@@ -1431,7 +1431,6 @@ void init_bit_stream_w(lame_global_flags *gfp)
     gfc->bs.h_ptr = gfc->bs.w_ptr = 0;
     gfc->bs.header[gfc->bs.h_ptr].write_timing = 0;
     gfc->bs.buf_byte_idx = -1;
-    gfc->bs.buf_bit_idx = 0;
     gfc->bs.totbit = 0;
 
     /* determine the mean bitrate for main data */

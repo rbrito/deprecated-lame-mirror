@@ -87,9 +87,8 @@ putbits2(lame_internal_flags *gfc, int val, int j)
     assert(j < MAX_LENGTH-2);
 
     while (j > 0) {
-	int k;
-	if (bs->buf_bit_idx == 0) {
-	    bs->buf_bit_idx = 8;
+	int k, bit_idx = 8 - (bs->totbit & 7);
+	if (bit_idx == 8) {
 	    bs->buf_byte_idx++;
 	    assert(bs->buf_byte_idx < BUFFER_SIZE);
 	    assert(bs->header[bs->w_ptr].write_timing >= bs->totbit
@@ -99,15 +98,15 @@ putbits2(lame_internal_flags *gfc, int val, int j)
 	    bs->buf[bs->buf_byte_idx] = 0;
 	}
 
-	k = Min(j, bs->buf_bit_idx);
+	k = Min(j, bit_idx);
 	j -= k;
 
-	bs->buf_bit_idx -= k;
+	bit_idx -= k;
 
 	assert (j < MAX_LENGTH); /* 32 too large on 32 bit machines */
-        assert (bs->buf_bit_idx < MAX_LENGTH); 
+        assert (bit_idx < 8u);
 
-        bs->buf[bs->buf_byte_idx] |= ((val >> j) << bs->buf_bit_idx);
+        bs->buf[bs->buf_byte_idx] |= ((val >> j) << bit_idx);
 	bs->totbit += k;
     }
 }
@@ -118,23 +117,22 @@ putbits_noheaders(Bit_stream_struc *bs, int val, int j)
 {
     assert(j < MAX_LENGTH-2);
     while (j > 0) {
-	int k;
-	if (bs->buf_bit_idx == 0) {
-	    bs->buf_bit_idx = 8;
+	int k, bit_idx = 8 - (bs->totbit & 7);
+	if (bit_idx == 8) {
 	    bs->buf_byte_idx++;
 	    assert(bs->buf_byte_idx < BUFFER_SIZE);
 	    bs->buf[bs->buf_byte_idx] = 0;
 	}
 
-	k = Min(j, bs->buf_bit_idx);
+	k = Min(j, bit_idx);
 	j -= k;
         
-	bs->buf_bit_idx -= k;
+	bit_idx -= k;
         
 	assert (j < MAX_LENGTH); /* 32 too large on 32 bit machines */
-        assert (bs->buf_bit_idx < MAX_LENGTH); 
+        assert (bit_idx < 8u);
 	
-        bs->buf[bs->buf_byte_idx] |= ((val >> j) << bs->buf_bit_idx);
+        bs->buf[bs->buf_byte_idx] |= ((val >> j) << bit_idx);
 	bs->totbit += k;
     }
 }
@@ -787,7 +785,6 @@ copy_buffer(
     if (size!=0 && minimum>size) return -1; /* buffer is too small */
     memcpy(buffer,bs->buf,minimum);
     bs->buf_byte_idx = -1;
-    bs->buf_bit_idx = 0;
 
     if (mp3data) {
 	UpdateMusicCRC(&gfc->nMusicCRC,buffer,minimum);
