@@ -472,16 +472,12 @@ psycho_loudness_approx( FLOAT *energy, lame_internal_flags *gfc )
  * compute interchannel masking effects
  ***************************************************************/
 static void
-calc_interchannel_masking(
-    lame_global_flags * gfp,
-    int gr
-    )
+calc_interchannel_masking(lame_global_flags * gfp, int gr)
 {
-    FLOAT ratio = gfp->interChRatio;
+    FLOAT ratio = gfp->interChRatio, l, r;
     III_psy_ratio *mr = gfp->internal_flags->masking_next[gr];
 
     int sb, sblock;
-    FLOAT l, r;
     for ( sb = 0; sb < SBMAX_l; sb++ ) {
 	l = mr[0].thm.l[sb];
 	r = mr[1].thm.l[sb];
@@ -530,10 +526,7 @@ calc_interchannel_masking(
  ***************************************************************/
 
 static void
-msfix_l(
-    lame_internal_flags *gfc,
-    int gr
-    )
+msfix_l(lame_internal_flags *gfc, int gr)
 {
     int sb;
     III_psy_ratio *mr = &gfc->masking_next[gr][0];
@@ -672,6 +665,7 @@ set_istereo_sfb(lame_internal_flags *gfc, int gr)
 	    break;
     } while (--sb >= 0);
     gfc->is_start_sfb_s_next[gr] = ++sb; assert(sb >= 0);
+	   
     for (; sb < gfc->cutoff_sfb_s; sb++) {
 	mr[0].en .s[sb][0] = mr[2].en .s[sb][0];
 	mr[0].thm.s[sb][0] = mr[2].thm.s[sb][0];
@@ -1455,19 +1449,14 @@ L3psycho_anal_ns(
  * auto-adjust of ATH, useful for low volume
  * Gabriel Bouvigne 3 feb 2001
  *
- * modifies some values in
- *   gfp->internal_flags->ATH
- *   (gfc->ATH)
+ * loudness based on equal loudness curve
+ * use granule with maximum combined loudness
+ * jd - 2001 mar 12, 27, jun 30
  */
 static void
 adjust_ATH(lame_internal_flags* const  gfc)
 {
-    FLOAT max_pow;
-
-    /* jd - 2001 mar 12, 27, jun 30 */
-    /* loudness based on equal loudness curve; */
-    /* use granule with maximum combined loudness*/
-    max_pow
+    FLOAT max_pow
 	= gfc->loudness_next[0][0]
 	+ gfc->loudness_next[0][gfc->channels_out-1];
 
