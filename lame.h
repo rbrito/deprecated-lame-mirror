@@ -31,17 +31,16 @@ typedef enum sound_file_format_e {
 } sound_file_format;
 
 
+
+
 /***********************************************************************
 *
-*  Global Variables.  
+*  Control Parameters set by User
 *
-*  substantiated in lame.c
+*  substantiated by calling program
 *
-*  Initilized and default values set by gf=lame_init()
-*  gf is a pointer to this struct, which the user may use to 
-*  override any of the default values
+*  Initilized and default values set by lame_init(&gf)
 *
-*  a call to lame_set_params() is also needed
 *
 ***********************************************************************/
 typedef struct  {
@@ -107,56 +106,7 @@ typedef struct  {
   int no_short_blocks;        /* disable short blocks       */
   int emphasis;                   /* obsolete */
 
-
-
-
-
-  /********************************************************************/
-  /* internal variables NOT set by calling program, and should not be */
-  /* modified by the calling program                                  */
-  /********************************************************************/
-  long int frameNum;              /* frame counter */
-  long totalframes;               /* frames: 0..totalframes-1 (estimate)*/
-  int encoder_delay;
-  int framesize;                  
-  int version;                    /* 0=MPEG2  1=MPEG1 */
-  int padding;                    /* padding for the current frame? */
-  int mode_gr;                    /* granules per frame */
-  int stereo;                     /* number of channels */
-  int VBR_min_bitrate;            /* min bitrate index */
-  int VBR_max_bitrate;            /* max bitrate index */
-  float resample_ratio;           /* input_samp_rate/output_samp_rate */
-  int bitrate_index;
-  int samplerate_index;
-  int mode_ext;
-
-  /* lowpass and highpass filter control */
-  float lowpass1,lowpass2;        /* normalized frequency bounds of passband */
-  float highpass1,highpass2;      /* normalized frequency bounds of passband */
-                                  
-  /* polyphase filter (filter_type=0)  */
-  int lowpass_band;          /* zero bands >= lowpass_band in the polyphase filterbank */
-  int highpass_band;         /* zero bands <= highpass_band */
-
-
-
-  int filter_type;          /* 0=polyphase filter, 1= FIR filter 2=MDCT filter(bad)*/
-  int quantization;         /* 0 = ISO formual,  1=best amplitude */
-  int noise_shaping;        /* 0 = none 
-                               1 = ISO AAC model
-                               2 = allow scalefac_select=1  
-                             */
-
-  int noise_shaping_stop;   /* 0 = stop at over=0, all scalefacs amplified or
-                                   a scalefac has reached max value
-                               1 = stop when all scalefacs amplified or        
-                                   a scalefac has reached max value
-                               2 = stop when all scalefacs amplified 
-			    */
-
-  int psymodel;             /* 0 = none   1=gpsycho */
-  int use_best_huffman;     /* 0 = no.  1=outside loop  2=inside loop(slow) */
-
+  void *internal_flags;
 
 } lame_global_flags;
 
@@ -173,9 +123,11 @@ The LAME API
 
 
 /* REQUIRED: initialize the encoder.  sets default for all encoder paramters,
- * returns pointer to encoder parameters listed above 
+ * returns -1 if some malloc()'s failed
+ * otherwise returns 0
+ * 
  */
-void lame_init(lame_global_flags *);
+int lame_init(lame_global_flags *);
 
 
 
@@ -230,6 +182,7 @@ void lame_print_config(lame_global_flags *);
  * return code     number of bytes output in mp3buffer.  can be 0 
  *                 -1:  mp3buffer was too small
  *                 -2:  malloc() problem
+ *                 -3:  lame_init_params() not called
  *
  * The required mp3buffer_size can be computed from num_samples, 
  * samplerate and encoding rate, but here is a worst case estimate:

@@ -57,6 +57,7 @@ void L3psycho_anal( lame_global_flags *gfp,
 		    FLOAT8 percep_entropy[2],FLOAT8 percep_MS_entropy[2], 
                     int blocktype_d[2])
 {
+  lame_internal_flags *gfc=gfp->internal_flags;
 
 /* to get a good cache performance, one has to think about
  * the sequence, in which the variables are used
@@ -147,7 +148,7 @@ void L3psycho_anal( lame_global_flags *gfp,
 
   /* initialization of static variables
    */
-  if((gfp->frameNum==0) && (gr_out==0)){
+  if((gfc->frameNum==0) && (gr_out==0)){
     FLOAT8	SNR_s[CBANDS];
     
     blocktype_old[0]=STOP_TYPE;
@@ -163,7 +164,8 @@ void L3psycho_anal( lame_global_flags *gfp,
     case  8000: samplerate *= 2; break;  /* kludge so mpeg2.5 uses mpeg2 tables  for now */
     case 11025: samplerate *= 2; break;
     case 12000: samplerate *= 2; break;
-    default:    fprintf(stderr,"error, invalid sampling frequency: %d Hz\n",gfp->out_samplerate);
+    default:    fprintf(stderr,"error, invalid sampling frequency: %d Hz\n",
+            gfp->out_samplerate);
       exit(-1);
     }
     
@@ -302,7 +304,7 @@ void L3psycho_anal( lame_global_flags *gfp,
     }
 
     /* MPEG1 SNR_s data is given in db, convert to energy */
-    if (gfp->version == 1) {
+    if (gfc->version == 1) {
       for ( b = 0;b < npart_s; b++ ) {
 	SNR_s[b]=exp( (FLOAT8) SNR_s[b] * LN_TO_LOG10 );
       }
@@ -327,7 +329,7 @@ void L3psycho_anal( lame_global_flags *gfp,
 
   
   
-  numchn = gfp->stereo;
+  numchn = gfc->stereo;
   /* chn=2 and 3 = Mid and Side channels */
   if (gfp->mode == MPG_MD_JOINT_STEREO) numchn=4;
   for (chn=0; chn<numchn; chn++) {
@@ -889,12 +891,12 @@ void L3psycho_anal( lame_global_flags *gfp,
    * determin final block type
    ***************************************************************/
 
-  for (chn=0; chn<gfp->stereo; chn++) {
+  for (chn=0; chn<gfc->stereo; chn++) {
     blocktype[chn] = NORM_TYPE;
   }
 
 
-  if (gfp->stereo==2) {
+  if (gfc->stereo==2) {
     if (!gfp->allow_diff_short || gfp->mode==MPG_MD_JOINT_STEREO) {
       /* force both channels to use the same block type */
       /* this is necessary if the frame is to be encoded in ms_stereo.  */
@@ -911,7 +913,7 @@ void L3psycho_anal( lame_global_flags *gfp,
   
   /* update the blocktype of the previous granule, since it depends on what
    * happend in this granule */
-  for (chn=0; chn<gfp->stereo; chn++) {
+  for (chn=0; chn<gfc->stereo; chn++) {
     if ( uselongblock[chn])
       {				/* no attack : use long blocks */
 	switch( blocktype_old[chn] ) 

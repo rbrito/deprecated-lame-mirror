@@ -512,6 +512,8 @@ static int count_bits_long(int ix[576], gr_info *gi)
 
 int count_bits(lame_global_flags *gfp,int *ix, FLOAT8 *xr, gr_info *cod_info)  
 {
+  lame_internal_flags *gfc=gfp->internal_flags;
+
   int bits=0,i;
   /* since quantize_xrpow uses table lookup, we need to check this first: */
   FLOAT8 w = (IXMAX_VAL) / IPOW20(cod_info->global_gain);
@@ -519,7 +521,7 @@ int count_bits(lame_global_flags *gfp,int *ix, FLOAT8 *xr, gr_info *cod_info)
     if (xr[i] > w)
       return LARGE_BITS;
   }
-  if (gfp->quantization) 
+  if (gfc->quantization) 
     quantize_xrpow(xr, ix, cod_info);
   else
     quantize_xrpow_ISO(xr, ix, cod_info);
@@ -739,6 +741,8 @@ void best_scalefac_store(lame_global_flags *gfp,int gr, int ch,
 			 III_side_info_t *l3_side,
 			 III_scalefac_t scalefac[2][2])
 {
+  lame_internal_flags *gfc=gfp->internal_flags;
+
     /* use scalefac_scale if we can */
     gr_info *gi = &l3_side->gr[gr].ch[ch].tt;
 
@@ -793,7 +797,7 @@ void best_scalefac_store(lame_global_flags *gfp,int gr, int ch,
 
 	    gi->scalefac_scale = 1;
 	    gi->part2_length = 99999999;
-	    if (gfp->mode_gr == 2) {
+	    if (gfc->mode_gr == 2) {
 	        scale_bitcount(&scalefac[gr][ch], gi);
 	    } else {
 		scale_bitcount_lsf(&scalefac[gr][ch], gi);
@@ -801,7 +805,7 @@ void best_scalefac_store(lame_global_flags *gfp,int gr, int ch,
 	}
     }
 
-    if (gfp->mode_gr==2 && gr == 1
+    if (gfc->mode_gr==2 && gr == 1
 	&& l3_side->gr[0].ch[ch].tt.block_type != SHORT_TYPE
 	&& l3_side->gr[1].ch[ch].tt.block_type != SHORT_TYPE
 	&& l3_side->gr[0].ch[ch].tt.scalefac_scale

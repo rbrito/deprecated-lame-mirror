@@ -84,6 +84,18 @@
 #define         Min(A, B)       ((A) < (B) ? (A) : (B))
 #define         Max(A, B)       ((A) > (B) ? (A) : (B))
 
+
+
+/***********************************************************************
+*
+*  Global Variable External Declarations
+*
+***********************************************************************/
+
+extern int      bitrate_table[2][15];
+
+
+
 /***********************************************************************
 *
 *  Global Type Definitions
@@ -101,7 +113,6 @@ typedef struct {
 
 typedef sb_alloc        al_table[SBLIMIT][16]; 
 
-/* Header Information Structure */
 
 
 
@@ -111,8 +122,6 @@ extern enum byte_order NativeByteOrder;
 /* "bit_stream.h" Type Definitions */
 
 typedef struct  bit_stream_struc {
-    unsigned char*		pbtOutBuf;   /* for .DLL code */
-    int 			nOutBufPos;  /* for .DLL code */
     FILE        *pt;            /* pointer to bit stream device */
     unsigned char *buf;         /* bit stream buffer */
     int         buf_size;       /* size of buffer (in number of bytes) */
@@ -125,13 +134,76 @@ typedef struct  bit_stream_struc {
 
 #include "l3side.h"
 
-/***********************************************************************
-*
-*  Global Variable External Declarations
-*
-***********************************************************************/
 
-extern int      bitrate_table[2][15];
+typedef struct  {
+  /********************************************************************/
+  /* internal variables NOT set by calling program, and should not be */
+  /* modified by the calling program                                  */
+  /********************************************************************/
+  int lame_init_params_init;      /* was lame_init_params called? */
+  int lame_encode_frame_init;     
+
+  long int frameNum;              /* frame counter */
+  long totalframes;               /* frames: 0..totalframes-1 (estimate)*/
+  int encoder_delay;
+  int framesize;                  
+  int version;                    /* 0=MPEG2  1=MPEG1 */
+  int padding;                    /* padding for the current frame? */
+  int mode_gr;                    /* granules per frame */
+  int stereo;                     /* number of channels */
+  int VBR_min_bitrate;            /* min bitrate index */
+  int VBR_max_bitrate;            /* max bitrate index */
+  float resample_ratio;           /* input_samp_rate/output_samp_rate */
+  int bitrate_index;
+  int samplerate_index;
+  int mode_ext;
+
+  /* lowpass and highpass filter control */
+  float lowpass1,lowpass2;        /* normalized frequency bounds of passband */
+  float highpass1,highpass2;      /* normalized frequency bounds of passband */
+                                  
+  /* polyphase filter (filter_type=0)  */
+  int lowpass_band;          /* zero bands >= lowpass_band in the polyphase filterbank */
+  int highpass_band;         /* zero bands <= highpass_band */
+
+
+
+  int filter_type;          /* 0=polyphase filter, 1= FIR filter 2=MDCT filter(bad)*/
+  int quantization;         /* 0 = ISO formual,  1=best amplitude */
+  int noise_shaping;        /* 0 = none 
+                               1 = ISO AAC model
+                               2 = allow scalefac_select=1  
+                             */
+
+  int noise_shaping_stop;   /* 0 = stop at over=0, all scalefacs amplified or
+                                   a scalefac has reached max value
+                               1 = stop when all scalefacs amplified or        
+                                   a scalefac has reached max value
+                               2 = stop when all scalefacs amplified 
+			    */
+
+  int psymodel;             /* 0 = none   1=gpsycho */
+  int use_best_huffman;     /* 0 = no.  1=outside loop  2=inside loop(slow) */
+
+
+
+  /* variables used by lame.c */
+  Bit_stream_struc   bs;
+  III_side_info_t l3_side;
+#define MFSIZE (1152+1152+ENCDELAY-MDCTDELAY)
+  short int mfbuf[2][MFSIZE];
+  int mf_size;
+  int mf_samples_to_encode;
+  unsigned long frameBits;
+  unsigned long sentBits;
+  FLOAT8 frac_SpF;
+  FLOAT8 slot_lag;
+  FLOAT8 ms_ener_ratio[2];
+  FLOAT8 ms_ratio[2];
+
+
+} lame_internal_flags;
+
 
 /***********************************************************************
 *
@@ -151,7 +223,15 @@ extern void           putbits(Bit_stream_struc*, unsigned int, int);
 extern enum byte_order DetermineByteOrder(void);
 extern void SwapBytesInWords( short *loc, int words );
 
+extern int fill_buffer_blackman(lame_global_flags *gfp,short int *outbuf,int desired_len,
+	 short int *inbuf,int len,int *num_used,int ch);
+
 extern void 
 getframebits(lame_global_flags *gfp,int *bitsPerFrame, int *mean_bits);
 
 #endif
+
+
+
+
+

@@ -151,20 +151,21 @@ static FLOAT8 ATH_s[SBPSY_l];
 void
 iteration_init( lame_global_flags *gfp,III_side_info_t *l3_side, int l3_enc[2][2][576])
 {
+  lame_internal_flags *gfc=gfp->internal_flags;
   gr_info *cod_info;
   int ch, gr, i;
 
   l3_side->resvDrain = 0;
 
-  if ( gfp->frameNum==0 ) {
+  if ( gfc->frameNum==0 ) {
     for (i = 0; i < SBMAX_l + 1; i++) {
       scalefac_band.l[i] =
-	sfBandIndex[gfp->samplerate_index + (gfp->version * 3) + 
+	sfBandIndex[gfc->samplerate_index + (gfc->version * 3) + 
               6*(gfp->out_samplerate<16000)].l[i];
     }
     for (i = 0; i < SBMAX_s + 1; i++) {
       scalefac_band.s[i] =
-	sfBandIndex[gfp->samplerate_index + (gfp->version * 3) + 
+	sfBandIndex[gfc->samplerate_index + (gfc->version * 3) + 
              6*(gfp->out_samplerate<16000)].s[i];
     }
 
@@ -192,14 +193,14 @@ iteration_init( lame_global_flags *gfp,III_side_info_t *l3_side, int l3_enc[2][2
 
   convert_mdct=0;
   reduce_sidechannel=0;
-  if (gfp->mode_ext==MPG_MD_MS_LR) {
+  if (gfc->mode_ext==MPG_MD_MS_LR) {
     convert_mdct = 1;
     reduce_sidechannel=1;
   }
   
   /* some intializations. */
-  for ( gr = 0; gr < gfp->mode_gr; gr++ ){
-    for ( ch = 0; ch < gfp->stereo; ch++ ){
+  for ( gr = 0; gr < gfc->mode_gr; gr++ ){
+    for ( ch = 0; ch < gfc->stereo; ch++ ){
       cod_info = (gr_info *) &(l3_side->gr[gr].ch[ch]);
 
       if (cod_info->block_type == SHORT_TYPE)
@@ -219,7 +220,7 @@ iteration_init( lame_global_flags *gfp,III_side_info_t *l3_side, int l3_enc[2][2
 
 
   /* dont bother with scfsi. */
-  for ( ch = 0; ch < gfp->stereo; ch++ )
+  for ( ch = 0; ch < gfc->stereo; ch++ )
     for ( i = 0; i < 4; i++ )
       l3_side->scfsi[ch][i] = 0;
 }
@@ -345,6 +346,7 @@ void ms_convert(FLOAT8 xr[2][576],FLOAT8 xr_org[2][576])
 void on_pe(lame_global_flags *gfp,FLOAT8 pe[2][2],III_side_info_t *l3_side,
 int targ_bits[2],int mean_bits, int gr)
 {
+  lame_internal_flags *gfc=gfp->internal_flags;
   gr_info *cod_info;
   int extra_bits,tbits,bits;
   int add_bits[2]; 
@@ -354,13 +356,13 @@ int targ_bits[2],int mean_bits, int gr)
   ResvMaxBits( mean_bits, &tbits, &extra_bits, gr);
     
 
-  for (ch=0 ; ch < gfp->stereo ; ch ++) {
+  for (ch=0 ; ch < gfc->stereo ; ch ++) {
     /******************************************************************
      * allocate bits for each channel 
      ******************************************************************/
     cod_info = &l3_side->gr[gr].ch[ch].tt;
     
-    targ_bits[ch]=tbits/gfp->stereo;
+    targ_bits[ch]=tbits/gfc->stereo;
     
     /* allocate extra bits from reservoir based on PE */
     bits=0;

@@ -59,14 +59,16 @@ void lame_close_infile(lame_global_flags *gfp)
 int lame_readframe(lame_global_flags *gfp,short int Buffer[2][1152])
 {
   int iread;
+  lame_internal_flags *gfc=gfp->internal_flags;
+
 
   /* note: if input is gfp->stereo and output is mono, get_audio() 
    * will return  .5*(L+R) in channel 0,  and nothing in channel 1. */
-  iread = get_audio(gfp,Buffer,gfp->stereo);
+  iread = get_audio(gfp,Buffer,gfc->stereo);
   
   /* check to see if we overestimated/underestimated totalframes */
-  if (iread==0)  gfp->totalframes = Min(gfp->totalframes,gfp->frameNum+2);
-  if (gfp->frameNum > (gfp->totalframes-1)) gfp->totalframes = gfp->frameNum;
+  if (iread==0)  gfc->totalframes = Min(gfc->totalframes,gfc->frameNum+2);
+  if (gfc->frameNum > (gfc->totalframes-1)) gfc->totalframes = gfc->frameNum;
   return iread;
 }
 
@@ -94,12 +96,14 @@ int get_audio(lame_global_flags *gfp,short buffer[2][1152],int stereo)
   static unsigned long num_samples_read;
   unsigned long remaining;
   int num_channels = gfp->num_channels;
+  lame_internal_flags *gfc=gfp->internal_flags;
 
-  if (gfp->frameNum==0) {
+
+  if (gfc->frameNum==0) {
     num_samples_read=0;
     num_samples= GetSndSamples();
   }
-  framesize = gfp->mode_gr*576;
+  framesize = gfc->mode_gr*576;
 
   samples_to_read = framesize;
   if (count_samples_carefully) { 
@@ -158,6 +162,8 @@ int read_samples_mp3(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2]
   static int framesize=0;
   int ch;
 #endif
+  lame_internal_flags *gfc=gfp->internal_flags;
+
 
   out=lame_decode_fromfile(musicin,mpg123pcm[0],mpg123pcm[1]);
   /* out = -1:  error, probably EOF */
@@ -187,8 +193,8 @@ int read_samples_mp3(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2]
 	pinfo->pcmdata2[ch][j+framesize-DECDELAY] = mpg123pcm[ch][j];
     }
   
-  pinfo->frameNum123 = gfp->frameNum-1;
-  pinfo->frameNum = gfp->frameNum;
+  pinfo->frameNum123 = gfc->frameNum-1;
+  pinfo->frameNum = gfc->frameNum;
   }
 #endif
   if (out==-1) return 0;

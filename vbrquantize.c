@@ -268,15 +268,18 @@ void
 VBR_iteration_loop_new (lame_global_flags *gfp,
                 FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
                 FLOAT8 xr[2][2][576], III_psy_ratio ratio[2][2],
-                III_side_info_t * l3_side, int l3_enc[2][2][576],
+                int l3_enc[2][2][576],
                 III_scalefac_t scalefac[2][2])
 {
+  lame_internal_flags *gfc=gfp->internal_flags;
   III_psy_xmin l3_xmin[2][2];
   FLOAT8    masking_lower_db;
   int       start,end,bw,sfb, i,ch, gr, over;
   III_psy_xmin vbrsf;
   FLOAT8 maxover,vbrmax;
-
+  III_side_info_t * l3_side;
+  
+  l3_side = &gfc->l3_side;
 
   iteration_init(gfp,l3_side,l3_enc);
 
@@ -288,10 +291,10 @@ VBR_iteration_loop_new (lame_global_flags *gfp,
   masking_lower = 1;
 
 
-  for (gr = 0; gr < gfp->mode_gr; gr++) {
+  for (gr = 0; gr < gfc->mode_gr; gr++) {
     if (convert_mdct)
       ms_convert(xr[gr],xr[gr]);
-    for (ch = 0; ch < gfp->stereo; ch++) { 
+    for (ch = 0; ch < gfc->stereo; ch++) { 
       FLOAT8 xr34[576];
       gr_info *cod_info = &l3_side->gr[gr].ch[ch].tt;
       int shortblock;

@@ -35,23 +35,25 @@ void getframebits(lame_global_flags *gfp,int *bitsPerFrame, int *mean_bits) {
   FLOAT8 bit_rate,samp;
   int bitsPerSlot;
   int sideinfo_len;
+  lame_internal_flags *gfc=gfp->internal_flags;
+
   
   samp =      gfp->out_samplerate/1000.0;
-  bit_rate = bitrate_table[gfp->version][gfp->bitrate_index];
+  bit_rate = bitrate_table[gfc->version][gfc->bitrate_index];
   bitsPerSlot = 8;
 
   /* determine the mean bitrate for main data */
   sideinfo_len = 32;
-  if ( gfp->version == 1 )
+  if ( gfc->version == 1 )
     {   /* MPEG 1 */
-      if ( gfp->stereo == 1 )
+      if ( gfc->stereo == 1 )
 	sideinfo_len += 136;
       else
 	sideinfo_len += 256;
     }
   else
     {   /* MPEG 2 */
-      if ( gfp->stereo == 1 )
+      if ( gfc->stereo == 1 )
 	sideinfo_len += 72;
       else
 	sideinfo_len += 136;
@@ -60,9 +62,9 @@ void getframebits(lame_global_flags *gfp,int *bitsPerFrame, int *mean_bits) {
   if (gfp->error_protection) sideinfo_len += 16;
   
   /* -f fast-math option causes some strange rounding here, be carefull: */  
-  whole_SpF = floor( (gfp->framesize /samp)*(bit_rate /  (FLOAT8)bitsPerSlot) + 1e-9);
-  *bitsPerFrame = 8 * whole_SpF + (gfp->padding * 8);
-  *mean_bits = (*bitsPerFrame - sideinfo_len) / gfp->mode_gr;
+  whole_SpF = floor( (gfc->framesize /samp)*(bit_rate /  (FLOAT8)bitsPerSlot) + 1e-9);
+  *bitsPerFrame = 8 * whole_SpF + (gfc->padding * 8);
+  *mean_bits = (*bitsPerFrame - sideinfo_len) / gfc->mode_gr;
 }
 
 
@@ -329,4 +331,121 @@ int N)                  /* number of bits of val */
 *  End of bit_stream.c package
 *
 *****************************************************************************/
+
+
+
+
+
+
+
+/* resampling via FIR filter, blackman window */
+INLINE double blackman(int i,double offset,double fcn,int l)
+{
+  double bkwn;
+  double wcn = (M_PI * fcn);
+  double dly = l / 2.0;
+  double x = i-offset;
+  if (x<0) x=0;
+  if (x>l) x=l;
+  bkwn = 0.42 - 0.5 * cos((x * 2) * M_PI /l)
+    + 0.08 * cos((x * 4) * M_PI /l);
+  if (fabs(x-dly)<1e-9) return wcn/M_PI;
+  else 
+    return  (sin( (wcn *  ( x - dly))) / (M_PI * ( x - dly)) * bkwn );
+}
+
+int fill_buffer_blackman(lame_global_flags *gfp,short int *outbuf,int desired_len,
+			 short int *inbuf,int len,int *num_used,int ch) {
+  
+#define BLACKSIZE 30
+  FLOAT8 offset,xvalue;
+  static short int inbuf_old[2][BLACKSIZE];
+  static int init[2]={0,0};
+  int i,j=0,k,value;
+  static int filter_l;
+  static FLOAT8 fcn,itime[2],intratio;
+  static FLOAT8 blackfilt[BLACKSIZE];
+  lame_internal_flags *gfc=gfp->internal_flags;
+
+  
+
+  if (gfc->frameNum==0 && !init[ch]) {
+    init[ch]=1;
+    itime[ch]=0;
+    memset((char *) inbuf_old[ch], 0, sizeof(short int)*BLACKSIZE);
+    intratio=( fabs(gfc->resample_ratio - floor(.5+gfc->resample_ratio)) < .0001 );
+
+    fcn = .90/gfc->resample_ratio;
+    if (fcn>.90) fcn=.90;
+
+    filter_l=19;  /* must be odd */
+    /* if resample_ratio = int, filter_l should be even */
+    filter_l += intratio;
+    assert(filter_l +5 < BLACKSIZE);
+
+    if (intratio) {
+      /* precompute blackman filter coefficients */
+      offset=0;
+      for (i=0; i<=filter_l; ++i) {
+	blackfilt[i]=blackman(i,offset,fcn,filter_l);
+      }
+      
+    }
+  }
+  if (gfc->frameNum!=0) init[ch]=0; /* reset, for next time framenum=0 */
+
+  
+  /* time of j'th element in inbuf = itime + j/ifreq; */
+  /* time of k'th element in outbuf   =  j/ofreq */
+  for (k=0;k<desired_len;k++) {
+    FLOAT8 time0;
+    
+    time0 = k*gfc->resample_ratio;       /* time of k'th output sample */
+    j = floor( time0 -itime[ch]  );
+    if ((j+filter_l/2) >= len) break;
+
+    /* blackmon filter.  by default, window centered at j+.5(filter_l%2) */
+    /* but we want a window centered at time0.   */
+    offset = ( time0 -itime[ch] - (j + .5*(filter_l%2)));
+    assert(offset<=.500001);
+
+    xvalue=0;
+#ifdef DEBUG
+    printf("fcn = %f   offset = %f  l=%i \n",fcn,offset,filter_l);
+    printf("time0=%f   j=%f \n",time0,j+.5*(filter_l%2));
+#endif
+    for (i=0 ; i<=filter_l ; ++i) {
+      int j2 = i+j-filter_l/2;
+      int y;
+      y = (j2<0) ? inbuf_old[ch][BLACKSIZE+j2] : inbuf[j2];
+      if (intratio) 
+	xvalue += y*blackfilt[i];
+      else
+	xvalue += y*blackman(i,offset,fcn,filter_l);
+#ifdef DEBUG
+      printf("i=%i  filter=%10.5f  y=%i \n",i,blackman(i,offset,fcn,filter_l),
+               y);
+#endif
+    }
+    value = floor(.5+xvalue);
+    if (value > 32767) outbuf[k]=32767;
+    else if (value < -32767) outbuf[k]=-32767;
+    else outbuf[k]=value;
+#ifdef DEBUG
+    printf("final value:  outbuf=%i \n\n",outbuf[k]);
+#endif
+  }
+
+  
+  /* k = number of samples added to outbuf */
+  /* last k sample used data from j,j+1, or j+1 overflowed buffer */
+  /* remove num_used samples from inbuf: */
+  *num_used = Min(len,j+filter_l/2);
+  itime[ch] += *num_used - k*gfc->resample_ratio;
+  for (i=0;i<BLACKSIZE;i++)
+    inbuf_old[ch][i]=inbuf[*num_used + i -BLACKSIZE];
+  return k;
+}
+
+
 

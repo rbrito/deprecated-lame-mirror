@@ -27,10 +27,12 @@ void brhist_init(lame_global_flags *gfp,int br_min, int br_max)
   char *termname;
   char *tp;
   char tc[10];
+  lame_internal_flags *gfc=gfp->internal_flags;
+
 
   for(i = 0; i < 15; i++)
     {
-      sprintf(brhist_bps[i], "%3d:", bitrate_table[gfp->version][i]);
+      sprintf(brhist_bps[i], "%3d:", bitrate_table[gfc->version][i]);
       brhist_count[i] = 0;
       brhist_temp[i] = 0;
     }
@@ -106,14 +108,16 @@ void brhist_disp_total(lame_global_flags *gfp)
 {
   int i;
   FLOAT ave;
+  lame_internal_flags *gfc=gfp->internal_flags;
+
 
   for(i = brhist_vbrmin; i <= brhist_vbrmax; i++)
     fputc('\n', stderr);
 
   ave=0;
   for(i = brhist_vbrmin; i <= brhist_vbrmax; i++)
-    ave += bitrate_table[gfp->version][i]*
-      (FLOAT)brhist_count[i] / gfp->totalframes;
+    ave += bitrate_table[gfc->version][i]*
+      (FLOAT)brhist_count[i] / gfc->totalframes;
   fprintf(stderr, "\naverage: %2.0f kbs\n",ave);
     
 #if 0
@@ -122,9 +126,9 @@ void brhist_disp_total(lame_global_flags *gfp)
   for(i = brhist_vbrmin; i <= brhist_vbrmax; i++)
     {
       fprintf(stderr, "   %3d  %8ld (%.1f%%)\n",
-	      bitrate_table[gfp->version][i],
+	      bitrate_table[gfc->version][i],
 	      brhist_count[i],
-	      (FLOAT)brhist_count[i] / gfp->totalframes * 100.0);
+	      (FLOAT)brhist_count[i] / gfc->totalframes * 100.0);
     }
 #endif
   fflush(stderr);

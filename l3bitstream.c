@@ -60,12 +60,15 @@ void
 III_format_bitstream( lame_global_flags *gfp,
                       int              bitsPerFrame,
 		      int              l3_enc[2][2][576],
-		      III_side_info_t  *l3_side,
-		      III_scalefac_t   scalefac[2][2],
-		      Bit_stream_struc *in_bs)
+		      III_scalefac_t   scalefac[2][2])
 {
     int gr, ch;
-    bs = in_bs;
+    lame_internal_flags *gfc=gfp->internal_flags;
+
+    III_side_info_t  *l3_side;
+
+    l3_side = &gfc->l3_side;
+    bs = &gfc->bs;
 
     if ( frameData == NULL )
     {
@@ -109,16 +112,16 @@ III_format_bitstream( lame_global_flags *gfp,
       to BitstreamFrame()
     */
     frameData->frameLength = bitsPerFrame;
-    frameData->nGranules   = gfp->mode_gr;
-    frameData->nChannels   = gfp->stereo;
+    frameData->nGranules   = gfc->mode_gr;
+    frameData->nChannels   = gfc->stereo;
     frameData->header      = headerPH->part;
     frameData->frameSI     = frameSIPH->part;
 
-    for ( ch = 0; ch < gfp->stereo; ch++ )
+    for ( ch = 0; ch < gfc->stereo; ch++ )
 	frameData->channelSI[ch] = channelSIPH[ch]->part;
 
-    for ( gr = 0; gr < gfp->mode_gr; gr++ )
-	for ( ch = 0; ch < gfp->stereo; ch++ )
+    for ( gr = 0; gr < gfc->mode_gr; gr++ )
+	for ( ch = 0; ch < gfc->stereo; ch++ )
 	{
 	    frameData->spectrumSI[gr][ch]   = spectrumSIPH[gr][ch]->part;
 	    frameData->scaleFactors[gr][ch] = scaleFactorsPH[gr][ch]->part;
@@ -151,20 +154,22 @@ encodeMainData( lame_global_flags *gfp,
 		III_scalefac_t   scalefac[2][2] )
 {
     int i, gr, ch, sfb, window;
+    lame_internal_flags *gfc=gfp->internal_flags;
 
-    for ( gr = 0; gr < gfp->mode_gr; gr++ )
-	for ( ch = 0; ch < gfp->stereo; ch++ )
+
+    for ( gr = 0; gr < gfc->mode_gr; gr++ )
+	for ( ch = 0; ch < gfc->stereo; ch++ )
 	    scaleFactorsPH[gr][ch]->part->nrEntries = 0;
 
-    for ( gr = 0; gr < gfp->mode_gr; gr++ )
-	for ( ch = 0; ch < gfp->stereo; ch++ )
+    for ( gr = 0; gr < gfc->mode_gr; gr++ )
+	for ( ch = 0; ch < gfc->stereo; ch++ )
 	    codedDataPH[gr][ch]->part->nrEntries = 0;
 
-    if ( gfp->version == 1 )
+    if ( gfc->version == 1 )
     {  /* MPEG 1 */
 	for ( gr = 0; gr < 2; gr++ )
 	{
-	    for ( ch = 0; ch < gfp->stereo; ch++ )
+	    for ( ch = 0; ch < gfc->stereo; ch++ )
 	    {
 		BF_PartHolder **pph = &scaleFactorsPH[gr][ch];		
 		gr_info *gi = &(si->gr[gr].ch[ch].tt);
@@ -226,7 +231,7 @@ encodeMainData( lame_global_flags *gfp,
     else
     {  /* MPEG 2 */
 	gr = 0;
-	for ( ch = 0; ch < gfp->stereo; ch++ )
+	for ( ch = 0; ch < gfc->stereo; ch++ )
 	{
 	    BF_PartHolder **pph = &scaleFactorsPH[gr][ch];		
 	    gr_info *gi = &(si->gr[gr].ch[ch].tt);
@@ -305,6 +310,8 @@ static BF_PartHolder *CRC_BF_addEntry( BF_PartHolder *thePH, u_int value, u_int 
 static int encodeSideInfo( lame_global_flags *gfp,III_side_info_t  *si )
 {
     int gr, ch, scfsi_band, region, window, bits_sent;
+    lame_internal_flags *gfc=gfp->internal_flags;
+
     
     crc = 0xffff; /* (jo) init crc16 for error_protection */
 
@@ -313,16 +320,16 @@ static int encodeSideInfo( lame_global_flags *gfp,III_side_info_t  *si )
       headerPH = BF_addEntry( headerPH, 0xffe,                    12 );
     else
       headerPH = BF_addEntry( headerPH, 0xfff,                    12 );
-    headerPH = BF_addEntry( headerPH, gfp->version,            1 );
+    headerPH = BF_addEntry( headerPH, gfc->version,            1 );
     headerPH = BF_addEntry( headerPH, 1,                        2 );
     headerPH = BF_addEntry( headerPH, !gfp->error_protection,     1 );
     /* (jo) from now on call the CRC_BF_addEntry() wrapper to update crc */
-    headerPH = CRC_BF_addEntry( headerPH, gfp->bitrate_index,      4 );
-    headerPH = CRC_BF_addEntry( headerPH, gfp->samplerate_index,   2 );
-    headerPH = CRC_BF_addEntry( headerPH, gfp->padding,            1 );
+    headerPH = CRC_BF_addEntry( headerPH, gfc->bitrate_index,      4 );
+    headerPH = CRC_BF_addEntry( headerPH, gfc->samplerate_index,   2 );
+    headerPH = CRC_BF_addEntry( headerPH, gfc->padding,            1 );
     headerPH = CRC_BF_addEntry( headerPH, gfp->extension,          1 );
     headerPH = CRC_BF_addEntry( headerPH, gfp->mode,               2 );
-    headerPH = CRC_BF_addEntry( headerPH, gfp->mode_ext,           2 );
+    headerPH = CRC_BF_addEntry( headerPH, gfc->mode_ext,           2 );
     headerPH = CRC_BF_addEntry( headerPH, gfp->copyright,          1 );
     headerPH = CRC_BF_addEntry( headerPH, gfp->original,           1 );
     headerPH = CRC_BF_addEntry( headerPH, gfp->emphasis,           2 );
@@ -333,23 +340,23 @@ static int encodeSideInfo( lame_global_flags *gfp,III_side_info_t  *si )
 
     frameSIPH->part->nrEntries = 0;
 
-    for (ch = 0; ch < gfp->stereo; ch++ )
+    for (ch = 0; ch < gfc->stereo; ch++ )
 	channelSIPH[ch]->part->nrEntries = 0;
 
-    for ( gr = 0; gr < gfp->mode_gr; gr++ )
-	for ( ch = 0; ch < gfp->stereo; ch++ )
+    for ( gr = 0; gr < gfc->mode_gr; gr++ )
+	for ( ch = 0; ch < gfc->stereo; ch++ )
 	    spectrumSIPH[gr][ch]->part->nrEntries = 0;
 
-    if ( gfp->version == 1 )
+    if ( gfc->version == 1 )
     {  /* MPEG1 */
 	frameSIPH = CRC_BF_addEntry( frameSIPH, si->main_data_begin, 9 );
 
-	if ( gfp->stereo == 2 )
+	if ( gfc->stereo == 2 )
 	    frameSIPH = CRC_BF_addEntry( frameSIPH, si->private_bits, 3 );
 	else
 	    frameSIPH = CRC_BF_addEntry( frameSIPH, si->private_bits, 5 );
 	
-	for ( ch = 0; ch < gfp->stereo; ch++ )
+	for ( ch = 0; ch < gfc->stereo; ch++ )
 	    for ( scfsi_band = 0; scfsi_band < 4; scfsi_band++ )
 	    {
 		BF_PartHolder **pph = &channelSIPH[ch];
@@ -357,7 +364,7 @@ static int encodeSideInfo( lame_global_flags *gfp,III_side_info_t  *si )
 	    }
 
 	for ( gr = 0; gr < 2; gr++ )
-	    for ( ch = 0; ch < gfp->stereo; ch++ )
+	    for ( ch = 0; ch < gfc->stereo; ch++ )
 	    {
 		BF_PartHolder **pph = &spectrumSIPH[gr][ch];
 		gr_info *gi = &(si->gr[gr].ch[ch].tt);
@@ -392,7 +399,7 @@ static int encodeSideInfo( lame_global_flags *gfp,III_side_info_t  *si )
 		*pph = CRC_BF_addEntry( *pph, gi->count1table_select, 1 );
 	    }
 
-	if ( gfp->stereo == 2 )
+	if ( gfc->stereo == 2 )
 	    bits_sent += 256;
 	else
 	    bits_sent += 136;
@@ -401,13 +408,13 @@ static int encodeSideInfo( lame_global_flags *gfp,III_side_info_t  *si )
     {  /* MPEG2 */
 	frameSIPH = CRC_BF_addEntry( frameSIPH, si->main_data_begin, 8 );
 
-	if ( gfp->stereo == 2 )
+	if ( gfc->stereo == 2 )
 	    frameSIPH = CRC_BF_addEntry( frameSIPH, si->private_bits, 2 );
 	else
 	    frameSIPH = CRC_BF_addEntry( frameSIPH, si->private_bits, 1 );
 	
 	gr = 0;
-	for ( ch = 0; ch < gfp->stereo; ch++ )
+	for ( ch = 0; ch < gfc->stereo; ch++ )
 	{
 	    BF_PartHolder **pph = &spectrumSIPH[gr][ch];
 	    gr_info *gi = &(si->gr[gr].ch[ch].tt);
@@ -439,7 +446,7 @@ static int encodeSideInfo( lame_global_flags *gfp,III_side_info_t  *si )
 	    *pph = CRC_BF_addEntry( *pph, gi->scalefac_scale,     1 );
 	    *pph = CRC_BF_addEntry( *pph, gi->count1table_select, 1 );
 	}
-	if ( gfp->stereo == 2 )
+	if ( gfc->stereo == 2 )
 	    bits_sent += 136;
 	else
 	    bits_sent += 72;

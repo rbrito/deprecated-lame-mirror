@@ -5,6 +5,14 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.6  2000/04/03 18:24:25  markt
+ * more massive internal changes in the goal of making
+ * lame thread safe.
+ *
+ * gfp-> user controlled varialbes
+ * gfc-> all other internal parameters.  eventually all global variables
+ *       which very from encode to encode need to go in here.
+ *
  * Revision 1.5  2000/03/21 23:02:17  markt
  * replaced all "gf." by gfp->
  *
@@ -48,13 +56,13 @@ extern int pretab[];
 void iteration_loop( lame_global_flags *gfp,
                      FLOAT8 pe[2][2], FLOAT8 ms_ratio[2], 
 		     FLOAT8 xr_org[2][2][576], III_psy_ratio ratio[2][2],
-		     III_side_info_t *l3_side, int l3_enc[2][2][576], 
+		     int l3_enc[2][2][576], 
 		     III_scalefac_t scalefac[2][2]);
 
 void VBR_iteration_loop( lame_global_flags *gfp,
                      FLOAT8 pe[2][2], FLOAT8 ms_ratio[2], 
 		     FLOAT8 xr_org[2][2][576], III_psy_ratio ratio[2][2],
-		     III_side_info_t *l3_side, int l3_enc[2][2][576], 
+		     int l3_enc[2][2][576], 
 		     III_scalefac_t scalefac[2][2]);
 
 

@@ -294,7 +294,7 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	}
 	else if (strcmp(token, "nores")==0) {
 	  gfp->disable_reservoir=1;
-	  gfp->padding=0;
+	  gfp->padding_type=0;
 	}
 	else if (strcmp(token, "athonly")==0) {
 	  gfp->ATHonly=1;
