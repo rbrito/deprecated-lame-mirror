@@ -784,6 +784,7 @@ lame_set_VBR_q( lame_global_flags*  gfp,
         return -1;  /* Unknown VBR quality level! */
 
     gfp->VBR_q = VBR_q;
+    lame_set_ATHcurve(gfp, VBR_q);
 
     return 0;
 }
@@ -1036,6 +1037,23 @@ lame_get_ATHtype( const lame_global_flags*  gfp )
 }
 
 
+/* Select ATH formula 4 shape. */
+int
+lame_set_ATHcurve( lame_global_flags*  gfp,
+                   float ATHcurve )
+{
+    gfp->ATHcurve = ATHcurve;
+
+    return 0;
+}
+
+int
+lame_get_ATHcurve( const lame_global_flags*  gfp )
+{
+    return gfp->ATHcurve;
+}
+
+
 /* Lower ATH by this many db. */
 int
 lame_set_ATHlower( lame_global_flags*  gfp,
@@ -1141,7 +1159,7 @@ lame_get_useTemporal( const lame_global_flags*  gfp )
 }
 
 
-/* Use temporal masking effect */
+/* Use inter-channel masking effect */
 int
 lame_set_interChRatio( lame_global_flags*  gfp,
 			float               ratio )
