@@ -72,7 +72,7 @@ putheader_bits(lame_internal_flags *gfc)
 	   gfc->l3_side.sideinfo_len);
     bs->buf_byte_idx += gfc->l3_side.sideinfo_len;
     bs->totbit += gfc->l3_side.sideinfo_len * 8;
-    bs->w_ptr = (bs->w_ptr + 1) & (MAX_HEADER_BUF - 1);
+    bs->w_ptr = (bs->w_ptr + 1) & (MAX_HEADER_BUF-1);
 }
 
 
@@ -101,12 +101,12 @@ putbits2(lame_internal_flags *gfc, int val, int j)
 
 	k = Min(j, bs->buf_bit_idx);
 	j -= k;
-        
+
 	bs->buf_bit_idx -= k;
-        
+
 	assert (j < MAX_LENGTH); /* 32 too large on 32 bit machines */
         assert (bs->buf_bit_idx < MAX_LENGTH); 
-	
+
         bs->buf[bs->buf_byte_idx] |= ((val >> j) << bs->buf_bit_idx);
 	bs->totbit += k;
     }
@@ -119,7 +119,6 @@ putbits_noheaders(lame_internal_flags *gfc, int val, int j)
     Bit_stream_struc *bs = &gfc->bs;
 
     assert(j < MAX_LENGTH-2);
-
     while (j > 0) {
 	int k;
 	if (bs->buf_bit_idx == 0) {
@@ -243,7 +242,7 @@ CRC_writeheader(lame_internal_flags *gfc, char *header)
 
 static int blockConv[] = {0, 1, 3, 2};
 inline static void
-encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
+encodeSideInfo2(lame_global_flags *gfp, int bitsPerFrame)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     III_side_info_t *l3_side = &gfc->l3_side;
@@ -433,13 +432,13 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 	int old = gfc->bs.h_ptr;
 	assert(gfc->bs.header[old].ptr == l3_side->sideinfo_len * 8);
 
-	gfc->bs.h_ptr = (old + 1) & (MAX_HEADER_BUF - 1);
-	gfc->bs.header[gfc->bs.h_ptr].write_timing =
-	    gfc->bs.header[old].write_timing + bitsPerFrame;
+	gfc->bs.h_ptr = (old + 1) & (MAX_HEADER_BUF-1);
+	gfc->bs.header[gfc->bs.h_ptr].write_timing
+	    = gfc->bs.header[old].write_timing + bitsPerFrame;
 
 	if (gfc->bs.h_ptr == gfc->bs.w_ptr) {
-	  /* yikes! we are out of header buffer space */
-	  ERRORF(gfc,"Error: MAX_HEADER_BUF too small in bitstream.c \n");
+	    /* yikes! we are out of header buffer space */
+	    ERRORF(gfc,"Error: MAX_HEADER_BUF too small in bitstream.c \n");
 	}
     }
 }
@@ -676,22 +675,19 @@ compute_flushbits( const lame_global_flags * gfp, int *total_bytes_output )
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     Bit_stream_struc *bs = &gfc->bs;
-    int flushbits,remaining_headers;
+    int flushbits;
     int bitsPerFrame;
-    int first_ptr = bs->w_ptr;           /* first header to add to bitstream */
     int last_ptr = (bs->h_ptr - 1) & (MAX_HEADER_BUF-1);
 
     /* add this many bits to bitstream so we can flush all headers */
     flushbits = bs->header[last_ptr].write_timing - bs->totbit;
-    *total_bytes_output=flushbits;
+    *total_bytes_output = flushbits;
 
     if (flushbits >= 0) {
 	/* if flushbits >= 0, some headers have not yet been written */
 	/* reduce flushbits by the size of the headers */
-	remaining_headers= 1+last_ptr - first_ptr;
-	if (last_ptr < first_ptr) 
-	    remaining_headers= 1+last_ptr - first_ptr + MAX_HEADER_BUF;
-	flushbits -= remaining_headers*8*gfc->l3_side.sideinfo_len;
+	flushbits -= 8 * gfc->l3_side.sideinfo_len
+	    * ((bs->h_ptr - bs->w_ptr) & (MAX_HEADER_BUF-1));
     }
 
     /* finally, add some bits so that the last frame is complete
@@ -701,7 +697,7 @@ compute_flushbits( const lame_global_flags * gfp, int *total_bytes_output )
     bitsPerFrame = getframebits(gfp);
     flushbits += bitsPerFrame;
     *total_bytes_output += bitsPerFrame;
-    /* round up: */
+    /* round up */
     if (*total_bytes_output % 8) 
 	*total_bytes_output = 1 + (*total_bytes_output/8);
     else
@@ -709,18 +705,9 @@ compute_flushbits( const lame_global_flags * gfp, int *total_bytes_output )
     *total_bytes_output +=  bs->buf_byte_idx + 1;
 
     if (flushbits<0) {
-#if 0
-	/* if flushbits < 0, this would mean that the buffer looks like:
-	 * (data...)  last_header  (data...)  (extra data that should not be here...)
-	 */
-	DEBUGF(gfc,"last header write_timing = %i \n", bs->header[last_ptr].write_timing);
-	DEBUGF(gfc,"first header write_timing = %i \n", bs->header[first_ptr].write_timing);
-	DEBUGF(gfc,"bs.totbit:                 %i \n", bs->totbit);
-	DEBUGF(gfc,"first_ptr, last_ptr        %i %i \n",first_ptr,last_ptr);
-	DEBUGF(gfc,"remaining_headers =        %i \n",remaining_headers);
-	DEBUGF(gfc,"bitsperframe:              %i \n",bitsPerFrame);
-	DEBUGF(gfc,"sidelen:                   %i \n",gfc->l3_side.sideinfo_len);
-#endif
+/* if flushbits < 0, this would mean that the buffer looks like:
+ * (data...)  last_header  (data...)  (extra data that should not be here...)
+ */
 	ERRORF(gfc,"strange error flushing buffer ... \n");
     }
     return flushbits;
@@ -752,7 +739,7 @@ void  add_dummy_byte ( lame_global_flags* const gfp, unsigned char val )
     lame_internal_flags *gfc = gfp->internal_flags;
     int i;
     putbits_noheaders(gfc, val, 8);   
-    for (i=0 ; i< MAX_HEADER_BUF ; ++i) 
+    for (i = 0 ; i < MAX_HEADER_BUF ; i++)
 	gfc->bs.header[i].write_timing += 8;
 }
 
@@ -770,60 +757,38 @@ int
 format_bitstream(lame_global_flags *gfp)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
-    int bits, nbytes, bitsPerFrame;
-    int stuffingBits, over_bits;
-    int resvDrain_pre = 0, resvDrain_post;
     III_side_info_t *l3_side = &gfc->l3_side;
+    int bitsPerFrame, drainPre, bits;
+    int drainbits = l3_side->ResvSize % 8;
 
-    /* we must be byte aligned */
-    stuffingBits = l3_side->ResvSize % 8;
-    over_bits = (l3_side->ResvSize - stuffingBits) - l3_side->ResvMax;
-    if (over_bits > 0) /* reservoir is overflowed */
-	stuffingBits += over_bits;
-    l3_side->ResvSize -= stuffingBits;
+    /* reservoir is overflowed ? */
+    if (l3_side->ResvSize > l3_side->ResvMax)
+	drainbits = l3_side->ResvSize - l3_side->ResvMax;
 
-#undef NEW_DRAIN
-#ifdef NEW_DRAIN
+    l3_side->ResvSize -= drainbits;
+
     /* drain as many bits as possible into previous frame ancillary data
      * In particular, in VBR mode ResvMax may have changed, and we have
      * to make sure main_data_begin does not create a reservoir bigger
      * than ResvMax  mt 4/00*/
-    over_bits = Min(l3_side->main_data_begin, stuffingBits/8);
-    l3_side->main_data_begin -= over_bits;
-
-    over_bits *= 8;
-    resvDrain_pre = over_bits;
-    stuffingBits -= over_bits;
-
-    /* drain just enough to be byte aligned.  The remaining bits will
-     * be added to the reservoir, and we will deal with them next frame.
-     * If the next frame is at a lower bitrate, it may have a larger ResvMax,
-     * and we will not have to waste these bits!  mt 4/00 */
-#endif
-    /* drain the rest into this frames ancillary data*/
-    resvDrain_post = stuffingBits;
+    drainPre = drainbits & (~7U);
+    if (drainPre > l3_side->main_data_begin*8)
+	drainPre = l3_side->main_data_begin*8;
 
     bitsPerFrame = getframebits(gfp);
-    drain_into_ancillary(gfp, resvDrain_pre);
+    drain_into_ancillary(gfp, drainPre);
     encodeSideInfo2(gfp, bitsPerFrame);
-    bits = 8*l3_side->sideinfo_len + resvDrain_pre + resvDrain_post
-	+ writeMainData(gfc);
-    drain_into_ancillary(gfp, resvDrain_post);
-
+    bits = 8*l3_side->sideinfo_len + drainbits + writeMainData(gfc);
+    drain_into_ancillary(gfp, drainbits - drainPre);
     l3_side->main_data_begin += (bitsPerFrame-bits)/8;
-
-    /* compare number of bits needed to clear all buffered mp3 frames
-     * with what we think the resvsize is: */
-    if (compute_flushbits(gfp,&nbytes) != l3_side->ResvSize)
-	ERRORF(gfc,"Internal buffer inconsistency. flushbits <> ResvSize");
 
     /* compare main_data_begin for the next frame with what we
      * think the resvsize is: */
     if (l3_side->main_data_begin * 8 != l3_side->ResvSize) {
-	ERRORF(gfc,"bit reservoir error: \n"
+	ERRORF(gfc, "internal bitstream data error.\n"
 	       "l3_side->main_data_begin: %i \n"
 	       "Resvoir size:             %i \n"
-	       "resv drain (post)         %i \n"
+	       "resv drain (total)        %i \n"
 	       "resv drain (pre)          %i \n"
 	       "header and sideinfo:      %i \n"
 	       "data bits:                %i \n"
@@ -832,10 +797,10 @@ format_bitstream(lame_global_flags *gfp)
 
 	       8*l3_side->main_data_begin,
 	       l3_side->ResvSize,
-	       resvDrain_post,
-	       resvDrain_pre,
+	       drainbits,
+	       drainPre,
 	       8*l3_side->sideinfo_len,
-	       bits - resvDrain_post - 8*l3_side->sideinfo_len,
+	       bits - drainbits + drainPre - 8*l3_side->sideinfo_len,
 	       bits, bits % 8,
 	       bitsPerFrame
 	    );
