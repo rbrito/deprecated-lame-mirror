@@ -1658,10 +1658,11 @@ psycho_analysis(
     if (gfp->mode == JOINT_STEREO) {
 	FLOAT diff_pe = 0;
 	for (gr = 0; gr < gfc->mode_gr; gr++)
-	    for (ch = 0; ch < gfc->channels_out; ch++)
-		diff_pe
-		    += gfc->masking_next[gr][ch+2].pe
-		    -  gfc->masking_next[gr][ch].pe;
+	    diff_pe
+		+= gfc->masking_next[gr][2].pe
+		-  gfc->masking_next[gr][0].pe
+		+  gfc->masking_next[gr][3].pe
+		-  gfc->masking_next[gr][1].pe;
 
 	/* based on PE: M/S coding would not use much more bits than L/R */
 	if (diff_pe <= 0.0 || gfp->force_ms) {
