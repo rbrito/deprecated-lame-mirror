@@ -536,10 +536,9 @@ encode_buffer_sample(
 	buf_remain -= i;
 
     /* Downsample to Mono if 2 channels in and 1 channel out */
-    if (gfc->num_channels == 2 && gfc->channels_out == 1) {
-	for (i=0; i<nsamples; i++)
-	    buffer_lr[i] = 0.5f * ((FLOAT) buffer_lr[i]
-				   + buffer_lr[i+nsamples]);
+    if (gfc->channels_in == 2 && gfc->channels_out == 1) {
+	for (i = 0; i < nsamples; i++)
+	    buffer_lr[i] = 0.5f * (buffer_lr[i] + buffer_lr[i+nsamples]);
     }
 
     assert(nsamples > 0);
@@ -565,7 +564,7 @@ encode_buffer_sample(
 	if (gfc->mf_size < gfc->mf_needed)
 	    break;
 
-	assert(gfc->mf_size <= MFSIZE);
+	assert(gfc->mf_size == gfc->mf_needed);
 	/* encode the frame.
 	 *  p           = pointer to current location in buffer
 	 *  mp3buf_size = size of original mp3 output buffer

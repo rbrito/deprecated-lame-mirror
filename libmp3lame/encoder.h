@@ -247,7 +247,7 @@ struct lame_internal_flags {
     FLOAT sb_sample[MAX_CHANNELS][3][18][SBLIMIT];
     FLOAT amp_filter[SBLIMIT];
     int xrNumMax_longblock;
-/*  
+/*
  * Some remarks to the Class_ID field:
  * The Class ID is an Identifier for a pointer to this struct.
  * It is very unlikely that a pointer to lame_internal_flags has the same 32 bits
@@ -465,7 +465,6 @@ struct lame_internal_flags {
 
     /* input description */
     unsigned long num_samples; /* number of samples. default=2^32-1 */
-    int num_channels;          /* input number of channels. default=2 */
     int in_samplerate;         /* input_samp_rate in Hz. default=44.1 kHz */
     int out_samplerate;        /* output_samp_rate.
 				  default: LAME picks best value 

@@ -413,7 +413,6 @@ lame_init_params(lame_t gfc)
 #endif
 
     gfc->Class_ID = 0;
-    gfc->channels_in = gfc->num_channels;
     if (gfc->channels_in == 1)
         gfc->mode = MONO;
     gfc->channels_out = (gfc->mode == MONO) ? 1 : 2;
@@ -630,7 +629,7 @@ lame_print_config(lame_t gfc)
     }
 #endif
 
-    if (gfc->num_channels == 2 && gfc->channels_out == 1 /* mono */ ) {
+    if (gfc->channels_in == 2 && gfc->channels_out == 1 /* mono */ ) {
         gfc->report.msgf("Autoconverting from stereo to mono. Setting encoding to mono mode.\n");
     }
 
@@ -679,12 +678,10 @@ void
 lame_print_internals(lame_t gfc)
 {
     const char * pc = "";
-    FLOAT bass, alto, treble, sfb21;
 
     /*  compiler/processor optimizations, operational, etc.
      */
     gfc->report.msgf("\nmisc:\n\n" );
-    
     gfc->report.msgf("\tscaling: \n");
     gfc->report.msgf("\t ^ ch0 (left) : %f\n", gfc->scale_left );
     gfc->report.msgf("\t ^ ch1 (right): %f\n", gfc->scale_right );
@@ -741,16 +738,14 @@ lame_print_internals(lame_t gfc)
     gfc->report.msgf("\t ^ shape: %g\n", gfc->ATHcurve);
     gfc->report.msgf("\t ^ level adjustement: %f (dB)\n", gfc->ATHlower );
     gfc->report.msgf("\t ^ adaptive adjustment decay (dB): %f\n",
-	  FAST_LOG10(gfc->ATH.aa_decay) * 10.0);
-
-    bass = gfc->nsPsy.tuneBass*0.25;
-    alto = gfc->nsPsy.tuneAlto*0.25;
-    treble = gfc->nsPsy.tuneTreble*0.25;
-    sfb21 = gfc->nsPsy.tuneSFB21*0.25;
+		     FAST_LOG10(gfc->ATH.aa_decay) * 10.0);
 
     gfc->report.msgf("\tadjust masking: %f dB\n", gfc->VBR_q-4.0 );
     gfc->report.msgf("\t ^ bass=%g dB, alto=%g dB, treble=%g dB, sfb21=%g dB\n",
-	 bass, alto, treble, sfb21);
+		     gfc->nsPsy.tuneBass*0.25,
+		     gfc->nsPsy.tuneAlto*0.25,
+		     gfc->nsPsy.tuneTreble*0.25,
+		     gfc->nsPsy.tuneSFB21*0.25);
 
     gfc->report.msgf("\ttemporal masking sustain factor: %f\n", gfc->nsPsy.decay);
     gfc->report.msgf("\tinterchannel masking ratio: %f\n", gfc->interChRatio );
@@ -1217,7 +1212,7 @@ lame_init(void)
     gfc->mode = NOT_SET;
     gfc->original = 1;
     gfc->in_samplerate = 44100;
-    gfc->num_channels = 2;
+    gfc->channels_in = 2;
     gfc->num_samples = MAX_U_32_NUM;
 
     gfc->bWriteVbrTag = 1;

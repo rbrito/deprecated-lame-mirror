@@ -77,14 +77,14 @@ lame_set_num_channels(lame_t gfc, int num_channels)
     if (!(0 < num_channels && num_channels <= 2))
         return -1;    /* we don't support more than 2 channels */
 
-    gfc->num_channels = num_channels;
+    gfc->channels_in = num_channels;
     return 0;
 }
 
 int
 lame_get_num_channels(lame_t gfc)
 {
-    return gfc->num_channels;
+    return gfc->channels_in;
 }
 
 
