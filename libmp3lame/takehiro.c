@@ -454,7 +454,7 @@ int count_bits(
 inline static void
 recalc_divide_init(
     const lame_internal_flags * const gfc,
-          gr_info         cod_info,
+          gr_info         *cod_info,
           int     * const ix,
           int             r01_bits[],
           int             r01_div [],
@@ -463,7 +463,7 @@ recalc_divide_init(
 {
     int r0, r1, bigv, r0t, r1t, bits;
 
-    bigv = cod_info.big_values;
+    bigv = cod_info->big_values;
 
     for (r0 = 0; r0 <= 7 + 15; r0++) {
 	r01_bits[r0] = LARGE_BITS;
@@ -473,7 +473,7 @@ recalc_divide_init(
 	int a1 = gfc->scalefac_band.l[r0 + 1], r0bits;
 	if (a1 >= bigv)
 	    break;
-	r0bits = cod_info.part2_length;
+	r0bits = cod_info->part2_length;
 	r0t = gfc->choose_table(ix, ix + a1, &r0bits);
 
 	for (r1 = 0; r1 < 8; r1++) {
@@ -496,7 +496,7 @@ recalc_divide_init(
 inline static void
 recalc_divide_sub(
     const lame_internal_flags * const gfc,
-    const gr_info         cod_info2,
+    const gr_info         *cod_info2,
           gr_info * const gi,
     const int     * const ix,
     const int             r01_bits[],
@@ -506,14 +506,14 @@ recalc_divide_sub(
 {
     int bits, r2, a2, bigv, r2t;
 
-    bigv = cod_info2.big_values;
+    bigv = cod_info2->big_values;
 
     for (r2 = 2; r2 < SBMAX_l + 1; r2++) {
 	a2 = gfc->scalefac_band.l[r2];
 	if (a2 >= bigv) 
 	    break;
 
-	bits = r01_bits[r2 - 2] + cod_info2.count1bits;
+	bits = r01_bits[r2 - 2] + cod_info2->count1bits;
 	if (gi->part2_3_length <= bits)
 	    break;
 
@@ -521,7 +521,7 @@ recalc_divide_sub(
 	if (gi->part2_3_length <= bits)
 	    continue;
 
-	memcpy(gi, &cod_info2, sizeof(gr_info));
+	memcpy(gi, cod_info2, sizeof(gr_info));
 	gi->part2_3_length = bits;
 	gi->region0_count = r01_div[r2 - 2];
 	gi->region1_count = r2 - 2 - r01_div[r2 - 2];
@@ -555,8 +555,8 @@ void best_huffman_divide(
 
     memcpy(&cod_info2, gi, sizeof(gr_info));
     if (gi->block_type == NORM_TYPE) {
-	recalc_divide_init(gfc, cod_info2, ix, r01_bits,r01_div,r0_tbl,r1_tbl);
-	recalc_divide_sub(gfc, cod_info2, gi, ix, r01_bits,r01_div,r0_tbl,r1_tbl);
+	recalc_divide_init(gfc, gi, ix, r01_bits,r01_div,r0_tbl,r1_tbl);
+	recalc_divide_sub(gfc, &cod_info2, gi, ix, r01_bits,r01_div,r0_tbl,r1_tbl);
     }
 
     i = cod_info2.big_values;
@@ -588,12 +588,12 @@ void best_huffman_divide(
     }
 
     cod_info2.count1bits = a1;
-    cod_info2.part2_3_length = a1 + cod_info2.part2_length;
 
     if (cod_info2.block_type == NORM_TYPE)
-	recalc_divide_sub(gfc, cod_info2, gi, ix, r01_bits,r01_div,r0_tbl,r1_tbl);
+	recalc_divide_sub(gfc, &cod_info2, gi, ix, r01_bits,r01_div,r0_tbl,r1_tbl);
     else {
 	/* Count the number of bits necessary to code the bigvalues region. */
+	cod_info2.part2_3_length = a1 + cod_info2.part2_length;
 	a1 = gfc->scalefac_band.l[7 + 1];
 	if (a1 > i) {
 	    a1 = i;
