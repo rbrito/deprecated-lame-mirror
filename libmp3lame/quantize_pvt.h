@@ -47,6 +47,10 @@ int iteration_finish_one (lame_internal_flags *gfc, int gr, int ch);
 int scale_bitcount (gr_info * const cod_info);
 int scale_bitcount_lsf (gr_info * const cod_info);
 
+#ifdef HAVE_NASM
+extern void quantize_sfb_3DN(const FLOAT *, int, int, int *);
+#endif
+
 #define LARGE_BITS 100000
 
 typedef union {

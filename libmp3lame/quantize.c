@@ -41,7 +41,6 @@
 
 
 #ifdef HAVE_NASM
-extern void quantize_sfb_3DN(const FLOAT *, int, int, int *);
 extern void pow075_SSE(float *, float *, int, float*);
 extern void pow075_3DN(float *, float *, int, float*);
 extern void sumofsqr_3DN(const FLOAT *, int, FLOAT *);
@@ -462,7 +461,7 @@ quantize_ISO(lame_internal_flags * const gfc, gr_info *gi)
 	}
     }
     if (gfc->noise_shaping_amp >= 3) {
-	istep = istep * (0.634521682242439 / (1.0-ROUNDFAC));
+	istep = 0.634521682242439 / IPOW20(gi->global_gain);
 	xp = xr34;
 	fi = (fi_union *)gi->l3_enc;
 	while (xp < xend) {
@@ -1520,7 +1519,6 @@ static int
 VBR_noise_shaping(lame_internal_flags * gfc, gr_info *gi, FLOAT * xmin)
 {
     int vbrmax, sfb, j;
-
     sfb = j = 0;
     vbrmax = -10000;
     do {

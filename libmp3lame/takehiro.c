@@ -420,7 +420,7 @@ count_bits(const lame_internal_flags * const gfc, gr_info * const gi)
 	sfb++;
     } while (xp < xend);
 
-    if (gfc->substep_shaping & 2) {
+    if (gfc->noise_shaping_amp >= 3) {
 	int sfb, j = 0;
 	for (sfb = 0; sfb < gi->psymax && j < gi->count1; sfb++) {
 	    FLOAT roundfac;
