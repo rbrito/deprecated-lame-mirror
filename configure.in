@@ -50,16 +50,14 @@ AC_CYGWIN
 AC_EXEEXT
 
 dnl # work around for a bug, don't know where it is exactly
-dnl if test "${ac_cv_cygwin}" = "yes"; then
-dnl	AC_MSG_CHECKING(if CC is set)
-dnl	old_cc="${CC-cc_wasnt_set}"
-dnl	CC=gcc
-dnl	if test "old_cc" = "cc_wasnt_set"; then
-dnl		AC_MSG_RESULT(no, setting it to 'gcc')
-dnl	else
-dnl		AC_MSG_RESULT(yes)
-dnl	fi
-dnl fi
+if test "${ac_cv_cygwin}" = "yes"; then
+	if test "${CC}" != "gcc"; then
+		AC_MSG_ERROR([Please use]
+			[   CC=gcc ./configure]
+			[Abort this configure run and add "CC=gcc" or you will]
+			[see errors and no lame.exe will be build.])
+	fi
+fi
 
 dnl check programs
 AM_PROG_CC_STDC
