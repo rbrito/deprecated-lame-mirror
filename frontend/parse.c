@@ -492,7 +492,8 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    -X n[,m]        selects between different noise measurements\n"
 	      "                    n for long block, m for short. if m is omitted, m = n\n"
               "    -Y              lets LAME ignore noise in sfb21, like in CBR\n"
-              "    -Z              toggles the scalefac feature on\n"
+              "    -Z [n]          toggles the scalefac-scale and subblock gain feature on\n"
+	      "                    if n is set and minus, only scalefac-scale is enabled \n"
             );
 
     wait_for ( fp, lessmode );  
@@ -1636,8 +1637,12 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                         lame_set_experimentalY(gfp,1);
                         break;
                     case 'Z': 
-                        lame_set_experimentalZ(gfp,1);
+		    {
+			int n = 1;
+                        argUsed = sscanf(arg, "%d", &n);
+                        lame_set_experimentalZ(gfp, n);
                         break;
+		    }
                     case 'e':        
                         argUsed = 1;
                         

@@ -916,7 +916,7 @@ balance_noise (
 	    inc_scalefac_scale (cod_info, xrpow);
 	    status = 0;
 	} else {
-	    if (cod_info->block_type == SHORT_TYPE ) {
+	    if (cod_info->block_type == SHORT_TYPE && gfp->experimentalZ > 0) {
 		status = inc_subblock_gain (gfc, cod_info, xrpow)
 		    || loop_break (cod_info);
 	    }

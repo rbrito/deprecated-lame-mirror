@@ -378,7 +378,7 @@ lame_init_qval(lame_global_flags * gfp)
     /* modifications to the above rules: */
 
     /* -Z option toggles scalefactor_scale: */
-    if ( (gfp->experimentalZ & 1) > 0) {
+    if (gfp->experimentalZ & 1) {
         gfc->noise_shaping = 2;
     }
 }
