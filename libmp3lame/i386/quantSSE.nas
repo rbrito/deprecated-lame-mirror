@@ -301,7 +301,7 @@ proc	calc_sfb_noise_fast_3DN
 	mov		edx, [esp+_P+12] ; -n
 
 	pxor		mm4, mm4
-	pxor		mm5, mm5
+	pxor		mm1, mm1
 	punpckldq	mm6, mm6
 	punpckldq	mm7, mm7
 
@@ -314,10 +314,6 @@ proc	calc_sfb_noise_fast_3DN
 	movd		ebp, mm4
 	punpckhdq	mm4, mm4
 	movd		ecx, mm4
-	cmp	ebp, 8191+15
-	ja	.ixover
-	cmp	ecx, 8191+15
-	ja	.ixover
 
 	movd		mm4, [pow43+ebp*4]
 	punpckldq	mm4, [pow43+ecx*4]
@@ -325,17 +321,10 @@ proc	calc_sfb_noise_fast_3DN
 	pfsubr		mm4, [eax+ 0+ edx*4 + 576*4]
 	add		edx, byte 2
 	pfmul		mm4, mm4
-	jmp	.lp4
-.ixover
-	femms
-	pop		ebp
-	pop		edi
-	pop		ebx
-	fld		dword [minus1]
-	ret
 
 	loopalignK7	16
 .lp4:
+	pfadd		mm4, mm1
 	movq		mm0, [eax+ 0+ edx*4]
 	movq		mm1, [eax+ 8+ edx*4]
 	pfmul		mm0, mm6
@@ -351,15 +340,6 @@ proc	calc_sfb_noise_fast_3DN
 	movd		ecx, mm0
 	movd		ebx, mm1
 
-	cmp	ebp, 8191+15
-	ja	.ixover
-	cmp	edi, 8191+15
-	ja	.ixover
-	cmp	ecx, 8191+15
-	ja	.ixover
-	cmp	ebx, 8191+15
-	ja	.ixover
-
 	movd		mm0, [pow43+ebp*4]
 	movd		mm1, [pow43+edi*4]
 	punpckldq	mm0, [pow43+ecx*4]
@@ -372,10 +352,9 @@ proc	calc_sfb_noise_fast_3DN
 	pfmul		mm0, mm0
 	pfmul		mm1, mm1
 	pfadd		mm4, mm0
-	pfadd		mm5, mm1
 	jnz		.lp4
 
-	pfadd		mm4, mm5
+	pfadd		mm4, mm1
 	pfacc		mm4, mm4
 	movd		eax, mm4
 	push		eax
@@ -403,7 +382,6 @@ proc	calc_sfb_noise_3DN
 	mov		edx, [esp+_P+8]  ; end
 	lea		eax, [eax+edx*4]
 	mov		edx, [esp+_P+16] ; scalefact
-	movq		mm5, [D_IXMAXVAL]
 	movd		mm6, [ipow20+116*4+edx*4] ; sfpow34
 	movd		mm7, [pow20+116*4+edx*4]  ; sfpow
 	mov		edx, [esp+_P+12]	; -n
@@ -419,7 +397,6 @@ proc	calc_sfb_noise_3DN
 	jz		.lp4
 	movq		mm4, [eax+ 0+ edx*4]
 	pfmul		mm4, mm6
-	pfmin		mm4, mm5
 	pf2id		mm2, mm4
 	movd		ebp, mm2
 	punpckhdq	mm2, mm2
@@ -444,8 +421,6 @@ proc	calc_sfb_noise_3DN
 	movq		mm1, [eax+ 8+ edx*4]
 	pfmul		mm0, mm6
 	pfmul		mm1, mm6
-	pfmin		mm0, mm5
-	pfmin		mm1, mm5
 	pf2id		mm2, mm0
 	pf2id		mm3, mm1
 	movd		ebp, mm2

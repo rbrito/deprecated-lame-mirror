@@ -89,6 +89,7 @@ typedef struct {
     FLOAT xr[576];
     int l3_enc[576];
     int scalefac[SFBMAX];
+    FLOAT maxXR[SFBMAX];
     FLOAT ATHadjust;
 
     int part2_length;
@@ -119,7 +120,7 @@ typedef struct {
     int count1bits;
     /* added for LSF */
     int slen[4];
-    int dummy_for_padding[2];
+    int dummy_for_padding[3];
 } gr_info;
 
 /* Layer III side information. */

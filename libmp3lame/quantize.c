@@ -801,8 +801,8 @@ calc_sfb_noise_fast(lame_t gfc, int j, int bw, int sf)
 	fi0.f = sfpow34 * xr34[j+bw  ] + (ROUNDFAC_NEAR + MAGIC_FLOAT);
 	fi1.f = sfpow34 * xr34[j+bw+1] + (ROUNDFAC_NEAR + MAGIC_FLOAT);
 
-	if (fi0.i > MAGIC_INT + IXMAX_VAL || fi1.i > MAGIC_INT + IXMAX_VAL)
-	    return -1.0;
+	assert(fi0.i <= MAGIC_INT + IXMAX_VAL
+	       && fi1.i <= MAGIC_INT + IXMAX_VAL);
 	t0 = absxr[j+bw  ] - (pow43 - MAGIC_INT)[fi0.i] * sfpow;
 	t1 = absxr[j+bw+1] - (pow43 - MAGIC_INT)[fi1.i] * sfpow;
 #else
@@ -810,8 +810,7 @@ calc_sfb_noise_fast(lame_t gfc, int j, int bw, int sf)
 	i0 = (int)(sfpow34 * xr34[j+bw  ] + ROUNDFAC);
 	i1 = (int)(sfpow34 * xr34[j+bw+1] + ROUNDFAC);
 
-	if (i0 > IXMAX_VAL || i1 > IXMAX_VAL)
-	    return -1.0;
+	assert(i0 <= IXMAX_VAL && i1 <= IXMAX_VAL);
 	t0 = absxr[j+bw  ] - pow43[i0] * sfpow;
 	t1 = absxr[j+bw+1] - pow43[i1] * sfpow;
 #endif
@@ -838,8 +837,8 @@ calc_sfb_noise(lame_t gfc, int j, int bw, int sf)
 	fi_union fi0, fi1;
 	fi0.f = (t0 = sfpow34 * xr34[j+bw  ] + MAGIC_FLOAT);
 	fi1.f = (t1 = sfpow34 * xr34[j+bw+1] + MAGIC_FLOAT);
-	if (fi0.i > MAGIC_INT + IXMAX_VAL) return -1.0;
-	if (fi1.i > MAGIC_INT + IXMAX_VAL) return -1.0;
+	assert(fi0.i <= MAGIC_INT + IXMAX_VAL
+	       && fi1.i <= MAGIC_INT + IXMAX_VAL);
 	fi0.f = t0 + (adj43asm - MAGIC_INT)[fi0.i];
 	fi1.f = t1 + (adj43asm - MAGIC_INT)[fi1.i];
 	t0 = absxr[j+bw  ] - (pow43 - MAGIC_INT)[fi0.i] * sfpow;
@@ -849,8 +848,7 @@ calc_sfb_noise(lame_t gfc, int j, int bw, int sf)
 	int i0, i1;
 	i0 = (int) (t0 = sfpow34 * xr34[j+bw  ]);
 	i1 = (int) (t1 = sfpow34 * xr34[j+bw+1]);
-	if (i0 > IXMAX_VAL) return -1.0;
-	if (i1 > IXMAX_VAL) return -1.0;
+	assert(i0 <= IXMAX_VAL && i1 <= IXMAX_VAL);
 
 	t0 = absxr[j+bw  ] - pow43[(int)(t0 + adj43[i0])] * sfpow;
 	t1 = absxr[j+bw+1] - pow43[(int)(t1 + adj43[i1])] * sfpow;
@@ -1254,7 +1252,7 @@ bitpressure_strategy(gr_info *gi, FLOAT *xmin)
 /* find_scalefac() calculates a quantization step size which would
  * introduce as much noise as allowed (= as less bits as possible). */
 inline static int
-find_scalefac(lame_t gfc, int j, FLOAT xmin, int bw,
+find_scalefac(lame_t gfc, int j, FLOAT xmin, int bw, FLOAT maxXR,
 	      int shortflag, int sf)
 {
     int sf_ok = 10000, delsf = 8, sfmin = -7*4, endflag = 0;
@@ -1267,6 +1265,8 @@ find_scalefac(lame_t gfc, int j, FLOAT xmin, int bw,
     assert(sf >= sfmin);
     do {
 	FLOAT xfsf;
+	if (IPOW20(sf) > maxXR)
+	    goto illegal_sf;
 #ifdef HAVE_NASM
 	if (gfc->CPU_features.AMD_3DNow)
 	    xfsf = calc_sfb_noise_fast_3DN(gfc, j, bw, sf);
@@ -1286,6 +1286,7 @@ find_scalefac(lame_t gfc, int j, FLOAT xmin, int bw,
 	} else {
 	    if (xfsf >= 0.0)
 		sf_ok = sf;
+	illegal_sf:
 	    endflag |= 2;
 	    if (endflag == 3)
 		delsf >>= 1;
@@ -1315,12 +1316,13 @@ short_block_scalefacs(gr_info * gi, int vbrmax)
 	= newmax1 = vbrmax;
 
     for (sfb = 0; sfb < gi->psymax; ) {
-	for (b = 0; b < 3; b++) {
+	for (b = 0; b < 3; b++, sfb++) {
+	    if (gi->scalefac[sfb] == LARGE_BITS)
+		continue;
 	    maxov[0][b] = Min(gi->scalefac[sfb] + 2*max_range_short[sfb],
 			      maxov[0][b]);
 	    maxov[1][b] = Min(gi->scalefac[sfb] + 4*max_range_short[sfb],
 			      maxov[1][b]);
-	    sfb++;
 	}
     }
 
@@ -1376,6 +1378,8 @@ long_block_scalefacs(lame_t gfc, gr_info * gi, int vbrmax)
        (which wants the largest scalefactor value)
        to largest possible range */
     for (sfb = 0; sfb < gi->psymax; ++sfb) {
+	if (gi->scalefac[sfb] == LARGE_BITS)
+	    continue;
 	maxov0  = Min(gi->scalefac[sfb] + 2*max_range_long[sfb], maxov0);
 	maxov1  = Min(gi->scalefac[sfb] + 4*max_range_long[sfb], maxov1);
 	maxov0p = Min(gi->scalefac[sfb] + 2*(max_range_long[sfb]+pretab[sfb]),
@@ -1429,6 +1433,8 @@ set_scalefactor_values(gr_info *gi)
 	    s -= pretab[sfb];
 	if (s < 0)
 	    s = 0;
+	if (gi->scalefac[sfb] == LARGE_BITS)
+	    s = gi->global_gain;
 	gi->scalefac[sfb] = s;
     } while (++sfb < gi->psymax);
 }
@@ -1442,7 +1448,11 @@ noisesfb(lame_t gfc, gr_info *gi, FLOAT * xmin, int startsfb)
 	int width = -gi->width[sfb];
 	j -= width;
 	if (sfb >= startsfb) {
-	    FLOAT noise = calc_sfb_noise(gfc, j, width, scalefactor(gi, sfb));
+	    int s = scalefactor(gi, sfb);
+	    FLOAT noise;
+	    if (IPOW20(s) > gi->maxXR[sfb])
+		return -1;
+	    noise = calc_sfb_noise(gfc, j, width, s);
 	    if (noise > xmin[sfb])
 		return sfb;
 	    if (noise < 0.0)
@@ -1491,9 +1501,7 @@ VBR_3rd_bitalloc(lame_t gfc, gr_info *gi, FLOAT * xmin)
        at this point */
     int sfb, j, r = 0;
     for (j = sfb = 0; sfb < gi->psymax; sfb++) {
-	int width = -gi->width[sfb];
-	j -= width;
-	if (calc_sfb_noise(gfc, j, width, scalefactor(gi, sfb)) < 0) {
+	if (IPOW20(scalefactor(gi, sfb)) > gi->maxXR[sfb]) {
 	    if (gi->scalefac[sfb] == 0)
 		return -2;
 	    r = -1;
@@ -1532,14 +1540,30 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
     sfb = j = 0;
     vbrmax = -10000;
     do {
-	int width = gi->width[sfb], gain;
+	FLOAT maxXR = 0.0;
+	int width = gi->width[sfb], gain = gi->global_gain;
+	int i;
+
 	j += width;
-	gain = find_scalefac(gfc, j, xmin[sfb], -width,
-			     gi->block_type == SHORT_TYPE, gi->global_gain);
+	for (i = -width; i < 0; i+=2) {
+	    if (maxXR < xr34[i+j])
+		maxXR = xr34[i+j];
+	    if (maxXR < xr34[i+j+1])
+		maxXR = xr34[i+j+1];
+	}
+
+	if (maxXR != 0.0) {
+	    gi->maxXR[sfb] = (maxXR = IXMAX_VAL / maxXR);
+	    gain = find_scalefac(gfc, j, xmin[sfb], -width, maxXR,
+				 gi->block_type == SHORT_TYPE, gain);
+	} else
+	    gi->maxXR[sfb] = FLOAT_MAX;
+
 	gi->scalefac[sfb] = gain;
-	if (vbrmax < gain)
+	if (gain <= 255 && vbrmax < gain)
 	    vbrmax = gain;
     } while (++sfb < gi->psymax);
+    assert(vbrmax != -10000);
 
     if (gi->block_type == SHORT_TYPE)
 	short_block_scalefacs(gi, vbrmax);
