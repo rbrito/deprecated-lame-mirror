@@ -719,7 +719,7 @@ lame_init_params(lame_global_flags * const gfp)
 	gfp->quality = LAME_DEFAULT_QUALITY;
 
     gfc->sfb21_extra = 0;
-    if (gfp->VBR) {
+    if (gfp->VBR == vbr) {
         if (gfp->quality > 7) {
             gfp->quality = 7;     // needs psymodel
             ERRORF(gfc, "VBR needs a psymodel, switching to quality level 7\n");
