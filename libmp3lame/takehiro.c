@@ -721,6 +721,7 @@ best_scalefac_store(
 		&& minsfb > gi->scalefac[sfb] + (gi->preflag>0 ? pretab[sfb]:0))
 		minsfb = gi->scalefac[sfb] + (gi->preflag>0 ? pretab[sfb]:0);
 	if (minsfb != 0) {
+	    gr_info gi_w = *gi;
 	    if (gi->global_gain - (minsfb << (gi->scalefac_scale+1)) < 0)
 		minsfb = gi->global_gain >> (gi->scalefac_scale+1);
 	    gi->global_gain -= minsfb << (gi->scalefac_scale+1);
@@ -729,8 +730,10 @@ best_scalefac_store(
 		    gi->scalefac[sfb] -= minsfb-(gi->preflag>0 ? pretab[sfb]:0);
 	    if (gi->preflag > 0)
 		gi->preflag = 0;
+	    gfc->scale_bitcounter(gi);
+	    if (gi->part2_length > gi_w.part2_length)
+		*gi = gi_w;
 	}
-	recalc = 1;
     }
 
     if (!gi->scalefac_scale && !gi->preflag) {
