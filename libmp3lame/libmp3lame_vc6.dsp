@@ -215,10 +215,6 @@ SOURCE=.\encoder.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\fft.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\tags.h
 # End Source File
 # Begin Source File
@@ -227,15 +223,7 @@ SOURCE=.\gain_analysis.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\l3side.h
-# End Source File
-# Begin Source File
-
 SOURCE=".\lame-analysis.h"
-# End Source File
-# Begin Source File
-
-SOURCE=.\lameerror.h
 # End Source File
 # Begin Source File
 
@@ -264,10 +252,6 @@ SOURCE=.\set_get.h
 # Begin Source File
 
 SOURCE=.\tables.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\tools.h
 # End Source File
 # Begin Source File
 
@@ -379,21 +363,6 @@ InputName=fft3dn
 # End Source File
 # Begin Source File
 
-SOURCE=.\i386\fftfpu.nas
-
-!IF  "$(CFG)" == "libmp3lame - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "libmp3lame - Win32 Debug"
-
-!ELSEIF  "$(CFG)" == "libmp3lame - Win32 Release NASM"
-
-# PROP Exclude_From_Build 1
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
 SOURCE=.\i386\fftsse.nas
 
 !IF  "$(CFG)" == "libmp3lame - Win32 Release"
@@ -402,22 +371,16 @@ SOURCE=.\i386\fftsse.nas
 
 !ELSEIF  "$(CFG)" == "libmp3lame - Win32 Release NASM"
 
-# PROP Exclude_From_Build 1
+# Begin Custom Build - Assembling $(InputName)...
+InputDir=.\i386
+OutDir=.\Release_NASM
+InputPath=.\i386\fftsse.nas
+InputName=fftsse
 
-!ENDIF 
+"$(OutDir)/$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o   $(OutDir)/$(InputName).obj
 
-# End Source File
-# Begin Source File
-
-SOURCE=.\i386\ffttbl.nas
-
-!IF  "$(CFG)" == "libmp3lame - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "libmp3lame - Win32 Debug"
-
-!ELSEIF  "$(CFG)" == "libmp3lame - Win32 Release NASM"
-
-# PROP Exclude_From_Build 1
+# End Custom Build
 
 !ENDIF 
 
