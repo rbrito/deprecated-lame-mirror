@@ -28,14 +28,12 @@ RM = rm -f
 ##########################################################################
 # -DHAVEMPGLIB compiles the mpglib *decoding* library into libmp3lame
 ##########################################################################
-CPP_OPTS = -DHAVEMPGLIB 
+CPP_OPTS += -DHAVEMPGLIB 
 
 ##########################################################################
-# -DFLOAT8_is_float will FLOAT8 as float
-# -DFLOAT_is_float will FLOAT8 as float
+# -DHAVEMPGLIB compiles the mpglib *decoding* library into libmp3lame
 ##########################################################################
-CPP_OPTS += -DFLOAT8_is_float
-
+CPP_OPTS += -DHAVEMPGLIB 
 
 
 
@@ -121,7 +119,6 @@ ifeq ($(UNAME),Linux)
 
 #  for debugging:
 #   CC_OPTS =  -UNDEBUG -O -Wall -g -DABORTFP
-#   CC_OPTS =  -UNDEBUG -O -Wall -g 
 
 #  for lots of debugging:
 #   CC_OPTS =  -DDEBUG -UNDEBUG  -O -Wall -g -DABORTFP 
@@ -192,8 +189,21 @@ endif
 # SGI
 ##########################################################################
 ifeq ($(UNAME),IRIX64) 
-   CC = cc	
+   CC = cc
+   CC_OPTS = -O3 -woff all 
+
+#optonal:
+#   GTK = -DHAVEGTK `gtk-config --cflags`
+#   GTKLIBS = `gtk-config --libs`
+#   BRHIST_SWITCH = -DBRHIST
+#   LIBTERMCAP = -lncurses
+
 endif
+ifeq ($(UNAME),IRIX) 
+   CC = cc
+   CC_OPTS = -O3 -woff all 
+endif
+
 
 
 ##########################################################################
@@ -315,13 +325,8 @@ ASFLAGS=-f elf -i i386/
 	gcc -c $< -o $@
 
 ## use MMX extension. you need nasm and MMX supported CPU.
-#CC_SWITCHES += -DMMX_choose_table
+#CC_SWITCCH += -DMMX_choose_table
 #OBJ += i386/choose_table.o
-
-## use SSE/3DNow! extension or FPU natie code.
-## you need nasm
-#CC_SWITCHES += -DASM_QUANTIZE
-#OBJ += i386/quantize.o
 
 %.o: %.c 
 	$(CC) $(CPP_OPTS) $(CC_SWITCHES) -c $< -o $@
@@ -329,8 +334,10 @@ ASFLAGS=-f elf -i i386/
 %.d: %.c
 	$(SHELL) -ec '$(CC) $(MAKEDEP)  $(CPP_OPTS) $(CC_SWITCHES)  $< | sed '\''s;$*.o;& $@;g'\'' > $@'
 
+all: $(PGM)
+
 $(PGM):	main.o $(gtk_obj) libmp3lame.a 
-	$(CC) -o $(PGM)  main.o $(gtk_obj) -L. -lmp3lame $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
+	$(CC) $(CC_OPTS) -o $(PGM)  main.o $(gtk_obj) -L. -lmp3lame $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
 
 mp3x:	mp3x.o $(gtk_obj) libmp3lame.a
 	$(CC) -o mp3x mp3x.o $(gtk_obj) $(OBJ) $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)

@@ -1027,10 +1027,10 @@ char *mp3buf, int mp3buf_size)
 
 
   switch (gfp->VBR){ 
-  case 1:
+  case 2:
     VBR_quantize( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
     break;
-  case 2:
+  case 1:
     VBR_iteration_loop( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
     break;
   case 3:

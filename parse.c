@@ -130,6 +130,7 @@ void lame_help(lame_global_flags *gfp,char *name)  /* print syntax & exit */
   PRINTF1("  VBR options:\n");
   PRINTF1("    -v              use variable bitrate (VBR)\n");
   PRINTF1("    --vbr-old       use old variable bitrate (VBR) routine\n");
+  PRINTF1("    --vbr-new       use new variable bitrate (VBR) routine\n");
   PRINTF1("    -V n            quality setting for VBR.  default n=%i\n",gfp->VBR_q);
   PRINTF1("                    0=high quality,bigger files. 9=smaller files\n");
   PRINTF1("    -b <bitrate>    specify minimum allowed bitrate, default 32kbs\n");
@@ -280,6 +281,10 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	  }
 	}
 	else if (strcmp(token, "vbr-old")==0) {
+	  gfp->VBR = 1; 
+	  gfp->quality = 2;
+	}
+	else if (strcmp(token, "vbr-new")==0) {
 	  gfp->VBR = 2; 
 	  gfp->quality = 2;
 	}
