@@ -507,11 +507,6 @@ lame_init_params(lame_global_flags * const gfp)
     if (NULL == gfc->ATH)
         return -2;  /* maybe error codes should be enumerated in lame.h ?? */
 
-    if (NULL == gfc->VBR)
-        gfc->VBR = calloc(1, sizeof(VBR_t));
-    if (NULL == gfc->VBR)
-        return -2;
-        
     if (NULL == gfc->PSY)
         gfc->PSY = calloc(1, sizeof(PSY_t));
     if (NULL == gfc->PSY)
@@ -911,9 +906,7 @@ lame_init_params(lame_global_flags * const gfp)
         gfc->PSY->mask_adjust = gfp->maskingadjust;
         gfc->PSY->mask_adjust_short = gfp->maskingadjust_short;
         if (gfp->VBR_smooth < 0)
-            gfp->VBR_smooth = 0;
-        gfc->VBR->smooth = gfp->VBR_smooth;
-
+            gfp->VBR_smooth = 0;    /* obsolete */
         
         /*  sfb21 extra only with MPEG-1 at higher sampling rates
          */
@@ -921,7 +914,9 @@ lame_init_params(lame_global_flags * const gfp)
             gfc->sfb21_extra = 0;
         else 
             gfc->sfb21_extra = (gfp->out_samplerate > 44000);
-      
+            
+        break;
+        
     }
     case vbr_rh: {
 
@@ -933,7 +928,6 @@ lame_init_params(lame_global_flags * const gfp)
         if ( gfp->psymodel == PSY_GPSYCHO )
             gfc->PSY->tonalityPatch = 1;
         
-
         /*  sfb21 extra only with MPEG-1 at higher sampling rates
          */
         if ( gfp->experimentalY )
@@ -1020,7 +1014,8 @@ lame_init_params(lame_global_flags * const gfp)
     lame_init_qval(gfp);
 
 
-    /*  automatic ATH adjustment */
+    /*  automatic ATH adjustment on
+     */
     if ( gfp->athaa_type < 0 )
         gfc->ATH->use_adjust = 3;
     else
@@ -1343,6 +1338,37 @@ lame_encode_frame(lame_global_flags * gfp,
     return ret;
 }
 
+static int
+update_inbuffer_size(lame_internal_flags * gfc, const int nsamples)
+{
+    if (gfc->in_buffer_0 == 0 || gfc->in_buffer_nsamples < nsamples) {
+        if (gfc->in_buffer_0) {
+            free(gfc->in_buffer_0);            
+        }
+        if (gfc->in_buffer_1) {
+            free(gfc->in_buffer_1);
+        }
+        gfc->in_buffer_0 = calloc(sizeof(sample_t), nsamples);
+        gfc->in_buffer_1 = calloc(sizeof(sample_t), nsamples);
+        gfc->in_buffer_nsamples = nsamples;
+    }
+    if (gfc->in_buffer_0 == NULL || gfc->in_buffer_1 == NULL) {
+        if (gfc->in_buffer_0) {
+            free(gfc->in_buffer_0);            
+        }
+        if (gfc->in_buffer_1) {
+            free(gfc->in_buffer_1);
+        }
+        gfc->in_buffer_0 = 0;
+        gfc->in_buffer_1 = 0;
+        gfc->in_buffer_nsamples = 0;
+        ERRORF(gfc, "Error: can't allocate in_buffer buffer\n");
+        return -2;
+    }
+    return 0;
+}
+
+
 /*
  * THE MAIN LAME ENCODING INTERFACE
  * mt 3/00
@@ -1512,7 +1538,7 @@ lame_encode_buffer(lame_global_flags * gfp,
                    const int nsamples, unsigned char *mp3buf, const int mp3buf_size)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
-    int     ret, i;
+    int     i;
     sample_t *in_buffer[2];
 
     if (gfc->Class_ID != LAME_ID)
@@ -1521,13 +1547,12 @@ lame_encode_buffer(lame_global_flags * gfp,
     if (nsamples == 0)
         return 0;
 
-    in_buffer[0] = calloc(sizeof(sample_t), nsamples);
-    in_buffer[1] = calloc(sizeof(sample_t), nsamples);
-
-    if (in_buffer[0] == NULL || in_buffer[1] == NULL) {
-        ERRORF(gfc, "Error: can't allocate in_buffer buffer\n");
+    if (update_inbuffer_size( gfc, nsamples ) != 0) {
         return -2;
     }
+
+    in_buffer[0] = gfc->in_buffer_0;
+    in_buffer[1] = gfc->in_buffer_1;
 
     /* make a copy of input buffer, changing type to sample_t */
     for (i = 0; i < nsamples; i++) {
@@ -1535,12 +1560,8 @@ lame_encode_buffer(lame_global_flags * gfp,
 	if (gfc->channels_in>1) in_buffer[1][i] = buffer_r[i];
     }
 
-    ret = lame_encode_buffer_sample_t(gfp,in_buffer[0],in_buffer[1],
+    return lame_encode_buffer_sample_t(gfp,in_buffer[0],in_buffer[1],
 				      nsamples, mp3buf, mp3buf_size);
-    
-    free(in_buffer[0]);
-    free(in_buffer[1]);
-    return ret;
 }
 
 
@@ -1551,7 +1572,7 @@ lame_encode_buffer_float(lame_global_flags * gfp,
                    const int nsamples, unsigned char *mp3buf, const int mp3buf_size)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
-    int     ret, i;
+    int     i;
     sample_t *in_buffer[2];
 
     if (gfc->Class_ID != LAME_ID)
@@ -1560,13 +1581,12 @@ lame_encode_buffer_float(lame_global_flags * gfp,
     if (nsamples == 0)
         return 0;
 
-    in_buffer[0] = calloc(sizeof(sample_t), nsamples);
-    in_buffer[1] = calloc(sizeof(sample_t), nsamples);
-
-    if (in_buffer[0] == NULL || in_buffer[1] == NULL) {
-        ERRORF(gfc, "Error: can't allocate in_buffer buffer\n");
+    if (update_inbuffer_size( gfc, nsamples ) != 0) {
         return -2;
     }
+
+    in_buffer[0] = gfc->in_buffer_0;
+    in_buffer[1] = gfc->in_buffer_1;
 
     /* make a copy of input buffer, changing type to sample_t */
     for (i = 0; i < nsamples; i++) {
@@ -1574,14 +1594,9 @@ lame_encode_buffer_float(lame_global_flags * gfp,
         if (gfc->channels_in>1) in_buffer[1][i] = buffer_r[i];
     }
 
-    ret = lame_encode_buffer_sample_t(gfp,in_buffer[0],in_buffer[1],
+    return lame_encode_buffer_sample_t(gfp,in_buffer[0],in_buffer[1],
 				      nsamples, mp3buf, mp3buf_size);
-    
-    free(in_buffer[0]);
-    free(in_buffer[1]);
-    return ret;
 }
-
 
 
 int
@@ -1591,7 +1606,7 @@ lame_encode_buffer_int(lame_global_flags * gfp,
                    const int nsamples, unsigned char *mp3buf, const int mp3buf_size)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
-    int     ret, i;
+    int     i;
     sample_t *in_buffer[2];
 
     if (gfc->Class_ID != LAME_ID)
@@ -1600,14 +1615,13 @@ lame_encode_buffer_int(lame_global_flags * gfp,
     if (nsamples == 0)
         return 0;
 
-    in_buffer[0] = calloc(sizeof(sample_t), nsamples);
-    in_buffer[1] = calloc(sizeof(sample_t), nsamples);
-
-    if (in_buffer[0] == NULL || in_buffer[1] == NULL) {
-        ERRORF(gfc, "Error: can't allocate in_buffer buffer\n");
+    if (update_inbuffer_size( gfc, nsamples ) != 0) {
         return -2;
     }
 
+    in_buffer[0] = gfc->in_buffer_0;
+    in_buffer[1] = gfc->in_buffer_1;
+    
     /* make a copy of input buffer, changing type to sample_t */
     for (i = 0; i < nsamples; i++) {
                                 /* internal code expects +/- 32768.0 */
@@ -1616,13 +1630,8 @@ lame_encode_buffer_int(lame_global_flags * gfp,
 	  in_buffer[1][i] = buffer_r[i] * (1.0 / ( 1L << (8 * sizeof(int) - 16)));
     }
 
-    ret = lame_encode_buffer_sample_t(gfp,in_buffer[0],in_buffer[1],
+    return lame_encode_buffer_sample_t(gfp,in_buffer[0],in_buffer[1],
 				      nsamples, mp3buf, mp3buf_size);
-    
-    free(in_buffer[0]);
-    free(in_buffer[1]);
-    return ret;
-
 }
 
 
@@ -1635,7 +1644,7 @@ lame_encode_buffer_long2(lame_global_flags * gfp,
                    const int nsamples, unsigned char *mp3buf, const int mp3buf_size)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
-    int     ret, i;
+    int     i;
     sample_t *in_buffer[2];
 
     if (gfc->Class_ID != LAME_ID)
@@ -1644,13 +1653,12 @@ lame_encode_buffer_long2(lame_global_flags * gfp,
     if (nsamples == 0)
         return 0;
 
-    in_buffer[0] = calloc(sizeof(sample_t), nsamples);
-    in_buffer[1] = calloc(sizeof(sample_t), nsamples);
-
-    if (in_buffer[0] == NULL || in_buffer[1] == NULL) {
-        ERRORF(gfc, "Error: can't allocate in_buffer buffer\n");
+    if (update_inbuffer_size( gfc, nsamples ) != 0) {
         return -2;
     }
+
+    in_buffer[0] = gfc->in_buffer_0;
+    in_buffer[1] = gfc->in_buffer_1;
 
     /* make a copy of input buffer, changing type to sample_t */
     for (i = 0; i < nsamples; i++) {
@@ -1660,13 +1668,9 @@ lame_encode_buffer_long2(lame_global_flags * gfp,
 	  in_buffer[1][i] = buffer_r[i] * (1.0 / ( 1L << (8 * sizeof(long) - 16)));
     }
 
-    ret = lame_encode_buffer_sample_t(gfp,in_buffer[0],in_buffer[1],
+    return lame_encode_buffer_sample_t(gfp,in_buffer[0],in_buffer[1],
 				      nsamples, mp3buf, mp3buf_size);
     
-    free(in_buffer[0]);
-    free(in_buffer[1]);
-    return ret;
-
 }
 
 
@@ -1678,7 +1682,7 @@ lame_encode_buffer_long(lame_global_flags * gfp,
                    const int nsamples, unsigned char *mp3buf, const int mp3buf_size)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
-    int     ret, i;
+    int     i;
     sample_t *in_buffer[2];
 
     if (gfc->Class_ID != LAME_ID)
@@ -1687,13 +1691,12 @@ lame_encode_buffer_long(lame_global_flags * gfp,
     if (nsamples == 0)
         return 0;
 
-    in_buffer[0] = calloc(sizeof(sample_t), nsamples);
-    in_buffer[1] = calloc(sizeof(sample_t), nsamples);
-
-    if (in_buffer[0] == NULL || in_buffer[1] == NULL) {
-        ERRORF(gfc, "Error: can't allocate in_buffer buffer\n");
+    if (update_inbuffer_size( gfc, nsamples ) != 0) {
         return -2;
     }
+
+    in_buffer[0] = gfc->in_buffer_0;
+    in_buffer[1] = gfc->in_buffer_1;
 
     /* make a copy of input buffer, changing type to sample_t */
     for (i = 0; i < nsamples; i++) {
@@ -1702,12 +1705,8 @@ lame_encode_buffer_long(lame_global_flags * gfp,
 	    in_buffer[1][i] = buffer_r[i];
     }
 
-    ret = lame_encode_buffer_sample_t(gfp,in_buffer[0],in_buffer[1],
+    return lame_encode_buffer_sample_t(gfp,in_buffer[0],in_buffer[1],
 				      nsamples, mp3buf, mp3buf_size);
-    
-    free(in_buffer[0]);
-    free(in_buffer[1]);
-    return ret;
 }
 
 
@@ -1726,26 +1725,23 @@ lame_encode_buffer_interleaved(lame_global_flags * gfp,
                                int nsamples,
                                unsigned char *mp3buf, int mp3buf_size)
 {
-    int     ret, i;
-    sample_t *buffer_l;
-    sample_t *buffer_r;
+    lame_internal_flags *gfc = gfp->internal_flags;
+    int     i;
+    sample_t *in_buffer[2];
 
-    buffer_l = calloc(sizeof(sample_t), nsamples);
-    buffer_r = calloc(sizeof(sample_t), nsamples);
-    if (buffer_l == NULL || buffer_r == NULL) {
+    if (update_inbuffer_size( gfc, nsamples ) != 0) {
         return -2;
     }
-    for (i = 0; i < nsamples; i++) {
-        buffer_l[i] = buffer[2 * i];
-        buffer_r[i] = buffer[2 * i + 1];
-    }
-    ret =
-        lame_encode_buffer_sample_t(gfp, buffer_l, buffer_r, nsamples, mp3buf,
-                           mp3buf_size);
-    free(buffer_l);
-    free(buffer_r);
-    return ret;
 
+    in_buffer[0] = gfc->in_buffer_0;
+    in_buffer[1] = gfc->in_buffer_1;
+
+    for (i = 0; i < nsamples; i++) {
+        in_buffer[0][i] = buffer[2 * i];
+        in_buffer[1][i] = buffer[2 * i + 1];
+    }
+    return lame_encode_buffer_sample_t(gfp, in_buffer[0], in_buffer[1], nsamples, mp3buf,
+                           mp3buf_size);
 }
 
 

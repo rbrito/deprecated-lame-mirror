@@ -509,23 +509,20 @@ static void
 quantize_x34(const algo_t * that)
 {
     DOUBLEX x[4];
-    const gr_info *cod_info = that->cod_info;
-    const FLOAT istep = IPOW20(cod_info->global_gain);
-    /* 0.634521682242439 = 0.5946*2**(.5*0.1875) */
-    const int max_nonzero_coeff = cod_info->max_nonzero_coeff;
-    const int *scalefac = cod_info->scalefac;
     const FLOAT *xr34_orig = that->xr34orig;
-    int     j = 0, sfb, psymax = cod_info->psymax;
+    const gr_info *cod_info = that->cod_info;
     int    *l3 = cod_info->l3_enc;
+    int     j = 0, sfb;
+    const int max_nonzero_coeff = cod_info->max_nonzero_coeff;
 
-    for (sfb = 0; sfb < psymax; ++sfb) {
-        const int s = ((scalefac[sfb] + (cod_info->preflag ? pretab[sfb] : 0))
+    for (sfb = 0; sfb < cod_info->psymax && j <= max_nonzero_coeff; ++sfb) {
+        const int s = ((cod_info->scalefac[sfb] + (cod_info->preflag ? pretab[sfb] : 0))
                        << (cod_info->scalefac_scale + 1))
             + cod_info->subblock_gain[cod_info->window[sfb]] * 8;
+        const int sfac = valid_sf(cod_info->global_gain-s);
+        const FLOAT sfpow34 = IPOW20(sfac);
         int     remaining;
         int     l = cod_info->width[sfb];
-        FLOAT   fac = IIPOW20(s);
-        FLOAT   jstep = fac * istep;
         if (l >= max_nonzero_coeff - j + 1) {
             l = max_nonzero_coeff - j + 1;
         }
@@ -535,10 +532,10 @@ quantize_x34(const algo_t * that)
         remaining = l % 2;
 
         for (l >>= 1; l > 0; --l) {
-            x[0] = jstep * xr34_orig[0];
-            x[1] = jstep * xr34_orig[1];
-            x[2] = jstep * xr34_orig[2];
-            x[3] = jstep * xr34_orig[3];
+            x[0] = sfpow34 * xr34_orig[0];
+            x[1] = sfpow34 * xr34_orig[1];
+            x[2] = sfpow34 * xr34_orig[2];
+            x[3] = sfpow34 * xr34_orig[3];
 
             k_34_4(x, l3);
 
@@ -546,19 +543,13 @@ quantize_x34(const algo_t * that)
             xr34_orig += 4;
         }
         if (remaining) {
-            x[0] = jstep * xr34_orig[0];
-            x[1] = jstep * xr34_orig[1];
+            x[0] = sfpow34 * xr34_orig[0];
+            x[1] = sfpow34 * xr34_orig[1];
 
             k_34_2(x, l3);
 
             l3 += 2;
             xr34_orig += 2;
-        }
-        if (j <= max_nonzero_coeff) {
-            /*  most often the case */
-        }
-        else {
-            break;
         }
     }
 }
@@ -567,23 +558,20 @@ static void
 quantize_ISO(const algo_t * that)
 {
     DOUBLEX x[4];
-    const gr_info *cod_info = that->cod_info;
-    const FLOAT istep = IPOW20(cod_info->global_gain);
-    /* 0.634521682242439 = 0.5946*2**(.5*0.1875) */
-    const int max_nonzero_coeff = cod_info->max_nonzero_coeff;
-    const int *scalefac = cod_info->scalefac;
     const FLOAT *xr34_orig = that->xr34orig;
-    int     sfb, j = 0, psymax = cod_info->psymax;
+    const gr_info *cod_info = that->cod_info;
     int    *l3 = cod_info->l3_enc;
+    int     j = 0, sfb;
+    const int max_nonzero_coeff = cod_info->max_nonzero_coeff;
 
-    for (sfb = 0; sfb < psymax; ++sfb) {
-        const int s = ((scalefac[sfb] + (cod_info->preflag ? pretab[sfb] : 0))
+    for (sfb = 0; sfb < cod_info->psymax && j <= max_nonzero_coeff; ++sfb) {
+        const int s = ((cod_info->scalefac[sfb] + (cod_info->preflag ? pretab[sfb] : 0))
                        << (cod_info->scalefac_scale + 1))
             + cod_info->subblock_gain[cod_info->window[sfb]] * 8;
+        const int sfac = valid_sf(cod_info->global_gain-s);
+        const FLOAT sfpow34 = IPOW20(sfac);
         int     remaining;
         int     l = cod_info->width[sfb];
-        FLOAT   fac = IIPOW20(s);
-        FLOAT   jstep = fac * istep;
         if (l >= max_nonzero_coeff - j + 1) {
             l = max_nonzero_coeff - j + 1;
         }
@@ -593,10 +581,10 @@ quantize_ISO(const algo_t * that)
         remaining = l % 2;
 
         for (l >>= 1; l > 0; --l) {
-            x[0] = jstep * xr34_orig[0];
-            x[1] = jstep * xr34_orig[1];
-            x[2] = jstep * xr34_orig[2];
-            x[3] = jstep * xr34_orig[3];
+            x[0] = sfpow34 * xr34_orig[0];
+            x[1] = sfpow34 * xr34_orig[1];
+            x[2] = sfpow34 * xr34_orig[2];
+            x[3] = sfpow34 * xr34_orig[3];
 
             k_iso_4(x, l3);
 
@@ -604,19 +592,13 @@ quantize_ISO(const algo_t * that)
             xr34_orig += 4;
         }
         if (remaining) {
-            x[0] = jstep * xr34_orig[0];
-            x[1] = jstep * xr34_orig[1];
+            x[0] = sfpow34 * xr34_orig[0];
+            x[1] = sfpow34 * xr34_orig[1];
 
             k_iso_2(x, l3);
 
             l3 += 2;
             xr34_orig += 2;
-        }
-        if (j <= max_nonzero_coeff) {
-            /*  most often the case */
-        }
-        else {
-            break;
         }
     }
 }

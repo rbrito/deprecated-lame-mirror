@@ -199,15 +199,6 @@ typedef struct
 } ATH_t;
 
 /**
- *  VBR related stuff
- */
-typedef struct
-{
-    int     quality;
-    int     smooth;         /* 0=no, 1=peaks, 2=+-4 */
-} VBR_t;
-
-/**
  *  PSY Model related stuff
  */
 typedef struct
@@ -494,7 +485,6 @@ struct lame_internal_flags {
   VBR_seek_info_t VBR_seek_table; /* used for Xing VBR header */
   
   ATH_t *ATH;   /* all ATH related stuff */
-  VBR_t *VBR;
   PSY_t *PSY;
 
   int nogap_total;
@@ -521,6 +511,10 @@ struct lame_internal_flags {
   FLOAT energy_save[4][HBLKSIZE];
   FLOAT ers_save[4];
 #endif
+
+  int in_buffer_nsamples;
+  sample_t *in_buffer_0;
+  sample_t *in_buffer_1;
 };
 
 

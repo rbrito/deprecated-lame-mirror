@@ -79,9 +79,6 @@ void  freegfc ( lame_internal_flags* const gfc )   /* bit stream structure */
     if ( gfc->ATH ) {
         free ( gfc->ATH );
     }
-    if ( gfc->VBR ) {
-        free ( gfc->VBR );
-    }
     if ( gfc->PSY ) {
         free ( gfc->PSY );
     }
@@ -96,7 +93,12 @@ void  freegfc ( lame_internal_flags* const gfc )   /* bit stream structure */
         /* XXX allocated in psymodel_init() */
         free ( gfc->s3_ss );
     }
-
+    if ( gfc->in_buffer_0 ) {
+        free ( gfc->in_buffer_0 );
+    }
+    if ( gfc->in_buffer_1 ) {
+        free ( gfc->in_buffer_1 );
+    }
 
     free ( gfc );
 }
