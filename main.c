@@ -185,7 +185,7 @@ int main ( int argc, char** argv )
 	if ( imp3 < 0 ) encoder_error ( imp3 );
 
 	/* imp3 is not negative, but fwrite needs an size_t here */
-	if ( imp3 != fwrite ( mp3buffer, 1, (size_t)imp3 outf ) ) {
+	if ( imp3 != fwrite ( mp3buffer, 1, (size_t)imp3, outf ) ) {
 	  fprintf ( stderr, "Error writing mp3 output, disk full?\n" );
 	  return -1;
 	}
@@ -195,7 +195,7 @@ int main ( int argc, char** argv )
 
       if ( imp3 < 0 ) encoder_error ( imp3 );
 
-      if ( imp3 != fwrite ( mp3buffer, 1, (size_t)imp3 outf ) ) {
+      if ( imp3 != fwrite ( mp3buffer, 1, (size_t)imp3, outf ) ) {
 	  fprintf ( stderr, "Error writing mp3 output, disk full? (final)\n" );
 	  return -1;
       }
