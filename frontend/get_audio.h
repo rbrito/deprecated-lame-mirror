@@ -50,7 +50,15 @@ int get_audio(lame_t gfp, int buffer[2][1152]);
 int WriteWaveHeader(FILE * const fp, const int pcmbytes,
 		    const int freq, const int channels, const int bits);
 extern int id3v2taglen;
-extern FILE *musicin;
+extern void *g_inputHandler;
+extern int in_signed;
+extern int in_endian;
+extern int in_bitwidth;
+extern sound_file_format input_format;
+
+#define order_littleEndian 0
+#define order_bigEndian 1
+#define order_unknown 2
 
 #ifdef LIBSNDFILE
 # include <sndfile.h>

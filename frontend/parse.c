@@ -75,12 +75,12 @@ int experimentalZ = 0;
 
 /* GLOBAL VARIABLES.  set by parse_args() */
 /* we need to clean this up */
-sound_file_format input_format;   
+sound_file_format input_format;
 int keeptag=0;
 int pcmswapbytes=0;         /* force byte swapping   default=0*/
 int silent;                 /* Verbosity */
 int brhist;
-float update_interval;      /* to use Frank's time status display */
+float update_interval;      /* time status display interval */
 int mp3_delay;              /* to adjust the number of samples truncated
                                during decode */
 int mp3_delay_set;          /* user specified the value of the mp3 encoder 
@@ -89,12 +89,9 @@ int mp3_delay_set;          /* user specified the value of the mp3 encoder
 int enc_delay;
 int enc_padding;
 int disable_wav_header;
-mp3data_struct mp3input_data; /* used by MP3 */
 
-#ifdef LIBSNDFILE
 int in_signed=1;
 int in_endian=order_littleEndian;
-#endif
 int in_bitwidth=16;
 int decode_only=0;
 static int ignore_tag_errors; /* Ignore errors in values passed for tags */
@@ -105,6 +102,7 @@ static int ignore_tag_errors; /* Ignore errors in values passed for tags */
  */
 #ifdef WIN32
 #include <winbase.h>
+#include <windows.h>
 static void  
 dosToLongFileName( char *fn )
 {
@@ -131,10 +129,7 @@ dosToLongFileName( char *fn )
         }
     }
 }
-#endif
 
-#if defined(WIN32)
-#include <windows.h>
 BOOL SetPriorityClassMacro(DWORD p)
 {
     HANDLE op = OpenProcess(PROCESS_ALL_ACCESS,TRUE,GetCurrentProcessId());
@@ -228,12 +223,13 @@ static int setOS2Priority(int Priority)
 void
 print_version (FILE* const fp)
 {
-    fprintf(fp, "LAME version %s (%s)\n\n",
+    fprintf(fp, "LAME version %s (%s)\n",
 	    get_lame_version (), get_lame_url ());
 #ifdef LIBSNDFILE
     fprintf (fp, "frontend built with libsndfile\n");
 #endif
 
+    fprintf (fp, "\n");
     if (LAME_ALPHA_VERSION)
 	fprintf (fp, "warning: alpha versions should be used for testing only\n\n");
 }
@@ -364,7 +360,7 @@ static int
 long_help (lame_t gfc, FILE* const fp, const char* ProgramName, int lessmode )  /* print long syntax help */
 {
     fprintf ( fp,
-              "usage: %s [options] <infile> [outfile]\n"
+	      "usage: %s [options] <infile> [outfile]\n"
               "\n"
               "    <infile> and/or <outfile> can be \"-\", which means stdin/stdout.\n"
               "\n"
@@ -377,12 +373,10 @@ long_help (lame_t gfc, FILE* const fp, const char* ProgramName, int lessmode )  
               "    -x              force byte-swapping of input\n"
               "    -s sfreq        sampling frequency of input file (kHz) - default 44.1 kHz\n"
               "    --bitwidth w    input bit width is w (default 16)\n"
-#ifdef LIBSNDFILE
               "    --signed        input is signed (default)\n"
               "    --unsigned      input is unsigned\n"
               "    --little-endian input is little-endian (default from host)\n"
               "    --big-endian    input is big-endian (default from host)\n"
-#endif
               "    --mp1input      input file is a MPEG Layer I   file\n"
               "    --mp2input      input file is a MPEG Layer II  file\n"
               "    --mp3input      input file is a MPEG Layer III file\n"
@@ -730,10 +724,10 @@ static int  presets_set( lame_t gfp, int cbr, const char* preset_name, const cha
     return -1;
 }
 
-static void genre_list_handler (int num,const char *name,void *cookie)
+static void genre_list_handler (int num,const char *name, void *cookie)
 {
     (void)cookie;
-    printf ("%3d %s\n", num, name);
+    printf("%3d %s\n", num, name);
 }
 
 
@@ -779,16 +773,15 @@ static int local_strcasecmp ( const char* s1, const char* s2 )
 static int filename_to_type ( const char* FileName )
 {
     int len = strlen (FileName);
-    
-    if ( len < 4 ) return sf_unknown;
-
-    FileName += len-4;
-    if ( 0 == local_strcasecmp ( FileName, ".mpg" ) ) return sf_mp1;
-    if ( 0 == local_strcasecmp ( FileName, ".mp1" ) ) return sf_mp1;
-    if ( 0 == local_strcasecmp ( FileName, ".mp2" ) ) return sf_mp2;
-    if ( 0 == local_strcasecmp ( FileName, ".mp3" ) ) return sf_mp3;
-    if ( 0 == local_strcasecmp ( FileName, ".wav" ) ) return sf_wave;
-    if ( 0 == local_strcasecmp ( FileName, ".raw" ) ) return sf_raw;
+    if (len >= 4) {
+	FileName += len-4;
+	if ( 0 == local_strcasecmp ( FileName, ".mpg" ) ) return sf_mp1;
+	if ( 0 == local_strcasecmp ( FileName, ".mp1" ) ) return sf_mp1;
+	if ( 0 == local_strcasecmp ( FileName, ".mp2" ) ) return sf_mp2;
+	if ( 0 == local_strcasecmp ( FileName, ".mp3" ) ) return sf_mp3;
+	if ( 0 == local_strcasecmp ( FileName, ".wav" ) ) return sf_wave;
+	if ( 0 == local_strcasecmp ( FileName, ".raw" ) ) return sf_raw;
+    }
     return sf_unknown;
 }
 
@@ -838,8 +831,8 @@ int  parse_args (lame_t gfp, int argc, char** argv,
     outPath[0] = '\0';
     /* turn on display options. user settings may turn them off below */
     silent   = 0;
-    ignore_tag_errors = 0;
     brhist   = 1;
+    ignore_tag_errors = 0;
     enc_padding=-1;
     enc_delay=-1;
     mp3_delay = 0;   
@@ -872,9 +865,8 @@ int  parse_args (lame_t gfp, int argc, char** argv,
 
                 T_IF ("resample")
                     argUsed = 1;
-                    (void) lame_set_out_samplerate( gfp,
-                        resample_rate ( atof (nextArg) ) );
-                
+		    lame_set_out_samplerate(gfp, resample_rate(atof(nextArg)));
+
                 T_ELIF ("cbr")
                     lame_set_VBR(gfp, vbr_off); 
 
@@ -893,7 +885,7 @@ int  parse_args (lame_t gfp, int argc, char** argv,
                 T_ELIF ("bitwidth")
                     argUsed=1;
                     in_bitwidth=atoi(nextArg);
-#ifdef LIBSNDFILE
+
                 T_ELIF ("signed")
 		    in_signed=1;
 
@@ -905,7 +897,7 @@ int  parse_args (lame_t gfp, int argc, char** argv,
 
                 T_ELIF ("big-endian")
 		    in_endian=order_bigEndian;
-#endif
+
                 T_ELIF ("mp1input")
                     input_format=sf_mp1;
                 
@@ -919,10 +911,10 @@ int  parse_args (lame_t gfp, int argc, char** argv,
                     keeptag=1;
 
                 T_ELIF ("mixedblock")
-                    (void) lame_set_use_mixed_blocks( gfp, 2);
+                    lame_set_use_mixed_blocks( gfp, 2);
 
                 T_ELIF_INTERNAL ("allshort")
-                    (void) lame_set_short_threshold(gfp, 0.0f);
+                    lame_set_short_threshold(gfp, 0.0f);
 
                 T_ELIF_INTERNAL ("shortthreshold")
 		{
@@ -942,7 +934,7 @@ int  parse_args (lame_t gfp, int argc, char** argv,
                     argUsed=1;
                 
                 T_ELIF_INTERNAL ("noath")
-                    (void) lame_set_noATH( gfp, 1 );
+                    lame_set_noATH( gfp, 1 );
                 
                 T_ELIF_INTERNAL ("nores")
                     lame_set_disable_reservoir(gfp,1);
@@ -955,15 +947,15 @@ int  parse_args (lame_t gfp, int argc, char** argv,
                     lame_set_strict_ISO(gfp,1);
                 
                 T_ELIF_INTERNAL ("athonly")
-                    (void) lame_set_ATHonly( gfp, 1 );
+                    lame_set_ATHonly( gfp, 1 );
                 
                 T_ELIF_INTERNAL ("athlower")
                     argUsed=1;
-                    (void) lame_set_ATHlower( gfp, atof( nextArg ) );
+                    lame_set_ATHlower( gfp, atof( nextArg ) );
                 
                 T_ELIF_INTERNAL ("athcurve")
                     argUsed=1;
-                    (void) lame_set_ATHcurve( gfp, atof( nextArg ) );
+                    lame_set_ATHcurve( gfp, atof( nextArg ) );
 
                 T_ELIF_INTERNAL ("athaa-sensitivity")
                     argUsed=1;
@@ -971,30 +963,30 @@ int  parse_args (lame_t gfp, int argc, char** argv,
 
                 T_ELIF ("scale")
                     argUsed=1;
-                    (void) lame_set_scale( gfp, atof(nextArg) );
+                    lame_set_scale( gfp, atof(nextArg) );
 
                 T_ELIF ("noasm")
                     argUsed=1;
                     if (!strcmp(nextArg, "mmx")) 
-                        (void) lame_set_asm_optimizations( gfp, MMX, 0 );
+                        lame_set_asm_optimizations( gfp, MMX, 0 );
                     if (!strcmp(nextArg, "3dnow")) 
-                        (void) lame_set_asm_optimizations( gfp, AMD_3DNOW, 0 );
+                        lame_set_asm_optimizations( gfp, AMD_3DNOW, 0 );
                     if (!strcmp(nextArg, "sse")) 
-                        (void) lame_set_asm_optimizations( gfp, SSE, 0 );
+                        lame_set_asm_optimizations( gfp, SSE, 0 );
 
 		T_ELIF ("scale-l")
                     argUsed=1;
-                    (void) lame_set_scale_left( gfp, atof(nextArg) );
+                    lame_set_scale_left( gfp, atof(nextArg) );
 
                 T_ELIF ("scale-r")
                     argUsed=1;
-                    (void) lame_set_scale_right( gfp, atof(nextArg) );
+                    lame_set_scale_right( gfp, atof(nextArg) );
                 
                 T_ELIF ("freeformat")
                     lame_set_free_format(gfp,1);
                 
                 T_ELIF_INTERNAL ("athshort")
-                    (void) lame_set_ATHshort( gfp, 1 );
+                    lame_set_ATHshort( gfp, 1 );
                 
                 T_ELIF ("nohist")
                     brhist = 0;
@@ -1128,26 +1120,26 @@ int  parse_args (lame_t gfp, int argc, char** argv,
                 
                 T_ELIF_INTERNAL ("reduce-side")
                     argUsed=1;
-                    (void) lame_set_reduceSide( gfp, atof(nextArg ) );
+                    lame_set_reduceSide( gfp, atof(nextArg ) );
 
                 T_ELIF_INTERNAL ("interch")
                     argUsed=1;
-                    (void) lame_set_interChRatio( gfp, atof(nextArg ) );
+                    lame_set_interChRatio( gfp, atof(nextArg ) );
 
                 T_ELIF_INTERNAL ("is-ratio")
                     argUsed=1;
-                    (void) lame_set_istereoRatio( gfp, atof(nextArg ) );
+                    lame_set_istereoRatio( gfp, atof(nextArg ) );
 
                 T_ELIF_INTERNAL ("substep")
                     argUsed=1;
-                    (void) lame_set_substep( gfp, atof(nextArg) );
+                    lame_set_substep( gfp, atof(nextArg) );
 
                 T_ELIF_INTERNAL ("sfscale")
 		{
 		    int i = 1;
 		    if (sscanf(nextArg, "%d", &i) == 1)
 			argUsed=1;
-                    (void) lame_set_sfscale(gfp, i);
+                    lame_set_sfscale(gfp, i);
 		}
 
                 T_ELIF_INTERNAL ("sbgain")
@@ -1155,19 +1147,19 @@ int  parse_args (lame_t gfp, int argc, char** argv,
 		    int i = 1;
 		    if (sscanf(nextArg, "%d", &i) == 1)
 			argUsed=1;
-                    (void) lame_set_subblock_gain( gfp, i);
+                    lame_set_subblock_gain( gfp, i);
 		}
 
                 T_ELIF_INTERNAL ("narrowen-stereo")
                     argUsed = 1;
-                    (void) lame_set_narrowenStereo(gfp, atof(nextArg));
+                    lame_set_narrowenStereo(gfp, atof(nextArg));
 
                 T_ELIF ("nspsytune")
 		    fprintf(stderr, "note: nspsytune is defaulted and no need to specify the option.\n");
 
                 T_ELIF ("nsmsfix")
                     argUsed=1;
-                    (void) lame_set_msfix( gfp, atof(nextArg) );
+                    lame_set_msfix( gfp, atof(nextArg) );
                 
                 T_ELIF ("tune-bass")
                     argUsed=1;
@@ -1279,9 +1271,9 @@ int  parse_args (lame_t gfp, int argc, char** argv,
                         argUsed           = 1;   
                         
                         switch ( *arg ) {
-                        case 's': (void) lame_set_mode( gfp, STEREO       );
+                        case 's': lame_set_mode( gfp, STEREO       );
                                   break;
-                        case 'd': (void) lame_set_mode( gfp, DUAL_CHANNEL );
+                        case 'd': lame_set_mode( gfp, DUAL_CHANNEL );
                                   fprintf( stderr,
                                            "%s: dual channel is not supported yet, the result (perhaps stereo)\n"
                                            "  may not be what you expect\n",
@@ -1289,9 +1281,9 @@ int  parse_args (lame_t gfp, int argc, char** argv,
                                   break;
                         case 'f': lame_set_force_ms(gfp,1);
                                  /* FALLTHROUGH */
-                        case 'j': (void) lame_set_mode( gfp, JOINT_STEREO );
+                        case 'j': lame_set_mode( gfp, JOINT_STEREO );
                                   break;
-                        case 'm': (void) lame_set_mode( gfp, MONO         );
+                        case 'm': lame_set_mode( gfp, MONO         );
                                   break;
 			default:
 			    fprintf(stderr,"%s: -m mode must be s/d/j/f/m not %s\n", ProgramName, arg);
@@ -1310,13 +1302,13 @@ int  parse_args (lame_t gfp, int argc, char** argv,
                         break;
 
                     case 'q':        argUsed = 1;
-			(void) lame_set_quality(gfp, atoi( arg ));
+			lame_set_quality(gfp, atoi( arg ));
                         break;
                     case 'f': 
-                        (void) lame_set_quality( gfp, 7 );
+                        lame_set_quality( gfp, 7 );
                         break;
                     case 'h': 
-                        (void) lame_set_quality( gfp, 2 );
+                        lame_set_quality( gfp, 2 );
                         break;
 
                     case 's':
@@ -1335,19 +1327,15 @@ int  parse_args (lame_t gfp, int argc, char** argv,
                         lame_set_VBR_max_bitrate_kbps(gfp,atoi(arg)); 
                         break;  
                     case 't':  /* dont write VBR tag */
-                        (void) lame_set_bWriteVbrTag( gfp, 0 );
+                        lame_set_bWriteVbrTag( gfp, 0 );
                         disable_wav_header=1;
                         break;
                     case 'T':  /* do write VBR tag */
-                        (void) lame_set_bWriteVbrTag( gfp, 1 );
+			lame_set_bWriteVbrTag( gfp, 1 );
                         nogap_tags=1;
                         disable_wav_header=0;
                         break;
                     case 'r':  /* force raw pcm input file */
-#ifdef LIBSNDFILE
-                        fprintf(stderr,"WARNING: libsndfile may ignore -r and perform fseek's on the input.\n"
-                               "Compile without libsndfile if this is a problem.\n");
-#endif
                         input_format=sf_raw;
                         break;
                     case 'x':  /* force byte swapping */
@@ -1358,7 +1346,7 @@ int  parse_args (lame_t gfp, int argc, char** argv,
                         break;
                     case 'a': /* autoconvert input file from stereo to mono - for mono mp3 encoding */
                         autoconvert=1;
-                        (void) lame_set_mode( gfp, MONO );
+                        lame_set_mode( gfp, MONO );
                         break;
                     case 'k': 
                         lame_set_lowpassfreq(gfp,1000000);
@@ -1481,36 +1469,36 @@ int  parse_args (lame_t gfp, int argc, char** argv,
 
     /* some file options not allowed with stdout */
     if (outPath[0]=='-') {
-        (void) lame_set_bWriteVbrTag( gfp, 0 ); /* turn off VBR tag */
+	lame_set_bWriteVbrTag( gfp, 0 ); /* turn off VBR tag */
     }
-    
+
     /* if user did not explicitly specify input is mp3, check file name */
     if (input_format == sf_unknown)
-        input_format = filename_to_type ( inPath );
-    
+	input_format = filename_to_type ( inPath );
+
 #ifndef HAVE_MPGLIB
     if (IS_MPEG123(input_format)) {
-        fprintf(stderr,"Error: libmp3lame not compiled with mpg123 *decoding* support \n");
-        return -1;
+	fprintf(stderr,"Error: libmp3lame not compiled with mpg123 *decoding* support \n");
+	return -1;
     }
 #endif
 
     /* default guess for number of channels */
     if (autoconvert) 
-        (void) lame_set_num_channels( gfp, 2 ); 
-    else if( MONO == lame_get_mode( gfp ) ) 
-        (void) lame_set_num_channels( gfp, 1 );
+	lame_set_num_channels(gfp, 2); 
+    else if (MONO == lame_get_mode(gfp))
+        lame_set_num_channels(gfp, 1);
     else 
-        (void) lame_set_num_channels( gfp, 2 );
-    
-    if ( lame_get_free_format(gfp) ) {
-        if ( lame_get_brate(gfp) < 8  ||  lame_get_brate(gfp) > 640 ) {
-            fprintf(stderr,"For free format, specify a bitrate between 8 and 640 kbps\n");
-            fprintf(stderr,"with the -b <bitrate> option\n");
-            return -1;
-        }
+        lame_set_num_channels(gfp, 2);
+
+    if (lame_get_free_format(gfp)) {
+	if (lame_get_brate(gfp) < 8 || lame_get_brate(gfp) > 640) {
+	    fprintf(stderr,"For free format, specify a bitrate between 8 and 640 kbps\n");
+	    fprintf(stderr,"with the -b <bitrate> option\n");
+	    return -1;
+	}
     }
-    if (num_nogap!=NULL) *num_nogap=count_nogap;
+    if (num_nogap) *num_nogap=count_nogap;
     return 0;
 }
 

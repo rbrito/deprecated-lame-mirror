@@ -33,7 +33,6 @@
 
 /* GLOBAL VARIABLES used by parse.c and main.c.  
    instantiated in parce.c.  ugly, ugly */
-extern sound_file_format input_format;
 extern int keeptag;
 extern int pcmswapbytes;           /* force byte swapping   default=0*/
 extern int silent;
@@ -46,12 +45,6 @@ extern int enc_padding;            /* if decoder finds a Xing header */
 extern float update_interval;      /* to use Frank's time status display */
 extern int disable_wav_header;     /* for decoder only */
 extern mp3data_struct mp3input_data; /* used by MP3 */
-extern int in_signed;
-#define order_littleEndian 0
-#define order_bigEndian 1
-#define order_unknown 2
-extern int in_endian;
-extern int in_bitwidth;
 extern int decode_only;
 
 #define         Min(A, B)       ((A) < (B) ? (A) : (B))

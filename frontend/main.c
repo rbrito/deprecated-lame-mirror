@@ -233,8 +233,8 @@ decoder(lame_t gfp, FILE * outf, int skip, char *inPath, char *outPath)
     }
     /* at this time, size is unknown. so write maximum 32 bit signed value */
     if (!disable_wav_header)
-        WriteWaveHeader(outf, 0x7FFFFFFF, lame_get_in_samplerate( gfp ),
-                        tmp_num_channels, 16);
+	WriteWaveHeader(outf, 0x7FFFFFFF, lame_get_in_samplerate( gfp ),
+			tmp_num_channels, 16);
 
     wavsize = -skip;
     mp3input_data.totalframes = mp3input_data.nsamp / mp3input_data.framesize;
@@ -287,23 +287,8 @@ decoder(lame_t gfp, FILE * outf, int skip, char *inPath, char *outPath)
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 static int
-encoder(lame_t gfp, FILE * outf, int nogap, char *inPath,
-             char *outPath)
+encoder(lame_t gfp, FILE * outf, int nogap, char *inPath, char *outPath)
 {
     unsigned char mp3buffer[LAME_MAXMP3BUFFER];
     int     Buffer[2][1152];
@@ -362,8 +347,8 @@ encoder(lame_t gfp, FILE * outf, int nogap, char *inPath,
         frames = lame_get_frameNum(gfp);
 
 
- /********************** status display  *****************************/
-        if (silent <= 0) {
+	/********************** status display  *****************************/
+	if (silent <= 0) {
             if (update_interval > 0) {
                 timestatus_klemm(gfp);
             }
@@ -419,17 +404,17 @@ encoder(lame_t gfp, FILE * outf, int nogap, char *inPath,
 
     if (silent <= 0) {
 #ifdef BRHIST
-        brhist_jump_back();
+	brhist_jump_back();
 #endif
-        timestatus(lame_get_out_samplerate(gfp),
-                   frames, lame_get_totalframes(gfp), lame_get_framesize(gfp));
+	timestatus(lame_get_out_samplerate(gfp),
+		   frames, lame_get_totalframes(gfp), lame_get_framesize(gfp));
 #ifdef BRHIST
-        if (brhist) {
-            brhist_disp(gfp);
-        }
-        brhist_disp_total(gfp);
+	if (brhist) {
+	    brhist_disp(gfp);
+	}
+	brhist_disp_total(gfp);
 #endif
-        timestatus_finish();
+	timestatus_finish();
     }
 
     fwrite(mp3buffer, 1, imp3, outf);
@@ -438,8 +423,8 @@ encoder(lame_t gfp, FILE * outf, int nogap, char *inPath,
     if (input_format == sf_mp3 && keeptag) {
 #define ID3TAGSIZE 128
 	char id3tag[ID3TAGSIZE];
-	fseek(musicin, -ID3TAGSIZE, SEEK_CUR);
-	fread(id3tag, 1, ID3TAGSIZE, musicin);
+	fseek(g_inputHandler, -ID3TAGSIZE, SEEK_CUR);
+	fread(id3tag, 1, ID3TAGSIZE, g_inputHandler);
 	if (memcmp(id3tag, "TAG", 3) == 0)
 	    fwrite(id3tag, 1, ID3TAGSIZE, outf);
 
@@ -447,8 +432,8 @@ encoder(lame_t gfp, FILE * outf, int nogap, char *inPath,
 	    char *id3v2tag = malloc(id3v2taglen);
 	    if (id3v2tag) {
 		fseek(outf, 0, SEEK_SET);
-		fseek(musicin, 0, SEEK_SET);
-		fread(id3v2tag, 1, id3v2taglen, musicin);
+		fseek(g_inputHandler, 0, SEEK_SET);
+		fread(id3v2tag, 1, id3v2taglen, g_inputHandler);
 		fwrite(id3v2tag, 1, id3v2taglen, outf);
 		free(id3v2tag);
 	    } else {

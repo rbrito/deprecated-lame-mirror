@@ -162,7 +162,7 @@ gtkmakeframe(void)
 	    }
 
 	    iread = get_audio(global_gfp, Buffer);
-	    if (feof(musicin))
+	    if (feof(g_inputHandler))
 		break;
 
 	    /* NOTE: frame analyzer requires that we encode one frame 
