@@ -1396,8 +1396,10 @@ int psymodel_init(lame_global_flags *gfp)
 	norm[i] = db2pow(-0.25) * NS_PREECHO_ATT0 * 0.8;
 	if (i < 4)
 	    norm[i] *= 0.01;
-	if (i < 8)
+	else if (i < 8)
 	    norm[i] *= 0.1;
+	else
+	    norm[i] *= db2pow(-1);
 	gfc->endlines_s[i] = numlines_s[i];
 	if (i != 0)
 	    gfc->endlines_s[i] += gfc->endlines_s[i-1];
