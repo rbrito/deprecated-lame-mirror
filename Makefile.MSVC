@@ -402,9 +402,40 @@ libmp3lame/i386/scalar.obj: libmp3lame/i386/scalar.nas
 	@nasmw -f win32 -i libmp3lame/i386/ -DWIN32 \
 		libmp3lame/i386/scalar.nas \
 		-o libmp3lame/i386/scalar.obj
-
+                                
 CC_SWITCHES = $(CC_SWITCHES) /DHAVE_NASM
 ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/cpu_feat.obj libmp3lame/i386/scalar.obj
+
+
+libmp3lame/i386/fft3dn.obj: libmp3lame/i386/fft3dn.nas
+	@echo assemble 3DNow! FFT routines, using NASM the Netwide Assembler
+	@nasmw -f win32 -i libmp3lame/i386/ -DWIN32 \
+		libmp3lame/i386/fft3dn.nas \
+		-o libmp3lame/i386/fft3dn.obj
+                                
+CC_SWITCHES = $(CC_SWITCHES) /DUSE_FFT3DN
+ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/fft3dn.obj
+
+#	not yet coded
+#
+#libmp3lame/i386/fftsse.obj: libmp3lame/i386/fftsse.nas
+#	@echo assemble SIMD FFT routines, using NASM the Netwide Assembler
+#	@nasmw -f win32 -i libmp3lame/i386/ -DWIN32 \
+#		libmp3lame/i386/fftsse.nas \
+#		-o libmp3lame/i386/fftsse.obj
+#                                
+#CC_SWITCHES = $(CC_SWITCHES) /DUSE_FFTSSE
+#ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/fftsse.obj
+
+#libmp3lame/i386/fftfpu.obj: libmp3lame/i386/fftfpu.nas
+#	@echo assemble i387 FPU FFT routines, using NASM the Netwide Assembler
+#	@nasmw -f win32 -i libmp3lame/i386/ -DWIN32 \
+#		libmp3lame/i386/fftfpu.nas \
+#		-o libmp3lame/i386/fftfpu.obj
+#                                
+#CC_SWITCHES = $(CC_SWITCHES) /DUSE_FFTFPU
+#ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/fftfpu.obj
+
 !	ENDIF
 #______________________________________________________________________ NASM __
 
