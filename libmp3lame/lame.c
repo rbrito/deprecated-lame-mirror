@@ -239,10 +239,8 @@ apply_preset(lame_t gfc, int bitrate, vbr_mode mode)
 	     && bitrate > switch_map[b].kbps; b++)
 	;
 
-    upper_range_kbps = switch_map[b].kbps;
-    upper_range = b;
-    lower_range_kbps = switch_map[b-1].kbps;
-    lower_range = (b-1);
+    upper_range_kbps = switch_map[b].kbps;    upper_range = b;
+    lower_range_kbps = switch_map[b-1].kbps;  lower_range = b-1;
 
     /* Determine which range the value specified is closer to */
     r = upper_range;
@@ -1344,10 +1342,10 @@ updateStats(lame_t gfc)
     int gr, ch;
     assert((unsigned int)gfc->bitrate_index < 16u);
     assert((unsigned int)gfc->mode_ext      <  4u);
-    
+
     /* count 'em for every mode extension in case of 2 channel encoding */
     if (gfc->channels_out == 2)
-	gfc->bitrate_stereoMode_Hist [gfc->bitrate_index] [gfc->mode_ext]++;
+	gfc->bitrate_stereoMode_Hist[gfc->bitrate_index] [gfc->mode_ext]++;
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 	for (ch = 0; ch < gfc->channels_out; ch++) {
