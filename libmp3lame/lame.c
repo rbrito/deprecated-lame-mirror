@@ -561,6 +561,7 @@ lame_init_params(lame_global_flags * const gfp)
 
     if (gfp->VBR != vbr_off) {
         gfp->free_format = 0; /* VBR can't be mixed with free format */
+        gfp->padding_type = PAD_NO;    
     }
 
     if (gfp->VBR == vbr_off && gfp->brate == 0) {
@@ -1137,17 +1138,6 @@ lame_init_params(lame_global_flags * const gfp)
 		         "Specialized tunings for the preset you are using have been deactivated.\n"
                  "This is *NOT* recommended and will lead to a decrease in quality!\n"
 	             "\n*** WARNING ***\n\n");
-
-    {   /* amount of filling bits for VBR in case of -Bxxx use */
-        int bit_rate = bitrate_table[gfp->version][gfc->VBR_max_bitrate];
-        int whole_SpF = (gfp->version+1)*72000*bit_rate / gfp->out_samplerate;
-        int mbp = ((gfp->strict_ISO ? 960 : 1440)-whole_SpF)*8;
-        gfc->VBR->maxFill = (gfp->version==1) ? 8*511 : 8*255;
-        if (gfc->VBR->maxFill > mbp) 
-            gfc->VBR->maxFill = mbp;
-        if (gfc->VBR->maxFill < 0)
-            gfc->VBR->maxFill = 0; 
-    }
 
     return 0;
 }

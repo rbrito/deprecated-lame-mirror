@@ -295,6 +295,16 @@ int  lame_encode_mp3_frame (				// Output
     gfc->frac_SpF = ((gfp->version+1)*72000L*gfp->brate) % gfp->out_samplerate;
     gfc->slot_lag  = gfc->frac_SpF;
     
+    switch (gfp->padding_type) {
+    default:
+    case PAD_NO:
+        gfc->padding = FALSE;
+        break;
+    case PAD_ALL:
+        gfc->padding = TRUE;
+        break;
+    }
+    
     /* check FFT will not use a negative starting offset */
 #if 576 < FFTOFFSET
 # error FFTOFFSET greater than 576: FFT uses a negative offset
@@ -347,27 +357,24 @@ int  lame_encode_mp3_frame (				// Output
 
 
   /********************** padding *****************************/
-  gfc->padding = FALSE;
-  if (gfp->padding_type == PAD_ALL) {
-    gfc->padding = TRUE;
-  } else if (gfp->padding_type != PAD_NO) {
-    /* if the user specified --nores, dont very gfc->padding either */
-    /* tiny changes in frac_SpF rounding will cause file differences */
-    if (gfp->VBR == vbr_off && !gfp->disable_reservoir) {
-      /* padding method as described in 
-       * "MPEG-Layer3 / Bitstream Syntax and Decoding"
-       * by Martin Sieler, Ralph Sperschneider
-       *
-       * note: there is no padding for the very first frame
-       *
-       * Robert.Hegemann@gmx.de 2000-06-22
-       */
-      gfc->slot_lag -= gfc->frac_SpF;
-      if (gfc->slot_lag < 0) {
-	gfc->slot_lag += gfp->out_samplerate;
-	gfc->padding = TRUE;
-      }
-    } /* reservoir enabled */
+  if (gfp->padding_type == PAD_ADJUST) {
+        /* padding method as described in 
+         * "MPEG-Layer3 / Bitstream Syntax and Decoding"
+         * by Martin Sieler, Ralph Sperschneider
+         *
+         * note: there is no padding for the very first frame
+         *
+         * Robert.Hegemann@gmx.de 2000-06-22
+         */
+
+        gfc->slot_lag -= gfc->frac_SpF;
+        if (gfc->slot_lag < 0) {
+            gfc->slot_lag += gfp->out_samplerate;
+            gfc->padding = TRUE;
+        } 
+        else {
+            gfc->padding = FALSE;
+        }
   }
 
   if (gfc->psymodel) {
