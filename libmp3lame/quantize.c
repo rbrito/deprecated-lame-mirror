@@ -1247,16 +1247,17 @@ bitpressure_strategy(
     int gr, ch, sfb;
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         for (ch = 0; ch < gfc->channels_out; ch++) {
-	    if (gfc->l3_side.tt[gr][ch].block_type == SHORT_TYPE) {
-		for (sfb = 0; sfb < SBMAX_s; sfb++) {
-		    l3_xmin[gr][ch][sfb*3+0] *= 1.+.029*sfb*sfb/SBMAX_s/SBMAX_s;
-		    l3_xmin[gr][ch][sfb*3+1] *= 1.+.029*sfb*sfb/SBMAX_s/SBMAX_s;
-		    l3_xmin[gr][ch][sfb*3+2] *= 1.+.029*sfb*sfb/SBMAX_s/SBMAX_s;
+	    gr_info *gi = &gfc->l3_side.tt[gr][ch];
+	    FLOAT8 *pxmin = l3_xmin[gr][ch];
+	    for (sfb = 0; sfb < gi->psy_lmax; sfb++) 
+		*pxmin++ *= 1.+.029*sfb*sfb/SBMAX_l/SBMAX_l;
+
+	    if (gi->block_type == SHORT_TYPE) {
+		for (sfb = gi->sfb_smin; sfb < SBMAX_s; sfb++) {
+		    *pxmin++ *= 1.+.029*sfb*sfb/SBMAX_s/SBMAX_s;
+		    *pxmin++ *= 1.+.029*sfb*sfb/SBMAX_s/SBMAX_s;
+		    *pxmin++ *= 1.+.029*sfb*sfb/SBMAX_s/SBMAX_s;
 		}
-	    }
-	    else {
-		for (sfb = 0; sfb < SBMAX_l; sfb++) 
-		    l3_xmin[gr][ch][sfb] *= 1.+.029*sfb*sfb/SBMAX_l/SBMAX_l;
 	    }
             max_bits[gr][ch] = Max(min_bits[gr][ch], 0.9*max_bits[gr][ch]);
         }
