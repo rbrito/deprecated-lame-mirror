@@ -3,18 +3,17 @@
 <head>
 <meta http-equiv="Content-Type"
 content="text/html; charset=iso-8859-1">
-<meta name="Author" content="Tord Jansson">
 <meta name="GENERATOR" content="Microsoft FrontPage Express 2.0">
-<title>BladeEnc DLL Manual</title>
+<title>Lame-</title>
 </head>
 
-<body>
+<body bgcolor="#FFFFFF">
 
 <p align="center">&nbsp; </p>
 
 <p align="center"><font size="7">Lame-enc DLL</font> <br>
-<font size="5">version 1.16</font> <br>
-(Lame engine version 3.87) <br>
+<font size="5">Interface version 1.32</font> (and above)<br>
+(Lame engine version: 3.93 or higher) <br>
 <font size="6">Programmers Manual</font></p>
 
 <p align="center"><i>The lame_enc.dll and this manual is
@@ -31,7 +30,8 @@ This document and the DLL interface may be distributed freely</i>
 
 <p align="center"><b>Homepage</b>: <a
 href="http://www.cdex.n3.net">http://www.cdex.n3.net</a><br>
-<b>E-mail:</b> mailto: <a href="mailto:afaber@users.sourceforge.net">afaber@users.sourceforge.net</a>
+<b>E-mail:</b> mailto: <a
+href="mailto:afaber@users.sourceforge.net">afaber@users.sourceforge.net</a>
 </p>
 
 <p><br>
@@ -44,9 +44,9 @@ href="http://www.cdex.n3.net">http://www.cdex.n3.net</a><br>
 
 <p>People and companies&nbsp; who wants to distribute
 lame_enc.dll with their commercial products are free to do so as
-far as I'm concerned (LGPL license), but should be aware that lame_enc.dll 
-might infringe certain MP3 related software patents held by Fraunhofer
-IIS in certain countries. </p>
+far as I'm concerned (LGPL license), but should be aware that
+lame_enc.dll might infringe certain MP3 related software patents
+held by Fraunhofer IIS in certain countries. </p>
 
 <p><br>
 &nbsp; </p>
@@ -97,11 +97,10 @@ stream. </p>
 </a></p>
 
 <p>6. Finally, call the <a href="#beWriteVBRHeader()">beWriteVBRHeader()</a>
-functions, to insert the INFO tag MP3 Header.  This is an extension
-of the Xing VBR tag which is also used for CBR encodings.  
-This call can only
-be omitted if the INFO tag was explicilty disabled in the 
-BE_CONFIG Structure.</p>
+functions, to insert the INFO tag MP3 Header. This is an
+extension of the Xing VBR tag which is also used for CBR
+encodings. This call can only be omitted if the INFO tag was
+explicilty disabled in the BE_CONFIG Structure.</p>
 
 <p>A handy feature is the available <a
 href="#Lame_enc.dll debug option">Lame_enc.dll debug option</a>,
@@ -109,7 +108,7 @@ which will dump the important lame internal settings to a text
 file.<br>
 &nbsp; </p>
 
-<p><font size="5"></font>&nbsp;</p>
+<p>&nbsp;</p>
 
 <p><font size="5">Return Values</font> </p>
 
@@ -195,7 +194,7 @@ varians, the old MP3 config structure that is truly compatible
 with the old BladeEnc interface, and the new defined LHV1
 structure, which can set far more options in the lame encoder</font></p>
 
-<p><font size="4"></font>&nbsp;</p>
+<p>&nbsp;</p>
 
 <h2><font size="5">The MP3 BE_CONFIG - structure (OBSOLETE)</font></h2>
 
@@ -310,28 +309,59 @@ need to fill in before you call beInitStream(): <br>
         Allowed bitrates are: <b>32, 40, 48, 56, 64, 80, 96, 112,
         128, 160, 192, 224, 256</b> and <b>320</b>.for MPEG-I<br>
         Allowed bitrates are: <b>8, 16, 24, 32, 40, 48, 56, 64,
-        80, 96, 112, 128, 144 </b>and<b> 160</b>.for MPEG-II</td>
+        80, 96, 112, 128, 144 </b>and<b> 160</b>.for MPEG-II<p><strong>Note:</strong>
+        dwBitrate is used as the minimum bitrate in the case of
+        using a VBR mode.</p>
+        </td>
     </tr>
     <tr>
         <td><strong>format.LHV1.dwMaxBitrate</strong></td>
-        <td>For CBR this setting is ignored, when using VBR, it
-        specifies the maximum bitrate</td>
+        <td>When VBR mode is enabled, it specifies the maximum
+        allowed bitrate (see also dwBitrate to specify the minium
+        bitrate), for CBR mode this setting is ignored.</td>
     </tr>
     <tr>
         <td><strong>format.LHV1.nPreset</strong></td>
-        <td>The quality option can be set to one of the following
-        presets:<br>
-        NOPRESET,PHONE,SW,AM,FM,VOICE,RADIO,TAPE,HIFI,CD,STUDIO
-        as defined in the LAME_QUALTIY_PRESET. Keep in mind that
-        the presets can overwrite some of the other settings,
-        since it is called right before the encoder is
-        initialized</td>
+        <td>Keep in mind that the presets can overwrite some of
+        the other settings, since it is called right before the
+        encoder is initialized<br>
+        <table border="0">
+            <tr>
+                <td>The nPreset option can be set to one of the
+                following presets values::</td>
+            </tr>
+        </table>
+        <p>LQP_NOPRESET (don't use any presets)<br>
+        LQP_NORMAL_QUALITY (quality is set to 5)<br>
+        LQP_LOW_QUALITY (quality is set to 9)<br>
+        LQP_HIGH_QUALITY (quality is set to 2)<br>
+        LQP_VOICE_QUALITY (use for voice encoding)<br>
+        LQP_R3MIX (r3mix preset option)<br>
+        LQP_VERYHIGH_QUALITY (quality is set to 0)<br>
+        LQP_STANDARD (lame command line alt-preset standard)<br>
+        LQP_FAST_STANDARD (lame command line alt-preset fast
+        standard)<br>
+        LQP_EXTREME (lame command line alt-preset extreme)<br>
+        LQP_FAST_EXTREME (lame command line alt-preset fast
+        extreme)<br>
+        LQP_INSANE (lame command line alt-preset insane)<br>
+        LQP_ABR (lame command line alt-preset abr)<br>
+        LQP_CBR(lame command line alt-preset cbr)<br>
+        <br>
+        <strong>(old lame preset options)</strong><br>
+        LQP_PHONE <br>
+        LQP_SW<br>
+        LQP_AM<br>
+        LQP_FM<br>
+        LQP_VOICE<br>
+        LQP_RADIO<br>
+        LQP_TAPE<br>
+        LQP_HIFI<br>
+        LQP_CD<br>
+        LQP_STUDIO</p>
+        </td>
     </tr>
     <tr>
-        <td>&nbsp;</td>
-    </tr>
-    <tr>
-        <td>&nbsp;</td>
         <td>&nbsp;</td>
     </tr>
     <tr>
@@ -359,11 +389,28 @@ need to fill in before you call beInitStream(): <br>
         <td>&nbsp;</td>
     </tr>
     <tr>
+        <td><strong>format.LHV1.nVbrMethod</strong></td>
+        <td>Sepecifes if the VBR method to use, currently the
+        following settings are supported:<p><font size="3">VBR_METHOD_NONE
+        (don't use VBR, use CBR encoding instead),<br>
+        VBR_METHOD_DEFAULT (default VBR method)<br>
+        VBR_METHOD_OLD (old VBR method, proven to be reliable)<br>
+        VBR_METHOD_NEW (new VBR method, faster than
+        VBR_METHOD_OLD)<br>
+        VBR_METHOD_MTRH (depreciated, same as VBR_METHOD_NEW)<br>
+        VBR_METHOD_ABR (Average Bitrate Encoding, see also </font><strong>format.LHV1.dwVbrAbr_bps</strong><font
+        size="3">)</font></p>
+        </td>
+    </tr>
+    <tr>
         <td><strong>format.LHV1.bWriteVBRHeader</strong></td>
         <td>Sepecifes if the a XING VBR header should be written
         or not. When this option is enabled, you have to call the
         <font size="3">beWriteVBRHeader function when encoding
-        has been completed</font></td>
+        has been completed. Keep in mind that the VBR info tag
+        can also be written for CBR encoded files, the TAG info
+        can be useful for additional info like encoder delay and
+        the like.</font></td>
     </tr>
     <tr>
         <td><strong>format.LHV1.bEnableVBR</strong></td>
@@ -378,7 +425,15 @@ need to fill in before you call beInitStream(): <br>
     <tr>
         <td><strong>format.LHV1.dwVbrAbr_bps</strong></td>
         <td>If the Average Bit Rate is specified, the lame
-        encoder ignores the nVBRQuality settings</td>
+        encoder ignores the nVBRQuality settings (However, <strong>bEnableVBR</strong>
+        must be set to TRUE and the <strong>format.LHV1.nVbrMethod
+        </strong>parameter should be set to<strong> </strong><font
+        size="3"><strong>VBR_METHOD_ABR</strong>). The allowed
+        range for the </font><strong>format.LHV1.dwVbrAbr_bps </strong>parameter<strong>
+        </strong>any integer value <font size="3">between:</font><p><strong>MPEG-I:</strong>
+        32000 .. 320000 bps<b><br>
+        </b><strong>MPEG-II:</strong> 8000 .. 160000 bps</p>
+        </td>
     </tr>
     <tr>
         <td>&nbsp;</td>
@@ -390,8 +445,11 @@ need to fill in before you call beInitStream(): <br>
         of padded frames</td>
     </tr>
     <tr>
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
+        <td><strong>format.LHV1.nQuality</strong></td>
+        <td>Quality Setting, HIGH BYTE should be NOT LOW byte,
+        otherwhise quality is set to 5. This is done to be
+        backward compatible. So to set quality to 3, you have to
+        set the nQuality parameter to 0xFC03.</td>
     </tr>
     <tr>
         <td><b>format.mp3.btReserved</b></td>
@@ -675,14 +733,6 @@ WriteLogFile=1</p>
 <p>Save this text file, and each time you encode a file, the
 settings are added to a file name lame_enc.txt, that is located
 in the same directory as the lame_enc.dll</p>
-
-<p>&nbsp;</p>
-
-<p>&nbsp;</p>
-
-<p>&nbsp;</p>
-
-<p>&nbsp;</p>
 
 <p>&nbsp;</p>
 
