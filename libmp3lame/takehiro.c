@@ -383,9 +383,9 @@ int noquant_count_bits(
 {
     int i, a1, a2;
     int *const ix = gi->l3_enc;
-    i=576;
+
     /* Determine count1 region */
-    for (; i > 1; i -= 2) 
+    for (i = 576; i > 1; i -= 2)
 	if (ix[i - 1] | ix[i - 2])
 	    break;
     gi->count1 = i;
@@ -395,7 +395,7 @@ int noquant_count_bits(
     for (; i > 3; i -= 4) {
 	int p;
 	/* hack to check if all values <= 1 */
-	if ((unsigned int)(ix[i-1] | ix[i-2] | ix[i-3] | ix[i-4]) > 1)
+	if ((ix[i-1] | ix[i-2] | ix[i-3] | ix[i-4]) > 1u)
 	    break;
 
 	p = ((ix[i-4] * 2 + ix[i-3]) * 2 + ix[i-2]) * 2 + ix[i-1];
@@ -438,14 +438,13 @@ int noquant_count_bits(
     assert( a2 > 0 );
 
     if (a1 >= a2) {
-	gi->table_select[0] = choosetable(ix, ix + a2,
-					  &gi->part2_3_length);
+	a1 = a2;
     } else {
-	gi->table_select[0] = choosetable(ix, ix + a1,
-					  &gi->part2_3_length);
 	gi->table_select[1] = choosetable(ix + a1, ix + a2,
 					  &gi->part2_3_length);
     }
+    gi->table_select[0] = choosetable(ix, ix + a1, &gi->part2_3_length);
+
     if (gfc->use_best_huffman == 2)
 	best_huffman_divide (gfc, gi);
 
@@ -456,12 +455,10 @@ int count_bits(
           lame_internal_flags * const gfc, 
     const FLOAT  * const xrpow,
           gr_info * const gi
-	  )
+    )
 {
-    int i;
-
     if (gfc->quantization) {
-	i = quantize_xrpow(xrpow, gi);
+	int i = quantize_xrpow(xrpow, gi);
 	if (i)
 	    return i;
     } else
@@ -469,23 +466,21 @@ int count_bits(
 
     if (gfc->substep_shaping & 2) {
 	int sfb, j = 0;
-	int *const ix = gi->l3_enc;
-	// 0.634521682242439 = 0.5946*2**(.5*0.1875)
 	for (sfb = 0; sfb < gi->sfbmax; sfb++) {
-	    int width = gi->width[sfb];
-	    int l;
-	    const FLOAT roundfac = 0.634521682242439
+	    FLOAT roundfac;
+	    int width = gi->width[sfb], l;
+	    j += gi->width[sfb];
+	    if (!gfc->pseudohalf[sfb])
+		continue;
+	    roundfac = 1.0
 		/ IPOW20(gi->global_gain
 			 - ((gi->scalefac[sfb] + (gi->preflag ? pretab[sfb]:0))
 			    << (gi->scalefac_scale + 1))
 			 - gi->subblock_gain[gi->window[sfb]] * 8
-			 + gi->scalefac_scale);
-	    j += width;
-	    if (!gfc->pseudohalf[sfb])
-		continue;
+			 + gi->scalefac_scale + 1);
 	    for (l = -width; l < 0; l++)
 		if (xrpow[j+l] < roundfac)
-		    ix[j+l] = 0;
+		    gi->l3_enc[j+l] = 0;
 	}
     }
     return noquant_count_bits(gfc, gi);
@@ -580,9 +575,9 @@ recalc_divide_sub(
 
 
 
-void best_huffman_divide(
-    const lame_internal_flags * const gfc,
-    gr_info * const gi)
+void
+best_huffman_divide(
+    const lame_internal_flags * const gfc, gr_info * const gi)
 {
     int i, a1, a2;
     gr_info cod_info2;
