@@ -485,6 +485,72 @@ brhist_init_package(lame_global_flags * gf)
 
 
 
+void parse_nogap_filenames(int nogapout,char *outPath, char *inPath) {
+
+    char    *slasher;
+    char    outdir[MAX_NAME_SIZE];
+    if (!nogapout)
+	{
+            strncpy(outPath, inPath, MAX_NAME_SIZE - 4);
+          /* nuke old extension, if one  */
+	  if (outPath[strlen(outPath)-3] == 'w' 
+	      && outPath[strlen(outPath)-2] == 'a'
+	      && outPath[strlen(outPath)-1] == 'v'
+	      && outPath[strlen(outPath)-4] == '.')
+	  {
+	    outPath[strlen(outPath)-3] = 'm';
+	    outPath[strlen(outPath)-2] = 'p';
+	    outPath[strlen(outPath)-1] = '3';
+	  }
+	}
+	else
+	{
+	  strcpy(outdir, outPath);
+	  
+	  slasher = inPath;
+          slasher += MAX_NAME_SIZE-4;
+	  
+	  /* backseek to last dir delemiter */
+	  while (*slasher != '/' && *slasher != '\\' && slasher != inPath)
+	  {
+	    slasher--;
+	  }
+
+	  /* skip one foward if needed */
+	  if (slasher != inPath 
+	      && (outPath[strlen(outPath)-1] == '/'
+		  ||
+		  outPath[strlen(outPath)-1] == '\\')) 
+	    slasher++;
+	  else if (slasher == inPath
+	      && (outPath[strlen(outPath)-1] != '/'
+		  &&
+		  outPath[strlen(outPath)-1] != '\\'))
+#ifdef _WIN32
+	    strcat(outPath, "\\");
+#else
+	    strcat(outPath, "/");
+#endif
+
+	  strcpy(outdir, outPath);
+	    
+	  strncat(outPath, slasher, MAX_NAME_SIZE-4);
+          /* nuke old extension  */
+	  if (outPath[strlen(outPath)-3] == 'w' 
+	      && outPath[strlen(outPath)-2] == 'a'
+	      && outPath[strlen(outPath)-1] == 'v'
+	      && outPath[strlen(outPath)-4] == '.')
+	  {
+	    outPath[strlen(outPath)-3] = 'm';
+	    outPath[strlen(outPath)-2] = 'p';
+	    outPath[strlen(outPath)-1] = '3';
+	  }
+	}
+}
+
+
+
+
 
 
 
@@ -495,9 +561,13 @@ main(int argc, char **argv)
     lame_global_flags *gf;
     char    outPath[MAX_NAME_SIZE];
     char    inPath[MAX_NAME_SIZE];
-#define MAX_NOGAP 40
+
+    /* support for "nogap" encoding of up to 200 .wav files */
+#define MAX_NOGAP 200
+    int    nogapout = 0;
     int     max_nogap = MAX_NOGAP;
     char   *nogap_inPath[MAX_NOGAP];
+
     int     i;
     FILE   *outf;
 
@@ -554,11 +624,15 @@ main(int argc, char **argv)
     if (update_interval < 0.)
         update_interval = 2.;
 
+    if (outPath[0] != '\0')
+      nogapout = 1;
+    
     /* initialize input file.  This also sets samplerate and as much
        other data on the input file as available in the headers */
     if (max_nogap > 0) {
-        strncpy(outPath, nogap_inPath[0], MAX_NAME_SIZE - 4);
-        strncat(outPath, ".mp3", 4);
+        /* for nogap encoding of multiple input files, it is not possible to
+         * specify the output file name, only an optional output directory. */
+        parse_nogap_filenames(nogapout,nogap_inPath[0],outPath);
         outf = init_files(gf, nogap_inPath[0], outPath);
     }
     else {
@@ -603,11 +677,13 @@ main(int argc, char **argv)
     }
     else {
         if (max_nogap > 0) {
+            /*
+             * encode multiple input files using nogap option
+             */
             for (i = 0; i < max_nogap; ++i) {
                 int     use_flush_nogap = (i != (max_nogap - 1));
                 if (i > 0) {
-                    strncpy(outPath, nogap_inPath[i], MAX_NAME_SIZE - 4);
-                    strncat(outPath, ".mp3", 4);
+                    parse_nogap_filenames(nogapout,nogap_inPath[i],outPath);
                     /* note: if init_files changes anything, like
                        samplerate, num_channels, etc, we are screwed */
                     outf = init_files(gf, nogap_inPath[i], outPath);
@@ -616,11 +692,11 @@ main(int argc, char **argv)
                 ret =
                     lame_encoder(gf, outf, use_flush_nogap, nogap_inPath[i],
                                  outPath);	
-
-				if (silent<=0) ReportLameTagProgress(gf,1);
+                
+                if (silent<=0) ReportLameTagProgress(gf,1);
                 lame_mp3_tags_fid(gf, outf); /* add VBR tags to mp3 file */
-				if (silent<=0) ReportLameTagProgress(gf,0);
-				
+                if (silent<=0) ReportLameTagProgress(gf,0);
+                
                 fclose(outf); /* close the output file */
                 close_infile(); /* close the input file */
             }
@@ -628,13 +704,16 @@ main(int argc, char **argv)
 
         }
         else {
+            /*
+             * encode a single input file
+             */
             brhist_init_package(gf);
             ret = lame_encoder(gf, outf, 0, inPath, outPath);
-
-			if (silent<=0) ReportLameTagProgress(gf,1);
+            
+            if (silent<=0) ReportLameTagProgress(gf,1);
             lame_mp3_tags_fid(gf, outf); /* add VBR tags to mp3 file */
-			if (silent<=0) ReportLameTagProgress(gf,0);
-
+            if (silent<=0) ReportLameTagProgress(gf,0);
+            
             fclose(outf); /* close the output file */
             close_infile(); /* close the input file */
             lame_close(gf);

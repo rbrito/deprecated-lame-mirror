@@ -367,8 +367,12 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --mp2input      input file is a MPEG Layer II  file\n"
               "    --mp3input      input file is a MPEG Layer III file\n"
 #if defined(HAVE_VORBIS)
-              "    --ogginput      input file is a Ogg Vorbis file"
+              "    --ogginput      input file is a Ogg Vorbis file\n"
 #endif
+ 	      "    --nogap <file1> <file2> <...>\n"
+ 	      "                    gapless encoding for a set of contiguous files\n"
+ 	      "    --nogapout <dir>\n"
+ 	      "                    output dir for gapless encoding (must precede --nogap)"
               , ProgramName );
 
     wait_for ( fp, lessmode );
@@ -390,7 +394,8 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --scale <arg>   scale input (multiply PCM data) by <arg>\n"
               "    --voice         experimental voice mode\n"
               "    --preset type   type must be phone, voice, fm, tape, hifi, cd or studio\n"
-              "                    \"--preset help\" gives some more infos on these" 
+              "                    \"--preset help\" gives some more infos on these\n" 
+ 	      "    --r3mix         use high-quality VBR preset"
               );
 
     wait_for ( fp, lessmode );
@@ -517,10 +522,6 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    Note: All '--t*' options (except those for track and genre) work for Ogg\n"
               "    Vorbis output, but other ID3-specific options are ignored."
 #endif              
-#if defined(HAVE_GTK)
-              "\n\n"
-              "    -g              run graphical analysis on <infile>"
-#endif
 #if defined(__OS2__)
               "\n\nOS/2-specific options:\n"
               "    --priority <type>     sets the process priority:\n"
@@ -1409,6 +1410,10 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     argUsed = 1;
                     update_interval = atof (nextArg);
 
+		T_ELIF ("nogapout")
+		    strcpy(outPath, nextArg);
+		    argUsed = 1;
+                
                 T_ELIF ("nogap")
                     nogap=1;
                     
@@ -1541,11 +1546,6 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     case 'Z': 
                         lame_set_experimentalZ(gfp,1);
                         break;
-#if defined(HAVE_GTK)
-                    case 'g': /* turn on gtk analysis */
-                        (void) lame_set_analysis( gfp, 1 );
-                        break;
-#endif                  
                     case 'e':        
                         argUsed = 1;
                         
@@ -1622,7 +1622,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
         dosToLongFileName( inPath );
 #endif
     
-    if ( outPath[0] == '\0' ) {
+    if ( outPath[0] == '\0' && count_nogap == 0) {
         if ( inPath[0] == '-' ) {
             /* if input is stdin, default output is stdout */
             strcpy(outPath,"-");
@@ -1637,6 +1637,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
             }
         }
     }
+    
     /* some file options not allowed with stdout */
     if (outPath[0]=='-') {
         (void) lame_set_bWriteVbrTag( gfp, 0 ); /* turn off VBR tag */
