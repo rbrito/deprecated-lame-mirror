@@ -965,7 +965,7 @@ fi
 
 # Define the identity of the package.
 PACKAGE=lame
-VERSION=3.92
+VERSION=3.93
 cat >> confdefs.h <<EOF
 #define PACKAGE "$PACKAGE"
 EOF
