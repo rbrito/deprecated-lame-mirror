@@ -89,6 +89,8 @@ int *scalefac_band_long;
 int *scalefac_band_short;
 
 
+FLOAT8 pow20[Q_MAX];
+FLOAT8 ipow20[Q_MAX];
 FLOAT8 pow43[PRECALC_SIZE];
 static FLOAT8 adj43[PRECALC_SIZE];
 static FLOAT8 adj43asm[PRECALC_SIZE];
@@ -130,9 +132,12 @@ iteration_init( FLOAT8 xr_org[2][2][576],
     for (i = 1; i < PRECALC_SIZE; i++)
       adj43asm[i] = i - 0.5 - pow(0.5 * (pow43[i - 1] + pow43[i]),0.75);
 
+    for (i = 0; i < Q_MAX; i++) {
+	ipow20[i] = pow(2.0, (double)(i - 210) * -0.1875);
+	pow20[i] = pow(2.0, (double)(i - 210) * 0.25);
+    }
   }
 
-  
 
   convert_mdct=0;
   convert_psy=0;
@@ -370,8 +375,7 @@ int numchn=2;
 /*************************************************************************** 
  *         inner_loop                                                      * 
  *************************************************************************** 
- * The code selects the best quantizerStepSize for a particular set
- * of scalefacs                                                            */
+ * The code selects the best global gain for a particular set of scalefacs */
  
 int
 inner_loop( FLOAT8 xr[2][2][576], FLOAT8 xrpow[576],
@@ -380,11 +384,11 @@ inner_loop( FLOAT8 xr[2][2][576], FLOAT8 xrpow[576],
 {
     int bits;
     assert( max_bits >= 0 );
-    cod_info->quantizerStepSize -= 1.0;;
+    cod_info->global_gain--;
     do
     {
-      cod_info->quantizerStepSize += 1.0;
-      bits = count_bits(l3_enc[gr][ch], xrpow, cod_info);  
+      cod_info->global_gain++;
+      bits = count_bits(l3_enc[gr][ch], xrpow, cod_info);
     }
     while ( bits > max_bits );
     return bits;
@@ -773,11 +777,10 @@ int loop_break( III_scalefac_t *scalefac, gr_info *cod_info,
  *********************************************************************/
 void quantize_xrpow(FLOAT8 xr[576], int ix[576], gr_info *cod_info) {
   /* quantize on xr^(3/4) instead of xr */
-  const FLOAT8 quantizerStepSize = cod_info->quantizerStepSize;
 #ifdef NOPOW
-  const FLOAT8 istep = exp((quantizerStepSize * -0.1875) * LOG2);
+  const FLOAT8 istep = exp((cod_info->global_gain - 210) * (-0.1875 * LOG2));
 #else
-  const FLOAT8 istep = pow(2.0, quantizerStepSize * -0.1875);
+  const FLOAT8 istep = ipow20[cod_info->global_gain];
 #endif  
 #ifndef _MSC_VER
   {
@@ -875,7 +878,6 @@ void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
 {
   /* quantize on xr^(3/4) instead of xr */
   register int j;
-  FLOAT8 quantizerStepSize;
   FLOAT8 istep;
 #if defined(__GNUC__) && defined(__i386__) 
 #elif defined (_MSC_VER)
@@ -884,12 +886,10 @@ void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
   FLOAT8 compareval0;
 #endif
 
-  quantizerStepSize = cod_info->quantizerStepSize;
-  
 #ifdef NOPOW
-  istep = exp( (quantizerStepSize * -0.1875) * LOG2 );
+  istep = exp((cod_info->global_gain - 210) * (-0.1875 * LOG2));
 #else
-  istep = pow ( 2.0, quantizerStepSize * -0.1875 );
+  istep = ipow20[cod_info->global_gain];
 #endif
   
 #if defined(_MSC_VER)
@@ -1010,7 +1010,7 @@ bin_search_StepSize2(int      desired_rate,
 
     do
     {
-	cod_info->quantizerStepSize = StepSize;
+	cod_info->global_gain = StepSize;
 	nBits = count_bits(ix, xrspow, cod_info);  
 
 	if (CurrentStep == 1 )

@@ -81,7 +81,7 @@ void init_outer_loop_dual(
   cod_info->part2_length      = 0;
   cod_info->preflag           = 0;
   cod_info->scalefac_scale    = 0;
-  cod_info->quantizerStepSize = 0.0;
+  cod_info->global_gain       = 210;
   cod_info->count1table_select= 0;
   cod_info->count1bits        = 0;
   
@@ -289,7 +289,7 @@ void outer_loop_dual(
   compute_stepsize=1;
 
   while ( (notdone[0] || notdone[1])  ) {
-    static FLOAT8 OldValue[2] = {-30, -30};
+    static FLOAT8 OldValue[2] = {180, 180};
     iteration ++;
 
     if (compute_stepsize) {
@@ -303,7 +303,7 @@ void outer_loop_dual(
 	  }
 	  bits_found[ch]=bin_search_StepSize2(targ_bits[ch],OldValue[ch],
 	      l3_enc[gr][ch],xr[gr][ch],xrpow[gr][ch],cod_info[ch]); 
-	  OldValue[ch] = cod_info[ch]->quantizerStepSize;
+	  OldValue[ch] = cod_info[ch]->global_gain;
 	}
     }
 
@@ -331,7 +331,7 @@ void outer_loop_dual(
 	   * computed in bin_search_StepSize above */
 	  if (iteration==1) {
 	    if(bits_found[ch]>huff_bits) {
-	      cod_info[ch]->quantizerStepSize+=1.0;
+	      cod_info[ch]->global_gain++;
 	      real_bits = inner_loop( xr, xrpow[gr][ch], l3_enc, huff_bits, cod_info[ch], gr, ch );
 	    } else real_bits=bits_found[ch];
 	  }
@@ -480,7 +480,6 @@ void outer_loop_dual(
       pinfo->LAMEmainbits[gr][ch]=cod_info[ch]->part2_3_length;
 #endif
     ResvAdjust(cod_info[ch], l3_side, mean_bits );
-    cod_info[ch]->global_gain = cod_info[ch]->quantizerStepSize + 210.0;
     assert( cod_info[ch]->global_gain < 256 );
   }
 }
@@ -528,9 +527,9 @@ void calc_noise2( FLOAT8 xr[2][576], int ix[2][576], gr_info *cod_info[2],
       tot_noise[ch]=0;
       max_noise[ch]=-999;
 #ifdef NOPOW
-      step[ch] = exp( ((cod_info[ch]->quantizerStepSize) * 0.25) * LOG2 );
+      step = exp( (cod_info->global_gain - 210) * (0.25 * LOG2));
 #else
-      step[ch] = pow( 2.0, (cod_info[ch]->quantizerStepSize) * 0.25 );
+      step[ch] = pow20[cod_info[ch]->global_gain];
 #endif
     }
     for ( sfb = 0; sfb < SBPSY_l; sfb++ ) {
@@ -587,11 +586,11 @@ void calc_noise2( FLOAT8 xr[2][576], int ix[2][576], gr_info *cod_info[2],
 */
     if (cod_info[0]->block_type == 2) {
 #ifdef NOPOW
-      step_0 = exp( ((cod_info[0]->quantizerStepSize) * 0.25) * LOG2 );
-      step_1 = exp( ((cod_info[1]->quantizerStepSize) * 0.25) * LOG2 );
+      step_0 = exp( (cod_info[0]->global_gain - 210) * (0.25 * LOG2));
+      step_1 = exp( (cod_info[1]->global_gain - 210) * (0.25 * LOG2));
 #else
-      step_0 = pow( 2.0, (cod_info[0]->quantizerStepSize) * 0.25 );
-      step_1 = pow( 2.0, (cod_info[1]->quantizerStepSize) * 0.25 );
+      step_0 = pow20[cod_info[0]->global_gain];
+      step_1 = pow20[cod_info[1]->global_gain];
 #endif
 
       for (ch=0 ; ch < gf.stereo ; ch ++ ) {

@@ -5,6 +5,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.27  2000/01/30 06:17:04  takehiro
+ * use lookup table to calculate pow(2.0, xx).(when not defined NOPOW)
+ *
  * Revision 1.26  2000/01/27 05:05:07  markt
  * Takehiro's fft_short and fft_long now the defaults.
  *
@@ -533,7 +536,8 @@ void L3psycho_anal( short int *buffer[2],
       }
 
 
-    fft_short( &wsamp_s[0][0], energy_s, chn, buffer);
+    fft_short( wsamp_s, energy_s, chn, buffer); /* old routines */
+
     /**********************************************************************
      *     compute unpredicatibility of next 200 spectral lines            *
      **********************************************************************/ 

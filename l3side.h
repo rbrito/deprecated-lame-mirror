@@ -5,6 +5,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.6  2000/01/30 06:17:04  takehiro
+ * use lookup table to calculate pow(2.0, xx).(when not defined NOPOW)
+ *
  * Revision 1.5  2000/01/09 10:54:56  takehiro
  * All Huffman code search algorithm is implemented.
  * (-h option to enable this)
@@ -89,7 +92,6 @@ int /*	unsigned */ subblock_gain[3];
 	unsigned sfb_lmax;
 	unsigned sfb_smax;
 	unsigned count1bits;
-	FLOAT8 quantizerStepSize;
 	/* added for LSF */
 	unsigned *sfb_partition_table;
 	unsigned slen[4];

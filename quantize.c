@@ -467,7 +467,7 @@ void init_outer_loop(
   cod_info->part2_length      = 0;
   cod_info->preflag           = 0;
   cod_info->scalefac_scale    = 0;
-  cod_info->quantizerStepSize = 0.0;
+  cod_info->global_gain       = 210;
   cod_info->count1table_select= 0;
   cod_info->count1bits        = 0;
   
@@ -586,7 +586,7 @@ void outer_loop(
   /* BEGIN MAIN LOOP */
   iteration = 0;
   while ( notdone  ) {
-    static FLOAT8 OldValue[2] = {-30, -30};
+    static FLOAT8 OldValue[2] = {180, 180};
     int try_scale=0;
     iteration ++;
     
@@ -599,7 +599,7 @@ void outer_loop(
       }
       bits_found=bin_search_StepSize2(targ_bits,OldValue[ch],
 		  l3_enc[gr][ch],xr[gr][ch],xrpow,cod_info);
-      OldValue[ch] = cod_info->quantizerStepSize;
+      OldValue[ch] = cod_info->global_gain;
     }
     
     
@@ -624,7 +624,7 @@ void outer_loop(
       int real_bits;
       if (iteration==1) {
 	if(bits_found>huff_bits) {
-	  cod_info->quantizerStepSize+=1.0;
+	  cod_info->global_gain++;
 	  real_bits = inner_loop( xr, xrpow, l3_enc, huff_bits, cod_info, gr, ch );
 	} else real_bits=bits_found;
       }
@@ -726,7 +726,7 @@ void outer_loop(
 	      pinfo->LAMEsfb[gr][ch][sfb]-=ifqstep*pretab[sfb];
 	  }
 	  }
-	  pinfo->LAMEqss[gr][ch] = (cod_info->quantizerStepSize+210);
+	  pinfo->LAMEqss[gr][ch] = cod_info->global_gain;
 	  pinfo->over[gr][ch]=over;
 	  pinfo->max_noise[gr][ch]=max_noise;
 	  pinfo->tot_noise[gr][ch]=tot_noise;
@@ -806,7 +806,6 @@ void outer_loop(
     cod_info->part2_3_length += cod_info->part2_length;
   }
   /* finish up */
-  cod_info->global_gain = cod_info->quantizerStepSize + 210.0;
   assert( cod_info->global_gain < 256 );
 
   best_noise[0]=best_over;
@@ -857,9 +856,9 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
     ix_s = (I192_3 *) ix;
 
 #ifdef NOPOW
-    step = exp( ((cod_info->quantizerStepSize) * 0.25) * LOG2 );
+    step = exp( (cod_info->global_gain - 210) * (0.25 * LOG2));
 #else
-    step = pow( 2.0, (cod_info->quantizerStepSize) * 0.25 );
+    step = pow20[cod_info->global_gain];
 #endif
     for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ )
     {
@@ -898,9 +897,9 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
     for ( i = 0; i < 3; i++ )
     {
 #ifdef NOPOW
-        step = exp( ((cod_info->quantizerStepSize) * 0.25) * LOG2 ); 
+        step = exp( (cod_info->global_gain - 210) * (0.25 * LOG2));
 #else
-        step = pow( 2.0, (cod_info->quantizerStepSize) * 0.25 ); 
+	step = pow20[cod_info->global_gain];
 #endif
         for ( sfb = cod_info->sfb_smax; sfb < SBPSY_s; sfb++ )
         {

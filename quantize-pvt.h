@@ -14,6 +14,12 @@ extern int *scalefac_band_short;
 
 extern FLOAT8 pow43[PRECALC_SIZE];
 
+#define Q_MAX 256
+
+extern FLOAT8 pow20[Q_MAX];
+extern FLOAT8 ipow20[Q_MAX];
+
+
 FLOAT8 ATHformula(FLOAT8 f);
 void compute_ath(layer *info,FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY_l]);
 void ms_convert(FLOAT8 xr[2][576],FLOAT8 xr_org[2][576]);
