@@ -217,7 +217,7 @@ FLOAT8 ATHmdct( lame_global_flags *gfp, FLOAT8 f )
     ath = ATHformula( f );
 	  
     /* convert to energy */
-    if (gfp->exp_nspsytune) {
+    if (gfc->exp_nspsytune) {
         ath -= NSATHSCALE;
     } else {
         ath -= 114;    /* MDCT scaling.  From tests by macik and MUS420 code */
@@ -475,7 +475,7 @@ int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576], III_psy_ratio *ratio,
   }
 
   }else{
-    if (gfp->exp_nspsytune) {
+    if (gfc->exp_nspsytune) {
       for ( sfb = 0; sfb < SBMAX_l; sfb++ ){
 	start = gfc->scalefac_band.l[ sfb ];
 	end   = gfc->scalefac_band.l[ sfb+1 ];
@@ -611,7 +611,7 @@ int calc_noise( lame_global_flags *gfp,
         end   = gfc->scalefac_band.l[ sfb+1 ];
         bw = end - start;
 
-	if (gfp->exp_nspsytune) {
+	if (gfc->exp_nspsytune) {
 	  for ( sum = 0.0, l = start; l < end; l++ )
 	    {
 	      FLOAT8 temp;
@@ -797,7 +797,7 @@ void set_pinfo (
             bw = end - start;
             for ( en0 = 0.0, l = start; l < end; l++ ) 
                 en0 += xr[l] * xr[l];
-            if (!gfp->exp_nspsytune) en0/=bw;
+            if (!gfc->exp_nspsytune) en0/=bw;
       /*
     DEBUGF("diff  = %f \n",10*log10(Max(ratio[gr][ch].en.l[sfb],1e-20))
                             -(10*log10(en0)+150));

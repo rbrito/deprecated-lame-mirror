@@ -272,6 +272,12 @@ typedef struct  {
   FLOAT energy_s[3][HBLKSIZE_s];
 
   
+  /* fft.c    */
+#define TRI_SIZE (5-1) /* 1024 =  4**5 */
+  FLOAT costab[TRI_SIZE*2];
+  FLOAT window[BLKSIZE], window_s[BLKSIZE_s/2];
+  
+  
   /* Scale Factor Bands    */
   FLOAT8	w1_l[SBMAX_l], w2_l[SBMAX_l];
   FLOAT8	w1_s[SBMAX_s], w2_s[SBMAX_s];
@@ -302,6 +308,11 @@ typedef struct  {
 
   /* used by the frame analyzer */
   plotting_data *pinfo;
+  
+  
+  /* copied from lame_global_flags */
+  
+  int exp_nspsytune;
 
 } lame_internal_flags;
 

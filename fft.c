@@ -37,18 +37,13 @@
 #include "lame.h"
 #include "fft.h"
 
-#define TRI_SIZE (5-1) /* 1024 =  4**5 */
-static FLOAT costab[TRI_SIZE*2];
-static FLOAT window[BLKSIZE], window_s[BLKSIZE_s/2];
-
-static INLINE void fht(FLOAT *fz, int n)
+static INLINE void fht(lame_internal_flags *gfc, FLOAT *fz, int n)
 {
+    const FLOAT *tri = (const FLOAT *)&gfc->costab[0];
     short k4;
     FLOAT *fi, *fn, *gi;
-    FLOAT *tri;
 
     fn = fz + n;
-    tri = &costab[0];
     k4 = 4;
     do {
 	FLOAT s1, c1;
@@ -168,9 +163,10 @@ static const short rv_tbl[] = {
 #define ms31(f)	(window_s[0x3e - i] * f(i + k + 0xc1))
 
 
-void fft_short(
-    lame_global_flags *gfp, FLOAT x_real[3][BLKSIZE_s], int chn, sample_t *buffer[2])
+void fft_short( lame_internal_flags *gfc, 
+                FLOAT x_real[3][BLKSIZE_s], int chn, sample_t *buffer[2])
 {
+    const FLOAT *window_s = (const FLOAT *)&gfc->window_s[0];
     short i, j, b;
 
     for (b = 0; b < 3; b++) {
@@ -200,13 +196,14 @@ void fft_short(
 	  x[BLKSIZE_s / 2 + 3] = f1 - f3;
 	} while (--j >= 0);
 
-	fht(x, BLKSIZE_s);
+	fht(gfc, x, BLKSIZE_s);
     }
 }
 
-void fft_long(
-    lame_global_flags *gfp, FLOAT x[BLKSIZE], int chn, sample_t *buffer[2])
+void fft_long( lame_internal_flags *gfc,
+               FLOAT x[BLKSIZE], int chn, sample_t *buffer[2] )
 {
+    const FLOAT *window = (const FLOAT *)&gfc->window[0];
     short i,jj = BLKSIZE / 8 - 1;
     x += BLKSIZE / 2;
 
@@ -232,12 +229,15 @@ void fft_long(
       x[BLKSIZE / 2 + 3] = f1 - f3;
     } while (--jj >= 0);
 
-    fht(x, BLKSIZE);
+    fht(gfc, x, BLKSIZE);
 }
 
 
-void init_fft(lame_global_flags *gfp)
+void init_fft(lame_internal_flags *gfc)
 {
+    FLOAT *costab   = &gfc->costab[0];
+    FLOAT *window   = &gfc->window[0];
+    FLOAT *window_s = &gfc->window_s[0];
     int i;
 
     FLOAT r = (FLOAT)(PI*0.125);
@@ -250,7 +250,7 @@ void init_fft(lame_global_flags *gfp)
     /*
      * calculate HANN window coefficients 
      */
-    if (gfp->exp_nspsytune) {
+    if (gfc->exp_nspsytune) {
       for (i = 0; i < BLKSIZE ; i++)
 	window[i] = 0.42-0.5*cos(2*PI*i/(BLKSIZE-1))+0.08*cos(4*PI*i/(BLKSIZE-1)); /* blackmann window */
     } else {

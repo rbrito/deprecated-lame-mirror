@@ -630,6 +630,8 @@ int lame_init_params(lame_global_flags *gfp)
   gfc->sfb21_extra = (gfp->VBR==vbr_rh || gfp->VBR==vbr_mtrh || gfp->VBR==vbr_mt)
                    &&(gfp->out_samplerate >= 32000);
   
+  gfc->exp_nspsytune = gfp->exp_nspsytune;
+  
   return 0;
 }
 

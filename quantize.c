@@ -396,7 +396,7 @@ void amp_scalefac_bands
   else
     distort_thresh *= .95;
 
-  if (gfp->exp_nspsytune && gfp->VBR == vbr_off) {
+  if (gfc->exp_nspsytune && gfp->VBR == vbr_off) {
     int asfb = -1;
     FLOAT8 max_dist = 0;
 
@@ -1042,7 +1042,7 @@ int VBR_prepare
             else 
                 adjust = 2/(1+exp(3.5-pe[gr][ch]/300.))-0.05;
       
-            if (gfp->exp_nspsytune) {
+            if (gfc->exp_nspsytune) {
                 masking_lower_db   = dbQ[gfp->VBR_q]; 
             } else {
                 masking_lower_db   = smrdbQ[gfp->VBR_q] - dbQ[gfp->VBR_q]; 

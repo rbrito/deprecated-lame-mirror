@@ -279,7 +279,7 @@ int L3psycho_anal( lame_global_flags *gfp,
       for ( k = gfc->s3ind[b][0]; k <= gfc->s3ind[b][1]; k++ ) {
 	norm += gfc->s3_l[b][k];
       }
-      if (gfp->exp_nspsytune) {
+      if (gfc->exp_nspsytune) {
 	for ( k = gfc->s3ind[b][0]; k <= gfc->s3ind[b][1]; k++ ) {
 	  gfc->s3_l[b][k] *= 0.5;
 	}
@@ -297,7 +297,7 @@ int L3psycho_anal( lame_global_flags *gfp,
       for ( k = gfc->s3ind_s[b][0]; k <= gfc->s3ind_s[b][1]; k++ ) {
 	norm += gfc->s3_s[b][k];
       }
-      if (0 /*gfp->exp_nspsytune*/) {
+      if (0 /*gfc->exp_nspsytune*/) {
 	for ( k = gfc->s3ind_s[b][0]; k <= gfc->s3ind_s[b][1]; k++ ) {
 	  gfc->s3_s[b][k] *= 0.5;
 	}
@@ -309,7 +309,7 @@ int L3psycho_anal( lame_global_flags *gfp,
       /*DEBUGF("%i  norm=%f  norm_s=%f \n",b,1/norm,norm_l[b]);*/
     }
     
-    init_fft(gfp);
+    init_fft(gfc);
   }
   /************************* End of Initialization *****************************/
   
@@ -346,8 +346,8 @@ int L3psycho_anal( lame_global_flags *gfp,
     wsamp_s = gfc->wsamp_S+(chn & 1);
     wsamp_l = gfc->wsamp_L+(chn & 1);
     if (chn<2) {    
-      fft_long ( gfp, *wsamp_l, chn, buffer);
-      fft_short( gfp, *wsamp_s, chn, buffer);
+      fft_long ( gfc, *wsamp_l, chn, buffer);
+      fft_short( gfc, *wsamp_s, chn, buffer);
     } 
     /* FFT data for mid and side channel is derived from L & R */
     if (chn == 2)
@@ -559,7 +559,7 @@ int L3psycho_anal( lame_global_flags *gfp,
      *    calculation partitions                                           *
      **********************************************************************/
 
-    if (gfp->exp_nspsytune) {
+    if (gfc->exp_nspsytune) {
       b = 0;
       for (j = 0; j < gfc->cw_upper_index && gfc->numlines_l[b] && b<gfc->npart_l_orig; )
         {
@@ -698,7 +698,7 @@ int L3psycho_anal( lame_global_flags *gfp,
 	ecb = 0;
 	ctb = 0;
 
-	if (gfp->exp_nspsytune) {
+	if (gfc->exp_nspsytune) {
 	  for ( k = gfc->s3ind[b][0]; k <= gfc->s3ind[b][1]; k++ )
 	    {
 	      ecb = mask_add(ecb,gfc->s3_l[b][k] * eb2[k],k,k-b,gfc);
@@ -752,7 +752,7 @@ int L3psycho_anal( lame_global_flags *gfp,
 	 *                        at least 20db.  
 	 */
 
-	if (gfp->exp_nspsytune) {
+	if (gfc->exp_nspsytune) {
 	  static FLOAT8 att=0;
 	  if (att==0) att = pow(10.0,-8.0/10);
 	  ecb *= att;
@@ -898,7 +898,7 @@ int L3psycho_anal( lame_global_flags *gfp,
 	FLOAT8 enn = gfc->w1_l[sb] * eb[gfc->bu_l[sb]] + gfc->w2_l[sb] * eb[gfc->bo_l[sb]];
 	FLOAT8 thmm = gfc->w1_l[sb] *thr[gfc->bu_l[sb]] + gfc->w2_l[sb] * thr[gfc->bo_l[sb]];
 
-	if (gfp->exp_nspsytune) {
+	if (gfc->exp_nspsytune) {
 	  /* additive masking */
 	  for ( b = gfc->bu_l[sb]+1; b < gfc->bo_l[sb]; b++ )
 	    {
@@ -978,7 +978,7 @@ int L3psycho_anal( lame_global_flags *gfp,
             FLOAT8 enn  = gfc->w1_s[sb] * eb[gfc->bu_s[sb]] + gfc->w2_s[sb] * eb[gfc->bo_s[sb]];
 	    FLOAT8 thmm = gfc->w1_s[sb] *thr[gfc->bu_s[sb]] + gfc->w2_s[sb] * thr[gfc->bo_s[sb]];
 	    
-	    if (gfp->exp_nspsytune) {
+	    if (gfc->exp_nspsytune) {
                 for ( b = gfc->bu_s[sb]+1; b < gfc->bo_s[sb]; b++ )
 	          {
 		    enn  += eb[b];
