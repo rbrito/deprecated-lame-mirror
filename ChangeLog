@@ -3,11 +3,1201 @@
 -==================-
 
  - All dates/times are in GMT.
+ - This file contains the complete changelog, even commit logs of
+   non official branches. An entry of the form "filename (branchname):"
+   may not apply to the source you get with this package.
  - Generated from cvs log entries
    (cvs2cl --gmt -S --branches --no-wrap --header ChangeLog.header)
 
 -- 
 
+2002-11-17 10:25  aleidinger
+
+	* Dll/Makefile.in, Makefile.in:
+
+	regen
+	
+2002-11-17 10:24  aleidinger
+
+	* Makefile.am:
+
+	Add lame.dsw.
+	
+2002-11-17 10:23  aleidinger
+
+	* Dll/Makefile.am:
+
+	Oops... add missing backslash.
+	
+2002-11-17 10:18  aleidinger
+
+	* Dll/Makefile.in, libmp3lame/Makefile.in:
+
+	regen
+	
+2002-11-17 10:16  aleidinger
+
+	* libmp3lame/Makefile.am:
+
+	Add gain_analysis.[ch] to the distributed files.
+	
+2002-11-17 10:11  aleidinger
+
+	* Dll/Makefile.am:
+
+	Add some missing files.
+	
+2002-11-17 10:09  aleidinger
+
+	* configure:
+
+	gtk12-config -> gtk-config
+	
+2002-11-17 10:05  aleidinger
+
+	* testcase.mp3:
+
+	"Official" testcase.mp3 for this release.
+	
+2002-11-17 09:51  aleidinger
+
+	* ChangeLog.header:
+
+	Add some information about branches.
+	
+2002-11-17 09:46  aleidinger
+
+	* libmp3lame/version.h:
+
+	We are at 3.93-RELEASE now...
+	
+2002-11-17 09:45  aleidinger
+
+	* doc/man/lame.1, frontend/parse.c:
+
+	Warn about fast presets.
+	
+2002-11-16 13:07  takehiro
+
+	* configure (takehiro-2002_05_07-experimental):
+
+	remove vorbis related things
+	
+2002-11-16 12:44  takehiro
+
+	* configure.in (takehiro-2002_05_07-experimental):
+
+	removed vorbis related thing
+	
+2002-11-16 10:07  bouvigne
+
+	* doc/html/presets.html:
+
+	warning about fast presets
+	
+2002-11-13 20:56  bouvigne
+
+	* libmp3lame/: lame.c, presets.c, util.c, util.h
+	(takehiro-stable-2002_10_15):
+
+	change of the default lowpass values (will break testcases)
+	
+2002-11-13 20:24  bouvigne
+
+	* libmp3lame/: lame.c, presets.c:
+
+	rollback of lowpass change before release
+	
+2002-11-10 12:41  takehiro
+
+	* libmp3lame/: encoder.c, psymodel.c, quantize.c
+	(takehiro-2002_05_07-experimental):
+
+	prepare for intensity-stereo.
+	
+2002-11-10 12:40  takehiro
+
+	* libmp3lame/takehiro.c (takehiro-2002_05_07-experimental):
+
+	some trivial optimizations and make some functions static.
+	
+2002-11-10 12:39  takehiro
+
+	* libmp3lame/machine.h (takehiro-2002_05_07-experimental):
+
+	trivial macro fix
+	
+2002-11-10 12:38  takehiro
+
+	* libmp3lame/newmdct.c (takehiro-2002_05_07-experimental):
+
+	optimize subband filter (lowpass/highpass).
+	
+2002-11-10 12:36  takehiro
+
+	* libmp3lame/i386/: choose_table.nas, fft3dn.nas
+	(takehiro-2002_05_07-experimental):
+
+	align -> loopalign
+	better labeling
+	
+2002-11-10 08:24  takehiro
+
+	* libmp3lame/tables.c (takehiro-2002_05_07-experimental):
+
+	- more db2pow() macro use
+	- remove traditional code(which do nothing)
+	
+2002-11-10 08:23  takehiro
+
+	* libmp3lame/psymodel.h (takehiro-2002_05_07-experimental):
+
+	fix warning
+	
+2002-11-10 07:55  takehiro
+
+	* frontend/main.c, frontend/parse.c, libmp3lame/Makefile.am,
+	libmp3lame/Makefile.in, libmp3lame/lame.c,
+	libmp3lame/lame_global_flags.h, libmp3lame/set_get.c,
+	libmp3lame/util.h, libmp3lame/vorbis_interface.c
+	(takehiro-2002_05_07-experimental):
+
+	remove vorbis support, which is too much outdated.
+	
+2002-11-10 07:53  takehiro
+
+	* libmp3lame/takehiro.c (takehiro-2002_05_07-experimental):
+
+	trivial optimization
+	
+2002-11-09 18:45  takehiro
+
+	* libmp3lame/: psymodel.c, tables.c
+	(takehiro-2002_05_07-experimental):
+
+	- optimize ATH handling in mask_add() by changing ATH.cb[] scaling.
+	- more faster long block masking threshold calculation.
+	
+2002-11-09 18:43  takehiro
+
+	* libmp3lame/: encoder.c, takehiro.c
+	(takehiro-2002_05_07-experimental):
+
+	cleanup START/STOP type bit calculation
+	
+2002-11-09 18:42  takehiro
+
+	* libmp3lame/i386/: choose_table.nas, nasm.h
+	(takehiro-2002_05_07-experimental):
+
+	some sync with GOGO.
+	
+2002-11-09 12:34  takehiro
+
+	* libmp3lame/: encoder.c, machine.h, quantize.c, set_get.c,
+	tables.c (takehiro-2002_05_07-experimental):
+
+	clean up decibel -> power conversion
+	
+2002-11-09 12:33  takehiro
+
+	* libmp3lame/psymodel.c (takehiro-2002_05_07-experimental):
+
+	clean up FFT related code.
+	more acculate condition check whether we need short block masking calculation.
+	FIR filter loop unrolling
+	
+2002-11-07 18:47  bouvigne
+
+	* libmp3lame/: lame.c, presets.c, util.c, util.h:
+
+	change of the default lowpass values (will break testcases)
+	
+2002-11-04 16:59  takehiro
+
+	* libmp3lame/psymodel.c (takehiro-2002_05_07-experimental):
+
+	optimize long block masking ratio calculation (partition -> scalefactor band transformation)
+	
+2002-11-04 16:49  takehiro
+
+	* testcase.mp3, libmp3lame/psymodel.c
+	(takehiro-2002_05_07-experimental):
+
+	fix short block masking calcultion(patition to scalefactor band transformation)
+	and trivial cleanups, as is always :)
+	
+2002-11-04 16:00  takehiro
+
+	* libmp3lame/psymodel.c (takehiro-2002_05_07-experimental):
+
+	fix mp3x FFT display.
+	
+2002-11-04 15:56  takehiro
+
+	* testcase.mp3, libmp3lame/encoder.c, libmp3lame/psymodel.c,
+	libmp3lame/reservoir.c, libmp3lame/version.h
+	(takehiro-2002_05_07-experimental):
+
+	now here goes alpha 2.
+	- some trivial optimizaions and cleanups on psymodel.
+	- cleanup mp3x arround
+	
+2002-11-04 13:53  takehiro
+
+	* libmp3lame/: VbrTag.h, encoder.c, lame-analysis.h, machine.h,
+	psymodel.c, psymodel.h, quantize.c, quantize.h, quantize_pvt.c,
+	quantize_pvt.h, set_get.c, tables.c, takehiro.c, util.h
+	(takehiro-2002_05_07-experimental):
+
+	large cleanup mainly arround psymodel (continue)
+	- removed all temporary masking related code, because now I found all the
+	temporal masking code is completely messed up.
+	
+	- do not calculate short block masking ratio when it is not needed.
+	
+	- mp3x FFT energy display fix.
+	
+	- better perceptual entropy calculation, by using ATH.
+	
+	- some include file clean up.
+	
+	- some trivial code cleanup arround quantize/bit counting.
+	
+2002-11-04 13:49  takehiro
+
+	* libmp3lame/lame.c (takehiro-2002_05_07-experimental):
+
+	fix -q 4 setting.
+	
+2002-11-04 13:48  takehiro
+
+	* frontend/gtkanal.c (takehiro-2002_05_07-experimental):
+
+	fix FFT energy display.
+	
+2002-11-03 17:56  takehiro
+
+	* testcase.mp3 (takehiro-2002_05_07-experimental):
+
+	regen with new psymodel, which increases encode delay.
+	
+2002-11-03 17:30  takehiro
+
+	* libmp3lame/: Makefile.am, Makefile.in, encoder.c, encoder.h,
+	l3side.h, lame-analysis.h, lame.c, lame_global_flags.h, newmdct.c,
+	psymodel.c, psymodel.h, quantize.c, quantize_pvt.h, set_get.c,
+	tables.c, takehiro.c, util.c, util.h, vbrquantize.c
+	(takehiro-2002_05_07-experimental):
+
+	large cleanup, mainly on PSYMODEL calculation.
+	- it calculates masking ratio/pe/tot_energy/block_type/frame_type next FRAME,
+	not next GRANULE. it increases the encoding delay, but code is very simple.
+	
+	- "allow different block_type in each channel (L/R)" could be archived even
+	when joint stereo.
+	
+	- l3side.h is merged into util.h
+	
+	- MPEG2/2.5, mp3x's display may corrupt (not tested much).
+	
+2002-11-03 17:23  takehiro
+
+	* libmp3lame/bitstream.c (takehiro-2002_05_07-experimental):
+
+	trivial
+	
+2002-11-03 17:22  takehiro
+
+	* frontend/: gpkplotting.c, gpkplotting.h, gtkanal.c
+	(takehiro-2002_05_07-experimental):
+
+	fix for mp3x MDCT original value display
+	
+2002-11-03 17:00  takehiro
+
+	* libmp3lame/set_get.c (takehiro-2002_05_07-experimental):
+
+	fix abr preset
+	
+2002-11-03 16:55  takehiro
+
+	* libmp3lame/util.c (takehiro-2002_05_07-experimental):
+
+	fix for not --enable-all-float
+	
+2002-11-02 17:47  takehiro
+
+	* libmp3lame/: lame.c, util.h (takehiro-2002_05_07-experimental):
+
+	trivial cleanup
+	
+2002-11-02 17:30  takehiro
+
+	* libmp3lame/: encoder.c, lame.c, presets.c, psymodel.c,
+	quantize.c, quantize_pvt.h, set_get.c, tables.c, util.h,
+	vbrquantize.c (takehiro-2002_05_07-experimental):
+
+	cleanup arround preset.
+	- merged adaptive ATH and msfix parameter into "normal" setting.
+	- simplified how to compare the quantization/scalefactor.
+	
+2002-11-02 17:26  takehiro
+
+	* frontend/parse.c (takehiro-2002_05_07-experimental):
+
+	remove unused prototype.
+	
+2002-11-02 15:50  takehiro
+
+	* libmp3lame/: encoder.c, set_get.c, util.h, vbrquantize.c
+	(takehiro-2002_05_07-experimental):
+
+	remove meaningless variables in preset modes.
+	
+2002-11-02 12:26  takehiro
+
+	* libmp3lame/: VbrTag.c, lame.c, presets.c, quantize.c, tables.c,
+	util.c, util.h, vbrquantize.c (takehiro-2002_05_07-experimental):
+
+	- -q option remapping.
+	  new  very old(-3.92)    old(3.93)
+	   9    8,9                8,9
+	   8    7                  7
+	   7    5,6                5,6
+	 5,6    2,3,4              3,4
+	   4    2 + --substep 5    3 + --substep 5
+	   3    2 + --substep 7    3 + --substep 7
+	   2    cannot emulate     2 + --substep 7
+	   1    cannot emulate     1 + --substep 7
+	   0    cannot emulate     0 + --substep 7
+	
+	- fast_log2() optimization and cleanup.
+	
+2002-11-02 12:18  takehiro
+
+	* libmp3lame/psymodel.c (takehiro-2002_05_07-experimental):
+
+	ATH adjustment aware masking calculation in mask_add() and ms_fix().
+	
+2002-10-31 14:56  takehiro
+
+	* libmp3lame/tables.c (takehiro-2002_05_07-experimental):
+
+	trivial cleanup
+	
+2002-10-31 14:27  takehiro
+
+	* libmp3lame/psymodel.c (takehiro-2002_05_07-experimental):
+
+	some precision fix(maybe)
+	
+2002-10-31 14:26  takehiro
+
+	* doc/html/presets.html (takehiro-2002_05_07-experimental):
+
+	sync with mainline and added some DM presets.
+	
+2002-10-28 11:25  takehiro
+
+	* libmp3lame/: encoder.c, psymodel.h, psymodel.c
+	(takehiro-2002_05_07-experimental):
+
+	now psymodel never return error.
+	
+2002-10-28 11:15  takehiro
+
+	* testcase.mp3, libmp3lame/bitstream.c, libmp3lame/encoder.c,
+	libmp3lame/l3side.h, libmp3lame/lame.c, libmp3lame/machine.h,
+	libmp3lame/newmdct.c, libmp3lame/psymodel.c, libmp3lame/psymodel.h,
+	libmp3lame/quantize.c, libmp3lame/quantize.h,
+	libmp3lame/quantize_pvt.c, libmp3lame/quantize_pvt.h,
+	libmp3lame/reservoir.c, libmp3lame/tables.c, libmp3lame/tables.h,
+	libmp3lame/takehiro.c, libmp3lame/util.h, libmp3lame/vbrquantize.c,
+	libmp3lame/vbrquantize.h (takehiro-2002_05_07-experimental):
+
+	changed FLOAT8 -> FLOAT (except one subband filter coefs, which is defined
+	as "double" in spec).
+	
+2002-10-28 11:12  takehiro
+
+	* mpglib/layer3.c (takehiro-2002_05_07-experimental):
+
+	fix mpglib crash bug, from Mathew Hendry.
+	
+2002-10-28 11:09  takehiro
+
+	* frontend/portableio.h (takehiro-2002_05_07-experimental):
+
+	remove cvs log.
+	
+2002-10-28 10:43  takehiro
+
+	* libmp3lame/: encoder.c, psymodel.c, psymodel.h, tables.c, util.h
+	(takehiro-2002_05_07-experimental):
+
+	remove unused variables
+	
+2002-10-28 10:01  takehiro
+
+	* libmp3lame/psymodel.c (takehiro-2002_05_07-experimental):
+
+	fix long/short typo.
+	
+2002-10-28 10:00  takehiro
+
+	* include/lame.h (takehiro-2002_05_07-experimental):
+
+	added new preset definition
+	
+2002-10-27 14:37  aleidinger
+
+	* configure:
+
+	regen
+	
+2002-10-27 14:36  aleidinger
+
+	* configure.in:
+
+	Forced commit: last commit was - remove -funroll-loops as suggested in the nearby commentNoticed by: takehiro
+	
+2002-10-27 14:32  aleidinger
+
+	* configure.in:
+
+	remove options as suggested in the nearby comment; Noticed by: takehiro
+	
+2002-10-27 13:38  takehiro
+
+	* libmp3lame/: encoder.c, lame.c, lame_global_flags.h, machine.h,
+	newmdct.c, newmdct.h, presets.c, psymodel.c, psymodel.h,
+	quantize.c, set_get.c, tables.c, util.h
+	(takehiro-2002_05_07-experimental):
+
+	large update.
+	- sync mainline,
+	  * side channel sparsing
+	  * new presets, dm-radio and so on.
+	  * blocktype histgram
+	  * fix arround FLOAT_MAX
+	  * tuning substep noise shaping start frequency
+	
+	- large code simplification
+	  * cod_info initialization code is moved to encoder.c
+	  * faster psymodel calculation.
+	
+2002-10-27 13:33  takehiro
+
+	* libmp3lame/vbrquantize.c (takehiro-2002_05_07-experimental):
+
+	sync mainline
+	- fix arround sfb21 and smoothing method 2
+	
+2002-10-27 13:32  takehiro
+
+	* libmp3lame/version.h (takehiro-2002_05_07-experimental):
+
+	To avoid confusing, named it as lame4.0
+	
+2002-10-27 13:30  takehiro
+
+	* frontend/: get_audio.c, get_audio.h, main.c, main.h, mp3rtp.c,
+	mp3x.c, parse.c, parse.h, timestatus.h
+	(takehiro-2002_05_07-experimental):
+
+	sync mainline
+	- fix arround PATHNAMELEN
+	- new presets
+	- fix warnings
+	- fix --silent option
+	- new option "side channel sparsing"
+	
+2002-10-27 13:29  takehiro
+
+	* frontend/brhist.c (takehiro-2002_05_07-experimental):
+
+	- sync mainline (block type histgram, build fix for cygwin)
+	
+2002-10-27 13:26  takehiro
+
+	* configure (takehiro-2002_05_07-experimental):
+
+	regen
+	
+2002-10-27 13:26  takehiro
+
+	* configure.in, doc/html/Makefile.am, doc/html/Makefile.in,
+	doc/html/contributors.html, doc/html/index.html, doc/man/lame.1
+	(takehiro-2002_05_07-experimental):
+
+	sync mainline
+	
+2002-10-27 12:19  robert
+
+	* frontend/portableio.h (takehiro-stable-2002_10_15):
+
+	do we need logging of cvs commits in source files?
+	small fixes in comments due to cvs log entries
+	
+2002-10-27 08:17  takehiro
+
+	* libmp3lame/version.h (takehiro-stable-2002_10_15):
+
+	bump up version number. alpha3 contains
+	- tuning substep noise shpaing (by me, Takehiro)
+	- added side channel sparsing (by Robert)
+	
+2002-10-26 20:41  robert
+
+	* configMS.h, frontend/amiga_mpega.c, frontend/brhist.c,
+	frontend/brhist.h, frontend/console.c, frontend/console.h,
+	frontend/get_audio.c, frontend/get_audio.h, frontend/gpkplotting.c,
+	frontend/gpkplotting.h, frontend/gtkanal.c, frontend/gtkanal.h,
+	frontend/lametime.c, frontend/lametime.h, frontend/main.c,
+	frontend/main.h, frontend/mp3rtp.c, frontend/mp3x.c,
+	frontend/parse.c, frontend/parse.h, frontend/portableio.c,
+	frontend/portableio.h, frontend/rtp.c, frontend/rtp.h,
+	frontend/timestatus.c, frontend/timestatus.h, include/lame.h,
+	libmp3lame/VbrTag.c, libmp3lame/VbrTag.h, libmp3lame/bitstream.c,
+	libmp3lame/bitstream.h, libmp3lame/debugscalefac.c,
+	libmp3lame/encoder.c, libmp3lame/encoder.h, libmp3lame/fft.c,
+	libmp3lame/fft.h, libmp3lame/gain_analysis.c,
+	libmp3lame/gain_analysis.h, libmp3lame/id3tag.c,
+	libmp3lame/id3tag.h, libmp3lame/l3side.h,
+	libmp3lame/lame-analysis.h, libmp3lame/lame.c,
+	libmp3lame/lame_global_flags.h, libmp3lame/machine.h,
+	libmp3lame/mpglib_interface.c, libmp3lame/newmdct.c,
+	libmp3lame/newmdct.h, libmp3lame/presets.c, libmp3lame/psymodel.c,
+	libmp3lame/psymodel.h, libmp3lame/quantize.c,
+	libmp3lame/quantize.h, libmp3lame/quantize_pvt.c,
+	libmp3lame/quantize_pvt.h, libmp3lame/reservoir.c,
+	libmp3lame/reservoir.h, libmp3lame/set_get.c, libmp3lame/tables.c,
+	libmp3lame/tables.h, libmp3lame/takehiro.c, libmp3lame/util.c,
+	libmp3lame/util.h, libmp3lame/vbrquantize.c,
+	libmp3lame/vbrquantize.h, libmp3lame/version.c,
+	libmp3lame/version.h, libmp3lame/vorbis_interface.c,
+	mpglib/common.c, mpglib/common.h, mpglib/dct64_i386.c,
+	mpglib/dct64_i386.h, mpglib/decode_i386.c, mpglib/decode_i386.h,
+	mpglib/huffman.h, mpglib/interface.c, mpglib/interface.h,
+	mpglib/l2tables.h, mpglib/layer1.c, mpglib/layer1.h,
+	mpglib/layer2.c, mpglib/layer2.h, mpglib/layer3.c, mpglib/layer3.h,
+	mpglib/mpg123.h, mpglib/mpglib.h, mpglib/tabinit.c,
+	mpglib/tabinit.h (takehiro-stable-2002_10_15):
+
+	changed C++ comments into C style comments for
+	configMS.h
+	include/*.h
+	frontend/*.[ch]
+	mpglib/*.[ch]
+	libmp3lame/*.[ch]
+	
+2002-10-26 18:53  takehiro
+
+	* libmp3lame/Makefile.in (takehiro-2002_05_07-experimental):
+
+	regen
+	
+2002-10-26 18:52  takehiro
+
+	* libmp3lame/: Makefile.am, debugscalefac.c
+	(takehiro-2002_05_07-experimental):
+
+	remove unused debugscalefac.c
+	
+2002-10-26 18:51  takehiro
+
+	* libmp3lame/Makefile.in (takehiro-2002_05_07-experimental):
+
+	fix build problem
+	
+2002-10-26 16:48  takehiro
+
+	* libmp3lame/presets.c (takehiro-stable-2002_10_15):
+
+	added interchannel masking to dm-radio-fast preset, too.
+	
+2002-10-26 16:47  takehiro
+
+	* libmp3lame/presets.c (takehiro-stable-2002_10_15):
+
+	lower bitrate adjustment and added inter-channel masking for dm-radio preset.
+	
+2002-10-26 16:32  takehiro
+
+	* libmp3lame/quantize.c (takehiro-stable-2002_10_15):
+
+	tuned substep-noise-shaping start frequency of short block (--substep 5).
+	
+2002-10-26 12:31  takehiro
+
+	* libmp3lame/quantize.c (takehiro-stable-2002_10_15):
+
+	fix for not C99 C compiler
+	
+2002-10-26 12:29  takehiro
+
+	* configure (takehiro-stable-2002_10_15):
+
+	regen
+	
+2002-10-26 12:29  takehiro
+
+	* configure.in (takehiro-stable-2002_10_15):
+
+	sync with mainline and added fix for "-funroll-loops" bug on gcc3.0.*
+	
+2002-10-26 12:20  takehiro
+
+	* frontend/parse.c (takehiro-stable-2002_10_15):
+
+	sync mainline... --silent + input from stdin fix.
+	
+2002-10-24 00:04  robert
+
+	* libmp3lame/: vbrquantize.c (takehiro-stable-2002_10_15),
+	vbrquantize.c:
+
+	bug fix in vbr-new
+	possible division by zero
+	
+2002-10-23 23:43  robert
+
+	* frontend/parse.c, libmp3lame/lame.c,
+	libmp3lame/lame_global_flags.h, libmp3lame/quantize.c,
+	libmp3lame/set_get.c, libmp3lame/util.h
+	(takehiro-stable-2002_10_15):
+
+	added mid/side channel sparsing
+	--ms-sparsing n | n=0 disable / n=1 mode 1 / n=2 mode 2
+	--ms-sparse_low x | default 9 dB
+	--ms-sparse_high x | default 3 dB
+	
+2002-10-21 01:27  markt
+
+	* frontend/parse.c:
+
+	truely silent when input is stdin patch committed
+	
+2002-10-20 15:38  takehiro
+
+	* libmp3lame/psymodel.c (takehiro-stable-2002_10_15):
+
+	fix possible float exception
+	
+2002-10-20 15:36  takehiro
+
+	* libmp3lame/version.h (takehiro-stable-2002_10_15):
+
+	bump up the alpha2
+	
+2002-10-20 15:35  takehiro
+
+	* libmp3lame/psymodel.c (takehiro-stable-2002_10_15):
+
+	fix minor boundary check and remove unused variable.
+	
+2002-10-20 13:42  takehiro
+
+	* doc/: html/Makefile.am, html/Makefile.in, html/contributors.html,
+	html/index.html, html/presets.html, man/lame.1
+	(takehiro-stable-2002_10_15):
+
+	sync with mainline
+	
+2002-10-20 13:31  takehiro
+
+	* libmp3lame/quantize.c (takehiro-stable-2002_10_15):
+
+	work arround of --substep for Tom's Diner.
+	
+2002-10-20 13:09  takehiro
+
+	* libmp3lame/psymodel.c (takehiro-stable-2002_10_15):
+
+	faster mask_add()
+	
+2002-10-20 12:31  takehiro
+
+	* libmp3lame/: psymodel.c, quantize_pvt.c, util.h
+	(takehiro-stable-2002_10_15):
+
+	more optimized usage of FAST_LOG().
+	
+2002-10-20 11:39  takehiro
+
+	* frontend/parse.c, include/lame.h, libmp3lame/encoder.c,
+	libmp3lame/lame_global_flags.h, libmp3lame/psymodel.c,
+	libmp3lame/set_get.c (takehiro-stable-2002_10_15):
+
+	removed mixed block related switches, which is "not" as stable as releasing.
+	fix block type decision code when LR/MS change occurs.
+	
+2002-10-20 08:41  takehiro
+
+	* libmp3lame/machine.h (takehiro-stable-2002_10_15):
+
+	float max should be arround 1e38 or so.
+	
+2002-10-20 08:39  takehiro
+
+	* include/lame.h, libmp3lame/set_get.c
+	(takehiro-stable-2002_10_15):
+
+	re-introduce the padding related functions/definitions for backward compatibility.
+	
+2002-10-20 08:38  takehiro
+
+	* frontend/: get_audio.c, get_audio.h, main.c, main.h, mp3rtp.c,
+	mp3x.c, parse.c, parse.h, timestatus.h
+	(takehiro-stable-2002_10_15):
+
+	sync mainline.
+	- PATHLEN related fix.
+	- reduce warning.
+	
+2002-10-20 08:37  takehiro
+
+	* frontend/brhist.c (takehiro-stable-2002_10_15):
+
+	fix for cygwin build.
+	
+2002-10-20 07:34  takehiro
+
+	* libmp3lame/psymodel.c (takehiro-stable-2002_10_15):
+
+	improve attack detection and added release detection for L/S switching.
+	
+2002-10-20 07:27  takehiro
+
+	* libmp3lame/psymodel.c (takehiro-stable-2002_10_15):
+
+	fix warning.
+	
+2002-10-20 07:21  takehiro
+
+	* frontend/parse.c, include/lame.h, libmp3lame/presets.c
+	(takehiro-stable-2002_10_15):
+
+	added some presetes for syncing DM series.
+	fix --preset medium to use -q3, not -q2.
+	
+2002-10-20 07:18  takehiro
+
+	* libmp3lame/vbrquantize.c (takehiro-stable-2002_10_15):
+
+	sync mainline. XXL is defaulted.
+	
+2002-10-19 02:11  robert
+
+	* frontend/brhist.c:
+
+	little bit prettier printing of block types stats
+	
+2002-10-19 02:10  robert
+
+	* frontend/brhist.c (takehiro-stable-2002_10_15):
+
+	little bit prettier printing of block type stats
+	
+2002-10-18 23:54  robert
+
+	* frontend/brhist.c, frontend/parse.c, include/lame.h,
+	libmp3lame/encoder.c, libmp3lame/lame.c, libmp3lame/util.h
+	(takehiro-stable-2002_10_15):
+
+	merger from main branch:
+	simple statistics of block types used (seeing with --brief / --verbose)
+	
+2002-10-18 22:54  robert
+
+	* frontend/brhist.c, frontend/parse.c, include/lame.h,
+	libmp3lame/lame.c, libmp3lame/util.c, libmp3lame/util.h:
+
+	added some simple statistics about block types used:
+	added lame_block_type_hist() and lame_bitrate_block_type_hist() to API
+	using new switch --brief will show one line of percentage types used
+	using switch --verbose will show in more detail used block types
+	
+2002-10-17 17:05  bouvigne
+
+	* frontend/parse.c:
+
+	removed some unused functions
+	
+2002-10-17 13:03  aleidinger
+
+	* include/lame.h:
+
+	correct comment about *_bWriteVbrTag()
+	
+2002-10-16 21:13  robert
+
+	* libmp3lame/vbrquantize.c:
+
+	fixing compiler warnings (unused code removed), some clean up
+	
+2002-10-16 18:01  bouvigne
+
+	* frontend/get_audio.c, frontend/get_audio.h, frontend/parse.c,
+	frontend/parse.h, frontend/timestatus.h, include/lame.h,
+	libmp3lame/set_get.c, libmp3lame/takehiro.c:
+
+	minor code cleanups in order to reduce warnings
+	
+2002-10-15 22:45  robert
+
+	* frontend/main.h, libmp3lame/machine.h
+	(takehiro-stable-2002_10_15):
+
+	fixing Win32 issues
+	
+2002-10-15 22:02  robert
+
+	* libmp3lame/: encoder.c, version.h (takehiro-stable-2002_10_15):
+
+	Takehiro I hope you don't mind, but I bump the version to 94 alpha 1
+	to avoid confusions if binaries are shown up at HA
+	
+2002-10-15 21:29  robert
+
+	* libmp3lame/vbrquantize.c (takehiro-stable-2002_10_15):
+
+	fix for --vbr-new -Y crash
+	we have to calc xr34 for the whole range, for sfb21 too
+	
+2002-10-15 19:16  robert
+
+	* Makefile.unix, libmp3lame/psymodel.c, libmp3lame/util.h:
+
+	reenentrant fix for loudness approx.
+	
+2002-10-15 17:07  takehiro
+
+	* libmp3lame/vbrquantize.c (takehiro-2002_05_07-experimental):
+
+	fix short block with -X 0(vbr smooth method 1), especially for --r3mix.
+	
+2002-10-15 16:35  takehiro
+
+	* libmp3lame/vbrquantize.c (takehiro-stable-2002_10_15):
+
+	fix short block with -X 0(vbr smooth method 1), especially for --r3mix.
+	
+2002-10-15 15:39  takehiro
+
+	* frontend/main.h, libmp3lame/lame.c
+	(takehiro-2002_05_07-experimental):
+
+	fix for no-GTK, and on windows (same as what I've done mainline).
+	
+2002-10-15 15:37  takehiro
+
+	* frontend/main.h (takehiro-stable-2002_10_15):
+
+	ooops, I missed "n".
+	
+2002-10-15 15:35  takehiro
+
+	* libmp3lame/lame.c (takehiro-stable-2002_10_15):
+
+	fix for no-GTK environment.
+	
+2002-10-15 15:30  takehiro
+
+	* libmp3lame/machine.h (takehiro-2002_05_07-experimental):
+
+	fix arround FLT_MAX/FLOAT_MAX (I hope)
+	
+2002-10-15 15:24  aleidinger
+
+	* configure.in:
+
+	different way of specifying the gcc version in the sparc section, the did not worked because autoconf does some nasty things with [ and ]
+	
+2002-10-15 11:30  aleidinger
+
+	* doc/man/lame.1:
+
+	catch up with HTML docs
+	
+2002-10-15 09:54  aleidinger
+
+	* doc/html/Makefile.in:
+
+	regen
+	
+2002-10-15 09:54  aleidinger
+
+	* doc/html/Makefile.am:
+
+	add presets.html
+	
+2002-10-15 09:53  aleidinger
+
+	* doc/html/presets.html:
+
+	typo fix
+	
+2002-10-15 09:50  aleidinger
+
+	* configure:
+
+	regen
+	
+2002-10-15 09:49  aleidinger
+
+	* configure.in:
+
+	Use sparc optimization on gcc 3.[123456].
+	
+	Submitted by:	"Spud McDuck" <dontspamonme@excite.com>
+	
+2002-10-15 09:33  aleidinger
+
+	* frontend/: brhist.c, main.c, main.h, mp3rtp.c, mp3x.c, parse.c:
+
+	PATH_MAX is in POSIX.1 (does not include the trailing NUL, so add +1), not MAXPATHLEN
+	
+2002-10-14 20:06  bouvigne
+
+	* doc/html/: contributors.html, index.html, presets.html:
+
+	html docs
+	
+2002-10-14 16:28  takehiro
+
+	* testcase.mp3 (takehiro-stable-2002_10_15):
+
+	update testcase.
+	
+2002-10-14 16:25  takehiro
+
+	* libmp3lame/: psymodel.c, util.h (takehiro-stable-2002_10_15):
+
+	reenentrant fix for loudness approx.
+	
+2002-10-14 16:06  takehiro
+
+	* Makefile.B32, Makefile.DJGPP, libmp3lame/libmp3lame.dsp
+	(takehiro-stable-2002_10_15):
+
+	build environment related file update.
+	I could not test them, but I hope it works.
+	
+2002-10-14 15:53  takehiro
+
+	* frontend/parse.c (takehiro-2002_05_07-experimental):
+
+	obsoleted --cwlimit option.
+	
+2002-10-14 15:53  takehiro
+
+	* Makefile.B32, Makefile.DJGPP, Makefile.MSVC, Makefile.unix
+	(takehiro-2002_05_07-experimental):
+
+	update Makefiles sync with Makefile.am
+	
+2002-10-13 20:35  takehiro
+
+	* libmp3lame/: Makefile.am, Makefile.in, encoder.c, fft.c, fft.h,
+	lame.c, lame_global_flags.h, libmp3lame.dsp, libmp3lame_vc6.dsp,
+	psymodel.c, psymodel.h, quantize.c, quantize_pvt.c, quantize_pvt.h,
+	set_get.c, tables.c, tables.h, takehiro.c, util.c, util.h,
+	vbrquantize.c (takehiro-2002_05_07-experimental):
+
+	bunch of cleanup for next generation LAME :)
+	- goodbye gpsycho. only nspsy is supported.
+	- functions related the initilization are moved to tables.c
+	- some functions in quantize_pvt.c are moved to quantize.c
+	- functions in fft.c moved to psymodel.c and fft.[ch] are removed
+	- fix ATH-adjust to reentrant.
+	
+2002-10-13 17:30  takehiro
+
+	* libmp3lame/: VbrTag.c, lame.c, lame_global_flags.h, set_get.c
+	(takehiro-2002_05_07-experimental):
+
+	sync the head. record preset parameter in LAME tag.
+	
+2002-10-13 15:52  takehiro
+
+	* frontend/main.h (takehiro-2002_05_07-experimental):
+
+	sync with the head branch.
+	
+2002-10-13 15:48  takehiro
+
+	* libmp3lame/: lame.c, psymodel.c, quantize_pvt.c, set_get.c,
+	util.h (takehiro-2002_05_07-experimental):
+
+	- tuned impulse like signal detection of threshold calculation.
+	
+	- block switching tuning, for impulse like signal by using maximum of filtered
+	signal, not by sum of its energy.
+	
+	- MP3X: print block switching factor(attack_intensity) instead of mx,
+	  for nspsytune mode.
+	
+	- small optimization for ns_firfilter
+	
+	- prepare for faster nspsy. calculate the blocktype first, and after it,
+	  only calculate the threshold for that blocktype.
+	
+	- clean up nspsy variables (remove unused variables).
+	
+	- calc_noise optimization for nspsy.
+	
+2002-10-13 11:36  robert
+
+	* Makefile.MSVC, Makefile.unix (takehiro-2002_05_07-experimental):
+
+	removed scalar.obj from targets
+	
+2002-10-13 08:10  takehiro
+
+	* libmp3lame/: encoder.c, lame.c
+	(takehiro-2002_05_07-experimental):
+
+	oops, I mis-check in th one older version ;(
+	
+2002-10-13 07:58  takehiro
+
+	* libmp3lame/: encoder.c, lame.c, quantize.c, quantize_pvt.c,
+	quantize_pvt.h, tables.h (takehiro-2002_05_07-experimental):
+
+	trivial changes.
+	- cleanup initilization code.
+	- better conjunctions of functions.
+	
+2002-10-09 17:27  takehiro
+
+	* libmp3lame/encoder.c, libmp3lame/lame.c, frontend/parse.c,
+	include/lame.h, libmp3lame/lame_global_flags.h,
+	libmp3lame/set_get.c (takehiro-2002_05_07-experimental):
+
+	large cleanup arround padding
+	- padding mode is always set by suitable one.
+	- gfp->padding_type and the functions to set/get it are removed.
+	
+	unused function optimum_samplefreq() is removed.
+	
+2002-10-09 17:24  takehiro
+
+	* libmp3lame/i386/: Makefile.am, Makefile.in, scalar.nas
+	(takehiro-2002_05_07-experimental):
+
+	remove scalar.nas
+	
+2002-10-09 17:22  takehiro
+
+	* configure (takehiro-2002_05_07-experimental):
+
+	regen
+	
+2002-10-09 17:22  takehiro
+
+	* configure.in (takehiro-2002_05_07-experimental):
+
+	fix extopt for gcc 3.1/3.2
+	
+2002-10-08 19:30  bouvigne
+
+	* libmp3lame/: VbrTag.c, lame.c, lame_global_flags.h, set_get.c:
+
+	preset info stored into Info tag
+	
+2002-10-08 17:43  bouvigne
+
+	* frontend/main.h:
+
+	win32 build fix
+	
+2002-10-08 13:59  takehiro
+
+	* libmp3lame/Makefile.in (takehiro-2002_05_07-experimental):
+
+	regen
+	
+2002-10-08 13:59  takehiro
+
+	* libmp3lame/: Makefile.am, tools.c, tools.h, util.c
+	(takehiro-2002_05_07-experimental):
+
+	removed unused tools.[hc]
+	
+2002-10-08 13:38  takehiro
+
+	* configure (takehiro-2002_05_07-experimental):
+
+	regen once more :(
+	
+2002-10-08 13:35  takehiro
+
+	* configure (takehiro-2002_05_07-experimental):
+
+	regen
+	
+2002-10-08 13:34  takehiro
+
+	* ltconfig, acinclude.m4, configure.in
+	(takehiro-2002_05_07-experimental):
+
+	sync the head branch.
+	fix gcc options for gcc3.1 after and 3.0.x
+	
+2002-10-08 13:30  takehiro
+
+	* libmp3lame/Makefile.in (takehiro-2002_05_07-experimental):
+
+	regen
+	
+2002-10-08 13:19  takehiro
+
+	* frontend/: main.c, main.h, mp3rtp.c, mp3x.c, parse.c
+	(takehiro-2002_05_07-experimental):
+
+	sync the head branch.
+	- MAXPATHLEN related fix.
+	- sizeof(short) related fix.
+	
+2002-10-08 13:18  takehiro
+
+	* libmp3lame/lameerror.h, include/lame.h, libmp3lame/Makefile.am
+	(takehiro-2002_05_07-experimental):
+
+	moved error code definitions into lame.h
+	
+2002-10-08 12:58  takehiro
+
+	* frontend/main.c:
+
+	sync my branch: fix warning of ReportLameTagProgress() definition
+	
+2002-10-08 12:51  takehiro
+
+	* libmp3lame/VbrTag.c (takehiro-2002_05_07-experimental):
+
+	remove unneeded include
+	
+2002-10-08 12:50  takehiro
+
+	* libmp3lame/encoder.c (takehiro-2002_05_07-experimental):
+
+	fix NO_PAD
+	
+2002-10-08 09:09  aleidinger
+
+	* configure:
+
+	regen
+	
+2002-10-08 08:59  aleidinger
+
+	* ChangeLog:
+
+	update with uptodate data
+	
 2002-10-08 08:57  aleidinger
 
 	* ChangeLog.header:
