@@ -1,31 +1,21 @@
 #
-# Makefile for LAME 3.xx
+# Makefile.in for LAME 3.xx
 #
-# LAME is reported to work under:  
-# Linux (i86), NetBSD 1.3.2 (StrongARM), FreeBSD (i86)
-# Compaq Alpha(OSF, Linux, Tru64 Unix), Sun Solaris, SGI IRIX,
-# OS2 Warp, Macintosh PPC, BeOS, Amiga and even VC++ 
-# 
-
+# processed by ./configure to produce Makefile
+#
+#
 # these variables are available on command line:
 #
-#   make NOUNIXCMD=YES            - don't use unix commands
 #   make UNAME=xxxxx ARCH=xxxxx   - specify a type of host
 #   make PGM=lame_exp             - specify a name of an executable file
 #
-# if you have mingw32-gcc, try:
-#   make NOUNIXCMD=YES UNAME=MSDOS
 #
 SHELL = @SHELL@
 @SET_MAKE@
 
-ifeq ($(NOUNIXCMD),YES)
-  UNAME ?= UNKNOWN
-  ARCH ?= UNKNOWN_ARCH
-else
-  UNAME = $(shell uname)
-  ARCH = $(shell uname -m)
-endif
+UNAME ?= $(shell uname)
+ARCH ?= $(shell uname -m)
+
 
 prefix = @prefix@
 exec_prefix = @exec_prefix@

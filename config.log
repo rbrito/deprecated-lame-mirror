@@ -1,3 +1,42 @@
 This file contains any messages produced by compilers while
 running configure, to aid debugging if configure makes a mistake.
 
+configure:569: checking host system type
+configure:594: checking for gcc
+configure:707: checking whether the C compiler (gcc  ) works
+configure:723: gcc -o conftest    conftest.c  1>&5
+configure:749: checking whether the C compiler (gcc  ) is a cross-compiler
+configure:754: checking whether we are using GNU C
+configure:782: checking whether gcc accepts -g
+configure:816: checking whether make sets ${MAKE}
+configure:845: checking for ranlib
+configure:873: checking whether ln -s works
+configure:905: checking for a BSD compatible install
+configure:964: checking for initscr in -ltermcap
+configure:1004: checking for initscr in -lcurses
+configure:1044: checking for initscr in -lncurses
+configure:1084: checking for cos in -lm
+configure:1125: checking for sf_open_read in -lsndfile
+configure:1165: checking for ogg_sync_init in -lvorbis
+configure:1207: checking use of file io
+configure:1290: checking use of vorbis
+configure:1360: checking use of mpg123 decoder
+configure:1379: checking for gtk-config
+configure:1413: checking use of GTK frame analyzer
+configure:1440: checking use of VBR bitrate histogram
+configure:1472: checking how to run the C preprocessor
+configure:1552: checking for ANSI C header files
+configure:1659: checking for fcntl.h
+configure:1659: checking for limits.h
+configure:1659: checking for sys/time.h
+configure:1659: checking for unistd.h
+configure:1697: checking for working const
+configure:1772: checking for size_t
+configure:1805: checking whether time.h and sys/time.h may both be included
+configure:1843: checking for working alloca.h
+configure:1876: checking for alloca
+configure:2075: checking return type of signal handlers
+configure:2116: checking for vprintf
+configure:2223: checking for gettimeofday
+configure:2223: checking for socket
+configure:2223: checking for strtol

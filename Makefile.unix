@@ -19,8 +19,8 @@ ifeq ($(UNAME),MSDOS)
   UNAME ?= UNKNOWN
   ARCH ?= UNKNOWN_ARCH
 else
-  UNAME = $(shell uname)
-  ARCH = $(shell uname -m)
+  UNAME ?= $(shell uname)
+  ARCH ?= $(shell uname -m)
 endif
 
 # generic defaults. OS specific options go in versious sections below

@@ -67,7 +67,7 @@ And the folloing options can be used with ./configure:
                               [default:yes, if installed]"
   --with-vorbis-prefix=DIR    Alternate location for vorbis
 
-  --enable-decoder            Include mpg123/mpglib decoder [default:yes]"
+  --enable-decoder=yes,no     Include mpg123/mpglib decoder [default:yes]"
 
   --enable-analyzer=yes,no    Whether to include the GTK frame analyzer 
                               (default yes if possible)
