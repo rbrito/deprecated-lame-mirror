@@ -255,18 +255,11 @@ int L3psycho_anal( lame_global_flags *gfp,
   /* chn=2 and 3 = Mid and Side channels */
   if (gfp->mode == MPG_MD_JOINT_STEREO) numchn=4;
   for (chn=0; chn<numchn; chn++) {
-  
-    wsamp_s = gfc->wsamp_S+(chn & 1);
-    wsamp_l = gfc->wsamp_L+(chn & 1);
 
-
+    /* there is a one granule delay.  Copy maskings computed last call
+     * into masking_ratio to return to calling program.
+     */
     if (chn<2) {    
-      /**********************************************************************
-       *  compute FFTs
-       **********************************************************************/
-      fft_long ( *wsamp_l, chn, buffer);
-      fft_short( *wsamp_s, chn, buffer); 
-      
       /* LR maskings  */
       percep_entropy[chn] = gfc->pe[chn]; 
       masking_ratio[gr_out][chn].thm = gfc->thm[chn];
@@ -276,8 +269,20 @@ int L3psycho_anal( lame_global_flags *gfp,
       percep_MS_entropy[chn-2] = gfc->pe[chn]; 
       masking_MS_ratio[gr_out][chn-2].en = gfc->en[chn];
       masking_MS_ratio[gr_out][chn-2].thm = gfc->thm[chn];
+    }
       
-      if (chn == 2)
+
+    /**********************************************************************
+     *  compute FFTs
+     **********************************************************************/
+    wsamp_s = gfc->wsamp_S+(chn & 1);
+    wsamp_l = gfc->wsamp_L+(chn & 1);
+    if (chn<2) {    
+      fft_long ( *wsamp_l, chn, buffer);
+      fft_short( *wsamp_s, chn, buffer);
+    } 
+    /* FFT data for mid and side channel is derived from L & R */
+    if (chn == 2)
       {
         for (j = BLKSIZE-1; j >=0 ; --j)
         {
@@ -297,7 +302,7 @@ int L3psycho_anal( lame_global_flags *gfp,
           }
         }
       }
-    }
+
 
     /**********************************************************************
      *  compute energies

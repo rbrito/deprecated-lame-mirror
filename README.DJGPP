@@ -1,0 +1,88 @@
+
+               Compiling LAME with DJGPP
+                       by S.T.L.               
+
+(LAME's homepage is http://www.sulaco.org/mp3, and LAME is distributed
+under the LGPL. More information is in the README file)
+
+============================================================================
+
+(Note: S.T.L. doesn't know C programming (...yet) but he has learned
+how to compile things with DJGPP. He's not providing his E-mail address
+here because he wouldn't know how to answer any questions even if you
+asked him!)
+
+Compiling LAME with DJGPP is actually somewhat easy, though not as easy
+as you might expect at first glance. Here are step-by-step instructions
+on how to compile LAME with the latest version of DJGPP. S.T.L. runs a
+Pentium III 600Mhz system using Windows 98 SE. These instructions should
+work on any Windows 9x system and probably Windows 2000 as well, and for
+all true Intel Pentium III, Pentium II, Celeron, or Pentium Pro processors.
+The instructions can be made to work (with less optimization) on other
+processors including Pentium (MMX or not), 486, 386, and K6. Also this
+might work under DOS, but I haven't tried it. S.T.L. takes no responsibility
+for what you do with these instructions. Now, let's get compiling!
+
+1) Find and install DJGPP.  It's at www.delorie.com. They have a Zip Picker
+there that makes the process easy and painless.
+
+2) Download the LAME sourcecode, preferably the latest version. Extract it
+to a directory using WinZip or another decompressor set to preserve the
+directory structure. Hopefully you already have done this, as you're reading
+this file!
+
+3) Create a new directory wherever. I called mine Crud.
+
+4) In the directory with all the .c and .h files (and the README, INSTALL, etc
+files), copy all the *.c and *.h files to the Crud directory.
+
+5) Go into the Crud directory and delete the following files and no others:
+debugscalefac.c
+mp3rtp.c
+mp3x.c
+rtp.c
+
+6) The command (don't type this!)
+GCC -o LAME_BAD.EXE -DNDEBUG -DLAMESNDFILE -DLAMEPARSE *.c
+should now create a terribly unoptimized but working LAME_BAD.EXE. Don't type
+it, because optimizations are a good thing and are what you want. I only
+provide the command so you can use it as a last resort. Here's how to execute
+the optimized command:
+
+7) In the Crud directory, create a new file. I called mine FILE. (In the DOS
+prompt, typing EDIT FILE will create such a file with no extension). Make its
+text consist of:
+
+-s -O2 -march=i686 -fomit-frame-pointer -ffast-math -funroll-loops 
+-funroll-all-loops -malign-double -fstrict-aliasing -o LAME.EXE -DNDEBUG 
+-DLAMESNDFILE -DLAMEPARSE *.c
+
+That should be one line in FILE even if it doesn't look like it in NotePad
+or whereever you're reading this. It is case sensitive.  If you're curious,
+you're making this file instead of typing a commandline directly
+because DOS will scream at such a long commandline.
+
+***ONLY FOR PENTIUM III, PENTIUM II, CELERON, OR PENTIUM PRO USERS***
+8) Now, save FILE and go back to the Crud directory. Typing GCC @FILE will
+now compile LAME.EXE. It will be heavily optimized - on my machine, it can
+encode a .WAV file using the -h -b256 -ms options at 5.73X, while the
+official binary I downloaded and ran using those same options only achieved
+5.32X.
+
+9) Have fun!
+
+***FOR OTHER PROCESSORS***
+8a) Using the commandline in (7) won't work for non-P6-core processors.
+Therefore you must use another commandline. The key is the -march=i686
+option. If you are running a Pentium (MMX or not), use -march=i586. For
+the 386 and 486, the option should now be self-explanatory! For a K6
+processor, use -march=k6 . For any other type of processor, you'll just
+have to not use the -march option at all, which will cost you some
+optimization. If you'd like to create an executable that runs fast on
+[modern computer X], say a Pentium III, but you still want it to be
+able to run on any i386 or later computer, use the -mcpu=[CPU TYPE
+HERE], using the same cpu types as -march= accepts.  The
+mcpu option gives less optimization, though.
+
+9a) Have fun!
+

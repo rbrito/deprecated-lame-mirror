@@ -1051,7 +1051,6 @@ set_pinfo (lame_global_flags *gfp,
       for ( i = 0; i < 3; i++ ) {
 	for ( en0 = 0.0, l = start; l < end; l++ ) {
 	  en0 += xr[j] * xr[j];
-	//	  en0 += (*xr_s)[l][i] * (*xr_s)[l][i];
 	  ++j;
 	}
 	en0=Max(en0/bw,1e-20);
@@ -1098,13 +1097,14 @@ average seems to be about -135db.
 	gfc->pinfo->en_s[gr][ch][3*sfb+i] = en1*en0;
 	
 	if (ratio->en.s[sfb][i]>0)
-	  en0 = en0/ratio->thm.s[sfb][i];
+	  en0 = en0/ratio->en.s[sfb][i];
 	else
 	  en0=0;
 	if (gfp->ATHonly || gfp->ATHshort)
 	  en0=0;
 
-	gfc->pinfo->thr_s[gr][ch][3*sfb+i] = en1*Max(en0*ratio->thm.s[sfb][i],gfc->ATH_s[sfb]);
+	gfc->pinfo->thr_s[gr][ch][3*sfb+i] = 
+en1*Max(en0*ratio->thm.s[sfb][i],gfc->ATH_s[sfb]);
 
 	
 	/* there is no scalefactor bands >= SBPSY_s */
