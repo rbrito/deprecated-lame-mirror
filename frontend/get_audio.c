@@ -103,8 +103,10 @@ static int  fskip ( FILE* fp, long offset, int whence )
         return 0;
 #endif	
     
-    if ( whence != SEEK_CUR  ||  offset < 0 )
-      return -1;
+    if ( whence != SEEK_CUR  ||  offset < 0 ) {
+        fprintf ( stderr, "fskip problem: Mostly the return status of functions is not evaluate so it is more secure to polute <stderr>.\n" );
+        return -1;
+    }
 
     while ( offset > 0 ) {
         read      = offset > sizeof(buffer)  ?  sizeof(buffer)  :  offset;
@@ -1286,7 +1288,7 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
     aid_header = (unsigned char) buf[0] + 256*(unsigned char)buf[1];
     fprintf(stderr,"Album ID found.  length=%i \n",aid_header);
     /* skip rest of AID, except for 6 bytes we have already read */
-    fskip(fd,aid_header-6,1);
+    fskip ( fd, aid_header-6, SEEK_CUR );
 
     /* read 2 more bytes to set up buffer for MP3 header check */
     if (fread(&buf,1,2,fd) == 0) return -1;  /* failed */
@@ -1319,7 +1321,7 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
     num_frames=pTagData.frames;
     fprintf(stderr,"\rXing VBR header dectected.  MP3 file has %i frames\n",num_frames);
     
-    fskip(fd,pTagData.headersize-48 ,1);
+    fskip ( fd, pTagData.headersize-48 ,SEEK_CUR );
     /* look for next sync word in buffer*/
     len=2;
     buf[0]=buf[1]=0;

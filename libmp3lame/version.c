@@ -22,17 +22,33 @@
 #include "version.h"    // macros of version numbers
 
 
-const char*  get_lame_version ( void )
+const char*  get_lame_version ( void )  // primary for reports on screen
 {
     static char ret [48];
     
     if (LAME_ALPHA_VERSION > 0)
-      /* adding date and time to version string makes it harder for
-       * output validation */
-      /*        sprintf ( ret, "%u.%02d (alpha %u, %6.6s %5.5s)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION, LAME_ALPHA_VERSION, __DATE__, __TIME__ ); */
-        sprintf ( ret, "%u.%02d (alpha %u)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION, LAME_ALPHA_VERSION);
+        sprintf ( ret, "%u.%02d (alpha %u, %6.6s %5.5s)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION, LAME_ALPHA_VERSION, __DATE__, __TIME__ );
     else if (LAME_BETA_VERSION > 0)
         sprintf ( ret, "%u.%02d (beta %u, %s)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION, LAME_BETA_VERSION, __DATE__ );
+    else
+        sprintf ( ret, "%u.%02d", LAME_MAJOR_VERSION, LAME_MINOR_VERSION );
+        
+    return ret;
+}
+
+const char*  get_lame_short_version ( void )  // primary to write into MP3 files
+{
+    static char ret [32];
+    
+    /* adding date and time to version string makes it harder for
+     * output validation
+     * I also removed version string and replaced by a "1" to be mt friendly 
+     */
+    
+    if (LAME_ALPHA_VERSION > 0)
+        sprintf ( ret, "%u.%02d (alpha 1)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION );
+    else if (LAME_BETA_VERSION > 0)
+        sprintf ( ret, "%u.%02d (beta 1)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION );
     else
         sprintf ( ret, "%u.%02d", LAME_MAJOR_VERSION, LAME_MINOR_VERSION );
         

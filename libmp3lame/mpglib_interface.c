@@ -20,9 +20,20 @@ static const int smpls[2][4]={
 
 
 
-static int is_syncword(char *header)
+static int is_syncword(char *header)  
+// bitstreams should be 'unsigned char', ISO otherwise not guarantees a lot !!!
+// bit operator on 'char' are not portable.
 {
-
+#ifdef KLEMM_08
+    const unsigned char* p = header;
+    
+    int mpeg1  = header[0] == 0xFF  &&  (header[1] & 0xF0) == 0xF0;
+    int mpeg25 = header[0] == 0xFF  &&  (header[1] & 0xF0) == 0xE0;
+  
+    return mpeg1 | mpeg25;
+    
+#else
+    // Sorry, I'm not a parser, I'm a human. I can't read this. I can only hope ...
 /*
 unsigned int s0,s1;
 s0 = (unsigned char) header[0];
@@ -37,8 +48,7 @@ printf(" syncword:  %2X   %2X   \n ",s0, s1);
     ((int) ( (header[1] & (char) 0xF0) == (char) 0xE0));
   
   return (mpeg1 || mpeg25);
- 
-
+#endif 
 }
 
 

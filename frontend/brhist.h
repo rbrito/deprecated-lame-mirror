@@ -34,6 +34,7 @@ void  brhist_disp_total ( const lame_global_flags *gf );
 typedef struct {
     FILE*   Console_fp;			/* filepointer to stream reporting information */
     FILE*   Error_fp;                   /* filepointer to stream fatal error reporting information */
+    FILE*   Report_fp;                  /* filepointer to stream reports (normally a text file or /dev/null) */
 #if defined(_WIN32)  &&  !defined(__CYGWIN__) 
     HANDLE  Console_Handle;
 #endif

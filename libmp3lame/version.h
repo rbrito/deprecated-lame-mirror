@@ -28,7 +28,7 @@
 
 # define LAME_MAJOR_VERSION      3      /* Major version number */
 # define LAME_MINOR_VERSION     88      /* Minor version number */
-# define LAME_ALPHA_VERSION      1      /* Patch level of alpha version, otherwise zero */
+# define LAME_ALPHA_VERSION      2      /* Patch level of alpha version, otherwise zero */
 # define LAME_BETA_VERSION       0      /* Patch level of beta  version, otherwise zero */
 
 # define PSY_MAJOR_VERSION       0      /* Major version number */
@@ -41,8 +41,10 @@
 # define MP3X_ALPHA_VERSION      0      /* Set number if this is an alpha version, otherwise zero */
 # define MP3X_BETA_VERSION       0      /* Set number if this is a beta version, otherwise zero */
 
-const char*  get_psy_version    ( void );       /* returns psy model version number string */
-const char*  get_mp3x_version   ( void );       /* returns mp3x version number string */
+const char*  get_lame_version       ( void ); /* returns lame long version number string */
+const char*  get_lame_short_version ( void ); /* returns lame short version number string */
+const char*  get_psy_version        ( void ); /* returns psy model version number string */
+const char*  get_mp3x_version       ( void ); /* returns mp3x version number string */
 
 #endif  /* LAME_VERSION_H */
 

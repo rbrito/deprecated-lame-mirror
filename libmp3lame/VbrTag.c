@@ -492,7 +492,7 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
 	nStreamIndex+=4;
 
 	/* Put LAME id */
-	sprintf(str1,"LAME%s",get_lame_version());
+	sprintf(str1,"LAME%s",get_lame_short_version());
 	strncpy((char *)&pbtStreamBuffer[nStreamIndex],str1,(size_t) 20);
 	nStreamIndex+=20;
 

@@ -221,7 +221,7 @@ FLOAT8 ATHmdct( lame_global_flags *gfp, FLOAT8 f )
         ath -= NSATHSCALE;
     } else {
 #ifdef KLEMM_01
-        ath -= 96;
+        ath -= 114;
 #else
         ath -= 114;    /* MDCT scaling.  From tests by macik and MUS420 code */
 #endif

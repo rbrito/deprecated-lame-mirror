@@ -100,8 +100,6 @@ static size_t  calculate_index ( const int* const array, const size_t len, const
 
 int  brhist_init ( const lame_global_flags* const gf, const int bitrate_kbps_min, const int bitrate_kbps_max )
 {
-    int    unused [BRHIST_WIDTH];
-
 #ifdef TERMCAP_AVAILABLE
     char   term_buff [1024];
     char*  termname;
@@ -129,7 +127,7 @@ int  brhist_init ( const lame_global_flags* const gf, const int bitrate_kbps_min
 #endif
 
     /* initialize histogramming data structure */
-    lame_bitrate_hist ( gf, unused, brhist.kbps );
+    lame_bitrate_hist ( gf, NULL, brhist.kbps );
     brhist.vbr_bitrate_min_index = calculate_index ( brhist.kbps, BRHIST_WIDTH, bitrate_kbps_min );
     brhist.vbr_bitrate_max_index = calculate_index ( brhist.kbps, BRHIST_WIDTH, bitrate_kbps_max );
 

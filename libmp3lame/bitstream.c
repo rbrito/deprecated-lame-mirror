@@ -171,7 +171,7 @@ drain_into_ancillary(lame_global_flags *gfp,int remainingBits)
       
     if (remainingBits >= 32) {
       const char * version;
-      version = get_lame_version();
+      version = get_lame_short_version ();
       if (remainingBits >= 32) 
 	for (i=0; i<(int)strlen(version) && remainingBits >=8 ; ++i) {
 	  remainingBits -= 8;

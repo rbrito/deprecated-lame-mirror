@@ -165,8 +165,11 @@ void decoder_progress ( const lame_global_flags* const gfp, const mp3data_struct
 {
     fprintf ( stderr, "\rFrame#%6i/%-6i %3i kbps",
               mp3data->framenum, mp3data->totalframes, mp3data->bitrate );
-    if ( mp3data->mode == MPG_MD_JOINT_STEREO )
-        fprintf ( stderr, "  %s" , 2==mp3data->mode_ext ? "M " : " S" );
+    if ( mp3data->mode == MPG_MD_JOINT_STEREO ) {
+        static int last;
+        fprintf ( stderr, "  %s" , 2==mp3data->mode_ext  ?  last ? " MS " : "LMSR"  :  last ? "LMSR" : "L  R" );
+        last = 2==mp3data->mode_ext;
+    }
     fprintf ( stderr, "%s", Console_IO.str_clreoln );
 }
 

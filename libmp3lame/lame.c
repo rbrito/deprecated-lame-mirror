@@ -1288,14 +1288,14 @@ void lame_bitrate_hist(
     
     assert( gfp != NULL );
     assert( gfp->internal_flags != NULL );
-    assert( bitrate_count != NULL );
-    assert( bitrate_kbps  != NULL );
     
     gfc = (lame_internal_flags*)gfp->internal_flags;
     
     for (i = 0; i < 14; i++) {
-        bitrate_count[i] = gfc->bitrateHist[i+1];
-        bitrate_kbps [i] = bitrate_table[gfp->version][i+1];
+        if (bitrate_count != NULL) 
+	    bitrate_count [i] = gfc->bitrateHist [i+1];
+        if (bitrate_kbps  != NULL) 
+	    bitrate_kbps  [i] = bitrate_table [gfp->version] [i+1];
     }
 }
 
