@@ -1050,7 +1050,7 @@ static int  dm_presets( lame_t gfp, int fast, int cbr, const char* preset_name, 
         lame_set_quality(gfp, 2);
         lame_set_lowpassfreq(gfp, 19000);
         lame_set_mode(gfp, JOINT_STEREO);
-        lame_set_VBR_min_bitrate_kbps(gfp, 112);
+        lame_set_VBR_min_bitrate_kbps(gfp, 128);
 
         return 0;
     }
