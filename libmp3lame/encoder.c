@@ -473,7 +473,7 @@ fill_buffer_resample(lame_t gfc, sample_t *outbuf, sample_t *inbuf, int len,
 
 	/* blackman filter.  by default, window centered at j+.5(filter_l%2) */
 	/* but we want a window centered at time0.   */
-	offset = time0 - (j + .5*(filter_l%2));
+	offset = time0 - (j + .5*(filter_l & 1));
 	assert(fabs(offset)<=.500);
 
 	/* find the closest precomputed window for this offset: */
@@ -589,8 +589,8 @@ lame_encode_buffer_sample_t(
 				   + buffer_lr[i+nsamples]);
     }
 
-    in_buffer[0]=buffer_lr;
-    in_buffer[1]=buffer_lr + nsamples;
+    in_buffer[0] = buffer_lr;
+    in_buffer[1] = buffer_lr + nsamples;
 
     /* some sanity checks */
 #if ENCDELAY < MDCTDELAY
@@ -607,7 +607,7 @@ lame_encode_buffer_sample_t(
     assert(nsamples > 0);
     do {
 	int buf_size, n_in, n_out, ch;
-        /* copy in new samples into mfbuf, with resampling
+	/* copy in new samples into mfbuf, with resampling
 	 * consume (n_in) samples from in_buffer,
 	 * and output (n_out) samples in gfc->mfbuf. */
 	for (ch = 0; ch < gfc->channels_out; ch++) {
@@ -620,9 +620,7 @@ lame_encode_buffer_sample_t(
 
 	/* update mfbuf[] counters */
 	gfc->mf_size += n_out;
-	gfc->mf_samples_to_encode += n_out;
-
-        if (gfc->mf_size < mf_needed)
+	if (gfc->mf_size < mf_needed)
 	    break;
 
 	assert(gfc->mf_size <= MFSIZE);
@@ -649,7 +647,6 @@ lame_encode_buffer_sample_t(
 
 	/* shift out old samples */
 	gfc->mf_size -= gfc->framesize;
-	gfc->mf_samples_to_encode -= gfc->framesize;
 	for (ch = 0; ch < gfc->channels_out; ch++)
 	    memcpy(gfc->mfbuf[ch], &gfc->mfbuf[ch][gfc->framesize],
 		   sizeof(sample_t) * gfc->mf_size);
