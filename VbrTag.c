@@ -238,7 +238,7 @@ int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
 */
 int InitVbrTag(lame_global_flags *gfp)
 {
-	int i,nMode,SampIndex;
+	int nMode,SampIndex;
 	lame_internal_flags *gfc = gfp->internal_flags;
 	u_char pbtStreamBuffer[216];   
 	nMode = gfp->mode;

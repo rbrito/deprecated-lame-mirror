@@ -249,6 +249,8 @@ int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip)
   if (!fseek(outf,0,SEEK_SET)) 
     WriteWav(outf,wavsize,gfp->in_samplerate,gfp->num_channels); 
   fclose(outf);
+  
+  return 0;
 }
 
 

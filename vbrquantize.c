@@ -702,7 +702,7 @@ VBR_noise_shaping
     /* increase global gain, keep exisiting scale factors */
     ++cod_info->global_gain;
     if (cod_info->global_gain > 255) 
-      fprintf(stderr,"%i impossible to encode this frame! bits=%i\n",
+      fprintf(stderr,"%ld impossible to encode this frame! bits=%d\n",
 	      gfp->frameNum,cod_info->part2_3_length);
     VBR_quantize_granule(gfp,xr,xr34,l3_enc,ratio,l3_xmin,scalefac,gr,ch);
     ++global_gain_adjust;
@@ -722,7 +722,7 @@ VBR_quantize(lame_global_flags *gfp,
                 III_scalefac_t scalefac[2][2])
 {
   lame_internal_flags *gfc=gfp->internal_flags;
-  int minbits,maxbits,max_frame_bits,totbits,bits,gr,ch,i,bits_ok;
+  int minbits,maxbits,max_frame_bits,totbits,gr,ch,i,bits_ok;
   int bitsPerFrame,mean_bits;
   FLOAT8 qadjust;
   III_side_info_t * l3_side;

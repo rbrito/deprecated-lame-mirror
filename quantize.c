@@ -267,7 +267,8 @@ VBR_iteration_loop (lame_global_flags *gfp,
       
       /* disable analog_silence if *any* of the granules != silence */
       /* if energy < ATH, set min_bits = 125 */
-      if (i=calc_xmin(gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin)) {
+      i = calc_xmin(gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin);
+      if (i) {
 	analog_silence=0;
       }else{
 	if (!gfp->VBR_hard_min) min_bits=125;
