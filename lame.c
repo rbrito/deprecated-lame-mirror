@@ -941,8 +941,11 @@ int lame_encode_buffer(lame_global_flags *gfp,
     int n_out=0;
     /* copy in new samples into mfbuf, with filtering */
     for (ch=0; ch<gfc->stereo; ch++) {
-      if (gfc->resample_ratio!=1)  {
-	n_out=fill_buffer_blackman(gfp,&mfbuf[ch][gfc->mf_size],gfc->framesize,
+      if (gfc->resample_ratio>1)  {
+	n_out=fill_buffer_downsample(gfp,&mfbuf[ch][gfc->mf_size],gfc->framesize,
+					  in_buffer[ch],nsamples,&n_in,ch);
+      } else if (gfc->resample_ratio<1) {
+	n_out=fill_buffer_upsample(gfp,&mfbuf[ch][gfc->mf_size],gfc->framesize,
 					  in_buffer[ch],nsamples,&n_in,ch);
       } else {
 	n_out=Min(gfc->framesize,nsamples);
@@ -1241,7 +1244,8 @@ int lame_init(lame_global_flags *gfp)
   gfc->lame_init_params_init=0;
   gfc->lame_encode_frame_init=0;
   gfc->iteration_init_init=0;
-  gfc->fill_buffer_blackman_init=0;
+  gfc->fill_buffer_downsample_init=0;
+  gfc->fill_buffer_upsample_init=0;
   gfc->mdct_sub48_init=0;
 
   gfc->frameNum=0;

@@ -143,7 +143,8 @@ typedef struct  {
   int lame_init_params_init;      /* was lame_init_params called? */
   int lame_encode_frame_init;     
   int iteration_init_init;
-  int fill_buffer_blackman_init;
+  int fill_buffer_downsample_init;
+  int fill_buffer_upsample_init;
   int mdct_sub48_init;
 
 
@@ -214,6 +215,10 @@ typedef struct  {
   short int inbuf_old[2][BLACKSIZE];
   FLOAT8 blackfilt[BLACKSIZE];
   FLOAT8 itime[2];
+#define OLDBUFSIZE 5
+  FLOAT8 upsample_itime[2];
+  short int upsample_inbuf_old[2][OLDBUFSIZE];
+
 
   /* variables for newmdct.c */
   FLOAT8 sb_sample[2][2][18][SBLIMIT];
@@ -244,7 +249,10 @@ extern void           putbits(Bit_stream_struc*, unsigned int, int);
 extern enum byte_order DetermineByteOrder(void);
 extern void SwapBytesInWords( short *loc, int words );
 
-extern int fill_buffer_blackman(lame_global_flags *gfp,short int *outbuf,int desired_len,
+extern int fill_buffer_downsample(lame_global_flags *gfp,short int *outbuf,int desired_len,
+	 short int *inbuf,int len,int *num_used,int ch);
+
+extern int fill_buffer_upsample(lame_global_flags *gfp,short int *outbuf,int desired_len,
 	 short int *inbuf,int len,int *num_used,int ch);
 
 extern void 

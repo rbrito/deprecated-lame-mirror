@@ -354,7 +354,7 @@ INLINE double blackman(int i,double offset,double fcn,int l)
     return  (sin( (wcn *  ( x - dly))) / (M_PI * ( x - dly)) * bkwn );
 }
 
-int fill_buffer_blackman(lame_global_flags *gfp,short int *outbuf,int desired_len,
+int fill_buffer_downsample(lame_global_flags *gfp,short int *outbuf,int desired_len,
 			 short int *inbuf,int len,int *num_used,int ch) {
   
   lame_internal_flags *gfc=gfp->internal_flags;
@@ -372,8 +372,8 @@ int fill_buffer_blackman(lame_global_flags *gfp,short int *outbuf,int desired_le
   filter_l += intratio;
   assert(filter_l +5 < BLACKSIZE);
   
-  if (!gfc->fill_buffer_blackman_init) {
-    gfc->fill_buffer_blackman_init=1;
+  if (!gfc->fill_buffer_downsample_init) {
+    gfc->fill_buffer_downsample_init=1;
     gfc->itime[0]=0;
     gfc->itime[1]=0;
     memset((char *) gfc->inbuf_old, 0, sizeof(short int)*2*BLACKSIZE);
@@ -442,5 +442,78 @@ int fill_buffer_blackman(lame_global_flags *gfp,short int *outbuf,int desired_le
   return k;
 }
 
+
+/* 4 point interpolation routine for upsampling */
+int fill_buffer_upsample(lame_global_flags *gfp,short int *outbuf,int desired_len,
+        short int *inbuf,int len,int *num_used,int ch) {
+
+  int i,j=0,k,linear,value;
+  lame_internal_flags *gfc=gfp->internal_flags;
+  short int *inbuf_old;
+
+  if (!gfc->fill_buffer_upsample_init) {
+    gfc->fill_buffer_upsample_init=1;
+    gfc->upsample_itime[0]=0;
+    gfc->upsample_itime[1]=0;
+    memset((char *) gfc->upsample_inbuf_old, 0, sizeof(short int)*2*OLDBUFSIZE);
+  }
+
+
+  inbuf_old=gfc->upsample_inbuf_old[ch];
+
+  /* if downsampling by an integer multiple, use linear resampling,
+   * otherwise use quadratic */
+  linear = ( fabs(gfc->resample_ratio - floor(.5+gfc->resample_ratio)) < .0001 );
+
+  /* time of j'th element in inbuf = itime + j/ifreq; */
+  /* time of k'th element in outbuf   =  j/ofreq */
+  for (k=0;k<desired_len;k++) {
+    int y0,y1,y2,y3;
+    FLOAT8 x0,x1,x2,x3;
+    FLOAT8 time0;
+
+    time0 = k*gfc->resample_ratio;       /* time of k'th output sample */
+    j = floor( time0 -gfc->upsample_itime[ch]  );
+    /* itime[ch] + j;    */            /* time of j'th input sample */
+    if (j+2 >= len) break;             /* not enough data in input buffer */
+
+    x1 = time0-(gfc->upsample_itime[ch]+j);
+    x2 = x1-1;
+    y1 = (j<0) ? inbuf_old[OLDBUFSIZE+j] : inbuf[j];
+    y2 = ((1+j)<0) ? inbuf_old[OLDBUFSIZE+1+j] : inbuf[1+j];
+
+    /* linear resample */
+    if (linear) {
+      outbuf[k] = floor(.5 +  (y2*x1-y1*x2) );
+    } else {
+      /* quadratic */
+      x0 = x1+1;
+      x3 = x1-2;
+      y0 = ((j-1)<0) ? inbuf_old[OLDBUFSIZE+(j-1)] : inbuf[j-1];
+      y3 = ((j+2)<0) ? inbuf_old[OLDBUFSIZE+(j+2)] : inbuf[j+2];
+      value = floor(.5 +
+			-y0*x1*x2*x3/6 + y1*x0*x2*x3/2 - y2*x0*x1*x3/2 +y3*x0*x1*x2/6
+			);
+      if (value > 32767) outbuf[k]=32767;
+      else if (value < -32767) outbuf[k]=-32767;
+      else outbuf[k]=value;
+
+      /*
+      printf("k=%i  new=%i   [ %i %i %i %i ]\n",k,outbuf[k],
+	     y0,y1,y2,y3);
+      */
+    }
+  }
+
+
+  /* k = number of samples added to outbuf */
+  /* last k sample used data from j,j+1, or j+1 overflowed buffer */
+  /* remove num_used samples from inbuf: */
+  *num_used = Min(len,j+2);
+  gfc->upsample_itime[ch] += *num_used - k*gfc->resample_ratio;
+  for (i=0;i<OLDBUFSIZE;i++)
+    inbuf_old[i]=inbuf[*num_used + i -OLDBUFSIZE];
+  return k;
+}
 
 
