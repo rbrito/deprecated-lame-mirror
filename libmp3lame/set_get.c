@@ -334,21 +334,61 @@ lame_get_mode_automs( const lame_global_flags*  gfp )
 }
 
 
-// force_ms.  Force M/S for all frames.  For testing only.
-// default = 0 (disabled)
+/*
+ * Force M/S for all frames.  For testing only.
+ * Requires mode = 1.
+ */
 int
 lame_set_force_ms( lame_global_flags*  gfp,
-                   int                 force_ms );
+                   int                 force_ms )
+{
+    /* default = 0 (disabled) */
+
+    /* enforce disable/enable meaning, if we need more than two values
+       we need to switch to an enum to have an apropriate representation
+       of the possible meanings of the value */
+    if ( 0 > force_ms || 1 < force_ms )
+        return -1;
+
+    gfp->force_ms = force_ms;
+
+    return 0;
+}
+
 int
-lame_get_force_ms( const lame_global_flags*  gfp );
+lame_get_force_ms( const lame_global_flags*  gfp )
+{
+    assert( 0 <= gfp->force_ms && 1 >= gfp->force_ms );
+
+    return gfp->force_ms;
+}
 
 
-// use free_format?  default = 0 (disabled)
+/* Use free_format. */
 int
 lame_set_free_format( lame_global_flags*  gfp,
-                      int                 free_format );
+                      int                 free_format )
+{
+    /* default = 0 (disabled) */
+
+    /* enforce disable/enable meaning, if we need more than two values
+       we need to switch to an enum to have an apropriate representation
+       of the possible meanings of the value */
+    if ( 0 > free_format || 1 < free_format )
+        return -1;
+
+    gfp->free_format = free_format;
+
+    return 0;
+}
+
 int
-lame_get_free_format( const lame_global_flags*  gfp );
+lame_get_free_format( const lame_global_flags*  gfp )
+{
+    assert( 0 <= gfp->free_format && 1 >= gfp->free_format );
+
+    return gfp->free_format;
+}
 
 
 /* message handlers */
@@ -380,17 +420,42 @@ lame_set_msgf( lame_global_flags*  gfp,
 }
 
 
-/* set one of brate compression ratio.  default is compression ratio of 11.  */
+/*
+ * Set one of
+ *  - brate
+ *  - compression ratio.
+ *
+ * Default is compression ratio of 11.
+ */
 int
 lame_set_brate( lame_global_flags*  gfp,
-                int                 brate );
+                int                 brate )
+{
+    gfp->brate = brate;
+
+    return 0;
+}
+
 int
-lame_get_brate( const lame_global_flags*  gfp );
+lame_get_brate( const lame_global_flags*  gfp )
+{
+    return gfp->brate;
+}
+
 int
 lame_set_compression_ratio( lame_global_flags*  gfp,
-                            float               compression_ratio );
+                            float               compression_ratio )
+{
+    gfp->compression_ratio = compression_ratio;
+
+    return 0;
+}
+
 float
-lame_get_compression_ratio( const lame_global_flags*  gfp );
+lame_get_compression_ratio( const lame_global_flags*  gfp )
+{
+    return gfp->compression_ratio;
+}
 
 
 
@@ -399,52 +464,171 @@ lame_get_compression_ratio( const lame_global_flags*  gfp );
  * frame parameters
  */
 
-// mark as copyright.  default=0
+/* Mark as copyright protected. */
 int
 lame_set_copyright( lame_global_flags*  gfp,
-                    int                 copyright );
+                    int                 copyright )
+{
+    /* default = 0 (disabled) */
+
+    /* enforce disable/enable meaning, if we need more than two values
+       we need to switch to an enum to have an apropriate representation
+       of the possible meanings of the value */
+    if ( 0 > copyright || 1 < copyright )
+        return -1;
+
+    gfp->copyright = copyright;
+
+    return 0;
+}
+
 int
-lame_get_copyright( const lame_global_flags*  gfp );
+lame_get_copyright( const lame_global_flags*  gfp )
+{
+    assert( 0 <= gfp->copyright && 1 >= gfp->copyright );
+
+    return gfp->copyright;
+}
 
 
-// mark as original.  default=1
+/* Mark as original. */
 int
 lame_set_original( lame_global_flags*  gfp,
-                   int                 original );
+                   int                 original )
+{
+    /* default = 1 (enabled) */
+
+    /* enforce disable/enable meaning, if we need more than two values
+       we need to switch to an enum to have an apropriate representation
+       of the possible meanings of the value */
+    if ( 0 > original || 1 < original )
+        return -1;
+
+    gfp->original = original;
+
+    return 0;
+}
+
 int
-lame_get_original( const lame_global_flags*  gfp );
+lame_get_original( const lame_global_flags*  gfp )
+{
+    assert( 0 <= gfp->original && 1 >= gfp->original );
+
+    return gfp->original;
+}
 
 
-// error_protection.  Use 2 bytes from each fraome for CRC checksum. default=0
+/*
+ * error_protection.
+ * Use 2 bytes from each frame for CRC checksum.
+ */
 int
 lame_set_error_protection( lame_global_flags*  gfp,
-                           int                 error_protection );
+                           int                 error_protection )
+{
+    /* default = 0 (disabled) */
+
+    /* enforce disable/enable meaning, if we need more than two values
+       we need to switch to an enum to have an apropriate representation
+       of the possible meanings of the value */
+    if ( 0 > error_protection || 1 < error_protection )
+        return -1;
+
+    gfp->error_protection = error_protection;
+
+    return 0;
+}
+
 int
-lame_get_error_protection( const lame_global_flags*  gfp );
+lame_get_error_protection( const lame_global_flags*  gfp )
+{
+    assert( 0 <= gfp->error_protection && 1 >= gfp->error_protection );
+
+    return gfp->error_protection;
+}
 
 
-// padding_type.  0=pad no frames  1=pad all frames 2=adjust padding(default)
+/*
+ * padding_type.
+ *  PAD_NO     = pad no frames
+ *  PAD_ALL    = pad all frames
+ *  PAD_ADJUST = adjust padding
+ */
 int
 lame_set_padding_type( lame_global_flags*  gfp,
-                       int                 padding_type );
-int
-lame_get_padding_type( const lame_global_flags*  gfp );
+                       Padding_type        padding_type )
+{
+    /* default = 2 */
+
+    if ( 0 > padding_type || PAD_MAX_INDICATOR < padding_type )
+        return -1;  /* Unknown padding type */
+
+    gfp->padding_type = padding_type;
+
+    return 0;
+}
+
+Padding_type
+lame_get_padding_type( const lame_global_flags*  gfp )
+{
+    assert( 0 <= gfp->padding_type && PAD_MAX_INDICATOR > gfp->padding_type );
+
+    return gfp->padding_type;
+}
 
 
-// MP3 'private extension' bit  Meaningless
+/* MP3 'private extension' bit. Meaningless. */
 int
 lame_set_extension( lame_global_flags*  gfp,
-                    int                 extension );
+                    int                 extension )
+{
+    /* default = 0 (disabled) */
+
+    /* enforce disable/enable meaning, if we need more than two values
+       we need to switch to an enum to have an apropriate representation
+       of the possible meanings of the value */
+    if ( 0 > extension || 1 < extension )
+        return -1;
+
+    gfp->extension = extension;
+
+    return 0;
+}
+
 int
-lame_get_extension( const lame_global_flags*  gfp );
+lame_get_extension( const lame_global_flags*  gfp )
+{
+    assert( 0 <= gfp->extension && 1 >= gfp->extension );
+
+    return gfp->extension;
+}
 
 
-// enforce strict ISO compliance.  default=0
+/* Enforce strict ISO compliance. */
 int
 lame_set_strict_ISO( lame_global_flags*  gfp,
-                     int                 strict_ISO );
+                     int                 strict_ISO )
+{
+    /* default = 0 (disabled) */
+
+    /* enforce disable/enable meaning, if we need more than two values
+       we need to switch to an enum to have an apropriate representation
+       of the possible meanings of the value */
+    if ( 0 > strict_ISO || 1 < strict_ISO )
+        return -1;
+
+    gfp->strict_ISO = strict_ISO;
+
+    return 0;
+}
+
 int
-lame_get_strict_ISO( const lame_global_flags*  gfp );
+lame_get_strict_ISO( const lame_global_flags*  gfp )
+{
+    assert( 0 <= gfp->strict_ISO && 1 >= gfp->strict_ISO );
+
+    return gfp->strict_ISO;
+}
  
 
 
@@ -453,44 +637,109 @@ lame_get_strict_ISO( const lame_global_flags*  gfp );
  * quantization/noise shaping 
  ***********************************************************************/
 
-// disable the bit reservoir. For testing only. default=0
+/* Disable the bit reservoir. For testing only. */
 int
 lame_set_disable_reservoir( lame_global_flags*  gfp,
-                            int                 disable_reservoir );
+                            int                 disable_reservoir )
+{
+    /* default = 0 (disabled) */
+
+    /* enforce disable/enable meaning, if we need more than two values
+       we need to switch to an enum to have an apropriate representation
+       of the possible meanings of the value */
+    if ( 0 > disable_reservoir || 1 < disable_reservoir )
+        return -1;
+
+    gfp->disable_reservoir = disable_reservoir;
+
+    return 0;
+}
+
 int
-lame_get_disable_reservoir( const lame_global_flags*  gfp );
+lame_get_disable_reservoir( const lame_global_flags*  gfp )
+{
+    assert( 0 <= gfp->disable_reservoir && 1 >= gfp->disable_reservoir );
+
+    return gfp->disable_reservoir;
+}
 
 
-// select a different "best quantization" function. default=0 
+/* Select a different "best quantization" function. default = 0 */
 int
 lame_set_experimentalX( lame_global_flags*  gfp,
-                        int                 experimentalX );
+                        int                 experimentalX )
+{
+    gfp->experimentalX = experimentalX;
+
+    return 0;
+}
+
 int
-lame_get_experimentalX( const lame_global_flags*  gfp );
+lame_get_experimentalX( const lame_global_flags*  gfp )
+{
+    return gfp->experimentalX;
+}
 
 
-// another experimental option.  for testing only
+/* Another experimental option. For testing only. */
 int
 lame_set_experimentalY( lame_global_flags*  gfp,
-                        int                 experimentalY );
+                        int                 experimentalY )
+{
+    gfp->experimentalY = experimentalY;
+
+    return 0;
+}
+
 int
-lame_get_experimentalY( const lame_global_flags*  gfp );
+lame_get_experimentalY( const lame_global_flags*  gfp )
+{
+    return gfp->experimentalY;
+}
 
 
-// another experimental option.  for testing only
+/* Another experimental option. For testing only. */
 int
 lame_set_experimentalZ( lame_global_flags*  gfp,
-                        int                 experimentalZ );
+                        int                 experimentalZ )
+{
+    gfp->experimentalZ = experimentalZ;
+
+    return 0;
+}
+
 int
-lame_get_experimentalZ( const lame_global_flags*  gfp );
+lame_get_experimentalZ( const lame_global_flags*  gfp )
+{
+    return gfp->experimentalZ;
+}
 
 
-// Naoki's psycho acoustic model.  default=0
+/* Naoki's psycho acoustic model. */
 int
 lame_set_exp_nspsytune( lame_global_flags*  gfp,
-                        int                 exp_nspsytune );
+                        int                 exp_nspsytune )
+{
+    /* default = 0 (disabled) */
+
+    /* enforce disable/enable meaning, if we need more than two values
+       we need to switch to an enum to have an apropriate representation
+       of the possible meanings of the value */
+    if ( 0 > exp_nspsytune || 1 < exp_nspsytune )
+        return -1;
+
+    gfp->exp_nspsytune = exp_nspsytune;
+
+    return 0;
+}
+
 int
-lame_get_exp_nspsytune( const lame_global_flags*  gfp );
+lame_get_exp_nspsytune( const lame_global_flags*  gfp )
+{
+    assert( 0 <= gfp->exp_nspsytune && 1 >= gfp->exp_nspsytune );
+
+    return gfp->exp_nspsytune;
+}
 
 
 
@@ -502,82 +751,214 @@ lame_get_exp_nspsytune( const lame_global_flags*  gfp );
 // Types of VBR.  default = vbr_off = CBR
 int
 lame_set_VBR( lame_global_flags*  gfp,
-              vbr_mode            VBR );
+              vbr_mode            VBR )
+{
+    if( 0 > VBR || vbr_max_indicator <= VBR )
+        return -1;  /* Unknown VBR mode! */
+
+    gfp->VBR = VBR;
+
+    return 0;
+}
+
 vbr_mode
-lame_get_exp_VBR( const lame_global_flags*  gfp );
+lame_get_VBR( const lame_global_flags*  gfp )
+{
+    assert( 0 <= gfp->VBR && vbr_max_indicator > gfp->VBR );
+
+    return gfp->VBR;
+}
 
 
-// VBR quality level.  0=highest  9=lowest 
+/*
+ * VBR quality level.
+ *  0 = highest
+ *  9 = lowest 
+ */
 int
 lame_set_VBR_q( lame_global_flags*  gfp,
-                int                 VBR_q );
+                int                 VBR_q )
+{
+    /* XXX: This should be an enum*/
+
+    if( 0 > VBR_q || 10 <= VBR_q )
+        return -1;  /* Unknown VBR quality level! */
+
+    gfp->VBR_q = VBR_q;
+
+    return 0;
+}
+
 int
-lame_get_VBR_q( const lame_global_flags*  gfp );
+lame_get_VBR_q( const lame_global_flags*  gfp )
+{
+    assert( 0 <= gfp->VBR_q && 10 > gfp->VBR_q );
+
+    return gfp->VBR_q;
+}
 
 
-// Ignored except for VBR=vbr_abr (ABR mode)
+/* Ignored except for VBR = vbr_abr (ABR mode) */
 int
 lame_set_VBR_mean_bitrate_kbps( lame_global_flags*  gfp,
-                                int                 VBR_mean_bitrate_kbps );
+                                int                 VBR_mean_bitrate_kbps )
+{
+    gfp->VBR_mean_bitrate_kbps = VBR_mean_bitrate_kbps;
+
+    return 0;
+}
+
 int
-lame_get_VBR_mean_bitrate_kbps( const lame_global_flags*  gfp );
+lame_get_VBR_mean_bitrate_kbps( const lame_global_flags*  gfp )
+{
+    return gfp->VBR_mean_bitrate_kbps;
+}
 
 int
 lame_set_VBR_min_bitrate_kbps( lame_global_flags*  gfp,
-                               int                 VBR_min_bitrate_kbps );
+                               int                 VBR_min_bitrate_kbps )
+{
+    gfp->VBR_min_bitrate_kbps = VBR_min_bitrate_kbps;
+
+    return 0;
+}
+
 int
-lame_get_VBR_min_bitrate_kbps( const lame_global_flags*  gfp );
+lame_get_VBR_min_bitrate_kbps( const lame_global_flags*  gfp )
+{
+    return gfp->VBR_min_bitrate_kbps;
+}
 
 int
 lame_set_VBR_max_bitrate_kbps( lame_global_flags*  gfp,
-                               int                 VBR_max_bitrate_kbps );
+                               int                 VBR_max_bitrate_kbps )
+{
+    gfp->VBR_max_bitrate_kbps = VBR_max_bitrate_kbps;
+
+    return 0;
+}
+
 int
-lame_get_VBR_max_bitrate_kbps( const lame_global_flags*  gfp );
+lame_get_VBR_max_bitrate_kbps( const lame_global_flags*  gfp )
+{
+    return gfp->VBR_max_bitrate_kbps;
+}
 
 
-// 1=stricetly enforce VBR_min_bitrate.  Normally it will be violated for
-// analog silence
+/*
+ * Strictly enforce VBR_min_bitrate.
+ * Normally it will be violated for analog silence.
+ */
 int
 lame_set_VBR_hard_min( lame_global_flags*  gfp,
-                       int                 VBR_hard_min );
+                       int                 VBR_hard_min )
+{
+    /* default = 0 (disabled) */
+
+    /* enforce disable/enable meaning, if we need more than two values
+       we need to switch to an enum to have an apropriate representation
+       of the possible meanings of the value */
+    if ( 0 > VBR_hard_min || 1 < VBR_hard_min )
+        return -1;
+
+    gfp->VBR_hard_min = VBR_hard_min;
+
+    return 0;
+}
+
 int
-lame_get_VBR_hard_min( const lame_global_flags*  gfp );
+lame_get_VBR_hard_min( const lame_global_flags*  gfp )
+{
+    assert( 0 <= gfp->VBR_hard_min && 1 >= gfp->VBR_hard_min );
+
+    return gfp->VBR_hard_min;
+}
 
 
 /********************************************************************
  * Filtering control
  ***********************************************************************/
 
-// freq in Hz to apply lowpass. Default = 0 = lame chooses.  -1 = disabled
+/*
+ * Freqency in Hz to apply lowpass.
+ *   0 = default = lame chooses
+ *  -1 = disabled
+ */
 int
 lame_set_lowpassfreq( lame_global_flags*  gfp,
-                      int                 lowpassfreq );
+                      int                 lowpassfreq )
+{
+    gfp->lowpassfreq = lowpassfreq;
+
+    return 0;
+}
+
 int
-lame_get_lowpassfreq( const lame_global_flags*  gfp );
+lame_get_lowpassfreq( const lame_global_flags*  gfp )
+{
+    return gfp->lowpassfreq;
+}
 
 
-// width of transition band, in Hz.  Default = one polyphase filter band
+/*
+ * Width of transition band (in Hz).
+ *  default = one polyphase filter band
+ */
 int
 lame_set_lowpasswidth( lame_global_flags*  gfp,
-                       int                 lowpasswidth );
+                       int                 lowpasswidth )
+{
+    gfp->lowpasswidth = lowpasswidth;
+
+    return 0;
+}
+
 int
-lame_get_lowpasswidth( const lame_global_flags*  gfp );
+lame_get_lowpasswidth( const lame_global_flags*  gfp )
+{
+    return gfp->lowpasswidth;
+}
 
 
-// freq in Hz to apply highpass. Default = 0 = lame chooses.  -1 = disabled
+/*
+ * Frequency in Hz to apply highpass.
+ *   0 = default = lame chooses
+ *  -1 = disabled
+ */
 int
 lame_set_highpassfreq( lame_global_flags*  gfp,
-                       int                 highpassfreq );
+                       int                 highpassfreq )
+{
+    gfp->highpassfreq = highpassfreq;
+
+    return 0;
+}
+
 int
-lame_get_highpassfreq( const lame_global_flags*  gfp );
+lame_get_highpassfreq( const lame_global_flags*  gfp )
+{
+    return gfp->highpassfreq;
+}
 
 
-// width of transition band, in Hz.  Default = one polyphase filter band
+/*
+ * Width of transition band (in Hz).
+ *  default = one polyphase filter band
+ */
 int
 lame_set_highpasswidth( lame_global_flags*  gfp,
-                        int                 highpasswidth );
+                        int                 highpasswidth )
+{
+    gfp->highpasswidth = highpasswidth;
+
+    return 0;
+}
+
 int
-lame_get_highpasswidth( const lame_global_flags*  gfp );
+lame_get_highpasswidth( const lame_global_flags*  gfp )
+{
+    return gfp->highpasswidth;
+}
 
 
 
@@ -587,172 +968,242 @@ lame_get_highpasswidth( const lame_global_flags*  gfp );
  * unless you know what you are doing
  */
 
-// only use ATH for masking
+/* Only use ATH for masking. */
 int
 lame_set_ATHonly( lame_global_flags*  gfp,
-                  int                 ATHonly ){
-    gfp->ATHonly=ATHonly;
+                  int                 ATHonly )
+{
+    gfp->ATHonly = ATHonly;
+
     return 0;
 }
 
 int
-lame_get_ATHonly( const lame_global_flags*  gfp ){
+lame_get_ATHonly( const lame_global_flags*  gfp )
+{
     return gfp->ATHonly;
 }
 
 
-// only use ATH for short blocks
+/* Only use ATH for short blocks. */
 int
 lame_set_ATHshort( lame_global_flags*  gfp,
-                   int                 ATHshort ){
+                   int                 ATHshort )
+{
     gfp->ATHshort = ATHshort;
+
     return 0;
 }
+
 int
-lame_get_ATHshort( const lame_global_flags*  gfp ){
+lame_get_ATHshort( const lame_global_flags*  gfp )
+{
     return gfp->ATHshort;
 }
 
 
-// disable ATH
+/* Disable ATH. */
 int
 lame_set_noATH( lame_global_flags*  gfp,
-                int                 noATH ){
-    gfp->noATH=noATH;
+                int                 noATH )
+{
+    gfp->noATH = noATH;
+
     return 0;
 }
+
 int
-lame_get_noATH( const lame_global_flags*  gfp ){
+lame_get_noATH( const lame_global_flags*  gfp )
+{
     return gfp->noATH;
 }
 
 
-// select ATH formula
+/* Select ATH formula. */
 int
 lame_set_ATHtype( lame_global_flags*  gfp,
-                  int                 ATHtype ){
-// ATHtype should be converted to an enum
-    gfp->ATHtype=ATHtype;
+                  int                 ATHtype )
+{
+    /* XXX: ATHtype should be converted to an enum. */
+    gfp->ATHtype = ATHtype;
+
     return 0;
 }
+
 int
-lame_get_ATHtype( const lame_global_flags*  gfp ){
+lame_get_ATHtype( const lame_global_flags*  gfp )
+{
     return gfp->ATHtype;
 }
 
 
-// lower ATH by this many db
+/* Lower ATH by this many db. */
 int
 lame_set_ATHlower( lame_global_flags*  gfp,
-                   float               ATHlower ){
+                   float               ATHlower )
+{
     gfp->ATHlower = ATHlower;
     return 0;
 }
 
 float
-lame_get_ATHlower( const lame_global_flags*  gfp ){
+lame_get_ATHlower( const lame_global_flags*  gfp )
+{
     return gfp->ATHlower;
 }
 
 
-// select adaptive ATH level adjustment scheme
+/* Select adaptive ATH level adjustment scheme. */
 int
-lame_set_adapt_thres_type( lame_global_flags* gfp,
-                           int adapt_thres_type ) {
+lame_set_adapt_thres_type( lame_global_flags*  gfp,
+                           int                 adapt_thres_type )
+{
     gfp->adapt_thres_type = adapt_thres_type;
+
     return 0;
 }
 
 int
-lame_get_adapt_thres_type( const lame_global_flags* gfp ) {
+lame_get_adapt_thres_type( const lame_global_flags*  gfp )
+{
     return gfp->adapt_thres_type;
 }
 
 
-// adjust (in dB) the point below which adaptive ATH level adjustment occurs
+/* Adjust (in dB) the point below which adaptive ATH level adjustment occurs. */
 int
-lame_set_adapt_thres_level( lame_global_flags* gfp,
-                            float adapt_thres_level ) {
+lame_set_adapt_thres_level( lame_global_flags*  gfp,
+                            float               adapt_thres_level )
+{
     gfp->adapt_thres_level = adapt_thres_level;
+
     return 0;
 }
 
 float
-lame_get_adapt_thres_level( const lame_global_flags* gfp ) {
+lame_get_adapt_thres_level( const lame_global_flags*  gfp )
+{
     return gfp->adapt_thres_level;
 }
 
 
-// predictability limit (ISO tonality formula)
+/* Predictability limit (ISO tonality formula) */
 int
 lame_set_cwlimit( lame_global_flags*  gfp,
-                  int                 cwlimit ){
-    gfp->cwlimit=cwlimit;
+                  int                 cwlimit )
+{
+    gfp->cwlimit = cwlimit;
+
     return 0;
 }
+
 int
-lame_get_cwlimit( const lame_global_flags*  gfp ){
+lame_get_cwlimit( const lame_global_flags*  gfp )
+{
     return gfp->cwlimit;
 }
 
 
 
-// allow blocktypes to differ between channels?
-// default: 0 for jstereo, 1 for stereo
+/*
+ * Allow blocktypes to differ between channels.
+ * default:
+ *  0 for jstereo,
+ *  1 for stereo
+ */
 int
 lame_set_allow_diff_short( lame_global_flags*  gfp,
-                           int                 allow_diff_short ){
-    gfp->allow_diff_short=allow_diff_short;
+                           int                 allow_diff_short )
+{
+    gfp->allow_diff_short = allow_diff_short;
+
     return 0;
 }
+
 int
-lame_get_allow_diff_short( const lame_global_flags*  gfp ){
+lame_get_allow_diff_short( const lame_global_flags*  gfp )
+{
     return gfp->allow_diff_short;
 }
 
 
-// use temporal masking effect (default = 1)
+/* Use temporal masking effect */
 int
 lame_set_useTemporal( lame_global_flags*  gfp,
-                      int                 useTemporal ){
-    gfp->useTemporal=useTemporal;
+                      int                 useTemporal )
+{
+    /* default = 1 (enabled) */
+
+    /* enforce disable/enable meaning, if we need more than two values
+       we need to switch to an enum to have an apropriate representation
+       of the possible meanings of the value */
+    if ( 0 > useTemporal || 1 < useTemporal )
+        return -1;
+
+    gfp->useTemporal = useTemporal;
+
     return 0;
 }
+
 int
-lame_get_useTemporal( const lame_global_flags*  gfp ){
+lame_get_useTemporal( const lame_global_flags*  gfp )
+{
+    assert( 0 <= gfp->useTemporal && 1 >= gfp->useTemporal );
+
     return gfp->useTemporal;
 }
 
 
-// disable short blocks
+/* Disable short blocks. */
 int
 lame_set_no_short_blocks( lame_global_flags*  gfp,
-                          int                 no_short_blocks ){
-    gfp->no_short_blocks=no_short_blocks;
+                          int                 no_short_blocks )
+{
+    /* enforce disable/enable meaning, if we need more than two values
+       we need to switch to an enum to have an apropriate representation
+       of the possible meanings of the value */
+    if ( 0 > no_short_blocks || 1 < no_short_blocks )
+        return -1;
+
+    gfp->no_short_blocks = no_short_blocks;
+
     return 0;
 }
 int
-lame_get_no_short_blocks( const lame_global_flags*  gfp ){
+lame_get_no_short_blocks( const lame_global_flags*  gfp )
+{
+    assert( 0 <= gfp->no_short_blocks && 1 >= gfp->no_short_blocks );
+
     return gfp->no_short_blocks;
 }
 
 
-/* Input PCM is emphased PCM (for instance from one of the rarely
-   emphased CDs), it is STRONGLY not recommended to use this, because
-   psycho does not take it into account, and last but not least many decoders
-   ignore these bits */
+/*
+ * Input PCM is emphased PCM
+ * (for instance from one of the rarely emphased CDs).
+ *
+ * It is STRONGLY not recommended to use this, because psycho does not
+ * take it into account, and last but not least many decoders
+ * ignore these bits
+ */
 int
 lame_set_emphasis( lame_global_flags*  gfp,
                    int                 emphasis )
 {
-// emphasis should be converted to an enum
-    if (emphasis<0 || emphasis>3) return -1;
+    /* XXX: emphasis should be converted to an enum */
+    if ( 0 > emphasis || 4 <= emphasis )
+        return -1;
+
     gfp->emphasis = emphasis;
+
     return 0;
 }
 
 int
-lame_get_emphasis( const lame_global_flags*  gfp ){
+lame_get_emphasis( const lame_global_flags*  gfp )
+{
+    assert( 0 <= gfp->emphasis && 4 > gfp->emphasis );
+
     return gfp->emphasis;
 }
 
@@ -764,37 +1215,48 @@ lame_get_emphasis( const lame_global_flags*  gfp ){
 /* provided because they may be of use to calling application  */
 /***************************************************************/
 
-// version  0=MPEG-2  1=MPEG-1  (2=MPEG-2.5)    
+/* MPEG version.
+ *  0 = MPEG-2
+ *  1 = MPEG-1
+ * (2 = MPEG-2.5)    
+ */
 int
-lame_get_version( const lame_global_flags* gfp ){
+lame_get_version( const lame_global_flags* gfp )
+{
     return gfp->version;
 }
 
 
-// encoder delay
+/* Encoder delay. */
 int
-lame_get_encoder_delay( const lame_global_flags*  gfp ){
+lame_get_encoder_delay( const lame_global_flags*  gfp )
+{
     return gfp->encoder_delay;
 }
 
 
-// size of MPEG frame
+/* Size of MPEG frame. */
 int
-lame_get_framesize( const lame_global_flags*  gfp ){
+lame_get_framesize( const lame_global_flags*  gfp )
+{
     return gfp->framesize;
 }
 
 
-// number of frames encoded so far
+/* Number of frames encoded so far. */
 int
-lame_get_frameNum( const lame_global_flags*  gfp ){
+lame_get_frameNum( const lame_global_flags*  gfp )
+{
     return gfp->frameNum;
 }
 
 
-// lame's estimate of the total number of frames to be encoded
-// only valid if calling program set num_samples 
+/*
+ * LAME's estimate of the total number of frames to be encoded.
+ * Only valid if calling program set num_samples.
+ */
 int
-lame_get_totalframes( const lame_global_flags*  gfp ){
+lame_get_totalframes( const lame_global_flags*  gfp )
+{
     return gfp->totalframes;
 }

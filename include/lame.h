@@ -44,19 +44,28 @@ typedef enum vbr_mode_e {
   vbr_rh,
   vbr_abr,
   vbr_mtrh,
-  vbr_default=vbr_rh  /* change this to change the default VBR mode of LAME */ 
+  vbr_max_indicator,  /* Don't use this! It's used for sanity checks.       */
+  vbr_default=vbr_rh  /* change this to change the default VBR mode of LAME */
 } vbr_mode;
 
 
 /* MPEG modes */
 typedef enum MPEG_mode_e {
-  STEREO=0,
+  STEREO = 0,
   JOINT_STEREO,
   DUAL_CHANNEL,   /* LAME doesn't supports this! */
   MONO,
   NOT_SET,
   MAX_INDICATOR   /* Don't use this! It's used for sanity checks. */ 
 } MPEG_mode;
+
+/* Padding types */
+typedef enum Padding_type_e {
+  PAD_NO = 0,
+  PAD_ALL,
+  PAD_ADJUST,
+  PAD_MAX_INDICATOR   /* Don't use this! It's used for sanity checks. */
+} Padding_type;
 
 
 /***********************************************************************
@@ -108,8 +117,10 @@ typedef struct  {
   int original;                   /* mark as original. default=1            */
   int error_protection;           /* use 2 bytes per frame for a CRC
                                      checksum. default=0                    */
-  int padding_type;               /* 0=no padding, 1=always pad,
-                                     2=adjust padding, default=2            */
+  Padding_type padding_type;      /* PAD_NO = no padding,
+                                     PAD_ALL = always pad,
+                                     PAD_ADJUST = adjust padding,
+                                     default=2                              */
   int extension;                  /* the MP3 'private extension' bit.
                                      Meaningless                            */
   int strict_ISO;                 /* enforce ISO spec as much as possible   */
@@ -360,8 +371,8 @@ int CDECL lame_set_error_protection(lame_global_flags *, int);
 int CDECL lame_get_error_protection(const lame_global_flags *);
 
 // padding_type.  0=pad no frames  1=pad all frames 2=adjust padding(default)
-int CDECL lame_set_padding_type(lame_global_flags *, int);
-int CDECL lame_get_padding_type(const lame_global_flags *);
+int CDECL lame_set_padding_type(lame_global_flags *, Padding_type);
+Padding_type CDECL lame_get_padding_type(const lame_global_flags *);
 
 // MP3 'private extension' bit  Meaningless
 int CDECL lame_set_extension(lame_global_flags *, int);
@@ -403,7 +414,7 @@ int CDECL lame_get_exp_nspsytune(const lame_global_flags *);
  ***********************************************************************/
 // Types of VBR.  default = vbr_off = CBR
 int CDECL lame_set_VBR(lame_global_flags *, vbr_mode);
-vbr_mode CDECL lame_get_exp_VBR(const lame_global_flags *);
+vbr_mode CDECL lame_get_VBR(const lame_global_flags *);
 
 // VBR quality level.  0=highest  9=lowest 
 int CDECL lame_set_VBR_q(lame_global_flags *, int);
