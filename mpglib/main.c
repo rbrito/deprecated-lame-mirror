@@ -94,7 +94,7 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
   /* look for sync word  FFF */
   if (len<2) return -1;
   while (!is_syncword(buf)) {
-    u_int i;
+    int i;
     for (i=0; i<len-1; i++)
       buf[i]=buf[i+1]; 
     if (fread(&buf[len-1],1,1,fd) == 0) return -1;  /* failed */
