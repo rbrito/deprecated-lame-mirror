@@ -40,12 +40,12 @@ extern "C" {
 
 typedef enum vbr_mode_e {
   vbr_off=0,
-  vbr_mt,
+  vbr_mt,               /* obsolete, same as vbr_mtrh */
   vbr_rh,
   vbr_abr,
   vbr_mtrh,
   vbr_max_indicator,    /* Don't use this! It's used for sanity checks.       */
-  vbr_default=vbr_rh  /* change this to change the default VBR mode of LAME */
+  vbr_default=vbr_rh    /* change this to change the default VBR mode of LAME */
 } vbr_mode;
 
 

@@ -956,11 +956,6 @@ lame_init_params(lame_global_flags * const gfp)
         for (i = 0; i < 19; i++)
             gfc->nsPsy.pefirbuf[i] = 700;
 
-        if (gfp->VBR == vbr_mt) {
-            ERRORF(gfc, "\n**** nspsytune was tuned for --vbr-old **** \n\n");
-            //gfp->VBR = vbr_rh;
-        }
-
         if (gfp->ATHtype == -1)
             gfp->ATHtype = 4;
 
@@ -993,6 +988,9 @@ lame_init_params(lame_global_flags * const gfp)
   
     switch (gfp->VBR) {
 
+    case vbr_mt:
+        gfp->VBR = vbr_mtrh;
+        
     case vbr_mtrh:
 
         if (gfp->ATHtype < 0) gfp->ATHtype = 4;
@@ -1052,16 +1050,6 @@ lame_init_params(lame_global_flags * const gfp)
         
         break;
         
-    case vbr_mt:
-
-        {   static const FLOAT8 dbQ[10]={-6.06,-4.4,-2.9,-1.57, -0.4, 0.61, 1.45, 2.13, 2.65, 3.0};
-            gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
-        }
-        gfc->VBR->quality = 2;
-        gfc->VBR->smooth = 2;
-
-        /*  fall through
-         */
 
     case vbr_rh:
 
