@@ -58,7 +58,7 @@ int targ_bits[2],int mean_bits, int gr);
 void reduce_side(int targ_bits[2],FLOAT8 ms_ener_ratio,int mean_bits,int max_bits);
 
 
-void iteration_init( lame_global_flags *gfp,III_side_info_t *l3_side, int l3_enc[2][2][576]);
+void iteration_init( lame_global_flags *gfp, III_side_info_t *l3_side);
 
 
 int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576],

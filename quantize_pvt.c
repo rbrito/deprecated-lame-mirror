@@ -146,11 +146,10 @@ FLOAT8 adj43asm[PRECALC_SIZE];
 /*  initialization for iteration_loop */
 /************************************************************************/
 void
-iteration_init( lame_global_flags *gfp,III_side_info_t *l3_side, int l3_enc[2][2][576])
+iteration_init( lame_global_flags *gfp, III_side_info_t *l3_side)
 {
   lame_internal_flags *gfc=gfp->internal_flags;
-  gr_info *cod_info;
-  int ch, gr, i;
+  int i;
 
   if ( gfc->iteration_init_init==0 ) {
     gfc->iteration_init_init=1;
@@ -173,32 +172,8 @@ iteration_init( lame_global_flags *gfp,III_side_info_t *l3_side, int l3_enc[2][2
 	ipow20[i] = pow(2.0, (double)(i - 210) * -0.1875);
 	pow20[i] = pow(2.0, (double)(i - 210) * 0.25);
     }
+    huffman_init(gfc);
   }
-
-
-
-  
-  /* some intializations. */
-  for ( gr = 0; gr < gfc->mode_gr; gr++ ){
-    for ( ch = 0; ch < gfc->stereo; ch++ ){
-      cod_info = (gr_info *) &(l3_side->gr[gr].ch[ch]);
-
-      if (cod_info->block_type == SHORT_TYPE)
-        {
-	  cod_info->sfb_lmax = 0; /* No sb*/
-	  cod_info->sfb_smax = 0;
-        }
-      else
-	{
-	  /* MPEG 1 doesnt use last scalefactor band */
-	  cod_info->sfb_lmax = SBPSY_l;
-	  cod_info->sfb_smax = SBPSY_s;    /* No sb */
-	}
-
-    }
-  }
-
-  huffman_init(gfc);
 }
 
 
@@ -576,17 +551,8 @@ int calc_noise( lame_global_flags *gfp,
 
   
   if (cod_info->block_type == SHORT_TYPE) {
-    int max_index = SBPSY_s;
-    if ((gfp->VBR==vbr_rh || gfp->VBR==vbr_mtrh || gfp->VBR==vbr_mt)&&(gfp->out_samplerate >=32000))
-      {
-        max_index = SBMAX_s;
-      }
-    else
-      {
-        distort[1][SBMAX_s-1] =
-        distort[2][SBMAX_s-1] =
-        distort[3][SBMAX_s-1] = 0;
-      }
+    int max_index = gfc->sfb21_extra ? SBMAX_s : SBPSY_s;
+
     for ( j=0, sfb = 0; sfb < max_index; sfb++ ) {
          start = gfc->scalefac_band.s[ sfb ];
          end   = gfc->scalefac_band.s[ sfb+1 ];
@@ -627,16 +593,8 @@ int calc_noise( lame_global_flags *gfp,
         }
     }
   }else{
-    int max_index = SBPSY_l;
+    int max_index = gfc->sfb21_extra ? SBMAX_l : SBPSY_l;
     
-    if ((gfp->VBR==vbr_rh || gfp->VBR==vbr_mtrh || gfp->VBR==vbr_mt)&&(gfp->out_samplerate >=32000))
-      {
-        max_index = SBMAX_l;
-      }
-    else
-      {
-        distort[0][SBMAX_l-1] = 0;
-      }
     for ( sfb = 0; sfb < max_index; sfb++ ) {
 	FLOAT8 step;
 	int s = scalefac->l[sfb];

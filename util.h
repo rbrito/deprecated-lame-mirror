@@ -227,6 +227,8 @@ typedef struct  {
   FLOAT8 ATH_vbrlower;
 
   char bv_scf[576];
+  
+  int sfb21_extra; /* will be set in lame_init_params */
 
   /* variables used by util.c */
 #define BLACKSIZE 25

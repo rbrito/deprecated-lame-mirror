@@ -120,6 +120,8 @@ char *mp3buf, int mp3buf_size)
   gfc->mode_ext = MPG_MD_LR_LR;
 
   if (gfc->lame_encode_frame_init==0 )  {
+    gfc->lame_encode_frame_init=1;
+    
     /* padding method as described in 
      * "MPEG-Layer3 / Bitstream Syntax and Decoding"
      * by Martin Sieler, Ralph Sperschneider
@@ -131,8 +133,6 @@ char *mp3buf, int mp3buf_size)
         
     gfc->frac_SpF = ((gfp->version+1)*72000L*gfp->brate) % gfp->out_samplerate;
     gfc->slot_lag  = gfc->frac_SpF;
-    
-    gfc->lame_encode_frame_init=1;
     
     /* check FFT will not use a negative starting offset */
     assert(576>=FFTOFFSET);
@@ -168,6 +168,8 @@ char *mp3buf, int mp3buf_size)
       }
       mdct_sub48(gfp,primebuff0, primebuff1, xr, &gfc->l3_side);
     }
+    
+    iteration_init(gfp, &gfc->l3_side);
   }
 
 

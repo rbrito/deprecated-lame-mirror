@@ -75,8 +75,13 @@ int init_outer_loop
     cod_info->scalefac_scale      = 0;
     cod_info->count1table_select  = 0;
     cod_info->part2_length        = 0;
-    /* sfb_lmax              was set by iteration_init */
-    /* sfb_smax              was set by iteration_init */
+    if (cod_info->block_type == SHORT_TYPE) {
+        cod_info->sfb_lmax        = 0;
+        cod_info->sfb_smax        = 0;
+    } else {
+        cod_info->sfb_lmax        = SBPSY_l;
+        cod_info->sfb_smax        = SBPSY_s;
+    }   
     cod_info->count1bits          = 0;  
     cod_info->sfb_partition_table = nr_of_sfb_block[0][0];
     cod_info->slen[0]             = 0;
@@ -876,7 +881,7 @@ void outer_loop
          * NOTE: distort[] = changed to:  noise/allowed noise
          * so distort[] > 1 means noise > allowed noise
          */
-        if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh || iteration > 100) {
+        if (gfc->sfb21_extra) {
             if (cod_info->block_type == SHORT_TYPE) {
                 if ( distort[1][SBMAX_s-1] > 1
                   || distort[2][SBMAX_s-1] > 1
@@ -1343,8 +1348,6 @@ void VBR_iteration_loop
     lame_internal_flags *gfc      = (lame_internal_flags*)gfp->internal_flags;
     III_side_info_t     *l3_side  = &gfc->l3_side;
 
-    iteration_init (gfp, l3_side, l3_enc);
-
     if (gfc->mode_ext == MPG_MD_MS_LR && gfp->quality >= 5) {
         /*  my experiences are, that side channel reduction  
          *  does more harm than good when VBR encoding
@@ -1622,8 +1625,6 @@ void ABR_iteration_loop
     lame_internal_flags *gfc      = gfp->internal_flags;
     III_side_info_t     *l3_side  = &gfc->l3_side;
 
-    iteration_init (gfp, l3_side, l3_enc);
-
     calc_target_bits (gfp, gfc, pe, ms_ener_ratio, targ_bits, 
                       &analog_silence_bits, &max_frame_bits);
     
@@ -1717,8 +1718,6 @@ void iteration_loop
     III_side_info_t     *l3_side = &gfc->l3_side;
     gr_info             *cod_info;
 
-    iteration_init (gfp, l3_side, l3_enc);
-  
     bit_rate = bitrate_table [gfp->version] [gfc->bitrate_index];
     getframebits (gfp, &bitsPerFrame, &mean_bits);
     ResvFrameBegin (gfp, l3_side, mean_bits, bitsPerFrame );

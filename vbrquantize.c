@@ -751,7 +751,6 @@ VBR_quantize(lame_global_flags *gfp,
   l3_side = &gfc->l3_side;
   gfc->ATH_vbrlower = (4-gfp->VBR_q)*4.0; 
   if (gfc->ATH_vbrlower < 0) gfc->ATH_vbrlower=0;
-  iteration_init(gfp,l3_side,l3_enc);
 
 
   /* now find out: if the frame can be considered analog silent
@@ -775,6 +774,15 @@ VBR_quantize(lame_global_flags *gfp,
       int over_ath;
       cod_info = &l3_side->gr[gr].ch[ch].tt;
       cod_info->part2_3_length=LARGE_BITS;
+      
+      if (cod_info->block_type == SHORT_TYPE) {
+          cod_info->sfb_lmax = 0; /* No sb*/
+          cod_info->sfb_smax = 0;
+      } else {
+          /* MPEG 1 doesnt use last scalefactor band */
+          cod_info->sfb_lmax = SBPSY_l;
+          cod_info->sfb_smax = SBPSY_s;    /* No sb */
+      }
       
       /* quality setting */
       masking_lower_db = dbQ[gfp->VBR_q];
