@@ -276,7 +276,6 @@ struct lame_internal_flags {
     unsigned long Class_ID;
     int alignment;
     int frameNum;                   /* number of frames encoded */
-    int bytes_diff;                 /* for ABR encoding */
 
     sample_t mfbuf[MAX_CHANNELS][MFSIZE];
     int mf_size;
@@ -342,6 +341,8 @@ struct lame_internal_flags {
     FLOAT rnumlines_ls[CBANDS];
     FLOAT masking_lower;
     FLOAT masking_lower_short;
+    int bytes_diff;                 /* for ABR encoding */
+    FLOAT masklower_base;           /* for ABR encoding */
 
     /* psymodel work, (for next frame data) */
     III_psy_ratio masking_next[MAX_GRANULES][MAX_CHANNELS*2];

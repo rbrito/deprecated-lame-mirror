@@ -136,22 +136,6 @@ ResvFrameBegin(lame_t gfc, int mean_bytes)
     return mean_bytes*8 + Min(gfc->ResvSize, gfc->ResvMax);
 }
 
-/*  find a bitrate which can refill the resevoir to positive size. */
-static void
-finish_VBR_coding(lame_t gfc)
-{
-    int mean_bytes;
-    gfc->bitrate_index = gfc->VBR_min_bitrate;
-    do {
-	mean_bytes = getframebytes(gfc);
-	if (ResvFrameBegin(gfc, mean_bytes) >= 0)
-	    break;
-    } while (++gfc->bitrate_index <= gfc->VBR_max_bitrate);
-    assert(gfc->bitrate_index <= gfc->VBR_max_bitrate);
-
-    gfc->ResvSize += mean_bytes*8;
-}
-
 /*************************************************************************
  *	calc_xmin()
  * Calculate the allowed noise threshold for each scalefactor band,
@@ -1564,7 +1548,7 @@ void
 VBR_iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 {
     FLOAT xmin[MAX_GRANULES][MAX_CHANNELS][SFBMAX];
-    int max_frame_bits, used_bits, ch, gr;
+    int max_frame_bits, used_bits, ch, gr, mean_bytes;
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 	for (ch = 0; ch < gfc->channels_out; ch++) {
@@ -1603,7 +1587,15 @@ VBR_iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
     }
     gfc->ResvSize -= used_bits;
 
-    finish_VBR_coding(gfc);
+    gfc->bitrate_index = gfc->VBR_min_bitrate;
+    do {
+	mean_bytes = getframebytes(gfc);
+	if (ResvFrameBegin(gfc, mean_bytes) >= 0)
+	    break;
+    } while (++gfc->bitrate_index <= gfc->VBR_max_bitrate);
+    assert(gfc->bitrate_index <= gfc->VBR_max_bitrate);
+
+    gfc->ResvSize += mean_bytes*8;
 }
 
 
@@ -1619,23 +1611,27 @@ VBR_iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 void 
 ABR_iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 {
-    int bytes, threshold;
-    FLOAT fact;
+    int bytes;
+    FLOAT threshold;
     /* encode */
     VBR_iteration_loop(gfc, ratio);
 
     /* adjust threshold for the next frame */
-    bytes = gfc->mean_bitrate_kbps
-	- bitrate_table[gfc->version][gfc->bitrate_index];
-    gfc->bytes_diff -= bytes * gfc->mode_gr * (1000*576/8);
+    bytes = bitrate_table[gfc->version][gfc->bitrate_index]
+	- gfc->mean_bitrate_kbps;
+    gfc->bytes_diff += bytes;
 
-    threshold = gfc->mean_bitrate_kbps * gfc->mode_gr * (1000*576/8/10);
-
-    fact = (FLOAT)gfc->bytes_diff / gfc->frameNum;
-    if (fact > threshold) {
+    threshold = gfc->mean_bitrate_kbps * gfc->frameNum * 0.2;
+    if (gfc->bytes_diff > threshold
+    || (gfc->bytes_diff > threshold*0.25
+	&& gfc->masking_lower < gfc->masklower_base*2.0)) {
 	gfc->masking_lower *= 1.01;
-    } else if (fact < -threshold) {
-	gfc->masking_lower *= 0.99;
+    } else if (gfc->masking_lower >= gfc->masklower_base) {
+	if (gfc->bytes_diff < -threshold) {
+	    gfc->masking_lower *= 0.97;
+	} else if (gfc->bytes_diff < -threshold*0.5) {
+	    gfc->masking_lower *= 0.99;
+	}
     }
 }
 
