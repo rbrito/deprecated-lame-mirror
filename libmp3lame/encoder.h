@@ -566,6 +566,9 @@ struct lame_internal_flags {
 
     int nogap_total;
     int nogap_current;
+
+    int nsamples;
+    sample_t *in_buffer;
 };
 
 /* same as lame_decode1 (look in lame.h), but returns 
