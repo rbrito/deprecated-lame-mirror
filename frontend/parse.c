@@ -835,7 +835,31 @@ static int  presets_set( lame_t gfp, int fast, int cbr, const char* preset_name,
         preset_name = "256";
     }
 
+    if (strcmp(preset_name, "dm-radio") == 0) {
+	//if (fast > 0)
+	//      lame_set_preset(gfp, DM_RADIO_FAST);
+	//else
+	lame_set_preset(gfp, DM_RADIO);
+	return 0;
+    }
 
+    if (strcmp(preset_name, "portable") == 0) {
+	//if (fast > 0)
+	//      lame_set_preset(gfp, PORTABLE_FAST);
+	//else
+	lame_set_preset(gfp, PORTABLE);
+
+	return 0;
+    }
+
+    if (strcmp(preset_name, "dm-medium") == 0) {
+	//if (fast > 0)
+	//    lame_set_preset(gfp, DM_MEDIUM_FAST);
+	//else
+	lame_set_preset(gfp, DM_MEDIUM);
+
+	return 0;
+    }
 
     if (strcmp(preset_name, "medium") == 0) {
 	if (fast > 0)
