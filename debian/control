@@ -1,12 +1,16 @@
 Source: lame
 Section: sound
 Priority: optional
-Maintainer: Stefan Karrmann <S.Karrmann@gmx.net>
-Standards-Version: 3.1.1
+Maintainer: Viral <viral@debian.org>
+Build-Depends: nasm, libncurses5-dev, libgtk1.2-dev, xlibs-dev, libglib1.2-dev
+Standards-Version: 3.5.2
 
 Package: lame
 Architecture: any
 Depends: ${shlibs:Depends}
+Conflicts: lame-i686-minimal
+Recommends: lame-extras
+Suggests: abcde
 Description: LAME Ain't an MP3 Encoder
  Lame is a program which can be used to create compressed
  audio files. (Lame aint MP3 encoder). These audio files
@@ -14,12 +18,12 @@ Description: LAME Ain't an MP3 Encoder
  To read from stdin, use "-" for <infile>. To write to
  stdout, use a "-" for <outfile>.
  .
- This package contains the frontend encoder binary.
+ This package contains the frontend encoder binary compiled for i386,
+ with almost all options such as frame analyzer and decoder enabled.
 
-Package: lame-extras
+Package: liblame0
 Architecture: any
-Priority: extra
-Depends: ${shlibs:Depends}
+Section: libs
 Description: LAME Ain't an MP3 Encoder
  Lame is a program which can be used to create compressed
  audio files. (Lame aint MP3 encoder). These audio files
@@ -27,13 +31,13 @@ Description: LAME Ain't an MP3 Encoder
  To read from stdin, use "-" for <infile>. To write to
  stdout, use a "-" for <outfile>.
  .
- This package contains a streming server (mp3rtp) and a graphical
- frame analysis tool (mp3x) for mp3 files.
-
+ This package contains the dynamic library.
+ 
 Package: lame-dev
 Architecture: any
 Section: devel
 Depends: libc6-dev
+Recommends: liblame0
 Description: LAME Ain't an MP3 Encoder
  Lame is a program which can be used to create compressed
  audio files. (Lame aint MP3 encoder). These audio files

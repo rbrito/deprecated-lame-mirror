@@ -12,7 +12,7 @@ configure: configure-stamp
 configure-stamp:
 	dh_testdir
 	# Add here commands to configure the package.
-	./configure --prefix=/usr --with-fileio=lame --enable-mp3x --enable-mp3rtp --without-vorbis
+	./configure --prefix=/usr --with-fileio=lame --disable-mp3x --enable-mp3rtp --without-vorbis --host=$$(dpkg-architecture -qDEB_HOST_GNU_TYPE)
 
 	touch configure-stamp
 
@@ -20,7 +20,7 @@ build: configure-stamp build-stamp
 build-stamp:
 	dh_testdir
 
-	# Add here commands to compile the package.
+        # Add here commands to compile the package.
 	$(MAKE)
 	#/usr/bin/docbook-to-man debian/lame.sgml > lame.1
 
@@ -44,7 +44,7 @@ install: build
 	dh_installdirs
 
 	# Add here commands to install the package into debian/tmp.
-	$(MAKE) DESTDIR=`pwd`/debian/tmp install
+	$(MAKE) DESTDIR=`pwd`/debian/lame install
 
 
 # Build architecture-independent files here.
@@ -56,7 +56,7 @@ binary-arch: build install
 #	dh_testversion
 	dh_testdir
 	dh_testroot
-	dh_movefiles
+	dh_movefiles -plame-dev -pliblame0  --sourcedir=./debian/lame
 #	dh_installdebconf	
 	dh_installdocs
 #	dh_installexamples
@@ -65,10 +65,10 @@ binary-arch: build install
 #	dh_installpam
 #	dh_installinit
 #	dh_installcron
-	dh_installmanpages -Nlame-extras -Nliblame0 -Nliblame-dev
+	dh_installmanpages -Nliblame0 -Nlame-dev
 #	dh_installinfo
-	dh_undocumented -Nlame -Nliblame0 -Nliblame-dev mp3rtp.1 mp3x.1
-	dh_installchangelogs doc/html/history.html
+#	dh_undocumented -Nlame -Nliblame0 -Nlame-dev mp3rtp.1
+	dh_installchangelogs ChangeLog
 #	dh_link
 	dh_strip
 	dh_compress

@@ -1,3 +1,19 @@
+lame (3.90-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Viral <viral@debian.org>  Tue, 21 Aug 2001 13:50:14 +0530
+
+lame (3.89-1) unstable; urgency=low
+
+  * New upstream version.
+  * Added --host=$$(dpkg-architecture -qDEB_HOST_GNU_TYPE) to configure.
+  * Added liblame0 package.
+  * Added doc-base entry.
+  * Actual ChangeLog is installed now instead of history.html
+  
+ -- Viral <viral@debian.org>  Sun, 22 Jul 2001 03:07:30 +0530
+
 lame (3.88-0) unstable; urgency=low
 
   * Updated debian/ directory to use configure.
