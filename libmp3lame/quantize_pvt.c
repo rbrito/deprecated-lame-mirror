@@ -287,10 +287,10 @@ iteration_init( lame_global_flags *gfp)
     for (i = 0; i < Q_MAX; i++) {
         iipow20[i] = pow(2.0, (double)(i - 210) * 0.1875);
 	ipow20[i] = pow(2.0, (double)(i - 210) * -0.1875);
-	pow20[i] = pow(2.0, (double)(i - 210) * 0.25);
+	pow20[i+128] = pow(2.0, (double)(i - 210) * 0.25);
     }
     for (i = -128; i < 0; i++)
-	pow20[i] = pow(2.0, (double)(i - 210) * 0.25);
+	pow20[i+128] = pow(2.0, (double)(i - 210) * 0.25);
     huffman_init(gfc);
   }
 }
