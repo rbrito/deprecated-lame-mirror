@@ -1259,7 +1259,8 @@ int psymodel_init(lame_global_flags *gfp)
 	    gfc->endlines_s[i] += gfc->endlines_s[i-1];
     }
     for (i = 0; i < SBMAX_s; i++)
-	gfc->ATH.s_avg[i] = gfc->ATH.cb[bm[i]] * db2pow(gfp->ATHlower*10.0);
+	gfc->ATH.s_avg[i] = gfc->ATH.cb[bm[i]] * db2pow(gfp->ATHlower*10.0)
+	    * BLKSIZE_s / BLKSIZE;
     
     i = init_s3_values(gfc, &gfc->s3_ss, gfc->s3ind_s,
 		       gfc->npart_s, bval, bval_width, norm);
