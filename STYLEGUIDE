@@ -7,7 +7,7 @@
   in routines you did not write.
 
 * Respect the indentation of the author of the original function.
-  If the indentation is not consistent, use 3.
+  If the indentation is not consistent, use 4.
 
 * Don't use tabulators (the character with the value '\t') in source code,
   especially these with a width of unequal 8. Lame sources are using
@@ -18,10 +18,10 @@
 
 * check important assumptions with an assert()
 
-* use int for all integer quantities if possible.  
+* use int for all integer quantities.  
   LAME requires 32 bit ints, so you can assume int is at least 32 bits.  
-  Dont use 'long'.  Dont use 'unsigned' unless absolutely necessary.
-  If 64 bits is required, use int64.
+  Dont use 'long'.  Dont use 'unsigned' unless ABSOLUTELY necessary.
+  Dont use 'char' just to save bytes.  If 64 bits is required, use int64.
 
 * Avoid using float or double, and instead use: (defined in machine.h).  
 
