@@ -1,0 +1,113 @@
+RH_VALIDATE_MS:
+ avoids to switch from LR to MS when the perceptual entropy indicates
+ a need for more bits in MS coding mode than in LR mode
+
+RH_AMP:
+ -Y -> careful noise shaping, only max. distorted band at once
+
+RH_SUBBLOCK:
+ ?
+
+RH_OUTERLOOP:
+ ?
+
+leftover in comment: RH_QUALITY_CONTROL
+
+
+KLEMM_01:
+ - other ATH formula (ATH table based on experimental data)
+---snip---
+The problem is that Lame uses the wrong formula as a hidden lowpass
+filtering, so a lot of tuning must be repeated after changing the ATH
+formula. Also Lame uses a ATH threshold which is constant in a sfb, at least
+in the last sfb this is wrong.
+
+KLEMM_01 didn't work well with the current code. You need the following
+additional modifications:
+
+  * Decreased lowpass frequency
+  * Non constant ATH for every sfb (at least for the last 2 sfb's were ATH
+    varies a lot)
+  * gpsycho must calculate masking for >= 16 kHz
+---snip---
+
+KLEMM_04:
+ - correctly calculated FIR coefficients
+ - sample_t instead of FLOAT for FIR coefficients
+ 
+KLEMM_05:
+ only write brhist lines if neccessary
+
+KLEMM_06:
+ fseek instead of fread (if available)
+
+KLEMM_07 (always on):
+ - new timestatus only using lametime.c functions
+ - more simple code
+
+KLEMM_12:
+ increase treshold for "Stereo instead of J-Stereo for high bitrates"
+  48   kHz: 171 kbps (used at 192+) -> 244 kbps (used at 256+)
+  44.1 kHz: 160 kbps (used at 160+) -> 224 kbps (used at 224+)
+  32   kHz: 119 kbps (used at 128+) -> 162 kbps (used at 192+)
+---snip---
+For 160...223 (44.1 kHz) joint stereo is used (instead of stereo). But the
+threshold to switch to MS coding is increased.
+
+Increases significantly the quality for 160 kbps. Castagnets is the example
+which sounds much much better with this switch.
+---snip---
+
+KLEMM_13:
+ bitrate and LR/MS statistics also displayed for CBR
+
+KLEMM_14 (always on):
+ some optimizations and code simplifications (unrolled code)
+
+KLEMM_42:
+ new bandwith calculation
+
+KLEMM_44:
+ enable code in pcm.c (new API)
+
+
+USE_GOGO_SUBBAND:
+ ?
+
+NOTABLES (allways off!):
+ ?
+
+NEWS3:
+ ?
+
+NORES_TEST (allways on):
+ - don't let the 2nd granule use bits saved by the 1st granule
+ - useful for testing only
+
+NEW_DRAIN (theres a define above: NEW_DRAINXX):
+ ?
+ comment:
+   mdb_bytes = x/8; m ?= n ?= o ?= 8* mdb_bytes; p ?= mdb_bytes
+   ( ? == [+-] )
+   - optimization should handle this, but it looks ugly
+   - do we lose precision here?
+
+LAME_STD_PRINT:
+ more verbose output?
+
+PRECOMPUTE (always on, multiple defines):
+ precomputes blackman window?
+
+TAKEHIRO_IEEE754_HACK (conditionally on (x86)):
+ speed optimization?
+ (should move into configure.in)
+
+USE_GNUC_ASM:
+ speed optimization
+ (should move into configure.in)
+
+MAXQUANTERROR:
+ ?
+
+... alot of #if 0 / #if 1 not evaluated ...
+
