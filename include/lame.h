@@ -585,6 +585,14 @@ int CDECL lame_encode_flush_nogap(
         unsigned char*       mp3buf, /* pointer to encoded MP3 stream         */
         int                  size);  /* number of valid octets in this stream */
 
+/*
+ * OPTIONAL:
+ * after calling flush_nogap, call this routine to add Xing and id3v2
+ * headers into the bitstream.  
+ */
+int CDECL lame_reinit_bitstream(
+        lame_global_flags *  gfp);    /* global context handle                 */
+
 
 
 /*

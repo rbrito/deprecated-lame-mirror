@@ -3,6 +3,10 @@ frontend: a bunch of static variables (input_format, swapbytes,
           get_audio.  should be cleaned up.
 
 
+-nogap:  more testing, fix options, add Vbr and id3 tag support?
+The tags will require chaning the tag data without reseting the
+encoder, as well as reseting the VBR histogram data without
+reseting the encoder.
 
 
 1.

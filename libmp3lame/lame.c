@@ -1761,6 +1761,22 @@ lame_encode_flush_nogap(lame_global_flags * gfp,
     return copy_buffer(mp3buffer, mp3buffer_size,  &gfc->bs);
 }
 
+/* call this after flush_nogap if you want to write new id3v2
+   and Xing VBR tags into the bitstream */
+int
+lame_reinit_bitstream(lame_global_flags * gfp)
+{
+    //    lame_internal_flags *gfc = gfp->internal_flags;
+    gfp->frameNum=0;
+    id3tag_write_v2(gfp);
+
+    /* Write initial VBR Header to bitstream, and reinit VBR data */
+    if (gfp->bWriteVbrTag)
+        InitVbrTag(gfp);
+
+    return 0;
+}
+
 
 /*****************************************************************/
 /* flush internal PCM sample buffers, then mp3 buffers           */

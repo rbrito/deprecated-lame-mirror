@@ -119,9 +119,10 @@ parse_args_from_string(lame_global_flags * const gfp, const char *p,
 
 
 
-FILE * init_files(lame_global_flags *gf, char *inPath, char *outPath)
+FILE   *
+init_files(lame_global_flags * gf, char *inPath, char *outPath)
 {
-    FILE *outf;
+    FILE   *outf;
     /* Mostly it is not useful to use the same input and output name.
        This test is very easy and buggy and don't recognize different names
        assigning the same file
@@ -130,7 +131,7 @@ FILE * init_files(lame_global_flags *gf, char *inPath, char *outPath)
         fprintf(stderr, "Input file and Output file are the same. Abort.\n");
         return NULL;
     }
-    
+
     /* open the wav/aiff/raw pcm or mp3 input file.  This call will
      * open the file, try to parse the headers and
      * set gf.samplerate, gf.num_channels, gf.num_samples.
@@ -151,7 +152,8 @@ FILE * init_files(lame_global_flags *gf, char *inPath, char *outPath)
 
 
 int
-lame_encoder(lame_global_flags * gf, FILE *outf, int nogap, char *inPath, char *outPath)
+lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath,
+             char *outPath)
 {
     unsigned char mp3buffer[LAME_MAXMP3BUFFER];
     int     Buffer[2][1152];
@@ -160,8 +162,7 @@ lame_encoder(lame_global_flags * gf, FILE *outf, int nogap, char *inPath, char *
         {"stereo", "j-stereo", "dual-ch", "single-ch"},
         {"stereo", "force-ms", "dual-ch", "single-ch"}
     };
-    static int frames_lastencode=0;
-    int frames;
+    int     frames;
 
     if (silent < 10) {
         lame_print_config(gf); /* print useful information about options being used */
@@ -188,7 +189,8 @@ lame_encoder(lame_global_flags * gf, FILE *outf, int nogap, char *inPath, char *
                 fprintf(stderr, "VBR(q=%i)", lame_get_VBR_q(gf));
                 break;
             case vbr_abr:
-                fprintf(stderr, "average %d kbps", lame_get_VBR_mean_bitrate_kbps(gf));
+                fprintf(stderr, "average %d kbps",
+                        lame_get_VBR_mean_bitrate_kbps(gf));
                 break;
             default:
                 fprintf(stderr, "%3d kbps", lame_get_brate(gf));
@@ -210,90 +212,87 @@ lame_encoder(lame_global_flags * gf, FILE *outf, int nogap, char *inPath, char *
     }
 
 
-        /* encode until we hit eof */
-        do {
-            /* read in 'iread' samples */
-            iread = get_audio(gf, Buffer);
-	    frames = lame_get_frameNum(gf)-frames_lastencode;
+    /* encode until we hit eof */
+    do {
+        /* read in 'iread' samples */
+        iread = get_audio(gf, Buffer);
+        frames = lame_get_frameNum(gf);
 
 
  /********************** status display  *****************************/
-            if (silent <= 0) {
-                if (update_interval > 0) {
-                    timestatus_klemm(gf);
-                }
-                else {
-                    if (0 == frames % 50) {
+        if (silent <= 0) {
+            if (update_interval > 0) {
+                timestatus_klemm(gf);
+            }
+            else {
+                if (0 == frames % 50) {
 #ifdef BRHIST
-                        brhist_jump_back();
+                    brhist_jump_back();
 #endif
-                        timestatus(lame_get_out_samplerate(gf),
-                                   frames,
-                                   lame_get_totalframes(gf), lame_get_framesize(gf));
+                    timestatus(lame_get_out_samplerate(gf),
+                               frames,
+                               lame_get_totalframes(gf),
+                               lame_get_framesize(gf));
 #ifdef BRHIST
-                        if (brhist)
-                            brhist_disp(gf);
+                    if (brhist)
+                        brhist_disp(gf);
 #endif
-                    }
                 }
             }
+        }
 
-            /* encode */
-            imp3 = lame_encode_buffer_int(gf, Buffer[0], Buffer[1], iread,
-                                          mp3buffer, sizeof(mp3buffer));
+        /* encode */
+        imp3 = lame_encode_buffer_int(gf, Buffer[0], Buffer[1], iread,
+                                      mp3buffer, sizeof(mp3buffer));
 
-            /* was our output buffer big enough? */
-            if (imp3 < 0) {
-                if (imp3 == -1)
-                    fprintf(stderr, "mp3 buffer is not big enough... \n");
-                else
-                    fprintf(stderr, "mp3 internal error:  error code=%i\n",
-                            imp3);
-                return 1;
-            }
-
-            if (fwrite(mp3buffer, 1, imp3, outf) != imp3) {
-                fprintf(stderr, "Error writing mp3 output \n");
-                return 1;
-            }
-
-        } while (iread);
-
-        if (nogap)
-            imp3 = lame_encode_flush_nogap(gf, mp3buffer, sizeof(mp3buffer)); /* may return one more mp3 frame */
-        else
-            imp3 = lame_encode_flush(gf, mp3buffer, sizeof(mp3buffer)); /* may return one more mp3 frame */
-
+        /* was our output buffer big enough? */
         if (imp3 < 0) {
             if (imp3 == -1)
                 fprintf(stderr, "mp3 buffer is not big enough... \n");
             else
                 fprintf(stderr, "mp3 internal error:  error code=%i\n", imp3);
             return 1;
-
         }
 
-        if (silent <= 0) {
-#ifdef BRHIST
-            brhist_jump_back();
-#endif
-            timestatus(lame_get_out_samplerate(gf),
-                       frames, lame_get_totalframes(gf), lame_get_framesize(gf));
-#ifdef BRHIST
-            if (brhist) {
-                brhist_disp(gf);
-            }
-            brhist_disp_total(gf);
-#endif
-            timestatus_finish();
+        if (fwrite(mp3buffer, 1, imp3, outf) != imp3) {
+            fprintf(stderr, "Error writing mp3 output \n");
+            return 1;
         }
 
-        fwrite(mp3buffer, 1, imp3, outf);
-        if (!nogap)
-            lame_mp3_tags_fid(gf, outf); /* add VBR tags to mp3 file */
+    } while (iread);
 
+    if (nogap) {
+        imp3 = lame_encode_flush_nogap(gf, mp3buffer, sizeof(mp3buffer)); /* may return one more mp3 frame */
+	lame_reinit_bitstream(gf);
+    } else {
+        imp3 = lame_encode_flush(gf, mp3buffer, sizeof(mp3buffer)); /* may return one more mp3 frame */
+    }
 
-    frames_lastencode = lame_get_frameNum(gf);
+    if (imp3 < 0) {
+        if (imp3 == -1)
+            fprintf(stderr, "mp3 buffer is not big enough... \n");
+        else
+            fprintf(stderr, "mp3 internal error:  error code=%i\n", imp3);
+        return 1;
+
+    }
+
+    if (silent <= 0) {
+#ifdef BRHIST
+        brhist_jump_back();
+#endif
+        timestatus(lame_get_out_samplerate(gf),
+                   frames, lame_get_totalframes(gf), lame_get_framesize(gf));
+#ifdef BRHIST
+        if (brhist) {
+            brhist_disp(gf);
+        }
+        brhist_disp_total(gf);
+#endif
+        timestatus_finish();
+    }
+
+    fwrite(mp3buffer, 1, imp3, outf);
 
     return 0;
 }
@@ -303,10 +302,14 @@ lame_encoder(lame_global_flags * gf, FILE *outf, int nogap, char *inPath, char *
 
 
 
-void brhist_init_package(lame_global_flags *gf){
+void
+brhist_init_package(lame_global_flags * gf)
+{
 #ifdef BRHIST
     if (brhist) {
-        if (brhist_init(gf, lame_get_VBR_min_bitrate_kbps(gf), lame_get_VBR_max_bitrate_kbps(gf))) {
+        if (brhist_init
+            (gf, lame_get_VBR_min_bitrate_kbps(gf),
+             lame_get_VBR_max_bitrate_kbps(gf))) {
             /* fail to initialize */
             brhist = 0;
         }
@@ -334,7 +337,7 @@ main(int argc, char **argv)
     int     max_nogap = MAX_NOGAP;
     char   *nogap_inPath[MAX_NOGAP];
     int     i;
-    FILE *outf;
+    FILE   *outf;
 
 #if macintosh
     argc = ccommand(&argv);
@@ -362,21 +365,24 @@ main(int argc, char **argv)
      */
     parse_args_from_string(gf, getenv("LAMEOPT"), inPath, outPath);
     ret = parse_args(gf, argc, argv, inPath, outPath, nogap_inPath, &max_nogap);
-    if (ret < 0) return ret == -2 ? 0 : 1;
+    if (ret < 0)
+        return ret == -2 ? 0 : 1;
 
-    if (update_interval < 0.) update_interval = 2.;
+    if (update_interval < 0.)
+        update_interval = 2.;
 
     /* initialize input file.  This also sets samplerate and as much
        other data on the input file as available in the headers */
     if (max_nogap > 0) {
-	strncpy(outPath, nogap_inPath[0], MAX_NAME_SIZE - 4);
+        strncpy(outPath, nogap_inPath[0], MAX_NAME_SIZE - 4);
         strncat(outPath, ".mp3", 4);
-	outf = init_files(gf,nogap_inPath[0],outPath);
-    }else{
-	outf = init_files(gf,inPath,outPath);
+        outf = init_files(gf, nogap_inPath[0], outPath);
     }
-    if (outf==NULL) {
-	return -1;
+    else {
+        outf = init_files(gf, inPath, outPath);
+    }
+    if (outf == NULL) {
+        return -1;
     }
 
     /* Now that all the options are set, lame needs to analyze them and
@@ -399,7 +405,7 @@ main(int argc, char **argv)
 #ifdef HAVE_VORBIS
     if (lame_get_ogg(gf)) {
         lame_encode_ogg_init(gf);
-        lame_set_VBR( gf, vbr_off ); /* ignore lame's various VBR modes */
+        lame_set_VBR(gf, vbr_off); /* ignore lame's various VBR modes */
     }
 #endif
 
@@ -411,32 +417,37 @@ main(int argc, char **argv)
         else
             lame_decoder(gf, outf, lame_get_encoder_delay(gf), inPath, outPath);
 
-    }else {
-	if (max_nogap > 0) {
-	    for (i = 0; i < max_nogap; ++i) {
-		int use_flush_nogap = (i!=(max_nogap-1));
-                if (i>0) {
-		    strncpy(outPath, nogap_inPath[i], MAX_NAME_SIZE - 4);
-		    strncat(outPath, ".mp3", 4);
-		    /* note: if init_files changes anything, like
-		       samplerate, num_channels, etc, we are screwed */
-		    outf = init_files(gf,nogap_inPath[i],outPath);
-		}
-		brhist_init_package(gf);
-		ret = lame_encoder(gf, outf, use_flush_nogap,nogap_inPath[i],outPath);
-		fclose(outf);   /* close the output file */
-		close_infile(); /* close the input file */
-	    }
-	    lame_close(gf);
-	    
-	}
-	else {
-	    brhist_init_package(gf);
-	    ret = lame_encoder(gf, outf, 0,inPath,outPath);
-	    fclose(outf);   /* close the output file */
-	    close_infile(); /* close the input file */
-	    lame_close(gf);
-	}
+    }
+    else {
+        if (max_nogap > 0) {
+            for (i = 0; i < max_nogap; ++i) {
+                int     use_flush_nogap = (i != (max_nogap - 1));
+                if (i > 0) {
+                    strncpy(outPath, nogap_inPath[i], MAX_NAME_SIZE - 4);
+                    strncat(outPath, ".mp3", 4);
+                    /* note: if init_files changes anything, like
+                       samplerate, num_channels, etc, we are screwed */
+                    outf = init_files(gf, nogap_inPath[i], outPath);
+                }
+                brhist_init_package(gf);
+                ret =
+                    lame_encoder(gf, outf, use_flush_nogap, nogap_inPath[i],
+                                 outPath);
+                lame_mp3_tags_fid(gf, outf); /* add VBR tags to mp3 file */
+                fclose(outf); /* close the output file */
+                close_infile(); /* close the input file */
+            }
+            lame_close(gf);
+
+        }
+        else {
+            brhist_init_package(gf);
+            ret = lame_encoder(gf, outf, 0, inPath, outPath);
+            lame_mp3_tags_fid(gf, outf); /* add VBR tags to mp3 file */
+            fclose(outf); /* close the output file */
+            close_infile(); /* close the input file */
+            lame_close(gf);
+        }
     }
     return ret;
 }
