@@ -104,12 +104,14 @@ typedef float   FLOAT;
 /* sample_t must be floating point, at least 32 bits */
 typedef FLOAT     sample_t;
 
-/* log/log10 approximations */
 #ifdef USE_IEEE754_HACK
 # define USE_FAST_LOG
 # define MAGIC_FLOAT ((double)65536*128)
 # define MAGIC_INT 0x4b000000
 # define ROUNDFAC_NEAR (ROUNDFAC-0.5)
+# define signbits(x) (*((unsigned int*)&x) >> 31)
+#else
+# define signbits(x) (x < (FLOAT)0.)
 #endif
 
 typedef union {
@@ -160,6 +162,7 @@ static inline FLOAT POW20core(int x)
 /*#define db2pow(x) pow(10.0, (x)*0.1) */
 /*#define db2pow(x) pow(10.0, (x)/10.0) */
 
+/* log/log10 approximations */
 #ifdef USE_FAST_LOG
 # define LOG2_SIZE       (256)
 # define LOG2_SIZE_L2    (8)

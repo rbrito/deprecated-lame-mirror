@@ -864,7 +864,7 @@ adjust_global_gain(lame_t gfc, gr_info *gi, FLOAT *distort, int huffbits)
 	int bw = gi->wi[sfb].width;
 	FLOAT istep;
 	j -= bw;
-	if (distort[sfb] >= (FLOAT)0.0)
+	if (!signbits(distort[sfb]))
 	    continue;
 
 	if (gi->count1 < j)

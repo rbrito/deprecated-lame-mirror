@@ -34,12 +34,6 @@
 #include "util.h"
 #include "tables.h"
 
-#ifdef USE_IEEE754_HACK
-# define signbits(x) (*((unsigned int*)&x) >> 31)
-#else
-# define signbits(x) (x < (FLOAT)0.)
-#endif
-
 typedef struct {
     unsigned char code;
     unsigned char len;

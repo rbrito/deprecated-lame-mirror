@@ -1001,9 +1001,9 @@ mp3x display               <------LONG------>
 	    if (adjust < (FLOAT)0.01)
 		adjust = (FLOAT)0.01;
 	    if (mr->en.s[0][(sb+1)/3] > adjust
-		|| mr->en.s[0][(sb+1)/3] < (FLOAT)0.0)
+		|| signbits(mr->en.s[0][(sb+1)/3]))
 		mr->en.s[0][(sb+1)/3] = adjust;
-	    if (mr->en.s[0][(sb  )/3] < (FLOAT)0.0)
+	    if (signbits(mr->en.s[0][(sb  )/3]))
 		mr->en.s[0][(sb  )/3] = (FLOAT)1.0;
 	}
 #ifndef NOANALYSIS
@@ -1293,10 +1293,9 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 
 	/* short block may be needed but not calculated */
 	/* calculate it from converting from long */
-	i = 0;
-	if (mr->en.s[0][0] < (FLOAT)0.0) i += 1;
-	if (mr->en.s[0][1] < (FLOAT)0.0) i += 2;
-	if (mr->en.s[0][2] < (FLOAT)0.0) i += 4;
+	i = signbits(mr->en.s[0][0]) * 1
+	    + signbits(mr->en.s[0][1]) * 2
+	    + signbits(mr->en.s[0][2]) * 4;
 
 	enn = thmm = (FLOAT)0.0;
 	for (b = j = 0;; b++ ) {
