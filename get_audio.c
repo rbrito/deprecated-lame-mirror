@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <assert.h>
 #include "util.h"
 #include "get_audio.h"
@@ -249,7 +250,7 @@ int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip)
 {
     short int   Buffer [2] [1152];
     int         iread;
-    long        wavsize;
+    double      wavsize;
     int         layer = 1;
     size_t      i;
     CLINK void  (*WriteFunction) (FILE* fp, char *p, int n);
@@ -335,16 +336,16 @@ int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip)
     if (wavsize < 0) {
         MSGF ("WAVE file contains 0 PCM samples\n");
         wavsize = 0;
-    } else if ( wavsize > 0xFFFFFFFF/i ) {
+    } else if ( wavsize > 0xFFFFFFC0/i ) {
         MSGF ("Very huge WAVE file, can't set filesize accordingly\n");
-	wavsize = 0xFFFFFFFF;
+	wavsize = 0xFFFFFFC0;
     } else {
         wavsize *= i;
     }
   
     if ( ! gfp->disable_waveheader )
 	if ( ! fseek (outf, 0l, SEEK_SET) ) /* if outf is seekable, rewind and adjust length */
-            WriteWav (outf, wavsize, gfp->in_samplerate, gfp->num_channels );
+            WriteWav (outf, (unsigned long)wavsize, gfp->in_samplerate, gfp->num_channels );
     fclose (outf);
 
     decoder_progress_finish (gfp);
@@ -378,7 +379,6 @@ int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip)
  */
 
 
-#include <stdio.h>
 
 
 
@@ -501,50 +501,34 @@ FILE * OpenSndFile(lame_global_flags *gfp)
 	DEBUGF("format            :");
 
 	/* new formats from sbellon@sbellon.de  1/2000 */
-        if ((gs_wfInfo.format&SF_FORMAT_TYPEMASK)==SF_FORMAT_WAV)
-	  DEBUGF("Microsoft WAV format (big endian). ");
-	if ((gs_wfInfo.format&SF_FORMAT_TYPEMASK)==SF_FORMAT_AIFF)
-	  DEBUGF("Apple/SGI AIFF format (little endian). ");
-	if ((gs_wfInfo.format&SF_FORMAT_TYPEMASK)==SF_FORMAT_AU)
-	  DEBUGF("Sun/NeXT AU format (big endian). ");
-	if ((gs_wfInfo.format&SF_FORMAT_TYPEMASK)==SF_FORMAT_AULE)
-	  DEBUGF("DEC AU format (little endian). ");
-	if ((gs_wfInfo.format&SF_FORMAT_TYPEMASK)==SF_FORMAT_RAW)
-	  DEBUGF("RAW PCM data. ");
-	if ((gs_wfInfo.format&SF_FORMAT_TYPEMASK)==SF_FORMAT_PAF)
-	  DEBUGF("Ensoniq PARIS file format. ");
-	if ((gs_wfInfo.format&SF_FORMAT_TYPEMASK)==SF_FORMAT_SVX)
-	  DEBUGF("Amiga IFF / SVX8 / SV16 format. ");
-	if ((gs_wfInfo.format&SF_FORMAT_TYPEMASK)==SF_FORMAT_NIST)
-	  DEBUGF("Sphere NIST format. ");
+	
+	switch ( gs_wfInfo.format & SF_FORMAT_TYPEMASK ) {
+	case SF_FORMAT_WAV:  DEBUGF ("Microsoft WAV format (big endian). "    ); break;
+	case SF_FORMAT_AIFF: DEBUGF ("Apple/SGI AIFF format (little endian). "); break;
+	case SF_FORMAT_AU:   DEBUGF ("Sun/NeXT AU format (big endian). "      ); break;
+	case SF_FORMAT_AULE: DEBUGF ("DEC AU format (little endian). "        ); break;
+	case SF_FORMAT_RAW:  DEBUGF ("RAW PCM data. "                         ); break;
+	case SF_FORMAT_PAF:  DEBUGF ("Ensoniq PARIS file format. "            ); break;
+	case SF_FORMAT_SVX:  DEBUGF ("Amiga IFF / SVX8 / SV16 format. "       ); break;
+	case SF_FORMAT_NIST: DEBUGF ("Sphere NIST format. "                   ); break;
+	default:             assert (0);                                         break;
+	}
 
-	if ((gs_wfInfo.format&SF_FORMAT_SUBMASK)==SF_FORMAT_PCM)
-	  DEBUGF("PCM data in 8, 16, 24 or 32 bits.");
-	if ((gs_wfInfo.format&SF_FORMAT_SUBMASK)==SF_FORMAT_FLOAT)
-	  DEBUGF("32 bit Intel x86 floats.");
-	if ((gs_wfInfo.format&SF_FORMAT_SUBMASK)==SF_FORMAT_ULAW)
-	  DEBUGF("U-Law encoded.");
-	if ((gs_wfInfo.format&SF_FORMAT_SUBMASK)==SF_FORMAT_ALAW)
-	  DEBUGF("A-Law encoded.");
-	if ((gs_wfInfo.format&SF_FORMAT_SUBMASK)==SF_FORMAT_IMA_ADPCM)
-	  DEBUGF("IMA ADPCM.");
-	if ((gs_wfInfo.format&SF_FORMAT_SUBMASK)==SF_FORMAT_MS_ADPCM)
-	  DEBUGF("Microsoft ADPCM.");
-	if ((gs_wfInfo.format&SF_FORMAT_SUBMASK)==SF_FORMAT_PCM_BE)
-	  DEBUGF("Big endian PCM data.");
-	if ((gs_wfInfo.format&SF_FORMAT_SUBMASK)==SF_FORMAT_PCM_LE)
-	  DEBUGF("Little endian PCM data.");
-	if ((gs_wfInfo.format&SF_FORMAT_SUBMASK)==SF_FORMAT_PCM_S8)
-	  DEBUGF("Signed 8 bit PCM.");
-	if ((gs_wfInfo.format&SF_FORMAT_SUBMASK)==SF_FORMAT_PCM_U8)
-	  DEBUGF("Unsigned 8 bit PCM.");
-	if ((gs_wfInfo.format&SF_FORMAT_SUBMASK)==SF_FORMAT_SVX_FIB)
-	  DEBUGF("SVX Fibonacci Delta encoding.");
-	if ((gs_wfInfo.format&SF_FORMAT_SUBMASK)==SF_FORMAT_SVX_EXP)
-	  DEBUGF("SVX Exponential Delta encoding.");
-
-
-
+        switch ( gs_wfInfo.format & SF_FORMAT_SUBMASK ) {
+	case SF_FORMAT_PCM: 	  DEBUGF ("PCM data in 8, 16, 24 or 32 bits."); break;
+	case SF_FORMAT_FLOAT: 	  DEBUGF ("32 bit Intel x86 floats."         ); break;
+	case SF_FORMAT_ULAW: 	  DEBUGF ("U-Law encoded."                   ); break;
+	case SF_FORMAT_ALAW:	  DEBUGF ("A-Law encoded."                   ); break;
+	case SF_FORMAT_IMA_ADPCM: DEBUGF ("IMA ADPCM."                       ); break;
+	case SF_FORMAT_MS_ADPCM:  DEBUGF ("Microsoft ADPCM."                 ); break;
+	case SF_FORMAT_PCM_BE: 	  DEBUGF ("Big endian PCM data."             ); break;
+	case SF_FORMAT_PCM_LE: 	  DEBUGF ("Little endian PCM data."          ); break;
+	case SF_FORMAT_PCM_S8: 	  DEBUGF ("Signed 8 bit PCM."                ); break;
+	case SF_FORMAT_PCM_U8: 	  DEBUGF ("Unsigned 8 bit PCM."              ); break;
+	case SF_FORMAT_SVX_FIB:   DEBUGF ("SVX Fibonacci Delta encoding."    ); break;
+	case SF_FORMAT_SVX_EXP:   DEBUGF ("SVX Exponential Delta encoding."  ); break;
+	default:                  assert (0);                                   break;
+	}
 
 	DEBUGF("\n");
 	DEBUGF("pcmbitwidth       :%d\n",gs_wfInfo.pcmbitwidth);

@@ -42,9 +42,9 @@ void lame_print_version(FILE *ofile) {
 char* get_lame_version(void)
 {
 	if (LAME_ALPHAVERSION>0)
-		sprintf(lpszVersion,"%d.%02d (alpha %d)",LAME_MAJOR_VERSION,LAME_MINOR_VERSION,LAME_ALPHAVERSION);
+		sprintf(lpszVersion,"%d.%02d (alpha %d, %s %5.5s)",LAME_MAJOR_VERSION,LAME_MINOR_VERSION,LAME_ALPHAVERSION,__DATE__,__TIME__);
 	else if (LAME_BETAVERSION>0)
-		sprintf(lpszVersion,"%d.%02d (beta %d)",LAME_MAJOR_VERSION,LAME_MINOR_VERSION,LAME_BETAVERSION);
+		sprintf(lpszVersion,"%d.%02d (beta %d, %s)",LAME_MAJOR_VERSION,LAME_MINOR_VERSION,LAME_BETAVERSION,__DATE__);
 	else
 		sprintf(lpszVersion,"%d.%02d",LAME_MAJOR_VERSION,LAME_MINOR_VERSION);
 	return lpszVersion;

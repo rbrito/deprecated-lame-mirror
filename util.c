@@ -1,5 +1,6 @@
 
 #include "util.h"
+#include <ctype.h>
 #include <assert.h>
 
 #ifdef LAME_STD_PRINT
@@ -644,4 +645,22 @@ lame_errorf(const char * s, ...)
 }
 
 #endif
+
+/* would use real "strcasecmp" but it isn't portable */
+int local_strcasecmp ( const char* s1, const char* s2 )
+{
+    unsigned char c1;
+    unsigned char c2;
+    
+    do {
+        c1 = tolower(*s1);
+        c2 = tolower(*s2);
+        if (!c1) {
+            break;
+        }
+        ++s1;
+        ++s2;
+    } while (c1 == c2);
+    return c1 - c2;
+}
 

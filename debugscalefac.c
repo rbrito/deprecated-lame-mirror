@@ -19,7 +19,7 @@ MDCT bands
  scalefac_band_long  = &sfBandIndex[info->sampling_frequency + (info->version * 3)].l[0];
  scalefac_band_short = &sfBandIndex[info->sampling_frequency + (info->version * 3)].s[0];
 
- DEBUGF("\n\n long block partiton  bands \n");
+ DEBUGF("\n\n long block partition bands \n");
  for (b = 0; b<CBANDS; b++) {
    /* look for FFT partition band bu_l[b]*/
    for (i=0;i<HBLKSIZE;i++, fstart=i) {

@@ -330,8 +330,7 @@ typedef struct  {
   plotting_data *pinfo;
 
   /* variables used for the status display */
-  time_t last_time;
-
+  time_t  last_time;
 
 } lame_internal_flags;
 
@@ -408,12 +407,6 @@ extern void lame_errorf(const char *, ...);
 #define LAME_ERROR_EXIT()	exit(1)
 #define LAME_FATAL_EXIT()	exit(2)
 
-
-
+int local_strcasecmp ( const char* s1, const char* s2 );
 
 #endif
-
-
-
-
-

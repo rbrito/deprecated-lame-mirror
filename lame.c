@@ -43,10 +43,6 @@
 #include "asmstuff.h"
 #endif
 
-#ifndef DISPLAY_UPDATE_TIME
-# define DISPLAY_UPDATE_TIME  2.0
-#endif
-
 /* lame_init_params_ppflt_lowpass */
 
 static void
@@ -690,13 +686,11 @@ void lame_print_config(lame_global_flags *gfp)
   }
   if (gfc->filter_type==0) {
     if (gfc->highpass2>0.0)
-      MSGF("Using polyphase highpass filter, transition band: %.0f Hz -  %.0f Hz\n",
-	   gfc->highpass1*out_samplerate*500,
-	   gfc->highpass2*out_samplerate*500);
+      MSGF("Using polyphase highpass filter, transition band: %5.0f Hz - %5.0f Hz\n", 
+           gfc->highpass1*out_samplerate*500, gfc->highpass2*out_samplerate*500);
     if (gfc->lowpass1>0.0)
-      MSGF("Using polyphase lowpass filter,  transition band:  %.0f Hz - %.0f Hz\n",
-	   gfc->lowpass1*out_samplerate*500,
-	   gfc->lowpass2*out_samplerate*500);
+      MSGF("Using polyphase lowpass  filter, transition band: %5.0f Hz - %5.0f Hz\n", 
+           gfc->lowpass1*out_samplerate*500, gfc->lowpass2*out_samplerate*500);
     else
       MSGF("polyphase lowpass filter disabled\n");
   } else {
@@ -712,8 +706,8 @@ void lame_print_config(lame_global_flags *gfp)
   }
   else {
     MSGF("Encoding %s to %s\n",
-	    (strcmp(gfp->inPath, "-")? gfp->inPath : "stdin"),
-	    (strcmp(gfp->outPath, "-")? gfp->outPath : "stdout"));
+	    (strcmp(gfp->inPath, "-")? gfp->inPath : "<stdin>"),
+	    (strcmp(gfp->outPath, "-")? gfp->outPath : "<stdout>"));
     if (gfp->ogg) {
       MSGF("Encoding as %.1f kHz VBR Ogg Vorbis \n",
 	      gfp->out_samplerate/1000.0);
@@ -742,7 +736,7 @@ void lame_print_config(lame_global_flags *gfp)
   if (gfp->free_format) {
     MSGF("Warning: many decoders cannot handle free format bitstreams\n");
     if (gfp->brate>320) {
-      MSGF("Warning: many decoders cannot handle free format bitrates > 320kbs\n");
+      MSGF("Warning: many decoders cannot handle free format bitrates > 320 kbps\n");
     }
   }
 
@@ -975,7 +969,7 @@ char *mp3buf, int mp3buf_size)
       time_t         curr_time = time (NULL);
       
       /* Update display once per second */
-      if ( difftime ( curr_time, gfc->last_time ) >= DISPLAY_UPDATE_TIME  ||  gfc->last_time == 0 ) {
+      if ( difftime ( curr_time, gfc->last_time ) >= gfp->display_update_interval  ||  gfp->frameNum < 2 ) {
 	timestatus(gfp->out_samplerate,gfp->frameNum,gfp->totalframes,gfp->framesize);
 	
 	if (gfp->brhist_disp)

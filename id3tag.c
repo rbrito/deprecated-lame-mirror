@@ -33,7 +33,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
+#include "util.h"
 
 static const char *genre_names[] =
 {
@@ -234,24 +234,6 @@ id3tag_set_track(struct id3tag_spec *spec, const char *track)
             spec->flags |= CHANGED_FLAG;
         }
     }
-}
-
-/* would use real "strcasecmp" but it isn't portable */
-static int
-local_strcasecmp(const char *s1, const char *s2)
-{
-    unsigned char c1;
-    unsigned char c2;
-    do {
-        c1 = tolower(*s1);
-        c2 = tolower(*s2);
-        if (!c1) {
-            break;
-        }
-        ++s1;
-        ++s2;
-    } while (c1 == c2);
-    return c1 - c2;
 }
 
 int

@@ -188,6 +188,8 @@ typedef struct  {
   /************************************************************************/
   void *internal_flags;
 
+  float display_update_interval;
+  
 } lame_global_flags;
 
 

@@ -128,6 +128,7 @@ void lame_help ( lame_global_flags* gfp, const char* ProgramName )  /* print syn
   PRINTF1("    --comp  <arg>   choose bitrate to achive a compression ratio of <arg>\n");
   PRINTF1("    --athonly       only use the ATH for masking\n");
   PRINTF1("    --noath         disable the ATH for masking\n");
+  PRINTF1("    --short         use short blocks\n");
   PRINTF1("    --noshort       do not use short blocks\n");
   PRINTF1("    --voice         experimental voice mode\n");
   PRINTF1("    --preset type   type must be phone, voice, fm, tape, hifi, cd or studio\n");
@@ -153,6 +154,7 @@ void lame_help ( lame_global_flags* gfp, const char* ProgramName )  /* print syn
   PRINTF1("                    do not support low bitrate mp3 (Apex AD600-A DVD/mp3 player)\n");
   PRINTF1("    -t              disable writing Xing VBR informational tag\n");
   PRINTF1("    --nohist        disable VBR histogram display\n");
+  PRINTF1("    --disptime<sec> time between display updates\n");
   PRINTF1("\n");
   PRINTF1("  MP3 header/stream options:\n");
   PRINTF1("    -e <emp>        de-emphasis n/5/c  (obsolete)\n");
@@ -217,32 +219,35 @@ void lame_help ( lame_global_flags* gfp, const char* ProgramName )  /* print syn
 
 
 typedef struct {
-    const char* name;
-    long        resample;
-    short       lowpass_freq;
-    short       lowpass_width;
-    signed char no_short_blocks;
-    signed char quality;
-    signed char mode;
-    short       cbr;
-    signed char vbr_mode;
-    short       vbr_min;
-    short       vbr_max;
+    const char* name;			// name of preset
+    long        resample;		// resample frequency in Hz, or -1 for no resampling
+    short       highpass_freq;		// highpass frequency in Hz, or -1 for no highpass filtering
+    short       lowpass_freq;		// lowpass frequency in Hz, or -1 for no lowpass filtering
+    short       lowpass_width;		// lowpass width in Hz
+    signed char no_short_blocks;	// use of short blocks, 1: no, 0: yes
+    signed char quality;		// quality, the same as -f or -h
+    signed char mode;			// channel mode (mono, stereo, joint)
+    short       cbr;			// CBR data rate in kbps
+    signed char vbr_mode;		// VBR mode (0...9)
+    short       vbr_min;		// minimum VBR rate in kbps
+    short       vbr_max;		// maximum VBR rate in kbps
 } preset_t;
 
 
 preset_t Presets [] = {
-   // name     fs      fo     dfo shrt qual  mode               cbr  vbr_mode/min/max
-    { "phone" ,  8000,  3200, 1000,  1,  5, MPG_MD_MONO        ,  16,  6,   8,  56 },
-    { "sw"    , 11025,  4800,  500,  0,  5, MPG_MD_MONO        ,  24,  5,   8,  64 },
-    { "am"    , 16000,  7200,  500,  0,  5, MPG_MD_MONO        ,  32,  5,  16, 128 },
-    { "fm"    , 22050,  9950,  880,  0,  5, MPG_MD_JOINT_STEREO,  64,  5,  24, 160 },
-    { "voice" , 32000, 12300, 2000,  1,  5, MPG_MD_MONO        ,  56,  4,  32, 128 },
-    { "radio" ,    -1, 15000,    0,  0,  5, MPG_MD_JOINT_STEREO, 112,  4,  64, 256 },
-    { "tape"  ,    -1, 18500, 2000,  0,  5, MPG_MD_JOINT_STEREO, 128,  4,  96, 320 },
-    { "hifi"  ,    -1, 20240, 2200,  0,  2, MPG_MD_JOINT_STEREO, 160,  3, 112, 320 },
-    { "cd"    ,    -1,    -1,   -1,  0,  2, MPG_MD_STEREO      , 192,  2, 128, 320 },
-    { "studio",    -1,    -1,   -1,  0,  2, MPG_MD_STEREO      , 256,  0, 160, 320 },
+   // name       fs     fu    fo    dfo shrt qual  mode              cbr vbr_mode/min/max
+    { "phone" ,  8000, 300,  3400,    0,  1,  5, MPG_MD_MONO        ,  16,  2,   8,  24 },  // phone standard
+    { "lw"    , 11025,  -1,  4300,    0,  0,  5, MPG_MD_MONO        ,  24,  3,  16,  56 },  // LW           use df= 9 kHz
+    { "mw-eu" , 11025,  -1,  4300,    0,  0,  5, MPG_MD_MONO        ,  24,  3,  16,  56 },  // MW in europe use df= 9 kHz
+    { "mw-us" , 16000,  -1,  7300,    0,  0,  5, MPG_MD_MONO        ,  32,  3,  24, 112 },  // MW in USA    use df= ? kHz
+    { "sw"    , 11025,  -1,  4800,    0,  0,  5, MPG_MD_MONO        ,  24,  3,  16,  56 },  // SW           use df=10 kHz
+    { "fm"    , 32000,  -1, 15000,    0,  0,  5, MPG_MD_JOINT_STEREO, 128,  3,  96, 256 },
+    { "voice" , 24000,  -1, 12100,    0,  1,  5, MPG_MD_MONO        ,  56,  3,  40, 112 },
+    { "radio" ,    -1,  -1, 15000,    0,  0,  5, MPG_MD_JOINT_STEREO, 128,  3,  96, 256 },
+    { "tape"  ,    -1,  -1, 18000, 1800,  0,  5, MPG_MD_JOINT_STEREO, 128,  3,  96, 256 },
+    { "hifi"  ,    -1,  -1, 18000, 1800,  0,  2, MPG_MD_JOINT_STEREO, 160,  2, 112, 320 },  // 144 seems to be enough
+    { "cd"    ,    -1,  -1,    -1,   -1,  0,  2, MPG_MD_STEREO      , 192,  1, 128, 320 },  // 160 seems to be enough
+    { "studio",    -1,  -1,    -1,   -1,  0,  2, MPG_MD_STEREO      , 256,  0, 160, 320 },  // 176 seems to be enough
 };
 
 
@@ -258,7 +263,7 @@ void lame_presets_info ( lame_global_flags* gfp, const char* ProgramName )  /* p
     
     PRINTF1 ("\n                ");
     for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
-        PRINTF1 ( " %5s", Presets[i].name );
+        PRINTF1 ( strlen(Presets[i].name) <= 4 ? "%5s " : " %-5s", Presets[i].name );
     PRINTF1 ("\n=================");
     for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
         PRINTF1 ( "======" );
@@ -267,19 +272,25 @@ void lame_presets_info ( lame_global_flags* gfp, const char* ProgramName )  /* p
         if ( Presets[i].resample < 0 )
             PRINTF1 ( "      " );
         else
-            PRINTF1 ( "%6lu",  Presets[i].resample );
+            PRINTF1 ( "%6.3g",  Presets[i].resample*1.e-3 );
+    PRINTF1 ("\n--highpass      ");
+    for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
+        if ( Presets[i].highpass_freq < 0 )
+            PRINTF1 ( "      " );
+        else
+            PRINTF1 ( "%6.3g",  Presets[i].highpass_freq*1.e-3 );
     PRINTF1 ("\n--lowpass       ");
     for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
         if ( Presets[i].lowpass_freq < 0 )
             PRINTF1 ( "      " );
         else
-            PRINTF1 ( "%6u",  Presets[i].lowpass_freq );
+            PRINTF1 ( "%6.3g",  Presets[i].lowpass_freq*1.e-3 );
     PRINTF1 ("\n--lowpass-width ");
     for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
         if ( Presets[i].lowpass_width < 0 )
             PRINTF1 ( "      " );
         else
-            PRINTF1 ( "%6u",  Presets[i].lowpass_width );
+            PRINTF1 ( "%6.3g",  Presets[i].lowpass_width*1.e-3 );
     PRINTF1 ("\n--noshort       ");
     for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
         switch ( Presets[i].no_short_blocks ) {
@@ -311,7 +322,7 @@ void lame_presets_info ( lame_global_flags* gfp, const char* ProgramName )  /* p
     PRINTF1 ("\n-- PLUS WITH -v ");
     for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
         PRINTF1 ( "------" );
-    PRINTF1 ("-\n-v              ");
+    PRINTF1 ("-\n-V              ");
     for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
         PRINTF1 ( "%6u", Presets[i].vbr_mode );
     PRINTF1 ("\n-b              ");
@@ -326,7 +337,7 @@ void lame_presets_info ( lame_global_flags* gfp, const char* ProgramName )  /* p
   
     PRINTF1 ("-\nEXAMPLES:\n");
     PRINTF1 (" a) --preset fm\n");
-    PRINTF1 ("    equals: --resample 22.05 --lowpass 9.95 --lowpass-width 0.88 -mj -b64\n");
+    PRINTF1 ("    equals: -mj -b64 --resample 32 --lowpass 15 --lowpass-width 0\n");
     PRINTF1 (" b) -v --preset studio\n");
     PRINTF1 ("    equals: -h -ms -V0 -b160 -B320\n");
 
@@ -339,9 +350,12 @@ void lame_presets_setup ( lame_global_flags* gfp, const char* preset_name, const
     size_t  i;
 
     for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++ )
-        if ( 0 == strcmp (preset_name, Presets[i].name ) ) {
+        if ( 0 == strncmp (preset_name, Presets[i].name, strlen (preset_name) ) ) {
             if ( Presets[i].resample >= 0 )
 	        gfp -> out_samplerate   = Presets[i].resample;
+	    if ( Presets[i].highpass_freq >= 0 )
+	        gfp -> highpassfreq     = Presets[i].highpass_freq,
+	        gfp -> highpasswidth    = 0;
 	    gfp -> lowpassfreq          = Presets[i].lowpass_freq;
 	    gfp -> lowpasswidth         = Presets[i].lowpass_width;
 	    gfp -> no_short_blocks      = Presets[i].no_short_blocks;
@@ -380,13 +394,51 @@ static void genre_list_handler(int num,const char *name,void *cookie)
 * The input and output filenames are read into #inpath# and #outpath#.
 *
 ************************************************************************/
+
+// buggy: Should analyze file contents instead of directory contents (file name)
+
+static int filename_to_type ( const char* FileName )
+{
+    size_t len = strlen (FileName);
+    
+    if ( len < 4 ) return sf_unknown;
+    
+    FileName += len-4;
+    if ( 0 == local_strcasecmp ( FileName, ".mpg" ) ) return sf_mp1;
+    if ( 0 == local_strcasecmp ( FileName, ".mp1" ) ) return sf_mp1;
+    if ( 0 == local_strcasecmp ( FileName, ".mp2" ) ) return sf_mp2;
+    if ( 0 == local_strcasecmp ( FileName, ".mp3" ) ) return sf_mp3;
+    if ( 0 == local_strcasecmp ( FileName, ".ogg" ) ) return sf_ogg;
+    return sf_unknown;
+}
+
+static int resample_rate ( double freq )
+{
+    if (freq >= 1.e3) freq *= 1.e-3;
+
+    switch ( (int)freq ) {
+    case  8: return  8000;
+    case 11: return 11025;
+    case 12: return 12000;
+    case 16: return 16000;
+    case 22: return 22050;
+    case 24: return 24000;
+    case 32: return 32000;
+    case 44: return 44100;
+    case 48: return 48000;
+    default: ERRORF ("Illegal resample frequency: %.3f kHz\n", freq );
+             return 0;
+    }
+}
+
 void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 {
-  FLOAT srate;
-  int   err = 0, i = 0;
-  int autoconvert=0;
-  int user_quality=-1;
-  const char* ProgramName = argv[0]; 
+    FLOAT       srate;
+    int         err;
+    int         i;
+    int         autoconvert  = 0;
+    int         user_quality = -1;
+    const char* ProgramName  = argv[0]; 
 
   gfp->inPath[0] = '\0';   
   gfp->outPath[0] = '\0';
@@ -394,10 +446,11 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
   gfp->silent=0;
   gfp->brhist_disp = 1;
   gfp->id3v1_enabled = 1;
+  gfp->display_update_interval = 2.0;
   id3tag_init(&gfp->tag_spec);
 
   /* process args */
-  while(++i<argc && err == 0) {
+  for ( i = 0, err = 0; ++i < argc  &&  !err; ) {
     char c, *token, *arg, *nextArg;
     int  argUsed;
     
@@ -416,14 +469,8 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	token++;
 
 	if (strcmp(token, "resample")==0) {
-	  argUsed=1;
-	  srate = atof( nextArg );
-	  if (srate <= 0) {
-	    ERRORF("Must specify a samplerate with --resample\n");
-	    LAME_ERROR_EXIT();
-	  }
-	  /* useful are 0.001 ... 384 kHz, 384 Hz ... 192000 Hz */
-	  gfp -> out_samplerate =  ( srate * (srate <= 384. ? 1.e3 : 1.e0 ) + 0.5 );
+	  argUsed = 1;
+	  gfp -> out_samplerate = resample_rate ( atof (nextArg) );
 	}
 	else if (strcmp(token, "vbr-old")==0) {
 	  gfp->VBR = vbr_rh; 
@@ -478,6 +525,9 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	else if (strcmp(token, "noshort")==0) {
 	  gfp->no_short_blocks=1;
 	}
+	else if (strcmp(token, "short")==0) {
+	  gfp->no_short_blocks=0;
+	}
 	else if (strcmp(token, "decode")==0) {
 	  gfp->decode_only=1;
 	}
@@ -493,6 +543,12 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	}
 	else if (strcmp(token, "athonly")==0) {
 	  gfp->ATHonly=1;
+	}
+	else if (strcmp(token, "disptime")==0) {
+	  argUsed = 1;
+	  gfp->display_update_interval = atof (nextArg);
+	  if (gfp->display_update_interval <= 0.0)
+	    gfp->display_update_interval = 10.;
 	}
 	else if (strcmp(token, "athlower")==0) {
 	  argUsed=1;
@@ -822,33 +878,12 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
     }
   }
 
-
   /* if user did not explicitly specify input is mp3, check file name */
-  if (gfp->input_format != sf_mp1 || 
-      gfp->input_format != sf_mp2 ||
-      gfp->input_format != sf_mp3 ||
-      gfp->input_format != sf_ogg) {
-    if (!(strcmp((char *) &gfp->inPath[strlen(gfp->inPath)-4],".mpg")))
-      gfp->input_format = sf_mp1;
-    else if (!(strcmp((char *) &gfp->inPath[strlen(gfp->inPath)-4],".MPG")))
-      gfp->input_format = sf_mp1;
-    else if (!(strcmp((char *) &gfp->inPath[strlen(gfp->inPath)-4],".mp1")))
-      gfp->input_format = sf_mp1;
-    else if (!(strcmp((char *) &gfp->inPath[strlen(gfp->inPath)-4],".MP1")))
-      gfp->input_format = sf_mp1;
-    else if (!(strcmp((char *) &gfp->inPath[strlen(gfp->inPath)-4],".mp2")))
-      gfp->input_format = sf_mp2;
-    else if (!(strcmp((char *) &gfp->inPath[strlen(gfp->inPath)-4],".MP2")))
-      gfp->input_format = sf_mp2;
-    else if (!(strcmp((char *) &gfp->inPath[strlen(gfp->inPath)-4],".mp3")))
-      gfp->input_format = sf_mp3;
-    else if (!(strcmp((char *) &gfp->inPath[strlen(gfp->inPath)-4],".MP3")))
-      gfp->input_format = sf_mp3;
-    else if (!(strcmp((char *) &gfp->inPath[strlen(gfp->inPath)-4],".ogg")))
-      gfp->input_format = sf_ogg;
-    else if (!(strcmp((char *) &gfp->inPath[strlen(gfp->inPath)-4],".OGG")))
-      gfp->input_format = sf_ogg;
-  }
+  if ( gfp -> input_format != sf_mp1  || 
+       gfp -> input_format != sf_mp2  ||
+       gfp -> input_format != sf_mp3  ||
+       gfp -> input_format != sf_ogg )
+      gfp -> input_format = filename_to_type ( gfp -> inPath );
   
 #if !(defined HAVEMPGLIB || defined AMIGA_MPEGA)
   if (gfp->input_format == sf_mp1 ||
