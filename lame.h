@@ -96,6 +96,7 @@ typedef struct  {
   int num_channels;           /* input number of channels. default=2  */
   int in_samplerate;          /* input_samp_rate. default=44.1kHz     */
   int out_samplerate;         /* output_samp_rate. (usually determined automatically)   */ 
+  float scale;                /* scale input by this amount */
 
   /* general control params */
   int gtkflag;                /* run frame analyzer?       */

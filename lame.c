@@ -661,7 +661,7 @@ int lame_init_params(lame_global_flags *gfp)
   }
 #endif
 
-  if ( gfp -> update_interval <= 0. )
+  if ( gfp -> update_interval < 0. )
       gfp -> update_interval = 2.;
 
   return 0;
@@ -1255,32 +1255,15 @@ int lame_init(lame_global_flags *gfp)
   gfc=(lame_internal_flags *) gfp->internal_flags;
   memset(gfc,0,sizeof(lame_internal_flags));
 
-  /* Global flags.  set defaults here */
+  /* Global flags.  set defaults here for non-zero values */
+  /* see lame.h for description */
   gfp->mode = MPG_MD_JOINT_STEREO;
-  gfp->mode_fixed=0;
-  gfp->force_ms=0;
-  gfp->brate=0;
-  gfp->copyright=0;
   gfp->original=1;
-  gfp->extension=0;
-  gfp->error_protection=0;
-  gfp->emphasis=0;
   gfp->in_samplerate=1000*44.1;
-  gfp->out_samplerate=0;
   gfp->num_channels=2;
   gfp->num_samples=MAX_U_32_NUM;
 
-  gfp->allow_diff_short=0;
-  gfp->ATHonly=0;
-  gfp->noATH=0;
   gfp->bWriteVbrTag=1;
-  gfp->cwlimit=0;
-  gfp->disable_reservoir=0;
-  gfp->experimentalX = 0;
-  gfp->experimentalY = 0;
-  gfp->experimentalZ = 0;
-  gfp->exp_nspsytune = 0;
-  gfp->gtkflag=0;
   gfp->quality=5;
   gfp->input_format=sf_unknown;
 
@@ -1291,9 +1274,7 @@ int lame_init(lame_global_flags *gfp)
   
   gfp->raiseSMR = 0;
 
-  gfp->no_short_blocks=0;
   gfp->padding_type=2;
-  gfp->swapbytes=0;
   gfp->silent=1;
   gfp->VBR=vbr_off;
   gfp->VBR_q=4;

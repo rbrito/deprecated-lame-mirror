@@ -113,6 +113,7 @@ Operational:
 --mp3input     input file is an MP3 file.  decode using mpglib/mpg123
 --ogginput     input file is an Ogg Vorbis file.  decode using libvorbis
 -x             swap bytes of input file
+--scale <arg>  multiply PCM input by <arg>
 -a             downmix stereo input file to mono .mp3
 -e  n/5/c      de-emphasis
 -p             add CRC error protection
@@ -572,6 +573,21 @@ silent operation
 -S
 
 don't print progress report
+
+=======================================================================
+scale
+=======================================================================
+--scale <arg>
+
+Scales input by <arg>.  This just multiplies the PCM data
+(after it has been converted to floating point) by <arg>.  
+
+<arg> > 1:  increase volume
+<arg> = 1:  no effect
+<arg> < 1:  reduce volume
+
+Use with care, since most MP3 decoders will truncate data
+which decodes to values greater than 32768.  
 
 
 =======================================================================

@@ -105,7 +105,16 @@ char *mp3buf, int mp3buf_size)
   memset((char *) scalefac, 0, sizeof(scalefac));
   inbuf[0]=inbuf_l;
   inbuf[1]=inbuf_r;
-    
+
+  if (gfp->scale != 0) {
+    int i;
+    for (i=0 ; i<gfp->framesize; ++i) {
+      inbuf_l[i] *= gfp->scale;
+      if (gfc->stereo==2) inbuf_r[i] *= gfp->scale;
+    }
+  }
+  
+
   gfc->mode_ext = MPG_MD_LR_LR;
 
   if (gfc->lame_encode_frame_init==0 )  {

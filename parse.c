@@ -184,6 +184,7 @@ void lame_help ( lame_global_flags* gfp, const char* ProgramName )  /* print syn
   PRINTF1("    --decode        input=mp3 file, output=wav\n");
   PRINTF1("    -t              disable writing wav header when using --decode\n");
   PRINTF1("    --comp  <arg>   choose bitrate to achive a compression ratio of <arg>\n");
+  PRINTF1("    --scale <arg>   scale input (multiply PCM data) by <arg>  \n");
   PRINTF1("    --athonly       only use the ATH for masking\n");
   PRINTF1("    --noath         disable the ATH for masking\n");
   PRINTF1("    --athlower x    lower the ATH x dB\n");
@@ -676,6 +677,10 @@ void lame_parse_args ( lame_global_flags* gfp, int argc, char** argv )
 		    gfp->raiseSMR = atof(nextArg);
                     if (gfp->raiseSMR < 0.0) gfp->raiseSMR = 0.0;
                     if (gfp->raiseSMR > 1.0) gfp->raiseSMR = 1.0;
+
+		T_ELIF ("scale")
+		    argUsed=1;
+		    gfp->scale = atof(nextArg);
 		
 		T_ELIF ("freeformat")
 		    gfp->free_format=1;
