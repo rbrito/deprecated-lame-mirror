@@ -19,17 +19,43 @@ Starting with LAME 3.0:
 <hr></h3>
 
 <h3>
-LAME 3.85&nbsp; (CVS)</h3>
+LAME 3.86alpha&nbsp; (CVS)</h3>
 
 <ul>
 <li>
-new VBR routine now the default.&nbsp; Same tunings as the old routine,
-but very different scalefactor search algorithm.&nbsp; Much faster, with
-noise shaping very close to the psycho acoustic model.&nbsp; Some further
-tuning may be needed.</li>
+</li>
+</ul>
+
+<h3>
+</h3>
+
+<h3>
+LAME 3.85beta&nbsp;&nbsp; July 3 2000</h3>
+
+<ul>
+<li>
+<font color="#FF0000">Takehiro Tominaga:&nbsp; mid/side stereo demasking
+thresholds updated.</font></li>
 
 <li>
-</li>
+Takehiro Tominaga: New short block MDCT coefficient data structure.&nbsp;
+Should allow for future speed improvements.</li>
+
+<li>
+Robert Hegemann:&nbsp; fixed bug in old VBR routine, the --noath mode messed
+up the VBR routine resulting in very large files</li>
+
+<li>
+Robert Hegemann: found bugs in some sections when using 32 bit floating
+point.&nbsp; Default is now back to 64bit floating point.</li>
+
+<li>
+<font color="#FF0000">Takehiro Tominaga:&nbsp; Modified PE formula to use
+ATH.</font></li>
+
+<li>
+<font color="#000000">S.T.J.:&nbsp; README.DJGPP - instructions for compiling
+LAME with DJGPP, the dos version of gcc.</font></li>
 </ul>
 
 <h3>
@@ -61,6 +87,10 @@ Marco Remondini:&nbsp; VBR histogram works in win32.&nbsp; compile with
 <li>
 <font color="#FF0000">Takehiro Tominaga:&nbsp; LAME CBR will now use scalefac_scale
 to expand the dynamic range of the scalefactors.</font></li>
+
+<li>
+<font color="#000000">Iwasa Kazmi:&nbsp; Library improvements:&nbsp; exit()'s,
+printf, fprintf's are being replaced by interceptable macros.</font></li>
 </ul>
 
 <h3>
