@@ -10,7 +10,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.     See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
@@ -400,10 +400,10 @@ void amp_scalefac_bands
       end   = gfc->scalefac_band.l[sfb+1];
     
       if ( distort[0][sfb]>distort_thresh  ) {
-	if (distort[0][sfb]-distort_thresh > max_dist) {
-	  max_dist = distort[0][sfb]-distort_thresh;
-	  asfb = sfb;
-	}
+    if (distort[0][sfb]-distort_thresh > max_dist) {
+      max_dist = distort[0][sfb]-distort_thresh;
+      asfb = sfb;
+    }
       }
     }
 
@@ -412,17 +412,17 @@ void amp_scalefac_bands
       start = gfc->scalefac_band.l[asfb];
       end   = gfc->scalefac_band.l[asfb+1];
       for ( l = start; l < end; l++ )
-	xrpow[l] *= ifqstep34;
+    xrpow[l] *= ifqstep34;
     }
   } else {
     for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
       if ( distort[0][sfb]>distort_thresh  ) {
-	scalefac->l[sfb]++;
-	start = gfc->scalefac_band.l[sfb];
-	end   = gfc->scalefac_band.l[sfb+1];
-	for ( l = start; l < end; l++ ) {
-	  xrpow[l] *= ifqstep34;
-	}
+    scalefac->l[sfb]++;
+    start = gfc->scalefac_band.l[sfb];
+    end   = gfc->scalefac_band.l[sfb+1];
+    for ( l = start; l < end; l++ ) {
+      xrpow[l] *= ifqstep34;
+    }
       }
     }
   }
@@ -557,18 +557,18 @@ void inc_scalefac_scale
     }
 
     for (j = 0, sfb = cod_info->sfb_smax; sfb < SBPSY_s; sfb++) {
-	start = gfc->scalefac_band.s[sfb];
-	end   = gfc->scalefac_band.s[sfb+1];
-	for (i = 0; i < 3; i++) {
-	    int j2 = j;
-	    if (scalefac->s[sfb][i] & 1) {
-		scalefac->s[sfb][i]++;
-		for (l = start; l < end; l++) 
-		    xrpow[j2++] *= ifqstep34;
-	    }
-	    scalefac->s[sfb][i] >>= 1;
-	    j += end-start;
-	}
+    start = gfc->scalefac_band.s[sfb];
+    end   = gfc->scalefac_band.s[sfb+1];
+    for (i = 0; i < 3; i++) {
+        int j2 = j;
+        if (scalefac->s[sfb][i] & 1) {
+        scalefac->s[sfb][i]++;
+        for (l = start; l < end; l++) 
+            xrpow[j2++] *= ifqstep34;
+        }
+        scalefac->s[sfb][i] >>= 1;
+        j += end-start;
+    }
     }
     cod_info->scalefac_scale = 1;
 }
@@ -594,48 +594,48 @@ int inc_subblock_gain(
     int window;
 
     for (window = 0; window < 3; window++) {
-	int s1, s2, l;
-	int sfb;
-	s1 = s2 = 0;
+    int s1, s2, l;
+    int sfb;
+    s1 = s2 = 0;
 
-	for (sfb = cod_info->sfb_smax; sfb < 6; sfb++) {
-	    if (s1 < scalefac->s[sfb][window])
-		s1 = scalefac->s[sfb][window];
-	}
-	for (; sfb < SBPSY_s; sfb++) {
-	    if (s2 < scalefac->s[sfb][window])
-		s2 = scalefac->s[sfb][window];
-	}
+    for (sfb = cod_info->sfb_smax; sfb < 6; sfb++) {
+        if (s1 < scalefac->s[sfb][window])
+        s1 = scalefac->s[sfb][window];
+    }
+    for (; sfb < SBPSY_s; sfb++) {
+        if (s2 < scalefac->s[sfb][window])
+        s2 = scalefac->s[sfb][window];
+    }
 
-	if (s1 < 16 && s2 < 8)
-	    continue;
+    if (s1 < 16 && s2 < 8)
+        continue;
 
-	if (cod_info->subblock_gain[window] > 7)
-	    return 1;
+    if (cod_info->subblock_gain[window] > 7)
+        return 1;
 
-	cod_info->subblock_gain[window]++;
-	for (sfb = cod_info->sfb_smax; sfb < SBPSY_s; sfb++) {
-	    int i, width;
-	    int s = scalefac->s[sfb][window];
-	    FLOAT8 amp;
+    cod_info->subblock_gain[window]++;
+    for (sfb = cod_info->sfb_smax; sfb < SBPSY_s; sfb++) {
+        int i, width;
+        int s = scalefac->s[sfb][window];
+        FLOAT8 amp;
 
-	    if (s < 0)
-		continue;
-	    s = s - (4 >> cod_info->scalefac_scale);
-	    if (s >= 0) {
-		scalefac->s[sfb][window] = s;
-		continue;
-	    }
+        if (s < 0)
+        continue;
+        s = s - (4 >> cod_info->scalefac_scale);
+        if (s >= 0) {
+        scalefac->s[sfb][window] = s;
+        continue;
+        }
 
-	    scalefac->s[sfb][window] = 0;
-	    //gf.distort[band] = -1.0;
-	    width = gfc->scalefac_band.s[sfb] - gfc->scalefac_band.s[sfb+1];
-	    i = gfc->scalefac_band.s[sfb] * 3 + width * window;
-	    amp = IPOW20(210 + (s << (cod_info->scalefac_scale + 1)));
-	    for (l = 0; l < width; l++) {
-		xrpow[l] *= amp;
-	    }
-	}
+        scalefac->s[sfb][window] = 0;
+        //gf.distort[band] = -1.0;
+        width = gfc->scalefac_band.s[sfb] - gfc->scalefac_band.s[sfb+1];
+        i = gfc->scalefac_band.s[sfb] * 3 + width * window;
+        amp = IPOW20(210 + (s << (cod_info->scalefac_scale + 1)));
+        for (l = 0; l < width; l++) {
+        xrpow[l] *= amp;
+        }
+    }
     }
     return 0;
 }
@@ -703,7 +703,7 @@ int balance_noise
         if (cod_info->block_type == SHORT_TYPE
          && gfp->experimentalZ && gfc->noise_shaping > 1) {
             status = inc_subblock_gain (gfc, cod_info, scalefac, xrpow)
-		|| loop_break (cod_info, scalefac);
+                  || loop_break (cod_info, scalefac);
         }
     }
     if (!status) {
