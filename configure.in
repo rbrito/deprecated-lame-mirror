@@ -713,8 +713,7 @@ if test "x$GCC" = "xyes"; then
         	;;
 	3.0*)
 		# -funroll-loops seems to produce buggy code with gcc 3.0.3
-		OPTIMIZATION="-O -fomit-frame-pointer -ffast-math \
-			-funroll-loops"
+		OPTIMIZATION="-O -fomit-frame-pointer -ffast-math"
 		OPTIMIZATION_FULL="-fmove-all-movables -freduce-all-givs \
 			-fbranch-count-reg -fforce-addr -fforce-mem"
 		;;
