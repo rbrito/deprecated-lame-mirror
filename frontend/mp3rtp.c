@@ -126,8 +126,8 @@ void levelmessage ( unsigned int maxvalue )
 int  main ( int argc, char **argv )
 {
     unsigned char       mp3buffer [LAME_MAXMP3BUFFER];
-    char       inPath    [MAXPATHLEN];
-    char       outPath   [MAXPATHLEN];
+    char       inPath    [PATH_MAX + 1];
+    char       outPath   [PATH_MAX + 1];
     int        Buffer [2] [1152];
 
     lame_global_flags *gf;

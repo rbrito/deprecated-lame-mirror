@@ -36,8 +36,8 @@ int main(int argc, char **argv)
 {
   char mp3buffer[LAME_MAXMP3BUFFER];
   lame_global_flags *gf;  
-  char outPath[MAXPATHLEN];
-  char inPath[MAXPATHLEN];
+  char outPath[PATH_MAX + 1];
+  char inPath[PATH_MAX + 1];
   int ret;
 
   gf=lame_init();

@@ -95,7 +95,7 @@ int in_bitwidth=16;
 static void  
 dosToLongFileName( char *fn )
 {
-    const int MSIZE = MAXPATHLEN-4;  //  we wanna add ".mp3" later
+    const int MSIZE = PATH_MAX + 1 - 4;  //  we wanna add ".mp3" later
     WIN32_FIND_DATAA lpFindFileData;
     HANDLE h = FindFirstFileA( fn, &lpFindFileData );
     if ( h != INVALID_HANDLE_VALUE ) {
@@ -418,6 +418,7 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --nohist        disable VBR histogram display\n"
               "    --silent        don't print anything on screen\n"
               "    --quiet         don't print anything on screen\n"
+              "    --brief         print more useful information\n"
               "    --verbose       print a lot of useful information\n"
               "\n"
               "  Noise shaping & psycho acoustic algorithms:\n"
@@ -697,85 +698,6 @@ static void  presets_longinfo_dm ( FILE* msgfp )
 }
 
 
-static void  presets_info_r3mix ( FILE* msgfp )
-{
-    fprintf( msgfp, "\n"
-             "r3mix- VBR preset for steady quality with little excess:\n"
-             "    --preset r3mix\n" );
-}
-
-#if 0
-static void  presets_info_dm ( FILE* msgfp )
-{
-    fprintf( msgfp, "\n"
-             "presets highly tuned for utmost quality via blind listening tests:\n"
-             "  VBR presets for steady quality\n"
-             "    --preset standard\n"
-             "    --preset extreme\n"
-             "    --preset insane\n"
-             "  ABR presets for best quality at a given average bitrate:\n"
-             "    --preset <bitrate value>\n"
-        );
-}
-
-
-static void  presets_info_head ( FILE* msgfp )
-{
-    fputc( '\n', msgfp );
-    lame_version_print( msgfp );
-    fprintf( msgfp, 
-             "Presets are shortcuts for common or carefully tuned settings.\n"
-             "Several separate collections of preset profiles are available.\n"
-        );
-}
-
-/* briefly and concisely display all available presets
-*/
-static void  presets_info ( FILE* msgfp )
-{
-    fprintf( msgfp, "For more preset details, refer to --preset longhelp.\n" );
-    presets_info_dm( msgfp );
-    presets_info_r3mix( msgfp );
-}
-
-
-/* elaborate on details for all available presets
-*/
-static void  presets_longinfo ( FILE* msgfp )
-{
-    const char hr[] = "\n----------------------------------------------------------------\n";
-
-    fprintf( msgfp, hr );
-    presets_longinfo_dm( msgfp );
-    fprintf( msgfp, hr );
-    presets_info_r3mix( msgfp );
-}
-#endif
-
-
-static const char presets_set_err_unk[] = "ERROR, unknown --preset profile: ";
-
-
-
-/* presets courtesy of r3mix
- */
-static int  presets_set_r3mix( lame_t gfp, const char* preset_name, 
-                               FILE *msgfp )
-{
-    if (preset_name[0] == '\0') {
-        lame_set_preset(gfp, R3MIX);
-        return 0;
-    }
-/*  else if( strcmp(preset_name, "-...") == 0 ) {
-        ;
-        return 0;
-    }
-*/
-    fprintf( msgfp, "%sr3mix%s\n", presets_set_err_unk, preset_name );
-    presets_info_r3mix( msgfp );
-    return -1;
-}
-
 extern void lame_set_msfix( lame_t gfp, double msfix );
 extern int lame_set_preset_expopts( lame_t gfp, int preset_expopts );
 
@@ -834,7 +756,31 @@ static int  presets_set( lame_t gfp, int fast, int cbr, const char* preset_name,
         preset_name = "256";
     }
 
+    if (strcmp(preset_name, "dm-radio") == 0) {
+	//if (fast > 0)
+	//      lame_set_preset(gfp, DM_RADIO_FAST);
+	//else
+	lame_set_preset(gfp, DM_RADIO);
+	return 0;
+    }
 
+    if (strcmp(preset_name, "portable") == 0) {
+	//if (fast > 0)
+	//      lame_set_preset(gfp, PORTABLE_FAST);
+	//else
+	lame_set_preset(gfp, PORTABLE);
+
+	return 0;
+    }
+
+    if (strcmp(preset_name, "dm-medium") == 0) {
+	//if (fast > 0)
+	//    lame_set_preset(gfp, DM_MEDIUM_FAST);
+	//else
+	lame_set_preset(gfp, DM_MEDIUM);
+
+	return 0;
+    }
 
     if (strcmp(preset_name, "medium") == 0) {
 	if (fast > 0)
@@ -1059,10 +1005,10 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
             if (! *token) { /* The user wants to use stdin and/or stdout. */
                 input_file = 1;
                 if (inPath [0] == '\0')
-                    strncpy (inPath, argv[i],MAXPATHLEN);
+                    strncpy (inPath, argv[i], PATH_MAX + 1);
                 else 
                 if (outPath[0] == '\0') 
-                    strncpy (outPath, argv[i],MAXPATHLEN);
+                    strncpy (outPath, argv[i], PATH_MAX + 1);
             } 
             if (*token == '-') { /* GNU style */
                 token++;
@@ -1085,7 +1031,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     lame_set_VBR(gfp,vbr_off); 
 
                 T_ELIF ("r3mix")
-		    presets_set_r3mix(gfp, "", stderr);
+		    lame_set_preset(gfp, R3MIX);
                                     
                 /**
                  *  please, do *not* DOCUMENT this one
@@ -1094,7 +1040,20 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF ("tune")
                     argUsed=1;
                     {extern void lame_set_tune(lame_t gfp, float val);
-                    lame_set_tune(gfp,atof(nextArg));}    
+                    lame_set_tune(gfp,atof(nextArg));} 
+                T_ELIF ("ms-sparsing")
+                    argUsed=1;
+                    {extern void lame_set_ms_sparsing(lame_t gfp, int val);
+                    lame_set_ms_sparsing(gfp,atoi(nextArg));}                    
+                T_ELIF ("ms-sparse-low")
+                    argUsed=1;
+                    {extern void lame_set_ms_sparse_low(lame_t gfp, float val);
+                    lame_set_ms_sparse_low(gfp,atof(nextArg));}
+                T_ELIF ("ms-sparse-high")
+                    argUsed=1;
+                    {extern void lame_set_ms_sparse_high(lame_t gfp, float val);
+                    lame_set_ms_sparse_high(gfp,atof(nextArg));}
+                       
                     
                 T_ELIF ("abr")
                     argUsed=1;
@@ -1475,6 +1434,9 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF2 ("quiet", "silent")
                     silent = 10;    /* on a scale from 1 to 10 be very silent */
                 
+                T_ELIF ("brief")
+                    silent = -5;     /* print few info on screen */
+                    
                 T_ELIF ("verbose")
                     silent = -10;    /* print a lot on screen, the default */
                     
@@ -1485,6 +1447,9 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF2 ("help", "usage")
                     short_help ( gfp, stdout, ProgramName );
                     return -2;
+                T_ELIF ("brief")
+                    silent = -5;     /* print few info on screen */
+                    
                 
                 T_ELIF ("longhelp")
                     long_help ( gfp, stdout, ProgramName, 0 /* lessmode=NO */ );
@@ -1700,7 +1665,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
         } else {
             if (nogap) {
                 if ((num_nogap != NULL) && (count_nogap < *num_nogap)) {
-                    strncpy(nogap_inPath[count_nogap++],argv[i],MAXPATHLEN);
+                    strncpy(nogap_inPath[count_nogap++], argv[i], PATH_MAX + 1);
                     input_file=1;
                 } else {
                     /* sorry, calling program did not allocate enough space */
@@ -1712,11 +1677,11 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 /* normal options:   inputfile  [outputfile], and
                    either one can be a '-' for stdin/stdout */
                 if (inPath [0] == '\0') {     
-                    strncpy(inPath , argv[i], MAXPATHLEN);
+                    strncpy(inPath , argv[i], PATH_MAX + 1);
                     input_file=1;
                 } else {
                     if (outPath[0] == '\0') 
-                        strncpy(outPath, argv[i], MAXPATHLEN);
+                        strncpy(outPath, argv[i], PATH_MAX + 1);
                     else {
                         fprintf(stderr,"%s: excess arg %s\n", ProgramName, argv[i]);
                         err = 1;
@@ -1732,7 +1697,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
     }
         
     if ( inPath[0] == '-' ) 
-        silent = 1;  /* turn off status - it's broken for stdin */
+	silent = (silent <= 1 ? 1 : silent);
 #ifdef WIN32
     else
         dosToLongFileName( inPath );
@@ -1743,7 +1708,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
             /* if input is stdin, default output is stdout */
             strcpy(outPath,"-");
         } else {
-            strncpy(outPath, inPath, MAXPATHLEN - 4);
+            strncpy(outPath, inPath, PATH_MAX + 1 - 4);
             if ( lame_get_decode_only( gfp ) ) {
                 strncat (outPath, ".wav", 4 );
             } else if( lame_get_ogg( gfp ) ) {
