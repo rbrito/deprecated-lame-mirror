@@ -687,6 +687,22 @@ if test "x$GCC" = "xyes"; then
 		OPTIMIZATION_FULL="-fmove-all-movables -freduce-all-givs \
 			-fbranch-count-reg -fforce-addr -fforce-mem"
 		;;
+	3.3*)
+		# don't test much. treat it same as 3.2
+		# -fomit-frame-pointer seems to be buggy on cygwin
+		case ${host_os} in
+		*cygwin*)
+			OMIT_FRAME_POINTER=
+			;;
+		*)
+			OMIT_FRAME_POINTER=-fomit-frame-pointer
+			;;
+		esac
+
+		OPTIMIZATION="-O ${OMIT_FRAME_POINTER} -ffast-math"
+		OPTIMIZATION_FULL="-fmove-all-movables -freduce-all-givs \
+			-fbranch-count-reg -fforce-addr -fforce-mem"
+		;;
 	*)
 		# default
 		OPTIMIZATION="-O3 ${OMIT_FRAME_POINTER} -ffast-math \
