@@ -68,7 +68,24 @@ void  freegfc ( lame_internal_flags* const gfc )   /* bit stream structure */
     free ( gfc );
 }
 
-#ifdef KLEMM_01
+
+#if 0
+FLOAT8 ATHformula(FLOAT8 f)
+{
+  FLOAT8 ath;
+  f  = Max(0.01, f);
+  f  = Min(18.0,f);
+
+  /* from Painter & Spanias, 1997 */
+  /* minimum: (i=77) 3.3kHz = -5db */
+  ath =    3.640 * pow(f,-0.8)
+         - 6.500 * exp(-0.6*pow(f-3.3,2.0))
+         + 0.001 * pow(f,4.0);
+  return ath;
+}
+#endif
+
+
 
 /* 
  *  Klemm 1994 and 1997. Experimental data. Sorry, data looks a little bit
@@ -77,10 +94,10 @@ void  freegfc ( lame_internal_flags* const gfc )   /* bit stream structure */
  *  ATH is not good even if it's theoretically inaudible).
  */
 
-double  ATHformula ( double freq )
+FLOAT8  ATHformula( FLOAT8 freq )
 {
     /* short [MilliBel] is also sufficient */
-    static float tab [] = {
+    static FLOAT tab [] = {
         /*    10.0 */  96.69, 96.69, 96.26, 95.12,
         /*    12.6 */  93.53, 91.13, 88.82, 86.76,
         /*    15.8 */  84.69, 82.43, 79.97, 77.48,
@@ -117,7 +134,7 @@ double  ATHformula ( double freq )
         /* 19952.6 */  63.85, 66.04, 68.33, 70.09,
         /* 25118.9 */  70.66, 71.27, 71.91, 72.60,
     };
-    double    freq_log;
+    FLOAT8    freq_log;
     unsigned  index;
     
     freq *= 1000.;
@@ -130,23 +147,7 @@ double  ATHformula ( double freq )
     return tab [index] * (1 + index - freq_log) + tab [index+1] * (freq_log - index);
 }
 
-#else
 
-FLOAT8 ATHformula(FLOAT8 f)
-{
-  FLOAT8 ath;
-  f  = Max(0.01, f);
-  f  = Min(18.0,f);
-
-  /* from Painter & Spanias, 1997 */
-  /* minimum: (i=77) 3.3kHz = -5db */
-  ath =    3.640 * pow(f,-0.8)
-         - 6.500 * exp(-0.6*pow(f-3.3,2.0))
-         + 0.001 * pow(f,4.0);
-  return ath;
-}
-
-#endif
 
 /* see for example "Zwicker: Psychoakustik, 1982; ISBN 3-540-11401-7 */
 FLOAT8 freq2bark(FLOAT8 freq)
@@ -323,17 +324,17 @@ void freorder(int scalefac_band[],FLOAT8 ix_orig[576]) {
 
 
 /* resampling via FIR filter, blackman window */
-inline static double blackman(int i,double offset,double fcn,int l)
+inline static FLOAT8 blackman(int i,FLOAT8 offset,FLOAT8 fcn,int l)
 {
   /* This algorithm from:
 SIGNAL PROCESSING ALGORITHMS IN FORTRAN AND C
 S.D. Stearns and R.A. David, Prentice-Hall, 1992
   */
 
-  double bkwn;
-  double wcn = (PI * fcn);
-  double dly = l / 2.0;
-  double x = i-offset;
+  FLOAT8 bkwn;
+  FLOAT8 wcn = (PI * fcn);
+  FLOAT8 dly = l / 2.0;
+  FLOAT8 x = i-offset;
   if (x<0) x=0;
   if (x>l) x=l;
   bkwn = 0.42 - 0.5 * cos((x * 2) * PI /l)
@@ -368,10 +369,10 @@ int fill_buffer_resample(
   
   lame_internal_flags *gfc=gfp->internal_flags;
   int BLACKSIZE;
-  double offset,xvalue;
+  FLOAT8 offset,xvalue;
   int i,j=0,k;
   int filter_l;
-  double fcn,intratio;
+  FLOAT8 fcn,intratio;
   FLOAT *inbuf_old;
   int bpc;   /* number of convolution functions to pre-compute */
   bpc = gfp->out_samplerate/gcd(gfp->out_samplerate,gfp->in_samplerate);
@@ -401,7 +402,7 @@ int fill_buffer_resample(
 
     /* precompute blackman filter coefficients */
     for ( j = 0; j <= 2*bpc; j++ ) {
-        double sum = 0.; 
+        FLOAT8 sum = 0.; 
         offset = (j-bpc) / (2.*bpc);
         for ( i = 0; i <= filter_l; i++ ) 
             sum += 
