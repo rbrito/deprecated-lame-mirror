@@ -51,8 +51,6 @@ typedef struct  {
   int gtkflag;                /* frame analyzer?       */
   int bWriteVbrTag;           /* Xing VBR tag?         */
   int quality;                /* quality setting 0=best,  9=worst  */
-  int allow_diff_short;       /* allow blocktypes to differ between channels ? */
-  int no_short_blocks;        /* disable short blocks       */
   int silent;                 /* disable some status output */
   int mode;                       /* mono, stereo, jstereo */
   int mode_fixed;                 /* use specified mode, not lame's opinion of the best mode */
@@ -62,17 +60,8 @@ typedef struct  {
   /* frame params */
   int copyright;                  /* mark as copyright */
   int original;                   /* mark as original */
-  int emphasis;                   /* obsolete */
   int error_protection;           /* use 2 bytes per frame for a CRC checksum */
 
-
-  /* resampling and filtering */
-  int resamplerate;               /* output_samp_rate.   */ 
-  int lowpassfreq;                /* freq in Hz. 0=lame choses. -1=no filter */
-  int highpassfreq;               /* freq in Hz. 0=lame choses. -1=no filter */
-  int lowpasswidth;               /* freq width of filter, in Hz (default=15%)*/
-  int highpasswidth;              /* freq width of filter, in Hz (default=15%)*/
-  int sfb21;                      /* soon to be obsolete */
 
   /* quantization/noise shaping */
   int disable_reservoir;          /* use bit reservoir? */
@@ -87,12 +76,13 @@ typedef struct  {
   int VBR_max_bitrate_kbps;
 
 
-  /* psycho acoustics */
-  int ATHonly;                    /* only use ATH */
-  int noATH;                      /* disable ATH */
-  float cwlimit;                  /* predictability limit */
+  /* resampling and filtering */
+  int resamplerate;               /* output_samp_rate.   */ 
+  int lowpassfreq;                /* freq in Hz. 0=lame choses. -1=no filter */
+  int highpassfreq;               /* freq in Hz. 0=lame choses. -1=no filter */
+  int lowpasswidth;               /* freq width of filter, in Hz (default=15%)*/
+  int highpasswidth;              /* freq width of filter, in Hz (default=15%)*/
 
-              
 
   /* input file reading - not used if calling program does the i/o */
   sound_file_format input_format;   
@@ -101,6 +91,17 @@ typedef struct  {
   char *outPath;              /* name of output file. */
   /* Note: outPath must be set if you want Xing VBR or id3 tags
    * written */
+
+
+  /* psycho acoustics and other aguments which you should not change 
+   * unless you know what you are doing  */
+  int ATHonly;                    /* only use ATH */
+  int noATH;                      /* disable ATH */
+  float cwlimit;                  /* predictability limit */
+  int allow_diff_short;       /* allow blocktypes to differ between channels ? */
+  int no_short_blocks;        /* disable short blocks       */
+  int emphasis;                   /* obsolete */
+  int sfb21;                      /* soon to be obsolete */
 
 
 
@@ -114,10 +115,10 @@ typedef struct  {
   int framesize;
   int mode_gr;                    /* granules per frame */
   int stereo;                     /* number of channels */
-  int VBR_min_bitrate;       
-  int VBR_max_bitrate;
+  int VBR_min_bitrate;            /* min bitrate index */
+  int VBR_max_bitrate;            /* max bitrate index */
   float resample_ratio;           /* input_samp_rate/output_samp_rate */
-  float lowpass1,lowpass2;
+  float lowpass1,lowpass2;        /* internal filter settings */
   float highpass1,highpass2;
 
   int filter_type;          /* 0=MDCT filter, 1= (expensive) filters */
