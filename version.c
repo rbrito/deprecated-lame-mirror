@@ -22,6 +22,7 @@
 
 #include "version.h"
 #include "lame.h"
+#include "get_audio.h"
 #include <stdio.h>
 
 static char lpszVersion[80];
