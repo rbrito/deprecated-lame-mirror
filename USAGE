@@ -111,18 +111,14 @@ Variable Bit Rate (VBR)
 -V n           VBR quality setting  (0=highest quality, 9=lowest)
 -b  n          specify a minimum allowed bitrate (8,16,24,...,320)
 -B  n          specify a maximum allowed bitrate (8,16,24,...,320)
--F             strictly enforce minimum bitrate
 -t             disable VBR informational tag 
 --nohist       disable display of VBR bitrate histogram
 
 --abr n        specify average bitrate desired
 
 
-Experimental (undocumented):  may work better or worse:
 
--X n           try different quality measures (when comparing quantizations)
--Y             
--Z             
+
 
 
 Operational:
@@ -329,14 +325,6 @@ NOT RECOMMENDED.  Use when encoding speed is critical and encoding
 quality does not matter.  Disable noise shaping.  Psycho acoustics are
 used only for bit allocation and pre-echo detection.
 
-=======================================================================
-strictly enforce VBR minimum bitrate
-=======================================================================
--F   
-
-strictly enforce VBR minimum bitrate.  With out this optioni, the minimum
-bitrate will be ignored for passages of analog silence.
-
 
 
 =======================================================================
@@ -439,15 +427,12 @@ DUAL CHANNELS   Not supported.
 
 INTENSITY STEREO
 
-AUTO
+AUTO(default)
 
-Auto select should select (if input is stereo)
+Auto select should select (if input is stereo, 44.1kHz sampling)
           8 kbps   Mono
-     16- 96 kbps   Intensity Stereo (if available, otherwise Joint Stereo)
-    112-128 kbps   Joint Stereo -mj
-    160-192 kbps   -mj with variable mid/side threshold
-    224-320 kbps   Independent Stereo -ms
-
+     16- 96 kbps   use Intensity and Mid/Side Stereo
+    128-    kbps   use Mid/Side Stereo
 
 
 =======================================================================
