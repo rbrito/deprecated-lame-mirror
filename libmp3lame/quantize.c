@@ -440,10 +440,7 @@ trancate_smallspectrums(
 	work[j] = xr;
     }
 
-    j = 0;
-    sfb = 8;
-    if (gi->block_type == SHORT_TYPE)
-	sfb = 6;
+    j = sfb = 0;
     do {
 	FLOAT allowedNoise, trancateThreshold;
 	int nsame, start;
@@ -1330,7 +1327,7 @@ VBR_maxnoise(
     int sfb2)
 {
     int sfb, j = 0;
-    for (sfb = 0; sfb < gi->psymax; ++sfb) {
+    for (sfb = 0; sfb < gi->psymax; sfb++) {
 	int width = gi->width[sfb];
 	if (sfb >= sfb2
 	    && calc_sfb_noise(
@@ -1381,6 +1378,29 @@ VBR_2nd_bitalloc(
     }
 }
 
+static void
+VBR_3rd_bitalloc(
+    gr_info *gi,
+    FLOAT * xr34,
+    FLOAT * l3_xmin)
+{
+    /* note: we cannot use calc_noise() because l3_enc[] is not calculated
+       at this point */
+    int sfb, j = 0;
+    for (sfb = 0; sfb < gi->psymax; sfb++) {
+	while (gi->scalefac[sfb] > 0
+	       && calc_sfb_noise(
+		   &gi->xr[j], &xr34[j], gi->width[sfb],
+		   gi->global_gain
+		   - ((gi->scalefac[sfb]-1 + (gi->preflag>0 ? pretab[sfb] : 0))
+		      << (gi->scalefac_scale + 1))
+		   - gi->subblock_gain[gi->window[sfb]] * 8) > l3_xmin[sfb])
+	    gi->scalefac[sfb]--;
+
+	j += gi->width[sfb];
+    }
+}
+
 /************************************************************************
  *
  *  VBR_noise_shaping()
@@ -1414,6 +1434,9 @@ VBR_noise_shaping(
 
     /* ensure there's no noise */
     VBR_2nd_bitalloc(gfc, gi, xr34, l3_xmin);
+
+    /* reduce bitrate if possible */
+    VBR_3rd_bitalloc(gi, xr34, l3_xmin);
 
     /* encode scalefacs */
     gfc->scale_bitcounter(gi);
