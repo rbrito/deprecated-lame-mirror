@@ -281,6 +281,10 @@ void compute_ath( lame_global_flags *gfp, FLOAT8 ATH_l[], FLOAT8 ATH_s[] )
             ATH_s[sfb] = 1E-37;
         }
     }
+    
+    /*  work in progress, don't rely on it too much
+     */
+    gfc->ATH-> floor = 10. * log10( ATHmdct( gfp, -1. ) );
 }
 
 
@@ -410,12 +414,26 @@ void reduce_side(int targ_bits[2],FLOAT8 ms_ener_ratio,int mean_bits,int max_bit
     }
 }
 
-#if 0
-FLOAT8 dreinorm (FLOAT8 a, FLOAT8 b, FLOAT8 c)
+
+/**
+ *  Robert Hegemann 2001-04-27:
+ *  this adjusts the ATH, keeping the original noise floor
+ *  affects the higher frequencies more than the lower ones
+ */
+
+FLOAT8 athAdjust( FLOAT8 a, FLOAT8 x, FLOAT8 athFloor )
 {
-    return pow(pow(a,3.)+pow(b,3.)+pow(c,3.),1./3.);
+    /*  work in progress
+     */
+    FLOAT8 const en = 1./90.30873362; // 1/(10*log10(2^15-1))
+    FLOAT8 u = 10. * log10(x);    
+    u -= athFloor;  // undo scaling
+    u *= 1. + 10. * log10(a) * en;
+    u += athFloor;  // redo scaling
+
+    return pow( 10., 0.1*u );
 }
-#endif
+
 
 /*************************************************************************/
 /*            calc_xmin                                                  */
@@ -437,11 +455,15 @@ int calc_xmin(
 {
   lame_internal_flags *gfc=gfp->internal_flags;
   int sfb,j,start, end, bw,l, b, ath_over=0;
-  FLOAT8 en0, xmin, ener;
+  FLOAT8 en0, xmin, ener, tmpATH;
 
   if (cod_info->block_type==SHORT_TYPE) {
 
   for ( j=0, sfb = 0; sfb < SBMAX_s; sfb++ ) {
+    tmpATH = gfp -> experimentalY 
+      ? athAdjust( gfc->ATH->adjust, gfc->ATH->s[sfb], gfc->ATH->floor )
+      : gfc->ATH->adjust * gfc->ATH->s[sfb];
+        
     start = gfc->scalefac_band.s[ sfb ];
     end   = gfc->scalefac_band.s[ sfb + 1 ];
     bw = end - start;
@@ -454,12 +476,12 @@ int calc_xmin(
       en0 /= bw;
       
       if (gfp->ATHonly || gfp->ATHshort) {
-        xmin = gfc->ATH->adjust * gfc->ATH->s[sfb];
+        xmin = tmpATH;
       } else {
         xmin = ratio->en.s[sfb][b];
         if (xmin > 0.0)
           xmin = en0 * ratio->thm.s[sfb][b] * gfc->masking_lower / xmin;
-        xmin = Max(gfc->ATH->adjust * gfc->ATH->s[sfb], xmin);
+        if (xmin < tmpATH) xmin = tmpATH;
       }
       l3_xmin->s[sfb][b] = xmin * bw;
 
@@ -473,7 +495,7 @@ int calc_xmin(
 	}
       }
 
-      if (en0 > gfc->ATH->adjust * gfc->ATH->s[sfb]) ath_over++;
+      if (en0 > tmpATH) ath_over++;
       if (gfc->nsPsy.use && (gfp->VBR == vbr_off || gfp->VBR == vbr_abr) && gfp->quality <= 1)
         l3_xmin->s[sfb][b] *= 0.001;
     }
@@ -525,6 +547,10 @@ int calc_xmin(
       }
     } else {
       for ( sfb = 0; sfb < SBMAX_l; sfb++ ){
+        tmpATH = gfp -> experimentalY
+          ? athAdjust( gfc->ATH->adjust, gfc->ATH->l[sfb], gfc->ATH->floor )
+          : gfc->ATH->adjust * gfc->ATH->l[sfb];
+          
 	start = gfc->scalefac_band.l[ sfb ];
 	end   = gfc->scalefac_band.l[ sfb+1 ];
 	bw = end - start;
@@ -536,16 +562,16 @@ int calc_xmin(
 	en0 /= bw;
     
 	if (gfp->ATHonly) {
-	  xmin=gfc->ATH->adjust * gfc->ATH->l[sfb];
+	  xmin=tmpATH;
 	} else {
 	  xmin = ratio->en.l[sfb];
 	  if (xmin > 0.0)
 	    xmin = en0 * ratio->thm.l[sfb] * gfc->masking_lower / xmin;
-          xmin=Max(gfc->ATH->adjust * gfc->ATH->l[sfb], xmin);
+          if ( xmin < tmpATH ) xmin = tmpATH;
 	}
 	l3_xmin->l[sfb]=xmin*bw;
 	
-        if (en0 > gfc->ATH->adjust * gfc->ATH->l[sfb]) ath_over++;
+        if (en0 > tmpATH) ath_over++;
       }
     }
   }
