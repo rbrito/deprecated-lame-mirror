@@ -34,10 +34,7 @@
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 
-#ifdef __unix__                 /* first hack: assume UNIX = ISO, better is to read enviroment etc. */
-# define SPEED_CHAR	"\xD7"	/* multiply sign in ANSI, ISO-8859-1 */
-# define SPEED_MULT	1.
-#elif 1
+#if 1
 # define SPEED_CHAR	"x"	/* character x */
 # define SPEED_MULT	1.
 #else
@@ -201,6 +198,10 @@ void decoder_progress ( const lame_global_flags* const gfp, const mp3data_struct
     // Programmed with a single frame hold delay
     // Attention: static data
     
+    // MP2 Playback is still buggy.
+    // "'00' subbands 4-31 in intensity_stereo, bound==4"
+    // is this really intensity_stereo or is it MS stereo?
+    
     if ( mp3data->mode == MPG_MD_JOINT_STEREO ) {
         static int  last;
         int         curr = mp3data->mode_ext;
@@ -208,6 +209,9 @@ void decoder_progress ( const lame_global_flags* const gfp, const mp3data_struct
                   curr&2  ?  last&2 ? " MS " : "LMSR"  :  last&2 ? "LMSR" : "L  R",
                   curr&1  ?  last&1 ? 'I'    : 'i'     :  last&1 ? 'i'    : ' ' );
         last = curr;
+    } else {
+        fprintf ( stderr, "         " );
+        last = 0;
     }
 //    fprintf ( stderr, "%s", Console_IO.str_clreoln );
       fprintf ( stderr, "        \b\b\b\b\b\b\b\b" );
