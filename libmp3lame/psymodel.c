@@ -1173,16 +1173,25 @@ pecalc_s(
 {
     FLOAT8 pe_s;
     const static FLOAT8 regcoef_s[] = {
-	0, 0, 0, /* I don't know why there're 0 -tt- */
-	0.434542,25.0738,
-	0, 0, 0,
-	19.5442,19.7486,60,100,0
+	11.8, /* these values are tuned only for 44.1kHz... */
+	13.6,
+	17.2,
+	32,
+	46.5,
+	51.3,
+	57.5,
+	67.1,
+	71.5,
+	84.6,
+	97.6,
+	130,
+//	255.8
     };
     int sb, sblock;
 
     pe_s = 1236.28/4;
-    for(sblock=0;sblock<3;sblock++) {
-	for ( sb = 0; sb < SBMAX_s; sb++ ) {
+    for (sb = 0; sb < SBMAX_s - 1; sb++) {
+	for (sblock=0;sblock<3;sblock++) {
 	    FLOAT x;
 	    if (regcoef_s[sb] == 0.0
 		|| mr->thm.s[sb][sblock] <= 0.0
@@ -1196,6 +1205,7 @@ pecalc_s(
 		pe_s += regcoef_s[sb] * FAST_LOG10(mr->en.s[sb][sblock] / x);
 	}
     }
+
     return pe_s;
 }
 
@@ -1207,14 +1217,33 @@ pecalc_l(
 {
     FLOAT8 pe_l;
     const static FLOAT8 regcoef_l[] = {
-	10.0583,10.7484,7.29006,16.2714,6.2345,4.09743,3.05468,3.33196,
-	2.54688, 3.68168,5.83109,2.93817,-8.03277,-10.8458,8.48777,
-	9.13182,2.05212,8.6674,50.3937,73.267,97.5664,0
+	6.8, /* these values are tuned only for 44.1kHz... */
+	5.8,
+	5.8,
+	6.4,
+	6.5,
+	9.9,
+	12.1,
+	14.4,
+	15,
+	18.9,
+	21.6,
+	26.9,
+	34.2,
+	40.2,
+	46.8,
+	56.5,
+	60.7,
+	73.9,
+	85.7,
+	93.4,
+	126.1,
+//	241.3
     };
     int sb;
 
     pe_l = 1124.23/4;
-    for ( sb = 0; sb < SBMAX_l; sb++ ) {
+    for (sb = 0; sb < SBMAX_l - 1; sb++) {
 	FLOAT x;
 	if (mr->thm.l[sb] <= 0.0
 	    || mr->en.l[sb] <= (x = mr->thm.l[sb]*masking_lower))
