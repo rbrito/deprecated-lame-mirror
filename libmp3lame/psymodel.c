@@ -1217,6 +1217,7 @@ L3psycho_anal_ns(
 	/* convolution   */
 	FLOAT eb[CBANDS], max[CBANDS], avg[CBANDS];
 	FLOAT enn, thmm;
+	III_psy_ratio *mr = &gfc->masking_next[gr][chn];
 #define eb2 fftenergy
 	static const FLOAT tab[] = {
 	    1.0    /0.11749, 0.79433/0.11749, 0.63096/0.11749, 0.63096/0.11749,
@@ -1335,6 +1336,7 @@ L3psycho_anal_ns(
 	b = j = 0;
 	spread = gfc->s3_ll;
 	enn = thmm = 0.0;
+	mr->ath_over = SBMAX_l;
 	for (;; b++ ) {
 	    /* convolve the partitioned energy with the spreading function */
 	    FLOAT ecb, tmp;
@@ -1392,8 +1394,12 @@ L3psycho_anal_ns(
 	    thmm *= gfc->masking_lower;
 	    if (thmm < gfc->ATH.l_avg[j] * gfc->ATH.adjust)
 		thmm = gfc->ATH.l_avg[j] * gfc->ATH.adjust;
-	    gfc->masking_next[gr][chn].en .l[j] = enn;
-	    gfc->masking_next[gr][chn].thm.l[j] = thmm;
+	    
+	    if (enn < gfc->ATH.l_avg[j] * gfc->ATH.adjust)
+		mr->ath_over--;
+
+	    mr->en .l[j] = enn;
+	    mr->thm.l[j] = thmm;
 
 	    enn  =  eb[b] * 0.5;
 	    thmm = tmp * 0.5;
@@ -1403,10 +1409,14 @@ L3psycho_anal_ns(
 	thmm *= gfc->masking_lower;
 	if (thmm < gfc->ATH.l_avg[SBMAX_l-1] * gfc->ATH.adjust)
 	    thmm = gfc->ATH.l_avg[SBMAX_l-1] * gfc->ATH.adjust;
-	gfc->masking_next[gr][chn].en .l[SBMAX_l-1] = enn;
-	gfc->masking_next[gr][chn].thm.l[SBMAX_l-1] = thmm;
+
+	if (enn < gfc->ATH.l_avg[SBMAX_l-1] * gfc->ATH.adjust)
+	    mr->ath_over--;
+
+	mr->en .l[SBMAX_l-1] = enn;
+	mr->thm.l[SBMAX_l-1] = thmm;
 #if 1
-	if (gfc->masking_next[gr][chn].en.s[0][0] >= 0.0) {
+	if (mr->en.s[0][0] >= 0.0) {
 	    partially_convert_l2s(gfc, eb, gr, chn);
 	    continue;
 	}
@@ -1430,14 +1440,8 @@ L3psycho_anal_ns(
 	    thmm *= gfc->masking_lower;
 	    if (thmm < gfc->ATH.s_avg[j] * gfc->ATH.adjust)
 		thmm = gfc->ATH.s_avg[j] * gfc->ATH.adjust;
-	    gfc->masking_next[gr][chn].en .s[j][0]
-		= gfc->masking_next[gr][chn].en .s[j][1]
-		= gfc->masking_next[gr][chn].en .s[j][2]
-		= enn;
-	    gfc->masking_next[gr][chn].thm.s[j][0]
-		= gfc->masking_next[gr][chn].thm.s[j][1]
-		= gfc->masking_next[gr][chn].thm.s[j][2]
-		= thmm;
+	    mr->en .s[j][0] = mr->en .s[j][1] = mr->en .s[j][2] = enn;
+	    mr->thm.s[j][0] = mr->thm.s[j][1] = mr->thm.s[j][2] = thmm;
 
 	    enn  =  eb[b] * 0.5;
 	    thmm = tmp * 0.5;
@@ -1447,13 +1451,13 @@ L3psycho_anal_ns(
 	thmm *= gfc->masking_lower;
 	if (thmm < gfc->ATH.s_avg[SBMAX_s-1] * gfc->ATH.adjust)
 	    thmm = gfc->ATH.s_avg[SBMAX_s-1] * gfc->ATH.adjust;
-	gfc->masking_next[gr][chn].en .s[SBMAX_s-1][0]
-	    = gfc->masking_next[gr][chn].en .s[SBMAX_s-1][1]
-	    = gfc->masking_next[gr][chn].en .s[SBMAX_s-1][2]
+	mr->en .s[SBMAX_s-1][0]
+	    = mr->en .s[SBMAX_s-1][1]
+	    = mr->en .s[SBMAX_s-1][2]
 	    = enn;
-	gfc->masking_next[gr][chn].thm.s[SBMAX_s-1][0]
-	    = gfc->masking_next[gr][chn].thm.s[SBMAX_s-1][1]
-	    = gfc->masking_next[gr][chn].thm.s[SBMAX_s-1][2]
+	mr->thm.s[SBMAX_s-1][0]
+	    = mr->thm.s[SBMAX_s-1][1]
+	    = mr->thm.s[SBMAX_s-1][2]
 	    = thmm;
     }
 }
