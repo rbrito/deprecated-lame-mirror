@@ -620,28 +620,7 @@ OpenSndFile(lame_global_flags * gfp, char *inPath)
         (void) lame_set_in_samplerate( gfp, mp3input_data.samplerate );
         (void) lame_set_num_samples( gfp, mp3input_data.nsamp );
     }
-    else if (input_format == sf_ogg) {
-#ifdef HAVE_VORBIS
-        if ((musicin = fopen(lpszFileName, "rb")) == NULL) {
-            fprintf(stderr, "Could not find \"%s\".\n", lpszFileName);
-            exit(1);
-        }
-        if ( -1 == lame_decode_ogg_initfile( gfp,
-                                             musicin,
-                                             &mp3input_data ) ) {
-            fprintf(stderr, "Error reading headers in mp3 input file %s.\n",
-                    lpszFileName);
-            exit(1);
-        }
-#else
-        fprintf(stderr, "LAME not compiled with libvorbis support.\n");
-        exit(1);
-#endif
-
-
-    }
     else {
-
         /* Try to open the sound file */
         /* set some defaults incase input is raw PCM */
         gs_wfInfo.seekable = (input_format != sf_raw); /* if user specified -r, set to not seekable */
@@ -699,39 +678,39 @@ OpenSndFile(lame_global_flags * gfp, char *inPath)
 	    input_format = sf_raw;
 
 #ifdef _DEBUG_SND_FILE
-        DEBUGF("\n\nSF_INFO structure\n");
-        DEBUGF("samplerate        :%d\n", gs_wfInfo.samplerate);
-        DEBUGF("samples           :%d\n", gs_wfInfo.samples);
-        DEBUGF("channels          :%d\n", gs_wfInfo.channels);
-        DEBUGF("pcmbitwidth       :%d\n", gs_wfInfo.pcmbitwidth);
-        DEBUGF("format            :");
+        printf("\n\nSF_INFO structure\n");
+        printf("samplerate        :%d\n", gs_wfInfo.samplerate);
+        printf("samples           :%d\n", gs_wfInfo.samples);
+        printf("channels          :%d\n", gs_wfInfo.channels);
+        printf("pcmbitwidth       :%d\n", gs_wfInfo.pcmbitwidth);
+        printf("format            :");
 
         /* new formats from sbellon@sbellon.de  1/2000 */
 
         switch (gs_wfInfo.format & SF_FORMAT_TYPEMASK) {
         case SF_FORMAT_WAV:
-            DEBUGF("Microsoft WAV format (big endian). ");
+            printf("Microsoft WAV format (big endian). ");
             break;
         case SF_FORMAT_AIFF:
-            DEBUGF("Apple/SGI AIFF format (little endian). ");
+            printf("Apple/SGI AIFF format (little endian). ");
             break;
         case SF_FORMAT_AU:
-            DEBUGF("Sun/NeXT AU format (big endian). ");
+            printf("Sun/NeXT AU format (big endian). ");
             break;
         case SF_FORMAT_AULE:
-            DEBUGF("DEC AU format (little endian). ");
+            printf("DEC AU format (little endian). ");
             break;
         case SF_FORMAT_RAW:
-            DEBUGF("RAW PCM data. ");
+            printf("RAW PCM data. ");
             break;
         case SF_FORMAT_PAF:
-            DEBUGF("Ensoniq PARIS file format. ");
+            printf("Ensoniq PARIS file format. ");
             break;
         case SF_FORMAT_SVX:
-            DEBUGF("Amiga IFF / SVX8 / SV16 format. ");
+            printf("Amiga IFF / SVX8 / SV16 format. ");
             break;
         case SF_FORMAT_NIST:
-            DEBUGF("Sphere NIST format. ");
+            printf("Sphere NIST format. ");
             break;
         default:
             assert(0);
@@ -740,50 +719,50 @@ OpenSndFile(lame_global_flags * gfp, char *inPath)
 
         switch (gs_wfInfo.format & SF_FORMAT_SUBMASK) {
         case SF_FORMAT_PCM:
-            DEBUGF("PCM data in 8, 16, 24 or 32 bits.");
+            printf("PCM data in 8, 16, 24 or 32 bits.");
             break;
         case SF_FORMAT_FLOAT:
-            DEBUGF("32 bit Intel x86 floats.");
+            printf("32 bit Intel x86 floats.");
             break;
         case SF_FORMAT_ULAW:
-            DEBUGF("U-Law encoded.");
+            printf("U-Law encoded.");
             break;
         case SF_FORMAT_ALAW:
-            DEBUGF("A-Law encoded.");
+            printf("A-Law encoded.");
             break;
         case SF_FORMAT_IMA_ADPCM:
-            DEBUGF("IMA ADPCM.");
+            printf("IMA ADPCM.");
             break;
         case SF_FORMAT_MS_ADPCM:
-            DEBUGF("Microsoft ADPCM.");
+            printf("Microsoft ADPCM.");
             break;
         case SF_FORMAT_PCM_BE:
-            DEBUGF("Big endian PCM data.");
+            printf("Big endian PCM data.");
             break;
         case SF_FORMAT_PCM_LE:
-            DEBUGF("Little endian PCM data.");
+            printf("Little endian PCM data.");
             break;
         case SF_FORMAT_PCM_S8:
-            DEBUGF("Signed 8 bit PCM.");
+            printf("Signed 8 bit PCM.");
             break;
         case SF_FORMAT_PCM_U8:
-            DEBUGF("Unsigned 8 bit PCM.");
+            printf("Unsigned 8 bit PCM.");
             break;
         case SF_FORMAT_SVX_FIB:
-            DEBUGF("SVX Fibonacci Delta encoding.");
+            printf("SVX Fibonacci Delta encoding.");
             break;
         case SF_FORMAT_SVX_EXP:
-            DEBUGF("SVX Exponential Delta encoding.");
+            printf("SVX Exponential Delta encoding.");
             break;
         default:
             assert(0);
             break;
         }
 
-        DEBUGF("\n");
-        DEBUGF("pcmbitwidth       :%d\n", gs_wfInfo.pcmbitwidth);
-        DEBUGF("sections          :%d\n", gs_wfInfo.sections);
-        DEBUGF("seekable          :\n", gs_wfInfo.seekable);
+        printf("\n");
+        printf("pcmbitwidth       :%d\n", gs_wfInfo.pcmbitwidth);
+        printf("sections          :%d\n", gs_wfInfo.sections);
+        printf("seekable          :%d\n", gs_wfInfo.seekable);
 #endif
 
         (void) lame_set_num_samples( gfp, gs_wfInfo.samples );
@@ -1048,7 +1027,7 @@ parse_wave_header(lame_global_flags * gfp, FILE * sf)
         if (type == WAV_ID_FMT) {
             subSize = Read32BitsLowHigh(sf);
             if (subSize < 16) {
-                /*DEBUGF(
+                /*printf(
                    "'fmt' chunk too short (only %ld bytes)!", subSize);  */
                 return 0;
             }
@@ -1066,7 +1045,7 @@ parse_wave_header(lame_global_flags * gfp, FILE * sf)
             bits_per_sample = Read16BitsLowHigh(sf);
             subSize -= 2;
 
-            /* DEBUGF("   skipping %d bytes\n", subSize); */
+            /* printf("   skipping %d bytes\n", subSize); */
 
             if (subSize > 0) {
                 if (fskip(sf, (long) subSize, SEEK_CUR) != 0)
@@ -1176,7 +1155,7 @@ parse_aiff_header(lame_global_flags * gfp, FILE * sf)
         int     type = Read32BitsHighLow(sf);
         chunkSize -= 4;
 
-        /* DEBUGF(
+        /* printf(
            "found chunk type %08x '%4.4s'\n", type, (char*)&type); */
 
         /* don't use a switch here to make it easier to use 'break' for SSND */
@@ -1237,7 +1216,7 @@ parse_aiff_header(lame_global_flags * gfp, FILE * sf)
         }
     }
 
-    /* DEBUGF("Parsed AIFF %d\n", is_aiff); */
+    /* printf("Parsed AIFF %d\n", is_aiff); */
     if (is_aiff) {
         /* make sure the header is sane */
         if (0 != aiff_check2("name" /*???????????? */ , &aiff_info))
@@ -1277,7 +1256,7 @@ parse_file_header(lame_global_flags * gfp, FILE * sf)
 
     int     type = Read32BitsHighLow(sf);
     /*
-       DEBUGF(
+       printf(
        "First word of input stream: %08x '%4.4s'\n", type, (char*) &type); 
      */
     count_samples_carefully = 0;
