@@ -360,8 +360,7 @@ static const unsigned char rv_tbl[] = {
 #define ms00(i)	(window_s[i] * buffer[i])
 
 static void
-fft_short(lame_t  const gfc,
-	  FLOAT x[BLKSIZE_s], const sample_t *buffer)
+fft_short(lame_t  const gfc, FLOAT x[BLKSIZE_s], const sample_t *buffer)
 {
     int i, j = (BLKSIZE_s / 8 - 1)*4;
     x += BLKSIZE_s / 2;
@@ -1070,7 +1069,7 @@ partially_convert_l2s(lame_t gfc, III_psy_ratio *mr, FLOAT *nb_1,
 	}
 	if (sfb != SBMAX_s-1)
 	    x += .5 * nb_1[b];
-	x *= ((double)BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE);
+	x *= (FLOAT)(((double)BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE));
 	if (x < gfc->ATH.s_avg[sfb] * ATHadjust)
 	    continue;
 	mr->thm.s[sfb][0] = mr->thm.s[sfb][1] = mr->thm.s[sfb][2] = x;
@@ -1294,8 +1293,8 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 
 	    enn  -= .5*eb[b];
 	    thmm -= .5*tmp;
-	    thmm *= ((double)BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE);
-	    enn  *= ((double)BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE);
+	    thmm *= (FLOAT)(((double)BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE));
+	    enn  *= (FLOAT)(((double)BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE));
 	    if (thmm < gfc->ATH.s_avg[j] * gfc->ATH.adjust[ch]) {
 		thmm = gfc->ATH.s_avg[j] * gfc->ATH.adjust[ch];
 		enn  = -enn;
@@ -1312,8 +1311,8 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 		break;
 	}
 
-	thmm *= ((double)BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE);
-	enn  *= ((double)BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE);
+	thmm *= (FLOAT)(((double)BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE));
+	enn  *= (FLOAT)(((double)BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE));
 	if (thmm < gfc->ATH.s_avg[j] * gfc->ATH.adjust[ch]) {
 	    thmm = gfc->ATH.s_avg[j] * gfc->ATH.adjust[ch];
 	    enn  = -enn;
