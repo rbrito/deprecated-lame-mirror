@@ -261,7 +261,6 @@ struct lame_internal_flags {
     replaygain_t rgdata;
 
     int findReplayGain;         /* find the RG value? default=0		     */
-    int findPeakSample;
     sample_t PeakSample;
     int noclipGainChange;  /* gain change required for preventing clipping */
     FLOAT noclipScale;     /* user-specified scale factor required for preventing clipping */

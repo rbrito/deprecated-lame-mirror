@@ -326,6 +326,7 @@ copy_buffer(lame_t gfc, unsigned char *buffer, int size)
 	int mp3_in = minimum, i, samples_out;
 	for (;;) {
 	    samples_out = decode1_unclipped(gfc->pmp_replaygain, buffer, mp3_in, pcm_buf[0], pcm_buf[1]);
+	    FLOAT peak;
 	    /* samples_out = 0:  need more data to decode 
              * samples_out = -1:  error.  Lets assume 0 pcm output 
              * samples_out = number of samples output */
@@ -345,27 +346,26 @@ copy_buffer(lame_t gfc, unsigned char *buffer, int size)
 	     * overflown the pcm_buf buffer */
 	    assert(samples_out <= 1152);
 
-	    if (gfc->findPeakSample) {
-		FLOAT peak = gfc->PeakSample;
-		for (i=0; i<samples_out; i++) {
-		    if (peak <  pcm_buf[0][i])
-			peak =  pcm_buf[0][i];
-		    if (peak < -pcm_buf[0][i])
-			peak = -pcm_buf[0][i];
-		}
-		if (gfc->channels_out > 1) {
-		    for (i=0; i<samples_out; i++) {
-			if (peak <  pcm_buf[1][i])
-			    peak =  pcm_buf[1][i];
-			if (peak < -pcm_buf[1][i])
-			    peak = -pcm_buf[1][i];
-		    }
-		}
-		gfc->PeakSample = peak;
+	    peak = gfc->PeakSample;
+	    for (i=0; i<samples_out; i++) {
+		if (peak <  pcm_buf[0][i])
+		    peak =  pcm_buf[0][i];
+		if (peak < -pcm_buf[0][i])
+		    peak = -pcm_buf[0][i];
 	    }
-	    if (gfc->findReplayGain)
-		if (AnalyzeSamples(&gfc->rgdata, pcm_buf[0], pcm_buf[1], samples_out, gfc->channels_out) == GAIN_ANALYSIS_ERROR)
-		    return -6;
+	    if (gfc->channels_out > 1) {
+		for (i=0; i<samples_out; i++) {
+		    if (peak <  pcm_buf[1][i])
+			peak =  pcm_buf[1][i];
+		    if (peak < -pcm_buf[1][i])
+			peak = -pcm_buf[1][i];
+		}
+	    }
+	    gfc->PeakSample = peak;
+
+	    if (gfc->findReplayGain
+		&& AnalyzeSamples(&gfc->rgdata, pcm_buf[0], pcm_buf[1], samples_out, gfc->channels_out) == GAIN_ANALYSIS_ERROR)
+		return -6;
 	}
     } /* if (gfc->decode_on_the_fly) */ 
 #endif
@@ -834,23 +834,21 @@ flush_bitstream(lame_t gfc, unsigned char *buffer, int size)
     }
 
     /* find the gain and scale change required for no clipping */
-    if (gfc->findPeakSample) {
-	gfc->noclipGainChange
-	    = (int) ceil(log10(gfc->PeakSample / 32767.0) *20.0*10.0);  /* round up */
+    gfc->noclipGainChange
+	= (int) ceil(log10(gfc->PeakSample / 32767.0) *20.0*10.0);  /* round up */
 
-	if (gfc->noclipGainChange > 0.0) { /* clipping occurs */
-	    if (gfc->scale == 1.0 || gfc->scale == 0.0) 
-		gfc->noclipScale = floor( (32767.0 / gfc->PeakSample) * 100.0 ) / 100.0;  /* round down */
-	    else
-		/* the user specified his own scaling factor. We could suggest 
-		 * the scaling factor of (32767.0/gfc->PeakSample)*(gfc->scale)
-		 * but it's usually very inaccurate. So we'd rather not advice
-		 * him/her on the scaling factor. */
-		gfc->noclipScale = -1;
-	}
-	else  /* no clipping */
+    if (gfc->noclipGainChange > 0.0) { /* clipping occurs */
+	if (gfc->scale == 1.0 || gfc->scale == 0.0) 
+	    gfc->noclipScale = floor( (32767.0 / gfc->PeakSample) * 100.0 ) / 100.0;  /* round down */
+	else
+	    /* the user specified his own scaling factor. We could suggest 
+	     * the scaling factor of (32767.0/gfc->PeakSample)*(gfc->scale)
+	     * but it's usually very inaccurate. So we'd rather not advice
+	     * him/her on the scaling factor. */
 	    gfc->noclipScale = -1;
     }
+    else  /* no clipping */
+	gfc->noclipScale = -1;
 
     /* we have padded out all frames with ancillary data, which is the
        same as filling the bitreservoir with ancillary data, so : */
