@@ -980,64 +980,101 @@ int lame_encode (lame_global_flags* gfp,
 /* flush internal mp3 buffers,                                   */
 /*****************************************************************/
 
+int    lame_encode_flush (
+                lame_global_flags* gfp,
+                char*              mp3buffer,
+                int                mp3buffer_size )
+{
+    short int buffer[2][1152];
+    int imp3 = 0, mp3count, mp3buffer_size_remaining;
+    lame_internal_flags *gfc = gfp->internal_flags;
+
+    memset((char *)buffer, 0, sizeof(buffer));
+    mp3count = 0;
+
+    while (gfc->mf_samples_to_encode > 0) {
+
+        mp3buffer_size_remaining = mp3buffer_size - mp3count;
+
+        /* if user specifed buffer size = 0, dont check size */
+        if (mp3buffer_size == 0)
+            mp3buffer_size_remaining = 0;  
+
+        /* send in a frame of 0 padding until all internal sample buffers
+         * are flushed 
+         */
+        imp3 = lame_encode_buffer (gfp, buffer[0], buffer[1], gfp->framesize,
+                                   mp3buffer, mp3buffer_size_remaining);
+        /* dont count the above padding: */
+        gfc->mf_samples_to_encode -= gfp->framesize;
+
+        if (imp3 < 0) {
+            /* some type of fatel error */
+            return imp3;
+        }
+        mp3buffer += imp3;
+        mp3count += imp3;
+    }
+    mp3buffer_size_remaining = mp3buffer_size - mp3count;
+
+
+    /* if user specifed buffer size = 0, dont check size */
+    if (mp3buffer_size == 0) 
+        mp3buffer_size_remaining = 0;  
+    if (gfp->ogg) {
+#ifdef HAVEVORBIS
+        /* ogg related stuff */
+        imp3 = lame_encode_ogg_finish(gfp, mp3buffer, mp3buffer_size_remaining);
+#endif
+    }else{
+        /* mp3 related stuff.  bit buffer might still contain some mp3 data */
+        flush_bitstream(gfp);
+        /* write a id3 tag to the bitstream */
+        id3tag_write_v1(gfp);
+        imp3 = copy_buffer(mp3buffer, mp3buffer_size_remaining, &gfc->bs);
+    }
+
+    if (imp3 < 0) {
+        return imp3;
+    }
+    //  mp3buffer += imp3;
+    mp3count += imp3;
+    //  mp3buffer_size_remaining = mp3buffer_size - mp3count;
+    
+    return mp3count;
+}
+
+
+
+/***********************************************************************
+ *
+ *      lame_close ()
+ *
+ *  frees internal buffers
+ *
+ ***********************************************************************/
+ 
+void lame_close (lame_global_flags *gfp)
+{
+    freegfc(gfp->internal_flags);    
+}
+
+
+
+/*****************************************************************/
+/* flush internal mp3 buffers, and free internal buffers         */
+/*****************************************************************/
+
 int    lame_encode_finish (
                 lame_global_flags* gfp,
                 char*              mp3buffer,
                 int                mp3buffer_size )
 {
-  int imp3=0,mp3count,mp3buffer_size_remaining;
-  short int buffer[2][1152];
-  lame_internal_flags *gfc=gfp->internal_flags;
-
-  memset((char *)buffer,0,sizeof(buffer));
-  mp3count = 0;
-
-  while (gfc->mf_samples_to_encode > 0) {
-
-    mp3buffer_size_remaining = mp3buffer_size - mp3count;
-
-    /* if user specifed buffer size = 0, dont check size */
-    if (mp3buffer_size == 0) mp3buffer_size_remaining=0;  
-
-    /* send in a frame of 0 padding until all internal sample buffers flushed */
-    imp3=lame_encode_buffer(gfp,buffer[0],buffer[1],gfp->framesize,mp3buffer,mp3buffer_size_remaining);
-    /* dont count the above padding: */
-    gfc->mf_samples_to_encode -= gfp->framesize;
-
-    if (imp3 < 0) {
-      /* some type of fatel error */
-      freegfc(gfc);    
-      return imp3;
-    }
-    mp3buffer += imp3;
-    mp3count += imp3;
-  }
-  mp3buffer_size_remaining = mp3buffer_size - mp3count;
-
-
-  /* if user specifed buffer size = 0, dont check size */
-  if (mp3buffer_size == 0) mp3buffer_size_remaining=0;  
-  if (gfp->ogg) {
-#ifdef HAVEVORBIS
-    /* ogg related stuff */
-    imp3 = lame_encode_ogg_finish(gfp,mp3buffer,mp3buffer_size_remaining);
-#endif
-  }else{
-    /* mp3 related stuff.  bit buffer might still contain some mp3 data */
-    flush_bitstream(gfp);
-    /* write a id3 tag to the bitstream */
-    id3tag_write_v1(gfp);
-    imp3= copy_buffer(mp3buffer,mp3buffer_size_remaining,&gfc->bs);
-  }
-  freegfc(gfc);
-
-  if (imp3 < 0) {
-    return imp3;
-  }
-  //  mp3buffer += imp3;
-  mp3count += imp3;
-  //  mp3buffer_size_remaining = mp3buffer_size - mp3count;
-  return mp3count;
+    int ret = lame_encode_flush( gfp, mp3buffer, mp3buffer_size );
+    
+    lame_close(gfp);
+    
+    return ret;
 }
 
 

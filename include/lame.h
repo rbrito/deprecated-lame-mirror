@@ -247,6 +247,31 @@ int num_samples, char *mp3buffer,int  mp3buffer_size);
  */
 int lame_encode_finish(lame_global_flags *,char *mp3buffer, int size);
 
+/* alternative: lame_encode_flush does the same as above, but will not
+ * freeing internal buffers. Will require to call a final lame_close.
+ * use the following if you want some final statistics. 
+ */
+int lame_encode_flush(lame_global_flags *,char *mp3buffer, int size);
+void lame_close(lame_global_flags *);
+
+
+/* OPTIONAL:    some simple statistics
+ * a bitrate histogram to visualize the distribution of used frame sizes
+ * a stereo mode histogram to visualize the distribution of used stereo
+ *   modes, useful in joint-stereo mode only
+ *   0: LR    left-right encoded
+ *   1: LR-I  left-right and intensity encoded (currently not supported)
+ *   2: MS    mid-side encoded
+ *   3: MS-I  mid-side and intensity encoded (currently not supported)
+ *
+ * attention: don't call them after lame_encode_finish
+ * suggested: lame_encode_flush -> lame_***_hist -> lame_close
+ */
+ 
+void lame_bitrate_hist( lame_global_flags *gfp, int bitrate_hist[16] );
+void lame_stereo_mode_hist( lame_global_flags *gfp, int stereo_mode[4] );
+
+
 
 /* OPTIONAL:  lame_mp3_tags_fid will append a Xing VBR tag to
 the mp3 file with file pointer fid.  These calls perform forward and
@@ -255,8 +280,6 @@ Note: if VBR  tags are turned off by the user, or turned off
 by LAME because the output is not a regular file, this call does nothing
 */
 void lame_mp3_tags_fid(lame_global_flags *,FILE* fid);
-
-
 
 
 
