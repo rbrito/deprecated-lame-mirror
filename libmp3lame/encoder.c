@@ -384,6 +384,8 @@ char *mp3buf, int mp3buf_size)
       }
     }
   }
+  
+  updateStats( gfc );
 
   return mp3count;
 }

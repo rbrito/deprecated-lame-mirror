@@ -182,20 +182,20 @@ int samplerate)   /* convert bitrate in kbps to index */
 }
 
 
-/* map samplerate to a valid samplerate
+/* map frequency to a valid MP3 sample frequency
  *
  * Robert.Hegemann@gmx.de 2000-07-01
  */
-int validSamplerate(int samplerate)
+int map2MP3Frequency(int freq)
 {
-    if (samplerate<= 8000) return  8000;
-    if (samplerate<=11025) return 11025;
-    if (samplerate<=12000) return 12000;
-    if (samplerate<=16000) return 16000;
-    if (samplerate<=22050) return 22050;
-    if (samplerate<=24000) return 24000;
-    if (samplerate<=32000) return 32000;
-    if (samplerate<=44100) return 44100;
+    if (freq <=  8000) return  8000;
+    if (freq <= 11025) return 11025;
+    if (freq <= 12000) return 12000;
+    if (freq <= 16000) return 16000;
+    if (freq <= 22050) return 22050;
+    if (freq <= 24000) return 24000;
+    if (freq <= 32000) return 32000;
+    if (freq <= 44100) return 44100;
     
     return 48000;
 }
@@ -569,3 +569,19 @@ int has_SIMD (void)
     return 0;
 #endif
 }    
+
+
+/***********************************************************************
+ *
+ *  some simple statistics
+ *
+ ***********************************************************************/
+ 
+void updateStats( lame_internal_flags *gfc )
+{
+    gfc->bitrateHist[gfc->bitrate_index & 0xf] ++;
+    if (gfc->stereo == 2) {
+        gfc->stereoModeHist[gfc->mode_ext & 0x3] ++;
+    }
+}
+

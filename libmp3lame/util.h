@@ -302,6 +302,10 @@ typedef struct  {
   FLOAT energy_save[4][HBLKSIZE];
   FLOAT8 pe_save[4];
   FLOAT8 ers_save[4];
+  
+  /* simple statistics */
+  int   bitrateHist[16];
+  int   stereoModeHist[4];
 
   /* ratios  */
   FLOAT8 pe[4];
@@ -334,7 +338,7 @@ typedef struct  {
 void           freegfc(lame_internal_flags *gfc);
 extern int            BitrateIndex(int, int,int);
 extern int            FindNearestBitrate(int,int,int);
-extern int            validSamplerate(int samplerate);
+extern int            map2MP3Frequency(int freq);
 extern int            SmpFrqIndex(int, int*);
 extern FLOAT8         ATHformula(FLOAT8 f);
 extern FLOAT8         freq2bark(FLOAT8 freq);
@@ -350,6 +354,10 @@ getframebits(lame_global_flags *gfp,int *bitsPerFrame, int *mean_bits);
 extern int has_3DNow (void);
 extern int has_MMX   (void);
 extern int has_SIMD  (void);
+
+
+extern void updateStats (lame_internal_flags *gfc);
+
 
 
 /***********************************************************************

@@ -225,7 +225,7 @@ int lame_init_params(lame_global_flags *gfp)
   if (gfp->VBR==vbr_off && gfp->compression_ratio > 0) {
     
     if (gfp->out_samplerate==0) 
-      gfp->out_samplerate=validSamplerate(gfp->in_samplerate);   
+      gfp->out_samplerate=map2MP3Frequency(gfp->in_samplerate);   
     
     /* choose a bitrate for the output samplerate which achieves
      * specifed compression ratio 
@@ -253,7 +253,7 @@ int lame_init_params(lame_global_flags *gfp)
 
 
     /* if resamplerate is not valid, find a valid value */
-    gfp->out_samplerate = validSamplerate(gfp->out_samplerate);
+    gfp->out_samplerate = map2MP3Frequency(gfp->out_samplerate);
 
 
     /* check if user specified bitrate requires downsampling */
@@ -262,7 +262,7 @@ int lame_init_params(lame_global_flags *gfp)
     if (gfp->VBR==vbr_off && gfp->brate>0) {
       gfp->compression_ratio = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->brate);
       if (gfp->compression_ratio > 13 ) {
-	gfp->out_samplerate = validSamplerate((10*1000*gfp->brate)/(16*gfc->stereo));
+	gfp->out_samplerate = map2MP3Frequency((10*1000*gfp->brate)/(16*gfc->stereo));
       }
     }
     if (gfp->VBR==vbr_abr) {
@@ -270,7 +270,7 @@ int lame_init_params(lame_global_flags *gfp)
 	gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->VBR_mean_bitrate_kbps);
       if (gfp->compression_ratio > 13 ) {
 	gfp->out_samplerate = 
-	  validSamplerate((10*1000*gfp->VBR_mean_bitrate_kbps)/(16*gfc->stereo));
+	  map2MP3Frequency((10*1000*gfp->VBR_mean_bitrate_kbps)/(16*gfc->stereo));
       }
     }
   }
@@ -1214,3 +1214,55 @@ int lame_init(lame_global_flags *gfp)
 
   return 0;
 }
+
+
+
+/***********************************************************************
+ *
+ *  some simple statistics
+ *
+ *  Robert Hegemann 2000-10-11
+ *
+ ***********************************************************************/
+
+/*  histogram of used bitrate indexes
+ *  one has to weight them to calculate the average bitrate in kbps
+ */
+ 
+void lame_bitrate_hist( lame_global_flags *gfp, int brhist[16] )
+{
+    lame_internal_flags *gfc;
+    int i;
+    
+    assert( gfp != NULL );
+    assert( gfp->internal_flags != NULL );
+    assert( brhist != NULL );
+    
+    gfc = (lame_internal_flags*)gfp->internal_flags;
+    for (i = 0; i < 16; i++)
+        brhist[i] = gfc->bitrateHist[i];
+}
+
+
+/*  stereoModeHist:
+ *  0: LR   number of left-right encoded frames
+ *  1: LR-I number of left-right and intensity encoded frames
+ *  2: MS   number of mid-side encoded frames
+ *  3: MS-I number of mid-side and intensity encoded frames
+ */
+ 
+void lame_stereo_mode_hist( lame_global_flags *gfp, int stmode[4] )
+{
+    lame_internal_flags *gfc;
+    int i;
+
+    assert( gfp != NULL );
+    assert( gfp->internal_flags != NULL );
+    assert( stmode != NULL );
+    
+    gfc = (lame_internal_flags*)gfp->internal_flags;
+    
+    for (i = 0; i < 4; i++)
+        stmode[i] = gfc->stereoModeHist[i]; 
+}
+
