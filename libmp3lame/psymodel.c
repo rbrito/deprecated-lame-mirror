@@ -2238,12 +2238,12 @@ i,*npart_s_orig,freq,numlines_s[i],j2-j,j,j2-1,bark1,bark2);
      NOTE: i and j are used opposite as in the ISO docs */
   for(i=0;i<*npart_l_orig;i++)    {
       for(j=0;j<*npart_l_orig;j++) 	{
-  	  s3_l[i][j]=s3_func(bval_l[i]-bval_l[j]);
+  	  s3_l[i][j]=s3_func(bval_l[i]-bval_l[j])*DELBARK;
       }
   }
   for(i=0;i<*npart_s_orig;i++)     {
       for(j=0;j<*npart_s_orig;j++) 	{
-  	  s3_s[i][j]=s3_func(bval_s[i]-bval_s[j]);
+  	  s3_s[i][j]=s3_func(bval_s[i]-bval_s[j])*DELBARK;
       }
   }
   
@@ -2465,7 +2465,12 @@ int psymodel_init(lame_global_flags *gfp)
 	/* long block spreading function normalization */
 	for ( b = 0;b < gfc->npart_l; b++ ) {
 	    for ( k = gfc->s3ind[b][0]; k <= gfc->s3ind[b][1]; k++ ) {
-		gfc->s3_l[b][k] *= 0.5*.6609193; ;
+		// spreading function has been properly normalized by
+		// multiplying by DELBARK/.6609193 = .515.  
+		// It looks like Naoki was
+                // way ahead of me and added this factor here!
+		// it is no longer needed.
+		//gfc->s3_l[b][k] *= 0.5;
 	    }
 	}
 	/* short block spreading function normalization */
