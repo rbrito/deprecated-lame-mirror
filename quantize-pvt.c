@@ -441,7 +441,7 @@ int numchn=2;
 int
 inner_loop( FLOAT8 xrpow[576],
 	    int l3_enc[576], int max_bits,
-	    gr_info *cod_info, int gr, int ch )
+	    gr_info *cod_info)
 {
     int bits;
     assert( max_bits >= 0 );

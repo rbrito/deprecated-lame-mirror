@@ -31,11 +31,10 @@
 #define minimum(x,y) ( (x<y) ? x : y )
 
 
-static FLOAT8 s3_l[CBANDS][CBANDS]; /* needed global static by sprdngfs */
-
 void L3para_read( FLOAT8 sfreq, int numlines[CBANDS],int numlines_s[CBANDS], int partition_l[HBLKSIZE],
 		  FLOAT8 minval[CBANDS], FLOAT8 qthr_l[CBANDS], 
-		  FLOAT8 s3_l[CBANDS][CBANDS],  FLOAT8 s3_s[CBANDS][CBANDS], 
+		  FLOAT8 s3_l[CBANDS + 1][CBANDS + 1],
+		  FLOAT8 s3_s[CBANDS + 1][CBANDS + 1],
                   FLOAT8 qthr_s[CBANDS],
 		  FLOAT8 SNR_s[CBANDS],
 		  int bu_l[SBPSY_l], int bo_l[SBPSY_l],
@@ -102,11 +101,12 @@ void L3psycho_anal( short int *buffer[2],
 /* "phi_sav", the first index from the left is the channel select and     */
 /* the second index is the "age" of the data.                             */
   static FLOAT8 	cw[HBLKSIZE], eb[CBANDS];
-  static FLOAT8	SNR_s[CBANDS];
   static FLOAT8	minval[CBANDS],qthr_l[CBANDS];
   static FLOAT8	qthr_s[CBANDS];
   static FLOAT8	nb_1[4][CBANDS], nb_2[4][CBANDS];
-  static FLOAT8  s3_s[CBANDS][CBANDS];
+  static FLOAT8 s3_s[CBANDS + 1][CBANDS + 1];
+  static FLOAT8 s3_l[CBANDS + 1][CBANDS + 1];
+
   
 /* Scale Factor Bands */
   static int	bu_l[SBPSY_l],bo_l[SBPSY_l] ;
@@ -121,14 +121,14 @@ void L3psycho_anal( short int *buffer[2],
   
   static int      s3ind[CBANDS][2];
   static int      s3ind_s[CBANDS][2];
-  
-  
-  static FLOAT   nb[CBANDS], cb[CBANDS];
+
+  FLOAT   cb[CBANDS];
   static	int	numlines_s[CBANDS] ;
   static	int	numlines_l[CBANDS];
   static FLOAT   ax_sav[4][2][HBLKSIZE], bx_sav[4][2][HBLKSIZE],rx_sav[4][2][HBLKSIZE];
 
   if((gf.frameNum==0) && (gr_out==0)){
+    FLOAT8	SNR_s[CBANDS];
     
     blocktype_old[0]=STOP_TYPE;
     blocktype_old[1]=STOP_TYPE;
@@ -334,7 +334,7 @@ void L3psycho_anal( short int *buffer[2],
 	tot_ener[chn] += energy[j];
       }
     }
-  
+
 #ifdef HAVEGTK
   if(gf.gtkflag) {
     for (j=0; j<HBLKSIZE ; j++) {
@@ -353,7 +353,7 @@ void L3psycho_anal( short int *buffer[2],
 	FLOAT8 bn, b1, b2;
 	FLOAT8 rn, r1, r2;
 	FLOAT8 numre, numim, den;
-	
+
 	a2 = ax_sav[chn][1][j];
 	b2 = bx_sav[chn][1][j];
 	r2 = rx_sav[chn][1][j];
@@ -416,13 +416,14 @@ void L3psycho_anal( short int *buffer[2],
 	k = (j+2) / 4; 
 	
 	{ /* square (x1,y1) */
-	  r1 = sqrt((FLOAT8)energy_s[0][k]);
+	  r1 = energy_s[0][k];
 	  if( r1 != 0.0 ) {
 	    FLOAT8 a1 = wsamp_s[0][k]; 
 	    FLOAT8 b1 = wsamp_s[0][BLKSIZE_s-k]; /* k is never 0 */
 	    numre = (a1*b1);
 	    numim = (a1*a1-b1*b1)*0.5;
-	    den = r1*r1;
+	    den = r1;
+	    r1 = sqrt(r1);
 	  } else {
 	    numre = 1.0;
 	    numim = 0.0;
@@ -432,7 +433,7 @@ void L3psycho_anal( short int *buffer[2],
 	
 	
 	{ /* multiply by (x2,-y2) */
-	  r2 = sqrt((FLOAT8)energy_s[2][k]);
+	  r2 = energy_s[2][k];
 	  if( r2 != 0.0 ) {
 	    FLOAT8 a2 = wsamp_s[2][k]; 
 	    FLOAT8 b2 = wsamp_s[2][BLKSIZE_s-k];
@@ -443,6 +444,7 @@ void L3psycho_anal( short int *buffer[2],
 	    numre =       -b2*numim+tmp2;
 	    numim = tmp1;
 	    
+	    r2 = sqrt(r2);
 	    den *= r2;
 	  } else {
 	    /* do nothing */
@@ -495,25 +497,7 @@ void L3psycho_anal( short int *buffer[2],
      *    Calculate the energy and the unpredictability in the threshold   *
      *    calculation partitions                                           *
      **********************************************************************/
-#if 1
-    for ( b = 0; b < CBANDS; b++ )
-      {
-	eb[b] = 0.0;
-	cb[b] = 0.0;
-      }
-    for ( j = 0; j < HBLKSIZE; j++ )
-      {
-	int tp = partition_l[j];
-	if ( tp >= 0 )
-	  {
-	    eb[tp] += energy[j];
-	    cb[tp] += cw[j] * energy[j];
-	  }
-	assert(tp<npart_l_orig);
-      }
-#else
     b = 0;
-    j = 0;
     for (j = 0; j < cw_upper_index;)
       {
 	FLOAT8 ebb, cbb;
@@ -546,7 +530,6 @@ void L3psycho_anal( short int *buffer[2],
 	eb[b] = ebb;
 	cb[b] = ebb * 0.4;
       }
-#endif
 
 
     /**********************************************************************
@@ -591,14 +574,14 @@ void L3psycho_anal( short int *buffer[2],
 	  }
 
 	tbb = minimum(minval[b], tbb);
-	nb[b] = ecb * tbb;
+	ecb *= tbb;
 
 	/* pre-echo control */
 	/* rpelev=2.0, rpelev2=16.0 */
-	temp_1 = minimum( nb[b], minimum(rpelev*nb_1[chn][b],rpelev2*nb_2[chn][b]) );
+	temp_1 = minimum(ecb, minimum(rpelev*nb_1[chn][b],rpelev2*nb_2[chn][b]) );
 	thr[b] = maximum( qthr_l[b], temp_1 ); 
 	nb_2[chn][b] = nb_1[chn][b];
-	nb_1[chn][b] = nb[b];
+	nb_1[chn][b] = ecb;
 
 	/* note: all surges in PE are because of the above pre-echo formula
 	 * for temp_1.  it this is not used, PE is always around 600
@@ -633,16 +616,16 @@ void L3psycho_anal( short int *buffer[2],
     
     
     
-    
+
 #ifdef HAVEGTK
     if (gf.gtkflag) {
       FLOAT8 mn,mx;
-      
-      for (sblock=0; sblock < 3; sblock++)
+
+      for (sblock=0; sblock < 3; sblock++) {
 	estot[chn][sblock]=0;
-      for ( j = HBLKSIZE_s/2; j < HBLKSIZE_s; j ++)
-	for (sblock=0; sblock < 3; sblock++)
+	for ( j = HBLKSIZE_s/2; j < HBLKSIZE_s; j ++)
 	  estot[chn][sblock]+=energy_s[sblock][j];
+      }
       mn = minimum(estot[chn][0],estot[chn][1]);
       mn = minimum(mn,estot[chn][2]);
       mx = maximum(estot[chn][0],estot[chn][1]);
@@ -680,7 +663,7 @@ void L3psycho_anal( short int *buffer[2],
 
 	/* tuned for t1.wav.  doesnt effect most other samples */
 	if (pe[chn] > 3000) uselongblock[chn]=0; 
-	
+
 	/* big surge of energy - always use short blocks */
 	if (  mx > 30*mn) uselongblock[chn] = 0;
 	
@@ -692,43 +675,43 @@ void L3psycho_anal( short int *buffer[2],
     
     
     /* threshold calculation for short blocks */
-    for ( sblock = 0; sblock < 3; sblock++ )    {
-      j = 0;
-      for ( b = 0; b < npart_s; b++ )
-	{
-	  int i;
-	  FLOAT8 ecb = energy_s[sblock][j++];
-	  for (i = numlines_s[b]; i > 0; i--)
-	    {
-	      ecb += energy_s[sblock][j++];
-	    }
-	  eb[b] = ecb;
-	}
+    for ( sblock = 0; sblock < 3; sblock++ )
+      {
+	j = 0;
+	for ( b = 0; b < npart_s; b++ )
+	  {
+	    int i;
+	    FLOAT8 ecb = energy_s[sblock][j++];
+	    for (i = numlines_s[b]; i > 0; i--)
+	      {
+		ecb += energy_s[sblock][j++];
+	      }
+	    eb[b] = ecb;
+	  }
 
-      for ( b = 0; b < npart_s; b++ )
-	{
-	  FLOAT8 ecb = 0.0;
-	  for ( k = s3ind_s[b][0]; k <= s3ind_s[b][1]; k++ )
-	    {
-	      ecb += s3_s[b][k] * eb[k];
-	    }
-	  nb[b] = ecb;
-	  thr[b] = maximum (qthr_s[b],nb[b]);
-	}
+	for ( b = 0; b < npart_s; b++ )
+	  {
+	    FLOAT8 ecb = 0.0;
+	    for ( k = s3ind_s[b][0]; k <= s3ind_s[b][1]; k++ )
+	      {
+		ecb += s3_s[b][k] * eb[k];
+	      }
+	    thr[b] = maximum (qthr_s[b], ecb);
+	  }
 
-      for ( sb = 0; sb < SBPSY_s; sb++ )
-	{
-	  FLOAT8 enn  = w1_s[sb] * eb[bu_s[sb]] + w2_s[sb] * eb[bo_s[sb]];
-	  FLOAT8 thmm = w1_s[sb] *thr[bu_s[sb]] + w2_s[sb] * thr[bo_s[sb]];
-	  for ( b = bu_s[sb]+1; b < bo_s[sb]; b++ )
-	    {
-	      enn  += eb[b];
-	      thmm += thr[b];
-	    }
-	  en[chn].s[sb][sblock] = enn;
-	  thm[chn].s[sb][sblock] = thmm;
-	}
-    } 
+	for ( sb = 0; sb < SBPSY_s; sb++ )
+	  {
+	    FLOAT8 enn  = w1_s[sb] * eb[bu_s[sb]] + w2_s[sb] * eb[bo_s[sb]];
+	    FLOAT8 thmm = w1_s[sb] *thr[bu_s[sb]] + w2_s[sb] * thr[bo_s[sb]];
+	    for ( b = bu_s[sb]+1; b < bo_s[sb]; b++ )
+	      {
+		enn  += eb[b];
+		thmm += thr[b];
+	      }
+	    en[chn].s[sb][sblock] = enn;
+	    thm[chn].s[sb][sblock] = thmm;
+	  }
+      }
   } /* end loop over chn */
 
 
@@ -754,7 +737,7 @@ void L3psycho_anal( short int *buffer[2],
 	thm[chside].l[sb]=rside;
       }
     }
-    for ( sblock = 0; sblock < 3; sblock++ ){
+    for ( sblock = 0; sblock < 3; sblock++ ) {
       for ( sb = 0; sb < SBPSY_s; sb++ ) {
 	if (thm[0].s[sb][sblock] <= 1.58*thm[1].s[sb][sblock]
 	    && thm[1].s[sb][sblock] <= 1.58*thm[0].s[sb][sblock]) {
@@ -780,7 +763,7 @@ void L3psycho_anal( short int *buffer[2],
   if (check_ms_stereo)  {
     /* determin ms_ratio from masking thresholds*/
     /* use ms_stereo (ms_ratio < .35) if average thresh. diff < 5 db */
-    { FLOAT8 db,x1,x2,sidetot=0,tot=0;
+    FLOAT8 db,x1,x2,sidetot=0,tot=0;
     for (sb= SBPSY_l/4 ; sb< SBPSY_l; sb ++ ) {
       x1 = minimum(thm[0].l[sb],thm[1].l[sb]);
       x2 = maximum(thm[0].l[sb],thm[1].l[sb]);
@@ -807,14 +790,12 @@ void L3psycho_anal( short int *buffer[2],
       }
     ms_ratio_s = .35*(sidetot/tot)/5.0*10.0;
     ms_ratio_s = Min(ms_ratio_s,.5);
-    }
   }
-  
-  
+
   /*************************************************************** 
    * determin final block type
    ***************************************************************/
-  
+
   for (chn=0; chn<gf.stereo; chn++) {
     blocktype[chn] = NORM_TYPE;
   }
@@ -908,13 +889,13 @@ void L3psycho_anal( short int *buffer[2],
 
 
 void L3para_read(FLOAT8 sfreq, int *numlines_l,int *numlines_s, int *partition_l, FLOAT8 *minval,
-FLOAT8 *qthr_l, FLOAT8 (*s3_l)[63], FLOAT8 s3_s[CBANDS][CBANDS],
+FLOAT8 *qthr_l, FLOAT8 s3_l[64][64], FLOAT8 s3_s[CBANDS + 1][CBANDS + 1],
 FLOAT8 *qthr_s, FLOAT8 *SNR, 
 int *bu_l, int *bo_l, FLOAT8 *w1_l, FLOAT8 *w2_l, 
 int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s)
 {
   FLOAT8 freq_tp;
-  static FLOAT8 bval_l[CBANDS], bval_s[CBANDS];
+  FLOAT8 bval_l[CBANDS], bval_s[CBANDS];
   int   cbmax=0, cbmax_tp;
   FLOAT8 *p = psy_data;
 
