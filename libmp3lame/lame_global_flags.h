@@ -50,6 +50,11 @@ struct lame_global_struct {
                                  ratio                                       */
   int force_ms;               /* force M/S mode.  requires mode=1            */
   int free_format;            /* use free format? default=0                  */
+  int ReplayGain_input;       /* perform analysis on input data? default=0   */
+#ifdef DECODE_ON_THE_FLY
+  int ReplayGain_decode;      /* perfrom analysys on decoded data? default=0 */
+  int findPeakSample;         /* find peak sample? default=0                 */
+#endif
 
   /*
    * set either brate>0  or compression_ratio>0, LAME will compute

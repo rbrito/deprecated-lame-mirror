@@ -27,8 +27,6 @@ INCLUDES = @INCLUDES@ -I$(top_srcdir)/mpglib/ -I$(top_builddir)
 DEFS = @DEFS@ @CONFIG_DEFS@
 
 EXTRA_DIST = \
-	gain_analysis.c \
-	gain_analysis.h \
 	libmp3lame.dsp \
 	libmp3lame_vc6.dsp \
 	vbrquantize.h
@@ -38,6 +36,7 @@ libmp3lame_la_SOURCES = \
 	bitstream.c \
 	encoder.c \
 	fft.c \
+	gain_analysis.c \
         id3tag.c \
         lame.c \
         newmdct.c \
@@ -59,6 +58,7 @@ noinst_HEADERS= \
 	bitstream.h \
 	encoder.h \
 	fft.h \
+	gain_analysis.h \
 	id3tag.h \
 	l3side.h \
 	lame-analysis.h \

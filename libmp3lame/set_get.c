@@ -418,6 +418,89 @@ lame_get_free_format( const lame_global_flags*  gfp )
 }
 
 
+/* Perform ReplayGain analysis on input data. */
+int
+lame_set_ReplayGain_input( lame_global_flags*  gfp,
+                           int                 ReplayGain_input )
+{
+    /* default = 0 (disabled) */
+
+    /* enforce disable/enable meaning, if we need more than two values
+       we need to switch to an enum to have an apropriate representation
+       of the possible meanings of the value */
+    if ( 0 > ReplayGain_input || 1 < ReplayGain_input )
+        return -1;
+
+    gfp->ReplayGain_input = ReplayGain_input;
+
+    return 0;
+}
+
+int
+lame_get_ReplayGain_input( const lame_global_flags*  gfp )
+{
+    assert( 0 <= gfp->ReplayGain_input && 1 >= gfp->ReplayGain_input );
+
+    return gfp->ReplayGain_input;
+}
+
+
+#ifdef DECODE_ON_THE_FLY
+/* Perform ReplayGain analysis on decoded data. */
+int
+lame_set_ReplayGain_decode( lame_global_flags*  gfp,
+                            int                 ReplayGain_decode )
+{
+    /* default = 0 (disabled) */
+
+    /* enforce disable/enable meaning, if we need more than two values
+       we need to switch to an enum to have an apropriate representation
+       of the possible meanings of the value */
+    if ( 0 > ReplayGain_decode || 1 < ReplayGain_decode )
+        return -1;
+
+    gfp->ReplayGain_decode = ReplayGain_decode;
+
+    return 0;
+}
+
+int
+lame_get_ReplayGain_decode( const lame_global_flags*  gfp )
+{
+    assert( 0 <= gfp->ReplayGain_decode && 1 >= gfp->ReplayGain_decode );
+
+    return gfp->ReplayGain_decode;
+}
+
+
+/* find peak sample. */
+int
+lame_set_findPeakSample( lame_global_flags*  gfp,
+                         int                 findPeakSample )
+{
+    /* default = 0 (disabled) */
+
+    /* enforce disable/enable meaning, if we need more than two values
+       we need to switch to an enum to have an apropriate representation
+       of the possible meanings of the value */
+    if ( 0 > findPeakSample || 1 < findPeakSample )
+        return -1;
+
+    gfp->findPeakSample = findPeakSample;
+
+    return 0;
+}
+
+int
+lame_get_findPeakSample( const lame_global_flags*  gfp )
+{
+    assert( 0 <= gfp->findPeakSample && 1 >= gfp->findPeakSample );
+
+    return gfp->findPeakSample;
+}
+#endif
+
+
 /* message handlers */
 int
 lame_set_errorf( lame_global_flags*  gfp,
@@ -1507,13 +1590,36 @@ lame_get_mf_samples_to_encode( const lame_global_flags*  gfp )
     return gfc->mf_samples_to_encode;
 }
 
-
 int CDECL lame_get_size_mp3buffer( const lame_global_flags*  gfp )
 {
     int size;
     compute_flushbits(gfp,&size);
     return size;
 }
+
+int
+lame_get_RadioGain( const lame_global_flags*  gfp )
+{
+    lame_internal_flags *gfc = gfp->internal_flags;
+    return gfc->RadioGain;
+}
+
+int
+lame_get_AudiophileGain( const lame_global_flags*  gfp )
+{
+    lame_internal_flags *gfc = gfp->internal_flags;
+    return gfc->AudiophileGain;
+}
+
+#ifdef DECODE_ON_THE_FLY
+float
+lame_get_PeakSample( const lame_global_flags*  gfp )
+{
+    lame_internal_flags *gfc = gfp->internal_flags;
+    return (float)gfc->PeakSample;
+}
+#endif
+
 
 
 

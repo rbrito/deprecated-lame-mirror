@@ -123,8 +123,6 @@ libmp3lame_la_LDFLAGS = -version-info @LIB_MAJOR_VERSION@:@LIB_MINOR_VERSION@ \
 DEFS = @DEFS@ @CONFIG_DEFS@
 
 EXTRA_DIST = \
-	gain_analysis.c \
-	gain_analysis.h \
 	libmp3lame.dsp \
 	libmp3lame_vc6.dsp \
 	vbrquantize.h
@@ -135,6 +133,7 @@ libmp3lame_la_SOURCES = \
 	bitstream.c \
 	encoder.c \
 	fft.c \
+	gain_analysis.c \
         id3tag.c \
         lame.c \
         newmdct.c \
@@ -157,6 +156,7 @@ noinst_HEADERS = \
 	bitstream.h \
 	encoder.h \
 	fft.h \
+	gain_analysis.h \
 	id3tag.h \
 	l3side.h \
 	lame-analysis.h \
@@ -200,9 +200,9 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 @HAVE_NASM_TRUE@@LIB_WITH_DECODER_FALSE@libmp3lame_la_DEPENDENCIES = \
 @HAVE_NASM_TRUE@@LIB_WITH_DECODER_FALSE@	$(top_builddir)/libmp3lame/@CPUTYPE@/liblameasmroutines.la
 am_libmp3lame_la_OBJECTS = VbrTag$U.lo bitstream$U.lo encoder$U.lo \
-	fft$U.lo id3tag$U.lo lame$U.lo newmdct$U.lo presets$U.lo \
-	psymodel$U.lo quantize$U.lo quantize_pvt$U.lo reservoir$U.lo \
-	set_get$U.lo tables$U.lo takehiro$U.lo util$U.lo \
+	fft$U.lo gain_analysis$U.lo id3tag$U.lo lame$U.lo newmdct$U.lo \
+	presets$U.lo psymodel$U.lo quantize$U.lo quantize_pvt$U.lo \
+	reservoir$U.lo set_get$U.lo tables$U.lo takehiro$U.lo util$U.lo \
 	vbrquantize$U.lo version$U.lo mpglib_interface$U.lo
 libmp3lame_la_OBJECTS = $(am_libmp3lame_la_OBJECTS)
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
@@ -212,6 +212,7 @@ LIBS = @LIBS@
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 @AMDEP_TRUE@DEP_FILES = $(DEPDIR)/VbrTag$U.Plo $(DEPDIR)/bitstream$U.Plo \
 @AMDEP_TRUE@	$(DEPDIR)/encoder$U.Plo $(DEPDIR)/fft$U.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/gain_analysis$U.Plo \
 @AMDEP_TRUE@	$(DEPDIR)/id3tag$U.Plo $(DEPDIR)/lame$U.Plo \
 @AMDEP_TRUE@	$(DEPDIR)/mpglib_interface$U.Plo \
 @AMDEP_TRUE@	$(DEPDIR)/newmdct$U.Plo $(DEPDIR)/presets$U.Plo \
@@ -300,6 +301,7 @@ mostlyclean-kr:
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/bitstream$U.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/encoder$U.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/fft$U.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/gain_analysis$U.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/id3tag$U.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/lame$U.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/mpglib_interface$U.Plo@am__quote@
@@ -345,6 +347,8 @@ encoder_.c: encoder.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/encoder.c; then echo $(srcdir)/encoder.c; else echo encoder.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > encoder_.c || rm -f encoder_.c
 fft_.c: fft.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/fft.c; then echo $(srcdir)/fft.c; else echo fft.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > fft_.c || rm -f fft_.c
+gain_analysis_.c: gain_analysis.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/gain_analysis.c; then echo $(srcdir)/gain_analysis.c; else echo gain_analysis.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > gain_analysis_.c || rm -f gain_analysis_.c
 id3tag_.c: id3tag.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/id3tag.c; then echo $(srcdir)/id3tag.c; else echo id3tag.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > id3tag_.c || rm -f id3tag_.c
 lame_.c: lame.c $(ANSI2KNR)
@@ -376,8 +380,9 @@ vbrquantize_.c: vbrquantize.c $(ANSI2KNR)
 version_.c: version.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/version.c; then echo $(srcdir)/version.c; else echo version.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > version_.c || rm -f version_.c
 VbrTag_.$(OBJEXT) VbrTag_.lo bitstream_.$(OBJEXT) bitstream_.lo \
-encoder_.$(OBJEXT) encoder_.lo fft_.$(OBJEXT) fft_.lo id3tag_.$(OBJEXT) \
-id3tag_.lo lame_.$(OBJEXT) lame_.lo mpglib_interface_.$(OBJEXT) \
+encoder_.$(OBJEXT) encoder_.lo fft_.$(OBJEXT) fft_.lo \
+gain_analysis_.$(OBJEXT) gain_analysis_.lo id3tag_.$(OBJEXT) id3tag_.lo \
+lame_.$(OBJEXT) lame_.lo mpglib_interface_.$(OBJEXT) \
 mpglib_interface_.lo newmdct_.$(OBJEXT) newmdct_.lo presets_.$(OBJEXT) \
 presets_.lo psymodel_.$(OBJEXT) psymodel_.lo quantize_.$(OBJEXT) \
 quantize_.lo quantize_pvt_.$(OBJEXT) quantize_pvt_.lo \

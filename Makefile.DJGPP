@@ -96,6 +96,7 @@ lib_sources = \
 	libmp3lame/bitstream.c \
 	libmp3lame/encoder.c \
 	libmp3lame/fft.c \
+	libmp3lame/gain_analysis.c \
 	libmp3lame/id3tag.c \
 	libmp3lame/lame.c \
 	libmp3lame/newmdct.c \
@@ -160,7 +161,7 @@ all: $(PGM)
 $(lib_sources) $(frontend_sources) : config.h
 
 config.h: configMS.h
-	cp configMS.h config.h
+	copy configMS.h config.h
 
 $(PGM): frontend/main.o $(frontend_obj) $(MP3LIB)
 	$(CC) $(CC_OPTS) -o frontend/$(PGM)  frontend/main.o  $(frontend_obj) \

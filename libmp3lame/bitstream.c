@@ -35,6 +35,9 @@
 #include "quantize_pvt.h"
 #include "version.h"
 #include "VbrTag.h"
+#ifdef DECODE_ON_THE_FLY
+#include "gain_analysis.h"
+#endif
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
@@ -939,38 +942,59 @@ int copy_buffer(lame_internal_flags *gfc,unsigned char *buffer,int size,int mp3d
     
     if (mp3data) {
         UpdateMusicCRC(&gfc->nMusicCRC,buffer,minimum);
-#ifdef DECODE_ON_THE_FLY
-      untested code;
-      /* if, for somereason, we would like to decode the frame: */
-      {
-          short int pcm_out[2][1152];
+
+#ifdef DECODE_ON_THE_FLY 
+        if (gfc->decode_on_the_fly) {  /* decode the frame */
+          sample_t pcm_out[2][1152];
           int mp3out;
-          do {
-              /* re-synthesis to pcm.  Repeat until we get a mp3out=0 */
-              mp3out=lame_decode1(buffer,minimum,pcm_out[0],pcm_out[1]); 
-              /* mp3out = 0:  need more data to decode */
-              /* mp3out = -1:  error.  Lets assume 0 pcm output */
-              /* mp3out = number of samples output */
+          int i;
+
+          /* re-synthesis to pcm.  Repeat until we get a mp3out=0 */
+          mp3out=lame_decode1_unclipped(buffer,minimum,pcm_out[0],pcm_out[1]); 
+          /* mp3out = 0:  need more data to decode */
+          /* mp3out = -1:  error.  Lets assume 0 pcm output */
+          /* mp3out = number of samples output */
               
-              if (mp3out==-1) {
-                  /* error decoding.  Not fatal, but might screw up are */
-                  /* ReplayVolume Info tag.   */
-                  /* what should we do?  ignore for now */
-                  mp3out=0;
+          if (mp3out==-1) {
+              /* error decoding. Not fatal, but might screw up */
+              /* the ReplayGain tag. what should we do? ignore for now */
+              mp3out=0;
+          }
+          if (mp3out>0) {  
+            /* process the PCM data */
+
+   /*     if (mp3out>1152) {
+    *         this should not be possible, and indicates we have 
+    *         overflown the pcm_out buffer.  Fatal error. 
+    *       return -6;
+    *     } 
+    */
+
+            if (gfc->gfp->findPeakSample) {
+              for (i=0; i<mp3out; i++) {   
+                 if (pcm_out[0][i] > gfc->PeakSample)
+                   gfc->PeakSample = pcm_out[0][i];
+                 else if (-pcm_out[0][i] > gfc->PeakSample)
+                   gfc->PeakSample = -pcm_out[0][i]; 
               }
-              if (mp3out>0) {
-                  /* process the PCM data.   */
-                  if (mp3out>1152) {
-                      /* this should not be possible, and indicates we have */
-                      /* overflowed the pcm_out buffer.  Fatal error. */
-                      return -6;
-                  }
-              }
-              
-          } while (mp3out>0);
-      }
-#endif  
-    }
+              if (gfc->channels_out > 1)
+                for (i=0; i<mp3out; i++) {
+                  if (pcm_out[1][i] > gfc->PeakSample)
+                    gfc->PeakSample = pcm_out[1][i];
+                  else if (-pcm_out[1][i] > gfc->PeakSample)
+                    gfc->PeakSample = -pcm_out[1][i];
+                }
+            }
+
+            if (gfc->gfp->ReplayGain_decode)
+              if (AnalyzeSamples(pcm_out[0], pcm_out[1], mp3out, gfc->channels_out) == GAIN_ANALYSIS_ERROR)
+                 return -6;
+
+          } /* if (mp3out>0) */
+        } /* if (gfc->decode_on_the_fly) */ 
+#endif
+  
+    } /* if (mp3data) */
     return minimum;
 }
 

@@ -147,6 +147,10 @@ Operational:
 -o              mark the encoded file as a copy
 -S              don't print progress report, VBR histogram
 --strictly-enforce-ISO   comply as much as possible to ISO MPEG spec
+--replaygain    perform ReplayGain analysis and store the result in LAME Tag
+--replaygain-accurate  slightly more accurate and much slower ReplayGain
+--clipdetect    determine whether clipping occurs and display an appropriate 
+                message. store the MP3 peak sample in LAME Tag
 
 --decode        assume input file is an mp3 file, and decode to wav.
 -t              disable writing of WAV header when using --decode
@@ -289,6 +293,21 @@ copyright
 -c   
 
 mark the encoded file as copyrighted
+
+
+
+=======================================================================
+clipping detection
+=======================================================================
+--clipdetect
+
+Decode on the fly, find the peak sample and determine whether clipping 
+occurs at current gain. Display an appropriate message. 
+Store the peak sample in the LAME Tag.
+
+NOTE: decoding on the fly significantly slows down the encoding process.
+
+Requires LAME to be compiled with DECODE_ON_THE_FLY.
 
 
 
@@ -557,6 +576,42 @@ Not supported if LAME is compiled to use LIBSNDFILE.
 
 
 =======================================================================
+perform ReplayGain analysis 
+=======================================================================
+--replaygain
+
+Perform ReplayGain analysis with reference volume equal 83dB on the input
+data and store RadioGain in the LAME Tag. If --scale option is used, 
+perform the analysis on the scaled data.
+
+More info on the algorithms used: http://www.replaygain.org
+
+NOTE: the results may be slightly inaccurate due to volume differences 
+      between the input data and data decoded from the MP3 file
+
+See also: --replaygain-accurate
+
+
+
+=======================================================================
+perform slightly more accurate ReplayGain analysis
+=======================================================================
+--replaygain-accurate
+
+Decode on the fly, perform ReplayGain analysis with reference volume
+equal 83dB on the decoded data and store RadioGain in the LAME Tag. 
+
+More info on the algorithms used: http://www.replaygain.org
+
+NOTE: decoding on the fly significantly slows down the encoding process.
+
+Requires LAME to be compiled with DECODE_ON_THE_FLY.
+
+See also: --replaygain
+
+
+
+=======================================================================
 output sampling frequency in kHz
 =======================================================================
 --resample  n
@@ -745,3 +800,4 @@ priority 0 will be assumed.
  
 
   
+ 

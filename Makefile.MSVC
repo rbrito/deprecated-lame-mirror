@@ -378,6 +378,7 @@ lamelib_sources = \
 	libmp3lame/bitstream.c \
 	libmp3lame/encoder.c \
 	libmp3lame/fft.c \
+	libmp3lame/gain_analysis.c \
 	libmp3lame/id3tag.c \
 	libmp3lame/lame.c \
 	libmp3lame/newmdct.c \

@@ -521,6 +521,15 @@ struct lame_internal_flags {
   int nogap_total;
   int nogap_current;  
 
+  int findReplayGain;
+  int RadioGain;
+  int AudiophileGain;
+
+#ifdef DECODE_ON_THE_FLY
+  int decode_on_the_fly;
+  sample_t PeakSample;
+#endif
+
 #ifdef BRHIST
   /* simple statistics */
   int   bitrate_stereoMode_Hist [16] [4+1];
