@@ -12052,7 +12052,15 @@ fi;
 if test "x$GCC" = "xyes"; then
 	# gcc defaults. OS specific options go in versious sections below
 	# from the gcc man pages:  "there is no reason to use -pedantic"
-	CFLAGS="-Wall -pipe ${CFLAGS}"
+	case ${host} in
+	mips-sgi-irix*)
+		# it doesn't like '-pipe'
+		CFLAGS="-Wall ${CFLAGS}"
+		;;
+	*)
+		CFLAGS="-Wall -pipe ${CFLAGS}"
+		;;
+	esac
 
 	# GCC version specific generic options
 	case "${GCC_version}" in
@@ -12114,6 +12122,10 @@ if test "x$GCC" = "xyes"; then
 
 	case "${CONFIG_EXPOPT}" in
 	no)
+		# if someone supplies own CFLAGS, we don't add our own
+		if  "X${ac_save_CFLAGS}" != "X" ; then
+			OPTIMIZATION=""
+		fi
 		;;
 	norm|yes)
 		OPTIMIZATION="${OPTIMIZATION} ${OPTIMIZATION_NORM}"
