@@ -322,6 +322,9 @@ typedef struct  {
   int CPU_features_3DNow;
   int CPU_features_MMX;
   int CPU_features_SIMD;
+   
+  /* functions to replace with CPU feature optimized versions in takehiro.c */
+  int (*choose_table)(int *ix, int *end, int *s);
   
   /* copied from lame_global_flags */
   

@@ -291,7 +291,6 @@ static int choose_table_nonMMX(int *ix, int *end, int *s)
     }
 }
 
-static int (*choose_table)(int *ix, int *end, int *s) = choose_table_nonMMX;
 
 
 /*************************************************************************/
@@ -354,7 +353,7 @@ int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
         a2 = gfc->scalefac_band.l[a1 + a2 + 2];
 	a1 = gfc->scalefac_band.l[a1 + 1];
 	if (a2 < i)
-	  gi->table_select[2] = choose_table(ix + a2, ix + i, &bits);
+	  gi->table_select[2] = gfc->choose_table(ix + a2, ix + i, &bits);
 
     } else {
 	gi->region0_count = 7;
@@ -378,9 +377,9 @@ int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
 
     /* Count the number of bits necessary to code the bigvalues region. */
     if (0 < a1)
-      gi->table_select[0] = choose_table(ix, ix + a1, &bits);
+      gi->table_select[0] = gfc->choose_table(ix, ix + a1, &bits);
     if (a1 < a2)
-      gi->table_select[1] = choose_table(ix + a1, ix + a2, &bits);
+      gi->table_select[1] = gfc->choose_table(ix + a1, ix + a2, &bits);
     return bits;
 }
 
@@ -438,7 +437,7 @@ int r01_bits[],int r01_div[],int r0_tbl[],int r1_tbl[])
 	if (a1 >= bigv)
 	    break;
 	r0bits = cod_info.part2_length;
-	r0t = choose_table(ix, ix + a1, &r0bits);
+	r0t = gfc->choose_table(ix, ix + a1, &r0bits);
 
 	for (r1 = 0; r1 < 8; r1++) {
 	    int a2 = gfc->scalefac_band.l[r0 + r1 + 2];
@@ -446,7 +445,7 @@ int r01_bits[],int r01_div[],int r0_tbl[],int r1_tbl[])
 		break;
 
 	    bits = r0bits;
-	    r1t = choose_table(ix + a1, ix + a2, &bits);
+	    r1t = gfc->choose_table(ix + a1, ix + a2, &bits);
 	    if (r01_bits[r0 + r1] > bits) {
 		r01_bits[r0 + r1] = bits;
 		r01_div[r0 + r1] = r0;
@@ -474,7 +473,7 @@ int r01_bits[],int r01_div[],int r0_tbl[],int r1_tbl[])
 	if (gi->part2_3_length <= bits)
 	    break;
 
-	r2t = choose_table(ix + a2, ix + bigv, &bits);
+	r2t = gfc->choose_table(ix + a2, ix + bigv, &bits);
 	if (gi->part2_3_length <= bits)
 	    continue;
 
@@ -554,10 +553,10 @@ void best_huffman_divide(lame_internal_flags *gfc, int gr, int ch, gr_info *gi, 
 	}
 	if (a1 > 0)
 	  cod_info2.table_select[0] =
-	    choose_table(ix, ix + a1, (int *)&cod_info2.part2_3_length);
+	    gfc->choose_table(ix, ix + a1, (int *)&cod_info2.part2_3_length);
 	if (i > a1)
 	  cod_info2.table_select[1] =
-	    choose_table(ix + a1, ix + i, (int *)&cod_info2.part2_3_length);
+	    gfc->choose_table(ix + a1, ix + i, (int *)&cod_info2.part2_3_length);
 	if (gi->part2_3_length > cod_info2.part2_3_length)
 	    memcpy(gi, &cod_info2, sizeof(gr_info));
     }
@@ -713,9 +712,19 @@ void best_scalefac_store(lame_internal_flags *gfc,int gr, int ch,
 
 
 /* number of bits used to encode scalefacs */
-static int scale_short[16];
-static int scale_long[16];
-static int scale_mixed[16];
+
+/* 18*slen1_tab[i] + 18*slen2_tab[i] */
+static const int scale_short[16] = {
+    0, 18, 36, 54, 54, 36, 54, 72, 54, 72, 90, 72, 90, 108, 108, 126 };
+
+/* 17*slen1_tab[i] + 18*slen2_tab[i] */
+static const int scale_mixed[16] = {
+    0, 18, 36, 54, 51, 35, 53, 71, 52, 70, 88, 69, 87, 105, 104, 122 };
+
+/* 11*slen1_tab[i] + 10*slen2_tab[i] */
+static const int scale_long[16] = {
+    0, 10, 20, 30, 33, 21, 31, 41, 32, 42, 52, 43, 53, 63, 64, 74 };
+
 
 /*************************************************************************/
 /*            scale_bitcount                                             */
@@ -925,6 +934,8 @@ void huffman_init(lame_internal_flags *gfc)
 {
     int i;
 
+    gfc->choose_table = choose_table_nonMMX;
+    
     for (i = 0; i < 16*16; i++) {
 	largetbl[i] = ((ht[16].hlen[i]) << 16) + ht[24].hlen[i];
     }
@@ -983,16 +994,8 @@ void huffman_init(lame_internal_flags *gfc)
 	    ((int64)ht[t2].xlen << 16) + ((int64)ht[t2].xlen);
     }
     if (gfc->CPU_features_MMX)
-        choose_table = choose_table_MMX;
+        gfc->choose_table = choose_table_MMX;
 #endif
-    for (i = 0; i < 16; i++) {
-	/* a = 18; b = 18;  */
-	scale_short[i] = slen1_tab[i] * 18 + slen2_tab[i] * 18;
-        /* a = 17; b = 18;   */
-	scale_mixed[i] = slen1_tab[i] * 17 + slen2_tab[i] * 18;
-        /* a = 11; b = 10;   */
-	scale_long [i] = slen1_tab[i] * 11 + slen2_tab[i] * 10;
-    }
 
     for (i = 2; i <= 576; i += 2) {
 	int scfb_anz = 0, index;
