@@ -65,42 +65,30 @@ FLOAT8 calc_sfb_ave_noise(FLOAT8 *xr, FLOAT8 *xr34, int stride, int bw, FLOAT8 s
 FLOAT8 find_scalefac(FLOAT8 *xr,FLOAT8 *xr34,int stride,int sfb,
 		     FLOAT8 l3_xmin,int bw)
 {
-  FLOAT8 xfsf,sfpow,sf,sf_ok,delsf;
-  int sf4,sf_ok4,delsf4;
-  int i;
+  FLOAT8 xfsf,sfpow;
+  int i,sf,sf_ok,delsf;
 
-  /* search will range from sf:  -52.25 -> 11.25  */
-  /* search will range from sf4:  -209 -> 45  */
-  sf = -20.5;
-  sf4 = -82;
-  delsf = 32;
-  delsf4 = 128;
+  /* search will range from sf:  -209 -> 45  */
+  sf = -82;
+  delsf = 128;
 
-  sf_ok =10000; 
-  sf_ok4=10000;
+  sf_ok=10000;
   for (i=0; i<7; i++) {
     delsf /= 2;
-    delsf4 /= 2;
-    sfpow = pow(2.0,sf);
-    /* sfpow = pow(2.0,sf4/4.0); */
+    sfpow = pow(2.0,sf/4.0); 
     xfsf = calc_sfb_ave_noise(xr,xr34,stride,bw,sfpow);
 
     if (xfsf < 0) {
       /* scalefactors too small */
-      sf += delsf; 
-      sf4 += delsf4;
+      sf += delsf;
     }else{
       if (sf_ok==10000) sf_ok=sf;  
-      if (sf_ok4==10000) sf_ok4=sf4;  
       if (xfsf > l3_xmin)  {
 	/* distortion.  try a smaller scalefactor */
 	sf -= delsf;
-	sf4 -= delsf4;
       }else{
-	sf_ok=sf;
-	sf_ok4 = sf4;
+	sf_ok = sf;
 	sf += delsf;
-	sf4 += delsf4;
       }
     }
   } 
@@ -121,22 +109,18 @@ FLOAT8 find_scalefac(FLOAT8 *xr,FLOAT8 *xr34,int stride,int sfb,
    *  sf = sf_ok + 0.00     works the rest of the time
    */
 
-  sf = sf_ok + 0.75;
-  sf4 = sf_ok4 + 3;
+  sf = sf_ok + 3;
 
   while (sf>(sf_ok+.01)) { 
     /* sf = sf_ok + 2*delsf was tried above, skip it:  */
-    if (fabs(sf-(sf_ok+2*delsf))  < .01) sf -=.25;
-    if (sf4 == sf_ok4+2*delsf4) sf4 -=1;
+    if (sf == sf_ok+2*delsf) sf -=1;
 
-    sfpow = pow(2.0,sf);
-    /* sfpow = pow(2.0,sf4/4.0) */
+    sfpow = pow(2.0,sf/4.0);
     xfsf = calc_sfb_ave_noise(xr,xr34,stride,bw,sfpow);
     if (xfsf > 0) {
       if (xfsf <= l3_xmin) return sf;
     }
-    sf -= .25;
-    sf4 -= 1;
+    sf -= 1;
   }
   return sf_ok;
 }
@@ -151,22 +135,24 @@ FLOAT8 max_range_short[2][SBPSY_s]={
     sfb=0..5  scalefac < 16 
     sfb>5     scalefac < 8
 
-    ifqstep = ( cod_info->scalefac_scale == 0 ) ? .5 : 1.0;
-    ol_sf =  (cod_info->global_gain-210.0)/4.0;
-    ol_sf -= 2*cod_info->subblock_gain[i];
+    ifqstep = ( cod_info->scalefac_scale == 0 ) ? 2 : 4;
+    ol_sf =  (cod_info->global_gain-210.0);
+    ol_sf -= 8*cod_info->subblock_gain[i];
     ol_sf -= ifqstep*scalefac[gr][ch].s[sfb][i];
 
 */
-FLOAT8 compute_scalefacs_short(FLOAT8 sf[SBPSY_s][3],gr_info *cod_info,
+FLOAT8 compute_scalefacs_short(int sf[SBPSY_s][3],gr_info *cod_info,
 int scalefac[SBPSY_s][3],int sbg[3])
 {
   FLOAT8 maxrange,maxrange1,maxrange2,maxover;
   int sfb,i;
-  int ifqstep_inv = ( cod_info->scalefac_scale == 0 ) ? 2 : 1;
+  int ifqstep = ( cod_info->scalefac_scale == 0 ) ? 2 : 4;
 
   maxover=0;
-  maxrange1 = 15.0/ifqstep_inv;
-  maxrange2 = 7.0/ifqstep_inv;
+  maxrange1 = 15.0;
+  maxrange2 = 7.0;
+
+
   for (i=0; i<3; ++i) {
     FLOAT8 maxsf1=0,maxsf2=0,minsf=1000;
     sbg[i]=0;
@@ -182,31 +168,35 @@ int scalefac[SBPSY_s][3],int sbg[3])
 
     /* boost subblock gain as little as possible so we can
      * reach maxsf1 with scalefactors 
-     * 2*sbg >= maxsf1   
+     * 8*sbg >= maxsf1   
      */
-    maxsf1 = Max(maxsf1-maxrange1,maxsf2-maxrange2);
+    maxsf1 = Max(maxsf1-maxrange1*ifqstep,maxsf2-maxrange2*ifqstep);
 
-    if (minsf >0 ) sbg[i] = floor(minsf/2 + .001);
-    if (maxsf1 > 0)  sbg[i]  = Max(sbg[i],ceil(maxsf1/2 - .0001));
+    if (minsf >0 ) sbg[i] = floor(.125*minsf + .001);
+    if (maxsf1 > 0)  sbg[i]  = Max(sbg[i],ceil(.125*maxsf1 - .0001));
     if (sbg[i] > 7) sbg[i]=7;
+
 
     for ( sfb = 0; sfb < SBPSY_s; sfb++ ) {
       /* ifqstep*scalefac + 2*subblock_gain >= -sf[sfb] */
       /* sf * ifqstep_inv = 3.0       scalefac=3.0 */
       /* sf * ifqstep_inv = 3.25-4.0  scalefac=4.0 */
-      sf[sfb][i] += 2*sbg[i];
+      sf[sfb][i] += 8*sbg[i];
 
       if (sf[sfb][i] < 0) {
 	maxrange = sfb < 6 ? maxrange1 : maxrange2;
-	scalefac[sfb][i]=ceil( -sf[sfb][i]*ifqstep_inv - .0001);
+	scalefac[sfb][i]=ceil( -(float)sf[sfb][i]/ifqstep - .0001);
 	if (scalefac[sfb][i]>maxrange) scalefac[sfb][i]=maxrange;
 	
-	if (-(sf[sfb][i] + scalefac[sfb][i]*ifqstep_inv) >maxover)  {
-	  maxover=-sf[sfb][i];
+	if (-(sf[sfb][i] + scalefac[sfb][i]*ifqstep) >maxover)  {
+	  maxover=-(sf[sfb][i] + scalefac[sfb][i]*ifqstep);
+	  printf("sfb=%i i=%i  sf=%i   scalefac=%i \n",sfb,i,sf[sfb][i],
+		 scalefac[sfb][i]);
 	}
       }
     }
   }
+
   return maxover;
 }
 
@@ -220,36 +210,39 @@ FLOAT8 max_range_long[SBPSY_l]=
 	  sfb=0..10  scalefac < 16 
 	  sfb>10     scalefac < 8
 		
-	  ifqstep = ( cod_info->scalefac_scale == 0 ) ? .5 : 1.0;
-	  ol_sf =  (cod_info->global_gain-210.0)/4.0;
+	  ifqstep = ( cod_info->scalefac_scale == 0 ) ? 2 : 4;
+	  ol_sf =  (cod_info->global_gain-210.0);
 	  ol_sf -= ifqstep*scalefac[gr][ch].l[sfb];
 	  if (cod_info->preflag && sfb>=11) 
 	  ol_sf -= ifqstep*pretab[sfb];
 */
-FLOAT8 compute_scalefacs_long(FLOAT8 sf[SBPSY_l],gr_info *cod_info,int scalefac[SBPSY_l])
+FLOAT8 compute_scalefacs_long(int sf[SBPSY_l],gr_info *cod_info,int scalefac[SBPSY_l])
 {
   int sfb;
   FLOAT8 maxover;
-  FLOAT8 ifqstep_inv = ( cod_info->scalefac_scale == 0 ) ? 2 : 1;
+  int ifqstep = ( cod_info->scalefac_scale == 0 ) ? 2 : 4;
   
+
   if (cod_info->preflag)
     for ( sfb = 11; sfb < SBPSY_l; sfb++ ) 
-      sf[sfb] += pretab[sfb]/ifqstep_inv;
+      sf[sfb] += pretab[sfb]*ifqstep;
+
 
   maxover=0;
   for ( sfb = 0; sfb < SBPSY_l; sfb++ ) {
 
     if (sf[sfb]<0) {
       /* ifqstep*scalefac >= -sf[sfb] */
-      scalefac[sfb]=ceil( -sf[sfb]*ifqstep_inv  - .0001)   ;
+      scalefac[sfb]=ceil( -sf[sfb]/(float)ifqstep  - .0001)   ;
       if (scalefac[sfb] > max_range_long[sfb]) scalefac[sfb]=max_range_long[sfb];
       
       /* sf[sfb] should now be positive: */
-      if (  -(sf[sfb] + scalefac[sfb]/ifqstep_inv)  > maxover) {
-	maxover = -sf[sfb];
+      if (  -(sf[sfb] + scalefac[sfb]*ifqstep)  > maxover) {
+	maxover = -(sf[sfb] + scalefac[sfb]*ifqstep);
       }
     }
   }
+
   return maxover;
 }
   
@@ -273,9 +266,9 @@ VBR_noise_shapping (lame_global_flags *gfp,
   lame_internal_flags *gfc=gfp->internal_flags;
   FLOAT8    masking_lower_db;
   int       start,end,bw,sfb,l, i,ch, gr, bits;
-  III_psy_xmin vbrsf;
-  FLOAT8 maxover0,maxover1,maxover0p,maxover1p,maxover,vbrmax,vbrmin;
-  FLOAT8 ifqstep;
+  scalefac_struct2 vbrsf;
+  FLOAT8 maxover0,maxover1,maxover0p,maxover1p,maxover,vbrmax;
+  int ifqstep;
   III_side_info_t * l3_side;
   gr_info *cod_info;  
 
@@ -310,7 +303,6 @@ VBR_noise_shapping (lame_global_flags *gfp,
       calc_xmin( gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin);
 
       vbrmax=-10000;
-      vbrmin=10000;
       if (shortblock) {
 	for ( sfb = 0; sfb < SBPSY_s; sfb++ )  {
 	  for ( i = 0; i < 3; i++ ) {
@@ -320,7 +312,6 @@ VBR_noise_shapping (lame_global_flags *gfp,
 	    vbrsf.s[sfb][i] = find_scalefac(&xr[gr][ch][3*start+i],&xr34[3*start+i],3,sfb,
 		   masking_lower*l3_xmin.s[sfb][i],bw);
 	    if (vbrsf.s[sfb][i]>vbrmax) vbrmax=vbrsf.s[sfb][i];
-	    if (vbrsf.s[sfb][i]<vbrmin) vbrmin=vbrsf.s[sfb][i];
 	  }
 	}
       }else{
@@ -331,12 +322,9 @@ VBR_noise_shapping (lame_global_flags *gfp,
 	  vbrsf.l[sfb] = find_scalefac(&xr[gr][ch][start],&xr34[start],1,sfb,
 	  		 masking_lower*l3_xmin.l[sfb],bw);
 	  if (vbrsf.l[sfb]>vbrmax) vbrmax = vbrsf.l[sfb];
-	  if (vbrsf.l[sfb]<vbrmin) vbrmin = vbrsf.l[sfb];
 	}
 
       } /* compute needed scalefactors */
-
-
 
 
 
@@ -350,8 +338,8 @@ VBR_noise_shapping (lame_global_flags *gfp,
 	maxover1=0;
 	for ( sfb = 0; sfb < SBPSY_s; sfb++ ) {
 	  for ( i = 0; i < 3; i++ ) {
-	    maxover0 = Max(maxover0,(vbrmax - vbrsf.s[sfb][i]) - max_range_short[0][sfb] );
-	    maxover1 = Max(maxover1,(vbrmax - vbrsf.s[sfb][i]) - max_range_short[1][sfb] );
+	    maxover0 = Max(maxover0,(vbrmax - vbrsf.s[sfb][i]) - 4*max_range_short[0][sfb] );
+	    maxover1 = Max(maxover1,(vbrmax - vbrsf.s[sfb][i]) - 4*max_range_short[1][sfb] );
 	  }
 	}
 	if (maxover0==0) 
@@ -366,7 +354,7 @@ VBR_noise_shapping (lame_global_flags *gfp,
 
 
 	/* sf =  (cod_info->global_gain-210.0)/4.0; */
-	cod_info->global_gain = floor(4*vbrmax +210 + .5);
+	cod_info->global_gain = floor(vbrmax +210 + .5);
 	if (cod_info->global_gain>255) cod_info->global_gain=255;
 
 	for ( sfb = 0; sfb < SBPSY_s; sfb++ ) {
@@ -374,23 +362,21 @@ VBR_noise_shapping (lame_global_flags *gfp,
 	    vbrsf.s[sfb][i]-=vbrmax;
 	  }
 	}
-
 	maxover=compute_scalefacs_short(vbrsf.s,cod_info,scalefac[gr][ch].s,cod_info->subblock_gain);
 	if (maxover > 0) {
 	  printf("not enought (short) maxover=%f \n",maxover);
 	  exit(-1);
 	}
 
-
 	/* quantize xr34[] based on computed scalefactors */
-	ifqstep = ( cod_info->scalefac_scale == 0 ) ? .5 : 1;
+	ifqstep = ( cod_info->scalefac_scale == 0 ) ? 2 : 4;
 	for ( sfb = 0; sfb < SBPSY_s; sfb++ ) {
 	  start = gfc->scalefac_band.s[ sfb ];
 	  end   = gfc->scalefac_band.s[ sfb+1 ];
 	  for (i=0; i<3; i++) {
 	    FLOAT8 fac;
-	    fac = (2*cod_info->subblock_gain[i]+ifqstep*scalefac[gr][ch].s[sfb][i]);
-	    fac = pow(2.0,.75*fac);
+	    fac = (8*cod_info->subblock_gain[i]+ifqstep*scalefac[gr][ch].s[sfb][i]);
+	    fac = pow(2.0,.75*fac/4.0);
 	    for ( l = start; l < end; l++ ) 
 	      xr34[3*l +i]*=fac;
 	  }
@@ -408,12 +394,16 @@ VBR_noise_shapping (lame_global_flags *gfp,
 	maxover1=0;
 	maxover0p=0;
 	maxover1p=0;
+
+
 	for ( sfb = 0; sfb < SBPSY_l; sfb++ ) {
-	  maxover0 = Max(maxover0,(vbrmax - vbrsf.l[sfb]) - .5*max_range_long[sfb] );
-	  maxover0p = Max(maxover0,(vbrmax - vbrsf.l[sfb]) - .5*(max_range_long[sfb]+pretab[sfb]) );
-	  maxover1 = Max(maxover1,(vbrmax - vbrsf.l[sfb]) - max_range_long[sfb] );
-	  maxover1p = Max(maxover1,(vbrmax - vbrsf.l[sfb]) - (max_range_long[sfb]+pretab[sfb]));
+	  maxover0 = Max(maxover0,(vbrmax - vbrsf.l[sfb]) - 4*.5*max_range_long[sfb] );
+	  maxover0p = Max(maxover0,(vbrmax - vbrsf.l[sfb]) - 4*.5*(max_range_long[sfb]+pretab[sfb]) );
+	  maxover1 = Max(maxover1,(vbrmax - vbrsf.l[sfb]) - 4*max_range_long[sfb] );
+	  maxover1p = Max(maxover1,(vbrmax - vbrsf.l[sfb]) - 4*(max_range_long[sfb]+pretab[sfb]));
 	}
+
+
         if (maxover0==0) {
 	  cod_info->scalefac_scale = 0;
          } else if (maxover0p==0) {
@@ -432,11 +422,12 @@ VBR_noise_shapping (lame_global_flags *gfp,
 
 
 	/* sf =  (cod_info->global_gain-210.0)/4.0; */
-	cod_info->global_gain = floor(4*vbrmax +210 + .0001);
+	cod_info->global_gain = floor(vbrmax +210 + .0001);
 	if (cod_info->global_gain>255) cod_info->global_gain=255;
 
 	for ( sfb = 0; sfb < SBPSY_l; sfb++ )   
 	  vbrsf.l[sfb] -= vbrmax;
+
 
 	maxover=compute_scalefacs_long(vbrsf.l,cod_info,scalefac[gr][ch].l);
 	if (maxover > 0) {
@@ -444,13 +435,14 @@ VBR_noise_shapping (lame_global_flags *gfp,
 	    exit(-1);
 	}
 
+
 	/* quantize xr34[] based on computed scalefactors */
-	ifqstep = ( cod_info->scalefac_scale == 0 ) ? .5 : 1;
+	ifqstep = ( cod_info->scalefac_scale == 0 ) ? 2 : 4;
 	for ( sfb = 0; sfb < SBPSY_l; sfb++ ) {
           FLOAT8 fac;
 	  fac = ifqstep*(scalefac[gr][ch].l[sfb]+cod_info->preflag);
 	  assert(fac >= -vbrsf.l[sfb]);
-	  fac=pow(2.0,.75*fac);
+	  fac=pow(2.0,.75*fac/4.0);
 	  start = gfc->scalefac_band.l[ sfb ];
 	  end   = gfc->scalefac_band.l[ sfb+1 ];
 	  for ( l = start; l < end; l++ ) 

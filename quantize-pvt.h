@@ -12,7 +12,7 @@ extern int pretab[21];
 extern const int slen1_tab[16];
 extern const int slen2_tab[16];
 
-extern const struct scalefac_struct sfBandIndex[9];
+extern const scalefac_struct sfBandIndex[9];
 
 extern FLOAT8 pow43[PRECALC_SIZE];
 

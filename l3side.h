@@ -19,11 +19,25 @@ typedef FLOAT8	D192_3[192][3];
 typedef int	I192_3[192][3];
 
 
+typedef struct 
+{
+   int l[1+SBMAX_l];
+   int s[1+SBMAX_s];
+} scalefac_struct;
+
+typedef struct 
+{
+   int l[1+SBMAX_l];
+   int s[1+SBMAX_s][3];
+} scalefac_struct2;
+
+/*
 struct scalefac_struct
 {
    int l[1+SBMAX_l];
    int s[1+SBMAX_s];
 };
+*/
 
 typedef struct {
 	FLOAT8	l[SBPSY_l + 1];

@@ -51,7 +51,7 @@ The required mp3buffer_size can be computed from num_samples,
 samplerate and encoding rate, but here is a worst case estimate:
 mp3buffer_size (in bytes) = 1.25*num_samples + 7200
 The return code = number of bytes output in mp3buffer.  This can be 0.
-If it is -1, an error occured.  
+If it is <0, an error occured.  
 
    int lame_encode_buffer(lame_global_flags *gfp,
          short int leftpcm[], short int rightpcm[],

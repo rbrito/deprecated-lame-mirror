@@ -97,7 +97,7 @@ int  pretab[21] =
 */
 
 
-const struct scalefac_struct sfBandIndex[9] =
+const scalefac_struct sfBandIndex[9] =
 {
   { /* Table B.2.b: 22.05 kHz */
     {0,6,12,18,24,30,36,44,54,66,80,96,116,140,168,200,238,284,336,396,464,522,576},

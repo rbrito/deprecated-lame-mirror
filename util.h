@@ -235,7 +235,7 @@ struct {
      int w_ptr;
 
   
-     struct scalefac_struct scalefac_band;
+  scalefac_struct scalefac_band;
 
 
 } lame_internal_flags;
