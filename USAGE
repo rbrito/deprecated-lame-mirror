@@ -143,7 +143,6 @@ Operational:
 -c              mark the encoded file as copyrighted
 -o              mark the encoded file as a copy
 -S              don't print progress report, VBR histogram
--g              run MP3x, the graphical frame analyzer
 --strictly-enforce-ISO   comply as much as possible to ISO MPEG spec
 
 --decode        assume input file is an mp3 file, and decode to wav.
@@ -236,9 +235,10 @@ ATH only
 --athonly
 
 This option causes LAME to ignore the output of the psy-model and
-only use masking from the ATH.  Might be useful at very high bitrates
-or for testing the ATH.  
+only use masking from the ATH.  (absolute threshold of hearing)
 
+Using --athonly is NOT RECOMMENDED.  It is designed for testing
+different ATH curves.
 
 
 
@@ -339,9 +339,10 @@ fast mode
 -f   
 
 Same as -q 7.  
-disable noise shaping.  Encodes faster, but lower quality.
-Psycho acoustics are computed for bit allocation and 
-pre-echo detection.
+
+NOT RECOMMENDED.  Use when encoding speed is critical and encoding
+quality does not matter.  Disable noise shaping.  Psycho acoustics are
+used only for bit allocation and pre-echo detection.
 
 =======================================================================
 strictly enforce VBR minimum bitrate
@@ -362,10 +363,11 @@ LAME will produce a fixed bitrate, free format bitstream.
 User must specify the desired bitrate in kbps, which can
 be any integer between 8 and 640.
 
-Not supported by most decoders.  Decoders only required to support
-up to 320 kbps.  
+Not supported by most decoders.  Complient decoders (of which there
+are few) are only required to support up to 320 kbps.  
 
 Decoders which can handle free format:
+
                      supports up to
 MAD                      640 kbps
 "lame --decode"          550 kbps  
@@ -373,18 +375,6 @@ Freeamp:                 440 kbps
 l3dec:                   310 kbps
 
 
-
-
-
-=======================================================================
-graphical frame analyzer
-=======================================================================
--g
-
-run MP3x, the graphical frame analyzer analysis on the inputfile.  The
-inputfile can be either an .mp3 file or uncompressed audio file.  MP3x
-support must be compiled into LAME, and requires GTK 1.2.
-Documentation (outdated) is under the About pull down menu.
 
 
 
@@ -446,6 +436,10 @@ if the signal does not have too much stereo separation.
 Mid/side stereo is basically a trick to increase bandwidth.  At 128 kbps,
 it is clearly worth while.  At higher bitrates it is less useful.
 
+For truly mono content, use -m m, which will automatically down
+sample your input file to mono.  This will produce 30% better results
+over -m j.  
+
 Using mid/side stereo inappropriately can result in audible
 compression artifacts.  To much switching between mid/side and regular
 stereo can also sound bad.  To determine when to switch to mid/side
@@ -456,7 +450,7 @@ FORCED MID/SIDE STEREO forces all frames to be encoded mid/side stereo.  It
 should only be used if you are sure every frame of the input file
 has very little stereo seperation.  
 
-DUAL CHANNELS
+DUAL CHANNELS   Not supported.
 
 INTENSITY STEREO
 
@@ -498,7 +492,8 @@ disable short blocks
 =======================================================================
 --noshort
 
-Encode all frames using long blocks.
+Encode all frames using long blocks.  NOT RECOMMENDED.  For
+testing purposes only.  
 
 
 
@@ -675,6 +670,8 @@ VBR quality setting
 n = 0...9.  Specifies the value of VBR_q.
 default = 4,  highest quality = 0, smallest files = 9
 
+Using -V 5 or higher (lower quality) is NOT RECOMMENDED.  
+ABR will produce better results.  
 
 
 How is VBR_q used?

@@ -2106,6 +2106,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
     if ( lame_get_free_format(gfp) ) {
         if ( lame_get_brate(gfp) < 8  ||  lame_get_brate(gfp) > 640 ) {
             fprintf(stderr,"For free format, specify a bitrate between 8 and 640 kbps\n");
+            fprintf(stderr,"with the -b <bitrate> option\n");
             return -1;
         }
     }
