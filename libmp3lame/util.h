@@ -493,7 +493,7 @@ struct lame_internal_flags {
   
   
   /* Scale Factor Bands    */
-  III_scalefac_t pseudohalf;
+  int pseudohalf[SFBMAX];
   FLOAT8	w1_l[SBMAX_l], w2_l[SBMAX_l];
   FLOAT8	w1_s[SBMAX_s], w2_s[SBMAX_s];
   FLOAT8 mld_l[SBMAX_l],mld_s[SBMAX_s];

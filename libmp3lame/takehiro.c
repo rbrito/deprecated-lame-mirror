@@ -518,35 +518,20 @@ int count_bits(
 	quantize_xrpow_ISO(xr, ix, IPOW20(gi->global_gain));
 
     if (gfc->substep_shaping) {
-      int sfb, j = 0;
-      // 0.634521682242439 = 0.5946*2**(.5*0.1875)
-      const FLOAT8 roundfac =
-	  0.634521682242439 / IPOW20(gi->global_gain+gi->scalefac_scale);
-      for (sfb = 0; sfb < gi->sfb_lmax; sfb++) {
-	  int width = gfc->scalefac_band.l[sfb+1] - gfc->scalefac_band.l[sfb];
-	  int l;
-	  j += width;
-	  if (!gfc->pseudohalf.l[sfb])
-	      continue;
-
-	  for (l = -width; l < 0; l++)
-	      if (xr[j+l] < roundfac)
-		  ix[j+l] = 0;
-      }
-
-      for (sfb = gi->sfb_smin; sfb < SBPSY_s; sfb++) {
-	  int b;
-	  int width = gfc->scalefac_band.s[sfb+1] - gfc->scalefac_band.s[sfb];
-	  for (b = 0; b < 3; b++) {
-	      int l;
-	      j += width;
-	      if (!gfc->pseudohalf.s[sfb][b])
-		  continue;
-	      for (l = -width; l < 0; l++)
-		  if (xr[j+l] < roundfac)
-		      ix[j+l] = 0;
-	  }
-      }
+	int sfb, j = 0;
+	// 0.634521682242439 = 0.5946*2**(.5*0.1875)
+	const FLOAT8 roundfac =
+	    0.634521682242439 / IPOW20(gi->global_gain+gi->scalefac_scale);
+	for (sfb = 0; sfb < gi->sfbmax; sfb++) {
+	    int width = gi->width[sfb];
+	    int l;
+	    j += width;
+	    if (!gfc->pseudohalf[sfb])
+		continue;
+	    for (l = -width; l < 0; l++)
+		if (xr[j+l] < roundfac)
+		    ix[j+l] = 0.0;
+	}
     }
 
 
@@ -821,12 +806,12 @@ scfsi_calc(int ch,
 
     for (i = 0; i < (sizeof(scfsi_band) / sizeof(int)) - 1; i++) {
 	for (sfb = scfsi_band[i]; sfb < scfsi_band[i + 1]; sfb++) {
-	    if (g0->scalefac.l[sfb] != gi->scalefac.l[sfb])
+	    if (g0->scalefac[sfb] != gi->scalefac[sfb])
 		break;
 	}
 	if (sfb == scfsi_band[i + 1]) {
 	    for (sfb = scfsi_band[i]; sfb < scfsi_band[i + 1]; sfb++) {
-		gi->scalefac.l[sfb] = -1;
+		gi->scalefac[sfb] = -1;
 	    }
 	    l3_side->scfsi[ch][i] = 1;
 	}
@@ -834,20 +819,20 @@ scfsi_calc(int ch,
 
     s1 = c1 = 0;
     for (sfb = 0; sfb < 11; sfb++) {
-	if (gi->scalefac.l[sfb] < 0)
+	if (gi->scalefac[sfb] < 0)
 	    continue;
 	c1++;
-	if (s1 < gi->scalefac.l[sfb])
-	    s1 = gi->scalefac.l[sfb];
+	if (s1 < gi->scalefac[sfb])
+	    s1 = gi->scalefac[sfb];
     }
 
     s2 = c2 = 0;
     for (; sfb < SBPSY_l; sfb++) {
-	if (gi->scalefac.l[sfb] < 0)
+	if (gi->scalefac[sfb] < 0)
 	    continue;
 	c2++;
-	if (s2 < gi->scalefac.l[sfb])
-	    s2 = gi->scalefac.l[sfb];
+	if (s2 < gi->scalefac[sfb])
+	    s2 = gi->scalefac[sfb];
     }
 
     for (i = 0; i < 16; i++) {
@@ -881,55 +866,34 @@ void best_scalefac_store(
      * from the AAC ISO docs.  added mt 3/00 */
     /* check if l3_enc=0 */
     j = 0;
-    for ( sfb = 0; sfb < gi->sfb_lmax; sfb++ ) {
-	int width = gfc->scalefac_band.l[sfb+1] - gfc->scalefac_band.l[sfb];
+    for ( sfb = 0; sfb < gi->sfbmax; sfb++ ) {
+	int width = gi->width[sfb];
 	j += width;
-	if (gi->scalefac.l[sfb] == 0)
+	if (gi->scalefac[sfb] == 0)
 	    continue;
 
-	for (l = -width; l < 0; l++) if (gi->l3_enc[l+j]!=0) break;
-	if (l==0) gi->scalefac.l[sfb]=0;
-    }
-    for (sfb = gi->sfb_smin; sfb < SBPSY_s; sfb++ ) {
-	int width = gfc->scalefac_band.s[sfb+1] - gfc->scalefac_band.s[sfb];
-	for ( i = 0; i < 3; i++ ) {
-	    j += width;
-	    if (gi->scalefac.s[sfb][i] == 0)
-		continue;
-
-	    for (l = -width; l < 0; l++) if (gi->l3_enc[l+j]!=0) break;
-	    if (l==0) gi->scalefac.s[sfb][i]=0;
-	}
+	for (l = -width; l < 0; l++)
+	    if (gi->l3_enc[l+j]!=0)
+		break;
+	if (l==0)
+	    gi->scalefac[sfb]=0;
     }
 
     if (!gi->scalefac_scale && !gi->preflag) {
-	int b, s = 0;
-	for (sfb = 0; sfb < gi->sfb_lmax; sfb++) {
-	    s |= gi->scalefac.l[sfb];
-	}
-
-	for (sfb = gi->sfb_smin; sfb < SBPSY_s; sfb++) {
-	    for (b = 0; b < 3; b++) {
-		s |= gi->scalefac.s[sfb][b];
-	    }
-	}
+	int s = 0;
+	for (sfb = 0; sfb < gi->sfbmax; sfb++)
+	    s |= gi->scalefac[sfb];
 
 	if (!(s & 1) && s != 0) {
-	    for (sfb = 0; sfb < gi->sfb_lmax; sfb++) {
-		gi->scalefac.l[sfb] /= 2;
-	    }
-	    for (sfb = gi->sfb_smin; sfb < SBPSY_s; sfb++) {
-		for (b = 0; b < 3; b++) {
-		    gi->scalefac.s[sfb][b] /= 2;
-		}
-	    }
+	    for (sfb = 0; sfb < gi->sfbmax; sfb++)
+		gi->scalefac[sfb] /= 2;
 
 	    gi->scalefac_scale = 1;
-	    gi->part2_length = 99999999;
+	    gi->part2_length = LARGE_BITS;
 	    if (gfc->mode_gr == 2) {
-	        scale_bitcount(&gi->scalefac, gi);
+	        scale_bitcount(gi);
 	    } else {
-		scale_bitcount_lsf(gfc,&gi->scalefac, gi);
+		scale_bitcount_lsf(gfc, gi);
 	    }
 	}
     }
@@ -967,73 +931,56 @@ static const int scale_long[16] = {
 
 /* Also calculates the number of bits necessary to code the scalefactors. */
 
-int scale_bitcount( 
-    III_scalefac_t * const scalefac, gr_info * const cod_info)
+int scale_bitcount(gr_info * const cod_info)
 {
-    int i, k, sfb, max_slen1 = 0, max_slen2 = 0, ep = 2;
+    int k, sfb, max_slen1 = 0, max_slen2 = 0;
 
     /* maximum values */
     const int *tab;
-
+    int *scalefac = cod_info->scalefac;
 
     if ( cod_info->block_type == SHORT_TYPE ) {
 	tab = scale_short;
-	if (cod_info->mixed_block_flag) {
+	if (cod_info->mixed_block_flag)
 	    tab = scale_mixed;
-	    for ( sfb = 0 ; sfb < cod_info->sfb_lmax; sfb++ )
-		if (max_slen1 < scalefac->l[sfb])
-		    max_slen1 = scalefac->l[sfb];
-	}
-
-	for ( i = 0; i < 3; i++ ) {
-	    for ( sfb = cod_info->sfb_smin; sfb < 6; sfb++ )
-		if (max_slen1 < scalefac->s[sfb][i])
-		    max_slen1 = scalefac->s[sfb][i];
-	    for (sfb = 6; sfb < SBPSY_s; sfb++ )
-		if (max_slen2 < scalefac->s[sfb][i])
-		    max_slen2 = scalefac->s[sfb][i];
-	}
     }
     else
     { /* block_type == 1,2,or 3 */
         tab = scale_long;
-        for ( sfb = 0; sfb < 11; sfb++ )
-            if ( scalefac->l[sfb] > max_slen1 )
-                max_slen1 = scalefac->l[sfb];
-
 	if (!cod_info->preflag) {
 	    for ( sfb = 11; sfb < SBPSY_l; sfb++ )
-		if (scalefac->l[sfb] < pretab[sfb])
+		if (scalefac[sfb] < pretab[sfb])
 		    break;
 
 	    if (sfb == SBPSY_l) {
 		cod_info->preflag = 1;
 		for ( sfb = 11; sfb < SBPSY_l; sfb++ )
-		    scalefac->l[sfb] -= pretab[sfb];
+		    scalefac[sfb] -= pretab[sfb];
 	    }
 	}
-
-        for ( sfb = 11; sfb < SBPSY_l; sfb++ )
-            if ( scalefac->l[sfb] > max_slen2 )
-                max_slen2 = scalefac->l[sfb];
     }
 
+    for (sfb = 0; sfb < cod_info->sfbdivide; sfb++)
+	if (max_slen1 < scalefac[sfb])
+	    max_slen1 = scalefac[sfb];
+
+    for (; sfb < cod_info->sfbmax; sfb++)
+	if (max_slen2 < scalefac[sfb])
+	    max_slen2 = scalefac[sfb];
 
     /* from Takehiro TOMINAGA <tominaga@isoternet.org> 10/99
      * loop over *all* posible values of scalefac_compress to find the
      * one which uses the smallest number of bits.  ISO would stop
      * at first valid index */
     cod_info->part2_length = LARGE_BITS;
-    for ( k = 0; k < 16; k++ )
-    {
-        if ( (max_slen1 < slen1_n[k]) && (max_slen2 < slen2_n[k]) &&
-             (cod_info->part2_length > tab[k])) {
-	  cod_info->part2_length=tab[k];
-	  cod_info->scalefac_compress=k;
-	  ep=0;  /* we found a suitable scalefac_compress */
+    for ( k = 0; k < 16; k++ ) {
+        if (max_slen1 < slen1_n[k] && max_slen2 < slen2_n[k]
+	    && cod_info->part2_length > tab[k]) {
+	    cod_info->part2_length=tab[k];
+	    cod_info->scalefac_compress=k;
 	}
     }
-    return ep;
+    return cod_info->part2_length == LARGE_BITS;
 }
 
 
@@ -1065,11 +1012,12 @@ static const int max_range_sfac_tab[6][4] =
 /* "Audio Decoding Layer III"                                            */
 
 int scale_bitcount_lsf(const lame_internal_flags *gfc,
-    const III_scalefac_t * const scalefac, gr_info * const cod_info)
+		       gr_info * const cod_info)
 {
     int table_number, row_in_table, partition, nr_sfb, window, over;
     int i, sfb, max_sfac[ 4 ];
     const int *partition_table;
+    int *scalefac = cod_info->scalefac;
 
     /*
       Set partition table. Note that should try to use table one,
@@ -1085,16 +1033,16 @@ int scale_bitcount_lsf(const lame_internal_flags *gfc,
 
     if ( cod_info->block_type == SHORT_TYPE )
     {
-	    row_in_table = 1;
-	    partition_table = &nr_of_sfb_block[table_number][row_in_table][0];
-	    for ( sfb = 0, partition = 0; partition < 4; partition++ )
-	    {
-		nr_sfb = partition_table[ partition ] / 3;
-		for ( i = 0; i < nr_sfb; i++, sfb++ )
-		    for ( window = 0; window < 3; window++ )
-			if ( scalefac->s[sfb][window] > max_sfac[partition] )
-			    max_sfac[partition] = scalefac->s[sfb][window];
-	    }
+	row_in_table = 1;
+	partition_table = &nr_of_sfb_block[table_number][row_in_table][0];
+	for ( sfb = 0, partition = 0; partition < 4; partition++ )
+	{
+	    nr_sfb = partition_table[ partition ] / 3;
+	    for ( i = 0; i < nr_sfb; i++, sfb++ )
+		for ( window = 0; window < 3; window++ )
+		    if ( scalefac[sfb*3+window] > max_sfac[partition] )
+			max_sfac[partition] = scalefac[sfb*3+window];
+	}
     }
     else
     {
@@ -1104,8 +1052,8 @@ int scale_bitcount_lsf(const lame_internal_flags *gfc,
 	{
 	    nr_sfb = partition_table[ partition ];
 	    for ( i = 0; i < nr_sfb; i++, sfb++ )
-		if ( scalefac->l[sfb] > max_sfac[partition] )
-		    max_sfac[partition] = scalefac->l[sfb];
+		if ( scalefac[sfb] > max_sfac[partition] )
+		    max_sfac[partition] = scalefac[sfb];
 	}
     }
 

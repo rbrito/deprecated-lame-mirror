@@ -70,16 +70,18 @@ void    iteration_init (lame_global_flags *gfp);
 
 
 int     calc_xmin (lame_global_flags *gfp,
-                   const III_psy_ratio * const ratio, const gr_info * const cod_info,
-                   III_psy_xmin * const l3_xmin);
+                   const III_psy_ratio * const ratio,
+		   const gr_info * const cod_info,
+                   FLOAT8 * const l3_xmin);
 
 int     calc_noise (const lame_internal_flags * const gfc,
                     const gr_info * const cod_info,
-                    const III_psy_xmin * const l3_xmin,
-                    III_psy_xmin * distort, calc_noise_result * const res);
+                    const FLOAT8 * l3_xmin,
+                    FLOAT8 * distort,
+		    calc_noise_result * const res);
 
-double get_klemm_noise(const III_psy_xmin	* const distort,
-		       const gr_info		* const gi);
+double get_klemm_noise(const FLOAT8	* const distort,
+		       const gr_info	* const gi);
 
 void    set_frame_pinfo (lame_global_flags *gfp,
                          III_psy_ratio ratio[2][2]);
@@ -100,9 +102,8 @@ void    best_huffman_divide (const lame_internal_flags * const gfc,
 void    best_scalefac_store (const lame_internal_flags * gfc, const int gr, const int ch,
                              III_side_info_t * const l3_side);
 
-int     scale_bitcount (III_scalefac_t * const scalefac, gr_info * const cod_info);
-
-int     scale_bitcount_lsf (const lame_internal_flags *gfp, const III_scalefac_t * const scalefac,
+int     scale_bitcount (gr_info * const cod_info);
+int     scale_bitcount_lsf (const lame_internal_flags *gfp,
                             gr_info * const cod_info);
 
 void    huffman_init (lame_internal_flags * const gfc);

@@ -501,90 +501,75 @@ huffman_coder_count1(lame_internal_flags *gfc, gr_info *gi)
 /*
   Implements the pseudocode of page 98 of the IS
   */
-
 inline static int
-HuffmanCode( lame_internal_flags* const gfc, const int table_select,
-	     int index, gr_info *gi)
+Huffmancode( lame_internal_flags* const gfc, const int tableindex,
+	     int start, int end, gr_info *gi)
 {
-    const struct huffcodetab* h = ht + table_select;
-    int  cbits   = 0;
-    int  xbits   = 0;
-    int  linbits = h->xlen;
-    int  xlen    = h->xlen;
-    int  ext = 0;
-    int x1 = gi->l3_enc[index];
-    int x2 = gi->l3_enc[index+1];
+    const struct huffcodetab* h = &ht[tableindex];
+    int index, bits = 0;
 
-    assert ( table_select > 0 );
+    assert(tableindex < 32u);
+    if (!tableindex)
+	return bits;
 
-    if (x1 != 0) {
-	if (gi->xr[index] < 0)
-	    ext++;
+    for (index = start; index < end; index += 2) {
+	int cbits   = 0;
+	int xbits   = 0;
+	int linbits = h->xlen;
+	int xlen    = h->xlen;
+	int ext = 0;
+	int x1 = gi->l3_enc[index];
+	int x2 = gi->l3_enc[index+1];
 
-	cbits--;
-    }
-
-    if (table_select > 15) {
-	/* use ESC-words */
-	if (x1 > 14) {
-	    int linbits_x1 = x1 - 15;
-	    assert ( linbits_x1 <= h->linmax );
-	    ext   |= linbits_x1 << 1;
-	    xbits  = linbits;
-	    x1     = 15;
+	if (x1 != 0) {
+	    if (gi->xr[index] < 0)
+		ext++;
+	    cbits--;
 	}
 
-	if (x2 > 14) {
-	    int linbits_x2 = x2 - 15;
-	    assert ( linbits_x2 <= h->linmax );
-	    ext  <<= linbits;
-	    ext   |= linbits_x2;
-	    xbits += linbits;
-	    x2     = 15;
+	if (tableindex > 15) {
+	    /* use ESC-words */
+	    if (x1 > 14) {
+		int linbits_x1 = x1 - 15;
+		assert ( linbits_x1 <= h->linmax );
+		ext   |= linbits_x1 << 1;
+		xbits  = linbits;
+		x1     = 15;
+	    }
+
+	    if (x2 > 14) {
+		int linbits_x2 = x2 - 15;
+		assert ( linbits_x2 <= h->linmax );
+		ext  <<= linbits;
+		ext   |= linbits_x2;
+		xbits += linbits;
+		x2     = 15;
+	    }
+	    xlen = 16;
 	}
-	xlen = 16;
+
+	if (x2 != 0) {
+	    ext <<= 1;
+	    if (gi->xr[index+1] < 0)
+		ext++;
+	    cbits--;
+	}
+
+	assert ( (x1|x2) < 16u );
+
+	x1 = x1 * xlen + x2;
+	xbits -= cbits;
+	cbits += h->hlen  [x1];
+
+	assert ( cbits <= MAX_LENGTH );
+	assert ( xbits <= MAX_LENGTH );
+
+	putbits2(gfc, h->table [x1], cbits );
+	putbits2(gfc, ext,  xbits );
+	bits += cbits + xbits;
     }
-
-    if (x2 != 0) {
-	ext <<= 1;
-	if (gi->xr[index+1] < 0)
-	    ext++;
-	cbits--;
-    }
-
-    xbits -= cbits;
-
-    assert ( (x1|x2) < 16u );
-
-    x1 = x1 * xlen + x2;
-
-    cbits += h->hlen  [x1];
-
-    assert ( cbits <= MAX_LENGTH );
-    assert ( xbits <= MAX_LENGTH );
-
-    putbits2(gfc, h->table [x1], cbits );
-    putbits2(gfc, ext,  xbits );
-    
-    return cbits + xbits;
-}
-
-static int
-Huffmancodebits(lame_internal_flags *gfc, int tableindex, int start, int end, gr_info *gi)
-{
-    int i,bits;
-
-    assert(tableindex < 32);
-    if (!tableindex) return 0;
-
-    bits=0;
-    for (i = start; i < end; i += 2)
-      bits +=HuffmanCode(gfc, tableindex, i, gi);
-
     return bits;
 }
-
-
 
 /*
   Note the discussion of huffmancodebits() on pages 28
@@ -602,8 +587,8 @@ ShortHuffmancodebits(lame_internal_flags *gfc, gr_info *gi)
 	region1Start = gi->big_values;
 
     /* short blocks do not have a region2 */
-    bits  = Huffmancodebits(gfc, gi->table_select[0], 0, region1Start, gi);
-    bits += Huffmancodebits(gfc, gi->table_select[1], region1Start, gi->big_values, gi);
+    bits  = Huffmancode(gfc, gi->table_select[0], 0, region1Start, gi);
+    bits += Huffmancode(gfc, gi->table_select[1], region1Start, gi->big_values, gi);
     return bits;
 }
 
@@ -629,16 +614,16 @@ LongHuffmancodebits(lame_internal_flags *gfc, gr_info *gi)
     if (region2Start > bigvalues)
 	region2Start = bigvalues;
 
-    bits  =Huffmancodebits(gfc, gi->table_select[0], 0, region1Start, gi);
-    bits +=Huffmancodebits(gfc, gi->table_select[1], region1Start, region2Start, gi);
-    bits +=Huffmancodebits(gfc, gi->table_select[2], region2Start, bigvalues, gi);
+    bits  =Huffmancode(gfc, gi->table_select[0], 0, region1Start, gi);
+    bits +=Huffmancode(gfc, gi->table_select[1], region1Start, region2Start, gi);
+    bits +=Huffmancode(gfc, gi->table_select[2], region2Start, bigvalues, gi);
     return bits;
 }
 
 inline static int
 writeMainData ( lame_global_flags * const gfp)
 {
-    int gr, ch, sfb,data_bits,scale_bits,tot_bits=0;
+    int gr, ch, sfb,data_bits,tot_bits=0;
     lame_internal_flags *gfc=gfp->internal_flags;
     III_side_info_t *l3_side;
 
@@ -651,52 +636,35 @@ writeMainData ( lame_global_flags * const gfp)
 		int slen1 = slen1_tab[gi->scalefac_compress];
 		int slen2 = slen2_tab[gi->scalefac_compress];
 		data_bits=0;
-		scale_bits=0;
-
 #ifdef DEBUG
 		hogege = gfc->bs.totbit;
 #endif
+		for (sfb = 0; sfb < gi->sfbdivide; sfb++) {
+		    if (gi->scalefac[sfb] < 0)
+			continue; // scfsi is used
+		    putbits2(gfc, gi->scalefac[sfb], slen1);
+		    data_bits += slen1;
+		}
+		for (; sfb < gi->sfbmax; sfb++) {
+		    if (gi->scalefac[sfb] < 0)
+			continue; // scfsi is used
+		    putbits2(gfc, gi->scalefac[sfb], slen2);
+		    data_bits += slen2;
+		}
+		assert(data_bits == gi->part2_length);
+
 		if (gi->block_type == SHORT_TYPE) {
-		    for (sfb = 0; sfb < SBPSY_s; sfb++) {
-			int slen = sfb < 6 ? slen1 : slen2;
-
-			assert(gi->scalefac.s[sfb][0]>=0);
-			assert(gi->scalefac.s[sfb][1]>=0);
-			assert(gi->scalefac.s[sfb][2]>=0);
-
-			putbits2(gfc, gi->scalefac.s[sfb][0], slen);
-			putbits2(gfc, gi->scalefac.s[sfb][1], slen);
-			putbits2(gfc, gi->scalefac.s[sfb][2], slen);
-			scale_bits += 3*slen;
-		    }
 		    data_bits += ShortHuffmancodebits(gfc, gi);
 		} else {
-		    int i;
-		    for (i = 0; i < sizeof(scfsi_band) / sizeof(int) - 1;
-			 i++) {
-			if (gr != 0 && l3_side->scfsi[ch][i])
-			    continue;
-
-			for (sfb = scfsi_band[i]; sfb < scfsi_band[i + 1];
-			     sfb++) {
-
-			    assert(gi->scalefac.l[sfb]>=0);
-			    putbits2(gfc, gi->scalefac.l[sfb],
-				    sfb < 11 ? slen1 : slen2);
-			    scale_bits += sfb < 11 ? slen1 : slen2;
-			}
-		    }
-		    data_bits +=LongHuffmancodebits(gfc, gi);
+		    data_bits += LongHuffmancodebits(gfc, gi);
 		}
-		data_bits +=huffman_coder_count1(gfc, gi);
+		data_bits += huffman_coder_count1(gfc, gi);
 #ifdef DEBUG
 		DEBUGF(gfc,"<%ld> ", gfc->bs.totbit-hogege);
 #endif
 		/* does bitcount in quantize.c agree with actual bit count?*/
-		assert(data_bits==gi->part2_3_length);
-		assert(scale_bits==gi->part2_length);
-		tot_bits += scale_bits + data_bits;
-
+		assert(data_bits == gi->part2_3_length + gi->part2_length);
+		tot_bits += data_bits;
 	    } /* for ch */
 	} /* for gr */
     } else {
@@ -704,10 +672,9 @@ writeMainData ( lame_global_flags * const gfp)
 	gr = 0;
 	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    gr_info *gi = &l3_side->tt[gr][ch];
-	    int i, sfb_partition;
+	    int i, sfb_partition, scale_bits=0;
 	    assert(gi->sfb_partition_table);
 	    data_bits = 0;
-	    scale_bits=0;
 
 	    sfb = 0;
 	    sfb_partition = 0;
@@ -717,9 +684,9 @@ writeMainData ( lame_global_flags * const gfp)
 		    int sfbs = gi->sfb_partition_table[sfb_partition] / 3;
 		    int slen = gi->slen[sfb_partition];
 		    for (i = 0; i < sfbs; i++, sfb++) {
-			putbits2(gfc, Max(gi->scalefac.s[sfb][0], 0U), slen);
-			putbits2(gfc, Max(gi->scalefac.s[sfb][1], 0U), slen);
-			putbits2(gfc, Max(gi->scalefac.s[sfb][2], 0U), slen);
+			putbits2(gfc, Max(gi->scalefac[sfb*3+0], 0U), slen);
+			putbits2(gfc, Max(gi->scalefac[sfb*3+1], 0U), slen);
+			putbits2(gfc, Max(gi->scalefac[sfb*3+2], 0U), slen);
 			scale_bits += 3*slen;
 		    }
 		}
@@ -729,7 +696,7 @@ writeMainData ( lame_global_flags * const gfp)
 		    int sfbs = gi->sfb_partition_table[sfb_partition];
 		    int slen = gi->slen[sfb_partition];
 		    for (i = 0; i < sfbs; i++, sfb++) {
-			putbits2(gfc, Max(gi->scalefac.l[sfb], 0U), slen);
+			putbits2(gfc, Max(gi->scalefac[sfb], 0U), slen);
 			scale_bits += slen;
 		    }
 		}

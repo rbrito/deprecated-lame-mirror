@@ -27,7 +27,7 @@ int VBR_noise_shaping(
                     FLOAT8            * xr34orig, 
                     int                 minbits, 
                     int                 maxbits,
-                    III_psy_xmin      * l3_xmin,
+                    FLOAT8	      * l3_xmin,
                     int                 gr,
                     int                 ch );
 

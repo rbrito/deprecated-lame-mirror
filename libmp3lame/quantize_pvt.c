@@ -455,23 +455,25 @@ int calc_xmin(
         lame_global_flags *gfp,
         const III_psy_ratio * const ratio,
 	const gr_info       * const cod_info, 
-              III_psy_xmin  * const l3_xmin ) 
+	      FLOAT8        * const l3_xmin
+    )
 {
     lame_internal_flags *gfc = gfp->internal_flags;
-    int sfb, j=0, ath_over=0;
+    int sfb, gsfb, j=0, ath_over=0;
     FLOAT8 xmin, tmpATH;
     ATH_t * ATH = gfc->ATH;
     const FLOAT8 *xr = cod_info->xr;
+    FLOAT8 *pxmin = l3_xmin;
 
-    for (sfb = 0; sfb < cod_info->psy_lmax; sfb++) {
+    for (gsfb = 0; gsfb < cod_info->psy_lmax; gsfb++) {
 	FLOAT en0 = 0.0;
 	int width, l;
 	if ( gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh )
-	    tmpATH = athAdjust( ATH->adjust, ATH->l[sfb], ATH->floor );
+	    tmpATH = athAdjust( ATH->adjust, ATH->l[gsfb], ATH->floor );
 	else
-	    tmpATH = ATH->adjust * ATH->l[sfb];
+	    tmpATH = ATH->adjust * ATH->l[gsfb];
 
-	width = gfc->scalefac_band.l[sfb+1] - gfc->scalefac_band.l[sfb];
+	width = cod_info->width[gsfb];
 	l = width;
 	do {
 	    en0 += xr[j] * xr[j];
@@ -483,9 +485,9 @@ int calc_xmin(
 
 	xmin = tmpATH;
 	if (!gfp->ATHonly) {
-	    xmin = ratio->en.l[sfb];
+	    xmin = ratio->en.l[gsfb];
 	    if (xmin > 0.0)
-		xmin = en0 * ratio->thm.l[sfb] * gfc->masking_lower / xmin;
+		xmin = en0 * ratio->thm.l[gsfb] * gfc->masking_lower / xmin;
 	    if (xmin < tmpATH) 
 		xmin = tmpATH;
 	}
@@ -494,25 +496,26 @@ int calc_xmin(
 	    xmin *= width;
 	}
 	else {
-	    if      (sfb <=  6) xmin *= gfc->nsPsy.bass;
-	    else if (sfb <= 13) xmin *= gfc->nsPsy.alto;
-	    else if (sfb <= 20) xmin *= gfc->nsPsy.treble;
+	    if      (gsfb <=  6) xmin *= gfc->nsPsy.bass;
+	    else if (gsfb <= 13) xmin *= gfc->nsPsy.alto;
+	    else if (gsfb <= 20) xmin *= gfc->nsPsy.treble;
 	    else                xmin *= gfc->nsPsy.sfb21;
 	    if ((gfp->VBR == vbr_off || gfp->VBR == vbr_abr) && gfp->quality <= 1)
 		xmin *= 0.001;
 	}
-	l3_xmin->l[sfb] = xmin;
+	*pxmin++ = xmin;
 	if (en0 > tmpATH) ath_over++;
     }   /* end of long block loop */
 
-    for (sfb = cod_info->sfb_smin; sfb < cod_info->psy_smax; sfb++) {
+    sfb = cod_info->sfb_smin;
+    for (; gsfb < cod_info->psymax; gsfb += 3) {
 	int width, b;
 	if ( gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh )
 	    tmpATH = athAdjust( ATH->adjust, ATH->s[sfb], ATH->floor );
 	else
 	    tmpATH = ATH->adjust * ATH->s[sfb];
 
-	width = gfc->scalefac_band.s[sfb+1] - gfc->scalefac_band.s[sfb];
+	width = cod_info->width[gsfb];
 	for ( b = 0; b < 3; b++ ) {
 	    FLOAT en0 = 0.0;
 	    int l = width;
@@ -539,18 +542,20 @@ int calc_xmin(
 		if ((gfp->VBR == vbr_off || gfp->VBR == vbr_abr) && gfp->quality <= 1)
 		    xmin *= 0.001;
 	    }
-	    l3_xmin->s[sfb][b] = xmin;
+	    *pxmin++ = xmin;
 	    if (en0 > tmpATH) ath_over++;
 	}   /* b */
 	if (gfp->useTemporal) {
+	    // XXX mixed block not supported, FIXME
 	    for ( b = 1; b < 3; b++ ) {
-		xmin = l3_xmin->s[sfb][b] * (1.0 - gfc->decay)
-		    + l3_xmin->s[sfb][b-1] * gfc->decay;
-		if (l3_xmin->s[sfb][b] < xmin)
-		    l3_xmin->s[sfb][b] = xmin;
+		xmin = l3_xmin[gsfb+b] * (1.0 - gfc->decay)
+		    + l3_xmin[gsfb+b-1] * gfc->decay;
+		if (l3_xmin[gsfb+b] < xmin)
+		    l3_xmin[gsfb+b] = xmin;
 	    }
-        }   /* sfb */
-    }   /* end of short block loop */
+        }
+	sfb++;
+    }   /* end of short block sfb loop */
 
     return ath_over;
 }
@@ -583,55 +588,51 @@ static double penalties ( double noise )
 }
 
 double get_klemm_noise(
-    const III_psy_xmin  *distort,
-    const gr_info	*const gi
+    const FLOAT8  * distort,
+    const gr_info * const gi
     )
 {
-    int sfb, i;
+    int sfb;
     double klemm_noise = 1E-37;
-    for (sfb = 0; sfb < gi->psy_lmax; sfb++) {
-	klemm_noise += penalties(distort->l[sfb]);
-    }
-    for (sfb = gi->sfb_smin; sfb < gi->psy_smax; sfb++) {
-	for ( i = 0; i < 3; i++ ) {
-	    klemm_noise += penalties(distort->s[sfb][i]);
-	}
-    }
+    for (sfb = 0; sfb < gi->psymax; sfb++)
+	klemm_noise += penalties(distort[sfb]);
+
     return Max(1e-20, klemm_noise);
 }
 
 /*  mt 5/99:  Function: Improved calc_noise for a single channel   */
 
 int  calc_noise( 
-        const lame_internal_flags           * const gfc,
-        const gr_info           * const cod_info,
-        const III_psy_xmin      * const l3_xmin, 
-              III_psy_xmin      * xfsf,
-              calc_noise_result * const res )
+        const lame_internal_flags * const gfc,
+        const gr_info             * const cod_info,
+        const FLOAT8              * l3_xmin, 
+              FLOAT8              * distort,
+              calc_noise_result   * const res )
 {
-    int sfb, l, i, over=0;
+    int sfb, l, over=0;
     FLOAT8 over_noise_db = 0;
     FLOAT8 tot_noise_db  = 0;     /*    0 dB relative to masking */
     FLOAT8 max_noise  = 1E-20; /* -200 dB relative to masking */
     int j = 0;
     const int *ix = cod_info->l3_enc;
-    const III_scalefac_t * const scalefac = &cod_info->scalefac;
+    int *scalefac = cod_info->scalefac;
 
-    for (sfb = 0; sfb < cod_info->psy_lmax; sfb++) {
+    for (sfb = 0; sfb < cod_info->psymax; sfb++) {
 	int s =
 	    cod_info->global_gain
-	    - ((scalefac->l[sfb] + (cod_info->preflag ? pretab[sfb] : 0))
-	       << (cod_info->scalefac_scale + 1));
+	    - (((*scalefac++) + (cod_info->preflag ? pretab[sfb] : 0))
+	       << (cod_info->scalefac_scale + 1))
+	    - cod_info->subblock_gain[cod_info->window[sfb]] * 8;
 	FLOAT8 step = POW20(s);
 	FLOAT8 noise = 0.0;
 
-	l = gfc->scalefac_band.l[sfb+1] - gfc->scalefac_band.l[sfb];
+	l = cod_info->width[sfb];
 	do {
 	    FLOAT8 temp = fabs(cod_info->xr[j]) - pow43[ix[j]] * step;
 	    noise += temp * temp;
 	    j++;
 	} while (--l > 0);
-	noise = xfsf->l[sfb] = noise / l3_xmin->l[sfb];
+	noise = *distort++ = noise / *l3_xmin++;
 	max_noise=Max(max_noise,noise);
 
 	noise = log10(Max(noise,1E-20));
@@ -644,36 +645,6 @@ int  calc_noise(
 	    /* multiplying here is adding in dB -but can overflow */
 	    //over_noise *= noise;
 	    over_noise_db += noise;
-	}
-    }
-
-    for (sfb = cod_info->sfb_smin; sfb < cod_info->psy_smax; sfb++) {
-	int width = gfc->scalefac_band.s[sfb+1] - gfc->scalefac_band.s[sfb];
-	for ( i = 0; i < 3; i++ ) {
-	    int s =
-		cod_info->global_gain
-		- (scalefac->s[sfb][i] << (cod_info->scalefac_scale + 1))
-		- cod_info->subblock_gain[i] * 8;
-	    FLOAT8 step = POW20(s);
-	    FLOAT8 noise = 0.0;
-	    l = width;
-	    do {
-		FLOAT8 temp;
-		temp = pow43[ix[j]] * step - fabs(cod_info->xr[j]);
-		noise += temp * temp;
-		j++;
-	    } while (--l > 0);
-	    noise = xfsf->s[sfb][i]  = noise / l3_xmin->s[sfb][i];
-
-	    max_noise    = Max(max_noise,noise);
-
-	    noise = log10(Max(noise,1E-20));
-	    tot_noise_db += noise;
-
-	    if (noise > 0.0) {
-		over++;
-		over_noise_db += noise;
-	    }
 	}
     }
 
@@ -719,88 +690,73 @@ void set_pinfo (
         const int                    ch )
 {
     lame_internal_flags *gfc=gfp->internal_flags;
-    int sfb;
+    int sfb, sfb2;
     int j,i,l,start,end,bw;
     FLOAT8 en0,en1;
     FLOAT ifqstep = ( cod_info->scalefac_scale == 0 ) ? .5 : 1.0;
-    const III_scalefac_t * const scalefac = &cod_info->scalefac;
+    int* scalefac = cod_info->scalefac;
 
-
-    III_psy_xmin l3_xmin;
+    FLOAT8 l3_xmin[SFBMAX], xfsf[SFBMAX];
     calc_noise_result noise;
-    III_psy_xmin xfsf;
 
-    calc_xmin (gfp, ratio, cod_info, &l3_xmin);
-    calc_noise (gfc, cod_info, &l3_xmin, &xfsf, &noise);
+    calc_xmin (gfp, ratio, cod_info, l3_xmin);
+    calc_noise (gfc, cod_info, l3_xmin, xfsf, &noise);
+
+    j = 0;
+    for (sfb = 0; sfb < cod_info->sfb_lmax; sfb++) {
+	start = gfc->scalefac_band.l[ sfb ];
+	end   = gfc->scalefac_band.l[ sfb+1 ];
+	bw = end - start;
+	for ( en0 = 0.0; j < end; j++ ) 
+	    en0 += cod_info->xr[j] * cod_info->xr[j];
+	en0/=bw;
+	/* convert to MDCT units */
+	en1=1e15;  /* scaling so it shows up on FFT plot */
+	gfc->pinfo->  en[gr][ch][sfb] = en1*en0;
+	gfc->pinfo-> thr[gr][ch][sfb] = en1*l3_xmin[sfb];
+	gfc->pinfo->xfsf[gr][ch][sfb] = en1*l3_xmin[sfb]*xfsf[sfb]/bw;
+
+	/* there is no scalefactor bands >= SBPSY_l */
+	gfc->pinfo->LAMEsfb[gr][ch][sfb] = 0;
+	if (cod_info->preflag && sfb>=11) 
+	    gfc->pinfo->LAMEsfb[gr][ch][sfb] = -ifqstep*pretab[sfb];
+
+	if (sfb<SBPSY_l) {
+	    assert(scalefac[sfb]>=0); /* scfsi should be decoded by caller side*/
+	    gfc->pinfo->LAMEsfb[gr][ch][sfb] -= ifqstep*scalefac[sfb];
+	}
+    } /* for sfb */
 
     if (cod_info->block_type == SHORT_TYPE) {
-        for (j=0, sfb = 0; sfb < SBMAX_s; sfb++ )  {
+	sfb2 = sfb;
+        for (sfb = cod_info->sfb_smin; sfb < SBMAX_s; sfb++ )  {
             start = gfc->scalefac_band.s[ sfb ];
             end   = gfc->scalefac_band.s[ sfb + 1 ];
             bw = end - start;
             for ( i = 0; i < 3; i++ ) {
                 for ( en0 = 0.0, l = start; l < end; l++ ) {
                     en0 += cod_info->xr[j] * cod_info->xr[j];
-                    ++j;
+                    j++;
                 }
                 en0=Max(en0/bw,1e-20);
                 /* convert to MDCT units */
                 en1=1e15;  /* scaling so it shows up on FFT plot */
-                gfc->pinfo->xfsf_s[gr][ch][3*sfb+i] 
-                    = en1*xfsf.s[sfb][i]*l3_xmin.s[sfb][i]/bw;
-                gfc->pinfo->en_s[gr][ch][3*sfb+i] = en1*en0;
 
-                if (ratio->en.s[sfb][i]>0)
-                    en0 = en0/ratio->en.s[sfb][i];
-                else
-                    en0=0;
-                if (gfp->ATHonly || gfp->ATHshort)
-                    en0=0;
-
-                gfc->pinfo->thr_s[gr][ch][3*sfb+i] = 
-                        en1*Max(en0*ratio->thm.s[sfb][i],gfc->ATH->s[sfb]);
+                gfc->pinfo->  en_s[gr][ch][3*sfb+i] = en1*en0;
+                gfc->pinfo-> thr_s[gr][ch][3*sfb+i] = en1*l3_xmin[sfb2];
+                gfc->pinfo->xfsf_s[gr][ch][3*sfb+i] = en1*l3_xmin[sfb2]*xfsf[sfb2]/bw;
 
                 /* there is no scalefactor bands >= SBPSY_s */
                 gfc->pinfo->LAMEsfb_s[gr][ch][3*sfb+i] =
 						-2*cod_info->subblock_gain[i];
                 if (sfb < SBPSY_s) {
                     gfc->pinfo->LAMEsfb_s[gr][ch][3*sfb+i] -=
-						ifqstep*scalefac->s[sfb][i];
+						ifqstep*scalefac[sfb2];
                 }
+		sfb2++;
             }
         }
-    } else {
-        for ( sfb = 0; sfb < SBMAX_l; sfb++ )   {
-            start = gfc->scalefac_band.l[ sfb ];
-            end   = gfc->scalefac_band.l[ sfb+1 ];
-            bw = end - start;
-            for ( en0 = 0.0, l = start; l < end; l++ ) 
-                en0 += cod_info->xr[l] * cod_info->xr[l];
-            en0/=bw;
-            /* convert to MDCT units */
-            en1=1e15;  /* scaling so it shows up on FFT plot */
-            gfc->pinfo->xfsf[gr][ch][sfb] =  en1*xfsf.l[sfb]*l3_xmin.l[sfb]/bw;
-            gfc->pinfo->en[gr][ch][sfb] = en1*en0;
-            if (ratio->en.l[sfb]>0)
-                en0 = en0/ratio->en.l[sfb];
-            else
-                en0=0;
-            if (gfp->ATHonly)
-                en0=0;
-            gfc->pinfo->thr[gr][ch][sfb] =
-                             en1*Max(en0*ratio->thm.l[sfb],gfc->ATH->l[sfb]);
-
-            /* there is no scalefactor bands >= SBPSY_l */
-	    gfc->pinfo->LAMEsfb[gr][ch][sfb] = 0;
-            if (cod_info->preflag && sfb>=11) 
-                gfc->pinfo->LAMEsfb[gr][ch][sfb] = -ifqstep*pretab[sfb];
-
-            if (sfb<SBPSY_l) {
-                assert(scalefac->l[sfb]>=0);  /* no scfsi! */
-		gfc->pinfo->LAMEsfb[gr][ch][sfb] -= ifqstep*scalefac->l[sfb];
-	    }
-        } /* for sfb */
-    } /* block type long */
+    } /* block type short */
     gfc->pinfo->LAMEqss     [gr][ch] = cod_info->global_gain;
     gfc->pinfo->LAMEmainbits[gr][ch] = cod_info->part2_3_length;
     gfc->pinfo->LAMEsfbits  [gr][ch] = cod_info->part2_length;
@@ -837,20 +793,21 @@ void set_frame_pinfo(
     for (gr = 0; gr < gfc->mode_gr; gr ++) {
         for (ch = 0; ch < gfc->channels_out; ch ++) {
             gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
-	    III_scalefac_t        scalefac_sav = cod_info->scalefac;
+	    int scalefac_sav[SFBMAX];
+	    memcpy(scalefac_sav, cod_info->scalefac, sizeof(scalefac_sav));
 
 	    /* reconstruct the scalefactors in case SCFSI was used 
 	     */
             if (gr == 1) {
 		int sfb;
 		for (sfb = 0; sfb < cod_info->sfb_lmax; sfb++) {
-		    if (cod_info->scalefac.l[sfb] < 0) /* scfsi */
-			cod_info->scalefac.l[sfb] = gfc->l3_side.tt[0][ch].scalefac.l[sfb];
+		    if (cod_info->scalefac[sfb] < 0) /* scfsi */
+			cod_info->scalefac[sfb] = gfc->l3_side.tt[0][ch].scalefac[sfb];
 		}
 	    }
 
 	    set_pinfo (gfp, cod_info, &ratio[gr][ch], gr, ch);
-	    cod_info->scalefac = scalefac_sav;
+	    memcpy(cod_info->scalefac, scalefac_sav, sizeof(scalefac_sav));
 	} /* for ch */
     }    /* for gr */
 }
