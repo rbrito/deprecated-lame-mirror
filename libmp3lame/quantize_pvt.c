@@ -505,10 +505,8 @@ int calc_xmin(
       for ( b = 1; b < 3; b++ ) {
         xmin = l3_xmin->s[sfb][b] * (1.0 - gfc->decay)
 	  +  l3_xmin->s[sfb][b-1] * gfc->decay;
-	if (l3_xmin->s[sfb][b] < xmin){
+	if (l3_xmin->s[sfb][b] < xmin)
 	    l3_xmin->s[sfb][b] = xmin;
-	    printf("%e\n", gfc->decay);
-	}
       }
     }
   }
