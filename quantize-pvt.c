@@ -348,8 +348,10 @@ void ms_convert(FLOAT8 xr[2][576],FLOAT8 xr_org[2][576])
 {
   int i;
   for ( i = 0; i < 576; i++ ) {
-    xr[0][i] = (xr_org[0][i]+xr_org[1][i])*(SQRT2*0.5);
-    xr[1][i] = (xr_org[0][i]-xr_org[1][i])*(SQRT2*0.5);
+    FLOAT8 l = xr_org[0][i];
+    FLOAT8 r = xr_org[1][i];
+    xr[0][i] = (l+r)*(SQRT2*0.5);
+    xr[1][i] = (l-r)*(SQRT2*0.5);
   }
 }
 
