@@ -235,7 +235,7 @@ typedef struct  {
 
   /* variables for newmdct.c */
   FLOAT8 sb_sample[2][2][18][SBLIMIT];
-  FLOAT8 mm[16][SBLIMIT - 1];
+  FLOAT8 mdct_work[32];
 
   /* variables for bitstream.c */
   /* mpeg1: buffer=511 bytes  smallest frame: 96-38(sideinfo)=58

@@ -31,11 +31,8 @@
 
 #define SCALE 32768
 
-static FLOAT8 enwindow[] = 
+static const FLOAT8 enwindow[] = 
 {
-  3.5780907e-02,1.7876148e-02,3.134727e-03,2.457142e-03,
-    9.71317e-04,  2.18868e-04, 1.01566e-04,  1.3828e-05,
-
   3.5758972e-02, 3.401756e-03,  9.83715e-04,   9.9182e-05,
       -4.77e-07,  1.03951e-04,  9.53674e-04, 2.841473e-03,
      1.2398e-05,  1.91212e-04, 2.283096e-03,1.6994476e-02,
@@ -111,6 +108,9 @@ static FLOAT8 enwindow[] =
       2.861e-06,  -6.0558e-05,  1.37329e-04, 5.462170e-03,
   2.9890060e-02, 4.570484e-03,  7.14302e-04,   4.6253e-05,
 
+  3.5780907e-02,1.7876148e-02,3.134727e-03,2.457142e-03,
+    9.71317e-04,  2.18868e-04, 1.01566e-04,  1.3828e-05,
+
   3.0526638e-02, 4.638195e-03,  7.47204e-04,   4.9591e-05,
    4.756451e-03,   2.1458e-05,  -6.9618e-05,    2.384e-06
 };
@@ -124,8 +124,6 @@ static FLOAT8 ca[8], cs[8];
 static FLOAT8 cos_s[NS / 2][NS / 2];
 static FLOAT8 cos_l[(NL / 2) * 12 + (NL / 6) * 4 + (NL / 18) * 2];
 static FLOAT8 win[4][36];
-
-#define work (&win[2][4])
 
 /************************************************************************
 *
@@ -141,76 +139,214 @@ static FLOAT8 win[4][36];
 *
 ************************************************************************/
 
-static void window_subband(lame_global_flags *gfp,short *xk, FLOAT8 d[SBLIMIT], FLOAT8 *in)
+/*
+ *      new IDCT routine written by Naoki Shibata
+ */
+INLINE static void idct32(FLOAT8 a[])
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
+    /* returns sum_j=0^31 a[j]*cos(PI*j*(k+1/2)/32), 0<=k<32 */
+
+    static const FLOAT8 costab[] = {
+	0.54119610014619701222,
+	1.3065629648763763537,
+
+	0.50979557910415917998,
+	2.5629154477415054814,
+	0.89997622313641556513,
+	0.60134488693504528634,
+
+	0.5024192861881556782,
+	5.1011486186891552563,
+	0.78815462345125020249,
+	0.64682178335999007679,
+	0.56694403481635768927,
+	1.0606776859903470633,
+	1.7224470982383341955,
+	0.52249861493968885462,
+
+	10.19000812354803287,
+	0.674808341455005678,
+	1.1694399334328846596,
+	0.53104259108978413284,	
+	2.0577810099534108446,
+	0.58293496820613388554,
+	0.83934964541552681272,
+	0.50547095989754364798,
+	3.4076084184687189804,
+	0.62250412303566482475,
+	0.97256823786196078263,
+	0.51544730992262455249,
+	1.4841646163141661852,
+	0.5531038960344445421,
+	0.74453627100229857749,
+	0.5006029982351962726,
+    };
+
     int i;
-    FLOAT8 s, t, *wp;
-    wp = enwindow;
-    {
-	t  =  xk[255];
-	t += (xk[223] - xk[287]) * *wp++;
-	t += (xk[191] + xk[319]) * *wp++;
-	t += (xk[159] - xk[351]) * *wp++;
-	t += (xk[127] + xk[383]) * *wp++;
-	t += (xk[ 95] - xk[415]) * *wp++;
-	t += (xk[ 63] + xk[447]) * *wp++;
-	t += (xk[ 31] - xk[479]) * *wp++;
-	in[15] = t;
-    }
 
-    for (i = 14; i >= 0; --i) {
-	short *x1 = &xk[i];
-	short *x2 = &xk[-i];
-	FLOAT8 w;
+    a[31] += a[29]; a[29] += a[27];
+    a[27] += a[25]; a[25] += a[23];
+    a[23] += a[21]; a[21] += a[19];
+    a[19] += a[17]; a[17] += a[15];
+    a[15] = -a[15] - a[13]; a[13] += a[11];
+    a[11] = -a[11] - a[ 9]; a[ 9] += a[ 7];
+    a[ 7] = -a[ 7] - a[ 5]; a[ 5] += a[ 3];
+    a[ 3] = -a[ 3] - a[ 1];
 
-	s = x2[270]; t = x1[240];
-	w = *wp++; s += x2[334] * w; t += x1[176] * w;
-	w = *wp++; s += x2[398] * w; t += x1[112] * w;
-	w = *wp++; s += x2[462] * w; t += x1[ 48] * w;
-	w = *wp++; s += x2[ 14] * w; t += x1[496] * w;
-	w = *wp++; s += x2[ 78] * w; t += x1[432] * w;
-	w = *wp++; s += x2[142] * w; t += x1[368] * w;
-	w = *wp++; s += x2[206] * w; t += x1[304] * w;
+    a[31] += a[27]; a[27] += a[23];
+    a[23] += a[19]; a[19] = a[15] - a[19];
+    a[15] = a[15] + a[11]; a[11] += a[ 7];
+    a[ 7] = -a[ 7] - a[ 3];
 
-	w = *wp++; s += x1[ 16] * w; t -= x2[494] * w;
-	w = *wp++; s += x1[ 80] * w; t -= x2[430] * w;
-	w = *wp++; s += x1[144] * w; t -= x2[366] * w;
-	w = *wp++; s += x1[208] * w; t -= x2[302] * w;
-	w = *wp++; s -= x1[272] * w; t += x2[238] * w;
-	w = *wp++; s -= x1[336] * w; t += x2[174] * w;
-	w = *wp++; s -= x1[400] * w; t += x2[110] * w;
-	w = *wp++; s -= x1[464] * w; t += x2[ 46] * w;
+    a[30] = -a[30] - a[26]; a[26] += a[22];
+    a[22] = -a[22] - a[18]; a[18] += a[14];
+    a[14] = a[14] + a[10]; a[10] += a[ 6];
+    a[ 6] = -a[ 6] - a[ 2];
 
-	in[30 - i] = s;
-	in[i] = t;
-    }
+    a[31] += a[23]; a[23] -= a[15];    a[15] -= a[ 7];
+    a[30] += a[22]; a[22] -= a[14];    a[14] -= a[ 6];
+    a[29] += a[21]; a[21] += a[13];    a[13] = -a[13] - a[ 5];
+    a[28] += a[20]; a[20] += a[12];    a[12] = -a[12] - a[ 4];
+
+    a[31] = a[15]-a[31];
+    a[30] = a[14]-a[30];
+    a[29] = a[13]-a[29];
+    a[28] = a[12]-a[28];
+    a[27] = a[11]-a[27];
+    a[26] = a[26]+a[10];
+    a[25] = a[25]+a[ 9];
+    a[24] = a[24]+a[ 8];
 
     {
-	s  = xk[239];
-	s += xk[175] * *wp++;
-	s += xk[111] * *wp++;
-	s += xk[ 47] * *wp++;
-	s -= xk[303] * *wp++;
-	s -= xk[367] * *wp++;
-	s -= xk[431] * *wp++;
-	s -= xk[495] * *wp++;
-	/* in[-1] = s;  */
-    }
-
-    in++;
-    wp = &gfc->mm[0][0];
-    for (i = 15; i >= 0; --i) {
-	int j;
-	FLOAT8 s0 = s; /* mm[i][0] is always 1 */
-	FLOAT8 s1 = t * *wp++;
-	for (j = 14; j >= 0; j--) {
-	    s0 += *wp++ * *in++;
-	    s1 += *wp++ * *in++;
+	for (i = 0; i < 8; i++) {
+	    FLOAT8 xr;
+	    xr = a[i+16] * (SQRT2*0.5);
+	    a[i+16] = (a[i] - xr);
+	    a[i   ] = (a[i] + xr);
+	    xr = -a[i+24] * (SQRT2*0.5);
+	    a[i+24] = (a[i+8] - xr);
+	    a[i+ 8] = (a[i+8] + xr);
 	}
-	in -= 30;
-	d[i     ] = s0 + s1;
-	d[31 - i] = s0 - s1;
+    }
+
+    {
+	FLOAT8 const *xp = costab;
+	int p0,p1;
+	for (i = 0; i < 8; i++) {
+	    FLOAT8 xr;
+
+	    xr = a[i+24] * xp[0];
+	    a[i+24] = (a[i] - xr);
+	    a[i   ] = (a[i] + xr);
+
+	    xr = a[i+8] * xp[1];
+	    a[i+ 8] = (a[i+16] - xr);
+	    a[i+16] = (a[i+16] + xr);
+	}
+
+	xp += 2;
+
+	for (i = 0; i < 4; i++) {
+	    FLOAT8 xr;
+
+	    xr = a[i+28] * xp[0];
+	    a[i+28] = (a[i] - xr);
+	    a[i   ] = (a[i] + xr);
+
+	    xr = a[i+4] * xp[1];
+	    a[i+ 4] = (a[i+24] - xr);
+	    a[i+24] = (a[i+24] + xr);
+
+	    xr = a[i+20] * xp[2];
+	    a[i+20] = (a[i+8] - xr);
+	    a[i+ 8] = (a[i+8] + xr);
+
+	    xr = a[i+12] * xp[3];
+	    a[i+12] = (a[i+16] - xr);
+	    a[i+16] = (a[i+16] + xr);
+	}
+	xp += 4;
+
+	for (i = 0; i < 4; i++) {
+	    FLOAT8 xr;
+
+	    xr = a[30-i*4] * xp[0];
+	    a[30-i*4] = (a[i*4] - xr);
+	    a[   i*4] = (a[i*4] + xr);
+
+	    xr = a[ 2+i*4] * xp[1];
+	    a[ 2+i*4] = (a[28-i*4] - xr);
+	    a[28-i*4] = (a[28-i*4] + xr);
+
+	    xr = a[31-i*4] * xp[0];
+	    a[31-i*4] = (a[1+i*4] - xr);
+	    a[ 1+i*4] = (a[1+i*4] + xr);
+
+	    xr = a[ 3+i*4] * xp[1];
+	    a[ 3+i*4] = (a[29-i*4] - xr);
+	    a[29-i*4] = (a[29-i*4] + xr);
+
+	    xp += 2;
+	}
+
+	p0 = 30;
+	p1 = 1;
+	do {
+	    FLOAT8 xr = a[p1] * *xp++;
+	    a[p1] = (a[p0] - xr);
+	    a[p0] = (a[p0] + xr);
+	    p0 -= 2; p1 += 2;
+	} while (p0 >= 0);
+    }
+}
+
+INLINE static void window_subband(short *x1, FLOAT8 a[SBLIMIT])
+{
+    int i;
+    FLOAT8 const *wp = enwindow;
+
+    short *x2 = &x1[238-14-286];
+
+    for (i = -15; i < 0; i++) {
+	FLOAT w, s, t;
+
+	w = wp[ 0]; s  = x2[  32] * w; t  = x1[- 32] * w;
+	w = wp[ 1]; s += x2[  96] * w; t += x1[- 96] * w;
+	w = wp[ 2]; s += x2[ 160] * w; t += x1[-160] * w;
+	w = wp[ 3]; s += x2[ 224] * w; t += x1[-224] * w;
+	w = wp[ 4]; s += x2[-224] * w; t += x1[ 224] * w;
+	w = wp[ 5]; s += x2[-160] * w; t += x1[ 160] * w;
+	w = wp[ 6]; s += x2[- 96] * w; t += x1[  96] * w;
+	w = wp[ 7]; s += x2[- 32] * w; t += x1[  32] * w;
+
+	w = wp[ 8]; s += x1[-256] * w; t -= x2[ 256] * w;
+	w = wp[ 9]; s += x1[-192] * w; t -= x2[ 192] * w;
+	w = wp[10]; s += x1[-128] * w; t -= x2[ 128] * w;
+	w = wp[11]; s += x1[- 64] * w; t -= x2[  64] * w;
+	w = wp[12]; s -= x1[   0] * w; t += x2[   0] * w;
+	w = wp[13]; s -= x1[  64] * w; t += x2[- 64] * w;
+	w = wp[14]; s -= x1[ 128] * w; t += x2[-128] * w;
+	w = wp[15]; s -= x1[ 192] * w; t += x2[-192] * w;
+	wp += 16;
+
+	*--a = t;
+	a[(i+16)*2] = s;
+	x1--;
+	x2++;
+    }
+    {
+	FLOAT8 s,t;
+	t  =  x1[- 16] * wp[0];               s  = x1[ -32] * wp[ 8];
+	t += (x1[- 48] - x1[ 16]) * wp[1];    s += x1[ -96] * wp[ 9];
+	t += (x1[- 80] + x1[ 48]) * wp[2];    s += x1[-160] * wp[10];
+	t += (x1[-112] - x1[ 80]) * wp[3];    s += x1[-224] * wp[11];
+	t += (x1[-144] + x1[112]) * wp[4];    s -= x1[  32] * wp[12];
+	t += (x1[-176] - x1[144]) * wp[5];    s -= x1[  96] * wp[13];
+	t += (x1[-208] + x1[176]) * wp[6];    s -= x1[ 160] * wp[14];
+	t += (x1[-240] - x1[208]) * wp[7];    s -= x1[ 224] * wp[15];
+
+	a[15] = t;
+	a[-1] = s;
     }
 }
 
@@ -323,6 +459,13 @@ static void mdct_long(FLOAT8 *out, FLOAT8 *in)
 }
 
 
+static const int order[] = {
+    0,  16,  8, 24,  4,  20,  12,  28,
+    2,  18, 10, 26,  6,  22,  14,  30,
+    1,  17,  9, 25,  5,  21,  13,  29,
+    3,  19, 11, 27,  7,  23,  15,  31
+};
+
 void mdct_sub48(lame_global_flags *gfp,
     short *w0, short *w1,
     FLOAT8 mdct_freq[2][2][576],
@@ -341,25 +484,41 @@ void mdct_sub48(lame_global_flags *gfp,
 	init++;
     }
 
-    wk = w0;
+    wk = w0 + 286;
     /* thinking cache performance, ch->gr loop is better than gr->ch loop */
     for (ch = 0; ch < gfc->stereo; ch++) {
 	for (gr = 0; gr < gfc->mode_gr; gr++) {
 	    int	band;
-	    FLOAT8 *mdct_enc = mdct_freq[gr][ch];
+	    FLOAT8 *mdct_enc = &mdct_freq[gr][ch][0];
 	    gr_info *gi = &(l3_side->gr[gr].ch[ch].tt);
 	    FLOAT8 *samp = gfc->sb_sample[ch][1 - gr][0];
 
 	    for (k = 0; k < 18 / 2; k++) {
-		window_subband(gfp,wk, samp, work);
-		window_subband(gfp,wk + 32, samp + 32, work);
+		window_subband(wk, samp + 16);
+		idct32(samp);
+		window_subband(wk + 32, samp + 32+16);
+		idct32(samp+32);
 		/*
 		 * Compensate for inversion in the analysis filter
 		 */
-		for (band = 1; band < 32; band += 2)
-		    samp[band + 32] *= -1.0;
 		samp += 64;
 		wk += 64;
+		samp[16+32-64] *= -1;
+		samp[24+32-64] *= -1;
+		samp[20+32-64] *= -1;
+		samp[28+32-64] *= -1;
+		samp[18+32-64] *= -1;
+		samp[26+32-64] *= -1;
+		samp[22+32-64] *= -1;
+		samp[30+32-64] *= -1;
+		samp[17+32-64] *= -1;
+		samp[25+32-64] *= -1;
+		samp[21+32-64] *= -1;
+		samp[29+32-64] *= -1;
+		samp[19+32-64] *= -1;
+		samp[27+32-64] *= -1;
+		samp[23+32-64] *= -1;
+		samp[31+32-64] *= -1;
 	    }
 
 
@@ -373,12 +532,12 @@ void mdct_sub48(lame_global_flags *gfp,
 		if (gfc->lowpass1 < freq && freq < gfc->lowpass2) {
 		  amp = cos((PI/2)*(gfc->lowpass1-freq)/(gfc->lowpass2-gfc->lowpass1));
 		  for (k=0; k<18; k++) 
-		    gfc->sb_sample[ch][1-gr][k][band]*=amp;
+		    gfc->sb_sample[ch][1-gr][k][order[band]]*=amp;
 		}
 		if (gfc->highpass1 < freq && freq < gfc->highpass2) {
 		  amp = cos((PI/2)*(gfc->highpass2-freq)/(gfc->highpass2-gfc->highpass1));
 		  for (k=0; k<18; k++) 
-		    gfc->sb_sample[ch][1-gr][k][band]*=amp;
+		    gfc->sb_sample[ch][1-gr][k][order[band]]*=amp;
 		}
 	      }
 	    }
@@ -392,6 +551,8 @@ void mdct_sub48(lame_global_flags *gfp,
 	    for (band = 0; band < 32; band++, mdct_enc += 18) 
               {
 		int type = gi->block_type;
+		int band_swapped;
+		band_swapped = order[band];
 #ifdef ALLOW_MIXED
 		if (gi->mixed_block_flag && band < 2)
 		    type = 0;
@@ -402,39 +563,39 @@ void mdct_sub48(lame_global_flags *gfp,
 		  if (type == SHORT_TYPE) {
 		    for (k = 2; k >= 0; --k) {
 		      FLOAT8 w1 = win[SHORT_TYPE][k];
-		      work[k] =
-			gfc->sb_sample[ch][gr][k+6][band] * w1 -
-			gfc->sb_sample[ch][gr][11-k][band];
-		      work[k+3] =
-			gfc->sb_sample[ch][gr][k+12][band] +
-			gfc->sb_sample[ch][gr][17-k][band] * w1;
+		      gfc->mdct_work[k] =
+			gfc->sb_sample[ch][gr][k+6][band_swapped] * w1 -
+			gfc->sb_sample[ch][gr][11-k][band_swapped];
+		      gfc->mdct_work[k+3] =
+			gfc->sb_sample[ch][gr][k+12][band_swapped] +
+			gfc->sb_sample[ch][gr][17-k][band_swapped] * w1;
 		      
-		      work[k+6] =
-			gfc->sb_sample[ch][gr][k+12][band] * w1 -
-			gfc->sb_sample[ch][gr][17-k][band];
-		      work[k+9] =
-			gfc->sb_sample[ch][1-gr][k][band] +
-			gfc->sb_sample[ch][1-gr][5-k][band] * w1;
+		      gfc->mdct_work[k+6] =
+			gfc->sb_sample[ch][gr][k+12][band_swapped] * w1 -
+			gfc->sb_sample[ch][gr][17-k][band_swapped];
+		      gfc->mdct_work[k+9] =
+			gfc->sb_sample[ch][1-gr][k][band_swapped] +
+			gfc->sb_sample[ch][1-gr][5-k][band_swapped] * w1;
 		      
-		      work[k+12] =
-			gfc->sb_sample[ch][1-gr][k][band] * w1 -
-			gfc->sb_sample[ch][1-gr][5-k][band];
-		      work[k+15] =
-			gfc->sb_sample[ch][1-gr][k+6][band] +
-			gfc->sb_sample[ch][1-gr][11-k][band] * w1;
+		      gfc->mdct_work[k+12] =
+			gfc->sb_sample[ch][1-gr][k][band_swapped] * w1 -
+			gfc->sb_sample[ch][1-gr][5-k][band_swapped];
+		      gfc->mdct_work[k+15] =
+			gfc->sb_sample[ch][1-gr][k+6][band_swapped] +
+			gfc->sb_sample[ch][1-gr][11-k][band_swapped] * w1;
 		    }
-		    mdct_short(mdct_enc, work);
+		    mdct_short(mdct_enc, gfc->mdct_work);
 		  } else {
 		    for (k = 8; k >= 0; --k) {
-		      work[k] =
-			win[type][k  ] * gfc->sb_sample[ch][gr][k   ][band]
-			- win[type][k+9] * gfc->sb_sample[ch][gr][17-k][band];
+		      gfc->mdct_work[k] =
+			win[type][k  ] * gfc->sb_sample[ch][gr][k   ][band_swapped]
+			- win[type][k+9] * gfc->sb_sample[ch][gr][17-k][band_swapped];
 		      
-		      work[9+k] =
-			win[type][k+18] * gfc->sb_sample[ch][1-gr][k   ][band]
-			+ win[type][k+27] * gfc->sb_sample[ch][1-gr][17-k][band];
+		      gfc->mdct_work[9+k] =
+			win[type][k+18] * gfc->sb_sample[ch][1-gr][k   ][band_swapped]
+			+ win[type][k+27] * gfc->sb_sample[ch][1-gr][17-k][band_swapped];
 		    }
-		    mdct_long(mdct_enc, work);
+		    mdct_long(mdct_enc, gfc->mdct_work);
 		  }
 		}
 		
@@ -456,7 +617,7 @@ void mdct_sub48(lame_global_flags *gfp,
 		}
 	      }
 	}
-	wk = w1;
+	wk = w1 + 286;
 	if (gfc->mode_gr == 1) {
 	    memcpy(gfc->sb_sample[ch][0], gfc->sb_sample[ch][1], 576 * sizeof(FLOAT8));
 	}
@@ -467,10 +628,8 @@ void mdct_sub48(lame_global_flags *gfp,
 
 void mdct_init48(lame_global_flags *gfp)
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
     int i, k, m;
     FLOAT8 sq;
-    FLOAT8 max;
 
     /* prepare the aliasing reduction butterflies */
     for (k = 0; k < 8; k++) {
@@ -544,45 +703,6 @@ void mdct_init48(lame_global_flags *gfp)
 	} while (--j >= 0);
     }
 
-    max = enwindow[256 - 8];
-    {
-	FLOAT8 *wp = enwindow;
-	FLOAT8 *wr = enwindow;
-	FLOAT8 mmax[32 - 1];
-
-	{
-	    FLOAT8 w = *wp++;
-	    mmax[15] = w / max;
-
-	    for (k = 0; k < 7; k++) {
-		*wr++ = *wp++ / w;
-	    }
-	}
-
-	for (i = 14; i >= 0; --i) {
-	    FLOAT8 w = *wp++;
-	    mmax[i] = mmax[30 - i] = w / max;
-
-	    for (k = 0; k < 15; k++) {
-		*wr++ = *wp++ / w;
-	    }
-	}
-
-	{
-	    wp++;
-	    for (k = 0; k < 7; k++) {
-		*wr++ = *wp++ / max;
-	    }
-	}
-
-	wp = &gfc->mm[0][0];
-	for (i = 15; i >= 0; --i) {
-	    for (k = 1; k < 32; k++) {
-		*wp++ = cos((2 * i + 1) * k * PI/64) * mmax[k - 1];
-	    }
-	}
-    }
-
     /* swap window data*/
     for (k = 0; k < 4; k++) {
 	FLOAT8 a;
@@ -613,15 +733,15 @@ void mdct_init48(lame_global_flags *gfp)
     }
 
     for (i = 0; i < 36; i++) {
-	win[0][i] *= max / SCALE;
-	win[1][i] *= max / SCALE;
-	win[3][i] *= max / SCALE;
+	win[0][i] /= SCALE;
+	win[1][i] /= SCALE;
+	win[3][i] /= SCALE;
     }
 
     /* type 2(short)*/
     sq = 4.0 / NS;
     for (i = 0; i < NS / 4; i++) {
-	FLOAT8 w2 = cos(PI/12 * (i + 0.5)) * max / SCALE * sq;
+	FLOAT8 w2 = cos(PI/12 * (i + 0.5)) / SCALE * sq;
 	win[SHORT_TYPE][i] = tan(PI/12 * (i + 0.5));
 
 	for (m = 0; m < NS / 2; m++) {
