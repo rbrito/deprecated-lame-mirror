@@ -322,13 +322,12 @@ static void quantize_xrpow(const FLOAT *xp, int *pi, FLOAT istep, gr_info * cons
 
     iData = pi;
 
-    /* bad way to check if global_gain is unchanged
-    since last call.
-    It might also be possible to re-use previous data
-    even when global_gain is changed */
-    prev_data_use = (prev_noise && 
-                    (cod_info->block_type != SHORT_TYPE) && 
-                    (cod_info->global_gain == prev_noise->step[21]));
+    /* Reusing previously computed data does not seems to work if global gain
+    is changed. Finding why it behaves this way would allow to use a cache of 
+    previously computed values (let's 10 cached values per sfb) that would 
+    probably provide a noticeable speedup*/
+    prev_data_use = (prev_noise  && 
+                    (cod_info->global_gain == prev_noise->global_gain));
 
     if (cod_info->block_type == SHORT_TYPE)
         sfbmax = 38;

@@ -737,6 +737,10 @@ int  calc_noise(
             }
         }
 
+        if (prev_noise) {
+            /* save noise values */
+            prev_noise->global_gain = cod_info->global_gain;;
+        }
 
 
 	    /*tot_noise *= Max(noise, 1E-20); */
