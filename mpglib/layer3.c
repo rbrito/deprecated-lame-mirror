@@ -482,8 +482,12 @@ static void III_get_side_info_2(struct III_sideinfo *si,int stereo,
          }
          /* region_count/start parameters are implicit in this case. */       
 /* check this again! */
-         if(gr_infos->block_type == 2)
-           gr_infos->region1start = 36>>1;
+         if(gr_infos->block_type == 2) {
+            if (sfreq == 8)
+                gr_infos->region1start = 36;
+            else
+                gr_infos->region1start = 36>>1;
+         }
          else if(sfreq == 8)
 /* check this for 2.5 and sfreq=8 */
            gr_infos->region1start = 108>>1;
