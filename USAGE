@@ -193,7 +193,7 @@ average bitrate encoding (aka Safe VBR)
 --abr n
 
 turns on encoding with a targeted average bitrate of n kbits, allowing
-to use frames of different sizes.  The allowed range of n is 4-310,
+to use frames of different sizes.  The allowed range of n is 8-320,
 you can use any integer value within that range.
 
 It can be combined with the -b and -B switches like
@@ -628,20 +628,13 @@ n=0..9.  Specifies the value of VBR_q.  default=4.  0=highest quality.
 
 How is VBR_q used?
 
-OVER = number of scalefactor bands with distortion that exceeds the
-allowed distortion given by the masking thresholds.  OVER is computed
-by outer_loop, and the masking thresholds are computed by the
-psycho-acoustic model. 
-
-VBR_q = the minimum value of OVER which is to be allowed.
-LAME will choose the smallest bitrate for which OVER <= VBR_q.  
-(a minimum allowed bitrate can be set with -b.  default=64kbs)
-
-If the frame contains short blocks, then the minimum bitrate is made
-much larger since the OVER does not adequately measure distortion
-caused by pre-echo.  LAME uses bitrates of at least 160kbs for short
-blocks to make sure they sound good.
-
+The value of VBR_q influences two basic parameters of LAME's psycho
+acoustics:
+ a) the absolute threshold of hearing
+ b) the sample to noise ratio
+The lower the VBR_q value the lower the injected quantization noise
+will be.
+ 
 *NOTE* No psy-model is perfect, so there can often be distortion which
 is audible even though the psy-model claims it is not!  Thus using a
 small minimum bitrate can result in some aggressive compression and

@@ -92,7 +92,9 @@ int gtkmakeframe(void)
 
   gfc->pinfo = pinfo;
   mpg123_pinfo = pinfo;
-  if (gfp->input_format == sf_mp3) {
+  if (gfp->input_format == sf_mp1 ||
+      gfp->input_format == sf_mp2 ||
+      gfp->input_format == sf_mp3) {
     iread=lame_readframe(gfp,Buffer);
     gfp->frameNum++;
   }else {
@@ -1265,11 +1267,15 @@ int gtkcontrol(lame_global_flags *gfp2)
     gfc=gfp->internal_flags;
 
     /* set some global defaults/variables */
-    gtkinfo.filetype = (gfp->input_format == sf_mp3);
+    gtkinfo.filetype = (gfp->input_format == sf_mp1 ||
+                        gfp->input_format == sf_mp2 ||
+                        gfp->input_format == sf_mp3);
     gtkinfo.msflag=0;
     gtkinfo.chflag=0;
     gtkinfo.kbflag=0;
-    gtkinfo.flag123 = (gfp->input_format == sf_mp3); /* MP3 file=use mpg123 output */
+    gtkinfo.flag123 = (gfp->input_format == sf_mp1 ||
+                       gfp->input_format == sf_mp2 ||
+                       gfp->input_format == sf_mp3); /* MP3 file=use mpg123 output */
     gtkinfo.pupdate=0;
     gtkinfo.avebits = 0;
     gtkinfo.maxbits = 0;

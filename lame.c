@@ -706,18 +706,24 @@ void lame_print_config(lame_global_flags *gfp)
 	      gfp->out_samplerate/1000.0);
     }else
     if (gfp->VBR==vbr_mt || gfp->VBR==vbr_rh)
-      MSGF("Encoding as %.1f kHz VBR(q=%i) %s MPEG%i LayerIII (%4.1fx estimated) qval=%i\n",
+      MSGF("Encoding as %.1f kHz VBR(q=%i) %s MPEG-%g LayerIII (%4.1fx estimated) qval=%i\n",
 	      gfp->out_samplerate/1000.0,
-	      gfp->VBR_q,mode_names[gfp->mode],2-gfp->version,gfp->compression_ratio,gfp->quality);
+	      gfp->VBR_q,mode_names[gfp->mode],
+              2-gfp->version+0.5*(gfp->out_samplerate<16000),
+              gfp->compression_ratio,gfp->quality);
     else
     if (gfp->VBR==vbr_abr)
-      MSGF("Encoding as %.1f kHz average %d kbps %s MPEG%i LayerIII (%4.1fx) qval=%i\n",
+      MSGF("Encoding as %.1f kHz average %d kbps %s MPEG-%g LayerIII (%4.1fx) qval=%i\n",
 	      gfp->out_samplerate/1000.0,
-	      gfp->VBR_mean_bitrate_kbps,mode_names[gfp->mode],2-gfp->version,gfp->compression_ratio,gfp->quality);
+	      gfp->VBR_mean_bitrate_kbps,mode_names[gfp->mode],
+              2-gfp->version+0.5*(gfp->out_samplerate<16000),
+              gfp->compression_ratio,gfp->quality);
     else {
-      MSGF("Encoding as %.1f kHz %d kbps %s MPEG%i LayerIII (%4.1fx)  qval=%i\n",
+      MSGF("Encoding as %.1f kHz %d kbps %s MPEG-%g LayerIII (%4.1fx)  qval=%i\n",
 	      gfp->out_samplerate/1000.0,gfp->brate,
-	      mode_names[gfp->mode],2-gfp->version,gfp->compression_ratio,gfp->quality);
+	      mode_names[gfp->mode],
+              2-gfp->version+0.5*(gfp->out_samplerate<16000),
+              gfp->compression_ratio,gfp->quality);
     }
   }
   if (gfp->free_format) {

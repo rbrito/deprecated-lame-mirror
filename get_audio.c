@@ -110,7 +110,9 @@ int get_audio(lame_global_flags *gfp,short buffer[2][1152],int stereo)
   }
 
 
-  if (gfp->input_format==sf_mp3) {
+  if (gfp->input_format==sf_mp1 ||
+      gfp->input_format==sf_mp2 ||
+      gfp->input_format==sf_mp3) {
     /* decode an mp3 file for the input */
     samples_read=read_samples_mp3(gfp,gfp->musicin,buffer,num_channels);
   } else if (gfp->input_format==sf_ogg) {
@@ -259,9 +261,29 @@ int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip)
   if (gfp->input_format==sf_mp3) {
     /* mp3 decoder has a 528 sample delay, plus user supplied "skip" */
     skip+=528 + 1;
-    MSGF("input:    %s %.1fkHz MPEG%i %i channel LayerIII\n",
+    MSGF("input:    %s %.1fkHz MPEG-%g %i channel LayerIII\n",
       (strcmp(gfp->inPath, "-")? gfp->inPath : "stdin"),
-      gfp->in_samplerate/1000.0,2-gfp->version,gfp->num_channels);
+      gfp->in_samplerate/1000.0,
+      2-gfp->version+0.5*(gfp->out_samplerate<16000),
+      gfp->num_channels);
+
+  }else if (gfp->input_format==sf_mp1) {
+    /* mp3 decoder has a 528 sample delay, plus user supplied "skip" */
+    skip+=528 + 1;
+    MSGF("input:    %s %.1fkHz MPEG-%g %i channel LayerI\n",
+      (strcmp(gfp->inPath, "-")? gfp->inPath : "stdin"),
+      gfp->in_samplerate/1000.0,
+      2-gfp->version+0.5*(gfp->out_samplerate<16000),
+      gfp->num_channels);
+
+  }else if (gfp->input_format==sf_mp2) {
+    /* mp3 decoder has a 528 sample delay, plus user supplied "skip" */
+    skip+=528 + 1;
+    MSGF("input:    %s %.1fkHz MPEG-%g %i channel LayerII\n",
+      (strcmp(gfp->inPath, "-")? gfp->inPath : "stdin"),
+      gfp->in_samplerate/1000.0,
+      2-gfp->version+0.5*(gfp->out_samplerate<16000),
+      gfp->num_channels);
 
   }else{
     /* other formats have no delay */
@@ -354,7 +376,7 @@ int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip)
 void CloseSndFile(sound_file_format input,FILE *musicin)
 {
   SNDFILE *gs_pSndFileIn=(SNDFILE*)musicin;
-  if (input==sf_mp3) {
+  if (input==sf_mp1 || input==sf_mp2 || input==sf_mp3) {
 #ifndef AMIGA_MPEGA
     if (fclose(musicin) != 0){
       ERRORF("Could not close audio input file\n");
@@ -385,7 +407,9 @@ FILE * OpenSndFile(lame_global_flags *gfp)
   mp3data_struct mp3data;
 
   gfc->input_bitrate=0;
-  if (gfp->input_format==sf_mp3) {
+  if (gfp->input_format==sf_mp1 ||
+      gfp->input_format==sf_mp2 ||
+      gfp->input_format==sf_mp3) {
 #ifdef AMIGA_MPEGA
     if (-1==lame_decode_initfile(lpszFileName,&mp3data)) {
       ERRORF("Error reading headers in mp3 input file %s.\n", lpszFileName);
@@ -542,7 +566,9 @@ FILE * OpenSndFile(lame_global_flags *gfp)
 #endif /* __riscos__ */
 
       /* try file size, assume 2 bytes per sample */
-      if (gfp->input_format == sf_mp3) {
+      if (gfp->input_format == sf_mp1 ||
+          gfp->input_format == sf_mp2 ||
+          gfp->input_format == sf_mp3) {
 	FLOAT totalseconds = (sb.st_size*8.0/(1000.0*gfc->input_bitrate));
 	gfp->num_samples= totalseconds*gfp->in_samplerate;
       }else{
@@ -1018,7 +1044,9 @@ FILE * OpenSndFile(lame_global_flags *gfp)
     }
   }
 
-  if (gfp->input_format==sf_mp3) {
+  if (gfp->input_format==sf_mp1 ||
+      gfp->input_format==sf_mp2 ||
+      gfp->input_format==sf_mp3) {
 #ifdef AMIGA_MPEGA
     if (-1==lame_decode_initfile(inPath,&mp3data)) {
       ERRORF("Error reading headers in mp3 input file %s.\n", inPath);
@@ -1081,7 +1109,9 @@ FILE * OpenSndFile(lame_global_flags *gfp)
 #endif
 
       /* try file size, assume 2 bytes per sample */
-      if (gfp->input_format == sf_mp3) {
+      if (gfp->input_format == sf_mp1 ||
+          gfp->input_format == sf_mp2 ||
+          gfp->input_format == sf_mp3) {
 	if (gfc->input_bitrate>0) {
 	  FLOAT totalseconds = (sb.st_size*8.0/(1000.0*gfc->input_bitrate));
 	  gfp->num_samples= totalseconds*gfp->in_samplerate;

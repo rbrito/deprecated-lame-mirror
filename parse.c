@@ -109,7 +109,9 @@ void lame_help(lame_global_flags *gfp,char *name)  /* print syntax & exit */
   PRINTF1("    -r              input is raw pcm\n");
   PRINTF1("    -x              force byte-swapping of input\n");
   PRINTF1("    -s sfreq        sampling frequency of input file(kHz) - default 44.1kHz\n");
-  PRINTF1("    --mp3input      input file is a MP3 file\n");
+  PRINTF1("    --mp1input      input file is a MPEG LayerI   file\n");
+  PRINTF1("    --mp2input      input file is a MPEG LayerII  file\n");
+  PRINTF1("    --mp3input      input file is a MPEG LayerIII file\n");
   PRINTF1("    --ogginput      input file is a Ogg Vorbis file\n");
   PRINTF1("\n");
   PRINTF1("  Operational options:\n");
@@ -323,12 +325,18 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	  argUsed=1;
 	  gfp->VBR = vbr_abr; 
 	  gfp->VBR_mean_bitrate_kbps = atoi(nextArg);
-	  /* values larger than 4000 are bps (like Fraunhofer), so it's strange
+	  /* values larger than 8000 are bps (like Fraunhofer), so it's strange
              to get 320000 bps MP3 when specifying 8000 bps MP3 */
-	  if ( gfp -> VBR_mean_bitrate_kbps >= 4000 )
+	  if ( gfp -> VBR_mean_bitrate_kbps >= 8000 )
 	      gfp -> VBR_mean_bitrate_kbps = ( gfp -> VBR_mean_bitrate_kbps + 500 ) / 1000;
-	  gfp->VBR_mean_bitrate_kbps = Min(gfp->VBR_mean_bitrate_kbps,310); 
-	  gfp->VBR_mean_bitrate_kbps = Max(gfp->VBR_mean_bitrate_kbps,4); 
+	  gfp->VBR_mean_bitrate_kbps = Min(gfp->VBR_mean_bitrate_kbps,320); 
+	  gfp->VBR_mean_bitrate_kbps = Max(gfp->VBR_mean_bitrate_kbps,8); 
+	}
+	else if (strcmp(token, "mp1input")==0) {
+	  gfp->input_format=sf_mp1;
+	}
+	else if (strcmp(token, "mp2input")==0) {
+	  gfp->input_format=sf_mp2;
 	}
 	else if (strcmp(token, "mp3input")==0) {
 	  gfp->input_format=sf_mp3;
@@ -839,17 +847,26 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 
 
   /* if user did not explicitly specify input is mp3, check file name */
-  if (gfp->input_format != sf_mp3 || gfp->input_format != sf_ogg) {
-    if (!(strcmp((char *) &gfp->inPath[strlen(gfp->inPath)-4],".mp3")))
-      gfp->input_format = sf_mp3;
-    if (!(strcmp((char *) &gfp->inPath[strlen(gfp->inPath)-4],".mp2")))
+  if (gfp->input_format != sf_mp1 || 
+      gfp->input_format != sf_mp2 ||
+      gfp->input_format != sf_mp3 ||
+      gfp->input_format != sf_ogg) {
+    if (!(strcmp((char *) &gfp->inPath[strlen(gfp->inPath)-4],".mpg")))
+      gfp->input_format = sf_mp1;
+    else if (!(strcmp((char *) &gfp->inPath[strlen(gfp->inPath)-4],".mp1")))
+      gfp->input_format = sf_mp1;
+    else if (!(strcmp((char *) &gfp->inPath[strlen(gfp->inPath)-4],".mp2")))
+      gfp->input_format = sf_mp2;
+    else if (!(strcmp((char *) &gfp->inPath[strlen(gfp->inPath)-4],".mp3")))
       gfp->input_format = sf_mp3;
     else if (!(strcmp((char *) &gfp->inPath[strlen(gfp->inPath)-4],".ogg")))
       gfp->input_format = sf_ogg;
   }
   
 #if !(defined HAVEMPGLIB || defined AMIGA_MPEGA)
-  if (gfp->input_format == sf_mp3) {
+  if (gfp->input_format == sf_mp1 ||
+      gfp->input_format == sf_mp2 ||
+      gfp->input_format == sf_mp3) {
     ERRORF("Error: libmp3lame not compiled with mp3 *decoding* support \n");
     LAME_ERROR_EXIT();
   }

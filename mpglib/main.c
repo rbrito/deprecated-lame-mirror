@@ -219,12 +219,13 @@ int lame_decode_fromfile(FILE *fd, short pcm_l[], short pcm_r[],mp3data_struct *
     mp3data->samplerate = freqs[mp.fr.sampling_frequency];
     /* bitrate formula works for free bitrate also */
     mp3data->bitrate = .5 + 8*(4+mp.fsizeold)*freqs[mp.fr.sampling_frequency]/
-      (1000.0*576*(2-mp.fr.lsf));
+      (1000.0*(mp.fr.lay==1?192:576)*(2-mp.fr.lsf));
     /*    write(1,out,size); */
     outsize = size/(2*(stereo));
-    if ((outsize!=576) && (outsize!=1152)) {
+    if ((outsize!=1152) && (outsize!=576) &&
+        (outsize!= 384) && (outsize!=192)) {
       fprintf(stderr,"Oops: mpg123 returned more than one frame!  Cant handle this... \n");
-    }
+     }
 
     for (j=0; j<stereo; j++)
       for (i=0; i<outsize; i++) 
