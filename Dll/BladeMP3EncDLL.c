@@ -411,12 +411,22 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 	
 
 	// First set all the preset options
-	PresetOptions(&gf,lameConfig.format.LHV1.nPreset);
+	if ((int)lameConfig.format.LHV1.nPreset>=(int)LQP_PHONE)
+		PresetOptions(&gf,lameConfig.format.LHV1.nPreset);
 
 	lame_init_params(&gf);	
 
 	//LAME encoding call will accept any number of samples.  
-	*dwSamples=1152*gf.num_channels;
+	if (gf.version==0)
+	{
+		// For MPEG-II, only 576 samples per frame per channel
+		*dwSamples=576*gf.num_channels;
+	}
+	else
+	{
+		// For MPEG-I, 1152 samples per frame per channel
+		*dwSamples=1152*gf.num_channels;
+	}
 
 	// Set the input sample buffer size, so we know what we can expect
 	dwSampleBufferSize=*dwSamples;
