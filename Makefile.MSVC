@@ -395,8 +395,14 @@ libmp3lame/i386/cpu_feat.obj: libmp3lame/i386/cpu_feat.nas
 		libmp3lame/i386/cpu_feat.nas \
 		-o libmp3lame/i386/cpu_feat.obj
 
+libmp3lame/i386/scalar.obj: libmp3lame/i386/scalar.nas
+	@echo assemble scalar multiplication routines, using NASM the Netwide Assembler
+	@nasmw -f win32 -i libmp3lame/i386/ -DWIN32 \
+		libmp3lame/i386/scalar.nas \
+		-o libmp3lame/i386/scalar.obj
+
 CC_SWITCHES = $(CC_SWITCHES) /DHAVE_NASM
-ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/cpu_feat.obj
+ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/cpu_feat.obj libmp3lame/i386/scalar.obj
 !	ENDIF
 #______________________________________________________________________ NASM __
 
@@ -477,7 +483,7 @@ $(T_LDLL) : config.h lib $(CMMN_OBJ) $(DLL_OBJ)
 	@echo.
 	@echo --=*  $@ ready  *=--
 	@echo.
-	
+
 $(T_MP3X) : config.h lib $(CMMN_OBJ) $(MPX_OBJ)
 	@$(LN) $(LN_SWITCHES) $(GTK_LIBS) $(LIBSNDFILE) $(VORBISLIB) \
 	       $(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ) $(CMMN_OBJ) $(MPX_OBJ) \
