@@ -80,8 +80,8 @@ int psymodel_init(lame_global_flags *gfp);
 #define NS_PREECHO_ATT2 0.3
 
 #define NS_MSFIX 3.5
-#define NSATTACKTHRE 4.5
-#define NSATTACKTHRE_S 30
+#define NSATTACKTHRE 4.4
+#define NSATTACKTHRE_S 25
 
 #endif /* LAME_PSYMODEL_H */
 

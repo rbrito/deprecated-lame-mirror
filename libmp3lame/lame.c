@@ -38,6 +38,7 @@
 #include "psymodel.h"
 #include "VbrTag.h"
 #include "gain_analysis.h"
+#include "set_get.h"
 
 #if defined(__FreeBSD__) && !defined(__alpha__)
 #include <floatingpoint.h>
@@ -512,7 +513,7 @@ lame_init_params(lame_global_flags * const gfp)
     if (gfc->channels_in == 1)
         gfp->mode = MONO;
     gfc->channels_out = (gfp->mode == MONO) ? 1 : 2;
-    gfc->mode_ext = MPG_MD_LR_LR;
+    gfc->mode_ext = MPG_MD_MS_LR;
     if (gfp->mode == MONO)
         gfp->force_ms = 0; /* don't allow forced mid/side stereo for mono output */
 
@@ -680,24 +681,10 @@ lame_init_params(lame_global_flags * const gfp)
 
     /* mode = -1 (not set by user) or 
      * mode = MONO (because of only 1 input channel).  
-     * If mode has been set, then select between STEREO or J-STEREO
-     * At higher quality (lower compression) use STEREO instead of J-STEREO.
-     * (unless the user explicitly specified a mode)
-     *
-     * The threshold to switch to STEREO is:
-     *    48 kHz:   171 kbps (used at 192+)
-     *    44.1 kHz: 160 kbps (used at 160+)
-     *    32 kHz:   119 kbps (used at 128+)
-     *
-     *   Note, that for 32 kHz/128 kbps J-STEREO FM recordings sound much
-     *   better than STEREO, so I'm not so very happy with that. 
-     *   fs < 32 kHz I have not tested.
-     */
+     * If mode has not been set, then select J-STEREO
+    */
     if (gfp->mode == NOT_SET) {
-        if (gfp->compression_ratio < 8)
-            gfp->mode = STEREO;
-        else
-            gfp->mode = JOINT_STEREO;
+        gfp->mode = JOINT_STEREO;
     }
 
     /* KLEMM's jstereo with ms threshold adjusted via compression ratio */
@@ -881,7 +868,7 @@ lame_init_params(lame_global_flags * const gfp)
 
     gfc->Class_ID = LAME_ID;
 
-    if (gfp->exp_nspsytune & 1) {
+    /*if (gfp->exp_nspsytune & 1)*/ {
         int     i;
 
         gfc->nsPsy.use = 1;
@@ -907,7 +894,7 @@ lame_init_params(lame_global_flags * const gfp)
     case vbr_mt:
         gfp->VBR = vbr_mtrh;
         
-    case vbr_mtrh:
+    case vbr_mtrh: {
 
         if (gfp->ATHtype < 0) gfp->ATHtype = 4;
         if (gfp->quality < 0) gfp->quality = LAME_DEFAULT_QUALITY;
@@ -1001,8 +988,8 @@ lame_init_params(lame_global_flags * const gfp)
         
         break;
         
-
-    case vbr_rh:
+    }
+    case vbr_rh: {
 
         if (gfp->VBR == vbr_rh) /* because of above fall thru */
         {   static const FLOAT8 dbQ[10]={-2.,-1.0,-.66,-.33,0.,0.33,.66,1.0,1.33,1.66};
@@ -1052,11 +1039,14 @@ lame_init_params(lame_global_flags * const gfp)
             gfp->quality = LAME_DEFAULT_QUALITY;
 
         break;
+    }
 
-    default:
+    default: /* cbr/abr */{
+        vbr_mode vbrmode;
 
+        /* first, set parameters valid for every bitrate */
         if (gfp->ATHtype == -1)
-            gfp->ATHtype = 2;
+            gfp->ATHtype = 4;
 
         /*  automatic ATH adjustment off by default
          *  not so important for CBR code?
@@ -1074,7 +1064,14 @@ lame_init_params(lame_global_flags * const gfp)
         if (gfp->quality < 0)
             gfp->quality = LAME_DEFAULT_QUALITY;
 
+
+        vbrmode = lame_get_VBR(gfp);
+        /* second, set parameters depending on bitrate */
+        apply_preset(gfp, gfp->VBR_mean_bitrate_kbps, 0);
+        lame_set_VBR(gfp, vbrmode);
+
         break;
+    }
     }
     /*  just another daily changing developer switch  */
     if ( gfp->tune ) gfc->PSY->mask_adjust = gfp->tune_value_a;
@@ -1108,6 +1105,20 @@ lame_init_params(lame_global_flags * const gfp)
     }    
 
     
+    if (lame_get_quant_comp(gfp) < 0 ) lame_set_quant_comp(gfp, 1);
+    if (lame_get_quant_comp_short(gfp) < 0 ) lame_set_quant_comp_short(gfp, 0);
+
+    if (lame_get_msfix(gfp) < 0 ) lame_set_msfix(gfp, 0);
+
+    if (lame_get_short_threshold_lrm(gfp) < 0 ) lame_set_short_threshold_lrm(gfp, NSATTACKTHRE);
+    if (lame_get_short_threshold_s(gfp) < 0 ) lame_set_short_threshold_s(gfp, NSATTACKTHRE_S);
+
+    if ( gfp->scale < 0 ) gfp->scale = 1;
+    
+    if ( gfp->ATHcurve < 0 ) gfp->ATHcurve = 4;
+    
+    if (gfp->interChRatio < 0 ) gfp->interChRatio = 0;
+
     if ( gfp->athaa_loudapprox < 0 ) gfp->athaa_loudapprox = 2;
     
     if (gfp->useTemporal < 0 ) gfp->useTemporal = 1;  /* on by default */
@@ -2065,12 +2076,16 @@ lame_init_old(lame_global_flags * gfp)
 
     gfp->VBR = vbr_off;
     gfp->VBR_q = 4;
-    gfp->ATHcurve = 4;
+    gfp->ATHcurve = -1;
     gfp->VBR_mean_bitrate_kbps = 128;
     gfp->VBR_min_bitrate_kbps = 0;
     gfp->VBR_max_bitrate_kbps = 0;
     gfp->VBR_hard_min = 0;
 
+    gfp->quant_comp = -1;
+    gfp->quant_comp_short = -1;
+
+    gfp->msfix = -1;
 
     gfc->resample_ratio = 1;
     gfc->VBR_min_bitrate = 1; /* not  0 ????? */
@@ -2081,8 +2096,10 @@ lame_init_old(lame_global_flags * gfp)
     gfc->CurrentStep[0] = 4;
     gfc->CurrentStep[1] = 4;
     gfc->masking_lower = 1;
-    gfc->nsPsy.attackthre   = NSATTACKTHRE;
-    gfc->nsPsy.attackthre_s = NSATTACKTHRE_S;
+    gfc->nsPsy.attackthre   = -1;
+    gfc->nsPsy.attackthre_s = -1;
+
+    gfp->scale = -1;
 
     gfp->athaa_type = -1;
     gfp->ATHtype = -1;  /* default = -1 = set in lame_init_params */
@@ -2090,7 +2107,7 @@ lame_init_old(lame_global_flags * gfp)
                                 /* 2 = equal loudness curve */
     gfp->athaa_sensitivity = 0.0; /* no offset */
     gfp->useTemporal = -1;
-    gfp->interChRatio = 0.0;
+    gfp->interChRatio = -1;
 
     /* The reason for
      *       int mf_samples_to_encode = ENCDELAY + POSTDELAY;

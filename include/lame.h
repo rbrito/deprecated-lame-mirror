@@ -353,6 +353,7 @@ int CDECL lame_set_exp_nspsytune(lame_global_flags *, int);
 int CDECL lame_get_exp_nspsytune(const lame_global_flags *);
 
 void CDECL lame_set_msfix(lame_global_flags *, double);
+float CDECL lame_get_msfix(const lame_global_flags *);
 
 int lame_set_exp_nspsytune2_int( lame_global_flags*, int, int);
 float lame_set_exp_nspsytune2_real( lame_global_flags*, int, float);

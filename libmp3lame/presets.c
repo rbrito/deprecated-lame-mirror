@@ -26,9 +26,14 @@
 #include "util.h"
 
 
+#define SET_OPTION(opt, val, def) if (enforce) \
+    lame_set_##opt(gfp, val); \
+    else if (lame_get_##opt(gfp) == def) \
+    lame_set_##opt(gfp, val);
 
 
-int apply_abr_preset(lame_global_flags*  gfp, int preset)
+
+int apply_abr_preset(lame_global_flags*  gfp, int preset, int enforce)
 {
     int k; 
 
@@ -86,23 +91,11 @@ int apply_abr_preset(lame_global_flags*  gfp, int preset)
 
 
     lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
-    lame_set_quant_comp(gfp, abr_switch_map[r].quant_comp);
-    lame_set_quant_comp_short( gfp, abr_switch_map[r].quant_comp_s);
-    lame_set_quality(gfp, 3);
-    lame_set_mode(gfp, JOINT_STEREO);
-    lame_set_interChRatio(gfp, abr_switch_map[r].interch);
-
-    lame_set_ATHtype(gfp, 4);
-    lame_set_ATHcurve(gfp, abr_switch_map[r].ath_curve);
 
 
+    /* parameters for which there is no proper set/get interface */
     if (abr_switch_map[r].safejoint > 0)
         lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
-
-    lame_set_short_threshold(gfp, abr_switch_map[r].st_lrm, abr_switch_map[r].st_s);
-
-    if (abr_switch_map[r].nsmsfix > 0)
-            (void) lame_set_msfix( gfp, abr_switch_map[r].nsmsfix );
 
     /* ns-bass tweaks */
     if (abr_switch_map[r].nsbass != 0) {
@@ -111,10 +104,25 @@ int apply_abr_preset(lame_global_flags*  gfp, int preset)
         lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 2));
     }
 
+
+
+
+    SET_OPTION(quant_comp, abr_switch_map[r].quant_comp, -1);
+    SET_OPTION(quant_comp_short, abr_switch_map[r].quant_comp_s, -1);
+
+    SET_OPTION(msfix, abr_switch_map[r].nsmsfix, -1);
+
+    SET_OPTION(short_threshold_lrm, abr_switch_map[r].st_lrm, -1);
+    SET_OPTION(short_threshold_s, abr_switch_map[r].st_s, -1);
+
     /* ABR seems to have big problems with clipping, especially at low bitrates */
     /* so we compensate for that here by using a scale value depending on bitrate */
-    if (abr_switch_map[r].scale != 1)
-        (void) lame_set_scale( gfp, abr_switch_map[r].scale );
+    SET_OPTION(scale, abr_switch_map[r].scale, -1);
+
+    SET_OPTION(ATHcurve, abr_switch_map[r].ath_curve, -1);
+
+    SET_OPTION(interChRatio, abr_switch_map[r].interch, -1);
+
 
     return preset;
 }
@@ -123,7 +131,7 @@ int apply_abr_preset(lame_global_flags*  gfp, int preset)
 
 
 
-int apply_preset(lame_global_flags*  gfp, int preset)
+int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
 {
     switch (preset) {
     case STREAMING: {
@@ -372,7 +380,7 @@ int apply_preset(lame_global_flags*  gfp, int preset)
         return preset;
     }
     case INSANE: {
-        return apply_abr_preset(gfp, 320);
+        return apply_abr_preset(gfp, 320, enforce);
     }
     case R3MIX: {
 	    lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1); /*nspsytune*/
@@ -394,7 +402,7 @@ int apply_preset(lame_global_flags*  gfp, int preset)
     }
 
     if ((preset >= 8) && (preset <=320))
-        return apply_abr_preset(gfp, preset);
+        return apply_abr_preset(gfp, preset, enforce);
 
 
     return preset;

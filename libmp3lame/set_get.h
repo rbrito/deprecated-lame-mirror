@@ -43,6 +43,10 @@ void CDECL lame_set_ms_sparse_high(lame_t , float );
 
 /* manage short blocks */
 int CDECL lame_set_short_threshold(lame_global_flags *, float, float);
+int CDECL lame_set_short_threshold_lrm(lame_global_flags *, float);
+float CDECL lame_get_short_threshold_lrm(const lame_global_flags *);
+int CDECL lame_set_short_threshold_s(lame_global_flags *, float);
+float CDECL lame_get_short_threshold_s(const lame_global_flags *);
 
 
 int CDECL lame_set_vbr_smooth( lame_global_flags *, int);
@@ -56,7 +60,7 @@ float CDECL lame_get_maskingadjust_short( const lame_global_flags *);
 
 /* select ATH formula 4 shape */
 int CDECL lame_set_ATHcurve(lame_global_flags *, float);
-int CDECL lame_get_ATHcurve(const lame_global_flags *);
+float CDECL lame_get_ATHcurve(const lame_global_flags *);
 
 int CDECL lame_set_preset_notune(lame_global_flags *, int);
 
