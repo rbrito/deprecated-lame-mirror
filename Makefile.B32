@@ -73,7 +73,6 @@ frontend_sources = \
 lib_sources = \
 	libmp3lame/bitstream.c \
 	libmp3lame/encoder.c \
-	libmp3lame/fft.c \
 	libmp3lame/id3tag.c \
 	libmp3lame/lame.c \
 	libmp3lame/newmdct.c \
@@ -110,7 +109,6 @@ lib_obj = $(lib_sources:.c=.obj)
 CC_SWITCHES = $(CC_SWITCHES) -DHAVE_NASM -DMMX_choose_table
 
 lib_obj = $(lib_obj) libmp3lame/i386/cpu_feat.obj \
-	libmp3lame/i386/scalar.obj \
 	libmp3lame/i386/choose_table.obj \
 	libmp3lame/i386/fft3dn.obj \
 #	libmp3lame/i386/fftsse.obj \

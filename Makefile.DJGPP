@@ -105,7 +105,6 @@ frontend_sources = \
 lib_sources = \
 	libmp3lame/bitstream.c \
 	libmp3lame/encoder.c \
-	libmp3lame/fft.c \
 	libmp3lame/id3tag.c \
 	libmp3lame/lame.c \
 	libmp3lame/newmdct.c \
@@ -152,7 +151,7 @@ ASFLAGS=-f win32 -DWIN32 -i libmp3lame/i386/
 ifeq ($(HAVE_NASM),YES)
 ## have NASM
 CC_SWITCHES += -DHAVE_NASM
-lib_obj += libmp3lame/i386/cpu_feat.o libmp3lame/i386/scalar.o
+lib_obj += libmp3lame/i386/cpu_feat.o
 
 ## use MMX extension. you need nasm and MMX supported CPU.
 CC_SWITCHES += -DMMX_choose_table
