@@ -23,7 +23,6 @@
 #ifndef LAME_GET_AUDIO_H
 #define LAME_GET_AUDIO_H
 
-#if (defined LIBSNDFILE || defined LAMESNDFILE)
 
 void CloseSndFile(sound_file_format input, FILE *musicin);
 FILE * OpenSndFile(lame_global_flags *gfp);
@@ -84,5 +83,4 @@ void close_infile(lame_global_flags *);
 
 
 #endif	/* ifdef LIBSNDFILE */
-#endif  /* ifdef LAMESNDFILE or LIBSNDFILE */
 #endif	/* ifndef LAME_GET_AUDIO_H */

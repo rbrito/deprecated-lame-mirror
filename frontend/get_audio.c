@@ -31,7 +31,6 @@
 #include "portableio.h"
 #include "timestatus.h"
 
-#if (defined LIBSNDFILE || defined LAMESNDFILE)
 
 #ifdef _WIN32
 /* needed to set stdin to binary on windoze machines */
@@ -48,20 +47,14 @@
 
 
 
-/* global data for get_audio.c.  NOTE: get_audio.c is going
- * to be removed from the lame encoding library.  It will only
- * be part of the LAME front end, and thus does not need to be thread
- * safe */
-
+/* global data for get_audio.c. */
 unsigned long num_samples_read;  
 int count_samples_carefully;
 int pcmbitwidth;
 mp3data_struct mp3input_data;
 enum byte_order NativeByteOrder = order_unknown;
 
-static int fskip(FILE *sf,long num_bytes,int dummy);
-
-
+int fskip(FILE *sf,long num_bytes,int dummy);
 
 
 
@@ -451,7 +444,6 @@ int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip)
 }
 
 
-#endif  /* LAMESNDFILE or LIBSNDFILE */
 
 
 
@@ -699,8 +691,7 @@ int read_samples_pcm(short sample_buffer[2304],int frame_size,int samples_to_rea
 }
 
 
-#endif /* ifdef LIBSNDFILE */
-#ifdef LAMESNDFILE
+#else
 
 /************************************************************************
  ************************************************************************
@@ -1190,7 +1181,7 @@ FILE * OpenSndFile(lame_global_flags *gfp)
   }
   return musicin;
 }
-#endif  /* LAMESNDFILE */
+#endif  /* LIBSNDFILE */
 
 
 
@@ -1363,7 +1354,7 @@ int lame_decode_fromfile(FILE *fd, short pcm_l[], short pcm_r[],mp3data_struct *
 }
 
 /* Replacement for forward fseek(,,SEEK_CUR), because fseek() fails on pipes */
-static int fskip(FILE *sf,long num_bytes,int dummy)
+int fskip(FILE *sf,long num_bytes,int dummy)
 {
   char data[1024];
   int nskip = 0;

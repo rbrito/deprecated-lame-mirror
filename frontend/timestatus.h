@@ -29,10 +29,7 @@ void timestatus ( unsigned long samp_rate,
                   int           framesize);
 void timestatus_finish(void);
 
-#if (defined LIBSNDFILE || defined LAMESNDFILE)
 void decoder_progress(lame_global_flags *gfp,mp3data_struct *);
 void decoder_progress_finish(lame_global_flags *gfp);
-#endif
-
 
 #endif /* LAME_TIMESTATUS_H */

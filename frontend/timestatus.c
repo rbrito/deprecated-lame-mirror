@@ -277,7 +277,6 @@ void timestatus_klemm(lame_global_flags *gfp)
 
 
 
-#if defined LIBSNDFILE || defined LAMESNDFILE
 
 /* these functions are used in get_audio.c */
 
@@ -327,7 +326,7 @@ void decoder_progress_finish ( lame_global_flags* gfp )
     fprintf ( stderr, "\n" );
 }
 
-#endif
+
 
 
 
