@@ -502,14 +502,14 @@ Huffmancode( lame_internal_flags* const gfc, const int tableindex,
 	    /* use ESC-words */
 	    if (x1 > 14) {
 		assert ( x1 <= h->linmax+15 );
-		ext   |= (x-15) << 1;
+		ext   |= (x1-15) << 1;
 		xbits  = xlen;
 		x1     = 15;
 	    }
 
 	    if (x2 > 14) {
 		assert ( x2 <= h->linmax+15 );
-		ext  <<= linbits;
+		ext  <<= xlen;
 		ext   |= x2-15;
 		xbits += xlen;
 		x2     = 15;
