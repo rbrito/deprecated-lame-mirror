@@ -29222,6 +29222,8 @@ _ACEOF
 *)
 	CPUTYPE="no"
 	;;
+# seems sparc/power pc cannot get any performance gain from IEEE754_HACK
+
 esac
 
 
@@ -29231,7 +29233,7 @@ echo $ECHO_N "checking for FLOAT as double... $ECHO_C" >&6
 # Check whether --enable-double-float or --disable-double-float was given.
 if test "${enable_double_float+set}" = set; then
   enableval="$enable_double_float"
-  CONFIG_ALLFLOAT="${enableval}"
+  CONFIG_ALLDOUBLE="${enableval}"
 else
   CONFIG_ALLDOUBLE="no"
 fi;
@@ -29241,7 +29243,7 @@ no)
 yes)
 
 cat >>confdefs.h <<\_ACEOF
-#define ALLDOUBLE double
+#define ALLDOUBLE 1
 _ACEOF
 
 	;;
@@ -29511,7 +29513,7 @@ if test "x$GCC" = "xyes"; then
 				OPTIMIZATION="${OPTIMIZATION} -mfp-regs"
 
 cat >>confdefs.h <<\_ACEOF
-#define FLOAT double
+#define ALLDOUBLE 1
 _ACEOF
 
 				# add "-mcpu=21164a -Wa,-m21164a" to optimize

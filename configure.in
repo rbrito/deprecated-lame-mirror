@@ -577,6 +577,8 @@ dns do not set CPUTYPE="i386" because nasm does not support elf64 currently
 *)
 	CPUTYPE="no"
 	;;
+# seems sparc/power pc cannot get any performance gain from IEEE754_HACK
+
 esac
 
 
@@ -585,12 +587,12 @@ AC_MSG_CHECKING(for FLOAT as double)
 AC_ARG_ENABLE(double-float,
   [  --enable-double-float      Whether to make all floting point variables]
   [                           [as double, not float [default=no]]],
-    CONFIG_ALLFLOAT="${enableval}", CONFIG_ALLDOUBLE="no")
+    CONFIG_ALLDOUBLE="${enableval}", CONFIG_ALLDOUBLE="no")
 case "${CONFIG_ALLDOUBLE}" in
 no)
 	;;
 yes)
-	AC_DEFINE(ALLDOUBLE, double, use double instead of float)
+	AC_DEFINE(ALLDOUBLE, 1, use double instead of float)
 	;;
 *)
 	AC_MSG_ERROR(bad value »${CONFIG_ALLDOUBLE}« for double-float option)
@@ -795,7 +797,7 @@ if test "x$GCC" = "xyes"; then
 				;;
 			alpha*)
 				OPTIMIZATION="${OPTIMIZATION} -mfp-regs"
-				AC_DEFINE(FLOAT, double, double is faster than float on Alpha)
+				AC_DEFINE(ALLDOUBLE, 1, double is faster than float on Alpha)
 				# add "-mcpu=21164a -Wa,-m21164a" to optimize
 				# for 21164a (ev56) CPU
 				;;
