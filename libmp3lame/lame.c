@@ -1160,9 +1160,9 @@ lame_init(void)
     void *work = calloc(1, sizeof(struct lame_internal_flags) + 16);
     if (!work)
         return NULL;
-#ifdef NDEBUG
+#ifndef NDEBUG
     if (sizeof(gr_info) & 15) {
-	printf("alignment error. gr_info size = %d\n", sizeof(gr_info));
+	printf("alignment error. gr_info size = %d\n", (int)sizeof(gr_info));
 	return NULL;
     }
 #endif
