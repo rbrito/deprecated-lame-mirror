@@ -639,26 +639,30 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 	//Determine whether file is of 'Archival' quality
 	//FALSE if some stupid options have been enabled:
 
-	if (gfp->short_blocks == short_block_forced ||
-		gfp->short_blocks == short_block_dispensed ||
+	if (gfp->short_blocks == short_block_forced 			||
+		gfp->short_blocks == short_block_dispensed 		||
+		((gfp->lowpassfreq == -1) && (gfp->highpassfreq == -1))	|| // "-k"
+		gfp->disable_reservoir		||
 		/*input_format	== sf_mp1	||
 		input_format	== sf_mp2	||
 		input_format	== sf_mp3	||
 		input_format	== sf_ogg	||*/
 		gfp->in_samplerate <= 32000)
 		bArchival = 0;
-
 	
-
-	if ((fVersion >=3.90) && 
-		(gfp->lowpassfreq >=19500 || gfp->lowpassfreq == 0) && 
+	else if ((fVersion >=3.90) && 
+		(gfp->lowpassfreq >=19100 	|| gfp->lowpassfreq == 0) &&
 		(nAthType > 0 && nAthType < 5 )		&&
 		( 
 			(gfp->brate >=256 && (gfp->mode == STEREO || (gfp->mode == JOINT_STEREO && bExpNPsyTune && bSafeJoint))) 
-			|| (nABRBitrate >=224 && gfp->mode == JOINT_STEREO && bExpNPsyTune && bSafeJoint) 
-			|| (nABRBitrate >=256 && gfp->mode == STEREO) 
-			|| (nQuality>=88 && bExpNPsyTune) 
-			|| (nQuality>=78 && gfp->mode == JOINT_STEREO && bExpNPsyTune && bSafeJoint && nAthType > 0 && nAthType < 5) 
+			||(        (gfp->VBR_max_bitrate_kbps==320) &&
+				(  (nABRBitrate >=224 && gfp->mode == JOINT_STEREO && bExpNPsyTune && bSafeJoint) 
+				|| (nABRBitrate >=256 && gfp->mode == STEREO) 
+				|| (nQuality>=88 && bExpNPsyTune)
+				|| (nQuality>=88 && gfp->VBR_min_bitrate_kbps>=128)
+				|| (nQuality>=78 && gfp->mode == JOINT_STEREO && bExpNPsyTune && bSafeJoint && nAthType > 0 && nAthType < 5) 
+				)
+			  )
 			)
 		)
 		bArchival = 1;
