@@ -120,6 +120,7 @@ void timestatus ( const int samp_rate,
         proc_time.last_time = GetCPUTime  ();
     }
 
+    // we need rollover protection for GetCPUTime, and maybe GetRealTime():
     tmx=GetRealTime();
     delta=tmx-real_time.last_time;
     if (delta<0) delta=0;  // ignore, clock has rolled over
