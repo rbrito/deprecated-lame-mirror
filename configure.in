@@ -734,47 +734,53 @@ fi  #  gcc or ccc?
 # SunOS
 ##########################################################################
 sparc-*-sunos4*)
-	CC="cc"
-	OPTIMIZATION="-O -xCC"
-	MAKEDEP="-xM"
-	# for gcc, use instead:
-	#   CC="gcc"
-	#   OPTIMIZATION="-O"
-	#   MAKEDEP="-M"
-	endif
+	if test CC = "cc"; then
+		OPTIMIZATION="-O -xCC"
+		MAKEDEP="-xM"
+		# for gcc, use instead:
+		#   CC="gcc"
+		#   OPTIMIZATION="-O"
+		#   MAKEDEP="-M"
+AC_MSG_WARN([Please contact lame@lists.sourceforge.net with the output of the configure run and the file config.cache. Thank you for your cooperation.])
+	fi
 ;; #SunOS
 
 ##########################################################################
 # SGI
 ##########################################################################
 *-sgi-irix*)
-	CC="cc"
-	OPTIMIZATION="-O3 -woff all"
+	if test CC = "cc"; then
+		OPTIMIZATION="-O3 -woff all"
+	fi
 ;; # SGI
 
 ##########################################################################
 # Compaq Alpha running Dec Unix (OSF)
 ##########################################################################
 alpha*-dec-osf*)
-	CC = cc
-	OPTIMIZATION="-fast -O3 -std -g3 -non_shared"
+	if test CC = "cc"; then
+		OPTIMIZATION="-fast -O3 -std -g3 -non_shared"
+	fi
 ;; #OSF
 
 ##########################################################################
 # BeOS
 ##########################################################################
 *-*-beos*) # todo:is this the right string ?
-	CC="\$(BE_C_COMPILER)"
-	case $target in
-	bepc*-*-*) # todo: is this right architecture ? was: if ($(ARCH),BePC)
-	   OPTIMIZATION="-O9 -fomit-frame-pointer -march=pentium \
-			-mcpu=pentium -ffast-math -funroll-loops \
-			-fprofile-arcs -fbranch-probabilities"
-	;;
-   	*) OPTIMIZATION="-opt all"
-	   MAKEDEP="-make"
-	;;
-	esac
+	if test CC = "\$(BE_C_COMPILER)"; then
+		case $target in
+		bepc*-*-*)
+		 # todo: is this right architecture ? was: if ($(ARCH),BePC)
+	   		OPTIMIZATION="-O9 -fomit-frame-pointer -march=pentium \
+				-mcpu=pentium -ffast-math -funroll-loops \
+				-fprofile-arcs -fbranch-probabilities"
+		;;
+   		*) OPTIMIZATION="-opt all"
+		   MAKEDEP="-make"
+AC_MSG_WARN([Please contact lame@lists.sourceforge.net with the output of the configure run and the file config.cache. Thank you for your cooperation.])
+		;;
+		esac
+	fi
 ;; #BeOS
 esac
 
@@ -815,16 +821,6 @@ if test "$UNAME" = "OS/2"; then
 #   FRONTEND_LDFLAGS="-LC:/XFree86/lib -lgtk12 -lgdk12 -lgmodule -lglib12 \
 #             -lXext -lX11 -lshm -lbsd -lsocket -lm $FRONTEND_LDFLAGS"
 #   FRONTEND_CFLAGS="-Zmtd -Zsysv-signals -Zbin-files $FRONTEND_CFLAGS"
-fi
-
-###########################################################################
-# MSDOS/Windows
-###########################################################################
-if test "$UNAME" = "MSDOS"; then
-  # file extension should alredy be handled by automake (I don't know, please
-  # give feedback!
-  #FILE_EXTENSION=".exe"
-  RM_F=
 fi
 
 ###########################################################################
