@@ -1443,13 +1443,19 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	{
 	    FLOAT *pf = ns_hpfsmpl[chn & 1];
 	    for (i=0;i<9;i++) {
-		FLOAT *pfe = pf + 576/9, p = 10.;
+		FLOAT *pfe = pf + 576/9, p = 1.;
 		for (; pf < pfe; pf++)
 		    if (p < fabs(*pf))
 			p = fabs(*pf);
 
 		gfc->nsPsy.last_en_subshort[chn][i] = en_subshort[i+3] = p;
-		attack_intensity[i+3] = p / en_subshort[i+3-2];
+		if (p > en_subshort[i+3-2])
+		    p = p / en_subshort[i+3-2];
+		else if (en_subshort[i+3-2] > p*10.0)
+		    p = en_subshort[i+3-2] / (p*10.0);
+		else
+		    p = 0.0;
+		attack_intensity[i+3] = p;
 	    }
 	}
 #if defined(HAVE_GTK)
