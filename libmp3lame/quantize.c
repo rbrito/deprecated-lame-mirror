@@ -378,8 +378,8 @@ void psfb21_analogsilence(
                 FLOAT ath12;
                 ath12 = athAdjust(ATH->adjust, ATH->psfb12[gsfb], ATH->floor);
 
-                if (gfc->nsPsy.longfact[12] != 0)
-                    ath12 *= gfc->nsPsy.longfact[12];
+                if (gfc->nsPsy.shortfact[12] != 0)
+                    ath12 *= gfc->nsPsy.shortfact[12];
 
                 for (j = end-1; j>=start; j--) {
                     if ( fabs(xr[j]) < ath12)
