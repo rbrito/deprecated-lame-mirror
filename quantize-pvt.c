@@ -5,6 +5,8 @@
 #include "reservoir.h"
 #include "quantize-pvt.h"
 
+#undef TAKEHIRO_IEEE754_HACK
+
 
 const int slen1_tab[16] = { 0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4 };
 const int slen2_tab[16] = { 0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3 };
@@ -1006,7 +1008,7 @@ set_pinfo (lame_global_flags *gfp,
   D192_3 *xr_s = (D192_3 *)xr;
   pinfo=gfc->pinfo;
   ifqstep = ( cod_info->scalefac_scale == 0 ) ? .5 : 1.0;
-	  
+
   if (cod_info->block_type == SHORT_TYPE) {
     for ( i = 0; i < 3; i++ ) {
       for ( sfb = 0; sfb < SBPSY_s; sfb++ )  {
@@ -1063,8 +1065,6 @@ set_pinfo (lame_global_flags *gfp,
   pinfo->over_noise[gr][ch] = noise[2];
   pinfo->tot_noise [gr][ch] = noise[3];
 }
-
-
 
 
 
@@ -1150,6 +1150,66 @@ set_pinfo (lame_global_flags *gfp,
  *    Acy Stapp <AStapp@austin.rr.com> 11/1999
  *    Takehiro Tominaga <tominaga@isoternet.org> 11/1999
  *********************************************************************/
+
+#ifdef TAKEHIRO_IEEE754_HACK
+
+#define MAGIC_FLOAT (65536*(128))
+#define MAGIC_INT 0x4b000000
+
+void quantize_xrpow(FLOAT8 xp[576], int pi[576], gr_info *cod_info)
+{
+    /* quantize on xr^(3/4) instead of xr */
+    const FLOAT8 istep = IPOW20(cod_info->global_gain);
+
+    /* generic code if you write ASM for XRPOW_FTOI() */
+    int j;
+    for (j = 576 / 4; j > 0; --j) {
+	double x0 = istep * xp[0] + MAGIC_FLOAT;
+	double x1 = istep * xp[1] + MAGIC_FLOAT;
+	double x2 = istep * xp[2] + MAGIC_FLOAT;
+	double x3 = istep * xp[3] + MAGIC_FLOAT;
+
+	((float*)pi)[0] = x0;
+	((float*)pi)[1] = x1;
+	((float*)pi)[2] = x2;
+	((float*)pi)[3] = x3;
+
+	((float *)pi)[0] = (x0 + adj43asm[pi[0] - MAGIC_INT]);
+	((float *)pi)[1] = (x1 + adj43asm[pi[1] - MAGIC_INT]);
+	((float *)pi)[2] = (x2 + adj43asm[pi[2] - MAGIC_INT]);
+	((float *)pi)[3] = (x3 + adj43asm[pi[3] - MAGIC_INT]);
+
+	pi[0] -= MAGIC_INT;
+	pi[1] -= MAGIC_INT;
+	pi[2] -= MAGIC_INT;
+	pi[3] -= MAGIC_INT;
+	pi += 4;
+	xp += 4;
+    }
+}
+
+void quantize_xrpow_ISO(FLOAT8 xp[576], int pi[576], gr_info *cod_info)
+{
+    /* quantize on xr^(3/4) instead of xr */
+    const FLOAT8 istep = IPOW20(cod_info->global_gain);
+
+    register int j;
+    for (j=576/4;j>0;j--) {
+	((float *)pi)[0] = (istep * xp[0]) + (ROUNDFAC + MAGIC_FLOAT);
+	((float *)pi)[1] = (istep * xp[1]) + (ROUNDFAC + MAGIC_FLOAT);
+	((float *)pi)[2] = (istep * xp[2]) + (ROUNDFAC + MAGIC_FLOAT);
+	((float *)pi)[3] = (istep * xp[3]) + (ROUNDFAC + MAGIC_FLOAT);
+
+	pi[0] -= MAGIC_INT;
+	pi[1] -= MAGIC_INT;
+	pi[2] -= MAGIC_INT;
+	pi[3] -= MAGIC_INT;
+	pi+=4;
+	xp+=4;
+    }
+}
+
+#else
 
 void quantize_xrpow(FLOAT8 xr[576], int ix[576], gr_info *cod_info) {
   /* quantize on xr^(3/4) instead of xr */
@@ -1499,3 +1559,5 @@ void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
   }
 #endif
 }
+
+#endif
