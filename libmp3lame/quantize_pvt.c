@@ -628,123 +628,102 @@ int  calc_noise(
               III_psy_xmin      * xfsf,
               calc_noise_result * const res )
 {
-  int sfb,start, end, j,l, i, over=0;
-  FLOAT8 sum;
-  
-  int count=0;
-  FLOAT8 noise,noise_db;
-  FLOAT8 over_noise_db = 0;
-  FLOAT8 tot_noise_db  = 0;     /*    0 dB relative to masking */
-  FLOAT8 max_noise  = 1E-20; /* -200 dB relative to masking */
-  double klemm_noise = 1E-37;
+    int sfb,start, end, l, i, over=0;
+    FLOAT8 over_noise_db = 0;
+    FLOAT8 tot_noise_db  = 0;     /*    0 dB relative to masking */
+    FLOAT8 max_noise  = 1E-20; /* -200 dB relative to masking */
+    double klemm_noise = 1E-37;
+    int j = 0;
 
-  if (cod_info->block_type == SHORT_TYPE) {
-    int max_index = gfc->sfb21_extra ? SBMAX_s : SBPSY_s;
+    if (cod_info->block_type == SHORT_TYPE) {
+	int max_index = gfc->sfb21_extra ? SBMAX_s : SBPSY_s;
 
-    for ( j=0, sfb = 0; sfb < max_index; sfb++ ) {
-         start = gfc->scalefac_band.s[ sfb ];
-         end   = gfc->scalefac_band.s[ sfb+1 ];
-         for ( i = 0; i < 3; i++ ) {
-	    FLOAT8 step;
-	    int s;
+	for ( sfb = 0; sfb < max_index; sfb++ ) {
+	    int width =
+		gfc->scalefac_band.s[sfb+1] - gfc->scalefac_band.s[sfb];
+	    for ( i = 0; i < 3; i++ ) {
+		int s =
+		    cod_info->global_gain
+		    - (scalefac->s[sfb][i] << (cod_info->scalefac_scale + 1))
+		    - cod_info->subblock_gain[i] * 8;
+		FLOAT8 step = POW20(s);
+		FLOAT8 noise = 0.0;
+		l = width;
+		do {
+		    FLOAT8 temp;
+		    temp = pow43[ix[j]] * step - fabs(xr[j]);
+		    noise += temp * temp;
+		    j++;
+		} while (--l > 0);
+		noise = xfsf->s[sfb][i]  = noise / l3_xmin->s[sfb][i];
 
-	    s = (scalefac->s[sfb][i] << (cod_info->scalefac_scale + 1))
-		+ cod_info->subblock_gain[i] * 8;
-	    s = cod_info->global_gain - s;
+		max_noise    = Max(max_noise,noise);
+		klemm_noise += penalties (noise);
 
-	    assert(s<Q_MAX);
-	    assert(s>=0);
-	    step = POW20(s);
-	    sum = 0.0;
-	    l = start;
+		noise=10*log10(Max(noise,1E-20));
+		tot_noise_db += noise;
+
+		if (noise > 0.0) {
+		    over++;
+		    over_noise_db += noise;
+		}
+	    }
+	}
+    } else { /* cod_info->block_type == SHORT_TYPE */
+	int max_index = gfc->sfb21_extra ? SBMAX_l : SBPSY_l;
+	for (sfb = 0; sfb < max_index; sfb++ ) {
+	    int s =
+		cod_info->global_gain
+		- ((scalefac->l[sfb] + (cod_info->preflag ? pretab[sfb] : 0))
+		   << (cod_info->scalefac_scale + 1));
+	    FLOAT8 step = POW20(s);
+	    FLOAT8 noise = 0.0;
+
+	    l = gfc->scalefac_band.l[sfb+1] - gfc->scalefac_band.l[sfb];
 	    do {
-	      FLOAT8 temp;
-	      temp = pow43[ix[j]];
-	      temp *= step;
-	      temp -= fabs(xr[j]);
-	      ++j;
-	      sum += temp * temp;
-	      l++;
-	    } while (l < end);
-            noise = xfsf->s[sfb][i]  = sum / l3_xmin->s[sfb][i];
-
-	    max_noise    = Max(max_noise,noise);
+		FLOAT8 temp;
+		temp = fabs(xr[j]) - pow43[ix[j]] * step;
+		noise += temp * temp;
+		j++;
+	    } while (--l > 0);
+	    noise = xfsf->l[sfb] = noise / l3_xmin->l[sfb];
+	    max_noise=Max(max_noise,noise);
 	    klemm_noise += penalties (noise);
 
-	    noise_db=10*log10(Max(noise,1E-20));
-	    tot_noise_db += noise_db;
+	    noise=10*log10(Max(noise,1E-20));
+	    /* multiplying here is adding in dB, but can overflow */
+	    //tot_noise *= Max(noise, 1E-20);
+	    tot_noise_db += noise;
 
-            if (noise > 1) {
+	    if (noise > 0.0) {
 		over++;
-		over_noise_db += noise_db;
+		/* multiplying here is adding in dB -but can overflow */
+		//over_noise *= noise;
+		over_noise_db += noise;
 	    }
-	    count++;	    
-        }
-    }
-  }else{ /* cod_info->block_type == SHORT_TYPE */
-    int max_index = gfc->sfb21_extra ? SBMAX_l : SBPSY_l;
-    
-    for ( sfb = 0; sfb < max_index; sfb++ ) {
-	FLOAT8 step;
-	int s = scalefac->l[sfb];
-
-	if (cod_info->preflag)
-	    s += pretab[sfb];
-
-	s = cod_info->global_gain - (s << (cod_info->scalefac_scale + 1));
-	assert(s<Q_MAX);
-	assert(s>=0);
-	step = POW20(s);
-
-	start = gfc->scalefac_band.l[ sfb ];
-        end   = gfc->scalefac_band.l[ sfb+1 ];
-
-	for ( sum = 0.0, l = start; l < end; l++ ) {
-	  FLOAT8 temp;
-	  temp = fabs(xr[l]) - pow43[ix[l]] * step;
-	  sum += temp * temp;
 	}
-	noise = xfsf->l[sfb] = sum / l3_xmin->l[sfb];
-	max_noise=Max(max_noise,noise);
-	klemm_noise += penalties (noise);
+    } /* cod_info->block_type == SHORT_TYPE */
 
-	noise_db=10*log10(Max(noise,1E-20));
-	/* multiplying here is adding in dB, but can overflow */
-	//tot_noise *= Max(noise, 1E-20);
-	tot_noise_db += noise_db;
+    /* normalization at this point by "count" is not necessary, since
+     * the values are only used to compare with previous values */
+    res->over_count = over;
 
-	if (noise > 1) {
-	  over++;
-	  /* multiplying here is adding in dB -but can overflow */
-	  //over_noise *= noise;
-	  over_noise_db += noise_db;
-	}
+    /* convert to db. DO NOT CHANGE THESE */
+    /* tot_noise = is really the average over each sfb of: 
+       [noise(db) - allowed_noise(db)]
 
-	count++;
-    }
-  } /* cod_info->block_type == SHORT_TYPE */
+       and over_noise is the same average, only over only the
+       bands with noise > allowed_noise.  
+    */
 
-  /* normalization at this point by "count" is not necessary, since
-   * the values are only used to compare with previous values */
-  res->over_count = over;
+    //res->tot_noise   = 10.*log10(Max(1e-20,tot_noise )); 
+    //res->over_noise  = 10.*log10(Max(1e+00,over_noise)); 
+    res->tot_noise   = tot_noise_db;
+    res->over_noise  = over_noise_db;
+    res->max_noise   = 10.*log10(Max(1e-20,max_noise ));
+    res->klemm_noise = 10.*log10(Max(1e-20,klemm_noise));
 
-  /* convert to db. DO NOT CHANGE THESE */
-  /* tot_noise = is really the average over each sfb of: 
-     [noise(db) - allowed_noise(db)]
-
-     and over_noise is the same average, only over only the
-     bands with noise > allowed_noise.  
-
-  */
-
-  //res->tot_noise   = 10.*log10(Max(1e-20,tot_noise )); 
-  //res->over_noise  = 10.*log10(Max(1e+00,over_noise)); 
-  res->tot_noise   = tot_noise_db;
-  res->over_noise  = over_noise_db;
-  res->max_noise   = 10.*log10(Max(1e-20,max_noise ));
-  res->klemm_noise = 10.*log10(Max(1e-20,klemm_noise));
-
-  return over;
+    return over;
 }
 
 
