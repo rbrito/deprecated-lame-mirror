@@ -486,10 +486,9 @@ int fill_buffer_resample(
   if (fcn>1.00) fcn=1.00;
   filter_l = gfp->quality < 7 ? 31 : 7;
   filter_l = 31;
-  if (0==filter_l % 2 ) --filter_l;  /* must be odd */
+  if (0==filter_l % 2 ) --filter_l;/* must be odd */
+  filter_l += intratio;            /* unless resample_ratio=int, it must be even */
 
-  /* if resample_ratio = int, filter_l should be even */
-  filter_l += intratio;
 
   BLACKSIZE = filter_l+1;  /* size of data needed for FIR */
   
@@ -527,7 +526,6 @@ int fill_buffer_resample(
     j = floor( time0 -gfc->itime[ch]  );
 
     /* check if we need more input data */
-    //    if ((j+filter_l/2) >= len) break;
     if ((filter_l + j - filter_l/2) >= len) break;
 
     /* blackman filter.  by default, window centered at j+.5(filter_l%2) */
@@ -541,6 +539,7 @@ int fill_buffer_resample(
       int j2 = i+j-filter_l/2;
       int y;
       assert(j2<len);
+      assert(j2+BLACKSIZE >= 0);
       y = (j2<0) ? inbuf_old[BLACKSIZE+j2] : inbuf[j2];
 #define PRECOMPUTE
 #ifdef PRECOMPUTE
@@ -554,10 +553,14 @@ int fill_buffer_resample(
 
   
   /* k = number of samples added to outbuf */
-  /* last k sample used data from j..j+filter_l/2  */
-  /* remove num_used samples from inbuf: */
-  //  *num_used = Min(len,j+filter_l/2);
+  /* last k sample used data from [j-filter_l/2,j+filter_l-filter_l/2]  */
+
+  /* how many samples of input data were used:  */
   *num_used = Min(len,filter_l+j-filter_l/2);
+
+  /* adjust our input time counter.  Incriment by the number of samples used,
+   * then normalize so that next output sample is at time 0, next
+   * input buffer is at time itime[ch] */
   gfc->itime[ch] += *num_used - k*gfc->resample_ratio;
 
   /* save the last BLACKSIZE samples into the inbuf_old buffer */

@@ -9,13 +9,17 @@ def Usage(mesg):
     print "Usage: " + os.linesep
 
     print "Mode 1. Compare output of 'lame1' and 'lame2':"
-    print "./lametest.py  options_file  input.wav lame1 lame2" + os.linesep
+    print "./lametest.py  [options] options_file  input.wav lame1 lame2" + os.linesep
 
     print "Mode 2. Compare output of lame1 with reference solutions:"
-    print "./lametest.py options_file input.wav lame1" + os.linesep
+    print "./lametest.py [options] options_file input.wav lame1" + os.linesep
 
     print "Mode 3. Generate reference solutions using lame1:"
-    print "./lametest.py -m options_file input.wav lame1"
+    print "./lametest.py -m options_file input.wav lame1" + os.linesep
+
+    print "options: "	
+    print "   -w   convert mp3's to wav's before comparison"
+
     sys.exit(0)
 
 
