@@ -331,7 +331,7 @@ set_frame(unsigned char *frame, unsigned long id, const char *text,
 }
 
 int
-id3tag_write_v2(lame_t gfc)
+id3tag_write_v2(lame_t gfc, unsigned char *buf, int size)
 {
     if ((gfc->tag_spec.flags & CHANGED_FLAG)
 	&& !(gfc->tag_spec.flags & V1_ONLY_FLAG)) {
@@ -459,9 +459,10 @@ id3tag_write_v2(lame_t gfc)
             /* clear any padding bytes */
             memset(p, 0, tag_size - (p - tag));
             /* write tag directly into bitstream at current position */
-            for (i = 0; i < tag_size; i++)
-		add_dummy_byte(gfc, tag[i]);
+	    if (size && size <= tag_size)
+		return -1;
 
+	    memcpy(buf, tag, tag_size);
             free(tag);
             return tag_size;
         }
@@ -483,7 +484,7 @@ set_text_field(unsigned char *field, const char *text, size_t size, int pad)
 }
 
 int
-id3tag_write_v1(lame_t gfc)
+id3tag_write_v1(lame_t gfc, unsigned char *buf, int size)
 {
     unsigned int i = 0;
     if ((gfc->tag_spec.flags & CHANGED_FLAG)
@@ -492,6 +493,9 @@ id3tag_write_v1(lame_t gfc)
         unsigned char *p = tag;
         int pad = (gfc->tag_spec.flags & SPACE_V1_FLAG) ? ' ' : 0;
         char year[5];
+	if (size != 0 && size < 128)
+	    return -1; /* buffer overrun ! */
+
         /* set tag identifier */
         *p++ = 'T'; *p++ = 'A'; *p++ = 'G';
         /* set each field in tag */
@@ -510,7 +514,7 @@ id3tag_write_v1(lame_t gfc)
         *p++ = gfc->tag_spec.genre;
         /* write tag directly into bitstream at current position */
 	for (; i < 128; i++)
-	    add_dummy_byte(gfc, tag[i]);
+	    buf[i] = tag[i];
     }
     return i;
 }

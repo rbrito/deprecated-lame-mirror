@@ -167,7 +167,7 @@ int
 InitVbrTag(lame_t gfc)
 {
 #define MAXFRAMESIZE 2880 /* the max framesize freeformat 640 32kHz */
-    int i, header_bitrate, tot;
+    int header_bitrate, tot;
 
     if (!gfc->bWriteVbrTag)
 	return 0;
@@ -214,17 +214,14 @@ InitVbrTag(lame_t gfc)
 	return -1;
     }   
 
-    /* write dummy VBR tag of all 0's into bitstream */
-    for (i=0; i<gfc->TotalFrameSize; ++i)
-	add_dummy_byte(gfc, 0);
-
     /*TOC shouldn't take into account the size of the VBR header itself, too*/
     gfc->VBR_seek_table.sum  = 0;
     gfc->VBR_seek_table.seen = 0;
     gfc->VBR_seek_table.want = 1;
     gfc->VBR_seek_table.pos  = 0;
     gfc->VBR_seek_table.size = 400;
-    return 0;
+
+    return gfc->TotalFrameSize;
 }
 
 /* fast CRC-16 computation - uses table crc16_lookup 8*/
@@ -458,10 +455,7 @@ PutLameVBR(lame_t gfc, FILE *fpStream,
 }
 
 /***********************************************************************
- * 
  * PutVbrTag: Write final VBR tag to the file
- * Paramters:
- *	lpszFileName: filename of MP3 bit stream
  ***********************************************************************/
 int
 PutVbrTag(lame_t gfc, FILE *fpStream)

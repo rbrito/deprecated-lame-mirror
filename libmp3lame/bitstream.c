@@ -274,6 +274,75 @@ static const short escHB[] = {
  1033,280,278,274, 267, 264, 259, 382, 378, 372, 367, 363, 360, 358,  356,  0,
    43, 20, 19, 17,  15,  13,  11,   9,   7,   6,   4,   7,   5,   3,    1,  3};
 
+/* copy data out of the internal MP3 bit buffer into a user supplied
+   unsigned char buffer.
+
+   mp3data=0      indicates data in buffer is an id3tags and VBR tags
+   mp3data=1      data is real mp3 frame data. 
+*/
+static int
+copy_buffer(lame_t gfc, unsigned char *buffer, int size)
+{
+    bit_stream_t *bs=&gfc->bs;
+    int spec_idx, minimum;
+    unsigned char *pbuf, *pend;
+    if (bs->bitidx <= 0)
+	return 0;
+
+    /* interleave the sideinfo and spectrum data */
+    pbuf = buffer;
+    if (size == 0)
+	size = 65535;
+    pend = &pbuf[size];
+
+    assert(bs->bitidx % 8 == 0);
+    bs->bitidx >>= 3;
+    spec_idx = 0;
+    do {
+	if (bs->totbyte + spec_idx == bs->header[bs->w_ptr].write_timing) {
+	    int i = gfc->sideinfo_len;
+	    if (pbuf+i >= pend) return -1; /* buffer is too small */
+	    memcpy(pbuf, bs->header[bs->w_ptr].buf, i);
+	    pbuf += i;
+	    bs->w_ptr = (bs->w_ptr + 1) & (MAX_HEADER_BUF-1);
+	}
+	if (pbuf >= pend) return -1; /* buffer is too small */
+	*pbuf++ = bs->buf[spec_idx++];
+    } while (spec_idx < bs->bitidx);
+    bs->totbyte += spec_idx;
+
+    memset(bs->buf, 0, spec_idx);
+    bs->bitidx = 0;
+    minimum = pbuf - buffer;
+
+    UpdateMusicCRC(&gfc->nMusicCRC, buffer, minimum);
+#ifdef DECODE_ON_THE_FLY
+    /* this is untested code;
+       if, for somereason, we would like to decode the frame: */
+    for (;;) {
+	/* re-synthesis to pcm.  Repeat until we get a mp3out=0 */
+	short int pcm_out[2][1152];
+	int mp3out = lame_decode1(buffer,minimum,pcm_out[0],pcm_out[1]);
+	/* mp3out = 0:  need more data to decode */
+	/* mp3out = -1:  error.  Lets assume 0 pcm output */
+	/* mp3out = number of samples output */
+	if (mp3out==-1) {
+	    /* error decoding.  Not fatal, but might screw up are
+	     * ReplayVolume Info tag.  
+	     * what should we do?  ignore for now */
+	    mp3out=0;
+	}
+	if (mp3out>1152) {
+	    /* this should not be possible, and indicates we have
+	     * overflowed the pcm_out buffer.  Fatal error. */
+	    return -6;
+	}
+	if (mp3out <= 0)
+	    break;
+    }
+#endif
+    return minimum;
+}
 /***********************************************************************
  * compute bits-per-frame
  **********************************************************************/
@@ -748,7 +817,7 @@ compute_flushbits(lame_t gfc, int *total_bytes_output)
 }
 
 int
-flush_bitstream(lame_t gfc, unsigned char *buffer, int size, int mp3data)
+flush_bitstream(lame_t gfc, unsigned char *buffer, int size)
 {
     int dummy;
 
@@ -756,19 +825,7 @@ flush_bitstream(lame_t gfc, unsigned char *buffer, int size, int mp3data)
        same as filling the bitreservoir with ancillary data, so : */
     gfc->bs.bitidx += compute_flushbits(gfc, &dummy);
     gfc->ResvSize = gfc->main_data_begin = 0;
-    return copy_buffer(gfc, buffer, size, mp3data);
-}
-
-void
-add_dummy_byte(lame_t gfc, unsigned char val)
-{
-    bit_stream_t *bs = &gfc->bs;
-    int i;
-    assert((bs->bitidx & 7) == 0);
-    bs->buf[bs->bitidx>>3] = val;
-    bs->bitidx += 8;
-    for (i = 0; i < MAX_HEADER_BUF; i++)
-	bs->header[i].write_timing++;
+    return copy_buffer(gfc, buffer, size);
 }
 
 /*
@@ -828,7 +885,7 @@ drain_into_ancillary(lame_t gfc, int remainingBits)
   in the IS).
 */
 int
-format_bitstream(lame_t gfc)
+format_bitstream(lame_t gfc, unsigned char *mp3buf, int mp3buf_size)
 {
     int drainPre, drainbits = gfc->ResvSize & 7;
 
@@ -854,76 +911,8 @@ format_bitstream(lame_t gfc)
     assert(gfc->bs.bitidx % 8 == 0);
     assert(gfc->ResvSize % 8 == 0);
     assert(gfc->ResvSize >= 0);
-    return 0;
+
+    /* copy mp3 bit buffer into array */
+    return copy_buffer(gfc, mp3buf, mp3buf_size);
 }
 
-/* copy data out of the internal MP3 bit buffer into a user supplied
-   unsigned char buffer.
-
-   mp3data=0      indicates data in buffer is an id3tags and VBR tags
-   mp3data=1      data is real mp3 frame data. 
-*/
-int
-copy_buffer(lame_t gfc, unsigned char *buffer, int size, int mp3data)
-{
-    bit_stream_t *bs=&gfc->bs;
-    int spec_idx, minimum;
-    unsigned char *pbuf, *pend;
-    if (bs->bitidx <= 0)
-	return 0;
-
-    /* interleave the sideinfo and spectrum data */
-    pbuf = buffer;
-    if (size == 0)
-	size = 65535;
-    pend = &pbuf[size];
-
-    assert(bs->bitidx % 8 == 0);
-    bs->bitidx >>= 3;
-    spec_idx = 0;
-    do {
-	if (bs->totbyte + spec_idx == bs->header[bs->w_ptr].write_timing) {
-	    int i = gfc->sideinfo_len;
-	    if (pbuf+i >= pend) return -1; /* buffer is too small */
-	    memcpy(pbuf, bs->header[bs->w_ptr].buf, i);
-	    pbuf += i;
-	    bs->w_ptr = (bs->w_ptr + 1) & (MAX_HEADER_BUF-1);
-	}
-	if (pbuf >= pend) return -1; /* buffer is too small */
-	*pbuf++ = bs->buf[spec_idx++];
-    } while (spec_idx < bs->bitidx);
-    bs->totbyte += spec_idx;
-
-    memset(bs->buf, 0, spec_idx);
-    bs->bitidx = 0;
-    minimum = pbuf - buffer;
-
-    if (mp3data) {
-	UpdateMusicCRC(&gfc->nMusicCRC, buffer, minimum);
-#ifdef DECODE_ON_THE_FLY
-	/* this is untested code;
-	   if, for somereason, we would like to decode the frame: */
-	short int pcm_out[2][1152];
-	int mp3out;
-	do {
-	    /* re-synthesis to pcm.  Repeat until we get a mp3out=0 */
-	    mp3out=lame_decode1(buffer,minimum,pcm_out[0],pcm_out[1]); 
-	    /* mp3out = 0:  need more data to decode */
-	    /* mp3out = -1:  error.  Lets assume 0 pcm output */
-	    /* mp3out = number of samples output */
-	    if (mp3out==-1) {
-		/* error decoding.  Not fatal, but might screw up are
-		 * ReplayVolume Info tag.  
-		 * what should we do?  ignore for now */
-		mp3out=0;
-	    }
-	    if (mp3out>1152) {
-		/* this should not be possible, and indicates we have
-		 * overflowed the pcm_out buffer.  Fatal error. */
-		return -6;
-	    }
-	} while (mp3out>0);
-#endif
-    }
-    return minimum;
-}

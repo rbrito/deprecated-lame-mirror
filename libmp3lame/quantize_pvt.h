@@ -28,8 +28,8 @@
         << (gi->scalefac_scale + 1)) \
      - gi->subblock_gain[gi->window[sfb]]*8)
 
-#define xr34 gfc->xrwork[0]
-#define absxr gfc->xrwork[1]
+#define xr34 gfc->w.xrwork[0]
+#define absxr gfc->w.xrwork[1]
 
 /* takehiro.c */
 

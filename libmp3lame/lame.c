@@ -543,7 +543,7 @@ lame_init_params(lame_t gfc)
 	}
     }
 #endif
-    init_bit_stream_w(gfc);
+    init_bitstream_w(gfc);
 
     gfc->Class_ID = LAME_ID;
 
@@ -558,7 +558,6 @@ lame_init_params(lame_t gfc)
     /* initialize internal qval settings */
     init_qval(gfc);
 
-    lame_init_bitstream(gfc);
     iteration_init(gfc);
     psymodel_init(gfc);
 
@@ -1007,30 +1006,9 @@ int
 lame_encode_flush_nogap(lame_t gfc,
 			unsigned char *mp3buffer, int mp3buffer_size)
 {
-    return flush_bitstream(gfc,  mp3buffer, mp3buffer_size, 1);
+    return flush_bitstream(gfc, mp3buffer, mp3buffer_size);
 }
 
-
-/* called by lame_init_params.  You can also call this after flush_nogap 
-   if you want to write new id3v2 and Xing VBR tags into the bitstream */
-int
-lame_init_bitstream(lame_t gfc)
-{
-#ifdef BRHIST
-    /* initialize histogram data optionally used by frontend */
-    memset(gfc->bitrate_stereoMode_Hist, 0,
-	   sizeof(gfc->bitrate_stereoMode_Hist));
-    memset(gfc->bitrate_blockType_Hist, 0,
-	   sizeof(gfc->bitrate_blockType_Hist));
-#endif
-    gfc->frameNum=0;
-    /* Write ID3v2 TAG at very the beggining */
-    id3tag_write_v2(gfc);
-    /* Write initial VBR Header to bitstream and init VBR data */
-    InitVbrTag(gfc);
-
-    return 0;
-}
 
 /*****************************************************************/
 /* flush internal PCM sample buffers, then mp3 buffers           */
@@ -1077,7 +1055,7 @@ lame_encode_flush(lame_t gfc, unsigned char *mp3buf, int mp3buffer_size)
     gfc->encoder_padding = POSTDELAY - mf_samples_to_encode;
 
     /* mp3 related stuff.  bit buffer might still contain some mp3 data */
-    imp3 = flush_bitstream(gfc, mp3buf, mp3buffer_size_remaining, 1);
+    imp3 = flush_bitstream(gfc, mp3buf, mp3buffer_size_remaining);
     if (imp3 < 0) return imp3;
 
     if (mp3buffer_size)
@@ -1086,8 +1064,7 @@ lame_encode_flush(lame_t gfc, unsigned char *mp3buf, int mp3buffer_size)
     mp3count += imp3;
 
     /* write a id3 tag to the bitstream */
-    id3tag_write_v1(gfc);
-    imp3 = copy_buffer(gfc, mp3buf, mp3buffer_size_remaining, 0);
+    imp3 = id3tag_write_v1(gfc, mp3buf, mp3buffer_size_remaining);
     if (imp3 < 0) return imp3;
 
     return mp3count + imp3;
@@ -1257,6 +1234,21 @@ lame_init(void)
     id3tag_init (gfc);
 
     return gfc;
+}
+
+int
+lame_init_bitstream(lame_t gfc)
+{
+#ifdef BRHIST
+    /* initialize histogram data optionally used by frontend */
+    memset(gfc->bitrate_stereoMode_Hist, 0,
+	   sizeof(gfc->bitrate_stereoMode_Hist));
+    memset(gfc->bitrate_blockType_Hist, 0,
+	   sizeof(gfc->bitrate_blockType_Hist));
+#endif
+    gfc->frameNum=0;
+
+    return 0;
 }
 
 /***********************************************************************

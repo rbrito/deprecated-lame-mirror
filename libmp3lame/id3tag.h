@@ -12,8 +12,8 @@
 
 
 /* write tag into stream at current position */
-extern int id3tag_write_v2(lame_t gfc);
-extern int id3tag_write_v1(lame_t gfc);
+extern int id3tag_write_v2(lame_t gfc, unsigned char *buf, int size);
+extern int id3tag_write_v1(lame_t gfc, unsigned char *buf, int size);
 /*
  * NOTE: A version 2 tag will NOT be added unless one of the text fields won't
  * fit in a version 1 tag (e.g. the title string is longer than 30 characters),

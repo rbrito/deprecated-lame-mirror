@@ -1165,7 +1165,7 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 	max[0] = enn * 2.0;
 	avg[0] = enn * 2.0 * gfc->rnumlines_l[0];
 
-	for (b = j = 1; b<gfc->npart_l; b++) {
+	for (b = j = 1; b < gfc->npart_l; b++) {
 	    thmm = enn = p[j]*p[j] + p[BLKSIZE-j]*p[BLKSIZE-j];
 	    j++;
 	    for (i = gfc->numlines_l[b] - 1; i > 0; --i) {

@@ -690,8 +690,8 @@ mdct_sub48(lame_t gfc, int ch)
 	if (gfc->xrNumMax_longblock < 576-36)
 	    endband = gfc->xrNumMax_longblock / 18 + 1;
 	do {
-	    FLOAT *prev = &gfc->sb_sample[ch][gr  ][0][mdctorder[band]];
-	    FLOAT *next = &gfc->sb_sample[ch][gr+1][0][mdctorder[band]];
+	    FLOAT *prev = &gfc->w.sb_smpl[ch][gr  ][0][mdctorder[band]];
+	    FLOAT *next = &gfc->w.sb_smpl[ch][gr+1][0][mdctorder[band]];
 	    if (type != SHORT_TYPE || (gi->mixed_block_flag && band < 2)) {
 		FLOAT work[18];
 		for (k = -NL/4; k < 0; k++) {

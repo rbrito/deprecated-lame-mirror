@@ -225,8 +225,11 @@ typedef struct {
  * encoder instance.
  */
 struct lame_internal_flags {
-    /* most used variables */
-    FLOAT xrwork[2][576];  /* xr^(3/4) and fabs(xr) */
+    /* variables for subband filter and MDCT */
+    union {
+	FLOAT sb_smpl[MAX_CHANNELS][3][18][SBLIMIT];
+	FLOAT xrwork[2][576];  /* xr^(3/4) and fabs(xr) */
+    } w;
 
     /* side information */
     gr_info tt[MAX_GRANULES][MAX_CHANNELS];
@@ -236,9 +239,9 @@ struct lame_internal_flags {
     int maxmp3buf; /* in bytes */
     int sideinfo_len;
     int scfsi[MAX_CHANNELS][4];
+    int mode_gr;        /* granules per frame */
+    int channels_out;   /* number of channels in the output data stream (not used for decoding) */
 
-    /* variables for subband filter and MDCT */
-    FLOAT sb_sample[MAX_CHANNELS][3][18][SBLIMIT];
     FLOAT amp_filter[SBLIMIT];
     int xrNumMax_longblock;
 /*
@@ -257,26 +260,21 @@ struct lame_internal_flags {
 #define LAME_ID 0xFFF88E3B
 
     unsigned long Class_ID;
-
-    sample_t     mfbuf[MAX_CHANNELS][MFSIZE];
     int alignment;
+    int frameNum;                   /* number of frames encoded             */
 
-    int mode_gr;        /* granules per frame */
-    int channels_in;	/* number of channels in the input data stream (PCM or decoded PCM) */
-    int channels_out;   /* number of channels in the output data stream (not used for decoding) */
-
+    sample_t mfbuf[MAX_CHANNELS][MFSIZE];
     int mf_size;
     int mf_needed;
+
+    int channels_in;	/* number of channels in the input data stream (PCM or decoded PCM) */
+
     int framesize;
     int VBR_min_bitrate;            /* min bitrate index */
     int VBR_max_bitrate;            /* max bitrate index */
     int bitrate_index;
     int samplerate_index;
     int mode_ext;
-
-    /* lowpass and highpass filter control */
-    FLOAT lowpass1,lowpass2;   /* normalized frequency bounds of passband */
-    FLOAT highpass1,highpass2; /* normalized frequency bounds of passband */
 
     FLOAT narrowStereo;        /* stereo image narrowen factor */
     FLOAT reduce_side;         /* side channel PE reduce factor */
@@ -514,11 +512,14 @@ struct lame_internal_flags {
     int VBR_min_bitrate_kbps;
     int VBR_max_bitrate_kbps;
 
-    /* resampling and filtering */
+    /* lowpass and highpass filter control */
     int lowpassfreq;   /* freq in Hz. 0=lame choses, -1=no filter */
     int highpassfreq;  /* freq in Hz. 0=lame choses. -1=no filter */
     int lowpasswidth;  /* freq width of filter, in Hz (default=15%) */
     int highpasswidth; /* freq width of filter, in Hz (default=15%) */
+    FLOAT lowpass1,lowpass2;   /* normalized frequency bounds of passband */
+    FLOAT highpass1,highpass2; /* normalized frequency bounds of passband */
+
     /*
      * psycho acoustics and other arguments which you should not change 
      * unless you know what you are doing
@@ -530,7 +531,6 @@ struct lame_internal_flags {
     FLOAT ATHlower;                 /* lower ATH by this many db            */
 
     int encoder_padding;  /* number of samples of padding appended to input */
-    int frameNum;                   /* number of frames encoded             */
 
 #ifdef HAVE_MPGLIB
     PMPSTR pmp;

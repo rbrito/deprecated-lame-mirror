@@ -1113,7 +1113,7 @@ psymodel_init(lame_t gfc)
 
 
 void
-init_bit_stream_w(lame_t gfc)
+init_bitstream_w(lame_t gfc)
 {
     gfc->bs.h_ptr = gfc->bs.w_ptr = 0;
     gfc->bs.header[gfc->bs.h_ptr].write_timing = 0;

@@ -36,6 +36,7 @@
 #include "tables.h"
 #include "bitstream.h"
 #include "VbrTag.h"
+#include "id3tag.h"
 
 static void
 conv_istereo(lame_t gfc, gr_info *gi, int sfb, int i)
@@ -282,8 +283,8 @@ encode_mp3_frame(lame_t gfc, unsigned char* mp3buf, int mp3buf_size)
     if (gfc->frameNum++ == 0) {
 	/* very the first frame */
 	for (ch = 0; ch < gfc->channels_out; ch++) {
-	    memcpy(gfc->sb_sample[ch][1], sbsmpl[ch],
-		   sizeof(gfc->sb_sample[0][0])*gfc->mode_gr);
+	    memcpy(gfc->w.sb_smpl[ch][1], sbsmpl[ch],
+		   sizeof(gfc->w.sb_smpl[0][0])*gfc->mode_gr);
 	}
 	return 0;
     }
@@ -298,12 +299,6 @@ encode_mp3_frame(lame_t gfc, unsigned char* mp3buf, int mp3buf_size)
     /* mdct */
     for (ch = 0; ch < gfc->channels_out; ch++) {
 	mdct_sub48(gfc, ch);
-	/* aging subband filetr output */
-	memcpy(gfc->sb_sample[ch][0], gfc->sb_sample[ch][gfc->mode_gr],
-	       sizeof(gfc->sb_sample[0][0]));
-	memcpy(gfc->sb_sample[ch][1], sbsmpl[ch],
-	       sizeof(gfc->sb_sample[0][0])*gfc->mode_gr);
-
 	for (gr = 0; gr < gfc->mode_gr; gr++)
 	    init_gr_info(gfc, gr, ch);
     }
@@ -386,10 +381,7 @@ encode_mp3_frame(lame_t gfc, unsigned char* mp3buf, int mp3buf_size)
     }
 
     /*  write the frame to the bitstream  */
-    format_bitstream(gfc);
-
-    /* copy mp3 bit buffer into array */
-    mp3count = copy_buffer(gfc,mp3buf,mp3buf_size,1);
+    mp3count = format_bitstream(gfc, mp3buf, mp3buf_size);
 
     if (gfc->bWriteVbrTag && gfc->VBR != cbr)
 	AddVbrFrame(gfc);
@@ -402,6 +394,14 @@ encode_mp3_frame(lame_t gfc, unsigned char* mp3buf, int mp3buf_size)
 #ifdef BRHIST
     updateStats( gfc );
 #endif
+
+    for (ch = 0; ch < gfc->channels_out; ch++) {
+	/* aging subband filetr output */
+	memcpy(gfc->w.sb_smpl[ch][0], gfc->w.sb_smpl[ch][gfc->mode_gr],
+	       sizeof(gfc->w.sb_smpl[0][0]));
+	memcpy(gfc->w.sb_smpl[ch][1], sbsmpl[ch],
+	       sizeof(gfc->w.sb_smpl[0][0])*gfc->mode_gr);
+    }
 
     return mp3count;
 }
@@ -527,13 +527,24 @@ encode_buffer_sample(
     sample_t *in_buffer[2];
     unsigned char *p = mp3buf;
 
-    /* copy out any tags that may have been written into bitstream */
-    i = copy_buffer(gfc, p, mp3buf_size, 0);
-    if (i < 0)
-	return i;  /* not enough buffer space */
-    p += i;
-    if (mp3buf_size)
-	buf_remain -= i;
+    if (gfc->frameNum == 0) {
+	/* Write ID3v2 TAG at very the beggining */
+	i = id3tag_write_v2(gfc, p, buf_remain);
+	if (i < 0)
+	    return i;  /* not enough buffer space */
+	p += i;
+	if (mp3buf_size)
+	    buf_remain -= i;
+
+	/* Write initial VBR Header to bitstream and init VBR data */
+	i = InitVbrTag(gfc);
+	if ((mp3buf_size && i >= buf_remain) || i < 0)
+	    return -1;  /* not enough buffer space */
+	memset(p, 0, i);
+	p += i;
+	if (mp3buf_size)
+	    buf_remain -= i;
+    }
 
     /* Downsample to Mono if 2 channels in and 1 channel out */
     if (gfc->channels_in == 2 && gfc->channels_out == 1) {
