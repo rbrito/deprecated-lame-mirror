@@ -1093,7 +1093,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 
                 T_ELIF_INTERNAL ("vbr-smooth")
                     argUsed=1;
-                    (void) lame_set_vbr_smooth( gfp, atof( nextArg ) );
+                    (void) lame_set_vbr_smooth( gfp, atoi( nextArg ) );
 
                 T_ELIF_INTERNAL ("maskingadjust")
                     argUsed=1;
@@ -1112,7 +1112,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 
                 T_ELIF_INTERNAL ("substep")
                     argUsed=1;
-                    (void) lame_set_substep( gfp, atof(nextArg) );
+                    (void) lame_set_substep( gfp, atoi(nextArg) );
                        
                 T_ELIF_INTERNAL ("sbgain")
                     argUsed=1;
@@ -1368,7 +1368,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                         fprintf(stderr,"Must specify lowpass with --lowpass freq, freq >= 0.001 kHz\n");
                         return -1;
                     }
-                    lame_set_lowpassfreq(gfp,val * (val < 50. ? 1.e3 : 1.e0 ) + 0.5);
+                    lame_set_lowpassfreq(gfp,(int)(val * (val < 50. ? 1.e3 : 1.e0 ) + 0.5));
                 
                 T_ELIF ("lowpass-width")
                     argUsed=1;
@@ -1377,7 +1377,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                         fprintf(stderr,"Must specify lowpass width with --lowpass-width freq, freq >= 0 kHz\n");
                         return -1;
                     }
-                    lame_set_lowpasswidth(gfp,val); 
+                    lame_set_lowpasswidth(gfp,(int)val); 
                 
                 T_ELIF ("highpass")
                     val = atof( nextArg );
@@ -1387,7 +1387,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                         fprintf(stderr,"Must specify highpass with --highpass freq, freq >= 0.001 kHz\n");
                         return -1;
                     }
-                    lame_set_highpassfreq(gfp, val * (val < 16. ? 1.e3 : 1.e0 ) + 0.5);
+                    lame_set_highpassfreq(gfp, (int)(val * (val < 16. ? 1.e3 : 1.e0 ) + 0.5));
                 
                 T_ELIF ("highpass-width")
                     argUsed=1;
@@ -1396,14 +1396,14 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                         fprintf(stderr,"Must specify highpass width with --highpass-width freq, freq >= 0 kHz\n");
                         return -1;
                     }
-                    lame_set_highpasswidth(gfp,val);
+                    lame_set_highpasswidth(gfp,(int)val);
                 
                 T_ELIF ("cwlimit")
                     val = atof (nextArg);
                     argUsed=1;
                     /* useful are 0.001 kHz...50 kHz, 50 Hz...50000 Hz */
                     {
-                        int my_cwlimit = val * ( val <= 50. ? 1.e3 : 1.e0 );
+                        int my_cwlimit = (int)(val * ( val <= 50. ? 1.e3 : 1.e0 ));
                         lame_set_cwlimit( gfp, my_cwlimit );
                         if ( my_cwlimit <= 0 ) {
                             fprintf( stderr,
@@ -1658,7 +1658,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                         argUsed = 1;
                         val = atof( arg );
                         (void) lame_set_in_samplerate( gfp,
-                            val * ( val <= 192 ? 1.e3 : 1.e0 ) + 0.5 );
+                            (int)(val * ( val <= 192 ? 1.e3 : 1.e0 ) + 0.5) );
                         break;
                     case 'b':        
                         argUsed = 1;

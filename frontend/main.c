@@ -304,7 +304,7 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath,
 
     if ( 0 == disable_wav_header )
         if (!fseek(outf, 0l, SEEK_SET)) /* if outf is seekable, rewind and adjust length */
-            WriteWaveHeader(outf, wavsize, lame_get_in_samplerate( gfp ),
+            WriteWaveHeader(outf, (int)wavsize, lame_get_in_samplerate( gfp ),
                             tmp_num_channels, 16);
     fclose(outf);
 

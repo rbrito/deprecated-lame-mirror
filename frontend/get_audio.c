@@ -1176,7 +1176,7 @@ parse_aiff_header(lame_global_flags * gfp, FILE * sf)
                      aiff_info.numChannels );
             exit( 1 );
         }
-        (void) lame_set_in_samplerate( gfp, aiff_info.sampleRate );
+        (void) lame_set_in_samplerate( gfp, (int)aiff_info.sampleRate );
         pcmbitwidth = aiff_info.sampleSize;
         (void) lame_set_num_samples( gfp, aiff_info.numSampleFrames );
     }
@@ -1332,7 +1332,7 @@ OpenSndFile(lame_global_flags * gfp, char *inPath)
                     double  totalseconds =
                         (flen * 8.0 / (1000.0 * mp3input_data.bitrate));
                     unsigned long tmp_num_samples =
-                        totalseconds * lame_get_in_samplerate( gfp );
+                        (unsigned long) totalseconds * lame_get_in_samplerate( gfp );
 
                     (void) lame_set_num_samples( gfp, tmp_num_samples );
                     mp3input_data.nsamp = tmp_num_samples;
@@ -1340,7 +1340,7 @@ OpenSndFile(lame_global_flags * gfp, char *inPath)
             }
             else {
                 (void) lame_set_num_samples( gfp,
-                    flen / (2 * lame_get_num_channels( gfp )) );
+                    (unsigned long)(flen / (2 * lame_get_num_channels( gfp ))) );
             }
         }
     }
@@ -1437,7 +1437,7 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
 	if (fread(&buf, 1, len, fd) != len)
 	    return -1;      /* failed */
 	buf[2] &= 127; buf[3] &= 127; buf[4] &= 127; buf[5] &= 127;
-	len = ((((buf[2] << 7) + buf[3] << 7) + buf[4]) << 7) + buf[5];
+	len = (((((buf[2] << 7) + buf[3]) << 7) + buf[4]) << 7) + buf[5];
 	fskip(fd, len, SEEK_CUR);
 	len = 4;
 	if (fread(&buf, 1, len, fd) != len)
