@@ -168,7 +168,6 @@ typedef struct
 {
     int     quality;
     FLOAT8  mask_adjust;    // the dbQ stuff
-    int     gain_adjust;
     int     smooth;         // 0=no, 1=peaks, 2=+-4
     int     bitpressure;    // strategy for bitpressure situations
     FLOAT8  scratch[192];
@@ -531,7 +530,7 @@ extern void freorder(int scalefac_band[],FLOAT8 ix_orig[576]);
 void disable_FPE(void);
 
 extern void 
-getframebits(lame_global_flags *gfp, int *bitsPerFrame, int *mean_bits);
+getframebits( const lame_global_flags *gfp, int *bitsPerFrame, int *mean_bits);
 
 void fill_buffer(lame_global_flags *gfp,
 		 sample_t *mfbuf[2],

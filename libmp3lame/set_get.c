@@ -1386,8 +1386,7 @@ void lame_set_tune( lame_global_flags* gfp, float val )
 
 /* Custom msfix hack */
 void
-lame_set_msfix( lame_global_flags*  gfp,
-                   double              msfix )
+lame_set_msfix( lame_global_flags*  gfp, double msfix )
 {
     /* default = 0 */
     gfp->msfix = msfix;

@@ -753,7 +753,7 @@ writeMainData ( lame_global_flags * const gfp,
 
  */
 int
-compute_flushbits(lame_global_flags *gfp, int *total_bytes_output )
+compute_flushbits( const lame_global_flags * gfp, int *total_bytes_output )
 {
   lame_internal_flags *gfc=gfp->internal_flags;
   int flushbits,remaining_headers;

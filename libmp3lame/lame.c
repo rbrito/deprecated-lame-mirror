@@ -1010,13 +1010,11 @@ lame_init_params(lame_global_flags * const gfp)
         if ( gfc->VBR->quality > 5 ) {
             static float const dbQ[10] = { -6,-4.75,-3.5,-2.25,-1,.25,1.5,2.75,4,5.25 };
             gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
-            gfc->VBR->gain_adjust = 0;
             gfc->VBR->smooth = 1;   // not finally
         }
         else {
             static const float dbQ[10]={-2.,-1.0,-.66,-.33,0.,0.33,.66,1.0,1.33,1.66};
             gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
-            gfc->VBR->gain_adjust = 0;
             gfc->VBR->smooth = 1;
         }
         if ( gfc->VBR->quality == 1 ) {
@@ -1051,7 +1049,6 @@ lame_init_params(lame_global_flags * const gfp)
             gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
         }
         gfc->VBR->quality = 2;
-        gfc->VBR->gain_adjust = 0;
         gfc->VBR->smooth = 2;
 
         /*  fall through

@@ -730,7 +730,6 @@ outer_loop (
     int age = 0;
 
     noise_info.over_count = 100;
-    noise_info.tot_count  = 100;
     noise_info.max_noise  = 0;
     noise_info.tot_noise  = 0;
     noise_info.over_noise = 0;

@@ -1026,14 +1026,6 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                  *  please, do *not* DOCUMENT this one
                  *  it is a developers only switch (rh)
                  */
-                T_ELIF ("remix")
-                    lame_set_VBR(gfp,vbr_mtrh); 
-                    lame_set_VBR_q(gfp,1);
-                    lame_set_quality( gfp, 2 );
-                    lame_set_lowpassfreq(gfp,19500);
-                    lame_set_mode( gfp, JOINT_STEREO );
-                    lame_set_ATHtype( gfp, 3 );
-                    lame_set_VBR_min_bitrate_kbps(gfp,32);
                 T_ELIF ("tune")
                     argUsed=1;
                     {extern void lame_set_tune(lame_t gfp, float val);
@@ -1310,6 +1302,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     lame_set_exp_nspsytune(gfp,lame_get_exp_nspsytune(gfp) | 2);
 
 		T_ELIF ("nsmsfix")
+                    extern void lame_set_msfix( lame_t gfp, double msfix );
                     argUsed=1;
                     (void) lame_set_msfix( gfp, atof(nextArg) );
                 

@@ -723,7 +723,6 @@ int  calc_noise(
 
   /* normalization at this point by "count" is not necessary, since
    * the values are only used to compare with previous values */
-  res->tot_count  = count;
   res->over_count = over;
 
   /* convert to db. DO NOT CHANGE THESE */

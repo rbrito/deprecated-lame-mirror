@@ -343,7 +343,7 @@ FLOAT8 freq2cbw(FLOAT8 freq)
 /***********************************************************************
  * compute bitsperframe and mean_bits for a layer III frame 
  **********************************************************************/
-void getframebits(lame_global_flags *gfp, int *bitsPerFrame, int *mean_bits) 
+void getframebits(const lame_global_flags * gfp, int *bitsPerFrame, int *mean_bits) 
 {
   lame_internal_flags *gfc=gfp->internal_flags;
   int  whole_SpF;  /* integral number of Slots per Frame without padding */
