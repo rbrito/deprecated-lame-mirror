@@ -5,12 +5,28 @@
 # Compaq Alpha(OSF, Linux, Tru64 Unix), Sun Solaris, SGI IRIX,
 # OS2 Warp, Macintosh PPC, BeOS, Amiga and even VC++ 
 # 
-UNAME = $(shell uname)
-ARCH = $(shell uname -m)
 
+# these variables are available on command line:
+#
+#   make NOUNIXCMD=YES            - don't use unix commands
+#   make UNAME=xxxxx ARCH=xxxxx   - specify a type of host
+#   make PGM=lame_exp             - specify a name of an executable file
+#
+# if you have mingw32-gcc, try:
+#   make NOUNIXCMD=YES UNAME=MSDOS
+#
+
+
+ifeq ($(NOUNIXCMD),YES)
+  UNAME ?= UNKNOWN
+  ARCH ?= UNKNOWN_ARCH
+else
+  UNAME = $(shell uname)
+  ARCH = $(shell uname -m)
+endif
 
 # generic defaults. OS specific options go in versious sections below
-PGM = lame
+PGM ?= lame
 CC = gcc
 CC_OPTS =  -O
 GTK = 
@@ -303,7 +319,7 @@ ifeq ($(UNAME),OS/2)
    SHELL=sh	
    CC = gcc
    CC_OPTS = -O3
-   PGM = lame.exe
+   PGM ?= lame.exe
    LIBS =
 
 # I use the following for slightly better performance on my Pentium-II
@@ -321,7 +337,13 @@ ifeq ($(UNAME),OS/2)
 #   GTKLIBS = -LC:/XFree86/lib -Zmtd -Zsysv-signals -Zbin-files -lgtk12 -lgdk12 -lgmodule -lglib12 -lXext -lX11 -lshm -lbsd -lsocket -lm
 endif
 
-
+###########################################################################
+# MSDOS/Windows
+###########################################################################
+ifeq ($(UNAME),MSDOS)
+  RM =
+  PGM ?= lame.exe
+endif
 
 
 # 10/99 added -D__NO_MATH_INLINES to fix a bug in *all* versions of
@@ -329,7 +351,7 @@ endif
 
 CC_SWITCHES = -DNDEBUG -D__NO_MATH_INLINES $(CC_OPTS) $(SNDLIB) $(GTK) \
 $(BRHIST_SWITCH) $(VORBIS) 
-c_sources = \
+c_sources_s = \
         brhist.c \
 	bitstream.c \
 	fft.c \
@@ -360,6 +382,12 @@ c_sources = \
         mpglib/interface.c \
         mpglib/main.c 
 
+ifeq ($(UNAME),MSDOS)
+  c_sources = $(subst /,\\,$(c_sources_s))
+else
+  c_sources = $(c_sources_s)
+endif
+
 OBJ = $(c_sources:.c=.o)
 DEP = $(c_sources:.c=.d)
 
@@ -384,7 +412,11 @@ ASFLAGS=-f elf -i i386/
 	$(CC) $(CPP_OPTS) $(CC_SWITCHES) -c $< -o $@
 
 %.d: %.c
+  ifeq ($(NOUNIXCMD),YES)
+	$(CC) $(MAKEDEP)  $(CPP_OPTS) $(CC_SWITCHES)  $< > $@
+  else
 	$(SHELL) -ec '$(CC) $(MAKEDEP)  $(CPP_OPTS) $(CC_SWITCHES)  $< | sed '\''s;$*.o;& $@;g'\'' > $@'
+  endif
 
 all: $(PGM)
 
@@ -403,8 +435,17 @@ libmp3lame.a:  $(OBJ) Makefile
 	ar cr libmp3lame.a  $(OBJ) 
 
 clean:
+  ifeq ($(UNAME),MSDOS)
+	-del *.o
+	-del *.d
+	-del *.a
+	-del mpglib\*.o
+	-del mpglib\*.d
+	-del $(PGM)
+  else
 	-$(RM) $(gtk_obj) $(OBJ) $(DEP) $(PGM) main.o rtp.o mp3rtp mp3rtp.o \
          mp3x.o mp3x libmp3lame.a 
+  endif
 
 
 tags: TAGS
