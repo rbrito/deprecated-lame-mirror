@@ -55,7 +55,7 @@
 #endif
 
 //! Compile time features.
-#define V   V1 V2 V3
+#define V   V1
 
 //! Get the LAME version string.
 /*!
