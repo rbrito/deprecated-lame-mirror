@@ -140,41 +140,6 @@ iteration_loop( lame_global_flags *gfp,
 }
 
 
-FLOAT8
-set_masking_lower (int VBR_q,int nbits)
-{
-	FLOAT masking_lower_db, adjust;
-	
-	/* quality setting */
-	/* Adjust allowed masking based on quality setting */
-	
-#ifdef  RH_QUALITY_CONTROL	
-	/* - lower masking depending on Quality setting
-	 * - quality control together with adjusted ATH MDCT scaling
-	 *   on lower quality setting allocate more noise from
-	 *   ATH masking, and on higher quality setting allocate
-	 *   less noise from ATH masking.
-	 * - experiments show that going more than 2dB over GPSYCHO's
-	 *   limits ends up in very annoying artefacts
-	 */
-	static const FLOAT dbQ[10]={-6.0,-4.5,-3.0,-1.5,0,0.3,0.6,1.0,1.5,2.0};
-	
-	assert( VBR_q <= 9 );
-	assert( VBR_q >= 0 );
-	
-	masking_lower_db = dbQ[VBR_q];	
-	adjust = 0;
-#else
-	/* masking_lower varies from -8 to +10 db */
-	masking_lower_db = -6 + 2*VBR_q;
-	/* adjust by -6(min)..0(max) depending on bitrate */
-	adjust = (nbits-125)/(2500.0-125.0);
-	adjust = 4*(adjust-1);
-#endif
-	masking_lower_db += adjust;
-	//	masking_lower = pow(10.0,masking_lower_db/10);
-	return pow(10.0,masking_lower_db/10);
-}
 
 /************************************************************************
  *
@@ -221,21 +186,33 @@ VBR_iteration_loop (lame_global_flags *gfp,
   l3_side = &gfc->l3_side;
   iteration_init(gfp,l3_side,l3_enc);
 
-#ifdef  RH_SIDE_VBR
     /* my experiences are, that side channel reduction  
      * does more harm than good when VBR encoding
      * (Robert.Hegemann@gmx.de 2000-02-18)
-     */
-#else
   if (gfc->mode_ext==MPG_MD_MS_LR) 
     reduce_sidechannel=1;
-#endif
+     */
 
 
-#ifdef RH_QUALITY_CONTROL
-  /* with RH_QUALITY_CONTROL we have to set masking_lower only once */
-  gfc->masking_lower=set_masking_lower(gfp->VBR_q, 0 );
-#endif      
+
+  /* - lower masking depending on Quality setting
+   * - quality control together with adjusted ATH MDCT scaling
+   *   on lower quality setting allocate more noise from
+   *   ATH masking, and on higher quality setting allocate
+   *   less noise from ATH masking.
+   * - experiments show that going more than 2dB over GPSYCHO's
+   *   limits ends up in very annoying artefacts
+   */
+  {
+    static const FLOAT8 dbQ[10]={-6.0,-4.5,-3.0,-1.5,0,0.3,0.6,1.0,1.5,2.0};
+    FLOAT8 masking_lower_db;
+    assert( gfp->VBR_q <= 9 );
+    assert( gfp->VBR_q >= 0 );
+    masking_lower_db = dbQ[gfp->VBR_q];	
+    gfc->masking_lower = pow(10.0,masking_lower_db/10);
+  }
+  
+
 
   /*******************************************************************
    * how many bits are available for each bitrate?
@@ -298,16 +275,6 @@ VBR_iteration_loop (lame_global_flags *gfp,
       
       memcpy( &clean_cod_info, cod_info, sizeof(gr_info) );
       
-#ifdef RH_QUALITY_CONTROL
-      /*
-       * masking lower already set in the beginning
-       */
-#else
-      /*
-       * has to be set before calculating l3_xmin
-       */
-      gfc->masking_lower=set_masking_lower( gfp->VBR_q,2500 );
-#endif      
       /* check for analolg silence */
       /* if energy < ATH, set min_bits = 125 */
       if (0==calc_xmin(gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin, gfc->masking_lower)) {
@@ -362,19 +329,6 @@ VBR_iteration_loop (lame_global_flags *gfp,
 	   */
 	  memcpy( cod_info, &clean_cod_info, sizeof(gr_info) );
 
-#ifdef RH_QUALITY_CONTROL
-          /*
-	   * there is no need for a recalculation of l3_xmin,
-	   * because masking_lower did not change within this do-while
-	   */
-#else
-	  /* quality setting */
-	  gfc->masking_lower=set_masking_lower( gfp->VBR_q,this_bits );
-          /* 
-	   * compute max allowed distortion, masking lower has changed
-	   */
-          calc_xmin(gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin, gfc->masking_lower);
-#endif
 	  outer_loop( gfp,xr[gr][ch], this_bits, noise, 
 		      &l3_xmin, l3_enc[gr][ch],
 		      &scalefac[gr][ch], cod_info, xfsf,
@@ -496,14 +450,6 @@ VBR_iteration_loop (lame_global_flags *gfp,
         }
 	else
 	{
-#ifdef RH_QUALITY_CONTROL
-          /*
-           * masking lower already set in the beginning
-           */
-#else
-          /* quality setting */
-          gfc->masking_lower=set_masking_lower( gfp->VBR_q,save_bits[gr][ch] );
-#endif
           calc_xmin(gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin,gfc->masking_lower);
 	
           outer_loop( gfp,xr[gr][ch], save_bits[gr][ch], noise,

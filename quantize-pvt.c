@@ -232,15 +232,15 @@ FLOAT8 ATHformula(lame_global_flags *gfp,FLOAT8 f)
     ath -= 114;    /* MDCT scaling.  From tests by macik and MUS420 code */
     /*ath -= 109; */
   }
-#ifdef RH_QUALITY_CONTROL 
+
   /* purpose of RH_QUALITY_CONTROL:
    * at higher quality lower ATH masking abilities   => needs more bits
    * at lower quality increase ATH masking abilities => needs less bits
    * works together with adjusted masking lowering of GPSYCHO thresholds
    * (Robert.Hegemann@gmx.de 2000-01-30)
    */
-  ath -= (4-gfp->VBR_q)*4.0; 
-#endif
+  if (gfp->VBR) ath -= (4-gfp->VBR_q)*4.0; 
+
   ath = pow( 10.0, ath/10.0 );
   return ath;
 }
