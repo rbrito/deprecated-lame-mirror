@@ -142,7 +142,6 @@ extern int      bitrate_table[2][15];
 extern void           display_bitrates(FILE *out_fh);
 extern int            BitrateIndex(int, int,int);
 extern int            SmpFrqIndex(long, int*);
-extern void           *mem_alloc(unsigned long, char*);
 extern int            copy_buffer(char *buffer,int buffer_size,Bit_stream_struc *bs);
 extern void           init_bit_stream_w(Bit_stream_struc*);
 extern void           alloc_buffer(Bit_stream_struc*, int);

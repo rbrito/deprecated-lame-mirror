@@ -9,7 +9,8 @@
 
 
 /* 1: MPEG-1, 0: MPEG-2 LSF, 1995-07-11 shn */
-FLOAT8  s_freq_table[2][4] = {{22.05, 24, 16, 0}, {44.1, 48, 32, 0}};
+FLOAT8  s_freq_table[3][4] = 
+  {{22.05, 24, 16, 0}, {44.1, 48, 32, 0}, {11.025, 12,8,0}};
 
 /* 1: MPEG-1, 0: MPEG-2 LSF, 1995-07-11 shn */
 int     bitrate_table[2][15] = {
@@ -141,39 +142,20 @@ int  *version)
     else if (sRate == 16000L) {
         *version = 0; return(2);
     }
+    else if (sRate == 12000L) {
+        *version = 0; return(1);
+    }
+    else if (sRate == 11025L) {
+        *version = 0; return(0);
+    }
+    else if (sRate ==  8000L) {
+        *version = 0; return(2);
+    }
     else {
         fprintf(stderr, "SmpFrqIndex: %ldHz is not a legal sample rate\n", sRate);
         return(-1);     /* Error! */
     }
 }
-
-/*******************************************************************************
-*
-*  Allocate number of bytes of memory equal to "block".
-*
-*******************************************************************************/
-/* exit(0) changed to exit(1) on memory allocation
- * error -- 1999/06 Alvaro Martinez Echevarria */
-
-void  *mem_alloc(unsigned long block, char *item)
-{
-
-    void    *ptr;
-
-    /* what kind of shit does ISO put out?  */
-    ptr = (void *) malloc((size_t) block /* <<1 */ ); /* allocate twice as much memory as needed. fixes dodgy
-					    memory problem on most systems */
-
-
-    if (ptr != NULL) {
-        memset(ptr, 0, (size_t) block);
-    } else {
-        fprintf(stderr,"Unable to allocate %s\n", item);
-        exit(1);
-    }
-    return(ptr);
-}
-
 
 
 /*****************************************************************************
@@ -290,8 +272,7 @@ void alloc_buffer(
 Bit_stream_struc *bs,   /* bit stream structure */
 int size)
 {
-   bs->buf = (unsigned char *)
-	mem_alloc((unsigned long) (size * sizeof(unsigned char)), "buffer");
+   bs->buf = (unsigned char *)       malloc(size);
    bs->buf_size = size;
 }
 

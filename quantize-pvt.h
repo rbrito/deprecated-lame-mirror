@@ -16,7 +16,7 @@ struct scalefac_struct
 };
 
 extern struct scalefac_struct scalefac_band;
-extern struct scalefac_struct sfBandIndex[6];
+extern struct scalefac_struct sfBandIndex[9];
 
 extern FLOAT8 pow43[PRECALC_SIZE];
 

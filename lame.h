@@ -109,6 +109,8 @@ typedef struct  {
 
 
 
+
+
   /********************************************************************/
   /* internal variables NOT set by calling program, and should not be */
   /* modified by the calling program                                  */
@@ -226,7 +228,8 @@ void lame_print_config(lame_global_flags *);
  * mp3buffer       pointer to buffer where mp3 output is written
  * mp3buffer_size  size of mp3buffer, in bytes
  * return code     number of bytes output in mp3buffer.  can be 0 
- *                 if return code = -1:  mp3buffer was too small
+ *                 -1:  mp3buffer was too small
+ *                 -2:  malloc() problem
  *
  * The required mp3buffer_size can be computed from num_samples, 
  * samplerate and encoding rate, but here is a worst case estimate:

@@ -93,7 +93,7 @@ int  pretab[21] =
            + (fr_ps->header->version * 3)
 */
 
-struct scalefac_struct sfBandIndex[6] =
+struct scalefac_struct sfBandIndex[9] =
 {
   { /* Table B.2.b: 22.05 kHz */
     {0,6,12,18,24,30,36,44,54,66,80,96,116,140,168,200,238,284,336,396,464,522,576},
@@ -118,6 +118,18 @@ struct scalefac_struct sfBandIndex[6] =
   { /* Table B.8.a: 32 kHz */
     {0,4,8,12,16,20,24,30,36,44,54,66,82,102,126,156,194,240,296,364,448,550,576},
     {0,4,8,12,16,22,30,42,58,78,104,138,180,192}
+  },
+  { /* MPEG-2.5 11.025 kHz */
+    {0,6,12,18,24,30,36,44,54,66,80,96,116,140,168,200,238,284,336,396,464,522,576},
+    {0/3,12/3,24/3,36/3,54/3,78/3,108/3,144/3,186/3,240/3,312/3,402/3,522/3,576/3}
+  },
+  { /* MPEG-2.5 12 kHz */
+    {0,6,12,18,24,30,36,44,54,66,80,96,116,140,168,200,238,284,336,396,464,522,576},
+    {0/3,12/3,24/3,36/3,54/3,78/3,108/3,144/3,186/3,240/3,312/3,402/3,522/3,576/3}
+  },
+  { /* MPEG-2.5 8 kHz */
+    {0,12,24,36,48,60,72,88,108,132,160,192,232,280,336,400,476,566,568,570,572,574,576},
+    {0/3,24/3,48/3,72/3,108/3,156/3,216/3,288/3,372/3,480/3,486/3,492/3,498/3,576/3}
   }
 };
 
@@ -147,11 +159,13 @@ iteration_init( lame_global_flags *gfp,III_side_info_t *l3_side, int l3_enc[2][2
   if ( gfp->frameNum==0 ) {
     for (i = 0; i < SBMAX_l + 1; i++) {
       scalefac_band.l[i] =
-	sfBandIndex[gfp->samplerate_index + (gfp->version * 3)].l[i];
+	sfBandIndex[gfp->samplerate_index + (gfp->version * 3) + 
+              6*(gfp->out_samplerate<16000)].l[i];
     }
     for (i = 0; i < SBMAX_s + 1; i++) {
       scalefac_band.s[i] =
-	sfBandIndex[gfp->samplerate_index + (gfp->version * 3)].s[i];
+	sfBandIndex[gfp->samplerate_index + (gfp->version * 3) + 
+             6*(gfp->out_samplerate<16000)].s[i];
     }
 
     l3_side->main_data_begin = 0;

@@ -42,6 +42,7 @@ typedef		unsigned long			BE_ERR;
 #define		BE_ERR_INVALID_FORMAT_PARAMETERS	0x00000002
 #define		BE_ERR_NO_MORE_HANDLES				0x00000003
 #define		BE_ERR_INVALID_HANDLE				0x00000004
+#define		BE_ERR_BUFFER_TOO_SMALL				0x00000005
 
 /* other constants */
 

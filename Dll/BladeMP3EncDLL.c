@@ -67,8 +67,6 @@ static void InitParams()
 
 
 
-#define MAX_ARGV 25
-
 __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples, PDWORD dwBufferSize, PHBE_STREAM phbeStream)
 {
 	int			nDllArgC=0;
@@ -118,20 +116,10 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 		memcpy(&lameConfig,pbeConfig,pbeConfig->format.LHV1.dwStructSize);
 	}
 
-	//for (i=0;i<MAX_ARGV;i++)
-	//	argv[i]=DllArgV[i];
-
-	// Clear the external and local paramters
-	InitParams();
-
-	// Clear argument array
-	//memset(&DllArgV[0][0],0x00,sizeof(DllArgV));
 
 	// Not used, always assign stream 1
 	*phbeStream=1;
 
-	// Set MP3 buffer size
-	*dwBufferSize=BUFFER_SIZE*2;
 
 
 	// --------------- Set arguments to LAME encoder -------------------------
@@ -144,19 +132,23 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 		case BE_MP3_MODE_STEREO:
 			gf.mode=0;
 			gf.mode_fixed=1;  /* dont allow LAME to change the mode */
+			gf.num_channels=2;
 		break;
 		case BE_MP3_MODE_JSTEREO:
 			gf.mode=1;
 			gf.mode_fixed=1;
+			gf.num_channels=2;
 		break;
 		case BE_MP3_MODE_MONO:
 			gf.mode=3;
 			gf.mode_fixed=1;
+			gf.num_channels=1;
 		break;
 		case BE_MP3_MODE_DUALCHANNEL:
 			gf.force_ms=1;
 			gf.mode=1;
 			gf.mode_fixed=1;
+			gf.num_channels=2;
 		break;
 		default:
 		{
@@ -176,7 +168,7 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 			break;
 		case HIGH_QUALITY:		// -h flag for high qualtiy
 			gf.quality=2;
-        break;
+			break;
 		case VOICE_QUALITY:		// --voice flag for experimental voice mode
 			gf.lowpassfreq=12000;
 			gf.VBR_max_bitrate_kbps=160;
@@ -219,10 +211,6 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 	if (lameConfig.format.LHV1.bCRC)
 		gf.error_protection=1;
 
-	lame_init_params(&gf);	
-
-	// Set the encoder variables
-	// lame_parse_args(nDllArgC,argv);
 	gf.silent=1;  /* disable status ouput */
 
 	// Set private bit?
@@ -235,13 +223,18 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 		gf.extension = 1;
 	}
 	
+	lame_init_params(&gf);	
 
 	//LAME encoding call will accept any number of samples.  Lets use 1152
-	*dwSamples=1152*gf.stereo;
-
+	*dwSamples=1152*gf.num_channels;
 
 	// Set the input sample buffer size, so we know what we can expect
 	dwSampleBufferSize=*dwSamples;
+
+	// Set MP3 buffer size
+	// conservative estimate
+	*dwBufferSize=1.25*(*dwSamples/gf.num_channels) + 7200;
+
 
 #ifdef _DEBUGDLL
 	dump_config(gf.inPath,gf.outPath);
@@ -258,8 +251,10 @@ __declspec(dllexport) BE_ERR	beDeinitStream(HBE_STREAM hbeStream, PBYTE pOutput,
 
 	*pdwOutput = lame_encode_finish(&gf,pOutput,0);
 
-	if (*pdwOutput==-1)
+	if (*pdwOutput<0) {
 		*pdwOutput=0;
+		return BE_ERR_BUFFER_TOO_SMALL;
+	}
 
 	return BE_ERR_SUCCESSFUL;
 }
@@ -324,39 +319,19 @@ __declspec(dllexport) BE_ERR	beEncodeChunk(HBE_STREAM hbeStream, DWORD nSamples,
 											  PSHORT pSamples, PBYTE pOutput, PDWORD pdwOutput)
 {
 	int iSampleIndex;
-	int n=nSamples/gf.stereo;
-    PSHORT LBuffer,RBuffer;
-	LBuffer=malloc(sizeof(short)*n);
-	RBuffer=malloc(sizeof(short)*n);
-	
-		
-
-	if (gf.num_channels==2)
-	{
-		for (iSampleIndex=0;iSampleIndex<n;iSampleIndex++)
-		{
-			// Copy new sample data into InputBuffer
-			LBuffer[iSampleIndex]=*pSamples++;
-			RBuffer[iSampleIndex]=*pSamples++;
-		}
-	}
-	else
-	{
-		// Mono, only put it data into buffer[0] (=left channel)
-		for (iSampleIndex=0;iSampleIndex<n;iSampleIndex++)
-		{
-			// Copy new sample data into InputBuffer
-			LBuffer[iSampleIndex]=*pSamples++;
-		}
-	}
-
+	int n=nSamples/gf.num_channels;
+	PSHORT LBuffer,RBuffer;
 
 	// Encode it
-	*pdwOutput=lame_encode_buffer(&gf,LBuffer,RBuffer,n,pOutput,0);
+	*pdwOutput=lame_encode_buffer_interleaved(&gf,pSamples,
+		  nSamples/gf.num_channels,pOutput,0);
 
 
-	free(LBuffer);
-	free(RBuffer);
+	if (*pdwOutput<0) {
+		*pdwOutput=0;
+		return BE_ERR_BUFFER_TOO_SMALL;
+	}
+
 	return BE_ERR_SUCCESSFUL;
 }
 

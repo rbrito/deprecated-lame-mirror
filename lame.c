@@ -483,11 +483,13 @@ void lame_init_params(lame_global_flags *gfp)
 
   for (i = 0; i < SBMAX_l + 1; i++) {
     scalefac_band.l[i] =
-      sfBandIndex[gfp->samplerate_index + (gfp->version * 3)].l[i];
+      sfBandIndex[gfp->samplerate_index + (gfp->version * 3) + 
+             6*(gfp->out_samplerate<16000)].l[i];
   }
   for (i = 0; i < SBMAX_s + 1; i++) {
     scalefac_band.s[i] =
-      sfBandIndex[gfp->samplerate_index + (gfp->version * 3)].s[i];
+      sfBandIndex[gfp->samplerate_index + (gfp->version * 3) + 
+             6*(gfp->out_samplerate<16000)].s[i];
   }
 
 
@@ -828,10 +830,10 @@ int mf_size,char *mp3buf, int mp3buf_size)
   }
 
 
-/*
+  /*
   VBR_iteration_loop_new( gfp,*pe_use, ms_ratio, xr, masking, &l3_side, l3_enc,
   	  &scalefac);
-*/
+  */
 
   if (gfp->VBR) {
     VBR_iteration_loop( gfp,*pe_use, ms_ratio, xr, *masking, &l3_side, l3_enc,
@@ -1098,7 +1100,7 @@ int lame_encode_buffer_interleaved(lame_global_flags *gfp,
     buffer_l=malloc(sizeof(short int)*nsamples);
     buffer_r=malloc(sizeof(short int)*nsamples);
     if (buffer_l == NULL || buffer_r == NULL) {
-      return -1;
+      return -2;
     }
     for (i=0; i<nsamples; i++) {
       buffer_l[i]=buffer[2*i];

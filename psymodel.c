@@ -88,7 +88,7 @@ void L3psycho_anal( lame_global_flags *gfp,
    */
   FLOAT (*wsamp_l)[BLKSIZE];
   FLOAT (*wsamp_s)[3][BLKSIZE_s];
-  FLOAT tot_ener[4]={0,0,0,0};
+  FLOAT tot_ener[4];
   static FLOAT wsamp_L[2][BLKSIZE];
   static FLOAT energy[HBLKSIZE];
   static FLOAT wsamp_S[2][3][BLKSIZE_s];
@@ -139,7 +139,7 @@ void L3psycho_anal( lame_global_flags *gfp,
   
   /* usual variables like loop indices, etc..
    */
-  int numchn, chn;
+  int numchn, chn, samplerate;
   int   b, i, j, k;
   int	sb,sblock;
   FLOAT cwlimit;
@@ -152,15 +152,18 @@ void L3psycho_anal( lame_global_flags *gfp,
     
     blocktype_old[0]=STOP_TYPE;
     blocktype_old[1]=STOP_TYPE;
-    i = gfp->out_samplerate;
-    switch(i){
+    samplerate = gfp->out_samplerate;
+    switch(gfp->out_samplerate){
     case 32000: break;
     case 44100: break;
     case 48000: break;
     case 16000: break;
     case 22050: break;
     case 24000: break;
-    default:    fprintf(stderr,"error, invalid sampling frequency: %d Hz\n",i);
+    case  8000: samplerate *= 2; break;  /* kludge so mpeg2.5 uses mpeg2 tables  for now */
+    case 11025: samplerate *= 2; break;
+    case 12000: samplerate *= 2; break;
+    default:    fprintf(stderr,"error, invalid sampling frequency: %d Hz\n",gfp->out_samplerate);
       exit(-1);
     }
     
@@ -198,7 +201,7 @@ void L3psycho_anal( lame_global_flags *gfp,
     
     for (i=0;i<HBLKSIZE;i++) partition_l[i]=-1;
 
-    L3para_read( (FLOAT8) gfp->out_samplerate,numlines_l,numlines_s,partition_l,minval,qthr_l,s3_l,s3_s,
+    L3para_read( (FLOAT8) samplerate,numlines_l,numlines_s,partition_l,minval,qthr_l,s3_l,s3_s,
 		 qthr_s,SNR_s,
 		 bu_l,bo_l,w1_l,w2_l, bu_s,bo_s,w1_s,w2_s );
     

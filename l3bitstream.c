@@ -309,7 +309,10 @@ static int encodeSideInfo( lame_global_flags *gfp,III_side_info_t  *si )
     crc = 0xffff; /* (jo) init crc16 for error_protection */
 
     headerPH->part->nrEntries = 0;
-    headerPH = BF_addEntry( headerPH, 0xfff,                    12 );
+    if (gfp->out_samplerate < 16000) 
+      headerPH = BF_addEntry( headerPH, 0xffe,                    12 );
+    else
+      headerPH = BF_addEntry( headerPH, 0xfff,                    12 );
     headerPH = BF_addEntry( headerPH, gfp->version,            1 );
     headerPH = BF_addEntry( headerPH, 1,                        2 );
     headerPH = BF_addEntry( headerPH, !gfp->error_protection,     1 );
