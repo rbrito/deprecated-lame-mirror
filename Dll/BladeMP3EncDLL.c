@@ -855,7 +855,6 @@ static void dump_config(lame_t	gfp)
 	DebugPrintf("ATH lower              =%f\n", lame_get_ATHlower( gfp ) );
 	DebugPrintf("ATH aa  sensitivity    =%f\n", lame_get_athaa_sensitivity( gfp ) );
 
-	DebugPrintf("Experimental nspsytune =%d\n", lame_get_exp_nspsytune( gfp ) );
 }
 
 
