@@ -298,7 +298,7 @@ calc_xmin(
 		    do {
 			en0 += gi->xr[j+l  ] * gi->xr[j+l  ];
 			en0 += gi->xr[j+l+1] * gi->xr[j+l+1];
-		    } while ((l+=2) > 0);
+		    } while ((l+=2) < 0);
 		    x *= en0;
 		}
 		if (threshold < x)
