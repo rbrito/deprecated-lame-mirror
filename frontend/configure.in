@@ -3,9 +3,6 @@ dnl
 dnl include support and option for
 dnl - VBR histogram  done.
 dnl - SNDLIB         done.
-dnl - VORBIS         done.
-dnl - disable shared done.
-dnl - shared lib version
 dnl - debugging mode
 dnl - MMX support
 dnl
@@ -56,7 +53,6 @@ dnl Compaq fast math library.
 dnl AC_CHECK_LIB(cpml, cos, HAVE_LIBM=-lcpml)
 
 AC_CHECK_LIB(sndfile, sf_open_read, HAVE_SNDFILE=yes)
-AC_CHECK_LIB(vorbis, ogg_sync_init, HAVE_VORBIS=yes)
 
 dnl configure use of features
 
@@ -102,40 +98,6 @@ if test ".$WARNING" != "." ; then
   AC_MSG_WARN($WARNING)
 fi
 
-
-dnl vorbis
-AC_MSG_CHECKING(use of vorbis)
-WARNING=
-AC_ARG_WITH(vorbis, 
-  [  --with-vorbis               Use vorbis library for ogg files [default:yes, if installed]],
-  CONFIG_VORBIS="$withval", CONFIG_VORBIS="yes")
-AC_ARG_WITH(vorbis-prefix,
-  [  --with-vorbis-prefix=DIR    Alternate location for vorbis],
-  CONFIG_VORBIS_PREFIX="${withval}", CONFIG_VORBIS_PREFIX="")
-if test "$CONFIG_VORBIS" != "no" ; then
-  if test ".$CONFIG_VORBIS_PREFIX" != "." ; then
-    # look for vorbis lib. This overrides any standard location
-    LA_SEARCH_LIB(VORBIS_LIB_LOC, VORBIS_INC_LOC, \
-      libvorbis.a, vorbis/codec.h, $CONFIG_VORBIS_PREFIX)
-    if test ".$VORBIS_LIB_LOC" != "." ; then
-      HAVE_VORBIS=yes
-      CONFIG_LDFLAGS="-L$VORBIS_LIB_LOC $CONFIG_LDFLAGS"
-      CONFIG_OPTS="-I$VORBIS_INC_LOC $CONFIG_OPTS"
-    else
-      WARNING="vorbis lib not found in specified prefix."
-    fi
-  fi
-  if test "$HAVE_VORBIS" = "yes" ; then
-    CONFIG_LDFLAGS="-lvorbis $CONFIG_LDFLAGS"
-    CONFIG_OPTS="-DHAVEVORBIS $CONFIG_OPTS"
-  else
-    CONFIG_VORBIS="no"
-  fi
-fi
-AC_MSG_RESULT($CONFIG_VORBIS)
-if test ".$WARNING" != "." ; then
-  AC_MSG_WARN($WARNING)
-fi
 
 
 

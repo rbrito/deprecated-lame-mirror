@@ -1,7 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl
 dnl include support and option for
-dnl - GTK            done.
 dnl - VBR histogram  done.
 dnl - SNDLIB         done.
 dnl - VORBIS         done.
@@ -92,6 +91,43 @@ AC_ARG_ENABLE(analyzer,
 if test "$CONFIG_ANALYZER" != "no" ; then
 	CPP_OPT="-DANALYSIS $CPP_OPT"
 fi
+
+
+dnl vorbis
+AC_MSG_CHECKING(use of vorbis)
+WARNING=
+AC_ARG_WITH(vorbis, 
+  [  --with-vorbis               Use vorbis library for ogg files [default:yes, if installed]],
+  CONFIG_VORBIS="$withval", CONFIG_VORBIS="yes")
+AC_ARG_WITH(vorbis-prefix,
+  [  --with-vorbis-prefix=DIR    Alternate location for vorbis],
+  CONFIG_VORBIS_PREFIX="${withval}", CONFIG_VORBIS_PREFIX="")
+if test "$CONFIG_VORBIS" != "no" ; then
+  if test ".$CONFIG_VORBIS_PREFIX" != "." ; then
+    # look for vorbis lib. This overrides any standard location
+    LA_SEARCH_LIB(VORBIS_LIB_LOC, VORBIS_INC_LOC, \
+      libvorbis.a, vorbis/codec.h, $CONFIG_VORBIS_PREFIX)
+    if test ".$VORBIS_LIB_LOC" != "." ; then
+      HAVE_VORBIS=yes
+      CONFIG_LDFLAGS="-L$VORBIS_LIB_LOC $CONFIG_LDFLAGS"
+      CONFIG_OPTS="-I$VORBIS_INC_LOC $CONFIG_OPTS"
+    else
+      WARNING="vorbis lib not found in specified prefix."
+    fi
+  fi
+  if test "$HAVE_VORBIS" = "yes" ; then
+    CONFIG_LDFLAGS="-lvorbis $CONFIG_LDFLAGS"
+    CONFIG_OPTS="-DHAVEVORBIS $CONFIG_OPTS"
+  else
+    CONFIG_VORBIS="no"
+  fi
+fi
+AC_MSG_RESULT($CONFIG_VORBIS)
+if test ".$WARNING" != "." ; then
+  AC_MSG_WARN($WARNING)
+fi
+
+
 
 
 
@@ -201,9 +237,8 @@ AC_SUBST(CONFIG_OPTS)
 AC_SUBST(CONFIG_LIBS)
 AC_SUBST(CONFIG_LDFLAGS)
 
-CONFIG_SOURCES="$GTK_SOURCE $BRHIST_SOURCE"
+CONFIG_SOURCES="$BRHIST_SOURCE"
 AC_SUBST(CONFIG_SOURCES)
-AC_SUBST(GTK_OBJ)
 AC_SUBST(CPP_OPT)
 
 AC_SUBST(INSTALL_TARGETS)
