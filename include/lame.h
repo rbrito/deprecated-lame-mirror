@@ -710,8 +710,10 @@ int CDECL lame_encode_flush(
 
 /*
  * OPTIONAL:
- * lame_encode_flush_nogap will flush the internal mp3 buffers and set
- * the bit Reservoir to 0.  'mp3buf' should be at least 7200 bytes long
+ * lame_encode_flush_nogap will flush the internal mp3 buffers and pad
+ * the last frame with ancillary data so it is a complete mp3 frame.
+ * 
+ * 'mp3buf' should be at least 7200 bytes long
  * to hold all possible emitted data.
  *
  * After a call to this routine, the outputed mp3 data is complete, but
