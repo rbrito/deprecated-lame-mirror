@@ -85,11 +85,11 @@ typedef struct {
 	int resvDrain_post;
 	int scfsi[2][4];
 	struct {
-		struct gr_info_ss {
-			gr_info tt;
-			} ch[2];
-		} gr[2];
-	} III_side_info_t;
+	    struct gr_info_ss {
+		gr_info tt;
+	    } ch[2];
+	} gr[2];
+} III_side_info_t;
 
 /* Layer III scale factors. */
 /* note: there are only SBPSY_l=(SBMAX_l-1) and SBPSY_s=(SBMAX_s-1) scalefactors.
