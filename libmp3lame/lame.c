@@ -260,7 +260,7 @@ set_compression_ratio(lame_global_flags * gfp)
 	return;
 
     if (gfp->VBR == vbr) {
-	FLOAT  cmp[] = { 5.7, 6.5, 7.3, 8.2, 9.1, 10, 11, 12, 13, 14 };
+	FLOAT  cmp[] = { 5.7, 6.5, 7.3, 8.2, 10, 11.9, 13, 14, 15, 16.5 };
 	gfp->compression_ratio = cmp[gfp->VBR_q];
     } else {
         gfp->compression_ratio
