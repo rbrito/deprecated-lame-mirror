@@ -98,13 +98,10 @@
 	mov	edx, [esp+8]	;edx = end
 
 	sub	ecx, edx	;ecx = begin-end(should be minus)
-	test	ecx, 8
- 	pxor	mm1, mm1	;mm1=[0:0]
 	movq	mm0, [edx+ecx]
-	jz	.lp
-
+	movq	mm1, mm0
 	add	ecx,8
-	jz	.exit
+	and	ecx, 0xfffffff0
 
 	loopalign	16
 .lp:
@@ -128,7 +125,7 @@
 	pand	mm0,mm2
 	pandn	mm2,mm1
 	por	mm0,mm2
-.exit:
+
 	movq	mm1, mm0
 	punpckhdq	mm1, mm1
 	movq	mm2,mm0
