@@ -202,7 +202,6 @@ struct lame_internal_flags {
     FLOAT samplefreq_out;
     FLOAT resample_ratio;      /* input_samp_rate/output_samp_rate */
 
-    int mf_samples_to_encode;
     int mf_size;
     int VBR_min_bitrate;            /* min bitrate index */
     int VBR_max_bitrate;            /* max bitrate index */

@@ -1048,7 +1048,7 @@ lame_get_frameNum(lame_t gfc)
 int
 lame_get_mf_samples_to_encode(lame_t gfc)
 {
-    return gfc->mf_samples_to_encode;
+    return gfc->mf_size + POSTDELAY + MDCTDELAY;
 }
 
 
