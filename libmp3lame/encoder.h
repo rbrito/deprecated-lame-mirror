@@ -570,6 +570,7 @@ struct lame_internal_flags {
     sample_t *in_buffer;
 };
 
+#ifdef HAVE_MPGLIB
 /* same as lame_decode1 (look in lame.h), but returns 
    unclipped raw floating-point samples. It is declared
    here, not in lame.h, because it returns LAME's 
@@ -581,6 +582,7 @@ int decode1_unclipped(
     int             len,
     sample_t        pcm_l[],
     sample_t        pcm_r[] );
+#endif
 
 int decode_init_for_replaygain(lame_t gfc);
 
