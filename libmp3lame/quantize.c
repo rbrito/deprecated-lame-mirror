@@ -48,11 +48,11 @@
 static void
 ms_sparsing(lame_internal_flags* gfc, int gr)
 {
-    if ( gfc->sparsing == 0 ) return;
     int sfb, m, k, i, j = 0;
     int width;
     FLOAT8 treshold = 0;
     
+    if ( gfc->sparsing == 0 ) return;
     m = gfc->l3_side.tt[gr][0].sfb_lmax;
     for ( sfb = 0; sfb < m; ++sfb ) {
         width = gfc->scalefac_band.l[sfb+1] - gfc->scalefac_band.l[sfb];
