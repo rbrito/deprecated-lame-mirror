@@ -690,7 +690,7 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 	pbtStreamBuffer[nBytesWritten] = nABRBitrate;
     nBytesWritten++;
 
-    pbtStreamBuffer[nBytesWritten   ] = enc_delay >> 4; /* works for win32, does it for unix? */
+    pbtStreamBuffer[nBytesWritten   ] = enc_delay >> 4;
     pbtStreamBuffer[nBytesWritten +1] = (enc_delay << 4) + (enc_padding >> 8);
     pbtStreamBuffer[nBytesWritten +2] = enc_padding;
 
