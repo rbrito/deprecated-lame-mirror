@@ -477,6 +477,7 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --nspsytune     experimental PSY tunings by Naoki Shibata\n"
               "    --nssafejoint   M/S switching criterion\n"
               "    --nsmsfix <arg> M/S switching tuning [effective 0-3.5]\n"
+              "    --interch x     adjust inter-channel masking ratio\n"
               "    --ns-bass x     adjust masking for sfbs  0 -  6 (long)  0 -  5 (short)\n"
               "    --ns-alto x     adjust masking for sfbs  7 - 13 (long)  6 - 10 (short)\n"         
               "    --ns-treble x   adjust masking for sfbs 14 - 21 (long) 11 - 12 (short)\n"
@@ -1665,6 +1666,10 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 
                 T_ELIF ("notemp")
                     (void) lame_set_useTemporal( gfp, 0 );
+
+                T_ELIF ("interch")
+                    argUsed=1;
+                    (void) lame_set_interChRatio( gfp, atof(nextArg ) );
 
                 T_ELIF ("temporal-masking")
                     argUsed = 1;

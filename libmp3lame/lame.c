@@ -455,6 +455,7 @@ lame_init_qval(lame_global_flags * gfp)
         gfc->psymodel = 1;
         gfc->quantization = 1;
         gfc->noise_shaping = 1;
+        gfc->substep_shaping = 1;
         gfc->noise_shaping_amp = 2;
         gfc->noise_shaping_stop = 1;
         gfc->use_best_huffman = 1;
@@ -465,6 +466,7 @@ lame_init_qval(lame_global_flags * gfp)
         gfc->psymodel = 1;
         gfc->quantization = 1;
         gfc->noise_shaping = 1; /* 2=usually lowers quality */
+        gfc->substep_shaping = 2;
         gfc->noise_shaping_amp = 3;
         gfc->noise_shaping_stop = 1;
         gfc->use_best_huffman = 1; /* 2 not yet coded */
@@ -1376,6 +1378,7 @@ lame_print_internals( const lame_global_flags * gfp )
     }
     pc = gfp->useTemporal ? "yes" : "no";
     MSGF( gfc, "\tusing temporal masking effect: %s\n", pc );
+    MSGF( gfc, "\tinterchannel masking ratio: %f\n", gfp->interChRatio );
     MSGF( gfc, "\t...\n" );
     
     /*  that's all ?
@@ -2116,6 +2119,7 @@ lame_init_old(lame_global_flags * gfp)
                                 /* 2 = equal loudness curve */
     gfp->athaa_sensitivity = 0.0; /* no offset */
     gfp->useTemporal = -1;
+    gfp->interChRatio = 0.0;
 
     /* The reason for
      *       int mf_samples_to_encode = ENCDELAY + POSTDELAY;

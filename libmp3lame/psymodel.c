@@ -1761,7 +1761,24 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
   if ( numchn==4 /* mid/side and r/l */) {
     FLOAT8 rside,rmid,mld;
     int chmid=2,chside=3; 
-    
+    if (gfp->interChRatio != 0.0) {
+	FLOAT8 l, r;
+	for ( sb = 0; sb < NBPSY_l; sb++ ) {
+	    l = gfc->thm[0].l[sb];
+	    r = gfc->thm[1].l[sb];
+	    gfc->thm[0].l[sb] += r*gfp->interChRatio;
+	    gfc->thm[1].l[sb] += l*gfp->interChRatio;
+	}
+	for ( sb = 0; sb < NBPSY_s; sb++ ) {
+	    for ( sblock = 0; sblock < 3; sblock++ ) {
+		l = gfc->thm[0].s[sb][sblock];
+		r = gfc->thm[1].s[sb][sblock];
+		gfc->thm[0].s[sb][sblock] += r*gfp->interChRatio;
+		gfc->thm[1].s[sb][sblock] += l*gfp->interChRatio;
+	    }
+	}
+    }
+
     for ( sb = 0; sb < NBPSY_l; sb++ ) {
       /* use this fix if L & R masking differs by 2db or less */
       /* if db = 10*log10(x2/x1) < 2 */

@@ -1250,6 +1250,29 @@ lame_get_useTemporal( const lame_global_flags*  gfp )
 }
 
 
+/* Use temporal masking effect */
+int
+lame_set_interChRatio( lame_global_flags*  gfp,
+			float               ratio )
+{
+    /* default = 0.0 (no inter-cahnnel maskin) */
+    if (! (0 <= ratio && ratio <= 1.0))
+        return -1;
+
+    gfp->interChRatio = ratio;
+
+    return 0;
+}
+
+int
+lame_get_interChRatio( const lame_global_flags*  gfp )
+{
+    assert( 0 <= gfp->interChRatio && gfp->interChRatio <= 1.0);
+
+    return gfp->interChRatio;
+}
+
+
 /* Disable short blocks. */
 int
 lame_set_no_short_blocks( lame_global_flags*  gfp,

@@ -458,7 +458,6 @@ struct lame_internal_flags {
   FLOAT8  *s3_ss;
   FLOAT8  *s3_ll;
   FLOAT8 decay;
-  FLOAT8 interChRatio;
 
   III_psy_xmin thm[4];
   III_psy_xmin en[4];

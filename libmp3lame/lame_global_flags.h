@@ -125,6 +125,7 @@ struct lame_global_struct {
 /*  int allow_diff_short;            allow blocktypes to differ between
                                      channels?                            */
   int useTemporal;                /* use temporal masking effect          */
+  float interChRatio;
 /*  int no_short_blocks;             disable short blocks                 */
   int emphasis;                   /* Input PCM is emphased PCM (for
                                      instance from one of the rarely

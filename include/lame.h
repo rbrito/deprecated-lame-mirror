@@ -371,6 +371,10 @@ int CDECL lame_get_allow_diff_short(const lame_global_flags *);
 int CDECL lame_set_useTemporal(lame_global_flags *, int);
 int CDECL lame_get_useTemporal(const lame_global_flags *);
 
+// use temporal masking effect (default = 1)
+int CDECL lame_set_interChRatio(lame_global_flags *, float);
+int CDECL lame_get_interChRatio(const lame_global_flags *);
+
 // disable short blocks
 int CDECL lame_set_no_short_blocks(lame_global_flags *, int);
 int CDECL lame_get_no_short_blocks(const lame_global_flags *);
