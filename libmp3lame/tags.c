@@ -859,6 +859,7 @@ lame_mp3_tags_fid(lame_t gfc, FILE * fpStream)
     /* Read the header of the first valid frame */
     totalFrameSize = ((gfc->version+1)*72000*bitrate_table[gfc->version][bitrate]) / gfc->out_samplerate;
     fseek(fpStream, id3v2TagSize + totalFrameSize, SEEK_SET);
+    memset(buf, 0, gfc->sideinfo_len);
     fread(buf, 4, 1, fpStream);
 
     /* note! Xing header specifies that Xing data goes in the
