@@ -751,36 +751,6 @@ lame_get_VBR_max_bitrate_kbps( const lame_global_flags*  gfp )
 }
 
 
-/*
- * Strictly enforce VBR_min_bitrate.
- * Normally it will be violated for analog silence.
- */
-int
-lame_set_VBR_hard_min( lame_global_flags*  gfp,
-                       int                 VBR_hard_min )
-{
-    /* default = 0 (disabled) */
-
-    /* enforce disable/enable meaning, if we need more than two values
-       we need to switch to an enum to have an apropriate representation
-       of the possible meanings of the value */
-    if ( 0 > VBR_hard_min || 1 < VBR_hard_min )
-        return -1;
-
-    gfp->VBR_hard_min = VBR_hard_min;
-
-    return 0;
-}
-
-int
-lame_get_VBR_hard_min( const lame_global_flags*  gfp )
-{
-    assert( 0 <= gfp->VBR_hard_min && 1 >= gfp->VBR_hard_min );
-
-    return gfp->VBR_hard_min;
-}
-
-
 /********************************************************************
  * Filtering control
  ***********************************************************************/

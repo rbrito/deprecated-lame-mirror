@@ -1507,7 +1507,6 @@ lame_init_old(lame_global_flags * gfp)
     gfp->mean_bitrate_kbps = 0;
     gfp->VBR_min_bitrate_kbps = 0;
     gfp->VBR_max_bitrate_kbps = 0;
-    gfp->VBR_hard_min = 0;
 
     gfc->OldValue[0] = 180;
     gfc->OldValue[1] = 180;

@@ -69,9 +69,7 @@ struct lame_global_struct {
     int VBR_q;
     int VBR_min_bitrate_kbps;
     int VBR_max_bitrate_kbps;
-    int VBR_hard_min;           /* strictly enforce VBR_min_bitrate
-				   normaly, it will be violated for analog
-				   silence */
+
     /* resampling and filtering */
     int lowpassfreq;                /* freq in Hz. 0=lame choses.
 				       -1=no filter                          */

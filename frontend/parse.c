@@ -442,8 +442,6 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
 "                    0=high quality,bigger files. 9=smaller files\n"
 "    -b <bitrate>    specify minimum allowed bitrate, default  32 kbps\n"
 "    -B <bitrate>    specify maximum allowed bitrate, default 320 kbps\n"
-"    -F              strictly enforce the -b option, for use with players that\n"
-"                    do not support low bitrate mp3\n"
 "    -t              disable writing LAME Tag\n"
               , lame_get_VBR_q(gfp) );
 
@@ -1388,9 +1386,6 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     case 'B':        
                         argUsed = 1;
                         lame_set_VBR_max_bitrate_kbps(gfp,atoi(arg)); 
-                        break;  
-                    case 'F':        
-                        lame_set_VBR_hard_min(gfp,1);
                         break;  
                     case 't':  /* dont write VBR tag */
                         (void) lame_set_bWriteVbrTag( gfp, 0 );

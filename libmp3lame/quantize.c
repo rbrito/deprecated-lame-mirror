@@ -101,10 +101,6 @@ static const int max_range_long[SBMAX_l] = {
  *     [, i.e. there is no buffering at all].
  */
 
-static int
-ResvFrameBegin(lame_internal_flags *gfc, int mean_bytes)
-{
-    III_side_info_t     *l3_side = &gfc->l3_side;
 /*
  *  Meaning of the variables:
  *      maxmp3buf: ( ??? ... 8*1951 (MPEG-1 and 2), 8*2047 (MPEG-2.5))
@@ -120,6 +116,10 @@ ResvFrameBegin(lame_internal_flags *gfc, int mean_bytes)
  *      l3_side->ResvMax:   maximum allowed reservoir 
  *      l3_side->ResvSize:  current reservoir size
  */
+static int
+ResvFrameBegin(lame_internal_flags *gfc, int mean_bytes)
+{
+    III_side_info_t     *l3_side = &gfc->l3_side;
     l3_side->ResvMax = (l3_side->maxmp3buf - mean_bytes)*8;
     /* main_data_begin has 9 bits in MPEG-1, 8 bits MPEG-2 */
     if (l3_side->ResvMax > (8*256)*gfc->mode_gr-8)
@@ -136,6 +136,22 @@ ResvFrameBegin(lame_internal_flags *gfc, int mean_bytes)
 #endif
 
     return mean_bytes*8 + Min(l3_side->ResvSize, l3_side->ResvMax);
+}
+
+/*  find a bitrate which can refill the resevoir to positive size. */
+static void
+finish_VBR_coding(lame_global_flags *gfp, lame_internal_flags *gfc)
+{
+    int mean_bytes;
+    gfc->bitrate_index = gfc->VBR_min_bitrate;
+    do {
+	mean_bytes = getframebytes(gfp);
+	if (ResvFrameBegin(gfc, mean_bytes) >= 0)
+	    break;
+    } while (++gfc->bitrate_index <= gfc->VBR_max_bitrate);
+    assert(gfc->bitrate_index <= gfc->VBR_max_bitrate);
+
+    gfc->l3_side.ResvSize += mean_bytes*8;
 }
 
 /*************************************************************************
@@ -589,7 +605,6 @@ trancate_smallspectrums(
  *  Otherwise it returns non-zero.
  *
  *************************************************************************/
-
 inline static int
 loop_break(const gr_info * const gi)
 {
@@ -766,8 +781,6 @@ amp_scalefac_bands(
 
     return target_bits - gfc->scale_bitcounter(gi);
 }
-
-
 
 
 inline static FLOAT
@@ -1055,9 +1068,6 @@ CBR_1st_bitalloc (
 }
 
 
-
-
-
 /************************************************************************
  * allocate bits among 2 channels based on PE (no multichannel support)
  ************************************************************************/
@@ -1124,7 +1134,7 @@ void
 ABR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
 {
     lame_internal_flags *gfc=gfp->internal_flags;
-    int mean_bytes, gr, max_bits, min_bits;
+    int gr, max_bits, min_bits;
     FLOAT factor;
 
     gfc->bitrate_index = 0;
@@ -1143,16 +1153,7 @@ ABR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
     for (gr = 0; gr < gfc->mode_gr; gr++)
 	CBR_bitalloc(gfc, ratio[gr], min_bits, max_bits, factor, gr);
 
-    /*  find a bitrate which can refill the resevoir to positive size. */
-    gfc->bitrate_index = gfc->VBR_min_bitrate;
-    do {
-	mean_bytes = getframebytes(gfp);
-	if (ResvFrameBegin(gfc, mean_bytes) >= 0)
-	    break;
-    } while (++gfc->bitrate_index <= gfc->VBR_max_bitrate);
-    assert(gfc->bitrate_index <= gfc->VBR_max_bitrate);
-
-    gfc->l3_side.ResvSize += mean_bytes*8;
+    finish_VBR_coding(gfp, gfc);
 }
 
 /************************************************************************
@@ -1560,13 +1561,12 @@ VBR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     FLOAT xmin[2][2][SFBMAX];
-    int mean_bytes, max_frame_bits, used_bits, ch, gr, ath_over = 0;
+    int max_frame_bits, used_bits, ch, gr;
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    calc_xmin (gfc, &ratio[gr][ch],
 		       &gfc->l3_side.tt[gr][ch], xmin[gr][ch]);
-	    ath_over += ratio[gr][ch].ath_over;
 	}
     }
 
@@ -1602,18 +1602,7 @@ VBR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
     }
     gfc->l3_side.ResvSize -= used_bits;
 
-    /*  find a bitrate which can refill the resevoir to positive size. */
-    gfc->bitrate_index = 1;
-    if (ath_over || gfp->VBR_hard_min)
-	gfc->bitrate_index = gfc->VBR_min_bitrate;
-    do {
-	mean_bytes = getframebytes(gfp);
-	if (ResvFrameBegin(gfc, mean_bytes) >= 0)
-	    break;
-    } while (++gfc->bitrate_index <= gfc->VBR_max_bitrate);
-    assert (gfc->bitrate_index <= gfc->VBR_max_bitrate);
-
-    gfc->l3_side.ResvSize += mean_bytes*8;
+    finish_VBR_coding(gfp, gfc);
 }
 
 
@@ -1716,7 +1705,6 @@ set_pinfo (
  *  Robert Hegemann 2000-10-21
  *
  ************************************************************************/
-
 void
 set_frame_pinfo(
     lame_global_flags *gfp, III_psy_ratio ratio[2][2], FLOAT *inbuf[])

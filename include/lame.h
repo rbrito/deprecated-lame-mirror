@@ -309,13 +309,6 @@ int CDECL lame_get_VBR_min_bitrate_kbps(const lame_global_flags *);
 int CDECL lame_set_VBR_max_bitrate_kbps(lame_global_flags *, int);
 int CDECL lame_get_VBR_max_bitrate_kbps(const lame_global_flags *);
 
-/*
-  1=strictly enforce VBR_min_bitrate.  Normally it will be violated for
-  analog silence
-*/
-int CDECL lame_set_VBR_hard_min(lame_global_flags *, int);
-int CDECL lame_get_VBR_hard_min(const lame_global_flags *);
-
 /********************************************************************
  * Filtering control
  ***********************************************************************/
