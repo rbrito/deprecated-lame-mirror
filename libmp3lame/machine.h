@@ -121,17 +121,17 @@ char *strchr (), *strrchr ();
 # include <windows.h>
 # include <float.h>
 # define FLOAT_MAX FLT_MAX
-#endif
-
-#ifdef ALLDOUBLE
-typedef double FLOAT;
-# ifdef DBL_MAX
-#  define FLOAT_MAX DBL_MAX
-# endif
 #else
+# ifdef ALLDOUBLE
+typedef double FLOAT;
+#  ifdef DBL_MAX
+#   define FLOAT_MAX DBL_MAX
+#  endif
+# else
 typedef float   FLOAT;
-# ifdef FLT_MAX
-#  define FLOAT_MAX FLT_MAX
+#  ifdef FLT_MAX
+#   define FLOAT_MAX FLT_MAX
+#  endif
 # endif
 #endif
 
