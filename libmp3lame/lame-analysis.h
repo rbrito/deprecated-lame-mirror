@@ -22,10 +22,7 @@
 #ifndef LAME_GTKANAL_H
 #define LAME_GTKANAL_H
 
-#ifndef NOANALYSIS
-#include "lame.h"
 #include "encoder.h"
-#include "l3side.h"
 
 #define READ_AHEAD 10             /* number of frames to read ahead */
 #define MAXMPGLAG READ_AHEAD      /* if the mpg123 lag becomes bigger than this 				     we have to stop */
@@ -90,5 +87,4 @@ typedef struct {
 
 extern plotting_data *pinfo;
 
-#endif
 #endif

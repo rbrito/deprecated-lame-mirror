@@ -5,6 +5,7 @@
 #include <gtk/gtk.h>
 #include "parse.h"
 #include "get_audio.h"
+#include "gtkanal.h"
 
 
 #include "main.h"
@@ -31,7 +32,6 @@ int main(int argc, char **argv)
 {
   char mp3buffer[LAME_MAXMP3BUFFER];
   lame_global_flags gf;  
-  FILE *musicin; 
   char outPath[MAX_NAME_SIZE];
   char inPath[MAX_NAME_SIZE];
 
