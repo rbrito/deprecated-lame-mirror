@@ -45,10 +45,6 @@ static int hoge, hogege;
 
 
 
-const int pmask[8]={0x1, 0x3, 0x7, 0xf, 0x1f, 0x3f, 0x7f, 0xff};
-
-
-
 void putheader_bits(lame_internal_flags *gfc,int w_ptr)
 {
     Bit_stream_struc *bs;
@@ -76,11 +72,11 @@ putbits2(lame_global_flags *gfp, unsigned int val, int j)
     bs = &gfc->bs;
 
     assert(j <= MAX_LENGTH);
-    if (val >= (1 << j)) {
+    if ((val>>j) >= 1) {
       DEBUGF("val=%ui %i\n",val,(1<<j));
+      assert((val >> j) < 1);
     }
 
-    assert((val >> j) < 1);
     while (j > 0) {
 	int k;
 	if (bs->buf_bit_idx == 0) {
@@ -95,11 +91,10 @@ putbits2(lame_global_flags *gfp, unsigned int val, int j)
 	}
 
 	k = Min(j, bs->buf_bit_idx);
-
-	bs->buf[bs->buf_byte_idx]
-	    |= ((val >> (j-k)) & pmask[k - 1]) << (bs->buf_bit_idx - k);
-	bs->buf_bit_idx -= k;
 	j -= k;
+
+	bs->buf_bit_idx -= k;
+	bs->buf[bs->buf_byte_idx] |= ((val >> j) << bs->buf_bit_idx);
 	bs->totbit += k;
     }
 }
@@ -175,10 +170,10 @@ writeheader(lame_internal_flags *gfc,unsigned int val, int j)
 
     while (j > 0) {
 	int k = Min(j, 8 - (ptr & 7));
-	gfc->header[gfc->h_ptr].buf[ptr >> 3]
-	    |= ((val >> (j-k)) & pmask[k-1]) << (8 - (ptr & 7) - k);
-	ptr += k;
 	j -= k;
+	gfc->header[gfc->h_ptr].buf[ptr >> 3]
+	    |= ((val >> j)) << (8 - (ptr & 7) - k);
+	ptr += k;
     }
     gfc->header[gfc->h_ptr].ptr = ptr;
 }
