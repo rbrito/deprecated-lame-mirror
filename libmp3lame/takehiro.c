@@ -509,29 +509,27 @@ int noquant_count_bits(
 	if (a2 < i)
 	    gi->table_select[2] = gfc->choose_table(ix + a2, ix + i,
 						    &gi->part2_3_length);
-
+	else
+	    a2 = i;
     } else {
 	a1 = gfc->scalefac_band.l[7 + 1]; // = 3*gfc->scalefac_band.s[3] */
 	a2 = i;
-	if (a1 > a2)
-	    a1 = a2;
     }
 
     /* have to allow for the case when bigvalues < region0 < region1 */
     /* (and region0, region1 are ignored) */
-    a1 = Min(a1,i);
-    a2 = Min(a2,i);
-    
-    assert( a1 >= 0 );
-    assert( a2 >= 0 );
+    assert( a1 > 0 );
+    assert( a2 > 0 );
 
-    /* Count the number of bits necessary to code the bigvalues region. */
-    if (0 < a1)
+    if (a1 >= a2) {
+	gi->table_select[0] = gfc->choose_table(ix, ix + a2,
+						&gi->part2_3_length);
+    } else {
 	gi->table_select[0] = gfc->choose_table(ix, ix + a1,
 						&gi->part2_3_length);
-    if (a1 < a2)
 	gi->table_select[1] = gfc->choose_table(ix + a1, ix + a2,
 						&gi->part2_3_length);
+    }
     if (gfc->use_best_huffman == 2)
 	best_huffman_divide (gfc, gi);
 
@@ -861,7 +859,7 @@ void best_scalefac_store(
 
     if (gfc->mode_gr==2 && gr == 1
 	&& l3_side->tt[0][ch].block_type != SHORT_TYPE
-	&& l3_side->tt[1][ch].block_type != SHORT_TYPE) {
+	&& gi->block_type != SHORT_TYPE) {
       	scfsi_calc(ch, l3_side);
     } else if (recalc) {
 	if (gfc->mode_gr == 2) {
