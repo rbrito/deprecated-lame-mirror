@@ -239,7 +239,7 @@ int find_scalefac(FLOAT8 *xr,FLOAT8 *xr34,int stride,int sfb,
 
 */
 int compute_scalefacs_short(int sf[SBPSY_s][3],gr_info *cod_info,
-int scalefac[SBPSY_s][3],int sbg[3])
+int scalefac[SBPSY_s][3],unsigned int sbg[3])
 {
   int maxrange,maxrange1,maxrange2,maxover;
   int sfb,i;
