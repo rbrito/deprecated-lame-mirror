@@ -237,7 +237,7 @@ proc	calc_noise_sub_3DN
 	mov		ebp, [ecx+ 0+ edx*4]
 	mov		esi, [ecx+ 4+ edx*4]
 	movd		mm4, [pow43+ebp*4]
-	punpckldq	mm4, qword [pow43+esi*4]
+	punpckldq	mm4, [pow43+esi*4]
 	pfmul		mm4, mm6
 	pfsubr		mm4, [eax+ 0+ edx*4]
 	add		edx, byte 2
@@ -251,8 +251,8 @@ proc	calc_noise_sub_3DN
 	mov		ebx, [ecx+12+ edx*4]
 	movd		mm0, [pow43+ebp*4]
 	movd		mm1, [pow43+edi*4]
-	punpckldq	mm0, qword [pow43+esi*4]
-	punpckldq	mm1, qword [pow43+ebx*4]
+	punpckldq	mm0, [pow43+esi*4]
+	punpckldq	mm1, [pow43+ebx*4]
 	pfmul		mm0, mm6
 	pfmul		mm1, mm6
 	pfsubr		mm0, [eax+ 0+ edx*4]
@@ -277,7 +277,7 @@ proc	calc_noise_sub_3DN
 	ret
 
 ;
-; FLOAT calc_sfb_noise_fast(FLOAT xr[576*2], int start, int bw, int sf)
+; FLOAT calc_sfb_noise_fast(FLOAT xr[576*2], int end, int bw, int sf)
 ;
 proc	calc_sfb_noise_fast_3DN
 %assign _P 12
@@ -314,7 +314,7 @@ proc	calc_sfb_noise_fast_3DN
 	ja	.ixover
 
 	movd		mm4, [pow43+ebp*4]
-	punpckldq	mm4, qword [pow43+ecx*4]
+	punpckldq	mm4, [pow43+ecx*4]
 	pfmul		mm4, mm7
 	pfsubr		mm4, [eax+ 0+ edx*4 + 576*4]
 	add		edx, byte 2
@@ -356,8 +356,8 @@ proc	calc_sfb_noise_fast_3DN
 
 	movd		mm0, [pow43+ebp*4]
 	movd		mm1, [pow43+edi*4]
-	punpckldq	mm0, qword [pow43+ecx*4]
-	punpckldq	mm1, qword [pow43+ebx*4]
+	punpckldq	mm0, [pow43+ecx*4]
+	punpckldq	mm1, [pow43+ebx*4]
 	pfmul		mm0, mm7
 	pfmul		mm1, mm7
 	pfsubr		mm0, [eax+ 0+ edx*4 + 576*4]
@@ -384,7 +384,7 @@ proc	calc_sfb_noise_fast_3DN
 
 
 ;
-; FLOAT calc_sfb_noise(FLOAT xr[576*2], int start, int bw, int sf)
+; FLOAT calc_sfb_noise(FLOAT xr[576*2], int end, int bw, int sf)
 ;
 proc	calc_sfb_noise_3DN
 %assign _P 16
@@ -394,7 +394,7 @@ proc	calc_sfb_noise_3DN
 	push		esi
 
 	mov		eax, [esp+_P+4]  ; xr
-	mov		edx, [esp+_P+8]  ; start
+	mov		edx, [esp+_P+8]  ; end
 	lea		eax, [eax+edx*4]
 	mov		edx, [esp+_P+16] ; scalefact
 	movq		mm5, [D_IXMAXVAL]
@@ -414,20 +414,19 @@ proc	calc_sfb_noise_3DN
 	movq		mm4, [eax+ 0+ edx*4]
 	pfmul		mm4, mm6
 	pfmin		mm4, mm5
-	movq		mm2, mm4
-	pf2id		mm2, mm2
+	pf2id		mm2, mm4
 	movd		ebp, mm2
 	punpckhdq	mm2, mm2
 	movd		ecx, mm2
 	movd		mm2, [esi+ebp*4+8208*4]
-	punpckldq	mm2, qword [esi+ecx*4+8208*4]	; mm2=adj43 value
+	punpckldq	mm2, [esi+ecx*4+8208*4]	; mm2=adj43 value
 	pfadd		mm2, mm4
 	pf2id		mm2, mm2
 	movd		ebp, mm2
 	punpckhdq	mm2, mm2
 	movd		ecx, mm2
 	movd		mm4, [esi+ebp*4]
-	punpckldq	mm4, qword [esi+ecx*4]
+	punpckldq	mm4, [esi+ecx*4]
 	pfmul		mm4, mm7
 	pfsubr		mm4, [eax+ 0+ edx*4 + 576*4]
 	add		edx, byte 2
@@ -441,10 +440,8 @@ proc	calc_sfb_noise_3DN
 	pfmul		mm1, mm6
 	pfmin		mm0, mm5
 	pfmin		mm1, mm5
-	movq		mm2, mm0
-	movq		mm3, mm1
-	pf2id		mm2, mm2
-	pf2id		mm3, mm3
+	pf2id		mm2, mm0
+	pf2id		mm3, mm1
 	movd		ebp, mm2
 	movd		edi, mm3
 	punpckhdq	mm2, mm2
@@ -453,8 +450,8 @@ proc	calc_sfb_noise_3DN
 	movd		ebx, mm3
 	movd		mm2, [esi+ebp*4+8208*4]
 	movd		mm3, [esi+edi*4+8208*4]
-	punpckldq	mm2, qword [esi+ecx*4+8208*4]	; mm2=adj43asm value
-	punpckldq	mm3, qword [esi+ebx*4+8208*4]	; mm3=adj43asm value
+	punpckldq	mm2, [esi+ecx*4+8208*4]	; mm2=adj43asm value
+	punpckldq	mm3, [esi+ebx*4+8208*4]	; mm3=adj43asm value
 	pfadd		mm0, mm2
 	pfadd		mm1, mm3
 	pf2id		mm0, mm0
@@ -468,8 +465,8 @@ proc	calc_sfb_noise_3DN
 
 	movd		mm0, [esi+ebp*4]
 	movd		mm1, [esi+edi*4]
-	punpckldq	mm0, qword [esi+ecx*4]
-	punpckldq	mm1, qword [esi+ebx*4]
+	punpckldq	mm0, [esi+ecx*4]
+	punpckldq	mm1, [esi+ebx*4]
 	pfmul		mm0, mm7
 	pfmul		mm1, mm7
 	pfsubr		mm0, [eax+ 0+ edx*4 + 576*4]
@@ -480,7 +477,7 @@ proc	calc_sfb_noise_3DN
 	add		edx, byte 4
 	pfadd		mm4, mm1
 	jnz		.lp4
-
+.exit:
 	pfacc		mm4, mm4
 	movd		eax, mm4
 	femms
@@ -493,4 +490,73 @@ proc	calc_sfb_noise_3DN
 	pop		ebp
 	pop		edi
 	pop		ebx
+	ret
+
+
+;
+; void qnatize_sfb_3DN(FLOAT xr34[], int end, int bw, int sf, int l3_enc[])
+;
+proc	quantize_sfb_3DN
+%assign _P 8
+	push		edi
+	push		ebp
+
+	mov		eax, [esp+_P+4]  ; xr[]
+	mov		ecx, [esp+_P+16] ; l3_enc[]
+	mov		edx, [esp+_P+12] ; scalefact
+	movq		mm5, [D_IXMAXVAL]
+	movd		mm4, [ipow20+116*4+edx*4] ; sfpow34
+	mov		edx, [esp+_P+8]	; -n
+	punpckldq	mm4, mm4		; sfpow34 x 2
+
+;  mm0, mm1, mm2, mm3 : general work
+
+	test		edx, 2
+	jz		.lp4
+	movq		mm0, [eax+ 0+ edx*4]
+	pfmul		mm0, mm4
+	pfmin		mm0, mm5
+	pf2id		mm2, mm0
+	movd		ebp, mm2
+	punpckhdq	mm2, mm2
+	movd		edi, mm2
+	add		edx, byte 2
+	movd		mm2, [pow43+ebp*4+8208*4]
+	punpckldq	mm2, [pow43+edi*4+8208*4]	; mm2=adj43 value
+	pfadd		mm2, mm0
+	pf2id		mm2, mm2
+	movq		[ecx - 8+ 0+ edx*4], mm2
+	jz		.exit
+	loopalignK7	16
+.lp4:
+	movq		mm0, [eax+ 0+ edx*4]
+	movq		mm1, [eax+ 8+ edx*4]
+	pfmul		mm0, mm4
+	pfmul		mm1, mm4
+	pfmin		mm0, mm5
+	pfmin		mm1, mm5
+	pf2id		mm2, mm0
+	pf2id		mm3, mm1
+	movd		ebp, mm2
+	movd		edi, mm3
+	punpckhdq	mm2, mm2
+	punpckhdq	mm3, mm3
+	movd		mm6, [pow43+ebp*4+8208*4]
+	movd		mm7, [pow43+edi*4+8208*4]
+	movd		ebp, mm2
+	movd		edi, mm3
+	add		edx, byte 4
+	punpckldq	mm6, [pow43+ebp*4+8208*4]	; mm6=adj43asm value
+	punpckldq	mm7, [pow43+edi*4+8208*4]	; mm7=adj43asm value
+	pfadd		mm0, mm6
+	pfadd		mm1, mm7
+	pf2id		mm0, mm0
+	pf2id		mm1, mm1
+	movq		[ecx -16 + 0+ edx*4], mm0
+	movq		[ecx -16 + 8+ edx*4], mm1
+	jnz		.lp4
+.exit:
+	femms
+	pop		ebp
+	pop		edi
 	ret

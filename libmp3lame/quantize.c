@@ -926,30 +926,38 @@ adjust_global_gain(
 	    continue;
 
 	bw = -bw;
-	istep = IPOW20(scalefactor(gi, sfb));
 	if (gi->count1 < j)
 	    gi->count1 = j;
-	do {
-#ifdef TAKEHIRO_IEEE754_HACK
-	    double x0 = istep * xr34[j+bw  ] + MAGIC_FLOAT;
-	    double x1 = istep * xr34[j+bw+1] + MAGIC_FLOAT;
-	    if (x0 > MAGIC_FLOAT + IXMAX_VAL) x0 = MAGIC_FLOAT + IXMAX_VAL;
-	    if (x1 > MAGIC_FLOAT + IXMAX_VAL) x1 = MAGIC_FLOAT + IXMAX_VAL;
-	    fi[j+bw  ].f = x0;
-	    fi[j+bw+1].f = x1;
-	    fi[j+bw  ].f = x0 + (adj43asm - MAGIC_INT)[fi[j+bw  ].i];
-	    fi[j+bw+1].f = x1 + (adj43asm - MAGIC_INT)[fi[j+bw+1].i];
-	    fi[j+bw  ].i -= MAGIC_INT;
-	    fi[j+bw+1].i -= MAGIC_INT;
-#else
-	    FLOAT x0 = istep * xr34[j+bw  ];
-	    FLOAT x1 = istep * xr34[j+bw+1];
-	    if (x0 > IXMAX_VAL) x0 = IXMAX_VAL;
-	    if (x1 > IXMAX_VAL) x1 = IXMAX_VAL;
-	    fi[j+bw  ].i = (int)(x0 + adj43[(int)x0]);
-	    fi[j+bw+1].i = (int)(x1 + adj43[(int)x1]);
+#ifdef HAVE_NASM
+	if (gfc->CPU_features.AMD_3DNow) {
+	    quantize_sfb_3DN(&xr34[j], bw, scalefactor(gi, sfb), &gi->l3_enc[j]);
+	} else
 #endif
-	} while ((bw += 2) < 0);
+	{
+	    istep = IPOW20(scalefactor(gi, sfb));
+	    do {
+#ifdef TAKEHIRO_IEEE754_HACK
+		double x0 = istep * xr34[j+bw  ] + MAGIC_FLOAT;
+		double x1 = istep * xr34[j+bw+1] + MAGIC_FLOAT;
+		if (x0 > MAGIC_FLOAT + IXMAX_VAL) x0 = MAGIC_FLOAT + IXMAX_VAL;
+		if (x1 > MAGIC_FLOAT + IXMAX_VAL) x1 = MAGIC_FLOAT + IXMAX_VAL;
+		fi[j+bw  ].f = x0;
+		fi[j+bw+1].f = x1;
+		fi[j+bw  ].f = x0 + (adj43asm - MAGIC_INT)[fi[j+bw  ].i];
+		fi[j+bw+1].f = x1 + (adj43asm - MAGIC_INT)[fi[j+bw+1].i];
+		fi[j+bw  ].i -= MAGIC_INT;
+		fi[j+bw+1].i -= MAGIC_INT;
+#else
+		FLOAT x0 = istep * xr34[j+bw  ];
+		FLOAT x1 = istep * xr34[j+bw+1];
+		if (x0 > IXMAX_VAL) x0 = IXMAX_VAL;
+		if (x1 > IXMAX_VAL) x1 = IXMAX_VAL;
+		fi[j+bw  ].i = (int)(x0 + adj43[(int)x0]);
+		fi[j+bw+1].i = (int)(x1 + adj43[(int)x1]);
+#endif
+	    } while ((bw += 2) < 0);
+	}
+
 	if (!gfc->pseudohalf[sfb])
 	    continue;
 	istep = 0.634521682242439

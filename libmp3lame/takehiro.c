@@ -379,8 +379,7 @@ count_bits(const lame_internal_flags * const gfc, gr_info * const gi)
     const FLOAT *xend = &xp[gi->count1];
 
     do {
-	const FLOAT *xe;
-	FLOAT istep = IPOW20(scalefactor(gi, sfb));
+	const FLOAT *xe; FLOAT istep;
 	if (xp > xe01) {
 	    quantize_01(xp, gi, fi, sfb, xend);
 	    break;
@@ -389,9 +388,16 @@ count_bits(const lame_internal_flags * const gfc, gr_info * const gi)
 	xe = xp + gi->width[sfb];
 	if (xe > xend)
 	    xe = xend;
-
-	sfb++;
-	do {
+#ifdef HAVE_NASM
+	if (gfc->CPU_features.AMD_3DNow) {
+	    fi -= xp-xe;
+	    quantize_sfb_3DN(xe, xp-xe, scalefactor(gi, sfb), &fi[0].i);
+	    xp = xe;
+	} else
+#endif
+	{
+	    istep = IPOW20(scalefactor(gi, sfb));
+	    do {
 #ifdef TAKEHIRO_IEEE754_HACK
 	    double x0 = istep * xp[0] + MAGIC_FLOAT;
 	    double x1 = istep * xp[1] + MAGIC_FLOAT;
@@ -414,6 +420,7 @@ count_bits(const lame_internal_flags * const gfc, gr_info * const gi)
 	    (fi++)->i = (int)(x1 + adj43[(int)x1]);
 #endif
 	} while (xp < xe);
+	sfb++;
     } while (xp < xend);
 
     if (gfc->substep_shaping & 2) {
