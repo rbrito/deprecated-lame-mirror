@@ -1,3 +1,9 @@
+lame (3.96-0.1) unstable; urgency=low
+ 
+  * Update debian packaging for lame 3.96
+ 
+ -- Geoffrey T. Dairiki <dairiki@dairiki.org>  Fri, 9 Apr 2004 10:28:12 -0700
+
 lame (3.94-0.1) unstable; urgency=low
 
   * Update packaging for lame 3.94 alpha 14;
