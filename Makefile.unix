@@ -506,6 +506,7 @@ CC_SWITCHES += -DHAVE_NASM
 lib_obj += libmp3lame/i386/cpu_feat.o
 lib_obj += libmp3lame/i386/choose_table.o
 lib_obj += libmp3lame/i386/fft3dn.o
+lib_obj += libmp3lame/i386/fftsse.o
 lib_obj += libmp3lame/i386/quantSSE.o
 endif
 

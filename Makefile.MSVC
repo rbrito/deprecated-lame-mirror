@@ -423,15 +423,9 @@ DLL_OBJ = $(dll_sources:.c=.obj)
 CC_SWITCHES = $(CC_SWITCHES) /DHAVE_NASM
 ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/cpu_feat.obj
 ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/fft3dn.obj
+ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/fftsse.obj
 ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/quantSSE.obj
 ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/choose_table.obj
-
-#	not yet coded
-#CC_SWITCHES = $(CC_SWITCHES) /DUSE_FFTSSE
-#ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/fftsse.obj
-
-#CC_SWITCHES = $(CC_SWITCHES) /DUSE_FFTFPU
-#ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/fftfpu.obj
 !	ENDIF
 #______________________________________________________________________ NASM __
 
