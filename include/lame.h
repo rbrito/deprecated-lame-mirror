@@ -25,6 +25,12 @@
 extern "C" {
 #endif
 
+#if defined(WIN32)
+#undef CDECL
+#define CDECL _cdecl
+#else
+#define CDECL
+#endif
 
 
 typedef enum vbr_mode_e {
@@ -173,7 +179,7 @@ typedef struct  {
  * otherwise returns 0
  * 
  */
-lame_global_flags *lame_init(void);
+lame_global_flags * CDECL lame_init(void);
 /* obsolete version */
 int lame_init_old(lame_global_flags *);
 
@@ -182,30 +188,30 @@ int lame_init_old(lame_global_flags *);
 /* note: these routines not yet written: */
 
 /* set one of these.  default is compression ratio of 11.  */
-int lame_set_brate(lame_global_flags *, int);
-int lame_set_compression_ratio(lame_global_flags *, int);
+int CDECL lame_set_brate(lame_global_flags *, int);
+int CDECL lame_set_compression_ratio(lame_global_flags *, int);
 
 
 
 /* REQUIRED:  sets more internal configuration based on data provided
  * above.  returns -1 if something failed.
  */
-int lame_init_params(lame_global_flags *);
+int CDECL lame_init_params(lame_global_flags *);
 
 
 /* OPTIONAL:  get the version number, in a string. of the form:  
  * "3.63 (beta)" or just "3.63". 
  */
-const char*  get_lame_version       ( void );
-const char*  get_lame_short_version ( void );
-const char*  get_psy_version        ( void );
-const char*  get_mp3x_version       ( void );
-const char*  get_lame_url           ( void );
-const char*  get_lame_about         ( void );
+const char*  CDECL get_lame_version       ( void );
+const char*  CDECL get_lame_short_version ( void );
+const char*  CDECL get_psy_version        ( void );
+const char*  CDECL get_mp3x_version       ( void );
+const char*  CDECL get_lame_url           ( void );
+const char*  CDECL get_lame_about         ( void );
 
 
 /* OPTIONAL:  print internal lame configuration to message handler */
-void lame_print_config(const lame_global_flags *);
+void CDECL lame_print_config(const lame_global_flags *);
 
 
 
@@ -249,7 +255,7 @@ void lame_print_config(const lame_global_flags *);
 */
 //int lame_encode_buffer(lame_global_flags *,short int leftpcm[], short int rightpcm[],int num_samples, char *mp3buffer,int  mp3buffer_size);
 
-int    lame_encode_buffer (
+int    CDECL lame_encode_buffer (
         lame_global_flags*  gfp,
         const short int     buffer_l [],
         const short int     buffer_r [],
@@ -261,7 +267,7 @@ int    lame_encode_buffer (
  * num_samples = number of samples in the L (or R)
  * channel, not the total number of samples in pcm[]  
  */
-int lame_encode_buffer_interleaved(lame_global_flags *,short int pcm[], 
+int CDECL lame_encode_buffer_interleaved(lame_global_flags *,short int pcm[], 
 int num_samples, char *mp3buffer,int  mp3buffer_size);
 
 
@@ -273,7 +279,7 @@ int num_samples, char *mp3buffer,int  mp3buffer_size);
  *
  * return code = number of bytes output to mp3buffer.  can be 0
  */
-int lame_encode_flush(lame_global_flags *,char *mp3buffer, int size);
+int CDECL lame_encode_flush(lame_global_flags *,char *mp3buffer, int size);
 
 
 
@@ -293,17 +299,17 @@ int lame_encode_flush(lame_global_flags *,char *mp3buffer, int size);
  * suggested: lame_encode_flush -> lame_*_hist -> lame_close
  */
  
-void lame_bitrate_hist( 
+void CDECL lame_bitrate_hist( 
         const lame_global_flags *const gfp, 
               int                      bitrate_count[14] );
-void lame_bitrate_kbps( 
+void CDECL lame_bitrate_kbps( 
         const lame_global_flags *const gfp, 
               int                      bitrate_kbps [14] );
-void lame_stereo_mode_hist( 
+void CDECL lame_stereo_mode_hist( 
         const lame_global_flags *const gfp, 
               int                      stereo_mode_count[4] );
 
-void lame_bitrate_stereo_mode_hist ( 
+void CDECL lame_bitrate_stereo_mode_hist ( 
         const lame_global_flags*  gfp, 
         int  bitrate_stmode_count [14] [4] );
 
@@ -316,17 +322,17 @@ to the file before calling this function.
 Note: if VBR  tags are turned off by the user, or turned off
 by LAME because the output is not a regular file, this call does nothing
 */
-void lame_mp3_tags_fid(lame_global_flags *,FILE* fid);
+void CDECL lame_mp3_tags_fid(lame_global_flags *,FILE* fid);
 
 
 /* REQUIRED:  final call to free all remaining buffers */
-int  lame_close (lame_global_flags *);
+int  CDECL lame_close (lame_global_flags *);
 
 /* OBSOLETE:  lame_encode_finish combines lame_encode_flush
  * and lame_close in one call.  However, once this call is made,
  * the statistics routines will no longer function since there 
  * data will have been cleared */
-int lame_encode_finish(lame_global_flags *,char *mp3buffer, int size);
+int CDECL lame_encode_finish(lame_global_flags *,char *mp3buffer, int size);
 
 
 
@@ -362,23 +368,23 @@ typedef struct {
 
 
 /* required call to initialize decoder */
-int lame_decode_init(void);
+int CDECL lame_decode_init(void);
 
 /*********************************************************************
  * input 1 mp3 frame, output (maybe) pcm data.  
  * lame_decode return code:  -1: error.  0: need more data.  n>0: size of pcm output
  *********************************************************************/
-int lame_decode(char *mp3buf,int len,short pcm_l[],short pcm_r[]);
+int CDECL lame_decode(char *mp3buf,int len,short pcm_l[],short pcm_r[]);
 
 /* same as lame_decode, and also returns mp3 header data */
-int lame_decode_headers(char *mp3buf,int len,short pcm_l[],short pcm_r[],
+int CDECL lame_decode_headers(char *mp3buf,int len,short pcm_l[],short pcm_r[],
 mp3data_struct *mp3data);
 
 /* same as lame_decode, but returns at most one frame */
-int lame_decode1(char *mp3buf,int len,short pcm_l[],short pcm_r[]);
+int CDECL lame_decode1(char *mp3buf,int len,short pcm_l[],short pcm_r[]);
 
 /* same as lame_decode1, but returns at most one frame and mp3 header data */
-int lame_decode1_headers(char *mp3buf,int len,short pcm_l[],short pcm_r[],
+int CDECL lame_decode1_headers(char *mp3buf,int len,short pcm_l[],short pcm_r[],
 mp3data_struct *mp3data);
 
 /* Also useful for decoding is the ability to parse Xing VBR headers: */
@@ -395,7 +401,7 @@ typedef struct
   int           headersize;             /* size of VBR header, in bytes */
 }   VBRTAGDATA;
 
-int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf);
+int CDECL GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf);
 
 
 
