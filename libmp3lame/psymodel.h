@@ -38,8 +38,8 @@
 #define NS_PREECHO_ATT2 0.3
 
 #define NS_MSFIX 5.0
-#define NSATTACKTHRE 3.5
-#define NSATTACKTHRE_S 30
+#define NSATTACKTHRE 1.8
+#define NSATTACKTHRE_S 10
 
 void psycho_analysis( lame_global_flags *gfp,
 		      const sample_t *buffer[2],

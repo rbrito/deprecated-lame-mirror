@@ -1000,6 +1000,7 @@ static void
 psycho_analysis_short(
     lame_global_flags * gfp,
     const sample_t *buffer[2],
+    FLOAT sbsmpl[2][2*1152],
     int gr
     )
 {
@@ -1010,9 +1011,6 @@ psycho_analysis_short(
     int numchn, chn;
     int i, j, sblock;
 
-    FLOAT ns_hpfsmpl[MAX_CHANNELS][576];
-
-    int ns_attacks[MAX_CHANNELS*2][4];
     numchn = gfc->channels_out;
     if (gfp->mode == JOINT_STEREO) numchn=4;
 
@@ -1020,86 +1018,59 @@ psycho_analysis_short(
      * determine the block type (window type)
      ***************************************************************/
     for (chn=0; chn<numchn; chn++) {
-	FLOAT en_subshort[12];
-	FLOAT attack_intensity[12];
+	FLOAT attack_intensity[3];
 	FLOAT attackThreshold;
-	/***************************************************************
-	 *  Apply HPF of fs/4 to the input signal to detect the attack.
-	 *  This is used for attack detection / handling.
-	 ***************************************************************/
-	static const FLOAT fircoef[] = {
-	    -8.65163e-18*2, -0.00851586*2, -6.74764e-18*2, 0.0209036*2,
-	    -3.36639e-17*2, -0.0438162 *2, -1.54175e-17*2, 0.0931738*2,
-	    -5.52212e-17*2, -0.313819  *2
-	};
 
 	if (chn < 2) {
-	    /* apply high pass filter of fs/4 */
-	    const sample_t * const firbuf = &buffer[chn][576-350-NSFIRLEN+192];
-	    for (i=0;i<576;i++) {
-		ns_hpfsmpl[chn][i]
-		    = fircoef[0] * (firbuf[i+0]+firbuf[i+NSFIRLEN-0])
-		    + fircoef[1] * (firbuf[i+1]+firbuf[i+NSFIRLEN-1])
-		    + fircoef[2] * (firbuf[i+2]+firbuf[i+NSFIRLEN-2])
-		    + fircoef[3] * (firbuf[i+3]+firbuf[i+NSFIRLEN-3])
-		    + fircoef[4] * (firbuf[i+4]+firbuf[i+NSFIRLEN-4])
-		    + fircoef[5] * (firbuf[i+5]+firbuf[i+NSFIRLEN-5])
-		    + fircoef[6] * (firbuf[i+6]+firbuf[i+NSFIRLEN-6])
-		    + fircoef[7] * (firbuf[i+7]+firbuf[i+NSFIRLEN-7])
-		    + fircoef[8] * (firbuf[i+8]+firbuf[i+NSFIRLEN-8])
-		    + fircoef[9] * (firbuf[i+9]+firbuf[i+NSFIRLEN-9])
-		    + firbuf[i + 10];
+	    for (i = 0; i < 3; i++) {
+		FLOAT x, y = 1.0;
+		for (j = 0; j < 6; j++) {
+		    int k = i*6+j, band;
+		    x = 0.0;
+// for (band = gfc->nsPsy.switching_highpass; ...
+		    for (band = 10; band < SBLIMIT; band++)
+			x += fabs(sbsmpl[chn][gr*576+k*32+mdctorder[band]]);
+		    if (y < x) y = x;
+		}
+		gfc->nsPsy.subbk_ene[chn][i] = gfc->nsPsy.subbk_ene[chn][i+3];
+		gfc->nsPsy.subbk_ene[chn][i+3] = y;
 	    }
 	} else if (chn == 2) {
-	    for (i=0;i<576;i++) {
-		FLOAT l, r;
-		l = ns_hpfsmpl[0][i];
-		r = ns_hpfsmpl[1][i];
-		ns_hpfsmpl[0][i] = l+r;
-		ns_hpfsmpl[1][i] = l-r;
+	    for (i = 0; i < 3; i++) {
+		FLOAT x0, x1, y0 = 1.0, y1 = 1.0;
+		for (j = 0; j < 6; j++) {
+		    int k = i*6+j, band;
+		    x0 = x1 = 0.0;
+// for (band = gfc->nsPsy.switching_highpass; ...
+		    for (band = 10; band < SBLIMIT; band++) {
+			FLOAT l = sbsmpl[0][gr*576+k*32+mdctorder[band]];
+			FLOAT r = sbsmpl[1][gr*576+k*32+mdctorder[band]];
+			x0 += fabs(l + r);
+			x1 += fabs(l - r);
+		    }
+		    if (y0 < x0) y0 = x0;
+		    if (y1 < x1) y1 = x1;
+		}
+		gfc->nsPsy.subbk_ene[2][i] = gfc->nsPsy.subbk_ene[2][i+3];
+		gfc->nsPsy.subbk_ene[3][i] = gfc->nsPsy.subbk_ene[3][i+3];
+		gfc->nsPsy.subbk_ene[2][i+3] = y0;
+		gfc->nsPsy.subbk_ene[3][i+3] = y1;
 	    }
 	}
 
 	/* calculate energies of each sub-shortblocks */
-	for (i=0; i<3; i++) {
-	    en_subshort[i] = gfc->nsPsy.last_en_subshort[chn][i+6];
-	    attack_intensity[i]
-		= en_subshort[i] / gfc->nsPsy.last_en_subshort[chn][i+4];
-	}
+	attack_intensity[0]
+	    = gfc->nsPsy.subbk_ene[chn][2] / gfc->nsPsy.subbk_ene[chn][1];
+	attack_intensity[1]
+	    = gfc->nsPsy.subbk_ene[chn][3] / gfc->nsPsy.subbk_ene[chn][2];
+	attack_intensity[2]
+	    = gfc->nsPsy.subbk_ene[chn][4] / gfc->nsPsy.subbk_ene[chn][3];
 
-	{
-#ifndef TAKEHIRO_IEEE754_HACK
-	    FLOAT *pf = ns_hpfsmpl[chn & 1];
-	    for (i=0;i<9;i++) {
-		FLOAT *pfe = pf + 576/9, p = 1.0;
-		for (; pf < pfe; pf++)
-		    if (p < fabs(*pf))
-			p = fabs(*pf);
-		gfc->nsPsy.last_en_subshort[chn][i] = en_subshort[i+3] = p;
-		attack_intensity[i+3] = p / en_subshort[i+3-2];
-	    }
-#else
-	    int *pi = (int *)ns_hpfsmpl[chn & 1];
-	    for (i=0;i<9;i++) {
-		int j, p = 0x3f800000;
-		for (j = 0; j < 576/9; j++) {
-		    int q = pi[j] & 0x7fffffff;
-		    if (p < q)
-			p = q;
-		}
-		pi += j;
-		((int *)gfc->nsPsy.last_en_subshort[chn])[i]
-		    = ((int *)en_subshort)[i+3] = p;
-		attack_intensity[i+3] = en_subshort[i+3] / en_subshort[i+3-2];
-	    }
-#endif
-	}
 #if defined(HAVE_GTK)
 	if (gfc->pinfo) {
 	    FLOAT x = attack_intensity[0];
-	    for (i=1;i<12;i++)
-		if (x < attack_intensity[i])
-		    x = attack_intensity[i];
+	    if (x < attack_intensity[1]) x = attack_intensity[1];
+	    if (x < attack_intensity[2]) x = attack_intensity[2];
 	    gfc->pinfo->ers[gr][chn] = gfc->ers_save[gr][chn];
 	    gfc->ers_save[gr][chn] = x;
 	}
@@ -1108,33 +1079,18 @@ psycho_analysis_short(
 	attackThreshold = (chn == 3)
 	    ? gfc->nsPsy.attackthre_s : gfc->nsPsy.attackthre;
 
-	for (i=0;i<4;i++) {
-	    int j = 0;
-	    ns_attacks[chn][i] = 0;
-	    if (attack_intensity[i*3 + (j++)] > attackThreshold
-		|| attack_intensity[i*3 + (j++)] > attackThreshold
-		|| attack_intensity[i*3 + (j++)] > attackThreshold)
-		ns_attacks[chn][i] = j;
-	}
-	if (ns_attacks[chn][0] && gfc->nsPsy.last_attacks[chn])
-	    ns_attacks[chn][0] = 0;
-
 	gfc->useshort_next[gr][chn] = NORM_TYPE;
-	if (gfc->nsPsy.last_attacks[chn] == 3 ||
-	    ns_attacks[chn][0] + ns_attacks[chn][1] + ns_attacks[chn][2] + ns_attacks[chn][3]) {
-	    gfc->useshort_next[gr][chn] = SHORT_TYPE;
-	    current_is_short |= 1 << chn;
-
-	    if (ns_attacks[chn][3] && ns_attacks[chn][2]) ns_attacks[chn][3] = 0;
-	    if (ns_attacks[chn][2] && ns_attacks[chn][1]) ns_attacks[chn][2] = 0;
-	    if (ns_attacks[chn][1] && ns_attacks[chn][0]) ns_attacks[chn][1] = 0;
+	for (i=0;i<3;i++) {
+	    if (attack_intensity[i] > attackThreshold) {
+		gfc->useshort_next[gr][chn] = SHORT_TYPE;
+		current_is_short |= 1 << chn;
+	    }
 	}
     }
 
     if (!current_is_short) {
 	for (chn=0; chn<numchn; chn++) {
 	    gfc->masking_next[gr][chn].en.s[0][0] = -1.0;
-	    gfc->nsPsy.last_attacks[chn] = ns_attacks[chn][2];
 	}
 	return;
     }
@@ -1142,7 +1098,6 @@ psycho_analysis_short(
     for (chn=0; chn<numchn; chn++) {
 	/* fft and energy calculation   */
 	FLOAT wsamp_S[2][3][BLKSIZE_s];
-	gfc->nsPsy.last_attacks[chn] = ns_attacks[chn][2];
 
 	/* compute masking thresholds for short blocks */
 	for (sblock = 0; sblock < 3; sblock++) {
@@ -1724,7 +1679,7 @@ psycho_analysis(
 	for (ch = 0; ch < gfc->channels_out; ch++)
 	    bufp[ch] = &buffer[ch][576*(gr + gfc->mode_gr) - FFTOFFSET];
 
-	psycho_analysis_short(gfp, bufp, gr);
+	psycho_analysis_short(gfp, bufp, sbsmpl, gr);
 	if (gr == 0) {
 	    L3psycho_anal_ns(gfp, bufp, blocktype_old, gr);
 	} else {

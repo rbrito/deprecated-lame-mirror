@@ -402,13 +402,13 @@ struct lame_internal_flags {
 
     /* variables used for psymodel */
     struct {
-	FLOAT last_en_subshort[4][9];
-	int   last_attacks[4];
 	FLOAT pefirbuf[19];
 
 	/* short block tuning */
-	FLOAT     attackthre;
-	FLOAT     attackthre_s;
+	FLOAT	attackthre;
+	FLOAT	attackthre_s;
+	FLOAT	subbk_ene[MAX_CHANNELS*2][6];
+	int	switching_highpass;
 
 	/* adjustment of Mid/Side maskings from LR maskings */
 	FLOAT msfix;

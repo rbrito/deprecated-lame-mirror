@@ -1338,10 +1338,9 @@ int psymodel_init(lame_global_flags *gfp)
 		gfc->masking_next[0][i].thm.s[sb][j] = 1e20;
 		gfc->masking_next[1][i].thm.s[sb][j] = 1e20;
 	    }
-	    gfc->nsPsy.last_attacks[i] = 0;
 	}
-	for (j=0;j<9;j++)
-	    gfc->nsPsy.last_en_subshort[i][j] = 1.0;
+	for (j=0;j<6;j++)
+	    gfc->nsPsy.subbk_ene[i][j] = 1.0;
 	gfc->useshort_next[0][i] = NORM_TYPE;
 	gfc->useshort_next[1][i] = NORM_TYPE;
     }
