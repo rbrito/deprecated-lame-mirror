@@ -238,19 +238,19 @@ struct lame_internal_flags {
 
     /* side information */
     gr_info tt[MAX_GRANULES][MAX_CHANNELS];
+    FLOAT maxXR[SFBMAX];
+    char scfsi[MAX_CHANNELS][4];
 
     /* precalculated width information */
     winfo_t w_long[SBMAX_l];
     winfo_t w_short[SBMAX_s*3];
     winfo_t w_mixed[SBMAX_s*3-1];
 
-    FLOAT maxXR[SFBMAX];
     int main_data_begin;  /* in bytes */
     int ResvSize; /* in bits */
     int ResvMax;  /* in bits */
     int maxmp3buf; /* in bytes */
     int sideinfo_len;
-    int scfsi[MAX_CHANNELS][4];
     int mode_gr;        /* granules per frame */
     int channels_out;   /* number of channels in the output data stream (not used for decoding) */
 
