@@ -820,11 +820,10 @@ lame_init_params(lame_global_flags * const gfp)
 #if defined(HAVE_GTK)
     if (gfp->analysis)
         gfp->bWriteVbrTag = 0;
-#endif
-
     /* some file options not allowed if output is: not specified or stdout */
     if (gfc->pinfo != NULL)
         gfp->bWriteVbrTag = 0; /* disable Xing VBR tag */
+#endif
 
     init_bit_stream_w(gfc);
 
