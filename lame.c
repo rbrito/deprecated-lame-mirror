@@ -843,8 +843,12 @@ FFT's                    <---------1024---------->
 lame_global_flags * lame_init(void)
 {
 
+  /*
+   *  Debugging stuff
+   */
+   
 #ifdef __FreeBSD__
-#include <floatingpoint.h>
+# include <floatingpoint.h>
   {
   /* seet floating point mask to the Linux default */
   fp_except_t mask;
@@ -855,17 +859,36 @@ lame_global_flags * lame_init(void)
   }
 #endif
 #ifdef ABORTFP
+# ifdef __CYGWIN__
+#  define _FPU_GETCW(cw) __asm__ ("fnstcw %0" : "=m" (*&cw))
+#  define _FPU_SETCW(cw) __asm__ ("fldcw %0" : : "m" (*&cw))
+
+#  define _EM_INEXACT     0x00000001 /* inexact (precision) */
+#  define _EM_UNDERFLOW   0x00000002 /* underflow */
+#  define _EM_OVERFLOW    0x00000004 /* overflow */
+#  define _EM_ZERODIVIDE  0x00000008 /* zero divide */
+#  define _EM_INVALID     0x00000010 /* invalid */
   {
-#include <fpu_control.h>
-  unsigned int mask;
-  _FPU_GETCW(mask);
-  /* Set the Linux mask to abort on most FPE's */
-  /* if bit is set, we _mask_ SIGFPE on that error! */
-  /*  mask &= ~( _FPU_MASK_IM | _FPU_MASK_ZM | _FPU_MASK_OM | _FPU_MASK_UM );*/
-   mask &= ~( _FPU_MASK_IM | _FPU_MASK_ZM | _FPU_MASK_OM );
-  _FPU_SETCW(mask);
+    unsigned int mask;
+    _FPU_GETCW(mask);
+    /* Set the FPU control word to abort on most FPEs */
+    mask &= ~(_EM_UNDERFLOW | _EM_OVERFLOW | _EM_ZERODIVIDE | _EM_INVALID);
+    _FPU_SETCW(mask);
   }
-#endif
+# else /* not __CYGWIN__ */
+  {
+#  include <fpu_control.h>
+    unsigned int mask;
+    _FPU_GETCW(mask);
+    /* Set the Linux mask to abort on most FPE's */
+    /* if bit is set, we _mask_ SIGFPE on that error! */
+    /*  mask &= ~( _FPU_MASK_IM | _FPU_MASK_ZM | _FPU_MASK_OM | _FPU_MASK_UM );*/
+    mask &= ~( _FPU_MASK_IM | _FPU_MASK_ZM | _FPU_MASK_OM );
+    _FPU_SETCW(mask);
+  }
+# endif /* __CYGWIN__ */
+#endif /* ABORTFP    */
+
 #ifdef __riscos__
   /* Disable FPE's under RISC OS */
   /* if bit is set, we disable trapping that error! */
