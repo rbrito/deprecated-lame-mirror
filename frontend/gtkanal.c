@@ -29,11 +29,11 @@
 #include <gtk/gtk.h>
 #include <assert.h>
 #include "main.h"
+#include "lame.h"
+#include "lame-analysis.h"
 #include "get_audio.h"
 #include "gtkanal.h"
 #include "gpkplotting.h"
-#include "lame.h"
-#include "lame-analysis.h"
 
 /* this file should be removed. The few data items accessed in 'gfc'
    should be made accessable by writing a lame_set_variable() function */

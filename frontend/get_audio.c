@@ -467,7 +467,6 @@ read_samples_mp3(lame_global_flags * const gfp,
      * out = 0:  not possible with lame_decode_fromfile() ???
      * out > 0:  number of output samples
      */
-
     if (out < 0) {
         memset(mpg123pcm, 0, sizeof(**mpg123pcm) * 2 * 1152);
         return 0;
@@ -923,13 +922,15 @@ OpenSndFile(lame_global_flags * gfp, char *inPath)
             /* try file size, assume 2 bytes per sample */
             if (input_format == sf_mp1 ||
                 input_format == sf_mp2 || input_format == sf_mp3) {
-                double  totalseconds =
-                    (flen * 8.0 / (1000.0 * mp3input_data.bitrate));
-                unsigned long tmp_num_samples =
-                    totalseconds * lame_get_in_samplerate( gfp );
-
-                (void) lame_set_num_samples( gfp, tmp_num_samples );
-                mp3input_data.nsamp = tmp_num_samples;
+		if (mp3input_data.bitrate>0) {
+		    double  totalseconds =
+			(flen * 8.0 / (1000.0 * mp3input_data.bitrate));
+		    unsigned long tmp_num_samples =
+			totalseconds * lame_get_in_samplerate( gfp );
+		    
+		    (void) lame_set_num_samples( gfp, tmp_num_samples );
+		    mp3input_data.nsamp = tmp_num_samples;
+		}
             }
             else {
                 lame_set_num_samples( gfp,
@@ -1522,13 +1523,14 @@ OpenSndFile(lame_global_flags * gfp, char *inPath)
 
 
     if (lame_get_num_samples( gfp ) == MAX_U_32_NUM && musicin != stdin) {
+
         double  flen = lame_get_file_size(inPath); /* try to figure out num_samples */
 
         if (flen >= 0) {
-
             /* try file size, assume 2 bytes per sample */
             if (input_format == sf_mp1 ||
                 input_format == sf_mp2 || input_format == sf_mp3) {
+
                 if (mp3input_data.bitrate > 0) {
                     double  totalseconds =
                         (flen * 8.0 / (1000.0 * mp3input_data.bitrate));
@@ -1654,17 +1656,18 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
     }
 
 
-    // now parse the current buffer looking for MP3 headers 
-    // we dont want to feed too much data to lame_decode1_headers -  
-    // we dont want it to actually decode the first frame
+    // now parse the current buffer looking for MP3 headers.   
     // (as of 11/00: mpglib modified so that for the first frame where 
-    // headers are parsed, no data will be decoded.  So the above is
-    // now a moot point.
+    // headers are parsed, no data will be decoded.  
+    // However, for freeformat, we need to decode an entire frame,
+    // so mp3data->bitrate will be 0 until we have decoded the first
+    // frame.  Cannot decode first frame here because we are not
+    // yet prepared to handle the output.
     ret = lame_decode1_headers(buf, len, pcm_l, pcm_r, mp3data);
     if (-1 == ret)
         return -1;
 
-    /* repeat until we decode a valid mp3 header */
+    /* repeat until we decode a valid mp3 header.  */
     while (!mp3data->header_parsed) {
         len = fread(buf, 1, sizeof(buf), fd);
         if (len != sizeof(buf))
@@ -1674,11 +1677,16 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
             return -1;
     }
 
+    if (mp3data->bitrate==0) {
+	fprintf(stderr,"Input file is freeformat.\n"); 
+    }
 
     if (mp3data->totalframes > 0) {
         /* mpglib found a Xing VBR header and computed nsamp & totalframes */
     }
     else {
+	/* set as unknown.  Later, we will take a guess based on file size
+	 * ant bitrate */
         mp3data->nsamp = MAX_U_32_NUM;
     }
 
@@ -1700,6 +1708,11 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
 /*
 For lame_decode_fromfile:  return code
   -1     error
+   n     number of samples output.  either 576 or 1152 depending on MP3 file.
+
+
+For lame_decode1_headers():  return code
+  -1     error
    0     ok, but need more data before outputing any samples
    n     number of samples output.  either 576 or 1152 depending on MP3 file.
 */
@@ -1707,16 +1720,27 @@ int
 lame_decode_fromfile(FILE * fd, short pcm_l[], short pcm_r[],
                      mp3data_struct * mp3data)
 {
-    int     ret = 0, len;
-    unsigned char buf[100];
+    int     ret = 0, len=0;
+    unsigned char buf[1024];
+
+    /* first see if we still have data buffered in the decoder: */
+    ret = lame_decode1_headers(buf, len, pcm_l, pcm_r, mp3data);
+    if (ret!=0) return ret;
+
+
     /* read until we get a valid output frame */
-    while (0 == ret) {
-        len = fread(buf, 1, 100, fd);
-        if (len != 100)
-            return -1;
+    while (1) {
+        len = fread(buf, 1, 1024, fd);
+        if (len == 0) {
+	    /* we are done reading the file, but check for buffered data */
+	    ret = lame_decode1_headers(buf, len, pcm_l, pcm_r, mp3data);
+	    if (ret<=0) return -1;  // done with file
+	    break;
+	}
+
         ret = lame_decode1_headers(buf, len, pcm_l, pcm_r, mp3data);
-        if (ret == -1)
-            return -1;
+        if (ret == -1) return -1;
+	if (ret >0) break;
     }
     return ret;
 }

@@ -22,6 +22,8 @@
 
 #ifndef LAME_GET_AUDIO_H
 #define LAME_GET_AUDIO_H
+#include "lame.h"
+#include <stdio.h>
 
 typedef enum sound_file_format_e {
   sf_unknown, 
@@ -36,7 +38,8 @@ typedef enum sound_file_format_e {
 
 
 
-FILE*  init_outfile ( char *outPath, int decode );
+
+FILE *init_outfile ( char *outPath, int decode );
 void init_infile(lame_global_flags *, char *inPath);
 void close_infile(void);
 int get_audio(lame_global_flags *gfp, int buffer[2][1152]);

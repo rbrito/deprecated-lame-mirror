@@ -236,7 +236,7 @@ int check_vbr_header(PMPSTR mp,int bytes)
   mp->vbr_header = GetVbrTag(&pTagData,xing);
   if (mp->vbr_header) {
     mp->num_frames=pTagData.frames;
-    //    fprintf(stderr,"\rmpglib: Xing VBR header dectected.  MP3 file has %i frames\n", pTagData.frames);
+    // fprintf(stderr,"\rmpglib: Xing VBR header dectected.  MP3 file has %i frames\n", pTagData.frames);
     return pTagData.headersize;
   }
   return 0;
