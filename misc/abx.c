@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /*
  *  Usage: abx original_file test_file
  *
@@ -37,14 +35,15 @@
  *      Stellensuche, ab 0*len oder 0.1*len oder 0.25*len, nach Effektiv oder Spitzenwert
  *      Absturz bei LPAC feeding, warum?
  *      Als 'B' beim Ratespiel sollte auch '0'...'9' verwendbar sein 
- *      Kreuzkorrelations mit und ohne Differenzen durchführen?
  *      Oder mit einem Filter 300 Hz...3 kHz vorher filtern?
- *      Maire 12 bit+Noise spaing möchte Originalsignal
  *      Multiple encoded differenziertes Signal
  *      Amplitudenanpassung schaltbar machen?
  *      Direkt auf der Kommandozeile kodieren:
  *      abx "test.wav" "!lame -b128 test.wav -"
  */
+
+#define USE_NICE
+#define USE_REALTIME
 
 #if defined(HAVE_CONFIG_H)
 # include <config.h>
@@ -79,9 +78,36 @@
 # include <linux/soundcard.h>         /* stand alone compilable for my tests */
 #endif
 
+#if defined USE_NICE
+# include <sys/resource.h>
+#endif
+#if defined USE_REALTIME
+# include <sched.h>
+#endif
+
 #define  BF           ((freq)/25)
-#define  MAX_LEN      (210 * 44100)
-#define  DMA_SAMPLES  512               /* My Linux driver uses a DMA buffer of 65536*16 bit, which is 32768 samples in 16 bit stereo mode */
+#define  MAX_LEN      (60 * 44100)
+#define  DMA_SAMPLES  512	    	/* My Linux driver uses a DMA buffer of 65536*16 bit, which is 32768 samples in 16 bit stereo mode */
+
+void  Set_Realtime ( void )
+{
+#if defined USE_REALTIME
+    struct sched_param  sp;
+    int                 ret;
+
+    memset      ( &sp, 0, sizeof(sp) );
+    seteuid     ( 0 );
+    sp.sched_priority = sched_get_priority_min ( SCHED_FIFO );
+    ret               = sched_setscheduler ( 0, SCHED_RR, &sp );
+    seteuid     ( getuid() );
+#endif
+
+#if defined USE_NICE
+    seteuid     ( 0 );
+    setpriority ( PRIO_PROCESS, getpid(), -20 );
+    seteuid     ( getuid() );
+#endif
+}
 
 int verbose = 0;
 
@@ -589,10 +615,10 @@ void testing ( const stereo_t* A, const stereo_t* B, size_t len, long freq )
             break;
 
         case 'o'  :
-            start = calc_true_index ( index, start, stop);
+	    start = calc_true_index ( index, start, stop);
             break;
         case 'p'  :
-            stop  = calc_true_index ( index, start, stop);
+	    stop  = calc_true_index ( index, start, stop);
             break;
         case 'h'  :
             if ( start > freq/100 )
@@ -854,8 +880,10 @@ const decoder_t  decoder [] = {
     { ".mp1"    , "/usr/local/bin/mpg123 -w - %s"                   REDIR },  // MPEG Layer I         : www.iis.fhg.de, www.mpeg.org
     { ".mp2"    , "/usr/local/bin/mpg123 -w - %s"                   REDIR },  // MPEG Layer II        : www.iis.fhg.de, www.uq.net.au/~zzmcheng, www.mpeg.org
     { ".mp3"    , "/usr/local/bin/mpg123 -w - %s"                   REDIR },  // MPEG Layer III       : www.iis.fhg.de, www.mp3dev.org/mp3, www.mpeg.org
+    { ".mp3pro" , "/usr/local/bin/mpg123 -w - %s"                   REDIR },  // MPEG Layer III       : www.iis.fhg.de, www.mp3dev.org/mp3, www.mpeg.org
     { ".mpt"    , "/usr/local/bin/mpg123 -w - %s"                   REDIR },  // MPEG Layer III       : www.iis.fhg.de, www.mp3dev.org/mp3, www.mpeg.org
     { ".mpp"    , "/usr/local/bin/mppdec %s -"                      REDIR },  // MPEGplus             : www.stud.uni-hannover.de/user/73884
+    { ".mpc"    , "/usr/local/bin/mppdec %s -"                      REDIR },  // MPEGplus             : www.stud.uni-hannover.de/user/73884
     { ".mp+"    , "/usr/local/bin/mppdec %s -"                      REDIR },  // MPEGplus             : www.stud.uni-hannover.de/user/73884
     { ".aac"    , "/usr/local/bin/faad -t.wav -w %s"                REDIR },  // Advanced Audio Coding: psytel.hypermart.net, www.aac-tech.com, sourceforge.net/projects/faac, www.aac-audio.com, www.mpeg.org
     { "aac.lqt" , "/usr/local/bin/faad -t.wav -w %s"                REDIR },  // Advanced Audio Coding: psytel.hypermart.net, www.aac-tech.com, sourceforge.net/projects/faac, www.aac-audio.com, www.mpeg.org
@@ -868,6 +896,7 @@ const decoder_t  decoder [] = {
     { ".wav.sz" , "szip  -d < %s | sox -twav - -twav -sw -"         REDIR },  // sziped WAV
     { ".wav.sz2", "szip2 -d < %s | sox -twav - -twav -sw -"         REDIR },  // sziped WAV
     { ".raw"    , "sox -r44100 -sw -c2 -traw %s -twav -sw -"        REDIR },  // raw files are treated as CD like audio
+    { ".cdr"    , "sox -r44100 -sw -c2 -traw %s -twav -sw -"        REDIR },  // CD-DA files are treated as CD like audio, no preemphasis info available
     { ".rm"     , "echo %s '???'"                                   REDIR },  // Real Audio           : www.real.com
     { ".epc"    , "echo %s '???'"                                   REDIR },  // ePAC                 : www.audioveda.com, www.lucent.com/ldr
     { ".mov"    , "echo %s '???'"                                   REDIR },  // QDesign Music 2      : www.qdesign.com
@@ -1078,8 +1107,8 @@ void  DC_cancel ( stereo_t* p, size_t len )
         fprintf (stderr, "Removing DC (left=%d, right=%d)\n", diff1, diff2 );
     
     for (i = 0; i < len; i++ ) {
-        p[i][0] = to_short (p[i][0] + diff1);
-        p[i][1] = to_short (p[i][1] + diff2);
+        p[i][0] = to_short ( p[i][0] - diff1);
+        p[i][1] = to_short ( p[i][1] - diff2);
     }
 }
 
@@ -1093,8 +1122,8 @@ void  multiply ( char c, stereo_t* p, size_t len, double fact )
         fprintf (stderr, "Multiplying %c by %7.5f\n", c, fact );
     
     for (i = 0; i < len; i++ ) {
-        p[i][0] = to_short (p[i][0] * fact );
-        p[i][1] = to_short (p[i][1] * fact );
+        p[i][0] = to_short ( p[i][0] * fact );
+        p[i][1] = to_short ( p[i][1] * fact );
     }
 }
 
@@ -1201,8 +1230,8 @@ int  main ( int argc, char** argv )
 
     if ( verbose ) {
         fprintf ( stderr, "Delay Ch1 is %.4f samples\n", fshift );
-        fprintf ( stderr, "Delay Ch2 is %.4f samples\n", 
-                  cross_analyze ( (stereo_t*)(((sample_t*)A)+1), (stereo_t*)(((sample_t*)B)+1), len ) );
+	fprintf ( stderr, "Delay Ch2 is %.4f samples\n", 
+	          cross_analyze ( (stereo_t*)(((sample_t*)A)+1), (stereo_t*)(((sample_t*)B)+1), len ) );
     }
 
     if (shift > 0) {
@@ -1246,7 +1275,7 @@ int  main ( int argc, char** argv )
     }
 
     set ();
-    nice (-20);
+    Set_Realtime ();
     testing ( A, B, len, freq1 );
     reset ();
 
@@ -1256,3 +1285,4 @@ int  main ( int argc, char** argv )
 }
 
 /* end of abx.c */
+
