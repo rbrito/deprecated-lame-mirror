@@ -280,26 +280,25 @@ writeTableHeader(lame_internal_flags *gfc, gr_info *gi, int ptr, char *p)
 	gi->table_select[1] = 16;
     tsel = gi->table_select[0]*32 + gi->table_select[1];
     if (gi->block_type != NORM_TYPE) {
-	ptr = writeheader(p, 8192 /* window_switching_flag */
-			  + blockConv[gi->block_type-1]*2048
-			  + gi->mixed_block_flag*1024
-			  + tsel,
-			  1+2+1+5*2, ptr);
+	writeheader(p, 8192 /* window_switching_flag */
+		    + blockConv[gi->block_type-1]*2048
+		    + gi->mixed_block_flag*1024 + tsel,
+		    1+2+1+5*2, ptr);
 
-	ptr = writeheader(p, gi->subblock_gain[0]*64
-			  + gi->subblock_gain[1]*8
-			  + gi->subblock_gain[2], 3*3, ptr);
+	writeheader(p, gi->subblock_gain[0]*64
+		    + gi->subblock_gain[1]*8
+		    + gi->subblock_gain[2], 3*3, ptr+1+2+1+5*2);
     } else {
 	assert(gi->region0_count < 16U);
 	assert(gi->region1_count < 8U);
 
 	if (gi->table_select[2] == 14)
 	    gi->table_select[2] = 16;
-	ptr = writeheader(p, tsel*32 + gi->table_select[2], 1+5*3, ptr);
-	ptr = writeheader(p, gi->region0_count*8 + gi->region1_count, 4+3,
-			  ptr);
+	writeheader(p, tsel*32 + gi->table_select[2], 1+5*3, ptr);
+	writeheader(p, gi->region0_count*8 + gi->region1_count, 4+3,
+		    ptr+1+5*3);
     }
-    return ptr;
+    return ptr + 23;
 }
 
 inline static void
