@@ -80,6 +80,10 @@
 	typedef float FLOAT;
 #endif
 typedef double FLOAT8;
+/* NOTE: the ASM versions of quantize_xrpow() assume FLOAT8=double. 
+   so if you redefine this as float, disable the ASM routines for 
+   quantize_xrpow() and quantize_xrpow_iso().   
+*/
 
 
 #if defined _WIN32 && !defined __CYGWIN__
