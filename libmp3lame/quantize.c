@@ -155,7 +155,7 @@ calc_xmin(
 	FLOAT x = ratio->en.l[gsfb];
 	int l = gi->wi[gsfb].width;
 	j -= l;
-	if (x > 0.0) {
+	if (x > (FLOAT)0.0) {
 	    x = ratio->thm.l[gsfb] / x;
 #ifdef HAVE_NASM
 	    if (gfc->CPU_features.AMD_3DNow)
@@ -163,7 +163,7 @@ calc_xmin(
 	    else
 #endif
 	    {
-		FLOAT en0 = 0.0;
+		FLOAT en0 = (FLOAT)0.0;
 		do {
 		    en0 += gi->xr[j+l  ] * gi->xr[j+l  ];
 		    en0 += gi->xr[j+l+1] * gi->xr[j+l+1];
@@ -184,7 +184,7 @@ calc_xmin(
 	    FLOAT threshold = tmpATH, x = ratio->en.s[sfb][b];
 	    int l = gi->wi[gsfb].width;
 	    j -= l;
-	    if (x > 0.0) {
+	    if (x > (FLOAT)0.0) {
 		x = ratio->thm.s[sfb][b] / x;
 #ifdef HAVE_NASM
 		if (gfc->CPU_features.AMD_3DNow)
@@ -192,7 +192,7 @@ calc_xmin(
 		else
 #endif
 		{
-		    FLOAT en0 = 0.0;
+		    FLOAT en0 = (FLOAT)0.0;
 		    do {
 			en0 += gi->xr[j+l  ] * gi->xr[j+l  ];
 			en0 += gi->xr[j+l+1] * gi->xr[j+l+1];
@@ -227,7 +227,7 @@ calc_noise(
 	noise = *distort;
 	l = gi->wi[sfb].width;
 	j -= l;
-	if (noise < 0.0) {
+	if (noise < (FLOAT)0.0) {
 #ifdef HAVE_NASM
 	    if (gfc->CPU_features.AMD_3DNow) {
 		calc_noise_sub_3DN(&absxr[j], &gi->l3_enc[j], l, scalefactor(gi, sfb), &noise);
@@ -235,7 +235,7 @@ calc_noise(
 #endif
 	    {
 		FLOAT step = POW20(scalefactor(gi, sfb));
-		noise = 0.0;
+		noise = (FLOAT)0.0;
 		do {
 		    FLOAT temp;
 		    temp = absxr[j+l] - pow43[gi->l3_enc[j+l]] * step; l++;
@@ -246,7 +246,7 @@ calc_noise(
 	    }
 	    *distort = (noise *= *rxmin);
 	}
-	max_noise=Max(max_noise,noise);
+	max_noise = Max(max_noise, noise);
     } while (rxmin++, distort++, ++sfb < gi->psymax);
 
     for (;sfb < gi->psymax; rxmin++, distort++, sfb++) {
@@ -256,9 +256,9 @@ calc_noise(
 	noise = *distort;
 	l = gi->wi[sfb].width;
 	j -= l;
-	if (noise < 0.0) {
+	if (noise < (FLOAT)0.0) {
 	    FLOAT step = POW20(scalefactor(gi, sfb)) * pow43[1];
-	    noise = 0.0;
+	    noise = (FLOAT)0.0;
 	    do {
 		FLOAT t0 = absxr[j+l], t1 = absxr[j+l+1];
 		if (gi->l3_enc[j+l  ]) t0 -= step;
@@ -275,7 +275,7 @@ calc_noise(
 	FLOAT noise = *distort;
 	l = gi->wi[sfb].width;
 	j -= l;
-	if (noise < 0.0) {
+	if (noise < (FLOAT)0.0) {
 #ifdef HAVE_NASM
 	    if (gfc->CPU_features.AMD_3DNow) {
 		noise = *rxmin;
@@ -283,7 +283,7 @@ calc_noise(
 	    } else
 #endif
 	    {
-		noise = 0.0;
+		noise = (FLOAT)0.0;
 		do {
 		    FLOAT t0 = absxr[j+l], t1 = absxr[j+l+1];
 		    noise += t0*t0 + t1*t1;
@@ -315,7 +315,7 @@ quantEstimate(
 {
     FLOAT noise = calc_noise(gfc, gi, rxmin, distort);
 
-    if (noise < 1.0) {
+    if (noise < (FLOAT)1.0) {
 	return (FLOAT) (-(MAX_BITS - gi->part2_3_length - gi->part2_length));
     }
     return noise;
@@ -350,7 +350,7 @@ calc_noise_allband(
 static int 
 init_bitalloc(lame_t gfc, gr_info *const gi)
 {
-    FLOAT tmp, sum = 0.0;
+    FLOAT tmp, sum = (FLOAT)0.0;
     int i, end = gi->xrNumMax;
 
     /*  check if there is some energy we have to quantize
@@ -543,8 +543,8 @@ trancate_smallspectrums(lame_t gfc, gr_info* const gi, const FLOAT* const xmin)
     assert(gi->psymax != 0);
 
     for (sfb = 0; sfb < gi->psymax; sfb++) {
-	work[sfb] = 1.0;
-	distort[sfb] = -1.0;
+	work[sfb] = (FLOAT)1.0;
+	distort[sfb] = (FLOAT)-1.0;
     }
     calc_noise(gfc, gi, work, distort);
 
@@ -574,7 +574,7 @@ trancate_smallspectrums(lame_t gfc, gr_info* const gi, const FLOAT* const xmin)
 		    break;
 
 	    threshold -= work[start] * work[start] * nsame;
-	} while (threshold > 0.0 && (start += nsame) < width2);
+	} while (threshold > (FLOAT)0.0 && (start += nsame) < width2);
 	if (start == 0)
 	    continue;
 	assert(start <= width2);
@@ -625,7 +625,7 @@ inc_scalefac_scale(gr_info * const gi, FLOAT distort[])
 	s0 = s;
 	gi->scalefac[sfb] = s = (s + 1) >> 1;
 	if (s*2 != s0)
-	    distort[sfb] = -1.0;
+	    distort[sfb] = (FLOAT)-1.0;
     } while (++sfb < gi->psymax);
     gi->preflag = 0;
     gi->scalefac_scale = 1;
@@ -666,7 +666,7 @@ inc_subblock_gain(gr_info * const gi, FLOAT distort[])
 	for (sfb = gi->sfb_lmax+subwin; sfb < gi->psymax; sfb += 3) {
 	    int s = gi->scalefac[sfb] - (4 >> gi->scalefac_scale);
 	    if (s < 0) {
-		distort[sfb] = -1.0;
+		distort[sfb] = (FLOAT)-1.0;
 		s = 0;
 	    }
 	    if (sfb < gi->sfbmax)
@@ -722,10 +722,10 @@ amp_scalefac_bands(lame_t gfc, gr_info *const gi, FLOAT *distort,
     }
 
     if (method < 2) {
-	if (trigger <= 1.0)
-	    trigger *= 0.95;
+	if (trigger <= (FLOAT)1.0)
+	    trigger *= (FLOAT)0.95;
 	else if (method == 0)
-	    trigger = 1.0;
+	    trigger = (FLOAT)1.0;
 	else
 	    trigger = sqrt(trigger);
     }
@@ -736,7 +736,7 @@ amp_scalefac_bands(lame_t gfc, gr_info *const gi, FLOAT *distort,
 
 	if (method < 3 || (gfc->pseudohalf[sfb] ^= 1))
 	    gi->scalefac[sfb]++;
-	distort[sfb] = -1.0;
+	distort[sfb] = (FLOAT)-1.0;
 	if (method >= 2)
 	    break;
     }
@@ -769,7 +769,7 @@ amp_scalefac_bands(lame_t gfc, gr_info *const gi, FLOAT *distort,
 inline static FLOAT
 calc_sfb_noise_fast(lame_t gfc, int j, int bw, int sf)
 {
-    FLOAT xfsf = 0.0;
+    FLOAT xfsf = (FLOAT)0.0;
     FLOAT sfpow = POW20(sf);  /*pow(2.0,sf/4.0); */
     FLOAT sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
 
@@ -806,7 +806,7 @@ calc_sfb_noise(lame_t gfc, int j, int bw, int sf)
     if (gfc->CPU_features.AMD_3DNow)
 	return calc_sfb_noise_3DN(gfc, j, bw, sf);
 #endif
-    xfsf = 0.0;
+    xfsf = (FLOAT)0.0;
     sfpow = POW20(sf);  /*pow(2.0,sf/4.0) */
     sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0)=pow(2.0,-sf*0.1875) */
 
@@ -847,7 +847,7 @@ adjust_global_gain(lame_t gfc, gr_info *gi, FLOAT *distort, int huffbits)
 	int bw = gi->wi[sfb].width;
 	FLOAT istep;
 	j -= bw;
-	if (distort[sfb] >= 0.0)
+	if (distort[sfb] >= (FLOAT)0.0)
 	    continue;
 
 	if (gi->count1 < j)
@@ -904,7 +904,7 @@ CBR_2nd_bitalloc(lame_t gfc, gr_info *gi, FLOAT distort[])
     int sfb, j = 0, flag = 0;
     for (sfb = 0; sfb < gi_w.psymax; sfb++) {
 	int width = gi_w.wi[sfb].width;
-	distort[sfb] = 0.0;
+	distort[sfb] = (FLOAT)0.0;
 	j -= width;
 	if (gi_w.scalefac[sfb] > 0) {
 	    FLOAT noiseold = calc_sfb_noise(gfc, j, width,
@@ -916,7 +916,7 @@ CBR_2nd_bitalloc(lame_t gfc, gr_info *gi, FLOAT distort[])
 	    gi_w.scalefac[sfb]++;
 	    if (gi_w.scalefac[sfb] != gi->scalefac[sfb]) {
 		flag = 1;
-		distort[sfb] = -1.0;
+		distort[sfb] = (FLOAT)-1.0;
 	    }
 	}
     }
@@ -979,7 +979,7 @@ CBR_1st_bitalloc (
 	goto quit_quantization;
     current_method = 0;
     age = 3;
-    if (bestNoise < 1.0) {
+    if (bestNoise < (FLOAT)1.0) {
 	if (gfc->noise_shaping_amp == 0)
 	    goto quit_quantization;
 	current_method = 1;
@@ -1000,7 +1000,7 @@ CBR_1st_bitalloc (
 		       && (unsigned int)++gi_w.global_gain < 256u)
 		    ;
 		for (sfb = 0; sfb < gi->psymax; sfb++)
-		    distort[sfb] = -1.0;
+		    distort[sfb] = (FLOAT)-1.0;
 	    }
 	    if ((gfc->mode_ext & 1) && ch == 1
 		&& ((gi->block_type != SHORT_TYPE
@@ -1010,7 +1010,7 @@ CBR_1st_bitalloc (
 		/* some scalefac band which we do not want to be i-stereo is
 		   all zero (treat as i-stereo). */
 		calc_noise(gfc, &gi_w, rxmin, distort);
-		distort[gi->psymax-1] = 20.0; /* some large value */
+		distort[gi->psymax-1] = (FLOAT)20.0; /* some large value */
 		goto nextTry;
 	    }
 
@@ -1020,7 +1020,7 @@ CBR_1st_bitalloc (
 		> (newNoise = quantEstimate(gfc, &gi_w, rxmin, distort))) {
 		bestNoise = newNoise;
 		*gi = gi_w;
-		if (bestNoise < 1.0 && current_method == 0) {
+		if (bestNoise < (FLOAT)1.0 && current_method == 0) {
 		    if (gfc->noise_shaping_amp == 0)
 			break;
 		    current_method++;
@@ -1133,7 +1133,7 @@ CBR_iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 
     ResvFrameBegin(gfc, mean_bits);
     mean_bits *= 8/gfc->mode_gr;
-    factor = (mean_bits/gfc->channels_out+300)*(1.0/1300.0);
+    factor = (mean_bits/gfc->channels_out+300)*(FLOAT)(1.0/1300.0);
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 	/*  calculate needed bits */
@@ -1233,7 +1233,7 @@ find_scalefac(lame_t gfc, int j, FLOAT xmin, int bw, FLOAT maxXR,
 		endflag = 3;
 	    }
 	} else {
-	    assert(xfsf >= 0.0);
+	    assert(xfsf >= (FLOAT)0.0);
 	    if (sf >= 256) {
 		return 256;
 	    }
@@ -1495,7 +1495,7 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
     if (gi->block_type == SHORT_TYPE)
 	sfmin = -7*8-7*4;
     do {
-	FLOAT maxXR = 0.0;
+	FLOAT maxXR = (FLOAT)0.0;
 	int i = gi->wi[sfb].width;
 	j -= i;
 #ifdef HAVE_NASM
@@ -1686,7 +1686,7 @@ static void
 set_pinfo(lame_t gfc, gr_info *gi, const III_psy_ratio *ratio, int gr, int ch)
 {
     int i, j, end, sfb, sfb2, over;
-    FLOAT en0, en1, tot_noise=0.0, over_noise=0.0, max_noise;
+    FLOAT en0, en1, tot_noise=(FLOAT)0.0, over_noise=(FLOAT)0.0, max_noise;
     FLOAT ifqstep = 0.5 * (1+gi->scalefac_scale);
     FLOAT xmin[SFBMAX], distort[SFBMAX], dummy[SFBMAX];
 
@@ -1697,7 +1697,7 @@ set_pinfo(lame_t gfc, gr_info *gi, const III_psy_ratio *ratio, int gr, int ch)
     over = j = 0;
     for (sfb2 = 0; sfb2 < gi->psy_lmax; sfb2++) {
 	end = j - gi->wi[sfb2].width;
-	for (en0 = 0.0; j < end; j++) 
+	for (en0 = (FLOAT)0.0; j < end; j++) 
 	    en0 += gi->xr[j] * gi->xr[j];
 	en0=Max(en0, 1e-20);
 	/* convert to MDCT units */
@@ -1705,7 +1705,7 @@ set_pinfo(lame_t gfc, gr_info *gi, const III_psy_ratio *ratio, int gr, int ch)
 	gfc->pinfo-> thr[gr][ch][sfb2] = FFT2MDCT*xmin[sfb2];
 	gfc->pinfo->xfsf[gr][ch][sfb2] = FFT2MDCT*xmin[sfb2]*distort[sfb2];
 	en1 = FAST_LOG10(distort[sfb2]);
-	if (en1 > 0.0) {
+	if (en1 > (FLOAT)0.0) {
 	    over++;
 	    over_noise += en1;
 	}
@@ -1721,7 +1721,7 @@ set_pinfo(lame_t gfc, gr_info *gi, const III_psy_ratio *ratio, int gr, int ch)
     for (sfb = gi->sfb_smin; sfb2 < gi->psymax; sfb++) {
 	for (i = 0; i < 3; i++, sfb2++) {
 	    end = j - gi->wi[sfb2].width;
-	    for (en0 = 0.0; j < end; j++)
+	    for (en0 = (FLOAT)0.0; j < end; j++)
 		en0 += gi->xr[j] * gi->xr[j];
 
 	    en0 = Max(en0, 1e-20);
@@ -1730,7 +1730,7 @@ set_pinfo(lame_t gfc, gr_info *gi, const III_psy_ratio *ratio, int gr, int ch)
 	    gfc->pinfo-> thr_s[gr][ch][3*sfb+i] = FFT2MDCT*xmin[sfb2];
 	    gfc->pinfo->xfsf_s[gr][ch][3*sfb+i] = FFT2MDCT*xmin[sfb2]*distort[sfb2];
 	    en1 = FAST_LOG10(distort[sfb2]);
-	    if (en1 > 0.0) {
+	    if (en1 > (FLOAT)0.0) {
 		over++;
 		over_noise += en1;
 	    }
@@ -1746,8 +1746,8 @@ set_pinfo(lame_t gfc, gr_info *gi, const III_psy_ratio *ratio, int gr, int ch)
     gfc->pinfo->LAMEsfbits  [gr][ch] = gi->part2_length;
 
     gfc->pinfo->over      [gr][ch] = over;
-    gfc->pinfo->max_noise [gr][ch] = FAST_LOG10(max_noise) * 10.0;
-    gfc->pinfo->over_noise[gr][ch] = over_noise * 10.0;
+    gfc->pinfo->max_noise [gr][ch] = FAST_LOG10(max_noise) * (FLOAT)10.0;
+    gfc->pinfo->over_noise[gr][ch] = over_noise * (FLOAT)10.0;
     gfc->pinfo->tot_noise [gr][ch] = tot_noise;
 }
 
