@@ -81,8 +81,8 @@ protected:
 	inline DWORD OnStreamUnPrepareHeader(LPACMDRVSTREAMINSTANCE a_StreamInstance, LPACMSTREAMHEADER a_StreamHeader);
 	inline DWORD OnStreamConvert(LPACMDRVSTREAMINSTANCE a_StreamInstance, LPACMDRVSTREAMHEADER a_StreamHeader);
 
-	void GetMP3FormatForIndex(const DWORD the_Index, WAVEFORMATEX & the_Format, unsigned short the_String[ACMFORMATDETAILS_FORMAT_CHARS]) const;
-	void GetPCMFormatForIndex(const DWORD the_Index, WAVEFORMATEX & the_Format, unsigned short the_String[ACMFORMATDETAILS_FORMAT_CHARS]) const;
+	void GetMP3FormatForIndex(const DWORD the_Index, WAVEFORMATEX & the_Format, WCHAR the_String[ACMFORMATDETAILS_FORMAT_CHARS]) const;
+	void GetPCMFormatForIndex(const DWORD the_Index, WAVEFORMATEX & the_Format, WCHAR the_String[ACMFORMATDETAILS_FORMAT_CHARS]) const;
 	DWORD GetNumberEncodingFormats() const;
 	bool IsSmartOutput(const int frequency, const int bitrate, const int channels) const;
 	void BuildBitrateTable();

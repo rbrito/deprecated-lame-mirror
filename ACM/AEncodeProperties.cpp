@@ -31,6 +31,7 @@
 
 #include <windows.h>
 #include <windowsx.h>
+#include <commctrl.h>
 #include <shlobj.h>
 #include <assert.h>
 
@@ -40,8 +41,6 @@
 #endif
 
 #include "resource.h"
-#include <config.h>
-#include "util.h"
 #include "adebug.h"
 #include "AEncodeProperties.h"
 #include "ACM.h"

@@ -30,20 +30,6 @@
 #endif // STRICT
 
 #include <windows.h>
-
-/// The ACM is considered as a driver and run in Kernel-Mode
-/// So the new/delete operators have to be overriden in order to use memory
-/// readable out of the calling process
-
-void * operator new( unsigned int cb )
-{
-	return LocalAlloc(LPTR, cb); // VirtualAlloc
-}
-
-void operator delete(void *block) {
-	LocalFree(block);
-}
-
 extern "C" {
 
 	void *acm_Calloc( size_t num, size_t size )
@@ -74,13 +60,11 @@ extern "C" {
 #include "ACM.h"
 #include "resource.h"
 #include "adebug.h"
-#include <version.h>
 
 ADbg * debug = NULL;
 
 LONG WINAPI DriverProc(DWORD dwDriverId, HDRVR hdrvr, UINT msg, LONG lParam1, LONG lParam2)
 {
-
 	switch (msg)
 	{
 		case DRV_OPEN: // acmDriverOpen

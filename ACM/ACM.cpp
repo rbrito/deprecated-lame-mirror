@@ -41,8 +41,6 @@
 
 #include <assert.h>
 
-#include <version.h>
-
 #include "adebug.h"
 #include "resource.h"
 #include "ACMStream.h"
@@ -243,7 +241,7 @@ LPARAM lParam  // second message parameter
 				bool bUrl = false;
 				if (::PtInRect(&rect,pnt))
 				{
-					wsprintf(Url,LAME_URL);
+					wsprintf(Url, get_lame_url());
 					bUrl = true;
 				}
 
@@ -326,13 +324,7 @@ ACM::ACM( HMODULE hModule )
 		}
 	}
 
-#if   LAME_ALPHA_VERSION > 0
-	wsprintf(VersionString,"%s - %d.%d (alpha %d)", ACM_VERSION, LAME_MAJOR_VERSION, LAME_MINOR_VERSION,LAME_ALPHA_VERSION);
-#elif LAME_BETA_VERSION > 0
-	wsprintf(VersionString,"%s - %d.%d (beta %d)", ACM_VERSION, LAME_MAJOR_VERSION, LAME_MINOR_VERSION, LAME_BETA_VERSION);
-#else
-	wsprintf(VersionString,"%s - %d.%d (stable)", ACM_VERSION, LAME_MAJOR_VERSION, LAME_MINOR_VERSION);
-#endif
+	wsprintf(VersionString, "%s - %s", ACM_VERSION, get_lame_short_version());
 
 	BuildBitrateTable();
 	
@@ -1217,7 +1209,7 @@ inline DWORD ACM::OnStreamConvert(LPACMDRVSTREAMINSTANCE a_StreamInstance, LPACM
 }
 
 
-void ACM::GetMP3FormatForIndex(const DWORD the_Index, WAVEFORMATEX & the_Format, unsigned short the_String[ACMFORMATDETAILS_FORMAT_CHARS]) const
+void ACM::GetMP3FormatForIndex(const DWORD the_Index, WAVEFORMATEX & the_Format, WCHAR the_String[ACMFORMATDETAILS_FORMAT_CHARS]) const
 {
 	int Block_size;
 
@@ -1257,7 +1249,7 @@ void ACM::GetMP3FormatForIndex(const DWORD the_Index, WAVEFORMATEX & the_Format,
 	}
 }
 
-void ACM::GetPCMFormatForIndex(const DWORD the_Index, WAVEFORMATEX & the_Format, unsigned short the_String[ACMFORMATDETAILS_FORMAT_CHARS]) const
+void ACM::GetPCMFormatForIndex(const DWORD the_Index, WAVEFORMATEX & the_Format, WCHAR the_String[ACMFORMATDETAILS_FORMAT_CHARS]) const
 {
 	the_Format.nChannels = SIZE_CHANNEL_MODE - int(the_Index % SIZE_CHANNEL_MODE);
 	the_Format.wBitsPerSample = 16;

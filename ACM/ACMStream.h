@@ -37,9 +37,7 @@
 #include <msacmdrv.h>
 
 #include "ADbg/ADbg.h"
-
-#include <config.h>
-#include "util.h"
+#include "lame.h"
 
 #include "AEncodeProperties.h"
 

@@ -129,37 +129,9 @@ bool DecodeStream::open()
 
 bool DecodeStream::close(LPBYTE pOutputBuffer, DWORD *pOutputSize)
 {
-
 	bool bResult = false;
-/*
-	int nOutputSamples = 0;
-
-    nOutputSamples = lame_encode_flush( gfp, pOutputBuffer, 0 );
-
-	if ( nOutputSamples < 0 )
-	{
-		// BUFFER_TOO_SMALL
-		*pOutputSize = 0;
-	}
-	else
-	{
-		*pOutputSize = nOutputSamples;
-
-		bResult = true;
-	}
-/*
-	// lame will be close in VbrWriteTag function
-	if ( !lame_get_bWriteVbrTag( gfp ) )
-	{
-		// clean up of allocated memory
-		lame_close( gfp );
-	}
-*/
-    
 	ExitMP3(&my_DecodeData);
-
 	bResult = true;
-    
 	return bResult;
 }
 
@@ -206,29 +178,6 @@ my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG, "enter DecodeStream::ConvertBuffer");
 			break;
 	}
 
-/*
-	DWORD InSize = a_StreamHeader->cbSrcLength / 2, OutSize = a_StreamHeader->cbDstLength; // 2 for 8<->16 bits
-
-// Encode it
-int dwSamples;
-	int nOutputSamples = 0;
-
-	dwSamples = InSize / lame_get_num_channels( gfp );
-
-	if ( 1 == lame_get_num_channels( gfp ) )
-	{
-		nOutputSamples = lame_encode_buffer(gfp,(PSHORT)a_StreamHeader->pbSrc,(PSHORT)a_StreamHeader->pbSrc,dwSamples,a_StreamHeader->pbDst,a_StreamHeader->cbDstLength);
-	}
-	else
-	{
-		nOutputSamples = lame_encode_buffer_interleaved(gfp,(PSHORT)a_StreamHeader->pbSrc,dwSamples,a_StreamHeader->pbDst,a_StreamHeader->cbDstLength);
-	}
-
-	a_StreamHeader->cbSrcLengthUsed = a_StreamHeader->cbSrcLength;
-	a_StreamHeader->cbDstLengthUsed = nOutputSamples;
-
-	result = a_StreamHeader->cbDstLengthUsed <= a_StreamHeader->cbDstLength;
-*/
 	my_debug->OutPut(DEBUG_LEVEL_FUNC_CODE, "UsedSize = %d / EncodedSize = %d, result = %d, ret = %s", a_StreamHeader->cbSrcLengthUsed, a_StreamHeader->cbDstLengthUsed, result,
 		(ret == MP3_OK)?"MP3_OK":(ret == MP3_NEED_MORE)?"MP3_NEED_MORE":"error");
 

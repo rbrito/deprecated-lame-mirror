@@ -219,8 +219,6 @@ bool ACMStream::open(const AEncodeProperties & the_Properties)
 	my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG, "High pass frequency    =%d", lame_get_highpassfreq( gfp ) );
 	my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG, "High pass width        =%d", lame_get_highpasswidth( gfp ) );
 
-	my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG, "No Short Blocks        =%d", lame_get_no_short_blocks( gfp ) );
-
 	my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG, "de-emphasis            =%d", lame_get_emphasis( gfp ) );
 	my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG, "private flag           =%d", lame_get_extension( gfp ) );
 
@@ -229,7 +227,6 @@ bool ACMStream::open(const AEncodeProperties & the_Properties)
 	my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG, "CRC                    =%s", lame_get_error_protection( gfp ) ? "on" : "off" );
 	my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG, "Fast mode              =%s", ( lame_get_quality( gfp ) )? "enabled" : "disabled" );
 	my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG, "Force mid/side stereo  =%s", ( lame_get_force_ms( gfp ) )?"enabled":"disabled" );
-	my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG, "Padding Type           =%d", lame_get_padding_type( gfp ) );
 	my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG, "Disable Resorvoir      =%d", lame_get_disable_reservoir( gfp ) );
 	my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG, "VBR                    =%s, VBR_q =%d, VBR method =",
 					( lame_get_VBR( gfp ) !=vbr_off ) ? "enabled": "disabled",
@@ -237,11 +234,9 @@ bool ACMStream::open(const AEncodeProperties & the_Properties)
 
 	switch ( lame_get_VBR( gfp ) )
 	{
-		case vbr_off:	my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG,  "vbr_off" );	break;
-		case vbr_mt :	my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG,  "vbr_mt" );	break;
-		case vbr_rh :	my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG,  "vbr_rh" );	break;
-		case vbr_mtrh:	my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG,  "vbr_mtrh" );	break;
-		case vbr_abr: 
+		case cbr:	my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG,  "vbr_off" );	break;
+		case vbr:	my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG,  "vbr" );	break;
+		case abr: 
 			my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG,  "vbr_abr (average bitrate %d kbps)", lame_get_VBR_mean_bitrate_kbps( gfp ) );
 		break;
 		default:
@@ -337,17 +332,34 @@ my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG, "ACMStream::ConvertBuffer result = %d (
 
 	return result;
 }
+/* map frequency to a valid MP3 sample frequency
+ *
+ * Robert Hegemann 2000-07-01
+ */
+static int map2MP3Frequency(int freq)
+{
+    if (freq <=  8000) return  8000;
+    if (freq <= 11025) return 11025;
+    if (freq <= 12000) return 12000;
+    if (freq <= 16000) return 16000;
+    if (freq <= 22050) return 22050;
+    if (freq <= 24000) return 24000;
+    if (freq <= 32000) return 32000;
+    if (freq <= 44100) return 44100;
+    
+    return 48000;
+}
 
 unsigned int ACMStream::GetOutputSampleRate(int samples_per_sec, int bitrate, int channels)
 {
-	/// \todo pass through the same LAME routine
-	unsigned int OutputFrequency;
-	double compression_ratio = double(samples_per_sec * 16 * channels / (bitrate * 8));
-	if (compression_ratio > 13.)
-		OutputFrequency = map2MP3Frequency( (10. * bitrate * 8) / (16 * channels));
-	else
-		OutputFrequency = map2MP3Frequency( 0.97 * samples_per_sec );
+    /// \todo pass through the same LAME routine
+    unsigned int OutputFrequency;
+    double compression_ratio = double(samples_per_sec * 16 * channels / (bitrate * 8));
+    if (compression_ratio > 13.)
+	OutputFrequency = map2MP3Frequency( (10. * bitrate * 8) / (16 * channels));
+    else
+	OutputFrequency = map2MP3Frequency( 0.97 * samples_per_sec );
 
-	return OutputFrequency;
+    return OutputFrequency;
 }
 
