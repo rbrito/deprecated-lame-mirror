@@ -1015,7 +1015,7 @@ CBR_1st_bitalloc (
 		for (sfb = 0; sfb < gi->psymax; sfb++)
 		    distort[sfb] = -1.0;
 	    }
-	    if ((gfc->mode_ext & 1) && ch == 1 && gi->psymax > 0
+	    if ((gfc->mode_ext & 1) && ch == 1
 		&& ((gi->block_type != SHORT_TYPE
 		     && gfc->scalefac_band.l[gi->psymax-1] > gi->count1)
 		    || gfc->scalefac_band.s[gi->psymax/3]*3
