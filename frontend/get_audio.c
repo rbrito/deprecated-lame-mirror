@@ -1320,7 +1320,6 @@ OpenSndFile(lame_global_flags * gfp, char *inPath)
     if (lame_get_num_samples( gfp ) == MAX_U_32_NUM && musicin != stdin) {
 
         double  flen = lame_get_file_size(inPath); /* try to figure out num_samples */
-
         if (flen >= 0) {
             /* try file size, assume 2 bytes per sample */
             if (input_format == sf_mp1 ||
@@ -1330,7 +1329,7 @@ OpenSndFile(lame_global_flags * gfp, char *inPath)
                     double  totalseconds =
                         (flen * 8.0 / (1000.0 * mp3input_data.bitrate));
                     unsigned long tmp_num_samples =
-                        (unsigned long) totalseconds * lame_get_in_samplerate( gfp );
+                        (unsigned long) (totalseconds * lame_get_in_samplerate( gfp ));
 
                     (void) lame_set_num_samples( gfp, tmp_num_samples );
                     mp3input_data.nsamp = tmp_num_samples;
