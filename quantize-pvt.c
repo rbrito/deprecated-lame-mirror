@@ -233,11 +233,7 @@ FLOAT8 ATHformula(lame_global_flags *gfp,FLOAT8 f)
          + 0.001 * pow(f,4.0);
 	  
   /* convert to energy */
-  if (gfp->noATH)
-    ath -= 200; /* disables ATH */
-  else {
-    ath -= 114;    /* MDCT scaling.  From tests by macik and MUS420 code */
-  }
+  ath -= 114;    /* MDCT scaling.  From tests by macik and MUS420 code */
 
   /* purpose of RH_QUALITY_CONTROL:
    * at higher quality lower ATH masking abilities   => needs more bits
@@ -292,6 +288,17 @@ samp_freq*end/(2*576),
       assert( freq < 25 );
       ATH_f = ATHformula(gfp,freq);    /* freq in kHz */
       ATH_s[sfb]=Min(ATH_s[sfb],ATH_f);
+    }
+  }
+  /* in no ATH mode leave ATH for the last scalefactor band in 
+   * because VBR mode needs it
+   */
+  if (gfp->noATH) {
+    for ( sfb = 0; sfb < SBMAX_l-1; sfb++ ) {
+      ATH_l[sfb]=1E-20;
+    }
+    for ( sfb = 0; sfb < SBMAX_s-1; sfb++ ) {
+      ATH_s[sfb]=1E-20;
     }
   }
 }
@@ -778,8 +785,11 @@ int calc_noise1( lame_global_flags *gfp,
   
   if (cod_info->block_type == SHORT_TYPE) {
     int max_index = SBPSY_s;
-    if (gfp->VBR!=vbr_off) max_index = SBMAX_s;
-
+    
+    if (gfp->VBR==vbr_rh || gfp->VBR==vbr_mt)
+      {
+        max_index = SBMAX_s;
+      }
     for ( i = 0; i < 3; i++ ) {
         for ( sfb = 0; sfb < max_index; sfb++ ) {
 	    FLOAT8 step;
@@ -823,8 +833,11 @@ int calc_noise1( lame_global_flags *gfp,
     }
   }else{
     int max_index = SBPSY_l;
-    if (gfp->VBR!=vbr_off) max_index = SBMAX_l;
-
+    
+    if (gfp->VBR==vbr_rh || gfp->VBR==vbr_mt)
+      {
+        max_index = SBMAX_l;
+      }
     for ( sfb = 0; sfb < max_index; sfb++ ) {
 	FLOAT8 step;
 	int s = scalefac->l[sfb];

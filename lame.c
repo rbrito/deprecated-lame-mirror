@@ -430,6 +430,45 @@ int lame_init_params(lame_global_flags *gfp)
     }
     gfp->VBR_mean_bitrate_kbps = Min(bitrate_table[gfp->version][gfc->VBR_max_bitrate]*.95,gfp->VBR_mean_bitrate_kbps);
     gfp->VBR_mean_bitrate_kbps = Max(bitrate_table[gfp->version][gfc->VBR_min_bitrate]*.95,gfp->VBR_mean_bitrate_kbps);
+    
+    /* Note: ABR mode should normally be used without a -V n setting,
+     * (or with the default value of 4)
+     * but the code below allows us to test how adjusting the maskings
+     * effects CBR encodings.  Lowering the maskings will make LAME
+     * work harder to get over=0 and may give better noise shaping?
+     */
+    if (gfp->VBR == vbr_abr)
+    {
+      static const FLOAT8 dbQ[10]={-5.0,-3.75,-2.5,-1.25,0,0.4,0.8,1.2,1.6,2.0};
+      FLOAT8 masking_lower_db;
+      assert( gfp->VBR_q <= 9 );
+      assert( gfp->VBR_q >= 0 );
+      masking_lower_db = dbQ[gfp->VBR_q];
+      gfc->masking_lower = pow(10.0,masking_lower_db/10);
+      gfc->ATH_lower = (4-gfp->VBR_q)*4.0; 
+    }
+    
+    /* - lower masking depending on Quality setting
+     * - quality control together with adjusted ATH MDCT scaling
+     *   on lower quality setting allocate more noise from
+     *   ATH masking, and on higher quality setting allocate
+     *   less noise from ATH masking.
+     * - experiments show that going more than 2dB over GPSYCHO's
+     *   limits ends up in very annoying artefacts
+     */
+    if (gfp->VBR == vbr_rh)
+    {
+      static const FLOAT8 dbQ[10]={-5.0,-3.75,-2.5,-1.25,0,0.4,0.8,1.2,1.6,2.0};
+      FLOAT8 masking_lower_db;
+      assert( gfp->VBR_q <= 9 );
+      assert( gfp->VBR_q >= 0 );
+      masking_lower_db = dbQ[gfp->VBR_q];
+      gfc->masking_lower = pow(10.0,masking_lower_db/10);
+      gfc->ATH_lower = (4-gfp->VBR_q)*4.0;     
+    }
+
+
+
   }
 
   /* VBR needs at least the output of GPSYCHO,

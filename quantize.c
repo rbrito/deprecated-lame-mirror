@@ -161,23 +161,8 @@ ABR_iteration_loop (lame_global_flags *gfp,
   III_side_info_t *l3_side;
 
   l3_side = &gfc->l3_side;
-  gfc->ATH_lower = (4-gfp->VBR_q)*4.0; 
   iteration_init(gfp,l3_side,l3_enc);
 
-  /* Note: ABR mode should normally be used without a -V n setting,
-   * (or with the default value of 4)
-   * but the code below allows us to test how adjusting the maskings
-   * effects CBR encodings.  Lowering the maskings will make LAME
-   * work harder to get over=0 and may give better noise shaping?
-   */
-  {
-    static const FLOAT8 dbQ[10]={-5.0,-3.75,-2.5,-1.25,0,0.4,0.8,1.2,1.6,2.0};
-    FLOAT8 masking_lower_db;
-    assert( gfp->VBR_q <= 9 );
-    assert( gfp->VBR_q >= 0 );
-    masking_lower_db = dbQ[gfp->VBR_q];
-    gfc->masking_lower = pow(10.0,masking_lower_db/10);
-  }
   gfc->bitrate_index = gfc->VBR_max_bitrate;
   getframebits (gfp,&bitsPerFrame, &mean_bits);
   max_frame_bits=ResvFrameBegin (gfp,l3_side, mean_bits, bitsPerFrame);
@@ -360,7 +345,6 @@ VBR_iteration_loop (lame_global_flags *gfp,
   III_side_info_t *l3_side;
 
   l3_side = &gfc->l3_side;
-  gfc->ATH_lower = (4-gfp->VBR_q)*4.0; 
   iteration_init(gfp,l3_side,l3_enc);
 
     /* my experiences are, that side channel reduction  
@@ -369,25 +353,6 @@ VBR_iteration_loop (lame_global_flags *gfp,
   if (gfc->mode_ext==MPG_MD_MS_LR) 
     reduce_s_ch=1;
      */
-
-
-  /* - lower masking depending on Quality setting
-   * - quality control together with adjusted ATH MDCT scaling
-   *   on lower quality setting allocate more noise from
-   *   ATH masking, and on higher quality setting allocate
-   *   less noise from ATH masking.
-   * - experiments show that going more than 2dB over GPSYCHO's
-   *   limits ends up in very annoying artefacts
-   */
-  {
-    static const FLOAT8 dbQ[10]={-5.0,-3.75,-2.5,-1.25,0,0.4,0.8,1.2,1.6,2.0};
-    FLOAT8 masking_lower_db;
-    assert( gfp->VBR_q <= 9 );
-    assert( gfp->VBR_q >= 0 );
-    masking_lower_db = dbQ[gfp->VBR_q];
-    gfc->masking_lower = pow(10.0,masking_lower_db/10);
-  }
-  
 
 
   /*******************************************************************
