@@ -351,8 +351,7 @@ table.from2:
 	cmp	edx, ecx
 	jle	.from2_s1
 	mov	edx, ecx
-	cmp	eax, 2	; CF = (eax < 2) ? 1 : 0
-	adc	eax, 1	; eax += CF+1 <=> eax += (eax==1) ? 2:1
+	mov	eax, 3
 .from2_s1:
 	mov	ecx, [esp+12] ; *s
 	add	[ecx], edx
