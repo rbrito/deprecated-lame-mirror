@@ -47,11 +47,11 @@
 /************************************************************************/
 void
 iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
-		FLOAT8 xr_org[2][2][576], III_psy_ratio *ratio,
+		FLOAT8 xr_org[2][2][576], III_psy_ratio ratio[2][2],
 		III_side_info_t *l3_side, int l3_enc[2][2][576],
 		III_scalefac_t scalefac[2][2], frame_params *fr_ps)
 {
-  III_psy_xmin l3_xmin;
+  III_psy_xmin l3_xmin[2][2];
   gr_info *cod_info;
   layer *info;
   int over[2];
@@ -63,7 +63,7 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   FLOAT8 xr[2][2][576];
 
 
-  iteration_init(xr_org,l3_side,l3_enc,fr_ps,&l3_xmin);
+  iteration_init(xr_org,l3_side,l3_enc,fr_ps,l3_xmin);
   info = fr_ps->header;
   bit_rate = bitrate[info->version][info->lay-1][info->bitrate_index];
 
@@ -79,8 +79,8 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
        * maskings (by constantly reconstructing L/R data).  Used before we
        * we had proper mid/side maskings. */
       outer_loop_dual( xr, xr_org, mean_bits, bit_rate, over,
-	       &l3_xmin,l3_enc, fr_ps, 
-	       scalefac,gr, l3_side, ratio, pe, ms_ener_ratio);
+		       l3_xmin,l3_enc, fr_ps, 
+		       scalefac,gr, l3_side, ratio, pe, ms_ener_ratio);
     } else {
       int targ_bits[2];
       /* copy data to be quantized into xr */
@@ -96,7 +96,7 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 #endif      
       
       for (ch=0 ; ch < gf.stereo ; ch ++) {
-	outer_loop( xr, targ_bits[ch], noise, targ_noise, 0, &l3_xmin,l3_enc, 
+	outer_loop( xr, targ_bits[ch], noise, targ_noise, 0, l3_xmin,l3_enc, 
 		    fr_ps, scalefac,gr, l3_side, ratio, ms_ener_ratio[gr],ch);
 	cod_info = &l3_side->gr[gr].ch[ch].tt;
 
@@ -216,11 +216,11 @@ void set_masking_lower( int nbits )
  ************************************************************************/
 void
 VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
-                FLOAT8 xr_org[2][2][576], III_psy_ratio * ratio,
+                FLOAT8 xr_org[2][2][576], III_psy_ratio ratio[2][2],
                 III_side_info_t * l3_side, int l3_enc[2][2][576],
                 III_scalefac_t scalefac[2][2], frame_params * fr_ps)
 {
-  III_psy_xmin l3_xmin;
+  III_psy_xmin l3_xmin[2][2];
   gr_info  *cod_info = NULL;
   layer    *info;
   int       save_bits[2][2];
@@ -237,7 +237,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   FLOAT8    xr[2][2][576];
   FLOAT8 xr_save[576];
 
-  iteration_init(xr_org,l3_side,l3_enc,fr_ps,&l3_xmin);
+  iteration_init(xr_org,l3_side,l3_enc,fr_ps,l3_xmin);
   info = fr_ps->header;
 
 
@@ -289,7 +289,8 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 
       /* check for analolg silence */
       /* if energy < ATH, set min_bits = 125 */
-      if (0==calc_xmin( xr, ratio, cod_info, &l3_xmin, gr, ch )) {
+      if (0==calc_xmin(xr[gr][ch], &ratio[gr][ch], cod_info,
+		       &l3_xmin[gr][ch])) {
 	analog_silence=1;
       	min_bits=125;
       }
@@ -340,7 +341,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 
 	/* restore xr */
 	memcpy(xr[gr][ch],xr_save,sizeof(FLOAT8)*576);   
-	outer_loop( xr, this_bits, noise, targ_noise, 1,&l3_xmin,l3_enc, fr_ps,
+	outer_loop( xr, this_bits, noise, targ_noise, 1,l3_xmin,l3_enc, fr_ps,
 	    scalefac,gr, l3_side, ratio, ms_ener_ratio[gr], ch);
 
 	/* is quantization as good as we are looking for ? */
@@ -414,7 +415,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
       set_masking_lower( save_bits[gr][ch] );
       
       outer_loop( xr, save_bits[gr][ch], noise,targ_noise,0,
-		  &l3_xmin,l3_enc, fr_ps, 
+		  l3_xmin,l3_enc, fr_ps, 
 		  scalefac,gr, l3_side, ratio, ms_ener_ratio[gr], ch);
     }
   }
@@ -462,30 +463,25 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 /************************************************************************/
 void init_outer_loop(
     FLOAT8 xr[2][2][576],        /*  could be L/R OR MID/SIDE */
-    III_psy_xmin  *l3_xmin,   /* the allowed distortion of the scalefactor */
+    III_psy_xmin l3_xmin[2][2],   /* the allowed distortion of the scalefactor */
     III_scalefac_t scalefac[2][2], /* scalefactors */
     int gr, III_side_info_t *l3_side,
-    III_psy_ratio *ratio, int ch)
+    III_psy_ratio ratio[2][2], int ch)
 {
   int sfb,i;
   gr_info *cod_info;  
   cod_info = &l3_side->gr[gr].ch[ch].tt;
 
   /* compute max allowed distortion */
-  calc_xmin( xr, ratio, cod_info, l3_xmin, gr, ch );
+  calc_xmin( xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin[gr][ch]);
 
   /* reset of iteration variables */
-    
-  for ( sfb = 0; sfb < SBMAX_l; sfb++ )
-    scalefac[gr][ch].l[sfb] = 0;
-  for ( sfb = 0; sfb < SBMAX_s; sfb++ )
-    for ( i = 0; i < 3; i++ )
-      scalefac[gr][ch].s[sfb][i] = 0;
-  
+  memset(&scalefac[gr][ch], 0, sizeof(III_scalefac_t));
+
   for ( i = 0; i < 4; i++ )
     cod_info->slen[i] = 0;
   cod_info->sfb_partition_table = &nr_of_sfb_block[0][0][0];
-  
+
   cod_info->part2_3_length    = 0;
   cod_info->big_values        = ((cod_info->block_type==SHORT_TYPE)?288:0);
   cod_info->count1            = 0;
@@ -534,7 +530,7 @@ void init_outer_loop(
 	  xr[gr][ch][i] *= 1 << (cod_info->subblock_gain[b] * 2);
 	}
 	for (sfb = 0; sfb < SBPSY_s; sfb++) {
-	  l3_xmin->s[gr][ch][sfb][b] *= 1 << (cod_info->subblock_gain[b] * 4);
+	  l3_xmin[gr][ch].s[sfb][b] *= 1 << (cod_info->subblock_gain[b] * 4);
 	}
       }
     }
@@ -564,12 +560,12 @@ void outer_loop(
     FLOAT8 best_noise[4],
     FLOAT8 targ_noise[4],
     int sloppy,
-    III_psy_xmin  *l3_xmin,   /* the allowed distortion of the scalefactor */
+    III_psy_xmin l3_xmin[2][2],   /* the allowed distortion of the scalefactor */
     int l3_enc[2][2][576],    /* vector of quantized values ix(0..575) */
     frame_params *fr_ps,
     III_scalefac_t scalefac[2][2], /* scalefactors */
     int gr, III_side_info_t *l3_side,
-    III_psy_ratio *ratio, FLOAT8 ms_ener_ratio,
+    III_psy_ratio ratio[2][2], FLOAT8 ms_ener_ratio,
     int ch)
 {
 
@@ -577,9 +573,7 @@ void outer_loop(
   int status,count=0,bits_found=0;
   III_scalefac_t scalesave;
   int sfb, huff_bits;
-  FLOAT8 xfsf[4][SBPSY_l];
   FLOAT8 xrpow[576],temp;
-  FLOAT8 distort[4][SBPSY_l];
   int save_l3_enc[576];  
   int better;
   int over=0;
@@ -593,6 +587,8 @@ void outer_loop(
   gr_info save_cod_info;
   gr_info *cod_info;  
   FLOAT8 xr_save[576];
+  FLOAT8 xfsf[4][SBPSY_l];
+  FLOAT8 distort[4][SBPSY_l];
 
   int compute_stepsize=1;
   int notdone=1;
@@ -633,9 +629,8 @@ void outer_loop(
 		  l3_enc[gr][ch],xr[gr][ch],xrpow,cod_info);
       OldValue[ch] = cod_info->global_gain;
     }
-    
-    
-    
+
+
     /* inner_loop starts with the initial quantization step computed above
      * and slowly increases until the bits < huff_bits.
      * Thus it is important not to start with too large of an inital
@@ -667,7 +662,7 @@ void outer_loop(
 	/* coefficients and thresholds both l/r (or both mid/side) */
 	over=calc_noise1( xr[gr][ch], l3_enc[gr][ch], cod_info, 
 			  xfsf,distort, l3_xmin,gr,ch, &over_noise, 
-			  &tot_noise, &max_noise, scalefac);
+			  &tot_noise, &max_noise);
       }
       /* check if this quantization is better the our saved quantization */
       if (iteration == 1) better=1;
@@ -710,11 +705,11 @@ void outer_loop(
 		  en0=Max(en0/bw,1e-20);
 
 		  /* conversion to FFT units */
-		  en0 = ratio->en_s[gr][ch][sfb][i]/en0;
-	
+		  en0 = ratio[gr][ch].en.s[sfb][i]/en0;
+
 		  pinfo->xfsf_s[gr][ch][3*sfb+i] =  xfsf[i+1][sfb]*en0;
-		  pinfo->thr_s[gr][ch][3*sfb+i] = ratio->thm_s[gr][ch][sfb][i];
-		  pinfo->en_s[gr][ch][3*sfb+i] = ratio->en_s[gr][ch][sfb][i]; 
+		  pinfo->thr_s[gr][ch][3*sfb+i] = ratio[gr][ch].thm.s[sfb][i];
+		  pinfo->en_s[gr][ch][3*sfb+i] = ratio[gr][ch].en.s[sfb][i]; 
 
 		  pinfo->LAMEsfb_s[gr][ch][3*sfb+i]=
 		    -2*cod_info->subblock_gain[i]-ifqstep*scalefac[gr][ch].s[sfb][i];
@@ -729,16 +724,16 @@ void outer_loop(
 		  en0 += xr[gr][ch][l] * xr[gr][ch][l];
 		en0=Max(en0/bw,1e-20);
 		/*
-		  printf("diff  = %f \n",10*log10(Max(ratio->en_l[gr][ch][sfb],1e-20))
+		  printf("diff  = %f \n",10*log10(Max(ratio[gr][ch].en.l[sfb],1e-20))
 		  -(10*log10(en0)+150));
 		  */
 
 		/* convert to FFT units */
-		en0 =   ratio->en_l[gr][ch][sfb]/en0;
+		en0 =   ratio[gr][ch].en.l[sfb]/en0;
 	
 		pinfo->xfsf[gr][ch][sfb] =  xfsf[0][sfb]*en0;
-		pinfo->thr[gr][ch][sfb] = ratio->thm_l[gr][ch][sfb];
-		pinfo->en[gr][ch][sfb] = ratio->en_l[gr][ch][sfb];
+		pinfo->thr[gr][ch][sfb] = ratio[gr][ch].thm.l[sfb];
+		pinfo->en[gr][ch][sfb] = ratio[gr][ch].en.l[sfb];
 
 		pinfo->LAMEsfb[gr][ch][sfb]=-ifqstep*scalefac[gr][ch].l[sfb];
 		if (cod_info->preflag && sfb>=11) 
@@ -769,11 +764,9 @@ void outer_loop(
 
 
 
-    
-    
     if (notdone) {
-      notdone = amp_scalefac_bands( xr[gr][ch], xrpow, l3_xmin,
-			     l3_side, scalefac, gr, ch, iteration,distort);
+      notdone = amp_scalefac_bands( xr[gr][ch], xrpow, &l3_xmin[gr][ch],
+				    cod_info, &scalefac[gr][ch], distort);
     }
       
       
@@ -842,11 +835,9 @@ void outer_loop(
 /*************************************************************************/
 /*  mt 5/99:  Function: Improved calc_noise for a single channel   */
 int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
-            FLOAT8 xfsf[4][SBPSY_l], FLOAT8 distort[4][SBPSY_l],
-            III_psy_xmin *l3_xmin,int gr, int ch, FLOAT8 *over_noise,
-            FLOAT8 *tot_noise, FLOAT8 *max_noise, 
-		    III_scalefac_t scalefac[2][2])
-
+		 FLOAT8 xfsf[4][SBPSY_l], FLOAT8 distort[4][SBPSY_l],
+		 III_psy_xmin l3_xmin[2][2],int gr, int ch, FLOAT8 *over_noise,
+		 FLOAT8 *tot_noise, FLOAT8 *max_noise)
 {
     int start, end, sfb, l, i, over=0;
     FLOAT8 sum,step,bw;
@@ -854,22 +845,17 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
     FLOAT8 ath_max;
 #endif
 
-    D192_3 *xr_s;
-    I192_3 *ix_s;
-
     int count=0;
     FLOAT8 noise;
     *over_noise=0;
     *tot_noise=0;
     *max_noise=-999;
 
-    xr_s = (D192_3 *) xr;
-    ix_s = (I192_3 *) ix;
     step = POW20(cod_info->global_gain);
 
     for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ )
     {
-        start = scalefac_band.l[ sfb ];
+	start = scalefac_band.l[ sfb ];
         end   = scalefac_band.l[ sfb+1 ];
         bw = end - start;
 
@@ -897,9 +883,9 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
 
 	/* max -30db noise below threshold */
 #if RH_ATH
-	noise = 10*log10(Max(.001,Min(ath_max,xfsf[0][sfb]/l3_xmin->l[gr][ch][sfb])));
+	noise = 10*log10(Max(.001,Min(ath_max,xfsf[0][sfb]/l3_xmin[gr][ch].l[sfb])));
 #else
-	noise = 10*log10(Max(.001,xfsf[0][sfb] / l3_xmin->l[gr][ch][sfb]));
+	noise = 10*log10(Max(.001,xfsf[0][sfb] / l3_xmin[gr][ch].l[sfb]));
 #endif
         distort[0][sfb] = noise;
         if (noise>0) {
@@ -913,40 +899,35 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
     }
 
 
-    for ( i = 0; i < 3; i++ )
-    {
-
+    for ( i = 0; i < 3; i++ ) {
 	step = POW20(cod_info->global_gain);
-        for ( sfb = cod_info->sfb_smax; sfb < SBPSY_s; sfb++ )
-        {
-            start = scalefac_band.s[ sfb ];
-            end   = scalefac_band.s[ sfb+1 ];
+        for ( sfb = cod_info->sfb_smax; sfb < SBPSY_s; sfb++ ) {
+	    start = scalefac_band.s[ sfb ];
+	    end   = scalefac_band.s[ sfb+1 ];
             bw = end - start;
-
 #if RH_ATH
-            ath_max = 0;
+	    ath_max = 0;
 #endif
-            for ( sum = 0.0, l = start; l < end; l++ )
-            {
-                FLOAT8 temp;
-                temp = fabs((*xr_s)[l][i]) - pow43[(*ix_s)[l][i]] * step;
+	    for ( sum = 0.0, l = start; l < end; l++ ) {
+		FLOAT8 temp;
+		temp = fabs(xr[l * 3 + i]) - pow43[ix[l * 3 + i]] * step;
 #ifdef MAXNOISE
 		temp = bw*temp*temp;
 		sum = Max(sum,temp);
 #elif RH_ATH
-	    temp = temp*temp;
-            sum += temp;
-	    ath_max = Max( ath_max, temp/ATH_mdct_short[l] );
+		temp = temp*temp;
+		sum += temp;
+		ath_max = Max( ath_max, temp/ATH_mdct_short[l] );
 #else
 		sum += temp * temp;
 #endif
             }       
-            xfsf[i+1][sfb] = sum / bw;
+	    xfsf[i+1][sfb] = sum / bw;
 	    /* max -30db noise below threshold */
 #if RH_ATH
-	    noise = 10*log10(Max(.001,Min(ath_max,xfsf[i+1][sfb]/l3_xmin->s[gr][ch][sfb][i])));
+	    noise = 10*log10(Max(.001,Min(ath_max,xfsf[i+1][sfb]/l3_xmin[gr][ch].s[sfb][i])));
 #else
-	    noise = 10*log10(Max(.001,xfsf[i+1][sfb] / l3_xmin->s[gr][ch][sfb][i] ));
+	    noise = 10*log10(Max(.001,xfsf[i+1][sfb] / l3_xmin[gr][ch].s[sfb][i] ));
 #endif
             distort[i+1][sfb] = noise;
             if (noise > 0) {
@@ -959,9 +940,9 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
         }
     }
 
-	if (count>1) *tot_noise /= count;
-	if (over>1) *over_noise /= over;
-	return over;
+    if (count>1) *tot_noise /= count;
+    if (over>1) *over_noise /= over;
+    return over;
 }
 
 
@@ -979,17 +960,15 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
   See ISO 11172-3 Section C.1.5.4.3.5
 */
 int amp_scalefac_bands( FLOAT8 xr[576], FLOAT8 xrpow[576], 
-		    III_psy_xmin *l3_xmin, III_side_info_t *l3_side,
-		    III_scalefac_t scalefac[2][2],
-		    int gr, int ch, int iteration, FLOAT8 distort[4][SBPSY_l])
+			III_psy_xmin *l3_xmin, gr_info *cod_info,
+			III_scalefac_t *scalefac,
+			FLOAT8 distort[4][SBPSY_l])
 {
     int start, end, l, sfb, i, over = 0;
     FLOAT8 ifqstep, ifqstep2, ifqstep34;
     FLOAT8 distort_thresh;
     D192_3 *xr_s;
     D192_3 *xrpow_s;
-    gr_info *cod_info;
-    cod_info = &l3_side->gr[gr].ch[ch].tt;
 
     xr_s = (D192_3 *) xr;
     xrpow_s = (D192_3 *) xrpow;
@@ -1008,8 +987,8 @@ int amp_scalefac_bands( FLOAT8 xr[576], FLOAT8 xrpow[576],
      * within 95% of largest distortion/masking ratio */
     distort_thresh = -900;
     for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ )
-      distort_thresh = Max(1.05*distort[0][sfb],distort_thresh);
-    distort_thresh=Min(distort_thresh,0.0);
+      distort_thresh = Max(distort[0][sfb],distort_thresh);
+    distort_thresh=Min(distort_thresh * 1.05,0.0);
 
 
     for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ )
@@ -1017,12 +996,12 @@ int amp_scalefac_bands( FLOAT8 xr[576], FLOAT8 xrpow[576],
 	if ( distort[0][sfb]>distort_thresh  ) 
 	{
 	    over++;
-	    scalefac[gr][ch].l[sfb]++;
+	    scalefac->l[sfb]++;
 	    start = scalefac_band.l[sfb];
 	    end   = scalefac_band.l[sfb+1];
 	    for ( l = start; l < end; l++ ) xr[l] *= ifqstep;
 	    for ( l = start; l < end; l++ ) xrpow[l] *= ifqstep34;
-	    l3_xmin->l[gr][ch][sfb] *= ifqstep2;
+	    l3_xmin->l[sfb] *= ifqstep2;
 
 	}
     }
@@ -1032,9 +1011,9 @@ int amp_scalefac_bands( FLOAT8 xr[576], FLOAT8 xrpow[576],
     distort_thresh = -900;
     for ( i = 0; i < 3; i++ )
       for ( sfb = cod_info->sfb_smax; sfb < 12; sfb++ ) {
-	  distort_thresh = Max(1.05*distort[i+1][sfb],distort_thresh);
+	  distort_thresh = Max(distort[i+1][sfb],distort_thresh);
       }
-    distort_thresh=Min(distort_thresh,0.0);
+    distort_thresh=Min(distort_thresh * 1.05, 0.0);
 
 
     for ( i = 0; i < 3; i++ )
@@ -1042,12 +1021,12 @@ int amp_scalefac_bands( FLOAT8 xr[576], FLOAT8 xrpow[576],
             if ( distort[i+1][sfb]>distort_thresh)
             {
                 over++;
-                scalefac[gr][ch].s[sfb][i]++;
+                scalefac->s[sfb][i]++;
                 start = scalefac_band.s[sfb];
                 end   = scalefac_band.s[sfb+1];
                 for ( l = start; l < end; l++ ) (*xr_s)[l][i] *= ifqstep;
 		for ( l = start; l < end; l++ ) (*xrpow_s)[l][i] *= ifqstep34;
-                l3_xmin->s[gr][ch][sfb][i] *= ifqstep2;
+                l3_xmin->s[sfb][i] *= ifqstep2;
             }
       }
     return over;

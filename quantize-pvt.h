@@ -42,13 +42,13 @@ void outer_loop( FLOAT8 xr[2][2][576],     /*vector of the magnitudees of the sp
 		FLOAT8 noise[4],
                 FLOAT8 targ_noise[4],    /* VBR target noise info */
                 int sloppy,              /* 1=quit as soon as noise < targ_noise */
-                III_psy_xmin  *l3_xmin, /* the allowed distortion of the scalefactor */
+                III_psy_xmin l3_xmin[2][2], /* the allowed distortion of the scalefactor */
                 int l3_enc[2][2][576],    /* vector of quantized values ix(0..575) */
 		frame_params *fr_ps,
                 III_scalefac_t scalefac[2][2], /* scalefactors */
                 int gr,
 		III_side_info_t *l3_side,
-		III_psy_ratio *ratio, 
+		III_psy_ratio ratio[2][2], 
 		FLOAT8 ms_ratio,
 		int ch);
 
@@ -58,13 +58,13 @@ void outer_loop_dual( FLOAT8 xr[2][2][576],     /*vector of the magnitudees of t
                 int mean_bits,
                 int bit_rate,
 		int best_over[2],
-                III_psy_xmin  *l3_xmin, /* the allowed distortion of the scalefactor */
+                III_psy_xmin l3_xmin[2][2], /* the allowed distortion of the scalefactor */
                 int l3_enc[2][2][576],    /* vector of quantized values ix(0..575) */
 		frame_params *fr_ps,
                 III_scalefac_t scalefac[2][2], /* scalefactors */
                 int gr,
 		III_side_info_t *l3_side,
-		III_psy_ratio *ratio, 
+		III_psy_ratio ratio[2][2], 
 		FLOAT8 pe[2][2],
 		FLOAT8 ms_ratio[2]);
 
@@ -73,7 +73,7 @@ void outer_loop_dual( FLOAT8 xr[2][2][576],     /*vector of the magnitudees of t
 
 void iteration_init( FLOAT8 xr_org[2][2][576], 
 		III_side_info_t *l3_side, int l3_enc[2][2][576],
-		frame_params *fr_ps, III_psy_xmin *l3_xmin);
+		frame_params *fr_ps, III_psy_xmin l3_xmin[2][2]);
 
 int inner_loop( FLOAT8 xr[2][2][576], FLOAT8 xrpow[576],
                 int l3_enc[2][2][576],
@@ -81,12 +81,11 @@ int inner_loop( FLOAT8 xr[2][2][576], FLOAT8 xrpow[576],
                 gr_info *cod_info,
                 int gr,
                 int ch );
-int calc_xmin( FLOAT8 xr[2][2][576],
+
+int calc_xmin( FLOAT8 xr[576],
                III_psy_ratio *ratio,
                gr_info *cod_info,
-               III_psy_xmin *l3_xmin,
-               int gr,
-               int ch );
+               III_psy_xmin *l3_xmin);
 
 
 int scale_bitcount( III_scalefac_t scalefac[2][2],
@@ -100,17 +99,16 @@ int calc_noise1( FLOAT8 xr[576],
                  gr_info *cod_info,
                  FLOAT8 xfsf[4][SBPSY_l], 
 		 FLOAT8 distort[4][SBPSY_l],
-                 III_psy_xmin  *l3_xmin,
+                 III_psy_xmin l3_xmin[2][2],
 		 int gr, int ch, 
-                 FLOAT8 *noise, FLOAT8 *tot_noise, FLOAT8 *max_noise,
-		 III_scalefac_t scalefac[2][2]);
+                 FLOAT8 *noise, FLOAT8 *tot_noise, FLOAT8 *max_noise);
 
 void calc_noise2( FLOAT8 xr[2][576],
                  int ix[2][576],
                  gr_info *cod_info[2],
                  FLOAT8 xfsf[2][4][SBPSY_l], 
 		 FLOAT8 distort[2][4][SBPSY_l],
-                 III_psy_xmin  *l3_xmin,
+                 III_psy_xmin l3_xmin[2][2],
 		 int gr, int over[2], 
                  FLOAT8 noise[2], FLOAT8 tot_noise[2], FLOAT8 max_noise[2]);
 
@@ -120,18 +118,15 @@ int loop_break( III_scalefac_t scalefac[2][2],
                 int gr,
                 int ch );
 int preemphasis( FLOAT8 xr[576], FLOAT8 xrpow[576],
-                  III_psy_xmin  *l3_xmin,
+                  III_psy_xmin l3_xmin[2][2],
                   int gr,
                   int ch,
 		  III_side_info_t *l3_side,
                   FLOAT8 distort[4][SBPSY_l] );
 int amp_scalefac_bands( FLOAT8 xr[576], FLOAT8 xrpow[576],
-                        III_psy_xmin  *l3_xmin,
-			III_side_info_t *l3_side,
-                        III_scalefac_t scalefac[2][2],
-                        int gr,
-                        int ch,
-			int iteration,
+                        III_psy_xmin *l3_xmin,
+			gr_info *cod_info,
+                        III_scalefac_t *scalefac,
                         FLOAT8 distort[4][SBPSY_l]);
 void quantize_xrpow( FLOAT8 xr[576],
                int  ix[576],

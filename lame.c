@@ -507,8 +507,8 @@ int lame_encode(short int Buffer[2][1152],char *mpg123bs)
   FLOAT8 xr[2][2][576];
   int l3_enc[2][2][576];
   int mpg123count;
-  III_psy_ratio masking_ratio;    /*LR ratios */
-  III_psy_ratio masking_MS_ratio; /*MS ratios */
+  III_psy_ratio masking_ratio[2][2];    /*LR ratios */
+  III_psy_ratio masking_MS_ratio[2][2]; /*MS ratios */
   III_psy_ratio *masking;  /*LR ratios and MS ratios*/
   III_scalefac_t scalefac[2][2];
 
@@ -666,10 +666,11 @@ FFT's                    <---------1024---------->
 	bufp[ch] = &mfbuf[ch][576 + gr*576-FFTOFFSET];
 
       L3psycho_anal( bufp, gr, info,
-         s_freq[info->version][info->sampling_frequency] * 1000.0,
-	 check_ms_stereo,&ms_ratio[gr],&ms_ratio_next,&ms_ener_ratio[gr],
-         &masking_ratio, &masking_MS_ratio,
-         pe[gr],pe_MS[gr],blocktype);
+		     s_freq[info->version][info->sampling_frequency] * 1000.0,
+		     check_ms_stereo,
+		     &ms_ratio[gr],&ms_ratio_next,&ms_ener_ratio[gr],
+		     masking_ratio, masking_MS_ratio,
+		     pe[gr],pe_MS[gr],blocktype);
 
       for ( ch = 0; ch < gf.stereo; ch++ ) 
 	l3_side.gr[gr].ch[ch].tt.block_type=blocktype[ch];
@@ -748,10 +749,10 @@ FFT's                    <---------1024---------->
 
   /* bit and noise allocation */
   if ((MPG_MD_MS_LR == info->mode_ext) && gf.ms_masking) {
-    masking = &masking_MS_ratio;    /* use MS masking */
+    masking = masking_MS_ratio;    /* use MS masking */
     pe_use=&pe_MS;
   } else {
-    masking = &masking_ratio;    /* use LR masking */
+    masking = masking_ratio;    /* use LR masking */
     pe_use=&pe;
   }
 

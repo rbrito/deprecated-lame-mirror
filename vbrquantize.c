@@ -63,7 +63,8 @@ FLOAT8 calc_sfb_ave_noise(FLOAT8 *xr, FLOAT8 *xr34, int stride, int bw, FLOAT8 s
 
 
 
-FLOAT8 find_scalefac(FLOAT8 *xr,FLOAT8 *xr34,int stride,int sfb,FLOAT8 l3_xmin,int bw)
+FLOAT8 find_scalefac(FLOAT8 *xr,FLOAT8 *xr34,int stride,int sfb,
+		     FLOAT8 l3_xmin,int bw)
 {
   FLOAT8 xfsf,sfpow,sf,sf_ok,delsf;
   int i;
@@ -142,11 +143,11 @@ FLOAT8 find_scalefac(FLOAT8 *xr,FLOAT8 *xr34,int stride,int sfb,FLOAT8 l3_xmin,i
  ************************************************************************/
 void
 VBR_iteration_loop_new (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
-                FLOAT8 xr_org[2][2][576], III_psy_ratio *ratio,
+                FLOAT8 xr_org[2][2][576], III_psy_ratio ratio[2][2],
                 III_side_info_t * l3_side, int l3_enc[2][2][576],
                 III_scalefac_t scalefac[2][2], frame_params * fr_ps)
 {
-  III_psy_xmin l3_xmin;
+  III_psy_xmin l3_xmin[2][2];
   layer    *info;
   FLOAT8    xr[2][2][576];
   FLOAT8    masking_lower_db;
@@ -188,7 +189,7 @@ VBR_iteration_loop_new (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
       }
 
       /*init_outer_loop(xr,&l3_xmin,scalefac,gr,stereo,l3_side,ratio,ch);  */
-      calc_xmin( xr, ratio, cod_info, &l3_xmin, gr, ch );
+      calc_xmin( xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin[gr][ch]);
 
       if (shortblock) {
 	for ( sfb = 0; sfb < SBPSY_s; sfb++ )  {
@@ -197,7 +198,7 @@ VBR_iteration_loop_new (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 	    end   = scalefac_band.s[ sfb+1 ];
 	    bw = end - start;
 	    vbr_sf = find_scalefac(&xr[gr][ch][3*start+i],&xr34[3*start+i],3,sfb,
-		   masking_lower*l3_xmin.s[gr][ch][sfb][i],bw);
+		   masking_lower*l3_xmin[gr][ch].s[sfb][i],bw);
 
             ol_sf =  (cod_info->global_gain-210.0)/4.0;
 	    ol_sf -= 2*cod_info->subblock_gain[i];
@@ -207,7 +208,7 @@ VBR_iteration_loop_new (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 	      FLOAT8 xfsf;
 	      xfsf = calc_sfb_ave_noise(&xr[gr][ch][3*start+i],&xr34[3*start+i],
 				    3,bw,pow(2.0,ol_sf));
-	      if (xfsf > masking_lower*l3_xmin.s[gr][ch][sfb][i]) {
+	      if (xfsf > masking_lower*l3_xmin[gr][ch].s[sfb][i]) {
 		over++;
 	      }
 	    }
@@ -219,7 +220,7 @@ VBR_iteration_loop_new (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 	  end   = scalefac_band.l[ sfb+1 ];
 	  bw = end - start;
 	  vbr_sf = find_scalefac(&xr[gr][ch][start],&xr34[start],1,sfb,
-				 masking_lower*l3_xmin.l[gr][ch][sfb],bw);
+				 masking_lower*l3_xmin[gr][ch].l[sfb],bw);
 	  
 	  /* compare with outer_loop scalefacs */
 	  ol_sf =  (cod_info->global_gain-210.0)/4.0;
@@ -229,7 +230,7 @@ VBR_iteration_loop_new (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 
 	  { FLOAT8 xfsf;
           xfsf=calc_sfb_ave_noise(&xr[gr][ch][start],&xr34[start],1,bw,pow(2.0,ol_sf));
-	  if (xfsf > masking_lower*l3_xmin.l[gr][ch][sfb]) {
+	  if (xfsf > masking_lower*l3_xmin[gr][ch].l[sfb]) {
 	    over++;
 	  }
 	  }

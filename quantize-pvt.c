@@ -136,7 +136,7 @@ FLOAT8 ATH_mdct_short[192];
 void
 iteration_init( FLOAT8 xr_org[2][2][576], 
 		III_side_info_t *l3_side, int l3_enc[2][2][576],
-		frame_params *fr_ps, III_psy_xmin *l3_xmin)
+		frame_params *fr_ps, III_psy_xmin l3_xmin[2][2])
 {
   gr_info *cod_info;
   layer *info  = fr_ps->header;
@@ -155,7 +155,6 @@ iteration_init( FLOAT8 xr_org[2][2][576],
     }
 
     l3_side->main_data_begin = 0;
-    memset((char *) &l3_xmin, 0, sizeof(l3_xmin));
     compute_ath(info,ATH_l,ATH_s);
 
     for(i=0;i<PRECALC_SIZE;i++)
@@ -704,73 +703,63 @@ int scale_bitcount_lsf( III_scalefac_t scalefac[2][2], gr_info *cod_info,
 
   returns number of sfb's with energy > ATH
 */
-int calc_xmin( FLOAT8 xr[2][2][576], III_psy_ratio *ratio,
-	   gr_info *cod_info, III_psy_xmin *l3_xmin,
-	   int gr, int ch )
+int calc_xmin( FLOAT8 xr[576], III_psy_ratio *ratio,
+	       gr_info *cod_info, III_psy_xmin *l3_xmin)
 {
     int start, end, sfb, l, b, ath_over=0;
-    FLOAT8 enmax, en0, bw, ener;
-
-    D192_3 *xr_s;
-    xr_s = (D192_3 *) xr[gr][ch] ;
+    FLOAT8 en0, bw, ener;
 
     if (gf.ATHonly) {    
       for ( sfb = cod_info->sfb_smax; sfb < SBPSY_s; sfb++ )
 	  for ( b = 0; b < 3; b++ )
-	      l3_xmin->s[gr][ch][sfb][b]=ATH_s[sfb];
+	      l3_xmin->s[sfb][b]=ATH_s[sfb];
       for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ )
-	  l3_xmin->l[gr][ch][sfb]=ATH_l[sfb];
-      
-    }else{
+	  l3_xmin->l[sfb]=ATH_l[sfb];
 
-      for ( sfb = cod_info->sfb_smax; sfb < SBPSY_s; sfb++ ){
+    }else{
+      for ( sfb = cod_info->sfb_smax; sfb < SBPSY_s; sfb++ ) {
 	start = scalefac_band.s[ sfb ];
         end   = scalefac_band.s[ sfb + 1 ];
 	bw = end - start;
         for ( b = 0; b < 3; b++ ) {
-	  for ( enmax=0.0, en0 = 0.0, l = start; l < end; l++ ) {
-	    ener = (*xr_s)[l][b] * (*xr_s)[l][b];
+	  for (en0 = 0.0, l = start; l < end; l++) {
+	    ener = xr[l * 3 + b];
+	    ener = ener * ener;
 	    en0 += ener;
-	    enmax=Max(enmax,ener);
 	  }
-	  en0 /= bw;
-	  if (ratio->en_s[gr][ch][sfb][b]==0) 
-	    l3_xmin->s[gr][ch][sfb][b]=0;
-	  else
-	    l3_xmin->s[gr][ch][sfb][b]=masking_lower*
-	      (ratio->thm_s[gr][ch][sfb][b]/ratio->en_s[gr][ch][sfb][b]) *en0;
+
+	  bw *= ratio->en.s[sfb][b];
+	  if (bw != 0.0)
+	    bw = en0 * ratio->thm.s[sfb][b] * masking_lower / bw;
 
 #if RH_ATH
-	  l3_xmin->s[gr][ch][sfb][b]=Max(1e-20,l3_xmin->s[gr][ch][sfb][b]);
+	  l3_xmin->s[sfb][b] = Max(1e-20, bw);
 #else
-	  l3_xmin->s[gr][ch][sfb][b]=Max(ATH_s[sfb],l3_xmin->s[gr][ch][sfb][b]);
+	  l3_xmin->s[sfb][b] = Max(ATH_s[sfb], bw);
 #endif
 	  if (en0 > ATH_s[sfb]) ath_over++;
 	}
       }
-      
-      
+
+
       for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ){
 	start = scalefac_band.l[ sfb ];
 	end   = scalefac_band.l[ sfb+1 ];
 	bw = end - start;
 	
-        for ( enmax=0.0, en0 = 0.0, l = start; l < end; l++ ) {
-	  ener = xr[gr][ch][l] * xr[gr][ch][l];
+        for (en0 = 0.0, l = start; l < end; l++ ) {
+	  ener = xr[l] * xr[l];
 	  en0 += ener;
-	  enmax=Max(enmax,ener);
 	}
-	en0 /= bw;
-	if (ratio->en_l[gr][ch][sfb]==0) 
-	  l3_xmin->l[gr][ch][sfb] =0;
-	else
-	  l3_xmin->l[gr][ch][sfb] =masking_lower*
-	    (ratio->thm_l[gr][ch][sfb]/ratio->en_l[gr][ch][sfb] )* en0;
+
+	bw *= ratio->en.l[sfb];
+	if (bw != 0.0)
+	  bw = en0 * ratio->thm.l[sfb] * masking_lower / bw;
 
 #if RH_ATH
-	l3_xmin->l[gr][ch][sfb]=Max(1e-20,l3_xmin->l[gr][ch][sfb]);
+	l3_xmin->l[sfb]=Max(1e-20, bw);
 #else
-	l3_xmin->l[gr][ch][sfb]=Max(ATH_l[sfb],l3_xmin->l[gr][ch][sfb]);
+	l3_xmin->l[sfb]=Max(ATH_l[sfb], bw);
 #endif
 	if (en0 > ATH_l[sfb]) ath_over++;
       }
