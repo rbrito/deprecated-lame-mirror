@@ -109,7 +109,7 @@ extern "C" {
 # define         FAST_LOG_X(x,y)     (fast_log2(x)*(LOG2*(y)))
 
 extern ieee754_float32_t log_table[LOG2_SIZE*2];
-static inline ieee754_float32_t fast_log2(ieee754_float32_t xx)
+inline static ieee754_float32_t fast_log2(ieee754_float32_t xx)
 {
     ieee754_float32_t log2val;
     int mantisse, i;
@@ -523,8 +523,6 @@ struct lame_internal_flags {
 #ifdef HAVE_GTK
   /* used by the frame analyzer */
   plotting_data *pinfo;
-  FLOAT ers_save[2][MAX_CHANNELS*2][3];
-  FLOAT energy_save[2][MAX_CHANNELS*2][HBLKSIZE];
 #endif
 };
 

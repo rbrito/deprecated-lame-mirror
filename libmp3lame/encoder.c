@@ -405,14 +405,8 @@ int  lame_encode_mp3_frame (				/* Output */
     for ( ch = 0; ch < gfc->channels_out; ch++ )
 	subband(gfc, inbuf[ch], sbsmpl[ch]);
 
-    if (gfc->psymodel) {
-#ifdef HAVE_GTK
-	if (gfc->pinfo)
-	    memcpy(gfc->pinfo->energy, gfc->energy_save,
-		   sizeof(gfc->energy_save));
-#endif
+    if (gfc->psymodel)
 	psycho_analysis(gfp, inbuf, masking, sbsmpl);
-    }
 
     /* polyphase filtering / mdct */
     for (ch = 0; ch < gfc->channels_out; ch++) {

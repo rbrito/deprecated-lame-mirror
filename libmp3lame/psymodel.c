@@ -915,8 +915,7 @@ mask_add(FLOAT m1, FLOAT m2, int k, int b, lame_internal_flags * const gfc)
 #define NS_INTERP2(x, y, r)  pow((x)/(y),(r))*(y)
 
 
-
-static inline FLOAT NS_INTERP(FLOAT x, FLOAT y, FLOAT r)
+inline static FLOAT NS_INTERP(FLOAT x, FLOAT y, FLOAT r)
 {
     if (r==1.0)
 	return x;
@@ -928,11 +927,7 @@ static inline FLOAT NS_INTERP(FLOAT x, FLOAT y, FLOAT r)
 
 
 static FLOAT
-pecalc_s(
-    lame_internal_flags *gfc,
-    III_psy_ratio *mr,
-    int sb
-    )
+pecalc_s(lame_internal_flags *gfc, III_psy_ratio *mr, int sb)
 {
     FLOAT pe_s = 0;
     const static FLOAT regcoef_s[] = {
@@ -972,11 +967,7 @@ pecalc_s(
 }
 
 static FLOAT
-pecalc_l(
-    lame_internal_flags *gfc,
-    III_psy_ratio *mr,
-    int sb
-    )
+pecalc_l(lame_internal_flags *gfc, III_psy_ratio *mr, int sb)
 {
     FLOAT pe_l = 20.0;
     const static FLOAT regcoef_l[] = {
@@ -1023,22 +1014,16 @@ pecalc_l(
 
 static void
 psycho_analysis_short(
-    lame_global_flags * gfp,
+    lame_internal_flags *gfc,
     const sample_t *buffer[2],
     FLOAT sbsmpl[2][2*1152],
-    int gr
+    int gr,
+    int numchn
     )
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
-    int current_is_short = 0;
-    int first_attack_position[4];
     FLOAT attack_adjust[4];
-
-    /* usual variables like loop indices, etc..    */
-    int numchn = gfc->channels_out, chn;
-    int i, j, sblock;
-
-    if (gfp->mode == JOINT_STEREO) numchn=4;
+    int current_is_short = 0, first_attack_position[4];
+    int chn, i, j, sblock;
 
     /*************************************************************** 
      * determine the block type (window type)
@@ -1114,13 +1099,13 @@ mp3x display               <------LONG------>
 	/* calculate energies of each sub-shortblocks */
 #if defined(HAVE_GTK)
 	if (gfc->pinfo) {
-	    memcpy(gfc->pinfo->ers[gr][chn], gfc->ers_save[gr][chn],
-		   sizeof(gfc->ers_save[0][0]));
-	    gfc->ers_save[gr][chn][0]
+	    memcpy(gfc->pinfo->ers[gr][chn], gfc->pinfo->ers_save[gr][chn],
+		   sizeof(gfc->pinfo->ers_save[0][0]));
+	    gfc->pinfo->ers_save[gr][chn][0]
 		= gfc->nsPsy.subbk_ene[chn][2] / gfc->nsPsy.subbk_ene[chn][1];
-	    gfc->ers_save[gr][chn][1]
+	    gfc->pinfo->ers_save[gr][chn][1]
 		= gfc->nsPsy.subbk_ene[chn][3] / gfc->nsPsy.subbk_ene[chn][2];
-	    gfc->ers_save[gr][chn][2]
+	    gfc->pinfo->ers_save[gr][chn][2]
 		= gfc->nsPsy.subbk_ene[chn][4] / gfc->nsPsy.subbk_ene[chn][3];
 	}
 #endif
@@ -1232,20 +1217,15 @@ partially_convert_l2s(
 
 static void
 L3psycho_anal_ns(
-    lame_global_flags * gfp,
+    lame_internal_flags *gfc,
     const sample_t *buffer[2],
     int useshort_old[4],
-    int gr
+    int gr,
+    int numchn
     )
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
-
-    /* fft and energy calculation   */
-    FLOAT wsamp_L[2][BLKSIZE];
-
-    /* usual variables like loop indices, etc..    */
-    int numchn = gfc->channels_out, chn;
-    if (gfp->mode == JOINT_STEREO) numchn=4;
+    FLOAT wsamp_L[2][BLKSIZE];    /* fft and energy calculation   */
+    int chn;
 
     /*********************************************************************
      * compute the long block masking ratio
@@ -1309,8 +1289,12 @@ L3psycho_anal_ns(
 		= psycho_loudness_approx(fftenergy, gfc);
 
 #ifdef HAVE_GTK
-	if (gfp->analysis)
-	    memcpy(gfc->energy_save[gr][chn], fftenergy, sizeof(fftenergy));
+	if (gfc->pinfo) {
+	    memcpy(gfc->pinfo->energy[gr][chn], gfc->pinfo->energy_save[gr][chn],
+		   sizeof(fftenergy));
+	    memcpy(gfc->pinfo->energy_save[gr][chn], fftenergy,
+		   sizeof(fftenergy));
+	}
 #endif
 	{
 	    FLOAT m,a;
@@ -1598,11 +1582,15 @@ psycho_analysis(
 	for (ch = 0; ch < gfc->channels_out; ch++)
 	    bufp[ch] = buffer[ch] + 576*(gr + gfc->mode_gr) - FFTOFFSET;
 
-	psycho_analysis_short(gfp, bufp, sbsmpl, gr);
+	numchn = gfc->channels_out;
+	if (gfp->mode == JOINT_STEREO)
+	    numchn = 4;
+
+	psycho_analysis_short(gfc, bufp, sbsmpl, gr, numchn);
 	if (gr == 0) {
-	    L3psycho_anal_ns(gfp, bufp, blocktype_old, 0);
+	    L3psycho_anal_ns(gfc, bufp, blocktype_old, 0, numchn);
 	} else {
-	    L3psycho_anal_ns(gfp, bufp, gfc->useshort_next[0], 1);
+	    L3psycho_anal_ns(gfc, bufp, gfc->useshort_next[0], 1, numchn);
 	}
 
 	/*********************************************************************
@@ -1611,7 +1599,6 @@ psycho_analysis(
 	if (gfp->interChRatio != 0.0)
 	    calc_interchannel_masking(gfp, gr);
 
-	numchn = gfc->channels_out;
 	if (gfp->mode == JOINT_STEREO) {
 	    if (!gfc->useshort_next[gr][2])
 		msfix_l(gfc, gr);
@@ -1623,7 +1610,6 @@ psycho_analysis(
 			= SHORT_TYPE;
 		set_istereo_sfb(gfc, gr);
 	    }
-	    numchn = 4;
 	}
 	/*********************************************************************
 	 * compute the value of PE to return
