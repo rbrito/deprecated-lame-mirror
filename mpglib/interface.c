@@ -246,7 +246,7 @@ int sync_buffer(struct mpstr *mp,int free_match)
 int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
 		int osize,int *done)
 {
-	int iret,bits,bytes;
+	int i,iret,bits,bytes;
 	gmp = mp;
 
 	if(osize < 4608) {
@@ -275,11 +275,17 @@ int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
 		  int size;
 		  fprintf(stderr,"bitstream problem: resyncing...\n");
 		  mp->old_free_format=0;
+
+		  /* skip some bytes, buffer the rest */
 		  size = (int) (wordpointer - mp->bsspace[mp->bsnum]+512);
-		  if ((size + bytes) < MAXFRAMESIZE) {
-		    copy_mp(mp,bytes,wordpointer);
-		    mp->fsizeold += bytes;
+		  i = (size+bytes)-MAXFRAMESIZE;
+		  for (; i>0; --i) {
+		    --bytes;
+		    read_buf_byte(mp);
 		  }
+		  copy_mp(mp,bytes,wordpointer);
+		  mp->fsizeold += bytes;
+
 		}
 
 		read_head(mp);

@@ -67,7 +67,13 @@ int head_check(unsigned long head)
     /* syncword */
 	return FALSE;
   }
+#if 0
   if(!((head>>17)&3)) {
+    /* bits 13-14 = layer 3 */
+	return FALSE;
+  }
+#endif
+  if (3 !=  4-((head>>17)&3)) {
     /* bits 13-14 = layer 3 */
 	return FALSE;
   }
