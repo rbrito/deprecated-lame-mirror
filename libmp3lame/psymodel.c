@@ -336,12 +336,21 @@ int L3psycho_anal( lame_global_flags *gfp,
 
   if (gfp->exp_nspsytune) {
     static const FLOAT fircoef[] = {
+#ifdef KLEMM_04
+      0,-0.00851586, 0  , 0.0209036,
+      0,-0.0438162 , 0  , 0.0931738,
+      0,-0.313819  , 0.5,-0.313819,
+      0, 0.0931738 , 0  ,-0.0438162,
+      0, 0.0209036 , 0  ,-0.00851586,
+      0,
+#else    
       -8.65163e-18,-0.00851586,-6.74764e-18, 0.0209036,
       -3.36639e-17,-0.0438162 ,-1.54175e-17, 0.0931738,
       -5.52212e-17,-0.313819  , 0.5        ,-0.313819,
       -5.52212e-17, 0.0931738 ,-1.54175e-17,-0.0438162,
       -3.36639e-17, 0.0209036 ,-6.74764e-18,-0.00851586,
       -8.65163e-18,
+#endif
     };
 
     for(chn=0;chn<gfc->stereo;chn++)
@@ -355,11 +364,18 @@ int L3psycho_anal( lame_global_flags *gfp,
 
 	for(i=0;i<576+576/3-NSFIRLEN;i++)
 	  {
-	    FLOAT sum=0;
-
+#ifdef KLEMM_04	/* on SIMD machines may be slower */
+	    FLOAT sum = -0.00851586 * ( firbuf[i+ 1] + firbuf[i+19] )
+	                +0.0209036  * ( firbuf[i+ 3] + firbuf[i+17] )
+			-0.0438162  * ( firbuf[i+ 5] + firbuf[i+15] )
+			+0.0931738  * ( firbuf[i+ 7] + firbuf[i+13] )
+			-0.313819   * ( firbuf[i+ 9] + firbuf[i+11] )
+			+0.5        *   firbuf[i+10];
+#else
+	    FLOAT sum = 0;
 	    for(j=0;j<NSFIRLEN;j++)
 	      sum += fircoef[j] * firbuf[i+j];
-
+#endif
 	    ns_hpfsmpl[chn][i] = sum;
 	  }
 
