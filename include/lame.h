@@ -197,9 +197,6 @@ int CDECL lame_get_findReplayGain(lame_t);
 int CDECL lame_set_decode_on_the_fly(lame_t, int);
 int CDECL lame_get_decode_on_the_fly(lame_t);
 
-/* is ReplayGain analysis performed */
-int CDECL lame_get_findReplayGain(lame_t);
-
 /* Gain change required for preventing clipping. The value is correct only if 
    peak sample searching was enabled. If negative then the waveform 
    already does not clip. The value is multiplied by 10 and rounded up. */
@@ -419,6 +416,17 @@ int CDECL lame_get_frameNum(lame_t);
    only valid if calling program set num_samples
 */
 int CDECL lame_get_totalframes(lame_t);
+
+/* RadioGain value. Multiplied by 10 and rounded to the nearest. */
+int CDECL lame_get_RadioGain(lame_t);
+
+/* AudiophileGain value. Multipled by 10 and rounded to the nearest. */
+int CDECL lame_get_AudiophileGain(lame_t);
+
+/* the peak sample */
+float CDECL lame_get_PeakSample(lame_t);
+
+
 
 
 
