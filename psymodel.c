@@ -165,16 +165,6 @@ int L3psycho_anal( lame_global_flags *gfp,
     for ( j = 0; j < HBLKSIZE; j++ )
       gfc->cw[j] = 0.4;
     
-    /* setup stereo demasking thresholds */
-    /* formula reverse enginerred from plot in paper */
-    for ( sb = 0; sb < SBPSY_s; sb++ ) {
-      FLOAT8 mld = 1.25*(1-cos(PI*sb/SBPSY_s))-2.5;
-      gfc->mld_s[sb] = pow(10.0,mld);
-    }
-    for ( sb = 0; sb < SBPSY_l; sb++ ) {
-      FLOAT8 mld = 1.25*(1-cos(PI*sb/SBPSY_l))-2.5;
-      gfc->mld_l[sb] = pow(10.0,mld);
-    }
     
 
     i=L3para_read( gfp,(FLOAT8) samplerate,gfc->numlines_l,gfc->numlines_s,
@@ -1420,6 +1410,29 @@ i,*npart_s_orig,freq,numlines_s[i],j2-j,j,j2-1,bark1,bark2);
     bo_s[SBPSY_s-1]=(*npart_s)-1;
     w2_s[SBPSY_s-1]=1.0;
   }
+
+
+    /* setup stereo demasking thresholds */
+    /* formula reverse enginerred from plot in paper */
+    for ( i = 0; i < SBPSY_s; i++ ) {
+      FLOAT8 arg,mld;
+      //      arg = (FLOAT8) i/SBPSY_s;
+      arg = freq2bark(sfreq*gfc->scalefac_band.s[i]/(2*192));
+      arg = (Min(arg, 15.5)/15.5);
+
+      mld = 1.25*(1-cos(PI*arg))-2.5;
+      gfc->mld_s[i] = pow(10.0,mld);
+    }
+    for ( i = 0; i < SBPSY_l; i++ ) {
+      FLOAT8 arg,mld;
+      //arg = (FLOAT8) i/SBPSY_l;
+      arg = freq2bark(sfreq*gfc->scalefac_band.l[i]/(2*576));
+      arg = (Min(arg, 15.5)/15.5);
+
+      mld = 1.25*(1-cos(PI*arg))-2.5;
+      gfc->mld_l[i] = pow(10.0,mld);
+    }
+
   
   return 0;
 }
