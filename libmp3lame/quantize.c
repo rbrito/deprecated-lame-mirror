@@ -1092,8 +1092,8 @@ CBR_bitalloc(
     int bits, ch, adjustBits, targ_bits[2];
 
     /* allocate minimum bits to encode part2_length (for i-stereo) */
-    bits += gfc->l3_side.tt[gr][0].part2_length
-	+ gfc->l3_side.tt[gr][gfc->channels_out].part2_length;
+    bits = gfc->l3_side.tt[gr][0].part2_length
+	+ gfc->l3_side.tt[gr][gfc->channels_out-1].part2_length;
 
     /* check hard limit per granule (by spec) */
     if (max_bits > MAX_BITS)
@@ -1101,8 +1101,8 @@ CBR_bitalloc(
     if (min_bits > MAX_BITS)
 	min_bits = MAX_BITS;
 
-    min_bits -= bits; assert(min_bits >= 0);
-    max_bits -= bits;
+    min_bits -= bits;
+    max_bits -= bits; assert(max_bits >= 0);
 
     /* estimate how many bits we need */
     adjustBits = 0;
