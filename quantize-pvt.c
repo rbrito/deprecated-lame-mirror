@@ -92,11 +92,11 @@ int *scalefac_band_long;
 int *scalefac_band_short;
 
 
-
-FLOAT8 ATH_l[SBPSY_l];
-FLOAT8 ATH_s[SBPSY_l];
 FLOAT8 pow43[PRECALC_SIZE];
-FLOAT8 adj43[PRECALC_SIZE];
+static FLOAT8 adj43[PRECALC_SIZE];
+static FLOAT8 adj43asm[PRECALC_SIZE];
+static FLOAT8 ATH_l[SBPSY_l];
+static FLOAT8 ATH_s[SBPSY_l];
 
 
 
@@ -129,6 +129,10 @@ iteration_init( FLOAT8 xr_org[2][2][576],
     for (i = 0; i < PRECALC_SIZE - 1; i++)
 	adj43[i] = (i + 1) - pow(0.5 * (pow43[i] + pow43[i + 1]), 0.75);
     adj43[i] = 0.5;
+
+    for (i = 0; i < PRECALC_SIZE - 1; i++)
+	adj43asm[i] = (i + .5) - pow(0.5 * (pow43[i] + pow43[i + 1]), 0.75);
+    adj43asm[i] = 0.0;
 
   }
 
@@ -374,7 +378,10 @@ inner_loop( FLOAT8 xr[2][2][576], FLOAT8 xrpow[576],
     do
     {
       cod_info->quantizerStepSize += 1.0;
-      quantize_xrpow( xrpow, l3_enc[gr][ch], cod_info );
+      if (highq) 
+	quantize_xrpow( xrpow, l3_enc[gr][ch], cod_info );
+      else
+	quantize_xrpow_ISO( xrpow, l3_enc[gr][ch], cod_info );
       bits = count_bits(l3_enc[gr][ch],cod_info);  
     }
     while ( bits > max_bits );
@@ -708,12 +715,44 @@ int loop_break( III_scalefac_t *scalefac, gr_info *cod_info,
 
 
 
-#define QUANTFAC_OLD  0.4054
-#define QUANTFAC  adj43[(int)x]
+
+
+
+#if defined(__GNUC__) && defined(__i386__)
+#  define QUANTFAC(rx)  adj43asm[rx]
+#  define XRPOW_FTOI(src, dest) \
+     asm ("fistpl %0 " : "=m"(dest) : "t"(src) : "st")
+#elif defined (_MSC_VER)
+#  define QUANTFAC(rx)  adj43asm[rx]
+#  define XRPOW_FTOI(src, dest) do { \
+     FLOAT8 src_ = (src); \
+     int dest_; \
+     { \
+       __asm fld src_ \
+       __asm fistp dest_ \
+     } \
+     (dest) = dest_; \
+   } while (0)
+#else
+#  define QUANTFAC(rx)  adj43[rx]
+#  define XRPOW_FTOI(src,dest) ((dest) = (int)(src))
+#endif
+
+/*********************************************************************
+ * nonlinear quantization of xr 
+ * More accurate formula than the ISO formula.  Takes into account
+ * the fact that we are quantizing xr -> ix, but we want ix^4/3 to be 
+ * as close as possible to x^4/3.  (taking the nearest int would mean
+ * ix is as close as possible to xr, which is different.)
+ * From Segher Boessenkool <segher@eastsite.nl>  11/1999
+ * ASM optimization from Mathew Hendry <scampi@dial.pipex.com> 11/1999
+ * and Takehiro Tominaga <tominaga@isoternet.org> 
+ *********************************************************************/
 void quantize_xrpow( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
 {
   /* quantize on xr^(3/4) instead of xr */
   register int j;
+  int rx;
   FLOAT8 x,quantizerStepSize;
   FLOAT8 istep_l,istep0,istep1,istep2;
 
@@ -729,21 +768,33 @@ void quantize_xrpow( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
       for (j=192;j>0;j--) 
         {
 	  x = istep0 * *xr++;
-          *(ix++) = (int)( x  + QUANTFAC);
+          /* *(ix++) = (int)( x  + adj43[(int)x]); */
+	  XRPOW_FTOI(x-.5, rx);
+	  XRPOW_FTOI(x + QUANTFAC(rx), *(ix++));
+
 	  x = istep1 * *xr++;
-          *(ix++) = (int)( x  + QUANTFAC);
+          /* *(ix++) = (int)( x  + adj43[(int)x]); */
+	  XRPOW_FTOI(x-.5, rx);
+	  XRPOW_FTOI(x + QUANTFAC(rx), *(ix++));
+
 	  x = istep2 * *xr++;
-          *(ix++) = (int)( x  + QUANTFAC);
+	  /*          *(ix++) = (int)( x  + adj43[(int)x]); */
+	  XRPOW_FTOI(x-.5, rx);
+	  XRPOW_FTOI(x + QUANTFAC(rx), *(ix++));
         }
     }
   else
     {
       for (j=576;j>0;j--) {
 	x = istep_l * *xr++;
-	*(ix++) = (int)( x  +  QUANTFAC);
+	/*	*(ix++) = (int)( x  +  adj43[(int)x]); */
+	XRPOW_FTOI(x-.5, rx);
+	XRPOW_FTOI(x + QUANTFAC(rx), *(ix++));
       }
     }
 }
+
+
 
 
 
@@ -761,7 +812,7 @@ void quantize_xrpow( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
   } while (0)
 # endif
 #endif
-void quantize_xrpow_orig( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
+void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
 {
   /* quantize on xr^(3/4) instead of xr */
   register int j;
@@ -805,9 +856,44 @@ void quantize_xrpow_orig( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
       for (j=576;j>0;j--) 
           asm ("fistpl %0 ": "=m"(*(ix++)): "t"(istep_l*(*(xr++)) - 0.0946): "st");
 #elif defined(MSVC_XRPOW_ASM)
+      temp0 = 0.0946;
+      _asm {
+          mov ecx, 576/4;
+          fld qword ptr [temp0];
+          fld qword ptr [istep_l];
+          mov eax, dword ptr [xr];
+          mov ebx, dword ptr [ix];
+      } loop0: _asm {
+          fld qword ptr [eax];
+          fld qword ptr [eax+8];
+          fld qword ptr [eax+16];
+          fld qword ptr [eax+24];
+          add eax, 32;
+          fld st(4)
+          fmul st(4), st(0);
+          fmul st(3), st(0);
+          fmul st(2), st(0);
+          fmulp st(1), st(0);
+          fsub st(0), st(5);
+          fistp dword ptr [ebx+12];
+          fsub st(0), st(4);
+          fistp dword ptr [ebx+8];
+          fsub st(0), st(3);
+          fistp dword ptr [ebx+4];
+          fsub st(0), st(2);
+          fistp dword ptr [ebx];
+          add ebx, 16;
+          loop loop0;
+          mov dword ptr [xr], eax;
+          mov dword ptr [ix], ebx;
+          fstp st(0);
+          fstp st(0);
+      }
+      /*
       for (j=576;j>0;j--) {
         MSVC_FTOL((istep_l*(*(xr++)) - 0.0946), *(ix++));
       }
+      */
 #else
       compareval0 = (1.0 - 0.4054)/istep_l;
       /* depending on architecture, it may be worth calculating a few more compareval's.
@@ -871,7 +957,11 @@ bin_search_StepSize2(int      desired_rate,
     do
     {
 	cod_info->quantizerStepSize = StepSize;
-	quantize_xrpow(xrspow, ix, cod_info);
+	if (highq)
+	  quantize_xrpow(xrspow, ix, cod_info);
+	else
+	  quantize_xrpow_ISO(xrspow, ix, cod_info);
+
 	nBits = count_bits(ix,cod_info);  
 
 	if (CurrentStep == 1 )

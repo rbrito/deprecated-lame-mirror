@@ -37,7 +37,6 @@ FLOAT8 calc_sfb_ave_noise(FLOAT8 *xr, FLOAT8 *xr34, int stride, int bw, FLOAT8 s
   int j;
   FLOAT8 xfsf=0;
   FLOAT8 sfpow34 = pow(sfpow,3.0/4.0);
-  static int init=0;
 
   for ( j=0; j < stride*bw ; j += stride) {
     int ix;

@@ -286,7 +286,10 @@ use (maybe) some quality improvements
 
 LAME 3.21 and up:  -h enables specialized mid/side masking thresholds to
 be used in jstereo mode.  Will sound better in jstereo mode
-but is 20% slower.  No effect for mono files
+but is 20% slower.  No effect for mono files.
+
+LAME 3.58beta and up: -h also enables a more accurate but slightly
+slower quantization formula.  
 
 
 

@@ -11,11 +11,13 @@ extern int *scalefac_band_long;
 extern int *scalefac_band_short;
 
 
+extern FLOAT8 pow43[PRECALC_SIZE];
+/*
+static FLOAT8 adj43[PRECALC_SIZE];
+static FLOAT8 adj43asm[PRECALC_SIZE];
 extern FLOAT8 ATH_l[SBPSY_l];
 extern FLOAT8 ATH_s[SBPSY_l];
-extern FLOAT8 pow43[PRECALC_SIZE];
-extern FLOAT8 adj43[PRECALC_SIZE];
-
+*/
 
 FLOAT8 ATHformula(FLOAT8 f);
 void compute_ath(layer *info,FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY_l]);
@@ -125,6 +127,9 @@ int amp_scalefac_bands( FLOAT8 xr[576], FLOAT8 xrpow[576],
 			int iteration,
                         FLOAT8 distort[4][SBPSY_l]);
 void quantize_xrpow( FLOAT8 xr[576],
+               int  ix[576],
+               gr_info *cod_info );
+void quantize_xrpow_ISO( FLOAT8 xr[576],
                int  ix[576],
                gr_info *cod_info );
 
