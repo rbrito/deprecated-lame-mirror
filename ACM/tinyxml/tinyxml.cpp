@@ -9,9 +9,9 @@ Permission is granted to anyone to use this software for any
 purpose, including commercial applications, and to alter it and 
 redistribute it freely, subject to the following restrictions:
 
-1. The origin of this software must not be misrepresented; you must 
-not claim that you wrote the original software. If you use this 
-software in a product, an acknowledgment in the product documentation 
+1. The origin of this software must not be misrepresented; you must
+not claim that you wrote the original software. If you use this
+software in a product, an acknowledgment in the product documentation
 would be appreciated but is not required.
 
 2. Altered source versions must be plainly marked as such, and
@@ -27,25 +27,54 @@ distribution.
 #include "tinyxml.h"
 using namespace std;
 
+
+bool TiXmlBase::condenseWhiteSpace = true;
+
+
 void TiXmlBase::PutString( const std::string& str, std::ostream* stream )
 {
-	// fixme: is there a better (speed) way to do this?
-	unsigned int i, j;
+	// Scan for the all important '&'
+	unsigned int i=0, j=0;
 
-	for( i=0; i<str.length(); ++i )
+	while ( i < str.length() )
 	{
-		for ( j=0; j<NUM_ENTITY; ++j )
+		unsigned next = str.find( '&', i );
+
+		if ( next == string::npos )
 		{
-			if ( str[i] == entity[j].chr )
-			{
-				stream->write( entity[j].str, entity[j].strLength );
-				break;
-			}
-		}
-		if ( j == NUM_ENTITY )
+			stream->write( &str.at( i ), str.length() - i );
+			return;
+   		}
+
+		// We found an entity.
+		if ( next - i > 0 )
+			stream->write( &str.at( i ), next - i );
+		i = next;
+
+		// Check for the special "&#x" entitity
+		if (    i < str.length() - 2
+		     && str[i] == '&'
+			 && str[i+1] == '#'
+			 && str[i+2] == 'x' )
 		{
 			stream->put( str[i] );
 		}
+		else
+		{
+			for ( j=0; j<NUM_ENTITY; ++j )
+			{
+				if ( str[i] == entity[j].chr )
+				{
+					stream->write( entity[j].str, entity[j].strLength );
+					break;
+				}
+			}
+			if ( j == NUM_ENTITY )
+			{
+				stream->put( str[i] );
+			}
+		}
+		++i;
 	}
 }
 
@@ -178,6 +207,7 @@ TiXmlNode* TiXmlNode::ReplaceChild( TiXmlNode* replaceThis, const TiXmlNode& wit
 		firstChild = node;
 
 	delete replaceThis;
+	node->parent = this;
 	return node;
 }
 
@@ -443,21 +473,67 @@ void TiXmlElement::SetAttribute( const std::string& name, const std::string& val
 }
 
 
-void TiXmlElement::Print( std::ostream* stream, int depth ) const
+void TiXmlElement::Print( FILE* cfile, int depth ) const
 {
 	int i;
 	for ( i=0; i<depth; i++ )
 	{
-		(*stream) << "    ";
+		fprintf( cfile, "    " );
 	}
 
+	fprintf( cfile, "<%s", value.c_str() );
+
+	TiXmlAttribute* attrib;
+	for ( attrib = attributeSet.First(); attrib; attrib = attrib->Next() )
+	{
+		fprintf( cfile, " " );
+		attrib->Print( cfile, depth );
+	}
+
+	// There are 3 different formatting approaches:
+	// 1) An element without children is printed as a <foo /> node
+	// 2) An element with only a text child is printed as <foo> text </foo>
+	// 3) An element with children is printed on multiple lines.
+	TiXmlNode* node;
+	if ( !firstChild )
+	{
+		fprintf( cfile, " />" );
+  	}
+	else if ( firstChild == lastChild && firstChild->ToText() )
+	{
+		fprintf( cfile, ">" );
+		firstChild->Print( cfile, depth + 1 );
+		fprintf( cfile, "</%s>", value.c_str() );
+  	}
+	else
+	{
+		fprintf( cfile, ">" );
+
+		for ( node = firstChild; node; node=node->NextSibling() )
+		{
+	 		if ( !node->ToText() )
+			{
+				fprintf( cfile, "\n" );
+			}
+			node->Print( cfile, depth+1 );
+		}
+		fprintf( cfile, "\n" );
+		for( i=0; i<depth; ++i )
+			fprintf( cfile, "    " );
+		fprintf( cfile, "</%s>", value.c_str() );
+	}
+}
+
+
+void TiXmlElement::StreamOut( std::ostream* stream ) const
+{
 	(*stream) << "<" << value;
 
 	TiXmlAttribute* attrib;
 	for ( attrib = attributeSet.First(); attrib; attrib = attrib->Next() )
 	{	
 		(*stream) << " ";
-		(*stream) << (*attrib);
+		attrib->StreamOut( stream );
 	}
 
 	// If this node has children, give it a closing tag. Else
@@ -469,25 +545,8 @@ void TiXmlElement::Print( std::ostream* stream, int depth ) const
 
 		for ( node = firstChild; node; node=node->NextSibling() )
 		{
-	 		if (	depth >= 0				// -1 is a special value for unformatted output
-				 && !node->ToText() )
-			{
-				if ( depth >= 0 )
-				{
-					(*stream) << "\n";
-				}
-			}
-			if ( depth >= 0 )
-				node->Print( stream, depth+1 ); 
-			else
-				node->Print( stream, depth );
+			node->StreamOut( stream );
 		}
-		if ( depth >= 0	)			// -1 is a special value for unformatted output
-		{
-			(*stream) << "\n";
-		}
-		for( i=0; i<depth; ++i )
-			(*stream) << "    ";
 		(*stream) << "</" << value << ">";
 	}
 	else
@@ -527,13 +586,13 @@ TiXmlNode* TiXmlElement::Clone() const
 TiXmlDocument::TiXmlDocument() : TiXmlNode( TiXmlNode::DOCUMENT )
 {
 	error = false;
-	ignoreWhiteSpace = true;
+//	ignoreWhiteSpace = true;
 }
 
 
 TiXmlDocument::TiXmlDocument( const std::string& documentName ) : TiXmlNode( TiXmlNode::DOCUMENT )
 {
-	ignoreWhiteSpace = true;
+//	ignoreWhiteSpace = true;
 	value = documentName;
 	error = false;
 }
@@ -598,7 +657,7 @@ bool TiXmlDocument::SaveFile( const std::string& filename ) const
 	FILE* fp = fopen( filename.c_str(), "w" );
 	if ( fp )
 	{
-		Print( fp );
+		Print( fp, 0 );
 		fclose( fp );
 		return true;
 	}
@@ -625,43 +684,30 @@ TiXmlNode* TiXmlDocument::Clone() const
 }
 
 
-void TiXmlDocument::Print( std::ostream* stream, int depth ) const
+void TiXmlDocument::Print( FILE* cfile, int depth ) const
 {
 	TiXmlNode* node;
 	for ( node=FirstChild(); node; node=node->NextSibling() )
 	{
-		node->Print( stream, depth );
-		if ( depth >= 0 )				// -1 is a special value for unformatted output
-		{
-			(*stream) << "\n";			// Newlines for formatted output.
-		}
+		node->Print( cfile, depth );
+		fprintf( cfile, "\n" );
 	}
-//	if ( depth < 0 )
-//	{
-//		(*stream) << " ";			// Minimal white space for stream output.
-//	}
 }
 
 
-void TiXmlDocument::Print( FILE* cfile ) const
-{
-	std::ostringstream out (std::ostringstream::out);
- 	Print( &out, 0 );
-	fprintf( cfile, "%s", out.str().c_str() );
-}
-
-
-TiXmlElement* TiXmlDocument::RootElement() const
+void TiXmlDocument::StreamOut( std::ostream* out ) const
 {
 	TiXmlNode* node;
 	for ( node=FirstChild(); node; node=node->NextSibling() )
-	{	
+	{
+		node->StreamOut( out );
+
+		// Special rule for streams: stop after the root element.
+		// The stream in code will only read one element, so don't 
+		// write more than one.
 		if ( node->ToElement() )
-		{
-			return node->ToElement();
-		}
+			break;
 	}
-	return 0;
 }
 
 
@@ -685,7 +731,17 @@ TiXmlAttribute* TiXmlAttribute::Previous() const
 }
 
 
-void TiXmlAttribute::Print( std::ostream* stream, int depth ) const
+void TiXmlAttribute::Print( FILE* cfile, int /*depth*/ ) const
+{
+	ostringstream stream( ostringstream::out );
+	stream.str().reserve( 500 );
+	
+	StreamOut( &stream );
+	fprintf( cfile, "%s", stream.str().c_str() );
+}
+
+
+void TiXmlAttribute::StreamOut( std::ostream* stream ) const
 {
 	if ( value.find( '\"' ) != std::string::npos )
 	{
@@ -740,12 +796,22 @@ const double  TiXmlAttribute::DoubleValue() const
 }
 
 
-void TiXmlComment::Print( std::ostream* stream, int depth ) const
+void TiXmlComment::Print( FILE* cfile, int depth ) const
 {
+	ostringstream stream( ostringstream::out );
+	stream.str().reserve( 1000 );
+	
 	for ( int i=0; i<depth; i++ )
 	{
-		(*stream) << "    ";
+		fprintf( cfile, "    " );
 	}
+	StreamOut( &stream );
+	fprintf( cfile, "%s", stream.str().c_str() );
+}
+
+
+void TiXmlComment::StreamOut( std::ostream* stream ) const
+{
 	(*stream) << "<!--";
 	PutString( value, stream );
 	(*stream) << "-->";
@@ -764,9 +830,17 @@ TiXmlNode* TiXmlComment::Clone() const
 }
 
 
-void TiXmlText::Print( std::ostream* stream, int depth ) const
+void TiXmlText::Print( FILE* cfile, int depth ) const
 {
-//	(*stream) << value;
+	ostringstream stream( ostringstream::out );
+	stream.str().reserve( 1000 );
+	StreamOut( &stream );
+	fprintf( cfile, "%s", stream.str().c_str() );
+}
+
+
+void TiXmlText::StreamOut( std::ostream* stream ) const
+{
 	PutString( value, stream );
 }
 
@@ -774,7 +848,7 @@ void TiXmlText::Print( std::ostream* stream, int depth ) const
 TiXmlNode* TiXmlText::Clone() const
 {	
 	TiXmlText* clone = 0;
-	clone = new TiXmlText();
+	clone = new TiXmlText( "" );
 	
 	if ( !clone )
 		return 0;
@@ -795,7 +869,16 @@ TiXmlDeclaration::TiXmlDeclaration( const std::string& _version,
 }
 
 
-void TiXmlDeclaration::Print( std::ostream* stream, int depth ) const
+void TiXmlDeclaration::Print( FILE* cfile, int depth ) const
+{
+	ostringstream stream( ostringstream::out );
+	stream.str().reserve( 200 );
+	StreamOut( &stream );
+	fprintf( cfile, "%s", stream.str().c_str() );
+}
+
+
+void TiXmlDeclaration::StreamOut( std::ostream* stream ) const
 {
 	(*stream) << "<?xml ";
 
@@ -803,27 +886,21 @@ void TiXmlDeclaration::Print( std::ostream* stream, int depth ) const
 	{
 		(*stream) << "version=\"";
 		PutString( version, stream );
-//		out += version;
 		(*stream) << "\" ";
 	}
 	if ( !encoding.empty() )
 	{
 		(*stream) << "encoding=\"";
-//		out += encoding;
 		PutString( encoding, stream );
 		(*stream ) << "\" ";
 	}
 	if ( !standalone.empty() )
 	{
 		(*stream) << "standalone=\"";
-//		out += standalone;	
 		PutString( standalone, stream );
 		(*stream) << "\" ";
 	}
-//	out += "?>";
 	(*stream) << "?>";
-
-//	(*stream) << out;
 }
 
 
@@ -842,10 +919,20 @@ TiXmlNode* TiXmlDeclaration::Clone() const
 }
 
 
-void TiXmlUnknown::Print( std::ostream* stream, int depth ) const
+void TiXmlUnknown::Print( FILE* cfile, int depth ) const
 {
+	ostringstream stream( ostringstream::out );
+	stream.str().reserve( 200 );
+	StreamOut( &stream );
+
 	for ( int i=0; i<depth; i++ )
-		(*stream) << "    ";
+		fprintf( cfile, "    " );
+	fprintf( cfile, "%s", stream.str().c_str() );
+}
+
+
+void TiXmlUnknown::StreamOut( std::ostream* stream ) const
+{
 	(*stream) << "<" << value << ">";		// Don't use entities hear! It is unknown.
 }
 

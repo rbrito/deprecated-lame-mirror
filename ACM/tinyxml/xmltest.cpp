@@ -4,6 +4,9 @@
 #include <strstream>
 using namespace std;
 
+int gPass = 0;
+int gFail = 0;
+
 // Utility functions:
 template< class T >
 bool XmlTest( const char* testString, T expected, T found, bool noEcho = false )
@@ -19,7 +22,12 @@ bool XmlTest( const char* testString, T expected, T found, bool noEcho = false )
 		cout << " " << testString << " [" << expected << "][" <<  found << "]";
 	cout << "\n";
 
-	return ( expected == found );
+	bool pass = ( expected == found );
+	if ( pass )
+		++gPass;
+	else
+		++gFail;
+	return pass;
 }
 
 
@@ -38,19 +46,21 @@ int main()
 	//
 	const char* demoStart = 
 		"<?xml version=\"1.0\"  standalone='no' >\n"
-		"<!-- Our to do list \n data -->"
+		"<!-- Our to do list data -->"
 		"<ToDo>\n"
-		"<Item priority=\"1\" distance='close'> Go to the <bold>Toy store!</bold></Item>"
-		"<Item priority=\"2\" distance='none'> Do bills   </Item>"
-		"<Item priority=\"2\" distance='far back'> Look for Evil Dinosaurs! </Item>"
+			"<!-- Do I need a secure PDA? -->\n"
+			"<Item priority=\"1\" distance='close'> Go to the <bold>Toy store!</bold></Item>"
+			"<Item priority=\"2\" distance='none'> Do bills   </Item>"
+			"<Item priority=\"2\" distance='far &amp; back'> Look for Evil Dinosaurs! </Item>"
 		"</ToDo>";
 
 	/*	What the todo list should look like after processing.
 		In stream (no formatting) representation. */
 	const char* demoEnd = 
 		"<?xml version=\"1.0\" standalone=\"no\" ?>"
-		"<!--Our to do list data-->"
+		"<!-- Our to do list data -->"
 		"<ToDo>"
+			"<!-- Do I need a secure PDA? -->"
 		    "<Item priority=\"2\" distance=\"close\">Go to the"
 		        "<bold>Toy store!"
 		        "</bold>"
@@ -58,7 +68,7 @@ int main()
 		    "<Item priority=\"1\" distance=\"far\">Talk to:"
 		        "<Meeting where=\"School\">"
 		            "<Attendee name=\"Marple\" position=\"teacher\" />"
-		            "<Attendee name=\"Voo\" position=\"counselor\" />"
+		            "<Attendee name=\"Vo&#x82;\" position=\"counselor\" />"
 		        "</Meeting>"
 		        "<Meeting where=\"Lunch\" />"
 		    "</Item>"
@@ -98,7 +108,7 @@ int main()
 	TiXmlElement* todoElement = 0;
 	TiXmlElement* itemElement = 0;
 
-	//exit(0);
+
 	// --------------------------------------------------------
 	// An example of changing existing attributes, and removing
 	// an element from the document.
@@ -113,7 +123,7 @@ int main()
 
 	// Going to the toy store is now our second priority...
 	// So set the "priority" attribute of the first item in the list.
-	node = todoElement->FirstChild();
+	node = todoElement->FirstChildElement();	// This skips the "PDA" comment.
 	assert( node );
 	itemElement = node->ToElement();
 	assert( itemElement  );
@@ -143,8 +153,7 @@ int main()
 	item.SetAttribute( "priority", "1" );
 	item.SetAttribute( "distance", "far" );
 
-	TiXmlText text;
-	text.SetValue( "Talk to:" );
+	TiXmlText text( "Talk to:" );
 
 	TiXmlElement meeting1( "Meeting" );
 	meeting1.SetAttribute( "where", "School" );
@@ -157,7 +166,7 @@ int main()
 	attendee1.SetAttribute( "position", "teacher" );
 
 	TiXmlElement attendee2( "Attendee" );
-	attendee2.SetAttribute( "name", "Voo" );
+	attendee2.SetAttribute( "name", "Vo&#x82;" );
 	attendee2.SetAttribute( "position", "counselor" );
 
 	// Assemble the nodes we've created:
@@ -189,41 +198,27 @@ int main()
 	int count = 0;
 	TiXmlElement*	element;
 
+	//////////////////////////////////////////////////////
 	cout << "** Basic structure. **\n";
 	ostringstream outputStream( ostringstream::out );
 	outputStream << doc;
 
 	XmlTest( "Output stream correct.", string( demoEnd ), outputStream.str(), true );
-//	{
-//		// Find the mismatch. This can be tedious to debug.
-//		const char* p = outputStream.str().c_str();
-//		const char* q = demoEnd;
-//		int k=0;
-//		for( ; *p && *q; ++p, ++q, ++k )
-//		{
-//			if ( *p != *q )
-//			{
-//				break;
-//			}
-//		}
-//		cout << "String mismatch at byte " << k << "\n";
-//		if ( *q )
-//			cout << "Expected:" << q << endl;
-//		if ( *p )
-//			cout << "Found   :" << p << endl;
-//	}
 
 	node = doc.RootElement();
 	XmlTest( "Root element exists.", true, ( node != 0 && node->ToElement() ) );	
 	XmlTest( "Root element value is 'ToDo'.", string( "ToDo" ), node->Value() );
 	node = node->FirstChild();
-	XmlTest( "First child exists.", true, ( node != 0 && node->ToElement() ) );
+	XmlTest( "First child exists & is a comment.", true, ( node != 0 && node->ToComment() ) );
+	node = node->NextSibling();
+	XmlTest( "Sibling element exists & is an element.", true, ( node != 0 && node->ToElement() ) );
 	XmlTest( "Value is 'Item'.", string( "Item" ), node->Value() );
 	node = node->FirstChild();
 	XmlTest( "First child exists.", true, ( node != 0 && node->ToText() ) );
 	XmlTest( "Value is 'Go to the'.", string( "Go to the" ), node->Value() );
 
 
+	//////////////////////////////////////////////////////
 	cout << "\n** Iterators. **" << "\n";
 	// Walk all the top level nodes of the document.
 	count = 0;
@@ -286,17 +281,46 @@ int main()
 	XmlTest( "'Item' children of the 'ToDo' element, using Last/Previous.", 3, count );
 
 
+	//////////////////////////////////////////////////////
 	cout << "\n** Parsing. **\n";
-	istringstream parse0( "<Element attribute0='foo0' attribute1= noquotes attribute2 = '&gt;' />" );
+	istringstream parse0( "<Element0 attribute0='foo0' attribute1= noquotes attribute2 = '&gt;' />" );
 	TiXmlElement element0( "default" );
 	parse0 >> element0;
 
-	XmlTest( "Element parsed, value is 'Element'.", string( "Element" ), element0.Value() );
+	XmlTest( "Element parsed, value is 'Element0'.", string( "Element0" ), element0.Value() );
 	XmlTest( "Reads attribute 'attribute0=\"foo0\"'.", string( "foo0" ), *( element0.Attribute( "attribute0" ) ) );
 	XmlTest( "Reads incorrectly formatted 'attribute1=noquotes'.", string( "noquotes" ), *( element0.Attribute( "attribute1" ) ) );
 	XmlTest( "Read attribute with entity value '>'.", string( ">" ), *( element0.Attribute( "attribute2" ) ) );
 
-	
+	//////////////////////////////////////////////////////
+	cout << "\n** Streaming. **\n";
+
+	// Round trip check: stream in, then stream back out to verify. The stream
+	// out has already been checked, above. We use the output
+
+	istringstream inputStringStream( outputStream.str() );
+	TiXmlDocument document0;
+
+	inputStringStream >> document0;
+
+	ostringstream outputStream0( ostringstream::out );
+	outputStream0 << document0;
+
+	XmlTest( "Stream round trip correct.", string( demoEnd ), outputStream0.str(), true );
+
+	//////////////////////////////////////////////////////
+	cout << "\n** Parsing, no Condense Whitespace **\n";
+	TiXmlBase::SetCondenseWhiteSpace( false );
+
+	istringstream parse1( "<start>This  is    \ntext</start>" );
+	TiXmlElement text1( "text" );
+	parse1 >> text1;
+
+	XmlTest( "Condense white space OFF.", string( "This  is    \ntext" ),
+										  text1.FirstChild()->Value(),
+										  true );
+							
+	cout << endl << "Pass " << gPass << ", Fail " << gFail << endl;	
 	return 0;
 }
 
