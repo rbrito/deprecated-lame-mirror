@@ -753,6 +753,36 @@ char *mp3buf, int mp3buf_size)
     assert(576>=FFTOFFSET);
     /* check if we have enough data for FFT */
     assert(gfc->mf_size>=(BLKSIZE+gfp->framesize-FFTOFFSET));
+    /* check if we have enough data for polyphase filterbank */
+    /* it needs 1152 samples + 286 samples ignored for one granule */
+    /*          1152+576+286 samples for two granules */
+    assert(gfc->mf_size>=(286+576*(1+gfc->mode_gr)));
+
+    /* prime the MDCT/polyphase filterbank with a short block */
+    { 
+      int i,j;
+      short primebuff0[286+1152+576];
+      short primebuff1[286+1152+576];
+      for (i=0, j=0; i<286+576*(1+gfc->mode_gr); ++i) {
+	if (i<576*gfc->mode_gr) {
+	  primebuff0[i]=0;
+	  if (gfc->stereo) 
+	    primebuff1[i]=0;
+	}else{
+	  primebuff0[i]=inbuf[0][j];
+	  if (gfc->stereo) 
+	    primebuff1[i]=inbuf[1][j];
+	  ++j;
+	}
+      }
+      /* polyphase filtering / mdct */
+      for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
+	for ( ch = 0; ch < gfc->stereo; ch++ ) {
+	  gfc->l3_side.gr[gr].ch[ch].tt.block_type=SHORT_TYPE;
+	}
+      }
+      mdct_sub48(gfp,primebuff0, primebuff1, xr, &gfc->l3_side);
+    }
   }
 
 
@@ -981,7 +1011,8 @@ int lame_encode_buffer(lame_global_flags *gfp,
   /* some sanity checks */
   assert(ENCDELAY>=MDCTDELAY);
   assert(BLKSIZE-FFTOFFSET >= 0);
-  mf_needed = BLKSIZE+gfp->framesize-FFTOFFSET;
+  mf_needed = BLKSIZE+gfp->framesize-FFTOFFSET;  /* ammount needed for FFT */
+  mf_needed = Max(mf_needed,286+576*(1+gfc->mode_gr)); /* ammount needed for MDCT/filterbank */
   assert(MFSIZE>=mf_needed);
 
   mfbuf[0]=gfc->mfbuf[0];
