@@ -60,7 +60,7 @@ return code = number of bytes output to mp3buffer.  This can be 0.
 int lame_encode_flush(lame_global_flags *,char *mp3buffer, int size);
 
 
-6.  Write all reamining data to mp3 file.  If the file was
+6.  Write all remaining data to mp3 file.  If the file was
 encoded using VBR, you should add the Xing VBR header by calling:
 
 void lame_mp3_tags_fid(lame_global_flags *,FILE* fid);

@@ -6,12 +6,13 @@ First, see the file STYLEGUIDE
 LAME API
 
 For a general outline of the code, see the file API.  
-Also, main.c is a simple front end to libmp3lame.a
+Also, frontend/main.c is a simple front end to libmp3lame.a
 
 The guts of the code are called from lame_encode_buffer().
 
 lame_encode_buffer() handles buffering and resampling, and
-then calls lame_encode_frame() for each frame:
+then calls lame_encode_frame() for each frame.  lame_encode_frame()
+looks like this:
 
 lame_encode_frame():
    l3psycho_anal()        compute masking thresholds
@@ -55,8 +56,8 @@ both strucs is initialized to zero.
 These are input paramters which are set by the calling program,
 and some information which the calling program may be interested in.
 
-This struct is defined in lame.h.  The calling program 
-must instantiate it.
+This struct is defined in lame.h.  It is instantiated
+by the call to lame_init().  
 
 
 2. lame_internal_flags *gfc
@@ -67,20 +68,18 @@ Most global variables go here.
 Defined in util.h.  Data for which the size is known
 in advace should be explicitly declaired (for example,
 float xr[576]);  Data which needs to be malloc'd is
-handled by:  (assume the data is used by the resample() routine)
+handled by:  
 
-1.  in lame_init_params(), call lame_init_resample().
-    lame_init_resample will malloc the data.
-
+1.  in lame_init_params(), malloc the data
 2.  be sure to free the data in freegfc()
 
 
-If the data to be balloc'd is large and only used in
-certain conditions, use the following:  (this has the
-disadvantage that it is hard to catch and return error
-flags all the way back up the call stack)
+If the data to be malloc'd is large and only used in
+certain conditions (like resampling), use the following:  
+this has the disadvantage that it is hard to catch and return error
+flags all the way back up the call stack.
 
-1. Add the variable: lame_init_resampl() to gfc.
+1. Add an initialization variable to the gfc struct: lame_init_resample
 2. In the resample routine, there should be some code like this:
 
    if (0==gfc->lame_init_resample) {
