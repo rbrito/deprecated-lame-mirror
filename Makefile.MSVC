@@ -18,19 +18,19 @@ CC = icl
 LN = xilink
 
 # debugging options
-# CC_OPTS = /nologo /Zi /Ge /GZ
+# CC_OPTS = /nologo /DHAVE_CONFIG_MS_H /Zi /Ge /GZ
 # LN_OPTS = /nologo /debug:full /debugtype:cv /fixed:no
 
 # profiling options
-# CC_OPTS = /nologo /Zi /O2ab2gitwy /G6AFs /DNDEBUG 
+# CC_OPTS = /nologo /DHAVE_CONFIG_MS_H /Zi /O2ab2gitwy /G6AFs /DNDEBUG 
 # LN_OPTS = /nologo /debug:full /debugtype:cv /fixed:no /profile
 
 # release options
-# CC_OPTS = /nologo /O2ab2gitwy /G6AFs /DNDEBUG 
+# CC_OPTS = /nologo /DHAVE_CONFIG_MS_H /O2ab2gitwy /G6AFs /DNDEBUG 
 # LN_OPTS = /nologo
 
 # Intel 4.5 options
-CC_OPTS = /nologo /DNDEBUG /Qunroll /O2 /G5AFs /QaxM /Qipo_obj /QIfist- 
+CC_OPTS = /nologo /DHAVE_CONFIG_MS_H /DNDEBUG /Qunroll /O2 /G5AFs /QaxM /Qipo_obj /QIfist- 
 LN_OPTS = /nologo
 
 

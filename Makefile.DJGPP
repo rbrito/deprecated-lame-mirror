@@ -91,7 +91,7 @@ CC_OPTS = -O2
 # 10/99 added -D__NO_MATH_INLINES to fix a bug in *all* versions of
 # gcc 2.8+ as of 10/99.  
 
-CC_SWITCHES = -DNDEBUG -D__NO_MATH_INLINES $(CC_OPTS) $(SNDLIB)  \
+CC_SWITCHES = -DHAVE_CONFIG_MS_H -DNDEBUG -D__NO_MATH_INLINES $(CC_OPTS) $(SNDLIB)  \
 $(VORBIS) 
 frontend_sources = \
         frontend/brhist.c \
