@@ -46,7 +46,7 @@
 #if  defined(__riscos__)  &&  defined(FPA10)
 # include "ymath.h"
 #else
-# ifdef HAVE_TGMATH_H
+# if defined(HAVE_TGMATH_H) && !defined(__alpha__)
 #  include <tgmath.h>
 # else
 #  include <math.h>
