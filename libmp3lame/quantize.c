@@ -1480,12 +1480,31 @@ calc_target_bits (
     getframebits (gfp, &bitsPerFrame, &mean_bits);
     *analog_silence_bits = mean_bits / gfc->channels_out;
 
-    mean_bits  = gfp->VBR_mean_bitrate_kbps * gfp->framesize * 1000 * 1.04; /*increase target abr bitrate by 4%*/
+    mean_bits  = gfp->VBR_mean_bitrate_kbps * gfp->framesize * 1000;
     mean_bits /= gfp->out_samplerate;
     mean_bits -= gfc->sideinfo_len*8;
     mean_bits /= gfc->mode_gr;
 
-    res_factor = .90 + .10 * (11.0 - gfp->compression_ratio) / (11.0 - 5.5);
+    /*
+        res_factor is the percentage of the target bitrate that should
+        be used on average.  the remaining bits are added to the
+        bitreservoir and used for difficult to encode frames.  
+
+        Since we are tracking the average bitrate, we should adjust
+        res_factor "on the fly", increasing it if the average bitrate
+        is greater than the requested bitrate, and decreasing it
+        otherwise.  Reasonable ranges are from .9 to 1.0
+        
+        Until we get the above suggestion working, we use the following
+        tuning:
+        compression ratio    res_factor
+          5.5  (256kbps)         1.0      no need for bitreservoir 
+          11   (128kbps)         .93      7% held for reservoir
+   
+        with linear interpolation for other values.
+
+     */
+    res_factor = .93 + .07 * (11.0 - gfp->compression_ratio) / (11.0 - 5.5);
     if (res_factor <  .90)
         res_factor =  .90; 
     if (res_factor > 1.00) 
