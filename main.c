@@ -55,6 +55,23 @@ int main(int argc, char **argv)
    */
   lame_parse_args(&gf,argc, argv);
 
+
+
+  /* open the wav/aiff/raw pcm or mp3 input file.  This call will
+   * open the file with name gf.inFile, try to parse the headers and
+   * set gf.samplerate, gf.num_channels, gf.num_samples.
+   * if you want to do your own file input, skip this call and set
+   * these values yourself.
+   */
+  lame_init_infile(&gf);
+
+  /* Now that all the options are set, lame needs to analyze them and
+   * set some more options
+   */
+  lame_init_params(&gf);
+  lame_print_config(&gf);   /* print usefull information about options being used */
+
+
   if (!gf.gtkflag) {
     /* open the MP3 output file */
     if (!strcmp(gf.outPath, "-")) {
@@ -81,21 +98,6 @@ int main(int argc, char **argv)
     SetFiletype(gf.outPath, 0x1ad);
 #endif
   }
-
-
-  /* open the wav/aiff/raw pcm or mp3 input file.  This call will
-   * open the file with name gf.inFile, try to parse the headers and
-   * set gf.samplerate, gf.num_channels, gf.num_samples.
-   * if you want to do your own file input, skip this call and set
-   * these values yourself.
-   */
-  lame_init_infile(&gf);
-
-  /* Now that all the options are set, lame needs to analyze them and
-   * set some more options
-   */
-  lame_init_params(&gf);
-  lame_print_config(&gf);   /* print usefull information about options being used */
 
 
 

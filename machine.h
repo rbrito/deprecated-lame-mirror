@@ -99,6 +99,11 @@ typedef double FLOAT8;
 	typedef unsigned char	u_char;
 #elif defined __DECALPHA__
 #       do nothing
+#elif defined __DJGPP__
+	typedef unsigned long	u_long;
+	typedef unsigned int	u_int;
+	typedef unsigned short	u_short;
+	typedef unsigned char	u_char;
 #elif !defined __GNUC__ || defined __STRICT_ANSI__
 	typedef unsigned long	u_long;
 	typedef unsigned int	u_int;

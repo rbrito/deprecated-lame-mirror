@@ -649,6 +649,17 @@ static int III_dequantize_sample(real xr[SBLIMIT][SSLIMIT],int *scf,
   int *me;
 
   {
+    int i;
+    
+    for(i=(&xr[SBLIMIT][0]-xrpnt)>>1;i>0;i--) {
+      *xrpnt++ = 0.0;
+      *xrpnt++ = 0.0;
+    }
+
+    xrpnt = (real *) xr;
+  }
+
+  {
     int bv       = gr_info->big_values;
     int region1  = gr_info->region1start;
     int region2  = gr_info->region2start;
