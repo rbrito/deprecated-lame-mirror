@@ -1273,6 +1273,28 @@ lame_get_interChRatio( const lame_global_flags*  gfp )
 }
 
 
+/* Use pseudo substep shaping method */
+int
+lame_set_substep( lame_global_flags*  gfp,
+		  int                 method )
+{
+    lame_internal_flags *gfc = gfp->internal_flags;
+    /* default = 0.0 (no inter-cahnnel maskin) */
+    if (! (0 <= method && method <= 2))
+        return -1;
+
+    gfc->substep_shaping = method;
+    return 0;
+}
+
+int
+lame_get_substep(const lame_global_flags*  gfp )
+{
+    lame_internal_flags *gfc = gfp->internal_flags;
+    assert(0 <= gfc->substep_shaping && gfc->substep_shaping <= 2);
+    return gfc->substep_shaping;
+}
+
 /* Disable short blocks. */
 int
 lame_set_no_short_blocks( lame_global_flags*  gfp,

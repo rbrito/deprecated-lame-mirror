@@ -862,8 +862,8 @@ void  add_dummy_byte ( lame_global_flags* const gfp, unsigned char val )
   */
 int
 format_bitstream(lame_global_flags *gfp, int bitsPerFrame,
-      int              l3_enc[2][2][576],
-  	III_scalefac_t   scalefac[2][2] )
+	int              l3_enc[2][2][576],
+	III_scalefac_t   scalefac[2][2] )
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     int bits,nbytes;

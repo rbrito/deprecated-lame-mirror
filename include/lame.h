@@ -404,6 +404,10 @@ int CDECL lame_get_useTemporal(const lame_global_flags *);
 int CDECL lame_set_interChRatio(lame_global_flags *, float);
 int CDECL lame_get_interChRatio(const lame_global_flags *);
 
+// substep shaping method
+int CDECL lame_set_substep(lame_global_flags *, int);
+int CDECL lame_get_substep(const lame_global_flags *);
+
 // disable short blocks
 int CDECL lame_set_no_short_blocks(lame_global_flags *, int);
 int CDECL lame_get_no_short_blocks(const lame_global_flags *);

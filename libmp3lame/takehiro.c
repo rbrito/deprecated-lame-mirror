@@ -332,20 +332,21 @@ int count_bits(
     else
 	quantize_xrpow_ISO(xr, ix, IPOW20(gi->global_gain));
 
-    if (gfc->noise_shaping_amp==3) {
-      int sfb;
+    if (gfc->substep_shaping) {
+      int sfb, j = 0;
       // 0.634521682242439 = 0.5946*2**(.5*0.1875)
-      FLOAT8 roundfac = 0.634521682242439 / IPOW20(gi->global_gain+gi->scalefac_scale);
-      i = 0;
+      const FLOAT8 roundfac =
+	  0.634521682242439 / IPOW20(gi->global_gain+gi->scalefac_scale);
       for (sfb = 0; sfb < gi->sfb_lmax; sfb++) {
 	  int width = gfc->scalefac_band.l[sfb+1] - gfc->scalefac_band.l[sfb];
 	  int l;
+	  j += width;
 	  if (!gfc->pseudohalf.l[sfb])
 	      continue;
 
 	  for (l = -width; l < 0; l++)
-	      if (xr[i+l] < roundfac)
-		  ix[i+l] = 0;
+	      if (xr[j+l] < roundfac)
+		  ix[j+l] = 0;
       }
 
       for (sfb = gi->sfb_smin; sfb < SBPSY_s; sfb++) {
@@ -353,11 +354,12 @@ int count_bits(
 	  int width = gfc->scalefac_band.s[sfb+1] - gfc->scalefac_band.s[sfb];
 	  for (b = 0; b < 3; b++) {
 	      int l;
+	      j += width;
 	      if (!gfc->pseudohalf.s[sfb][b])
 		  continue;
 	      for (l = -width; l < 0; l++)
-		  if (xr[i+l] < roundfac)
-		      ix[i+l] = 0;
+		  if (xr[j+l] < roundfac)
+		      ix[j+l] = 0;
 	  }
       }
     }

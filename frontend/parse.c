@@ -481,6 +481,7 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --nssafejoint   M/S switching criterion\n"
               "    --nsmsfix <arg> M/S switching tuning [effective 0-3.5]\n"
               "    --interch x     adjust inter-channel masking ratio\n"
+              "    --substep n     use pseudo substep noise shaping method types 0-2\n"
               "    --ns-bass x     adjust masking for sfbs  0 -  6 (long)  0 -  5 (short)\n"
               "    --ns-alto x     adjust masking for sfbs  7 - 13 (long)  6 - 10 (short)\n"         
               "    --ns-treble x   adjust masking for sfbs 14 - 21 (long) 11 - 12 (short)\n"
@@ -1524,6 +1525,10 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF ("interch")
                     argUsed=1;
                     (void) lame_set_interChRatio( gfp, atof(nextArg ) );
+
+                T_ELIF ("substep")
+                    argUsed=1;
+                    (void) lame_set_substep( gfp, atof(nextArg) );
 
                 T_ELIF ("temporal-masking")
                     argUsed = 1;

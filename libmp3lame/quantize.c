@@ -84,26 +84,24 @@ init_outer_loop(
     cod_info->scalefac_scale      = 0;
     cod_info->count1table_select  = 0;
     cod_info->part2_length        = 0;
+    cod_info->sfb_lmax        = SBPSY_l;
+    cod_info->sfb_smin        = SBPSY_s;
+    cod_info->psy_lmax        = gfc->sfb21_extra ? SBMAX_l : SBPSY_l;
+    cod_info->psy_smax        = 0;
     if (cod_info->block_type == SHORT_TYPE) {
-        cod_info->sfb_lmax        = 0;
         cod_info->sfb_smin        = 0;
-        cod_info->psy_lmax        = 0;
         cod_info->psy_smax        = gfc->sfb21_extra ? SBMAX_s : SBPSY_s;
+        cod_info->sfb_lmax        = 0;
 	if (cod_info->mixed_block_flag) {
             /*
              *  MPEG-1:      sfbs 0-7 long block, 3-12 short blocks 
              *  MPEG-2(.5):  sfbs 0-5 long block, 3-12 short blocks
              */ 
-            cod_info->sfb_lmax    = gfc->is_mpeg1 ? 8 : 6;
-	    cod_info->psy_lmax    = gfc->is_mpeg1 ? 8 : 6;
 	    cod_info->sfb_smin    = 3;
+            cod_info->sfb_lmax    = gfc->is_mpeg1 ? 8 : 6;
 	}
-    } else {
-        cod_info->sfb_lmax        = SBPSY_l;
-        cod_info->sfb_smin        = SBPSY_s;
-        cod_info->psy_lmax        = gfc->sfb21_extra ? SBMAX_l : SBPSY_l;
-        cod_info->psy_smax        = 0;
-    }   
+	cod_info->psy_lmax    = cod_info->sfb_lmax;
+    }
     cod_info->count1bits          = 0;  
     cod_info->sfb_partition_table = nr_of_sfb_block[0][0];
     cod_info->slen[0]             = 0;
@@ -443,10 +441,8 @@ amp_scalefac_bands(
 
   switch (gfc->noise_shaping_amp) {
 
-  case 3:
   case 2:
     /* amplify exactly 1 band */
-    //trigger = distort_thresh;
     break;
 
   case 1:
@@ -475,15 +471,15 @@ amp_scalefac_bands(
       if (distort->l[sfb] < trigger)
 	  continue;
 
-      if (gfc->noise_shaping_amp==3) {
+      if (gfc->substep_shaping == 2) {
 	  gfc->pseudohalf.l[sfb] = !gfc->pseudohalf.l[sfb];
-	  if (!gfc->pseudohalf.l[sfb])
+	  if (!gfc->pseudohalf.l[sfb] && gfc->noise_shaping_amp==2)
 	      return;
       }
       scalefac->l[sfb]++;
       for (l = -width; l < 0; l++)
 	  xrpow[j+l] *= ifqstep34;
-      if (gfc->noise_shaping_amp==2||gfc->noise_shaping_amp==3)
+      if (gfc->noise_shaping_amp==2)
 	  return;
   }
 
@@ -496,15 +492,15 @@ amp_scalefac_bands(
 	  if (distort->s[sfb][b] < trigger)
 	      continue;
 
-	  if (gfc->noise_shaping_amp==3) {
+	  if (gfc->substep_shaping == 2) {
 	      gfc->pseudohalf.s[sfb][b] = !gfc->pseudohalf.s[sfb][b];
-	      if (!gfc->pseudohalf.s[sfb][b])
+	      if (!gfc->pseudohalf.s[sfb][b] && gfc->noise_shaping_amp==2)
 		  return;
 	  }
 	  scalefac->s[sfb][b]++;
 	  for (l = -width; l < 0; l++) 
 	      xrpow[j+l] *= ifqstep34;
-	  if (gfc->noise_shaping_amp==2||gfc->noise_shaping_amp==3)
+	  if (gfc->noise_shaping_amp==2)
 	      return;
       }
   }
