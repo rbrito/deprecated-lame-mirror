@@ -236,12 +236,10 @@ int  main ( int argc, char **argv )
     rtp_output ( mp3buffer, mp3bytes );           /* write MP3 output to RTP port */
     fwrite ( mp3buffer, 1, mp3bytes, outf );      /* write the MP3 output to file */
     
-    lame_mp3_tags_fid(gf, outf ); /* add VBR tags to mp3 file */
-    
     lame_close(gf);
     fclose(outf);
     close_infile();                 /* close the sound input file */
-    
+
     return 0;
 }
 
