@@ -65,6 +65,7 @@ target_alias = @target_alias@
 target_triplet = @target@
 AS = @AS@
 CC = @CC@
+CONFIG_DEFS = @CONFIG_DEFS@
 CPP = @CPP@
 CPUTYPE = @CPUTYPE@
 DLLTOOL = @DLLTOOL@
@@ -101,6 +102,8 @@ brhist_sources = brhist.c brhist.h
 
 EXTRA_DIST = $(brhist_sources) README.Win32 mp3x.dsp mp3x.dsw amiga_mpega.c
 
+DEFS = @DEFS@ @CONFIG_DEFS@
+
 common_sources =  	get_audio.c 	ieeefloat.c 	lametime.c 	parse.c 	portableio.c 	timestatus.c
 
 
@@ -129,14 +132,12 @@ mp3x_LDADD = $(LDADD) @GTK_LIBS@
 
 CLEANFILES = lclint.txt
 
-LCLINTFLAGS = +posixlib +showsummary +showalluses +whichlib +forcehints
+LCLINTFLAGS = +posixlib +showsummary +showalluses +whichlib +forcehints -Dlint
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../config.h
 CONFIG_CLEAN_FILES = 
 PROGRAMS =  $(bin_PROGRAMS)
 
-
-DEFS = @DEFS@ -I. -I$(srcdir) -I..
 CPPFLAGS = @CPPFLAGS@
 LIBS = @LIBS@
 ANSI2KNR = $(top_srcdir)/ansi2knr

@@ -65,6 +65,7 @@ target_alias = @target_alias@
 target_triplet = @target@
 AS = @AS@
 CC = @CC@
+CONFIG_DEFS = @CONFIG_DEFS@
 CPP = @CPP@
 CPUTYPE = @CPUTYPE@
 DLLTOOL = @DLLTOOL@
@@ -108,6 +109,8 @@ libmp3lame_la_LDFLAGS = -version-info @LIB_MAJOR_VERSION@:@LIB_MINOR_VERSION@
 
 INCLUDES = @INCLUDES@ -I$(top_srcdir)/mpglib/ -I$(top_srcdir)
 
+DEFS = @DEFS@ @CONFIG_DEFS@
+
 EXTRA_DIST =  	debugscalefac.c 	libmp3lame.dsp
 
 
@@ -119,14 +122,12 @@ noinst_HEADERS =  	VbrTag.h 	bitstream.h 	encoder.h 	fft.h 	id3tag.h 	l3side.h 	
 
 CLEANFILES = lclint.txt
 
-LCLINTFLAGS = +posixlib +showsummary +showalluses +whichlib +forcehints
+LCLINTFLAGS = +posixlib +showsummary +showalluses +whichlib +forcehints -Dlint
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../config.h
 CONFIG_CLEAN_FILES = 
 LTLIBRARIES =  $(lib_LTLIBRARIES)
 
-
-DEFS = @DEFS@ -I. -I$(srcdir) -I..
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
