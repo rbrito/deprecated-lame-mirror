@@ -8,6 +8,615 @@
 
 -- 
 
+2002-04-14 12:21  afaber
+
+	* Dll/: BladeMP3EncDLL.c, BladeMP3EncDLL.def, BladeMP3EncDLL.h:
+
+	Added strict-iso option to the interface, added output samplerate parameter  to the debug log file
+	
+2002-04-12 19:44  markt
+
+	* libmp3lame/bitstream.c:
+
+	added message regarding "internal buffer inconsistency error" to printout:
+	
+	      ERRORF(gfc,"This is a fatal error.  It has several possible causes:");
+	      ERRORF(gfc,"90%  LAME compiled with buggy version of gcc using advanced optimizations");
+	      ERRORF(gfc," 9%  Your system is overclocked");
+	      ERRORF(gfc," 1%  bug in LAME encoding library");
+	
+2002-04-10 12:55  bouvigne
+
+	* frontend/parse.c, include/lame.h, libmp3lame/lame.c,
+	libmp3lame/lame_global_flags.h, libmp3lame/set_get.c:
+
+	--noasm option
+	
+2002-04-10 06:37  bouvigne
+
+	* Makefile.MSVC:
+
+	presets.c
+	
+2002-04-09 15:43  bouvigne
+
+	* Dll/BladeMP3EncDLL.c:
+
+	dm presets in the dll are now used from initialized from inside libmp3lame
+	
+2002-04-09 15:28  aleidinger
+
+	* libmp3lame/Makefile.in:
+
+	regen
+	
+2002-04-09 14:46  bouvigne
+
+	* frontend/parse.c, include/lame.h, libmp3lame/Makefile.am,
+	libmp3lame/libmp3lame_vc6.dsp, libmp3lame/presets.c,
+	libmp3lame/set_get.c:
+
+	vbr presets are now part of libmp3lame
+	
+2002-04-09 11:56  bouvigne
+
+	* frontend/parse.c:
+
+	--cbr switch
+	
+2002-04-08 18:41  aleidinger
+
+	* Makefile.in:
+
+	regen
+	
+2002-04-08 18:41  aleidinger
+
+	* Makefile.am:
+
+	add new vc6 file
+	
+2002-04-08 12:43  bouvigne
+
+	* lame_vc6.dsw:
+
+	added ACM codec to vc6 workspace
+	
+2002-04-08 09:56  bouvigne
+
+	* lame_projects_vc6.dsp, lame_vc6.dsw:
+
+	dummy project to generate all lame projects (select lame_projects in the workspace)
+	
+2002-04-06 14:12  aleidinger
+
+	* lame.bat:
+
+	bugfix, sorry, lost the mail for it
+	
+2002-04-06 14:10  aleidinger
+
+	* Makefile.in, Dll/Makefile.in, frontend/Makefile.in,
+	libmp3lame/Makefile.in, mpglib/Makefile.in, configure:
+
+	regen
+	
+2002-04-06 14:09  aleidinger
+
+	* configure.in:
+
+	add tinyxml directory
+	
+2002-04-06 14:08  aleidinger
+
+	* Makefile.am, Dll/Makefile.am, frontend/Makefile.am,
+	libmp3lame/Makefile.am, mpglib/Makefile.am:
+
+	add new files
+	
+2002-04-04 13:35  bouvigne
+
+	* lame_vc6.dsw, Dll/LameDll_vc6.dsp, frontend/lame_vc6.dsp,
+	libmp3lame/libmp3lame_vc6.dsp, mpglib/mpglib_vc6.dsp:
+
+	I was annoyed to not be able to open the VC projects in vc6, so I added vc6 ones
+	
+2002-03-22 18:29  afaber
+
+	* Dll/: BladeMP3EncDLL.c, BladeMP3EncDLL.h:
+
+	Added lame presets to DLL interface
+	
+2002-03-16 00:26  robert
+
+	* Makefile.MSVC:
+
+	no fast float to int conversion (Intel compiler)
+	
+2002-03-16 00:21  robert
+
+	* Makefile.MSVC, frontend/parse.c:
+
+	fix for Win2k path seperator issue
+	found by Peter Hartley
+	
+2002-03-15 23:16  robert
+
+	* libmp3lame/quantize.c:
+
+	bugfix, confusion about sideinfo length
+	found by "Kei Ishida"
+	
+2002-03-06 00:02  robert
+
+	* lame.dsw:
+
+	VC Workspace for all(?) targets
+	
+2002-03-03 18:57  aleidinger
+
+	* libmp3lame/psymodel.c:
+
+	remove /* withhin comment
+	
+2002-03-03 18:38  markt
+
+	* TODO:
+
+	  msvc6 notes
+	
+2002-02-22 11:53  shibatch
+
+	* libmp3lame/quantize_pvt.c:
+
+	mp3x now displays quantization noise correctly when using nspsytune.
+	
+2002-02-21 00:54  rbrito
+
+	* debian/: changelog, control, copyright, lame-dev.docs,
+	lame-dev.files, lame-extras.files, lame.docs, liblame0-dev.docs,
+	liblame0-dev.files, liblame0.files, rules:
+
+	Reorganization of the lame/debian directory for generating packages closer
+	to what the Debian Policy specifies. Still not there (the liblame0 package
+	still has a dreaded -rpath and thus, is not lintian clean).
+	
+2002-02-17 15:24  takehiro
+
+	* doc/html/: history.html, switchs.html:
+
+	fix option description, and changed & to &amp;
+	
+2002-02-17 14:22  takehiro
+
+	* libmp3lame/psymodel.c:
+
+	now inter-channel masking works even when without --nspsytune or with -m s
+	
+2002-02-17 13:59  takehiro
+
+	* libmp3lame/psymodel.c:
+
+	fix for --enable-all-float.
+	
+2002-02-17 13:55  takehiro
+
+	* frontend/parse.c, include/lame.h, libmp3lame/lame.c,
+	libmp3lame/lame_global_flags.h, libmp3lame/psymodel.c,
+	libmp3lame/set_get.c, libmp3lame/util.h:
+
+	added inter channel masking effect.
+	gfp->interChRatio is the ratio of inter-channel masking effect, which could
+	be indicated by --interch X option.
+	The default value is 0.0, which means there's no inter-channel masking effect.
+	
+	I think ratio = 0.01 is OK for lower bitrates (like under 128kbps),
+	for like old days songs by the Beatles.
+	
+2002-02-17 13:30  bouvigne
+
+	* frontend/parse.c:
+
+	presets down to 8kbps
+	
+2002-02-17 08:12  takehiro
+
+	* libmp3lame/util.h:
+
+	prepare for the interchannel masking and substep noise shaping.
+	
+2002-02-15 11:42  shibatch
+
+	* frontend/parse.c, libmp3lame/psymodel.c:
+
+	Now, nspsytune2 should work, maybe...
+	
+2002-02-14 15:38  shibatch
+
+	* libmp3lame/: lame.c, psymodel.c, util.h:
+
+	Preparation work for nspsytune2.
+	
+2002-02-13 16:30  aleidinger
+
+	* frontend/rtp.h:
+
+	compile fix for gcc 3.x from Len Walter <len@unsw.edu.au>
+	
+2002-02-09 18:51  markt
+
+	* frontend/gtkanal.c:
+
+	added preflag count to statics window in mp3x
+	
+2002-02-07 11:58  shibatch
+
+	* libmp3lame/lame.c, libmp3lame/lame_global_flags.h,
+	frontend/parse.c, include/lame.h, libmp3lame/set_get.c:
+
+	preparation work for nspsytune2
+	
+2002-02-04 17:10  markt
+
+	* TODO, libmp3lame/util.c:
+
+	temporary fix for resampling code. downsampling from 44101 to 44100 causes
+	a seg fault.  Workaround in place for now:  resampling disabled
+	if input/output samplerates agree to 4 digits.
+	
+2002-02-01 18:58  markt
+
+	* INSTALL, TODO:
+
+	minor edits
+	
+2002-02-01 17:41  markt
+
+	* TODO:
+
+	added notes about building a working, all encompasing MSVC6
+	workspace to TODO list
+	
+2002-02-01 17:37  markt
+
+	* INSTALL:
+
+	added nots about the ACM codec and directshow filter
+	to INSTALL
+	
+2002-01-31 21:17  robux4
+
+	* libmp3lame/lame.c:
+
+	Less memory copying on interleaved buffer
+	
+2002-01-29 20:37  robux4
+
+	* configMS.h:
+
+	More debugging, special dynamic memory handling for ACM
+	
+2002-01-28 18:18  markt
+
+	* libmp3lame/lame.c, test/CBRABR.op:
+
+	set devault qval to 2 for CBR and ABR.
+	
+2002-01-25 11:27  aleidinger
+
+	* misc/Makefile.in:
+
+	regen
+	
+2002-01-25 11:23  aleidinger
+
+	* misc/Makefile.am:
+
+	add lameid3.pl
+	
+2002-01-25 11:22  aleidinger
+
+	* doc/man/lame.1:
+
+	some fixes
+	
+2002-01-23 20:32  robux4
+
+	* mpglib/interface.h:
+
+	better handling of C++ include
+	
+2002-01-23 01:23  markt
+
+	* lame.spec.in:
+
+	commiting Yosi's new lame.spec.in file
+	
+2002-01-21 21:33  markt
+
+	* TODO, configure, configure.in:
+
+	added MAX OSX patch from sf bugtrack page
+	
+2002-01-21 20:24  markt
+
+	* USAGE, misc/lameid3.pl:
+
+	added lameid3.pl script to misc directory.
+	(use to reencode mp3's and preserve id3 tags)
+	
+2002-01-20 19:29  robux4
+
+	* libmp3lame/util.h:
+
+	Better C++ handling
+	
+2002-01-20 19:25  robux4
+
+	* Dll/BladeMP3EncDLL.h:
+
+	Better C++ handling
+	
+2002-01-20 15:05  aleidinger
+
+	* configure:
+
+	regen (ACM)
+	
+2002-01-20 15:05  aleidinger
+
+	* configure.in:
+
+	Add ACM directory
+	
+2002-01-19 11:52  bouvigne
+
+	* README, TODO:
+
+	updated TODO
+	
+2002-01-17 16:43  aleidinger
+
+	* Makefile.unix:
+
+	NASM for Windows fixes (Hubert Hanghofer)
+	
+2002-01-17 13:42  aleidinger
+
+	* configure:
+
+	regen
+	
+2002-01-17 13:42  aleidinger
+
+	* configure.in:
+
+	- Update gcc 3.x and --enable-expopt=full flags based upon suggestions
+	  and benchmarks from Hubert Hanghofer <hhanghof@netbeer.co.at> and
+	  Craig Okruhlica <craig@velio.com>.
+	- Remove gcc flags which are marked 'experimental' in the gcc 3.0.3
+	  documentation (noticed by Hubert Hanghofer).
+	- Add comment what "expopt" means, and what it doesn't mean.
+	
+2002-01-17 13:42  aleidinger
+
+	* Makefile.unix:
+
+	- Update MINGW part pased upon patches and comments from
+	  Hubert Hanghofer <Hubert.Hanghofer@m-real.com>.
+	- Some minor changes for consistency.
+	
+	Note: this file is superseded by configure, except for systems where
+	      configure didn't work, so if something is broken you have to send
+	      patches.
+	
+2002-01-17 05:08  takehiro
+
+	* libmp3lame/i386/.cvsignore:
+
+	added *.lo
+	
+2002-01-09 12:09  takehiro
+
+	* debian/.cvsignore, dshow/.cvsignore:
+
+	added autogen Makefile to ignore
+	
+2002-01-09 12:09  takehiro
+
+	* frontend/.cvsignore, libmp3lame/.cvsignore, mpglib/.cvsignore:
+
+	added *.il, for the intel compiler with ipo option
+	
+2002-01-07 15:51  aleidinger
+
+	* configure:
+
+	oops, forgot to s/gtk12-config/gtk-config/
+	
+2002-01-07 15:48  aleidinger
+
+	* configure:
+
+	regen
+	
+2002-01-07 15:48  aleidinger
+
+	* configure.in:
+
+	add gcc 3 specific optimizations, based upon suggestions by Sébastien FORESTIER <forestie@caramail.com>
+	
+2002-01-07 10:35  aleidinger
+
+	* configure, frontend/Makefile.in:
+
+	regen: Fix Cygwin and HPUX problems.
+	
+2002-01-07 10:34  aleidinger
+
+	* configure.in, frontend/Makefile.am:
+
+	Fix Cygwin and HPUX problems.
+	
+2002-01-01 16:55  robert
+
+	* misc/lame4dos.bat:
+
+	modified some remark
+	
+2001-12-30 23:54  markt
+
+	* doc/html/history.html:
+
+	updated hostory.html from master copy in webpages project
+	
+2001-12-29 17:36  takehiro
+
+	* doc/html/history.html:
+
+	fix option for pseudo-half step quantization
+	
+2001-12-29 16:23  aleidinger
+
+	* configure:
+
+	regen: Welcome to 3.92
+	
+2001-12-29 16:21  aleidinger
+
+	* configMS.h, configure.in, libmp3lame/version.h:
+
+	Welcome to 3.92
+	
+2001-12-29 15:45  aleidinger
+
+	* doc/html/history.html:
+
+	sync with webpages/history.html
+	
+2001-12-28 18:55  takehiro
+
+	* .cvsignore:
+
+	added stamp-h1
+	
+2001-12-28 12:47  aleidinger
+
+	* Dll/Example.dsp, Dll/MP3EncDll.dsp, dshow/dshow.dsp,
+	frontend/lame.dsp, libmp3lame/libmp3lame.dsp, dshow/dshow.dsw,
+	mpglib/mpglib.dsp:
+
+	unix->dos
+	
+2001-12-27 16:12  aleidinger
+
+	* doc/man/lame.1:
+
+	add --alt-preset
+	
+2001-12-27 12:50  aleidinger
+
+	* misc/Makefile.in:
+
+	regen: add missing files to the distribution
+	
+2001-12-27 12:49  aleidinger
+
+	* misc/Makefile.am:
+
+	add missing files to the distribution
+	
+2001-12-23 20:19  dibrom
+
+	* libmp3lame/set_get.c:
+
+	disable noise shaping 2 for "fast" extreme mode also
+	
+2001-12-23 20:11  dibrom
+
+	* libmp3lame/: set_get.c, vbrquantize.c:
+
+	fix small bug and completely disable noise_shaping 2 with "fast" mode until a better solution can be found.
+	
+2001-12-23 12:25  aleidinger
+
+	* misc/Makefile.in:
+
+	regen: add some files to the distribution
+	
+2001-12-23 12:22  aleidinger
+
+	* misc/Makefile.am:
+
+	add auenc, mugeco,sh and mlame to distrib
+	
+2001-12-22 13:32  aleidinger
+
+	* DEFINES:
+
+	document NON_LINEAR_PSYMODEL, remove KLEMM_43
+	
+2001-12-22 13:29  aleidinger
+
+	* libmp3lame/psymodel.c:
+
+	non linear psymodel (disabled by default) for GPSYCHO (nspsytune is untouched)
+	
+2001-12-22 13:27  aleidinger
+
+	* configure:
+
+	regen: Welcome to v3.91
+	
+2001-12-22 13:26  aleidinger
+
+	* configMS.h, configure.in, libmp3lame/version.h:
+
+	Welcome to v3.91
+	
+2001-12-21 15:09  aleidinger
+
+	* libmp3lame/machine.h:
+
+	add icc check
+	
+2001-12-21 15:05  aleidinger
+
+	* libmp3lame/Makefile.in:
+
+	regen: (add vbrquantize.h)
+	
+2001-12-21 15:05  aleidinger
+
+	* libmp3lame/Makefile.am:
+
+	add vbrquantize.h
+	
+2001-12-21 11:58  jd-
+
+	* Dll/: BladeMP3EncDLL.c, BladeMP3EncDLL.def, BladeMP3EncDLL.h:
+
+	Added DLL interface function beEncodeChunkFloatS16NI for floating point audio
+	Samples are input within the range +/- 32768, in non-interleaved channels
+	
+2001-12-21 03:29  markt
+
+	* testcase.mp3:
+
+	updated testcase
+	
+2001-12-21 03:29  markt
+
+	* libmp3lame/: version.c, version.h:
+
+	updated version to lame 3.90
+	
+2001-12-20 23:11  markt
+
+	* ChangeLog:
+
+	update changelog
+	
 2001-12-20 08:44  dibrom
 
 	* libmp3lame/encoder.c:
@@ -15453,8 +16062,7 @@
 	mpglib/main.c, mpglib/mpglib.dsp, mpglib/mpg123.h, mpglib/mpglib.h,
 	mpglib/tabinit.c:
 
-	initial checkin of LAME
-	Starting with LAME 3.57beta with some modifications
+	Initial revision
 	
 1999-11-24 08:43  markt
 
@@ -15473,19 +16081,6 @@
 	mpglib/main.c, mpglib/mpglib.dsp, mpglib/mpg123.h, mpglib/mpglib.h,
 	mpglib/tabinit.c:
 
-	Initial revision
-	
-1999-11-24 08:40  markt
-
-	* COPYING, INSTALL, Makefile, Makefile.MSVC, tables.c, util.c,
-	README, README.WINGTK, TODO, USAGE, fft.c, VbrTag.c, VbrTag.h,
-	auenc, fft.h, psymodel.c, lame.dsp, util.h, formatBitstream.c,
-	formatBitstream.h, get_audio.c, lame.c, get_audio.h, globalflags.h,
-	gpkplotting.c, gpkplotting.h, gtkanal.c, gtkanal.h, quantize.c,
-	version.h, newmdct.c, id3tag.c, id3tag.h, ieeefloat.c, ieeefloat.h,
-	l3bitstream-pvt.h, l3bitstream.c, l3bitstream.h, LICENSE, l3side.h,
-	lame.dsw, quantize-pvt.c, lame.h, psymodel.h:
-
 	initial checkin of LAME
 	Starting with LAME 3.57beta with some modifications
 	
@@ -15501,4 +16096,18 @@
 	lame.dsw, quantize-pvt.c, lame.h, psymodel.h:
 
 	Initial revision
+	
+1999-11-24 08:40  markt
+
+	* COPYING, INSTALL, Makefile, Makefile.MSVC, tables.c, util.c,
+	README, README.WINGTK, TODO, USAGE, fft.c, VbrTag.c, VbrTag.h,
+	auenc, fft.h, psymodel.c, lame.dsp, util.h, formatBitstream.c,
+	formatBitstream.h, get_audio.c, lame.c, get_audio.h, globalflags.h,
+	gpkplotting.c, gpkplotting.h, gtkanal.c, gtkanal.h, quantize.c,
+	version.h, newmdct.c, id3tag.c, id3tag.h, ieeefloat.c, ieeefloat.h,
+	l3bitstream-pvt.h, l3bitstream.c, l3bitstream.h, LICENSE, l3side.h,
+	lame.dsw, quantize-pvt.c, lame.h, psymodel.h:
+
+	initial checkin of LAME
+	Starting with LAME 3.57beta with some modifications
 	
