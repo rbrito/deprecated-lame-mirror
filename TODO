@@ -33,6 +33,13 @@ There're some sound quality regression compared with LAME3.x
 - short block problem (i.e. spahm.wav)
 - white noise problem (i.e. dr4.wav)
 
+LAME4's block switching is better than LAME3 with nspsy,
+but the threshold calculation of short blocks is not.
+It does not support temporal masking, and so on.
+
+At the high frequency region, LAME4 increases the threshold too much.
+And more the worse, there's sfb21 :(
+
 
 5.
 Better intensity stereo.
@@ -41,12 +48,6 @@ And LAME4 should support it when MPEG2 Layer3 (currently not).
 Note: mpg123 (and all derivatives, like xmms and lame/mpglib)
 have bugs in the intensity stereo decoding.  Bugs have been there
 for years since there are very few intensity stereo mp3's out there.
-
-
-6.
-Threshold calculation on short blocks. LAME4's block switching is
-better than LAME3 with nspsy, but threshold calculation is not.
-It does not support temporal masking, and so on.
 
 
 7.
@@ -67,8 +68,8 @@ because of poor resorvoir handling.
 Right now the code is tuned with the LAME3's pe calculation and
 psymodel. Now they are all changed and we should re-tune these code.
 
-And sometimes it drains too much bits. That's should be fixed.
-
+2-pass VBR/ABR will perfectly solve the problem, but before it,
+we should improve the 1-pass encoding.
 
 
 9.
@@ -132,13 +133,6 @@ Merge GOGO's fast assembler routines.
 
 1500.
 Integrate plusV extensions
-
-
-
-2000.
-2 pass VBR/ABR support. It may improve the quality, but I am not sure.
-
-
 
 
 
