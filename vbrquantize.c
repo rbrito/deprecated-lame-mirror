@@ -168,7 +168,7 @@ VBR_iteration_loop_new (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 
   /* Adjust allowed masking based on quality setting */
   /* db_lower varies from -10 to +8 db */
-  masking_lower_db = -10 + 2*VBR_q;
+  masking_lower_db = -10 + 2*gf.VBR_q;
   /* adjust by -6(min)..0(max) depending on bitrate */
   masking_lower = pow(10.0,masking_lower_db/10);
   masking_lower = 1;

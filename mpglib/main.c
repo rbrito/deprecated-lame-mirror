@@ -74,7 +74,7 @@ unsigned long *num_samples)
   VBRTAGDATA pTagData;
   int ret,size,framesize;
   unsigned long num_frames=0;
-  size_t len,len2;
+  size_t len;
   int xing_header;
 
 
@@ -98,7 +98,6 @@ unsigned long *num_samples)
   xing_header = GetVbrTag(&pTagData,buf);
   if (xing_header) {
     num_frames=pTagData.frames;
-    fprintf(stderr,"frames  = %i %i \n",num_frames,len);
   }
 
   size=0;

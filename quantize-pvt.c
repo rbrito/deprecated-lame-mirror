@@ -142,7 +142,7 @@ iteration_init( FLOAT8 xr_org[2][2][576],
   convert_psy=0;
   reduce_sidechannel=0;
   if (info->mode_ext==MPG_MD_MS_LR) {
-    if (highq) {
+    if (gf.highq) {
       convert_mdct = 1;
       convert_psy = 0;
       reduce_sidechannel=1;

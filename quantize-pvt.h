@@ -13,12 +13,6 @@ extern int *scalefac_band_short;
 
 
 extern FLOAT8 pow43[PRECALC_SIZE];
-/*
-static FLOAT8 adj43[PRECALC_SIZE];
-static FLOAT8 adj43asm[PRECALC_SIZE];
-extern FLOAT8 ATH_l[SBPSY_l];
-extern FLOAT8 ATH_s[SBPSY_l];
-*/
 
 FLOAT8 ATHformula(FLOAT8 f);
 void compute_ath(layer *info,FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY_l]);
@@ -138,7 +132,6 @@ new_choose_table( int ix[576],
 		  unsigned int begin,
 		  unsigned int end, int * s );
 
-/* New SS 20-12-96 */
 int bin_search_StepSize2(int desired_rate, FLOAT8 start, int ix[576],
            FLOAT8 xrs[576], FLOAT8 xrspow[576], gr_info * cod_info);
 int count_bits(int  *ix, FLOAT8 xr[576], gr_info *cod_info);

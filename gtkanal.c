@@ -74,7 +74,7 @@ int gtkmakeframe()
 
   /* even if iread=0, get_audio hit EOF and returned Buffer=all 0's.  encode
    * and decode to flush any previous buffers from the decoder */
-  if (input_format == sf_mp3) {
+  if (gf.input_format == sf_mp3) {
     iread=lame_readframe(Buffer);
     gf.frameNum++;
   }else {
@@ -623,7 +623,7 @@ void plot_frame(void)
 static void update_progress(void)
 {    
   char label[80];
-  int tf=totalframes;
+  int tf=gf.totalframes;
   if (gtkinfo.totalframes>0) tf=gtkinfo.totalframes;
 
   sprintf(label,"Frame:%4i/%4i  %6.2fs",
@@ -1108,11 +1108,11 @@ int gtkcontrol(void)
 
 
     /* set some global defaults/variables */
-    gtkinfo.filetype = (input_format == sf_mp3);
+    gtkinfo.filetype = (gf.input_format == sf_mp3);
     gtkinfo.msflag=0;
     gtkinfo.chflag=0;
     gtkinfo.kbflag=0;
-    gtkinfo.flag123 = (input_format == sf_mp3); /* MP3 file=use mpg123 output */
+    gtkinfo.flag123 = (gf.input_format == sf_mp3); /* MP3 file=use mpg123 output */
     gtkinfo.pupdate=0;
     gtkinfo.avebits = 0;
     gtkinfo.maxbits = 0;
@@ -1179,7 +1179,7 @@ int gtkcontrol(void)
     gtk_widget_show(framecounter);
     gtk_box_pack_start(GTK_BOX (box2),framecounter, FALSE, TRUE, 0);
 
-    adj = (GtkAdjustment *) gtk_adjustment_new (0, 0,(gint) totalframes-1, 0, 0, 0);
+    adj = (GtkAdjustment *) gtk_adjustment_new (0, 0,(gint) gf.totalframes-1, 0, 0, 0);
     frameprogress = gtk_progress_bar_new_with_adjustment (adj);
     /* Set the format of the string that can be displayed in the
      * trough of the progress bar:

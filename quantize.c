@@ -99,7 +99,8 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 	outer_loop( xr, targ_bits[ch], noise, targ_noise, 0, &l3_xmin,l3_enc, 
 		    fr_ps, scalefac,gr,stereo, l3_side, ratio, ms_ener_ratio[gr],ch);
 	cod_info = &l3_side->gr[gr].ch[ch].tt;
-	if (highq && cod_info->block_type == NORM_TYPE) {
+	best_scalefac_store(gr, ch, l3_side, scalefac);
+	if (gf.highq && cod_info->block_type == NORM_TYPE) {
 	  best_huffman_divide(gr, ch, cod_info, l3_enc[gr][ch]);
 	}
 #ifdef HAVEGTK
@@ -111,6 +112,17 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
     }
   } /* loop over gr */
 
+#if 0
+  /* replace ResvAdjust above with this code if you do not want
+     the second granule to use bits saved by the first granule.
+     when combined with --nores, this is usefull for testing only */
+  for ( gr = 0; gr < mode_gr; gr++ ) {
+    for ( ch =  0; ch < stereo; ch++ ) {
+	cod_info = &l3_side->gr[gr].ch[ch].tt;
+	ResvAdjust( fr_ps, cod_info, l3_side, mean_bits );
+    }
+  }
+#endif
 
 
 
@@ -136,7 +148,7 @@ void set_masking_lower( int nbits )
 	
 #ifdef  RH_masking	
 	/* masking_lower_db varies from -10 to +2.9 db */
-	masking_lower_db = 10 * ( VBR_q/7.0 - 1 );
+	masking_lower_db = 10 * ( gf.VBR_q/7.0 - 1 );
 	
 	/* adjust by -4(min)..0(max) depending on bitrate */
 	/* above 1500 bits we will trust the PSY model */
@@ -144,7 +156,7 @@ void set_masking_lower( int nbits )
 	fac *= reduce_sidechannel ? 0.707 : 1;
 #else
 	/* masking_lower varies from -8 to +10 db */
-	masking_lower_db = -8 + 2*VBR_q;
+	masking_lower_db = -8 + 2*gf.VBR_q;
 	/* adjust by -6(min)..0(max) depending on bitrate */
 	fac = (nbits-125)/(2500.0-125.0);
 	fac = 4*(fac-1);
@@ -197,10 +209,10 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
    * how many bits are available for each bitrate?
    *******************************************************************/
   for( info->bitrate_index = 1;
-       info->bitrate_index <= VBR_max_bitrate;
+       info->bitrate_index <= gf.VBR_max_bitrate;
        info->bitrate_index++    ) {
     getframebits (info, stereo, &bitsPerFrame, &mean_bits);
-    if (info->bitrate_index == VBR_min_bitrate) {
+    if (info->bitrate_index == gf.VBR_min_bitrate) {
       /* always use at least this many bits per granule per channel */
       /* unless we detect analog silence, see below */
       min_mean_bits=mean_bits/stereo;
@@ -209,7 +221,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
       ResvFrameBegin (fr_ps, l3_side, mean_bits, bitsPerFrame);
   }
 
-  info->bitrate_index=VBR_max_bitrate;
+  info->bitrate_index=gf.VBR_max_bitrate;
 
   
   /*******************************************************************
@@ -247,7 +259,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 	min_bits=Min(min_bits,1800);
       }
 
-      max_bits = 1200 + frameBits[VBR_max_bitrate]/(stereo*mode_gr);
+      max_bits = 1200 + frameBits[gf.VBR_max_bitrate]/(stereo*mode_gr);
       max_bits=Min(max_bits,2500);
       max_bits=Max(max_bits,min_bits);
 
@@ -317,8 +329,8 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   /******************************************************************
    * find lowest bitrate able to hold used bits
    ******************************************************************/
-  for( info->bitrate_index =   (analog_silence ? 1 : VBR_min_bitrate );
-       info->bitrate_index < VBR_max_bitrate;
+  for( info->bitrate_index =   (analog_silence ? 1 : gf.VBR_min_bitrate );
+       info->bitrate_index < gf.VBR_max_bitrate;
        info->bitrate_index++    )
     if( used_bits <= frameBits[info->bitrate_index] ) break;
 
@@ -364,6 +376,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   for (gr = 0; gr < mode_gr; gr++)
     for (ch = 0; ch < stereo; ch++) {
       cod_info = &l3_side->gr[gr].ch[ch].tt;
+      best_scalefac_store(gr, ch, l3_side, scalefac);
       if (cod_info->block_type == NORM_TYPE) {
 	best_huffman_divide(gr, ch, cod_info, l3_enc[gr][ch]);
       }
@@ -543,7 +556,7 @@ void outer_loop(
 
   
 
-  if (gf.experimentalY && (sloppy || !VBR)) {
+  if (gf.experimentalY && (sloppy || !gf.VBR)) {
     memcpy(xr_save,xr[gr][ch],sizeof(FLOAT8)*576);
   }   
   cod_info = &l3_side->gr[gr].ch[ch].tt;
@@ -761,7 +774,7 @@ void outer_loop(
     
 
     
-    if (try_scale && gf.experimentalY && (sloppy || !VBR)) {
+    if (try_scale && gf.experimentalY && (sloppy || !gf.VBR)) {
       memcpy(xr[gr][ch],xr_save,sizeof(FLOAT8)*576);   
       init_outer_loop(xr,l3_xmin,scalefac,gr,stereo,l3_side,ratio,ch);  
       compute_stepsize=1;  /* compute a new global gain */

@@ -20,7 +20,7 @@ void filterMDCT( FLOAT8 xr_org[2][2][576],
   scalefac_band_short = &sfBandIndex[info->sampling_frequency + (info->version * 3)].s[0];
 
   /* voice mode disables short blocks */  
-  if (voice_mode) {
+  if (gf.voice_mode) {
     for ( gr = 0; gr < gf.mode_gr; gr++ ) {
       for (ch =0 ; ch < stereo ; ch++) {
 		int start = scalefac_band_long[ SBMAX_l-3 ];
@@ -34,15 +34,15 @@ void filterMDCT( FLOAT8 xr_org[2][2][576],
     }
   }
 
-  if (lowpass1>0) {
+  if (gf.lowpass1>0) {
     FLOAT start,stop;
     for ( gr = 0; gr < gf.mode_gr; gr++ ) {
       for (ch =0 ; ch < stereo ; ch++) {
 	int shortblock = (l3_side->gr[gr].ch[ch].tt.block_type==SHORT_TYPE);
 	if (shortblock) {
 	  int j;
-	  start = lowpass1*192;
-	  stop  = lowpass2*192;
+	  start = gf.lowpass1*192;
+	  stop  = gf.lowpass2*192;
 	  for (j=0; j<3; j++) {
 	    for ( i = ceil(start);  i < 192; i++ ) {
 	      int i0 = 3*i+j; 
@@ -51,8 +51,8 @@ void filterMDCT( FLOAT8 xr_org[2][2][576],
 	    }
 	  }
 	}else{
-	  start = lowpass1*576;
-	  stop  = lowpass2*576;
+	  start = gf.lowpass1*576;
+	  stop  = gf.lowpass2*576;
 	  for ( i = ceil(start) ; i < 576; i++ )
 	    if (i<=stop) xr_org[gr][ch][i] *=  cos((PI/2)*(i-start)/(stop-start));
 	    else xr_org[gr][ch][i]=0;
@@ -60,15 +60,15 @@ void filterMDCT( FLOAT8 xr_org[2][2][576],
       }
     }
   }
-  if (highpass2>0) {
+  if (gf.highpass2>0) {
     FLOAT start,stop;
     for ( gr = 0; gr < gf.mode_gr; gr++ ) {
       for (ch =0 ; ch < stereo ; ch++) {
 	int shortblock = (l3_side->gr[gr].ch[ch].tt.block_type==SHORT_TYPE);
 	if (shortblock) {
 	  int j;
-	  start = highpass1*192;
-	  stop  = highpass2*192;
+	  start = gf.highpass1*192;
+	  stop  = gf.highpass2*192;
 	  for (j=0; j<3; j++) {
 	    for ( i = 0;  i < stop; i++ ) {
 	      int i0 = 3*i+j; 
@@ -77,8 +77,8 @@ void filterMDCT( FLOAT8 xr_org[2][2][576],
 	    }
 	  }
 	}else{
-	  start = highpass1*576;
-	  stop  = highpass2*576;
+	  start = gf.highpass1*576;
+	  stop  = gf.highpass2*576;
 	  for ( i = 0 ; i < stop; i++ )
 	    if (i>=start) xr_org[gr][ch][i] *=  cos((PI/2)*(stop-i)/(stop-start));
 	    else xr_org[gr][ch][i]=0;
@@ -87,7 +87,7 @@ void filterMDCT( FLOAT8 xr_org[2][2][576],
     }
   }
 
-  if (sfb21) {
+  if (gf.sfb21) {
     for ( gr = 0; gr < gf.mode_gr; gr++ ) {
       for (ch =0 ; ch < stereo ; ch++) {
 	int shortblock = (l3_side->gr[gr].ch[ch].tt.block_type==SHORT_TYPE);

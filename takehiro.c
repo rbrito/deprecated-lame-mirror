@@ -548,14 +548,14 @@ static int count_bits_long(int ix[576], gr_info *gi)
 int count_bits(int *ix, FLOAT8 *xr, gr_info *cod_info)  
 {
   int bits=0,i;
-  if (highq) {
+  if (gf.highq) {
     FLOAT8 w = (IXMAX_VAL) * pow(2.0, cod_info->quantizerStepSize * 0.1875);
     for ( i = 0; i < 576; i++ )  {
       if (xr[i] > w)
 	return 100000;
     }
   }
-  if (highq)
+  if (gf.highq)
     quantize_xrpow(xr, ix, cod_info);
   else
     quantize_xrpow_ISO(xr, ix, cod_info);

@@ -10,51 +10,58 @@ typedef enum sound_file_format_e {
 
 /***********************************************************************
 *
-*  we are in the process of moving global flags into this struct
+*  Global Variables.  Substantiated in lame.c
 *
 ***********************************************************************/
-
 typedef struct  {
+  /* general control params */
+  long int frameNum;              /* frame counter */
+  long totalframes;               /* frames: 0..totalframes-1 (estimate)*/
+  int gtkflag;                    /* frame analyzer? */
+  int mode_gr;                    /* granules per frame */
+  int stereo;                     /* number of channels */
+  int bWriteVbrTag;               /* Xing VBR tag? */
+  sound_file_format input_format; 
+  int fast_mode;                  /* fast, very low quaity  */
+  int highq;                      /* use best possible quality */
+  int allow_diff_short;           /* allow blocktypes to differ between channels ? */
+  int no_short_blocks;            /* disable short blocks */
+  int silent;                     /* disable some status output */
+  int voice_mode;
 
-  int allow_diff_short;
-  int ATHonly;
-  int noATH;
-  int autoconvert;
-  FLOAT cwlimit;
-  int disable_reservoir;
-  int experimentalX;
+  /* file i/o */
+  int autoconvert;                /* downsample stereo->mono */
+  int lame_nowrite;               /* disable file writing */
+  int swapbytes;                  /* force byte swapping on input file*/
+
+  /* psycho acoustics */
+  int ATHonly;                    /* only use ATH */
+  int noATH;                      /* disable ATH */
+  FLOAT cwlimit;                  /* predictability limit */
+
+  /* resampling and filtering */
+  FLOAT resample_ratio;           /* input_samp_rate/output_samp_rate */
+  FLOAT lowpass1,lowpass2;
+  FLOAT highpass1,highpass2;
+  int sfb21;
+
+  /* quantization/noise shaping */
+  int disable_reservoir;          /* use bit reservoir? */
+  int experimentalX;            
   int experimentalY;
   int experimentalZ;
-  int fast_mode; 
-  long int frameNum;
-  int gtkflag;
-  int bWriteVbrTag;
-  int mode_gr;
-  int stereo;
+
+  /* VBR control */
+  int VBR;
+  int VBR_q;
+  int VBR_min_bitrate;
+  int VBR_max_bitrate;
+
 } global_flags;
 
 
-/***********************************************************************
-*
-*  Global Variable External Declarations
-*
-***********************************************************************/
 extern global_flags gf;
 
-extern int highq;
-extern sound_file_format input_format;
-extern int lame_nowrite;
-extern FLOAT lowpass1,lowpass2;
-extern FLOAT highpass1,highpass2;
-extern int no_short_blocks;
-extern FLOAT resample_ratio;     /* if > 0, = input_samp/output_samp */
-extern int sfb21;
-extern int silent;
-extern int swapbytes;
-extern long totalframes;       /* frames: 0..totalframes-1 */
-extern int VBR;
-extern int VBR_q;
-extern int VBR_min_bitrate;
-extern int VBR_max_bitrate;
-extern int voice_mode;
+
+
 #endif

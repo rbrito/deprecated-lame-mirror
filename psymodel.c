@@ -5,6 +5,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.21  2000/01/13 02:07:31  markt
+ * moved the rest of the global variables into gf struct
+ *
  * Revision 1.20  2000/01/09 23:10:24  markt
  * moved more globalflags into the gf. struct
  *
@@ -390,7 +393,7 @@ void L3psycho_anal( short int *buffer[2], int stereo,
   
   
   numchn=stereo;
-  if (highq && (info->mode == MPG_MD_JOINT_STEREO)) numchn=4;
+  if (gf.highq && (info->mode == MPG_MD_JOINT_STEREO)) numchn=4;
   for (chn=0; chn<numchn; chn++) {
 
 
@@ -741,7 +744,7 @@ void L3psycho_anal( short int *buffer[2], int stereo,
      * 
      ***************************************************************/
     if (chn<2) {
-      if (no_short_blocks){
+      if (gf.no_short_blocks){
 	uselongblock[chn]=1;
       } else {
 	FLOAT8 mn,mx;
@@ -978,7 +981,7 @@ void L3psycho_anal( short int *buffer[2], int stereo,
   /* 0 = no energy in side channel */
   /* .5 = half of total energy in side channel */
   /*********************************************************************/
-  if (highq) 
+  if (gf.highq) 
     *ms_ener_ratio = ms_ener_ratio_old;
   else
     /* we didn't compute ms_ener_ratios, use the masking ratios instead */

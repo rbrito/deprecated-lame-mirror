@@ -56,7 +56,7 @@ int get_audio(short buffer[2][1152],int stereo, layer* info)
     num_channels= gf.autoconvert ? 2 : 1;
   }
 
-  if (input_format==sf_mp3) {
+  if (gf.input_format==sf_mp3) {
     samples_read=read_samples_mp3(musicin,buffer,num_channels);
   }else{
     samples_read = read_samples_pcm(insamp, num_channels*framesize,num_channels*samples_to_read);
@@ -280,7 +280,7 @@ int GetSndChannels(void)
 
 void CloseSndFile(void)
 {
-  if (input_format==sf_mp3) {
+  if (gf.input_format==sf_mp3) {
 #ifndef AMIGA_MPEGA
     if (fclose(musicin) != 0){
       fprintf(stderr, "Could not close audio input file\n");
@@ -313,7 +313,7 @@ void OpenSndFile(const char* lpszFileName, layer *info,int default_samp,
 int default_channels)
 {
   input_bitrate=0;
-  if (input_format==sf_mp3) {
+  if (gf.input_format==sf_mp3) {
 #ifndef AMIGA_MPEGA
     if ((musicin = fopen(lpszFileName, "rb")) == NULL) {
       fprintf(stderr, "Could not find \"%s\".\n", lpszFileName);
@@ -336,7 +336,7 @@ int default_channels)
 
     /* Try to open the sound file */
     /* set some defaults incase input is raw PCM */
-    gs_wfInfo.seekable=(input_format!=sf_raw);  /* if user specified -r, set to not seekable */
+    gs_wfInfo.seekable=(gf.input_format!=sf_raw);  /* if user specified -r, set to not seekable */
     gs_wfInfo.samplerate=default_samp;
     gs_wfInfo.pcmbitwidth=16;
     gs_wfInfo.channels=default_channels;
@@ -357,7 +357,7 @@ int default_channels)
 
     if ((gs_wfInfo.format==SF_FORMAT_RAW_LE) || 
 	(gs_wfInfo.format==SF_FORMAT_RAW_BE)) 
-      input_format=sf_raw;
+      gf.input_format=sf_raw;
 
 #ifdef _DEBUG_SND_FILE
 	printf("\n\nSF_INFO structure\n");
@@ -517,7 +517,7 @@ int default_channels)
   }
 
   input_bitrate=0;
-  if (input_format==sf_mp3) {
+  if (gf.input_format==sf_mp3) {
 #ifdef AMIGA_MPEGA
     if (-1==lame_decode_initfile(inPath,&num_channels,&samp_freq,&input_bitrate,&num_samples)) {
 #else
@@ -527,15 +527,15 @@ int default_channels)
       exit(1);
     }
   }else{
-    if (input_format != sf_raw) {
+    if (gf.input_format != sf_raw) {
       parse_file_header(musicin);
     }
 
     
-    if (input_format==sf_raw) {
+    if (gf.input_format==sf_raw) {
       /* assume raw PCM */
       fprintf(stderr, "Assuming raw pcm input file");
-      if (swapbytes==TRUE)
+      if (gf.swapbytes==TRUE)
 	fprintf(stderr, " : Forcing byte-swapping\n");
       else
 	fprintf(stderr, "\n");
@@ -560,7 +560,7 @@ int read_samples_pcm(short sample_buffer[2304], int frame_size,int samples_to_re
 {
     int samples_read;
     int rcode;
-    int iswav=(input_format==sf_wave);
+    int iswav=(gf.input_format==sf_wave);
 
     samples_read = fread(sample_buffer, sizeof(short), samples_to_read, musicin);
     if (ferror(musicin)) {
@@ -587,7 +587,7 @@ int read_samples_pcm(short sample_buffer[2304], int frame_size,int samples_to_re
     if (iswav && ( NativeByteOrder == order_bigEndian ))
       SwapBytesInWords( sample_buffer, samples_read );
 
-    if (swapbytes==TRUE)
+    if (gf.swapbytes==TRUE)
       SwapBytesInWords( sample_buffer, samples_read );
 
 
@@ -876,21 +876,21 @@ void parse_file_header(FILE *sf)
 	/* fprintf(stderr,
 		"First word of input stream: %08x '%4.4s'\n", type, (char*) &type); */
 
-	input_format = sf_raw;
+	gf.input_format = sf_raw;
 
 	if (type == WAV_ID_RIFF) {
 		/* It's probably a WAV file */
 		if (parse_wave_header(sf)) {
-			input_format = sf_wave;
+			gf.input_format = sf_wave;
 		}
 
 	} else if (type == IFF_ID_FORM) {
 		/* It's probably an AIFF file */
 		if (parse_aiff_header(sf)) {
-			input_format = sf_aiff;
+			gf.input_format = sf_aiff;
 		}
 	}
-	if (input_format==sf_raw) {
+	if (gf.input_format==sf_raw) {
 	  /*
 	  ** Assume it's raw PCM.	 Since the audio data is assumed to begin
 	  ** at byte zero, this will unfortunately require seeking.
@@ -898,7 +898,7 @@ void parse_file_header(FILE *sf)
 	  if (fseek(sf, 0L, SEEK_SET) != 0) {
 	    /* ignore errors */
 	  }
-	  input_format = sf_raw;
+	  gf.input_format = sf_raw;
 	}
 }
 #endif  /* LIBSNDFILE */
