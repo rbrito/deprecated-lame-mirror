@@ -134,9 +134,9 @@ lame_init_params_ppflt(lame_global_flags * gfp)
 	freq = band / 31.0;
 	gfc->amp_filter[band]
 	    = filter_coef((gfc->highpass2 - freq)
-			  / (gfc->highpass2 - gfc->highpass1))
+			  / (gfc->highpass2 - gfc->highpass1 + 1e-37))
 	    * filter_coef((freq - gfc->lowpass1)
-			  / (gfc->lowpass2 - gfc->lowpass1));
+			  / (gfc->lowpass2 - gfc->lowpass1 + 1e-37));
     }
 }
 
