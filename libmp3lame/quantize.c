@@ -259,8 +259,6 @@ calc_xmin(
 	FLOAT xmin = gfc->ATH.adjust * gfc->ATH.l[gsfb];
 	FLOAT en0 = 0.0, x;
 	int l = gi->width[gsfb];
-	if (l > gi->xrNumMax - j)
-	    l = gi->xrNumMax - j;
 	l >>= 1;
 	do {
 	    en0 += gi->xr[j] * gi->xr[j]; j++;
@@ -336,8 +334,6 @@ calc_noise(
     for (;sfb < gi->psymax; sfb++) {
 	FLOAT noise = 0.0;
 	int l = gi->width[sfb];
-	if (l > gi->xrNumMax - j)
-	    l = gi->xrNumMax - j;
 	l >>= 1;
 	do {
 	    FLOAT t0 = gi->xr[j], t1 = gi->xr[j+1];
@@ -857,8 +853,6 @@ adjust_global_gain(
     do {
 	int width = gi->width[sfb];
 	FLOAT istep;
-	if (width > xend - xp)
-	    width = xend - xp;
 	xp += width;
 	fi += width;
 	if (distort[sfb] > 0.0)
@@ -1669,7 +1663,7 @@ set_pinfo (
     over = j = 0;
     for (sfb2 = 0; sfb2 < gi->psy_lmax; sfb2++) {
 	bw = gi->width[sfb2];
-	end   = j + bw;
+	end = j + bw;
 	for (en0 = 0.0; j < end; j++) 
 	    en0 += gi->xr[j] * gi->xr[j];
 	en0=Max(en0, 1e-20);

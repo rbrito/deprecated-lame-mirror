@@ -212,6 +212,7 @@ init_gr_info(lame_internal_flags *gfc, int gr, int ch)
 	    = gfc->scalefac_band.l[sfb+1] - gfc->scalefac_band.l[sfb];
 	gi->window[sfb] = 3; /* subblockgain[3] is always 0. */
     }
+    gi->width[sfb-1] = gfc->xrNumMax_longblock - gfc->scalefac_band.l[sfb-1];
 
     if (gi->block_type != NORM_TYPE) {
 	gi->region0_count = 7;
