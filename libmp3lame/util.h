@@ -132,13 +132,15 @@ typedef struct {
 } nsPsy_t;
 
 
-/* different amplification modes */
-typedef enum {
-    amp_mode_all = 0, /* the old one, all distorted bands at once */ 
-    amp_mode_low, 
-    amp_mode_mid, 
-    amp_mode_max      /* only maximum distorted band at once */
-} amp_mode_t;
+typedef struct 
+{
+    int sum;    // what we have seen so far
+    int seen;   // how many frames we have seen in this chunk
+    int want;   // how many frames we want to collect into one chunk
+    int pos;    // actual position in our bag
+    int size;   // size of our bag
+    int *bag;   // pointer to our bag
+} VBR_seek_info_t;
 
 
 /* Guest structure, only temporarly here */
@@ -282,8 +284,6 @@ typedef struct  {
   
   int sfb21_extra; /* will be set in lame_init_params */
   
-  amp_mode_t amp_mode; 
-
   int is_mpeg1; /* 1 for MPEG-1, 0 for MPEG-2(.5) */
 
   /* variables used by util.c */
@@ -410,6 +410,8 @@ typedef struct  {
   nsPsy_t nsPsy;  /* variables used for --nspsytune */
   
   unsigned crcvalue;
+  
+  VBR_seek_info_t VBR_seek_table; // used for Xing VBR header
   
   //  lame_global_flags *gfp;  // lame_init_params() should copy all information 
                            // needed from gfp to this structure, so gfp becomes

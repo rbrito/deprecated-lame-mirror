@@ -73,6 +73,72 @@ const int SizeOfEmptyFrame[2][2]=
 	{32,17},
 };
 
+#define RH_SEEK_TABLE
+#ifdef RH_SEEK_TABLE
+/***********************************************************************
+ *  Robert Hegemann 2001-01-17
+ ***********************************************************************/
+
+void addVbr(VBR_seek_info_t * v, int bitrate)
+{
+    int i;
+
+    v->sum += bitrate;
+    v->seen ++;
+    
+    if (v->seen < v->want) {
+        return;
+    }
+
+    if (v->pos < v->size) {
+        v->bag[v->pos] = v->sum;
+        v->pos ++;
+        v->seen = 0;
+    }
+    if (v->pos == v->size) {
+        for (i = 1; i < v->size; i += 2) {
+            v->bag[i/2] = v->bag[i]; 
+        }
+        v->want *= 2;
+        v->pos  /= 2;
+    }
+}
+
+void Xing_seek_table(VBR_seek_info_t * v, unsigned char *t)
+{
+    int i, index;
+    int seek_point;
+    
+    if (v->pos <= 0)
+        return;
+        
+    for (i = 1; i < NUMTOCENTRIES; ++i) {
+        float j = i/(float)NUMTOCENTRIES, act, sum;
+        index = (int)(floor(j * v->pos));
+        if (index > v->pos-1)
+            index = v->pos-1;
+        act = v->bag[index];
+        sum = v->sum;
+        seek_point = (int)(256. * act / sum);
+        if (seek_point > 255)
+            seek_point = 255;
+        t[i] = seek_point;
+    }
+}
+
+#if 0
+void print_seeking(unsigned char *t)
+{
+    int i;
+    
+    printf("seeking table ");
+    for (i = 0; i < NUMTOCENTRIES; ++i) {
+        printf(" %d ", t[i]);
+    }
+    printf("\n");
+}
+#endif
+#endif
 
 
 /****************************************************************************
@@ -84,8 +150,29 @@ const int SizeOfEmptyFrame[2][2]=
 */
 void AddVbrFrame(lame_global_flags *gfp)
 {
-    int nStreamPos;
     lame_internal_flags *gfc = gfp->internal_flags;
+#ifdef RH_SEEK_TABLE
+    int kbps = bitrate_table[gfp->version][gfc->bitrate_index];
+    
+    if (gfc->VBR_seek_table.bag == NULL) {
+        gfc->VBR_seek_table.sum  = 0;
+        gfc->VBR_seek_table.seen = 0;
+        gfc->VBR_seek_table.want = 1;
+        gfc->VBR_seek_table.pos  = 0;
+        gfc->VBR_seek_table.bag  = malloc (400*sizeof(int));
+        if (gfc->VBR_seek_table.bag != NULL) {
+            gfc->VBR_seek_table.size = 400;
+        }
+        else {
+            gfc->VBR_seek_table.size = 0;
+            ERRORF ("Error: can't allocate VbrFrames buffer\n");
+            return;
+        }   
+    }
+    addVbr(&gfc->VBR_seek_table, kbps);
+    gfp->nVbrNumFrames++;
+#else
+    int nStreamPos;
     nStreamPos = (gfc->bs.totbit/8);
 
     /* Simple exponential growing buffer */
@@ -129,6 +216,7 @@ void AddVbrFrame(lame_global_flags *gfp)
     
     /* Store values */
     gfp->pVbrFrames[gfp->nVbrNumFrames++] = nStreamPos;
+#endif
 }
 
 
@@ -378,7 +466,11 @@ int InitVbrTag(lame_global_flags *gfp)
 */
 int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
 {
+#ifdef RH_SEEK_TABLE
+        lame_internal_flags * gfc = gfp->internal_flags;
+#else
 	int			i;
+#endif
 	long lFileSize;
 	int nStreamIndex;
 	char abyte,bbyte;
@@ -388,7 +480,11 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
         unsigned char id3v2Header[10];
         size_t id3v2TagSize;
 
+#ifdef RH_SEEK_TABLE
+        if (gfc->VBR_seek_table.pos <= 0)
+#else
 	if (gfp->nVbrNumFrames==0 || gfp->pVbrFrames==NULL)
+#endif
 		return -1;
 
 
@@ -474,6 +570,10 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
 	/* Clear all TOC entries */
 	memset(btToc,0,sizeof(btToc));
 
+#ifdef RH_SEEK_TABLE
+        Xing_seek_table (&gfc->VBR_seek_table, btToc);
+        /* print_seeking (btToc); */
+#else
         for (i=1;i<NUMTOCENTRIES;i++) /* Don't touch zero point... */
         {
                 /* Calculate frame from given percentage */
@@ -488,7 +588,7 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
                 /* Assign toc entry value */
                 btToc[i]=(u_char) fRelStreamPos;
         }
-
+#endif
 
 
 	/* Start writing the tag after the zero frame */

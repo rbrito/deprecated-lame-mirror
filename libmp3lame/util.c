@@ -67,6 +67,9 @@ void  freegfc ( lame_internal_flags* const gfc )   /* bit stream structure */
         free ( gfc->inbuf_old[1] );
 	gfc->inbuf_old[1] = NULL;
     }
+    if ( gfc->VBR_seek_table.bag ) {
+        free ( gfc->VBR_seek_table.bag );
+    }
     free ( gfc );
 }
 
