@@ -27,6 +27,7 @@
 /* encoding formats */
 
 #define		BE_CONFIG_MP3			0										
+#define		BE_CONFIG_LAME			256		
 
 /* type definitions */
 
@@ -53,13 +54,24 @@ typedef		unsigned long			BE_ERR;
 #define		BE_MP3_MODE_DUALCHANNEL	2
 #define		BE_MP3_MODE_MONO		3
 
+#define		MPEG1	1
+#define		MPEG2	0
+
 #ifdef _BLADEDLL
 #undef FLOAT
 	#include <Windows.h>
 #endif
 
+
+typedef enum 
+{
+	NORMAL_QUALITY=0,
+	LOW_QUALITY,
+	HIGH_QUALITY,
+	VOICE_QUALITY
+} MPEG_QUALITY;
+
 typedef struct	{
-	
 	DWORD	dwConfig;			// BE_CONFIG_XXXXX
 								// Currently only BE_CONFIG_MP3 is supported
 	union	{
@@ -76,6 +88,38 @@ typedef struct	{
 
 			} mp3;					// BE_CONFIG_MP3
 
+			struct
+			{
+			// STRUCTURE INFORMATION
+			DWORD			dwStructVersion;	
+			DWORD			dwStructSize;
+
+			// BASIC ENCODER SETTINGS
+			DWORD			dwSampleRate;	// ALLOWED SAMPLERATE VALUES DEPENDS ON dwMPEGVersion 
+			DWORD			dwReSampleRate;	// DOWNSAMPLERATE, 0=ENCODER DECIDES  
+			INT				nMode;			// BE_MP3_MODE_STEREO, BE_MP3_MODE_DUALCHANNEL, BE_MP3_MODE_MONO
+			DWORD			dwBitrate;		// CBR bitrate, VBR min bitrate
+			DWORD			dwMaxBitrate;	// CBR ignored, VBR Max bitrate
+			MPEG_QUALITY	nQuality;		// Quality setting (NORMAL,HIGH,LOW,VOICE)
+			DWORD			dwMpegVersion;	// MPEG-1 OR MPEG-2
+			DWORD			dwPsyModel;		// FUTURE USE, SET TO 0
+			DWORD			dwEmphasis;		// FUTURE USE, SET TO 0
+
+			// BIT STREAM SETTINGS
+			BOOL			bPrivate;		// Set Private Bit (TRUE/FALSE)
+			BOOL			bCRC;			// Insert CRC (TRUE/FALSE)
+			BOOL			bCopyright;		// Set Copyright Bit (TRUE/FALSE)
+			BOOL			bOriginal;		// Set Original Bit (TRUE/FALSE_
+			
+			// VBR STUFF
+			BOOL			bWriteVBRHeader;	// WRITE XING VBR HEADER (TRUE/FALSE)
+			BOOL			bEnableVBR;			// USE VBR ENCODING (TRUE/FALSE)
+			INT				nVBRQuality;		// VBR QUALITY 0..9
+
+			BYTE			btReserved[255];	// FUTURE USE, SET TO 0
+
+			} LHV1;					// LAME header version 1
+
 		struct	{
 
 			DWORD	dwSampleRate;
@@ -88,6 +132,7 @@ typedef struct	{
 	} format;
 		
 } BE_CONFIG, *PBE_CONFIG;
+
 
 typedef struct	{
 

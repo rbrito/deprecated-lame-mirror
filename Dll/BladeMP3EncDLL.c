@@ -30,12 +30,14 @@
 #include "globalflags.h"
 
 #ifdef _DEBUG
-//	#define _DEBUGDLL 1
+	#define _DEBUGDLL 1
 #endif
 
 
 const int MAJORVERSION=1;
-const int MINORVERSION=03;
+const int MINORVERSION=04;
+const int CURRENT_STRUCT_VERSION=1;
+const int CURRENT_STRUCT_SIZE=sizeof(BE_CONFIG);
 
 static short int InputBuffer[2][1152];
 
@@ -61,6 +63,7 @@ static int			stereo, error_protection;
 extern Bit_stream_struc   bs;
 extern III_side_info_t l3_side;
 extern frame_params fr_ps;
+extern FLOAT resample_ratio;
 
 static void InitParams()
 {
@@ -75,35 +78,66 @@ static void InitParams()
 
 }
 
-#define NORMAL_QUALITY 0
-#define LOW_QUALITY 1
-#define HIGH_QUALITY 2
 
 #define GPL_PSYCHOMODEL 0
 #define ISO_PSYCHOMODEL 1
 
+
+
+#define MAX_ARGV 25
+
 __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples, PDWORD dwBufferSize, PHBE_STREAM phbeStream)
 {
-#define MAX_ARGV 20
+	char		strTmp[255];
+	int			nDllArgC=0;
+	char		DllArgV[20][80];
+	char*		argv[MAX_ARGV];
+	int			i;
+	BE_CONFIG	lameConfig;
+	layer*		pInfo = NULL;
 
-	char	strTmp[255];
-	int		nDllArgC=0;
-	char	DllArgV[20][80];
-	char*	argv[MAX_ARGV];
-	int		i;
-	int		nCRC=pbeConfig->format.mp3.bCRC;
-	int		nVBR;
-	int		nQuality;
-	layer*	pInfo = NULL;
-	fr_ps.header;
 
-	// Get VBR setting from fourth nibble
-	nVBR=(nCRC>>12)&0x0F;
+	// clear out structure
+	memset(&lameConfig,0x00,CURRENT_STRUCT_SIZE);
 
-	// Get Quality from third nibble
-	nQuality=(nCRC>>8)&0x0F;
-	// Get model from lower nibble (to be compatible with standard definition)
-	nCRC=(nCRC&0x01);
+	// Check if this is a regular BLADE_ENCODER header
+	if (pbeConfig->dwConfig!=BE_CONFIG_LAME)
+	{
+		int	nCRC=pbeConfig->format.mp3.bCRC;
+		int nVBR=(nCRC>>12)&0x0F;
+
+		// Copy parameter from old Blade structure
+		lameConfig.format.LHV1.dwSampleRate	=pbeConfig->format.mp3.dwSampleRate;
+		lameConfig.format.LHV1.dwReSampleRate=pbeConfig->format.mp3.dwSampleRate;
+		lameConfig.format.LHV1.nMode		=(pbeConfig->format.mp3.byMode&0x0F);
+		lameConfig.format.LHV1.dwBitrate	=pbeConfig->format.mp3.wBitrate;
+		lameConfig.format.LHV1.bPrivate		=pbeConfig->format.mp3.bPrivate;
+		lameConfig.format.LHV1.bPrivate		=pbeConfig->format.mp3.bPrivate;
+		lameConfig.format.LHV1.bOriginal	=pbeConfig->format.mp3.bOriginal;
+		lameConfig.format.LHV1.bCRC			=nCRC&0x01;
+		lameConfig.format.LHV1.bCopyright	=pbeConfig->format.mp3.bCopyright;
+	
+		// Fill out the unknowns
+		lameConfig.format.LHV1.dwStructSize=CURRENT_STRUCT_VERSION;
+		lameConfig.format.LHV1.dwStructVersion=CURRENT_STRUCT_SIZE;
+
+		// Get VBR setting from fourth nibble
+		if (nVBR>0)
+		{
+			lameConfig.format.LHV1.bWriteVBRHeader=TRUE;
+			lameConfig.format.LHV1.bEnableVBR=TRUE;
+			lameConfig.format.LHV1.nVBRQuality=nVBR-1;
+		}
+
+		// Get Quality from third nibble
+		lameConfig.format.LHV1.nQuality=(MPEG_QUALITY)((nCRC>>8)&0x0F);
+
+	}
+	else
+	{
+		// Copy the parameters
+		memcpy(&lameConfig,pbeConfig,pbeConfig->format.LHV1.dwStructSize);
+	}
 
 	for (i=0;i<MAX_ARGV;i++)
 		argv[i]=DllArgV[i];
@@ -121,27 +155,12 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 	*dwBufferSize=BUFFER_SIZE*2;
 
 
-	// Set number of input samples depending on the number of samples
-	if ((pbeConfig->format.mp3.byMode&0x0F)== BE_MP3_MODE_MONO)
-	{
-		// Mono channel, thus MPEGFRAMSIZE samples needed
-		*dwSamples=1152;
-	}
-	else
-	{
-		// For Stereo.Joint stereo and dual channel, need 2*MPEGFRAMESIZE samples
-		*dwSamples=1152*2;
-	}
-
-	// Set the input sample buffer size, so we know what we can expect
-	dwSampleBufferSize=*dwSamples;
-	
 	// --------------- Set arguments for ParseArg function -------------------------
 
 	// Set zero argument, the filename
 	strcpy(DllArgV[nDllArgC++],"LameDLLEncoder");
 
-  	switch (pbeConfig->format.mp3.byMode)
+  	switch (lameConfig.format.LHV1.nMode)
 	{
 		case BE_MP3_MODE_STEREO:
 			strcpy(DllArgV[nDllArgC++],"-ms");
@@ -158,13 +177,13 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 		default:
 		{
 			char lpszError[255];
-			sprintf(lpszError,"Invalid pbeConfig->format.mp3.byMode, value is %d\n",pbeConfig->format.mp3.byMode);
+			sprintf(lpszError,"Invalid lameConfig.format.LHV1.nMode, value is %d\n",lameConfig.format.LHV1.nMode);
 			OutputDebugString(lpszError);
 			return BE_ERR_INVALID_FORMAT_PARAMETERS;
 		}
 	}
 
-	switch (nQuality)
+	switch (lameConfig.format.LHV1.nQuality)
 	{
 		case NORMAL_QUALITY:	// Nothing special
 		break;
@@ -173,34 +192,51 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 		break;
 		case HIGH_QUALITY:		// -k flag for high qualtiy
 			strcpy(DllArgV[nDllArgC++],"-k");
+		case VOICE_QUALITY:		// --voice flag for high qualtiy
+			strcpy(DllArgV[nDllArgC++],"--voice");
 		break;
 	}
 
-	if (nVBR)
+	if (lameConfig.format.LHV1.bEnableVBR)
 	{
 		// 0=no vbr 1..10 is VBR quality setting -1
 		sprintf(DllArgV[nDllArgC++],"-v");
-		sprintf(DllArgV[nDllArgC++],"-V%d",nVBR-1);
+		sprintf(DllArgV[nDllArgC++],"-V%d",lameConfig.format.LHV1.nVBRQuality);
 	}
 
 	// Set frequency
-	sprintf(strTmp,"-s %f",pbeConfig->format.mp3.dwSampleRate/1000.0);
+	sprintf(strTmp,"-s %f",lameConfig.format.LHV1.dwSampleRate/1000.0);
 	strcpy(DllArgV[nDllArgC++],strTmp);
 
+	// Set frequency resampling rate, if specified
+	if (lameConfig.format.LHV1.dwReSampleRate>0)
+	{
+		strcpy(DllArgV[nDllArgC++],"--resample");
+		sprintf(strTmp,"%f",lameConfig.format.LHV1.dwReSampleRate/1000.0);
+		strcpy(DllArgV[nDllArgC++],strTmp);
+	}
+	
 	// Set bitrate
-	sprintf(strTmp,"-b %d",pbeConfig->format.mp3.wBitrate);
+	sprintf(strTmp,"-b %d",lameConfig.format.LHV1.dwBitrate);
 	strcpy(DllArgV[nDllArgC++],strTmp);
 	
+	// Set Maxbitrate, if specified
+	if (lameConfig.format.LHV1.dwMaxBitrate>0)
+	{
+		sprintf(strTmp,"-B %d",lameConfig.format.LHV1.dwMaxBitrate);
+		strcpy(DllArgV[nDllArgC++],strTmp);
+	}
+
 	// Set copyright flag?
-    if (pbeConfig->format.mp3.bCopyright)
+    if (lameConfig.format.LHV1.bCopyright)
 		strcpy(DllArgV[nDllArgC++],"-c");
 
 	// Do we have to tag  it as non original 
-    if (!pbeConfig->format.mp3.bOriginal)
+    if (!lameConfig.format.LHV1.bOriginal)
 		strcpy(DllArgV[nDllArgC++],"-o");
 
 	// Add CRC?
-    if (nCRC)
+    if (lameConfig.format.LHV1.bCRC)
 		strcpy(DllArgV[nDllArgC++],"-p");
 
 	// Add input filename
@@ -217,7 +253,7 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 	pInfo = fr_ps.header;
 
 	// Set private bit?
-	if (pbeConfig->format.mp3.bPrivate)
+	if (lameConfig.format.LHV1.bPrivate)
 	{
 		pInfo->extension = 0;
 	}
@@ -240,6 +276,19 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 		OutputDebugString(lpszError);
 		return BE_ERR_INVALID_FORMAT_PARAMETERS;
     }
+
+	// Set number of input samples depending on the number of samples
+	*dwSamples=(pInfo->version==MPEG2)?1152:2304;
+
+	*dwSamples=(DWORD)(resample_ratio* *dwSamples);
+	if ((lameConfig.format.LHV1.nMode)== BE_MP3_MODE_MONO)
+	{
+		*dwSamples/=2;
+	}
+
+
+	// Set the input sample buffer size, so we know what we can expect
+	dwSampleBufferSize=*dwSamples;
 
 #ifdef _DEBUGDLL
 	dump_config(&fr_ps,&nPsychoModel,original_file_name,encoded_file_name);
@@ -365,7 +414,7 @@ __declspec(dllexport) BE_ERR	beEncodeChunk(HBE_STREAM hbeStream, DWORD nSamples,
 
 	if (stereo==2)
 	{
-		for (iSampleIndex=0;iSampleIndex<1152;iSampleIndex++)
+		for (iSampleIndex=0;iSampleIndex<nSamples/2;iSampleIndex++)
 		{
 			// Copy new sample data into InputBuffer
 			InputBuffer[0][iSampleIndex]=*pSamples++;
@@ -375,7 +424,7 @@ __declspec(dllexport) BE_ERR	beEncodeChunk(HBE_STREAM hbeStream, DWORD nSamples,
 	else
 	{
 		// Mono, only put it data into buffer[0] (=left channel)
-		for (iSampleIndex=0;iSampleIndex<1152;iSampleIndex++)
+		for (iSampleIndex=0;iSampleIndex<nSamples;iSampleIndex++)
 		{
 			// Copy new sample data into InputBuffer
 			InputBuffer[0][iSampleIndex]=*pSamples++;
@@ -446,21 +495,25 @@ void dump_config( frame_params *fr_ps, int *psy, char *inPath, char *outPath)
 	char strTmp[255];
 extern int VBR;
 extern int VBR_q;
-
+extern int voice_mode;
+extern int force_ms;
 
 	OutputDebugString("Encoding configuration:\n");
 
+
+	sprintf(strTmp,"Write VBR Header=%s\n",(g_bWriteVbrTag)?"Yes":"No");
+	OutputDebugString(strTmp);
 	sprintf(strTmp,"info->version=%d\n",info->version);
 	OutputDebugString(strTmp);
 
 	if(info->mode != MPG_MD_JOINT_STEREO)
 	{
-		sprintf(strTmp,"Layer=%d   mode=%d   extn=%d   psy model=%d\n",info->lay-1,info->mode,info->mode_ext, *psy);
+		sprintf(strTmp,"Layer=%d   mode=%d   extn=%d   psy model=%d\n",info->lay,info->mode,info->mode_ext, *psy);
 		OutputDebugString(strTmp);
 	}
 	else
 	{
-		sprintf(strTmp,"Layer=%d   mode=%d   extn=data dependant   psy model=%d\n",info->lay-1, info->mode, *psy);
+		sprintf(strTmp,"Layer=%d   mode=%d   extn=data dependent   psy model=%d\n",info->lay, info->mode, *psy);
 		OutputDebugString(strTmp);
 	}
 
@@ -488,7 +541,10 @@ extern int VBR_q;
 //	sprintf(strTmp,"input file: '%s'   output file: '%s'\n", inPath, outPath);
 //	OutputDebugString(strTmp);
 
-	sprintf(strTmp,"Encoding as %.1f kHz %d kbps %d MPEG-1 LayerIII file\n",s_freq[info->version][info->sampling_frequency],bitrate[info->version][info->lay-1][info->bitrate_index],info->mode);
+	sprintf(strTmp,"Voice mode %s\n",(voice_mode)?"enabled":"disabled");
+	OutputDebugString(strTmp);
+
+	sprintf(strTmp,"Encoding as %.1f kHz %d kbps %d MPEG-%d LayerIII file\n",s_freq[info->version][info->sampling_frequency],bitrate[info->version][info->lay-1][info->bitrate_index],info->mode,2-info->version);
 	OutputDebugString(strTmp);
 }
 

@@ -26,7 +26,7 @@ CFG=MP3EncDll - Win32 Debug
 # Begin Project
 # PROP Scc_ProjName ""
 # PROP Scc_LocalPath ""
-CPP=cl.exe
+CPP=xicl.exe
 MTL=midl.exe
 RSC=rc.exe
 
@@ -52,7 +52,7 @@ RSC=rc.exe
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=link.exe
+LINK32=xilink.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /machine:I386
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /map /machine:I386 /out:"..\..\lame_enc.dll"
 
@@ -78,7 +78,7 @@ LINK32=link.exe
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=link.exe
+LINK32=xilink.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /out:"..\..\lame_enc.dll" /pdbtype:sept
 # SUBTRACT LINK32 /map
@@ -107,14 +107,6 @@ SOURCE=..\encoder.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\fastmdct.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\fastmdct.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\fft.c
 # End Source File
 # Begin Source File
@@ -123,11 +115,11 @@ SOURCE=..\fft.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\filterbank.c
+SOURCE=..\filters.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\filters.c
+SOURCE=..\filters.h
 # End Source File
 # Begin Source File
 
@@ -163,10 +155,6 @@ SOURCE=..\huffman.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\id3tag.c
-# End Source File
-# Begin Source File
-
 SOURCE=..\ieeefloat.c
 # End Source File
 # Begin Source File
@@ -199,11 +187,11 @@ SOURCE=..\lame.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\loopold.c
+SOURCE=..\newmdct.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\newmdct.c
+SOURCE=..\newmdct.h
 # End Source File
 # Begin Source File
 
@@ -220,10 +208,6 @@ SOURCE=..\psymodel.c
 # Begin Source File
 
 SOURCE=..\psymodel.h
-# End Source File
-# Begin Source File
-
-SOURCE="..\quantize-pvt.c"
 # End Source File
 # Begin Source File
 
