@@ -503,7 +503,14 @@ void amp_scalefac_bands
         }
     }
     if (distort_thresh[0] > 1.0) 
+#ifdef RH_AMP2
+        if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh) 
+            distort_thresh[0] = 1.0;
+        else
+            distort_thresh[0] = pow(distort_thresh[0], 0.50);
+#else
         distort_thresh[0] = 1.0;
+#endif
     else 
         distort_thresh[0] = pow (distort_thresh[0], 1.05); /* 95% */
   
@@ -515,7 +522,14 @@ void amp_scalefac_bands
             }
         }
         if (distort_thresh[i] > 1.0)
+#ifdef RH_AMP2
+            if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh) 
+                distort_thresh[i] = 1.0;
+            else
+                distort_thresh[i] = pow (distort_thresh[i], 0.50);
+#else
             distort_thresh[i] = 1.0;
+#endif
         else
             distort_thresh[i] = pow (distort_thresh[i], 1.05); /* 95% */
     }
@@ -740,7 +754,12 @@ int balance_noise
         status = 0;
     } else {
         if (cod_info->block_type == SHORT_TYPE
-         && gfp->experimentalZ && gfc->noise_shaping > 1) {
+#ifdef RH_SUBBLOCK
+         && gfc->noise_shaping > 0)
+#else
+         && gfp->experimentalZ && gfc->noise_shaping > 1)
+#endif
+        {
             status = inc_subblock_gain (gfc, cod_info, scalefac, xrpow)
                   || loop_break (cod_info, scalefac);
         }
@@ -804,6 +823,9 @@ void outer_loop
     lame_internal_flags *gfc = (lame_internal_flags *)gfp->internal_flags;
 
     int notdone=1;
+#ifdef RH_OUTERLOOP
+    int age = 0;
+#endif
 
     noise_info.over_count = 100;
     noise_info.tot_count  = 100;
@@ -882,13 +904,33 @@ void outer_loop
                     /* store for later reuse */
                     memcpy (save_xrpow, xrpow, sizeof(save_xrpow));
                 }
+#ifdef RH_OUTERLOOP
+                age = 0;
+#endif
             }
+#ifdef RH_OUTERLOOP
+            else
+                age ++;
+#endif
         } /* huffbits >= 0 */
 
 
+#ifdef RH_OUTERLOOP
+        /* allow up to 3 unsuccesful tries in serial, then stop 
+         * if our best quantization so far had no distorted bands. This
+         * gives us more possibilities for different quant_compare modes.
+         * Much more than 3 makes not a big difference, it is only slower.
+         */
+        if (age > 3 && best_noise_info.over_count == 0) {
+            notdone = 0;
+        }
+#else
         /* do early stopping on noise_shaping_stop = 0
          * otherwise stop only if tried to amplify all bands
-         * or after noise_shaping_stop iterations are no distorted bands
+         *
+         * note: there is currently no mode that turns on other
+         *       noise_shaping_stop than 0, so this branch will
+         *       always be executed.          Robert Hegemann 2000-10-24
          */ 
 
         if (gfc->noise_shaping_stop < iteration) {
@@ -906,6 +948,7 @@ void outer_loop
                 notdone = 0;
             }
         }
+#endif
     
         /* Check if the last scalefactor band is distorted.
          * in VBR mode we can't get rid of the distortion, so quit now

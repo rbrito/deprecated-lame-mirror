@@ -94,7 +94,7 @@ CPP_OPTS = $(CPP_OPTS) /DTAKEHIRO_IEEE754_HACK
 #	uncomment the following to enable some alternate code
 #
 CPP_OPTS = $(CPP_OPTS) /DRH_AMP /DRH_VALIDATE_MS
-# CPP_OPTS = $(CPP_OPTS) /DRH_AMP /DRH_VALIDATE_MS
+CPP_OPTS = $(CPP_OPTS) /DRH_AMP2 /DRH_SUBBLOCK /DRH_OUTERLOOP
 #=================================================== Robert's alternate code ==
 
 
