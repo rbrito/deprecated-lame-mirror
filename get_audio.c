@@ -276,7 +276,6 @@ int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip)
     short int   Buffer [2] [1152];
     size_t    iread;
     double      wavsize;
-    int         layer = 1;
     size_t      i;
     void        (*WriteFunction) (FILE* fp, char *p, int n);
 
