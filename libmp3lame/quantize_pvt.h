@@ -72,9 +72,6 @@ int     bin_search_StepSize (lame_internal_flags * const gfc, gr_info * const co
                              const int desired_rate, const int start,
                              const FLOAT8 xrpow[576], int l3enc[576]);
 
-int     inner_loop (lame_internal_flags * const gfc, gr_info * const cod_info, const int max_bits,
-                    const FLOAT8 xrpow[576], int l3enc[576]);
-
 void    iteration_init (lame_global_flags *gfp);
 
 

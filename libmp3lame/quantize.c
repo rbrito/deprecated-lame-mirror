@@ -252,7 +252,7 @@ bin_search_StepSize(
  *
  ***************************************************************************/ 
 
-int 
+static int 
 inner_loop(
           lame_internal_flags * const gfc,
           gr_info * const cod_info,
