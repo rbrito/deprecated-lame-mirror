@@ -27,7 +27,6 @@
 #include "version.h"
 #include "tables.h"
 #include "quantize_pvt.h"
-#include "id3tag.h"
 
 #ifdef __riscos__
 #include "asmstuff.h"
