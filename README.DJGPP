@@ -10,7 +10,7 @@ under the LGPL. More information is in the README file)
 New, 7/00, Christopher Wise <cwise@ses.swin.edu.au>
 
 Makefile.DJGPP is now included with LAME.  If you have
-make.exe and ar.exe (these come with DJGPP?), you
+make.exe and ar.exe (these come with DJGPP), you
 should be able to just run, from the MSDOS prompt
 in the directory with the LAME source code:
 

@@ -1,4 +1,3 @@
-#undef MAXNOISE
 /*
  *	MP3 quantization
  *
@@ -178,12 +177,12 @@ ABR_iteration_loop (lame_global_flags *gfp,
   for(gr = 0; gr < gfc->mode_gr; gr++) {
     for(ch = 0; ch < gfc->stereo; ch++) {
       if (pe[gr][ch]<750) {
-	targ_bits[gr][ch]=(mean_bits/gfc->stereo)*Max(.5,(pe[gr][ch])/750.0);
+	targ_bits[gr][ch]=.95*(mean_bits/gfc->stereo);
       }else{
 	int add_bits=(pe[gr][ch]-750)/1.4;
 	
 	cod_info = &l3_side->gr[gr].ch[ch].tt;
-	targ_bits[gr][ch]=(mean_bits/gfc->stereo);
+	targ_bits[gr][ch]=.95*(mean_bits/gfc->stereo);
 	
 	/* short blocks use a little extra, no matter what the pe */
 	if (cod_info->block_type==SHORT_TYPE) {

@@ -802,12 +802,7 @@ int calc_noise( lame_global_flags *gfp,
 		FLOAT8 temp;
 		temp = fabs(xr[j]) - pow43[ix[j]] * step;
 		++j;
-#ifdef MAXNOISE
-		temp = bw*temp*temp;
-		sum = Max(sum,temp);
-#else
 		sum += temp * temp;
-#endif
 	      }   
 	    }    
 
@@ -865,12 +860,7 @@ int calc_noise( lame_global_flags *gfp,
 	    {
 	      FLOAT8 temp;
 	      temp = fabs(xr[l]) - pow43[ix[l]] * step;
-#ifdef MAXNOISE
-	      temp = bw*temp*temp;
-	      sum = Max(sum,temp);
-#else
 	      sum += temp * temp;
-#endif
 	    }
 	}
 
