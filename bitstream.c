@@ -79,7 +79,7 @@ putbits2(lame_global_flags *gfp, unsigned int val, int j)
     if (j<MAX_LENGTH)
       {
 	if (val >= (1 << j)) {
-	  printf("val=%ui %i \n",val,(1<<j));
+	  DEBUGF("val=%ui %i \n",val,(1<<j));
 	}
       assert(val < (1 << j));  /* 1 << 32 wont work on 32 bit machines */
       }
@@ -121,7 +121,7 @@ drain_into_ancillary(lame_global_flags *gfp,int remainingBits)
     int i,bits;
     assert(remainingBits >= 0);
 #ifdef DEBUG
-    printf("remain %d\n",remainingBits);
+    DEBUGF("remain %d\n",remainingBits);
     hoge += remainingBits;
     hogege += remainingBits;
 #endif
@@ -360,7 +360,7 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 
 	if (gfc->h_ptr == gfc->w_ptr) {
 	  /* yikes! we are out of header buffer space */
-	  fprintf(stderr,"Error: MAX_HEADER_BUF too small in bitstream.c \n");
+	  ERRORF("Error: MAX_HEADER_BUF too small in bitstream.c \n");
 	}
 
     }
@@ -429,7 +429,7 @@ huffman_coder_count1(lame_global_flags *gfp,int *ix, gr_info *gi)
 	bits += h->hlen[p];
     }
 #ifdef DEBUG
-    printf("%ld %d %d %d\n",gfc->bs.totbit -gegebo, gi->count1bits, gi->big_values, gi->count1);
+    DEBUGF("%ld %d %d %d\n",gfc->bs.totbit -gegebo, gi->count1bits, gi->big_values, gi->count1);
 #endif
     return bits;
 }
@@ -645,7 +645,7 @@ writeMainData(lame_global_flags *gfp,
 		}
 		data_bits +=huffman_coder_count1(gfp,l3_enc[gr][ch], gi);
 #ifdef DEBUG
-		printf("<%ld> ", gfc->bs.totbit-hogege);
+		DEBUGF("<%ld> ", gfc->bs.totbit-hogege);
 #endif
 		/* does bitcount in quantize.c agree with actual bit count?*/
 		assert(data_bits==gi->part2_3_length-gi->part2_length);
@@ -740,15 +740,15 @@ flush_bitstream(lame_global_flags *gfp)
     /* if flushbits < 0, this would mean that the buffer looks like:
      * (data...)  last_header  (data...)  (extra data that should not be here...)
      */
-    printf("last header write_timing = %i \n",gfc->header[last_ptr].write_timing);
-    printf("first header write_timing = %i \n",gfc->header[first_ptr].write_timing);
-    printf("bs.totbit:                 %i \n",gfc->bs.totbit);
-    printf("first_ptr, last_ptr        %i %i \n",first_ptr,last_ptr);
-    printf("remaining_headers =        %i \n",remaining_headers);
-    printf("bitsperframe:              %i \n",bitsPerFrame);
-    printf("sidelen:                   %i \n",gfc->sideinfo_len);
+    DEBUGF("last header write_timing = %i \n",gfc->header[last_ptr].write_timing);
+    DEBUGF("first header write_timing = %i \n",gfc->header[first_ptr].write_timing);
+    DEBUGF("bs.totbit:                 %i \n",gfc->bs.totbit);
+    DEBUGF("first_ptr, last_ptr        %i %i \n",first_ptr,last_ptr);
+    DEBUGF("remaining_headers =        %i \n",remaining_headers);
+    DEBUGF("bitsperframe:              %i \n",bitsPerFrame);
+    DEBUGF("sidelen:                   %i \n",gfc->sideinfo_len);
 #endif
-    fprintf(stderr,"strange error flushing buffer ... \n");
+    ERRORF("strange error flushing buffer ... \n");
   } else {
     drain_into_ancillary(gfp,flushbits);
   }
@@ -810,16 +810,25 @@ format_bitstream(lame_global_flags *gfp, int bitsPerFrame,
 
     l3_side->main_data_begin += (bitsPerFrame-bits)/8;
     if ((l3_side->main_data_begin * 8) != gfc->ResvSize ) {
-      fprintf(stderr,"bit reservoir error: \n");
-      fprintf(stderr,"l3_side->main_data_begin: %i \n",8*l3_side->main_data_begin);
-      fprintf(stderr,"Resvoir size:             %i \n",gfc->ResvSize);
-      fprintf(stderr,"resv drain (post)         %i \n",l3_side->resvDrain_post);
-      fprintf(stderr,"resv drain (pre)          %i \n",l3_side->resvDrain_pre);
-      fprintf(stderr,"header and sideinfo:      %i \n",8*gfc->sideinfo_len);
-      fprintf(stderr,"data bits:                %i \n",bits-l3_side->resvDrain_post-8*gfc->sideinfo_len);
-      fprintf(stderr,"total bits:               %i (remainder: %i) \n",bits,bits % 8);
-      fprintf(stderr,"bitsperframe:             %i \n",bitsPerFrame);
+      ERRORF("bit reservoir error: \n"
+             "l3_side->main_data_begin: %i \n"
+             "Resvoir size:             %i \n"
+             "resv drain (post)         %i \n"
+             "resv drain (pre)          %i \n"
+             "header and sideinfo:      %i \n"
+             "data bits:                %i \n"
+             "total bits:               %i (remainder: %i) \n"
+             "bitsperframe:             %i \n",
 
+             8*l3_side->main_data_begin,
+             gfc->ResvSize,
+             l3_side->resvDrain_post,
+             l3_side->resvDrain_pre,
+             8*gfc->sideinfo_len,
+             bits-l3_side->resvDrain_post-8*gfc->sideinfo_len,
+             bits, bits % 8,
+             bitsPerFrame
+      );
 
       gfc->ResvSize = l3_side->main_data_begin*8;
     };

@@ -72,14 +72,14 @@ void brhist_init(lame_global_flags *gfp,int br_min, int br_max)
 #ifndef NOTERMCAP
   if ((termname = getenv("TERM")) == NULL)
     {
-      fprintf(stderr, "can't get TERM environment string.\n");
+      ERRORF("can't get TERM environment string.\n");
       gfp->brhist_disp = 0;
       return;
     }
 
   if (tgetent(term_buff, termname) != 1)
     {
-      fprintf(stderr, "can't find termcap entry: %s\n", termname);
+      ERRORF("can't find termcap entry: %s\n", termname);
       gfp->brhist_disp = 0;
       return;
     }

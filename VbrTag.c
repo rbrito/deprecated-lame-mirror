@@ -212,22 +212,22 @@ int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
 	}
 
 #ifdef DEBUG_VBRTAG
-	printf("\n\n********************* VBR TAG INFO *****************\n");
-	printf("tag         :%s\n",VBRTag);
-	printf("head_flags  :%d\n",head_flags);
-	printf("bytes       :%d\n",pTagData->bytes);
-	printf("frames      :%d\n",pTagData->frames);
-	printf("VBR Scale   :%d\n",pTagData->vbr_scale);
-	printf("toc:\n");
+	DEBUGF("\n\n********************* VBR TAG INFO *****************\n");
+	DEBUGF("tag         :%s\n",VBRTag);
+	DEBUGF("head_flags  :%d\n",head_flags);
+	DEBUGF("bytes       :%d\n",pTagData->bytes);
+	DEBUGF("frames      :%d\n",pTagData->frames);
+	DEBUGF("VBR Scale   :%d\n",pTagData->vbr_scale);
+	DEBUGF("toc:\n");
 	if( pTagData->toc != NULL )
 	{
 		for(i=0;i<NUMTOCENTRIES;i++)
 		{
-			if( (i%10) == 0 ) printf("\n");
-			printf(" %3d", (int)(pTagData->toc[i]));
+			if( (i%10) == 0 ) DEBUGF("\n");
+			DEBUGF(" %3d", (int)(pTagData->toc[i]));
 		}
 	}
-	printf("\n***************** END OF VBR TAG INFO ***************\n");
+	DEBUGF("\n***************** END OF VBR TAG INFO ***************\n");
 #endif
 	return 1;       /* success */
 }
@@ -290,16 +290,16 @@ int InitVbrTag(lame_global_flags *gfp)
 	/* static int framesize[3]={156,144,216}; */ /* 48kbs framesize */
 
 	if (SampIndex>2) {
-	  fprintf(stderr,"illegal sampling frequency index\n");
-	  exit(-1);
+	  ERRORF("illegal sampling frequency index\n");
+	  LAME_ERROR_EXIT();
 	}
 	gfp->TotalFrameSize= framesize[SampIndex];
 	tot = (gfp->nZeroStreamSize+VBRHEADERSIZE);
 	tot += 20;  /* extra 20 bytes for LAME & version string */
 
 	if (gfp->TotalFrameSize < tot ) {
-	  fprintf(stderr,"Xing VBR header problem...use -t\n");
-	  exit(-1);
+	  ERRORF("Xing VBR header problem...use -t\n");
+	  LAME_ERROR_EXIT();
 	}
 	}
 

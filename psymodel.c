@@ -121,7 +121,7 @@ int L3psycho_anal( lame_global_flags *gfp,
     case  8000: samplerate *= 2; break;  /* kludge so mpeg2.5 uses mpeg2 tables  for now */
     case 11025: samplerate *= 2; break;
     case 12000: samplerate *= 2; break;
-    default:    fprintf(stderr,"error, invalid sampling frequency: %d Hz\n",
+    default:    ERRORF("error, invalid sampling frequency: %d Hz\n",
 			gfp->out_samplerate);
     return -1;
     }
@@ -238,7 +238,7 @@ int L3psycho_anal( lame_global_flags *gfp,
       for ( k = gfc->s3ind[b][0]; k <= gfc->s3ind[b][1]; k++ ) {
 	gfc->s3_l[b][k] /=  norm;
       }
-      /*printf("%i  norm=%f  norm_l=%f \n",b,1/norm,norm_l[b]);*/
+      /*DEBUGF("%i  norm=%f  norm_l=%f \n",b,1/norm,norm_l[b]);*/
     }
 
     /* MPEG1 SNR_s data is given in db, convert to energy */
@@ -256,7 +256,7 @@ int L3psycho_anal( lame_global_flags *gfp,
       for ( k = gfc->s3ind_s[b][0]; k <= gfc->s3ind_s[b][1]; k++ ) {
 	gfc->s3_s[b][k] *= SNR_s[b] / norm;
       }
-      /*printf("%i  norm=%f  norm_s=%f \n",b,1/norm,norm_l[b]);*/
+      /*DEBUGF("%i  norm=%f  norm_s=%f \n",b,1/norm,norm_l[b]);*/
     }
     
     init_fft();
@@ -490,7 +490,7 @@ int L3psycho_anal( lame_global_flags *gfp,
 	ave = gfc->energy[j+1]+ gfc->energy[j+2]+ gfc->energy[j+3]+ gfc->energy[j];
 	ave /= 4.;
 	/*
-	  printf("energy / tot %i %5.2f   %e  %e\n",j,ave/(tot*16./3.),
+	  DEBUGF("energy / tot %i %5.2f   %e  %e\n",j,ave/(tot*16./3.),
 	  ave,tot*16./3.);
 	*/
 	gfc->energy[j+1] = gfc->energy[j+2] = gfc->energy[j+3] =  gfc->energy[j]=tot;
@@ -827,7 +827,7 @@ int L3psycho_anal( lame_global_flags *gfp,
       /* thresholds difference in db */
       if (x2 >= 1000*x1)  db=3;
       else db = log10(x2/x1);  
-      /*  printf("db = %f %e %e  \n",db,gfc->thm[0].l[sb],gfc->thm[1].l[sb]);*/
+      /*  DEBUGF("db = %f %e %e  \n",db,gfc->thm[0].l[sb],gfc->thm[1].l[sb]);*/
       sidetot += db;
       tot++;
     }
@@ -888,8 +888,8 @@ int L3psycho_anal( lame_global_flags *gfp,
 	    blocktype[chn] = STOP_TYPE; 
 	    break;
 	  case START_TYPE:
-	    fprintf( stderr, "Error in block selecting\n" );
-	    abort();
+	    ERRORF( "Error in block selecting\n" );
+	    LAME_ERROR_EXIT();
 	    break; /* problem */
 	  }
       } else   {
@@ -982,7 +982,7 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 	      /* bval_l[i] = *p++; */ p++;
 	      if (j!=i)
 		{
-		  fprintf(stderr,"1. please check \"psy_data\"");
+		  ERRORF("1. please check \"psy_data\"");
 		  return -1;
 		}
 	    }
@@ -1012,7 +1012,7 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 	      /* bval_s[i] = *p++ */ p++;
 	      if (j!=i)
 		{
-		  fprintf(stderr,"3. please check \"psy_data\"");
+		  ERRORF("3. please check \"psy_data\"");
 		  return -1;
 		}
 	    }
@@ -1045,15 +1045,15 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 	      w1_l[i] = (FLOAT8) *p++;
 	      w2_l[i] = (FLOAT8) *p++;
 	      if (j!=i)
-		{ fprintf(stderr,"30:please check \"psy_data\"\n");
+		{ ERRORF("30:please check \"psy_data\"\n");
 		return -1;
 		}
 
 	      if (i!=0)
 		if ( (fabs(1.0-w1_l[i]-w2_l[i-1]) > 0.01 ) )
 		  {
-		    fprintf(stderr,"31l: please check \"psy_data.\"\n");
-                  fprintf(stderr,"w1,w2: %f %f \n",w1_l[i],w2_l[i-1]);
+		    ERRORF("31l: please check \"psy_data.\"\n"
+                           "w1,w2: %f %f \n",w1_l[i],w2_l[i-1]);
 		    return -1;
 		  }
 	    }
@@ -1082,15 +1082,15 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 	      w1_s[i] = *p++;
 	      w2_s[i] = *p++;
 	      if (j!=i)
-		{ fprintf(stderr,"30:please check \"psy_data\"\n");
+		{ ERRORF("30:please check \"psy_data\"\n");
 		return -1;
 		}
 
 	      if (i!=0)
 		if ( (fabs(1.0-w1_s[i]-w2_s[i-1]) > 0.01 ) )
 		  { 
-                  fprintf(stderr,"31s: please check \"psy_data.\"\n");
-                  fprintf(stderr,"w1,w2: %f %f \n",w1_s[i],w2_s[i-1]);
+                  ERRORF("31s: please check \"psy_data.\"\n"
+                         "w1,w2: %f %f \n",w1_s[i],w2_s[i-1]);
 		  return -1;
 		  }
 	    }
@@ -1131,7 +1131,7 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
       } while ((bark2 - bark1) < delbark  && j2<=BLKSIZE/2);
 
       /*
-      printf("%i old n=%i  %f old numlines:  %i   new=%i (%i,%i) (%f,%f) \n",
+      DEBUGF("%i old n=%i  %f old numlines:  %i   new=%i (%i,%i) (%f,%f) \n",
 i,*npart_l_orig,freq,numlines_l[i],j2-j,j,j2-1,bark1,bark2);
       */
 
@@ -1157,7 +1157,7 @@ i,*npart_l_orig,freq,numlines_l[i],j2-j,j,j2-1,bark1,bark2);
       i2 = floor(.5 + BLKSIZE*freq2/sfreq);
       if (i2>BLKSIZE/2) i2=BLKSIZE/2;
 
-      printf("old: (%i,%i)  new: (%i,%i) %i %i \n",bu_l[sfb],bo_l[sfb],
+      DEBUGF("old: (%i,%i)  new: (%i,%i) %i %i \n",bu_l[sfb],bo_l[sfb],
 	     partition[i1],partition[i2],i1,i2);
 
       w1_l[sfb]=.5;
@@ -1185,7 +1185,7 @@ i,*npart_l_orig,freq,numlines_l[i],j2-j,j,j2-1,bark1,bark2);
       freq = sfreq*ji/1024000.0;
       bark = .5*(bark + 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5)));
       /*
-      printf("freq=%f bark=%f  del_bark=%f %f \n",freq,bark,bark-bval_l[i-1],24.5/cbmax );
+      DEBUGF("freq=%f bark=%f  del_bark=%f %f \n",freq,bark,bark-bval_l[i-1],24.5/cbmax );
       */
       bval_l[i]=bark;
       j += numlines_l[i];
@@ -1223,7 +1223,7 @@ i,*npart_l_orig,freq,numlines_l[i],j2-j,j,j2-1,bark1,bark2);
 #endif
 	  /*
 	  if ((i==cbmax/2)  && (fabs(bval_l[j] - bval_l[i])) < 3) {
-	    printf("bark=%f   x+tempy = %f  \n",bval_l[j] - bval_l[i],x+tempy);
+	    DEBUGF("bark=%f   x+tempy = %f  \n",bval_l[j] - bval_l[i],x+tempy);
 	  }
 	  */
 
@@ -1261,7 +1261,7 @@ i,*npart_l_orig,freq,numlines_l[i],j2-j,j,j2-1,bark1,bark2);
       } while ((bark2 - bark1) < delbark  && j2<=BLKSIZE_s/2);
 
       /*
-      printf("%i old n=%i  %f old numlines:  %i   new=%i (%i,%i) (%f,%f) \n",
+      DEBUGF("%i old n=%i  %f old numlines:  %i   new=%i (%i,%i) (%f,%f) \n",
 i,*npart_s_orig,freq,numlines_s[i],j2-j,j,j2-1,bark1,bark2);
       */
       for (k=j; k<j2; ++k)
@@ -1286,7 +1286,7 @@ i,*npart_s_orig,freq,numlines_s[i],j2-j,j,j2-1,bark1,bark2);
       i2 = floor(.5 + BLKSIZE_s*freq2/sfreq);
       if (i2>BLKSIZE_s/2) i2=BLKSIZE_s/2;
 
-      printf("old: (%i,%i)  new: (%i,%i) %i %i \n",bu_s[sfb],bo_s[sfb],
+      DEBUGF("old: (%i,%i)  new: (%i,%i) %i %i \n",bu_s[sfb],bo_s[sfb],
 	     partition[i1],partition[i2],i1,i2);
 
       w1_s[sfb]=.5;
@@ -1314,7 +1314,7 @@ i,*npart_s_orig,freq,numlines_s[i],j2-j,j,j2-1,bark1,bark2);
       freq = sfreq*ji/256000.0;
       bark = .5*(bark + 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5)));
       /*
-      printf("%i %i bval_s = %f  %f  numlines=%i  formula=%f \n",i,j,bval_s[i],freq,numlines_s[i],bark);
+      DEBUGF("%i %i bval_s = %f  %f  numlines=%i  formula=%f \n",i,j,bval_s[i],freq,numlines_s[i],bark);
       */
       bval_s[i]=bark;
       j += numlines_s[i];

@@ -617,8 +617,8 @@ VBR_noise_shaping
       cod_info->scalefac_scale = 1;
       cod_info->preflag=1;
     } else {
-      fprintf(stderr,"error vbrquantize.c...\n");
-      exit(1);
+      ERRORF("error vbrquantize.c...\n");
+      LAME_ERROR_EXIT();
     }
 
     
@@ -672,12 +672,12 @@ VBR_noise_shaping
 
 #if 0
     if (gfp->frameNum==29 && ch==0 && gr==0) {
-            printf("not enough bits, decreasing vbrmax. g_gainv=%i\n",cod_info->global_gain);
-            printf("%i %i %i  minbits=%i   part2_3_length=%i  part2=%i\n",
+            DEBUGF("not enough bits, decreasing vbrmax. g_gainv=%i\n",cod_info->global_gain);
+            DEBUGF("%i %i %i  minbits=%i   part2_3_length=%i  part2=%i\n",
         	   gfp->frameNum,gr,ch,minbits,cod_info->part2_3_length,cod_info->part2_length);
 
-	    printf("xr[1] = %e  %e  \n",xr34[1],xr[1]);
-	    if (cod_info->global_gain < 130) exit(-1);
+	    DEBUGF("xr[1] = %e  %e  \n",xr34[1],xr[1]);
+	    if (cod_info->global_gain < 130) LAME_ERROR_EXIT();
     }
 #endif
 
@@ -697,7 +697,7 @@ VBR_noise_shaping
     /* increase global gain, keep exisiting scale factors */
     ++cod_info->global_gain;
     if (cod_info->global_gain > 255) 
-      fprintf(stderr,"%ld impossible to encode this frame! bits=%d\n",
+      ERRORF("%ld impossible to encode this frame! bits=%d\n",
 	      gfp->frameNum,cod_info->part2_3_length);
     VBR_quantize_granule(gfp,xr,xr34,l3_enc,ratio,l3_xmin,scalefac,gr,ch);
     ++global_gain_adjust;
@@ -846,8 +846,8 @@ VBR_quantize(lame_global_flags *gfp,
     bits_ok=1;
     if (totbits>max_frame_bits) {
       qadjust += Max(.25,(totbits-max_frame_bits)/300.0);
-      //      printf("%i totbits>max_frame_bits   totbits=%i  maxbits=%i \n",gfp->frameNum,totbits,max_frame_bits);
-      //      printf("next masking_lower_db = %f \n",masking_lower_db + qadjust);
+      //      DEBUGF("%i totbits>max_frame_bits   totbits=%i  maxbits=%i \n",gfp->frameNum,totbits,max_frame_bits);
+      //      DEBUGF("next masking_lower_db = %f \n",masking_lower_db + qadjust);
       bits_ok=0;
     }
     
@@ -911,7 +911,7 @@ VBR_quantize(lame_global_flags *gfp,
     maxbits = ResvFrameBegin(gfp,l3_side, mean_bits, bitsPerFrame);
   }
 
-  //  printf("%i total_bits=%i max_frame_bits=%i index=%i  \n",gfp->frameNum,totbits,max_frame_bits,gfc->bitrate_index);
+  //  DEBUGF("%i total_bits=%i max_frame_bits=%i index=%i  \n",gfp->frameNum,totbits,max_frame_bits,gfc->bitrate_index);
 
   for (gr = 0; gr < gfc->mode_gr; gr++) {
     for (ch = 0; ch < gfc->stereo; ch++) {

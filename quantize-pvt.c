@@ -274,7 +274,7 @@ void compute_ath(lame_global_flags *gfp,FLOAT8 ATH_l[],FLOAT8 ATH_s[])
     }
 
     /*
-    printf("sfb=%2i freq(khz): %5.2f ..%5.2f  ATH=%6.2f %6.2f  %6.2f   \n",sfb,samp_freq*start/(2*576),
+    DEBUGF("sfb=%2i freq(khz): %5.2f ..%5.2f  ATH=%6.2f %6.2f  %6.2f   \n",sfb,samp_freq*start/(2*576),
 samp_freq*end/(2*576),
 10*log10(ATH_l[sfb]),
 10*log10( ATHformula(gfp,samp_freq*start/(2*576)))  ,
@@ -639,13 +639,13 @@ int scale_bitcount_lsf(III_scalefac_t *scalefac, gr_info *cod_info)
 	    break;
 
 	  default:
-	    fprintf( stderr, "intensity stereo not implemented yet\n" );
+	    ERRORF("intensity stereo not implemented yet\n" );
 	    break;
 	}
     }
 #ifdef DEBUG
     if ( over ) 
-        printf( "---WARNING !! Amplification of some bands over limits\n" );
+        ERRORF( "---WARNING !! Amplification of some bands over limits\n" );
 #endif
     if (!over) {
       assert( cod_info->sfb_partition_table );     
@@ -1074,13 +1074,13 @@ double tot1,tot2;
       tot2 += ratio->en.s[sfb][i];
 
 
-      printf("%i %i sfb=%i mdct=%f fft=%f  fft-mdct=%f db \n",gr,ch,sfb,
+      DEBUGF("%i %i sfb=%i mdct=%f fft=%f  fft-mdct=%f db \n",gr,ch,sfb,
 10*log10(Max(1e-25,ratio->en.s[sfb][i])),
 10*log10(Max(1e-25,en0)),
 10*log10((Max(1e-25,en0)/Max(1e-25,ratio->en.s[sfb][i]))));
 
       if (sfb==SBMAX_s-2) {
-      printf("%i %i toti %f %f ratio=%f db \n",gr,ch,
+      DEBUGF("%i %i toti %f %f ratio=%f db \n",gr,ch,
 10*log10(Max(1e-25,tot2)),
 10*log(Max(1e-25,tot1)),
 10*log10(Max(1e-25,tot1)/(Max(1e-25,tot2))));
@@ -1132,7 +1132,7 @@ average seems to be about -135db.
 	en0 += xr[l] * xr[l];
       en0/=bw;
       /*
-	printf("diff  = %f \n",10*log10(Max(ratio[gr][ch].en.l[sfb],1e-20))
+	DEBUGF("diff  = %f \n",10*log10(Max(ratio[gr][ch].en.l[sfb],1e-20))
 	-(10*log10(en0)+150));
       */
 
@@ -1147,13 +1147,13 @@ double tot1,tot2;
       tot2 += ratio->en.l[sfb];
 
 
-      printf("%i %i sfb=%i mdct=%f fft=%f  fft-mdct=%f db \n",gr,ch,sfb,
+      DEBUGF("%i %i sfb=%i mdct=%f fft=%f  fft-mdct=%f db \n",gr,ch,sfb,
 10*log10(Max(1e-25,ratio->en.l[sfb])),
 10*log10(Max(1e-25,en0)),
 10*log10((Max(1e-25,en0)/Max(1e-25,ratio->en.l[sfb]))));
 
       if (sfb==SBMAX_l-1) {
-      printf("%i %i toti %f %f ratio=%f db \n",gr,ch,
+      DEBUGF("%i %i toti %f %f ratio=%f db \n",gr,ch,
 10*log10(Max(1e-25,tot2)),
 10*log(Max(1e-25,tot1)),
 10*log10(Max(1e-25,tot1)/(Max(1e-25,tot2))));

@@ -79,8 +79,8 @@ int gtkmakeframe(void)
   extern plotting_data *mpg123_pinfo;  
 
 #ifndef HAVEMPGLIB
-  fprintf(stderr,"Error: GTK frame analyzer requires MPGLIB\n");
-  exit(1);
+  ERRORF("Error: GTK frame analyzer requires MPGLIB\n");
+  LAME_ERROR_EXIT();
 #else
   /* even if iread=0, get_audio hit EOF and returned Buffer=all 0's.  encode
    * and decode to flush any previous buffers from the decoder */
@@ -113,7 +113,7 @@ int gtkmakeframe(void)
 	 * is feed data too quickly, it will sometimes encode multiple frames
 	 * breaking this loop.
 	 */
-	fprintf(stderr,"Warning: lame_readframe is returning too much data.\n");
+	MSGF("Warning: lame_readframe is returning too much data.\n");
       }
       mp3count=lame_encode_buffer(gfp,Buffer[0],Buffer[1],iread,
 				  mp3buffer,(int)sizeof(mp3buffer));
@@ -144,9 +144,9 @@ int gtkmakeframe(void)
       }
     }else{
       if (mpglag == MAXMPGLAG) {
-	fprintf(stderr,"READ_AHEAD set too low - not enough frame buffering.\n");
-	fprintf(stderr,"MP3x display of input and output PCM data out of sync.\n");
-	fflush(stderr);
+	ERRORF("READ_AHEAD set too low - not enough frame buffering.\n"
+	       "MP3x display of input and output PCM data out of sync.\n");
+	FLUSH_ERROR();
       }
       else mpglag++; 
       pinfo->frameNum123=-1;  /* no frame output */
@@ -188,7 +188,7 @@ void plot_frame(void)
     }
   }
   if (i > MAXMPGLAG) {
-    fprintf(stderr,"input/output pcm syncing problem.  should not happen!\n");
+    ERRORF("input/output pcm syncing problem.  should not happen!\n");
     pplot2=pplot-1;
   }
 
@@ -1445,7 +1445,7 @@ int gtkcontrol(lame_global_flags *gfp2)
     idle_count=0;                 /* pause & plot when idle_count=idle_count_max */
 
     gtk_main ();
-    if (!mp3done) exit(2);
+    if (!mp3done) LAME_FATAL_EXIT();
     return(0);
 }
 
