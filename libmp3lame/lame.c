@@ -29,6 +29,9 @@
 #include "quantize_pvt.h"
 #include "VbrTag.h"
 
+#ifdef __FreeBSD__
+#include <floatingpoint.h>
+#endif
 #ifdef __riscos__
 #include "asmstuff.h"
 #endif
@@ -1120,7 +1123,6 @@ int lame_init_old(lame_global_flags *gfp)
    *  Disable floating point exepctions
    */
 #ifdef __FreeBSD__
-# include <floatingpoint.h>
   {
   /* seet floating point mask to the Linux default */
   fp_except_t mask;
@@ -1173,7 +1175,7 @@ int lame_init_old(lame_global_flags *gfp)
     mask &= ~(_EM_UNDERFLOW | _EM_OVERFLOW | _EM_ZERODIVIDE | _EM_INVALID);
     _FPU_SETCW(mask);
   }
-# elif (defined(__linux__) || defined(__FreeBSD__))
+# elif defined(__linux__)
   {
 #  include <fpu_control.h>
 #  ifndef _FPU_GETCW

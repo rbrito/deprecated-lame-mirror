@@ -4,17 +4,8 @@
 # processed by ./configure to produce Makefile
 #
 #
-# these variables are available on command line:
-#
-#   make UNAME=xxxxx ARCH=xxxxx   - specify a type of host
-#   make PGM=lame_exp             - specify a name of an executable file
-#
-#
 SHELL = @SHELL@
 @SET_MAKE@
-
-UNAME = $(shell uname)
-ARCH = $(shell uname -m)
 
 prefix = @prefix@
 exec_prefix = @exec_prefix@
@@ -62,8 +53,6 @@ lib_sources = \
 	mpglib_interface.c \
         version.c
 
-lib_obj = $(lib_sources:.c=.o) 
-
 mpglib_sources = ../mpglib/common.c \
         ../mpglib/dct64_i386.c \
         ../mpglib/decode_i386.c \
@@ -73,9 +62,9 @@ mpglib_sources = ../mpglib/common.c \
         ../mpglib/tabinit.c \
         ../mpglib/interface.c 
 mpglib_obj = $(mpglib_sources:.c=.o) 
+lib_obj = $(lib_sources:.c=.o) 
 
 all_sources = $(lib_sources) @LIB_SOURCES@
-
 lib_obj = $(all_sources:.c=.o)
 
 DEP = $(all_sources:.c=.d)

@@ -8,6 +8,8 @@
 SHELL = @SHELL@
 @SET_MAKE@
 
+.PHONY: mp3x
+
 all:  
 	cd libmp3lame; $(MAKE)
 	cd frontend; $(MAKE)
