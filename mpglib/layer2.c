@@ -67,6 +67,9 @@ void II_step_one(unsigned int *bit_alloc,int *scale,struct frame *fr)
     int sblimit = fr->II_sblimit;
     int jsbound = fr->jsbound;
     int sblimit2 = fr->II_sblimit<<stereo;
+#ifndef __cplusplus    
+	struct
+#endif
     al_table *alloc1 = fr->alloc;
     int i;
     static unsigned int scfsi_buf[64];
@@ -140,6 +143,9 @@ void II_step_two(unsigned int *bit_alloc,real fraction[2][4][SBLIMIT],int *scale
     int channels = fr->channels;
     int sblimit = fr->II_sblimit;
     int jsbound = fr->jsbound;
+#ifndef __cplusplus    
+	struct
+#endif
     al_table *alloc2,*alloc1 = fr->alloc;
     unsigned int *bita=bit_alloc;
     int d1,step;
@@ -240,7 +246,11 @@ static void II_select_table(struct frame *fr)
        { 0,3,3,0,0,0,1,1,1,1,1,1,1,1,1,0 } } };
 
   int table,sblim;
-  static al_table *tables[5] =
+  static
+#ifndef __cplusplus    
+	struct
+#endif
+	al_table *tables[5] =
        { alloc_0, alloc_1, alloc_2, alloc_3 , alloc_4 };
   static int sblims[5] = { 27 , 30 , 8, 12 , 30 };
 

@@ -112,7 +112,7 @@ static unsigned int get1bit(void)
   wordpointer += (bitindex>>3);
   bitindex &= 7;
 
-  return rval>>7;
+  return (unsigned int)rval>>7;
 }
 
 
@@ -1552,7 +1552,7 @@ int do_layer3_sideinfo(struct frame *fr)
       databits += gr_infos->part2_3_length;
     }
   }
-  return databits-8*sideinfo.main_data_begin;
+  return (int)((databits-8)*sideinfo.main_data_begin);
 }
 
 

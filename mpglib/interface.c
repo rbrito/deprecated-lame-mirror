@@ -110,7 +110,7 @@ static void remove_buf(struct mpstr *mp)
 
 }
 
-static int read_buf_byte(struct mpstr *mp)
+static unsigned int read_buf_byte(struct mpstr *mp)
 {
 	unsigned int b;
 

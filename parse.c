@@ -948,8 +948,6 @@ void lame_parse_args ( lame_global_flags* gfp, int argc, char** argv )
     }
     
     /* if user did not explicitly specify input is mp3, check file name */
-    fprintf ( stderr, "\nBuuuuuuuuuuuuug???!!!!\n" );
-    // Check also for possible bug in mpg123/layer1.c
     
     if ( gfp -> input_format != sf_mp1  || 
 	 gfp -> input_format != sf_mp2  ||
