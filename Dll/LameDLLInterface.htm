@@ -24,14 +24,14 @@ DLL interface<br>
 which is copyrighted by Tord Jansson and Jukka Poikolainen<br>
 This document and the DLL interface may be distributed freely</i>
 <br>
-<i>as long as no modifications are made to neither one of them.</i>
+<i>as long as modifications are released under the LGPL license.</i>
 </p>
 
 <p align="center">&nbsp; </p>
 
 <p align="center"><b>Homepage</b>: <a
 href="http://www.cdex.n3.net">http://www.cdex.n3.net</a><br>
-<b>E-mail:</b> mailto: <a href="mailto:cdex@softwarecenter.net">cdex@softwarecenter.net</a>
+<b>E-mail:</b> mailto: <a href="mailto:afaber@users.sourceforge.net">afaber@users.sourceforge.net</a>
 </p>
 
 <p><br>
@@ -44,8 +44,8 @@ href="http://www.cdex.n3.net">http://www.cdex.n3.net</a><br>
 
 <p>People and companies&nbsp; who wants to distribute
 lame_enc.dll with their commercial products are free to do so as
-far as I'm concerned, but should be aware that lame_enc.dll might
-infringe certain MP3 related software patents held by Fraunhofer
+far as I'm concerned (LGPL license), but should be aware that lame_enc.dll 
+might infringe certain MP3 related software patents held by Fraunhofer
 IIS in certain countries. </p>
 
 <p><br>
@@ -181,7 +181,7 @@ compiler, which has the following type definitions:</p>
 </table>
 
 <p>Within the lame_enc.dll All the structure elements are one
-byte alligned (due to backwards compatibility wiht BladEnc.DLL!</p>
+byte alligned (due to backwards compatibility with BladEnc.DLL!</p>
 
 <p>&nbsp;</p>
 
@@ -664,9 +664,9 @@ need to fill in before you call beInitStream(): <br>
 
 <h1><a name="Lame_enc.dll debug option">Lame_enc.dll debug option</a></h1>
 
-<p>The lame_enc.dll has a built-in debug options, that dumps all
+<p>The lame_enc.dll has a built-in debug option, that dumps all
 the important internal settings to a text file. To enable this
-feature, create a text file in the Windwos directory which is
+feature, create a text file in the Windows directory which is
 named lame_enc.ini, and should contain the following two lines</p>
 
 <p>[debug]<br>
