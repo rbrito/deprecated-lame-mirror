@@ -222,6 +222,7 @@ typedef struct  {
   FLOAT8 masking_lower;
   FLOAT8 ATH_lower;
 
+  char bv_scf[576-2];
 
   /* variables used by util.c */
 #define BLACKSIZE 30

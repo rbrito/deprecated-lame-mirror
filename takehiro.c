@@ -344,23 +344,11 @@ int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
       a2 = gi->big_values;
 
     }else if (gi->block_type == NORM_TYPE) {
-	int index;
-	int scfb_anz = 0;
+	a1 = gi->region0_count = gfc->bv_scf[i-2];
+	a2 = gi->region1_count = gfc->bv_scf[i-1];
 
-	while (gfc->scalefac_band.l[++scfb_anz] < i) 
-	    ;
-	index = subdv_table[scfb_anz].region0_count;
-	while (gfc->scalefac_band.l[index + 1] > i)
-	    index--;
-	gi->region0_count = index;
-
-	index = subdv_table[scfb_anz].region1_count;
-	while (gfc->scalefac_band.l[index + gi->region0_count + 2] > i)
-	    index--;
-	gi->region1_count = index;
-
-	a1 = gfc->scalefac_band.l[gi->region0_count + 1];
-	a2 = gfc->scalefac_band.l[index + gi->region0_count + 2];
+	a2 = gfc->scalefac_band.l[a1 + a2 + 2];
+	a1 = gfc->scalefac_band.l[a1 + 1];
 	if (a2 < i)
 	  gi->table_select[2] = choose_table(ix + a2, ix + i, &bits);
 
@@ -705,8 +693,229 @@ void best_scalefac_store(lame_global_flags *gfp,int gr, int ch,
     gi->part2_3_length += gi->part2_length;
 }
 
-void huffman_init()
+static const int slen1_tab[16] = { 0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4 };
+static const int slen2_tab[16] = { 0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3 };
+
+static const int slen1[16] = { 1, 1, 1, 1, 8, 2, 2, 2, 4, 4, 4, 8, 8, 8,16,16 };
+static const int slen2[16] = { 1, 2, 4, 8, 1, 2, 4, 8, 2, 4, 8, 2, 4, 8, 4, 8 };
+
+/* number of bits used to encode scalefacs */
+static int scale_short[16];
+static int scale_long[16];
+static int scale_mixed[16];
+
+/*************************************************************************/
+/*            scale_bitcount                                             */
+/*************************************************************************/
+
+/* Also calculates the number of bits necessary to code the scalefactors. */
+
+int scale_bitcount( III_scalefac_t *scalefac, gr_info *cod_info)
 {
+    int i, k, sfb, max_slen1 = 0, max_slen2 = 0, /*a, b, */ ep = 2;
+
+    /* maximum values */
+    const int *tab;
+
+
+    if ( cod_info->block_type == SHORT_TYPE ) {
+	tab = scale_short;
+	/* a = 18; b = 18;  */
+	for ( i = 0; i < 3; i++ )
+	{
+	    for ( sfb = 0; sfb < 6; sfb++ )
+		if (scalefac->s[sfb][i] > max_slen1 )
+		    max_slen1 = scalefac->s[sfb][i];
+	    for (sfb = 6; sfb < SBPSY_s; sfb++ )
+		if ( scalefac->s[sfb][i] > max_slen2 )
+		    max_slen2 = scalefac->s[sfb][i];
+	}
+    }
+    else
+    { /* block_type == 1,2,or 3 */
+        tab = scale_long;
+        /* a = 11; b = 10;   */
+        for ( sfb = 0; sfb < 11; sfb++ )
+            if ( scalefac->l[sfb] > max_slen1 )
+                max_slen1 = scalefac->l[sfb];
+
+	if (!cod_info->preflag) {
+	    for ( sfb = 11; sfb < SBPSY_l; sfb++ )
+		if (scalefac->l[sfb] < pretab[sfb])
+		    break;
+
+	    if (sfb == SBPSY_l) {
+		cod_info->preflag = 1;
+		for ( sfb = 11; sfb < SBPSY_l; sfb++ )
+		    scalefac->l[sfb] -= pretab[sfb];
+	    }
+	}
+
+        for ( sfb = 11; sfb < SBPSY_l; sfb++ )
+            if ( scalefac->l[sfb] > max_slen2 )
+                max_slen2 = scalefac->l[sfb];
+    }
+
+
+
+    /* from Takehiro TOMINAGA <tominaga@isoternet.org> 10/99
+     * loop over *all* posible values of scalefac_compress to find the
+     * one which uses the smallest number of bits.  ISO would stop
+     * at first valid index */
+    cod_info->part2_length = LARGE_BITS;
+    for ( k = 0; k < 16; k++ )
+    {
+        if ( (max_slen1 < slen1[k]) && (max_slen2 < slen2[k]) &&
+             ((int)cod_info->part2_length > tab[k])) {
+	  cod_info->part2_length=tab[k];
+	  cod_info->scalefac_compress=k;
+	  ep=0;  /* we found a suitable scalefac_compress */
+	}
+    }
+    return ep;
+}
+
+
+
+/*
+  table of largest scalefactor values for MPEG2
+*/
+static const unsigned int max_range_sfac_tab[6][4] =
+{
+ { 15, 15, 7,  7},
+ { 15, 15, 7,  0},
+ { 7,  3,  0,  0},
+ { 15, 31, 31, 0},
+ { 7,  7,  7,  0},
+ { 3,  3,  0,  0}
+};
+
+
+
+
+
+/*************************************************************************/
+/*            scale_bitcount_lsf                                         */
+/*************************************************************************/
+
+/* Also counts the number of bits to encode the scalefacs but for MPEG 2 */ 
+/* Lower sampling frequencies  (24, 22.05 and 16 kHz.)                   */
+ 
+/*  This is reverse-engineered from section 2.4.3.2 of the MPEG2 IS,     */
+/* "Audio Decoding Layer III"                                            */
+
+int scale_bitcount_lsf(III_scalefac_t *scalefac, gr_info *cod_info)
+{
+    int table_number, row_in_table, partition, nr_sfb, window, over;
+    int i, sfb, max_sfac[ 4 ];
+    unsigned int *partition_table;
+
+    /*
+      Set partition table. Note that should try to use table one,
+      but do not yet...
+    */
+    if ( cod_info->preflag )
+	table_number = 2;
+    else
+	table_number = 0;
+
+    for ( i = 0; i < 4; i++ )
+	max_sfac[i] = 0;
+
+    if ( cod_info->block_type == SHORT_TYPE )
+    {
+	    row_in_table = 1;
+	    partition_table = &nr_of_sfb_block[table_number][row_in_table][0];
+	    for ( sfb = 0, partition = 0; partition < 4; partition++ )
+	    {
+		nr_sfb = partition_table[ partition ] / 3;
+		for ( i = 0; i < nr_sfb; i++, sfb++ )
+		    for ( window = 0; window < 3; window++ )
+			if ( scalefac->s[sfb][window] > max_sfac[partition] )
+			    max_sfac[partition] = scalefac->s[sfb][window];
+	    }
+    }
+    else
+    {
+	row_in_table = 0;
+	partition_table = &nr_of_sfb_block[table_number][row_in_table][0];
+	for ( sfb = 0, partition = 0; partition < 4; partition++ )
+	{
+	    nr_sfb = partition_table[ partition ];
+	    for ( i = 0; i < nr_sfb; i++, sfb++ )
+		if ( scalefac->l[sfb] > max_sfac[partition] )
+		    max_sfac[partition] = scalefac->l[sfb];
+	}
+    }
+
+    for ( over = 0, partition = 0; partition < 4; partition++ )
+    {
+	if ( max_sfac[partition] > (int)max_range_sfac_tab[table_number][partition] )
+	    over++;
+    }
+    if ( !over )
+    {
+	/*
+	  Since no bands have been over-amplified, we can set scalefac_compress
+	  and slen[] for the formatter
+	*/
+	static const int log2tab[] = { 0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4 };
+
+	unsigned int slen1, slen2, slen3, slen4;
+
+        cod_info->sfb_partition_table = &nr_of_sfb_block[table_number][row_in_table][0];
+	for ( partition = 0; partition < 4; partition++ )
+	    cod_info->slen[partition] = log2tab[max_sfac[partition]];
+
+	/* set scalefac_compress */
+	slen1 = cod_info->slen[ 0 ];
+	slen2 = cod_info->slen[ 1 ];
+	slen3 = cod_info->slen[ 2 ];
+	slen4 = cod_info->slen[ 3 ];
+
+	switch ( table_number )
+	{
+	  case 0:
+	    cod_info->scalefac_compress = (((slen1 * 5) + slen2) << 4)
+		+ (slen3 << 2)
+		+ slen4;
+	    break;
+
+	  case 1:
+	    cod_info->scalefac_compress = 400
+		+ (((slen1 * 5) + slen2) << 2)
+		+ slen3;
+	    break;
+
+	  case 2:
+	    cod_info->scalefac_compress = 500 + (slen1 * 3) + slen2;
+	    break;
+
+	  default:
+	    ERRORF("intensity stereo not implemented yet\n" );
+	    break;
+	}
+    }
+#ifdef DEBUG
+    if ( over ) 
+        ERRORF( "---WARNING !! Amplification of some bands over limits\n" );
+#endif
+    if (!over) {
+      assert( cod_info->sfb_partition_table );     
+      cod_info->part2_length=0;
+      for ( partition = 0; partition < 4; partition++ )
+	cod_info->part2_length += cod_info->slen[partition] * cod_info->sfb_partition_table[partition];
+    }
+    return over;
+}
+
+
+
+
+
+void huffman_init(lame_global_flags *gfp)
+{
+    lame_internal_flags *gfc=gfp->internal_flags;
     int i;
 
     for (i = 0; i < 16*16; i++) {
@@ -767,4 +976,31 @@ void huffman_init()
 	    ((int64)ht[t2].xlen << 16) + ((int64)ht[t2].xlen);
     }
 #endif
+    for (i = 0; i < 16; i++) {
+	scale_short[i] = slen1_tab[i] * 18 + slen2_tab[i] * 18;
+	scale_mixed[i] = slen1_tab[i] * 17 + slen2_tab[i] * 18;
+	scale_long [i] = slen1_tab[i] * 11 + slen2_tab[i] * 10;
+    }
+
+    for (i = 2; i < 576; i += 2) {
+	int scfb_anz = 0, index;
+	while (gfc->scalefac_band.l[++scfb_anz] < i)
+	    ;
+
+	index = subdv_table[scfb_anz].region0_count;
+	while (gfc->scalefac_band.l[index + 1] > i)
+	    index--;
+	if (index < 0) {
+	    index = 0;
+	}
+	gfc->bv_scf[i-2] = index;
+
+	index = subdv_table[scfb_anz].region1_count;
+	while (gfc->scalefac_band.l[index + gfc->bv_scf[i-2] + 2] > i)
+	    index--;
+	if (index < 0) {
+	    index = 0;
+	}
+	gfc->bv_scf[i-1] = index;
+    }
 }
