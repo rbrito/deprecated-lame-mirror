@@ -179,11 +179,11 @@ typedef struct
 typedef struct {
     FLOAT	l[SBMAX_l];
     FLOAT	s[SBMAX_s][3];
-} III_psy_xmin;
+} III_psy;
 
 typedef struct {
-    III_psy_xmin thm;
-    III_psy_xmin en;
+    III_psy thm;
+    III_psy en;
     FLOAT	pe;
     int	ath_over;
 } III_psy_ratio;
