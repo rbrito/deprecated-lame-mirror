@@ -146,11 +146,11 @@ static FLOAT athAdjust( FLOAT a, FLOAT x, FLOAT athFloor )
     FLOAT u = FAST_LOG10_X(x, 10.0); 
     FLOAT v = a*a;
     FLOAT w = 0.0;
-    u -= athFloor;                                  // undo scaling
+    u -= athFloor;                                  /* undo scaling */
     if ( v > 1E-20 ) w = 1. + FAST_LOG10_X(v, 10.0 / o);
     if ( w < 0  )    w = 0.; 
     u *= w; 
-    u += athFloor + o-p;                            // redo scaling
+    u += athFloor + o-p;                            /* redo scaling */
 #undef o
 #undef p
     return db2pow(u);
@@ -274,13 +274,13 @@ calc_noise(
 
 	noise = FAST_LOG10(Max(noise,1E-20));
 	/* multiplying here is adding in dB, but can overflow */
-	//tot_noise *= Max(noise, 1E-20);
+	/* tot_noise *= Max(noise, 1E-20); */
 	tot_noise_db += noise;
 
 	if (noise > 0.0) {
 	    over++;
 	    /* multiplying here is adding in dB -but can overflow */
-	    //over_noise *= noise;
+	    /* over_noise *= noise; */
 	    over_noise_db += noise;
 	}
 	max_noise=Max(max_noise,noise);
@@ -520,14 +520,6 @@ trancate_smallspectrums(
 	if (trancateThreshold == 0.0)
 	    continue;
 
-//	printf("%e %e %e\n",
-//	       trancateThreshold/l3_xmin[sfb],
-//	       trancateThreshold/(l3_xmin[sfb]*start),
-//	       trancateThreshold/(l3_xmin[sfb]*(start+width))
-//	    );
-//	if (trancateThreshold > 1000*l3_xmin[sfb]*start)
-//	    trancateThreshold = 1000*l3_xmin[sfb]*start;
-
 	do {
 	    if (fabs(gi->xr[j - width]) <= trancateThreshold)
 		gi->l3_enc[j - width] = 0;
@@ -678,7 +670,8 @@ static void
 amp_scalefac_bands(
     lame_internal_flags *gfc,
     gr_info  *const cod_info, 
-    FLOAT *distort )
+    FLOAT *distort,
+    int method )
 {
     int sfb;
     FLOAT trigger;
@@ -690,7 +683,7 @@ amp_scalefac_bands(
 	    trigger = distort[sfb];
     }
 
-    switch (gfc->noise_shaping_amp) {
+    switch (method) {
     case 2:
 	/* amplify exactly 1 band */
 	break;
@@ -840,14 +833,10 @@ inc_subblock_gain (
 inline static int 
 balance_noise (
     lame_internal_flags *const gfc,
-    gr_info        * const cod_info,
-    FLOAT         * distort
+    gr_info        * const cod_info
     )
 {
     int status;
-    
-    amp_scalefac_bands ( gfc, cod_info, distort);
-
     /* check to make sure we have not amplified too much 
      * loop_break returns 0 if there is an unamplified scalefac
      * scale_bitcount returns 0 if no scalefactors are too large
@@ -865,7 +854,7 @@ balance_noise (
 
     if (!status)
 	return 1; /* amplified some bands not exceeding limits */
-    
+
     /*  some scalefactors are too large. */
     if (gfc->use_subblock_gain && cod_info->block_type == SHORT_TYPE) {
 	/* try to use subblcok gain */
@@ -912,9 +901,8 @@ outer_loop (
     lame_internal_flags *gfc=gfp->internal_flags;
     calc_noise_result best_noise_info;
     gr_info cod_info_w;
-    FLOAT distort[SFBMAX], l3_xmin[SFBMAX];
-    FLOAT xrpow[576];
-    int huff_bits;
+    FLOAT distort[SFBMAX], l3_xmin[SFBMAX], xrpow[576];
+    int huff_bits, current_method, age;
 
     if (!init_outer_loop(gfc, cod_info, xrpow))
 	return; /* digital silence */
@@ -934,58 +922,62 @@ outer_loop (
     /* coefficients and thresholds both l/r (or both mid/side) */
     calc_xmin (gfp, ratio, cod_info, l3_xmin);
     calc_noise (cod_info, l3_xmin, distort, &best_noise_info);
-    cod_info_w = *cod_info;
+    if (gfc->noise_shaping_stop == 0 && best_noise_info.over_count == 0)
+	goto quit_quantization;
 
     /* BEGIN MAIN LOOP */
-    do {
-	/******************************************************************/
-	/* stopping criterion */
-	/******************************************************************/
-	/* if no bands with distortion, we are done */
-	if (gfc->noise_shaping_stop == 0 && best_noise_info.over_count == 0)
-	    break;
-
-	/* Check if the last scalefactor band is distorted.
-	 * (makes a 10% speed increase, the files I tested were
-	 * binary identical, 2000/05/20 Robert Hegemann)
-	 * distort[] > 1 means noise > allowed noise
-	 */
-	if (cod_info_w.psy_lmax == SBMAX_l && distort[SBMAX_l-1] > 1.0)
-	    break;
-
+    cod_info_w = *cod_info;
+    current_method = 0;
+    age = 3;
+    for (;;) {
 	/* try the new scalefactor conbination on cod_info_w */
-	if (balance_noise (gfc, &cod_info_w, distort) == 0)
+	amp_scalefac_bands ( gfc, &cod_info_w, distort, current_method);
+	if (balance_noise (gfc, &cod_info_w)
+	    && (huff_bits = targ_bits - cod_info_w.part2_length) > 0) {
+
+	    /* adjust global_gain to fit the available bits */
+	    while (count_bits(gfc, xrpow, &cod_info_w) > huff_bits
+		   && ++cod_info_w.global_gain < 256u)
+		;
+	    /* store this scalefactor combination if it is better */
+	    if (cod_info_w.global_gain != 256
+		&& better_quant(gfc, l3_xmin, distort, &best_noise_info,
+				&cod_info_w)) {
+		*cod_info = cod_info_w;
+		/* if no bands with distortion, we are done */
+		if (gfc->noise_shaping_stop == 0
+		    && best_noise_info.over_count == 0)
+		    break;
+		age = (current_method*3+2) * ((gfc->substep_shaping & 2) + 1);
+		continue;
+	    }
+	} else
+	    age = 0;
+
+	/* stopping criteria */
+	if (--age > 0 && cod_info_w.global_gain != 256
+	    /* Check if the last scalefactor band is distorted.
+	     * (makes a 10% speed increase, the files I tested were
+	     * binary identical, 2000/05/20 Robert Hegemann)
+	     * distort[] > 1 means noise > allowed noise
+	     */
+	    && !(cod_info_w.psy_lmax == SBMAX_l && distort[SBMAX_l-1] > 1.0))
+	    continue;
+
+	/* seems we cannot get a better combination.
+	   restart from the best with more finer noise_amp method */
+	if (current_method == gfc->noise_shaping_amp)
 	    break;
-
-        huff_bits = targ_bits - cod_info_w.part2_length;
-	if (huff_bits <= 0)
-            break;
-
-        /* this loop starts with the initial quantization step computed above
-         * and slowly increases until the bits < huff_bits.
-         * Thus it is important not to start with too large of an inital
-         * quantization step.  Too small is ok, but the loop will take longer
-         */
-	while (count_bits(gfc, xrpow, &cod_info_w) > huff_bits
-	       && ++cod_info_w.global_gain < 256u)
-	    ;
-	if (cod_info_w.global_gain == 256)
-	    break;
-
-        /* save data so we can restore this quantization later,
-	 * if the newer scalefactor combination is better
-	 */
-        /* compute the distortion in this quantization and
-	   compare it with "BEST" result */
-	if (better_quant(gfc, l3_xmin, distort, &best_noise_info, &cod_info_w))
-	    *cod_info = cod_info_w;
+	current_method++;
+	cod_info_w = *cod_info;
+	age = (current_method*3+2) * ((gfc->substep_shaping & 2) + 1);
     }
-    while (cod_info_w.global_gain <= 255u);
 
     assert (cod_info->global_gain < 256);
 
     /*  do the 'substep shaping'
      */
+ quit_quantization:
     if (gfc->substep_shaping & 1)
 	trancate_smallspectrums(gfc, cod_info, l3_xmin, xrpow);
 }
