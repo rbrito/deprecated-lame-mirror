@@ -1022,6 +1022,11 @@ lame_init_params(lame_global_flags * const gfp)
         if (gfp->quality < 0)
             gfp->quality = 1;
         
+        /*  tonality
+         */
+        if (gfp->cwlimit <= 0)
+            gfp->cwlimit = 0.454*gfp->out_samplerate;
+        
         /*  fall through
          */
              
