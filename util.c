@@ -344,16 +344,16 @@ int N)                  /* number of bits of val */
 INLINE double blackman(int i,double offset,double fcn,int l)
 {
   double bkwn;
-  double wcn = (M_PI * fcn);
+  double wcn = (PI * fcn);
   double dly = l / 2.0;
   double x = i-offset;
   if (x<0) x=0;
   if (x>l) x=l;
-  bkwn = 0.42 - 0.5 * cos((x * 2) * M_PI /l)
-    + 0.08 * cos((x * 4) * M_PI /l);
-  if (fabs(x-dly)<1e-9) return wcn/M_PI;
+  bkwn = 0.42 - 0.5 * cos((x * 2) * PI /l)
+    + 0.08 * cos((x * 4) * PI /l);
+  if (fabs(x-dly)<1e-9) return wcn/PI;
   else 
-    return  (sin( (wcn *  ( x - dly))) / (M_PI * ( x - dly)) * bkwn );
+    return  (sin( (wcn *  ( x - dly))) / (PI * ( x - dly)) * bkwn );
 }
 
 int fill_buffer_downsample(lame_global_flags *gfp,short int *outbuf,int desired_len,
