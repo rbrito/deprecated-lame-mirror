@@ -921,20 +921,20 @@ void quantize_xrpow(FLOAT8 xp[576], int pi[576], gr_info *cod_info)
 
     fi = pi;
     for (j = 576 / 4 - 1; j >= 0; --j) {
-	double x0 = istep * xp[0] + MAGIC_FLOAT;
-	double x1 = istep * xp[1] + MAGIC_FLOAT;
-	double x2 = istep * xp[2] + MAGIC_FLOAT;
-	double x3 = istep * xp[3] + MAGIC_FLOAT;
+	double x0 = istep * xp[0];
+	double x1 = istep * xp[1];
+	double x2 = istep * xp[2];
+	double x3 = istep * xp[3];
 
-	fi[0].f = x0;
-	fi[1].f = x1;
-	fi[2].f = x2;
-	fi[3].f = x3;
+	x0 += MAGIC_FLOAT; fi[0].f = x0;
+	x1 += MAGIC_FLOAT; fi[1].f = x1;
+	x2 += MAGIC_FLOAT; fi[2].f = x2;
+	x3 += MAGIC_FLOAT; fi[3].f = x3;
 
-	fi[0].f = (x0 + (adj43asm - MAGIC_INT)[pi[0]]);
-	fi[1].f = (x1 + (adj43asm - MAGIC_INT)[pi[1]]);
-	fi[2].f = (x2 + (adj43asm - MAGIC_INT)[pi[2]]);
-	fi[3].f = (x3 + (adj43asm - MAGIC_INT)[pi[3]]);
+	fi[0].f = x0 + (adj43asm - MAGIC_INT)[fi[0].i];
+	fi[1].f = x1 + (adj43asm - MAGIC_INT)[fi[1].i];
+	fi[2].f = x2 + (adj43asm - MAGIC_INT)[fi[2].i];
+	fi[3].f = x3 + (adj43asm - MAGIC_INT)[fi[3].i];
 
 	fi[0].i -= MAGIC_INT;
 	fi[1].i -= MAGIC_INT;
@@ -958,10 +958,10 @@ void quantize_xrpow_ISO(FLOAT8 xp[576], int pi[576], gr_info *cod_info)
 
     fi = pi;
     for (j=576/4 - 1;j>=0;j--) {
-	fi[0].f = (istep * xp[0]) + (ROUNDFAC + MAGIC_FLOAT);
-	fi[1].f = (istep * xp[1]) + (ROUNDFAC + MAGIC_FLOAT);
-	fi[2].f = (istep * xp[2]) + (ROUNDFAC + MAGIC_FLOAT);
-	fi[3].f = (istep * xp[3]) + (ROUNDFAC + MAGIC_FLOAT);
+	fi[0].f = istep * xp[0] + (ROUNDFAC + MAGIC_FLOAT);
+	fi[1].f = istep * xp[1] + (ROUNDFAC + MAGIC_FLOAT);
+	fi[2].f = istep * xp[2] + (ROUNDFAC + MAGIC_FLOAT);
+	fi[3].f = istep * xp[3] + (ROUNDFAC + MAGIC_FLOAT);
 
 	fi[0].i -= MAGIC_INT;
 	fi[1].i -= MAGIC_INT;
