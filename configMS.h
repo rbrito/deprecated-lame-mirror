@@ -41,7 +41,7 @@
 #define PACKAGE "lame"
 
 /* Version number of package */
-#define VERSION "3.92"
+#define VERSION "3.94"
 
 /* Define if compiler has function prototypes */
 #define PROTOTYPES 1
