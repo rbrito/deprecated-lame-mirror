@@ -52,7 +52,6 @@ char *strchr (), *strrchr ();
 #endif
 
 #include "lame.h"
-#include "set_get.h"
 
 #include "brhist.h"
 #include "parse.h"
@@ -65,12 +64,13 @@ char *strchr (), *strrchr ();
 #endif
 
 #if (defined DEBUG) || (defined _DEBUG)
-#define INTERNAL_OPTS 1
+# define INTERNAL_OPTS 1
 #else
-#define INTERNAL_OPTS LAME_ALPHA_VERSION
+# define INTERNAL_OPTS LAME_ALPHA_VERSION
 #endif
 
 #if INTERNAL_OPTS
+# include "set_get.h"
 int experimentalX = 0;
 int experimentalY = 0;
 int experimentalZ = 0;
