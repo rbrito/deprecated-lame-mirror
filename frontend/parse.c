@@ -404,7 +404,6 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --scale <arg>   scale input (multiply PCM data) by <arg>\n"
 	      "    --scale-l <arg> scale channel 0 (left) input (multiply PCM data) by <arg>\n"
               "    --scale-r <arg> scale channel 1 (right) input (multiply PCM data) by <arg>\n"
-              "    --replaygain    perform ReplayGain analysis and store the result in LAME Tag\n"
 #ifdef DECODE_ON_THE_FLY
               "    --replaygain-accurate  slightly more accurate and much slower ReplayGain\n"
               "    --clipdetect    determine whether clipping occurs and display an appropriate\n"
@@ -1232,9 +1231,6 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 
                 T_ELIF ("freeformat")
                     lame_set_free_format(gfp,1);
-
-                T_ELIF ("replaygain")
-                    lame_set_ReplayGain_input(gfp,1);
 
 #ifdef DECODE_ON_THE_FLY
                 T_ELIF ("replaygain-accurate")

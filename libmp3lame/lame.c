@@ -2092,7 +2092,7 @@ lame_init_old(lame_global_flags * gfp)
 #endif
 
     gfc->findReplayGain = 0;
-    gfp->ReplayGain_input = 0;
+    gfp->ReplayGain_input = 1;
 #ifdef DECODE_ON_THE_FLY
     gfp->ReplayGain_decode = 0;
 #endif

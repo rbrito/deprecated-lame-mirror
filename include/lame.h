@@ -26,6 +26,11 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+
+#ifdef HAVE_MPGLIB
+#define DECODE_ON_THE_FLY
+#endif
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
