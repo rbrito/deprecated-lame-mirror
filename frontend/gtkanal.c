@@ -556,22 +556,24 @@ void plot_frame(void)
 
     /* draw some hash marks showing scalefactor bands */
     if (gtkinfo.sfblines) {
-      int fac,nsfb, *scalefac;
-      if (blocktype[gr][ch]==SHORT_TYPE) {
-	nsfb=SBMAX_s;
-	fac=3;
-	scalefac = gfc->scalefac_band.s;
-      }else{
-	nsfb=SBMAX_l;
-	fac=1;
-	scalefac = gfc->scalefac_band.l;
-      }
-      for (i=nsfb-7 ; i<nsfb; i++) {
-	ycord[0] = .8*ymx;  ycord[1] = ymn;
-	xcord[0] = fac*scalefac[i];
-	xcord[1] = xcord[0];
-	gpk_rectangle_draw(mdctbox[gr],xcord,ycord,xmn,ymn,xmx,ymx,&yellow);
-      }
+        int fac,nsfb, *scalefac;
+            if (blocktype[gr][ch]==SHORT_TYPE) {
+            nsfb=SBMAX_s;
+            i = nsfb-7;
+            fac=3;
+            scalefac = gfc->scalefac_band.s;
+        }else{
+            nsfb=SBMAX_l;
+            i = nsfb-10;
+            fac=1;
+            scalefac = gfc->scalefac_band.l;
+        }
+        for ( ; i<nsfb; i++) {
+            ycord[0] = .8*ymx;  ycord[1] = ymn;
+            xcord[0] = fac*scalefac[i];
+            xcord[1] = xcord[0];
+            gpk_rectangle_draw(mdctbox[gr],xcord,ycord,xmn,ymn,xmx,ymx,&yellow);
+        }
     }   
 
 
