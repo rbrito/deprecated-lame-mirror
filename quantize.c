@@ -65,6 +65,7 @@ iteration_loop( lame_global_flags *gfp,
 
 
 
+
   for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
     int targ_bits[2];
 
@@ -661,8 +662,8 @@ void outer_loop(
     }
 
     /* if no bands with distortion, we are done */
-    if (gfc->noise_shaping_stop==0)
-      if (over==0) notdone=0;
+    if (gfc->noise_shaping_stop==0 && over==0)
+      notdone=0;
 
     if (notdone) {
 	amp_scalefac_bands( gfp, xrpow, cod_info, &scalefac_w, distort);
@@ -675,12 +676,20 @@ void outer_loop(
 	    }else{
 		status = scale_bitcount_lsf(&scalefac_w, cod_info);
 	    }
-	    if (status && gfp->experimentalZ && !cod_info->scalefac_scale) {
-		inc_scalefac_scale(gfp, &scalefac_w, cod_info, xrpow);
-		if ( gfp->version == 1 ) {
-		    status = scale_bitcount(&scalefac_w, cod_info);
-		}else{
-		    status = scale_bitcount_lsf(&scalefac_w, cod_info);
+	    if (status) {
+		if (!cod_info->scalefac_scale) {
+		    inc_scalefac_scale(gfp, &scalefac_w, cod_info, xrpow);
+		    status = 0;
+		} else if (cod_info->block_type == SHORT_TYPE && gfp->experimentalZ) {
+		    inc_subblock_gain(gfp, &scalefac_w, cod_info, xrpow);
+		    status = loop_break(&scalefac_w, cod_info);
+		}
+		if (!status) {
+		    if ( gfp->version == 1 ) {
+			status = scale_bitcount(&scalefac_w, cod_info);
+		    }else{
+			status = scale_bitcount_lsf(&scalefac_w, cod_info);
+		    }
 		}
 	    }
 	}
@@ -817,14 +826,18 @@ void inc_scalefac_scale(lame_global_flags *gfp,
     const FLOAT8 ifqstep34 = 1.29683955465100964055;
 
     for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
-	if (scalefac->l[sfb] & 1) {
-	    scalefac->l[sfb]++;
+	int s = scalefac->l[sfb];
+	if (cod_info->preflag)
+	    s += pretab[sfb];
+	if (s & 1) {
+	    s++;
 	    start = gfc->scalefac_band.l[sfb];
 	    end   = gfc->scalefac_band.l[sfb+1];
 	    for ( l = start; l < end; l++ )
 		xrpow[l] *= ifqstep34;
 	}
-	scalefac->l[sfb] >>= 1;
+	scalefac->l[sfb] = s >> 1;
+	cod_info->preflag = 0;
     }
 
     for ( i = 0; i < 3; i++ ) {
@@ -840,6 +853,49 @@ void inc_scalefac_scale(lame_global_flags *gfp,
 	}
     }
     cod_info->scalefac_scale = 1;
+}
+
+void inc_subblock_gain(lame_global_flags *gfp,
+		       III_scalefac_t *scalefac,
+		       gr_info *cod_info,
+		       FLOAT8 xrpow[576])
+{
+    int start, end, l,i;
+    int	sfb;
+    lame_internal_flags *gfc=gfp->internal_flags;
+
+    for ( i = 0; i < 3; i++ ) {
+	if (cod_info->subblock_gain[i] >= 7)
+	    continue;
+
+	for ( sfb = cod_info->sfb_smax; sfb < 12; sfb++ ) {
+	    if (scalefac->s[sfb][i] >= 8) {
+		break;
+	    }
+	}
+	if (sfb == 12)
+	    continue;
+
+	for ( sfb = cod_info->sfb_smax; sfb < 12; sfb++ ) {
+	    if (scalefac->s[sfb][i] >= 2) {
+		scalefac->s[sfb][i] -= 2;
+	    } else {
+		FLOAT8 amp = pow(2.0, 0.75*(2 - scalefac->s[sfb][i]));
+		scalefac->s[sfb][i] = 0;
+		start = gfc->scalefac_band.s[sfb];
+		end   = gfc->scalefac_band.s[sfb+1];
+		for (l = start; l < end; l++)
+		    xrpow[l * 3 + i] *= amp;
+	    }
+	}
+	{
+	    FLOAT8 amp = pow(2.0, 0.75*2);
+	    start = gfc->scalefac_band.s[sfb];
+	    for (l = start; l < 192; l++)
+		xrpow[l * 3 + i] *= amp;
+	}
+	cod_info->subblock_gain[i]++;
+    }
 }
 
 int quant_compare(int experimentalX,

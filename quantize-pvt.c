@@ -892,7 +892,7 @@ int loop_break( III_scalefac_t *scalefac, gr_info *cod_info)
 
     for ( sfb = cod_info->sfb_smax; sfb < SBPSY_s; sfb++ )
       for ( i = 0; i < 3; i++ ) 
-            if ( scalefac->s[sfb][i] == 0 )
+            if ( scalefac->s[sfb][i]+cod_info->subblock_gain[i] == 0 )
 		return 0;
 
     return 1;

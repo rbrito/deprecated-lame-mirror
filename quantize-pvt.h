@@ -111,6 +111,11 @@ void inc_scalefac_scale(lame_global_flags *gfp,
 			gr_info *cod_info,
 			FLOAT8 xrpow[576]);
 
+void inc_subblock_gain(lame_global_flags *gfp,
+		       III_scalefac_t *scalefac,
+		       gr_info *cod_info,
+		       FLOAT8 xrpow[576]);
+
 
 int init_outer_loop(
     lame_global_flags *gfp,
