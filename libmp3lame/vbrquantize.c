@@ -48,37 +48,6 @@ typedef union {
 
 #ifdef TAKEHIRO_IEEE754_HACK
 
-#define DUFFBLOCKMQ() do { \
-        xp = xr34[index] * sfpow34_p1; \
-        xe = xr34[index] * sfpow34_eq; \
-        xm = xr34[index] * sfpow34_m1; \
-        if (xm > IXMAX_VAL)  \
-            return -1; \
-        xp += MAGIC_FLOAT; \
-        xe += MAGIC_FLOAT; \
-        xm += MAGIC_FLOAT; \
-        fi[0].f = xp; \
-        fi[1].f = xe; \
-        fi[2].f = xm; \
-        fi[0].f = xp + (adj43asm - MAGIC_INT)[fi[0].i]; \
-        fi[1].f = xe + (adj43asm - MAGIC_INT)[fi[1].i]; \
-        fi[2].f = xm + (adj43asm - MAGIC_INT)[fi[2].i]; \
-        fi[0].i -= MAGIC_INT; \
-        fi[1].i -= MAGIC_INT; \
-        fi[2].i -= MAGIC_INT; \
-        x0 = fabs(xr[index]); \
-        xp = x0 - pow43[fi[0].i] * sfpow_p1; \
-        xe = x0 - pow43[fi[1].i] * sfpow_eq; \
-        xm = x0 - pow43[fi[2].i] * sfpow_m1; \
-        xp *= xp; \
-        xe *= xe; \
-        xm *= xm; \
-        xfsf_eq = Max(xfsf_eq, xe); \
-        xfsf_p1 = Max(xfsf_p1, xp); \
-        xfsf_m1 = Max(xfsf_m1, xm); \
-        ++index; \
-    } while(0)
-
 #define DUFFBLOCK() do { \
         xp = xr34[index] * sfpow34_p1; \
         xe = xr34[index] * sfpow34_eq; \
@@ -106,7 +75,6 @@ typedef union {
         xfsf_m1 += xm * xm; \
         ++index; \
     } while(0)
-
 #else
 
 /*********************************************************************
@@ -178,17 +146,16 @@ calc_sfb_noise(const FLOAT8 * xr, const FLOAT8 * xr34, unsigned int bw, int sf)
     sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
 
     for (j = 0; j < bw; ++j) {
-        if (xr34[j] * sfpow34 > IXMAX_VAL)
+        temp = sfpow34 * xr34[j];
+        if (temp > IXMAX_VAL)
             return -1;
 
 #ifdef TAKEHIRO_IEEE754_HACK
-        temp = sfpow34 * xr34[j];
         temp += MAGIC_FLOAT;
         fi.f = temp;
         fi.f = temp + (adj43asm - MAGIC_INT)[fi.i];
         fi.i -= MAGIC_INT;
 #else
-        temp = xr34[j] * sfpow34;
         XRPOW_FTOI(temp, fi.i);
         XRPOW_FTOI(temp + QUANTFAC(fi.i), fi.i);
 #endif
@@ -203,28 +170,27 @@ calc_sfb_noise(const FLOAT8 * xr, const FLOAT8 * xr34, unsigned int bw, int sf)
 
 
 static  FLOAT8
-calc_sfb_noise_mq(const FLOAT8 * xr, const FLOAT8 * xr34, int bw, int sf, int mq, FLOAT8 * scratch)
+calc_sfb_noise_mq(const FLOAT8 * xr, const FLOAT8 * xr34, int bw, int sf, int mq)
 {
     int     j, k;
     fi_union fi;
-    FLOAT8  temp;
+    FLOAT8  temp, scratch[192];
     FLOAT8  sfpow, sfpow34, xfsfm = 0, xfsf = 0;
 
     sfpow = POW20(sf);  /*pow(2.0,sf/4.0); */
     sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
 
     for (j = 0; j < bw; ++j) {
-        if (xr34[j] * sfpow34 > IXMAX_VAL)
+        temp = xr34[j] * sfpow34;
+        if (temp > IXMAX_VAL)
             return -1;
 
 #ifdef TAKEHIRO_IEEE754_HACK
-        temp = sfpow34 * xr34[j];
         temp += MAGIC_FLOAT;
         fi.f = temp;
         fi.f = temp + (adj43asm - MAGIC_INT)[fi.i];
         fi.i -= MAGIC_INT;
 #else
-        temp = xr34[j] * sfpow34;
         XRPOW_FTOI(temp, fi.i);
         XRPOW_FTOI(temp + QUANTFAC(fi.i), fi.i);
 #endif
@@ -338,7 +304,8 @@ calc_sfb_noise_ave(const FLOAT8 * xr, const FLOAT8 * xr34, int bw, int sf)
 
 
 inline int
-find_scalefac(const FLOAT8 * xr, const FLOAT8 * xr34, FLOAT8 l3_xmin, int bw)
+find_scalefac(
+    const FLOAT8 * xr, const FLOAT8 * xr34, FLOAT8 l3_xmin, int bw)
 {
     FLOAT8  xfsf;
     int     i, sf, sf_ok, delsf;
@@ -376,8 +343,8 @@ find_scalefac(const FLOAT8 * xr, const FLOAT8 * xr34, FLOAT8 l3_xmin, int bw)
 }
 
 inline int
-find_scalefac_mq(const FLOAT8 * xr, const FLOAT8 * xr34, FLOAT8 l3_xmin, int bw, int mq,
-                 FLOAT8 * scratch)
+find_scalefac_mq(const FLOAT8 * xr, const FLOAT8 * xr34, FLOAT8 l3_xmin,
+		 int bw, int mq)
 {
     FLOAT8  xfsf;
     int     i, sf, sf_ok, delsf;
@@ -389,7 +356,7 @@ find_scalefac_mq(const FLOAT8 * xr, const FLOAT8 * xr34, FLOAT8 l3_xmin, int bw,
     sf_ok = 10000;
     for (i = 0; i < 7; ++i) {
         delsf /= 2;
-        xfsf = calc_sfb_noise_mq(xr, xr34, bw, sf, mq, scratch);
+        xfsf = calc_sfb_noise_mq(xr, xr34, bw, sf, mq);
 
         if (xfsf < 0) {
             /* scalefactors too small */
@@ -415,7 +382,8 @@ find_scalefac_mq(const FLOAT8 * xr, const FLOAT8 * xr34, FLOAT8 l3_xmin, int bw,
 }
 
 inline int
-find_scalefac_ave(const FLOAT8 * xr, const FLOAT8 * xr34, FLOAT8 l3_xmin, int bw)
+find_scalefac_ave(
+    const FLOAT8 * xr, const FLOAT8 * xr34, FLOAT8 l3_xmin, int bw)
 {
     FLOAT8  xfsf;
     int     i, sf, sf_ok, delsf;
@@ -651,7 +619,7 @@ compute_scalefacs_long(int *sf, const gr_info * cod_info, int *scalefac)
  *  Robert Hegemann 2000-10-25 made functions of it
  *
  ***********************************************************************/
-static const int MAX_SF_DELTA = 4;
+#define MAX_SF_DELTA 4
 
 /* a variation for vbr-mtrh */
 static void
@@ -660,52 +628,44 @@ block_sf(const lame_internal_flags * gfc, const FLOAT8 * l3_xmin,
 {
     int     sfb, j;
     int     scalefac_criteria;
-    static int const map[] = { 2, 1, 0, 3, 6 };
 
     if (gfc->presetTune.use) {
         /* map experimentalX settings to internal selections */
-        scalefac_criteria = map[gfc->presetTune.quantcomp_current];
+        scalefac_criteria = gfc->presetTune.quantcomp_current;
     }
     else {
-        scalefac_criteria = map[gfc->VBR->quality];
+        scalefac_criteria = gfc->VBR->quality;
     }
 
     j = 0;
     for (sfb = 0; sfb < gi->psymax; sfb++) {
         const int width = gi->width[sfb];
         switch (scalefac_criteria) {
-        default:
-            /*  the fastest
-             */
-            vbrsf[sfb] =
-                calc_scalefac(l3_xmin[sfb], width, gfc->presetTune.quantcomp_adjust_mtrh);
-            break;
-        case 5:
-        case 4:
-        case 3:
-            /*  the faster and sloppier mode to use at lower quality
-             */
-            vbrsf[sfb] = find_scalefac(&gi->xr[j], &xr34_orig[j], l3_xmin[sfb], width);
-            break;
-        case 2:
+        case 0:
             /*  the slower and better mode to use at higher quality
              */
             vbrsf[sfb] =
                 find_scalefac_ave(&gi->xr[j], &xr34_orig[j], l3_xmin[sfb], width);
             break;
         case 1:
+        case 2:
             /*  maxnoise mode to use at higher quality
              */
-            vbrsf[sfb] =
-                find_scalefac_mq(&gi->xr[j], &xr34_orig[j], l3_xmin[sfb], width, 1,
-                                 gfc->VBR->scratch);
+            vbrsf[sfb]
+		= find_scalefac_mq(&gi->xr[j], &xr34_orig[j], l3_xmin[sfb],
+				   width, 2 - scalefac_criteria);
             break;
-        case 0:
-            /*  maxnoise mode to use at higher quality
+        case 3:
+            /*  the faster and sloppier mode to use at lower quality
+             */
+            vbrsf[sfb] = find_scalefac(&gi->xr[j], &xr34_orig[j], l3_xmin[sfb], width);
+            break;
+        case 4:
+        default:
+            /*  the fastest
              */
             vbrsf[sfb] =
-                find_scalefac_mq(&gi->xr[j], &xr34_orig[j], l3_xmin[sfb], width, 0,
-                                 gfc->VBR->scratch);
+                calc_scalefac(l3_xmin[sfb], width, gfc->presetTune.quantcomp_adjust_mtrh);
             break;
         }
 	j += width;
@@ -915,9 +875,9 @@ short_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
 	    maxover1 = v1;
     }
 
-    if ((gfc->noise_shaping == 2)
-        && (gfc->presetTune.use
-            && !(gfc->presetTune.athadjust_safe_noiseshaping || gfc->ATH->adjust < 1.0)))
+    if (gfc->noise_shaping == 2 && gfc->presetTune.use
+	&& !gfc->presetTune.athadjust_safe_noiseshaping
+	&& gfc->ATH->adjust >= 1.0)
         /* allow scalefac_scale=1 */
         mover = Min(maxover0, maxover1);
     else
@@ -1012,9 +972,9 @@ long_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
     }
 
     mover = Min(maxover0, maxover0p);
-    if ((gfc->noise_shaping == 2)
-        && (gfc->presetTune.use
-            && !(gfc->presetTune.athadjust_safe_noiseshaping || gfc->ATH->adjust < 1.0))) {
+    if (gfc->noise_shaping == 2 && gfc->presetTune.use
+	&& !gfc->presetTune.athadjust_safe_noiseshaping
+	&& gfc->ATH->adjust >= 1.0) {
         /* allow scalefac_scale=1 */
         mover = Min(mover, maxover1);
         mover = Min(mover, maxover1p);
@@ -1049,8 +1009,6 @@ long_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
     }
 
     cod_info->global_gain = vbrmax;
-    assert(cod_info->global_gain < 256);
-
     if (cod_info->global_gain < 0) {
         cod_info->global_gain = 0;
     }

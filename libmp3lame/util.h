@@ -231,7 +231,6 @@ typedef struct
  */
 typedef struct
 {
-    FLOAT8  scratch[192];
     FLOAT8  mask_adjust;    // the dbQ stuff
     int     quality;
     int     smooth;         // 0=no, 1=peaks, 2=+-4
