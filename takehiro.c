@@ -794,7 +794,7 @@ void best_scalefac_store(lame_global_flags *gfp,int gr, int ch,
 	}
     }
 
-    if (gfp->use_scfsi && gr == 1
+    if (gfp->mode_gr==2 && gr == 1
 	&& l3_side->gr[0].ch[ch].tt.block_type != SHORT_TYPE
 	&& l3_side->gr[1].ch[ch].tt.block_type != SHORT_TYPE
 	&& l3_side->gr[0].ch[ch].tt.scalefac_scale
