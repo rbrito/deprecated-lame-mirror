@@ -59,25 +59,6 @@
 # include <sys/stat.h>
 #endif
 
-/* 
- * 3 different types of pow() functions:
- *   - table lookup
- *   - pow()
- *   - exp()   on some machines this is claimed to be faster than pow()
- */
-
-#define POW20(x) (assert(-Q_MAX2 <= (x) && (x) < Q_MAX), pow20[(x)+Q_MAX2])
-/*#define POW20(x)  pow(2.0,((double)(x)-210)*.25) */
-/*#define POW20(x)  exp( ((double)(x)-210)*(.25*LOG2) ) */
-
-#define IPOW20(x)  (assert(-Q_MAX2 <= (x) && (x) < Q_MAX), ipow20[(x)+Q_MAX2])
-/*#define IPOW20(x)  exp( -((double)(x)-210)*.1875*LOG2 ) */
-/*#define IPOW20(x)  pow(2.0,-((double)(x)-210)*.1875) */
-
-#define db2pow(x) (exp((x)*(LOG10*0.1)))
-/*#define db2pow(x) pow(10.0, (x)*0.1) */
-/*#define db2pow(x) pow(10.0, (x)/10.0) */
-
 #ifdef _MSC_VER
 # pragma warning( disable : 4244 )
 /*# pragma warning( disable : 4305 ) */
@@ -132,6 +113,49 @@ typedef union {
     int i;
 } fi_union;
 
+/* 
+ * 3 different types of pow() functions:
+ *   - table lookup
+ *   - pow()
+ *   - exp()   on some machines this is claimed to be faster than pow()
+ */
+
+#if (defined(SMALL_CACHE) && defined(USE_IEEE754_HACK))
+static inline FLOAT IPOW20core(int x)
+{
+    fi_union fi;
+    extern float ipow20[];
+
+    fi.i = ((int*)ipow20)[x&15] - (x>>4)*(3*0x800000);
+    return fi.f;
+}
+
+static inline FLOAT POW20core(int x)
+{
+    fi_union fi;
+    extern float pow20[];
+
+    fi.i = ((int*)pow20)[x&3] + (x>>2)*(0x800000);
+
+    return fi.f;
+}
+# define IPOW20(x)  (assert(-Q_MAX2 <= (x) && (x) < Q_MAX), IPOW20core((x)+Q_MAX2))
+# define POW20(x) (assert(-Q_MAX2 <= (x) && (x) < Q_MAX), POW20core((x)+Q_MAX2))
+#else
+# define IPOW20(x)  (assert(-Q_MAX2 <= (x) && (x) < Q_MAX), ipow20[(x)+Q_MAX2])
+/*#define IPOW20(x)  exp( -((double)(x)-210)*.1875*LOG2 ) */
+/*#define IPOW20(x)  pow(2.0,-((double)(x)-210)*.1875) */
+
+#define POW20(x) (assert(-Q_MAX2 <= (x) && (x) < Q_MAX), pow20[(x)+Q_MAX2])
+/*#define POW20(x)  pow(2.0,((double)(x)-210)*.25) */
+/*#define POW20(x)  exp( ((double)(x)-210)*(.25*LOG2) ) */
+
+#endif
+
+# define db2pow(x) (exp((x)*(LOG10*0.1)))
+/*#define db2pow(x) pow(10.0, (x)*0.1) */
+/*#define db2pow(x) pow(10.0, (x)/10.0) */
+
 #ifdef USE_FAST_LOG
 # define LOG2_SIZE       (256)
 # define LOG2_SIZE_L2    (8)
@@ -145,10 +169,7 @@ inline static ieee754_float32_t fast_log2(ieee754_float32_t xx)
 {
     ieee754_float32_t log2val;
     int mantisse, i;
-    union {
-	ieee754_float32_t f;
-	int i;
-    } x;
+    fi_union x;
 
     x.f = xx;
     mantisse = x.i & 0x7FFFFF;
