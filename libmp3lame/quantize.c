@@ -1082,12 +1082,10 @@ CBR_bitalloc(
     const int gr
     )
 {
-    int bits, ch, adjustBits, targ_bits[MAX_CHANNELS];
+    int bits = gfc->l3_side.tt[gr][gfc->channels_out-1].part2_length;
+    int ch, adjustBits, targ_bits[MAX_CHANNELS];
 
     /* allocate minimum bits to encode part2_length (for i-stereo) */
-    bits = gfc->l3_side.tt[gr][0].part2_length
-	+ gfc->l3_side.tt[gr][gfc->channels_out-1].part2_length;
-
     min_bits -= bits;
     max_bits -= bits; assert(max_bits >= 0);
 
