@@ -8,6 +8,23 @@
 SHELL = @SHELL@
 @SET_MAKE@
 
+UNAME = $(shell uname)
+ARCH = $(shell uname -m)
+
+
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+
+BINDIR = @bindir@
+LIBDIR = $(prefix)/lib
+INCLUDEDIR = $(prefix)/include
+INSTALL= @INSTALL@
+INSTALL_PROGRAM=@INSTALL_PROGRAM@
+INSTALL_DATA=@INSTALL_DATA@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
+
+
+
 all:  
 	cd libmp3lame; $(MAKE)
 	cd frontend; $(MAKE)
@@ -39,7 +56,7 @@ uninstall:
 
 clean:
 	cd libmp3lame; $(MAKE) clean; 
-	#cd mpglib; $(MAKE) clean; 
+	cd mpglib; $(MAKE) clean; 
 	cd analyzer; $(MAKE) clean; 
 	cd frontend; $(MAKE) clean; 
 
@@ -47,10 +64,8 @@ clean:
 
 tags: TAGS
 
-
-# todo
-TAGS: @FRONTEND_SOURCES@ @LIB_SOURCES@ $(lib_sources) ${gtk_sources}
-	etags -T @FRONTEND_SOURCES@ @LIB_SOURCES@ $(lib_sources) ${gtk_sources}
+TAGS: @CONFIG_SOURCES@ $(lib_sources) ${gtk_sources}
+	etags -T @CONFIG_SOURCES@ $(lib_sources) ${gtk_sources}
 
 
 #

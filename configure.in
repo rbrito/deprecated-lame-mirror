@@ -19,10 +19,35 @@ dnl -    check for GTK code
 dnl
 dnl todo:
 dnl - move all system-dependent entries from Makefile here
+dnl
+dnl Exported and configured variables:
+dnl PGM
+dnl CC
+dnl CFLAGS
+dnl CONFIG_DEFS
+dnl LDFLAGS
+
+dnl extra vars for GTK
+dnl GTK_LDFLAGS
+dnl GTK_CFLAGS
+
+dnl extra vars for frontend:
+dnl FRONTEND_LDFLAGS
+dnl FRONTEND_CFLAGS
+dnl FRONTEND_SOURCES
+
+dnl extra vars for lib:
+dnl LIB_SOURCES
+
+dnl tools:
+dnl AR
+dnl MAKEDEP
+dnl RM_F
+
 
 AC_INIT(libmp3lame/lame.c)
 AM_INIT_AUTOMAKE(lamelib,3.88,notdef)
-AM_PROG_LIBTOOL
+dnl AM_PROG_LIBTOOL
 
 # increase this when the shared lib becomes totally incompatible
 LIB_MAJOR_VERSION=1
@@ -30,9 +55,6 @@ LIB_MAJOR_VERSION=1
 # increase this when changes are made, but they are upward compatible
 # to previous versions
 LIB_MINOR_VERSION=0
-
-dnl uncomment to use "/usr" as default prefix...
-dnl AC_PREFIX_DEFAULT(/usr)
 
 dnl check host
 AC_CANONICAL_HOST
@@ -47,14 +69,21 @@ AC_PROG_RANLIB
 AC_PROG_LN_S
 AC_PROG_INSTALL
 
-dnl These are the main configuration variables for the Makefile
-CONFIG_LIBS=
-CONFIG_OPTS=
-CONFIG_LDFLAGS=
-CPP_OPT=
+dnl Initialize configuration variables for the Makefile
+FILE_EXTENSION=
+CFLAGS=
+INCLUDES="-I../include -I."
+CONFIG_DEFS="-DNDEBUG"
+LDFLAGS=
 GTK_LDFLAGS=
-GTK_OPTS=
-
+GTK_CFLAGS=
+FRONTEND_LDFLAGS=
+FRONTEND_CFLAGS=
+FRONTEND_SOURCES=
+LIB_SOURCES=
+AR="ar"
+MAKEDEP="-M"
+RM_F="rm -f"
 
 dnl Checks for libraries.
 
@@ -62,11 +91,15 @@ dnl TODO: are the functions of termcap and curses the same as for ncurses ?
 AC_CHECK_LIB(termcap, initscr, HAVE_TERMCAP=termcap)
 AC_CHECK_LIB(curses, initscr, HAVE_TERMCAP=curses)
 AC_CHECK_LIB(ncurses, initscr, HAVE_TERMCAP=ncurses)
+
+dnl math lib
 AC_CHECK_LIB(m, cos, HAVE_LIBM=-lm)
 dnl free fast math library
-dnl AC_CHECK_LIB(ffm, cos, HAVE_LIBM=-lffm)
+dnl AC_CHECK_LIB(ffm, cos, HAVE_LIBFFM=-lffm)
 dnl Compaq fast math library.
-dnl AC_CHECK_LIB(cpml, cos, HAVE_LIBM=-lcpml)
+HAVE_LIBCPML=
+AC_CHECK_LIB(cpml, cos, HAVE_LIBCPML=-lcpml)
+CONFIG_MATH_LIB="$HAVE_LIBM"
 
 AC_CHECK_LIB(sndfile, sf_open_read, HAVE_SNDFILE=yes)
 AC_CHECK_LIB(vorbis, ogg_sync_init, HAVE_VORBIS=yes)
@@ -90,15 +123,15 @@ if test "$CONFIG_FILEIO" = "sndfile" ; then
       libsndfile.a, sndfile.h, $CONFIG_SNDFILE_PREFIX) 
     if test ".$SNDFILE_LIB_LOC" != "." ; then
       HAVE_SNDFILE=yes
-      CONFIG_LDFLAGS="-L$SNDFILE_LIB_LOC $CONFIG_LDFLAGS"
-      CONFIG_OPTS="-I$SNDFILE_INC_LOC $CONFIG_OPTS"
+      FRONTEND_LDFLAGS="-L$SNDFILE_LIB_LOC $FRONTEND_LDFLAGS"
+      INCLUDES="-I$SNDFILE_INC_LOC $INCLUDES"
     else
       WARNING="sndfile lib not found in specified prefix."
     fi
   fi
   if test "$HAVE_SNDFILE" = "yes" ; then
-    CONFIG_LDFLAGS="-lsndfile $CONFIG_LDFLAGS"
-    CONFIG_OPTS="-DLIBSNDFILE $CONFIG_OPTS"
+    FRONTEND_LDFLAGS="-lsndfile $FRONTEND_LDFLAGS"
+    CONFIG_DEFS="-DLIBSNDFILE $CONFIG_DEFS"
   else
     # default
     CONFIG_FILEIO="lame"
@@ -125,30 +158,34 @@ AC_ARG_ENABLE(decode-layer1,
 AC_ARG_ENABLE(decode-layer1, 
   [  --enable-decoder-layer2     Include layer2 decoding [default:yes]],
   CONFIG_DECODER_L2="$enableval", CONFIG_DECODER_L2="yes")
-AC_MSG_RESULT($CONFIG_DECODER)
 
 if test "$CONFIG_DECODER" != "no" ; then
-  CONFIG_DECODER=yes
-  #add code to include this in libmp3lame  
-  #CONFIG_LIBS="mpglib/mpglib.a $CONFIG_LIBS"
-  CONFIG_OPTS="-DHAVEMPGLIB $CONFIG_OPTS"
+  CONFIG_DECODER="yes (Layer"
+  # todo: add code to include this in libmp3lame  
+  CONFIG_DEFS="-DHAVEMPGLIB $CONFIG_DEFS"
+  LIB_SOURCES="\$(mpglib_sources) $LIB_SOURCES"
+  INCLUDES="-I../mpglib $INCLUDES"
+  if test "$CONFIG_DECODER_L1" = "yes"; then
+    CONFIG_DEFS="-DUSE_LAYER_1 $CONFIG_DEFS"
+    CONFIG_DECODER="$CONFIG_DECODER 1,"
+  fi
+  if test "$CONFIG_DECODER_L2" = "yes"; then
+    CONFIG_DEFS="-DUSE_LAYER_2 $CONFIG_DEFS"
+    CONFIG_DECODER="$CONFIG_DECODER 2,"
+  fi
+  CONFIG_DECODER="$CONFIG_DECODER 3)"
 fi
+AC_MSG_RESULT($CONFIG_DECODER)
 
-
-#AC_MSG_CHECKING(use of GTK frame analyzer)
-#AC_PATH_PROG(GTK_CONFIG, gtk-config, no)
-#if test ".$GTK_CONFIG" != ".no" ; then
-#else
-#  FA_DEFAULT=no
 
 AM_PATH_GTK(1.2.0,FA_DEFAULT=yes ,FA_DEFAULT=no)
 
 if test "$FA_DEFAULT" != "no" ; then
   GTK_LDFLAGS="`$GTK_CONFIG --libs` "
-  GTK_OPTS=" `$GTK_CONFIG --cflags` "
+  GTK_CFLAGS=" `$GTK_CONFIG --cflags` "
 else
   CONFIG_FA=no
-  echo Cannot find GTK: Is gtk-config in path? 
+  AC_MSG_WARN(Cannot find GTK: Is gtk-config in path?)
 fi
 
 
@@ -172,15 +209,15 @@ if test "$CONFIG_VORBIS" != "no" ; then
       libvorbis.a, vorbis/codec.h, $CONFIG_VORBIS_PREFIX)
     if test ".$VORBIS_LIB_LOC" != "." ; then
       HAVE_VORBIS=yes
-      CONFIG_LDFLAGS="-L$VORBIS_LIB_LOC $CONFIG_LDFLAGS"
-      CONFIG_OPTS="-I$VORBIS_INC_LOC $CONFIG_OPTS"
+      LDFLAGS="-L$VORBIS_LIB_LOC $LDFLAGS"
+      INCLUDES="-I$VORBIS_INC_LOC $INCLUDES"
     else
       WARNING="vorbis lib not found in specified prefix."
     fi
   fi
   if test "$HAVE_VORBIS" = "yes" ; then
-    CONFIG_LDFLAGS="-lvorbis $CONFIG_LDFLAGS"
-    CONFIG_OPTS="-DHAVEVORBIS $CONFIG_OPTS"
+    LDFLAGS="-lvorbis $LDFLAGS"
+    CONFIG_DEFS="-DHAVEVORBIS $CONFIG_DEFS"
   else
     CONFIG_VORBIS="no"
   fi
@@ -212,7 +249,7 @@ if test "$CONFIG_SHARED" != "no" ; then
 		LIB_TARGETS="$LIB_TARGETS libmp3lame.so"
 		LIB_INSTALL_TARGETS="$LIB_INSTALL_TARGETS install_shared_lib"
 		# need position independent code for shared library
-		CONFIG_OPTS="$CONFIG_OPTS -fPIC"
+		CFLAGS="$CFLAGS -fPIC"
 	esac
 fi
 
@@ -261,7 +298,7 @@ case $host in
  AC_MSG_WARN([********************************************************])
  AC_MSG_WARN([                                                        ])
 
-	CPP_OPT="-D__NO_MATH_INLINES $CPP_OPT"
+	CONFIG_DEFS="-D__NO_MATH_INLINES $CONFIG_DEFS"
 	fi;;
 esac
 
@@ -278,34 +315,281 @@ AC_ARG_ENABLE(brhist,
   [  --enable-brhist             Include the VBR bitrate histogram feature (default:yes if any termcap available)],
   CONFIG_BRHIST="$enableval", CONFIG_BRHIST="$BRH_DEFAULT")
 if test "$CONFIG_BRHIST" != "no" ; then
-  BRHIST_SOURCE="\$(brhist_sources)"
+  FRONTEND_SOURCES="\$(brhist_sources) $FRONTEND_SOURCES"
   if test "$BRH_DEFAULT" = "yes" ; then
-    CONFIG_LDFLAGS="-l$HAVE_TERMCAP $CONFIG_LDFLAGS"
-    CONFIG_OPTS="-DBRHIST $CONFIG_OPTS"
+    FRONTEND_LDFLAGS="-l$HAVE_TERMCAP $FRONTEND_LDFLAGS"
+    CONFIG_DEFS="-DBRHIST $CONFIG_DEFS"
     CONFIG_BRHIST="yes, with $HAVE_TERMCAP"
   else
-    CONFIG_OPTS="-DBRHIST -DNOTERMCAP $CONFIG_OPTS"
+    CONFIG_DEFS="-DBRHIST -DNOTERMCAP $CONFIG_DEFS"
     CONFIG_BRHIST="yes, simulated termcap"
   fi
 fi
 AC_MSG_RESULT($CONFIG_BRHIST)
 
 
+
+
+
+
+
+
+
 dnl ############### host dependent setup #####################
 
+# generic defaults. OS specific options go in versious sections below
+OPTIMIZATION=-O
+
+case $host in
+*-*-linux*)
+##########################################################################
+# LINUX   
+##########################################################################
+CFLAGS="-pedantic -Wall $CFLAGS"
+
+# suggested for gcc-2.7.x
+   OPTIMIZATION="-O3 -fomit-frame-pointer -funroll-loops -ffast-math  -finline-functions"
+#  OPTIMIZATION="-O9 -fomit-frame-pointer -fno-strength-reduce -mpentiumpro -ffast-math -finline-functions -funroll-loops -Wall -malign-double -g -march=pentiumpro -mfancy-math-387 -pipe"
+
+#  for debugging:
+#  CONFIG_DEFS="-UNDEBUG -DABORTFP $CONFIG_DEFS"
+#  OPTIMIZATION="-O -ggdb"
+
+#  for lots of debugging:
+#  CONFIG_DEFS="-UNDEBUG -DABORTFP -DDEBUG $CONFIG_DEFS"
+#  OPTIMIZATION="-O -g" 
+
+
+#  some alternate code (work in progress Robert.Hegemann@gmx.de)
+#  CONFIG_DEFS="-DRH_AMP -DRH_VALIDATE_MS $CONFIG_DEFS"
+#  CONFIG_DEFS="-DKLEMM_01 $CONFIG_DEFS"
+# these options for gcc-2.95.2 to produce fast code
+#  OPTIMIZATION = \
+#	-O9 -fomit-frame-pointer -march=pentium \
+#	-finline-functions -fexpensive-optimizations \
+#	-funroll-loops -funroll-all-loops -pipe -fschedule-insns2 \
+#	-fstrength-reduce \
+#	-malign-double -mfancy-math-387 -ffast-math 
+
+
+##########################################################################
+# LINUX on Digital/Compaq Alpha CPUs
+##########################################################################
+case $host in
+alpha*-*-linux*)
+
+################################################################
+#### Check if 'ccc' is in our path
+####   if not, use 'gcc'
+################################################################
+if test "`which ccc 2>/dev/null | grep -c ccc`" = ".0" ; then
+
+# double is faster than float on Alpha
+dnl CONFIG_DEFS="-DFLOAT=double $CONFIG_DEFS"
+
+OPTIMIZATION="-O4 -fomit-frame-pointer -ffast-math -funroll-loops \
+                -mfp-regs -fschedule-insns -fschedule-insns2 \
+                -finline-functions"
+# add "-mcpu=21164a -Wa,-m21164a" to optimize for 21164a (ev56) CPU
+
+################################################################
+#### else, use 'ccc'
+################################################################
+else
+
+# Compaq's C Compiler
+CC=ccc
+
+################################################################
+#### set 'OPTIMIZATION = -arch host -tune host' 
+####              to generate/tune instructions for this machine
+####     'OPTIMIZATION += -migrate -fast -inline speed -unroll 0' 
+####              tweak to run as fast as possible :)
+####     'OPTIMIZATION += -w0' 
+####              set warning and linking flags
+################################################################
+OPTIMIZATION="-arch host -tune host"
+OPTIMIZATION="-migrate -fast -inline speed -unroll 0 $OPTIMIZATION"
+OPTIMIZATION="-w0 $OPTIMIZATION"
+
+
+################################################################
+#### to debug, uncomment
+################################################################
+# For Debugging
+#OPTIMIZATION="-g3 $OPTIMIZATION"
+
+################################################################
+#### define __DECALPHA__ (i was getting re-declaration warnings
+####   in machine.h
+################################################################
+# Define DEC Alpha
+CONFIG_DEFS="-D__DECALPHA__ $CONFIG_DEFS"
+
+# optimized libffm (free fast math library)
+#CONFIG_MATH_LIB="-lffm"
+# Compaq's fast math library
+if test ".$HAVE_LIBCPML" != "." ; then
+	CONFIG_MATH_LIB="$HAVE_LIBCPML"
+fi
+
+fi  #  gcc or ccc?
+;; # alpha
+
+esac  
+;; #  linux
+
+##########################################################################
+# FreeBSD
+##########################################################################
+# todo
+
+##########################################################################
+# OpenBSD
+##########################################################################
+# todo
+
+
+##########################################################################
+# SunOS
+##########################################################################
+sparc-*-sunos4*)
+	CC="cc"
+	OPTIMIZATION="-O -xCC"
+	MAKEDEP="-xM"
+	# for gcc, use instead:
+	#   CC="gcc"
+	#   OPTIMIZATION="-O"
+	#   MAKEDEP="-M"
+	endif
+;; #SunOS
+
+##########################################################################
+# SGI
+##########################################################################
+*-sgi-irix*)
+	CC="cc"
+	OPTIMIZATION="-O3 -woff all"
+;; # SGI
+
+##########################################################################
+# Compaq Alpha running Dec Unix (OSF)
+##########################################################################
+alpha*-dec-osf*)
+	CC = cc
+	OPTIMIZATION="-fast -O3 -std -g3 -non_shared"
+;; #OSF
+
+##########################################################################
+# BeOS
+##########################################################################
+*-*-beos*) # todo:is this the right string ?
+	CC="\$(BE_C_COMPILER)"
+	case $host in
+	bepc*-*-*) # todo: is this right architecture ? was: if ($(ARCH),BePC)
+	   OPTIMIZATION="-O9 -fomit-frame-pointer -march=pentium \
+			-mcpu=pentium -ffast-math -funroll-loops \
+			-fprofile-arcs -fbranch-probabilities"
+	;;
+   	*) OPTIMIZATION="-opt all"
+	   MAKEDEP="-make"
+	;;
+	esac
+;; #BeOS
+esac
+
+# todo: include the following tests in the case-list
+UNAME=`uname`
+ARCH=`uname -m`
+
+###########################################################################
+# MOSXS (Rhapsody PPC)
+###########################################################################
+if test "$UNAME" = "Rhapsody"; then
+   CC="cc"
+   OPTIMIZATION="-O9 -ffast-math -funroll-loops -fomit-frame-pointer"
+   MAKEDEP="-make"
+fi
+
+##########################################################################
+# OS/2
+##########################################################################
+# Properly installed EMX runtime & development package is a prerequisite.
+# tools I used: make 3.76.1, uname 1.12, sed 2.05, PD-ksh 5.2.13
+#
+##########################################################################
+if test "$UNAME" = "OS/2"; then
+   SHELL=sh	
+   CC=gcc
+   OPTIMIZATION="-O3"
+   FILE_EXTENSION=".exe"
+
+# I use the following for slightly better performance on my Pentium-II
+# using pgcc-2.91.66:
+#  OPTIMIZATION="-O6 -ffast-math -funroll-loops -mpentiumpro -march=pentiumpro"
+
+# Uncomment & inspect the GTK lines to use MP3x GTK frame analyzer.
+# Properly installed XFree86/devlibs & GTK+ is a prerequisite.
+# The following works for me using Xfree86/OS2 3.3.5 and GTK+ 1.2.3:
+#   CONFIG_DEFS="-DHAVEGTK -D__ST_MT_ERRNO__ $CONFIG_DEFS"
+#   INCLUDES="-IC:/XFree86/include/gtk12 -IC:/XFree86/include/glib12 \
+#             -IC:/XFree86/include $INCLUDES"
+#   FRONTEND_LDFLAGS="-LC:/XFree86/lib -lgtk12 -lgdk12 -lgmodule -lglib12 \
+#             -lXext -lX11 -lshm -lbsd -lsocket -lm $FRONTEND_LDFLAGS"
+#   FRONTEND_CFLAGS="-Zmtd -Zsysv-signals -Zbin-files $FRONTEND_CFLAGS"
+fi
+
+###########################################################################
+# MSDOS/Windows
+###########################################################################
+if test "$UNAME" = "MSDOS"; then
+  FILE_EXTENSION=".exe"
+  RM_F=
+fi
+
+###########################################################################
+# AmigaOS
+###########################################################################
+# Type 'Make ARCH=PPC' for PowerUP and 'Make ARCH=WOS' for WarpOS
+#
+###########################################################################
+if test "$UNAME" = "AmigaOS" ; then
+	CC="gcc -noixemul"
+	OPTIMIZATION="-O3 -ffast-math -funroll-loops -m68020-60 -m68881"
+	MAKEDEP="-MM"
+	if test "$ARCH" = "WOS"; then
+		CC="ppc-amigaos-gcc -warpup"
+		OPTIMIZATION="-O3 -ffast-math -fomit-frame-pointer \
+			-funroll-loops -mmultiple -mcpu=603e"
+		AR="ppc-amigaos-ar"
+		RANLIB="ppc-amigaos-ranlib"
+	fi
+	if test "$ARCH",PPC; then
+		CC="ppc-amigaos-gcc"
+		OPTIMIZATION="-O3 -ffast-math -fomit-frame-pointer \
+			-funroll-loops -mmultiple -mcpu=603e"
+		AR="ppc-amigaos-ar"
+		RANLIB="ppc-amigaos-ranlib"
+	fi
+fi
+
+
+CFLAGS="$OPTIMIZATION $CFLAGS"
+LDFLAGS="$CONFIG_MATH_LIB $LDFLAGS"
 
 
 
-CONFIG_LDFLAGS="$HAVE_LIBM $CONFIG_LDFLAGS"
-AC_SUBST(CONFIG_OPTS)
-AC_SUBST(CONFIG_LIBS)
-AC_SUBST(CONFIG_LDFLAGS)
 
-CONFIG_SOURCES="$BRHIST_SOURCE"
-AC_SUBST(CONFIG_SOURCES)
-AC_SUBST(CPP_OPT)
+AC_SUBST(INCLUDES)
+AC_SUBST(FILE_EXTENSION)
+
+AC_SUBST(FRONTEND_LDFLAGS)
+AC_SUBST(FRONTEND_CFLAGS)
+AC_SUBST(FRONTEND_SOURCES)
+
+AC_SUBST(LIB_SOURCES)
 AC_SUBST(GTK_LDFLAGS)
-AC_SUBST(GTK_OPTS)
+AC_SUBST(GTK_CFLAGS)
 
 AC_SUBST(LIB_INSTALL_TARGETS)
 AC_SUBST(LIB_TARGETS)
@@ -313,6 +597,10 @@ AC_SUBST(LIB_TARGETS)
 AC_SUBST(LIB_MAJOR_VERSION)
 AC_SUBST(LIB_MINOR_VERSION)
 
+AC_SUBST(AR)
+AC_SUBST(MAKEDEP)
+AC_SUBST(RM_F)
+AC_SUBST(CONFIG_DEFS)
 
 dnl Checks for header files.
 AC_HEADER_STDC
@@ -329,6 +617,4 @@ AC_TYPE_SIGNAL
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS(gettimeofday socket strtol)
 
-
 AC_OUTPUT(Makefile libmp3lame/Makefile frontend/Makefile analyzer/Makefile )
-
