@@ -69,10 +69,8 @@ int main(int argc, char *argv[])
 	strcpy(strFileIn ,argv[1]);
 	strcpy(strFileOut,argv[1]);
 
-	// Change the file name extention for the output file name
-	strFileOut[strlen(strFileOut)-3]='M';
-	strFileOut[strlen(strFileOut)-2]='P';
-	strFileOut[strlen(strFileOut)-1]='3';
+	// Add mp3 extention
+	strcat(strFileOut,".mp3");
 
 	// Load lame_enc.dll library (Make sure though that you set the 
 	// project/settings/debug Working Directory correctly, otherwhise the DLL can't be loaded
@@ -144,24 +142,27 @@ int main(int argc, char *argv[])
 	// use the LAME config structure
 	beConfig.dwConfig = BE_CONFIG_LAME;
 
+	// this are the default settings for testcase.wav
 	beConfig.format.LHV1.dwStructVersion	= 1;
 	beConfig.format.LHV1.dwStructSize		= sizeof(beConfig);		
 	beConfig.format.LHV1.dwSampleRate		= 44100;				// INPUT FREQUENCY
 	beConfig.format.LHV1.dwReSampleRate		= 0;					// DON"T RESAMPLE
-	beConfig.format.LHV1.nMode				= BE_MP3_MODE_STEREO;	// OUTPUT IN STREO
-	beConfig.format.LHV1.dwBitrate			= 32;					// MINIMUM BIT RATE
-	beConfig.format.LHV1.dwMaxBitrate		= 320;					// MAXIMUM BIT RATE
-	beConfig.format.LHV1.nPreset			= LQP_NOPRESET;			// QUALITY PRESET SETTING
+	beConfig.format.LHV1.nMode				= BE_MP3_MODE_JSTEREO;	// OUTPUT IN STREO
+	beConfig.format.LHV1.dwBitrate			= 128;					// MINIMUM BIT RATE
+	beConfig.format.LHV1.nPreset			= LQP_HIGH_QUALITY;		// QUALITY PRESET SETTING
 	beConfig.format.LHV1.dwMpegVersion		= MPEG1;				// MPEG VERSION (I or II)
 	beConfig.format.LHV1.dwPsyModel			= 0;					// USE DEFAULT PSYCHOACOUSTIC MODEL 
 	beConfig.format.LHV1.dwEmphasis			= 0;					// NO EMPHASIS TURNED ON
-	beConfig.format.LHV1.bCRC				= TRUE;					// INSERT CRC
-	beConfig.format.LHV1.bCopyright			= TRUE;					// SET COPYRIGHT FLAG	
-	beConfig.format.LHV1.bPrivate			= TRUE;					// SET PRIVATE FLAG
 	beConfig.format.LHV1.bOriginal			= TRUE;					// SET ORIGINAL FLAG
-	beConfig.format.LHV1.bWriteVBRHeader	= TRUE;					// YES, WRITE THE XING VBR HEADER
-	beConfig.format.LHV1.bEnableVBR			= TRUE;					// USE VBR
-	beConfig.format.LHV1.nVBRQuality		= 5;					// SET VBR QUALITY
+
+//	beConfig.format.LHV1.dwMaxBitrate		= 320;					// MAXIMUM BIT RATE
+//	beConfig.format.LHV1.bCRC				= TRUE;					// INSERT CRC
+//	beConfig.format.LHV1.bCopyright			= TRUE;					// SET COPYRIGHT FLAG	
+//	beConfig.format.LHV1.bPrivate			= TRUE;					// SET PRIVATE FLAG
+//	beConfig.format.LHV1.bWriteVBRHeader	= TRUE;					// YES, WRITE THE XING VBR HEADER
+//	beConfig.format.LHV1.bEnableVBR			= TRUE;					// USE VBR
+//	beConfig.format.LHV1.nVBRQuality		= 5;					// SET VBR QUALITY
+	beConfig.format.LHV1.bNoRes				= TRUE;					// No Bit resorvoir
 
 // Preset Test
 //	beConfig.format.LHV1.nPreset			= LQP_PHONE;

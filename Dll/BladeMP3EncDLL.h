@@ -83,11 +83,11 @@ typedef enum
 {
 	LQP_NOPRESET=-1,
 
-	// OBSOLETE VALUES, DO NOT USE
-	LQP_OBS_NORMAL_QUALITY=0,
-	LQP_OBS_LOW_QUALITY,
-	LQP_OBS_HIGH_QUALITY,
-	LQP_OBS_VOICE_QUALITY,
+	// STANDARD QUALITY PRESETS
+	LQP_NORMAL_QUALITY=0,
+	LQP_LOW_QUALITY,
+	LQP_HIGH_QUALITY,
+	LQP_VOICE_QUALITY,
 
 	// NEW PRESET VALUES
 	LQP_PHONE	=1000,
@@ -150,8 +150,9 @@ typedef struct	{
 			BOOL			bEnableVBR;			// USE VBR ENCODING (TRUE/FALSE)
 			INT				nVBRQuality;		// VBR QUALITY 0..9
 			DWORD			dwVbrAbr_bps;		// Use ABR in stead of nVBRQuality
+			BOOL			bNoRes;				// Disable Bit resorvoir
 
-			BYTE			btReserved[255-sizeof(DWORD)];	// FUTURE USE, SET TO 0
+			BYTE			btReserved[255-2*sizeof(DWORD)];	// FUTURE USE, SET TO 0
 
 			} LHV1;					// LAME header version 1
 

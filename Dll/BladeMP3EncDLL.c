@@ -29,7 +29,7 @@
 #define _RELEASEDEBUG 0
 
 const int MAJORVERSION=1;
-const int MINORVERSION=15;
+const int MINORVERSION=16;
 
 
 // Local variables
@@ -97,16 +97,16 @@ static void PresetOptions(lame_global_flags *gfp,LONG myPreset)
 	switch (myPreset)
 	{
 		case LQP_NOPRESET:
-		case LQP_OBS_NORMAL_QUALITY:
+		case LQP_NORMAL_QUALITY:
 			break;
 		break;
-		case LQP_OBS_LOW_QUALITY:		// -f flag
+		case LQP_LOW_QUALITY:		// -f flag
 			gf.quality=9;
 			break;
-		case LQP_OBS_HIGH_QUALITY:		// -h flag for high qualtiy
+		case LQP_HIGH_QUALITY:		// -h flag for high qualtiy
 			gf.quality=2;
 			break;
-		case LQP_OBS_VOICE_QUALITY:		// --voice flag for experimental voice mode
+		case LQP_VOICE_QUALITY:		// --voice flag for experimental voice mode
 			gf.lowpassfreq=12000;
 			gf.VBR_max_bitrate_kbps=160;
 			gf.no_short_blocks=1;
@@ -414,6 +414,12 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 	if ((int)lameConfig.format.LHV1.nPreset)
 		PresetOptions(&gf,lameConfig.format.LHV1.nPreset);
 
+	if (lameConfig.format.LHV1.bNoRes)
+	{
+		gf.disable_reservoir=1;
+		gf.padding_type=0;
+	}
+
 	lame_init_params(&gf);	
 
 	//LAME encoding call will accept any number of samples.  
@@ -625,13 +631,14 @@ static void dump_config( char *inPath, char *outPath)
 	DebugPrintf("High pass frequency    =%d\n",gf.highpassfreq);
 	DebugPrintf("No Short Blocks        =%s\n",(gf.no_short_blocks)?"yes":"no");
 	DebugPrintf("de-emphasis            =%d\n",gf.emphasis);
+	DebugPrintf("private flag           =%d\n",gf.extension);
 	DebugPrintf("copyright flag         =%d\n",gf.copyright);
 	DebugPrintf("original flag          =%d\n",gf.original);
 	DebugPrintf("CRC                    =%s\n",(gf.error_protection) ? "on" : "off");
-//	DebugPrintf("16 Khz cut off is %s\n",(0)?"enabled":"disabled");
 	DebugPrintf("Fast mode              =%s\n",(gf.quality==9)?"enabled":"disabled");
 	DebugPrintf("Force mid/side stereo  =%s\n",(gf.force_ms)?"enabled":"disabled");
-//	DebugPrintf("GPsycho acoustic model =%s\n",(gpsycho)?"enabled":"disabled");
+	DebugPrintf("Padding Type           =%d\n",gf.padding_type);
+	DebugPrintf("Disable Resorvoir      =%d\n",gf.disable_reservoir);
 	DebugPrintf("VBR                    =%s, VBR_q =%d, VBR method =",(gf.VBR!=vbr_off)?"enabled":"disabled",gf.VBR_q);
 
 	switch (gf.VBR)
