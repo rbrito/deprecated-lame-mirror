@@ -428,32 +428,51 @@ int CDECL lame_get_highpasswidth(lame_global_flags *);
  * psycho acoustics and other arguments which you should not change 
  * unless you know what you are doing
  ***********************************************************************/
-#if 0
+// only use ATH for masking
+int CDECL lame_set_ATHonly(lame_global_flags *, int);
+int CDECL lame_get_ATHonly(lame_global_flags *);
 
-  /*
-   * psycho acoustics and other arguments which you should not change 
-   * unless you know what you are doing
-   */
-  int ATHonly;                    /* only use ATH                         */
-  int ATHshort;                   /* only use ATH for short blocks        */
-  int noATH;                      /* disable ATH                          */
-  int ATHtype;                    /* select ATH formula                   */
-  float ATHlower;                 /* lower ATH by this many db            */
-  int cwlimit;                    /* predictability limit                 */
-  int allow_diff_short;           /* allow blocktypes to differ between
-                                     channels?                            */
-  int useTemporal;                /* use temporal masking effect          */
-  int no_short_blocks;            /* disable short blocks                 */
-  int emphasis;                   /* Input PCM is emphased PCM (for
-                                     instance from one of the rarely
-                                     emphased CDs), it is STRONGLY not
-                                     recommended to use this, because
-				     psycho does not take it into account,
-				     and last but not least many decoders
-                                     don't care about these bits          */
+// only use ATH for short blocks
+int CDECL lame_set_ATHshort(lame_global_flags *, int);
+int CDECL lame_get_ATHshort(lame_global_flags *);
+
+// disable ATH
+int CDECL lame_set_noATH(lame_global_flags *, int);
+int CDECL lame_get_noATH(lame_global_flags *);
+
+// select ATH formula
+int CDECL lame_set_ATHtype(lame_global_flags *, int);
+int CDECL lame_get_ATHtype(lame_global_flags *);
+
+// lower ATH by this many db
+int CDECL lame_set_ATHlower(lame_global_flags *, float);
+float CDECL lame_get_ATHlower(lame_global_flags *);
+
+// predictability limit (ISO tonality formula)
+int CDECL lame_set_cwlimit(lame_global_flags *, int);
+int CDECL lame_get_cwlimit(lame_global_flags *);
+
+// allow blocktypes to differ between channels?
+// default: 0 for jstereo, 1 for stereo
+int CDECL lame_set_cwlimit(lame_global_flags *, int);
+int CDECL lame_get_cwlimit(lame_global_flags *);
+
+// use temporal masking effect (default = 1)
+int CDECL lame_set_useTemporal(lame_global_flags *, int);
+int CDECL lame_get_useTemporal(lame_global_flags *);
+
+// disable short blocks
+int CDECL lame_set_no_short_blocks(lame_global_flags *, int);
+int CDECL lame_get_no_short_blocks(lame_global_flags *);
+
+/* Input PCM is emphased PCM (for instance from one of the rarely
+   emphased CDs), it is STRONGLY not recommended to use this, because
+   psycho does not take it into account, and last but not least many decoders
+   ignore these bits */
+int CDECL lame_set_emphasis(lame_global_flags *, int);
+int CDECL lame_get_emphasis(lame_global_flags *);
 
 
-#endif
 
 /************************************************************************/
 /* internal variables, cannot be set...                                 */
