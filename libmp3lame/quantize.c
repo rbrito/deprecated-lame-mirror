@@ -317,7 +317,8 @@ trancate_smallspectrums(
     FLOAT8 distort[SFBMAX];
     calc_noise_result dummy;
 
-    if (!(gfc->substep_shaping & 4) && gi->block_type == SHORT_TYPE)
+    if ((!(gfc->substep_shaping & 4) && gi->block_type == SHORT_TYPE)
+	|| gfc->substep_shaping & 0x80)
 	return;
     calc_noise (gfc, gi, l3_xmin, distort, &dummy);
     for (j = 0; j < 576; j++) {
@@ -1457,7 +1458,7 @@ VBR_iteration_loop (
 
     }   /* breaks adjusted */
     /*--------------------------------------*/
-    
+
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         for (ch = 0; ch < gfc->channels_out; ch++) {
 	    /*  do the 'substep shaping'

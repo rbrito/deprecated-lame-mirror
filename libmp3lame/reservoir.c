@@ -126,32 +126,26 @@ ResvFrameBegin(lame_global_flags *gfp, int *mean_bits)
  */
 
     /* main_data_begin has 9 bits in MPEG-1, 8 bits MPEG-2 */
-    resvLimit = (gfp->version==1) ? 8*511 : 8*255 ;
+    resvLimit = (8*256)*gfc->mode_gr-8;
 
+    /*all mp3 decoders should have enough buffer to handle this value: size of a 320kbps 32kHz frame*/
+    maxmp3buf = 8*1440;
 
     /* maximum allowed frame size.  dont use more than this number of
        bits, even if the frame has the space for them: */
     /* Bouvigne suggests this more lax interpretation of the ISO doc 
        instead of using 8*960. */
-    if (gfp->strict_ISO) {
-        if (gfp->version==1)
-            maxmp3buf=8*((int)(320000/(gfp->out_samplerate / (FLOAT8)1152)/8 +.5));
-        else
-            maxmp3buf=8*((int)(160000/(gfp->out_samplerate / (FLOAT8)576)/8 +.5));
-    } else
-        /*all mp3 decoders should have enough buffer to handle this value: size of a 320kbps 32kHz frame*/
-        maxmp3buf = 8*1440;
+    if (gfp->strict_ISO)
+	maxmp3buf=8* (int) (20000.0*576.0/gfp->out_samplerate + .5);
 
-
-    if ( frameLength > maxmp3buf ||  gfp->disable_reservoir ) {
+    gfc->ResvMax = maxmp3buf - frameLength;
+    if (gfc->ResvMax > resvLimit)
+	gfc->ResvMax = resvLimit;
+    if (gfc->ResvMax < 0 ||  gfp->disable_reservoir)
 	gfc->ResvMax = 0;
-    } else {
-	gfc->ResvMax = maxmp3buf - frameLength;
-	if ( gfc->ResvMax > resvLimit )
-	  gfc->ResvMax = resvLimit;
-    }
 
-    fullFrameBits = *mean_bits * gfc->mode_gr + Min ( gfc->ResvSize, gfc->ResvMax );
+    fullFrameBits
+	= *mean_bits * gfc->mode_gr + Min ( gfc->ResvSize, gfc->ResvMax );
 
     if (fullFrameBits > maxmp3buf)
         fullFrameBits = maxmp3buf;
@@ -160,11 +154,12 @@ ResvFrameBegin(lame_global_flags *gfp, int *mean_bits)
     assert ( gfc->ResvMax >= 0 );
 
     l3_side->resvDrain_pre = 0;
-
-    if ( gfc->pinfo != NULL ) {
+#ifdef HAVE_GTK
+    if (gfc->pinfo != NULL) {
         gfc->pinfo->mean_bits = *mean_bits / 2;  /* expected bits per channel per granule [is this also right for mono/stereo, MPEG-1/2 ?] */
         gfc->pinfo->resvsize  = gfc->ResvSize;
     }
+#endif
 
     return fullFrameBits;
 }
@@ -180,25 +175,30 @@ void ResvMaxBits(lame_global_flags *gfp, int mean_bits, int *targ_bits, int *ext
 {
   lame_internal_flags *gfc=gfp->internal_flags;
   int add_bits;
-  int ResvSize = gfc->ResvSize;
+  int ResvSize = gfc->ResvSize, ResvMax = gfc->ResvMax;
 
   /* conpensate the saved bits used in the 1st granule */
   if (cbr)
       ResvSize += mean_bits;
 
+  if (gfc->substep_shaping & 1)
+      ResvMax *= 0.9;
+
   *targ_bits = mean_bits ;
 
   /* extra bits if the reservoir is almost full */
-  if (ResvSize > ((gfc->ResvMax * 9) / 10)) {
-    add_bits= ResvSize - ((gfc->ResvMax * 9) / 10);
+  if (ResvSize*10 > ResvMax*9) {
+    add_bits= ResvSize - (ResvMax * 9) / 10;
     *targ_bits += add_bits;
+    gfc->substep_shaping |= 0x80;
   }else {
     add_bits =0 ;
+    gfc->substep_shaping &= 0x7f;
     /* build up reservoir.  this builds the reservoir a little slower
      * than FhG.  It could simple be mean_bits/15, but this was rigged
      * to always produce 100 (the old value) at 128kbs */
     /*    *targ_bits -= (int) (mean_bits/15.2);*/
-    if (!gfp->disable_reservoir) 
+    if (!gfp->disable_reservoir && !(gfc->substep_shaping & 1))
       *targ_bits -= .1*mean_bits;
   }
 
