@@ -762,7 +762,7 @@ int mf_size,char *mp3buf, int mp3buf_size)
     ms_ratio_ave = .25*(ms_ratio[0] + ms_ratio[1]+
 			 ms_ratio_prev + ms_ratio_next);
     ms_ener_ratio_ave = .5*(ms_ener_ratio[0]+ms_ener_ratio[1]);
-    if ( ms_ratio_ave <.35 && ms_ener_ratio_ave<.75 ) gfp->mode_ext = MPG_MD_MS_LR;
+    if ( ms_ratio_ave <.35 /*&& ms_ener_ratio_ave<.75*/ ) gfp->mode_ext = MPG_MD_MS_LR;
   }
   if (gfp->force_ms) gfp->mode_ext = MPG_MD_MS_LR;
 
