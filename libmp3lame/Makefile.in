@@ -114,7 +114,7 @@ DEFS = @DEFS@ @CONFIG_DEFS@
 EXTRA_DIST =  	debugscalefac.c 	libmp3lame.dsp
 
 
-libmp3lame_la_SOURCES =          VbrTag.c 	bitstream.c 	encoder.c 	fft.c         id3tag.c         lame.c         newmdct.c 	pcm.c 	psymodel.c 	quantize.c 	quantize_pvt.c 	reservoir.c 	tables.c 	takehiro.c 	util.c 	vbrquantize.c 	version.c 	mpglib_interface.c 	vorbis_interface.c
+libmp3lame_la_SOURCES =          VbrTag.c 	bitstream.c 	encoder.c 	fft.c         id3tag.c         lame.c         newmdct.c 	psymodel.c 	quantize.c 	quantize_pvt.c 	reservoir.c 	tables.c 	takehiro.c 	util.c 	vbrquantize.c 	version.c 	mpglib_interface.c 	vorbis_interface.c
 
 
 noinst_HEADERS =  	VbrTag.h 	bitstream.h 	encoder.h 	fft.h 	id3tag.h 	l3side.h 	lame-analysis.h 	machine.h 	newmdct.h 	psymodel.h 	quantize.h  	quantize_pvt.h 	reservoir.h 	tables.h 	util.h 	version.h
@@ -122,8 +122,7 @@ noinst_HEADERS =  	VbrTag.h 	bitstream.h 	encoder.h 	fft.h 	id3tag.h 	l3side.h 	
 
 CLEANFILES = lclint.txt
 
-LCLINTFLAGS =  	+posixlib 	+showsummary 	+showalluses 	+whichlib 	+forcehints 	-fixedformalarray 	+matchanyintegral 	-Dlint
-
+LCLINTFLAGS = +posixlib +showsummary +showalluses +whichlib +forcehints -Dlint
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../config.h
 CONFIG_CLEAN_FILES = 
@@ -133,19 +132,19 @@ CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 ANSI2KNR = $(top_srcdir)/ansi2knr
-@LIB_WITH_DECODER_FALSE@@HAVE_NASM_TRUE@libmp3lame_la_DEPENDENCIES =  \
-@LIB_WITH_DECODER_FALSE@@HAVE_NASM_TRUE@$(top_srcdir)/libmp3lame/@CPUTYPE@/liblameasmroutines.la
-@LIB_WITH_DECODER_TRUE@@HAVE_NASM_FALSE@libmp3lame_la_DEPENDENCIES =  \
-@LIB_WITH_DECODER_TRUE@@HAVE_NASM_FALSE@$(top_srcdir)/mpglib/libmpgdecoder.la
-@LIB_WITH_DECODER_TRUE@@HAVE_NASM_TRUE@libmp3lame_la_DEPENDENCIES =  \
-@LIB_WITH_DECODER_TRUE@@HAVE_NASM_TRUE@$(top_srcdir)/libmp3lame/@CPUTYPE@/liblameasmroutines.la \
-@LIB_WITH_DECODER_TRUE@@HAVE_NASM_TRUE@$(top_srcdir)/mpglib/libmpgdecoder.la
-@LIB_WITH_DECODER_FALSE@@HAVE_NASM_FALSE@libmp3lame_la_DEPENDENCIES = 
+@HAVE_NASM_TRUE@@LIB_WITH_DECODER_FALSE@libmp3lame_la_DEPENDENCIES =  \
+@HAVE_NASM_TRUE@@LIB_WITH_DECODER_FALSE@$(top_srcdir)/libmp3lame/@CPUTYPE@/liblameasmroutines.la
+@HAVE_NASM_FALSE@@LIB_WITH_DECODER_TRUE@libmp3lame_la_DEPENDENCIES =  \
+@HAVE_NASM_FALSE@@LIB_WITH_DECODER_TRUE@$(top_srcdir)/mpglib/libmpgdecoder.la
+@HAVE_NASM_FALSE@@LIB_WITH_DECODER_FALSE@libmp3lame_la_DEPENDENCIES = 
+@HAVE_NASM_TRUE@@LIB_WITH_DECODER_TRUE@libmp3lame_la_DEPENDENCIES =  \
+@HAVE_NASM_TRUE@@LIB_WITH_DECODER_TRUE@$(top_srcdir)/libmp3lame/@CPUTYPE@/liblameasmroutines.la \
+@HAVE_NASM_TRUE@@LIB_WITH_DECODER_TRUE@$(top_srcdir)/mpglib/libmpgdecoder.la
 libmp3lame_la_OBJECTS =  VbrTag$U.lo bitstream$U.lo encoder$U.lo \
-fft$U.lo id3tag$U.lo lame$U.lo newmdct$U.lo pcm$U.lo psymodel$U.lo \
-quantize$U.lo quantize_pvt$U.lo reservoir$U.lo tables$U.lo \
-takehiro$U.lo util$U.lo vbrquantize$U.lo version$U.lo \
-mpglib_interface$U.lo vorbis_interface$U.lo
+fft$U.lo id3tag$U.lo lame$U.lo newmdct$U.lo psymodel$U.lo quantize$U.lo \
+quantize_pvt$U.lo reservoir$U.lo tables$U.lo takehiro$U.lo util$U.lo \
+vbrquantize$U.lo version$U.lo mpglib_interface$U.lo \
+vorbis_interface$U.lo
 CFLAGS = @CFLAGS@
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -158,14 +157,13 @@ DIST_COMMON =  Makefile.am Makefile.in
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
-TAR = tar
+TAR = gtar
 GZIP_ENV = --best
 DEP_FILES =  .deps/VbrTag.P .deps/bitstream.P .deps/encoder.P \
 .deps/fft.P .deps/id3tag.P .deps/lame.P .deps/mpglib_interface.P \
-.deps/newmdct.P .deps/pcm.P .deps/psymodel.P .deps/quantize.P \
-.deps/quantize_pvt.P .deps/reservoir.P .deps/tables.P .deps/takehiro.P \
-.deps/util.P .deps/vbrquantize.P .deps/version.P \
-.deps/vorbis_interface.P
+.deps/newmdct.P .deps/psymodel.P .deps/quantize.P .deps/quantize_pvt.P \
+.deps/reservoir.P .deps/tables.P .deps/takehiro.P .deps/util.P \
+.deps/vbrquantize.P .deps/version.P .deps/vorbis_interface.P
 SOURCES = $(libmp3lame_la_SOURCES)
 OBJECTS = $(libmp3lame_la_OBJECTS)
 
@@ -270,8 +268,6 @@ mpglib_interface_.c: mpglib_interface.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/mpglib_interface.c; then echo $(srcdir)/mpglib_interface.c; else echo mpglib_interface.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > mpglib_interface_.c
 newmdct_.c: newmdct.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/newmdct.c; then echo $(srcdir)/newmdct.c; else echo newmdct.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > newmdct_.c
-pcm_.c: pcm.c $(ANSI2KNR)
-	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/pcm.c; then echo $(srcdir)/pcm.c; else echo pcm.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > pcm_.c
 psymodel_.c: psymodel.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/psymodel.c; then echo $(srcdir)/psymodel.c; else echo psymodel.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > psymodel_.c
 quantize_.c: quantize.c $(ANSI2KNR)
@@ -294,10 +290,10 @@ vorbis_interface_.c: vorbis_interface.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/vorbis_interface.c; then echo $(srcdir)/vorbis_interface.c; else echo vorbis_interface.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > vorbis_interface_.c
 VbrTag_.o VbrTag_.lo bitstream_.o bitstream_.lo encoder_.o encoder_.lo \
 fft_.o fft_.lo id3tag_.o id3tag_.lo lame_.o lame_.lo \
-mpglib_interface_.o mpglib_interface_.lo newmdct_.o newmdct_.lo pcm_.o \
-pcm_.lo psymodel_.o psymodel_.lo quantize_.o quantize_.lo \
-quantize_pvt_.o quantize_pvt_.lo reservoir_.o reservoir_.lo tables_.o \
-tables_.lo takehiro_.o takehiro_.lo util_.o util_.lo vbrquantize_.o \
+mpglib_interface_.o mpglib_interface_.lo newmdct_.o newmdct_.lo \
+psymodel_.o psymodel_.lo quantize_.o quantize_.lo quantize_pvt_.o \
+quantize_pvt_.lo reservoir_.o reservoir_.lo tables_.o tables_.lo \
+takehiro_.o takehiro_.lo util_.o util_.lo vbrquantize_.o \
 vbrquantize_.lo version_.o version_.lo vorbis_interface_.o \
 vorbis_interface_.lo : $(ANSI2KNR)
 
@@ -403,7 +399,7 @@ distdir: $(DISTFILES)
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
-	    cp -pr $$d/$$file $(distdir)/$$file; \
+	    cp -pr $$/$$file $(distdir)/$$file; \
 	  else \
 	    test -f $(distdir)/$$file \
 	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \

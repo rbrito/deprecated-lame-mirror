@@ -2,7 +2,7 @@
 <html>
 <head>
    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-   <meta name="GENERATOR" content="Mozilla/4.7 [en] (X11; I; Linux 2.2.12-20 i686) [Netscape]">
+   <meta name="GENERATOR" content="Mozilla/4.7 [en] (X11; I; Linux 2.4.0-test9 i586) [Netscape]">
    <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
    <title>LAME Changelog</title>
 </head>
@@ -19,7 +19,50 @@ Starting with LAME 3.0:
 
 <hr></h3>
 
-<h3> LAME 3.87beta&nbsp; September 25 2000</h3>
+<h3>
+LAME 3.88alpha (CVS)</h3>
+
+<ul>
+<li>
+Takehiro Tominaga:&nbsp; LAME restructured into a true shared library and
+front end application.&nbsp; Slight changes to the API.</li>
+
+<li>
+<font color="#000000">Naoki Shibata:</font></li>
+
+<ul>
+<li>
+<font color="#FF0000">improvements to psychoacoustics</font><font color="#000000">
+(--nspsytune)</font></li>
+
+<li>
+<font color="#FF0000">BUG in long block pre echo control fixed </font><font color="#000000">(some
+out of range array access in M/S psychoacoustics)</font></li>
+</ul>
+
+<li>
+<font color="#000000">Ralf Kempkens:&nbsp;&nbsp;&nbsp; Visual Basic Script
+for lame, suggested to put it on your Windows Desktop and you can drag'n'drop
+Waves to encode on it.</font></li>
+
+<li>
+<font color="#000000">Alexander Stumpf:&nbsp;&nbsp;&nbsp; improved lame.bat
+for 4Dos users</font></li>
+
+<li>
+<font color="#000000">Frank Klemm, Robert Hegemann:&nbsp;&nbsp;&nbsp; added
+assembler code for CPU feature detection on runtime (MMX, 3DNow, SIMD)</font></li>
+
+<li>
+<font color="#000000">Florian Bome, Alexander Leidinger:&nbsp;&nbsp;&nbsp; more work on configure
+stuff</font></li>
+
+<li>
+<font color="#000000">Alexander Leidinger:&nbsp;&nbsp;&nbsp; automake/libtool generated Makefiles</font></li>
+</ul>
+
+<h3>
+LAME 3.87alpha&nbsp; September 25 2000</h3>
 
 <ul>
 <li>
@@ -59,7 +102,7 @@ Magnus Holmgren:&nbsp; README and Makefile for (free) Borland C++&nbsp;
 compiler. Will also compile lame_enc.dll, but this is untested.</li>
 
 <li>
-Florian Bome:&nbsp;&nbsp; LAME&nbsp;finally has a&nbsp; ./configure script!!</li>
+Florian Bome:&nbsp;&nbsp; LAME finally has a&nbsp; ./configure script!!</li>
 </ul>
 
 <h3>

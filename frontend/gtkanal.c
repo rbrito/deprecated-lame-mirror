@@ -117,7 +117,7 @@ int gtkmakeframe(void)
   pinfo->frameNum = frameNum;
   pinfo->sampfreq=gfp->out_samplerate;
   pinfo->framesize=576*gfc->mode_gr;
-  pinfo->stereo = gfc->channels_out;
+  pinfo->stereo = gfc->stereo;
 
   /* If the analsys code is enabled, lame will writes data into gfc->pinfo,
    * and mpg123 will write data into mpg123_pinfo.  Set these so
@@ -133,7 +133,7 @@ int gtkmakeframe(void)
 
     /* add a delay of framesize-DECDELAY, which will make the total delay
      * exactly one frame, so we can sync MP3 output with WAV input */
-    for ( ch = 0; ch < gfc->channels_out; ch++ ) {
+    for ( ch = 0; ch < gfc->stereo; ch++ ) {
       for ( j = 0; j < gfp->framesize-DECDELAY; j++ )
 	gfc->pinfo->pcmdata2[ch][j] = gfc->pinfo->pcmdata2[ch][j+gfp->framesize];
       for ( j = 0; j < gfp->framesize; j++ )

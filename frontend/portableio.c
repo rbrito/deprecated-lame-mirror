@@ -64,35 +64,6 @@
  * Big/little-endian independent I/O routines.
  ****************************************************************/
 
-/*
- * It is a hoax to call this code portable-IO:
- * 
- *   - It doesn't work on machines with CHAR_BIT != 8
- *   - it also don't test this error condition
- *   - otherwise it tries to handle CHAR_BIT != 8 by things like 
- *     masking 'putc(i&0xff,fp)'
- *   - It doesn't handle EOF in any way
- *   - it only works with ints with 32 or more bits
- *   - It is a collection of initial buggy code with patching the known errors
- *     instead of CORRECTING them! 
- *     For that see comments on the old Read16BitsHighLow()
- */
-
-#ifdef KLEMM_36
-
-signed int    ReadByte ( FILE* fp )
-{
-    int  result = getc (fp);
-    return result == EOF  ?  0  :  (signed char) (result & 0xFF);
-}
-
-unsigned int  ReadByteUnsigned ( FILE* fp )
-{
-    int  result = getc (fp);
-    return result == EOF  ?  0  :  (unsigned char) (result & 0xFF);
-}
-
-#else
 
 int
 ReadByte(FILE *fp)
@@ -105,19 +76,7 @@ ReadByte(FILE *fp)
 	return result;
 }
 
-#endif
 
-#ifdef KLEMM_36
-
-int  Read16BitsLowHigh ( FILE* fp )
-{
-    int  low  = ReadByteUnsigned (fp);
-    int  high = ReadByte         (fp);
-    
-    return (high << 8) | low;
-}
-
-#else
 int
 Read16BitsLowHigh(FILE *fp)
 {
@@ -133,57 +92,24 @@ Read16BitsLowHigh(FILE *fp)
 #endif	/* THINK_C */
 	return(result);
 }
-#endif
 
 
-#ifdef KLEMM_36
-
-int  Read16BitsHighLow ( FILE* fp )
-{
-    int  high = ReadByte         (fp);
-    int  low  = ReadByteUnsigned (fp);
-    
-    return (high << 8) | low;
-}
-
-#else
 int
 Read16BitsHighLow(FILE *fp)
 {
 	int	first, second, result;
-     
-        /* Reads the High bits, the value is -128...127 
-	 * (which gave after upscaling the -32768...+32512
-	 * Why this value is not converted to signed char?
-	 */
-        first = 0xff & getc(fp);
-        /* Reads the Lows bits, the value is 0...255 
-	 * This is correct. This value gives an additional offset
-	 * for the High bits
-	 */
+
+	first = 0xff & getc(fp);
 	second = 0xff & getc(fp);
 
-        /* This is right */
 	result = (first << 8) + second;
-    
-        /* Now we are starting to correct the nasty bug of the first instruction
-	 * The value of the high bits is wrong. Always. So we must correct this
-	 * value. This seems to be not necessary for THINK_C42. This is either
-	 * a 16 bit compiler with 16 bit ints (where this bug is hidden and 0x10000
-	 * is not in the scope of an int) or it is not a C compiler, but only a
-	 * C like compiler. In the first case the '#ifndef THINK_C42' is wrong
-	 * because it's not a property of the THINK_C42 compiler, but of all compilers
-	 * with sizeof(int)*CHAR_BIT < 18.
-	 * Another nasty thing is that the rest of the code doesn't work for 16 bit ints,
-	 * so this patch don't solve the 16 bit problem.
-         */
 #ifndef	THINK_C42
 	if (result & 0x8000)
 		result = result - 0x10000;
 #endif	/* THINK_C */
 	return(result);
 }
-#endif
+
 
 void
 Write8Bits(FILE *fp, int i)
@@ -207,18 +133,7 @@ Write16BitsHighLow(FILE *fp, int i)
 	putc(i&0xff,fp);
 }
 
-#ifdef KLEMM_36
 
-int  Read24BitsHighLow ( FILE* fp )
-{
-    int  high = ReadByte         (fp);
-    int  med  = ReadByteUnsigned (fp);
-    int  low  = ReadByteUnsigned (fp);
-    
-    return (high << 16) | (med << 8) | low;
-}
-
-#else
 int
 Read24BitsHighLow(FILE *fp)
 {
@@ -234,23 +149,9 @@ Read24BitsHighLow(FILE *fp)
 		result = result - 0x1000000;
 	return(result);
 }
-#endif
 
 #define	Read32BitsLowHigh(f)	Read32Bits(f)
 
-#ifdef KLEMM_36
-
-int  Read32Bits ( FILE* fp )
-{
-    int  low  = ReadByte         (fp);
-    int  medl = ReadByteUnsigned (fp);
-    int  medh = ReadByteUnsigned (fp);
-    int  high = ReadByteUnsigned (fp);
-    
-    return (high << 24) | (medh << 16) | (medl << 8) | low;
-}
-
-#else
 
 int
 Read32Bits(FILE *fp)
@@ -267,22 +168,7 @@ Read32Bits(FILE *fp)
 #endif	/* CRAY */
 	return(result);
 }
-#endif
 
-
-#ifdef KLEMM_36
-
-int  Read32BitsHighLow ( FILE* fp )
-{
-    int  high = ReadByte         (fp);
-    int  medh = ReadByteUnsigned (fp);
-    int  medl = ReadByteUnsigned (fp);
-    int  low  = ReadByteUnsigned (fp);
-    
-    return (high << 24) | (medh << 16) | (medl << 8) | low;
-}
-
-#else
 
 int
 Read32BitsHighLow(FILE *fp)
@@ -300,7 +186,6 @@ Read32BitsHighLow(FILE *fp)
 	return(result);
 }
 
-#endif
 
 void
 Write32Bits(FILE *fp, int i)
@@ -325,34 +210,19 @@ Write32BitsHighLow(FILE *fp, int i)
 	Write16BitsHighLow(fp,(int)(i&0xffffL));
 }
 
-#ifdef KLEMM_36
-void ReadBytes (FILE     *fp, char *p, int n) 
-{
-    memset ( p, 0, n );
-    fread  ( p, 1, n, fp );
-}
-#else
 void ReadBytes(FILE	*fp, char *p, int n)
 {
-	/* What about fread? */
-	 
 	while (!feof(fp) & (n-- > 0))
 		*p++ = getc(fp);
 }
-#endif
 
 void ReadBytesSwapped(FILE *fp, char *p, int n)
 {
 	register char	*q = p;
 
-	/* What about fread? */
-	  
 	while (!feof(fp) & (n-- > 0))
 		*q++ = getc(fp);
 
-        /* If not all bytes could be read, the resorting is different
-	 * from the normal resorting. Is this intention or another bug?
-	 */
 	for (q--; p < q; p++, q--){
 		n = *p;
 		*p = *q;
@@ -360,35 +230,18 @@ void ReadBytesSwapped(FILE *fp, char *p, int n)
 	}
 }
 
-#ifdef KLEMM_36
 void WriteBytes(FILE *fp, char *p, int n)
 {
-    /* return n == */
-    fwrite ( p, 1, n, fp );
-}
-#else
-void WriteBytes(FILE *fp, char *p, int n)
-{
-        /* No error condition checking */
-        while (n-- > 0)
+	while (n-- > 0)
 		putc(*p++, fp);
 }
-#endif
-#ifdef KLEMM_36
-void WriteBytesSwapped(FILE *fp, char *p, int n)
-{
-    p += n;
-    while ( n-- > 0 )
-	putc ( *--p, fp );
-}
-#else
+
 void WriteBytesSwapped(FILE *fp, char *p, int n)
 {
 	p += n-1;
 	while (n-- > 0)
 		putc(*p--, fp);
 }
-#endif
 
 
 
@@ -435,15 +288,10 @@ printf("ConvertFromIEEEExtended(%lx,%lx,%lx,%lx,%lx,%lx,%lx,%lx,%lx,%lx\r",
 			|	((unsigned long)(bytes[8] & 0xFF) << 8)
 			|	((unsigned long)(bytes[9] & 0xFF));
 
-        /* This case should also be called if the number is below the smallest
-	 * positive double variable */
 	if (expon == 0 && hiMant == 0 && loMant == 0) {
 		f = 0;
 	}
 	else {
-	        /* This case should also be called if the number is too large to fit into 
-		 * a double variable */
-	    
 		if (expon == 0x7FFF) {	/* Infinity or NaN */
 			f = HUGE_VAL;
 		}
@@ -467,9 +315,9 @@ printf("ConvertFromIEEEExtended(%lx,%lx,%lx,%lx,%lx,%lx,%lx,%lx,%lx,%lx\r",
 double
 ReadIeeeExtendedHighLow(FILE *fp)
 {
-	char	bytes [10];
+	char	bits[10];
 
-	ReadBytes ( fp, bytes, 10 );
-	return ConvertFromIeeeExtended ( bytes );
+	ReadBytes(fp, bits, 10);
+	return ConvertFromIeeeExtended(bits);
 }
 

@@ -126,7 +126,7 @@ int  usage ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramNa
               "\n"
               "Try  \"%s --help\"     for more information\n" 
               "  or \"%s --longhelp\"\n"
-              "  or \"%s --?\"        for a complete options list\n\n",
+              "  or \"%s -?\"         for a complete options list\n\n",
               ProgramName, ProgramName, ProgramName, ProgramName ); 
     return 0;
 }
@@ -1034,7 +1034,7 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 		        break;
 			
 		    case '?':   
-		        short_help ( gfp, stderr, ProgramName );
+		        long_help ( gfp, stderr, ProgramName, 0 /* LESSMODE=NO */);
 		        return -1;
 		        
 		    default:    

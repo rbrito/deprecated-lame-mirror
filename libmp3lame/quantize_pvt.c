@@ -221,7 +221,7 @@ FLOAT8 ATHmdct( lame_global_flags *gfp, FLOAT8 f )
     lame_internal_flags *gfc = gfp->internal_flags;
     FLOAT8 ath;
   
-    ath = ATHformula( 1.e3 * f );
+    ath = ATHformula( f );
 	  
     /* convert to energy */
     if (gfc->nsPsy.use) {
@@ -319,18 +319,16 @@ void compute_ath( lame_global_flags *gfp, FLOAT8 ATH_l[], FLOAT8 ATH_s[] )
 
 
 
-/* convert from L/R <-> Mid/Side, src == dst allowed */
-void ms_convert(FLOAT8 dst[2][576], FLOAT8 src[2][576])
+/* convert from L/R <-> Mid/Side */
+void ms_convert(FLOAT8 xr[2][576],FLOAT8 xr_org[2][576])
 {
-    FLOAT8 l;
-    FLOAT8 r;
-    int i;
-    for (i = 0; i < 576; ++i) {
-        l = src[0][i];
-        r = src[1][i];
-        dst[0][i] = (l+r) * (FLOAT8)(SQRT2*0.5);
-        dst[1][i] = (l-r) * (FLOAT8)(SQRT2*0.5);
-    }
+  int i;
+  for ( i = 0; i < 576; i++ ) {
+    FLOAT8 l = xr_org[0][i];
+    FLOAT8 r = xr_org[1][i];
+    xr[0][i] = (l+r)*(SQRT2*0.5);
+    xr[1][i] = (l-r)*(SQRT2*0.5);
+  }
 }
 
 
@@ -355,13 +353,13 @@ int targ_bits[2],int mean_bits, int gr)
 
   bits=0;
 
-  for (ch=0 ; ch < gfc->channels_out ; ch ++) {
+  for (ch=0 ; ch < gfc->stereo ; ch ++) {
     /******************************************************************
      * allocate bits for each channel 
      ******************************************************************/
     cod_info = &l3_side->gr[gr].ch[ch].tt;
     
-    targ_bits[ch]=Min(4095,tbits/gfc->channels_out);
+    targ_bits[ch]=Min(4095,tbits/gfc->stereo);
     
     add_bits[ch]=(pe[gr][ch]-750)/1.4;
     /* short blocks us a little extra, no matter what the pe */
@@ -379,11 +377,11 @@ int targ_bits[2],int mean_bits, int gr)
     bits += add_bits[ch];
   }
   if (bits > extra_bits)
-    for (ch=0 ; ch < gfc->channels_out ; ch ++) {
+    for (ch=0 ; ch < gfc->stereo ; ch ++) {
       add_bits[ch] = (extra_bits*add_bits[ch])/bits;
     }
 
-  for (ch=0 ; ch < gfc->channels_out ; ch ++) {
+  for (ch=0 ; ch < gfc->stereo ; ch ++) {
     targ_bits[ch] = targ_bits[ch] + add_bits[ch];
     extra_bits -= add_bits[ch];
   }
@@ -576,7 +574,8 @@ int  calc_noise(
         const gr_info           * const cod_info,
         const III_psy_xmin      * const l3_xmin, 
         const III_scalefac_t    * const scalefac,
-              calc_noise_result * const res )
+              FLOAT8                    xfsf [4][SBMAX_l], 
+              calc_noise_result *       res )
 {
   int sfb,start, end, j,l, i, over=0;
   FLOAT8 sum, bw;
@@ -618,10 +617,10 @@ int  calc_noise(
 	      l++;
 	    } while (l < end);
 
-	    noise  = sum / bw;
-            noise /= l3_xmin->s[sfb][i];
+	    xfsf[i+1][sfb]  = sum / bw;
+            xfsf[i+1][sfb] /= l3_xmin->s[sfb][i];
             
-            res->dist_s[i][sfb] = noise;
+            noise = xfsf[i+1][sfb];
 	    
             /* multiplying here is adding in dB */
 	    tot_noise *= Max(noise, 1E-20);         // IISC this is nonsense, a nearly nondistorted band doesn't comp a heavly distorted one
@@ -663,14 +662,14 @@ int  calc_noise(
 	}
 
 	if (gfc->nsPsy.use) {
-	  noise = sum;
+	  xfsf[0][sfb] = sum;
 	  sum /= bw;
 	} else {
-	  noise = sum / bw;
+	  xfsf[0][sfb] = sum / bw;
 	}
 
-        noise /= l3_xmin->l[sfb];
-	res->dist_l[sfb] = noise;
+        xfsf[0][sfb] /= l3_xmin->l[sfb];
+	noise = xfsf[0][sfb];
 	/* multiplying here is adding in dB */
 	tot_noise *= Max(noise, 1E-20);
 	if (noise > 1) {
@@ -752,10 +751,11 @@ void set_pinfo (
 
     III_psy_xmin l3_xmin;
     calc_noise_result noise;
+    FLOAT8 xfsf[4][SBMAX_l];
 
     calc_xmin (gfp,xr, ratio, cod_info, &l3_xmin);
 
-    calc_noise (gfc, xr, l3_enc, cod_info, &l3_xmin, scalefac, &noise);
+    calc_noise (gfc, xr, l3_enc, cod_info, &l3_xmin, scalefac, xfsf, &noise);
 
     if (cod_info->block_type == SHORT_TYPE) {
         for (j=0, sfb = 0; sfb < SBMAX_s; sfb++ )  {
@@ -806,7 +806,7 @@ void set_pinfo (
                 /* convert to MDCT units */
                 en1=1e15;  /* scaling so it shows up on FFT plot */
                 gfc->pinfo->xfsf_s[gr][ch][3*sfb+i] 
-                    = en1*noise.dist_s[i][sfb]*l3_xmin.s[sfb][i];
+                    = en1*xfsf[i+1][sfb]*l3_xmin.s[sfb][i];
                 gfc->pinfo->en_s[gr][ch][3*sfb+i] = en1*en0;
 
                 if (ratio->en.s[sfb][i]>0)
@@ -878,7 +878,7 @@ void set_pinfo (
 
             /* convert to MDCT units */
             en1=1e15;  /* scaling so it shows up on FFT plot */
-            gfc->pinfo->xfsf[gr][ch][sfb] = en1*noise.dist_l[sfb]*l3_xmin.l[sfb];
+            gfc->pinfo->xfsf[gr][ch][sfb] =  en1*xfsf[0][sfb]*l3_xmin.l[sfb];
             gfc->pinfo->en[gr][ch][sfb] = en1*en0;
             if (ratio->en.l[sfb]>0)
                 en0 = en0/ratio->en.l[sfb];
@@ -943,7 +943,7 @@ void set_frame_pinfo(
     
     /* reconstruct the scalefactors in case SCSFI was used 
      */
-    for (ch = 0; ch < gfc->channels_out; ch ++) {
+    for (ch = 0; ch < gfc->stereo; ch ++) {
         for (sfb = 0; sfb < SBMAX_l; sfb ++) {
             if (scalefac[1][ch].l[sfb] == -1) {/* scfsi */
                 act_scalefac[ch].l[sfb] = scalefac[0][ch].l[sfb];
@@ -957,7 +957,7 @@ void set_frame_pinfo(
     /* for every granule and channel patch l3_enc and set info
      */
     for (gr = 0; gr < gfc->mode_gr; gr ++) {
-        for (ch = 0; ch < gfc->channels_out; ch ++) {
+        for (ch = 0; ch < gfc->stereo; ch ++) {
             int i;
             gr_info *cod_info = &gfc->l3_side.gr[gr].ch[ch].tt;
             

@@ -76,12 +76,10 @@ FFT's                    <---------1024---------->
 
 typedef FLOAT8 pedata[2][2];
 
-int  lame_encode_mp3_frame (				// Output
-	lame_global_flags* const  gfp,			// Context
-	sample_t*                 inbuf_l,              // Input
-	sample_t*                 inbuf_r,              // Input
-	unsigned char*            mp3buf, 		// Output
-	size_t                    mp3buf_size )		// Output
+int lame_encode_mp3_frame(lame_global_flags *gfp,
+sample_t inbuf_l[],
+sample_t inbuf_r[],
+char *mp3buf, int mp3buf_size)
 {
 #ifdef macintosh /* PLL 14/04/2000 */
   static FLOAT8 xr[2][2][576];
@@ -95,7 +93,7 @@ int  lame_encode_mp3_frame (				// Output
   III_psy_ratio masking_MS_ratio[2][2]; /*MS ratios */
   III_psy_ratio (*masking)[2][2];  /*LR ratios and MS ratios*/
   III_scalefac_t scalefac[2][2];
-  const sample_t *inbuf[2];
+  sample_t *inbuf[2];
   lame_internal_flags *gfc=gfp->internal_flags;
 
   pedata pe,pe_MS;
@@ -117,16 +115,11 @@ int  lame_encode_mp3_frame (				// Output
   inbuf[0]=inbuf_l;
   inbuf[1]=inbuf_r;
 
-  /* Now another nasty example about programming:
-   * A lot of lame functions destroy data, so you can't trust
-   * in that data is not modified. A lot of prophylactic copying is done.
-   */
-   
   if (gfp->scale != 0) {
     int i;
     for (i=0 ; i<gfp->framesize; ++i) {
       inbuf_l[i] *= gfp->scale;
-      if (gfc->channels_out==2) inbuf_r[i] *= gfp->scale;
+      if (gfc->stereo==2) inbuf_r[i] *= gfp->scale;
     }
   }
   
@@ -167,18 +160,18 @@ int  lame_encode_mp3_frame (				// Output
       for (i=0, j=0; i<286+576*(1+gfc->mode_gr); ++i) {
 	if (i<576*gfc->mode_gr) {
 	  primebuff0[i]=0;
-	  if (gfc->channels_out==2) 
+	  if (gfc->stereo==2) 
 	    primebuff1[i]=0;
 	}else{
 	  primebuff0[i]=inbuf[0][j];
-	  if (gfc->channels_out==2) 
+	  if (gfc->stereo==2) 
 	    primebuff1[i]=inbuf[1][j];
 	  ++j;
 	}
       }
       /* polyphase filtering / mdct */
       for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
-	for ( ch = 0; ch < gfc->channels_out; ch++ ) {
+	for ( ch = 0; ch < gfc->stereo; ch++ ) {
 	  gfc->l3_side.gr[gr].ch[ch].tt.block_type=SHORT_TYPE;
 	}
       }
@@ -237,13 +230,13 @@ int  lame_encode_mp3_frame (				// Output
      * (mt 6/99).
      */
     int ret;
-    const sample_t *bufp[2];  /* address of beginning of left & right granule */
+    sample_t *bufp[2];  /* address of beginning of left & right granule */
     int blocktype[2];
 
     ms_ratio_prev=gfc->ms_ratio[gfc->mode_gr-1];
     for (gr=0; gr < gfc->mode_gr ; gr++) {
 
-      for ( ch = 0; ch < gfc->channels_out; ch++ )
+      for ( ch = 0; ch < gfc->stereo; ch++ )
 	bufp[ch] = &inbuf[ch][576 + gr*576-FFTOFFSET];
 
       ret=L3psycho_anal( gfp, bufp, gr, 
@@ -252,7 +245,7 @@ int  lame_encode_mp3_frame (				// Output
 		     pe[gr],pe_MS[gr],blocktype);
       if (ret!=0) return -4;
 
-      for ( ch = 0; ch < gfc->channels_out; ch++ )
+      for ( ch = 0; ch < gfc->stereo; ch++ )
 	gfc->l3_side.gr[gr].ch[ch].tt.block_type=blocktype[ch];
 
     }
@@ -260,7 +253,7 @@ int  lame_encode_mp3_frame (				// Output
     gfc->ms_ratio[1]=gfc->ms_ratio[gfc->mode_gr-1];
   }else{
     for (gr=0; gr < gfc->mode_gr ; gr++)
-      for ( ch = 0; ch < gfc->channels_out; ch++ ) {
+      for ( ch = 0; ch < gfc->stereo; ch++ ) {
 	gfc->l3_side.gr[gr].ch[ch].tt.block_type=NORM_TYPE;
 	pe_MS[gr][ch]=pe[gr][ch]=700;
       }
@@ -269,7 +262,7 @@ int  lame_encode_mp3_frame (				// Output
 
   /* block type flags */
   for( gr = 0; gr < gfc->mode_gr; gr++ ) {
-    for ( ch = 0; ch < gfc->channels_out; ch++ ) {
+    for ( ch = 0; ch < gfc->stereo; ch++ ) {
       gr_info *cod_info = &gfc->l3_side.gr[gr].ch[ch].tt;
       cod_info->mixed_block_flag = 0;     /* never used by this model */
       if (cod_info->block_type == NORM_TYPE )
@@ -284,7 +277,7 @@ int  lame_encode_mp3_frame (				// Output
   mdct_sub48(gfc, inbuf[0], inbuf[1], xr);
   /* re-order the short blocks, for more efficient encoding below */
   for (gr = 0; gr < gfc->mode_gr; gr++) {
-    for (ch = 0; ch < gfc->channels_out; ch++) {
+    for (ch = 0; ch < gfc->stereo; ch++) {
       gr_info *cod_info = &gfc->l3_side.gr[gr].ch[ch].tt;
       if (cod_info->block_type==SHORT_TYPE) {
 	freorder(gfc->scalefac_band.s,xr[gr][ch]);
@@ -351,7 +344,7 @@ int  lame_encode_mp3_frame (				// Output
 
   if (gfp->analysis && gfc->pinfo != NULL) {
     for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
-      for ( ch = 0; ch < gfc->channels_out; ch++ ) {
+      for ( ch = 0; ch < gfc->stereo; ch++ ) {
 	gfc->pinfo->ms_ratio[gr]=gfc->ms_ratio[gr];
 	gfc->pinfo->ms_ener_ratio[gr]=gfc->ms_ener_ratio[gr];
 	gfc->pinfo->blocktype[gr][ch]=
@@ -411,7 +404,7 @@ int  lame_encode_mp3_frame (				// Output
 
   if (gfp->analysis && gfc->pinfo != NULL) {
     int j;
-    for ( ch = 0; ch < gfc->channels_out; ch++ ) {
+    for ( ch = 0; ch < gfc->stereo; ch++ ) {
       for ( j = 0; j < FFTOFFSET; j++ )
 	gfc->pinfo->pcmdata[ch][j] = gfc->pinfo->pcmdata[ch][j+gfp->framesize];
       for ( j = FFTOFFSET; j < 1600; j++ ) {

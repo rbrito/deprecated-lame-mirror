@@ -25,7 +25,7 @@
 #include "l3side.h"
 
 int L3psycho_anal( lame_global_flags *gfc,
-                    const sample_t *buffer[2], int gr, 
+                    sample_t *buffer[2], int gr , 
 		    FLOAT8 *ms_ratio, 
 		    FLOAT8 *ms_ratio_next, 
 		    FLOAT8 *ms_ener_ratio, 

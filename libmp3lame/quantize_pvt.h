@@ -54,8 +54,6 @@ typedef struct calc_noise_result_t {
     FLOAT8  tot_noise;       /* sum of all quantization noise */
     FLOAT8  max_noise;       /* max quantization noise */
     float   klemm_noise;
-    FLOAT8  dist_l[SBMAX_l];
-    FLOAT8  dist_s[3][SBMAX_s];
 } calc_noise_result;
 
 void    compute_ath (lame_global_flags * gfp, FLOAT8 ATH_l[SBPSY_l],
@@ -88,7 +86,7 @@ int     calc_noise (const lame_internal_flags * gfc, const FLOAT8 xr[576],
                     const int ix[576], const gr_info * cod_info,
                     const III_psy_xmin * l3_xmin,
                     const III_scalefac_t * scalefac,
-                    calc_noise_result * res);
+                    FLOAT8 distort[4][SBMAX_l], calc_noise_result * res);
 
 void    set_frame_pinfo (lame_global_flags *gfp, FLOAT8 xr[2][2][576],
                          III_psy_ratio ratio[2][2], int l3_enc[2][2][576],

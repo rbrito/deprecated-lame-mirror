@@ -120,6 +120,7 @@ double  ATHformula ( double freq )
     double    freq_log;
     unsigned  index;
     
+    freq *= 1000.;
     if ( freq <    10. ) freq =    10.;
     if ( freq > 25000. ) freq = 25000.;
     
@@ -131,18 +132,17 @@ double  ATHformula ( double freq )
 
 #else
 
-FLOAT8 ATHformula(FLOAT8 freq)
+FLOAT8 ATHformula(FLOAT8 f)
 {
   FLOAT8 ath;
-  freq  = Max (   20, freq);   // reaches +84 dB which is known as the subsonic/sonic border
-  freq  = Min (18000, freq);
+  f  = Max(0.01, f);
+  f  = Min(18.0,f);
 
   /* from Painter & Spanias, 1997 */
-  /* minimum: (i=77) 3.3 kHz = -5 dB */
-  freq *= 1.e-3;
-  ath   =  3.640 * pow (freq, -0.8)
-         - 6.500 * exp (-0.6*pow (freq-3.3, 2.) )
-         + 0.001 * pow (freq, 4.);
+  /* minimum: (i=77) 3.3kHz = -5db */
+  ath =    3.640 * pow(f,-0.8)
+         - 6.500 * exp(-0.6*pow(f-3.3,2.0))
+         + 0.001 * pow(f,4.0);
   return ath;
 }
 
@@ -211,14 +211,16 @@ int bRate,        /* legal rates from 32 to 448 */
 int version,      /* MPEG-1 or MPEG-2 LSF */
 int samplerate)   /* convert bitrate in kbps to index */
 {
-    int  bitrate = 0;
-    int  i;
+  int     index = 0;
+  int     bitrate = 10000;
   
-    for ( i = 1; i <= 14; i++ )
-        if ( ABS (bitrate_table[version][i] - bRate) < ABS (bitrate - bRate) )
-            bitrate = bitrate_table [version] [i];
-	    
-    return bitrate;
+  while( index<15)   {
+    if( ABS( bitrate_table[version][index] - bRate) < ABS(bitrate-bRate) ) {
+      bitrate = bitrate_table[version][index];
+    }
+    ++index;
+  }
+  return bitrate;
 }
 
 
@@ -241,19 +243,26 @@ int map2MP3Frequency(int freq)
 }
 
 int BitrateIndex(
-int bRate,        /* legal rates from 32 to 448 kbps */
-int version,      /* MPEG-1 or MPEG-2/2.5 LSF */
+int bRate,        /* legal rates from 32 to 448 */
+int version,      /* MPEG-1 or MPEG-2 LSF */
 int samplerate)   /* convert bitrate in kbps to index */
 {
-    int  i;
+int     index = 0;
+int     found = 0;
 
-    for ( i = 1; i <= 14; i++)
-        if ( bitrate_table [version] [i] == bRate )
-            return i;
-	    
-    ERRORF ( "Bitrate %d kbps not legal for %i Hz output sampling frequency.\n", 
-             bRate, samplerate );
-    return -1;
+    while(!found && index<15)   {
+        if(bitrate_table[version][index] == bRate)
+            found = 1;
+        else
+            ++index;
+    }
+    if(found)
+        return(index);
+    else {
+        ERRORF("Bitrate %d kbps not legal for %i Hz output sampling frequency.\n",
+                bRate, samplerate);
+        return(-1);     /* Error! */
+    }
 }
 
 /* convert samp freq in Hz to index */
@@ -527,15 +536,6 @@ int  has_SIMD ( void )
 #endif
 }    
 
-int  has_SIMD2 ( void )
-{
-#ifdef HAVE_NASM 
-    extern int has_SIMD2_nasm ( void );
-    return has_SIMD2_nasm ();
-#else
-    return 0;   /* don't know, assume not */
-#endif
-}    
 
 /***********************************************************************
  *
@@ -561,8 +561,8 @@ void updateStats( lame_internal_flags * const gfc )
     /* count bitrate indices */
     gfc->bitrate_stereoMode_Hist [gfc->bitrate_index] [4] ++;
     
-    /* count 'em for every mode extension in case of 2 channel encoding */
-    if (gfc->channels_out == 2)
+    /* count 'em for every mode extension in case of stereo encoding */
+    if (gfc->stereo == 2)
         gfc->bitrate_stereoMode_Hist [gfc->bitrate_index] [gfc->mode_ext]++;
 }
 

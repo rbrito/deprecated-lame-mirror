@@ -110,7 +110,7 @@ inline static FLOAT8 mask_add(FLOAT8 m1,FLOAT8 m2,int k,int b, lame_internal_fla
 }
 
 int L3psycho_anal( lame_global_flags * gfp,
-                    const sample_t *buffer[2], int gr_out, 
+                    sample_t *buffer[2],int gr_out , 
                     FLOAT8 *ms_ratio,
                     FLOAT8 *ms_ratio_next,
 		    FLOAT8 *ms_ener_ratio,
@@ -187,7 +187,7 @@ int L3psycho_anal( lame_global_flags * gfp,
     case  8000: samplerate *= 2; break;  /* kludge so mpeg2.5 uses mpeg2 tables  for now */
     case 11025: samplerate *= 2; break;
     case 12000: samplerate *= 2; break;
-    default:    ERRORF("error, invalid sampling frequency: %d Hz\a\n",
+    default:    ERRORF("error, invalid sampling frequency: %d Hz\n",
 			gfp->out_samplerate);
     return -1;
     }
@@ -337,20 +337,11 @@ int L3psycho_anal( lame_global_flags * gfp,
 
   
   
-  numchn = gfc->channels_out;
+  numchn = gfc->stereo;
   /* chn=2 and 3 = Mid and Side channels */
   if (gfp->mode == MPG_MD_JOINT_STEREO) numchn=4;
 
   if (gfc->nsPsy.use) {
-#ifdef KLEMM_04
-    static const sample_t fircoef[] = {
-      0,-0.00851586, 0  , 0.0209036,
-      0,-0.0438162 , 0  , 0.0931738,
-      0,-0.313819  , 0.5,-0.313819,
-      0, 0.0931738 , 0  ,-0.0438162,
-      0, 0.0209036 , 0  ,-0.00851586,
-    };
-#else    
     static const FLOAT fircoef[] = {
       -8.65163e-18,-0.00851586,-6.74764e-18, 0.0209036,
       -3.36639e-17,-0.0438162 ,-1.54175e-17, 0.0931738,
@@ -359,15 +350,11 @@ int L3psycho_anal( lame_global_flags * gfp,
       -3.36639e-17, 0.0209036 ,-6.74764e-18,-0.00851586,
       -8.65163e-18,
     };
-#endif
 
-    for(chn=0;chn<gfc->channels_out;chn++)
+
+    for(chn=0;chn<gfc->stereo;chn++)
       {
-#ifdef KLEMM_04
-	sample_t firbuf [576 + 576/3 + NSFIRLEN];
-#else      
 	FLOAT firbuf[576+576/3+NSFIRLEN];
-#endif	
 
 	/* apply high pass filter of fs/4 */
 	
@@ -375,16 +362,12 @@ int L3psycho_anal( lame_global_flags * gfp,
 	  firbuf[i+NSFIRLEN] = buffer[chn][576-350+(i)];
 
 	for(i=0;i<576+576/3-NSFIRLEN;i++)
-#ifdef KLEMM_04
-	    ns_hpfsmpl [chn] [i] = scalar20 ( fircoef, firbuf+i );
-#else
           {
 	    FLOAT sum = 0;
 	    for(j=0;j<NSFIRLEN;j++)
 	      sum += fircoef[j] * firbuf[i+j];
 	    ns_hpfsmpl[chn][i] = sum;
 	  }
-#endif	    
 
 	for(;i<576+576/3;i++)
 	  ns_hpfsmpl[chn][i] = 0;
@@ -1203,12 +1186,12 @@ int L3psycho_anal( lame_global_flags * gfp,
    * determine final block type
    ***************************************************************/
 
-  for (chn=0; chn<gfc->channels_out; chn++) {
+  for (chn=0; chn<gfc->stereo; chn++) {
     blocktype[chn] = NORM_TYPE;
   }
 
 
-  if (gfc->channels_out==2) {
+  if (gfc->stereo==2) {
     if (!gfp->allow_diff_short || gfp->mode==MPG_MD_JOINT_STEREO) {
       /* force both channels to use the same block type */
       /* this is necessary if the frame is to be encoded in ms_stereo.  */
@@ -1225,7 +1208,7 @@ int L3psycho_anal( lame_global_flags * gfp,
   
   /* update the blocktype of the previous granule, since it depends on what
    * happend in this granule */
-  for ( chn = 0; chn < gfc->channels_out; chn++ ) {
+  for (chn=0; chn<gfc->stereo; chn++) {
     if ( uselongblock[chn])
       {				/* no attack : use long blocks */
 	assert( gfc->blocktype_old[chn] != START_TYPE );
@@ -1288,122 +1271,174 @@ int L3psycho_anal( lame_global_flags * gfp,
 
 
 
-int  L3para_read (
-	lame_global_flags* const gfp, 
-	FLOAT8   sfreq, 
-	int*     numlines_l,
-	int*     numlines_s, 
-	FLOAT8*  minval,
-	FLOAT8   s3_l [CBANDS] [CBANDS], 
-	FLOAT8   s3_s [CBANDS] [CBANDS],
-	FLOAT8*  SNR, 
-	int*     bu_l, 
-	int*     bo_l, 
-	FLOAT8*  w1_l, 
-	FLOAT8*  w2_l, 
-	int*     bu_s, 
-	int*     bo_s, 
-	FLOAT8*  w1_s, 
-	FLOAT8*  w2_s,
-	int*     npart_l_orig,
-	int*     npart_l,
-	int*     npart_s_orig,
-	int*     npart_s )
+int L3para_read(lame_global_flags * gfp, FLOAT8 sfreq, int *numlines_l,int *numlines_s, 
+FLOAT8 *minval,
+FLOAT8 s3_l[CBANDS][CBANDS], FLOAT8 s3_s[CBANDS][CBANDS],
+FLOAT8 *SNR, 
+int *bu_l, int *bo_l, FLOAT8 *w1_l, FLOAT8 *w2_l, 
+int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s,
+int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 {
-    lame_internal_flags* const gfc = gfp->internal_flags;
-    FLOAT8          bval_l [CBANDS];
-    FLOAT8          bval_s [CBANDS];
-    int             cbmax;
-    int             i;
-    int             j;
-    int             index = sfreq==16000 ? 0 : sfreq==22050 ? 1 : sfreq==24000 ? 2 : sfreq==32000 ? 3 : sfreq==44100 ? 4 : sfreq==48000 ? 5 : -1;
-    const type5_t*  ti    = table5 + index;
+  lame_internal_flags *gfc=gfp->internal_flags;
+  FLOAT8 freq_tp;
+  FLOAT8 bval_l[CBANDS], bval_s[CBANDS];
+  int   cbmax=0, cbmax_tp;
+  const FLOAT* p = psy_data;
+  int  sbmax ;
+  int  i,j,k2,loop;
+  int freq_scale=1;
+/*  int partition[HBLKSIZE]; */
 
-    /******************************************************************/
-    /* Read long block data (part 1)                                  */
-    /******************************************************************/
+  /******************************************************************/
+  /* Read long block data */
+  /******************************************************************/
+  for(loop=0;loop<6;loop++)
+    {
+      freq_tp = *p++;
+      cbmax_tp = (int) *p++;
+      cbmax_tp++;
 
-    *npart_l_orig = cbmax = ti->len1;
-
-    for ( i = 0; i < cbmax; i++ ) {
-	if ( i != ti->tab1[i].no ) {
-	    ERRORF ("psy_data(%u): idx=%d  table idx=%f\a\n", 1, i, ti->tab1[i].no );
-	    return -1;
+      if (sfreq == freq_tp/freq_scale )
+	{
+	  cbmax = cbmax_tp;
+	  for(i=0,k2=0;i<cbmax_tp;i++)
+	    {
+	      j = (int) *p++;
+	      numlines_l[i] = (int) *p++;
+	      minval[i] = exp(-((*p++) ) * LN_TO_LOG10);
+	      /* qthr_l[i] = *p++ */ p++;
+	      /* norm_l[i] = *p++*/ p++;
+	      /* bval_l[i] = *p++; */ p++;
+	      if (j!=i)
+		{
+		  ERRORF("1. please check \"psy_data\"");
+		  return -1;
+		}
+	    }
 	}
-	numlines_l  [i] = ti->tab1[i].width;
-	minval      [i] = exp ( -LN_TO_LOG10 * ti->tab1[i].minval_2 / 2. );
-	// qthr_l [i] = ti->tab1[i].quiet_thr;
-	// norm_l [i] = ti->tab1[i].norm;
-	// bval_l [i] = ti->tab1[i].bark;
+      else
+	p += cbmax_tp * 6;
     }
 
-    /******************************************************************/
-    /* Read short block data (part 2)                                 */
-    /******************************************************************/
+  *npart_l_orig = cbmax;
 
-    *npart_s_orig = cbmax = ti->len2;
+  /* Read short block data */
+  for(loop=0;loop<6;loop++)
+    {
+      freq_tp = *p++;
+      cbmax_tp = (int) *p++;
+      cbmax_tp++;
+      if (sfreq == freq_tp/freq_scale )
+	{
+	  cbmax = cbmax_tp;
+	  for(i=0,k2=0;i<cbmax_tp;i++)
+	    {
+	      j = (int) *p++;
+	      numlines_s[i] = (int) *p++;
+	      /* qthr_s[i] = *p++*/  p++;         
+	      /* norm_s[i] =*p++ */ p++;         
+	      SNR[i] = *p++;            
+	      /* bval_s[i] = *p++ */ p++;
+	      if (j!=i)
+		{
+		  ERRORF("3. please check \"psy_data\"");
+		  return -1;
+		}
+	    }
+	}
+      else
+	p += cbmax_tp * 6;
+    }
+  *npart_s_orig = cbmax;
 
-    for ( i = 0; i < cbmax; i++ ) {
-	if ( i != ti->tab2[i].no ) {
-	    ERRORF ("psy_data(%u): idx=%d  table idx=%f\a\n", 2, i, ti->tab2[i].no );
-	    return -1;
+  /* MPEG1 SNR_s data is given in db, convert to energy */
+  if (gfp->version == 1) {
+    for ( i = 0;i < *npart_s_orig; i++ ) {
+      SNR[i]=exp( (FLOAT8) SNR[i] * LN_TO_LOG10 );
+    }
+  }
+
+
+
+
+  /* Read long block data for converting threshold calculation 
+     partitions to scale factor bands */
+
+  for(loop=0;loop<6;loop++)
+    {
+      freq_tp = *p++;
+      sbmax =  (int) *p++;
+      sbmax++;
+
+      if (sfreq == freq_tp/freq_scale)
+	{
+	  for(i=0;i<sbmax;i++)
+	    {
+	      j = (int) *p++;
+	      p++;             
+	      bu_l[i] = (int) *p++;
+	      bo_l[i] = (int) *p++;
+	      w1_l[i] = (FLOAT8) *p++;
+	      w2_l[i] = (FLOAT8) *p++;
+	      if (j!=i)
+		{ ERRORF("30:please check \"psy_data\"\n");
+		return -1;
+		}
+
+	      if (i!=0)
+		if ( (fabs(1.0-w1_l[i]-w2_l[i-1]) > 0.01 ) )
+		  {
+		    ERRORF("31l: please check \"psy_data.\"\n"
+                           "w1,w2: %f %f \n",w1_l[i],w2_l[i-1]);
+		    return -1;
+		  }
+	    }
 	}
-	numlines_s [i]  = ti->tab2[i].width;
-	// qthr_s [i] = ti->tab2[i].quiet_thr;
-	// norm_s [i] = ti->tab2[i].norm;
-	SNR [i]         = ti->tab2[i].SNR;
-	// bval_s [i] = ti->tab2[i].bark;
-	if ( SNR[i] <= 0 ) {
-	    ERRORF ("psy_data(%u): idx=%d  bad SNR: %f\a\n", 2, i, SNR[i] );
-	    return -1;
-	}
+      else
+	p += sbmax * 6;
     }
 
-    /******************************************************************/
-    /* Read long block data for converting threshold                  */
-    /* calculation partitions to scale factor bands (part 3)          */
-    /******************************************************************/
+  /* Read short block data for converting threshold calculation 
+     partitions to scale factor bands */
 
-    cbmax = ti->len3;
-    assert (cbmax == 21);
-    for ( i = 0; i < cbmax; i++ ) {
-	if ( i != ti->tab3[i].no ) {
-	    ERRORF ("psy_data(%u): idx=%d  table idx=%f\a\n", 3, i, ti->tab3[i].no );
-	    return -1;
-	}
-	bu_l [i] = ti->tab3[i].bu;
-	bo_l [i] = ti->tab3[i].bo;
-	w1_l [i] = ti->tab3[i].w1_576 / 576.;
-	w2_l [i] = ti->tab3[i].w2_576 / 576.;
-	
-	if ( i != 0  &&  fabs (1.-w1_l[i]-w2_l[i-1] > 1.e-6 ) ) {
-	    ERRORF ("psy_data(%u): idx=%d  sum error: w1=%f w2=%f\a\n", 3, i, w1_l [i], w2_l [i-1] );
-	    return -1;
-	}
-    }
-    
-    /******************************************************************/
-    /* Read short block data for converting threshold                 */
-    /* calculation partitions to scale factor bands (part 4)          */
-    /******************************************************************/
+  for(loop=0;loop<6;loop++)
+    {
+      freq_tp = *p++;
+      sbmax = (int) *p++;
+      sbmax++;
 
-    cbmax = ti->len4;
-    assert (cbmax == 12);
-    for ( i = 0; i < cbmax; i++ ) {
-	if ( i != ti->tab4[i].no ) {
-	    ERRORF ("psy_data(%u): idx=%d  table idx=%f\a\n", 4, i, ti->tab4[i].no );
-	    return -1;
+      if (sfreq == freq_tp/freq_scale)
+	{
+	  for(i=0;i<sbmax;i++)
+	    {
+	      j = (int) *p++;
+	      p++;
+	      bu_s[i] = (int) *p++;
+	      bo_s[i] = (int) *p++;
+	      w1_s[i] = *p++;
+	      w2_s[i] = *p++;
+	      if (j!=i)
+		{ ERRORF("30:please check \"psy_data\"\n");
+		return -1;
+		}
+
+	      if (i!=0)
+		if ( (fabs(1.0-w1_s[i]-w2_s[i-1]) > 0.01 ) )
+		  { 
+                  ERRORF("31s: please check \"psy_data.\"\n"
+                         "w1,w2: %f %f \n",w1_s[i],w2_s[i-1]);
+		  return -1;
+		  }
+	    }
 	}
-	bu_s [i] = ti->tab4[i].bu;
-	bo_s [i] = ti->tab4[i].bo;
-	w1_s [i] = ti->tab4[i].w1_576 / 576.;
-	w2_s [i] = ti->tab4[i].w2_576 / 576.;
-	
-	if ( i != 0  &&  fabs (1.-w1_s[i]-w2_s[i-1] > 1.e-6 ) ) {
-	    ERRORF ("psy_data(%u): idx=%d  sum error: w1=%f w2=%f\a\n", 3, i, w1_s [i], w2_s [i-1] );
-	    return -1;
-	}
+      else
+	p += sbmax * 6;
     }
+
+  /******************************************************************/
+  /* done reading table data */
+  /******************************************************************/
+
 
 
 
@@ -1429,8 +1464,10 @@ int  L3para_read (
 	bark2  = freq2bark(sfreq*ji/BLKSIZE);
       } while ((bark2 - bark1) < delbark  && j2<=BLKSIZE/2);
 
-      // DEBUGF("%i old n=%i  %f old numlines:  %i   new=%i (%i,%i) (%f,%f) \n", i,*npart_l_orig,freq,numlines_l[i],j2-j,j,j2-1,bark1,bark2);
-      
+      /*
+      DEBUGF("%i old n=%i  %f old numlines:  %i   new=%i (%i,%i) (%f,%f) \n",
+i,*npart_l_orig,freq,numlines_l[i],j2-j,j,j2-1,bark1,bark2);
+      */
       for (k=j; k<j2; ++k)
 	partition[k]=i;
       numlines_l[i]=(j2-j);
@@ -1484,10 +1521,10 @@ int  L3para_read (
 
       gfc->ATH_partitionbands [i] = 1.e37; // preinit for minimum search
       for (k=0; k < numlines_l[i]; k++, j++) {
-	FLOAT8  freq = sfreq*j/BLKSIZE;
+	FLOAT8  freq = sfreq*j/(1000.0*BLKSIZE);
 	FLOAT8  level;
-	assert( freq <= 24000 );              // or only '<'
-	//	freq = Min(100,freq);       // ATH below 100 Hz constant, not further climbing
+	assert( freq <= 24 );              // or only '<'
+	//	freq = Min(.1,freq);       // ATH below 100 Hz constant, not further climbing
 	level  = ATHformula (freq) - 20;   // scale to FFT units; returned value is in dB
 	level  = pow ( 10., 0.1*level );   // convert from dB -> energy
 	level *= numlines_l [i];
@@ -1739,5 +1776,3 @@ i,*npart_s_orig,freq,numlines_s[i],j2-j,j,j2-1,bark1,bark2);
   
   return 0;
 }
-
-/* end of psymodel.c */

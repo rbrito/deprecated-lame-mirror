@@ -22,7 +22,7 @@ MP3LIB = libmp3lame/libmp3lame.lib
 ##########################################################################
 # -DHAVEMPGLIB compiles the mpglib *decoding* library into libmp3lame
 ##########################################################################
-CPP_OPTS = $(CPP_OPTS) -DHAVE_MPGLIB 
+CPP_OPTS = $(CPP_OPTS) -DHAVEMPGLIB 
 
 
 ##########################################################################
@@ -71,7 +71,7 @@ CPP_OPTS = $(CPP_OPTS) -DHAVE_MPGLIB
 # Define these in the OS specific sections below to compile in code for
 # the GTK mp3 frame analyzer
 #
-# Requires  -DHAVE_MPGLIB
+# Requires  -DHAVEMPGLIB
 # and SNDLIB = -DLAME or -DLIBSNDFILE
 #
 # GTK = -DHAVEGTK `gtk-config --cflags`
@@ -102,7 +102,7 @@ BRHIST_SWITCH = -DBRHIST -DNOTERMCAP
 # LIBSNDFILE= -L $(LIBSNDHOME) sndfile.lib -I $(LIBSNDHOME)
 
 # uncomment to compile in Vorbis support
-# VORBIS = -DHAVE_VORBIS -I ../vorbis/include
+# VORBIS = -DHAVEVORBIS -I ../vorbis/include
 # VORBIS_LIB = -L ../vorbis/lib vorbis.lib
 
 # for debugging:
@@ -112,7 +112,7 @@ BRHIST_SWITCH = -DBRHIST -DNOTERMCAP
 # FEATURES = -DRH_NOISE_CALC
 
 
-CC_SWITCHES = -DHAVE_CONFIG_MS_H -DNDEBUG $(CC_OPTS) $(SNDLIB) $(GTK) $(BRHIST_SWITCH) $(VORBIS) 
+CC_SWITCHES = -DNDEBUG $(CC_OPTS) $(SNDLIB) $(GTK) $(BRHIST_SWITCH) $(VORBIS) 
 frontend_sources = \
         frontend/brhist.c \
 	frontend/get_audio.c \

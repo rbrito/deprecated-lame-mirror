@@ -19,7 +19,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#define KLEMM_14
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -141,285 +140,6 @@ putbits_noheaders(lame_global_flags *gfp, int val, int j)
     }
 }
 
-#ifdef KLEMM_14 /*======================================================*/
-
-/*
- * Some combinations of bitrate, Fs, and stereo make it impossible to stuff
- * out a frame using just main_data, due to the limited number of bits to
- * indicate main_data_length. In these situations, we put stuffing bits into
- * the ancillary data...
- */
-
-inline static void drain_into_ancillary ( lame_global_flags* const gfp, int remainingBits )
-{
-    lame_internal_flags*  gfc = gfp->internal_flags;
-    char                  buffer [80];
-    char*                 p = buffer;
-    
-    assert (remainingBits >= 0);
-    
-    sprintf ( p, "LAME%s", get_lame_short_version () );
-
-    for (; *p != '\0'  &&  remainingBits >= 8; p++, remainingBits -= 8 )
-        putbits2 ( gfp, *p, 8 );
-
-    for (; remainingBits >= 1; remainingBits -= 1 ) {
-        putbits2 ( gfp, gfc->ancillary_flag, 1 );
-        gfc->ancillary_flag ^= 1;
-    }
-
-    assert (remainingBits == 0);
-}
-
-
-static void  writeheader (
-        lame_internal_flags* const  gfc, 
-        const unsigned              value, 
-        size_t                      bitcount )
-{
-    static unsigned  tab [2] = { 0, CRC16_POLYNOMIAL };
-    int              i;
-    int              k;
-
-    assert (bitcount < MAX_LENGTH-2  &&  value < (1lu << bitcount) );
-
-    // Update CRC value
-    for ( i = bitcount; i-- > 0; )
-        gfc->crcvalue = (gfc->crcvalue << 1) ^ tab [ ((gfc->crcvalue >> 15) ^ (value >> i)) & 1 ];
-      
-    // Poke value into bitbuffer
-    i = gfc->header[gfc->h_ptr].ptr;
-    while ( 1 ) {
-        if (bitcount < 8 - (i & 7)) {            // 'bitcount <= ...' also possible ?
-	    gfc->header [gfc->h_ptr].buf [i >> 3] |= value << (8 - (i & 7) - bitcount);
-	    i += bitcount;
-	    break;
-	} else {
-	    bitcount -= (k = 8 - (i & 7));
-	    gfc->header [gfc->h_ptr].buf [i >> 3] |= (value >> bitcount) << (8 - (i & 7) - k);
-	    i += k;
-	}
-    }
-    gfc->header[gfc->h_ptr].ptr = i;
-}
-
-static void  writedummy (
-        lame_internal_flags* const  gfc, 
-        size_t                      bitcount )
-{
-    gfc->header[gfc->h_ptr].ptr += bitcount;   // dummy bits without updating CRC and Buffer
-}
-
-
-inline static void encodeSideInfo2 ( lame_global_flags* const gfp, int bitsPerFrame )
-{
-    lame_internal_flags *gfc=gfp->internal_flags;
-    III_side_info_t *l3_side;
-    int gr, ch, band, old;
-    
-    l3_side = &gfc->l3_side;
-    gfc->header[gfc->h_ptr].ptr = 0;
-    memset(gfc->header[gfc->h_ptr].buf, 0, gfc->sideinfo_len);
-    
-    writeheader ( gfc, gfp->out_samplerate >= 16000 ? 0xfff : 0xffe, 12 );
-    writeheader ( gfc, gfp->version          , 1 );
-    writeheader ( gfc, 4 - 3                 , 2 );
-    writeheader ( gfc, !gfp->error_protection, 1 );
-
-    /* Reset CRC generator */
-    gfc->crcvalue = 0xFFFF;
-    writeheader ( gfc, gfc->bitrate_index    , 4 );
-    writeheader ( gfc, gfc->samplerate_index , 2 );
-    writeheader ( gfc, gfc->padding          , 1 );
-    writeheader ( gfc, gfp->extension        , 1 );
-    writeheader ( gfc, gfp->mode             , 2 );
-    writeheader ( gfc, gfc->mode_ext         , 2 );
-    writeheader ( gfc, gfp->copyright        , 1 );
-    writeheader ( gfc, gfp->original         , 1 );
-    writeheader ( gfc, gfp->emphasis         , 2 );
-    if (gfp->error_protection)
-        writedummy ( gfc, 16 );
-
-    if ( gfp->version == 1 ) { /* MPEG1 */
-    
-	assert(l3_side->main_data_begin >= 0);
-	writeheader ( gfc, l3_side->main_data_begin         , 9 );
-	writeheader ( gfc, l3_side->private_bits            , gfc->channels_out == 2  ?  3  :  5 );
-
-	for (ch = 0; ch < gfc->channels_out; ch++) {
-	    for (band = 0; band < 4; band++) {
-		writeheader ( gfc, l3_side->scfsi[ch][band] , 1 );
-	    }
-	}
-
-	for (gr = 0; gr < 2; gr++) {
-	    for (ch = 0; ch < gfc->channels_out; ch++) {
-		gr_info *gi = &l3_side->gr[gr].ch[ch].tt;
-		writeheader ( gfc, gi->part2_3_length       ,12 );
-		writeheader ( gfc, gi->big_values / 2       , 9 );
-		writeheader ( gfc, gi->global_gain          , 8 );
-		writeheader ( gfc, gi->scalefac_compress    , 4 );
-		writeheader ( gfc, gi->window_switching_flag, 1 );
-
-		if (gi->window_switching_flag) {
-		    writeheader ( gfc, gi->block_type       , 2 );
-		    writeheader ( gfc, gi->mixed_block_flag , 1 );
-
-		    if (gi->table_select[0] == 14)
-			gi->table_select[0] = 16;
-		    writeheader ( gfc, gi->table_select[0]  , 5 );
-		    if (gi->table_select[1] == 14)
-			gi->table_select[1] = 16;
-		    writeheader ( gfc, gi->table_select[1]  , 5 );
-
-		    writeheader ( gfc, gi->subblock_gain[0] , 3 );
-		    writeheader ( gfc, gi->subblock_gain[1] , 3 );
-		    writeheader ( gfc, gi->subblock_gain[2] , 3 );
-		} else {
-		    assert(gi->block_type == NORM_TYPE);
-		    if (gi->table_select[0] == 14)
-			gi->table_select[0] = 16;
-		    writeheader ( gfc, gi->table_select[0]  , 5 );
-		    if (gi->table_select[1] == 14)
-			gi->table_select[1] = 16;
-		    writeheader ( gfc, gi->table_select[1]  , 5 );
-		    if (gi->table_select[2] == 14)
-			gi->table_select[2] = 16;
-		    writeheader ( gfc, gi->table_select[2]  , 5 );
-
-		    assert(gi->region0_count < 16U);
-		    assert(gi->region1_count < 8U);
-		    writeheader ( gfc, gi->region0_count    , 4 );
-		    writeheader ( gfc, gi->region1_count    , 3 );
-		}
-		writeheader ( gfc, gi->preflag              , 1 );
-		writeheader ( gfc, gi->scalefac_scale       , 1 );
-		writeheader ( gfc, gi->count1table_select   , 1 );
-	    }
-	}
-    }
-    else { /* MPEG2 */
-	
-	assert(l3_side->main_data_begin >= 0);
-	writeheader ( gfc, l3_side->main_data_begin         , 8 );
-	writeheader ( gfc, l3_side->private_bits            , gfc->channels_out );
-
-	gr = 0;
-	for (ch = 0; ch < gfc->channels_out; ch++) {
-	    gr_info *gi = &l3_side->gr[gr].ch[ch].tt;
-	    writeheader ( gfc, gi->part2_3_length           ,12 );
-	    writeheader ( gfc, gi->big_values / 2           , 9 );
-	    writeheader ( gfc, gi->global_gain              , 8 );
-	    writeheader ( gfc, gi->scalefac_compress        , 9 );
-	    writeheader ( gfc, gi->window_switching_flag    , 1 );
-
-	    if (gi->window_switching_flag) {
-		writeheader ( gfc, gi->block_type           , 2 );
-		writeheader ( gfc, gi->mixed_block_flag     , 1 );
-
-		if (gi->table_select[0] == 14)
-		    gi->table_select[0] = 16;
-		writeheader ( gfc, gi->table_select[0]      , 5 );
-		if (gi->table_select[1] == 14)
-		    gi->table_select[1] = 16;
-		writeheader ( gfc, gi->table_select [1]     , 5 );
-
-		writeheader ( gfc, gi->subblock_gain [0]    , 3 );
-		writeheader ( gfc, gi->subblock_gain [1]    , 3 );
-		writeheader ( gfc, gi->subblock_gain [2]    , 3 );
-	    } else {
-		if (gi->table_select[0] == 14)
-		    gi->table_select[0] = 16;
-		writeheader ( gfc, gi->table_select [0]     , 5 );
-		if (gi->table_select[1] == 14)
-		    gi->table_select[1] = 16;
-		writeheader ( gfc, gi->table_select [1]     , 5 );
-		if (gi->table_select[2] == 14)
-		    gi->table_select[2] = 16;
-		writeheader ( gfc, gi->table_select [2]     , 5 );
-
-		assert(gi->region0_count < 16U);
-		assert(gi->region1_count < 8U);
-		writeheader ( gfc, gi->region0_count        , 4 );
-		writeheader ( gfc, gi->region1_count        , 3 );
-	    }
-
-	    writeheader ( gfc, gi->scalefac_scale           , 1 );
-	    writeheader ( gfc, gi->count1table_select       , 1 );
-	}
-    }
-
-    if ( gfp->error_protection ) {
-	/* (jo) error_protection: add crc16 information to header */
-	gfc->header[gfc->h_ptr].buf [4] = (gfc->crcvalue >> 8) & 0xFF;
-	gfc->header[gfc->h_ptr].buf [5] = (gfc->crcvalue >> 0) & 0xFF;
-    }
-
-
-    old = gfc->h_ptr;
-    assert (gfc->header[old].ptr == gfc->sideinfo_len * 8);
-
-    gfc->h_ptr                           = (old + 1) & (MAX_HEADER_BUF - 1);
-    gfc->header[gfc->h_ptr].write_timing = gfc->header[old].write_timing + bitsPerFrame;
-
-    if ( gfc->h_ptr == gfc->w_ptr ) { /* yikes! we are out of header buffer space */
-        ERRORF("Error: MAX_HEADER_BUF too small in bitstream.c \n");
-    }
-}
-
-/* 
- * For region 1 (only values of -1, 0 and +1) one step codes 4 values.
- * This table contains the coded 'huffmancode' in bits 7...4 and the
- * value 'p' in bit 3...0. So you don't need a lot of unpredictable jumps
- * to code this area. Merge the 4 values and make a table lookup.
- */
-
-static unsigned char klemm_table [3*3*3*3] = {
-    0xFF, 0x7E, 0xEF, 0x7D, 0x3C, 0x6D, 0xDF, 0x6E, 0xCF,
-    0x7B, 0x3A, 0x6B, 0x39, 0x18, 0x29, 0x5B, 0x2A, 0x4B,
-    0xBF, 0x5E, 0xAF, 0x5D, 0x2C, 0x4D, 0x9F, 0x4E, 0x8F,
-    0x77, 0x36, 0x67, 0x35, 0x14, 0x25, 0x57, 0x26, 0x47,
-    0x33, 0x12, 0x23, 0x11, 0x00, 0x01, 0x13, 0x02, 0x03,
-    0x37, 0x16, 0x27, 0x15, 0x04, 0x05, 0x17, 0x06, 0x07,
-    0x7F, 0x3E, 0x6F, 0x3D, 0x1C, 0x2D, 0x5F, 0x2E, 0x4F,
-    0x3B, 0x1A, 0x2B, 0x19, 0x08, 0x09, 0x1B, 0x0A, 0x0B,
-    0x3F, 0x1E, 0x2F, 0x1D, 0x0C, 0x0D, 0x1F, 0x0E, 0x0F,
-};
-
-/*
- *  This function codes the part 2 of the quantized values.
- *  This is the part consisting only of (-1,0,+1). The part 3 is the part
- *  which is always [0], the part 1 can contain all values from [-8191,+8191]
- */
-
-inline static int  huffman_coder_count1 ( lame_global_flags* const gfp, const int* ix, gr_info* gi )
-{
-#ifdef DEBUG
-    lame_internal_flags*  gfc    = gfp->internal_flags;
-    int                   gegebo = gfc->bs.totbit;
-#endif
-    /* Write count1 area */
-    const struct huffcodetab* h = ht + gi->count1table_select + 32;
-    int  bits = 0;
-    int  i;
-    int  tmp;
-
-    assert (gi->count1table_select < 2u);
-
-    for ( i = (gi->count1 - gi->big_values) / 4, ix += gi->big_values; i > 0; i--, ix += 4 ) {
-        assert ( ix[0]+1 <= 2u  &&  ix[1]+1 <= 2u  &&  ix[2]+1 <= 2u  &&  ix[3]+1 <= 2u );
-	tmp   = klemm_table [ 40 + 27*ix[0] + 9*ix[1] + 3*ix[2] + ix[3] ];
-	bits += h->hlen [tmp & 15];
-	putbits2 ( gfp, (tmp >> 4) + h->table [tmp & 15], h->hlen [tmp & 15] );
-    }
-    
-#ifdef DEBUG
-    DEBUGF("%ld %d %d %d\n",gfc->bs.totbit -gegebo, gi->count1bits, gi->big_values, gi->count1);
-#endif
-    return bits;
-}
-
-#else /*================================================================*/
 
 /*
   Some combinations of bitrate, Fs, and stereo make it impossible to stuff
@@ -461,20 +181,13 @@ drain_into_ancillary(lame_global_flags *gfp,int remainingBits)
 	}
     }
 
-    /* drain the rest 16 bits at a time */
-    bits = remainingBits & (16 - 1);
-    for (i=0; i<bits; ++i) {
-      putbits2(gfp,gfc->ancillary_flag,1);
-      gfc->ancillary_flag = 1-gfc->ancillary_flag;
+    for (; remainingBits >= 1; remainingBits -= 1 ) {
+        putbits2 ( gfp, gfc->ancillary_flag, 1 );
+        gfc->ancillary_flag ^= 1;
     }
 
-    remainingBits /= 16;
-    for (; remainingBits > 0; remainingBits--) {
-      if (gfc->ancillary_flag)
-	putbits2(gfp,0xAAAA, 16);
-      else
-	putbits2(gfp,0x5555, 16);
-    }
+    assert (remainingBits == 0);
+
 }
 
 /*write N bits into the header */
@@ -494,7 +207,6 @@ writeheader(lame_internal_flags *gfc,int val, int j)
     gfc->header[gfc->h_ptr].ptr = ptr;
 }
 
-#if 1  /* Set to 0 for new CRC function, but speed improvement is around 0.2% */
 
 /* (jo) this wrapper function for BF_addEntry() updates also the crc */
 static void
@@ -515,61 +227,7 @@ CRC_writeheader(lame_internal_flags *gfc, int value, int length,int *crc)
 
 void main_CRC_init (void) {}
 
-#else
 
-static unsigned short CRC_table [256];
-
-static void CRC_init ( unsigned short polynom )
-{
-    int            i;
-    int            j;
-    unsigned long  val;
-    
-    i = 0;
-    do {
-        val = 0;
-        j = 0x80;
-        do {
-            val <<= 1;
-            if ( !(val & 0x10000) ^ !(i & j) )
-		val ^= polynom;
-   	} while ( j >>= 1 );
-   	CRC_table [i] = val;
-    } while ( ++i < 0x100 );
-}
-
-static void CRC_writeheader ( lame_internal_flags*  gfc,
-                              unsigned int          val, 
-                              unsigned              len,
-                              unsigned int*         crc )
-{
-    unsigned long c = *crc;
-    
-    assert ( len <= 16 );
-    assert ( val < (1 << len) );
-    assert ( c < 0x10000 );
-    
-    if ( len > 8 ) {
-        c <<= len-8;
-        c  ^= CRC_table [ (c>>16) ^ (val >> 8) ];
-        c  &= 0xFFFF;
-        c <<= 8;
-        c  ^= CRC_table [ (c>>16) ^ (val & 0xFF) ];
-    } else {
-        c <<= len;
-        c  ^= CRC_table [ (c>>16) ^ val ];
-    }
-    
-    *crc = c & 0xFFFF;
-    writeheader ( gfc, val, len );
-}
-
-void main_CRC_init ( void )
-{
-    CRC_init ( CRC16_POLYNOMIAL );
-}
-
-#endif
 
 inline static void
 encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
@@ -609,12 +267,12 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 	assert(l3_side->main_data_begin >= 0);
 	CRC_writeheader(gfc,(l3_side->main_data_begin), 9,&crc);
 
-	if (gfc->channels_out == 2)
+	if (gfc->stereo == 2)
 	    CRC_writeheader(gfc,l3_side->private_bits, 3,&crc);
 	else
 	    CRC_writeheader(gfc,l3_side->private_bits, 5,&crc);
 
-	for (ch = 0; ch < gfc->channels_out; ch++) {
+	for (ch = 0; ch < gfc->stereo; ch++) {
 	    int band;
 	    for (band = 0; band < 4; band++) {
 		CRC_writeheader(gfc,l3_side->scfsi[ch][band], 1,&crc);
@@ -622,7 +280,7 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 	}
 
 	for (gr = 0; gr < 2; gr++) {
-	    for (ch = 0; ch < gfc->channels_out; ch++) {
+	    for (ch = 0; ch < gfc->stereo; ch++) {
 		gr_info *gi = &l3_side->gr[gr].ch[ch].tt;
 		CRC_writeheader(gfc,gi->part2_3_length,       12,&crc);
 		CRC_writeheader(gfc,gi->big_values / 2,        9,&crc);
@@ -670,10 +328,10 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 	/* MPEG2 */
 	assert(l3_side->main_data_begin >= 0);
 	CRC_writeheader(gfc,(l3_side->main_data_begin), 8,&crc);
-	CRC_writeheader(gfc,l3_side->private_bits, gfc->channels_out,&crc);
+	CRC_writeheader(gfc,l3_side->private_bits, gfc->stereo,&crc);
 
 	gr = 0;
-	for (ch = 0; ch < gfc->channels_out; ch++) {
+	for (ch = 0; ch < gfc->stereo; ch++) {
 	    gr_info *gi = &l3_side->gr[gr].ch[ch].tt;
 	    CRC_writeheader(gfc,gi->part2_3_length,       12,&crc);
 	    CRC_writeheader(gfc,gi->big_values / 2,        9,&crc);
@@ -807,7 +465,6 @@ huffman_coder_count1(lame_global_flags *gfp,int *ix, gr_info *gi)
 }
 
 
-#endif /*====================================================================*/
 
 /*
   Implements the pseudocode of page 98 of the IS
@@ -970,7 +627,7 @@ writeMainData ( lame_global_flags * const gfp,
     if (gfp->version == 1) {
 	/* MPEG 1 */
 	for (gr = 0; gr < 2; gr++) {
-	    for (ch = 0; ch < gfc->channels_out; ch++) {
+	    for (ch = 0; ch < gfc->stereo; ch++) {
 		gr_info *gi = &l3_side->gr[gr].ch[ch].tt;
 		int slen1 = slen1_tab[gi->scalefac_compress];
 		int slen2 = slen2_tab[gi->scalefac_compress];
@@ -1026,7 +683,7 @@ writeMainData ( lame_global_flags * const gfp,
     } else {
 	/* MPEG 2 */
 	gr = 0;
-	for (ch = 0; ch < gfc->channels_out; ch++) {
+	for (ch = 0; ch < gfc->stereo; ch++) {
 	    gr_info *gi = &l3_side->gr[gr].ch[ch].tt;
 	    int i, sfb_partition;
 	    assert(gi->sfb_partition_table);
@@ -1203,7 +860,7 @@ format_bitstream(lame_global_flags *gfp, int bitsPerFrame,
 }
 
 
-int copy_buffer(unsigned char* buffer,int size,Bit_stream_struc *bs)
+int copy_buffer(char *buffer,int size,Bit_stream_struc *bs)
 {
   int minimum = bs->buf_byte_idx + 1;
   if (minimum <= 0) return 0;

@@ -22,8 +22,6 @@
 
 /* $Id$ */
 
-//#define KLEMM_42
-
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #elif defined(HAVE_CONFIG_MS_H)
@@ -237,7 +235,7 @@ static void  optimum_bandwidth (
     if (channels >= 2. )
         br /= 1.75 + 0.25 * (channels-2.);    // MS needs 1.75x mono, LR needs 2.00x mono (experimental data of a lot of albums)
         
-    br *= 0.5;                                // the sine and cosine term must share the bitrate
+    br *= 0.5;                                // the sinus and cosine term must share the bitrate
 
 /* 
  *  So, now we have the bitrate for every spectral line.
@@ -270,7 +268,7 @@ static void  optimum_bandwidth (
  *   What I propose?
  *       A slightly with the bitrate increasing bits/line function. It is
  *       better to decrease NMR for low bitrates to get a little bit more
- *       bandwidth. So we have a better trade off between twickling and
+ *       bandwidth. So we have a better trade of between twickling and
  *       muffled sound.
  */    
 
@@ -311,7 +309,7 @@ static void  optimum_bandwidth (
 	// fflush (stdout);
 	
 	while ( f_low > f_low_sw ) {
-	    double  dATH = ATHformula (f_low) - ATHformula (f_low_sw);	// [dB]
+	    double  dATH = ATHformula (f_low*1.e-3) - ATHformula (f_low_sw*1.e-3);	// [dB]
 	    double  dNMR = br / f_low - br_sw / f_low_sw;		// bit
 
   	    // printf ("br   =%f  f_low   =%f\n", br   , f_low    );
@@ -321,7 +319,7 @@ static void  optimum_bandwidth (
 	    
 	    if ( dATH / 4.0  <  dNMR * 6.0206 / 1.25 )			// 1 bit = 6.0206... dB
 		break;
-	    f_low *= 0.99609375;
+	    f_low -= 25.;
 	}
     } 
 
@@ -371,7 +369,8 @@ static int  optimum_samplefreq ( int lowpassfreq, int input_samplefreq )
 /*
  * Rules:
  *
- *  - output sample frequency should NOT be decreased by more than 3% if lowpass allows this
+ *  - input sample frequency should be decreased 
+ *    by more than 3% if lowpass allows this
  *  - if possible, sfb21 should NOT be used
  *
  *  Problem: Switches to 32 kHz at 112 kbps
@@ -408,91 +407,95 @@ int lame_init_params ( lame_global_flags* const gfp )
     int                  j;
     lame_internal_flags* gfc = gfp -> internal_flags;
 
-    gfc -> gfp                = gfp;
-
     gfc -> Class_ID           = 0;
   
     gfc -> CPU_features_i387  = has_i387  ();
     gfc -> CPU_features_3DNow = has_3DNow ();
     gfc -> CPU_features_MMX   = has_MMX   ();
     gfc -> CPU_features_SIMD  = has_SIMD  ();
-    gfc -> CPU_features_SIMD2 = has_SIMD2 ();
+    gfc -> CPU_features_SIMD2 = 0;
     
     //init_scalar_functions ( gfc );      /* Select the fastest functions for this CPU */
 
-    gfc->channels_in  = gfp->num_channels;
-    if ( gfc->channels_in == 1 ) 
-	gfp->mode     = MPG_MD_MONO;
-    gfc->channels_out = (gfp->mode == MPG_MD_MONO)  ?  1  :  2;
-    gfc->mode_ext     = MPG_MD_LR_LR;
-    if ( gfp->mode == MPG_MD_MONO ) gfp->force_ms = 0;	// don't allow forced mid/side stereo for mono output
+  if (gfp->num_channels == 1)
+      gfp->mode = MPG_MD_MONO;
+  
+  if (gfp->mode == MPG_MD_MONO) 
+      gfc->stereo = 1;  /* malicious variable name, really */
+  else
+      gfc->stereo = 2;
 
-    /* Here are some hidden flaws, the first step to show them is to reformat this
-     * code. The next steps are little code morphings to ease the readability of
-     * this code and to show some strange (may be wanted???) misbehaves.
-     * The reason of this flaws are extending of the automation without understanding
-     * the rest of the automation code.
-     * 
-     * Another point are changes in the documentation. Some adds, some removes
-     * of old (for the current code wrong) remarks, etc.
+  if (gfp->VBR!=vbr_off) {
+    gfp->free_format=0;  /* VBR can't be mixed with free format */
+  }
+
+  if (gfp->VBR==vbr_off && gfp->brate==0) {
+    /* no bitrate or compression ratio specified, use 11.025 */
+    if (gfp->compression_ratio==0) gfp->compression_ratio=11.025;   /* rate to compress a CD down to exactly 128000 bps */
+  }
+
+
+  /* find bitrate if user specify a compression ratio */
+  if (gfp->VBR==vbr_off && gfp->compression_ratio > 0) {
+    
+    if (gfp->out_samplerate==0) 
+      gfp->out_samplerate = map2MP3Frequency (0.97 * gfp->in_samplerate); /* round up with a margin of 3% */
+    
+    /* choose a bitrate for the output samplerate which achieves
+     * specified compression ratio 
      */
+    gfp->brate = 
+      gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->compression_ratio);
+
+    /* we need the version for the bitrate table look up */
+    gfc->samplerate_index = SmpFrqIndex(gfp->out_samplerate, &gfp->version);
+    /* find the nearest allowed bitrate */
+    if (!gfp->free_format)
+      gfp->brate = FindNearestBitrate(gfp->brate,gfp->version,gfp->out_samplerate);
+  }
+  if (gfp->brate >= 320) gfp->VBR=vbr_off;  /* don't bother with VBR at 320kbs */
+
+
+
+  /* set the output sampling rate, and resample options if necessary
+     samplerate = input sample rate
+     resamplerate = ouput sample rate
+  */
     
-    if ( gfp->VBR != vbr_off )  /* VBR can't be combined with Free format */
-	gfp->free_format = 0;
+  if (gfp->out_samplerate==0) {
+    /* if resamplerate is not valid, find a valid value */
+    gfp->out_samplerate = map2MP3Frequency (0.97 * gfp->in_samplerate);
 
-    if ( gfp->VBR == vbr_off  &&  gfp->brate == 0 )  /* no bitrate or compression ratio specified, so use a compression ratio of 11.025 (CD => 128 kbps) */
-	if ( gfp->compression_ratio == 0 ) gfp->compression_ratio = 11.025;
 
-    /* find bitrate if now a compression ratio is specified */
-    if ( gfp->VBR == vbr_off  &&  gfp->compression_ratio > 0 ) {
-    
-	if ( gfp->out_samplerate == 0 ) 
-	    gfp->out_samplerate = map2MP3Frequency (0.97 * gfp->in_samplerate); /* round up with a margin of 3% */
-
-	/* choose a bitrate for the output samplerate which achieves specified compression ratio */
-	gfp->brate = gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 * gfp->compression_ratio);
-
-	/* we need the version for the bitrate table look up */
-	gfc->samplerate_index = SmpFrqIndex ( gfp->out_samplerate, &gfp->version );
-
-	if ( !gfp->free_format )   /* for non Free Format find the nearest allowed bitrate */
-	    gfp->brate = FindNearestBitrate ( gfp->brate, gfp->version, gfp->out_samplerate );
+    /* check if user specified bitrate requires downsampling */
+    /* if compression ratio is > 13, choose a new samplerate to get
+     * the compression ratio down to about 10 */
+    if (gfp->VBR==vbr_off && gfp->brate>0) {
+      gfp->compression_ratio = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->brate);
+      if (gfp->compression_ratio > 13 ) {
+	gfp->out_samplerate = map2MP3Frequency((10*1000*gfp->brate)/(16*gfc->stereo));
+      }
     }
-    
-    if ( gfp->VBR != vbr_off  &&  gfp->brate >= 320 ) 
-	gfp->VBR = vbr_off;  /* at 160 kbps (MPEG-2/2.5)/ 320 kbps (MPEG-1) only Free format or CBR are possible, no VBR */
-
-    if ( gfp->out_samplerate == 0 ) { /* if output sample frequency is not given, find an useful value */
-	gfp->out_samplerate = map2MP3Frequency (0.97 * gfp->in_samplerate);
-
-	/* check if user specified bitrate requires downsampling, if compression    */
-	/* ratio is > 13, choose a new samplerate to get the ratio down to about 10 */
-	 
-	if ( gfp->VBR == vbr_off  &&  gfp->brate > 0 ) {
-	    gfp->compression_ratio = gfp->out_samplerate * 16*gfc->channels_out / (1.e3 * gfp->brate);
-	    if ( gfp->compression_ratio > 13. )
-		gfp->out_samplerate = map2MP3Frequency ( (10. * 1.e3*gfp->brate)/(16 * gfc->channels_out) );
-	}
-	if ( gfp->VBR == vbr_abr ) {
-	    gfp->compression_ratio = gfp->out_samplerate * 16*gfc->channels_out / (1.e3 * gfp->VBR_mean_bitrate_kbps );
-	    if (gfp->compression_ratio > 13. )
-		gfp->out_samplerate = map2MP3Frequency ( (10. * 1.e3*gfp->VBR_mean_bitrate_kbps)/(16 * gfc->channels_out));
-	}
+    if (gfp->VBR==vbr_abr) {
+      gfp->compression_ratio = 
+	gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->VBR_mean_bitrate_kbps);
+      if (gfp->compression_ratio > 13 ) {
+	gfp->out_samplerate = 
+	  map2MP3Frequency((10*1000*gfp->VBR_mean_bitrate_kbps)/(16*gfc->stereo));
+      }
     }
+  }
 
-    if ( gfp->ogg ) {
-        gfp->framesize     = 1024;
-        gfp->encoder_delay = ENCDELAY;
-	gfc->coding        = coding_Ogg_Vorbis;
-    } else {
-        gfc->mode_gr       = gfp->out_samplerate <= 24000  ?  1  :  2;  // Number of granules per frame
-        gfp->framesize     = 576 * gfc->mode_gr;
-        gfp->encoder_delay = ENCDELAY;
-	gfc->coding        = coding_MPEG_Layer_3;
-    }
-    
-    gfc->frame_size     = gfp->framesize;
-    gfc->resample_ratio = (double)gfp->in_samplerate / gfp->out_samplerate;
+  gfc->mode_gr = (gfp->out_samplerate <= 24000) ? 1 : 2;  /* mode_gr = 2 */
+  gfp->framesize = gfc->mode_gr*576;
+  if (gfp->ogg) gfp->framesize = 1024;
+
+  gfp->encoder_delay = ENCDELAY;
+
+    if ( gfp->out_samplerate != gfp->in_samplerate ) 
+        gfc->resample_ratio = (double)gfp->in_samplerate / gfp->out_samplerate;
+    else
+        gfc->resample_ratio = 1.;
 
     /* 
      *  sample freq       bitrate     compression ratio
@@ -534,10 +537,10 @@ int lame_init_params ( lame_global_flags* const gfp )
         gfp->compression_ratio = cmp [ gfp->VBR_q ];
 	break;
     case vbr_abr:
-        gfp->compression_ratio = gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 * gfp->VBR_mean_bitrate_kbps);
+        gfp->compression_ratio = gfp->out_samplerate * 16 * gfc->stereo / (1.e3 * gfp->VBR_mean_bitrate_kbps);
 	break;
     default:  
-        gfp->compression_ratio = gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 * gfp->brate);
+        gfp->compression_ratio = gfp->out_samplerate * 16 * gfc->stereo / (1.e3 * gfp->brate);
 	break;
     }
 
@@ -575,8 +578,11 @@ int lame_init_params ( lame_global_flags* const gfp )
    *   fs < 32 kHz I have not tested.
    */
    
-    if ( !gfp->mode_fixed  &&  gfp->mode != MPG_MD_MONO  &&  gfp->compression_ratio < 9 )
-        gfp->mode = MPG_MD_STEREO;
+  if ( (!gfp->mode_fixed) && (gfp->mode !=MPG_MD_MONO)) {
+    if (gfp->compression_ratio /* <= 8.82 */ < 9 ) {
+      gfp->mode = MPG_MD_STEREO;
+    }
+  }
 
 #endif    
 
@@ -609,7 +615,7 @@ int lame_init_params ( lame_global_flags* const gfp )
 	
         optimum_bandwidth ( &lowpass, 
 	                    &highpass, 
-			    gfp->out_samplerate * 16 * gfc->channels_out / gfp->compression_ratio,
+			    gfp->out_samplerate * 16 * gfc->stereo / gfp->compression_ratio,
 			    gfp->out_samplerate,
 			    channels );
 			
@@ -712,99 +718,116 @@ int lame_init_params ( lame_global_flags* const gfp )
 #endif    
   
 
-    /************************************************************************/
-    /* compute info needed for polyphase filter (filter type==0, default)   */
-    /************************************************************************/
-    lame_init_params_ppflt (gfc);
-
-    /***************************************************************/
-    /* compute info needed for FIR filter (filter_type==1)         */
-    /***************************************************************/
-    /* not yet coded */
 
 
-    gfc->samplerate_index = SmpFrqIndex ( gfp->out_samplerate, &gfp->version );
-    if ( gfc->samplerate_index < 0 )
-	return -1;
-  
-    if ( gfp->VBR == vbr_off ) {
-        if ( gfp->free_format ) {
-	    gfc->bitrate_index = 0;
-        } else {
-	    gfc->bitrate_index = BitrateIndex ( gfp->brate, gfp->version,
-                                                gfp->out_samplerate );
-            if ( gfc->bitrate_index < 0 )
-	        return -1;  
-        }
+  /***************************************************************/
+  /* compute info needed for polyphase filter (filter type==0, default)   */
+  /***************************************************************/
+  lame_init_params_ppflt(gfc);
+
+
+  /***************************************************************/
+  /* compute info needed for FIR filter (filter_type==1) */
+  /***************************************************************/
+  /* not yet coded */
+
+  gfc->mode_ext=MPG_MD_LR_LR;
+  gfc->stereo = (gfp->mode == MPG_MD_MONO) ? 1 : 2;
+
+  gfc->samplerate_index = SmpFrqIndex(gfp->out_samplerate, &gfp->version);
+  if( gfc->samplerate_index < 0) {
+    return -1;
+  }
+  if (gfp->free_format) {
+    gfc->bitrate_index=0;
+  }else{
+    if( (gfc->bitrate_index = BitrateIndex(gfp->brate, gfp->version,gfp->out_samplerate)) < 0) {
+      return -1;
     }
-    else { /* choose a min/max bitrate for VBR */
-        /* if the user didn't specify VBR_max_bitrate: */
-	gfc->VBR_min_bitrate =  1;      /* default: allow   8 kbps (MPEG-2) or  32 kbps (MPEG-1) */
-	gfc->VBR_max_bitrate = 14;      /* default: allow 160 kbps (MPEG-2) or 320 kbps (MPEG-1) */
-	
-	if ( gfp->VBR_min_bitrate_kbps )
-	    if ( (gfc->VBR_min_bitrate = BitrateIndex ( gfp->VBR_min_bitrate_kbps, gfp->version,gfp->out_samplerate)) < 0 )
-		return -1;	    
-	if ( gfp->VBR_max_bitrate_kbps )
-	    if ( (gfc->VBR_max_bitrate = BitrateIndex ( gfp->VBR_max_bitrate_kbps, gfp->version,gfp->out_samplerate)) < 0 )
-		return -1;
+  }
 
-	gfp->VBR_min_bitrate_kbps  = bitrate_table [gfp->version] [gfc->VBR_min_bitrate];
-	gfp->VBR_max_bitrate_kbps  = bitrate_table [gfp->version] [gfc->VBR_max_bitrate];
-	
-	gfp->VBR_mean_bitrate_kbps = Min ( bitrate_table [gfp->version] [gfc->VBR_max_bitrate], gfp->VBR_mean_bitrate_kbps );
-	gfp->VBR_mean_bitrate_kbps = Max ( bitrate_table [gfp->version] [gfc->VBR_min_bitrate], gfp->VBR_mean_bitrate_kbps );
-      
-	/* Note: ABR mode should normally be used without a -V n setting,
-	 * (or with the default value of 4)
-	 * but the code below allows us to test how adjusting the maskings
-	 * effects CBR encodings.  Lowering the maskings will make LAME
-	 * work harder to get over=0 and may give better noise shaping?
-	 */
+
+  /* choose a min/max bitrate for VBR */
+  if (gfp->VBR!=vbr_off) {
+    /* if the user didn't specify VBR_max_bitrate: */
+    if (0==gfp->VBR_max_bitrate_kbps) {
+      gfc->VBR_max_bitrate = 14;      /* default: allow 160 kbps (MPEG-2) or 320 kbps (MPEG-1) */
+    }else{
+      if( (gfc->VBR_max_bitrate  = BitrateIndex(gfp->VBR_max_bitrate_kbps, gfp->version,gfp->out_samplerate)) < 0) {
+	return -1;
+      }
+    }
+    if (0==gfp->VBR_min_bitrate_kbps) {
+      gfc->VBR_min_bitrate =  1;      /* default: allow 8 kbps (MPEG-2) or 32 kbps (MPEG-1) */
+    }else{
+      if( (gfc->VBR_min_bitrate  = BitrateIndex(gfp->VBR_min_bitrate_kbps, gfp->version,gfp->out_samplerate)) < 0) {
+	return -1;
+      }
+    }
+
+    gfp->VBR_min_bitrate_kbps = bitrate_table[gfp->version][gfc->VBR_min_bitrate];
+    gfp->VBR_max_bitrate_kbps = bitrate_table[gfp->version][gfc->VBR_max_bitrate];
+
+    gfp->VBR_mean_bitrate_kbps = Min(bitrate_table[gfp->version][gfc->VBR_max_bitrate],gfp->VBR_mean_bitrate_kbps);
+    gfp->VBR_mean_bitrate_kbps = Max(bitrate_table[gfp->version][gfc->VBR_min_bitrate],gfp->VBR_mean_bitrate_kbps);
+    
+    /* Note: ABR mode should normally be used without a -V n setting,
+     * (or with the default value of 4)
+     * but the code below allows us to test how adjusting the maskings
+     * effects CBR encodings.  Lowering the maskings will make LAME
+     * work harder to get over=0 and may give better noise shaping?
+     */
+
+      /* A third dbQ table */
+      /* Can all dbQ setup can be done here using a switch statement? */
+
      
         switch ( gfp->VBR ) {
 	case vbr_abr:
-	    assert ( (unsigned)gfp->VBR_q < sizeof(dbQ)/sizeof(*dbQ) );
-	    assert ( (unsigned)gfp->VBR_q < sizeof(atQ)/sizeof(*atQ) );
+	    assert( (unsigned)gfp->VBR_q < sizeof(dbQ)/sizeof(*dbQ) );
+	    assert( (unsigned)gfp->VBR_q < sizeof(atQ)/sizeof(*atQ) );
             gfc->masking_lower = pow (10., 0.1 * dbQ [gfp->VBR_q] );
             gfc->ATH_vbrlower  = atQ [ gfp->VBR_q ];
             break;
         case vbr_rh:
         case vbr_mtrh:
-	    assert ( (unsigned)gfp->VBR_q < sizeof(atQ)/sizeof(*atQ) );
+	    assert( (unsigned)gfp->VBR_q < sizeof(atQ)/sizeof(*atQ) );
 	    gfc->ATH_vbrlower  = atQ [ gfp->VBR_q ];
             break;
 	default:
 	    break;
 	}
-    }
+  }
 
-    /* 
-     * VBR needs at least the output of GPSYCHO,
-     * so we have to garantee that by setting a minimum 
-     * quality level, actually level 5 does it.
-     * the -v and -V x settings switch the quality to level 2
-     * you would have to add a -q 5 to reduce the quality
-     * down to level 5
-     */
-    
-    if ( gfp->VBR != vbr_off )      gfp->quality = Min ( gfp->quality, 5 );
-    
-    /* Do not write VBR tag if VBR flag is not specified */
-    if ( gfp->VBR==vbr_off ) gfp->bWriteVbrTag = 0;
-    if ( gfp->ogg )          gfp->bWriteVbrTag = 0;
-    if ( gfp->analysis )     gfp->bWriteVbrTag = 0;
-    
-    /* some file options not allowed if output is: not specified or stdout */
-    if ( gfc->pinfo != NULL )
-	gfp->bWriteVbrTag = 0;  /* disable Xing VBR tag */  
+  /* VBR needs at least the output of GPSYCHO,
+   * so we have to garantee that by setting a minimum 
+   * quality level, actually level 5 does it.
+   * the -v and -V x settings switch the quality to level 2
+   * you would have to add a -q 5 to reduce the quality
+   * down to level 5
+   */
+  if (gfp->VBR!=vbr_off) gfp->quality=Min(gfp->quality,5);
+  /* dont allow forced mid/side stereo for mono output */
+  if (gfp->mode == MPG_MD_MONO) gfp->force_ms=0;
 
-    init_bit_stream_w ( gfc );
 
-    /* 
-     * Sets internal feature flags.  
-     * User should not access these since some combinations will produce strange results
-     */
+  /* Do not write VBR tag if VBR flag is not specified */
+  if (gfp->VBR==vbr_off) gfp->bWriteVbrTag=0;
+  if (gfp->ogg) gfp->bWriteVbrTag=0;
+  if (gfp->analysis) gfp->bWriteVbrTag=0;
+
+  /* some file options not allowed if output is: not specified or stdout */
+
+  if (gfc->pinfo != NULL) {
+    gfp->bWriteVbrTag=0;  /* disable Xing VBR tag */
+  }
+
+  init_bit_stream_w(gfc);
+
+
+  /* set internal feature flags.  USER should not access these since
+   * some combinations will produce strange results */
+
 
     switch ( gfp->quality ) {
     case 9: /* no psymodel, no noise shaping */
@@ -885,13 +908,14 @@ int lame_init_params ( lame_global_flags* const gfp )
 
     /* determine the mean bitrate for main data */
     if ( gfp->version == 1 ) /* MPEG 1 */
-	gfc->sideinfo_len = (gfc->channels_out == 1)  ?  4+17  :  4+32;
+	gfc->sideinfo_len = (gfc->stereo == 1)  ?  4+17  :  4+32;
     else                     /* MPEG 2 */
-	gfc->sideinfo_len = (gfc->channels_out == 1)  ?  4+ 9  :  4+17;
+	gfc->sideinfo_len = (gfc->stereo == 1)  ?  4+ 9  :  4+17;
   
     if ( gfp->error_protection ) 
         gfc->sideinfo_len += 2;
   
+
     /* 
      *  Write id3v2 tag into the bitstream.
      *  This tag must be before the Xing VBR header.
@@ -910,37 +934,10 @@ int lame_init_params ( lame_global_flags* const gfp )
   
     gfc->nsPsy.use = gfp->exp_nspsytune;
 
-    switch (gfp->VBR) {
-    case vbr_mt:
-    case vbr_rh:
-    case vbr_mtrh:
-        if (gfc->nsPsy.use == 1 || gfp->experimentalY == 1) 
-            gfc->amp_mode = amp_mode_mid;
-        else
-            gfc->amp_mode = gfp->quality > 2 ? amp_mode_all : amp_mode_low; 
-        break;
-    default:
-    case vbr_off:
-    case vbr_abr:
-        if (gfc->nsPsy.use == 1 || gfp->experimentalY == 1)
-            gfc->amp_mode = amp_mode_max;
-        else
-#ifdef RH_AMP
-            gfc->amp_mode = gfp->quality > 2 ? amp_mode_all : amp_mode_low; 
-#else
-            gfc->amp_mode = amp_mode_all; 
-#endif
-        break;
-    }
-    if (gfp->version == 1) /* 0 indicates use lower sample freqs algorithm */
-        gfc->is_mpeg1 = 1; /* yes */
-    else
-        gfc->is_mpeg1 = 0; /* no */
-
     /* estimate total frames.  */
     gfp->totalframes           = 2 + gfp->num_samples/(gfc->resample_ratio * gfp->framesize);
     gfc->Class_ID              = LAME_ID;
-
+    
     return 0;
 }
 
@@ -984,7 +981,7 @@ void lame_print_config ( const lame_global_flags* gfp )
         MSGF ("\n");  
     }
   
-    if ( gfp->num_channels==2  &&  gfc->channels_out==1 /* mono */ ) {
+    if ( gfp->num_channels==2  &&  gfc->stereo==1 /* mono */ ) {
 	MSGF ("Autoconverting from stereo to mono. Setting encoding to mono mode.\n");
     }
     
@@ -1029,7 +1026,7 @@ program.
 */
 int lame_encode_frame(lame_global_flags *gfp,
 sample_t inbuf_l[],sample_t inbuf_r[],
-unsigned char *mp3buf, int mp3buf_size)
+char *mp3buf, int mp3buf_size)
 {
   int ret;
   if (gfp->ogg) {
@@ -1080,7 +1077,7 @@ int    lame_encode_buffer (
         const short int     buffer_l [],
         const short int     buffer_r [],
         int                 nsamples,
-        unsigned char*      mp3buf,
+        char*               mp3buf,
         const int           mp3buf_size )
 {
   lame_internal_flags *gfc = gfp->internal_flags;
@@ -1123,7 +1120,7 @@ int    lame_encode_buffer (
   mfbuf[0]=gfc->mfbuf[0];
   mfbuf[1]=gfc->mfbuf[1];
 
-  if (gfp->num_channels==2  && gfc->channels_out==1) {
+  if (gfp->num_channels==2  && gfc->stereo==1) {
     /* downsample to mono */
     for (i=0; i<nsamples; ++i) {
       in_buffer[0][i] = 0.5 * ( (FLOAT8)in_buffer[0][i] + in_buffer[1][i] );
@@ -1138,7 +1135,7 @@ int    lame_encode_buffer (
 
     /* copy in new samples into mfbuf, with resampling if necessary */
     if (gfc->resample_ratio != 1.0)  {
-      for (ch=0; ch<gfc->channels_out; ch++) {
+      for (ch=0; ch<gfc->stereo; ch++) {
 	n_out = fill_buffer_resample(gfp,&mfbuf[ch][gfc->mf_size],gfp->framesize, in_buffer[ch],nsamples,&n_in,ch);
 	in_buffer[ch] += n_in;
       }
@@ -1147,7 +1144,7 @@ int    lame_encode_buffer (
       n_in=n_out;
       for (i = 0 ; i< n_out; ++i) {
 	mfbuf[0][gfc->mf_size+i]=in_buffer[0][i];
-	if (gfc->channels_out==2)
+	if (gfc->stereo==2)
 	  mfbuf[1][gfc->mf_size+i]=in_buffer[1][i];
       }
       in_buffer[0] += n_in;
@@ -1174,7 +1171,7 @@ int    lame_encode_buffer (
       /* shift out old samples */
       gfc->mf_size -= gfp->framesize;
       gfc->mf_samples_to_encode -= gfp->framesize;
-      for (ch=0; ch<gfc->channels_out; ch++)
+      for (ch=0; ch<gfc->stereo; ch++)
 	for (i=0; i<gfc->mf_size; i++)
 	  mfbuf[ch][i]=mfbuf[ch][i+gfp->framesize];
     }
@@ -1196,7 +1193,7 @@ int    lame_encode_buffer_interleaved (
                 lame_global_flags* gfp,
                 short int          buffer [],
                 int                nsamples,
-                unsigned char*     mp3buf,
+                char*              mp3buf,
                 int                mp3buf_size )
 {
   int mp3size = 0, ret, i, ch, mf_needed;
@@ -1251,7 +1248,7 @@ int    lame_encode_buffer_interleaved (
      * averaging L & R channels if we are encoding mono with
      * stereo input */
     for (i=0; i<n_out; ++i) {
-      if (gfp->num_channels==2  && gfc->channels_out==1) {
+      if (gfp->num_channels==2  && gfc->stereo==1) {
 	mfbuf[0][gfc->mf_size+i]=((int)buffer[2*i]+(int)buffer[2*i+1])/2.0;
 	mfbuf[1][gfc->mf_size+i]=0;
       }else{
@@ -1272,7 +1269,7 @@ int    lame_encode_buffer_interleaved (
       /* encode the frame */
       ret = lame_encode_frame(gfp,mfbuf[0],mfbuf[1],mp3buf,mp3buf_size);
       if (ret < 0) {
-	/* fatal error: mp3buffer was too small */
+	/* fatel error: mp3buffer was too small */
 	return ret;
       }
       mp3buf += ret;
@@ -1281,7 +1278,7 @@ int    lame_encode_buffer_interleaved (
       /* shift out old samples */
       gfc->mf_size -= gfp->framesize;
       gfc->mf_samples_to_encode -= gfp->framesize;
-      for (ch=0; ch<gfc->channels_out; ch++)
+      for (ch=0; ch<gfc->stereo; ch++)
 	for (i=0; i<gfc->mf_size; i++)
 	  mfbuf[ch][i]=mfbuf[ch][i+gfp->framesize];
     }
@@ -1300,7 +1297,7 @@ int    lame_encode_buffer_interleaved (
 int lame_encode (
         lame_global_flags* const  gfp,
         const short int           in_buffer [2] [1152],
-        unsigned char* const      mp3buf,
+        char* const               mp3buf,
         const int                 size )
 {
     lame_internal_flags*  gfc = gfp->internal_flags;
@@ -1319,7 +1316,7 @@ int lame_encode (
 
 int    lame_encode_flush (
                 lame_global_flags* gfp,
-                unsigned char*     mp3buffer,
+                char*              mp3buffer,
                 int                mp3buffer_size )
 {
     short int buffer[2][1152];
@@ -1416,7 +1413,7 @@ int  lame_close (lame_global_flags *gfp)
 
 int    lame_encode_finish (
                 lame_global_flags* gfp,
-                unsigned char*     mp3buffer,
+                char*              mp3buffer,
                 int                mp3buffer_size )
 {
     int ret = lame_encode_flush( gfp, mp3buffer, mp3buffer_size );
