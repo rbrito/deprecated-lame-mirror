@@ -5,6 +5,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.13  1999/12/22 17:38:18  markt
+ * AAC NMT/TMN values (commented out)
+ *
  * Revision 1.12  1999/12/22 07:39:05  markt
  * added AAC spreading function (disabled by default)
  *
@@ -304,7 +307,8 @@ void L3psycho_anal( short int *buffer[2], int stereo,
 
 #define AACS3XX
 #define NEWS3XX
-#ifdef NEWS3     
+#define NEWNORMXX
+#ifdef NEWNORM
     
     /* compute norm_l, norm_s instead of relying on table data */
     for ( b = 0;b < npart_l; b++ ) {
@@ -606,6 +610,16 @@ void L3psycho_anal( short int *buffer[2], int stereo,
     /* calculate the tonality of each threshold calculation partition */
     /* calculate the SNR in each threshhold calculation partition */
     
+    /* MP3 values */
+#define TMN 29
+#define NMT 6
+
+    /* AAC values */
+    /*
+#define TMN 18
+#define NMT 6
+    */
+
     for ( b = 0; b < npart_l; b++ )
       {
 	FLOAT8 cbb,tbb;
@@ -619,10 +633,8 @@ void L3psycho_anal( short int *buffer[2], int stereo,
 	  cbb = 0.0 ;
 	tbb = -0.299 - 0.43*cbb;  /* conv1=-0.299, conv2=-0.43 */
 	tbb = minimum( 1.0, maximum( 0.0, tbb) ) ;  /* 0<tbb<1 */
-	SNR_l[b] = maximum( minval[b], 29.0*tbb+6.0*(1.0-tbb) );
-	
-	
-      }	/* TMN=29.0,NMT=6.0 for all calculation partitions */
+	SNR_l[b] = maximum( minval[b], TMN*tbb+NMT*(1.0-tbb) );
+      }	
     
     for ( b = 0; b < npart_l; b++ ) /* calculate the threshold for each partition */
       nb[b] = ecb[b] * norm_l[b] * exp( -SNR_l[b] * LN_TO_LOG10 );

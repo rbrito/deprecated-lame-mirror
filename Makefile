@@ -286,6 +286,10 @@ test22: $(PGM)
 test22h: $(PGM)
 	./lame  -h  ../test/castanets.wav
 	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref22h.mp3 | head
+
+testr: $(PGM)
+	./lame  --nores -h  ../test/castanets.wav
+	cmp -l ../test/castanets.wav.mp3 ../test/castanets.refr.mp3 | wc
 testv: $(PGM)
 	./lame  -v  ../test/castanets.wav
 	cmp -l ../test/castanets.wav.mp3 ../test/castanets.refv.mp3 | head
