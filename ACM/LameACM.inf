@@ -32,7 +32,7 @@ addreg     = LameACM.AddReg,LameACM.AddRegNT
 MediaType  = SOFTWARE
 
 [Remove_LameMP3]
-;AddReg     = LameACM.Unregister
+AddReg     = LameACM.Unregister
 DelReg     = LameACM.DelReg
 DelFiles   = LameACM.Copy,LameACM.Copy.Inf
 UpdateInis = LameACM.UpdateIni
@@ -65,8 +65,8 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\drivers.desc","LameACM.acm",,
 HKLM,%UnInstallPath%,DisplayName,,%DisplayNameWin%
 HKLM,%UnInstallPath%,UninstallString,,"%11%\rundll32.exe setupapi,InstallHinfSection Remove_LameMP3 132 %17%\%InfFile%"
 
-;[LameACM.DoReg]
-;HKLM,Software\Microsoft\Windows\CurrentVersion\RunOnce\Setup,"Lame ACM MP3 Codec",,"%11%\regsvr32.exe /s %11%\LameCom.acm"
+[LameACM.DoReg]
+HKLM,Software\Microsoft\Windows\CurrentVersion\RunOnce\Setup,"Lame ACM MP3 Codec",,"%11%\regsvr32.exe /s %11%\LameCom.acm"
 
 [LameACM.DelReg]
 HKLM,"SYSTEM\CurrentControlSet\Control\MediaResources\msacm\msacm.lameacm"
@@ -74,8 +74,8 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\drivers.desc","LameACM.acm",,
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\drivers32","msacm.lameacm",,""
 HKLM,%UnInstallPath%
 
-;[LameACM.Unregister]
-;HKLM,"Software\Microsoft\Windows\CurrentVersion\RunOnce\Setup","Lame ACM MP3 Codec",,"%11%\regsvr32.exe /s /u %11%\LameCom.acm"
+[LameACM.Unregister]
+HKLM,"Software\Microsoft\Windows\CurrentVersion\RunOnce\Setup","Lame ACM MP3 Codec",,"%11%\regsvr32.exe /s /u %11%\LameCom.acm"
 
 [DestinationDirs]
 DefaultDestDir   = 11	; LDID_SYS
