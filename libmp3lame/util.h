@@ -113,9 +113,13 @@ extern "C" {
 #ifdef USE_FAST_LOG
 #define         FAST_LOG10(x)       (fast_log2(x)*(LOG2/LOG10))
 #define         FAST_LOG(x)         (fast_log2(x)*LOG2)
+#define         FAST_LOG10_X(x,y)   (fast_log2(x)*(LOG2/LOG10*(y)))
+#define         FAST_LOG_X(x,y)     (fast_log2(x)*(LOG2*(y)))
 #else
 #define         FAST_LOG10(x)       log10(x)
 #define         FAST_LOG(x)         log(x)
+#define         FAST_LOG10_X(x,y)   (log10(x)*(y))
+#define         FAST_LOG_X(x,y)     (log(x)*(y))
 #endif
 
 
