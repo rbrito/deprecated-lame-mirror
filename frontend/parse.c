@@ -450,7 +450,7 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --athonly       ignore GPSYCHO completely, use ATH only\n"
               "    --athtype n     selects between different ATH types [0-5]\n"
               "    --athlower x    lowers ATH by x dB\n"
-              "    --ath-adjust n  ATH auto adjust types 1-3, else no adjustment\n"
+              "    --athaa-type n  ATH auto adjust types 1-3, else no adjustment\n"
               "    --athaa-loudapprox n   n=1 total energy or n=2 equal loudness curve\n"
               "    --athaa-sensitivity x  activation offset in -/+ dB for ATH auto-adjustment\n" 
               "\n"
@@ -1154,9 +1154,9 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     argUsed=1;
                     (void) lame_set_ATHtype( gfp, atoi( nextArg ) );
 
-                T_ELIF ("ath-adjust")   //  switch for developing, no DOCU
+                T_ELIF ("athaa-type")   //  switch for developing, no DOCU
                     argUsed=1;          //  1:Gaby, 2:Robert, 3:Jon, else:off
-                    lame_set_adjust_type( gfp, atoi(nextArg) );
+                    lame_set_athaa_type( gfp, atoi(nextArg) );
 
                 T_ELIF ("athaa-loudapprox")
                     argUsed=1;
