@@ -1824,9 +1824,9 @@ set_frame_pinfo(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 
 	    /* reconstruct the scalefactors in case SCFSI was used */
 	    for (sfb = 0; sfb < gi->psymax; sfb++) {
-		if (gi->scalefac[sfb] == -1) /* scfsi */
+		if (gi->scalefac[sfb] == SCALEFAC_SCFSI_FLAG)
 		    gi->scalefac[sfb] = gfc->tt[0][ch].scalefac[sfb];
-		if (gi->scalefac[sfb] == -2) /* anything goes */
+		if (gi->scalefac[sfb] == SCALEFAC_ANYTHING_GOES)
 		    gi->scalefac[sfb] = 0;
 	    }
 
