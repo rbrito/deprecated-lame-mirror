@@ -110,24 +110,24 @@ static void PresetOptions( lame_global_flags *gfp, LONG myPreset )
 			break;
 
 /*0*/		case LQP_NORMAL_QUALITY:
-				lame_set_quality( gfp, 5 );
+			lame_set_quality( gfp, 5 );
 			break;
 
 /*1*/		case LQP_LOW_QUALITY:
-				lame_set_quality( gfp, 9 );
+			lame_set_quality( gfp, 9 );
 			break;
 
 /*2*/		case LQP_HIGH_QUALITY:
-				lame_set_quality( gfp, 2 );
+			lame_set_quality( gfp, 2 );
 			break;
 
 /*3*/		case LQP_VOICE_QUALITY:				// --voice flag for experimental voice mode
-				lame_set_mode( gfp, MONO );
-		        lame_set_preset( gfp, 56);
+			lame_set_mode( gfp, MONO );
+			lame_set_preset( gfp, 56);
 			break;
 
 /*4*/		case LQP_R3MIX:					// --R3MIX
-		        lame_set_preset( gfp, R3MIX);
+		       lame_set_preset( gfp, R3MIX);
 			break;
 
 /*5*/		case LQP_VERYHIGH_QUALITY:
@@ -864,9 +864,9 @@ static void dump_config( 	lame_global_flags*	gfp )
 	DebugPrintf("Fast mode              =%s\n", ( lame_get_quality( gfp ) )? "enabled" : "disabled" );
 	DebugPrintf("Force mid/side stereo  =%s\n", ( lame_get_force_ms( gfp ) )?"enabled":"disabled" );
 	DebugPrintf("Padding Type           =%d\n", lame_get_padding_type( gfp ) );
-	DebugPrintf("Disable Resorvoir      =%d\n", lame_get_disable_reservoir( gfp ) );
+	DebugPrintf("Disable Reservoir      =%d\n", lame_get_disable_reservoir( gfp ) );
 	DebugPrintf("Allow diff-short       =%d\n", lame_get_allow_diff_short( gfp ) );
-	DebugPrintf("Temporal masking effect=%d\n", lame_get_interChRatio( gfp ) );
+	DebugPrintf("Interchannel masking   =%f\n", lame_get_interChRatio( gfp ) );
 	DebugPrintf("Strict ISO Encoding    =%s\n", ( lame_get_strict_ISO( gfp ) ) ?"Yes":"No");
 	DebugPrintf("Scale                  =%5.2f\n", lame_get_scale( gfp ) );
 
@@ -896,14 +896,12 @@ static void dump_config( 	lame_global_flags*	gfp )
 
 	DebugPrintf("ATH Only               =%d\n", lame_get_ATHonly( gfp ) );
 	DebugPrintf("ATH short              =%d\n", lame_get_ATHshort( gfp ) );
-	DebugPrintf("ATH short              =%d\n", lame_get_ATHshort( gfp ) );
 	DebugPrintf("ATH no                 =%d\n", lame_get_noATH( gfp ) );
 	DebugPrintf("ATH type               =%d\n", lame_get_ATHtype( gfp ) );
-	DebugPrintf("ATH lower              =%d\n", lame_get_ATHlower( gfp ) );
+	DebugPrintf("ATH lower              =%f\n", lame_get_ATHlower( gfp ) );
 	DebugPrintf("ATH aa                 =%d\n", lame_get_athaa_type( gfp ) );
 	DebugPrintf("ATH aa  loudapprox     =%d\n", lame_get_athaa_loudapprox( gfp ) );
-	DebugPrintf("ATH aa  sensitivity    =%d\n", lame_get_athaa_sensitivity( gfp ) );
-	DebugPrintf("ATHtype                =%d\n", lame_get_ATHtype( gfp ) );
+	DebugPrintf("ATH aa  sensitivity    =%f\n", lame_get_athaa_sensitivity( gfp ) );
 
 	DebugPrintf("Experimental nspsytune =%d\n", lame_get_exp_nspsytune( gfp ) );
 	DebugPrintf("Experimental X         =%d\n", lame_get_experimentalX( gfp ) );
