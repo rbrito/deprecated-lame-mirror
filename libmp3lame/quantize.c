@@ -413,7 +413,7 @@ quantize_ISO(lame_t gfc, gr_info *gi)
 #endif
     {
 	while (xp < xend) {
-#ifdef TAKEHIRO_IEEE754_HACK
+#ifdef USE_IEEE754_HACK
 	    fi[0].f = istep * xp[0] + (ROUNDFAC_NEAR + MAGIC_FLOAT);
 	    fi[1].f = istep * xp[1] + (ROUNDFAC_NEAR + MAGIC_FLOAT);
 	    fi[2].f = istep * xp[2] + (ROUNDFAC_NEAR + MAGIC_FLOAT);
@@ -763,7 +763,7 @@ calc_sfb_noise_fast(lame_t gfc, int j, int bw, int sf)
 
     do {
 	FLOAT t0, t1;
-#ifdef TAKEHIRO_IEEE754_HACK
+#ifdef USE_IEEE754_HACK
 	fi_union fi0, fi1;
 	fi0.f = sfpow34 * xr34[j+bw  ] + (ROUNDFAC_NEAR + MAGIC_FLOAT);
 	fi1.f = sfpow34 * xr34[j+bw+1] + (ROUNDFAC_NEAR + MAGIC_FLOAT);
@@ -799,7 +799,7 @@ calc_sfb_noise(lame_t gfc, int j, int bw, int sf)
     sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0)=pow(2.0,-sf*0.1875) */
 
     do {
-#ifdef TAKEHIRO_IEEE754_HACK
+#ifdef USE_IEEE754_HACK
 	double t0, t1;
 	fi_union fi0, fi1;
 	fi0.f = (t0 = sfpow34 * xr34[j+bw  ] + MAGIC_FLOAT);
@@ -848,7 +848,7 @@ adjust_global_gain(lame_t gfc, gr_info *gi, FLOAT *distort, int huffbits)
 	{
 	    istep = IPOW20(scalefactor(gi, sfb));
 	    do {
-#ifdef TAKEHIRO_IEEE754_HACK
+#ifdef USE_IEEE754_HACK
 		double x0 = istep * xr34[j+bw  ] + MAGIC_FLOAT;
 		double x1 = istep * xr34[j+bw+1] + MAGIC_FLOAT;
 		if (x0 > MAGIC_FLOAT + IXMAX_VAL) x0 = MAGIC_FLOAT + IXMAX_VAL;

@@ -45,7 +45,7 @@ extern const int mdctorder[SBLIMIT];
 
 #define PRECALC_SIZE (IXMAX_VAL+2)
 
-#ifdef TAKEHIRO_IEEE754_HACK
+#ifdef USE_IEEE754_HACK
 extern FLOAT pow43[PRECALC_SIZE*3];
 # define adj43asm (&pow43[PRECALC_SIZE*2])
 #else

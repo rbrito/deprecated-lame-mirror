@@ -50,7 +50,7 @@
 #define BRHIST 1
 
 /* IEEE754 compatible machine */
-#define TAKEHIRO_IEEE754_HACK 1
+#define USE_IEEE754_HACK 1
 
 #define HAVE_STRCHR
 #define HAVE_MEMCPY

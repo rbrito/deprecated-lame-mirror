@@ -726,7 +726,7 @@ static FLOAT ma_max_i1;
 static FLOAT ma_max_i2;
 static FLOAT ma_max_m;
 
-#ifdef TAKEHIRO_IEEE754_HACK
+#ifdef USE_IEEE754_HACK
 inline static int
 trancate(FLOAT x)
 {
@@ -737,9 +737,9 @@ trancate(FLOAT x)
     fi.f = x+(0.5+MAGIC_FLOAT);
     return fi.i - MAGIC_INT - 1;
 }
-#else /* TAKEHIRO_IEEE754_HACK */
+#else /* USE_IEEE754_HACK */
 # define trancate(x) (int)x
-#endif /* TAKEHIRO_IEEE754_HACK */
+#endif /* USE_IEEE754_HACK */
 
 void
 init_mask_add_max_values(lame_t gfc)

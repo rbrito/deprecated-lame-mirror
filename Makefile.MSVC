@@ -331,13 +331,13 @@ CPP_OPTS = $(CPP_OPTS) /DHAVE_MPGLIB /DUSE_LAYER_1 /DUSE_LAYER_2
 
 
 
-#__ Takehiro's IEEE hack ______________________________________________________
+#__ IEEE hack ______________________________________________________
 #
 #	uncomment the following to enable Takehiro's IEEE hack
 #	You'll want it on a x86 machine with i387 FPU
 #
-CPP_OPTS = $(CPP_OPTS) /DTAKEHIRO_IEEE754_HACK
-#______________________________________________________ Takehiro's IEEE hack __
+CPP_OPTS = $(CPP_OPTS) /DUSE_IEEE754_HACK
+#______________________________________________________ IEEE hack __
 
 
 

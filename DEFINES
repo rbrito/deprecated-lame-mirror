@@ -1,7 +1,8 @@
 $Id$
 
-TAKEHIRO_IEEE754_HACK:
+USE_IEEE754_HACK:
  - use hacky and fast code with IEEE754 float format.
+ - with this option, LAME uses undefined behavior of C.
 
 USE_FAST_LOG:
  - use of log/log10 approximation (uses IEEE754 float format)

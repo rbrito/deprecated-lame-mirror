@@ -34,7 +34,7 @@
 #include "util.h"
 #include "tables.h"
 
-#ifdef TAKEHIRO_IEEE754_HACK
+#ifdef USE_IEEE754_HACK
 # define signbits(x) (*((unsigned int*)&x) >> 31)
 #else
 # define signbits(x) (x < (FLOAT)0.)

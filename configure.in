@@ -567,13 +567,13 @@ case $host_cpu in
 	CPUTYPE="i386"
 
 	# use internal knowledge of the IEEE 754 layout
-	AC_DEFINE(TAKEHIRO_IEEE754_HACK, 1, IEEE754 compatible machine)
+	AC_DEFINE(USE_IEEE754_HACK, 1, IEEE754 compatible machine)
 	;;
 x86_64)
 dns do not set CPUTYPE="i386" because nasm does not support elf64 currently
 
 	# use internal knowledge of the IEEE 754 layout
-	AC_DEFINE(TAKEHIRO_IEEE754_HACK, 1, IEEE754 compatible machine)
+	AC_DEFINE(USE_IEEE754_HACK, 1, IEEE754 compatible machine)
 	;;
 *)
 	CPUTYPE="no"

@@ -120,7 +120,7 @@ typedef float   FLOAT;
 typedef FLOAT     sample_t;
 
 /* log/log10 approximations */
-#ifdef TAKEHIRO_IEEE754_HACK
+#ifdef USE_IEEE754_HACK
 # define USE_FAST_LOG
 # define MAGIC_FLOAT (65536*128)
 # define MAGIC_INT 0x4b000000
