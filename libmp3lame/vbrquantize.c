@@ -518,54 +518,72 @@ compute_scalefacs_short(int sf[], const gr_info * cod_info, int scalefac[],
     const int maxrange1 = 15, maxrange2 = 7;
     int     maxrange, maxover = 0;
     int     sfb, i;
-    int     ifqstep = (cod_info->scalefac_scale == 0) ? 2 : 4;
+    const int ifqstep = (cod_info->scalefac_scale == 0) ? 2 : 4;
+    const int ifqstepShift = (cod_info->scalefac_scale == 0) ? 1 : 2;
 
     for (i = 0; i < 3; ++i) {
         int     maxsf1 = 0, maxsf2 = 0, minsf = 1000;
         /* see if we should use subblock gain */
         for (sfb = 0; sfb < 6; ++sfb) { /* part 1 */
-            if (maxsf1 < -sf[sfb*3+i])
-                maxsf1 = -sf[sfb*3+i];
-            if (minsf > -sf[sfb*3+i])
-                minsf = -sf[sfb*3+i];
+            int v = -sf[sfb*3+i];
+            if (maxsf1 < v)
+                maxsf1 = v;
+            if (minsf > v)
+                minsf = v;
         }
         for (; sfb < SBPSY_s; ++sfb) { /* part 2 */
-            if (maxsf2 < -sf[sfb*3+i])
-                maxsf2 = -sf[sfb*3+i];
-            if (minsf > -sf[sfb*3+i])
-                minsf = -sf[sfb*3+i];
+            int v = -sf[sfb*3+i];
+            if (maxsf2 < v)
+                maxsf2 = v;
+            if (minsf > v)
+                minsf = v;
         }
 
         /* boost subblock gain as little as possible so we can
          * reach maxsf1 with scalefactors 
          * 8*sbg >= maxsf1   
          */
-        maxsf1 = Max(maxsf1 - maxrange1 * ifqstep, maxsf2 - maxrange2 * ifqstep);
-        sbg[i] = 0;
-        if (minsf > 0)
-            sbg[i] = floor(.125 * minsf + .001);
-        if (maxsf1 > 0)
-            sbg[i] = Max(sbg[i], (maxsf1 / 8 + (maxsf1 % 8 != 0)));
+        {
+            int m1 = maxsf1 - (maxrange1 << ifqstepShift);
+            int m2 = maxsf2 - (maxrange2 << ifqstepShift);
+            maxsf1 = Max(m1, m2);
+        }
+        if (minsf > 0) {
+            sbg[i] = minsf >> 3;
+        }
+        else {
+            sbg[i] = 0;
+        }
+        if (maxsf1 > 0) {
+            int m1 = sbg[i];
+            int m2 = (maxsf1+7) >> 3;
+            sbg[i] = Max(m1, m2);
+        }
         if (sbg[i] > 7)
             sbg[i] = 7;
 
         for (sfb = 0; sfb < SBPSY_s; ++sfb) {
-            sf[sfb*3+i] += 8 * sbg[i];
+            int j = sfb*3+i;
+            sf[j] += sbg[i] << 3;
 
-            if (sf[sfb*3+i] < 0) {
+            if (sf[j] < 0) {
+                int m;
                 maxrange = sfb < 6 ? maxrange1 : maxrange2;
 
-                scalefac[sfb*3+i]
-                    = -sf[sfb*3+i] / ifqstep + (-sf[sfb*3+i] % ifqstep != 0);
+                scalefac[j] = (ifqstep-1-sf[j]) >> ifqstepShift;
 
-                if (scalefac[sfb*3+i] > maxrange)
-                    scalefac[sfb*3+i] = maxrange;
+                if (scalefac[j] > maxrange)
+                    scalefac[j] = maxrange;
 
-                if (maxover < -(sf[sfb*3+i] + scalefac[sfb*3+i] * ifqstep))
-                    maxover = -(sf[sfb*3+i] + scalefac[sfb*3+i] * ifqstep);
+                m = -(sf[j] + (scalefac[j] << ifqstepShift));
+                if (maxover < m)
+                    maxover = m;
+            }
+            else {
+                scalefac[j] = 0;
             }
         }
-        scalefac[sfb*3+i] = 0;
+        scalefac[SBPSY_s*3+i] = 0;
     }
 
     return maxover;
@@ -584,32 +602,37 @@ inline int
 compute_scalefacs_long_lsf(int *sf, const gr_info * cod_info, int *scalefac)
 {
     const int *max_range = max_range_long;
-    int     ifqstep = (cod_info->scalefac_scale == 0) ? 2 : 4;
+    const int ifqstep = (cod_info->scalefac_scale == 0) ? 2 : 4;
+    const int ifqstepShift = (cod_info->scalefac_scale == 0) ? 1 : 2;
     int     sfb;
     int     maxover;
 
     if (cod_info->preflag) {
         max_range = max_range_long_lsf_pretab;
         for (sfb = 11; sfb < SBPSY_l; ++sfb)
-            sf[sfb] += pretab[sfb] * ifqstep;
+            sf[sfb] += pretab[sfb] << ifqstepShift;
     }
 
     maxover = 0;
     for (sfb = 0; sfb < SBPSY_l; ++sfb) {
 
         if (sf[sfb] < 0) {
+            int m = -(sf[sfb] + (scalefac[sfb] << ifqstepShift));
             /* ifqstep*scalefac >= -sf[sfb], so round UP */
-            scalefac[sfb] = -sf[sfb] / ifqstep + (-sf[sfb] % ifqstep != 0);
+            scalefac[sfb] = (ifqstep-1-sf[sfb]) >> ifqstepShift;
             if (scalefac[sfb] > max_range[sfb])
                 scalefac[sfb] = max_range[sfb];
 
             /* sf[sfb] should now be positive: */
-            if (-(sf[sfb] + scalefac[sfb] * ifqstep) > maxover) {
-                maxover = -(sf[sfb] + scalefac[sfb] * ifqstep);
+            if ( maxover < m ) {
+                maxover = m;
             }
         }
+        else {
+            scalefac[sfb] = 0;
+        }
     }
-    scalefac[sfb] = 0;  /* sfb21 */
+    scalefac[SBPSY_l] = 0;  /* sfb21 */
 
     return maxover;
 }
@@ -628,31 +651,37 @@ compute_scalefacs_long_lsf(int *sf, const gr_info * cod_info, int *scalefac)
 inline int
 compute_scalefacs_long(int *sf, const gr_info * cod_info, int *scalefac)
 {
-    int     ifqstep = (cod_info->scalefac_scale == 0) ? 2 : 4;
+    const int ifqstep = (cod_info->scalefac_scale == 0) ? 2 : 4;
+    const int ifqstepShift = (cod_info->scalefac_scale == 0) ? 1 : 2;
     int     sfb;
     int     maxover;
 
     if (cod_info->preflag) {
-        for (sfb = 11; sfb < SBPSY_l; ++sfb)
-            sf[sfb] += pretab[sfb] * ifqstep;
+        for (sfb = 11; sfb < SBPSY_l; ++sfb) {
+            sf[sfb] += pretab[sfb] << ifqstepShift;
+        }
     }
 
     maxover = 0;
     for (sfb = 0; sfb < SBPSY_l; ++sfb) {
 
         if (sf[sfb] < 0) {
+            int m = -(sf[sfb] + (scalefac[sfb] << ifqstepShift));
             /* ifqstep*scalefac >= -sf[sfb], so round UP */
-            scalefac[sfb] = -sf[sfb] / ifqstep + (-sf[sfb] % ifqstep != 0);
+            scalefac[sfb] = (ifqstep-1-sf[sfb]) >> ifqstepShift;
             if (scalefac[sfb] > max_range_long[sfb])
                 scalefac[sfb] = max_range_long[sfb];
 
             /* sf[sfb] should now be positive: */
-            if (-(sf[sfb] + scalefac[sfb] * ifqstep) > maxover) {
-                maxover = -(sf[sfb] + scalefac[sfb] * ifqstep);
+            if ( maxover < m ) {
+                maxover = m;
             }
         }
+        else {
+            scalefac[sfb] = 0;
+        }
     }
-    scalefac[sfb] = 0;  /* sfb21 */
+    scalefac[SBPSY_l] = 0;  /* sfb21 */
 
     return maxover;
 }
