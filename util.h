@@ -229,7 +229,7 @@ typedef struct  {
 
   /* variables used by util.c */
 #define BLACKSIZE 25
-#define BPC 16
+#define BPC 160
   short int inbuf_old[2][BLACKSIZE];
   FLOAT blackfilt[2*BPC+1][BLACKSIZE];
   FLOAT8 itime[2];

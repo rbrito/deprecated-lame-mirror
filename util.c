@@ -459,6 +459,11 @@ void fun_reorder(int scalefac_band[],FLOAT8 ix_orig[576]) {
 /* resampling via FIR filter, blackman window */
 INLINE double blackman(int i,double offset,double fcn,int l)
 {
+  /* This algorithm from:
+SIGNAL PROCESSING ALGORITHMS IN FORTRAN AND C
+S.D. Stearns and R.A. David, Prentice-Hall, 1992
+  */
+
   double bkwn;
   double wcn = (PI * fcn);
   double dly = l / 2.0;
