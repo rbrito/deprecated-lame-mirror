@@ -532,7 +532,7 @@ void L3psycho_anal( lame_global_flags *gfp,
      *    calculation partitions                                           *
      **********************************************************************/
     b = 0;
-    for (j = 0; j < gfc->cw_upper_index && gfc->numlines_l[b]; )
+    for (j = 0; j < gfc->cw_upper_index && gfc->numlines_l[b] && b<gfc->npart_l_orig; )
       {
 	FLOAT8 ebb, cbb;
 	int i;

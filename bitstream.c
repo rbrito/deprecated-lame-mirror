@@ -561,7 +561,7 @@ writeMainData(lame_global_flags *gfp,
       int              l3_enc[2][2][576],
   	III_scalefac_t   scalefac[2][2] )
 {
-    int i, gr, ch, sfb,data_bits,tot_bits=0;
+    int i, gr, ch, sfb,data_bits,scale_bits,tot_bits=0;
     lame_internal_flags *gfc=gfp->internal_flags;
     III_side_info_t *l3_side;
     int ix_w[576];
@@ -575,6 +575,7 @@ writeMainData(lame_global_flags *gfp,
 		int slen1 = slen1_tab[gi->scalefac_compress];
 		int slen2 = slen2_tab[gi->scalefac_compress];
 		data_bits=0;
+		scale_bits=0;
 
 #ifdef DEBUG
 		hogege = gfc->bs.totbit;
@@ -587,7 +588,7 @@ writeMainData(lame_global_flags *gfp,
 			putbits2(gfp,Max(scalefac[gr][ch].s[sfb][0], 0), slen);
 			putbits2(gfp,Max(scalefac[gr][ch].s[sfb][1], 0), slen);
 			putbits2(gfp,Max(scalefac[gr][ch].s[sfb][2], 0), slen);
-			tot_bits += 3*slen;
+			scale_bits += 3*slen;
 		    }
 		    data_bits += ShortHuffmancodebits(gfp,l3_enc[gr][ch], gi);
 		} else {
@@ -601,7 +602,7 @@ writeMainData(lame_global_flags *gfp,
 			     sfb++) {
 			    putbits2(gfp,Max(scalefac[gr][ch].l[sfb], 0),
 				    sfb < 11 ? slen1 : slen2);
-			    tot_bits += sfb < 11 ? slen1 : slen2;
+			    scale_bits += sfb < 11 ? slen1 : slen2;
 			}
 		    }
 		    data_bits +=LongHuffmancodebits(gfp,l3_enc[gr][ch], gi);
@@ -612,7 +613,8 @@ writeMainData(lame_global_flags *gfp,
 #endif
 		/* does bitcount in quantize.c agree with actual bit count?*/
 		assert(data_bits==gi->part2_3_length-gi->part2_length);
-		tot_bits += data_bits;
+		assert(scale_bits==gi->part2_length);
+		tot_bits += scale_bits + data_bits;
 
 	    } /* for ch */
 	} /* for gr */
@@ -624,6 +626,7 @@ writeMainData(lame_global_flags *gfp,
 	    int sfb_partition;
 	    assert(gi->sfb_partition_table);
 	    data_bits = 0;
+	    scale_bits=0;
 
 	    sfb = 0;
 	    sfb_partition = 0;
@@ -637,7 +640,7 @@ writeMainData(lame_global_flags *gfp,
 			putbits2(gfp,Max(scalefac[gr][ch].s[sfb][0], 0), slen);
 			putbits2(gfp,Max(scalefac[gr][ch].s[sfb][1], 0), slen);
 			putbits2(gfp,Max(scalefac[gr][ch].s[sfb][2], 0), slen);
-			tot_bits += 3*slen;
+			scale_bits += 3*slen;
 		    }
 		}
 		data_bits += ShortHuffmancodebits(gfp,l3_enc[gr][ch], gi);
@@ -647,7 +650,7 @@ writeMainData(lame_global_flags *gfp,
 		    int slen = gi->slen[sfb_partition];
 		    for (i = 0; i < sfbs; i++, sfb++) {
 			putbits2(gfp,Max(scalefac[gr][ch].l[sfb], 0), slen);
-			tot_bits += slen;
+			scale_bits += slen;
 		    }
 		}
 		data_bits +=LongHuffmancodebits(gfp,l3_enc[gr][ch], gi);
@@ -656,7 +659,8 @@ writeMainData(lame_global_flags *gfp,
 
 	    /* does bitcount in quantize.c agree with actual bit count?*/
 	    assert(data_bits==gi->part2_3_length-gi->part2_length);
-	    tot_bits += data_bits;
+	    assert(scale_bits==gi->part2_length);
+	    tot_bits += scale_bits + data_bits;
 	} /* for ch */
     } /* for gf */
     return tot_bits;
@@ -793,6 +797,9 @@ format_bitstream(lame_global_flags *gfp, int bitsPerFrame,
       fprintf(stderr,"resv drain (pre)          %i \n",l3_side->resvDrain_pre);
       fprintf(stderr,"header and sideinfo:      %i \n",8*gfc->sideinfo_len);
       fprintf(stderr,"data bits:                %i \n",bits-l3_side->resvDrain_post-8*gfc->sideinfo_len);
+      fprintf(stderr,"total bits:               %i (remainder: %i) \n",bits,bits % 8);
+      fprintf(stderr,"bitsperframe:             %i \n",bitsPerFrame);
+
 
       gfc->ResvSize = l3_side->main_data_begin*8;
     };

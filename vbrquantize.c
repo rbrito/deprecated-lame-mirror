@@ -467,7 +467,7 @@ VBR_noise_shaping
   lame_internal_flags *gfc=gfp->internal_flags;
   int       start,end,bw,sfb,l, i, vbrmax;
   III_scalefac_t vbrsf;
-  III_scalefac_t save_sf;
+  III_scalefac_t save_sf,scalefac_save;
   int maxover0,maxover1,maxover0p,maxover1p,maxover,mover;
   int ifqstep;
   III_psy_xmin l3_xmin;
@@ -512,8 +512,9 @@ VBR_noise_shaping
     }
     
   } /* compute needed scalefactors */
-  memcpy(&save_sf,&vbrsf,sizeof(III_scalefac_t));
 
+  /* save a copy of vbrsf, incase we have to recomptue scalefacs */
+  memcpy(&save_sf,&vbrsf,sizeof(III_scalefac_t));
 
 
   do { 
@@ -675,6 +676,9 @@ VBR_noise_shaping
     }
   } 
   
+  /* make a copy since VBR_quantize_granule may modify scalefactors
+   * (for example, if it turns on scsfi) */
+  memcpy(&scalefac_save,&scalefac[gr][ch],sizeof(III_scalefac_t));
   VBR_quantize_granule(gfp,xr,xr34,l3_enc,ratio,l3_xmin,scalefac,gr,ch);
 
   if (cod_info->part2_3_length < minbits) {
@@ -700,6 +704,7 @@ VBR_noise_shaping
 
   while (cod_info->part2_3_length > Min(maxbits,4095)) {
     /* increase global gain, keep exisiting scale factors */
+    memcpy(&scalefac[gr][ch],&scalefac_save,sizeof(III_scalefac_t));
     ++cod_info->global_gain;
     if (cod_info->global_gain > 255) 
       fprintf(stderr,"%ld impossible to encode this frame! bits=%d\n",

@@ -28,9 +28,9 @@ ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, i
 
     /* maximum allowed frame size */
     if (gfp->strict_ISO)
-      maxmp3buf = 7680;
+      maxmp3buf = 8*960;
     else
-      maxmp3buf = 16380;
+      maxmp3buf = 8*2047;
 
     if ( frameLength > maxmp3buf )
 	gfc->ResvMax = 0;
@@ -38,6 +38,7 @@ ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, i
 	gfc->ResvMax = maxmp3buf - frameLength;
     if (gfp->disable_reservoir) gfc->ResvMax=0;
     if ( gfc->ResvMax > resvLimit ) gfc->ResvMax = resvLimit;
+    assert(0==(gfc->ResvMax % 8));
 
     l3_side->resvDrain_pre = 0;
 
@@ -103,6 +104,11 @@ ResvAdjust(lame_global_flags *gfp,gr_info *gi, III_side_info_t *l3_side, int mea
 {
   lame_internal_flags *gfc=gfp->internal_flags;
   gfc->ResvSize += (mean_bits / gfc->stereo) - gi->part2_3_length;
+#if 0
+  printf("part2_3_length:  %i  avg=%i  incres: %i\n",gi->part2_3_length,
+	 mean_bits/gfc->stereo,
+mean_bits/gfc->stereo-gi->part2_3_length);
+#endif
 }
 
 
@@ -128,17 +134,19 @@ ResvFrameEnd(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits)
     l3_side->resvDrain_post = 0;
     l3_side->resvDrain_pre = 0;
 
-
-    over_bits = gfc->ResvSize - gfc->ResvMax;
-    if ( over_bits < 0 )
-	over_bits = 0;
-    stuffingBits += over_bits;
-
     /* we must be byte aligned */
-    if ( (over_bits = (gfc->ResvSize-over_bits) % 8) )
+    if ( (over_bits = (gfc->ResvSize % 8)) )
 	stuffingBits += over_bits;
 
-#define NEW_DRAIN
+
+    over_bits = (gfc->ResvSize - stuffingBits) - gfc->ResvMax;
+    if (over_bits > 0) {
+      assert(0==(over_bits % 8 ));
+      stuffingBits += over_bits;
+    }
+    
+
+#define NEW_DRAINXX
 #ifdef NEW_DRAIN
     /* drain as many bits as possible into previous frame ancillary data
      * In particular, in VBR mode ResvMax may have changed, and we have
@@ -150,39 +158,19 @@ ResvFrameEnd(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits)
     gfc->ResvSize -= 8*mdb_bytes;
     l3_side->main_data_begin -= mdb_bytes;
 
-#if 0    
-    if (gfp->VBR && mdb_bytes && !gfp->disable_reservoir)  {
-	printf("**** %i informative message:  drain_pre: wasting bits=%i\n",
-             (int)gfc->frameNum,8*mdb_bytes);
-      }
-#endif
-#endif
 
-#ifdef NEW_DRAIN
     /* drain just enough to be byte aligned.  The remaining bits will
      * be added to the reservoir, and we will deal with them next frame.
      * If the next frame is at a lower bitrate, it may have a larger ResvMax, 
      * and we will not have to waste these bits!  mt 4/00 */
-    if (gfp->VBR) {
-      l3_side->resvDrain_post += (stuffingBits % 8);
-      gfc->ResvSize -= stuffingBits % 8;
-    }else{
-      /* drain the rest into this frames ancillary data*/
-      l3_side->resvDrain_post += stuffingBits;
-      gfc->ResvSize -= stuffingBits;
-    }
+    l3_side->resvDrain_post += (stuffingBits % 8);
+    gfc->ResvSize -= stuffingBits % 8;
 #else
     /* drain the rest into this frames ancillary data*/
     l3_side->resvDrain_post += stuffingBits;
     gfc->ResvSize -= stuffingBits;
 #endif
 
-#if 0
-    if (gfp->VBR && stuffingBits>7 && !gfp->disable_reservoir) {
-      printf("**** %i informative message: drain_post: wasting bits=%i\n",
-	     (int)gfc->frameNum,stuffingBits);
-    }
-#endif
     return;
 }
 

@@ -642,6 +642,7 @@ scfsi_calc(int ch,
 	if (s2 < scalefac[1][ch].l[sfb])
 	    s2 = scalefac[1][ch].l[sfb];
     }
+
     for (i = 0; i < 16; i++) {
 	if (s1 < slen1_n[i] && s2 < slen2_n[i]) {
 	    int c = slen1_tab[i] * c1 + slen2_tab[i] * c2;
@@ -662,10 +663,10 @@ void best_scalefac_store(lame_global_flags *gfp,int gr, int ch,
 
     /* use scalefac_scale if we can */
     gr_info *gi = &l3_side->gr[gr].ch[ch].tt;
+    int sfb,i,l,start,end;
 
     /* remove scalefacs from bands with ix=0.  This idea comes
      * from the AAC ISO docs.  added mt 3/00 */
-    int sfb,i,l,start,end;
     /* check if l3_enc=0 */
     for ( sfb = 0; sfb < gi->sfb_lmax; sfb++ ) {
       if (scalefac[gr][ch].l[sfb]>0) { 
@@ -723,7 +724,6 @@ void best_scalefac_store(lame_global_flags *gfp,int gr, int ch,
     }
 
 
-    /* initialize scfsi to 0 (may be changed below) */
     for ( i = 0; i < 4; i++ )
       l3_side->scfsi[ch][i] = 0;
 
@@ -736,7 +736,6 @@ void best_scalefac_store(lame_global_flags *gfp,int gr, int ch,
 	== l3_side->gr[1].ch[ch].tt.preflag) {
       	scfsi_calc(ch, l3_side, scalefac);
     }
-
     gi->part2_3_length += gi->part2_length;
 }
 
