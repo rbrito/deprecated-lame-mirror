@@ -10,7 +10,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.     See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
@@ -593,6 +593,11 @@ better_quant(
 			   || ( calc.max_noise  == best->max_noise
 			     && calc.tot_noise  <= best->tot_noise )
 			  ));
+	    break;
+
+        case 10:
+	    better = (calc.over_noise < best->over_noise)
+		&&   (calc.max_noise < best->max_noise);
 	    break;
     }   
     if (better)
