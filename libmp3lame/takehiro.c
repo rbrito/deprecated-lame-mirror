@@ -686,7 +686,7 @@ void best_scalefac_store(
 
     /* use scalefac_scale if we can */
     gr_info *gi = &l3_side->tt[gr][ch];
-    int sfb,i,j,j2,l;
+    int sfb,i,j,l;
 
     /* remove scalefacs from bands with ix=0.  This idea comes
      * from the AAC ISO docs.  added mt 3/00 */

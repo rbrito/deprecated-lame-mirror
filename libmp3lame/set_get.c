@@ -35,6 +35,12 @@
 #endif
 
 
+
+extern int apply_preset(lame_global_flags*  gfp, int preset);
+
+
+
+
 /*
  * input stream description
  */

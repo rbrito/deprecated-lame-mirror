@@ -358,6 +358,7 @@ int CDECL lame_get_VBR_hard_min(const lame_global_flags *);
 
 /* for preset */
 int CDECL lame_set_preset_expopts(lame_global_flags *, int);
+int CDECL lame_set_preset_notune(lame_global_flags *, int);
 
 
 /********************************************************************

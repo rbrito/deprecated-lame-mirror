@@ -777,8 +777,6 @@ static int  presets_set_r3mix( lame_t gfp, const char* preset_name,
     return -1;
 }
 
-extern void lame_set_msfix( lame_t gfp, double msfix );
-extern int lame_set_preset_expopts( lame_t gfp, int preset_expopts );
 
 
 
