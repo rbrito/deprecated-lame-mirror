@@ -78,7 +78,7 @@ endif
 # Requires ncurses, but libtermcap also works.  
 # If you have any trouble, just dont define these
 #
-# BRHIST_SWITCH = -DBRHIST -DHAVE_TERMCAP
+# BRHIST_SWITCH = -DBRHIST -DHAVE_TERMCAP -DHAVE_{NCURSES_}TERMCAP_H
 # LIBTERMCAP = -lncurses
 # LIBTERMCAP = -ltermcap
 #
@@ -124,7 +124,7 @@ ifeq ($(UNAME),Linux)
    GTK = -DHAVE_GTK `gtk-config --cflags`
    GTKLIBS = `gtk-config --libs` 
 # Comment out next 2 lines if you want to remove VBR histogram capability
-   BRHIST_SWITCH = -DBRHIST -DHAVE_TERMCAP
+   BRHIST_SWITCH = -DBRHIST -DHAVE_TERMCAP -DHAVE_TERMCAP_H
    LIBTERMCAP = -lncurses
 #  uncomment to use LIBSNDFILE
 #   SNDLIB = -DLIBSNDFILE
@@ -243,7 +243,7 @@ ifeq ($(UNAME),FreeBSD)
    GTK = -DHAVE_GTK `gtk12-config --cflags`
    GTKLIBS = `gtk12-config --libs` 
 # Comment out next 2 lines if you want to remove VBR histogram capability
-   BRHIST_SWITCH = -DBRHIST -DHAVE_TERMCAP
+   BRHIST_SWITCH = -DBRHIST -DHAVE_TERMCAP -DHAVE_TERMCAP_H
    LIBTERMCAP = -lncurses
 
 endif
@@ -257,7 +257,7 @@ ifeq ($(UNAME),OpenBSD)
    GTK = -DHAVE_GTK `gtk-config --cflags`
    GTKLIBS = `gtk-config --libs` 
 # Comment out next 2 lines if you want to remove VBR histogram capability
-   BRHIST_SWITCH = -DBRHIST -DHAVE_TERMCAP
+   BRHIST_SWITCH = -DBRHIST -DHAVE_TERMCAP -DHAVE_TERMCAP_H
    LIBTERMCAP = -lcurses 
 endif
 
@@ -288,7 +288,7 @@ ifeq ($(UNAME),IRIX64)
 #optonal:
 #   GTK = -DHAVE_GTK `gtk-config --cflags`
 #   GTKLIBS = `gtk-config --libs`
-#   BRHIST_SWITCH = -DBRHIST -DHAVE_TERMCAP
+#   BRHIST_SWITCH = -DBRHIST -DHAVE_TERMCAP -DHAVE_TERMCAP_H
 #   LIBTERMCAP = -lncurses
 
 endif
@@ -352,7 +352,7 @@ ifeq ($(UNAME),OS/2)
 #   CC_OPTS = -O6 -ffast-math -funroll-loops -mpentiumpro -march=pentiumpro
 
 # Comment out next 2 lines if you want to remove VBR histogram capability
-   BRHIST_SWITCH = -DBRHIST -DHAVE_TERMCAP
+   BRHIST_SWITCH = -DBRHIST -DHAVE_TERMCAP -DHAVE_TERMCAP_H
    LIBTERMCAP = -ltermcap
 
 # Uncomment & inspect the 2 GTK lines to use MP3x GTK frame analyzer.

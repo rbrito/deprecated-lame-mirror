@@ -68,6 +68,11 @@
 
 	typedef float  float32_t;
 	typedef double float64_t;
+#elif defined (__GNUC__)
+#define uint8_t unsigned char
+#define uint16_t unsigned short
+#define uint32_t unsigned int
+#define uint64_t unsigned long long
 #endif
 
 typedef long double ieee854_float80_t;
