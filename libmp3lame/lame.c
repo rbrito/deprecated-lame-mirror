@@ -676,8 +676,7 @@ lame_init_params(lame_global_flags * const gfp)
       gfc->decode_on_the_fly = 1;
 
     if (gfc->decode_on_the_fly && !gfp->decode_only)
-      if (lame_decode_init() < 0)  /* initialize the decoder  */
-	return -6;
+      lame_decode_init();  /* initialize the decoder  */
 #endif
 
 

@@ -20,7 +20,6 @@
 
 MPSTR   mp;
 plotting_data *mpg123_pinfo = NULL;
-int is_initialised = 0;
 
 int
 lame_decode_exit(void)
@@ -33,10 +32,6 @@ lame_decode_exit(void)
 int
 lame_decode_init(void)
 {
-    if (is_initialised)
-	    return -1;
-    is_initialised = 1;
-
     InitMP3(&mp);
     return 0;
 }
