@@ -5,6 +5,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.24  2000/01/26 08:39:19  markt
+ * removed two c++ commends (by request)
+ *
  * Revision 1.23  2000/01/15 14:35:38  takehiro
  * little bit optimization
  *
@@ -437,7 +440,7 @@ void L3psycho_anal( short int *buffer[2],
      *  compute FFTs
      **********************************************************************/
     fft_long2( wsamp, energy, chn, buffer); /* old version */
-    //fft_long( wsamp, energy, chn, buffer);
+    /*fft_long( wsamp, energy, chn, buffer);*/
 
     if (check_ms_stereo) {
       /* used for MS stereo criterion */
@@ -473,7 +476,7 @@ void L3psycho_anal( short int *buffer[2],
 	b1 = bx_sav[chn][1][j] = bx_sav[chn][0][j];
 	r1 = rx_sav[chn][1][j] = rx_sav[chn][0][j];
 	an = ax_sav[chn][0][j] = wsamp[j];
-	bn = bx_sav[chn][0][j] = j==0 ? wsamp[0] : wsamp[BLKSIZE-j];  // bx[j];
+	bn = bx_sav[chn][0][j] = j==0 ? wsamp[0] : wsamp[BLKSIZE-j];  
 	rn = rx_sav[chn][0][j] = sqrt(energy[j]);
 
 	{ /* square (x1,y1) */
