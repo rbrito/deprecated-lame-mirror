@@ -2021,3 +2021,4 @@ void AEncodeProperties::EnableAbrOptions(HWND hDialog, bool enable)
 	::EnableWindow(::GetDlgItem( hDialog, IDC_STATIC_AVERAGE_STEP_VALUE), enable);
 	::EnableWindow(::GetDlgItem( hDialog, IDC_STATIC_AVERAGE_SAMPLE_VALUE), enable);
 }
+

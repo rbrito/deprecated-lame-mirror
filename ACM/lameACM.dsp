@@ -57,7 +57,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /machine:I386
-# ADD LINK32 winmm.lib advapi32.lib user32.lib kernel32.lib libc.lib libcp.lib /nologo /subsystem:windows /dll /map /machine:I386 /nodefaultlib /out:"Release\lameACM.acm"
+# ADD LINK32 shell32.lib url.lib gdi32.lib winmm.lib advapi32.lib user32.lib kernel32.lib libc.lib libcp.lib /nologo /subsystem:windows /dll /map /machine:I386 /nodefaultlib /out:"Release\lameACM.acm"
 
 !ELSEIF  "$(CFG)" == "lameACM - Win32 Debug"
 
@@ -83,7 +83,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 winmm.lib advapi32.lib user32.lib kernel32.lib libcd.lib libcpd.lib /nologo /subsystem:windows /dll /debug /machine:I386 /nodefaultlib /out:"Debug\lameACM.acm" /pdbtype:sept
+# ADD LINK32 shell32.lib url.lib gdi32.lib winmm.lib advapi32.lib user32.lib kernel32.lib libcd.lib libcpd.lib /nologo /subsystem:windows /dll /debug /machine:I386 /nodefaultlib /out:"Debug\lameACM.acm" /pdbtype:sept
 # SUBTRACT LINK32 /map
 # Begin Special Build Tool
 SOURCE=$(InputPath)
@@ -115,7 +115,7 @@ BSC32=bscmake.exe
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept
 # SUBTRACT BASE LINK32 /map
-# ADD LINK32 winmm.lib advapi32.lib user32.lib kernel32.lib libcd.lib libcpd.lib ADbg/Debug/adbg.lib tinyxml/Debug/tinyxml.lib /nologo /subsystem:windows /dll /debug /machine:I386 /nodefaultlib /out:"Debug_NASM\lameACM.acm" /pdbtype:sept
+# ADD LINK32 shell32.lib url.lib gdi32.lib winmm.lib advapi32.lib user32.lib kernel32.lib libcd.lib libcpd.lib ADbg/Debug/adbg.lib tinyxml/Debug/tinyxml.lib /nologo /subsystem:windows /dll /debug /machine:I386 /nodefaultlib /out:"Debug_NASM\lameACM.acm" /pdbtype:sept
 # SUBTRACT LINK32 /map
 # Begin Special Build Tool
 SOURCE=$(InputPath)
@@ -146,7 +146,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /map /machine:I386
-# ADD LINK32 winmm.lib advapi32.lib user32.lib kernel32.lib libc.lib libcp.lib ADbg\Release\adbg.lib tinyxml/Release/tinyxml.lib /nologo /subsystem:windows /dll /map /machine:I386 /nodefaultlib /out:"Release_NASM\lameACM.acm"
+# ADD LINK32 shell32.lib url.lib gdi32.lib winmm.lib advapi32.lib user32.lib kernel32.lib libc.lib libcp.lib ADbg\Release\adbg.lib tinyxml/Release/tinyxml.lib /nologo /subsystem:windows /dll /map /machine:I386 /nodefaultlib /out:"Release_NASM\lameACM.acm"
 
 !ENDIF 
 

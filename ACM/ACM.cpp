@@ -33,6 +33,7 @@
 
 #include <windows.h>
 #include <windowsx.h>
+#include <intshcut.h>
 
 #include <mmreg.h>
 #include <msacm.h>
@@ -169,16 +170,92 @@ WPARAM wParam, // first message parameter
 LPARAM lParam  // second message parameter
 )
 {
+	static HBRUSH hBrushStatic = NULL;
+//	static LOGFONT lf;  // structure for font information  
+//	static HFONT hfnt;
+	static HCURSOR hcOverCursor = NULL;
 	BOOL bResult;
 
 	switch (uMsg) {
 		case WM_INITDIALOG:
-			char tmp[100];
+			char tmp[150];
 			wsprintf(tmp,"LAME MP3 codec v%s", ACM::GetVersionString());
 			::SetWindowText(GetDlgItem( hwndDlg, IDC_STATIC_ABOUT_TITLE), tmp);
 
+/*
+			::GetObject(::GetStockObject(DEFAULT_GUI_FONT), sizeof(LOGFONT), &lf); 
+			lf.lfUnderline = TRUE;
+
+			hfnt = ::CreateFontIndirect(&lf);
+
+			::SendMessage(::GetDlgItem(hwndDlg,IDC_STATIC_ABOUT_URL), WM_SETFONT, (WPARAM) hfnt, TRUE);
+* /
+			hBrushStatic = ::CreateSolidBrush(::GetSysColor (COLOR_BTNFACE));
+*/			hcOverCursor = ::LoadCursor(NULL,(LPCTSTR)IDC_HAND); 
+			if (hcOverCursor == NULL)
+				hcOverCursor = ::LoadCursor(NULL,(LPCTSTR)IDC_CROSS); 
+
 			bResult = TRUE;
 			break;
+/*
+		case WM_CTLCOLORSTATIC:
+			/// \todo only if there are URLs
+			if ((HWND)lParam == ::GetDlgItem(hwndDlg,IDC_STATIC_ABOUT_URL))
+			{
+				::SetTextColor((HDC)wParam, ::GetSysColor (COLOR_HIGHLIGHT));
+				::SetBkColor((HDC)wParam, ::GetSysColor (COLOR_BTNFACE));
+
+				return (LRESULT) hBrushStatic;
+			}
+			else
+				return (LRESULT) NULL;
+*/
+		case WM_MOUSEMOVE:
+			{
+				POINT pnt;
+				::GetCursorPos(&pnt);
+
+				RECT rect;
+				::GetWindowRect( ::GetDlgItem(hwndDlg,IDC_STATIC_ABOUT_URL), &rect);
+
+				if (  ::PtInRect(&rect,pnt)  )
+				{
+					::SetCursor(hcOverCursor);
+				}
+
+
+			}
+			break;
+
+		case WM_LBUTTONUP:
+			{
+				POINT pnt;
+				::GetCursorPos(&pnt);
+
+				RECT rect;
+				::GetWindowRect( ::GetDlgItem(hwndDlg,IDC_STATIC_ABOUT_URL), &rect);
+
+				TCHAR Url[200];
+				bool bUrl = false;
+				if (::PtInRect(&rect,pnt))
+				{
+					wsprintf(Url,LAME_URL);
+					bUrl = true;
+				}
+
+				if (bUrl)
+				{
+					LPSTR tmpStr;
+					HRESULT hresult = ::TranslateURL(Url, TRANSLATEURL_FL_GUESS_PROTOCOL|TRANSLATEURL_FL_GUESS_PROTOCOL, &tmpStr);
+					if (hresult == S_OK)
+						::ShellExecute(hwndDlg,"open",tmpStr,NULL,"",SW_SHOWMAXIMIZED );
+					else if (hresult == S_FALSE)
+						::ShellExecute(hwndDlg,"open",Url,NULL,"",SW_SHOWMAXIMIZED );
+				}
+
+			}
+			break;
+
 		case WM_COMMAND:
 			UINT command;
 			command = GET_WM_COMMAND_ID(wParam, lParam);
@@ -187,6 +264,9 @@ LPARAM lParam  // second message parameter
                 EndDialog(hwndDlg, TRUE);
             }
             bResult = FALSE;
+			break;
+
+		case IDC_STATIC_ABOUT_URL:
 			break;
 		default:
 			bResult = FALSE; // will be treated by DefWindowProc
