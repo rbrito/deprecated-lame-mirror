@@ -582,7 +582,7 @@ void best_huffman_divide(int gr, int ch, gr_info *gi, int *ix)
 
     memcpy(&cod_info, gi, sizeof(gr_info));
     bigv = cod_info.big_values * 2;
-    bits = &cod_info.part2_3_length;
+    bits = (int *) &cod_info.part2_3_length;
 
     for (r0 = 2; r0 < SBMAX_l + 1; r0++) {
 	a2 = scalefac_band.l[r0];

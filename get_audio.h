@@ -22,7 +22,6 @@
 #define GET_AUDIO_H_INCLUDED
 
 
-#ifndef _BLADEDLL
 
 /* AIFF Definitions */
 
@@ -91,5 +90,4 @@ extern void   aiff_check(const char*, IFF_AIFF*, int*);
 
 
 #endif	/* ifndef _LIBSNDDLL */
-#endif	/* ifndef _BLADEDLL */
 #endif	/* ifndef GET_AUDIO_H_INCLUDED*/

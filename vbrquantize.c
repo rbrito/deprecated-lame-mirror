@@ -155,7 +155,7 @@ VBR_iteration_loop_new (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   int       start,end,bw,sfb, i,ch, gr, over;
 
   /*
-  iteration_init(xr_org,l3_side,l3_enc,fr_ps,&l3_xmin);
+  iteration_init(xr_org,l3_side,l3_enc,fr_ps);
   */
   info = fr_ps->header;
 

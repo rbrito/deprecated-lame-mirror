@@ -73,7 +73,7 @@ void outer_loop_dual( FLOAT8 xr[2][2][576],     /*vector of the magnitudees of t
 
 void iteration_init( FLOAT8 xr_org[2][2][576], 
 		III_side_info_t *l3_side, int l3_enc[2][2][576],
-		frame_params *fr_ps, III_psy_xmin l3_xmin[2][2]);
+		frame_params *fr_ps);
 
 int inner_loop( FLOAT8 xr[2][2][576], FLOAT8 xrpow[576],
                 int l3_enc[2][2][576],

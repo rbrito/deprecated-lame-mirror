@@ -63,7 +63,7 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   FLOAT8 xr[2][2][576];
 
 
-  iteration_init(xr_org,l3_side,l3_enc,fr_ps,l3_xmin);
+  iteration_init(xr_org,l3_side,l3_enc,fr_ps);
   info = fr_ps->header;
   bit_rate = bitrate[info->version][info->lay-1][info->bitrate_index];
 
@@ -239,7 +239,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   FLOAT8    xr[2][2][576];
   FLOAT8 xr_save[576];
 
-  iteration_init(xr_org,l3_side,l3_enc,fr_ps,l3_xmin);
+  iteration_init(xr_org,l3_side,l3_enc,fr_ps);
   info = fr_ps->header;
 
 
