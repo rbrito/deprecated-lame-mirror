@@ -665,7 +665,7 @@ int calc_noise( lame_global_flags *gfp,
 	    int i,j;
 	    for(i=0;i<7;i++)
 	      for(j=0;j<20;j++)
-		tab[i][j] = pow(10,-tab[i][j]/10.0);
+		tab[i][j] = pow(10.0,-tab[i][j]/10.0);
 	  }
 
 	  for ( sum = 0.0, l = start; l < end; l++ )
