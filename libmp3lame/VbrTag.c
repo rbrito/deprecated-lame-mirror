@@ -107,16 +107,16 @@ static unsigned int crc16_lookup[256] =
 static void
 Xing_seek_table(VBR_seek_info_t * v, unsigned char *t)
 {
-    int i, index, seek_point;
+    int i, idx, seek_point;
     if (v->pos <= 0)
         return;
 
     for (i = 1; i < NUMTOCENTRIES; ++i) {
 	float j = i/(float)NUMTOCENTRIES, act, sum;
-        index = (int)(floor(j * v->pos));
-        if (index > v->pos-1)
-            index = v->pos-1;
-        act = v->bag[index];
+        idx = (int)(floor(j * v->pos));
+        if (idx > v->pos-1)
+            idx = v->pos-1;
+        act = v->bag[idx];
         sum = v->sum;
         seek_point = (int)(256. * act / sum);
         if (seek_point > 255)

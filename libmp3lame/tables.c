@@ -703,8 +703,6 @@ FLOAT window[BLKSIZE], window_s[BLKSIZE_s];
 
 ieee754_float32_t log_table[LOG2_SIZE*2];
 
-
-
 static void init_log_table(void)
 {
     int j;
@@ -860,33 +858,32 @@ huffman_init(lame_t gfc)
 	gfc->scale_bitcounter = scale_bitcount_lsf;
 
     for (i = 2; i <= 576; i += 2) {
-	int scfb_anz = 0, index;
+	int scfb_anz = 0, j;
 	while (gfc->scalefac_band.l[++scfb_anz] < i)
 	    ;
 
-	index = subdv_table[scfb_anz].region0_count;
-	while (gfc->scalefac_band.l[index + 1] > i)
-	    index--;
+	j = subdv_table[scfb_anz].region0_count;
+	while (gfc->scalefac_band.l[j + 1] > i)
+	    j--;
 
-	if (index < 0) {
-	  /* this is an indication that everything is going to
-	     be encoded as region0:  bigvalues < region0 < region1
-	     so lets set region0, region1 to some value larger
-	     than bigvalues */
-	  index = subdv_table[scfb_anz].region0_count;
+	if (j < 0) {
+	    /* this is an indication that everything is going to
+	       be encoded as region0:  bigvalues < region0 < region1
+	       so lets set region0, region1 to some value larger
+	       than bigvalues */
+	    j = subdv_table[scfb_anz].region0_count;
 	}
 
-	gfc->bv_scf[i-2] = index;
+	gfc->bv_scf[i-2] = j;
 
-	index = subdv_table[scfb_anz].region1_count;
-	while (gfc->scalefac_band.l[index + gfc->bv_scf[i-2] + 2] > i)
-	    index--;
+	j = subdv_table[scfb_anz].region1_count;
+	while (gfc->scalefac_band.l[j + gfc->bv_scf[i-2] + 2] > i)
+	    j--;
 
-	if (index < 0) {
-	    index = subdv_table[scfb_anz].region1_count;
-	}
+	if (j < 0)
+	    j = subdv_table[scfb_anz].region1_count;
 
-	gfc->bv_scf[i-1] = index;
+	gfc->bv_scf[i-1] = j;
     }
 }
 
@@ -1142,7 +1139,7 @@ static FLOAT freq2bark(FLOAT freq)
     /* input: freq in hz  output: barks */
     if (freq<0) freq=0;
     freq = freq * 0.001;
-#define FREQ_BOUND 1.35
+
     if (freq < FREQ_BOUND) {
 	bark = 13.0*atan(FREQ_BOUND*.76)
 	    + 3.5*atan(FREQ_BOUND*FREQ_BOUND/(7.5*7.5))

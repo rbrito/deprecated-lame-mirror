@@ -201,12 +201,12 @@ init_gr_info(lame_t gfc, int gr, int ch)
 	    for (sfb = gi->sfb_smin; sfb < SBMAX_s; sfb++) {
 		int start = gfc->scalefac_band.s[sfb];
 		int end   = gfc->scalefac_band.s[sfb + 1];
-		int window, l;
-		for (window = 0; window < 3; window++) {
+		int subwin, l;
+		for (subwin = 0; subwin < 3; subwin++) {
 		    for (l = start; l < end; l++)
-			*ix++ = ixwork[3*l+window];
+			*ix++ = ixwork[3*l+subwin];
 		    gi->width [j] = end - start;
-		    gi->window[j] = window;
+		    gi->window[j] = subwin;
 		    j++;
 		}
 	    }
@@ -215,12 +215,12 @@ init_gr_info(lame_t gfc, int gr, int ch)
     } else {
 	/* analog silence detection in pseudo sfb 22 */
 	if (gfc->scalefac_band.l[SBMAX_l-1] < 576-100) {
-	    int j0 = (576+gfc->scalefac_band.l[SBMAX_l-1])/2, j;
+	    int k = (576+gfc->scalefac_band.l[SBMAX_l-1])/2;
 	    FLOAT power = 0.0;
-	    for (j = j0; j < 576; j++)
+	    for (j = k; j < 576; j++)
 		power += gi->xr[j] * gi->xr[j];
 	    if (power < gi->ATHadjust * gfc->ATH.l[SBMAX_l-1]) {
-		for (j = j0; j < 576; j++)
+		for (j = k; j < 576; j++)
 		    gi->xr[j] = 0;
 	    }
 	}

@@ -83,5 +83,4 @@ typedef struct {
   int scfsi[2],mean_bits,resvsize;
   int totbits;
 } plotting_data;
-
 #endif

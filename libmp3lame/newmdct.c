@@ -719,16 +719,15 @@ mdct_sub48(lame_t gfc, int ch)
 		    mdct_enc[k]    = bd;
 		}
 	    } else {
-		int kk;
-		for (kk = -NS/4; kk < 0; kk++) {
-		    int k = kk+NS/4;
-		    FLOAT w = win[SHORT_TYPE][k];
-		    mdct_enc[k*3   ] = prev[( 6+k)*32] * w - prev[(11-k)*32];
-		    mdct_enc[k*3+ 9] = prev[(17-k)*32] * w + prev[(12+k)*32];
-		    mdct_enc[k*3+ 1] = prev[(12+k)*32] * w - prev[(17-k)*32];
-		    mdct_enc[k*3+10] = next[( 5-k)*32] * w + next[(   k)*32];
-		    mdct_enc[k*3+ 2] = next[(   k)*32] * w - next[( 5-k)*32];
-		    mdct_enc[k*3+11] = next[(11-k)*32] * w + next[( 6+k)*32];
+		for (k = -NS/4; k < 0; k++) {
+		    int j = k+NS/4;
+		    FLOAT w = win[SHORT_TYPE][j];
+		    mdct_enc[j*3   ] = prev[( 6+j)*32] * w - prev[(11-j)*32];
+		    mdct_enc[j*3+ 9] = prev[(17-j)*32] * w + prev[(12+j)*32];
+		    mdct_enc[j*3+ 1] = prev[(12+j)*32] * w - prev[(17-j)*32];
+		    mdct_enc[j*3+10] = next[( 5-j)*32] * w + next[(   j)*32];
+		    mdct_enc[j*3+ 2] = next[(   j)*32] * w - next[( 5-j)*32];
+		    mdct_enc[j*3+11] = next[(11-j)*32] * w + next[( 6+j)*32];
 		}
 		mdct_short(mdct_enc);
 	    }

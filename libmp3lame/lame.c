@@ -223,7 +223,8 @@ static struct {
     { 320, 0, 21000, -13.0, 0.0,   1.00,  0,   1, 0.0000, 1.8, 0.0, 0.0}
 };
 
-static int apply_preset(lame_t gfc, int bitrate, vbr_mode mode)
+static int
+apply_preset(lame_t gfc, int bitrate, vbr_mode mode)
 {
     int lower_range, lower_range_kbps, upper_range, upper_range_kbps;
     int r, b;

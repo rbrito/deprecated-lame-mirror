@@ -96,10 +96,15 @@
 #define SBMAX_l       22
 #define SBMAX_s       13
 
+/* max scalefactor band, max(SBMAX_l, SBMAX_s*3, (SBMAX_s-3)*3+8) */
+#define SFBMAX (SBMAX_s*3)
+
 /* FFT sizes */
 #define BLKSIZE       1024
 #define HBLKSIZE      (BLKSIZE/2 + 1)
 #define BLKSIZE_s     256
+
+#define MFSIZE  ( 3*1152 + ENCDELAY - MDCTDELAY )
 
 /* 
  * Mode Extention:
@@ -116,13 +121,10 @@
 #define MPG_MD_MS_LR  2
 #define MPG_MD_MS_I   3
 
+#define	MAX_BITS	4095
+
 #define MAX_CHANNELS  2
 #define MAX_GRANULES  2
-
-/* max scalefactor band, max(SBMAX_l, SBMAX_s*3, (SBMAX_s-3)*3+8) */
-#define SFBMAX (SBMAX_s*3)
-
-#define MFSIZE  ( 3*1152 + ENCDELAY - MDCTDELAY )
 
 /***********************************************************************
 *

@@ -44,7 +44,6 @@ extern void quantize_sfb_3DN(const FLOAT *, int, int, int *);
 #endif
 
 #define LARGE_BITS	100000
-#define	MAX_BITS	4095
 
 /*********************************************************************
  * XRPOW_FTOI is a macro to convert floats to ints.

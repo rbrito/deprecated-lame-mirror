@@ -84,21 +84,7 @@
 /*#define db2pow(x) pow(10.0, (x)*0.1) */
 /*#define db2pow(x) pow(10.0, (x)/10.0) */
 
-/* in case this is used without configure */
-#ifndef inline
-# define inline
-#endif
-
-#if defined(_MSC_VER)
-# undef inline
-# define inline _inline
-#elif defined(__SASC) || defined(__GNUC__) || defined(__ICC) || defined(__ECC)
-/* if __GNUC__ we always want to inline, not only if the user requests it */
-# undef inline
-# define inline __inline
-#endif
-
-#if    defined(_MSC_VER)
+#ifdef _MSC_VER
 # pragma warning( disable : 4244 )
 /*# pragma warning( disable : 4305 ) */
 #endif

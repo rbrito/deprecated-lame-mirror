@@ -452,10 +452,10 @@ sync_buffer(PMPSTR mp,int free_match)
 
 
 static int
-decodeMP3_clipchoice( PMPSTR mp,unsigned char *in,int isize,char *out,
-		      int osize,int *done,      
-		      int (*synth_1to1_mono_ptr)(PMPSTR,real *,unsigned char *,int *),
-		      int (*synth_1to1_ptr)(PMPSTR,real *,int,unsigned char *, int *) )
+decodeMP3_clipchoice(
+    PMPSTR mp, unsigned char *in, int isize, char *out, int *done,
+    int (*synth_1to1_mono_ptr)(PMPSTR,real *,unsigned char *,int *),
+    int (*synth_1to1_ptr)(PMPSTR,real *,int,unsigned char *, int *) )
 {
 	int i,iret,bits,bytes;
 
@@ -701,7 +701,7 @@ int decodeMP3( PMPSTR mp,unsigned char *in,int isize,char *out,
 	}
 
 	/* passing pointers to the functions which clip the samples */
-	return decodeMP3_clipchoice(mp, in, isize, out, osize, done, synth_1to1_mono, synth_1to1);
+	return decodeMP3_clipchoice(mp, in, isize, out, done, synth_1to1_mono, synth_1to1);
 }	
 
 int decodeMP3_unclipped( PMPSTR mp,unsigned char *in,int isize,char *out,
@@ -714,5 +714,5 @@ int decodeMP3_unclipped( PMPSTR mp,unsigned char *in,int isize,char *out,
 	}
 
 	/* passing pointers to the functions which don't clip the samples */
-	return decodeMP3_clipchoice(mp, in, isize, out, osize, done, synth_1to1_mono_unclipped, synth_1to1_unclipped);
+	return decodeMP3_clipchoice(mp, in, isize, out, done, synth_1to1_mono_unclipped, synth_1to1_unclipped);
 }	

@@ -24,6 +24,7 @@
 
 /* size of each partition band, in barks */
 #define DELBARK (1.0/3.0)
+#define FREQ_BOUND 1.35
 
 #define ATHAdjustLimit 0.01
 
@@ -38,7 +39,6 @@ void psycho_analysis(lame_t gfc,
 		     III_psy_ratio masking[MAX_GRANULES][MAX_CHANNELS],
 		     FLOAT sbsmpl[MAX_CHANNELS][1152] );
 
-int psymodel_init(lame_t gfc);
 void init_mask_add_max_values(lame_t gfc);
 
 #endif /* LAME_PSYMODEL_H */

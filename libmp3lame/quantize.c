@@ -504,7 +504,7 @@ init_global_gain(
 	    if (flag_GoneOver==3) CurrentStep >>= 1;
 	    gi->global_gain -= CurrentStep;
 	}
-    } while (gi->global_gain < 256u);
+    } while ((unsigned int)gi->global_gain < 256u);
 
     if (gi->global_gain < 0) {
 	gi->global_gain = 0;
@@ -631,7 +631,7 @@ inc_scalefac_scale (gr_info * const gi, FLOAT distort[])
     int sfb = 0;
     do {
 	int s = gi->scalefac[sfb], s0;
-	if (gi->preflag)
+	if (gi->preflag > 0)
 	    s += pretab[sfb];
 	s0 = s;
 	gi->scalefac[sfb] = s = (s + 1) >> 1;
@@ -652,7 +652,7 @@ inc_scalefac_scale (gr_info * const gi, FLOAT distort[])
 static int 
 inc_subblock_gain(gr_info * const gi, FLOAT distort[])
 {
-    int sfb, window;
+    int sfb, subwin;
     const int *tab = max_range_short;
     if (gi->sfb_lmax) {	/* mixed_block. */
 	/* subbloc_gain can't do anything in the long block region */
@@ -662,19 +662,19 @@ inc_subblock_gain(gr_info * const gi, FLOAT distort[])
 	tab--;
     }
 
-    for (window = 0; window < 3; window++) {
-	for (sfb = gi->sfb_lmax+window; sfb < gi->psymax; sfb += 3)
+    for (subwin = 0; subwin < 3; subwin++) {
+	for (sfb = gi->sfb_lmax+subwin; sfb < gi->psymax; sfb += 3)
 	    if (gi->scalefac[sfb] > tab[sfb])
 		break;
 
 	if (sfb >= gi->psymax)
 	    continue;
 
-	if (gi->subblock_gain[window] >= 7)
+	if (gi->subblock_gain[subwin] >= 7)
 	    return 1;
 
-	gi->subblock_gain[window]++;
-	for (sfb = gi->sfb_lmax+window; sfb < gi->psymax; sfb += 3) {
+	gi->subblock_gain[subwin]++;
+	for (sfb = gi->sfb_lmax+subwin; sfb < gi->psymax; sfb += 3) {
 	    int s = gi->scalefac[sfb] - (4 >> gi->scalefac_scale);
 	    if (s < 0) {
 		distort[sfb] = -1.0;
@@ -1019,7 +1019,7 @@ CBR_1st_bitalloc (
 	    if (adjust_global_gain(gfc, &gi_w, distort, huff_bits)) {
 		int sfb;
 		while (count_bits(gfc, &gi_w) > huff_bits
-		       && ++gi_w.global_gain < 256u)
+		       && (unsigned int)++gi_w.global_gain < 256u)
 		    ;
 		for (sfb = 0; sfb < gi->psymax; sfb++)
 		    distort[sfb] = -1.0;
@@ -1427,7 +1427,7 @@ set_scalefactor_values(gr_info *gi)
 	int s = (gi->global_gain - gi->scalefac[sfb]
 		 - gi->subblock_gain[gi->window[sfb]]*8 + ifqstep)
 		     >> (1 + gi->scalefac_scale);
-	if (gi->preflag)
+	if (gi->preflag > 0)
 	    s -= pretab[sfb];
 	if (s < 0)
 	    s = 0;
@@ -1691,7 +1691,7 @@ set_pinfo(lame_t gfc, gr_info *gi, const III_psy_ratio *ratio, int gr, int ch)
 	tot_noise += en1;
 
 	gfc->pinfo->LAMEsfb[gr][ch][sfb2] = 0;
-	if (gi->preflag && sfb2>=11)
+	if (gi->preflag > 0 && sfb2>=11)
 	    gfc->pinfo->LAMEsfb[gr][ch][sfb2] = -ifqstep*pretab[sfb2];
 	if (gi->scalefac[sfb2]>=0)
 	    gfc->pinfo->LAMEsfb[gr][ch][sfb2] -= ifqstep*gi->scalefac[sfb2];

@@ -640,12 +640,7 @@ set_istereo_sfb(lame_t gfc, int gr)
 
 static void
 compute_masking_s(
-    lame_t gfc,
-    FLOAT fft_s[BLKSIZE_s],
-    III_psy_ratio *mr,
-    int ch,
-    int sblock
-    )
+    lame_t gfc, FLOAT fft_s[BLKSIZE_s], III_psy_ratio *mr, int ch, int sblock)
 {
     int j, b, sb;
     FLOAT eb[CBANDS], ecb, enn, thmm;
@@ -668,7 +663,7 @@ compute_masking_s(
     sb = j = b = 0;
     for (;;b++) {
 	int kk = gfc->s3ind_s[b][0];
-	FLOAT ecb = gfc->s3_ss[j++] * eb[kk++];
+	ecb = gfc->s3_ss[j++] * eb[kk++];
 	while (kk <= gfc->s3ind_s[b][1])
 	    ecb += gfc->s3_ss[j++] * eb[kk++];
 	enn  += eb[b];
@@ -732,7 +727,8 @@ static FLOAT ma_max_i2;
 static FLOAT ma_max_m;
 
 #ifdef TAKEHIRO_IEEE754_HACK
-static inline int trancate(FLOAT x)
+inline static int
+trancate(FLOAT x)
 {
     union {
 	float f;

@@ -30,7 +30,6 @@ int format_bitstream(lame_t gfc);
 int flush_bitstream(lame_t gfc, unsigned char *, int, int);
 void add_dummy_byte (lame_t gfc, unsigned char val);
 int  copy_buffer(lame_t gfc, unsigned char *buffer, int buffer_size, int update_crc);
-void init_bit_stream_w(lame_t gfc);
 void CRC_writeheader (char *buffer, int len);
 int compute_flushbits(const lame_t gfc, int *nbytes);
 

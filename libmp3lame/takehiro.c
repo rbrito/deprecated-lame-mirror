@@ -428,7 +428,7 @@ noquant_count_bits(lame_t gfc, gr_info * const gi)
     for (; i > 3; i -= 4) {
 	int p;
 	/* hack to check if all values <= 1 */
-	if ((ix[i-1] | ix[i-2] | ix[i-3] | ix[i-4]) > 1u)
+	if ((unsigned int)(ix[i-1] | ix[i-2] | ix[i-3] | ix[i-4]) > 1u)
 	    break;
 
 	p = ((ix[i-4] * 2 + ix[i-3]) * 2 + ix[i-2]) * 2 + ix[i-1];
@@ -541,7 +541,7 @@ count_bits(lame_t gfc, gr_info * const gi)
     } while (xp < xend);
 
     if (gfc->noise_shaping_amp >= 3) {
-	int sfb, j = 0;
+	int j = 0;
 	for (sfb = 0; sfb < gi->psymax && j < gi->count1; sfb++) {
 	    FLOAT roundfac;
 	    int l = -gi->width[sfb];
@@ -566,10 +566,10 @@ count_bits(lame_t gfc, gr_info * const gi)
 static void
 scfsi_calc(int ch, III_side_info_t *l3_side)
 {
-    int i, s1, s2, c1, c2, sfb;
+    int i, s1 = 0, s2, c1, c2, sfb;
     gr_info *gi = &l3_side->tt[1][ch];
     gr_info *g0 = &l3_side->tt[0][ch];
-    s1 = 0;
+
     for (i = 0; i < (sizeof(scfsi_band) / sizeof(int)) - 1; i++) {
 	for (sfb = scfsi_band[i]; sfb < scfsi_band[i + 1]; sfb++) {
 	    if (g0->scalefac[sfb] != gi->scalefac[sfb]
@@ -665,8 +665,9 @@ best_scalefac_store(lame_t gfc, int gr, int ch)
 	int minsfb = 15;
 	for (sfb = 0; sfb < gi->psymax; sfb++)
 	    if (gi->scalefac[sfb] >= 0
-		&& minsfb > gi->scalefac[sfb] + (gi->preflag>0 ? pretab[sfb]:0))
+	     && minsfb > gi->scalefac[sfb] + (gi->preflag>0 ? pretab[sfb]:0))
 		minsfb = gi->scalefac[sfb] + (gi->preflag>0 ? pretab[sfb]:0);
+
 	if (minsfb != 0) {
 	    gr_info gi_w = *gi;
 	    if (gi->global_gain - (minsfb << (gi->scalefac_scale+1)) < 0)

@@ -84,4 +84,8 @@ extern FLOAT pow20[Q_MAX+Q_MAX2];
 extern FLOAT ipow20[Q_MAX+Q_MAX2];
 
 
+int psymodel_init(lame_t gfc);
+void iteration_init(lame_t gfc);
+void init_bit_stream_w(lame_t gfc);
+
 #endif /* LAME_TABLES_H */

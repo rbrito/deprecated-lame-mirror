@@ -90,48 +90,48 @@ putbits(bit_stream_t *bs, unsigned int val, int j)
 inline static void
 Huf_count1(bit_stream_t *bs, gr_info *gi)
 {
-    int index;
+    int i;
     const unsigned char * const hcode = quadcode[gi->count1table_select];
 
     assert(gi->count1table_select < 2u);
-    for (index = gi->big_values; index < gi->count1; index += 4) {
+    for (i = gi->big_values; i < gi->count1; i += 4) {
 	int huffbits = 0, p = 0;
 
-	if (gi->l3_enc[index  ]) {
+	if (gi->l3_enc[i  ]) {
 	    p = 8;
-	    huffbits = huffbits + (gi->xr[index  ] < 0);
+	    huffbits = huffbits + (gi->xr[i  ] < 0);
 	}
 
-	if (gi->l3_enc[index+1]) {
+	if (gi->l3_enc[i+1]) {
 	    p += 4;
-	    huffbits = huffbits*2 + (gi->xr[index+1] < 0);
+	    huffbits = huffbits*2 + (gi->xr[i+1] < 0);
 	}
 
-	if (gi->l3_enc[index+2]) {
+	if (gi->l3_enc[i+2]) {
 	    p += 2;
-	    huffbits = huffbits*2 + (gi->xr[index+2] < 0);
+	    huffbits = huffbits*2 + (gi->xr[i+2] < 0);
 	}
 
-	if (gi->l3_enc[index+3]) {
+	if (gi->l3_enc[i+3]) {
 	    p++;
-	    huffbits = huffbits*2 + (gi->xr[index+3] < 0);
+	    huffbits = huffbits*2 + (gi->xr[i+3] < 0);
 	}
 	putbits24(bs, huffbits + hcode[p+16], hcode[p]);
     }
-    assert(index == gi->count1);
+    assert(i == gi->count1);
 }
 
 /* Implements the pseudocode of page 98 of the IS */
 static void
 Huffmancode_esc(bit_stream_t *bs, const struct huffcodetab* h,
-		int index, int end, gr_info *gi)
+		int i, int end, gr_info *gi)
 {
     do {
 	int cbits   = 0;
 	int xbits   = 0;
 	int ext = 0;
-	int x1 = gi->l3_enc[index];
-	int x2 = gi->l3_enc[index+1];
+	int x1 = gi->l3_enc[i];
+	int x2 = gi->l3_enc[i+1];
 
 	if (x1 != 0) {
 	    if (x1 > 14) {
@@ -141,7 +141,7 @@ Huffmancode_esc(bit_stream_t *bs, const struct huffcodetab* h,
 		xbits  = h->xlen;
 		x1     = 15;
 	    }
-	    ext += (gi->xr[index] < 0);
+	    ext += (gi->xr[i] < 0);
 	    cbits--;
 	    x1 *= 16;
 	}
@@ -154,7 +154,7 @@ Huffmancode_esc(bit_stream_t *bs, const struct huffcodetab* h,
 		xbits += h->xlen;
 		x2     = 15;
 	    }
-	    ext = ext*2 + (gi->xr[index+1] < 0);
+	    ext = ext*2 + (gi->xr[i+1] < 0);
 	    cbits--;
 	    x1 += x2;
 	}
@@ -165,28 +165,28 @@ Huffmancode_esc(bit_stream_t *bs, const struct huffcodetab* h,
 	putbits24(bs, h->table [x1], cbits);
 	if (xbits)
 	    putbits(bs, ext, xbits);
-    } while ((index += 2) < end);
+    } while ((i += 2) < end);
 }
 
 static void
 Huffmancode(bit_stream_t *bs, const struct huffcodetab* h,
-	    int index, int end, gr_info *gi)
+	    int i, int end, gr_info *gi)
 {
     do {
 	int code, clen;
-	int x1 = gi->l3_enc[index];
-	int x2 = gi->l3_enc[index+1];
+	int x1 = gi->l3_enc[i];
+	int x2 = gi->l3_enc[i+1];
 	assert(x1 < h->xlen && x2 < h->xlen);
 
 	code = x1*h->xlen + x2;
 	clen = h->hlen[code];
 	code = h->table[code];
 
-	if (x1) code = code*2 + (gi->xr[index  ] < 0);
-	if (x2) code = code*2 + (gi->xr[index+1] < 0);
+	if (x1) code = code*2 + (gi->xr[i  ] < 0);
+	if (x2) code = code*2 + (gi->xr[i+1] < 0);
 
 	putbits24(bs, code, clen);
-    } while ((index += 2) < end);
+    } while ((i += 2) < end);
 }
 
 inline static void
@@ -275,7 +275,7 @@ CRC_writeheader(char *header, int len)
 }
 
 static int
-writeTableHeader(lame_t gfc, gr_info *gi, int ptr, char *p)
+writeTableHeader(gr_info *gi, int ptr, char *p)
 {
     static const int blockConv[] = {1, 3, 2};
     int tsel;
@@ -362,7 +362,7 @@ encodeBitStream(lame_t gfc)
 		ptr = writeheader(p, gi->big_values / 2,        9, ptr);
 		ptr = writeheader(p, gi->global_gain,           8, ptr);
 		ptr = writeheader(p, gi->scalefac_compress,     4, ptr);
-		ptr = writeTableHeader(gfc, gi, ptr, p);
+		ptr = writeTableHeader(gi, ptr, p);
 		ptr = writeheader(p,
 				  (gi->preflag > 0)*4 + gi->scalefac_scale*2
 				  + gi->count1table_select, 3, ptr);
@@ -438,7 +438,7 @@ encodeBitStream(lame_t gfc)
 		assert(0);
 	    }
 	    ptr = writeheader(p, part, 9, ptr);
-	    ptr = writeTableHeader(gfc, gi, ptr, p);
+	    ptr = writeTableHeader(gi, ptr, p);
 	    ptr = writeheader(p, gi->scalefac_scale,     1, ptr);
 	    ptr = writeheader(p, gi->count1table_select, 1, ptr);
 

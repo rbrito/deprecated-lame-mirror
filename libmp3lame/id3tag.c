@@ -280,11 +280,11 @@ id3tag_set_genre(lame_t gfc, const char *genre)
 static unsigned char *
 set_4_byte_value(unsigned char *bytes, unsigned long value)
 {
-    int index;
-    for (index = 3; index >= 0; --index) {
-        bytes[index] = value & 0xfful;
-        value >>= 8;
-    }
+    bytes[0] = (value >> 24) & 0xff;
+    bytes[1] = (value >> 16) & 0xff;
+    bytes[2] = (value >>  8) & 0xff;
+    bytes[3] = (value      ) & 0xff;
+
     return bytes + 4;
 }
 
@@ -354,7 +354,7 @@ id3tag_write_v2(lame_t gfc)
 	    || comment_length > 30
 	    || (gfc->tag_spec.track && comment_length > 28)
 	    || gfc->tag_spec.track > 255 || gfc->tag_spec.totaltrack > 0) {
-            size_t tag_size;
+            size_t adjusted_tag_size, tag_size, i;
             char encoder[20];
             size_t encoder_length;
             char year[5];
@@ -365,8 +365,7 @@ id3tag_write_v2(lame_t gfc)
             size_t genre_length;
             unsigned char *tag;
             unsigned char *p;
-            size_t adjusted_tag_size;
-            unsigned int index;
+
             /* calulate size of tag starting with 10-byte tag header */
             tag_size = 10;
             encoder_length = snprintf(encoder, sizeof(encoder),
@@ -460,8 +459,8 @@ id3tag_write_v2(lame_t gfc)
             /* clear any padding bytes */
             memset(p, 0, tag_size - (p - tag));
             /* write tag directly into bitstream at current position */
-            for (index = 0; index < tag_size; ++index)
-		add_dummy_byte(gfc, tag[index]);
+            for (i = 0; i < tag_size; i++)
+		add_dummy_byte(gfc, tag[i]);
 
             free(tag);
             return tag_size;
@@ -486,7 +485,7 @@ set_text_field(unsigned char *field, const char *text, size_t size, int pad)
 int
 id3tag_write_v1(lame_t gfc)
 {
-    unsigned int index = 0;
+    unsigned int i = 0;
     if ((gfc->tag_spec.flags & CHANGED_FLAG)
 	&& !(gfc->tag_spec.flags & V2_ONLY_FLAG)) {
         unsigned char tag[128];
@@ -510,8 +509,8 @@ id3tag_write_v1(lame_t gfc)
         }
         *p++ = gfc->tag_spec.genre;
         /* write tag directly into bitstream at current position */
-	for (; index < 128; ++index)
-	    add_dummy_byte(gfc, tag[index]);
+	for (; i < 128; i++)
+	    add_dummy_byte(gfc, tag[i]);
     }
-    return index;
+    return i;
 }
