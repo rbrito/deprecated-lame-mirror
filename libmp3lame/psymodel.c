@@ -569,16 +569,9 @@ static void convert_partition2scalefac_l(
     int chn
     )
 {
-    int sb, b;
     FLOAT8 enn, thmm;
-    /* it seems bug... tt 2002/Aug/25 */
-#if 1
-    b = 0;
-    enn  = 0.5*eb[0];
-    thmm = 0.5*thr[0];
-#else
-    b = -1;
-#endif
+    int sb, b = -1;
+    enn = thmm = 0.0;
     for (sb = 0; sb < SBMAX_l; sb++) {
 	while (++b < gfc->bo_l[sb]) {
 	    enn  += eb[b];
@@ -591,7 +584,10 @@ static void convert_partition2scalefac_l(
         enn  = 0.5 *  eb[b];
 	thmm = 0.5 * thr[b];
     }
+    gfc->en [chn].l[sb-1] += enn;
+    gfc->thm[chn].l[sb-1] += thmm;
 }
+
 static void
 compute_masking_s(
     lame_internal_flags *gfc,
@@ -616,21 +612,13 @@ compute_masking_s(
 	while (kk <= gfc->s3ind_s[b][1])
 	    ecb += gfc->s3_ss[j++] * eb[kk++];
 
-#if 0
-	if ( gfp->VBR == vbr_off || gfp->VBR == vbr_abr ) {
-	    /* this looks like a BUG to me. robert */
-	    thr[b] = Max (1e-6, ecb);
-	} else
-#endif
-	{
-	    thr[b] = Min( ecb, rpelev_s  * gfc->nb_s1[chn][b] );
-	    if (gfc->blocktype_old[chn & 1] == SHORT_TYPE ) {
-		thr[b] = Min(thr[b], rpelev2_s * gfc->nb_s2[chn][b]);
-	    }
-	    thr[b] = Max( thr[b], 1e-37 );
-	    gfc->nb_s2[chn][b] = gfc->nb_s1[chn][b];
-	    gfc->nb_s1[chn][b] = ecb;
+	thr[b] = Min( ecb, rpelev_s  * gfc->nb_s1[chn][b] );
+	if (gfc->blocktype_old[chn & 1] == SHORT_TYPE ) {
+	    thr[b] = Min(thr[b], rpelev2_s * gfc->nb_s2[chn][b]);
 	}
+	thr[b] = Max( thr[b], 1e-37 );
+	gfc->nb_s2[chn][b] = gfc->nb_s1[chn][b];
+	gfc->nb_s1[chn][b] = ecb;
     }
 }
 
