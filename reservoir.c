@@ -5,6 +5,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.6  2000/01/13 16:26:50  takehiro
+ * moved info.stereo into gf.stereo
+ *
  * Revision 1.5  2000/01/12 14:30:54  takehiro
  * more simple & fast scalefac_scale use
  * and mode_gr is moved into gf structure.
@@ -166,9 +169,9 @@ void ResvMaxBits2(int mean_bits, int *targ_bits, int *extra_bits, int gr)
   the reservoir to reflect the granule's usage.
 */
 void
-ResvAdjust( frame_params *fr_ps, gr_info *gi, III_side_info_t *l3_side, int mean_bits )
+ResvAdjust(gr_info *gi, III_side_info_t *l3_side, int mean_bits )
 {
-    ResvSize += (mean_bits / fr_ps->stereo) - gi->part2_3_length;
+    ResvSize += (mean_bits / gf.stereo) - gi->part2_3_length;
 }
 
 
@@ -181,18 +184,14 @@ ResvAdjust( frame_params *fr_ps, gr_info *gi, III_side_info_t *l3_side, int mean
   appropriate stuffing bits to the bitstream.
 */
 void
-ResvFrameEnd( frame_params *fr_ps, III_side_info_t *l3_side, int mean_bits )
+ResvFrameEnd(III_side_info_t *l3_side, int mean_bits)
 {
-    int stereo, stuffingBits;
+    int stuffingBits;
     int over_bits;
 
-    stereo = fr_ps->stereo;
-
-#if 1
     /* just in case mean_bits is odd, this is necessary... */
-    if ( (stereo == 2) && (mean_bits & 1) )
+    if ( gf.stereo == 2 && mean_bits & 1)
 	ResvSize += 1;
-#endif
 
     over_bits = ResvSize - ResvMax;
     if ( over_bits < 0 )

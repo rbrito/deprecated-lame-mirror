@@ -626,15 +626,16 @@ void best_huffman_divide(int gr, int ch, gr_info *gi, int *ix)
 }
 
 static void
-scfsi_calc(int ch)
+scfsi_calc(int ch,
+	   III_side_info_t *l3_side)
 {
 #if 0
     int i, s1, s2, c1, c2;
     int sfb;
-    gr_info *gi = &l3_side.tt[1][ch];
+    gr_info *gi = &l3_side.gr[1].ch[ch].tt;
 
-    for (sfb = 0; sfb < 4; sfb++) 
-	l3_side.scfsi[ch][sfb] = 0;
+    for (i = 0; i < 4; i++) 
+	l3_side->scfsi[ch][i] = 0;
 
     for (i = 0; i < sizeof(scfsi_band) / sizeof(int) - 1; i++) {
 	for (sfb = scfsi_band[i]; sfb < scfsi_band[i + 1]; sfb++) {
@@ -719,7 +720,7 @@ void best_scalefac_store(int gr, int ch,
 	}
     }
 
-    if (gf.mode_gr == 2
+    if (gf.mode_gr == 2 && gr == 1
 	&& l3_side->gr[0].ch[ch].tt.block_type != SHORT_TYPE
 	&& l3_side->gr[1].ch[ch].tt.block_type != SHORT_TYPE
 	&& l3_side->gr[0].ch[ch].tt.scalefac_scale
@@ -727,6 +728,6 @@ void best_scalefac_store(int gr, int ch,
 	&& l3_side->gr[0].ch[ch].tt.preflag
 	== l3_side->gr[1].ch[ch].tt.preflag) {
 
-	scfsi_calc(ch);
+	scfsi_calc(ch, l3_side);
     }
 }

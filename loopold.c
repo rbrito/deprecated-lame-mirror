@@ -41,7 +41,7 @@ void init_outer_loop_dual(
     FLOAT8 xr_org[2][2][576],
     III_psy_xmin  *l3_xmin,   /* the allowed distortion of the scalefactor */
     III_scalefac_t *scalefac, /* scalefactors */
-    int gr, int stereo, III_side_info_t *l3_side,
+    int gr, III_side_info_t *l3_side,
     III_psy_ratio *ratio, int ch)
 {
   int sfb,i;
@@ -128,7 +128,7 @@ void init_outer_loop_dual(
 
 
 
-void quant_compare_dual(int better[2], int notdone[2], int stereo, 
+void quant_compare_dual(int better[2], int notdone[2],
 FLOAT8 ms_ener_ratio,
 int best_over[2],FLOAT8 best_tot_noise[2],FLOAT8 best_over_noise[2],FLOAT8 best_max_noise[2],
 int over[2],FLOAT8 tot_noise[2], FLOAT8 over_noise[2], FLOAT8 max_noise[2]) 
@@ -144,7 +144,7 @@ int over[2],FLOAT8 tot_noise[2], FLOAT8 over_noise[2], FLOAT8 max_noise[2])
    */
 
 
-  for (ch=0 ; ch < stereo ; ch ++ ) {
+  for (ch=0 ; ch < gf.stereo ; ch ++ ) {
     better[ch]=0;
     if (notdone[ch]) {
       if (convert_psy) {
@@ -186,7 +186,7 @@ void outer_loop_dual(
     int l3_enc[2][2][576],    /* vector of quantized values ix(0..575) */
     frame_params *fr_ps,
     III_scalefac_t *scalefac, /* scalefactors */
-    int gr, int stereo, III_side_info_t *l3_side,
+    int gr, III_side_info_t *l3_side,
     III_psy_ratio *ratio, FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2])
 {
   int status[2],notdone[2]={0,0},count[2]={0,0},bits_found[2];
@@ -211,16 +211,16 @@ void outer_loop_dual(
 
   cod_info[0] = &l3_side->gr[gr].ch[0].tt;
   cod_info[1] = &l3_side->gr[gr].ch[1].tt;
-  for (ch=0 ; ch < stereo ; ch ++) 
+  for (ch=0 ; ch < gf.stereo ; ch ++) 
     best_over[ch] = 100;
       
 
   if (convert_mdct) ms_convert(xr[gr],xr_org[gr]);
   else memcpy(xr[gr],xr_org[gr],sizeof(FLOAT8)*2*576);   
-  for (ch=0; ch<stereo; ch++)
-    init_outer_loop_dual(xr,xr_org,l3_xmin,scalefac,gr,stereo,l3_side,ratio,ch);  
+  for (ch=0; ch<gf.stereo; ch++)
+    init_outer_loop_dual(xr,xr_org,l3_xmin,scalefac,gr,l3_side,ratio,ch);  
   
-  for (ch=0 ; ch < stereo ; ch ++) {
+  for (ch=0 ; ch < gf.stereo ; ch ++) {
     count[ch]=0;
     for (i=0; i<576; i++) {
       if ( fabs(xr[gr][ch][i]) > 0 ) count[ch]++; 
@@ -235,13 +235,13 @@ void outer_loop_dual(
   /* allocate targ_bits for granule */
   ResvMaxBits2( mean_bits, &tbits, &extra_bits, gr);
   
-  for (ch=0 ; ch < stereo ; ch ++ )
-    targ_bits[ch]=tbits/stereo;
+  for (ch=0 ; ch < gf.stereo ; ch ++ )
+    targ_bits[ch]=tbits/gf.stereo;
   
   
   /* allocate extra bits from reservoir based on PE */
   bits=0;
-  for (ch=0; ch<stereo; ch++) {
+  for (ch=0; ch<gf.stereo; ch++) {
     FLOAT8 pe_temp=pe[gr][ch];
     if (convert_psy) pe_temp=Max(pe[gr][0],pe[gr][1]);
     
@@ -256,11 +256,11 @@ void outer_loop_dual(
     if (add_bits[ch] < 0) add_bits[ch]=0;
     bits += add_bits[ch];
   }
-  for (ch=0; ch<stereo; ch++) {
+  for (ch=0; ch<gf.stereo; ch++) {
     if (bits > extra_bits) add_bits[ch] = (extra_bits*add_bits[ch])/bits;
     targ_bits[ch] = targ_bits[ch] + add_bits[ch];
   }
-  for (ch=0; ch<stereo; ch++) 
+  for (ch=0; ch<gf.stereo; ch++) 
     extra_bits -= add_bits[ch];
 
   if (reduce_sidechannel) {
@@ -279,7 +279,7 @@ void outer_loop_dual(
 
   
     /* dont allow to many bits per channel */  
-    for (ch=0; ch<stereo; ch++) {
+    for (ch=0; ch<gf.stereo; ch++) {
       int max_bits = Min(4095,mean_bits/2 + 1200);
       if (targ_bits[ch] > max_bits) {
 	extra_bits += (targ_bits[ch] - max_bits);
@@ -300,7 +300,7 @@ void outer_loop_dual(
     if (compute_stepsize) {
       /* compute initial quantization step */
       compute_stepsize=0;
-      for (ch=0 ; ch < stereo ; ch ++ )
+      for (ch=0 ; ch < gf.stereo ; ch ++ )
 	if (notdone[ch]) {
 	  for(i=0;i<576;i++) 	    {
 	    temp=fabs(xr[gr][ch][i]);
@@ -319,7 +319,7 @@ void outer_loop_dual(
      * Thus is it important not to start with too large of an inital
      * quantization step.  Too small is ok, but inner_loop will take longer 
      */
-    for (ch=0 ; ch < stereo ; ch ++ ) {
+    for (ch=0 ; ch < gf.stereo ; ch ++ ) {
       if (notdone[ch]) {
 	huff_bits = targ_bits[ch] - cod_info[ch]->part2_length;
 	if (huff_bits < 0) {
@@ -352,16 +352,16 @@ void outer_loop_dual(
 
     /* compute the distortion in this quantization */
     if (gf.fast_mode) {
-      for (ch=0; ch<stereo; ch++)
+      for (ch=0; ch<gf.stereo; ch++)
 	over[ch]=0;
     }else{
       if (convert_psy) {
 	/* mid/side coefficiets, l/r thresholds */
 	calc_noise2( xr[gr], l3_enc[gr], cod_info, xfsf,
-          distort, l3_xmin,gr,stereo,over,over_noise,tot_noise,max_noise);
+          distort, l3_xmin,gr,over,over_noise,tot_noise,max_noise);
       }	else {
 	  /* coefficients and thresholds both l/r (or both mid/side) */
-	  for (ch=0; ch<stereo; ch++)
+	  for (ch=0; ch<gf.stereo; ch++)
 	    if (notdone[ch])
 	      over[ch]=calc_noise1( xr[gr][ch], l3_enc[gr][ch], cod_info[ch], 
 	    xfsf[ch],distort[ch], l3_xmin,gr,ch, &over_noise[ch], 
@@ -371,15 +371,15 @@ void outer_loop_dual(
 
     /* check if this quantization is better the our saved quantization */
     if (iteration == 1) 
-      for (ch=0; ch<stereo; ch++) better[ch]=1;
-    else quant_compare_dual(better,notdone,stereo,ms_ener_ratio[gr],
+      for (ch=0; ch<gf.stereo; ch++) better[ch]=1;
+    else quant_compare_dual(better,notdone,ms_ener_ratio[gr],
         best_over,best_tot_noise,best_over_noise,best_max_noise,
 	over,tot_noise,over_noise,max_noise);
 
  
 
     /* save data so we can restore this quantization later */    
-    for (ch=0 ; ch < stereo ; ch ++ ) {
+    for (ch=0 ; ch < gf.stereo ; ch ++ ) {
       if (better[ch]) {
 	best_over[ch]=over[ch];
 	best_over_noise[ch]=over_noise[ch];
@@ -421,7 +421,7 @@ void outer_loop_dual(
     }
 
     /* if no bands with distortion, we are done */
-    for (ch=0 ; ch < stereo ; ch ++ ) 
+    for (ch=0 ; ch < gf.stereo ; ch ++ ) 
       if (notdone[ch]) {
 	if (convert_psy) 
 	  notdone[ch] = (over[0] || over[1]);
@@ -434,7 +434,7 @@ void outer_loop_dual(
 
     /* if we didn't just apply pre-emph, let us see if we should 
      * amplify some scale factor bands */
-    for (ch=0 ; ch < stereo ; ch ++ ) 
+    for (ch=0 ; ch < gf.stereo ; ch ++ ) 
       if (notdone[ch]) {
 	  amp_scalefac_bands( xr[gr][ch], xrpow[gr][ch], l3_xmin,
 		l3_side, scalefac, gr, ch, iteration,distort[ch]);
@@ -442,7 +442,7 @@ void outer_loop_dual(
     
 
     /* check to make sure we have not amplified too much */
-    for (ch=0 ; ch < stereo ; ch ++ ) {
+    for (ch=0 ; ch < gf.stereo ; ch ++ ) {
       if (notdone[ch]) {
 	if ( (status[ch] = loop_break(scalefac, cod_info[ch], gr, ch)) == 0 ) {
 	  if ( fr_ps->header->version == 1 ) {
@@ -459,7 +459,7 @@ void outer_loop_dual(
 
   
   /* restore some data */
-  for (ch=0 ; ch < stereo ; ch ++ ) {
+  for (ch=0 ; ch < gf.stereo ; ch ++ ) {
     if (count[ch]) {
       for ( sfb = 0; sfb < SBPSY_l; sfb++ ) {
 	scalefac->l[gr][ch][sfb] = scalesave_l[ch][sfb];    
@@ -478,12 +478,12 @@ void outer_loop_dual(
   }
   
   /* finish up */
-  for (ch=0 ; ch < stereo ; ch ++ ) {
+  for (ch=0 ; ch < gf.stereo ; ch ++ ) {
 #ifdef HAVEGTK
     if (gf.gtkflag)
       pinfo->LAMEmainbits[gr][ch]=cod_info[ch]->part2_3_length;
 #endif
-    ResvAdjust( fr_ps, cod_info[ch], l3_side, mean_bits );
+    ResvAdjust(cod_info[ch], l3_side, mean_bits );
     cod_info[ch]->global_gain = cod_info[ch]->quantizerStepSize + 210.0;
     assert( cod_info[ch]->global_gain < 256 );
   }
@@ -499,7 +499,7 @@ void outer_loop_dual(
 
 void calc_noise2( FLOAT8 xr[2][576], int ix[2][576], gr_info *cod_info[2],
             FLOAT8 xfsf[2][4][SBPSY_l], FLOAT8 distort[2][4][SBPSY_l],
-            III_psy_xmin *l3_xmin,int gr,int stereo, int over[2], 
+            III_psy_xmin *l3_xmin,int gr, int over[2], 
             FLOAT8 over_noise[2], FLOAT8 tot_noise[2], FLOAT8 max_noise[2])
 {
     int start, end, sfb, l, i;
@@ -526,7 +526,7 @@ void calc_noise2( FLOAT8 xr[2][576], int ix[2][576], gr_info *cod_info[2],
     /* calc_noise2: we can assume block types of both channels must be the same
 */
     if (cod_info[0]->block_type != 2) {
-    for (ch=0 ; ch < stereo ; ch ++ ) {
+    for (ch=0 ; ch < gf.stereo ; ch ++ ) {
       over[ch]=0;
       over_noise[ch]=0;
       tot_noise[ch]=0;
@@ -563,7 +563,7 @@ void calc_noise2( FLOAT8 xr[2][576], int ix[2][576], gr_info *cod_info[2],
       sum[0] *= 0.5;
       sum[1] *= 0.5;
 
-      for (ch=0 ; ch < stereo ; ch ++ ) {
+      for (ch=0 ; ch < gf.stereo ; ch ++ ) {
         xfsf[ch][0][sfb] = sum[ch] / bw;
         noise = 10*log10(Max(.001,xfsf[ch][0][sfb]/l3_xmin->l[gr][ch][sfb]));
         distort[ch][0][sfb] =  noise;
@@ -577,7 +577,7 @@ void calc_noise2( FLOAT8 xr[2][576], int ix[2][576], gr_info *cod_info[2],
 
       /* if there is audible distortion in left or right channel, set flags
        * to denote distortion in both mid and side channels */
-      for (ch=0 ; ch < stereo ; ch ++ ) {
+      for (ch=0 ; ch < gf.stereo ; ch ++ ) {
         distort[ch][0][sfb] = Max(distort[0][0][sfb],distort[1][0][sfb]);
       }
     }
@@ -589,7 +589,7 @@ void calc_noise2( FLOAT8 xr[2][576], int ix[2][576], gr_info *cod_info[2],
       step_0 = pow( 2.0, (cod_info[0]->quantizerStepSize) * 0.25 );
       step_1 = pow( 2.0, (cod_info[1]->quantizerStepSize) * 0.25 );
 
-      for (ch=0 ; ch < stereo ; ch ++ ) {
+      for (ch=0 ; ch < gf.stereo ; ch ++ ) {
 	over[ch] = 0;
 	xr_s[ch] = (D192_3 *) xr[ch];
 	ix_s[ch] = (I192_3 *) ix[ch];
@@ -600,7 +600,7 @@ void calc_noise2( FLOAT8 xr[2][576], int ix[2][576], gr_info *cod_info[2],
       end   = scalefac_band_short[ sfb+1 ];
       bw = end - start;
       for ( i = 0; i < 3; i++ ) {           
-        for (ch=0 ; ch < stereo ; ch ++ ) sum[ch] = 0.0;
+        for (ch=0 ; ch < gf.stereo ; ch ++ ) sum[ch] = 0.0;
         for ( l = start; l < end; l++ )           {
             index=(*ix_s[0])[l][i];
             if (index==0)
@@ -626,7 +626,7 @@ void calc_noise2( FLOAT8 xr[2][576], int ix[2][576], gr_info *cod_info[2],
           sum[1] += (diff[0]-diff[1])*(diff[0]-diff[1])/(2.0);
         }
 
-        for (ch=0 ; ch < stereo ; ch ++ ) {
+        for (ch=0 ; ch < gf.stereo ; ch ++ ) {
           xfsf[ch][i+1][sfb] = sum[ch] / bw;
           noise =
 10*log10(Max(.001,xfsf[ch][i+1][sfb]/l3_xmin->s[gr][ch][sfb][i]));
@@ -640,7 +640,7 @@ void calc_noise2( FLOAT8 xr[2][576], int ix[2][576], gr_info *cod_info[2],
         }
         /* if there is audible distortion in left or right channel, set flags
          * to denote distortion in both mid and side channels */
-        for (ch=0 ; ch < stereo ; ch ++ ) 
+        for (ch=0 ; ch < gf.stereo ; ch ++ ) 
           distort[ch][i+1][sfb] = Max
             (distort[0][i+1][sfb],distort[1][i+1][sfb]  );
       }

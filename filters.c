@@ -12,7 +12,6 @@ void filterMDCT( FLOAT8 xr_org[2][2][576],
 {
   int gr,ch,i;
   layer *info  = fr_ps->header;
-  int stereo = fr_ps->stereo;
   int *scalefac_band_long;
   int *scalefac_band_short;
 
@@ -22,12 +21,12 @@ void filterMDCT( FLOAT8 xr_org[2][2][576],
   /* voice mode disables short blocks */  
   if (gf.voice_mode) {
     for ( gr = 0; gr < gf.mode_gr; gr++ ) {
-      for (ch =0 ; ch < stereo ; ch++) {
+      for (ch =0 ; ch < gf.stereo ; ch++) {
 		int start = scalefac_band_long[ SBMAX_l-3 ];
 		  for ( i = start; i < 576; i++ )
 			  xr_org[gr][ch][i]=0;
       }
-      for (ch =0 ; ch < stereo ; ch++) {
+      for (ch =0 ; ch < gf.stereo ; ch++) {
 		for ( i = 0; i < 2; i++ )
 			  xr_org[gr][ch][i]=0;
       }
@@ -37,7 +36,7 @@ void filterMDCT( FLOAT8 xr_org[2][2][576],
   if (gf.lowpass1>0) {
     FLOAT start,stop;
     for ( gr = 0; gr < gf.mode_gr; gr++ ) {
-      for (ch =0 ; ch < stereo ; ch++) {
+      for (ch =0 ; ch < gf.stereo ; ch++) {
 	int shortblock = (l3_side->gr[gr].ch[ch].tt.block_type==SHORT_TYPE);
 	if (shortblock) {
 	  int j;
@@ -63,7 +62,7 @@ void filterMDCT( FLOAT8 xr_org[2][2][576],
   if (gf.highpass2>0) {
     FLOAT start,stop;
     for ( gr = 0; gr < gf.mode_gr; gr++ ) {
-      for (ch =0 ; ch < stereo ; ch++) {
+      for (ch =0 ; ch < gf.stereo ; ch++) {
 	int shortblock = (l3_side->gr[gr].ch[ch].tt.block_type==SHORT_TYPE);
 	if (shortblock) {
 	  int j;
@@ -89,7 +88,7 @@ void filterMDCT( FLOAT8 xr_org[2][2][576],
 
   if (gf.sfb21) {
     for ( gr = 0; gr < gf.mode_gr; gr++ ) {
-      for (ch =0 ; ch < stereo ; ch++) {
+      for (ch =0 ; ch < gf.stereo ; ch++) {
 	int shortblock = (l3_side->gr[gr].ch[ch].tt.block_type==SHORT_TYPE);
 	if (shortblock) {
 	  int j;

@@ -18,7 +18,7 @@ FLOAT8 ATHformula(FLOAT8 f);
 void compute_ath(layer *info,FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY_l]);
 void ms_convert(FLOAT8 xr[2][576],FLOAT8 xr_org[2][576]);
 void on_pe(FLOAT8 pe[2][2],III_side_info_t *l3_side,
-int targ_bits[2],int mean_bits,int stereo, int gr);
+int targ_bits[2],int mean_bits, int gr);
 void reduce_side(int targ_bits[2],FLOAT8 ms_ener_ratio,int mean_bits);
 
 
@@ -32,7 +32,6 @@ void outer_loop( FLOAT8 xr[2][2][576],     /*vector of the magnitudees of the sp
 		frame_params *fr_ps,
                 III_scalefac_t *scalefac, /* scalefactors */
                 int gr,
-                int stereo,
 		III_side_info_t *l3_side,
 		III_psy_ratio *ratio, 
 		FLOAT8 ms_ratio,
@@ -49,7 +48,6 @@ void outer_loop_dual( FLOAT8 xr[2][2][576],     /*vector of the magnitudees of t
 		frame_params *fr_ps,
                 III_scalefac_t *scalefac, /* scalefactors */
                 int gr,
-                int ch,
 		III_side_info_t *l3_side,
 		III_psy_ratio *ratio, 
 		FLOAT8 pe[2][2],
@@ -98,7 +96,7 @@ void calc_noise2( FLOAT8 xr[2][576],
                  FLOAT8 xfsf[2][4][SBPSY_l], 
 		 FLOAT8 distort[2][4][SBPSY_l],
                  III_psy_xmin  *l3_xmin,
-		 int gr, int ch, int over[2], 
+		 int gr, int over[2], 
                  FLOAT8 noise[2], FLOAT8 tot_noise[2], FLOAT8 max_noise[2]);
 
 

@@ -157,7 +157,6 @@ VBR_iteration_loop_new (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   FLOAT8    xr[2][2][576];
   FLOAT8    masking_lower_db;
   FLOAT8    ifqstep,ol_sf,vbr_sf;
-  int       stereo = fr_ps->stereo;
   int       start,end,bw,sfb, i,ch, gr, over;
 
   /*
@@ -181,7 +180,7 @@ VBR_iteration_loop_new (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   }
 
   for (gr = 0; gr < gf.mode_gr; gr++) {
-    for (ch = 0; ch < stereo; ch++) { 
+    for (ch = 0; ch < gf.stereo; ch++) { 
       FLOAT8 xr34[576];
       gr_info *cod_info = &l3_side->gr[gr].ch[ch].tt;
       int shortblock;

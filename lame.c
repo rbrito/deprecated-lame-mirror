@@ -177,7 +177,6 @@ void lame_parse_args(int argc, char **argv)
   int   err = 0, i = 0;
   int mode_given=0;
   int num_channels;   /* number of channels of INPUT file */
-  int stereo;           /* number of channels of MP3 file */
   int samplerate,resamplerate=0;
   int lowpassrate=0, highpassrate=0; /* initialized to use defaults */
   int lowpasswidth=-1, highpasswidth=-1; /* initialized to use defaults */
@@ -591,8 +590,8 @@ case 't':  /* dont write VBR tag */
   if (gf.autoconvert==TRUE) {
     fprintf(stderr, "Autoconverting from stereo to mono. Setting encoding to mono mode.\n");
   }
-  stereo=2;
-  if (info->mode == MPG_MD_MONO) stereo=1;
+  gf.stereo=2;
+  if (info->mode == MPG_MD_MONO) gf.stereo=1;
 
 
   /* set the output sampling rate, and resample options if necessary 
@@ -614,10 +613,10 @@ case 't':  /* dont write VBR tag */
     }
 
     if (brate>0) {
-      compression_ratio = resamplerate*16*stereo/(1000.0*brate);
+      compression_ratio = resamplerate*16*gf.stereo/(1000.0*brate);
       if (!gf.VBR && compression_ratio > 13 ) {
 	/* automatic downsample, if possible */
-	resamplerate = (10*1000.0*brate)/(16*stereo);
+	resamplerate = (10*1000.0*brate)/(16*gf.stereo);
 	if (resamplerate<16000) resamplerate=16000;
 	else if (resamplerate<22050) resamplerate=22050;
 	else if (resamplerate<24000) resamplerate=24000;
@@ -651,7 +650,7 @@ case 't':  /* dont write VBR tag */
     gf.VBR_min_bitrate=info->bitrate_index;
   }
   if (info->bitrate_index==14) gf.VBR=0;  /* dont bother with VBR at 320kbs */
-  compression_ratio = resamplerate*16*stereo/(1000.0*brate);
+  compression_ratio = resamplerate*16*gf.stereo/(1000.0*brate);
 
   gf.resample_ratio=1;
   if (resamplerate != samplerate) gf.resample_ratio = (FLOAT)samplerate/(FLOAT)resamplerate;
@@ -730,7 +729,7 @@ case 't':  /* dont write VBR tag */
   /* disable sfb21 cutoff for low amounts of compression */
   if (compression_ratio<9.0) gf.sfb21=0;
 
-  if (brate/stereo <= 32  ) {
+  if (brate/gf.stereo <= 32  ) {
     /* high compression, low bitrates, lets use a filter */
     gf.sfb21=0; /* not needed */
     gf.lowpass1=.85;
@@ -832,8 +831,7 @@ case 't':  /* dont write VBR tag */
 
   /* copy some header information */
   fr_ps.actual_mode = info->mode;
-  fr_ps.stereo = (info->mode == MPG_MD_MONO) ? 1 : 2;
-
+  gf.stereo = (info->mode == MPG_MD_MONO) ? 1 : 2;
 
 #ifdef BRHIST
   if (gf.VBR) {
@@ -877,7 +875,7 @@ void lame_print_config(void)
   layer *info = fr_ps.header;
   char *mode_names[4] = { "stereo", "j-stereo", "dual-ch", "single-ch" };
   FLOAT compression=
-    (FLOAT)(fr_ps.stereo*16*s_freq[info->version][info->sampling_frequency])/
+    (FLOAT)(gf.stereo*16*s_freq[info->version][info->sampling_frequency])/
     (FLOAT)(bitrate[info->version][info->lay-1][info->bitrate_index]);
 
   if (gf.gtkflag) {
@@ -1088,7 +1086,6 @@ int lame_encode(short int Buffer[2][1152],char *mpg123bs)
 #if (ENCDELAY < 800) 
   static int frame_buffered=0;
 #endif
-  int stereo;
   layer *info;
   int i;
   int check_ms_stereo;
@@ -1103,7 +1100,6 @@ int lame_encode(short int Buffer[2][1152],char *mpg123bs)
     init++;
   }
 
-  stereo = fr_ps.stereo;
   info = fr_ps.header;
   info->mode_ext = MPG_MD_LR_LR; 
 
@@ -1137,10 +1133,10 @@ int lame_encode(short int Buffer[2][1152],char *mpg123bs)
 
 
   /* shift in new samples, delayed by EXTRADELAY */
-   for (ch=0; ch<stereo; ch++)
+   for (ch=0; ch<gf.stereo; ch++)
      for (i=0; i<EXTRADELAY; i++)
        mfbuf[ch][i]=mfbuf[ch][i+samplesPerFrame];
-   for (ch=0; ch<stereo; ch++)
+   for (ch=0; ch<gf.stereo; ch++)
      for (i=0; i<samplesPerFrame; i++)
        mfbuf[ch][i+EXTRADELAY]=Buffer[ch][i];
 
@@ -1156,10 +1152,10 @@ int lame_encode(short int Buffer[2][1152],char *mpg123bs)
 #endif
 
 
-  /* use m/s stereo? */
+  /* use m/s gf.stereo? */
   check_ms_stereo =   ((info->mode == MPG_MD_JOINT_STEREO) && 
 		       (info->version == 1) &&
-		       (stereo==2) );
+		       (gf.stereo==2) );
 
 
 
@@ -1234,22 +1230,22 @@ FFT's                    <---------1024---------->
     ms_ratio_prev=ms_ratio[gf.mode_gr-1];
     for (gr=0; gr < gf.mode_gr ; gr++) {
 
-      for ( ch = 0; ch < stereo; ch++ )
+      for ( ch = 0; ch < gf.stereo; ch++ )
 	bufp[ch] = &mfbuf[ch][576 + gr*576-FFTOFFSET];
 
-      L3psycho_anal( bufp, stereo, gr, info,
+      L3psycho_anal( bufp, gr, info,
          s_freq[info->version][info->sampling_frequency] * 1000.0,
 	 check_ms_stereo,&ms_ratio[gr],&ms_ratio_next,&ms_ener_ratio[gr],
          &masking_ratio, &masking_MS_ratio,
          pe[gr],pe_MS[gr],blocktype);
 
-      for ( ch = 0; ch < stereo; ch++ ) 
+      for ( ch = 0; ch < gf.stereo; ch++ ) 
 	l3_side.gr[gr].ch[ch].tt.block_type=blocktype[ch];
 
     }
   }else{
     for (gr=0; gr < gf.mode_gr ; gr++) 
-      for ( ch = 0; ch < stereo; ch++ ) {
+      for ( ch = 0; ch < gf.stereo; ch++ ) {
 	l3_side.gr[gr].ch[ch].tt.block_type=NORM_TYPE;
 	pe[gr][ch]=700;
       }
@@ -1258,7 +1254,7 @@ FFT's                    <---------1024---------->
 
   /* block type flags */
   for( gr = 0; gr < gf.mode_gr; gr++ ) {
-    for ( ch = 0; ch < stereo; ch++ ) {
+    for ( ch = 0; ch < gf.stereo; ch++ ) {
       gr_info *cod_info = &l3_side.gr[gr].ch[ch].tt;
       cod_info->mixed_block_flag = 0;     /* never used by this model */
       if (cod_info->block_type == NORM_TYPE )
@@ -1269,7 +1265,7 @@ FFT's                    <---------1024---------->
   }
 
   /* polyphase filtering / mdct */
-  mdct_sub48(mfbuf[0], mfbuf[1], xr, stereo, &l3_side);
+  mdct_sub48(mfbuf[0], mfbuf[1], xr, &l3_side);
 
   /* lowpass MDCT filtering */
   if (gf.sfb21 || gf.voice_mode || gf.lowpass1>0 || gf.highpass2>0) 
@@ -1297,7 +1293,7 @@ FFT's                    <---------1024---------->
   if (gf.gtkflag) { 
     int j;
     for ( gr = 0; gr < gf.mode_gr; gr++ ) {
-      for ( ch = 0; ch < stereo; ch++ ) {
+      for ( ch = 0; ch < gf.stereo; ch++ ) {
 	pinfo->ms_ratio[gr]=ms_ratio[gr];
 	pinfo->ms_ener_ratio[gr]=ms_ener_ratio[gr];
 	pinfo->blocktype[gr][ch]=
@@ -1347,7 +1343,7 @@ FFT's                    <---------1024---------->
 
 
   /*  write the frame to the bitstream  */
-  getframebits(info,stereo,&bitsPerFrame,&mean_bits);
+  getframebits(info,&bitsPerFrame,&mean_bits);
   III_format_bitstream( bitsPerFrame, &fr_ps, l3_enc, &l3_side, 
 			&scalefac, &bs);
 
@@ -1372,7 +1368,7 @@ FFT's                    <---------1024---------->
   if (gf.gtkflag) { 
     int j;
     int framesize = (info->version==0) ? 576 : 1152;
-    for ( ch = 0; ch < stereo; ch++ ) {
+    for ( ch = 0; ch < gf.stereo; ch++ ) {
       for ( j = 0; j < FFTOFFSET; j++ )
 	pinfo->pcmdata[ch][j] = pinfo->pcmdata[ch][j+framesize];
       for ( j = FFTOFFSET; j < 1600; j++ ) {
@@ -1391,7 +1387,7 @@ int lame_readframe(short int Buffer[2][1152])
 {
   int iread;
 
-  /* note: if input is stereo and output is mono, get_audio() 
+  /* note: if input is gf.stereo and output is mono, get_audio() 
    * will  .5*(L+R) in channel 0,  and nothing in channel 1. */
   /* DOWNSAMPLE, ETC */
 #ifdef HAVEGTK
@@ -1401,14 +1397,14 @@ int lame_readframe(short int Buffer[2][1152])
     pinfo->frameNum = gf.frameNum;
     pinfo->sampfreq=ofreq;
     pinfo->framesize=(fr_ps.header->version==0) ? 576 : 1152;
-    pinfo->stereo = fr_ps.stereo;
+    pinfo->stereo = gf.stereo;
   }
 #endif
   if (gf.resample_ratio!=1) {
     /* input frequency =  output freq*resample_ratio; */
-    iread=get_audio_resample(Buffer,gf.resample_ratio,fr_ps.stereo,fr_ps.header);
+    iread=get_audio_resample(Buffer,gf.resample_ratio,gf.stereo,fr_ps.header);
   }else{
-    iread = get_audio(Buffer,fr_ps.stereo,fr_ps.header);
+    iread = get_audio(Buffer,gf.stereo,fr_ps.header);
   }
 
   /* check to see if we overestimated/underestimated totalframes */
@@ -1512,7 +1508,7 @@ void lame_getmp3info(lame_mp3info *mp3info)
 {
   mp3info->encoder_delay = ENCDELAY;
   mp3info->framesize = (fr_ps.header->version==0) ? 576 : 1152;
-  mp3info->output_channels = fr_ps.stereo;
+  mp3info->output_channels = gf.stereo;
   mp3info->output_samplerate = (int)
      1000*s_freq[fr_ps.header->version][fr_ps.header->sampling_frequency];
 }

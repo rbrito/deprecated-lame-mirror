@@ -110,7 +110,6 @@ iteration_init( FLOAT8 xr_org[2][2][576],
 {
   gr_info *cod_info;
   layer *info  = fr_ps->header;
-  int stereo = fr_ps->stereo;
   int ch, gr, i;
 
   l3_side->resvDrain = 0;
@@ -156,7 +155,7 @@ iteration_init( FLOAT8 xr_org[2][2][576],
   
   /* some intializations. */
   for ( gr = 0; gr < gf.mode_gr; gr++ ){
-    for ( ch = 0; ch < stereo; ch++ ){
+    for ( ch = 0; ch < gf.stereo; ch++ ){
       cod_info = (gr_info *) &(l3_side->gr[gr].ch[ch]);
 
       if ( cod_info->window_switching_flag != 0 && cod_info->block_type == SHORT_TYPE )
@@ -176,7 +175,7 @@ iteration_init( FLOAT8 xr_org[2][2][576],
 
 
   /* dont bother with scfsi. */
-  for ( ch = 0; ch < stereo; ch++ )
+  for ( ch = 0; ch < gf.stereo; ch++ )
     for ( i = 0; i < 4; i++ )
       l3_side->scfsi[ch][i] = 0;
 
@@ -291,7 +290,7 @@ void ms_convert(FLOAT8 xr[2][576],FLOAT8 xr_org[2][576])
  * mt 6/99
  ************************************************************************/
 void on_pe(FLOAT8 pe[2][2],III_side_info_t *l3_side,
-int targ_bits[2],int mean_bits,int stereo, int gr)
+int targ_bits[2],int mean_bits, int gr)
 {
   gr_info *cod_info;
   int extra_bits,tbits,bits;
@@ -302,13 +301,13 @@ int targ_bits[2],int mean_bits,int stereo, int gr)
   ResvMaxBits2( mean_bits, &tbits, &extra_bits, gr);
     
 
-  for (ch=0 ; ch < stereo ; ch ++) {
+  for (ch=0 ; ch < gf.stereo ; ch ++) {
     /******************************************************************
      * allocate bits for each channel 
      ******************************************************************/
     cod_info = &l3_side->gr[gr].ch[ch].tt;
     
-    targ_bits[ch]=tbits/stereo;
+    targ_bits[ch]=tbits/gf.stereo;
     
     /* allocate extra bits from reservoir based on PE */
     bits=0;
@@ -335,7 +334,7 @@ int targ_bits[2],int mean_bits,int stereo, int gr)
 void reduce_side(int targ_bits[2],FLOAT8 ms_ener_ratio,int mean_bits)
 {
 int ch;
-int stereo=2;
+int numchn=2;
     /*  ms_ener_ratio = 0:  allocate 66/33  mid/side  fac=.33  
      *  ms_ener_ratio =.5:  allocate 50/50 mid/side   fac= 0 */
     /* 75/25 split is fac=.5 */
@@ -355,7 +354,7 @@ int stereo=2;
     }
     
     /* dont allow to many bits per channel */  
-    for (ch=0; ch<stereo; ch++) {
+    for (ch=0; ch<numchn; ch++) {
       int max_bits = Min(4095,mean_bits/2 + 1200);
       if (targ_bits[ch] > max_bits) {
 	targ_bits[ch] = max_bits;

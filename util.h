@@ -121,7 +121,6 @@ typedef struct {
     int         actual_mode;    /* when writing IS, may forget if 0 chs */
     al_table    *alloc;         /* bit allocation table read in */
     int         tab_num;        /* number of table as loaded */
-    int         stereo;         /* 1 for mono, 2 for stereo */
     int         jsbound;        /* first band of joint stereo coding */
     int         sblimit;        /* total number of sub bands */
 } frame_params;
@@ -179,7 +178,7 @@ extern enum byte_order DetermineByteOrder(void);
 extern void SwapBytesInWords( short *loc, int words );
 
 extern void 
-getframebits(layer *info, int stereo, int *bitsPerFrame, int *mean_bits);
+getframebits(layer *info, int *bitsPerFrame, int *mean_bits);
 
 void timestatus(layer *info,long frameNum,long totalframes);
 #endif

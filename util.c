@@ -35,7 +35,7 @@ enum byte_order NativeByteOrder = order_unknown;
 /***********************************************************************
  * compute bitsperframe and mean_bits for a layer III frame 
  **********************************************************************/
-void getframebits(layer *info, int stereo, int *bitsPerFrame, int *mean_bits) {
+void getframebits(layer *info, int *bitsPerFrame, int *mean_bits) {
   int whole_SpF;
   FLOAT8 bit_rate,samp;
   int samplesPerFrame,bitsPerSlot;
@@ -43,21 +43,21 @@ void getframebits(layer *info, int stereo, int *bitsPerFrame, int *mean_bits) {
   
   samp =      s_freq[info->version][info->sampling_frequency];
   bit_rate = bitrate[info->version][info->lay-1][info->bitrate_index];
-  samplesPerFrame = info->version == 1 ? 1152 : 576;
+  samplesPerFrame = 576 * gf.mode_gr;
   bitsPerSlot = 8;
-  
+
   /* determine the mean bitrate for main data */
   sideinfo_len = 32;
   if ( info->version == 1 )
     {   /* MPEG 1 */
-      if ( stereo == 1 )
+      if ( gf.stereo == 1 )
 	sideinfo_len += 136;
       else
 	sideinfo_len += 256;
     }
   else
     {   /* MPEG 2 */
-      if ( stereo == 1 )
+      if ( gf.stereo == 1 )
 	sideinfo_len += 72;
       else
 	sideinfo_len += 136;
