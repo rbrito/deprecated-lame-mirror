@@ -35,7 +35,7 @@
 
 
 const int MAJORVERSION=1;
-const int MINORVERSION=04;
+const int MINORVERSION=05;
 const int CURRENT_STRUCT_VERSION=1;
 const int CURRENT_STRUCT_SIZE=sizeof(BE_CONFIG);
 
@@ -190,8 +190,9 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 		case LOW_QUALITY:		// -f flag
 			strcpy(DllArgV[nDllArgC++],"-f");
 		break;
-		case HIGH_QUALITY:		// -k flag for high qualtiy
-			strcpy(DllArgV[nDllArgC++],"-k");
+		case HIGH_QUALITY:		// -h flag for high qualtiy
+			strcpy(DllArgV[nDllArgC++],"-h");
+        break;
 		case VOICE_QUALITY:		// --voice flag for high qualtiy
 			strcpy(DllArgV[nDllArgC++],"--voice");
 		break;

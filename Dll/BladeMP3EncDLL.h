@@ -109,7 +109,7 @@ typedef struct	{
 			BOOL			bPrivate;		// Set Private Bit (TRUE/FALSE)
 			BOOL			bCRC;			// Insert CRC (TRUE/FALSE)
 			BOOL			bCopyright;		// Set Copyright Bit (TRUE/FALSE)
-			BOOL			bOriginal;		// Set Original Bit (TRUE/FALSE_
+			BOOL			bOriginal;		// Set Original Bit (TRUE/FALSE)
 			
 			// VBR STUFF
 			BOOL			bWriteVBRHeader;	// WRITE XING VBR HEADER (TRUE/FALSE)
