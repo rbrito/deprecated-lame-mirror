@@ -439,7 +439,7 @@ ns_msfix(
 	gfc->thm[3].l[sb] = Min(thmS,gfc->thm[3].l[sb]);
     }
 
-    athlower *= (BLKSIZE_s / BLKSIZE);
+    athlower *= ((FLOAT)BLKSIZE_s / BLKSIZE);
     for ( sb = 0; sb < SBMAX_s; sb++ ) {
 	for ( sblock = 0; sblock < 3; sblock++ ) {
 	    FLOAT thmLR,thmM,thmS,ath;
@@ -511,7 +511,7 @@ compute_masking_s(
     )
 {
     int j, b;
-    athlower *= (BLKSIZE_s / BLKSIZE);
+    athlower *= ((FLOAT)BLKSIZE_s / BLKSIZE);
     for (j = b = 0; b < gfc->npart_s; b++) {
 	FLOAT ecb = fftenergy_s[sblock][j++];
 	int kk = gfc->numlines_s[b];
