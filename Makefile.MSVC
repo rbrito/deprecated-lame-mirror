@@ -169,6 +169,20 @@ MPX_OBJ = $(mpx_sources:.c=.obj)
 
 all : prg
 
+#== NASM ======================================================================
+#
+#	uncomment the following if you have NASM 
+#	NASM: Netwide Assembler
+#
+libmp3lame/i386/choose_table.obj: libmp3lame/i386/choose_table.nas
+	@echo assemble CPU-feature detection, using NASM the Netwide Assembler
+	@nasmw -f win32 -i libmp3lame/i386/ -DWIN32 \
+		libmp3lame/i386/cpu_feat.nas \
+		-o libmp3lame/i386/cpu_feat.obj
+                
+CC_SWITCHES = $(CC_SWITCHES) /DHAVE_NASM
+LIB_OBJ = $(LIB_OBJ) libmp3lame/i386/cpu_feat.obj
+#====================================================================== NASM ==
 
 #== MMX =======================================================================
 #
@@ -176,9 +190,10 @@ all : prg
 #	NASM: Netwide Assembler
 #
 libmp3lame/i386/choose_table.obj: libmp3lame/i386/choose_table.nas
-	@echo assemble MMX featured choose table, using NASM the Netwide Assembler
-	@nasmw -f win32 -i libmp3lame/i386/ -DWIN32 libmp3lame/i386/choose_table.nas \
-	       -o libmp3lame/i386/choose_table.obj
+	@echo assemble MMX choose table, using NASM the Netwide Assembler
+	@nasmw -f win32 -i libmp3lame/i386/ -DWIN32 \
+		libmp3lame/i386/choose_table.nas \
+		-o libmp3lame/i386/choose_table.obj
 
 CC_SWITCHES = $(CC_SWITCHES) /DMMX_choose_table
 LIB_OBJ = $(LIB_OBJ) libmp3lame/i386/choose_table.obj
