@@ -1402,7 +1402,7 @@ VBR_2nd_bitalloc(lame_t gfc, gr_info *gi, FLOAT * xmin)
     int sfb = 0, endflag = 0;
     for (sfb = 0; sfb < gi->psymax; sfb++) {
 	if (gi->scalefac[sfb] == LARGE_BITS) {
-	    gi->scalefac[sfb] = SCALEFAC_ANYTHING_GOES;
+	    gi->scalefac[sfb] = 0;
 	    continue;
 	}
 
