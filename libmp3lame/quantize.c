@@ -847,7 +847,7 @@ outer_loop (
     FLOAT distort[SFBMAX], l3_xmin[SFBMAX], xrpow[576];
     int current_method, age;
 
-    if (!init_outer_loop(gfc, gi, xrpow))
+    if (!init_outer_loop(gfc, gi, xrpow) || gi->psymax == 0)
 	return; /* digital silence */
 
     bin_search_StepSize (gfc, gi, targ_bits,
