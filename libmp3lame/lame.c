@@ -426,7 +426,7 @@ lame_init_qval(lame_global_flags * gfp)
     case 7:            /* use psymodel (for short block and m/s switching), but no noise shapping */
         gfc->filter_type = 0;
         gfc->psymodel = 1;
-        /**/ gfc->quantization = 0;
+        gfc->quantization = 0;
         gfc->noise_shaping = 0;
         gfc->noise_shaping_amp = 0;
         gfc->noise_shaping_stop = 0;
@@ -440,7 +440,7 @@ lame_init_qval(lame_global_flags * gfp)
         gfc->psymodel = 1;
         gfc->quantization = 0;
         gfc->noise_shaping = 1;
-        /**/ gfc->noise_shaping_amp = 0;
+         /**/ gfc->noise_shaping_amp = 0;
         gfc->noise_shaping_stop = 0;
         gfc->use_best_huffman = 0;
         break;
@@ -513,6 +513,46 @@ lame_init_qval(lame_global_flags * gfp)
  *   initialize internal params based on data in gf
  *   (globalflags struct filled in by calling program)
  *
+ *  OUTLINE:
+ *
+ * We first have some complex code to determine bitrate, 
+ * output samplerate and mode.  It is complicated by the fact
+ * that we allow the user to set some or all of these parameters,
+ * and need to determine best possible values for the rest of them:
+ *
+ *   set some CPU related flags
+ *   check if we are mono->mono, stereo->mono or stereo->stereo
+ *   compute bitrate and output samplerate:
+ *          user may have set compression ratio
+ *          user may have set a bitrate  
+ *          user may have set a output samplerate
+ *   set some options which depend on output samplerate
+ *   compute the actual compression ratio
+ *   set mode based on compression ratio
+ *
+ *  The remaining code is much simpler - it just sets options
+ *  based on the mode & compression ratio: 
+ *   
+ *   set allow_diff_short based on mode
+ *   select lowpass filter based on compression ratio & mode
+ *   set the bitrate index, and min/max bitrates for VBR modes
+ *   disable VBR tag if it is not appropriate
+ *   initialize the bitstream
+ *   initialize scalefac_band data
+ *   set sideinfo_len (based on channels, CRC, out_samplerate)
+ *   write an id3v2 tag into the bitstream
+ *   write VBR tag into the bitstream
+ *   set mpeg1/2 flag
+ *   estimate the number of frames (based on a lot of data)
+ *         
+ *   now we set more flags:
+ *   nspsytune:
+ *      see code
+ *   VBR modes
+ *      see code      
+ *   CBR/ABR
+ *      see code   
+ *
  ********************************************************************/
 int
 lame_init_params(lame_global_flags * const gfp)
@@ -526,11 +566,11 @@ lame_init_params(lame_global_flags * const gfp)
 
     gfc->Class_ID = 0;
 
-    gfc->CPU_features.i387      = has_i387();
+    gfc->CPU_features.i387 = has_i387();
     gfc->CPU_features.AMD_3DNow = has_3DNow();
-    gfc->CPU_features.MMX       = has_MMX();
-    gfc->CPU_features.SIMD      = has_SIMD();
-    gfc->CPU_features.SIMD2     = has_SIMD2();
+    gfc->CPU_features.MMX = has_MMX();
+    gfc->CPU_features.SIMD = has_SIMD();
+    gfc->CPU_features.SIMD2 = has_SIMD2();
 
 
     gfc->ATH = calloc(1, sizeof(ATH_t));
@@ -540,7 +580,7 @@ lame_init_params(lame_global_flags * const gfp)
 
 #ifdef KLEMM_44
     /* Select the fastest functions for this CPU */
-    init_scalar_functions ( gfc );
+    init_scalar_functions(gfc);
 #endif
 
     gfc->channels_in = gfp->num_channels;
@@ -580,8 +620,7 @@ lame_init_params(lame_global_flags * const gfp)
          */
         gfp->brate =
             gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 *
-                                                            gfp->
-                                                            compression_ratio);
+                                                            gfp->compression_ratio);
 
         /* we need the version for the bitrate table look up */
         gfc->samplerate_index = SmpFrqIndex(gfp->out_samplerate, &gfp->version);
@@ -615,8 +654,7 @@ lame_init_params(lame_global_flags * const gfp)
         if (gfp->VBR == vbr_abr) {
             gfp->compression_ratio =
                 gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 *
-                                                                gfp->
-                                                                VBR_mean_bitrate_kbps);
+                                                                gfp->VBR_mean_bitrate_kbps);
             if (gfp->compression_ratio > 13.)
                 gfp->out_samplerate =
                     map2MP3Frequency((10. * 1.e3 * gfp->VBR_mean_bitrate_kbps) /
@@ -680,8 +718,7 @@ lame_init_params(lame_global_flags * const gfp)
     case vbr_abr:
         gfp->compression_ratio =
             gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 *
-                                                            gfp->
-                                                            VBR_mean_bitrate_kbps);
+                                                            gfp->VBR_mean_bitrate_kbps);
         break;
     default:
         gfp->compression_ratio =
@@ -708,8 +745,8 @@ lame_init_params(lame_global_flags * const gfp)
     if (gfp->mode == -1) {
         if (gfp->compression_ratio < 8)
             gfp->mode = MPG_MD_STEREO;
-	else
-	    gfp->mode = MPG_MD_JOINT_STEREO;
+        else
+            gfp->mode = MPG_MD_JOINT_STEREO;
     }
 
     /* KLEMM's jstereo with ms threshold adjusted via compression ratio */
@@ -718,6 +755,11 @@ lame_init_params(lame_global_flags * const gfp)
             gfp->mode = MPG_MD_STEREO;
     }
 
+
+    if (gfp->allow_diff_short == -1) {
+        if (gfp->mode == MPG_MD_STEREO)
+            gfp->allow_diff_short = 1;
+    }
 
 
 
@@ -905,14 +947,12 @@ lame_init_params(lame_global_flags * const gfp)
             if (
                 (gfc->VBR_min_bitrate =
                  BitrateIndex(gfp->VBR_min_bitrate_kbps, gfp->version,
-                              gfp->out_samplerate)) < 0)
-                return -1;
+                              gfp->out_samplerate)) < 0) return -1;
         if (gfp->VBR_max_bitrate_kbps)
             if (
                 (gfc->VBR_max_bitrate =
                  BitrateIndex(gfp->VBR_max_bitrate_kbps, gfp->version,
-                              gfp->out_samplerate)) < 0)
-                return -1;
+                              gfp->out_samplerate)) < 0) return -1;
 
         gfp->VBR_min_bitrate_kbps =
             bitrate_table[gfp->version][gfc->VBR_min_bitrate];
@@ -1019,20 +1059,20 @@ lame_init_params(lame_global_flags * const gfp)
     switch (gfp->VBR) {
 
     case vbr_mtrh:
-        
+
         /*  default quality for --vbr-mtrh is 1
          */
         if (gfp->quality < 0)
             gfp->quality = 1;
-        
+
         /*  tonality
          */
         if (gfp->cwlimit <= 0)
-            gfp->cwlimit = 0.454*gfp->out_samplerate;
-        
+            gfp->cwlimit = 0.454 * gfp->out_samplerate;
+
         /*  fall through
          */
-             
+
     case vbr_mt:
 
         /*  use Gaby's ATH for vbr-mtrh by default
@@ -1094,7 +1134,7 @@ lame_init_params(lame_global_flags * const gfp)
         /*  no sfb21 extra with CBR code
          */
         gfc->sfb21_extra = 0;
-        
+
         /*  default quality setting for CBR/ABR is 5
          */
         if (gfp->quality < 0)
@@ -1107,14 +1147,13 @@ lame_init_params(lame_global_flags * const gfp)
     lame_init_qval(gfp);
 
 #ifdef KLEMM_44
-    gfc->mfbuf[0]     = (sample_t*) calloc (sizeof(sample_t), MFSIZE);
-    gfc->mfbuf[1]     = (sample_t*) calloc (sizeof(sample_t), MFSIZE);
-    gfc->sampfreq_in  = unround_samplefrequency (gfp->in_samplerate);
+    gfc->mfbuf[0] = (sample_t *) calloc(sizeof(sample_t), MFSIZE);
+    gfc->mfbuf[1] = (sample_t *) calloc(sizeof(sample_t), MFSIZE);
+    gfc->sampfreq_in = unround_samplefrequency(gfp->in_samplerate);
     gfc->sampfreq_out = gfp->out_samplerate;
-    gfc->resample_in  = resample_open ( gfc->sampfreq_in,
-                                        gfc->sampfreq_out,
-                                        -1 .0 /* Auto */,
-                                        32 );
+    gfc->resample_in = resample_open(gfc->sampfreq_in,
+                                     gfc->sampfreq_out, -1 .0 /* Auto */ ,
+                                     32);
 #endif
 
     return 0;
@@ -1143,8 +1182,7 @@ lame_print_config(const lame_global_flags * gfp)
 
     if (gfc->CPU_features.MMX
         || gfc->CPU_features.AMD_3DNow
-        || gfc->CPU_features.SIMD
-        || gfc->CPU_features.SIMD2) {
+        || gfc->CPU_features.SIMD || gfc->CPU_features.SIMD2) {
         MSGF("CPU features:");
 
         if (gfc->CPU_features.i387)
@@ -1314,17 +1352,18 @@ lame_encode_buffer(lame_global_flags * gfp,
     while (nsamples > 0) {
         int     n_in = 0;    /* number of input samples processed with fill_buffer */
         int     n_out = 0;   /* number of samples output with fill_buffer */
-                             /* n_in <> n_out if we are resampling */
+        /* n_in <> n_out if we are resampling */
 
         /* copy in new samples into mfbuf, with resampling & scaling if necessary */
-        fill_buffer(gfp,mfbuf,in_buffer,nsamples,&n_in,&n_out);
+        fill_buffer(gfp, mfbuf, in_buffer, nsamples, &n_in, &n_out);
 
         /* update in_buffer counters */
         nsamples -= n_in;
-	in_buffer[0] += n_in;
-        if (gfc->channels_out==2) in_buffer[1] += n_in;
+        in_buffer[0] += n_in;
+        if (gfc->channels_out == 2)
+            in_buffer[1] += n_in;
 
-	/* update mfbuf[] counters */
+        /* update mfbuf[] counters */
         gfc->mf_size += n_out;
         assert(gfc->mf_size <= MFSIZE);
         gfc->mf_samples_to_encode += n_out;
@@ -1367,22 +1406,22 @@ lame_encode_buffer_interleaved(lame_global_flags * gfp,
                                int nsamples,
                                unsigned char *mp3buf, int mp3buf_size)
 {
-    int ret,i;
+    int     ret, i;
     short int *buffer_l;
     short int *buffer_r;
-    
+
     buffer_l = malloc(sizeof(short int) * nsamples);
     buffer_r = malloc(sizeof(short int) * nsamples);
     if (buffer_l == NULL || buffer_r == NULL) {
-	return -2;
+        return -2;
     }
     for (i = 0; i < nsamples; i++) {
-	buffer_l[i] = buffer[2 * i];
-	buffer_r[i] = buffer[2 * i + 1];
+        buffer_l[i] = buffer[2 * i];
+        buffer_r[i] = buffer[2 * i + 1];
     }
     ret =
-	lame_encode_buffer(gfp, buffer_l, buffer_r, nsamples, mp3buf,
-			   mp3buf_size);
+        lame_encode_buffer(gfp, buffer_l, buffer_r, nsamples, mp3buf,
+                           mp3buf_size);
     free(buffer_l);
     free(buffer_r);
     return ret;
@@ -1501,11 +1540,11 @@ lame_close(lame_global_flags * gfp)
 
 #ifdef KLEMM_44
     if (gfc->resample_in != NULL) {
-        resample_close (gfc->resample_in);
-       gfc->resample_in = NULL;
+        resample_close(gfc->resample_in);
+        gfc->resample_in = NULL;
     }
-    free (gfc->mfbuf[0]);
-    free (gfc->mfbuf[1]);
+    free(gfc->mfbuf[0]);
+    free(gfc->mfbuf[1]);
 #endif
 
     freegfc(gfp->internal_flags);
@@ -1591,7 +1630,7 @@ lame_init_old(lame_global_flags * gfp)
 {
     lame_internal_flags *gfc;
 
-    disable_FPE(); // disable floating point exceptions
+    disable_FPE();      // disable floating point exceptions
 
     memset(gfp, 0, sizeof(lame_global_flags));
 
@@ -1601,6 +1640,11 @@ lame_init_old(lame_global_flags * gfp)
 
     /* Global flags.  set defaults here for non-zero values */
     /* see lame.h for description */
+    /* set integer values to -1 to mean that LAME will compute the
+     * best value, UNLESS the calling program as set it
+     * (and the value is no longer -1)
+     */
+
 
     gfp->mode = -1;
     gfp->original = 1;
@@ -1609,7 +1653,8 @@ lame_init_old(lame_global_flags * gfp)
     gfp->num_samples = MAX_U_32_NUM;
 
     gfp->bWriteVbrTag = 1;
-    gfp->quality = -1;  // -1 means, to be replaced by a default value in lame_init_params
+    gfp->quality = -1;
+    gfp->allow_diff_short = -1;
 
     gfp->lowpassfreq = 0;
     gfp->highpassfreq = 0;
@@ -1637,10 +1682,6 @@ lame_init_old(lame_global_flags * gfp)
     gfc->masking_lower = 1;
 
     gfp->ATHtype = -1;  /* default = -1 = set in lame_init_params */
-
-//  memset(&gfc->bs, 0, sizeof(Bit_stream_struc));
-//  memset(&gfc->l3_side,0x00,sizeof(III_side_info_t));
-//  memset((char *) gfc->mfbuf, 0, sizeof(gfc->mfbuf[0][0])*2*MFSIZE);
 
     /* The reason for
      *       int mf_samples_to_encode = ENCDELAY + 288;
