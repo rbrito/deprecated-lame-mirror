@@ -177,8 +177,7 @@ calc_xmin(
 	    pxmin[gsfb]
 		= athAdjust(gfc->ATH.adjust, gfc->ATH.l[gsfb], gfc->ATH.floor);
 
-	for (sfb = gi->sfb_smin; gsfb < gi->psymax;
-	     sfb++, gsfb += 3)
+	for (sfb = gi->sfb_smin; gsfb < gi->psymax; sfb++, gsfb += 3)
 	    pxmin[gsfb] = pxmin[gsfb+1] = pxmin[gsfb+2]
 		= athAdjust(gfc->ATH.adjust, gfc->ATH.s[sfb], gfc->ATH.floor);
 
@@ -1012,8 +1011,8 @@ ABR_calc_target_bits (
     /*  repartion target bits if needed
      */
     if (totbits > max_frame_bits) {
-        for(gr = 0; gr < gfc->mode_gr; gr++) {
-            for(ch = 0; ch < gfc->channels_out; ch++) {
+        for (gr = 0; gr < gfc->mode_gr; gr++) {
+            for (ch = 0; ch < gfc->channels_out; ch++) {
                 targ_bits[gr][ch] *= max_frame_bits; 
                 targ_bits[gr][ch] /= totbits; 
             }
