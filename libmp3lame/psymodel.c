@@ -1094,16 +1094,17 @@ inline static FLOAT8 mask_add(FLOAT8 m1,FLOAT8 m2,int k,int b, lame_internal_fla
       return m1;
 
   i = FAST_LOG10_X(ratio, 16.0);
-  if (m1 < ma_max_m*gfc->ATH->cb[k]*gfc->ATH->adjust)  {
+  m2 = gfc->ATH->cb[k]*gfc->ATH->adjust;
+  if (m1 < ma_max_m*m2)  {
       /* 3% of the total */
       /* Originally if (m > 0) { */
-      if (m1 > gfc->ATH->cb[k]*gfc->ATH->adjust) {
+      if (m1 > m2) {
 	  FLOAT8 f, r;
 
 	  f = 1.0;
 	  if (i <= 13) f = table3[i];
 
-	  r = FAST_LOG10_X(m1 / gfc->ATH->cb[k]*gfc->ATH->adjust, 10.0/15.0);
+	  r = FAST_LOG10_X(m1 / m2, 10.0/15.0);
 	  return m1 * ((table1[i]-f)*r+f);
       }
 
