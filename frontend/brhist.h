@@ -25,10 +25,10 @@
 
 #include "lame.h"
 
-void brhist_init(lame_global_flags *gfp,int br_min, int br_max);
-void brhist_add_count(lame_global_flags *gfp,int i);
-void brhist_disp (lame_global_flags *gfp );
-void brhist_disp_total(lame_global_flags *gfp);
+int brhist_init(int br_min, int br_max);
+void brhist_disp(int frames);
+void brhist_disp_total(int frames);
+void brhist_update(int kbps);
 
 #endif /* LAME_BRHIST_H */
 

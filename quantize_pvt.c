@@ -21,7 +21,7 @@
 
 #include <assert.h>
 #include "util.h"
-#include "gtkanal.h"
+#include "analysis.h"
 #include "tables.h"
 #include "reservoir.h"
 #include "quantize_pvt.h"

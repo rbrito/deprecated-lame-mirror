@@ -25,7 +25,7 @@
 #include "quantize.h"
 #include "reservoir.h"
 #include "quantize_pvt.h"
-#include "gtkanal.h"
+#include "analysis.h"
 
 
 #if (defined(__GNUC__) && defined(__i386__))
@@ -638,8 +638,7 @@ VBR_noise_shaping
       cod_info->scalefac_scale = 1;
       cod_info->preflag=1;
     } else {
-      ERRORF("error vbrquantize.c...\n");
-      LAME_ERROR_EXIT();
+      assert(0);
     }
 
     

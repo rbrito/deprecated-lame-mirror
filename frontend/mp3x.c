@@ -1,6 +1,6 @@
 #include "lame.h"
 
-#include "gtkanal.h"
+#include "analysis.h"
 #include <gtk/gtk.h>
 
 

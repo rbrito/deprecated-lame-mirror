@@ -24,7 +24,7 @@
 #include "util.h"
 #include "get_audio.h"
 #include "portableio.h"
-#include "gtkanal.h"
+#include "analysis.h"
 #include "timestatus.h"
 
 #if (defined LIBSNDFILE || defined LAMESNDFILE)
@@ -215,10 +215,10 @@ int read_samples_ogg(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2]
     }
 
   if (gfp->num_channels != mp3input_data.stereo) {
-    ERRORF("Error: number of channels has changed in mp3 file - not supported. \n");
+    fprintf(stderr,"Error: number of channels has changed in mp3 file - not supported. \n");
   }
   if (gfp->in_samplerate != mp3input_data.samplerate) {
-    ERRORF("Error: samplerate has changed in mp3 file - not supported. \n");
+    fprintf(stderr,"Error: samplerate has changed in mp3 file - not supported. \n");
   }
 
 
@@ -244,10 +244,10 @@ int read_samples_mp3(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2]
   if (out==-1) return 0;
 
   if (gfp->num_channels != mp3input_data.stereo) {
-    ERRORF("Error: number of channels has changed in mp3 file - not supported. \n");
+    fprintf(stderr,"Error: number of channels has changed in mp3 file - not supported. \n");
   }
   if (gfp->in_samplerate != mp3input_data.samplerate) {
-    ERRORF("Error: samplerate has changed in mp3 file - not supported. \n");
+    fprintf(stderr,"Error: samplerate has changed in mp3 file - not supported. \n");
   }
   return out;
 
@@ -430,8 +430,8 @@ void CloseSndFile(sound_file_format input,FILE *musicin)
   if (input==sf_mp1 || input==sf_mp2 || input==sf_mp3) {
 #ifndef AMIGA_MPEGA
     if (fclose(musicin) != 0){
-      ERRORF("Could not close audio input file\n");
-      LAME_FATAL_EXIT();
+      fprintf(stderr,"Could not close audio input file\n");
+      exit(2);
     }
 #endif
   }else{
@@ -439,8 +439,8 @@ void CloseSndFile(sound_file_format input,FILE *musicin)
 	{
 		if (sf_close(gs_pSndFileIn) !=0)
 		{
-			ERRORF("Could not close sound file \n");
-			LAME_FATAL_EXIT();
+			fprintf(stderr,"Could not close sound file \n");
+			exit(2);
 		}
 	}
   }
@@ -460,18 +460,18 @@ FILE * OpenSndFile(lame_global_flags *gfp)
       gfp->input_format==sf_mp3) {
 #ifdef AMIGA_MPEGA
     if (-1==lame_decode_initfile(lpszFileName,&mp3input_data)) {
-      ERRORF("Error reading headers in mp3 input file %s.\n", lpszFileName);
-      LAME_ERROR_EXIT();
+      fprintf(stderr,"Error reading headers in mp3 input file %s.\n", lpszFileName);
+      exit(1);
     }
 #endif
 #ifdef HAVEMPGLIB
     if ((musicin = fopen(lpszFileName, "rb")) == NULL) {
-	  ERRORF("Could not find \"%s\".\n", lpszFileName);
-	  LAME_ERROR_EXIT();
+	  fprintf(stderr,"Could not find \"%s\".\n", lpszFileName);
+	  exit(1);
     }
     if (-1==lame_decode_initfile(musicin,&mp3input_data)) {
-	  ERRORF("Error reading headers in mp3 input file %s.\n", lpszFileName);
-	  LAME_ERROR_EXIT();
+	  fprintf(stderr,"Error reading headers in mp3 input file %s.\n", lpszFileName);
+	  exit(1);
 	}
 #endif
 
@@ -481,19 +481,19 @@ FILE * OpenSndFile(lame_global_flags *gfp)
   }else if (gfp->input_format==sf_ogg) {
 #ifdef HAVEVORBIS
     if ((musicin = fopen(lpszFileName, "rb")) == NULL) {
-	  ERRORF("Could not find \"%s\".\n", lpszFileName);
-	  LAME_ERROR_EXIT();
+	  fprintf(stderr,"Could not find \"%s\".\n", lpszFileName);
+	  exit(1);
     }
     if (-1==lame_decode_ogg_initfile(musicin,&mp3input_data)) {
-	  ERRORF("Error reading headers in mp3 input file %s.\n", lpszFileName);
-	  LAME_ERROR_EXIT();
+	  fprintf(stderr,"Error reading headers in mp3 input file %s.\n", lpszFileName);
+	  exit(1);
 	}
     gfp->num_channels=0;
     gfp->in_samplerate=0;
     gfp->num_samples=0;
 #else
-    ERRORF("LAME not compiled with libvorbis support.\n");
-    LAME_ERROR_EXIT();
+    fprintf(stderr,"LAME not compiled with libvorbis support.\n");
+    exit(1);
 #endif
 
 
@@ -520,8 +520,8 @@ FILE * OpenSndFile(lame_global_flags *gfp)
 	if (gs_pSndFileIn==NULL)
 	{
 	        sf_perror(gs_pSndFileIn);
-		ERRORF("Could not open sound file \"%s\".\n", lpszFileName);
-		LAME_ERROR_EXIT();
+		fprintf(stderr,"Could not open sound file \"%s\".\n", lpszFileName);
+		exit(1);
 	}
 
     if ((gs_wfInfo.format==SF_FORMAT_RAW_LE) ||
@@ -692,12 +692,12 @@ int read_samples_pcm(lame_global_flags *gfp,short sample_buffer[2304], int frame
 	sample_buffer[i]=((short int)temp[i]-127)*256;
       }
     }else{
-      ERRORF("Only 8 and 16 bit input files supported \n");
-      LAME_ERROR_EXIT();
+      fprintf(stderr,"Only 8 and 16 bit input files supported \n");
+      exit(1);
     }
     if (ferror(gfp->musicin)) {
-      ERRORF("Error reading input file\n");
-      LAME_ERROR_EXIT();
+      fprintf(stderr,"Error reading input file\n");
+      exit(1);
     }
 
 
@@ -708,8 +708,8 @@ int read_samples_pcm(lame_global_flags *gfp,short sample_buffer[2304], int frame
 	  NativeByteOrder = DetermineByteOrder();
 	  if ( NativeByteOrder == order_unknown )
 	    {
-	      ERRORF("byte order not determined\n" );
-	      LAME_ERROR_EXIT();
+	      fprintf(stderr,"byte order not determined\n" );
+	      exit(1);
 	    }
 	}
       /* intel=littleEndian */
@@ -843,33 +843,33 @@ static void
 aiff_check2(const char *file_name, IFF_AIFF *pcm_aiff_data)
 {
 	if (pcm_aiff_data->sampleType != IFF_ID_SSND) {
-	   ERRORF("Sound data is not PCM in \"%s\".\n", file_name);
-	   LAME_ERROR_EXIT();
+	   fprintf(stderr,"Sound data is not PCM in \"%s\".\n", file_name);
+	   exit(1);
 	}
 
 	if (pcm_aiff_data->sampleSize != sizeof(short) * BITS_IN_A_BYTE) {
-		ERRORF("Sound data is not %d bits in \"%s\".\n",
+		fprintf(stderr,"Sound data is not %d bits in \"%s\".\n",
 				(unsigned int) sizeof(short) * BITS_IN_A_BYTE, file_name);
-		LAME_ERROR_EXIT();
+		exit(1);
 	}
 
 	if (pcm_aiff_data->numChannels != 1 &&
 		pcm_aiff_data->numChannels != 2) {
-	   ERRORF("Sound data is not mono or stereo in \"%s\".\n",
+	   fprintf(stderr,"Sound data is not mono or stereo in \"%s\".\n",
 			   file_name);
-	   LAME_ERROR_EXIT();
+	   exit(1);
 	}
 
 	if (pcm_aiff_data->blkAlgn.blockSize != 0) {
-	   ERRORF("Block size is not %d bytes in \"%s\".\n",
+	   fprintf(stderr,"Block size is not %d bytes in \"%s\".\n",
 			   0, file_name);
-	   LAME_ERROR_EXIT();
+	   exit(1);
 	}
 
 	if (pcm_aiff_data->blkAlgn.offset != 0) {
-	   ERRORF("Block offset is not %d bytes in \"%s\".\n",
+	   fprintf(stderr,"Block offset is not %d bytes in \"%s\".\n",
 			   0, file_name);
-	   LAME_ERROR_EXIT();
+	   exit(1);
 	}
 }
 
@@ -1017,8 +1017,8 @@ void parse_file_header(lame_global_flags *gfp,FILE *sf)
 void CloseSndFile(sound_file_format input,FILE * musicin)
 {
   if (fclose(musicin) != 0){
-    ERRORF("Could not close audio input file\n");
-    LAME_FATAL_EXIT();
+    fprintf(stderr,"Could not close audio input file\n");
+    exit(2);
   }
 }
 
@@ -1050,8 +1050,8 @@ FILE * OpenSndFile(lame_global_flags *gfp)
     musicin = stdin;
   } else {
     if ((musicin = fopen(inPath, "rb")) == NULL) {
-      ERRORF("Could not find \"%s\".\n", inPath);
-      LAME_ERROR_EXIT();
+      fprintf(stderr,"Could not find \"%s\".\n", inPath);
+      exit(1);
     }
   }
 
@@ -1060,14 +1060,14 @@ FILE * OpenSndFile(lame_global_flags *gfp)
       gfp->input_format==sf_mp3) {
 #ifdef AMIGA_MPEGA
     if (-1==lame_decode_initfile(inPath,&mp3input_data)) {
-      ERRORF("Error reading headers in mp3 input file %s.\n", inPath);
-      LAME_ERROR_EXIT();
+      fprintf(stderr,"Error reading headers in mp3 input file %s.\n", inPath);
+      exit(1);
     }
 #endif
 #ifdef HAVEMPGLIB
     if (-1==lame_decode_initfile(musicin,&mp3input_data)) {
-      ERRORF("Error reading headers in mp3 input file %s.\n", inPath);
-      LAME_ERROR_EXIT();
+      fprintf(stderr,"Error reading headers in mp3 input file %s.\n", inPath);
+      exit(1);
     }
 #endif
     gfp->num_channels=mp3input_data.stereo;
@@ -1076,15 +1076,15 @@ FILE * OpenSndFile(lame_global_flags *gfp)
   }else if (gfp->input_format==sf_ogg) {
 #ifdef HAVEVORBIS
     if (-1==lame_decode_ogg_initfile(musicin,&mp3input_data)) {
-      ERRORF("Error reading headers in ogg input file %s.\n", inPath);
-      LAME_ERROR_EXIT();
+      fprintf(stderr,"Error reading headers in ogg input file %s.\n", inPath);
+      exit(1);
     }
     gfp->num_channels=mp3input_data.stereo;
     gfp->in_samplerate=mp3input_data.samplerate;
     gfp->num_samples=mp3input_data.nsamp;
 #else
-    ERRORF("LAME not compiled with libvorbis support.\n");
-    LAME_ERROR_EXIT();
+    fprintf(stderr,"LAME not compiled with libvorbis support.\n");
+    exit(1);
 #endif
  }else{
    if (gfp->input_format != sf_raw) {
@@ -1269,8 +1269,21 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
 
   return 0;
 }
+#endif
 
 
+/* currently disabled */
+#if 0
+#ifdef LIBSNDFILE
+# include "sndfile.h"   // prototype for sf_get_lib_version()
+void print_sndlib_version(FILE *fp)
+{
+    char  tmp [80];
+    sf_get_lib_version ( tmp, sizeof (tmp) );
+    fprintf ( fp, "Input handled by %s  (http://www.zip.com.au/~erikd/libsndfile/)\n", tmp );
+}
+#endif
+#endif
 
 
 /*
@@ -1292,4 +1305,3 @@ int lame_decode_fromfile(FILE *fd, short pcm_l[], short pcm_r[],mp3data_struct *
   }
   return ret;
 }
-#endif

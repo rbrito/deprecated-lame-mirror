@@ -1,9 +1,8 @@
-#ifdef PARENT_IS_SLASH
-#include "/gtkanal.h"
-#else
-#include "../gtkanal.h"
-#endif
+#include "analysis.h"
+
+#ifdef ANALYSIS
 extern plotting_data *mpg123_pinfo;
+#endif
 
 struct buf {
         unsigned char *pnt;

@@ -30,7 +30,7 @@
 #include "machine.h"
 #include "encoder.h"
 #include "lame.h"
-#include "gtkanal.h"
+#include "analysis.h"
 
 /***********************************************************************
 *
@@ -81,21 +81,6 @@
 #define         HAN_SIZE                512
 #define         CRC16_POLYNOMIAL        0x8005
 
-/* MPEG Header Definitions - Mode Values */
-
-#define         MPG_MD_STEREO           0
-#define         MPG_MD_JOINT_STEREO     1
-#define         MPG_MD_DUAL_CHANNEL     2
-#define         MPG_MD_MONO             3
-
-/* Mode Extention */
-
-#define         MPG_MD_LR_LR             0
-#define         MPG_MD_LR_I              1
-#define         MPG_MD_MS_LR             2
-#define         MPG_MD_MS_I              3
-
-
 /* "bit_stream.h" Definitions */
 #define         BUFFER_SIZE     LAME_MAXMP3BUFFER 
 
@@ -103,15 +88,6 @@
 #define         Max(A, B)       ((A) > (B) ? (A) : (B))
 
 
-
-/***********************************************************************
-*
-*  Global Variable External Declarations
-*
-***********************************************************************/
-
-extern const int      bitrate_table[2][16];
-extern const int      samplerate_table[2][3];
 
 
 
@@ -388,15 +364,8 @@ extern void lame_errorf(const char *, ...);
 #define DISPLAY_BITRATES1()	display_bitrates(stdout)
 #define DISPLAY_BITRATES2()	display_bitrates(stderr)
   /* need version.h */
-#define LAME_PRINT_VERSION1()	lame_print_version(stdout)
-#define LAME_PRINT_VERSION2()	lame_print_version(stderr)
 #endif
 
-
-#define LAME_EXIT(n)		exit(n)
-#define LAME_NORMAL_EXIT()	exit(0)
-#define LAME_ERROR_EXIT()	exit(1)
-#define LAME_FATAL_EXIT()	exit(2)
 
 int local_strcasecmp ( const char* s1, const char* s2 );
 

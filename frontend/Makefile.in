@@ -1,10 +1,13 @@
 #
-# Makefile.in for mpglib in LAME 3.xx
+# Makefile.in for LAME 3.xx
 #
 # processed by ./configure to produce Makefile
+#
+#
 # these variables are available on command line:
 #
 #   make UNAME=xxxxx ARCH=xxxxx   - specify a type of host
+#   make PGM=lame_exp             - specify a name of an executable file
 #
 #
 SHELL = @SHELL@
@@ -17,6 +20,7 @@ ARCH = $(shell uname -m)
 prefix = @prefix@
 exec_prefix = @exec_prefix@
 
+BINDIR = @bindir@
 LIBDIR = $(prefix)/lib
 INCLUDEDIR = $(prefix)/include
 CC     = @CC@
@@ -28,18 +32,82 @@ INSTALL_PROGRAM=@INSTALL_PROGRAM@
 INSTALL_DATA=@INSTALL_DATA@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
-SHARED_LIB = libmpglib.so
-SHARED_LIB_MAJOR = $(SHARED_LIB).@LIB_MAJOR_VERSION@
-SHARED_LIB_MINOR = $(SHARED_LIB_MAJOR).@LIB_MINOR_VERSION@
-
 # generic defaults. OS specific options go in versious sections below
-CPP_OPTS = @CPP_OPT@ -I ../include -I .. -I .
+PGM ?= lame
+CPP_OPTS = @CPP_OPT@ -I ../include -I ./ -I ../
 CC_OPTS = -O
 AR = ar
 RANLIB = @RANLIB@
 MAKEDEP = -M
 RM_F = rm -f
 LN_S = @LN_S@
+
+##########################################################################
+# -DHAVEMPGLIB compiles the mpglib *decoding* library into libmp3lame
+##########################################################################
+# handled by configure
+
+##########################################################################
+# -DUSE_LAYER_1/2 enables Layer1 or Layer2 *decoding* abilities 
+##########################################################################
+# hadled by configure
+
+
+##########################################################################
+#
+# ** handled by configure **
+# 
+# Define these in the OS specific sections below to compile in support
+# for the Ogg Vorbis audio format (both decoding and encoding)
+# http://www.xiph.org/ogg/vorbis/
+#
+# VORBIS = -DHAVEVORBIS  -I ../vorbis/include
+# VORBIS_LIB = -L ../vorbis/lib -lvorbis
+##########################################################################
+
+##########################################################################
+#
+# ** handled by configure **
+# 
+# Define these in the OS specific sections below to compile in code 
+# for the optional VBR bitrate histogram.  
+# Requires ncurses, but libtermcap also works.  
+# If you have any trouble, just dont define these
+#
+# BRHIST_SWITCH = -DBRHIST
+# LIBTERMCAP = -lncurses
+# LIBTERMCAP = -ltermcap
+#
+# or, to try and simulate TERMCAP (ANSI), use:
+# BRHIST_SWITCH = -DBRHIST -DNOTERMCAP
+#
+##########################################################################
+
+
+##########################################################################
+#
+# ** handled by configure **
+# 
+# Define these in the OS specific sections below to compile in code for:
+#
+# SNDLIB =                no file i/o 
+# SNDLIB = -DLAMESNDFILE  to use internal LAME soundfile routines 
+# SNDLIB = -DLIBSNDFILE   to use Erik de Castro Lopo's libsndfile 
+# http://www.zip.com.au/~erikd/libsndfile/
+#
+# Note: at present, libsndfile does not support input from stdin.  
+#
+# for example:
+#  SNDLIB = -DLIBSNDFILE
+#  LIBSNDFILE=-lsndfile 
+#  if libsndfile is in a custom location, try:
+#  LIBSNDFILE=-L $(LIBSNDHOME) -lsndfile  -I $(LIBSNDHOME)
+##########################################################################
+
+
+
+
+
 
 ##########################################################################
 # LINUX   
@@ -118,11 +186,11 @@ CC_OPTS += -w0 -pedantic -Wall
 CPP_OPTS += -D__DECALPHA__
 
 # standard Linux libm
-#LIBS	=	-lm
+#LDFLAGS	+=	-lm
 # optimized libffm (free fast math library)
-#LIBS	=	-lffm
+#LDFLAGS	+=	-lffm
 # Compaq's fast math library
-LIBS    =       -lcpml
+LDFLAGS    +=       -lcpml
 endif  #  gcc or ccc?
 endif  #  alpha 
 endif  #  linux
@@ -189,7 +257,6 @@ endif
 ##########################################################################
 ifeq ($(UNAME),BeOS)
    CC = $(BE_C_COMPILER)
-   LIBS =
 ifeq ($(ARCH),BePC)
    CC_OPTS = -O9 -fomit-frame-pointer -march=pentium \
    -mcpu=pentium -ffast-math -funroll-loops \
@@ -205,7 +272,6 @@ endif
 ###########################################################################
 ifeq ($(UNAME),Rhapsody)
    CC = cc
-   LIBS =
    CC_OPTS = -O9 -ffast-math -funroll-loops -fomit-frame-pointer
    MAKEDEP = -make 
 endif
@@ -221,7 +287,7 @@ ifeq ($(UNAME),OS/2)
    SHELL=sh	
    CC = gcc
    CC_OPTS = -O3
-   LIBS =
+   PGM ?= lame.exe
 
 # I use the following for slightly better performance on my Pentium-II
 # using pgcc-2.91.66:
@@ -230,7 +296,7 @@ ifeq ($(UNAME),OS/2)
 # Uncomment & inspect the 2 GTK lines to use MP3x GTK frame analyzer.
 # Properly installed XFree86/devlibs & GTK+ is a prerequisite.
 # The following works for me using Xfree86/OS2 3.3.5 and GTK+ 1.2.3:
-#   LIBS += -DHAVEGTK -IC:/XFree86/include/gtk12 -Zmt -D__ST_MT_ERRNO__ -IC:/XFree86/include/glib12 -IC:/XFree86/include
+#   LDFLAGS += -DHAVEGTK -IC:/XFree86/include/gtk12 -Zmt -D__ST_MT_ERRNO__ -IC:/XFree86/include/glib12 -IC:/XFree86/include
 #   CFLAGS += -LC:/XFree86/lib -Zmtd -Zsysv-signals -Zbin-files -lgtk12 -lgdk12 -lgmodule -lglib12 -lXext -lX11 -lshm -lbsd -lsocket -lm
 endif
 
@@ -239,6 +305,7 @@ endif
 ###########################################################################
 ifeq ($(UNAME),MSDOS)
   RM_F =
+  PGM ?= lame.exe
 endif
 
 ###########################################################################
@@ -257,7 +324,6 @@ ifeq ($(UNAME),AmigaOS)
 		-mmultiple -mcpu=603e
 		AR = ppc-amigaos-ar
 		RANLIB = ppc-amigaos-ranlib
-		LIBS =
 	endif
 	ifeq ($(ARCH),PPC)
 		CC = ppc-amigaos-gcc
@@ -265,7 +331,6 @@ ifeq ($(UNAME),AmigaOS)
 		-mmultiple -mcpu=603e
 		AR = ppc-amigaos-ar
 		RANLIB = ppc-amigaos-ranlib
-		LIBS =
 	endif
 endif
 
@@ -283,21 +348,28 @@ endif
 
 
 
-CC_SWITCHES = -DNDEBUG $(CC_OPTS) $(CFLAGS) $(LDFLAGS) -I../include
+# ** handled by configure **
+# 10/99 added -D__NO_MATH_INLINES to fix a bug in *all* versions of
+# gcc 2.8+ as of 10/99.  
 
-c_sources = \
- common.c \
- dct64_i386.c \
- decode_i386.c \
- layer1.c \
- layer2.c \
- layer3.c \
- tabinit.c \
- interface.c \
- main.c 
+CC_SWITCHES = -DNDEBUG $(CC_OPTS) $(CFLAGS)
+
+gtk_sources = gtkanal.c gpkplotting.c
+gtk_obj = $(gtk_sources:.c=.o)
+
+brhist_sources = brhist.c
+
+c_sources = @CONFIG_SOURCES@ \
+        lametime.c \
+	timestatus.c \
+	portableio.c \
+	ieeefloat.c \
+	vorbis_interface.c \
+	get_audio.c
 
 OBJ = $(c_sources:.c=.o)
 DEP = $(c_sources:.c=.d)
+
 
 
 
@@ -318,26 +390,46 @@ ASFLAGS=-f elf -i i386/
 	$(SHELL) -ec '$(CC) $(MAKEDEP)  $(CPP_OPTS) $(CC_SWITCHES)  $< | sed '\''s;$*.o;& $@;g'\'' > $@'
   endif
 
-all: mpglib.a
+all: $(PGM)
 
-mpglib.a: $(OBJ)
-	$(AR) cr mpglib.a $(OBJ)
+$(PGM):	main.o @GTK_OBJ@ ../libmp3lame.a $(LIBS) $(OBJ)
+	$(CC) -o $(PGM)  main.o  $(OBJ) $(LIBS) $(LDFLAGS) -L.. -lmp3lame
 
-install: mpglib.a
-	@mkdir -p $(LIBDIR)
-	$(INSTALL_PROGRAM) mpglib.a $(LIBDIR)
+mp3x:	mp3x.o @GTK_OBJ@ ../libmp3lame.a $(LIBS) $(OBJ)
+	$(CC) -o mp3x mp3x.o -L.. $(OBJ) $(LIBS) $(LDFLAGS) $(OBJ)
+
+mp3rtp:	rtp.o mp3rtp.o ../libmp3lame.a $(LIBS) $(OBJ)
+	$(CC) -o mp3rtp mp3rtp.o rtp.o -L..   $(OBJ) $(LIBS) $(LDFLAGS) $(OBJ)
+
+
+
+
+
+
+
+
+
+install_program: $(PGM)
+	$(INSTALL_PROGRAM) $(PGM) ${BINDIR}
+
+install: @INSTALL_TARGETS@
 
 uninstall:
-	$(RM_F) $(LIBDIR)/mpglib.a
+	$(RM_F) $(BINDIR)/$(PGM)
 
 clean:
   ifeq ($(UNAME),MSDOS)
 	-del *.o
 	-del *.d
 	-del *.a
+	-del $(PGM)
   else
-	-$(RM_F) $(OBJ) $(DEP) mpglib.a
+	-$(RM_F) $(gtk_obj) $(OBJ) $(DEP) $(PGM) main.o rtp.o mp3rtp mp3rtp.o \
+         mp3x.o mp3x main.d rtp.d mp3rtp.d
   endif
+
+bla:
+	echo "LIB=$(SHARED_LIB) MAJOR=$(SHARED_LIB_MAJOR) MINOR=$(SHARED_LIB_MINOR)"
 
 tags: TAGS
 
@@ -347,3 +439,20 @@ TAGS: ${c_sources}
 ifneq ($(MAKECMDGOALS),clean)
   -include $(DEP)
 endif
+
+
+#
+#  testcase.mp3 is a 2926 byte file.  The first number output by
+#  wc is the number of bytes which differ between new output
+#  and 'official' results.  
+#
+#  Because of compiler options and effects of roundoff, the 
+#  number of bytes which are different may not be zero, but
+#  should be at most 30.
+#
+test: $(PGM)
+	./$(PGM)  --nores -h ../testcase.wav ../testcase.new.mp3
+	cmp -l ../testcase.new.mp3 ../testcase.mp3 | wc
+
+testg: $(PGM)
+	./$(PGM) -g -h ../../test/castanets.wav

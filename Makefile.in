@@ -37,8 +37,8 @@ SHARED_LIB_MAJOR = $(SHARED_LIB).@LIB_MAJOR_VERSION@
 SHARED_LIB_MINOR = $(SHARED_LIB_MAJOR).@LIB_MINOR_VERSION@
 
 # generic defaults. OS specific options go in versious sections below
-PGM ?= lame
-CPP_OPTS = @CPP_OPT@ -I ./include
+PGM ?= ./frontend/lame
+CPP_OPTS = @CPP_OPT@ -I ./include -I .
 CC_OPTS = -O
 AR = ar
 RANLIB = @RANLIB@
@@ -305,7 +305,7 @@ ifeq ($(UNAME),OS/2)
    SHELL=sh	
    CC = gcc
    CC_OPTS = -O3
-   PGM ?= lame.exe
+   PGM ?= frontend/lame.exe
 
 # I use the following for slightly better performance on my Pentium-II
 # using pgcc-2.91.66:
@@ -323,7 +323,7 @@ endif
 ###########################################################################
 ifeq ($(UNAME),MSDOS)
   RM_F =
-  PGM ?= lame.exe
+  PGM ?= frontend/lame.exe
 endif
 
 ###########################################################################
@@ -372,11 +372,6 @@ endif
 
 CC_SWITCHES = -DNDEBUG $(CC_OPTS) $(CFLAGS)
 
-gtk_sources = gtkanal.c gpkplotting.c
-gtk_obj = $(gtk_sources:.c=.o)
-
-brhist_sources = brhist.c
-
 lib_sources = \
 	bitstream.c \
 	encoder.c \
@@ -384,7 +379,6 @@ lib_sources = \
         id3tag.c \
         lame.c \
         newmdct.c \
-        parse.c \
 	psymodel.c \
 	quantize.c \
 	quantize_pvt.c \
@@ -395,14 +389,6 @@ lib_sources = \
 	util.c \
         VbrTag.c \
         version.c
-
-c_sources = @CONFIG_SOURCES@ \
-        lametime.c \
-	timestatus.c \
-	portableio.c \
-	ieeefloat.c \
-	vorbis_interface.c \
-	get_audio.c
 
 lib_obj = $(lib_sources:.c=.o)
 
@@ -433,37 +419,39 @@ ASFLAGS=-f elf -i i386/
 	$(SHELL) -ec '$(CC) $(MAKEDEP)  $(CPP_OPTS) $(CC_SWITCHES)  $< | sed '\''s;$*.o;& $@;g'\'' > $@'
   endif
 
-all: $(PGM) lib $(LIBS)
+all: lib $(LIBS) $(PGM)
 
-$(PGM):	main.o @GTK_OBJ@ libmp3lame.a $(LIBS) $(OBJ)
-	$(CC) -o $(PGM)  main.o -L. -lmp3lame $(LIBS) $(LDFLAGS) $(OBJ)
-
-mp3x:	mp3x.o @GTK_OBJ@ libmp3lame.a $(LIBS) $(OBJ)
-	$(CC) -o mp3x mp3x.o $(OBJ) $(LIBS) $(LDFLAGS) $(OBJ)
-
-mp3rtp:	rtp.o mp3rtp.o libmp3lame.a $(LIBS) $(OBJ)
-	$(CC) -o mp3rtp mp3rtp.o rtp.o   $(OBJ) $(LIBS) $(LDFLAGS) $(OBJ)
+lib:  @LIB_TARGETS@
 
 libmp3lame.a:  $(lib_obj) Makefile
 	$(AR) cr libmp3lame.a  $(lib_obj)
 	$(RANLIB) libmp3lame.a
 
-mpglib/mpglib.a:
-	cd mpglib; $(MAKE)
-
 #shared library, probably GNU specific?
-libmp3lame.so:  $(lib_obj) Makefile
+libmp3lame.so:  $(LIBS) $(lib_obj) Makefile
 	$(CC) -shared -Wl,-soname,$(SHARED_LIB_MAJOR) -o $(SHARED_LIB_MINOR) $(LIBS) $(LDFLAGS) $(lib_obj)
 	@$(RM_F) $(SHARED_LIB_MAJOR)
 	$(LN_S) $(SHARED_LIB_MINOR) $(SHARED_LIB_MAJOR)
 	@$(RM_F) $(SHARED_LIB)
 	$(LN_S) $(SHARED_LIB_MAJOR) $(SHARED_LIB)
 
-lib:  @LIB_TARGETS@
+$(PGM): lib
+	cd frontend; make
+
+frontend/mp3x:
+	cd frontend; make
+
+frontend/mp3rtp:
+	cd frontend; make
+
+mpglib/mpglib.a:
+	cd mpglib; $(MAKE)
 
 install_header:
 	@mkdir -p $(INCLUDEDIR)
 	$(INSTALL_PROGRAM) include/lame.h $(INCLUDEDIR)
+	$(INSTALL_PROGRAM) include/id3tag.h $(INCLUDEDIR)
+	$(INSTALL_PROGRAM) include/analysis.h $(INCLUDEDIR)
 
 install_static_lib: libmp3lame.a install_header
 	@mkdir -p $(LIBDIR)
@@ -477,13 +465,9 @@ install_shared_lib: libmp3lame.so install_header
 	@$(RM_F) $(LIBDIR)/$(SHARED_LIB)
 	(cd $(LIBDIR) && $(LN_S) $(SHARED_LIB_MAJOR) $(SHARED_LIB))
 
-install_program: $(PGM)
-	$(INSTALL_PROGRAM) $(PGM) ${BINDIR}
-
 install: @INSTALL_TARGETS@
 
 uninstall:
-	$(RM_F) $(BINDIR)/$(PGM)
 	$(RM_F) $(INCLUDEDIR)/lame.h
 	$(RM_F) $(LIBDIR)/libmp3lame.a
 	$(RM_F) $(LIBDIR)/$(SHARED_LIB)
@@ -497,11 +481,15 @@ clean:
 	-del *.a
 	-del mpglib\*.o
 	-del mpglib\*.d
-	-del $(PGM)
+	-del frontend\*.o
+	-del frontend\*.d
+	-del frontend\*.exe
   else
-	-$(RM_F) $(gtk_obj) $(OBJ) $(DEP) $(PGM) main.o rtp.o mp3rtp mp3rtp.o \
-         mp3x.o mp3x libmp3lame.a $(lib_obj) main.d rtp.d mp3rtp.d \
+	-$(RM_F) $(gtk_obj) $(OBJ) $(DEP) \
+         libmp3lame.a $(lib_obj) \
          $(SHARED_LIB) $(SHARED_LIB_MAJOR) $(SHARED_LIB_MINOR)
+	cd mpglib; make clean
+	cd frontend; make clean
   endif
 
 bla:

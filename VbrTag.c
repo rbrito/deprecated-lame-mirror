@@ -28,6 +28,7 @@
 #include "VbrTag.h"
 #include "version.h"
 #include "bitstream.h"
+#include	<assert.h>
 
 
 #ifdef _DEBUG
@@ -324,7 +325,10 @@ int InitVbrTag(lame_global_flags *gfp)
 	  ((gfp->version+1)*72000*bitrate) / gfp->out_samplerate;
 	tot = (gfp->nZeroStreamSize+VBRHEADERSIZE);
 	tot += 20;  /* extra 20 bytes for LAME & version string */
-
+#if 1
+	assert(gfp->TotalFrameSize >= tot );
+	assert(gfp->TotalFrameSize <= MAXFRAMESIZE );
+#else
 	if (gfp->TotalFrameSize < tot ) {
 	  ERRORF("Xing VBR header problem 1...use -t\n");
 	  LAME_ERROR_EXIT();
@@ -333,6 +337,7 @@ int InitVbrTag(lame_global_flags *gfp)
 	  ERRORF("Xing VBR header problem 2...use -t\n");
 	  LAME_ERROR_EXIT();
 	}
+#endif
 	}
 
 	{ int i;

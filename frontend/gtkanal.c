@@ -24,7 +24,7 @@
 #include <gtk/gtk.h>
 #include "gpkplotting.h"
 #include "util.h"
-#include "gtkanal.h"
+#include "analysis.h"
 #include "version.h"
 #include "lame.h"
 #include "tables.h"
@@ -1507,7 +1507,7 @@ int gtkcontrol(lame_global_flags *gfp2)
     idle_count=0;                 /* pause & plot when idle_count=idle_count_max */
 
     gtk_main ();
-    if (!mp3done) LAME_FATAL_EXIT();
+    assert(mp3done);
     return(0);
 }
 

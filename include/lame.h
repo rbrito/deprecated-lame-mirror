@@ -52,6 +52,21 @@ typedef enum vbr_mode_e {
 } vbr_mode;
 
 
+/* MPEG Header Definitions - Mode Values */
+
+#define         MPG_MD_STEREO           0
+#define         MPG_MD_JOINT_STEREO     1
+#define         MPG_MD_DUAL_CHANNEL     2
+#define         MPG_MD_MONO             3
+
+/* Mode Extention */
+
+#define         MPG_MD_LR_LR             0
+#define         MPG_MD_LR_I              1
+#define         MPG_MD_MS_LR             2
+#define         MPG_MD_MS_I              3
+
+
 struct id3tag_spec
 {
     /* private data members */
@@ -64,21 +79,6 @@ struct id3tag_spec
     int track;
     int genre;
 };
-
-#ifndef BRHIST_BARMAX
-	# define  BRHIST_BARMAX 50
-#endif
-
-typedef struct BRHST_TAG
-{
-  long count[15];
-  long count_max;
-  int  vbrmin;
-  int  vbrmax;
-  char kbps[15][4];
-  char bar[BRHIST_BARMAX + 1];
-} BRHST, *PBRHST;
-
 
 /***********************************************************************
 *
@@ -182,7 +182,6 @@ typedef struct  {
   /* internal variables, do not set... */
   /* provided because they may be of use to some applications   */
   /************************************************************************/
-  BRHST brhist;					  /* histogramming data */
 
   int version;                    /* 0=MPEG2  1=MPEG1 */
   int frameNum;                   /* frame counter */
@@ -232,24 +231,12 @@ int lame_init(lame_global_flags *);
  * command line argument parsing & option setting.  Only supported
  * if libmp3lame compiled with LAMEPARSE defined 
  *********************************************************************/
-/* OPTIONAL: call this to print an error with a brief command line usage guide and quit 
- * only supported if libmp3lame compiled with LAMEPARSE defined.  
- */
-void lame_usage(lame_global_flags *, const char *);
-
-/* OPTIONAL: call this to print a command line interface usage guide and quit   */
-void lame_help(lame_global_flags *, const char *);
+void lame_print_license(lame_global_flags* gfp, const char* ProgramName );
 
 /* OPTIONAL: get the version number, in a string. of the form:  "3.63 (beta)" or 
    just "3.63".  Max allows length is 20 characters  */
 void lame_version(lame_global_flags *, char *);
-
-
-/* OPTIONAL: set internal options via command line argument parsing 
- * You can skip this call if you like the default values, or if
- * set the encoder parameters your self 
- */
-void lame_parse_args(lame_global_flags *, int argc, char **argv);
+void lame_print_version ( FILE* fp );
 
 
 
@@ -397,6 +384,16 @@ int lame_decode1(char *mp3buf,int len,short pcm_l[],short pcm_r[]);
 /* same as lame_decode1, but returns at most one frame and mp3 header data */
 int lame_decode1_headers(char *mp3buf,int len,short pcm_l[],short pcm_r[],
 mp3data_struct *mp3data);
+
+
+/***********************************************************************
+*
+*  Global Variable External Declarations
+*
+***********************************************************************/
+
+extern const int      bitrate_table[2][16];
+extern const int      samplerate_table[2][3];
 
 
 

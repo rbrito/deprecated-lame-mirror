@@ -1114,6 +1114,7 @@ int L3psycho_anal( lame_global_flags *gfp,
   for (chn=0; chn<gfc->stereo; chn++) {
     if ( uselongblock[chn])
       {				/* no attack : use long blocks */
+	assert( gfc->blocktype_old[chn] != START_TYPE );
 	switch( gfc->blocktype_old[chn] ) 
 	  {
 	  case NORM_TYPE:
@@ -1123,10 +1124,6 @@ int L3psycho_anal( lame_global_flags *gfp,
 	  case SHORT_TYPE:
 	    blocktype[chn] = STOP_TYPE; 
 	    break;
-	  case START_TYPE:
-	    ERRORF( "Error in block selecting\n" );
-	    LAME_ERROR_EXIT();
-	    break; /* problem */
 	  }
       } else   {
 	/* attack : use short blocks */

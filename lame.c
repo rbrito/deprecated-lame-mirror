@@ -21,24 +21,32 @@
  */
 
 #include <assert.h>
-#include "gtkanal.h"
+#include "analysis.h"
 #include "lame.h"
 #include "util.h"
-#include "timestatus.h"
 #include "bitstream.h"
 #include "version.h"
 #include "VbrTag.h"
 #include "id3tag.h"
 #include "tables.h"
-#ifdef BRHIST
-#include "brhist.h"
-#endif
-#include "get_audio.h"
 #include "quantize_pvt.h"
 
 #ifdef __riscos__
 #include "asmstuff.h"
 #endif
+
+/************************************************************************
+*
+* license
+*
+* PURPOSE:  Writes version and license to the file specified by #stdout#
+*
+************************************************************************/
+
+#define LAME_PRINT_VERSION1()	
+#define LAME_PRINT_VERSION2()	lame_print_version(stderr)
+
+
 
 /* lame_init_params_ppflt_lowpass */
 
@@ -209,16 +217,6 @@ int lame_init_params(lame_global_flags *gfp)
   if (gfp->gtkflag) 
     gfp->silent=1;
 
-  if (gfp->silent) {
-#ifdef BRHIST
-   gfp->brhist_disp=0;  /* turn of VBR historgram */
-#endif
-  }
-  if (gfp->VBR==vbr_off) {
-#ifdef BRHIST
-    gfp->brhist_disp=0;  /* turn of VBR historgram */
-#endif
-  }
   if (gfp->VBR!=vbr_off) {
     gfp->free_format=0;  /* VBR cant mix with free format */
   }
@@ -459,6 +457,10 @@ int lame_init_params(lame_global_flags *gfp)
 	return -1;
       }
     }
+
+    gfp->VBR_min_bitrate_kbps = bitrate_table[gfp->version][gfc->VBR_min_bitrate];
+    gfp->VBR_max_bitrate_kbps = bitrate_table[gfp->version][gfc->VBR_max_bitrate];
+
     gfp->VBR_mean_bitrate_kbps = Min(bitrate_table[gfp->version][gfc->VBR_max_bitrate],gfp->VBR_mean_bitrate_kbps);
     gfp->VBR_mean_bitrate_kbps = Max(bitrate_table[gfp->version][gfc->VBR_min_bitrate],gfp->VBR_mean_bitrate_kbps);
     
@@ -663,19 +665,6 @@ int lame_init_params(lame_global_flags *gfp)
   /* Write initial VBR Header to bitstream */
   if (gfp->bWriteVbrTag)
       InitVbrTag(gfp);
-
-#ifdef BRHIST
-  if (gfp -> brhist_disp)
-    brhist_init(gfp,gfc->VBR_min_bitrate,gfc->VBR_max_bitrate);
-#endif
-
-#ifdef HAVEVORBIS
-  if (gfp->ogg) {
-    lame_encode_ogg_init(gfp);
-    gfc->filter_type = -1;   /* vorbis claims not to need filters */
-    gfp->VBR=vbr_off;            /* ignore lame's various VBR modes */
-  }
-#endif
 
   if ( gfp -> update_interval < 0. )
       gfp -> update_interval = 2.;
@@ -1076,18 +1065,6 @@ int    lame_encode_finish (
   mp3buffer_size_remaining = mp3buffer_size - mp3count;
 
   gfp->frameNum--;
-  if (!gfp->silent) {
-      timestatus(gfp->out_samplerate,gfp->frameNum,gfp->totalframes,gfp->framesize);
-
-#ifdef BRHIST
-      if (gfp->brhist_disp)
-	{
-	  brhist_disp(gfp);
-	  brhist_disp_total(gfp);
-	}
-#endif
-      timestatus_finish();
-  }
 
 
   /* if user specifed buffer size = 0, dont check size */

@@ -21,23 +21,10 @@
 
 #include "version.h"    // macros of version numbers
 
-#ifdef LIBSNDFILE
-# include "sndfile.h"   // prototype for sf_get_lib_version()
-#endif
-
 void  lame_print_version ( FILE* fp )
 {
-#ifdef LIBSNDFILE
-    char  tmp [80];
-#endif
-    
     fprintf ( fp, "LAME version %s    (http://www.mp3dev.org) \n", get_lame_version() );
  // fprintf ( fp, "GPSYCHO: GPL psycho-acoustic and noise shaping model version %s. \n", get_psy_version () );
-  
-#ifdef LIBSNDFILE
-    sf_get_lib_version ( tmp, sizeof (tmp) );
-    fprintf ( fp, "Input handled by %s  (http://www.zip.com.au/~erikd/libsndfile/)\n", tmp );
-#endif
 }
 
 const char*  get_lame_version ( void )

@@ -8,11 +8,7 @@
 #include <stdlib.h>
 #include "common.h"
 #include "huffman.h"
-#ifdef PARENT_IS_SLASH
-#include "/gtkanal.h"
-#else
-#include "../gtkanal.h"
-#endif
+#include "analysis.h"
 
 
 extern struct mpstr *gmp;
@@ -347,9 +343,11 @@ static void III_get_side_info_1(struct III_sideinfo *si,int stereo,
        {
 	 unsigned int qss = getbits_fast(8);
 	 gr_infos->pow2gain = gainpow2+256 - qss + powdiff;
+#ifdef ANALYSIS
 	 if (mpg123_pinfo != NULL) {
 	   mpg123_pinfo->qss[gr][ch]=qss;
 	 }
+#endif
        }
        if(ms_stereo)
          gr_infos->pow2gain += 2;
@@ -372,10 +370,11 @@ static void III_get_side_info_1(struct III_sideinfo *si,int stereo,
          for(i=0;i<3;i++) {
 	   unsigned int sbg = (getbits_fast(3)<<3);
            gr_infos->full_gain[i] = gr_infos->pow2gain + sbg;
+#ifdef ANALYSIS
 	   if (mpg123_pinfo != NULL)
 	     mpg123_pinfo->sub_gain[gr][ch][i]=sbg/8;
+#endif
 	 }
-
 
          if(gr_infos->block_type == 0) {
            fprintf(stderr,"Blocktype == 0 and window-switching == 1 not allowed.\n");
@@ -434,9 +433,11 @@ static void III_get_side_info_2(struct III_sideinfo *si,int stereo,
        }
        qss=getbits_fast(8);
        gr_infos->pow2gain = gainpow2+256 - qss + powdiff;
+#ifdef ANALYSIS
        if (mpg123_pinfo!=NULL) {
 	   mpg123_pinfo->qss[0][ch]=qss;
        }
+#endif
 
 
        if(ms_stereo)
@@ -458,8 +459,10 @@ static void III_get_side_info_2(struct III_sideinfo *si,int stereo,
          for(i=0;i<3;i++) {
 	   unsigned int sbg = (getbits_fast(3)<<3);
            gr_infos->full_gain[i] = gr_infos->pow2gain + sbg;
+#ifdef ANALYSIS
 	   if (mpg123_pinfo!=NULL)
 	     mpg123_pinfo->sub_gain[0][ch][i]=sbg/8;
+#endif
 
 	 }
 
@@ -1613,12 +1616,14 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
 #endif
       }
 
+#ifdef ANALYSIS
       if (mpg123_pinfo!=NULL) {
 	int i;
 	mpg123_pinfo->sfbits[gr][0] = part2bits;
 	for (i=0; i<39; i++) 
 	  mpg123_pinfo->sfb_s[gr][0][i]=scalefacs[0][i];
       }
+#endif
 
       if(III_dequantize_sample(hybridIn[0], scalefacs[0],gr_infos,sfreq,part2bits))
         return clip;
@@ -1635,12 +1640,14 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
 	fprintf(stderr,"Not supported\n");
 #endif
       }
+#ifdef ANALYSIS
       if (mpg123_pinfo!=NULL) {
 	int i;
 	mpg123_pinfo->sfbits[gr][1] = part2bits;
 	for (i=0; i<39; i++) 
 	  mpg123_pinfo->sfb_s[gr][1][i]=scalefacs[1][i];
       }
+#endif
 
       if(III_dequantize_sample(hybridIn[1],scalefacs[1],gr_infos,sfreq,part2bits))
           return clip;
@@ -1686,6 +1693,7 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
       }
     }
 
+#ifdef ANALYSIS
     if (mpg123_pinfo!=NULL) {
     extern int pretab[21];
     int i,sb;
@@ -1751,6 +1759,7 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
 	  mpg123_pinfo->mpg123xr[gr][ch][j]=hybridIn[ch][sb][ss];
     }
   }
+#endif
 
 
     for(ch=0;ch<stereo1;ch++) {
