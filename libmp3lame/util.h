@@ -357,7 +357,7 @@ typedef struct  {
 *  Global Function Prototype Declarations
 *
 ***********************************************************************/
-void           freegfc(context *gfc);
+void                  freegfc(lame_internal_flags *gfc);
 extern int            BitrateIndex(int, int,int);
 extern int            FindNearestBitrate(int,int,int);
 extern int            map2MP3Frequency(int freq);
@@ -369,10 +369,10 @@ extern void freorder(int scalefac_band[],FLOAT8 ix_orig[576]);
 
 
 extern void 
-getframebits(context *gfc, int *bitsPerFrame, int *mean_bits);
+getframebits(lame_internal_flags *gfc, int *bitsPerFrame, int *mean_bits);
 
 int  fill_buffer_resample (
-        context * const  gfc,
+        lame_internal_flags *gfc,
         sample_t* const  outbuf,
         const int        desired_len,
         const sample_t*  inbuf,
@@ -386,7 +386,7 @@ extern int has_MMX   (void);
 extern int has_SIMD  (void);
 
 
-extern void updateStats (context *gfc);
+extern void updateStats (lame_internal_flags *gfc);
 
 
 
@@ -424,6 +424,6 @@ extern scalar_t   scalar20;
 extern scalar_t   scalar64;
 extern scalarn_t  scalar;
 
-void init_scalar_functions ( const context * gfc );
+void init_scalar_functions ( lame_internal_flags *gfc );
 
 #endif /* LAME_UTIL_H */

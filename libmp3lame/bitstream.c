@@ -19,12 +19,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/* $Id$ */
-
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-
 #include <stdlib.h>
 #include <assert.h>
 #include <stdio.h>
@@ -53,7 +50,7 @@ static int hoge, hogege;
 
 
 
-void putheader_bits(context * const gfc, int w_ptr)
+void putheader_bits(lame_internal_flags *gfc,int w_ptr)
 {
     Bit_stream_struc *bs;
     bs = &gfc->bs;
@@ -73,8 +70,9 @@ void putheader_bits(context * const gfc, int w_ptr)
 
 /*write j bits into the bit stream */
 static INLINE void
-putbits(context * const gfc, int val, int j)
+putbits2(lame_global_flags *gfp, int val, int j)
 {
+    lame_internal_flags *gfc=gfp->internal_flags;
     Bit_stream_struc *bs;
     bs = &gfc->bs;
 
@@ -108,8 +106,9 @@ putbits(context * const gfc, int val, int j)
 
 /*write j bits into the bit stream, ignoreing frame headers */
 static INLINE void
-putbits_noheaders(context * const gfc, int val, int j)
+putbits_noheaders(lame_global_flags *gfp, int val, int j)
 {
+    lame_internal_flags *gfc=gfp->internal_flags;
     Bit_stream_struc *bs;
     bs = &gfc->bs;
 
@@ -144,224 +143,331 @@ putbits_noheaders(context * const gfc, int val, int j)
   the ancillary data...
 */
 
-static INLINE void 
-drain_into_ancillary ( context * const gfc, int remainingBits )
+static INLINE void
+drain_into_ancillary(lame_global_flags *gfp,int remainingBits)
 {
-    char                  buffer [80];
-    char*                 p;
-    
-    assert (remainingBits >= 0);
-    
-    sprintf ( p = buffer, "LAME%s", get_lame_short_version () );
+    lame_internal_flags *gfc=gfp->internal_flags;
+    int i,bits;
+    assert(remainingBits >= 0);
+#ifdef DEBUG
+    DEBUGF("remain %d\n",remainingBits);
+    hoge += remainingBits;
+    hogege += remainingBits;
+#endif
 
-    for (; *p != '\0'  &&  remainingBits >= 8; p++, remainingBits -= 8 )
-        putbits ( gfc, *p, 8 );
-
-    for (; remainingBits >= 1; remainingBits -= 1 ) {
-        putbits ( gfc, gfc->ancillary_flag, 1 );
-        gfc->ancillary_flag ^= 1;
+    if (remainingBits >= 8) {
+      putbits2(gfp,0x4c,8);
+      remainingBits -= 8;
     }
-
-    assert (remainingBits == 0);
-}
-
-
-static void  
-writeheader ( context * const gfc, const unsigned value, size_t bitcount )
-{
-    static unsigned  tab [2] = { 0, CRC16_POLYNOMIAL };
-    int              i;
-    int              k;
-
-    assert (bitcount < MAX_LENGTH-2  &&  value < (1lu << bitcount) );
-
-    // Update CRC value
-    for ( i = bitcount; i-- > 0; )
-        gfc->crcvalue = (gfc->crcvalue << 1) ^ tab [ ((gfc->crcvalue >> 15) ^ (value >> i)) & 1 ];
+    if (remainingBits >= 8) {
+      putbits2(gfp,0x41,8);
+      remainingBits -= 8;
+    }
+    if (remainingBits >= 8) {
+      putbits2(gfp,0x4d,8);
+      remainingBits -= 8;
+    }
+    if (remainingBits >= 8) {
+      putbits2(gfp,0x45,8);
+      remainingBits -= 8;
+    }
       
-    // Poke value into bitbuffer
-    i = gfc->header[gfc->h_ptr].ptr;
-    while ( 1 ) {
-        if (bitcount < 8 - (i & 7)) {
-	    gfc->header [gfc->h_ptr].buf [i >> 3] |= value << (8 - (i & 7) - bitcount);
-	    i += bitcount;
-	    break;
-	} else {
-	    bitcount -= (k = 8 - (i & 7));
-	    gfc->header [gfc->h_ptr].buf [i >> 3] |= (value >> bitcount) << (8 - (i & 7) - k);
-	    i += k;
+    if (remainingBits >= 32) {
+      const char * version;
+      version = get_lame_version();
+      if (remainingBits >= 32) 
+	for (i=0; i<(int)strlen(version) && remainingBits >=8 ; ++i) {
+	  remainingBits -= 8;
+	  putbits2(gfp,version[i],8);
 	}
     }
-    gfc->header[gfc->h_ptr].ptr = i;
+
+    /* drain the rest 16 bits at a time */
+    bits = remainingBits & (16 - 1);
+    for (i=0; i<bits; ++i) {
+      putbits2(gfp,gfc->ancillary_flag,1);
+      gfc->ancillary_flag = 1-gfc->ancillary_flag;
+    }
+
+    remainingBits /= 16;
+    for (; remainingBits > 0; remainingBits--) {
+      if (gfc->ancillary_flag)
+	putbits2(gfp,0xAAAA, 16);
+      else
+	putbits2(gfp,0x5555, 16);
+    }
 }
 
-static void  writedummy ( context * const gfc, size_t bitcount )
+/*write N bits into the header */
+static INLINE void
+writeheader(lame_internal_flags *gfc,int val, int j)
 {
-	gfc->header[gfc->h_ptr].ptr += bitcount;   /* dummy bits without updating CRC */
+    int ptr = gfc->header[gfc->h_ptr].ptr;
+
+    while (j > 0) {
+	int k = Min(j, 8 - (ptr & 7));
+	j -= k;
+        assert (j < MAX_LENGTH); /* >> 32  too large for 32 bit machines */
+	gfc->header[gfc->h_ptr].buf[ptr >> 3]
+	    |= ((val >> j)) << (8 - (ptr & 7) - k);
+	ptr += k;
+    }
+    gfc->header[gfc->h_ptr].ptr = ptr;
 }
 
+#if 1  /* Set to 0 for new CRC function, but speed improvement is around 0.2% */
+
+/* (jo) this wrapper function for BF_addEntry() updates also the crc */
+static void
+CRC_writeheader(lame_internal_flags *gfc, int value, int length,int *crc)
+{
+   int bit = 1 << length;
+
+   assert(length < MAX_LENGTH-2);
+   
+   while((bit >>= 1)){
+      *crc <<= 1;
+      if (!(*crc & 0x10000) ^ !(value & bit))
+	*crc ^= CRC16_POLYNOMIAL;
+   }
+   *crc &= 0xffff;
+   writeheader(gfc,value, length);
+}
+
+void main_CRC_init (void) {}
+
+#else
+
+static unsigned short CRC_table [256];
+
+static void CRC_init ( unsigned short polynom )
+{
+    int            i;
+    int            j;
+    unsigned long  val;
+    
+    i = 0;
+    do {
+        val = 0;
+        j = 0x80;
+        do {
+            val <<= 1;
+            if ( !(val & 0x10000) ^ !(i & j) )
+		val ^= polynom;
+   	} while ( j >>= 1 );
+   	CRC_table [i] = val;
+    } while ( ++i < 0x100 );
+}
+
+static void CRC_writeheader ( lame_internal_flags*  gfc,
+                              unsigned int          val, 
+                              unsigned              len,
+                              unsigned int*         crc )
+{
+    unsigned long c = *crc;
+    
+    assert ( len <= 16 );
+    assert ( val < (1 << len) );
+    assert ( c < 0x10000 );
+    
+    if ( len > 8 ) {
+        c <<= len-8;
+        c  ^= CRC_table [ (c>>16) ^ (val >> 8) ];
+        c  &= 0xFFFF;
+        c <<= 8;
+        c  ^= CRC_table [ (c>>16) ^ (val & 0xFF) ];
+    } else {
+        c <<= len;
+        c  ^= CRC_table [ (c>>16) ^ val ];
+    }
+    
+    *crc = c & 0xFFFF;
+    writeheader ( gfc, val, len );
+}
+
+void main_CRC_init ( void )
+{
+    CRC_init ( CRC16_POLYNOMIAL );
+}
+
+#endif
 
 static INLINE void
-encodeSideInfo2(context * const gfc, int bitsPerFrame)
+encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 {
+    lame_internal_flags *gfc=gfp->internal_flags;
     III_side_info_t *l3_side;
-    int gr, ch, band, old;
+    int gr, ch;
+    int crc;
     
     l3_side = &gfc->l3_side;
     gfc->header[gfc->h_ptr].ptr = 0;
     memset(gfc->header[gfc->h_ptr].buf, 0, gfc->sideinfo_len);
-    
-    writeheader ( gfc, gfc->gfp->out_samplerate >= 16000 ? 0xfff : 0xffe, 12 );
-    writeheader ( gfc, gfc->gfp->version          , 1 );
-    writeheader ( gfc, 4 - 3                 , 2 );
-    writeheader ( gfc, !gfc->gfp->error_protection, 1 );
+    crc = 0xffff; /* (jo) init crc16 for error_protection */
+    if (gfp->out_samplerate < 16000) 
+      writeheader(gfc,0xffe,                12);
+    else
+      writeheader(gfc,0xfff,                12);
+    writeheader(gfc,(gfp->version),            1);
+    writeheader(gfc,4 - 3,                 2);
+    writeheader(gfc,(!gfp->error_protection),  1);
+    /* (jo) from now on call the CRC_writeheader() wrapper to update crc */
+    CRC_writeheader(gfc,(gfc->bitrate_index),      4,&crc);
+    CRC_writeheader(gfc,(gfc->samplerate_index),   2,&crc);
+    CRC_writeheader(gfc,(gfc->padding),            1,&crc);
+    CRC_writeheader(gfc,(gfp->extension),          1,&crc);
+    CRC_writeheader(gfc,(gfp->mode),               2,&crc);
+    CRC_writeheader(gfc,(gfc->mode_ext),           2,&crc);
+    CRC_writeheader(gfc,(gfp->copyright),          1,&crc);
+    CRC_writeheader(gfc,(gfp->original),           1,&crc);
+    CRC_writeheader(gfc,(gfp->emphasis),           2,&crc);
+    if (gfp->error_protection) {
+	writeheader(gfc,0, 16); /* dummy */
+    }
 
-    /* Reset CRC generator */
-    gfc->crcvalue = 0xFFFF;
-    writeheader ( gfc, gfc->bitrate_index    , 4 );
-    writeheader ( gfc, gfc->samplerate_index , 2 );
-    writeheader ( gfc, gfc->padding          , 1 );
-    writeheader ( gfc, gfc->gfp->extension        , 1 );
-    writeheader ( gfc, gfc->gfp->mode             , 2 );
-    writeheader ( gfc, gfc->mode_ext         , 2 );
-    writeheader ( gfc, gfc->gfp->copyright        , 1 );
-    writeheader ( gfc, gfc->gfp->original         , 1 );
-    writeheader ( gfc, gfc->gfp->emphasis         , 2 );
-    if (gfc->gfp->error_protection)
-        writedummy ( gfc, 16 );
-
-    if ( gfc->gfp->version == 1 ) { /* MPEG1 */
-    
+    if (gfp->version == 1) {
+	/* MPEG1 */
 	assert(l3_side->main_data_begin >= 0);
-	writeheader ( gfc, l3_side->main_data_begin         , 9 );
-	writeheader ( gfc, l3_side->private_bits            , gfc->stereo == 2  ?  3  :  5 );
+	CRC_writeheader(gfc,(l3_side->main_data_begin), 9,&crc);
+
+	if (gfc->stereo == 2)
+	    CRC_writeheader(gfc,l3_side->private_bits, 3,&crc);
+	else
+	    CRC_writeheader(gfc,l3_side->private_bits, 5,&crc);
 
 	for (ch = 0; ch < gfc->stereo; ch++) {
+	    int band;
 	    for (band = 0; band < 4; band++) {
-		writeheader ( gfc, l3_side->scfsi[ch][band] , 1 );
+		CRC_writeheader(gfc,l3_side->scfsi[ch][band], 1,&crc);
 	    }
 	}
 
 	for (gr = 0; gr < 2; gr++) {
 	    for (ch = 0; ch < gfc->stereo; ch++) {
 		gr_info *gi = &l3_side->gr[gr].ch[ch].tt;
-		writeheader ( gfc, gi->part2_3_length       ,12 );
-		writeheader ( gfc, gi->big_values / 2       , 9 );
-		writeheader ( gfc, gi->global_gain          , 8 );
-		writeheader ( gfc, gi->scalefac_compress    , 4 );
-		writeheader ( gfc, gi->window_switching_flag, 1 );
+		CRC_writeheader(gfc,gi->part2_3_length,       12,&crc);
+		CRC_writeheader(gfc,gi->big_values / 2,        9,&crc);
+		CRC_writeheader(gfc,gi->global_gain,           8,&crc);
+		CRC_writeheader(gfc,gi->scalefac_compress,     4,&crc);
+		CRC_writeheader(gfc,gi->window_switching_flag, 1,&crc);
 
 		if (gi->window_switching_flag) {
-		    writeheader ( gfc, gi->block_type       , 2 );
-		    writeheader ( gfc, gi->mixed_block_flag , 1 );
+		    CRC_writeheader(gfc,gi->block_type,       2,&crc);
+		    CRC_writeheader(gfc,gi->mixed_block_flag, 1,&crc);
 
 		    if (gi->table_select[0] == 14)
 			gi->table_select[0] = 16;
-		    writeheader ( gfc, gi->table_select[0]  , 5 );
+		    CRC_writeheader(gfc,gi->table_select[0],  5,&crc);
 		    if (gi->table_select[1] == 14)
 			gi->table_select[1] = 16;
-		    writeheader ( gfc, gi->table_select[1]  , 5 );
+		    CRC_writeheader(gfc,gi->table_select[1],  5,&crc);
 
-		    writeheader ( gfc, gi->subblock_gain[0] , 3 );
-		    writeheader ( gfc, gi->subblock_gain[1] , 3 );
-		    writeheader ( gfc, gi->subblock_gain[2] , 3 );
+		    CRC_writeheader(gfc,gi->subblock_gain[0], 3,&crc);
+		    CRC_writeheader(gfc,gi->subblock_gain[1], 3,&crc);
+		    CRC_writeheader(gfc,gi->subblock_gain[2], 3,&crc);
 		} else {
 		    assert(gi->block_type == NORM_TYPE);
 		    if (gi->table_select[0] == 14)
 			gi->table_select[0] = 16;
-		    writeheader ( gfc, gi->table_select[0]  , 5 );
+		    CRC_writeheader(gfc,gi->table_select[0], 5,&crc);
 		    if (gi->table_select[1] == 14)
 			gi->table_select[1] = 16;
-		    writeheader ( gfc, gi->table_select[1]  , 5 );
+		    CRC_writeheader(gfc,gi->table_select[1], 5,&crc);
 		    if (gi->table_select[2] == 14)
 			gi->table_select[2] = 16;
-		    writeheader ( gfc, gi->table_select[2]  , 5 );
+		    CRC_writeheader(gfc,gi->table_select[2], 5,&crc);
 
 		    assert(gi->region0_count < 16U);
 		    assert(gi->region1_count < 8U);
-		    writeheader ( gfc, gi->region0_count    , 4 );
-		    writeheader ( gfc, gi->region1_count    , 3 );
+		    CRC_writeheader(gfc,gi->region0_count, 4,&crc);
+		    CRC_writeheader(gfc,gi->region1_count, 3,&crc);
 		}
-		writeheader ( gfc, gi->preflag              , 1 );
-		writeheader ( gfc, gi->scalefac_scale       , 1 );
-		writeheader ( gfc, gi->count1table_select   , 1 );
+		CRC_writeheader(gfc,gi->preflag,            1,&crc);
+		CRC_writeheader(gfc,gi->scalefac_scale,     1,&crc);
+		CRC_writeheader(gfc,gi->count1table_select, 1,&crc);
 	    }
 	}
-    }
-    else { /* MPEG2 */
-	
+    } else {
+	/* MPEG2 */
 	assert(l3_side->main_data_begin >= 0);
-	writeheader ( gfc, l3_side->main_data_begin         , 8 );
-	writeheader ( gfc, l3_side->private_bits            , gfc->stereo );
+	CRC_writeheader(gfc,(l3_side->main_data_begin), 8,&crc);
+	CRC_writeheader(gfc,l3_side->private_bits, gfc->stereo,&crc);
 
 	gr = 0;
 	for (ch = 0; ch < gfc->stereo; ch++) {
 	    gr_info *gi = &l3_side->gr[gr].ch[ch].tt;
-	    writeheader ( gfc, gi->part2_3_length           ,12 );
-	    writeheader ( gfc, gi->big_values / 2           , 9 );
-	    writeheader ( gfc, gi->global_gain              , 8 );
-	    writeheader ( gfc, gi->scalefac_compress        , 9 );
-	    writeheader ( gfc, gi->window_switching_flag    , 1 );
+	    CRC_writeheader(gfc,gi->part2_3_length,       12,&crc);
+	    CRC_writeheader(gfc,gi->big_values / 2,        9,&crc);
+	    CRC_writeheader(gfc,gi->global_gain,           8,&crc);
+	    CRC_writeheader(gfc,gi->scalefac_compress,     9,&crc);
+	    CRC_writeheader(gfc,gi->window_switching_flag, 1,&crc);
 
 	    if (gi->window_switching_flag) {
-		writeheader ( gfc, gi->block_type           , 2 );
-		writeheader ( gfc, gi->mixed_block_flag     , 1 );
+		CRC_writeheader(gfc,gi->block_type,       2,&crc);
+		CRC_writeheader(gfc,gi->mixed_block_flag, 1,&crc);
 
 		if (gi->table_select[0] == 14)
 		    gi->table_select[0] = 16;
-		writeheader ( gfc, gi->table_select[0]      , 5 );
+		CRC_writeheader(gfc,gi->table_select[0],  5,&crc);
 		if (gi->table_select[1] == 14)
 		    gi->table_select[1] = 16;
-		writeheader ( gfc, gi->table_select [1]     , 5 );
+		CRC_writeheader(gfc,gi->table_select[1],  5,&crc);
 
-		writeheader ( gfc, gi->subblock_gain [0]    , 3 );
-		writeheader ( gfc, gi->subblock_gain [1]    , 3 );
-		writeheader ( gfc, gi->subblock_gain [2]    , 3 );
+		CRC_writeheader(gfc,gi->subblock_gain[0], 3,&crc);
+		CRC_writeheader(gfc,gi->subblock_gain[1], 3,&crc);
+		CRC_writeheader(gfc,gi->subblock_gain[2], 3,&crc);
 	    } else {
 		if (gi->table_select[0] == 14)
 		    gi->table_select[0] = 16;
-		writeheader ( gfc, gi->table_select [0]     , 5 );
+		CRC_writeheader(gfc,gi->table_select[0], 5,&crc);
 		if (gi->table_select[1] == 14)
 		    gi->table_select[1] = 16;
-		writeheader ( gfc, gi->table_select [1]     , 5 );
+		CRC_writeheader(gfc,gi->table_select[1], 5,&crc);
 		if (gi->table_select[2] == 14)
 		    gi->table_select[2] = 16;
-		writeheader ( gfc, gi->table_select [2]     , 5 );
+		CRC_writeheader(gfc,gi->table_select[2], 5,&crc);
 
 		assert(gi->region0_count < 16U);
 		assert(gi->region1_count < 8U);
-		writeheader ( gfc, gi->region0_count        , 4 );
-		writeheader ( gfc, gi->region1_count        , 3 );
+		CRC_writeheader(gfc,gi->region0_count, 4,&crc);
+		CRC_writeheader(gfc,gi->region1_count, 3,&crc);
 	    }
 
-	    writeheader ( gfc, gi->scalefac_scale           , 1 );
-	    writeheader ( gfc, gi->count1table_select       , 1 );
+	    CRC_writeheader(gfc,gi->scalefac_scale,     1,&crc);
+	    CRC_writeheader(gfc,gi->count1table_select, 1,&crc);
 	}
     }
 
-    if ( gfc->gfp->error_protection ) {
+    if (gfp->error_protection) {
 	/* (jo) error_protection: add crc16 information to header */
-	gfc->header[gfc->h_ptr].buf [4] = (gfc->crcvalue >> 8) & 0xFF;
-	gfc->header[gfc->h_ptr].buf [5] = (gfc->crcvalue >> 0) & 0xFF;
+	gfc->header[gfc->h_ptr].buf[4] = crc >> 8;
+	gfc->header[gfc->h_ptr].buf[5] = crc & 255;
     }
 
+    {
+	int old = gfc->h_ptr;
+	assert(gfc->header[old].ptr == gfc->sideinfo_len * 8);
 
-    old = gfc->h_ptr;
-    assert (gfc->header[old].ptr == gfc->sideinfo_len * 8);
+	gfc->h_ptr = (old + 1) & (MAX_HEADER_BUF - 1);
+	gfc->header[gfc->h_ptr].write_timing =
+	    gfc->header[old].write_timing + bitsPerFrame;
 
-    gfc->h_ptr                           = (old + 1) & (MAX_HEADER_BUF - 1);
-    gfc->header[gfc->h_ptr].write_timing = gfc->header[old].write_timing + bitsPerFrame;
+	if (gfc->h_ptr == gfc->w_ptr) {
+	  /* yikes! we are out of header buffer space */
+	  ERRORF("Error: MAX_HEADER_BUF too small in bitstream.c \n");
+	}
 
-    if ( gfc->h_ptr == gfc->w_ptr ) { /* yikes! we are out of header buffer space */
-        ERRORF("Error: MAX_HEADER_BUF too small in bitstream.c \n");
     }
 }
 
 
 
 static INLINE int
-huffman_coder_count1(context * const gfc, int *ix, gr_info *gi)
+huffman_coder_count1(lame_global_flags *gfp,int *ix, gr_info *gi)
 {
+#ifdef DEBUG
+    lame_internal_flags *gfc = gfp->internal_flags;
+#endif
     /* Write count1 area */
     const struct huffcodetab *h = &ht[gi->count1table_select + 32];
     int i,bits=0;
@@ -413,7 +519,7 @@ huffman_coder_count1(context * const gfc, int *ix, gr_info *gi)
 	}
 
 	ix += 4;
-	putbits(gfc, huffbits + h->table[p], h->hlen[p]);
+	putbits2(gfp,huffbits + h->table[p], h->hlen[p]);
 	bits += h->hlen[p];
     }
 #ifdef DEBUG
@@ -427,8 +533,9 @@ huffman_coder_count1(context * const gfc, int *ix, gr_info *gi)
   */
 
 static INLINE int
-HuffmanCode(context * const gfc, int table_select, int x, int y)
+HuffmanCode(lame_global_flags *gfp, int table_select, int x, int y)
 {
+  /*    lame_internal_flags *gfc=gfp->internal_flags;*/
     int code, ext, xlen;
     int cbits, xbits;
     int signx, signy, linbits;
@@ -501,13 +608,13 @@ HuffmanCode(context * const gfc, int table_select, int x, int y)
     assert(cbits <= MAX_LENGTH);
     assert(xbits <= MAX_LENGTH);
 
-    putbits(gfc,code, cbits);
-    putbits(gfc, ext, xbits);
+    putbits2(gfp,code, cbits);
+    putbits2(gfp, ext, xbits);
     return cbits+xbits;
 }
 
 static int
-Huffmancodebits(context * const gfc, int tableindex, int start, int end, int *ix)
+Huffmancodebits(lame_global_flags *gfp, int tableindex, int start, int end, int *ix)
 {
     int i,bits;
 
@@ -516,7 +623,7 @@ Huffmancodebits(context * const gfc, int tableindex, int start, int end, int *ix
 
     bits=0;
     for (i = start; i < end; i += 2) {
-      bits += HuffmanCode(gfc, tableindex, ix[i], ix[i + 1]);
+      bits +=HuffmanCode(gfp,tableindex, ix[i], ix[i + 1]);
     }
     return bits;
 }
@@ -529,8 +636,9 @@ Huffmancodebits(context * const gfc, int tableindex, int start, int end, int *ix
   information on pages 26 and 27.
   */
 static int
-ShortHuffmancodebits(context * const gfc, int *ix, gr_info *gi)
+ShortHuffmancodebits(lame_global_flags *gfp,int *ix, gr_info *gi)
 {
+    lame_internal_flags *gfc=gfp->internal_flags;
     int bits;
     int region1Start;
     
@@ -538,14 +646,15 @@ ShortHuffmancodebits(context * const gfc, int *ix, gr_info *gi)
     if (region1Start > gi->big_values) 	region1Start = gi->big_values;
 
     /* short blocks do not have a region2 */
-    bits  = Huffmancodebits(gfc,gi->table_select[0], 0, region1Start, ix);
-    bits += Huffmancodebits(gfc,gi->table_select[1], region1Start, gi->big_values, ix);
+    bits  = Huffmancodebits(gfp,gi->table_select[0], 0, region1Start, ix);
+    bits += Huffmancodebits(gfp,gi->table_select[1], region1Start, gi->big_values, ix);
     return bits;
 }
 
 static int
-LongHuffmancodebits(context * const gfc,int *ix, gr_info *gi)
+LongHuffmancodebits(lame_global_flags *gfp,int *ix, gr_info *gi)
 {
+    lame_internal_flags *gfc=gfp->internal_flags;
     int i, bigvalues,bits=0;
     int region1Start, region2Start;
 
@@ -565,22 +674,23 @@ LongHuffmancodebits(context * const gfc,int *ix, gr_info *gi)
     if (region2Start > bigvalues)
 	region2Start = bigvalues;
 
-    bits +=Huffmancodebits(gfc,gi->table_select[0], 0, region1Start, ix);
-    bits +=Huffmancodebits(gfc,gi->table_select[1], region1Start, region2Start, ix);
-    bits +=Huffmancodebits(gfc,gi->table_select[2], region2Start, bigvalues, ix);
+    bits +=Huffmancodebits(gfp,gi->table_select[0], 0, region1Start, ix);
+    bits +=Huffmancodebits(gfp,gi->table_select[1], region1Start, region2Start, ix);
+    bits +=Huffmancodebits(gfp,gi->table_select[2], region2Start, bigvalues, ix);
     return bits;
 }
 
 static INLINE int
-writeMainData(context * const gfc,
+writeMainData(lame_global_flags *gfp,
       int              l3_enc[2][2][576],
   	III_scalefac_t   scalefac[2][2] )
 {
     int gr, ch, sfb,data_bits,scale_bits,tot_bits=0;
+    lame_internal_flags *gfc=gfp->internal_flags;
     III_side_info_t *l3_side;
 
     l3_side = &gfc->l3_side;
-    if (gfc->gfp->version == 1) {
+    if (gfp->version == 1) {
 	/* MPEG 1 */
 	for (gr = 0; gr < 2; gr++) {
 	    for (ch = 0; ch < gfc->stereo; ch++) {
@@ -601,12 +711,12 @@ writeMainData(context * const gfc,
 			assert(scalefac[gr][ch].s[sfb][1]>=0);
 			assert(scalefac[gr][ch].s[sfb][2]>=0);
 
-			putbits(gfc,scalefac[gr][ch].s[sfb][0], slen);
-			putbits(gfc,scalefac[gr][ch].s[sfb][1], slen);
-			putbits(gfc,scalefac[gr][ch].s[sfb][2], slen);
+			putbits2(gfp,scalefac[gr][ch].s[sfb][0], slen);
+			putbits2(gfp,scalefac[gr][ch].s[sfb][1], slen);
+			putbits2(gfp,scalefac[gr][ch].s[sfb][2], slen);
 			scale_bits += 3*slen;
 		    }
-		    data_bits += ShortHuffmancodebits(gfc,l3_enc[gr][ch], gi);
+		    data_bits += ShortHuffmancodebits(gfp,l3_enc[gr][ch], gi);
 		} else {
 		    int i;
 		    for (i = 0; i < sizeof(scfsi_band) / sizeof(int) - 1;
@@ -618,14 +728,14 @@ writeMainData(context * const gfc,
 			     sfb++) {
 
 			    assert(scalefac[gr][ch].l[sfb]>=0);
-			    putbits(gfc,scalefac[gr][ch].l[sfb],
+			    putbits2(gfp,scalefac[gr][ch].l[sfb],
 				    sfb < 11 ? slen1 : slen2);
 			    scale_bits += sfb < 11 ? slen1 : slen2;
 			}
 		    }
-		    data_bits +=LongHuffmancodebits(gfc,l3_enc[gr][ch], gi);
+		    data_bits +=LongHuffmancodebits(gfp,l3_enc[gr][ch], gi);
 		}
-		data_bits +=huffman_coder_count1(gfc,l3_enc[gr][ch], gi);
+		data_bits +=huffman_coder_count1(gfp,l3_enc[gr][ch], gi);
 #ifdef DEBUG
 		DEBUGF("<%ld> ", gfc->bs.totbit-hogege);
 #endif
@@ -653,25 +763,25 @@ writeMainData(context * const gfc,
 		    int sfbs = gi->sfb_partition_table[sfb_partition] / 3;
 		    int slen = gi->slen[sfb_partition];
 		    for (i = 0; i < sfbs; i++, sfb++) {
-			putbits(gfc,Max(scalefac[gr][ch].s[sfb][0], 0U), slen);
-			putbits(gfc,Max(scalefac[gr][ch].s[sfb][1], 0U), slen);
-			putbits(gfc,Max(scalefac[gr][ch].s[sfb][2], 0U), slen);
+			putbits2(gfp,Max(scalefac[gr][ch].s[sfb][0], 0U), slen);
+			putbits2(gfp,Max(scalefac[gr][ch].s[sfb][1], 0U), slen);
+			putbits2(gfp,Max(scalefac[gr][ch].s[sfb][2], 0U), slen);
 			scale_bits += 3*slen;
 		    }
 		}
-		data_bits += ShortHuffmancodebits(gfc,l3_enc[gr][ch], gi);
+		data_bits += ShortHuffmancodebits(gfp,l3_enc[gr][ch], gi);
 	    } else {
 		for (; sfb_partition < 4; sfb_partition++) {
 		    int sfbs = gi->sfb_partition_table[sfb_partition];
 		    int slen = gi->slen[sfb_partition];
 		    for (i = 0; i < sfbs; i++, sfb++) {
-			putbits(gfc,Max(scalefac[gr][ch].l[sfb], 0U), slen);
+			putbits2(gfp,Max(scalefac[gr][ch].l[sfb], 0U), slen);
 			scale_bits += slen;
 		    }
 		}
-		data_bits +=LongHuffmancodebits(gfc,l3_enc[gr][ch], gi);
+		data_bits +=LongHuffmancodebits(gfp,l3_enc[gr][ch], gi);
 	    }
-	    data_bits +=huffman_coder_count1(gfc,l3_enc[gr][ch], gi);
+	    data_bits +=huffman_coder_count1(gfp,l3_enc[gr][ch], gi);
 
 	    /* does bitcount in quantize.c agree with actual bit count?*/
 	    assert(data_bits==gi->part2_3_length-gi->part2_length);
@@ -686,8 +796,9 @@ writeMainData(context * const gfc,
 
 
 void
-flush_bitstream(context * const gfc)
+flush_bitstream(lame_global_flags *gfp)
 {
+  lame_internal_flags *gfc=gfp->internal_flags;
   int flushbits,remaining_headers;
   int bitsPerFrame, mean_bits;
   int last_ptr,first_ptr;
@@ -712,7 +823,7 @@ flush_bitstream(context * const gfc)
    * these bits are not necessary to decode the last frame, but
    * some decoders will ignore last frame if these bits are missing 
    */
-  getframebits(gfc, &bitsPerFrame, &mean_bits);
+  getframebits(gfc,&bitsPerFrame,&mean_bits);
   flushbits += bitsPerFrame;
   if (flushbits<0) {
 #if 0
@@ -729,7 +840,7 @@ flush_bitstream(context * const gfc)
 #endif
     ERRORF("strange error flushing buffer ... \n");
   } else {
-    drain_into_ancillary(gfc,flushbits);
+    drain_into_ancillary(gfp,flushbits);
   }
 
   assert (gfc->header[last_ptr].write_timing + bitsPerFrame  == gfc->bs.totbit);
@@ -738,11 +849,12 @@ flush_bitstream(context * const gfc)
 
 
 
-void add_dummy_byte(context * const gfc, int val)
+void add_dummy_byte(lame_global_flags *gfp,int val)
 {
+  lame_internal_flags *gfc = gfp->internal_flags;
   int i;
 
-  putbits_noheaders(gfc,val,8);   
+  putbits_noheaders(gfp,val,8);   
 
   for (i=0 ; i< MAX_HEADER_BUF ; ++i) 
     gfc->header[i].write_timing += 8;
@@ -763,20 +875,21 @@ void add_dummy_byte(context * const gfc, int val)
   in the IS).
   */
 int
-format_bitstream(context * const gfc, int bitsPerFrame,
+format_bitstream(lame_global_flags *gfp, int bitsPerFrame,
       int              l3_enc[2][2][576],
   	III_scalefac_t   scalefac[2][2] )
 {
+    lame_internal_flags *gfc=gfp->internal_flags;
     int bits;
     III_side_info_t *l3_side;
     l3_side = &gfc->l3_side;
 
-    drain_into_ancillary(gfc,l3_side->resvDrain_pre);
+    drain_into_ancillary(gfp,l3_side->resvDrain_pre);
 
-    encodeSideInfo2(gfc,bitsPerFrame);
+    encodeSideInfo2(gfp,bitsPerFrame);
     bits = 8*gfc->sideinfo_len;
-    bits+=writeMainData(gfc,l3_enc,scalefac);
-    drain_into_ancillary(gfc,l3_side->resvDrain_post);
+    bits+=writeMainData(gfp,l3_enc,scalefac);
+    drain_into_ancillary(gfp,l3_side->resvDrain_post);
     bits += l3_side->resvDrain_post;
 
     l3_side->main_data_begin += (bitsPerFrame-bits)/8;
@@ -834,21 +947,16 @@ int copy_buffer(char *buffer,int size,Bit_stream_struc *bs)
 
 
 
-void init_bit_stream_w(context * const gfc)
+void init_bit_stream_w(lame_internal_flags *gfc)
 {
-    gfc->bs.buf = (unsigned char *)       malloc(BUFFER_SIZE);
-    gfc->bs.buf_size = BUFFER_SIZE;
+   gfc->bs.buf = (unsigned char *)       malloc(BUFFER_SIZE);
+   gfc->bs.buf_size = BUFFER_SIZE;
 
-    gfc->h_ptr = gfc->w_ptr = 0;
-    gfc->header[gfc->h_ptr].write_timing = 0;
-    gfc->bs.buf_byte_idx = -1;
-    gfc->bs.buf_bit_idx = 0;
-    gfc->bs.totbit = 0;
-   
-    if (gfc->bs.buf == NULL) {
-        ERRORF ("PANIC: can't allocate bs.buf buffer\n");
-        exit (-1);
-    }
+   gfc->h_ptr = gfc->w_ptr = 0;
+   gfc->header[gfc->h_ptr].write_timing = 0;
+   gfc->bs.buf_byte_idx = -1;
+   gfc->bs.buf_bit_idx = 0;
+   gfc->bs.totbit = 0;
 }
 
 
