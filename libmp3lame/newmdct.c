@@ -587,7 +587,7 @@ INLINE static void mdct_short(FLOAT8 *out, FLOAT8 *in)
 {
     int l;
     for ( l = 0; l < 3; l++ ) {
-	FLOAT tc0,tc1,tc2,ts0,ts1,ts2;
+	FLOAT8 tc0,tc1,tc2,ts0,ts1,ts2;
 
 	ts0 = (in[2] * win[SHORT_TYPE][0] - in[5]) * 1.907525191737280e-11; /* tritab_s[0] */
 	tc0 = (in[0] * win[SHORT_TYPE][2] - in[3]) * 1.907525191737280e-11; /* tritab_s[2] */
@@ -732,56 +732,36 @@ void mdct_sub48(lame_internal_flags *gfc,
 	     * Perform imdct of 18 previous subband samples
 	     * + 18 current subband samples
 	     */
-	    for (band = 0; band < 32; band++, mdct_enc += 18) 
-	    {
+	    for (band = 0; band < 32; band++, mdct_enc += 18) {
 		int type = gi->block_type;
-		int band_swapped;
-		band_swapped = order[band];
+		FLOAT8 *band0, *band1;
+		band0 = gfc->sb_sample[ch][  gr][0] + order[band];
+		band1 = gfc->sb_sample[ch][1-gr][0] + order[band];
 #ifdef ALLOW_MIXED
 		if (gi->mixed_block_flag && band < 2)
 		    type = 0;
 #endif
 		if (band >= gfc->lowpass_band || band <= gfc->highpass_band) {
 		    memset((char *)mdct_enc,0,18*sizeof(FLOAT8));
-		}else {
+		} else {
 		  if (type == SHORT_TYPE) {
-		    for (k = 2; k >= 0; --k) {
-			FLOAT8 win1 = win[SHORT_TYPE][k];
-
-			work[k  ] =
-			    gfc->sb_sample[ch][gr][k+6][band_swapped] * win1 -
-			    gfc->sb_sample[ch][gr][11-k][band_swapped];
-
-			work[k+3] =
-			    gfc->sb_sample[ch][gr][k+12][band_swapped] +
-			    gfc->sb_sample[ch][gr][17-k][band_swapped] * win1;
-
-
-			work[k+6] =
-			    gfc->sb_sample[ch][gr][k+12][band_swapped] * win1 -
-			    gfc->sb_sample[ch][gr][17-k][band_swapped];
-
-			work[k+9] =
-			    gfc->sb_sample[ch][1-gr][k][band_swapped] +
-			    gfc->sb_sample[ch][1-gr][5-k][band_swapped] * win1;
-
-
-			work[k+12] =
-			    gfc->sb_sample[ch][1-gr][k][band_swapped] * win1 -
-			    gfc->sb_sample[ch][1-gr][5-k][band_swapped];
-
-			work[k+15] =
-			    gfc->sb_sample[ch][1-gr][k+6][band_swapped] +
-			    gfc->sb_sample[ch][1-gr][11-k][band_swapped] * win1;
+		    for (k = -NS/4; k < 0; k++) {
+			FLOAT8 w = win[SHORT_TYPE][k+3];
+			work[k+ 3] = band0[( 9+k)*32] * w - band0[( 8-k)*32];
+			work[k+ 6] = band0[(14-k)*32] * w + band0[(15+k)*32];
+			work[k+ 9] = band0[(15+k)*32] * w - band0[(14-k)*32];
+			work[k+12] = band1[( 2-k)*32] * w + band1[( 3+k)*32];
+			work[k+15] = band1[( 3+k)*32] * w - band1[( 2-k)*32];
+			work[k+18] = band1[( 8-k)*32] * w + band1[( 9+k)*32];
 		    }
 		    mdct_short(mdct_enc, work);
 		  } else {
 		    for (k = -NL/4; k < 0; k++) {
 			FLOAT8 a, b;
-			a = win[type][k+27] * gfc->sb_sample[ch][1-gr][k+9][band_swapped]
-			  + win[type][k+36] * gfc->sb_sample[ch][1-gr][8-k][band_swapped];
-			b = win[type][k+ 9] * gfc->sb_sample[ch][gr][k+9][band_swapped]
-			  - win[type][k+18] * gfc->sb_sample[ch][gr][8-k][band_swapped];
+			a = win[type][k+27] * band1[(k+9)*32]
+			  + win[type][k+36] * band1[(8-k)*32];
+			b = win[type][k+ 9] * band0[(k+9)*32]
+			  - win[type][k+18] * band0[(8-k)*32];
 			work[k+ 9] = a - b*tantab_l[k+9];
 			work[k+18] = a*tantab_l[k+9] + b;
 		    }
