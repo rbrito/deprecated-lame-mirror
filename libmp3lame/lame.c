@@ -65,7 +65,8 @@ lame_init_qval(lame_global_flags * gfp)
     lame_internal_flags *gfc = gfp->internal_flags;
 
     switch (gfp->quality) {
-    case 9:            /* no psymodel, no noise shaping */
+    case 9:            /* no psymodel, no noise shaping, no reservoir */
+	gfp->disable_reservoir = 1;
         gfc->filter_type = 0;
         gfc->psymodel = 0;
         gfc->noise_shaping_amp = 0;
