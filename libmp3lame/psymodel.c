@@ -1417,7 +1417,9 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 
 	  for (b=0; b < gfc->npart_l_orig; b++ )
 	    {
-	      fscanf(gfc->nsPsy.pass1fp,"%lf",&eb2[b]);
+	      double e;
+	      fscanf(gfc->nsPsy.pass1fp,"%lf",&e);
+	      eb2[b] = e;
 	    }
 
 	  if (feof(gfc->nsPsy.pass1fp)) abort();
