@@ -603,7 +603,7 @@ of a sound file. Information on the purpose of ReplayGain and the
 algorithms used is available at: http://www.replaygain.org/
 
 The ReplayGain values are stored in the LAME tag. The analysis is 
-performed with the reference volume equal to 83dB. 
+performed with the reference volume equal to 89dB. 
 
 This option requires LAME to be compiled with DECODE_ON_THE_FLY.
 (note: if LAME is compiled without DECODE_ON_THE_FLY, ReplayGain 
