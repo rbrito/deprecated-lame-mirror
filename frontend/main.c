@@ -48,6 +48,10 @@ char   *strchr(), *strrchr();
 # include <fcntl.h>
 #endif
 
+#ifdef HAVE_UNISTD_H
+# include <unistd.h>
+#endif
+
 #if defined(_WIN32)
 # include <windows.h>
 #endif
