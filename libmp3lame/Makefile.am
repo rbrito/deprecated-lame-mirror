@@ -7,7 +7,7 @@ SUBDIRS = i386
 lib_LTLIBRARIES = libmp3lame.la
 
 if HAVE_NASM
-nasm_ldadd = $(top_builddir)/libmp3lame/@CPUTYPE@/liblameasmroutines.la
+nasm_ldadd = $(top_builddir)/libmp3lame/@CPUTYPE@/liblameasmroutines.a
 else
 nasm_ldadd =
 endif

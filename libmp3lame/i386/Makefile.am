@@ -11,8 +11,8 @@ nasm_sources = \
 	scalar.nas
 
 if HAVE_NASM
-noinst_LTLIBRARIES = liblameasmroutines.la
-liblameasmroutines_la_SOURCES = $(nasm_sources)
+noinst_LIBRARIES = liblameasmroutines.a
+liblameasmroutines_a_SOURCES = $(nasm_sources)
 endif
 
 noinst_HEADERS = nasm.h
@@ -21,7 +21,7 @@ INCLUDES = @INCLUDES@ -I$(top_srcdir)/libmp3lame/@CPUTYPE@
 
 SUFFIXES = .nas
 
-EXTRA_liblameasmroutines_la_SOURCES = $(nasm_sources)
+EXTRA_liblameasmroutines_a_SOURCES = $(nasm_sources)
 
 CLEANFILES = \
 	choose_table.lst \
@@ -39,3 +39,4 @@ NASM = @NASM@
 NASMFLAGS=@NASM_FORMAT@ -i $(top_srcdir)/libmp3lame/@CPUTYPE@/
 .nas.o:
 	$(NASM) $(NASMFLAGS) $< -o $@ -l $@.lst
+
