@@ -804,26 +804,28 @@ static void update_progress(void)
 
 static void analyze(void)
 {
-    if ( idle_keepgoing) {
+    plot_frame();   
+    update_progress(); 
+    if (idle_keepgoing) {
       idle_count = 0;
       idle_count_max=0;
       idle_keepgoing=0;
       idle_end=0;
     }
-    plot_frame();   
-    update_progress(); 
 }
 
 static void plotclick( GtkWidget *widget, gpointer   data )
-{   analyze(); }
+{
+    analyze();
+}
 
 
 
 
 static int frameadv1(GtkWidget *widget, gpointer   data )
 {
-  int i;
-  if (idle_keepgoing ){
+    int i;
+    assert(idle_keepgoing);
     if (idle_back) {
       /* frame displayed is the old frame.  to advance, just swap in new frame */
       idle_back--;
@@ -881,9 +883,8 @@ static int frameadv1(GtkWidget *widget, gpointer   data )
     idle_count++;
     if (gtkinfo.pupdate) plot_frame();
     update_progress();
-    if ((idle_count>=idle_count_max) && (! idle_end)) analyze();
-  }
-  return 1;
+    if ((idle_count>=idle_count_max) && (!idle_end)) analyze();
+    return 1;
 }
 
 
@@ -917,6 +918,9 @@ static void frameadv( GtkWidget *widget, gpointer   data )
       idle_count_max = adv;
       idle_count = 0;
       idle_keepgoing = 1;
+    }
+    while (idle_keepgoing) {
+	frameadv1(widget, data);
     }
 }
 
@@ -1249,14 +1253,6 @@ static void text_window (GtkWidget *widget, gpointer data)
 
 static const GtkItemFactoryEntry menu_items [] = {
     { "/_File"                      , NULL, NULL                , 0, "<Branch>" },
-#if 0
-    { "/File/_New"                  , C(N), func(print_hello)   , 0, NULL },
-    { "/File/_Open"                 , C(O), func(print_hello)   , 0, NULL },
-    { "/File/_Save"                 , C(S), func(print_hello)   , 0, NULL },
-    { "/File/Save _As"              , NULL, NULL                , 0, NULL },
-    { "/File/sep1"                  , NULL, NULL                , 0, "<Separator>" },
-    { "/File/Quit"                  , C(Q), func(gtk_main_quit) , 0, NULL }, 
-#endif
     { "/File/_Quit"                 , C(Q), func(delete_event)  , 0, NULL }, 
 
     { "/_Plotting"                  , NULL, NULL                , 0, "<Branch>" },
@@ -1381,7 +1377,7 @@ int gtkcontrol(lame_t gfp, char *inPath)
     gtkinfo.difference= 0;
     gtkinfo.totalframes = 0;
 
-    memset((char *) Pinfo, 0, sizeof(Pinfo));
+    memset(Pinfo, 0, sizeof(Pinfo));
     pplot = &Pinfo[READ_AHEAD];
 
     strcpy(frameinfo,"MP3x: ");
@@ -1535,7 +1531,6 @@ int gtkcontrol(lame_t gfp, char *inPath)
 
 
 
-    gtk_idle_add((GtkFunction) frameadv1, NULL);
     gtk_widget_show(menubar); 
     gtk_widget_show(box2); 
     gtk_widget_show(box3); 
@@ -1555,6 +1550,9 @@ int gtkcontrol(lame_t gfp, char *inPath)
     idle_count_max=READ_AHEAD+1;  /* number of frames to process before plotting */
     idle_count=0;                 /* pause & plot when idle_count=idle_count_max */
 
+    while (idle_keepgoing) {
+	frameadv1(NULL, NULL);
+    }
     gtk_main ();
     assert(mp3done);
     return(0);
