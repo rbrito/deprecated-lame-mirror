@@ -851,12 +851,10 @@ mask_add_samebark(FLOAT m1, FLOAT m2)
 }
 
 inline static FLOAT
-mask_add(FLOAT m1, FLOAT m2, int k, int b, lame_internal_flags * const gfc)
+mask_add(FLOAT m1, FLOAT m2, FLOAT ATH)
 {
     int i;
     FLOAT ratio;
-
-    assert((unsigned int)(k-b+3) > 3+3);
 
     if (m2 > m1) {
 	if (m2 >= m1*ma_max_i2)
@@ -871,26 +869,23 @@ mask_add(FLOAT m1, FLOAT m2, int k, int b, lame_internal_flags * const gfc)
     /* Should always be true, just checking */
     assert(m1>0.0);
     assert(m2>0.0);
-    assert(gfc->ATH.cb[k]>0.0);
+    assert(ATH>0.0);
 
 
     m1 += m2;
     i = trancate(FAST_LOG10_X(ratio, 16.0));
-    m2 = gfc->ATH.cb[k] * gfc->ATH.adjust;
 
     /* 10% of total */
-    if (m1 >= m2)
+    if (m1 >= ATH)
 	return m1*table1[i];
 
     /* 3% of the total */
     /* Originally if (m > 0) { */
-    m2 *= ma_max_m;
-    if (m1 > m2) {
-	FLOAT f, r;
-
-	f = 1.0;
+    ATH *= ma_max_m;
+    if (m1 > ATH) {
+	FLOAT f = 1.0, r;
 	if (i <= 13) f = table3[i];
-	r = FAST_LOG10_X(m1 / m2, 10.0/15.0);
+	r = FAST_LOG10_X(m1 / ATH, 10.0/15.0);
 	return m1 * ((table1[i]-f)*r+f);
     }
 
@@ -1198,7 +1193,12 @@ L3psycho_anal_ns(
     )
 {
     FLOAT wsamp_L[2][BLKSIZE];    /* fft and energy calculation   */
-    int chn;
+    int chn, i;
+    FLOAT adjATH[CBANDS];
+    {int i;
+    for (i = 0; i < gfc->npart_l; i++)
+	adjATH[i] = gfc->ATH.cb[i] * gfc->ATH.adjust;
+    }
 
     /*********************************************************************
      * compute the long block masking ratio
@@ -1354,7 +1354,7 @@ L3psycho_anal_ns(
 	    for (kk = gfc->s3ind[b][0]; kk <= gfc->s3ind[b][1]; kk++) {
 		if ((unsigned int)(kk - b + 3) <= 6 || eb2[kk] == 0.0)
 		    continue;
-		ecb = mask_add(ecb, p[kk] * eb2[kk], kk, b, gfc);
+		ecb = mask_add(ecb, p[kk] * eb2[kk], adjATH[kk]);
 	    }
 	    p += gfc->s3ind[b][1] + 1;
 
