@@ -688,7 +688,7 @@ main(int argc, char **argv)
         return 1;
     }
     if (argc <= 1) {
-        usage(gf, stderr, argv[0]); /* no command-line args, print usage, exit  */
+        usage(stderr, argv[0]); /* no command-line args, print usage, exit  */
         return 1;
     }
 
