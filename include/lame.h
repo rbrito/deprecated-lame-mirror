@@ -885,6 +885,8 @@ int CDECL lame_decode1_headersB(
         int              *enc_padding );
 
 
+/* cleanup call to exit decoder  */
+int CDECL lame_decode_exit(void);
 
 
 
