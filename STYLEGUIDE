@@ -6,6 +6,9 @@
   don't change the spacing, indentation, curly braces, etc, 
   in routines you did not write.
 
+* If you want to make a change which effects many many functions,
+  please check with the maintainer first.
+
 * Respect the indentation of the author of the original function.
   If the indentation is not consistent, use 4.
 
