@@ -265,7 +265,11 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 		    CRC_writeheader(gfc,gi->block_type,       2,&crc);
 		    CRC_writeheader(gfc,gi->mixed_block_flag, 1,&crc);
 
+		    if (gi->table_select[0] == 14)
+			gi->table_select[0] = 16;
 		    CRC_writeheader(gfc,gi->table_select[0],  5,&crc);
+		    if (gi->table_select[1] == 14)
+			gi->table_select[1] = 16;
 		    CRC_writeheader(gfc,gi->table_select[1],  5,&crc);
 
 		    CRC_writeheader(gfc,gi->subblock_gain[0], 3,&crc);
@@ -273,8 +277,14 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 		    CRC_writeheader(gfc,gi->subblock_gain[2], 3,&crc);
 		} else {
 		    assert(gi->block_type == NORM_TYPE);
+		    if (gi->table_select[0] == 14)
+			gi->table_select[0] = 16;
 		    CRC_writeheader(gfc,gi->table_select[0], 5,&crc);
+		    if (gi->table_select[1] == 14)
+			gi->table_select[1] = 16;
 		    CRC_writeheader(gfc,gi->table_select[1], 5,&crc);
+		    if (gi->table_select[2] == 14)
+			gi->table_select[2] = 16;
 		    CRC_writeheader(gfc,gi->table_select[2], 5,&crc);
 
 		    CRC_writeheader(gfc,gi->region0_count, 4,&crc);
@@ -304,15 +314,25 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 		CRC_writeheader(gfc,gi->block_type,       2,&crc);
 		CRC_writeheader(gfc,gi->mixed_block_flag, 1,&crc);
 
+		if (gi->table_select[0] == 14)
+		    gi->table_select[0] = 16;
 		CRC_writeheader(gfc,gi->table_select[0],  5,&crc);
+		if (gi->table_select[1] == 14)
+		    gi->table_select[1] = 16;
 		CRC_writeheader(gfc,gi->table_select[1],  5,&crc);
 
 		CRC_writeheader(gfc,gi->subblock_gain[0], 3,&crc);
 		CRC_writeheader(gfc,gi->subblock_gain[1], 3,&crc);
 		CRC_writeheader(gfc,gi->subblock_gain[2], 3,&crc);
 	    } else {
+		if (gi->table_select[0] == 14)
+		    gi->table_select[0] = 16;
 		CRC_writeheader(gfc,gi->table_select[0], 5,&crc);
+		if (gi->table_select[1] == 14)
+		    gi->table_select[1] = 16;
 		CRC_writeheader(gfc,gi->table_select[1], 5,&crc);
+		if (gi->table_select[2] == 14)
+		    gi->table_select[2] = 16;
 		CRC_writeheader(gfc,gi->table_select[2], 5,&crc);
 
 		CRC_writeheader(gfc,gi->region0_count, 4,&crc);

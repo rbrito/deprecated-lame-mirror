@@ -70,7 +70,7 @@ unsigned long long linbits32[13];
 unsigned short choose_table_H[13];
 
 extern int choose_table_MMX(int *ix, int *end, int *s);
-#define choose_table choose_table_MMX
+#define choose_table(a,b,c) (assert(a<b),choose_table_MMX(a,b,c))
 #else
 /*************************************************************************/
 /*	      ix_max							 */
@@ -145,21 +145,20 @@ count_bit_ESC(int *ix, int *end, int t1, int t2, int *s)
 
 
 INLINE static int
-count_bit_noESC(int *ix, int *end, int t1, int *s)
+count_bit_noESC(int *ix, int *end, int *s)
 {
     /* No ESC-words */
     int	sum1 = 0;
-    const unsigned int xlen = ht[t1].xlen;
-    const unsigned char *hlen1 = ht[t1].hlen;
+    const unsigned char *hlen1 = ht[1].hlen;
 
     do {
-	int x = ix[0] * xlen + ix[1];
+	int x = ix[0] * 2 + ix[1];
 	ix += 2;
 	sum1 += hlen1[x];
     } while (ix < end);
 
     *s += sum1;
-    return t1;
+    return 1;
 }
 
 
@@ -244,11 +243,11 @@ count_bit_noESC_from3(int *ix, int *end, int t1, int *s)
   with any arbitrary tables.
 */
 
-int choose_table(int *ix, int *end, int *s)
+static int choose_table(int *ix, int *end, int *s)
 {
     unsigned int max;
     int choice, choice2;
-    static const int huf_tbl_noESC[16] = {
+    static const int huf_tbl_noESC[] = {
 	1, 2, 5, 7, 7,10,10,13,13,13,13,13,13,13,13
     };
 
@@ -259,7 +258,7 @@ int choose_table(int *ix, int *end, int *s)
 	return (int)max;
 
     case 1:
-	return count_bit_noESC(ix, end, 1, s);
+	return count_bit_noESC(ix, end, s);
 
     case 2:
     case 3:
@@ -269,10 +268,7 @@ int choose_table(int *ix, int *end, int *s)
     case 7: case 8: case 9:
     case 10: case 11: case 12:
     case 13: case 14: case 15:
-	choice = count_bit_noESC_from3(ix, end, huf_tbl_noESC[max - 1], s);
-	if (choice == 14) {
-	    choice = 16;
-	}
+	return count_bit_noESC_from3(ix, end, huf_tbl_noESC[max - 1], s);
 	return choice;
 
     default:
@@ -307,9 +303,6 @@ int choose_table(int *ix, int *end, int *s)
 */
 
 
-int bigv_short_ISO;
-
-
 int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
 {
     int i, a1, a2;
@@ -331,8 +324,8 @@ int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
 	    break;
 
 	p = ((ix[i-4] * 2 + ix[i-3]) * 2 + ix[i-2]) * 2 + ix[i-1];
-	a1 += ht[32].hlen[p];
-	a2 += ht[33].hlen[p];
+	a1 += t32l[p];
+	a2 += t33l[p];
     }
 
     bits = a1;
@@ -348,14 +341,6 @@ int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
 	return bits;
 
     if (gi->block_type == SHORT_TYPE) {
-      if (bigv_short_ISO) {
-	/* old ISO formula */
-	bits=0;
-	gi->count1bits=0;
-	gi->count1=576;
-	gi->big_values=576;
-      }
-
       a1=3*gfc->scalefac_band.s[3];
       if (a1 > gi->big_values) a1 = gi->big_values;
       a2 = gi->big_values;
@@ -431,22 +416,11 @@ int count_bits(lame_global_flags *gfp,int *ix, FLOAT8 *xr, gr_info *cod_info)
   if (cod_info->block_type==SHORT_TYPE) {
     int ix_reorder[576];
     reorder(gfc->scalefac_band.s,ix_reorder,ix);
-    /*
-    int obits;
-    bigv_short_ISO=1;
-    obits=count_bits_long(gfc, ix_reorder, cod_info);
-    */
-    bigv_short_ISO=0;
     bits=count_bits_long(gfc, ix_reorder, cod_info);
-    /*
-    printf("new bits = %i  saving=%i   percentage=%f\n",bits,obits-bits,
-            (obits-bits)/(.1+bits));
-    */
   }else{
     bits=count_bits_long(gfc, ix, cod_info);
   }
   return bits;
-
 }
 
 /***********************************************************************
@@ -555,8 +529,8 @@ void best_huffman_divide(lame_internal_flags *gfc, int gr, int ch, gr_info *gi, 
     
     for (; i > cod_info2.big_values; i -= 4) {
 	int p = ((ix[i-4] * 2 + ix[i-3]) * 2 + ix[i-2]) * 2 + ix[i-1];
-	a1 += ht[32].hlen[p];
-	a2 += ht[33].hlen[p];
+	a1 += t32l[p];
+	a2 += t33l[p];
     }
     cod_info2.big_values = i;
 

@@ -45,6 +45,6 @@ extern struct huffcodetab ht_takehiro[HTN];/* global memory block		*/
 				/* 32,33 count1-tables			*/
 
 
-
+extern unsigned char t32l[], t33l[];
 
 #endif
