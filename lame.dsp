@@ -93,7 +93,7 @@ LINK32=xilink.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /Zp4 /W3 /Gm /GX /Zi /Od /I "../WinGTK/gtk-plus" /I "../WinGTK/glib-1.2" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVEGTK" /YX /FD /c
-# ADD CPP /nologo /W3 /Gm /GX /Zi /Od /I "./WinGTK/gtk-plus" /I "./WinGTK/glib-1.2" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "LAMESNDFILE" /D "HAVEMPGLIB" /D "HAVEGTK" /YX /FD /c
+# ADD CPP /nologo /W3 /Gm /GX /Zi /Od /I "./WinGTK/src/gtk+" /I "./WinGTK/src/glib" /I "./WinGTK/src/gtk+/gdk" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "LAMESNDFILE" /D "HAVEMPGLIB" /D "HAVEGTK" /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -101,7 +101,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=xilink.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib glib-1.2.lib gdk-1.3.lib gtk-1.3.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept /libpath:"./WinGTK/glib-1.2" /libpath:"./WinGTK/gtk-plus/gdk" /libpath:"./WinGTK/gtk-plus/gtk"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib glib-1.3.lib gdk-1.3.lib gtk-1.3.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept /libpath:"./WinGtk/src/gtk+/gtk" /libpath:"./WinGtk/src/gtk+/gdk" /libpath:"./WinGtk/src/glib"
 
 !ELSEIF  "$(CFG)" == "lame - Win32 Release GTK"
 
@@ -118,7 +118,7 @@ LINK32=xilink.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /I "../WinGTK/gtk-plus" /I "../WinGTK/glib-1.2" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVEGTK" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /O2 /I "./WinGTK/gtk-plus" /I "./WinGTK/glib-1.2" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "LAMEPARSE" /D "HAVEMPGLIB" /D "LAMESNDFILE" /D "HAVEGTK" /YX /FD /c
+# ADD CPP /nologo /W3 /GX /O2 /I "./WinGTK/src/gtk+" /I "./WinGTK/src/glib" /I "./WinGTK/src/gtk+/gdk" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "LAMEPARSE" /D "HAVEMPGLIB" /D "LAMESNDFILE" /D "HAVEGTK" /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -126,7 +126,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=xilink.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /profile /map /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib glib-1.2.lib gdk-1.3.lib gtk-1.3.lib /nologo /subsystem:console /profile /map /machine:I386 /libpath:"./WinGTK/glib-1.2" /libpath:"./WinGTK/gtk-plus/gdk" /libpath:"./WinGTK/gtk-plus/gtk"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib glib-1.2.lib gdk-1.3.lib gtk-1.3.lib /nologo /subsystem:console /profile /map /machine:I386 /libpath:"./WinGtk/src/gtk+/gtk" /libpath:"./WinGtk/src/gtk+/gdk" /libpath:"./WinGtk/src/glib"
 
 !ENDIF 
 
@@ -254,19 +254,19 @@ SOURCE=.\psymodel.h
 # End Source File
 # Begin Source File
 
-SOURCE=".\quantize_pvt.c"
-# End Source File
-# Begin Source File
-
-SOURCE=".\quantize_pvt.h"
-# End Source File
-# Begin Source File
-
 SOURCE=.\quantize.c
 # End Source File
 # Begin Source File
 
 SOURCE=.\quantize.h
+# End Source File
+# Begin Source File
+
+SOURCE=".\quantize_pvt.c"
+# End Source File
+# Begin Source File
+
+SOURCE=".\quantize_pvt.h"
 # End Source File
 # Begin Source File
 
