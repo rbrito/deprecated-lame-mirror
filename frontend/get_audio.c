@@ -76,8 +76,10 @@ char   *strchr(), *strrchr();
 /* global data for get_audio.c. */
 int     count_samples_carefully;
 int     pcmbitwidth;
+int     pcmswapbytes = 0;
 unsigned int num_samples_read;
 FILE   *musicin;
+
 
 #ifdef AMIGA_MPEGA
 int     lame_decode_initfile(const char *fullname,
@@ -90,23 +92,11 @@ int     lame_decode_initfile(FILE * fd, mp3data_struct * mp3data);
 int     lame_decode_fromfile(FILE * fd, short int pcm_l[], short int pcm_r[],
                              mp3data_struct * mp3data);
 
-/* and for Vorbis: */
-int     lame_decode_ogg_initfile( lame_global_flags*  gfp,
-                                  FILE*               fd,
-                                  mp3data_struct*     mp3data );
-int     lame_decode_ogg_fromfile( lame_global_flags*  gfc,
-                                  FILE*               fd,
-                                  short int           pcm_l[],
-                                  short int           pcm_r[],
-                                  mp3data_struct*     mp3data );
-
 
 static int read_samples_pcm(FILE * musicin, int sample_buffer[2304],
                             int frame_size, int samples_to_read);
 static int read_samples_mp3(lame_global_flags * const gfp, FILE * const musicin,
                             short int mpg123pcm[2][1152], int num_chan);
-static int read_samples_ogg(lame_global_flags * const gfp, FILE * const musicin,
-                            short int mpg123pcm[2][1152], const int num_chan);
 void    CloseSndFile(sound_file_format input, FILE * musicin);
 FILE   *OpenSndFile(lame_global_flags * gfp, char *);
 
@@ -188,6 +178,7 @@ init_infile(lame_global_flags * gfp, char *inPath)
     count_samples_carefully = 0;
     num_samples_read=0;
     pcmbitwidth=in_bitwidth;
+    pcmswapbytes=swapbytes;
     musicin = OpenSndFile(gfp, inPath);
 }
 
@@ -341,14 +332,6 @@ get_audio_common( lame_global_flags * const gfp,
 	    samples_read = read_samples_mp3( gfp, musicin,
 					     buffer16, num_channels );
         break;
-    case sf_ogg:
-	if( buffer != NULL )
-	    samples_read = read_samples_ogg( gfp, musicin,
-					     buf_tmp16, num_channels );
-	else
-	    samples_read = read_samples_ogg( gfp, musicin,
-					     buffer16, num_channels );
-        break;
     default:
         samples_read =
             read_samples_pcm(musicin, insamp, num_channels * framesize,
@@ -384,9 +367,9 @@ get_audio_common( lame_global_flags * const gfp,
 	}
     }
 
-    /* LAME mp3 is output 16bit -  convert to int, if necessary */
+    /* LAME mp3 output 16bit -  convert to int, if necessary */
     if( input_format == sf_mp1 || input_format == sf_mp2 || 
-        input_format == sf_mp3 || input_format == sf_ogg ) {
+        input_format == sf_mp3) {
 	if( buffer != NULL ) {
 	    for( i = samples_read; --i >= 0; )
 		buffer[0][i] = buf_tmp16[0][i] << (8 * sizeof(int) - 16);
@@ -412,50 +395,6 @@ get_audio_common( lame_global_flags * const gfp,
 
 
 int
-read_samples_ogg(lame_global_flags * const gfp,
-                 FILE * const musicin,
-                 short int oggpcm[2][1152], const int stereo)
-{
-    int     out = 0;
-
-#ifdef HAVE_VORBIS
-    static const char type_name[] = "Ogg Vorbis file";
-
-    out =
-        lame_decode_ogg_fromfile( gfp,
-                                  musicin,
-                                  oggpcm[0],
-                                  oggpcm[1],
-                                  &mp3input_data );
-    /*
-     * out < 0:  error, probably EOF
-     * out = 0:  not possible with lame_decode_fromfile() ???
-     * out > 0:  number of output samples
-     */
-
-    if (out < 0) {
-        memset(oggpcm, 0, sizeof(**oggpcm) * 2 * 1152);
-        return 0;
-    }
-
-    if (lame_get_num_channels( gfp ) != mp3input_data.stereo)
-        fprintf(stderr,
-                "Error: number of channels has changed in %s - not supported\n",
-                type_name);
-    if ( lame_get_in_samplerate( gfp ) != mp3input_data.samplerate )
-        fprintf(stderr,
-                "Error: sample frequency has changed in %s - not supported\n",
-                type_name);
-
-#else
-    out = -1;           /* wanna read ogg without vorbis support? */
-#endif
-
-    return out;
-}
-
-
-static int
 read_samples_mp3(lame_global_flags * const gfp,
                  FILE * const musicin, short int mpg123pcm[2][1152], int stereo)
 {
@@ -463,8 +402,9 @@ read_samples_mp3(lame_global_flags * const gfp,
 #if defined(AMIGA_MPEGA)  ||  defined(HAVE_MPGLIB)
     static const char type_name[] = "MP3 file";
 
-    out = lame_decode_fromfile(musicin, mpg123pcm[0], mpg123pcm[1],
-			       &mp3input_data);
+    out =
+        lame_decode_fromfile(musicin, mpg123pcm[0], mpg123pcm[1],
+                             &mp3input_data);
     /*
      * out < 0:  error, probably EOF
      * out = 0:  not possible with lame_decode_fromfile() ???
@@ -498,18 +438,18 @@ WriteWaveHeader(FILE * const fp, const int pcmbytes,
     int     bytes = (bits + 7) / 8;
 
     /* quick and dirty, but documented */
-    fwrite("RIFF", 1, 4, fp); // label
-    Write32BitsLowHigh(fp, pcmbytes + 44 - 8); // length in bytes without header
-    fwrite("WAVEfmt ", 2, 4, fp); // 2 labels
-    Write32BitsLowHigh(fp, 2 + 2 + 4 + 4 + 2 + 2); // length of PCM format declaration area
-    Write16BitsLowHigh(fp, 1); // is PCM?
-    Write16BitsLowHigh(fp, channels); // number of channels
-    Write32BitsLowHigh(fp, freq); // sample frequency in [Hz]
-    Write32BitsLowHigh(fp, freq * channels * bytes); // bytes per second
-    Write16BitsLowHigh(fp, channels * bytes); // bytes per sample time
-    Write16BitsLowHigh(fp, bits); // bits per sample
-    fwrite("data", 1, 4, fp); // label
-    Write32BitsLowHigh(fp, pcmbytes); // length in bytes of raw PCM data
+    fwrite("RIFF", 1, 4, fp); /* label */
+    Write32BitsLowHigh(fp, pcmbytes + 44 - 8); /* length in bytes without header */
+    fwrite("WAVEfmt ", 2, 4, fp); /* 2 labels */
+    Write32BitsLowHigh(fp, 2 + 2 + 4 + 4 + 2 + 2); /* length of PCM format declaration area */
+    Write16BitsLowHigh(fp, 1); /* is PCM? */
+    Write16BitsLowHigh(fp, channels); /* number of channels */
+    Write32BitsLowHigh(fp, freq); /* sample frequency in [Hz] */
+    Write32BitsLowHigh(fp, freq * channels * bytes); /* bytes per second */
+    Write16BitsLowHigh(fp, channels * bytes); /* bytes per sample time */
+    Write16BitsLowHigh(fp, bits); /* bits per sample */
+    fwrite("data", 1, 4, fp); /* label */
+    Write32BitsLowHigh(fp, pcmbytes); /* length in bytes of raw PCM data */
 
     return ferror(fp) ? -1 : 0;
 }
@@ -520,7 +460,7 @@ WriteWaveHeader(FILE * const fp, const int pcmbytes,
 #if defined(LIBSNDFILE)
 
 #if 0                   /* currently disabled */
-# include "sndfile.h"   // prototype for sf_get_lib_version()
+# include "sndfile.h"   /* prototype for sf_get_lib_version() */
 void
 print_sndlib_version(FILE * fp)
 {
@@ -618,7 +558,12 @@ OpenSndFile(lame_global_flags * gfp, char *inPath)
         (void) lame_set_in_samplerate( gfp, mp3input_data.samplerate );
         (void) lame_set_num_samples( gfp, mp3input_data.nsamp );
     }
+    else if (input_format == sf_ogg) {
+        fprintf(stderr, "sorry, vorbis support in LAME is deprecated.\n");
+        exit(1);
+    }
     else {
+
         /* Try to open the sound file */
         /* set some defaults incase input is raw PCM */
         gs_wfInfo.seekable = (input_format != sf_raw); /* if user specified -r, set to not seekable */
@@ -676,39 +621,39 @@ OpenSndFile(lame_global_flags * gfp, char *inPath)
 	    input_format = sf_raw;
 
 #ifdef _DEBUG_SND_FILE
-        printf("\n\nSF_INFO structure\n");
-        printf("samplerate        :%d\n", gs_wfInfo.samplerate);
-        printf("samples           :%d\n", gs_wfInfo.samples);
-        printf("channels          :%d\n", gs_wfInfo.channels);
-        printf("pcmbitwidth       :%d\n", gs_wfInfo.pcmbitwidth);
-        printf("format            :");
+        DEBUGF("\n\nSF_INFO structure\n");
+        DEBUGF("samplerate        :%d\n", gs_wfInfo.samplerate);
+        DEBUGF("samples           :%d\n", gs_wfInfo.samples);
+        DEBUGF("channels          :%d\n", gs_wfInfo.channels);
+        DEBUGF("pcmbitwidth       :%d\n", gs_wfInfo.pcmbitwidth);
+        DEBUGF("format            :");
 
         /* new formats from sbellon@sbellon.de  1/2000 */
 
         switch (gs_wfInfo.format & SF_FORMAT_TYPEMASK) {
         case SF_FORMAT_WAV:
-            printf("Microsoft WAV format (big endian). ");
+            DEBUGF("Microsoft WAV format (big endian). ");
             break;
         case SF_FORMAT_AIFF:
-            printf("Apple/SGI AIFF format (little endian). ");
+            DEBUGF("Apple/SGI AIFF format (little endian). ");
             break;
         case SF_FORMAT_AU:
-            printf("Sun/NeXT AU format (big endian). ");
+            DEBUGF("Sun/NeXT AU format (big endian). ");
             break;
         case SF_FORMAT_AULE:
-            printf("DEC AU format (little endian). ");
+            DEBUGF("DEC AU format (little endian). ");
             break;
         case SF_FORMAT_RAW:
-            printf("RAW PCM data. ");
+            DEBUGF("RAW PCM data. ");
             break;
         case SF_FORMAT_PAF:
-            printf("Ensoniq PARIS file format. ");
+            DEBUGF("Ensoniq PARIS file format. ");
             break;
         case SF_FORMAT_SVX:
-            printf("Amiga IFF / SVX8 / SV16 format. ");
+            DEBUGF("Amiga IFF / SVX8 / SV16 format. ");
             break;
         case SF_FORMAT_NIST:
-            printf("Sphere NIST format. ");
+            DEBUGF("Sphere NIST format. ");
             break;
         default:
             assert(0);
@@ -717,50 +662,50 @@ OpenSndFile(lame_global_flags * gfp, char *inPath)
 
         switch (gs_wfInfo.format & SF_FORMAT_SUBMASK) {
         case SF_FORMAT_PCM:
-            printf("PCM data in 8, 16, 24 or 32 bits.");
+            DEBUGF("PCM data in 8, 16, 24 or 32 bits.");
             break;
         case SF_FORMAT_FLOAT:
-            printf("32 bit Intel x86 floats.");
+            DEBUGF("32 bit Intel x86 floats.");
             break;
         case SF_FORMAT_ULAW:
-            printf("U-Law encoded.");
+            DEBUGF("U-Law encoded.");
             break;
         case SF_FORMAT_ALAW:
-            printf("A-Law encoded.");
+            DEBUGF("A-Law encoded.");
             break;
         case SF_FORMAT_IMA_ADPCM:
-            printf("IMA ADPCM.");
+            DEBUGF("IMA ADPCM.");
             break;
         case SF_FORMAT_MS_ADPCM:
-            printf("Microsoft ADPCM.");
+            DEBUGF("Microsoft ADPCM.");
             break;
         case SF_FORMAT_PCM_BE:
-            printf("Big endian PCM data.");
+            DEBUGF("Big endian PCM data.");
             break;
         case SF_FORMAT_PCM_LE:
-            printf("Little endian PCM data.");
+            DEBUGF("Little endian PCM data.");
             break;
         case SF_FORMAT_PCM_S8:
-            printf("Signed 8 bit PCM.");
+            DEBUGF("Signed 8 bit PCM.");
             break;
         case SF_FORMAT_PCM_U8:
-            printf("Unsigned 8 bit PCM.");
+            DEBUGF("Unsigned 8 bit PCM.");
             break;
         case SF_FORMAT_SVX_FIB:
-            printf("SVX Fibonacci Delta encoding.");
+            DEBUGF("SVX Fibonacci Delta encoding.");
             break;
         case SF_FORMAT_SVX_EXP:
-            printf("SVX Exponential Delta encoding.");
+            DEBUGF("SVX Exponential Delta encoding.");
             break;
         default:
             assert(0);
             break;
         }
 
-        printf("\n");
-        printf("pcmbitwidth       :%d\n", gs_wfInfo.pcmbitwidth);
-        printf("sections          :%d\n", gs_wfInfo.sections);
-        printf("seekable          :%d\n", gs_wfInfo.seekable);
+        DEBUGF("\n");
+        DEBUGF("pcmbitwidth       :%d\n", gs_wfInfo.pcmbitwidth);
+        DEBUGF("sections          :%d\n", gs_wfInfo.sections);
+        DEBUGF("seekable          :\n", gs_wfInfo.seekable);
 #endif
 
         (void) lame_set_num_samples( gfp, gs_wfInfo.samples );
@@ -948,7 +893,7 @@ read_samples_pcm(FILE * musicin, int sample_buffer[2304], int frame_size,
     if( (32 == pcmbitwidth) || (24 == pcmbitwidth) || (16 == pcmbitwidth) ) {
 				/* assume only recognized wav files are */
 				/*  in little endian byte order */
-	hi_lo_order = (!iswav == !swapbytes);
+	hi_lo_order = (!iswav == !pcmswapbytes);
         samples_read = unpack_read_samples(samples_to_read, pcmbitwidth/8, 
                                            hi_lo_order,sample_buffer, musicin );
        
@@ -1025,7 +970,7 @@ parse_wave_header(lame_global_flags * gfp, FILE * sf)
         if (type == WAV_ID_FMT) {
             subSize = Read32BitsLowHigh(sf);
             if (subSize < 16) {
-                /*printf(
+                /*DEBUGF(
                    "'fmt' chunk too short (only %ld bytes)!", subSize);  */
                 return 0;
             }
@@ -1043,7 +988,7 @@ parse_wave_header(lame_global_flags * gfp, FILE * sf)
             bits_per_sample = Read16BitsLowHigh(sf);
             subSize -= 2;
 
-            /* printf("   skipping %d bytes\n", subSize); */
+            /* DEBUGF("   skipping %d bytes\n", subSize); */
 
             if (subSize > 0) {
                 if (fskip(sf, (long) subSize, SEEK_CUR) != 0)
@@ -1153,7 +1098,7 @@ parse_aiff_header(lame_global_flags * gfp, FILE * sf)
         int     type = Read32BitsHighLow(sf);
         chunkSize -= 4;
 
-        /* printf(
+        /* DEBUGF(
            "found chunk type %08x '%4.4s'\n", type, (char*)&type); */
 
         /* don't use a switch here to make it easier to use 'break' for SSND */
@@ -1178,9 +1123,11 @@ parse_aiff_header(lame_global_flags * gfp, FILE * sf)
                     (dataType != IFF_ID_2CBE) &&
                     (dataType != IFF_ID_NONE))
                     return 0;
-                    
+
                 if (aiff_info.sampleSize == 16)
-                    swapbytes = (!swapbytes == (dataType == IFF_ID_2CLE));
+                  pcmswapbytes = (!swapbytes == (dataType == IFF_ID_2CLE));
+
+                fprintf(stderr, "swapbytes: %d\n", pcmswapbytes);
             }
             
             if (fskip(sf, (long) subSize, SEEK_CUR) != 0)
@@ -1214,7 +1161,7 @@ parse_aiff_header(lame_global_flags * gfp, FILE * sf)
         }
     }
 
-    /* printf("Parsed AIFF %d\n", is_aiff); */
+    /* DEBUGF("Parsed AIFF %d\n", is_aiff); */
     if (is_aiff) {
         /* make sure the header is sane */
         if (0 != aiff_check2("name" /*???????????? */ , &aiff_info))
@@ -1254,7 +1201,7 @@ parse_file_header(lame_global_flags * gfp, FILE * sf)
 
     int     type = Read32BitsHighLow(sf);
     /*
-       printf(
+       DEBUGF(
        "First word of input stream: %08x '%4.4s'\n", type, (char*) &type); 
      */
     count_samples_carefully = 0;
@@ -1348,26 +1295,8 @@ OpenSndFile(lame_global_flags * gfp, char *inPath)
         (void) lame_set_num_samples( gfp, mp3input_data.nsamp );
     }
     else if (input_format == sf_ogg) {
-#ifdef HAVE_VORBIS
-        if ( -1 == lame_decode_ogg_initfile( gfp,
-                                             musicin,
-                                             &mp3input_data ) ) {
-            fprintf(stderr, "Error reading headers in ogg input file %s.\n",
-                    inPath);
-            exit(1);
-        }
-        if( -1 == lame_set_num_channels( gfp, mp3input_data.stereo ) ) {
-            fprintf( stderr,
-                     "Unsupported number of channels: %ud\n",
-                     mp3input_data.stereo );
-            exit( 1 );
-        }
-        (void) lame_set_in_samplerate( gfp, mp3input_data.samplerate );
-        (void) lame_set_num_samples( gfp, mp3input_data.nsamp );
-#else
-        fprintf(stderr, "LAME not compiled with libvorbis support.\n");
+        fprintf(stderr, "sorry, vorbis support in LAME is desperated.\n");
         exit(1);
-#endif
     }
     else {
         if (input_format != sf_raw) {
@@ -1381,6 +1310,7 @@ OpenSndFile(lame_global_flags * gfp, char *inPath)
                 fprintf(stderr, " : Forcing byte-swapping\n");
             else
                 fprintf(stderr, "\n");
+            pcmswapbytes = swapbytes;
         }
     }
 
@@ -1439,20 +1369,22 @@ is_syncword_mp123(const void *const headerptr)
         { 0, 7, 7, 7, 0, 7, 0, 0, 0, 0, 0, 8, 8, 8, 8, 8 };
 
     if ((p[0] & 0xFF) != 0xFF)
-        return 0;       // first 8 bits must be '1'
+        return 0;       /* first 8 bits must be '1' */
     if ((p[1] & 0xE0) != 0xE0)
-        return 0;       // next 3 bits are also
+        return 0;       /* next 3 bits are also */
     if ((p[1] & 0x18) == 0x08)
-        return 0;       // no MPEG-1, -2 or -2.5
+        return 0;       /* no MPEG-1, -2 or -2.5 */
     if ((p[1] & 0x06) == 0x00)
-        return 0;       // no Layer I, II and III
+        return 0;       /* no Layer I, II and III */
     if ((p[2] & 0xF0) == 0xF0)
-        return 0;       // bad bitrate
+        return 0;       /* bad bitrate */
     if ((p[2] & 0x0C) == 0x0C)
-        return 0;       // no sample frequency with (32,44.1,48)/(1,2,4)    
-    if ((p[1] & 0x06) == 0x04) // illegal Layer II bitrate/Channel Mode comb
+        return 0;       /* no sample frequency with (32,44.1,48)/(1,2,4)     */
+    if ((p[1] & 0x06) == 0x04) /* illegal Layer II bitrate/Channel Mode comb */
         if (abl2[p[2] >> 4] & (1 << (p[3] >> 6)))
             return 0;
+    if ((p[7] & 3) == 2)
+	return 0;       /* reserved enphasis mode */
     return 1;
 }
 #if 0
@@ -1462,17 +1394,17 @@ is_syncword_mp3(const void *const headerptr)
     const unsigned char *const p = headerptr;
 
     if ((p[0] & 0xFF) != 0xFF)
-        return 0;       // first 8 bits must be '1'
+        return 0;       /* first 8 bits must be '1' */
     if ((p[1] & 0xE0) != 0xE0)
-        return 0;       // next 3 bits are also
+        return 0;       /* next 3 bits are also */
     if ((p[1] & 0x18) == 0x08)
-        return 0;       // no MPEG-1, -2 or -2.5
+        return 0;       /* no MPEG-1, -2 or -2.5 */
     if ((p[1] & 0x06) != 0x02)
-        return 0;       // no Layer III (can be merged with 'next 3 bits are also' test, but don't do this, this decreases readability)
+        return 0;       /* no Layer III (can be merged with 'next 3 bits are also' test, but don't do this, this decreases readability) */
     if ((p[2] & 0xF0) == 0xF0)
-        return 0;       // bad bitrate
+        return 0;       /* bad bitrate */
     if ((p[2] & 0x0C) == 0x0C)
-        return 0;       // no sample frequency with (32,44.1,48)/(1,2,4)    
+        return 0;       /* no sample frequency with (32,44.1,48)/(1,2,4)     */
     return 1;
 }
 #endif
@@ -1480,20 +1412,33 @@ is_syncword_mp3(const void *const headerptr)
 int
 lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
 {
-    //  VBRTAGDATA pTagData;
-    // int xing_header,len2,num_frames;
+    /*  VBRTAGDATA pTagData; */
+    /* int xing_header,len2,num_frames; */
     unsigned char buf[100];
     int     ret;
     int     len, aid_header;
     short int pcm_l[1152], pcm_r[1152];
-    
+    int freeformat = 0;
 
     memset(mp3data, 0, sizeof(mp3data_struct));
     lame_decode_init();
 
     len = 4;
-    if (fread(&buf, 1, len, fd) != len)
+    if (fread(buf, 1, len, fd) != len)
         return -1;      /* failed */
+    if (buf[0] == 'I' && buf[1] == 'D' && buf[2] == '3') {
+        fprintf(stderr, "ID3v2 found. "
+		"Be sure the tag is lost when transcoding currently.\n");
+	len = 6;
+	if (fread(&buf, 1, len, fd) != len)
+	    return -1;      /* failed */
+	buf[2] &= 127; buf[3] &= 127; buf[4] &= 127; buf[5] &= 127;
+	len = ((((buf[2] << 7) + buf[3] << 7) + buf[4]) << 7) + buf[5];
+	fskip(fd, len, SEEK_CUR);
+	len = 4;
+	if (fread(&buf, 1, len, fd) != len)
+	    return -1;      /* failed */
+    }
     aid_header = check_aid(buf);
     if (aid_header) {
         if (fread(&buf, 1, 2, fd) != 2)
@@ -1504,13 +1449,15 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
         fskip(fd, aid_header - 6, SEEK_CUR);
 
         /* read 4 more bytes to set up buffer for MP3 header check */
-        len = fread(&buf, 1, 4, fd);
+	if (fread(&buf, 1, len, fd) != len)
+	    return -1;      /* failed */
     }
 
 
-    /* look for valid 4 byte MPEG header  */
-    if (len < 4)
-        return -1;
+    /* look for valid 8 byte MPEG header  */
+    if (fread(&buf[4], 1, len, fd) != len)
+        return -1;      /* failed */
+    len = 8;
     while (!is_syncword_mp123(buf)) {
         int     i;
         for (i = 0; i < len - 1; i++)
@@ -1519,14 +1466,18 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
             return -1;  /* failed */
     }
 
+    if ((buf[3] & 0xf0)==0) {
+	fprintf(stderr,"Input file is freeformat.\n");
+	freeformat = 1;
+    }
 
-    // now parse the current buffer looking for MP3 headers.   
-    // (as of 11/00: mpglib modified so that for the first frame where 
-    // headers are parsed, no data will be decoded.  
-    // However, for freeformat, we need to decode an entire frame,
-    // so mp3data->bitrate will be 0 until we have decoded the first
-    // frame.  Cannot decode first frame here because we are not
-    // yet prepared to handle the output.
+    /* now parse the current buffer looking for MP3 headers.    */
+    /* (as of 11/00: mpglib modified so that for the first frame where  */
+    /* headers are parsed, no data will be decoded.   */
+    /* However, for freeformat, we need to decode an entire frame, */
+    /* so mp3data->bitrate will be 0 until we have decoded the first */
+    /* frame.  Cannot decode first frame here because we are not */
+    /* yet prepared to handle the output. */
     ret = lame_decode1_headersB(buf, len, pcm_l, pcm_r, mp3data,&enc_delay,&enc_padding);
     if (-1 == ret)
         return -1;
@@ -1541,8 +1492,9 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
             return -1;
     }
 
-    if (mp3data->bitrate==0) {
-	fprintf(stderr,"Input file is freeformat.\n"); 
+    if (mp3data->bitrate==0 && !freeformat) {
+	fprintf(stderr, "fail to sync...\n");
+	return lame_decode_initfile(fd, mp3data);
     }
 
     if (mp3data->totalframes > 0) {
@@ -1599,15 +1551,15 @@ lame_decode_fromfile(FILE * fd, short pcm_l[], short pcm_r[],
 	    /* we are done reading the file, but check for buffered data */
 	    ret = lame_decode1_headers(buf, len, pcm_l, pcm_r, mp3data);
 	    if (ret<=0) {
-                lame_decode_exit(); // release mp3decoder memory
-                return -1;  // done with file
+                lame_decode_exit(); /* release mp3decoder memory */
+                return -1;  /* done with file */
             }
 	    break;
 	}
 
         ret = lame_decode1_headers(buf, len, pcm_l, pcm_r, mp3data);
         if (ret == -1) {
-            lame_decode_exit();  // release mp3decoder memory
+            lame_decode_exit();  /* release mp3decoder memory */
             return -1;
         }
 	if (ret >0) break;
@@ -1617,3 +1569,4 @@ lame_decode_fromfile(FILE * fd, short pcm_l[], short pcm_r[],
 #endif /* defined(HAVE_MPGLIB) */
 
 /* end of get_audio.c */
+
