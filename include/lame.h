@@ -56,7 +56,7 @@ typedef struct  {
   /* input description */
   unsigned long num_samples;  /* number of samples. default=2^32-1    */
   int num_channels;           /* input number of channels. default=2  */
-  int in_samplerate;          /* input_samp_rate in Hz. default=44100kHz     */
+  int in_samplerate;          /* input_samp_rate in Hz. default=44.1 kHz     */
   int out_samplerate;         /* output_samp_rate. default: LAME picks best value */
   float scale;                /* scale input by this amount before encoding */
 

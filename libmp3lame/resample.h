@@ -1,5 +1,24 @@
 
 
+#define INLINE         static inline
+#define MAX_TABLES     1001
+#define FLOAT          float
+#define float_t        long double
+#define float32_t      float
+#define sample_t       float
+
+#define OUT            const
+#define INOUT
+#define IN
+
+double  sinpi    ( double x );
+double  cospi    ( double x );
+double  sinc     ( double x );
+double  hanning  ( double x );
+double  hamming  ( double x );
+double  blackman ( double x );
+double  blackmanharris_nuttall ( double x );
+double  blackmanharris_min4    ( double x );
 
 typedef struct {
     long double  sample_freq_in;
@@ -9,8 +28,16 @@ typedef struct {
     int          scale_out;
     sample_t**   fir;
     sample_t*    lastsamples [2];
-    ... 
+    // ... 
 } resample_t;
+
+
+typedef struct {
+    int  CPU_features_i387;
+    int  CPU_features_3DNow;
+    int  CPU_features_SIMD;
+    // ...
+} lame_internal_flags;
 
 
 // Creates and initialize a resample_t structure on the heap and 
@@ -45,14 +72,14 @@ int  fill_buffer_resample (			// return code, 0 for success
 // 0.01 means 1%
 
 double  resample_freq_error ( OUT resample_t* const r );
-{
-    return  (sample_freq_in*scale_out - sample_freq_out*scale_in) 
-          / (sample_freq_out*scale_in);
-}
+//{
+//    return  (r->sample_freq_in*r->scale_out - r->sample_freq_out*r->scale_in) 
+//          / (r->sample_freq_out*r->scale_in);
+//}
 
 
-typedef FLOAT (*scalar_t)  ( const sample_t* p, const sample_t* q );
-typedef FLOAT (*scalarn_t) ( const sample_t* p, const sample_t* q, size_t len );
+typedef float_t (*scalar_t)  ( const sample_t* p, const sample_t* q );
+typedef float_t (*scalarn_t) ( const sample_t* p, const sample_t* q, size_t len );
 
 extern scalar_t   scalar4;
 extern scalar_t   scalar8;
@@ -63,7 +90,7 @@ extern scalar_t   scalar24;
 extern scalar_t   scalar64;
 extern scalarn_t  scalar;
 
-void init_scalar_functions ( lame_internal_flags *gfc );
+void init_scalar_functions ( const lame_internal_flags *gfc );
 
 
 
@@ -110,5 +137,14 @@ float_t  scalar20_float32_SIMD  ( const float32_t* p, const float32_t* q );
 float_t  scalar24_float32_SIMD  ( const float32_t* p, const float32_t* q );
 float_t  scalar4n_float32_SIMD  ( const float32_t* p, const float32_t* q, const size_t len );
 float_t  scalar1n_float32_SIMD  ( const float32_t* p, const float32_t* q, const size_t len );
+
+float_t  scalar04_float32       ( const float32_t* p, const float32_t* q );
+float_t  scalar08_float32       ( const float32_t* p, const float32_t* q );
+float_t  scalar12_float32       ( const float32_t* p, const float32_t* q );
+float_t  scalar16_float32       ( const float32_t* p, const float32_t* q );
+float_t  scalar20_float32       ( const float32_t* p, const float32_t* q );
+float_t  scalar24_float32       ( const float32_t* p, const float32_t* q );
+float_t  scalar4n_float32       ( const float32_t* p, const float32_t* q, const size_t len );
+float_t  scalar1n_float32       ( const float32_t* p, const float32_t* q, const size_t len );
 
 /* end of resample.h */

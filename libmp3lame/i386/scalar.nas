@@ -423,31 +423,243 @@ proc	scalar1n_float32_i387
 .ret2
 endproc
 
-;
-;  Should be replaced by optimized versions
-;
 
 proc	scalar04_float32_3DNow
-	jmp	scalar04_float32_i387
+%$p	arg	4
+%$q	arg	4
+        mov     eax,[sp(%$p)]
+        mov     edx,[sp(%$q)]
+
+	pmov    mm0,qword [eax]
+	pmov    mm1,qword [eax+8]
+        pfmul   mm0,qword [edx]
+	pfmul   mm1,qword [edx+8]
+
+        pfadd   mm0,mm1
+        sub     esp,byte 8
+        pmov    qword [esp],mm0
+	femms
+	fld     dword [esp]
+        fadd    dword [esp+4]
+        add     esp,byte 8
 endproc
+
+
 proc	scalar08_float32_3DNow
-	jmp	scalar08_float32_i387
+%$p	arg	4
+%$q	arg	4
+        mov     eax,[sp(%$p)]
+        mov     edx,[sp(%$q)]
+
+	pmov    mm0,qword [eax]
+	pmov    mm1,qword [eax+8]
+        pfmul   mm0,qword [edx]
+	pfmul   mm1,qword [edx+8]
+
+	pmov    mm2,qword [eax+16]
+	pmov    mm3,qword [eax+24]
+        pfmul   mm2,qword [edx+16]
+	pfmul   mm3,qword [edx+24]
+        pfadd   mm0,mm2
+        pfadd   mm1,mm3
+
+        pfadd   mm0,mm1
+        sub     esp,byte 8
+        pmov    qword [esp],mm0
+	femms
+	fld     dword [esp]
+        fadd    dword [esp+4]
+        add     esp,byte 8
 endproc
+
+
 proc	scalar12_float32_3DNow
-	jmp	scalar12_float32_i387
+%$p	arg	4
+%$q	arg	4
+        mov     eax,[sp(%$p)]
+        mov     edx,[sp(%$q)]
+
+	pmov    mm0,qword [eax]
+	pmov    mm1,qword [eax+8]
+        pfmul   mm0,qword [edx]
+	pfmul   mm1,qword [edx+8]
+
+	pmov    mm2,qword [eax+16]
+	pmov    mm3,qword [eax+24]
+        pfmul   mm2,qword [edx+16]
+	pfmul   mm3,qword [edx+24]
+        pfadd   mm0,mm2
+        pfadd   mm1,mm3
+
+	pmov    mm2,qword [eax+32]
+	pmov    mm3,qword [eax+40]
+        pfmul   mm2,qword [edx+32]
+	pfmul   mm3,qword [edx+40]
+        pfadd   mm0,mm2
+        pfadd   mm1,mm3
+
+        pfadd   mm0,mm1
+        sub     esp,byte 8
+        pmov    qword [esp],mm0
+	femms
+	fld     dword [esp]
+        fadd    dword [esp+4]
+        add     esp,byte 8
 endproc
+
+
 proc	scalar16_float32_3DNow
-	jmp	scalar16_float32_i387
+%$p	arg	4
+%$q	arg	4
+        mov     eax,[sp(%$p)]
+        mov     edx,[sp(%$q)]
+
+	pmov    mm0,qword [eax]
+	pmov    mm1,qword [eax+8]
+        pfmul   mm0,qword [edx]
+	pfmul   mm1,qword [edx+8]
+
+	pmov    mm2,qword [eax+16]
+	pmov    mm3,qword [eax+24]
+        pfmul   mm2,qword [edx+16]
+	pfmul   mm3,qword [edx+24]
+        pfadd   mm0,mm2
+        pfadd   mm1,mm3
+
+	pmov    mm2,qword [eax+32]
+	pmov    mm3,qword [eax+40]
+        pfmul   mm2,qword [edx+32]
+	pfmul   mm3,qword [edx+40]
+        pfadd   mm0,mm2
+        pfadd   mm1,mm3
+
+	pmov    mm2,qword [eax+48]
+	pmov    mm3,qword [eax+56]
+        pfmul   mm2,qword [edx+48]
+	pfmul   mm3,qword [edx+56]
+        pfadd   mm0,mm2
+        pfadd   mm1,mm3
+
+        pfadd   mm0,mm1
+        sub     esp,byte 8
+        pmov    qword [esp],mm0
+	femms
+	fld     dword [esp]
+        fadd    dword [esp+4]
+        add     esp,byte 8
 endproc
+
+
 proc	scalar20_float32_3DNow
-	jmp	scalar20_float32_i387
+%$p	arg	4
+%$q	arg	4
+        mov     eax,[sp(%$p)]
+        mov     edx,[sp(%$q)]
+
+	pmov    mm0,qword [eax]
+	pmov    mm1,qword [eax+8]
+        pfmul   mm0,qword [edx]
+	pfmul   mm1,qword [edx+8]
+
+	pmov    mm2,qword [eax+16]
+	pmov    mm3,qword [eax+24]
+        pfmul   mm2,qword [edx+16]
+	pfmul   mm3,qword [edx+24]
+        pfadd   mm0,mm2
+        pfadd   mm1,mm3
+
+	pmov    mm2,qword [eax+32]
+	pmov    mm3,qword [eax+40]
+        pfmul   mm2,qword [edx+32]
+	pfmul   mm3,qword [edx+40]
+        pfadd   mm0,mm2
+        pfadd   mm1,mm3
+
+	pmov    mm2,qword [eax+48]
+	pmov    mm3,qword [eax+56]
+        pfmul   mm2,qword [edx+48]
+	pfmul   mm3,qword [edx+56]
+        pfadd   mm0,mm2
+        pfadd   mm1,mm3
+
+	pmov    mm2,qword [eax+64]
+	pmov    mm3,qword [eax+72]
+        pfmul   mm2,qword [edx+64]
+	pfmul   mm3,qword [edx+72]
+        pfadd   mm0,mm2
+        pfadd   mm1,mm3
+
+        pfadd   mm0,mm1
+        sub     esp,byte 8
+        pmov    qword [esp],mm0
+	femms
+	fld     dword [esp]
+        fadd    dword [esp+4]
+        add     esp,byte 8
 endproc
+
+
 proc	scalar24_float32_3DNow
-	jmp	scalar24_float32_i387
+%$p	arg	4
+%$q	arg	4
+        mov     eax,[sp(%$p)]
+        mov     edx,[sp(%$q)]
+
+	pmov    mm0,qword [eax]
+	pmov    mm1,qword [eax+8]
+        pfmul   mm0,qword [edx]
+	pfmul   mm1,qword [edx+8]
+
+	pmov    mm2,qword [eax+16]
+	pmov    mm3,qword [eax+24]
+        pfmul   mm2,qword [edx+16]
+	pfmul   mm3,qword [edx+24]
+        pfadd   mm0,mm2
+        pfadd   mm1,mm3
+
+	pmov    mm2,qword [eax+32]
+	pmov    mm3,qword [eax+40]
+        pfmul   mm2,qword [edx+32]
+	pfmul   mm3,qword [edx+40]
+        pfadd   mm0,mm2
+        pfadd   mm1,mm3
+
+	pmov    mm2,qword [eax+48]
+	pmov    mm3,qword [eax+56]
+        pfmul   mm2,qword [edx+48]
+	pfmul   mm3,qword [edx+56]
+        pfadd   mm0,mm2
+        pfadd   mm1,mm3
+
+	pmov    mm2,qword [eax+64]
+	pmov    mm3,qword [eax+72]
+        pfmul   mm2,qword [edx+64]
+	pfmul   mm3,qword [edx+72]
+        pfadd   mm0,mm2
+        pfadd   mm1,mm3
+
+	pmov    mm2,qword [eax+80]
+	pmov    mm3,qword [eax+88]
+        pfmul   mm2,qword [edx+80]
+	pfmul   mm3,qword [edx+88]
+        pfadd   mm0,mm2
+        pfadd   mm1,mm3
+
+        pfadd   mm0,mm1
+        sub     esp,byte 8
+        pmov    qword [esp],mm0
+	femms
+	fld     dword [esp]
+        fadd    dword [esp+4]
+        add     esp,byte 8
 endproc
+
+
 proc	scalar4n_float32_3DNow
 	jmp	scalar24_float32_i387
 endproc
+
+
 proc	scalar1n_float32_3DNow
 	jmp	scalar24_float32_i387
 endproc
@@ -456,24 +668,38 @@ endproc
 proc	scalar04_float32_SIMD
 	jmp	scalar04_float32_i387
 endproc
+
+
 proc	scalar08_float32_SIMD
 	jmp	scalar08_float32_i387
 endproc
+
+
 proc	scalar12_float32_SIMD
 	jmp	scalar12_float32_i387
 endproc
+
+
 proc	scalar16_float32_SIMD
 	jmp	scalar16_float32_i387
 endproc
+
+
 proc	scalar20_float32_SIMD
 	jmp	scalar20_float32_i387
 endproc
+
+
 proc	scalar24_float32_SIMD
 	jmp	scalar24_float32_i387
 endproc
+
+
 proc	scalar4n_float32_SIMD
 	jmp	scalar24_float32_i387
 endproc
+
+
 proc	scalar1n_float32_SIMD
 	jmp	scalar24_float32_i387
 endproc

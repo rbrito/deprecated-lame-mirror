@@ -805,81 +805,79 @@ huffman_coder_count1(lame_global_flags *gfp,int *ix, gr_info *gi)
   */
 
 INLINE int
-HuffmanCode(lame_global_flags *gfp, int table_select, int x, int y)
+HuffmanCode ( lame_global_flags* const gfp, const int table_select, int x1, int x2 )
 {
-  /*    lame_internal_flags *gfc=gfp->internal_flags;*/
-    int code, ext, xlen;
-    int cbits, xbits;
-    int signx, signy, linbits;
-    const struct huffcodetab *h;
+    const struct huffcodetab* h = ht + table_select;
+    int  code    = 0;
+    int  cbits   = 0;
+    int  xbits   = 0;
+    int  sgn_x1  = 0;
+    int  sgn_x2  = 0;
+    int  linbits = h->xlen;
+    int  xlen    = h->xlen;
+    int  ext; 
 
-    cbits = 0;
-    xbits = 0;
-    code  = 0;
-    signx = signy = 0;
+    assert ( table_select > 0 );
 
-    if (x < 0) {
-	signx++;
-	x = -x;
+    if (x1 < 0) {
+	sgn_x1++;
+	x1 = -x1;
     }
 
-    if (y < 0) {
-	signy++;
-	y = -y;
+    if (x2 < 0) {
+	sgn_x2++;
+	x2 = -x2;
     }
 
-    assert(table_select>0);
-    h       = ht + table_select;
-    linbits = h->xlen;
-    ext     = signx;
-    xlen    = h->xlen;
+    ext     = sgn_x1;
 
     if (table_select > 15) {
 	/* use ESC-words */
-	if (x > 14) {
-	    int linbitsx = x - 15;
-	    assert(linbitsx <= h->linmax);
-	    ext |= linbitsx << 1;
-	    xbits = linbits;
-	    x = 15;
+	if (x1 > 14) {
+	    int linbits_x1 = x1 - 15;
+	    assert ( linbits_x1 <= h->linmax );
+	    ext   |= linbits_x1 << 1;
+	    xbits  = linbits;
+	    x1     = 15;
 	}
 
-	if (y > 14) {
-	    int linbitsy = y - 15;
-	    assert(linbitsy <= h->linmax);
-	    ext <<= linbits;
-	    ext |= linbitsy;
+	if (x2 > 14) {
+	    int linbits_x2 = x2 - 15;
+	    assert ( linbits_x2 <= h->linmax );
+	    ext  <<= linbits;
+	    ext   |= linbits_x2;
 	    xbits += linbits;
-	    y = 15;
+	    x2     = 15;
 	}
 	xlen = 16;
     }
 
-    if (x != 0) {
+    if (x1 != 0) {
 	cbits--;
     }
 
-    if (y != 0) {
+    if (x2 != 0) {
 	ext <<= 1;
-	ext |= signy;
+	ext  |= sgn_x2;
 	cbits--;
     }
 
     xbits -= cbits;
 
-    assert ( (x|y) < 16u );
+    assert ( (x1|x2) < 16u );
 
-    x = x * xlen + y;
+    x1 = x1 * xlen + x2;
 
-    code = h->table[x];
-    cbits += h->hlen[x];
+    code   = h->table [x1];
+    cbits += h->hlen  [x1];
 
-    assert(cbits <= MAX_LENGTH);
-    assert(xbits <= MAX_LENGTH);
+    assert ( cbits <= MAX_LENGTH );
+    assert ( xbits <= MAX_LENGTH );
 
-    putbits2(gfp,code, cbits);
-    putbits2(gfp, ext, xbits);
-    return cbits+xbits;
+    putbits2 ( gfp, code, cbits );
+    putbits2 ( gfp, ext,  xbits );
+    
+    return cbits + xbits;
 }
 
 static int

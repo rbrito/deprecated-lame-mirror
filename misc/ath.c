@@ -29,7 +29,7 @@
      
 
 #define AUDIO_DEVICE       "/dev/dsp"
-#define COOLEDIT_FILE      "/mnt/dosd/cooledit.wav"
+//#define COOLEDIT_FILE      "/mnt/dosd/cooledit.wav"
 #define DELAY_UNTIL_XCHG   2.5
 #define TURN_STEPS	   2400
 
