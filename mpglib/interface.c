@@ -175,7 +175,7 @@ void copy_mp(PMPSTR mp,int size,unsigned char *ptr)
 {
   int len = 0;
 
-  while(len < size) {
+  while(len < size && mp->tail) {
     int nlen;
     int blen = mp->tail->size - mp->tail->pos;
     if( (size - len) <= blen) {
@@ -267,6 +267,7 @@ int sync_buffer(PMPSTR mp,int free_match)
   unsigned int b[4]={0,0,0,0};
   int i,h,pos;
   struct buf *buf=mp->tail;
+  if (!buf) return -1;
 
   pos = buf->pos;
   for (i=0; i<mp->bsize; i++) {
