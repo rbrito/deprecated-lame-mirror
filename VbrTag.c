@@ -284,12 +284,12 @@ int InitVbrTag(Bit_stream_struc* pBs,int nVersion, int nMode, int SampIndex)
 	// 44.1kHz:  156 bytes          208bytes@64kbs     (+1 if padding = 1)
 	// 48kHz:    144 bytes          192
 	// 
-	// MPEG 2 values are half the above.  Need to go to a 128kbs frame
-	// to have room for the table of contents.
+	// MPEG 2 values are the since the framesize and samplerate
+        // are each reduced by a factor of 2.
 	*/
 	{
 	int tot;
-	int framesize[3]={208,192,288};  /* 64kbs MPEG1 or 128kbs MPEG2  framesize */
+	int framesize[3]={208,192,288};  /* 64kbs MPEG1 or MPEG2  framesize */
 	/* int framesize[3]={156,144,216}; */ /* 48kbs framesize */
 	
 	if (SampIndex>2) {
@@ -379,7 +379,7 @@ int PutVbrTag(char* lpszFileName,int nVbrScale,int nVersion)
 	}else{
 	  pbtStreamBuffer[1]=(u_char) 0xf3;    
 	  abyte = pbtStreamBuffer[2] & (char) 0x0c;   
-	  pbtStreamBuffer[2]=(char) 0xc0 | abyte;     /* 128kbs MPEG2 frame */
+	  pbtStreamBuffer[2]=(char) 0x80 | abyte;     /* 64kbs MPEG2 frame */
 	}
 
 

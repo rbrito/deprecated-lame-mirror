@@ -401,10 +401,6 @@ void lame_init_params(lame_global_flags *gfp)
     gfp->bWriteVbrTag=0;  /* disable Xing VBR tag */
   }
 
-  if (gfp->mode_gr==1) {
-    gfp->bWriteVbrTag=0;      /* no MPEG2 Xing VBR tags yet */
-  }
-
   init_bit_stream_w(&bs);
 
 
