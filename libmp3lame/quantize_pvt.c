@@ -444,8 +444,12 @@ void reduce_side(int targ_bits[2],FLOAT8 ms_ener_ratio,int mean_bits,int max_bit
 
   returns number of sfb's with energy > ATH
 */
-int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576], III_psy_ratio *ratio,
-	       gr_info *cod_info, III_psy_xmin *l3_xmin)
+int calc_xmin( 
+        const lame_global_flags * const gfp,
+        const FLOAT8                    xr [576],
+        const III_psy_ratio     * const ratio,
+	const gr_info           * const cod_info, 
+              III_psy_xmin      * const l3_xmin ) 
 {
   lame_internal_flags *gfc=gfp->internal_flags;
   int sfb,j,start, end, bw,l, b, ath_over=0;
@@ -539,11 +543,16 @@ int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576], III_psy_ratio *ratio,
 /*            calc_noise                                                 */
 /*************************************************************************/
 /*  mt 5/99:  Function: Improved calc_noise for a single channel   */
-int calc_noise( lame_global_flags *gfp,
-                 FLOAT8 xr[576], int ix[576], gr_info *cod_info,
-		 FLOAT8 xfsf[4][SBMAX_l], FLOAT8 distort[4][SBMAX_l],
-		 III_psy_xmin *l3_xmin, III_scalefac_t *scalefac,
-		 calc_noise_result *res)
+int calc_noise( 
+        const lame_global_flags * const gfp,
+        const FLOAT8                    xr [576],
+        const int                       ix [576],
+        const gr_info           * const cod_info,
+        const III_psy_xmin      * const l3_xmin, 
+        const III_scalefac_t    * const scalefac,
+              FLOAT8                    xfsf    [4][SBMAX_l], 
+              FLOAT8                    distort [4][SBMAX_l],
+              calc_noise_result *       res )
 {
   int sfb,start, end, j,l, i, over=0;
   FLOAT8 sum, bw;
@@ -692,19 +701,24 @@ int calc_noise( lame_global_flags *gfp,
  *
  *  set_pinfo()
  *
- *  updates plotting data                                              
+ *  updates plotting data    
+ *
+ *  Mark Taylor 2000-??-??                
+ *
+ *  Robert Hegemann: moved noise/distortion calc into it                          
  *
  ************************************************************************/
 
+static
 void set_pinfo (
-    lame_global_flags *gfp,
-    gr_info           *cod_info,
-    III_psy_ratio     *ratio, 
-    III_scalefac_t    *scalefac,
-    FLOAT8             xr[576],
-    int                l3_enc[576],        
-    int                gr,
-    int                ch )
+        const lame_global_flags * const gfp,
+        const gr_info           * const cod_info,
+        const III_psy_ratio     * const ratio, 
+        const III_scalefac_t    * const scalefac,
+        const FLOAT8                    xr[576],
+        const int                       l3_enc[576],        
+        const int                       gr,
+        const int                       ch )
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     int sfb;
@@ -720,8 +734,8 @@ void set_pinfo (
 
     calc_xmin (gfp,xr, ratio, cod_info, &l3_xmin);
 
-    calc_noise (gfp, xr, l3_enc, cod_info, xfsf, distort,
-                &l3_xmin, scalefac, &noise_info);
+    calc_noise (gfp, xr, l3_enc, cod_info, &l3_xmin, scalefac, 
+                xfsf, distort, &noise_info);
 
     if (cod_info->block_type == SHORT_TYPE) {
         for (j=0, sfb = 0; sfb < SBMAX_s; sfb++ )  {
@@ -880,7 +894,69 @@ void set_pinfo (
 }
 
 
+/************************************************************************
+ *
+ *  set_frame_pinfo()
+ *
+ *  updates plotting data for a whole frame  
+ *
+ *  Robert Hegemann 2000-10-21                          
+ *
+ ************************************************************************/
 
+void set_frame_pinfo( 
+        const lame_global_flags * const gfp,
+              FLOAT8                    xr           [2][2][576],
+              III_psy_ratio             ratio        [2][2],  
+              int                       l3_enc       [2][2][576],
+              III_scalefac_t            scalefac     [2][2] )
+{
+    lame_internal_flags * gfc = gfp->internal_flags;
+    unsigned int          gr, ch, sfb;
+    int                   act_l3enc[576];
+    III_scalefac_t        act_scalefac [2];
+    int scsfi[2] = {0,0};
+    
+    
+    gfc->masking_lower = 1.0;
+    
+    /* reconstruct the scalefactors in case SCSFI was used 
+     */
+    for (ch = 0; ch < gfc->stereo; ch ++) {
+        for (sfb = 0; sfb < SBMAX_l; sfb ++) {
+            if (scalefac[1][ch].l[sfb] == -1) {/* scfsi */
+                act_scalefac[ch].l[sfb] = scalefac[0][ch].l[sfb];
+                scsfi[ch] = 1;
+            } else {
+                act_scalefac[ch].l[sfb] = scalefac[1][ch].l[sfb];
+            }
+        }
+    }
+    
+    /* for every granule and channel patch l3_enc and set info
+     */
+    for (gr = 0; gr < gfc->mode_gr; gr ++) {
+        for (ch = 0; ch < gfc->stereo; ch ++) {
+            int i;
+            gr_info *cod_info = &gfc->l3_side.gr[gr].ch[ch].tt;
+            
+            /* revert back the sign of l3enc */
+            for ( i = 0; i < 576; i++) {
+                if (xr[gr][ch][i] < 0) 
+                    act_l3enc[i] = -l3_enc[gr][ch][i];
+                else
+                    act_l3enc[i] = +l3_enc[gr][ch][i];
+            }
+            if (gr == 1 && scsfi[ch]) 
+                set_pinfo (gfp, cod_info, &ratio[gr][ch], &act_scalefac[ch],
+                        xr[gr][ch], act_l3enc, gr, ch);                    
+            else
+                set_pinfo (gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch],
+                        xr[gr][ch], act_l3enc, gr, ch);                    
+        } /* for ch */
+    }    /* for gr */
+}
+        
 
 
 

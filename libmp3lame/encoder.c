@@ -383,6 +383,7 @@ char *mp3buf, int mp3buf_size)
 	gfc->pinfo->pcmdata[ch][j] = inbuf[ch][j-FFTOFFSET];
       }
     }
+    set_frame_pinfo (gfp, xr, *masking, l3_enc, scalefac);
   }
   
   updateStats( gfc );

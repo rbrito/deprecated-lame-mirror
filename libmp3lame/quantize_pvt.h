@@ -65,28 +65,31 @@ void reduce_side(int targ_bits[2],FLOAT8 ms_ener_ratio,int mean_bits,int max_bit
 void iteration_init( lame_global_flags *gfp, III_side_info_t *l3_side);
 
 
-int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576],
-                III_psy_ratio *ratio,
-	            gr_info *cod_info,
-                III_psy_xmin *l3_xmin);
+int calc_xmin( 
+        const lame_global_flags * const gfp,
+        const FLOAT8                    xr [576],
+        const III_psy_ratio     * const ratio,
+	const gr_info           * const cod_info, 
+              III_psy_xmin      * const l3_xmin );
+               
+int calc_noise( 
+        const lame_global_flags * const gfp,
+        const FLOAT8                    xr [576],
+        const int                       ix [576],
+        const gr_info           * const cod_info,
+        const III_psy_xmin      * const l3_xmin, 
+        const III_scalefac_t    * const scalefac,
+              FLOAT8                    xfsf    [4][SBMAX_l], 
+              FLOAT8                    distort [4][SBMAX_l],
+              calc_noise_result *       res );
+              
+void set_frame_pinfo( 
+        const lame_global_flags * const gfp,
+              FLOAT8                    xr       [2][2][576],
+              III_psy_ratio             ratio    [2][2],  
+              int                       l3_enc   [2][2][576],
+              III_scalefac_t            scalefac [2][2] );
 
-int calc_noise( lame_global_flags *gfp, FLOAT8 xr[576],
-                 int ix[576],
-                 gr_info *cod_info,
-                 FLOAT8 xfsf[4][SBMAX_l], 
-		 FLOAT8 distort[4][SBMAX_l],
-                 III_psy_xmin *l3_xmin,
-		 III_scalefac_t *,
-                 calc_noise_result *);
-
-void set_pinfo ( lame_global_flags *gfp,
-                 gr_info           *cod_info,
-                 III_psy_ratio     *ratio, 
-                 III_scalefac_t    *scalefac,
-                 FLOAT8             xr    [576],        
-                 int                l3_enc[576],        
-                 int                gr,
-                 int                ch );
 
 #ifdef ASM_QUANTIZE
 void quantize_xrpow_ASM( FLOAT8 xr[576],

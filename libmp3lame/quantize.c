@@ -855,8 +855,8 @@ void outer_loop
                 over = 0;
             } else {
                 /* coefficients and thresholds both l/r (or both mid/side) */
-                over = calc_noise (gfp, xr, l3_enc_w, cod_info, xfsf_w,
-                                   distort, l3_xmin, scalefac, &noise_info);
+                over = calc_noise (gfp, xr, l3_enc_w, cod_info, l3_xmin, 
+                                   scalefac, xfsf_w, distort, &noise_info);
             }
 
 
@@ -978,19 +978,6 @@ void iteration_finish
         for (ch = 0; ch < gfc->stereo; ch++) {
             gr_info *cod_info = &l3_side->gr[gr].ch[ch].tt;
 
-            /*  update the frame analyzer information
-             *  it looks like scfsi will not be handled correct:
-             *    often there are undistorted bands which show up
-             *    as distorted ones in the frame analyzer!!
-             *  that's why we do it before:
-             *  - best_scalefac_store
-             *  - best_huffman_divide
-             *  but we should solve the real problem!
-             */
-            if (gfp->analysis) 
-                set_pinfo (gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch],
-                           xr[gr][ch], l3_enc[gr][ch], gr, ch);
-            
             /*  try some better scalefac storage
              */
             best_scalefac_store (gfc, gr, ch, l3_enc, l3_side, scalefac);
@@ -1780,19 +1767,6 @@ void iteration_loop
             }
             assert (cod_info->part2_3_length < 4096);
 
-            /*  update the frame analyzer information
-             *  it looks like scfsi will not be handled correct:
-             *    often there are undistorted bands which show up
-             *    as distorted ones in the frame analyzer!!
-             *  that's why we do it before:
-             *  - best_scalefac_store
-             *  - best_huffman_divide
-             *  but we should solve the real problem!
-             */
-            if (gfp->analysis) 
-                set_pinfo (gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch],
-                           xr[gr][ch], l3_enc[gr][ch], gr, ch);
-            
             /*  try some better scalefac storage
              */
             best_scalefac_store (gfc, gr, ch, l3_enc, l3_side, scalefac);

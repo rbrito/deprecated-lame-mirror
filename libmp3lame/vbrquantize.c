@@ -988,22 +988,6 @@ VBR_quantize(lame_global_flags *gfp,
   
 
 
-  if (gfp->analysis) {
-    for (gr = 0; gr < gfc->mode_gr; gr++) {
-      for (ch = 0; ch < gfc->stereo; ch++) {
-        cod_info = &l3_side->gr[gr].ch[ch].tt;
-
-        /* recompute allowed noise with no 'masking_lower' for
-         * frame analyzer */
-        gfc->masking_lower=1.0;
-        set_pinfo (gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], l3_enc[gr][ch], gr, ch);
-      }
-    }
-  }
-
-  
-
-
   /* find optimal scalefac storage.  Cant be done above because
    * might enable scfsi which breaks the interation loops */
   totbits=0;
