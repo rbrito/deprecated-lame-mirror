@@ -446,14 +446,14 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
         case vbr_rh: {
             SET_OPTION(short_threshold_lrm, 5.80f, -1);
             SET_OPTION(short_threshold_s, 130.0f, -1);
-            SET_OPTION(quant_comp, 3, -1);
-            SET_OPTION(quant_comp_short, 3, -1);
+            SET_OPTION(quant_comp, 9, -1);
+            SET_OPTION(quant_comp_short, 9, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
             lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
             SET_OPTION(msfix, 1.64, -1);
-            SET_OPTION(maskingadjust, 0.95, 0);
-            SET_OPTION(maskingadjust_short, -0.05, 0);
-            SET_OPTION(ATHlower, -4.9, 0);
+            SET_OPTION(maskingadjust, -1.8, 0);
+            SET_OPTION(maskingadjust_short, -2.8, 0);
+            SET_OPTION(ATHlower, 2.6, 0);
             SET_OPTION(ATHcurve, 3, -1);
             SET_OPTION(athaa_sensitivity, -4, 0);
 
@@ -491,18 +491,16 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
         lame_set_VBR_q(gfp, 2);
         switch (lame_get_VBR(gfp)) {
         case vbr_rh: {
-            SET_OPTION(VBR_min_bitrate_kbps, 128, 0); /*ideally, we should get rid of this*/
-
             SET_OPTION(short_threshold_lrm, 5.6f, -1);
             SET_OPTION(short_threshold_s, 125.0f, -1);
-            SET_OPTION(quant_comp, 3, -1);
-            SET_OPTION(quant_comp_short, 3, -1);
+            SET_OPTION(quant_comp, 9, -1);
+            SET_OPTION(quant_comp_short, 9, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
             lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
             SET_OPTION(msfix, 1.49, -1);
-            SET_OPTION(maskingadjust, .8, 0);
-            SET_OPTION(maskingadjust_short, -1.1, 0);
-            SET_OPTION(ATHlower, -1.4, 0);
+            SET_OPTION(maskingadjust, -2.1, 0);
+            SET_OPTION(maskingadjust_short, -3.4, 0);
+            SET_OPTION(ATHlower, 2.8, 0);
             SET_OPTION(ATHcurve, 2, -1);
             /* modify sfb21 by 3.75 dB plus ns-treble=0                  */
             lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (15 << 20));
