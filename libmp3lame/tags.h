@@ -28,7 +28,7 @@ int InitVbrTag(lame_t gfc);
 void AddVbrFrame(lame_t gfc);
 
 /* write tag into "buf" */
-int id3tag_write_v2(lame_t gfc, unsigned char *buf, int size);
-int id3tag_write_v1(lame_t gfc, unsigned char *buf, int size);
+int id3tag_write_v2(lame_t gfc, unsigned char *buf, size_t size);
+int id3tag_write_v1(lame_t gfc, unsigned char *buf, size_t size);
 
 #endif

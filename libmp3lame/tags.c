@@ -359,7 +359,7 @@ set_frame(unsigned char *frame, unsigned long id, const char *text,
  * or the "id3tag_add_v2" or "id3tag_v2_only" functions are used.
  */
 int
-id3tag_write_v2(lame_t gfc, unsigned char *buf, int size)
+id3tag_write_v2(lame_t gfc, unsigned char *buf, size_t size)
 {
     if ((gfc->tag_spec.flags & CHANGED_FLAG)
 	&& !(gfc->tag_spec.flags & V1_ONLY_FLAG)) {
@@ -512,7 +512,7 @@ set_text_field(unsigned char *field, const char *text, size_t size, int pad)
 }
 
 int
-id3tag_write_v1(lame_t gfc, unsigned char *buf, int size)
+id3tag_write_v1(lame_t gfc, unsigned char *buf, size_t size)
 {
     unsigned char tag[128], *p = tag, year[5];
     int pad = (gfc->tag_spec.flags & SPACE_V1_FLAG) ? ' ' : 0;
