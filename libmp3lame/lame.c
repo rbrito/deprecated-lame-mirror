@@ -721,7 +721,7 @@ lame_init_params(lame_global_flags * const gfp)
     case vbr_mtrh:
         {
             /*numbers are a bit strange, but they determine the lowpass value*/
-            FLOAT8  cmp[] = { 5.7, 6.5, 7.3, 8.2, 10, 11.9, 13, 14, 15, 16.5 };
+            FLOAT  cmp[] = { 5.7, 6.5, 7.3, 8.2, 10, 11.9, 13, 14, 15, 16.5 };
             gfp->compression_ratio = cmp[gfp->VBR_q];
         }
         break;
@@ -1972,7 +1972,7 @@ lame_mp3_tags_fid(lame_global_flags * gfp, FILE * fpStream)
 {
 
     if (gfp->internal_flags->findReplayGain) {
-        FLOAT8 RadioGain = (FLOAT8) GetTitleGain();
+        FLOAT RadioGain = (FLOAT) GetTitleGain();
         assert(RadioGain != GAIN_NOT_ENOUGH_SAMPLES); 
         gfp->internal_flags->RadioGain = (int) floor( RadioGain * 10.0 + 0.5 ); /* round to nearest */
     }

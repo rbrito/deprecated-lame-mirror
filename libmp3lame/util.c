@@ -103,7 +103,7 @@ void  freegfc ( lame_internal_flags* const gfc )   /* bit stream structure */
 /*those ATH formulas are returning
 their minimum value for input = -1*/
 
-FLOAT8 ATHformula_GB(FLOAT8 f, FLOAT8 value)
+FLOAT ATHformula_GB(FLOAT f, FLOAT value)
 {
   /* from Painter & Spanias
     modified by Gabriel Bouvigne to better fit the reality
@@ -127,7 +127,7 @@ it adjusts from something close to Painter & Spanias
 on V9 up to Bouvigne's formula for V0. This way the VBR
 bitrate is more balanced according to the -V value.*/
 
-  FLOAT8 ath;
+  FLOAT ath;
 
   if (f < -.3)
       f=3410;
@@ -145,7 +145,7 @@ bitrate is more balanced according to the -V value.*/
 
 
 
-FLOAT8 ATHformula(FLOAT8 f,lame_global_flags *gfp)
+FLOAT ATHformula(FLOAT f,lame_global_flags *gfp)
 {
   switch(gfp->ATHtype)
     {

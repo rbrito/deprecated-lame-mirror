@@ -517,7 +517,7 @@ void ReportLameTagProgress(lame_global_flags *gfp,int nStart)
 		  MSGF( gfc, "done\n");
 
 		if( gfc->findReplayGain ) {
-		  MSGF( gfc, "ReplayGain: %s%.1fdB\n", gfc->RadioGain > 0 ? "+" : "", ((FLOAT8)gfc->RadioGain) / 10.0 );
+		  MSGF( gfc, "ReplayGain: %s%.1fdB\n", gfc->RadioGain > 0 ? "+" : "", ((FLOAT)gfc->RadioGain) / 10.0 );
 		  if( gfc->RadioGain > 0x1FE || gfc->RadioGain < -0x1FE ) {
 		    MSGF( gfc, "WARNING: ReplayGain  exceeds  -51dB to +51dB  range.  Such a result is too\n" );
 		    MSGF( gfc, "         high to be stored in the header.\n" );
@@ -526,7 +526,7 @@ void ReportLameTagProgress(lame_global_flags *gfp,int nStart)
                                                                                          
 #ifdef DECODE_ON_THE_FLY
 		if( gfp->findPeakSample ) {
-		  FLOAT8 GainChange = 20.0 * log10( ((FLOAT8)gfc->PeakSample) / 32767.0 );
+		  FLOAT GainChange = 20.0 * log10( ((FLOAT)gfc->PeakSample) / 32767.0 );
 
 		  if (GainChange > 0.0) { /* clipping occurs */
 		    MSGF( gfc, "\nWARNING: clipping occurs at the current gain. Set your decoder to decrease\n");
@@ -534,7 +534,7 @@ void ReportLameTagProgress(lame_global_flags *gfp,int nStart)
                                                                             
 		    /* advice the user on the scale factor */
 		    if (gfp->scale == 1.0 || gfp->scale == 0.0) {
-		      FLOAT8 scale = floor( (32767.0 / ((FLOAT8)gfc->PeakSample)) * 100.0 ) / 100.0;  /* round down */
+		      FLOAT scale = floor( (32767.0 / ((FLOAT)gfc->PeakSample)) * 100.0 ) / 100.0;  /* round down */
 		      MSGF( gfc, "using  --scale %.2f\n", scale);
 		      MSGF( gfc, "         or less (the value under --scale is approximate).\n" );
 		    }

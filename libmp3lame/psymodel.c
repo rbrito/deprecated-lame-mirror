@@ -1776,7 +1776,7 @@ init_numline(
 static int
 init_s3_values(
     lame_internal_flags *gfc,
-    FLOAT8 **p,
+    FLOAT **p,
     int (*s3ind)[2],
     int npart,
     FLOAT8 *bval,
@@ -1784,7 +1784,7 @@ init_s3_values(
     FLOAT8 *norm
     )
 {
-    FLOAT8 s3[CBANDS][CBANDS];
+    FLOAT s3[CBANDS][CBANDS];
     /* The s3 array is not linear in the bark scale.
      * bval[x] should be used to get the bark value.
      */
@@ -1815,7 +1815,7 @@ init_s3_values(
 	s3ind[i][1] = j;
 	numberOfNoneZero += (s3ind[i][1] - s3ind[i][0] + 1);
     }
-    *p = malloc(sizeof(FLOAT8)*numberOfNoneZero);
+    *p = malloc(sizeof(FLOAT)*numberOfNoneZero);
     if (!*p)
 	return -1;
 

@@ -426,8 +426,8 @@ struct lame_internal_flags {
   FLOAT8	minval[CBANDS];
   FLOAT8	nb_1[4][CBANDS], nb_2[4][CBANDS];
   FLOAT8	nb_s1[4][CBANDS], nb_s2[4][CBANDS];
-  FLOAT8  *s3_ss;
-  FLOAT8  *s3_ll;
+  FLOAT     *s3_ss;
+  FLOAT     *s3_ll;
   FLOAT8 decay;
 
   III_psy_xmin thm[4];
@@ -535,7 +535,7 @@ extern int            FindNearestBitrate(int,int);
 extern int            map2MP3Frequency(int freq);
 extern int            SmpFrqIndex(int, int* const);
 extern int            nearestBitrateFullIndex(const int brate);
-extern FLOAT8         ATHformula(FLOAT8 f,lame_global_flags *gfp);
+extern FLOAT          ATHformula(FLOAT freq,lame_global_flags *gfp);
 extern FLOAT8         freq2bark(FLOAT8 freq);
 extern FLOAT8         freq2cbw(FLOAT8 freq);
 void disable_FPE(void);
