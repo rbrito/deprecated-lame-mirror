@@ -61,7 +61,7 @@ void    compute_ath (lame_global_flags * gfp, FLOAT8 ATH_l[SBPSY_l],
 
 void    ms_convert (FLOAT8 xr[2][576], FLOAT8 xr_org[2][576]);
 
-int     on_pe (lame_internal_flags * gfc, FLOAT8 pe[2][2], III_side_info_t * l3_side,
+int     on_pe (lame_global_flags *gfp, FLOAT8 pe[2][2], III_side_info_t * l3_side,
                int targ_bits[2], int mean_bits, int gr);
 
 void    reduce_side (int targ_bits[2], FLOAT8 ms_ener_ratio, int mean_bits,
@@ -75,10 +75,10 @@ int     bin_search_StepSize (lame_internal_flags * gfc, gr_info * cod_info,
 int     inner_loop (lame_internal_flags * gfc, gr_info * cod_info, int max_bits,
                     const FLOAT8 xrpow[576], int l3enc[576]);
 
-void    iteration_init (lame_internal_flags * gfc);
+void    iteration_init (lame_global_flags *gfp);
 
 
-int     calc_xmin (const lame_internal_flags * gfc, const FLOAT8 xr[576],
+int     calc_xmin (lame_global_flags *gfp, const FLOAT8 xr[576],
                    const III_psy_ratio * ratio, const gr_info * cod_info,
                    III_psy_xmin * l3_xmin);
 
@@ -88,7 +88,7 @@ int     calc_noise (const lame_internal_flags * gfc, const FLOAT8 xr[576],
                     const III_scalefac_t * scalefac,
                     FLOAT8 distort[4][SBMAX_l], calc_noise_result * res);
 
-void    set_frame_pinfo (lame_internal_flags * gfc, FLOAT8 xr[2][2][576],
+void    set_frame_pinfo (lame_global_flags *gfp, FLOAT8 xr[2][2][576],
                          III_psy_ratio ratio[2][2], int l3_enc[2][2][576],
                          III_scalefac_t scalefac[2][2]);
 

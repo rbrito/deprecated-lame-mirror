@@ -41,7 +41,7 @@
 
 #define NSFIRLEN 21
 
-int L3para_read( lame_internal_flags * const gfc,
+int L3para_read( lame_global_flags *gfp,
 		  FLOAT8 sfreq, int numlines[CBANDS],int numlines_s[CBANDS], 
 		  FLOAT8 minval[CBANDS], 
 		  FLOAT8 s3_l[CBANDS][CBANDS],
@@ -107,7 +107,7 @@ INLINE FLOAT8 mask_add(FLOAT8 m1,FLOAT8 m2,int k,int b, lame_internal_flags * co
   return (m1+m2)*table1[i];
 }
 
-int L3psycho_anal( lame_internal_flags * const gfc,
+int L3psycho_anal( lame_global_flags * gfp,
                     sample_t *buffer[2],int gr_out , 
                     FLOAT8 *ms_ratio,
                     FLOAT8 *ms_ratio_next,
@@ -122,7 +122,8 @@ int L3psycho_anal( lame_internal_flags * const gfc,
  * (Note: these static variables have been moved to the gfc-> struct,
  * and their order in memory is layed out in util.h)
  */
-  
+  lame_internal_flags *gfc=gfp->internal_flags;
+
 
   /* fft and energy calculation   */
   FLOAT (*wsamp_l)[BLKSIZE];
@@ -173,8 +174,8 @@ int L3psycho_anal( lame_internal_flags * const gfc,
     gfc->psymodel_init=1;
 
 
-    samplerate = gfc->gfp->out_samplerate;
-    switch(gfc->gfp->out_samplerate){
+    samplerate = gfp->out_samplerate;
+    switch(gfp->out_samplerate){
     case 32000: break;
     case 44100: break;
     case 48000: break;
@@ -185,7 +186,7 @@ int L3psycho_anal( lame_internal_flags * const gfc,
     case 11025: samplerate *= 2; break;
     case 12000: samplerate *= 2; break;
     default:    ERRORF("error, invalid sampling frequency: %d Hz\n",
-			gfc->gfp->out_samplerate);
+			gfp->out_samplerate);
     return -1;
     }
 
@@ -216,10 +217,10 @@ int L3psycho_anal( lame_internal_flags * const gfc,
 
 
     
-    /*  gfc->gfp->cwlimit = sfreq*j/1024.0;  */
+    /*  gfp->cwlimit = sfreq*j/1024.0;  */
     gfc->cw_lower_index=6;
-    if (gfc->gfp->cwlimit>0) 
-      cwlimit=gfc->gfp->cwlimit;
+    if (gfp->cwlimit>0) 
+      cwlimit=gfp->cwlimit;
     else
       cwlimit=(FLOAT)8871.7;
     gfc->cw_upper_index = cwlimit*1024.0/((FLOAT8)samplerate);
@@ -231,7 +232,7 @@ int L3psycho_anal( lame_internal_flags * const gfc,
     
     
 
-    i=L3para_read( gfc,(FLOAT8) samplerate,gfc->numlines_l,gfc->numlines_s,
+    i=L3para_read( gfp,(FLOAT8) samplerate,gfc->numlines_l,gfc->numlines_s,
           gfc->minval,gfc->s3_l,gfc->s3_s,SNR_s,gfc->bu_l,
           gfc->bo_l,gfc->w1_l,gfc->w2_l, gfc->bu_s,gfc->bo_s,
           gfc->w1_s,gfc->w2_s,&gfc->npart_l_orig,&gfc->npart_l,
@@ -336,7 +337,7 @@ int L3psycho_anal( lame_internal_flags * const gfc,
   
   numchn = gfc->stereo;
   /* chn=2 and 3 = Mid and Side channels */
-  if (gfc->gfp->mode == MPG_MD_JOINT_STEREO) numchn=4;
+  if (gfp->mode == MPG_MD_JOINT_STEREO) numchn=4;
 
   if (gfc->nsPsy.use) {
 #ifdef KLEMM_04
@@ -387,7 +388,7 @@ int L3psycho_anal( lame_internal_flags * const gfc,
 	  ns_hpfsmpl[chn][i] = 0;
       }
 
-    if (gfc->gfp->mode == MPG_MD_JOINT_STEREO) {
+    if (gfp->mode == MPG_MD_JOINT_STEREO) {
       for(i=0;i<576+576/3;i++)
 	{
 	  ns_hpfsmpl[2][i] = ns_hpfsmpl[0][i]+ns_hpfsmpl[1][i];
@@ -479,7 +480,7 @@ int L3psycho_anal( lame_internal_flags * const gfc,
     }
 
 
-  if (gfc->gfp->analysis) {
+  if (gfp->analysis) {
     for (j=0; j<HBLKSIZE ; j++) {
       gfc->pinfo->energy[gr_out][chn][j]=gfc->energy_save[chn][j];
       gfc->energy_save[chn][j]=gfc->energy[j];
@@ -911,7 +912,7 @@ int L3psycho_anal( lame_internal_flags * const gfc,
 	  }
 	
 	/* disable short blocks */
-	if (gfc->gfp->no_short_blocks)
+	if (gfp->no_short_blocks)
 	  uselongblock[chn]=1;
       }
     }
@@ -978,7 +979,7 @@ int L3psycho_anal( lame_internal_flags * const gfc,
 	  gfc->nsPsy.last_attack_intensity[chn][i] = attack_intensity[i];
 	}
 
-      if (gfc->gfp->no_short_blocks) {
+      if (gfp->no_short_blocks) {
 	uselongblock[chn] = 1;
       } else {
 	if (chn < 2) {
@@ -989,7 +990,7 @@ int L3psycho_anal( lame_internal_flags * const gfc,
       }
     }
 
-    if (gfc->gfp->analysis) {
+    if (gfp->analysis) {
       FLOAT mn,mx,ma=0,mb=0,mc=0;
 
       for ( j = HBLKSIZE_s/2; j < HBLKSIZE_s; j ++)
@@ -1164,7 +1165,7 @@ int L3psycho_anal( lame_internal_flags * const gfc,
 
   
   
-  if (gfc->gfp->mode == MPG_MD_JOINT_STEREO)  {
+  if (gfp->mode == MPG_MD_JOINT_STEREO)  {
     /* determin ms_ratio from masking thresholds*/
     /* use ms_stereo (ms_ratio < .35) if average thresh. diff < 5 db */
     FLOAT8 db,x1,x2,sidetot=0,tot=0;
@@ -1206,7 +1207,7 @@ int L3psycho_anal( lame_internal_flags * const gfc,
 
 
   if (gfc->stereo==2) {
-    if (!gfc->gfp->allow_diff_short || gfc->gfp->mode==MPG_MD_JOINT_STEREO) {
+    if (!gfp->allow_diff_short || gfp->mode==MPG_MD_JOINT_STEREO) {
       /* force both channels to use the same block type */
       /* this is necessary if the frame is to be encoded in ms_stereo.  */
       /* But even without ms_stereo, FhG  does this */
@@ -1285,7 +1286,7 @@ int L3psycho_anal( lame_internal_flags * const gfc,
 
 
 
-int L3para_read(lame_internal_flags * const gfc, FLOAT8 sfreq, int *numlines_l,int *numlines_s, 
+int L3para_read(lame_global_flags * gfp, FLOAT8 sfreq, int *numlines_l,int *numlines_s, 
 FLOAT8 *minval,
 FLOAT8 s3_l[CBANDS][CBANDS], FLOAT8 s3_s[CBANDS][CBANDS],
 FLOAT8 *SNR, 
@@ -1293,6 +1294,7 @@ int *bu_l, int *bo_l, FLOAT8 *w1_l, FLOAT8 *w2_l,
 int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s,
 int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 {
+  lame_internal_flags *gfc=gfp->internal_flags;
   FLOAT8 freq_tp;
   FLOAT8 bval_l[CBANDS], bval_s[CBANDS];
   int   cbmax=0, cbmax_tp;
@@ -1365,7 +1367,7 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
   *npart_s_orig = cbmax;
 
   /* MPEG1 SNR_s data is given in db, convert to energy */
-  if (gfc->gfp->version == 1) {
+  if (gfp->version == 1) {
     for ( i = 0;i < *npart_s_orig; i++ ) {
       SNR[i]=exp( (FLOAT8) SNR[i] * LN_TO_LOG10 );
     }

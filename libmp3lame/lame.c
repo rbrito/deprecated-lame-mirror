@@ -214,7 +214,6 @@ int lame_init_params ( lame_global_flags* const gfp )
     int                  j;
     lame_internal_flags* gfc = gfp -> internal_flags;
 
-    gfc -> gfp                = gfp;
     gfc -> Class_ID           = 0;
   
     gfc -> CPU_features_i387  = has_i387  ();

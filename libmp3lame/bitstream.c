@@ -1048,7 +1048,7 @@ flush_bitstream(lame_global_flags *gfp)
    * these bits are not necessary to decode the last frame, but
    * some decoders will ignore last frame if these bits are missing 
    */
-  getframebits(gfc,&bitsPerFrame,&mean_bits);
+  getframebits(gfp,&bitsPerFrame,&mean_bits);
   flushbits += bitsPerFrame;
   if (flushbits<0) {
 #if 0

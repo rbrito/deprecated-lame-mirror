@@ -173,7 +173,7 @@ char *mp3buf, int mp3buf_size)
       mdct_sub48(gfc, primebuff0, primebuff1, xr);
     }
     
-    iteration_init(gfc);
+    iteration_init(gfp);
   }
 
 
@@ -234,7 +234,7 @@ char *mp3buf, int mp3buf_size)
       for ( ch = 0; ch < gfc->stereo; ch++ )
 	bufp[ch] = &inbuf[ch][576 + gr*576-FFTOFFSET];
 
-      ret=L3psycho_anal( gfc, bufp, gr, 
+      ret=L3psycho_anal( gfp, bufp, gr, 
 		     &gfc->ms_ratio[gr],&ms_ratio_next,&gfc->ms_ener_ratio[gr],
 		     masking_ratio, masking_MS_ratio,
 		     pe[gr],pe_MS[gr],blocktype);
@@ -375,22 +375,22 @@ char *mp3buf, int mp3buf_size)
   switch (gfp->VBR){ 
   default:
   case vbr_off:
-    iteration_loop( gfc,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
+    iteration_loop( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
     break;
   case vbr_mt:
-    VBR_quantize( gfc,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
+    VBR_quantize( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
     break;
   case vbr_rh:
   case vbr_mtrh:
-    VBR_iteration_loop( gfc,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
+    VBR_iteration_loop( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
     break;
   case vbr_abr:
-    ABR_iteration_loop( gfc,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
+    ABR_iteration_loop( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
     break;
   }
 
   /*  write the frame to the bitstream  */
-  getframebits(gfc, &bitsPerFrame, &mean_bits);
+  getframebits(gfp, &bitsPerFrame, &mean_bits);
 
   format_bitstream( gfp, bitsPerFrame, l3_enc, scalefac);
 
@@ -409,7 +409,7 @@ char *mp3buf, int mp3buf_size)
 	gfc->pinfo->pcmdata[ch][j] = inbuf[ch][j-FFTOFFSET];
       }
     }
-    set_frame_pinfo (gfc, xr, *masking, l3_enc, scalefac);
+    set_frame_pinfo (gfp, xr, *masking, l3_enc, scalefac);
   }
   
   updateStats( gfc );

@@ -357,20 +357,20 @@ typedef struct  {
   
   unsigned crcvalue;
   
-  lame_global_flags *gfp;  // lame_init_params() should copy all information 
+  //  lame_global_flags *gfp;  // lame_init_params() should copy all information 
                            // needed from gfp to this structure, so gfp becomes
 			   // more and more unimportant in the future, and may be
 			   // sometimes gfp can removed from the LAME API. mt?
+
+  // Robert:  See the file 'API' for details of the new interface.  
+  // The gfp structure will be completely hidden from the user,
+  // yet the interface will be 100% compatiable with current interface.
+  // And no need to change any code inside LAME.
+
   
 } lame_internal_flags;
 
-// why was lame_internal_flags renamed context?
-// this is a cosmetic change.  it causes me no end of grief
-// and is in volation of the rules in STYLEGUIDE.  
-// If you want to make a massive change like this that
-// effects every file, run it by the maintainer first.
-//  
-//typedef lame_internal_flags context;
+
 
  
 
@@ -391,7 +391,7 @@ extern void freorder(int scalefac_band[],FLOAT8 ix_orig[576]);
 
 
 extern void 
-getframebits(lame_internal_flags *gfc, int *bitsPerFrame, int *mean_bits);
+getframebits(lame_global_flags *gfp, int *bitsPerFrame, int *mean_bits);
 
 int  fill_buffer_resample (
         lame_global_flags *gfp,

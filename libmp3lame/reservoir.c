@@ -36,19 +36,20 @@
   was set properly by the formatter
 */
 int
-ResvFrameBegin(lame_internal_flags *gfc,III_side_info_t *l3_side, int mean_bits, int frameLength )
+ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, int frameLength )
 {
+    lame_internal_flags *gfc=gfp->internal_flags;
     int fullFrameBits;
     int resvLimit;
     int maxmp3buf;
 
 
     /* main_data_begin has 9 bits in MPEG 1, 8 bits MPEG2 */
-    resvLimit = (gfc->gfp->version==1) ? 8*511 : 8*255 ;
+    resvLimit = (gfp->version==1) ? 8*511 : 8*255 ;
 
 
     /* maximum allowed frame size */
-    if (gfc->gfp->strict_ISO)
+    if (gfp->strict_ISO)
       maxmp3buf = 8*960;
     else
       maxmp3buf = 8*2047;
@@ -57,7 +58,7 @@ ResvFrameBegin(lame_internal_flags *gfc,III_side_info_t *l3_side, int mean_bits,
 	gfc->ResvMax = 0;
     else
 	gfc->ResvMax = maxmp3buf - frameLength;
-    if (gfc->gfp->disable_reservoir) gfc->ResvMax=0;
+    if (gfp->disable_reservoir) gfc->ResvMax=0;
     if ( gfc->ResvMax > resvLimit ) gfc->ResvMax = resvLimit;
     assert(0==(gfc->ResvMax % 8));
 
@@ -69,7 +70,7 @@ ResvFrameBegin(lame_internal_flags *gfc,III_side_info_t *l3_side, int mean_bits,
     }
 
     fullFrameBits = mean_bits * gfc->mode_gr + Min(gfc->ResvSize,gfc->ResvMax);
-    if (gfc->gfp->strict_ISO) {
+    if (gfp->strict_ISO) {
       if (fullFrameBits>maxmp3buf) fullFrameBits=maxmp3buf;
     }
     return fullFrameBits;
@@ -82,8 +83,9 @@ ResvFrameBegin(lame_internal_flags *gfc,III_side_info_t *l3_side, int mean_bits,
          extra_bits:  amount extra available from reservoir
   Mark Taylor 4/99
 */
-void ResvMaxBits(lame_internal_flags *gfc, int mean_bits, int *targ_bits, int *extra_bits)
+void ResvMaxBits(lame_global_flags *gfp, int mean_bits, int *targ_bits, int *extra_bits)
 {
+  lame_internal_flags *gfc=gfp->internal_flags;
   int add_bits,full_fac;
   *targ_bits = mean_bits ;
 
@@ -99,7 +101,7 @@ void ResvMaxBits(lame_internal_flags *gfc, int mean_bits, int *targ_bits, int *e
      * than FhG.  It could simple be mean_bits/15, but this was rigged
      * to always produce 100 (the old value) at 128kbs */
     /*    *targ_bits -= (int) (mean_bits/15.2);*/
-    if (!gfc->gfp->disable_reservoir) 
+    if (!gfp->disable_reservoir) 
       *targ_bits -= .1*mean_bits;
   }
 

@@ -157,23 +157,24 @@ FLOAT8 freq2cbw(FLOAT8 freq)
 /***********************************************************************
  * compute bitsperframe and mean_bits for a layer III frame 
  **********************************************************************/
-void getframebits(lame_internal_flags *const gfc, int *bitsPerFrame, int *mean_bits) 
+void getframebits(lame_global_flags *gfp, int *bitsPerFrame, int *mean_bits) 
 {
+  lame_internal_flags *gfc=gfp->internal_flags;
   int  whole_SpF;  /* integral number of Slots per Frame without padding */
   int  bit_rate;
   
   /* get bitrate in kbps [?] */
   if (gfc->bitrate_index) 
-    bit_rate = bitrate_table[gfc->gfp->version][gfc->bitrate_index];
+    bit_rate = bitrate_table[gfp->version][gfc->bitrate_index];
   else
-    bit_rate = gfc->gfp->brate;
+    bit_rate = gfp->brate;
   assert ( bit_rate <= 550 );
   
   // bytes_per_frame = bitrate * 1000 / ( gfp->out_samplerate / (gfp->version == 1  ?  1152  :  576 )) / 8;
   // bytes_per_frame = bitrate * 1000 / gfp->out_samplerate * (gfp->version == 1  ?  1152  :  576 ) / 8;
   // bytes_per_frame = bitrate * ( gfp->version == 1  ?  1152/8*1000  :  576/8*1000 ) / gfp->out_samplerate;
   
-  whole_SpF = (gfc->gfp->version+1)*72000*bit_rate / gfc->gfp->out_samplerate;
+  whole_SpF = (gfp->version+1)*72000*bit_rate / gfp->out_samplerate;
   
   // There must be somewhere code toggling gfc->padding on and off
   
