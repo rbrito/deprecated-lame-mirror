@@ -1,20 +1,7 @@
 $Id$
 
-RH_VALIDATE_MS:
- avoids to switch from LR to MS when the perceptual entropy indicates
- a need for more bits in MS coding mode than in LR mode
-
 RH_AMP:
  -Y -> careful noise shaping, only max. distorted band at once
-
-RH_SUBBLOCK:
- ?
-
-RH_OUTERLOOP:
- ?
-
-leftover in comment: RH_QUALITY_CONTROL
-
 
 KLEMM_04:
  - correctly calculated FIR coefficients

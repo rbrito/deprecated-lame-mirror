@@ -55,7 +55,7 @@ AM_CONFIG_HEADER(config.h)
 AM_MAINTAINER_MODE
 AC_DISABLE_SHARED
 cflags_safe="${CFLAGS}"
-AM_PROG_LIBTOOL
+AC_PROG_LIBTOOL
 CFLAGS="${cflags_safe}"
 
 # increase this when the shared lib becomes totally incompatible
@@ -156,8 +156,6 @@ fi
 
 
 dnl ElectricFence malloc debugging
-AC_CHECK_LIB(efence, EF_Print, HAVE_EFENCE="-lefence")
-
 AC_MSG_CHECKING(use of ElectricFence malloc debugging)
 AC_ARG_ENABLE(efence,
   [  --enable-efence            Use ElectricFence for malloc debugging],
@@ -165,6 +163,7 @@ AC_ARG_ENABLE(efence,
 
 case "${CONFIG_EFENCE}" in
 yes)
+	AC_CHECK_LIB(efence, EF_Print, HAVE_EFENCE="-lefence")
 	if test "x${HAVE_EFENCE}" != "x-lefence"; then
 		AC_MSG_RESULT(yes, but libefence not found)
 	else

@@ -11,5 +11,4 @@ EXTRA_DIST = BladeMP3EncDLL.c \
 	LameDLLInterface.htm \
 	MP3EncDll.dsp \
 	MP3EncDll.dsw \
-	MP3export.pas \
-	README
+	MP3export.pas
