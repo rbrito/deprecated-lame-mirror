@@ -37,17 +37,19 @@
 #include "lame.h"
 
 #define TRI_SIZE (5-1) /* 1024 =  4**5 */
-static FLOAT costab[TRI_SIZE*2];
-static FLOAT window[BLKSIZE], window_s[BLKSIZE_s/2];
 
-static INLINE void fht(FLOAT *fz, int n)
+static FLOAT  cos_sin_tab   [TRI_SIZE] [2];
+static FLOAT  window        [BLKSIZE];
+static FLOAT  window_s      [BLKSIZE_s / 2];
+
+static INLINE void fht ( FLOAT* fz, int n )
 {
     size_t  k4;
     FLOAT *fi, *fn, *gi;
     FLOAT *tri;
 
     fn = fz + n;
-    tri = &costab[0];
+    tri = & (cos_sin_tab [0] [0]);
     k4 = 4;
     do {
 	FLOAT s1, c1;
@@ -167,8 +169,11 @@ static const unsigned char rv_tbl [] = {
 #define ms31(f)	(window_s[0x3e - i] * f(i + k + 0xc1))
 
 
-void fft_short(
-    lame_global_flags *gfp, FLOAT x_real[3][BLKSIZE_s], int chn, short *buffer[2])
+void  fft_short (
+        lame_global_flags*  gfp, 
+        FLOAT               x_real [3] [BLKSIZE_s],
+        int                 chn, 
+        sample_t*           buffer [2] )
 {
     size_t  i;
     size_t  b;
@@ -205,8 +210,11 @@ void fft_short(
     }
 }
 
-void fft_long(
-    lame_global_flags *gfp, FLOAT x[BLKSIZE], int chn, short *buffer[2])
+void  fft_long (
+        lame_global_flags*  gfp, 
+        FLOAT               x [BLKSIZE], 
+        int                 chn, 
+        sample_t*           buffer [2] )
 {
     size_t  i;
     int     jj = BLKSIZE / 8 - 1;
@@ -241,12 +249,12 @@ void fft_long(
 
 void init_fft(lame_global_flags *gfp)
 {
-    int i;
-
-    FLOAT r = PI*0.125;
+    int     i;
+    double  r = PI * 0.125;
+    
     for (i = 0; i < TRI_SIZE; i++) {
-	costab[i*2  ] = cos(r);
-	costab[i*2+1] = sin(r);
+	cos_sin_tab [i] [0] = cos (r);
+	cos_sin_tab [i] [1] = sin (r);
 	r *= 0.25;
     }
 

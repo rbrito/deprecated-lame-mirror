@@ -456,7 +456,7 @@ int lame_init_params(lame_global_flags *gfp)
       }
     }
     if (0==gfp->VBR_min_bitrate_kbps) {
-      gfc->VBR_min_bitrate=1;  /* 32 kbps */
+      gfc->VBR_min_bitrate=1;  	/* 8 or 32 kbps */
     }else{
       if( (gfc->VBR_min_bitrate  = BitrateIndex(gfp->VBR_min_bitrate_kbps, gfp->version,gfp->out_samplerate)) < 0) {
 	display_bitrates(stderr);
@@ -644,8 +644,8 @@ int lame_init_params(lame_global_flags *gfp)
       InitVbrTag(gfp);
     }
 
-  if (gfp->brhist_disp)
-    brhist_init(gfp,1,14);
+    if ( gfp -> brhist_disp )
+        brhist_init ( gfp, gfc -> VBR_min_bitrate, gfc -> VBR_max_bitrate );
 
 #ifdef HAVEVORBIS
   if (gfp->ogg) {

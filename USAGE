@@ -280,7 +280,7 @@ mpglib decode capability
 
 This just uses LAME's mpg123/mpglib interface to decode an MP3 file to
 a wav file.  The input file can be any input type supported by
-encoding, including .mp3 (layers 1,2 and 3) and .ogg.  
+encoding, including .mp3 (layers 1, 2 and 3) and .ogg.  
 
 If -t is used (disable wav header), LAME will output
 raw pcm in native endian format (use -x to swap bytes).
@@ -547,7 +547,7 @@ Output sampling frequency.  Resample the input if necessary.
 
 If not specified, LAME may sometimes resample automatically 
 when faced with extreme compression conditions (like encoding
-a 44.1 kHz input file at 16 kbps).
+a 44.1 kHz input file at 32 kbps).
 
 
 
@@ -616,11 +616,11 @@ If the file is too big, use -V n, where n = 0...9
 lame -v -V n -b 112  input.wav output.mp3
 
 
-If you wan to use VBR to get the maximum compression possible,
+If you want to use VBR to get the maximum compression possible,
 and for this, you can try:  
 
 lame -v  input.wav output.mp3
-lame -v -V n input.wav output.mp3         (to very quality/filesize)
+lame -v -V n input.wav output.mp3         (to vary quality/filesize)
 
 
 

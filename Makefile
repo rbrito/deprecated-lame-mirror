@@ -27,7 +27,7 @@ endif
 
 # generic defaults. OS specific options go in versious sections below
 PGM ?= lame
-CC = gcc
+CC = g++
 CC_OPTS =  -O
 AR = ar
 RANLIB = ranlib

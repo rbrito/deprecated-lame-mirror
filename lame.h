@@ -24,7 +24,9 @@
 extern "C" {
 #endif
 
-
+typedef signed short int  sample_t;
+typedef sample_t          mono_t;
+typedef sample_t          stereo_t [2];
 
 /* maximum size of mp3buffer needed if you encode at most 1152 samples for
    each call to lame_encode_buffer.  see lame_encode_buffer() below  

@@ -96,7 +96,7 @@ void brhist_add_count(int i)
         brhist_count_max = brhist_count [i];
 }
 
-void brhist_disp(long totalframes)
+void brhist_disp ( long totalframes )
 {
     unsigned       i;
     unsigned       percent;
