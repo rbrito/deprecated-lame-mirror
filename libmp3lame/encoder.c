@@ -75,29 +75,28 @@ adjust_ATH( lame_global_flags* const  gfp,
         break;
     
     case 2:                     /* jd - 2001 mar 12, 27, jun 30 */
-    {				/* loudness based on equal loudness curve; */
+    {				            /* loudness based on equal loudness curve; */
                                 /* use granule with maximum combined loudness*/
-	FLOAT gr2_max;
+	    FLOAT gr2_max;
         max_pow = gfc->loudness_sq[0][0];
+	    gr2_max = gfc->loudness_sq[1][0];
         if( gfc->channels_out == 2 ) {
             max_pow += gfc->loudness_sq[0][1];
-	    gr2_max = gfc->loudness_sq[1][0] + gfc->loudness_sq[1][1];
-	} else {
-	    gr2_max = gfc->loudness_sq[1][0];
-	    max_pow += max_pow;
-	    gr2_max += gr2_max;
-	}
-	if( gfc->mode_gr == 2 ) {
-	    max_pow = Max( max_pow, gr2_max );
-	}
-	max_pow *= 0.5;		/* max_pow approaches 1.0 for full band noise*/
+	        gr2_max += gfc->loudness_sq[1][1];
+	    } else {
+	        max_pow += max_pow;
+	        gr2_max += gr2_max;
+	    }
+	    if( gfc->mode_gr == 2 ) {
+	        max_pow = Max( max_pow, gr2_max );
+	    }
+	    max_pow *= 0.5;		    /* max_pow approaches 1.0 for full band noise*/
         break;
     }
 
-    default:                    /* jd - 2001 mar 27, 31, jun 30 */
-                                /* no adaptive threshold */
-        max_pow = 1.0 / gfc->athaa_sensitivity_p;
-        break;
+    default:
+        gfc->ATH->adjust = 1.0;	/* no adjustment */
+        return;
     }
 
                                 /* jd - 2001 mar 31, jun 30 */
@@ -108,18 +107,18 @@ adjust_ATH( lame_global_flags* const  gfp,
         max_pow_alt *= pow( 10.0, gfc->presetTune.athadjust_safe_athaasensitivity / -10.0 );
 
     /*  adjust ATH depending on range of maximum value
+        The first mode was just implemented for rough
+        experimentation. Third mode is recommended
      */
     switch ( gfc->ATH->use_adjust ) {
 
-    case  1:
-        max_val = sqrt( max_pow ); /* GB's original code requires a maximum */
-        max_val *= 32768;          /*  sample or loudness value up to 32768 */
-
-                                /* by Gabriel Bouvigne */
-        if      (0.5 < max_val / 32768) {       /* value above 50 % */
+    case  1:                                    /* by Gabriel Bouvigne */
+        max_val = sqrt( max_pow );              /* max_val should be between 0 and 1 */
+                                                
+        if      (max_val > 0.5) {               /* value above 50 % */
                 gfc->ATH->adjust = 1.0;         /* do not reduce ATH */
         }
-        else if (0.3 < max_val / 32768) {       /* value above 30 % */
+        else if (max_val > 0.3) {               /* value above 30 % */
                 gfc->ATH->adjust *= 0.955;      /* reduce by ~0.2 dB */
                 if (gfc->ATH->adjust < 0.3)     /* but ~5 dB in maximum */
                     gfc->ATH->adjust = 0.3;            
@@ -161,25 +160,19 @@ adjust_ATH( lame_global_flags* const  gfp,
         if( max_pow > 0.03125) { /* ((1 - 0.000625)/ 31.98) from curve below */
             if( gfc->ATH->adjust >= 1.0) {
                 gfc->ATH->adjust = 1.0;
-                if (gfc->presetTune.use) {
-		        if (max_pow_alt > gfc->presetTune.athadjust_safe_noiseshaping_thre)
-			      gfc->presetTune.athadjust_safe_noiseshaping = 1;
-		        else
-			      gfc->presetTune.athadjust_safe_noiseshaping = 0;
-                }
             } else {
                                 /* preceding frame has lower ATH adjust; */
                                 /* ascend only to the preceding adjust_limit */
                                 /* in case there is leading low volume */
                 if( gfc->ATH->adjust < gfc->ATH->adjust_limit) {
                     gfc->ATH->adjust = gfc->ATH->adjust_limit;
-                    if (gfc->presetTune.use) {
-                        if (max_pow_alt > gfc->presetTune.athadjust_safe_noiseshaping_thre)
-                            gfc->presetTune.athadjust_safe_noiseshaping = 1;
-                        else
-                            gfc->presetTune.athadjust_safe_noiseshaping = 0;
-                    }
                 }
+            }
+            if (gfc->presetTune.use) {
+		        if (max_pow_alt > gfc->presetTune.athadjust_safe_noiseshaping_thre)
+			      gfc->presetTune.athadjust_safe_noiseshaping = 1;
+		        else
+			      gfc->presetTune.athadjust_safe_noiseshaping = 0;
             }
             gfc->ATH->adjust_limit = 1.0;
         } else {                /* adjustment curve */
