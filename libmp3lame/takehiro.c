@@ -561,7 +561,7 @@ best_huffman_divide(
     const lame_internal_flags * const gfc, gr_info * const gi)
 {
     int i, a1, a2;
-    gr_info cod_info_w;
+    gr_info gi_w;
     int * const ix = gi->l3_enc;
 
     int r01_bits[7 + 15 + 1];
@@ -585,43 +585,43 @@ best_huffman_divide(
     if (i > 576)
 	return;
 
-    cod_info_w = *gi;
-    cod_info_w.count1 = i;
-    cod_info_w.big_values -= 2;
+    gi_w = *gi;
+    gi_w.count1 = i;
+    gi_w.big_values -= 2;
 
     a1 = a2 = 0;
-    for (; i > cod_info_w.big_values; i -= 4) {
+    for (; i > gi_w.big_values; i -= 4) {
 	int p = ((ix[i-4] * 2 + ix[i-3]) * 2 + ix[i-2]) * 2 + ix[i-1];
 	a1 += quadcode[0][p];
 	a2 += quadcode[1][p];
     }
 
-    cod_info_w.count1table_select = 0;
+    gi_w.count1table_select = 0;
     if (a1 > a2) {
 	a1 = a2;
-	cod_info_w.count1table_select = 1;
+	gi_w.count1table_select = 1;
     }
 
-    cod_info_w.count1bits = a1;
+    gi_w.count1bits = a1;
 
-    if (cod_info_w.block_type == NORM_TYPE) {
-	if (recalc_divide_sub(gfc, &cod_info_w, r01_bits,r01_div,r0_tbl,r1_tbl))
-	    *gi = cod_info_w;
+    if (gi_w.block_type == NORM_TYPE) {
+	if (recalc_divide_sub(gfc, &gi_w, r01_bits,r01_div,r0_tbl,r1_tbl))
+	    *gi = gi_w;
     } else {
 	/* Count the number of bits necessary to code the bigvalues region. */
-	cod_info_w.part2_3_length = a1;
+	gi_w.part2_3_length = a1;
 	a1 = gfc->scalefac_band.l[gi->region0_count+1];
 	if (a1 > i)
 	    a1 = i;
 
 	if (a1 > 0)
-	    cod_info_w.table_select[0] =
-		choosetable(ix, ix + a1, &cod_info_w.part2_3_length);
+	    gi_w.table_select[0] =
+		choosetable(ix, ix + a1, &gi_w.part2_3_length);
 	if (i > a1)
-	    cod_info_w.table_select[1] =
-		choosetable(ix + a1, ix + i, &cod_info_w.part2_3_length);
-	if (gi->part2_3_length > cod_info_w.part2_3_length)
-	    *gi = cod_info_w;
+	    gi_w.table_select[1] =
+		choosetable(ix + a1, ix + i, &gi_w.part2_3_length);
+	if (gi->part2_3_length > gi_w.part2_3_length)
+	    *gi = gi_w;
     }
 }
 
@@ -687,9 +687,9 @@ scfsi_calc(
 }
 
 /*
-Find the optimal way to store the scalefactors.
-Only call this routine after final scalefactors have been
-chosen and the channel/granule will not be re-encoded.
+  Find the optimal way to store the scalefactors.
+  Only call this routine after final scalefactors have been
+  chosen and the channel/granule will not be re-encoded.
  */
 static void
 best_scalefac_store(
