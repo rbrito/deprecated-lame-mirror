@@ -996,7 +996,6 @@ ieee754_float32_t fast_log2(ieee754_float32_t x)
 
   /* log2val += log_table[mantisse];  without interpolation the results are not good */
   log2val += log_table[mantisse] * (1.0f-partial) + log_table[mantisse+1]*partial;
-
   return log2val;
 }
 
