@@ -190,8 +190,8 @@ int sync_buffer(struct mpstr *mp,int free_match)
       buf  = buf->next;
       pos = buf->pos;
       if(!buf) {
-	fprintf(stderr,"Fatal error!\n");
-	exit(1);
+	return -1;
+	/* not enough data to read 4 bytes */
       }
     }
     b[3] = buf->pnt[pos];

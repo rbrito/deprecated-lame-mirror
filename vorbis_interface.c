@@ -159,7 +159,7 @@ int lame_decode_ogg_initfile(FILE *fd,mp3data_struct *mp3data)
   
   mp3data->stereo = vi.channels;
   mp3data->samplerate = vi.rate;
-  mp3data->bitrate = 0;
+  mp3data->bitrate = 0; //ov_bitrate_instant(&vf);
   mp3data->nsamp=MAX_U_32_NUM;
   
   return 0;
@@ -266,9 +266,11 @@ int lame_decode_ogg_fromfile(FILE *fd,short int pcm_l[],short int pcm_r[],mp3dat
     }
   }
   
+
+
   mp3data->stereo = vi.channels;
   mp3data->samplerate = vi.rate;
-  mp3data->bitrate = 0;
+  mp3data->bitrate = 0; //ov_bitrate_instant(&vf);
   /*  mp3data->nsamp=MAX_U_32_NUM;*/
 
   

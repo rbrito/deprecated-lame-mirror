@@ -358,10 +358,33 @@ VBR_quantize_granule(lame_global_flags *gfp,
                 III_scalefac_t scalefac[2][2],int gr, int ch)
 {
   lame_internal_flags *gfc=gfp->internal_flags;
+  int i;
   gr_info *cod_info;  
   III_side_info_t * l3_side;
   l3_side = &gfc->l3_side;
   cod_info = &l3_side->gr[gr].ch[ch].tt;
+
+  /*
+  for ( i = 0; i < 4; i++ )
+    cod_info->slen[i] = 0;
+  cod_info->sfb_partition_table = &nr_of_sfb_block[0][0][0];
+  */
+
+  //  cod_info->big_values        = 0;
+  /*
+  cod_info->part2_3_length    = 0;
+  cod_info->count1            = 0;
+  cod_info->scalefac_compress = 0;
+  cod_info->table_select[0]   = 0;
+  cod_info->table_select[1]   = 0;
+  cod_info->table_select[2]   = 0;
+  cod_info->region0_count     = 0;
+  cod_info->region1_count     = 0;
+  cod_info->part2_length      = 0;
+  cod_info->count1table_select= 0;
+  cod_info->count1bits        = 0;
+  */
+
 
   /* encode scalefacs */
   if ( gfp->version == 1 ) 
@@ -369,14 +392,25 @@ VBR_quantize_granule(lame_global_flags *gfp,
   else
     scale_bitcount_lsf(&scalefac[gr][ch], cod_info);
 
+    if (gfp->frameNum==29 && ch==0 && gr==0) {
+      printf(" initial bigv = %i \n",cod_info->big_values);
+    }
 
   /* quantize xr34 */
   cod_info->part2_3_length = count_bits(gfp,l3_enc[gr][ch],xr34,cod_info);
   cod_info->part2_3_length += cod_info->part2_length;
+
+    if (gfp->frameNum==29 && ch==0 && gr==0) {
+      printf(" before bigv = %i \n",cod_info->big_values);
+    }
   
   if (gfc->use_best_huffman==1 && cod_info->block_type != SHORT_TYPE) {
-    best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
+    //    best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
   }
+    if (gfp->frameNum==29 && ch==0 && gr==0) {
+      printf(" after bigv = %i \n",cod_info->big_values);
+    }
+
 
   return;
 }
@@ -517,6 +551,7 @@ VBR_noise_shaping
 
     /* sf =  (cod_info->global_gain-210.0) */
     cod_info->global_gain = vbrmax +210;
+    assert(cod_info->global_gain < 256);
     if (cod_info->global_gain>255) cod_info->global_gain=255;
     
     for ( sfb = 0; sfb < SBPSY_s; sfb++ ) {
@@ -612,7 +647,9 @@ VBR_noise_shaping
     
     /* sf =  (cod_info->global_gain-210.0) */
     cod_info->global_gain = vbrmax +210;
+    assert(cod_info->global_gain < 256);
     if (cod_info->global_gain>255) cod_info->global_gain=255;
+
     
     for ( sfb = 0; sfb < SBPSY_l; sfb++ )   
       vbrsf.l[sfb] -= vbrmax;
@@ -646,15 +683,25 @@ VBR_noise_shaping
   
   VBR_quantize_granule(gfp,xr,xr34,l3_enc,ratio,l3_xmin,scalefac,gr,ch);
 
+
+
+
   if (cod_info->part2_3_length < minbits) {
     /* decrease global gain, recompute scale factors */
     if (*ath_over==0) break;  
     if (cod_info->part2_3_length-cod_info->part2_length== 0) break;
     if (vbrmax+210 ==0 ) break;
     
-    //        printf("not enough bits, decreasing vbrmax. g_gainv=%i\n",cod_info->global_gain);
-    //        printf("%i minbits=%i   part2_3_length=%i  part2=%i\n",
-    //    	   gfp->frameNum,minbits,cod_info->part2_3_length,cod_info->part2_length);
+    if (gfp->frameNum==29 && ch==0 && gr==0) {
+            printf("not enough bits, decreasing vbrmax. g_gainv=%i\n",cod_info->global_gain);
+            printf("%i %i %i  minbits=%i   part2_3_length=%i  part2=%i\n",
+        	   gfp->frameNum,gr,ch,minbits,cod_info->part2_3_length,cod_info->part2_length);
+
+	    printf("xr[1] = %e  %e  \n",xr34[1],xr[1]);
+    }
+
+
+
     --vbrmax;
     --global_gain_adjust;
     memcpy(&vbrsf,&save_sf,sizeof(III_scalefac_t));
