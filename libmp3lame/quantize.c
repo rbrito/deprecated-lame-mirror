@@ -537,10 +537,7 @@ floatcompare(const FLOAT *a, const FLOAT *b)
 
 static void
 trancate_smallspectrums(
-    lame_internal_flags *gfc,
-    gr_info		* const gi,
-    const FLOAT	* const xmin
-    )
+    lame_internal_flags *gfc, gr_info * const gi, const FLOAT * const xmin)
 {
     int sfb, j;
     FLOAT distort[SFBMAX], work[576]; /* 576 is too much */
@@ -866,8 +863,7 @@ calc_sfb_noise(lame_internal_flags *gfc, int j, int bw, int sf)
 
 static int
 adjust_global_gain(
-    lame_internal_flags *gfc,
-    gr_info *gi, FLOAT *distort, int huffbits)
+    lame_internal_flags *gfc, gr_info *gi, FLOAT *distort, int huffbits)
 {
     fi_union *fi = (fi_union *)gi->l3_enc;
     int sfb = 0, j = 0, end = gi->xrNumMax;
@@ -929,9 +925,7 @@ adjust_global_gain(
 
 static void
 CBR_2nd_bitalloc(
-    lame_internal_flags * gfc,
-    gr_info *gi,
-    FLOAT distort[])
+    lame_internal_flags * gfc, gr_info *gi, FLOAT distort[])
 {
     gr_info gi_w = *gi;
     int sfb, j = 0, flag = 0;
