@@ -548,7 +548,6 @@ static int  presets_setup ( lame_global_flags* gfp, const char* preset_name, con
 	    gfp -> VBR_q                = Presets[i].vbr_mode;
 	    gfp -> VBR_min_bitrate_kbps = Presets[i].vbr_min;
 	    gfp -> VBR_max_bitrate_kbps = Presets[i].vbr_max;
-	    gfp -> mode_fixed           = 1; 
 	    return 0;
 	}
 
@@ -704,7 +703,6 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
                     gfp->quality = 2;
                     gfp->lowpassfreq = 19000;
                     gfp->mode=MPG_MD_JOINT_STEREO;
-                    gfp->mode_fixed=1;
 		    gfp->ATHtype=3;
 		    gfp->VBR_min_bitrate_kbps=64;
 		
@@ -1025,7 +1023,6 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 		    switch (c) {
 		    case 'm':        
 			argUsed           = 1;   
-			gfp -> mode_fixed = 1;
 			
 			switch ( *arg ) {
 			case 's': gfp->mode = MPG_MD_STEREO;       break;
@@ -1102,7 +1099,6 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 		    case 'a': /* autoconvert input file from stereo to mono - for mono mp3 encoding */
 			autoconvert=1;
 			gfp->mode=MPG_MD_MONO;
-			gfp->mode_fixed=1;
 			break;
 		    case 'k': 
 			gfp->lowpassfreq=-1;

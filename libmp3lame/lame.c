@@ -690,8 +690,9 @@ lame_init_params(lame_global_flags * const gfp)
     }
 
 
-    /* Default mode has been set to jstereo, unless user specified a mode
-     * (in which case mode_fixed=1)
+    /* mode = -1 (not set by user) or 
+     * mode = MONO (because of only 1 input channel).  
+     * If mode has been set, then select between STEREO or J-STEREO
      * At higher quality (lower compression) use STEREO instead of J-STEREO.
      * (unless the user explicitly specified a mode)
      *
@@ -704,17 +705,19 @@ lame_init_params(lame_global_flags * const gfp)
      *   better than STEREO, so I'm not so very happy with that. 
      *   fs < 32 kHz I have not tested.
      */
+    if (gfp->mode == -1) {
+        if (gfp->compression_ratio < 8)
+            gfp->mode = MPG_MD_STEREO;
+	else
+	    gfp->mode = MPG_MD_JOINT_STEREO;
+    }
 
+    /* KLEMM's jstereo with ms threshold adjusted via compression ratio */
     if (gfp->mode_automs) {
-        /* KLEMM's jstereo with ms threshold adjusted via compression ratio */
         if (gfp->mode != MPG_MD_MONO && gfp->compression_ratio < 6.6)
             gfp->mode = MPG_MD_STEREO;
     }
-    else {
-        if (!gfp->mode_fixed && gfp->mode != MPG_MD_MONO &&
-            gfp->compression_ratio < 8)
-            gfp->mode = MPG_MD_STEREO;
-    }
+
 
 
 
@@ -1588,91 +1591,7 @@ lame_init_old(lame_global_flags * gfp)
 {
     lame_internal_flags *gfc;
 
-/* extremly system dependent stuff, move to a lib to make the code readable */
-/*==========================================================================*/
-
-    /*
-     *  Disable floating point exceptions
-     */
-#if defined(__FreeBSD__) && !defined(__alpha__)
-    {
-        /* seet floating point mask to the Linux default */
-        fp_except_t mask;
-        mask = fpgetmask();
-        /* if bit is set, we get SIGFPE on that error! */
-        fpsetmask(mask & ~(FP_X_INV | FP_X_DZ));
-        /*  DEBUGF("FreeBSD mask is 0x%x\n",mask); */
-    }
-#endif
-
-#if defined(__riscos__) && !defined(ABORTFP)
-    /* Disable FPE's under RISC OS */
-    /* if bit is set, we disable trapping that error! */
-    /*   _FPE_IVO : invalid operation */
-    /*   _FPE_DVZ : divide by zero */
-    /*   _FPE_OFL : overflow */
-    /*   _FPE_UFL : underflow */
-    /*   _FPE_INX : inexact */
-    DisableFPETraps(_FPE_IVO | _FPE_DVZ | _FPE_OFL);
-#endif
-
-    /*
-     *  Debugging stuff
-     *  The default is to ignore FPE's, unless compiled with -DABORTFP
-     *  so add code below to ENABLE FPE's.
-     */
-
-#if defined(ABORTFP)
-#if defined(_MSC_VER)
-    {
-#include <float.h>
-        unsigned int mask;
-        mask = _controlfp(0, 0);
-        mask &= ~(_EM_OVERFLOW | _EM_UNDERFLOW | _EM_ZERODIVIDE | _EM_INVALID);
-        mask = _controlfp(mask, _MCW_EM);
-    }
-#elif defined(__CYGWIN__)
-#  define _FPU_GETCW(cw) __asm__ ("fnstcw %0" : "=m" (*&cw))
-#  define _FPU_SETCW(cw) __asm__ ("fldcw %0" : : "m" (*&cw))
-
-#  define _EM_INEXACT     0x00000020 /* inexact (precision) */
-#  define _EM_UNDERFLOW   0x00000010 /* underflow */
-#  define _EM_OVERFLOW    0x00000008 /* overflow */
-#  define _EM_ZERODIVIDE  0x00000004 /* zero divide */
-#  define _EM_INVALID     0x00000001 /* invalid */
-    {
-        unsigned int mask;
-        _FPU_GETCW(mask);
-        /* Set the FPU control word to abort on most FPEs */
-        mask &= ~(_EM_OVERFLOW | _EM_ZERODIVIDE | _EM_INVALID);
-        _FPU_SETCW(mask);
-    }
-# elif defined(__linux__)
-    {
-
-#  include <fpu_control.h>
-#  ifndef _FPU_GETCW
-#  define _FPU_GETCW(cw) __asm__ ("fnstcw %0" : "=m" (*&cw))
-#  endif
-#  ifndef _FPU_SETCW
-#  define _FPU_SETCW(cw) __asm__ ("fldcw %0" : : "m" (*&cw))
-#  endif
-
-        /* 
-         * Set the Linux mask to abort on most FPE's
-         * if bit is set, we _mask_ SIGFPE on that error!
-         *  mask &= ~( _FPU_MASK_IM | _FPU_MASK_ZM | _FPU_MASK_OM | _FPU_MASK_UM );
-         */
-
-        unsigned int mask;
-        _FPU_GETCW(mask);
-        mask &= ~(_FPU_MASK_IM | _FPU_MASK_ZM | _FPU_MASK_OM);
-        _FPU_SETCW(mask);
-    }
-#endif
-#endif /* ABORTFP */
-
-/*======================================================================================*/
+    disable_FPE(); // disable floating point exceptions
 
     memset(gfp, 0, sizeof(lame_global_flags));
 
@@ -1683,7 +1602,7 @@ lame_init_old(lame_global_flags * gfp)
     /* Global flags.  set defaults here for non-zero values */
     /* see lame.h for description */
 
-    gfp->mode = MPG_MD_JOINT_STEREO;
+    gfp->mode = -1;
     gfp->original = 1;
     gfp->in_samplerate = 1000 * 44.1;
     gfp->num_channels = 2;

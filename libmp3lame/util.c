@@ -710,4 +710,94 @@ int select_kth_int(int a[], int N, int k)
     }
     return a[k];
 }
+
+
+
+void disable_FPE(void) {
+/* extremly system dependent stuff, move to a lib to make the code readable */
+/*==========================================================================*/
+
+    /*
+     *  Disable floating point exceptions
+     */
+#if defined(__FreeBSD__) && !defined(__alpha__)
+    {
+        /* seet floating point mask to the Linux default */
+        fp_except_t mask;
+        mask = fpgetmask();
+        /* if bit is set, we get SIGFPE on that error! */
+        fpsetmask(mask & ~(FP_X_INV | FP_X_DZ));
+        /*  DEBUGF("FreeBSD mask is 0x%x\n",mask); */
+    }
+#endif
+
+#if defined(__riscos__) && !defined(ABORTFP)
+    /* Disable FPE's under RISC OS */
+    /* if bit is set, we disable trapping that error! */
+    /*   _FPE_IVO : invalid operation */
+    /*   _FPE_DVZ : divide by zero */
+    /*   _FPE_OFL : overflow */
+    /*   _FPE_UFL : underflow */
+    /*   _FPE_INX : inexact */
+    DisableFPETraps(_FPE_IVO | _FPE_DVZ | _FPE_OFL);
+#endif
+
+    /*
+     *  Debugging stuff
+     *  The default is to ignore FPE's, unless compiled with -DABORTFP
+     *  so add code below to ENABLE FPE's.
+     */
+
+#if defined(ABORTFP)
+#if defined(_MSC_VER)
+    {
+#include <float.h>
+        unsigned int mask;
+        mask = _controlfp(0, 0);
+        mask &= ~(_EM_OVERFLOW | _EM_UNDERFLOW | _EM_ZERODIVIDE | _EM_INVALID);
+        mask = _controlfp(mask, _MCW_EM);
+    }
+#elif defined(__CYGWIN__)
+#  define _FPU_GETCW(cw) __asm__ ("fnstcw %0" : "=m" (*&cw))
+#  define _FPU_SETCW(cw) __asm__ ("fldcw %0" : : "m" (*&cw))
+
+#  define _EM_INEXACT     0x00000020 /* inexact (precision) */
+#  define _EM_UNDERFLOW   0x00000010 /* underflow */
+#  define _EM_OVERFLOW    0x00000008 /* overflow */
+#  define _EM_ZERODIVIDE  0x00000004 /* zero divide */
+#  define _EM_INVALID     0x00000001 /* invalid */
+    {
+        unsigned int mask;
+        _FPU_GETCW(mask);
+        /* Set the FPU control word to abort on most FPEs */
+        mask &= ~(_EM_OVERFLOW | _EM_ZERODIVIDE | _EM_INVALID);
+        _FPU_SETCW(mask);
+    }
+# elif defined(__linux__)
+    {
+
+#  include <fpu_control.h>
+#  ifndef _FPU_GETCW
+#  define _FPU_GETCW(cw) __asm__ ("fnstcw %0" : "=m" (*&cw))
+#  endif
+#  ifndef _FPU_SETCW
+#  define _FPU_SETCW(cw) __asm__ ("fldcw %0" : : "m" (*&cw))
+#  endif
+
+        /* 
+         * Set the Linux mask to abort on most FPE's
+         * if bit is set, we _mask_ SIGFPE on that error!
+         *  mask &= ~( _FPU_MASK_IM | _FPU_MASK_ZM | _FPU_MASK_OM | _FPU_MASK_UM );
+         */
+
+        unsigned int mask;
+        _FPU_GETCW(mask);
+        mask &= ~(_FPU_MASK_IM | _FPU_MASK_ZM | _FPU_MASK_OM);
+        _FPU_SETCW(mask);
+    }
+#endif
+#endif /* ABORTFP */
+}
+
+
 /* end of util.c */

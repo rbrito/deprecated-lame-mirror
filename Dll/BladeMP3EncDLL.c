@@ -125,7 +125,6 @@ static void PresetOptions(lame_global_flags *gfp,LONG myPreset)
 			gfp->no_short_blocks=1;
 			gfp->quality = 5;
 			gfp->mode = MPG_MD_MONO; 
-			gfp->mode_fixed = 1; 
 			gfp->brate = 16; 
 			gfp->VBR_q=6;
 			gfp->VBR_min_bitrate_kbps=8;
@@ -138,7 +137,6 @@ static void PresetOptions(lame_global_flags *gfp,LONG myPreset)
 			gfp->lowpasswidth=500;
 			gfp->quality = 5;
 			gfp->mode = MPG_MD_MONO; 
-			gfp->mode_fixed = 1; 
 			gfp->brate = 24; 
 			gfp->VBR_q=5;
 			gfp->VBR_min_bitrate_kbps=8;
@@ -150,7 +148,6 @@ static void PresetOptions(lame_global_flags *gfp,LONG myPreset)
 			gfp->lowpasswidth=500;
 			gfp->quality = 5;
 			gfp->mode = MPG_MD_MONO; 
-			gfp->mode_fixed = 1; 
 			gfp->brate = 32; 
 			gfp->VBR_q=5;
 			gfp->VBR_min_bitrate_kbps=16;
@@ -162,7 +159,6 @@ static void PresetOptions(lame_global_flags *gfp,LONG myPreset)
 			gfp->lowpasswidth=880;
 			gfp->quality = 5;
 			gfp->mode = MPG_MD_JOINT_STEREO; 
-			gfp->mode_fixed = 1; 
 			gfp->brate = 64; 
 			gfp->VBR_q=5;
 			gfp->VBR_min_bitrate_kbps=24;
@@ -175,7 +171,6 @@ static void PresetOptions(lame_global_flags *gfp,LONG myPreset)
 			gfp->no_short_blocks=1;
 			gfp->quality = 5;
 			gfp->mode = MPG_MD_MONO; 
-			gfp->mode_fixed = 1; 
 			gfp->brate = 56; 
 			gfp->VBR_q=4;
 			gfp->VBR_min_bitrate_kbps=32;
@@ -186,7 +181,6 @@ static void PresetOptions(lame_global_flags *gfp,LONG myPreset)
 			gfp->lowpasswidth=0;
 			gfp->quality = 5;
 			gfp->mode = MPG_MD_JOINT_STEREO; 
-			gfp->mode_fixed = 1; 
 			gfp->brate = 112; 
 			gfp->VBR_q=4;
 			gfp->VBR_min_bitrate_kbps=64;
@@ -197,7 +191,6 @@ static void PresetOptions(lame_global_flags *gfp,LONG myPreset)
 			gfp->lowpasswidth=2000;
 			gfp->quality = 5;
 			gfp->mode = MPG_MD_JOINT_STEREO; 
-			gfp->mode_fixed = 1; 
 			gfp->brate = 128; 
 			gfp->VBR_q=4;
 			gfp->VBR_min_bitrate_kbps=96;
@@ -208,7 +201,6 @@ static void PresetOptions(lame_global_flags *gfp,LONG myPreset)
 			gfp->lowpasswidth=2200;
 			gfp->quality = 2;
 			gfp->mode = MPG_MD_JOINT_STEREO; 
-			gfp->mode_fixed = 1; 
 			gfp->brate = 160;            
 			gfp->VBR_q=3;
 			gfp->VBR_min_bitrate_kbps=112;
@@ -219,7 +211,6 @@ static void PresetOptions(lame_global_flags *gfp,LONG myPreset)
 			gfp->highpassfreq=-1;
 			gfp->quality = 2;
 			gfp->mode = MPG_MD_STEREO; 
-			gfp->mode_fixed = 1; 
 			gfp->brate = 192;  
 			gfp->VBR_q=2;
 			gfp->VBR_min_bitrate_kbps=128;
@@ -230,7 +221,6 @@ static void PresetOptions(lame_global_flags *gfp,LONG myPreset)
 			gfp->highpassfreq=-1;
 			gfp->quality = 2; 
 			gfp->mode = MPG_MD_STEREO; 
-			gfp->mode_fixed = 1; 
 			gfp->brate = 256; 
 			gfp->VBR_q=0;
 			gfp->VBR_min_bitrate_kbps=160;
@@ -309,23 +299,19 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 		{
 			case BE_MP3_MODE_STEREO:
 				gf.mode=0;
-				gf.mode_fixed=1;  /* dont allow LAME to change the mode */
 				gf.num_channels=2;
 			break;
 			case BE_MP3_MODE_JSTEREO:
 				gf.mode=1;
-				gf.mode_fixed=1;
 				gf.num_channels=2;
 			break;
 			case BE_MP3_MODE_MONO:
 				gf.mode=3;
-				gf.mode_fixed=1;
 				gf.num_channels=1;
 			break;
 			case BE_MP3_MODE_DUALCHANNEL:
 				gf.force_ms=1;
 				gf.mode=1;
-				gf.mode_fixed=1;
 				gf.num_channels=2;
 			break;
 			default:

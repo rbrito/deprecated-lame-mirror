@@ -490,7 +490,7 @@ extern FLOAT8         ATHformula(FLOAT8 f,lame_global_flags *gfp);
 extern FLOAT8         freq2bark(FLOAT8 freq);
 extern FLOAT8         freq2cbw(FLOAT8 freq);
 extern void freorder(int scalefac_band[],FLOAT8 ix_orig[576]);
-
+void disable_FPE(void);
 
 extern void 
 getframebits(lame_global_flags *gfp, int *bitsPerFrame, int *mean_bits);
