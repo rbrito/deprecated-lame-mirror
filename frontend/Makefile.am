@@ -3,7 +3,7 @@
 include $(top_srcdir)/Makefile.am.global
 
 bin_PROGRAMS = @WITH_FRONTEND@ @WITH_MP3RTP@ @WITH_MP3X@
-EXTRA_PROGRAMS = lame mp3rtp mp3x
+EXTRA_PROGRAMS = lame$(EXEEXT) mp3rtp$(EXEEXT) mp3x$(EXEEXT)
 
 brhist_sources = brhist.c brhist.h
 
@@ -35,19 +35,20 @@ noinst_HEADERS = get_audio.h \
 	portableio.h \
 	timestatus.h
 
-EXTRA_lame_SOURCES = $(brhist_sources)
-EXTRA_mp3rtp_SOURCES = $(brhist_sources)
-EXTRA_mp3x_SOURCES = $(brhist_sources)
+EXTRA_lame__EXEEXT__SOURCES = $(brhist_sources)
+EXTRA_mp3rtp__EXEEXT__SOURCES = $(brhist_sources)
+EXTRA_mp3x__EXEEXT__SOURCES = $(brhist_sources)
 
 if WITH_BRHIST
-lame_SOURCES = main.c $(common_sources) $(brhist_sources)
-mp3rtp_SOURCES = mp3rtp.c rtp.c rtp.h $(common_sources) $(brhist_sources)
-mp3x_SOURCES = mp3x.c gtkanal.c gpkplotting.c \
+lame__EXEEXT__SOURCES = main.c $(common_sources) $(brhist_sources)
+mp3rtp__EXEEXT__SOURCES = mp3rtp.c rtp.c rtp.h $(common_sources) \
+	$(brhist_sources)
+mp3x__EXEEXT__SOURCES = mp3x.c gtkanal.c gpkplotting.c \
 	$(common_sources) $(brhist_sources)
 else
-lame_SOURCES = main.c $(common_sources)
-mp3rtp_SOURCES = mp3rtp.c rtp.c rtp.h $(common_sources)
-mp3x_SOURCES = mp3x.c gtkanal.c gpkplotting.c $(common_sources)
+lame__EXEEXT__SOURCES = main.c $(common_sources)
+mp3rtp__EXEEXT__SOURCES = mp3rtp.c rtp.c rtp.h $(common_sources)
+mp3x__EXEEXT__SOURCES = mp3x.c gtkanal.c gpkplotting.c $(common_sources)
 endif
 
 CFLAGS = @CFLAGS@ @GTK_CFLAGS@ @FRONTEND_CFLAGS@
@@ -55,10 +56,11 @@ LDFLAGS = @LDFLAGS@ @FRONTEND_LDFLAGS@ -static
 
 INCLUDES = -I$(top_srcdir)/libmp3lame -I$(top_srcdir)/include -I$(top_builddir)
 
-LDADD = @LDADD@ @FRONTEND_LDADD@ \
-	$(top_builddir)/libmp3lame/libmp3lame.la
+LDADD = @LDADD@ \
+	$(top_builddir)/libmp3lame/libmp3lame.la \
+	@FRONTEND_LDADD@
 
-mp3x_LDADD = $(LDADD) @GTK_LIBS@
+mp3x__EXEEXT__LDADD = $(LDADD) @GTK_LIBS@
 
 CLEANFILES = lclint.txt $(EXTRA_PROGRAMS)
 

@@ -388,7 +388,7 @@ AC_ARG_ENABLE(frontend,
   [  --disable-frontend         Do not build the lame executable [default: build it]],
     WITH_FRONTEND="${enableval}", WITH_FRONTEND=yes)
 if test "x${WITH_FRONTEND}" = "xyes"; then
-	WITH_FRONTEND=lame
+	WITH_FRONTEND=lame${ac_exeext}
 	AC_MSG_RESULT(yes)
 else
 	WITH_FRONTEND=
@@ -402,7 +402,7 @@ AC_ARG_ENABLE(mp3x,
   [  --enable-mp3x              Build GTK frame analyzer [default: no]],
     WITH_MP3X="${enableval}", WITH_MP3X=no)
 if test "x${WITH_MP3X}" = "xyes"; then
-	WITH_MP3X=mp3x
+	WITH_MP3X=mp3x${ac_exeext}
 	AC_MSG_RESULT(yes)
 else
 	WITH_MP3X=
@@ -425,7 +425,7 @@ AC_ARG_ENABLE(mp3rtp,
   [  --enable-mp3rtp            Build mp3rtp [default: no]],
     WITH_MP3RTP="${enableval}", WITH_MP3RTP=no)
 if test "x${WITH_MP3RTP}" = "xyes"; then
-	WITH_MP3RTP=mp3rtp
+	WITH_MP3RTP=mp3rtp${ac_exeext}
 	AC_MSG_RESULT(yes)
 else
 	WITH_MP3RTP=
@@ -866,8 +866,8 @@ fi
 
 
 CFLAGS="${OPTIMIZATION} ${CFLAGS}"
-LDADD="${CONFIG_MATH_LIB} ${LDADD}"
-
+LDADD="${LDADD}"
+FRONTEND_LDADD="${FRONTEND_LDADD} ${CONFIG_MATH_LIB}"
 
 
 AC_SUBST(INCLUDES)
