@@ -58,9 +58,11 @@ int getframebytes(const lame_global_flags * gfp)
 
 /*write j bits into the bit stream */
 inline static void
-putbits24(bit_stream_t *bs, int val, int j)
+putbits24(bit_stream_t *bs, unsigned int val, int j)
 {
     char *p = &bs->buf[bs->bitidx >> 3];
+    assert(0 < j <= 24);
+    assert(val <= (1UL << j));
 
     val <<= (32 - j - (bs->bitidx & 7));
     bs->bitidx += j;
@@ -72,7 +74,7 @@ putbits24(bit_stream_t *bs, int val, int j)
 }
 
 inline static void
-putbits(bit_stream_t *bs, int val, int j)
+putbits(bit_stream_t *bs, unsigned int val, int j)
 {
     if (j > 25) {
 	putbits24(bs, val>>16, j-16);
