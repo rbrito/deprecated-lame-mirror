@@ -127,6 +127,7 @@ typedef struct {
   FLOAT	last_thm[4][SBMAX_s][3];
   int   last_attacks[4][3];
   FLOAT pefirbuf[19];
+  FLOAT bass,alto,treble;
 } nsPsy_t;
 
 

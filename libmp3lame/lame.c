@@ -919,7 +919,7 @@ int lame_init_params ( lame_global_flags* const gfp )
     gfc->sfb21_extra = ( gfp->VBR == vbr_rh  ||  gfp->VBR == vbr_mtrh  ||  gfp->VBR == vbr_mt )
                     && ( gfp->out_samplerate >= 32000 );
   
-    if (gfp->exp_nspsytune) {
+    if (gfp->exp_nspsytune & 1) {
       int i;
 
       gfc->nsPsy.use = 1;
@@ -935,6 +935,12 @@ int lame_init_params ( lame_global_flags* const gfp )
       }
 
       if (gfp->ATHtype == -1) gfp->ATHtype = 0;
+
+      gfc->nsPsy.bass = gfc->nsPsy.alto = gfc->nsPsy.treble = 0;
+
+      i = (gfp->exp_nspsytune >>  2) & 63; if (i >= 32) i -= 64; gfc->nsPsy.bass   = pow(10,i / 4.0 / 10.0);
+      i = (gfp->exp_nspsytune >>  8) & 63; if (i >= 32) i -= 64; gfc->nsPsy.alto   = pow(10,i / 4.0 / 10.0);
+      i = (gfp->exp_nspsytune >> 14) & 63; if (i >= 32) i -= 64; gfc->nsPsy.treble = pow(10,i / 4.0 / 10.0);
     }
 
     if (gfp->ATHtype == -1) gfp->ATHtype = 1;

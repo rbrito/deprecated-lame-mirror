@@ -483,6 +483,16 @@ int calc_xmin(
         l3_xmin->s[sfb][b] = Max(gfc->ATH_s[sfb], xmin);
       }
       
+      if (gfc->nsPsy.use) {
+	if (sfb <= 5) {
+	  l3_xmin->s[sfb][b] *= gfc->nsPsy.bass;
+	} else if (sfb <= 10) {
+	  l3_xmin->s[sfb][b] *= gfc->nsPsy.alto;
+	} else {
+	  l3_xmin->s[sfb][b] *= gfc->nsPsy.treble;
+	}
+      }
+
       if (en0 > gfc->ATH_s[sfb]) ath_over++;
       if (gfc->nsPsy.use && gfp->VBR == vbr_off && gfp->quality <= 1)
         l3_xmin->s[sfb][b] *= 0.001;
@@ -509,6 +519,15 @@ int calc_xmin(
 	    xmin = en0 * ratio->thm.l[sfb] * gfc->masking_lower / xmin;
 	  l3_xmin->l[sfb]=Max(gfc->ATH_l[sfb], xmin);
 	}
+
+	if (sfb <= 6) {
+	  l3_xmin->l[sfb] *= gfc->nsPsy.bass;
+	} else if (sfb <= 13) {
+	  l3_xmin->l[sfb] *= gfc->nsPsy.alto;
+	} else {
+	  l3_xmin->l[sfb] *= gfc->nsPsy.treble;
+	}
+
 	if (en0 > gfc->ATH_l[sfb]) ath_over++;
 	if (gfp->VBR == vbr_off && gfp->quality <= 1)
           l3_xmin->l[sfb] *= 0.001;
