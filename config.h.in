@@ -1,7 +1,21 @@
 /* config.h.in.  Generated from configure.in by autoheader.  */
+#undef  int8_t
+#undef uint8_t
+#undef  int18_t
+#undef uint16_t
+#undef  int32_t
+#undef uint32_t
+#undef  int64_t
+#undef uint64_t
+#undef ieee854_float80_t
+#undef ieee754_float64_t
+#undef ieee754_float32_t
 
 /* debug define */
 #undef ABORTFP
+
+/* use double instead of float */
+#undef ALLDOUBLE
 
 /* enable VBR bitrate histogram */
 #undef BRHIST
@@ -19,9 +33,6 @@
 
 /* double is faster than float on Alpha */
 #undef FLOAT
-
-/* float instead of double */
-#undef FLOAT8
 
 /* Define to 1 if you have `alloca', as a function or macro. */
 #undef HAVE_ALLOCA
@@ -62,13 +73,6 @@
 #ifndef HAVE_INT32_T
 #undef A_INT32_T
 	typedef A_INT32_T int32_t;
-#endif
-
-/* add uint64_t type */
-#undef HAVE_UINT64_T
-#ifndef HAVE_UINT64_T
-#undef A_UINT64_T
-	typedef A_UINT64_T uint64_t;
 #endif
 
 /* Define to 1 if you have the <inttypes.h> header file. */
@@ -144,6 +148,13 @@
 	typedef A_UINT32_T uint32_t;
 #endif
 
+/* add uint64_t type */
+#undef HAVE_UINT64_T
+#ifndef HAVE_UINT64_T
+#undef A_UINT64_T
+	typedef A_UINT64_T uint64_t;
+#endif
+
 /* add uint8_t type */
 #undef HAVE_UINT8_T
 #ifndef HAVE_UINT8_T
@@ -152,6 +163,12 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
+
+/* Define to 1 if you have the <vecLib/vDSP.h> header file. */
+#undef HAVE_VECLIB_VDSP_H
+
+/* winsock */
+#undef HAVE_WINSOCKET
 
 /* requested by Frank, seems to be temporary needed for a smooth transition */
 #undef LAME_LIBRARY_BUILD
@@ -183,7 +200,7 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
-/* Define if compiler has function prototypes */
+/* Define to 1 if the C compiler supports function prototypes. */
 #undef PROTOTYPES
 
 /* The size of a `double', as computed by sizeof. */
@@ -197,9 +214,6 @@
 
 /* The size of a `long', as computed by sizeof. */
 #undef SIZEOF_LONG
-
-/* The size of a `long double', as computed by sizeof. */
-#undef SIZEOF_LONG_DOUBLE
 
 /* The size of a `long long', as computed by sizeof. */
 #undef SIZEOF_LONG_LONG
@@ -222,19 +236,19 @@
 /* If using the C implementation of alloca, define if you know the
    direction of stack growth for your system; otherwise it will be
    automatically deduced at run-time.
-        STACK_DIRECTION > 0 => grows toward higher addresses
-        STACK_DIRECTION < 0 => grows toward lower addresses
-        STACK_DIRECTION = 0 => direction of growth unknown */
+	STACK_DIRECTION > 0 => grows toward higher addresses
+	STACK_DIRECTION < 0 => grows toward lower addresses
+	STACK_DIRECTION = 0 => direction of growth unknown */
 #undef STACK_DIRECTION
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
-/* IEEE754 compatible machine */
-#undef USE_IEEE754_HACK
-
 /* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
 #undef TIME_WITH_SYS_TIME
+
+/* IEEE754 compatible machine */
+#undef USE_IEEE754_HACK
 
 /* build with layer 1 decoding */
 #undef USE_LAYER_1
@@ -281,12 +295,17 @@
 /* work around a glibc bug */
 #undef __NO_MATH_INLINES
 
+/* Define like PROTOTYPES; this can be used by system headers. */
+#undef __PROTOTYPES
+
 /* Define to empty if `const' does not conform to ANSI C. */
 #undef const
 
-/* Define as `__inline' if that's what the C compiler calls it, or to nothing
-   if it is not supported. */
+/* Define to `__inline__' or `__inline' if that's what the C compiler
+   calls it, or to nothing if 'inline' is not supported under any name.  */
+#ifndef __cplusplus
 #undef inline
+#endif
 
 /* Define to `unsigned' if <sys/types.h> does not define. */
 #undef size_t
