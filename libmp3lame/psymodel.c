@@ -662,6 +662,13 @@ compute_masking_s(
 	sb++;
 	if (sb == SBMAX_s)
 	    break;
+	if (b == gfc->bo_s[sb]) {
+	    if (thmm < gfc->ATH.s_avg[sb] * gfc->ATH.adjust)
+		thmm = gfc->ATH.s_avg[sb] * gfc->ATH.adjust;
+	    mr->en .s[sb][sblock] = enn;
+	    mr->thm.s[sb][sblock] = thmm;
+	    break;
+	}
     }
 }
 
@@ -1367,6 +1374,7 @@ L3psycho_anal_ns(
 	    spread -= kk;
 // calculate same bark masking 1st
 	    ecb = spread[b] * eb2[b];
+
 	    for (kk = 1; kk <= 3; kk++) {
 		int k2;
 
@@ -1424,6 +1432,8 @@ L3psycho_anal_ns(
 	    enn  =  eb[b] * 0.5;
 	    thmm = tmp * 0.5;
 	    j++;
+	    if (b == gfc->bo_l[j])
+		break;
 	}
 
 	thmm *= gfc->masking_lower;
@@ -1463,6 +1473,8 @@ L3psycho_anal_ns(
 	    enn  =  eb[b] * 0.5;
 	    thmm = tmp * 0.5;
 	    j++;
+	    if (b == gfc->bo_l2s[j])
+		break;
 	}
 
 	thmm *= gfc->masking_lower;
