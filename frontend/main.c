@@ -454,7 +454,7 @@ lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath,
     fwrite(mp3buffer, 1, imp3, outf);
 
     /* id3 tag */
-    if (input_format == sf_mp3) {
+    if (input_format == sf_mp3 && keeptag) {
 #define ID3TAGSIZE 128
 	extern FILE * musicin;
 	char id3tag[ID3TAGSIZE];
