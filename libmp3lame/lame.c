@@ -978,7 +978,7 @@ lame_init_params(lame_global_flags * const gfp)
         j = (gfp->exp_nspsytune >> 20) & 63;
         if (j >= 32)
             j -= 64;
-        gfc->nsPsy.sfb21 = pow(10, i+j / 4.0 / 10.0);
+        gfc->nsPsy.sfb21 = pow(10, (i+j) / 4.0 / 10.0);
     }
 
     assert( gfp->VBR_q <= 9 );
@@ -1357,8 +1357,12 @@ lame_print_internals( const lame_global_flags * gfp )
     MSGF( gfc, "\t ^ adjust type: %d\n", gfc->ATH->use_adjust );
     MSGF( gfc, "\t ^ adapt threshold type: %d\n", gfp->athaa_loudapprox );
     
-    if ( gfc->nsPsy.use )
+    if ( gfc->nsPsy.use ) {
     MSGF( gfc, "\texperimental psy tunings by Naoki Shibata\n" ); 
+    MSGF( gfc, "\t   adjust masking bass=%g dB, alto=%g dB, treble=%g dB, sfb21=%g dB\n", 
+        10*log10(gfc->nsPsy.bass),   10*log10(gfc->nsPsy.alto), 
+        10*log10(gfc->nsPsy.treble), 10*log10(gfc->nsPsy.sfb21) );
+    }
     pc = gfp->useTemporal ? "yes" : "no";
     MSGF( gfc, "\tusing temporal masking effect: %s\n", pc );
     MSGF( gfc, "\t...\n" );
