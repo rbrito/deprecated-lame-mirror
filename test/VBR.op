@@ -1,7 +1,9 @@
---vbr-old   
 --vbr-new 
---vbr-mtrh
---vbr-old  -k --resample 11
 --vbr-new  -k --resample 11
+--vbr-mtrh
 --vbr-mtrh -k --resample 11
+--vbr-mtrh -V1 -ms -k -q5
+--vbr-mtrh -V1 -ms -k -q9
+--vbr-old   
+--vbr-old  -k --resample 11
 --vbr-old  -k --nspsytune

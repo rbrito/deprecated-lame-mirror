@@ -825,27 +825,7 @@ outer_loop (
          * Much more than 3 makes not a big difference, it is only slower.
          */
         if (age > 3 && best_noise_info.over_count == 0) 
-            break;
-        
-
-
-        /* Check if the last scalefactor band is distorted.
-         * in VBR mode we can't get rid of the distortion, so quit now
-         * and VBR mode will try again with more bits.  
-         * (makes a 10% speed increase, the files I tested were
-         * binary identical, 2000/05/20 Robert.Hegemann@gmx.de)
-         * distort[] > 1 means noise > allowed noise
-         */
-        if (gfc->sfb21_extra) {
-            if (cod_info->block_type == SHORT_TYPE) {
-                if (distort.s[SBMAX_s-1][0] > 1 ||
-                    distort.s[SBMAX_s-1][1] > 1 ||
-                    distort.s[SBMAX_s-1][2] > 1) break;
-            } else {
-                if (distort.l[SBMAX_l-1] > 1) break;
-            }
-        }
-    
+            break;    
     
         /* save data so we can restore this quantization later */    
         if (better) {
@@ -1314,7 +1294,6 @@ VBR_iteration_loop (
     int       analog_mean_bits, min_mean_bits;
     int       mean_bits;
     int       ch, gr, analog_silence;
-    int       sfb21_extra;
     gr_info             *cod_info;
     III_side_info_t     *l3_side  = &gfc->l3_side;
 
@@ -1422,11 +1401,6 @@ VBR_iteration_loop (
     } while (used_bits > bits);
     /*--------------------------------------*/
     
-    /*  ignore sfb21 by the following (maybe) noise shaping  
-     */
-    sfb21_extra = gfc->sfb21_extra;
-    gfc->sfb21_extra = 0;     
-        
     /*  quantize granules which violate bit constraints again
      */  
     for (gr = 0; gr < gfc->mode_gr; gr++) {
@@ -1467,8 +1441,6 @@ VBR_iteration_loop (
             }
         } /* ch */
     }  /* gr */
-    
-    gfc->sfb21_extra = sfb21_extra;
 
     iteration_finish (gfc, xr, l3_enc, ratio, scalefac, mean_bits);
 }

@@ -35,7 +35,7 @@ extern int brhist;
 extern int mp3_delay;              /* for decoder only */
 extern int mp3_delay_set;          /* for decoder only */
 extern float update_interval;      /* to use Frank's time status display */
-extern disable_wav_header;         /* for decoder only */
+extern int disable_wav_header;     /* for decoder only */
 
 
 #define         Min(A, B)       ((A) < (B) ? (A) : (B))
