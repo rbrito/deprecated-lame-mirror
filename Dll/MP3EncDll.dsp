@@ -44,7 +44,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /Zp2 /MT /W3 /GX /Ox /Ot /Og /Ob2 /I "../" /I "../include" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /YX /FD /c
+# ADD CPP /nologo /Zp2 /MT /W3 /GX /Ox /Ot /Og /Ob2 /I "../libmp3lame" /I "../include" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o NUL /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o NUL /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
@@ -70,7 +70,7 @@ LINK32=xilink.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /Zp2 /MTd /W3 /Gm /GX /Zi /Od /I "../" /I "../include" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /YX /FD /c
+# ADD CPP /nologo /Zp2 /MTd /W3 /Gm /GX /Zi /Od /I "../libmp3lame" /I "../include" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /YX /FD /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o NUL /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o NUL /win32
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
@@ -89,13 +89,12 @@ LINK32=xilink.exe
 
 # Name "MP3EncDll - Win32 Release"
 # Name "MP3EncDll - Win32 Debug"
+# Begin Group "Source"
+
+# PROP Default_Filter "c"
 # Begin Source File
 
-SOURCE=..\bitstream.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\bitstream.h
+SOURCE=..\libmp3lame\bitstream.c
 # End Source File
 # Begin Source File
 
@@ -107,123 +106,136 @@ SOURCE=.\BladeMP3EncDLL.def
 # End Source File
 # Begin Source File
 
+SOURCE=..\libmp3lame\encoder.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\libmp3lame\fft.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\libmp3lame\id3tag.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\libmp3lame\lame.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\libmp3lame\mpglib_interface.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\libmp3lame\newmdct.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\libmp3lame\psymodel.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\libmp3lame\quantize.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\libmp3lame\quantize_pvt.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\libmp3lame\reservoir.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\libmp3lame\tables.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\libmp3lame\takehiro.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\libmp3lame\util.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\libmp3lame\vbrquantize.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\libmp3lame\VbrTag.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\libmp3lame\version.c
+# End Source File
+# End Group
+# Begin Group "Include"
+
+# PROP Default_Filter "h"
+# Begin Source File
+
+SOURCE=..\libmp3lame\bitstream.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\BladeMP3EncDLL.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\confdefs.h
+SOURCE=..\libmp3lame\encoder.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\encoder.c
+SOURCE=..\libmp3lame\fft.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\encoder.h
+SOURCE=..\libmp3lame\l3side.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\fft.c
+SOURCE="..\libmp3lame\lame-analysis.h"
 # End Source File
 # Begin Source File
 
-SOURCE=..\fft.h
+SOURCE=..\libmp3lame\machine.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\id3tag.c
+SOURCE=..\libmp3lame\newmdct.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\l3side.h
+SOURCE=..\libmp3lame\psymodel.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\lame.c
+SOURCE=..\libmp3lame\quantize.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\machine.h
+SOURCE=..\libmp3lame\quantize_pvt.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\newmdct.c
+SOURCE=..\libmp3lame\reservoir.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\newmdct.h
+SOURCE=..\libmp3lame\tables.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\psymodel.c
+SOURCE=..\libmp3lame\util.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\psymodel.h
+SOURCE=..\libmp3lame\VbrTag.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\quantize.c
+SOURCE=..\libmp3lame\version.h
 # End Source File
-# Begin Source File
-
-SOURCE=..\quantize.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\quantize_pvt.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\quantize_pvt.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\reservoir.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\reservoir.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\tables.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\tables.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\takehiro.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\util.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\util.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\vbrquantize.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\VbrTag.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\VbrTag.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\version.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\version.h
-# End Source File
+# End Group
 # End Target
 # End Project
