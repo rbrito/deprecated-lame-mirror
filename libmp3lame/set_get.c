@@ -692,8 +692,8 @@ lame_get_quantcomp_method(const lame_global_flags*  gfp)
 
 
 int
-lame_set_use_largescalefac( lame_global_flags*  gfp,
-			    int                 method)
+lame_set_sfscale( lame_global_flags*  gfp,
+		  int                 method)
 {
     gfp->internal_flags->use_scalefac_scale = method;
 
@@ -702,8 +702,8 @@ lame_set_use_largescalefac( lame_global_flags*  gfp,
 
 
 int
-lame_set_use_subblock_gain( lame_global_flags*  gfp,
-			    int                 method)
+lame_set_subblock_gain( lame_global_flags*  gfp,
+			int                 method)
 {
     gfp->internal_flags->use_subblock_gain = method;
 

@@ -52,6 +52,7 @@ char *strchr (), *strrchr ();
 #endif
 
 #include "lame.h"
+#include "set_get.h"
 
 #include "brhist.h"
 #include "parse.h"
@@ -63,13 +64,21 @@ char *strchr (), *strrchr ();
 #include <dmalloc.h>
 #endif
 
+#if defined DEBUG || _DEBUG
+#define INTERNAL_OPTS 1
+#else
+#define INTERNAL_OPTS LAME_ALPHA_VERSION
+#endif
+
+
 
 /* GLOBAL VARIABLES.  set by parse_args() */
 /* we need to clean this up */
 sound_file_format input_format;   
 int keeptag=0;
 int swapbytes;              /* force byte swapping   default=0*/
-int silent;
+int silent;                 /* Verbosity */
+int ignore_tag_errors;      /* Ignore errors in values passed for tags */
 int brhist;
 float update_interval;      /* to use Frank's time status display */
 int mp3_delay;              /* to adjust the number of samples truncated
@@ -80,7 +89,7 @@ int mp3_delay_set;          /* user specified the value of the mp3 encoder
 int enc_delay;
 int enc_padding;
 int disable_wav_header;
-mp3data_struct mp3input_data; /* used by Ogg and MP3 */
+mp3data_struct mp3input_data; /* used by MP3 */
 
 int in_signed=1;
 int in_unsigned=0;
@@ -788,6 +797,7 @@ static int resample_rate ( double freq )
 
 #define T_IF(str)          if ( 0 == local_strcasecmp (token,str) ) {
 #define T_ELIF(str)        } else if ( 0 == local_strcasecmp (token,str) ) {
+#define T_ELIF_INTERNAL(str)        } else if (INTERNAL_OPTS && (0 == local_strcasecmp (token,str)) ) {
 #define T_ELIF2(str1,str2) } else if ( 0 == local_strcasecmp (token,str1)  ||  0 == local_strcasecmp (token,str2) ) {
 #define T_ELSE             } else {
 #define T_END              }
@@ -809,6 +819,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
     outPath[0] = '\0';
     /* turn on display options. user settings may turn them off below */
     silent   = 0;
+    ignore_tag_errors = 0;
     brhist   = 1;
     enc_padding=-1;
     enc_delay=-1;
@@ -853,19 +864,21 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                  *  please, do *not* DOCUMENT this one
                  *  it is a developers only switch (rh)
                  */
-                T_ELIF ("tune")
+                T_ELIF_INTERNAL ("tune")
                     argUsed=1;
                     {extern void lame_set_tune(lame_t gfp, float val);
                     lame_set_tune(gfp,atof(nextArg));} 
-                T_ELIF ("ms-sparsing")
+
+                T_ELIF_INTERNAL ("ms-sparsing")
                     argUsed=1;
                     {extern void lame_set_ms_sparsing(lame_t gfp, int val);
                     lame_set_ms_sparsing(gfp,atoi(nextArg));}                    
-                T_ELIF ("ms-sparse-low")
+                T_ELIF_INTERNAL ("ms-sparse-low")
                     argUsed=1;
                     {extern void lame_set_ms_sparse_low(lame_t gfp, float val);
                     lame_set_ms_sparse_low(gfp,atof(nextArg));}
-                T_ELIF ("ms-sparse-high")
+
+                T_ELIF_INTERNAL ("ms-sparse-high")
                     argUsed=1;
                     {extern void lame_set_ms_sparse_high(lame_t gfp, float val);
                     lame_set_ms_sparse_high(gfp,atof(nextArg));}
@@ -912,10 +925,10 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF ("mixedblock")
                     (void) lame_set_use_mixed_blocks( gfp, 2);
 
-                T_ELIF ("allshort")
+                T_ELIF_INTERNAL ("shortthreshold")
                     (void) lame_set_short_threshold( gfp, 0.0f, 0.0f);
 
-                T_ELIF ("quantcomp")
+                T_ELIF_INTERNAL ("quantcomp")
 		    {
 			int n, m, i;
                         argUsed = 1;
@@ -926,7 +939,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 			lame_set_quant_comp_short(gfp, m);
 		    }
                 
-                T_ELIF ("shortthreshold")
+                T_ELIF_INTERNAL ("shortthreshold")
 		{
 		    float x,y;
 		    int i;
@@ -945,27 +958,27 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     mp3_delay_set=1;
                     argUsed=1;
                 
-                T_ELIF ("noath")
+                T_ELIF_INTERNAL ("noath")
                     (void) lame_set_noATH( gfp, 1 );
                 
-                T_ELIF ("nores")
+                T_ELIF_INTERNAL ("nores")
                     lame_set_disable_reservoir(gfp,1);
                 
                 T_ELIF ("strictly-enforce-ISO")
                     lame_set_strict_ISO(gfp,1);
                 
-                T_ELIF ("athonly")
+                T_ELIF_INTERNAL ("athonly")
                     (void) lame_set_ATHonly( gfp, 1 );
                 
-                T_ELIF ("athlower")
+                T_ELIF_INTERNAL ("athlower")
                     argUsed=1;
                     (void) lame_set_ATHlower( gfp, atof( nextArg ) );
                 
-                T_ELIF ("athcurve")
+                T_ELIF_INTERNAL ("athcurve")
                     argUsed=1;
                     (void) lame_set_ATHcurve( gfp, atof( nextArg ) );
 
-                T_ELIF ("athaa-sensitivity")
+                T_ELIF_INTERNAL ("athaa-sensitivity")
                     argUsed=1;
                     lame_set_athaa_sensitivity( gfp, atof(nextArg) );
 
@@ -993,7 +1006,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF ("freeformat")
                     lame_set_free_format(gfp,1);
                 
-                T_ELIF ("athshort")
+                T_ELIF_INTERNAL ("athshort")
                     (void) lame_set_ATHshort( gfp, 1 );
                 
                 T_ELIF ("nohist")
@@ -1028,13 +1041,31 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 
                 T_ELIF ("tn")
                     argUsed=1;
-                    id3tag_set_track(gfp, nextArg);
-                
+		    if( 0 == ignore_tag_errors ) {
+			if (nextArg && *nextArg) {
+			    int num = atoi(nextArg);
+			    if ( num < 0 || num > 255 ) {
+				if( silent < 10 ) {
+				    fprintf(stderr, "The track number has to be between 0 and 255.\n");
+				}
+				return -1;
+			    }
+			}
+		    }
+		    id3tag_set_track(gfp, nextArg);
+		    
                 T_ELIF ("tg")
                     argUsed=1;
-                    if (id3tag_set_genre(gfp, nextArg)) {
-                        fprintf(stderr,"Unknown genre: %s.  Specify genre name or number\n", nextArg);
-                        return -1;
+                    if ( id3tag_set_genre(gfp, nextArg) ) {
+                        if ( ignore_tag_errors ) {
+                            if( silent < 10 ) {
+                                fprintf(stderr, "Unknown genre: '%s'.  Setting to 'Other'\n", nextArg);
+                            }
+                            id3tag_set_genre(gfp, "other");
+                        } else {
+                            fprintf(stderr, "Unknown genre: '%s'.  Specify genre name or number\n", nextArg);
+                            return -1;
+                        }
                     }
                 
                 T_ELIF ("add-id3v2")
@@ -1106,24 +1137,24 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF ("notemp")
                     (void) lame_set_useTemporal( gfp, 0 );
 
-                T_ELIF ("interch")
+                T_ELIF_INTERNAL ("interch")
                     argUsed=1;
                     (void) lame_set_interChRatio( gfp, atof(nextArg ) );
 
-                T_ELIF ("is-ratio")
+                T_ELIF_INTERNAL ("is-ratio")
                     argUsed=1;
                     (void) lame_set_istereoRatio( gfp, atof(nextArg ) );
 
-                T_ELIF ("substep")
+                T_ELIF_INTERNAL ("substep")
                     argUsed=1;
                     (void) lame_set_substep( gfp, atof(nextArg) );
 
-                T_ELIF ("sfscale")
+                T_ELIF_INTERNAL ("sfscale")
 		{
 		    int i = 1;
 		    if (sscanf(nextArg, "%d", &i) == 1)
 			argUsed=1;
-                    (void) lame_set_use_largescalefac( gfp, i);
+                    (void) lame_set_sfscale(gfp, i);
 		}
 
                 T_ELIF ("sbgain")
@@ -1131,7 +1162,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 		    int i = 1;
 		    if (sscanf(nextArg, "%d", &i) == 1)
 			argUsed=1;
-                    (void) lame_set_use_subblock_gain( gfp, i);
+                    (void) lame_set_subblock_gain( gfp, i);
 		}
 
                 T_ELIF ("temporal-masking")
@@ -1218,6 +1249,9 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     
                 T_ELIF ("verbose")
                     silent = -10;    /* print a lot on screen */
+
+                T_ELIF ("ignore-tag-errors")
+                    ignore_tag_errors = 1;
                     
                 T_ELIF2 ("version", "license")
                     print_license ( gfp, stdout, ProgramName );

@@ -294,11 +294,6 @@ int CDECL lame_set_quant_comp_short(lame_global_flags *, int);
 int CDECL lame_set_quantcomp_method(lame_global_flags *, int);
 int CDECL lame_get_quantcomp_method(const lame_global_flags *);
 
-/* set/get large scalefactor range */
-int CDECL lame_set_use_subblock_gain(lame_global_flags *, int);
-int CDECL lame_set_use_largescalefac(lame_global_flags *, int);
-int CDECL lame_get_use_largescalefac(const lame_global_flags *);
-
 /* Naoki's psycho acoustic model.  default=0 */
 int CDECL lame_set_exp_nspsytune(lame_global_flags *, int);
 int CDECL lame_get_exp_nspsytune(const lame_global_flags *);
@@ -389,17 +384,6 @@ int CDECL lame_set_istereoRatio(lame_global_flags *, float);
 /* use temporal masking effect (default = 1) */
 int CDECL lame_set_interChRatio(lame_global_flags *, float);
 float CDECL lame_get_interChRatio(const lame_global_flags *);
-
-/* substep shaping method */
-int CDECL lame_set_substep(lame_global_flags *, int);
-int CDECL lame_get_substep(const lame_global_flags *);
-
-/* short blocks switching threshold */
-int CDECL lame_set_short_threshold(lame_global_flags *,
-				   float forlong, float forshort);
-
-/* use mixed blocks */
-int CDECL lame_set_use_mixed_blocks(lame_global_flags *, int);
 
 /* Input PCM is emphased PCM (for instance from one of the rarely
    emphased CDs), it is STRONGLY not recommended to use this, because

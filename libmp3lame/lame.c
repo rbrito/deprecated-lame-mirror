@@ -27,6 +27,7 @@
 
 #include <assert.h>
 #include "lame.h"
+#include "set_get.h"
 #include "util.h"
 #include "bitstream.h"
 #include "version.h"
@@ -284,8 +285,8 @@ static int apply_preset(lame_global_flags*  gfp, int bitrate, vbr_mode mode)
     lame_set_brate(gfp, lame_get_VBR_mean_bitrate_kbps(gfp));
 
     if (mode != vbr) {
-	lame_set_use_largescalefac(gfp, switch_map[r].large_scalefac);
-	lame_set_use_subblock_gain(gfp, switch_map[r].large_scalefac);
+	lame_set_sfscale(gfp, switch_map[r].large_scalefac);
+	lame_set_subblock_gain(gfp, switch_map[r].large_scalefac);
 	lame_set_ATHcurve(gfp, switch_map[r].ath_curve);
 	lame_set_ATHlower(gfp, (double)switch_map[r].ath_lower);
 	if (gfp->internal_flags->quantcomp_method < 0)
