@@ -116,6 +116,34 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 }
 
       
+void set_masking_lower( int nbits )
+{
+	FLOAT8 masking_lower_db, fac;
+	
+	/* quality setting */
+	/* Adjust allowed masking based on quality setting */
+	/* db_lower varies from -10 to +8 db */
+	
+#define RH_maskingXXX
+#ifdef  RH_masking	
+	masking_lower_db = 10 * ( VBR_q/7.0 - 1 );
+#else
+	masking_lower_db = -10 + 2*VBR_q;
+#endif
+	
+	/* adjust by -6(min)..0(max) depending on bitrate */
+
+#ifdef  RH_masking	
+	fac = nbits > 1750 ? 1 : 0.5*(1.0+sin(PI*(nbits/1750.0 - 0.5)));
+#else
+	fac = (nbits-125)/(2500.0-125.0);
+#endif
+	fac = 6*(fac-1);
+	masking_lower_db += fac;
+
+	masking_lower = pow(10.0,masking_lower_db/10);
+}
+
 /************************************************************************
  *
  * VBR_iteration_loop()   
@@ -148,7 +176,6 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   int       i,ch, gr, mode_gr, analog_silence;
   FLOAT8    xr[2][2][576];
   FLOAT8 xr_save[576];
-  FLOAT8 masking_lower_db;
 
   iteration_init(xr_org,l3_side,l3_enc,fr_ps,&l3_xmin);
   info = fr_ps->header;
@@ -221,23 +248,11 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
       /* bin search to within +/- 10 bits of optimal */
       do {
 	int better;
-	FLOAT8 fac;
 	assert(this_bits>=min_bits);
 	assert(this_bits<=max_bits);
 
 	/* quality setting */
-	/* Adjust allowed masking based on quality setting */
-	/* db_lower varies from -10 to +8 db */
-	masking_lower_db = -10 + 2*VBR_q;
-	/* adjust by -6(min)..0(max) depending on bitrate */
-	fac=(FLOAT8)(this_bits-125)/(FLOAT8)(2500-125);
-	fac = 6*(fac-1);
-	masking_lower_db += fac;
-
-	masking_lower = pow(10.0,masking_lower_db/10);
-
-
-	
+	set_masking_lower( this_bits );
 
 	/* VBR will look for a quantization which has better values
 	 * then those specified below.*/
@@ -279,7 +294,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
     for (gr = 0; gr < mode_gr; gr++) {
       FLOAT8 fac = .33*(.5-ms_ener_ratio[gr])/.5;
       save_bits[gr][1]=((1-fac)/(1+fac))*save_bits[gr][0];
-      save_bits[gr][1]=Max(75,save_bits[gr][1]);
+      save_bits[gr][1]=Max(125,save_bits[gr][1]);
       used_bits += save_bits[gr][1];
     }
   }
@@ -319,6 +334,9 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
     if (convert_mdct) ms_convert(xr[gr],xr_org[gr]);
     else memcpy(xr[gr],xr_org[gr],sizeof(FLOAT8)*2*576);   
     for(ch = 0; ch < stereo; ch++) {
+      /* quality setting */
+      set_masking_lower( save_bits[gr][ch] );
+      
       outer_loop( xr, save_bits[gr][ch], noise,targ_noise,0,
 		  &l3_xmin,l3_enc, fr_ps, 
 		  scalefac,gr,stereo, l3_side, ratio, ms_ener_ratio[gr], ch);
