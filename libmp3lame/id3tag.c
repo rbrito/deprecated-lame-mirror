@@ -50,6 +50,12 @@ char *strchr (), *strrchr ();
 # endif
 #endif
 
+
+#ifdef _MSC_VER
+#define snprintf _snprintf
+#endif
+
+
 #include "lame.h"
 #include "id3tag.h"
 #include "util.h"
@@ -396,9 +402,9 @@ id3tag_write_v2(lame_global_flags *gfp)
             unsigned int index;
             /* calulate size of tag starting with 10-byte tag header */
             tag_size = 10;
-	    encoder_length = snprintf(encoder, sizeof(encoder),
-				      "LAME v%s", get_lame_short_version());
-	    tag_size += 11 + encoder_length;
+            encoder_length = snprintf(encoder, sizeof(encoder),
+                            "LAME v%s", get_lame_short_version());
+            tag_size += 11 + encoder_length;
             if (title_length) {
                 /* add 10-byte frame header, 1 encoding descriptor byte ... */
                 tag_size += 11 + title_length;
