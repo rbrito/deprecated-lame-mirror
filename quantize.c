@@ -805,7 +805,7 @@ void outer_loop(
   /* BEGIN MAIN LOOP */
   iteration = 0;
   while ( notdone  ) {
-    static FLOAT8 OldValue[2] = {180, 180};
+    static int OldValue[2] = {180, 180};
     int try_scale=0;
     iteration ++;
 
@@ -819,7 +819,7 @@ void outer_loop(
 	xrpow[i]=sqrt(sqrt(temp)*temp);
       }
       bits_found=bin_search_StepSize2(targ_bits,OldValue[ch],
-				      l3_enc_w,xr,xrpow,cod_info);
+				      l3_enc_w,xrpow,cod_info);
       OldValue[ch] = cod_info->global_gain;
     }
 

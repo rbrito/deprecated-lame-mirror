@@ -244,7 +244,7 @@ void outer_loop_dual(
   
   ms_convert(xr,xr_org);
   for (ch=0; ch<2; ch++) {
-    static FLOAT8 OldValue[2] = {180, 180};
+    static int OldValue[2] = {180, 180};
     /* compute max allowed distortion */
     calc_xmin(xr_org[ch], &ratio[ch], cod_info[ch], &l3_xmin[ch]);
 
@@ -266,7 +266,7 @@ void outer_loop_dual(
       best_over[ch] = 100;
       bits_found[ch]=
 	bin_search_StepSize2(targ_bits[ch],OldValue[ch],
-			     l3_enc_w[ch],xr[ch],xrpow[ch],cod_info[ch]); 
+			     l3_enc_w[ch],xrpow[ch],cod_info[ch]); 
       OldValue[ch] = cod_info[ch]->global_gain;
     }
   }

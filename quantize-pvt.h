@@ -123,8 +123,8 @@ new_choose_table( int ix[576],
 		  unsigned int begin,
 		  unsigned int end, int * s );
 
-int bin_search_StepSize2(int desired_rate, FLOAT8 start, int ix[576],
-           FLOAT8 xrs[576], FLOAT8 xrspow[576], gr_info * cod_info);
+int bin_search_StepSize2(int desired_rate, int start, int ix[576],
+                         FLOAT8 xrspow[576], gr_info * cod_info);
 int count_bits(int  *ix, FLOAT8 xr[576], gr_info *cod_info);
 
 

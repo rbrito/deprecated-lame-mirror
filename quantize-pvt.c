@@ -1208,7 +1208,23 @@ void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
 
 
 
-
+/*
+ ----------------------------------------------------------------------
+  if someone wants to try to find a faster step search function,
+  here is some code which gives a lower bound for the step size:
+  
+  for (max_xrspow = 0, i = 0; i < 576; ++i)
+  {
+    max_xrspow = Max(max_xrspow, xrspow[i]);
+  }
+  max_xrspow = Min(Q_MAX, Max(0,max_xrspow));
+  
+  lowerbound = 210+log10(max_xrspow/IXMAX_VAL)/(0.1875*LOG2);
+ 
+ 
+                                                 Robert.Hegemann@gmx.de
+ ----------------------------------------------------------------------
+*/
 
 
 typedef enum {
@@ -1219,17 +1235,13 @@ typedef enum {
 
 /*-------------------------------------------------------------------------*/
 int 
-bin_search_StepSize2(int      desired_rate, 
-		    FLOAT8   start, 
-		    int     *ix,
-		    FLOAT8   xrs[576], 
-		    FLOAT8   xrspow[576], 
-		    gr_info *cod_info)
+bin_search_StepSize2 (int desired_rate, int start, int *ix, 
+                      FLOAT8 xrspow[576], gr_info *cod_info)
 /*-------------------------------------------------------------------------*/
 {
-    int flag_GoneOver = 0;
     static int CurrentStep = 4;
     int nBits;
+    int flag_GoneOver = 0;
     int StepSize = start;
     binsearchDirection_t Direction = BINSEARCH_NONE;
 
@@ -1269,7 +1281,8 @@ bin_search_StepSize2(int      desired_rate,
 	else break; /* nBits == desired_rate;; most unlikely to happen.*/
     } while (1); /* For-ever, break is adjusted. */
 
-    CurrentStep = fabs(start - StepSize);
+    CurrentStep = abs(start - StepSize);
+    
     if (CurrentStep >= 4) {
 	CurrentStep = 4;
     } else {
