@@ -625,8 +625,8 @@ set_istereo_sfb(lame_internal_flags *gfc, int gr)
     III_psy_ratio *mr = &gfc->masking_next[gr][0];
     gfc->l3_side.is_start_sfb_l[gr] = gfc->is_start_sfb_l_next[gr];
     gfc->l3_side.is_start_sfb_s[gr] = gfc->is_start_sfb_s_next[gr];
+    sb = gfc->cutoff_sfb_l - 1;
     if (!gfc->useshort_next[gr][0] && !gfc->useshort_next[gr][1]) {
-	sb = gfc->cutoff_sfb_l - 1;
 	do {
 	    FLOAT x1, x2;
 	    if (mr[3].en.l[sb] < mr[3].thm.l[sb]
@@ -643,14 +643,14 @@ set_istereo_sfb(lame_internal_flags *gfc, int gr)
 	    if (x1*gfc->istereo_ratio > x2 || x2*gfc->istereo_ratio > x1)
 		break;
 	} while (--sb >= 0);
-	gfc->is_start_sfb_l_next[gr] = ++sb;
-	for (; sb < SBMAX_l; sb++) {
-	    mr[0].en .l[sb] = mr[2].en .l[sb];
-	    mr[0].thm.l[sb] = mr[2].thm.l[sb];
-	}
+    }
+    gfc->is_start_sfb_l_next[gr] = ++sb;
+    for (; sb < gfc->cutoff_sfb_l; sb++) {
+	mr[0].en .l[sb] = mr[2].en .l[sb];
+	mr[0].thm.l[sb] = mr[2].thm.l[sb];
     }
 
-    sb = gfc->cutoff_sfb_s;
+    sb = gfc->cutoff_sfb_s - 1;
     do {
 	int sblock;
 	for (sblock = 0; sblock < 3; sblock++) {
@@ -673,7 +673,7 @@ set_istereo_sfb(lame_internal_flags *gfc, int gr)
 	    break;
     } while (--sb >= 0);
     gfc->is_start_sfb_s_next[gr] = ++sb;
-    for (; sb < SBMAX_s; sb++) {
+    for (; sb < gfc->cutoff_sfb_s; sb++) {
 	mr[0].en .s[sb][0] = mr[2].en .s[sb][0];
 	mr[0].thm.s[sb][0] = mr[2].thm.s[sb][0];
 	mr[0].en .s[sb][1] = mr[2].en .s[sb][1];
