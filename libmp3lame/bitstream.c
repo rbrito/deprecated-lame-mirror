@@ -452,29 +452,22 @@ huffman_coder_count1(lame_internal_flags *gfc, gr_info *gi)
 
 	if (gi->l3_enc[index  ]) {
 	    p = 8;
-	    if (gi->xr[index  ] < 0)
-		huffbits++;
+	    huffbits = huffbits + (gi->xr[index  ] < 0);
 	}
 
 	if (gi->l3_enc[index+1]) {
 	    p += 4;
-	    huffbits *= 2;
-	    if (gi->xr[index+1] < 0)
-		huffbits++;
+	    huffbits = huffbits*2 + (gi->xr[index+1] < 0);
 	}
 
 	if (gi->l3_enc[index+2]) {
 	    p += 2;
-	    huffbits *= 2;
-	    if (gi->xr[index+2] < 0)
-		huffbits++;
+	    huffbits = huffbits*2 + (gi->xr[index+2] < 0);
 	}
 
 	if (gi->l3_enc[index+3]) {
 	    p++;
-	    huffbits *= 2;
-	    if (gi->xr[index+3] < 0)
-		huffbits++;
+	    huffbits = huffbits*2 + (gi->xr[index+3] < 0);
 	}
 	putbits2(gfc, huffbits + hcode[p+16], hcode[p]);
     }
@@ -505,8 +498,7 @@ Huffmancode_esc( lame_internal_flags* const gfc, const struct huffcodetab* h,
 		xbits  = xlen;
 		x1     = 15;
 	    }
-	    if (gi->xr[index] < 0)
-		ext++;
+	    ext += (gi->xr[index] < 0);
 	    cbits--;
 	}
 
@@ -518,9 +510,7 @@ Huffmancode_esc( lame_internal_flags* const gfc, const struct huffcodetab* h,
 		xbits += xlen;
 		x2     = 15;
 	    }
-	    ext <<= 1;
-	    if (gi->xr[index+1] < 0)
-		ext++;
+	    ext = ext*2 + (gi->xr[index+1] < 0);
 	    cbits--;
 	}
 
@@ -549,16 +539,9 @@ Huffmancode( lame_internal_flags* const gfc, const struct huffcodetab* h,
 	clen = h->hlen[code];
 	code = h->table[code];
 
-	if (x1 != 0) {
-	    code <<= 1;
-	    if (gi->xr[index] < 0)
-		code++;
-	}
-	if (x2 != 0) {
-	    code <<= 1;
-	    if (gi->xr[index+1] < 0)
-		code++;
-	}
+	if (x1) code = code*2 + (gi->xr[index  ] < 0);
+	if (x2) code = code*2 + (gi->xr[index+1] < 0);
+
 	putbits2(gfc, code, clen);
     }
 }
