@@ -77,7 +77,12 @@ putbits2(lame_global_flags *gfp, unsigned int val, int j)
 
     assert(j <= MAX_LENGTH);
     if (j<MAX_LENGTH)
+      {
+	if (val >= (1 << j)) {
+	  printf("val=%ui %i \n",val,(1<<j));
+	}
       assert(val < (1 << j));  /* 1 << 32 wont work on 32 bit machines */
+      }
 
     while (j > 0) {
 	int k;
@@ -589,9 +594,14 @@ writeMainData(lame_global_flags *gfp,
 		    reorder(gfc->scalefac_band.s,l3_enc[gr][ch],ix_w);
 		    for (sfb = 0; sfb < SBPSY_s; sfb++) {
 			int slen = sfb < 6 ? slen1 : slen2;
-			putbits2(gfp,Max(scalefac[gr][ch].s[sfb][0], 0U), slen);
-			putbits2(gfp,Max(scalefac[gr][ch].s[sfb][1], 0U), slen);
-			putbits2(gfp,Max(scalefac[gr][ch].s[sfb][2], 0U), slen);
+
+			assert(scalefac[gr][ch].s[sfb][0]>=0);
+			assert(scalefac[gr][ch].s[sfb][1]>=0);
+			assert(scalefac[gr][ch].s[sfb][2]>=0);
+
+			putbits2(gfp,scalefac[gr][ch].s[sfb][0], slen);
+			putbits2(gfp,scalefac[gr][ch].s[sfb][1], slen);
+			putbits2(gfp,scalefac[gr][ch].s[sfb][2], slen);
 			scale_bits += 3*slen;
 		    }
 		    data_bits += ShortHuffmancodebits(gfp,l3_enc[gr][ch], gi);
@@ -604,7 +614,9 @@ writeMainData(lame_global_flags *gfp,
 
 			for (sfb = scfsi_band[i]; sfb < scfsi_band[i + 1];
 			     sfb++) {
-			    putbits2(gfp,Max(scalefac[gr][ch].l[sfb], 0U),
+
+			    assert(scalefac[gr][ch].l[sfb]>=0);
+			    putbits2(gfp,scalefac[gr][ch].l[sfb],
 				    sfb < 11 ? slen1 : slen2);
 			    scale_bits += sfb < 11 ? slen1 : slen2;
 			}
@@ -768,22 +780,6 @@ format_bitstream(lame_global_flags *gfp, int bitsPerFrame,
     III_side_info_t *l3_side;
     l3_side = &gfc->l3_side;
 
-
-#ifdef DEBUG
-    hoge = gfc->bs.totbit;
-    hogege = gfc->bs.totbit;
-
-    printf("%d %d %d %d ->%d //\n",
-	   l3_side->gr[0].ch[0].tt.part2_3_length,
-	   l3_side->gr[0].ch[1].tt.part2_3_length,
-	   l3_side->gr[1].ch[0].tt.part2_3_length,
-	   l3_side->gr[1].ch[1].tt.part2_3_length,
-
-	   l3_side->gr[0].ch[0].tt.part2_3_length +
-	   l3_side->gr[0].ch[1].tt.part2_3_length +
-	   l3_side->gr[1].ch[0].tt.part2_3_length +
-	   l3_side->gr[1].ch[1].tt.part2_3_length);
-#endif
     drain_into_ancillary(gfp,l3_side->resvDrain_pre);
 
     encodeSideInfo2(gfp,bitsPerFrame);
@@ -807,17 +803,6 @@ format_bitstream(lame_global_flags *gfp, int bitsPerFrame,
 
       gfc->ResvSize = l3_side->main_data_begin*8;
     };
-
-#ifdef DEBUG
-    printf("total bits used = %i max=%i mdb=%i \n",bits,bitsPerFrame,l3_side->main_data_begin*8);
-    printf("%ld -> %ld\n",
-	   gfc->bs.totbit - hoge,
-	   l3_side->gr[0].ch[0].tt.part2_3_length +
-	   l3_side->gr[0].ch[1].tt.part2_3_length +
-	   l3_side->gr[1].ch[0].tt.part2_3_length +
-	   l3_side->gr[1].ch[1].tt.part2_3_length -
-	   (gfc->bs.totbit - hoge));
-#endif
     assert(gfc->bs.totbit % 8 == 0);
 
     if (gfc->bs.totbit > 1000000000UL ) {

@@ -539,7 +539,7 @@ void lame_init_params(lame_global_flags *gfp)
     gfc->psymodel=1;
     gfc->quantization=1;
     gfc->noise_shaping=2;
-    gfc->noise_shaping_stop=1;
+    gfc->noise_shaping_stop=0;
     gfc->use_best_huffman=1;
   }
 

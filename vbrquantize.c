@@ -373,46 +373,12 @@ VBR_quantize_granule(lame_global_flags *gfp,
     scale_bitcount_lsf(&scalefac[gr][ch], cod_info);
 
 
-
-
   /* quantize xr34 */
   cod_info->part2_3_length = count_bits(gfp,l3_enc[gr][ch],xr34,cod_info);
   cod_info->part2_3_length += cod_info->part2_length;
-  assert((int)count_bits != LARGE_BITS);
   
-  /* do this before calling best_scalefac_store! */
-  if (gfp->gtkflag) {
-    FLOAT8 noise[4];
-    FLOAT8 xfsf[4][SBMAX_l];
-    FLOAT8 distort[4][SBMAX_l];
-    FLOAT8 save;
-    
-    /* recompute allowed noise with no 'masking_lower' for
-     * frame analyzer */
-    save = gfc->masking_lower;
-    gfc->masking_lower=1.0;
-    calc_xmin( gfp,xr, ratio, cod_info, &l3_xmin);
-    gfc->masking_lower=save;
-
-    noise[0]=calc_noise1( gfp, xr, l3_enc[gr][ch], cod_info, 
-			  xfsf,distort, &l3_xmin, &scalefac[gr][ch], 
-			  &noise[2],&noise[3],&noise[1]);
-    
-    set_pinfo (gfp, cod_info, ratio, &scalefac[gr][ch], xr, xfsf, noise, gr, ch);
-  }
-
-  
-  cod_info = &l3_side->gr[gr].ch[ch].tt;
-  best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
   if (gfc->use_best_huffman==1 && cod_info->block_type != SHORT_TYPE) {
     best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
-  }
-  if (cod_info->part2_3_length>4095) 
-    cod_info->part2_3_length=LARGE_BITS;
-  
-
-  if (gfc->pinfo != NULL) {
-    gfc->pinfo->LAMEmainbits[gr][ch]=cod_info->part2_3_length;
   }
 
   return;
@@ -466,7 +432,7 @@ VBR_noise_shaping
   lame_internal_flags *gfc=gfp->internal_flags;
   int       start,end,bw,sfb,l, i, vbrmax;
   III_scalefac_t vbrsf;
-  III_scalefac_t save_sf,scalefac_save;
+  III_scalefac_t save_sf;
   int maxover0,maxover1,maxover0p,maxover1p,maxover,mover;
   int ifqstep;
   III_psy_xmin l3_xmin;
@@ -501,6 +467,7 @@ VBR_noise_shaping
       }
     }
   }else{
+    int sflist[3]={-10000,-10000,-10000};
     for ( sfb = 0; sfb < SBPSY_l; sfb++ )   {
       start = gfc->scalefac_band.l[ sfb ];
       end   = gfc->scalefac_band.l[ sfb+1 ];
@@ -508,13 +475,27 @@ VBR_noise_shaping
       vbrsf.l[sfb] = find_scalefac(&xr[start],&xr34[start],1,sfb,
 				   l3_xmin.l[sfb],bw);
       if (vbrsf.l[sfb]>vbrmax) vbrmax = vbrsf.l[sfb];
+
+      /* code to find the 3 largest (counting duplicates) contributed
+       * by Microsoft Employee #12 */
+      if (vbrsf.l[sfb]>sflist[0]) {
+	sflist[2]=sflist[1];
+	sflist[1]=sflist[0];
+	sflist[0]=vbrsf.l[sfb];
+      } else if (vbrsf.l[sfb]>sflist[1]) {
+	sflist[2]=sflist[1];
+	sflist[1]=vbrsf.l[sfb];
+      } else if (vbrsf.l[sfb]>sflist[2]) {
+	sflist[2]=vbrsf.l[sfb];
+      }
     }
-    
+    //    vbrmax=sflist[2];
   } /* compute needed scalefactors */
 
   /* save a copy of vbrsf, incase we have to recomptue scalefacs */
   memcpy(&save_sf,&vbrsf,sizeof(III_scalefac_t));
 
+#undef SCALEFAC_SCALE
 
   do { 
 
@@ -534,8 +515,11 @@ VBR_noise_shaping
 	maxover1 = Max(maxover1,(vbrmax - vbrsf.s[sfb][i]) - (4*14 + 4*max_range_short[sfb]) );
       }
     }
+#ifdef SCALEFAC_SCALE
     mover = Min(maxover0,maxover1);
-    mover = maxover0; /* this line will disable scalefac_scale */
+#else
+    mover = maxover0; 
+#endif
 
     vbrmax -= mover;
     maxover0 -= mover;
@@ -609,11 +593,12 @@ VBR_noise_shaping
       maxover1p = Max(maxover1,(vbrmax - vbrsf.l[sfb]) - 4*(max_range_long[sfb]+pretab[sfb]));
     }
     mover = Min(maxover0,maxover0p);
-    /* disable scalefac scale by commenting out next two lines: */
-    /*
+#ifdef SCALEFAC_SCALE
     mover = Min(mover,maxover1);
     mover = Min(mover,maxover1p);
-    */
+#endif
+
+
     vbrmax -= mover;
     maxover0 -= mover;
     maxover0p -= mover;
@@ -621,11 +606,11 @@ VBR_noise_shaping
     maxover1p -= mover;
 
 
-    if (maxover0<=12) {
+    if (maxover0<=0) {
       cod_info->scalefac_scale = 0;
       cod_info->preflag=0;
       vbrmax -= maxover0;
-    } else if (maxover0p<=12) {
+    } else if (maxover0p<=0) {
       cod_info->scalefac_scale = 0;
       cod_info->preflag=1;
       vbrmax -= maxover0p;
@@ -675,9 +660,6 @@ VBR_noise_shaping
     }
   } 
   
-  /* make a copy since VBR_quantize_granule may modify scalefactors
-   * (for example, if it turns on scsfi) */
-  memcpy(&scalefac_save,&scalefac[gr][ch],sizeof(III_scalefac_t));
   VBR_quantize_granule(gfp,xr,xr34,l3_enc,ratio,l3_xmin,scalefac,gr,ch);
 
   if (cod_info->part2_3_length < minbits) {
@@ -703,7 +685,6 @@ VBR_noise_shaping
 
   while (cod_info->part2_3_length > Min(maxbits,4095)) {
     /* increase global gain, keep exisiting scale factors */
-    memcpy(&scalefac[gr][ch],&scalefac_save,sizeof(III_scalefac_t));
     ++cod_info->global_gain;
     if (cod_info->global_gain > 255) 
       fprintf(stderr,"%ld impossible to encode this frame! bits=%d\n",
@@ -843,7 +824,42 @@ VBR_quantize(lame_global_flags *gfp,
     
   } while (!bits_ok);
   
+
+
+
+
+  /* find optimal scalefac storage.  Cant be done above because
+   * might enable scfsi which breaks the interation loops */
+  totbits=0;
+  for (gr = 0; gr < gfc->mode_gr; gr++) {
+    for (ch = 0; ch < gfc->stereo; ch++) {
+      best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
+      totbits += l3_side->gr[gr].ch[ch].tt.part2_3_length;
+    }
+  }
+
   
+  if (gfp->gtkflag) {
+    for (gr = 0; gr < gfc->mode_gr; gr++) {
+      for (ch = 0; ch < gfc->stereo; ch++) {
+	III_psy_xmin l3_xmin;
+	FLOAT8 noise[4];
+	FLOAT8 xfsf[4][SBMAX_l];
+	FLOAT8 distort[4][SBMAX_l];
+	/* recompute allowed noise with no 'masking_lower' for
+	 * frame analyzer */
+	gfc->masking_lower=1.0;
+	cod_info = &l3_side->gr[gr].ch[ch].tt;	
+	calc_xmin( gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin);
+	
+	noise[0]=calc_noise1( gfp, xr[gr][ch], l3_enc[gr][ch], cod_info, 
+			      xfsf,distort, &l3_xmin, &scalefac[gr][ch], 
+			      &noise[2],&noise[3],&noise[1]);
+	
+	set_pinfo (gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
+      }
+    }
+  }
 
 
   
@@ -866,6 +882,8 @@ VBR_quantize(lame_global_flags *gfp,
   for (gr = 0; gr < gfc->mode_gr; gr++) {
     for (ch = 0; ch < gfc->stereo; ch++) {
       cod_info = &l3_side->gr[gr].ch[ch].tt;
+
+
       ResvAdjust (gfp,cod_info, l3_side, mean_bits);
       
       /*******************************************************************
