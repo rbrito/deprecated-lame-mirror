@@ -444,6 +444,7 @@ lib_sources = \
 	libmp3lame/psymodel.c \
 	libmp3lame/quantize.c \
 	libmp3lame/quantize_pvt.c \
+        libmp3lame/set_get.c \
 	libmp3lame/vbrquantize.c \
 	libmp3lame/reservoir.c \
 	libmp3lame/tables.c \
