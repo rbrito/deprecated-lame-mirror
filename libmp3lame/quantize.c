@@ -917,9 +917,9 @@ adjust_global_gain(lame_t gfc, gr_info *gi, FLOAT *distort, int huffbits)
 static void
 CBR_2nd_bitalloc(lame_t gfc, gr_info *gi, FLOAT distort[])
 {
+    int sfb, j = 0, flag = 0;
     gr_info gi_w;
     gi_w = *gi;
-    int sfb, j = 0, flag = 0;
     for (sfb = 0; sfb < gi_w.psymax; sfb++) {
 	int width = gi_w.wi[sfb].width;
 	distort[sfb] = (FLOAT)0.0;
