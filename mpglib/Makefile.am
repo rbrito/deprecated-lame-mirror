@@ -32,7 +32,15 @@ noinst_HEADERS = common.h \
 	mpglib.h \
 	tabinit.h
 
-LCLINTFLAGS= +posixlib +showsummary +showalluses +whichlib +forcehints -Dlint
+LCLINTFLAGS= \
+	+posixlib \
+	+showsummary \
+	+showalluses \
+	+whichlib \
+	+forcehints \
+	-fixedformalarray \
+	+matchanyintegral \
+	-Dlint
 
 lclint.txt: ${libmpgdecoder_la_SOURCES} ${noinst_HEADERS}
 	@lclint ${LCLINTFLAGS} ${INCLUDES} ${DEFS} ${libmpgdecoder_la_SOURCES} 2>&1 >lclint.txt || true

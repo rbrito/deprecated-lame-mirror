@@ -110,8 +110,7 @@ EXTRA_liblameasmroutines_la_SOURCES = $(nasm_sources)
 nasm_sources =  	choose_table.nas 	cpu_feat.nas 	scalar.nas
 
 
-CLEANFILES =  	choose_table.lst 	cpu_feat.lst 	scalar.lst
-
+CLEANFILES = *.lst
 
 @HAVE_NASM_TRUE@liblameasmroutines_la_SOURCES = $(nasm_sources)
 
@@ -145,7 +144,7 @@ DIST_COMMON =  Makefile.am Makefile.in
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
-TAR = gtar
+TAR = tar
 GZIP_ENV = --best
 DEP_FILES =  .deps/choose_table.P .deps/cpu_feat.P .deps/scalar.P
 SOURCES = $(liblameasmroutines_la_SOURCES) $(EXTRA_liblameasmroutines_la_SOURCES)
@@ -263,7 +262,7 @@ distdir: $(DISTFILES)
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
-	    cp -pr $$/$$file $(distdir)/$$file; \
+	    cp -pr $$d/$$file $(distdir)/$$file; \
 	  else \
 	    test -f $(distdir)/$$file \
 	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \
