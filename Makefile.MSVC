@@ -18,19 +18,31 @@ CC = icl
 LN = xilink
 
 # debugging options
-# CC_OPTS = /nologo /DHAVE_CONFIG_MS_H /Zi /Ge /GZ
+# CC_OPTS = /nologo /Zi /Ge /GZ
 # LN_OPTS = /nologo /debug:full /debugtype:cv /fixed:no
 
 # profiling options
-# CC_OPTS = /nologo /DHAVE_CONFIG_MS_H /Zi /O2ab2gitwy /G6AFs /DNDEBUG 
+# CC_OPTS = /nologo /Zi /O2ab2gitwy /G6AFs /DNDEBUG 
 # LN_OPTS = /nologo /debug:full /debugtype:cv /fixed:no /profile
 
 # release options
-# CC_OPTS = /nologo /DHAVE_CONFIG_MS_H /O2ab2gitwy /G6AFs /DNDEBUG 
+# CC_OPTS = /nologo /O2ab2gitwy /G6AFs /DNDEBUG 
 # LN_OPTS = /nologo
 
 # Intel 4.5 options
-CC_OPTS = /nologo /DHAVE_CONFIG_MS_H /DNDEBUG /Qunroll /O2 /G5AFs /QaxM /Qipo_obj /QIfist- 
+#CC_OPTS = /nologo /DNDEBUG /Qunroll /O2 /G5AFs /QaxM /Qipo_obj /QIfist- 
+# /Ox     	maximum optimization
+# /G5     	optimized for Pentium
+# /Gs[n]	disable stack checks for functions with less than n bytes of locals
+# /Qunroll	unroll loops with default heuristic
+# /GA     	assume single threaded
+# /GF     	read-only string pooling optimization
+# /QIfist 	enable fast float to int conversion
+# /QIfdiv 	enable patch for Pentium with FDIV erratum
+# /QI0f	 	enable patch for Pentium with 0f erratum
+# /Qip
+# /QaxM	    currently crashes at the end of encoding! so disabled by now, needs some attention
+CC_OPTS = /nologo /DNDEBUG /Qunroll /Ox /G5 /GA /Gs1024 /GF /QIfist /QIfdiv /QI0f /Qip 
 LN_OPTS = /nologo
 
 
@@ -39,9 +51,10 @@ LIBSNDFILE =
 LIBS =
 MAKEDEP =
 TIMER_SWITCH =
-BRHIST_SWITCH = /DBRHIST /DNOTERMCAP
+BRHIST_SWITCH = /DBRHIST
 LIBTERMCAP =
 
+CPP_OPTS = /DHAVE_CONFIG_H -I.
 
 #== FRAME ANALYZER SUPPORT ====================================================
 # assuming you have "glib-dev" and "gtk+-dev" installed
@@ -52,8 +65,7 @@ LIBTERMCAP =
 # you need the above mentioned libraries 
 # and to uncomment the following lines
 #
-GTK = /DHAVEGTK         \
-      -I../src/glib     \
+GTK = -I../src/glib     \
       -I../src/gtk+     \
       -I../src/gtk+/gtk \
       -I../src/gtk+/gdk
@@ -104,7 +116,7 @@ CC_SWITCHES = $(CC_OPTS) $(DISTRIB) $(SNDLIB) $(BRHIST_SWITCH) \
 
 !ELSE
 
-CC_SWITCHES = $(CC_OPTS) $(DISTRIB) $(SNDLIB) \
+CC_SWITCHES = $(CC_OPTS) $(DISTRIB) $(SNDLIB) $(BRHIST_SWITCH) \
               /DBS_FORMAT=BINARY $(TIMER_SWITCH) $(VORBIS) $(GTK)
 
 !ENDIF
@@ -112,24 +124,23 @@ CC_SWITCHES = $(CC_OPTS) $(DISTRIB) $(SNDLIB) \
 LN_SWITCHES = $(LN_OPTS)
 
 lame_sources = \
-	frontend/main.c \
-	frontend/brhist.c \
-	frontend/get_audio.c \
-	frontend/lametime.c \
-	frontend/parse.c \
-	frontend/portableio.c \
-	frontend/timestatus.c 
+	frontend/main.c  
 
 mpx_sources = \
 	frontend/gpkplotting.c \
 	frontend/gtkanal.c \
-	frontend/mp3x.c \
-	frontend/brhist.c \
-	frontend/get_audio.c \
-	frontend/lametime.c \
-	frontend/parse.c \
+	frontend/mp3x.c 
+
+dll_sources = \
+	dll/BladeMP3EncDll.c
+	
+common_sources = \
 	frontend/portableio.c \
-	frontend/timestatus.c 
+	frontend/get_audio.c \
+	frontend/parse.c \
+	frontend/timestatus.c \
+	frontend/lametime.c \
+	frontend/brhist.c 
 
 lib_sources = \
 	libmp3lame/bitstream.c \
@@ -159,10 +170,13 @@ lib_sources = \
 	mpglib/tabinit.c \
 	mpglib/interface.c 
 
+
+
 LIB_OBJ = $(lib_sources:.c=.obj)
 LAME_OBJ = $(lame_sources:.c=.obj)
 MPX_OBJ = $(mpx_sources:.c=.obj)
-
+CMMN_OBJ = $(common_sources:.c=.obj)
+DLL_OBJ = $(dll_sources:.c=.obj)
 
 
 all : prg
@@ -200,27 +214,37 @@ LIB_OBJ = $(LIB_OBJ) libmp3lame/i386/choose_table.obj
 
 
 
-!IF "$(CFG)" == "LAME"
-
 .c.obj: 
 	@$(CC) $(CC_SWITCHES) $(CPP_OPTS) -Iinclude -Impglib -Ilibmp3lame /c $< /Fo$@
 
-prg: $(LIB_OBJ) $(LAME_OBJ) Makefile.MSVC
+
+!IF "$(CFG)" == "LAME"
+
+prg: config lib common Makefile.MSVC $(LAME_OBJ)
 	@echo lame.exe
-	@$(LN) $(LN_SWITCHES) $(LIB_OBJ) $(LAME_OBJ) $(LIBS) $(LIBSNDFILE) $(VORBISLIB) \
-	       $(LIBTERMCAP) /out:lame.exe /map:lame.map
+	@$(LN) $(LN_SWITCHES) $(LIB_OBJ) $(CMMN_OBJ) $(LAME_OBJ) $(LIBSNDFILE) $(VORBISLIB) \
+	       /out:lame.exe /map:lame.map
 
 !ELSE
 
-.c.obj: 
-	@$(CC) $(CC_SWITCHES) $(CPP_OPTS) -Iinclude -Impglib -Ilibmp3lame -Ifrontend /c $< /Fo$@
-
-prg: $(LIB_OBJ) $(MPX_OBJ) Makefile.MSVC
+prg: config lib common Makefile.MSVC $(MPX_OBJ)
 	@echo mp3x.exe
-	@$(LN) $(LN_SWITCHES) $(LIB_OBJ) $(MPX_OBJ) $(LIBS) $(LIBSNDFILE) $(VORBISLIB) \
+	@$(LN) $(LN_SWITCHES) $(LIB_OBJ) $(CMMN_OBJ) $(MPX_OBJ) $(LIBSNDFILE) $(VORBISLIB) \
 	       $(GTKLIBS) /out:mp3x.exe /map:mp3x.map
 
 !ENDIF
+
+dll: config lib common Makefile.MSVC $(DLL_OBJ)
+	@echo lame.dll
+	@$(LN) $(LN_SWITCHES) $(LIB_OBJ) $(CMMN_OBJ) $(DLL_OBJ) $(LIBSNDFILE) $(VORBISLIB) \
+	       /DLL /out:lame.dll /map:lamedll.map
+
+lib: config Makefile.MSVC $(LIB_OBJ)
+
+common: config Makefile.MSVC $(CMMN_OBJ)
+
+config: configMS.h
+	@-copy configMS.h config.h
 
 clean:
 	@-del *.obj
