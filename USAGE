@@ -8,10 +8,10 @@ For more options, just type:
 =======================================================================
 Constant Bitrate Examples:
 =======================================================================
-fixed bit rate jstereo 128 kbps encoding:
+fixed bit rate jstereo 128 kbps encoding:  (recommended)
 % lame sample.wav  sample.mp3      
 
-fixed bit rate jstereo 128 kbps encoding, higher quality:  (recommended)
+fixed bit rate jstereo 128 kbps encoding, higher quality:
 % lame -h sample.wav  sample.mp3      
 
 Fast encode, low quality  (no noise shaping)
@@ -92,7 +92,6 @@ Quality related:
 
 -m m/s/j/f/a   mode selection
 -k             disable all filtering
--d             allow block types to differ between channels
 --athonly      ignore psy-model output, only use masking from the ATH
 --noshort      disable short blocks
 -q n           Internal algorithm quality setting 0..9. 
@@ -288,17 +287,6 @@ copyright
 
 mark the encoded file as copyrighted
 
-
-
-=======================================================================
-block type control
-=======================================================================
--d 
-
-Allows the left and right channels to use different block types.
-Normally this is not allowed, only because the FhG encoder does
-not seem to allow it either.  If anyone finds a sample where -d
-produces better results, let me know.  (mt@sulaco.org)
 
 
 =======================================================================
@@ -696,14 +684,6 @@ distortion.  Using a fixed 256 kbps framesize, LAME could end up
 introducing only 2 dB of distortion.  If the psy-model was correct,
 they will both sound the same.  If the psy-model was wrong, the VBR-0
 result can sound worse.
-
-
-=======================================================================
-voice encoding mode
-=======================================================================
---voice
-
-An experimental voice encoding mode.  Tuned for 44.1 kHz input files.
 
 
 =======================================================================
