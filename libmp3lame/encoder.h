@@ -110,11 +110,6 @@
 #define HBLKSIZE      (BLKSIZE/2 + 1)
 #define BLKSIZE_s     256
 
-#define NORM_TYPE     0
-#define SHORT_TYPE    3 /* in the spec, 2 */
-#define START_TYPE    1
-#define STOP_TYPE     2 /* in the spec, 3 */
-
 /* 
  * Mode Extention:
  * When we are in stereo mode, there are 4 possible methods to store these

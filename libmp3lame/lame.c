@@ -26,6 +26,7 @@
 #endif
 
 #include <assert.h>
+
 #include "lame.h"
 #include "set_get.h"
 #include "util.h"
@@ -36,7 +37,6 @@
 #include "psymodel.h"
 #include "VbrTag.h"
 #include "id3tag.h"
-#include "quantize_pvt.h"
 
 #if defined(__FreeBSD__) && !defined(__alpha__)
 #include <floatingpoint.h>
@@ -515,14 +515,11 @@ lame_init_params(lame_global_flags * const gfp)
 	gfc->lowpass2 /= gfp->out_samplerate;
     }
 
-    gfc->scale_bitcounter = scale_bitcount;
     gfp->version = 1;
-    gfc->mode_gr = 2;
-    if (gfp->out_samplerate <= 24000) {
+    if (gfp->out_samplerate <= 24000)
 	gfp->version = 0;
-	gfc->mode_gr = 1;
-	gfc->scale_bitcounter = scale_bitcount_lsf;
-    }
+
+    gfc->mode_gr = gfp->version+1;
     gfp->framesize = 576 * gfc->mode_gr;
     gfp->encoder_delay = ENCDELAY;
     gfc->resample_ratio = (double) gfp->in_samplerate / gfp->out_samplerate;
@@ -1593,13 +1590,17 @@ void
 lame_bitrate_hist(const lame_global_flags * const gfp, int bitrate_count[14])
 {
     const lame_internal_flags *gfc;
-    int     i;
+    int     i, j;
 
     if (!bitrate_count || !gfp || !(gfc = gfp->internal_flags))
-        return;
+	return;
 
-    for (i = 0; i < 14; i++)
-        bitrate_count[i] = gfc->bitrate_stereoMode_Hist[i + 1][4];
+    for (i = 0; i < 14; i++) {
+	int total = 0;
+	for (j = 0; j < 4; j++)
+	    total += gfc->bitrate_stereoMode_Hist[i+1][j];
+	bitrate_count[i] = total;
+    }
 }
 
 
@@ -1607,13 +1608,17 @@ void
 lame_stereo_mode_hist(const lame_global_flags * const gfp, int stmode_count[4])
 {
     const lame_internal_flags *gfc;
-    int     i;
+    int     i, j;
 
     if (!stmode_count || !gfp || !(gfc = gfp->internal_flags))
-        return;
+	return;
 
-    for (i = 0; i < 4; i++)
-        stmode_count[i] = gfc->bitrate_stereoMode_Hist[15][i];
+    for (i = 0; i < 4; i++) {
+	int total = 0;
+	for (j = 0; j < 14; j++)
+	    total += gfc->bitrate_stereoMode_Hist[j+1][i];
+	stmode_count[i] = total;
+    }
 }
 
 
@@ -1626,11 +1631,11 @@ lame_bitrate_stereo_mode_hist(const lame_global_flags * const gfp,
     int     i, j;
 
     if (!bitrate_stmode_count ||!gfp || !(gfc = gfp->internal_flags))
-        return;
+	return;
 
     for (j = 0; j < 14; j++)
-        for (i = 0; i < 4; i++)
-            bitrate_stmode_count[j][i] = gfc->bitrate_stereoMode_Hist[j + 1][i];
+	for (i = 0; i < 4; i++)
+            bitrate_stmode_count[j][i] = gfc->bitrate_stereoMode_Hist[j+1][i];
 }
 
 
@@ -1639,13 +1644,16 @@ void
 lame_block_type_hist(const lame_global_flags * const gfp, int btype_count[6])
 {
     const lame_internal_flags *gfc;
-    int     i;
+    int     i, total = 0;
 
     if (!btype_count || !gfp || !(gfc = gfp->internal_flags))
 	return;
 
-    for (i = 0; i < 6; ++i)
-        btype_count[i] = gfc->bitrate_blockType_Hist[15][i];
+    for (i = 0; i < 5; ++i) {
+	total += gfc->bitrate_blockType_Hist[15][i];
+	btype_count[i] = gfc->bitrate_blockType_Hist[15][i];
+    }
+    btype_count[i] = total;
 }
 
 
@@ -1656,13 +1664,17 @@ lame_bitrate_block_type_hist(const lame_global_flags * const gfp,
 {
     const lame_internal_flags * gfc;
     int     i, j;
-    
     if (!bitrate_btype_count || !gfp || !(gfc = gfp->internal_flags))
         return;
-        
-    for (j = 0; j < 14; ++j)
-	for (i = 0; i <  6; ++i)
+
+    for (j = 0; j < 14; ++j) {
+	int total = 0;
+	for (i = 0; i < 5; ++i) {
 	    bitrate_btype_count[j][i] = gfc->bitrate_blockType_Hist[j+1][i];
+	    total += gfc->bitrate_blockType_Hist[j+1][i];
+	}
+	bitrate_btype_count[j][i] = total;
+    }
 }
 
 #endif

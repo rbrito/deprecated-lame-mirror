@@ -904,6 +904,11 @@ extern int id3tag_set_genre(
 extern const int      bitrate_table    [3] [16];
 extern const int      samplerate_table [3] [ 4];
 
+#define NORM_TYPE     0
+#define SHORT_TYPE    3 /* in the spec, 2 */
+#define START_TYPE    1
+#define STOP_TYPE     2 /* in the spec, 3 */
+
 
 
 /* maximum size of mp3buffer needed if you encode at most 1152 samples for

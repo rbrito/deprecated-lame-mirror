@@ -469,8 +469,8 @@ struct lame_internal_flags {
 
 #ifdef BRHIST
     /* simple statistics */
-    int bitrate_stereoMode_Hist[16][4+1];
-    int	bitrate_blockType_Hist [16][4+1+1];/*norm/start/short/stop/mixed(short)/sum*/
+    int bitrate_stereoMode_Hist[16][4];
+    int	bitrate_blockType_Hist [16][4+1];/*norm/start/stop/short/mixed(short)*/
 #endif
 #ifndef NOANALYSIS
     /* used by the frame analyzer */

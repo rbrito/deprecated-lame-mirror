@@ -28,6 +28,7 @@
 #include "util.h"
 #include "tables.h"
 #include "psymodel.h"
+#include "quantize_pvt.h"
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
@@ -772,6 +773,10 @@ huffman_init(lame_internal_flags * const gfc)
         gfc->choose_table = choose_table_MMX;
     }
 #endif
+
+    gfc->scale_bitcounter = scale_bitcount;
+    if (gfc->mode_gr < 2)
+	gfc->scale_bitcounter = scale_bitcount_lsf;
 
     for (i = 2; i <= 576; i += 2) {
 	int scfb_anz = 0, index;
