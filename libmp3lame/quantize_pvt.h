@@ -57,7 +57,7 @@ typedef struct calc_noise_result_t {
 
 void compute_ath(lame_global_flags *gfp,FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY_l]);
 void ms_convert(FLOAT8 xr[2][576],FLOAT8 xr_org[2][576]);
-int on_pe(lame_global_flags *gfp,FLOAT8 pe[2][2],III_side_info_t *l3_side,
+int on_pe(context *gfc, FLOAT8 pe[2][2], III_side_info_t *l3_side,
 int targ_bits[2],int mean_bits, int gr);
 void reduce_side(int targ_bits[2],FLOAT8 ms_ener_ratio,int mean_bits,int max_bits);
 
@@ -77,18 +77,18 @@ int inner_loop (
     const FLOAT8          xrpow [576],
           int             l3enc [576] );
 
-void iteration_init( lame_global_flags *gfp, III_side_info_t *l3_side);
+void iteration_init( context *gfc );
 
 
 int calc_xmin( 
-        const lame_global_flags * const gfp,
-        const FLOAT8                    xr [576],
-        const III_psy_ratio     * const ratio,
-	const gr_info           * const cod_info, 
-              III_psy_xmin      * const l3_xmin );
+        const context       * const gfc,
+        const FLOAT8                xr [576],
+        const III_psy_ratio * const ratio,
+	const gr_info       * const cod_info, 
+              III_psy_xmin  * const l3_xmin );
                
 int calc_noise( 
-        const lame_global_flags * const gfp,
+        const context           * const gfc,
         const FLOAT8                    xr [576],
         const int                       ix [576],
         const gr_info           * const cod_info,
@@ -98,32 +98,33 @@ int calc_noise(
               calc_noise_result *       res );
               
 void set_frame_pinfo( 
-        const lame_global_flags * const gfp,
-              FLOAT8                    xr       [2][2][576],
-              III_psy_ratio             ratio    [2][2],  
-              int                       l3_enc   [2][2][576],
-              III_scalefac_t            scalefac [2][2] );
+        context * const gfc,
+        FLOAT8          xr       [2][2][576],
+        III_psy_ratio   ratio    [2][2],  
+        int             l3_enc   [2][2][576],
+        III_scalefac_t  scalefac [2][2] );
 
 
-void quantize_xrpow( const FLOAT8 xr[576],
-		     int  ix[576],
-		     FLOAT8 istep );
+void quantize_xrpow( 
+        const FLOAT8 xr[576],
+              int    ix[576],
+              FLOAT8 istep );
 
-void quantize_xrpow_ISO( const FLOAT8 xr[576],
-			 int  ix[576],
-			 FLOAT8 istep );
+void quantize_xrpow_ISO( 
+        const FLOAT8 xr[576],
+              int    ix[576],
+              FLOAT8 istep );
 
 
 
 /* takehiro.c */
 
-int count_bits (lame_internal_flags *gfc, int  *ix, const FLOAT8 xr[576],
-                gr_info *cod_info);
+int count_bits (context *gfc, int  *ix, const FLOAT8 xr[576], gr_info *cod_info);
 
 
-void best_huffman_divide(lame_internal_flags *gfc, int gr, int ch, gr_info *cod_info, int *ix);
+void best_huffman_divide(context *gfc, int gr, int ch, gr_info *cod_info, int *ix);
 
-void best_scalefac_store(lame_internal_flags *gfc, int gr, int ch,
+void best_scalefac_store(context *gfc, int gr, int ch,
 			 int l3_enc[2][2][576],
 			 III_side_info_t *l3_side,
 			 III_scalefac_t scalefac[2][2]);
@@ -132,7 +133,7 @@ int scale_bitcount (III_scalefac_t *scalefac, gr_info *cod_info);
 
 int scale_bitcount_lsf (III_scalefac_t *scalefac, gr_info *cod_info);
 
-void huffman_init (lame_internal_flags *gfp );
+void huffman_init (context *gfc);
 
 #define LARGE_BITS 100000
 

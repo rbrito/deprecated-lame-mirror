@@ -173,7 +173,7 @@ char *mp3buf, int mp3buf_size)
       mdct_sub48(gfc, primebuff0, primebuff1, xr);
     }
     
-    iteration_init(gfp, &gfc->l3_side);
+    iteration_init(gfc);
   }
 
 
@@ -375,17 +375,17 @@ char *mp3buf, int mp3buf_size)
   switch (gfp->VBR){ 
   default:
   case vbr_off:
-    iteration_loop( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
+    iteration_loop( gfc,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
     break;
   case vbr_mt:
-    VBR_quantize( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
+    VBR_quantize( gfc,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
     break;
   case vbr_rh:
   case vbr_mtrh:
-    VBR_iteration_loop( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
+    VBR_iteration_loop( gfc,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
     break;
   case vbr_abr:
-    ABR_iteration_loop( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
+    ABR_iteration_loop( gfc,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
     break;
   }
 
@@ -409,7 +409,7 @@ char *mp3buf, int mp3buf_size)
 	gfc->pinfo->pcmdata[ch][j] = inbuf[ch][j-FFTOFFSET];
       }
     }
-    set_frame_pinfo (gfp, xr, *masking, l3_enc, scalefac);
+    set_frame_pinfo (gfc, xr, *masking, l3_enc, scalefac);
   }
   
   updateStats( gfc );

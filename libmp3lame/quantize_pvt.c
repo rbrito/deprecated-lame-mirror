@@ -159,16 +159,16 @@ FLOAT8 adj43[PRECALC_SIZE];
 /*  initialization for iteration_loop */
 /************************************************************************/
 void
-iteration_init( lame_global_flags *gfp, III_side_info_t *l3_side)
+iteration_init( context * const gfc )
 {
-  lame_internal_flags *gfc=gfp->internal_flags;
+  III_side_info_t * const l3_side = &gfc->l3_side;
   int i;
 
   if ( gfc->iteration_init_init==0 ) {
     gfc->iteration_init_init=1;
 
     l3_side->main_data_begin = 0;
-    compute_ath(gfp,gfc->ATH_l,gfc->ATH_s);
+    compute_ath(gfc->gfp,gfc->ATH_l,gfc->ATH_s);
 
     for(i=0;i<PRECALC_SIZE;i++)
         pow43[i] = pow((FLOAT8)i, 4.0/3.0);
@@ -348,10 +348,9 @@ void ms_convert(FLOAT8 xr[2][576],FLOAT8 xr_org[2][576])
  * allocate bits among 2 channels based on PE
  * mt 6/99
  ************************************************************************/
-int on_pe(lame_global_flags *gfp,FLOAT8 pe[2][2],III_side_info_t *l3_side,
+int on_pe(context *gfc,FLOAT8 pe[2][2],III_side_info_t *l3_side,
 int targ_bits[2],int mean_bits, int gr)
 {
-  lame_internal_flags *gfc=gfp->internal_flags;
   gr_info *cod_info;
   int extra_bits,tbits,bits;
   int add_bits[2]; 
@@ -359,7 +358,7 @@ int targ_bits[2],int mean_bits, int gr)
   int max_bits;  /* maximum allowed bits for this granule */
 
   /* allocate targ_bits for granule */
-  ResvMaxBits(gfp, mean_bits, &tbits, &extra_bits);
+  ResvMaxBits(gfc->gfp, mean_bits, &tbits, &extra_bits);
   max_bits=tbits+extra_bits;
 
   bits=0;
@@ -459,13 +458,12 @@ void reduce_side(int targ_bits[2],FLOAT8 ms_ener_ratio,int mean_bits,int max_bit
   returns number of sfb's with energy > ATH
 */
 int calc_xmin( 
-        const lame_global_flags * const gfp,
-        const FLOAT8                    xr [576],
-        const III_psy_ratio     * const ratio,
-	const gr_info           * const cod_info, 
-              III_psy_xmin      * const l3_xmin ) 
+        const context       * const gfc,
+        const FLOAT8                xr [576],
+        const III_psy_ratio * const ratio,
+	const gr_info       * const cod_info, 
+              III_psy_xmin  * const l3_xmin ) 
 {
-  lame_internal_flags *gfc=gfp->internal_flags;
   int sfb,j,start, end, bw,l, b, ath_over=0;
   FLOAT8 en0, xmin, ener;
 
@@ -483,7 +481,7 @@ int calc_xmin(
       }
       en0 /= bw;
       
-      if (gfp->ATHonly || gfp->ATHshort) {
+      if (gfc->gfp->ATHonly || gfc->gfp->ATHshort) {
         l3_xmin->s[sfb][b]=gfc->ATH_s[sfb];
       } else {
         xmin = ratio->en.s[sfb][b];
@@ -493,7 +491,8 @@ int calc_xmin(
       }
       
       if (en0 > gfc->ATH_s[sfb]) ath_over++;
-      if (gfc->nsPsy.use && gfp->VBR == vbr_off && gfp->quality <= 1) l3_xmin->s[sfb][b] *= 0.001;
+      if (gfc->nsPsy.use && gfc->gfp->VBR == vbr_off && gfc->gfp->quality <= 1)
+        l3_xmin->s[sfb][b] *= 0.001;
     }
   }
 
@@ -509,7 +508,7 @@ int calc_xmin(
 	  en0 += ener;
 	}
     
-	if (gfp->ATHonly) {
+	if (gfc->gfp->ATHonly) {
 	  l3_xmin->l[sfb]=gfc->ATH_l[sfb];
 	} else {
 	  xmin = ratio->en.l[sfb];
@@ -518,7 +517,8 @@ int calc_xmin(
 	  l3_xmin->l[sfb]=Max(gfc->ATH_l[sfb], xmin);
 	}
 	if (en0 > gfc->ATH_l[sfb]) ath_over++;
-	if (gfp->VBR == vbr_off && gfp->quality <= 1) l3_xmin->l[sfb] *= 0.001;
+	if (gfc->gfp->VBR == vbr_off && gfc->gfp->quality <= 1)
+          l3_xmin->l[sfb] *= 0.001;
       }
     } else {
       for ( sfb = 0; sfb < SBMAX_l; sfb++ ){
@@ -532,7 +532,7 @@ int calc_xmin(
 	}
 	en0 /= bw;
     
-	if (gfp->ATHonly) {
+	if (gfc->gfp->ATHonly) {
 	  l3_xmin->l[sfb]=gfc->ATH_l[sfb];
 	} else {
 	  xmin = ratio->en.l[sfb];
@@ -558,7 +558,7 @@ int calc_xmin(
 /*************************************************************************/
 /*  mt 5/99:  Function: Improved calc_noise for a single channel   */
 int calc_noise( 
-        const lame_global_flags * const gfp,
+        const context           * const gfc,
         const FLOAT8                    xr [576],
         const int                       ix [576],
         const gr_info           * const cod_info,
@@ -569,7 +569,6 @@ int calc_noise(
 {
   int sfb,start, end, j,l, i, over=0;
   FLOAT8 sum, bw;
-  lame_internal_flags *gfc=gfp->internal_flags;
   
   int count=0;
   FLOAT8 noise;
@@ -726,16 +725,15 @@ int calc_noise(
 
 static
 void set_pinfo (
-        const lame_global_flags * const gfp,
-        const gr_info           * const cod_info,
-        const III_psy_ratio     * const ratio, 
-        const III_scalefac_t    * const scalefac,
-        const FLOAT8                    xr[576],
-        const int                       l3_enc[576],        
-        const int                       gr,
-        const int                       ch )
+        const context        * const gfc,
+        const gr_info        * const cod_info,
+        const III_psy_ratio  * const ratio, 
+        const III_scalefac_t * const scalefac,
+        const FLOAT8                 xr[576],
+        const int                    l3_enc[576],        
+        const int                    gr,
+        const int                    ch )
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
     int sfb;
     int j,i,l,start,end,bw;
     FLOAT8 en0,en1;
@@ -746,9 +744,9 @@ void set_pinfo (
     calc_noise_result noise;
     FLOAT8 xfsf[4][SBMAX_l];
 
-    calc_xmin (gfp,xr, ratio, cod_info, &l3_xmin);
+    calc_xmin (gfc,xr, ratio, cod_info, &l3_xmin);
 
-    calc_noise (gfp, xr, l3_enc, cod_info, &l3_xmin, scalefac, xfsf, &noise);
+    calc_noise (gfc, xr, l3_enc, cod_info, &l3_xmin, scalefac, xfsf, &noise);
 
     if (cod_info->block_type == SHORT_TYPE) {
         for (j=0, sfb = 0; sfb < SBMAX_s; sfb++ )  {
@@ -806,7 +804,7 @@ void set_pinfo (
                     en0 = en0/ratio->en.s[sfb][i];
                 else
                     en0=0;
-                if (gfp->ATHonly || gfp->ATHshort)
+                if (gfc->gfp->ATHonly || gfc->gfp->ATHshort)
                     en0=0;
 
                 gfc->pinfo->thr_s[gr][ch][3*sfb+i] = 
@@ -877,7 +875,7 @@ void set_pinfo (
                 en0 = en0/ratio->en.l[sfb];
             else
                 en0=0;
-            if (gfp->ATHonly)
+            if (gfc->gfp->ATHonly)
                 en0=0;
             gfc->pinfo->thr[gr][ch][sfb] =
                              en1*Max(en0*ratio->thm.l[sfb],gfc->ATH_l[sfb]);
@@ -919,13 +917,12 @@ void set_pinfo (
  ************************************************************************/
 
 void set_frame_pinfo( 
-        const lame_global_flags * const gfp,
-              FLOAT8                    xr           [2][2][576],
-              III_psy_ratio             ratio        [2][2],  
-              int                       l3_enc       [2][2][576],
-              III_scalefac_t            scalefac     [2][2] )
+        context * const gfc,
+        FLOAT8          xr       [2][2][576],
+        III_psy_ratio   ratio    [2][2],  
+        int             l3_enc   [2][2][576],
+        III_scalefac_t  scalefac [2][2] )
 {
-    lame_internal_flags * gfc = gfp->internal_flags;
     unsigned int          gr, ch, sfb;
     int                   act_l3enc[576];
     III_scalefac_t        act_scalefac [2];
@@ -962,10 +959,10 @@ void set_frame_pinfo(
                     act_l3enc[i] = +l3_enc[gr][ch][i];
             }
             if (gr == 1 && scsfi[ch]) 
-                set_pinfo (gfp, cod_info, &ratio[gr][ch], &act_scalefac[ch],
+                set_pinfo (gfc, cod_info, &ratio[gr][ch], &act_scalefac[ch],
                         xr[gr][ch], act_l3enc, gr, ch);                    
             else
-                set_pinfo (gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch],
+                set_pinfo (gfc, cod_info, &ratio[gr][ch], &scalefac[gr][ch],
                         xr[gr][ch], act_l3enc, gr, ch);                    
         } /* for ch */
     }    /* for gr */
