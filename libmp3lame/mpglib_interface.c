@@ -56,10 +56,10 @@ int lame_decode1_headers(char *buffer,int len,
 
   mp3data->header_parsed=0;
   
-    // The static global out buffer is a really worse thing
   ret = decodeMP3(&mp,buffer,len,(char*)p, sizeof(out)/sizeof(*out), &processed_bytes );
-    //                                     ^^^^^^^^^^^^^^^^^^^^^^^^
-    //  maybe sizeof(out) is the right meaning, but the translation of the origin code has this meaning
+  //                                     ^^^^^^^^^^^^^^^^^^^^^^^^
+  //  this argument is the size of the output buffer in bytes.
+  //  Even though decodeMP3 returns short ints!
   
   if (mp.header_parsed) {
     mp3data->header_parsed=1;

@@ -192,7 +192,7 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    <infile> and/or <outfile> can be \"-\", which means stdin/stdout.\n"
               "\n"
               "RECOMMENDED:\n"
-              "    lame -h input.mp3 output.wav\n"
+              "    lame -h input.wav output.mp3\n"
               "\n"
               "OPTIONS:\n"
               "  Input options:\n"

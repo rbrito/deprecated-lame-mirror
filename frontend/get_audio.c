@@ -1310,8 +1310,8 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
     fskip ( fd, aid_header-6, SEEK_CUR );
 
     /* read 2 more bytes to set up buffer for MP3 header check */
-    if (fread(&buf,1,2,fd) == 0) return -1;  /* failed */
-    len =2;
+    if (fread(&buf,1,4,fd) == 0) return -1;  /* failed */
+    len =4;
   }
 
 
@@ -1329,9 +1329,8 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
   
   /* read the rest of header and enough bytes to check for Xing header */
   len2 = fread(&buf[len],1,48-len,fd);
-  if (len2 ==0 ) return -1;            // what happens when only 1 byte is read ???
-  len +=len2;
-
+  if (len2 != 48-len ) return -1;
+  len = 48;
 
   /* check first 48 bytes for Xing header */
   xing_header = GetVbrTag(&pTagData,(unsigned char*)buf);
@@ -1375,7 +1374,9 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
   }
 
 
-  /* now parse the current buffer looking for MP3 headers */
+  // now parse the current buffer looking for MP3 headers 
+  // we dont want to feed too much data to lame_decode1_headers 
+  // because we dont want it to actually decode the first frame.
   ret = lame_decode1_headers(buf,len,pcm_l,pcm_r,mp3data);
   if (-1==ret) return -1;
   if (ret>0 && !xing_header) 

@@ -905,7 +905,7 @@ int    lame_encode_buffer (
   if (gfp->num_channels==2  && gfc->stereo==1) {
     /* downsample to mono */
     for (i=0; i<nsamples; ++i) {
-      in_buffer[0][i] = 0.5 * ( (double)in_buffer[0][i] + in_buffer[1][i] );
+      in_buffer[0][i] = 0.5 * ( (FLOAT8)in_buffer[0][i] + in_buffer[1][i] );
       in_buffer[1][i] = 0.0;
     }
   }
@@ -981,7 +981,7 @@ int    lame_encode_buffer_interleaved (
   int mp3size = 0, ret, i, ch, mf_needed;
   lame_internal_flags *gfc=gfp->internal_flags;
   sample_t *mfbuf[2];
-    signed short int* p;
+
 
   if (!gfc->lame_init_params_init) return -3;
 
@@ -1021,24 +1021,10 @@ int    lame_encode_buffer_interleaved (
   
   while (nsamples > 0) {         /* while copying in new samples */
     int n_out = Min (gfp->framesize,nsamples);
-    
-#ifdef KLEMM_09  /* only a try to understand the code */
 
-    assert (gfp->num_channels == 2);
-    p = buffer;
-    if ( gfc->stereo == 1 /* mono, although true */ )
-        for (i = 0; i < n_out; i++, p += 2 ) {
-	    mfbuf [0] [gfc->mf_size + i] = 0.5 * ((sample_t)p[0] + (sample_t)p[1]);
-	    mfbuf [1] [gfc->mf_size + i] = 0.;
-        }
-    else
-        for (i = 0; i < n_out; i++, p += 2) {
-	    mfbuf [0] [gfc->mf_size + i] = p[0];
-	    mfbuf [1] [gfc->mf_size + i] = p[1];
-        }
-      
-#else 
-   
+    /* copy data into internal buffer.  Downsample to mono by
+     * averaging L & R channels if we are encoding mono with
+     * stereo input */
     for (i=0; i<n_out; ++i) {
       if (gfp->num_channels==2  && gfc->stereo==1) {
 	mfbuf[0][gfc->mf_size+i]=((int)buffer[2*i]+(int)buffer[2*i+1])/2.0;
@@ -1049,7 +1035,6 @@ int    lame_encode_buffer_interleaved (
       }
     }
       
-#endif
       
     buffer += 2*n_out;
 

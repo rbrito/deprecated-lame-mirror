@@ -41,6 +41,10 @@
   and have at least the advantage that you not need to explain their
   meaning. 
 
+  Annotation (mt):  
+  we will adopt this convention in Jan 1, 2003.
+
+
 * The internal representation of PCM samples in type 'sample_t',
   currently this is a FLOAT.
 
