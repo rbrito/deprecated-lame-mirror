@@ -310,6 +310,14 @@ int CDECL lame_get_experimentalY(const lame_global_flags *);
 int CDECL lame_set_experimentalZ(lame_global_flags *, int);
 int CDECL lame_get_experimentalZ(const lame_global_flags *);
 
+/* set/get how to compare the quantization values */
+int CDECL lame_set_quantcomp_method(lame_global_flags *, int);
+int CDECL lame_get_quantcomp_method(const lame_global_flags *);
+
+/* set/get large scalefactor range */
+int CDECL lame_set_use_largescalefac(lame_global_flags *, int);
+int CDECL lame_get_use_largescalefac(const lame_global_flags *);
+
 /* Naoki's psycho acoustic model.  default=0 */
 int CDECL lame_set_exp_nspsytune(lame_global_flags *, int);
 int CDECL lame_get_exp_nspsytune(const lame_global_flags *);
@@ -407,17 +415,6 @@ int CDECL lame_get_athaa_loudapprox( const lame_global_flags *);
 int CDECL lame_set_athaa_sensitivity( lame_global_flags *, float);
 float CDECL lame_get_athaa_sensitivity( const lame_global_flags* );
 
-/* predictability limit (ISO tonality formula) */
-int CDECL lame_set_cwlimit(lame_global_flags *, int);
-int CDECL lame_get_cwlimit(const lame_global_flags *);
-
-/*
-  allow blocktypes to differ between channels?
-  default: 0 for jstereo, 1 for stereo
-*/
-int CDECL lame_set_allow_diff_short(lame_global_flags *, int);
-int CDECL lame_get_allow_diff_short(const lame_global_flags *);
-
 /* use temporal masking effect (default = 1) */
 int CDECL lame_set_useTemporal(lame_global_flags *, int);
 int CDECL lame_get_useTemporal(const lame_global_flags *);
@@ -430,16 +427,12 @@ float CDECL lame_get_interChRatio(const lame_global_flags *);
 int CDECL lame_set_substep(lame_global_flags *, int);
 int CDECL lame_get_substep(const lame_global_flags *);
 
-/* disable short blocks */
-int CDECL lame_set_no_short_blocks(lame_global_flags *, int);
-int CDECL lame_get_no_short_blocks(const lame_global_flags *);
+/* short blocks switching threshold */
+int CDECL lame_set_short_threshold(lame_global_flags *,
+				   float forlong, float forshort);
 
 /* use mixed blocks */
 int CDECL lame_set_use_mixed_blocks(lame_global_flags *, int);
-
-/* force short blocks */
-int CDECL lame_set_force_short_blocks(lame_global_flags *, int);
-int CDECL lame_get_force_short_blocks(const lame_global_flags *);
 
 /* Input PCM is emphased PCM (for instance from one of the rarely
    emphased CDs), it is STRONGLY not recommended to use this, because
