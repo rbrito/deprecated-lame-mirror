@@ -727,8 +727,10 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 	nBytesWritten++;
 
 
-	memset(pbtStreamBuffer+nBytesWritten,0, 3);		//unused in rev0
-	nBytesWritten+=3;
+	pbtStreamBuffer[nBytesWritten++] = 0;	//unused in rev1
+
+	CreateI2(&pbtStreamBuffer[nBytesWritten], gfp->preset);
+	nBytesWritten+=2;
 
 	CreateI4(&pbtStreamBuffer[nBytesWritten], nMusicLength);
 	nBytesWritten+=4;
