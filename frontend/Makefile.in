@@ -107,7 +107,7 @@ DEFS = @DEFS@ @CONFIG_DEFS@
 common_sources =  	get_audio.c 	lametime.c 	parse.c 	portableio.c 	timestatus.c
 
 
-noinst_HEADERS = get_audio.h 	gtkanal.h 	gpkplotting.h 	ieeefloat.h 	lametime.h 	main.h 	parse.h 	portableio.h 	timestatus.h
+noinst_HEADERS = get_audio.h 	gtkanal.h 	gpkplotting.h 	lametime.h 	main.h 	parse.h 	portableio.h 	timestatus.h
 
 
 EXTRA_lame_SOURCES = $(brhist_sources)
@@ -175,7 +175,7 @@ DIST_COMMON =  Makefile.am Makefile.in
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
-TAR = gtar
+TAR = tar
 GZIP_ENV = --best
 DEP_FILES =  .deps/brhist.P .deps/get_audio.P .deps/gpkplotting.P \
 .deps/gtkanal.P .deps/lametime.P .deps/main.P .deps/mp3rtp.P \
@@ -350,7 +350,7 @@ distdir: $(DISTFILES)
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
-	    cp -pr $$/$$file $(distdir)/$$file; \
+	    cp -pr $$d/$$file $(distdir)/$$file; \
 	  else \
 	    test -f $(distdir)/$$file \
 	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \
