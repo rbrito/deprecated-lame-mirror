@@ -1430,17 +1430,14 @@ VBR_3rd_bitalloc(lame_t gfc, gr_info *gi, FLOAT * xmin)
      * But we cannot use calc_noise() because l3_enc[] is not calculated
      * at this point.
      */
-    int sfb, j, r = 0;
+    int sfb, j;
     for (j = sfb = 0; sfb < gi->psymax; sfb++) {
-	if (IPOW20(scalefactor(gi, sfb)) > gfc->maxXR[sfb]) {
+	while (IPOW20(scalefactor(gi, sfb)) > gfc->maxXR[sfb]) {
 	    if (gi->scalefac[sfb] == 0)
 		return -2;
-	    r = -1;
-	    xmin[sfb] *= 1.0029;
+	    gi->scalefac[sfb]--;
 	}
     }
-    if (r)
-	return r;
 
     for (j = sfb = 0; sfb < gi->psymax; sfb++) {
 	int width = gi->wi[sfb].width;
