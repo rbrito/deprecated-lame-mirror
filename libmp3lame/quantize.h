@@ -39,4 +39,12 @@ void ABR_iteration_loop( lame_global_flags *gfp,
 			 FLOAT8 ms_ratio[2], 
 			 III_psy_ratio ratio[2][2]);
 
+void init_outer_loop( lame_internal_flags *gfc,
+		      gr_info *const cod_info);
+
+
+int init_xrpow( lame_internal_flags *gfc,
+		gr_info *const cod_info, 
+		FLOAT8 xrpow[576] );
+
 #endif /* LAME_QUANTIZE_H */

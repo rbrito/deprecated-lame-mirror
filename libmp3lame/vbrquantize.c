@@ -1508,7 +1508,7 @@ VBR_quantize(lame_global_flags *gfp,
   gr_info *cod_info;  
   int digital_silence[2][2];
   FLOAT8 masking_lower_db=0;
-  FLOAT8 xr34[2][2][576];
+  FLOAT8 xr34[576];
   
   qadjust=0;   /* start with -1 db quality improvement over quantize.c VBR */
 
@@ -1534,20 +1534,8 @@ VBR_quantize(lame_global_flags *gfp,
        */
       int over_ath;
       cod_info = &l3_side->tt[gr][ch];
+      init_outer_loop(gfc, cod_info);
       cod_info->part2_3_length=LARGE_BITS;
-      
-      if (cod_info->block_type == SHORT_TYPE) {
-          cod_info->sfb_lmax = 0; /* No sb*/
-          cod_info->sfb_smin = 0;
-      } else {
-          /* MPEG 1 doesnt use last scalefactor band */
-          cod_info->sfb_lmax = SBPSY_l;
-          cod_info->sfb_smin = SBPSY_s;    /* No sb */
-	  if (cod_info->mixed_block_flag) {
-	    cod_info->sfb_lmax        = gfc->is_mpeg1 ? 8 : 6;
-	    cod_info->sfb_smin        = 3;
-	  }
-      }
       
       /* quality setting */
       masking_lower_db = gfc->VBR->mask_adjust;
@@ -1563,16 +1551,6 @@ VBR_quantize(lame_global_flags *gfp,
        * then we say the frame is not analog silent */
       if (over_ath) {
         analog_silence = 0;
-      }
-      
-      /* if there is no line with more energy than 1e-20
-       * then this granule is considered to be digital silent
-       * plus calculation of xr34 */
-      digital_silence[gr][ch] = 1;
-      for(i=0;i<576;++i) {
-	  FLOAT8 temp=fabs(cod_info->xr[i]);
-	  xr34[gr][ch][i]=sqrt(sqrt(temp)*temp);
-	  digital_silence[gr][ch] &= temp < 1E-20;
       }
     } /* ch */
   }  /* gr */
@@ -1675,7 +1653,8 @@ VBR_quantize(lame_global_flags *gfp,
           /* digital silent granules do not need the full round trip,
            * but this can be optimized later on
            */
-          adjusted = VBR_noise_shaping (gfp, cod_info->xr, xr34[gr][ch],
+	  init_xrpow(gfc, cod_info, xr34);
+          adjusted = VBR_noise_shaping (gfp, cod_info->xr, xr34,
                                         cod_info->l3_enc,
                                         digital_silence[gr][ch],
                                         minbits_lr[ch],

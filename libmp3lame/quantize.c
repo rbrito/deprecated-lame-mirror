@@ -51,7 +51,7 @@
  *
  ************************************************************************/
 
-static int 
+int 
 init_xrpow(
     lame_internal_flags *gfc,
     gr_info *const cod_info, 
@@ -79,7 +79,7 @@ init_xrpow(
     return 0;
 }
 
-static void
+void
 init_outer_loop(
     lame_internal_flags *gfc,
     gr_info *const cod_info)
