@@ -19,11 +19,66 @@ Starting with LAME 3.0:
 <HR></H3>
 
 <H3>
-LAME 3.62beta&nbsp; (CVS)</H3>
+LAME&nbsp;3.63beta&nbsp; (CVS)</H3>
+
+<H3>
+LAME 3.62beta&nbsp;&nbsp; February 9 2000</H3>
 
 <UL>
 <LI>
-</LI>
+<FONT COLOR="#000000">Iwasa Kazmi:&nbsp; frame analyzer short block display
+of single subblocks (press 1,2&nbsp; or 3)</FONT></LI>
+
+<LI>
+<FONT COLOR="#000000">Ingo Saitz:&nbsp; --help option added, with output
+to stdout</FONT></LI>
+
+<LI>
+<FONT COLOR="#FF0000">Alfred Weyers: short block AAC spreading function
+bug fixed</FONT></LI>
+
+<LI>
+<FONT COLOR="#3366FF">Takehiro Tominaga:&nbsp; new scalefac data structure
+- improves performance!</FONT></LI>
+
+<LI>
+<FONT COLOR="#FF0000">Lionel Bonnet:&nbsp; Bug fixed in MPEG2 scalefactor
+routine: scalefactors were being severly limited.</FONT></LI>
+
+<LI>
+<FONT COLOR="#3366FF">Takehiro Tominaga:&nbsp; faster FFT routines from.&nbsp;
+These routines are also compatible with the GOGO routines, in case someone
+is interested in porting them back to LAME.</FONT></LI>
+
+<LI>
+<FONT COLOR="#3366FF">Sigbj&oslash;rn Skj&aelig;ret, Takehiro Tominaga:&nbsp;
+faster pow() code.</FONT></LI>
+
+<LI>
+<FONT COLOR="#FF0000">Joachim Kuebart:&nbsp; Found some unitialized variables
+that were effecting quality for encodings which did not use the -h option
+(now fixed).</FONT></LI>
+
+<LI>
+More modularization work.&nbsp;&nbsp; It is now possible to use LAME as
+a library where you can set the encoding parameters directly and do your
+own file i/o.&nbsp;&nbsp; The calling program is now it's own mp3 output.&nbsp;
+For an example of the LAME API, see main.c, or mp3rtp.c or mp3x.c.&nbsp;
+These can all be compiled as stand alone programs which link with libmp3lame.a.</LI>
+
+<LI>
+Felix vos Leitner:&nbsp; mp3rtp fixes.&nbsp; mp3rtp is a standalone program
+which will encode and stream with RTP.</LI>
+
+<LI>
+Robert Hegemann:&nbsp; Information written to stderr displaying exactly
+which type of lowpass filter (if any) is being used.</LI>
+
+<LI>
+Iwasa Kazmi:&nbsp; mpglib (the mpg123 decoder) scsfi decoding fixes.</LI>
+
+<LI>
+Takehiro Tominaga:&nbsp; More mpglib scsfi decoding fixes.</LI>
 </UL>
 
 <H3>
@@ -140,8 +195,8 @@ LAME 3.57beta&nbsp; November 22 1999</H3>
 
 <UL>
 <LI>
-Sigbjxrn Skjfret: patch to allow encoding from 8bit input files when using
-LIBSNDFILE</LI>
+Sigbj&oslash;rn Skj&aelig;ret, patch to allow encoding from 8bit input
+files when using LIBSNDFILE</LI>
 
 <LI>
 Automatic downsampling to nearest valid samplerate.</LI>
