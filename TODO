@@ -115,6 +115,10 @@ maybe nspsy2 based model will solve it.
 
 
 
+60.
+mp3 decoding is not reentrant nor thread safe.
+
+
 
 70.
 Use mixed blocks.
