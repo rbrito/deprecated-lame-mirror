@@ -532,7 +532,38 @@ lame_get_ReplayGain_decode( const lame_global_flags*  gfp )
 }
 
 
+/* set and get some gapless encoding flags */
 
+int
+lame_set_nogap_total( lame_global_flags* gfp,
+                      int the_nogap_total )
+{
+    lame_internal_flags *gfc = gfp->internal_flags;
+    gfc->nogap_total = the_nogap_total;
+    return 0;
+}
+
+int
+lame_get_nogap_total( const lame_global_flags* gfp )
+{
+  return gfp->internal_flags->nogap_total;
+}
+
+int
+lame_set_nogap_currentindex( lame_global_flags* gfp,
+                             int the_nogap_index )
+{
+    lame_internal_flags *gfc = gfp->internal_flags;
+    gfc->nogap_current = the_nogap_index;
+    return 0;
+}
+
+int
+lame_get_nogap_currentindex( const lame_global_flags* gfp )
+{
+  return gfp->internal_flags->nogap_current;
+}
+  
 
 /* message handlers */
 int

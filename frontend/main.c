@@ -763,6 +763,8 @@ main(int argc, char **argv)
                     outf = init_files(gf, nogap_inPath[i], outPath);
                 }
                 brhist_init_package(gf);
+                lame_set_nogap_total(gf, max_nogap);
+                lame_set_nogap_currentindex(gf, i);
                 ret =
                     lame_encoder(gf, outf, use_flush_nogap, nogap_inPath[i],
                                  outPath);	
