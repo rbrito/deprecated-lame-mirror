@@ -30,6 +30,8 @@
 #include "tables.h"
 #include "quantize_pvt.h"
 #include <assert.h>
+#include "main.h"
+#include "get_audio.h"
 
 plotting_data *pinfo;
 plotting_data *pplot;
@@ -106,17 +108,17 @@ int gtkmakeframe(void)
   /* even if iread=0, get_audio hit EOF and returned Buffer=all 0's.  encode
    * and decode to flush any previous buffers from the decoder */
 
-  pinfo->frameNum = gfp->frameNum;
+  pinfo->frameNum = frameNum;
   pinfo->sampfreq=gfp->out_samplerate;
   pinfo->framesize=576*gfc->mode_gr;
   pinfo->stereo = gfc->stereo;
 
   gfc->pinfo = pinfo;
   mpg123_pinfo = pinfo;
-  if (gfp->input_format == sf_mp1 ||
-      gfp->input_format == sf_mp2 ||
-      gfp->input_format == sf_mp3) {
-    iread=lame_readframe(gfp,Buffer);
+  if (input_format == sf_mp1 ||
+      input_format == sf_mp2 ||
+      input_format == sf_mp3) {
+    iread = readframe(gfp,Buffer);
 
     /* add a delay of framesize-DECDELAY, which will make the total delay
      * exactly one frame, so we can sync MP3 output with WAV input */
@@ -127,36 +129,36 @@ int gtkmakeframe(void)
 	gfc->pinfo->pcmdata2[ch][j+gfp->framesize-DECDELAY] = mpg123pcm[ch][j];
     }
 
-    gfc->pinfo->frameNum123 = gfp->frameNum-1;
-    gfc->pinfo->frameNum = gfp->frameNum;
-    gfp->frameNum++;
+    gfc->pinfo->frameNum123 = frameNum-1;
+    gfc->pinfo->frameNum = frameNum;
+    frameNum++;
 
   }else {
 
     /* feed data to encoder until encoder produces some output */
-    while (gfp->frameNum == pinfo->frameNum) {
+    while (frameNum == pinfo->frameNum) {
       
-      if (gfp->frameNum==0 && !init) {
+      if (frameNum==0 && !init) {
 	mpglag=1;
 	lame_decode_init();
       }
-      if (gfp->frameNum==1) init=0; /* reset for next time frameNum==0 */
+      if (frameNum==1) init=0; /* reset for next time frameNum==0 */
       
-      iread=lame_readframe(gfp,Buffer);
+      iread = readframe(gfp,Buffer);
       if (iread > gfp->framesize) {
 	/* NOTE: frame analyzer requires that we encode one frame 
 	 * for each pass through this loop.  If lame_encode_buffer()
 	 * is feed data too quickly, it will sometimes encode multiple frames
 	 * breaking this loop.
 	 */
-	MSGF("Warning: lame_readframe is returning too much data.\n");
+	MSGF("Warning: readframe is returning too much data.\n");
       }
       if (0==iread) break; /* eof */
 
       mp3count=lame_encode_buffer(gfp,Buffer[0],Buffer[1],iread,
 				  mp3buffer,(int)sizeof(mp3buffer));
       
-      assert( !(mp3count > 0 && gfp->frameNum == pinfo->frameNum));
+      assert( !(mp3count > 0 && frameNum == pinfo->frameNum));
       /* not possible to produce mp3 data without encoding at least 
        * one frame of data which would increment gfp->frameNum */
     }
@@ -767,7 +769,7 @@ static void update_progress(void)
 {    
   char label[80];
 
-  int tf=gfp->totalframes;
+  int tf = totalframes;
   if (gtkinfo.totalframes>0) tf=gtkinfo.totalframes;
 
   sprintf(label,"Frame:%4i/%4i  %6.2fs",
@@ -1310,15 +1312,15 @@ int gtkcontrol(lame_global_flags *gfp2)
     gfc=gfp->internal_flags;
 
     /* set some global defaults/variables */
-    gtkinfo.filetype = (gfp->input_format == sf_mp1 ||
-                        gfp->input_format == sf_mp2 ||
-                        gfp->input_format == sf_mp3);
+    gtkinfo.filetype = (input_format == sf_mp1 ||
+                        input_format == sf_mp2 ||
+                        input_format == sf_mp3);
     gtkinfo.msflag=0;
     gtkinfo.chflag=0;
     gtkinfo.kbflag=0;
-    gtkinfo.flag123 = (gfp->input_format == sf_mp1 ||
-                       gfp->input_format == sf_mp2 ||
-                       gfp->input_format == sf_mp3); /* MP3 file=use mpg123 output */
+    gtkinfo.flag123 = (input_format == sf_mp1 ||
+                       input_format == sf_mp2 ||
+                       input_format == sf_mp3); /* MP3 file=use mpg123 output */
     gtkinfo.pupdate=0;
     gtkinfo.avebits = 0;
     gtkinfo.maxbits = 0;
@@ -1336,7 +1338,7 @@ int gtkcontrol(lame_global_flags *gfp2)
     pplot = &Pinfo[READ_AHEAD];
 
     strcpy(frameinfo,"MP3x: ");
-    strncat(frameinfo,gfp->inPath,70);
+    strncat(frameinfo,inPath,70);
 
     window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title (GTK_WINDOW (window), frameinfo);
@@ -1391,7 +1393,7 @@ int gtkcontrol(lame_global_flags *gfp2)
     gtk_widget_show(framecounter);
     gtk_box_pack_start(GTK_BOX (box2),framecounter, FALSE, TRUE, 0);
 
-    adj = (GtkAdjustment *) gtk_adjustment_new (0, 0,(gint) gfp->totalframes-1, 0, 0, 0);
+    adj = (GtkAdjustment *) gtk_adjustment_new (0, 0,(gint) totalframes-1, 0, 0, 0);
     frameprogress = gtk_progress_bar_new_with_adjustment (adj);
     /* Set the format of the string that can be displayed in the
      * trough of the progress bar:

@@ -23,7 +23,6 @@
 #include <string.h>
 #include <assert.h>
 #include "brhist.h"
-//#include "util.h"
 
 
 

@@ -365,6 +365,7 @@ c_sources = @CONFIG_SOURCES@ \
 	portableio.c \
 	ieeefloat.c \
 	vorbis_interface.c \
+	parse.c \
 	get_audio.c
 
 OBJ = $(c_sources:.c=.o)

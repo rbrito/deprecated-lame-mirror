@@ -29,32 +29,9 @@
 
 /***********************************************************************
 *
-*  Global Variable Definitions
-*
-***********************************************************************/
-
-
-enum byte_order NativeByteOrder = order_unknown;
-
-/***********************************************************************
-*
 *  Global Function Definitions
 *
 ***********************************************************************/
-/* Replacement for forward fseek(,,SEEK_CUR), because fseek() fails on pipes */
-int fskip(FILE *sf,long num_bytes,int dummy)
-{
-  char data[1024];
-  int nskip = 0;
-  while (num_bytes > 0) {
-    nskip = (num_bytes>1024) ? 1024 : num_bytes;
-    num_bytes -= fread(data,(size_t)1,(size_t)nskip,sf);
-  }
-  /* return 0 if last read was successful */
-  return num_bytes;
-}
-
-
 FLOAT8 ATHformula(FLOAT8 f)
 {
   FLOAT8 ath;
@@ -112,41 +89,6 @@ void getframebits(lame_global_flags *gfp,int *bitsPerFrame, int *mean_bits) {
 }
 
 
-
-
-void display_bitrates(FILE *out_fh)
-{
-  int index,version;
-
-  version = 1;
-  fprintf(out_fh,"\n");
-  fprintf(out_fh,"MPEG1 layer III samplerates(kHz): 32 44.1 48 \n");
-
-  fprintf(out_fh,"bitrates(kbs): ");
-  for (index=1;index<15;index++) {
-    fprintf(out_fh,"%i ",bitrate_table[version][index]);
-  }
-  fprintf(out_fh,"\n");
-  
-  
-  version = 0;
-  fprintf(out_fh,"\n");
-  fprintf(out_fh,"MPEG2 layer III samplerates(kHz): 16 22.05 24 \n");
-  fprintf(out_fh,"bitrates(kbs): ");
-  for (index=1;index<15;index++) {
-    fprintf(out_fh,"%i ",bitrate_table[version][index]);
-  }
-  fprintf(out_fh,"\n");
-
-  version = 0;
-  fprintf(out_fh,"\n");
-  fprintf(out_fh,"MPEG2.5 layer III samplerates(kHz): 8 11.025 12 \n");
-  fprintf(out_fh,"bitrates(kbs): ");
-  for (index=1;index<15;index++) {
-    fprintf(out_fh,"%i ",bitrate_table[version][index]);
-  }
-  fprintf(out_fh,"\n");
-}
 
 
 #define ABS(A) (((A)>0) ? (A) : -(A))
@@ -249,53 +191,6 @@ int  *version)
         return(-1);     /* Error! */
     }
 }
-
-
-
-
-/*****************************************************************************
-*
-*  Routines to determine byte order and swap bytes
-*
-*****************************************************************************/
-
-enum byte_order DetermineByteOrder(void)
-{
-    char s[ sizeof(long) + 1 ];
-    union
-    {
-        long longval;
-        char charval[ sizeof(long) ];
-    } probe;
-    probe.longval = 0x41424344L;  /* ABCD in ASCII */
-    strncpy( s, probe.charval, sizeof(long) );
-    s[ sizeof(long) ] = '\0';
-    /* fprintf( stderr, "byte order is %s\n", s ); */
-    if ( strcmp(s, "ABCD") == 0 )
-        return order_bigEndian;
-    else
-        if ( strcmp(s, "DCBA") == 0 )
-            return order_littleEndian;
-        else
-            return order_unknown;
-}
-
-void SwapBytesInWords( short *loc, int words )
-{
-    int i;
-    short thisval;
-    char *dst, *src;
-    src = (char *) &thisval;
-    for ( i = 0; i < words; i++ )
-    {
-        thisval = *loc;
-        dst = (char *) loc++;
-        dst[0] = src[1];
-        dst[1] = src[0];
-    }
-}
-
-
 
 
 

@@ -386,6 +386,5 @@ char *mp3buf, int mp3buf_size)
     }
   }
 
-  gfp->frameNum++;
   return mp3count;
 }

@@ -77,7 +77,6 @@
 #endif
 
 
-#define         BITS_IN_A_BYTE          8
 #define         HAN_SIZE                512
 #define         CRC16_POLYNOMIAL        0x8005
 
@@ -98,9 +97,6 @@
 ***********************************************************************/
 
 
-
-enum byte_order { order_unknown, order_bigEndian, order_littleEndian };
-extern enum byte_order NativeByteOrder;
 
 /* "bit_stream.h" Type Definitions */
 
@@ -303,9 +299,6 @@ typedef struct  {
   /* used by the frame analyzer */
   plotting_data *pinfo;
 
-  /* variables used for the status display */
-  FLOAT8  last_time;
-
 } lame_internal_flags;
 
 
@@ -314,8 +307,6 @@ typedef struct  {
 *  Global Function Prototype Declarations
 *
 ***********************************************************************/
-extern int            fskip(FILE *sf,long num_bytes,int dummy);
-extern void           display_bitrates(FILE *out_fh);
 extern int            BitrateIndex(int, int,int);
 extern int            FindNearestBitrate(int,int,int);
 extern int            validSamplerate(int samplerate);
@@ -327,9 +318,6 @@ extern FLOAT8         ATHformula(FLOAT8 f);
 extern FLOAT8         freq2bark(FLOAT8 freq);
 extern FLOAT8         freq2cbw(FLOAT8 freq);
 extern void freorder(int scalefac_band[],FLOAT8 ix_orig[576]);
-
-extern enum byte_order DetermineByteOrder(void);
-extern void SwapBytesInWords( short *loc, int words );
 
 extern int fill_buffer_resample(lame_global_flags *gfp,sample_t *outbuf,int desired_len,
 	 short int *inbuf,int len,int *num_used,int ch);
@@ -360,10 +348,6 @@ extern void lame_errorf(const char *, ...);
 
 /* for displaying version, help strings, and bitrates */
 #define PRINTF1		printf
-#define PRINTF2		lame_errorf
-#define DISPLAY_BITRATES1()	display_bitrates(stdout)
-#define DISPLAY_BITRATES2()	display_bitrates(stderr)
-  /* need version.h */
 #endif
 
 

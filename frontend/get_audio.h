@@ -72,6 +72,16 @@ extern int parse_wavheader(void);
 extern int parse_aiff(const char fn[]);
 extern void   aiff_check(const char*, IFF_AIFF*, int*);
 
+enum byte_order { order_unknown, order_bigEndian, order_littleEndian };
+enum byte_order NativeByteOrder;
+
+enum byte_order DetermineByteOrder(void);
+void SwapBytesInWords( short *loc, int words );
+
+void init_infile(lame_global_flags *);
+int readframe(lame_global_flags *,short int Buffer[2][1152]);
+void close_infile(lame_global_flags *);
+
 
 #endif	/* ifdef LIBSNDFILE */
 #endif  /* ifdef LAMESNDFILE or LIBSNDFILE */

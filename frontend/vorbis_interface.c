@@ -534,7 +534,7 @@ int lame_encode_ogg_frame(lame_global_flags *gfp,
       if(ogg_page_eos(&og2))eos=1;
     } while (1);
   }
-  gfp->frameNum++;
+  frameNum++;
   return bytes;
 }
 

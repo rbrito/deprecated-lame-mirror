@@ -20,9 +20,6 @@
  */
 
 #include "lame.h"
-#include "timestatus.h"
-#include "lametime.h"
-#include "util.h"
 #ifdef BRHIST
 #include "brhist.h"
 #endif
@@ -34,6 +31,9 @@
    #include <unistd.h>
 #endif
 
+#include "timestatus.h"
+#include "lametime.h"
+#include "main.h"
 
 #if defined(CLOCKS_PER_SEC)
 /* ANSI/ISO systems */
@@ -51,13 +51,13 @@
 
 /* divide process time by TS_CLOCKS_PER_TIC to reduce overflow threshold */
 #define TS_CLOCKS_PER_TIC ((CLOCKS_PER_SEC + 63) / 64)
-#define TS_SECS_PER_TIC ((FLOAT) TS_CLOCKS_PER_TIC / TS_CLOCKS_PER_SEC)
+#define TS_SECS_PER_TIC ((double) TS_CLOCKS_PER_TIC / TS_CLOCKS_PER_SEC)
 
 /*********************************************************/
 /* ts_real_time: real time elapsed in seconds            */
 /*********************************************************/
 
-FLOAT ts_real_time (long frame) 
+double ts_real_time (long frame) 
 {
 #ifdef __unix__
 
@@ -71,7 +71,7 @@ FLOAT ts_real_time (long frame)
    if (frame == 0)
        initial_time = current_time;
 
-   return (FLOAT)(current_time - initial_time);
+   return (double)(current_time - initial_time);
 
 #else
 
@@ -83,7 +83,7 @@ FLOAT ts_real_time (long frame)
    if (frame == 0)
        initial_time = current_time;
 
-   return (FLOAT) difftime (current_time, initial_time);
+   return (double) difftime (current_time, initial_time);
 
 #endif
 }
@@ -91,7 +91,7 @@ FLOAT ts_real_time (long frame)
 /*********************************************************/
 /* ts_process_time: process time elapsed in seconds      */
 /*********************************************************/
-FLOAT ts_process_time(long frame) {
+double ts_process_time(long frame) {
   static clock_t initial_tictime;
   static clock_t previous_time;
   clock_t current_time;
@@ -115,7 +115,7 @@ FLOAT ts_process_time(long frame) {
       User.LowPart    = UserTime.dwLowDateTime;
       User.HighPart   = UserTime.dwHighDateTime;
 
-      current_time = (clock_t)((FLOAT)(Kernel.QuadPart + User.QuadPart) * TS_CLOCKS_PER_SEC / 10000000);
+      current_time = (clock_t)((double)(Kernel.QuadPart + User.QuadPart) * TS_CLOCKS_PER_SEC / 10000000);
     } else {
       current_time = clock();
 	}
@@ -142,7 +142,7 @@ FLOAT ts_process_time(long frame) {
     initial_tictime = current_time;
   }
 
-  return (FLOAT)((FLOAT)(current_time - initial_tictime) * TS_SECS_PER_TIC);
+  return (double)((double)(current_time - initial_tictime) * TS_SECS_PER_TIC);
 }
 
 #undef TS_SECS_PER_TIC
@@ -150,10 +150,10 @@ FLOAT ts_process_time(long frame) {
 #undef TS_CLOCKS_PER_SEC
 
 typedef struct ts_times {
-  FLOAT so_far;
-  FLOAT estimated;
-  FLOAT speed;
-  FLOAT eta;
+  double so_far;
+  double estimated;
+  double speed;
+  double eta;
 } ts_times;
 
 /*********************************************************/
@@ -245,24 +245,25 @@ void timestatus_finish(void)
 
 void timestatus_klemm(lame_global_flags *gfp)
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
-    if (! gfp -> silent) {
-        if ( gfp -> frameNum ==  0  ||  
-             gfp -> frameNum == 10  ||
-	     ( GetRealTime () - gfc -> last_time >= gfp -> update_interval  ||
-               GetRealTime ()                    <  gfp -> update_interval )) {
-            timestatus ( gfp -> out_samplerate, 
-                         gfp -> frameNum, 
-                         gfp -> totalframes, 
-                         gfp -> framesize );
+  /* variables used for the status display */
+  double  last_time;
 
+  if (! gfp -> silent) {
+    if ( frameNum ==  0  ||  
+	 frameNum == 10  ||
+	 ( GetRealTime () - last_time >= gfp -> update_interval  ||
+	   GetRealTime ()             <  gfp -> update_interval )) {
+      timestatus ( gfp -> out_samplerate, 
+		   frameNum, 
+		   totalframes, 
+		   gfp -> framesize );
 #ifdef BRHIST
-            if ( gfp -> brhist_disp )
-	        brhist_disp ( gfp->totalframes );
+      if ( gfp -> brhist_disp )
+	brhist_disp ( totalframes );
 #endif
-	    gfc -> last_time = GetRealTime ();  /* from now! disp_time seconds */
-        }
+      last_time = GetRealTime ();  /* from now! disp_time seconds */
     }
+  }
 }
 
 
@@ -279,29 +280,29 @@ void decoder_progress ( lame_global_flags* gfp, mp3data_struct *mp3data )
     static int  last_kbps  = -1;
     static int  last_frame = -1;
 
-    if ( (gfp -> frameNum & 255 ) == 1 ) {
-        fprintf ( stderr, "\rFrame#%6lu/%-6lu %3u kbps        ", gfp -> frameNum, gfp -> totalframes, gfp -> brate );
+    if ( (frameNum & 255 ) == 1 ) {
+        fprintf ( stderr, "\rFrame#%6lu/%-6lu %3u kbps        ", frameNum, totalframes, gfp -> brate );
         last_frame = -1;
     } 
     else if ( last_kbps != gfp -> brate ) {
-        fprintf ( stderr, "\rFrame#%6lu/%-6lu %3u", gfp -> frameNum, gfp -> totalframes, gfp -> brate );
+        fprintf ( stderr, "\rFrame#%6lu/%-6lu %3u", frameNum, totalframes, gfp -> brate );
         last_frame = -1;
     } 
-    else if ( last_total != gfp -> totalframes ) {
-        fprintf ( stderr, "\rFrame#%6lu/%-6lu", gfp -> frameNum, gfp -> totalframes );
+    else if ( last_total != totalframes ) {
+        fprintf ( stderr, "\rFrame#%6lu/%-6lu", frameNum, totalframes );
         last_frame = -1;
     } 
     else {
-        if ( last_frame > 0  &&  last_frame/10 == gfp -> frameNum/10 )
-            fprintf ( stderr, "\b%lu", gfp -> frameNum % 10 );
-        else if ( last_frame > 0  &&  last_frame/100 == gfp -> frameNum/100 )
-            fprintf ( stderr, "\b\b%02lu", gfp -> frameNum % 100 );
+        if ( last_frame > 0  &&  last_frame/10 == frameNum/10 )
+            fprintf ( stderr, "\b%lu", frameNum % 10 );
+        else if ( last_frame > 0  &&  last_frame/100 == frameNum/100 )
+            fprintf ( stderr, "\b\b%02lu", frameNum % 100 );
         else
-            fprintf ( stderr, "\rFrame#%6lu", gfp -> frameNum ),
-        last_frame = gfp -> frameNum;
+            fprintf ( stderr, "\rFrame#%6lu", frameNum ),
+        last_frame = frameNum;
     }
 	      
-    last_total = gfp -> totalframes;
+    last_total = totalframes;
     last_kbps  = gfp -> brate;
 #endif
 

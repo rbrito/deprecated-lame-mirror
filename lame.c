@@ -207,7 +207,6 @@ int lame_init_params(lame_global_flags *gfp)
   lame_internal_flags *gfc=gfp->internal_flags;
   gfc->lame_init_params_init=1;
 
-  gfp->frameNum=0;
   if (gfp->num_channels==1) {
     gfp->mode = MPG_MD_MONO;
   }
@@ -288,19 +287,6 @@ int lame_init_params(lame_global_flags *gfp)
   gfc->resample_ratio=1;
   if (gfp->out_samplerate != gfp->in_samplerate) 
         gfc->resample_ratio = (FLOAT)gfp->in_samplerate/(FLOAT)gfp->out_samplerate;
-
-  /* estimate total frames.  must be done after setting sampling rate so
-   * we know the framesize.  */
-  gfp->totalframes=0;
-  if(gfp->input_format == sf_mp1 && gfp->decode_only)
-    gfp->totalframes = (gfp->num_samples+383)/384;
-  else
-  if(gfp->input_format == sf_mp2 && gfp->decode_only)
-    gfp->totalframes = (gfp->num_samples+1151)/1152;
-  else
-    gfp->totalframes = 2+ gfp->num_samples/(gfc->resample_ratio*gfp->framesize);
-
-
 
   /* 44.1kHz at 56kbs/channel: compression factor of 12.6
      44.1kHz at 64kbs/channel: compression factor of 11.025
@@ -425,14 +411,12 @@ int lame_init_params(lame_global_flags *gfp)
 
   gfc->samplerate_index = SmpFrqIndex(gfp->out_samplerate, &gfp->version);
   if( gfc->samplerate_index < 0) {
-    display_bitrates(stderr);
     return -1;
   }
   if (gfp->free_format) {
     gfc->bitrate_index=0;
   }else{
     if( (gfc->bitrate_index = BitrateIndex(gfp->brate, gfp->version,gfp->out_samplerate)) < 0) {
-      display_bitrates(stderr);
       return -1;
     }
   }
@@ -445,7 +429,6 @@ int lame_init_params(lame_global_flags *gfp)
       gfc->VBR_max_bitrate=14;   /* default: allow 320kbs */
     }else{
       if( (gfc->VBR_max_bitrate  = BitrateIndex(gfp->VBR_max_bitrate_kbps, gfp->version,gfp->out_samplerate)) < 0) {
-	display_bitrates(stderr);
 	return -1;
       }
     }
@@ -453,7 +436,6 @@ int lame_init_params(lame_global_flags *gfp)
       gfc->VBR_min_bitrate=1;  	/* 8 or 32 kbps */
     }else{
       if( (gfc->VBR_min_bitrate  = BitrateIndex(gfp->VBR_min_bitrate_kbps, gfp->version,gfp->out_samplerate)) < 0) {
-	display_bitrates(stderr);
 	return -1;
       }
     }
@@ -618,7 +600,7 @@ int lame_init_params(lame_global_flags *gfp)
     gfc->noise_shaping=3;       /* not yet coded */
     gfc->noise_shaping_stop=2;  /* not yet coded */
     gfc->use_best_huffman=2;   /* not yet coded */
-    return -1;
+    return -2;
   }
 
 
@@ -694,7 +676,6 @@ void lame_print_config(lame_global_flags *gfp)
 {
   lame_internal_flags *gfc=gfp->internal_flags;
 
-  static const char *mode_names[4] = { "stereo", "j-stereo", "dual-ch", "single-ch" };
   FLOAT out_samplerate=gfp->out_samplerate/1000.0;
   FLOAT in_samplerate = gfc->resample_ratio*out_samplerate;
 
@@ -723,38 +704,6 @@ void lame_print_config(lame_global_flags *gfp)
     MSGF("careful noise shaping, only maximum distorted band at once\n");
   }
 #endif
-  if (gfp->gtkflag) {
-    MSGF("Analyzing %s \n",gfp->inPath);
-  }
-  else {
-    MSGF("Encoding %s to %s\n",
-	    (strcmp(gfp->inPath, "-")? gfp->inPath : "<stdin>"),
-	    (strcmp(gfp->outPath, "-")? gfp->outPath : "<stdout>"));
-    if (gfp->ogg) {
-      MSGF("Encoding as %.1f kHz VBR Ogg Vorbis \n",
-	      gfp->out_samplerate/1000.0);
-    }else
-    if (gfp->VBR==vbr_mt || gfp->VBR==vbr_rh || gfp->VBR==vbr_mtrh)
-      MSGF("Encoding as %.1f kHz VBR(q=%i) %s MPEG-%g LayerIII (%4.1fx estimated) qval=%i\n",
-	      gfp->out_samplerate/1000.0,
-	      gfp->VBR_q,mode_names[gfp->mode],
-              2-gfp->version+0.5*(gfp->out_samplerate<16000),
-              gfp->compression_ratio,gfp->quality);
-    else
-    if (gfp->VBR==vbr_abr)
-      MSGF("Encoding as %.1f kHz average %d kbps %s MPEG-%g LayerIII (%4.1fx) qval=%i\n",
-	      gfp->out_samplerate/1000.0,
-	      gfp->VBR_mean_bitrate_kbps,mode_names[gfp->mode],
-              2-gfp->version+0.5*(gfp->out_samplerate<16000),
-              gfp->compression_ratio,gfp->quality);
-    else {
-      MSGF("Encoding as %.1f kHz %d kbps %s MPEG-%g LayerIII (%4.1fx)  qval=%i\n",
-	      gfp->out_samplerate/1000.0,gfp->brate,
-	      mode_names[gfp->mode],
-              2-gfp->version+0.5*(gfp->out_samplerate<16000),
-              gfp->compression_ratio,gfp->quality);
-    }
-  }
   if (gfp->free_format) {
     MSGF("Warning: many decoders cannot handle free format bitstreams\n");
     if (gfp->brate>320) {
@@ -1064,8 +1013,6 @@ int    lame_encode_finish (
   }
   mp3buffer_size_remaining = mp3buffer_size - mp3count;
 
-  gfp->frameNum--;
-
 
   /* if user specifed buffer size = 0, dont check size */
   if (mp3buffer_size == 0) mp3buffer_size_remaining=0;  
@@ -1243,7 +1190,6 @@ int lame_init(lame_global_flags *gfp)
 
   gfp->bWriteVbrTag=1;
   gfp->quality=5;
-  gfp->input_format=sf_unknown;
 
   gfp->lowpassfreq=0;
   gfp->highpassfreq=0;

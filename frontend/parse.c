@@ -19,14 +19,22 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
 #include <assert.h>
-#include "util.h"
+#include "lame.h"
 #include "id3tag.h"
-#include "get_audio.h"
+
 #include "brhist.h"
-#include "version.h"
+#include "parse.h"
+#include "main.h"
+#include "get_audio.h"
 
-
+#define LAME_EXIT(n)		exit(n)
+#define LAME_NORMAL_EXIT()	exit(0)
+#define LAME_ERROR_EXIT()	exit(1)
+#define LAME_FATAL_EXIT()	exit(2)
 
 
 /************************************************************************
@@ -39,46 +47,46 @@
 
 void lame_print_license ( lame_global_flags* gfp, const char* ProgramName )  /* print version,license & exit */
 {
-    LAME_PRINT_VERSION1 ();
-    PRINTF1 ("\n");
-    PRINTF1 ("Can I use LAME in my commercial program?\n");
-    PRINTF1 ("\n");
-    PRINTF1 ("Yes, you can, under the restrictions of the LGPL.  In particular, you\n");
-    PRINTF1 ("can include a compiled version of the LAME library (for example,\n");
-    PRINTF1 ("lame.dll) with a commercial program.  Some notable requirements of\n");
-    PRINTF1 ("the LGPL:\n");
-    PRINTF1 ("\n");
-    PRINTF1 ("1. In your program, you cannot include any source code from LAME, with\n");
-    PRINTF1 ("   the exception of files whose only purpose is to describe the library\n");
-    PRINTF1 ("   interface (such as lame.h).\n");
-    PRINTF1 ("\n");
-    PRINTF1 ("2. Any modifications of LAME must be released under the LGPL.\n");
-    PRINTF1 ("   The LAME project (www.mp3dev.org) would appreciate being\n");
-    PRINTF1 ("   notified of any modifications.\n");
-    PRINTF1 ("\n");
-    PRINTF1 ("3. You must give prominent notice that your program is:\n");
-    PRINTF1 ("      A. using LAME (including version number)\n");
-    PRINTF1 ("      B. LAME is under the LGPL\n");
-    PRINTF1 ("      C. Provide a copy of the LGPL.  (the file COPYING contains the LGPL)\n");
-    PRINTF1 ("      D. Provide a copy of LAME source, or a pointer where the LAME\n");
-    PRINTF1 ("         source can be obtained (such as www.mp3dev.org)\n");
-    PRINTF1 ("   An example of prominent notice would be an \"About the LAME encoding engine\"\n");
-    PRINTF1 ("   button in some pull down menu within the executable of your program.\n");
-    PRINTF1 ("\n");
-    PRINTF1 ("4. If you determine that distribution of LAME requires a patent license,\n");
-    PRINTF1 ("   you must obtain such license.\n");
-    PRINTF1 ("\n");
-    PRINTF1 ("\n");
-    PRINTF1 ("*** IMPORTANT NOTE ***\n");
-    PRINTF1 ("\n");
-    PRINTF1 ("The decoding functions provided in LAME use the mpglib decoding engine which\n");
-    PRINTF1 ("is under the GPL.  They may not be used by any program not released under the\n");
-    PRINTF1 ("GPL unless you obtain such permission from the MPG123 project (www.mpg123.de).\n");
-    PRINTF1 ("\n");
-    PRINTF1 ("LAME has built-in support to read raw pcm and some wav and aiff files. More\n");
-    PRINTF1 ("robust file I/O can be handled by compiling in LIBSNDFILE, but LIBSNDFILE is\n");
-    PRINTF1 ("also under the GPL and may not be used by other programs not under the GPL.\n");
-    PRINTF1 ("\n");
+    lame_print_version (stdout);
+    printf ("\n");
+    printf ("Can I use LAME in my commercial program?\n");
+    printf ("\n");
+    printf ("Yes, you can, under the restrictions of the LGPL.  In particular, you\n");
+    printf ("can include a compiled version of the LAME library (for example,\n");
+    printf ("lame.dll) with a commercial program.  Some notable requirements of\n");
+    printf ("the LGPL:\n");
+    printf ("\n");
+    printf ("1. In your program, you cannot include any source code from LAME, with\n");
+    printf ("   the exception of files whose only purpose is to describe the library\n");
+    printf ("   interface (such as lame.h).\n");
+    printf ("\n");
+    printf ("2. Any modifications of LAME must be released under the LGPL.\n");
+    printf ("   The LAME project (www.mp3dev.org) would appreciate being\n");
+    printf ("   notified of any modifications.\n");
+    printf ("\n");
+    printf ("3. You must give prominent notice that your program is:\n");
+    printf ("      A. using LAME (including version number)\n");
+    printf ("      B. LAME is under the LGPL\n");
+    printf ("      C. Provide a copy of the LGPL.  (the file COPYING contains the LGPL)\n");
+    printf ("      D. Provide a copy of LAME source, or a pointer where the LAME\n");
+    printf ("         source can be obtained (such as www.mp3dev.org)\n");
+    printf ("   An example of prominent notice would be an \"About the LAME encoding engine\"\n");
+    printf ("   button in some pull down menu within the executable of your program.\n");
+    printf ("\n");
+    printf ("4. If you determine that distribution of LAME requires a patent license,\n");
+    printf ("   you must obtain such license.\n");
+    printf ("\n");
+    printf ("\n");
+    printf ("*** IMPORTANT NOTE ***\n");
+    printf ("\n");
+    printf ("The decoding functions provided in LAME use the mpglib decoding engine which\n");
+    printf ("is under the GPL.  They may not be used by any program not released under the\n");
+    printf ("GPL unless you obtain such permission from the MPG123 project (www.mpg123.de).\n");
+    printf ("\n");
+    printf ("LAME has built-in support to read raw pcm and some wav and aiff files. More\n");
+    printf ("robust file I/O can be handled by compiling in LIBSNDFILE, but LIBSNDFILE is\n");
+    printf ("also under the GPL and may not be used by other programs not under the GPL.\n");
+    printf ("\n");
     LAME_NORMAL_EXIT ();
 }
 
@@ -92,15 +100,15 @@ void lame_print_license ( lame_global_flags* gfp, const char* ProgramName )  /* 
 *
 ************************************************************************/
 
-void lame_usage ( lame_global_flags* gfp, const char* ProgramName )  /* print syntax & exit */
+void usage( lame_global_flags* gfp, const char* ProgramName )  /* print syntax & exit */
 {
-  LAME_PRINT_VERSION2();
-  PRINTF2("\n");
-  PRINTF2("usage: %s [options] <infile> [outfile]\n", ProgramName );
-  PRINTF2("\n<infile> and/or <outfile> can be \"-\", which means stdin/stdout.\n");
-  PRINTF2("\n");
-  PRINTF2("Try \"%s --help\"     for more information\n", ProgramName );
-  PRINTF2(" or \"%s --longhelp\" for a complete options list\n\n", ProgramName );
+  lame_print_version(stderr);
+  fprintf(stderr,"\n");
+  fprintf(stderr,"usage: %s [options] <infile> [outfile]\n", ProgramName );
+  fprintf(stderr,"\n<infile> and/or <outfile> can be \"-\", which means stdin/stdout.\n");
+  fprintf(stderr,"\n");
+  fprintf(stderr,"Try \"%s --help\"     for more information\n", ProgramName );
+  fprintf(stderr," or \"%s --longhelp\" for a complete options list\n\n", ProgramName );
   LAME_ERROR_EXIT();
 }
 
@@ -117,29 +125,29 @@ void lame_usage ( lame_global_flags* gfp, const char* ProgramName )  /* print sy
 
 void lame_short_help ( lame_global_flags* gfp, const char* ProgramName )  /* print syntax & exit */
 {
-  LAME_PRINT_VERSION1(); /* prints two lines */
-  PRINTF1("\n");
-  PRINTF1("usage: %s [options] <infile> [outfile]\n", ProgramName );
-  PRINTF1("\n<infile> and/or <outfile> can be \"-\", which means stdin/stdout.\n");
-  PRINTF1("\n");
-  PRINTF1("RECOMMENDED :  ");
-  PRINTF1("lame -h input.wav output.mp3\n");
-  PRINTF1("\n");
-  PRINTF1("OPTIONS :\n");
-  PRINTF1("    -b bitrate      set the bitrate, default 128 kbps\n");
-  PRINTF1("    -f              fast mode (lower quality)\n");
-  PRINTF1("    -h              higher quality, but a little slower.  Recommended.\n");
-  PRINTF1("    -k              keep ALL frequencies (disables all filters)\n");
-  PRINTF1("                    Can cause ringing and twinkling\n");
-  PRINTF1("    -m mode         (s)tereo, (j)oint, (f)orce or (m)ono  (default j)\n");
-  PRINTF1("                    force = force ms_stereo on all frames.\n");
-  PRINTF1("    -V n            quality setting for VBR.  default n=%i\n",gfp->VBR_q);
-  PRINTF1("\n");
-  PRINTF1("    --preset type   type must be phone, voice, fm, tape, hifi, cd or studio\n");
-  PRINTF1("                    \"--preset help\" gives some more infos on these\n");
-  PRINTF1("\n");
-  PRINTF1("    --longhelp      full list of options\n");
-  PRINTF1("\n");
+  lame_print_version(stdout); /* prints two lines */
+  printf("\n");
+  printf("usage: %s [options] <infile> [outfile]\n", ProgramName );
+  printf("\n<infile> and/or <outfile> can be \"-\", which means stdin/stdout.\n");
+  printf("\n");
+  printf("RECOMMENDED :  ");
+  printf("lame -h input.wav output.mp3\n");
+  printf("\n");
+  printf("OPTIONS :\n");
+  printf("    -b bitrate      set the bitrate, default 128 kbps\n");
+  printf("    -f              fast mode (lower quality)\n");
+  printf("    -h              higher quality, but a little slower.  Recommended.\n");
+  printf("    -k              keep ALL frequencies (disables all filters)\n");
+  printf("                    Can cause ringing and twinkling\n");
+  printf("    -m mode         (s)tereo, (j)oint, (f)orce or (m)ono  (default j)\n");
+  printf("                    force = force ms_stereo on all frames.\n");
+  printf("    -V n            quality setting for VBR.  default n=%i\n",gfp->VBR_q);
+  printf("\n");
+  printf("    --preset type   type must be phone, voice, fm, tape, hifi, cd or studio\n");
+  printf("                    \"--preset help\" gives some more infos on these\n");
+  printf("\n");
+  printf("    --longhelp      full list of options\n");
+  printf("\n");
  
   LAME_NORMAL_EXIT();
 }
@@ -154,119 +162,154 @@ void lame_short_help ( lame_global_flags* gfp, const char* ProgramName )  /* pri
 
 void lame_help ( lame_global_flags* gfp, const char* ProgramName )  /* print syntax & exit */
 {
-  LAME_PRINT_VERSION1();
-  PRINTF1("\n");
-  PRINTF1("usage: %s [options] <infile> [outfile]\n", ProgramName );
-  PRINTF1("\n<infile> and/or <outfile> can be \"-\", which means stdin/stdout.\n");
-  PRINTF1("\n");
-  PRINTF1("RECOMMENDED :  ");
-  PRINTF1("lame -h input.mp3 output.wav\n");
-  PRINTF1("\n");
-  PRINTF1("OPTIONS :\n");
-  PRINTF1("  Input options:\n");
-  PRINTF1("    -r              input is raw pcm\n");
-  PRINTF1("    -x              force byte-swapping of input\n");
-  PRINTF1("    -s sfreq        sampling frequency of input file(kHz) - default 44.1kHz\n");
-  PRINTF1("    --mp1input      input file is a MPEG LayerI   file\n");
-  PRINTF1("    --mp2input      input file is a MPEG LayerII  file\n");
-  PRINTF1("    --mp3input      input file is a MPEG LayerIII file\n");
-  PRINTF1("    --ogginput      input file is a Ogg Vorbis file\n");
-  PRINTF1("\n");
-  PRINTF1("  Operational options:\n");
-  PRINTF1("    -m <mode>       (s)tereo, (j)oint, (f)orce or (m)ono  (default j)\n");
-  PRINTF1("                    force = force ms_stereo on all frames.\n");
-  PRINTF1("    -a              downmix from stereo to mono file for mono encoding\n");
-  PRINTF1("    -d              allow channels to have different blocktypes\n");
-  PRINTF1("    -S              don't print progress report, VBR histograms\n");
-  PRINTF1("    --disptime <arg>print progress report every arg seconds \n");
-  PRINTF1("    --ogg           encode to Ogg Vorbis instead of MP3\n");
-  PRINTF1("    --freeformat    produce a free format bitstream\n");
-  PRINTF1("    --decode        input=mp3 file, output=wav\n");
-  PRINTF1("    -t              disable writing wav header when using --decode\n");
-  PRINTF1("    --comp  <arg>   choose bitrate to achive a compression ratio of <arg>\n");
-  PRINTF1("    --scale <arg>   scale input (multiply PCM data) by <arg>  \n");
-  PRINTF1("    --athonly       only use the ATH for masking\n");
-  PRINTF1("    --noath         disable the ATH for masking\n");
-  PRINTF1("    --athlower x    lower the ATH x dB\n");
-  PRINTF1("    --raise-smr x   0 <= x <= 1, 0 default, 1 maximum SMR\n");
-  PRINTF1("    --short         use short blocks\n");
-  PRINTF1("    --noshort       do not use short blocks\n");
-  PRINTF1("    --voice         experimental voice mode\n");
-  PRINTF1("    --preset type   type must be phone, voice, fm, tape, hifi, cd or studio\n");
-  PRINTF1("                    \"--preset help\" gives some more infos on these\n");
-  PRINTF1("\n");
-  PRINTF1("  CBR (constant bitrate, the default) options:\n");
-  PRINTF1("    -h              higher quality, but a little slower.  Recommended.\n");
-  PRINTF1("    -f              fast mode (lower quality)\n");
-  PRINTF1("    -b <bitrate>    set the bitrate in kbps, default 128 kbps\n");
-  PRINTF1("\n");
-  PRINTF1("  ABR options:\n");
-  PRINTF1("    --abr <bitrate> specify average bitrate desired (instead of quality)\n");
-  PRINTF1("\n");
-  PRINTF1("  VBR options:\n");
-  PRINTF1("    -v              use variable bitrate (VBR)\n");
-  PRINTF1("    --vbr-old       use old variable bitrate (VBR) routine\n");
-  PRINTF1("    --vbr-new       use new variable bitrate (VBR) routine\n");
-  PRINTF1("    -V n            quality setting for VBR.  default n=%i\n",gfp->VBR_q);
-  PRINTF1("                    0=high quality,bigger files. 9=smaller files\n");
-  PRINTF1("    -b <bitrate>    specify minimum allowed bitrate, default  32 kbps\n");
-  PRINTF1("    -B <bitrate>    specify maximum allowed bitrate, default 320 kbps\n");
-  PRINTF1("    -F              strictly enforce the -b option, for use with players that\n");
-  PRINTF1("                    do not support low bitrate mp3 (Apex AD600-A DVD/mp3 player)\n");
-  PRINTF1("    -t              disable writing Xing VBR informational tag\n");
-  PRINTF1("    --nohist        disable VBR histogram display\n");
-  PRINTF1("\n");
-  PRINTF1("  MP3 header/stream options:\n");
-  PRINTF1("    -e <emp>        de-emphasis n/5/c  (obsolete)\n");
-  PRINTF1("    -c              mark as copyright\n");
-  PRINTF1("    -o              mark as non-original\n");
-  PRINTF1("    -p              error protection.  adds 16bit checksum to every frame\n");
-  PRINTF1("                    (the checksum is computed correctly)\n");
-  PRINTF1("    --nores         disable the bit reservoir\n");
-  PRINTF1("    --strictly-enforce-ISO   comply as much as possible to ISO MPEG spec\n");
-  PRINTF1("\n");
-  PRINTF1("  Filter options:\n");
-  PRINTF1("    -k              keep ALL frequencies (disables all filters),\n");
-  PRINTF1("                    Can cause ringing and twinkling\n");
-  PRINTF1("  --lowpass <freq>        frequency(kHz), lowpass filter cutoff above freq\n");
-  PRINTF1("  --lowpass-width <freq>  frequency(kHz) - default 15%% of lowpass freq\n");
-  PRINTF1("  --highpass <freq>       frequency(kHz), highpass filter cutoff below freq\n");
-  PRINTF1("  --highpass-width <freq> frequency(kHz) - default 15%% of highpass freq\n");
-  PRINTF1("  --resample <sfreq>  sampling frequency of output file(kHz)- default=automatic\n");
-  PRINTF1("  --cwlimit <freq>    compute tonality up to freq (in kHz) default 8.8717\n");
-  PRINTF1("\n");
-  PRINTF1("  ID3 tag options:\n");
-  PRINTF1("    --tt <title>    audio/song title (max 30 chars for version 1 tag)\n");
-  PRINTF1("    --ta <artist>   audio/song artist (max 30 chars for version 1 tag)\n");
-  PRINTF1("    --tl <album>    audio/song album (max 30 chars for version 1 tag)\n");
-  PRINTF1("    --ty <year>     audio/song year of issue (1 to 9999)\n");
-  PRINTF1("    --tc <comment>  user-defined text (max 30 chars for v1 tag, 28 for v1.1)\n");
-  PRINTF1("    --tn <track>    audio/song track number (1 to 99, creates v1.1 tag)\n");
-  PRINTF1("    --tg <genre>    audio/song genre (name or number in list)\n");
-  PRINTF1("    --add-id3v2     force addition of version 2 tag\n");
-  PRINTF1("    --id3v1-only    add only a version 1 tag\n");
-  PRINTF1("    --id3v2-only    add only a version 2 tag\n");
-  PRINTF1("    --space-id3v1   pad version 1 tag with spaces instead of nulls\n");
-  PRINTF1("    --pad-id3v2     pad version 2 tag with extra 128 bytes\n");
-  PRINTF1("    --genre-list    print alphabetically sorted ID3 genre list and exit\n");
-  PRINTF1("\n");
-  PRINTF1("    Note: A version 2 tag will NOT be added unless one of the input fields\n");
-  PRINTF1("    won't fit in a version 1 tag (e.g. the title string is longer than 30\n");
-  PRINTF1("    characters), or the `--add-id3v2' or `--id3v2-only' options are used,\n");
-  PRINTF1("    or output is redirected to stdout.\n");
-  PRINTF1("\n");
+  lame_print_version(stdout);
+  printf("\n");
+  printf("usage: %s [options] <infile> [outfile]\n", ProgramName );
+  printf("\n<infile> and/or <outfile> can be \"-\", which means stdin/stdout.\n");
+  printf("\n");
+  printf("RECOMMENDED :  ");
+  printf("lame -h input.mp3 output.wav\n");
+  printf("\n");
+  printf("OPTIONS :\n");
+  printf("  Input options:\n");
+  printf("    -r              input is raw pcm\n");
+  printf("    -x              force byte-swapping of input\n");
+  printf("    -s sfreq        sampling frequency of input file(kHz) - default 44.1kHz\n");
+  printf("    --mp1input      input file is a MPEG LayerI   file\n");
+  printf("    --mp2input      input file is a MPEG LayerII  file\n");
+  printf("    --mp3input      input file is a MPEG LayerIII file\n");
+  printf("    --ogginput      input file is a Ogg Vorbis file\n");
+  printf("\n");
+  printf("  Operational options:\n");
+  printf("    -m <mode>       (s)tereo, (j)oint, (f)orce or (m)ono  (default j)\n");
+  printf("                    force = force ms_stereo on all frames.\n");
+  printf("    -a              downmix from stereo to mono file for mono encoding\n");
+  printf("    -d              allow channels to have different blocktypes\n");
+  printf("    -S              don't print progress report, VBR histograms\n");
+  printf("    --disptime <arg>print progress report every arg seconds \n");
+  printf("    --ogg           encode to Ogg Vorbis instead of MP3\n");
+  printf("    --freeformat    produce a free format bitstream\n");
+  printf("    --decode        input=mp3 file, output=wav\n");
+  printf("    -t              disable writing wav header when using --decode\n");
+  printf("    --comp  <arg>   choose bitrate to achive a compression ratio of <arg>\n");
+  printf("    --scale <arg>   scale input (multiply PCM data) by <arg>  \n");
+  printf("    --athonly       only use the ATH for masking\n");
+  printf("    --noath         disable the ATH for masking\n");
+  printf("    --athlower x    lower the ATH x dB\n");
+  printf("    --raise-smr x   0 <= x <= 1, 0 default, 1 maximum SMR\n");
+  printf("    --short         use short blocks\n");
+  printf("    --noshort       do not use short blocks\n");
+  printf("    --voice         experimental voice mode\n");
+  printf("    --preset type   type must be phone, voice, fm, tape, hifi, cd or studio\n");
+  printf("                    \"--preset help\" gives some more infos on these\n");
+  printf("\n");
+  printf("  CBR (constant bitrate, the default) options:\n");
+  printf("    -h              higher quality, but a little slower.  Recommended.\n");
+  printf("    -f              fast mode (lower quality)\n");
+  printf("    -b <bitrate>    set the bitrate in kbps, default 128 kbps\n");
+  printf("\n");
+  printf("  ABR options:\n");
+  printf("    --abr <bitrate> specify average bitrate desired (instead of quality)\n");
+  printf("\n");
+  printf("  VBR options:\n");
+  printf("    -v              use variable bitrate (VBR)\n");
+  printf("    --vbr-old       use old variable bitrate (VBR) routine\n");
+  printf("    --vbr-new       use new variable bitrate (VBR) routine\n");
+  printf("    -V n            quality setting for VBR.  default n=%i\n",gfp->VBR_q);
+  printf("                    0=high quality,bigger files. 9=smaller files\n");
+  printf("    -b <bitrate>    specify minimum allowed bitrate, default  32 kbps\n");
+  printf("    -B <bitrate>    specify maximum allowed bitrate, default 320 kbps\n");
+  printf("    -F              strictly enforce the -b option, for use with players that\n");
+  printf("                    do not support low bitrate mp3 (Apex AD600-A DVD/mp3 player)\n");
+  printf("    -t              disable writing Xing VBR informational tag\n");
+  printf("    --nohist        disable VBR histogram display\n");
+  printf("\n");
+  printf("  MP3 header/stream options:\n");
+  printf("    -e <emp>        de-emphasis n/5/c  (obsolete)\n");
+  printf("    -c              mark as copyright\n");
+  printf("    -o              mark as non-original\n");
+  printf("    -p              error protection.  adds 16bit checksum to every frame\n");
+  printf("                    (the checksum is computed correctly)\n");
+  printf("    --nores         disable the bit reservoir\n");
+  printf("    --strictly-enforce-ISO   comply as much as possible to ISO MPEG spec\n");
+  printf("\n");
+  printf("  Filter options:\n");
+  printf("    -k              keep ALL frequencies (disables all filters),\n");
+  printf("                    Can cause ringing and twinkling\n");
+  printf("  --lowpass <freq>        frequency(kHz), lowpass filter cutoff above freq\n");
+  printf("  --lowpass-width <freq>  frequency(kHz) - default 15%% of lowpass freq\n");
+  printf("  --highpass <freq>       frequency(kHz), highpass filter cutoff below freq\n");
+  printf("  --highpass-width <freq> frequency(kHz) - default 15%% of highpass freq\n");
+  printf("  --resample <sfreq>  sampling frequency of output file(kHz)- default=automatic\n");
+  printf("  --cwlimit <freq>    compute tonality up to freq (in kHz) default 8.8717\n");
+  printf("\n");
+  printf("  ID3 tag options:\n");
+  printf("    --tt <title>    audio/song title (max 30 chars for version 1 tag)\n");
+  printf("    --ta <artist>   audio/song artist (max 30 chars for version 1 tag)\n");
+  printf("    --tl <album>    audio/song album (max 30 chars for version 1 tag)\n");
+  printf("    --ty <year>     audio/song year of issue (1 to 9999)\n");
+  printf("    --tc <comment>  user-defined text (max 30 chars for v1 tag, 28 for v1.1)\n");
+  printf("    --tn <track>    audio/song track number (1 to 99, creates v1.1 tag)\n");
+  printf("    --tg <genre>    audio/song genre (name or number in list)\n");
+  printf("    --add-id3v2     force addition of version 2 tag\n");
+  printf("    --id3v1-only    add only a version 1 tag\n");
+  printf("    --id3v2-only    add only a version 2 tag\n");
+  printf("    --space-id3v1   pad version 1 tag with spaces instead of nulls\n");
+  printf("    --pad-id3v2     pad version 2 tag with extra 128 bytes\n");
+  printf("    --genre-list    print alphabetically sorted ID3 genre list and exit\n");
+  printf("\n");
+  printf("    Note: A version 2 tag will NOT be added unless one of the input fields\n");
+  printf("    won't fit in a version 1 tag (e.g. the title string is longer than 30\n");
+  printf("    characters), or the `--add-id3v2' or `--id3v2-only' options are used,\n");
+  printf("    or output is redirected to stdout.\n");
+  printf("\n");
 #ifdef HAVEVORBIS
-  PRINTF1("    Note: All `--t*' options (except those for track and genre) work for Ogg\n");
-  PRINTF1("    Vorbis output, but other ID3-specific options are ignored.\n");
-  PRINTF1("\n");
+  printf("    Note: All `--t*' options (except those for track and genre) work for Ogg\n");
+  printf("    Vorbis output, but other ID3-specific options are ignored.\n");
+  printf("\n");
 #endif
 #ifdef HAVEGTK
-  PRINTF1("    -g              run graphical analysis on <infile>\n");
+  printf("    -g              run graphical analysis on <infile>\n");
 #endif
-  DISPLAY_BITRATES1();
+  display_bitrates(stdout);
   LAME_NORMAL_EXIT();
 }
 
+
+
+void display_bitrates(FILE *out_fh)
+{
+  int index,version;
+
+  version = 1;
+  fprintf(out_fh,"\n");
+  fprintf(out_fh,"MPEG1 layer III samplerates(kHz): 32 44.1 48 \n");
+
+  fprintf(out_fh,"bitrates(kbs): ");
+  for (index=1;index<15;index++) {
+    fprintf(out_fh,"%i ",bitrate_table[version][index]);
+  }
+  fprintf(out_fh,"\n");
+  
+  
+  version = 0;
+  fprintf(out_fh,"\n");
+  fprintf(out_fh,"MPEG2 layer III samplerates(kHz): 16 22.05 24 \n");
+  fprintf(out_fh,"bitrates(kbs): ");
+  for (index=1;index<15;index++) {
+    fprintf(out_fh,"%i ",bitrate_table[version][index]);
+  }
+  fprintf(out_fh,"\n");
+
+  version = 0;
+  fprintf(out_fh,"\n");
+  fprintf(out_fh,"MPEG2.5 layer III samplerates(kHz): 8 11.025 12 \n");
+  fprintf(out_fh,"bitrates(kbs): ");
+  for (index=1;index<15;index++) {
+    fprintf(out_fh,"%i ",bitrate_table[version][index]);
+  }
+  fprintf(out_fh,"\n");
+}
 
 
 /************************************************************************
@@ -352,91 +395,91 @@ void lame_presets_info ( lame_global_flags* gfp, const char* ProgramName )  /* p
 {
     size_t  i;
 
-    PRINTF1 ("\n");    
-    LAME_PRINT_VERSION1 ();
-    PRINTF1 ("\n");
-    PRINTF1 ("Presets are some shortcuts for common settings.\n");
-    PRINTF1 ("They can be combined with -v if you want VBR MP3s.\n");
+    printf ("\n");    
+    lame_print_version(stdout);
+    printf ("\n");
+    printf ("Presets are some shortcuts for common settings.\n");
+    printf ("They can be combined with -v if you want VBR MP3s.\n");
     
-    PRINTF1 ("\n                ");
+    printf ("\n                ");
     for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
-        PRINTF1 ( strlen(Presets[i].name) <= 4 ? "%5s " : " %-5s", Presets[i].name );
-    PRINTF1 ("\n=================");
+        printf ( strlen(Presets[i].name) <= 4 ? "%5s " : " %-5s", Presets[i].name );
+    printf ("\n=================");
     for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
-        PRINTF1 ( "======" );
-    PRINTF1 ("\n--resample      ");
+        printf ( "======" );
+    printf ("\n--resample      ");
     for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
         if ( Presets[i].resample < 0 )
-            PRINTF1 ( "      " );
+            printf ( "      " );
         else
-            PRINTF1 ( "%6.3g",  Presets[i].resample*1.e-3 );
-    PRINTF1 ("\n--highpass      ");
+            printf ( "%6.3g",  Presets[i].resample*1.e-3 );
+    printf ("\n--highpass      ");
     for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
         if ( Presets[i].highpass_freq < 0 )
-            PRINTF1 ( "      " );
+            printf ( "      " );
         else
-            PRINTF1 ( "%6.3g",  Presets[i].highpass_freq*1.e-3 );
-    PRINTF1 ("\n--lowpass       ");
+            printf ( "%6.3g",  Presets[i].highpass_freq*1.e-3 );
+    printf ("\n--lowpass       ");
     for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
         if ( Presets[i].lowpass_freq < 0 )
-            PRINTF1 ( "      " );
+            printf ( "      " );
         else
-            PRINTF1 ( "%6.3g",  Presets[i].lowpass_freq*1.e-3 );
-    PRINTF1 ("\n--lowpass-width ");
+            printf ( "%6.3g",  Presets[i].lowpass_freq*1.e-3 );
+    printf ("\n--lowpass-width ");
     for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
         if ( Presets[i].lowpass_width < 0 )
-            PRINTF1 ( "      " );
+            printf ( "      " );
         else
-            PRINTF1 ( "%6.3g",  Presets[i].lowpass_width*1.e-3 );
-    PRINTF1 ("\n--noshort       ");
+            printf ( "%6.3g",  Presets[i].lowpass_width*1.e-3 );
+    printf ("\n--noshort       ");
     for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
         switch ( Presets[i].no_short_blocks ) {
-        case  1: PRINTF1 ( "   yes" ); break;
-        case  0: PRINTF1 ( "    no" ); break;
-        case -1: PRINTF1 ( "      " ); break;
+        case  1: printf ( "   yes" ); break;
+        case  0: printf ( "    no" ); break;
+        case -1: printf ( "      " ); break;
         default: assert (0);           break;
         }
-    PRINTF1 ("\n                ");
+    printf ("\n                ");
     for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
         switch ( Presets[i].mode ) {
-        case MPG_MD_MONO:         PRINTF1 ("   -mm"); break;
-        case MPG_MD_JOINT_STEREO: PRINTF1 ("   -mj"); break;
-        case MPG_MD_STEREO:       PRINTF1 ("   -ms"); break;
-        case -1:                  PRINTF1 ("      "); break;
+        case MPG_MD_MONO:         printf ("   -mm"); break;
+        case MPG_MD_JOINT_STEREO: printf ("   -mj"); break;
+        case MPG_MD_STEREO:       printf ("   -ms"); break;
+        case -1:                  printf ("      "); break;
         default:                  assert (0);         break;
         }
-    PRINTF1 ("\n                ");
+    printf ("\n                ");
     for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
         switch ( Presets[i].quality ) {
-	case  2: PRINTF1 ("    -h"); break;
-	case  5: PRINTF1 ("      "); break;
-	case  7: PRINTF1 ("    -f"); break;
+	case  2: printf ("    -h"); break;
+	case  5: printf ("      "); break;
+	case  7: printf ("    -f"); break;
 	default: assert (0);         break;
     }
-    PRINTF1 ("\n-b              ");
+    printf ("\n-b              ");
     for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
-        PRINTF1 ( "%6u", Presets[i].cbr );
-    PRINTF1 ("\n-- PLUS WITH -v ");
+        printf ( "%6u", Presets[i].cbr );
+    printf ("\n-- PLUS WITH -v ");
     for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
-        PRINTF1 ( "------" );
-    PRINTF1 ("-\n-V              ");
+        printf ( "------" );
+    printf ("-\n-V              ");
     for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
-        PRINTF1 ( "%6u", Presets[i].vbr_mode );
-    PRINTF1 ("\n-b              ");
+        printf ( "%6u", Presets[i].vbr_mode );
+    printf ("\n-b              ");
     for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
-        PRINTF1 ( "%6u", Presets[i].vbr_min );
-    PRINTF1 ("\n-B              ");
+        printf ( "%6u", Presets[i].vbr_min );
+    printf ("\n-B              ");
     for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
-        PRINTF1 ( "%6u", Presets[i].vbr_max );
-    PRINTF1 ("\n----------------");
+        printf ( "%6u", Presets[i].vbr_max );
+    printf ("\n----------------");
     for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
-        PRINTF1 ( "------" );
+        printf ( "------" );
   
-    PRINTF1 ("-\nEXAMPLES:\n");
-    PRINTF1 (" a) --preset fm\n");
-    PRINTF1 ("    equal to: -mj -b112 --resample 32 --lowpass 15 --lowpass-width 0\n");
-    PRINTF1 (" b) -v --preset studio\n");
-    PRINTF1 ("    equals to: -h -ms -V0 -b160 -B320\n");
+    printf ("-\nEXAMPLES:\n");
+    printf (" a) --preset fm\n");
+    printf ("    equal to: -mj -b112 --resample 32 --lowpass 15 --lowpass-width 0\n");
+    printf (" b) -v --preset studio\n");
+    printf ("    equals to: -h -ms -V0 -b160 -B320\n");
 
     LAME_NORMAL_EXIT ();
 }
@@ -473,7 +516,7 @@ void lame_presets_setup ( lame_global_flags* gfp, const char* preset_name, const
 
 static void genre_list_handler (int num,const char *name,void *cookie)
 {
-    PRINTF1 ("%3d %s\n", num, name);
+    printf ("%3d %s\n", num, name);
 }
 
 
@@ -494,12 +537,30 @@ static void genre_list_handler (int num,const char *name,void *cookie)
 
 // buggy: Should analyze file contents instead of directory contents (file name)
 
+/* would use real "strcasecmp" but it isn't portable */
+static int local_strcasecmp ( const char* s1, const char* s2 )
+{
+    unsigned char c1;
+    unsigned char c2;
+    
+    do {
+        c1 = tolower(*s1);
+        c2 = tolower(*s2);
+        if (!c1) {
+            break;
+        }
+        ++s1;
+        ++s2;
+    } while (c1 == c2);
+    return c1 - c2;
+}
+
 static int filename_to_type ( const char* FileName )
 {
     size_t len = strlen (FileName);
     
     if ( len < 4 ) return sf_unknown;
-    
+
     FileName += len-4;
     if ( 0 == local_strcasecmp ( FileName, ".mpg" ) ) return sf_mp1;
     if ( 0 == local_strcasecmp ( FileName, ".mp1" ) ) return sf_mp1;
@@ -526,7 +587,7 @@ static int resample_rate ( double freq )
     case 32: return 32000;
     case 44: return 44100;
     case 48: return 48000;
-    default: ERRORF ("Illegal resample frequency: %.3f kHz\n", freq );
+    default: fprintf(stderr,"Illegal resample frequency: %.3f kHz\n", freq );
              return 0;
     }
 }
@@ -539,7 +600,7 @@ static int resample_rate ( double freq )
 #define T_ELSE             } else {
 #define T_END              }
 
-void lame_parse_args ( lame_global_flags* gfp, int argc, char** argv )
+void parse_args ( lame_global_flags* gfp, int argc, char** argv )
 {
     int         err;
     int         i;
@@ -548,7 +609,7 @@ void lame_parse_args ( lame_global_flags* gfp, int argc, char** argv )
     double      freq;
     const char* ProgramName  = argv[0]; 
 
-    gfp -> inPath [0] = '\0';   
+    inPath [0] = '\0';   
     gfp -> outPath[0] = '\0';
     /* turn on display options. user settings may turn them off below */
     gfp -> silent        = 0;
@@ -570,8 +631,8 @@ void lame_parse_args ( lame_global_flags* gfp, int argc, char** argv )
 	    nextArg = i+1 < argc  ?  argv[i+1]  :  "";
 	    
             if (! *token) { /* The user wants to use stdin and/or stdout. */
-	        if (gfp -> inPath [0] == '\0')
-		    strncpy (gfp->inPath, argv[i],MAX_NAME_SIZE);
+	        if (inPath [0] == '\0')
+		    strncpy (inPath, argv[i],MAX_NAME_SIZE);
 	        else 
 		if (gfp -> outPath[0] == '\0') 
 		    strncpy (gfp->outPath, argv[i],MAX_NAME_SIZE);
@@ -606,26 +667,26 @@ void lame_parse_args ( lame_global_flags* gfp, int argc, char** argv )
 		    gfp->VBR_mean_bitrate_kbps = Max(gfp->VBR_mean_bitrate_kbps,   8); 
 		
 		T_ELIF ("mp1input")
-		    gfp->input_format=sf_mp1;
+		    input_format=sf_mp1;
 		
 		T_ELIF ("mp2input")
-		    gfp->input_format=sf_mp2;
+		    input_format=sf_mp2;
 		
 		T_ELIF ("mp3input")
-		    gfp->input_format=sf_mp3;
+		    input_format=sf_mp3;
 		
 		T_ELIF ("ogginput")
 #ifdef HAVEVORBIS
-		    gfp->input_format=sf_ogg;
+		    input_format=sf_ogg;
 #else
-		    ERRORF("Error: LAME not compiled with Vorbis support\n");
+		    fprintf(stderr,"Error: LAME not compiled with Vorbis support\n");
 		    LAME_ERROR_EXIT();
 #endif
 		T_ELIF ("ogg")
 #ifdef HAVEVORBIS
 		    gfp->ogg=1;
 #else
-		    ERRORF("Error: LAME not compiled with Vorbis support\n");
+		    fprintf(stderr,"Error: LAME not compiled with Vorbis support\n");
 		    LAME_ERROR_EXIT();
 #endif
 		T_ELIF ("phone")
@@ -719,7 +780,7 @@ void lame_parse_args ( lame_global_flags* gfp, int argc, char** argv )
 		T_ELIF ("tg")
 		    argUsed=1;
 		    if (id3tag_set_genre(&gfp->tag_spec, nextArg)) {
-			ERRORF("Unknown genre: %s.  Specify genre name or number\n", nextArg);
+			fprintf(stderr,"Unknown genre: %s.  Specify genre name or number\n", nextArg);
 			LAME_ERROR_EXIT();
 		    }
 		
@@ -748,7 +809,7 @@ void lame_parse_args ( lame_global_flags* gfp, int argc, char** argv )
 		    /* useful are 0.001 kHz...50 kHz, 50 Hz...50000 Hz */
 		    gfp -> lowpassfreq = freq * (freq < 50. ? 1.e3 : 1.e0 ) + 0.5;
 		    if ( freq < 0.001 || freq > 50000. ) {
-			ERRORF("Must specify lowpass with --lowpass freq, freq >= 0.001 kHz\n");
+			fprintf(stderr,"Must specify lowpass with --lowpass freq, freq >= 0.001 kHz\n");
 			LAME_ERROR_EXIT();
 		    }
 		
@@ -756,7 +817,7 @@ void lame_parse_args ( lame_global_flags* gfp, int argc, char** argv )
 		    argUsed=1;
 		    gfp->lowpasswidth =  1000.0 * atof( nextArg ) + 0.5;
 		    if (gfp->lowpasswidth  < 0) {
-			ERRORF("Must specify lowpass width with --lowpass-width freq, freq >= 0 kHz\n");
+			fprintf(stderr,"Must specify lowpass width with --lowpass-width freq, freq >= 0 kHz\n");
 			LAME_ERROR_EXIT();
 		    }
 		
@@ -766,7 +827,7 @@ void lame_parse_args ( lame_global_flags* gfp, int argc, char** argv )
 		    /* useful are 0.001 kHz...16 kHz, 16 Hz...50000 Hz */
 		    gfp->highpassfreq =  freq * (freq < 16. ? 1.e3 : 1.e0 ) + 0.5;
 		    if ( freq < 0.001 || freq > 50000. ) {
-			ERRORF("Must specify highpass with --highpass freq, freq >= 0.001 kHz\n");
+			fprintf(stderr,"Must specify highpass with --highpass freq, freq >= 0.001 kHz\n");
 			LAME_ERROR_EXIT();
 		    }
 		
@@ -774,7 +835,7 @@ void lame_parse_args ( lame_global_flags* gfp, int argc, char** argv )
 		    argUsed=1;
 		    gfp->highpasswidth =  1000.0 * atof( nextArg ) + 0.5;
 		    if (gfp->highpasswidth  < 0) {
-			ERRORF("Must specify highpass width with --highpass-width freq, freq >= 0 kHz\n");
+			fprintf(stderr,"Must specify highpass width with --highpass-width freq, freq >= 0 kHz\n");
 			LAME_ERROR_EXIT();
 		    }
 		
@@ -784,7 +845,7 @@ void lame_parse_args ( lame_global_flags* gfp, int argc, char** argv )
 		    /* useful are 0.001 kHz...50 kHz, 50 Hz...50000 Hz */
 		    gfp -> cwlimit = freq * ( freq <= 50. ? 1.e3 : 1.e0 );
 		    if (gfp->cwlimit <= 0 ) {
-			ERRORF("Must specify cwlimit with --cwlimit freq, freq >= 0.001 kHz\n");
+			fprintf(stderr,"Must specify cwlimit with --cwlimit freq, freq >= 0.001 kHz\n");
 			LAME_ERROR_EXIT();
 		    }
 		 
@@ -792,7 +853,7 @@ void lame_parse_args ( lame_global_flags* gfp, int argc, char** argv )
 		    argUsed=1;
 		    gfp->compression_ratio =  atof( nextArg );
 		    if (gfp->compression_ratio < 1.0 ) {
-			ERRORF("Must specify compression ratio >= 1.0\n");
+			fprintf(stderr,"Must specify compression ratio >= 1.0\n");
 			LAME_ERROR_EXIT();
 		    }
 		
@@ -827,7 +888,7 @@ void lame_parse_args ( lame_global_flags* gfp, int argc, char** argv )
                     argUsed = 1;
 		    gfp -> update_interval = atof (nextArg);
 		T_ELSE
-		    ERRORF ("%s: unrec option --%s\n", ProgramName, token);
+		    fprintf(stderr,"%s: unrec option --%s\n", ProgramName, token);
 		    
 		T_END
 		
@@ -847,7 +908,7 @@ void lame_parse_args ( lame_global_flags* gfp, int argc, char** argv )
 			case 'f': gfp -> force_ms = 1;               /* fall through */
 			case 'j': gfp -> mode = MPG_MD_JOINT_STEREO; break;
 			case 'm': gfp -> mode = MPG_MD_MONO;         break;
-			default : ERRORF ("%s: -m mode must be s/d/j/f/m not %s\n", ProgramName, arg);
+			default : fprintf(stderr,"%s: -m mode must be s/d/j/f/m not %s\n", ProgramName, arg);
 			    err = 1;
 			    break;
 			}
@@ -889,13 +950,13 @@ void lame_parse_args ( lame_global_flags* gfp, int argc, char** argv )
 			break;
 		    case 'r':  /* force raw pcm input file */
 #ifdef LIBSNDFILE
-			ERRORF("WARNING: libsndfile may ignore -r and perform fseek's on the input.\n"
+			fprintf(stderr,"WARNING: libsndfile may ignore -r and perform fseek's on the input.\n"
 			       "Compile without libsndfile if this is a problem.\n");
 #endif
-			gfp->input_format=sf_raw;
+			input_format=sf_raw;
 			break;
 		    case 'x':  /* force byte swapping */
-			gfp->swapbytes=TRUE;
+			swapbytes=TRUE;
 			break;
 		    case 'p': /* (jo) error_protection: add crc16 information to stream */
 			gfp->error_protection = 1; 
@@ -947,7 +1008,7 @@ void lame_parse_args ( lame_global_flags* gfp, int argc, char** argv )
 			case 'n': gfp -> emphasis = 0; break;
 			case '5': gfp -> emphasis = 1; break;
 			case 'c': gfp -> emphasis = 3; break;
-			default : ERRORF ("%s: -e emp must be n/5/c not %s\n", ProgramName, arg );
+			default : fprintf(stderr,"%s: -e emp must be n/5/c not %s\n", ProgramName, arg );
 			    err = 1;
 			    break;
 			}
@@ -963,7 +1024,7 @@ void lame_parse_args ( lame_global_flags* gfp, int argc, char** argv )
 		        lame_help(gfp,ProgramName);  /* doesn't return */
 		        
 		    default:    
-		        ERRORF("%s: unrec option %c\n", ProgramName, c);
+		        fprintf(stderr,"%s: unrec option %c\n", ProgramName, c);
 			err = 1; 
 			break;
 		    }
@@ -975,30 +1036,30 @@ void lame_parse_args ( lame_global_flags* gfp, int argc, char** argv )
 		}
 	    }	
 	} else {
-	    if (gfp->inPath [0] == '\0')       
-	        strncpy(gfp->inPath , argv[i], MAX_NAME_SIZE);
+	    if (inPath [0] == '\0')       
+	        strncpy(inPath , argv[i], MAX_NAME_SIZE);
 	    else 
 	    if (gfp->outPath[0] == '\0') 
 	        strncpy(gfp->outPath, argv[i], MAX_NAME_SIZE);
 	    else {
-		ERRORF("%s: excess arg %s\n", ProgramName, argv[i]);
+		fprintf(stderr,"%s: excess arg %s\n", ProgramName, argv[i]);
 		err = 1;
 	    }
 	}
     }  /* loop over args */
     
-    if ( err || gfp->inPath[0] == '\0' ) 
-        lame_usage (gfp,ProgramName);  /* never returns */
+    if ( err || inPath[0] == '\0' ) 
+        usage (gfp,ProgramName);  /* never returns */
 	
-    if ( gfp->inPath[0] == '-' ) 
+    if ( inPath[0] == '-' ) 
         gfp -> silent = 1;  /* turn off status - it's broken for stdin */
 	
     if ( gfp->outPath[0] == '\0' ) {
-	if ( gfp->inPath[0] == '-' ) {
+	if ( inPath[0] == '-' ) {
 	    /* if input is stdin, default output is stdout */
 	    strcpy(gfp->outPath,"-");
 	} else {
-	    strncpy(gfp->outPath, gfp->inPath, MAX_NAME_SIZE - 4);
+	    strncpy(gfp->outPath, inPath, MAX_NAME_SIZE - 4);
 	    if (gfp->decode_only) {
 	        strncat (gfp->outPath, ".wav", 4 );
 	    } else if (gfp->ogg) {
@@ -1013,28 +1074,28 @@ void lame_parse_args ( lame_global_flags* gfp, int argc, char** argv )
 	gfp->bWriteVbrTag=0; /* turn off VBR tag */
 	if (gfp->id3v1_enabled) {
 	    gfp->id3v1_enabled=0;     /* turn off ID3 version 1 tagging */
-	    ERRORF("ID3 version 1 tagging not supported for stdout.\n");
-	    ERRORF("Converting any ID3 tag data to version 2 format.\n");
+	    fprintf(stderr,"ID3 version 1 tagging not supported for stdout.\n");
+	    fprintf(stderr,"Converting any ID3 tag data to version 2 format.\n");
 	    id3tag_v2_only(&gfp->tag_spec);
 	}
     }
     
     /* if user did not explicitly specify input is mp3, check file name */
-    if (gfp -> input_format == sf_unknown)
-	gfp -> input_format = filename_to_type ( gfp -> inPath );
+    if (input_format == sf_unknown)
+	input_format = filename_to_type ( inPath );
     
 #if !(defined HAVEMPGLIB || defined AMIGA_MPEGA)
-    if ( gfp->input_format == sf_mp1 ||
-	 gfp->input_format == sf_mp2 ||
-	 gfp->input_format == sf_mp3) {
-	ERRORF("Error: libmp3lame not compiled with mpg123 *decoding* support \n");
+    if ( input_format == sf_mp1 ||
+	 input_format == sf_mp2 ||
+	 input_format == sf_mp3) {
+	fprintf(stderr,"Error: libmp3lame not compiled with mpg123 *decoding* support \n");
 	LAME_ERROR_EXIT();
     }
 #endif
 
 #if !(defined HAVEVORBIS)
-    if ( gfp->input_format == sf_ogg ) {
-        ERRORF("Error: LAME not compiled with Vorbis support\n");
+    if ( input_format == sf_ogg ) {
+        fprintf(stderr,"Error: LAME not compiled with Vorbis support\n");
         LAME_ERROR_EXIT();
     }
 #endif
@@ -1052,7 +1113,7 @@ void lame_parse_args ( lame_global_flags* gfp, int argc, char** argv )
     
     if ( gfp->free_format ) {
 	if ( gfp -> brate < 8  ||  gfp -> brate > 550 ) {
-	    ERRORF("For free format, specify a bitrate between 8 and 320 (550) kbps\n");
+	    fprintf(stderr,"For free format, specify a bitrate between 8 and 320 (550) kbps\n");
 	    LAME_ERROR_EXIT();
 	}
     }

@@ -705,8 +705,9 @@ VBR_noise_shaping
     /* increase global gain, keep exisiting scale factors */
     ++cod_info->global_gain;
     if (cod_info->global_gain > 255) 
-      ERRORF("%ld impossible to encode this frame! bits=%d\n",
-	      gfp->frameNum,cod_info->part2_3_length);
+      ERRORF("%ld impossible to encode ??? frame! bits=%d\n",
+	     //	      gfp->frameNum,cod_info->part2_3_length);
+	      -1, cod_info->part2_3_length);
     VBR_quantize_granule(gfp,xr34,l3_enc,ratio,scalefac,gr,ch);
 
     ++global_gain_adjust;

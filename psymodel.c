@@ -801,23 +801,23 @@ int L3psycho_anal( lame_global_flags *gfp,
 	    t = tonality2[b]*b*50-950;
 	    if (t<0) t = 0;
 	    if (t>99) t = 99;
-	    PRINTF1("%2d ",t);
+	    DEBUGF("%2d ",t);
  
 	    t = -82+20*log10(ecb); // -82+20*log10(thr[b]);
 	    e = -82+20*log10(eb[b]);
 	    a = -82+20*log10(gfc->ATH_partitionbands[b])+120;
-	    for(i=0;i<a;i++) PRINTF1("a");
+	    for(i=0;i<a;i++) DEBUGF("a");
 	    for(;i<t;i++) {
-	      if (i >= e) PRINTF1("O");
-	      else PRINTF1("@");
+	      if (i >= e) DEBUGF("O");
+	      else DEBUGF("@");
 	    }
-	    for(;i<e;i++) PRINTF1("-");
-	    PRINTF1("\n");
+	    for(;i<e;i++) DEBUGF("-");
+	    DEBUGF("\n");
 	  }
 #endif
       }
 #ifdef PRINTMASKING
-    PRINTF1("\n");
+    DEBUGF("\n");
 #endif
     
     /*************************************************************** 
