@@ -1433,19 +1433,10 @@ VBR_iteration_loop (
         if (used_bits <= frameBits[gfc->bitrate_index]) break; 
     }
     if ( !analog_silence && !gfp->disable_reservoir ) {
-        int bp, unused = frameBits[gfc->bitrate_index]-used_bits;
-        if (unused > 0) {
-            bp = (gfp->version==1) ? 8*511 : 8*255;
-            bp -= unused;
-        }
-        else {
-            bp = 0;
-        }
-        for( ; bp > 0 && gfc->bitrate_index <= gfc->VBR_max_bitrate; gfc->bitrate_index++) {
+        int bp = gfc->VBR->maxFill;
+        for( ; bp > 0 && gfc->bitrate_index < gfc->VBR_max_bitrate; gfc->bitrate_index++) {
             if (used_bits+bp <= frameBits[gfc->bitrate_index]) break; 
         }
-        if (gfc->bitrate_index > gfc->VBR_max_bitrate)
-            gfc->bitrate_index = gfc->VBR_max_bitrate;
     }
     getframebits (gfp, &bitsPerFrame, &mean_bits);
     bits = ResvFrameBegin (gfp, l3_side, mean_bits, bitsPerFrame);
@@ -1456,7 +1447,7 @@ VBR_iteration_loop (
 
     }   /* breaks adjusted */
     /*--------------------------------------*/
-    
+
     iteration_finish (gfp, mean_bits);
 }
 
