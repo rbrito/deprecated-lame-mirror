@@ -312,7 +312,7 @@ void outer_loop_dual(
 	  }
 	  bits_found[ch]=bin_search_StepSize2(targ_bits[ch],OldValue[ch],
 	      l3_enc[gr][ch],xr[gr][ch],xrpow[gr][ch],cod_info[ch]); 
-	  OldValue[ch] = cod_info->quantizerStepSize;
+	  OldValue[ch] = cod_info[ch]->quantizerStepSize;
 	}
     }
 
