@@ -972,16 +972,30 @@ mp3x display               <------LONG------>
 
 	for (sb = 0; sb < 6; sb++) {
 	    /* calculate energies of each sub-shortblocks */
+	    static FLOAT subbk_w[] = {
+		0.258819045102521,
+		0.5,
+		0.707106781186547,
+		0.866025403784439,
+		0.965925826289068,
+		1.0,
+		1.0,
+		0.965925826289068,
+		0.866025403784439,
+		0.707106781186547,
+		0.5,
+		0.258819045102521,
+	    };
 	    FLOAT adjust
-		= (Max(gfc->nsPsy.subbk_ene[ch][sb+2],
-		      gfc->nsPsy.subbk_ene[ch][sb+1])
-		   + gfc->nsPsy.decay * gfc->nsPsy.subbk_ene[ch][sb])
+		= (Max(gfc->nsPsy.subbk_ene[ch][sb+2]*subbk_w[sb+2],
+		      gfc->nsPsy.subbk_ene[ch][sb+1]*subbk_w[sb+1])
+		   + gfc->nsPsy.decay*gfc->nsPsy.subbk_ene[ch][sb]*subbk_w[sb])
 		* gfc->nsPsy.attackthre;
-	    if (gfc->nsPsy.subbk_ene[ch][sb+3] < adjust)
+	    if (gfc->nsPsy.subbk_ene[ch][sb+3]*subbk_w[sb+3] < adjust)
 		continue;
 
 	    current_is_short |= (1 << ch);
-	    adjust /= gfc->nsPsy.subbk_ene[ch][sb+3];
+	    adjust /= gfc->nsPsy.subbk_ene[ch][sb+3]*subbk_w[sb+3];
 	    if (adjust < 0.01)
 		adjust = 0.01;
 	    if (mr->en.s[0][(sb+1)/3] > adjust || mr->en.s[0][(sb+1)/3] < 0)
