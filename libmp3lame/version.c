@@ -40,7 +40,6 @@
 
 
 #include <stdio.h>
-#include <lame.h>
 #include "version.h"    /* macros of version numbers */
 
 #ifdef WITH_DMALLOC
