@@ -905,17 +905,11 @@ psycho_analysis_short(lame_t gfc, FLOAT sbsmpl[2][1152], int gr, int numchn)
 
   1 character = 1 sample (in subband) = 32 samples (in original)
 
-                                          =============stop=============
-                  ===short====      ===short====
-            ===short====      ===short====
-      ===short====      ===short====
-<----------------><----------------><----------------><---------------->
-subbk_ene         000111222333444555666777888999AAABBB
-mp3x display               <------LONG------>
-                           <=ST=><=ST=><=ST=>
+Examples of block type transitions (with the same time-domain scaling).
 
-================long================
+                                    ================long================
                   ================long================
+================long================
 
                                           =============stop=============
                                     ===short====
@@ -926,6 +920,17 @@ mp3x display               <------LONG------>
                                     ================long================
                         =============stop=============
 =============start============
+
+                                          =============stop=============
+                  ===short====      ===short====
+            ===short====      ===short====
+      ===short====      ===short====
+and subband filt. output
+<----------------><----------------><----------------><---------------->
+subbk_ene(suffix) 000111222333444555666777888999AAABBB
+mp3x display               <------LONG------>
+                           <SHRT><SHRT><SHRT>
+
 */
 	/* calculate energies of each sub-shortblocks */
 	if (ch < 2) {
@@ -933,11 +938,9 @@ mp3x display               <------LONG------>
 		FLOAT y = 1.0;
 		for (j = 0; j < 3; j++) {
 		    int k = sb*3+j, band;
-		    FLOAT x = 0.0;
 		    for (band = gfc->nsPsy.switching_band;
 			 band < SBLIMIT; band++)
-			x += fabs(sbsmpl[ch][gr*576+k*32+mdctorder[band]]);
-		    if (y < x) y = x;
+			y += fabs(sbsmpl[ch][gr*576+k*32+mdctorder[band]]);
 		}
 		gfc->nsPsy.subbk_ene[ch][sb] = gfc->nsPsy.subbk_ene[ch][sb+6];
 		gfc->nsPsy.subbk_ene[ch][sb+6] = y;
@@ -947,16 +950,13 @@ mp3x display               <------LONG------>
 		FLOAT y0 = 1.0, y1 = 1.0;
 		for (j = 0; j < 3; j++) {
 		    int k = sb*3+j, band;
-		    FLOAT x0 = 0.0, x1 = 0.0;
 		    for (band = gfc->nsPsy.switching_band;
 			 band < SBLIMIT; band++) {
 			FLOAT l = sbsmpl[0][gr*576+k*32+mdctorder[band]];
 			FLOAT r = sbsmpl[1][gr*576+k*32+mdctorder[band]];
-			x0 += fabs(l + r);
-			x1 += fabs(l - r);
+			y0 += fabs(l + r);
+			y1 += fabs(l - r);
 		    }
-		    if (y0 < x0) y0 = x0;
-		    if (y1 < x1) y1 = x1;
 		}
 		gfc->nsPsy.subbk_ene[2][sb] = gfc->nsPsy.subbk_ene[2][sb+6];
 		gfc->nsPsy.subbk_ene[3][sb] = gfc->nsPsy.subbk_ene[3][sb+6];
@@ -972,7 +972,7 @@ mp3x display               <------LONG------>
 
 	for (sb = 0; sb < 6; sb++) {
 	    /* calculate energies of each sub-shortblocks */
-	    static FLOAT subbk_w[] = {
+	    const static FLOAT subbk_w[] = {
 		0.258819045102521,
 		0.5,
 		0.707106781186547,
@@ -986,21 +986,22 @@ mp3x display               <------LONG------>
 		0.5,
 		0.258819045102521,
 	    };
+	    FLOAT nextPow = gfc->nsPsy.subbk_ene[ch][sb+3]*subbk_w[sb+3];
 	    FLOAT adjust
 		= (Max(gfc->nsPsy.subbk_ene[ch][sb+2]*subbk_w[sb+2],
-		      gfc->nsPsy.subbk_ene[ch][sb+1]*subbk_w[sb+1])
-		   + gfc->nsPsy.decay*gfc->nsPsy.subbk_ene[ch][sb]*subbk_w[sb])
+		       gfc->nsPsy.subbk_ene[ch][sb+1]*subbk_w[sb+1])
+		   + gfc->nsPsy.decay*gfc->nsPsy.subbk_ene[ch][sb])
 		* gfc->nsPsy.attackthre;
-	    if (gfc->nsPsy.subbk_ene[ch][sb+3]*subbk_w[sb+3] < adjust)
+	    if (nextPow < adjust)
 		continue;
 
 	    current_is_short |= (1 << ch);
-	    adjust /= gfc->nsPsy.subbk_ene[ch][sb+3]*subbk_w[sb+3];
+	    adjust /= nextPow;
 	    if (adjust < 0.01)
 		adjust = 0.01;
-	    if (mr->en.s[0][(sb+1)/3] > adjust || mr->en.s[0][(sb+1)/3] < 0)
+	    if (mr->en.s[0][(sb+1)/3] > adjust || mr->en.s[0][(sb+1)/3] < 0.0)
 		mr->en.s[0][(sb+1)/3] = adjust;
-	    if (mr->en.s[0][(sb  )/3] < 0)
+	    if (mr->en.s[0][(sb  )/3] < 0.0)
 		mr->en.s[0][(sb  )/3] = 1.0;
 	}
 #ifndef NOANALYSIS
