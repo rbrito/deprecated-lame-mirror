@@ -271,31 +271,26 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 
 //2001-12-18 Dibrom's ABR preset stuff
 
-	if(lameConfig.format.LHV1.nPreset == LQP_ABR)		// --ALT-PRESET ABR
-	{
-		actual_bitrate = lameConfig.format.LHV1.dwVbrAbr_bps / 1000;
+	if (lameConfig.format.LHV1.nPreset == LQP_ABR) {
+	    // --ALT-PRESET ABR
+	    actual_bitrate = lameConfig.format.LHV1.dwVbrAbr_bps / 1000;
+	    // limit range
+	    if( actual_bitrate > 320)
+		actual_bitrate = 320;
+	    if( actual_bitrate < 8 )
+		actual_bitrate = 8;
 
-		// limit range
-		if( actual_bitrate > 320)
-		{
-			actual_bitrate = 320;
-		}
-
-		if( actual_bitrate < 8 )
-		{
-			actual_bitrate = 8;
-		}
-
-		lame_set_preset( gfp, actual_bitrate );
-	}    
-
+	    lame_set_brate( gfp, actual_bitrate );
+	    lame_set_VBR(gfp, vbr_abr);
+	}
+	
 // end Dibrom's ABR preset 2001-12-18 ****** START OF CBR
 
-	if(lameConfig.format.LHV1.nPreset == LQP_CBR)		// --ALT-PRESET CBR
-	{
-		actual_bitrate = lameConfig.format.LHV1.dwBitrate;
-        lame_set_preset(gfp, actual_bitrate);
-        lame_set_VBR(gfp, vbr_off);
+	if (lameConfig.format.LHV1.nPreset == LQP_CBR) {
+	    // --ALT-PRESET CBR
+	    actual_bitrate = lameConfig.format.LHV1.dwBitrate;
+	    lame_set_brate( gfp, actual_bitrate );
+	    lame_set_VBR(gfp, vbr_off);
 	}
 
 // end Dibrom's CBR preset 2001-12-18
@@ -821,9 +816,6 @@ static void dump_config(lame_t	gfp)
 	DebugPrintf("High pass frequency    =%d\n", lame_get_highpassfreq( gfp ) );
 	DebugPrintf("High pass width        =%d\n", lame_get_highpasswidth( gfp ) );
 
-	DebugPrintf("No short blocks        =%d\n", lame_get_no_short_blocks( gfp ) );
-	DebugPrintf("Force short blocks     =%d\n", lame_get_force_short_blocks( gfp ) );
-
 	DebugPrintf("de-emphasis            =%d\n", lame_get_emphasis( gfp ) );
 	DebugPrintf("private flag           =%d\n", lame_get_extension( gfp ) );
 
@@ -832,9 +824,7 @@ static void dump_config(lame_t	gfp)
 	DebugPrintf("CRC                    =%s\n", lame_get_error_protection( gfp ) ? "on" : "off" );
 	DebugPrintf("Fast mode              =%s\n", ( lame_get_quality( gfp ) )? "enabled" : "disabled" );
 	DebugPrintf("Force mid/side stereo  =%s\n", ( lame_get_force_ms( gfp ) )?"enabled":"disabled" );
-	DebugPrintf("Padding Type           =%d\n", lame_get_padding_type( gfp ) );
 	DebugPrintf("Disable Reservoir      =%d\n", lame_get_disable_reservoir( gfp ) );
-	DebugPrintf("Allow diff-short       =%d\n", lame_get_allow_diff_short( gfp ) );
 	DebugPrintf("Interchannel masking   =%f\n", lame_get_interChRatio( gfp ) );
 	DebugPrintf("Strict ISO Encoding    =%s\n", ( lame_get_strict_ISO( gfp ) ) ?"Yes":"No");
 	DebugPrintf("Scale                  =%5.2f\n", lame_get_scale( gfp ) );
@@ -859,15 +849,10 @@ static void dump_config(lame_t	gfp)
 	DebugPrintf("Vbr Max bitrate        =%d kbps\n", lame_get_VBR_max_bitrate_kbps( gfp ) );
 
 	DebugPrintf("Write VBR Header       =%s\n", ( lame_get_bWriteVbrTag( gfp ) ) ?"Yes":"No");
-	DebugPrintf("VBR Hard min           =%d\n", lame_get_VBR_hard_min( gfp ) );
-
 	DebugPrintf("ATH Only               =%d\n", lame_get_ATHonly( gfp ) );
 	DebugPrintf("ATH short              =%d\n", lame_get_ATHshort( gfp ) );
 	DebugPrintf("ATH no                 =%d\n", lame_get_noATH( gfp ) );
-	DebugPrintf("ATH type               =%d\n", lame_get_ATHtype( gfp ) );
 	DebugPrintf("ATH lower              =%f\n", lame_get_ATHlower( gfp ) );
-	DebugPrintf("ATH aa                 =%d\n", lame_get_athaa_type( gfp ) );
-	DebugPrintf("ATH aa  loudapprox     =%d\n", lame_get_athaa_loudapprox( gfp ) );
 	DebugPrintf("ATH aa  sensitivity    =%f\n", lame_get_athaa_sensitivity( gfp ) );
 
 	DebugPrintf("Experimental nspsytune =%d\n", lame_get_exp_nspsytune( gfp ) );
