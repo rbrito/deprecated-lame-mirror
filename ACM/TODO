@@ -1,5 +1,4 @@
 - known bug : when recording, converting, and recording a lame_close() call fail
-- add the preset modes (and alt-preset too) in the config
 - allow decompression the same way as in the command-line
 - allow VBR mode
 - allow channel resampling (mono to stereo / stereo to mono)
