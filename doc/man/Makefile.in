@@ -106,7 +106,6 @@ install_sh = @install_sh@
 AUTOMAKE_OPTIONS = foreign ansi2knr
 
 man_MANS = lame.1
-
 EXTRA_DIST = ${man_MANS}
 subdir = doc/man
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
