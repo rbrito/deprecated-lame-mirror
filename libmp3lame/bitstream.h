@@ -27,7 +27,7 @@ int getframebits(const lame_global_flags *gfp);
 
 int format_bitstream(lame_global_flags *gfp);
 
-void flush_bitstream(lame_global_flags *gfp);
+int flush_bitstream(lame_global_flags *gfp, unsigned char *, int, int);
 void add_dummy_byte (lame_internal_flags* gfc, unsigned char val);
 
 int  copy_buffer(lame_internal_flags *gfc,unsigned char *buffer,int buffer_size,int update_crc);

@@ -1205,8 +1205,8 @@ lame_get_totalframes( const lame_global_flags*  gfp )
     int totalframes;
     /* estimate based on user set num_samples: */
     totalframes =
-        2 + ((double)gfp->num_samples * gfp->out_samplerate) / 
-              ((double)gfp->in_samplerate * gfp->framesize);
+        ((double)gfp->num_samples * gfp->out_samplerate)
+	/ ((double)gfp->in_samplerate * gfp->framesize) + 2;
 
     /* check to see if we underestimated totalframes */
     //    if (totalframes < gfp->frameNum)

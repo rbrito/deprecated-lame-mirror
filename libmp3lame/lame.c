@@ -565,24 +565,23 @@ lame_init_params(lame_global_flags * const gfp)
 	if (gfp->mode == MONO)
 	    gfc->VBR_max_bitrate--;
 
-        if (gfp->VBR_min_bitrate_kbps) {
-	    if ((gfc->VBR_min_bitrate =
-		 BitrateIndex(gfp->VBR_min_bitrate_kbps, gfp->version)) < 0)
-		return -1;
-			      
-	}
-	gfp->VBR_min_bitrate_kbps =
-	    bitrate_table[gfp->version][gfc->VBR_min_bitrate];
+        if (gfp->VBR_min_bitrate_kbps
+	    && (gfc->VBR_min_bitrate
+		= BitrateIndex(gfp->VBR_min_bitrate_kbps, gfp->version)) < 0)
+	    return -1;
+
+	gfp->VBR_min_bitrate_kbps
+	    = bitrate_table[gfp->version][gfc->VBR_min_bitrate];
         if (gfp->mean_bitrate_kbps < gfp->VBR_min_bitrate_kbps)
 	    gfp->mean_bitrate_kbps = gfp->VBR_min_bitrate_kbps;
 
-        if (gfp->VBR_max_bitrate_kbps) {
-	    if ((gfc->VBR_max_bitrate =
-		 BitrateIndex(gfp->VBR_max_bitrate_kbps, gfp->version)) < 0)
-		return -1;
-	}
-	gfp->VBR_max_bitrate_kbps =
-	    bitrate_table[gfp->version][gfc->VBR_max_bitrate];
+        if (gfp->VBR_max_bitrate_kbps
+	    && (gfc->VBR_max_bitrate
+		= BitrateIndex(gfp->VBR_max_bitrate_kbps, gfp->version)) < 0)
+	    return -1;
+
+	gfp->VBR_max_bitrate_kbps
+	    = bitrate_table[gfp->version][gfc->VBR_max_bitrate];
         if (gfp->mean_bitrate_kbps > gfp->VBR_max_bitrate_kbps)
 	    gfp->mean_bitrate_kbps = gfp->VBR_max_bitrate_kbps;
     }
@@ -1300,9 +1299,7 @@ int
 lame_encode_flush_nogap(lame_global_flags * gfp,
                   unsigned char *mp3buffer, int mp3buffer_size)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
-    flush_bitstream(gfp);
-    return copy_buffer(gfc,mp3buffer, mp3buffer_size,1);
+    return flush_bitstream(gfp,  mp3buffer, mp3buffer_size, 1);
 }
 
 
@@ -1386,8 +1383,7 @@ lame_encode_flush(lame_global_flags * gfp,
         mp3buffer_size_remaining = 0;
 
     /* mp3 related stuff.  bit buffer might still contain some mp3 data */
-    flush_bitstream(gfp);
-    imp3 = copy_buffer(gfc,mp3buffer, mp3buffer_size_remaining, 1);
+    imp3 = flush_bitstream(gfp, mp3buffer, mp3buffer_size_remaining, 1);
     if (imp3 < 0) {
 	/* some type of fatal error */
 	return imp3;

@@ -323,7 +323,6 @@ FFT's                    <---------1024---------->
     MPEG1:  FFT ends at:  BLKSIZE+2*576-224-MDCTDELAY    (1904)
 
     FFT starts at 576-224-MDCTDELAY (304)  = 576-FFTOFFSET
-
 */
 
 int  lame_encode_mp3_frame (				/* Output */
@@ -370,7 +369,7 @@ int  lame_encode_mp3_frame (				/* Output */
 	/* check if we have enough data for polyphase filterbank */
 	/* it needs 1152 samples + 286 samples ignored for one granule */
 	/*          1152+576+286 samples for two granules */
-	assert(gfc->mf_size>=(286+576*(1+gfc->mode_gr)));
+	assert(gfc->mf_size >= 286+576+gfp->framesize);
 
 	if (gfc->psymodel)
 	    psycho_analysis(gfp, inbuf, masking, sbsmpl);

@@ -239,6 +239,7 @@ CRC_writeheader(lame_internal_flags *gfc, char *header)
 }
 
 static int blockConv[] = {0, 1, 3, 2};
+
 inline static void
 encodeSideInfo2(lame_global_flags *gfp, int bitsPerFrame)
 {
@@ -713,20 +714,21 @@ compute_flushbits( const lame_global_flags * gfp, int *total_bytes_output )
 
 
 
-void
-flush_bitstream(lame_global_flags *gfp)
+int
+flush_bitstream(
+    lame_global_flags *gfp,unsigned char *buffer,int size,int mp3data)
 {
     III_side_info_t *l3_side = &gfp->internal_flags->l3_side;
     int nbytes, flushbits;
 
-    if ((flushbits = compute_flushbits(gfp,&nbytes)) < 0)
-	return;  
-    drain_into_ancillary(gfp, flushbits);
+    if ((flushbits = compute_flushbits(gfp,&nbytes)) >= 0) {
+	drain_into_ancillary(gfp, flushbits);
+	/* we have padded out all frames with ancillary data, which is the
+	   same as filling the bitreservoir with ancillary data, so : */
+	l3_side->ResvSize=l3_side->main_data_begin = 0;
+    }
 
-    /* we have padded out all frames with ancillary data, which is the
-       same as filling the bitreservoir with ancillary data, so : */
-    l3_side->ResvSize=0;
-    l3_side->main_data_begin = 0;
+    return copy_buffer(gfp->internal_flags, buffer, size, mp3data);
 }
 
 
@@ -756,14 +758,11 @@ format_bitstream(lame_global_flags *gfp)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     III_side_info_t *l3_side = &gfc->l3_side;
-    int bitsPerFrame, drainPre, bits;
-    int drainbits = l3_side->ResvSize % 8;
+    int bitsPerFrame, drainPre, drainbits = l3_side->ResvSize % 8;
 
     /* reservoir is overflowed ? */
-    if (l3_side->ResvSize > l3_side->ResvMax)
+    if (drainbits < l3_side->ResvSize - l3_side->ResvMax)
 	drainbits = l3_side->ResvSize - l3_side->ResvMax;
-
-    l3_side->ResvSize -= drainbits;
 
     /* drain as many bits as possible into previous frame ancillary data
      * In particular, in VBR mode ResvMax may have changed, and we have
@@ -776,41 +775,22 @@ format_bitstream(lame_global_flags *gfp)
     bitsPerFrame = getframebits(gfp);
     drain_into_ancillary(gfp, drainPre);
     encodeSideInfo2(gfp, bitsPerFrame);
-    bits = 8*l3_side->sideinfo_len + drainbits + writeMainData(gfc);
+    bitsPerFrame -= writeMainData(gfc);
     drain_into_ancillary(gfp, drainbits - drainPre);
-    l3_side->main_data_begin += (bitsPerFrame-bits)/8;
+    l3_side->main_data_begin
+	+= (bitsPerFrame - drainbits)/8	- l3_side->sideinfo_len;
 
     /* compare main_data_begin for the next frame with what we
      * think the resvsize is: */
-    if (l3_side->main_data_begin * 8 != l3_side->ResvSize) {
-	ERRORF(gfc, "internal bitstream data error.\n"
-	       "l3_side->main_data_begin: %i \n"
-	       "Resvoir size:             %i \n"
-	       "resv drain (total)        %i \n"
-	       "resv drain (pre)          %i \n"
-	       "header and sideinfo:      %i \n"
-	       "data bits:                %i \n"
-	       "total bits:               %i (remainder: %i) \n"
-	       "bitsperframe:             %i \n",
-
-	       8*l3_side->main_data_begin,
-	       l3_side->ResvSize,
-	       drainbits,
-	       drainPre,
-	       8*l3_side->sideinfo_len,
-	       bits - drainbits + drainPre - 8*l3_side->sideinfo_len,
-	       bits, bits % 8,
-	       bitsPerFrame
-	    );
-
+    if (l3_side->main_data_begin * 8 != l3_side->ResvSize - drainbits) {
 	ERRORF(gfc,
+	       "internal bitstream data error.\n"
 	       "This is a fatal error.  It has several possible causes:\n"
 	       "90%%  LAME compiled with buggy version of gcc using advanced optimizations\n"
 	       " 9%%  Your system is overclocked\n"
 	       " 1%%  bug in LAME encoding library");
-
-	l3_side->ResvSize = l3_side->main_data_begin*8;
     };
+    l3_side->ResvSize = l3_side->main_data_begin*8;
     assert(gfc->bs.totbit % 8 == 0);
     return 0;
 }
