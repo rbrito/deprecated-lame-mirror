@@ -430,14 +430,10 @@ lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath,
 
     } while (iread);
 
-    if (nogap) {
+    if (nogap) 
         imp3 = lame_encode_flush_nogap(gf, mp3buffer, sizeof(mp3buffer)); /* may return one more mp3 frame */
-        /* reinitialize bitstream for next encoding.  this is normally done
-         * by lame_init_params(), but we cannot call that routine twice */
-        lame_init_bitstream(gf);
-    } else {
+    else
         imp3 = lame_encode_flush(gf, mp3buffer, sizeof(mp3buffer)); /* may return one more mp3 frame */
-    }
 
     if (imp3 < 0) {
         if (imp3 == -1)
@@ -725,6 +721,12 @@ main(int argc, char **argv)
                 
                 fclose(outf); /* close the output file */
                 close_infile(); /* close the input file */
+
+                /* reinitialize bitstream for next encoding.  this is normally done
+                 * by lame_init_params(), but we cannot call that routine twice */
+                if (use_flush_nogap) 
+                    lame_init_bitstream(gf);
+
             }
             lame_close(gf);
 

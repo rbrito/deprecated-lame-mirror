@@ -209,7 +209,7 @@ void AddVbrFrame(lame_global_flags *gfp)
 	    kbps_header = XING_BITRATE2;
 	}
         /* TOC should also take into account the size of the VBR header
-           itself.  so initial value of sum should be the kbps of the header */
+           itself.  so initial value of .sum should be the kbps of the header */
         gfc->VBR_seek_table.sum  = kbps_header;
 
         gfc->VBR_seek_table.seen = 0;
