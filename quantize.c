@@ -414,6 +414,24 @@ VBR_iteration_loop (lame_global_flags *gfp,
       
       memcpy( &clean_cod_info, cod_info, sizeof(gr_info) );
       
+      /* - lower masking depending on Quality setting
+       * - quality control together with adjusted ATH MDCT scaling
+       *   on lower quality setting allocate more noise from
+       *   ATH masking, and on higher quality setting allocate
+       *   less noise from ATH masking.
+       * - experiments show that going more than 2dB over GPSYCHO's
+       *   limits ends up in very annoying artefacts
+       */
+      {
+        static const FLOAT8 dbQ[10]={-5.0,-3.75,-2.5,-1.25,0,0.4,0.8,1.2,1.6,2.0};
+        FLOAT8 masking_lower_db;
+        assert( gfp->VBR_q <= 9 );
+        assert( gfp->VBR_q >= 0 );
+        masking_lower_db = dbQ[gfp->VBR_q];
+        if (cod_info->block_type==SHORT_TYPE) 
+          masking_lower_db -= 10/(1+exp(3.5-pe[gr][ch]/300.))-0.25;
+        gfc->masking_lower = pow(10.0,masking_lower_db/10);
+      }
       /* disable analog_silence if *any* of the granules != silence */
       /* if energy < ATH, set min_bits = 125 */
       i = calc_xmin(gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin);
@@ -421,11 +439,6 @@ VBR_iteration_loop (lame_global_flags *gfp,
 	analog_silence=0;
       }else{
 	if (!gfp->VBR_hard_min) min_bits=125;
-      }
-
-      if (cod_info->block_type==SHORT_TYPE) {
-	  min_bits += Max(1000,pe[gr][ch]);
-	  min_bits=Min(min_bits,1800);
       }
 
       max_bits = 1200 + frameBits[gfc->VBR_max_bitrate]/(gfc->stereo*gfc->mode_gr);
@@ -623,6 +636,58 @@ VBR_iteration_loop (lame_global_flags *gfp,
 
 
 
+
+INLINE 
+int quant_compare(int experimentalX,
+	calc_noise_result *best,
+	calc_noise_result *calc)
+{
+  /*
+    noise is given in decibals (db) relative to masking thesholds.
+
+    over_noise:  sum of quantization noise > masking
+    tot_noise:   sum of all quantization noise
+    max_noise:   max quantization noise 
+
+   */
+  int better=0;
+
+  switch (experimentalX) {
+  default:
+  case 0: better =   calc->over_count      < best->over_count
+                 ||( calc->over_count     == best->over_count
+                  && calc->over_noise <= best->over_noise ); break;
+
+  case 1: better = calc->max_noise < best->max_noise; break;
+
+  case 2: better = calc->tot_noise < best->tot_noise; break;
+  
+  case 3: better =  calc->tot_noise < best->tot_noise
+                 && calc->max_noise     < best->max_noise + 2; break;
+  
+  case 4: better = ( ( (0>=calc->max_noise) && (best->max_noise>2)) ||
+     ( (0>=calc->max_noise) && (best->max_noise<0) && ((best->max_noise+2)>calc->max_noise) && (calc->tot_noise<best->tot_noise) ) ||
+     ( (0>=calc->max_noise) && (best->max_noise>0) && ((best->max_noise+2)>calc->max_noise) && (calc->tot_noise<(best->tot_noise+best->over_noise)) ) ||
+     ( (0<calc->max_noise) && (best->max_noise>-0.5) && ((best->max_noise+1)>calc->max_noise) && ((calc->tot_noise+calc->over_noise)<(best->tot_noise+best->over_noise)) ) ||
+     ( (0<calc->max_noise) && (best->max_noise>-1) && ((best->max_noise+1.5)>calc->max_noise) && ((calc->tot_noise+calc->over_noise+calc->over_noise)<(best->tot_noise+best->over_noise+best->over_noise)) ) );
+     break;
+     
+  case 5: better =   calc->over_noise  < best->over_noise
+                 ||( calc->over_noise == best->over_noise
+                  && calc->tot_noise   < best->tot_noise ); break;
+  
+  case 6: better =     calc->over_noise  < best->over_noise
+                 ||(   calc->over_noise == best->over_noise
+                  &&(  calc->max_noise       < best->max_noise
+                   ||( calc->max_noise      == best->max_noise
+                    && calc->tot_noise  <= best->tot_noise ))); break;
+  
+  case 7: better =  calc->over_count < best->over_count
+                 || calc->over_noise < best->over_noise; break;
+  }
+
+  return better;
+}
 
 
 /************************************************************************/
@@ -1076,56 +1141,4 @@ void inc_subblock_gain(lame_global_flags *gfp,
     }
 
     freorder(gfc->scalefac_band.s,xrpow);
-}
-
-INLINE 
-int quant_compare(int experimentalX,
-	calc_noise_result *best,
-	calc_noise_result *calc)
-{
-  /*
-    noise is given in decibals (db) relative to masking thesholds.
-
-    over_noise:  sum of quantization noise > masking
-    tot_noise:   sum of all quantization noise
-    max_noise:   max quantization noise 
-
-   */
-  int better=0;
-
-  switch (experimentalX) {
-  default:
-  case 0: better =   calc->over_count      < best->over_count
-                 ||( calc->over_count     == best->over_count
-                  && calc->over_noise <= best->over_noise ); break;
-
-  case 1: better = calc->max_noise < best->max_noise; break;
-
-  case 2: better = calc->tot_noise < best->tot_noise; break;
-  
-  case 3: better =  calc->tot_noise < best->tot_noise
-                 && calc->max_noise     < best->max_noise + 2; break;
-  
-  case 4: better = ( ( (0>=calc->max_noise) && (best->max_noise>2)) ||
-     ( (0>=calc->max_noise) && (best->max_noise<0) && ((best->max_noise+2)>calc->max_noise) && (calc->tot_noise<best->tot_noise) ) ||
-     ( (0>=calc->max_noise) && (best->max_noise>0) && ((best->max_noise+2)>calc->max_noise) && (calc->tot_noise<(best->tot_noise+best->over_noise)) ) ||
-     ( (0<calc->max_noise) && (best->max_noise>-0.5) && ((best->max_noise+1)>calc->max_noise) && ((calc->tot_noise+calc->over_noise)<(best->tot_noise+best->over_noise)) ) ||
-     ( (0<calc->max_noise) && (best->max_noise>-1) && ((best->max_noise+1.5)>calc->max_noise) && ((calc->tot_noise+calc->over_noise+calc->over_noise)<(best->tot_noise+best->over_noise+best->over_noise)) ) );
-     break;
-     
-  case 5: better =   calc->over_noise  < best->over_noise
-                 ||( calc->over_noise == best->over_noise
-                  && calc->tot_noise   < best->tot_noise ); break;
-  
-  case 6: better =     calc->over_noise  < best->over_noise
-                 ||(   calc->over_noise == best->over_noise
-                  &&(  calc->max_noise       < best->max_noise
-                   ||( calc->max_noise      == best->max_noise
-                    && calc->tot_noise  <= best->tot_noise ))); break;
-  
-  case 7: better =  calc->over_count < best->over_count
-                 || calc->over_noise < best->over_noise; break;
-  }
-
-  return better;
 }

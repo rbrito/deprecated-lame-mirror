@@ -448,22 +448,8 @@ int lame_init_params(lame_global_flags *gfp)
       gfc->ATH_lower = (4-gfp->VBR_q)*4.0; 
     }
     
-    /* - lower masking depending on Quality setting
-     * - quality control together with adjusted ATH MDCT scaling
-     *   on lower quality setting allocate more noise from
-     *   ATH masking, and on higher quality setting allocate
-     *   less noise from ATH masking.
-     * - experiments show that going more than 2dB over GPSYCHO's
-     *   limits ends up in very annoying artefacts
-     */
     if (gfp->VBR == vbr_rh)
     {
-      static const FLOAT8 dbQ[10]={-5.0,-3.75,-2.5,-1.25,0,0.4,0.8,1.2,1.6,2.0};
-      FLOAT8 masking_lower_db;
-      assert( gfp->VBR_q <= 9 );
-      assert( gfp->VBR_q >= 0 );
-      masking_lower_db = dbQ[gfp->VBR_q];
-      gfc->masking_lower = pow(10.0,masking_lower_db/10);
       gfc->ATH_lower = (4-gfp->VBR_q)*4.0;     
     }
 
