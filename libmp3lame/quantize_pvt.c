@@ -486,12 +486,7 @@ int calc_xmin(
     ATH_t * ATH = gfc->ATH;
     int max_index = 0;
 
-    if (cod_info->block_type != SHORT_TYPE)
-	max_index = SBMAX_l;
-    else if (cod_info->mixed_block_flag)
-	max_index = 3;
-
-    for (sfb = 0; sfb < max_index; sfb++) {
+    for (sfb = 0; sfb < cod_info->sfb_lmax; sfb++) {
 	FLOAT en0 = 0.0;
 	int width, l;
 	if ( gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh )
@@ -531,59 +526,54 @@ int calc_xmin(
 	}
 	l3_xmin->l[sfb] = xmin;
 	if (en0 > tmpATH) ath_over++;
-    }   /* sfb */
+    }   /* end of long block loop */
 
-    if (cod_info->block_type == SHORT_TYPE) {
-	sfb = 0;
-	if (cod_info->mixed_block_flag)
-	    sfb = 8;
-	for (; sfb < SBMAX_s; sfb++) {
-	    int width, b;
-            if ( gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh )
-                tmpATH = athAdjust( ATH->adjust, ATH->s[sfb], ATH->floor );
-            else
-                tmpATH = ATH->adjust * ATH->s[sfb];
+    for (sfb = cod_info->sfb_smin; sfb < cod_info->psy_smax; sfb++) {
+	int width, b;
+	if ( gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh )
+	    tmpATH = athAdjust( ATH->adjust, ATH->s[sfb], ATH->floor );
+	else
+	    tmpATH = ATH->adjust * ATH->s[sfb];
 
-            width = gfc->scalefac_band.s[sfb+1] - gfc->scalefac_band.s[sfb];
-            for ( b = 0; b < 3; b++ ) {
-		FLOAT en0 = 0.0;
-		int l = width;
-		do {
-                    en0 += xr[j] * xr[j];
-                    j++;
-                } while (--l > 0);
-                en0 /= width;
+	width = gfc->scalefac_band.s[sfb+1] - gfc->scalefac_band.s[sfb];
+	for ( b = 0; b < 3; b++ ) {
+	    FLOAT en0 = 0.0;
+	    int l = width;
+	    do {
+		en0 += xr[j] * xr[j];
+		j++;
+	    } while (--l > 0);
+	    en0 /= width;
 
-		xmin = tmpATH;
-                if (!gfp->ATHonly && !gfp->ATHshort) {
-                    xmin = ratio->en.s[sfb][b];
-                    if (xmin > 0.0)
-                        xmin = en0 * ratio->thm.s[sfb][b] * gfc->masking_lower / xmin;
-                    if (xmin < tmpATH) 
-                        xmin = tmpATH;
-                }
-                xmin *= width;
+	    xmin = tmpATH;
+	    if (!gfp->ATHonly && !gfp->ATHshort) {
+		xmin = ratio->en.s[sfb][b];
+		if (xmin > 0.0)
+		    xmin = en0 * ratio->thm.s[sfb][b] * gfc->masking_lower / xmin;
+		if (xmin < tmpATH) 
+		    xmin = tmpATH;
+	    }
+	    xmin *= width;
 
-                if (gfc->nsPsy.use) {
-                    if      (sfb <=  5) xmin *= gfc->nsPsy.bass;
-                    else if (sfb <= 10) xmin *= gfc->nsPsy.alto;
-                    else                xmin *= gfc->nsPsy.treble;
-                    if ((gfp->VBR == vbr_off || gfp->VBR == vbr_abr) && gfp->quality <= 1)
-                        xmin *= 0.001;
-                }
-                l3_xmin->s[sfb][b] = xmin;
-                if (en0 > tmpATH) ath_over++;
-            }   /* b */
-	    if (gfp->useTemporal) {
-		for ( b = 1; b < 3; b++ ) {
-		    xmin = l3_xmin->s[sfb][b] * (1.0 - gfc->decay)
-			+ l3_xmin->s[sfb][b-1] * gfc->decay;
-		    if (l3_xmin->s[sfb][b] < xmin)
-			l3_xmin->s[sfb][b] = xmin;
-		}
+	    if (gfc->nsPsy.use) {
+		if      (sfb <=  5) xmin *= gfc->nsPsy.bass;
+		else if (sfb <= 10) xmin *= gfc->nsPsy.alto;
+		else                xmin *= gfc->nsPsy.treble;
+		if ((gfp->VBR == vbr_off || gfp->VBR == vbr_abr) && gfp->quality <= 1)
+		    xmin *= 0.001;
+	    }
+	    l3_xmin->s[sfb][b] = xmin;
+	    if (en0 > tmpATH) ath_over++;
+	}   /* b */
+	if (gfp->useTemporal) {
+	    for ( b = 1; b < 3; b++ ) {
+		xmin = l3_xmin->s[sfb][b] * (1.0 - gfc->decay)
+		    + l3_xmin->s[sfb][b-1] * gfc->decay;
+		if (l3_xmin->s[sfb][b] < xmin)
+		    l3_xmin->s[sfb][b] = xmin;
 	    }
         }   /* sfb */
-    }   /* end of short block case */
+    }   /* end of short block loop */
 
     return ath_over;
 }
