@@ -1,3 +1,27 @@
+lame (3.91-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Rogerio Brito <linuxsup@ig.com.br>  Sun, 20 Jan 2002 20:50:19 -0200
+
+lame (3.90.1-0) unstable; urgency=low
+
+  * New upstream release.
+  * debian/control: nasm is only a build-dependency on x86;
+  * debian/control: added debhelper to build-dependency list;
+  * debian/control: changed description of the binary packages;
+  * debian/rules: enabled experimental/agressive optimizations;
+  * debian/rules: effectively spread the installed files in binary packages;
+  * debian/rules: now dh_makeshlibs creates good postinst and prerm scripts;
+  * Changed the lame-dev package to liblame0-dev;
+  * Removed references to lame-extras, since it doesn't exist anymore;
+  * Added LICENCE to copyright and excluded it from the binary package;
+  * Removed INSTALL from the binary package;
+  * lame is now almost lintian clean (the only problem remaining is
+    an rpath in liblame build process).
+
+ -- Rogerio Brito <linuxsup@ig.com.br>  Fri, 28 Dec 2001 04:08:57 -0200
+
 lame (3.90-1) unstable; urgency=low
 
   * New upstream release.

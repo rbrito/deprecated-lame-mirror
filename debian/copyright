@@ -1,7 +1,7 @@
-This package was debianized by Stefan Karrmann <S.Karrmann@gmx.net> on
-Thu, 31 Aug 2000 22:15:07 +0200.
+This package was originally debianized by Stefan Karrmann <S.Karrmann@gmx.net>
+on Thu, 31 Aug 2000 22:15:07 +0200.
 
-It was downloaded from CVS archive at sourceforge.net.
+It was downloaded from <http://www.mp3dev.org/mp3/>.
 
 Upstream Author(s): see the file html/contributors.html
 
@@ -21,6 +21,29 @@ Copyright:
     License along with this library; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 
+Additionally, the original software's LICENCE file contains the following:
+
+- - - - - - - - - - - - - - - - - - - - -  - - - - - - - - - - - - - - -
+Can I use LAME in my commercial program?  
+
+Yes, you can, under the restrictions of the LGPL.  The easiest
+way to do this is to:
+
+1. Link to LAME as separate library (libmp3lame.a on unix or 
+   lame_enc.dll on windows)
+
+2. Fully acknowledge that you are using LAME, and give a link
+   to our web site, www.mp3dev.org
+
+3. If you make modifications to LAME, you *must* release these
+   these modifications back to the LAME project, under the LGPL.
+
+*** IMPORTANT NOTE ***
+
+The decoding functions provided in LAME use the mpglib decoding engine which
+is under the GPL.  They may not be used by any program not released under the
+GPL unless you obtain such permission from the MPG123 project (www.mpg123.de).
+- - - - - - - - - - - - - - - - - - - - -  - - - - - - - - - - - - - - -
+
 On Debian systems, the complete text of the GNU Library
 General Public License can be found in `/usr/share/common-licenses/LGPL'.
-

@@ -5,14 +5,14 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
-# This is the debhelper compatability version to use.
-export DH_COMPAT=2
+# This is the debhelper compatibility version to use.
+export DH_COMPAT=3
 
 configure: configure-stamp
 configure-stamp:
 	dh_testdir
 	# Add here commands to configure the package.
-	./configure --prefix=/usr --with-fileio=lame --disable-mp3x --enable-mp3rtp --without-vorbis --host=$$(dpkg-architecture -qDEB_HOST_GNU_TYPE)
+	./configure --prefix=/usr --with-fileio=lame --disable-mp3x --disable-mp3rtp --disable-analyzer-hooks --without-vorbis --host=$$(dpkg-architecture -qDEB_HOST_GNU_TYPE)
 
 	touch configure-stamp
 
@@ -44,7 +44,7 @@ install: build
 	dh_installdirs
 
 	# Add here commands to install the package into debian/tmp.
-	$(MAKE) DESTDIR=`pwd`/debian/lame install
+	$(MAKE) DESTDIR=`pwd`/debian/tmp install
 
 
 # Build architecture-independent files here.
@@ -53,19 +53,12 @@ binary-indep: build install
 
 # Build architecture-dependent files here.
 binary-arch: build install
-#	dh_testversion
 	dh_testdir
 	dh_testroot
-	dh_movefiles -plame-dev -pliblame0  --sourcedir=./debian/lame
+	dh_movefiles
 #	dh_installdebconf	
 	dh_installdocs
-#	dh_installexamples
-#	dh_installmenu
-#	dh_installemacsen
-#	dh_installpam
-#	dh_installinit
-#	dh_installcron
-	dh_installmanpages -Nliblame0 -Nlame-dev
+	dh_installmanpages -Nliblame0 -Nliblame0-dev
 #	dh_installinfo
 #	dh_undocumented -Nlame -Nliblame0 -Nlame-dev mp3rtp.1
 	dh_installchangelogs ChangeLog

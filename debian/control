@@ -1,17 +1,14 @@
 Source: lame
 Section: sound
 Priority: optional
-Maintainer: Viral <viral@debian.org>
-Build-Depends: nasm, libncurses5-dev, libgtk1.2-dev, xlibs-dev, libglib1.2-dev
-Standards-Version: 3.5.2
+Maintainer: Rogerio Brito <linuxsup@ig.com.br>
+Build-Depends: nasm [i386], debhelper, libncurses5-dev
+Standards-Version: 3.5.6
 
 Package: lame
 Architecture: any
 Depends: ${shlibs:Depends}
-Conflicts: lame-i686-minimal
-Recommends: lame-extras
-Suggests: abcde
-Description: LAME Ain't an MP3 Encoder
+Description: An open source MP3 encoder
  Lame is a program which can be used to create compressed
  audio files. (Lame aint MP3 encoder). These audio files
  can be played back by popular mp3 players such as mpg123.
@@ -23,8 +20,9 @@ Description: LAME Ain't an MP3 Encoder
 
 Package: liblame0
 Architecture: any
+Depends: ${shlibs:Depends}
 Section: libs
-Description: LAME Ain't an MP3 Encoder
+Description: Shared library for mp3 encoding
  Lame is a program which can be used to create compressed
  audio files. (Lame aint MP3 encoder). These audio files
  can be played back by popular mp3 players such as mpg123.
@@ -32,13 +30,12 @@ Description: LAME Ain't an MP3 Encoder
  stdout, use a "-" for <outfile>.
  .
  This package contains the dynamic library.
- 
-Package: lame-dev
+
+Package: liblame0-dev
 Architecture: any
 Section: devel
 Depends: libc6-dev
-Recommends: liblame0
-Description: LAME Ain't an MP3 Encoder
+Description: Development files for lame
  Lame is a program which can be used to create compressed
  audio files. (Lame aint MP3 encoder). These audio files
  can be played back by popular mp3 players such as mpg123.
@@ -46,4 +43,3 @@ Description: LAME Ain't an MP3 Encoder
  stdout, use a "-" for <outfile>.
  .
  This package contains the static library and header files.
- 
