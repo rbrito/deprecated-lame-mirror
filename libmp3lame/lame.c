@@ -975,6 +975,7 @@ lame_init_params(lame_global_flags * const gfp)
         if ( gfc->nsPsy.use ) {
             gfc->PSY->mask_adjust = gfp->maskingadjust;
             gfc->PSY->mask_adjust_short = gfp->maskingadjust_short;
+            gfc->VBR->smooth = gfp->VBR_smooth;
         }
 
         

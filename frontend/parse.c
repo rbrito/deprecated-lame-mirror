@@ -1073,6 +1073,10 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     (void) lame_set_short_threshold( gfp, x, y);
                 }
 
+                T_ELIF_INTERNAL ("vbr-smooth")
+                    argUsed=1;
+                    (void) lame_set_vbr_smooth( gfp, atof( nextArg ) );
+
                 T_ELIF_INTERNAL ("maskingadjust")
                     argUsed=1;
                     (void) lame_set_maskingadjust( gfp, atof( nextArg ) );

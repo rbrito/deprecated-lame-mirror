@@ -414,6 +414,9 @@ int CDECL lame_get_highpasswidth(const lame_global_flags *);
  * unless you know what you are doing
  ***********************************************************************/
 
+int CDECL lame_set_vbr_smooth( lame_global_flags *, int);
+float CDECL lame_get_vbr_smooth( const lame_global_flags *);
+
 int CDECL lame_set_maskingadjust( lame_global_flags *, float);
 float CDECL lame_get_maskingadjust( const lame_global_flags *);
 int CDECL lame_set_maskingadjust_short( lame_global_flags *, float);
