@@ -1405,7 +1405,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                         (void) lame_set_mode( gfp, MONO );
                         break;
                     case 'k': 
-                        lame_set_lowpassfreq(gfp,-1);
+                        lame_set_lowpassfreq(gfp,1000000);
                         lame_set_highpassfreq(gfp,0);
                         break;
                     case 'd': 

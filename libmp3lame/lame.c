@@ -676,9 +676,8 @@ lame_print_config(const lame_global_flags * gfp)
                  "Using polyphase highpass filter, transition band: %5.0f Hz - %5.0f Hz\n",
                  0.5 * gfc->highpass1 * out_samplerate,
                  0.5 * gfc->highpass2 * out_samplerate);
-        if (gfc->lowpass1 > 0.) {
-            MSGF
-                (gfc,
+        if (0. < gfc->lowpass1 && gfc->lowpass1 < 1.0) {
+            MSGF(gfc,
                  "Using polyphase lowpass  filter, transition band: %5.0f Hz - %5.0f Hz\n",
                  0.5 * gfc->lowpass1 * out_samplerate,
                  0.5 * gfc->lowpass2 * out_samplerate);
