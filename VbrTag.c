@@ -300,16 +300,7 @@ int InitVbrTag(lame_global_flags *gfp)
 	}
 	}
 
-	if (pBs->bstype){
-	  add_dummy_vbrframe(gfp,8*gfp->TotalFrameSize);
-	}else{
-	  /* Put empty bytes into the bitstream */
-	  for (i=0;i<gfp->TotalFrameSize;i++)
-	    {
-	      /* Write a byte to the bitstream */
-	      putbits(pBs,0,8);
-	    }
-	}
+	add_dummy_vbrframe(gfp,8*gfp->TotalFrameSize);
 	  
 	/* Success */
 	return 0;

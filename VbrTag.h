@@ -21,7 +21,7 @@
 
 #ifndef VRBTAG_H_INCLUDED
 #define VRBTAG_H_INCLUDED
-
+#include "lame.h"
 /* -----------------------------------------------------------
  * A Vbr header may be present in the ancillary
  * data field of the first frame of an mp3 bitstream
@@ -38,7 +38,6 @@
  * e.g. half duration seek point = (toc[50]/256.0) * total_bitstream_bytes
  */
 
-#include "l3bitstream.h"
 
 #define FRAMES_FLAG     0x0001
 #define BYTES_FLAG      0x0002

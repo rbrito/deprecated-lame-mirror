@@ -25,7 +25,6 @@
 #include "util.h"
 #include "l3side.h"
 #include "quantize.h"
-#include "l3bitstream.h"
 #include "reservoir.h"
 #include "quantize-pvt.h"
 #include "gtkanal.h"

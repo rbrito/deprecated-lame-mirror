@@ -251,10 +251,8 @@ CC_SWITCHES = -DNDEBUG -D__NO_MATH_INLINES $(CC_OPTS) $(SNDLIB) $(GTK) $(BRHIST_
 c_sources = \
         brhist.c \
 	bitstream.c \
-	formatBitstream.c \
 	fft.c \
 	get_audio.c \
-	l3bitstream.c \
         id3tag.c \
 	ieeefloat.c \
         lame.c \

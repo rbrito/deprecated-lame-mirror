@@ -31,8 +31,6 @@
 #include "newmdct.h"
 #include "quantize.h"
 #include "quantize-pvt.h"
-#include "l3bitstream.h"
-#include "formatBitstream.h"
 #include "bitstream.h"
 #include "version.h"
 #include "VbrTag.h"
@@ -81,7 +79,6 @@ void lame_init_params(lame_global_flags *gfp)
 
 
   gfc->frameNum=0;
-  InitFormatBitStream();
   if (gfp->num_channels==1) {
     gfp->mode = MPG_MD_MONO;
   }
@@ -440,15 +437,7 @@ void lame_init_params(lame_global_flags *gfp)
     gfp->bWriteVbrTag=0;  /* disable Xing VBR tag */
   }
 
-#define NEWFMT
-#ifdef NEWFMT  
-  gfc->bs.bstype=1;
-#else
-  gfc->bs.bstype=0;
-#endif
   init_bit_stream_w(gfc);
-
-
 
 
   /* set internal feature flags.  USER should not access these since
@@ -903,11 +892,7 @@ char *mp3buf, int mp3buf_size)
 
   /*  write the frame to the bitstream  */
   getframebits(gfp,&bitsPerFrame,&mean_bits);
-  if (1==gfc->bs.bstype) 
-    format_bitstream( gfp, bitsPerFrame, l3_enc, scalefac);
-  else
-    III_format_bitstream( gfp,bitsPerFrame, l3_enc, scalefac);
-
+  format_bitstream( gfp, bitsPerFrame, l3_enc, scalefac);
 
   /* copy mp3 bit buffer into array */
   mp3count = copy_buffer(mp3buf,mp3buf_size,&gfc->bs);
@@ -1177,12 +1162,7 @@ int lame_encode_finish(lame_global_flags *gfp,char *mp3buffer, int mp3buffer_siz
   }
 
 
-  if (1==gfc->bs.bstype) 
-    flush_bitstream(gfp);
-  else
-    III_FlushBitstream();
-
-
+  flush_bitstream(gfp);
   mp3buffer_size_remaining = mp3buffer_size - mp3count;
   /* if user specifed buffer size = 0, dont check size */
   if (mp3buffer_size == 0) mp3buffer_size_remaining=0;  

@@ -241,22 +241,13 @@ void empty_buffer(Bit_stream_struc *bs)
 int copy_buffer(char *buffer,int size,Bit_stream_struc *bs)
 {
   int i,j=0;
-  if (bs->bstype) {
-    int minimum = bs->buf_byte_idx + 1;
-    if (minimum <= 0) return 0;
-    if (size!=0 && minimum>size) return -1; /* buffer is too small */
-    memcpy(buffer,bs->buf,minimum);
-    bs->buf_byte_idx = -1;
-    bs->buf_bit_idx = 0;
-    return minimum;
-  }else{
-    if (size!=0 && (bs->buf_size-1 - bs->buf_byte_idx) > size ) return -1;
-    for (i=bs->buf_size-1 ; i > bs->buf_byte_idx ; (i-- ))
-      buffer[j++]=bs->buf[i];
-    assert(j == (bs->buf_size-1 - bs->buf_byte_idx));
-    empty_buffer(bs);  /* empty buffer, (changes bs->buf_size) */
-    return j;
-  }
+  int minimum = bs->buf_byte_idx + 1;
+  if (minimum <= 0) return 0;
+  if (size!=0 && minimum>size) return -1; /* buffer is too small */
+  memcpy(buffer,bs->buf,minimum);
+  bs->buf_byte_idx = -1;
+  bs->buf_bit_idx = 0;
+  return minimum;
 }
 
 
@@ -267,20 +258,11 @@ void init_bit_stream_w(lame_internal_flags *gfc)
 {
   Bit_stream_struc* bs = &gfc->bs;
    alloc_buffer(bs, BUFFER_SIZE);
-   if (bs->bstype==1) {
-     /* takehiro style */
-     gfc->h_ptr = gfc->w_ptr = 0;
-     gfc->header[gfc->h_ptr].write_timing = 0;
-     gfc->bs.bstype = 1;
-     gfc->bs.buf_byte_idx = -1;
-     gfc->bs.buf_bit_idx = 0;
-     gfc->bs.totbit = 0;
-   }else{  
-     /* ISO style */
-     bs->buf_byte_idx = BUFFER_SIZE-1;
-     bs->buf_bit_idx=8;
-     bs->totbit=0;
-   }
+   gfc->h_ptr = gfc->w_ptr = 0;
+   gfc->header[gfc->h_ptr].write_timing = 0;
+   gfc->bs.buf_byte_idx = -1;
+   gfc->bs.buf_bit_idx = 0;
+   gfc->bs.totbit = 0;
 }
 
 
@@ -303,33 +285,6 @@ void freegfc(lame_internal_flags *gfc)   /* bit stream structure */
 int putmask[9]={0x0, 0x1, 0x3, 0x7, 0xf, 0x1f, 0x3f, 0x7f, 0xff};
 
 
-/*write N bits into the bit stream */
-void putbits(
-Bit_stream_struc *bs,   /* bit stream structure */
-unsigned int val,       /* val to write into the buffer */
-int N)                  /* number of bits of val */
-{
- register int j = N;
- register int k, tmp;
-
- if (N > MAX_LENGTH)
-    fprintf(stderr,"Cannot read or write more than %d bits at a time.\n", MAX_LENGTH);
-
- bs->totbit += N;
- while (j > 0) {
-   k = Min(j, bs->buf_bit_idx);
-   tmp = val >> (j-k);
-   bs->buf[bs->buf_byte_idx] |= (tmp&putmask[k]) << (bs->buf_bit_idx-k);
-   bs->buf_bit_idx -= k;
-   if (!bs->buf_bit_idx) {
-       bs->buf_bit_idx = 8;
-       bs->buf_byte_idx--;
-       assert(bs->buf_byte_idx >= 0);
-       bs->buf[bs->buf_byte_idx] = 0;
-   }
-   j -= k;
- }
-}
 
 
 

@@ -123,7 +123,6 @@ extern enum byte_order NativeByteOrder;
 /* "bit_stream.h" Type Definitions */
 
 typedef struct  bit_stream_struc {
-    int         bstype;  
     unsigned char *buf;         /* bit stream buffer */
     int         buf_size;       /* size of buffer (in number of bytes) */
     unsigned long        totbit;         /* bit counter of bit stream */
@@ -344,7 +343,6 @@ extern int            copy_buffer(char *buffer,int buffer_size,Bit_stream_struc 
 extern void           init_bit_stream_w(lame_internal_flags *gfc);
 extern void           alloc_buffer(Bit_stream_struc*, int);
 extern void           freegfc(lame_internal_flags *gfc);
-extern void           putbits(Bit_stream_struc *bs,unsigned int val,int N);
 extern void           reorder(int * bands, int ix[576], int ix_org[576]);
 
 
