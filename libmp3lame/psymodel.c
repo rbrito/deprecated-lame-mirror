@@ -564,20 +564,21 @@ ns_msfix(
     FLOAT msfix2 = gfc->presetTune.ms_maskadjust;
 
     for ( sb = 0; sb < SBMAX_l; sb++ ) {
-	FLOAT thmL, thmR, thmM, thmS;
+	FLOAT thmL, thmR, thmM, thmS, x;
 	thmL = thmR = thmM = thmS = gfc->ATH.l_avg[sb] * gfc->ATH.adjust;
 	thmL = Max(mr[0].thm.l[sb], thmL);
 	thmR = Max(mr[1].thm.l[sb], thmR);
 	thmM = Max(mr[2].thm.l[sb], thmM);
 	thmS = Max(mr[3].thm.l[sb], thmS);
+	x = thmM + thmS;
 
-	if (thmL*msfix < thmM+thmS) {
-	    FLOAT f = thmL * msfix2 / (thmM+thmS);
+	if (thmL*msfix < x) {
+	    FLOAT f = thmL * msfix2 / x;
 	    thmM *= f;
 	    thmS *= f;
 	}
-	if (thmR*msfix < thmM+thmS) {
-	    FLOAT f = thmR * msfix2 / (thmM+thmS);
+	if (thmR*msfix < x) {
+	    FLOAT f = thmR * msfix2 / x;
 	    thmM *= f;
 	    thmS *= f;
 	}
@@ -589,20 +590,21 @@ ns_msfix(
 
     for (sb = 0; sb < SBMAX_s; sb++) {
 	for (sblock = 0; sblock < 3; sblock++) {
-	    FLOAT thmL, thmR, thmM, thmS;
+	    FLOAT thmL, thmR, thmM, thmS, x;
 	    thmL = thmR = thmM = thmS = gfc->ATH.s_avg[sb] * gfc->ATH.adjust;
 	    thmL = Max(mr[0].thm.s[sb][sblock], thmL);
 	    thmR = Max(mr[1].thm.s[sb][sblock], thmR);
 	    thmM = Max(mr[2].thm.s[sb][sblock], thmM);
 	    thmS = Max(mr[3].thm.s[sb][sblock], thmS);
+	    x = thmM + thmS;
 
-	    if (thmL*msfix < thmM+thmS) {
-		FLOAT f = thmL*msfix / (thmM+thmS);
+	    if (thmL*msfix < x) {
+		FLOAT f = thmL*msfix / x;
 		thmM *= f;
 		thmS *= f;
 	    }
-	    if (thmR*msfix < thmM+thmS) {
-		FLOAT f = thmR*msfix / (thmM+thmS);
+	    if (thmR*msfix < x) {
+		FLOAT f = thmR*msfix / x;
 		thmM *= f;
 		thmS *= f;
 	    }
