@@ -313,37 +313,11 @@ WriteWaveHeader(FILE * const fp, const int pcmbytes,
 
 
 
-#if defined(LIBSNDFILE)
-
-/*
-** Copyright (C) 1999 Albert Faber
-**
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
- * Library General Public License for more details.
- *
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
- */
-
 void
 close_infile(void)
 {
-    if (IS_MPEG123(input_format) {
-        if (fclose(musicin) != 0) {
-            fprintf(stderr, "Could not close audio input file\n");
-            exit(2);
-        }
-    }
-    else {
+#ifdef LIBSNDFILE
+    if (USE_LIBSNDFILE(input_format)) {
 	SNDFILE *gs_pSndFileIn = (SNDFILE *) musicin;
         if (gs_pSndFileIn) {
             if (sf_close(gs_pSndFileIn) != 0) {
@@ -351,11 +325,18 @@ close_infile(void)
                 exit(2);
             }
         }
+	return;
+    }
+#endif
+    if (fclose(musicin) != 0) {
+	fprintf(stderr, "Could not close audio input file\n");
+	exit(2);
     }
 }
 
 
 
+#if defined(LIBSNDFILE)
 static FILE   *
 OpenSndFile(lame_t gfp, char *inPath)
 {
@@ -911,17 +892,6 @@ parse_file_header(lame_t gfp, FILE * sf)
 	    /* ignore errors */
         }
 	input_format = sf_raw;
-    }
-}
-
-
-
-void
-close_infile(void)
-{
-    if (fclose(musicin) != 0) {
-        fprintf(stderr, "Could not close audio input file\n");
-        exit(2);
     }
 }
 

@@ -36,6 +36,13 @@ typedef enum sound_file_format_e {
 
 #define IS_MPEG123(x) ((x) & 0x10)
 
+#ifdef LIBSNDFILE
+/* even when with libsndfile, we cannot use it with mpeg layer 1,2,3 */
+# define USE_LIBSNDFILE(x) (!IS_MPEG123(x))
+#else
+# define USE_LIBSNDFILE(x) 0
+#endif
+
 FILE *init_outfile (char *outPath);
 void init_infile(lame_t , char *inPath);
 void close_infile(void);
