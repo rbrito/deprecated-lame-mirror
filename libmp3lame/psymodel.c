@@ -1104,18 +1104,23 @@ mp3x display               <------LONG------>
 	 */
 	gfc->masking_next[gr][chn].en.s[0][0] = -1.0;
 	gfc->useshort_next[gr][chn] = NORM_TYPE;
+	attack_adjust[chn] = 0.1;
 	for (i=0;i<3;i++) {
 	    /* calculate energies of each sub-shortblocks */
 	    if (gfc->nsPsy.subbk_ene[chn][i+2]
-		> attackThreshold * gfc->nsPsy.subbk_ene[chn][i+1]) {
-		gfc->useshort_next[gr][chn] = SHORT_TYPE;
-		current_is_short += (1 << chn);
-		first_attack_position[chn] = i;
+		<= attackThreshold * gfc->nsPsy.subbk_ene[chn][i+1])
+		continue;
+
+	    gfc->useshort_next[gr][chn] = SHORT_TYPE;
+	    current_is_short += (1 << chn);
+	    first_attack_position[chn] = i;
+
+	    if (gfc->nsPsy.subbk_ene[chn][i+1]
+		> gfc->nsPsy.subbk_ene[chn][i+2]*0.1)
 		attack_adjust[chn]
 		    = gfc->nsPsy.subbk_ene[chn][i+1]
 		    / gfc->nsPsy.subbk_ene[chn][i+2];
-		break;
-	    }
+	    break;
 	}
     }
 
