@@ -1455,6 +1455,7 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
              lame_set_experimentalX(gfp, 2);
              gfc->presetTune.quantcomp_type_s = 4;
              gfc->presetTune.quantcomp_adjust_mtrh = 9;
+			 gfc->presetTune.quantcomp_maxath_type_mtrh = 1;
           }
           else {
              lame_set_experimentalX(gfp, 3);
@@ -1480,6 +1481,7 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
           if (gfp->VBR == vbr_mtrh) {
              gfc->presetTune.quantcomp_type_s = 4;
              gfc->presetTune.quantcomp_adjust_mtrh = 9;
+			 gfc->presetTune.quantcomp_maxath_type_mtrh = 0;
              (void) lame_set_ATHlower( gfp, -2 );
           }
           else {

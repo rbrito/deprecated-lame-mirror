@@ -144,6 +144,7 @@ typedef struct {
   FLOAT8  quantcomp_adjust_rh_tot;    // adjustments for tot_noise with vbr-old
   FLOAT8  quantcomp_adjust_rh_max;    // adjustments for max_noise with vbr-old
   FLOAT8  quantcomp_adjust_mtrh;      // adjustments for calc_scalefac "c" with vbr-mtrh
+  int     quantcomp_maxath_type_mtrh; // quant compare for mtrh for when ath adjustment == 1
   int     quantcomp_type_s;           // quantization comparison to switch to on non-normal blocks
 } presetTune_t;
 

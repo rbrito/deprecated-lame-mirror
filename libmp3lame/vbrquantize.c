@@ -808,13 +808,23 @@ long_block_sf (
     int sfb;
     int vbrmean, vbrmn;
     int sf_cache[SBMAX_l];
+    int scalefac_criteria;
+
+    if (gfc->presetTune.use) {
+	    /* map experimentalX settings to internal selections */
+        static char const map[] = {2,1,0,3,6};
+        scalefac_criteria = map[gfc->presetTune.quantcomp_current];
+    }
+	else {
+        scalefac_criteria = gfc->VBR->quality;
+    }
     
     for (sfb = 0; sfb < SBMAX_l; ++sfb) {
         const  int start = gfc->scalefac_band.l[ sfb ];
         const  int end   = gfc->scalefac_band.l[ sfb+1 ];
         const  int width = end - start;
         
-        switch( gfc->VBR->quality ) {
+        switch( scalefac_criteria ) {
         default:
             /*  the fastest
              */

@@ -1920,10 +1920,15 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
     blocktype_d[chn] = gfc->blocktype_old[chn];  /* value returned to calling program */
     gfc->blocktype_old[chn] = blocktype[chn];    /* save for next call to l3psy_anal */
 
-    if (blocktype_d[chn] != NORM_TYPE)
-        gfc->presetTune.quantcomp_current = gfc->presetTune.quantcomp_type_s;
-    else
-        gfc->presetTune.quantcomp_current = gfp->experimentalX;
+    if (gfc->presetTune.use) {
+        if (blocktype_d[chn] != NORM_TYPE)
+            gfc->presetTune.quantcomp_current = gfc->presetTune.quantcomp_type_s;
+        else
+            gfc->presetTune.quantcomp_current = gfp->experimentalX;
+    
+        if (gfp->VBR == vbr_mtrh && blocktype_d[chn] == NORM_TYPE)
+		    gfc->presetTune.quantcomp_current = gfc->presetTune.quantcomp_maxath_type_mtrh;
+    }
   }
   
   /*********************************************************************
@@ -1947,7 +1952,6 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	if (gfp->analysis) gfc->pinfo->pe[gr_out][chn] = percep_MS_entropy[chn-2];
       }
     }
-
 
   return 0;
 }
