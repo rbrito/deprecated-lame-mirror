@@ -20,13 +20,15 @@
 #	passing arguments, one can modify the default behaviour:
 #	COMP=<not INTEL or BCC>    ->  use MS compiler
 #	WARN=<anything but OFF>    ->  give verbose compiler warnings
-#	OPT=<NORMAL,EXTRA,ULTRA>   ->  different Intel optimizations
 #	ASM=<anything but YES>     ->  no NASM nor MMX
 #	MMX=<anything but YES>     ->  do not assemble MMX code
 #	CFG=<anything but RH>      ->  disable Robert's modifications
 #	OGG=<anything>             ->  have Vorbis library, use it
 #	CPU=P1                     ->  optimize for Pentium instead of P II/III
+#	CPU=P2                     ->  optimize for Pentium II/III, you need a PII or better
+#	CPU=P3                     ->  optimize for Pentium III, you need a PIII or better
 #	GTK=YES                    ->  have GTK, adds mp3x to default targets
+#	PREC=SLOPPY                ->  use single float instead of double
 #
 #	Example:
 #	nmake -f Makefile.MSVC CPU=P1 GTK=YES
@@ -61,17 +63,16 @@ CFG = RH
 !	ENDIF
 
 !	IF "$(CPU)" == ""
-CPU = P3
-!	ENDIF
-
-!	IF "$(OPT)" == ""
-OPT = NORMAL
+CPU = P2auto
 !	ENDIF
 
 !	IF "$(WARN)" == ""
 WARN = OFF
 !	ENDIF
 
+!	IF "$(PREC)" == ""
+PREC = DOUBLE
+!	ENDIF
 
 
 OFF = win32
@@ -92,22 +93,26 @@ OFF = win32
 !	ENDIF 
 !	IF "$(COMP)" == "INTEL"
 !	MESSAGE using INTEL COMPILER
-!	IF "$(OPT)" == "NORMAL"
-!	MESSAGE + perform single-file optimizations
+!	IF "$(CPU)" == "P1"
+!	MESSAGE + optimizing for Pentium (MMX)
+!	ELSE
+!	IF "$(CPU)" == "P2"
+!	MESSAGE + you need a Pentium II or better
+!	ELSE
+!	IF "$(CPU)" == "P3"
+!	MESSAGE + you need a Pentium III or better
+!	ELSE
+!	MESSAGE + otimizing for Pentium II/III
 !	ENDIF
-!	IF "$(OPT)" == "EXTRA"
-!	MESSAGE + perform multi-file optimizations
 !	ENDIF
-!	IF "$(OPT)" == "ULTRA"
-!	MESSAGE + perform multi-file optimizations over entire program
 !	ENDIF
 !	ELSE
 !	MESSAGE using MS COMPILER
-!	ENDIF
 !	IF "$(CPU)" == "P1"
 !	MESSAGE + optimizing for Pentium (MMX) (may slow down PIII a few percent)
 !	ELSE
-!	MESSAGE + optimizing for Pentium II/III (slows down Pentium a few percent)
+!	MESSAGE + optimizing for Pentium II/III
+!	ENDIF
 !	ENDIF
 !	MESSAGE ----------------------------------------------------------------------
 
@@ -154,7 +159,7 @@ LN_OPTS = /nologo /DNDEBUG
 !	IF "$(CPU)" == "P1"
 CC_OPTS = $(CC_OPTS) /G5
 !	ELSE
-CC_OPTS = $(CC_OPTS) /GX
+CC_OPTS = $(CC_OPTS) /G6
 !	ENDIF
 
 !	IF "$(WARN)" == "OFF"
@@ -238,21 +243,15 @@ PGM = $(T_LAME)
 #	2) faster compared to 3) or 4) on Pentium MMX at 200 MHz
 
 !	IF "$(CPU)" == "P1"
-CC_OPTS = /G5 /QaxiMK
+CC_OPTS = /G5 /QaxiMK /QIfdiv /QI0f
 !	ELSE
-CC_OPTS = /G6 /Qaxi
-!	ENDIF
-
-!	IF "$(OPT)" == "NORMAL"
-CC_OPTS = $(CC_OPTS) /Qip
+!	IF "$(CPU)" == "P2"
+CC_OPTS = /G6 /Qxi /QaxMK
 !	ELSE
-!	IF "$(OPT)" == "EXTRA"
-#	resulting exe seems to be not faster than with NORMAL
-CC_OPTS = $(CC_OPTS) /Qip /Qipo
+!	IF "$(CPU)" == "P3"
+CC_OPTS = /G6 /QxiMK
 !	ELSE
-!	IF "$(OPT)" == "ULTRA"
-#	resulting exe seems to be not faster than with NORMAL
-CC_OPTS = $(CC_OPTS) /Qip /Qipo_wp
+CC_OPTS = /G6 /QaxiMK /QIfdiv /QI0f
 !	ENDIF
 !	ENDIF
 !	ENDIF
@@ -263,8 +262,13 @@ CC_OPTS = $(CC_OPTS) /w
 CC_OPTS = $(CC_OPTS) /W2 /Wport
 !	ENDIF
 
-CC_OPTS = /nologo /DNDEBUG /YX /GA /O2 /Gs1024 \
-          /Qunroll /Qsox- /QIfdiv /QI0f $(CC_OPTS) 
+!	IF "$(PREC)" == "SINGLE"
+CC_OPTS = $(CC_OPTS) /DFLOAT8=float
+!	ENDIF
+
+CC_OPTS = /nologo /DNDEBUG /YX /GA /Ox /Ob2 \
+          /Qunroll /Qsox- /Qip $(CC_OPTS)
+
 
 LN_OPTS = $(CC_OPTS)
 LN_DLL = /LD
