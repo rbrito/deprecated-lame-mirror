@@ -624,13 +624,20 @@ int read_samples_pcm(lame_global_flags *gfp,short sample_buffer[2304], int frame
     int samples_read;
     int iswav=(gfp->input_format==sf_wave);
 
-    samples_read = fread(sample_buffer, sizeof(short), (unsigned int)samples_to_read, gfp->musicin);
-    if (ferror(gfp->musicin)) {
-      ERRORF("Error reading input file\n");
+    if (16==gfc->pcmbitwidth) {
+      samples_read = fread(sample_buffer, 2, (unsigned int)samples_to_read, gfp->musicin);
+    }else if (8==gfc->pcmbitwidth) {
+      signed char temp[2304];
+      int i;
+      samples_read = fread(temp, 1, (unsigned int)samples_to_read, gfp->musicin);
+      for (i=0 ; i<samples_read; ++i)
+	sample_buffer[i]=(short int)temp[i]*256;
+    }else{
+      ERRORF("Only 8 and 16 bit input files supported \n");
       LAME_ERROR_EXIT();
     }
-    if (16!=gfc->pcmbitwidth) {
-      ERRORF("Compile with LIBSNDFILE to read non 16 bit input files\n");
+    if (ferror(gfp->musicin)) {
+      ERRORF("Error reading input file\n");
       LAME_ERROR_EXIT();
     }
 
@@ -691,25 +698,6 @@ typedef struct fmt_chunk_data_struct {
 
 
 
-
-/************************************************************************
-*
-* wave_check
-*
-* PURPOSE:	Checks Wave header information to make sure it is valid.
-*			Exits if not.
-*
-************************************************************************/
-
-static void
-wave_check(char *file_name, fmt_chunk_data *wave_info)
-{
-	if (wave_info->bits_per_sample != 16) {
-		ERRORF("%d-bit sample-size is not supported!\n",
-			wave_info->bits_per_sample);
-		LAME_ERROR_EXIT();
-	}
-}
 
 
 /*****************************************************************************
@@ -783,7 +771,6 @@ parse_wave_header(lame_global_flags *gfp,FILE *sf)
 
 	if (is_wav) {
 		/* make sure the header is sane */
-		wave_check("name", &wave_info);
 		gfp->num_channels  = wave_info.channels;
 		gfp->in_samplerate = wave_info.samples_per_sec;
 		gfc->pcmbitwidth = wave_info.bits_per_sample;
