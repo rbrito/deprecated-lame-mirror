@@ -513,8 +513,8 @@ int calc_xmin(
 	if (en0 > tmpATH) ath_over++;
     }   /* end of long block loop */
 
-    sfb = cod_info->sfb_smin;
-    for (; gsfb < cod_info->psymax; gsfb += 3) {
+    for (sfb = cod_info->sfb_smin;
+	 gsfb < cod_info->psymax; sfb++, gsfb += 3) {
 	int width, b;
 	if ( gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh )
 	    tmpATH = athAdjust( ATH->adjust, ATH->s[sfb], ATH->floor );
@@ -560,7 +560,6 @@ int calc_xmin(
 		    l3_xmin[gsfb+b] = xmin;
 	    }
         }
-	sfb++;
     }   /* end of short block sfb loop */
 
     return ath_over;
