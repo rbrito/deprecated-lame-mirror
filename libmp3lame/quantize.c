@@ -826,8 +826,11 @@ amp_scalefac_bands(
 		return;
 	}
 	cod_info->scalefac[sfb]++;
-	for (l = -width; l < 0; l++)
+    for (l = -width; l < 0; l++) {
 	    xrpow[j+l] *= ifqstep34;
+        if (xrpow[j+l] > cod_info->xrpow_max)
+            cod_info->xrpow_max = xrpow[j+l];
+    }
 
 	if (gfc->noise_shaping_amp==2)
 	    return;
@@ -861,8 +864,11 @@ inc_scalefac_scale (
 	j += width;
         if (s & 1) {
             s++;
-            for (l = -width; l < 0; l++) 
+            for (l = -width; l < 0; l++) {
                 xrpow[j+l] *= ifqstep34;
+                if (xrpow[j+l] > cod_info->xrpow_max)
+                    cod_info->xrpow_max = xrpow[j+l];
+            }
         }
         cod_info->scalefac[sfb] = s >> 1;
     }
@@ -898,17 +904,17 @@ inc_subblock_gain (
     }
 
     for (window = 0; window < 3; window++) {
-	int s1, s2, l, j;
+        int s1, s2, l, j;
         s1 = s2 = 0;
 
         for (sfb = cod_info->sfb_lmax+window;
-	     sfb < cod_info->sfbdivide; sfb += 3) {
+        sfb < cod_info->sfbdivide; sfb += 3) {
             if (s1 < scalefac[sfb])
-		s1 = scalefac[sfb];
+                s1 = scalefac[sfb];
         }
-	for (; sfb < cod_info->sfbmax; sfb += 3) {
-	    if (s2 < scalefac[sfb])
-		s2 = scalefac[sfb];
+        for (; sfb < cod_info->sfbmax; sfb += 3) {
+            if (s2 < scalefac[sfb])
+                s2 = scalefac[sfb];
         }
 
         if (s1 < 16 && s2 < 8)
@@ -918,37 +924,41 @@ inc_subblock_gain (
             return 1;
 
         /* even though there is no scalefactor for sfb12
-         * subblock gain affects upper frequencies too, that's why
-         * we have to go up to SBMAX_s
-         */
+        * subblock gain affects upper frequencies too, that's why
+        * we have to go up to SBMAX_s
+        */
         cod_info->subblock_gain[window]++;
-	j = gfc->scalefac_band.l[cod_info->sfb_lmax];
-	for (sfb = cod_info->sfb_lmax+window;
-	     sfb < cod_info->sfbmax; sfb += 3) {
-	    FLOAT8 amp;
-	    int width = cod_info->width[sfb], s = scalefac[sfb];
-	    assert(s >= 0);
-	    s = s - (4 >> cod_info->scalefac_scale);
+        j = gfc->scalefac_band.l[cod_info->sfb_lmax];
+        for (sfb = cod_info->sfb_lmax+window;
+        sfb < cod_info->sfbmax; sfb += 3) {
+            FLOAT8 amp;
+            int width = cod_info->width[sfb], s = scalefac[sfb];
+            assert(s >= 0);
+            s = s - (4 >> cod_info->scalefac_scale);
             if (s >= 0) {
-		scalefac[sfb] = s;
-		j += width*3;
-		continue;
-	    }
-
-	    scalefac[sfb] = 0;
-	    amp = IPOW20(210 + (s << (cod_info->scalefac_scale + 1)));
-	    j += width * (window+1);
-	    for (l = -width; l < 0; l++) {
-		xrpow[j+l] *= amp;
+                scalefac[sfb] = s;
+                j += width*3;
+                continue;
             }
-	    j += width*(3 - window - 1);
+
+            scalefac[sfb] = 0;
+            amp = IPOW20(210 + (s << (cod_info->scalefac_scale + 1)));
+            j += width * (window+1);
+            for (l = -width; l < 0; l++) {
+                xrpow[j+l] *= amp;
+                if (xrpow[j+l] > cod_info->xrpow_max)
+                    cod_info->xrpow_max = xrpow[j+l];
+            }
+            j += width*(3 - window - 1);
         }
 
-	{
-	    FLOAT8 amp = IPOW20(210 - 8);
-	    j += cod_info->width[sfb] * (window+1);
-	    for (l = -cod_info->width[sfb]; l < 0; l++)
-		xrpow[j+l] *= amp;
+        {
+        FLOAT8 amp = IPOW20(210 - 8);
+        j += cod_info->width[sfb] * (window+1);
+        for (l = -cod_info->width[sfb]; l < 0; l++)
+            xrpow[j+l] *= amp;
+            if (xrpow[j+l] > cod_info->xrpow_max)
+                cod_info->xrpow_max = xrpow[j+l];
         }
     }
     return 0;
