@@ -44,12 +44,12 @@ const char*  get_lame_version ( void )
 {
     static char ret [48];
     
-    if (LAME_ALPHA_VERSION > 0u)
+    if (LAME_ALPHA_VERSION > 0)
       /* adding date and time to version string makes it harder for
        * output validation */
       /*        sprintf ( ret, "%u.%02d (alpha %u, %6.6s %5.5s)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION, LAME_ALPHA_VERSION, __DATE__, __TIME__ ); */
         sprintf ( ret, "%u.%02d (alpha %u)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION, LAME_ALPHA_VERSION);
-    else if (LAME_BETA_VERSION > 0u)
+    else if (LAME_BETA_VERSION > 0)
         sprintf ( ret, "%u.%02d (beta %u, %s)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION, LAME_BETA_VERSION, __DATE__ );
     else
         sprintf ( ret, "%u.%02d", LAME_MAJOR_VERSION, LAME_MINOR_VERSION );
@@ -61,9 +61,9 @@ const char*  get_psy_version ( void )
 {
     static char ret [48];
     
-    if (PSY_ALPHA_VERSION > 0u)
+    if (PSY_ALPHA_VERSION > 0)
         sprintf ( ret, "%u.%02d (alpha %u, %6.6s %5.5s)", PSY_MAJOR_VERSION, PSY_MINOR_VERSION, PSY_ALPHA_VERSION, __DATE__, __TIME__ );
-    else if (PSY_BETA_VERSION > 0u)
+    else if (PSY_BETA_VERSION > 0)
         sprintf ( ret, "%u.%02d (beta %u, %s)", PSY_MAJOR_VERSION, PSY_MINOR_VERSION, PSY_BETA_VERSION, __DATE__ );
     else
         sprintf ( ret, "%u.%02d", PSY_MAJOR_VERSION, PSY_MINOR_VERSION );
@@ -75,9 +75,9 @@ const char*  get_mp3x_version ( void )
 {
     static char ret [48];
     
-    if (MP3X_ALPHA_VERSION > 0u)
+    if (MP3X_ALPHA_VERSION > 0)
         sprintf ( ret, "%u:%02u (alpha %u, %6.6s %5.5s)", MP3X_MAJOR_VERSION, MP3X_MINOR_VERSION, MP3X_ALPHA_VERSION, __DATE__, __TIME__ );
-    else if (MP3X_BETA_VERSION > 0u)
+    else if (MP3X_BETA_VERSION > 0)
         sprintf ( ret, "%u:%02u (beta %u, %s)", MP3X_MAJOR_VERSION, MP3X_MINOR_VERSION, MP3X_BETA_VERSION, __DATE__ );
     else
         sprintf ( ret, "%u:%02u", MP3X_MAJOR_VERSION, MP3X_MINOR_VERSION );
