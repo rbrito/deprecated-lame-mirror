@@ -563,6 +563,9 @@ struct lame_internal_flags {
     PMPSTR pmp;
     PMPSTR pmp_replaygain;
 #endif
+
+    int nogap_total;
+    int nogap_current;
 };
 
 /* same as lame_decode1 (look in lame.h), but returns 

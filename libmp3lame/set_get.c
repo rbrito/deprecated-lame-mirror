@@ -1,5 +1,5 @@
 /*
- * set/get functions for lame_internal_flags
+ * set/get functions for lame internal flags
  *
  * Copyright (c) 2001 Alexander Leidinger
  *
@@ -288,6 +288,122 @@ lame_get_free_format(lame_t gfc)
     return gfc->free_format;
 }
 
+
+/* Perform ReplayGain analysis */
+int
+lame_set_findReplayGain( lame_t  gfc,
+                         int                 findReplayGain )
+{
+    /* default = 0 (disabled) */
+
+    /* enforce disable/enable meaning, if we need more than two values
+       we need to switch to an enum to have an apropriate representation
+       of the possible meanings of the value */
+    if ( 0 > findReplayGain || 1 < findReplayGain )
+        return -1;
+
+    gfc->findReplayGain = findReplayGain;
+
+    return 0;
+}
+
+int
+lame_get_findReplayGain( lame_t  gfc )
+{
+    assert( 0 <= gfc->findReplayGain && 1 >= gfc->findReplayGain);
+
+    return gfc->findReplayGain;
+}
+
+
+/* Decode on the fly. Find the peak sample. If ReplayGain analysis is 
+   enabled then perform it on the decoded data. */
+int
+lame_set_decode_on_the_fly( lame_t  gfc,
+                            int                 decode_on_the_fly )
+{
+#ifndef DECODE_ON_THE_FLY
+    return -1;
+#else
+    /* default = 0 (disabled) */
+
+    /* enforce disable/enable meaning, if we need more than two values
+       we need to switch to an enum to have an apropriate representation
+       of the possible meanings of the value */
+    if ( 0 > decode_on_the_fly || 1 < decode_on_the_fly )
+        return -1;
+
+    gfc->decode_on_the_fly = decode_on_the_fly;
+
+    return 0;
+#endif
+}
+
+int
+lame_get_decode_on_the_fly( lame_t  gfc )
+{
+    assert( 0 <= gfc->decode_on_the_fly && 1 >= gfc->decode_on_the_fly );
+
+    return gfc->decode_on_the_fly;
+}
+
+/* DEPRECATED. same as lame_set_decode_on_the_fly() */
+int
+lame_set_findPeakSample( lame_t  gfc,
+                           int                 arg )
+{
+    return lame_set_decode_on_the_fly(gfc, arg);
+}
+
+int
+lame_get_findPeakSample( lame_t  gfc )
+{
+    return lame_get_decode_on_the_fly(gfc);
+}
+
+/* DEPRECATED. same as lame_set_findReplayGain() */
+int
+lame_set_ReplayGain_input( lame_t  gfc,
+                           int                 arg )
+{
+    return lame_set_findReplayGain(gfc, arg);
+}
+
+int
+lame_get_ReplayGain_input( lame_t  gfc )
+{
+    return lame_get_findReplayGain(gfc);
+}
+
+/* set and get some gapless encoding flags */
+
+int
+lame_set_nogap_total( lame_t gfc, int the_nogap_total )
+{
+    gfc->nogap_total = the_nogap_total;
+    return 0;
+}
+
+int
+lame_get_nogap_total( lame_t gfc )
+{
+    return gfc->nogap_total;
+}
+
+int
+lame_set_nogap_currentindex( lame_t gfc,
+                             int the_nogap_index )
+{
+    gfc->nogap_current = the_nogap_index;
+    return 0;
+}
+
+int
+lame_get_nogap_currentindex( lame_t gfc )
+{
+    return gfc->nogap_current;
+}
+  
 
 /* message handlers */
 int

@@ -95,6 +95,7 @@ int in_endian=order_littleEndian;
 int in_bitwidth=16;
 int decode_only=0;
 static int ignore_tag_errors; /* Ignore errors in values passed for tags */
+int print_clipping_info;      /* print info whether waveform clips */
 
 /**  
  *  Long Filename support for the WIN32 platform
@@ -403,6 +404,16 @@ long_help (lame_t gfc, FILE* const fp, const char* ProgramName, int lessmode )  
               "    --scale-r <arg> scale channel 1 (right) input (multiply PCM data) by <arg>\n"
               );
 
+    fprintf ( fp,
+              "    --noreplaygain         disable ReplayGain analysis\n"
+              "    --replaygain-fast      compute RG fast but slightly inaccurately (default)\n"
+#ifdef HAVE_MPGLIB
+              "    --replaygain-accurate  compute RG more accurately and find the peak sample\n"
+              "    --clipdetect    enable --replaygain-accurate and print a message whether\n"
+              "                    clipping occurs and how far the waveform is from full scale\n"
+#endif
+	);
+
     wait_for ( fp, lessmode );
     fprintf ( fp,
               "  Verbosity:\n"
@@ -520,7 +531,7 @@ long_help (lame_t gfc, FILE* const fp, const char* ProgramName, int lessmode )  
               "    --space-id3v1   pad version 1 tag with spaces instead of nulls\n"
               "    --pad-id3v2     pad version 2 tag with extra 128 bytes\n"
               "    --genre-list    print alphabetically sorted ID3 genre list and exit\n"
-              "    --keeptag       keep ID3v1 tag of input file(mp3 only)\n"
+              "    --keeptag       keep ID3 tag of input file(mp3 only)\n"
               "\n"
               "    Note: A version 2 tag will NOT be added unless one of the input fields\n"
               "    won't fit in a version 1 tag (e.g. the title string is longer than 30\n"
@@ -824,8 +835,9 @@ int  parse_args (lame_t gfp, int argc, char** argv,
     double      val;
     int         nogap=0;
     int         nogap_tags=0;  /* set to 1 to use VBR tags in NOGAP mode */
-    const char* ProgramName  = argv[0]; 
-    int count_nogap=0;
+    int		count_nogap=0;
+    int 	noreplaygain=0;  /* is RG explicitly disabled by the user */
+    const char* ProgramName=argv[0]; 
 
     inPath [0] = '\0';   
     outPath[0] = '\0';
@@ -838,6 +850,7 @@ int  parse_args (lame_t gfp, int argc, char** argv,
     mp3_delay = 0;   
     mp3_delay_set=0;
     disable_wav_header=0;
+    print_clipping_info = 0;
 
     /* process args */
     for ( i = 0, err = 0; ++i < argc  &&  !err; ) {
@@ -982,6 +995,21 @@ int  parse_args (lame_t gfp, int argc, char** argv,
                     argUsed=1;
                     lame_set_scale_right( gfp, atof(nextArg) );
                 
+                T_ELIF ("replaygain-fast")
+                    lame_set_findReplayGain(gfp,1);
+#ifdef HAVE_MPGLIB
+                T_ELIF ("replaygain-accurate")
+		    lame_set_decode_on_the_fly(gfp,1);
+		    lame_set_findReplayGain(gfp,1);
+
+                T_ELIF ("clipdetect")
+		    print_clipping_info = 1;
+		    lame_set_decode_on_the_fly(gfp,1);
+#endif
+                T_ELIF ("noreplaygain")
+		    noreplaygain = 1;
+		    lame_set_findReplayGain(gfp,0);
+
                 T_ELIF ("freeformat")
                     lame_set_free_format(gfp,1);
                 
@@ -1449,22 +1477,26 @@ int  parse_args (lame_t gfp, int argc, char** argv,
     
     if ( outPath[0] == '\0' && count_nogap == 0) {
         if ( inPath[0] == '-' ) {
-            /* if input is stdin, default output is stdout */
-            strcpy(outPath,"-");
-        } else {
-            strncpy(outPath, inPath, PATH_MAX + 1 - 4);
-            if (decode_only) {
-                strncat (outPath, ".wav", 4 );
-            } else {
-                strncat (outPath, ".mp3", 4 );
-            }
+	    /* if input is stdin, default output is stdout */
+	    strcpy(outPath,"-");
+	} else {
+	    strncpy(outPath, inPath, PATH_MAX + 1 - 4);
+	    if (decode_only) {
+		strncat (outPath, ".wav", 4 );
+	    } else {
+		strncat (outPath, ".mp3", 4 );
+	    }
         }
     }
     
+    /* RG is enabled by default */
+    if (!noreplaygain) 
+	lame_set_findReplayGain(gfp,1);
+
     /* disable VBR tags with nogap unless the VBR tags are forced */
     if (nogap && lame_get_bWriteVbrTag(gfp) && nogap_tags==0) {
-      fprintf(stderr,"Note: Disabling VBR Xing/Info tag since it interferes with --nogap\n");
-      lame_set_bWriteVbrTag( gfp, 0 );
+	fprintf(stderr,"Note: Disabling VBR Xing/Info tag since it interferes with --nogap\n");
+	lame_set_bWriteVbrTag( gfp, 0 );
     }
 
     /* some file options not allowed with stdout */

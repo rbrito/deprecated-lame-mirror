@@ -186,9 +186,41 @@ MPEG_mode CDECL lame_get_mode(lame_t);
 int CDECL lame_set_force_ms(lame_t, int);
 int CDECL lame_get_force_ms(lame_t);
 
+/* perform ReplayGain analysis?  default = 0 (disabled) */
+int CDECL lame_set_findReplayGain(lame_t, int);
+int CDECL lame_get_findReplayGain(lame_t);
+
+/* decode on the fly. Search for the peak sample. If the ReplayGain
+ * analysis is enabled then perform the analysis on the decoded data
+ * stream. default = 0 (disabled) 
+ * NOTE: if this option is set the build-in decoder should not be used */
+int CDECL lame_set_decode_on_the_fly(lame_t, int);
+int CDECL lame_get_decode_on_the_fly(lame_t);
+
+/* is ReplayGain analysis performed */
+int CDECL lame_get_findReplayGain(lame_t);
+
+/* Gain change required for preventing clipping. The value is correct only if 
+   peak sample searching was enabled. If negative then the waveform 
+   already does not clip. The value is multiplied by 10 and rounded up. */
+int CDECL lame_get_noclipGainChange(lame_t);
+
+/* user-specified scale factor required for preventing clipping. Value is 
+   correct only if peak sample searching was enabled and no user-specified
+   scaling was performed. If negative then either the waveform already does
+   not clip or the value cannot be determined */
+float CDECL lame_get_noclipScale(lame_t);
+
 /* use free_format?  default = 0 (disabled) */
 int CDECL lame_set_free_format(lame_t, int);
 int CDECL lame_get_free_format(lame_t);
+
+/* counters for gapless encoding */
+int CDECL lame_set_nogap_total(lame_t, int);
+int CDECL lame_get_nogap_total(lame_t);
+
+int CDECL lame_set_nogap_currentindex(lame_t , int);
+int CDECL lame_get_nogap_currentindex(lame_t);
 
 /*
  * OPTIONAL:
