@@ -435,7 +435,7 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    -b <bitrate>    specify minimum allowed bitrate, default  32 kbps\n"
               "    -B <bitrate>    specify maximum allowed bitrate, default 320 kbps\n"
               "    -F              strictly enforce the -b option, for use with players that\n"
-              "                    do not support low bitrate mp3 (Apex AD600-A DVD/mp3 player)\n"
+              "                    do not support low bitrate mp3\n"
               "    -t              disable writing LAME Tag\n"
               , lame_get_VBR_q(gfp) );
   
