@@ -21,6 +21,7 @@
 #ifndef GET_AUDIO_H_INCLUDED
 #define GET_AUDIO_H_INCLUDED
 
+#if (defined LIBSNDFILE || defined LAMESNDFILE)
 
 
 /* AIFF Definitions */
@@ -90,4 +91,5 @@ extern void   aiff_check(const char*, IFF_AIFF*, int*);
 
 
 #endif	/* ifndef _LIBSNDDLL */
+#endif  /* ifdef LAMESNDFILE or LIBSNDFILE */
 #endif	/* ifndef GET_AUDIO_H_INCLUDED*/

@@ -6,6 +6,14 @@
 #include <gtk/gtk.h>
 #endif
 
+/* dummy file i/o routines if file i/o support is not compiled into lame */
+#if !(defined LIBSNDFILE || defined LAMESNDFILE)
+void lame_init_infile(void) {return;}
+void lame_close_infile(void) {return;}
+int lame_readframe(short int Buffer[2][1152]) {return 0;}
+
+#else
+
 static FILE *musicin=NULL;  /* input file pointer */
 static unsigned long num_samples;
 static int samp_freq;
@@ -205,8 +213,7 @@ int read_samples_mp3(FILE *musicin,short int mpg123pcm[2][1152],int stereo)
   if (out==-1) return 0;
   else return out;
 }
-
-
+#endif  /* LAMESNDFILE or LIBSNDFILE */
 
 
 
@@ -282,15 +289,13 @@ int default_channels)
 {
   input_bitrate=0;
   if (gf.input_format==sf_mp3) {
-#ifndef AMIGA_MPEGA
+#ifdef AMIGA_MPEGA
+    if (-1==lame_decode_initfile(lpszFileName,&num_channels,&samp_freq,&input_bitrate,&num_samples)) {
+#else
     if ((musicin = fopen(lpszFileName, "rb")) == NULL) {
       fprintf(stderr, "Could not find \"%s\".\n", lpszFileName);
       exit(1);
     }
-#endif
-#ifdef AMIGA_MPEGA
-    if (-1==lame_decode_initfile(lpszFileName,&num_channels,&samp_freq,&input_bitrate,&num_samples)) {
-#else
     if (-1==lame_decode_initfile(musicin,&num_channels,&samp_freq,&input_bitrate,&num_samples)) {
 #endif
       fprintf(stderr,"Error reading headers in mp3 input file %s.\n", lpszFileName);
@@ -440,7 +445,8 @@ int read_samples_pcm(short sample_buffer[2304],int frame_size,int samples_to_rea
 }
 
 
-#else /* ifdef LIBSNDFILE */
+#endif /* ifdef LIBSNDFILE */
+#ifdef LAMESNDFILE 
 
 /************************************************************************
  ************************************************************************
@@ -929,6 +935,6 @@ void parse_file_header(FILE *sf)
 	  gf.input_format = sf_raw;
 	}
 }
-#endif  /* LIBSNDFILE */
+#endif  /* LAMESNDFILE */
 
 

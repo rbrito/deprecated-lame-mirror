@@ -124,14 +124,6 @@ SOURCE=..\fft.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\filters.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\filters.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\formatBitstream.c
 # End Source File
 # Begin Source File

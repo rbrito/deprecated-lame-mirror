@@ -15,17 +15,25 @@ CC = gcc
 CC_OPTS =  -O
 GTK = 
 GTKLIBS = 
-SNDLIB = 
-LIBSNDFILE =
+SNDLIB = -DLAMESNDFILE
+LIBSNDFILE =  
 LIBS = -lm 
 MAKEDEP = -M
 BRHIST_SWITCH = 
 LIBTERMCAP = 
 RM = rm -f
+CPP_OPTS = -DHAVEMPGLIB -DLAMEPARSE
+
 
 ##########################################################################
-# Define these to produce a VBR bitrate histogram.  Requires ncurses,
-# but libtermcap also works.  
+# To remove support for mp3 *decoding*, 
+# remove -DHAVEMPGLIB to CPP_OPTS
+##########################################################################
+
+
+##########################################################################
+# Define these to compile in code for the optional VBR bitrate histogram.  
+# Requires ncurses, but libtermcap also works.  
 # If you have any trouble, just dont define these
 ##########################################################################
 #BRHIST_SWITCH = -DBRHIST
@@ -34,7 +42,9 @@ RM = rm -f
 
 
 ##########################################################################
-# define these to use Erik de Castro Lopo's libsndfile 
+# SNDLIB =         no file i/o 
+# SNDLIB = -DLAMESNDFILE  to use internal LAME soundfile routines
+# SNDLIB = -DLIBSNDFILE   to use Erik de Castro Lopo's libsndfile 
 # http://www.zip.com.au/~erikd/libsndfile/
 # otherwise LAME can only read 16bit wav, aiff and pcm inputfiles.
 # Note: at present, libsndfile does not support input from stdin.  
@@ -47,6 +57,8 @@ RM = rm -f
 
 ##########################################################################
 # define these to use compile in support for the GTK mp3 frame analyzer
+# Requires  -DHAVEMPGLIB
+# and SNDLIB = -DLAME or -DLIBSNDFILE
 ##########################################################################
 #GTK = -DHAVEGTK `gtk-config --cflags`
 #GTKLIBS = `gtk-config --libs` 
@@ -57,8 +69,8 @@ RM = rm -f
 ##########################################################################
 ifeq ($(UNAME),Linux)
 #  remove these lines if you dont have GTK, or dont want the GTK frame analyzer
-   GTK = -DHAVEGTK `gtk-config --cflags`
-   GTKLIBS = `gtk-config --libs` 
+#   GTK = -DHAVEGTK `gtk-config --cflags`
+#   GTKLIBS = `gtk-config --libs` 
 # Comment out next 2 lines if you want to remove VBR histogram capability
    BRHIST_SWITCH = -DBRHIST
    LIBTERMCAP = -lncurses
@@ -221,7 +233,6 @@ endif
 CC_SWITCHES = -DNDEBUG -D__NO_MATH_INLINES $(CC_OPTS) $(SNDLIB) $(GTK) $(BRHIST_SWITCH)
 c_sources = \
         brhist.c \
-	filters.c \
 	formatBitstream.c \
 	fft.c \
 	get_audio.c \
@@ -260,28 +271,26 @@ DEP = $(c_sources:.c=.d)
 
 
 %.o: %.c 
-	$(CC) $(CC_SWITCHES) -c $< -o $@
+	$(CC) $(CPP_OPTS) $(CC_SWITCHES) -c $< -o $@
 
 %.d: %.c
-	$(SHELL) -ec '$(CC) $(MAKEDEP)  $(CC_SWITCHES)  $< | sed '\''s;$*.o;& $@;g'\'' > $@'
+	$(SHELL) -ec '$(CC) $(MAKEDEP)  $(CPP_OPTS) $(CC_SWITCHES)  $< | sed '\''s;$*.o;& $@;g'\'' > $@'
 
-$(PGM):	main.o $(OBJ) Makefile 
-	$(CC) -o $(PGM)  main.o $(OBJ) $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP)
+#$(PGM):	main.o $(OBJ) Makefile 
+#	$(CC) -o $(PGM)  main.o $(OBJ) $(LIBS) $(CPP_OPTS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP)
 
-#$(PGM):	main.o libmp3lame.a Makefile 
-#	$(CC) -o $(PGM)  main.o -L. -lmp3lame $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP)
+$(PGM):	main.o libmp3lame.a 
+	$(CC) -o $(PGM)  main.o -L. -lmp3lame $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP)
 
-mp3x:	mp3x.o $(OBJ) Makefile 
+mp3x:	mp3x.o libmp3lame.a
 	$(CC) -o mp3x mp3x.o  $(OBJ) $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP)
 
-mp3rtp:	rtp.o mp3rtp.o $(OBJ) Makefile 
+mp3rtp:	rtp.o mp3rtp.o libmp3lame.a
 	$(CC) -o mp3rtp mp3rtp.o rtp.o   $(OBJ) $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP)
 
-# compile mp3rtp using the mp3lame library:
-#mp3rtp:	rtp.o mp3rtp.o libmp3lame.a Makefile 
-#	$(CC) -o mp3rtp mp3rtp.o rtp.o  -L. -lmp3lame $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP)
-
 libmp3lame.a:  $(OBJ) Makefile
+#	cd libmp3lame
+#	make libmp3lame
 	ar cr libmp3lame.a  $(OBJ) 
 
 clean:

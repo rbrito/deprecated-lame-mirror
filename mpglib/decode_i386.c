@@ -1,3 +1,4 @@
+#ifdef HAVEMPGLIB
 /* 
  * Mpeg Layer-1,2,3 audio decoder 
  * ------------------------------
@@ -152,3 +153,4 @@ int synth_1to1(real *bandPtr,int channel,unsigned char *out,int *pnt)
 }
 
 
+#endif

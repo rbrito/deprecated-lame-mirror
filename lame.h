@@ -101,7 +101,6 @@ typedef struct  {
   int allow_diff_short;       /* allow blocktypes to differ between channels ? */
   int no_short_blocks;        /* disable short blocks       */
   int emphasis;                   /* obsolete */
-  int sfb21;                      /* soon to be obsolete */
 
 
 
@@ -170,15 +169,20 @@ lame_global_flags *lame_init(void);
 
 
 
+
+/*********************************************************************
+ * command line argument parsing & option setting.  Only supported
+ * if libmp3lame compiled with LAMEPARSE defined 
+ *********************************************************************/
 /* OPTIONAL: call this to print an error with a brief command line usage guide and quit 
+ * only supported if libmp3lame compiled with LAMEPARSE defined.  
  */
 void lame_usage(char *);
 
-
-
-/* OPTIONAL: call this to print a command line interface usage guide and quit 
- */
+/* OPTIONAL: call this to print a command line interface usage guide and quit   */
 void lame_help(char *);
+
+
 
 
 
@@ -189,11 +193,6 @@ void lame_help(char *);
 void lame_parse_args(int argc, char **argv);
 
 
-
-/* OPTIONAL: open the input file, and parse headers if possible 
- * you can skip this call if you will do your own PCM input 
- */
-void lame_init_infile(void);
 
 
 
@@ -206,13 +205,6 @@ void lame_init_params(void);
 /* OPTONAL:  print internal lame configuration on stderr*/
 void lame_print_config(void);
 
-
-
-/* OPTIONAL:  read one frame of PCM data from audio input file opened by 
- * lame_init_infile.  Input file can be wav, aiff, raw pcm, anything
- * supported by libsndfile, or an mp3 file
- */
-int lame_readframe(short int Buffer[2][1152]);
 
 
 
@@ -246,13 +238,8 @@ int lame_encode(short int Buffer[2][1152],char *mp3buffer);
 int lame_encode_finish(char *mp3buffer);
 
 
-
-/* OPTIONAL: close the sound input file if lame_init_infile() was used */
-void lame_close_infile(void);
-
-
 /* OPTIONAL:  lame_mp3_tags will append id3 and Xing VBR tags to
-the mp3 file with name given by gf->outPath.  These cals open the file,
+the mp3 file with name given by gf->outPath.  These calls open the file,
 write tags, and close the file, so make sure the the encoding is finished
 before calling these routines.  
 Note: if VBR and id3 tags are turned off by the user, or turned off
@@ -262,10 +249,35 @@ void lame_mp3_tags(void);
 
 
 
-/* a simple interface to mpglib, part of mpg123, is also included:
+
+/*********************************************************************
+ * lame file i/o.  Only supported
+ * if libmp3lame compiled with LAMESNDFILE or LIBSNDFILE
+ *********************************************************************/
+/* OPTIONAL: open the input file, and parse headers if possible 
+ * you can skip this call if you will do your own PCM input 
+ */
+void lame_init_infile(void);
+
+/* OPTIONAL:  read one frame of PCM data from audio input file opened by 
+ * lame_init_infile.  Input file can be wav, aiff, raw pcm, anything
+ * supported by libsndfile, or an mp3 file
+ */
+int lame_readframe(short int Buffer[2][1152]);
+
+/* OPTIONAL: close the sound input file if lame_init_infile() was used */
+void lame_close_infile(void);
+
+
+
+
+
+/*********************************************************************
+ * a simple interface to mpglib, part of mpg123, is also included if
+ * libmp3lame is compiled with HAVEMPGLIB
  * input 1 mp3 frame, output (maybe) 1 pcm frame.   
  * lame_decode return code:  -1: error.  0: need more data.  n>0: size of pcm output
- */
+ *********************************************************************/
 int lame_decode_init(void);
 int lame_decode(char *mp3buf,int len,short pcm[][1152]);
 

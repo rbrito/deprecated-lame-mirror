@@ -1,4 +1,4 @@
-#ifndef AMIGA_MPEGA /* Don't link with mpglib if you define AMIGA_MPEGA!!! */
+#ifdef HAVEMPGLIB
 
 #include "mpg123.h"
 #include "mpglib.h"
@@ -20,29 +20,6 @@ static char buf[16384];
 static char out[FSIZE];
 struct mpstr mp;
 
-#if 0
-void main(void)
-{
-	int size;
-	char out[8192];
-	int len,ret;
-	
-
-	InitMP3(&mp);
-
-	while(1) {
-		len = read(0,buf,16384);
-		if(len <= 0)
-			break;
-		ret = decodeMP3(&mp,buf,len,out,8192,&size);
-		while(ret == MP3_OK) {
-			write(1,out,size);
-			ret = decodeMP3(&mp,NULL,0,out,8192,&size);
-		}
-	}
-
-}
-#endif
 
 int is_syncword(char *header)
 {
@@ -125,7 +102,6 @@ unsigned long *num_samples)
   */
   return 0;
 }
-
 
 
 int lame_decode_init(void)
@@ -219,6 +195,5 @@ int lame_decode(char *buf,int len,short pcm[][1152])
   else return outsize;
 }
 
-#endif /* !AMIGA_MPEGA */
-
+#endif /* HAVEMPGLIB */
 

@@ -33,7 +33,6 @@ LN_SWITCHES = $(LN_OPTS)
 c_sources = \
  main.c \
  brhist.c \
- filters.c \
  formatBitstream.c \
  fft.c \
  get_audio.c \

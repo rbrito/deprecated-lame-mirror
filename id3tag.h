@@ -1,6 +1,5 @@
 #ifndef ID3TAG_H_INCLUDED
 #define ID3TAG_H_INCLUDED
-
 typedef struct
 {
 	int used;

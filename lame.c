@@ -31,7 +31,6 @@
 #include "globalflags.h"
 #include "psymodel.h"
 #include "newmdct.h"
-#include "filters.h"
 #include "quantize.h"
 #include "quantize-pvt.h"
 #include "l3bitstream.h"
@@ -211,11 +210,11 @@ void lame_init_params(void)
 
 
     /* Should we use some lowpass filters? */    
-    gf.lowpass_band = floor(.5 -18*log(compression_ratio/16.0)+14);
+    gf.lowpass_band = floor(.5 + 14-18*log(compression_ratio/16.0));
+    //    printf("gf.lowpassband = %i %f \n",gf.lowpass_band,14-18*log(compression_ratio/16.0) );
     if (gf.lowpass_band < 31) {
       gf.lowpass1 = (gf.lowpass_band+1-.75)/31.0;
       gf.lowpass2 = (gf.lowpass_band+1+.75)/31.0;
-      //	printf("keeping band = %i \n",gf.lowpass_band);
     }
   }
 
@@ -246,7 +245,6 @@ void lame_init_params(void)
 	gf.highpass_band= band + 1;
 	gf.highpass1 = Max(0.0,(band-.75)/31.0);
 	gf.highpass2 = (band+.75)/31.0;
-	printf("keeping band = %i \n",gf.highpass_band);
       }
     }
   }
@@ -480,11 +478,6 @@ void lame_print_config(void)
     fprintf(stderr, "Using polyphase lowpass filter,  passband:  %.0f Hz - %.0f Hz\n",
 	    gf.lowpass1*out_samplerate*500, 
 	    gf.lowpass2*out_samplerate*500);
-  if (gf.sfb21) {
-    int *scalefac_band_long = &sfBandIndex[info->sampling_frequency + (info->version * 3)].l[0];
-    fprintf(stderr, "sfb21 filter: sharp cutoff above %.0f Hz\n",
-            scalefac_band_long[SBPSY_l]/576.0*out_samplerate*500);
-  }
 
   if (gf.gtkflag) {
     fprintf(stderr, "Analyzing %s \n",gf.inPath);
@@ -717,9 +710,6 @@ int lame_encode_frame(short int inbuf_l[],short int inbuf_r[],int mf_size,char *
 
   /* polyphase filtering / mdct */
   mdct_sub48(inbuf[0], inbuf[1], xr, &l3_side);
-
-  /* lowpass MDCT filtering (obsolete)*/
-  if (gf.sfb21) filterMDCT(xr, &l3_side);
 
   if (check_ms_stereo) {
     /* make sure block type is the same in each channel */
@@ -1140,7 +1130,6 @@ lame_global_flags * lame_init(void)
   gf.resample_ratio=1;
   gf.padding=2;
   gf.swapbytes=0;
-  gf.sfb21=0;
   gf.silent=0;
   gf.totalframes=0;
   gf.VBR=0;
@@ -1229,7 +1218,6 @@ int lame_encode_finish(char *mp3buffer)
 }
 
 
-
 /*****************************************************************/
 /* write VBR Xing header, and ID3 tag, if asked for               */
 /*****************************************************************/
@@ -1251,3 +1239,10 @@ void lame_mp3_tags(void)
     id3_writetag(gf.outPath, &id3tag);
   }
 }
+
+
+#if (!defined  HAVEMPGLIB && !defined AMIGA_MPEGA) 
+/* dummy routines if you dont have a mp3 decoder library */
+int lame_decode(char *buf,int len,short pcm[][1152]) { return 0;}
+int lame_decode_init(void) {return 0;}
+#endif
