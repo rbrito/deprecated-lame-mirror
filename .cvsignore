@@ -1,6 +1,7 @@
 libtool
 Makefile
 libmp3lame.so*
+configure-stamp
 config.status
 config.log
 config.cache
