@@ -1039,7 +1039,7 @@ lame_init_params(lame_global_flags * const gfp)
         /*  use Roel's tweaked Gaby-ATH for VBR by default
          */
         if (gfp->ATHtype == -1)
-            gfp->ATHtype = 3;
+            gfp->ATHtype = 2;
 
         /*  automatic ATH adjustment on, VBR modes need it
          */
@@ -1080,7 +1080,7 @@ lame_init_params(lame_global_flags * const gfp)
         /*  use Frank's ATH for CBR/ABR by default
          */
         if (gfp->ATHtype == -1)
-            gfp->ATHtype = 1;
+            gfp->ATHtype = 2;
 
         /*  no sfb21 extra with CBR code
          */

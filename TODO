@@ -1,20 +1,6 @@
-library:  User defined call backs for error messages and 
-          display messages.  Right now this is a #define MACRO
-          which can be disabled at compile time.  Default
-          build will create a library which displays error messages
-          to stderr.
-
 frontend: a bunch of static variables (input_format, swapbytes,
           silent, brhist, update_inteval) are set in parse_args and used in
           get_audio.  should be cleaned up.
-
-
-Makefile.{B32,DJGPP} all broken?
-
-These makefiles should only bother to build the static lib,
-(or compile everything without even using the library)
-and then make lame, mp3x and/or the dll.  Any system interested in
-the shared library should be able to use ./configure. 
 
 
 1.
@@ -39,6 +25,11 @@ be fixed.
 modify mpglib to output
 floating point and have finaly quantization step a
 easy-to-change module so it can output other than 16bit.
+
+4.
+Clipping detection.  For input near 2^15, print a warning about
+possible clipping during decoding.  Suggest using --scale .98
+or something.  
 
 
 

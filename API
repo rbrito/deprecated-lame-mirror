@@ -1,8 +1,8 @@
 The LAME API
 
 This is the simple interface to the encoding part of libmp3lame.so.
-The library also contains routines for adding id3 tags, Xing VBR
-header, and mp3 decoding.  These routines are not fully documented,
+The library also contains routines for adding id3 tags and 
+mp3 decoding.  These routines are not fully documented,
 but you can figure them out by looking at "include/lame.h" and the
 example frontend encoder/decoder source code in frontend/main.c
 
