@@ -583,39 +583,39 @@ INLINE static void window_subband(sample_t *x1, FLOAT8 a[SBLIMIT])
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
-INLINE static void mdct_short(FLOAT8 *out, FLOAT8 *in)
+INLINE static void mdct_short(FLOAT8 *inout)
 {
     int l;
     for ( l = 0; l < 3; l++ ) {
 	FLOAT8 tc0,tc1,tc2,ts0,ts1,ts2;
 
-	ts0 = (in[2] * win[SHORT_TYPE][0] - in[5]) * 1.907525191737280e-11; /* tritab_s[0] */
-	tc0 = (in[0] * win[SHORT_TYPE][2] - in[3]) * 1.907525191737280e-11; /* tritab_s[2] */
+	ts0 = (inout[2*3] * win[SHORT_TYPE][0] - inout[5*3]) * 1.907525191737280e-11; /* tritab_s[0] */
+	tc0 = (inout[0*3] * win[SHORT_TYPE][2] - inout[3*3]) * 1.907525191737280e-11; /* tritab_s[2] */
 	tc1 = ts0 + tc0;
 	tc2 = ts0 - tc0;
 
-	ts0 = (in[5] * win[SHORT_TYPE][0] + in[2]) * 1.907525191737280e-11; /* tritab_s[2] */
-	tc0 = (in[3] * win[SHORT_TYPE][2] + in[0]) * 1.907525191737280e-11; /* tritab_s[0] */
+	ts0 = (inout[5*3] * win[SHORT_TYPE][0] + inout[2*3]) * 1.907525191737280e-11; /* tritab_s[2] */
+	tc0 = (inout[3*3] * win[SHORT_TYPE][2] + inout[0*3]) * 1.907525191737280e-11; /* tritab_s[0] */
 	ts1 = ts0 + tc0;
 	ts2 =-ts0 + tc0;
 
-	tc0 = (in[1] * win[SHORT_TYPE][1] - in[4]) * 2.069978111953089e-11; /* tritab_s[1] */
-	ts0 = (in[4] * win[SHORT_TYPE][1] + in[1]) * 2.069978111953089e-11; /* tritab_s[1] */
+	tc0 = (inout[1*3] * win[SHORT_TYPE][1] - inout[4*3]) * 2.069978111953089e-11; /* tritab_s[1] */
+	ts0 = (inout[4*3] * win[SHORT_TYPE][1] + inout[1*3]) * 2.069978111953089e-11; /* tritab_s[1] */
 
-	out[3*0] = tc1 + tc0;
-	out[3*5] =-ts1 + ts0;
+	inout[3*0] = tc1 + tc0;
+	inout[3*5] =-ts1 + ts0;
 
 	tc2 = tc2 * cx[6];
 	ts1 = ts1 * cx[7] + ts0;
-	out[3*1] = tc2-ts1;
-	out[3*2] = tc2+ts1;
+	inout[3*1] = tc2-ts1;
+	inout[3*2] = tc2+ts1;
 
 	tc1 = tc1 * cx[7] - tc0;
 	ts2 = ts2 * cx[6];
-	out[3*3] = tc1+ts2;
-	out[3*4] = tc1-ts2;
+	inout[3*3] = tc1+ts2;
+	inout[3*4] = tc1-ts2;
 
-	in += 6; out++;
+	inout++;
     }
 }
 
@@ -675,19 +675,18 @@ INLINE static void mdct_long(FLOAT8 *out, FLOAT8 *in)
 
     st = ts5+ts7-ts8-ins(1)+ins(4)-ins(7);
     out[17] = st;
+#undef inc
+#undef ins
 }
 
 
 
 void mdct_sub48(lame_internal_flags *gfc,
-    sample_t *w0, sample_t *w1,
-    FLOAT8 mdct_freq[2][2][576],
-    III_side_info_t *l3_side)
+		sample_t *w0, sample_t *w1,
+		FLOAT8 mdct_freq[2][2][576])
 {
     int gr, k, ch;
     sample_t *wk;
-
-    FLOAT8 work[18];
 
     wk = w0 + 286;
     /* thinking cache performance, ch->gr loop is better than gr->ch loop */
@@ -695,7 +694,7 @@ void mdct_sub48(lame_internal_flags *gfc,
 	for (gr = 0; gr < gfc->mode_gr; gr++) {
 	    int	band;
 	    FLOAT8 *mdct_enc = &mdct_freq[gr][ch][0];
-	    gr_info *gi = &(l3_side->gr[gr].ch[ch].tt);
+	    gr_info *gi = &(gfc->l3_side.gr[gr].ch[ch].tt);
 	    FLOAT8 *samp = gfc->sb_sample[ch][1 - gr][0];
 
 	    for (k = 0; k < 18 / 2; k++) {
@@ -747,15 +746,16 @@ void mdct_sub48(lame_internal_flags *gfc,
 		  if (type == SHORT_TYPE) {
 		    for (k = -NS/4; k < 0; k++) {
 			FLOAT8 w = win[SHORT_TYPE][k+3];
-			work[k+ 3] = band0[( 9+k)*32] * w - band0[( 8-k)*32];
-			work[k+ 6] = band0[(14-k)*32] * w + band0[(15+k)*32];
-			work[k+ 9] = band0[(15+k)*32] * w - band0[(14-k)*32];
-			work[k+12] = band1[( 2-k)*32] * w + band1[( 3+k)*32];
-			work[k+15] = band1[( 3+k)*32] * w - band1[( 2-k)*32];
-			work[k+18] = band1[( 8-k)*32] * w + band1[( 9+k)*32];
+			mdct_enc[k*3+ 9] = band0[( 9+k)*32] * w - band0[( 8-k)*32];
+			mdct_enc[k*3+18] = band0[(14-k)*32] * w + band0[(15+k)*32];
+			mdct_enc[k*3+10] = band0[(15+k)*32] * w - band0[(14-k)*32];
+			mdct_enc[k*3+19] = band1[( 2-k)*32] * w + band1[( 3+k)*32];
+			mdct_enc[k*3+11] = band1[( 3+k)*32] * w - band1[( 2-k)*32];
+			mdct_enc[k*3+20] = band1[( 8-k)*32] * w + band1[( 9+k)*32];
 		    }
-		    mdct_short(mdct_enc, work);
+		    mdct_short(mdct_enc);
 		  } else {
+		    FLOAT8 work[18];
 		    for (k = -NL/4; k < 0; k++) {
 			FLOAT8 a, b;
 			a = win[type][k+27] * band1[(k+9)*32]
@@ -770,8 +770,8 @@ void mdct_sub48(lame_internal_flags *gfc,
 		  }
 		}
 		/*
-		  Perform aliasing reduction butterfly
-		*/
+		 * Perform aliasing reduction butterfly
+		 */
 		if (type != SHORT_TYPE) {
 		  if (band == 0)
 		    continue;

@@ -161,7 +161,7 @@ char *mp3buf, int mp3buf_size)
 	  gfc->l3_side.gr[gr].ch[ch].tt.block_type=SHORT_TYPE;
 	}
       }
-      mdct_sub48(gfc, primebuff0, primebuff1, xr, &gfc->l3_side);
+      mdct_sub48(gfc, primebuff0, primebuff1, xr);
     }
     
     iteration_init(gfp, &gfc->l3_side);
@@ -260,7 +260,7 @@ char *mp3buf, int mp3buf_size)
 
 
   /* polyphase filtering / mdct */
-  mdct_sub48(gfc, inbuf[0], inbuf[1], xr, &gfc->l3_side);
+  mdct_sub48(gfc, inbuf[0], inbuf[1], xr);
   /* re-order the short blocks, for more efficient encoding below */
   for (gr = 0; gr < gfc->mode_gr; gr++) {
     for (ch = 0; ch < gfc->stereo; ch++) {

@@ -127,7 +127,6 @@ typedef struct  {
   int lame_encode_frame_init;     
   int iteration_init_init;
   int fill_buffer_resample_init;
-  int mdct_sub48_init;
   int psymodel_init;
 
   int padding;                    /* padding for the current frame? */

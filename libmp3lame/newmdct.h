@@ -23,7 +23,6 @@
 #define LAME_NEWMDCT_H
 
 void mdct_sub48(lame_internal_flags *gfc,sample_t *w0, sample_t *w1,
-	      FLOAT8 mdct_freq[2][2][576],
-	      III_side_info_t *l3_side);
+		FLOAT8 mdct_freq[2][2][576]);
 
 #endif /* LAME_NEWMDCT_H */
