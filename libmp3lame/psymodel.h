@@ -26,7 +26,7 @@
 #define DELBARK (1.0/3.0)
 #define FREQ_BOUND 1.35
 
-#define ATHAdjustLimit 0.01
+#define ATHAdjustLimit 0.001
 
 #define TEMPORALMASK_SUSTAIN_SEC 0.01
 
