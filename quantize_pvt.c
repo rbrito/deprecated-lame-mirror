@@ -10,7 +10,7 @@
 #undef TAKEHIRO_IEEE754_HACK
 #endif
 
-#define NSATHSCALE 103 // Assuming dynamic range=96dB, this value should be 92
+#define NSATHSCALE 100 // Assuming dynamic range=96dB, this value should be 92
 
 const int slen1_tab[16] = { 0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4 };
 const int slen2_tab[16] = { 0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3 };
@@ -649,16 +649,47 @@ int calc_noise( lame_global_flags *gfp,
         end   = gfc->scalefac_band.l[ sfb+1 ];
         bw = end - start;
 
-	for ( sum = 0.0, l = start; l < end; l++ )
-	  {
-	    FLOAT8 temp;
-	    temp = fabs(xr[l]) - pow43[ix[l]] * step;
-	    sum += temp * temp;
+	if (gfp->exp_nspsytune) {
+	  FLOAT8 max=0,tone;
+	  static FLOAT8 tab[7][20] = {
+	    {  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0},
+	    {  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0},
+	    {  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,  1,  1,  1},
+	    {  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1},
+	    {  0,  0,  0,  0,  3,  3,  3,  4,  4,  4,  4,  5,  5,  5,  5,  5,  5,  5,  5,  5},
+	    {  0,  0,  0,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5},
+	    {  0,  0,  0,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5},
+	  };
+
+	  if (tab[0][0] == 0) {
+	    int i,j;
+	    for(i=0;i<7;i++)
+	      for(j=0;j<20;j++)
+		tab[i][j] = pow(10,-tab[i][j]/10.0);
 	  }
 
-	if (gfp->exp_nspsytune) {
+	  for ( sum = 0.0, l = start; l < end; l++ )
+	    {
+	      FLOAT8 temp;
+	      temp = fabs(xr[l]) - pow43[ix[l]] * step;
+	      temp = temp * temp;
+	      max = max < temp ? temp : max;
+	      sum += temp;
+	    }
+
 	  xfsf[0][sfb] = sum;
+
+	  sum /= bw;
+	  tone = sum == 0 ? 0 : (max / sum - 1)/(bw-1);
+	  if (sfb != 0) xfsf[0][sfb] *= tab[(sfb-1)/3][(int)(20*tone)];
 	} else {
+	  for ( sum = 0.0, l = start; l < end; l++ )
+	    {
+	      FLOAT8 temp;
+	      temp = fabs(xr[l]) - pow43[ix[l]] * step;
+	      sum += temp * temp;
+	    }
+
 	  xfsf[0][sfb] = sum / bw;
 	}
 
