@@ -328,7 +328,7 @@ static void quantize_xrpow(const FLOAT *xp, int *pi, FLOAT istep, gr_info * cons
     even when global_gain is changed */
     prev_data_use = (prev_noise && 
                     (cod_info->block_type != SHORT_TYPE) && 
-                    (POW20(cod_info->global_gain) == prev_noise->step[21]));
+                    (cod_info->global_gain == prev_noise->step[21]));
 
     if (cod_info->block_type == SHORT_TYPE)
         sfbmax = 38;
