@@ -1664,7 +1664,8 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
 	    /* scalefac was copied into pinfo->sfb_s[] above */
 	    pinfo->sfb_s[gr][ch][j] = -ifqstep*pinfo->sfb_s[gr][ch][j-gr_info->mixed_block_flag];
 	    pinfo->sfb_s[gr][ch][j] -= 2*(pinfo->sub_gain[gr][ch][i]);
-	  } 
+	  }
+	  pinfo->sfb_s[gr][ch][3*sb+i] = - 2*(pinfo->sub_gain[gr][ch][i]);
 	}
       }else{
 	for (sb=0; sb<21; sb++) {
