@@ -403,36 +403,36 @@ void lame_init_params(lame_global_flags *gfp)
 
   /* set internal feature flags.  USER should not access these since
    * some combinations will produce strange results */
-  if (gfp->quality>=9) {
-    /* 9 = worst quality */
-    gfp->filter_type=0;
-    gfp->quantization=0;
-    gfp->psymodel=0;
-    gfp->noise_shaping=0;
-    gfp->noise_shaping_stop=0;
-    gfp->use_best_huffman=0;
-  } else if (gfp->quality>=5) {
+
+  gfp->filter_type=0;
+  gfp->quantization=0;
+  gfp->psymodel=0;
+  gfp->noise_shaping=0;
+  gfp->noise_shaping_stop=0;
+  gfp->use_best_huffman=0;
+
+  if (gfp->quality<9) {
     /* 5..8 quality, the default  */
-    gfp->filter_type=0;
-    gfp->quantization=0;
     gfp->psymodel=1;
     gfp->noise_shaping=1;
-    gfp->noise_shaping_stop=0;
     if (!gfp->mode_fixed && gfp->mode==1) gfp->mode=0;  /* dont use jstereo */
     gfp->use_best_huffman=0;
-  } else if (gfp->quality>=2) {
+  }
+
+  if (gfp->quality<5) {
     /* 2..4 quality */
-    gfp->filter_type=0;
     gfp->quantization=1;
-    gfp->psymodel=1;
-    gfp->noise_shaping=1;
-    gfp->noise_shaping_stop=0;
     gfp->use_best_huffman=1;
-  } else {
+  }
+
+  if (gfp->quality<3) {
+    /* 0..1 quality */
+    gfp->noise_shaping_stop=1;
+  }
+
+  if (gfp->quality<2) {
     /* 0..1 quality */
     gfp->filter_type=1;         /* not yet coded */
-    gfp->quantization=1;
-    gfp->psymodel=1;
     gfp->noise_shaping=3;       /* not yet coded */
     gfp->noise_shaping_stop=2;  /* not yet coded */
     gfp->use_best_huffman=2;   /* not yet coded */
@@ -440,10 +440,6 @@ void lame_init_params(lame_global_flags *gfp)
   }
 
   gfp->filter_type=0;
-
-  /* best_quant algorithms not based on over=0 require this: */
-  if (gfp->experimentalX) gfp->noise_shaping_stop=1;
-
 
   for (i = 0; i < SBMAX_l + 1; i++) {
     scalefac_band.l[i] =
