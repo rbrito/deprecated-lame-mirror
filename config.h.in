@@ -3,7 +3,7 @@
 /* debug define */
 #undef ABORTFP
 
-/* use double instead of float */
+/* double is faster than float on Alpha */
 #undef ALLDOUBLE
 
 /* enable VBR bitrate histogram */
@@ -19,9 +19,6 @@
 
 /* alot of debug output */
 #undef DEBUG
-
-/* double is faster than float on Alpha */
-#undef FLOAT
 
 /* Define to 1 if you have `alloca', as a function or macro. */
 #undef HAVE_ALLOCA
