@@ -19,7 +19,7 @@ Starting with LAME 3.0:
 <HR></H3>
 
 <H3>
-LAME 3.60beta&nbsp;&nbsp; (not yet released)</H3>
+LAME 3.62beta&nbsp; (CVS)</H3>
 
 <UL>
 <LI>
@@ -27,7 +27,45 @@ LAME 3.60beta&nbsp;&nbsp; (not yet released)</H3>
 </UL>
 
 <H3>
-LAME 3.59beta&nbsp; January 4 1999</H3>
+LAME 3.61beta&nbsp; January 14 2000</H3>
+
+<UL>
+<LI>
+<FONT COLOR="#FF0000">Fixed bug with lowpass filters when using VBR with
+a 64kbs or lower min bitrate setting.</FONT></LI>
+
+<LI>
+<FONT COLOR="#FF0000">Takehiro Tominaga:&nbsp; more efficient huffman encoding
+splitting.</FONT></LI>
+</UL>
+
+<H3>
+LAME 3.60beta&nbsp;&nbsp; January 9 2000</H3>
+
+<UL>
+<LI>
+Distribution now comes with self test.&nbsp; Needs work to be automated,
+see 'make test' in Makefile.</LI>
+
+<LI>
+<FONT COLOR="#FF0000">AAC spreading function now the default</FONT></LI>
+
+<LI>
+Gabriel Bouvigne: updated HTML docs</LI>
+
+<LI>
+Felix von Leitner: compute correct file length from Xing header (if present)
+when input file is a mp3 file</LI>
+
+<LI>
+Felix von Leitner: mp3rtp (standalone) program now included.&nbsp; Not
+yet tested.&nbsp; mp3rtp ip:port:ttl&nbsp; &lt;infile>&nbsp;&nbsp; /dev/null
+will stream directly to ip:port using&nbsp; RTP.</LI>
+
+<BR>&nbsp;</UL>
+
+<H3>
+LAME 3.59beta&nbsp; January 4 2000</H3>
 
 <UL>
 <LI>
