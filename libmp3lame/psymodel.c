@@ -1093,13 +1093,14 @@ inline static FLOAT8 mask_add(FLOAT8 m1,FLOAT8 m2,int k,int b, lame_internal_fla
   int i;
   FLOAT ratio;
 
-  if (m1 == 0) return m2;
 
-  if (m2 > m1)
+  if (m2 > m1) {
+      if (m1 == 0) return m2;
       ratio = m2/m1;
-  else
+  } else {
+      if (m2 == 0) return m1;
       ratio = m1/m2;
-
+  }
   /*i = abs(10*log10(m2 / m1)/10*16);
   m = 10*log10((m1+m2)/gfc->ATH->cb[k]);*/
 
