@@ -26,7 +26,7 @@
 --procnames-start-lines
 --dont-star-comments
 --leave-optional-blank-lines 
-
+--no-space-after-function-call-names
 
 --tab-size0
 --line-length80

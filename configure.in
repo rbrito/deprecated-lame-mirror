@@ -166,6 +166,7 @@ fi
 
 
 dnl check if we should remove hooks for analyzer code in library
+dnl default library must include these hooks
 AC_DEFINE(ANALYSIS, 1, build with hooks for analyzer)
 
 

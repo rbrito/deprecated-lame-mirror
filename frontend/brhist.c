@@ -31,7 +31,7 @@
 # define BRHIST_WIDTH    14
 #endif
 #ifndef BRHIST_RES
-# define BRHIST_RES      11
+# define BRHIST_RES      14
 #endif
 
 
@@ -185,8 +185,12 @@ static void  brhist_disp_line ( const lame_global_flags*  gf, int i, int br_hist
     }
 
     if (frames > 0)
-        ppt = (1000lu * br_hist_TOT + frames/2) / frames;                                  /* round nearest */
+        ppt = (1000 * br_hist_TOT + frames/2) / frames;                                  /* round nearest */
 
+    // bar graph gives a visual indication of percentages.
+    // so lets not print perswitched back 
+    // mt 11/00
+#if 0
     if ( br_hist_TOT == 0 )
         sprintf ( brppt,  " [   ]" );
     else if ( ppt < br_hist_TOT/10000 )
@@ -197,6 +201,12 @@ static void  brhist_disp_line ( const lame_global_flags*  gf, int i, int br_hist
         sprintf ( brppt, " [%2u%%]", (ppt+5)/10 );
     else
         sprintf ( brppt, "[%3u%%]", (ppt+5)/10 );
+#else
+    sprintf( brppt, " [%3i]",br_hist_TOT);
+    if (frames>999) sprintf( brppt, " [%4i]",br_hist_TOT);
+    if (frames>9999) sprintf( brppt, " [%5i]",br_hist_TOT);
+    if (frames>99999) sprintf( brppt, " [%6i]",br_hist_TOT);
+#endif
           
     if ( Console_IO.str_clreoln [0] ) /* ClearEndOfLine available */
         fprintf ( Console_IO.Console_fp, "\n%3d%s %.*s%.*s%s", 
