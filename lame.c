@@ -749,32 +749,38 @@ case 't':  /* dont write VBR tag */
   /* apply user driven filters, may override above calculations 
    * ensure:  0 <= highpass1 < highpass2 <= lowpass1 < lowpass2
    */
-  
-  if ( lowpass_h > 0 ) {
-    lowpass2 = Max( 1E-7, 2.0*lowpass_h/resamplerate );
-    lowpass1 = lowpass2 - 1E-8; /* lowpass1 has to be != lowpass2 ! */
+
+  if ( lowpass_h > 0.0 ) {
+    lowpass2 = Max( 1E-5, 2.0*lowpass_h/resamplerate );
+    lowpass1 = lowpass2 - 1E-6; /* lowpass1 has to be != lowpass2 ! */
   }
-  if ( lowpass_l > 0 ) {
+  if ( lowpass_l > 0.0 ) {
     if ( lowpass_h <= 0 ) {
       lowpass2 = 1.0;
     }
-    lowpass1 = Max( 1E-8, Min( lowpass2-1E-8, 2.0*lowpass_l/resamplerate) );
+    lowpass1 = Max( 1E-6, Min( lowpass2-1E-6, 2.0*lowpass_l/resamplerate) );
   }
   if ( highpass2 > 0 ) {
     if ( lowpass_l > 0 || lowpass_h > 0 ) {
-      highpass2 = Max( 1E-9, Min( lowpass1, 2.0*highpass2/resamplerate ));
+      highpass2 = Max( 1E-6, Min( lowpass1, 2.0*highpass2/resamplerate ));
     } else {
-      highpass2 = Max( 1E-9, 2.0*highpass2/resamplerate );
+      highpass2 = Max( 1E-6, 2.0*highpass2/resamplerate );
     }
   }
   if ( highpass1 > 0 ) {
     if ( highpass2 > 0 ) {
-      highpass1 = Max( 0.0, Min( highpass2-1E-10, 2.0*highpass1/resamplerate ));
+      highpass1 = Max( 0.0, Min( highpass2-1E-6, 2.0*highpass1/resamplerate ));
     } else {
-      highpass1 = Max( 0.0, 2.0*highpass1/resamplerate );
-      highpass2 = highpass1 + 1E-10; /* may violate: highpass2 <= lowpass1 ! */
+      if ( lowpass1 > 0 ) {
+        highpass1 = Max( 0.0, Min( lowpass1-1E-6, 2.0*highpass1/resamplerate ));
+      } else {
+        highpass1 = Max( 0.0, 2.0*highpass1/resamplerate );
+      }
+      highpass2 = highpass1 + 5E-7; /* may violate: highpass2 <= lowpass1 ! */
     }
   }
+  /* printf("%g %g %g %g\n", highpass1, highpass2, lowpass1, lowpass2 );
+   */
   if ( highpass2>0 || lowpass1>0 ) {
     sfb21 = 0;
   }
