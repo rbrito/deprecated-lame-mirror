@@ -801,7 +801,7 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 
 		T_ELIF ("adapt-thres-type")
 		    argUsed=1;
-		    gfp->adapt_thres_type = atoi(nextArg);
+		    lame_set_adapt_thres_type( gfp, atoi(nextArg) );
 
 		T_ELIF ("scale")
 		    argUsed=1;

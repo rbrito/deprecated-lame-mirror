@@ -680,6 +680,20 @@ lame_get_ATHlower( const lame_global_flags*  gfp ){
 }
 
 
+// select adaptive ATH level adjustment scheme
+int
+lame_set_adapt_thres_type( lame_global_flags* gfp,
+                           int adapt_thres_type ) {
+    gfp->adapt_thres_type = adapt_thres_type;
+    return 0;
+}
+
+int
+lame_get_adapt_thres_type( const lame_global_flags* gfp ) {
+    return gfp->adapt_thres_type;
+}
+
+
 // predictability limit (ISO tonality formula)
 int
 lame_set_cwlimit( lame_global_flags*  gfp,
