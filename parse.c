@@ -853,13 +853,23 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
       gfp->input_format != sf_ogg) {
     if (!(strcmp((char *) &gfp->inPath[strlen(gfp->inPath)-4],".mpg")))
       gfp->input_format = sf_mp1;
+    else if (!(strcmp((char *) &gfp->inPath[strlen(gfp->inPath)-4],".MPG")))
+      gfp->input_format = sf_mp1;
     else if (!(strcmp((char *) &gfp->inPath[strlen(gfp->inPath)-4],".mp1")))
+      gfp->input_format = sf_mp1;
+    else if (!(strcmp((char *) &gfp->inPath[strlen(gfp->inPath)-4],".MP1")))
       gfp->input_format = sf_mp1;
     else if (!(strcmp((char *) &gfp->inPath[strlen(gfp->inPath)-4],".mp2")))
       gfp->input_format = sf_mp2;
+    else if (!(strcmp((char *) &gfp->inPath[strlen(gfp->inPath)-4],".MP2")))
+      gfp->input_format = sf_mp2;
     else if (!(strcmp((char *) &gfp->inPath[strlen(gfp->inPath)-4],".mp3")))
       gfp->input_format = sf_mp3;
+    else if (!(strcmp((char *) &gfp->inPath[strlen(gfp->inPath)-4],".MP3")))
+      gfp->input_format = sf_mp3;
     else if (!(strcmp((char *) &gfp->inPath[strlen(gfp->inPath)-4],".ogg")))
+      gfp->input_format = sf_ogg;
+    else if (!(strcmp((char *) &gfp->inPath[strlen(gfp->inPath)-4],".OGG")))
       gfp->input_format = sf_ogg;
   }
   
