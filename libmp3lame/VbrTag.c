@@ -502,6 +502,12 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
 
 	/* Start writing the tag after the zero frame */
 	nStreamIndex=gfc->sideinfo_len;
+	/* note! Xing header specifies that Xing data goes in the
+	 * ancillary data with NO ERROR PROTECTION.  If error protecton
+	 * in enabled, the Xing data still starts at the same offset,
+	 * and now it is in sideinfo data block, and thus will not
+	 * decode correctly by non-Xing tag aware players */
+	if (gfp->error_protection) nStreamIndex -= 2;
 
 	/* Put Vbr tag */
 	pbtStreamBuffer[nStreamIndex++]=VBRTag[0];
