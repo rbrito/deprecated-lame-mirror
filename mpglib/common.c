@@ -12,7 +12,7 @@
 #include  <sys/stat.h>
 #endif
 
-#include "mpg123.h"
+#include "common.h"
 
 // In C++ the array first must be prototyped, why ?
 

@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "mpg123.h"
-#include "mpglib.h"
+#include "common.h"
+#include "interface.h"
 
 #ifdef USE_LAYER_1
 	#include "layer1.h"
@@ -94,7 +94,7 @@ static struct buf *addbuf(struct mpstr *mp,char *buf,int size)
 	return nbuf;
 }
 
-static void remove_buf(struct mpstr *mp)
+void remove_buf(struct mpstr *mp)
 {
   struct buf *buf = mp->tail;
   

@@ -126,6 +126,10 @@ SOURCE=.\common.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\common.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\dct64_i386.c
 # End Source File
 # Begin Source File
@@ -139,6 +143,10 @@ SOURCE=.\huffman.h
 # Begin Source File
 
 SOURCE=.\interface.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\interface.h
 # End Source File
 # Begin Source File
 

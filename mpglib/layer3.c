@@ -7,8 +7,7 @@
  */ 
 
 #include <stdlib.h>
-#include "mpg123.h"
-#include "mpglib.h"
+#include "common.h"
 #include "huffman.h"
 #ifdef PARENT_IS_SLASH
 #include "/gtkanal.h"
@@ -1689,7 +1688,6 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
     }
 
     if (mpg123_pinfo!=NULL) {
-    extern const int tabsel_123[2][3][16];
     extern int pretab[21];
     int i,sb;
     float ifqstep;

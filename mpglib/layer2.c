@@ -8,7 +8,7 @@
 #ifdef USE_LAYER_2
 
 
-#include "mpg123.h"
+#include "common.h"
 #include "layer2.h"
 #include "l2tables.h"
 

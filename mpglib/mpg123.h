@@ -1,3 +1,6 @@
+#ifndef MPG123_H_INCLUDED
+#define MPG123_H_INCLUDED
+
 #include        <stdio.h>
 #include        <string.h>
 #include        <signal.h>
@@ -105,8 +108,6 @@ struct parameter {
 };
 
 /* extern unsigned int   get1bit(void); */
-extern unsigned int   getbits(int);
-extern unsigned int   getbits_fast(int);
 extern int set_pointer(long);
 
 extern unsigned char *wordpointer;
@@ -114,8 +115,6 @@ extern int bitindex;
 
 extern int do_layer3(struct frame *fr,unsigned char *,int *);
 extern int do_layer3_sideinfo(struct frame *fr);
-extern int decode_header(struct frame *fr,unsigned long newhead);
-extern int head_check(unsigned long head);
 
 
 struct gr_info_s {
@@ -197,3 +196,4 @@ extern real *pnts[5];
 extern const struct parameter param;
 
 
+#endif
