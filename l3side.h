@@ -31,17 +31,10 @@ typedef struct
    int s[1+SBMAX_s][3];
 } scalefac_struct2;
 
-/*
-struct scalefac_struct
-{
-   int l[1+SBMAX_l];
-   int s[1+SBMAX_s];
-};
-*/
 
 typedef struct {
-	FLOAT8	l[SBPSY_l + 1];
-	FLOAT8	s[SBPSY_s + 1][3];
+	FLOAT8	l[SBMAX_l];
+	FLOAT8	s[SBMAX_s][3];
 } III_psy_xmin;
 
 typedef struct {

@@ -248,15 +248,14 @@ FLOAT8 ATHformula(lame_global_flags *gfp,FLOAT8 f)
 }
  
 
-void compute_ath(lame_global_flags *gfp,FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY_s])
+void compute_ath(lame_global_flags *gfp,FLOAT8 ATH_l[],FLOAT8 ATH_s[])
 {
   lame_internal_flags *gfc=gfp->internal_flags;
   int sfb,i,start,end;
   FLOAT8 ATH_f;
   FLOAT8 samp_freq = gfp->out_samplerate/1000.0;
 
-  /* last sfb is not used */
-  for ( sfb = 0; sfb < SBPSY_l; sfb++ ) {
+  for ( sfb = 0; sfb < SBMAX_l; sfb++ ) {
     start = gfc->scalefac_band.l[ sfb ];
     end   = gfc->scalefac_band.l[ sfb+1 ];
     ATH_l[sfb]=1e99;
@@ -272,7 +271,7 @@ void compute_ath(lame_global_flags *gfp,FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY
     */
   }
 
-  for ( sfb = 0; sfb < SBPSY_s; sfb++ ){
+  for ( sfb = 0; sfb < SBMAX_s; sfb++ ){
     start = gfc->scalefac_band.s[ sfb ];
     end   = gfc->scalefac_band.s[ sfb+1 ];
     ATH_s[sfb]=1e99;
@@ -668,58 +667,58 @@ int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576], III_psy_ratio *ratio,
   u_int	sfb;
   FLOAT8 en0, xmin, ener;
 
-    if (gfp->ATHonly || (gfp->ATHshort && cod_info->block_type==SHORT_TYPE)) {    
-      for ( sfb = cod_info->sfb_smax; sfb < SBPSY_s; sfb++ )
-	  for ( b = 0; b < 3; b++ )
-	      l3_xmin->s[sfb][b]=gfc->ATH_s[sfb];
-      for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ )
-	  l3_xmin->l[sfb]=gfc->ATH_l[sfb];
+  if (cod_info->block_type==SHORT_TYPE) {
 
-    }else{
-
-      for ( sfb = cod_info->sfb_smax; sfb < SBPSY_s; sfb++ ) {
-	start = gfc->scalefac_band.s[ sfb ];
-        end   = gfc->scalefac_band.s[ sfb + 1 ];
-	bw = end - start;
-        for ( b = 0; b < 3; b++ ) {
-	  for (en0 = 0.0, l = start; l < end; l++) {
-	    ener = xr[l * 3 + b];
-	    ener = ener * ener;
-	    en0 += ener;
-	  }
-	  en0 /= bw;
-
-	  xmin = ratio->en.s[sfb][b];
-	  if (xmin > 0.0)
-	    xmin = en0 * ratio->thm.s[sfb][b] * gfc->masking_lower / xmin;
-
-	  l3_xmin->s[sfb][b] = Max(gfc->ATH_s[sfb], xmin);
-
-	  if (en0 > gfc->ATH_s[sfb]) ath_over++;
-	}
+  for ( sfb = 0; sfb < SBMAX_s; sfb++ ) {
+    start = gfc->scalefac_band.s[ sfb ];
+    end   = gfc->scalefac_band.s[ sfb + 1 ];
+    bw = end - start;
+    for ( b = 0; b < 3; b++ ) {
+      for (en0 = 0.0, l = start; l < end; l++) {
+	ener = xr[l * 3 + b];
+	ener = ener * ener;
+	en0 += ener;
       }
-
-      for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ){
-	start = gfc->scalefac_band.l[ sfb ];
-	end   = gfc->scalefac_band.l[ sfb+1 ];
-	bw = end - start;
-
-        for (en0 = 0.0, l = start; l < end; l++ ) {
-	  ener = xr[l] * xr[l];
-	  en0 += ener;
-	}
-	en0 /= bw;
-
-	xmin = ratio->en.l[sfb];
+      en0 /= bw;
+      
+      if (gfp->ATHonly || gfp->ATHshort) {
+	l3_xmin->s[sfb][b]=gfc->ATH_s[sfb];
+      } else {
+	xmin = ratio->en.s[sfb][b];
 	if (xmin > 0.0)
-	  xmin = en0 * ratio->thm.l[sfb] * gfc->masking_lower / xmin;
-
-	l3_xmin->l[sfb]=Max(gfc->ATH_l[sfb], xmin);
-
-	if (en0 > gfc->ATH_l[sfb]) ath_over++;
+	  xmin = en0 * ratio->thm.s[sfb][b] * gfc->masking_lower / xmin;
+	l3_xmin->s[sfb][b] = Max(gfc->ATH_s[sfb], xmin);
       }
+      
+      if (en0 > gfc->ATH_s[sfb]) ath_over++;
     }
-    return ath_over;
+  }
+
+  }else{
+  
+  for ( sfb = 0; sfb < SBMAX_l; sfb++ ){
+    start = gfc->scalefac_band.l[ sfb ];
+    end   = gfc->scalefac_band.l[ sfb+1 ];
+    bw = end - start;
+    
+    for (en0 = 0.0, l = start; l < end; l++ ) {
+      ener = xr[l] * xr[l];
+      en0 += ener;
+    }
+    en0 /= bw;
+    
+    if (gfp->ATHonly) {
+      l3_xmin->l[sfb]=gfc->ATH_l[sfb];
+    } else {
+      xmin = ratio->en.l[sfb];
+      if (xmin > 0.0)
+	xmin = en0 * ratio->thm.l[sfb] * gfc->masking_lower / xmin;
+      l3_xmin->l[sfb]=Max(gfc->ATH_l[sfb], xmin);
+    }
+    if (en0 > gfc->ATH_l[sfb]) ath_over++;
+  }
+  }
+  return ath_over;
 }
 
 
@@ -1011,7 +1010,7 @@ set_pinfo (lame_global_flags *gfp,
 
   if (cod_info->block_type == SHORT_TYPE) {
     for ( i = 0; i < 3; i++ ) {
-      for ( sfb = 0; sfb < SBPSY_s; sfb++ )  {
+      for ( sfb = 0; sfb < SBMAX_s; sfb++ )  {
 	start = gfc->scalefac_band.s[ sfb ];
 	end   = gfc->scalefac_band.s[ sfb + 1 ];
 	bw = end - start;
@@ -1026,13 +1025,21 @@ set_pinfo (lame_global_flags *gfp,
 	pinfo->thr_s[gr][ch][3*sfb+i] = Min(ratio->thm.s[sfb][i],en0*gfc->ATH_s[sfb]);
 	pinfo->en_s[gr][ch][3*sfb+i] = ratio->en.s[sfb][i]; 
 
-	pinfo->LAMEsfb_s[gr][ch][3*sfb+i]=
-	  -2*cod_info->subblock_gain[i]-ifqstep*scalefac->s[sfb][i];
+	/* there is no scalefactor bands >= SBPSY_s */
+	if (sfb < SBPSY_s) 
+	  pinfo->LAMEsfb_s[gr][ch][3*sfb+i]=
+	    -ifqstep*scalefac->s[sfb][i];
+	else
+	  pinfo->LAMEsfb_s[gr][ch][3*sfb+i]=0;
+	
+	pinfo->LAMEsfb_s[gr][ch][3*sfb+i] -=
+	  -2*cod_info->subblock_gain[i];
+
       }
       pinfo->LAMEsfb_s[gr][ch][3*sfb+i]=-2*cod_info->subblock_gain[i];
     }
   }else{
-    for ( sfb = 0; sfb < SBPSY_l; sfb++ )   {
+    for ( sfb = 0; sfb < SBMAX_l; sfb++ )   {
       start = gfc->scalefac_band.l[ sfb ];
       end   = gfc->scalefac_band.l[ sfb+1 ];
       bw = end - start;
@@ -1050,12 +1057,16 @@ set_pinfo (lame_global_flags *gfp,
       pinfo->xfsf[gr][ch][sfb] =  xfsf[0][sfb]*en0;
       pinfo->thr[gr][ch][sfb] = Min(ratio->thm.l[sfb],en0*gfc->ATH_l[sfb]);
       pinfo->en[gr][ch][sfb] = ratio->en.l[sfb];
-      
-      pinfo->LAMEsfb[gr][ch][sfb]=-ifqstep*scalefac->l[sfb];
+
+      /* there is no scalefactor bands >= SBPSY_l */
+      if (sfb<SBPSY_l)
+	pinfo->LAMEsfb[gr][ch][sfb]=-ifqstep*scalefac->l[sfb];
+      else
+	pinfo->LAMEsfb[gr][ch][sfb]=0;
+
       if (cod_info->preflag && sfb>=11) 
 	pinfo->LAMEsfb[gr][ch][sfb]-=ifqstep*pretab[sfb];
     }
-    pinfo->LAMEsfb[gr][ch][sfb]=0;  /* there is no 22 scalefactor */
   }
   pinfo->LAMEqss[gr][ch] = cod_info->global_gain;
   pinfo->LAMEmainbits[gr][ch] = cod_info->part2_3_length;

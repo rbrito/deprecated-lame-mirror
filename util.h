@@ -215,8 +215,8 @@ typedef struct  {
   /* variables used by quantize.c */
   int OldValue[2];
   int CurrentStep;
-  FLOAT8 ATH_l[SBPSY_l];
-  FLOAT8 ATH_s[SBPSY_s];
+  FLOAT8 ATH_l[SBMAX_l];
+  FLOAT8 ATH_s[SBMAX_s];
   FLOAT8 masking_lower;
   FLOAT8 ATH_lower;
 

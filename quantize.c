@@ -266,10 +266,11 @@ VBR_iteration_loop (lame_global_flags *gfp,
       
       /* disable analog_silence if *any* of the granules != silence */
       /* if energy < ATH, set min_bits = 125 */
-      if (calc_xmin(gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin)) 
+      if (calc_xmin(gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin)) {
 	analog_silence=0;
-      else
-	min_bits=125;
+      }else{
+	if (!gfp->VBR_hard_min) min_bits=125;
+      }
 
       if (cod_info->block_type==SHORT_TYPE) {
 	  min_bits += Max(1000,pe[gr][ch]);
@@ -329,6 +330,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
 			     noise[1]);
 	  if (gfp->gtkflag)
 	    set_pinfo(gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
+
 	  if (better) {
 	      /* 
 	       * we now know it can be done with "real_bits"

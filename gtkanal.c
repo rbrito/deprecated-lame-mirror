@@ -84,7 +84,7 @@ int gtkmakeframe(void)
   /* even if iread=0, get_audio hit EOF and returned Buffer=all 0's.  encode
    * and decode to flush any previous buffers from the decoder */
 
-  pinfo->frameNum = gfc->frameNum;
+  pinfo->frameNum = gfp->frameNum;
   pinfo->sampfreq=gfp->out_samplerate;
   pinfo->framesize=576*gfc->mode_gr;
   pinfo->stereo = gfc->stereo;
@@ -93,21 +93,21 @@ int gtkmakeframe(void)
   mpg123_pinfo = pinfo;
   if (gfp->input_format == sf_mp3) {
     iread=lame_readframe(gfp,Buffer);
-    gfc->frameNum++;
+    gfp->frameNum++;
   }else {
-    while (gfc->frameNum == pinfo->frameNum) {
-      if (gfc->frameNum==0 && !init) {
+    while (gfp->frameNum == pinfo->frameNum) {
+      if (gfp->frameNum==0 && !init) {
 	mpglag=1;
 	lame_decode_init();
       }
-      if (gfc->frameNum==1) init=0; /* reset for next time frameNum==0 */
+      if (gfp->frameNum==1) init=0; /* reset for next time frameNum==0 */
       iread=lame_readframe(gfp,Buffer);
       
       
       mp3count=lame_encode(gfp,Buffer,mp3buffer,sizeof(mp3buffer)); /* encode frame */
-      assert( !(mp3count > 0 && gfc->frameNum == pinfo->frameNum));
+      assert( !(mp3count > 0 && gfp->frameNum == pinfo->frameNum));
       /* not possible to produce mp3 data without encoding at least 
-       * one frame of data which would increment gfc->frameNum */
+       * one frame of data which would increment gfp->frameNum */
     }
     mp3out=lame_decode1(mp3buffer,mp3count,mpg123pcm[0],mpg123pcm[1]); /* re-synthesis to pcm */
     /* mp3out = 0:  need more data to decode */
@@ -691,7 +691,7 @@ static void update_progress(void)
 {    
   char label[80];
 
-  int tf=gfc->totalframes;
+  int tf=gfp->totalframes;
   if (gtkinfo.totalframes>0) tf=gtkinfo.totalframes;
 
   sprintf(label,"Frame:%4i/%4i  %6.2fs",
@@ -1296,7 +1296,7 @@ int gtkcontrol(lame_global_flags *gfp2)
     gtk_widget_show(framecounter);
     gtk_box_pack_start(GTK_BOX (box2),framecounter, FALSE, TRUE, 0);
 
-    adj = (GtkAdjustment *) gtk_adjustment_new (0, 0,(gint) gfc->totalframes-1, 0, 0, 0);
+    adj = (GtkAdjustment *) gtk_adjustment_new (0, 0,(gint) gfp->totalframes-1, 0, 0, 0);
     frameprogress = gtk_progress_bar_new_with_adjustment (adj);
     /* Set the format of the string that can be displayed in the
      * trough of the progress bar:
