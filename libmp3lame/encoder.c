@@ -269,7 +269,6 @@ int  lame_encode_mp3_frame (				// Output
 
   int ch,gr;
 
-  int check_ms_stereo;
   FLOAT8 ms_ratio_next = 0.;
   FLOAT8 ms_ratio_prev = 0.;
 
@@ -279,7 +278,6 @@ int  lame_encode_mp3_frame (				// Output
   inbuf[0]=inbuf_l;
   inbuf[1]=inbuf_r;
 
-  check_ms_stereo =  (gfp->mode == JOINT_STEREO);
   gfc->mode_ext = MPG_MD_LR_LR;
 
   if (gfc->lame_encode_frame_init==0 )  {
@@ -335,6 +333,7 @@ int  lame_encode_mp3_frame (				// Output
     }
     
     iteration_init(gfp);
+    psymodel_init(gfp);
     
     /*  prepare for ATH auto adjustment:
      *  we want to decrease the ATH by 12 dB per second
@@ -348,43 +347,28 @@ int  lame_encode_mp3_frame (				// Output
 
 
   /********************** padding *****************************/
-  switch (gfp->padding_type) {
-  case PAD_NO:
-    gfc->padding = FALSE;
-    break;
-  case PAD_ALL:
+  gfc->padding = FALSE;
+  if (gfp->padding_type == PAD_ALL) {
     gfc->padding = TRUE;
-    break;
-  case PAD_ADJUST:
-  default:
-    if (gfp->VBR!=vbr_off) {
-      gfc->padding = FALSE;
-    } else {
-      if (gfp->disable_reservoir) {
-	gfc->padding = FALSE;
-	/* if the user specified --nores, dont very gfc->padding either */
-	/* tiny changes in frac_SpF rounding will cause file differences */
-      }else{
-        /* padding method as described in 
-         * "MPEG-Layer3 / Bitstream Syntax and Decoding"
-         * by Martin Sieler, Ralph Sperschneider
-         *
-         * note: there is no padding for the very first frame
-         *
-         * Robert.Hegemann@gmx.de 2000-06-22
-         */
-
-        gfc->slot_lag -= gfc->frac_SpF;
-        if (gfc->slot_lag < 0) {
-          gfc->slot_lag += gfp->out_samplerate;
-          gfc->padding = TRUE;
-        } else {
-          gfc->padding = FALSE;
-        }
-      } /* reservoir enabled */
-    }
+  } else if (gfp->padding_type != PAD_NO) {
+    /* if the user specified --nores, dont very gfc->padding either */
+    /* tiny changes in frac_SpF rounding will cause file differences */
+    if (gfp->VBR == vbr_off && !gfp->disable_reservoir) {
+      /* padding method as described in 
+       * "MPEG-Layer3 / Bitstream Syntax and Decoding"
+       * by Martin Sieler, Ralph Sperschneider
+       *
+       * note: there is no padding for the very first frame
+       *
+       * Robert.Hegemann@gmx.de 2000-06-22
+       */
+      gfc->slot_lag -= gfc->frac_SpF;
+      if (gfc->slot_lag < 0) {
+	gfc->slot_lag += gfp->out_samplerate;
+	gfc->padding = TRUE;
+      }
+    } /* reservoir enabled */
   }
-
 
   if (gfc->psymodel) {
     /* psychoacoustic model
@@ -417,12 +401,11 @@ int  lame_encode_mp3_frame (				// Output
       for ( ch = 0; ch < gfc->channels_out; ch++ )
 	gfc->l3_side.tt[gr][ch].block_type=blocktype[ch];
 
-      if (check_ms_stereo) {
+      if (gfp->mode == JOINT_STEREO) {
 	  ms_ener_ratio[gr] = tot_ener[gr][2]+tot_ener[gr][3];
 	  if (ms_ener_ratio[gr]>0)
 	      ms_ener_ratio[gr] = tot_ener[gr][3]/ms_ener_ratio[gr];
       }
-
     }
   }else{
     for (gr=0; gr < gfc->mode_gr ; gr++)
@@ -458,38 +441,37 @@ int  lame_encode_mp3_frame (				// Output
   /* polyphase filtering / mdct */
   mdct_sub48(gfc, inbuf[0], inbuf[1]);
 
-  /* use m/s gfc->channels_out? */
-  if (check_ms_stereo) {
-      gr_info *gi0 = &gfc->l3_side.tt[0][0];
-      gr_info *gi1 = &gfc->l3_side.tt[gfc->mode_gr-1][0];
-      /* make sure block type is the same in each channel */
-      check_ms_stereo
-	  =  (gi0[0].block_type == gi0[1].block_type)
-	  && (gi1[0].block_type == gi1[1].block_type);
-  }
-
   /* Here will be selected MS or LR coding of the 2 stereo channels */
   assert (  gfc->mode_ext == MPG_MD_LR_LR );
   gfc->mode_ext = MPG_MD_LR_LR;
   
   if (gfp->force_ms) {
     gfc->mode_ext = MPG_MD_MS_LR;
-  } else if (check_ms_stereo) {
-      /* ms_ratio = is scaled, for historical reasons, to look like
-	 a ratio of side_channel / total.  
-         0 = signal is 100% mono
-         .5 = L & R uncorrelated
-      */
-      
-      /* [0] and [1] are the results for the two granules in MPEG-1,
-       * in MPEG-2 it's only a faked averaging of the same value
-       * _prev is the value of the last granule of the previous frame
-       * _next is the value of the first granule of the next frame
-       */
+  } else if (gfp->mode == JOINT_STEREO) {
+    int check_ms_stereo = 1;
+    /* ms_ratio = is scaled, for historical reasons, to look like
+       a ratio of side_channel / total.  
+       0 = signal is 100% mono
+       .5 = L & R uncorrelated
+    */
+    /* [0] and [1] are the results for the two granules in MPEG-1,
+     * in MPEG-2 it's only a faked averaging of the same value
+     * _prev is the value of the last granule of the previous frame
+     * _next is the value of the first granule of the next frame
+     */
+    if (!gfc->nsPsy.use) {
       FLOAT8  ms_ratio_ave1;
       FLOAT8  ms_ratio_ave2;
       FLOAT8  threshold1    = 0.35;
       FLOAT8  threshold2    = 0.45;
+
+      /* use m/s gfc->channels_out? */
+      gr_info *gi0 = &gfc->l3_side.tt[0][0];
+      gr_info *gi1 = &gfc->l3_side.tt[gfc->mode_gr-1][0];
+      /* make sure block type is the same in each channel */
+      if (gi0[0].block_type != gi0[1].block_type
+	  || gi1[0].block_type != gi1[1].block_type)
+	check_ms_stereo = 0;
 
       /* take an average */
       if (gfc->mode_gr==1) {
@@ -501,56 +483,34 @@ int  lame_encode_mp3_frame (				// Output
 	  ms_ratio_ave2 = 0.50 * ( gfc->ms_ratio[0] + gfc->ms_ratio[1] );
       }
       
-      if (gfp->mode_automs) {
-	  if ( gfp->compression_ratio < 11.025 ) {
-	      /* 11.025 => 1, 6.3 => 0 */
-	      double thr = (gfp->compression_ratio - 6.3) / (11.025 - 6.3);
-	      if (thr<0) thr=0;
-	      threshold1   *= thr;
-	      threshold2   *= thr;
-	  }
-      }
-      
-      if ((ms_ratio_ave1 < threshold1  &&  ms_ratio_ave2 < threshold2) || gfc->nsPsy.use) {
-	  FLOAT8 sum_pe_MS = 0;
-	  FLOAT8 sum_pe_LR = 0;
-	  for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
-	      for ( ch = 0; ch < gfc->channels_out; ch++ ) {
-		  sum_pe_MS += pe_MS[gr][ch];
-		  sum_pe_LR += pe[gr][ch];
-	      }
-	  }
-	  
-	  /* based on PE: M/S coding would not use much more bits than L/R coding */
-	  
-	  if (sum_pe_MS <= 1.07 * sum_pe_LR && !gfc->nsPsy.use) gfc->mode_ext = MPG_MD_MS_LR;
-	  if (sum_pe_MS <= 1.00 * sum_pe_LR &&  gfc->nsPsy.use) gfc->mode_ext = MPG_MD_MS_LR;
-      }
-  }
+      if (gfp->mode_automs && gfp->compression_ratio < 11.025 )
+	{
+	  /* 11.025 => 1, 6.3 => 0 */
+	  double thr = (gfp->compression_ratio - 6.3) / (11.025 - 6.3);
+	  if (thr<0) thr=0;
+	  threshold1   *= thr;
+	  threshold2   *= thr;
+	}
 
-
-#if defined(HAVE_GTK)
-  /* copy data for MP3 frame analyzer */
-  if (gfp->analysis && gfc->pinfo != NULL) {
-    for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
-      for ( ch = 0; ch < gfc->channels_out; ch++ ) {
-	gfc->pinfo->ms_ratio[gr]=gfc->ms_ratio[gr];
-	gfc->pinfo->ms_ener_ratio[gr]=ms_ener_ratio[gr];
-	gfc->pinfo->blocktype[gr][ch]=gfc->l3_side.tt[gr][ch].block_type;
-	memcpy(gfc->pinfo->xr[gr][ch], &gfc->l3_side.tt[gr][ch].xr,
-	       sizeof(FLOAT8)*476);
-	/* in psymodel, LR and MS data was stored in pinfo.  
-	   switch to MS data: */
-	if (gfc->mode_ext==MPG_MD_MS_LR) {
-	  gfc->pinfo->pe[gr][ch]=gfc->pinfo->pe[gr][ch+2];
-	  gfc->pinfo->ers[gr][ch]=gfc->pinfo->ers[gr][ch+2];
-	  memcpy(gfc->pinfo->energy[gr][ch],gfc->pinfo->energy[gr][ch+2],
-		 sizeof(gfc->pinfo->energy[gr][ch]));
+      if (ms_ratio_ave1 >= threshold1 || ms_ratio_ave2 >= threshold2)
+	check_ms_stereo = 0;
+    }
+    if (gfc->nsPsy.use || check_ms_stereo) {
+      FLOAT8 sum_pe_MS = 0;
+      FLOAT8 sum_pe_LR = 0;
+      for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
+	for ( ch = 0; ch < gfc->channels_out; ch++ ) {
+	  sum_pe_MS += pe_MS[gr][ch];
+	  sum_pe_LR += pe[gr][ch];
 	}
       }
+
+      /* based on PE: M/S coding would not use much more bits than L/R */
+      if ((!gfc->nsPsy.use && sum_pe_MS <= 1.07 * sum_pe_LR)
+	  || (gfc->nsPsy.use && sum_pe_MS <= 1.00 * sum_pe_LR))
+	gfc->mode_ext = MPG_MD_MS_LR;
     }
   }
-#endif
 
 
   /* bit and noise allocation */
@@ -633,8 +593,26 @@ int  lame_encode_mp3_frame (				// Output
 #if defined(HAVE_GTK)
   /* copy data for MP3 frame analyzer */
   if (gfp->analysis && gfc->pinfo != NULL) {
-    int j;
+    for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
+      for ( ch = 0; ch < gfc->channels_out; ch++ ) {
+	gfc->pinfo->ms_ratio[gr]=gfc->ms_ratio[gr];
+	gfc->pinfo->ms_ener_ratio[gr]=ms_ener_ratio[gr];
+	gfc->pinfo->blocktype[gr][ch]=gfc->l3_side.tt[gr][ch].block_type;
+	memcpy(gfc->pinfo->xr[gr][ch], &gfc->l3_side.tt[gr][ch].xr,
+	       sizeof(FLOAT8)*476);
+	/* in psymodel, LR and MS data was stored in pinfo.  
+	   switch to MS data: */
+	if (gfc->mode_ext==MPG_MD_MS_LR) {
+	  gfc->pinfo->pe[gr][ch]=gfc->pinfo->pe[gr][ch+2];
+	  gfc->pinfo->ers[gr][ch]=gfc->pinfo->ers[gr][ch+2];
+	  memcpy(gfc->pinfo->energy[gr][ch],gfc->pinfo->energy[gr][ch+2],
+		 sizeof(gfc->pinfo->energy[gr][ch]));
+	}
+      }
+    }
+
     for ( ch = 0; ch < gfc->channels_out; ch++ ) {
+      int j;
       for ( j = 0; j < FFTOFFSET; j++ )
 	gfc->pinfo->pcmdata[ch][j] = gfc->pinfo->pcmdata[ch][j+gfp->framesize];
       for ( j = FFTOFFSET; j < 1600; j++ ) {
