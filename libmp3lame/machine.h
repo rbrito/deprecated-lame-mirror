@@ -89,7 +89,7 @@ char *strchr (), *strrchr ();
 #if defined(_MSC_VER)
 # undef inline
 # define inline _inline
-#elif defined(__SASC) || defined(__GNUC__)
+#elif defined(__SASC) || defined(__GNUC__) || defined(__ICC) || defined(__ECC)
 /* if __GNUC__ we always want to inline, not only if the user requests it */
 # undef inline
 # define inline __inline
