@@ -47,7 +47,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /Zp2 /MT /W3 /GX /Ox /Ot /Og /Ob2 /I "../libmp3lame" /I "../include" /I ".." /I "../.." /I "../mpglib" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_CONFIG_H" /D "HAVE_MPGLIB" /YX /FD /c
+# ADD CPP /nologo /Zp2 /MT /W3 /GX /Ox /Ot /Og /Ob2 /I "../libmp3lame" /I "../include" /I ".." /I "../.." /I "../mpglib" /D "NDEBUG" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_CONFIG_H" /D "HAVE_MPGLIB" /D "_WINDOWS" /D "WIN32" /D "NOANALYSIS" /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o /win32 "NUL"
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o /win32 "NUL"
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
@@ -57,7 +57,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /machine:I386
-# ADD LINK32 winmm.lib advapi32.lib user32.lib kernel32.lib libc.lib /nologo /subsystem:windows /dll /map /machine:I386 /nodefaultlib /out:"Release\lameACM.acm"
+# ADD LINK32 winmm.lib advapi32.lib user32.lib kernel32.lib libc.lib libcp.lib /nologo /subsystem:windows /dll /map /machine:I386 /nodefaultlib /out:"Release\lameACM.acm"
 
 !ELSEIF  "$(CFG)" == "lameACM - Win32 Debug"
 
@@ -73,7 +73,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /Zp2 /MTd /W3 /GX /Od /I "../libmp3lame" /I "../include" /I ".." /I "../.." /I "../mpglib" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_CONFIG_H" /D "HAVE_MPGLIB" /YX /FD /ZI /c
+# ADD CPP /nologo /Zp2 /MTd /W3 /GX /Od /I "../libmp3lame" /I "../include" /I ".." /I "../.." /I "../mpglib" /D "_DEBUG" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_CONFIG_H" /D "HAVE_MPGLIB" /D "_WINDOWS" /D "WIN32" /D "NOANALYSIS" /YX /FD /ZI /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o /win32 "NUL"
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o /win32 "NUL"
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
@@ -83,7 +83,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 winmm.lib advapi32.lib user32.lib kernel32.lib libcd.lib /nologo /subsystem:windows /dll /debug /machine:I386 /nodefaultlib /out:"Debug\lameACM.acm" /pdbtype:sept
+# ADD LINK32 winmm.lib advapi32.lib user32.lib kernel32.lib libcd.lib libcpd.lib /nologo /subsystem:windows /dll /debug /machine:I386 /nodefaultlib /out:"Debug\lameACM.acm" /pdbtype:sept
 # SUBTRACT LINK32 /map
 # Begin Special Build Tool
 SOURCE=$(InputPath)
@@ -104,7 +104,7 @@ PostBuild_Cmds=copy Debug\lameACM.acm e:\winnt\system32\lameACM.acm
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /Zp2 /MTd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /Zp2 /MTd /W3 /GX /Od /I "../libmp3lame" /I "../include" /I ".." /I "../.." /I "../mpglib" /D "_DEBUG" /D "HAVE_NASM" /D "MMX_choose_table" /D "WIN32" /D "_WINDOWS" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_CONFIG_H" /D "HAVE_MPGLIB" /YX /FD /ZI /c
+# ADD CPP /nologo /Zp2 /MTd /W3 /GX /Od /I "../libmp3lame" /I "../include" /I ".." /I "../.." /I "../mpglib" /D "_DEBUG" /D "HAVE_NASM" /D "MMX_choose_table" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_CONFIG_H" /D "HAVE_MPGLIB" /D "_WINDOWS" /D "WIN32" /D "NOANALYSIS" /YX /FD /ZI /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o /win32 "NUL"
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o /win32 "NUL"
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
@@ -115,7 +115,7 @@ BSC32=bscmake.exe
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept
 # SUBTRACT BASE LINK32 /map
-# ADD LINK32 winmm.lib advapi32.lib user32.lib kernel32.lib libcd.lib ADbg/Debug/adbg.lib ../mpglib/Debug/mpglib.lib /nologo /subsystem:windows /dll /debug /machine:I386 /nodefaultlib /out:"Debug_NASM\lameACM.acm" /pdbtype:sept
+# ADD LINK32 winmm.lib advapi32.lib user32.lib kernel32.lib libcd.lib libcpd.lib ADbg/Debug/adbg.lib ../mpglib/Debug/mpglib.lib tinyxml/Debug/tinyxml.lib /nologo /subsystem:windows /dll /debug /machine:I386 /nodefaultlib /out:"Debug_NASM\lameACM.acm" /pdbtype:sept
 # SUBTRACT LINK32 /map
 # Begin Special Build Tool
 SOURCE=$(InputPath)
@@ -136,7 +136,7 @@ PostBuild_Cmds=copy Debug_NASM\lameACM.acm d:\winnt\system32\lameACM.acm
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /Zp2 /MT /W3 /GX /Ox /Ot /Og /Ob2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /Zp2 /MT /W3 /GX /Ox /Ot /Og /Ob2 /I "../libmp3lame" /I "../include" /I ".." /I "../.." /I "../mpglib" /D "NDEBUG" /D "HAVE_NASM" /D "MMX_choose_table" /D "WIN32" /D "_WINDOWS" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_CONFIG_H" /D "HAVE_MPGLIB" /YX /FD /c
+# ADD CPP /nologo /Zp2 /MT /W3 /GX /Ox /Ot /Og /Ob2 /I "../libmp3lame" /I "../include" /I ".." /I "../.." /I "../mpglib" /D "NDEBUG" /D "HAVE_NASM" /D "MMX_choose_table" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_CONFIG_H" /D "HAVE_MPGLIB" /D "_WINDOWS" /D "WIN32" /D "NOANALYSIS" /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o /win32 "NUL"
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o /win32 "NUL"
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
@@ -146,7 +146,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /map /machine:I386
-# ADD LINK32 winmm.lib advapi32.lib user32.lib kernel32.lib libc.lib ADbg\Release\adbg.lib /nologo /subsystem:windows /dll /map /machine:I386 /nodefaultlib /out:"Release_NASM\lameACM.acm"
+# ADD LINK32 winmm.lib advapi32.lib user32.lib kernel32.lib libc.lib libcp.lib ADbg\Release\adbg.lib /nologo /subsystem:windows /dll /map /machine:I386 /nodefaultlib /out:"Release_NASM\lameACM.acm"
 
 !ENDIF 
 
@@ -169,7 +169,15 @@ SOURCE=.\ACMStream.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\AEncodeProperties.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\libmp3lame\bitstream.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\DecodeStream.cpp
 # End Source File
 # Begin Source File
 
@@ -194,10 +202,6 @@ SOURCE=.\lameACM.def
 # Begin Source File
 
 SOURCE=.\main.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\libmp3lame\mpglib_interface.c
 # End Source File
 # Begin Source File
 
@@ -265,6 +269,10 @@ SOURCE=.\adebug.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\AEncodeProperties.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\libmp3lame\bitstream.h
 # End Source File
 # Begin Source File
@@ -320,6 +328,10 @@ InputPath=..\configMS.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\DecodeStream.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\libmp3lame\encoder.h
 # End Source File
 # Begin Source File
@@ -357,6 +369,10 @@ SOURCE=..\libmp3lame\quantize_pvt.h
 # Begin Source File
 
 SOURCE=..\libmp3lame\reservoir.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\resource.h
 # End Source File
 # Begin Source File
 

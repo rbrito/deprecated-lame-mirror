@@ -25,8 +25,8 @@
 	\version \$Id$
 */
 
-#if !defined(_ACMSTREAM_H__INCLUDED_)
-#define _ACMSTREAM_H__INCLUDED_
+#if !defined(_DECODESTREAM_H__INCLUDED_)
+#define _DECODESTREAM_H__INCLUDED_
 
 #if _MSC_VER >= 1000
 #pragma once
@@ -40,20 +40,19 @@
 
 #include <config.h>
 #include "util.h"
+#include "interface.h"
 
-#include "AEncodeProperties.h"
-
-class ACMStream
+class DecodeStream
 {
 public:
-	ACMStream( );
-	virtual ~ACMStream( );
+	DecodeStream( );
+	virtual ~DecodeStream( );
 
-	static ACMStream * Create();
-	static const bool Erase(const ACMStream * a_ACMStream);
+	static DecodeStream * Create();
+	static const bool Erase(const DecodeStream * a_ACMStream);
 
-	bool init(const int nSamplesPerSec, const int nOutputSamplesPerSec, const int nChannels, const int nAvgBytesPerSec);
-	bool open(const AEncodeProperties & the_Properties);
+	bool init(const int nSamplesPerSec, const int nChannels, const int nAvgBytesPerSec, const int nSourceBitrate);
+	bool open();
 	bool close(LPBYTE pOutputBuffer, DWORD *pOutputSize);
 
 	DWORD GetOutputSizeForInput(const DWORD the_SrcLength) const;
@@ -68,15 +67,17 @@ protected:
 	int my_SamplesPerSec;
 	int my_Channels;
 	int my_AvgBytesPerSec;
-	int my_OutBytesPerSec;
 	DWORD  my_SamplesPerBlock;
+	int my_SourceBitrate;
 
-unsigned int m_WorkingBufferUseSize;
+	MPSTR my_DecodeData;
+
+	unsigned int m_WorkingBufferUseSize;
 	char m_WorkingBuffer[2304*2]; // should be at least twice my_SamplesPerBlock
 
-inline int GetBytesPerBlock(DWORD bytes_per_sec, DWORD samples_per_sec, int BlockAlign) const;
+	inline int GetBytesPerBlock(DWORD bytes_per_sec, DWORD samples_per_sec, int BlockAlign) const;
 
 };
 
-#endif // !defined(_ACMSTREAM_H__INCLUDED_)
+#endif // !defined(_DECODESTREAM_H__INCLUDED_)
 

@@ -106,20 +106,7 @@ bool ACMStream::init(const int nSamplesPerSec, const int nOutputSamplesPerSec, c
 {
 	bool bResult = false;
 
-#ifdef ENABLE_DECODING
-if (m_MadDLL.Load("in_mad.dll"))
-	{
-		char path[512];
-		m_MadDLL.GetFullLocation(path, 512);
-my_debug->OutPut(DEBUG_LEVEL_FUNC_CODE, "MAD Winamp DLL found in %s",path);
-	}
-	else
-{
-my_debug->OutPut(DEBUG_LEVEL_FUNC_CODE, "MAD Winamp DLL not found !");
-	}
-#endif // ENABLE_DECODING
-
-my_SamplesPerSec  = nSamplesPerSec;
+	my_SamplesPerSec  = nSamplesPerSec;
 	my_OutBytesPerSec = nOutputSamplesPerSec;
 	my_Channels       = nChannels;
 	my_AvgBytesPerSec = nAvgBytesPerSec;
@@ -130,61 +117,50 @@ my_SamplesPerSec  = nSamplesPerSec;
 
 }
 
-bool ACMStream::open()
+bool ACMStream::open(const AEncodeProperties & the_Properties)
 {
 	bool bResult = false;
-/*
-	BE_VERSION ver;
-	m_LameDLL.Version(&ver);
 
-	char path[512];
-	m_LameDLL.GetFullLocation(path, 512);
-my_debug->OutPut(DEBUG_LEVEL_FUNC_CODE, "Lame DLL %d.%d (v%d.%d) found in %s",ver.byMajorVersion,
-				                                                          ver.byMinorVersion,
-																		  ver.byDLLMajorVersion,
-																		  ver.byDLLMinorVersion,
-																		  path);
-*/
-// Init the MP3 Stream
-// Init the global flags structure
-gfp = lame_init();
+	// Init the MP3 Stream
+	// Init the global flags structure
+	gfp = lame_init();
 
 	// Set input sample frequency
-lame_set_in_samplerate( gfp, my_SamplesPerSec );
+	lame_set_in_samplerate( gfp, my_SamplesPerSec );
 
 	lame_set_num_channels( gfp, my_Channels );
 	if (my_Channels == 1)
 		lame_set_mode( gfp, MONO );
 	else
-lame_set_mode( gfp, JOINT_STEREO ); /// \todo Get the mode from the default configuration
+		lame_set_mode( gfp, (MPEG_mode_e)the_Properties.GetChannelModeValue()) ; /// \todo Get the mode from the default configuration
 
-lame_set_VBR( gfp, vbr_off ); /// \note VBR not supported for the moment
+	lame_set_VBR( gfp, vbr_off ); /// \note VBR not supported for the moment
 
-// Set bitrate
-lame_set_brate( gfp, my_AvgBytesPerSec * 8 / 1000 );
-	
+	// Set bitrate
+	lame_set_brate( gfp, my_AvgBytesPerSec * 8 / 1000 );
+
 	/// \todo Get the mode from the default configuration
-// Set copyright flag?
-lame_set_copyright( gfp, 0 );
+	// Set copyright flag?
+	lame_set_copyright( gfp, the_Properties.GetCopyrightMode()?1:0 );
 	// Do we have to tag  it as non original 
-lame_set_original( gfp, 0 );
+	lame_set_original( gfp, the_Properties.GetOriginalMode()?1:0 );
 	// Add CRC?
-lame_set_error_protection( gfp, 1 );
+	lame_set_error_protection( gfp, the_Properties.GetCRCMode()?1:0 );
 	// Set private bit?
-lame_set_extension( gfp, 0 );
+	lame_set_extension( gfp, the_Properties.GetPrivateMode()?1:0 );
 
 	if (0 == lame_init_params( gfp ))
 	{
 		//LAME encoding call will accept any number of samples.  
-if ( 0 == lame_get_version( gfp ) )
+		if ( 0 == lame_get_version( gfp ) )
 		{
 			// For MPEG-II, only 576 samples per frame per channel
-my_SamplesPerBlock = 576 * lame_get_num_channels( gfp );
+			my_SamplesPerBlock = 576 * lame_get_num_channels( gfp );
 		}
 		else
-{
+		{
 			// For MPEG-I, 1152 samples per frame per channel
-my_SamplesPerBlock = 1152 * lame_get_num_channels( gfp );
+			my_SamplesPerBlock = 1152 * lame_get_num_channels( gfp );
 		}
 	}
 
@@ -197,7 +173,7 @@ my_SamplesPerBlock = 1152 * lame_get_num_channels( gfp );
 		case DUAL_CHANNEL: my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG,  "mode                   =Forced Stereo" ); break;
 		case MONO:         my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG,  "mode                   =Mono" ); break;
 		case NOT_SET:      /* FALLTROUGH */
-default:           my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG,  "mode                   =Error (unknown)" ); break;
+		default:           my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG,  "mode                   =Error (unknown)" ); break;
 	}
 
 	my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG, "sampling frequency     =%.1f kHz", lame_get_in_samplerate( gfp ) /1000.0 );
@@ -248,7 +224,7 @@ default:           my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG,  "mode              
 beConfig.format.LHV1.dwReSampleRate		= my_OutBytesPerSec;	  // force the user resampling
 #endif // FROM_DLL
 
-bResult = true;
+	bResult = true;
 
 	return bResult;
 }

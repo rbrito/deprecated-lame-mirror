@@ -13,6 +13,7 @@ Class = MEDIA
 [SourceDisksFiles]
 LameACM.inf=1
 LameACM.acm=1
+lame_acm.xml=1
 
 [Installable.Drivers]
 lameacm  = 1:LameACM.acm, "msacm.lameacm", %DisplayNameWin% , , ,
@@ -38,6 +39,7 @@ UpdateInis = LameACM.UpdateIni
 
 [LameACM.Copy]
 LameACM.acm
+lame_acm.xml
 
 [LameACM.Copy.Inf]
 LameACM.inf
@@ -82,7 +84,7 @@ LameACM.Copy.Inf = 17
 
 [Strings]
 InfFile="LameACM.inf"
-DisplayNameWin="Lame ACM MP3 Codec (encode-only)"
+DisplayNameWin="Lame ACM MP3 Codec"
 UnInstallPath="Software\Microsoft\Windows\CurrentVersion\Uninstall\LameACM"
 MediaClassName="Media Devices"
 mfgname="Steve Lhomme"

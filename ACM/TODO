@@ -1,4 +1,5 @@
 - see why the PCM resampling doesn't work from PCM in sndrec32.exe
+- see why we output a bunch of 0x00 at the beginning
 - change the dialog boxes
 - add the configuration options (stereo mode, flags)
 - save restore parameters in a safe place (not in the registry !) see TinyXML

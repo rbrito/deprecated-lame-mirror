@@ -37,6 +37,8 @@
 
 #include "ADbg/ADbg.h"
 
+#include "AEncodeProperties.h"
+
 class ACM  
 {
 public:
@@ -46,7 +48,7 @@ public:
 	LONG DriverProcedure(const HDRVR hdrvr, const UINT msg, LONG lParam1, LONG lParam2);
 
 protected:
-	inline DWORD Configure( HWND hParentWindow, LPDRVCONFIGINFO pConfig );
+//	inline DWORD Configure( HWND hParentWindow, LPDRVCONFIGINFO pConfig );
 	inline DWORD About( HWND hParentWindow );
 
 	inline DWORD OnDriverDetails(const HDRVR hdrvr, LPACMDRIVERDETAILS a_DriverDetail);
@@ -66,6 +68,7 @@ protected:
 	HMODULE my_hModule;
 	HICON   my_hIcon;
 	ADbg    my_debug;
+	AEncodeProperties my_EncodingProperties;
 
 };
 

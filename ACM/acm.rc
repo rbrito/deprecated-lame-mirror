@@ -54,17 +54,17 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,3,0,0
- PRODUCTVERSION 0,3,0,0
+ FILEVERSION 0,0,7,3
+ PRODUCTVERSION 0,3,0,92
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
 #else
  FILEFLAGS 0x0L
 #endif
- FILEOS 0x40004L
+ FILEOS 0x4L
  FILETYPE 0x3L
- FILESUBTYPE 0x0L
+ FILESUBTYPE 0x8L
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
@@ -73,13 +73,13 @@ BEGIN
             VALUE "Comments", "This is currently a test of an ACM driver for Win32 using Lame to encode and mpglib to decode\0"
             VALUE "CompanyName", "http://www.mp3dev.org/\0"
             VALUE "FileDescription", "Lame MP3 codec engine\0"
-            VALUE "FileVersion", "0.7.1\0"
+            VALUE "FileVersion", "0.7.3\0"
             VALUE "InternalName", "lameACM\0"
             VALUE "LegalCopyright", "Copyright © 2002 Steve Lhomme\0"
             VALUE "LegalTrademarks", "LGPL (see gnu.org)\0"
             VALUE "OriginalFilename", "lameACM.acm\0"
             VALUE "ProductName", "Lame MP3 codec\0"
-            VALUE "ProductVersion", "0.7.1\0"
+            VALUE "ProductVersion", "0.7.3\0"
         END
     END
     BLOCK "VarFileInfo"
@@ -98,22 +98,38 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_ICON1               ICON    DISCARDABLE     "lame.ico"
+IDI_ICON                ICON    DISCARDABLE     "lame.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
 // Dialog
 //
 
-IDD_DIALOG1 DIALOG DISCARDABLE  0, 0, 186, 95
+IDD_CONFIG DIALOG DISCARDABLE  0, 0, 255, 154
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Lame MP3 Codec"
 FONT 8, "MS Sans Serif"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,129,7,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,129,24,50,14
-    LTEXT           "Nothing can be configured so far",IDC_STATIC,25,50,104,
-                    8
+    DEFPUSHBUTTON   "OK",IDOK,80,129,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,140,129,50,14
+    GROUPBOX        "Encoding",IDC_STATIC,7,7,142,113
+    GROUPBOX        "Decoding",IDC_STATIC_DECODING,157,7,81,63
+    GROUPBOX        "Bits",IDC_STATIC,16,65,124,42
+    CONTROL         "Copyright",IDC_CHECK_COPYRIGHT,"Button",BS_AUTOCHECKBOX | 
+                    BS_FLAT | WS_GROUP | WS_TABSTOP,23,76,45,10
+    CONTROL         "Checksum",IDC_CHECK_CHECKSUM,"Button",BS_AUTOCHECKBOX | 
+                    BS_FLAT | WS_GROUP | WS_TABSTOP,84,76,49,10
+    CONTROL         "Original",IDC_CHECK_ORIGINAL,"Button",BS_AUTOCHECKBOX | 
+                    BS_FLAT | WS_GROUP | WS_TABSTOP,23,92,39,10
+    CONTROL         "Private",IDC_CHECK_PRIVATE,"Button",BS_AUTOCHECKBOX | 
+                    BS_FLAT | WS_GROUP | WS_TABSTOP,84,92,38,10
+    COMBOBOX        IDC_COMBO_ENC_STEREO,70,21,60,53,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "Stereo mode",IDC_STATIC,23,24,41,8
+    CONTROL         "Smart Encode",IDC_CHECK_ENC_SMART,"Button",
+                    BS_AUTOCHECKBOX | BS_FLAT | WS_DISABLED | WS_GROUP | 
+                    WS_TABSTOP,49,45,61,10
+    ICON            IDI_ICON,IDC_STATIC_ENC_ICON,189,86,20,20
 END
 
 IDD_ABOUT DIALOG DISCARDABLE  0, 0, 186, 39
@@ -135,7 +151,7 @@ END
 #ifdef APSTUDIO_INVOKED
 GUIDELINES DESIGNINFO DISCARDABLE 
 BEGIN
-    IDD_DIALOG1, DIALOG
+    IDD_CONFIG, DIALOG
     BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 179
