@@ -493,7 +493,7 @@ void lame_parse_args(int argc, char **argv)
 	    {
 	      fprintf(stderr,"%s: --preset type, type must be phone, voice, fm, tape, hifi, cd or studio, not %s\n",
 		      programName, nextArg);
-	      err = 1;
+	      exit(1);
 	    }
 	} /* --preset */
 	else
