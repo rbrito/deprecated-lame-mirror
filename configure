@@ -1648,7 +1648,7 @@ fi
 
 
 
-LIB_TARGETS="libmp3lame.a"
+LIB_TARGETS="libmp3lame/libmp3lame.a"
 INSTALL_TARGETS="install_static_lib"
 
 
@@ -1666,7 +1666,7 @@ fi
 if test "$CONFIG_SHARED" != "no" ; then
 	case $host in
 	*-*-linux*)
-		LIB_TARGETS="$LIB_TARGETS libmp3lame.so"
+		LIB_TARGETS="$LIB_TARGETS libmp3lame/libmp3lame.so"
 		INSTALL_TARGETS="$INSTALL_TARGETS install_shared_lib"
 		# need position independent code for shared library
 		CONFIG_OPTS="$CONFIG_OPTS -fPIC"
@@ -2716,7 +2716,7 @@ done
 ac_given_srcdir=$srcdir
 ac_given_INSTALL="$INSTALL"
 
-trap 'rm -fr `echo "libmp3lame/Makefile frontend/Makefile mp3x/Makefile " | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
+trap 'rm -fr `echo "Makefile libmp3lame/Makefile frontend/Makefile mp3x/Makefile " | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
 
@@ -2819,7 +2819,7 @@ EOF
 
 cat >> $CONFIG_STATUS <<EOF
 
-CONFIG_FILES=\${CONFIG_FILES-"libmp3lame/Makefile frontend/Makefile mp3x/Makefile "}
+CONFIG_FILES=\${CONFIG_FILES-"Makefile libmp3lame/Makefile frontend/Makefile mp3x/Makefile "}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
 for ac_file in .. $CONFIG_FILES; do if test "x$ac_file" != x..; then
