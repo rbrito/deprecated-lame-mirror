@@ -644,8 +644,12 @@ int inc_subblock_gain(
         if (cod_info->subblock_gain[window] > 7)
             return 1;
 
+        /* even though there is no scalefactor for sfb12
+         * subblock gain affects upper frequencies too, that's why
+         * we have to go up to SBMAX_s
+         */
         cod_info->subblock_gain[window]++;
-        for (sfb = cod_info->sfb_smax; sfb < SBPSY_s; sfb++) {
+        for (sfb = cod_info->sfb_smax; sfb < SBMAX_s; sfb++) {
             int i, width;
             int s = scalefac->s[sfb][window];
             FLOAT8 amp;

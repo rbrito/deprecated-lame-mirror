@@ -387,15 +387,99 @@ VBR_quantize_granule(lame_global_flags *gfp,
   }
   return;
 }
+
+
+
   
 
+/***********************************************************************
+ *
+ *      calc_fac()
+ *
+ *  Mark Taylor 2000-??-??
+ *  Robert Hegemann 2000-10-20 made functions of it
+ *
+ ***********************************************************************/
+
+INLINE 
+FLOAT8 calc_fac( int ifac )
+{
+    if (ifac+210<Q_MAX) 
+        return 1/IPOW20(ifac+210);
+    else
+        return pow(2.0,.75*ifac/4.0);
+}
 
 
 
+/***********************************************************************
+ *
+ *  quantize xr34 based on scalefactors
+ *
+ *  calc_short_block_xr34      
+ *  calc_long_block_xr34
+ *
+ *  Mark Taylor 2000-??-??
+ *  Robert Hegemann 2000-10-20 made functions of them
+ *
+ ***********************************************************************/
 
+void calc_short_block_xr34 ( 
+    const lame_internal_flags * const gfc,
+    const gr_info             * const cod_info,
+    const III_scalefac_t      * const scalefac, 
+    const FLOAT8                      xr34_orig[576],
+          FLOAT8                      xr34     [576] )
+{
+    unsigned int sfb, l, j, b;
+    int    ifac, ifqstep, start, end;
+    FLOAT8 fac;
 
+    /* even though there is no scalefactor for sfb12
+     * subblock gain affects upper frequencies too, that's why
+     * we have to go up to SBMAX_s
+     */
+    ifqstep = ( cod_info->scalefac_scale == 0 ) ? 2 : 4;
+    for ( j = 0, sfb = 0; sfb < SBMAX_s; sfb++ ) {
+        start = gfc->scalefac_band.s[ sfb ];
+        end   = gfc->scalefac_band.s[ sfb+1 ];
+        for (b = 0; b < 3; b++) {
+            ifac = 8*cod_info->subblock_gain[b]+ifqstep*scalefac->s[sfb][b];
+            fac = calc_fac( ifac );
+            for ( l = start; l < end; l++ ) {
+                xr34[j] = xr34_orig[j]*fac; j++;
+            }
+        }
+    }
+}
 
+void calc_long_block_xr34 ( 
+    const lame_internal_flags * const gfc,
+    const gr_info             * const cod_info,
+    const III_scalefac_t      * const scalefac, 
+    const FLOAT8                      xr34_orig[576],
+          FLOAT8                      xr34     [576] )
+{ 
+    unsigned int sfb, l;
+    int    ifac, ifqstep, start, end;
+    FLOAT8 fac;
+        
+    ifqstep = ( cod_info->scalefac_scale == 0 ) ? 2 : 4;
+    for ( sfb = 0; sfb < SBMAX_l; sfb++ ) {
+        
+        ifac = ifqstep*scalefac->l[sfb];
+        if (cod_info->preflag)
+            ifac += ifqstep*pretab[sfb];
 
+        fac = calc_fac( ifac );
+
+        start = gfc->scalefac_band.l[ sfb ];
+        end   = gfc->scalefac_band.l[ sfb+1 ];
+        for ( l = start; l < end; l++ ) {
+            xr34[l] = xr34_orig[l]*fac;
+        }
+    }
+}
 
 
 
@@ -434,11 +518,10 @@ VBR_noise_shaping
  int gr,int ch)
 {
   lame_internal_flags *gfc=gfp->internal_flags;
-  int       start,end,bw,sfb,l, i,j, vbrmax;
+  int       start,end,bw,sfb, i,j, vbrmax;
   III_scalefac_t vbrsf;
   III_scalefac_t save_sf;
   int maxover0,maxover1,maxover0p,maxover1p,maxover,mover;
-  int ifqstep;
   III_side_info_t * l3_side;
   gr_info *cod_info;  
   FLOAT8 xr34[576];
@@ -449,8 +532,6 @@ VBR_noise_shaping
   cod_info = &l3_side->gr[gr].ch[ch].tt;
   shortblock = (cod_info->block_type == SHORT_TYPE);
   
-  memcpy(xr34, xr34orig, sizeof(xr34));
-
   
 #define MAX_SF_DELTA 4  
   vbrmax=-10000;
@@ -460,7 +541,7 @@ VBR_noise_shaping
 	start = gfc->scalefac_band.s[ sfb ];
 	end   = gfc->scalefac_band.s[ sfb+1 ];
 	bw = end - start;
-	vbrsf.s[sfb][i] = find_scalefac(&xr[j],&xr34[j],sfb,
+	vbrsf.s[sfb][i] = find_scalefac(&xr[j],&xr34orig[j],sfb,
 					l3_xmin->s[sfb][i],bw);
 	j += bw;
       }
@@ -486,7 +567,7 @@ VBR_noise_shaping
       start = gfc->scalefac_band.l[ sfb ];
       end   = gfc->scalefac_band.l[ sfb+1 ];
       bw = end - start;
-      vbrsf.l[sfb] = find_scalefac(&xr[start],&xr34[start],sfb,
+      vbrsf.l[sfb] = find_scalefac(&xr[start],&xr34orig[start],sfb,
 				   l3_xmin->l[sfb],bw);
 
     }
@@ -568,27 +649,8 @@ VBR_noise_shaping
       for (i=0; i<3; i++) cod_info->subblock_gain[i] -= minsfb;
     }
     
-    
-    
-    /* quantize xr34[] based on computed scalefactors */
-    ifqstep = ( cod_info->scalefac_scale == 0 ) ? 2 : 4;
-    for ( j=0, sfb = 0; sfb < SBPSY_s; sfb++ ) {
-      start = gfc->scalefac_band.s[ sfb ];
-      end   = gfc->scalefac_band.s[ sfb+1 ];
-      for (i=0; i<3; i++) {
-	int ifac;
-	FLOAT8 fac;
-	ifac = (8*cod_info->subblock_gain[i]+ifqstep*scalefac->s[sfb][i]);
-	if (ifac+210<Q_MAX) 
-	  fac = 1/IPOW20(ifac+210);
-	else
-	  fac = pow(2.0,.75*ifac/4.0);
-	for ( l = start; l < end; l++ ) 
-	  xr34[j++]*=fac;
-      }
-    }
-    
-    
+    calc_short_block_xr34( gfc, cod_info, scalefac, xr34orig, xr34 );
+
     
   }else{
     /******************************************************************
@@ -655,27 +717,7 @@ VBR_noise_shaping
     maxover=compute_scalefacs_long(vbrsf.l,cod_info,scalefac->l);
     assert(maxover <=0);
     
-    
-    /* quantize xr34[] based on computed scalefactors */
-    ifqstep = ( cod_info->scalefac_scale == 0 ) ? 2 : 4;
-    for ( sfb = 0; sfb < SBPSY_l; sfb++ ) {
-      int ifac;
-      FLOAT8 fac;
-      ifac = ifqstep*scalefac->l[sfb];
-      if (cod_info->preflag)
-	ifac += ifqstep*pretab[sfb];
-
-      if (ifac+210<Q_MAX) 
-	fac = 1/IPOW20(ifac+210);
-      else
-	fac = pow(2.0,.75*ifac/4.0);
-
-      start = gfc->scalefac_band.l[ sfb ];
-      end   = gfc->scalefac_band.l[ sfb+1 ];
-      for ( l = start; l < end; l++ ) {
-    	xr34[l]*=fac;
-      }
-    }
+    calc_long_block_xr34( gfc, cod_info, scalefac, xr34orig, xr34 );
   } 
 
   VBR_quantize_granule(gfp,xr34,l3_enc,ratio,scalefac,gr,ch);
@@ -694,7 +736,6 @@ VBR_noise_shaping
     --vbrmax;
     --global_gain_adjust;
     memcpy(&vbrsf,&save_sf,sizeof(III_scalefac_t));
-    memcpy(xr34, xr34orig, sizeof(xr34));
   }
 
   } while ((cod_info->part2_3_length < minbits));
