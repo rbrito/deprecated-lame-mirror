@@ -768,6 +768,12 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, u_char *pbtStreamBuffer, 
 		pbtStreamBuffer[nBytesWritten] = nABRBitrate;
 	nBytesWritten++;
 
+        {
+            int enc_delay=lame_get_encoder_delay(gfp);       // encoder delay
+            int enc_padding=lame_get_encoder_padding(gfp);   // encoder padding 
+
+        }
+
 	memset(pbtStreamBuffer+nBytesWritten,0, 3);		//encoder delay stuff..TODO
 	nBytesWritten+=3;
 

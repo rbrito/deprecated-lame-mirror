@@ -381,8 +381,14 @@ int CDECL lame_get_emphasis(const lame_global_flags *);
 // version  0=MPEG-2  1=MPEG-1  (2=MPEG-2.5)    
 int CDECL lame_get_version(const lame_global_flags *);
 
-// encoder delay
+// encoder delay  
 int CDECL lame_get_encoder_delay(const lame_global_flags *);
+
+// padding appended to the input to make sure decoder can fully decode
+// all input.  Note that this value can only be calculated during the
+// call to lame_encoder_flush().  Before lame_encoder_flush() has
+// been called, the value of encoder_padding = -1.
+int CDECL lame_get_encoder_padding(const lame_global_flags *);
 
 // size of MPEG frame
 int CDECL lame_get_framesize(const lame_global_flags *);

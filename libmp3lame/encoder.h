@@ -56,6 +56,11 @@
  
 #define ENCDELAY      576
 
+
+#define POSTDELAY   288
+
+
+
 /* 
  * delay of the MDCT used in mdct.c
  * original ISO routines had a delay of 528!  

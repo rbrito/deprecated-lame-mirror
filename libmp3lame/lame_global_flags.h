@@ -147,6 +147,7 @@ struct lame_global_struct {
 
   int version;                    /* 0=MPEG-2  1=MPEG-1  (2=MPEG-2.5)     */
   int encoder_delay;
+  int encoder_padding;  /* number of samples of padding appended to input */
   int framesize;                  
   int frameNum;                   /* number of frames encoded             */
   int lame_allocated_gfp;         /* is this struct owned by calling

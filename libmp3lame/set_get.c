@@ -1305,6 +1305,13 @@ lame_get_encoder_delay( const lame_global_flags*  gfp )
     return gfp->encoder_delay;
 }
 
+/* padding added to the end of the input */
+int
+lame_get_encoder_padding( const lame_global_flags*  gfp )
+{
+    return gfp->encoder_padding;
+}
+
 
 /* Size of MPEG frame. */
 int

@@ -506,7 +506,7 @@ lame_init_qval(lame_global_flags * gfp)
     /* modifications to the above rules: */
 
     /* -Z option toggles scalefactor_scale: */
-    if (gfp->experimentalZ & 1 > 0) {
+    if ( (gfp->experimentalZ & 1) > 0) {
         gfc->noise_shaping = 2;
     }
 }
@@ -1824,9 +1824,13 @@ lame_encode_flush(lame_global_flags * gfp,
     short int buffer[2][1152];
     int     imp3 = 0, mp3count, mp3buffer_size_remaining;
 
+    /* we always add POSTDELAY=288 padding to make sure granule with real
+     * data can be complety decoded (because of 50% overlap with next granule */
+    int end_padding=POSTDELAY;  
 
     memset(buffer, 0, sizeof(buffer));
     mp3count = 0;
+
 
     while (gfc->mf_samples_to_encode > 0) {
 
@@ -1841,8 +1845,14 @@ lame_encode_flush(lame_global_flags * gfp,
          */
         imp3 = lame_encode_buffer(gfp, buffer[0], buffer[1], gfp->framesize,
                                   mp3buffer, mp3buffer_size_remaining);
+
         /* don't count the above padding: */
         gfc->mf_samples_to_encode -= gfp->framesize;
+        if (gfc->mf_samples_to_encode < 0) {
+            /* we added extra padding to the end */
+            end_padding += -gfc->mf_samples_to_encode;  
+        }
+
 
         if (imp3 < 0) {
             /* some type of fatal error */
@@ -1875,6 +1885,7 @@ lame_encode_flush(lame_global_flags * gfp,
         return imp3;
     }
     mp3count += imp3;
+    gfp->encoder_padding=end_padding;
     return mp3count;
 }
 
@@ -2041,8 +2052,8 @@ lame_init_old(lame_global_flags * gfp)
     gfp->useTemporal = -1;
 
     /* The reason for
-     *       int mf_samples_to_encode = ENCDELAY + 288;
-     * ENCDELAY = internal encoder delay.  And then we have to add 288
+     *       int mf_samples_to_encode = ENCDELAY + POSTDELAY;
+     * ENCDELAY = internal encoder delay.  And then we have to add POSTDELAY=288
      * because of the 50% MDCT overlap.  A 576 MDCT granule decodes to
      * 1152 samples.  To synthesize the 576 samples centered under this granule
      * we need the previous granule for the first 288 samples (no problem), and
@@ -2050,7 +2061,8 @@ lame_init_old(lame_global_flags * gfp)
      * granule).  So we need to pad with 288 samples to make sure we can
      * encode the 576 samples we are interested in.
      */
-    gfc->mf_samples_to_encode = ENCDELAY + 288;
+    gfc->mf_samples_to_encode = ENCDELAY + POSTDELAY;
+    gfp->encoder_padding = -1;
     gfc->mf_size = ENCDELAY - MDCTDELAY; /* we pad input with this many 0's */
 
 #ifdef KLEMM_44
