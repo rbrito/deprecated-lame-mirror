@@ -741,78 +741,118 @@ int loop_break( III_scalefac_t *scalefac, gr_info *cod_info,
  * as close as possible to x^4/3.  (taking the nearest int would mean
  * ix is as close as possible to xr, which is different.)
  * From Segher Boessenkool <segher@eastsite.nl>  11/1999
- * ASM optimization from Mathew Hendry <scampi@dial.pipex.com> 11/1999
- * and Takehiro Tominaga <tominaga@isoternet.org> 
+ * ASM optimization from 
+ *    Mathew Hendry <scampi@dial.pipex.com> 11/1999
+ *    Acy Stapp <AStapp@austin.rr.com> 11/1999
+ *    Takehiro Tominaga <tominaga@isoternet.org> 11/1999
  *********************************************************************/
-void quantize_xrpow( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
-{
+void quantize_xrpow(FLOAT8 xr[576], int ix[576], gr_info *cod_info) {
   /* quantize on xr^(3/4) instead of xr */
-  register int j;
-  int rx;
-  FLOAT8 x,quantizerStepSize;
-  FLOAT8 istep;
-
-  quantizerStepSize = cod_info->quantizerStepSize;
+  const FLOAT8 quantizerStepSize = cod_info->quantizerStepSize;
+  const FLOAT8 istep = pow(2.0, quantizerStepSize * -0.1875);
   
-  istep = pow ( 2.0, quantizerStepSize * -0.1875 );
-  
-  if ((cod_info->block_type==SHORT_TYPE))
-    {
-      for (j=192;j>0;j--) 
-        {
-	  x = istep * *xr++;
-          /* *(ix++) = (int)( x  + adj43[(int)x]); */
-	  XRPOW_FTOI(x-.5, rx);
-	  XRPOW_FTOI(x + QUANTFAC(rx), *(ix++));
-
-	  x = istep * *xr++;
-          /* *(ix++) = (int)( x  + adj43[(int)x]); */
-	  XRPOW_FTOI(x-.5, rx);
-	  XRPOW_FTOI(x + QUANTFAC(rx), *(ix++));
-
-	  x = istep * *xr++;
-	  /*          *(ix++) = (int)( x  + adj43[(int)x]); */
-	  XRPOW_FTOI(x-.5, rx);
-	  XRPOW_FTOI(x + QUANTFAC(rx), *(ix++));
-        }
-    }
-  else
-    {
-      for (j=576;j>0;j--) {
-	x = istep * *xr++;
-	/*	*(ix++) = (int)( x  +  adj43[(int)x]); */
-	XRPOW_FTOI(x-.5, rx);
-	XRPOW_FTOI(x + QUANTFAC(rx), *(ix++));
+#ifndef _MSC_VER
+  {
+      FLOAT8 x;
+      int j, rx;
+      for (j = 576 / 4; j > 0; --j) {
+          x = *xr++ * istep;
+          XRPOW_FTOI(x-.5, rx);
+          XRPOW_FTOI(x + QUANTFAC(rx), *ix++);
+          x = *xr++ * istep;
+          XRPOW_FTOI(x-.5, rx);
+          XRPOW_FTOI(x + QUANTFAC(rx), *ix++);
+          x = *xr++ * istep;
+          XRPOW_FTOI(x-.5, rx);
+          XRPOW_FTOI(x + QUANTFAC(rx), *ix++);
+          x = *xr++ * istep;
+          XRPOW_FTOI(x-.5, rx);
+          XRPOW_FTOI(x + QUANTFAC(rx), *ix++);
       }
-    }
+  }
+#else
+/* def _MSC_VER */
+  {
+      /* asm from Acy Stapp <AStapp@austin.rr.com> */
+      int rx[4];
+      _asm {
+          fld qword ptr [istep]
+          mov esi, dword ptr [xr]
+          lea edi, dword ptr [adj43asm]
+          mov edx, dword ptr [ix]
+          mov ecx, 576/4
+      } loop1: _asm {
+          fld qword ptr [esi]         // 0
+          fld qword ptr [esi+8]       // 1 0
+          fld qword ptr [esi+16]      // 2 1 0
+          fld qword ptr [esi+24]      // 3 2 1 0
+
+          fxch st(3)                  // 0 2 1 3
+          fmul st(0), st(4)
+          fxch st(2)                  // 1 2 0 3
+          fmul st(0), st(4)
+          fxch st(1)                  // 2 1 0 3
+          fmul st(0), st(4)
+          fxch st(3)                  // 3 1 0 2
+          fmul st(0), st(4)
+
+          add esi, 32
+          add edx, 16
+
+          fxch st(2)                  // 0 1 3 2
+          fist dword ptr [rx]
+          fxch st(1)                  // 1 0 3 2
+          fist dword ptr [rx+4]
+          fxch st(3)                  // 2 0 3 1
+          fist dword ptr [rx+8]
+          fxch st(2)                  // 3 0 2 1
+          fist dword ptr [rx+12]
+
+          dec ecx
+
+          mov eax, dword ptr [rx]
+          mov ebx, dword ptr [rx+4]
+          fxch st(1)                  // 0 3 2 1
+          fadd qword ptr [edi+eax*8]
+          fxch st(3)                  // 1 3 2 0
+          fadd qword ptr [edi+ebx*8]
+
+          mov eax, dword ptr [rx+8]
+          mov ebx, dword ptr [rx+12]
+          fxch st(2)                  // 2 3 1 0
+          fadd qword ptr [edi+eax*8]
+          fxch st(1)                  // 3 2 1 0
+          fadd qword ptr [edi+ebx*8]
+
+          fxch st(3)                  // 0 2 1 3
+          fistp dword ptr [edx-16]    // 2 1 3
+          fxch st(1)                  // 1 2 3
+          fistp dword ptr [edx-12]    // 2 3
+          fistp dword ptr [edx-8]     // 3
+          fistp dword ptr [edx-4]
+
+          jnz loop1
+
+          mov dword ptr [xr], esi
+          mov dword ptr [ix], edx
+          fstp st(0)
+      }
+  }
+#endif
 }
 
 
 
-
-
-#ifdef _MSC_VER
-#define MSVC_XRPOW_ASM
-#ifdef MSVC_XRPOW_ASM
-# define MSVC_FTOL(src, dest) do { \
-    FLOAT8 src_ = (src); \
-    int dest_; \
-    { \
-      __asm fld src_ \
-      __asm fistp dest_ \
-    } \
-    (dest) = dest_; \
-  } while (0)
-# endif
-#endif
 void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
 {
   /* quantize on xr^(3/4) instead of xr */
   register int j;
   FLOAT8 quantizerStepSize;
   FLOAT8 istep;
+  FLOAT8 rx;
 #if defined(__GNUC__) && defined(__i386__) 
-#elif defined(MSVC_XRPOW_ASM)
+#elif defined (_MSC_VER)
+  FLOAT8 temp0;
 #else
   FLOAT8 compareval0;
 #endif
@@ -821,70 +861,63 @@ void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
   
   istep = pow ( 2.0, quantizerStepSize * -0.1875 );
   
-  if ((cod_info->block_type==SHORT_TYPE))
-    {
-      for (j=192;j>0;j--) 
-        {
-#if defined(__GNUC__) && defined(__i386__)
-          asm ("fistpl %0 ": "=m"(*(ix++)): "t"(istep*(*(xr++)) - 0.0946): "st");
-          asm ("fistpl %0 ": "=m"(*(ix++)): "t"(istep*(*(xr++)) - 0.0946): "st");
-          asm ("fistpl %0 ": "=m"(*(ix++)): "t"(istep*(*(xr++)) - 0.0946): "st");
-#elif defined(MSVC_XRPOW_ASM)
-          MSVC_FTOL((istep*(*(xr++)) - 0.0946), *(ix++));
-          MSVC_FTOL((istep*(*(xr++)) - 0.0946), *(ix++));
-          MSVC_FTOL((istep*(*(xr++)) - 0.0946), *(ix++));
-#else
-          *(ix++) = (int)( istep*(*(xr++))  + 0.4054);
-          *(ix++) = (int)( istep*(*(xr++))  + 0.4054);
-          *(ix++) = (int)( istep*(*(xr++))  + 0.4054);
-#endif
-        }
-    }
-  else
-    {
-#if defined(__GNUC__) && defined(__i386__) 
-      for (j=576;j>0;j--) 
-          asm ("fistpl %0 ": "=m"(*(ix++)): "t"(istep*(*(xr++)) - 0.0946): "st");
-#elif defined(MSVC_XRPOW_ASM)
-      /* asm from Acy Stapp <AStapp@origin.ea.com> */
-      FLOAT8 temp0 = 0.0946;
+#if defined(_MSC_VER)
+      /* asm from Acy Stapp <AStapp@austin.rr.com> */
+      temp0 = 0.4054 - 0.5;
       _asm {
           mov ecx, 576/4;
           fld qword ptr [temp0];
           fld qword ptr [istep];
           mov eax, dword ptr [xr];
-          mov ebx, dword ptr [ix];
+          mov edx, dword ptr [ix];
       } loop0: _asm {
-          fld qword ptr [eax];
-          fld qword ptr [eax+8];
-          fld qword ptr [eax+16];
-          fld qword ptr [eax+24];
+          fld qword ptr [eax]; // 0
+          fld qword ptr [eax+8]; // 1 0
+          fld qword ptr [eax+16]; // 2 1 0
+          fld qword ptr [eax+24]; // 3 2 1 0
+
           add eax, 32;
-          fld st(4)
-          fmul st(4), st(0);
-          fmul st(3), st(0);
-          fmul st(2), st(0);
-          fmulp st(1), st(0);
-          fsub st(0), st(5);
-          fistp dword ptr [ebx+12];
-          fsub st(0), st(4);
-          fistp dword ptr [ebx+8];
-          fsub st(0), st(3);
-          fistp dword ptr [ebx+4];
-          fsub st(0), st(2);
-          fistp dword ptr [ebx];
-          add ebx, 16;
+          add edx, 16;
+
+          fxch st(3); // 0 2 1 3
+          fmul st(0), st(4);
+          fxch st(2); // 1 2 0 3
+          fmul st(0), st(4);
+          fxch st(1); // 2 1 0 3
+          fmul st(0), st(4);
+          fxch st(3); // 3 1 0 2
+          fmul st(0), st(4);
+
+          fxch st(2); // 0 1 3 2
+          fadd st(0), st(5);
+          fxch st(1); // 1 0 3 2
+          fadd st(0), st(5);
+          fxch st(3); // 2 0 3 1
+          fadd st(0), st(5);
+          fxch st(2); // 3 0 2 1
+          fadd st(0), st(5);
+
+          fxch st(1); // 0 3 2 1 
+          fistp dword ptr [edx-16]; // 3 2 1
+          fxch st(2); // 1 2 3
+          fistp dword ptr [edx-12];
+          fistp dword ptr [edx-8];
+          fistp dword ptr [edx-4];
+
           loop loop0;
+
           mov dword ptr [xr], eax;
-          mov dword ptr [ix], ebx;
+          mov dword ptr [ix], edx;
           fstp st(0);
           fstp st(0);
       }
-      /*
-      for (j=576;j>0;j--) {
-        MSVC_FTOL((istep*(*(xr++)) - 0.0946), *(ix++));
+#elif defined(__GNUC__) && defined(__i386__) 
+      for (j=576/4;j>0;j--) {
+         XRPOW_FTOI(istep * (*xr++) - 0.0946, *ix++);
+         XRPOW_FTOI(istep * (*xr++) - 0.0946, *ix++);
+         XRPOW_FTOI(istep * (*xr++) - 0.0946, *ix++);
+         XRPOW_FTOI(istep * (*xr++) - 0.0946, *ix++);
       }
-      */
 #else
       compareval0 = (1.0 - 0.4054)/istep;
       /* depending on architecture, it may be worth calculating a few more compareval's.
@@ -908,8 +941,9 @@ void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
             *(ix++) = (int)( istep*(*(xr++))  + 0.4054);
         }
 #endif
-    }
 }
+
+
 
 
 

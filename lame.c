@@ -1450,7 +1450,6 @@ int lame_cleanup(char *mpg123bs)
   frameNum--;
   if (!gtkflag && !silent) {
       timestatus(&info,frameNum,totalframes);
-      fprintf(stderr,"\n");
 #ifdef BRHIST
       if (disp_brhist)
 	{
@@ -1462,6 +1461,7 @@ int lame_cleanup(char *mpg123bs)
       if (disp_brhist)
 	brhist_disp_total();
 #endif
+      fprintf(stderr,"\n");
       fflush(stderr);
   }
 

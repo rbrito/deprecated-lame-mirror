@@ -5,11 +5,9 @@
  * $Id$
  *
  * $Log$
- * Revision 1.4  1999/12/06 20:38:32  afaber
- * Fixed compiler errors
- *
- * Revision 1.3  1999/12/03 10:13:05  takehiro
- * maybe faster FFT coding
+ * Revision 1.5  1999/12/07 02:04:41  markt
+ * backed out takehiro's fft changes for now
+ * added latest quantize_xrpow asm from Acy and Mat
  *
  * Revision 1.2  1999/11/29 02:45:59  markt
  * MS stereo switch slightly improved:  old formula was based on the average
@@ -88,6 +86,100 @@ void L3para_read( FLOAT8 sfreq, int numlines[CBANDS],int numlines_s[CBANDS], int
 
 
 
+void L3psycho_energy( short int *buffer[2], 
+    FLOAT energy[HBLKSIZE],
+    FLOAT ax[HBLKSIZE], FLOAT bx[HBLKSIZE],
+    FLOAT energy_s[3][HBLKSIZE_s],
+    FLOAT ax_s[3][HBLKSIZE_s], FLOAT bx_s[3][HBLKSIZE_s],
+     int chn,int gr_out , layer * info)
+{
+  static FLOAT window_s[BLKSIZE_s];
+  static FLOAT window[BLKSIZE];
+  static int firstcall=1;
+
+#ifdef HAVEGTK
+  static FLOAT energy_save[4][HBLKSIZE];
+#endif
+
+  int i,j,k,sblock;
+  
+  FLOAT wsamp_r[BLKSIZE];
+  FLOAT wsamp_rs[256];
+  
+ if(firstcall) {
+   firstcall=0;
+    /* calculate HANN window coefficients */
+    /* note: ISO DOCS use i-.5 because their i starts at 1, not 0 */
+   for(i=0;i<BLKSIZE;i++)  window[i]  =0.5*(1-cos(2.0*PI*(i+0.5)/BLKSIZE));
+   for(i=0;i<BLKSIZE_s;i++)window_s[i]=0.5*(1-cos(2.0*PI*(i+0.5)/BLKSIZE_s));
+  }
+
+
+  /**********************************************************************
+   *  compute FFTs
+   **********************************************************************/
+  if (chn<2) { /* the most common option */
+    for ( j = 0; j < BLKSIZE; j++ ) 
+      wsamp_r[j] = window[j] * buffer[chn][j];
+  } else {
+    if (chn==2) {
+      for ( j = 0; j < BLKSIZE; j++ )
+        wsamp_r[j] = window[j] * (buffer[0][j] + buffer[1][j] )/SQRT2;
+    } else {/* if (chn==3)   */
+      for ( j = 0; j < BLKSIZE; j++ )
+	wsamp_r[j] = window[j] * (buffer[0][j] - buffer[1][j] )/SQRT2;
+    }
+  }
+  
+
+  fft( wsamp_r, energy, ax, bx, 1024 );
+  /* mt 7/99
+    Note: fft_side() can be used to compute energy, ax & bx for the
+    mid and side channels (chn=2,3) without calling additional FFTs. 
+    But it requires wsamp_r to be saved from channels 0 and 1.  
+    My tests show that the FFT is so fast that this gives no savings.
+    Probably the extra memory hurts the cache performance.
+  */
+
+
+  
+#ifdef HAVEGTK
+  if(gtkflag) {
+    for (j=0; j<HBLKSIZE ; j++) {
+      pinfo->energy[gr_out][chn][j]=energy_save[chn][j];
+      energy_save[chn][j]=energy[j];
+    }
+  }
+#endif
+  for ( sblock = 0; sblock < 3; sblock++ ) {
+    int shlen = 192;
+    int shoff = 1;
+    if (chn<2) 
+      for ( j = 0, k = shlen * (shoff + sblock); j < 256; j++, k++ ) 
+        wsamp_rs[j] = window_s[j]* buffer[chn][k];
+    if (chn==2) 
+      for ( j = 0, k = shlen * (shoff + sblock); j < 256; j++, k++ ) 
+        wsamp_rs[j] = window_s[j] *
+	  ((buffer[0][k]+buffer[1][k])/2)*SQRT2;
+    if (chn==3) 
+      for ( j = 0, k = shlen * (shoff + sblock); j < 256; j++, k++ ) 
+        wsamp_rs[j] = window_s[j] *
+	  ((buffer[0][k]-buffer[1][k])/2)*SQRT2;
+
+    fft( wsamp_rs, energy_s[sblock], ax_s[sblock], bx_s[sblock], 256 );
+  }
+
+}
+
+
+
+
+ 
+
+
+
+ 
+
 void L3psycho_anal( short int *buffer[2], int stereo,
 		    int gr_out , layer * info,
 		    FLOAT8 sfreq, int check_ms_stereo, 
@@ -121,18 +213,15 @@ void L3psycho_anal( short int *buffer[2], int stereo,
 
 
   FLOAT/*FLOAT8*/   thr[CBANDS];
+  FLOAT ax[HBLKSIZE], bx[HBLKSIZE];
   FLOAT energy[HBLKSIZE];
   FLOAT energy_s[3][HBLKSIZE_s];
+  FLOAT ax_s[3][HBLKSIZE_s], bx_s[3][HBLKSIZE_s]; /* 256 samples not 129. */
 
   static float mld_l[SBPSY_l],mld_s[SBPSY_s];
   
 
-  FLOAT wsamp_r[1024+1];
-
- #ifdef HAVEGTK
-   static FLOAT energy_save[4][HBLKSIZE];
- #endif
-
+  
 
 /* The static variables "r", "phi_sav", "new", "old" and "oldest" have    */
 /* to be remembered for the unpredictability measure.  For "r" and        */
@@ -308,7 +397,6 @@ void L3psycho_anal( short int *buffer[2], int stereo,
 	SNR_s[b]=exp( (FLOAT8) SNR_s[b] * LN_TO_LOG10 );
       }
     }
-    init_fft();
   }
   /************************* End of Initialization *****************************/
   
@@ -340,122 +428,134 @@ void L3psycho_anal( short int *buffer[2], int stereo,
     
 
     
-	fft_long(wsamp_r, energy, chn, buffer);
-	wsamp_r[BLKSIZE] = wsamp_r[0];
-
-	/* mt 7/99
-	   Note: fft_side() can be used to compute energy, ax & bx for the
-	   mid and side channels (chn=2,3) without calling additional FFTs. 
-	   But it requires wsamp_r to be saved from channels 0 and 1.
-	   My tests show that the FFT is so fast that this gives no savings.
-	   Probably the extra memory hurts the cache performance.
-	   */
-
-#ifdef HAVEGTK
-	if (gtkflag) {
-	    for (j = 0; j < HBLKSIZE; j++) {
-		pinfo->energy[gr_out][chn][j] = energy_save[chn][j];
-		energy_save[chn][j] = energy[j];
-	    }
+    /**********************************************************************
+     *  compute FFTs
+     **********************************************************************/
+    L3psycho_energy( buffer, energy, ax, bx, energy_s, ax_s, bx_s,
+		     chn,gr_out,info);
+    
+    /**********************************************************************
+     *    compute unpredicatability of first six spectral lines            * 
+     **********************************************************************/
+    for ( j = 0; j < 6; j++ )
+      {	 /* calculate unpredictability measure cw */
+	FLOAT8 an, a1, a2;
+	FLOAT8 bn, b1, b2;
+	FLOAT8 rn, r1, r2;
+	FLOAT8 numre, numim, den;
+	
+	a2 = ax_sav[chn][1][j];
+	b2 = bx_sav[chn][1][j];
+	r2 = rx_sav[chn][1][j];
+	a1 = ax_sav[chn][1][j] = ax_sav[chn][0][j];
+	b1 = bx_sav[chn][1][j] = bx_sav[chn][0][j];
+	r1 = rx_sav[chn][1][j] = rx_sav[chn][0][j];
+	an = ax_sav[chn][0][j] = ax[j];
+	bn = bx_sav[chn][0][j] = bx[j];
+	rn = rx_sav[chn][0][j] = sqrt(energy[j]);
+	
+	{ /* square (x1,y1) */
+	  if( r1 != 0.0 ) {
+	    numre = (a1*b1);
+	    numim = (a1*a1-b1*b1)*0.5;
+	    den = r1*r1;
+	  } else {
+	    numre = 1.0;
+	    numim = 0.0;
+	    den = 1.0;
+	  }
 	}
-#endif
-	for (j = 0; j < 6; j++) {
-	    /* calculate unpredictability measure cw */
-	    FLOAT numre, numim, den;
-	    FLOAT a2 = ax_sav[1][chn][j];
-	    FLOAT b2 = bx_sav[1][chn][j];
-	    FLOAT r2 = rx_sav[1][chn][j];
-	    FLOAT a1 = ax_sav[1][chn][j] = ax_sav[0][chn][j];
-	    FLOAT b1 = bx_sav[1][chn][j] = bx_sav[0][chn][j];
-	    FLOAT r1 = rx_sav[1][chn][j] = rx_sav[0][chn][j];
-	    FLOAT an = ax_sav[0][chn][j] = wsamp_r[j];
-	    FLOAT bn = bx_sav[0][chn][j] = wsamp_r[BLKSIZE - j];
-	    FLOAT rn = rx_sav[0][chn][j] = sqrt(energy[j]);
-
-	    /* square (x1,y1) */
-	    if (r1 != 0.0) {
-		den = r1 * r1;
-		numre = a1 * b1;
-		numim = den - b1 * b1;
-		r1 *= 2.0;
-	    } else {
-		den = numre = 1.0;
-		numim = r1;
-	    }
-
-	    /* multiply by (x2,-y2) */
-	    if (r2 != 0.0) {
-		FLOAT tmp2 = (numim + numre) * (a2 + b2) * 0.5;
-		FLOAT tmp1 = tmp2 - a2 * numre;
-		numre = tmp2 - b2 * numim;
-		numim = tmp1;
-		den *= r2;
-		/* r-prime factor */
-		r1 -= r2;
-	    }
-
-	    if ((rn += fabs(r1)) != 0.0) {
-		r2 = r1 / den;
-		numre = (an + bn) / 2.0 - numre * r2;
-		numim = (an - bn) / 2.0 - numim * r2;
-		rn = sqrt(numre * numre + numim * numim) / rn;
-	    }
-	    cw[j] = rn;
+	
+	{ /* multiply by (x2,-y2) */
+	  if( r2 != 0.0 ) {
+	    FLOAT8 tmp2 = (numim+numre)*(a2+b2)*0.5;
+	    FLOAT8 tmp1 = -a2*numre+tmp2;
+	    numre =       -b2*numim+tmp2;
+	    numim = tmp1;
+	    den *= r2;
+	  } else {
+	    /* do nothing */
+	  }
 	}
-
-/**********************************************************************
-*     compute unpredicatibility of next 200 spectral lines            *
-**********************************************************************/
-	fft_short(wsamp_r, energy_s, chn, buffer);
-	for (j = 6; j < 206; j += 4) {
-	    /* calculate unpredictability measure cw */
-	    FLOAT rn, r1, r2;
-	    FLOAT numre, numim, den;
-	    int k = (j + 2) / 4;
-
-	    /* square (x1,y1) */
-	    den = energy_s[0][k];
-	    if (den != 0.0) {
-		FLOAT a1 = wsamp_r[0 + k];
-		FLOAT b1 = wsamp_r[BLKSIZE_s - k];
-		numre = a1 * b1;
-		numim = den - b1 * b1;
-		r1 = sqrt(den) * 2.0;
-	    } else {
-		numim = r1 = den;
-		numre = den = 1.0;
-	    }
-
-	    /* multiply by (x2,-y2) */
-	    r2 = energy_s[2][k];
-	    if (r2 != 0.0) {
-		FLOAT a2 = wsamp_r[BLKSIZE_s * 2 + k];
-		FLOAT b2 = wsamp_r[BLKSIZE_s * 3 - k];
-
-		FLOAT tmp2 = (numim + numre) * (a2 + b2) * 0.5;
-		FLOAT tmp1 = -a2 * numre + tmp2;
-		numre = -b2 * numim + tmp2;
-		numim = tmp1;
-
-		r2 = sqrt(r2);
-		den *= r2;
-		/* r-prime factor */
-		r1 -= r2;
-	    }
-
-	    rn = sqrt((FLOAT8) energy_s[1][k]) + fabs(r1);
-	    if (rn != 0.0) {
-		FLOAT an = wsamp_r[BLKSIZE_s + k];
-		FLOAT bn = wsamp_r[BLKSIZE_s * 2 - k];
-		r2 = r1 / den;
-		numre = (an + bn) / 2.0 - numre * r2;
-		numim = (an - bn) / 2.0 - numim * r2;
-		rn = sqrt(numre * numre + numim * numim) / rn;
-	    }
-
-	    cw[j + 1] = cw[j + 2] = cw[j + 3] = cw[j] = rn;
+	
+	{ /* r-prime factor */
+	  FLOAT8 tmp = (2.0*r1-r2)/den;
+	  numre *= tmp;
+	  numim *= tmp;
 	}
-
+	
+	if( (den=rn+fabs(2.0*r1-r2)) != 0.0 ) {
+	  numre = (an+bn)/2.0-numre;
+	  numim = (an-bn)/2.0-numim;
+	  cw[j] = sqrt(numre*numre+numim*numim)/den;
+	} else {
+	  cw[j] = 0.0;
+	}
+	
+      }
+    
+    /**********************************************************************
+     *     compute unpredicatibility of next 200 spectral lines            *
+     **********************************************************************/ 
+    for ( j = 6; j < 206; j += 4 )
+      {/* calculate unpredictability measure cw */
+	FLOAT8 rn, r1, r2;
+	FLOAT8 numre, numim, den;
+	
+	k = (j+2) / 4; 
+	
+	{ /* square (x1,y1) */
+	  r1 = sqrt((FLOAT8)energy_s[0][k]);
+	  if( r1 != 0.0 ) {
+	    FLOAT8 a1 = ax_s[0][k];
+	    FLOAT8 b1 = bx_s[0][k];
+	    numre = (a1*b1);
+	    numim = (a1*a1-b1*b1)*0.5;
+	    den = r1*r1;
+	  } else {
+	    numre = 1.0;
+	    numim = 0.0;
+	    den = 1.0;
+	  }
+	}
+	
+	
+	{ /* multiply by (x2,-y2) */
+	  r2 = sqrt((FLOAT8)energy_s[2][k]);
+	  if( r2 != 0.0 ) {
+	    FLOAT8 a2 = ax_s[2][k];
+	    FLOAT8 b2 = bx_s[2][k];
+	    
+	    FLOAT8 tmp2 = (numim+numre)*(a2+b2)*0.5;
+	    FLOAT8 tmp1 = -a2*numre+tmp2;
+	    numre =       -b2*numim+tmp2;
+	    numim = tmp1;
+	    
+	    den *= r2;
+	  } else {
+	    /* do nothing */
+	  }
+	}
+	
+	{ /* r-prime factor */
+	  FLOAT8 tmp = (2.0*r1-r2)/den;
+	  numre *= tmp;
+	  numim *= tmp;
+	}
+	
+	rn = sqrt((FLOAT8)energy_s[1][k]);
+	if( (den=rn+fabs(2.0*r1-r2)) != 0.0 ) {
+	  FLOAT8 an = ax_s[1][k];
+	  FLOAT8 bn = bx_s[1][k];
+	  numre = (an+bn)/2.0-numre;
+	  numim = (an-bn)/2.0-numim;
+	  cw[j] = sqrt(numre*numre+numim*numim)/den;
+	} else {
+	  cw[j] = 0.0;
+	}
+	
+	cw[j+1] = cw[j+2] = cw[j+3] = cw[j];
+      }
     
     
     
