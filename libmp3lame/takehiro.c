@@ -903,9 +903,8 @@ best_scalefac_store(lame_t gfc, int gr, int ch)
 	}
     }
 
-    if (gfc->mode_gr==2 && gr == 1
-	&& gfc->tt[0][ch].block_type != SHORT_TYPE
-	&& gi->block_type != SHORT_TYPE) {
+    if (gfc->mode_gr == 2 && gr == 1
+	&& gi[-2].block_type != SHORT_TYPE && gi[0].block_type != SHORT_TYPE) {
 	scfsi_calc(gfc, ch);
     } else if (recalc)
 	gfc->scale_bitcounter(gi);
@@ -993,7 +992,8 @@ scale_bitcount(gr_info * const gi)
      * at first valid index */
     gi->part2_length = LARGE_BITS;
     for (k = 0; k < 16; k++) {
-	if (gi->part2_length > tab[k] && s1 <= s1bits[k] && s2 <= s2bits[k]) {
+	if (gi->part2_length > tab[k]
+	    && ((s1bits[k] - s1) | (s2bits[k] - s2)) >= 0) {
 	    gi->part2_length = tab[k];
 	    gi->scalefac_compress = k;
 	}
