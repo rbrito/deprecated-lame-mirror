@@ -364,7 +364,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   for (gr = 0; gr < mode_gr; gr++)
     for (ch = 0; ch < stereo; ch++) {
       cod_info = &l3_side->gr[gr].ch[ch].tt;
-      if (highq && cod_info->block_type == NORM_TYPE) {
+      if (cod_info->block_type == NORM_TYPE) {
 	best_huffman_divide(gr, ch, cod_info, l3_enc[gr][ch]);
       }
 #ifdef HAVEGTK

@@ -390,7 +390,7 @@ void outer_loop_dual(
 	  for ( sfb = 0; sfb < SBPSY_l; sfb++ ) /* save scaling factors */
 	    scalesave_l[ch][sfb] = scalefac->l[gr][ch][sfb];
 	  
-	  for ( sfb = 0; sfb < SBMAX_s; sfb++ )
+	  for ( sfb = 0; sfb < SBPSY_s; sfb++ )
 	    for ( i = 0; i < 3; i++ )
 	      scalesave_s[ch][sfb][i] = scalefac->s[gr][ch][sfb][i];
 	  
@@ -477,7 +477,7 @@ void outer_loop_dual(
       }
       
       for ( i = 0; i < 3; i++ )
-	for ( sfb = 0; sfb < SBMAX_s; sfb++ ) {
+	for ( sfb = 0; sfb < SBPSY_s; sfb++ ) {
 	  scalefac->s[gr][ch][sfb][i] = scalesave_s[ch][sfb][i];    
 	}
 
