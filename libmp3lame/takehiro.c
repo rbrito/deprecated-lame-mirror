@@ -43,7 +43,7 @@
 #define SCALEFAC_ANYTHING_GOES (-2)
 
 /* log2(x). the last element is for the case when sfb is over valid range.*/
-static const int log2tab[] = {
+static const char log2tab[] = {
     0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 5};
 
 /* ixmax=3 (select table from 5, 9, 6, 7) */
@@ -242,8 +242,8 @@ count_bit_ESC(
     int sum = 0, sum2;
 
     do {
-	int x = *ix++;
-	int y = *ix++;
+	int x = ix[0];
+	int y = ix[1];
 
 	if (x > 14) {
 	    x = 15;
@@ -254,7 +254,7 @@ count_bit_ESC(
 	    sum += linbits;
 	}
 	sum += largetbl[x*16 + y];
-    } while (ix < end);
+    } while ((ix += 2) < end);
 
     sum2 = sum & 0xffff;
     sum >>= 16;
@@ -273,8 +273,7 @@ count_bit_noESC_from2(int * const s, const int *ix, const int * const end)
 {
     int t1, diff = 0, sum = 0;
     do {
-	t1 = ix[1] + ix[0]*2 - (ix[0]&ix[1]);
-	sum += t1 + 2;
+	sum += ix[1] + ix[0]*2 - (ix[0]&ix[1]) + 2;
 	diff += ix[1]*2 - 1;
     } while ((ix += 2) < end);
 
