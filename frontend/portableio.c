@@ -96,7 +96,7 @@ unsigned int  ReadByteUnsigned ( FILE* fp )
 
 #else
 
-int
+static int
 ReadByte(FILE *fp)
 {
 	int	result;
@@ -188,55 +188,12 @@ Read16BitsHighLow(FILE *fp)
 #endif
 
 void
-Write8Bits(FILE *fp, int i)
-{
-	putc(i&0xff,fp);
-}
-
-
-void
 Write16BitsLowHigh(FILE *fp, int i)
 {
 	putc(i&0xff,fp);
 	putc((i>>8)&0xff,fp);
 }
 
-
-void
-Write16BitsHighLow(FILE *fp, int i)
-{
-	putc((i>>8)&0xff,fp);
-	putc(i&0xff,fp);
-}
-
-#ifdef KLEMM_36
-
-int  Read24BitsHighLow ( FILE* fp )
-{
-    int  high = ReadByte         (fp);
-    int  med  = ReadByteUnsigned (fp);
-    int  low  = ReadByteUnsigned (fp);
-    
-    return (high << 16) | (med << 8) | low;
-}
-
-#else
-int
-Read24BitsHighLow(FILE *fp)
-{
-	int	first, second, third;
-	int	result;
-
-	first = 0xff & getc(fp);
-	second = 0xff & getc(fp);
-	third = 0xff & getc(fp);
-
-	result = (first << 16) + (second << 8) + third;
-	if (result & 0x800000)
-		result = result - 0x1000000;
-	return(result);
-}
-#endif
 
 #define	Read32BitsLowHigh(f)	Read32Bits(f)
 
@@ -305,14 +262,6 @@ Read32BitsHighLow(FILE *fp)
 #endif
 
 void
-Write32Bits(FILE *fp, int i)
-{
-	Write16BitsLowHigh(fp,(int)(i&0xffffL));
-	Write16BitsLowHigh(fp,(int)((i>>16)&0xffffL));
-}
-
-
-void
 Write32BitsLowHigh(FILE *fp, int i)
 {
 	Write16BitsLowHigh(fp,(int)(i&0xffffL));
@@ -320,46 +269,10 @@ Write32BitsLowHigh(FILE *fp, int i)
 }
 
 
-void
-Write32BitsHighLow(FILE *fp, int i)
-{
-	Write16BitsHighLow(fp,(int)((i>>16)&0xffffL));
-	Write16BitsHighLow(fp,(int)(i&0xffffL));
-}
-
-#ifdef KLEMM_36
 void ReadBytes (FILE     *fp, char *p, int n) 
 {
     memset ( p, 0, n );
     fread  ( p, 1, n, fp );
-}
-#else
-void ReadBytes(FILE	*fp, char *p, int n)
-{
-	/* What about fread? */
-	 
-	while (!feof(fp) & (n-- > 0))
-		*p++ = getc(fp);
-}
-#endif
-
-void ReadBytesSwapped(FILE *fp, char *p, int n)
-{
-	register char	*q = p;
-
-	/* What about fread? */
-	  
-	while (!feof(fp) & (n-- > 0))
-		*q++ = getc(fp);
-
-        /* If not all bytes could be read, the resorting is different
-	 * from the normal resorting. Is this intention or another bug?
-	 */
-	for (q--; p < q; p++, q--){
-		n = *p;
-		*p = *q;
-		*q = n;
-	}
 }
 
 #ifdef KLEMM_36
@@ -413,7 +326,7 @@ void WriteBytesSwapped(FILE *fp, char *p, int n)
  * Extended precision IEEE floating-point conversion routines
  ****************************************************************/
 
-double
+static double
 ConvertFromIeeeExtended(char* bytes)
 {
 	double	f;

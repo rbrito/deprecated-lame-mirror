@@ -73,7 +73,7 @@ static const char	VBRTag2[]={"Info"};
  * See 'CRC_update_lookup'
  * Uses the polynomial x^16+x^15+x^2+1 */
 
-unsigned int crc16_lookup[256] =
+static unsigned int crc16_lookup[256] =
 {
 	0x0000, 0xC0C1, 0xC181, 0x0140, 0xC301, 0x03C0, 0x0280, 0xC241,
 	0xC601, 0x06C0, 0x0780, 0xC741, 0x0500, 0xC5C1, 0xC481, 0x0440,
@@ -128,6 +128,7 @@ static int ExtractI4(unsigned char *buf)
     return x;
 }
 
+#if (defined HAVE_MPGLIB || defined AMIGA_MPEGA)
 int
 GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
 {
@@ -207,7 +208,7 @@ GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
 
     return 1;       /* success */
 }
-
+#endif
 
 /***********************************************************************
  *  Robert Hegemann 2001-01-17
@@ -345,7 +346,7 @@ int InitVbrTag(lame_global_flags *gfp)
 
 
 /* fast CRC-16 computation - uses table crc16_lookup 8*/
-int CRC_update_lookup(int value, int crc)
+static int CRC_update_lookup(int value, int crc)
 {
     int tmp;
     tmp=crc^value;

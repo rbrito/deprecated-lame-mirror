@@ -219,43 +219,10 @@ int decode_header(struct frame *fr,unsigned long newhead)
         fprintf(stderr,"Sorry, layer %d not supported\n",fr->lay); 
         return (0);
     }
-    /*    print_header(fr); */
 
     return 1;
 }
 
-
-#if 1
-void print_header(struct frame *fr)
-{
-	static const char *modes[4] = { "Stereo", "Joint-Stereo", "Dual-Channel", "Single-Channel" };
-	static const char *layers[4] = { "Unknown" , "I", "II", "III" };
-
-	fprintf(stderr,"MPEG %s, Layer: %s, Freq: %ld, mode: %s, modext: %d, BPF : %d\n", 
-		fr->mpeg25 ? "2.5" : (fr->lsf ? "2.0" : "1.0"),
-		layers[fr->lay],freqs[fr->sampling_frequency],
-		modes[fr->mode],fr->mode_ext,fr->framesize+4);
-	fprintf(stderr,"Channels: %d, copyright: %s, original: %s, CRC: %s, emphasis: %d.\n",
-		fr->stereo,fr->copyright?"Yes":"No",
-		fr->original?"Yes":"No",fr->error_protection?"Yes":"No",
-		fr->emphasis);
-	fprintf(stderr,"Bitrate: %d Kbits/s, Extension value: %d\n",
-		tabsel_123[fr->lsf][fr->lay-1][fr->bitrate_index],fr->extension);
-}
-
-void print_header_compact(struct frame *fr)
-{
-	static const char *modes[4] = { "stereo", "joint-stereo", "dual-channel", "mono" };
-	static const char *layers[4] = { "Unknown" , "I", "II", "III" };
- 
-	fprintf(stderr,"MPEG %s layer %s, %d kbit/s, %ld Hz %s\n",
-		fr->mpeg25 ? "2.5" : (fr->lsf ? "2.0" : "1.0"),
-		layers[fr->lay],
-		tabsel_123[fr->lsf][fr->lay-1][fr->bitrate_index],
-		freqs[fr->sampling_frequency], modes[fr->mode]);
-}
-
-#endif
 
 unsigned int getbits(int number_of_bits)
 {

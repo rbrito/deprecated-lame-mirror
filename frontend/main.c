@@ -129,7 +129,7 @@ parse_args_from_string(lame_global_flags * const gfp, const char *p,
 
 
 
-FILE   *
+static FILE   *
 init_files(lame_global_flags * gf, char *inPath, char *outPath)
 {
     FILE   *outf;
@@ -485,7 +485,7 @@ lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath,
 
 
 
-void
+static void
 brhist_init_package(lame_global_flags * gf)
 {
 #ifdef BRHIST

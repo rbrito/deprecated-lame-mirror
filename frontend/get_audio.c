@@ -190,7 +190,7 @@ close_infile(void)
 }
 
 
-void
+static void
 SwapBytesInWords(short *ptr, int short_words)
 {                       /* Some speedy code */
     unsigned long val;
@@ -949,7 +949,8 @@ read_samples_pcm(FILE * musicin, int sample_buffer[2304], int frame_size,
  * http://www.turtlebeach.com/site/kb_ftp/1166005.asp
  *********************************************/
 
-void SetIDTagsFromRiffTags(lame_global_flags * gfp, FILE * sf)
+static void
+SetIDTagsFromRiffTags(lame_global_flags * gfp, FILE * sf)
 {
     int subSize = Read32BitsLowHigh(sf);
     if (Read32BitsHighLow(sf) != WAV_ID_INFO) {
@@ -1112,7 +1113,7 @@ parse_wave_header(lame_global_flags * gfp, FILE * sf)
 *	        returns 0 on success, 1 on errors
 ************************************************************************/
 
-int
+static int
 aiff_check2(const char *file_name, IFF_AIFF * const pcm_aiff_data)
 {
     if (pcm_aiff_data->sampleType != IFF_ID_SSND) {
@@ -1266,7 +1267,7 @@ parse_aiff_header(lame_global_flags * gfp, FILE * sf)
 *
 ************************************************************************/
 
-void
+static void
 parse_file_header(lame_global_flags * gfp, FILE * sf)
 {
 

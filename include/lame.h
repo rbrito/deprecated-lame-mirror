@@ -92,8 +92,6 @@ typedef lame_global_flags *lame_t;
  * API calls.
  */
 lame_global_flags * CDECL lame_init(void);
-/* obsolete version */
-int CDECL lame_init_old(lame_global_flags *);
 
 
 /*

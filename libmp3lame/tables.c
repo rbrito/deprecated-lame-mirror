@@ -88,7 +88,7 @@ const int  pretab[SBMAX_l] = {
     idx  = fr_ps->header->sampling_frequency + (fr_ps->header->version * 3)
 */
 
-const scalefac_struct sfBandIndex[9] = {
+static const scalefac_struct sfBandIndex[9] = {
   { /* Table B.2.b: 22.05 kHz */
     {0,6,12,18,24,30,36,44,54,66,80,96,116,140,168,200,238,284,336,396,464,522,576},
     {0,4,8,12,18,24,32,42,56,74,100,132,174,192}
@@ -659,11 +659,9 @@ const int mdctorder[] = {
     2,28,13,19,10,20, 5,27, 6,24, 9,23,14,16, 1,31
 };
 
-const char* version_string  [3] = { "2", "1", "2.5" };
-
-const int  samplerate_table [3]  [4] = { 
+const int  samplerate_table [3]  [4] = {
     { 22050, 24000, 16000, -1 },      /* MPEG 2 */
-    { 44100, 48000, 32000, -1 },      /* MPEG 1 */  
+    { 44100, 48000, 32000, -1 },      /* MPEG 1 */
     { 11025, 12000,  8000, -1 },      /* MPEG 2.5 */
 };
 

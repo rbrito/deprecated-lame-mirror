@@ -59,8 +59,8 @@
 
 /* set internal feature flags.  USER should not access these since
  * some combinations will produce strange results */
-void
-lame_init_qval(lame_global_flags * gfp)
+static void
+init_qval(lame_global_flags * gfp)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
 
@@ -395,7 +395,7 @@ optimum_samplefreq(int lowpassfreq, int input_samplefreq)
  *      see code   
  *
  *  Finally, we set the algorithm flags based on the gfp->quality value
- *  lame_init_qval(gfp);
+ *  init_qval(gfp);
  *
  ********************************************************************/
 int
@@ -574,7 +574,7 @@ lame_init_params(lame_global_flags * const gfp)
 	gfc->noise_shaping_amp = 4;
 
     /* initialize internal qval settings */
-    lame_init_qval(gfp);
+    init_qval(gfp);
 
     lame_init_bitstream(gfp);
     iteration_init(gfp);
@@ -1393,29 +1393,9 @@ lame_mp3_tags_fid(lame_global_flags * gfp, FILE * fpStream)
 	PutVbrTag(gfp, fpStream);
 }
 
-lame_global_flags *
-lame_init(void)
-{
-    lame_global_flags *gfp;
-    int     ret;
-
-    gfp = calloc(1, sizeof(lame_global_flags));
-    if (!gfp)
-        return NULL;
-
-    ret = lame_init_old(gfp);
-    if (ret != 0) {
-        free(gfp);
-        return NULL;
-    }
-
-    gfp->lame_allocated_gfp = 1;
-    return gfp;
-}
-
 /* initialize mp3 encoder */
-int
-lame_init_old(lame_global_flags * gfp)
+static int
+init_core(lame_global_flags * gfp)
 {
     lame_internal_flags *gfc;
     int align;
@@ -1493,6 +1473,26 @@ lame_init_old(lame_global_flags * gfp)
     gfp->asm_optimizations.sse = 1;
 #endif
     return 0;
+}
+
+lame_global_flags *
+lame_init(void)
+{
+    lame_global_flags *gfp;
+    int     ret;
+
+    gfp = calloc(1, sizeof(lame_global_flags));
+    if (!gfp)
+        return NULL;
+
+    ret = init_core(gfp);
+    if (ret != 0) {
+        free(gfp);
+        return NULL;
+    }
+
+    gfp->lame_allocated_gfp = 1;
+    return gfp;
 }
 
 /***********************************************************************

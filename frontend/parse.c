@@ -239,7 +239,8 @@ void lame_version_print ( FILE* const fp )
 	fprintf ( fp, "warning: alpha versions should be used for testing only\n\n");
 }
 
-int  print_license ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramName )  /* print version & license */
+static int
+print_license ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramName )  /* print version & license */
 {
     fprintf ( fp, 
               "Can I use LAME in my commercial program?\n"
@@ -314,7 +315,8 @@ int  usage ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramNa
 *
 ************************************************************************/
 
-int  short_help ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramName )  /* print short syntax help */
+static int
+short_help ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramName )  /* print short syntax help */
 {
     fprintf ( fp,
               "usage: %s [options] <infile> [outfile]\n"
@@ -357,7 +359,8 @@ static void  wait_for ( FILE* const fp, int lessmode )
     fprintf ( fp, "\n" );
 }
 
-int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramName, int lessmode )  /* print long syntax help */
+static int
+long_help ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramName, int lessmode )  /* print long syntax help */
 {
     fprintf ( fp,
               "usage: %s [options] <infile> [outfile]\n"
