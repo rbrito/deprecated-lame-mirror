@@ -253,6 +253,13 @@ S.D. Stearns and R.A. David, Prentice-Hall, 1992
     return  (sin( (wcn *  ( x - dly))) / (PI * ( x - dly)) * bkwn );
 }
 
+/* gcd - greatest common divisor */
+/* Joint work of Euclid and M. Hendry */
+int gcd(int i, int j) {
+  return j ? gcd(j, i % j) : i;
+}
+
+
 int fill_buffer_resample(lame_global_flags *gfp,sample_t *outbuf,int desired_len,
 			 short int *inbuf,int len,int *num_used,int ch) {
   
@@ -262,6 +269,10 @@ int fill_buffer_resample(lame_global_flags *gfp,sample_t *outbuf,int desired_len
   int filter_l;
   FLOAT8 fcn,intratio;
   short int *inbuf_old;
+  int bpc = BPC;  /* number of convolution functions to pre-compute */
+
+  bpc = gfp->out_samplerate/gcd(gfp->out_samplerate,gfp->in_samplerate);
+  if (bpc>BPC) bpc = BPC;
 
   intratio=( fabs(gfc->resample_ratio - floor(.5+gfc->resample_ratio)) < .0001 );
   fcn = .90/gfc->resample_ratio;
@@ -280,8 +291,8 @@ int fill_buffer_resample(lame_global_flags *gfp,sample_t *outbuf,int desired_len
     gfc->itime[1]=0;
     memset((char *) gfc->inbuf_old, 0, sizeof(short int)*2*BLACKSIZE);
     /* precompute blackman filter coefficients */
-    for (j= 0; j<= 2*BPC; ++j) {
-      offset=(double)(j-BPC)/(double)(2*BPC);
+    for (j= 0; j<= 2*bpc; ++j) {
+      offset=(double)(j-bpc)/(double)(2*bpc);
       for (i=0; i<=filter_l; ++i) {
 	gfc->blackfilt[j][i]=blackman(i,offset,fcn,filter_l);
       }
@@ -304,7 +315,7 @@ int fill_buffer_resample(lame_global_flags *gfp,sample_t *outbuf,int desired_len
     /* but we want a window centered at time0.   */
     offset = ( time0 -gfc->itime[ch] - (j + .5*(filter_l%2)));
     assert(fabs(offset)<=.500001);
-    joff = floor((offset*2*BPC) + BPC +.5);
+    joff = floor((offset*2*bpc) + bpc +.5);
 
     xvalue=0;
     for (i=0 ; i<=filter_l ; ++i) {
