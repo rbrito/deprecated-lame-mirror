@@ -955,7 +955,7 @@ read_samples_pcm(FILE * musicin, int sample_buffer[2304], int frame_size,
 void SetIDTagsFromRiffTags(lame_global_flags * gfp, FILE * sf)
 {
 	int subSize =Read32BitsLowHigh(sf);
-	while (0 != subSize )
+	while (0 != subSize && !feof(sf))
 	{
 		int type = Read32BitsHighLow(sf);
 		subSize -= 4;
