@@ -628,12 +628,13 @@ trancate_smallspectrums(
     j = sfb = 0;
     do {
 	FLOAT threshold;
-	int nsame, start, width2 = 0, k = j, width = gi->width[sfb];
+	int nsame, start, width2, k = j, width = gi->width[sfb];
 	j += width;
 
 	if (distort[sfb] >= xmin[sfb])
 	    continue;
 
+	width2 = 0;
 	do {
 	    if (gi->l3_enc[k] != 0)
 		work[width2++] = absxr[k];
@@ -659,8 +660,8 @@ trancate_smallspectrums(
 	width = -width;
 	do {
 	    if (absxr[j + width] <= threshold)
-		gi->l3_enc[j + width] = 0.0;
-	} while (++width > 0);
+		gi->l3_enc[j + width] = 0;
+	} while (++width < 0);
     } while (++sfb < gi->psymax);
 
     noquant_count_bits(gfc, gi);
