@@ -1433,10 +1433,9 @@ L3psycho_anal_ns(
 	    thmm -= .5*tmp;
 	    if (thmm < gfc->ATH.l_avg[j] * gfc->ATH.adjust)
 		thmm = gfc->ATH.l_avg[j] * gfc->ATH.adjust;
-	    thmm *= gfc->masking_lower;
 
 	    mr->en .l[j] = enn;
-	    mr->thm.l[j] = thmm;
+	    mr->thm.l[j] = thmm * gfc->masking_lower;
 
 	    enn  =  eb[b] * 0.5;
 	    thmm = tmp * 0.5;
@@ -1447,10 +1446,9 @@ L3psycho_anal_ns(
 
 	if (thmm < gfc->ATH.l_avg[SBMAX_l-1] * gfc->ATH.adjust)
 	    thmm = gfc->ATH.l_avg[SBMAX_l-1] * gfc->ATH.adjust;
-	thmm *= gfc->masking_lower;
 
 	mr->en .l[SBMAX_l-1] = enn;
-	mr->thm.l[SBMAX_l-1] = thmm;
+	mr->thm.l[SBMAX_l-1] = thmm * gfc->masking_lower;
 
 	if (mr->en.s[0][0] >= 0.0) {
 	    partially_convert_l2s(gfc, eb, gr, chn);
@@ -1488,13 +1486,16 @@ L3psycho_anal_ns(
 	    if (b == gfc->bo_l2s[j])
 		break;
 	}
+
 	thmm *= ((double)BLKSIZE_s / BLKSIZE);
 	enn  *= ((double)BLKSIZE_s / BLKSIZE);
-	if (thmm < gfc->ATH.s_avg[j] * gfc->ATH.adjust)
-	    thmm = gfc->ATH.s_avg[j] * gfc->ATH.adjust;
+	if (thmm < gfc->ATH.s_avg[SBMAX_s-1] * gfc->ATH.adjust)
+	    thmm = gfc->ATH.s_avg[SBMAX_s-1] * gfc->ATH.adjust;
 
-	mr->thm.s[j][0] = mr->thm.s[j][1] = mr->thm.s[j][2] = thmm;
-	mr->en .s[j][0] = mr->en .s[j][1] = mr->en .s[j][2] = enn;
+	mr->thm.s[SBMAX_s-1][0] = mr->thm.s[SBMAX_s-1][1]
+	    = mr->thm.s[SBMAX_s-1][2] = thmm * gfc->masking_lower;
+	mr->en .s[SBMAX_s-1][0] = mr->en .s[SBMAX_s-1][1]
+	    = mr->en .s[SBMAX_s-1][2] = enn;
     }
 }
 
