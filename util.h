@@ -209,6 +209,8 @@ typedef struct  {
   FLOAT8 slot_lag;
   FLOAT8 ms_ener_ratio[2];
   FLOAT8 ms_ratio[2];
+  long remainder;
+  long difference;
 
 
   /* variables used by quantize.c */
