@@ -1324,11 +1324,8 @@ VBR_noise_shaping (
     FLOAT8 xr34[576];
     int shortblock, ret, bits, huffbits;
     int vbrmin, vbrmax, vbrmin2, vbrmax2;
-    int best_huffman = gfc->use_best_huffman;
     int count=6;
     
-    gfc->use_best_huffman = 0; /* we will do it later */
- 
     cod_info   = &gfc->l3_side.tt[gr][ch];
     shortblock = (cod_info->block_type == SHORT_TYPE);
       
@@ -1399,9 +1396,6 @@ do {
     }
     else break;
 } while(1 && ret != -1);
-
-
-    gfc->use_best_huffman = best_huffman;
 
     if (ret == -1) /* Houston, we have a problem */
         return -1;

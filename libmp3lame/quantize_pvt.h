@@ -65,6 +65,7 @@ int     on_pe (lame_global_flags *gfp, FLOAT8 pe[2][2], III_side_info_t * l3_sid
 void    reduce_side (int targ_bits[2], FLOAT8 ms_ener_ratio, int mean_bits,
                      int max_bits);
 
+void    iteration_init (lame_global_flags *gfp);
 
 int     calc_xmin (lame_global_flags *gfp,
                    const III_psy_ratio * const ratio, const gr_info * const cod_info,
