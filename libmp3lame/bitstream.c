@@ -588,7 +588,7 @@ CRC_writeheader(char *header, int len)
 static int
 writeTableHeader(gr_info *gi, int ptr, char *p)
 {
-    static const int blockConv[] = {1, 3, 2};
+    static const short blockConv[] = {1*2048+8192, 3*2048+8192, 2*2048+8192};
     int tsel;
     if (gi->table_select[0] == 14)
 	gi->table_select[0] = 16;
@@ -600,8 +600,8 @@ writeTableHeader(gr_info *gi, int ptr, char *p)
 	gi->table_select[1] = 6;
     tsel = gi->table_select[0]*32 + gi->table_select[1];
     if (gi->block_type != NORM_TYPE) {
-	writeheader(p, 8192 /* window_switching_flag */
-		    + blockConv[gi->block_type-1]*2048
+	writeheader(p,
+		    blockConv[gi->block_type-1]
 		    + gi->mixed_block_flag*1024 + tsel,
 		    1+2+1+5*2, ptr);
 
