@@ -427,7 +427,7 @@ amp_scalefac_bands(
                 distort_thresh = pow (distort_thresh, 0.20f);
             else 
                 /* amplify only bands near 95% of maximum noise */
-                distort_thresh = powf (distort_thresh, 1.05f);
+                distort_thresh = pow (distort_thresh, 1.05f);
             break;
     case amp_mode_mid:
             if (distort_thresh > 1.0f) 
