@@ -76,18 +76,22 @@ choose_table_MMX:
 	movq	mm4,[edx+ecx]
 	movq	mm5,[edx+ecx+8]
 	add	ecx,16
-	psubusw	mm4,mm0	; 本当は dword でないといけないのだが
-	psubusw	mm5,mm1	; そんなコマンドはない :-p
-	paddw	mm0,mm4 ; が, ここで扱う値の範囲は 8191+15 以下なので問題ない
+; below operations should be done as dword (32bit),
+; an MMX has no such instruction, however.
+; but! because the maximum value of IX is 8191+15,
+; we can safely use "word" operation.
+	psubusw	mm4,mm0
+	psubusw	mm5,mm1
+	paddw	mm0,mm4
 	paddw	mm1,mm5
 	jnz	.lp
 .exit:
-	psubusw	mm1,mm0	; これも本当は dword でないといけない
+	psubusw	mm1,mm0
 	paddw	mm0,mm1
 
 	movq	mm4,mm0
 	punpckhdq	mm4,mm4
-	psubusw	mm4,mm0	; これも本当は dword でないといけない
+	psubusw	mm4,mm0
 	paddw	mm0,mm4
 	movd	eax,mm0
 
@@ -104,7 +108,7 @@ choose_table_MMX:
 
 .with_ESC:
 	cmp	eax, 8191+15
-	ja	.with_ESC1
+	ja	.with_ESC1	; error !
 
 	sub	eax,15
 	push	ebx
@@ -121,7 +125,7 @@ choose_table_MMX:
 
 	xor	esi, esi	; sum = 0
 	test    ecx, 8
-	pxor	mm7, mm7	; linbits_sum, 14を越えたものの数
+	pxor	mm7, mm7	; linbits_sum, number of IXs over 14
 	jz	.H_dual_lp1
 
 	movq	mm0, [edx+ecx]
@@ -129,8 +133,8 @@ choose_table_MMX:
 	packssdw	mm0,mm7
 	movq	mm2, mm0
 	paddusw	mm0, mm5	; mm0 = min(ix, 15)+0xfff0
-	pcmpgtw	mm2, mm6	; 14より大きいか？
-	psubw	mm7, mm2	; 14より大きいとき linbits_sum++;
+	pcmpgtw	mm2, mm6	; over 14 or not
+	psubw	mm7, mm2	; if (over 14) then linbits_sum++
 	pmaddwd	mm0, mm3	; {0, 0, y, x}*{1, 16, 1, 16}
 	movd	ebx, mm0
 	mov	esi, [largetbl+ebx*4+(16*16+16)*4]
@@ -144,7 +148,7 @@ choose_table_MMX:
 	packssdw	mm0,mm1
 	movq	mm2, mm0
 	paddusw	mm0, mm5	; mm0 = min(ix, 15)+0xfff0
-	pcmpgtw	mm2, mm6	; 14より大きいか？
+	pcmpgtw	mm2, mm6	; over 14 or not.
 	pmaddwd	mm0, mm3	; {y, x, y, x}*{1, 16, 1, 16}
 	movd	ebx, mm0
 	punpckhdq	mm0,mm0
@@ -152,7 +156,7 @@ choose_table_MMX:
 	movd	ebx, mm0
 	add	esi, [largetbl+ebx*4+(16*16+16)*4]
 	add	ecx, 16
-	psubw	mm7, mm2	; 14より大きいとき linbits_sum++;
+	psubw	mm7, mm2	; if (over 14) then linbits_sum++
 	jnz	.H_dual_lp1
 
 .H_dual_exit:
