@@ -107,6 +107,8 @@ int get_audio(short buffer[2][1152],int stereo)
   remaining=num_samples-num_samples_read;
   framesize = gf.mode_gr*576;
   samples_to_read = (remaining > framesize ? framesize : remaining);
+  if (samples_to_read == -1 ) /* we don't know how much to read */
+    samples_to_read = framesize;
   if (samples_to_read<0) samples_to_read=0;
 
 
@@ -505,7 +507,7 @@ int read_samples_pcm(short sample_buffer[2304],int frame_size,int samples_to_rea
     rcode = samples_read;
     if (samples_read < frame_size)
       {
-	/* printf("Insufficient PCM input for one frame - fillout with zeros\n"); */
+	fprintf(stderr,"Insufficient PCM input for one frame - fillout with zeros\n"); 
 	if (samples_read<0) samples_read=0;
 	for (; samples_read < frame_size; sample_buffer[samples_read++] = 0);
       }
@@ -629,7 +631,7 @@ int default_channels)
    }
  }
     
-  if (num_samples==MAX_U_32_NUM) {
+  if (num_samples==MAX_U_32_NUM && musicin != stdin) {
     /* try to figure out num_samples */
     stat(inPath,&sb);  /* try file size, assume 2 bytes per sample */
     if (gf.input_format == sf_mp3) {
@@ -693,7 +695,7 @@ int read_samples_pcm(short sample_buffer[2304], int frame_size,int samples_to_re
     rcode=samples_read;
     if (samples_read < frame_size) {
       if (samples_read<0) samples_read=0;
-      /* printf("Insufficient PCM input for one frame - fillout with zeros\n"); */
+      fprintf(stderr,"Insufficient PCM input for one frame - fillout with zeros\n");
       for (; samples_read < frame_size; sample_buffer[samples_read++] = 0);
     }
     return(rcode);
