@@ -359,7 +359,6 @@ init_bitalloc(lame_t gfc, gr_info *const gi)
 {
     FLOAT tmp, sum = 0.0;
     int i, end = gi->xrNumMax;
-    memset(&gi->l3_enc[end], 0, sizeof(int)*(576-end));
 
     /*  check if there is some energy we have to quantize
      *  and calculate xr34(gfc->xrwork[0]) matching our fresh scalefactors */
@@ -668,10 +667,10 @@ inc_subblock_gain(gr_info * const gi, FLOAT distort[])
 	if (sfb >= gi->psymax)
 	    continue;
 
-	if (gi->subblock_gain[subwin] >= 7)
+	if (gi->subblock_gain[subwin+1] >= 7)
 	    return 1;
 
-	gi->subblock_gain[subwin]++;
+	gi->subblock_gain[subwin+1]++;
 	for (sfb = gi->sfb_lmax+subwin; sfb < gi->psymax; sfb += 3) {
 	    int s = gi->scalefac[sfb] - (4 >> gi->scalefac_scale);
 	    if (s < 0) {
@@ -1347,21 +1346,21 @@ short_block_scalefacs(gr_info * gi, int vbrmax)
 	if (sbg < 0)
 	    sbg = 0;
 	assert(sbg <= 7);
-	gi->subblock_gain[b] = sbg;
+	gi->subblock_gain[b+1] = sbg;
     }
 
     b = vbrmax >> 3;
-    if (b > gi->subblock_gain[0])
-	b = gi->subblock_gain[0];
     if (b > gi->subblock_gain[1])
 	b = gi->subblock_gain[1];
     if (b > gi->subblock_gain[2])
 	b = gi->subblock_gain[2];
+    if (b > gi->subblock_gain[3])
+	b = gi->subblock_gain[3];
 
     gi->global_gain = vbrmax-b*8;
-    gi->subblock_gain[0] -= b;
     gi->subblock_gain[1] -= b;
     gi->subblock_gain[2] -= b;
+    gi->subblock_gain[3] -= b;
 }
 
 
@@ -1711,7 +1710,7 @@ set_pinfo(lame_t gfc, gr_info *gi, const III_psy_ratio *ratio, int gr, int ch)
 	    tot_noise += distort[sfb2];
 
 	    gfc->pinfo->LAMEsfb_s[gr][ch][3*sfb+i]
-		= -2.0*gi->subblock_gain[i] - ifqstep*gi->scalefac[sfb2];
+		= -2.0*gi->subblock_gain[1+i] - ifqstep*gi->scalefac[sfb2];
 	}
     } /* block type short */
 

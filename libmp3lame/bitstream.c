@@ -615,9 +615,9 @@ writeTableHeader(gr_info *gi, int ptr, char *p)
 		    + gi->mixed_block_flag*1024 + tsel,
 		    1+2+1+5*2, ptr);
 
-	writeheader(p, gi->subblock_gain[0]*64
-		    + gi->subblock_gain[1]*8
-		    + gi->subblock_gain[2], 3*3, ptr+1+2+1+5*2);
+	writeheader(p, gi->subblock_gain[1]*64
+		    + gi->subblock_gain[2]*8
+		    + gi->subblock_gain[3], 3*3, ptr+1+2+1+5*2);
     } else {
 	assert((unsigned int)gi->region0_count < 16u);
 	assert((unsigned int)gi->region1_count <  8u);

@@ -205,6 +205,7 @@ typedef struct {
     int count1bits;
     /* added for LSF */
     int slen[4];
+
     int dummy_for_padding[2];
 } gr_info;
 

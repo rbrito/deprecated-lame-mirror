@@ -339,8 +339,10 @@ huffman_init(lame_t gfc)
 
 #if HAVE_NASM
     gfc->ix_max = ix_max;
-    if (gfc->CPU_features.MMX)
-        gfc->ix_max = ix_max_MMX;
+    if (gfc->CPU_features.MMX) {
+	extern int ix_max_MMX(const int *ix, const int *end);
+	gfc->ix_max = ix_max_MMX;
+    }
 #endif
 
     gfc->scale_bitcounter = scale_bitcount;

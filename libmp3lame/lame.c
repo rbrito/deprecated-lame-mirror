@@ -587,7 +587,7 @@ lame_init_params(lame_t gfc)
 	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    gr_info *gi = &gfc->tt[gr][ch];
 	    gi->block_type = NORM_TYPE;
-	    gi->mixed_block_flag = gi->subblock_gain[3] = 0;
+	    gi->mixed_block_flag = gi->subblock_gain[0] = 0;
 	    gi->global_gain = 210;
 	}
     }
@@ -1352,26 +1352,10 @@ conv_istereo(lame_t gfc, gr_info *gi, int sfb, int i)
 static void
 init_gr_info(lame_t gfc, int gr, int ch)
 {
-    int sfb, j;
     gr_info *gi = &gfc->tt[gr][ch];
+    int sfb, j;
 
-    gi->part2_3_length     = 0;
-    gi->part2_length       = 0;
-    gi->count1bits         = 0;
-    gi->slen[0]            = 0;
-    gi->slen[1]            = 0;
-    gi->slen[2]            = 0;
-    gi->slen[3]            = 0;
-    gi->big_values         = 0;
-    gi->count1             = 0;
-    gi->scalefac_compress  = 0;
     /* mixed_block_flag, block_type was set in psymodel.c */
-    gi->table_select [0]   = 0;
-    gi->table_select [1]   = 0;
-    gi->table_select [2]   = 0;
-    gi->preflag            = 0;
-    gi->scalefac_scale     = 0;
-    gi->count1table_select = 0;
     gi->sfbdivide          = 11;
     gi->xrNumMax           = gfc->xrNumMax_longblock;
 
@@ -1384,12 +1368,10 @@ init_gr_info(lame_t gfc, int gr, int ch)
     for (sfb = 0; sfb < SBMAX_l; sfb++) {
 	gi->width[sfb]
 	    = gfc->scalefac_band.l[sfb+1] - gfc->scalefac_band.l[sfb];
-	gi->window[sfb] = 3; /* subblockgain[3] is always 0. */
     }
     gi->width[sfb-1] = gfc->xrNumMax_longblock - gfc->scalefac_band.l[sfb-1];
 
     if (gi->block_type != NORM_TYPE) {
-	gi->subblock_gain[0] = gi->subblock_gain[1] = gi->subblock_gain[2] = 0;
 	gi->region0_count = 7;
 	if (gi->block_type == SHORT_TYPE) {
 	    FLOAT ixwork[576];
@@ -1433,14 +1415,13 @@ init_gr_info(lame_t gfc, int gr, int ch)
 		    for (l = start; l < end; l++)
 			*ix++ = ixwork[3*l+subwin];
 		    gi->width [j] = end - start;
-		    gi->window[j] = subwin;
+		    gi->window[j] = subwin+1;
 		    j++;
 		}
 	    }
 	}
 	gi->region1_count = SBMAX_l - 2 - gi->region0_count;
     } else {
-	gi->region0_count = gi->region1_count = 0;
 	/* analog silence detection in pseudo sfb 22 */
 	if (gfc->scalefac_band.l[SBMAX_l-1] < 576-100) {
 	    int k = (576+gfc->scalefac_band.l[SBMAX_l-1])/2;
@@ -1453,8 +1434,6 @@ init_gr_info(lame_t gfc, int gr, int ch)
 	    }
 	}
     }
-
-    memset(gi->scalefac, 0, sizeof(gi->scalefac));
 }
 
 /*************************************************************************

@@ -1335,9 +1335,11 @@ psycho_analysis(
     int gr, ch, blocktype_old[MAX_CHANNELS], numchn;
 
     /* next frame data -> current frame data (aging) */
-    gfc->mode_ext = gfc->mode_ext_next;
     blocktype_old[0] = gfc->tt[gfc->mode_gr-1][0].block_type;
     blocktype_old[1] = gfc->tt[gfc->mode_gr-1][1].block_type;
+    gfc->mode_ext = gfc->mode_ext_next;
+
+    memset(gfc->tt, 0, sizeof(gr_info)*MAX_GRANULES*MAX_CHANNELS);
 
     numchn = gfc->channels_out;
     if (gfc->mode == JOINT_STEREO)

@@ -23,10 +23,9 @@
 #define LAME_QUANTIZE_PVT_H
 
 #define scalefactor(gi, sfb) \
-    (gi->global_gain \
+    (gi->global_gain - gi->subblock_gain[gi->window[sfb]]*8) \
      - ((gi->scalefac[sfb] + ((gi->preflag > 0) ? pretab[sfb] : 0)) \
-        << (gi->scalefac_scale + 1)) \
-     - gi->subblock_gain[gi->window[sfb]]*8)
+        << (gi->scalefac_scale + 1))
 
 #define xr34 gfc->w.xrwork[0]
 #define absxr gfc->w.xrwork[1]
@@ -39,9 +38,8 @@ int iteration_finish_one (lame_t gfc, int gr, int ch);
 int scale_bitcount (gr_info * const gi);
 int scale_bitcount_lsf (gr_info * const gi);
 
-#ifdef HAVE_NASM
+#if HAVE_NASM
 int ix_max(const int *ix, const int *end);
-int ix_max_MMX(const int *ix, const int *end);
 void quantize_sfb_3DN(const FLOAT *, int, int, int *);
 #endif
 
