@@ -6,8 +6,11 @@
 #include "quantize-pvt.h"
 
 /* This does not work properly on some CPUs (68k for sure), it should not be default.*/
+#if (defined(__GNUC__) && defined(__i386__))
+#define TAKEHIRO_IEEE754_HACK
+#else
 #undef TAKEHIRO_IEEE754_HACK
-
+#endif
 
 const int slen1_tab[16] = { 0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4 };
 const int slen2_tab[16] = { 0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3 };
@@ -1121,7 +1124,7 @@ set_pinfo (lame_global_flags *gfp,
 
 /* NOTE: GNUC quantize_xrpow is broken as of 1.107 */
 #if (defined(__GNUC__) && defined(__i386__))
-#define USE_GNUC_ASMXXX
+#define USE_GNUC_ASM
 #endif
 #ifdef _MSC_VER
 #define USE_MSC_ASM
