@@ -388,17 +388,17 @@ void ReportLameTagProgress(lame_global_flags *gfp,int nStart)
 static void CreateI4(unsigned char *buf, int nValue)
 {
     /* big endian create */
-    buf[0]=(nValue>>24)&0xff;
-    buf[1]=(nValue>>16)&0xff;
-    buf[2]=(nValue>> 8)&0xff;
-    buf[3]=(nValue   )&0xff;
+    buf[0] = nValue >> 24;
+    buf[1] = nValue >> 16;
+    buf[2] = nValue >>  8;
+    buf[3] = nValue;
 }
 
 static void CreateI2(unsigned char *buf, int nValue)
 {
     /* big endian create */
-    buf[0]=(nValue>> 8)&0xff;
-    buf[1]=(nValue   )&0xff;
+    buf[0] = nValue >> 8;
+    buf[1] = nValue;
 }
 
 
@@ -662,7 +662,7 @@ int PutVbrTag(lame_global_flags *gfp, FILE *fpStream)
 	if (gfp->out_samplerate < 16000)
 	    bitrate = XING_BITRATE25;
     }
-    if (gfp->VBR==cbr)
+    if (gfp->VBR == cbr)
 	bitrate = gfp->mean_bitrate_kbps;
 
     /* Use as much of the info from the real frames in the
