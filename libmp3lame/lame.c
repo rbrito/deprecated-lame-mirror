@@ -388,6 +388,107 @@ static int  optimum_samplefreq ( int lowpassfreq, int input_samplefreq )
 }
 
 
+/* set internal feature flags.  USER should not access these since
+ * some combinations will produce strange results */
+void lame_init_qval(lame_global_flags *gfp) {
+    lame_internal_flags* gfc = gfp -> internal_flags;
+
+    switch ( gfp->quality ) {
+    case 9: /* no psymodel, no noise shaping */
+	gfc->filter_type        = 0;
+	gfc->psymodel           = 0;
+	gfc->quantization       = 0;
+	gfc->noise_shaping      = 0;
+	gfc->noise_shaping_amp  = 0; 
+	gfc->noise_shaping_stop = 0;
+	gfc->use_best_huffman   = 0;
+        break;
+	
+    case 8:
+	gfp->quality = 7;
+    case 7: /* use psymodel (for short block and m/s switching), but no noise shapping */
+	gfc->filter_type        = 0;
+	gfc->psymodel           = 1; /**/
+	gfc->quantization       = 0;
+	gfc->noise_shaping      = 0;
+	gfc->noise_shaping_amp  = 0; 
+	gfc->noise_shaping_stop = 0;
+	gfc->use_best_huffman   = 0;
+	break;
+
+    case 6:
+	gfp->quality = 5;
+    case 5: /* the default */
+	gfc->filter_type        = 0;
+	gfc->psymodel           = 1;
+	gfc->quantization       = 0;
+	gfc->noise_shaping      = 1; /**/
+	gfc->noise_shaping_amp  = 0; 
+	gfc->noise_shaping_stop = 0;
+	gfc->use_best_huffman   = 0;
+	break;
+
+    case 4:
+	gfp->quality = 3;
+    case 3:
+	gfc->filter_type        = 0;
+	gfc->psymodel           = 1;
+	gfc->quantization       = 1; 
+	gfc->noise_shaping      = 1;
+	gfc->noise_shaping_amp  = 0; 
+	gfc->noise_shaping_stop = 0;
+	gfc->use_best_huffman   = 1; 
+	break;
+
+    case 2:
+	gfc->filter_type        = 0;
+	gfc->psymodel           = 1;
+	gfc->quantization       = 1;
+	gfc->noise_shaping      = 1;
+	gfc->noise_shaping_amp  = 1; 
+	gfc->noise_shaping_stop = 1;
+	gfc->use_best_huffman   = 1;
+	break;
+
+    case 1:
+	gfc->filter_type        = 0;
+	gfc->psymodel           = 1;
+	gfc->quantization       = 1;
+	gfc->noise_shaping      = 1; 
+	gfc->noise_shaping_amp  = 2; 
+	gfc->noise_shaping_stop = 1;
+	gfc->use_best_huffman   = 1;
+	break;
+
+    case 0: /* 0..1 quality */
+	gfc->filter_type        = 0; /* 1 not yet coded */
+	gfc->psymodel           = 1;
+	gfc->quantization       = 1;
+	gfc->noise_shaping      = 1;  /* 2=usually lowers quality */
+	gfc->noise_shaping_amp  = 2; 
+	gfc->noise_shaping_stop = 1; 
+	gfc->use_best_huffman   = 1; /* 2 not yet coded */
+    }
+
+    /* modifications to the above rules: */
+
+    /* -Z option enables scalefactor_scale: */
+    if (gfp->experimentalZ) {
+	gfc->noise_shaping = 2;
+    }
+
+    if (gfp->exp_nspsytune & 1) {
+      if (gfp->quality <= 2) gfc->noise_shaping = 2; /* use scalefac_scale */
+    }
+
+}
+
+
+
+
+
+
+
 /* int           lame_init_params               (lame_global_flags *gfp)                                                                                          *//*{{{*/
 
 /********************************************************************
@@ -780,88 +881,6 @@ int lame_init_params ( lame_global_flags* const gfp )
 
   init_bit_stream_w ( gfc );
 
-
-  /* set internal feature flags.  USER should not access these since
-   * some combinations will produce strange results */
-
-
-    switch ( gfp->quality ) {
-    case 9: /* no psymodel, no noise shaping */
-	gfc->filter_type        = 0;
-	gfc->psymodel           = 0;
-	gfc->quantization       = 0;
-	gfc->noise_shaping      = 0;
-	gfc->noise_shaping_amp  = 0; 
-	gfc->noise_shaping_stop = 0;
-	gfc->use_best_huffman   = 0;
-        break;
-	
-    case 8:
-	gfp->quality = 7;
-    case 7: /* use psymodel (for short block and m/s switching), but no noise shapping */
-	gfc->filter_type        = 0;
-	gfc->psymodel           = 1; /**/
-	gfc->quantization       = 0;
-	gfc->noise_shaping      = 0;
-	gfc->noise_shaping_amp  = 0; 
-	gfc->noise_shaping_stop = 0;
-	gfc->use_best_huffman   = 0;
-	break;
-
-    case 6:
-	gfp->quality = 5;
-    case 5: /* the default */
-	gfc->filter_type        = 0;
-	gfc->psymodel           = 1;
-	gfc->quantization       = 0;
-	gfc->noise_shaping      = 1; /**/
-	gfc->noise_shaping_amp  = 0; 
-	gfc->noise_shaping_stop = 0;
-	gfc->use_best_huffman   = 0;
-	break;
-
-    case 4:
-	gfp->quality = 3;
-    case 3:
-	gfc->filter_type        = 0;
-	gfc->psymodel           = 1;
-	gfc->quantization       = 1; 
-	gfc->noise_shaping      = 1;
-	gfc->noise_shaping_amp  = 0; 
-	gfc->noise_shaping_stop = 0;
-	gfc->use_best_huffman   = 1; 
-	break;
-
-    case 2:
-	gfc->filter_type        = 0;
-	gfc->psymodel           = 1;
-	gfc->quantization       = 1;
-	gfc->noise_shaping      = 1;
-	gfc->noise_shaping_amp  = 1; 
-	gfc->noise_shaping_stop = 1;
-	gfc->use_best_huffman   = 1;
-	break;
-
-    case 1:
-	gfc->filter_type        = 0;
-	gfc->psymodel           = 1;
-	gfc->quantization       = 1;
-	gfc->noise_shaping      = 1; 
-	gfc->noise_shaping_amp  = 2; 
-	gfc->noise_shaping_stop = 1;
-	gfc->use_best_huffman   = 1;
-	break;
-
-    case 0: /* 0..1 quality */
-	gfc->filter_type        = 0; /* 1 not yet coded */
-	gfc->psymodel           = 1;
-	gfc->quantization       = 1;
-	gfc->noise_shaping      = 1;  /* 2=usually lowers quality */
-	gfc->noise_shaping_amp  = 2; 
-	gfc->noise_shaping_stop = 1; 
-	gfc->use_best_huffman   = 1; /* 2 not yet coded */
-    }
-
     j = gfc->samplerate_index + (3 * gfp->version) + 6 * (gfp->out_samplerate < 16000);
     for (i = 0; i < SBMAX_l + 1; i++)
         gfc->scalefac_band.l[i] = sfBandIndex [j].l[i];
@@ -881,11 +900,10 @@ int lame_init_params ( lame_global_flags* const gfp )
     /* 
      *  Write id3v2 tag into the bitstream.
      *  This tag must be before the Xing VBR header.
-     *  Does id3v2 and Xing header really work ???
      */
-     
     if ( !gfp->ogg )
         id3tag_write_v2 ( gfp );
+
 
     /* Write initial VBR Header to bitstream */
     if ( gfp->bWriteVbrTag )
@@ -893,15 +911,22 @@ int lame_init_params ( lame_global_flags* const gfp )
 
     gfc->sfb21_extra = ( gfp->VBR == vbr_rh  ||  gfp->VBR == vbr_mtrh  ||  gfp->VBR == vbr_mt )
                     && ( gfp->out_samplerate >= 32000 );
-  
+
+    if (gfp->version == 1) /* 0 indicates use lower sample freqs algorithm */
+      gfc->is_mpeg1=1; /* yes */
+    else
+      gfc->is_mpeg1=0; /* no */
+
+    /* estimate total frames.  */
+    gfp->totalframes=2+gfp->num_samples/(gfc->resample_ratio*gfp->framesize);
+    gfc->Class_ID =LAME_ID;
+
+
     if (gfp->exp_nspsytune & 1) {
       int i;
 
       gfc->nsPsy.use = 1;
       gfc->nsPsy.safejoint = (gfp->exp_nspsytune & 2) != 0;
-#ifdef RH_AMP
-      if (gfp->VBR == vbr_off) gfp->experimentalY = 1;
-#endif
       for(i=0;i<19;i++) gfc->nsPsy.pefirbuf[i] = 700;
 
       if (gfp->VBR == vbr_mtrh || gfp->VBR == vbr_mt) {
@@ -916,21 +941,13 @@ int lame_init_params ( lame_global_flags* const gfp )
       i = (gfp->exp_nspsytune >>  2) & 63; if (i >= 32) i -= 64; gfc->nsPsy.bass   = pow(10,i / 4.0 / 10.0);
       i = (gfp->exp_nspsytune >>  8) & 63; if (i >= 32) i -= 64; gfc->nsPsy.alto   = pow(10,i / 4.0 / 10.0);
       i = (gfp->exp_nspsytune >> 14) & 63; if (i >= 32) i -= 64; gfc->nsPsy.treble = pow(10,i / 4.0 / 10.0);
-
-
-      if (gfp->quality <= 2) gfc->noise_shaping = 2; /* use scalefac_scale */
     }
 
     if (gfp->ATHtype == -1) gfp->ATHtype = 1;
 
-    if (gfp->version == 1) /* 0 indicates use lower sample freqs algorithm */
-      gfc->is_mpeg1 = 1; /* yes */
-    else
-      gfc->is_mpeg1 = 0; /* no */
+    /* initialize internal qval settings */
+    lame_init_qval(gfp);
 
-    /* estimate total frames.  */
-    gfp->totalframes           = 2 + gfp->num_samples/(gfc->resample_ratio * gfp->framesize);
-    gfc->Class_ID              = LAME_ID;
 
     return 0;
 }
@@ -996,12 +1013,6 @@ void lame_print_config ( const lame_global_flags* gfp )
     } else {
 	MSGF ("polyphase filters disabled\n");
     }
-    
-#ifdef RH_AMP
-    if (gfp->experimentalY) {
-	MSGF ("careful noise shaping, only maximum distorted band at once\n");
-    }
-#endif
     
     if ( gfp->free_format ) {
 	MSGF ("Warning: many decoders cannot handle free format bitstreams\n");
