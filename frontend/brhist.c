@@ -52,30 +52,6 @@
 
 #include "brhist.h"
 
-
-/* ///
- * Sorry for not using KLEMM_03, but the code was really unreadable with so much #ifdefs
- * and finally I was not sure not to unintentionally have modified the original code ...
- *
- * remove after reading (such remarks I mark with a "///")
- * changed:
- *   not all bitrates are display, only min <= x <= max and outside this range the used bitrates
- *   cursor stays at the end of the screen, so ^C works right and nice (fflush moved two lines up)
- *   WINDOWS not tested, problems may be at the line marked with "$$$" if counting the lines is wrong for Windows
- *   No cache array for bit rate string representations, printed immediately with %3u from the int array
- *   Renaming of br_min to br_kbps_min (I trapped into the pitfall that br_min in 3.87 was the index and now without renaming it was the data rate in kbps)
- *   A "bug" is that brhist_disp_line has too many arguments
- *   assert.h removed, not used
- *   some minor changes, "%#5.4g" for percentages of LR/MS, a spell error in "BRHIST_WIDTH" (last two letters were wrong), and things like that
- *   some unsigned long => int stuff
- *   brhist_disp have a second arg to select to jump back or not
- *
- * Why not adding to the cvs comments:
- *   commenting must be done while transmission (costs money, 4.8 Pf/min)
- *   I have 3 minutes time, otherwise the modem cancels the connection and the comments are lost (cvs have problems with this case)
- *   comments can be added at the right place
- */
-
 /* Structure holding all data related to the Console I/O 
  * may be this should be a more global frontend structure. So it
  * makes sense to print all files instead with
@@ -239,7 +215,8 @@ static void  brhist_disp_line ( const lame_global_flags*  gf, int i, int br_hist
                   barlen_LR, brhist.bar_hash, 
                   barlen_TOT - barlen_LR, brhist.bar_asterisk, 
 		  Console_IO.disp_width - BRHIST_RES - barlen_TOT, "" );
-	Console_IO.hist_printed_lines++;
+		  
+    Console_IO.hist_printed_lines++;
 }
 
 
@@ -257,7 +234,7 @@ void  brhist_disp ( const lame_global_flags*  gf )
     
     Console_IO.hist_printed_lines = 0;  /* printed number of lines for the brhist functionality, used to skip back the right number of lines */
 	
-	lame_bitrate_hist             ( gf, br_hist    );
+    lame_bitrate_hist             ( gf, br_hist    );
     lame_bitrate_stereo_mode_hist ( gf, br_sm_hist );
 
     frames = most_often = 0;
@@ -288,7 +265,7 @@ void  brhist_disp ( const lame_global_flags*  gf )
 
 #if defined(_WIN32)  &&  !defined(__CYGWIN__) 
     /* fflush is needed for Windows ! */
-	fflush ( Console_IO.Console_fp );
+    fflush ( Console_IO.Console_fp );
 #else
     fputs ( "\r", Console_IO.Console_fp );
     fflush ( Console_IO.Console_fp );
@@ -302,10 +279,10 @@ void brhist_jump_back( void )
         COORD                       Pos;
         CONSOLE_SCREEN_BUFFER_INFO  CSBI;
 	
-	    GetConsoleScreenBufferInfo ( Console_IO.Console_Handle, &CSBI );
-	    Pos.Y = CSBI.dwCursorPosition.Y - Console_IO.hist_printed_lines ;  /* $$$ */
-	    Pos.X = 0;
-	    SetConsoleCursorPosition ( Console_IO.Console_Handle, Pos );
+        GetConsoleScreenBufferInfo ( Console_IO.Console_Handle, &CSBI );
+        Pos.Y = CSBI.dwCursorPosition.Y - Console_IO.hist_printed_lines ;  /* $$$ */
+        Pos.X = 0;
+        SetConsoleCursorPosition ( Console_IO.Console_Handle, Pos );
     }
 #else
     while ( Console_IO.hist_printed_lines-- > 0 )

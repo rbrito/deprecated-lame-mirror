@@ -1,0 +1,2 @@
+
+/* console stuff prototypes */

@@ -37,10 +37,6 @@ and then make lame, mp3x and/or the dll.  Any system interested in
 the shared library should be able to use ./configure. 
 
 
-
-1. add 'mmx' to version string if compiled for mmx cpu
-
-
 1.
 ACM wrapper for LAME.
 

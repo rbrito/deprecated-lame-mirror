@@ -27,6 +27,12 @@
 
 #include "version.h"    // macros of version numbers
 
+#if defined(MMX_choose_table)
+# define V1 "MMX "
+#else
+# define V1 ""
+#endif
+
 
 const char*  get_lame_version ( void )  // primary for reports on screen
 {
@@ -37,11 +43,11 @@ const char*  get_lame_version ( void )  // primary for reports on screen
  */
     
     if (LAME_ALPHA_VERSION > 0)
-        sprintf ( ret, "%u.%02d (alpha %u, %6.6s %5.5s)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION, LAME_ALPHA_VERSION, __DATE__, __TIME__ );
+        sprintf ( ret, "%u.%02d " V1 "(alpha %u, %6.6s %5.5s)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION, LAME_ALPHA_VERSION, __DATE__, __TIME__ );
     else if (LAME_BETA_VERSION > 0)
-        sprintf ( ret, "%u.%02d (beta %u, %s)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION, LAME_BETA_VERSION, __DATE__ );
+        sprintf ( ret, "%u.%02d " V1 "(beta %u, %s)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION, LAME_BETA_VERSION, __DATE__ );
     else
-        sprintf ( ret, "%u.%02d", LAME_MAJOR_VERSION, LAME_MINOR_VERSION );
+        sprintf ( ret, "%u.%02d " V1, LAME_MAJOR_VERSION, LAME_MINOR_VERSION );
         
     return ret;
 }
