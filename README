@@ -27,8 +27,8 @@ see the file "HACKING" if you are interested in working on LAME
 see the file "API" for details of the LAME encoding library API
 
 There is HTML documentation and a man page in the doc directory.
-The HTML docs were contributed by Gabriel Bouvigne (www.mp3tech.org).
-See www.mp3tech.org for more audio compression information and links.
+The HTML docs were contributed by Gabriel Bouvigne (www.mp3-tech.org).
+See www.mp3-tech.org for more audio compression information and links.
 
 ============================================================================
 

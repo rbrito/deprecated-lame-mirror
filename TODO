@@ -48,12 +48,8 @@ which will return all data needed by the frame analyzer)
 i-stereo value (= frame is m/s stereo) is not correct.  
 
 4.
-Clipping detection.  Compute statistics for input near 2^15, 
-(should be done in fill_buffer() in util.c).  Have command
-line encoder print statistics about % of samples which might
-end up clipped.
-
-Better: do a full decode - but this seems too expensive. 
+Clipping detection: This could be done by decoding on the fly
+and adjusting the replay gain flag of the INFO tag.
 
 
 5.
@@ -77,18 +73,60 @@ higher quality.
 We should consider moving the experts options from the *long
 help* text into an *experts only* help text. The average Joe gets
 knocked down by the huge number of possibilities to setup lame.
+
+
+
+
+
+
+20.
+Tuning for low bitrates: Right now the default sampling freq
+and lowpass are way too low for very low bitrates (less than 50kbps)
  
 
 
 
+50.
+Better tonality estimation.
+Gpsycho uses predictability, and so needs a delay to detect the tonality
+of a sound.
+Nspsytune seems to miss tonals when several of them are too narrow.
+We would probably need the best of both.
 
 
-997..
+
+
+60.
+Different ATH handling for sfb21. We are using the minimum value of ath
+in each whole sfb. in sfb21 this leads to very high bitrates.
+We could perhaps use 2 or 3 ath partitions in sfb21
+
+
+
+
+70.
+Use mixed blocks.
+
+
+
+
+90.
+Use intensity stereo. This is a must-have for low bitrates, but if the
+algorythm is very good it could also be used in every case.
+
+
+
+
+
+997.
 ACM wrapper for LAME.  Note: ACM is obsolete and was replaced
 with DirectShow and/or a "DMO".  We do have a beta directshow filter.
 
 Contact "Florian Bruckner" <h9651030@miraculix.wu-wien.ac.at> for info - 
 he is working on the VorbisACM.
+
+Note to the note: There are still some applications that need an ACM
+filter. Steve Lhomme is working on an ACM lame wrapper.
 
 
 
@@ -106,7 +144,15 @@ a: wave -> mp3
 	==> could go into TAG fields of resulting mp3
 b: mp3 -> mp3
 	==> we could copy the TAG directly
-c: mp3 <-> ogg
-	==> copy TAG info into oggs info field and vice versa
-d: mp3 -> wave
+c: mp3 -> wave
 	==> copy TAG into LIST chunk
+
+
+
+1500.
+Integrate plusV extensions
+
+
+
+2000.
+To be able to encode as fast as FastEnc
