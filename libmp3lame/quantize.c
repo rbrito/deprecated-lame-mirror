@@ -1415,7 +1415,7 @@ noisesfb(lame_t gfc, gr_info *gi, FLOAT * xmin, int startsfb)
     for (sfb = 0; sfb < gi->psymax; sfb++) {
 	int width = gi->wi[sfb].width, s;
 	j -= width;
-	if (sfb < startsfb || gi->scalefac[sfb] == SCALEFAC_ANYTHING_GOES)
+	if (sfb < startsfb || gi->scalefac[sfb] < 0)
 	    continue;
 
 	s = scalefactor(gi, sfb);
@@ -1471,17 +1471,23 @@ VBR_2nd_bitalloc(lame_t gfc, gr_info *gi, FLOAT * xmin)
     }
     for (;;) {
 	sfb = noisesfb(gfc, &gi_w, xmin, sfb);
-	if (sfb < 0) {
+	if (sfb < 0) { /* no noise */
 	    gi_work_copy(gi, &gi_w);
 	    if (endflag == 1 || gi_w.global_gain >= MAX_GLOBAL_GAIN)
 		return 0;
 	    gi_w.global_gain++;
 	    endflag = 2;
-	} else if (sfb < gi->sfbmax) {
+	} else if (sfb < gi->sfbmax) { /* noise at "sfb" */
 	    gi_w.scalefac[sfb]++;
-	    if (gi_w.scalefac[sfb] > tab[sfb] || loop_break(&gi_w)
-		|| IPOW20(scalefactor(&gi_w, sfb)) > gfc->maxXR[sfb])
+	    if (loop_break(&gi_w))
 		return 0;
+	    if (gi_w.scalefac[sfb] > tab[sfb]
+		|| IPOW20(scalefactor(&gi_w, sfb)) > gfc->maxXR[sfb]) {
+		/* oh, we can't reduce the noise in this band */
+		gi_w.scalefac[sfb]--;
+		sfb++;
+		endflag = 1; /* forbid to increase global_gain */
+	    }
 	} else { /* noise in sfb21 */
 	    int win = gi_w.wi[sfb].window;
 	    if (win && gi_w.subblock_gain[win] < MAX_SUBBLOCK_GAIN) {
@@ -1542,14 +1548,15 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
 	sfmin = -7*8-7*4;
     do {
 	FLOAT maxXR;
-	int i = gi->wi[sfb].width;
-	j -= i;
+	int width = gi->wi[sfb].width;
+	j -= width;
 #ifdef HAVE_NASM
 	if (gfc->CPU_features.MMX) {
-	    maxXR = xrmax_MMX(&xr34[j+i], &xr34[j]);
+	    maxXR = xrmax_MMX(&xr34[j+width], &xr34[j]);
 	} else
 #endif
 	{
+	    int i = width;
 	    maxXR = (FLOAT)0.0;
 	    do {
 		if (maxXR < xr34[i+j])
@@ -1562,8 +1569,7 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
 	gfc->maxXR[sfb] = FLOAT_MAX;
 	if (maxXR > (FLOAT)(IXMAX_VAL / FLOAT_MAX)) {
 	    maxXR = IXMAX_VAL / maxXR;
-	    gain = find_scalefac(gfc, j, xmin[sfb], gi->wi[sfb].width, maxXR,
-				 sfmin, gain);
+	    gain = find_scalefac(gfc, j, xmin[sfb], width, maxXR, sfmin, gain);
 	    if (gain <= MAX_GLOBAL_GAIN) {
 		gi->scalefac[sfb] = gain;
 		gfc->maxXR[sfb] = maxXR;
@@ -1590,8 +1596,7 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
 
     /* quantize */
     gi->big_values = gi->count1 = gi->xrNumMax;
-    if (count_bits(gfc, gi) >= LARGE_BITS)
-	return -2;
+    count_bits(gfc, gi);
 
     /* encode scalefacs */
     gfc->scale_bitcounter(gi);
@@ -1604,7 +1609,6 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
 	    return -2;
     }
 
-    assert(gi->part2_length < LARGE_BITS);
     assert((unsigned int)gi->global_gain <= (unsigned int)MAX_GLOBAL_GAIN);
 
     return 0;
@@ -1836,7 +1840,7 @@ set_frame_pinfo(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 		= gfc->masking_next[gr][2].pe + gfc->masking_next[gr][3].pe
 		- gfc->masking_next[gr][0].pe - gfc->masking_next[gr][1].pe;
 	}
-        for (ch = 0; ch < gfc->channels_out; ch++) {
+	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    gr_info *gi = &gfc->tt[gr][ch];
 	    int scalefac_sav[SFBMAX], sfb;
 
