@@ -371,7 +371,6 @@ VBR_quantize_granule(lame_global_flags *gfp,
     status=scale_bitcount_lsf(scalefac, cod_info);
 
   if (status!=0) {
-    cod_info->part2_3_length = LARGE_BITS;
     return;
   }
   
@@ -380,8 +379,8 @@ VBR_quantize_granule(lame_global_flags *gfp,
   if (cod_info->part2_3_length >= LARGE_BITS) return;
   cod_info->part2_3_length += cod_info->part2_length;
 
-  
-  if (gfc->use_best_huffman==1 && cod_info->block_type != SHORT_TYPE) {
+
+  if (gfc->use_best_huffman==1) {
     best_huffman_divide(gfc, gr, ch, cod_info, l3_enc);
   }
   return;

@@ -87,7 +87,7 @@ iteration_loop( lame_global_flags *gfp, FLOAT8 pe[2][2],
         }
 
       best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
-      if (gfc->use_best_huffman==1 && cod_info->block_type != SHORT_TYPE) {
+      if (gfc->use_best_huffman==1) {
         best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
       }
       assert((int)cod_info->part2_3_length < 4096);
@@ -279,7 +279,7 @@ ABR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
       cod_info = &l3_side->gr[gr].ch[ch].tt;
 
       best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
-      if (gfc->use_best_huffman==1 && cod_info->block_type != SHORT_TYPE) {
+      if (gfc->use_best_huffman==1) {
         best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
       }
       if (gfp->gtkflag) {
@@ -617,7 +617,7 @@ VBR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
       /* update reservoir status after FINAL quantization/bitrate
        */
       best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
-      if (gfc->use_best_huffman==1 && cod_info->block_type != SHORT_TYPE) {
+      if (gfc->use_best_huffman==1) {
         best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
       }
       if (gfp->gtkflag) {
