@@ -338,43 +338,36 @@ esac
 
 
 dnl libsndfile
-AC_MSG_CHECKING(use of file io)
+AC_MSG_CHECKING(sndfile)
 WARNING=
-AC_ARG_WITH(fileio, 
-  [  --with-fileio=lame         Use lame's internal file io routines [[default]]]
-  [             =sndfile      Use Erik de Castro Lopo's libsndfile]
-  [                           (no stdin possible currently)],
-  CONFIG_FILEIO="${withval}", CONFIG_FILEIO="lame")
 AC_ARG_WITH(sndfile-prefix,
   [  --with-sndfile-prefix=DIR  Alternate location for libsndfile],
   CONFIG_SNDFILE_PREFIX="${withval}", CONFIG_SNDFILE_PREFIX="")
-if test "${CONFIG_FILEIO}" = "sndfile" ; then
-  if test "x${CONFIG_SNDFILE_PREFIX}" != "x" ; then 
-    # look for sndfile lib. This overrides any standard location
-    LA_SEARCH_LIB(SNDFILE_LIB_LOC, SNDFILE_INC_LOC, \
-      libsndfile.a, sndfile.h, $CONFIG_SNDFILE_PREFIX) 
-    if test "x${SNDFILE_LIB_LOC}" != "x" ; then
-      HAVE_SNDFILE="yes"
-      FRONTEND_LDFLAGS="-L${SNDFILE_LIB_LOC} ${FRONTEND_LDFLAGS}"
-      INCLUDES="-I${SNDFILE_INC_LOC} ${INCLUDES}"
-    else
-      WARNING="sndfile lib not found in specified prefix."
-    fi
-  fi
-  if test "${HAVE_SNDFILE}" = "yes" ; then
-    FRONTEND_LDADD="-lsndfile ${FRONTEND_LDADD}"
-    AC_DEFINE(LIBSNDFILE, 1, build with libsndfile support)
+
+if test "x${CONFIG_SNDFILE_PREFIX}" != "x" ; then 
+  # look for sndfile lib. This overrides any standard location
+  LA_SEARCH_LIB(SNDFILE_LIB_LOC, SNDFILE_INC_LOC, \
+    libsndfile.a, sndfile.h, $CONFIG_SNDFILE_PREFIX) 
+  if test "x${SNDFILE_LIB_LOC}" != "x" ; then
+    HAVE_SNDFILE="yes"
+    FRONTEND_LDFLAGS="-L${SNDFILE_LIB_LOC} ${FRONTEND_LDFLAGS}"
+    INCLUDES="-I${SNDFILE_INC_LOC} ${INCLUDES}"
   else
-    # default
-    CONFIG_FILEIO="lame"
-    WARNING="${WARNING} Could not find any sndfile lib on system."
+    WARNING="sndfile lib not found in specified prefix."
   fi
+fi
+
+if test "${HAVE_SNDFILE}" = "yes" ; then
+  FRONTEND_LDADD="-lsndfile ${FRONTEND_LDADD}"
+  AC_DEFINE(LIBSNDFILE, 1, build with libsndfile support)
 else
-  CONFIG_FILEIO="lame"
-fi 
+  WARNING="${WARNING} Could not find any sndfile lib on system."
+fi
+
 AC_MSG_RESULT(${CONFIG_FILEIO})
 if test "x${WARNING}" != "x" ; then
   AC_MSG_WARN($WARNING)
+  AC_MSG_WARN(use built-in input routine only.)
 fi
 
 
