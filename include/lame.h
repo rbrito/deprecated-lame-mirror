@@ -20,7 +20,9 @@
 
 #ifndef LAME_LAME_H
 #define LAME_LAME_H
+
 #include <stdio.h>
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
@@ -207,7 +209,9 @@ const char*  CDECL get_lame_short_version ( void );
 const char*  CDECL get_psy_version        ( void );
 const char*  CDECL get_mp3x_version       ( void );
 const char*  CDECL get_lame_url           ( void );
+#if 0
 const char*  CDECL get_lame_about         ( void );
+#endif
 
 
 /* OPTIONAL:  print internal lame configuration to message handler */
@@ -298,7 +302,8 @@ int CDECL lame_encode_flush(lame_global_flags *,char *mp3buffer, int size);
  * attention: don't call them after lame_encode_finish
  * suggested: lame_encode_flush -> lame_*_hist -> lame_close
  */
- 
+
+/*@-fixedformalarray@*/ 
 void CDECL lame_bitrate_hist( 
         const lame_global_flags *const gfp, 
               int                      bitrate_count[14] );
@@ -312,6 +317,7 @@ void CDECL lame_stereo_mode_hist(
 void CDECL lame_bitrate_stereo_mode_hist ( 
         const lame_global_flags*  gfp, 
         int  bitrate_stmode_count [14] [4] );
+/*@=fixedformalarray@*/
 
 
 /* OPTIONAL:  lame_mp3_tags_fid will append a Xing VBR tag to
@@ -348,7 +354,7 @@ int CDECL lame_encode_finish(lame_global_flags *,char *mp3buffer, int size);
  * decoding 
  *
  * a simple interface to mpglib, part of mpg123, is also included if
- * libmp3lame is compiled with HAVEMPGLIB
+ * libmp3lame is compiled with HAVE_MPGLIB
  *
  *********************************************************************/
 typedef struct {
