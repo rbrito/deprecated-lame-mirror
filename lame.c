@@ -537,8 +537,8 @@ void lame_print_config(lame_global_flags *gfp)
     fprintf(stderr, "Autoconverting from stereo to mono. Setting encoding to mono mode.\n");
   }
   if (gfp->resample_ratio!=1) {
-    fprintf(stderr,"Resampling:  input=%ikHz  output=%ikHz\n",
-	    (int)in_samplerate,(int)out_samplerate);
+    fprintf(stderr,"Resampling:  input=%.1fkHz  output=%.1fkHz\n",
+	    in_samplerate,out_samplerate);
   }
   if (gfp->highpass2>0.0)
     fprintf(stderr, "Using polyphase highpass filter, transition band: %.0f Hz -  %.0f Hz\n",
