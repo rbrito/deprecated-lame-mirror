@@ -457,6 +457,7 @@ void lame_init_params(lame_global_flags *gfp)
 
   /* Do not write VBR tag if VBR flag is not specified */
   if (gfp->VBR==0) gfp->bWriteVbrTag=0;
+  if (gfp->ogg==0) gfp->bWriteVbrTag=0;
   if (gfp->gtkflag) gfp->bWriteVbrTag=0;
 
   /* some file options not allowed if output is: not specified or stdout */
@@ -1003,7 +1004,9 @@ short int inbuf_l[],short int inbuf_r[],
 char *mp3buf, int mp3buf_size)
 {
   if (gfp->ogg) 
+#ifdef HAVEVORBIS
     return lame_encode_ogg_frame(gfp,inbuf_l,inbuf_r,mp3buf,mp3buf_size);
+#endif
   else
     return lame_encode_mp3_frame(gfp,inbuf_l,inbuf_r,mp3buf,mp3buf_size);
 }
@@ -1262,26 +1265,25 @@ int lame_encode_finish(lame_global_flags *gfp,char *mp3buffer, int mp3buffer_siz
       fflush(stderr);
   }
 
+  mp3buffer_size_remaining = mp3buffer_size - mp3count;
+  /* if user specifed buffer size = 0, dont check size */
+  if (mp3buffer_size == 0) mp3buffer_size_remaining=0;  
 
   if (gfp->ogg) {
+#ifdef HAVEVORBIS    
     /* ogg related stuff */
-    lame_encode_ogg_finish(gfp);
-    
+    imp3 = lame_encode_ogg_finish(gfp,mp3buffer,mp3buffer_size_remaining);
+#endif
   }else{
     /* mp3 related stuff.  bit buffer might still contain some data */
     flush_bitstream(gfp);
-    mp3buffer_size_remaining = mp3buffer_size - mp3count;
-    /* if user specifed buffer size = 0, dont check size */
-    if (mp3buffer_size == 0) mp3buffer_size_remaining=0;  
-    
     imp3= copy_buffer(mp3buffer,mp3buffer_size_remaining,&gfc->bs);
-    if (imp3 < 0) {
-      freegfc(gfc);    
-      return imp3;
-    }
-    mp3count += imp3;
   }
-
+  if (imp3 < 0) {
+    freegfc(gfc);    
+    return imp3;
+  }
+  mp3count += imp3;
 
   freegfc(gfc);    
   return mp3count;

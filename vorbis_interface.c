@@ -352,18 +352,53 @@ int lame_encode_ogg_init(lame_global_flags *gfp)
 
 
 
-int lame_encode_ogg_finish(lame_global_flags *gfp)
+int lame_encode_ogg_finish(lame_global_flags *gfp,
+			  char *mp3buf, int mp3buf_size)
 {
+  int eos=0,bytes=0;
+
   vorbis_analysis_wrote(&vd,0);
+
+  while(vorbis_analysis_blockout(&vd,&vb)==1){
+    
+    /* analysis */
+    vorbis_analysis(&vb,&op);
+
+      /* weld the packet into the bitstream */
+      ogg_stream_packetin(&os,&op);
+
+      /* write out pages (if any) */
+      while(!eos){
+	int result=ogg_stream_pageout(&os,&og);
+	if(result==0)break;
+
+
+	/* check if mp3buffer is big enough for the output */
+	bytes += og.header_len + og.body_len;
+	if (bytes > mp3buf_size && mp3buf_size>0)
+	  return -1;
+	
+	memcpy(mp3buf,og.header,og.header_len);
+	memcpy(mp3buf+og.header_len,og.body,og.body_len);
+
+	/* this could be set above, but for illustrative purposes, I do
+	   it here (to show that vorbis does know where the stream ends) */
+	if(ogg_page_eos(&og))eos=1;
+
+      }
+    }
+
 
   /* clean up and exit.  vorbis_info_clear() must be called last */
   ogg_stream_clear(&os);
   vorbis_block_clear(&vb);
   vorbis_dsp_clear(&vd);
+
   
   /* ogg_page and ogg_packet structs always point to storage in
      libvorbis.  They're never freed or manipulated directly */
-  return 0;
+  return bytes;
+
 }
 
 
@@ -403,13 +438,14 @@ int lame_encode_ogg_frame(lame_global_flags *gfp,
     ogg_stream_packetin(&os,&op);
     
     /* write out pages (if any) */
-    result=ogg_stream_pageout(&os,&og);
-    //    if(result==0)break;
-    if (result!=0) {
-    
+    do {
+      result=ogg_stream_pageout(&os,&og);
+      if (result==0) break;
+	
       /* check if mp3buffer is big enough for the output */
       bytes += og.header_len + og.body_len;
-      if (bytes > mp3buf_size)
+      printf("\n\n*********\ndecoded bytes=%i  %i \n",bytes,mp3buf_size);
+      if (bytes > mp3buf_size && mp3buf_size>0)
 	return -1;
       
       /*
@@ -420,7 +456,7 @@ int lame_encode_ogg_frame(lame_global_flags *gfp,
       memcpy(mp3buf+og.header_len,og.body,og.body_len);
       
       if(ogg_page_eos(&og))eos=1;
-    }
+    } while (1);
   }
   gfp->frameNum++;
   return bytes;
