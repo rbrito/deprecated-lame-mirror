@@ -366,13 +366,14 @@ static const FLOAT8 win[4][NL] = {
  *      new IDCT routine written by Takehiro TOMINAGA
  */
 static const int order[] = {
-  0, 1,12,17, 8, 9, 4,25,24, 5,20,21,16,13,28,29,
- 26, 3,18,19,10,11, 2,27,22, 7, 6,23,15,14,30,31
+  0, 1,16,17, 8, 9,24,25, 4, 5,20,21,12,13,28,29,
+  2, 3,18,19,10,11,26,27, 6, 7,22,23,14,15,30,31
 };
 
 
 /* returns sum_j=0^31 a[j]*cos(PI*j*(k+1/2)/32), 0<=k<32 */
-inline static void window_subband ( const sample_t *x1, FLOAT8 a[SBLIMIT] )
+INLINE static void
+window_subband(const sample_t *x1, FLOAT8 a[SBLIMIT])
 {
     int i;
     FLOAT8 const *wp = enwindow+10;
@@ -401,9 +402,9 @@ inline static void window_subband ( const sample_t *x1, FLOAT8 a[SBLIMIT] )
 	w = wp[ 5]; s += x1[ 192] * w; t -= x2[-192] * w;
 
 	/*
-	 * this multiplyer could be removed, but it needs more 256 FLOAT8 data.
+	 * this multiplyer could be removed, but it needs more 256 FLOAT data.
 	 * thinking about the data cache performance, I think we should not
-	 * using such a huge table. tt 2000/Oct/25
+	 * use such a huge table. tt 2000/Oct/25
 	 */
 	s *= wp[6];
 	w = t - s;
@@ -432,158 +433,125 @@ inline static void window_subband ( const sample_t *x1, FLOAT8 a[SBLIMIT] )
 
 	a[31] = v + t;   // A0
 	a[30] = u + s;   // A1
-	a[14] = u - s;   // A2
-	a[15] = v - t;   // A3
+	a[15] = u - s;   // A2
+	a[14] = v - t;   // A3
     }
 {
     FLOAT8 xr;
-    xr = a[26] - a[ 2]; a[26] += a[ 2]; a[ 2] = xr * wp[-4*18+7];
-    xr = a[ 3] - a[27]; a[ 3] += a[27]; a[27] = xr * wp[-4*18+7];
+    xr = a[28] - a[ 0]; a[ 0] += a[28]; a[28] = xr * wp[-2*18+7];
+    xr = a[29] - a[ 1]; a[ 1] += a[29]; a[29] = xr * wp[-2*18+7];
+
+    xr = a[26] - a[ 2]; a[ 2] += a[26]; a[26] = xr * wp[-4*18+7];
+    xr = a[27] - a[ 3]; a[ 3] += a[27]; a[27] = xr * wp[-4*18+7];
+
+    xr = a[24] - a[ 4]; a[ 4] += a[24]; a[24] = xr * wp[-6*18+7];
+    xr = a[25] - a[ 5]; a[ 5] += a[25]; a[25] = xr * wp[-6*18+7];
+
+    xr = a[22] - a[ 6]; a[ 6] += a[22]; a[22] = xr * M_SQRT2;
+    xr = a[23] - a[ 7]; a[ 7] += a[23]; a[23] = xr * M_SQRT2 - a[ 7];
+    a[ 7] -= a[ 6];
+    a[22] -= a[ 7];
+    a[23] -= a[22];
+
+    xr = a[ 6]; a[ 6] = a[31] - xr; a[31] = a[31] + xr;
+    xr = a[ 7]; a[ 7] = a[30] - xr; a[30] = a[30] + xr;
+    xr = a[22]; a[22] = a[15] - xr; a[15] = a[15] + xr;
+    xr = a[23]; a[23] = a[14] - xr; a[14] = a[14] + xr;
+
+    xr = a[20] - a[ 8]; a[ 8] += a[20]; a[20] = xr * wp[-10*18+7];
+    xr = a[21] - a[ 9]; a[ 9] += a[21]; a[21] = xr * wp[-10*18+7];
+
     xr = a[18] - a[10]; a[10] += a[18]; a[18] = xr * wp[-12*18+7];
     xr = a[19] - a[11]; a[11] += a[19]; a[19] = xr * wp[-12*18+7];
 
-    xr = a[28] - a[ 0]; a[ 0] += a[28]; a[28] = xr * wp[-2*18+7];
-    xr =-a[ 1] + a[29]; a[ 1] += a[29]; a[29] = xr * wp[-2*18+7];
-
-    xr = a[20] - a[ 8]; a[ 8] += a[20]; a[20] = xr * wp[-10*18+7];
-    xr = a[ 9] - a[21]; a[ 9] += a[21]; a[21] = xr * wp[-10*18+7];
-
-    xr = a[24] - a[ 4]; a[24] += a[ 4]; a[ 4] = xr * wp[-6*18+7];
-    xr = a[ 5] - a[25]; a[ 5] += a[25]; a[25] = xr * wp[-6*18+7];
-
-    xr = a[16] - a[12]; a[16] += a[12]; a[12] = xr * wp[-14*18+7];
+    xr = a[16] - a[12]; a[12] += a[16]; a[16] = xr * wp[-14*18+7];
     xr = a[17] - a[13]; a[13] += a[17]; a[17] = xr * wp[-14*18+7];
 
-    xr = a[ 0] - a[16]; a[ 0] += a[16]; a[16] = xr * wp[-4*18+7];
+    xr =-a[20] + a[24]; a[20] += a[24]; a[24] = xr * wp[-12*18+7];
+    xr =-a[21] + a[25]; a[21] += a[25]; a[25] = xr * wp[-12*18+7];
+
+    xr = a[ 4] - a[ 8]; a[ 4] += a[ 8]; a[ 8] = xr * wp[-12*18+7];
+    xr = a[ 5] - a[ 9]; a[ 5] += a[ 9]; a[ 9] = xr * wp[-12*18+7];
+
+    xr = a[ 0] - a[12]; a[ 0] += a[12]; a[12] = xr * wp[-4*18+7];
     xr = a[ 1] - a[13]; a[ 1] += a[13]; a[13] = xr * wp[-4*18+7];
-    xr = a[12] - a[28]; a[12] += a[28]; a[28] = xr * wp[-4*18+7];
+    xr = a[16] - a[28]; a[16] += a[28]; a[28] = xr * wp[-4*18+7];
     xr =-a[17] + a[29]; a[17] += a[29]; a[29] = xr * wp[-4*18+7];
 
-    xr = a[24] - a[ 8]; a[24] += a[ 8]; a[ 8] = xr * wp[-12*18+7];
-    xr = a[ 5] - a[ 9]; a[ 5] += a[ 9]; a[ 9] = xr * wp[-12*18+7];
-    xr =-a[20] + a[ 4]; a[20] += a[ 4]; a[ 4] = xr * wp[-12*18+7];
-    xr = a[21] - a[25]; a[21] += a[25]; a[25] = xr * wp[-12*18+7];
+    xr = M_SQRT2 * (a[ 2] - a[10]); a[ 2] += a[10]; a[10] = xr;
+    xr = M_SQRT2 * (a[ 3] - a[11]); a[ 3] += a[11]; a[11] = xr;
+    xr = M_SQRT2 * (-a[18] + a[26]); a[18] += a[26]; a[26] = xr - a[18];
+    xr = M_SQRT2 * (-a[19] + a[27]); a[19] += a[27]; a[27] = xr - a[19];
 
+    xr = a[ 2]; a[19] -= a[ 3]; a[ 3] -= xr; a[ 2] = a[31] - xr; a[31] += xr;
+    xr = a[ 3]; a[11] -= a[19]; a[18] -= xr; a[ 3] = a[30] - xr; a[30] += xr;
+    xr = a[18]; a[27] -= a[11]; a[19] -= xr; a[18] = a[15] - xr; a[15] += xr;
 
-    xr = a[22] - a[ 6]; a[22] += a[ 6]; a[ 6] = xr * SQRT2;
-    xr =-a[ 7] + a[23]; a[ 7] += a[23]; a[23] = xr * SQRT2 - a[ 7];
+    xr = a[19]; a[10] -= xr; a[19] = a[14] - xr; a[14] += xr;
+    xr = a[10]; a[11] -= xr; a[10] = a[23] - xr; a[23] += xr;
+    xr = a[11]; a[26] -= xr; a[11] = a[22] - xr; a[22] += xr;
+    xr = a[26]; a[27] -= xr; a[26] = a[ 7] - xr; a[ 7] += xr;
 
-    a[ 7] -= a[22];
-    a[ 6] -= a[ 7];
-    a[23] -= a[ 6];
+    xr = a[27]; a[27] = a[ 6] - xr; a[ 6] += xr;
 
-    xr = a[22]; a[22] = a[31] - xr; a[31] = a[31] + xr;
-    xr = a[ 6]; a[ 6] = a[14] - xr; a[14] = a[14] + xr;
-    xr = a[ 7]; a[ 7] = a[30] - xr; a[30] = a[30] + xr;
-    xr = a[23]; a[23] = a[15] - xr; a[15] = a[15] + xr;
+    xr = M_SQRT2 * (a[ 0] - a[ 4]); a[ 0] += a[ 4]; a[ 4] = xr;
+    xr = M_SQRT2 * (a[ 1] - a[ 5]); a[ 1] += a[ 5]; a[ 5] = xr;
+    xr = M_SQRT2 * (a[16] - a[20]); a[16] += a[20]; a[20] = xr;
+    xr = M_SQRT2 * (a[17] - a[21]); a[17] += a[21]; a[21] = xr;
 
-    xr = SQRT2 * (a[26] - a[10]); a[26] += a[10]; a[10] = xr;
-    xr = SQRT2 * (a[ 3] - a[11]); a[ 3] += a[11]; a[11] = xr;
-    xr =-SQRT2 * (a[18] - a[ 2]); a[18] += a[ 2]; a[ 2] = xr - a[18];
-    xr =-SQRT2 * (a[19] + a[27]); a[19] -= a[27]; a[27] = xr - a[19];
+    xr =-M_SQRT2 * (a[ 8] - a[12]); a[ 8] += a[12]; a[12] = xr - a[ 8];
+    xr =-M_SQRT2 * (a[ 9] - a[13]); a[ 9] += a[13]; a[13] = xr - a[ 9];
+    xr =-M_SQRT2 * (a[25] - a[29]); a[25] += a[29]; a[29] = xr - a[25];
+    xr =-M_SQRT2 * (a[24] + a[28]); a[24] -= a[28]; a[28] = xr - a[24];
 
-    xr = a[26];
-    a[19] -= a[ 3];
-    a[ 3] -= xr;
-    a[26] = a[31] - xr;
-    a[31] += xr;
+    xr = a[24] - a[16]; a[24] = xr;
+    xr = a[20] - xr;    a[20] = xr;
+    xr = a[28] - xr;    a[28] = xr;
 
-    xr = a[ 3];
-    a[11] -= a[19];
-    a[18] -= xr;
-    a[ 3] = a[30] - xr;
-    a[30] += xr;
+    xr = a[25] - a[17]; a[25] = xr;
+    xr = a[21] - xr;    a[21] = xr;
+    xr = a[29] - xr;    a[29] = xr;
 
-    xr = a[18];
-    a[27] -= a[11];
-    a[19] -= xr;
-    a[18] = a[14] - xr;
-    a[14] += xr;
+    xr = a[17] - a[ 1]; a[17] = xr;
+    xr = a[ 9] - xr;    a[ 9] = xr;
+    xr = a[25] - xr;    a[25] = xr;
+    xr = a[ 5] - xr;    a[ 5] = xr;
+    xr = a[21] - xr;    a[21] = xr;
+    xr = a[13] - xr;    a[13] = xr;
+    xr = a[29] - xr;    a[29] = xr;
 
-    xr = a[19];
-    a[10] -= xr;
-    a[19] = a[15] - xr;
-    a[15] += xr;
-
-    xr = a[10];
-    a[11] -= xr;
-    a[10] = a[23] - xr;
-    a[23] += xr;
-
-    xr = a[11];
-    a[ 2] -= xr;
-    a[11] = a[ 6] - xr;
-    a[ 6] += xr;
-
-    xr = a[ 2];
-    a[27] -= xr;
-    a[ 2] = a[ 7] - xr; a[ 7] += xr;
-    xr = a[27]; a[27] = a[22] - xr; a[22] += xr;
-
-    xr = SQRT2 * (a[ 0] - a[24]); a[ 0] += a[24]; a[24] = xr;
-    xr = SQRT2 * (a[ 1] - a[ 5]); a[ 1] += a[ 5]; a[ 5] = xr;
-    xr = SQRT2 * (a[12] - a[20]); a[12] += a[20]; a[20] = xr;
-    xr = SQRT2 * (a[17] + a[21]); a[17] -= a[21]; a[21] = xr;
-
-    xr =-SQRT2 * (a[ 8] - a[16]); a[ 8] += a[16]; a[16] = xr - a[ 8];
-    xr =-SQRT2 * (a[ 9] - a[13]); a[ 9] += a[13]; a[13] = xr - a[ 9];
-    xr =-SQRT2 * (a[25] - a[29]); a[25] += a[29]; a[29] = xr - a[25];
-
-    xr =-SQRT2 * (a[ 4] + a[28]);
-    a[ 4] -= a[28];
-    a[28] = xr - a[ 4];
-
-    xr = a[ 4] - a[12];
-    a[ 4] = xr;
-    xr = a[20] - xr;
-    a[20] = xr;
-    xr = a[28] - xr;
-    a[28] = xr;
-
-    a[25] -= a[17];
-    a[21] -= a[25];
-    a[29] -= a[21];
-
-    a[17] -= a[ 1];
-    a[ 9] -= a[17];
-    a[25] -= a[ 9];
-    a[ 5] -= a[25];
-    a[21] -= a[ 5];
-    a[13] -= a[21];
-    a[29] -= a[13];
-
-    a[ 1] -= a[ 0];
-    a[12] -= a[ 1];
-    a[17] -= a[12];
-    a[ 8] -= a[17];
-    a[ 9] -= a[ 8];
-    a[ 4] -= a[ 9];
-    a[25] -= a[ 4];
-    a[24] -= a[25];
-    a[ 5] -= a[24];
-    a[20] -= a[ 5];
-    a[21] -= a[20];
-    a[16] -= a[21];
-    a[13] -= a[16];
-    a[28] -= a[13];
-    a[29] -= a[28];
+    xr = a[ 1] - a[ 0]; a[ 1] = xr;
+    xr = a[16] - xr;    a[16] = xr;
+    xr = a[17] - xr;    a[17] = xr;
+    xr = a[ 8] - xr;    a[ 8] = xr;
+    xr = a[ 9] - xr;    a[ 9] = xr;
+    xr = a[24] - xr;    a[24] = xr;
+    xr = a[25] - xr;    a[25] = xr;
+    xr = a[ 4] - xr;    a[ 4] = xr;
+    xr = a[ 5] - xr;    a[ 5] = xr;
+    xr = a[20] - xr;    a[20] = xr;
+    xr = a[21] - xr;    a[21] = xr;
+    xr = a[12] - xr;    a[12] = xr;
+    xr = a[13] - xr;    a[13] = xr;
+    xr = a[28] - xr;    a[28] = xr;
+    xr = a[29] - xr;    a[29] = xr;
 
     xr = a[ 0]; a[ 0] += a[31]; a[31] -= xr;
     xr = a[ 1]; a[ 1] += a[30]; a[30] -= xr;
-    xr = a[12]; a[12] += a[14]; a[14] -= xr;
-    xr = a[17]; a[17] += a[15]; a[15] -= xr;
+    xr = a[16]; a[16] += a[15]; a[15] -= xr;
+    xr = a[17]; a[17] += a[14]; a[14] -= xr;
     xr = a[ 8]; a[ 8] += a[23]; a[23] -= xr;
-    xr = a[ 9]; a[ 9] += a[ 6]; a[ 6] -= xr;
-    xr = a[ 4]; a[ 4] += a[ 7]; a[ 7] -= xr;
-    xr = a[25]; a[25] += a[22]; a[22] -= xr;
-    xr = a[24]; a[24] += a[27]; a[27] -= xr;
-    xr = a[ 5]; a[ 5] += a[ 2]; a[ 2] -= xr;
+    xr = a[ 9]; a[ 9] += a[22]; a[22] -= xr;
+    xr = a[24]; a[24] += a[ 7]; a[ 7] -= xr;
+    xr = a[25]; a[25] += a[ 6]; a[ 6] -= xr;
+    xr = a[ 4]; a[ 4] += a[27]; a[27] -= xr;
+    xr = a[ 5]; a[ 5] += a[26]; a[26] -= xr;
     xr = a[20]; a[20] += a[11]; a[11] -= xr;
     xr = a[21]; a[21] += a[10]; a[10] -= xr;
-    xr = a[16]; a[16] += a[19]; a[19] -= xr;
+    xr = a[12]; a[12] += a[19]; a[19] -= xr;
     xr = a[13]; a[13] += a[18]; a[18] -= xr;
     xr = a[28]; a[28] += a[ 3]; a[ 3] -= xr;
-    xr = a[29]; a[29] += a[26]; a[26] -= xr;
+    xr = a[29]; a[29] += a[ 2]; a[ 2] -= xr;
 }
 
 }
