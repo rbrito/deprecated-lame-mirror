@@ -1009,31 +1009,25 @@ typedef struct  IFF_AIFF_struct {
 } IFF_AIFF;
 
 static int
-aiff_check2(const char *file_name, IFF_AIFF * const pcm_aiff_data)
+aiff_check2(IFF_AIFF * const pcm_aiff_data)
 {
     if (pcm_aiff_data->sampleType != IFF_ID_SSND) {
-        fprintf(stderr, "Sound data is not PCM in '%s'\n", file_name);
+        fprintf(stderr, "Input Sound data is not PCM\n");
         return 1;
     }
     if (pcm_aiff_data->sampleSize != sizeof(short) * CHAR_BIT) {
-        fprintf(stderr, "Sound data is not %i bits in '%s'\n",
-                sizeof(short) * CHAR_BIT, file_name);
+        fprintf(stderr, "Input Sound data is not %i bits\n",
+                sizeof(short) * CHAR_BIT);
         return 1;
     }
     if (pcm_aiff_data->numChannels != 1 && pcm_aiff_data->numChannels != 2) {
-        fprintf(stderr, "Sound data is not mono or stereo in '%s'\n",
-                file_name);
+        fprintf(stderr, "Input Sound data is not mono or stereo\n");
         return 1;
     }
     if (pcm_aiff_data->blkAlgn.blockSize != 0) {
-        fprintf(stderr, "Block size is not 0 bytes in '%s'\n", file_name);
+        fprintf(stderr, "Block size of Input Sound data is not 0 bytes\n");
         return 1;
     }
-    /* A bug, since we correctly skip the offset earlier in the code.
-    if (pcm_aiff_data->blkAlgn.offset != 0) {
-        fprintf(stderr, "Block offset is not 0 bytes in '%s'\n", file_name);
-        return 1;
-    } */
 
     return 0;
 }
@@ -1129,7 +1123,7 @@ parse_aiff_header(lame_t gfp, FILE * sf)
     /* DEBUGF("Parsed AIFF %d\n", is_aiff); */
     if (is_aiff) {
         /* make sure the header is sane */
-        if (aiff_check2(inPath, &aiff_info))
+        if (aiff_check2(&aiff_info))
             return 0;
         if( -1 == lame_set_num_channels( gfp, aiff_info.numChannels ) ) {
             fprintf( stderr,
