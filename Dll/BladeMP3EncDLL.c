@@ -338,7 +338,9 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 		if (lameConfig.format.LHV1.bEnableVBR)
 		{
 			// 0=no vbr 1..10 is VBR quality setting -1
-			gf.VBR=vbr_default;
+			//gf.VBR=vbr_default;
+			gf.VBR = vbr_mtrh;
+
 			gf.VBR_q=lameConfig.format.LHV1.nVBRQuality;
 
 			if (lameConfig.format.LHV1.bWriteVBRHeader==TRUE)
@@ -364,7 +366,6 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 		if (lameConfig.format.LHV1.dwMaxBitrate>0)
 			gf.VBR_max_bitrate_kbps=lameConfig.format.LHV1.dwMaxBitrate;
 
-		gf.VBR = vbr_mtrh;
 		// Use ABR?
 		if (lameConfig.format.LHV1.dwVbrAbr_bps>0)
 		{
@@ -447,7 +448,7 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 
 	// Set MP3 buffer size
 	// conservative estimate
-	*dwBufferSize=1.25*(*dwSamples/gf.num_channels) + 7200;
+	*dwBufferSize=(DWORD)(1.25*(*dwSamples/gf.num_channels) + 7200);
 
 
 	// For debugging purposes
