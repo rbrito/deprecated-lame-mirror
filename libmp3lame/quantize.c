@@ -261,7 +261,10 @@ bin_search_StepSize(
 	cod_info->global_gain += step;
     } while (cod_info->global_gain < 256u);
 
-    if (cod_info->global_gain >= 255) {
+    if (cod_info->global_gain < 0) {
+	cod_info->global_gain = 0;
+	nBits = count_bits(gfc, xrpow, cod_info);
+    } else if (cod_info->global_gain > 255) {
 	cod_info->global_gain = 255;
 	nBits = count_bits(gfc, xrpow, cod_info);
     } else if (nBits > desired_rate) {

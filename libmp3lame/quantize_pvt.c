@@ -139,7 +139,7 @@ const scalefac_struct sfBandIndex[9] =
 
 
 
-FLOAT8 pow20[Q_MAX];
+FLOAT8 pow20[Q_MAX+128];
 FLOAT8 ipow20[Q_MAX];
 FLOAT8 iipow20[Q_MAX];
 FLOAT8 *iipow20_;
@@ -289,6 +289,8 @@ iteration_init( lame_global_flags *gfp)
 	ipow20[i] = pow(2.0, (double)(i - 210) * -0.1875);
 	pow20[i] = pow(2.0, (double)(i - 210) * 0.25);
     }
+    for (i = -128; i < 0; i++)
+	pow20[i] = pow(2.0, (double)(i - 210) * 0.25);
     huffman_init(gfc);
   }
 }
