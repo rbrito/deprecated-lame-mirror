@@ -799,7 +799,7 @@ void lame_parse_args ( lame_global_flags* gfp, int argc, char** argv )
 		T_ELIF ("nspsytune")
 		    gfp->exp_nspsytune = TRUE;
 		    gfp->experimentalZ = TRUE;
-		    gfp->experimentalX = 6;
+		    gfp->experimentalX = 1;
 		
 		/* some more GNU-ish options could be added
 		 * version       => complete name, version and license info (normal exit)  

@@ -391,18 +391,39 @@ void amp_scalefac_bands
   else
     distort_thresh *= .95;
 
+  if (gfp->exp_nspsytune && gfp->VBR == vbr_off) {
+    int asfb = -1;
+    FLOAT8 max_dist = 0;
 
-  for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
-    if ( distort[0][sfb]>distort_thresh  ) {
-      scalefac->l[sfb]++;
+    for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
       start = gfc->scalefac_band.l[sfb];
       end   = gfc->scalefac_band.l[sfb+1];
-      for ( l = start; l < end; l++ ) {
-        xrpow[l] *= ifqstep34;
+    
+      if ( distort[0][sfb]>distort_thresh  ) {
+	if (distort[0][sfb]-distort_thresh > max_dist) {
+	  max_dist = distort[0][sfb]-distort_thresh;
+	  asfb = sfb;
+	}
+      }
+    }
+
+    scalefac->l[asfb]++;
+    start = gfc->scalefac_band.l[asfb];
+    end   = gfc->scalefac_band.l[asfb+1];
+    for ( l = start; l < end; l++ )
+      xrpow[l] *= ifqstep34;
+  } else {
+    for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
+      if ( distort[0][sfb]>distort_thresh  ) {
+	scalefac->l[sfb]++;
+	start = gfc->scalefac_band.l[sfb];
+	end   = gfc->scalefac_band.l[sfb+1];
+	for ( l = start; l < end; l++ ) {
+	  xrpow[l] *= ifqstep34;
+	}
       }
     }
   }
-    
 
   for ( j=0,sfb = cod_info->sfb_smax; sfb < 12; sfb++ ) {
     start = gfc->scalefac_band.s[sfb];
