@@ -24,11 +24,12 @@ LIBTERMCAP =
 
 
 ##########################################################################
-# Define these to produce a VBR bitrate histogram.  Requires libtermcap.
-# You can also use the more modern ncurses but it doesn't work as well.
-# If you have any trouble, just dont use termcap/ncurses.
+# Define these to produce a VBR bitrate histogram.  Requires ncurses,
+# but libtermcap also works.  
+# If you have any trouble, just dont define these
 ##########################################################################
 #BRHIST_SWITCH = -DBRHIST
+#LIBTERMCAP = -lncurses
 #LIBTERMCAP = -ltermcap
 
 
@@ -60,8 +61,7 @@ ifeq ($(UNAME),Linux)
    GTKLIBS = `gtk-config --libs` 
 # Comment out next 2 lines if you want to remove VBR histogram capability
    BRHIST_SWITCH = -DBRHIST
-   LIBTERMCAP = -L/usr/lib/termcap -ltermcap
-#   LIBTERMCAP = -lncurses
+   LIBTERMCAP = -lncurses
 
 #  for debugging:
    CC_OPTS =  -UNDEBUG -O  -Wall -g -DABORTFP 

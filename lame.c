@@ -896,18 +896,10 @@ void brhist_init(int br_min, int br_max)
 
   tc[0] = '\0';
   tp = &tc[0];
-  tgetstr("up", &tp);
+  tp=tgetstr("up", &tp);
   brhist_backcur[0] = '\0';
   for(i = br_min-1; i <= br_max; i++)
-    strcat(brhist_backcur, tc);
-
-  /*
-    tc[0] = '\0';
-    tp = &tc[0];
-    tgetstr("ce", &tp);
-    strcat(brhist_bar, tc);
-  */
-
+    strcat(brhist_backcur, tp);
   setbuf(stderr, stderr_buff);
 }
 
