@@ -99,6 +99,9 @@
 /* have working GTK */
 #undef HAVE_GTK
 
+/* we link against libefence */
+#undef HAVE_EFENCE
+
 /* build with libsndfile support */
 #undef LIBSNDFILE
 
