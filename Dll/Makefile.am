@@ -9,7 +9,7 @@ EXTRA_DIST = BladeMP3EncDLL.c \
 	Example.dsp \
 	Example.dsw \
 	Example_vc6.dsp \
-	Example_vc6.dsw
+	Example_vc6.dsw \
 	LameDLLInterface.htm \
 	LameDll_vc6.dsp \
 	MP3EncDll.dsp \
