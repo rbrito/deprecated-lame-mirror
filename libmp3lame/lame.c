@@ -1962,6 +1962,11 @@ lame_close(lame_global_flags * gfp)
     if (gfc->Class_ID != LAME_ID)
         return -3;
 
+    if (gfp->exp_nspsytune2.pointer[0]) {
+      fclose((FILE *)gfp->exp_nspsytune2.pointer[0]);
+      gfp->exp_nspsytune2.pointer[0] = NULL;
+    }
+
     gfc->Class_ID = 0;
 
     // this routien will free all malloc'd data in gfc, and then free gfc:
@@ -1969,8 +1974,10 @@ lame_close(lame_global_flags * gfp)
 
     gfp->internal_flags = NULL;
 
-    if (gfp->lame_allocated_gfp)
+    if (gfp->lame_allocated_gfp) {
+        gfp->lame_allocated_gfp = 0;
         free(gfp);
+    }
 
     return 0;
 }

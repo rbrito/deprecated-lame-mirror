@@ -172,7 +172,11 @@ struct lame_global_struct {
   int nVbrNumFrames;
   int nVbrFrameBufferSize;
 
-
+  struct {
+    int integer[16];
+    float real[16];
+    void *pointer[16];
+  } exp_nspsytune2;
 } ;
 
 #endif /* LAME_GLOBAL_FLAGS_H */
