@@ -33,6 +33,7 @@ void WriteWav(FILE *f,unsigned long bytes,int srate,int ch){
   Write32BitsLowHigh(f,srate*ch*2);
   Write16BitsLowHigh(f,4);
   Write16BitsLowHigh(f,16);
+  fwrite("data",1,4,f);               /* 36-39 */
   Write32BitsLowHigh(f,bytes);
 }
 
