@@ -564,54 +564,44 @@ ns_msfix(
     FLOAT msfix2 = gfc->presetTune.ms_maskadjust;
 
     for ( sb = 0; sb < SBMAX_l; sb++ ) {
-	FLOAT thmL, thmR, thmM, thmS, x;
-	thmL = thmR = thmM = thmS = gfc->ATH.l_avg[sb] * gfc->ATH.adjust;
-	thmL = Max(mr[0].thm.l[sb], thmL);
-	thmR = Max(mr[1].thm.l[sb], thmR);
+	FLOAT thmLR, thmM, thmS, x;
+	thmLR = thmM = thmS = gfc->ATH.l_avg[sb] * gfc->ATH.adjust;
+	thmLR = Max(mr[0].thm.l[sb], thmLR);
+	thmLR = Max(mr[1].thm.l[sb], thmLR);
 	thmM = Max(mr[2].thm.l[sb], thmM);
 	thmS = Max(mr[3].thm.l[sb], thmS);
 	x = thmM + thmS;
 
-	if (thmL*msfix < x) {
-	    FLOAT f = thmL * msfix2 / x;
+	if (thmLR*msfix < x) {
+	    FLOAT f = thmLR * msfix2 / x;
 	    thmM *= f;
 	    thmS *= f;
+	    if (mr[2].thm.l[sb] > thmM)
+		mr[2].thm.l[sb] = thmM;
+	    if (mr[3].thm.l[sb] > thmS)
+		mr[3].thm.l[sb] = thmS;
 	}
-	if (thmR*msfix < x) {
-	    FLOAT f = thmR * msfix2 / x;
-	    thmM *= f;
-	    thmS *= f;
-	}
-	if (mr[2].thm.l[sb] > thmM)
-	    mr[2].thm.l[sb] = thmM;
-	if (mr[3].thm.l[sb] > thmS)
-	    mr[3].thm.l[sb] = thmS;
     }
 
     for (sb = 0; sb < SBMAX_s; sb++) {
 	for (sblock = 0; sblock < 3; sblock++) {
-	    FLOAT thmL, thmR, thmM, thmS, x;
-	    thmL = thmR = thmM = thmS = gfc->ATH.s_avg[sb] * gfc->ATH.adjust;
-	    thmL = Max(mr[0].thm.s[sb][sblock], thmL);
-	    thmR = Max(mr[1].thm.s[sb][sblock], thmR);
+	    FLOAT thmLR, thmM, thmS, x;
+	    thmLR = thmM = thmS = gfc->ATH.s_avg[sb] * gfc->ATH.adjust;
+	    thmLR = Max(mr[0].thm.s[sb][sblock], thmLR);
+	    thmLR = Max(mr[1].thm.s[sb][sblock], thmLR);
 	    thmM = Max(mr[2].thm.s[sb][sblock], thmM);
 	    thmS = Max(mr[3].thm.s[sb][sblock], thmS);
 	    x = thmM + thmS;
 
-	    if (thmL*msfix < x) {
-		FLOAT f = thmL*msfix / x;
+	    if (thmLR*msfix < x) {
+		FLOAT f = thmLR*msfix / x;
 		thmM *= f;
 		thmS *= f;
+		if (mr[2].thm.s[sb][sblock] > thmM)
+		    mr[2].thm.s[sb][sblock] = thmM;
+		if (mr[3].thm.s[sb][sblock] > thmS)
+		    mr[3].thm.s[sb][sblock] = thmS;
 	    }
-	    if (thmR*msfix < x) {
-		FLOAT f = thmR*msfix / x;
-		thmM *= f;
-		thmS *= f;
-	    }
-	    if (mr[2].thm.s[sb][sblock] > thmM)
-		mr[2].thm.s[sb][sblock] = thmM;
-	    if (mr[3].thm.s[sb][sblock] > thmS)
-		mr[3].thm.s[sb][sblock] = thmS;
 	}
     }
 }
@@ -1292,44 +1282,25 @@ L3psycho_anal_ns(
 	    FLOAT ecb, tmp;
 	    int kk = gfc->s3ind[b][0];
 	    spread -= kk;
-#if 1
 // calculate same bark masking 1st
-	    {
-		ecb = spread[b] * eb2[b];
-		for (kk = 1; kk <= 3; kk++) {
-		    int k2;
+	    ecb = spread[b] * eb2[b];
+	    for (kk = 1; kk <= 3; kk++) {
+		int k2;
 
-		    k2 = b + kk;
-		    if (k2 <= gfc->s3ind[b][1] && eb2[k2] != 0.0)
-			ecb = mask_add_samebark(ecb, spread[k2] * eb2[k2]);
+		k2 = b + kk;
+		if (k2 <= gfc->s3ind[b][1] && eb2[k2] != 0.0)
+		    ecb = mask_add_samebark(ecb, spread[k2] * eb2[k2]);
 
-		    k2 = b - kk;
-		    if (k2 >= gfc->s3ind[b][0] && eb2[k2] != 0.0)
-			ecb = mask_add_samebark(ecb, spread[k2] * eb2[k2]);
-		}
-		for (kk = gfc->s3ind[b][0]; kk <= gfc->s3ind[b][1]; kk++) {
-		    if ((unsigned int)(kk - b + 3) <= 6 || eb2[kk] == 0.0)
-			continue;
-		    ecb = mask_add(ecb, spread[kk] * eb2[kk], kk, b, gfc);
-		}
-		kk = gfc->s3ind[b][1] + 1;
+		k2 = b - kk;
+		if (k2 >= gfc->s3ind[b][0] && eb2[k2] != 0.0)
+		    ecb = mask_add_samebark(ecb, spread[k2] * eb2[k2]);
 	    }
-#else
-// calculate other bark masking 1st
-	    do {
-		if (eb2[kk] != 0.0) {
-		    ecb = spread[kk] * eb2[kk];
-		    break;
-		}
-	    } while (++kk <= gfc->s3ind[b][1]);
-
-	    while (++kk <= gfc->s3ind[b][1]) {
-		if (eb2[kk] == 0.0)
+	    for (kk = gfc->s3ind[b][0]; kk <= gfc->s3ind[b][1]; kk++) {
+		if ((unsigned int)(kk - b + 3) <= 6 || eb2[kk] == 0.0)
 		    continue;
 		ecb = mask_add(ecb, spread[kk] * eb2[kk], kk, b, gfc);
 	    }
-#endif
-	    spread += kk;
+	    spread += gfc->s3ind[b][1] + 1;
 
 	    /****   long block pre-echo control   ****/
 	    /* dont use long block pre-echo control if previous granule was 
