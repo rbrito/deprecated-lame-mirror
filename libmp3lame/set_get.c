@@ -1132,6 +1132,12 @@ lame_set_msfix( lame_global_flags*  gfp, double msfix )
     gfp->internal_flags->nsPsy.msfix = msfix;
 }
 
+void
+lame_set_analysis(lame_global_flags*  gfp, plotting_data *pinfo)
+{
+    gfp->internal_flags->pinfo = pinfo;
+}
+
 int 
 lame_set_asm_optimizations( lame_global_flags*  gfp, int optim, int mode)
 {

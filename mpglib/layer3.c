@@ -351,7 +351,7 @@ static void III_get_side_info_1(struct III_sideinfo *si,int stereo,
        {
 	 unsigned int qss = getbits_fast(8);
 	 gr_infos->pow2gain = gainpow2+256 - qss + powdiff;
-#ifdef HAVE_GTK
+#ifndef NOANALYSIS
 	 if (mpg123_pinfo != NULL) {
 	   mpg123_pinfo->qss[gr][ch]=qss;
 	 }
@@ -378,7 +378,7 @@ static void III_get_side_info_1(struct III_sideinfo *si,int stereo,
          for(i=0;i<3;i++) {
 	   unsigned int sbg = (getbits_fast(3)<<3);
            gr_infos->full_gain[i] = gr_infos->pow2gain + sbg;
-#ifdef HAVE_GTK
+#ifndef NOANALYSIS
 	   if (mpg123_pinfo != NULL)
 	     mpg123_pinfo->sub_gain[gr][ch][i]=sbg/8;
 #endif
@@ -442,7 +442,7 @@ static void III_get_side_info_2(struct III_sideinfo *si,int stereo,
        }
        qss=getbits_fast(8);
        gr_infos->pow2gain = gainpow2+256 - qss + powdiff;
-#ifdef HAVE_GTK
+#ifndef NOANALYSIS
        if (mpg123_pinfo!=NULL) {
 	   mpg123_pinfo->qss[0][ch]=qss;
        }
@@ -468,7 +468,7 @@ static void III_get_side_info_2(struct III_sideinfo *si,int stereo,
          for(i=0;i<3;i++) {
 	   unsigned int sbg = (getbits_fast(3)<<3);
            gr_infos->full_gain[i] = gr_infos->pow2gain + sbg;
-#ifdef HAVE_GTK
+#ifndef NOANALYSIS
 	   if (mpg123_pinfo!=NULL)
 	     mpg123_pinfo->sub_gain[0][ch][i]=sbg/8;
 #endif
@@ -1644,7 +1644,7 @@ int  do_layer3( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point,
 #endif
       }
 
-#ifdef HAVE_GTK
+#ifndef NOANALYSIS
       if (mpg123_pinfo!=NULL) {
 	int i;
 	mpg123_pinfo->sfbits[gr][0] = part2bits;
@@ -1668,7 +1668,7 @@ int  do_layer3( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point,
 	fprintf(stderr,"Not supported\n");
 #endif
       }
-#ifdef HAVE_GTK
+#ifndef NOANALYSIS
       if (mpg123_pinfo!=NULL) {
 	int i;
 	mpg123_pinfo->sfbits[gr][1] = part2bits;
@@ -1721,7 +1721,7 @@ int  do_layer3( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point,
       }
     }
 
-#ifdef HAVE_GTK
+#ifndef NOANALYSIS
     if (mpg123_pinfo!=NULL) {
     int i,sb;
     float ifqstep;

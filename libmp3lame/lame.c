@@ -549,9 +549,13 @@ lame_init_params(lame_global_flags * const gfp)
     }
 
 #ifndef NOANALYSIS
-    /* some file options not allowed if output is: not specified or stdout */
-    if (!gfc->pinfo)
+    if (gfc->pinfo) {
 	gfp->bWriteVbrTag = 0; /* disable Xing VBR tag */
+	if (gfp->quality > 8) {
+	    gfp->quality = 8;
+	    ERRORF(gfc, "Analyzer needs psymodel (-q 8 or lesser).\n");
+	}
+    }
 #endif
     init_bit_stream_w(gfp);
 

@@ -22,6 +22,7 @@
 #define __SET_GET_H__
 
 #include "lame.h"
+#include "lame-analysis.h"
 
 
 #if defined(__cplusplus)
@@ -72,6 +73,9 @@ int lame_set_narrowenStereo(lame_global_flags *, float);
 
 /* reduce side channel PE */
 int lame_set_reduceSide(lame_global_flags *, float);
+
+/* for analyzer hook */
+int lame_set_analysis(lame_global_flags *, plotting_data *);
 
 #if defined(__cplusplus)
 }

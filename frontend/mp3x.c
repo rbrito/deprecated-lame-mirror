@@ -14,6 +14,7 @@
 #include "get_audio.h"
 #include "gtkanal.h"
 #include "lametime.h"
+#include "set_get.h"
 
 #include "main.h"
 
@@ -39,6 +40,7 @@ int main(int argc, char **argv)
   char outPath[PATH_MAX + 1];
   char inPath[PATH_MAX + 1];
   int ret;
+  extern plotting_data Pinfo[];
 
   lame_version_print (stdout);
   gf=lame_init();
@@ -50,6 +52,7 @@ int main(int argc, char **argv)
   if (ret < 0)
     return ret == -2 ? 0 : 1;
   
+  lame_set_analysis(gf, Pinfo);
   init_infile(gf,inPath);
   lame_init_params(gf);
   lame_print_config(gf);
