@@ -180,26 +180,26 @@ lame_encoder(lame_global_flags * gf, FILE *outf, int nogap, char *inPath, char *
         else {
             const char *appendix = "";
 
-            switch (gf->VBR) {
+            switch (lame_get_VBR(gf)) {
             case vbr_mt:
             case vbr_rh:
             case vbr_mtrh:
                 appendix = "ca. ";
-                fprintf(stderr, "VBR(q=%i)", gf->VBR_q);
+                fprintf(stderr, "VBR(q=%i)", lame_get_VBR_q(gf));
                 break;
             case vbr_abr:
-                fprintf(stderr, "average %d kbps", gf->VBR_mean_bitrate_kbps);
+                fprintf(stderr, "average %d kbps", lame_get_VBR_mean_bitrate_kbps(gf));
                 break;
             default:
-                fprintf(stderr, "%3d kbps", gf->brate);
+                fprintf(stderr, "%3d kbps", lame_get_brate(gf));
                 break;
             }
             fprintf(stderr, " %s MPEG-%u%s Layer III (%s%gx) qval=%i\n",
-                    mode_names[gf->force_ms][gf->mode],
-                    2 - gf->version,
+                    mode_names[lame_get_force_ms(gf)][lame_get_mode(gf)],
+                    2 - lame_get_version(gf),
                     lame_get_out_samplerate(gf) < 16000 ? ".5" : "",
                     appendix,
-                    0.1 * (int) (10. * gf->compression_ratio + 0.5),
+                    0.1 * (int) (10. * lame_get_compression_ratio(gf) + 0.5),
                     lame_get_quality(gf));
         }
 
@@ -390,7 +390,7 @@ main(int argc, char **argv)
         return i;
     }
 
-    if (silent > 0 || gf->VBR == vbr_off) {
+    if (silent > 0 || lame_get_VBR(gf) == vbr_off) {
         brhist = 0;     /* turn off VBR histogram */
     }
 
@@ -398,7 +398,7 @@ main(int argc, char **argv)
 #ifdef HAVE_VORBIS
     if (lame_get_ogg(gf)) {
         lame_encode_ogg_init(gf);
-        gf->VBR = vbr_off; /* ignore lame's various VBR modes */
+        lame_set_VBR( gf, vbr_off ); /* ignore lame's various VBR modes */
     }
 #endif
 
@@ -408,7 +408,7 @@ main(int argc, char **argv)
         if (mp3_delay_set)
             lame_decoder(gf, outf, mp3_delay, inPath, outPath);
         else
-            lame_decoder(gf, outf, gf->encoder_delay, inPath, outPath);
+            lame_decoder(gf, outf, lame_get_encoder_delay(gf), inPath, outPath);
 
     }else {
 	if (max_nogap > 0) {
