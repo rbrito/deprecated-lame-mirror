@@ -480,6 +480,7 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --ns-alto x     adjust masking for sfbs  7 - 13 (long)  6 - 10 (short)\n"         
               "    --ns-treble x   adjust masking for sfbs 14 - 21 (long) 11 - 12 (short)\n"
               "    --ns-sfb21 x    change ns-treble by x dB for sfb21\n"
+              "    --shortthreshold x,y  short block switching threshold, x for L/R/M channel, y for S channel\n"
               "  Noise Shaping related:\n"
               "    --substep n     use pseudo substep noise shaping method types 0-2\n"
             );
@@ -1125,6 +1126,17 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 
                 T_ELIF ("allshort")
                     (void) lame_set_force_short_blocks( gfp, 1 );
+                
+                T_ELIF ("shortthreshold")
+		{
+		    float x,y;
+		    int i;
+		    argUsed=1;
+		    i = sscanf(nextArg, "%f,%f", &x, &y);
+		    if (i == 1)
+			y = x;
+                    (void) lame_set_short_threshold( gfp, x, y);
+		}
                 
                 T_ELIF ("decode")
                     (void) lame_set_decode_only( gfp, 1 );
