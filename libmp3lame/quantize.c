@@ -753,7 +753,6 @@ inc_scalefac_scale (
  
 static int 
 inc_subblock_gain (
-    const lame_internal_flags        * const gfc,
           gr_info        * const cod_info
     )
 {
@@ -767,7 +766,7 @@ inc_subblock_gain (
     }
 
     for (window = 0; window < 3; window++) {
-	int s1, s2, j;
+	int s1, s2;
         s1 = s2 = 0;
 
         for (sfb = cod_info->sfb_lmax+window;
@@ -781,13 +780,12 @@ inc_subblock_gain (
 	}
 
         if (s1 < 16 && s2 < 8)
-            continue;
+	    continue;
 
         if (cod_info->subblock_gain[window] >= 7)
-            return 1;
+	    return 1;
 
         cod_info->subblock_gain[window]++;
-	j = gfc->scalefac_band.l[cod_info->sfb_lmax];
 	for (sfb = cod_info->sfb_lmax+window;
 	     sfb < cod_info->sfbmax; sfb += 3) {
 	    int s = scalefac[sfb] - (4 >> cod_info->scalefac_scale);
@@ -837,7 +835,7 @@ balance_noise (
     /*  some scalefactors are too large. */
     if (gfc->use_subblock_gain && cod_info->block_type == SHORT_TYPE) {
 	/* try to use subblcok gain */
-	if (inc_subblock_gain (gfc, cod_info) || loop_break (cod_info))
+	if (inc_subblock_gain (cod_info) || loop_break (cod_info))
 	    return 0;
     } else if (gfc->use_scalefac_scale && !cod_info->scalefac_scale) {
 	/*  lets try setting scalefac_scale=1 */
