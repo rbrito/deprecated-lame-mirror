@@ -1,6 +1,5 @@
 #include "util.h"
 #include "get_audio.h"
-#include "globalflags.h"
 #ifdef HAVEGTK
 #include "gtkanal.h"
 #include <gtk/gtk.h>

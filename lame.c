@@ -29,7 +29,6 @@
 #include "lame.h"
 #include "util.h"
 #include "timestatus.h"
-#include "globalflags.h"
 #include "psymodel.h"
 #include "newmdct.h"
 #include "quantize.h"
@@ -46,10 +45,6 @@
 #ifdef __riscos__
 #include "asmstuff.h"
 #endif
-
-/* Global flags substantiated here.  defined extern in globalflags.h */
-/* default values set in lame_init() */
-//lame_global_flags gf;
 
 
 /* Global variable definitions for lame.c */

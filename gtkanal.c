@@ -2,7 +2,6 @@
 #include <math.h>
 #include <gtk/gtk.h>
 #include "gpkplotting.h"
-#include "globalflags.h"
 #include "util.h"
 #include "gtkanal.h"
 #include "version.h"

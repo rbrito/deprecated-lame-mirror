@@ -2,7 +2,6 @@
 #include <string.h>
 #include "brhist.h"
 #include "util.h"
-#include "globalflags.h"
 #include <termcap.h>
 
 

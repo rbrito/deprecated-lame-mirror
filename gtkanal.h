@@ -1,6 +1,6 @@
 #ifndef GTKANAL_DOT_H
 #define GTKANAL_DOT_H
-#include "globalflags.h"
+#include "lame.h"
 #include "encoder.h"
 
 #define READ_AHEAD 10             /* number of frames to read ahead */

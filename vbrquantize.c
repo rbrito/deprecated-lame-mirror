@@ -18,7 +18,6 @@
  * the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 #include <assert.h>
-#include "globalflags.h"
 #include "util.h"
 #include "l3side.h"
 #include "quantize.h"

@@ -1,6 +1,5 @@
 #ifdef LAMEPARSE
 
-#include "globalflags.h"
 #include "util.h"
 #include "id3tag.h"
 #include "get_audio.h"

@@ -1,5 +1,4 @@
 #include <assert.h>
-#include "globalflags.h"
 #include "util.h"
 #include "tables.h"
 #include "reservoir.h"

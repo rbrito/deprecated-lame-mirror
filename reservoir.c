@@ -19,7 +19,7 @@
 #ifdef HAVEGTK
 #include "gtkanal.h"
 #endif
-#include "globalflags.h"
+#include "lame.h"
 
 /*
   Layer3 bit reservoir:

@@ -34,7 +34,6 @@
 #include <math.h>
 #include "util.h"
 #include "psymodel.h"
-#include "globalflags.h"
 #include "lame.h"
 
 #define TRI_SIZE (5-1) /* 1024 =  4**5 */

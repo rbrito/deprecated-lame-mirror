@@ -22,7 +22,6 @@
 
 
 #include <assert.h>
-#include "globalflags.h"
 #include "util.h"
 #include "l3side.h"
 #include "quantize.h"

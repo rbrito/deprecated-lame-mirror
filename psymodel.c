@@ -10,7 +10,6 @@
  **********************************************************************/
 
 #include "util.h"
-#include "globalflags.h"
 #include "encoder.h"
 #include "psymodel.h"
 #include "l3side.h"

@@ -1,5 +1,4 @@
 #include "util.h"
-#include "globalflags.h"
 #include <assert.h>
 
 /***********************************************************************

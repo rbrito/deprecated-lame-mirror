@@ -22,7 +22,6 @@
 #include "tables.h"
 #include <assert.h>
 #include "l3bitstream-pvt.h"
-#include "globalflags.h"
 
 static Bit_stream_struc *bs = NULL;
 

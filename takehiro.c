@@ -24,7 +24,6 @@
 #include "l3side.h"
 #include "tables.h"
 #include "quantize-pvt.h"
-#include "globalflags.h"
 
 
 
