@@ -182,6 +182,18 @@ void set_masking_lower( int nbits )
 	
 	masking_lower_db = dbQ[gf.VBR_q];	
 	adjust = 0;
+#elif (RH_QUALITY_CONTROL == 3)	
+#warning **** YOU ARE MODIFYING VBR QUALITY CONTROL (RH_QUALITY_CONTROL =3) ****
+	/* lower masking depending on Quality setting
+	 * quality control together with adjusted ATH MDCT scaling
+	 */
+	static FLOAT dbQ[10]={-6.0,-4.5,-3.0,-1.5,0,0.3,0.6,1.0,1.5,2.0};
+	
+	assert( gf.VBR_q <= 9 );
+	assert( gf.VBR_q >= 0 );
+	
+	masking_lower_db = dbQ[gf.VBR_q];	
+	adjust = 0;
 #else
 	/* masking_lower varies from -8 to +10 db */
 	masking_lower_db = -6 + 2*gf.VBR_q;
@@ -266,6 +278,8 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
     else memcpy(xr[gr],xr_org[gr],sizeof(FLOAT8)*2*576);   
 
     for (ch = 0; ch < num_chan; ch++) { 
+      int real_bits;
+      
       /******************************************************************
        * find smallest number of bits for an allowable quantization
        ******************************************************************/
@@ -296,12 +310,21 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 
       dbits = (max_bits-min_bits)/4;
       this_bits = (max_bits+min_bits)/2;  
+      real_bits = max_bits;
+      
       /* bin search to within +/- 10 bits of optimal */
       do {
 	int better;
 	assert(this_bits>=min_bits);
 	assert(this_bits<=max_bits);
-
+	
+	if( this_bits >= real_bits ){
+	  save_bits[gr][ch] = this_bits;
+	  this_bits -= dbits;
+	  dbits /= 2;
+	  continue; /* skips the rest of this do-while loop */
+	}
+	
 	/* quality setting */
 	set_masking_lower( this_bits );
 
@@ -315,7 +338,6 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 	targ_noise[0]=Max(0,targ_noise[0]);
 	targ_noise[2]=Max(0,targ_noise[2]);
 
-
 	/* restore xr */
 	memcpy(xr[gr][ch],xr_save,sizeof(FLOAT8)*576);   
 	outer_loop( xr, this_bits, noise, targ_noise, 1,&l3_xmin,l3_enc, fr_ps, 
@@ -324,10 +346,11 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 	/* is quantization as good as we are looking for ? */
 	better=VBR_compare((int)targ_noise[0],targ_noise[3],targ_noise[2],
             targ_noise[1],(int)noise[0],noise[3],noise[2],noise[1]);
-
        if (better) {
 	  save_bits[gr][ch] = this_bits;
           this_bits -= dbits;
+	  /* because of the sloppy mode we have to sum this */
+	  real_bits  = cod_info->part2_3_length + cod_info->part2_length;
         } else {
           this_bits += dbits;
         }

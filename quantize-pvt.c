@@ -261,6 +261,12 @@ void compute_ath(layer *info,FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY_l])
            break;
   default: /* don't change it */
   }
+# elif (RH_QUALITY_CONTROL == 3)
+  /* purpose of RH_QUALITY_CONTROL =3:
+   * at higher quality lower ATH masking abilities   => needs more bits
+   * at lower quality increase ATH masking abilities => needs less bits
+   * RH 2000-01-30 */
+  adjust_mdct_scaling = pow( 10, (114-104-(4-gf.VBR_q)*4.0)/10.0 ); 
 # endif
 #endif
 
