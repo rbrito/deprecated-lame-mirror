@@ -956,15 +956,13 @@ psycho_analysis_short(
     )
 {
     FLOAT wsamp_S[2][3][BLKSIZE_s];
-    FLOAT attack_adjust[4];
     int current_is_short = 0, first_attack_position[4];
-    int ch, i, j, sblock;
+    int ch, j, sb;
 
     /*************************************************************** 
      * determine the block type (window type)
      ***************************************************************/
     for (ch = 0; ch < numchn; ch++) {
-	FLOAT pre;
 /*
   use subband filtered samples to determine block type switching.
 
@@ -995,24 +993,24 @@ mp3x display               <------LONG------>
 =============start============
 */
 	if (ch < 2) {
-	    for (i = 0; i < 3; i++) {
+	    for (sb = 0; sb < 3; sb++) {
 		FLOAT y = 1.0;
 		for (j = 0; j < 6; j++) {
-		    int k = i*6+j, band;
+		    int k = sb*6+j, band;
 		    FLOAT x = 0.0;
 		    for (band = gfc->nsPsy.switching_band;
 			 band < SBLIMIT; band++)
 			x += fabs(sbsmpl[ch][gr*576+k*32+mdctorder[band]]);
 		    if (y < x) y = x;
 		}
-		gfc->nsPsy.subbk_ene[ch][i] = gfc->nsPsy.subbk_ene[ch][i+3];
-		gfc->nsPsy.subbk_ene[ch][i+3] = y;
+		gfc->nsPsy.subbk_ene[ch][sb] = gfc->nsPsy.subbk_ene[ch][sb+3];
+		gfc->nsPsy.subbk_ene[ch][sb+3] = y;
 	    }
 	} else if (ch == 2) {
-	    for (i = 0; i < 3; i++) {
+	    for (sb = 0; sb < 3; sb++) {
 		FLOAT y0 = 1.0, y1 = 1.0;
 		for (j = 0; j < 6; j++) {
-		    int k = i*6+j, band;
+		    int k = sb*6+j, band;
 		    FLOAT x0 = 0.0, x1 = 0.0;
 		    for (band = gfc->nsPsy.switching_band;
 			 band < SBLIMIT; band++) {
@@ -1024,10 +1022,10 @@ mp3x display               <------LONG------>
 		    if (y0 < x0) y0 = x0;
 		    if (y1 < x1) y1 = x1;
 		}
-		gfc->nsPsy.subbk_ene[2][i] = gfc->nsPsy.subbk_ene[2][i+3];
-		gfc->nsPsy.subbk_ene[3][i] = gfc->nsPsy.subbk_ene[3][i+3];
-		gfc->nsPsy.subbk_ene[2][i+3] = y0;
-		gfc->nsPsy.subbk_ene[3][i+3] = y1;
+		gfc->nsPsy.subbk_ene[2][sb] = gfc->nsPsy.subbk_ene[2][sb+3];
+		gfc->nsPsy.subbk_ene[3][sb] = gfc->nsPsy.subbk_ene[3][sb+3];
+		gfc->nsPsy.subbk_ene[2][sb+3] = y0;
+		gfc->nsPsy.subbk_ene[3][sb+3] = y1;
 	    }
 	}
 
@@ -1044,42 +1042,36 @@ mp3x display               <------LONG------>
 		= gfc->nsPsy.subbk_ene[ch][4] / gfc->nsPsy.subbk_ene[ch][3];
 	}
 #endif
-	/* initialize the flag representing
+	for (sb = -1; sb < 4; sb++) {
+	    /* calculate energies of each sub-shortblocks */
+	    FLOAT pre = gfc->nsPsy.subbk_ene[ch][sb+1];
+	    if (sb == -1 || sb == 3)
+		pre *= 1.5;
+	    else {
+		if (gfc->nsPsy.attackthre*gfc->nsPsy.subbk_ene[ch][sb+2]*100.0
+		    < pre)
+		    goto shortblock;
+		pre += gfc->decay * gfc->nsPsy.subbk_ene[ch][sb];
+	    }
+	    if (gfc->nsPsy.subbk_ene[ch][sb+2] > gfc->nsPsy.attackthre*pre)
+		goto shortblock;
+	}
+	/* en.s[0][sb] is the flag representing
 	 * "short block may be needed but not calculated" */
 	gfc->masking_next[gr][ch].en.s[0][0]
 	    = gfc->masking_next[gr][ch].en.s[0][1]
 	    = gfc->masking_next[gr][ch].en.s[0][2] = -1.0;
 	gfc->blocktype_next[gr][ch] = NORM_TYPE;
-	first_attack_position[ch] = -1;
-
-	for (i = -1; i < 4; i++) {
-	    /* calculate energies of each sub-shortblocks */
-	    pre = gfc->nsPsy.subbk_ene[ch][i+1];
-	    if (i == -1 || i == 3)
-		pre *= 1.5;
-	    else {
-		if (gfc->nsPsy.attackthre*gfc->nsPsy.subbk_ene[ch][i+2]*100 < pre)
-		    goto shortblock;
-		pre += gfc->decay * gfc->nsPsy.subbk_ene[ch][i];
-	    }
-	    if (gfc->nsPsy.subbk_ene[ch][i+2] > gfc->nsPsy.attackthre*pre)
-		goto shortblock;
-	}
 	continue;
+
  shortblock:
 	gfc->blocktype_next[gr][ch] = SHORT_TYPE;
 	current_is_short += (1 << ch);
-	pre = gfc->nsPsy.subbk_ene[ch][i+1]/gfc->nsPsy.subbk_ene[ch][i+2];
-	if (pre > 1.0)
-	    pre = 1.0/pre;
-	if (pre < 0.01)
-	    pre = 0.01;
-	attack_adjust[ch] = pre;
-	if (i < 0)
-	    i = 0;
-	if (i > 2)
-	    i = 2;
-	first_attack_position[ch] = i;
+	if (sb < 0)
+	    sb = 0;
+	if (sb > 2)
+	    sb = 2;
+	first_attack_position[ch] = sb;
     }
 
     if (!current_is_short)
@@ -1090,34 +1082,41 @@ mp3x display               <------LONG------>
 	    if (!(current_is_short & 12))
 		break;
 
-	    for (sblock = 0; sblock < 3; sblock++) {
+	    for (sb = 0; sb < 3; sb++) {
 		for (j = 0; j < BLKSIZE_s; j++) {
-		    FLOAT l = wsamp_S[0][sblock][j];
-		    FLOAT r = wsamp_S[1][sblock][j];
-		    wsamp_S[0][sblock][j] = (l+r)*(SQRT2*0.5);
-		    wsamp_S[1][sblock][j] = (l-r)*(SQRT2*0.5);
+		    FLOAT l = wsamp_S[0][sb][j];
+		    FLOAT r = wsamp_S[1][sb][j];
+		    wsamp_S[0][sb][j] = (l+r)*(SQRT2*0.5);
+		    wsamp_S[1][sb][j] = (l-r)*(SQRT2*0.5);
 		}
 	    }
 	}
 
 	/* compute masking thresholds for short blocks */
-	for (sblock = 0; sblock < 3; sblock++) {
+	for (sb = 0; sb < 3; sb++) {
+	    FLOAT adjust;
 	    /* fft and energy calculation   */
 	    if (ch < 2)
-		fft_short(gfc, wsamp_S[ch][sblock],
-			  &buffer[ch][(576/3) * (sblock+1)]);
-	    if (!gfc->blocktype_next[gr][ch]
-		|| sblock < first_attack_position[ch])
+		fft_short(gfc, wsamp_S[ch][sb], &buffer[ch][(576/3) * (sb+1)]);
+	    if (!gfc->blocktype_next[gr][ch] || sb < first_attack_position[ch])
 		continue;
 
-	    compute_masking_s(gfc, wsamp_S[ch&1][sblock],
-			      &gfc->masking_next[gr][ch], ch, sblock);
-	    if (sblock == first_attack_position[ch]) {
-		int sb;
-		for (sb = 0; sb < SBMAX_s; sb++) 
-		    gfc->masking_next[gr][ch].thm.s[sb][sblock]
-			*= attack_adjust[ch];
-	    }
+	    compute_masking_s(gfc, wsamp_S[ch&1][sb],
+			      &gfc->masking_next[gr][ch], ch, sb);
+	    if (sb != first_attack_position[ch])
+		continue;
+
+	    if (gfc->nsPsy.subbk_ene[ch][sb+1] < gfc->nsPsy.subbk_ene[ch][sb+2])
+		adjust = gfc->nsPsy.subbk_ene[ch][sb+1]
+		    / gfc->nsPsy.subbk_ene[ch][sb+2];
+	    else 
+		adjust = gfc->nsPsy.subbk_ene[ch][sb+2]
+		    / gfc->nsPsy.subbk_ene[ch][sb+1];
+
+	    if (adjust < 0.01)
+		adjust = 0.01;
+	    for (j = 0; j < SBMAX_s; j++)
+		gfc->masking_next[gr][ch].thm.s[j][sb] *= adjust;
 	}
     } /* end loop over ch */
 }
@@ -1373,18 +1372,10 @@ L3psycho_anal_ns(
 		enn  = -enn;
 	    }
 
-	    if (i & 1) {
-		mr->thm.s[j][0] = thmm * gfc->masking_lower;
-		mr->en .s[j][0] = enn;
-	    }
-	    if (i & 2) {
-		mr->thm.s[j][1] = thmm * gfc->masking_lower;
-		mr->en .s[j][1] = enn;
-	    }
-	    if (i & 4) {
-		mr->thm.s[j][2] = thmm * gfc->masking_lower;
-		mr->en .s[j][2] = enn;
-	    }
+	    thmm *= gfc->masking_lower;
+	    if (i & 1) mr->thm.s[j][0] = thmm; mr->en .s[j][0] = enn;
+	    if (i & 2) mr->thm.s[j][1] = thmm; mr->en .s[j][1] = enn;
+	    if (i & 4) mr->thm.s[j][2] = thmm; mr->en .s[j][2] = enn;
 
 	    enn  =  eb[b] * 0.5;
 	    thmm = tmp * 0.5;
@@ -1433,9 +1424,9 @@ psycho_analysis(
     for (gr=0; gr < gfc->mode_gr ; gr++) {
 	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    gr_info *gi = &gfc->l3_side.tt[gr][ch];
-	    masking_d[gr][ch] = gfc->masking_next[gr][ch + (gfc->mode_ext & 2)];
+	    masking_d[gr][ch] = gfc->masking_next[gr][ch + gfc->mode_ext];
 	    /* not good XXX */
-	    gi->ATHadjust = gfc->ATH.adjust[ch + (gfc->mode_ext & 2)];
+	    gi->ATHadjust = gfc->ATH.adjust[ch + gfc->mode_ext];
 	    gi->block_type = gfc->blocktype_next[gr][ch];
 	    bufp[ch] = buffer[ch] + 576*(gr + gfc->mode_gr) - FFTOFFSET;
 	}
