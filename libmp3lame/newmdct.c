@@ -37,9 +37,6 @@
 #include <dmalloc.h>
 #endif
 
-#define SCALE (32768.0/ 2.384e-06)
-
-#ifndef USE_GOGO_SUBBAND
 static const FLOAT8 enwindow[] = 
 {
       -4.77e-07*0.740951125354959/2.384e-06,  1.03951e-04*0.740951125354959/2.384e-06,  9.53674e-04*0.740951125354959/2.384e-06, 2.841473e-03*0.740951125354959/2.384e-06,
@@ -168,7 +165,6 @@ static const FLOAT8 enwindow[] =
       3.0526638e-02/2.384e-06, 4.638195e-03/2.384e-06,  7.47204e-04/2.384e-06,   4.9591e-05/2.384e-06,
       4.756451e-03/2.384e-06,   2.1458e-05/2.384e-06,  -6.9618e-05/2.384e-06,/*    2.384e-06/2.384e-06*/
 };
-#endif
 
 
 #define NS 12
@@ -365,8 +361,8 @@ static const FLOAT8 win[4][NL] = {
  *      new IDCT routine written by Takehiro TOMINAGA
  */
 static const int order[] = {
-  0, 1,16,17, 8, 9,24,25, 4, 5,20,21,12,13,28,29,
-  2, 3,18,19,10,11,26,27, 6, 7,22,23,14,15,30,31
+  0,30,15,17, 8,22, 7,25, 4,26,11,21,12,18, 3,29,
+  2,28,13,19,10,20, 5,27, 6,24, 9,23,14,16, 1,31
 };
 
 
@@ -535,22 +531,22 @@ window_subband(FLOAT coef[SBLIMIT], const sample_t *x1, FLOAT a[SBLIMIT])
     xr = a[28] - xr;    a[28] = xr;
     xr = a[29] - xr;    a[29] = xr;
 
-    xr = a[ 0]; a[ 0] = (a[ 0]+a[31])*coef[ 0]; a[31] = (a[31]-xr)*coef[31];
-    xr = a[ 1]; a[ 1] = (a[ 1]+a[30])*coef[ 1]; a[30] = (a[30]-xr)*coef[30];
-    xr = a[16]; a[16] = (a[16]+a[15])*coef[ 2]; a[15] = (a[15]-xr)*coef[29];
-    xr = a[17]; a[17] = (a[17]+a[14])*coef[ 3]; a[14] = (a[14]-xr)*coef[28];
-    xr = a[ 8]; a[ 8] = (a[ 8]+a[23])*coef[ 4]; a[23] = (a[23]-xr)*coef[27];
-    xr = a[ 9]; a[ 9] = (a[ 9]+a[22])*coef[ 5]; a[22] = (a[22]-xr)*coef[26];
-    xr = a[24]; a[24] = (a[24]+a[ 7])*coef[ 6]; a[ 7] = (a[ 7]-xr)*coef[25];
-    xr = a[25]; a[25] = (a[25]+a[ 6])*coef[ 7]; a[ 6] = (a[ 6]-xr)*coef[24];
-    xr = a[ 4]; a[ 4] = (a[ 4]+a[27])*coef[ 8]; a[27] = (a[27]-xr)*coef[23];
-    xr = a[ 5]; a[ 5] = (a[ 5]+a[26])*coef[ 9]; a[26] = (a[26]-xr)*coef[22];
-    xr = a[20]; a[20] = (a[20]+a[11])*coef[10]; a[11] = (a[11]-xr)*coef[21];
-    xr = a[21]; a[21] = (a[21]+a[10])*coef[11]; a[10] = (a[10]-xr)*coef[20];
-    xr = a[12]; a[12] = (a[12]+a[19])*coef[12]; a[19] = (a[19]-xr)*coef[19];
-    xr = a[13]; a[13] = (a[13]+a[18])*coef[13]; a[18] = (a[18]-xr)*coef[18];
-    xr = a[28]; a[28] = (a[28]+a[ 3])*coef[14]; a[ 3] = (a[ 3]-xr)*coef[17];
-    xr = a[29]; a[29] = (a[29]+a[ 2])*coef[15]; a[ 2] = (a[ 2]-xr)*coef[16];
+    xr = a[ 0]; a[ 0] = (a[31]+xr)*coef[ 0]; a[31] = (a[31]-xr)*coef[31];
+    xr = a[ 1]; a[ 1] = (a[30]-xr)*coef[30]; a[30] = (a[30]+xr)*coef[ 1];
+    xr = a[16]; a[16] = (a[15]-xr)*coef[29]; a[15] = (a[15]+xr)*coef[ 2];
+    xr = a[17]; a[17] = (a[14]+xr)*coef[ 3]; a[14] = (a[14]-xr)*coef[28];
+    xr = a[ 8]; a[ 8] = (a[23]+xr)*coef[ 4]; a[23] = (a[23]-xr)*coef[27];
+    xr = a[ 9]; a[ 9] = (a[22]-xr)*coef[26]; a[22] = (a[22]+xr)*coef[ 5];
+    xr = a[24]; a[24] = (a[ 7]-xr)*coef[25]; a[ 7] = (a[ 7]+xr)*coef[ 6];
+    xr = a[25]; a[25] = (a[ 6]+xr)*coef[ 7]; a[ 6] = (a[ 6]-xr)*coef[24];
+    xr = a[ 4]; a[ 4] = (a[27]+xr)*coef[ 8]; a[27] = (a[27]-xr)*coef[23];
+    xr = a[ 5]; a[ 5] = (a[26]-xr)*coef[22]; a[26] = (a[26]+xr)*coef[ 9];
+    xr = a[20]; a[20] = (a[11]-xr)*coef[21]; a[11] = (a[11]+xr)*coef[10];
+    xr = a[21]; a[21] = (a[10]+xr)*coef[11]; a[10] = (a[10]-xr)*coef[20];
+    xr = a[12]; a[12] = (a[19]+xr)*coef[12]; a[19] = (a[19]-xr)*coef[19];
+    xr = a[13]; a[13] = (a[18]-xr)*coef[18]; a[18] = (a[18]+xr)*coef[13];
+    xr = a[28]; a[28] = (a[ 3]-xr)*coef[17]; a[ 3] = (a[ 3]+xr)*coef[14];
+    xr = a[29]; a[29] = (a[ 2]+xr)*coef[15]; a[ 2] = (a[ 2]-xr)*coef[16];
 }
 
 }
@@ -700,10 +696,9 @@ void mdct_sub48(
 	    window_subband(gfc->amp_filter, wk + 32, samp + 32);
 	    samp += 64;
 	    wk += 64;
-	    for (band = 1; band < 32; band+=2) {
+	    for (band = -16; band < 0; band++)
 		/* Compensate for inversion in the analysis filter */
-		samp[band-32] *= -1;
-	    }
+		samp[band] *= -1;
 	}
 
 	/*
@@ -712,18 +707,16 @@ void mdct_sub48(
 	 */
 	for (band = 0; band < 32; band++, mdct_enc += 18) {
 	    int type = gi->block_type;
-	    FLOAT *band0, *band1;
-	    band0 = gfc->sb_sample[ch][  gr][0] + order[band];
-	    band1 = gfc->sb_sample[ch][1-gr][0] + order[band];
-	    if (gi->block_type != SHORT_TYPE
-		|| (gi->mixed_block_flag && band < 2)) {
+	    FLOAT *crnt = gfc->sb_sample[ch][  gr][0] + order[band];
+	    FLOAT *prev = gfc->sb_sample[ch][1-gr][0] + order[band];
+	    if (type != SHORT_TYPE || (gi->mixed_block_flag && band < 2)) {
 		FLOAT work[18];
 		for (k = -NL/4; k < 0; k++) {
 		    FLOAT a, b;
-		    a = win[type][k+27] * band1[(k+9)*32]
-		      + win[type][k+36] * band1[(8-k)*32];
-		    b = win[type][k+ 9] * band0[(k+9)*32]
-		      - win[type][k+18] * band0[(8-k)*32];
+		    a = win[type][k+27] * prev[(k+9)*32]
+		      + win[type][k+36] * prev[(8-k)*32];
+		    b = win[type][k+ 9] * crnt[(k+9)*32]
+		      - win[type][k+18] * crnt[(8-k)*32];
 		    work[k+ 9] = a - tantab_l[k+9] * b;
 		    work[k+18] = a * tantab_l[k+9] + b;
 		}
@@ -743,20 +736,22 @@ void mdct_sub48(
 		    mdct_enc[k]    = bd;
 		}
 	    } else {
-		for (k = -NS/4; k < 0; k++) {
-		    FLOAT w = win[SHORT_TYPE][k+3];
-		    mdct_enc[k*3+ 9] = band0[( 9+k)*32] * w - band0[( 8-k)*32];
-		    mdct_enc[k*3+18] = band0[(14-k)*32] * w + band0[(15+k)*32];
-		    mdct_enc[k*3+10] = band0[(15+k)*32] * w - band0[(14-k)*32];
-		    mdct_enc[k*3+19] = band1[( 2-k)*32] * w + band1[( 3+k)*32];
-		    mdct_enc[k*3+11] = band1[( 3+k)*32] * w - band1[( 2-k)*32];
-		    mdct_enc[k*3+20] = band1[( 8-k)*32] * w + band1[( 9+k)*32];
+		int kk;
+		for (kk = -NS/4; kk < 0; kk++) {
+		    int k = kk+NS/4;
+		    FLOAT w = win[SHORT_TYPE][k];
+		    mdct_enc[k*3   ] = crnt[( 6+k)*32] * w - crnt[(11-k)*32];
+		    mdct_enc[k*3+ 9] = crnt[(17-k)*32] * w + crnt[(12+k)*32];
+		    mdct_enc[k*3+ 1] = crnt[(12+k)*32] * w - crnt[(17-k)*32];
+		    mdct_enc[k*3+10] = prev[( 5-k)*32] * w + prev[(   k)*32];
+		    mdct_enc[k*3+ 2] = prev[(   k)*32] * w - prev[( 5-k)*32];
+		    mdct_enc[k*3+11] = prev[(11-k)*32] * w + prev[( 6+k)*32];
 		}
 		mdct_short(mdct_enc);
 	    }
 	}
     }
     if (gfc->mode_gr == 1) {
-	memcpy(gfc->sb_sample[ch][0], gfc->sb_sample[ch][1], 576 * sizeof(FLOAT));
+	memcpy(gfc->sb_sample[ch][0], gfc->sb_sample[ch][1], sizeof(gfc->sb_sample[ch][1]));
     }
 }
