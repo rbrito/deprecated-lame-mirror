@@ -310,6 +310,18 @@ calc_noise(
 }
 
 static FLOAT
+quantEstimate(
+    lame_t gfc, const gr_info * const gi, const FLOAT rxmin[], FLOAT distort[])
+{
+    FLOAT noise = calc_noise(gfc, gi, rxmin, distort);
+
+    if (noise < 1.0) {
+	return (FLOAT) (-(MAX_BITS - gi->part2_3_length - gi->part2_length));
+    }
+    return noise;
+}
+
+static FLOAT
 calc_noise_allband(
     lame_t gfc,
     const gr_info * const gi,
@@ -1005,7 +1017,7 @@ CBR_1st_bitalloc (
 	    /* store this scalefactor combination if it is better */
 	    if (gi_w.global_gain != 256
 		&& bestNoise
-		> (newNoise = calc_noise(gfc, &gi_w, rxmin, distort))) {
+		> (newNoise = quantEstimate(gfc, &gi_w, rxmin, distort))) {
 		bestNoise = newNoise;
 		*gi = gi_w;
 		if (bestNoise < 1.0 && current_method == 0) {
