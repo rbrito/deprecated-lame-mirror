@@ -644,6 +644,7 @@ lame_init_params(lame_global_flags * const gfp)
 	if (gfp->mode == JOINT_STEREO)
 	    gfc->mode_ext = MPG_MD_MS_LR;
 	gfp->disable_reservoir = 1;
+	gfc->substep_shaping = 0;
 	for (gr=0; gr < gfc->mode_gr ; gr++)
 	    for ( ch = 0; ch < gfc->channels_out; ch++ ) {
 		gfc->l3_side.tt[gr][ch].block_type=NORM_TYPE;

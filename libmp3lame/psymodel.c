@@ -625,7 +625,7 @@ set_istereo_sfb(lame_internal_flags *gfc, int gr)
     gfc->is_start_sfb_l_next[gr] = gfc->cutoff_sfb_l;
     gfc->is_start_sfb_s_next[gr] = gfc->cutoff_sfb_s;
     sb = gfc->cutoff_sfb_l - 1;
-    if (!gfc->useshort_next[gr][0] && !gfc->useshort_next[gr][1]) {
+    if (!gfc->blocktype_next[gr][0] && !gfc->blocktype_next[gr][1]) {
 	do {
 	    FLOAT x1, x2;
 	    if (mr[3].en.l[sb] < mr[3].thm.l[sb]
@@ -743,23 +743,23 @@ compute_masking_s(
 static int
 block_type_set(
     int blocktype_old,
-    int useshort_current,
-    int useshort_next
+    int blocktype_current,
+    int blocktype_next
     )
 {
     /* update the blocktype of the previous granule, since it depends on what
      * happend in this granule */
-    if (useshort_current == SHORT_TYPE)
+    if (blocktype_current == SHORT_TYPE)
 	return SHORT_TYPE;
 
-    if (useshort_next == SHORT_TYPE || useshort_next == STOP_TYPE) {
+    if (blocktype_next == SHORT_TYPE || blocktype_next == STOP_TYPE) {
 	if (blocktype_old == SHORT_TYPE || blocktype_old == START_TYPE)
 	    return SHORT_TYPE;
 	return START_TYPE;
     }
     if (blocktype_old == SHORT_TYPE || blocktype_old == START_TYPE)
-	return STOP_TYPE - useshort_current;
-    return useshort_current;
+	return STOP_TYPE - blocktype_current;
+    return blocktype_current;
 }
 
 /* mask_add optimization */
@@ -907,21 +907,6 @@ mask_add(FLOAT m1, FLOAT m2, int k, int b, lame_internal_flags * const gfc)
     /* very rare case */
     if (i > 13) return m1;
     return m1*table3[i];
-}
-
-
-
-/* pow(x, r) * pow(y, 1-r) */
-#define NS_INTERP2(x, y, r)  pow((x)/(y),(r))*(y)
-
-
-inline static FLOAT NS_INTERP(FLOAT x, FLOAT y, FLOAT r)
-{
-    if (r==1.0)
-	return x;
-    if (y==0.0)
-	return y;
-    return NS_INTERP2(x,y,r);
 }
 
 
@@ -1117,7 +1102,7 @@ mp3x display               <------LONG------>
 	 * "short block may be needed but not calculated"
 	 */
 	gfc->masking_next[gr][chn].en.s[0][0] = -1.0;
-	gfc->useshort_next[gr][chn] = NORM_TYPE;
+	gfc->blocktype_next[gr][chn] = NORM_TYPE;
 	first_attack_position[chn] = -2;
 
 	for (i=0;i<3;i++) {
@@ -1126,7 +1111,7 @@ mp3x display               <------LONG------>
 		<= attackThreshold * gfc->nsPsy.subbk_ene[chn][i+1])
 		continue;
 
-	    gfc->useshort_next[gr][chn] = SHORT_TYPE;
+	    gfc->blocktype_next[gr][chn] = SHORT_TYPE;
 	    current_is_short += (1 << chn);
 	    first_attack_position[chn] = i;
 	    attack_adjust[chn]
@@ -1157,7 +1142,7 @@ mp3x display               <------LONG------>
 		}
 	    }
 
-	    if (!gfc->useshort_next[gr][chn])
+	    if (!gfc->blocktype_next[gr][chn])
 		continue;
 
 	    compute_masking_s(gfc, wsamp_S[chn&1][sblock],
@@ -1219,7 +1204,6 @@ static void
 L3psycho_anal_ns(
     lame_internal_flags *gfc,
     const sample_t *buffer[2],
-    int useshort_old[4],
     int gr,
     int numchn
     )
@@ -1553,30 +1537,23 @@ psycho_analysis(
     FLOAT sbsmpl[2][2*1152]
     )
 {
-    int gr, ch;
-    int blocktype_old[MAX_CHANNELS*2];
     lame_internal_flags *gfc=gfp->internal_flags;
-
-    /* address of beginning of left & right granule */
+    int gr, ch, blocktype_old[MAX_CHANNELS];
     const sample_t *bufp[MAX_CHANNELS];
 
-    for (ch = 0; ch < gfc->channels_out; ch++) {
-	blocktype_old[ch] = blocktype_old[ch+2]
-	    = gfc->l3_side.tt[gfc->mode_gr-1][ch].block_type;
-    }
     /* next frame data -> current frame data (aging) */
-
-    adjust_ATH(gfc);
     gfc->mode_ext = gfc->mode_ext_next;
-    for (gr=0; gr < gfc->mode_gr ; gr++) {
 	for (ch = 0; ch < 2; ch++) {
+	blocktype_old[ch] = gfc->l3_side.tt[gfc->mode_gr-1][ch].block_type;
+	for (gr=0; gr < gfc->mode_gr ; gr++) {
 	    masking_d[gr][ch]
 		= gfc->masking_next[gr][ch + (gfc->mode_ext & MPG_MD_MS_LR)];
-	    gfc->l3_side.tt[gr][ch].block_type = gfc->useshort_next[gr][ch];
+	    gfc->l3_side.tt[gr][ch].block_type = gfc->blocktype_next[gr][ch];
 	}
     }
 
     /* calculate next frame data */
+    adjust_ATH(gfc);
     for (gr=0; gr < gfc->mode_gr ; gr++) {
 	int numchn;
 	for (ch = 0; ch < gfc->channels_out; ch++)
@@ -1587,11 +1564,7 @@ psycho_analysis(
 	    numchn = 4;
 
 	psycho_analysis_short(gfc, bufp, sbsmpl, gr, numchn);
-	if (gr == 0) {
-	    L3psycho_anal_ns(gfc, bufp, blocktype_old, 0, numchn);
-	} else {
-	    L3psycho_anal_ns(gfc, bufp, gfc->useshort_next[0], 1, numchn);
-	}
+	L3psycho_anal_ns(gfc, bufp, gr, numchn);
 
 	/*********************************************************************
 	 * other masking effect
@@ -1600,13 +1573,13 @@ psycho_analysis(
 	    calc_interchannel_masking(gfp, gr);
 
 	if (gfp->mode == JOINT_STEREO) {
-	    if (!gfc->useshort_next[gr][2])
+	    if (!gfc->blocktype_next[gr][2])
 		msfix_l(gfc, gr);
 
 	    msfix_s(gfc, gr);
 	    if (gfp->use_istereo) {
-		if (gfc->useshort_next[gr][0] | gfc->useshort_next[gr][1])
-		    gfc->useshort_next[gr][0] = gfc->useshort_next[gr][1]
+		if (gfc->blocktype_next[gr][0] | gfc->blocktype_next[gr][1])
+		    gfc->blocktype_next[gr][0] = gfc->blocktype_next[gr][1]
 			= SHORT_TYPE;
 		set_istereo_sfb(gfc, gr);
 	    }
@@ -1617,7 +1590,7 @@ psycho_analysis(
 	for (ch=0;ch<numchn;ch++) {
 	    III_psy_ratio *mr = &gfc->masking_next[gr][ch];
 	    mr->ath_over = 0;
-	    if (gfc->useshort_next[gr][ch]) {
+	    if (gfc->blocktype_next[gr][ch]) {
 		int sb = gfc->cutoff_sfb_s;
 		if (ch & 1)
 		    sb = gfc->is_start_sfb_s_next[gr];
@@ -1630,8 +1603,8 @@ psycho_analysis(
 	    }
 	}
 	gfc->masking_next[gr][3].pe *= gfc->reduce_side;
-	if (gfc->useshort_next[gr][2] | gfc->useshort_next[gr][3])
-	    gfc->useshort_next[gr][2] = gfc->useshort_next[gr][3] = SHORT_TYPE;
+	if (gfc->blocktype_next[gr][2] | gfc->blocktype_next[gr][3])
+	    gfc->blocktype_next[gr][2] = gfc->blocktype_next[gr][3] = SHORT_TYPE;
     }
     /* determine MS/LR in the next frame */
     if (gfp->mode == JOINT_STEREO) {
@@ -1650,9 +1623,9 @@ psycho_analysis(
 	if (diff_pe <= 0.0 || gfp->force_ms) {
 	    gfc->mode_ext_next = MPG_MD_MS_LR;
 	    for (gr = 0; gr < gfc->mode_gr; gr++) {
-		assert(gfc->useshort_next[gr][2] == gfc->useshort_next[gr][3]);
-		gfc->useshort_next[gr][0] = gfc->useshort_next[gr][1]
-		    = gfc->useshort_next[gr][2];
+		assert(gfc->blocktype_next[gr][2] == gfc->blocktype_next[gr][3]);
+		gfc->blocktype_next[gr][0] = gfc->blocktype_next[gr][1]
+		    = gfc->blocktype_next[gr][2];
 	    }
 	    /* LR -> MS case */
 	    if ((gfc->mode_ext_next ^ gfc->mode_ext) & 2
@@ -1672,11 +1645,11 @@ psycho_analysis(
 	} else {
 	    gfc->mode_ext_next = MPG_MD_LR_LR;
 	    if ((gfc->mode_ext_next ^ gfc->mode_ext) & 2
-		&& (gfc->useshort_next[0][0] != gfc->useshort_next[0][1])) {
-		if (gfc->useshort_next[0][0] != SHORT_TYPE)
-		    gfc->useshort_next[0][0] = STOP_TYPE;
-		if (gfc->useshort_next[0][1] != SHORT_TYPE)
-		    gfc->useshort_next[0][1] = STOP_TYPE;
+		&& (gfc->blocktype_next[0][0] != gfc->blocktype_next[0][1])) {
+		if (gfc->blocktype_next[0][0] != SHORT_TYPE)
+		    gfc->blocktype_next[0][0] = STOP_TYPE;
+		if (gfc->blocktype_next[0][1] != SHORT_TYPE)
+		    gfc->blocktype_next[0][1] = STOP_TYPE;
 	    }
 	}
 	gfc->mode_ext_next |= gfp->use_istereo;
@@ -1688,7 +1661,7 @@ psycho_analysis(
 	    gfc->l3_side.tt[0][ch].block_type
 		= block_type_set(blocktype_old[ch],
 				 gfc->l3_side.tt[0][ch].block_type,
-				 gfc->useshort_next[0][ch]);
+				 gfc->blocktype_next[0][ch]);
 	else {
 	    gfc->l3_side.tt[0][ch].block_type
 		= block_type_set(blocktype_old[ch],
@@ -1698,7 +1671,7 @@ psycho_analysis(
 	    gfc->l3_side.tt[1][ch].block_type
 		= block_type_set(gfc->l3_side.tt[0][ch].block_type,
 				 gfc->l3_side.tt[1][ch].block_type,
-				 gfc->useshort_next[0][ch]);
+				 gfc->blocktype_next[0][ch]);
 	}
     }
     if (gfc->mode_ext & MPG_MD_MS_LR) {

@@ -407,6 +407,8 @@ int  lame_encode_mp3_frame (				/* Output */
 
     if (gfc->psymodel)
 	psycho_analysis(gfp, inbuf, masking, sbsmpl);
+    else
+	memset(masking, 0, sizeof(masking));
 
     /* polyphase filtering / mdct */
     for (ch = 0; ch < gfc->channels_out; ch++) {
@@ -484,7 +486,7 @@ int  lame_encode_mp3_frame (				/* Output */
 	}
     }
 
-#if defined(HAVE_GTK)
+#ifdef HAVE_GTK
     /* copy data for MP3 frame analyzer */
     if (gfc->pinfo) {
 	for ( gr = 0; gr < gfc->mode_gr; gr++ ) {

@@ -1317,16 +1317,11 @@ int psymodel_init(lame_global_flags *gfp)
 	}
 	for (j=0;j<6;j++)
 	    gfc->nsPsy.subbk_ene[i][j] = 1.0;
-	gfc->useshort_next[0][i] = NORM_TYPE;
-	gfc->useshort_next[1][i] = NORM_TYPE;
+	gfc->blocktype_next[0][i] = NORM_TYPE;
+	gfc->blocktype_next[1][i] = NORM_TYPE;
     }
 
     gfc->masking_lower = db2pow(gfp->VBR_q - 8 - 4);
-
-    /* init. for loudness approx. -jd 2001 mar 27*/
-    gfc->loudness_next[0][0] = gfc->loudness_next[0][1]
-	= gfc->loudness_next[1][0] = gfc->loudness_next[1][1]
-	= 0.0;
 
     /*************************************************************************
      * now compute the psychoacoustic model specific constants
@@ -1414,10 +1409,29 @@ int psymodel_init(lame_global_flags *gfp)
     if (i)
 	return i;
 
+    assert(gfc->bo_l[SBMAX_l-1] <= gfc->npart_l);
+    assert(gfc->bo_l2s[SBMAX_s-1] <= gfc->npart_l);
+    assert(gfc->bo_s[SBMAX_s-1] <= gfc->npart_s);
+
+    init_mask_add_max_values(gfc);
+
+    /* setup temporal masking */
+    gfc->decay = db2pow(-(576.0/3)/(TEMPORALMASK_SUSTAIN_SEC*sfreq));
+
     /* long/short switching, use subbandded sample in f > 2kHz */
     i = (int) (2000.0 / (sfreq / 2.0 / 32.0) + 0.5);
     gfc->nsPsy.switching_band = Min(i, 30);
 
+    /*  prepare for ATH auto adjustment:
+     *  we want to decrease the ATH by 12 dB per second
+     */
+    gfc->ATH.adjust = 0.01; /* minimum, for leading low loudness */
+    gfc->ATH.adjust_limit = 1.0; /* on lead, allow adjust up to maximum */
+
+    /* init. for loudness approx. -jd 2001 mar 27*/
+    gfc->loudness_next[0][0] = gfc->loudness_next[0][1]
+	= gfc->loudness_next[1][0] = gfc->loudness_next[1][1]
+	= 0.0;
     /* compute equal loudness weights */
     eql_balance = 0.0;
     for( i = 0; i < BLKSIZE/2; ++i ) {
@@ -1426,26 +1440,8 @@ int psymodel_init(lame_global_flags *gfp)
 	eql_balance += gfc->ATH.eql_w[i];
     }
     eql_balance =  (vo_scale * vo_scale / (BLKSIZE/2)) / eql_balance * 0.5;
-    for( i = BLKSIZE/2; --i >= 0; ) { /* scale weights */
+    for( i = BLKSIZE/2; --i >= 0; )
 	gfc->ATH.eql_w[i] *= eql_balance;
-    }
-
-
-    init_mask_add_max_values(gfc);
-
-    /* setup temporal masking */
-    gfc->decay = db2pow(-(576.0/3)/(TEMPORALMASK_SUSTAIN_SEC*sfreq));
-
-    /*  prepare for ATH auto adjustment:
-     *  we want to decrease the ATH by 12 dB per second
-     */
-#define frame_duration (576. * gfc->mode_gr / sfreq)
-    gfc->ATH.adjust = 0.01; /* minimum, for leading low loudness */
-    gfc->ATH.adjust_limit = 1.0; /* on lead, allow adjust up to maximum */
-
-    assert(gfc->bo_l[SBMAX_l-1] <= gfc->npart_l);
-    assert(gfc->bo_l2s[SBMAX_s-1] <= gfc->npart_l);
-    assert(gfc->bo_s[SBMAX_s-1] <= gfc->npart_s);
 
     // The type of window used here will make no real difference, but
     // use blackman window for long block.
