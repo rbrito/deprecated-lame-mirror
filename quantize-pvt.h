@@ -46,25 +46,25 @@ void outer_loop( FLOAT8 xr[576],     /*vector of the magnitudees of the spectral
                 int l3_enc[576],    /* vector of quantized values ix(0..575) */
 		frame_params *fr_ps,
 		 III_scalefac_t *scalefac, /* scalefactors */
-		 gr_info *,
+                int gr,
 		III_side_info_t *l3_side,
 		III_psy_ratio *ratio, 
 		FLOAT8 ms_ratio,
-		int gr, int ch);
+		int ch);
 
 
-void outer_loop_dual( FLOAT8 xr[2][576],     /*vector of the magnitudees of the spectral values */
-		 FLOAT8 xr_org[2][576],
+void outer_loop_dual( FLOAT8 xr[2][2][576],     /*vector of the magnitudees of the spectral values */
+		 FLOAT8 xr_org[2][2][576],
                 int mean_bits,
                 int bit_rate,
 		int best_over[2],
-                III_psy_xmin l3_xmin[2], /* the allowed distortion of the scalefactor */
-                int l3_enc[2][576],    /* vector of quantized values ix(0..575) */
+                III_psy_xmin l3_xmin[2][2], /* the allowed distortion of the scalefactor */
+                int l3_enc[2][2][576],    /* vector of quantized values ix(0..575) */
 		frame_params *fr_ps,
-                III_scalefac_t scalefac[2], /* scalefactors */
+                III_scalefac_t scalefac[2][2], /* scalefactors */
                 int gr,
 		III_side_info_t *l3_side,
-		III_psy_ratio ratio[2], 
+		III_psy_ratio ratio[2][2], 
 		FLOAT8 pe[2][2],
 		FLOAT8 ms_ratio[2]);
 
@@ -94,7 +94,6 @@ int calc_noise1( FLOAT8 xr[576],
                  FLOAT8 xfsf[4][SBPSY_l], 
 		 FLOAT8 distort[4][SBPSY_l],
                  III_psy_xmin *l3_xmin,
-		 III_scalefac_t *,
                  FLOAT8 *noise, FLOAT8 *tot_noise, FLOAT8 *max_noise);
 
 void calc_noise2( FLOAT8 xr[2][576],
@@ -102,19 +101,18 @@ void calc_noise2( FLOAT8 xr[2][576],
                  gr_info *cod_info[2],
                  FLOAT8 xfsf[2][4][SBPSY_l], 
 		 FLOAT8 distort[2][4][SBPSY_l],
-                 III_psy_xmin l3_xmin[2],
-		 III_scalefac_t scalefac[2],
-		 int over[2], 
+                 III_psy_xmin l3_xmin[2][2],
+		 int gr, int over[2], 
                  FLOAT8 noise[2], FLOAT8 tot_noise[2], FLOAT8 max_noise[2]);
 
 
 int loop_break( III_scalefac_t *scalefac, gr_info *cod_info);
 
-void amp_scalefac_bands(FLOAT8 xrpow[576],
+int amp_scalefac_bands( FLOAT8 xr[576], FLOAT8 xrpow[576],
+                        III_psy_xmin *l3_xmin,
 			gr_info *cod_info,
-			III_scalefac_t *scalefac,
-			FLOAT8 distort[4][SBPSY_l]);
-
+                        III_scalefac_t *scalefac,
+                        FLOAT8 distort[4][SBPSY_l]);
 void quantize_xrpow( FLOAT8 xr[576],
                int  ix[576],
                gr_info *cod_info );
@@ -145,11 +143,5 @@ void best_huffman_divide(int gr, int ch, gr_info *cod_info, int *ix);
 void best_scalefac_store(int gr, int ch,
 			 III_side_info_t *l3_side,
 			 III_scalefac_t scalefac[2][2]);
-
-void init_outer_loop(
-    FLOAT8 xr[576],        /*  could be L/R OR MID/SIDE */
-    III_scalefac_t *scalefac, /* scalefactors */
-    gr_info *cod_info,
-    III_side_info_t *l3_side);
 
 #endif
