@@ -12123,7 +12123,7 @@ if test "x$GCC" = "xyes"; then
 	case "${CONFIG_EXPOPT}" in
 	no)
 		# if someone supplies own CFLAGS, we don't add our own
-		if  "X${ac_save_CFLAGS}" != "X" ; then
+		if test "x${ac_save_CFLAGS}" != "x"; then
 			OPTIMIZATION=""
 		fi
 		;;
