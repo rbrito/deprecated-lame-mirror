@@ -147,7 +147,7 @@ void lame_help(lame_global_flags *gfp,char *name)  /* print syntax & exit */
   fprintf(stdout,"    -t              disable Xing VBR informational tag\n");
   fprintf(stdout,"    --nohist        disable VBR histogram display\n");
   fprintf(stdout,"\n");
-  fprintf(stdout,"    --abr <bitrate> specify average bitrate desired\n");
+  fprintf(stdout,"    --abr <bitrate> specify average bitrate desired (instead of quality)\n");
   fprintf(stdout,"\n");
   fprintf(stdout,"  MP3 header/stream options:\n");
   fprintf(stdout,"    -e <emp>        de-emphasis n/5/c  (obsolete)\n");

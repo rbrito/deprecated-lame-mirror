@@ -182,7 +182,6 @@ ABR_iteration_loop (lame_global_flags *gfp,
   mean_bits = (bitsPerFrame - 8*gfc->sideinfo_len) / gfc->mode_gr;
 
 
-
   for(gr = 0; gr < gfc->mode_gr; gr++) {
 
     for(ch = 0; ch < gfc->stereo; ch++) {

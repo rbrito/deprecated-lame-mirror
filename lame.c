@@ -441,14 +441,7 @@ void lame_init_params(lame_global_flags *gfp)
   if (gfp->VBR) {
     /* if the user didn't specify VBR_max_bitrate: */
     if (0==gfp->VBR_max_bitrate_kbps) {
-      /* default max bitrate is 256kbs */
       gfc->VBR_max_bitrate=14;   /* default: allow 320kbs */
-      if (gfp->VBR_min_bitrate_kbps>=256) gfc->VBR_max_bitrate=14;
-#if 0
-      if (gfp->VBR_q == 0) gfc->VBR_max_bitrate=14;   /* allow 320kbs */
-      if (gfp->VBR_q >= 4) gfc->VBR_max_bitrate=12;   /* max = 224kbs */
-      if (gfp->VBR_q >= 8) gfc->VBR_max_bitrate=9;    /* low quality, max = 128kbs */
-#endif
     }else{
       if( (gfc->VBR_max_bitrate  = BitrateIndex(gfp->VBR_max_bitrate_kbps, gfp->version,gfp->out_samplerate)) < 0) {
 	display_bitrates(stderr);

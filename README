@@ -31,21 +31,14 @@ See www.mp3tech.org for more audio compression information and links.
 
 ============================================================================
 
-The graphical frame analyzer uses the MPGLIB decoding engine, from the
+LAME uses the MPGLIB decoding engine, from the
 MPG123 package, written by: Michael Hipp (www.mpg123.de) MPGLIB is
 released under the GPL, while MPG123 is released under a more
 restrictive agreement.
 
-Various components of the patch are:
+Various components are:
 
 Copyrights (c) 1999 by Mark Taylor: new psy-model, quantization and bit allocation 
 Copyrights (c) 1998 by Michael Cheng:  new transforms and many other improvements
 Copyrights (c) 1995,1996,1997 by Michael Hipp: mpglib
-
-
-The ISO demonstration source (distributed separately) has its own
-patent, copyright and distribution issues.  The code is freely
-available, but any commercial use (including distributing free
-encoders) may require a patent license from Thomson Multimedia.  (see
-http://www.iis.fhg.de/amm/legal/)
 

@@ -36,21 +36,14 @@ you use a 16kHz sampling rate combined with lowpass filtering.  LAME,
 as well as commercial encoders (FhG, Xing) will do this automatically.
 However, if you feel there is too much (or not enough) lowpass
 filtering, you may need to try different values of the lowpass cutoff
-and passband width (--lowpass and --lowpass-width options).
-
-
+and passband width (--resample, --lowpass and --lowpass-width options).
 
 
 =======================================================================
 STREAMING EXAMPLES
 =======================================================================
-Streaming mono 22.05kHz raw pcm, 24kbs output:
-% cat inputfile | lame -r -m m -b 24 -s 22.05 - - > output
 
-Streaming mono 22.05kHz raw pcm, with downsampling to 16kHz:
-% cat inputfile | sox -t raw -x -w -s -c 1 -r 22050 -  -t raw -x -w -s -c 1 -r 16000 - resample 0.66 | lame -r -m m -b 24 -s 16 - - > output
-
-You may or may not need one or both of the "-x" (swap bytes) option in Sox.  
+% cat inputfile | lame [options] - - > output
 
 
 
@@ -452,16 +445,34 @@ non-original
 
 mark the encoded file as a copy
 
+
+
 =======================================================================
-Ogg Vorbis input file
+Ogg Vorbis encoding
 =======================================================================
---ogginput
+--ogg
+
+Encode using the Ogg Vobis codec (using libvorbis) instead of
+LAME's internal mp3 codec.
 
 Assume the input file is an Ogg Vorbis file.  Mostly usefull
 with --decode for playing back .ogg files.  
 If the filename ends in ".ogg" LAME will assume
 it is an Ogg.  For stdin or files which dont end in .ogg you need
 to use this switch.
+
+
+=======================================================================
+Ogg Vorbis input file
+=======================================================================
+--ogginput
+
+Assume the input file is an Ogg Vorbis file.  Mostly usefull
+with --decode for playing back .ogg files, or converting
+your .ogg collection to MP3 :-)
+
+If the filename ends in ".ogg" LAME will assume it is Ogg.  For
+stdin or files which dont end in .ogg you need to use this switch.
 
 
 
