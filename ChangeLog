@@ -11,6 +11,2128 @@
 
 -- 
 
+2004-04-11 15:04  aleidinger
+
+	* configure:
+
+	regen
+
+2004-04-11 15:00  aleidinger
+
+	* config.h.in:
+
+	Add some missing LARGEFILE pieces. This patch is also in the generated
+	lame-3.96 tarball, it just enters the CVS repository for 3.97 for
+	organizational reasons.
+
+2004-04-11 14:58  aleidinger
+
+	* configure.in:
+
+	Welcome to lame 3.97.
+
+2004-04-11 14:27  takehiro
+
+	* libmp3lame/: encoder.c, encoder.h, lame.c, set_get.c, tables.c
+	(takehiro-2002_05_07-experimental):
+
+	merged gfc->num_channels & gfc->channels_in
+	some trivial clean up.
+
+2004-04-11 13:54  takehiro
+
+	* libmp3lame/VbrTag.c, libmp3lame/encoder.h, libmp3lame/lame.c,
+	libmp3lame/set_get.c, libmp3lame/tables.c, libmp3lame/util.c,
+	libmp3lame/util.h, include/lame.h
+	(takehiro-2002_05_07-experimental):
+
+	changed error/debug/normal message output code.
+
+2004-04-11 13:10  takehiro
+
+	* debian/: changelog, lame.docs, rules
+	(takehiro-2002_05_07-experimental):
+
+	updated for lame4
+
+2004-04-11 13:09  takehiro
+
+	* libmp3lame/: encoder.c, encoder.h, lame.c, mpglib_interface.c,
+	tables.c (takehiro-2002_05_07-experimental):
+
+	clean up the members of structure lame_t.
+
+2004-04-11 13:08  takehiro
+
+	* libmp3lame/set_get.c (takehiro-2002_05_07-experimental):
+
+	fix build problem when --disable-analysis-hook
+
+2004-04-11 13:05  bouvigne
+
+	* libmp3lame/version.h:
+
+	3.97a1
+
+2004-04-11 13:03  bouvigne
+
+	* libmp3lame/version.h:
+
+	release 3.96
+
+2004-04-11 13:03  bouvigne
+
+	* doc/html/history.html:
+
+	history
+
+2004-04-11 13:02  bouvigne
+
+	* debian/changelog:
+
+	updated debian changelog
+
+2004-04-11 13:01  bouvigne
+
+	* libmp3lame/presets.c:
+
+	use X9 to select abr/cbr quantization,
+	use sfscale up to 160kbps
+
+2004-04-11 12:50  bouvigne
+
+	* Makefile.in:
+
+	manually updated Makefile.in
+
+2004-04-11 12:12  takehiro
+
+	* configure (takehiro-2002_05_07-experimental):
+
+	regen (by hand)
+
+2004-04-11 12:10  takehiro
+
+	* configure.in (takehiro-2002_05_07-experimental):
+
+	fix confusion arround "decoder" and "decode"
+
+2004-04-11 11:58  takehiro
+
+	* libmp3lame/lame-analysis.h, frontend/gtkanal.c
+	(takehiro-2002_05_07-experimental):
+
+	trivial
+
+2004-04-11 11:57  takehiro
+
+	* libmp3lame/: encoder.c, encoder.h, lame.c
+	(takehiro-2002_05_07-experimental):
+
+	one more fix for "very the beginig samples"
+
+2004-04-11 11:55  takehiro
+
+	* libmp3lame/quantize.c (takehiro-2002_05_07-experimental):
+
+	fix it sometimes goes into infinite loop when with i-stereo.
+
+2004-04-10 16:58  takehiro
+
+	* libmp3lame/quantize.c (takehiro-2002_05_07-experimental):
+
+	fix mp3x display delay.
+
+2004-04-10 16:56  takehiro
+
+	* libmp3lame/encoder.c (takehiro-2002_05_07-experimental):
+
+	remove redandunt code.
+
+2004-04-10 16:48  takehiro
+
+	* libmp3lame/: encoder.c, encoder.h, lame.c, newmdct.c, psymodel.c,
+	quantize.c, set_get.c (takehiro-2002_05_07-experimental):
+
+	fix "start" delay and reduce buffer size.
+	still there's known bugs in mp3x and the tail part encoding.
+
+2004-04-10 16:15  takehiro
+
+	* frontend/get_audio.c (takehiro-2002_05_07-experimental):
+
+	fix trivial bug when stereo input
+
+2004-04-10 15:43  takehiro
+
+	* frontend/: get_audio.c, get_audio.h, gtkanal.c, lametime.c,
+	lametime.h, main.c, mp3rtp.c (takehiro-2002_05_07-experimental):
+
+	frontend code fix and clean up.
+	- fix it cut the beginning 17 samples when input is .wav file.
+	- fix function names. remove "lame_" prefix from the functions which is not
+	  LAME API.
+	- and some trivial clean up.
+
+2004-04-10 13:23  takehiro
+
+	* frontend/gpkplotting.c (takehiro-2002_05_07-experimental):
+
+	remove unused definition
+
+2004-04-10 12:08  takehiro
+
+	* frontend/main.c (takehiro-2002_05_07-experimental):
+
+	clarify the comment
+
+2004-04-04 15:13  takehiro
+
+	* libmp3lame/encoder.h (takehiro-2002_05_07-experimental):
+
+	reduce POSTDELAY when MPEG2 layer3
+
+2004-04-04 12:49  takehiro
+
+	* frontend/parse.c, include/lame.h, libmp3lame/encoder.h,
+	libmp3lame/lame.c, libmp3lame/set_get.c, libmp3lame/tables.c
+	(takehiro-2002_05_07-experimental):
+
+	rename ns-(bass|alto|treble) options and their implementation.
+
+2004-04-04 12:45  takehiro
+
+	* mpglib/layer3.c (takehiro-2002_05_07-experimental):
+
+	always support MPEG1.
+
+2004-04-04 12:33  takehiro
+
+	* libmp3lame/quantize.c (takehiro-2002_05_07-experimental):
+
+	trivial
+
+2004-04-04 11:55  takehiro
+
+	* libmp3lame/takehiro.c (takehiro-2002_05_07-experimental):
+
+	trivial optimization
+
+2004-04-04 11:54  takehiro
+
+	* libmp3lame/: util.c, machine.h
+	(takehiro-2002_05_07-experimental):
+
+	include file clean up.
+
+2004-04-04 11:52  takehiro
+
+	* libmp3lame/id3tag.c (takehiro-2002_05_07-experimental):
+
+	replace snprintf() with strncat() and so on, for some old systems.
+
+2004-04-03 19:30  takehiro
+
+	* libmp3lame/encoder.c (takehiro-2002_05_07-experimental):
+
+	work arround for short blocks with i-stereo bug.
+	and some simplification of i-stereo code.
+
+2004-04-03 19:25  takehiro
+
+	* frontend/gtkanal.c (takehiro-2002_05_07-experimental):
+
+	display more scalefactor band splitting lines.
+
+2004-04-03 17:35  takehiro
+
+	* libmp3lame/psymodel.c (takehiro-2002_05_07-experimental):
+
+	fix uninitialized memory access (found by valgrind).
+
+2004-04-03 17:28  bouvigne
+
+	* frontend/gtkanal.c, libmp3lame/lame-analysis.h,
+	libmp3lame/quantize.c, libmp3lame/quantize_pvt.c,
+	libmp3lame/quantize_pvt.h:
+
+	Add X9 quantization selection method.
+	It increases applaud.wav substancially.
+	Not enabled by default
+
+2004-04-03 17:14  takehiro
+
+	* libmp3lame/quantize.c (takehiro-2002_05_07-experimental):
+
+	try to find better scalefactor combination when i-stereo.
+
+2004-04-03 17:07  takehiro
+
+	* libmp3lame/quantize.c (takehiro-2002_05_07-experimental):
+
+	remove one condition which is always stisfied.
+
+2004-04-03 13:17  takehiro
+
+	* libmp3lame/quantize.c (takehiro-2002_05_07-experimental):
+
+	better bit allocation when substep noise shaping.
+
+2004-04-02 16:37  takehiro
+
+	* libmp3lame/takehiro.c (takehiro-2002_05_07-experimental):
+
+	fix "all even" hack.
+
+2004-04-02 15:54  takehiro
+
+	* libmp3lame/: psymodel.c, quantize.c
+	(takehiro-2002_05_07-experimental):
+
+	better bit allocation for CBR.
+	- increase bit allocation on start/end blocks, where the effect of
+	  best_huffman_divide() is very weak.
+	- increase bit allocation when --substep is enabled.
+
+	some trivial clean up.
+
+2004-03-30 15:49  takehiro
+
+	* libmp3lame/takehiro.c (takehiro-2002_05_07-experimental):
+
+	fix it sometimes crashes with -q0 or -q1 + CBR
+
+2004-03-28 16:14  takehiro
+
+	* libmp3lame/quantize.c (takehiro-2002_05_07-experimental):
+
+	trivial simplification
+
+2004-03-28 13:11  bouvigne
+
+	* libmp3lame/version.h:
+
+	3.96 beta 2
+
+2004-03-28 13:10  bouvigne
+
+	* doc/html/history.html:
+
+	history
+
+2004-03-28 13:10  bouvigne
+
+	* libmp3lame/presets.c:
+
+	updated minimal bitrate for V1 and V2
+
+2004-03-28 12:41  takehiro
+
+	* libmp3lame/quantize.c (takehiro-2002_05_07-experimental):
+
+	reduce array size
+
+2004-03-28 12:16  takehiro
+
+	* libmp3lame/: bitstream.c, encoder.c, encoder.h, lame.c,
+	quantize.c, tables.c, tables.h, takehiro.c
+	(takehiro-2002_05_07-experimental):
+
+	warning fix, cleanup, and cosmetic change.
+
+2004-03-28 12:16  takehiro
+
+	* TODO (takehiro-2002_05_07-experimental):
+
+	there is already VC6 project file. We (maybe) need .net project/solution file.
+
+2004-03-28 11:29  takehiro
+
+	* frontend/mp3x.c, include/lame.h, libmp3lame/lame.c,
+	libmp3lame/takehiro.c (takehiro-2002_05_07-experimental):
+
+	remove lame_encode_finish() API
+
+2004-03-28 11:28  takehiro
+
+	* libmp3lame/encoder.c (takehiro-2002_05_07-experimental):
+
+	fixed mixed block statics
+	trivial optimization/clean up
+
+2004-03-27 17:08  takehiro
+
+	* libmp3lame/quantize.c (takehiro-2002_05_07-experimental):
+
+	- use calc_sfb_noise() and calc_sfb_noise_fast() do not return minus value.
+	- little better CBR_2nd_bitalloc()
+
+2004-03-27 14:50  takehiro
+
+	* libmp3lame/bitstream.c (takehiro-2002_05_07-experimental):
+
+	reduce table size.
+
+2004-03-27 14:49  takehiro
+
+	* frontend/get_audio.c (takehiro-2002_05_07-experimental):
+
+	fix warnings
+
+2004-03-27 12:38  takehiro
+
+	* libmp3lame/: bitstream.c, quantize.c
+	(takehiro-2002_05_07-experimental):
+
+	cosmetic
+
+2004-03-27 11:18  takehiro
+
+	* libmp3lame/: bitstream.c, tables.c, tables.h
+	(takehiro-2002_05_07-experimental):
+
+	simplification arround huffman code output
+
+2004-03-27 09:47  takehiro
+
+	* libmp3lame/: bitstream.c, quantize.c, quantize_pvt.h, tables.c,
+	takehiro.c (takehiro-2002_05_07-experimental):
+
+	clean up. fix warning and trivial optimizations.
+
+2004-03-27 08:31  takehiro
+
+	* TODO (takehiro-2002_05_07-experimental):
+
+	updated
+
+2004-03-27 07:48  takehiro
+
+	* libmp3lame/: bitstream.c, tables.c, tables.h, takehiro.c
+	(takehiro-2002_05_07-experimental):
+
+	simplify the code arround huffman coding with the escape sequence.
+
+2004-03-23 22:17  robert
+
+	* libmp3lame/vbrquantize.c, Makefile.unix:
+
+	rewritten vbr-new
+
+	the scalefactor allocation functions take into account now, that some
+	minimal scalefactor has to be used (the less IXMAX_VAL case)
+
+	the output of vbr-new is not bit identical to previous ones, but the
+	code is much more straight forward now.
+
+2004-03-23 22:11  robert
+
+	* libmp3lame/util.c:
+
+	patch for resampling code, found by Takehiro
+
+	this patch removes some unneccessary integer rounding
+	resulting mp3s where bit identical, but resampling is faster now
+
+2004-03-23 03:07  olcios
+
+	* frontend/parse.c:
+
+	fixed a compile-time issue in --longhelp
+
+2004-03-23 01:57  olcios
+
+	* USAGE, doc/html/switchs.html, doc/man/lame.1, frontend/main.c,
+	frontend/parse.c, include/lame.h, libmp3lame/VbrTag.c,
+	libmp3lame/bitstream.c, libmp3lame/lame.c,
+	libmp3lame/lame_global_flags.h, libmp3lame/set_get.c,
+	libmp3lame/util.h:
+
+	1. added --noreplaygain switch that disables RG   2. added --replaygain-fast switch that complements --replaygain-accurate. The new switch is enabled by default in the frontend.   3. Made RG analysis no longer default in libmp3lib. RG can still be fully controlled via the libmp3lib interface, but for other interfaces, like DLL or ACM, that provide no RG control, RG analysis is now _disabled_.     4. updated documentation
+
+2004-03-21 17:53  takehiro
+
+	* frontend/parse.c, libmp3lame/VbrTag.c, libmp3lame/VbrTag.h,
+	libmp3lame/bitstream.c, libmp3lame/bitstream.h, libmp3lame/lame.c,
+	libmp3lame/version.c, mpglib/interface.c
+	(takehiro-2002_05_07-experimental):
+
+	more API clean up and cosmetic changes.
+
+2004-03-21 17:51  takehiro
+
+	* libmp3lame/quantize.c (takehiro-2002_05_07-experimental):
+
+	faster float comparison when FLOAT is float.
+	some cosmetic changes
+
+2004-03-21 17:14  takehiro
+
+	* libmp3lame/VbrTag.c, libmp3lame/bitstream.c,
+	libmp3lame/bitstream.h, libmp3lame/encoder.c, libmp3lame/encoder.h,
+	libmp3lame/id3tag.c, libmp3lame/lame-analysis.h, libmp3lame/lame.c,
+	libmp3lame/machine.h, libmp3lame/newmdct.c, libmp3lame/psymodel.c,
+	libmp3lame/psymodel.h, libmp3lame/quantize.c,
+	libmp3lame/quantize.h, libmp3lame/quantize_pvt.h,
+	libmp3lame/tables.c, libmp3lame/tables.h, libmp3lame/takehiro.c,
+	mpglib/interface.c (takehiro-2002_05_07-experimental):
+
+	clean up APIs and variable names (to fix warnings when -Wshadow)
+
+2004-03-21 16:27  takehiro
+
+	* include/lame.h, libmp3lame/VbrTag.c, libmp3lame/id3tag.c,
+	libmp3lame/lame-analysis.h, libmp3lame/machine.h,
+	libmp3lame/mpglib_interface.c, libmp3lame/newmdct.c,
+	libmp3lame/quantize.c, libmp3lame/set_get.c, libmp3lame/takehiro.c,
+	libmp3lame/version.h (takehiro-2002_05_07-experimental):
+
+	cosmetic
+
+2004-03-21 15:51  takehiro
+
+	* libmp3lame/: machine.h, psymodel.c, quantize_pvt.h
+	(takehiro-2002_05_07-experimental):
+
+	clean up arround IEEE754 hack.
+
+2004-03-21 15:47  takehiro
+
+	* libmp3lame/: VbrTag.c, encoder.h
+	(takehiro-2002_05_07-experimental):
+
+	remove unused "nogap" related variables.
+
+2004-03-21 15:41  takehiro
+
+	* libmp3lame/: VbrTag.c, encoder.c, encoder.h
+	(takehiro-2002_05_07-experimental):
+
+	fix invalid vbr header output when ABR.
+	merge gfc->frameNum and gfc->nVbrNumFrames.
+
+2004-03-21 14:51  takehiro
+
+	* libmp3lame/: encoder.h, psymodel.c, psymodel.h, quantize.c
+	(takehiro-2002_05_07-experimental):
+
+	remove magic numbers
+
+2004-03-21 14:32  takehiro
+
+	* libmp3lame/encoder.h (takehiro-2002_05_07-experimental):
+
+	header file style/comment fix.
+
+2004-03-21 14:32  takehiro
+
+	* libmp3lame/quantize.c (takehiro-2002_05_07-experimental):
+
+	trivial
+
+2004-03-21 14:31  takehiro
+
+	* mpglib/: layer3.c, mpg123.h (takehiro-2002_05_07-experimental):
+
+	trivial optimization
+
+2004-03-21 14:31  takehiro
+
+	* include/lame.h (takehiro-2002_05_07-experimental):
+
+	remove obsolete API.
+
+2004-03-21 13:51  takehiro
+
+	* ACM/DecodeStream.h, frontend/gtkanal.c, frontend/mp3x.c,
+	frontend/parse.c, libmp3lame/VbrTag.c, libmp3lame/VbrTag.h,
+	libmp3lame/bitstream.c, libmp3lame/bitstream.h,
+	libmp3lame/encoder.c, libmp3lame/encoder.h, libmp3lame/id3tag.c,
+	libmp3lame/lame-analysis.h, libmp3lame/lame.c,
+	libmp3lame/mpglib_interface.c, libmp3lame/newmdct.c,
+	libmp3lame/psymodel.c, libmp3lame/quantize.c,
+	libmp3lame/quantize.h, libmp3lame/set_get.c, libmp3lame/tables.c,
+	libmp3lame/tables.h, libmp3lame/takehiro.c, libmp3lame/util.c,
+	libmp3lame/util.h, libmp3lame/version.c, mpglib/layer3.c,
+	mpglib/mpglib.h (takehiro-2002_05_07-experimental):
+
+	clean up header files.
+
+2004-03-21 13:00  takehiro
+
+	* testcase.mp3 (takehiro-2002_05_07-experimental):
+
+	new testcase
+
+2004-03-21 12:37  takehiro
+
+	* libmp3lame/: encoder.c, quantize.c, quantize.h
+	(takehiro-2002_05_07-experimental):
+
+	clean up APIs of set_frame_pinfo()
+
+2004-03-21 12:34  takehiro
+
+	* libmp3lame/: lame.c, set_get.c, util.h
+	(takehiro-2002_05_07-experimental):
+
+	clean up arround buffer flush.
+	and remove "mf_samples_to_encode" from lame_t.
+
+2004-03-21 12:33  takehiro
+
+	* libmp3lame/encoder.c (takehiro-2002_05_07-experimental):
+
+	trivial clean up
+
+2004-03-21 11:55  takehiro
+
+	* libmp3lame/: encoder.c, lame.c, quantize.c, tables.c, util.h
+	(takehiro-2002_05_07-experimental):
+
+	clean up and "possible" bug of resampling code.
+	- calculate resampling value with "sample_t" instead of "int".
+	- moved resampling initialization code into tables.c
+
+2004-03-21 10:37  takehiro
+
+	* libmp3lame/psymodel.c (takehiro-2002_05_07-experimental):
+
+	oops, remove gabage...
+
+2004-03-21 10:34  takehiro
+
+	* libmp3lame/: encoder.c, psymodel.c, psymodel.h
+	(takehiro-2002_05_07-experimental):
+
+	clean up internal APIs
+
+2004-03-21 10:33  takehiro
+
+	* libmp3lame/quantize.c (takehiro-2002_05_07-experimental):
+
+	fix prototype declaration, to clarify all the ASM code cannot run when FLOAT!=float
+
+2004-03-21 07:12  takehiro
+
+	* libmp3lame/: lame.c, util.c (takehiro-2002_05_07-experimental):
+
+	header file clean up (I hope it works...)
+
+2004-03-21 07:10  takehiro
+
+	* libmp3lame/: encoder.c, lame.c, util.h
+	(takehiro-2002_05_07-experimental):
+
+	do not use calloc in lame_encode_* functions.
+	and moved some functions for better conjunctions.
+
+2004-03-21 07:09  takehiro
+
+	* libmp3lame/quantize.c (takehiro-2002_05_07-experimental):
+
+	trivial
+
+2004-03-21 05:08  takehiro
+
+	* ACM/main.cpp (takehiro-2002_05_07-experimental):
+
+	fix build problem on mingw
+
+2004-03-20 17:28  takehiro
+
+	* libmp3lame/: lame.c, util.c, util.h
+	(takehiro-2002_05_07-experimental):
+
+	move fill_buffer() function and make it static and bit optimizing.
+
+2004-03-20 16:04  takehiro
+
+	* libmp3lame/: quantize.c, util.h, i386/quantSSE.nas
+	(takehiro-2002_05_07-experimental):
+
+	Faster quantization code, based on the ideas from the main line (done by Gaby).
+	about 2% faster on VBR. The same algorithm can be applied to the CBR, but
+	currently is not.
+
+2004-03-19 22:09  olcios
+
+	* libmp3lame/gain_analysis.c:
+
+	changed the pre-processor condition related to the x86's extended FP bug when compiled by GCC with optimizations
+
+2004-03-19 18:18  olcios
+
+	* libmp3lame/gain_analysis.c:
+
+	improved comment
+
+2004-03-19 13:17  olcios
+
+	* libmp3lame/gain_analysis.c:
+
+	workaround for the gcc ceil() bug when compiled with optimizations
+
+2004-03-18 22:00  olcios
+
+	* libmp3lame/gain_analysis.h:
+
+	fixed compile-time problem with uint32_t on gcc
+
+2004-03-18 16:11  takehiro
+
+	* libmp3lame/psymodel.c (takehiro-2002_05_07-experimental):
+
+	fix uninitialized memory access.
+
+2004-03-18 14:27  aleidinger
+
+	* libmp3lame/: gain_analysis.c, gain_analysis.h:
+
+	Replace Uint32_t and Int32_t with uint32_t and int32_t. There are only few
+	instances of them used, so there's no need to typedef new types for them.
+
+	I hope this fixes problems on OSX reported on lame-dev.
+
+	While I'm here, fix a cast (rgData->sampleWindow is long, not int).
+
+2004-03-17 18:56  aleidinger
+
+	* libmp3lame/: bitstream.c, gain_analysis.c, gain_analysis.h,
+	lame.c:
+
+	- remove config.h (prerequisite) include from gain_analysis.h
+	- make sure prerequisites get included in every file before gain_analysis.h
+
+2004-03-14 18:22  bouvigne
+
+	* libmp3lame/gain_analysis.h:
+
+	solved the potential data type problem
+
+2004-03-14 17:13  takehiro
+
+	* frontend/parse.c, include/lame.h, libmp3lame/VbrTag.c,
+	libmp3lame/VbrTag.h, libmp3lame/bitstream.c, libmp3lame/encoder.c,
+	libmp3lame/id3tag.c, libmp3lame/lame.c,
+	libmp3lame/mpglib_interface.c, libmp3lame/psymodel.c,
+	libmp3lame/quantize.c, libmp3lame/quantize_pvt.h,
+	libmp3lame/set_get.c, libmp3lame/set_get.h, libmp3lame/tables.c,
+	libmp3lame/takehiro.c, libmp3lame/util.c, libmp3lame/util.h,
+	mpglib/layer3.c, mpglib/mpg123.h, mpglib/tabinit.c
+	(takehiro-2002_05_07-experimental):
+
+	cosmetic changes.
+
+2004-03-14 16:19  takehiro
+
+	* ACM/readme.txt (takehiro-2002_05_07-experimental):
+
+	sync main branch
+
+2004-03-14 16:18  takehiro
+
+	* ACM/ACMStream.cpp (takehiro-2002_05_07-experimental):
+
+	sync main branch.
+
+2004-03-14 16:15  takehiro
+
+	* libmp3lame/libmp3lame_vc6.dsp (takehiro-2002_05_07-experimental):
+
+	fix MSVC6+NASM compilation
+
+2004-03-14 16:00  takehiro
+
+	* ACM/main.cpp (takehiro-2002_05_07-experimental):
+
+	oops, I removed too much.
+
+2004-03-14 13:47  takehiro
+
+	* frontend/brhist.h, libmp3lame/bitstream.c, libmp3lame/encoder.c,
+	libmp3lame/tables.c, libmp3lame/takehiro.c, libmp3lame/util.c
+	(takehiro-2002_05_07-experimental):
+
+	cosmetic and reduce warnings
+
+2004-03-14 12:46  takehiro
+
+	* libmp3lame/: bitstream.h, machine.h, psymodel.c, quantize_pvt.h,
+	tables.c, util.h (takehiro-2002_05_07-experimental):
+
+	fix build problem on vanilla(without ICC) VC6.
+	better ATH handling for psymodel
+	and some minor cosmetic change
+
+2004-03-14 12:44  takehiro
+
+	* libmp3lame/mpglib_interface.c (takehiro-2002_05_07-experimental):
+
+	cosmetic
+
+2004-03-14 12:43  takehiro
+
+	* libmp3lame/: gain_analysis.c, gain_analysis.h
+	(takehiro-2002_05_07-experimental):
+
+	backport from the main branch.
+	(only copied. not working currently).
+
+2004-03-14 11:50  takehiro
+
+	* libmp3lame/quantize.c (takehiro-2002_05_07-experimental):
+
+	better 8kHz/128kbps bit allocation.
+
+2004-03-14 06:17  takehiro
+
+	* mpglib/interface.c (takehiro-2002_05_07-experimental):
+
+	sync main branch (fix freeformat decoding bug done by Robert Hegemann)
+
+2004-03-13 14:06  takehiro
+
+	* libmp3lame/psymodel.c (takehiro-2002_05_07-experimental):
+
+	fix a warning.
+
+2004-03-13 13:00  takehiro
+
+	* Dll/BladeMP3EncDLL.c (takehiro-2002_05_07-experimental):
+
+	fix build problem on VC6+debug mode
+
+2004-03-13 12:59  takehiro
+
+	* libmp3lame/libmp3lame_vc6.dsp (takehiro-2002_05_07-experimental):
+
+	fix build problem on VC6
+
+2004-03-11 23:43  olcios
+
+	* libmp3lame/bitstream.c:
+
+	fixed a bug related to the usage of mpglib when decoding on the fly
+
+2004-03-11 19:35  olcios
+
+	* libmp3lame/lame.c:
+
+	fixed compile-time problem when mpglib is disabled
+
+2004-03-10 20:49  robert
+
+	* doc/html/: contributors.html, history.html:
+
+	history
+
+2004-03-10 00:50  robert
+
+	* mpglib/interface.c:
+
+	patch for freeformat decoding bug
+
+2004-03-09 19:04  bouvigne
+
+	* libmp3lame/lame.c:
+
+	typo
+
+2004-03-09 00:35  robert
+
+	* libmp3lame/vbrquantize.c:
+
+	found a sample which did not give bit identical result with the previous
+	patch. found out why and corrected it, so now the results for
+	find_scalefac_ave_[x34|ISO] are identical to the original code,
+	but --preset fast standard is ~7 percent faster now.
+
+2004-03-08 04:13  takehiro
+
+	* mpglib/layer1.c (takehiro-2002_05_07-experimental):
+
+	fix layer1 compilation problem.
+
+2004-03-08 04:12  takehiro
+
+	* libmp3lame/i386/choose_table.nas
+	(takehiro-2002_05_07-experimental):
+
+	remove unused label
+
+2004-03-08 04:04  takehiro
+
+	* libmp3lame/lame.c (takehiro-2002_05_07-experimental):
+
+	fix alignment work and build problem with icl(MS-Windows)
+
+2004-03-08 00:54  robert
+
+	* libmp3lame/vbrquantize.c:
+
+	faster "find_scalefac_ave_[x34|ISO]":
+	this patch gave bit identical results on all tested samples compared to
+	previous version, so I'm pretty much confident that I don't introduce
+	a new bug here.
+	the speeding up of this functions results in an overall speed increase of
+	almost 7 percent for --preset fast standard
+
+2004-03-07 23:55  robert
+
+	* Makefile.unix, Makefile.MSVC:
+
+	in case of single precision (FLOAT8==float) we have to make sure that
+	the mpglib uses REAL==float too. otherwise the decoder will moan about
+	too small buffers
+
+2004-03-07 14:18  takehiro
+
+	* mpglib/interface.c (takehiro-2002_05_07-experimental):
+
+	no Xing-VBR header except layer 3
+
+2004-03-06 17:52  takehiro
+
+	* libmp3lame/lame.c (takehiro-2002_05_07-experimental):
+
+	fix it ignores --scale option.
+
+2004-03-06 17:37  takehiro
+
+	* libmp3lame/i386/fft3dn.nas (takehiro-2002_05_07-experimental):
+
+	remove Japanese comments.
+
+2004-03-06 16:32  takehiro
+
+	* libmp3lame/: psymodel.h, tables.c
+	(takehiro-2002_05_07-experimental):
+
+	revert the last psymodel change, and implement the better way to archive
+	more precise frequency analysis in the lower frequency region. This is
+	done by changing frequency -> bark conversion equation.
+
+2004-03-06 16:02  takehiro
+
+	* libmp3lame/i386/choose_table.nas
+	(takehiro-2002_05_07-experimental):
+
+	remove Jananese comments.
+
+2004-03-06 15:36  bouvigne
+
+	* libmp3lame/version.h:
+
+	entering beta stage
+
+2004-03-06 15:34  bouvigne
+
+	* doc/html/history.html:
+
+	history
+
+2004-03-01 22:21  robert
+
+	* configMS.h, libmp3lame/version.h:
+
+	we are now at 3.96 alpha 4
+
+2004-03-01 22:20  robert
+
+	* libmp3lame/psymodel.c:
+
+	bug fix: the highly optimized loops did an off by one access resulting
+	in often invalid energy and threshold calculations. (both psy models
+	affected). added a workaround and some assertions.
+
+2004-03-01 15:11  takehiro
+
+	* libmp3lame/quantize.c (takehiro-2002_05_07-experimental):
+
+	fix for testcase... (oops, simple mistake)
+
+2004-02-29 19:55  robert
+
+	* libmp3lame/: bitstream.c, takehiro.c:
+
+	fixing the "huffman decode overrun" and "mp3x problem"
+
+2004-02-29 18:20  bouvigne
+
+	* doc/html/: contributors.html, history.html:
+
+	no message
+
+2004-02-29 18:12  takehiro
+
+	* libmp3lame/quantize.c (takehiro-2002_05_07-experimental):
+
+	fix for 8kHz with 128kbps.
+
+2004-02-29 17:58  takehiro
+
+	* libmp3lame/: psymodel.c, psymodel.h, tables.c, util.h
+	(takehiro-2002_05_07-experimental):
+
+	better partitioning for psymodel calculation (very much experimental!)
+
+2004-02-29 17:17  takehiro
+
+	* mpglib/layer1.c:
+
+	fix layer1 decoding bug
+
+2004-02-29 17:16  takehiro
+
+	* mpglib/layer1.c (takehiro-2002_05_07-experimental):
+
+	fix monural file decoding bug in layer1, reported by Goran Markovic.
+
+2004-02-26 17:20  takehiro
+
+	* frontend/get_audio.c:
+
+	fixed Layer2 decoding bug reported by Goran Markovic
+
+2004-02-26 16:31  takehiro
+
+	* frontend/get_audio.c (takehiro-2002_05_07-experimental):
+
+	fixed Layer2 decoding issue, reported by Goran Markovic.
+
+2004-02-25 22:10  robert
+
+	* libmp3lame/util.c:
+
+	fixing some aliasing problem in fastlog2 calculation
+
+2004-02-25 21:46  robert
+
+	* libmp3lame/vbrquantize.c:
+
+	getting rid of a warning about a function being defined but not used
+
+2004-02-25 21:46  robert
+
+	* libmp3lame/gain_analysis.c:
+
+	fixing code relying on compiler implementation details
+
+2004-02-25 21:41  robert
+
+	* frontend/parse.c, libmp3lame/lame.c, libmp3lame/psymodel.c,
+	libmp3lame/quantize.c, libmp3lame/VbrTag.c, libmp3lame/set_get.c,
+	libmp3lame/util.c:
+
+	getting rid of some compiler warnings:
+	- about too long string constants
+	- about C++ stylish comments
+	there is still a warning about the use of a C99 hexadecimal floating
+	constant in portableio.c. will this compile on older C-compilers?
+
+2004-02-24 02:18  takehiro
+
+	* testcase.mp3 (takehiro-2002_05_07-experimental):
+
+	testcase with new huffman coding.
+
+2004-02-24 01:57  olcios
+
+	* libmp3lame/lame.c:
+
+	fixed a bug with --resample and ReplayGain analysis of input data. With certain parameters the data sent to analysis was mangled (some samples missing, some doubled, some in the wrong order). With most natural music the error wasn't vast (below 1dB), but with e.g. a sine wave the gain error was audible.
+
+2004-02-23 19:48  bouvigne
+
+	* libmp3lame/gain_analysis.h:
+
+	now works under gcc, but I am not sure about the typedefs on different platforms.
+
+2004-02-23 18:53  bouvigne
+
+	* libmp3lame/: gain_analysis.h, util.h:
+
+	moved replaygain_t to gain_analysis.h
+
+2004-02-23 14:50  takehiro
+
+	* libmp3lame/takehiro.c (takehiro-2002_05_07-experimental):
+
+	improve lossless coding when all the quantized values in the same scalefactor band are even number.
+
+2004-02-22 21:17  bouvigne
+
+	* libmp3lame/: bitstream.c, gain_analysis.c, gain_analysis.h,
+	lame.c, util.c, util.h:
+
+	made ReplayGain reentrant
+
+2004-02-22 21:16  bouvigne
+
+	* libmp3lame/quantize_pvt.c:
+
+	yet another "usefullsize" bug (found by passing the python tests)
+
+2004-02-22 21:14  bouvigne
+
+	* test/: CBRABR.op, VBR.op, misc.op, shortCBRABR.op, shortVBR.op:
+
+	Updated test files.
+	As the cbr/abr and vbr ones are quite long, I also added some short ones.
+
+2004-02-17 00:37  robert
+
+	* libmp3lame/lame.c:
+
+	bug fix: in mono mode all block type where of short type due to forced
+	block type coupling
+
+2004-02-16 21:51  robert
+
+	* libmp3lame/gain_analysis.c:
+
+	bug fix by John Edwards (48 kHz replay gain segmentation fault)
+
+2004-02-15 21:39  robert
+
+	* libmp3lame/: lame.c, vbrquantize.c:
+
+	standard ISO quantization for vbr-mtrh
+
+2004-02-15 19:05  robert
+
+	* libmp3lame/: lame.c, takehiro.c:
+
+	bug fix: usefullsize may become negativ due to some optimizations
+
+2004-02-15 13:09  takehiro
+
+	* libmp3lame/id3tag.c (takehiro-2002_05_07-experimental):
+
+	sprintf -> snprintf and some trivial clean up.
+
+2004-02-15 01:20  robert
+
+	* libmp3lame/takehiro.c:
+
+	a simple -V9 -f line lets LAME crash,
+	there seems to be something wrong with scalefactor width
+	at least my inserted assertions indicate this
+
+2004-02-10 02:04  robert
+
+	* libmp3lame/vbrquantize.c:
+
+	try to make some use of max_nonzero_coeff in vbr-mtrh
+
+2004-02-08 21:58  takehiro
+
+	* frontend/: brhist.c, get_audio.c, get_audio.h, gtkanal.c,
+	lame.dsp, main.c, mp3rtp.c, parse.c, timestatus.c, timestatus.h
+	(takehiro-2002_05_07-experimental):
+
+	misc clean ups.
+	- gfp/gfc things
+	- mp3 decoding patch from Dmitriy Startsev
+	- remove an old file
+
+2004-02-08 21:57  takehiro
+
+	* mpglib/interface.c (takehiro-2002_05_07-experimental):
+
+	mp3 decoding patch from Dmitriy Startsev
+
+2004-02-08 19:00  bouvigne
+
+	* libmp3lame/presets.c:
+
+	reduced the number of short blocks
+
+2004-02-08 14:08  bouvigne
+
+	* Makefile.am, lame.dsw:
+
+	removed old workspace
+
+2004-02-08 12:44  bouvigne
+
+	* libmp3lame/: quantize_pvt.c, takehiro.c:
+
+	inverted a while statement, some int ->unsigned.
+	I hope that they will be safe this time.
+
+2004-02-08 03:10  robert
+
+	* libmp3lame/takehiro.c:
+
+	sorry Gabriel, reverting your signed->unsigned patch due to exceptions
+	while encoding awe32_20sec.wav using --preset standard
+
+2004-02-08 03:06  robert
+
+	* libmp3lame/quantize_pvt.c:
+
+	sorry Gabriel, reverting your signed->unsigned patch because of
+	exceptions in awe32_20sec.wav using --preset standard
+
+2004-02-08 03:01  robert
+
+	* libmp3lame/vbrquantize.c:
+
+	bug fix: scalefactors may have been read from uninitialized memory
+
+2004-02-08 02:12  robert
+
+	* libmp3lame/: takehiro.c, vbrquantize.c:
+
+	calculating xrpow_max for vbr_mtrh too
+
+2004-02-07 19:38  bouvigne
+
+	* libmp3lame/: quantize_pvt.c, takehiro.c:
+
+	some int -> unsigned int
+
+2004-02-06 16:56  takehiro
+
+	* frontend/get_audio.c, mpglib/interface.c:
+
+	mp3 decoding patch from Dmitriy Startsev
+
+2004-02-04 20:17  bouvigne
+
+	* libmp3lame/version.h:
+
+	bump alpha because of the fixed crash
+
+2004-02-04 20:16  bouvigne
+
+	* libmp3lame/takehiro.c:
+
+	fixed a crash in quantize_xrpow occuring when using low bitrates (32kbps)
+
+2004-02-02 15:20  olcios
+
+	* USAGE, doc/html/switchs.html:
+
+	reworded the RG part. Discussed with: Alexander Leidinger
+
+2004-02-02 14:17  olcios
+
+	* testcase.mp3:
+
+	oops, committed an experimental file, reverting back to 1.80
+
+2004-02-02 13:28  aleidinger
+
+	* configure:
+
+	regen
+
+2004-02-02 13:25  aleidinger
+
+	* configure.in:
+
+	Add a check for 64 bit off_t's ("LARGEFILE" support).
+
+	This may not be enough as lame uses ints and longs where other types
+	may be more correct, but it may work in some cases.
+
+	HOWTO provided by:	Dan Nelson <dnelson@allantgroup.com>
+
+2004-02-02 13:02  aleidinger
+
+	* doc/man/lame.1:
+
+	 - reformatted the replaygain part (less than 80 characters per line)
+	 - reworded some parts
+	 - add a note about the decoder requierement for the --decode,
+	   --replaygain-accurate and --clipdetect options
+
+	Discussed with:	Aleksander Korzynski
+
+2004-02-02 12:58  aleidinger
+
+	* config.h.in, configure:
+
+	regen
+
+2004-02-02 12:57  aleidinger
+
+	* configMS.h:
+
+	Add the DECODE_ON_THE_FLY define in the HAVE_MPGLIB case.
+
+2004-02-02 12:57  aleidinger
+
+	* configure.in, include/lame.h:
+
+	- enable bitrate histogram by default
+	  discussed with Gabriel in Sept. 03
+
+	- define DECODE_ON_THE_FLY for the replaygain feature in the HAVE_MPGLIB
+	  case too (moved from include/lame.h, I think it's cleaner this way)
+	  discussed with Aleksander Korzynski
+
+2004-02-02 12:38  aleidinger
+
+	* libmp3lame/id3tag.c:
+
+	Patch from Ti Kan <ti@amb.org>:
+	---snip---
+	Below is a patch to make Lame 3.95.1 compile and run on AIX, HP-UX,
+	IRIX, Solaris, UnixWare, SCO Open Server and SunOS 4.1.x.
+
+	The change involves the call to snprintf() in libmp3lame/id3tag.c.,
+	but snprintf() is not available on many of these platforms.  I know
+	that in general replacing snprintf() with sprintf() removes a layer
+	of string buffer overflow protection, but in this case it should
+	be safe because the size of string is bounded.
+	---snip---
+
+2004-01-31 20:05  olcios
+
+	* testcase.mp3, frontend/main.c, libmp3lame/lame.c:
+
+	disabled peak sample detection when LAME tag is not written into the file
+
+2004-01-29 16:39  bouvigne
+
+	* doc/html/history.html:
+
+	history
+
+2004-01-29 16:31  bouvigne
+
+	* libmp3lame/version.h:
+
+	bump alpha because of the fixed crashes
+
+2004-01-29 16:26  bouvigne
+
+	* libmp3lame/takehiro.c:
+
+	fixed bug #886989
+
+2004-01-26 14:00  olcios
+
+	* USAGE, doc/html/switchs.html, doc/man/lame.1, frontend/parse.c:
+
+	updated documentation and --longhelp on RG
+
+2004-01-26 12:05  olcios
+
+	* frontend/main.c, frontend/main.h, frontend/parse.c,
+	include/lame.h, libmp3lame/VbrTag.c, libmp3lame/VbrTag.h,
+	libmp3lame/bitstream.c, libmp3lame/lame.c, libmp3lame/set_get.c,
+	libmp3lame/util.h:
+
+	removed ReportLameTagProgress (it is not LAME API). Fixed --replaygain-accurate and --clipdetect.
+
+2004-01-25 10:12  takehiro
+
+	* libmp3lame/VbrTag.c (takehiro-2002_05_07-experimental):
+
+	fix a bug when the malloc is failed.
+
+2004-01-25 10:06  takehiro
+
+	* libmp3lame/: lame.c, VbrTag.c (takehiro-2002_05_07-experimental):
+
+	fix id3v2 tag output
+
+2004-01-25 10:05  takehiro
+
+	* libmp3lame/: VbrTag.h, id3tag.c, id3tag.h, quantize.h
+	(takehiro-2002_05_07-experimental):
+
+	trivial
+
+2004-01-25 08:44  takehiro
+
+	* libmp3lame/id3tag.c (takehiro-2002_05_07-experimental):
+
+	fix total track number buffer overrun bug.
+
+2004-01-25 08:34  takehiro
+
+	* libmp3lame/id3tag.c (takehiro-2002_05_07-experimental):
+
+	remove unused prototype
+
+2004-01-25 08:33  takehiro
+
+	* frontend/parse.c, libmp3lame/id3tag.c, libmp3lame/util.h
+	(takehiro-2002_05_07-experimental):
+
+	total track ID3 tag, requested at sf.net (Request ID #630803)
+	http://sourceforge.net/tracker/index.php?func=detail&aid=630803&group_id=290&atid=350290
+
+2004-01-25 08:30  takehiro
+
+	* lame_vc6.dsw (takehiro-2002_05_07-experimental):
+
+	sync with the main branch.(related mp3x projects)
+
+2004-01-25 08:28  takehiro
+
+	* frontend/lame.dsw (takehiro-2002_05_07-experimental):
+
+	remove old files.
+
+2004-01-25 05:45  takehiro
+
+	* frontend/parse.c (takehiro-2002_05_07-experimental):
+
+	added message about "--preset medium"
+
+2004-01-24 17:37  takehiro
+
+	* ACM/: ACM.cpp, ACM.h, ACMStream.cpp, ACMStream.h,
+	AEncodeProperties.cpp, DecodeStream.cpp, main.cpp
+	(takehiro-2002_05_07-experimental):
+
+	fix build problem(I hope...)
+
+2004-01-24 17:31  takehiro
+
+	* frontend/main.h (takehiro-2002_05_07-experimental):
+
+	sync the main branch.
+	- include limits.h only when there's the header.
+
+2004-01-24 17:28  takehiro
+
+	* frontend/get_audio.c (takehiro-2002_05_07-experimental):
+
+	sync with the main branch.
+	- remove message output during reading AIFF file.
+
+2004-01-21 13:50  aleidinger
+
+	* Makefile.in, ACM/Makefile.in, Dll/Makefile.in,
+	frontend/Makefile.in, libmp3lame/Makefile.in, mpglib/Makefile.in:
+
+	regen
+
+2004-01-21 13:48  aleidinger
+
+	* frontend/main.h:
+
+	only include limits.h if it is present on the system
+
+2004-01-21 10:17  bouvigne
+
+	* libmp3lame/quantize.c:
+
+	missing {} in last fix
+
+2004-01-21 09:41  bouvigne
+
+	* ACM/ACM.dsw, ACM/Makefile.am, ACM/lameACM.dsp, Makefile.B32,
+	Makefile.DJGPP, Makefile.am, PRESETS.draft, README.B32,
+	README.DJGPP, Dll/Example.dsp, Dll/Example.dsw, Dll/MP3EncDll.dsp,
+	Dll/MP3EncDll.dsw, Dll/Makefile.am, frontend/Makefile.am,
+	frontend/lame.dsp, frontend/lame.dsw, frontend/mp3x.dsp,
+	frontend/mp3x.dsw, libmp3lame/Makefile.am,
+	libmp3lame/libmp3lame.dsp, mpglib/Makefile.am, mpglib/mpglib.dsp:
+
+	removed old unmaintained files
+
+2004-01-20 18:41  bouvigne
+
+	* libmp3lame/quantize.c:
+
+	fixed a crash:
+	sometimes quantization could overflow because of big xr_pow values
+
+2004-01-20 17:04  takehiro
+
+	* Dll/Makefile.mingw32 (takehiro-2002_05_07-experimental):
+
+	remove unused include path
+
+2004-01-20 16:24  takehiro
+
+	* Dll/: BladeMP3EncDLL.c, BladeMP3EncDLL.h, Example.cpp,
+	Makefile.mingw32 (takehiro-2002_05_07-experimental):
+
+	DLL build and minor message fix. but we may need API fix, too...
+
+2004-01-20 06:22  takehiro
+
+	* frontend/main.c (takehiro-2002_05_07-experimental):
+
+	do not include "internal" header file.
+
+2004-01-18 15:54  takehiro
+
+	* configure (takehiro-2002_05_07-experimental):
+
+	regen
+
+2004-01-18 15:52  takehiro
+
+	* config.h.in, configure.in, mac/Precompile_Common.h
+	(takehiro-2002_05_07-experimental):
+
+	remove ieee754_float64_t
+
+2004-01-18 13:51  takehiro
+
+	* frontend/gtkanal.c, libmp3lame/quantize.c
+	(takehiro-2002_05_07-experimental):
+
+	mp3x: fix mean bits display when mono or mpeg2
+
+2004-01-18 13:48  takehiro
+
+	* frontend/parse.c (takehiro-2002_05_07-experimental):
+
+	make it sure not to call "experimental" switches when it is not DEBUG mode or ALPHA version.
+
+2004-01-18 13:21  takehiro
+
+	* frontend/gtkanal.c (takehiro-2002_05_07-experimental):
+
+	fix typo
+
+2004-01-18 12:52  takehiro
+
+	* Makefile.am, Makefile.in, PRESETS.draft, lame.dsw, ACM/ACM.dsw,
+	ACM/Makefile.am, ACM/Makefile.in, ACM/lameACM.dsp, Dll/Example.dsp,
+	Dll/Example.dsw, Dll/MP3EncDll.dsp, Dll/MP3EncDll.dsw,
+	Dll/Makefile.am, Dll/Makefile.in, frontend/Makefile.am,
+	frontend/Makefile.in, frontend/mp3x.dsp, frontend/mp3x.dsw,
+	frontend/mp3x_vc6.dsp, libmp3lame/Makefile.am,
+	libmp3lame/Makefile.in, libmp3lame/libmp3lame.dsp,
+	mpglib/Makefile.am, mpglib/Makefile.in, mpglib/mpglib.dsp
+	(takehiro-2002_05_07-experimental):
+
+	remove all the outdated files.
+	copied mp3x_vc6.dsp from main branch.
+
+2004-01-18 12:51  takehiro
+
+	* libmp3lame/: quantize.c, lame.c
+	(takehiro-2002_05_07-experimental):
+
+	cosmetic
+
+2004-01-18 12:47  takehiro
+
+	* configure (takehiro-2002_05_07-experimental):
+
+	regen
+
+2004-01-18 12:47  takehiro
+
+	* config.h.in, configure.in, libmp3lame/tables.c,
+	libmp3lame/tables.h, libmp3lame/takehiro.c
+	(takehiro-2002_05_07-experimental):
+
+	replace "unsigned long long" -> "uint64_t"
+
+2004-01-18 12:46  takehiro
+
+	* libmp3lame/VbrTag.c (takehiro-2002_05_07-experimental):
+
+	cosmetic
+
+2004-01-17 18:33  takehiro
+
+	* include/lame.h, libmp3lame/VbrTag.c, libmp3lame/VbrTag.h,
+	libmp3lame/bitstream.c, mpglib/interface.c
+	(takehiro-2002_05_07-experimental):
+
+	moved VBR header related code. now the vbr header structure is in lame.h.
+	This means applications can use the VBR header information via it.
+
+2004-01-17 18:21  takehiro
+
+	* libmp3lame/lame-analysis.h (takehiro-2002_05_07-experimental):
+
+	remove unused definition
+
+2004-01-17 18:19  takehiro
+
+	* libmp3lame/takehiro.c (takehiro-2002_05_07-experimental):
+
+	cosmetic
+
+2004-01-17 18:14  takehiro
+
+	* libmp3lame/: bitstream.c, lame.c
+	(takehiro-2002_05_07-experimental):
+
+	fix assert() condition.
+	remove unused function.
+
+2004-01-17 18:08  takehiro
+
+	* frontend/main.c, libmp3lame/VbrTag.c, libmp3lame/VbrTag.h
+	(takehiro-2002_05_07-experimental):
+
+	remove ReportLameTagProgress(). it is not LAME API at all...
+
+2004-01-17 18:07  takehiro
+
+	* libmp3lame/lame.c (takehiro-2002_05_07-experimental):
+
+	cosmetic
+
+2004-01-17 17:56  takehiro
+
+	* libmp3lame/: encoder.h, lame.c, machine.h, util.h
+	(takehiro-2002_05_07-experimental):
+
+	include file clean up.
+
+2004-01-17 17:44  takehiro
+
+	* libmp3lame/mpglib_interface.c, mpglib/interface.c,
+	mpglib/interface.h, mpglib/mpglib.h
+	(takehiro-2002_05_07-experimental):
+
+	changed InitMP3() and ExitMP3() API.
+
+2004-01-17 17:37  takehiro
+
+	* libmp3lame/util.h (takehiro-2002_05_07-experimental):
+
+	remove freegfc() prototype
+
+2004-01-17 17:35  takehiro
+
+	* libmp3lame/: util.c, lame.c (takehiro-2002_05_07-experimental):
+
+	simplify freegfc()
+
+2004-01-17 17:04  takehiro
+
+	* frontend/brhist.c, frontend/console.c, frontend/get_audio.c,
+	frontend/gpkplotting.c, frontend/gtkanal.c, frontend/main.c,
+	frontend/mp3rtp.c, frontend/rtp.c, include/lame.h,
+	libmp3lame/lame-analysis.h, libmp3lame/machine.h,
+	libmp3lame/mpglib_interface.c, mpglib/common.c,
+	mpglib/decode_i386.c, mpglib/interface.c, mpglib/layer1.c,
+	mpglib/layer2.c, mpglib/layer3.c, mpglib/mpg123.h
+	(takehiro-2002_05_07-experimental):
+
+	renamed "stereo" -> "channels" to make things more clear.
+	remove unused definitions.
+
+2004-01-17 14:25  takehiro
+
+	* README.B32, README.DJGPP (takehiro-2002_05_07-experimental):
+
+	too much old. removed.
+
+2004-01-17 14:23  takehiro
+
+	* API, HACKING, ACM/ACMStream.h, ACM/DecodeStream.h,
+	Dll/BladeMP3EncDLL.c, Dll/Makefile.mingw32, dshow/Encoder.h,
+	frontend/brhist.c, frontend/brhist.h, frontend/get_audio.c,
+	frontend/get_audio.h, frontend/gtkanal.c, frontend/gtkanal.h,
+	frontend/main.c, frontend/mp3rtp.c, frontend/mp3x.c,
+	frontend/parse.c, frontend/parse.h, frontend/timestatus.c,
+	frontend/timestatus.h, include/lame.h, libmp3lame/Makefile.am,
+	libmp3lame/Makefile.in, libmp3lame/VbrTag.c, libmp3lame/VbrTag.h,
+	libmp3lame/bitstream.c, libmp3lame/bitstream.h,
+	libmp3lame/encoder.c, libmp3lame/encoder.h, libmp3lame/id3tag.c,
+	libmp3lame/id3tag.h, libmp3lame/lame.c,
+	libmp3lame/lame_global_flags.h, libmp3lame/libmp3lame_vc6.dsp,
+	libmp3lame/mpglib_interface.c, libmp3lame/newmdct.c,
+	libmp3lame/newmdct.h, libmp3lame/psymodel.c, libmp3lame/psymodel.h,
+	libmp3lame/quantize.c, libmp3lame/quantize.h,
+	libmp3lame/quantize_pvt.h, libmp3lame/set_get.c,
+	libmp3lame/set_get.h, libmp3lame/tables.c, libmp3lame/takehiro.c,
+	libmp3lame/util.c, libmp3lame/util.h, mpglib/Makefile.am,
+	mpglib/Makefile.in, mpglib/common.c, mpglib/common.h,
+	mpglib/dct64_i386.c, mpglib/decode_i386.c, mpglib/interface.c,
+	mpglib/interface.h, mpglib/layer1.c, mpglib/layer1.h,
+	mpglib/layer2.c, mpglib/layer2.h, mpglib/layer3.c, mpglib/layer3.h,
+	mpglib/mpg123.h, mpglib/mpglib.h
+	(takehiro-2002_05_07-experimental):
+
+	Large API clean up.
+	To make MP3 decoding function reentrant, we need to replace the all API...
+
+	all the variables are now marked as "INTERNAL" and applications cannot
+	access them directly.
+
+	"lame_global_flags" structure is removed. Use "lame_t" instead.
+
+2004-01-17 14:11  takehiro
+
+	* Makefile.B32, Makefile.DJGPP (takehiro-2002_05_07-experimental):
+
+	They are too much outdated. removed.
+
+2004-01-17 11:34  takehiro
+
+	* config.h.in, configure.in, frontend/brhist.c,
+	frontend/get_audio.c, frontend/get_audio.h, frontend/gpkplotting.c,
+	frontend/gtkanal.c, frontend/main.c, frontend/main.h,
+	frontend/parse.c, frontend/portableio.c,
+	libmp3lame/mpglib_interface.c, mac/Precompile_Common.h,
+	mpglib/common.c, mpglib/interface.c, mpglib/layer2.c,
+	mpglib/layer3.c, mpglib/mpg123.h
+	(takehiro-2002_05_07-experimental):
+
+	cleanup. remove unused functions/definitions.
+
+2004-01-17 10:51  takehiro
+
+	* frontend/parse.h (takehiro-2002_05_07-experimental):
+
+	fix warning
+
+2004-01-17 10:45  takehiro
+
+	* frontend/parse.c (takehiro-2002_05_07-experimental):
+
+	fix usage message of --priority
+
+2004-01-17 10:17  takehiro
+
+	* frontend/get_audio.c, frontend/main.c, frontend/parse.c,
+	frontend/portableio.c, frontend/portableio.h, include/lame.h,
+	libmp3lame/VbrTag.c, libmp3lame/lame.c, libmp3lame/tables.c,
+	mpglib/common.c, mpglib/common.h, mpglib/tabinit.c
+	(takehiro-2002_05_07-experimental):
+
+	remove unused code and old APIs.
+	make some functions/arrays static.
+
+2004-01-17 09:35  takehiro
+
+	* libmp3lame/lame.c (takehiro-2002_05_07-experimental):
+
+	fix it does not write id3v2 at all.
+	make bitrate table static.
+
+2004-01-15 19:05  aleidinger
+
+	* frontend/parse.c:
+
+	We should not need errno... introduced in the last commit, remove it.
+
+2004-01-15 19:04  aleidinger
+
+	* frontend/parse.c:
+
+	Different fix for the priority parsing bug, uses less code.
+
+	Tested by:	Gabriel
+
+2004-01-15 13:54  bouvigne
+
+	* doc/html/history.html, ACM/TODO, doc/html/index.html,
+	doc/html/switchs.html:
+
+	doc, history
+
+2004-01-15 11:15  bouvigne
+
+	* include/lame.h, libmp3lame/lame.c,
+	libmp3lame/lame_global_flags.h, libmp3lame/set_get.c:
+
+	made lame.h identical with or without DECODE_ON_THE_FLY.
+	made gfp identical with or without DECODE_ON_THE_FLY.
+
+2004-01-15 01:24  olcios
+
+	* USAGE, frontend/parse.c, libmp3lame/lame.c:
+
+	changed the behaviour of --clipdetect to force RG analysis on decoded data (not input data).  Updated --longhelp and documentation
+
+2004-01-14 14:38  bouvigne
+
+	* libmp3lame/psymodel.c:
+
+	minor code change in mask_add
+
+2004-01-14 14:16  bouvigne
+
+	* libmp3lame/psymodel.c:
+
+	minor code change in mask_add
+
+2004-01-13 19:23  bouvigne
+
+	* frontend/parse.c:
+
+	isnumber ->is_number
+
+2004-01-13 18:35  glessard
+
+	* frontend/get_audio.c:
+
+	Removed a spurious fprintf that occurred during AIFF-C decoding.
+
+2004-01-13 17:36  bouvigne
+
+	* USAGE:
+
+	ReplayGain ->89dB
+
+2004-01-13 17:30  takehiro
+
+	* frontend/get_audio.c:
+
+	fix mp3 decoding...
+
+2004-01-13 13:30  bouvigne
+
+	* frontend/parse.c:
+
+	fixed issue when --priority is not followed by a number but by another
+	argument.
+
+	Btw, the situation is the same with a lot of other settings.
+
+2004-01-13 12:36  bouvigne
+
+	* libmp3lame/version.h:
+
+	3.96a1
+
+2004-01-12 18:09  takehiro
+
+	* libmp3lame/takehiro.c (takehiro-2002_05_07-experimental):
+
+	bit better diveding point of huffman coding.
+
+2004-01-12 17:23  takehiro
+
+	* TODO (takehiro-2002_05_07-experimental):
+
+	updated
+
+2004-01-12 16:54  takehiro
+
+	* libmp3lame/: lame.c, quantize.c, set_get.c, util.h
+	(takehiro-2002_05_07-experimental):
+
+	implement lame_set_maskingadjust() and lame_set_maskingadjust_short() as is in LAME3.x branch.
+
+	get_XX functions are not yet coded.
+
+2004-01-12 16:50  takehiro
+
+	* libmp3lame/: lame.c, set_get.c, tables.c
+	(takehiro-2002_05_07-experimental):
+
+	fix it ignores --athlower and --athcurve option (always use default setting)
+	and clean up ATH related functions.
+
+2004-01-12 14:49  takehiro
+
+	* frontend/get_audio.c (takehiro-2002_05_07-experimental):
+
+	better mp3 file header analysis (and bugfix).
+
+2004-01-12 13:44  takehiro
+
+	* libmp3lame/psymodel.c (takehiro-2002_05_07-experimental):
+
+	consider subblock position when calculating the PE value
+	(usually, subblock 3 needs more bits than subblock 1)
+
+2004-01-12 13:40  takehiro
+
+	* libmp3lame/psymodel.c (takehiro-2002_05_07-experimental):
+
+	cosmetic
+
+2004-01-12 09:03  bouvigne
+
+	* doc/html/history.html:
+
+	history
+
+2004-01-12 08:59  bouvigne
+
+	* libmp3lame/gain_analysis.c:
+
+	changed RG level to 89dB
+
+2004-01-12 08:42  bouvigne
+
+	* libmp3lame/version.h:
+
+	back into 3.95 because of the fixed crash
+
+2004-01-12 08:41  bouvigne
+
+	* libmp3lame/takehiro.c:
+
+	fixed a potential crash with fast vbr (introduced by myself)
+
+2004-01-12 07:17  takehiro
+
+	* frontend/parse.c, include/lame.h, libmp3lame/lame.c,
+	libmp3lame/lame_global_flags.h, libmp3lame/psymodel.c,
+	libmp3lame/set_get.c (takehiro-2002_05_07-experimental):
+
+	added "--sameblock" option, to help the playback problems on some buggy decoders.(like some DVD/CD-R mp3 player)
+
+2004-01-12 06:50  takehiro
+
+	* frontend/parse.c, libmp3lame/set_get.c
+	(takehiro-2002_05_07-experimental):
+
+	clean up quality setting.
+
+2004-01-11 15:39  takehiro
+
+	* libmp3lame/quantize.c (takehiro-2002_05_07-experimental):
+
+	fix for short block i-stereo band mis-selection.
+
+2004-01-11 15:01  bouvigne
+
+	* libmp3lame/lame.c:
+
+	small cleanup in the lowpass/samplefreq selection code
+
+2004-01-11 14:39  takehiro
+
+	* libmp3lame/quantize.c (takehiro-2002_05_07-experimental):
+
+	quick fix for i-stereo. it accidentially uses i-stereo on the scalefactor
+	where we do not want to use (and where we do not set the direction).
+
+2004-01-11 14:04  takehiro
+
+	* config.h.in, configure (takehiro-2002_05_07-experimental):
+
+	regen
+
+2004-01-11 13:37  takehiro
+
+	* configure.in, mac/Precompile_Common.h
+	(takehiro-2002_05_07-experimental):
+
+	remove IEEE854_float80
+
+2004-01-11 12:46  takehiro
+
+	* testcase.mp3 (takehiro-2002_05_07-experimental):
+
+	regen
+
+2004-01-11 12:45  takehiro
+
+	* libmp3lame/tables.c (takehiro-2002_05_07-experimental):
+
+	fix the fatal reservoir usage bug.
+	- meaning of "--nores" was opposite.
+	- it does not use reservoir at all when VBR.
+
+2004-01-11 12:02  takehiro
+
+	* libmp3lame/VbrTag.c (takehiro-2002_05_07-experimental):
+
+	fix Tag problem when CBR.
+
+2004-01-11 12:01  takehiro
+
+	* libmp3lame/VbrTag.c (takehiro-2002_05_07-experimental):
+
+	cosmetic
+
+2004-01-11 11:56  takehiro
+
+	* frontend/mp3rtp.c (takehiro-2002_05_07-experimental):
+
+	rtp cannot send vbr header.
+
+2004-01-11 11:37  takehiro
+
+	* libmp3lame/: VbrTag.c, VbrTag.h
+	(takehiro-2002_05_07-experimental):
+
+	make PutLameVBR() as static
+
+2004-01-11 11:22  aleidinger
+
+	* configure:
+
+	regen
+
+2004-01-11 11:20  aleidinger
+
+	* configure.in:
+
+	Welcome to 3.96.
+
+2004-01-11 10:21  bouvigne
+
+	* libmp3lame/version.h:
+
+	We are now in 3.96
+
+2004-01-11 10:03  takehiro
+
+	* frontend/: get_audio.c, get_audio.h
+	(takehiro-2002_05_07-experimental):
+
+	ignore the MPEG header whose layer is not same as the filename.
+
+2004-01-11 09:56  takehiro
+
+	* frontend/get_audio.h (takehiro-2002_05_07-experimental):
+
+	fix build problem with libsndfile.
+
+2004-01-11 02:21  takehiro
+
+	* libmp3lame/tables.c (takehiro-2002_05_07-experimental):
+
+	remove unused tables.
+
+2004-01-11 01:19  takehiro
+
+	* testcase.mp3, libmp3lame/tables.c, libmp3lame/tables.h,
+	libmp3lame/takehiro.c, libmp3lame/i386/choose_table.nas
+	(takehiro-2002_05_07-experimental):
+
+	choose from 4 code table when ixmax = 2, 3, ..., 7
+
+2004-01-10 22:47  takehiro
+
+	* libmp3lame/i386/choose_table.nas
+	(takehiro-2002_05_07-experimental):
+
+	cosmetic
+
+2004-01-10 21:20  olcios
+
+	* doc/html/history.html:
+
+	cosmetic
+
+2004-01-10 20:38  takehiro
+
+	* libmp3lame/quantize.c (takehiro-2002_05_07-experimental):
+
+	fix mp3x sometimes crashes.
+
+2004-01-10 20:31  takehiro
+
+	* configure (takehiro-2002_05_07-experimental):
+
+	regen by hand
+
+2004-01-10 20:29  takehiro
+
+	* Makefile.B32, Makefile.unix, config.h.in, configure.in,
+	frontend/mp3x.dsp (takehiro-2002_05_07-experimental):
+
+	remove symbol HAVE_GTK
+
+2004-01-10 20:20  takehiro
+
+	* libmp3lame/psymodel.c (takehiro-2002_05_07-experimental):
+
+	trivial
+
+2004-01-10 20:16  takehiro
+
+	* frontend/mp3x.c, libmp3lame/lame.c, libmp3lame/set_get.c,
+	libmp3lame/set_get.h, mpglib/layer3.c
+	(takehiro-2002_05_07-experimental):
+
+	clean up and fix analyzer hook related code.
+
+2004-01-10 20:15  takehiro
+
+	* libmp3lame/takehiro.c (takehiro-2002_05_07-experimental):
+
+	trivial
+
+2004-01-10 19:34  takehiro
+
+	* libmp3lame/: bitstream.c, tables.c, tables.h, takehiro.c,
+	i386/choose_table.nas (takehiro-2002_05_07-experimental):
+
+	clean up huffman coding tables.
+
+2004-01-10 19:24  takehiro
+
+	* testcase.mp3, libmp3lame/bitstream.c, libmp3lame/tables.c,
+	libmp3lame/takehiro.c, libmp3lame/i386/choose_table.nas
+	(takehiro-2002_05_07-experimental):
+
+	little bit better huffman coding when ix_max = 2
+
+2004-01-10 18:25  takehiro
+
+	* testcase.mp3, libmp3lame/tables.c, libmp3lame/tables.h,
+	libmp3lame/takehiro.c, libmp3lame/i386/choose_table.nas
+	(takehiro-2002_05_07-experimental):
+
+	little bit better huffman coding when ix_max is 1.
+
+2004-01-10 17:28  olcios
+
+	* USAGE:
+
+	cosmetic change
+
+2004-01-10 16:14  takehiro
+
+	* libmp3lame/lame.c:
+
+	fix the display of lowpass fileter config.
+
+2004-01-10 16:01  takehiro
+
+	* libmp3lame/VbrTag.c (takehiro-2002_05_07-experimental):
+
+	main line merge.
+	- Gaby's VBRtag fix (do not include the vbr header into the vbr seek table as it breaks a player).
+
+2004-01-10 15:57  takehiro
+
+	* ACM/ACMStream.cpp (takehiro-2002_05_07-experimental):
+
+	main line merge
+	- Gaby's buffer size fix.
+
+2004-01-10 12:59  takehiro
+
+	* libmp3lame/bitstream.c (takehiro-2002_05_07-experimental):
+
+	added one more error check.
+
+2004-01-10 12:31  takehiro
+
+	* TODO (takehiro-2002_05_07-experimental):
+
+	update
+
+2004-01-10 12:29  aleidinger
+
+	* testcase.mp3:
+
+	testcase for 3.95
+
+2004-01-10 12:29  takehiro
+
+	* doc/html/history.html:
+
+	added mpglib fix
+
+2004-01-10 12:18  aleidinger
+
+	* ChangeLog:
+
+	update CVS history
+
 2004-01-10 12:13  aleidinger
 
 	* libmp3lame/version.h:
