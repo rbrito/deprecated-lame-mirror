@@ -588,8 +588,8 @@ inc_scalefac_scale (
                 xrpow[j+l] *= ifqstep34;
         }
         scalefac->l[sfb]  = s >> 1;
-        cod_info->preflag = 0;
     }
+    cod_info->preflag = 0;
 
     for (sfb = cod_info->sfb_smin; sfb < SBPSY_s; sfb++) {
 	int width = gfc->scalefac_band.s[sfb+1] - gfc->scalefac_band.s[sfb];
@@ -862,7 +862,6 @@ outer_loop (
             memcpy(cod_info->l3_enc, l3_enc_w, sizeof(int)*576);
             break;
         }
-
 
         /* check if this quantization is better
          * than our saved quantization */
