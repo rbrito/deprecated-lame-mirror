@@ -23,7 +23,6 @@
 #	ASM=<anything but YES>     ->  no NASM nor MMX
 #	MMX=<anything but YES>     ->  do not assemble MMX code
 #	CFG=<anything but RH>      ->  disable Robert's modifications
-#	OGG=<anything>             ->  have Vorbis library, use it
 #	CPU=P1                     ->  optimize for Pentium instead of P II/III
 #	CPU=P2                     ->  optimize for Pentium II/III, you need a PII or better
 #	CPU=P3                     ->  optimize for Pentium III, you need a PIII or better
@@ -87,9 +86,6 @@ OFF = win32
 !	ENDIF 
 !	IF "$(GTK)" == "YES"
 !	MESSAGE + GTK
-!	ENDIF 
-!	IF "$(OGG)" != ""
-!	MESSAGE + Ogg-Vorbis
 !	ENDIF 
 !	IF "$(COMP)" == "INTEL"
 !	MESSAGE using INTEL COMPILER
@@ -325,15 +321,6 @@ PGM = $(T_MP3X) $(PGM)
 
 
 
-#__ VORBIS SUPPORT ____________________________________________________________
-!	IF "$(OGG)" != ""
-VORBIS = /DHAVE_VORBIS -I../vorbis/include
-VORBISLIB = ../vorbis/lib/vorbis.lib
-!	ENDIF
-#____________________________________________________________ VORBIS SUPPORT __
-
-
-
 #__ MPG123 DECODING ___________________________________________________________
 #
 #	uncomment the following if you want decoding support
@@ -363,7 +350,7 @@ CPP_OPTS = $(CPP_OPTS)
 
 
 
-CC_SWITCHES = $(CC_OPTS) $(SNDLIB) $(VORBIS) $(BRHIST_SWITCH) \
+CC_SWITCHES = $(CC_OPTS) $(SNDLIB) $(BRHIST_SWITCH) \
               $(TIMER_SWITCH) $(GTK_OPTS) /DBS_FORMAT=BINARY
 
 LN_SWITCHES = $(LN_OPTS)
@@ -403,7 +390,6 @@ lamelib_sources = \
 	libmp3lame/tables.c \
 	libmp3lame/takehiro.c \
 	libmp3lame/util.c \
-	libmp3lame/vorbis_interface.c \
 	libmp3lame/mpglib_interface.c \
 	libmp3lame/VbrTag.c \
 	libmp3lame/presets.c \
@@ -500,21 +486,21 @@ libB:	$(MPG_OBJ)
 lib: $(ASM_OBJ) libA libB
 
 $(T_LAME) : config.h lib common $(LAME_OBJ)
-	@$(LN) $(LN_OUT)$@ $(LN_SWITCHES) $(LIBSNDFILE) $(VORBISLIB) \
+	@$(LN) $(LN_OUT)$@ $(LN_SWITCHES) $(LIBSNDFILE) \
 	       $(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ) $(CMMN_OBJ) $(LAME_OBJ)
 	@echo.
 	@echo --=*  $@ ready  *=--
 	@echo.
 
 $(T_MP3X) : config.h lib common $(MPX_OBJ)
-	@$(LN) $(LN_OUT)$@ $(LN_SWITCHES) $(GTK_LIBS) $(LIBSNDFILE) $(VORBISLIB) \
+	@$(LN) $(LN_OUT)$@ $(LN_SWITCHES) $(GTK_LIBS) $(LIBSNDFILE) \
 	       $(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ) $(CMMN_OBJ) $(MPX_OBJ)
 	@echo.
 	@echo --=*  $@ ready  *=--
 	@echo.
 
 $(T_LDLL) : config.h lib $(DLL_OBJ)
-	@$(LN) $(LN_OUT)$@ $(LN_SWITCHES) $(LN_DLL) $(LIBSNDFILE) $(VORBISLIB) \
+	@$(LN) $(LN_OUT)$@ $(LN_SWITCHES) $(LN_DLL) $(LIBSNDFILE) \
 	       $(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ) $(DLL_OBJ)
 	@echo.
 	@echo --=*  $@ ready  *=--

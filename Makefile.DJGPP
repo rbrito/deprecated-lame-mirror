@@ -39,15 +39,6 @@ CPP_OPTS += -DUSE_LAYER_1 -DUSE_LAYER_2
 
 
 ##########################################################################
-# Define these in the OS specific sections below to compile in support
-# for the Ogg Vorbis audio format (both decoding and encoding)
-# 
-# VORBIS = -DHAVEVORBIS  -I ../vorbis/include
-# VORBIS_LIB = -L ../vorbis/lib -lvorbis
-##########################################################################
-
-
-##########################################################################
 # Define these in the section below to compile in code for:
 #
 # SNDLIB =                no file i/o 
@@ -92,8 +83,7 @@ CC_OPTS = -O2
 # 10/99 added -D__NO_MATH_INLINES to fix a bug in *all* versions of
 # gcc 2.8+ as of 10/99.  
 
-CC_SWITCHES = -DHAVE_CONFIG_H -DNDEBUG -D__NO_MATH_INLINES $(CC_OPTS) $(SNDLIB)  \
-$(VORBIS) 
+CC_SWITCHES = -DHAVE_CONFIG_H -DNDEBUG -D__NO_MATH_INLINES $(CC_OPTS) $(SNDLIB)
 frontend_sources = \
 	frontend/brhist.c \
 	frontend/get_audio.c \
@@ -119,7 +109,6 @@ lib_sources = \
 	libmp3lame/tables.c \
 	libmp3lame/takehiro.c \
 	libmp3lame/util.c \
-	libmp3lame/vorbis_interface.c \
 	libmp3lame/mpglib_interface.c \
 	libmp3lame/VbrTag.c \
 	libmp3lame/version.c \
@@ -175,7 +164,7 @@ config.h: configMS.h
 
 $(PGM): frontend/main.o $(frontend_obj) $(MP3LIB)
 	$(CC) $(CC_OPTS) -o frontend/$(PGM)  frontend/main.o  $(frontend_obj) \
-	$(MP3LIB) $(LIBS) $(LIBSNDFILE) $(VORBIS_LIB)
+	$(MP3LIB) $(LIBS) $(LIBSNDFILE)
 
 libmp3lame/libmp3lame.a:  $(lib_obj) 
 #       cd libmp3lame

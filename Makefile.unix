@@ -71,14 +71,6 @@ ifeq ($(iARCH),x86)
 endif
 
 ##########################################################################
-# Define these in the OS specific sections below to compile in support
-# for the Ogg Vorbis audio format (both decoding and encoding)
-# 
-# VORBIS = -DHAVE_VORBIS  -I ../vorbis/include
-# VORBIS_LIB = -L ../vorbis/lib -lvorbis
-##########################################################################
-
-##########################################################################
 # Define these in the OS specific sections below to compile in code 
 # for the optional VBR bitrate histogram.  
 # Requires ncurses, but libtermcap also works.  
@@ -135,11 +127,6 @@ ifeq ($(UNAME),Linux)
 #  uncomment to use LIBSNDFILE
 #   SNDLIB = -DLIBSNDFILE
 #   LIBSNDFILE=-lsndfile 
-
-# uncomment to compile in Vorbis support
-#   VORBIS = -DHAVE_VORBIS -I/home/mt/mp3/vorbis/include
-#   VORBIS_LIB = -L/home/mt/mp3/vorbis/lib -lvorbis
-
 
 # suggested for gcc-2.7.x
 #   CC_OPTS =  -O3 -fomit-frame-pointer -funroll-loops -ffast-math  -finline-functions -Wall -pedantic
@@ -449,8 +436,7 @@ else
 CC_SWITCHES = -D__NO_MATH_INLINES  # only needed by some older glibc
 endif
 
-CC_SWITCHES += -DNDEBUG $(CC_OPTS) $(SNDLIB) $(GTK) \
-$(BRHIST_SWITCH) $(VORBIS) 
+CC_SWITCHES += -DNDEBUG $(CC_OPTS) $(SNDLIB) $(GTK) $(BRHIST_SWITCH)
 frontend_sources = \
 	frontend/amiga_mpega.c \
         frontend/brhist.c \
@@ -476,7 +462,6 @@ lib_sources = \
 	libmp3lame/tables.c \
 	libmp3lame/takehiro.c \
 	libmp3lame/util.c \
-	libmp3lame/vorbis_interface.c \
 	libmp3lame/mpglib_interface.c \
         libmp3lame/VbrTag.c \
         libmp3lame/version.c \
@@ -569,16 +554,15 @@ config.h: configMS.h
 
 frontend/$(PGM):	frontend/main.o $(frontend_obj)  $(MP3LIB)
 	$(CC) $(CC_OPTS) -o frontend/$(PGM)  frontend/main.o $(frontend_obj) \
-        $(MP3LIB) $(LIBS) $(LIBSNDFILE) $(LIBTERMCAP) \
-        $(VORBIS_LIB)
+        $(MP3LIB) $(LIBS) $(LIBSNDFILE) $(LIBTERMCAP)
 
 mp3x:   frontend/mp3x.o $(frontend_obj) $(gtk_obj) $(MP3LIB)
 	$(CC) $(CC_OPTS) -o frontend/mp3x frontend/mp3x.o $(frontend_obj) $(gtk_obj) $(MP3LIB) \
-        $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
+        $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP)
 
 mp3rtp:	frontend/rtp.o frontend/mp3rtp.o  $(frontend_obj) $(MP3LIB)
 	$(CC) $(CC_OPTS) -o frontend/mp3rtp frontend/mp3rtp.o frontend/rtp.o $(frontend_obj) $(MP3LIB) \
-        $(LIBS) $(LIBSNDFILE) $(LIBTERMCAP) $(VORBIS_LIB)
+        $(LIBS) $(LIBSNDFILE) $(LIBTERMCAP)
 
 libmp3lame/libmp3lame.a:  $(lib_obj)
 	$(AR) cr libmp3lame/libmp3lame.a  $(lib_obj)
