@@ -1343,6 +1343,7 @@ int lame_init(lame_global_flags *gfp)
   gfp->VBR_q=4;
   gfp->VBR_min_bitrate_kbps=0;
   gfp->VBR_max_bitrate_kbps=0;
+  gfp->VBR_hard_min=0;
 
   gfc->pcmbitwidth = 16;
   gfc->resample_ratio=1;

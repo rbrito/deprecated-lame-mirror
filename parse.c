@@ -625,7 +625,7 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	  gfp->VBR_max_bitrate_kbps=atoi(arg); 
 	  break;	
 	case 'F':        
-	  gfp->VBR_hard_min;
+	  gfp->VBR_hard_min=1;
 	  break;	
 	case 't':  /* dont write VBR tag */
 	  gfp->bWriteVbrTag=0;

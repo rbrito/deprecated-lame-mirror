@@ -1,8 +1,14 @@
-# Makefile.MSVC: MSVC Makefile for LAME 3.57beta
+# Makefile.MSVC: MSVC Makefile for LAME 3.81 (alpha1)
 
 PGM = lame
-CC = cl
-LN = link
+
+# Microsoft C options
+# CC = cl
+# LN = link
+
+# Intel 4.5 compiler
+CC = icl
+LN = xilink
 
 # debugging options
 # CC_OPTS = /nologo /Zi /Ge /GZ
@@ -13,18 +19,24 @@ LN = link
 # LN_OPTS = /nologo /debug:full /debugtype:cv /fixed:no /profile
 
 # release options
-CC_OPTS = /nologo /O2ab2gitwy /G6AFs /DNDEBUG 
+# CC_OPTS = /nologo /O2ab2gitwy /G6AFs /DNDEBUG 
+# LN_OPTS = /nologo
+
+# Intel 4.5 options
+CC_OPTS = /nologo /DNDEBUG /Qunroll /O2 /G5AFs /QaxM /Qipo_obj /QIfist- 
 LN_OPTS = /nologo
 
 GTK =
 GTKLIBS =
-SNDLIB =
+SNDLIB = /DLAMESNDFILE
 LIBSNDFILE =
 LIBS =
 MAKEDEP =
 TIMER_SWITCH =
-BRHIST_SWITCH =
+BRHIST_SWITCH = # /DBRHIST
 LIBTERMCAP =
+
+CPP_OPTS = /DHAVEMPGLIB /DLAMEPARSE
 
 CC_SWITCHES = $(CC_OPTS) $(DISTRIB) $(SNDLIB) $(GTK) \
               /DBS_FORMAT=BINARY $(TIMER_SWITCH) $(BRHIST_SWITCH)
@@ -32,16 +44,16 @@ LN_SWITCHES = $(LN_OPTS)
 
 c_sources = \
  main.c \
+        gtkanal.c \
+        gpkplotting.c \
  brhist.c \
  bitstream.c \
- formatBitstream.c \
  fft.c \
  get_audio.c \
- l3bitstream.c \
-        id3tag.c \
+ id3tag.c \
  ieeefloat.c \
-        lame.c \
-        newmdct.c \
+ lame.c \
+ newmdct.c \
  parse.c \
  portableio.c \
  psymodel.c \
@@ -53,22 +65,20 @@ c_sources = \
  takehiro.c \
  timestatus.c \
  util.c \
-        VbrTag.c \
-        version.c \
-        gtkanal.c \
-        gpkplotting.c \
-        mpglib/common.c \
-        mpglib/dct64_i386.c \
-        mpglib/decode_i386.c \
-        mpglib/layer3.c \
-        mpglib/tabinit.c \
-        mpglib/interface.c \
-        mpglib/main.c 
+ VbrTag.c \
+ version.c \
+ mpglib/common.c \
+ mpglib/dct64_i386.c \
+ mpglib/decode_i386.c \
+ mpglib/layer3.c \
+ mpglib/tabinit.c \
+ mpglib/interface.c \
+ mpglib/main.c 
 
 OBJ = $(c_sources:.c=.obj)
 
 .c.obj:
- @$(CC) $(CC_SWITCHES) /c $< /Fo$@
+ @$(CC) $(CC_SWITCHES) $(CPP_OPTS) /c $< /Fo$@
 
 $(PGM).exe: $(OBJ) Makefile.MSVC
  @echo $(PGM).exe

@@ -101,15 +101,6 @@ ifeq ($(UNAME),Linux)
 #   CC_OPTS =  -DDEBUG -UNDEBUG  -O -Wall -g -DABORTFP 
 
 
-
-# The following features are experimental code: 
-# I would recommend them, but they are *not* part of official LAME.
-# (RH 2000-03-31)
-#                                                       Robert.Hegemann@gmx.de
-#-----------------------------------------------------------------------------
-#   FEATURES  = -DRH_QUALITY_CONTROL  # tuned VBR quality control
-#   FEATURES += -DRH_SIDE_VBR         # turns side channel reduction off (VBR)
-#
 # these options for gcc-2.95.2 to produce fast code
 #   CC_OPTS = $(FEATURES)\
 #	-Wall -O9 -fomit-frame-pointer -march=pentium \
