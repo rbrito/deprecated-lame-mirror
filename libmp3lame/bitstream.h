@@ -32,7 +32,7 @@ void add_dummy_byte (lame_internal_flags* gfc, unsigned char val);
 
 int  copy_buffer(lame_internal_flags *gfc,unsigned char *buffer,int buffer_size,int update_crc);
 void init_bit_stream_w(lame_global_flags *gfc);
-void CRC_writeheader (lame_internal_flags *gfc, char *buffer);
+void CRC_writeheader (char *buffer, int len);
 int compute_flushbits(const lame_global_flags *gfp, int *nbytes);
 
 

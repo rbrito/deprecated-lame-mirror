@@ -35,11 +35,6 @@
 #include <dmalloc.h>
 #endif
 
-/* unsigned int is at least this large:  */
-/* we work with ints, so when doing bit manipulation, we limit
- * ourselves to MAX_LENGTH-2 just to be on the safe side */
-#define MAX_LENGTH      32  
-
 /***********************************************************************
  * compute bits-per-frame
  **********************************************************************/
@@ -87,136 +82,6 @@ putbits(Bit_stream_struc *bs, int val, int j)
     putbits24(bs, val, j);
 }
 
-/*
-  Some combinations of bitrate, Fs, and stereo make it impossible to stuff
-  out a frame using just main_data, due to the limited number of bits to
-  indicate main_data_length. In these situations, we put stuffing bits into
-  the ancillary data...
-*/
-
-inline static void
-drain_into_ancillary(lame_internal_flags *gfc, int remainingBits)
-{
-    Bit_stream_struc *bs = &gfc->bs;
-    int i, pad;
-    assert(remainingBits >= 0);
-
-    if (remainingBits >= 8) {
-	putbits24(bs,0x4c,8);
-	remainingBits -= 8;
-    }
-    if (remainingBits >= 8) {
-	putbits24(bs,0x41,8);
-	remainingBits -= 8;
-    }
-    if (remainingBits >= 8) {
-	putbits24(bs,0x4d,8);
-	remainingBits -= 8;
-    }
-    if (remainingBits >= 8) {
-	putbits24(bs,0x45,8);
-	remainingBits -= 8;
-    }
-
-    pad = 0xaa;
-    if (remainingBits >= 8) {
-	const char *version = get_lame_short_version ();
-	for (i=0; remainingBits >=8 ; ++i) {
-	    if (i < strlen(version))
-		putbits24(bs,version[i],8);
-	    else
-		putbits24(bs,pad,8);
-	    remainingBits -= 8;
-	}
-    }
-
-    if (remainingBits)
-	putbits24(bs, pad >> (8 - remainingBits), remainingBits);
-}
-
-/*write N bits into the header */
-inline static int
-writeheader(char *p, int val, int j, int ptr)
-{
-    p += ptr >> 3;
-    assert(0 < j && j <= 16);
-    val <<= (24 - j - (ptr&7));
-    p[0] |= val >> 16;
-    p[1]  = val >> 8;
-    p[2]  = val;
-    return ptr + j;
-}
-
-static int
-CRC_update(int value, int crc)
-{
-    int i;
-    value <<= 8;
-    for (i = 0; i < 8; i++) {
-	value <<= 1;
-	crc <<= 1;
-
-	if (((crc ^ value) & 0x10000))
-	    crc ^= CRC16_POLYNOMIAL;
-    }
-    return crc;
-}
-
-static int
-writeTableHeader(lame_internal_flags *gfc, gr_info *gi, int ptr, char *p)
-{
-    static const int blockConv[] = {1, 3, 2};
-    if (gi->block_type != NORM_TYPE) {
-	ptr = writeheader(p, 1, 1, ptr); /* window_switching_flag */
-	ptr = writeheader(p, blockConv[gi->block_type-1], 2, ptr);
-	ptr = writeheader(p, gi->mixed_block_flag, 1, ptr);
-
-	if (gi->table_select[0] == 14)
-	    gi->table_select[0] = 16;
-	ptr = writeheader(p, gi->table_select[0],  5, ptr);
-	if (gi->table_select[1] == 14)
-	    gi->table_select[1] = 16;
-	ptr = writeheader(p, gi->table_select[1],  5, ptr);
-
-	ptr = writeheader(p, gi->subblock_gain[0], 3, ptr);
-	ptr = writeheader(p, gi->subblock_gain[1], 3, ptr);
-	ptr = writeheader(p, gi->subblock_gain[2], 3, ptr);
-    } else {
-	ptr++; /* window_switching_flag */
-	if (gi->table_select[0] == 14)
-	    gi->table_select[0] = 16;
-	ptr = writeheader(p, gi->table_select[0], 5, ptr);
-	if (gi->table_select[1] == 14)
-	    gi->table_select[1] = 16;
-	ptr = writeheader(p, gi->table_select[1], 5, ptr);
-	if (gi->table_select[2] == 14)
-	    gi->table_select[2] = 16;
-	ptr = writeheader(p, gi->table_select[2], 5, ptr);
-
-	assert(gi->region0_count < 16U);
-	assert(gi->region1_count < 8U);
-	ptr = writeheader(p, gi->region0_count, 4, ptr);
-	ptr = writeheader(p, gi->region1_count, 3, ptr);
-    }
-    return ptr;
-}
-
-void
-CRC_writeheader(lame_internal_flags *gfc, char *header)
-{
-    int crc = 0xffff; /* (jo) init crc16 for error_protection */
-    int i;
-
-    crc = CRC_update(((unsigned char*)header)[2], crc);
-    crc = CRC_update(((unsigned char*)header)[3], crc);
-    for (i = 6; i < gfc->l3_side.sideinfo_len; i++) {
-	crc = CRC_update(((unsigned char*)header)[i], crc);
-    }
-
-    header[4] = crc >> 8;
-    header[5] = crc & 255;
-}
-
 inline static void
 Huf_count1(Bit_stream_struc *bs, gr_info *gi)
 {
@@ -250,11 +115,7 @@ Huf_count1(Bit_stream_struc *bs, gr_info *gi)
     }
 }
 
-
-
-/*
-  Implements the pseudocode of page 98 of the IS
-  */
+/* Implements the pseudocode of page 98 of the IS */
 static void
 Huffmancode_esc(Bit_stream_struc *bs, const struct huffcodetab* h,
 		int index, int end, gr_info *gi)
@@ -267,9 +128,9 @@ Huffmancode_esc(Bit_stream_struc *bs, const struct huffcodetab* h,
 	int x2 = gi->l3_enc[index+1];
 
 	if (x1 != 0) {
-	    /* use ESC-words */
 	    if (x1 > 14) {
-		assert ( x1 <= h->linmax+15 );
+		/* use ESC-words */
+		assert (x1 <= h->linmax);
 		ext    = (x1-15) << 1;
 		xbits  = h->xlen;
 		x1     = 15;
@@ -281,7 +142,7 @@ Huffmancode_esc(Bit_stream_struc *bs, const struct huffcodetab* h,
 
 	if (x2 != 0) {
 	    if (x2 > 14) {
-		assert ( x2 <= h->linmax+15 );
+		assert (x2 <= h->linmax);
 		ext  <<= h->xlen;
 		ext   |= x2-15;
 		xbits += h->xlen;
@@ -365,6 +226,82 @@ Huffmancodebits(lame_internal_flags *gfc, gr_info *gi)
     assert(gfc->bs.bitidx == data_bits + gi->count1bits);
 }
 
+/*write N bits into the header */
+inline static int
+writeheader(char *p, int val, int j, int ptr)
+{
+    p += ptr >> 3;
+    assert(0 < j && j <= 17);
+    val <<= (24 - j - (ptr&7));
+    p[0] |= val >> 16;
+    p[1]  = val >> 8;
+    p[2]  = val;
+    return ptr + j;
+}
+
+static int
+CRC_update(int value, int crc)
+{
+    int i;
+    value <<= 8;
+    for (i = 0; i < 8; i++) {
+	value <<= 1;
+	crc <<= 1;
+
+	if (((crc ^ value) & 0x10000))
+	    crc ^= CRC16_POLYNOMIAL;
+    }
+    return crc;
+}
+
+void
+CRC_writeheader(char *header, int len)
+{
+    int crc = 0xffff; /* (jo) init crc16 for error_protection */
+    int i;
+
+    crc = CRC_update(0xff & header[2], crc);
+    crc = CRC_update(0xff & header[3], crc);
+    for (i = 6; i < len; i++)
+	crc = CRC_update(0xff & header[i], crc);
+
+    header[4] = crc >> 8;
+    header[5] = crc & 255;
+}
+
+static int
+writeTableHeader(lame_internal_flags *gfc, gr_info *gi, int ptr, char *p)
+{
+    static const int blockConv[] = {1, 3, 2};
+    int tsel;
+    if (gi->table_select[0] == 14)
+	gi->table_select[0] = 16;
+    if (gi->table_select[1] == 14)
+	gi->table_select[1] = 16;
+    tsel = gi->table_select[0]*32 + gi->table_select[1];
+    if (gi->block_type != NORM_TYPE) {
+	ptr = writeheader(p, 8192 /* window_switching_flag */
+			  + blockConv[gi->block_type-1]*2048
+			  + gi->mixed_block_flag*1024
+			  + tsel,
+			  1+2+1+5*2, ptr);
+
+	ptr = writeheader(p, gi->subblock_gain[0]*64
+			  + gi->subblock_gain[1]*8
+			  + gi->subblock_gain[2], 3*3, ptr);
+    } else {
+	assert(gi->region0_count < 16U);
+	assert(gi->region1_count < 8U);
+
+	if (gi->table_select[2] == 14)
+	    gi->table_select[2] = 16;
+	ptr = writeheader(p, tsel*32 + gi->table_select[2], 1+5*3, ptr);
+	ptr = writeheader(p, gi->region0_count*8 + gi->region1_count, 4+3,
+			  ptr);
+    }
+    return ptr;
+}
+
 inline static void
 encodeBitStream(lame_global_flags *gfp)
 {
@@ -374,25 +311,27 @@ encodeBitStream(lame_global_flags *gfp)
     int gr, ch, ptr;
     assert(l3_side->main_data_begin >= 0);
 
-    memset(p, 0, l3_side->sideinfo_len);
-    ptr = writeheader(p, 0xfff - (gfp->out_samplerate < 16000), 12, 0);
-    ptr = writeheader(p, gfp->version,            1, ptr);
-    ptr = writeheader(p, 4 - 3,                   2, ptr);
-    ptr = writeheader(p, !gfp->error_protection,  1, ptr);
-    ptr = writeheader(p, gfc->bitrate_index,      4, ptr);
-    ptr = writeheader(p, gfc->samplerate_index,   2, ptr);
-    ptr = writeheader(p, gfc->padding,            1, ptr);
-    ptr = writeheader(p, gfp->extension,          1, ptr);
-    ptr = writeheader(p, gfp->mode,               2, ptr);
-    ptr = writeheader(p, gfc->mode_ext,           2, ptr);
-    ptr = writeheader(p, gfp->copyright,          1, ptr);
-    ptr = writeheader(p, gfp->original,           1, ptr);
-    ptr = writeheader(p, gfp->emphasis,           2, ptr);
+    ptr = gfc->bs.h_ptr;
+    gfc->bs.h_ptr = (ptr + 1) & (MAX_HEADER_BUF-1);
+    assert(gfc->bs.h_ptr != gfc->bs.w_ptr);
+
+    gfc->bs.header[gfc->bs.h_ptr].write_timing
+	= gfc->bs.header[ptr].write_timing + getframebytes(gfp);
+
+    p[0] = 0xff;
+    p[1] = 0xf0 - (gfp->out_samplerate < 16000)*16
+	+ gfp->version*8 + (4 - 3)*2 + (!gfp->error_protection);
+    p[2] = gfc->bitrate_index*16
+	+ gfc->samplerate_index*4 + gfc->padding*2 + gfp->extension;
+    p[3] = gfp->mode*64 + gfc->mode_ext*16
+	+ gfp->copyright*8 + gfp->original*4 + gfp->emphasis;
+
+    memset(p+4, 0, l3_side->sideinfo_len-4);
+    ptr = 32;
     if (gfp->error_protection)
 	ptr += 16;
-
     ptr = writeheader(p, l3_side->main_data_begin, 7+gfc->mode_gr, ptr);
-    if (gfp->version == 1) {
+    if (gfc->mode_gr == 2) {
 	/* MPEG1 */
 	ptr += 7 - gfc->channels_out*2; /* private_bits */
 	for (ch = 0; ch < gfc->channels_out; ch++)
@@ -468,11 +407,9 @@ encodeBitStream(lame_global_flags *gfp)
 		assert(gi->slen[3] == 0);
 		break;
 	    case 6: case 7: case 8:
+		for (part = 0; part < SBMAX_l; part++)
+		    gi->scalefac[part] -= pretab[part];
 		part = 500 + gi->slen[0]*3 + gi->slen[1];
-		{int i;
-		for (i = 0; i < SBMAX_l; i++)
-		    gi->scalefac[i] -= pretab[i];
-		}
 		assert(500 <= part && part < 512);
 		assert(gi->slen[2] == 0);
 		assert(gi->slen[3] == 0);
@@ -519,20 +456,9 @@ encodeBitStream(lame_global_flags *gfp)
     } /* for MPEG version */
     assert(ptr == l3_side->sideinfo_len * 8);
 
-    if (gfp->error_protection) {
-	/* (jo) error_protection: add crc16 information to header */
-	CRC_writeheader(gfc, gfc->bs.header[gfc->bs.h_ptr].buf);
-    }
-
-    ptr = gfc->bs.h_ptr;
-    gfc->bs.h_ptr = (ptr + 1) & (MAX_HEADER_BUF-1);
-    assert(gfc->bs.h_ptr != gfc->bs.w_ptr);
-
-    gfc->bs.header[gfc->bs.h_ptr].write_timing
-	= gfc->bs.header[ptr].write_timing + getframebytes(gfp);
+    if (gfp->error_protection)
+	CRC_writeheader(p, gfc->l3_side.sideinfo_len);
 }
-
-
 
 /* compute the number of bits required to flush all mp3 frames
    currently in the buffer.  This should be the same as the
@@ -547,10 +473,9 @@ encodeBitStream(lame_global_flags *gfp)
 
    total_bytes_output is the size of the mp3 output buffer if 
    lame_encode_flush_nogap() was called right now. 
-
- */
+*/
 int
-compute_flushbits( const lame_global_flags * gfp, int *total_bytes_output )
+compute_flushbits(const lame_global_flags * gfp, int *total_bytes_output)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     Bit_stream_struc *bs = &gfc->bs;
@@ -562,12 +487,11 @@ compute_flushbits( const lame_global_flags * gfp, int *total_bytes_output )
     flushbits = (bs->header[last_ptr].write_timing - bs->totbyte)*8;
     *total_bytes_output = flushbits;
 
-    if (flushbits >= 0) {
+    if (flushbits >= 0)
 	/* if flushbits >= 0, some headers have not yet been written */
 	/* add the size of the headers to the total byte output */
 	*total_bytes_output += 8 * gfc->l3_side.sideinfo_len
 	    * ((bs->h_ptr - bs->w_ptr) & (MAX_HEADER_BUF-1));
-    }
 
     /* finally, add some bits so that the last frame is complete
      * these bits are not necessary to decode the last frame, but
@@ -585,20 +509,18 @@ int
 flush_bitstream(
     lame_global_flags *gfp,unsigned char *buffer,int size,int mp3data)
 {
-    III_side_info_t *l3_side = &gfp->internal_flags->l3_side;
-    int dummy, flushbits;
+    lame_internal_flags* gfc = gfp->internal_flags;
+    int dummy;
 
-    if ((flushbits = compute_flushbits(gfp,&dummy)) >= 0) {
-	drain_into_ancillary(gfp->internal_flags, flushbits);
-	/* we have padded out all frames with ancillary data, which is the
-	   same as filling the bitreservoir with ancillary data, so : */
-	l3_side->ResvSize=l3_side->main_data_begin = 0;
-    }
-
-    return copy_buffer(gfp->internal_flags, buffer, size, mp3data);
+    /* we have padded out all frames with ancillary data, which is the
+       same as filling the bitreservoir with ancillary data, so : */
+    gfc->bs.bitidx += compute_flushbits(gfp, &dummy);
+    gfc->l3_side.ResvSize = gfc->l3_side.main_data_begin = 0;
+    return copy_buffer(gfc, buffer, size, mp3data);
 }
 
-void  add_dummy_byte (lame_internal_flags* gfc, unsigned char val )
+void
+add_dummy_byte(lame_internal_flags* gfc, unsigned char val)
 {
     Bit_stream_struc *bs = &gfc->bs;
     int i;
@@ -610,6 +532,52 @@ void  add_dummy_byte (lame_internal_flags* gfc, unsigned char val )
 }
 
 /*
+  Some combinations of bitrate, Fs, and stereo make it impossible to stuff
+  out a frame using just main_data, due to the limited number of bits to
+  indicate main_data_length. In these situations, we put stuffing bits into
+  the ancillary data...
+*/
+inline static void
+drain_into_ancillary(lame_internal_flags *gfc, int remainingBits)
+{
+    Bit_stream_struc *bs = &gfc->bs;
+    int i, pad;
+    assert(remainingBits >= 0);
+
+    if (remainingBits >= 8) {
+	putbits24(bs,0x4c,8);
+	remainingBits -= 8;
+    }
+    if (remainingBits >= 8) {
+	putbits24(bs,0x41,8);
+	remainingBits -= 8;
+    }
+    if (remainingBits >= 8) {
+	putbits24(bs,0x4d,8);
+	remainingBits -= 8;
+    }
+    if (remainingBits >= 8) {
+	putbits24(bs,0x45,8);
+	remainingBits -= 8;
+    }
+
+    pad = 0xaa;
+    if (remainingBits >= 8) {
+	const char *version = get_lame_short_version ();
+	for (i=0; remainingBits >=8 ; ++i) {
+	    if (i < strlen(version))
+		putbits24(bs,version[i],8);
+	    else
+		putbits24(bs,pad,8);
+	    remainingBits -= 8;
+	}
+    }
+
+    if (remainingBits)
+	putbits24(bs, pad >> (8 - remainingBits), remainingBits);
+}
+
+/*
   format_bitstream()
 
   This is called after a frame of audio has been quantized and coded.
@@ -618,7 +586,7 @@ void  add_dummy_byte (lame_internal_flags* gfc, unsigned char val )
   a series of main_data() blocks, with header and side information
   inserted at the proper locations to maintain framing. (See Figure A.7
   in the IS).
-  */
+*/
 int
 format_bitstream(lame_global_flags *gfp)
 {
@@ -649,10 +617,6 @@ format_bitstream(lame_global_flags *gfp)
     assert(l3_side->ResvSize % 8 == 0);
     return 0;
 }
-
-
-
-
 
 /* copy data out of the internal MP3 bit buffer into a user supplied
    unsigned char buffer.

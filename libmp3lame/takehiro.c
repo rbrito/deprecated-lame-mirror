@@ -277,18 +277,14 @@ int choose_table_nonMMX(
 	    *s = LARGE_BITS;
 	    return -1;
 	}
-	max -= 15;
-	for (choice2 = 24; choice2 < 32; choice2++) {
-	    if (ht[choice2].linmax >= max) {
+	for (choice2 = 24; choice2 < 32; choice2++)
+	    if (ht[choice2].linmax >= max)
 		break;
-	    }
-	}
 
-	for (choice = choice2 - 8; choice < 24; choice++) {
-	    if (ht[choice].linmax >= max) {
+	for (choice = choice2 - 8; choice < 24; choice++)
+	    if (ht[choice].linmax >= max)
 		break;
-	    }
-	}
+
 	return count_bit_ESC(ix, end, choice, choice2, s);
     }
 }
