@@ -148,7 +148,7 @@ ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, i
 
     fullFrameBits = mean_bits * gfc->mode_gr + Min ( gfc->ResvSize, gfc->ResvMax );
     
-    if ( gfp->strict_ISO  &&  fullFrameBits > maxmp3buf )
+    if ( fullFrameBits > maxmp3buf )
         fullFrameBits = maxmp3buf;
 
     assert ( 0 == gfc->ResvMax % 8 );
