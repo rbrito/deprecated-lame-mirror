@@ -288,6 +288,7 @@ inline
 static int 
 quant_compare(
     const int                       experimentalX,
+          lame_internal_flags * const gfc,
     const calc_noise_result * const best,
     const calc_noise_result * const calc )
 {
@@ -318,8 +319,10 @@ quant_compare(
 	    better = calc->tot_noise < best->tot_noise; 
 	    break;
         case 3: 
-	    better = calc->tot_noise < best->tot_noise  &&
-                     calc->max_noise < best->max_noise+2; 
+		better = ( calc->tot_noise < (gfc->presetTune.use ? (best->tot_noise - gfc->presetTune.quantcomp_adjust_rh_tot)
+                                                          :  best->tot_noise ) &&
+                   calc->max_noise < (gfc->presetTune.use ? (best->max_noise - gfc->presetTune.quantcomp_adjust_rh_max)
+                                                          :  best->max_noise ));
 	    break;
         case 4: 
 	    better = ( calc->max_noise <= 0  &&
@@ -677,7 +680,8 @@ balance_noise (
     /*  some scalefactors are too large.
      *  lets try setting scalefac_scale=1 
      */
-    if (gfc->noise_shaping > 1) {
+    if ((gfc->noise_shaping > 1) && (!(gfc->presetTune.use &&
+                                      gfc->ATH->adjust < gfc->presetTune.athadapt_noiseshaping_thre))) {
 	memset(&gfc->pseudohalf, 0, sizeof(gfc->pseudohalf));
 	if (!cod_info->scalefac_scale) {
 	    inc_scalefac_scale (gfc, cod_info, scalefac, xrpow);
@@ -814,8 +818,9 @@ outer_loop (
         if (iteration == 1) /* the first iteration is always better */
             better = 1;
         else
-            better = quant_compare (gfp->experimentalX, 
-                                    &best_noise_info, &noise_info);
+            better = quant_compare ((gfc->presetTune.use ? gfc->presetTune.quantcomp_current
+                                                         : gfp->experimentalX), 
+                                     gfc, &best_noise_info, &noise_info);
         
         /* save data so we can restore this quantization later */    
         if (better) {

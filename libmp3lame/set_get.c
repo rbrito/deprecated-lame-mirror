@@ -1422,12 +1422,102 @@ lame_set_msfix( lame_global_flags*  gfp, double msfix )
 
 }
 
+int
+lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
+{
 
+    lame_internal_flags *gfc = gfp->internal_flags;
 
+    gfc->presetTune.use = 1;
 
+    /* default = 0 (disabled) */
+    gfp->preset_expopts = preset_expopts;
 
+    switch (preset_expopts)
+    {
+        case 1:
 
+          lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
+          lame_set_experimentalX(gfp, 3);
+          lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); // safejoint
+          lame_set_ATHtype(gfp, 2);
 
+          gfc->presetTune.attackthre   = 35;
+          gfc->presetTune.attackthre_s = 150;
+          gfc->presetTune.ms_maskadjust = .5;
+          gfc->presetTune.athadapt_noiseshaping_thre = 2; // Always switch
+
+          break;
+
+        case 2:
+
+          if (gfp->VBR == vbr_mtrh) {
+             lame_set_experimentalX(gfp, 2);
+             gfc->presetTune.quantcomp_type_s = 4;
+             gfc->presetTune.quantcomp_adjust_mtrh = 9;
+          }
+          else {
+             lame_set_experimentalX(gfp, 3);
+          }
+
+          lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
+          lame_set_experimentalZ(gfp, 1);
+          lame_set_VBR_q(gfp, 2);
+          lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); // safejoint
+          lame_set_ATHtype(gfp, 2);				
+          // modify sfb21 by 3 dB plus ns-treble=0                 
+          lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (12 << 20));
+
+          gfc->presetTune.attackthre   = 35;
+          gfc->presetTune.attackthre_s = 150;
+          gfc->presetTune.ms_maskadjust = .5;
+          gfc->presetTune.athadapt_noiseshaping_thre = 2; // Always switch
+
+          break;
+
+        case 3:
+
+          if (gfp->VBR == vbr_mtrh) {
+             gfc->presetTune.quantcomp_type_s = 4;
+             gfc->presetTune.quantcomp_adjust_mtrh = 9;
+             (void) lame_set_ATHlower( gfp, -2 );
+          }
+          else {
+             gfc->presetTune.quantcomp_type_s = 3;
+             gfc->presetTune.quantcomp_adjust_rh_tot = 600;
+			 gfc->presetTune.quantcomp_adjust_rh_max = 60;
+             (void) lame_set_ATHlower( gfp, -1 );
+          }
+
+          lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
+          lame_set_experimentalZ(gfp, 1);
+          lame_set_experimentalX(gfp, 1);
+          lame_set_VBR_q(gfp, 2);
+          lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); // safejoint
+   (void) lame_set_msfix( gfp, 2.13 );
+          lame_set_ATHtype(gfp, 4);
+          // modify sfb21 by 3.75 dB plus ns-treble=0                 
+          lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (15 << 20));
+
+          gfc->presetTune.attackthre   = 35;
+          gfc->presetTune.attackthre_s = 150;
+          gfc->presetTune.ms_maskadjust = .5;
+          gfc->presetTune.athadapt_noiseshaping_thre = 1;
+
+          break;
+    }
+    return 0;
+}
+
+int
+lame_set_preset_notune( lame_global_flags*  gfp, int preset_notune )
+{
+    lame_internal_flags *gfc = gfp->internal_flags;
+
+    gfc->presetTune.use = 0;  // Turn off specialized preset tunings
+
+    return 0;
+}
 
 
 

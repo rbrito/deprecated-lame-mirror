@@ -1512,7 +1512,8 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 
       for(i=0;i<12;i++)
 	{
-	  if (!ns_attacks[i/3] && attack_intensity[i] > (chn == 3 ? NSATTACKTHRE_S : NSATTACKTHRE)) ns_attacks[i/3] = (i % 3)+1;
+	  if (!ns_attacks[i/3] && attack_intensity[i] > (chn == 3 ? (gfc->presetTune.use ? gfc->presetTune.attackthre_s : NSATTACKTHRE_S)
+                                                              : (gfc->presetTune.use ? gfc->presetTune.attackthre   : NSATTACKTHRE))) ns_attacks[i/3] = (i % 3)+1;
 	}
 
       if (ns_attacks[0] && gfc->nsPsy.last_attacks[chn][2]) ns_attacks[0] = 0;
@@ -1767,12 +1768,12 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	thmS = Max(gfc->thm[3].l[sb],ath);
 
 	if (thmL*msfix < (thmM+thmS)/2) {
-	  FLOAT8 f = thmL*msfix / ((thmM+thmS)/2);
+	  FLOAT8 f = thmL * (gfc->presetTune.use ? gfc->presetTune.ms_maskadjust : msfix) / ((thmM+thmS)/2);
 	  thmM *= f;
 	  thmS *= f;
 	}
 	if (thmR*msfix < (thmM+thmS)/2) {
-	  FLOAT8 f = thmR*msfix / ((thmM+thmS)/2);
+	  FLOAT8 f = thmR * (gfc->presetTune.use ? gfc->presetTune.ms_maskadjust : msfix) / ((thmM+thmS)/2);
 	  thmM *= f;
 	  thmS *= f;
 	}
@@ -1918,6 +1919,11 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
     
     blocktype_d[chn] = gfc->blocktype_old[chn];  /* value returned to calling program */
     gfc->blocktype_old[chn] = blocktype[chn];    /* save for next call to l3psy_anal */
+
+    if (blocktype_d[chn] != NORM_TYPE)
+        gfc->presetTune.quantcomp_current = gfc->presetTune.quantcomp_type_s;
+    else
+        gfc->presetTune.quantcomp_current = gfp->experimentalX;
   }
   
   /*********************************************************************

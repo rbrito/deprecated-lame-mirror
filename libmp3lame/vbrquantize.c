@@ -435,9 +435,10 @@ find_scalefac_ave( const FLOAT8 *xr, const FLOAT8 *xr34, FLOAT8 l3_xmin, int bw 
  *  calculates quantization step size determined by allowed masking
  */
 INLINE int 
-calc_scalefac( FLOAT8 l3_xmin, int bw )
+calc_scalefac( FLOAT8 l3_xmin, int bw, FLOAT8 preset_tune )
 {
-    FLOAT8 const c = 5.799142446;   // 10 * 10^(2/3) * log10(4/3)
+    FLOAT8 const c = (preset_tune > 0 ? preset_tune
+		                              : 5.799142446);   // 10 * 10^(2/3) * log10(4/3)
     return (int)(c*log10(l3_xmin/bw)-.5);
 }
 
@@ -679,6 +680,16 @@ short_block_sf (
     int j, sfb, b;
     int vbrmean, vbrmn;
     int sf_cache[SBMAX_s];
+    int scalefac_criteria;
+
+    if (gfc->presetTune.use) {
+	    /* map experimentalX settings to internal selections */
+        static char const map[] = {2,1,0,3,6};
+        scalefac_criteria = map[gfc->presetTune.quantcomp_current];
+    }
+	else {
+        scalefac_criteria = gfc->VBR->quality;
+    }
   
     for (j = 0, sfb = 0; sfb < SBMAX_s; ++sfb) {
         for (b = 0; b < 3; ++b) {
@@ -686,11 +697,12 @@ short_block_sf (
             const  int end   = gfc->scalefac_band.s[ sfb+1 ];
             const  int width = end - start;
 	    
-            switch( gfc->VBR->quality ) {
+            switch( scalefac_criteria ) {
             default:
                 /*  the fastest
                  */
-                vbrsf->s[sfb][b] = calc_scalefac( l3_xmin->s[sfb][b], width );
+                vbrsf->s[sfb][b] = calc_scalefac( l3_xmin->s[sfb][b], width,
+					                              gfc->presetTune.quantcomp_adjust_mtrh );
                 break;
             case 5:
             case 4:
@@ -806,7 +818,8 @@ long_block_sf (
         default:
             /*  the fastest
              */
-            vbrsf->l[sfb] = calc_scalefac( l3_xmin->l[sfb], width );
+            vbrsf->l[sfb] = calc_scalefac( l3_xmin->l[sfb], width,
+				                           gfc->presetTune.quantcomp_adjust_mtrh );
             break;
         case 5:
         case 4:
@@ -922,7 +935,8 @@ short_block_scalefacs (
         }
     }
 
-    if (gfc->noise_shaping == 2)
+    if ((gfc->noise_shaping == 2) && (!(gfc->presetTune.use &&
+                                      gfc->ATH->adjust < gfc->presetTune.athadapt_noiseshaping_thre)))
         /* allow scalefac_scale=1 */
         mover = Min (maxover0, maxover1);
     else
@@ -1022,7 +1036,8 @@ long_block_scalefacs (
     }
 
     mover = Min (maxover0, maxover0p);
-    if (gfc->noise_shaping == 2) {
+    if ((gfc->noise_shaping == 2) && (!(gfc->presetTune.use &&
+		                               gfc->ATH->adjust < gfc->presetTune.athadapt_noiseshaping_thre))) {
         /* allow scalefac_scale=1 */
         mover = Min (mover, maxover1);
         mover = Min (mover, maxover1p);
@@ -1742,6 +1757,7 @@ VBR_quantize(lame_global_flags *gfp,
 
 
 }
+
 
 
 

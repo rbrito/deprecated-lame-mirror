@@ -83,6 +83,7 @@ struct lame_global_struct {
   int exp_nspsytune;
 
   double newmsfix;
+  int preset_expopts;
 
   /* VBR control */
   vbr_mode VBR;

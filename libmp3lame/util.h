@@ -133,6 +133,19 @@ typedef struct {
   FLOAT bass,alto,treble,sfb21;
 } nsPsy_t;
 
+/* variables used for --alt-preset */
+typedef struct {
+  int     use;                        // indicates the use of alt-preset
+  int     attackthre;
+  int     attackthre_s;
+  FLOAT8  ms_maskadjust;
+  FLOAT8  athadapt_noiseshaping_thre; // x <= 0 == never switch, x >= 1 == always switch
+  int     quantcomp_current;          // current quant_compare mode we are using
+  FLOAT8  quantcomp_adjust_rh_tot;    // adjustments for tot_noise with vbr-old
+  FLOAT8  quantcomp_adjust_rh_max;    // adjustments for max_noise with vbr-old
+  FLOAT8  quantcomp_adjust_mtrh;      // adjustments for calc_scalefac "c" with vbr-mtrh
+  int     quantcomp_type_s;           // quantization comparison to switch to on non-normal blocks
+} presetTune_t;
 
 typedef struct 
 {
@@ -499,6 +512,7 @@ struct lame_internal_flags {
   void (*fft_fht)(FLOAT *, int);
 
   nsPsy_t nsPsy;  /* variables used for --nspsytune */
+  presetTune_t presetTune;  /* variables used for --alt-preset */
   
   unsigned crcvalue;
   
