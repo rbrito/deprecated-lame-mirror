@@ -135,6 +135,11 @@ init_outer_loop(
     cod_info->psymax          = cod_info->psy_lmax;
     cod_info->sfbmax          = cod_info->sfb_lmax;
     cod_info->sfbdivide       = 11;
+    for (sfb = 0; sfb < SBMAX_l; sfb++) {
+	cod_info->width[sfb]
+	    = gfc->scalefac_band.l[sfb+1] - gfc->scalefac_band.l[sfb];
+	cod_info->window[sfb] = 3; // which is always 0.
+    }
     if (cod_info->block_type == SHORT_TYPE) {
 	FLOAT8 ixwork[576];
 	FLOAT8 *ix;
@@ -176,13 +181,7 @@ init_outer_loop(
 		}
 	    }
 	}
-    }
-    for (sfb = 0; sfb < SBMAX_l; sfb++) {
-	cod_info->width[sfb]
-	    = gfc->scalefac_band.l[sfb+1] - gfc->scalefac_band.l[sfb];
-	cod_info->window[sfb] = 3; // which is always 0.
-    }
-    if (cod_info->block_type==SHORT_TYPE) {
+
 	j = cod_info->sfb_lmax;
 	for (sfb = cod_info->sfb_smin; sfb < SBMAX_s; sfb++) {
 	    cod_info->width[j] = cod_info->width[j+1] = cod_info->width[j + 2]

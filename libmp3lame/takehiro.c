@@ -888,7 +888,6 @@ void best_scalefac_store(
 		    gi->scalefac[sfb] >>= 1;
 
 	    gi->scalefac_scale = 1;
-	    gi->part2_length = LARGE_BITS;
 	    if (gfc->mode_gr == 2) {
 	        scale_bitcount(gi);
 	    } else {
