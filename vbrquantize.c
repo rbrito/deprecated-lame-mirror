@@ -738,6 +738,7 @@ VBR_quantize(lame_global_flags *gfp,
   lame_internal_flags *gfc=gfp->internal_flags;
   int minbits,maxbits,max_frame_bits,totbits,gr,ch,i,bits_ok;
   int bitsPerFrame,mean_bits;
+  int analog_silence;
   FLOAT8 qadjust;
   III_side_info_t * l3_side;
   gr_info *cod_info;  
@@ -756,9 +757,40 @@ VBR_quantize(lame_global_flags *gfp,
   iteration_init(gfp,l3_side,l3_enc);
 
 
+  /* analog silence detection */
+
+  analog_silence=1;
+  assert( gfp->VBR_q <= 9 );
+  assert( gfp->VBR_q >= 0 );
+  masking_lower_db = dbQ[gfp->VBR_q];
+  gfc->masking_lower = pow(10.0,masking_lower_db/10);
+  for (gr = 0; gr < gfc->mode_gr; gr++) {
+    /* copy data to be quantized into xr */
+    if (gfc->mode_ext==MPG_MD_MS_LR) {
+      ms_convert(xr[gr],xr[gr]);
+    }
+    for (ch = 0; ch < gfc->stereo; ch++) {
+      /* if in the following sections the quality would not be adjusted
+       * then we would only have to call calc_xmin once here and
+       * could drop subsequently calls (rh 2000/07/17)
+       */
+      III_psy_xmin l3_xmin;
+      int over_ath;
+      cod_info = &l3_side->gr[gr].ch[ch].tt;
+      cod_info->part2_3_length=LARGE_BITS;
+      over_ath = calc_xmin(gfp,xr[gr][ch],&ratio[gr][ch],cod_info,&l3_xmin);
+      if (over_ath) {
+        analog_silence = 0;
+      }
+    }
+  }
 
   /* compute minimum allowed bits from minimum allowed bitrate */
-  gfc->bitrate_index=gfc->VBR_min_bitrate;
+  if (analog_silence) {
+    gfc->bitrate_index=1;
+  } else {
+    gfc->bitrate_index=gfc->VBR_min_bitrate;
+  }
   getframebits(gfp,&bitsPerFrame, &mean_bits);
   minbits = (mean_bits/gfc->stereo);
 
@@ -782,17 +814,6 @@ VBR_quantize(lame_global_flags *gfp,
   minbits=Max(minbits,.40*(mean_bits/gfc->stereo));
   maxbits=Min(maxbits,2.5*(mean_bits/gfc->stereo));
 
-
-  if (gfc->mode_ext==MPG_MD_MS_LR) 
-    for (gr = 0; gr < gfc->mode_gr; gr++) 
-      ms_convert(xr[gr],xr[gr]);
-
-  for (gr = 0; gr < gfc->mode_gr; gr++) {
-    for (ch = 0; ch < gfc->stereo; ch++) { 
-      cod_info = &l3_side->gr[gr].ch[ch].tt;
-      cod_info->part2_3_length=LARGE_BITS;
-    }
-  }
 
 
 
@@ -874,6 +895,8 @@ VBR_quantize(lame_global_flags *gfp,
     }
     bits_ok=1;
     if (totbits>max_frame_bits) {
+      /* maybe doing a CBR encoding would speed up things at this point?
+       */
       qadjust += Max(.25,(totbits-max_frame_bits)/300.0);
       //      DEBUGF("%i totbits>max_frame_bits   totbits=%i  maxbits=%i \n",gfp->frameNum,totbits,max_frame_bits);
       //      DEBUGF("next masking_lower_db = %f \n",masking_lower_db + qadjust);
@@ -929,9 +952,12 @@ VBR_quantize(lame_global_flags *gfp,
 
   
 
-  for( gfc->bitrate_index = (gfp->VBR_hard_min ? gfc->VBR_min_bitrate : 1);
-       gfc->bitrate_index < gfc->VBR_max_bitrate;
-       gfc->bitrate_index++    ) {
+  if (analog_silence && !gfp->VBR_hard_min) {
+    gfc->bitrate_index = 1;
+  } else {
+    gfc->bitrate_index = gfc->VBR_min_bitrate;
+  }
+  for( ; gfc->bitrate_index < gfc->VBR_max_bitrate; gfc->bitrate_index++ ) {
 
     getframebits (gfp,&bitsPerFrame, &mean_bits);
     maxbits = ResvFrameBegin(gfp,l3_side, mean_bits, bitsPerFrame);
