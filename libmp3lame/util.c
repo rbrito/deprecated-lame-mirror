@@ -602,14 +602,6 @@ void  lame_errorf (const lame_internal_flags *gfc, const char* format, ... )
  *
  ***********************************************************************/
 
-int  has_i387 ( void )
-{
-#ifdef HAVE_NASM 
-    return 1;
-#else
-    return 0;   /* don't know, assume not */
-#endif
-}    
 
 int  has_MMX ( void )
 {

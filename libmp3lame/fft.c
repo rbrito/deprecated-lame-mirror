@@ -286,12 +286,6 @@ void init_fft(lame_internal_flags * const gfc)
         gfc->fft_fht = fht_SSE;
     } else 
 #endif
-#ifdef USE_FFTFPU
-    if (gfc->CPU_features.i387) {
-        extern void fht_FPU(FLOAT *fz, int n);
-        gfc->fft_fht = fht_FPU;
-    } else
-#endif
         gfc->fft_fht = fht;
 }
 

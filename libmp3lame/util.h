@@ -473,7 +473,6 @@ struct lame_internal_flags {
 
   /* CPU features */
   struct {
-    unsigned int  i387      : 1; /* FPU is a normal Intel CPU */
     unsigned int  MMX       : 1; /* Pentium MMX, Pentium II...IV, K6, K6-2,
                                     K6-III, Athlon */
     unsigned int  AMD_3DNow : 1; /* K6-2, K6-III, Athlon      */
@@ -572,7 +571,6 @@ int lame_decode1_unclipped(
      sample_t        pcm_r[] );
 
 
-extern int  has_i387  ( void );
 extern int  has_MMX   ( void );
 extern int  has_3DNow ( void );
 extern int  has_SSE  ( void );

@@ -457,8 +457,6 @@ lame_init_params(lame_global_flags * const gfp)
     gfc->report.debugf = gfp->report.debugf;
     gfc->report.errorf = gfp->report.errorf;
 
-    gfc->CPU_features.i387 = has_i387();
-
 
     if (gfp->asm_optimizations.amd3dnow )
         gfc->CPU_features.AMD_3DNow = has_3DNow();
@@ -1189,15 +1187,13 @@ lame_print_config(const lame_global_flags * gfp)
     if (gfc->CPU_features.MMX
         || gfc->CPU_features.AMD_3DNow
         || gfc->CPU_features.SSE || gfc->CPU_features.SSE2) {
-        MSGF(gfc, "CPU features:");
+        MSGF(gfc, "CPU features: ");
 
-        if (gfc->CPU_features.i387)
-            MSGF(gfc, " i387");
         if (gfc->CPU_features.MMX)
 #ifdef MMX_choose_table
-            MSGF(gfc, ", MMX (ASM used)");
+            MSGF(gfc, "MMX (ASM used)");
 #else
-            MSGF(gfc, ", MMX");
+            MSGF(gfc, "MMX");
 #endif
         if (gfc->CPU_features.AMD_3DNow)
 #ifdef HAVE_NASM
