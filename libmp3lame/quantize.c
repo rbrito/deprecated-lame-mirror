@@ -1096,7 +1096,7 @@ calc_sfb_noise(const FLOAT * xr, const FLOAT * xr34, int bw, int sf)
     FLOAT xfsf = 0.0;
     FLOAT sfpow = POW20(sf);  /*pow(2.0,sf/4.0); */
     FLOAT sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
- 
+
     bw >>= 1;
     do {
 	fi_union fi0, fi1;
@@ -1329,24 +1329,19 @@ VBR_2nd_bitalloc(
     int sfb = 0, endflag = 0;
     for (;;) {
 	sfb = noisesfb(&gi_w, xr34, l3_xmin, sfb);
-	if (sfb >= 0) {
-	    if (sfb >= gi->sfbmax) { /* noise in sfb21 */
-		endflag |= 1;
-		if (endflag == 3 || gi_w.global_gain == 0)
-		    return;
-		gi_w.global_gain--;
-		sfb = 0;
-	    } else {
-		gi_w.scalefac[sfb]++;
-		if (loop_break(&gi_w)
-		    || gfc->scale_bitcounter(&gi_w) > MAX_BITS)
-		    return;
-	    }
+	if (sfb < 0)
+	    return;
+
+	if (sfb >= gi->sfbmax) { /* noise in sfb21 */
+	    endflag |= 1;
+	    if (endflag == 3 || gi_w.global_gain == 0)
+		return;
+	    gi_w.global_gain--;
+	    sfb = 0;
 	} else {
-	    *gi = gi_w;
-	    gi_w.global_gain++;
-	    endflag |= 2;
-	    if (endflag == 3 || gi_w.global_gain > 255)
+	    gi_w.scalefac[sfb]++;
+	    if (loop_break(&gi_w)
+		|| gfc->scale_bitcounter(&gi_w) > MAX_BITS)
 		return;
 	}
     }
