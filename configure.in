@@ -30,6 +30,15 @@ AM_CONFIG_HEADER(config.h)
 AM_MAINTAINER_MODE
 AM_MAKE_INCLUDE
 
+dnl check environment
+AC_AIX
+AC_ISC_POSIX
+AC_MINIX
+case $host_os in
+  *cygwin* ) CYGWIN=yes;;
+         * ) CYGWIN=no;;
+esac
+
 dnl libtool
 # AC_DISABLE_SHARED
 AC_PROG_LIBTOOL
@@ -41,15 +50,6 @@ LIB_MAJOR_VERSION=0
 # increase this when changes are made, but they are upward compatible
 # to previous versions
 LIB_MINOR_VERSION=0
-
-dnl check environment
-AC_AIX
-AC_ISC_POSIX
-AC_MINIX
-case $host_os in
-  *cygwin* ) CYGWIN=yes;;
-         * ) CYGWIN=no;;
-esac
 
 dnl # work around for a bug, don't know where it is exactly
 if test "${ac_cv_cygwin}" = "yes"; then
@@ -303,7 +303,7 @@ fi
 dnl Check if we have winsock, if so, we are on a mingw system
 dnl and need libwsock32
 SOCKETFUNCTION=YES
-AC_CHECK_HEADER(winsock2.h, [AC_DEFINE(HAVE_WINSOCKET)
+AC_CHECK_HEADER(winsock2.h, [AC_DEFINE([HAVE_WINSOCKET], [], [winsock])
 		LIBS="$LIBS -lwsock32"])  
 if test $ac_cv_header_winsock2_h = no; then
 	AC_CHECK_FUNCS(socket)
