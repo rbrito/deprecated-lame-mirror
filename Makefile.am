@@ -27,6 +27,7 @@ EXTRA_DIST = \
 	USAGE \
 	configMS.h \
 	lame.bat \
+	lame.dsw \
 	lame.spec.in \
 	lame.spec \
 	lame_projects_vc6.dsp \
