@@ -134,7 +134,7 @@ typedef double  FLOAT8;
 # ifdef FLT_MAX
 #  define FLOAT8_MAX FLT_MAX
 # else
-#  define FLOAT8_MAX 1e99 /* approx */
+#  define FLOAT8_MAX 1e37 /* approx */
 # endif
 #endif
 
