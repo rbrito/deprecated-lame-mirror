@@ -1477,7 +1477,7 @@ psycho_analysis(
     adjust_ATH(gfp);
     gfc->mode_ext = gfc->mode_ext_next;
     need_short = 0;
-    if (gfc->mode_ext == MPG_MD_MS_LR) {
+    if (gfc->mode_ext & MPG_MD_MS_LR) {
 	for (gr=0; gr < gfc->mode_gr ; gr++) {
 	    FLOAT e0 = gfc->tot_ener_next[gr][2] + gfc->tot_ener_next[gr][3];
 	    if (e0 > 0.0)
@@ -1605,7 +1605,7 @@ psycho_analysis(
 				 gfc->useshort_next[0][ch]);
 	}
     }
-    if (gfp->mode == JOINT_STEREO && gfc->mode_ext == MPG_MD_MS_LR) {
+    if (gfc->mode_ext & MPG_MD_MS_LR) {
 	assert(
 	    gfc->l3_side.tt[0][0].block_type
 	    == gfc->l3_side.tt[0][1].block_type);

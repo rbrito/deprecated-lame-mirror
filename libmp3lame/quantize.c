@@ -1360,7 +1360,7 @@ VBR_prepare (
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         mxb = on_pe (gfp, ratio[gr], max_bits[gr], avg, gr, 0);
-        if (gfc->mode_ext == MPG_MD_MS_LR)
+        if (gfc->mode_ext & MPG_MD_MS_LR)
             reduce_side (max_bits[gr], ms_ener_ratio[gr], avg, mxb);
 
         for (ch = 0; ch < gfc->channels_out; ++ch) {
@@ -1632,14 +1632,11 @@ calc_target_bits (
 
                 targ_bits[gr][ch] += add_bits;
             }
-        }/* for ch */
-    }   /* for gr */
-    
-    if (gfc->mode_ext == MPG_MD_MS_LR) 
-        for (gr = 0; gr < gfc->mode_gr; gr++) {
-            reduce_side (targ_bits[gr], ms_ener_ratio[gr], mean_bits*gfc->channels_out,
-			 MAX_BITS);
         }
+	if (gfc->mode_ext & MPG_MD_MS_LR)
+	    reduce_side(targ_bits[gr], ms_ener_ratio[gr],
+			mean_bits * STEREO, MAX_BITS);
+    }
 
     /*  sum target bits
      */
@@ -1768,7 +1765,7 @@ iteration_loop(
         /*  calculate needed bits
          */
         max_bits = on_pe (gfp, ratio[gr], targ_bits, mean_bits, gr, gr);
-        if (gfc->mode_ext == MPG_MD_MS_LR)
+        if (gfc->mode_ext & MPG_MD_MS_LR)
             reduce_side (targ_bits, ms_ener_ratio[gr], mean_bits, max_bits);
         
         for (ch=0 ; ch < gfc->channels_out ; ch ++) {
