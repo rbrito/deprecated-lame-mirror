@@ -1488,7 +1488,6 @@ lame_set_msfix( lame_global_flags*  gfp, double msfix )
 {
     /* default = 0 */
     gfp->msfix = msfix;
-
 }
 
 int
@@ -1517,19 +1516,11 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
 	break;
 
     case 2: /* EXTREME */
-	if (gfp->VBR == vbr_mtrh) {
-	    lame_set_experimentalX(gfp, 2);
-	    gfc->presetTune.quantcomp_adjust_mtrh = 9;
-	    gfc->quantcomp_type_s = 4;
-	    lame_set_athaa_sensitivity(
-		gfp, db2pow(-8.0) * lame_get_athaa_sensitivity(gfp));
-	}
-	else {
-	    lame_set_experimentalX(gfp, 3);
-	    gfc->presetTune.quantcomp_adjust_rh_tot = 60;
-	    gfc->presetTune.quantcomp_adjust_rh_max = 6;
-	    gfc->quantcomp_type_s = 3;
-	}
+	lame_set_experimentalX(gfp, 2);
+	gfc->presetTune.quantcomp_adjust_mtrh = 9;
+	gfc->quantcomp_type_s = 4;
+	lame_set_athaa_sensitivity(
+	    gfp, db2pow(-8.0) * lame_get_athaa_sensitivity(gfp));
 
 	lame_set_experimentalZ(gfp, 1);
 	lame_set_VBR_q(gfp, 2);
@@ -1543,19 +1534,11 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
 	break;
 
     case 3: /* DM_RADIO, PORTABLE, DM_MEDIUM, MEDIUM, STANDARD */
-	if (gfp->VBR == vbr_mtrh) {
-	    gfc->quantcomp_type_s = 4;
-	    gfc->presetTune.quantcomp_adjust_mtrh = 9;
-	    (void) lame_set_ATHlower( gfp, -2 );
-	    lame_set_athaa_sensitivity(
-		gfp, db2pow(-8.0) * lame_get_athaa_sensitivity(gfp));
-	}
-	else {
-	    gfc->quantcomp_type_s = 3;
-	    gfc->presetTune.quantcomp_adjust_rh_tot = 60;
-	    gfc->presetTune.quantcomp_adjust_rh_max = 6;
-	    (void) lame_set_ATHlower( gfp, -1 );
-	}
+	gfc->quantcomp_type_s = 4;
+	gfc->presetTune.quantcomp_adjust_mtrh = 9;
+	(void) lame_set_ATHlower( gfp, -2 );
+	lame_set_athaa_sensitivity(
+	    gfp, db2pow(-8.0) * lame_get_athaa_sensitivity(gfp));
 
 	lame_set_experimentalZ(gfp, 1);
 	lame_set_experimentalX(gfp, 1);
