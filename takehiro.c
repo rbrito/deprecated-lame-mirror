@@ -64,18 +64,20 @@ struct
 
 int ix_max(int *ix, int *end)
 {
-    int max = 0;
+    int max1 = 0, max2 = 0;
 
     while (ix < end) {
-	int x =	 *ix++;
-	if (max < x) 
-	    max = x;
+	int x1 = *ix++;
+	int x2 = *ix++;
+	if (max1 < x1) 
+	    max1 = x1;
 
-	x = *ix++;
-	if (max < x) 
-	    max = x;
+	if (max2 < x2) 
+	    max2 = x2;
     }
-    return max;
+    if (max1 < max2) 
+	max1 = max2;
+    return max1;
 }
 
 
@@ -84,19 +86,6 @@ int ix_max(int *ix, int *end)
 
 
 
-
-/*************************************************************************/
-/*	      count_bit							 */
-/*************************************************************************/
-
-/*
- Function: Count the number of bits necessary to code the subregion. 
-*/
-
-
-static const int huf_tbl_noESC[15] = {
-    1, 2, 5, 7, 7,10,10,13,13,13,13,13,13,13,13
-};
 
 int
 count_bit_ESC(int *ix, int *end, int t1, int t2, int *s)
@@ -142,50 +131,93 @@ count_bit_ESC(int *ix, int *end, int t1, int t2, int *s)
     return t1;
 }
 
-int
-count_bit_noESC(int *ix, int *end, unsigned int table, int * cb_esc_buf, int **cb_esc_end) 
+INLINE static int
+count_bit_noESC(int *ix, int *end, int t1, int *s)
 {
     /* No ESC-words */
-    int	sum = 0;
-    const unsigned char *hlen = ht[table].hlen;
-    const unsigned int xlen = ht[table].xlen;
-    unsigned int *p = cb_esc_buf;
+    int	sum1 = 0;
+    const unsigned int xlen = ht[t1].xlen;
+    const unsigned char *hlen1 = ht[t1].hlen;
 
     do {
-	int x, y;
-	x = *ix++;
-	y = *ix++;
-	x = x * xlen + y;
-	*p++ = x;
-	sum += hlen[x];
+	int x = ix[0] * xlen + ix[1];
+	ix += 2;
+	sum1 += hlen1[x];
     } while (ix < end);
 
-    *cb_esc_end = p;
-    return sum;
+    *s += sum1;
+    return t1;
 }
 
 
 
-int
-count_bit_noESC2(unsigned int table,int * cb_esc_buf,int *cb_esc_end) 
+INLINE static int
+count_bit_noESC_from2(int *ix, int *end, int t1, int *s)
 {
     /* No ESC-words */
-    int	sum = 0;
-    int *p = cb_esc_buf;
+    int	sum1 = 0;
+    int	sum2 = 0;
+    const unsigned int xlen = ht[t1].xlen;
+    const unsigned char *hlen1 = ht[t1].hlen;
+    const unsigned char *hlen2 = ht[t1+1].hlen;
 
     do {
-	sum += ht[table].hlen[*p++];
-    } while (p < cb_esc_end);
+	int x = ix[0] * xlen + ix[1];
+	ix += 2;
+	sum1 += hlen1[x];
+	sum2 += hlen2[x];
+    } while (ix < end);
 
-    return sum;
+    if (sum1 > sum2) {
+	sum1 = sum2;
+	t1++;
+    }
+    *s += sum1;
+
+    return t1;
 }
 
 
+
+INLINE static int
+count_bit_noESC_from3(int *ix, int *end, int t1, int *s)
+{
+    /* No ESC-words */
+    int	sum1 = 0;
+    int	sum2 = 0;
+    int	sum3 = 0;
+    const unsigned int xlen = ht[t1].xlen;
+    const unsigned char *hlen1 = ht[t1].hlen;
+    const unsigned char *hlen2 = ht[t1+1].hlen;
+    const unsigned char *hlen3 = ht[t1+2].hlen;
+    int t;
+
+    do {
+	int x = ix[0] * xlen + ix[1];
+	ix += 2;
+	sum1 += hlen1[x];
+	sum2 += hlen2[x];
+	sum3 += hlen3[x];
+    } while (ix < end);
+
+    t = t1;
+    if (sum1 > sum2) {
+	sum1 = sum2;
+	t++;
+    }
+    if (sum1 > sum3) {
+	sum1 = sum3;
+	t = t1+2;
+    }
+    *s += sum1;
+
+    return t;
+}
 
 
 
 /*************************************************************************/
-/*	      new_choose table						 */
+/*	      choose table						 */
 /*************************************************************************/
 
 /*
@@ -199,89 +231,69 @@ count_bit_noESC2(unsigned int table,int * cb_esc_buf,int *cb_esc_end)
 
 int choose_table(int *ix, int *end, int *s)
 {
-    int max;
-    int choice0, sum0;
-    int choice1, sum1;
-    int cb_esc_buf[288];
-    int *cb_esc_end;
+    unsigned int max;
+    int choice, choice2;
+    static const int huf_tbl_noESC[16] = {
+	1, 2, 5, 7, 7,10,10,13,13,13,13,13,13,13,13
+    };
 
     max = ix_max(ix, end);
 
-    if (max > IXMAX_VAL) {
-        *s = LARGE_BITS;
-        return -1;
-    }
+    switch (max) {
+    case 0:
+	return max;
 
-    if (max <= 15)  {
-	if (max == 0) {
-	    return 0;
+    case 1:
+	return count_bit_noESC(ix, end, 1, s);
+
+    case 2:
+    case 3:
+	return count_bit_noESC_from2(ix, end, huf_tbl_noESC[max - 1], s);
+
+    case 4: case 5: case 6:
+    case 7: case 8: case 9:
+    case 10: case 11: case 12:
+    case 13: case 14: case 15:
+	choice = count_bit_noESC_from3(ix, end, huf_tbl_noESC[max - 1], s);
+	if (choice == 14) {
+	    choice = 16;
 	}
-	/* try tables with no linbits */
-	choice0 = huf_tbl_noESC[max - 1];
-	sum0 = count_bit_noESC(ix, end, choice0,cb_esc_buf,&cb_esc_end);
-	choice1 = choice0;
+	return choice;
 
-	switch (choice0) {
-	case 7:
-	case 10:
-	    choice1++;
-	    sum1 = count_bit_noESC2(choice1,cb_esc_buf,cb_esc_end);
-	    if (sum0 > sum1) {
-		sum0 = sum1;
-		choice0 = choice1;
-	    }
-	    /*fall*/
-	case 2:
-	case 5:
-	    choice1++;
-	    sum1 = count_bit_noESC2(choice1,cb_esc_buf,cb_esc_end);
-	    if (sum0 > sum1) {
-		sum0 = sum1;
-		choice0 = choice1;
-	    }
-	    break;
-
-	case 13:
-	    sum1 = count_bit_noESC2(14,cb_esc_buf,cb_esc_end);
-	    if (sum0 > sum1) {
-		sum0 = sum1;
-		choice0 = 16;
-	    }
-
-	    choice1 = 15;
-	    sum1 = count_bit_noESC2(choice1,cb_esc_buf,cb_esc_end);
-	    if (sum0 > sum1) {
-		sum0 = sum1;
-		choice0 = choice1;
-	    }
-	    break;
-
-	default:
-	    break;
-	}
-	*s += sum0;
-    } else {
+    default:
 	/* try tables with linbits */
+	if (max > IXMAX_VAL) {
+	    *s = LARGE_BITS;
+	    return -1;
+	}
 	max -= 15;
-
-	for (choice1 = 24; choice1 < 32; choice1++) {
-	    if ((int)ht[choice1].linmax >= max) {
+	for (choice2 = 24; choice2 < 32; choice2++) {
+	    if (ht[choice2].linmax >= max) {
 		break;
 	    }
 	}
 
-	for (choice0 = choice1 - 8; choice0 < 24; choice0++) {
-	    if ((int)ht[choice0].linmax >= max) {
+	for (choice = choice2 - 8; choice < 24; choice++) {
+	    if (ht[choice].linmax >= max) {
 		break;
 	    }
 	}
-
-	choice0 = count_bit_ESC(ix, end, choice0, choice1, s);
+	return count_bit_ESC(ix, end, choice, choice2, s);
     }
-
-    return choice0;
 }
 
+/*************************************************************************/
+/*	      count_bit							 */
+/*************************************************************************/
+
+/*
+ Function: Count the number of bits necessary to code the subregion. 
+*/
+
+
+static const int huf_tbl_noESC[15] = {
+    1, 2, 5, 7, 7,10,10,13,13,13,13,13,13,13,13
+};
 
 int bigv_short_ISO;
 
