@@ -148,6 +148,34 @@ int apply_abr_preset(lame_global_flags*  gfp, int preset)
 int apply_preset(lame_global_flags*  gfp, int preset)
 {
     switch (preset) {
+    case MEDIUM: {
+                lame_set_VBR(gfp, vbr_rh);
+
+                lame_set_preset_expopts(gfp, 3);
+                lame_set_quality(gfp, 2);
+                lame_set_lowpassfreq(gfp, 18000);
+                lame_set_mode(gfp, JOINT_STEREO);
+                lame_set_VBR_min_bitrate_kbps(gfp, 64);
+                lame_set_athaa_sensitivity(gfp, -11);
+                lame_set_msfix(gfp, 3);
+                lame_set_VBR_q(gfp, 3);
+                lame_set_experimentalY(gfp, 1);
+                return preset;
+           }
+    case MEDIUM_FAST: {
+                lame_set_VBR(gfp, vbr_mtrh);
+
+                lame_set_preset_expopts(gfp, 3);
+                lame_set_quality(gfp, 2);
+                lame_set_lowpassfreq(gfp, 18000);
+                lame_set_mode(gfp, JOINT_STEREO);
+                lame_set_VBR_min_bitrate_kbps(gfp, 64);
+                lame_set_athaa_sensitivity(gfp, -11);
+                lame_set_msfix(gfp, 3);
+                lame_set_VBR_q(gfp, 3);
+                lame_set_experimentalY(gfp, 1);
+                return preset;
+           }
     case STANDARD: {
                 lame_set_VBR(gfp, vbr_rh);
 
