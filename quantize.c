@@ -699,7 +699,7 @@ void outer_loop(
       /* see if we should apply preemphasis */
       int pre_just_turned_on=0;
       /*
-	pre_just_turned_on=
+      pre_just_turned_on=
       	preemphasis(xr[gr][ch],xrpow,l3_xmin,gr,ch,l3_side,distort);
       */
 

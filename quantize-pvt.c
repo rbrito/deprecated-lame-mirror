@@ -785,7 +785,7 @@ void quantize_xrpow( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
     }
   else
     {
-      for (j=576/4;j>0;j--) {
+      for (j=576;j>0;j--) {
 	x = istep_l * *xr++;
 	/*	*(ix++) = (int)( x  +  adj43[(int)x]); */
 	XRPOW_FTOI(x-.5, rx);
