@@ -202,7 +202,7 @@ lame_init_params_ppflt(lame_internal_flags *gfc)
 int lame_init_params(lame_global_flags *gfp)
 {
     static unsigned char vbr_compression_ratio_guess [] = { 
-        52, 57, 64, 71, 89, 98, 110, 125, 137, 150 
+        52, 57, 64, 71, 89, 98, 110, 125, 137, 150 		// 5.2x ... 15x
     };
     static const float  masking_lower [] = { 
         0.316, 0.422, 0.562, 0.750, 1.000, 1.096, 1.202, 1.318, 1.445, 1.585 
@@ -366,21 +366,24 @@ int lame_init_params(lame_global_flags *gfp)
 	// pfk
         // For 44.1 kHz
 	//   1... 96 kbps: Mono                 better than ugly stereo °)
-	//  97...160 kbps: Joint Stereo
-	// 161...192 kbps: Force Joint Stereo   bandwidth not enough for LR stereo, but reducing switching artefacts
+	//  97...159 kbps: Joint Stereo
+	// 160...192 kbps: Force Joint Stereo   bandwidth not enough for LR stereo, but reducing switching artefacts
 	// 193...    kbps: Stereo               enough bandwidth for LR stereo
         //
         // °) mostly prevent by automatic downsampling
 
-        if      ( gfp -> compression_ratio <   7.35 )
+
+        if      ( gfp -> compression_ratio <   7.35 )   // 193...    kbps (-V 0...3)
             gfp -> mode = MPG_MD_STEREO;
-        else if ( gfp -> compression_ratio <   8.82 )
+        else if ( gfp -> compression_ratio <=  8.82 )   // 160...192 kbps ( currently no -V )
             gfp -> force_ms = 1,
             gfp -> mode = MPG_MD_JOINT_STEREO;
-        else if ( gfp -> compression_ratio <= 14.70 )
+        else if ( gfp -> compression_ratio <= 14.70 )   //  97...159 kbps (-V 4...9)
             gfp -> mode = MPG_MD_JOINT_STEREO;
-        else
+        else if ( gfp -> VBR != vbr_off ) {             //    ... 96 kbps
             gfp -> mode = MPG_MD_MONO;
+	    gfp -> compression_ratio *= 0.5;
+	}
 
         // Note: File sizes with -V0 for several files
 	//	-mm    -mj      -mf      -ms          korr
@@ -709,7 +712,10 @@ void lame_print_config(lame_global_flags *gfp)
 {
   lame_internal_flags *gfc=gfp->internal_flags;
 
-  static const char *mode_names[4] = { "stereo", "j-stereo", "dual-ch", "single-ch" };
+  static const char *mode_names [2] [4] = { 
+      { "stereo", "j-stereo", "dual-ch", "single-ch" },
+      { "stereo", "force-j" , "dual-ch", "single-ch" }
+  };
   FLOAT out_samplerate=gfp->out_samplerate/1000.0;
   FLOAT in_samplerate = gfc->resample_ratio*out_samplerate;
 
@@ -717,10 +723,9 @@ void lame_print_config(lame_global_flags *gfp)
   if (gfp->num_channels==2 && gfc->channels==1) {
     MSGF("Autoconverting from stereo to mono. Setting encoding to mono mode.\n");
   }
-  if (gfc->resample_ratio!=1.0) {
-    MSGF("Resampling:  input=%g kHz  output=%g kHz\n",
-	    in_samplerate,out_samplerate);
-  }
+  if ( gfc->resample_ratio != 1.0 )
+    MSGF("Resampling:  input=%g kHz  output=%g kHz\n", in_samplerate, out_samplerate );
+  
   if (gfc->filter_type==0) {
     if (gfc->highpass2>0.0)
       MSGF("Using polyphase highpass filter, transition band: %5.0f Hz - %5.0f Hz\n", 
@@ -764,7 +769,7 @@ void lame_print_config(lame_global_flags *gfp)
           	break;
         }
     	MSGF (" %s MPEG-%u%s Layer III (%gx estim) qval=%i\n", 
-	      mode_names [gfp -> mode],
+	      mode_names [gfp -> force_ms] [gfp -> mode],
               2 - gfp -> version, 
               gfp -> out_samplerate < 16000 ? ".5" : "",
               0.1 * (int) (gfp -> compression_ratio * 10 + 0.5),
@@ -1289,9 +1294,13 @@ char *mp3buf, size_t mp3buf_size)
  *
  * return code = number of bytes output in mp3buffer.  can be 0
 */
-int lame_encode_buffer(lame_global_flags *gfp,
-   sample_t* buffer_l, sample_t* buffer_r,size_t nsamples,
-   char *mp3buf, size_t mp3buf_size)
+int    lame_encode_buffer (
+		lame_global_flags*  gfp,
+                sample_t*           buffer_l, 
+		sample_t*           buffer_r,
+		size_t              nsamples,
+                char*               mp3buf, 
+		size_t              mp3buf_size )
 {
   int mp3size = 0, ret, i, ch, mf_needed;
   lame_internal_flags *gfc=gfp->internal_flags;

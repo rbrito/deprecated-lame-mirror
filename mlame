@@ -173,7 +173,7 @@ for src in "$@"; do
 		sleep $errordelay
             elif $mp3coder $options "$src" "$dst"; then
                 if [ $removesource = true ]; then
-                    mv -f "$src"
+                    mv -f "$dst" "$src"
                 fi
             else
                 echo converting of \'$src\' to \'$dst\' failed

@@ -10,111 +10,151 @@
 
 #ifdef USE_LAYER_1
 
+#include <assert.h>
 #include "mpg123.h"
 
-void I_step_one(unsigned int balloc[], unsigned int scale_index[2][SBLIMIT],struct frame *fr)
+real muls [27] [64];   // used by Layer 1 and 2 decoding
+
+
+void   I_step_one ( 
+		unsigned int         balloc [], 
+		unsigned int         scale_index [2] [SBLIMIT],
+		const struct frame*  fr )
 {
-  unsigned int *ba=balloc;
-  unsigned int *sca = (unsigned int *) scale_index;
+    unsigned int*  sca = (unsigned int*) scale_index;
+    unsigned int*  ba;
+    unsigned int   jsbound;
+    unsigned int   i;
+    
+    switch ( fr -> channels ) {
+    case 1:
+        ba = balloc;
+        for ( i = 0; i < SBLIMIT; i++ )
+            *ba++ = getbits (4);
+	    
+        ba = balloc;
+        for ( i = 0; i < SBLIMIT; i++ )
+            if (*ba++)
+                *sca++ = getbits (6);
+	break;
+    case 2:
+	jsbound = fr -> jsbound;
+	
+        ba = balloc;
+	for ( i = 0; i < jsbound; i++ ) { 
+            *ba++ = getbits (4);
+            *ba++ = getbits (4);
+        }
+        for ( i = jsbound; i < SBLIMIT; i++ )
+            *ba++ = getbits (4);
 
-  if(fr->channels==2) {
-    int i;
-    int jsbound = fr->jsbound;
-    for (i=0;i<jsbound;i++) { 
-      *ba++ = getbits(4);
-      *ba++ = getbits(4);
+        ba = balloc;
+        for ( i = 0; i < jsbound; i++ ) {
+            if (*ba++)
+    		*sca++ = getbits (6);
+            if (*ba++)
+    		*sca++ = getbits (6);
+        }
+        for ( i = jsbound; i < SBLIMIT; i++)
+            if (*ba++) {
+                *sca++ = getbits (6);
+                *sca++ = getbits (6);
+            }
+	break;
+    default:
+        assert (0);
+	break;
     }
-    for (i=jsbound;i<SBLIMIT;i++)
-      *ba++ = getbits(4);
-
-    ba = balloc;
-
-    for (i=0;i<jsbound;i++) {
-      if ((*ba++))
-        *sca++ = getbits(6);
-      if ((*ba++))
-        *sca++ = getbits(6);
-    }
-    for (i=jsbound;i<SBLIMIT;i++)
-      if ((*ba++)) {
-        *sca++ =  getbits(6);
-        *sca++ =  getbits(6);
-      }
-  }
-  else {
-    int i;
-    for (i=0;i<SBLIMIT;i++)
-      *ba++ = getbits(4);
-    ba = balloc;
-    for (i=0;i<SBLIMIT;i++)
-      if ((*ba++))
-        *sca++ = getbits(6);
-  }
 }
 
-void I_step_two(real fraction[2][SBLIMIT],unsigned int balloc[2*SBLIMIT],
-	unsigned int scale_index[2][SBLIMIT],struct frame *fr)
+void I_step_two (
+		real                 fraction    [2] [SBLIMIT],
+		unsigned int         balloc      [2 * SBLIMIT],
+	        unsigned int         scale_index [2] [SBLIMIT],
+		const struct frame*  fr)
 {
-  int i,n;
-  int smpb[2*SBLIMIT]; /* values: 0-65535 */
-  int *sample;
-  register unsigned int *ba;
-  register unsigned int *sca = (unsigned int *) scale_index;
+    int             smpb [2*SBLIMIT];                   /* values: 0...65535 */
+    int*            sample;
+    unsigned int*   sca = (unsigned int*) scale_index;
+    unsigned int*   ba;
+    register real*  f0;
+    register real*  f1;
+    real            samp;
+    int             jsbound;
+    int             i;
+    int             n;
 
-  if(fr->channels==2) {
-    int jsbound = fr->jsbound;
-    register real *f0 = fraction[0];
-    register real *f1 = fraction[1];
-    ba = balloc;
-    for (sample=smpb,i=0;i<jsbound;i++)  {
-      if ((n = *ba++))
-        *sample++ = getbits(n+1);
-      if ((n = *ba++))
-        *sample++ = getbits(n+1);
-    }
-    for (i=jsbound;i<SBLIMIT;i++) 
-      if ((n = *ba++))
-        *sample++ = getbits(n+1);
+    switch ( fr -> channels ) {
+    case 1:
+        f0     = fraction [0];
+	
+        ba     = balloc;
+        sample = smpb;
+        for ( i = 0; i < SBLIMIT; i++ )
+            if ( (n = *ba++) != 0 )
+                *sample++ = getbits(n+1);
+		
+        ba     = balloc;
+        sample = smpb;
+        for ( i = 0; i < SBLIMIT; i++ ) {
+            if ( (n=*ba++) != 0 )
+                *f0++ = (real) ( (-1<<n) + 1 + *sample++) * muls [n+1] [*sca++];
+            else
+                *f0++ = 0.;
+        }
+	
+        for ( i = fr -> down_sample_sblimit; i < 32; i++ )
+            fraction [0] [i] = 0.;
+	break;
+	
+    case 2:
+	jsbound = fr -> jsbound;
+	f0      = fraction [0];
+	f1      = fraction [1];
+	
+	ba      = balloc;
+	sample  = smpb;
+        for ( i = 0; i < jsbound; i++ ) {
+            if ( (n = *ba++) != 0 )
+    		*sample++ = getbits (n+1);
+            if ( (n = *ba++) != 0 )
+    		*sample++ = getbits(n+1);
+        }
+        for ( i = jsbound; i < SBLIMIT; i++ ) 
+            if ( (n = *ba++) != 0 )
+                *sample++ = getbits (n+1);
 
-    ba = balloc;
-    for (sample=smpb,i=0;i<jsbound;i++) {
-      if((n=*ba++))
-        *f0++ = (real) ( ((-1)<<n) + (*sample++) + 1) * muls[n+1][*sca++];
-      else
-        *f0++ = 0.0;
-      if((n=*ba++))
-        *f1++ = (real) ( ((-1)<<n) + (*sample++) + 1) * muls[n+1][*sca++];
-      else
-        *f1++ = 0.0;
+        ba      = balloc;
+	sample  = smpb;
+        for ( i = 0; i < jsbound; i++ ) {
+            if ( (n = *ba++) != 0 )
+                *f0++ = (real) ( (-1<<n) + 1 + *sample++) * muls [n+1] [*sca++];
+            else
+                *f0++ = 0.;
+		
+            if ( (n = *ba++) != 0 )
+                *f1++ = (real) ( (-1<<n) + 1 + *sample++) * muls [n+1] [*sca++];
+            else
+                *f1++ = 0.;
+        }
+        for ( i = jsbound; i < SBLIMIT; i++ ) {
+            if ( (n = *ba++) != 0 ) {
+                samp = (real) ( (-1<<n) + 1 + *sample++ );
+                *f0++ = samp * muls [n+1] [*sca++];
+                *f1++ = samp * muls [n+1] [*sca++];
+            } else {
+                *f0++ = *f1++ = 0.;
+	    }
+        }
+	
+        for ( i = fr -> down_sample_sblimit; i < 32; i++ )
+            fraction [0] [i] = fraction [1] [i] = 0.;
+        break;
+	
+    default:
+        assert (0);
+	break;
     }
-    for (i=jsbound;i<SBLIMIT;i++) {
-      if ((n=*ba++)) {
-        real samp = (real)( ((-1)<<n) + (*sample++) + 1);
-        *f0++ = samp * muls[n+1][*sca++];
-        *f1++ = samp * muls[n+1][*sca++];
-      }
-      else
-        *f0++ = *f1++ = 0.0;
-    }
-    for(i=fr->down_sample_sblimit;i<32;i++)
-      fraction[0][i] = fraction[1][i] = 0.0;
-  }
-  else {
-    register real *f0 = fraction[0];
-    ba = balloc;
-    for (sample=smpb,i=0;i<SBLIMIT;i++)
-      if ((n = *ba++))
-        *sample++ = getbits(n+1);
-    ba = balloc;
-    for (sample=smpb,i=0;i<SBLIMIT;i++) {
-      if((n=*ba++))
-        *f0++ = (real) ( ((-1)<<n) + (*sample++) + 1) * muls[n+1][*sca++];
-      else
-        *f0++ = 0.0;
-    }
-    for(i=fr->down_sample_sblimit;i<32;i++)
-      fraction[0][i] = 0.0;
-  }
 }
 
 //int do_layer1(struct frame *fr,int outmode,struct audio_info_struct *ai)

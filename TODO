@@ -1,4 +1,5 @@
-0.   ./configure script
+0.
+./configure script
 
 things to check for:  
 
@@ -6,13 +7,17 @@ things to check for:
    -llibsndfile      (allow user to enable)
    -lvorbis          (allow user to disable)
    -lGTK             (allow user to disable)
-   architecture depending optimization(like assembler code)
-   make depend option for CC
+
+   architecture depending optimizations (like assembler code) make depend
+   option for CC
 
 
-1. ACM wrapper for LAME.  Contact 
-"Florian Bruckner" <h9651030@miraculix.wu-wien.ac.at>
-for info - he is working on the VorbisACM.  
+1.
+ACM wrapper for LAME.
+
+Contact "Florian Bruckner" <h9651030@miraculix.wu-wien.ac.at> for info - 
+he is working on the VorbisACM.
+
 
 1.
 Does stdin work when LAME is compiled to use libsndfile? 
@@ -21,8 +26,25 @@ Does stdin work when LAME is compiled to use libsndfile?
 
 2. 
 LAME has problems with pure DC input.  i.e. a square wave with
-a frequency well below 20Hz.  Not very important, but it should
+a frequency well below 20 Hz.  Not very important, but it should
 be fixed.
+
+
+2a.
+Combined LPC + FFT spectral analysis will solve perhaps solve problem 2.
+
+First the input signal is filtered with a simple low order IIR filter which
+imitates the spectral sensivity of the human ear. The result is the input of
+the windowed FFT. Then spectral power density is computed.
+
+Now there are 2 possibilties:
+
+  * The influence of the IIR is removed while computing the Spectral Power
+    Density
+
+  * The rest of the calculation is done with the preemphased SPD
+    coefficients.
+
 
 3. 
 Replace internal representation of PCM data to floating point
@@ -33,9 +55,13 @@ floating point and have finaly quantization step a
 easy-to-change module so it can output other than 16bit.
 
 
+997. 
+RPC support for distributed computing
+
 
 998.
 Merge GOGO's fast assembler routines.
+
 
 999.
 It would be nice to save some information whilst encoding

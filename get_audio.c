@@ -260,7 +260,7 @@ static int    WriteWav (
     Write32BitsLowHigh ( fp, PCMbytes+44-8 );           // total file size without this 8 byte here
     fwrite             ( "WAVEfmt ", 1, 8, fp );
     Write32BitsLowHigh ( fp, 16 );                      // now following 16 byte of header data
-    Write16BitsLowHigh ( fp, 1 );                       // this is simple PCM data
+    Write16BitsLowHigh ( fp,  1 );                      // this is simple PCM data
     Write16BitsLowHigh ( fp, Channels );                // Channels
     Write32BitsLowHigh ( fp, freq );                    // fs
     Write32BitsLowHigh ( fp, freq * Channels * bytes ); // Bytes per second
@@ -288,13 +288,7 @@ int lame_decoder ( lame_global_flags* gfp, FILE* outf, int skip )
     double      wavsize;
     int         layer = 1;
     size_t      i;
-    
-#ifdef __cplusplus    
-    // how to use C-Linkage ????
-    void  (*WriteFunction) (FILE* fp, char *p, int n);
-#else
-    CLINK void  (*WriteFunction) (FILE* fp, char *p, int n);
-#endif         
+    void        (*WriteFunction) (FILE* fp, char *p, int n);
 
     MSGF ( "\rinput:  %s%s(%g kHz, %i channel%s, ", 
            strcmp (gfp->inPath, "-")  ?  gfp->inPath  :  "<stdin>",

@@ -49,7 +49,9 @@ CPP_OPTS += -DHAVEMPGLIB
 ##########################################################################
 # -DUSE_LAYER_1/2 enables Layer1 or Layer2 *decoding* abilities 
 ##########################################################################
-# CPP_OPTS += -DUSE_LAYER_1 -DUSE_LAYER_2
+CPP_OPTS += -DUSE_LAYER_1 
+
+## -DUSE_LAYER_2
 
 ##########################################################################
 # floating point option:

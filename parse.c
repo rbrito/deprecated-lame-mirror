@@ -446,6 +446,9 @@ static int filename_to_type ( const char* FileName )
     if ( 0 == local_strcasecmp ( FileName, ".mp2" ) ) return sf_mp2;
     if ( 0 == local_strcasecmp ( FileName, ".mp3" ) ) return sf_mp3;
     if ( 0 == local_strcasecmp ( FileName, ".ogg" ) ) return sf_ogg;
+    if ( 0 == local_strcasecmp ( FileName, ".wav" ) ) return sf_wave;
+    if ( 0 == local_strcasecmp ( FileName, ".aif" ) ) return sf_aiff;
+    if ( 0 == local_strcasecmp ( FileName, ".raw" ) ) return sf_raw;
     return sf_unknown;
 }
 
@@ -948,11 +951,7 @@ void lame_parse_args ( lame_global_flags* gfp, int argc, char** argv )
     }
     
     /* if user did not explicitly specify input is mp3, check file name */
-    
-    if ( gfp -> input_format != sf_mp1  || 
-	 gfp -> input_format != sf_mp2  ||
-	 gfp -> input_format != sf_mp3  ||
-	 gfp -> input_format != sf_ogg )  // long-winded for: if ( 1 ) {
+    if ( gfp -> input_format == sf_unknown ) 
 	gfp -> input_format = filename_to_type ( gfp -> inPath );
     
 #if !(defined HAVEMPGLIB || defined AMIGA_MPEGA)

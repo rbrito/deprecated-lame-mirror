@@ -16,8 +16,6 @@ static int grp_3tab[32 * 3] = { 0, };   /* used: 27 */
 static int grp_5tab[128 * 3] = { 0, };  /* used: 125 */
 static int grp_9tab[1024 * 3] = { 0, }; /* used: 729 */
 
-real muls[27][64];	/* also used by layer 1 */
-
 void init_layer2(void)
 {
   static double mulmul[27] = {

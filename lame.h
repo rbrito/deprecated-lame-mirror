@@ -21,6 +21,16 @@
 #ifndef LAME_H_INCLUDE
 # define LAME_H_INCLUDE
 
+// Macros to mark memory transfers for RPC functions
+// size_t fread  ( INOUT char* buffer, IN size_t count, IN size_t size, INOUT FILE* fp );
+// size_t fwrite ( OUT   char* buffer, IN size_t count, IN size_t size, INOUT FILE* fp );
+// void   memset ( IN    void* buffer, IN int fill, IN size_t size );
+
+#define IN		/* Object is transfered from RPC system, no data is taken from the origin */
+#define OUT    const    /* Object is transfered only to the RPC system and therefore never changed */
+#define INOUT           /* before remote execution data is transfered to remote host and after the
+                           operation the (maybe) modified data is transfered back */
+
 # include <stdio.h>
 
 /* maximum size of mp3buffer needed if you encode at most 1152 samples for
@@ -50,13 +60,15 @@ typedef const unsigned char*   cstring;
 
 typedef enum sound_file_format_e {
     sf_unknown, 
-    sf_mp1,  /* MPEG Layer 1, aka mpg */
-    sf_mp2,  /* MPEG Layer 2 */
-    sf_mp3,  /* MPEG Layer 3 */
+    sf_mp1,  		/* MPEG Layer 1, aka mpg */
+    sf_mp2,  		/* MPEG Layer 2 */
+    sf_mp3,  		/* MPEG Layer 3 */
     sf_ogg,
     sf_raw, 
     sf_wave, 
-    sf_aiff 
+    sf_aiff,
+    sf_wave_szip,  	// see http://www.compressconsult.com/szip/
+    sf_aiff_szip   	// compressing -o4 -i -r4 (for 16 bit stereo)
 } sound_file_format;
 
 typedef enum vbr_mode_e {
