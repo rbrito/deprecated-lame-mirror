@@ -19,10 +19,7 @@ nasm_sources = \
 	cpu_feat.nas \
 	scalar.nas
 
-CLEANFILES = \
-	choose_table.lst \
-	cpu_feat.lst \
-	scalar.lst
+CLEANFILES = *.lst
 
 if HAVE_NASM
 liblameasmroutines_la_SOURCES = $(nasm_sources)
