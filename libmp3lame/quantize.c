@@ -1638,6 +1638,7 @@ ABR_iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 	    gfc->masking_lower = gfc->masklower_base;
 	}
     }
+    gfc->masking_lower_short = gfc->masking_lower;
 }
 
 #ifndef NOANALYSIS
