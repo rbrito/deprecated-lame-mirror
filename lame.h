@@ -351,7 +351,14 @@ int lame_decode_initfile(FILE *fd,mp3data_struct *mp3data);
 int lame_decode_fromfile(FILE *fd,short int pcm_l[],short int pcm_r[],mp3data_struct *mp3data);
 #endif
 
-
+/* the simple lame decoder (interface to above routines) */
+/* After calling lame_init(), lame_init_params() and
+ * lame_init_infile(), call this routine to read the input MP3 file 
+ * and output .wav data to the specified file pointer*/
+/* lame_decoder will ignore the first 528 samples, since these samples
+ * represent the mpglib delay (and are all 0).  skip = number of additional
+ * samples to skip, to (for example) compensate for the encoder delay */
+int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip);
 
 
 #endif

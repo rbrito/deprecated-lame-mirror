@@ -20,26 +20,6 @@
 
 
 
-void WriteWav(FILE *f,unsigned long bytes,int srate,int ch){
-  /* quick and dirty */
-
-  fwrite("RIFF",1,4,f);               /*  0-3 */
-  Write32BitsLowHigh(f,bytes+44-8);
-  fwrite("WAVEfmt ",1,8,f);           /*  8-15 */
-  Write32BitsLowHigh(f,16);
-  Write16BitsLowHigh(f,1);
-  Write16BitsLowHigh(f,ch);
-  Write32BitsLowHigh(f,srate);
-  Write32BitsLowHigh(f,srate*ch*2);
-  Write16BitsLowHigh(f,4);
-  Write16BitsLowHigh(f,16);
-  fwrite("data",1,4,f);               /* 36-39 */
-  Write32BitsLowHigh(f,bytes);
-}
-
-
-
-
 
 /************************************************************************
 *
@@ -131,45 +111,10 @@ int main(int argc, char **argv)
 #endif
 
   } else if (gf.decode_only) {
+    
     /* decode an mp3 file to a .wav */
-    int skip=528+gf.encoder_delay;
-    long wavsize=2147483647L;  /* max for a signed long */
-    fprintf(stderr, "input:    %s %.1fkHz MPEG%i %i channel LayerIII\n",
-	    (strcmp(gf.inPath, "-")? gf.inPath : "stdin"),
-	    gf.in_samplerate/1000.0,2-gf.version,gf.num_channels);
-    fprintf(stderr, "output:   %s (wav format)\n",
-	    (strcmp(gf.outPath, "-")? gf.outPath : "stdout"));
-    fprintf(stderr, "skipping initial %i samples (encoder + decoder delay)\n",skip);
-    WriteWav(outf,wavsize,gf.in_samplerate,gf.num_channels);
-    wavsize=-skip;
-    do {
-      int i;
-      /* read in 'iread' samples */
-      iread=lame_readframe(&gf,Buffer);
-      wavsize += iread;
-      if (!gf.silent)
-	fprintf(stderr,"\rFrame# %lu [ %lu]  %ikbs",gf.frameNum,
-           gf.totalframes-1,gf.brate);
-      for (i=0; i<iread; ++i) {
-	if (skip) {
-	  --skip;
-	}else{
-	  Write16BitsLowHigh(outf,Buffer[0][i]);
-	  if (gf.num_channels==2) 
-	    Write16BitsLowHigh(outf,Buffer[1][i]);
-	}
-      }
-    } while (iread);
-    if (wavsize<0) wavsize=0;
-    wavsize *= 2*gf.num_channels;
-    fprintf(stderr,"\n");
-    /* if outf is seekable, rewind and adjust length */
-    if (!fseek(outf,0,SEEK_SET)) 
-       WriteWav(outf,wavsize,gf.in_samplerate,gf.num_channels); 
-    fclose(outf);
-
-
-
+    lame_decoder(&gf,outf,gf.encoder_delay);
+    
   } else {
 
       /* encode until we hit eof */

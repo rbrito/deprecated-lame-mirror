@@ -181,6 +181,77 @@ int read_samples_mp3(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2]
   exit(1);
 #endif
 }
+
+
+
+
+
+void WriteWav(FILE *f,unsigned long bytes,int srate,int ch){
+  /* quick and dirty */
+  fwrite("RIFF",1,4,f);               /*  0-3 */
+  Write32BitsLowHigh(f,bytes+44-8);
+  fwrite("WAVEfmt ",1,8,f);           /*  8-15 */
+  Write32BitsLowHigh(f,16);
+  Write16BitsLowHigh(f,1);
+  Write16BitsLowHigh(f,ch);
+  Write32BitsLowHigh(f,srate);
+  Write32BitsLowHigh(f,srate*ch*2);
+  Write16BitsLowHigh(f,4);
+  Write16BitsLowHigh(f,16);
+  fwrite("data",1,4,f);               /* 36-39 */
+  Write32BitsLowHigh(f,bytes);
+}
+
+/* the simple lame decoder */
+/* After calling lame_init(), lame_init_params() and
+ * lame_init_infile(), call this routine to read the input MP3 file 
+ * and output .wav data to the specified file pointer*/
+/* lame_decoder will ignore the first 528 samples, since these samples
+ * represent the mpglib delay (and are all 0).  skip = number of additional
+ * samples to skip, to (for example) compensate for the encoder delay */
+int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip)
+{
+  short int Buffer[2][1152];
+  int iread;
+  
+  long wavsize=2147483647L;  /* max for a signed long */
+  skip+=528;
+  fprintf(stderr, "input:    %s %.1fkHz MPEG%i %i channel LayerIII\n",
+	  (strcmp(gfp->inPath, "-")? gfp->inPath : "stdin"),
+	  gfp->in_samplerate/1000.0,2-gfp->version,gfp->num_channels);
+  fprintf(stderr, "output:   %s (wav format)\n",
+	  (strcmp(gfp->outPath, "-")? gfp->outPath : "stdout"));
+  fprintf(stderr, "skipping initial %i samples (encoder + decoder delay)\n",skip);
+  WriteWav(outf,wavsize,gfp->in_samplerate,gfp->num_channels);
+  wavsize=-skip;
+  do {
+    int i;
+    /* read in 'iread' samples */
+    iread=lame_readframe(gfp,Buffer);
+    wavsize += iread;
+    if (!gfp->silent)
+      fprintf(stderr,"\rFrame# %lu [ %lu]  %ikbs",gfp->frameNum,
+	      gfp->totalframes-1,gfp->brate);
+    for (i=0; i<iread; ++i) {
+      if (skip) {
+	--skip;
+      }else{
+	Write16BitsLowHigh(outf,Buffer[0][i]);
+	if (gfp->num_channels==2) 
+	  Write16BitsLowHigh(outf,Buffer[1][i]);
+      }
+    }
+  } while (iread);
+  if (wavsize<0) wavsize=0;
+  wavsize *= 2*gfp->num_channels;
+  fprintf(stderr,"\n");
+  /* if outf is seekable, rewind and adjust length */
+  if (!fseek(outf,0,SEEK_SET)) 
+    WriteWav(outf,wavsize,gfp->in_samplerate,gfp->num_channels); 
+  fclose(outf);
+}
+
+
 #endif  /* LAMESNDFILE or LIBSNDFILE */
 
 
