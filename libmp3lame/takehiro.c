@@ -81,7 +81,7 @@ count_bit_ESC(
           int * const s)
 {
     /* ESC-table is used */
-    int linbits = ht[t1].xlen * 65536 + ht[t2].xlen;
+    int linbits = ht[t1-1].xlen * 65536 + ht[t2-1].xlen;
     int sum = 0, sum2;
 
     do {
@@ -129,10 +129,10 @@ count_bit_noESC_from2(
 {
     /* No ESC-words */
     unsigned int sum = 0, sum2;
-    const int xlen = ht[t1].xlen;
-    static const unsigned int *from2_tables[] = {
-	table13, table23, NULL, NULL, table56};
-    const unsigned int *hlen = from2_tables[t1-1];
+    const int xlen = ht[t1-1].xlen;
+    const unsigned int *hlen = table13;
+    if (t1 == 5)
+	hlen = table56;
     do {
 	int x = ix[0] * xlen + ix[1];
 	ix += 2;
@@ -165,10 +165,10 @@ count_bit_noESC_from3(
     int	sum1 = 0;
     int	sum2 = 0;
     int	sum3 = 0;
-    const int xlen = ht[t1].xlen;
-    const char *hlen1 = ht[t1].hlen;
-    const char *hlen2 = ht[t1+1].hlen;
-    const char *hlen3 = ht[t1+2].hlen;
+    const int xlen = ht[t1-1].xlen;
+    const char *hlen1 = ht[t1-1].hlen;
+    const char *hlen2 = ht[t1].hlen;
+    const char *hlen3 = ht[t1+1].hlen;
     int t;
 
     do {
@@ -258,11 +258,11 @@ int choose_table_nonMMX(
 	    return -1;
 	}
 	for (choice2 = 24; choice2 < 32; choice2++)
-	    if (ht[choice2].linmax >= max)
+	    if (ht[choice2-1].linmax >= max)
 		break;
 
 	for (choice = choice2 - 8; choice < 24; choice++)
-	    if (ht[choice].linmax >= max)
+	    if (ht[choice-1].linmax >= max)
 		break;
 
 	return count_bit_ESC(ix, end, choice, choice2, s);

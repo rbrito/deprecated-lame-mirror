@@ -475,7 +475,6 @@ const unsigned char quadcode[2][16*2]  = {
 
 const struct huffcodetab ht[] = {
   /* xlen, linmax, table, hlen */
-  { 0,   0,NULL,NULL},
   { 2,   0,t1HB, t1l},
 
   { 3,   0,t2HB, t2l},
@@ -516,13 +515,8 @@ const struct huffcodetab ht[] = {
   {13,8191+15,t24HB, t24l}
 };
 
-
-
-
-
-/*  for (i = 0; i < 16*16; i++) {
+/*  for (i = 0; i < 16*16; i++)
  *      largetbl[i] = ((ht[16].hlen[i]) << 16) + ht[24].hlen[i];
- *  }
  */
 const unsigned int largetbl[16*16] = {
 0x010004, 0x050005, 0x070007, 0x090008, 0x0a0009, 0x0a000a, 0x0b000a, 0x0b000b,
@@ -566,15 +560,6 @@ const unsigned int table13[2*2] = {
     0x010002, 0x040003,
     0x030004, 0x050004
 };
-/*  for (i = 0; i < 3*3; i++)
- *      table23[i] = ((ht[2].hlen[i]) << 16) + ht[3].hlen[i];
- */
-const unsigned int table23[3*3] = {
-    0x010002, 0x040003, 0x070007,
-    0x040004, 0x050004, 0x070007, 
-    0x060006, 0x070007, 0x080008
-};
-
 /*   for (i = 0; i < 4*4; i++)
  *       table56[i] = ((ht[5].hlen[i]) << 16) + ht[6].hlen[i];
  */

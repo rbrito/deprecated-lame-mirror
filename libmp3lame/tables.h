@@ -32,12 +32,11 @@ struct huffcodetab {
 };
 
 /* array of all huffcodtable headers, Huffman code table 0..31 */
-extern const struct huffcodetab ht [];
+extern const struct huffcodetab ht[];
 
 extern const unsigned char quadcode[2][16*2];
 
 extern const unsigned int   largetbl    [16*16];
-extern const unsigned int   table23       [3*3];
 extern const unsigned int   table56       [4*4];
 extern const unsigned int   table13       [2*2];
 

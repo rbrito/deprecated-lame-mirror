@@ -11,7 +11,6 @@
 
 	externdef	largetbl
 	externdef	table13
-	externdef	table23
 	externdef	table56
 
 	segment_data

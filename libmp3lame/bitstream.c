@@ -197,9 +197,9 @@ Huf_bigvalue(bit_stream_t *bs, int tablesel, int start, int end, gr_info *gi)
 	return;
 
     if (tablesel > 15)
-	Huffmancode_esc(bs, &ht[tablesel], start, end, gi);
+	Huffmancode_esc(bs, &ht[tablesel-1], start, end, gi);
     else
-	Huffmancode(bs, &ht[tablesel], start, end, gi);
+	Huffmancode(bs, &ht[tablesel-1], start, end, gi);
 }
 
 /*
