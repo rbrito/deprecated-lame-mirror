@@ -1448,7 +1448,7 @@ is_syncword_mp123(const void *const headerptr)
     if ((p[1] & 0x06) == 0x04) /* illegal Layer II bitrate/Channel Mode comb */
         if (abl2[p[2] >> 4] & (1 << (p[3] >> 6)))
             return 0;
-    if ((p[7] & 3) == 2)
+    if ((p[3] & 3) == 2)
 	return 0;       /* reserved enphasis mode */
 
     layer = (p[1] & 0x0E);
