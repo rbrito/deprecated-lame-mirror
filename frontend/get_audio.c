@@ -955,108 +955,88 @@ read_samples_pcm(FILE * musicin, int sample_buffer[2304], int frame_size,
 
 void SetIDTagsFromRiffTags(lame_global_flags * gfp, FILE * sf)
 {
-	int subSize =Read32BitsLowHigh(sf);
-	while (0 != subSize && !feof(sf))
-	{
-		int type = Read32BitsHighLow(sf);
-		subSize -= 4;
-		if (WAV_ID_INFO == type)
-		{
-		}
-		else if (WAV_ID_INAM == type)
-		{
-			// Track Name
-			char buf[INFO_SIZE]={0};
-			unsigned int length=Read32BitsLowHigh(sf);
-			subSize -= 4;
+    int subSize = Read32BitsLowHigh(sf);
+    while (subSize && !feof(sf)) {
+	int type = Read32BitsHighLow(sf);
+	subSize -= 4;
+	if (WAV_ID_INAM == type) {
+	    /* Track Name */
+	    char buf[INFO_SIZE]={0};
+	    unsigned int length=Read32BitsLowHigh(sf);
+	    subSize -= 4;
 
-			ReadBytes(sf,&buf[0],length);
-			id3tag_set_title(gfp,strdup(&buf[0]));
+	    ReadBytes(sf,&buf[0],length);
+	    id3tag_set_title(gfp,strdup(&buf[0]));
 
-			subSize -= length;
-			if (length & 0x00000001 )  
-			{
-				// resolve word padding
-				ReadByte(sf);
-				subSize--;
-			}
-		}
-		else if (WAV_ID_IART == type)
-		{
-			// Artist Name
-			unsigned int length=Read32BitsLowHigh(sf);
-			char buf[INFO_SIZE]={0};
-			subSize -= 4;
+	    subSize -= length;
+	    if (length & 0x00000001) {
+		/* resolve word padding */
+		ReadByte(sf);
+		subSize--;
+	    }
+	} else if (WAV_ID_IART == type) {
+	    /* Artist Name */
+	    unsigned int length=Read32BitsLowHigh(sf);
+	    char buf[INFO_SIZE]={0};
+	    subSize -= 4;
 
-			ReadBytes(sf,&buf[0],length);
-			id3tag_set_artist(gfp, strdup(&buf[0]));
+	    ReadBytes(sf,&buf[0],length);
+	    id3tag_set_artist(gfp, strdup(&buf[0]));
 
-			subSize -= length;
-			if (length & 0x00000001 )  // resolve word padding
-			{
-				// resolve word padding
-				ReadByte(sf);
-				subSize--;
-			}
-		}
-		else if (WAV_ID_IGNR == type)
-		{
-			// Genre Name
-			char buf[INFO_SIZE]={0};
-			unsigned int length=Read32BitsLowHigh(sf);
-			subSize -= 4;
+	    subSize -= length;
+	    if (length & 0x00000001) {
+		/* resolve word padding */
+		ReadByte(sf);
+		subSize--;
+	    }
+	} else if (WAV_ID_IGNR == type) {
+	    /* Genre Name */
+	    char buf[INFO_SIZE]={0};
+	    unsigned int length=Read32BitsLowHigh(sf);
+	    subSize -= 4;
 
-			ReadBytes(sf,&buf[0],length);
-			if (id3tag_set_genre(gfp,strdup(&buf[0]))) 
-			{
-				fprintf(stderr,"Unknown genre: %s.  Specify genre name or number\n", buf);
-			}
+	    ReadBytes(sf,&buf[0],length);
+	    if (id3tag_set_genre(gfp,strdup(&buf[0]))) {
+		fprintf(stderr,"Unknown genre: %s.  Specify genre name or number\n", buf);
+	    }
+	    subSize -= length;
+	    if (length & 0x00000001) {
+		/* resolve word padding */
+		ReadByte(sf);
+		subSize--;
+	    }
+	} else if (WAV_ID_IPRD == type) {
+	    /* Title */
+	    char buf[INFO_SIZE]={0};
+	    unsigned int length=Read32BitsLowHigh(sf);
+	    subSize -= 4;
 
-			subSize -= length;
-			if (length & 0x00000001 )  // resolve word padding
-			{
-				// resolve word padding
-				ReadByte(sf);
-				subSize--;
-			}
-		}
-		else if (WAV_ID_IPRD == type)
-		{
-			// Title
-			char buf[INFO_SIZE]={0};
-			unsigned int length=Read32BitsLowHigh(sf);
-			subSize -= 4;
+	    ReadBytes(sf,&buf[0],length);
+	    id3tag_set_album(gfp, strdup(&buf[0]));
 
-			ReadBytes(sf,&buf[0],length);
-			id3tag_set_album(gfp, strdup(&buf[0]));
+	    subSize -= length;
+	    if (length & 0x00000001) {
+		/* resolve word padding */
+		ReadByte(sf);
+		subSize--;
+	    }
+	} else if (WAV_ID_ITRK == type) {
+	    /* Track Number */
+	    char buf[INFO_SIZE]={0};
+	    unsigned int length=Read32BitsLowHigh(sf);
+	    subSize -= 4;
 
-			subSize -= length;
-			if (length & 0x00000001 )  // resolve word padding
-			{
-				// resolve word padding
-				ReadByte(sf);
-				subSize--;
-			}
-		}
-		else if (WAV_ID_ITRK == type)
-		{
-			// Track Number
-			char buf[INFO_SIZE]={0};
-			unsigned int length=Read32BitsLowHigh(sf);
-			subSize -= 4;
+	    ReadBytes(sf,&buf[0],length);
+	    id3tag_set_track(gfp, strdup(&buf[0]));
 
-			ReadBytes(sf,&buf[0],length);
-			id3tag_set_track(gfp, strdup(&buf[0]));
-
-			subSize -= length;
-			if (length & 0x00000001 )  // resolve word padding
-			{
-				// resolve word padding
-				ReadByte(sf);
-				subSize--;
-			}
-		}
+	    subSize -= length;
+	    if (length & 1) {
+		/* resolve word padding */
+		ReadByte(sf);
+		subSize--;
+	    }
 	}
+    }
 }
 
 /*****************************************************************************
@@ -1137,7 +1117,7 @@ parse_wave_header(lame_global_flags * gfp, FILE * sf)
         }
         else if (type == WAV_ID_LIST) {
 	    SetIDTagsFromRiffTags(gfp, sf);
-	    // Position read ptr back to data chunk
+	    /* Position read ptr back to data chunk */
 	    break;
         }
         else {
