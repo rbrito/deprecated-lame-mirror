@@ -28,6 +28,7 @@
 
 #include <assert.h>
 #include "util.h"
+#include "bitstream.h"  /* because of compute_flushbits */
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
@@ -725,9 +726,14 @@ lame_set_exp_nspsytune( lame_global_flags*  gfp,
     /* enforce disable/enable meaning, if we need more than two values
        we need to switch to an enum to have an apropriate representation
        of the possible meanings of the value */
+       
+    /*  nice try Alexander, but this restriction breaks Naoki's 
+        settings for "safe joint stereo" and some "bass-alto-trebble"
+        adjustments.  
     if ( 0 > exp_nspsytune || 1 < exp_nspsytune )
         return -1;
-
+        commented out, robert 2001-06-29 */
+        
     gfp->exp_nspsytune = exp_nspsytune;
 
     return 0;
@@ -736,8 +742,9 @@ lame_set_exp_nspsytune( lame_global_flags*  gfp,
 int
 lame_get_exp_nspsytune( const lame_global_flags*  gfp )
 {
-    assert( 0 <= gfp->exp_nspsytune && 1 >= gfp->exp_nspsytune );
-
+    /*  assert( 0 <= gfp->exp_nspsytune && 1 >= gfp->exp_nspsytune );
+        read above note. commented out, robert 2001-06-29 */
+        
     return gfp->exp_nspsytune;
 }
 
@@ -780,6 +787,9 @@ lame_set_VBR_q( lame_global_flags*  gfp,
                 int                 VBR_q )
 {
     /* XXX: This should be an enum*/
+    /*  to whoever added this note: why should it be an enum?
+        do you want to call a specific setting by name? 
+        say VBR quality level red? */
 
     if( 0 > VBR_q || 10 <= VBR_q )
         return -1;  /* Unknown VBR quality level! */
