@@ -234,88 +234,103 @@ ATH = ATH * 2.5e-10      (ener)
 
 */
 
-FLOAT8 ATHmdct(lame_global_flags *gfp,FLOAT8 f)
+FLOAT8 ATHmdct( lame_global_flags *gfp, FLOAT8 f )
 {
-  lame_internal_flags *gfc=gfp->internal_flags;
-  FLOAT8 ath;
+    lame_internal_flags *gfc = gfp->internal_flags;
+    FLOAT8 ath;
   
-  ath = ATHformula(f);
+    ath = ATHformula( f );
 	  
-  /* convert to energy */
-  if (gfp->exp_nspsytune) {
-    ath -= NSATHSCALE;
-  } else {
-    ath -= 114;    /* MDCT scaling.  From tests by macik and MUS420 code */
-  }
-  ath -= gfp->ATHlower;
-
-  /* purpose of RH_QUALITY_CONTROL:
-   * at higher quality lower ATH masking abilities   => needs more bits
-   * at lower quality increase ATH masking abilities => needs less bits
-   * works together with adjusted masking lowering of GPSYCHO thresholds
-   * (Robert.Hegemann@gmx.de 2000-01-30)
-   */
-  if (gfp->VBR!=vbr_off) 
-    {
-      ath -= gfc->ATH_vbrlower;
-      if (!gfp->exp_nspsytune) ath = Min(gfp->VBR_q-62,ath);
+    /* convert to energy */
+    if (gfp->exp_nspsytune) {
+        ath -= NSATHSCALE;
+    } else {
+        ath -= 114;    /* MDCT scaling.  From tests by macik and MUS420 code */
     }
     
-  ath = pow( 10.0, ath/10.0 );
-  return ath;
+    /*  the user wishes to modify the MDCT scaling for the ATH
+     */
+    ath -= gfp->ATHlower;
+
+    /* purpose of RH_QUALITY_CONTROL:
+     * at higher quality lower ATH masking abilities   => needs more bits
+     * at lower quality increase ATH masking abilities => needs less bits
+     * works together with adjusted masking lowering of GPSYCHO thresholds
+     * (Robert.Hegemann@gmx.de 2000-01-30)
+     */
+    if (gfp->VBR != vbr_off) {
+        ath -= gfc->ATH_vbrlower;
+    }
+    
+    ath = pow( 10.0, ath/10.0 );
+    return ath;
 }
  
 
-void compute_ath(lame_global_flags *gfp,FLOAT8 ATH_l[],FLOAT8 ATH_s[])
+void compute_ath( lame_global_flags *gfp, FLOAT8 ATH_l[], FLOAT8 ATH_s[] )
 {
-  lame_internal_flags *gfc=gfp->internal_flags;
-  int sfb,i,start,end;
-  FLOAT8 ATH_f;
-  FLOAT8 samp_freq = gfp->out_samplerate/1000.0;
+    lame_internal_flags *gfc = gfp->internal_flags;
+    int sfb, i, start, end;
+    FLOAT8 ATH_f;
+    FLOAT8 samp_freq = gfp->out_samplerate/1000.0;
 
-  for ( sfb = 0; sfb < SBMAX_l; sfb++ ) {
-    start = gfc->scalefac_band.l[ sfb ];
-    end   = gfc->scalefac_band.l[ sfb+1 ];
-    ATH_l[sfb]=1e99;
-    for (i=start ; i < end; i++) {
-      FLOAT8 freq = samp_freq*i/(2*576);
-      assert( freq < 25 );
-      ATH_f = ATHmdct(gfp,freq);  /* freq in kHz */
-      ATH_l[sfb]=Min(ATH_l[sfb],ATH_f);
+    for (sfb = 0; sfb < SBMAX_l; sfb++) {
+        start = gfc->scalefac_band.l[ sfb ];
+        end   = gfc->scalefac_band.l[ sfb+1 ];
+        ATH_l[sfb]=1e99;
+        for (i = start ; i < end; i++) {
+            FLOAT8 freq = i*samp_freq/(2*576);
+            assert( freq < 25 );
+            ATH_f = ATHmdct( gfp, freq );  /* freq in kHz */
+            ATH_l[sfb] = Min( ATH_l[sfb], ATH_f );
+        }
+
+        /*
+        DEBUGF("sfb=%2i freq(khz): %5.2f ..%5.2f  ATH=%6.2f %6.2f  %6.2f   \n",
+            sfb, samp_freq*start/(2*576),
+            samp_freq*end/(2*576),
+            10*log10(ATH_l[sfb]),
+            10*log10(ATHmdct(gfp,samp_freq*start/(2*576))),
+            10*log10(ATHmdct(gfp,samp_freq*end/(2*576))));
+        */
     }
 
+    for (sfb = 0; sfb < SBMAX_s; sfb++){
+        start = gfc->scalefac_band.s[ sfb ];
+        end   = gfc->scalefac_band.s[ sfb+1 ];
+        ATH_s[sfb] = 1e99;
+        for (i = start ; i < end; i++) {
+            FLOAT8 freq = i*samp_freq/(2*192);
+            assert( freq < 25 );
+            ATH_f = ATHmdct( gfp, freq );    /* freq in kHz */
+            ATH_s[sfb] = Min( ATH_s[sfb], ATH_f );
+        }
+    } 
 
-    /*
-    DEBUGF("sfb=%2i freq(khz): %5.2f ..%5.2f  ATH=%6.2f %6.2f  %6.2f   \n",sfb,samp_freq*start/(2*576),
-samp_freq*end/(2*576),
-10*log10(ATH_l[sfb]),
-10*log10( ATHmdct(gfp,samp_freq*start/(2*576)))  ,
-10*log10(ATHmdct(gfp,samp_freq*end/(2*576))));
-    */
-  }
 
-  for ( sfb = 0; sfb < SBMAX_s; sfb++ ){
-    start = gfc->scalefac_band.s[ sfb ];
-    end   = gfc->scalefac_band.s[ sfb+1 ];
-    ATH_s[sfb]=1e99;
-    for (i=start ; i < end; i++) {
-      FLOAT8 freq = samp_freq*i/(2*192);
-      assert( freq < 25 );
-      ATH_f = ATHmdct(gfp,freq);    /* freq in kHz */
-      ATH_s[sfb]=Min(ATH_s[sfb],ATH_f);
+    /*  kludge for sfb21:
+     *  lowering the ATH seems to be problematic for sfb21
+     *  where the ATH is the only masking we currently have
+     *  so this patch reverts back ATH-lowering for the last 
+     *  scalefactor bands
+     */
+    ATH_l[SBMAX_l-1] *= pow( 10.0, gfp->ATHlower/10.0 );
+    ATH_s[SBMAX_s-1] *= pow( 10.0, gfp->ATHlower/10.0 );
+
+
+    /*  no-ATH mode:
+     *  reduce ATH to -200 dB, but leave ATH for the last scalefactor band, 
+     *  because VBR modes need it as it is currently the only masking computed
+     *  for that band
+     */
+    if (gfp->noATH) {
+        for (sfb = 0; sfb < SBMAX_l-1; sfb++) {
+            ATH_l[sfb] = 1E-20;
+        }
+        for (sfb = 0; sfb < SBMAX_s-1; sfb++) {
+            ATH_s[sfb] = 1E-20;
+        }
     }
-  }
-  /* in no ATH mode leave ATH for the last scalefactor band in 
-   * because VBR mode needs it
-   */
-  if (gfp->noATH) {
-    for ( sfb = 0; sfb < SBMAX_l-1; sfb++ ) {
-      ATH_l[sfb]=1E-20;
-    }
-    for ( sfb = 0; sfb < SBMAX_s-1; sfb++ ) {
-      ATH_s[sfb]=1E-20;
-    }
-  }
 }
 
 
