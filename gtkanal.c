@@ -19,7 +19,7 @@ extern int makeframe(void);
 static gint idle_keepgoing;        /* processing of frames is ON */
 static gint idle_count_max;   /* number of frames to process before plotting */
 static gint idle_count;       /* pause & plot when idle_count=idel_count_max */
-static gint idle_finish=0;      /* process all frames, finish mp3 file and exit */
+static gint idle_end=0;      /* process all frames, stop at last frame  */
 static gint idle_back = 0;     /* set when we are displaying the old data */
 static int mp3done = 0;         /* last frame has been read */
 static GtkWidget *frameprogress; /* progress bar */ 
@@ -691,7 +691,7 @@ static void analyze(void)
       idle_count = 0;
       idle_count_max=0;
       idle_keepgoing=0;
-      idle_finish=0;
+      idle_end=0;
     }
     plot_frame();   
     update_progress(); 
@@ -716,8 +716,9 @@ static int frameadv1(GtkWidget *widget, gpointer   data )
       pplot = &Pinfo[READ_AHEAD];
       if (mp3done) { 
 	/* dont try to read any more frames, and quit if "finish MP3" was selected */
-	if (idle_finish) gtk_main_quit();
+	/*	if (idle_finish) gtk_main_quit(); */
 	idle_count_max=0; 
+        idle_end=0;
       } else {
 	/* read in the next frame */
 	for (i=NUMPINFO-1 ; i>0 ; i--)
@@ -732,10 +733,9 @@ static int frameadv1(GtkWidget *widget, gpointer   data )
 	  pinfo->frametime = (pinfo->frameNum)*1152.0/pinfo->sampfreq;
 	else pinfo->frametime=0;
 
-        /* eof? */
-	if (!pinfo->num_samples) {
-	  if (idle_finish) gtk_main_quit();
-	}
+        /* eof? 
+	if (!pinfo->num_samples) if (idle_finish) gtk_main_quit();
+	*/
 
 	pinfo->totbits = 0;
 	{ int gr,ch;
@@ -763,7 +763,7 @@ static int frameadv1(GtkWidget *widget, gpointer   data )
     idle_count++;
     if (gtkinfo.pupdate) plot_frame();
     update_progress();
-    if ((idle_count>=idle_count_max) && (! idle_finish)) analyze();
+    if ((idle_count>=idle_count_max) && (! idle_end)) analyze();
   }
   return 1;
 }
@@ -787,7 +787,7 @@ static void frameadv( GtkWidget *widget, gpointer   data )
     if (!strcmp((char *) data,"1")) adv = 1;
     if (!strcmp((char *) data,"10")) adv = 10;
     if (!strcmp((char *) data,"100")) adv = 100;
-    if (!strcmp((char *) data,"finish")) idle_finish = 1;
+    if (!strcmp((char *) data,"finish")) idle_end = 1;
 
 
     if (idle_keepgoing) {
@@ -1310,7 +1310,7 @@ int gtkcontrol(lame_global_flags *gfp2)
     gtk_box_pack_start(GTK_BOX(box1), button, TRUE, TRUE, 0);
     gtk_widget_show(button);
 
-    button = gtk_button_new_with_label ("finish mp3");
+    button = gtk_button_new_with_label ("last frame");
     gtk_signal_connect (GTK_OBJECT (button), "clicked",
 			GTK_SIGNAL_FUNC (frameadv), (gpointer) "finish");
     gtk_box_pack_start(GTK_BOX(box1), button, TRUE, TRUE, 0);

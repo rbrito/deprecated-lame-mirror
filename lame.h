@@ -59,7 +59,7 @@ typedef struct  {
   int silent;                 /* disable some status output */
   int mode;                       /* 0,1,2,3 stereo,jstereo,dual channel,mono */
   int mode_fixed;                 /* use specified the mode, do not use lame's opinion of the best mode */
-  int force_ms;                   /* force M/S mode */
+  int force_ms;                   /* force M/S mode.  requires mode=1 */
   int brate;                      /* bitrate */
 
   /* frame params */
@@ -153,7 +153,6 @@ typedef struct  {
 			    */
 
   int psymodel;             /* 0 = none   1=gpsycho */
-  int ms_masking;           /* 0 = no,  1 = use mid/side maskings */
   int use_best_huffman;     /* 0 = no.  1=outside loop  2=inside loop(slow) */
 
 

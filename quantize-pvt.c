@@ -6,7 +6,7 @@
 #include "quantize-pvt.h"
 
 FLOAT masking_lower=1;
-int convert_mdct, convert_psy, reduce_sidechannel;
+int convert_mdct, reduce_sidechannel;
 /*
 mt 5/99.  These global flags denote 4 possibilities:
                                                                 mode    l3_xmin
@@ -174,20 +174,11 @@ iteration_init( lame_global_flags *gfp,III_side_info_t *l3_side, int l3_enc[2][2
 
 
   convert_mdct=0;
-  convert_psy=0;
   reduce_sidechannel=0;
   if (gfp->mode_ext==MPG_MD_MS_LR) {
-    if (gfp->ms_masking) {
-      convert_mdct = 1;
-      convert_psy = 0;
-      reduce_sidechannel=1;
-    }else{
-      convert_mdct = 1;
-      convert_psy = 1;
-      reduce_sidechannel=1;
-    }
+    convert_mdct = 1;
+    reduce_sidechannel=1;
   }
-  if (convert_psy) memset(l3_enc,0,sizeof(int)*2*2*576);
   
   /* some intializations. */
   for ( gr = 0; gr < gfp->mode_gr; gr++ ){

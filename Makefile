@@ -248,7 +248,6 @@ c_sources = \
 	quantize.c \
 	quantize-pvt.c \
 	vbrquantize.c \
-	loopold.c \
 	reservoir.c \
 	tables.c \
 	takehiro.c \

@@ -78,7 +78,6 @@ void lame_init_params(lame_global_flags *gfp)
 
 
   gfp->frameNum=0;
-  gfp->force_ms=0;
   InitFormatBitStream();
   if (gfp->num_channels==1) {
     gfp->mode = MPG_MD_MONO;
@@ -414,7 +413,6 @@ void lame_init_params(lame_global_flags *gfp)
     gfp->psymodel=0;
     gfp->noise_shaping=0;
     gfp->noise_shaping_stop=0;
-    gfp->ms_masking=0;
     gfp->use_best_huffman=0;
   } else if (gfp->quality>=5) {
     /* 5..8 quality, the default  */
@@ -423,7 +421,7 @@ void lame_init_params(lame_global_flags *gfp)
     gfp->psymodel=1;
     gfp->noise_shaping=1;
     gfp->noise_shaping_stop=0;
-    gfp->ms_masking=0;
+    if (!gfp->mode_fixed && gfp->mode==1) gfp->mode=0;  /* dont use jstereo */
     gfp->use_best_huffman=0;
   } else if (gfp->quality>=2) {
     /* 2..4 quality */
@@ -432,7 +430,6 @@ void lame_init_params(lame_global_flags *gfp)
     gfp->psymodel=1;
     gfp->noise_shaping=1;
     gfp->noise_shaping_stop=0;
-    gfp->ms_masking=1;
     gfp->use_best_huffman=1;
   } else {
     /* 0..1 quality */
@@ -441,7 +438,6 @@ void lame_init_params(lame_global_flags *gfp)
     gfp->psymodel=1;
     gfp->noise_shaping=3;       /* not yet coded */
     gfp->noise_shaping_stop=2;  /* not yet coded */
-    gfp->ms_masking=1;
     gfp->use_best_huffman=2;   /* not yet coded */
     exit(-99);
   }
@@ -646,10 +642,7 @@ int mf_size,char *mp3buf, int mp3buf_size)
 
 
   /* use m/s gfp->stereo? */
-  check_ms_stereo =   ((gfp->mode == MPG_MD_JOINT_STEREO) &&
-		       (gfp->version == 1) &&
-		       (gfp->stereo==2) );
-
+  check_ms_stereo =  (gfp->mode == MPG_MD_JOINT_STEREO);
 
 
   /********************** padding *****************************/
@@ -717,7 +710,6 @@ int mf_size,char *mp3buf, int mp3buf_size)
 	bufp[ch] = &inbuf[ch][576 + gr*576-FFTOFFSET];
 
       L3psycho_anal( gfp,bufp, gr, 
-		     check_ms_stereo,
 		     &ms_ratio[gr],&ms_ratio_next,&ms_ener_ratio[gr],
 		     masking_ratio, masking_MS_ratio,
 		     pe[gr],pe_MS[gr],blocktype);
@@ -778,7 +770,7 @@ int mf_size,char *mp3buf, int mp3buf_size)
 	  l3_side.gr[gr].ch[ch].tt.block_type;
 	for ( j = 0; j < 576; j++ ) pinfo->xr[gr][ch][j]=xr[gr][ch][j];
 	/* if MS stereo, switch to MS psy data */
-	if (gfp->ms_masking && (gfp->mode_ext==MPG_MD_MS_LR)) {
+	if (gfp->mode_ext==MPG_MD_MS_LR) {
 	  pinfo->pe[gr][ch]=pinfo->pe[gr][ch+2];
 	  pinfo->ers[gr][ch]=pinfo->ers[gr][ch+2];
 	  memcpy(pinfo->energy[gr][ch],pinfo->energy[gr][ch+2],
@@ -793,7 +785,7 @@ int mf_size,char *mp3buf, int mp3buf_size)
 
 
   /* bit and noise allocation */
-  if ((MPG_MD_MS_LR == gfp->mode_ext) && gfp->ms_masking) {
+  if (MPG_MD_MS_LR == gfp->mode_ext) {
     masking = &masking_MS_ratio;    /* use MS masking */
     pe_use=&pe_MS;
   } else {

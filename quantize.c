@@ -151,48 +151,21 @@ iteration_loop( lame_global_flags *gfp,
 
 
   for ( gr = 0; gr < gfp->mode_gr; gr++ ) {
-    if (convert_psy) {
-      /* dual channel version can quantize Mid/Side channels with L/R
-       * maskings (by constantly reconstructing L/R data).  Used before we
-       * we had proper mid/side maskings. */
-      outer_loop_dual( gfp,xr, xr_org[gr], mean_bits, bit_rate, over,
-		       l3_xmin, l3_enc[gr], scalefac[gr],
-		       gr, l3_side, ratio[gr], pe, ms_ener_ratio);
+    int targ_bits[2];
 
-      /* finish up */
-      for (ch=0 ; ch < gfp->stereo ; ch ++ ) {
-	cod_info = &l3_side->gr[gr].ch[ch].tt;
-	best_scalefac_store(gfp,gr, ch, l3_side, scalefac);
-#ifdef HAVEGTK
-	if (gfp->gtkflag)
-	  pinfo->LAMEmainbits[gr][ch]=cod_info->part2_3_length;
-#endif
-	ResvAdjust(gfp,cod_info, l3_side, mean_bits );
-	assert(cod_info->global_gain < 256 );
-      }
-      /* set the sign of l3_enc */
-      for ( ch =  0; ch < gfp->stereo; ch++ ) {
-        for ( i = 0; i < 576; i++) {
-          if (xr[ch][i] < 0)
-            l3_enc[gr][ch][i] *= -1;
-        }
-      }
-    } else {
-      int targ_bits[2];
-
-      if (convert_mdct) 
-        ms_convert(xr_org[gr], xr_org[gr]);
-
-      on_pe(gfp,pe,l3_side,targ_bits,mean_bits, gr);
+    if (convert_mdct) 
+      ms_convert(xr_org[gr], xr_org[gr]);
+    
+    on_pe(gfp,pe,l3_side,targ_bits,mean_bits, gr);
 #ifdef RH_SIDE_CBR
 #else
-      if (reduce_sidechannel) 
-	reduce_side(targ_bits,ms_ener_ratio[gr],mean_bits);
+    if (reduce_sidechannel) 
+      reduce_side(targ_bits,ms_ener_ratio[gr],mean_bits);
 #endif      
-
-      for (ch=0 ; ch < gfp->stereo ; ch ++) {
-	cod_info = &l3_side->gr[gr].ch[ch].tt;	
-        if (!init_outer_loop(gfp,xr_org[gr][ch], cod_info))
+    
+    for (ch=0 ; ch < gfp->stereo ; ch ++) {
+      cod_info = &l3_side->gr[gr].ch[ch].tt;	
+      if (!init_outer_loop(gfp,xr_org[gr][ch], cod_info))
         {
           /* xr contains no energy 
            * cod_info was set in init_outer_loop above
@@ -201,29 +174,28 @@ iteration_loop( lame_global_flags *gfp,
           memset(l3_enc[gr][ch],0,576*sizeof(int));
 	  noise[0]=noise[1]=noise[2]=noise[3]=0;
         }
-	else
+      else
 	{
           calc_xmin(gfp,xr_org[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin[ch]);
 	  outer_loop( gfp,xr_org[gr][ch], targ_bits[ch], noise,
 		      &l3_xmin[ch], l3_enc[gr][ch], 
 		      &scalefac[gr][ch], cod_info, xfsf, ch);
         }
-	best_scalefac_store(gfp,gr, ch, l3_side, scalefac);
-	if (gfp->use_best_huffman==1 && cod_info->block_type == NORM_TYPE) {
-	  best_huffman_divide(gr, ch, cod_info, l3_enc[gr][ch]);
-	}
-#ifdef HAVEGTK
-	if (gfp->gtkflag)
-	  set_pinfo (cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr_org[gr][ch], xfsf, noise, gr, ch);
-#endif
-	ResvAdjust(gfp,cod_info, l3_side, mean_bits );
-        /* set the sign of l3_enc */
-        for ( i = 0; i < 576; i++) {
-	  if (xr_org[gr][ch][i] < 0)
-	    l3_enc[gr][ch][i] *= -1;
-          }
+      best_scalefac_store(gfp,gr, ch, l3_side, scalefac);
+      if (gfp->use_best_huffman==1 && cod_info->block_type == NORM_TYPE) {
+	best_huffman_divide(gr, ch, cod_info, l3_enc[gr][ch]);
       }
-    } /* convert_psy */
+#ifdef HAVEGTK
+      if (gfp->gtkflag)
+	set_pinfo (cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr_org[gr][ch], xfsf, noise, gr, ch);
+#endif
+      ResvAdjust(gfp,cod_info, l3_side, mean_bits );
+      /* set the sign of l3_enc */
+      for ( i = 0; i < 576; i++) {
+	if (xr_org[gr][ch][i] < 0)
+	  l3_enc[gr][ch][i] *= -1;
+      }
+    }
   } /* loop over gr */
 
 #if 0

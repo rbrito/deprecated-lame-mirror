@@ -50,7 +50,6 @@ void L3para_read( FLOAT8 sfreq, int numlines[CBANDS],int numlines_s[CBANDS], int
 
 void L3psycho_anal( lame_global_flags *gfp,
                     short int *buffer[2],int gr_out , 
-		    int check_ms_stereo, 
                     FLOAT8 *ms_ratio,
                     FLOAT8 *ms_ratio_next,
 		    FLOAT8 *ms_ener_ratio,
@@ -327,7 +326,8 @@ void L3psycho_anal( lame_global_flags *gfp,
   
   
   numchn = gfp->stereo;
-  if (gfp->ms_masking && (gfp->mode == MPG_MD_JOINT_STEREO)) numchn=4;
+  /* chn=2 and 3 = Mid and Side channels */
+  if (gfp->mode == MPG_MD_JOINT_STEREO) numchn=4;
   for (chn=0; chn<numchn; chn++) {
   
     wsamp_s = wsamp_S+(chn & 1);
@@ -851,7 +851,7 @@ void L3psycho_anal( lame_global_flags *gfp,
 
   
   
-  if (check_ms_stereo)  {
+  if (gfp->mode == MPG_MD_JOINT_STEREO)  {
     /* determin ms_ratio from masking thresholds*/
     /* use ms_stereo (ms_ratio < .35) if average thresh. diff < 5 db */
     FLOAT8 db,x1,x2,sidetot=0,tot=0;
@@ -959,17 +959,14 @@ void L3psycho_anal( lame_global_flags *gfp,
   /* 0 = no energy in side channel */
   /* .5 = half of total energy in side channel */
   /*********************************************************************/
-  if (gfp->ms_masking) 
-    *ms_ener_ratio = ms_ener_ratio_old;
-  else
-    /* we didn't compute ms_ener_ratios, use the masking ratios instead */
-    *ms_ener_ratio = *ms_ratio;
-
-  {
+  if (numchn==4)  {
     FLOAT tmp = tot_ener[3]+tot_ener[2];
+    *ms_ener_ratio = ms_ener_ratio_old;
     ms_ener_ratio_old=0;
     if (tmp>0) ms_ener_ratio_old=tot_ener[3]/tmp;
-  }
+  } else
+    /* we didn't compute ms_ener_ratios */
+    *ms_ener_ratio = 0;
  
 }
 
