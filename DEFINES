@@ -1,5 +1,9 @@
 $Id$
 
+USE_FAST_LOG:
+ - use of log/log10 approximation (uses IEEE754 float format)
+   (absolute precision of log10 is then around 1e-6)
+
 KLEMM_36:
  - portability fixes in the IO code
 
