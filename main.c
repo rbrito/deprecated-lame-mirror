@@ -134,7 +134,8 @@ int main(int argc, char **argv)
 	  exit(1);
 	}
 
-	if (fwrite(mp3buffer,1,imp3,outf) != imp3) {
+	/* imp3 is not negative, but fwrite needs an unsigned here */
+	if (fwrite(mp3buffer,1,(unsigned)imp3,outf) != imp3) {
 	  fprintf(stderr,"Error writing mp3 output \n");
 	  exit(1);
 	}
@@ -145,8 +146,8 @@ int main(int argc, char **argv)
 	else fprintf(stderr,"mp3 internal error:  error code=%i\n",imp3);
 	exit(1);
       }
-
-      fwrite(mp3buffer,1,imp3,outf);
+      /* imp3 is not negative, but fwrite needs an unsigned here */
+      fwrite(mp3buffer,1,(unsigned)imp3,outf);
       fclose(outf);
       lame_mp3_tags(&gf);                /* add id3 or VBR tags to mp3 file */
     }

@@ -151,18 +151,17 @@ int read_samples_mp3(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2]
 
   if (gfc->pinfo != NULL) {
     int ch;
-    plotting_data *pinfo=gfc->pinfo;
     /* add a delay of framesize-DECDELAY, which will make the total delay
      * exactly one frame, so we can sync MP3 output with WAV input */
     for ( ch = 0; ch < stereo; ch++ ) {
       for ( j = 0; j < gfp->framesize-DECDELAY; j++ )
-	pinfo->pcmdata2[ch][j] = pinfo->pcmdata2[ch][j+gfp->framesize];
+	gfc->pinfo->pcmdata2[ch][j] = gfc->pinfo->pcmdata2[ch][j+gfp->framesize];
       for ( j = 0; j < gfp->framesize; j++ ) 
-	pinfo->pcmdata2[ch][j+gfp->framesize-DECDELAY] = mpg123pcm[ch][j];
+	gfc->pinfo->pcmdata2[ch][j+gfp->framesize-DECDELAY] = mpg123pcm[ch][j];
     }
   
-  pinfo->frameNum123 = gfp->frameNum-1;
-  pinfo->frameNum = gfp->frameNum;
+  gfc->pinfo->frameNum123 = gfp->frameNum-1;
+  gfc->pinfo->frameNum = gfp->frameNum;
   }
 
   if (out==-1) return 0;
@@ -187,7 +186,7 @@ int read_samples_mp3(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2]
 
 
 
-void WriteWav(FILE *f,unsigned long bytes,int srate,int ch){
+void WriteWav(FILE *f,long bytes,int srate,int ch){
   /* quick and dirty */
   fwrite("RIFF",1,4,f);               /*  0-3 */
   Write32BitsLowHigh(f,bytes+44-8);
@@ -529,101 +528,6 @@ int fskip(FILE *sf,long num_bytes,int dummy)
   /* return 0 if last read was successful */
   return num_bytes;
 }
-
-
-
-void CloseSndFile(sound_file_format input,FILE * musicin)
-{
-  if (fclose(musicin) != 0){
-    fprintf(stderr, "Could not close audio input file\n");
-    exit(2);
-  }
-}
-
-
-
-
-
-FILE * OpenSndFile(lame_global_flags *gfp)
-{
-  lame_internal_flags *gfc=gfp->internal_flags;
-  const char* inPath = gfp->inPath;
-  FILE * musicin;
-  struct stat sb;
-  void parse_file_header(lame_global_flags *gfp,FILE *sf);
-  /* set the defaults from info incase we cannot determine them from file */
-  gfp->num_samples=MAX_U_32_NUM;
-  gfc->input_bitrate=0;
-
-  
-  if (!strcmp(inPath, "-")) {
-    /* Read from standard input. */
-#ifdef __EMX__
-    _fsetmode(stdin,"b");
-#elif (defined  __BORLANDC__)
-    setmode(_fileno(stdin), O_BINARY);
-#elif (defined  __CYGWIN__)
-    setmode(fileno(stdin), _O_BINARY);
-#elif (defined _WIN32)
-    _setmode(_fileno(stdin), _O_BINARY);
-#endif
-    musicin = stdin;
-  } else {
-    if ((musicin = fopen(inPath, "rb")) == NULL) {
-      fprintf(stderr, "Could not find \"%s\".\n", inPath);
-      exit(1);
-    }
-  }
-  
-  if (gfp->input_format==sf_mp3) {
-    mp3data_struct mp3data;
-#ifdef AMIGA_MPEGA
-    if (-1==lame_decode_initfile(inPath,&mp3data)) {
-      fprintf(stderr,"Error reading headers in mp3 input file %s.\n", inPath);
-      exit(1);
-    }
-#endif
-#ifdef HAVEMPGLIB
-    if (-1==lame_decode_initfile(musicin,&mp3data)) {
-      fprintf(stderr,"Error reading headers in mp3 input file %s.\n", inPath);
-      exit(1);
-    }
-#endif
-    gfp->num_channels=mp3data.stereo;
-    gfp->in_samplerate=mp3data.samplerate;
-    gfc->input_bitrate=mp3data.bitrate;
-    gfp->num_samples=mp3data.nsamp;
- }else{
-   if (gfp->input_format != sf_raw) {
-     parse_file_header(gfp,musicin);
-   }
-   
-   if (gfp->input_format==sf_raw) {
-     /* assume raw PCM */
-     fprintf(stderr, "Assuming raw pcm input file");
-     if (gfp->swapbytes==TRUE)
-       fprintf(stderr, " : Forcing byte-swapping\n");
-     else
-       fprintf(stderr, "\n");
-   }
- }
-    
-  if (gfp->num_samples==MAX_U_32_NUM && musicin != stdin) {
-    /* try to figure out num_samples */
-    if (0==stat(inPath,&sb)) {  
-      /* try file size, assume 2 bytes per sample */
-      if (gfp->input_format == sf_mp3) {
-	if (gfc->input_bitrate>0) {
-	  FLOAT totalseconds = (sb.st_size*8.0/(1000.0*gfc->input_bitrate));
-	  gfp->num_samples= totalseconds*gfp->in_samplerate;
-	}
-      }else{
-	gfp->num_samples = sb.st_size/(2*gfp->num_channels);
-      }
-    }
-  }
-  return musicin;
-}
   
   
 /************************************************************************
@@ -645,7 +549,7 @@ int read_samples_pcm(lame_global_flags *gfp,short sample_buffer[2304], int frame
     int rcode;
     int iswav=(gfp->input_format==sf_wave);
 
-    samples_read = fread(sample_buffer, sizeof(short), samples_to_read, gfp->musicin);
+    samples_read = fread(sample_buffer, sizeof(short), (unsigned)samples_to_read, gfp->musicin);
     if (ferror(gfp->musicin)) {
       fprintf(stderr, "Error reading input file\n");
       exit(2);
@@ -917,7 +821,7 @@ parse_aiff_header(lame_global_flags *gfp,FILE *sf)
 			aiff_info.blkAlgn.blockSize = Read32BitsHighLow(sf);
 			subSize -= 4;
 
-			if (fskip(sf, aiff_info.blkAlgn.offset, SEEK_CUR) != 0 )
+			if (fskip(sf, (long) aiff_info.blkAlgn.offset, SEEK_CUR) != 0 )
 				return 0;
 
 			aiff_info.sampleType = IFF_ID_SSND;
@@ -1000,6 +904,101 @@ void parse_file_header(lame_global_flags *gfp,FILE *sf)
 	  }
 	  gfp->input_format = sf_raw;
 	}
+}
+
+
+
+void CloseSndFile(sound_file_format input,FILE * musicin)
+{
+  if (fclose(musicin) != 0){
+    fprintf(stderr, "Could not close audio input file\n");
+    exit(2);
+  }
+}
+
+
+
+
+
+FILE * OpenSndFile(lame_global_flags *gfp)
+{
+  lame_internal_flags *gfc=gfp->internal_flags;
+  const char* inPath = gfp->inPath;
+  FILE * musicin;
+  struct stat sb;
+
+  /* set the defaults from info incase we cannot determine them from file */
+  gfp->num_samples=MAX_U_32_NUM;
+  gfc->input_bitrate=0;
+
+  
+  if (!strcmp(inPath, "-")) {
+    /* Read from standard input. */
+#ifdef __EMX__
+    _fsetmode(stdin,"b");
+#elif (defined  __BORLANDC__)
+    setmode(_fileno(stdin), O_BINARY);
+#elif (defined  __CYGWIN__)
+    setmode(fileno(stdin), _O_BINARY);
+#elif (defined _WIN32)
+    _setmode(_fileno(stdin), _O_BINARY);
+#endif
+    musicin = stdin;
+  } else {
+    if ((musicin = fopen(inPath, "rb")) == NULL) {
+      fprintf(stderr, "Could not find \"%s\".\n", inPath);
+      exit(1);
+    }
+  }
+  
+  if (gfp->input_format==sf_mp3) {
+    mp3data_struct mp3data;
+#ifdef AMIGA_MPEGA
+    if (-1==lame_decode_initfile(inPath,&mp3data)) {
+      fprintf(stderr,"Error reading headers in mp3 input file %s.\n", inPath);
+      exit(1);
+    }
+#endif
+#ifdef HAVEMPGLIB
+    if (-1==lame_decode_initfile(musicin,&mp3data)) {
+      fprintf(stderr,"Error reading headers in mp3 input file %s.\n", inPath);
+      exit(1);
+    }
+#endif
+    gfp->num_channels=mp3data.stereo;
+    gfp->in_samplerate=mp3data.samplerate;
+    gfc->input_bitrate=mp3data.bitrate;
+    gfp->num_samples=mp3data.nsamp;
+ }else{
+   if (gfp->input_format != sf_raw) {
+     parse_file_header(gfp,musicin);
+   }
+   
+   if (gfp->input_format==sf_raw) {
+     /* assume raw PCM */
+     fprintf(stderr, "Assuming raw pcm input file");
+     if (gfp->swapbytes==TRUE)
+       fprintf(stderr, " : Forcing byte-swapping\n");
+     else
+       fprintf(stderr, "\n");
+   }
+ }
+    
+  if (gfp->num_samples==MAX_U_32_NUM && musicin != stdin) {
+    /* try to figure out num_samples */
+    if (0==stat(inPath,&sb)) {  
+      /* try file size, assume 2 bytes per sample */
+      if (gfp->input_format == sf_mp3) {
+	if (gfc->input_bitrate>0) {
+	  FLOAT totalseconds = (sb.st_size*8.0/(1000.0*gfc->input_bitrate));
+	  gfp->num_samples= totalseconds*gfp->in_samplerate;
+	}
+      }else{
+	gfp->num_samples = sb.st_size/(2*gfp->num_channels);
+      }
+    }
+  }
+  return musicin;
 }
 #endif  /* LAMESNDFILE */
 
