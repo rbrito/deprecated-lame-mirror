@@ -175,14 +175,9 @@ EXTRA_DIST = \
 	HACKING \
 	INSTALL.configure \
 	LICENSE \
-	Makefile.B32 \
-	Makefile.DJGPP \
 	Makefile.MSVC \
 	Makefile.unix \
 	Makefile.am.global \
-	PRESETS.draft \
-	README.B32 \
-	README.DJGPP \
 	README.WINGTK \
 	STYLEGUIDE \
 	USAGE \
