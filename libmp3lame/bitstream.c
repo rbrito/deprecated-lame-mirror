@@ -41,7 +41,7 @@
 #define MAX_LENGTH      32  
 
 /***********************************************************************
- * compute bitsperframe and mean_bits for a layer III frame 
+ * compute bits-per-frame
  **********************************************************************/
 int getframebytes(const lame_global_flags * gfp)
 {
@@ -372,11 +372,11 @@ encodeBitStream(lame_global_flags *gfp)
     lame_internal_flags *gfc = gfp->internal_flags;
     III_side_info_t *l3_side = &gfc->l3_side;
     char *p = gfc->bs.header[gfc->bs.h_ptr].buf;
-    int gr, ch, ptr = 0;
+    int gr, ch, ptr;
     assert(l3_side->main_data_begin >= 0);
 
     memset(p, 0, l3_side->sideinfo_len);
-    ptr = writeheader(p, 0xfff - (gfp->out_samplerate < 16000), 12, ptr);
+    ptr = writeheader(p, 0xfff - (gfp->out_samplerate < 16000), 12, 0);
     ptr = writeheader(p, gfp->version,            1, ptr);
     ptr = writeheader(p, 4 - 3,                   2, ptr);
     ptr = writeheader(p, !gfp->error_protection,  1, ptr);
