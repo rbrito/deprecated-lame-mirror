@@ -1432,7 +1432,7 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
         return -1;      /* failed */
     if (buf[0] == 'I' && buf[1] == 'D' && buf[2] == '3') {
         fprintf(stderr, "ID3v2 found. "
-		"Be sure the tag is lost when transcoding currently.\n");
+		"Be aware that the ID3 tag is currently lost when transcoding.\n");
 	len = 6;
 	if (fread(&buf, 1, len, fd) != len)
 	    return -1;      /* failed */
