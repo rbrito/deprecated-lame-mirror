@@ -1045,7 +1045,7 @@ lame_init_params(lame_global_flags * const gfp)
         }
         else    /* defaulting to */
         {
-            gfc->VBR->quality = 2;
+            gfc->VBR->quality = DEFAULT_QUALITY;
         }   
         if ( gfc->VBR->quality > 5 ) {
             static float const dbQ[10] = { -6,-4.75,-3.5,-2.25,-1,.25,1.5,2.75,4,5.25 };
@@ -1118,7 +1118,7 @@ lame_init_params(lame_global_flags * const gfp)
         /*  VBR needs at least the output of GPSYCHO,
          *  so we have to garantee that by setting a minimum 
          *  quality level, actually level 5 does it.
-         *  the -v and -V x settings switch the quality to level 2
+         *  the -v and -V x settings switch the quality to level 3
          *  you would have to add a -q 5 to reduce the quality
          *  down to level 5
          */
@@ -1126,8 +1126,6 @@ lame_init_params(lame_global_flags * const gfp)
             gfp->quality = 5;
 
 
-        /*  default quality setting is 2
-         */
         if (gfp->quality < 0)
             gfp->quality = DEFAULT_QUALITY;
 
@@ -1151,8 +1149,6 @@ lame_init_params(lame_global_flags * const gfp)
          */
         gfc->sfb21_extra = 0;
 
-        /*  default quality setting for CBR/ABR is 2
-         */
         if (gfp->quality < 0)
             gfp->quality = DEFAULT_QUALITY;
 

@@ -302,7 +302,7 @@ lame_get_ogg( const lame_global_flags*  gfp )
  * True quality is determined by the bitrate but this variable will effect
  * quality by selecting expensive or cheap algorithms.
  * quality=0..9.  0=best (very slow).  9=worst.  
- * recommended:  2     near-best quality, not too slow
+ * recommended:  3     near-best quality, not too slow
  *               5     good quality, fast
  *               7     ok quality, really fast
  */
