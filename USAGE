@@ -147,9 +147,9 @@ Operational:
 -o              mark the encoded file as a copy
 -S              don't print progress report, VBR histogram
 --strictly-enforce-ISO   comply as much as possible to ISO MPEG spec
---replaygain-accurate  slightly more accurate and much slower ReplayGain
---clipdetect    determine whether clipping occurs and display an appropriate 
-                message. store the MP3 peak sample in LAME Tag
+--replaygain-accurate   compute RG more accurately and find the peak sample
+--clipdetect    enable --replaygain-accurate and display a message whether
+                clipping occurs and how far the waveform is from full scale
 
 --decode        assume input file is an mp3 file, and decode to wav.
 -t              disable writing of WAV header when using --decode
@@ -300,11 +300,10 @@ clipping detection
 =======================================================================
 --clipdetect
 
-Decode on the fly, find the peak sample and determine whether clipping 
-occurs at current gain. Display an appropriate message. 
-Store the peak sample in the LAME Tag.
+Enables --replaygain-accurate and displays a message whether clipping 
+occurs and how far in dB the waveform is from full scale.
 
-NOTE: decoding on the fly significantly slows down the encoding process.
+See also: --replaygain-accurate
 
 Requires LAME to be compiled with DECODE_ON_THE_FLY.
 
@@ -575,12 +574,19 @@ Not supported if LAME is compiled to use LIBSNDFILE.
 
 
 =======================================================================
-perform slightly more accurate ReplayGain analysis
+slightly more accurate ReplayGain analysis and finding the peak sample
 =======================================================================
 --replaygain-accurate
 
-Enables decoding on the fly and performs ReplayGain analysis on 
-the decoded data stream.
+Enables decoding on the fly. Computes ReplayGain on the decoded data 
+stream. Finds the peak sample of the decoded data stream and stores it 
+in the file.
+
+
+Please note: ReplayGain analysis does not affect the content of a 
+compressed data stream itself, it is a value stored in the header 
+of a sound file. Information on the purpose of ReplayGain and the
+algorithms used is available at: http://www.replaygain.org/
 
 By default, LAME performs ReplayGain analysis on the input data (more 
 precisely: data only after the user-specified volume scaling). This
@@ -590,26 +596,30 @@ the initial input data. When --replaygain-accurate is specified then
 decoding on the fly is performed and the analysis is performed on the
 decoded data stream, that is on the output of decoding (playbacking) 
 a compressed sound file. Although theoretically this method gives more 
-accurate results, it is unrecommended, because:
+accurate results, it has several disadvantages:
   * tests have shown that the difference between the ReplayGain values 
     computed on the input data and decoded data is usually no greater 
     than 0.5dB, although the minimum volume difference the human ear 
     can perceive is about 1.0dB
   * decoding on the fly significantly slows down the encoding process
-
-Please note: ReplayGain analysis does not affect the content of a 
-compressed data stream itself, it is a value stored in the header 
-of a sound file. Information on the purpose of ReplayGain and the
-algorithms used is available at: http://www.replaygain.org/
+The apparent advantage is that:
+  * with --replaygain-accurate the peak sample is determined and 
+    stored in the file. The knowledge of the peak sample can be useful
+    to decoders (players) to prevent a negative effect called 'clipping'
+    that introduces distortion into sound.
+    
 
 The ReplayGain values are stored in the LAME tag. The analysis is 
 performed with the reference volume equal to 89dB. 
+Note: the reference volume has been changed from 83dB on transition
+from version 3.95 to 3.95.1.
 
 This option requires LAME to be compiled with DECODE_ON_THE_FLY.
 (note: if LAME is compiled without DECODE_ON_THE_FLY, ReplayGain 
 analysis is performed on the input data after user-specified
 volume scaling)
 
+See also: --clipdetect
 
 
 =======================================================================
