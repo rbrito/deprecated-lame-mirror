@@ -601,29 +601,29 @@ INLINE static void mdct_short(FLOAT8 *inout)
     for ( l = 0; l < 3; l++ ) {
 	FLOAT8 tc0,tc1,tc2,ts0,ts1,ts2;
 
-	ts0 = (inout[2*3] * win[SHORT_TYPE][0] - inout[5*3]) * 1.907525191737280e-11; /* tritab_s[0] */
-	tc0 = (inout[0*3] * win[SHORT_TYPE][2] - inout[3*3]) * 1.907525191737280e-11; /* tritab_s[2] */
+	ts0 = inout[2*3] * win[SHORT_TYPE][0] - inout[5*3];
+	tc0 = inout[0*3] * win[SHORT_TYPE][2] - inout[3*3];
 	tc1 = ts0 + tc0;
 	tc2 = ts0 - tc0;
 
-	ts0 = (inout[5*3] * win[SHORT_TYPE][0] + inout[2*3]) * 1.907525191737280e-11; /* tritab_s[2] */
-	tc0 = (inout[3*3] * win[SHORT_TYPE][2] + inout[0*3]) * 1.907525191737280e-11; /* tritab_s[0] */
+	ts0 = inout[5*3] * win[SHORT_TYPE][0] + inout[2*3];
+	tc0 = inout[3*3] * win[SHORT_TYPE][2] + inout[0*3];
 	ts1 = ts0 + tc0;
 	ts2 =-ts0 + tc0;
 
 	tc0 = (inout[1*3] * win[SHORT_TYPE][1] - inout[4*3]) * 2.069978111953089e-11; /* tritab_s[1] */
 	ts0 = (inout[4*3] * win[SHORT_TYPE][1] + inout[1*3]) * 2.069978111953089e-11; /* tritab_s[1] */
 
-	inout[3*0] = tc1 + tc0;
-	inout[3*5] =-ts1 + ts0;
+	inout[3*0] = tc1 * 1.907525191737280e-11 /* tritab_s[2] */ + tc0;
+	inout[3*5] =-ts1 * 1.907525191737280e-11 /* tritab_s[0] */ + ts0;
 
-	tc2 = tc2 * cx[6];
-	ts1 = ts1 * cx[7] + ts0;
+	tc2 = tc2 * 0.86602540378443870761 * 1.907525191737280e-11 /* tritab_s[2] */;
+	ts1 = ts1 * 0.5 * 1.907525191737280e-11 + ts0;
 	inout[3*1] = tc2-ts1;
 	inout[3*2] = tc2+ts1;
 
-	tc1 = tc1 * cx[7] - tc0;
-	ts2 = ts2 * cx[6];
+	tc1 = tc1 * 0.5 * 1.907525191737280e-11 - tc0;
+	ts2 = ts2 * 0.86602540378443870761 * 1.907525191737280e-11 /* tritab_s[0] */;
 	inout[3*3] = tc1+ts2;
 	inout[3*4] = tc1-ts2;
 
@@ -633,62 +633,75 @@ INLINE static void mdct_short(FLOAT8 *inout)
 
 INLINE static void mdct_long(FLOAT8 *out, FLOAT8 *in)
 {
-#define inc(x) in[17-(x)]
-#define ins(x) in[8-(x)]
-
-    FLOAT8 tc1 = inc(0)-inc(8),tc2 = (inc(1)-inc(7))*cx[6], tc3 = inc(2)-inc(6), tc4 = inc(3)-inc(5);
-    FLOAT8 tc5 = inc(0)+inc(8),tc6 = (inc(1)+inc(7))*cx[7], tc7 = inc(2)+inc(6), tc8 = inc(3)+inc(5);
-    FLOAT8 ts1 = ins(0)-ins(8),ts2 = (ins(1)-ins(7))*cx[6], ts3 = ins(2)-ins(6), ts4 = ins(3)-ins(5);
-    FLOAT8 ts5 = ins(0)+ins(8),ts6 = (ins(1)+ins(7))*cx[7], ts7 = ins(2)+ins(6), ts8 = ins(3)+ins(5);
     FLOAT8 ct,st;
+  {
+    FLOAT8 tc1, tc2, tc3, tc4, ts5, ts6, ts7, ts8;
+    // 1,2, 5,6, 9,10, 13,14, 17
+    tc1 = in[17]-in[ 9];
+    tc3 = in[15]-in[11];
+    tc4 = in[14]-in[12];
+    ts5 = in[ 0]+in[ 8];
+    ts6 = in[ 1]+in[ 7];
+    ts7 = in[ 2]+in[ 6];
+    ts8 = in[ 3]+in[ 5];
 
-    ct = tc5+tc7+tc8+inc(1)+inc(4)+inc(7);
-    out[0] = ct;
-
-    ct = tc1*cx[0] + tc2 + tc3*cx[1] + tc4*cx[2];
-    st = -ts5*cx[4] + ts6 - ts7*cx[5] + ts8*cx[3] + ins(4);
-    out[1] = ct+st;
-    out[2] = ct-st;
-
-    ct = tc5*cx[3] + tc6 + tc7*cx[4] + tc8*cx[5] - inc(4);
-    st = ts1*cx[2] + ts2 + ts3*cx[0] + ts4*cx[1];
-    out[3] = ct+st;
-    out[4] = ct-st;
-
+    out[17] = (ts5+ts7-ts8)-ts6+in[4];
+    st = (ts5+ts7-ts8)*cx[7]+ts6-in[4];
     ct = (tc1-tc3-tc4)*cx[6];
-    st = (ts5+ts7-ts8)*cx[7]+ins(1)-ins(4)+ins(7);
     out[5] = ct+st;
     out[6] = ct-st;
 
-    ct = -tc5*cx[5] - tc6 - tc7*cx[3] - tc8*cx[4] + inc(4);
-    st = ts1*cx[1] + ts2 - ts3*cx[2] - ts4*cx[0];
-    out[7] = ct+st;
-    out[8] = ct-st;
+    tc2 = (in[16]-in[10])*cx[6];
+    ts6 = ts6*cx[7] + in[4];
+    ct =  tc1*cx[0] + tc2 + tc3*cx[1] + tc4*cx[2];
+    st = -ts5*cx[4] + ts6 - ts7*cx[5] + ts8*cx[3];
+    out[1] = ct+st;
+    out[2] = ct-st;
 
-    ct = tc1*cx[1] - tc2 - tc3*cx[2] + tc4*cx[0];
-    st = -ts5*cx[5] + ts6 - ts7*cx[3] + ts8*cx[4] + ins(4);
+    ct =  tc1*cx[1] - tc2 - tc3*cx[2] + tc4*cx[0];
+    st = -ts5*cx[5] + ts6 - ts7*cx[3] + ts8*cx[4];
     out[ 9] = ct+st;
     out[10] = ct-st;
 
-    ct = (tc5+tc7+tc8)*cx[7]-inc(1)-inc(4)-inc(7);
+    ct = tc1*cx[2] - tc2 + tc3*cx[0] - tc4*cx[1];
+    st = ts5*cx[3] - ts6 + ts7*cx[4] - ts8*cx[5];
+    out[13] = ct+st;
+    out[14] = ct-st;
+  }
+  {
+    FLOAT8 ts1, ts2, ts3, ts4, tc5, tc6, tc7, tc8;
+
+    ts1 = in[ 8]-in[ 0];
+    ts3 = in[ 6]-in[ 2];
+    ts4 = in[ 5]-in[ 3];
+    tc5 = in[17]+in[ 9];
+    tc6 = in[16]+in[10];
+    tc7 = in[15]+in[11];
+    tc8 = in[14]+in[12];
+
+    out[0]  = (tc5+tc7+tc8)+tc6+in[13];
+    ct = (tc5+tc7+tc8)*cx[7]-tc6-in[13];
     st = (ts1-ts3+ts4)*cx[6];
     out[11] = ct+st;
     out[12] = ct-st;
 
-    ct = tc1*cx[2] - tc2 + tc3*cx[0] - tc4*cx[1];
-    st =  ts5*cx[3] - ts6 + ts7*cx[4] - ts8*cx[5] - ins(4);
-    out[13] = ct+st;
-    out[14] = ct-st;
+    ts2 = (in[7]-in[1])*cx[6];
+    tc6 = in[13] - tc6*cx[7];
+    ct = tc5*cx[3] - tc6 + tc7*cx[4] + tc8*cx[5];
+    st = ts1*cx[2] + ts2 + ts3*cx[0] + ts4*cx[1];
+    out[3] = ct+st;
+    out[4] = ct-st;
 
-    ct = -tc5*cx[4] - tc6 - tc7*cx[5] - tc8*cx[3] + inc(4);
-    st = ts1*cx[0] - ts2 + ts3*cx[1] - ts4*cx[2];
+    ct = -tc5*cx[5] + tc6 - tc7*cx[3] - tc8*cx[4];
+    st =  ts1*cx[1] + ts2 - ts3*cx[2] - ts4*cx[0];
+    out[7] = ct+st;
+    out[8] = ct-st;
+
+    ct = -tc5*cx[4] + tc6 - tc7*cx[5] - tc8*cx[3];
+    st =  ts1*cx[0] - ts2 + ts3*cx[1] - ts4*cx[2];
     out[15] = ct+st;
     out[16] = ct-st;
-
-    st = ts5+ts7-ts8-ins(1)+ins(4)-ins(7);
-    out[17] = st;
-#undef inc
-#undef ins
+  }
 }
 
 
