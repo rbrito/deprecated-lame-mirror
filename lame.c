@@ -200,27 +200,7 @@ int lame_init_params(lame_global_flags *gfp)
 {
   int i;
   lame_internal_flags *gfc=gfp->internal_flags;
-
   gfc->lame_init_params_init=1;
-
-  memset(&gfc->bs, 0, sizeof(Bit_stream_struc));
-  memset(&gfc->l3_side,0x00,sizeof(III_side_info_t));
-
-  memset((char *) gfc->mfbuf, 0, sizeof(short)*2*MFSIZE);
-
-  /* The reason for
-   *       int mf_samples_to_encode = ENCDELAY + 288;
-   * ENCDELAY = internal encoder delay.  And then we have to add 288
-   * because of the 50% MDCT overlap.  A 576 MDCT granule decodes to
-   * 1152 samples.  To synthesize the 576 samples centered under this granule
-   * we need the previous granule for the first 288 samples (no problem), and
-   * the next granule for the next 288 samples (not possible if this is last
-   * granule).  So we need to pad with 288 samples to make sure we can
-   * encode the 576 samples we are interested in.
-   */
-  gfc->mf_samples_to_encode = ENCDELAY+288;
-  gfc->mf_size=ENCDELAY-MDCTDELAY;  /* we pad input with this many 0's */
-
 
   gfp->frameNum=0;
   if (gfp->num_channels==1) {
@@ -430,10 +410,10 @@ int lame_init_params(lame_global_flags *gfp)
   /***************************************************************/
   /* compute info needed for FIR filter (filter_type==1) */
   /***************************************************************/
+  /* not yet coded */
 
   gfc->mode_ext=MPG_MD_LR_LR;
   gfc->stereo = (gfp->mode == MPG_MD_MONO) ? 1 : 2;
-
 
   gfc->samplerate_index = SmpFrqIndex((long)gfp->out_samplerate, &gfp->version);
   if( gfc->samplerate_index < 0) {
@@ -1640,6 +1620,23 @@ int lame_init(lame_global_flags *gfp)
   gfc->masking_lower=1;
 
 
+  memset(&gfc->bs, 0, sizeof(Bit_stream_struc));
+  memset(&gfc->l3_side,0x00,sizeof(III_side_info_t));
+
+  memset((char *) gfc->mfbuf, 0, sizeof(short)*2*MFSIZE);
+
+  /* The reason for
+   *       int mf_samples_to_encode = ENCDELAY + 288;
+   * ENCDELAY = internal encoder delay.  And then we have to add 288
+   * because of the 50% MDCT overlap.  A 576 MDCT granule decodes to
+   * 1152 samples.  To synthesize the 576 samples centered under this granule
+   * we need the previous granule for the first 288 samples (no problem), and
+   * the next granule for the next 288 samples (not possible if this is last
+   * granule).  So we need to pad with 288 samples to make sure we can
+   * encode the 576 samples we are interested in.
+   */
+  gfc->mf_samples_to_encode = ENCDELAY+288;
+  gfc->mf_size=ENCDELAY-MDCTDELAY;  /* we pad input with this many 0's */
 
   return 0;
 }
