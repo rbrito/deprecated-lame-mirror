@@ -590,7 +590,7 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath,
         fprintf(stderr, "skipping initial %i samples (encoder+decoder delay)\n",
                 skip);
 
-    if ( 0 == lame_get_disable_waveheader( gfp ) )
+    if ( 0 == disable_wav_header )
         WriteWaveHeader(outf, 0x7FFFFFFF, lame_get_in_samplerate( gfp ),
                         tmp_num_channels,
                         16);
@@ -613,7 +613,7 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath,
         skip -= (i = skip < iread ? skip : iread); /* 'i' samples are to skip in this frame */
 
         for (; i < iread; i++) {
-            if ( lame_get_disable_waveheader( gfp ) ) {
+            if ( disable_wav_header ) {
                 WriteFunction(outf, (char *) &Buffer[0][i], sizeof(short));
                 if (tmp_num_channels == 2)
                     WriteFunction(outf, (char *) &Buffer[1][i], sizeof(short));
@@ -641,7 +641,7 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath,
         wavsize *= i;
     }
 
-    if ( 0 == lame_get_disable_waveheader( gfp ) )
+    if ( 0 == disable_wav_header )
         if (!fseek(outf, 0l, SEEK_SET)) /* if outf is seekable, rewind and adjust length */
             WriteWaveHeader(outf, wavsize, lame_get_in_samplerate( gfp ),
                             tmp_num_channels, 16);

@@ -203,32 +203,6 @@ lame_get_bWriteVbrTag( const lame_global_flags*  gfp )
 }
 
 
-/* disable writing a wave header with *decoding* */
-int
-lame_set_disable_waveheader( lame_global_flags*  gfp,
-                             int                 disable_waveheader )
-{
-    /* default = 0 (disabled) */
-
-    /* enforce disable/enable meaning, if we need more than two values
-       we need to switch to an enum to have an apropriate representation
-       of the possible meanings of the value */
-    if ( 0 > disable_waveheader || 1 < disable_waveheader )
-        return -1;
-
-    gfp->disable_waveheader = disable_waveheader;
-
-    return 0;
-}
-
-int
-lame_get_disable_waveheader( const lame_global_flags*  gfp )
-{
-    assert( 0 <= gfp->disable_waveheader && 1 >= gfp->disable_waveheader );
-
-    return gfp->disable_waveheader;
-}
-
 
 /* decode only, use lame/mpglib to convert mp3/ogg to wav */
 int

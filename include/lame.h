@@ -82,8 +82,6 @@ typedef struct  {
   /* general control params */
   int analysis;               /* collect data for a MP3 frame analyzer?      */
   int bWriteVbrTag;           /* add Xing VBR tag?                           */
-  int disable_waveheader;     /* disable writing of .wav header, when
-                                 *decoding*                                  */
   int decode_only;            /* use lame/mpglib to convert mp3/ogg to wav   */
   int ogg;                    /* encode to Vorbis .ogg file                  */
 
@@ -280,10 +278,6 @@ int CDECL lame_get_analysis(const lame_global_flags *);
 // this variable must have been added by a Hungarian notation Windows programmer :-)
 int CDECL lame_set_bWriteVbrTag(lame_global_flags *, int);
 int CDECL lame_get_bWriteVbrTag(const lame_global_flags *);
-
-// 1=disable writing a wave header with *decoding*.  default=0
-int CDECL lame_set_disable_waveheader(lame_global_flags *, int);
-int CDECL lame_get_disable_waveheader(const lame_global_flags *);
 
 // 1=decode only.  use lame/mpglib to convert mp3/ogg to wav.  default=0
 int CDECL lame_set_decode_only(lame_global_flags *, int);
