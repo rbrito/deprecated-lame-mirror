@@ -111,7 +111,7 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 
       for (ch=0 ; ch < gf.stereo ; ch ++) {
 	cod_info = &l3_side->gr[gr].ch[ch].tt;
-	outer_loop( xr[ch], targ_bits[ch], noise, targ_noise, 0,
+	outer_loop( xr[ch], targ_bits[ch], noise, targ_noise, 
 		    &l3_xmin[ch], l3_enc[gr][ch], fr_ps,
 		    &scalefac[gr][ch], cod_info,
 		    l3_side, &ratio[gr][ch], ms_ener_ratio[gr],gr,ch);
@@ -241,6 +241,9 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
                 III_side_info_t * l3_side, int l3_enc[2][2][576],
                 III_scalefac_t scalefac[2][2], frame_params * fr_ps)
 {
+  static gr_info        bst_cod_info;
+  static III_scalefac_t bst_scalefac;
+  static int            bst_l3_enc[576]; 
   III_psy_xmin l3_xmin;
   gr_info  *cod_info = NULL;
   layer    *info;
@@ -255,6 +258,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   int       bits;
   int       mean_bits;
   int       i,ch, gr, analog_silence;
+  int	    reparted = 0;
 
   iteration_init(xr,l3_side,l3_enc,fr_ps);
   info = fr_ps->header;
@@ -321,11 +325,6 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
       max_bits=Min(max_bits,2500);
       max_bits=Max(max_bits,min_bits);
 
-
-      /** in the case we will not find any better, we allocate max_bits
-       ****************************************************************/
-      save_bits[gr][ch] = max_bits;
-
       dbits = (max_bits-min_bits)/4;
       this_bits = (max_bits+min_bits)/2;
       real_bits = max_bits+1;
@@ -341,7 +340,6 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 	       * we already found a quantization with fewer bits
 	       * so we can skip this try
 	       */
-	      save_bits[gr][ch] = this_bits;
 	      this_bits -= dbits;
 	      dbits /= 2;
 	      continue; /* skips the rest of this do-while loop */
@@ -360,29 +358,48 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 	  targ_noise[0]=Max(0,targ_noise[0]);
 	  targ_noise[2]=Max(0,targ_noise[2]);
 
-	  outer_loop( xr[gr][ch], this_bits, noise, targ_noise, 1,
+	  outer_loop( xr[gr][ch], this_bits, noise, targ_noise,
 		      &l3_xmin, l3_enc[gr][ch], fr_ps,
-		      &scalefac[gr][ch],
-		      &l3_side->gr[gr].ch[ch].tt,
-		      l3_side, &ratio[gr][ch], ms_ener_ratio[gr], gr, ch);
+		      &scalefac[gr][ch], cod_info, l3_side, 
+		      &ratio[gr][ch], ms_ener_ratio[gr], gr, ch);
 
 	  /* is quantization as good as we are looking for ? */
 	  better=VBR_compare((int)targ_noise[0],targ_noise[3],targ_noise[2],
 			     targ_noise[1],(int)noise[0],noise[3],noise[2],
 			     noise[1]);
 	  if (better) {
-	      save_bits[gr][ch] = this_bits;
-	      this_bits -= dbits;
-	      real_bits = cod_info->part2_3_length;
 	      /* 
 	       * we now know it can be done with "real_bits"
 	       * and maybe we can skip some iterations
 	       */
+	      real_bits = cod_info->part2_3_length;
+	      /*
+	       * save best quantization so far
+	       */
+              memcpy( &bst_scalefac, &scalefac[gr][ch], sizeof(III_scalefac_t) );
+              memcpy(    bst_l3_enc,    l3_enc[gr][ch], sizeof(int)*576        );
+              memcpy( &bst_cod_info,  cod_info,         sizeof(gr_info)        );
+	      /*
+	       * try with fewer bits
+	       */
+	      this_bits -= dbits;
 	  } else {
+	      /*
+	       * try with more bits
+	       */
 	      this_bits += dbits;
 	  }
 	  dbits /= 2;
       } while (dbits>10) ;
+      
+      if (real_bits <= max_bits)
+      {
+        /* restore best quantization found */
+        memcpy(  cod_info,         &bst_cod_info, sizeof(gr_info)        );
+        memcpy( &scalefac[gr][ch], &bst_scalefac, sizeof(III_scalefac_t) );
+        memcpy(    l3_enc[gr][ch],    bst_l3_enc, sizeof(int)*576        );
+      }
+      save_bits[gr][ch] = cod_info->part2_3_length;
       used_bits += save_bits[gr][ch];
       
     } /* for ch */
@@ -418,6 +435,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 
   /* repartion available bits in same proportion */
   if (used_bits > bits ) {
+    reparted = 1;
     for( gr = 0; gr < gf.mode_gr; gr++) {
       for(ch = 0; ch < gf.stereo; ch++) {
 	save_bits[gr][ch]=(save_bits[gr][ch]*frameBits[info->bitrate_index])/used_bits;
@@ -434,14 +452,21 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 
   for(gr = 0; gr < gf.mode_gr; gr++) {
     for(ch = 0; ch < gf.stereo; ch++) {
-      /* quality setting */
-      set_masking_lower( save_bits[gr][ch] );
+#ifdef RH_SIDE_VBR
+      if (reparted)
+#else
+      if (reparted || (reduce_sidechannel && ch == 1))
+#endif
+      {
+        /* quality setting */
+        set_masking_lower( save_bits[gr][ch] );
       
-      outer_loop( xr[gr][ch], save_bits[gr][ch], noise,targ_noise,0,
-		  &l3_xmin, l3_enc[gr][ch], fr_ps, 
+        outer_loop( xr[gr][ch], save_bits[gr][ch], noise,targ_noise,
+	 	  &l3_xmin, l3_enc[gr][ch], fr_ps, 
 		  &scalefac[gr][ch],
 		  &l3_side->gr[gr].ch[ch].tt,
 		  l3_side, &ratio[gr][ch], ms_ener_ratio[gr], gr,ch);
+      }
     }
   }
 
@@ -572,7 +597,6 @@ void outer_loop(
     int targ_bits,
     FLOAT8 best_noise[4],
     FLOAT8 targ_noise[4],
-    int sloppy,
     III_psy_xmin *l3_xmin,   /* the allowed distortion of the scalefactor */
     int l3_enc[576],         /* vector of quantized values ix(0..575) */
     frame_params *fr_ps,
@@ -681,8 +705,6 @@ void outer_loop(
 
       }
 
-
-
       /* check if this quantization is better the our saved quantization */
       if (iteration == 1) better=1;
       else 
@@ -770,15 +792,6 @@ void outer_loop(
     if (gf.noise_shaping_stop==0)
       if (over==0) notdone=0;
 
-    /* in sloppy mode, as soon as we know we can do better than targ_noise,
-       quit.  This is used for the inital VBR bin search.  Turn it off for
-       final (optimal) quantization */
-    if (sloppy && notdone) notdone = 
-        !VBR_compare((int)targ_noise[0],targ_noise[3],targ_noise[2],
-         targ_noise[1],over,tot_noise,over_noise,max_noise);
-
-
-
     if (notdone) {
 	amp_scalefac_bands( xrpow, cod_info, &scalefac_w, distort);
 	/* check to make sure we have not amplified too much */
@@ -795,9 +808,7 @@ void outer_loop(
 	notdone = !status;
     }
 
-
-
-    if (try_scale && gf.experimentalY && (sloppy || !gf.VBR)) {
+    if (try_scale && gf.experimentalY) {
       init_outer_loop(xr, &scalefac_w, cod_info,l3_side);
       compute_stepsize=1;  /* compute a new global gain */
       notdone=1;
@@ -805,10 +816,6 @@ void outer_loop(
     }
   }    /* done with main iteration */
 
-  /* in sloppy mode we don´t need to restore the quantization, 
-   * cos we didn´t saved it and we don´t need it, as we only want
-   * to know if we can do better
-   */
   if (count) {
     memcpy(cod_info,&save_cod_info,sizeof(save_cod_info));
     cod_info->part2_3_length += cod_info->part2_length;

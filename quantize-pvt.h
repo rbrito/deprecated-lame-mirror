@@ -41,7 +41,6 @@ void outer_loop( FLOAT8 xr[576],     /*vector of the magnitudees of the spectral
                 int bits,
 		FLOAT8 noise[4],
                 FLOAT8 targ_noise[4],    /* VBR target noise info */
-                int sloppy,              /* 1=quit as soon as noise < targ_noise */
                 III_psy_xmin *l3_xmin, /* the allowed distortion of the scalefactor */
                 int l3_enc[576],    /* vector of quantized values ix(0..575) */
 		frame_params *fr_ps,
