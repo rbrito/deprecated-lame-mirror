@@ -24,6 +24,7 @@ int
 lame_decode_exit(lame_t gfc)
 {
     ExitMP3(gfc->pmp);
+    gfc->pmp = NULL;
     return 0;
 }
 
