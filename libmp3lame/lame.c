@@ -1089,6 +1089,10 @@ lame_close(lame_t gfc)
     if (gfc->s3_ll) free(gfc->s3_ll);
     if (gfc->s3_ss) free(gfc->s3_ss);
 
+#ifdef HAVE_MPGLIB
+    if (gfc->pmp) lame_decode_exit(gfc);
+#endif
+
     free((unsigned char*)gfc - gfc->alignment);
 
     return 0;
