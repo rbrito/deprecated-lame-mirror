@@ -17,6 +17,9 @@
 /* alot of debug output */
 #undef DEBUG
 
+/* allow to compute a more accurate replaygain value */
+#undef DECODE_ON_THE_FLY
+
 /* double is faster than float on Alpha */
 #undef FLOAT
 
@@ -274,7 +277,7 @@
 /* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
 #undef TIME_WITH_SYS_TIME
 
-/* fast log implementation with limited precission */
+/* faster log implementation with less but enough precission */
 #undef USE_FAST_LOG
 
 /* build with layer 1 decoding */

@@ -1043,8 +1043,8 @@ Optional Features:
   --disable-frontend         Do not build the lame executable default=build
   --enable-mp3x              Build GTK frame analyzer default=no
   --enable-mp3rtp            Build mp3rtp default=no
-  --enable-brhist            Include the VBR bitrate histogram feature
-                             default=yes if any termcap available
+  --disable-brhist          Include the VBR bitrate histogram feature
+                             default=yes
   --enable-all-float         Whether to make all floting point variables as float, not double
                              default=no
   --enable-expopt=full,norm  Whether to enable experimental optimizations
@@ -1819,7 +1819,7 @@ fi
 
 # Define the identity of the package.
  PACKAGE=lame
- VERSION=3.96
+ VERSION=3.95.1
 
 
 cat >>confdefs.h <<_ACEOF
@@ -26853,6 +26853,11 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
 
+cat >>confdefs.h <<\_ACEOF
+#define DECODE_ON_THE_FLY 1
+_ACEOF
+
+
 	if test "${CONFIG_DECODER_L1}" != "no"; then
 		CONFIG_DECODER="${CONFIG_DECODER} 1,"
 
@@ -27058,16 +27063,16 @@ esac
 echo "$as_me:$LINENO: checking use of VBR bitrate histogram" >&5
 echo $ECHO_N "checking use of VBR bitrate histogram... $ECHO_C" >&6
 if test "x${HAVE_TERMCAP}" != "x"; then
-  BRH_DEFAULT="yes"
+  TERMCAP_DEFAULT="yes"
 else
-  BRH_DEFAULT="no"
+  TERMCAP_DEFAULT="no"
 fi
 # Check whether --enable-brhist or --disable-brhist was given.
 if test "${enable_brhist+set}" = set; then
   enableval="$enable_brhist"
   CONFIG_BRHIST="${enableval}"
 else
-  CONFIG_BRHIST="${BRH_DEFAULT}"
+  CONFIG_BRHIST="yes"
 fi;
 if test "${CONFIG_BRHIST}" != "no" ; then
 
@@ -27076,7 +27081,7 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
 
-	if test "${BRH_DEFAULT}" = "yes" ; then
+	if test "${TERMCAP_DEFAULT}" = "yes" ; then
 		FRONTEND_LDADD="-l${HAVE_TERMCAP} ${FRONTEND_LDADD}"
 		CONFIG_BRHIST="yes, with ${HAVE_TERMCAP}"
 
