@@ -1820,7 +1820,7 @@ fi
 
 # Define the identity of the package.
  PACKAGE=lame
- VERSION=3.95.1
+ VERSION=3.97
 
 
 cat >>confdefs.h <<_ACEOF
