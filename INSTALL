@@ -55,12 +55,7 @@ via % make -f Makefile.unix
 
 And the folloing options can be used with ./configure:
 
-  --with-fileio=lame          Use lame's internal file io routines [default]
-               =sndfile       Use Erik de Castro Lopo's libsndfile (no stdin possible currently)
-               =no            Do not use file io routines
-
-  --with-sndfile-prefix=DIR   Alternate location for libsndfile
-                              (if --with-fileio=sndfile)
+For libmp3lame:
 
   --with-vorbis               Use vorbis library for ogg files 
                               [default:yes, if installed]"
@@ -68,13 +63,23 @@ And the folloing options can be used with ./configure:
 
   --enable-decoder=yes,no     Include mpg123/mpglib decoder [default:yes]"
 
-  --enable-analyzer=yes,no    Whether to include the GTK frame analyzer 
+  --enable-analyzer=yes,no    Whether to include support in the library
+                              for an MP3 frame analyzer.
                               (default yes if possible)
-                              It requires installed GTK, file io and 
-                              the mpg123 decoder."
+
+For the LAME front end encoder:
+(how do we pass these options to frontend/configure?)
+
+  --with-fileio=lame          Use lame's internal file io routines [default]
+               =sndfile       Use Erik de Castro Lopo's libsndfile (no stdin possible currently)
+               =no            Do not use file io routines
+
+  --with-sndfile-prefix=DIR   Alternate location for libsndfile
+                              (if --with-fileio=sndfile)
 
   --enable-brhist             Include the VBR bitrate histogram feature 
                               (default:yes if any ncurses/termcap available)"
+
 
 
 Other usefull configure options:
