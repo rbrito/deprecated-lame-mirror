@@ -4,13 +4,14 @@
 =======================================================================
 Examples:
 =======================================================================
-fixed bit rate jstereo 128kbs encoding:
+fixed bit rate jstereo 128 kbps encoding:
 % lame sample.wav  sample.mp3      
 
-fixed bit rate jstereo 128kbs encoding, highest quality:  (recommended)
+fixed bit rate jstereo 128 kbps encoding, highest quality:  (recommended)
 % lame -h sample.wav  sample.mp3      
 
-To disable joint stereo encoding (slightly faster, but less quality at bitrates<=128kbs)
+To disable joint stereo encoding (slightly faster, but less quality at 
+bitrates <= 128 kbps)
 % lame -m s sample.wav  sample.mp3     
 
 Fast encode, low quality  (no noise shaping)
@@ -21,7 +22,7 @@ Variable Bitrate (VBR): (use -V n to adjust quality/filesize)
 
 Note: VBR is currently under heavy development.  Right now it can
 often result in too much compression.  I would recommend using VBR
-with a minimum bitrate of 112kbs.  This will let LAME increase
+with a minimum bitrate of 112 kbps.  This will let LAME increase
 the bitrate for difficult-to-encode frames, but prevent LAME from
 being too aggressive for simple frames:
 
@@ -31,8 +32,8 @@ being too aggressive for simple frames:
 =======================================================================
 LOW BITRATES
 =======================================================================
-At lower bitrates, (like 24kbs per channel), it is recommended that
-you use a 16kHz sampling rate combined with lowpass filtering.  LAME,
+At lower bitrates, (like 24 kbps per channel), it is recommended that
+you use a 16 kHz sampling rate combined with lowpass filtering.  LAME,
 as well as commercial encoders (FhG, Xing) will do this automatically.
 However, if you feel there is too much (or not enough) lowpass
 filtering, you may need to try different values of the lowpass cutoff
@@ -55,7 +56,7 @@ For more options, just type:
 
 Scripts are included to run lame on multiple files:
 
-bach script:  mlame     Run "mlame -h" for instructions.
+bach script:  mlame     Run "mlame -?" for instructions.
 sh script:    auenc     Run auenc for instructions
 
 
@@ -77,11 +78,11 @@ Quality related:
 
 
 Constant Bit Rate (CBR)
--b  n          set bitrate (8,16,24,...,320)
+-b  n          set bitrate (8, 16, 24, ..., 320)
 -h             higher quality but slower
 -f             disable noise shaping.  Encodes faster, but lower quality
 --freeformat   produce a free format bitstream.  User must also specify
-               a bitrate with -b, between 8 and 320 kbs.
+               a bitrate with -b, between 8 and 320 kbps.
 
 Variable Bit Rate (VBR)
 -v             VBR
@@ -193,18 +194,18 @@ average bitrate encoding (aka Safe VBR)
 =======================================================================
 --abr n
 
-turns on encoding with a targeted average bitrate of n kbits, allowing
-to use frames of different sizes.  The allowed range of n is 8-320,
-you can use any integer value within that range.
+turns on encoding with a targeted average bitrate of n kbps, allowing
+to use frames of different sizes.  The allowed range of n is 8...320 
+kbps, you can use any integer value within that range.
 
 It can be combined with the -b and -B switches like
 lame --abr 123 -b 64 -B 192 a.wav a.mp3
-which would limit the allowed frame sizes between 64 and 192 kbits.
+which would limit the allowed frame sizes between 64 and 192 kbps.
 
-Using -B is NOT RECOMMENDED.  A 128kbs CBR bitstream, because of the
+Using -B is NOT RECOMMENDED.  A 128 kbps CBR bitstream, because of the
 bit reservoir, can actually have frames which use as many bits as a
-320kbs frame.  VBR modes minimize the use of the bit reservoir, and
-thus need to allow 320kbs frames to get the same flexability as CBR
+320 kbps frame.  VBR modes minimize the use of the bit reservoir, and
+thus need to allow 320 kbps frames to get the same flexability as CBR
 streams.
 
 
@@ -227,14 +228,15 @@ bitrate
 =======================================================================
 -b  n
 
-For MPEG1 (sampling frequencies of 32, 44.1 and 48kHz)
-n =   32,40,48,56,64,80,96,112,128,160,192,224,256,320
+For MPEG-1 (sampling frequencies of 32, 44.1 and 48 kHz)
+n =   32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320
 
-For MPEG2 (sampling frequencies of 16, 22.05 and 24kHz)
-n = 8,16,24,32,40,48,56,64,80,96,112,128,144,160
+For MPEG-2 and MPEG-2.5 (sampling frequencies of 8, 11.025, 
+12, 16, 22.05 and 24 kHz)
+n = 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160
 
 
-The bitrate to be used.  Default is 128kbs MPEG1, 80kbs MPEG2.
+The bitrate to be used.  Default is 128 kbps MPEG1, 80 kbps MPEG2.
 
 When used with variable bitrate encodings (VBR), -b specifies the
 minimum bitrate to use.  This is useful to prevent LAME VBR from
@@ -246,11 +248,7 @@ max bitrate
 =======================================================================
 -B  n
 
-For MPEG1 (sampling frequencies of 32, 44.1 and 48kHz)
-n =   32,40,48,56,64,80,96,112,128,160,192,224,256,320
-
-For MPEG2 (sampling frequencies of 16, 22.05 and 24kHz)
-n = 8,16,24,32,40,48,56,64,80,96,112,128,144,160
+see also option "-b" for allowed bitrates.
 
 Maximum allowed bitrate when using VBR.
 
@@ -333,17 +331,17 @@ free format bitstreams
 --freeformat   
 
 LAME will produce a fixed bitrate, free format bitstream.
-User must specify the desired bitrate in kbs, which can
+User must specify the desired bitrate in kbps, which can
 be any integer between 8 and 320.
 
 Not supported by most decoders.  Decoders only required to support
-up to 320kbs.  
+up to 320 kbps.  
 
 Decoders which can handle free format:
                      supports up to
-"lame --decode"          560kbs  
-Freeamp:                 440kbs
-l3dec:                   310kbs
+"lame --decode"          550 kbps  
+Freeamp:                 440 kbps
+l3dec:                   310 kbps
 
 
 
@@ -396,17 +394,21 @@ that would be better used for lower, more important frequencies.
 Modes:
 =======================================================================
 
--m m           mono.  
+-m m           mono
 -m s           stereo
--m j           jstereo
+-m j           joint stereo
 -m f           forced mid/side stereo
+-m d           dual (independent) channels
+-m i           intensity stereo
 
-mono is the default mode for mono input files.  If "-m m" is specified
+MONO is the default mode for mono input files.  If "-m m" is specified
 for a stereo input file, the two channels will be averaged into a mono
 signal.  
 
-jstereo is the default mode for stereo files with fixed bitrates of
-128kbs or less.  At higher fixed bitrates, the default is stereo.
+STEREO
+
+JOINT STEREO is the default mode for stereo files with fixed bitrates of
+128 kbps or less.  At higher fixed bitrates, the default is stereo.
 For VBR encoding, jstereo is the default for VBR_q >4, and stereo
 is the default for VBR_q <=4.  You can override all of these defaults
 by specifing the mode on the command line.  
@@ -418,8 +420,8 @@ channels are encoded, and more bits are allocated to the mid channel
 than the side channel.  This will effectively increase the bandwidth
 if the signal does not have too much stereo separation.  
 
-Mid/side stereo is basically a trick to increase bandwidth.  At 128kbs,
-it is clearly worth while.  At higher bitrates it is less usefull.  
+Mid/side stereo is basically a trick to increase bandwidth.  At 128 kbps,
+it is clearly worth while.  At higher bitrates it is less useful.
 
 Using mid/side stereo inappropriately can result in audible
 compression artifacts.  To much switching between mid/side and regular
@@ -427,10 +429,13 @@ stereo can also sound bad.  To determine when to switch to mid/side
 stereo, LAME uses a much more sophisticated algorithm than that
 described in the ISO documentation.
 
--m f forces all frames to be encoded mid/side stereo.  It 
+FORCED MID/SIDE STEREO forces all frames to be encoded mid/side stereo.  It 
 should only be used if you are sure every frame of the input file
 has very little stereo seperation.  
 
+DUAL CHANNELS
+
+INTENSITY STEREO
 
 
 =======================================================================
@@ -484,7 +489,7 @@ are ignored when using "--ogg".  But downsampling and stereo/mono
 options work.  
 
 Currently (8/00) Ogg Vorbis only supports 5 modes, which range
-from approximately 128kbs to 320kbs.   Based on the bitrate
+from approximately 128 kbps to 320 kbps.   Based on the bitrate
 specified (or the -V n option), LAME will take its best guess
 as to which of the 5 Vorbis modes will give about close to the
 desired bitrate.
@@ -532,22 +537,22 @@ Not supported if LAME is compiled to use LIBSNDFILE.
 
 
 =======================================================================
-output sampling frequency in kHZ
+output sampling frequency in kHz
 =======================================================================
 --resample  n
 
-where n = 16, 22.05, 24, 32, 44.1, 48
+where n = 8, 11.025, 12, 16, 22.05, 24, 32, 44.1, 48
 
 Output sampling frequency.  Resample the input if necessary.  
 
 If not specified, LAME may sometimes resample automatically 
 when faced with extreme compression conditions (like encoding
-a 44.1khz input file at 16kbs).  
+a 44.1 kHz input file at 16 kbps).
 
 
 
 =======================================================================
-sampling frequency in kHZ
+sampling frequency in kHz
 =======================================================================
 -s  n
 
@@ -600,15 +605,15 @@ variable bit rate  (VBR)
 -v
 
 Turn on VBR.  There are several ways you can use VBR.  I personally
-like using VBR to get files slightly bigger than 128kbs files, where
+like using VBR to get files slightly bigger than 128 kbps files, where
 the extra bits are used for the occasional difficult-to-encode frame.
 For this, try specifying a minimum bitrate to use with VBR:
 
-lame -v -b 112  input.wav output.mp3
+lame -v      -b 112  input.wav output.mp3
 
-If the file is too big, use -V n, where n=0..9
+If the file is too big, use -V n, where n = 0...9
 
-lame -v -V n   -b 112  input.wav output.mp3
+lame -v -V n -b 112  input.wav output.mp3
 
 
 If you wan to use VBR to get the maximum compression possible,
@@ -627,7 +632,8 @@ VBR quality setting
 =======================================================================
 -V n       
 
-n=0..9.  Specifies the value of VBR_q.  default=4.  0=highest quality.
+n = 0...9.  Specifies the value of VBR_q.
+default = 4,  highest quality = 0, smallest files = 9
 
 
 
@@ -644,12 +650,12 @@ will be.
 is audible even though the psy-model claims it is not!  Thus using a
 small minimum bitrate can result in some aggressive compression and
 audible distortion even with -V 0.  Thus using -V 0 does not sound
-better than a fixed 256kbs encoding.  For example: suppose in the 1kHz
-frequency band the psy-model claims 20db of distortion will not be
+better than a fixed 256 kbps encoding.  For example: suppose in the 1 kHz
+frequency band the psy-model claims 20 dB of distortion will not be
 detectable by the human ear, so LAME VBR-0 will compress that
-frequency band as much as possible and introduce at most 20db of
-distortion.  Using a fixed 256kbit framesize, LAME could end up
-introducing only 2db of distortion.  If the psy-model was correct,
+frequency band as much as possible and introduce at most 20 dB of
+distortion.  Using a fixed 256 kbps framesize, LAME could end up
+introducing only 2 dB of distortion.  If the psy-model was correct,
 they will both sound the same.  If the psy-model was wrong, the VBR-0
 result can sound worse.
 
@@ -659,7 +665,7 @@ voice encoding mode
 =======================================================================
 --voice
 
-An experimental voice encoding mode.  Tuned for 44.1kHz input files.
+An experimental voice encoding mode.  Tuned for 44.1 kHz input files.
 
 
 =======================================================================
@@ -670,5 +676,3 @@ swapbytes
 swap bytes in the input file (and output file when using --decode).
 For sorting out little endian/big endian type problems.  If your
 encodings sound like static, try this first.
-
-

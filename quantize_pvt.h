@@ -5,10 +5,10 @@
 #define PRECALC_SIZE (IXMAX_VAL+2)
 
 
-extern unsigned int nr_of_sfb_block[6][3][4];
-extern int pretab[SBMAX_l];
-extern const int slen1_tab[16];
-extern const int slen2_tab[16];
+extern const unsigned int     nr_of_sfb_block [6] [3] [4];
+extern const char             pretab [SBMAX_l];
+extern const char             slen1_tab [16];
+extern const char             slen2_tab [16];
 
 extern const scalefac_struct sfBandIndex[9];
 

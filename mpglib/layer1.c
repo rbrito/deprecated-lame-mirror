@@ -155,5 +155,4 @@ int do_layer1(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
   return clip;
 }
 
-
 #endif

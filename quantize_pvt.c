@@ -12,8 +12,8 @@
 
 #define NSATHSCALE 100 // Assuming dynamic range=96dB, this value should be 92
 
-const int slen1_tab[16] = { 0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4 };
-const int slen2_tab[16] = { 0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3 };
+const char  slen1_tab [16] = { 0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4 };
+const char  slen2_tab [16] = { 0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3 };
 
 
 /*
@@ -24,7 +24,7 @@ const int slen2_tab[16] = { 0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3 };
 
   [table_number][row_in_table][column of nr_of_sfb]
 */
-unsigned int nr_of_sfb_block[6][3][4] =
+const unsigned int  nr_of_sfb_block [6] [3] [4] =
 {
   {
     {6, 5, 5, 5},
@@ -60,7 +60,7 @@ unsigned int nr_of_sfb_block[6][3][4] =
 
 
 /* Table B.6: layer3 preemphasis */
-int  pretab[SBMAX_l] =
+const char  pretab [SBMAX_l] =
 {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     1, 1, 1, 1, 2, 2, 3, 3, 3, 2, 0

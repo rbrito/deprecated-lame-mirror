@@ -138,21 +138,21 @@ ifeq ($(UNAME),Linux)
 
 
 # suggested for gcc-2.7.x
-   CC_OPTS =  -O3 -fomit-frame-pointer -funroll-loops -ffast-math  -finline-functions -Wall
-#  CC_OPTS =  -O9 -fomit-frame-pointer -fno-strength-reduce -mpentiumpro -ffast-math -finline-functions -funroll-loops -Wall -malign-double -g -march=pentiumpro -mfancy-math-387 -pipe 
+   CC_OPTS =  -O3 -fomit-frame-pointer -funroll-loops -ffast-math  -finline-functions -Wall -pedantic
+#  CC_OPTS =  -O9 -fomit-frame-pointer -fno-strength-reduce -mpentiumpro -ffast-math -finline-functions -funroll-loops -Wall -malign-double -g -march=pentiumpro -mfancy-math-387 -pipe -pedantic
 
 #  for debugging:
-#  CC_OPTS =  -UNDEBUG -O -Wall -ggdb -DABORTFP
+#  CC_OPTS =  -UNDEBUG -O -Wall -pedantic -ggdb -DABORTFP
 
 #  for lots of debugging:
-#   CC_OPTS =  -DDEBUG -UNDEBUG  -O -Wall -g -DABORTFP 
+#   CC_OPTS =  -DDEBUG -UNDEBUG  -O -Wall -pedantic -g -DABORTFP 
 
 
 #  some alternate code (work in progress Robert.Hegemann@gmx.de)
 #  CPP_OPTS += -DRH_AMP -DRH_VALIDATE_MS
 # these options for gcc-2.95.2 to produce fast code
 #   CC_OPTS = \
-#	-Wall -O9 -fomit-frame-pointer -march=pentium \
+#	-pedantic -Wall -O9 -fomit-frame-pointer -march=pentium \
 #	-finline-functions -fexpensive-optimizations \
 #	-funroll-loops -funroll-all-loops -pipe -fschedule-insns2 \
 #	-fstrength-reduce \
@@ -171,7 +171,7 @@ ifeq ($(ARCH),alpha)
 ifeq ($(shell which ccc 2>/dev/null | grep -c ccc),0)
 
 # double is faster than float on Alpha
-CC_OPTS =       -O4 -Wall -fomit-frame-pointer -ffast-math -funroll-loops \
+CC_OPTS =       -O4 -pedantic -Wall -fomit-frame-pointer -ffast-math -funroll-loops \
                 -mfp-regs -fschedule-insns -fschedule-insns2 \
                 -finline-functions \
 #                -DFLOAT=double
@@ -188,11 +188,11 @@ CC = ccc
 ################################################################
 #### set 'CC_OPTS = -arch host -tune host' to generate/tune instructions for this machine
 ####     'CC_OPTS += -migrate -fast -inline speed -unroll 0' tweak to run as fast as possible :)
-####     'CC_OPTS += -w0 -Wall' set warning and linking flags
+####     'CC_OPTS += -w0 -pedantic -Wall' set warning and linking flags
 ################################################################
 CC_OPTS = -arch host -tune host
 CC_OPTS += -migrate -fast -inline speed -unroll 0
-CC_OPTS += -w0 -Wall
+CC_OPTS += -w0 -pedantic -Wall
 
 
 ################################################################
