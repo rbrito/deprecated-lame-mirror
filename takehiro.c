@@ -686,11 +686,37 @@ scfsi_calc(int ch,
 }
 
 void best_scalefac_store(lame_global_flags *gfp,int gr, int ch,
+			 int l3_enc[2][2][576],
 			 III_side_info_t *l3_side,
 			 III_scalefac_t scalefac[2][2])
 {
     /* use scalefac_scale if we can */
     gr_info *gi = &l3_side->gr[gr].ch[ch].tt;
+
+    /* remove scalefacs from bands with ix=0.  This idea comes
+     * from the AAC ISO docs.  added mt 3/00 */
+    int sfb,i,l,start,end;
+    /* check if l3_enc=0 */
+    for ( sfb = 0; sfb < gi->sfb_lmax; sfb++ ) {
+      if (scalefac[gr][ch].l[sfb]>0) { 
+	start = scalefac_band.l[ sfb ];
+	end   = scalefac_band.l[ sfb+1 ];
+	for ( l = start; l < end; l++ ) if (l3_enc[gr][ch][l]!=0) break;
+	if (l==end) scalefac[gr][ch].l[sfb]=0;
+      }
+    }
+    for ( i = 0; i < 3; i++ ) {
+      for ( sfb = gi->sfb_smax; sfb < SBPSY_s; sfb++ ) {
+	if (scalefac[gr][ch].s[sfb][i]>0) {
+	  start = scalefac_band.s[ sfb ];
+	  end   = scalefac_band.s[ sfb+1 ];
+	  for ( l = start; l < end; l++ ) 
+	    if (l3_enc[gr][ch][3*l+i]!=0) break;
+	  if (l==end) scalefac[gr][ch].s[sfb][i]=0;
+        }
+      }
+    }
+
 
     gi->part2_3_length -= gi->part2_length;
     if (!gi->scalefac_scale && !gi->preflag) {

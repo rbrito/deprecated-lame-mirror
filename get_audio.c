@@ -9,7 +9,7 @@
 #if (defined LIBSNDFILE || defined LAMESNDFILE)
 
 #ifdef _WIN32
-/* needed for set stdin to binary on windoze machines */
+/* needed to set stdin to binary on windoze machines */
 #include <io.h>
 #endif
 

@@ -179,7 +179,7 @@ iteration_loop( lame_global_flags *gfp,
 		      &l3_xmin[ch], l3_enc[gr][ch], 
 		      &scalefac[gr][ch], cod_info, xfsf, ch);
         }
-      best_scalefac_store(gfp,gr, ch, l3_side, scalefac);
+      best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
       if (gfp->use_best_huffman==1 && cod_info->block_type == NORM_TYPE) {
 	best_huffman_divide(gr, ch, cod_info, l3_enc[gr][ch]);
       }
@@ -187,7 +187,10 @@ iteration_loop( lame_global_flags *gfp,
       if (gfp->gtkflag)
 	set_pinfo (cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
 #endif
+/*#define NORESTEST*/
+#ifndef NORESTEST
       ResvAdjust(gfp,cod_info, l3_side, mean_bits );
+#endif
       /* set the sign of l3_enc */
       for ( i = 0; i < 576; i++) {
 	if (xr[gr][ch][i] < 0)
@@ -196,12 +199,12 @@ iteration_loop( lame_global_flags *gfp,
     }
   } /* loop over gr */
 
-#if 0
+#ifdef NORESTEST
   /* replace ResvAdjust above with this code if you do not want
      the second granule to use bits saved by the first granule.
      when combined with --nores, this is usefull for testing only */
-  for ( gr = 0; gr < mode_gr; gr++ ) {
-    for ( ch =  0; ch < stereo; ch++ ) {
+  for ( gr = 0; gr < gfp->mode_gr; gr++ ) {
+    for ( ch =  0; ch < gfp->stereo; ch++ ) {
 	cod_info = &l3_side->gr[gr].ch[ch].tt;
 	ResvAdjust(gfp, cod_info, l3_side, mean_bits );
     }
@@ -597,7 +600,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
   for (gr = 0; gr < gfp->mode_gr; gr++)
     for (ch = 0; ch < gfp->stereo; ch++) {
       cod_info = &l3_side->gr[gr].ch[ch].tt;
-      best_scalefac_store(gfp,gr, ch, l3_side, scalefac);
+      best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
       if (cod_info->block_type == NORM_TYPE) {
 	best_huffman_divide(gr, ch, cod_info, l3_enc[gr][ch]);
       }

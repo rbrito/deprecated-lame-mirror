@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 #ifdef _WIN32
+/* needed to set stdout to binary */
 #include <io.h>
 #endif
 #include "lame.h"
