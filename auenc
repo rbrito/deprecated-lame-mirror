@@ -26,7 +26,7 @@ case "$1" in
   -d | --delete ) DELETE=1 ; shift ;;
 esac
 
-for f in $*
+for f
 do
   $LAME $LAME_OPTS "$f" `basename "$f" .wav`.mp3 || {
     exec 1>&2
