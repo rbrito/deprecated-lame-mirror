@@ -348,7 +348,6 @@ static void III_get_side_info_1(struct III_sideinfo *si,int stereo,
 #ifdef HAVEGTK
 	 if (gtkflag) {
 	   pinfo->qss[gr][ch]=qss;
-	   pinfo->big_values[gr][ch]=gr_info->big_values;
 	 }
 #endif
        }
@@ -403,10 +402,6 @@ static void III_get_side_info_1(struct III_sideinfo *si,int stereo,
        gr_info->preflag = get1bit();
        gr_info->scalefac_scale = get1bit();
        gr_info->count1table_select = get1bit();
-#ifdef HAVEGTK
-       if (gtkflag)
-	 pinfo->scalefac_scale[gr][ch]=gr_info->scalefac_scale;
-#endif
      }
    }
 }
@@ -443,7 +438,6 @@ static void III_get_side_info_2(struct III_sideinfo *si,int stereo,
 #ifdef HAVEGTK
        if (gtkflag) {
 	   pinfo->qss[0][ch]=qss;
-	   pinfo->big_values[0][ch]=gr_info->big_values;
        }
 #endif
 
@@ -501,10 +495,6 @@ static void III_get_side_info_2(struct III_sideinfo *si,int stereo,
        }
        gr_info->scalefac_scale = get1bit();
        gr_info->count1table_select = get1bit();
-#ifdef HAVEGTK
-       if (gtkflag)
-	 pinfo->scalefac_scale[0][ch]=gr_info->scalefac_scale;
-#endif
    }
 }
 
@@ -1655,6 +1645,29 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
     int i,j,sb;
     float ifqstep;
 
+    pinfo->bitrate = 
+      tabsel_123[fr->lsf][fr->lay-1][fr->bitrate_index];
+    pinfo->sampfreq = freqs[sfreq];
+    pinfo->emph = fr->emphasis;
+    pinfo->crc = fr->error_protection;
+    pinfo->padding = fr->padding;
+    pinfo->stereo = fr->stereo;
+    pinfo->js =   (fr->mode == MPG_MD_JOINT_STEREO);
+    pinfo->ms_stereo = ms_stereo;
+    pinfo->i_stereo = i_stereo;
+    pinfo->maindata = sideinfo.main_data_begin;
+
+    for(ch=0;ch<stereo1;ch++) {
+      struct gr_info_s *gr_info = &(sideinfo.ch[ch].gr[gr]);
+      pinfo->big_values[gr][ch]=gr_info->big_values;
+      pinfo->scalefac_scale[gr][ch]=gr_info->scalefac_scale;
+      pinfo->mixed[gr][ch] = gr_info->mixed_block_flag;
+      pinfo->mpg123blocktype[gr][ch]=gr_info->block_type;
+      pinfo->mainbits[gr][ch] = gr_info->part2_3_length;
+      if (gr==1) pinfo->scfsi[ch] = gr_info->scfsi;
+    }
+
+
     for (ch=0;ch<stereo1;ch++) {
       struct gr_info_s *gr_info = &(sideinfo.ch[ch].gr[gr]);
       ifqstep = ( pinfo->scalefac_scale[gr][ch] == 0 ) ? .5 : 1.0;
@@ -1683,25 +1696,6 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
 
 
     
-    pinfo->bitrate = 
-      tabsel_123[fr->lsf][fr->lay-1][fr->bitrate_index];
-    pinfo->sampfreq = freqs[sfreq];
-    pinfo->emph = fr->emphasis;
-    pinfo->crc = fr->error_protection;
-    pinfo->padding = fr->padding;
-    pinfo->stereo = fr->stereo;
-    pinfo->js =   (fr->mode == MPG_MD_JOINT_STEREO);
-    pinfo->ms_stereo = ms_stereo;
-    pinfo->i_stereo = i_stereo;
-    pinfo->maindata = sideinfo.main_data_begin;
-
-    for(ch=0;ch<stereo1;ch++) {
-      struct gr_info_s *gr_info = &(sideinfo.ch[ch].gr[gr]);
-      pinfo->mixed[gr][ch] = gr_info->mixed_block_flag;
-      pinfo->mpg123blocktype[gr][ch]=gr_info->block_type;
-      pinfo->mainbits[gr][ch] = gr_info->part2_3_length;
-      if (gr==1) pinfo->scfsi[ch] = gr_info->scfsi;
-    }
     for(ch=0;ch<stereo1;ch++) { 
       int j=0;
       for (sb=0;sb<SBLIMIT;sb++)

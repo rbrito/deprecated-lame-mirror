@@ -510,6 +510,70 @@ static int count_bits_long(int ix[576], gr_info *gi)
 
 
 
+
+static int count_quad_short(int ix[576], gr_info *gi)
+{
+    int start,i, a1, a2,sfb;
+    int bits = 0;
+
+    i=576;
+    for (; i > 1; i -= 2) 
+	if (ix[i - 1] | ix[i - 2])
+	    break;
+    gi->count1 = i;
+
+
+    /* Determines where quadruples could start */
+    for (; i > 3; i -= 4) {
+	if ((unsigned int)(ix[i-1] | ix[i-2] | ix[i-3] | ix[i-4]) > 1)
+	    break;
+    }
+    /* find the value of 'start' which is >= i */
+
+    for ( sfb = 0; sfb < 13; ++sfb )      {
+      start = scalefac_band.s[ sfb ];
+      start *= 3;
+      if (start>=i) break;
+    }
+    gi->big_values=Min(start,576);
+    gi->big_values += (gi->big_values % 2);
+    if (gi->big_values > gi->count1) gi->count1=gi->big_values;
+
+    a1 = gi->count1 - gi->big_values;
+    a1 += 4 - (a1 % 4);
+    gi->count1 = gi->big_values + a1;
+
+
+    /* Determines the number of bits to encode the quadruples. */
+    a1 = a2 = 0;
+    for (i=gi->big_values; i < gi->count1; i += 4) {
+	int p;
+	assert(	(unsigned int)(ix[i] | ix[i+1] | ix[i+2] | ix[i+3]) <=1);
+	p = ((ix[i] * 2 + ix[i+1]) * 2 + ix[i+2]) * 2 + ix[i+3];
+	a1 += ht[32].hlen[p];
+	a2 += ht[33].hlen[p];
+    }
+
+    bits = a1;
+    gi->count1table_select = 0;
+    if (a1 > a2) {
+	bits = a2;
+	gi->count1table_select = 1;
+    }
+
+    gi->count1bits = bits;
+    return bits;
+}
+
+
+
+
+
+
+
+
+
+
 int count_bits(lame_global_flags *gfp,int *ix, FLOAT8 *xr, gr_info *cod_info)  
 {
   lame_internal_flags *gfc=gfp->internal_flags;
@@ -529,10 +593,24 @@ int count_bits(lame_global_flags *gfp,int *ix, FLOAT8 *xr, gr_info *cod_info)
 
 
   if (cod_info->block_type==SHORT_TYPE) {
-    cod_info->table_select[0] = choose_table_short(ix, ix + 36, &bits);
-    cod_info->table_select[1] = choose_table_short(ix + 36, ix + 576, &bits);
+    int r1=3*12,r2;
+#if 1
     cod_info->big_values=576;
     cod_info->count1=576;
+    if (r1 > cod_info->big_values) r1 = cod_info->big_values;
+    /* short blocks do not have a region2 */
+    r2 = cod_info->big_values;
+    cod_info->table_select[0] = choose_table_short(ix, ix + r1, &bits);
+    cod_info->table_select[1] = choose_table_short(ix + r1, ix + r2, &bits);
+#else
+    bits = count_quad_short(ix, cod_info);
+    if (r1 > cod_info->big_values) r1 = cod_info->big_values;
+    /* short blocks do not have a region2 */
+    r2 = cod_info->big_values;
+    printf("big=%i  count1=%i \n",cod_info->big_values,cod_info->count1);
+    cod_info->table_select[0] = choose_table_short(ix, ix + r1, &bits);
+    cod_info->table_select[1] = choose_table_short(ix + r1, ix + r2, &bits);
+#endif
   }else{
     bits=count_bits_long(ix, cod_info);
   }
