@@ -86,13 +86,8 @@ And setting highpass filtering to enhance the playback frequency range.
 
 
 20.
-bug in resample code:  downsampling from 44101 to 44100 causes a seg
-fault.  Workaround in place for now:  resampling disabled if
-input/output samplerates agree to 4 digits.
-
-I plan to replace the resampling code of ssrc (Shibatch sampling rate
-conv.) and solve this problem. (takehiro)
-
+Replacing the resampling code of ssrc (Shibatch sampling rate conv.)
+will bring better result.
 
 
 
