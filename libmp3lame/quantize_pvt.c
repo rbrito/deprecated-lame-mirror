@@ -626,8 +626,10 @@ int  calc_noise(
     FLOAT8 tot_noise_db  = 0; /*    0 dB relative to masking */
     FLOAT8 max_noise = -20.0; /* -200 dB relative to masking */
     int j = 0;
-    const int *ix = cod_info->l3_enc;
+    int *ix = cod_info->l3_enc;
     const int *scalefac = cod_info->scalefac;
+    FLOAT8 *xr = cod_info->xr;
+
 
     for (sfb = 0; sfb < cod_info->psymax; sfb++) {
 	int s =
@@ -638,14 +640,22 @@ int  calc_noise(
 	FLOAT8 step = POW20(s);
 	FLOAT8 noise = 0.0;
 
-	l = cod_info->width[sfb] >> 1;
+	l = cod_info->width[sfb];
 	do {
-	    FLOAT8 temp;
-	    temp = fabs(cod_info->xr[j]) - pow43[ix[j]] * step; j++;
-	    noise += temp * temp;
-	    temp = fabs(cod_info->xr[j]) - pow43[ix[j]] * step; j++;
-	    noise += temp * temp;
-	} while (--l > 0);
+        if (! *ix) { /*60%*/
+    	    noise += *xr * *xr;
+        } else  if (*ix == 1) { /*20%*/
+    	    FLOAT8 temp;
+            temp = fabs(*xr) - step;
+    	    noise += temp * temp;
+        } else  {  /*20%*/
+    	    FLOAT8 temp;
+	        temp = fabs(*xr) - pow43[*ix] * step;
+    	    noise += temp * temp;
+        }
+        ix++;
+        xr++;
+	} while (--l);
 	noise = *distort++ = noise / *l3_xmin++;
 
 	noise = FAST_LOG10(Max(noise,1E-20));
@@ -653,7 +663,7 @@ int  calc_noise(
 	/*tot_noise *= Max(noise, 1E-20); */
 	tot_noise_db += noise;
 
-	if (noise > 0.0) {
+    if (noise > 0.0) {
 	    over++;
 	    /* multiplying here is adding in dB -but can overflow */
 	    /*over_noise *= noise; */
