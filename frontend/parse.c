@@ -264,6 +264,7 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --noath         disable the ATH for masking\n"
               "    --athlower x    lower the ATH x dB\n"
               "    --short         use short blocks\n"
+              "    --temporal <n>  use temporal masking effect (type n)\n"
               "    --noshort       do not use short blocks\n"
               "    --voice         experimental voice mode\n"
               "    --preset type   type must be phone, voice, fm, tape, hifi, cd or studio\n"
@@ -903,6 +904,9 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 			return -1;
 		    }
 		
+		T_ELIF ("temporal")
+		    gfp->useTemporal =  1;
+
 		T_ELIF ("nspsytune")
 		    gfp->exp_nspsytune |= 1;
 		    gfp->experimentalZ = 1;

@@ -132,6 +132,7 @@ typedef struct  {
   int ATHlower;                   /* lower ATH by this many db */
   int cwlimit;                    /* predictability limit */
   int allow_diff_short;           /* allow blocktypes to differ between channels ? */
+  int useTemporal;                /* use temporal masking effect */
   int no_short_blocks;            /* disable short blocks       */
   int emphasis;                   /* Input PCM is emphased PCM (for instance 
                                    * from one of the rarely emphased CDs), it is 

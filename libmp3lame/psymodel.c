@@ -2405,6 +2405,10 @@ i,*npart_s_orig,freq,numlines_s[i],j2-j,j,j2-1,bark1,bark2);
       gfc->mld_l[i] = pow(10.0,mld);
     }
 
-  
-  return 0;
+#define temporalmask_sustain_sec 0.01
+
+    /* setup temporal masking */
+    gfc->decay = exp(-2.0*M_LN10/(temporalmask_sustain_sec*sfreq/192.0));
+
+    return 0;
 }

@@ -278,6 +278,7 @@ typedef struct  {
   int CurrentStep;
   FLOAT8 ATH_l[SBMAX_l];
   FLOAT8 ATH_s[SBMAX_s];
+  FLOAT8 decay;
   FLOAT8 masking_lower;
 
   char bv_scf[576];

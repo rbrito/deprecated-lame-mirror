@@ -499,6 +499,20 @@ int calc_xmin(
         l3_xmin->s[sfb][b] *= 0.001;
     }
   }
+
+  if (gfp->useTemporal) {
+    for (sfb = 0; sfb < SBMAX_s; sfb++ ) {
+      for ( b = 1; b < 3; b++ ) {
+        xmin = l3_xmin->s[sfb][b] * (1.0 - gfc->decay)
+	  +  l3_xmin->s[sfb][b-1] * gfc->decay;
+	if (l3_xmin->s[sfb][b] < xmin){
+	    l3_xmin->s[sfb][b] = xmin;
+	    printf("%e\n", gfc->decay);
+	}
+      }
+    }
+  }
+
   if (vbr_mtrh == gfp->VBR) {
     /*
      *  fake masking for sfb12, remove it if true maskings available
@@ -514,6 +528,7 @@ int calc_xmin(
       l3_xmin->s[SBPSY_s][b] = ener;
     }
   }
+
   }else{
     if (gfc->nsPsy.use) {
       for ( sfb = 0; sfb < SBMAX_l; sfb++ ){
@@ -665,11 +680,8 @@ int  calc_noise(
 	      sum += temp * temp;
 	      l++;
 	    } while (l < end);
+            noise = xfsf->s[sfb][i]  = sum / l3_xmin->s[sfb][i];
 
-	    xfsf->s[sfb][i]  = sum / l3_xmin->s[sfb][i];
-            
-            noise = xfsf->s[sfb][i];
-	    
             /* multiplying here is adding in dB */
 	    tot_noise *= Max(noise, 1E-20);         // IISC this is nonsense, a nearly nondistorted band doesn't comp a heavly distorted one
 
