@@ -200,11 +200,9 @@ init_gr_info(lame_internal_flags *gfc, gr_info *const cod_info)
     cod_info->scalefac_scale      = 0;
     cod_info->count1table_select  = 0;
     cod_info->part2_length        = 0;
-    cod_info->sfb_lmax        = SBPSY_l;
-    cod_info->sfb_smin        = SBPSY_s;
-    cod_info->psy_lmax        = gfc->cutoff_sfb_l;
-    cod_info->psymax          = cod_info->psy_lmax;
-    cod_info->sfbmax          = cod_info->sfb_lmax;
+    cod_info->psymax = cod_info->psy_lmax = gfc->cutoff_sfb_l;
+    cod_info->sfbmax = cod_info->sfb_lmax = SBPSY_l;
+    cod_info->sfb_smin                    = SBPSY_s;
     cod_info->sfbdivide       = 11;
     for (sfb = 0; sfb < SBMAX_l; sfb++) {
 	cod_info->width[sfb]
