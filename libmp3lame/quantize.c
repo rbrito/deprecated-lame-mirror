@@ -713,6 +713,7 @@ amp_scalefac_bands(
 
 	if (method < 3 || (gfc->pseudohalf[sfb] ^= 1))
 	    gi->scalefac[sfb]++;
+	distort[sfb] = -1.0;
 	if (method >= 2)
 	    break;
     }
@@ -841,6 +842,61 @@ CBR_2nd_bitalloc(
     gi->part2_3_length = count_bits(gfc, xr34, gi);
 }
 
+static int
+adjust_global_gain(
+    lame_internal_flags *gfc,
+    FLOAT *xp,
+    gr_info *gi, FLOAT *distort, int huffbits)
+{
+    fi_union *fi = (fi_union *)gi->l3_enc;
+    FLOAT *xend = &xp[gi->count1];
+    int sfb = 0;
+
+    do {
+	int width = gi->width[sfb];
+	FLOAT istep;
+	if (width > xend - xp)
+	    width = xend - xp;
+	xp += width;
+	fi += width;
+	if (distort[sfb] > 0.0)
+	    continue;
+
+	width = -width;
+	istep = IPOW20(scalefactor(gi, sfb));
+	do {
+#ifdef TAKEHIRO_IEEE754_HACK
+	    double x0 = istep * xp[width  ] + MAGIC_FLOAT;
+	    double x1 = istep * xp[width+1] + MAGIC_FLOAT;
+
+	    fi[width  ].f = x0;
+	    fi[width+1].f = x1;
+
+	    if (fi[width  ].i >= MAGIC_INT + PRECALC_SIZE) return LARGE_BITS;
+	    fi[width  ].f = x0 + (adj43asm - MAGIC_INT)[fi[width  ].i];
+	    if (fi[width+1].i >= MAGIC_INT + PRECALC_SIZE) return LARGE_BITS;
+	    fi[width+1].f = x1 + (adj43asm - MAGIC_INT)[fi[width+1].i];
+	    fi[width  ].i -= MAGIC_INT;
+	    fi[width+1].i -= MAGIC_INT;
+#else
+	    FLOAT x1 = xp[width  ] * istep;
+	    FLOAT x2 = xp[width+1] * istep;
+	    int rx1 = (int)x1;
+	    int rx2 = (int)x2;
+	    if (rx1 >= PRECALC_SIZE) return LARGE_BITS;
+	    if (rx2 >= PRECALC_SIZE) return LARGE_BITS;
+	    fi[width  ].i = (int)(x1 + adj43[rx1]);
+	    fi[width+1].i = (int)(x2 + adj43[rx2]);
+#endif
+	} while ((width += 2) < 0);
+    } while (++sfb < gi->psymax && xp < xend);
+
+    if (noquant_count_bits(gfc, gi) > huffbits)
+	return gi->global_gain++;
+
+    return 0;
+}
+
 /************************************************************************
  *
  *  CBR_1st_bitalloc ()                                                       
@@ -898,11 +954,14 @@ CBR_1st_bitalloc (
 
 	if (huff_bits > 0) {
 	    /* adjust global_gain to fit the available bits */
-	    
 	    gi_w.count1 = gi->xrNumMax;
-	    while (count_bits(gfc, xrpow, &gi_w) > huff_bits
-		   && ++gi_w.global_gain < 256u)
-		;
+	    if (current_method >= 3
+		|| adjust_global_gain(gfc, xrpow, &gi_w, distort, huff_bits)) {
+		while (count_bits(gfc, xrpow, &gi_w) > huff_bits
+		       && ++gi_w.global_gain < 256u)
+		    ;
+	    }
+
 	    /* store this scalefactor combination if it is better */
 	    if (gi_w.global_gain != 256
 		&& bestNoise > (newNoise = calc_noise(&gi_w, l3_xmin, distort))) {

@@ -75,8 +75,8 @@ static int quantize_xrpow(const FLOAT *xp, gr_info *gi)
 	    xe = xend;
 	do {
 #ifdef TAKEHIRO_IEEE754_HACK
-	    FLOAT x0 = istep * xp[0] + MAGIC_FLOAT;
-	    FLOAT x1 = istep * xp[1] + MAGIC_FLOAT;
+	    double x0 = istep * xp[0] + MAGIC_FLOAT;
+	    double x1 = istep * xp[1] + MAGIC_FLOAT;
 	    xp += 2;
 
 	    fi[0].f = x0;
