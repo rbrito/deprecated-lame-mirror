@@ -640,7 +640,8 @@ inc_subblock_gain(gr_info * const gi, FLOAT distort[])
 		distort[sfb] = -1.0;
 		s = 0;
 	    }
-	    gi->scalefac[sfb] = s;
+	    if (sfb < gi->sfbmax)
+		gi->scalefac[sfb] = s;
 	}
     }
     return 0;
@@ -691,6 +692,14 @@ amp_scalefac_bands(
     if (sfbmax > gi->psymax)
 	sfbmax = gi->psymax;
 
+    if (gi->block_type == SHORT_TYPE) {
+	trigger = distort[0];
+	for (sfb = 1; sfb < sfbmax; sfb++) {
+	    if (trigger < distort[sfb])
+		trigger = distort[sfb];
+	}
+    }
+
     if (method < 2) {
 	if (trigger <= 1.0)
 	    trigger *= 0.95;
@@ -724,7 +733,7 @@ amp_scalefac_bands(
     /* some scalefactors are increased too much
      *      -> try to use scalefac_scale or subblock_gain.
      */
-    if (gfc->use_subblock_gain && gi->block_type == SHORT_TYPE) {
+    if (0 && gi->block_type == SHORT_TYPE && gfc->use_subblock_gain) {
 	if (inc_subblock_gain(gi, distort) || loop_break(gi))
 	    return 0; /* failed */
     } else if (gfc->use_scalefac_scale && !gi->scalefac_scale)
@@ -998,6 +1007,7 @@ CBR_1st_bitalloc (
 	current_method++;
 	gi_w = *gi;
 	age = current_method*3+2;
+	newNoise = bestNoise;
     }
     assert (gi->global_gain < 256);
 
