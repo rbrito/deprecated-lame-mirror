@@ -557,8 +557,7 @@ recalc_divide_sub(
 
 
 void
-best_huffman_divide(
-    const lame_internal_flags * const gfc, gr_info * const gi)
+best_huffman_divide(const lame_internal_flags * const gfc, gr_info * const gi)
 {
     int i, a1, a2;
     gr_info gi_w;
@@ -630,13 +629,9 @@ best_huffman_divide(
   the saved bits are kept in the bit reservoir.
  **********************************************************************/
 static void
-scfsi_calc(
-    int ch,
-    III_side_info_t *l3_side
-    )
+scfsi_calc(int ch, III_side_info_t *l3_side)
 {
-    int i, s1, s2, c1, c2;
-    int sfb;
+    int i, s1, s2, c1, c2, sfb;
     gr_info *gi = &l3_side->tt[1][ch];
     gr_info *g0 = &l3_side->tt[0][ch];
     s1 = 0;
@@ -889,9 +884,7 @@ scale_bitcount_lsf(gr_info * const gi)
 
     table_type = 0;
     if (gi->preflag < 0)
-	table_type = 3;
-    else if (gi->preflag > 0)
-	table_type = 2;
+	table_type = 3; /* intensity stereo */
 
     tableID = table_type * 3;
     if (gi->block_type == SHORT_TYPE) {
@@ -899,21 +892,7 @@ scale_bitcount_lsf(gr_info * const gi)
 	if (gi->mixed_block_flag)
 	    tableID++;
     }
-    else {
-	if (gi->preflag == 0) {
-	    for (sfb = 11; sfb < gi->psymax; sfb++)
-		if (gi->scalefac[sfb] < pretab[sfb])
-		    break;
 
-	    if (sfb == gi->psymax) {
-		gi->preflag = 1; table_type = 2; tableID = 6;
-		for (sfb = 11; sfb < gi->psymax; sfb++)
-		    gi->scalefac[sfb] -= pretab[sfb];
-	    }
-	}
-    }
-
-    gi->part2_length = LARGE_BITS;
     sfb = i = 0;
     for (part = 0; part < 4; part++) {
 	int m = 0, sfbend = sfb + nr_of_sfb_block[tableID][part];
@@ -923,13 +902,13 @@ scale_bitcount_lsf(gr_info * const gi)
 	gi->slen[part] = m = log2tab[m];
 
 	if (m > max_range_sfac_tab[table_type][part])
-	    return gi->part2_length; /* fail */
+	    return (gi->part2_length = LARGE_BITS); /* fail */
 	i += m * nr_of_sfb_block[tableID][part];
     }
     gi->part2_length = i;
 
     if (table_type == 0) {
-	/* try to use table type 1 */
+	/* try to use table type 1 and 2(preflag) */
 	int slen2[4];
 	sfb = i = 0;
 	for (part = 0; part < 4; part++) {
@@ -949,6 +928,31 @@ scale_bitcount_lsf(gr_info * const gi)
 	    gi->part2_length = i;
 	    tableID += 3;
 	    memcpy(gi->slen, slen2, sizeof(slen2));
+	}
+
+	if ((tableID == 3 || tableID == 0) && gi->preflag == 0) {
+	    /* not SHORT block and not i-stereo of channel 1 */
+	    for (part = 0; part < 4; part++) {
+		int m = 0, sfbend = sfb + nr_of_sfb_block[6+tableID][part];
+		for (; sfb < sfbend; sfb++) {
+		    if (gi->scalefac[sfb] < pretab[sfb])
+			m = 10000;
+		    if (m < gi->scalefac[sfb]-pretab[sfb])
+			m = gi->scalefac[sfb]-pretab[sfb];
+		}
+		slen2[part] = m = log2tab[m];
+
+		if (m > max_range_sfac_tab[2][part]) {
+		    i = LARGE_BITS;
+		    break;
+		}
+		i += m * nr_of_sfb_block[6+tableID][part];
+	    }
+	    if (gi->part2_length > i) {
+		gi->part2_length = i;
+		tableID = 6;
+		memcpy(gi->slen, slen2, sizeof(slen2));
+	    }
 	}
     }
     gi->scalefac_compress = tableID;

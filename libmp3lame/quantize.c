@@ -48,9 +48,6 @@ static const int max_range_short[SBMAX_s*3] = {
 static const int max_range_long[SBMAX_l] = {
     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 0
 };
-static const int max_range_long_lsf_pretab[SBMAX_l] = {
-    7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 0
-};
 
 /************************************************************************
  * allocate bits among 2 channels based on PE
@@ -1159,10 +1156,7 @@ short_block_scalefacs(gr_info * gi, int vbrmax)
 static void
 long_block_scalefacs(const lame_internal_flags *gfc, gr_info * gi, int vbrmax)
 {
-    int     sfb;
-    int     maxov0, maxov1, maxov0p, maxov1p;
-    const int *max_rangep
-	= gfc->mode_gr == 2 ? max_range_long : max_range_long_lsf_pretab;
+    int     sfb, maxov0, maxov1, maxov0p, maxov1p;
 
     /* we can use 4 strategies. [scalefac_scale = (0,1), pretab = (0,1)] */
     maxov0  = maxov1 = maxov0p = maxov1p = vbrmax;
@@ -1173,14 +1167,18 @@ long_block_scalefacs(const lame_internal_flags *gfc, gr_info * gi, int vbrmax)
     for (sfb = 0; sfb < gi->psymax; ++sfb) {
 	maxov0  = Min(gi->scalefac[sfb] + 2*max_range_long[sfb], maxov0);
 	maxov1  = Min(gi->scalefac[sfb] + 4*max_range_long[sfb], maxov1);
-	maxov0p = Min(gi->scalefac[sfb] + 2*(max_rangep[sfb] + pretab[sfb]),
+	maxov0p = Min(gi->scalefac[sfb] + 2*(max_range_long[sfb]+pretab[sfb]),
 		      maxov0p);
-	maxov1p = Min(gi->scalefac[sfb] + 4*(max_rangep[sfb] + pretab[sfb]),
+	maxov1p = Min(gi->scalefac[sfb] + 4*(max_range_long[sfb]+pretab[sfb]),
 		      maxov1p);
     }
 
+    if (gfc->mode_gr == 1)
+	maxov1p = maxov0p = 10000;
+
+    gi->preflag = 0;
     if (maxov0 == vbrmax) {
-        gi->scalefac_scale = 0;
+	gi->scalefac_scale = 0;
     }
     else if (maxov0p == vbrmax) {
 	gi->scalefac_scale = 0;
@@ -1357,14 +1355,16 @@ VBR_noise_shaping(
     if (j)
 	return j;
 
-    /* encode scalefacs */
-    gfc->scale_bitcounter(gi);
-
     /* quantize xr34 */
     gi->part2_3_length = count_bits(gfc, xr34, gi);
-
-    if (gi->part2_3_length + gi->part2_length >= LARGE_BITS)
+    if (gi->part2_3_length >= LARGE_BITS)
 	return -2;
+
+    /* encode scalefacs */
+    gfc->scale_bitcounter(gi);
+    if(gfc->pinfo)
+	printf("%d %d\n", gfc->pinfo->frameNum, gi->preflag);
+    assert(gi->part2_length < LARGE_BITS);
 
     if (gfc->substep_shaping & 2) {
 	FLOAT xrtmp[576];

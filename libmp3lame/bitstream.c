@@ -354,22 +354,28 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 		break;
 	    case 6: case 7: case 8:
 		part = 500 + gi->slen[0]*3 + gi->slen[1];
+		{int i;
+		for (i = 0; i < SBMAX_l; i++)
+		    gi->scalefac[i] -= pretab[i];
+		}
 		assert(500 <= part && part < 512);
 		assert(gi->slen[2] == 0);
 		assert(gi->slen[3] == 0);
 		break;
 	    case 9: case 10: case 11:
-		part = (gi->slen[0]*36 + gi->slen[1]*6 + gi->slen[2])*2;
+		part = (gi->slen[0]*36 + gi->slen[1]*6 + gi->slen[2])*2
+		    + gi->preflag+2;
 		assert(0 <= part && part < 180*2);
 		assert(gi->slen[3] == 0);
 		break;
 	    case 12: case 13: case 14:
-		part = 180 + (gi->slen[0]*16 + gi->slen[1]*4 + gi->slen[2])*2;
+		part = (180 + gi->slen[0]*16 + gi->slen[1]*4 + gi->slen[2])*2
+		    + gi->preflag+2;
 		assert(180*2 <= part && part < 244*2);
 		assert(gi->slen[3] == 0);
 		break;
 	    case 15: case 16: case 17:
-		part = 244 + (gi->slen[0]*3 + gi->slen[1])*2;
+		part = (244 + gi->slen[0]*3 + gi->slen[1])*2 + gi->preflag+2;
 		assert(244*2 <= part && part < 512);
 		assert(gi->slen[2] == 0);
 		assert(gi->slen[3] == 0);

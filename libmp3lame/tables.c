@@ -53,21 +53,21 @@ const int  nr_of_sfb_block [6*3][4] =
     {9, 9, 12, 6}, /* short */
     {6, 9, 12, 6}  /* mixed */
     ,
-    {11, 10, 0, 0}, /* long/start/stop */
-    {18, 18, 0, 0}, /* short */
-    {15, 18, 0, 0}  /* mixed */
+    {11, 10, 0, 0}, /* long/start/stop, preflag */
+    {18, 18, 0, 0}, /* short, preflag ? */
+    {15, 18, 0, 0}  /* mixed, preflag ? */
     ,
-    { 7,  7,  7, 0}, /* long/start/stop, IS or preflag */
-    {12, 12, 12, 0}, /* short, IS or preflag */
-    { 6, 15, 12, 0}  /* mixed, IS or preflag */
+    { 7,  7,  7, 0}, /* long/start/stop, IS */
+    {12, 12, 12, 0}, /* short, IS */
+    { 6, 15, 12, 0}  /* mixed, IS */
     ,
-    { 6,  6, 6, 3}, /* long/start/stop, IS or preflag */
-    {12,  9, 9, 6}, /* short, IS or preflag */
-    { 6, 12, 9, 6}  /* mixed, IS or preflag */
+    { 6,  6, 6, 3}, /* long/start/stop, IS */
+    {12,  9, 9, 6}, /* short, IS */
+    { 6, 12, 9, 6}  /* mixed, IS */
     ,
-    { 8, 8, 5, 0}, /* long/start/stop, IS or preflag */
-    {15,12, 9, 0}, /* short, IS or preflag */
-    { 6,18, 9, 0}  /* mixed, IS or preflag */
+    { 8, 8, 5, 0}, /* long/start/stop, IS  */
+    {15,12, 9, 0}, /* short, IS */
+    { 6,18, 9, 0}  /* mixed, IS */
 };
 
 
