@@ -48,17 +48,14 @@
 
 void  freegfc ( lame_internal_flags* const gfc )   /* bit stream structure */
 {
+#ifndef KLEMM_44
     int  i;
-   
+ 
     for ( i = 0 ; i <= 2*BPC; i++ )
         if ( gfc->blackfilt[i] != NULL ) {
             free ( gfc->blackfilt[i] );
 	    gfc->blackfilt[i] = NULL;
 	}
-    if ( gfc->bs.buf != NULL ) {
-        free ( gfc->bs.buf );
-	gfc->bs.buf = NULL;
-    }
     if ( gfc->inbuf_old[0] ) { 
         free ( gfc->inbuf_old[0] );
 	gfc->inbuf_old[0] = NULL;
@@ -67,6 +64,13 @@ void  freegfc ( lame_internal_flags* const gfc )   /* bit stream structure */
         free ( gfc->inbuf_old[1] );
 	gfc->inbuf_old[1] = NULL;
     }
+#endif
+
+    if ( gfc->bs.buf != NULL ) {
+        free ( gfc->bs.buf );
+        gfc->bs.buf = NULL;
+    }
+
     if ( gfc->VBR_seek_table.bag ) {
         free ( gfc->VBR_seek_table.bag );
     }
@@ -81,7 +85,7 @@ FLOAT8 ATHformula_old(FLOAT8 f)
   FLOAT8 ath;
   f /= 1000;  // convert to khz
   f  = Max(0.01, f);
-  f  = Min(18.0,f);
+  f  = Min(18.0, f);
 
   /* from Painter & Spanias, 1997 */
   /* minimum: (i=77) 3.3kHz = -5db */
@@ -96,7 +100,7 @@ FLOAT8 ATHformula_GB(FLOAT8 f)
   FLOAT8 ath;
   f /= 1000;  // convert to khz
   f  = Max(0.01, f);
-  f  = Min(18.0,f);
+  f  = Min(18.0, f);
 
   /* from Painter & Spanias, 1997 */
   /* modified by Gabriel Bouvigne to better fit to the reality */
@@ -112,7 +116,7 @@ FLOAT8 ATHformula_GBtweak(FLOAT8 f)
   FLOAT8 ath;
   f /= 1000;  // convert to khz
   f  = Max(0.01, f);
-  f  = Min(18.0,f);
+  f  = Min(18.0, f);
 
   /* from Painter & Spanias, 1997 */
   /* modified by Gabriel Bouvigne to better fit to the reality */
@@ -134,7 +138,13 @@ FLOAT8 ATHformula_GBtweak(FLOAT8 f)
 
 FLOAT8  ATHformula_Frank( FLOAT8 freq )
 {
-    /* short [MilliBel] is also sufficient */
+    /*
+     * one value per 100 cent = 1
+     * semitone = 1/4
+     * third = 1/12
+     * octave = 1/40 decade
+     * rest is linear interpolated, values are currently in decibel rel. 20 µPa
+     */
     static FLOAT tab [] = {
         /*    10.0 */  96.69, 96.69, 96.26, 95.12,
         /*    12.6 */  93.53, 91.13, 88.82, 86.76,
@@ -176,7 +186,7 @@ FLOAT8  ATHformula_Frank( FLOAT8 freq )
     unsigned  index;
     
     if ( freq <    10. ) freq =    10.;
-    if ( freq > 25000. ) freq = 25000.;
+    if ( freq > 29853. ) freq = 29853.;
     
     freq_log = 40. * log10 (0.1 * freq);   /* 4 steps per third, starting at 10 Hz */
     index    = (unsigned) freq_log;
@@ -363,7 +373,7 @@ void freorder(int scalefac_band[],FLOAT8 ix_orig[576]) {
 
 
 
-
+#ifndef KLEMM_44
 
 
 /* resampling via FIR filter, blackman window */
@@ -552,7 +562,7 @@ int fill_buffer_resample(
 }
 
 
-
+#endif /* ndef KLEMM_44 */
 
 
 
