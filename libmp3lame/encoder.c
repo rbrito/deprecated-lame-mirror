@@ -101,7 +101,7 @@ adjust_ATH( lame_global_flags* const  gfp,
                                 /* jd - 2001 mar 31, jun 30 */
                                 /* user tuning of ATH adjustment region */
     max_pow_alt = max_pow;
-    max_pow *= gfc->athaa_sensitivity_p;
+    max_pow *= gfc->ATH->aa_sensitivity_p;
     if (gfc->presetTune.use)
         max_pow_alt *= pow( 10.0, gfc->presetTune.athadjust_safe_athaasensitivity / -10.0 );
 

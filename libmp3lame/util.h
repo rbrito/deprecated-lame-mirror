@@ -211,6 +211,9 @@ typedef struct
 typedef struct
 {
     int     use_adjust;     /* method for the auto adjustment  */
+    FLOAT   aa_sensitivity_p;    /* factor for tuning the (sample power)
+                                    point below which adaptive threshold
+                                    of hearing adjustment occurs */
     FLOAT8  adjust;         /* lowering based on peak volume, 1 = no lowering */
     FLOAT8  adjust_limit;   /* limit for dynamic ATH adjust */
     FLOAT8  decay;          /* determined to lower x dB each second */
@@ -484,10 +487,6 @@ struct lame_internal_flags {
   FLOAT loudness_sq[2][2];  /* loudness^2 approx. per granule and channel */
   FLOAT loudness_sq_save[2];/* account for granule delay of L3psycho_anal */
 
-  /* factor for tuning the (sample power) point below which adaptive threshold
-     of hearing adjustment occurs 
-   */
-  FLOAT athaa_sensitivity_p;
 
   /* Scale Factor Bands    */
   FLOAT8 mld_l[SBMAX_l],mld_s[SBMAX_s];

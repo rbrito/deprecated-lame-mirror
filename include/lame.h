@@ -410,6 +410,10 @@ int CDECL lame_get_noATH(const lame_global_flags *);
 int CDECL lame_set_ATHtype(lame_global_flags *, int);
 int CDECL lame_get_ATHtype(const lame_global_flags *);
 
+/* select ATH formula 4 shape */
+int CDECL lame_set_ATHcurve(lame_global_flags *, float);
+int CDECL lame_get_ATHcurve(const lame_global_flags *);
+
 /* lower ATH by this many db */
 int CDECL lame_set_ATHlower(lame_global_flags *, float);
 float CDECL lame_get_ATHlower(const lame_global_flags *);

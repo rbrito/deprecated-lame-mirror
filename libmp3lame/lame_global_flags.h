@@ -113,6 +113,7 @@ struct lame_global_struct {
   int ATHshort;                   /* only use ATH for short blocks        */
   int noATH;                      /* disable ATH                          */
   int ATHtype;                    /* select ATH formula                   */
+  float ATHcurve;                 /* change ATH formula 4 shape           */
   float ATHlower;                 /* lower ATH by this many db            */
   int athaa_type;                 /* select ATH auto-adjust scheme        */
   int athaa_loudapprox;           /* select ATH auto-adjust loudness calc */

@@ -1022,7 +1022,7 @@ lame_init_params(lame_global_flags * const gfp)
 #endif
 
     /* initialize internal adaptive ATH settings  -jd */
-    gfc->athaa_sensitivity_p = pow( 10.0, gfp->athaa_sensitivity / -10.0 );
+    gfc->ATH->aa_sensitivity_p = pow( 10.0, gfp->athaa_sensitivity / -10.0 );
 
 
     gfc->PSY->cwlimit = gfp->cwlimit <= 0 ? 8871.7f : gfp->cwlimit;
@@ -1191,8 +1191,6 @@ lame_print_internals( const lame_global_flags * gfp )
     } 
     MSGF( gfc, "\thuffman search: %s\n", pc ); 
     MSGF( gfc, "\texperimental Y=%d Z=%d\n", gfp->experimentalY, gfp->experimentalZ );
-    MSGF( gfc, "\tquantization comparison: %d\n", gfp->quant_comp );
-    MSGF( gfc, "\tquantization comparison short blocks: %d\n", gfp->quant_comp_short );
     MSGF( gfc, "\t...\n" );
 
     /*  everything controlling the stream format 
@@ -1240,7 +1238,9 @@ lame_print_internals( const lame_global_flags * gfp )
      */
     MSGF( gfc, "\npsychoacoustic:\n\n" );
     
-    MSGF( gfc, "\ttonality estimation limit: %f Hz\n", gfc->PSY->cwlimit );
+    MSGF( gfc, "\tusing psychoacoustic model: %d\n", gfc->psymodel);
+    MSGF( gfc, "\tpsychoacoustic model: %s\n", gfc->nsPsy.use ? "NSPsytune" : "GPsycho" );
+    MSGF( gfc, "\ttonality estimation limit: %f Hz %s\n", gfc->PSY->cwlimit, gfc->nsPsy.use ? "(not relevant)" : "");
     switch ( gfp->short_blocks ) {
     default:
     case short_block_not_set:   pc = "?";               break;
@@ -1251,7 +1251,8 @@ lame_print_internals( const lame_global_flags * gfp )
     }
     MSGF( gfc, "\tusing short blocks: %s\n", pc );    
     MSGF( gfc, "\tadjust masking: %f dB\n", gfc->VBR->mask_adjust );
-    MSGF( gfc, "\tpsymodel: %d\n", gfc->psymodel );
+    MSGF( gfc, "\tquantization comparison: %d\n", gfp->quant_comp );
+    MSGF( gfc, "\t ^ comparison short blocks: %d\n", gfp->quant_comp_short );
     MSGF( gfc, "\tnoise shaping: %d\n", gfc->noise_shaping );
     MSGF( gfc, "\t ^ amplification: %d\n", gfc->noise_shaping_amp );
     MSGF( gfc, "\t ^ stopping: %d\n", gfc->noise_shaping_stop );
@@ -1262,7 +1263,9 @@ lame_print_internals( const lame_global_flags * gfp )
     if ( gfp->noATH    ) pc = "not used";
     MSGF( gfc, "\tATH: %s\n", pc );
     MSGF( gfc, "\t ^ type: %d\n", gfp->ATHtype );
+    MSGF( gfc, "\t ^ shape: %g%s\n", gfp->ATHcurve, " (only for type 4)" );
     MSGF( gfc, "\t ^ adjust type: %d\n", gfc->ATH->use_adjust );
+    MSGF( gfc, "\t ^ adjust sensitivity power: %d\n", gfc->ATH->aa_sensitivity_p );
     MSGF( gfc, "\t ^ adapt threshold type: %d\n", gfp->athaa_loudapprox );
     
     if ( gfc->nsPsy.use ) {

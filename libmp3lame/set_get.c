@@ -880,6 +880,7 @@ lame_set_VBR_q( lame_global_flags*  gfp,
         return -1;  /* Unknown VBR quality level! */
 
     gfp->VBR_q = VBR_q;
+    lame_set_ATHcurve(gfp, VBR_q);
 
     return 0;
 }
@@ -1132,6 +1133,23 @@ lame_get_ATHtype( const lame_global_flags*  gfp )
 }
 
 
+/* Select ATH formula 4 shape. */
+int
+lame_set_ATHcurve( lame_global_flags*  gfp,
+                   float ATHcurve )
+{
+    gfp->ATHcurve = ATHcurve;
+
+    return 0;
+}
+
+int
+lame_get_ATHcurve( const lame_global_flags*  gfp )
+{
+    return gfp->ATHcurve;
+}
+
+
 /* Lower ATH by this many db. */
 int
 lame_set_ATHlower( lame_global_flags*  gfp,
@@ -1270,7 +1288,7 @@ lame_get_useTemporal( const lame_global_flags*  gfp )
 }
 
 
-/* Use temporal masking effect */
+/* Use inter-channel masking effect */
 int
 lame_set_interChRatio( lame_global_flags*  gfp,
 			float               ratio )
@@ -1505,6 +1523,44 @@ lame_get_totalframes( const lame_global_flags*  gfp )
 }
 
 
+
+
+
+int
+lame_set_preset( lame_global_flags*  gfp, int preset )
+{
+    extern int apply_preset();
+    gfp->preset = preset;
+    return apply_preset(gfp, preset);
+}
+
+
+
+int 
+lame_set_asm_optimizations( lame_global_flags*  gfp, int optim, int mode)
+{
+    mode = (mode == 1? 1 : 0);
+    switch (optim){
+        case MMX: {
+            gfp->asm_optimizations.mmx = mode;
+            return optim;
+        }
+        case AMD_3DNOW: {
+            gfp->asm_optimizations.amd3dnow = mode;
+            return optim;
+        }
+        case SSE: {
+            gfp->asm_optimizations.sse = mode;
+            return optim;
+        }
+        default: return optim;
+    }
+}
+
+
+
+
+
 /*
 
 UNDOCUMENTED, experimental settings.  These routines are not prototyped
@@ -1661,37 +1717,5 @@ lame_set_preset_notune( lame_global_flags*  gfp, int preset_notune )
     gfc->presetTune.use = 0;  /* Turn off specialized preset tunings */
 
     return 0;
-}
-
-
-int
-lame_set_preset( lame_global_flags*  gfp, int preset )
-{
-    extern int apply_preset();
-    gfp->preset = preset;
-    return apply_preset(gfp, preset);
-}
-
-
-
-int 
-lame_set_asm_optimizations( lame_global_flags*  gfp, int optim, int mode)
-{
-    mode = (mode == 1? 1 : 0);
-    switch (optim){
-        case MMX: {
-            gfp->asm_optimizations.mmx = mode;
-            return optim;
-        }
-        case AMD_3DNOW: {
-            gfp->asm_optimizations.amd3dnow = mode;
-            return optim;
-        }
-        case SSE: {
-            gfp->asm_optimizations.sse = mode;
-            return optim;
-        }
-        default: return optim;
-    }
 }
 
