@@ -132,7 +132,8 @@ mp3x_LDADD = $(LDADD) @GTK_LIBS@
 
 CLEANFILES = lclint.txt
 
-LCLINTFLAGS = +posixlib +showsummary +showalluses +whichlib +forcehints -Dlint
+LCLINTFLAGS =  	+posixlib 	+showsummary 	+showalluses 	+whichlib 	+forcehints 	-fixedformalarray 	+matchanyintegral 	-Dlint
+
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../config.h
 CONFIG_CLEAN_FILES = 

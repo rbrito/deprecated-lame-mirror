@@ -110,7 +110,8 @@ libmpgdecoder_la_SOURCES = common.c 	dct64_i386.c 	decode_i386.c 	interface.c 	l
 noinst_HEADERS = common.h 	dct64_i386.h 	decode_i386.h 	huffman.h 	interface.h 	l2tables.h 	layer1.h 	layer2.h 	layer3.h 	mpg123.h 	mpglib.h 	tabinit.h
 
 
-LCLINTFLAGS = +posixlib +showsummary +showalluses +whichlib +forcehints -Dlint
+LCLINTFLAGS =  	+posixlib 	+showsummary 	+showalluses 	+whichlib 	+forcehints 	-fixedformalarray 	+matchanyintegral 	-Dlint
+
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../config.h
 CONFIG_CLEAN_FILES = 
@@ -136,7 +137,7 @@ DIST_COMMON =  README Makefile.am Makefile.in TODO
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
-TAR = gtar
+TAR = tar
 GZIP_ENV = --best
 DEP_FILES =  .deps/common.P .deps/dct64_i386.P .deps/decode_i386.P \
 .deps/interface.P .deps/layer1.P .deps/layer2.P .deps/layer3.P \
@@ -276,7 +277,7 @@ distdir: $(DISTFILES)
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
-	    cp -pr $$/$$file $(distdir)/$$file; \
+	    cp -pr $$d/$$file $(distdir)/$$file; \
 	  else \
 	    test -f $(distdir)/$$file \
 	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \
