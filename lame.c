@@ -1003,12 +1003,13 @@ int lame_encode_frame(lame_global_flags *gfp,
 short int inbuf_l[],short int inbuf_r[],
 char *mp3buf, int mp3buf_size)
 {
-  if (gfp->ogg) 
+  if (gfp->ogg) {
 #ifdef HAVEVORBIS
     return lame_encode_ogg_frame(gfp,inbuf_l,inbuf_r,mp3buf,mp3buf_size);
 #endif
-  else
+  } else {
     return lame_encode_mp3_frame(gfp,inbuf_l,inbuf_r,mp3buf,mp3buf_size);
+  }
 }
 
 
