@@ -77,7 +77,8 @@ char *strchr (), *strrchr ();
 /* we need to clean this up */
 sound_file_format input_format;   
 int swapbytes;              /* force byte swapping   default=0*/
-int silent;
+int silent;                 /* Verbosity */
+int ignore_tag_errors;      /* Ignore errors in values passed for tags */
 int brhist;
 float update_interval;      /* to use Frank's time status display */
 int mp3_delay;              /* to adjust the number of samples truncated
@@ -551,6 +552,7 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --space-id3v1   pad version 1 tag with spaces instead of nulls\n"
               "    --pad-id3v2     pad version 2 tag with extra 128 bytes\n"
               "    --genre-list    print alphabetically sorted ID3 genre list and exit\n"
+              "    --ignore-tag-errors  ignore errors in values passed for tags\n"
               "\n"
               "    Note: A version 2 tag will NOT be added unless one of the input fields\n"
               "    won't fit in a version 1 tag (e.g. the title string is longer than 30\n"
@@ -991,6 +993,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
     outPath[0] = '\0';
     /* turn on display options. user settings may turn them off below */
     silent   = 0;
+    ignore_tag_errors = 0;
     brhist   = 1;
     enc_padding=-1;
     enc_delay=-1;
@@ -1269,34 +1272,53 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF ("tt")
                     argUsed=1;
                     id3tag_set_title(gfp, nextArg);
-                
+
                 T_ELIF ("ta")
                     argUsed=1;
                     id3tag_set_artist(gfp, nextArg);
-                
+
                 T_ELIF ("tl")
                     argUsed=1;
                     id3tag_set_album(gfp, nextArg);
-                
+
                 T_ELIF ("ty")
                     argUsed=1;
                     id3tag_set_year(gfp, nextArg);
-                
+
                 T_ELIF ("tc")
                     argUsed=1;
                     id3tag_set_comment(gfp, nextArg);
-                
+
                 T_ELIF ("tn")
                     argUsed=1;
+                    if( 0 == ignore_tag_errors ) {
+                        if (nextArg && *nextArg) {
+                            int num = atoi(nextArg);
+
+                            if ( num < 0 || num > 255 ) {
+                                if( silent < 10 ) {
+                                    fprintf(stderr, "The track number has to be between 0 and 255.\n");
+                                }
+                                return -1;
+                            }
+                         }
+                    }
                     id3tag_set_track(gfp, nextArg);
-                
+
                 T_ELIF ("tg")
                     argUsed=1;
-                    if (id3tag_set_genre(gfp, nextArg)) {
-                        fprintf(stderr,"Unknown genre: %s.  Specify genre name or number\n", nextArg);
-                        return -1;
+                    if ( id3tag_set_genre(gfp, nextArg) ) {
+                        if ( ignore_tag_errors ) {
+                            if( silent < 10 ) {
+                                fprintf(stderr, "Unknown genre: '%s'.  Setting to 'Other'\n", nextArg);
+                            }
+                            id3tag_set_genre(gfp, "other");
+                        } else {
+                            fprintf(stderr, "Unknown genre: '%s'.  Specify genre name or number\n", nextArg);
+                            return -1;
+                        }
                     }
-                
+
                 T_ELIF ("add-id3v2")
                     id3tag_add_v2(gfp);
                 
@@ -1485,6 +1507,8 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     
                 T_ELIF ("verbose")
                     silent = -10;    /* print a lot on screen */
+                T_ELIF ("ignore-tag-errors")
+                    ignore_tag_errors = 1;
                     
                 T_ELIF2 ("version", "license")
                     print_license ( gfp, stdout, ProgramName );
