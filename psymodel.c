@@ -28,10 +28,9 @@
 
 
 void L3para_read( FLOAT8 sfreq, int numlines[CBANDS],int numlines_s[CBANDS], int partition_l[HBLKSIZE],
-		  FLOAT8 minval[CBANDS], FLOAT8 qthr_l[CBANDS], 
+		  FLOAT8 minval[CBANDS], 
 		  FLOAT8 s3_l[CBANDS + 1][CBANDS + 1],
 		  FLOAT8 s3_s[CBANDS + 1][CBANDS + 1],
-                  FLOAT8 qthr_s[CBANDS],
 		  FLOAT8 SNR_s[CBANDS],
 		  int bu_l[SBPSY_l], int bo_l[SBPSY_l],
 		  FLOAT8 w1_l[SBPSY_l], FLOAT8 w2_l[SBPSY_l],
@@ -67,8 +66,7 @@ void L3psycho_anal( lame_global_flags *gfp,
 /* to be remembered for the unpredictability measure.  For "r" and        */
 /* "phi_sav", the first index from the left is the channel select and     */
 /* the second index is the "age" of the data.                             */
-  static FLOAT8	minval[CBANDS],qthr_l[CBANDS];
-  static FLOAT8	qthr_s[CBANDS];
+  static FLOAT8	minval[CBANDS];
   static FLOAT8	nb_1[4][CBANDS], nb_2[4][CBANDS];
   static FLOAT8 s3_s[CBANDS + 1][CBANDS + 1];
   static FLOAT8 s3_l[CBANDS + 1][CBANDS + 1];
@@ -203,9 +201,8 @@ void L3psycho_anal( lame_global_flags *gfp,
     
     for (i=0;i<HBLKSIZE;i++) partition_l[i]=-1;
 
-    L3para_read( (FLOAT8) samplerate,numlines_l,numlines_s,partition_l,minval,qthr_l,s3_l,s3_s,
-		 qthr_s,SNR_s,
-		 bu_l,bo_l,w1_l,w2_l, bu_s,bo_s,w1_s,w2_s );
+    L3para_read( (FLOAT8) samplerate,numlines_l,numlines_s,partition_l,minval,
+           s3_l,s3_s,SNR_s,bu_l,bo_l,w1_l,w2_l, bu_s,bo_s,w1_s,w2_s );
     
     
     /* npart_l_orig   = number of partition bands before convolution */
@@ -632,7 +629,6 @@ void L3psycho_anal( lame_global_flags *gfp,
     for ( b = 0;b < npart_l; b++ )
       {
 	FLOAT8 tbb,ecb,ctb;
-	FLOAT8 temp_1; /* BUG of IS */
 
 	ecb = 0;
 	ctb = 0;
@@ -672,11 +668,12 @@ void L3psycho_anal( lame_global_flags *gfp,
 	/* dont use if previous granule was a short block */
 	/* rpelev=2.0, rpelev2=16.0 */
 	if (blocktype_old[chn] == SHORT_TYPE )
-	  temp_1 = ecb;
+	  thr[b] = ecb;
 	else
-	  temp_1 = Min(ecb, Min(rpelev*nb_1[chn][b],rpelev2*nb_2[chn][b]) );
+	  thr[b] = Min(ecb, Min(rpelev*nb_1[chn][b],rpelev2*nb_2[chn][b]) );
 
-	thr[b] = Max( qthr_l[b], temp_1 ); 
+	if (thr[b]<1e-6) thr[b]=1e-6;
+
 	nb_2[chn][b] = nb_1[chn][b];
 	nb_1[chn][b] = ecb;
 
@@ -796,7 +793,7 @@ void L3psycho_anal( lame_global_flags *gfp,
 	      {
 		ecb += s3_s[b][k] * eb[k];
 	      }
-	    thr[b] = Max (qthr_s[b], ecb);
+	    thr[b] = Max (1e-6, ecb);
 	  }
 
 	for ( sb = 0; sb < SBPSY_s; sb++ )
@@ -985,8 +982,8 @@ void L3psycho_anal( lame_global_flags *gfp,
 
 
 void L3para_read(FLOAT8 sfreq, int *numlines_l,int *numlines_s, int *partition_l, FLOAT8 *minval,
-FLOAT8 *qthr_l, FLOAT8 s3_l[64][64], FLOAT8 s3_s[CBANDS + 1][CBANDS + 1],
-FLOAT8 *qthr_s, FLOAT8 *SNR, 
+FLOAT8 s3_l[64][64], FLOAT8 s3_s[CBANDS + 1][CBANDS + 1],
+FLOAT8 *SNR, 
 int *bu_l, int *bo_l, FLOAT8 *w1_l, FLOAT8 *w2_l, 
 int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s)
 {
@@ -1023,7 +1020,7 @@ int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s)
 	      j = (int) *p++;
 	      numlines_l[i] = (int) *p++;
 	      minval[i] = exp(-((*p++) - NMT) * LN_TO_LOG10);
-	      qthr_l[i] = *p++;
+	      /* qthr_l[i] = *p++ */ p++;
 	      /* norm_l[i] = *p++*/ p++;
 	      bval_l[i] = *p++;
 	      if (j!=i)
@@ -1117,7 +1114,7 @@ int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s)
 	    {
 	      j = (int) *p++;
 	      numlines_s[i] = (int) *p++;
-	      qthr_s[i] = *p++;         
+	      /* qthr_s[i] = *p++*/  p++;         
 	      /* norm_s[i] =*p++ */ p++;         
 	      SNR[i] = *p++;            
 	      bval_s[i] = *p++;

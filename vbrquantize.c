@@ -175,8 +175,10 @@ int find_scalefac(FLOAT8 *xr,FLOAT8 *xr34,int stride,int sfb,
   for (i=0; i<7; i++) {
     delsf /= 2;
     sfpow = pow(2.0,sf/4.0); 
-    //    xfsf = calc_sfb_ave_noise(0,xr,xr34,stride,bw,sfpow);
-    xfsf = calc_sfb_ave_noise(1,xr,xr34,stride,bw,sfpow);
+    if (delsf >= 16)
+      xfsf = calc_sfb_ave_noise(0,xr,xr34,stride,bw,sfpow);
+    else
+      xfsf = calc_sfb_ave_noise(1,xr,xr34,stride,bw,sfpow);
 
     if (xfsf < 0) {
       /* scalefactors too small */
@@ -591,7 +593,7 @@ VBR_quantize(lame_global_flags *gfp,
   assert( gfp->VBR_q >= 0 );
   masking_lower_db = dbQ[gfp->VBR_q];	
 
-  masking_lower_db = 0;
+  //  masking_lower_db = 0;
   masking_lower = pow(10.0,masking_lower_db/10);
 
 

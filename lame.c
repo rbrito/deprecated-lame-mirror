@@ -861,13 +861,12 @@ char *mp3buf, int mp3buf_size)
 
 
   if (gfp->VBR) {
-#if 0
-  VBR_quantize( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc,
-  	  scalefac);
-#else
+  if (gfp->experimentalY)
+    VBR_quantize( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc,
+		  scalefac);
+  else
     VBR_iteration_loop( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc,
 			scalefac);
-#endif
   }else{
     iteration_loop( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc,
 		    scalefac);

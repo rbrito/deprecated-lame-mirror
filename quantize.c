@@ -589,7 +589,10 @@ int init_outer_loop(lame_global_flags *gfp,
   cod_info->count1table_select= 0;
   cod_info->count1bits        = 0;
   
-  
+#if 0
+  not working because of new quantize_xrpow_* routines
+  xrpow needs to be scaled by pow(2,.75*2*subblock_gain)
+
   if (gfp->experimentalZ) {
     /* compute subblock gains */
     int j,b;  FLOAT8 en[3],mx;
@@ -625,6 +628,9 @@ int init_outer_loop(lame_global_flags *gfp,
         return 0;
     }
   }
+#endif
+
+
   /*
    *  check if there is some energy we have to quantize
    *  if so, then return 1 else 0
@@ -691,7 +697,6 @@ void outer_loop(
   /* BEGIN MAIN LOOP */
   iteration = 0;
   while ( notdone  ) {
-    int try_scale=0;
     ++iteration;
 
     if (compute_stepsize) {
@@ -786,16 +791,8 @@ void outer_loop(
 	    }else{
 		status = scale_bitcount_lsf(&scalefac_w, cod_info);
 	    }
-	    if (status && (cod_info->scalefac_scale==0)) try_scale=1; 
 	}
 	notdone = !status;
-    }
-
-    if (try_scale && gfp->experimentalY) {
-      init_outer_loop(gfp,xr, cod_info);
-      compute_stepsize=1;  /* compute a new global gain */
-      notdone=1;
-      cod_info->scalefac_scale=1;
     }
   }    /* done with main iteration */
 
