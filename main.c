@@ -152,25 +152,39 @@ int main(int argc, char **argv)
 
   } else if (gf.decode_only) {
     /* decode an mp3 file to a .wav */
+    int skip=528+gf.encoder_delay;
+    unsigned long wavsize=2147483647;  /* max for a signed long */
     fprintf(stderr, "input:    %s %.1fkHz MPEG%i LayerIII\n",
 	    (strcmp(gf.inPath, "-")? gf.inPath : "stdin"),
 	    gf.in_samplerate/1000.0,2-gf.version);
     fprintf(stderr, "output:   %s (wav format)\n",
 	    (strcmp(gf.outPath, "-")? gf.outPath : "stdout"));
-    WriteWav(outf,(unsigned long) 0xFFFFFFFF,gf.in_samplerate,gf.num_channels);
+    fprintf(stderr, "skipping initial %i samples \n",skip);
+    WriteWav(outf,wavsize,gf.in_samplerate,gf.num_channels);
+    wavsize=0;
     do {
       int i;
       /* read in 'iread' samples */
       iread=lame_readframe(&gf,Buffer);
+      wavsize += iread;
       if (!gf.silent)
 	fprintf(stderr,"\rFrame# %lu [ %lu]",gf.frameNum,gf.totalframes-1);
       for (i=0; i<iread; ++i) {
-	fwrite(&Buffer[0][i],2,1,outf);
-	if (gf.num_channels==2) fwrite(&Buffer[1][i],2,1,outf);
+	if (skip) {
+	  --skip;
+	}else{
+	  fwrite(&Buffer[0][i],2,1,outf);
+	  if (gf.num_channels==2) fwrite(&Buffer[1][i],2,1,outf);
+	}
       }
     } while (iread);
     fprintf(stderr,"\n");
+    /* if outf is seekable, rewind and adjust length */
+    if (!fseek(outf,0,SEEK_SET)) 
+       WriteWav(outf,wavsize,gf.in_samplerate,gf.num_channels); 
     fclose(outf);
+
+
 
   } else {
 
