@@ -492,13 +492,13 @@ __declspec(dllexport) VOID		beVersion(PBE_VERSION pbeVersion)
 	// Set Engine version number (Same as Lame version)
 	pbeVersion->byMajorVersion=LAME_MAJOR_VERSION;
 	pbeVersion->byMinorVersion=LAME_MINOR_VERSION;
-	pbeVersion->bAlphaLevel=LAME_ALPHA_VERSION;
-	pbeVersion->bBetaLevel=LAME_BETA_VERSION;
+	pbeVersion->byAlphaLevel=LAME_ALPHA_VERSION;
+	pbeVersion->byBetaLevel=LAME_BETA_VERSION;
 
 #ifdef MMX_choose_table
-	pbeVersion->bMMXEnabled=1;
+	pbeVersion->byMMXEnabled=1;
 #else
-	pbeVersion->bMMXEnabled=0;
+	pbeVersion->byMMXEnabled=0;
 #endif
 
 	memset(pbeVersion->btReserved,0, sizeof(pbeVersion->btReserved));

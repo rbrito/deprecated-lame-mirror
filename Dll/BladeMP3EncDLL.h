@@ -192,9 +192,9 @@ typedef struct	{
 
 	CHAR	zHomepage[BE_MAX_HOMEPAGE + 1];	
 
-	BYTE	bAlphaLevel;
-	BYTE	bBetaLevel;
-	BYTE	bMMXEnabled;
+	BYTE	byAlphaLevel;
+	BYTE	byBetaLevel;
+	BYTE	byMMXEnabled;
 
 	BYTE	btReserved[125];
 
