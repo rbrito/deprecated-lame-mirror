@@ -21,6 +21,8 @@
 
 /* $Id$ */
 
+#ifdef BRHIST
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -358,4 +360,4 @@ void  brhist_disp_total ( const lame_global_flags* gf )
  * But one day, for one kind of terminal, that was not enough.)
  */
 
-/* end of brhist.c */
+#endif /* ifdef BRHIST */

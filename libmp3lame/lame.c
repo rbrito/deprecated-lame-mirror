@@ -440,8 +440,6 @@ lame_init_qval(lame_global_flags * gfp)
 
 
 
-/* int           lame_init_params               (lame_global_flags *gfp)                                                                                          *//*{{{ */
-
 /********************************************************************
  *   initialize internal params based on data in gf
  *   (globalflags struct filled in by calling program)
@@ -1142,9 +1140,6 @@ lame_init_params(lame_global_flags * const gfp)
     return 0;
 }
 
-/*}}}*/
-/* void          lame_print_config              (lame_global_flags *gfp)                                                                                          *//*{{{ */
-
 /*
  *  print_config
  *
@@ -1354,8 +1349,6 @@ lame_print_internals( const lame_global_flags * gfp )
 
 
 
-/* int           lame_encode_frame              (lame_global_flags *gfp, sample_t inbuf_l[],sample_t inbuf_r[], char *mp3buf, int mp3buf_size)                    *//*{{{ */
-
 /* routine to feed exactly one frame (gfp->framesize) worth of data to the 
 encoding engine.  All buffering, resampling, etc, handled by calling
 program.  
@@ -1382,11 +1375,6 @@ lame_encode_frame(lame_global_flags * gfp,
     gfp->frameNum++;
     return ret;
 }
-
-/*}}}*/
-/* int           lame_encode_buffer             (lame_global_flags* gfp, short int buffer_l[], short int buffer_r[], int nsamples, char* mp3buf, int mp3buf_size )*//*{{{ */
-
-
 
 /*
  * THE MAIN LAME ENCODING INTERFACE
@@ -1788,12 +1776,6 @@ lame_encode_buffer_interleaved(lame_global_flags * gfp,
 }
 
 
-/*}}}*/
-/* int           lame_encode                    (lame_global_flags* gfp, short int in_buffer[2][1152], char* mp3buf, int size )                                   *//*{{{ */
-
-
-/* old LAME interface.  use lame_encode_buffer instead */
-
 int
 lame_encode(lame_global_flags * const gfp,
             const short int in_buffer[2][1152],
@@ -1807,11 +1789,6 @@ lame_encode(lame_global_flags * const gfp,
     return lame_encode_buffer(gfp, in_buffer[0], in_buffer[1], gfp->framesize,
                               mp3buf, size);
 }
-
-/*}}}*/
-/* int           lame_encode_flush              (lame_global_flags* gfp, char* mp3buffer, int mp3buffer_size )                                                    *//*{{{ */
-
-
 
 /*****************************************************************
  Flush mp3 buffer, pad with ancillary data so last frame is complete.
@@ -1843,14 +1820,11 @@ lame_init_bitstream(lame_global_flags * gfp)
 
     if (!gfp->ogg)
 	id3tag_write_v2(gfp);
-
+#ifdef BRHIST
     /* initialize histogram data optionally used by frontend */
-    for ( i = 0; i < 16; i++ ) 
-	gfc->bitrate_stereoMode_Hist [i] [0] =
-	    gfc->bitrate_stereoMode_Hist [i] [1] =
-	    gfc->bitrate_stereoMode_Hist [i] [2] =
-	    gfc->bitrate_stereoMode_Hist [i] [3] =
-	    gfc->bitrate_stereoMode_Hist [i] [4] = 0;
+    memset(gfc->bitrate_stereoMode_Hist, 0,
+	   sizeof(gfc->bitrate_stereoMode_Hist));
+#endif
 
     /* Write initial VBR Header to bitstream and init VBR data */
     if (gfp->bWriteVbrTag)
@@ -1952,9 +1926,6 @@ lame_encode_flush(lame_global_flags * gfp,
     return mp3count;
 }
 
-/*}}}*/
-/* void          lame_close                     (lame_global_flags *gfp)                                                                                          *//*{{{ */
-
 /***********************************************************************
  *
  *      lame_close ()
@@ -1991,11 +1962,6 @@ lame_close(lame_global_flags * gfp)
     return 0;
 }
 
-
-/*}}}*/
-/* int           lame_encode_finish             (lame_global_flags* gfp, char* mp3buffer, int mp3buffer_size )                                                    *//*{{{ */
-
-
 /*****************************************************************/
 /* flush internal mp3 buffers, and free internal buffers         */
 /*****************************************************************/
@@ -2010,9 +1976,6 @@ lame_encode_finish(lame_global_flags * gfp,
 
     return ret;
 }
-
-/*}}}*/
-/* void          lame_mp3_tags_fid              (lame_global_flags *gfp,FILE *fpStream)                                                                           *//*{{{ */
 
 /*****************************************************************/
 /* write VBR Xing header, and ID3 version 1 tag, if asked for    */
@@ -2031,8 +1994,6 @@ lame_mp3_tags_fid(lame_global_flags * gfp, FILE * fpStream)
 
 
 }
-/*}}}*/
-/* lame_global_flags *lame_init                 (void)                                                                                                            *//*{{{ */
 
 lame_global_flags *
 lame_init(void)
@@ -2055,9 +2016,6 @@ lame_init(void)
     gfp->lame_allocated_gfp = 1;
     return gfp;
 }
-
-/*}}}*/
-/* int           lame_init_old                  (lame_global_flags *gfp)                                                                                          *//*{{{ */
 
 /* initialize mp3 encoder */
 int
@@ -2180,25 +2138,6 @@ lame_init_old(lame_global_flags * gfp)
  */
 
 void
-lame_bitrate_hist(const lame_global_flags * const gfp, int bitrate_count[14])
-{
-    const lame_internal_flags *gfc;
-    int     i;
-
-    if (NULL == bitrate_count)
-        return;
-    if (NULL == gfp)
-        return;
-    gfc = gfp->internal_flags;
-    if (NULL == gfc)
-        return;
-
-    for (i = 0; i < 14; i++)
-        bitrate_count[i] = gfc->bitrate_stereoMode_Hist[i + 1][4];
-}
-
-
-void
 lame_bitrate_kbps(const lame_global_flags * const gfp, int bitrate_kbps[14])
 {
     const lame_internal_flags *gfc;
@@ -2216,6 +2155,25 @@ lame_bitrate_kbps(const lame_global_flags * const gfp, int bitrate_kbps[14])
         bitrate_kbps[i] = bitrate_table[gfp->version][i + 1];
 }
 
+
+#ifdef BRHIST
+void
+lame_bitrate_hist(const lame_global_flags * const gfp, int bitrate_count[14])
+{
+    const lame_internal_flags *gfc;
+    int     i;
+
+    if (NULL == bitrate_count)
+        return;
+    if (NULL == gfp)
+        return;
+    gfc = gfp->internal_flags;
+    if (NULL == gfc)
+        return;
+
+    for (i = 0; i < 14; i++)
+        bitrate_count[i] = gfc->bitrate_stereoMode_Hist[i + 1][4];
+}
 
 
 void
@@ -2262,5 +2220,6 @@ lame_bitrate_stereo_mode_hist(const lame_global_flags * const gfp,
         for (i = 0; i < 4; i++)
             bitrate_stmode_count[j][i] = gfc->bitrate_stereoMode_Hist[j + 1][i];
 }
+#endif
 
 /* end of lame.c */

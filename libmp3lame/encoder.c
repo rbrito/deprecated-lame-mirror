@@ -224,7 +224,8 @@ adjust_ATH( lame_global_flags* const  gfp,
  *  3:  MS-i
  *
  ***********************************************************************/
- 
+
+#ifdef BRHIST
 static void
 updateStats( lame_internal_flags * const gfc )
 {
@@ -238,7 +239,7 @@ updateStats( lame_internal_flags * const gfc )
     if (gfc->channels_out == 2)
         gfc->bitrate_stereoMode_Hist [gfc->bitrate_index] [gfc->mode_ext]++;
 }
-
+#endif
 
 
 /************************************************************************
@@ -647,7 +648,9 @@ int  lame_encode_mp3_frame (				// Output
   }
 #endif
   
+#ifdef BRHIST
   updateStats( gfc );
+#endif
 
   return mp3count;
 }

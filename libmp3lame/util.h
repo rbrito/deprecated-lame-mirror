@@ -498,10 +498,6 @@ struct lame_internal_flags {
 
   int	numlines_s[CBANDS];
   int	numlines_l[CBANDS];
-  
-  
-  /* simple statistics */
-  int   bitrate_stereoMode_Hist [16] [4+1];
 
   /* ratios  */
   FLOAT8 pe[4];
@@ -539,6 +535,11 @@ struct lame_internal_flags {
 
   int nogap_total;
   int nogap_current;  
+
+#ifdef BRHIST
+  /* simple statistics */
+  int   bitrate_stereoMode_Hist [16] [4+1];
+#endif
 
   /* used by the frame analyzer */
   plotting_data *pinfo;
