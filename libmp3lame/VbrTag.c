@@ -423,7 +423,8 @@ int InitVbrTag(lame_global_flags *gfp)
 
 	/* Clear Frame position array variables */
 	/*gfp->pVbrFrames=NULL; */
-	gfp->nVbrNumFrames=0;
+	gfp->nVbrNumFrames=1;   /* we should also count the vbr tag itself */
+                            /* problem: the seek table is off by 1 frame*/
 	gfp->nVbrFrameBufferSize=0;
 
 
