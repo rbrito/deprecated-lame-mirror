@@ -113,7 +113,7 @@ void L3psycho_anal( lame_global_flags *gfp,
       cwlimit=gfp->cwlimit;
     else
       cwlimit=8.8717;
-    gfc->cw_upper_index = cwlimit*1000.0*1024.0/((FLOAT8) gfp->out_samplerate);
+    gfc->cw_upper_index = cwlimit*1000.0*1024.0/((FLOAT8)samplerate);
     gfc->cw_upper_index=Min(HBLKSIZE-4,gfc->cw_upper_index);      /* j+3 < HBLKSIZE-1 */
     gfc->cw_upper_index=Max(6,gfc->cw_upper_index);
 
