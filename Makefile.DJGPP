@@ -176,10 +176,12 @@ clean:
 	del frontend\*.d 
 	del frontend\*.exe 
 	del mpglib\*.o 
-	del mpglib\*.d 
-	del libmp3lame\*.o      
-	del libmp3lame\*.d      
-	del libmp3lame\*.a      
+	del mpglib\*.d
+	cd libmp3lame 
+	del *.o      
+	del *.d      
+	del *.a      
+	cd ..
 
 
 #
