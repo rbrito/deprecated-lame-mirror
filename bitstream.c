@@ -300,7 +300,7 @@ huffman_coder_count1(lame_global_flags *gfp,int *ix, gr_info *gi)
 {
   /*    lame_internal_flags *gfc=gfp->internal_flags;*/
     /* Write count1 area */
-    const struct huffcodetab *h = &ht_takehiro[gi->count1table_select + 32];
+    const struct huffcodetab *h = &ht[gi->count1table_select + 32];
     int i,bits=0;
 #ifdef DEBUG
     int gegebo = gfc->bs.totbit;
@@ -388,7 +388,7 @@ HuffmanCode(lame_global_flags *gfp,int table_select, int x, int y)
     }
 
     assert(table_select>0);
-    h = &(ht_takehiro[table_select]);
+    h = &(ht[table_select]);
     linbits = h->xlen;
     ext = signx;
     xlen = h->xlen;
