@@ -193,6 +193,7 @@ typedef struct {
     int l3_enc[576];
     int scalefac[SFBMAX];
 
+    int part2_length;
     int part2_3_length;
     int big_values;
     int count1;
@@ -208,7 +209,6 @@ typedef struct {
     int scalefac_scale;
     int count1table_select;
 
-    int part2_length;
     int sfb_lmax;
     int sfb_smin;
     int psy_lmax;
@@ -221,13 +221,14 @@ typedef struct {
     int count1bits;
     /* added for LSF */
     int slen[4];
+    int dummy_for_padding[3];
 } gr_info;
 
 /* Layer III side information. */
 typedef struct {
-    gr_info tt[2][2];
     int main_data_begin; 
     int private_bits;
+    gr_info tt[2][2];
     int ResvSize; /* in bits */
     int ResvMax;  /* in bits */
     int maxmp3buf; /* in bits */

@@ -379,18 +379,25 @@ init_bitalloc(
 {
     FLOAT tmp, sum = 0.0;
     int i, end = gi->xrNumMax;
-
-    /*  check if there is some energy we have to quantize
-     *  and calculate xrpow matching our fresh scalefactors */
-    for (i = 0; i < end; i++) {
-	tmp = fabs (gi->xr[i]);
-	sum += tmp;
-	xrpow[i] = sqrt (tmp * sqrt(tmp));
+#ifdef HAVE_NASM
+    if (gfc->CPU_features.SIMD) {
+	extern void pow075_SSE(float *, float *, int, float*);
+	end = (end + 7) & (~7);
+	pow075_SSE(gi->xr, xrpow, end, &sum);
+    } else
+#endif
+    {
+	/*  check if there is some energy we have to quantize
+	 *  and calculate xrpow matching our fresh scalefactors */
+	for (i = 0; i < end; i++) {
+	    tmp = fabs (gi->xr[i]);
+	    sum += tmp;
+	    xrpow[i] = sqrt (tmp * sqrt(tmp));
+	}
     }
-    memset(&xrpow[i], 0, sizeof(FLOAT)*(576-end));
-
+    memset(&xrpow[end], 0, sizeof(FLOAT)*(576-end));
     /*  return 1 if we have something to quantize, else 0 */
-    if (sum > (FLOAT)1E-20) {
+    if (sum > (FLOAT)1e-20) {
 	int j = 0;
 	if (gfc->noise_shaping_amp >= 3)
 	    j = 1;

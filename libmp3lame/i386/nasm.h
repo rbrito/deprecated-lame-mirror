@@ -230,3 +230,4 @@ _%1:
 %imacro	loopalign	0-1 12 
 	loopalignK7 %1
 %endmacro
+%define PACK(x,y,z,w)	(x*64+y*16+z*4+w)

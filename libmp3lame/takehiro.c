@@ -420,7 +420,7 @@ noquant_count_bits(
 
     if (gi->block_type == NORM_TYPE) {
 	assert(i <= 576); /* bv_scf has 576 entries (0..575) */
-        a1 = gi->region0_count = gfc->bv_scf[i-2];
+	a1 = gi->region0_count = gfc->bv_scf[i-2];
 	a2 = gi->region1_count = gfc->bv_scf[i-1];
 
 	assert(a1+a2+2 < SBPSY_l);
@@ -455,7 +455,8 @@ noquant_count_bits(
     return gi->part2_3_length;
 }
 
-int count_bits(
+int
+count_bits(
     const lame_internal_flags * const gfc, 
     const FLOAT  * const xrpow,
           gr_info * const gi
