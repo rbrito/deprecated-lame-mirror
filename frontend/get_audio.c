@@ -942,7 +942,7 @@ OpenSndFile(lame_t gfp, char *inPath)
 	parse_file_header(gfp, fp);
     }
 
-    if (input_format == sf_raw) {
+    if (input_format == sf_raw && silent < 10) {
 	/* assume raw PCM */
 	fprintf(stderr, "Assuming raw pcm input file");
 	if (pcmswapbytes)
