@@ -170,6 +170,9 @@ int InitVbrTag(lame_t gfc)
 #define MAXFRAMESIZE 2880 /* the max framesize freeformat 640 32kHz */
     int i, header_bitrate, tot;
 
+    if (!gfc->bWriteVbrTag)
+	return 0;
+
     /* we shold not count the vbr tag itself, because it breaks some player */
     gfc->nVbrNumFrames=0;
 
@@ -316,9 +319,6 @@ PutLameVBR(lame_t gfc, FILE *fpStream,
     uint8_t nSourceFreq				= 0;
     uint8_t nMisc					= 0;
     uint32_t nMusicLength			= 0;
-    int		bId3v1Present
-	= ((gfc->tag_spec.flags & CHANGED_FLAG)
-	   && !(gfc->tag_spec.flags & V2_ONLY_FLAG));
     uint16_t nMusicCRC				= 0;
 
     /*psy model type:*/
@@ -418,7 +418,8 @@ PutLameVBR(lame_t gfc, FILE *fpStream,
     nFilesize = ftell(fpStream);
 
     nMusicLength = nFilesize - id3v2size;		/*omit current frame */
-    if (bId3v1Present)
+    if ((gfc->tag_spec.flags & CHANGED_FLAG)
+	&& !(gfc->tag_spec.flags & V2_ONLY_FLAG))
 	nMusicLength-=128;                     /*id3v1 present. */
     nMusicCRC = gfc->nMusicCRC;
 
@@ -496,7 +497,7 @@ int PutVbrTag(lame_t gfc, FILE *fpStream)
 	return -1;
 
     /* Get file size */
-    fseek(fpStream,0,SEEK_END);
+    fseek(fpStream, 0, SEEK_END);
     if ((lFileSize=ftell(fpStream)) == 0)
 	return -1;
 

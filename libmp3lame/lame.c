@@ -1209,12 +1209,11 @@ lame_init_bitstream(lame_t gfc)
     memset(gfc->bitrate_blockType_Hist, 0,
 	   sizeof(gfc->bitrate_blockType_Hist));
 #endif
-    /* Write initial VBR Header to bitstream and init VBR data */
-    if (gfc->bWriteVbrTag)
-        InitVbrTag(gfc);
-
     gfc->frameNum=0;
+    /* Write ID3v2 TAG at very the beggining */
     id3tag_write_v2(gfc);
+    /* Write initial VBR Header to bitstream and init VBR data */
+    InitVbrTag(gfc);
 
     return 0;
 }
