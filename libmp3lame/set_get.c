@@ -1280,7 +1280,7 @@ lame_set_substep( lame_global_flags*  gfp,
 {
     lame_internal_flags *gfc = gfp->internal_flags;
     /* default = 0.0 (no inter-cahnnel maskin) */
-    if (! (0 <= method && method <= 3))
+    if (! (0 <= method && method <= 7))
         return -1;
 
     gfc->substep_shaping = method;
@@ -1291,7 +1291,7 @@ int
 lame_get_substep(const lame_global_flags*  gfp )
 {
     lame_internal_flags *gfc = gfp->internal_flags;
-    assert(0 <= gfc->substep_shaping && gfc->substep_shaping <= 3);
+    assert(0 <= gfc->substep_shaping && gfc->substep_shaping <= 7);
     return gfc->substep_shaping;
 }
 

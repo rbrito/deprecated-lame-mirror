@@ -317,6 +317,8 @@ trancate_smallspectrums(
     FLOAT8 distort[SFBMAX];
     calc_noise_result dummy;
 
+    if (!(gfc->substep_shaping & 4) && gi->block_type == SHORT_TYPE)
+	return;
     calc_noise (gfc, gi, l3_xmin, distort, &dummy);
     for (j = 0; j < 576; j++) {
 	FLOAT8 xr = 0.0;
