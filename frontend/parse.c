@@ -266,11 +266,16 @@ int  usage ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramNa
               "\n"
               "    <infile> and/or <outfile> can be \"-\", which means stdin/stdout.\n"
               "\n"
-              "Try  \"%s --help\"          for more information\n" 
-              "  or \"%s --preset help\"   about suggested predefined settings\n"
-              "  or \"%s --longhelp\"\n"
+              "Try:\n"
+              "     \"%s --help\"           for general usage information\n" 
+              " or:\n"
+              "     \"%s --preset help\"    for information on suggested predefined settings\n"
+              "     \"%s --dm-preset help\" for information on the seperate and very highly\n" 
+              "                             tuned for quality predefined settings\n"
+              " or:\n"
+              "     \"%s --longhelp\"\n"
               "  or \"%s -?\"              for a complete options list\n\n",
-              ProgramName, ProgramName, ProgramName, ProgramName, ProgramName ); 
+              ProgramName, ProgramName, ProgramName, ProgramName, ProgramName, ProgramName ); 
     return 0;
 }
 
@@ -307,6 +312,9 @@ int  short_help ( const lame_global_flags* gfp, FILE* const fp, const char* Prog
               "\n"
               "    --preset type   type must be phone, voice, fm, tape, hifi, cd or studio\n"
               "                    \"--preset help\" gives some more infos on these\n"
+              "    --dm-preset type type must be \"standard\", \"xtreme\", \"insane\", or a\n"
+              "                     value for an average desired bitrate and depending on the\n"                       
+              "                     value specified, appropriate quality settings will be used\n"
               "\n"
 #if defined(__OS2__)
               "    --priority type  sets the process priority (OS/2 only):\n"
@@ -399,6 +407,9 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --scale-r <arg> scale channel 1 (right) input (multiply PCM data) by <arg>\n"
               "    --preset type   type must be phone, voice, fm, tape, hifi, cd or studio\n"
               "                    \"--preset help\" gives some more infos on these\n" 
+              "    --dm-preset type type must be \"standard\", \"xtreme\", \"insane\", or a\n"
+              "                     value for an average desired bitrate and depending on the\n"                       
+              "                     value specified, appropriate quality settings will be used\n"
  	      "    --r3mix         use high-quality VBR preset"
               );
 
@@ -713,13 +724,13 @@ static int  presets_info ( const lame_global_flags* gfp, FILE* const fp, const c
     fprintf ( fp, "    equals to: -h -ms -V0 -b160 -B320\n");
     
     fprintf ( fp, "\n\n"
-              "VBR presets highly tuned for quality can be activated via:\n"
-              "--preset dm-standard\n"
-              "--preset dm-xtreme\n"
-              "--preset dm-insane\n"
+              "VBR presets highly tuned via blind listening tests to provide utmost quality:\n"
+              "--dm-preset standard\n"
+              "--dm-preset xtreme\n"
+              "--dm-preset insane\n"
               "\n"
-              "ABR preset optimized for lower file size and good quality can be activated via:\n"
-              "--preset dm-metal\n"
+              "ABR preset tuned in the same manner to provide best quality at given bitrate:\n"
+              "--dm-preset <bitrate value>\n"
               "\n"
               "VBR preset for quality with little excess:\n"
               "--preset r3mix\n"
@@ -831,113 +842,223 @@ static int  r3mix_presets( lame_t gfp, const char* preset_subname )
 
 /*  some presets thanks to Dibrom
  */
-static int  dm_presets( lame_t gfp, const char* preset_subname )
+static int  dm_presets( lame_t gfp, int fast, int cbr, const char* preset_name, const char* ProgramName )
 {
-    double  d;
-    int     k;
-        	
-    // Standard Preset == --nspsytune -V2 -mj -h --lowpass 19.5 -b112 --nssafejoint --athtype 4 --ns-sfb21 3" 
-    if (strcmp(preset_subname, "standard") == 0) {
-        /* nspsytune stuff */
+    // Bitrate mappings for ABR mode
+    const int abr_kbps_map [9] = { 80, 96, 112, 128, 160, 192, 224, 256, 320 };
+
+    // Switch mappings for ABR mode
+    const int abr_switch_map [9] [6] = {
+             // Z  X  lowpass safejoint nsmsfix ns-bass
+              { 1, 1, 14500,  0,        0    ,  -3 }, //  80
+              { 1, 1, 15500,  0,        0    ,  -4 }, //  96
+              { 1, 1, 16000,  0,        0    ,  -5 }, // 112
+              { 1, 1, 17500,  0,        0    ,  -6 }, // 128
+              { 1, 1, 18000,  0,        0    ,  -4 }, // 160
+              { 1, 1, 19000,  1,        1.7  ,  -2 }, // 192
+              { 1, 1, 19500,  1,        1.25 ,   0 }, // 224
+              { 0, 3, 19500,  1,        0    ,   0 }, // 256
+              { 0, 3, 20500,  1,        0    ,   0 }  // 320
+                                       };
+
+    // Variables for the ABR stuff
+    int actual_bitrate = atoi(preset_name);
+
+    int lower_range = 0, lower_range_kbps = 0,
+        upper_range = 0, upper_range_kbps = 0;
+    
+    int r; // r = resolved range
+
+    int b;
+
+    // Standard Preset == --nspsytune -V2 -mj -h --lowpass 19.5 -b112 --nssafejoint --athtype 4 --ns-sfb21 3
+    if (strcmp(preset_name, "standard") == 0) {
+
+        if (fast > 0)
+           lame_set_VBR(gfp, vbr_mtrh);
+        else
+           lame_set_VBR(gfp, vbr_rh);
+
         lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
-        lame_set_experimentalZ(gfp,1);
-        lame_set_experimentalX(gfp,1);
-        /* nspsytune stuff end */
-        lame_set_VBR(gfp,vbr_rh); 
-        lame_set_VBR_q(gfp,2);
-        lame_set_quality( gfp, 2 );
-        lame_set_lowpassfreq(gfp,19500);
-        lame_set_mode( gfp, JOINT_STEREO );
-        /* safejoint start */
-        lame_set_exp_nspsytune(gfp,lame_get_exp_nspsytune(gfp) | 2);
-        /* safejoint end*/
-        lame_set_ATHtype( gfp, 4 );
-        lame_set_VBR_min_bitrate_kbps(gfp,112);					
-        /* high freq */
-        d = 3;      // modify sfb21 by 3 dB plus ns-treble=0                 
-        k = (int)(d * 4);
-        if (k < -32) k = -32;
-        if (k >  31) k =  31;
-        if (k < 0) k += 64;
-        lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 20));
+        lame_set_experimentalZ(gfp, 1);
+        lame_set_experimentalX(gfp, 1);
+        lame_set_VBR_q(gfp, 2);
+        lame_set_quality(gfp, 2);
+        lame_set_lowpassfreq(gfp, 19500);
+        lame_set_mode(gfp, JOINT_STEREO);
+        lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); // safejoint
+        lame_set_ATHtype(gfp, 4);
+        lame_set_VBR_min_bitrate_kbps(gfp, 112);
+
+        // modify sfb21 by 3 dB plus ns-treble=0                 
+        lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (12 << 20));
+
         return 0;
     }
     
-    // Xtreme Preset == --nspsytune -V2 -mj -h --lowpass 19.5 -b112 --nssafejoint --athtype 2 --ns-sfb21 3"
-    else if (strcmp(preset_subname, "xtreme") == 0){
-        /* nspsytune stuff */
+    // Xtreme Preset == --nspsytune -V2 -mj -h --lowpass 19.5 -b128 --nssafejoint --athtype 2 --ns-sfb21 3 -X3
+    else if (strcmp(preset_name, "xtreme") == 0){
+
+        if (fast > 0) {
+           lame_set_VBR(gfp, vbr_mtrh);
+           lame_set_experimentalX(gfp, 2);
+        }
+        else {
+           lame_set_VBR(gfp, vbr_rh);
+           lame_set_experimentalX(gfp, 3);
+        }
+
         lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
-        lame_set_experimentalZ(gfp,1);
-        lame_set_experimentalX(gfp,1);
-        /* nspsytune stuff end */
-        lame_set_VBR(gfp,vbr_rh); 
-        lame_set_VBR_q(gfp,2);
-        lame_set_quality( gfp, 2 );
-        lame_set_lowpassfreq(gfp,19500);
-        lame_set_mode( gfp, JOINT_STEREO );
-        /* safejoint start */
-        lame_set_exp_nspsytune(gfp,lame_get_exp_nspsytune(gfp) | 2);
-        /* safejoint end*/
-        lame_set_ATHtype( gfp, 2 );
-        lame_set_VBR_min_bitrate_kbps(gfp,112);
-        /* high freq */
-        d = 3;      // modify sfb21 by 3 dB plus ns-treble=0                 
-        k = (int)(d * 4);
-        if (k < -32) k = -32;
-        if (k >  31) k =  31;
-        if (k < 0) k += 64;
-        lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 20));
+        lame_set_experimentalZ(gfp, 1);
+        lame_set_VBR_q(gfp, 2);
+        lame_set_quality(gfp, 2);
+        lame_set_lowpassfreq(gfp, 19500);
+        lame_set_mode(gfp, JOINT_STEREO);
+        lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); // safejoint
+        lame_set_ATHtype(gfp, 2);
+        lame_set_VBR_min_bitrate_kbps(gfp, 128);					
+
+        // modify sfb21 by 3 dB plus ns-treble=0                 
+        lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (12 << 20));
+
         return 0;
     }
     					
-    // Insane Preset == --nspsytune -V0 -mj -h --lowpass 19.5 -b128 --nssafejoint --athtype 2 -Z"
-    else if (strcmp(preset_subname, "insane") == 0){
-        /* nspsytune stuff */
-        lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
-        lame_set_experimentalX(gfp,1);
-        /* nspsytune end stuff */
-        lame_set_VBR(gfp,vbr_rh); 
-        lame_set_VBR_q(gfp,0);
-        lame_set_quality( gfp, 2 );
-        lame_set_lowpassfreq(gfp,19500);
-        lame_set_mode( gfp, JOINT_STEREO );
-        /* safejoint start */
-        lame_set_exp_nspsytune(gfp,lame_get_exp_nspsytune(gfp) | 2);
-        /* safejoint end*/
-        lame_set_ATHtype( gfp, 2 );
-        lame_set_VBR_min_bitrate_kbps(gfp,128);
-        return 0;
-    }	
+    // Insane Preset == --nspsytune -b320 -h -mj --nssafejoint --lowpass 20 --athtype 2 -X3
+    else if ((strcmp(preset_name, "insane") == 0) && (fast < 1)){
 
-    // Metal Preset == "--nspsytune --abr 192 -h -mj -b128 --lowpass 19.5 --nssafejoint --athtype 2"
-    else if (strcmp(preset_subname, "metal") == 0){
-        /* nspsytune stuff */
         lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
-        lame_set_experimentalZ(gfp,1);
-        lame_set_experimentalX(gfp,1);					
-        /* nspsytune stuff end */
-        lame_set_VBR(gfp,vbr_abr); 
-        lame_set_VBR_mean_bitrate_kbps(gfp, 192);
-        lame_set_VBR_mean_bitrate_kbps(gfp,Min(lame_get_VBR_mean_bitrate_kbps(gfp), 320)); 
-        lame_set_VBR_mean_bitrate_kbps(gfp,Max(lame_get_VBR_mean_bitrate_kbps(gfp),8)); 
-        lame_set_quality( gfp, 2 );
-        lame_set_lowpassfreq(gfp,19500);
-        lame_set_mode( gfp, JOINT_STEREO );
-        /* safejoint start */
-        lame_set_exp_nspsytune(gfp,lame_get_exp_nspsytune(gfp) | 2);
-        /* safejoint end*/
-        lame_set_ATHtype( gfp, 2 );
-        lame_set_VBR_min_bitrate_kbps(gfp,128);
+        lame_set_experimentalX(gfp, 3);
+        lame_set_brate(gfp, 320);
+        lame_set_quality(gfp, 2);
+        lame_set_mode(gfp, JOINT_STEREO);
+        lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); // safejoint
+        lame_set_lowpassfreq(gfp, 20500);
+        lame_set_ATHtype(gfp, 2);
+
         return 0;
     }
 
-    fprintf( stderr, "Unknown --preset profile: dm-%s\n"
-             "Available dm- presets:\n"
-             " dm-standard\n dm-xtreme\n dm-insane\n dm-metal\n",
-             preset_subname );
+    // Generic ABR Preset
+    else if (((atoi(preset_name)) > 0) &&  (fast < 1)) {
+        if ((atoi(preset_name)) >= 80 && (atoi(preset_name)) <= 320) {
+
+            // We assume specified bitrate will be 320kbps
+            upper_range_kbps = abr_kbps_map[8];
+            upper_range = 8;
+            lower_range_kbps = abr_kbps_map[8];
+            lower_range = 8;
+ 
+            // Determine which significant bitrates the value specified falls between,
+            // if loop ends without breaking then we were correct above that the value was 320
+            for (b = 1; b < 9; b++) {
+                if ((Max(actual_bitrate, abr_kbps_map[b])) != actual_bitrate) {
+                      upper_range_kbps = abr_kbps_map[b];
+                      upper_range = b;
+                      lower_range_kbps = abr_kbps_map[b-1];
+                      lower_range = (b-1);
+                      break; // We found upper range 
+                }
+            }
+
+            // Determine which range the value specified is closer to
+            if ((upper_range_kbps - actual_bitrate) > (actual_bitrate - lower_range_kbps))
+                r = lower_range;
+            else
+                r = upper_range;
+
+            // If the user specified the CBR option, use that instead of ABR
+            if (cbr > 0) {
+                if ((lower_range_kbps == actual_bitrate)  ||
+                    (upper_range_kbps == actual_bitrate)) {
+                    lame_set_brate(gfp, actual_bitrate);
+                }
+                else {
+                    lame_version_print ( stdout );
+                    fprintf(stdout,"Error: The \"cbr\" option was used but the bitrate does not match allowed values.\n"
+                                   "\n"
+                                   "Allowed values are:\n"
+                                   "\" 80\"\n"
+                                   "\" 96\"\n"
+                                   "\"112\"\n"
+                                   "\"128\"\n"
+                                   "\"160\"\n"
+                                   "\"192\"\n"
+                                   "\"224\"\n"
+                                   "\"256\"\n"
+                                   "\"320\"\n"
+                                   "\n"
+                                   "For further information try: \"%s --dm-preset help\"\n"
+                                   , ProgramName
+                           );
+                    return -1;
+                }
+            }
+            else {
+                lame_set_VBR(gfp, vbr_abr); 
+                lame_set_VBR_mean_bitrate_kbps(gfp, actual_bitrate);
+                lame_set_VBR_mean_bitrate_kbps(gfp, Min(lame_get_VBR_mean_bitrate_kbps(gfp), 320)); 
+                lame_set_VBR_mean_bitrate_kbps(gfp, Max(lame_get_VBR_mean_bitrate_kbps(gfp), 8)); 
+            }
+
+            lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
+            lame_set_experimentalZ(gfp, abr_switch_map[r][0]);
+            lame_set_experimentalX(gfp, abr_switch_map[r][1]);
+            lame_set_quality(gfp, 2);
+            lame_set_lowpassfreq(gfp, abr_switch_map[r][2]);
+            lame_set_mode(gfp, JOINT_STEREO);
+
+            if (abr_switch_map[r][3] > 0)
+                lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); // safejoint
+
+            if (abr_switch_map[r][4] > 0)
+                    (void) lame_set_msfix( gfp, abr_switch_map[r][4] );
+
+            lame_set_ATHtype(gfp, 2);
+
+            return 0;
+    
+        }
+        else {
+            lame_version_print ( stdout );
+            fprintf(stdout,"Error: The bitrate specified is out of the valid range for this preset\n"
+                           "\n"
+                           "When using this mode you must enter a value between \"80\" and \"320\"\n"
+                           "\n"
+                           "For further information try: \"%s --dm-preset help\"\n"                  
+
+                           , ProgramName
+                   );
+            return -1;
+        }
+    }
+
+    lame_version_print ( stdout );
+    fprintf(stdout,"Error: You did not enter a valid profile and/or options with --dm-preset\n"
+                   "\n"
+                   "Available profiles are:\n"
+                   "\n"
+                   "   <fast>        standard\n"
+                   "   <fast>        xtreme\n"
+                   "                 insane\n"
+                   "          <cbr> (ABR Mode) - The ABR Mode is implied. To use it,\n"
+                   "                             simply specify a bitrate. For example:n"
+                   "                                         \"--dm-preset 185\" activates this\n"
+                   "                             preset and uses 185 as an average kbps.\n" 
+                   "\n"
+                   "    Some examples:\n"
+                   "\n"
+                   " or \"%s --dm-preset fast standard <input file> <output file>\"\n"
+                   " or \"%s --dm-preset cbr 192 <input file> <output file>\"\n"
+                   " or \"%s --dm-preset 172 <input file> <output file>\"\n"
+                   " or \"%s --dm-preset xtreme <input file> <output file>\"\n"                   
+                   "\n"
+                   "For further information try: \"%s --dm-preset help\"\n"                  
+
+                   , ProgramName, ProgramName, ProgramName, ProgramName, ProgramName
+           );
     return -1;
 }
-
 
 static void genre_list_handler (int num,const char *name,void *cookie)
 {
@@ -1387,8 +1508,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF ("nssafejoint")
                     lame_set_exp_nspsytune(gfp,lame_get_exp_nspsytune(gfp) | 2);
 
-		T_ELIF ("nsmsfix")
-                    extern void lame_set_msfix( lame_t gfp, double msfix );
+                T_ELIF ("nsmsfix")
                     argUsed=1;
                     (void) lame_set_msfix( gfp, atof(nextArg) );
                 
@@ -1486,11 +1606,11 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     argUsed = 1;
                     xlatArg = presets_alias( nextArg );
                     
-                    if (strncmp( xlatArg, "dm-", 3 ) == 0 ) {
-                        if( dm_presets( gfp, xlatArg + 3 ) < 0 )
-                            return -1;
-                    } 
-                    else if (strncmp( xlatArg, "r3mix", 5 ) == 0 ) {
+//                    if (strncmp( xlatArg, "dm-", 3 ) == 0 ) {
+//                        if( dm_presets( gfp, xlatArg + 3 ) < 0 )
+//                            return -1;
+//                    } 
+                     if (strncmp( xlatArg, "r3mix", 5 ) == 0 ) {
                         if( r3mix_presets( gfp, xlatArg + 5 ) < 0 )
                             return -1;
                     }
@@ -1499,6 +1619,104 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                             return -1;
                     }
                 }
+
+                T_ELIF ("dm-preset")
+                    argUsed = 1;
+                    {
+                    int fast = 0, cbr = 0;
+
+                    if (strcmp(nextArg, "help") == 0) {
+                        lame_version_print ( stdout );
+                        fprintf ( stdout,
+                        "The --dm-preset switches are designed to provide the highest possible quality.\n"
+                        "\n"
+                        "They have for the most part been subject to and tuned via rigorous double blind\n"
+                        "listening tests to verify and achieve this objective.\n"
+                        "\n"
+                        "These are continually updated to coincide with the latest developments that\n"
+                        "occur and as a result should provide you with nearly the best quality\n"
+                        "currently possible from LAME.\n"
+                        "\n"
+                        "To activate these presets:\n"
+                        "\n"
+                        "   For VBR modes (generally highest quality):\n"
+                        "\n"
+                        "     \"--dm-preset standard\" This preset should generally be transparent\n"
+                        "                            to most people on most music and is already\n"
+                        "                            quite high in quality.\n"
+                        "\n"
+                        "     \"--dm-preset xtreme\"   If you have extremely good hearing and similar\n"
+                        "                            equipment, this preset will generally provide\n"
+                        "                            slightly higher quality than the \"standard\"\n"
+                        "                            mode. This mode will also provide much higher\n"
+                        "                            quality on certain clips heavy on synthetic\n"
+                        "                            impulse sounds, such as those in fatboy.wav.\n"
+                        "\n"
+                        "   For CBR 320kbps (highest quality possible from the --dm-preset switches):\n"
+                        "\n"
+                        "     \"--dm-preset insane\"   This preset will usually be overkill for most\n"
+                        "                            people and most situations, but if you must\n"
+                        "                            have the absolute highest quality with no\n"
+                        "                            regard to filesize, this is the way to go.\n"
+                        "\n"
+                        "   For ABR modes (high quality per given bitrate but not as high as VBR):\n"
+                        "\n"
+                        "     \"--dm-preset <kbps>\"   Using this preset will usually give you good\n"
+                        "                            quality at a specified bitrate. Depending on the\n"
+                        "                            bitrate entered, this preset will determine the\n"
+                        "                            optimal settings for that particular situation.\n"
+                        "                            While this approach works, it is not nearly as\n"
+                        "                            flexible as VBR, and usually will not attain the\n"
+                        "                            same level of quality as VBR at higher bitrates.\n"  
+                        "\n"
+                        "The following options are also available for the corresponding profiles:\n"
+                        "\n"
+                        "   <fast>        standard\n"
+                        "   <fast>        xtreme\n"
+                        "                 insane\n"
+                        "          <cbr> (ABR Mode) - The ABR Mode is implied. To use it,\n"
+                        "                             simply specify a bitrate. For example:n"
+                        "                                         \"--dm-preset 185\" activates this\n"
+                        "                             preset and uses 185 as an average kbps.\n" 
+                        "\n"
+                        "   \"fast\" - Enables the new fast VBR for a particular profile. The\n"
+                        "            disadvantage to the speed switch is that often times the\n"
+                        "            bitrate will be slightly higher than with the normal mode\n"
+                        "            and quality may be slightly lower also.\n"
+                        "\n"
+                        "   \"cbr\"  - If you use the ABR mode (read above) with a significant\n"
+                        "            bitrate such as 80, 96, 112, 128, 160, 192, 224, 256, 320,\n"
+                        "            you can use the \"cbr\" option to force CBR mode encoding\n"
+                        "            instead of the standard abr mode. ABR does provide higher\n"
+                        "            quality but CBR may be useful in situations such as when\n"
+                        "            streaming an mp3 over the internet may be important.\n"
+                        "\n"
+                        "    For example:\n"
+                        "\n"
+                        " or \"%s --dm-preset fast standard <input file> <output file>\"\n"
+                        " or \"%s --dm-preset cbr 192 <input file> <output file>\"\n"
+                        " or \"%s --dm-preset 172 <input file> <output file>\"\n"
+                        " or \"%s --dm-preset xtreme <input file> <output file>\"\n"
+                        , ProgramName, ProgramName, ProgramName, ProgramName);
+                       return -1;
+                    }
+
+                    while ((strcmp(nextArg, "fast")  == 0) ||
+                           (strcmp(nextArg, "cbr")   == 0))  {
+
+                        if ((strcmp(nextArg, "fast") == 0) && (fast < 1))
+                            fast = 1;
+                        if ((strcmp(nextArg, "cbr")  == 0) && (cbr  < 1))
+                            cbr = 1;
+
+                        argUsed++;
+                        nextArg = i+argUsed < argc  ?  argv[i+argUsed]  :  "";
+                    }
+
+                    if (dm_presets ( gfp, fast, cbr, nextArg, ProgramName ) < 0)
+                    return -1;
+                }
+
                 T_ELIF ("disptime")
                     argUsed = 1;
                     update_interval = atof (nextArg);
