@@ -448,7 +448,7 @@ void fill_buffer(lame_global_flags *gfp,
     }
 
     /* user selected scaling of the samples */
-    if (gfp->scale != 0) {
+    if (gfp->scale != 0 && gfp->scale != 1.0) {
 	for (i=0 ; i<*n_out; ++i) {
 	    mfbuf[0][gfc->mf_size+i] *= gfp->scale;
 	    if (gfc->channels_out == 2)

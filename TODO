@@ -22,9 +22,12 @@ floating point and have finaly quantization step a
 easy-to-change module so it can output other than 16bit.
 
 4.
-Clipping detection.  For input near 2^15, print a warning about
-possible clipping during decoding.  Suggest using --scale .98
-or something.  
+Clipping detection.  Compute statistics for input near 2^15, 
+(should be done in fill_buffer() in util.c).  Have command
+line encoder print statistics about % of samples which might
+end up clipped.
+
+Better: do a full decode - but this seems too expensive. 
 
 
 5.
