@@ -2,9 +2,11 @@
 
 AUTOMAKE_OPTIONS = foreign $(top_srcdir)/ansi2knr
 
-INCLUDES = @INCLUDES@ -I$(top_srcdir)/libmp3lame
+INCLUDES = @INCLUDES@ -I$(top_srcdir)/libmp3lame -I$(top_srcdir)
 
 EXTRA_DIST = README
+
+DEFS = @DEFS@ @CONFIG_DEFS@
 
 noinst_LTLIBRARIES = libmpgdecoder.la
 
@@ -30,7 +32,7 @@ noinst_HEADERS = common.h \
 	mpglib.h \
 	tabinit.h
 
-LCLINTFLAGS= +posixlib +showsummary +showalluses +whichlib +forcehints
+LCLINTFLAGS= +posixlib +showsummary +showalluses +whichlib +forcehints -Dlint
 
 lclint.txt: ${libmpgdecoder_la_SOURCES} ${noinst_HEADERS}
 	@lclint ${LCLINTFLAGS} ${INCLUDES} ${DEFS} ${libmpgdecoder_la_SOURCES} 2>&1 >lclint.txt || true
