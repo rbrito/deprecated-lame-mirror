@@ -62,6 +62,21 @@ int targ_bits[2],int mean_bits, int gr);
 void reduce_side(int targ_bits[2],FLOAT8 ms_ener_ratio,int mean_bits,int max_bits);
 
 
+int bin_search_StepSize (         
+    lame_internal_flags *gfc,
+    gr_info             *cod_info,
+    int                  desired_rate, 
+    int                  start, 
+    int                 *ix, 
+    FLOAT8               xrspow[576] );
+    
+int inner_loop (
+    lame_internal_flags *gfc,
+    gr_info             *cod_info,
+    FLOAT8               xrpow [576],
+    int                  l3_enc[576], 
+    int                  max_bits );
+
 void iteration_init( lame_global_flags *gfp, III_side_info_t *l3_side);
 
 

@@ -1446,10 +1446,10 @@ void VBR_iteration_loop
             max_bits = calc_max_bits (gfc, frameBits, min_bits);
             
             if (gfp->VBR == vbr_mtrh) 
-                VBR_noise_shaping (gfp, xr[gr][ch], xrpow, &ratio[gr][ch],
-                                   l3_enc[gr][ch], 0 /*digital_silence*/, 
-                                   min_bits, max_bits, &scalefac[gr][ch],
-                                   &l3_xmin[gr][ch], gr, ch );
+                VBR_noise_shaping2 (gfp, xr[gr][ch], xrpow, &ratio[gr][ch],
+                                    l3_enc[gr][ch], 0 /*digital_silence*/, 
+                                    min_bits, max_bits, &scalefac[gr][ch],
+                                    &l3_xmin[gr][ch], gr, ch );
             else
                 VBR_encode_granule (gfp, cod_info, xr[gr][ch], &l3_xmin[gr][ch],
                                     &scalefac[gr][ch], xrpow, l3_enc[gr][ch],

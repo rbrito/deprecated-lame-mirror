@@ -56,9 +56,9 @@ void VBR_quantize(lame_global_flags *gfp,
 		    III_scalefac_t scalefac[2][2]);
 
 
-    /*  used by VBR_quantize() and VBR_iteration_loop() */ 
+    /*  used by VBR_iteration_loop() */ 
 
-int VBR_noise_shaping(
+int VBR_noise_shaping2(
                     lame_global_flags *gfp,
                     FLOAT8             xr[576], 
                     FLOAT8             xr34orig[576], 
