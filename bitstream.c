@@ -849,7 +849,7 @@ flush_bitstream(lame_global_flags *gfp)
 void add_dummy_byte(lame_global_flags *gfp,int val)
 {
   lame_internal_flags *gfc = gfp->internal_flags;
-  int i,bits;
+  int i;
 
   putbits_noheaders(gfp,val,8);   
 
