@@ -87,6 +87,7 @@
    precision long doubles, as supported by ICL), you will need
    to disable the ASM routines (or fix them :) */
 
+/* NOTE: RH: 7/00:  if FLOAT8=float, it breaks resampling and VBR code */
 #ifdef FLOAT8_is_double
 	typedef double FLOAT8;
 #else

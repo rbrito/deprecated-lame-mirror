@@ -1416,7 +1416,6 @@ i,*npart_s_orig,freq,numlines_s[i],j2-j,j,j2-1,bark1,bark2);
     /* formula reverse enginerred from plot in paper */
     for ( i = 0; i < SBPSY_s; i++ ) {
       FLOAT8 arg,mld;
-      //      arg = (FLOAT8) i/SBPSY_s;
       arg = freq2bark(sfreq*gfc->scalefac_band.s[i]/(2*192));
       arg = (Min(arg, 15.5)/15.5);
 
@@ -1425,7 +1424,6 @@ i,*npart_s_orig,freq,numlines_s[i],j2-j,j,j2-1,bark1,bark2);
     }
     for ( i = 0; i < SBPSY_l; i++ ) {
       FLOAT8 arg,mld;
-      //arg = (FLOAT8) i/SBPSY_l;
       arg = freq2bark(sfreq*gfc->scalefac_band.l[i]/(2*576));
       arg = (Min(arg, 15.5)/15.5);
 
