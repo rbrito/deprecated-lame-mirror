@@ -1085,7 +1085,7 @@ set_pinfo (lame_global_flags *gfp,
 
       /* there is no scalefactor bands >= SBPSY_l */
       if (sfb<SBPSY_l) {
-	if (scalefac->s[sfb]<0)  /* scfsi! */
+	if (scalefac->l[sfb]<0)  /* scfsi! */
 	  pinfo->LAMEsfb[gr][ch][sfb]=pinfo->LAMEsfb[0][ch][sfb];
 	else
 	  pinfo->LAMEsfb[gr][ch][sfb]=-ifqstep*scalefac->l[sfb];
