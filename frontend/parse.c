@@ -750,7 +750,8 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 	    nextArg = i+1 < argc  ?  argv[i+1]  :  "";
 	    
             if (! *token) { /* The user wants to use stdin and/or stdout. */
-	        if (inPath [0] == '\0')
+	        input_file = 1;
+                if (inPath [0] == '\0')
 		    strncpy (inPath, argv[i],MAX_NAME_SIZE);
 	        else 
 		if (outPath[0] == '\0') 
