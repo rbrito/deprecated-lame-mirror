@@ -106,7 +106,6 @@ Experimental (undocumented):  may work better or worse:
 Operational:
 
 -r             assume input file is raw PCM
---decode       assume input file is an mp3 file, and decode to raw pcm.  
 -s  n          input sampling frequency in kHz (for raw PCM input files)
 --resample n   output sampling frequency
 --mp3input     input file is an MP3 file.  decode using mpglib/mpg123
@@ -121,7 +120,13 @@ Operational:
 -g             run MP3x, the graphical frame analyzer
 --strictly-enforce-ISO   comply as much as possible to ISO MPEG spec
 
+--decode       assume input file is an mp3 file, and decode to wav.
+-t             disable writing of WAV header when using --decode
+               (decode to raw pcm, little endian format)
+
 --ogg          Encode using Ogg Vorbis (.ogg) instead of mp3.
+
+
 
 ID3 tagging:
 
@@ -572,6 +577,10 @@ Disable writing of the Xing VBR Tag (only valid if -v flag is
 specified) This tag in embedded in frame 0 of the MP3 file.  It lets
 VBR aware players correctly seek and compute playing times of VBR
 files.
+
+When '--decode' is specified (decode mp3 to wav), this flag will 
+disable writing the WAV header.  The output will thus be
+little endian, raw pcm.
 
 
 

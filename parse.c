@@ -694,6 +694,7 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	  break;	
 	case 't':  /* dont write VBR tag */
 	  gfp->bWriteVbrTag=0;
+	  gfp->disable_waveheader=1;
 	  break;
 	case 'r':  /* force raw pcm input file */
 #ifdef LIBSNDFILE

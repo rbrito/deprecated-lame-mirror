@@ -514,6 +514,17 @@ void plot_frame(void)
         coeff = 0;
       ycord[i]=coeff*coeff*1e10;
       ycord[i] = log10( MAX( ycord[i],(double) 1)); 
+
+#if 0
+      if (ch==0) 
+	if (i==26) 
+	  if (data[i]!=0)
+	    printf("%i %i i=%i  mdct: (db) %f  %f \n",pplot->frameNum,gr,i,
+10*log10(data[i]*data[i]),
+10*log10(.33*(data[i-1]*data[i-1] + data[i]*data[i] + data[i+1]*data[i+1]))  
+);
+#endif
+
       ymx=(ycord[i] > ymx) ? ycord[i] : ymx;
       ymn=(ycord[i] < ymn) ? ycord[i] : ymn;
     }

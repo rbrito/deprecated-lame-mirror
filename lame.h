@@ -82,6 +82,7 @@ typedef struct  {
   /* general control params */
   int gtkflag;                /* run frame analyzer?       */
   int bWriteVbrTag;           /* add Xing VBR tag?         */
+  int disable_waveheader;     /* disable writing of .wav header, when *decoding* */
   int decode_only;            /* use lame/mpglib to convert mp3 to wav */
   int ogg;                    /* encode to Vorbis .ogg file */
 

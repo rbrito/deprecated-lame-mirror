@@ -275,7 +275,8 @@ int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip)
 	  (strcmp(gfp->outPath, "-")? gfp->outPath : "stdout"));
   if (skip>0)
     MSGF("skipping initial %i samples (encoder + decoder delay)\n",skip);
-  WriteWav(outf,wavsize,gfp->in_samplerate,gfp->num_channels);
+  if (!gfp->disable_waveheader)
+    WriteWav(outf,wavsize,gfp->in_samplerate,gfp->num_channels);
   wavsize=-skip;
   do {
     int i;
@@ -299,7 +300,8 @@ int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip)
   decoder_progress_finish(gfp);
   /* if outf is seekable, rewind and adjust length */
   if (!fseek(outf,0,SEEK_SET))
-    WriteWav(outf,wavsize,gfp->in_samplerate,gfp->num_channels);
+    if (!gfp->disable_waveheader)
+      WriteWav(outf,wavsize,gfp->in_samplerate,gfp->num_channels);
   fclose(outf);
 
   return 0;
