@@ -217,9 +217,6 @@ void lame_init_params(lame_global_flags *gfp)
     }
   }
 
-
-
-
   /****************************************************************/
   /* apply user driven filters*/
   /****************************************************************/
@@ -642,7 +639,8 @@ int mf_size,char *mp3buf, int mp3buf_size)
 
 
   /* use m/s gfp->stereo? */
-  check_ms_stereo =  (gfp->mode == MPG_MD_JOINT_STEREO);
+  check_ms_stereo =   (gfp->mode == MPG_MD_JOINT_STEREO);
+
 
 
   /********************** padding *****************************/
@@ -692,7 +690,6 @@ int mf_size,char *mp3buf, int mp3buf_size)
 #endif
     }
   }
-
 
 
   if (gfp->psymodel) {

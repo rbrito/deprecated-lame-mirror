@@ -20,8 +20,8 @@ typedef int	I192_3[192][3];
 
 
 typedef struct {
-	FLOAT8	l[SBPSY_l];
-	FLOAT8	s[SBPSY_s][3];
+	FLOAT8	l[SBPSY_l + 1];
+	FLOAT8	s[SBPSY_s + 1][3];
 } III_psy_xmin;
 
 typedef struct {

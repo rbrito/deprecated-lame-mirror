@@ -86,7 +86,13 @@ int  pretab[21] =
     1, 1, 1, 1, 2, 2, 3, 3, 3, 2
 };
 
-/* Table B.8 */
+/*
+  Here are MPEG1 Table B.8 and MPEG2 Table B.1
+  -- Layer III scalefactor bands. 
+  Index into this using a method such as:
+    idx  = fr_ps->header->sampling_frequency
+           + (fr_ps->header->version * 3)
+*/
 
 struct scalefac_struct sfBandIndex[6] =
 {

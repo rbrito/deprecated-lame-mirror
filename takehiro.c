@@ -91,7 +91,6 @@ struct
 */
 
 static int cb_esc_buf[288];
-static int cb_esc_sign;
 static int *cb_esc_end;
 static const int huf_tbl_noESC[15] = {
     1, 2, 5, 7, 7,10,10,13,13,13,13,13,13,13,13
@@ -103,7 +102,6 @@ count_bit_ESC(int *ix, int *end, int t1, int t2, int *s)
     /* ESC-table is used */
     int linbits1 = ht[t1].xlen;
     int linbits2 = ht[t2].xlen;
-    int	sum = 0;
     int	sum1 = 0;
     int	sum2 = 0;
 
@@ -112,7 +110,6 @@ count_bit_ESC(int *ix, int *end, int t1, int t2, int *s)
 	int y = *ix++;
 
 	if (x != 0) {
-	    sum++;
 	    if (x > 14) {
 		x = 15;
 		sum1 += linbits1;
@@ -122,7 +119,6 @@ count_bit_ESC(int *ix, int *end, int t1, int t2, int *s)
 	}
 
 	if (y != 0) {
-	    sum++;
 	    if (y > 14) {
 		y = 15;
 		sum1 += linbits1;
@@ -135,12 +131,12 @@ count_bit_ESC(int *ix, int *end, int t1, int t2, int *s)
 	sum2 += ht[24].hlen[x];
     }
 
-    if (sum1 > sum2)  {
+    if (sum1 > sum2) {
 	sum1 = sum2;
 	t1 = t2;
     }
 
-    *s += sum + sum1;
+    *s += sum1;
     return t1;
 }
 
@@ -148,30 +144,22 @@ count_bit_ESC(int *ix, int *end, int t1, int t2, int *s)
 count_bit_noESC(int *ix, int *end, unsigned int table) 
 {
     /* No ESC-words */
-    int	sum = 0, sign = 0;
-    unsigned char *hlen = ht[table].hlen;
-    int *p = cb_esc_buf;
+    int	sum = 0;
+    const unsigned char *hlen = ht[table].hlen;
+    const unsigned int xlen = ht[table].xlen;
+    unsigned int *p = cb_esc_buf;
 
     do {
-	int x = *ix++;
-	int y = *ix++;
-	if (x != 0) {
-	    sign++;
-	    x *= 16;
-	}
-
-	if (y != 0) {
-	    sign++;
-	    x += y;
-	}
-
+	int x, y;
+	x = *ix++;
+	y = *ix++;
+	x = x * xlen + y;
 	*p++ = x;
 	sum += hlen[x];
     } while (ix < end);
 
-    cb_esc_sign = sign;
     cb_esc_end = p;
-    return sum + sign;
+    return sum;
 }
 
 
@@ -180,7 +168,7 @@ count_bit_noESC(int *ix, int *end, unsigned int table)
 count_bit_noESC2(unsigned int table) 
 {
     /* No ESC-words */
-    int	sum = cb_esc_sign;
+    int	sum = 0;
     int *p = cb_esc_buf;
 
     do {
@@ -198,7 +186,6 @@ count_bit_short_ESC(int *ix, int *end, int t1, int t2, int *s)
     /* ESC-table is used */
     int linbits1 = ht[t1].xlen;
     int linbits2 = ht[t2].xlen;
-    int	sum = 0;
     int	sum1 = 0;
     int	sum2 = 0;
 
@@ -209,7 +196,6 @@ count_bit_short_ESC(int *ix, int *end, int t1, int t2, int *s)
 	    int x = *ix++;
 
 	    if (x != 0) {
-		sum++;
 		if (x > 14) {
 		    x = 15;
 		    sum1 += linbits1;
@@ -219,7 +205,6 @@ count_bit_short_ESC(int *ix, int *end, int t1, int t2, int *s)
 	    }
 
 	    if (y != 0) {
-		sum++;
 		if (y > 14) {
 		    y = 15;
 		    sum1 += linbits1;
@@ -239,7 +224,7 @@ count_bit_short_ESC(int *ix, int *end, int t1, int t2, int *s)
 	t1 = t2;
     }
 
-    *s += sum + sum1;
+    *s += sum1;
     return t1;
 }
 
@@ -249,34 +234,25 @@ count_bit_short_ESC(int *ix, int *end, int t1, int t2, int *s)
 count_bit_short_noESC(int *ix, int *end, unsigned int table) 
 {
     /* No ESC-words */
-    int	sum = 0, sign = 0;
-    unsigned char *hlen = ht[table].hlen;
-    int *p = cb_esc_buf;
+    int	sum = 0;
+    const unsigned char *hlen = ht[table].hlen;
+    const unsigned int xlen = ht[table].xlen;
+    unsigned int *p = cb_esc_buf;
 
     do {
 	int i;
 	for (i = 0; i < 3; i++) {
 	    int y = *(ix + 3);
 	    int x = *ix++;
-	    if (x != 0) {
-		sign++;
-		x *= 16;
-	    }
-
-	    if (y != 0) {
-		sign++;
-		x += y;
-	    }
-
+	    x = x * xlen + y;
 	    *p++ = x;
 	    sum += hlen[x];
 	}
 	ix += 3;
     } while (ix < end);
 
-    cb_esc_sign = sign;
     cb_esc_end = p;
-    return sum + sign;
+    return sum;
 }
 
 
@@ -338,6 +314,12 @@ static int choose_table(int *ix, int *end, int *s)
 
 	case 13:
 	    choice1 += 2;
+	    sum1 = count_bit_noESC2(14);
+	    if (sum0 > sum1) {
+		sum0 = sum1;
+		choice0 = 16;
+	    }
+
 	    sum1 = count_bit_noESC2(choice1);
 	    if (sum0 > sum1) {
 		sum0 = sum1;
@@ -414,11 +396,16 @@ static int choose_table_short(int *ix, int *end, int * s)
 	    break;
 
 	case 13:
-	    choice1 += 2;
-	    sum1 = count_bit_noESC2(choice1);
+	    sum1 = count_bit_noESC2(14);
 	    if (sum0 > sum1) {
 		sum0 = sum1;
-		choice0 = choice1;
+		choice0 = 16;
+	    }
+
+	    sum1 = count_bit_noESC2(15);
+	    if (sum0 > sum1) {
+		sum0 = sum1;
+		choice0 = 15;
 	    }
 	    break;
 
@@ -460,42 +447,21 @@ static int count_bits_long(int ix[576], gr_info *gi)
 
     /* Determines the number of bits to encode the quadruples. */
     gi->count1 = i;
-    a1 = 0;
+    a1 = a2 = 0;
     for (; i > 3; i -= 4) {
-	int p, v;
+	int p;
 	if ((unsigned int)(ix[i-1] | ix[i-2] | ix[i-3] | ix[i-4]) > 1)
 	    break;
 
-	v = ix[i-1];
-	p = v;
-	bits += v;
-
-	v = ix[i-2];
-	if (v != 0) {
-	    p += 2;
-	    bits++;
-	}
-
-	v = ix[i-3];
-	if (v != 0) {
-	    p += 4;
-	    bits++;
-	}
-
-	v = ix[i-4];
-	if (v != 0) {
-	    p += 8;
-	    bits++;
-	}
-
+	p = ((ix[i-4] * 2 + ix[i-3]) * 2 + ix[i-2]) * 2 + ix[i-1];
 	a1 += ht[32].hlen[p];
+	a2 += ht[33].hlen[p];
     }
-    a2 = gi->count1 - i;
-    if (a1 < a2) {
-	bits += a1;
-	gi->count1table_select = 0;
-    } else {
-	bits += a2;
+
+    bits = a1;
+    gi->count1table_select = 0;
+    if (a1 > a2) {
+	bits = a2;
 	gi->count1table_select = 1;
     }
 

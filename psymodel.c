@@ -567,7 +567,7 @@ void L3psycho_anal( lame_global_flags *gfp,
      *    Calculate the energy and the unpredictability in the threshold   *
      *    calculation partitions                                           *
      **********************************************************************/
-#if 1
+#if 0
     for ( b = 0; b < CBANDS; b++ )
       {
 	eb[b] = 0;
