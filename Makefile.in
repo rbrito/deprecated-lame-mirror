@@ -1,3 +1,4 @@
+#
 # Makefile for LAME 3.xx
 #
 # LAME is reported to work under:  
@@ -15,7 +16,8 @@
 # if you have mingw32-gcc, try:
 #   make NOUNIXCMD=YES UNAME=MSDOS
 #
-
+SHELL = @SHELL@
+@SET_MAKE@
 
 ifeq ($(NOUNIXCMD),YES)
   UNAME ?= UNKNOWN
@@ -25,26 +27,36 @@ else
   ARCH = $(shell uname -m)
 endif
 
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+
+BINDIR = @bindir@
+LIBDIR = $(prefix)/lib
+INCLUDEDIR = $(prefix)/include
+CC     = @CC@
+CFLAGS = @CONFIG_OPTS@
+LIBS   = @CONFIG_LIBS@
+LDFLAGS= @CONFIG_LDFLAGS@
+INSTALL= @INSTALL@
+INSTALL_PROGRAM=@INSTALL_PROGRAM@
+INSTALL_DATA=@INSTALL_DATA@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
+
 # generic defaults. OS specific options go in versious sections below
 PGM ?= lame
-CC = gcc
-CC_OPTS =  -O
+CC_OPTS = -O
 AR = ar
-RANLIB = ranlib
-GTK = 
-GTKLIBS = 
-SNDLIB = -DLAMESNDFILE
-LIBSNDFILE =  
-LIBS = -lm 
+RANLIB = @RANLIB@
 MAKEDEP = -M
-BRHIST_SWITCH = 
-LIBTERMCAP = 
-RM = rm -f
+RM_F = rm -f
+LN_S = @LN_S@
+LIB_TARGETS = libmp3lame.a
+INSTALL_TARGETS = install_program install_static_lib
 
 ##########################################################################
 # -DHAVEMPGLIB compiles the mpglib *decoding* library into libmp3lame
 ##########################################################################
-CPP_OPTS += -DHAVEMPGLIB 
+# handled by configure
 
 ##########################################################################
 # -DUSE_LAYER_1/2 enables Layer1 or Layer2 *decoding* abilities 
@@ -71,14 +83,21 @@ CPP_OPTS += -DUSE_LAYER_1 -DUSE_LAYER_2
 
 
 ##########################################################################
+#
+# ** handled by configure **
+# 
 # Define these in the OS specific sections below to compile in support
 # for the Ogg Vorbis audio format (both decoding and encoding)
-# 
+# http://www.xiph.org/ogg/vorbis/
+#
 # VORBIS = -DHAVEVORBIS  -I ../vorbis/include
 # VORBIS_LIB = -L ../vorbis/lib -lvorbis
 ##########################################################################
 
 ##########################################################################
+#
+# ** handled by configure **
+# 
 # Define these in the OS specific sections below to compile in code 
 # for the optional VBR bitrate histogram.  
 # Requires ncurses, but libtermcap also works.  
@@ -95,6 +114,9 @@ CPP_OPTS += -DUSE_LAYER_1 -DUSE_LAYER_2
 
 
 ##########################################################################
+#
+# ** handled by configure **
+# 
 # Define these in the OS specific sections below to compile in code for:
 #
 # SNDLIB =                no file i/o 
@@ -113,6 +135,9 @@ CPP_OPTS += -DUSE_LAYER_1 -DUSE_LAYER_2
 
 
 ##########################################################################
+#
+# ** handled by configure **
+# 
 # Define these in the OS specific sections below to compile in code for
 # the GTK mp3 frame analyzer
 #
@@ -131,27 +156,15 @@ CPP_OPTS += -DUSE_LAYER_1 -DUSE_LAYER_2
 # LINUX   
 ##########################################################################
 ifeq ($(UNAME),Linux)
-#  remove these lines if you dont have GTK, or dont want the GTK frame analyzer
-   GTK = -DHAVEGTK `gtk-config --cflags`
-   GTKLIBS = `gtk-config --libs` 
-# Comment out next 2 lines if you want to remove VBR histogram capability
-   BRHIST_SWITCH = -DBRHIST
-   LIBTERMCAP = -lncurses
-#  uncomment to use LIBSNDFILE
-#   SNDLIB = -DLIBSNDFILE
-#   LIBSNDFILE=-lsndfile 
-
-# uncomment to compile in Vorbis support
-#   VORBIS = -DHAVEVORBIS -I/home/mt/mp3/vorbis/include
-#   VORBIS_LIB = -L/home/mt/mp3/vorbis/lib -lvorbis
-
+LIB_TARGETS += libmp3lame.so
+INSTALL_TARGETS += install_shared_lib
 
 # suggested for gcc-2.7.x
-#   CC_OPTS =  -O3 -fomit-frame-pointer -funroll-loops -ffast-math  -finline-functions -Wall -pedantic
+   CC_OPTS =  -O3 -fomit-frame-pointer -funroll-loops -ffast-math  -finline-functions -Wall -pedantic
 #  CC_OPTS =  -O9 -fomit-frame-pointer -fno-strength-reduce -mpentiumpro -ffast-math -finline-functions -funroll-loops -Wall -malign-double -g -march=pentiumpro -mfancy-math-387 -pipe -pedantic
 
 #  for debugging:
-  CC_OPTS =  -UNDEBUG -O -Wall -pedantic -ggdb -DABORTFP
+#  CC_OPTS =  -UNDEBUG -O -Wall -pedantic -ggdb -DABORTFP
 
 #  for lots of debugging:
 #   CC_OPTS =  -DDEBUG -UNDEBUG  -O -Wall -pedantic -g -DABORTFP 
@@ -233,13 +246,7 @@ endif  #  linux
 # FreeBSD
 ##########################################################################
 ifeq ($(UNAME),FreeBSD)
-#  remove if you do not have GTK or do not want the GTK frame analyzer
-   GTK = -DHAVEGTK `gtk12-config --cflags`
-   GTKLIBS = `gtk12-config --libs` 
-# Comment out next 2 lines if you want to remove VBR histogram capability
-   BRHIST_SWITCH = -DBRHIST
-   LIBTERMCAP = -lncurses
-
+  # nothing left...
 endif
 
 
@@ -247,14 +254,8 @@ endif
 # OpenBSD
 ##########################################################################
 ifeq ($(UNAME),OpenBSD)
-#  remove if you do not have GTK or do not want the GTK frame analyzer
-   GTK = -DHAVEGTK `gtk-config --cflags`
-   GTKLIBS = `gtk-config --libs` 
-# Comment out next 2 lines if you want to remove VBR histogram capability
-   BRHIST_SWITCH = -DBRHIST
-   LIBTERMCAP = -lcurses 
+  # nothing left...
 endif
-
 
 
 
@@ -279,13 +280,8 @@ ifeq ($(UNAME),IRIX64)
    CC = cc
    CC_OPTS = -O3 -woff all 
 
-#optonal:
-#   GTK = -DHAVEGTK `gtk-config --cflags`
-#   GTKLIBS = `gtk-config --libs`
-#   BRHIST_SWITCH = -DBRHIST
-#   LIBTERMCAP = -lncurses
-
 endif
+
 ifeq ($(UNAME),IRIX) 
    CC = cc
    CC_OPTS = -O3 -woff all 
@@ -345,22 +341,18 @@ ifeq ($(UNAME),OS/2)
 # using pgcc-2.91.66:
 #   CC_OPTS = -O6 -ffast-math -funroll-loops -mpentiumpro -march=pentiumpro
 
-# Comment out next 2 lines if you want to remove VBR histogram capability
-   BRHIST_SWITCH = -DBRHIST
-   LIBTERMCAP = -ltermcap
-
 # Uncomment & inspect the 2 GTK lines to use MP3x GTK frame analyzer.
 # Properly installed XFree86/devlibs & GTK+ is a prerequisite.
 # The following works for me using Xfree86/OS2 3.3.5 and GTK+ 1.2.3:
-#   GTK = -DHAVEGTK -IC:/XFree86/include/gtk12 -Zmt -D__ST_MT_ERRNO__ -IC:/XFree86/include/glib12 -IC:/XFree86/include
-#   GTKLIBS = -LC:/XFree86/lib -Zmtd -Zsysv-signals -Zbin-files -lgtk12 -lgdk12 -lgmodule -lglib12 -lXext -lX11 -lshm -lbsd -lsocket -lm
+#   LIBS += -DHAVEGTK -IC:/XFree86/include/gtk12 -Zmt -D__ST_MT_ERRNO__ -IC:/XFree86/include/glib12 -IC:/XFree86/include
+#   CFLAGS += -LC:/XFree86/lib -Zmtd -Zsysv-signals -Zbin-files -lgtk12 -lgdk12 -lgmodule -lglib12 -lXext -lX11 -lshm -lbsd -lsocket -lm
 endif
 
 ###########################################################################
 # MSDOS/Windows
 ###########################################################################
 ifeq ($(UNAME),MSDOS)
-  RM =
+  RM_F =
   PGM ?= lame.exe
 endif
 
@@ -373,7 +365,6 @@ endif
 ifeq ($(UNAME),AmigaOS)
 	CC = gcc -noixemul
 	CC_OPTS = -O3 -ffast-math -funroll-loops -m68020-60 -m68881
-	BRHIST_SWITCH = -DBRHIST -DNOTERMCAP
 	MAKEDEP = -MM
 	ifeq ($(ARCH),WOS)
 		CC = ppc-amigaos-gcc -warpup
@@ -411,8 +402,8 @@ endif
 # 10/99 added -D__NO_MATH_INLINES to fix a bug in *all* versions of
 # gcc 2.8+ as of 10/99.  
 
-CC_SWITCHES = -DNDEBUG -D__NO_MATH_INLINES $(CC_OPTS) $(SNDLIB) $(GTK) \
-$(BRHIST_SWITCH) $(VORBIS) 
+CC_SWITCHES = -DNDEBUG -D__NO_MATH_INLINES $(CC_OPTS) $(CFLAGS) \
+$(LDFLAGS)
 c_sources_s = \
         brhist.c \
 	bitstream.c \
@@ -484,34 +475,52 @@ ASFLAGS=-f elf -i i386/
 	$(SHELL) -ec '$(CC) $(MAKEDEP)  $(CPP_OPTS) $(CC_SWITCHES)  $< | sed '\''s;$*.o;& $@;g'\'' > $@'
   endif
 
-all: $(PGM)
+all: $(PGM) lib
 
 $(PGM):	main.o $(gtk_obj) libmp3lame.a 
-	$(CC) $(CC_OPTS) -o $(PGM)  main.o $(gtk_obj) libmp3lame.a $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
+	$(CC) $(CC_OPTS) -o $(PGM)  main.o $(gtk_obj) -L. -lmp3lame $(LIBS) $(CFLAGS) $(LDFLAGS)
 
 mp3x:	mp3x.o $(gtk_obj) libmp3lame.a
-	$(CC) -o mp3x mp3x.o $(gtk_obj) libmp3lame.a $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
+	$(CC) -o mp3x mp3x.o $(gtk_obj) $(OBJ) $(LIBS) $(LDFLAGS) $(CFLAGS)
 
 mp3rtp:	rtp.o mp3rtp.o libmp3lame.a
-	$(CC) -o mp3rtp mp3rtp.o rtp.o libmp3lame.a $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
+	$(CC) -o mp3rtp mp3rtp.o rtp.o   $(OBJ) $(LIBS) $(LDFLAGS) $(CFLAGS)
 
 libmp3lame.a:  $(OBJ) Makefile
-	$(AR) cr libmp3lame.a  $(OBJ) 
+	$(AR) cr libmp3lame.a  $(OBJ)
 	$(RANLIB) libmp3lame.a
 
 #shared library, probably GNU specific?
-#note: using a shared library is not a good idea!: different 
-#versions of LAME require no code changes to the calling app, but
-#the app must be recompiled.
 libmp3lame.so:  $(OBJ) Makefile
-	gcc -shared -Wl,-soname,libmp3lame.so -o libmp3lame.so $(OBJ)
+	$(CC) -shared -Wl,-soname,libmp3lame.so.1 -o libmp3lame.so.1.0 $(OBJ)
+	$(RM_F) libmp3lame.so.1
+	$(LN_S) libmp3lame.so.1.0 libmp3lame.so.1
+	$(RM_F) libmp3lame.so
+	$(LN_S) libmp3lame.so.1 libmp3lame.so
 
-install:  $(PGM) #libmp3lame.a
-	cp $(PGM) /usr/bin
-	#cp libmp3lame.a /usr/lib
-	#cp lame.h /usr/lib
+lib:  $(LIB_TARGETS)
+
+install_static_lib: libmp3lame.a
+	mkdir -p $(LIBDIR)
+	$(INSTALL_PROGRAM) libmp3lame.a $(LIBDIR)
+	mkdir -p $(INCLUDEDIR)
+	$(INSTALL_PROGRAM) lame.h $(INCLUDEDIR)
 
 
+install_shared_lib: libmp3lame.so
+	mkdir -p $(LIBDIR)
+	$(INSTALL_PROGRAM) libmp3lame.so.1.0 $(LIBDIR)
+	$(RM_F) $(LIBDIR)/libmp3lame.so.1
+	(cd $(LIBDIR) && $(LN_S) libmp3lame.so.1.0 libmp3lame.so.1)
+	$(RM_F) $(LIBDIR)/libmp3lame.so
+	(cd $(LIBDIR) && $(LN_S) libmp3lame.so.1 libmp3lame.so)
+	mkdir -p $(INCLUDEDIR)
+	$(INSTALL_PROGRAM) lame.h $(INCLUDEDIR)
+
+install_program: $(PGM)
+	$(INSTALL_PROGRAM) $(PGM) ${BINDIR}
+
+install: $(INSTALL_TARGETS)
 
 clean:
   ifeq ($(UNAME),MSDOS)
@@ -522,8 +531,8 @@ clean:
 	-del mpglib\*.d
 	-del $(PGM)
   else
-	-$(RM) $(gtk_obj) $(OBJ) $(DEP) $(PGM) main.o rtp.o mp3rtp mp3rtp.o \
-         mp3x.o mp3x libmp3lame.a libmp3lame.so
+	-$(RM_F) $(gtk_obj) $(OBJ) $(DEP) $(PGM) main.o rtp.o mp3rtp mp3rtp.o \
+         mp3x.o mp3x libmp3lame.a libmp3lame.so libmp3lame.so.1 libmp3lame.so.1.0
   endif
 
 
@@ -542,13 +551,13 @@ endif
 #  wc is the number of bytes which differ between new output
 #  and 'official' results.  
 #
-#  Because of compilier options and effects of roundoff, the 
+#  Because of compiler options and effects of roundoff, the 
 #  number of bytes which are different may not be zero, but
 #  should be at most 30.
 #
 test: $(PGM)
-	./lame  --nores -h testcase.wav testcase.new.mp3
+	./$(PGM)  --nores -h testcase.wav testcase.new.mp3
 	cmp -l testcase.new.mp3 testcase.mp3 | wc
 
 testg: $(PGM)
-	./lame -g -h ../test/castanets.wav
+	./$(PGM) -g -h ../test/castanets.wav

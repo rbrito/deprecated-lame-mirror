@@ -8,23 +8,30 @@ There are serveral targets which can be built from this
 source code:
 
 lame/lame.exe   The command line encoder
+
 lame_enc.dll    a Windows DLL used by many GUIs which support lame.
+                (Can only be compiled by MSVC???)
+
 libmp3lame.a    the *NIX style encoding library
 libmp3lame.so   shared version of libmp3lame.a
 
 
 The following compile time options can be used.  For libmp3lame.a
-and lame_enc.dll, none are required.  See Makefile for details.
+and lame_enc.dll, none are required.  On non-unix systems,
+these options must be set in Makefile or in the IDE.  
+On unix systems, they are set via ./configure.  
 
 
-#define HAVEMPGLIB   to compile in mpglib's mp3 *decoding* capibility
-#define HAVEVORBIS   to compile in Vorbis decoding and encoding capibility
+#define HAVEGTK      compile in support for the GTK based mp3 frame analyzer
+#define HAVEMPGLIB   compile in mpglib's mp3 *decoding* capibility
+#define HAVEVORBIS   compile in Vorbis decoding and encoding capibility
                      (you need libvorbis already built)
 
 Exactly one of these is required for the command line encoder:
 #define LIBSNDFILE   to use Erik de Castro Lopo's libsndfile
+                     (no stdin support yet)
 #define LAMESNDFILE  to use LAME's internal sound file support 
-                     (wav and raw pcm only)
+                     (16 bit wav and raw pcm only, files or stdin )
 
 Other options for the command line encoder:
 #define HAVEGTK      to compile in the LAME MP3 frame analyzer
@@ -37,6 +44,55 @@ Other options for the command line encoder:
 
 
 =======================================================================
+Building the software on *NIX platforms:
+=======================================================================
+./configure support was recently added to LAME. (9/18/00)
+If ./configure has problems, you can use the old makefile
+via % make -f Makefile.unix
+
+% ./configure
+% make 
+% make install
+
+And the folloing options can be used with ./configure:
+
+  --with-fileio=lame          Use lame's internal file io routines [default]
+               =sndfile       Use Erik de Castro Lopo's libsndfile (no stdin possible currently)
+               =no            Do not use file io routines
+
+  --with-sndfile-prefix=DIR   Alternate location for libsndfile
+                              (if --with-fileio=sndfile)
+
+  --with-vorbis               Use vorbis library for ogg files 
+                              [default:yes, if installed]"
+  --with-vorbis-prefix=DIR    Alternate location for vorbis
+
+  --enable-decoder            Include mpg123/mpglib decoder [default:yes]"
+
+  --enable-analyzer=yes,no    Whether to include the GTK frame analyzer 
+                              (default yes if possible)
+                              It requires installed GTK, file io and 
+                              the mpg123 decoder."
+
+  --enable-brhist             Include the VBR bitrate histogram feature 
+                              (default:yes if any ncurses/termcap available)"
+
+
+Other usefull configure options:
+
+--prefix = PATH               default is /usr/local
+                              (LAME currently installs:
+                                /usr/local/bin/lame
+                                /usr/local/lib/libmp3lame.a
+                                /usr/local/lib/libmp3lame.so
+                                /usr/local/include/lame.h
+
+                        
+
+
+
+
+=======================================================================
 Building the software on Windows with MSVC:
 =======================================================================
 There are MSVC project files, and a Makefile.MSVC included
@@ -44,9 +100,10 @@ with the project.  For production use, be sure to compile
 a "Release" target, with the "maximum speed" compile
 option, and #define NDEBUG.   
 
-Note that MSVC "professional" claims to produce faster executables
-then MSVC "standard".  It is possible to compile the GTK frame
-analyzer under windows, see README.WINGTK
+It is possible to compile the GTK frame analyzer under windows, see
+README.WINGTK
+
+
 
 =======================================================================
 Building the software on Windows with free compilers:
@@ -55,7 +112,7 @@ LAME can be compiled with various Windows MSDOS ports (all free)
 of GCC (DJGPP, Mingw32).  See README.DJGPP.  
 
 For Mingw32, you should now be able to use the Unix Makefile that
-comes with LAME.  Try: "make NOUNIXCMD=YES UNAME=MSDOS"
+comes with LAME.  Try: "make -f Makefile.unix UNAME=MSDOS"
 You may need to remove these lines from brhist.c:
 
 #ifdef _WIN32
@@ -68,42 +125,6 @@ To use the Borland C compiler (now free!) see README.B32 and Makefile.B32.
 Borland can also compile the lame_enc.dll, but this is untested.
 
 Can DJGPP or Mingw32 produce lame_enc.dll?
-
-
-=======================================================================
-Building the software on *NIX platforms:
-=======================================================================
-If you are reading this, you have already applied the patch to the
-dist10 ISO demonstration source (or downloaded a full source
-distrubtion).  If you do not have GTK 1.1.16 or higher, or do not want
-the graphical frame analyzer (it uses a lot of memory), edit the
-Makefile and dont define GTK and GTKLIBS.  If you have trouble with
-libncurses/libtermcap, you can also disable that in the Makefile.
-
-Now just type:
-
-% make
-
-(for non-GNU systems: use gnumake or gmake instead of make)
-
-If it doesn't work, figure out why and send me the fix!  
-If you are using a newer version of EGCS, check the Makefile.
-There are some flags which may improve performance.
-
-LAME has built in support for 16bit raw pcm, aiff and wav
-formats.  If you want to encode from other sound formats, you can
-compile LAME to use Erik de Castro Lopo's libsndfile.  To use
-libsndfile in LAME:
-
-  1. install libsndfile (see http://www.zip.com.au/~erikd/libsndfile/).  
-  2. set SNDLIB and LIBSNDFILE as shown in the LAME Makefile.  
-  3. make clean ; make
-
-Thanks to Albert Faber for adding the libsndfile support!
-
-LAME can also be compiled into a BladeEnc compatiable MS Windows .dll 
-file.  See the Dll/ directory for details. 
-
 
 
 =======================================================================
