@@ -994,6 +994,7 @@ CBR_1st_bitalloc (
     gi->global_gain = gfc->OldValue[ch];
     init_global_gain(gfc, gi, targ_bits, gfc->CurrentStep[ch]);
 
+
     gfc->CurrentStep[ch] = (gfc->OldValue[ch] - gi->global_gain) >= 4 ? 4 : 2;
     gfc->OldValue[ch] = gi->global_gain;
 
@@ -1097,35 +1098,39 @@ CBR_bitalloc(
 {
     int bits, ch, adjustBits, targ_bits[2];
 
-    /* allocate minimum bits to encode part2_length (for i-stereo) */
-    bits = gfc->l3_side.tt[gr][0].part2_length
-	+ gfc->l3_side.tt[gr][gfc->channels_out-1].part2_length;
+    if (min_bits == max_bits) {
+	/* we have no way ... like 8kHz MPEG2 with 128kbps. */
+	targ_bits[0] = targ_bits[1] = min_bits;
+    } else {
+	/* allocate minimum bits to encode part2_length (for i-stereo) */
+	bits = gfc->l3_side.tt[gr][0].part2_length
+	    + gfc->l3_side.tt[gr][gfc->channels_out-1].part2_length;
 
-    min_bits -= bits;
-    max_bits -= bits; assert(max_bits >= 0);
+	min_bits -= bits;
+	max_bits -= bits; assert(max_bits >= 0);
 
-    /* estimate how many bits we need */
-    adjustBits = 0;
-    for (ch = 0; ch < gfc->channels_out; ch++) {
+	/* estimate how many bits we need */
+	adjustBits = 0;
+	for (ch = 0; ch < gfc->channels_out; ch++) {
+	    bits = 0;
+	    if (gfc->l3_side.tt[gr][ch].psymax > 0)
+		bits = (int)(ratio[ch].pe*factor);
+	    adjustBits += (targ_bits[ch] = ++bits); /* avoid zero division */
+	}
+
 	bits = 0;
-	if (gfc->l3_side.tt[gr][ch].psymax > 0)
-	    bits = (int)(ratio[ch].pe*factor);
-	adjustBits += (targ_bits[ch] = ++bits); /* avoid zero division */
+	if (adjustBits > max_bits)
+	    bits = max_bits - adjustBits; /* reduce */
+	else if (adjustBits < min_bits)
+	    bits = min_bits - adjustBits; /* increase */
+
+	if (bits) {
+	    int ch0new = targ_bits[0] + (bits * targ_bits[0]) / adjustBits;
+	    if (gfc->channels_out == 2)
+		targ_bits[1] += bits - (ch0new - targ_bits[0]);
+	    targ_bits[0] = ch0new;
+	}
     }
-
-    bits = 0;
-    if (adjustBits > max_bits)
-	bits = max_bits - adjustBits; /* reduce */
-    else if (adjustBits < min_bits)
-	bits = min_bits - adjustBits; /* increase */
-
-    if (bits) {
-	int ch0new = targ_bits[0] + (bits * targ_bits[0]) / adjustBits;
-	if (gfc->channels_out == 2)
-	    targ_bits[1] += bits - (ch0new - targ_bits[0]);
-	targ_bits[0] = ch0new;
-    }
-
     for (ch = 0; ch < gfc->channels_out; ch++) {
 	CBR_1st_bitalloc(gfc, &gfc->l3_side.tt[gr][ch], ch,
 			 targ_bits[ch] + gfc->l3_side.tt[gr][ch].part2_length,
