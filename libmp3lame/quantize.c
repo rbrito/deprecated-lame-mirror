@@ -723,6 +723,102 @@ amp_scalefac_bands(
 
 
 
+inline static FLOAT
+calc_sfb_noise_fast(const FLOAT * xr, const FLOAT * xr34, int bw, int sf)
+{
+    FLOAT xfsf = 0.0;
+    FLOAT sfpow = POW20(sf);  /*pow(2.0,sf/4.0); */
+    FLOAT sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
+
+    bw >>= 1;
+    do {
+	fi_union fi0, fi1;
+	FLOAT t0, t1;
+#ifdef TAKEHIRO_IEEE754_HACK
+	fi0.f = sfpow34 * xr34[0] + (ROUNDFAC + MAGIC_FLOAT);
+	fi1.f = sfpow34 * xr34[1] + (ROUNDFAC + MAGIC_FLOAT);
+
+	if (fi0.i > MAGIC_INT + IXMAX_VAL) return -1;
+	if (fi1.i > MAGIC_INT + IXMAX_VAL) return -1;
+	t0 = fabs(xr[0]) - (pow43 - MAGIC_INT)[fi0.i] * sfpow;
+	t1 = fabs(xr[1]) - (pow43 - MAGIC_INT)[fi1.i] * sfpow;
+#else
+	XRPOW_FTOI(sfpow34 * xr34[0] + ROUNDFAC, fi0.i);
+	XRPOW_FTOI(sfpow34 * xr34[1] + ROUNDFAC, fi1.i);
+ 
+	if (fi0.i > IXMAX_VAL) return -1;
+	if (fi1.i > IXMAX_VAL) return -1;
+	t0 = fabs(xr[0]) - pow43[fi0.i] * sfpow;
+	t1 = fabs(xr[1]) - pow43[fi1.i] * sfpow;
+#endif
+	xfsf += t0*t0 + t1*t1;
+	xr34 += 2;
+	xr += 2;
+    } while (--bw > 0);
+    return xfsf;
+}
+
+inline static FLOAT
+calc_sfb_noise(const FLOAT * xr, const FLOAT * xr34, int bw, int sf)
+{
+    FLOAT xfsf = 0.0;
+    FLOAT sfpow = POW20(sf);  /*pow(2.0,sf/4.0); */
+    FLOAT sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
+
+    bw >>= 1;
+    do {
+	fi_union fi0, fi1;
+	FLOAT t0, t1;
+#ifdef TAKEHIRO_IEEE754_HACK
+	fi0.f = (t0 = sfpow34 * xr34[0] + (ROUNDFAC + MAGIC_FLOAT));
+	fi1.f = (t1 = sfpow34 * xr34[1] + (ROUNDFAC + MAGIC_FLOAT));
+	if (fi0.i > MAGIC_INT + IXMAX_VAL) return -1.0;
+	if (fi1.i > MAGIC_INT + IXMAX_VAL) return -1.0;
+	fi0.f = t0 + (adj43asm - MAGIC_INT)[fi0.i];
+	fi1.f = t1 + (adj43asm - MAGIC_INT)[fi1.i];
+	t0 = fabs(xr[0]) - (pow43 - MAGIC_INT)[fi0.i] * sfpow;
+	t1 = fabs(xr[1]) - (pow43 - MAGIC_INT)[fi1.i] * sfpow;
+#else
+	fi0.i = (int) (t0 = sfpow34 * xr34[0]);
+        fi1.i = (int) (t1 = sfpow34 * xr34[1]);
+	if (fi0.i > IXMAX_VAL) return -1.0;
+	if (fi1.i > IXMAX_VAL) return -1.0;
+
+	t0 = fabs(xr[0]) - pow43[(int)(t0 + adj43[fi0.i])] * sfpow;
+	t1 = fabs(xr[1]) - pow43[(int)(t1 + adj43[fi1.i])] * sfpow;
+#endif
+	xfsf += t0*t0 + t1*t1;
+	xr34 += 2;
+	xr += 2;
+    } while (--bw > 0);
+    return xfsf;
+}
+
+static void
+CBR_2nd_bitalloc(
+    lame_internal_flags * gfc,
+    gr_info *gi,
+    FLOAT * xr34)
+{
+    int sfb = 0, j = 0;
+    for (sfb = 0; sfb < gi->psymax; sfb++) {
+	int width = gi->width[sfb];
+	if (gi->scalefac[sfb] != 0) {
+	    FLOAT noisenew, noiseold;
+	    noiseold = calc_sfb_noise(&gi->xr[j], &xr34[j], width,
+				      scalefactor(gi, sfb));
+	    gi->scalefac[sfb]--;
+	    noisenew = calc_sfb_noise(&gi->xr[j], &xr34[j], width,
+				      scalefactor(gi, sfb));
+	    if (noisenew > noiseold)
+		gi->scalefac[sfb]++;
+	}
+	j += width;
+    }
+    gfc->scale_bitcounter(gi);
+    gi->part2_3_length = count_bits(gfc, xr34, gi);
+}
+
 /************************************************************************
  *
  *  outer_loop ()                                                       
@@ -824,6 +920,7 @@ outer_loop (
     /*  do the 'substep shaping'
      */
  quit_quantization:
+    CBR_2nd_bitalloc(gfc, gi, xrpow);
     if (gfc->substep_shaping & 1)
 	trancate_smallspectrums(gfc, gi, l3_xmin, xrpow);
 }
@@ -1049,77 +1146,6 @@ bitpressure_strategy(gr_info *gi, FLOAT *pxmin)
 	*pxmin++ *= x;
 	*pxmin++ *= x;
     }
-}
-
-inline static FLOAT
-calc_sfb_noise_fast(const FLOAT * xr, const FLOAT * xr34, int bw, int sf)
-{
-    FLOAT xfsf = 0.0;
-    FLOAT sfpow = POW20(sf);  /*pow(2.0,sf/4.0); */
-    FLOAT sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
-
-    bw >>= 1;
-    do {
-	fi_union fi0, fi1;
-	FLOAT t0, t1;
-#ifdef TAKEHIRO_IEEE754_HACK
-	fi0.f = sfpow34 * xr34[0] + (ROUNDFAC + MAGIC_FLOAT);
-	fi1.f = sfpow34 * xr34[1] + (ROUNDFAC + MAGIC_FLOAT);
-
-	if (fi0.i > MAGIC_INT + IXMAX_VAL) return -1;
-	if (fi1.i > MAGIC_INT + IXMAX_VAL) return -1;
-	t0 = fabs(xr[0]) - (pow43 - MAGIC_INT)[fi0.i] * sfpow;
-	t1 = fabs(xr[1]) - (pow43 - MAGIC_INT)[fi1.i] * sfpow;
-#else
-	XRPOW_FTOI(sfpow34 * xr34[0] + ROUNDFAC, fi0.i);
-	XRPOW_FTOI(sfpow34 * xr34[1] + ROUNDFAC, fi1.i);
- 
-	if (fi0.i > IXMAX_VAL) return -1;
-	if (fi1.i > IXMAX_VAL) return -1;
-	t0 = fabs(xr[0]) - pow43[fi0.i] * sfpow;
-	t1 = fabs(xr[1]) - pow43[fi1.i] * sfpow;
-#endif
-	xfsf += t0*t0 + t1*t1;
-	xr34 += 2;
-	xr += 2;
-    } while (--bw > 0);
-    return xfsf;
-}
-
-inline static FLOAT
-calc_sfb_noise(const FLOAT * xr, const FLOAT * xr34, int bw, int sf)
-{
-    FLOAT xfsf = 0.0;
-    FLOAT sfpow = POW20(sf);  /*pow(2.0,sf/4.0); */
-    FLOAT sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
-
-    bw >>= 1;
-    do {
-	fi_union fi0, fi1;
-	FLOAT t0, t1;
-#ifdef TAKEHIRO_IEEE754_HACK
-	fi0.f = (t0 = sfpow34 * xr34[0] + (ROUNDFAC + MAGIC_FLOAT));
-	fi1.f = (t1 = sfpow34 * xr34[1] + (ROUNDFAC + MAGIC_FLOAT));
-	if (fi0.i > MAGIC_INT + IXMAX_VAL) return -1.0;
-	if (fi1.i > MAGIC_INT + IXMAX_VAL) return -1.0;
-	fi0.f = t0 + (adj43asm - MAGIC_INT)[fi0.i];
-	fi1.f = t1 + (adj43asm - MAGIC_INT)[fi1.i];
-	t0 = fabs(xr[0]) - (pow43 - MAGIC_INT)[fi0.i] * sfpow;
-	t1 = fabs(xr[1]) - (pow43 - MAGIC_INT)[fi1.i] * sfpow;
-#else
-	fi0.i = (int) (t0 = sfpow34 * xr34[0]);
-        fi1.i = (int) (t1 = sfpow34 * xr34[1]);
-	if (fi0.i > IXMAX_VAL) return -1.0;
-	if (fi1.i > IXMAX_VAL) return -1.0;
-
-	t0 = fabs(xr[0]) - pow43[(int)(t0 + adj43[fi0.i])] * sfpow;
-	t1 = fabs(xr[1]) - pow43[(int)(t1 + adj43[fi1.i])] * sfpow;
-#endif
-	xfsf += t0*t0 + t1*t1;
-	xr34 += 2;
-	xr += 2;
-    } while (--bw > 0);
-    return xfsf;
 }
 
 /* the find_scalefac* routines calculate
