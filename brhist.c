@@ -99,30 +99,32 @@ void brhist_add_count(int i)
 void brhist_disp ( long totalframes )
 {
     unsigned       i;
-    unsigned       percent;
+    unsigned       ppt;
     unsigned long  full;
     int            barlen;
-    char           brpercent [16];
+    char           brppt [16];
     
 #ifdef BRHIST
     full = brhist_count_max < BRHIST_BARMAX  ?  BRHIST_BARMAX  :  brhist_count_max;
 
     for ( i = brhist_vbrmin; i <= brhist_vbrmax; i++ ) {
         barlen  = ( brhist_count[i]*BRHIST_BARMAX + full-1  ) / full;		/* round up */
-        percent = ( 100lu * brhist_count[i] + totalframes/2 ) / totalframes;	/* round nearest */
+        ppt = ( 1000lu * brhist_count[i] + totalframes/2 ) / totalframes;	/* round nearest */
       
         if ( brhist_count [i] == 0 )
-            sprintf ( brpercent,  " [   ]" );
-        else if ( percent < 100 )
-            sprintf ( brpercent," [%2u%%]", percent );
+            sprintf ( brppt,  " [   ]" );
+        else if ( ppt < 10 )
+            sprintf ( brppt," [%%.%1u]", ppt%10 );
+        else if ( ppt < 995 )
+            sprintf ( brppt, " [%2u%%]", (ppt+5)/10 );
         else
-            sprintf ( brpercent, "[%3u%%]", percent );
+            sprintf ( brppt, "[%3u%%]", (ppt+5)/10 );
           
         if ( brhist_clreoln [0] ) /* ClearEndOfLine available */
-            fprintf ( stderr, "\n%s%s%.*s%s", brhist_kbps [i], brpercent, 
+            fprintf ( stderr, "\n%s%s%.*s%s", brhist_kbps [i], brppt, 
                       barlen, brhist_bar, brhist_clreoln );
         else
-            fprintf ( stderr, "\n%s%s%.*s%*s ", brhist_kbps [i], brpercent, 
+            fprintf ( stderr, "\n%s%s%.*s%*s ", brhist_kbps [i], brppt, 
                       barlen, brhist_bar, BRHIST_BARMAX - barlen, "" );
     }
 # ifdef _WIN32  

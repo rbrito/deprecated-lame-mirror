@@ -1,3 +1,4 @@
+/* -*- mode: C; mode: fold -*- */
 /*
  *	LAME MP3 encoding engine
  *
