@@ -772,7 +772,7 @@ PutLameVBR(lame_t gfc, size_t nMusicLength, uint8_t *p, uint8_t *p0)
 	}
     }
     if (gfc->decode_on_the_fly)
-	nPeakSignalAmplitude = (int)(fabs(gfc->PeakSample) / 32767.0 * pow(2.0, 23.0) + .5);
+	nPeakSignalAmplitude = (int)(fabs(gfc->PeakSample) * (FLOAT)((1 << 23) / 32767.0) + (FLOAT).5);
 
     p = CreateI4(p, nPeakSignalAmplitude);
     p = CreateI2(p, nRadioReplayGain);

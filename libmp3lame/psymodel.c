@@ -126,7 +126,6 @@ be masked by strong maskers in the L or R channels.
 # include <dmalloc.h>
 #endif
 #include <assert.h>
-#include <math.h>
 
 #include "encoder.h"
 #include "psymodel.h"
@@ -1042,7 +1041,7 @@ mp3x display               <------LONG------>
 	/* compute masking thresholds for short blocks */
 	for (sb = 0; sb < 3; sb++) {
 	    FLOAT adjust = mr->en.s[0][sb];
-	    if (adjust < 0)
+	    if (adjust < (FLOAT)0.0)
 		continue;
 
 	    /* energy/threshold calculation   */

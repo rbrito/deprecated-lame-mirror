@@ -170,7 +170,7 @@ get_bitrate(lame_t gfc)
 {
     /* assume 16bit linear PCM input, and in_sample = out_sample */
     return (int)(gfc->in_samplerate * 16 * gfc->channels_out
-		 / (1.e3 * gfc->compression_ratio) + 0.5);
+		 / (FLOAT)(1000 * gfc->compression_ratio) + (FLOAT)0.5);
 }
 
 static void
@@ -188,7 +188,7 @@ set_compression_ratio(lame_t gfc)
     } else {
 	gfc->compression_ratio
 	    = gfc->in_samplerate * 16 * gfc->channels_in
-	    / (1.e3 * gfc->mean_bitrate_kbps);
+	    / (FLOAT)(1000 * gfc->mean_bitrate_kbps);
     }
 }
 
@@ -269,9 +269,9 @@ apply_preset(lame_t gfc, int bitrate, vbr_mode mode)
     if (gfc->lowpassfreq == 0) {
 	int lowpass = switch_map[r].lowpass;
 	if (gfc->quality > 7)
-	    lowpass *= 0.9;
+	    lowpass *= (FLOAT)0.9;
 	if (gfc->mode == MONO)
-	    lowpass *= 1.5;
+	    lowpass *= (FLOAT)1.5;
 	lame_set_lowpassfreq(gfc, lowpass);
     }
 
@@ -465,12 +465,12 @@ lame_init_params(lame_t gfc)
 
     /* apply user driven high pass filter */
     if (gfc->highpassfreq > 0) {
-	gfc->highpass1 = 2. * gfc->highpassfreq;
+	gfc->highpass1 = (FLOAT)2. * gfc->highpassfreq;
 
 	if (gfc->highpasswidth >= 0)
-	    gfc->highpass2 = 2. * (gfc->highpassfreq + gfc->highpasswidth);
+	    gfc->highpass2 = (FLOAT)2. * (gfc->highpassfreq + gfc->highpasswidth);
 	else            /* 0% above on default */
-	    gfc->highpass2 = (1 + 0.00) * 2. * gfc->highpassfreq;
+	    gfc->highpass2 = (FLOAT)2. * gfc->highpassfreq;
 
 	gfc->highpass1 /= gfc->out_samplerate;
 	gfc->highpass2 /= gfc->out_samplerate;
@@ -478,14 +478,14 @@ lame_init_params(lame_t gfc)
 
     /* apply user driven low pass filter */
     if (gfc->lowpassfreq > 0) {
-	gfc->lowpass2 = 2. * gfc->lowpassfreq;
+	gfc->lowpass2 = (FLOAT)2. * gfc->lowpassfreq;
 	if (gfc->lowpasswidth >= 0) {
-	    gfc->lowpass1 = 2. * (gfc->lowpassfreq - gfc->lowpasswidth);
+	    gfc->lowpass1 = (FLOAT)2. * (gfc->lowpassfreq - gfc->lowpasswidth);
 	    if (gfc->lowpass1 < 0)
 		gfc->lowpass1 = 0;
 	}
 	else          /* 0% below on default */
-	    gfc->lowpass1 = (1 - 0.00) * 2. * gfc->lowpassfreq;
+	    gfc->lowpass1 = (FLOAT)2. * gfc->lowpassfreq;
 
 	gfc->lowpass1 /= gfc->out_samplerate;
 	gfc->lowpass2 /= gfc->out_samplerate;
@@ -499,7 +499,7 @@ lame_init_params(lame_t gfc)
     gfc->framesize = 576 * gfc->mode_gr;
     gfc->mf_needed = ENCDELAY + FFTOFFSET + gfc->framesize + 480;
     gfc->mf_size = gfc->mf_needed - 576 + MDCTDELAY;
-    gfc->resample.ratio = (double) gfc->in_samplerate / gfc->out_samplerate;
+    gfc->resample.ratio = (FLOAT) gfc->in_samplerate / gfc->out_samplerate;
     assert(gfc->mf_needed <= MFSIZE);
     /* at 160 kbps (MPEG-2/2.5)/ 320 kbps (MPEG-1) only
        Free format or CBR are possible, no ABR */
@@ -589,8 +589,8 @@ lame_init_params(lame_t gfc)
     psymodel_init(gfc);
 
     if (gfc->VBR == abr) {
-	gfc->masking_lower *= 2.0;
-	gfc->masking_lower_short *= 2.0;
+	gfc->masking_lower *= (FLOAT)2.0;
+	gfc->masking_lower_short *= (FLOAT)2.0;
     }
 
     /* scaling */
@@ -712,16 +712,16 @@ lame_print_config(lame_t gfc)
         gfc->report.msgf("Filters are disabled\n");
     }
     if (gfc->filter_type <= 1) {
-        if (0. < gfc->highpass2 && gfc->highpass2 < 1.0)
+        if ((FLOAT)0. < gfc->highpass2 && gfc->highpass2 < (FLOAT)1.0)
             gfc->report.msgf(
 		"  Highpass filter, transition band: %5.0f Hz - %5.0f Hz\n",
-                 0.5 * gfc->highpass1 * out_samplerate,
-                 0.5 * gfc->highpass2 * out_samplerate);
-        if (0. < gfc->lowpass1 && gfc->lowpass1 < 1.0) {
+                 (FLOAT)0.5 * gfc->highpass1 * out_samplerate,
+                 (FLOAT)0.5 * gfc->highpass2 * out_samplerate);
+        if ((FLOAT)0. < gfc->lowpass1 && gfc->lowpass1 < (FLOAT)1.0) {
 	    gfc->report.msgf(
 		"  Lowpass  filter, transition band: %5.0f Hz - %5.0f Hz\n",
-		 0.5 * gfc->lowpass1 * out_samplerate,
-		 0.5 * gfc->lowpass2 * out_samplerate);
+		 (FLOAT)0.5 * gfc->lowpass1 * out_samplerate,
+		 (FLOAT)0.5 * gfc->lowpass2 * out_samplerate);
 	}
         else {
             gfc->report.msgf("  No Lowpass filter\n");
@@ -932,12 +932,12 @@ lame_encode_buffer_int(lame_t gfc,
         return ret;
 
     /* make a copy of input buffer, changing type to sample_t */
-    scale = gfc->scale_left * (1.0 / ( 1L << (8 * sizeof(int) - 16)));
+    scale = gfc->scale_left * (FLOAT)(1.0 / ( 1L << (8 * sizeof(int) - 16)));
     for (i = 0; i < nsamples; i++)
 	gfc->in_buffer[i] = buffer_l[i] * scale;
 
     if (gfc->channels_in>1) {
-	scale = gfc->scale_right * (1.0 / ( 1L << (8 * sizeof(int) - 16)));
+	scale = gfc->scale_right * (FLOAT)(1.0 / ( 1L << (8 * sizeof(int) - 16)));
 	for (i = 0; i < nsamples; i++)
 	    gfc->in_buffer[i+nsamples] = buffer_r[i] * scale;
     }
@@ -959,12 +959,12 @@ lame_encode_buffer_long2(lame_t gfc,
         return ret;
 
     /* make a copy of input buffer, changing type to sample_t */
-    scale = gfc->scale_left * (1.0 / (1L << (8 * sizeof(long) - 16)));
+    scale = gfc->scale_left * (FLOAT)(1.0 / (1L << (8 * sizeof(long) - 16)));
     for (i = 0; i < nsamples; i++)
 	gfc->in_buffer[i] = buffer_l[i] * scale;
 
     if (gfc->channels_in>1) {
-	scale = gfc->scale_right * (1.0 / (1L << (8 * sizeof(long) - 16)));
+	scale = gfc->scale_right * (FLOAT)(1.0 / (1L << (8 * sizeof(long) - 16)));
 	for (i = 0; i < nsamples; i++)
 	    gfc->in_buffer[i+nsamples] = buffer_r[i] * scale;
     }
@@ -1363,19 +1363,19 @@ conv_istereo(lame_t gfc, gr_info *gi, int sfb, int i)
 
 	lsum = lsum / (lsum+rsum);
 	j = 3;
-	if (lsum < 0.5) {
-	    if (lsum < 0.211324865 * 0.5)
+	if (lsum < (FLOAT)0.5) {
+	    if (lsum < (FLOAT)(0.211324865 * 0.5))
 		j = 0;
-	    else if (lsum < (0.366025404 + 0.211324865) * 0.5)
+	    else if (lsum < (FLOAT)((0.366025404 + 0.211324865) * 0.5))
 		j = 1;
-	    else if (lsum < (0.5 + 0.366025404) * 0.5)
+	    else if (lsum < (FLOAT)((0.5 + 0.366025404) * 0.5))
 		j = 2;
 	} else {
-	    if (lsum > 1.0-0.211324865 * 0.5)
+	    if (lsum > (FLOAT)(1.0-0.211324865 * 0.5))
 		j = 6;
-	    else if (lsum > 1.0-(0.366025404 + 0.211324865) * 0.5)
+	    else if (lsum > (FLOAT)(1.0-(0.366025404 + 0.211324865) * 0.5))
 		j = 5;
-	    else if (lsum > 1.0-(0.5 + 0.366025404) * 0.5)
+	    else if (lsum > (FLOAT)(1.0-(0.5 + 0.366025404) * 0.5))
 		j = 4;
 	}
 	gi[1].scalefac[sfb] = j;
@@ -1534,7 +1534,7 @@ encode_mp3_frame(lame_t gfc, unsigned char* mp3buf, int mp3buf_size)
     }
 
     /* channel conversion */
-    if (gfc->narrowStereo != 0.0) {
+    if (gfc->narrowStereo != (FLOAT)0.0) {
 	/* narrown_stereo */
 	for (gr = 0; gr < gfc->mode_gr; gr++) {
 	    gr_info *gi = &gfc->tt[gr][0];
@@ -1665,13 +1665,13 @@ fill_buffer_resample(lame_t gfc, sample_t *outbuf, sample_t *inbuf, int len,
 
 	/* blackman filter.  by default, window centered at j+.5(filter_l%2) */
 	/* but we want a window centered at time0.   */
-	offset = time0 - (j + .5*(filter_l & 1));
-	assert(fabs(offset)<=.500);
+	offset = time0 - (j + (FLOAT).5*(filter_l & 1));
+	assert(fabs(offset)<=(FLOAT).5);
 
 	/* find the closest precomputed window for this offset: */
 	filter_coef
 	    = gfc->resample.blackfilt
-	    + ((int)((offset*2*bpc)+bpc+.5)) * (filter_l+1);
+	    + ((int)((offset*2*bpc)+bpc+(FLOAT).5)) * (filter_l+1);
 
 	xvalue = 0.;
 	for (i = 0; i <= filter_l; i++) {
@@ -1719,7 +1719,7 @@ static int
 fill_buffer(lame_t gfc, sample_t *in_buffer, int nsamples, int *n_in, int ch)
 {
     /* copy in new samples into mfbuf, with resampling if necessary */
-    if (gfc->resample.ratio != 1.0)
+    if (gfc->resample.ratio != (FLOAT)1.0)
 	return fill_buffer_resample(gfc, &gfc->mfbuf[ch][gfc->mf_size],
 				    in_buffer, nsamples, n_in, ch);
 

@@ -27,7 +27,6 @@
 #ifdef WITH_DMALLOC
 # include <dmalloc.h>
 #endif
-#include <math.h>
 #include <assert.h>
 #include <stdlib.h>
 
