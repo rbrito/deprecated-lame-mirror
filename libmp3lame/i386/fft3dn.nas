@@ -126,12 +126,6 @@ proc	fht_3DN
 	pfmul	mm1, mm6	; 2*c1*c1 | 2*c1*s1
 	pfsub	mm1, [D_1_0_0_0] ; 2*c1*c1-1.0 | 2*c1*s1 = -c2 | s2
 
-%ifdef E3DN
-	pswapd	mm0, mm1	; s2 |-c2
-	pxor	mm0, mm7	; s2 | c2
-	pxor	mm7, mm6	; c1 |-s1
-	pswapd	mm6, mm6	; s1 | c1
-%else
 	pmov	mm0, mm1
 	pxor	mm7, mm6	; c1 | -s1
 
@@ -141,7 +135,6 @@ proc	fht_3DN
 	puphdq	mm6, mm3	;-s1 | c1
 
 	pxor	mm0, [costab]	; c2 | -s2
-%endif
 
 ; mm0 =  s2| c2
 ; mm1 = -c2| s2
@@ -254,12 +247,8 @@ proc	fht_3DN
 	cmp	r5, r4
 
 	pfsub	mm6, mm7	; c1*a-s1*b | s1*a+c1*b
-%ifdef E3DN
-	pswapd	mm6, mm6 ; ???	; s1*a+c1*b | c1*a-s1*b
-%else
 	pupldq	mm7,mm6
 	puphdq	mm6,mm7
-%endif
 	pmov	mm7, [costab]
 	jb near	.for
 
