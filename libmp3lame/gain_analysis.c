@@ -103,10 +103,6 @@
 /* for each filter: */
 /* [0] 48 kHz, [1] 44.1 kHz, [2] 32 kHz, [3] 24 kHz, [4] 22050 Hz, [5] 16 kHz, [6] 12 kHz, [7] is 11025 Hz, [8] 8 kHz */
 
-#ifdef WIN32
-#pragma warning ( disable : 4305 )
-#endif
-
 static const Float_t ABYule[9][2*YULE_ORDER + 1] = {
     {0.03857599435200, -3.84664617118067, -0.02160367184185,  7.81501653005538, -0.00123395316851,-11.34170355132042, -0.00009291677959, 13.05504219327545, -0.01655260341619,-12.28759895145294,  0.02161526843274,  9.48293806319790, -0.02074045215285, -5.87257861775999,  0.00594298065125,  2.75465861874613,  0.00306428023191, -0.86984376593551,  0.00012025322027,  0.13919314567432,  0.00288463683916 },
     {0.05418656406430, -3.47845948550071, -0.02911007808948,  6.36317777566148, -0.00848709379851, -8.54751527471874, -0.00851165645469,  9.47693607801280, -0.00834990904936, -8.81498681370155,  0.02245293253339,  6.85401540936998, -0.02596338512915, -4.39470996079559,  0.01624864962975,  2.19611684890774, -0.00240879051584, -0.75104302451432,  0.00674613682247,  0.13149317958808, -0.00187763777362 },
@@ -305,31 +301,10 @@ AnalyzeSamples (replaygain_t* rgData, const Float_t* left_samples, const Float_t
         curleft = rgData->lout + rgData->totsamp;                   /* Get the squared values */
         curright = rgData->rout + rgData->totsamp;
 
-        i = cursamples % 8;
+        i = cursamples;
         while (i--)
         {   rgData->lsum += fsqr(*curleft++);
             rgData->rsum += fsqr(*curright++);
-        }
-        i = cursamples / 8;
-        while (i--)
-        {   rgData->lsum += fsqr(curleft[0])
-                  + fsqr(curleft[1])
-                  + fsqr(curleft[2])
-                  + fsqr(curleft[3])
-                  + fsqr(curleft[4])
-                  + fsqr(curleft[5])
-                  + fsqr(curleft[6])
-                  + fsqr(curleft[7]);
-            curleft += 8;
-            rgData->rsum += fsqr(curright[0])
-                  + fsqr(curright[1])
-                  + fsqr(curright[2])
-                  + fsqr(curright[3])
-                  + fsqr(curright[4])
-                  + fsqr(curright[5])
-                  + fsqr(curright[6])
-                  + fsqr(curright[7]);
-            curright += 8;
         }
 
         batchsamples -= cursamples;
