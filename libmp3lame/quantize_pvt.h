@@ -22,11 +22,6 @@
 #ifndef LAME_QUANTIZE_PVT_H
 #define LAME_QUANTIZE_PVT_H
 
-typedef struct calc_noise_result_t {
-    FLOAT  over_noise;      /* sum of quantization noise > masking */
-    FLOAT  max_noise;       /* max quantization noise */
-} calc_noise_result;
-
 #define scalefactor(gi, sfb) \
     (gi->global_gain \
      - ((gi->scalefac[sfb] + (gi->preflag ? pretab[sfb] : 0)) \

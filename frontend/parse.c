@@ -437,8 +437,6 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    -h              Same as -q 2.   Recommended.\n"
               "    -f              Same as -q 7.   Fast, ok quality\n"
 	      "\n"
-              "    --quantcomp n[,m] indicate quantization compare method\n"
-	      "                      n for long block and m for short block.\n"
               "    --substep n       use pseudo substep noise shaping method types 0-7\n"
               "    --sfscale [n]     try to use scalefactor scale(n=1, default) or not(n=0).\n"
               "    --sbgain [n]      try to use subblock gain (n=1, default) or not(n=0)\n"
@@ -965,17 +963,6 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF_INTERNAL ("allshort")
                     (void) lame_set_short_threshold( gfp, 0.0f, 0.0f);
 
-                T_ELIF_INTERNAL ("quantcomp")
-		    {
-			int n, m, i;
-                        argUsed = 1;
-			i = sscanf(nextArg, "%d,%d", &n, &m);
-			if (i == 1)
-			    m = n;
-			lame_set_quant_comp(gfp, n);
-			lame_set_quant_comp_short(gfp, m);
-		    }
-                
                 T_ELIF_INTERNAL ("shortthreshold")
 		{
 		    float x,y;

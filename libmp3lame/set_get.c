@@ -625,45 +625,6 @@ lame_get_disable_reservoir( const lame_global_flags*  gfp )
 
 
 
-/* Select a different "best quantization" function. default = 0 */
-int
-lame_set_quant_comp( lame_global_flags*  gfp,
-		     int                 method )
-{
-    gfp->internal_flags->quantcomp_method   =  method;
-
-    return 0;
-}
-
-/* Select a different "best quantization" function. default = 0 */
-int
-lame_set_quantcomp_method( lame_global_flags*  gfp,
-                           int                 method )
-{
-     gfp->internal_flags->quantcomp_method   =  method       & 15;
-     gfp->internal_flags->quantcomp_method_s = (method >> 4) & 15;
-
-     return 0;
-}
-
-int
-lame_set_quant_comp_short( lame_global_flags*  gfp,
-			   int                 method )
-{
-    gfp->internal_flags->quantcomp_method_s   =  method;
-
-    return 0;
-}
-
-int
-lame_get_quantcomp_method(const lame_global_flags*  gfp)
-{
-    return 
-	gfp->internal_flags->quantcomp_method
-	+ gfp->internal_flags->quantcomp_method_s * 16;
-}
-
-
 int
 lame_set_sfscale( lame_global_flags*  gfp,
 		  int                 method)

@@ -343,8 +343,6 @@ struct lame_internal_flags {
 
   int use_scalefac_scale;   /* 0 = not use  1 = use */
   int use_subblock_gain;   /* 0 = not use  1 = use */
-  int quantcomp_method;     /* how to compare the scalefactor combination */
-  int quantcomp_method_s;   /* and for short block */
   int noise_shaping_amp;    /*  0 = ISO model: amplify all distorted bands
                                 1 = amplify within 50% of max (on db scale)
                                 2 = amplify only most distorted band

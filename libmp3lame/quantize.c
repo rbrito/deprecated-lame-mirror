@@ -168,14 +168,14 @@ calc_xmin(
 /*            calc_noise                                                 */
 /*************************************************************************/
 /*  mt 5/99:  Function: Improved calc_noise for a single channel   */
-static void
+static FLOAT
 calc_noise( 
-        const gr_info           * const gi,
-        const FLOAT             * l3_xmin,
-              FLOAT             * distort,
-              calc_noise_result * const res )
+  const gr_info           * const gi,
+  const FLOAT             * l3_xmin,
+	FLOAT             * distort
+    )
 {
-    FLOAT over_noise_db = 0.0, max_noise   = -20.0;
+    FLOAT max_noise   = -100.0;
     int sfb = 0, j = 0;
 
     do {
@@ -194,11 +194,6 @@ calc_noise(
 	noise = *distort++ = noise / *l3_xmin++;
 
 	noise = FAST_LOG10(Max(noise,1E-20));
-	if (noise > 0.0) {
-	    /* multiplying here is adding in dB -but can overflow */
-	    /* over_noise *= noise; */
-	    over_noise_db += noise;
-	}
 	max_noise=Max(max_noise,noise);
     } while (++sfb < gi->psymax);
 
@@ -213,18 +208,12 @@ calc_noise(
 	noise = *distort++ = noise / *l3_xmin++;
 
 	noise = FAST_LOG10(Max(noise,1E-20));
-	if (noise > 0.0) {
-	    /* multiplying here is adding in dB -but can overflow */
-	    /* over_noise *= noise; */
-	    over_noise_db += noise;
-	}
 	max_noise=Max(max_noise,noise);
     }
 
     if (max_noise > 0.0 && gi->block_type == SHORT_TYPE) {
 	distort -= sfb;
 	max_noise = -20.0;
-	over_noise_db = 0.0;
 	for (sfb = gi->sfb_smin; sfb < gi->psymax; sfb += 3) {
 	    FLOAT noise = 0.0, nsum = 0.0, subnoise;
 	    subnoise = FAST_LOG10(distort[sfb]);
@@ -244,12 +233,9 @@ calc_noise(
 
 	    if (max_noise < nsum)
 		max_noise = nsum;
-	    if (noise > 0)
-		over_noise_db += noise;
 	}
     }
-    res->over_noise  = over_noise_db;
-    res->max_noise   = max_noise;
+    return max_noise;
 }
 
 /************************************************************************
@@ -387,11 +373,11 @@ trancate_smallspectrums(
 {
     int sfb, j, width;
     FLOAT distort[SFBMAX];
-    calc_noise_result dummy;
 
     if (gfc->substep_shaping & 0x80 || gi->psymax == 0)
 	return;
-    calc_noise(gi, l3_xmin, distort, &dummy);
+
+    calc_noise(gi, l3_xmin, distort);
     for (j = 0; j < 576; j++) {
 	FLOAT xr = 0.0;
 	if (gi->l3_enc[j] != 0)
@@ -481,36 +467,18 @@ loop_break(const gr_info * const gi)
 
 inline static int 
 better_quant(
-    lame_internal_flags	* const gfc,
     const FLOAT         * l3_xmin, 
-    FLOAT               * distort,
-    calc_noise_result   * const best,
+    FLOAT   * distort,
+    FLOAT   * best,
     const gr_info	* const gi
     )
 {
-    calc_noise_result calc;
-    int better;
-    FLOAT new;
-    /*
-       noise is given in decibels (dB) relative to masking thesholds.
-
-       over_noise:  sum of noise which exceed the threshold.
-       max_noise:   max quantization noise 
-     */
-
-    calc_noise(gi, l3_xmin, distort, &calc);
-    new = calc.max_noise;
-    if (gi->block_type == SHORT_TYPE
-	? gfc->quantcomp_method_s : gfc->quantcomp_method) {
-
-	new = calc.over_noise;
-	calc.max_noise = new;
+    FLOAT new = calc_noise(gi, l3_xmin, distort);
+    if (*best > new) {
+	*best = new;
+	return 1;
     }
-
-    better = new < best->max_noise;
-    if (better)
-	*best = calc;
-    return better;
+    return 0;
 }
 
 
@@ -801,9 +769,8 @@ outer_loop (
     const III_psy_ratio * const ratio
     )
 {
-    calc_noise_result best_noise_info;
     gr_info gi_w;
-    FLOAT distort[SFBMAX], l3_xmin[SFBMAX], xrpow[576];
+    FLOAT distort[SFBMAX], l3_xmin[SFBMAX], xrpow[576], best_noise;
     int current_method, age;
 
     if (!init_outer_loop(gfc, gi, xrpow) || gi->psymax == 0)
@@ -824,8 +791,8 @@ outer_loop (
     /* compute the distortion in this quantization */
     /* coefficients and thresholds of ch0(L or Mid) or ch1(R or Side) */
     calc_xmin (gfc, ratio, gi, l3_xmin);
-    calc_noise(gi, l3_xmin, distort, &best_noise_info);
-    if (gfc->noise_shaping_stop == 0 && best_noise_info.max_noise < 0.0)
+    best_noise = calc_noise(gi, l3_xmin, distort);
+    if (gfc->noise_shaping_stop == 0 && best_noise < 0.0)
 	goto quit_quantization;
 
     /* BEGIN MAIN LOOP */
@@ -843,10 +810,9 @@ outer_loop (
 		;
 	    /* store this scalefactor combination if it is better */
 	    if (gi_w.global_gain != 256
-		&& better_quant(gfc, l3_xmin, distort, &best_noise_info,
-				&gi_w)) {
+		&& better_quant(l3_xmin, distort, &best_noise, &gi_w)) {
 		*gi = gi_w;
-		if (best_noise_info.max_noise < 0.0) {
+		if (best_noise < 0.0) {
 		    if (gfc->noise_shaping_stop == 0)
 			break;
 		    if (current_method == 0)
@@ -860,8 +826,7 @@ outer_loop (
 
 	/* stopping criteria */
 	if (--age > 0 && gi_w.global_gain != 256
-	    && (gi_w.psy_lmax != SBMAX_l
-		|| distort[SBMAX_l-1] > best_noise_info.max_noise))
+	    && (gi_w.psy_lmax != SBMAX_l || distort[SBMAX_l-1] > best_noise))
 	    continue;
 
 	/* seems we cannot get a better combination.
@@ -1542,16 +1507,15 @@ set_pinfo (
     const int           gr,
     const int           ch )
 {
-    int i, j, end, bw, sfb, sfb2, over = 0;
-    FLOAT en0,en1,tot_noise=0.0;
+    int i, j, end, bw, sfb, sfb2, over;
+    FLOAT en0, en1, tot_noise=0.0, over_noise=0.0, max_noise;
     FLOAT ifqstep = 0.5 * (1+gi->scalefac_scale);
     FLOAT l3_xmin[SFBMAX], distort[SFBMAX];
-    calc_noise_result noise;
 
     calc_xmin (gfc, ratio, gi, l3_xmin);
-    calc_noise(gi, l3_xmin, distort, &noise);
+    max_noise = calc_noise(gi, l3_xmin, distort);
 
-    j = 0;
+    over = j = 0;
     for (sfb2 = 0; sfb2 < gi->psy_lmax; sfb2++) {
 	bw = gi->width[sfb2];
 	end   = j + bw;
@@ -1563,9 +1527,12 @@ set_pinfo (
 	gfc->pinfo->  en[gr][ch][sfb2] = en1*en0;
 	gfc->pinfo-> thr[gr][ch][sfb2] = en1*l3_xmin[sfb2];
 	gfc->pinfo->xfsf[gr][ch][sfb2] = en1*l3_xmin[sfb2]*distort[sfb2];
-	if (distort[sfb2] > 1.0)
+	en1 = FAST_LOG10(distort[sfb2]);
+	if (en1 > 0.0) {
 	    over++;
-	tot_noise += distort[sfb2];
+	    over_noise += en1;
+	}
+	tot_noise += en1;
 
 	gfc->pinfo->LAMEsfb[gr][ch][sfb2] = 0;
 	if (gi->preflag && sfb2>=11)
@@ -1587,8 +1554,11 @@ set_pinfo (
 	    gfc->pinfo->  en_s[gr][ch][3*sfb+i] = en1*en0;
 	    gfc->pinfo-> thr_s[gr][ch][3*sfb+i] = en1*l3_xmin[sfb2];
 	    gfc->pinfo->xfsf_s[gr][ch][3*sfb+i] = en1*l3_xmin[sfb2]*distort[sfb2];
-	    if (distort[sfb2] > 1.0)
+	    en1 = FAST_LOG10(distort[sfb2]);
+	    if (en1 > 0.0) {
 		over++;
+		over_noise += en1;
+	    }
 	    tot_noise += distort[sfb2];
 
 	    gfc->pinfo->LAMEsfb_s[gr][ch][3*sfb+i]
@@ -1601,8 +1571,8 @@ set_pinfo (
     gfc->pinfo->LAMEsfbits  [gr][ch] = gi->part2_length;
 
     gfc->pinfo->over      [gr][ch] = over;
-    gfc->pinfo->max_noise [gr][ch] = noise.max_noise * 10.0;
-    gfc->pinfo->over_noise[gr][ch] = noise.over_noise * 10.0;
+    gfc->pinfo->max_noise [gr][ch] = max_noise * 10.0;
+    gfc->pinfo->over_noise[gr][ch] = over_noise * 10.0;
     gfc->pinfo->tot_noise [gr][ch] = tot_noise;
 }
 
