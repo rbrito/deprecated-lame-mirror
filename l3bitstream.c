@@ -236,7 +236,7 @@ encodeMainData( lame_global_flags *gfp,
 	    int sfb_partition;
 	    assert( gi->sfb_partition_table );
 
-	    if (gi->block_type == SHORT_TYPE)
+	    if ( (gi->window_switching_flag == 1) && (gi->block_type == SHORT_TYPE) )
 	    {
 #ifdef ALLOW_MIXED
 		if ( gi->mixed_block_flag )
@@ -361,7 +361,7 @@ static int encodeSideInfo( lame_global_flags *gfp,III_side_info_t  *si )
 		BF_PartHolder **pph = &spectrumSIPH[gr][ch];
 		gr_info *gi = &(si->gr[gr].ch[ch].tt);
 		*pph = CRC_BF_addEntry( *pph, gi->part2_3_length,        12 );
-		*pph = CRC_BF_addEntry( *pph, gi->big_values / 2,        9 );
+		*pph = CRC_BF_addEntry( *pph, gi->big_values,            9 );
 		*pph = CRC_BF_addEntry( *pph, gi->global_gain,           8 );
 		*pph = CRC_BF_addEntry( *pph, gi->scalefac_compress,     4 );
 		*pph = CRC_BF_addEntry( *pph, gi->window_switching_flag, 1 );
@@ -411,7 +411,7 @@ static int encodeSideInfo( lame_global_flags *gfp,III_side_info_t  *si )
 	    BF_PartHolder **pph = &spectrumSIPH[gr][ch];
 	    gr_info *gi = &(si->gr[gr].ch[ch].tt);
 	    *pph = CRC_BF_addEntry( *pph, gi->part2_3_length,        12 );
-	    *pph = CRC_BF_addEntry( *pph, gi->big_values / 2,        9 );
+	    *pph = CRC_BF_addEntry( *pph, gi->big_values,            9 );
 	    *pph = CRC_BF_addEntry( *pph, gi->global_gain,           8 );
 	    *pph = CRC_BF_addEntry( *pph, gi->scalefac_compress,     9 );
 	    *pph = CRC_BF_addEntry( *pph, gi->window_switching_flag, 1 );
@@ -501,10 +501,10 @@ Huffmancodebits( BF_PartHolder **pph, int *ix, gr_info *gi )
 
     
     /* 1: Write the bigvalues */
-    bigvalues = gi->big_values;
+    bigvalues = gi->big_values * 2;
     if ( bigvalues )
     {
-	if ( !(gi->mixed_block_flag) && (gi->block_type == SHORT_TYPE) )
+	if ( !(gi->mixed_block_flag) && gi->window_switching_flag && (gi->block_type == SHORT_TYPE) )
 	{ /* Three short blocks */
 	    /*
 	      Within each scalefactor band, data is given for successive
@@ -647,7 +647,7 @@ Huffmancodebits( BF_PartHolder **pph, int *ix, gr_info *gi )
 
     /* 2: Write count1 area */
     assert( (gi->count1table_select < 2) );
-    count1End = gi->count1;
+    count1End = bigvalues + (gi->count1 * 4);
     assert( count1End <= 576 );
     for ( i = bigvalues; i < count1End; i += 4 )
     {
@@ -697,33 +697,45 @@ abs_and_sign( int *x )
 int
 L3_huffman_coder_count1( BF_PartHolder **pph, struct huffcodetab *h, int v, int w, int x, int y )
 {
+    HUFFBITS huffbits;
     unsigned int signv, signw, signx, signy, p;
     int len;
-
+    int totalBits = 0;
+    
     signv = abs_and_sign( &v );
     signw = abs_and_sign( &w );
     signx = abs_and_sign( &x );
     signy = abs_and_sign( &y );
-
+    
     /* bug fix from Leonid A. Kulakov 9/1999:*/
     p = (v << 3) + (w << 2) + (x << 1) + y;  
-    len = h->hlen[p];
-    p = h->table[p];
 
+    huffbits = h->table[p];
+    len = h->hlen[ p ];
+    *pph = BF_addEntry(*pph, huffbits, len);
+    totalBits += len;
     if ( v )
-	p = p*2 + v;
-
+    {
+	*pph = BF_addEntry( *pph,  signv, 1 );
+	totalBits += 1;
+    }
     if ( w )
-	p = p*2 + w;
+    {
+	*pph = BF_addEntry( *pph,  signw, 1 );
+	totalBits += 1;
+    }
 
     if ( x )
-	p = p*2 + x;
-
+    {
+	*pph = BF_addEntry( *pph,  signx, 1 );
+	totalBits += 1;
+    }
     if ( y )
-	p = p*2 + y;
-
-    *pph = BF_addEntry(*pph, p, len);
-    return len;
+    {
+	*pph = BF_addEntry( *pph,  signy, 1 );
+	totalBits += 1;
+    }
+    return totalBits;
 }
 
 /*
@@ -746,11 +758,11 @@ HuffmanCode( int table_select, int x, int y, unsigned int *code, unsigned int *e
     signx = abs_and_sign( &x );
     signy = abs_and_sign( &y );
     h = &(ht[table_select]);
+    linbits = h->xlen;
+    linbitsx = linbitsy = 0;
 
     if ( table_select > 15 )
     { /* ESC-table is used */
-	linbits = h->xlen;
-	linbitsx = linbitsy = 0;
 	if ( x > 14 )
 	{
 	    linbitsx = x - 15;
@@ -776,7 +788,6 @@ HuffmanCode( int table_select, int x, int y, unsigned int *code, unsigned int *e
 	    *ext <<= 1;
 	    *ext |= signx;
 	    *xbits += 1;
-	    *cbits -= 1;
 	}
 	if ( y > 14 )
 	{
@@ -789,23 +800,24 @@ HuffmanCode( int table_select, int x, int y, unsigned int *code, unsigned int *e
 	    *ext <<= 1;
 	    *ext |= signy;
 	    *xbits += 1;
-	    *cbits -= 1;
 	}
     }
     else
     { /* No ESC-words */
-	idx = x * h->xlen + y;
+	idx = x * 16 + y;
 	*code = h->table[idx];
 	*cbits += h->hlen[ idx ];
 	if ( x != 0 )
 	{
 	    *code <<= 1;
 	    *code |= signx;
+	    *cbits += 1;
 	}
 	if ( y != 0 )
 	{
 	    *code <<= 1;
 	    *code |= signy;
+	    *cbits += 1;
 	}
     }
     assert( *cbits <= 32 );
