@@ -67,7 +67,7 @@ static layer info;
 void lame_init_params(void)
 {
   layer *info = fr_ps.header;
-  int framesize;
+  int i,framesize;
   FLOAT compression_ratio;
 
   gf.frameNum=0;
@@ -389,6 +389,14 @@ void lame_init_params(void)
   if (gf.experimentalX) gf.noise_shaping_stop=1;
 
 
+  for (i = 0; i < SBMAX_l + 1; i++) {
+    scalefac_band.l[i] =
+      sfBandIndex[info->sampling_frequency + (info->version * 3)].l[i];
+  }
+  for (i = 0; i < SBMAX_s + 1; i++) {
+    scalefac_band.s[i] =
+      sfBandIndex[info->sampling_frequency + (info->version * 3)].s[i];
+  }
 
 
 
@@ -427,7 +435,7 @@ void lame_print_config(void)
     (FLOAT)(bitrate[info->version][info->lay-1][info->bitrate_index]);
 
   fprintf(stderr,"LAME version %s (www.sulaco.org/mp3) \n",get_lame_version());
-  fprintf(stderr,"GPSYCHO: GPL psycho-acoustic model version %s. \n",get_psy_version());
+  fprintf(stderr,"GPSYCHO: GPL psycho-acoustic and noise shaping model version %s. \n",get_psy_version());
 #ifdef LIBSNDFILE
   fprintf(stderr,"Input handled by libsndfile (www.zip.com.au/~erikd/libsndfile)\n");
 #endif
@@ -704,7 +712,6 @@ FFT's                    <---------1024---------->
   if (gf.sfb21 || gf.lowpass1>0 || gf.highpass2>0) 
     filterMDCT(xr, &l3_side);
 
-
   if (check_ms_stereo) {
     /* make sure block type is the same in each channel */
     check_ms_stereo = 
@@ -755,6 +762,9 @@ FFT's                    <---------1024---------->
     masking = masking_ratio;    /* use LR masking */
     pe_use=&pe;
   }
+
+
+
 
   if (gf.VBR) {
     VBR_iteration_loop( *pe_use, ms_ratio, xr, masking, &l3_side, l3_enc, 
