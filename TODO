@@ -8,6 +8,14 @@
    frontend:  
      vbr historgram display broken
 
+library:  call backs for error messages and display messages.
+
+lame.h:  bitrate and samplerate tables should not be in here
+
+frontend:  a bunch of static variables are set in parse_args
+and used in get_audio.  should be cleaned up.
+
+
 
 Makefile.{B32,MSVC,DJGPP} probably all broken.
 these makefiles should only bother to build the static lib,
