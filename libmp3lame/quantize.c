@@ -258,7 +258,10 @@ calc_xmin(
     for (gsfb = 0; gsfb < gi->psy_lmax; gsfb++) {
 	FLOAT xmin = gfc->ATH.adjust * gfc->ATH.l[gsfb];
 	FLOAT en0 = 0.0, x;
-	int l = gi->width[gsfb] >> 1;
+	int l = gi->width[gsfb];
+	if (l > gi->xrNumMax - j)
+	    l = gi->xrNumMax - j;
+	l >>= 1;
 	do {
 	    en0 += gi->xr[j] * gi->xr[j]; j++;
 	    en0 += gi->xr[j] * gi->xr[j]; j++;
@@ -332,9 +335,10 @@ calc_noise(
 
     for (;sfb < gi->psymax; sfb++) {
 	FLOAT noise = 0.0;
-	int l = gi->width[sfb] >> 1;
+	int l = gi->width[sfb];
 	if (l > gi->xrNumMax - j)
 	    l = gi->xrNumMax - j;
+	l >>= 1;
 	do {
 	    FLOAT t0 = gi->xr[j], t1 = gi->xr[j+1];
 	    noise += t0*t0 + t1*t1;
