@@ -273,7 +273,7 @@ void lame_parse_args(int argc, char **argv)
 	  argUsed=1;
 	  srate = atof( nextArg );
 	  /* samplerate = rint( 1000.0 * srate ); $A  */
-	  gf.resamplerate =  (( 1000.0 * srate ) + 0.5);
+	  gf.out_samplerate =  (( 1000.0 * srate ) + 0.5);
 	  if (srate  < 1) {
 	    fprintf(stderr,"Must specify a samplerate with --resample\n");
 	    exit(1);
@@ -416,7 +416,7 @@ void lame_parse_args(int argc, char **argv)
 	    gf.VBR_min_bitrate_kbps=8;
 	    gf.VBR_max_bitrate_kbps=56;
 	    gf.no_short_blocks=1;
-	    gf.resamplerate =  16000;
+	    gf.out_samplerate =  16000;
 	    gf.mode = MPG_MD_MONO; 
 	    gf.mode_fixed = 1; 
 	    gf.quality = 5;
@@ -434,7 +434,7 @@ void lame_parse_args(int argc, char **argv)
 	    gf.no_short_blocks=1;
 	    gf.mode = MPG_MD_MONO; 
 	    gf.mode_fixed = 1; 
-	    gf.resamplerate =  24000; 
+	    gf.out_samplerate =  24000; 
 	    gf.quality = 5;
 	  }
 	  else if (strcmp(nextArg,"fm")==0)
@@ -449,7 +449,7 @@ void lame_parse_args(int argc, char **argv)
 	    gf.VBR_max_bitrate_kbps=192;
 	    gf.mode = MPG_MD_JOINT_STEREO; 
 	    gf.mode_fixed = 1; 
-	    /*gf.resamplerate =  32000; */ /* determined automatically based on bitrate & sample freq. */
+	    /*gf.out_samplerate =  32000; */ /* determined automatically based on bitrate & sample freq. */
 	    gf.quality = 5;
 	  }
 	  else if (strcmp(nextArg,"tape")==0)
@@ -575,7 +575,7 @@ void lame_parse_args(int argc, char **argv)
 	  argUsed = 1;
 	  srate = atof( arg );
 	  /* samplerate = rint( 1000.0 * srate ); $A  */
-	  gf.samplerate =  (( 1000.0 * srate ) + 0.5);
+	  gf.in_samplerate =  (( 1000.0 * srate ) + 0.5);
 	  break;
 	case 'b':        
 	  argUsed = 1;

@@ -53,9 +53,9 @@ void lame_init_infile(void)
 {
   /* open the input file */
   count_samples_carefully=0;
-  OpenSndFile(gf.inPath,gf.samplerate,gf.num_channels);  
+  OpenSndFile(gf.inPath,gf.in_samplerate,gf.num_channels);  
   /* if GetSndSampleRate is non zero, use it to overwrite the default */
-  if (GetSndSampleRate()) gf.samplerate=GetSndSampleRate();
+  if (GetSndSampleRate()) gf.in_samplerate=GetSndSampleRate();
   if (GetSndChannels()) gf.num_channels=GetSndChannels();
   gf.num_samples = GetSndSamples();
 }

@@ -45,7 +45,9 @@ typedef struct  {
   /* input file description */
   unsigned long num_samples;  /* number of samples         */
   int num_channels;           /* input number of channels  */
-  int samplerate;             /* input_samp_rate           */
+  int in_samplerate;          /* input_samp_rate           */
+  int out_samplerate;         /* output_samp_rate. (usually determined automatically)   */ 
+
 
   /* general control params */
   int gtkflag;                /* frame analyzer?       */
@@ -77,7 +79,6 @@ typedef struct  {
 
 
   /* resampling and filtering */
-  int resamplerate;               /* output_samp_rate.   */ 
   int lowpassfreq;                /* freq in Hz. 0=lame choses. -1=no filter */
   int highpassfreq;               /* freq in Hz. 0=lame choses. -1=no filter */
   int lowpasswidth;               /* freq width of filter, in Hz (default=15%)*/

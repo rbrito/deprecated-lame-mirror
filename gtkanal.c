@@ -79,7 +79,7 @@ int gtkmakeframe(void)
    * and decode to flush any previous buffers from the decoder */
 
   pinfo->frameNum = gf.frameNum;
-  pinfo->sampfreq=gf.resamplerate;
+  pinfo->sampfreq=gf.out_samplerate;
   pinfo->framesize=576*gf.mode_gr;
   pinfo->stereo = gf.stereo;
 

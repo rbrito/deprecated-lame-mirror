@@ -97,37 +97,37 @@ void lame_init_params(void)
      samplerate = input sample rate
      resamplerate = ouput sample rate
   */
-  if (gf.resamplerate==0) {
+  if (gf.out_samplerate==0) {
     /* user did not specify output sample rate */
-    gf.resamplerate=gf.samplerate;   /* default */
+    gf.out_samplerate=gf.in_samplerate;   /* default */
 
 
     /* if resamplerate is not valid, find a valid value */
-    if (gf.resamplerate>=48000) gf.resamplerate=48000;
-    else if (gf.resamplerate>=44100) gf.resamplerate=44100;
-    else if (gf.resamplerate>=32000) gf.resamplerate=32000;
-    else if (gf.resamplerate>=24000) gf.resamplerate=24000;
-    else if (gf.resamplerate>=22050) gf.resamplerate=22050;
-    else gf.resamplerate=16000;
+    if (gf.out_samplerate>=48000) gf.out_samplerate=48000;
+    else if (gf.out_samplerate>=44100) gf.out_samplerate=44100;
+    else if (gf.out_samplerate>=32000) gf.out_samplerate=32000;
+    else if (gf.out_samplerate>=24000) gf.out_samplerate=24000;
+    else if (gf.out_samplerate>=22050) gf.out_samplerate=22050;
+    else gf.out_samplerate=16000;
 
 
     if (gf.brate>0) {
       /* check if user specified bitrate requires downsampling */
-      compression_ratio = gf.resamplerate*16*gf.stereo/(1000.0*gf.brate);
+      compression_ratio = gf.out_samplerate*16*gf.stereo/(1000.0*gf.brate);
       if (!gf.VBR && compression_ratio > 13 ) {
 	/* automatic downsample, if possible */
-	gf.resamplerate = (10*1000.0*gf.brate)/(16*gf.stereo);
-	if (gf.resamplerate<=16000) gf.resamplerate=16000;
-	else if (gf.resamplerate<=22050) gf.resamplerate=22050;
-	else if (gf.resamplerate<=24000) gf.resamplerate=24000;
-	else if (gf.resamplerate<=32000) gf.resamplerate=32000;
-	else if (gf.resamplerate<=44100) gf.resamplerate=44100;
-	else gf.resamplerate=48000;
+	gf.out_samplerate = (10*1000.0*gf.brate)/(16*gf.stereo);
+	if (gf.out_samplerate<=16000) gf.out_samplerate=16000;
+	else if (gf.out_samplerate<=22050) gf.out_samplerate=22050;
+	else if (gf.out_samplerate<=24000) gf.out_samplerate=24000;
+	else if (gf.out_samplerate<=32000) gf.out_samplerate=32000;
+	else if (gf.out_samplerate<=44100) gf.out_samplerate=44100;
+	else gf.out_samplerate=48000;
       }
     }
   }
 
-  gf.mode_gr = (gf.resamplerate <= 24000) ? 1 : 2;  /* mode_gr = 2 */
+  gf.mode_gr = (gf.out_samplerate <= 24000) ? 1 : 2;  /* mode_gr = 2 */
   gf.encoder_delay = ENCDELAY;
   gf.framesize = gf.mode_gr*576;
 
@@ -138,7 +138,7 @@ void lame_init_params(void)
 
 
   gf.resample_ratio=1;
-  if (gf.resamplerate != gf.samplerate) gf.resample_ratio = (FLOAT)gf.samplerate/(FLOAT)gf.resamplerate;
+  if (gf.out_samplerate != gf.in_samplerate) gf.resample_ratio = (FLOAT)gf.in_samplerate/(FLOAT)gf.out_samplerate;
 
   /* estimate total frames.  must be done after setting sampling rate so
    * we know the framesize.  */
@@ -164,7 +164,7 @@ void lame_init_params(void)
 
   */
   if (gf.brate >= 320) gf.VBR=0;  /* dont bother with VBR at 320kbs */
-  compression_ratio = gf.resamplerate*16*gf.stereo/(1000.0*gf.brate);
+  compression_ratio = gf.out_samplerate*16*gf.stereo/(1000.0*gf.brate);
 
 
   /* for VBR, take a guess at the compression_ratio */
@@ -224,29 +224,29 @@ void lame_init_params(void)
   /* apply user driven filters*/
   /****************************************************************/
   if ( gf.highpassfreq > 0 ) {
-    gf.highpass1 = 2.0*gf.highpassfreq/gf.resamplerate; /* will always be >=0 */
+    gf.highpass1 = 2.0*gf.highpassfreq/gf.out_samplerate; /* will always be >=0 */
     if ( gf.highpasswidth >= 0 ) {
-      gf.highpass2 = 2.0*(gf.highpassfreq+gf.highpasswidth)/gf.resamplerate;
+      gf.highpass2 = 2.0*(gf.highpassfreq+gf.highpasswidth)/gf.out_samplerate;
     } else {
       /* 15% above on default */
-      /* gf.highpass2 = 1.15*2.0*gf.highpassfreq/gf.resamplerate;  */
-      gf.highpass2 = 1.00*2.0*gf.highpassfreq/gf.resamplerate; 
+      /* gf.highpass2 = 1.15*2.0*gf.highpassfreq/gf.out_samplerate;  */
+      gf.highpass2 = 1.00*2.0*gf.highpassfreq/gf.out_samplerate; 
     }
     gf.highpass1 = Min( 1, gf.highpass1 );
     gf.highpass2 = Min( 1, gf.highpass2 );
   }
 
   if ( gf.lowpassfreq > 0 ) {
-    gf.lowpass2 = 2.0*gf.lowpassfreq/gf.resamplerate; /* will always be >=0 */
+    gf.lowpass2 = 2.0*gf.lowpassfreq/gf.out_samplerate; /* will always be >=0 */
     if ( gf.lowpasswidth >= 0 ) {
-      gf.lowpass1 = 2.0*(gf.lowpassfreq-gf.lowpasswidth)/gf.resamplerate;
+      gf.lowpass1 = 2.0*(gf.lowpassfreq-gf.lowpasswidth)/gf.out_samplerate;
       if ( gf.lowpass1 < 0 ) { /* has to be >= 0 */
 	gf.lowpass1 = 0;
       }
     } else {
       /* 15% below on default */
-      /* gf.lowpass1 = 0.85*2.0*gf.lowpassfreq/gf.resamplerate;  */
-      gf.lowpass1 = 1.00*2.0*gf.lowpassfreq/gf.resamplerate;
+      /* gf.lowpass1 = 0.85*2.0*gf.lowpassfreq/gf.out_samplerate;  */
+      gf.lowpass1 = 1.00*2.0*gf.lowpassfreq/gf.out_samplerate;
     }
     gf.lowpass1 = Min( 1, gf.lowpass1 );
     gf.lowpass2 = Min( 1, gf.lowpass2 );
@@ -343,12 +343,12 @@ void lame_init_params(void)
   gf.stereo = (info->mode == MPG_MD_MONO) ? 1 : 2;
 
 
-  info->sampling_frequency = SmpFrqIndex((long)gf.resamplerate, &info->version);
+  info->sampling_frequency = SmpFrqIndex((long)gf.out_samplerate, &info->version);
   if( info->sampling_frequency < 0) {
     display_bitrates(stderr);
     exit(1);
   }
-  if( (info->bitrate_index = BitrateIndex(3, gf.brate, info->version,gf.resamplerate)) < 0) {
+  if( (info->bitrate_index = BitrateIndex(3, gf.brate, info->version,gf.out_samplerate)) < 0) {
     display_bitrates(stderr);
     exit(1);
   }
@@ -366,7 +366,7 @@ void lame_init_params(void)
       if (gf.VBR_q >= 4) gf.VBR_max_bitrate=12;   /* max = 224kbs */
       if (gf.VBR_q >= 8) gf.VBR_max_bitrate=9;    /* low quality, max = 128kbs */
     }else{
-      if( (gf.VBR_max_bitrate  = BitrateIndex(3, gf.VBR_max_bitrate_kbps, info->version,gf.resamplerate)) < 0) {
+      if( (gf.VBR_max_bitrate  = BitrateIndex(3, gf.VBR_max_bitrate_kbps, info->version,gf.out_samplerate)) < 0) {
 	display_bitrates(stderr);
 	exit(1);
       }
@@ -374,7 +374,7 @@ void lame_init_params(void)
     if (0==gf.VBR_min_bitrate_kbps) {
       gf.VBR_min_bitrate=1;  /* 32 kbps */
     }else{
-      if( (gf.VBR_min_bitrate  = BitrateIndex(3, gf.VBR_min_bitrate_kbps, info->version,gf.resamplerate)) < 0) {
+      if( (gf.VBR_min_bitrate  = BitrateIndex(3, gf.VBR_min_bitrate_kbps, info->version,gf.out_samplerate)) < 0) {
 	display_bitrates(stderr);
 	exit(1);
       }
@@ -1195,8 +1195,8 @@ lame_global_flags * lame_init(void)
   gf.original=1;
   gf.error_protection=0;
   gf.emphasis=0;
-  gf.samplerate=1000*44.1;
-  gf.resamplerate=0;
+  gf.in_samplerate=1000*44.1;
+  gf.out_samplerate=0;
   gf.num_channels=2;
   gf.num_samples=MAX_U_32_NUM;
 

@@ -1,38 +1,15 @@
 ************************************************************************
-LAME is supposed to become more modular.  It can be used as a standalone
-library now, although the interface is not great.  See the
-mp3rtp.c for an example of how the interface is used.  See the makefile
-entry for mp3rtp for examples of compiling mp3rtp and linking with
-libmp3lame.a  
-
-
-************************************************************************
 LAME API
 
-General outline of the code (see main.c)
+For a general outline of the code, see the file API.  
+Also, main.c is a simple front end to libmp3lame.a
 
-gf=lame_init(no_write,no_read)   
-                         called before encoding a file
-                         Set no_write=1 if you want to do your file output
-                         Set no_read=1  if you want to do your own file input
+The guts of the code are called from lame_encode_buffer().
 
-lame_parse_args(int, char **) 
-                         called to set encoding options (gf->*), and input 
-                         and output filenames.  You can ignore this routine
-                         and set all desired encoding options yourself
+lame_encode_buffer() handles buffering, resampling, filtering, and
+then calls lame_encode_frame() for each frame:
 
-lame_init_params()       Initialize based on set encoding options
-
-
-while not eof:
-   out=lame_readframe(inBuffer)                 input one frame of data
-   out=lame_encodeframe(inBuffer,outBuffer)     encode one frame of data
-
-lame_cleanup(outBuffer)                         close files, flush buffers
-
-
-
-lame_encodeframe():
+lame_encode_frame():
    l3psycho_anal()        compute masking thresholds
    mdct_sub()             compute MDCT coefficients
    iteration_loop()       choose scalefactors (via iteration)
@@ -49,8 +26,9 @@ lame_encodeframe():
 
 
 ************************************************************************
-We are in the process of switching the whole code to FLOAT, which
-defined in machine.h.  Avoid using float or double, and instead use:
+We are in the process of switching the whole code to FLOAT or FLOAT8,
+which ever is faster (defined in machine.h).  
+Avoid using float or double, and instead use:
 
 FLOAT    4 byte floating point.  
 FLOAT8   8 byte floating point (only when necessary)
@@ -72,21 +50,41 @@ void subroutine(void)
     firstcall=0;
     /* code that needs to be done only once when routine is loaded */
   }
-  if (frameNum==0) {
+  if (gf.frameNum==0) {
     /* code that needs to be done before encoding each file/stream */
   }
 }
+
+The frameNum==0 code only works for routines which are only called
+once per frame.  More general code would be:
+
+
+#include "globalflags"
+void subroutine(void)
+{
+  static int init=0;
+  if (gf.frameNum==0 && !init) {
+    /* code that needs to be done before encoding each file/stream */
+    init=1;
+  }
+  if (gf.frameNum>0) init=0;
+}
+
+
 
 
 
 ************************************************************************
 Global flags
 
-For better or worse, there are many global flags in lame.  
+For better or worse, there are many global flags in lame, 
+in the 'gf' structure.  
+
 The rules for adding a global flag are:
 
-1. declair in struct gf in globalflags.h
+1. declair in struct gf in lame.h
 2. default values must be set in lame_init()
+3. include "globalflags.h" in routines that need access to these flags.
 
 
 
