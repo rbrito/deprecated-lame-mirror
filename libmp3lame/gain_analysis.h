@@ -35,11 +35,6 @@ extern "C" {
 
 typedef sample_t Float_t;         /* Type used for filtering */
 
-typedef uint32_t        Uint32_t;
-typedef int32_t         Int32_t; 
-
-
-
 #define GAIN_NOT_ENOUGH_SAMPLES  -24601
 #define GAIN_ANALYSIS_ERROR           0
 #define GAIN_ANALYSIS_OK              1
@@ -86,8 +81,8 @@ typedef struct
     double           rsum;
     int              freqindex;
     int              first;
-    Uint32_t  A [(size_t)(STEPS_per_dB * MAX_dB)];
-    Uint32_t  B [(size_t)(STEPS_per_dB * MAX_dB)];
+    uint32_t  A [(size_t)(STEPS_per_dB * MAX_dB)];
+    uint32_t  B [(size_t)(STEPS_per_dB * MAX_dB)];
 
 } replaygain_t;
 
