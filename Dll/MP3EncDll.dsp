@@ -122,10 +122,6 @@ SOURCE=..\libmp3lame\lame.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\libmp3lame\mpglib_interface.c
-# End Source File
-# Begin Source File
-
 SOURCE=..\libmp3lame\newmdct.c
 # End Source File
 # Begin Source File

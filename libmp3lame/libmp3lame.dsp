@@ -79,71 +79,71 @@ LIB32=link.exe -lib
 # PROP Default_Filter "c"
 # Begin Source File
 
-SOURCE=..\bitstream.c
+SOURCE=.\bitstream.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\encoder.c
+SOURCE=.\encoder.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\fft.c
+SOURCE=.\fft.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\id3tag.c
+SOURCE=.\id3tag.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\lame.c
+SOURCE=.\lame.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\mpglib_interface.c
+SOURCE=.\mpglib_interface.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\newmdct.c
+SOURCE=.\newmdct.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\psymodel.c
+SOURCE=.\psymodel.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\quantize.c
+SOURCE=.\quantize.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\quantize_pvt.c
+SOURCE=.\quantize_pvt.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\reservoir.c
+SOURCE=.\reservoir.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\tables.c
+SOURCE=.\tables.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\takehiro.c
+SOURCE=.\takehiro.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\util.c
+SOURCE=.\util.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\vbrquantize.c
+SOURCE=.\vbrquantize.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\VbrTag.c
+SOURCE=.\VbrTag.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\version.c
+SOURCE=.\version.c
 # End Source File
 # End Group
 # Begin Group "Include"
@@ -151,67 +151,63 @@ SOURCE=..\version.c
 # PROP Default_Filter "h"
 # Begin Source File
 
-SOURCE=..\bitstream.h
+SOURCE=.\bitstream.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\confdefs.h
+SOURCE=.\encoder.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\encoder.h
+SOURCE=.\fft.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\fft.h
+SOURCE=.\l3side.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\l3side.h
+SOURCE=".\lame-analysis.h"
 # End Source File
 # Begin Source File
 
-SOURCE="..\lame-analysis.h"
+SOURCE=.\machine.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\machine.h
+SOURCE=.\newmdct.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\newmdct.h
+SOURCE=.\psymodel.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\psymodel.h
+SOURCE=.\quantize.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\quantize.h
+SOURCE=.\quantize_pvt.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\quantize_pvt.h
+SOURCE=.\reservoir.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\reservoir.h
+SOURCE=.\tables.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\tables.h
+SOURCE=.\util.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\util.h
+SOURCE=.\VbrTag.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\VbrTag.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\version.h
+SOURCE=.\version.h
 # End Source File
 # End Group
 # End Target
