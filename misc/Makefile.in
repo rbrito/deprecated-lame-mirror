@@ -69,6 +69,7 @@ CONFIG_DEFS = @CONFIG_DEFS@
 CPP = @CPP@
 CPUTYPE = @CPUTYPE@
 DLLTOOL = @DLLTOOL@
+EXEEXT = @EXEEXT@
 FRONTEND_CFLAGS = @FRONTEND_CFLAGS@
 FRONTEND_LDADD = @FRONTEND_LDADD@
 FRONTEND_LDFLAGS = @FRONTEND_LDFLAGS@
@@ -99,7 +100,7 @@ AUTOMAKE_OPTIONS = foreign $(top_srcdir)/ansi2knr
 
 EXTRA_PROGRAMS = abx ath scalartest
 
-EXTRA_DIST = mugeco.sh
+EXTRA_DIST = mugeco.sh mlame_corr.c
 
 abx_SOURCES = abx.c
 
@@ -201,16 +202,16 @@ distclean-kr:
 
 maintainer-clean-kr:
 
-abx: $(abx_OBJECTS) $(abx_DEPENDENCIES)
-	@rm -f abx
+abx$(EXEEXT): $(abx_OBJECTS) $(abx_DEPENDENCIES)
+	@rm -f abx$(EXEEXT)
 	$(LINK) $(abx_LDFLAGS) $(abx_OBJECTS) $(abx_LDADD) $(LIBS)
 
-ath: $(ath_OBJECTS) $(ath_DEPENDENCIES)
-	@rm -f ath
+ath$(EXEEXT): $(ath_OBJECTS) $(ath_DEPENDENCIES)
+	@rm -f ath$(EXEEXT)
 	$(LINK) $(ath_LDFLAGS) $(ath_OBJECTS) $(ath_LDADD) $(LIBS)
 
-scalartest: $(scalartest_OBJECTS) $(scalartest_DEPENDENCIES)
-	@rm -f scalartest
+scalartest$(EXEEXT): $(scalartest_OBJECTS) $(scalartest_DEPENDENCIES)
+	@rm -f scalartest$(EXEEXT)
 	$(LINK) $(scalartest_LDFLAGS) $(scalartest_OBJECTS) $(scalartest_LDADD) $(LIBS)
 abx_.c: abx.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/abx.c; then echo $(srcdir)/abx.c; else echo abx.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > abx_.c

@@ -69,6 +69,7 @@ CONFIG_DEFS = @CONFIG_DEFS@
 CPP = @CPP@
 CPUTYPE = @CPUTYPE@
 DLLTOOL = @DLLTOOL@
+EXEEXT = @EXEEXT@
 FRONTEND_CFLAGS = @FRONTEND_CFLAGS@
 FRONTEND_LDADD = @FRONTEND_LDADD@
 FRONTEND_LDFLAGS = @FRONTEND_LDFLAGS@
@@ -99,15 +100,15 @@ AUTOMAKE_OPTIONS = foreign $(top_srcdir)/ansi2knr
 SUBDIRS = i386
 
 lib_LTLIBRARIES = libmp3lame.la
-@HAVE_NASM_TRUE@nasm_ldadd = $(top_srcdir)/libmp3lame/@CPUTYPE@/liblameasmroutines.la
+@HAVE_NASM_TRUE@nasm_ldadd = $(top_builddir)/libmp3lame/@CPUTYPE@/liblameasmroutines.la
 @HAVE_NASM_FALSE@nasm_ldadd = 
-@LIB_WITH_DECODER_TRUE@decoder_ldadd = $(top_srcdir)/mpglib/libmpgdecoder.la
+@LIB_WITH_DECODER_TRUE@decoder_ldadd = $(top_builddir)/mpglib/libmpgdecoder.la
 @LIB_WITH_DECODER_FALSE@decoder_ldadd = 
 
 libmp3lame_la_LIBADD = $(nasm_ldadd) $(decoder_ldadd)
 libmp3lame_la_LDFLAGS = -version-info @LIB_MAJOR_VERSION@:@LIB_MINOR_VERSION@
 
-INCLUDES = @INCLUDES@ -I$(top_srcdir)/mpglib/ -I$(top_srcdir)
+INCLUDES = @INCLUDES@ -I$(top_srcdir)/mpglib/ -I$(top_builddir)
 
 DEFS = @DEFS@ @CONFIG_DEFS@
 
@@ -134,12 +135,12 @@ LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 ANSI2KNR = $(top_srcdir)/ansi2knr
 @LIB_WITH_DECODER_FALSE@@HAVE_NASM_TRUE@libmp3lame_la_DEPENDENCIES =  \
-@LIB_WITH_DECODER_FALSE@@HAVE_NASM_TRUE@$(top_srcdir)/libmp3lame/@CPUTYPE@/liblameasmroutines.la
+@LIB_WITH_DECODER_FALSE@@HAVE_NASM_TRUE@$(top_builddir)/libmp3lame/@CPUTYPE@/liblameasmroutines.la
 @LIB_WITH_DECODER_TRUE@@HAVE_NASM_FALSE@libmp3lame_la_DEPENDENCIES =  \
-@LIB_WITH_DECODER_TRUE@@HAVE_NASM_FALSE@$(top_srcdir)/mpglib/libmpgdecoder.la
+@LIB_WITH_DECODER_TRUE@@HAVE_NASM_FALSE@$(top_builddir)/mpglib/libmpgdecoder.la
 @LIB_WITH_DECODER_TRUE@@HAVE_NASM_TRUE@libmp3lame_la_DEPENDENCIES =  \
-@LIB_WITH_DECODER_TRUE@@HAVE_NASM_TRUE@$(top_srcdir)/libmp3lame/@CPUTYPE@/liblameasmroutines.la \
-@LIB_WITH_DECODER_TRUE@@HAVE_NASM_TRUE@$(top_srcdir)/mpglib/libmpgdecoder.la
+@LIB_WITH_DECODER_TRUE@@HAVE_NASM_TRUE@$(top_builddir)/libmp3lame/@CPUTYPE@/liblameasmroutines.la \
+@LIB_WITH_DECODER_TRUE@@HAVE_NASM_TRUE@$(top_builddir)/mpglib/libmpgdecoder.la
 @LIB_WITH_DECODER_FALSE@@HAVE_NASM_FALSE@libmp3lame_la_DEPENDENCIES = 
 libmp3lame_la_OBJECTS =  VbrTag$U.lo bitstream$U.lo encoder$U.lo \
 fft$U.lo id3tag$U.lo lame$U.lo newmdct$U.lo psymodel$U.lo quantize$U.lo \

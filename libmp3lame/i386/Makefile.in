@@ -69,6 +69,7 @@ CONFIG_DEFS = @CONFIG_DEFS@
 CPP = @CPP@
 CPUTYPE = @CPUTYPE@
 DLLTOOL = @DLLTOOL@
+EXEEXT = @EXEEXT@
 FRONTEND_CFLAGS = @FRONTEND_CFLAGS@
 FRONTEND_LDADD = @FRONTEND_LDADD@
 FRONTEND_LDFLAGS = @FRONTEND_LDFLAGS@
@@ -101,7 +102,7 @@ noinst_LTLIBRARIES = liblameasmroutines.la
 
 noinst_HEADERS = nasm.h
 
-INCLUDES = @INCLUDES@ -I$(top_srcdir)/mpglib/ -I$(top_srcdir)/libmp3lame
+INCLUDES = @INCLUDES@ -I$(top_srcdir)/libmp3lame/@CPUTYPE@
 
 SUFFIXES = .nas
 
@@ -119,7 +120,7 @@ EXTRA_DIST =  	fft.nas 	fft3dn.nas 	fftfpu.nas 	fftsse.nas 	ffttbl.nas
 
 
 NASM = @NASM@
-NASMFLAGS = -f elf -i .
+NASMFLAGS = -f elf -i $(top_srcdir)/libmp3lame/@CPUTYPE@/
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../../config.h
 CONFIG_CLEAN_FILES = 
