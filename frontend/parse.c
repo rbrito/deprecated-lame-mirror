@@ -193,7 +193,7 @@ static int setOS2Priority( lame_global_flags*  gfp, int Priority )
 *
 ************************************************************************/
 
-static int  lame_version_print ( FILE* const fp )
+int  lame_version_print ( FILE* const fp )
 {
     const char * v = get_lame_version ();
     const char * u = get_lame_url ();
@@ -210,8 +210,7 @@ static int  lame_version_print ( FILE* const fp )
         fprintf ( fp, "LAME version %s\n%*s(%s)\n\n", v, lw-2-lenu, "", u );
     
     if (LAME_ALPHA_VERSION)
-	fprintf ( fp, "warning: alpha versions should be used for testing only\
-n\n");
+	fprintf ( fp, "warning: alpha versions should be used for testing only\n\n");
 
 
     return 0;
@@ -219,7 +218,6 @@ n\n");
 
 int  print_license ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramName )  /* print version & license */
 {
-    lame_version_print ( fp );
     fprintf ( fp, 
               "Can I use LAME in my commercial program?\n"
               "\n"
@@ -269,7 +267,6 @@ int  print_license ( const lame_global_flags* gfp, FILE* const fp, const char* P
 
 int  usage ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramName )  /* print general syntax */
 {
-    lame_version_print ( fp );
     fprintf ( fp,
               "usage: %s [options] <infile> [outfile]\n"
               "\n"
@@ -296,7 +293,6 @@ int  usage ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramNa
 
 int  short_help ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramName )  /* print short syntax help */
 {
-    lame_version_print ( fp );
     fprintf ( fp,
               "usage: %s [options] <infile> [outfile]\n"
               "\n"
@@ -352,7 +348,6 @@ static void  wait_for ( FILE* const fp, int lessmode )
 
 int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramName, int lessmode )  /* print long syntax help */
 {
-    lame_version_print ( fp );
     fprintf ( fp,
               "usage: %s [options] <infile> [outfile]\n"
               "\n"
@@ -626,7 +621,6 @@ static int  presets_set( lame_t gfp, int fast, int cbr, const char* preset_name,
 	);
 
     if (strcmp(preset_name, "help") == 0) {
-        lame_version_print ( stdout );
         presets_longinfo_dm( stdout );
         return -1;
     }
@@ -717,7 +711,6 @@ static int  presets_set( lame_t gfp, int fast, int cbr, const char* preset_name,
 	return 0;
     }
 
-    lame_version_print ( stderr );
     fprintf(stderr,
 	    "Error: You did not enter a valid profile and/or options with --preset\n"
 	    "For further information try: \"%s --preset help\"\n"

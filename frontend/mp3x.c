@@ -40,6 +40,7 @@ int main(int argc, char **argv)
   char inPath[PATH_MAX + 1];
   int ret;
 
+  lame_version_print (stdout);
   gf=lame_init();
   if(argc <=1 ) {
     usage(gf, stderr, argv[0]);  /* no command-line args  */

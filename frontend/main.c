@@ -602,6 +602,8 @@ main(int argc, char **argv)
     argc = ccommand(&argv);
 #endif
 
+    lame_version_print (stdout);
+
 #if defined(_WIN32)
    /* set affinity back to all CPUs.  Fix for EAC/lame on SMP systems from
      "Todd Richmond" <todd.richmond@openwave.com> */
