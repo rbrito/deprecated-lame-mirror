@@ -942,6 +942,7 @@ lame_init_params(lame_global_flags * const gfp)
                 gfc->PSY->tonalityPatch = 1;
                 gfc->VBR->mask_adjust = dbQ[gfp->VBR_q]; 
             }
+            gfc->VBR->mask_adjust += gfp->maskingadjust;
         }
         
         /*  use Gabriel's adaptative ATH shape for VBR by default
@@ -1178,9 +1179,9 @@ lame_print_internals( const lame_global_flags * gfp )
      */
     MSGF( gfc, "\nmisc:\n\n" );
     
-    MSGF( gfc, "\tscaling: %f\n", gfp->scale );
-    MSGF( gfc, "\tch0 (left) scaling: %f\n", gfp->scale_left );
-    MSGF( gfc, "\tch1 (right) scaling: %f\n", gfp->scale_right );
+    MSGF( gfc, "\tscaling: %g\n", gfp->scale );
+    MSGF( gfc, "\tch0 (left) scaling: %g\n", gfp->scale_left );
+    MSGF( gfc, "\tch1 (right) scaling: %g\n", gfp->scale_right );
     MSGF( gfc, "\tfilter type: %d\n", gfc->filter_type );
     pc = gfc->quantization ? "xr^3/4" : "ISO";
     MSGF( gfc, "\tquantization: %s\n", pc );
@@ -1250,7 +1251,8 @@ lame_print_internals( const lame_global_flags * gfp )
     case short_block_forced:    pc = "forced";          break;
     }
     MSGF( gfc, "\tusing short blocks: %s\n", pc );    
-    MSGF( gfc, "\tadjust masking: %f dB\n", gfc->VBR->mask_adjust );
+    MSGF( gfc, "\tadjust masking: %g dB\n", gfp->maskingadjust );
+    MSGF( gfc, "\tadjust VBR masking: %g dB\n", gfc->VBR->mask_adjust );
     MSGF( gfc, "\tquantization comparison: %d\n", gfp->quant_comp );
     MSGF( gfc, "\t ^ comparison short blocks: %d\n", gfp->quant_comp_short );
     MSGF( gfc, "\tnoise shaping: %d\n", gfc->noise_shaping );

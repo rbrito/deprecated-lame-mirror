@@ -109,6 +109,7 @@ struct lame_global_struct {
    * psycho acoustics and other arguments which you should not change 
    * unless you know what you are doing
    */
+  float maskingadjust;
   int ATHonly;                    /* only use ATH                         */
   int ATHshort;                   /* only use ATH for short blocks        */
   int noATH;                      /* disable ATH                          */

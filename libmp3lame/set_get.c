@@ -1064,6 +1064,21 @@ lame_get_highpasswidth( const lame_global_flags*  gfp )
  * unless you know what you are doing
  */
 
+/* Adjust masking values. */
+int
+lame_set_maskingadjust( lame_global_flags*  gfp,
+                   float               adjust )
+{
+    gfp->maskingadjust = adjust;
+    return 0;
+}
+
+float
+lame_get_maskingadjust( const lame_global_flags*  gfp )
+{
+    return gfp->maskingadjust;
+}
+
 /* Only use ATH for masking. */
 int
 lame_set_ATHonly( lame_global_flags*  gfp,

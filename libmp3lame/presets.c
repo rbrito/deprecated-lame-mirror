@@ -227,10 +227,36 @@ int apply_preset(lame_global_flags*  gfp, int preset)
         lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
         lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
         lame_set_msfix( gfp, 1.62 );
-        lame_set_ATHlower( gfp, -13 );
+        lame_set_maskingadjust( gfp, 1 );
+        lame_set_ATHlower( gfp, -10 );
         lame_set_ATHtype(gfp, 4);
         lame_set_ATHcurve(gfp, 3);
-	    lame_set_athaa_sensitivity(gfp, -16);
+	    lame_set_athaa_sensitivity(gfp, -12);
+        
+	    lame_set_experimentalY(gfp, 1);
+
+	    return preset;
+
+    }
+    case MEDIUM1: {
+	    lame_set_VBR_min_bitrate_kbps(gfp, 80);
+	    lame_set_VBR(gfp, vbr_rh);
+
+	    lame_set_quality(gfp, 3);
+	    lame_set_lowpassfreq(gfp, 18000);
+	    lame_set_mode(gfp, JOINT_STEREO);
+
+        lame_set_short_threshold(gfp, 3.5f, 15.0f);
+        lame_set_quant_comp(gfp, 1);
+        lame_set_quant_comp_short(gfp, 3);
+        lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
+        lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
+        lame_set_msfix( gfp, 1.62 );
+        lame_set_maskingadjust( gfp, -.6 );
+        lame_set_ATHlower( gfp, 0 );
+        lame_set_ATHtype(gfp, 4);
+        lame_set_ATHcurve(gfp, 3);
+	    lame_set_athaa_sensitivity(gfp, -12);
         
 	    lame_set_experimentalY(gfp, 1);
 

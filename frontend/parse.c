@@ -1171,6 +1171,10 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     argUsed=1;
                     (void) lame_set_ATHlower( gfp, atof( nextArg ) );
                 
+                T_ELIF ("maskingadjust")
+                    argUsed=1;
+                    (void) lame_set_maskingadjust( gfp, atof( nextArg ) );
+                
                 T_ELIF ("athtype")
                     argUsed=1;
                     (void) lame_set_ATHtype( gfp, atoi( nextArg ) );

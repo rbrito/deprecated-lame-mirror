@@ -395,6 +395,10 @@ int CDECL lame_get_highpasswidth(const lame_global_flags *);
  * psycho acoustics and other arguments which you should not change 
  * unless you know what you are doing
  ***********************************************************************/
+
+int CDECL lame_set_maskingadjust( lame_global_flags *, float);
+float CDECL lame_get_maskingadjust( const lame_global_flags *);
+
 /* only use ATH for masking */
 int CDECL lame_set_ATHonly(lame_global_flags *, int);
 int CDECL lame_get_ATHonly(const lame_global_flags *);
