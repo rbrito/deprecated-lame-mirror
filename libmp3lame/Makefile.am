@@ -60,6 +60,7 @@ noinst_HEADERS= \
 	quantize.h  \
 	quantize_pvt.h \
 	reservoir.h \
+	set_get.h \
 	tables.h \
 	util.h \
 	version.h
