@@ -793,7 +793,7 @@ scfsi_calc(lame_t gfc, int ch)
     s2 = log2tab[s2];
 
     for (i = 0; i < 16; i++) {
-	if (s1 <= s1bits[i] && s2 <= s2bits[i]) {
+	if (((s1bits[i] - s1) | (s2bits[i] - s2)) >= 0) {
 	    int c = s1bits[i] * c1 + s2bits[i] * c2;
 	    if (gi->part2_length > c) {
 		gi->part2_length = c;
