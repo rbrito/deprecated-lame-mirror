@@ -41,8 +41,6 @@ RANLIB = @RANLIB@
 MAKEDEP = -M
 RM_F = rm -f
 LN_S = @LN_S@
-LIB_TARGETS = libmp3lame.a
-INSTALL_TARGETS = install_program install_static_lib
 
 ##########################################################################
 # -DHAVEMPGLIB compiles the mpglib *decoding* library into libmp3lame
@@ -129,8 +127,6 @@ INSTALL_TARGETS = install_program install_static_lib
 # LINUX   
 ##########################################################################
 ifeq ($(UNAME),Linux)
-LIB_TARGETS += libmp3lame.so
-INSTALL_TARGETS += install_shared_lib
 
 # suggested for gcc-2.7.x
    CC_OPTS =  -O3 -fomit-frame-pointer -funroll-loops -ffast-math  -finline-functions -Wall -pedantic
@@ -150,7 +146,7 @@ INSTALL_TARGETS += install_shared_lib
 #	-Wall -O9 -fomit-frame-pointer -march=pentium \
 #	-finline-functions -fexpensive-optimizations \
 #	-funroll-loops -funroll-all-loops -pipe -fschedule-insns2 \
-#	-fstrength-reduce -fno-strict-aliasing \
+#	-fstrength-reduce \
 #	-malign-double -mfancy-math-387 -ffast-math 
 
 
@@ -294,8 +290,8 @@ ifeq ($(UNAME),Rhapsody)
    LIBS =
    CC_OPTS = -O9 -ffast-math -funroll-loops -fomit-frame-pointer
    MAKEDEP = -make 
-   
 endif
+
 ##########################################################################
 # OS/2
 ##########################################################################
@@ -376,12 +372,9 @@ endif
 # gcc 2.8+ as of 10/99.  
 
 CC_SWITCHES = -DNDEBUG $(CC_OPTS) $(CFLAGS) $(LDFLAGS)
-OBJ = $(c_sources:.c=.o)
-DEP = $(c_sources:.c=.d)
 
 gtk_sources = gtkanal.c gpkplotting.c
 gtk_obj = $(gtk_sources:.c=.o)
-gtk_dep = $(gtk_sources:.c=.d)
 
 mpglib_sources = \
         mpglib/common.c \
@@ -393,11 +386,10 @@ mpglib_sources = \
         mpglib/tabinit.c \
         mpglib/interface.c \
         mpglib/main.c 
-mpglib_obj = $(mpglib_sources:.c=.o)
-mpglib_dep = $(mpglib_sources:.c=.d)
+
+brhist_sources = brhist.c
 
 c_sources_s =  @CONFIG_SOURCES@ \
-        brhist.c \
 	bitstream.c \
 	encoder.c \
 	fft.c \
@@ -421,6 +413,9 @@ c_sources_s =  @CONFIG_SOURCES@ \
 	vorbis_interface.c \
         VbrTag.c \
         version.c
+
+OBJ = $(c_sources:.c=.o)
+DEP = $(c_sources:.c=.d)
 
 ifeq ($(UNAME),MSDOS)
   c_sources = $(subst /,\\,$(c_sources_s))
@@ -453,11 +448,11 @@ ASFLAGS=-f elf -i i386/
 
 all: $(PGM) lib
 
-$(PGM):	main.o $(gtk_obj) libmp3lame.a 
-	$(CC) $(CC_OPTS) -o $(PGM)  main.o $(gtk_obj) -L. -lmp3lame $(LIBS) $(CFLAGS) $(LDFLAGS)
+$(PGM):	main.o @GTK_OBJ@ libmp3lame.a 
+	$(CC) $(CC_OPTS) -o $(PGM)  main.o @GTK_OBJ@ -L. -lmp3lame $(LIBS) $(CFLAGS) $(LDFLAGS)
 
-mp3x:	mp3x.o $(gtk_obj) libmp3lame.a
-	$(CC) -o mp3x mp3x.o $(gtk_obj) $(OBJ) $(LIBS) $(LDFLAGS) $(CFLAGS)
+mp3x:	mp3x.o @GTK_OBJ@ libmp3lame.a
+	$(CC) -o mp3x mp3x.o @GTK_OBJ@ $(OBJ) $(LIBS) $(LDFLAGS) $(CFLAGS)
 
 mp3rtp:	rtp.o mp3rtp.o libmp3lame.a
 	$(CC) -o mp3rtp mp3rtp.o rtp.o   $(OBJ) $(LIBS) $(LDFLAGS) $(CFLAGS)
@@ -474,7 +469,7 @@ libmp3lame.so:  $(OBJ) Makefile
 	$(RM_F) libmp3lame.so
 	$(LN_S) libmp3lame.so.1 libmp3lame.so
 
-lib:  $(LIB_TARGETS)
+lib:  @LIB_TARGETS@
 
 install_static_lib: libmp3lame.a
 	mkdir -p $(LIBDIR)
@@ -496,7 +491,7 @@ install_shared_lib: libmp3lame.so
 install_program: $(PGM)
 	$(INSTALL_PROGRAM) $(PGM) ${BINDIR}
 
-install: $(INSTALL_TARGETS)
+install: @INSTALL_TARGETS@
 
 clean:
   ifeq ($(UNAME),MSDOS)

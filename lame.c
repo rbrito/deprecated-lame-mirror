@@ -30,7 +30,9 @@
 #include "VbrTag.h"
 #include "id3tag.h"
 #include "tables.h"
+#ifdef BRHIST
 #include "brhist.h"
+#endif
 #include "get_audio.h"
 #include "quantize_pvt.h"
 
@@ -208,10 +210,14 @@ int lame_init_params(lame_global_flags *gfp)
     gfp->silent=1;
 
   if (gfp->silent) {
+#ifdef BRHIST
    gfp->brhist_disp=0;  /* turn of VBR historgram */
+#endif
   }
   if (gfp->VBR==vbr_off) {
+#ifdef BRHIST
     gfp->brhist_disp=0;  /* turn of VBR historgram */
+#endif
   }
   if (gfp->VBR!=vbr_off) {
     gfp->free_format=0;  /* VBR cant mix with free format */
@@ -650,8 +656,10 @@ int lame_init_params(lame_global_flags *gfp)
   if (gfp->bWriteVbrTag)
       InitVbrTag(gfp);
 
+#ifdef BRHIST
   if (gfp -> brhist_disp)
     brhist_init(gfp,gfc->VBR_min_bitrate,gfc->VBR_max_bitrate);
+#endif
 
 #ifdef HAVEVORBIS
   if (gfp->ogg) {
@@ -1066,12 +1074,13 @@ int    lame_encode_finish (
   if (!gfp->silent) {
       timestatus(gfp->out_samplerate,gfp->frameNum,gfp->totalframes,gfp->framesize);
 
+#ifdef BRHIST
       if (gfp->brhist_disp)
 	{
 	  brhist_disp(gfp);
 	  brhist_disp_total(gfp);
 	}
-
+#endif
       timestatus_finish();
   }
 

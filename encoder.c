@@ -23,7 +23,9 @@
 #include "lame.h"
 #include "util.h"
 #include "timestatus.h"
+#ifdef BRHIST
 #include "brhist.h"
+#endif
 #include "newmdct.h"
 #include "psymodel.h"
 #include "quantize.h"
@@ -216,8 +218,10 @@ char *mp3buf, int mp3buf_size)
       int mod = gfp->version == 0 ? 100 : 50;
       if (gfp->frameNum%mod==0) {
 	timestatus(gfp->out_samplerate,gfp->frameNum,gfp->totalframes,gfp->framesize);
+#ifdef BRHIST
 	if (gfp->brhist_disp)
 	  brhist_disp(gfp);
+#endif
       }
     }
   }
@@ -377,8 +381,10 @@ char *mp3buf, int mp3buf_size)
     break;
   }
 
+#ifdef BRHIST
   /* update VBR histogram data */
   brhist_add_count(gfp,gfc->bitrate_index);
+#endif
 
   /*  write the frame to the bitstream  */
   getframebits(gfp,&bitsPerFrame,&mean_bits);

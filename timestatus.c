@@ -23,7 +23,9 @@
 #include "timestatus.h"
 #include "lametime.h"
 #include "util.h"
+#ifdef BRHIST
 #include "brhist.h"
+#endif
 #include <assert.h>
 #include <time.h>
 
@@ -248,18 +250,19 @@ void timestatus_klemm(lame_global_flags *gfp)
         if ( gfp -> frameNum ==  0  ||  
              gfp -> frameNum == 10  ||
 	     ( GetRealTime () - gfc -> last_time >= gfp -> update_interval  ||
-               GetRealTime ()                    <  gfp -> update_interval ) ) {
+               GetRealTime ()                    <  gfp -> update_interval )) {
             timestatus ( gfp -> out_samplerate, 
                          gfp -> frameNum, 
                          gfp -> totalframes, 
                          gfp -> framesize );
 
+#ifdef BRHIST
             if ( gfp -> brhist_disp )
 	        brhist_disp ( gfp );
-	        
+#endif
 	    gfc -> last_time = GetRealTime ();  /* from now! disp_time seconds */
         }
-  }
+    }
 }
 
 
