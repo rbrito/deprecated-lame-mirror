@@ -751,7 +751,7 @@ int calc_noise1( lame_global_flags *gfp,
   
   if (cod_info->block_type == SHORT_TYPE) {
     int max_index = SBPSY_s;
-    if (gfp->gtkflag) max_index = SBMAX_s;
+    if (gfp->VBR ) max_index = SBMAX_s;
 
     for ( i = 0; i < 3; i++ ) {
         for ( sfb = 0; sfb < max_index; sfb++ ) {
@@ -795,7 +795,7 @@ int calc_noise1( lame_global_flags *gfp,
     }
   }else{
     int max_index = SBPSY_l;
-    if (gfp->gtkflag) max_index = SBMAX_l;
+    if (gfp->VBR) max_index = SBMAX_l;
 
     for ( sfb = 0; sfb < max_index; sfb++ ) {
 	FLOAT8 step;
