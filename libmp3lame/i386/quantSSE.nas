@@ -217,6 +217,7 @@ proc	sumofsqr_3DN
 
 
 	externdef	pow43
+	externdef	adj43
 	externdef	pow20
 	externdef	ipow20
 
@@ -502,8 +503,8 @@ proc	quantize_sfb_3DN
 	punpckhdq	mm2, mm2
 	movd		edi, mm2
 	add		edx, byte 2
-	movd		mm2, [pow43+ebp*4+8208*4]
-	punpckldq	mm2, [pow43+edi*4+8208*4]	; mm2=adj43 value
+	movd		mm2, [adj43+ebp*4]
+	punpckldq	mm2, [adj43+edi*4]	; mm2=adj43 value
 	pfadd		mm2, mm0
 	pf2id		mm2, mm2
 	movq		[ecx - 8+ 0+ edx*4], mm2
@@ -522,13 +523,13 @@ proc	quantize_sfb_3DN
 	movd		edi, mm3
 	punpckhdq	mm2, mm2
 	punpckhdq	mm3, mm3
-	movd		mm6, [pow43+ebp*4+8208*4]
-	movd		mm7, [pow43+edi*4+8208*4]
+	movd		mm6, [adj43+ebp*4]
+	movd		mm7, [adj43+edi*4]
 	movd		ebp, mm2
 	movd		edi, mm3
 	add		edx, byte 4
-	punpckldq	mm6, [pow43+ebp*4+8208*4]	; mm6=adj43asm value
-	punpckldq	mm7, [pow43+edi*4+8208*4]	; mm7=adj43asm value
+	punpckldq	mm6, [adj43+ebp*4]	; mm6=adj43 value
+	punpckldq	mm7, [adj43+edi*4]	; mm7=adj43 value
 	pfadd		mm0, mm6
 	pfadd		mm1, mm7
 	pf2id		mm0, mm0
