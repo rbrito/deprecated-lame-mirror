@@ -22,9 +22,10 @@
 
 
 #include "get_audio.h"        
+#include <limits.h>
 
-#ifndef MAXPATHLEN
-#define MAXPATHLEN 1024
+#ifndef PATH_MAX
+#define PATH_MAX 1024
 #endif
 
 
