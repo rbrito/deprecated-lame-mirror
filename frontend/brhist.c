@@ -211,7 +211,7 @@ static void  brhist_disp_line ( const lame_global_flags*  gf, int i, int br_hist
                   barlen_TOT - barlen_LR, brhist.bar_asterisk, 
 		  Console_IO.disp_width - BRHIST_RES - barlen_TOT, "" );
 		  
-    hist.hist_printed_lines++;
+    brhist.hist_printed_lines++;
 }
 
 
@@ -227,7 +227,7 @@ void  brhist_disp ( const lame_global_flags*  gf )
     int   frames;                       /* total number of encoded frames */
     int   most_often;                   /* usage count of the most often used frame size, but not smaller than Console_IO.disp_width-BRHIST_RES (makes this sense?) and 1 */
     
-    hist.hist_printed_lines = 0;  /* printed number of lines for the brhist functionality, used to skip back the right number of lines */
+    brhist.hist_printed_lines = 0;  /* printed number of lines for the brhist functionality, used to skip back the right number of lines */
 	
     lame_bitrate_hist             ( gf, br_hist    );
     lame_bitrate_stereo_mode_hist ( gf, br_sm_hist );
@@ -260,12 +260,12 @@ void brhist_jump_back( void )
         CONSOLE_SCREEN_BUFFER_INFO  CSBI;
 	
         GetConsoleScreenBufferInfo ( Console_IO.Console_Handle, &CSBI );
-        Pos.Y = CSBI.dwCursorPosition.Y - hist.hist_printed_lines ;
+        Pos.Y = CSBI.dwCursorPosition.Y - brhist.hist_printed_lines ;
         Pos.X = 0;
         SetConsoleCursorPosition ( Console_IO.Console_Handle, Pos );
     }
 #else
-    while ( hist.hist_printed_lines-- > 0 )
+    while ( brhist.hist_printed_lines-- > 0 )
         fputs ( Console_IO.str_up, Console_IO.Console_fp );
 #endif
 }
