@@ -1130,8 +1130,6 @@ parse_aiff_header(lame_global_flags * gfp, FILE * sf)
 
                 if (aiff_info.sampleSize == 16)
                   pcmswapbytes = (!swapbytes == (dataType == IFF_ID_2CLE));
-
-                fprintf(stderr, "swapbytes: %d\n", pcmswapbytes);
             }
             
             if (fskip(sf, (long) subSize, SEEK_CUR) != 0)
