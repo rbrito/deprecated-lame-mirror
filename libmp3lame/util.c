@@ -389,18 +389,19 @@ inline static FLOAT8 blackman(int i,FLOAT8 offset,FLOAT8 fcn,int l)
 SIGNAL PROCESSING ALGORITHMS IN FORTRAN AND C
 S.D. Stearns and R.A. David, Prentice-Hall, 1992
   */
-
   FLOAT8 bkwn;
   FLOAT8 wcn = (PI * fcn);
-  FLOAT8 dly = l / 2.0;
-  FLOAT8 x = i-offset;
+  FLOAT8 x = (i-offset)/l;
+  FLOAT8 x2 = x - .5;
   if (x<0) x=0;
-  if (x>l) x=l;
-  bkwn = 0.42 - 0.5 * cos((x * 2) * PI /l)
-    + 0.08 * cos((x * 4) * PI /l);
-  if (fabs(x-dly)<1e-9) return wcn/PI;
+  if (x>1) x=1;
+
+  bkwn = 0.42 - 0.5*cos(2*x*PI)  + 0.08*cos(4*x*PI);
+  if (fabs(x2)<1e-9) return wcn/PI;
   else 
-    return  (sin( (wcn *  ( x - dly))) / (PI * ( x - dly)) * bkwn );
+    return  (  bkwn*sin(l*wcn*x2)  / (PI*l*x2)  );
+
+
 }
 
 /* gcd - greatest common divisor */
