@@ -900,18 +900,6 @@ void outer_loop(
           memcpy(xfsf, xfsf_w, sizeof(xfsf_w));
         }
       }
-
-      if (ch==1 && gfp->frameNum == 2326) {
-	printf("iter=%i better=%i over=%i  scale=%i gg=%i    \n",iteration,
-            better,over,
-	       cod_info->scalefac_scale,cod_info->global_gain);
-	printf("max_noise = %15.10e  \n",noise_info.max_noise);
-	printf("tot_noise = %15.10e  \n",noise_info.tot_noise);
-	printf("over_noise = %15.10e %15.10e  \n",noise_info.over_noise,best_noise_info.over_noise);
-	printf("distort[0] = %15.10e \n",distort[0][0]);
-	
-      }
-
     }
 
 
