@@ -881,6 +881,8 @@ lame_print_internals( const lame_global_flags * gfp )
 	  gfc->quantcomp_method, gfc->quantcomp_method_s);
     MSGF( gfc, "\tallow large scalefactor range=%s\n",
 	  gfc->use_scalefac_scale ? "yes" : "no");
+    MSGF( gfc, "\tuse subblock gain=%s\n",
+	  gfc->use_subblock_gain ? "yes" : "no");
     MSGF( gfc, "\texperimental X=%d Y=%d Z=%d\n",
 	  gfp->experimentalX, gfp->experimentalY, gfp->experimentalZ );
     MSGF( gfc, "\t...\n" );
