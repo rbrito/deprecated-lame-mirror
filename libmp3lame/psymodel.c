@@ -879,7 +879,7 @@ int L3psycho_anal( lame_global_flags * gfp,
   }
 
   /*************************************************************** 
-  /* compute M/S thresholds from Johnston & Ferreira 1992 ICASSP paper
+   * compute M/S thresholds from Johnston & Ferreira 1992 ICASSP paper
    ***************************************************************/
   if (gfp->mode == JOINT_STEREO) {
     FLOAT8 rside,rmid,mld;
@@ -1796,7 +1796,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
   }
 
   /*************************************************************** 
-  /* compute M/S thresholds from Johnston & Ferreira 1992 ICASSP paper
+   * compute M/S thresholds from Johnston & Ferreira 1992 ICASSP paper
    ***************************************************************/
   if ( numchn==4 /* mid/side and r/l */) {
     FLOAT8 rside,rmid,mld;
