@@ -383,7 +383,10 @@ int PutVbrTag(char* lpszFileName,int nVbrScale,int nVersion)
 	  abyte = pbtStreamBuffer[2] & (char) 0x0c;   
 	  pbtStreamBuffer[2]=(char) 0x50 | abyte;     /* 64kbs MPEG1 frame */
 	}else{
-	  pbtStreamBuffer[1]=(u_char) 0xf3;    
+	  if (gfp->out_samplerate < 16000)
+	    pbtStreamBuffer[1]=(u_char) 0xe3;    /* MPEG2.5 */
+	  else
+	    pbtStreamBuffer[1]=(u_char) 0xf3;    /* MPEG2 */
 	  abyte = pbtStreamBuffer[2] & (char) 0x0c;   
 	  pbtStreamBuffer[2]=(char) 0x80 | abyte;     /* 64kbs MPEG2 frame */
 	}
