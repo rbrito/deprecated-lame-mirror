@@ -479,7 +479,7 @@ int InitVbrTag(lame_global_flags *gfp)
             else {
                 gfc->VBR_seek_table.size = 0;
                 ERRORF (gfc,"Error: can't allocate VbrFrames buffer\n");
-                return;
+                return -1;
             }   
         }
 	/* Success */
