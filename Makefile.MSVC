@@ -1,38 +1,76 @@
 # Makefile.MSVC: MSVC Makefile for LAME 3.88
+#
+# 2000-11-21 Robert Hegemann  e-mail: Robert.Hegemann@gmx.de
+# dedicated to the LAME project http://www.mp3dev.org
+###############################################################################
 
-PGM = lame dll
+# targets <-> DOS filenames
+T_LAME = lame.exe
+T_LDLL = lame_enc.dll
+T_MP3X = mp3x.exe
+
+# default targets
+PGM = $(T_LAME) $(T_LDLL)
 
 # some default settings
-!IF "$(ASM)" == ""
+
+COMP = INTEL
+
+!	IF "$(ASM)" == ""
 ASM = YES
-!ENDIF
-!IF "$(MMX)" == ""
+!	ENDIF
+
+!	IF "$(MMX)" == ""
 MMX = YES
-!ENDIF
-!IF "$(CFG)" == ""
+!	ENDIF
+
+!	IF "$(CFG)" == ""
 CFG = RH
-!ENDIF
+!	ENDIF
 
-!MESSAGE ----------------------------------------------------------------------
-!MESSAGE BUILDING LAME featuring $(CFG)
-!IF "$(ASM)" == "YES"
-!MESSAGE + ASM
-!ENDIF 
-!IF "$(MMX)" == "YES"
-!MESSAGE + MMX
-!ENDIF 
-!IF "$(GTK)" == "YES"
-!MESSAGE + GTK
-!ENDIF 
-!MESSAGE ----------------------------------------------------------------------
+!	IF "$(CPU)" == ""
+CPU = P3
+!	ENDIF
 
+!	IF "$(OPT)" == ""
+OPT = NORMAL
+!	ENDIF
+
+
+!	MESSAGE ----------------------------------------------------------------------
+!	MESSAGE building LAME featuring $(CFG)
+!	IF "$(ASM)" == "YES"
+!	MESSAGE + ASM
+!	ENDIF 
+!	IF "$(MMX)" == "YES"
+!	MESSAGE + MMX
+!	ENDIF 
+!	IF "$(GTK)" == "YES"
+!	MESSAGE + GTK
+!	ENDIF 
+!	IF "$(COMP)" == "INTEL"
+!	MESSAGE using INTEL COMPILER
+!	IF "$(CPU)" == "P1"
+!	MESSAGE + optimizing for Pentium (MMX) (may slow down PIII a few percent)
+!	ELSE
+!	MESSAGE + optimizing for Pentium II/III (slows down Pentium a few percent)
+!	ENDIF
+!	IF "$(OPT)" == "NORMAL"
+!	MESSAGE + perform single-file optimizations
+!	ENDIF
+!	IF "$(OPT)" == "EXTRA"
+!	MESSAGE + perform multi-file optimizations
+!	ENDIF
+!	IF "$(OPT)" == "ULTRA"
+!	MESSAGE + perform multi-file optimizations over entire program
+!	ENDIF
+!	ENDIF
+!	MESSAGE ----------------------------------------------------------------------
+
+!	IF "$(COMP)" != "INTEL"
 # Microsoft C options
-# CC = cl
-# LN = link
-
-# Intel 4.5 compiler
-CC = icl
-LN = xilink
+CC = cl
+LN = link
 
 # debugging options
 # CC_OPTS = /nologo /Zi /Ge /GZ
@@ -43,36 +81,80 @@ LN = xilink
 # LN_OPTS = /nologo /debug:full /debugtype:cv /fixed:no /profile
 
 # release options
-# CC_OPTS = /nologo /O2ab2gitwy /G6AFs /DNDEBUG 
-# LN_OPTS = /nologo
-
-# Intel 4.5 options
-#CC_OPTS = /nologo /DNDEBUG /Qunroll /O2 /G5AFs /QaxM /Qipo_obj /QIfist- 
-# /Ox     	maximum optimization
-# /G5     	optimized for Pentium
-# /Gs[n]	disable stack checks for functions with less than n bytes of locals
-# /Qunroll	unroll loops with default heuristic
-# /GA     	assume single threaded
-# /GF     	read-only string pooling optimization
-# /QIfist 	enable fast float to int conversion
-# /QIfdiv 	enable patch for Pentium with FDIV erratum
-# /QI0f	 	enable patch for Pentium with 0f erratum
-# /Qip
-# /QaxM	    currently crashes at the end of encoding! 
-#           so disabled by now, needs some attention
-CC_OPTS = /nologo /DNDEBUG /Qunroll /Ox /G5 /GA /Gs1024 /GF /QIfist /QIfdiv /QI0f /Qip 
+CC_OPTS = /nologo /O2ab2gitwy /G6AFs /DNDEBUG 
 LN_OPTS = /nologo
 
+LN_DLL = /DLL
+LN_OUT = /OUT:
 
+!	ELSE
+
+#__ Intel 4.5 options _________________________________________________________
+#CC_OPTS = /nologo /DNDEBUG /Qunroll /O2 /G5AFs /QaxM /Qipo_obj /QIfist- 
+# /YX         enable automatic precompiled header file creation/usage
+# /Ox         maximum optimization
+# /Ow         assume no aliasing within functions, but across calls
+# /Gd      1) make cdecl the default calling convention
+# /G5      2) optimized for Pentium
+# /G6      3) optimized for Pentium II/III
+# /GA         assume single threaded
+# /Gs[n]      disable stack checks for functions with < n bytes of locals
+# /GF     	  read-only string pooling optimization
+# /Qunroll    unroll loops with default heuristic
+# /QIfist     enable fast float to int conversion
+# /QIfdiv     enable patch for Pentium with FDIV erratum
+# /QI0f	 	  enable patch for Pentium with 0f erratum
+# /Qip     2) enable single-file IP optimizations (within files)
+# /Qipo       enable multi-file IP optimizations (between files)
+# /Qipo_wp 4) enable entire program multi-file IP optimizations
+# /QaxiMK     automatic use of specialized code for PII/III, MMX, SIMD
+#
+# remarks: 
+# 1) slows speed down, not using
+# 2) faster compared to 3) or 4) on Pentium MMX at 200 MHz
+
+!	IF "$(CPU)" == "P1"
+CCOPTS = /G5
+!	ELSE
+CCOPTS = /G6
+!	ENDIF
+!	IF "$(OPT)" == "NORMAL"
+CCOPTS = $(CCOPTS) /Qip
+!	ELSE
+!	IF "$(OPT)" == "EXTRA"
+CCOPTS = $(CCOPTS) /Qip /Qipo
+!	ELSE
+!	IF "$(OPT)" == "ULTRA"
+CCOPTS = $(CCOPTS) /Qip /Qipo_wp
+!	ENDIF
+!	ENDIF
+!	ENDIF
+
+CC_OPTS = /nologo /DNDEBUG /YX /Ox /GA /Gs1024 /GF \
+          /Qunroll /QIfist /QIfdiv /QI0f /QaxiMK $(CCOPTS) 
+
+LN_OPTS = $(CC_OPTS) 
+LN_DLL = /LD
+LN_OUT = /Fe
+
+CC = icl
+LN = icl
+#--------------------------------------------------------- Intel 4.5 options --
+
+!	ENDIF
+
+
+
+#-- MISC --
 SNDLIB = /DLAMESNDFILE
 LIBSNDFILE =
-LIBS =
-MAKEDEP =
-TIMER_SWITCH =
+
 BRHIST_SWITCH = /DBRHIST
-LIBTERMCAP =
+TIMER_SWITCH =
 
 CPP_OPTS = /DHAVE_CONFIG_H -I.
+
+
 
 #== FRAME ANALYZER SUPPORT ====================================================
 # assuming you have "glib-dev" and "gtk+-dev" installed
@@ -83,22 +165,24 @@ CPP_OPTS = /DHAVE_CONFIG_H -I.
 # you need the above mentioned libraries 
 # and to uncomment the following lines
 #
-!IF "$(GTK)" == "YES"
-GTK_OPTS = -I../src/glib     \
-           -I../src/gtk+     \
-           -I../src/gtk+/gtk \
-           -I../src/gtk+/gdk
-GTK_LIBS = /LIBPATH:../src/gtk+/gtk \
-           /LIBPATH:../src/gtk+/gdk \
-           /LIBPATH:../src/glib     \
-           glib-1.3.lib gdk-1.3.lib gtk-1.3.lib
-PGM = mp3x $(PGM)
-!ELSE
-!IF "$(GTK)" == ""
-!MESSAGE Pass GTK=YES to build the frame analyzer. (requires installed GTK)
-!ENDIF
-!ENDIF
+!	IF "$(GTK)" == "YES"
+GTK_DIRS = ../src
+GTK_OPTS = -I$(GTK_DIRS)/glib     \
+           -I$(GTK_DIRS)/gtk+     \
+           -I$(GTK_DIRS)/gtk+/gtk \
+           -I$(GTK_DIRS)/gtk+/gdk
+GTK_LIBS = $(GTK_DIRS)/gtk+/gtk/gtk-1.3.lib \
+           $(GTK_DIRS)/gtk+/gdk/gdk-1.3.lib \
+           $(GTK_DIRS)/glib/glib-1.3.lib
+             
+PGM = $(T_MP3X) $(PGM)
+!	ELSE
+!	IF "$(GTK)" == ""
+!	MESSAGE Pass GTK=YES to build the frame analyzer. (requires installed GTK)
+!	ENDIF
+!	ENDIF
 #==================================================== FRAME ANALYZER SUPPORT ==
+
 
 
 #== VORBIS SUPPORT ============================================================
@@ -106,8 +190,9 @@ PGM = mp3x $(PGM)
 # uncomment the following if you have Vorbis
 #
 #VORBIS = /DHAVE_VORBIS -I../vorbis/include
-#VORBISLIB = /LIBPATH:../vorbis/lib vorbis.lib
+#VORBISLIB = ../vorbis/lib/vorbis.lib
 #============================================================ VORBIS SUPPORT ==
+
 
 
 #== MPG123 DECODING ===========================================================
@@ -118,6 +203,7 @@ CPP_OPTS = $(CPP_OPTS) /DHAVE_MPGLIB /DUSE_LAYER_1 /DUSE_LAYER_2
 #=========================================================== MPG123 DECODING ==
 
 
+
 #== Takehiro's IEEE hack ======================================================
 #
 #	uncomment the following to enable Takehiro's IEEE hack
@@ -126,18 +212,20 @@ CPP_OPTS = $(CPP_OPTS) /DTAKEHIRO_IEEE754_HACK
 #====================================================== Takehiro's IEEE hack ==
 
 
+
 #== Robert's alternate code ===================================================
 #
 #	uncomment the following to enable some alternate code
 #
-!IF "$(CFG)" == "RH"
+!	IF "$(CFG)" == "RH"
 CPP_OPTS = $(CPP_OPTS) /DRH_AMP /DRH
-!ENDIF
+!	ENDIF
 #=================================================== Robert's alternate code ==
 
 
-CC_SWITCHES = $(CC_OPTS) $(DISTRIB) $(SNDLIB) $(BRHIST_SWITCH) \
-              /DBS_FORMAT=BINARY $(TIMER_SWITCH) $(VORBIS)
+
+CC_SWITCHES = $(CC_OPTS) $(SNDLIB) $(VORBIS) $(BRHIST_SWITCH) \
+              $(TIMER_SWITCH) /DBS_FORMAT=BINARY
 
 LN_SWITCHES = $(LN_OPTS)
 
@@ -201,13 +289,15 @@ DLL_OBJ = $(dll_sources:.c=.obj)
 
 
 all :	$(PGM)
+	@echo.
+	@echo --=*  $(PGM) uptodate  *=--
+	@echo.
 
 #== NASM ======================================================================
 #
-#	uncomment the following if you have NASM 
 #	NASM: Netwide Assembler
 #
-!IF "$(ASM)" == "YES"
+!	IF "$(ASM)" == "YES"
 libmp3lame/i386/cpu_feat.obj: libmp3lame/i386/cpu_feat.nas
 	@echo assemble CPU-feature detection, using NASM the Netwide Assembler
 	@nasmw -f win32 -i libmp3lame/i386/ -DWIN32 \
@@ -216,16 +306,15 @@ libmp3lame/i386/cpu_feat.obj: libmp3lame/i386/cpu_feat.nas
                 
 CC_SWITCHES = $(CC_SWITCHES) /DHAVE_NASM
 ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/cpu_feat.obj
-!ENDIF
+!	ENDIF
 #====================================================================== NASM ==
 
 #== MMX =======================================================================
 #
-#	uncomment the following if you have NASM and a processor with MMX 
-#	NASM: Netwide Assembler
+#	you have NASM and a processor with MMX 
 #
-!IF "$(ASM)" == "YES"
-!IF "$(MMX)" == "YES"
+!	IF "$(ASM)" == "YES"
+!	IF "$(MMX)" == "YES"
 libmp3lame/i386/choose_table.obj: libmp3lame/i386/choose_table.nas
 	@echo assemble MMX choose table, using NASM the Netwide Assembler
 	@nasmw -f win32 -i libmp3lame/i386/ -DWIN32 \
@@ -234,65 +323,87 @@ libmp3lame/i386/choose_table.obj: libmp3lame/i386/choose_table.nas
 
 CC_SWITCHES = $(CC_SWITCHES) /DMMX_choose_table
 ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/choose_table.obj
-!ENDIF
-!ENDIF
+!	ENDIF
+!	ENDIF
 #======================================================================= MMX ==
 
-!MESSAGE
+!	MESSAGE
+
+
+config.h : configMS.h
+	@-copy configMS.h config.h
 
 
 .c.obj: 
-	@$(CC) $(CPP_OPTS) $(CC_SWITCHES) -Iinclude -Ilibmp3lame /c $< /Fo$@
-
-$(LIB_OBJ) : $(lamelib_sources)
-	@echo --- LAME MP3 ENCODING LIBRARY ---
-	@$(CC) $(CPP_OPTS) $(CC_SWITCHES) -Iinclude -Impglib /c $(lamelib_sources) /Folibmp3lame/
-
-$(MPG_OBJ) : $(mpglib_sources)
-	@echo --- MPG123 DECODING LIBRARY ---
-	@$(CC) $(CPP_OPTS) $(CC_SWITCHES) -Iinclude -Ilibmp3lame /c $(mpglib_sources) /Fompglib/
-
-$(CMMN_OBJ) : $(common_sources)
-	@echo --- FRONTEND STUFF ---
-	@$(CC) $(CPP_OPTS) $(CC_SWITCHES) -Iinclude /c $(common_sources) /Fofrontend/
+	@$(CC) $(CPP_OPTS) $(CC_SWITCHES) -Iinclude -Ilibmp3lame \
+	       /c $< /Fo$@
 
 $(MPX_OBJ) : $(mpx_sources)
-	@echo --- FRAME ANALYZER STUFF ---
 	@$(CC) $(CPP_OPTS) $(CC_SWITCHES) $(GTK_OPTS) \
-	       -Iinclude -Impglib -Ilibmp3lame /c $(mpx_sources) /Fofrontend/
+	       -Iinclude -Impglib -Ilibmp3lame /c $** /Fofrontend/
+	@echo.
+	@echo --- FRAME ANALYZER STUFF READY ---
+	@echo.
 
-lame: config lib common Makefile.MSVC $(LAME_OBJ)
+$(CMMN_OBJ): $(common_sources) 
+	@$(CC) $(CPP_OPTS) $(CC_SWITCHES) -Iinclude /c $** /Fofrontend/
+	@echo.
+	@echo --- COMMON FRONTEND STUFF UPTODATE ---
+	@echo.
+
+$(LIB_OBJ) : $(lamelib_sources)
+	@$(CC) $(CPP_OPTS) $(CC_SWITCHES) \
+	       -Iinclude -Impglib /c $** /Folibmp3lame/
+	@echo.
+	@echo --- LAME MP3 ENCODING LIBRARY UPTODATE ---
+	@echo.
+
+$(MPG_OBJ) : $(mpglib_sources)
+	@$(CC) $(CPP_OPTS) $(CC_SWITCHES) \
+	       -Iinclude -Ilibmp3lame /c $** /Fompglib/
+	@echo.
+	@echo --- MPG123 DECODING LIBRARY UPTODATE ---
+	@echo.
+
+lib: $(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ)
+
+$(T_LAME) : config.h lib $(CMMN_OBJ) $(LAME_OBJ)
 	@$(LN) $(LN_SWITCHES) $(LIBSNDFILE) $(VORBISLIB) \
-	       $(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ) $(CMMN_OBJ) $(LAME_OBJ) /out:lame.exe /map
-	@echo --- LAME ENCODER READY ---
+	       $(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ) $(CMMN_OBJ) $(LAME_OBJ) \
+		   $(LN_OUT)$@
+	@echo.
+	@echo --=*  $(T_LAME) ready  *=--
+	@echo.
 
-mp3x: config lib common Makefile.MSVC $(MPX_OBJ)
+$(T_LDLL) : config.h lib $(CMMN_OBJ) $(DLL_OBJ)
+	@$(LN) $(LN_SWITCHES) $(LIBSNDFILE) $(VORBISLIB) \
+	       $(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ) $(DLL_OBJ) \
+		   $(LN_DLL) $(LN_OUT)$@
+	@echo.
+	@echo --=*  $(T_LDLL) ready  *=--
+	@echo.
+	
+$(T_MP3X) : config.h lib $(CMMN_OBJ) $(MPX_OBJ)
 	@$(LN) $(LN_SWITCHES) $(GTK_LIBS) $(LIBSNDFILE) $(VORBISLIB) \
-	       $(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ) $(CMMN_OBJ) $(MPX_OBJ) /out:mp3x.exe /map
-	@echo --- FRAME ANALYZER READY ---
-
-dll: config lib common Makefile.MSVC $(DLL_OBJ)
-	@$(LN) $(LN_SWITCHES) $(LIBSNDFILE) $(VORBISLIB) \
-	       $(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ) $(DLL_OBJ) /DLL /out:lame_enc.dll /map	
-	@echo --- LAME ENCODER DLL READY ---
-
-lib: config Makefile.MSVC $(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ)
-
-common: config Makefile.MSVC $(CMMN_OBJ)
-
-config: configMS.h
-	@-copy configMS.h config.h
+	       $(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ) $(CMMN_OBJ) $(MPX_OBJ) \
+		   $(LN_OUT)$@
+	@echo.
+	@echo --=*  $(T_MP3X) ready  *=--
+	@echo.
 
 clean:
+	@-del *.exe
+	@-del icl.pch
+	@-del lame_enc.*
 	@-del frontend\*.obj
 	@-del dll\*.obj
+	@-del mpglib\*.obj
 	@-del libmp3lame\*.obj
 	@-del libmp3lame\i386\*.obj
-	@-del mpglib\*.obj
-	@-del *.map
-	@-del lame_enc.*
-	@-del *.exe
-	
+
 
 rebuild: clean all
 
+lame	:	$(T_LAME)
+dll 	:	$(T_LDLL)
+mp3x	:	$(T_MP3X)

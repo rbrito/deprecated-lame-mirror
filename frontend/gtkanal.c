@@ -1021,7 +1021,7 @@ static void text_window (GtkWidget *widget, gpointer data)
   long option;
   GtkWidget *hbox,*vbox,*button,*box;
   GtkWidget *textwindow,*vscrollbar;
-  char text[80];
+  char text[256];
 
   option = (long) data;
   
