@@ -20,6 +20,12 @@ MPEGA_STREAM    *mstream=NULL;
 MPEGA_CTRL      mctrl;
 
 
+static int break_cleanup(void)
+{
+	/* Dummy break function to make atexit() work. :P */
+	return 1;
+}
+
 static void exit_cleanup(void)
 {
 	if(mstream) {
@@ -57,6 +63,7 @@ int lame_decode_initfile(const char *fullname, int *stereo, int *samp, int *bitr
 		fprintf(stderr, "Unable to open mpega.library v2\n");
 		exit(1);
 	}
+	onbreak(break_cleanup);
 	atexit(exit_cleanup);
 
 	mstream=MPEGA_open(fullname, &mctrl);
