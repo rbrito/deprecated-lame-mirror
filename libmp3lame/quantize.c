@@ -406,7 +406,7 @@ amp_scalefac_bands(
 {
   lame_internal_flags *gfc=gfp->internal_flags;
   int start, end, l,i,j,sfb;
-  FLOAT8 ifqstep34,distort_thresh,trigger;
+  FLOAT8 ifqstep34, trigger;
 
   if (cod_info->scalefac_scale == 0) {
     ifqstep34 = 1.29683955465100964055; /* 2**(.75*.5)*/
@@ -415,13 +415,15 @@ amp_scalefac_bands(
   }
 
   /* compute maximum value of distort[]  */
-  distort_thresh = 0;
+  trigger = 0;
   for (sfb = 0; sfb < cod_info->sfb_lmax; sfb++) {
-    distort_thresh = Max(distort->l[sfb],distort_thresh);
+    if (trigger < distort->l[sfb])
+        trigger = distort->l[sfb];
   }
   for (sfb = cod_info->sfb_smin; sfb < SBPSY_s; sfb++) {
     for (i = 0; i < 3; i++ ) {
-      distort_thresh = Max(distort->s[sfb][i],distort_thresh);
+      if (trigger < distort->s[sfb][i])
+          trigger = distort->s[sfb][i];
     }
   }
 
@@ -429,13 +431,13 @@ amp_scalefac_bands(
 
   case 2:
     /* amplify exactly 1 band */
-    trigger = distort_thresh;
+    //trigger = distort_thresh;
     break;
 
   case 1:
     /* amplify bands within 50% of max (on db scale) */
-    if (distort_thresh>1.0)
-      trigger = pow(distort_thresh,.5);
+    if (trigger>1.0)
+        trigger = pow(trigger, .5);
     else
       trigger *= .95;
     break;
@@ -443,17 +445,17 @@ amp_scalefac_bands(
   case 0:
   default:
     /* ISO algorithm.  amplify all bands with distort>1 */
-    if (distort_thresh>1.0)
-      trigger=1.0;
+    if (trigger>1.0)
+        trigger=1.0;
     else
-      trigger *= .95;
+        trigger *= .95;
     break;
   }
 
   for (sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
     start = gfc->scalefac_band.l[sfb];
     end   = gfc->scalefac_band.l[sfb+1];
-    if (distort[0][sfb]>=trigger  ) {
+    if (distort->l[sfb]>=trigger  ) {
       scalefac->l[sfb]++;
       for ( l = start; l < end; l++ )
 	xrpow[l] *= ifqstep34;
@@ -466,7 +468,7 @@ amp_scalefac_bands(
     end   = gfc->scalefac_band.s[sfb+1];
     for ( i = 0; i < 3; i++ ) {
       int j2 = j;
-      if ( distort[i+1][sfb]>=trigger) {
+      if ( distort->s[sfb][i]>=trigger) {
 	scalefac->s[sfb][i]++;
 	for (l = start; l < end; l++) 
 	  xrpow[j2++] *= ifqstep34;
