@@ -683,8 +683,8 @@ int select_kth_int(int a[], int N, int k)
 {
     int i, j, l, r, v, w;
     
-    l = 1;
-    r = N;
+    l = 0;
+    r = N-1;
     while (r > l) {
         v = a[r];
         i = l-1;
