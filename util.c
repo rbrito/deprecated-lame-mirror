@@ -117,48 +117,50 @@ void getframebits(lame_global_flags *gfp,int *bitsPerFrame, int *mean_bits) {
 
 
 
-void display_bitrates(FILE *out_fh)
+void   display_bitrates ( FILE* fp )
 {
-  int index,version;
+    int   i;
 
-  version = 1;
-  fprintf(out_fh,"\n");
-  fprintf(out_fh,"MPEG1 layer III samplerates(kHz): 32 44.1 48 \n");
+    fprintf ( fp, "\nMPEG-1   layer III sample rates (kHz): 32  44.1   48\n");
+    fprintf ( fp, "bit rates (kbps):");
+    for ( i = 1; i <= 14; i++ )
+        fprintf ( fp, "%4u", index_to_bitrate [MPEG_1  ] [i] );
+    fprintf ( fp, "\n" );
 
-  fprintf(out_fh,"bitrates(kbs): ");
-  for (index=1;index<15;index++) {
-    fprintf(out_fh,"%i ",index_to_bitrate[version][index]);
-  }
-  fprintf(out_fh,"\n");
+    fprintf ( fp, "\nMPEG-2   layer III sample rates (kHz): 16  22.05  24\n");
+    fprintf ( fp, "bit rates (kbps):");
+    for ( i = 1; i <= 14; i++ )
+        fprintf ( fp, "%4u", index_to_bitrate [MPEG_2  ] [i] );
+    fprintf ( fp, "\n" );
   
-  
-  version = 0;
-  fprintf(out_fh,"\n");
-  fprintf(out_fh,"MPEG2 layer III samplerates(kHz): 16 22.05 24 \n");
-  fprintf(out_fh,"bitrates(kbs): ");
-  for (index=1;index<15;index++) {
-    fprintf(out_fh,"%i ",index_to_bitrate[version][index]);
-  }
-  fprintf(out_fh,"\n");
-
-  version = 0;
-  fprintf(out_fh,"\n");
-  fprintf(out_fh,"MPEG2.5 layer III samplerates(kHz): 8 11.025 12 \n");
-  fprintf(out_fh,"bitrates(kbs): ");
-  for (index=1;index<15;index++) {
-    fprintf(out_fh,"%i ",index_to_bitrate[version][index]);
-  }
-  fprintf(out_fh,"\n");
+    fprintf ( fp, "\nMPEG-2.5 layer III sample rates (kHz):  8  11.025 16\n");
+    fprintf ( fp, "bit rates (kbps):");
+    for ( i = 1; i <= 14; i++ )
+        fprintf ( fp, "%4u", index_to_bitrate [MPEG_2_5] [i] );
+    fprintf ( fp, "\n" );
 }
 
 /* convert bitrate in kbps to index */
 
-int FindNearestBitrate ( unsigned       bRate,        /* legal rates from 32 to 448 */
-		         unsigned       version,      /* MPEG-1 or MPEG-2 LSF */
-                         unsigned long  samplerate )  /* unused */  
+int FindNearestBitrateIndex ( 
+		unsigned       bRate,        /* legal rates from 32 to 448 */
+		unsigned       version,      /* MPEG-1 or MPEG-2 LSF */
+                unsigned long  samplerate )  /* unused */  
 {
     assert (version < 2);
     return bitrate_to_index [version] [ bRate <= 320 ? bRate >> 2 : 80 ];
+}
+
+/* round bitrate in kbps to nearest valid value for non freeformat */
+
+unsigned FindNearestBitrate ( 
+		unsigned       bRate,        /* legal rates from 32 to 448 */
+		unsigned       version,      /* MPEG-1 or MPEG-2 LSF */
+                unsigned long  samplerate )  /* unused */  
+{
+    assert (version < 2);
+    return index_to_bitrate [version] 
+                            [bitrate_to_index [version] [ bRate <= 320 ? bRate >> 2 : 80 ]];
 }
 
 
@@ -540,7 +542,7 @@ int fill_buffer_downsample(lame_global_flags *gfp,sample_t *outbuf,int desired_l
   FLOAT8 fcn,intratio;
   sample_t *inbuf_old;
 
-  intratio=( fabs(gfc->resample_ratio - floor(.5+gfc->resample_ratio)) < .0001 );
+  intratio=( fabs(gfc->resample_ratio - floor(.5+gfc->resample_ratio)) < 1.e-4 );
   fcn = .90/gfc->resample_ratio;
   if (fcn>.90) fcn=.90;
   filter_l=19;  /* must be odd */
@@ -633,7 +635,7 @@ int fill_buffer_upsample(lame_global_flags *gfp,sample_t *outbuf,int desired_len
 
   /* if downsampling by an integer multiple, use linear resampling,
    * otherwise use quadratic */
-  linear = ( fabs(gfc->resample_ratio - floor(.5+gfc->resample_ratio)) < .0001 );
+  linear = ( fabs(gfc->resample_ratio - floor(.5+gfc->resample_ratio)) < 1.e-4 );
 
   /* time of j'th element in inbuf = itime + j/ifreq; */
   /* time of k'th element in outbuf   =  j/ofreq */

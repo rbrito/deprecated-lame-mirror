@@ -43,6 +43,7 @@ extern "C" {
 
 typedef signed short int sample_t;
 typedef long double      freq_t;
+typedef sample_t         mono_t;
 typedef sample_t         stereo_t [2];
 
 
@@ -74,6 +75,11 @@ typedef enum {
     ch_mono    = 3
 } channel_mode_t;
 
+typedef enum {
+    MPEG_1   = 1,
+    MPEG_2   = 0,
+    MPEG_2_5 = 0
+} MPEG_version_t;
 
 struct id3tag_spec
 {
@@ -188,7 +194,7 @@ typedef struct  {
   /************************************************************************/
   /* internal variables, do not set... */
   /************************************************************************/
-  int version;                /* 0=MPEG2  1=MPEG1 */
+  MPEG_version_t version;         /* MPEG-1 or MPEG-2 */
   long int frameNum;              /* frame counter */
   long totalframes;               /* frames: 0..totalframes-1 (estimate)*/
   int encoder_delay;
@@ -206,7 +212,7 @@ typedef struct  {
   /************************************************************************/
   /* more internal variables, which will not exist after lame_encode_finish() */
   /************************************************************************/
-  void *internal_flags;
+  void* internal_flags;
 
   float display_update_interval;
   
@@ -329,7 +335,7 @@ int    lame_encode_buffer (
  */
 int    lame_encode_buffer_interleaved (
                 lame_global_flags* gfp,
-		sample_t           pcm [], 
+		stereo_t           pcm [], 
                 size_t             num_samples, 
 		char*              mp3buffer, 
 		size_t             mp3buffer_size );

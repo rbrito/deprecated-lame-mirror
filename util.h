@@ -153,7 +153,7 @@ typedef struct  {
   int channels;                   /* number of channels */
   int VBR_min_bitrate;            /* min bitrate index */
   int VBR_max_bitrate;            /* max bitrate index */
-  float resample_ratio;           /* input_samp_rate/output_samp_rate */
+  long double resample_ratio;     /* input_samp_rate/output_samp_rate */
   int bitrate_index;
   int samplerate_index;
   int mode_ext;
@@ -343,10 +343,11 @@ typedef struct  {
 extern int            fskip(FILE *sf,long num_bytes,int dummy);
 extern void           display_bitrates(FILE *out_fh);
 extern int            BitrateIndex(int, int,int);
-extern int            FindNearestBitrate(unsigned,unsigned, unsigned long);
 
-extern long  RoundSampleRateToNearest ( long samplerate );
-extern long  RoundSampleRateUp        ( long samplerate );
+extern int            FindNearestBitrateIndex  ( unsigned rate, unsigned version, unsigned long samplerate );
+extern unsigned       FindNearestBitrate       ( unsigned rate, unsigned version, unsigned long samplerate );
+extern long           RoundSampleRateToNearest ( long samplerate );
+extern long           RoundSampleRateUp        ( long samplerate );
 
 extern int            SmpFrqIndex(long, int*);
 extern int            copy_buffer(char *buffer,int buffer_size,Bit_stream_struc *bs);
