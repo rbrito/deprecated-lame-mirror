@@ -435,10 +435,7 @@ encodeSideInfo2(lame_global_flags *gfp, int bitsPerFrame)
 	gfc->bs.header[gfc->bs.h_ptr].write_timing
 	    = gfc->bs.header[old].write_timing + bitsPerFrame;
 
-	if (gfc->bs.h_ptr == gfc->bs.w_ptr) {
-	    /* yikes! we are out of header buffer space */
-	    ERRORF(gfc,"Error: MAX_HEADER_BUF too small in bitstream.c \n");
-	}
+	assert(gfc->bs.h_ptr != gfc->bs.w_ptr);
     }
 }
 
