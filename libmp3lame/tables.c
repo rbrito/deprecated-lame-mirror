@@ -1397,9 +1397,9 @@ int psymodel_init(lame_global_flags *gfp)
 		       gfc->scalefac_band.s, BLKSIZE_s/(2.0*192), SBMAX_s);
     assert(gfc->npart_s <= CBANDS);
 
-    /* SNR formula. short block is normalized by SNR. is it still right ? */
+    /* SNR formula is removed. but we should tune s3_s more */
     for (i=0;i<gfc->npart_s;i++) {
-	norm[i] = db2pow(-0.25) * NS_PREECHO_ATT0 * 0.8; /* should tune more */
+	norm[i] = db2pow(-0.25) * NS_PREECHO_ATT0 * 0.8;
 	gfc->endlines_s[i] = numlines_s[i];
 	if (i != 0)
 	    gfc->endlines_s[i] += gfc->endlines_s[i-1];
