@@ -83,7 +83,6 @@ sound_file_format input_format;
 int keeptag=0;
 int swapbytes;              /* force byte swapping   default=0*/
 int silent;                 /* Verbosity */
-int ignore_tag_errors;      /* Ignore errors in values passed for tags */
 int brhist;
 float update_interval;      /* to use Frank's time status display */
 int mp3_delay;              /* to adjust the number of samples truncated
@@ -96,11 +95,13 @@ int enc_padding;
 int disable_wav_header;
 mp3data_struct mp3input_data; /* used by MP3 */
 
+#ifdef LIBSNDFILE
 int in_signed=1;
-int in_unsigned=0;
 int in_endian=order_littleEndian;
+#endif
 int in_bitwidth=16;
 int decode_only=0;
+static int ignore_tag_errors; /* Ignore errors in values passed for tags */
 
 /**  
  *  Long Filename support for the WIN32 platform
@@ -895,7 +896,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF ("bitwidth")
                     argUsed=1;
                     in_bitwidth=atoi(nextArg);
-
+#ifdef LIBSNDFILE
                 T_ELIF ("signed")
 		    in_signed=1;
 
@@ -907,7 +908,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 
                 T_ELIF ("big-endian")
 		    in_endian=order_bigEndian;
-
+#endif
                 T_ELIF ("mp1input")
                     input_format=sf_mp1;
                 
@@ -919,7 +920,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 
                 T_ELIF ("keeptag")
                     keeptag=1;
-                
+
                 T_ELIF ("mixedblock")
                     (void) lame_set_use_mixed_blocks( gfp, 2);
 

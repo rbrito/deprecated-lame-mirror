@@ -109,7 +109,8 @@ static struct buf *addbuf( PMPSTR mp, unsigned char *buf,int size)
 	return nbuf;
 }
 
-void remove_buf(PMPSTR mp)
+static void
+remove_buf(PMPSTR mp)
 {
   struct buf *buf = mp->tail;
   
@@ -172,7 +173,8 @@ static void read_head(PMPSTR mp)
 
 
 
-void copy_mp(PMPSTR mp,int size,unsigned char *ptr) 
+static void
+copy_mp(PMPSTR mp,int size,unsigned char *ptr) 
 {
   int len = 0;
 
@@ -208,7 +210,8 @@ void copy_mp(PMPSTR mp,int size,unsigned char *ptr)
 /* bytes = number of bytes before MPEG header.  skip this many bytes */
 /* before starting to read */
 /* return value: number of bytes in VBR header, including syncword */
-int check_vbr_header(PMPSTR mp,int bytes)
+static int
+check_vbr_header(PMPSTR mp,int bytes)
 {
   int i,pos;
   struct buf *buf=mp->tail;
@@ -256,7 +259,9 @@ int check_vbr_header(PMPSTR mp,int bytes)
 
 
 
-int sync_buffer(PMPSTR mp,int free_match) 
+
+static int
+sync_buffer(PMPSTR mp,int free_match) 
 {
   /* traverse mp structure without modifing pointers, looking
    * for a frame valid header.
@@ -335,10 +340,11 @@ int sync_buffer(PMPSTR mp,int free_match)
 
 
 
-int decodeMP3_clipchoice( PMPSTR mp,unsigned char *in,int isize,char *out,
-		           int osize,int *done,      
-                           int (*synth_1to1_mono_ptr)(PMPSTR,real *,unsigned char *,int *),
-                           int (*synth_1to1_ptr)(PMPSTR,real *,int,unsigned char *, int *) )
+static int
+decodeMP3_clipchoice( PMPSTR mp,unsigned char *in,int isize,char *out,
+		      int osize,int *done,      
+		      int (*synth_1to1_mono_ptr)(PMPSTR,real *,unsigned char *,int *),
+		      int (*synth_1to1_ptr)(PMPSTR,real *,int,unsigned char *, int *) )
 {
 	int i,iret,bits,bytes;
 

@@ -74,19 +74,19 @@ char   *strchr(), *strrchr();
 
 
 /* global data for get_audio.c. */
-int     count_samples_carefully;
-int     pcmbitwidth;
+static int     count_samples_carefully;
+static unsigned int num_samples_read;
+static int     pcmbitwidth;
 int     pcmswapbytes = 0;
-unsigned int num_samples_read;
 FILE   *musicin;
 int id3v2taglen = 0;
 
 
 #ifdef AMIGA_MPEGA
-int     lame_decode_initfile(const char *fullname,
-                             mp3data_struct * const mp3data);
+static int decode_initfile(const char *fullname,
+			   mp3data_struct * const mp3data);
 #else
-int     lame_decode_initfile(FILE * fd, mp3data_struct * mp3data);
+static int decode_initfile(FILE * fd, mp3data_struct * mp3data);
 #endif
 
 /* read mp3 file until mpglib returns one frame of PCM data */
@@ -98,8 +98,8 @@ static int read_samples_pcm(FILE * musicin, int sample_buffer[2304],
                             int frame_size, int samples_to_read);
 static int read_samples_mp3(lame_global_flags * const gfp, FILE * const musicin,
                             short int mpg123pcm[2][1152], int num_chan);
-void    CloseSndFile(sound_file_format input, FILE * musicin);
-FILE   *OpenSndFile(lame_global_flags * gfp, char *);
+static void    CloseSndFile(sound_file_format input, FILE * musicin);
+static FILE   *OpenSndFile(lame_global_flags * gfp, char *);
 
 
 /* Replacement for forward fseek(,,SEEK_CUR), because fseek() fails on pipes */
@@ -188,62 +188,6 @@ close_infile(void)
 {
     CloseSndFile(input_format, musicin);
 }
-
-
-static void
-SwapBytesInWords(short *ptr, int short_words)
-{                       /* Some speedy code */
-    unsigned long val;
-    unsigned long *p = (unsigned long *) ptr;
-
-#ifndef lint
-# if defined(CHAR_BIT)
-#  if CHAR_BIT != 8
-#   error CHAR_BIT != 8
-#  endif
-# else
-#  error can not determine number of bits in a char
-# endif
-#endif /* lint */
-
-    assert(sizeof(short) == 2);
-
-
-#if defined(SIZEOF_UNSIGNED_LONG) && SIZEOF_UNSIGNED_LONG == 4
-    for (; short_words >= 2; short_words -= 2, p++) {
-        val = *p;
-        *p = ((val << 8) & 0xFF00FF00) | ((val >> 8) & 0x00FF00FF);
-    }
-    ptr = (short *) p;
-    for (; short_words >= 1; short_words -= 1, ptr++) {
-        val = *ptr;
-        *ptr = ((val << 8) & 0xFF00) | ((val >> 8) & 0x00FF);
-    }
-#elif defined(SIZEOF_UNSIGNED_LONG) && SIZEOF_UNSIGNED_LONG == 8
-    for (; short_words >= 4; short_words -= 4, p++) {
-        val = *p;
-        *p =
-            ((val << 8) & 0xFF00FF00FF00FF00) | ((val >> 8) &
-                                                 0x00FF00FF00FF00FF);
-    }
-    ptr = (short *) p;
-    for (; short_words >= 1; short_words -= 1, ptr++) {
-        val = *ptr;
-        *ptr = ((val << 8) & 0xFF00) | ((val >> 8) & 0x00FF);
-    }
-#else
-# ifdef SIZEOF_UNSIGNED_LONG
-#  warning Using unoptimized SwapBytesInWords().
-# endif
-    for (; short_words >= 1; short_words -= 1, ptr++) {
-        val = *ptr;
-        *ptr = ((val << 8) & 0xFF00) | ((val >> 8) & 0x00FF);
-    }
-#endif
-
-    assert(short_words == 0);
-}
-
 
 
 static int
@@ -498,7 +442,7 @@ print_sndlib_version(FILE * fp)
 
 
 
-void
+static void
 CloseSndFile(sound_file_format input, FILE * musicin)
 {
     SNDFILE *gs_pSndFileIn = (SNDFILE *) musicin;
@@ -522,7 +466,7 @@ CloseSndFile(sound_file_format input, FILE * musicin)
 
 
 
-FILE   *
+static FILE   *
 OpenSndFile(lame_global_flags * gfp, char *inPath)
 {
     char   *lpszFileName = inPath;
@@ -533,7 +477,7 @@ OpenSndFile(lame_global_flags * gfp, char *inPath)
     if (input_format == sf_mp1 ||
         input_format == sf_mp2 || input_format == sf_mp3) {
 #ifdef AMIGA_MPEGA
-        if (-1 == lame_decode_initfile(lpszFileName, &mp3input_data)) {
+        if (-1 == decode_initfile(lpszFileName, &mp3input_data)) {
             fprintf(stderr, "Error reading headers in mp3 input file %s.\n",
                     lpszFileName);
             exit(1);
@@ -544,7 +488,7 @@ OpenSndFile(lame_global_flags * gfp, char *inPath)
             fprintf(stderr, "Could not find \"%s\".\n", lpszFileName);
             exit(1);
         }
-        if (-1 == lame_decode_initfile(musicin, &mp3input_data)) {
+        if (-1 == decode_initfile(musicin, &mp3input_data)) {
             fprintf(stderr, "Error reading headers in mp3 input file %s.\n",
                     lpszFileName);
             exit(1);
@@ -1305,7 +1249,7 @@ parse_file_header(lame_global_flags * gfp, FILE * sf)
 
 
 
-void
+static void
 CloseSndFile(sound_file_format input, FILE * musicin)
 {
     if (fclose(musicin) != 0) {
@@ -1318,7 +1262,7 @@ CloseSndFile(sound_file_format input, FILE * musicin)
 
 
 
-FILE   *
+static FILE   *
 OpenSndFile(lame_global_flags * gfp, char *inPath)
 {
     FILE   *musicin;
@@ -1340,14 +1284,14 @@ OpenSndFile(lame_global_flags * gfp, char *inPath)
     if (input_format == sf_mp1 ||
         input_format == sf_mp2 || input_format == sf_mp3) {
 #ifdef AMIGA_MPEGA
-        if (-1 == lame_decode_initfile(inPath, &mp3input_data)) {
+        if (-1 == decode_initfile(inPath, &mp3input_data)) {
             fprintf(stderr, "Error reading headers in mp3 input file %s.\n",
                     inPath);
             exit(1);
         }
 #endif
 #ifdef HAVE_MPGLIB
-        if (-1 == lame_decode_initfile(musicin, &mp3input_data)) {
+        if (-1 == decode_initfile(musicin, &mp3input_data)) {
             fprintf(stderr, "Error reading headers in mp3 input file %s.\n",
                     inPath);
             exit(1);
@@ -1454,8 +1398,8 @@ is_syncword_mp123(const void *const headerptr)
     return 1;
 }
 
-int
-lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
+static int
+decode_initfile(FILE * fd, mp3data_struct * mp3data)
 {
     /*  VBRTAGDATA pTagData; */
     /* int xing_header,len2,num_frames; */
@@ -1535,7 +1479,7 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
 
     if (mp3data->bitrate==0 && !freeformat) {
 	fprintf(stderr, "fail to sync...\n");
-	return lame_decode_initfile(fd, mp3data);
+	return decode_initfile(fd, mp3data);
     }
 
     if (mp3data->totalframes > 0) {

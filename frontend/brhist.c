@@ -78,7 +78,7 @@ char *strchr (), *strrchr ();
  * printf ( "blah\n") with printf ( "blah%s\n", Console_IO.str_clreoln );
  */
 
-Console_IO_t Console_IO;
+static Console_IO_t Console_IO;
 
 static struct {
     int     vbr_bitrate_min_index;

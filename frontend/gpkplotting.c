@@ -67,7 +67,8 @@ void setcolor(GtkWidget *widget, GdkColor *color, gint red,gint green,gint blue)
 }
 
 
-void gpk_redraw(GdkPixmap *pixmap, GtkWidget *pixmapbox)
+static void
+gpk_redraw(GdkPixmap *pixmap, GtkWidget *pixmapbox)
 {
   /* redraw the entire pixmap */
   gdk_draw_pixmap(pixmapbox->window,

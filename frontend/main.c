@@ -84,16 +84,7 @@ char   *strchr(), *strrchr();
 
 
 
-/************************************************************************
-*
-* main
-*
-* PURPOSE:  MPEG-1,2 Layer III encoder with GPSYCHO
-* psychoacoustic model.
-*
-************************************************************************/
-
-int
+static int
 parse_args_from_string(lame_global_flags * const gfp, const char *p,
                        char *inPath, char *outPath)
 {                       /* Quick & very Dirty */
@@ -166,13 +157,13 @@ init_files(lame_global_flags * gf, char *inPath, char *outPath)
 /* After calling lame_init(), lame_init_params() and
  * init_infile(), call this routine to read the input MP3 file
  * and output .wav data to the specified file pointer*/
-/* lame_decoder will ignore the first 528 samples, since these samples
+/* decoder will ignore the first 528 samples, since these samples
  * represent the mpglib delay (and are all 0).  skip = number of additional
  * samples to skip, to (for example) compensate for the encoder delay */
 
-int
-lame_decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath,
-             char *outPath)
+static int
+decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath,
+	char *outPath)
 {
     short int Buffer[2][1152];
     int     iread;
@@ -324,8 +315,8 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath,
 
 
 
-int
-lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath,
+static int
+encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath,
              char *outPath)
 {
     unsigned char mp3buffer[LAME_MAXMP3BUFFER];
@@ -506,8 +497,9 @@ brhist_init_package(lame_global_flags * gf)
 
 
 
-void parse_nogap_filenames(int nogapout, char *inPath, char *outPath, char *outdir) {
-
+static void
+parse_nogap_filenames(int nogapout, char *inPath, char *outPath, char *outdir)
+{
     char    *slasher;
     int     n;
 
@@ -663,9 +655,9 @@ main(int argc, char **argv)
     if (decode_only) {
         /* decode an mp3 file to a .wav */
         if (mp3_delay_set)
-            lame_decoder(gf, outf, mp3_delay, inPath, outPath);
+            decoder(gf, outf, mp3_delay, inPath, outPath);
         else
-            lame_decoder(gf, outf, 0, inPath, outPath);
+            decoder(gf, outf, 0, inPath, outPath);
     }
     else {
         if (max_nogap > 0) {
@@ -681,9 +673,8 @@ main(int argc, char **argv)
                     outf = init_files(gf, nogap_inPath[i], outPath);
                 }
                 brhist_init_package(gf);
-                ret =
-                    lame_encoder(gf, outf, use_flush_nogap, nogap_inPath[i],
-                                 outPath);	
+                ret = encoder(gf, outf, use_flush_nogap, nogap_inPath[i],
+			      outPath);	
                 
                 if (silent<=0) ReportLameTagProgress(gf,1);
                 lame_mp3_tags_fid(gf, outf); /* add VBR tags to mp3 file */
@@ -704,7 +695,7 @@ main(int argc, char **argv)
              * encode a single input file
              */
             brhist_init_package(gf);
-            ret = lame_encoder(gf, outf, 0, inPath, outPath);
+            ret = encoder(gf, outf, 0, inPath, outPath);
             
             if (silent<=0) ReportLameTagProgress(gf,1);
             lame_mp3_tags_fid(gf, outf); /* add VBR tags to mp3 file */

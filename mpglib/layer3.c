@@ -23,6 +23,7 @@
 
 #define MPEG1
 
+static struct III_sideinfo sideinfo; /* XXX REENTRANT */
 
 static real ispow[8207];
 static real aa_ca[8],aa_cs[8];
@@ -42,8 +43,8 @@ struct bandInfoStruct {
   short shortDiff[13];
 };
 
-int longLimit[9][23];
-int shortLimit[9][14];
+static int longLimit[9][23];
+static int shortLimit[9][14];
 
 const struct bandInfoStruct bandInfo[9] = { 
 
@@ -1536,7 +1537,6 @@ static void III_hybrid( PMPSTR mp, real fsIn[SBLIMIT][SSLIMIT],real tsOut[SSLIMI
 /*
  * main layer3 handler
  */
-struct III_sideinfo sideinfo;
 
 int do_layer3_sideinfo(struct frame *fr)
 {

@@ -56,8 +56,8 @@ static const int blockConv[] = {0, 1, 3, 2};
 #define MP3X_BETA_VERSION       0      /* Set number if this is a beta version, otherwise zero */
 
 
-plotting_data *pinfo;
-plotting_data *pplot;
+static plotting_data *pinfo;
+static plotting_data *pplot;
 plotting_data Pinfo[NUMPINFO];
 
 
@@ -76,15 +76,15 @@ static int subblock_draw[3] = { 1, 1, 1 };
 /* main window */
 GtkWidget *window;
 /* Backing pixmap for drawing areas */
-GtkWidget *pcmbox;       /* PCM data plotted here */
-GtkWidget *winbox;       /* mpg123 synthesis data plotted here */
-GtkWidget *enerbox[2];   /* spectrum, gr=0,1 plotted here */
-GtkWidget *mdctbox[2];   /* mdct coefficients gr=0,1 plotted here */
-GtkWidget *sfbbox[2];    /* scalefactors gr=0,1 plotted here */
-GtkWidget *headerbox;    /* mpg123 header info shown here */
+static GtkWidget *pcmbox;       /* PCM data plotted here */
+static GtkWidget *winbox;       /* mpg123 synthesis data plotted here */
+static GtkWidget *enerbox[2];   /* spectrum, gr=0,1 plotted here */
+static GtkWidget *mdctbox[2];   /* mdct coefficients gr=0,1 plotted here */
+static GtkWidget *sfbbox[2];    /* scalefactors gr=0,1 plotted here */
+static GtkWidget *headerbox;    /* mpg123 header info shown here */
 
 
-struct gtkinfostruct {
+static struct gtkinfostruct {
   int filetype;           /* input file type 0=WAV, 1=MP3 */
   int msflag;             /* toggle between L&R vs M&S PCM data display */
   int chflag;             /* toggle between L & R channels */
@@ -107,12 +107,13 @@ struct gtkinfostruct {
 
 
 static lame_global_flags *gfp;
-lame_internal_flags *gfc;
+static lame_internal_flags *gfc;
 
 /**********************************************************************
  * read one frame and encode it 
  **********************************************************************/
-int gtkmakeframe(void)
+static int
+gtkmakeframe(void)
 {
   int iread = 0;
   static int init=0;
@@ -224,7 +225,8 @@ int gtkmakeframe(void)
 }
 
 
-void plot_frame(void)
+static void
+plot_frame(void)
 {
   int i,j,n,ch,gr;
   gfloat *xcord,*ycord;
@@ -1031,7 +1033,8 @@ static gint key_press_event (GtkWidget *widget, GdkEventKey *event)
 
 
 /*! Get the mp3x version string.*/
-const char*  get_mp3x_version ( void )
+static const char*
+get_mp3x_version ( void )
 {
 #if   MP3X_ALPHA_VERSION > 0
     static /*@observer@*/ const char *const str =

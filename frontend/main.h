@@ -45,7 +45,6 @@ extern float update_interval;      /* to use Frank's time status display */
 extern int disable_wav_header;     /* for decoder only */
 extern mp3data_struct mp3input_data; /* used by Ogg and MP3 */
 extern int in_signed;
-extern int in_unsigned;
 #define order_littleEndian 0
 #define order_bigEndian 1
 #define order_unknown 2

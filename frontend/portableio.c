@@ -80,36 +80,19 @@
  *     For that see comments on the old Read16BitsHighLow()
  */
 
-#ifdef KLEMM_36
-
-signed int    ReadByte ( FILE* fp )
+static signed int
+ReadByte ( FILE* fp )
 {
     int  result = getc (fp);
     return result == EOF  ?  0  :  (signed char) (result & 0xFF);
 }
 
-unsigned int  ReadByteUnsigned ( FILE* fp )
+static unsigned int
+ReadByteUnsigned ( FILE* fp )
 {
     int  result = getc (fp);
     return result == EOF  ?  0  :  (unsigned char) (result & 0xFF);
 }
-
-#else
-
-static int
-ReadByte(FILE *fp)
-{
-	int	result;
-
-	result = getc(fp) & 0xff;
-	if (result & 0x80)
-		result = result - 0x100;
-	return result;
-}
-
-#endif
-
-#ifdef KLEMM_36
 
 int  Read16BitsLowHigh ( FILE* fp )
 {
@@ -119,27 +102,6 @@ int  Read16BitsLowHigh ( FILE* fp )
     return (high << 8) | low;
 }
 
-#else
-int
-Read16BitsLowHigh(FILE *fp)
-{
-	int	first, second, result;
-
-	first = 0xff & getc(fp);
-	second = 0xff & getc(fp);
-
-	result = (second << 8) + first;
-#ifndef	THINK_C42
-	if (result & 0x8000)
-		result = result - 0x10000;
-#endif	/* THINK_C */
-	return(result);
-}
-#endif
-
-
-#ifdef KLEMM_36
-
 int  Read16BitsHighLow ( FILE* fp )
 {
     int  high = ReadByte         (fp);
@@ -148,45 +110,6 @@ int  Read16BitsHighLow ( FILE* fp )
     return (high << 8) | low;
 }
 
-#else
-int
-Read16BitsHighLow(FILE *fp)
-{
-	int	first, second, result;
-     
-        /* Reads the High bits, the value is -128...127 
-	 * (which gave after upscaling the -32768...+32512
-	 * Why this value is not converted to signed char?
-	 */
-        first = 0xff & getc(fp);
-        /* Reads the Lows bits, the value is 0...255 
-	 * This is correct. This value gives an additional offset
-	 * for the High bits
-	 */
-	second = 0xff & getc(fp);
-
-        /* This is right */
-	result = (first << 8) + second;
-    
-        /* Now we are starting to correct the nasty bug of the first instruction
-	 * The value of the high bits is wrong. Always. So we must correct this
-	 * value. This seems to be not necessary for THINK_C42. This is either
-	 * a 16 bit compiler with 16 bit ints (where this bug is hidden and 0x10000
-	 * is not in the scope of an int) or it is not a C compiler, but only a
-	 * C like compiler. In the first case the '#ifndef THINK_C42' is wrong
-	 * because it's not a property of the THINK_C42 compiler, but of all compilers
-	 * with sizeof(int)*CHAR_BIT < 18.
-	 * Another nasty thing is that the rest of the code doesn't work for 16 bit ints,
-	 * so this patch don't solve the 16 bit problem.
-         */
-#ifndef	THINK_C42
-	if (result & 0x8000)
-		result = result - 0x10000;
-#endif	/* THINK_C */
-	return(result);
-}
-#endif
-
 void
 Write16BitsLowHigh(FILE *fp, int i)
 {
@@ -194,10 +117,7 @@ Write16BitsLowHigh(FILE *fp, int i)
 	putc((i>>8)&0xff,fp);
 }
 
-
 #define	Read32BitsLowHigh(f)	Read32Bits(f)
-
-#ifdef KLEMM_36
 
 int  Read32Bits ( FILE* fp )
 {
@@ -209,28 +129,6 @@ int  Read32Bits ( FILE* fp )
     return (high << 24) | (medh << 16) | (medl << 8) | low;
 }
 
-#else
-
-int
-Read32Bits(FILE *fp)
-{
-	int	first, second, result;
-
-	first = 0xffff & Read16BitsLowHigh(fp);
-	second = 0xffff & Read16BitsLowHigh(fp);
-
-	result = (second << 16) + first;
-#ifdef	CRAY
-	if (result & 0x80000000)
-		result = result - 0x100000000;
-#endif	/* CRAY */
-	return(result);
-}
-#endif
-
-
-#ifdef KLEMM_36
-
 int  Read32BitsHighLow ( FILE* fp )
 {
     int  high = ReadByte         (fp);
@@ -240,26 +138,6 @@ int  Read32BitsHighLow ( FILE* fp )
     
     return (high << 24) | (medh << 16) | (medl << 8) | low;
 }
-
-#else
-
-int
-Read32BitsHighLow(FILE *fp)
-{
-	int	first, second, result;
-
-	first = 0xffff & Read16BitsHighLow(fp);
-	second = 0xffff & Read16BitsHighLow(fp);
-
-	result = (first << 16) + second;
-#ifdef	CRAY
-	if (result & 0x80000000)
-		result = result - 0x100000000;
-#endif
-	return(result);
-}
-
-#endif
 
 void
 Write32BitsLowHigh(FILE *fp, int i)
@@ -275,37 +153,18 @@ void ReadBytes (FILE     *fp, char *p, int n)
     fread  ( p, 1, n, fp );
 }
 
-#ifdef KLEMM_36
 void WriteBytes(FILE *fp, char *p, int n)
 {
     /* return n == */
     fwrite ( p, 1, n, fp );
 }
-#else
-void WriteBytes(FILE *fp, char *p, int n)
-{
-        /* No error condition checking */
-        while (n-- > 0)
-		putc(*p++, fp);
-}
-#endif
-#ifdef KLEMM_36
+
 void WriteBytesSwapped(FILE *fp, char *p, int n)
 {
     p += n;
     while ( n-- > 0 )
 	putc ( *--p, fp );
 }
-#else
-void WriteBytesSwapped(FILE *fp, char *p, int n)
-{
-	p += n-1;
-	while (n-- > 0)
-		putc(*p--, fp);
-}
-#endif
-
-
 
 /****************************************************************
  * The following two routines make up for deficiencies in many
@@ -374,10 +233,6 @@ printf("ConvertFromIEEEExtended(%lx,%lx,%lx,%lx,%lx,%lx,%lx,%lx,%lx,%lx\r",
 	else
 		return f;
 }
-
-
-
-
 
 double
 ReadIeeeExtendedHighLow(FILE *fp)

@@ -85,10 +85,6 @@
 /* Define to 1 if you have the <linux/soundcard.h> header file. */
 #undef HAVE_LINUX_SOUNDCARD_H
 
-/* Define to 1 if long double works and has more range or precision than
-   double. */
-#undef HAVE_LONG_DOUBLE
-
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 

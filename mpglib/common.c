@@ -44,45 +44,14 @@ const long freqs[9] = { 44100, 48000, 32000,
                         22050, 24000, 16000,
                         11025, 12000,  8000 };
 
-int bitindex;
-unsigned char *wordpointer;
-unsigned char *pcm_sample;
-int pcm_point = 0;
+int bitindex; /* XXX NOT REENTRANT */
+unsigned char *wordpointer; /* XXX NOT REENTRANT */
+int pcm_point = 0; /* XXX NOT REENTRANT */
 
 
 #if defined( USE_LAYER_1 ) || defined ( USE_LAYER_2 )
   real muls[27][64];
 #endif
-
-#if 0
-static void get_II_stuff(struct frame *fr)
-{
-  static const int translate [3] [2] [16] =   /* char ? */
-   { { { 0,2,2,2,2,2,2,0,0,0,1,1,1,1,1,0 } ,
-       { 0,2,2,0,0,0,1,1,1,1,1,1,1,1,1,0 } } ,
-     { { 0,2,2,2,2,2,2,0,0,0,0,0,0,0,0,0 } ,
-       { 0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0 } } ,
-     { { 0,3,3,3,3,3,3,0,0,0,1,1,1,1,1,0 } ,
-       { 0,3,3,0,0,0,1,1,1,1,1,1,1,1,1,0 } } };
-
-  int table,sblim;
-  static const struct al_table2 *tables[5] = 
-       { alloc_0, alloc_1, alloc_2, alloc_3 , alloc_4 };
-  static int sblims[5] = { 27 , 30 , 8, 12 , 30 };
-
-  if(fr->lsf)
-    table = 4;
-  else
-    table = translate[fr->sampling_frequency][2-fr->stereo][fr->bitrate_index];
-  sblim = sblims[table];
-
-  fr->alloc = tables[table];
-  fr->II_sblimit = sblim;
-}
-#endif
-
-#define HDRCMPMASK 0xfffffd00
-
 
 int head_check(unsigned long head,int check_layer)
 {

@@ -61,10 +61,6 @@ int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip, char *inPath, char 
 
 
 
-void SwapBytesInWords( short *loc, int words );
-
-
-
 #ifdef LIBSNDFILE
 
 #include "sndfile.h"

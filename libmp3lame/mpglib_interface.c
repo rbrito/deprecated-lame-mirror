@@ -17,7 +17,7 @@
 #include <dmalloc.h>
 #endif
 
-MPSTR   mp; /* oops, not reentrant ... */
+static MPSTR mp; /* XXX NOT REENTRANT */
 #ifndef NOANALYSIS
 plotting_data *mpg123_pinfo = NULL;
 #endif
@@ -267,16 +267,6 @@ lame_decode_headers(unsigned char *buffer,
         }
     }
 }
-
-
-int
-lame_decode(unsigned char *buffer, int len, short pcm_l[], short pcm_r[])
-{
-    mp3data_struct mp3data;
-
-    return lame_decode_headers(buffer, len, pcm_l, pcm_r, &mp3data);
-}
-
 
 #endif
 

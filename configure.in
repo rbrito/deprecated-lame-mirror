@@ -110,11 +110,6 @@ AC_CHECK_SIZEOF(unsigned long long)
 AC_CHECK_SIZEOF(float)
 AC_CHECK_SIZEOF(double)
 
-AC_C_LONG_DOUBLE
-if test "${ac_cv_c_have_long_double}" = "yes" ; then
-	AC_CHECK_SIZEOF(long double)
-fi
-
 AC_CHECK_TYPES([uint8_t, int8_t, uint16_t, int16_t, uint32_t, int32_t])
 
 AH_VERBATIM([HAVE_UINT8_T],
