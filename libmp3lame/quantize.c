@@ -1445,14 +1445,14 @@ noisesfb(lame_t gfc, gr_info *gi, FLOAT * xmin, int startsfb)
 {
     int sfb, j = 0;
     for (sfb = 0; sfb < gi->psymax; sfb++) {
-	int width = -gi->width[sfb];
-	j -= width;
+	int width = gi->width[sfb];
+	j += width;
 	if (sfb >= startsfb) {
 	    int s = scalefactor(gi, sfb);
 	    FLOAT noise;
 	    if (IPOW20(s) > gi->maxXR[sfb])
 		return -1;
-	    noise = calc_sfb_noise(gfc, j, width, s);
+	    noise = calc_sfb_noise(gfc, j, -width, s);
 	    if (noise > xmin[sfb])
 		return sfb;
 	    if (noise < 0.0)
