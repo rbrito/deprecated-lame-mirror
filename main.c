@@ -111,7 +111,6 @@ int main(int argc, char **argv)
 	/* encode */
 	imp3=lame_encode_buffer(Buffer[0],Buffer[1],iread,
               mp3buffer,LAME_MAXMP3BUFFER); 
-
 	fwrite(mp3buffer,1,imp3,outf);       /* write the MP3 output  */
       } while (iread);
     }

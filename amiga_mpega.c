@@ -65,7 +65,7 @@ int lame_decode_initfile(const char *fullname, int *stereo, int *samp, int *bitr
 	*stereo  = mstream->dec_channels;
 	*samp    = mstream->dec_frequency;
 	*bitrate = mstream->bitrate;
-//	*nsamp   = MAX_U_32_NUM;
+        /* *nsamp   = MAX_U_32_NUM; */
 	*nsamp   = (mstream->ms_duration * mstream->dec_frequency) / 1000;
 
 	return 0;

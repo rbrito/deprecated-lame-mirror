@@ -1199,7 +1199,7 @@ void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
             *(ix++) = 0;
             xr++;
           } else
-	    //	    *(ix++) = (int)( istep*(*(xr++))  + 0.4054);
+	    /*   *(ix++) = (int)( istep*(*(xr++))  + 0.4054); */
             XRPOW_FTOI(  istep*(*(xr++))  + ROUNDFAC , *(ix++) );
         }
   }

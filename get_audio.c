@@ -61,13 +61,13 @@ int lame_readframe(short int Buffer[2][1152])
   /* note: if input is gf.stereo and output is mono, get_audio() 
    * will  .5*(L+R) in channel 0,  and nothing in channel 1. */
   /* DOWNSAMPLE, ETC */
-  if (gf.resample_ratio!=1) {
-    /* input frequency =  output freq*resample_ratio; */
-    iread=get_audio_resample(Buffer,gf.resample_ratio,gf.stereo);
-  }else{
+  //  if (gf.resample_ratio!=1) {
+  //    /* input frequency =  output freq*resample_ratio; */
+  //    iread=get_audio_resample(Buffer,gf.resample_ratio,gf.stereo);
+  //  }else{
     iread = get_audio(Buffer,gf.stereo);
-  }
-
+    //  }
+  
   /* check to see if we overestimated/underestimated totalframes */
   if (iread==0)  gf.totalframes = Min(gf.totalframes,gf.frameNum+2);
   if (gf.frameNum > (gf.totalframes-1)) gf.totalframes = gf.frameNum;

@@ -217,13 +217,6 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 	if (gf.gtkflag)
 	  set_pinfo (cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr_org[gr][ch], xfsf, noise, gr, ch);
 #endif
-	//	printf("%i %i %i bits=%i  %e %e %e %e \n",
-	//          gf.frameNum,gr,ch,cod_info->part2_3_length,
-	//          noise[0],noise[1],noise[2],noise[3] );
-
-	//	printf("%i %i  sf=%i %i \n",gf.frameNum,l3_enc[gr][ch][0],
-	//           scalefac[gr][ch].l[0],cod_info->global_gain);
-
 	ResvAdjust(cod_info, l3_side, mean_bits );
         /* set the sign of l3_enc */
         for ( i = 0; i < 576; i++) {
@@ -968,7 +961,7 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
     FLOAT8 noise;
     *over_noise=0;
     *tot_noise=0;
-    *max_noise=-999;
+    *max_noise = -999;
 
     for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
 	FLOAT8 step;
@@ -1169,7 +1162,6 @@ int over,FLOAT8 tot_noise, FLOAT8 over_noise, FLOAT8 max_noise)
   if (gf.experimentalX==0) {
     better = ((over < best_over) ||
 	      ((over==best_over) && (over_noise<=best_over_noise)) ) ;
-	      //	    ((over==best_over) && (over_noise<best_over_noise)) ) ;
   }
 
   if (gf.experimentalX==1) 

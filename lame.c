@@ -813,12 +813,52 @@ int lame_encode_frame(short int inbuf_l[],short int inbuf_r[],int mf_size,char *
 }
 
 
-int fill_buffer_linear_resample(short int *outbuf,int desired_len,short int *inbuf,int len) {
-  int j;
-  j=Min(desired_len,len);
-  memcpy( (char *) outbuf,(char *)inbuf,sizeof(short int)*j);
-  return j;
+
+
+int fill_buffer_linear_resample(short int *outbuf,int desired_len,
+        short int *inbuf,int len,int *num_used,int ch) {
+
+  static FLOAT8 itime[2];
+#define OLDBUFSIZE 10
+  static short int inbuf_old[2][OLDBUFSIZE];
+  FLOAT8 time0,time1,time2;
+  int i,j,k,x1,x2;
+
+  if (gf.frameNum==0) {
+    itime[ch]=0;
+  }
+
+  /* time of j'th element in inbuf = itime + j/ifreq; */
+  /* time of k'th element in outbuf   =  j/ofreq */
+  for (k=0;k<desired_len;k++) {
+    time0 = k*gf.resample_ratio;       /* time of k'th output sample */
+    j = floor( time0 -itime[ch]  );  
+    time1 = itime[ch] + j;              /* time of j'th input sample */
+    time2 = time1 +1;               /* time of j+1th input sample */
+
+    if (1+j >= len) break;
+
+    x1 = (j<0) ? inbuf_old[ch][OLDBUFSIZE+j] : inbuf[j];
+    x2 = ((1+j)<0) ? inbuf_old[ch][OLDBUFSIZE+1+j] : inbuf[1+j];
+    outbuf[k] = floor(.5 +  (x1*(time2-time0) + x2*(time0-time1)) );
+
+    /*
+    printf("k=%i ch=%i  new=%i old=%i(%i) %i(%i) \n",k,ch,outbuf[k],x1,j,x2,j+1); 
+    */
+  }
+
+  /* k = number of samples added to outbuf */
+  /* last k sample used data from j,j+1, or j+1 overflowed buffer */
+  /* remove num_used samples from inbuf: */
+  *num_used = Min(len,j+1);
+  assert(*num_used > OLDBUFSIZE);
+  itime[ch] += *num_used - k*gf.resample_ratio;
+  for (i=0;i<OLDBUFSIZE;i++)
+    inbuf_old[ch][i]=inbuf[*num_used + i -OLDBUFSIZE];
+  return k;
 }
+
+
 
 
 int fill_buffer(short int *outbuf,int desired_len,short int *inbuf,int len) {
@@ -827,6 +867,8 @@ int fill_buffer(short int *outbuf,int desired_len,short int *inbuf,int len) {
   memcpy( (char *) outbuf,(char *)inbuf,sizeof(short int)*j);
   return j;
 }
+
+
 
 
 /* 
@@ -875,44 +917,46 @@ int lame_encode_buffer(short int buffer_l[], short int buffer_r[],int nbuffer,
     frame_buffered=1;
     mf_samples_to_encode = ENCDELAY+288;
     mf_size=ENCDELAY-MDCTDELAY;  /* we pad input with this many 0's */
-  }else {
+  }
+  if (gf.frameNum==1) {
     /* reset, for the next time frameNum==0 */
     frame_buffered=0;  
   }
 
   while (nbuffer > 0) {
-    int n=0;
-
+    int n_in=0;
+    int n_out=0;
     /* copy in new samples */
     for (ch=0; ch<gf.stereo; ch++) {
-      //      if (gf.resample_ratio!=1) 
-      //	n=fill_buffer_linear_resample(&mfbuf[ch][mf_size],samplesPerFrame,
-      //              in_buffer[ch],nbuffer);
-      //      else
-	n=fill_buffer(&mfbuf[ch][mf_size],samplesPerFrame,in_buffer[ch],nbuffer);
+      if (gf.resample_ratio!=1)  {
+	n_out=fill_buffer_linear_resample(&mfbuf[ch][mf_size],samplesPerFrame,
+					  in_buffer[ch],nbuffer,&n_in,ch);
+      } else { 
+	n_out=fill_buffer(&mfbuf[ch][mf_size],samplesPerFrame,in_buffer[ch],nbuffer);
+	n_in = n_out;
+      }
+      in_buffer[ch] += n_in;
     }
-
-    mf_size += n;
-    mf_samples_to_encode += n;
-    nbuffer -= n;
-    for (ch=0; ch<gf.stereo; ch++) in_buffer[ch] += n;
-    
-    if (mf_size < mf_needed) return mp3size;
+    nbuffer -= n_in;
+    mf_size += n_out;
     assert(mf_size<=MFSIZE);
-    
-    /* encode the frame */
-    ret = lame_encode_frame(mfbuf[0],mfbuf[1],mf_size,mp3buf);
-    mp3buf += ret;
-    mp3size += ret;
-    
-    /* shift out old samples */
-    mf_size -= samplesPerFrame;
-    mf_samples_to_encode -= samplesPerFrame;
-    for (ch=0; ch<gf.stereo; ch++)
-      for (i=0; i<mf_size; i++)
-	mfbuf[ch][i]=mfbuf[ch][i+samplesPerFrame];
+    mf_samples_to_encode += n_out;
+
+    if (mf_size >= mf_needed) {
+      /* encode the frame */
+      ret = lame_encode_frame(mfbuf[0],mfbuf[1],mf_size,mp3buf);
+      mp3buf += ret;
+      mp3size += ret;
+      
+      /* shift out old samples */
+      mf_size -= samplesPerFrame;
+      mf_samples_to_encode -= samplesPerFrame;
+      for (ch=0; ch<gf.stereo; ch++)
+	for (i=0; i<mf_size; i++)
+	  mfbuf[ch][i]=mfbuf[ch][i+samplesPerFrame];
+    }
   }
-    
+  assert(nbuffer==0);
   return mp3size;
 }
 

@@ -238,7 +238,7 @@ VBR_iteration_loop_new (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 	  
 	}
       } /* compute scalefactors */
-      //    printf("%i %i %i new vbr over=%i  \n",gf.frameNum,gr,ch,over);
+      /*    printf("%i %i %i new vbr over=%i  \n",gf.frameNum,gr,ch,over);*/
     } /* ch */
   } /* gr */
 }
