@@ -1054,8 +1054,8 @@ mp3x display               <------LONG------>
 		for (j = 0; j < 6; j++) {
 		    int k = i*6+j, band;
 		    FLOAT x = 0.0;
-// for (band = gfc->nsPsy.switching_highpass; ...
-		    for (band = 10; band < SBLIMIT; band++)
+		    for (band = gfc->nsPsy.switching_band;
+			 band < SBLIMIT; band++)
 			x += fabs(sbsmpl[chn][gr*576+k*32+mdctorder[band]]);
 		    if (y < x) y = x;
 		}
@@ -1199,21 +1199,11 @@ partially_convert_l2s(
 	}
 	x += .5*gfc->nb_1[chn][b];
 
-//	printf("%e %e %e -> %e",
-//	       mr->thm.s[sfb][0], mr->thm.s[sfb][1], mr->thm.s[sfb][2], x);
 	x *= ((double)BLKSIZE_s / BLKSIZE);
 	if (x < gfc->ATH.s_avg[sfb] * gfc->ATH.adjust)
 	    continue;
 	x *= gfc->masking_lower;
-//	printf("(%e)\n", gfc->ATH.s_avg[sfb] * gfc->ATH.adjust);
-//	printf("%e %e %e\n",
-//	       mr->en.s[sfb][0], mr->en.s[sfb][1], mr->en.s[sfb][2]);
-	if (mr->thm.s[sfb][0] > x)
-	    mr->thm.s[sfb][0] = x;
-	if (mr->thm.s[sfb][1] > x)
-	    mr->thm.s[sfb][1] = x;
-	if (mr->thm.s[sfb][2] > x)
-	    mr->thm.s[sfb][2] = x;
+	mr->thm.s[sfb][0] = mr->thm.s[sfb][1] = mr->thm.s[sfb][2] = x;
     }
 }
 
@@ -1381,7 +1371,7 @@ L3psycho_anal_ns(
 	enn = thmm = 0.0;
 	for (;; b++ ) {
 	    /* convolve the partitioned energy with the spreading function */
-	    FLOAT ecb, tmp;
+	    FLOAT ecb;
 	    int kk = gfc->s3ind[b][0];
 	    spread -= kk;
 // calculate same bark masking 1st
@@ -1405,27 +1395,10 @@ L3psycho_anal_ns(
 	    }
 	    spread += gfc->s3ind[b][1] + 1;
 
-	    /****   long block pre-echo control   ****/
-	    /* dont use long block pre-echo control if previous granule was 
-	     * a short block.  This is to avoid the situation:   
-	     * frame0:  quiet (very low masking)  
-	     * frame1:  surge  (triggers short blocks)
-	     * frame2:  regular frame.  looks like pre-echo when compared to 
-	     *          frame0, but all pre-echo was in frame1.
-	     */
-	    if (useshort_old[chn] == SHORT_TYPE)
-		tmp = ecb; /* or Min(ecb, rpelev*gfc->nb_1[chn][b]); ? */
-	    else
-		tmp = NS_INTERP(Min(ecb,
-				    Min(rpelev  * gfc->nb_1[chn][b],
-					rpelev2 * gfc->nb_2[chn][b])),
-				ecb, pcfact);
-
-	    gfc->nb_2[chn][b] = gfc->nb_1[chn][b];
 	    gfc->nb_1[chn][b] = ecb;
 
-	    enn  += eb [b];
-	    thmm += tmp;
+	    enn  += eb[b];
+	    thmm += ecb;
 	    if (b != gfc->bo_l[j])
 		continue;
 
@@ -1433,15 +1406,20 @@ L3psycho_anal_ns(
 		break;
 
 	    enn  -= .5*eb[b];
-	    thmm -= .5*tmp;
+	    thmm -= .5*ecb;
+	    /****   long block pre-echo control   ****/
+	    /* reduce masking threshold if there's a surge
+	     * in the subbanded signal. */
+	    /* XXX not implemented */
+
 	    if (thmm < gfc->ATH.l_avg[j] * gfc->ATH.adjust)
 		thmm = gfc->ATH.l_avg[j] * gfc->ATH.adjust;
 
 	    mr->en .l[j] = enn;
 	    mr->thm.l[j] = thmm * gfc->masking_lower;
 
-	    enn  =  eb[b] * 0.5;
-	    thmm = tmp * 0.5;
+	    enn  = .5*eb[b];
+	    thmm = .5*ecb;
 	    j++;
 	    if (b == gfc->bo_l[j])
 		break;

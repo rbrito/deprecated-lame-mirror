@@ -1291,7 +1291,6 @@ int psymodel_init(lame_global_flags *gfp)
     for (i=0; i<4; ++i) {
 	for (j=0; j<CBANDS; ++j) {
 	    gfc->nb_1[i][j]=1e20;
-	    gfc->nb_2[i][j]=1e20;
 	}
 	for ( sb = 0; sb < SBMAX_l; sb++ ) {
 	    gfc->masking_next[0][i].en.l[sb] = 1e20;
@@ -1398,8 +1397,8 @@ int psymodel_init(lame_global_flags *gfp)
     if (i)
 	return i;
 
-    /* long/short switching, use subbandded sample in f > 7kHz */
-    i = (int) (7000.0 / (sfreq / 2.0 / 32.0) + 0.5);
+    /* long/short switching, use subbandded sample in f > 2kHz */
+    i = (int) (2000.0 / (sfreq / 2.0 / 32.0) + 0.5);
     gfc->nsPsy.switching_band = Min(i, 30);
 
     /* compute equal loudness weights */

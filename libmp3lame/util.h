@@ -365,7 +365,7 @@ struct lame_internal_flags {
   FLOAT sparseB;
 
     /* psymodel */
-    FLOAT nb_1[4][CBANDS], nb_2[4][CBANDS];
+    FLOAT nb_1[4][CBANDS];
     FLOAT *s3_ss;
     FLOAT *s3_ll;
     FLOAT decay;
