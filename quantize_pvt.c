@@ -995,20 +995,6 @@ void quantize_xrpow_ISO(FLOAT8 xp[576], int pi[576], gr_info *cod_info)
 
 #else
 
-
-
-
-
-
-#if (defined(__GNUC__) && defined(__i386__))
-#define USE_GNUC_ASM
-#endif
-#ifdef _MSC_VER
-#define USE_MSC_ASM
-#endif
-
-
-
 /*********************************************************************
  * XRPOW_FTOI is a macro to convert floats to ints.  
  * if XRPOW_FTOI(x) = nearest_int(x), then QUANTFAC(x)=adj43asm[x]
@@ -1017,254 +1003,54 @@ void quantize_xrpow_ISO(FLOAT8 xp[576], int pi[576], gr_info *cod_info)
  * if XRPOW_FTOI(x) = floor(x), then QUANTFAC(x)=asj43[x]   
  *                                   ROUNDFAC=0.4054
  *********************************************************************/
-#ifdef USE_GNUC_ASM
-#  define QUANTFAC(rx)  adj43asm[rx]
-#  define ROUNDFAC -0.0946
-#  define XRPOW_FTOI(src, dest) \
-     __asm__ ("fistpl %0 " : "=m"(dest) : "t"(src) : "st")
-#elif defined (USE_MSC_ASM)
-#  define QUANTFAC(rx)  adj43asm[rx]
-#  define ROUNDFAC -0.0946
-#  define XRPOW_FTOI(src, dest) do { \
-     FLOAT8 src_ = (src); \
-     int dest_; \
-     { \
-       __asm fld src_ \
-       __asm fistp dest_ \
-     } \
-     (dest) = dest_; \
-   } while (0)
-#else
-#  define QUANTFAC(rx)  adj43[rx]
-#  define ROUNDFAC 0.4054
-#  define XRPOW_FTOI(src,dest) ((dest) = (int)(src))
-#endif
+#define QUANTFAC(rx)  adj43[rx]
+#define ROUNDFAC 0.4054
+#define XRPOW_FTOI(src,dest) ((dest) = (int)(src))
 
-#ifdef USE_MSC_ASM
-/* define F8type and F8size according to type of FLOAT8 */
-# if defined FLOAT8_is_double
-#  define F8type qword
-#  define F8size 8
-# elif defined FLOAT8_is_float
-#  define F8type dword
-#  define F8size 4
-# else
-/* only float and double supported */
-#  error invalid FLOAT8 type for USE_MSC_ASM
-# endif
-#endif
-
-#ifdef USE_GNUC_ASM
-/* define F8type and F8size according to type of FLOAT8 */
-# if defined FLOAT8_is_double
-#  define F8type "l"
-#  define F8size "8"
-# elif defined FLOAT8_is_float
-#  define F8type "s"
-#  define F8size "4"
-# else
-/* only float and double supported */
-#  error invalid FLOAT8 type for USE_GNUC_ASM
-# endif
-#endif
 
 void quantize_xrpow(FLOAT8 xr[576], int ix[576], gr_info *cod_info) {
-  /* quantize on xr^(3/4) instead of xr */
-  const FLOAT8 istep = IPOW20(cod_info->global_gain);
+    /* quantize on xr^(3/4) instead of xr */
+    const FLOAT8 istep = IPOW20(cod_info->global_gain);
+    /* from Wilfried.Behne@t-online.de.  Reported to be 2x faster than 
+       the above code (when not using ASM) on PowerPC */
+    int j;
 
-#if defined (USE_GNUC_ASM) 
-  {
-      int rx[4];
-      __asm__ __volatile__(
-        "\n\nloop1:\n\t"
-
-        "fld" F8type " 0*" F8size "(%1)\n\t"
-        "fld" F8type " 1*" F8size "(%1)\n\t"
-        "fld" F8type " 2*" F8size "(%1)\n\t"
-        "fld" F8type " 3*" F8size "(%1)\n\t"
-
-        "fxch %%st(3)\n\t"
-        "fmul %%st(4)\n\t"
-        "fxch %%st(2)\n\t"
-        "fmul %%st(4)\n\t"
-        "fxch %%st(1)\n\t"
-        "fmul %%st(4)\n\t"
-        "fxch %%st(3)\n\t"
-        "fmul %%st(4)\n\t"
-
-        "addl $4*" F8size ", %1\n\t"
-        "addl $16, %3\n\t"
-
-        "fxch %%st(2)\n\t"
-        "fistl %5\n\t"
-        "fxch %%st(1)\n\t"
-        "fistl 4+%5\n\t"
-        "fxch %%st(3)\n\t"
-        "fistl 8+%5\n\t"
-        "fxch %%st(2)\n\t"
-        "fistl 12+%5\n\t"
-
-        "dec %4\n\t"
-
-        "movl %5, %%eax\n\t"
-        "movl 4+%5, %%ebx\n\t"
-        "fxch %%st(1)\n\t"
-        "fadd" F8type " (%2,%%eax," F8size ")\n\t"
-        "fxch %%st(3)\n\t"
-        "fadd" F8type " (%2,%%ebx," F8size ")\n\t"
-
-        "movl 8+%5, %%eax\n\t"
-        "movl 12+%5, %%ebx\n\t"
-        "fxch %%st(2)\n\t"
-        "fadd" F8type " (%2,%%eax," F8size ")\n\t"
-        "fxch %%st(1)\n\t"
-        "fadd" F8type " (%2,%%ebx," F8size ")\n\t"
-
-        "fxch %%st(3)\n\t"
-        "fistpl -16(%3)\n\t"
-        "fxch %%st(1)\n\t"
-        "fistpl -12(%3)\n\t"
-        "fistpl -8(%3)\n\t"
-        "fistpl -4(%3)\n\t"
-
-        "jnz loop1\n\n"
-        : /* no outputs */
-        : "t" (istep), "r" (xr), "r" (adj43asm), "r" (ix), "r" (576 / 4), "m" (rx)
-        : "%eax", "%ebx", "memory", "cc"
-      );
-  }
-#elif defined (USE_MSC_ASM)
-  {
-      /* asm from Acy Stapp <AStapp@austin.rr.com> */
-      int rx[4];
-      _asm {
-          fld F8type ptr [istep]
-          mov esi, dword ptr [xr]
-          lea edi, dword ptr [adj43asm]
-          mov edx, dword ptr [ix]
-          mov ecx, 576/4
-      } loop1: _asm {
-          fld F8type ptr [esi+(0*F8size)] // 0
-          fld F8type ptr [esi+(1*F8size)] // 1 0
-          fld F8type ptr [esi+(2*F8size)] // 2 1 0
-          fld F8type ptr [esi+(3*F8size)] // 3 2 1 0
-          fxch st(3)                  // 0 2 1 3
-          fmul st(0), st(4)
-          fxch st(2)                  // 1 2 0 3
-          fmul st(0), st(4)
-          fxch st(1)                  // 2 1 0 3
-          fmul st(0), st(4)
-          fxch st(3)                  // 3 1 0 2
-          fmul st(0), st(4)
-
-          add esi, 4*F8size
-          add edx, 16
-
-          fxch st(2)                  // 0 1 3 2
-          fist dword ptr [rx]
-          fxch st(1)                  // 1 0 3 2
-          fist dword ptr [rx+4]
-          fxch st(3)                  // 2 0 3 1
-          fist dword ptr [rx+8]
-          fxch st(2)                  // 3 0 2 1
-          fist dword ptr [rx+12]
-
-          dec ecx
-
-          mov eax, dword ptr [rx]
-          mov ebx, dword ptr [rx+4]
-          fxch st(1)                  // 0 3 2 1
-          fadd F8type ptr [edi+eax*F8size]
-          fxch st(3)                  // 1 3 2 0
-          fadd F8type ptr [edi+ebx*F8size]
-
-          mov eax, dword ptr [rx+8]
-          mov ebx, dword ptr [rx+12]
-          fxch st(2)                  // 2 3 1 0
-          fadd F8type ptr [edi+eax*F8size]
-          fxch st(1)                  // 3 2 1 0
-          fadd F8type ptr [edi+ebx*F8size]
-          fxch st(3)                  // 0 2 1 3
-          fistp dword ptr [edx-16]    // 2 1 3
-          fxch st(1)                  // 1 2 3
-          fistp dword ptr [edx-12]    // 2 3
-          fistp dword ptr [edx-8]     // 3
-          fistp dword ptr [edx-4]
-
-          jnz loop1
-
-          mov dword ptr [xr], esi
-          mov dword ptr [ix], edx
-          fstp st(0)
-      }
-  }
-#else
-#if 0
-  {   /* generic code if you write ASM for XRPOW_FTOI() */
-      FLOAT8 x;
-      int j, rx;
-      for (j = 576 / 4; j > 0; --j) {
-          x = *xr++ * istep;
-          XRPOW_FTOI(x, rx);
-          XRPOW_FTOI(x + QUANTFAC(rx), *ix++);
-
-          x = *xr++ * istep;
-          XRPOW_FTOI(x, rx);
-          XRPOW_FTOI(x + QUANTFAC(rx), *ix++);
-
-          x = *xr++ * istep;
-          XRPOW_FTOI(x, rx);
-          XRPOW_FTOI(x + QUANTFAC(rx), *ix++);
-
-          x = *xr++ * istep;
-          XRPOW_FTOI(x, rx);
-          XRPOW_FTOI(x + QUANTFAC(rx), *ix++);
-      }
-  }
-#endif
-  {/* from Wilfried.Behne@t-online.de.  Reported to be 2x faster than 
-      the above code (when not using ASM) on PowerPC */
-     	int j;
-     	
-     	for ( j = 576/8; j > 0; --j)
-     	{
-			FLOAT8	x1, x2, x3, x4, x5, x6, x7, x8;
-			int		rx1, rx2, rx3, rx4, rx5, rx6, rx7, rx8;
-			x1 = *xr++ * istep;
-			x2 = *xr++ * istep;
-			XRPOW_FTOI(x1, rx1);
-			x3 = *xr++ * istep;
-			XRPOW_FTOI(x2, rx2);
-			x4 = *xr++ * istep;
-			XRPOW_FTOI(x3, rx3);
-			x5 = *xr++ * istep;
-			XRPOW_FTOI(x4, rx4);
-			x6 = *xr++ * istep;
-			XRPOW_FTOI(x5, rx5);
-			x7 = *xr++ * istep;
-			XRPOW_FTOI(x6, rx6);
-			x8 = *xr++ * istep;
-			XRPOW_FTOI(x7, rx7);
-			x1 += QUANTFAC(rx1);
-			XRPOW_FTOI(x8, rx8);
-			x2 += QUANTFAC(rx2);
-			XRPOW_FTOI(x1,*ix++);
-			x3 += QUANTFAC(rx3);
-			XRPOW_FTOI(x2,*ix++);
-			x4 += QUANTFAC(rx4);		
-			XRPOW_FTOI(x3,*ix++);
-			x5 += QUANTFAC(rx5);
-			XRPOW_FTOI(x4,*ix++);
-			x6 += QUANTFAC(rx6);
-			XRPOW_FTOI(x5,*ix++);
-			x7 += QUANTFAC(rx7);
-			XRPOW_FTOI(x6,*ix++);
-			x8 += QUANTFAC(rx8);		
-			XRPOW_FTOI(x7,*ix++);
-			XRPOW_FTOI(x8,*ix++);
-     	}
-	}
-#endif
+    for ( j = 576/8; j > 0; --j) {
+	FLOAT8	x1, x2, x3, x4, x5, x6, x7, x8;
+	int	rx1, rx2, rx3, rx4, rx5, rx6, rx7, rx8;
+	x1 = *xr++ * istep;
+	x2 = *xr++ * istep;
+	XRPOW_FTOI(x1, rx1);
+	x3 = *xr++ * istep;
+	XRPOW_FTOI(x2, rx2);
+	x4 = *xr++ * istep;
+	XRPOW_FTOI(x3, rx3);
+	x5 = *xr++ * istep;
+	XRPOW_FTOI(x4, rx4);
+	x6 = *xr++ * istep;
+	XRPOW_FTOI(x5, rx5);
+	x7 = *xr++ * istep;
+	XRPOW_FTOI(x6, rx6);
+	x8 = *xr++ * istep;
+	XRPOW_FTOI(x7, rx7);
+	x1 += QUANTFAC(rx1);
+	XRPOW_FTOI(x8, rx8);
+	x2 += QUANTFAC(rx2);
+	XRPOW_FTOI(x1,*ix++);
+	x3 += QUANTFAC(rx3);
+	XRPOW_FTOI(x2,*ix++);
+	x4 += QUANTFAC(rx4);
+	XRPOW_FTOI(x3,*ix++);
+	x5 += QUANTFAC(rx5);
+	XRPOW_FTOI(x4,*ix++);
+	x6 += QUANTFAC(rx6);
+	XRPOW_FTOI(x5,*ix++);
+	x7 += QUANTFAC(rx7);
+	XRPOW_FTOI(x6,*ix++);
+	x8 += QUANTFAC(rx8);
+	XRPOW_FTOI(x7,*ix++);
+	XRPOW_FTOI(x8,*ix++);
+    }
 }
 
 
@@ -1274,148 +1060,35 @@ void quantize_xrpow(FLOAT8 xr[576], int ix[576], gr_info *cod_info) {
 
 void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
 {
-  /* quantize on xr^(3/4) instead of xr */
-  const FLOAT8 istep = IPOW20(cod_info->global_gain);
-  
-#if defined(USE_GNUC_ASM)
+    /* quantize on xr^(3/4) instead of xr */
+    const FLOAT8 istep = IPOW20(cod_info->global_gain);
+    const FLOAT8 compareval0 = (1.0 - 0.4054)/istep;
+    int j;
+    /* depending on architecture, it may be worth calculating a few more
+       compareval's.
 
-   {
-      __asm__ __volatile__ (
-        "\n\nloop0:\n\t"
+       eg.  compareval1 = (2.0 - 0.4054/istep);
+       .. and then after the first compare do this ...
+       if compareval1>*xr then ix = 1;
 
-        "fld" F8type " 0*" F8size "(%3)\n\t"
-        "fld" F8type " 1*" F8size "(%3)\n\t"
-        "fld" F8type " 2*" F8size "(%3)\n\t"
-        "fld" F8type " 3*" F8size "(%3)\n\t"
+       On a pentium166, it's only worth doing the one compare (as done here),
+       as the second compare becomes more expensive than just calculating
+       the value. Architectures with slow FP operations may want to add some
+       more comparevals. try it and send your diffs statistically speaking
 
-        "addl $4*" F8size ", %3\n\t"
-        "addl $16, %4\n\t"
-
-        "fxch %%st(3)\n\t"
-        "fmul %%st(4)\n\t"
-        "fxch %%st(2)\n\t"
-        "fmul %%st(4)\n\t"
-        "fxch %%st(1)\n\t"
-        "fmul %%st(4)\n\t"
-        "fxch %%st(3)\n\t"
-        "fmul %%st(4)\n\t"
-
-        "dec %0\n\t"
-
-        "fxch %%st(2)\n\t"
-        "fadd %%st(5)\n\t"
-        "fxch %%st(1)\n\t"
-        "fadd %%st(5)\n\t"
-        "fxch %%st(3)\n\t"
-        "fadd %%st(5)\n\t"
-        "fxch %%st(2)\n\t"
-        "fadd %%st(5)\n\t"
-
-        "fxch %%st(1)\n\t"
-        "fistpl -16(%4)\n\t"
-        "fxch %%st(2)\n\t"
-        "fistpl -12(%4)\n\t"
-        "fistpl -8(%4)\n\t"
-        "fistpl -4(%4)\n\t"
-
-        "jnz loop0\n\n"
-
-        : /* no outputs */
-        : "r" (576 / 4), "u" ((FLOAT8)(0.4054 - 0.5)), "t" (istep), "r" (xr), "r" (ix)
-        : "memory", "cc"
-      );
-  }
-#elif defined(USE_MSC_ASM)
-  {
-      /* asm from Acy Stapp <AStapp@austin.rr.com> */
-      const FLOAT8 temp0 = 0.4054 - 0.5;
-      _asm {
-          mov ecx, 576/4;
-          fld F8type ptr [temp0];
-          fld F8type ptr [istep];
-          mov eax, dword ptr [xr];
-          mov edx, dword ptr [ix];
-      } loop0: _asm {
-          fld F8type ptr [eax+0*F8size]; // 0
-          fld F8type ptr [eax+1*F8size]; // 1 0
-          fld F8type ptr [eax+2*F8size]; // 2 1 0
-          fld F8type ptr [eax+3*F8size]; // 3 2 1 0
-
-          add eax, 4*F8size;
-          add edx, 16;
-
-          fxch st(3); // 0 2 1 3
-          fmul st(0), st(4);
-          fxch st(2); // 1 2 0 3
-          fmul st(0), st(4);
-          fxch st(1); // 2 1 0 3
-          fmul st(0), st(4);
-          fxch st(3); // 3 1 0 2
-          fmul st(0), st(4);
-
-          dec ecx;
-
-          fxch st(2); // 0 1 3 2
-          fadd st(0), st(5);
-          fxch st(1); // 1 0 3 2
-          fadd st(0), st(5);
-          fxch st(3); // 2 0 3 1
-          fadd st(0), st(5);
-          fxch st(2); // 3 0 2 1
-          fadd st(0), st(5);
-
-          fxch st(1); // 0 3 2 1 
-          fistp dword ptr [edx-16]; // 3 2 1
-          fxch st(2); // 1 2 3
-          fistp dword ptr [edx-12];
-          fistp dword ptr [edx-8];
-          fistp dword ptr [edx-4];
-
-          jnz loop0;
-
-          mov dword ptr [xr], eax;
-          mov dword ptr [ix], edx;
-          fstp st(0);
-          fstp st(0);
-      }
-  }
-#else
-#if 0
-   /* generic ASM */
-      register int j;
-      for (j=576/4;j>0;j--) {
-         XRPOW_FTOI(istep * (*xr++) + ROUNDFAC, *ix++);
-         XRPOW_FTOI(istep * (*xr++) + ROUNDFAC, *ix++);
-         XRPOW_FTOI(istep * (*xr++) + ROUNDFAC, *ix++);
-         XRPOW_FTOI(istep * (*xr++) + ROUNDFAC, *ix++);
-      }
-#endif
-  {
-      register int j;
-      const FLOAT8 compareval0 = (1.0 - 0.4054)/istep;
-      /* depending on architecture, it may be worth calculating a few more compareval's.
-         eg.  compareval1 = (2.0 - 0.4054/istep); 
-              .. and then after the first compare do this ...
-              if compareval1>*xr then ix = 1;
-         On a pentium166, it's only worth doing the one compare (as done here), as the second
-         compare becomes more expensive than just calculating the value. Architectures with 
-         slow FP operations may want to add some more comparevals. try it and send your diffs 
-         statistically speaking
-         73% of all xr*istep values give ix=0
-         16% will give 1
-         4%  will give 2
-      */
-      for (j=576;j>0;j--) 
-        {
-          if (compareval0 > *xr) {
-            *(ix++) = 0;
-            xr++;
-          } else
+       73% of all xr*istep values give ix=0
+       16% will give 1
+       4%  will give 2
+    */
+    for (j=576;j>0;j--) {
+	if (compareval0 > *xr) {
+	    *(ix++) = 0;
+	    xr++;
+	} else {
 	    /*    *(ix++) = (int)( istep*(*(xr++))  + 0.4054); */
-            XRPOW_FTOI(  istep*(*(xr++))  + ROUNDFAC , *(ix++) );
-        }
-  }
-#endif
+	    XRPOW_FTOI(  istep*(*(xr++))  + ROUNDFAC , *(ix++) );
+	}
+    }
 }
 
 #endif
