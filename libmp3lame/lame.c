@@ -540,8 +540,7 @@ lame_init_params(lame_global_flags * const gfp)
 
         if (!gfp->free_format) /* for non Free Format find the nearest allowed bitrate */
             gfp->brate =
-                FindNearestBitrate(gfp->brate, gfp->version,
-                                   gfp->out_samplerate);
+                FindNearestBitrate(gfp->brate, gfp->version);
     }
 
     if (gfp->VBR != vbr_off && gfp->brate >= 320)
