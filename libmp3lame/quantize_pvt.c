@@ -293,6 +293,9 @@ static void compute_ath( lame_global_flags *gfp )
 }
 
 
+
+void init_calc_noise_core_init(lame_internal_flags * const gfc);
+
 /************************************************************************/
 /*  initialization for iteration_loop */
 /************************************************************************/
@@ -330,6 +333,7 @@ iteration_init( lame_global_flags *gfp)
     huffman_init(gfc);
     quantize_init(gfc);
     init_xrpow_core_init(gfc);
+    init_calc_noise_core_init(gfc);
 
     if (gfp->psymodel == PSY_NSPSYTUNE) {
 	    FLOAT bass, alto, treble, sfb21;
@@ -637,9 +641,192 @@ int calc_xmin(
 }
 
 
+FLOAT calc_noise_core_c( const gr_info * const cod_info, 
+                        int *startline,
+                        int l,
+                        FLOAT step)
+{
+    FLOAT noise = 0;
+    int j = *startline;
+    const int *ix = cod_info->l3_enc;
+
+    assert(cod_info->count1 != 0);
+    assert(cod_info->big_values != 0);
+
+    if (j> cod_info->count1) {
+	    while (l--) {
+            FLOAT temp;
+            temp = cod_info->xr[j];j++;
+	        noise += temp * temp;
+	        temp = cod_info->xr[j];j++;
+	        noise += temp * temp;
+ 	    }
+    } else if (j> cod_info->big_values) {
+	    while (l--) {
+            FLOAT temp;
+            temp = fabs(cod_info->xr[j]) - ix[j] * step;j++;
+	        noise += temp * temp;
+	        temp = fabs(cod_info->xr[j]) - ix[j] * step;j++;
+	        noise += temp * temp;
+ 	    }
+    } else {
+	    while (l--) {
+            FLOAT temp;
+            temp = fabs(cod_info->xr[j]) - pow43[ix[j]] * step;j++;
+	        noise += temp * temp;
+	        temp = fabs(cod_info->xr[j]) - pow43[ix[j]] * step;j++;
+	        noise += temp * temp;
+ 	    }
+    }
+
+    *startline = j;
+    return noise;
+}
+ 
+
+#ifdef HAVE_INTRINSICS_SSE
+#include <xmmintrin.h>
+
+typedef union {
+    __m128   _m128;
+    FLOAT     _FLOAT[4];
+} __m128_FLOAT;
 
 
 
+FLOAT calc_noise_core_sse( const gr_info * const cod_info, 
+                        int *startline,
+                        int l,
+                        FLOAT step)
+{
+    FLOAT noise = 0;
+    int j = *startline;
+    const int *ix = cod_info->l3_enc;
+    int quad = l >> 1;
+    int pair = l - (quad<<1);
+
+    const __m128 _step = _mm_set_ps1(step);
+    const int fabs_mask[4] = {0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF};
+    const __m128 fabs_mask_m128 = _mm_loadu_ps((float *) fabs_mask);
+    __m128_FLOAT _noise;
+    _noise._m128 = _mm_set_ps1(0);
+
+    assert(cod_info->count1 != 0);
+    assert(cod_info->big_values != 0);
+
+    _mm_prefetch((char*)cod_info->xr, _MM_HINT_T0);
+    _mm_prefetch((char*)ix, _MM_HINT_T0);
+    _mm_prefetch((char*)pow43, _MM_HINT_T0);
+
+
+    if (j> cod_info->count1) {
+	    while (quad--) {
+            __m128 _xr = _mm_loadu_ps(&(cod_info->xr[j]));
+            _xr = _mm_mul_ps(_xr, _xr);
+
+            _noise._m128 = _mm_add_ps(_noise._m128, _xr);
+
+            j += 4;
+ 	    }
+    } else if (j> cod_info->big_values) {
+        __m128_FLOAT _pow43;
+        if (quad) { /*prefetch*/
+            _pow43._FLOAT[0] = ix[j];
+            _pow43._FLOAT[1] = ix[j+1];
+            _pow43._FLOAT[2] = ix[j+2];
+            _pow43._FLOAT[3] = ix[j+3];
+        }
+	    while (quad--) {
+            __m128 _temp;
+            __m128 _pow43_step;
+            __m128 _xr = _mm_loadu_ps(&(cod_info->xr[j]));
+            _xr = _mm_and_ps(_xr, fabs_mask_m128); //fabs
+
+            _pow43_step = _mm_mul_ps(_pow43._m128, _step); // * step
+
+            j += 4;
+            if (quad) { /*prefetch*/
+                _pow43._FLOAT[0] = ix[j];
+                _pow43._FLOAT[1] = ix[j+1];
+                _pow43._FLOAT[2] = ix[j+2];
+                _pow43._FLOAT[3] = ix[j+3];
+            }
+
+
+            _temp = _mm_sub_ps(_xr, _pow43_step);
+            _temp = _mm_mul_ps(_temp, _temp);
+
+            _noise._m128 = _mm_add_ps(_noise._m128, _temp);
+
+ 	    }
+    } else {
+        __m128_FLOAT _pow43;
+        if (quad) { /*prefetch*/
+            _pow43._FLOAT[0] = pow43[ix[j]];
+            _pow43._FLOAT[1] = pow43[ix[j+1]];
+            _pow43._FLOAT[2] = pow43[ix[j+2]];
+            _pow43._FLOAT[3] = pow43[ix[j+3]];
+        }
+	    while (quad--) {
+            __m128 _temp;
+            __m128 _pow43_step;
+            __m128 _xr = _mm_loadu_ps(&(cod_info->xr[j]));
+            _xr = _mm_and_ps(_xr, fabs_mask_m128); //fabs
+
+            _pow43_step = _mm_mul_ps(_pow43._m128, _step); // * step
+
+            j += 4;
+            if (quad) { /*prefetch*/
+                _pow43._FLOAT[0] = pow43[ix[j]];
+                _pow43._FLOAT[1] = pow43[ix[j+1]];
+                _pow43._FLOAT[2] = pow43[ix[j+2]];
+                _pow43._FLOAT[3] = pow43[ix[j+3]];
+            }
+
+
+            _temp = _mm_sub_ps(_xr, _pow43_step);
+            _temp = _mm_mul_ps(_temp, _temp);
+
+            _noise._m128 = _mm_add_ps(_noise._m128, _temp);
+
+ 	    }
+    }
+    
+    noise += _noise._FLOAT[0];
+    noise += _noise._FLOAT[1];
+    noise += _noise._FLOAT[2];
+    noise += _noise._FLOAT[3];
+
+    if (pair) {
+        __m128_FLOAT _temp;
+        __m128_FLOAT _pow43_step;
+        __m128_FLOAT _xr;
+
+        _xr._FLOAT[0] = cod_info->xr[j];
+        _xr._FLOAT[1] = cod_info->xr[j+1];
+        _xr._m128 = _mm_and_ps(_xr._m128, fabs_mask_m128); //fabs
+
+        _pow43_step._FLOAT[0] = pow43[ix[j]];
+        _pow43_step._FLOAT[1] = pow43[ix[j+1]];
+
+        _pow43_step._m128 = _mm_mul_ps(_pow43_step._m128, _step); // * step
+
+        j += 2;
+
+        _temp._m128 = _mm_sub_ps(_xr._m128, _pow43_step._m128);
+        _temp._m128 = _mm_mul_ps(_temp._m128, _temp._m128);
+
+        noise += _temp._FLOAT[0];
+        noise += _temp._FLOAT[1];
+
+    }
+
+
+    *startline = j;
+    return noise;
+}  
+ 
+#endif
 
 
 /*************************************************************************/
@@ -647,7 +834,7 @@ int calc_xmin(
 /*************************************************************************/
 
 /* -oo dB  =>  -1.00 */
-/* - 6 dB  =>  -0.97 */
+/* - 6 dB  =>  -0.97 */ 
 /* - 3 dB  =>  -0.80 */
 /* - 2 dB  =>  -0.64 */
 /* - 1 dB  =>  -0.38 */
@@ -709,34 +896,8 @@ int  calc_noise(
                     l = 0;
             }
 
-            assert(cod_info->count1 != 0);
-            assert(cod_info->big_values != 0);
+            noise = gfc->calc_noise_core(cod_info, &j, l, step); 
 
-            if (j> cod_info->count1) {
-	            while (l--) {
-                    FLOAT temp;
-                    temp = cod_info->xr[j];j++;
-	                noise += temp * temp;
-	                temp = cod_info->xr[j];j++;
-	                noise += temp * temp;
- 	            }
-            } else if (j> cod_info->big_values) {
-	            while (l--) {
-                    FLOAT temp;
-                    temp = fabs(cod_info->xr[j]) - ix[j] * step;j++;
-	                noise += temp * temp;
-	                temp = fabs(cod_info->xr[j]) - ix[j] * step;j++;
-	                noise += temp * temp;
- 	            }
-            } else {
-	            while (l--) {
-                    FLOAT temp;
-                    temp = fabs(cod_info->xr[j]) - pow43[ix[j]] * step;j++;
-	                noise += temp * temp;
-	                temp = fabs(cod_info->xr[j]) - pow43[ix[j]] * step;j++;
-	                noise += temp * temp;
- 	            }
-            }
 
             if (prev_noise) {
                 /* save noise values */
@@ -791,6 +952,18 @@ int  calc_noise(
 
 
 
+
+
+
+void init_calc_noise_core_init(lame_internal_flags * const gfc)
+{
+    gfc->calc_noise_core = calc_noise_core_c;
+    
+#ifdef HAVE_INTRINSICS_SSE
+    if (gfc->CPU_features.SSE)
+        gfc->calc_noise_core = calc_noise_core_sse;
+#endif
+}
 
 
 

@@ -479,6 +479,8 @@ struct lame_internal_flags {
   void (*fft_fht)(FLOAT *, int);
   void (*quantize_lines_xrpow)(int l, FLOAT istep, const FLOAT* xp, int* pi);
   void (*init_xrpow_core)(gr_info *const cod_info, FLOAT xrpow[576], int upper, FLOAT* sum);
+  FLOAT (*calc_noise_core)( const gr_info * const cod_info, 
+                            int *startline, int l, FLOAT step);
 
 
 
