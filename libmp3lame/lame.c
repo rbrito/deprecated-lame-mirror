@@ -411,6 +411,9 @@ lame_init_params(lame_t gfc)
     }
 #endif
 
+    if (gfc->in_samplerate < 0)
+	gfc->in_samplerate = 44100;
+
     gfc->Class_ID = 0;
     if (gfc->channels_in == 1)
         gfc->mode = MONO;
@@ -1133,7 +1136,7 @@ lame_init(void)
      */
     gfc->mode = NOT_SET;
     gfc->original = 1;
-    gfc->in_samplerate = 44100;
+    gfc->in_samplerate = -1;
     gfc->channels_in = 2;
     gfc->num_samples = MAX_U_32_NUM;
 

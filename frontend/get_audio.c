@@ -916,7 +916,8 @@ parse_wave_header(lame_t gfp, FILE * sf)
 	    fprintf(stderr, "Unsupported number of channels: %ud\n", channels);
 	    exit(1);
 	}
-	lame_set_in_samplerate(gfp, samples_per_sec);
+	if (lame_get_in_samplerate(gfp) < 0)
+	    lame_set_in_samplerate(gfp, samples_per_sec);
 	pcmbitwidth = bits_per_sample;
 	lame_set_num_samples(
 	    gfp, data_length / (channels * ((bits_per_sample+7) / 8)));
@@ -1022,7 +1023,8 @@ OpenSndFile(lame_t gfp, char *inPath)
                      mp3input_data.channels);
             exit( 1 );
         }
-	lame_set_in_samplerate( gfp, mp3input_data.samplerate );
+	if (lame_get_in_samplerate(gfp) < 0)
+	    lame_set_in_samplerate(gfp, mp3input_data.samplerate);
 	lame_set_num_samples( gfp, mp3input_data.nsamp );
     }
     else {

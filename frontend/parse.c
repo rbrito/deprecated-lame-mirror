@@ -1326,8 +1326,8 @@ int  parse_args (lame_t gfp, int argc, char** argv,
                     case 's':
                         argUsed = 1;
                         val = atof( arg );
-                        (void) lame_set_in_samplerate( gfp,
-                            val * ( val <= 192 ? 1.e3 : 1.e0 ) + 0.5 );
+			if (val <= 192) val *= 1000.0f;
+                        lame_set_in_samplerate(gfp, (int)(val + 0.5));
                         break;
                     case 'b':        
                         argUsed = 1;
