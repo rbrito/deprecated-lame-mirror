@@ -490,7 +490,7 @@ int read_samples_pcm(lame_global_flags *gfp,short sample_buffer[2304],int frame_
       }
 
     if (8==gfc->pcmbitwidth)
-      for (; samples_read >= 0; sample_buffer[samples_read] = sample_buffer[samples_read--] * 256);
+      for (; samples_read > 0; sample_buffer[--samples_read] *= 256);
 
     return(rcode);
 }
