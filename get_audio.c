@@ -507,7 +507,8 @@ int read_samples_pcm(short sample_buffer[2304],int frame_size,int samples_to_rea
     rcode = samples_read;
     if (samples_read < frame_size)
       {
-	fprintf(stderr,"Insufficient PCM input for one frame - fillout with zeros\n"); 
+	/*fprintf(stderr,"Insufficient PCM input for one frame - fillout with zeros\n"); 
+	*/
 	if (samples_read<0) samples_read=0;
 	for (; samples_read < frame_size; sample_buffer[samples_read++] = 0);
       }
@@ -695,7 +696,8 @@ int read_samples_pcm(short sample_buffer[2304], int frame_size,int samples_to_re
     rcode=samples_read;
     if (samples_read < frame_size) {
       if (samples_read<0) samples_read=0;
-      fprintf(stderr,"Insufficient PCM input for one frame - fillout with zeros\n");
+      /*fprintf(stderr,"Insufficient PCM input for one frame - fillout with zeros\n");
+      */
       for (; samples_read < frame_size; sample_buffer[samples_read++] = 0);
     }
     return(rcode);
