@@ -1217,7 +1217,7 @@ typedef enum {
     BINSEARCH_DOWN
 } binsearchDirection_t;
 
-#define SECAND_SEARCHXXX
+#define SECAND_SEARCH
 #define DEBUG_STEP_SEARCHXXX
 #ifdef DEBUG_STEP_SEARCH
 static int countall = 0;
