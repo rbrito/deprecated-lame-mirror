@@ -685,8 +685,6 @@ lame_print_config(const lame_global_flags * gfp)
     double  out_samplerate = gfp->out_samplerate;
     double  in_samplerate = gfp->in_samplerate;
 
-    MSGF(gfc, "LAME version %s (%s)\n", get_lame_version(), get_lame_url());
-
 #ifdef HAVE_NASM
     if (gfc->CPU_features.MMX || gfc->CPU_features.AMD_3DNow
         || gfc->CPU_features.SIMD || gfc->CPU_features.SIMD2) {

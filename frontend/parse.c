@@ -197,18 +197,9 @@ void lame_version_print ( FILE* const fp )
 {
     const char * v = get_lame_version ();
     const char * u = get_lame_url ();
-    const int lenv = strlen (v);
-    const int lenu = strlen (u);
-    const int lw = 80; /* line width of terminal in characters */
-    const int sw = 16; /* static width of text */
-    
-    if (lw >= lenv+lenu+sw || lw < lenu+2)                
-        /* text fits in 80 chars per line, or line even too small for url */
-        fprintf ( fp, "LAME version %s (%s)\n\n", v, u );
-    else            
-        /* text too long, wrap url into next line, right aligned */
-        fprintf ( fp, "LAME version %s\n%*s(%s)\n\n", v, lw-2-lenu, "", u );
-    
+
+    fprintf ( fp, "LAME version %s (%s)\n\n", v, u );
+
     if (LAME_ALPHA_VERSION)
 	fprintf ( fp, "warning: alpha versions should be used for testing only\n\n");
 }
