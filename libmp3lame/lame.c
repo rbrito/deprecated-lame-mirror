@@ -856,20 +856,6 @@ lame_print_internals( const lame_global_flags * gfp )
     MSGF( gfc, "\tch0 (left) scaling: %f\n", gfp->scale_left );
     MSGF( gfc, "\tch1 (right) scaling: %f\n", gfp->scale_right );
     MSGF( gfc, "\tfilter type: %d\n", gfc->filter_type );
-    pc = gfc->quantization ? "xr^3/4" : "ISO";
-    MSGF( gfc, "\tquantization: %s\n", pc );
-    switch( gfc->use_best_huffman ) {
-    default: pc = "normal"; break;
-    case  1: pc = "best (outside loop)"; break;
-    case  2: pc = "best (inside loop, slow)"; break;
-    } 
-    MSGF( gfc, "\thuffman search: %s\n", pc ); 
-    MSGF( gfc, "\tquantcomp_long/short=%d,%d\n",
-	  gfc->quantcomp_method, gfc->quantcomp_method_s);
-    MSGF( gfc, "\tallow large scalefactor range=%s\n",
-	  gfc->use_scalefac_scale ? "yes" : "no");
-    MSGF( gfc, "\tuse subblock gain=%s\n",
-	  gfc->use_subblock_gain ? "yes" : "no");
     MSGF( gfc, "\texperimental X=%d Y=%d Z=%d\n",
 	  gfp->experimentalX, gfp->experimentalY, gfp->experimentalZ );
     MSGF( gfc, "\t...\n" );
@@ -893,36 +879,25 @@ lame_print_internals( const lame_global_flags * gfp )
     default          : pc = "unknown (error)"; break;
     }
     MSGF( gfc, "\t%d channel - %s\n", gfc->channels_out, pc );
-    
-    switch (gfp->VBR) {
-    case cbr   : pc = "off";    break;
-    default    : pc = "all";    break;
-    }
-    MSGF( gfc, "\tpadding: %s\n", pc );
 
-    if ( vbr_default == gfp->VBR )  pc = "(default)";
-    else if ( gfp->free_format )    pc = "(free format)";
+    if (gfp->free_format)    pc = "(free format)";
     else pc = "";
     switch ( gfp->VBR ) {
     case cbr : MSGF( gfc, "\tconstant bitrate - CBR %s\n", pc ); break;
     case abr : MSGF( gfc, "\tvariable bitrate - ABR %s\n", pc ); break;
-    case vbr : MSGF( gfc, "\tvariable bitrate - VBR %s\n", pc ); break;
-    default  : MSGF( gfc, "\t ?? oops, some new one ?? \n" );         break;
+    case vbr : MSGF( gfc, "\tvariable bitrate - VBR\n"        ); break;
+    default  : MSGF( gfc, "\t ?? oops, some new one ?? \n"    ); break;
     }
     if (gfp->bWriteVbrTag) 
     MSGF( gfc, "\tusing LAME Tag\n" );
     MSGF( gfc, "\t...\n" );
-    
+
     /*  everything controlling psychoacoustic settings, like ATH, etc.
      */
     MSGF( gfc, "\npsychoacoustic:\n\n" );
     MSGF( gfc, "\tshort block switching threshold: %f %f\n",
 	  gfc->nsPsy.attackthre, gfc->nsPsy.attackthre_s );
-    MSGF( gfc, "\tadjust masking: %f dB\n", gfp->VBR_q-4 );
     MSGF( gfc, "\tpsymodel: %s\n", gfc->psymodel ? "used" : "not used");
-    MSGF( gfc, "\tnoise shaping: %s\n", gfc->psymodel > 1 ? "used" : "not used");
-    MSGF( gfc, "\t ^ amplification: %d\n", gfc->noise_shaping_amp );
-    MSGF( gfc, "\t ^ stopping: %d\n", gfc->noise_shaping_stop );
     
     pc = "using";
     if ( gfp->ATHshort ) pc = "the only masking for short blocks";
@@ -933,8 +908,6 @@ lame_print_internals( const lame_global_flags * gfp )
     MSGF( gfc, "\t ^ adjust type: %d\n", gfc->ATH.use_adjust );
     MSGF( gfc, "\t ^ adjust sensitivity power: %d\n", gfc->ATH.aa_sensitivity_p );
     MSGF( gfc, "\t ^ adapt threshold type: %d\n", gfp->athaa_loudapprox );
-
-    MSGF(gfc, "\tpsy tunings by Naoki Shibata\n" );
 
     i = (gfp->exp_nspsytune >> 2) & 63;
     if (i >= 32)
@@ -958,12 +931,34 @@ lame_print_internals( const lame_global_flags * gfp )
 	i -= 64;
     sfb21 = treble + i*0.25;
 
-    MSGF(gfc, "\t   adjust masking bass=%g dB, alto=%g dB, treble=%g dB, sfb21=%g dB\n",
+    MSGF(gfc, "\tadjust masking: %f dB\n", gfp->VBR_q-4.0 );
+    MSGF(gfc, "\t ^ bass=%g dB, alto=%g dB, treble=%g dB, sfb21=%g dB\n",
 	 bass, alto, treble, sfb21);
 
     pc = gfp->useTemporal ? "yes" : "no";
     MSGF( gfc, "\tusing temporal masking effect: %s\n", pc );
     MSGF( gfc, "\tinterchannel masking ratio: %f\n", gfp->interChRatio );
+    MSGF( gfc, "\t...\n" );
+
+    MSGF( gfc, "\nnoisechaping & quantization:\n\n" );
+    MSGF( gfc, "\tnoise shaping: %s\n", gfc->psymodel > 1 ? "used" : "not used");
+    MSGF( gfc, "\t ^ amplification: %d\n", gfc->noise_shaping_amp );
+    MSGF( gfc, "\t ^ stopping: %d\n", gfc->noise_shaping_stop );
+    pc = gfc->quantization ? "xr^3/4" : "ISO";
+    MSGF( gfc, "\tquantization: %s\n", pc );
+    switch( gfc->use_best_huffman ) {
+    default: pc = "normal"; break;
+    case  1: pc = "best (outside loop)"; break;
+    case  2: pc = "best (inside loop, slow)"; break;
+    } 
+    MSGF( gfc, "\thuffman search: %s\n", pc ); 
+    MSGF( gfc, "\tquantcomp_long/short=%d,%d\n",
+	  gfc->quantcomp_method, gfc->quantcomp_method_s);
+    MSGF( gfc, "\tallow large scalefactor range=%s\n",
+	  gfc->use_scalefac_scale ? "yes" : "no");
+    MSGF( gfc, "\tuse subblock gain=%s\n",
+	  gfc->use_subblock_gain ? "yes" : "no");
+    MSGF( gfc, "\tsubstep shaping=%d\n", gfc->substep_shaping);
     MSGF( gfc, "\t...\n" );
 
     /*  that's all ?
