@@ -447,155 +447,75 @@ encode_mp3_frame(lame_t gfc, unsigned char* mp3buf, int mp3buf_size)
   return mp3count;
 }
 
-/* resampling via FIR filter, blackman window */
-inline static FLOAT blackman(FLOAT x,FLOAT fcn,int l)
-{
-    /* This algorithm from:
-       SIGNAL PROCESSING ALGORITHMS IN FORTRAN AND C
-       S.D. Stearns and R.A. David, Prentice-Hall, 1992
-    */
-    FLOAT bkwn,x2;
-    FLOAT wcn = (PI * fcn);
-  
-    x /= l;
-    if (x<0) x=0;
-    if (x>1) x=1;
-    x2 = x - .5;
-
-    bkwn = 0.42 - 0.5*cos(2*x*PI)  + 0.08*cos(4*x*PI);
-    if (fabs(x2)<1e-9) return wcn/PI;
-    else 
-	return  (  bkwn*sin(l*wcn*x2)  / (PI*l*x2)  );
-}
-
-/* gcd - greatest common divisor */
-/* Joint work of Euclid and M. Hendry */
-
-static int
-gcd(int i, int j)
-{
-    return j ? gcd(j, i % j) : i;
-}
-
-
-
 /* copy in new samples from in_buffer into mfbuf, with resampling
    if necessary.  n_in = number of samples from the input buffer that
    were used.  n_out = number of samples copied into mfbuf  */
 
 static int
-fill_buffer_resample(
-    lame_t gfc,
-    sample_t *outbuf,
-    sample_t *inbuf,
-    int len,
-    int *num_used,
-    int ch) 
+fill_buffer_resample(lame_t gfc, sample_t *outbuf, sample_t *inbuf, int len,
+		     int *num_used, int ch)
 {
-    int desired_len = gfc->framesize;
-    int BLACKSIZE;
-    FLOAT offset,xvalue;
-    int i,j=0,k;
-    FLOAT fcn;
-    FLOAT *inbuf_old;
-    int bpc = gcd(gfc->out_samplerate, gfc->in_samplerate);
-    int filter_l = 31;
-
-    if (bpc == gfc->out_samplerate || bpc == gfc->in_samplerate)
-	filter_l++; /* if the resample ratio is int, it must be even */
-
-    bpc = gfc->out_samplerate/bpc;
-    if (bpc>BPC) bpc = BPC;
-
-    fcn = 1.00;
-    if (gfc->resample_ratio > 1.00) fcn /= gfc->resample_ratio;
-    BLACKSIZE = filter_l+1;  /* size of data needed for FIR */
-
-    if (gfc->fill_buffer_resample_init == 0) {
-	gfc->inbuf_old[0]=calloc(BLACKSIZE,sizeof(gfc->inbuf_old[0][0]));
-	gfc->inbuf_old[1]=calloc(BLACKSIZE,sizeof(gfc->inbuf_old[0][0]));
-	for (i=0; i<=2*bpc; ++i)
-	    gfc->blackfilt[i]=calloc(BLACKSIZE,sizeof(gfc->blackfilt[0][0]));
-
-	gfc->itime[0]=0;
-	gfc->itime[1]=0;
-
-	/* precompute blackman filter coefficients */
-	for (j = 0; j <= 2*bpc; j++) {
-	    FLOAT sum = 0.; 
-	    offset = (j-bpc) / (2.*bpc);
-	    for (i = 0; i <= filter_l; i++)
-		sum += gfc->blackfilt[j][i] = blackman(i-offset,fcn,filter_l);
-	    for (i = 0; i <= filter_l; i++)
-		gfc->blackfilt[j][i] /= sum;
-	}
-	gfc->fill_buffer_resample_init = 1;
-    }
-
-    inbuf_old=gfc->inbuf_old[ch];
+    int i, j, k, filter_l = gfc->resample.filter_l, bpc = gfc->resample.bpc;
+    sample_t *inbuf_old = gfc->resample.inbuf_old[ch];
 
     /* time of j'th element in inbuf = itime + j/ifreq; */
     /* time of k'th element in outbuf   =  j/ofreq */
-    for (k=0;k<desired_len;k++) {
-	FLOAT time0;
-	int joff;
-
-	time0 = k*gfc->resample_ratio;       /* time of k'th output sample */
-	j = floor( time0 -gfc->itime[ch]  );
+    k = 0;
+    do {
+	sample_t xvalue;
+	FLOAT time0 = k*gfc->resample_ratio - gfc->resample.itime[ch], offset;
+	FLOAT *filter_coef;
+	j = floor(time0);
 
 	/* check if we need more input data */
-	if ((filter_l + j - filter_l/2) >= len) break;
+	if ((filter_l + j - filter_l/2) >= len)
+	    break;
 
 	/* blackman filter.  by default, window centered at j+.5(filter_l%2) */
 	/* but we want a window centered at time0.   */
-	offset = ( time0 -gfc->itime[ch] - (j + .5*(filter_l%2)));
-	assert(fabs(offset)<=.501);
+	offset = time0 - (j + .5*(filter_l%2));
+	assert(fabs(offset)<=.500);
 
 	/* find the closest precomputed window for this offset: */
-	joff = floor((offset*2*bpc) + bpc +.5);
+	filter_coef = gfc->resample.blackfilt[(int)((offset*2*bpc)+bpc+.5)];
 
 	xvalue = 0.;
-	for (i=0 ; i<=filter_l ; ++i) {
-	    int j2 = i+j-filter_l/2;
-	    int y;
+	for (i = 0; i <= filter_l; i++) {
+	    int j2 = i + j - filter_l/2;
+	    sample_t y;
 	    assert(j2<len);
-	    assert(j2+BLACKSIZE >= 0);
-	    y = (j2<0) ? inbuf_old[BLACKSIZE+j2] : inbuf[j2];
-	    xvalue += y*gfc->blackfilt[joff][i];
+	    assert(j2+filter_l+1 >= 0);
+	    y = (j2<0) ? inbuf_old[filter_l+1+j2] : inbuf[j2];
+	    xvalue += y * filter_coef[i];
 	}
-	outbuf[k]=xvalue;
-    }
-
+	outbuf[k] = xvalue;
+    } while (++k < gfc->framesize);
     /* k = number of samples added to outbuf */
     /* last k sample used data from [j-filter_l/2,j+filter_l-filter_l/2]  */
 
     /* how many samples of input data were used:  */
-    *num_used = Min(len,filter_l+j-filter_l/2);
+    *num_used = Min(len, (filter_l+1)/2 + j);
 
     /* adjust our input time counter.  Incriment by the number of samples used,
      * then normalize so that next output sample is at time 0, next
      * input buffer is at time itime[ch] */
-    gfc->itime[ch] += *num_used - k*gfc->resample_ratio;
+    gfc->resample.itime[ch] += *num_used - k*gfc->resample_ratio;
 
     /* save the last BLACKSIZE samples into the inbuf_old buffer */
-    if (*num_used >= BLACKSIZE) {
-	for (i=0;i<BLACKSIZE;i++)
-	    inbuf_old[i]=inbuf[*num_used + i -BLACKSIZE];
-    }else{
+    if (*num_used >= filter_l+1) {
+	inbuf += *num_used - filter_l - 1;
+	j = 0;
+    } else {
 	/* shift in *num_used samples into inbuf_old  */
-	int n_shift = BLACKSIZE-*num_used;  /* number of samples to shift */
+	j = filter_l+1-*num_used;  /* number of samples to shift */
 
-	/* shift n_shift samples by *num_used, to make room for the
+	/* shift j samples by *num_used, to make room for the
 	 * num_used new samples */
-	for (i=0; i<n_shift; ++i ) 
-	    inbuf_old[i] = inbuf_old[i+ *num_used];
-
-	/* shift in the *num_used samples */
-	for (j=0; i<BLACKSIZE; ++i, ++j ) 
-	    inbuf_old[i] = inbuf[j];
-
-	assert(j == *num_used);
+	memcpy(inbuf_old, &inbuf_old[*num_used], sizeof(sample_t) * j);
+	inbuf_old += j;
     }
+    memcpy(inbuf_old, inbuf, sizeof(sample_t) * (filter_l+1 - j));
+
     return k;  /* return the number samples created at the new samplerate */
 }
 
@@ -604,25 +524,19 @@ fill_buffer_resample(
 
 
 static int
-fill_buffer(lame_t gfc, sample_t *in_buffer[2], int nsamples, int *n_in)
+fill_buffer(lame_t gfc, sample_t *in_buffer, int nsamples, int *n_in, int ch)
 {
     int n_out;
 
     /* copy in new samples into mfbuf, with resampling if necessary */
     if (gfc->resample_ratio != 1.0) {
-	int ch = 0;
-	do {
-	    n_out = fill_buffer_resample(gfc, &gfc->mfbuf[ch][gfc->mf_size],
-					 in_buffer[ch], nsamples, n_in, ch);
-	} while (ch < gfc->channels_out);
+	n_out = fill_buffer_resample(gfc, &gfc->mfbuf[ch][gfc->mf_size],
+				     in_buffer, nsamples, n_in, ch);
     }
     else {
 	*n_in = n_out = Min(gfc->framesize, nsamples);
-	memcpy(&gfc->mfbuf[0][gfc->mf_size], &in_buffer[0][0],
+	memcpy(&gfc->mfbuf[ch][gfc->mf_size], in_buffer,
 	       sizeof(sample_t) * n_out);
-	if (gfc->channels_out == 2)
-	    memcpy(&gfc->mfbuf[1][gfc->mf_size], &in_buffer[1][0],
-		   sizeof(sample_t) * n_out);
     }
     return n_out;
 }
@@ -658,7 +572,7 @@ lame_encode_buffer_sample_t(
     const int mp3buf_size
     )
 {
-    int mp3size = 0, ret, i, ch, mf_needed;
+    int mp3size = 0, ret, i, mf_needed;
     int mp3out;
     sample_t *in_buffer[2];
 
@@ -692,27 +606,26 @@ lame_encode_buffer_sample_t(
 
     assert(nsamples > 0);
     do {
-        int     n_in;  /* number of input samples processed with fill_buffer */
-        int     n_out; /* number of samples output with fill_buffer */
-			/* n_in != n_out if we are resampling */
-	int	buf_size;
+	int buf_size, n_in, n_out, ch;
+        /* copy in new samples into mfbuf, with resampling
+	 * consume (n_in) samples from in_buffer,
+	 * and output (n_out) samples in gfc->mfbuf. */
+	for (ch = 0; ch < gfc->channels_out; ch++) {
+	    n_out = fill_buffer(gfc, in_buffer[ch], nsamples, &n_in, ch);
+	    in_buffer[ch] += n_in;
+	}
 
-        /* copy in new samples into mfbuf, with resampling */
-        n_out = fill_buffer(gfc, in_buffer, nsamples, &n_in);
+	/* update in_buffer counters */
+	nsamples -= n_in;
 
-        /* update in_buffer counters */
-        nsamples -= n_in;
-        in_buffer[0] += n_in;
-	in_buffer[1] += n_in;
-
-        /* update mfbuf[] counters */
-        gfc->mf_size += n_out;
-        gfc->mf_samples_to_encode += n_out;
+	/* update mfbuf[] counters */
+	gfc->mf_size += n_out;
+	gfc->mf_samples_to_encode += n_out;
 
         if (gfc->mf_size < mf_needed)
 	    break;
 
-        assert(gfc->mf_size <= MFSIZE);
+	assert(gfc->mf_size <= MFSIZE);
 	/* encode the frame.
 	 *  mp3buf              = pointer to current location in buffer
 	 *  mp3buf_size         = size of original mp3 output buffer
@@ -723,8 +636,8 @@ lame_encode_buffer_sample_t(
 	 *  mp3buf_size-mp3size = amount of space avalable
 	 */
 	buf_size = mp3buf_size - mp3size;
-	if (mp3buf_size==0)
-	    buf_size=0;
+	if (mp3buf_size == 0)
+	    buf_size = 0;
 
 	ret = encode_mp3_frame(gfc, mp3buf, buf_size);
 	gfc->frameNum++;
@@ -738,8 +651,8 @@ lame_encode_buffer_sample_t(
 	gfc->mf_size -= gfc->framesize;
 	gfc->mf_samples_to_encode -= gfc->framesize;
 	for (ch = 0; ch < gfc->channels_out; ch++)
-	    for (i = 0; i < gfc->mf_size; i++)
-		gfc->mfbuf[ch][i] = gfc->mfbuf[ch][i + gfc->framesize];
+	    memcpy(gfc->mfbuf[ch], &gfc->mfbuf[ch][gfc->framesize],
+		   sizeof(sample_t) * gfc->mf_size);
     } while (nsamples > 0);
     assert(nsamples == 0);
     return mp3size;

@@ -983,6 +983,38 @@ lame_init_params_ppflt(lame_t gfc)
 }
 
 
+/* resampling via FIR filter, blackman window */
+inline static FLOAT blackman(FLOAT x,FLOAT fcn,int l)
+{
+    /* This algorithm from:
+       SIGNAL PROCESSING ALGORITHMS IN FORTRAN AND C
+       S.D. Stearns and R.A. David, Prentice-Hall, 1992
+    */
+    FLOAT bkwn,x2;
+    FLOAT wcn = (PI * fcn);
+  
+    x /= l;
+    if (x<0) x=0;
+    if (x>1) x=1;
+    x2 = x - .5;
+
+    bkwn = 0.42 - 0.5*cos(2*x*PI)  + 0.08*cos(4*x*PI);
+    if (fabs(x2)<1e-9) return wcn/PI;
+    else 
+	return  (  bkwn*sin(l*wcn*x2)  / (PI*l*x2)  );
+}
+
+/* gcd - greatest common divisor */
+/* Joint work of Euclid and M. Hendry */
+
+static int
+gcd(int i, int j)
+{
+    return j ? gcd(j, i % j) : i;
+}
+
+
+
 void
 iteration_init(lame_t gfc)
 {
@@ -1059,6 +1091,44 @@ iteration_init(lame_t gfc)
     }
 
     huffman_init(gfc);
+
+    if (gfc->resample_ratio != 1.0) {
+	FLOAT fcn = 1.00;
+	int bpc = gcd(gfc->out_samplerate, gfc->in_samplerate);
+	int filter_l = 31;
+	if (bpc == gfc->out_samplerate || bpc == gfc->in_samplerate)
+	    filter_l++; /* if the resample ratio is int, it must be even */
+
+	bpc = gfc->out_samplerate/bpc;
+	if (bpc > BPC)
+	    bpc = BPC;
+
+	if (fcn < gfc->resample_ratio)
+	    fcn /= gfc->resample_ratio;
+
+	gfc->resample.inbuf_old[0] = calloc(filter_l+1,sizeof(FLOAT));
+	gfc->resample.inbuf_old[1] = calloc(filter_l+1,sizeof(FLOAT));
+	gfc->resample.itime[0]=0;
+	gfc->resample.itime[1]=0;
+
+	/* precompute blackman filter coefficients */
+	for (j = 0; j <= 2*bpc; j++) {
+	    FLOAT sum = 0.; 
+	    FLOAT offset = (j-bpc) / (2.*bpc);
+	    gfc->resample.blackfilt[j] = malloc((filter_l+1)*sizeof(FLOAT));
+	    if (!gfc->resample.blackfilt[j])
+		return;
+
+	    for (i = 0; i <= filter_l; i++)
+		sum += (gfc->resample.blackfilt[j][i]
+			= blackman(i-offset, fcn, filter_l));
+	    sum = 1.0 / sum;
+	    for (i = 0; i <= filter_l; i++)
+		gfc->resample.blackfilt[j][i] *= sum;
+	}
+	gfc->resample.filter_l = filter_l;
+	gfc->resample.bpc = bpc;
+    }
 }
 
 

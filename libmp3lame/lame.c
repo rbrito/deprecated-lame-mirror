@@ -1163,17 +1163,15 @@ lame_close(lame_t gfc)
 
     /* free all malloc'd data in gfc, and then free gfc: */
     for ( i = 0 ; i <= 2*BPC; i++ )
-        if ( gfc->blackfilt[i] != NULL ) {
-            free ( gfc->blackfilt[i] );
-	    gfc->blackfilt[i] = NULL;
+        if (gfc->resample.blackfilt[i]) {
+            free(gfc->resample.blackfilt[i]);
+	    gfc->resample.blackfilt[i] = NULL;
 	}
-    if ( gfc->inbuf_old[0] ) { 
-        free ( gfc->inbuf_old[0] );
-	gfc->inbuf_old[0] = NULL;
-    }
-    if ( gfc->inbuf_old[1] ) { 
-        free ( gfc->inbuf_old[1] );
-	gfc->inbuf_old[1] = NULL;
+    for (i = 0; i < MAX_CHANNELS; i++) {
+	if (gfc->resample.inbuf_old[i]) { 
+	    free(gfc->resample.inbuf_old[i]);
+	    gfc->resample.inbuf_old[i] = NULL;
+	}
     }
 
     if ( gfc->VBR_seek_table.bag ) {

@@ -193,7 +193,6 @@ struct lame_internal_flags {
 
     int lame_encode_frame_init;
     int iteration_init_init;
-    int fill_buffer_resample_init;
 
     int padding;        /* padding for the current frame? */
     int mode_gr;        /* granules per frame */
@@ -348,12 +347,16 @@ struct lame_internal_flags {
 	void (*errorf)(const char *format, va_list ap);
     } report;
 
-  /* variables used by util.c */
-  /* BPC = maximum number of filter convolution windows to precompute */
+    /* variables used for resampling */
+    /* BPC = maximum number of filter convolution windows to precompute */
 #define BPC 320
-    sample_t *inbuf_old [2];
-    sample_t *blackfilt [2*BPC+1];
-    FLOAT itime[2];
+    struct {
+	FLOAT itime[MAX_CHANNELS];
+	sample_t *inbuf_old[MAX_CHANNELS];
+	FLOAT *blackfilt [2*BPC+1];
+	int filter_l;
+	int bpc;
+    } resample;
 
     int (*scale_bitcounter)(gr_info * const gi);
 #if HAVE_NASM
