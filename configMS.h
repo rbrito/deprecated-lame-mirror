@@ -108,8 +108,12 @@ void acm_Free( void * mem);
 
 
 #ifdef HAVE_NASM
-#include <malloc.h>
-#ifdef _mm_malloc
-#define HAVE_INTRINSICS_SSE
-#endif
+    #if (defined(__ICL) && (__ICL >= 450))
+        #define HAVE_INTRINSICS_SSE
+    #elif defined(_MSC_VER)
+        #include <malloc.h>
+        #ifdef _mm_malloc
+            #define HAVE_INTRINSICS_SSE
+        #endif
+    #endif
 #endif
