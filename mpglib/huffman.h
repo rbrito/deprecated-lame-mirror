@@ -328,5 +328,3 @@ static const struct newhuff htc[] =
  { /* 1 , 1 , */ 0 , tab_c0 } ,
  { /* 1 , 1 , */ 0 , tab_c1 }
 };
-
-

@@ -38,4 +38,3 @@ int  do_layer2( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point);
 #endif
 
 #endif
-

@@ -26,7 +26,7 @@
 #include <dmalloc.h>
 #endif
 
-// In C++ the array first must be prototyped, why ?
+/* In C++ the array first must be prototyped, why ? */
 
 extern const int tabsel_123 [2] [3] [16];
 
