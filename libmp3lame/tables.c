@@ -1002,8 +1002,12 @@ iteration_init( lame_global_flags *gfp)
 
     /* intensity stereo */
     gfp->use_istereo = 0;
-    gfc->is_start_sfb_l_next[0] = gfc->is_start_sfb_l_next[1] = SBMAX_l;
-    gfc->is_start_sfb_s_next[0] = gfc->is_start_sfb_s_next[1] = SBMAX_s;
+    gfc->is_start_sfb_l_next[0] = gfc->is_start_sfb_l_next[1]
+	= gfc->l3_side.is_start_sfb_l[0] = gfc->l3_side.is_start_sfb_l[1]
+	= SBMAX_l;
+    gfc->is_start_sfb_s_next[0] = gfc->is_start_sfb_s_next[1]
+	= gfc->l3_side.is_start_sfb_s[0] = gfc->l3_side.is_start_sfb_s[1]
+	= SBMAX_s;
     if (gfp->mode != MONO && gfp->compression_ratio > 12.0 && gfp->VBR != vbr
 	&& gfp->internal_flags->mode_gr == 2) {
 	/* currently only MPEG1/CBR or ABR */
