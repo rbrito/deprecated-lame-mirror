@@ -20,7 +20,6 @@
  */
 
 /* $Id$ */
-
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -250,7 +249,7 @@ void compute_ath( lame_global_flags *gfp, FLOAT8 ATH_l[], FLOAT8 ATH_s[] )
     for (sfb = 0; sfb < SBMAX_l; sfb++) {
         start = gfc->scalefac_band.l[ sfb ];
         end   = gfc->scalefac_band.l[ sfb+1 ];
-        ATH_l[sfb]=1e99;
+        ATH_l[sfb]=FLOAT8_MAX;
         for (i = start ; i < end; i++) {
             FLOAT8 freq = i*samp_freq/(2*576);
             ATH_f = ATHmdct( gfp, freq );  /* freq in kHz */
@@ -262,7 +261,7 @@ void compute_ath( lame_global_flags *gfp, FLOAT8 ATH_l[], FLOAT8 ATH_s[] )
     for (sfb = 0; sfb < SBMAX_s; sfb++){
         start = gfc->scalefac_band.s[ sfb ];
         end   = gfc->scalefac_band.s[ sfb+1 ];
-        ATH_s[sfb] = 1e99;
+        ATH_s[sfb] = FLOAT8_MAX;
         for (i = start ; i < end; i++) {
             FLOAT8 freq = i*samp_freq/(2*192);
             ATH_f = ATHmdct( gfp, freq );    /* freq in kHz */

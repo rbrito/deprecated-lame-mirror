@@ -114,11 +114,27 @@ char *strchr (), *strrchr ();
 #else
 # ifndef FLOAT
 typedef float   FLOAT;
+#  ifdef FLT_MAX
+#   define FLOAT_MAX FLT_MAX
+#  else
+#   define FLOAT_MAX 1e99 /* approx */
+#  endif
 # endif
 #endif
 
 #ifndef FLOAT8  /* NOTE: RH: 7/00:  if FLOAT8=float, it breaks resampling and VBR code */
 typedef double  FLOAT8;
+# ifdef DBL_MAX
+#  define FLOAT8_MAX DBL_MAX
+# else
+#  define FLOAT8_MAX 1e99 /* approx */
+# endif
+#else
+# ifdef FLT_MAX
+#  define FLOAT8_MAX FLT_MAX
+# else
+#  define FLOAT8_MAX 1e99 /* approx */
+# endif
 #endif
 
 /* Various integer types */
