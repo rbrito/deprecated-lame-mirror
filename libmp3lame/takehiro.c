@@ -470,7 +470,7 @@ int count_bits(
 
     if (gfc->substep_shaping & 2) {
 	int sfb, j = 0;
-	for (sfb = 0; sfb < gi->sfbmax; sfb++) {
+	for (sfb = 0; sfb < gi->psymax && j < gi->count1; sfb++) {
 	    FLOAT roundfac;
 	    int width = gi->width[sfb], l;
 	    j += gi->width[sfb];

@@ -284,7 +284,7 @@ init_gr_info(lame_internal_flags *gfc, int gr, int ch)
     if (gi->block_type == SHORT_TYPE)
 	gi->xrNumMax = gfc->scalefac_band.s[gi->psymax/3]*3;
     else
-	gi->xrNumMax = gfc->scalefac_band.l[gi->psymax]; /* XXX should be more precise */
+	gi->xrNumMax = gfc->xrNumMax_longblock;
 
     memset(gi->scalefac, 0, sizeof(gi->scalefac));
 }

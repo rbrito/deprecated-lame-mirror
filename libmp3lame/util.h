@@ -377,6 +377,7 @@ struct lame_internal_flags {
   /* variables for subband filter and MDCT */
   FLOAT sb_sample[2][3][18][SBLIMIT];
   FLOAT amp_filter[SBLIMIT];
+  int xrNumMax_longblock;
 
   /* side channel sparsing */
   int   sparsing;

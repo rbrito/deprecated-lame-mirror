@@ -909,6 +909,11 @@ lame_init_params_ppflt(lame_global_flags * gfp)
 	    * filter_coef((freq - gfc->lowpass1)
 			  / (gfc->lowpass2 - gfc->lowpass1 - 1e-37));
     }
+    while (--band >= 0) {
+	if (gfc->amp_filter[band] > 1e-20)
+	    break;
+    }
+    gfc->xrNumMax_longblock = (band+1) * 18;
 }
 
 

@@ -387,6 +387,7 @@ init_bitalloc(
 	sum += tmp;
 	xrpow[i] = sqrt (tmp * sqrt(tmp));
     }
+    memset(&xrpow[i], 0, sizeof(FLOAT)*(576-end));
 
     /*  return 1 if we have something to quantize, else 0 */
     if (sum > (FLOAT)1E-20) {
@@ -987,7 +988,6 @@ ABR_calc_target_bits (
           11   (128kbps)         .93      7% held for reservoir
    
         with linear interpolation for other values.
-
      */
     res_factor = .93 + .07 * (11.0 - gfp->compression_ratio) / (11.0 - 5.5);
     if (res_factor <  .90)
@@ -1059,9 +1059,7 @@ ABR_iteration_loop(
     III_psy_ratio      ratio        [2][2])
 {
     lame_internal_flags *gfc=gfp->internal_flags;
-    int targ_bits[2][2];
-    int mean_bits;
-    int gr, ch;
+    int targ_bits[2][2], mean_bits, gr, ch;
 
     ABR_calc_target_bits (gfp, ratio, targ_bits);
     for (gr = 0; gr < gfc->mode_gr; gr++) {
@@ -1075,11 +1073,11 @@ ABR_iteration_loop(
 
     /*  find a bitrate which can refill the resevoir to positive size.
      */
-    for (gfc->bitrate_index =  gfc->VBR_min_bitrate;
-	 gfc->bitrate_index <= gfc->VBR_max_bitrate; gfc->bitrate_index++) {
-	if (ResvFrameBegin (gfp, &mean_bits) >= 0) break;
-    }
-    assert (gfc->bitrate_index <= gfc->VBR_max_bitrate);
+    gfc->bitrate_index = gfc->VBR_min_bitrate;
+    for (; gfc->bitrate_index <= gfc->VBR_max_bitrate; gfc->bitrate_index++)
+	if (ResvFrameBegin(gfp, &mean_bits) >= 0)
+	    break;
+    assert(gfc->bitrate_index <= gfc->VBR_max_bitrate);
 
     gfc->l3_side.ResvSize += mean_bits;
 }
@@ -1105,9 +1103,7 @@ iteration_loop(
     III_psy_ratio      ratio        [2][2])
 {
     lame_internal_flags *gfc=gfp->internal_flags;
-    int targ_bits[2];
-    int mean_bits;
-    int gr, ch;
+    int targ_bits[2], mean_bits, gr, ch;
 
     ResvFrameBegin (gfp, &mean_bits);
     mean_bits /= gfc->mode_gr;
@@ -1169,7 +1165,7 @@ find_scalefac(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, int bw,
     if (shortflag)
 	sfmin = -7*4-7*2;
 
-    for (;;) {
+    do {
 	FLOAT xfsf = calc_sfb_noise_fast(xr, xr34, bw, sf);
 	if (xfsf > l3_xmin) {
 	    /* distortion.  try a smaller scalefactor */
@@ -1194,9 +1190,7 @@ find_scalefac(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, int bw,
 		endflag = 3;
 	    }
 	}
-	if (delsf == 0)
-	    break;
-    }
+    } while (delsf != 0);
 
     if (sfmin <= sf_ok && sf_ok < 256)
 	sf = sf_ok;
