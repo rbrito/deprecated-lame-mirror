@@ -100,23 +100,14 @@ Write16BitsLowHigh(FILE *fp, int i)
     putc((i >> 8) & 0xff, fp);
 }
 
-int  Read32Bits ( FILE* fp )
+int
+Read32Bits ( FILE* fp )
 {
     int  low  = ReadByteUnsigned (fp);
     int  medl = ReadByteUnsigned (fp);
     int  medh = ReadByteUnsigned (fp);
     int  high = ReadByteUnsigned (fp);
 
-    return (high << 24) | (medh << 16) | (medl << 8) | low;
-}
-
-int  Read32BitsHighLow ( FILE* fp )
-{
-    int  high = ReadByteUnsigned (fp);
-    int  medh = ReadByteUnsigned (fp);
-    int  medl = ReadByteUnsigned (fp);
-    int  low  = ReadByteUnsigned (fp);
-    
     return (high << 24) | (medh << 16) | (medl << 8) | low;
 }
 

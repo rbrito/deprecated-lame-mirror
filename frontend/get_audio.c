@@ -718,17 +718,17 @@ read_samples_pcm(FILE * const musicin, int sample_buffer[1152*2],
 
 
 
-#define WAV_ID_RIFF 0x52494646 /* "RIFF" */
-#define WAV_ID_WAVE 0x57415645 /* "WAVE" */
-#define WAV_ID_FMT  0x666d7420 /* "fmt " */
-#define WAV_ID_DATA 0x64617461 /* "data" */
-#define WAV_ID_LIST 0x4c495354 /* "LIST" */
-#define WAV_ID_INFO 0x494e464f /* "INFO" */
-#define WAV_ID_INAM 0x494e414d /* "INAM" */
-#define WAV_ID_IART 0x49415254 /* "IART" */
-#define WAV_ID_IGNR 0x49474e52 /* "IGNR" */
-#define WAV_ID_IPRD 0x49505244 /* "IPRD" */
-#define WAV_ID_ITRK 0x6974726b /* "itrk" */
+#define WAV_ID_RIFF 0x46464952 /* "RIFF" */
+#define WAV_ID_WAVE 0x45564157 /* "WAVE" */
+#define WAV_ID_FMT  0x20746d66 /* "fmt " */
+#define WAV_ID_DATA 0x61746164 /* "data" */
+#define WAV_ID_LIST 0x5453494c /* "LIST" */
+#define WAV_ID_INFO 0x4f464e49 /* "INFO" */
+#define WAV_ID_INAM 0x4d414e49 /* "INAM" */
+#define WAV_ID_IART 0x54524149 /* "IART" */
+#define WAV_ID_IGNR 0x524e4749 /* "IGNR" */
+#define WAV_ID_IPRD 0x44525049 /* "IPRD" */
+#define WAV_ID_ITRK 0x6b727469 /* "itrk" */
 
 #define INFO_SIZE 256
 
@@ -747,14 +747,14 @@ static void
 SetIDTagsFromRiffTags(lame_t gfp, FILE * sf)
 {
     int subSize = Read32BitsLowHigh(sf);
-    if (Read32BitsHighLow(sf) != WAV_ID_INFO) {
+    if (Read32BitsLowHigh(sf) != WAV_ID_INFO) {
 	fskip(sf, subSize, SEEK_CUR);
 	return;
     }
 
     subSize -= 4;
     while (subSize && !feof(sf)) {
-	int type = Read32BitsHighLow(sf);
+	int type = Read32BitsLowHigh(sf);
 	char buf[INFO_SIZE+1];
 	unsigned int length = Read32BitsLowHigh(sf);
 	if (length > INFO_SIZE)
@@ -816,11 +816,11 @@ parse_wave_header(lame_t gfp, FILE * sf)
 
     file_length = Read32BitsLowHigh(sf);
 
-    if (Read32BitsHighLow(sf) != WAV_ID_WAVE)
+    if (Read32BitsLowHigh(sf) != WAV_ID_WAVE)
 	return 0;
 
     for (loop_sanity = 0; loop_sanity < 20; ++loop_sanity) {
-	int type = Read32BitsHighLow(sf);
+	int type = Read32BitsLowHigh(sf);
 	if (feof(sf))
 	    break;
 
@@ -908,7 +908,7 @@ parse_wave_header(lame_t gfp, FILE * sf)
 static void
 parse_file_header(lame_t gfp, FILE * sf)
 {
-    int type = Read32BitsHighLow(sf);
+    int type = Read32BitsLowHigh(sf);
     count_samples_carefully = 0;
     input_format = sf_raw;
 
