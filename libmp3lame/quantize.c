@@ -818,21 +818,22 @@ calc_sfb_noise_fast(lame_internal_flags *gfc, int j, int bw, int sf)
 
     do {
 	FLOAT t0, t1;
-	int i0, i1;
 #ifdef TAKEHIRO_IEEE754_HACK
 	fi_union fi0, fi1;
 	fi0.f = sfpow34 * xr34[j+bw  ] + (ROUNDFAC_NEAR + MAGIC_FLOAT);
 	fi1.f = sfpow34 * xr34[j+bw+1] + (ROUNDFAC_NEAR + MAGIC_FLOAT);
-	i0 = fi0.i; i1 = fi1.i;
-	if (i0 > MAGIC_INT + IXMAX_VAL) i0 = MAGIC_INT + IXMAX_VAL;
-	if (i1 > MAGIC_INT + IXMAX_VAL) i1 = MAGIC_INT + IXMAX_VAL;
-	t0 = absxr[j+bw  ] - (pow43 - MAGIC_INT)[i0] * sfpow;
-	t1 = absxr[j+bw+1] - (pow43 - MAGIC_INT)[i1] * sfpow;
+
+	if (fi0.i > MAGIC_INT + IXMAX_VAL) return -1;
+	if (fi1.i > MAGIC_INT + IXMAX_VAL) return -1;
+	t0 = absxr[j+bw  ] - (pow43 - MAGIC_INT)[fi0.i] * sfpow;
+	t1 = absxr[j+bw+1] - (pow43 - MAGIC_INT)[fi1.i] * sfpow;
 #else
+	int i0, i1;
 	i0 = (int)(sfpow34 * xr34[j+bw  ] + ROUNDFAC);
 	i1 = (int)(sfpow34 * xr34[j+bw+1] + ROUNDFAC);
-	if (i0 > IXMAX_VAL) i0 = IXMAX_VAL;
-	if (i1 > IXMAX_VAL) i1 = IXMAX_VAL;
+
+	if (i0 > IXMAX_VAL) return -1;
+	if (i1 > IXMAX_VAL) return -1;
 	t0 = absxr[j+bw  ] - pow43[i0] * sfpow;
 	t1 = absxr[j+bw+1] - pow43[i1] * sfpow;
 #endif
@@ -850,23 +851,24 @@ calc_sfb_noise(lame_internal_flags *gfc, int j, int bw, int sf)
 
     do {
 #ifdef TAKEHIRO_IEEE754_HACK
-	double t0 = sfpow34 * xr34[j+bw  ] + MAGIC_FLOAT;
-	double t1 = sfpow34 * xr34[j+bw+1] + MAGIC_FLOAT;
+	double t0, t1;
 	fi_union fi0, fi1;
-	if (t0 > MAGIC_FLOAT + IXMAX_VAL) t0 = MAGIC_FLOAT + IXMAX_VAL;
-	if (t1 > MAGIC_FLOAT + IXMAX_VAL) t1 = MAGIC_FLOAT + IXMAX_VAL;
-	fi0.f = t0;
-	fi1.f = t1;
+	fi0.f = (t0 = sfpow34 * xr34[j+bw  ] + MAGIC_FLOAT);
+	fi1.f = (t1 = sfpow34 * xr34[j+bw+1] + MAGIC_FLOAT);
+	if (fi0.i > MAGIC_INT + IXMAX_VAL) return -1.0;
+	if (fi1.i > MAGIC_INT + IXMAX_VAL) return -1.0;
 	fi0.f = t0 + (adj43asm - MAGIC_INT)[fi0.i];
 	fi1.f = t1 + (adj43asm - MAGIC_INT)[fi1.i];
 	t0 = absxr[j+bw  ] - (pow43 - MAGIC_INT)[fi0.i] * sfpow;
 	t1 = absxr[j+bw+1] - (pow43 - MAGIC_INT)[fi1.i] * sfpow;
 #else
-	FLOAT t0 = sfpow34 * xr34[j+bw  ];
-	FLOAT t1 = sfpow34 * xr34[j+bw+1];
-	int i0 = (int)t0, i1 = (int) t1;
-	if (i0 > IXMAX_VAL) i0 = IXMAX_VAL;
-	if (i1 > IXMAX_VAL) i1 = IXMAX_VAL;
+	FLOAT t0, t1;
+	int i0, i1;
+	i0 = (int) (t0 = sfpow34 * xr34[j+bw  ]);
+	i1 = (int) (t1 = sfpow34 * xr34[j+bw+1]);
+	if (i0 > IXMAX_VAL) return -1.0;
+	if (i1 > IXMAX_VAL) return -1.0;
+
 	t0 = absxr[j+bw  ] - pow43[(int)(t0 + adj43[i0])] * sfpow;
 	t1 = absxr[j+bw+1] - pow43[(int)(t1 + adj43[i1])] * sfpow;
 #endif
