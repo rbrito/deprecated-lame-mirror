@@ -341,6 +341,45 @@ int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
     if (i == 0)
 	return bits;
 
+#if 1
+    if (gi->block_type == SHORT_TYPE) {
+      a1=3*gfc->scalefac_band.s[3];
+      if (a1 > gi->big_values) a1 = gi->big_values;
+      a2 = gi->big_values;
+
+    }else if (gi->block_type == NORM_TYPE) {
+	int index;
+	int scfb_anz = 0;
+
+	while (gfc->scalefac_band.l[++scfb_anz] < i) 
+	    ;
+	index = subdv_table[scfb_anz].region0_count;
+	while (gfc->scalefac_band.l[index + 1] > i)
+	    index--;
+	gi->region0_count = index;
+
+	index = subdv_table[scfb_anz].region1_count;
+	while (gfc->scalefac_band.l[index + gi->region0_count + 2] > i)
+	    index--;
+	gi->region1_count = index;
+
+	a1 = gfc->scalefac_band.l[gi->region0_count + 1];
+	a2 = gfc->scalefac_band.l[index + gi->region0_count + 2];
+	if (a2 < i)
+	  gi->table_select[2] = choose_table(ix + a2, ix + i, &bits);
+
+    } else {
+	gi->region0_count = 7;
+	/*gi->region1_count = SBPSY_l - 7 - 1;*/
+	gi->region1_count = SBMAX_l -1 - 7 - 1;
+	a1 = gfc->scalefac_band.l[7 + 1];
+	a2 = i;
+	if (a1 > a2) {
+	    a1 = a2;
+	}
+    }
+#else
+
     if (gi->block_type == NORM_TYPE) {
 	a1 = gi->region0_count = gfc->bv_scf[i-2];
 	a2 = gi->region1_count = gfc->bv_scf[i-1];
@@ -360,6 +399,7 @@ int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
 	    a1 = a2;
 	}
     }
+#endif
 
     /* Count the number of bits necessary to code the bigvalues region. */
     if (0 < a1)
@@ -490,6 +530,9 @@ void best_huffman_divide(lame_internal_flags *gfc, int gr, int ch, gr_info *gi, 
     int r1_tbl[7 + 15 + 1];
     memcpy(&cod_info2, gi, sizeof(gr_info));
 
+    if (gi->block_type == SHORT_TYPE) 
+      return;
+
     if (gi->block_type == NORM_TYPE) {
 	recalc_divide_init(gfc, cod_info2, ix, r01_bits,r01_div,r0_tbl,r1_tbl);
 	recalc_divide_sub(gfc, cod_info2, gi, ix, r01_bits,r01_div,r0_tbl,r1_tbl);
@@ -558,6 +601,10 @@ scfsi_calc(int ch,
     gr_info *gi = &l3_side->gr[1].ch[ch].tt;
 
     static const int scfsi_band[5] = { 0, 6, 11, 16, 21 };
+
+    static const int slen1_n[16] = { 0, 1, 1, 1, 8, 2, 2, 2, 4, 4, 4, 8, 8, 8,16,16 };
+    static const int slen2_n[16] = { 0, 2, 4, 8, 1, 2, 4, 8, 2, 4, 8, 2, 4, 8, 4, 8 };
+
 
     for (i = 0; i < 4; i++) 
 	l3_side->scfsi[ch][i] = 0;
@@ -783,7 +830,6 @@ static const unsigned int max_range_sfac_tab[6][4] =
 
 
 
-
 /*************************************************************************/
 /*            scale_bitcount_lsf                                         */
 /*************************************************************************/
@@ -898,7 +944,6 @@ int scale_bitcount_lsf(III_scalefac_t *scalefac, gr_info *cod_info)
     }
     return over;
 }
-
 
 
 

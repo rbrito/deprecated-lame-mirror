@@ -80,7 +80,7 @@ int loop_break( III_scalefac_t *scalefac, gr_info *cod_info);
 void amp_scalefac_bands(lame_global_flags *gfp, FLOAT8 xrpow[576],
 			gr_info *cod_info,
 			III_scalefac_t *scalefac,
-			FLOAT8 distort[4][SBMAX_l], FLOAT8 dt);
+			FLOAT8 distort[4][SBMAX_l]);
 
 #ifdef ASM_QUANTIZE
 void quantize_xrpow_ASM( FLOAT8 xr[576],

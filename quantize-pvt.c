@@ -539,8 +539,8 @@ int calc_noise( lame_global_flags *gfp,
   
   int count=0;
   FLOAT8 noise;
-  FLOAT8 over_noise=1;
-  FLOAT8 tot_noise=1;
+  FLOAT8 over_noise=0;
+  FLOAT8 tot_noise=0;
   FLOAT8 max_noise = -999;
   
   if (cod_info->block_type == SHORT_TYPE) {
@@ -589,11 +589,11 @@ int calc_noise( lame_global_flags *gfp,
 	    xfsf[i+1][sfb] = sum / bw;
 
 	    noise = xfsf[i+1][sfb] / l3_xmin->s[sfb][i];
-	    tot_noise *= Max(noise, 1E-20);
+	    tot_noise += Max(noise, 1E-20);
 
             if (noise > 1) {
 		over++;
-		over_noise *= noise;
+		over_noise += noise;
 	    }
 	    max_noise=Max(max_noise,noise);
             distort[i+1][sfb] = noise;
@@ -647,11 +647,11 @@ int calc_noise( lame_global_flags *gfp,
         xfsf[0][sfb] = sum / bw;
 
 	noise = xfsf[0][sfb] / l3_xmin->l[sfb];
-	tot_noise *= Max(noise, 1E-20);
+	tot_noise += Max(noise, 1E-20);
 
         if (noise>1) {
 	  over++;
-	  over_noise *= noise;
+	  over_noise += noise;
 	}
 	max_noise=Max(max_noise,noise);
         distort[0][sfb] = noise;
@@ -665,9 +665,11 @@ int calc_noise( lame_global_flags *gfp,
    * the values are only used to compare with previous values */
   res->tot_count  = count;
   res->over_count = over;
-  res->tot_noise  = tot_noise;
-  res->over_noise = over_noise; 
-  res->max_noise  = max_noise;
+
+  /* convert to db. DO NOT CHANGE THESE */
+  res->tot_noise = 10*log10(Max(.00001,tot_noise)); 
+  res->over_noise = 10*log10(Max(1.0,over_noise)); 
+  res->max_noise = 10*log10(Max(.00001,max_noise));
   
   return over;
 }

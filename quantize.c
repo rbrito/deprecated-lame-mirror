@@ -87,8 +87,8 @@ iteration_loop( lame_global_flags *gfp, FLOAT8 pe[2][2],
         }
 
       best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
-      if (gfc->use_best_huffman==1) {
-        best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
+      if (gfc->use_best_huffman==1 && cod_info->block_type != SHORT_TYPE) {
+	best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
       }
       assert((int)cod_info->part2_3_length < 4096);
 
@@ -279,7 +279,7 @@ ABR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
       cod_info = &l3_side->gr[gr].ch[ch].tt;
 
       best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
-      if (gfc->use_best_huffman==1) {
+      if (gfc->use_best_huffman==1 && cod_info->block_type != SHORT_TYPE) {
         best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
       }
       if (gfp->gtkflag) {
@@ -636,6 +636,7 @@ VBR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
 
 
 
+
 INLINE 
 int quant_compare(int experimentalX,
                   calc_noise_result *best,
@@ -658,56 +659,48 @@ int quant_compare(int experimentalX,
                        && calc->over_noise < best->over_noise )
                  ||  ( calc->over_count == best->over_count 
                        && calc->over_noise==best->over_noise
-                       && calc->tot_noise < best->tot_noise)
-                 ; break;
+		       && calc->tot_noise < best->tot_noise)
+	    ; break;
 
 
   case 1: better = calc->max_noise < best->max_noise; break;
 
   case 2: better = calc->tot_noise < best->tot_noise; break;
   
-  case 3: { double max_noise = 10*log10(Max(.00001,calc->max_noise)),
-                   bmx_noise = 10*log10(Max(.00001,best->max_noise));
-          better =  calc->tot_noise < best->tot_noise
-                 &&       max_noise <       bmx_noise + 2; } break;
+  case 3: better =  calc->tot_noise < best->tot_noise
+                 && calc->max_noise < best->max_noise + 2; break;
   
-  case 4: { double max_noise = 10*log10(Max(.00001,calc->max_noise)),
-                   bmx_noise = 10*log10(Max(.00001,best->max_noise));
-            double tot_noise = 10*log10(Max(.00001,calc->tot_noise)),
-                   btt_noise = 10*log10(Max(.00001,best->tot_noise));
-            double ovr_noise = 10*log10(Max(1.0,calc->over_noise)),
-                   bov_noise = 10*log10(Max(1.0,best->over_noise));
-          better =  (
-                      (0>=max_noise)
-                    &&(bmx_noise>2)
+  case 4: better =  (
+                      (0>=calc->max_noise)
+                    &&(best->max_noise>2)
                     )
                  || (
-                      (0>=max_noise)
-                    &&(bmx_noise<0)
-                    &&((bmx_noise+2)>max_noise)
-                    &&(tot_noise<btt_noise)
+                      (0>=calc->max_noise)
+                    &&(best->max_noise<0)
+                    &&((best->max_noise+2)>calc->max_noise)
+                    &&(calc->tot_noise<best->tot_noise)
                     )
                  || (
-                      (0>=max_noise)
-                    &&(bmx_noise>0)
-                    &&((bmx_noise+2)>max_noise)
-                    &&(tot_noise<(btt_noise+bov_noise))
+                      (0>=calc->max_noise)
+                    &&(best->max_noise>0)
+                    &&((best->max_noise+2)>calc->max_noise)
+                    &&(calc->tot_noise<(best->tot_noise+best->over_noise))
                     )
                  || (
-                      (0<max_noise)
-                    &&(bmx_noise>-0.5)
-                    &&((bmx_noise+1)>max_noise)
-                    &&((  tot_noise+ovr_noise)
-                        <(btt_noise+bov_noise))
+                      (0<calc->max_noise)
+                    &&(best->max_noise>-0.5)
+                    &&((best->max_noise+1)>calc->max_noise)
+                    &&((  calc->tot_noise+calc->over_noise)
+                        <(best->tot_noise+best->over_noise))
                     )
                  || (
-                      (0<max_noise)
-                    &&(bmx_noise>-1)
-                    &&((bmx_noise+1.5)>max_noise)
-                    &&((  tot_noise+ovr_noise+ovr_noise)
-                        <(btt_noise+bov_noise+bov_noise))
+                      (0<calc->max_noise)
+                    &&(best->max_noise>-1)
+                    &&((best->max_noise+1.5)>calc->max_noise)
+                    &&((  calc->tot_noise+calc->over_noise+calc->over_noise)
+                        <(best->tot_noise+best->over_noise+best->over_noise))
                     )
-                  ;} break;
+                  ; break;
      
   case 5: better =   calc->over_noise  < best->over_noise
                  ||( calc->over_noise == best->over_noise
@@ -776,7 +769,7 @@ int init_outer_loop(lame_global_flags *gfp,
     o += temp>1E-20;
   }
   
-  return o;
+  return o>0;
 }
 
 
@@ -813,8 +806,8 @@ void outer_loop(
   gr_info save_cod_info;
   FLOAT8 xfsf_w[4][SBMAX_l];
   FLOAT8 distort[4][SBMAX_l];
-  calc_noise_result noise_info;      /* gets filled at first iteration */
-  calc_noise_result best_noise_info; /* gets filled at first iteration */
+  calc_noise_result noise_info;
+  calc_noise_result best_noise_info;
   int l3_enc_w[576]; 
   int iteration;
   int status,bits_found=0;
@@ -824,6 +817,15 @@ void outer_loop(
   lame_internal_flags *gfc=gfp->internal_flags;
 
   int notdone=1;
+
+  noise_info.over_count = 100;
+  noise_info.tot_count = 100;
+  noise_info.max_noise = 0;
+  noise_info.tot_noise = 0;
+  noise_info.over_noise = 0;
+  best_noise_info = noise_info;
+
+
 
   /* reset of iteration variables */
   memset(&scalefac_w, 0, sizeof(III_scalefac_t));
@@ -835,7 +837,7 @@ void outer_loop(
 
   /* BEGIN MAIN LOOP */
   iteration = 0;
-  do {
+  while ( notdone  ) {
     iteration += 1;
 
 
@@ -870,18 +872,7 @@ void outer_loop(
 
       /* compute the distortion in this quantization */
       if (gfc->noise_shaping==0) {
-        if (gfp->gtkflag) {
-          calc_noise( gfp,xr, l3_enc_w, cod_info, xfsf_w,distort,
-                      l3_xmin, &scalefac_w, &noise_info);
-        } else {
-          noise_info.over_count = 0;
-          noise_info.tot_count  = 0;
-          noise_info.max_noise  = 1;
-          noise_info.tot_noise  = 1;
-          noise_info.over_noise = 1;
-        }
         over=0;
-        notdone=0;
       } else {
         /* coefficients and thresholds both l/r (or both mid/side) */
         over = calc_noise( gfp,xr, l3_enc_w, cod_info, xfsf_w,distort,
@@ -928,8 +919,7 @@ void outer_loop(
       notdone=0;
     }
     if (notdone) {
-      amp_scalefac_bands( gfp, xrpow, cod_info, &scalefac_w, distort,
-                          noise_info.max_noise);
+      amp_scalefac_bands( gfp, xrpow, cod_info, &scalefac_w, distort);
 
       /* check to make sure we have not amplified too much */
       /* loop_break returns 0 if there is an unamplified scalefac */
@@ -976,7 +966,7 @@ void outer_loop(
      * NOTE: distort[] = changed to:  noise/allowed noise
      * so distort[] > 1 means noise > allowed noise
      */
-    if (gfp->VBR==vbr_rh) {
+    if (gfp->VBR==vbr_rh || iteration>100) {
       if (cod_info->block_type == SHORT_TYPE) {
         if ((distort[1][SBMAX_s-1] > 1)
           ||(distort[2][SBMAX_s-1] > 1)
@@ -985,14 +975,8 @@ void outer_loop(
         if (distort[0][SBMAX_l-1] > 1) { notdone=0; }
       }
     }
-    /* some quantization comparisons from our -X modes do not minimize
-     * the number of distorted bands, so it can happen in rare cases
-     * that we never get one without distorted bands. Aborting after
-     * some fixed 100 iterations will do the trick.
-     */  
-    if (iteration>100) { notdone=0; }
 
-  } while ( notdone );    /* done with main iteration */
+  }    /* done with main iteration */
 
   memcpy(cod_info,&save_cod_info,sizeof(save_cod_info));
   cod_info->part2_3_length += cod_info->part2_length;
@@ -1037,11 +1021,11 @@ void outer_loop(
 
 void amp_scalefac_bands(lame_global_flags *gfp, FLOAT8 xrpow[576], 
                         gr_info *cod_info, III_scalefac_t *scalefac,
-                        FLOAT8 distort[4][SBMAX_l], FLOAT8 distort_thresh)
+                        FLOAT8 distort[4][SBMAX_l])
 {
   int start, end, l,i,j;
   u_int sfb;
-  FLOAT8 ifqstep34;
+  FLOAT8 ifqstep34,distort_thresh;
   lame_internal_flags *gfc=gfp->internal_flags;
 
   if ( cod_info->scalefac_scale == 0 ) {
@@ -1049,16 +1033,23 @@ void amp_scalefac_bands(lame_global_flags *gfp, FLOAT8 xrpow[576],
   } else {
     ifqstep34 = 1.68179283050742922612;  /* 2**(.75*1) */
   }
-  /* distort_thresh = 0, unless all bands have distortion 
-   * less than masking.  In that case, just amplify bands with distortion
+  /* distort[] = noise/masking.  Comput distort_thresh so that:
+   * distort_thresh = 1, unless all bands have distort < 1
+   * In that case, just amplify bands with distortion
    * within 95% of largest distortion/masking ratio */
-  
-  if (distort_thresh <= 1.0) {
-    distort_thresh *= 0.95;
-  } else {
-    distort_thresh = 1.0;
+  distort_thresh = -900;
+  for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
+    distort_thresh = Max(distort[0][sfb],distort_thresh);
   }
-  
+
+  for ( sfb = cod_info->sfb_smax; sfb < 12; sfb++ ) {
+    for ( i = 0; i < 3; i++ ) {
+      distort_thresh = Max(distort[i+1][sfb],distort_thresh);
+    }
+  }
+  distort_thresh=Min(distort_thresh * 1.05, 1.0);
+
+
 
   for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
     if ( distort[0][sfb]>distort_thresh  ) {
