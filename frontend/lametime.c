@@ -150,18 +150,8 @@ off_t  lame_get_file_size ( const char* const filename )
 {
     struct stat       sb;
 
-#ifndef __riscos__
     if ( 0 == stat ( filename, &sb ) )
         return sb.st_size;
-#else
-    _kernel_swi_regs  reg;
-    
-    reg.r [0] = 17;
-    reg.r [1] = (int) filename;
-    _kernel_swi ( OS_File, &reg, &reg );
-    if ( reg.r [0] == 1 )
-        return (off_t) reg.r [4];
-#endif
     return (off_t) -1;
 }
 
