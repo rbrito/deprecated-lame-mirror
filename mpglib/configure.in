@@ -1,0 +1,178 @@
+dnl Process this file with autoconf to produce a configure script.
+dnl
+dnl include support and option for
+dnl - GTK            done.
+dnl - decoder        done.
+dnl - disable shared done.
+dnl - shared lib version
+dnl - debugging mode
+dnl - MMX support
+dnl
+dnl todo:
+dnl - move all system-dependent entries from Makefile here
+
+AC_INIT(main.c)
+
+dnl use "/usr" as default prefix...
+AC_PREFIX_DEFAULT(/usr)
+
+dnl check host
+AC_CANONICAL_HOST
+
+dnl Checks for programs.
+cflags_save="$CFLAGS"
+AC_PROG_CC
+# because AC_PROG_CC likes to set -g
+CFLAGS="$cflags_save"
+AC_PROG_MAKE_SET
+AC_PROG_RANLIB
+AC_PROG_LN_S
+AC_PROG_INSTALL
+
+dnl These are the main configuration variables for the Makefile
+CONFIG_LIBS=
+CONFIG_OPTS=
+CONFIG_LDFLAGS=
+
+dnl Checks for libraries.
+
+dnl TODO: are the functions of termcap and curses the same as for ncurses ?
+AC_CHECK_LIB(m, cos, HAVE_LIBM=-lm)
+dnl free fast math library
+dnl AC_CHECK_LIB(ffm, cos, HAVE_LIBM=-lffm)
+dnl Compaq fast math library.
+dnl AC_CHECK_LIB(cpml, cos, HAVE_LIBM=-lcpml)
+
+dnl mpg123 decoder
+AC_MSG_CHECKING(use of layer1 decoding)
+AC_ARG_ENABLE(decode-layer1, 
+  [  --enable-decoder-layer1     Include layer1 decoding [default:yes]],
+  CONFIG_DECODER_L1="$enableval", CONFIG_DECODER_L1="yes")
+
+if test "$CONFIG_DECODER_L1" != "no" ; then
+  CONFIG_OPTS="-DUSE_LAYER_1 $CONFIG_OPTS"
+fi
+AC_MSG_RESULT($CONFIG_DECODER_L1)
+
+AC_MSG_CHECKING(use of layer2 decoding)
+AC_ARG_ENABLE(decode-layer2, 
+  [  --enable-decoder-layer2     Include layer2 decoding [default:yes]],
+  CONFIG_DECODER_L2="$enableval", CONFIG_DECODER_L2="yes")
+
+if test "$CONFIG_DECODER_L2" != "no" ; then
+  CONFIG_OPTS="-DUSE_LAYER_2 $CONFIG_OPTS"
+fi
+AC_MSG_RESULT($CONFIG_DECODER_L2)
+
+
+dnl basic check for GTK...actually just for gtk-config...
+AC_PATH_PROG(GTK_CONFIG, gtk-config, no)
+AC_MSG_CHECKING(use of GTK frame analyzer)
+if test ".$GTK_CONFIG" != "." \
+    && test "$CONFIG_DECODER" != "no" \
+    && test "$CONFIG_FILEIO" != "no"; then
+  FA_DEFAULT=yes
+else
+  FA_DEFAULT=no
+fi
+
+dnl todo: display actual default value
+AC_ARG_ENABLE(analyzer, 
+    [  --enable-analyzer=yes,no    Whether to include the GTK frame analyzer [default yes if possible]]
+    [                          It requires installed GTK, file io and the decoder.],
+    CONFIG_FA="$enableval", CONFIG_FA="$FA_DEFAULT")
+if test "$FA_DEFAULT" != "no" && test "$CONFIG_FA" != "no" ; then
+  CONFIG_LIBS="`$GTK_CONFIG --libs` $CONFIG_LIBS"
+  CONFIG_OPTS="-DHAVEGTK `$GTK_CONFIG --cflags` $CONFIG_OPTS"
+  GTK_SOURCE="\$(gtk_sources)"
+  CONFIG_FA=yes
+  GTK_OBJ="\$(gtk_obj)"
+else
+  CONFIG_FA=no
+fi
+AC_MSG_RESULT($CONFIG_FA)
+
+
+#
+# this is from vorbis
+#
+dnl check GLIBC
+case $host in 
+*86-*-linux*)
+	# glibc < 2.1.3 has a serious FP bug in the math inline header
+	# that will cripple Vorbis.  Look to see if the magic FP stack
+	# clobber is missing in the mathinline header, thus indicating
+	# the buggy version
+
+	AC_EGREP_CPP(log10.*fldlg2.*fxch,[
+		#define __LIBC_INTERNAL_MATH_INLINES 1
+	     	#define __OPTIMIZE__
+		#include <math.h>
+		],bad=maybe,bad=no)
+
+	AC_MSG_CHECKING(glibc mathinline bug)
+	if test ${bad} = "maybe" ;then
+	      AC_EGREP_CPP(log10.*fldlg2.*fxch.*st\([[0123456789]]*\),
+				[
+				#define __LIBC_INTERNAL_MATH_INLINES 1
+			     	#define __OPTIMIZE__
+				#include <math.h>
+				],bad=no,bad=yes)
+	fi
+	AC_MSG_RESULT(${bad})
+	if test ${bad} = "yes" ;then
+ AC_MSG_WARN([                                                        ])
+ AC_MSG_WARN([********************************************************])
+ AC_MSG_WARN([* The glibc headers on this machine have a serious bug *])
+ AC_MSG_WARN([* in /usr/include/bits/mathinline.h  This bug affects  *])
+ AC_MSG_WARN([* all floating point code, not only LAME, but all code *])
+ AC_MSG_WARN([* built on this machine. Upgrading to glibc 2.1.3 is   *])
+ AC_MSG_WARN([* strongly urged to correct the problem.               *])
+ AC_MSG_WARN([*Note: that upgrading glibc will not fix any previously*])
+ AC_MSG_WARN([* built programs; this is a compile-time time bug.     *])
+ AC_MSG_WARN([* To work around the problem for this build of LAME,   *])
+ AC_MSG_WARN([* autoconf is disabling all math inlining.  This will  *])
+ AC_MSG_WARN([* hurt LAME performace but is necessary for LAME to    *])
+ AC_MSG_WARN([* work correctly.  Once glibc is upgraded, rerun       *])
+ AC_MSG_WARN([* configure and make to build with inlining.           *])
+ AC_MSG_WARN([********************************************************])
+ AC_MSG_WARN([                                                        ])
+
+	CPP_OPT="-D__NO_MATH_INLINES"
+	fi;;
+esac
+
+
+CONFIG_LIBS="$HAVE_LIBM $CONFIG_LIBS"
+AC_SUBST(CONFIG_OPTS)
+AC_SUBST(CONFIG_LIBS)
+AC_SUBST(CONFIG_LDFLAGS)
+
+CONFIG_SOURCES="$GTK_SOURCE $MPGLIB_SOURCE $BRHIST_SOURCE"
+AC_SUBST(CONFIG_SOURCES)
+AC_SUBST(GTK_OBJ)
+AC_SUBST(CPP_OPT)
+
+AC_SUBST(INSTALL_TARGETS)
+AC_SUBST(LIB_TARGETS)
+
+AC_SUBST(LIB_MAJOR_VERSION)
+AC_SUBST(LIB_MINOR_VERSION)
+
+
+dnl Checks for header files.
+AC_HEADER_STDC
+AC_CHECK_HEADERS(fcntl.h limits.h sys/time.h unistd.h)
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_TYPE_SIZE_T
+AC_HEADER_TIME
+
+dnl Checks for library functions.
+AC_FUNC_ALLOCA
+AC_TYPE_SIGNAL
+AC_FUNC_VPRINTF
+AC_CHECK_FUNCS(gettimeofday socket strtol)
+
+AC_OUTPUT(Makefile)

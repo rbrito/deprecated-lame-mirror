@@ -1,4 +1,3 @@
-#ifdef HAVEMPGLIB
 /*
  * Discrete Cosine Tansform (DCT) for subband synthesis
  * optimized for machines with no auto-increment. 
@@ -313,5 +312,3 @@ void dct64(real *a,real *b,real *c)
   dct64_1(a,b,bufs,bufs+0x20,c);
 }
 
-
-#endif

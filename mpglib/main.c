@@ -1,17 +1,6 @@
-#ifdef HAVEMPGLIB
-
 #include "common.h"
 #include "interface.h"
-
-#ifdef PARENT_IS_SLASH
-#include "/lame.h"
-#include "/util.h"
-#include "/VbrTag.h"
-#else
-#include "../lame.h"
-#include "../util.h"
-#include "../VbrTag.h"
-#endif 
+#include "lame.h"
 
 #include <limits.h>
 #include <stdlib.h>
@@ -162,12 +151,4 @@ int lame_decode(char *buffer,int len,short pcm_l[],short pcm_r[])
   mp3data_struct mp3data;
   return lame_decode_headers(buffer,len,pcm_l,pcm_r,&mp3data);
 }
-
-
-
-
-
-
-
-#endif /* HAVEMPGLIB */
 

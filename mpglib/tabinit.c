@@ -1,4 +1,3 @@
-#ifdef HAVEMPGLIB
 #include <stdlib.h>
 
 #include "mpg123.h"
@@ -117,6 +116,3 @@ void make_decode_tables(long scaleval)
   }
 }
 
-
-
-#endif

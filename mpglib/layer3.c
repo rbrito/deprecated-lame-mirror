@@ -1,4 +1,3 @@
-#ifdef HAVEMPGLIB
 /* 
  * Mpeg Layer-3 audio decoder 
  * --------------------------
@@ -1775,6 +1774,3 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
   return clip;
 }
 
-
-
-#endif

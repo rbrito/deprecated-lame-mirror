@@ -1,4 +1,3 @@
-#ifdef HAVEMPGLIB
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -493,8 +492,3 @@ int set_pointer(long backstep)
   return MP3_OK;
 }
 
-
-
-
-
-#endif

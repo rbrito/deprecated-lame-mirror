@@ -1,4 +1,3 @@
-#ifdef HAVEMPGLIB
 #include <ctype.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -280,8 +279,3 @@ unsigned int getbits_fast(int number_of_bits)
   return rval;
 }
 
-
-
-
-
-#endif
