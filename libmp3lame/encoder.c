@@ -298,6 +298,16 @@ int  lame_encode_mp3_frame (				// Output
     gfc->frac_SpF = ((gfp->version+1)*72000L*gfp->brate) % gfp->out_samplerate;
     gfc->slot_lag  = gfc->frac_SpF;
     
+    switch (gfp->padding_type) {
+    default:
+    case PAD_NO:
+        gfc->padding = FALSE;
+        break;
+    case PAD_ALL:
+        gfc->padding = TRUE;
+        break;
+    }
+    
     /* check FFT will not use a negative starting offset */
 #if 576 < FFTOFFSET
 # error FFTOFFSET greater than 576: FFT uses a negative offset
@@ -349,23 +359,7 @@ int  lame_encode_mp3_frame (				// Output
 
 
   /********************** padding *****************************/
-  switch (gfp->padding_type) {
-  case PAD_NO:
-    gfc->padding = FALSE;
-    break;
-  case PAD_ALL:
-    gfc->padding = TRUE;
-    break;
-  case PAD_ADJUST:
-  default:
-    if (gfp->VBR!=vbr_off) {
-      gfc->padding = FALSE;
-    } else {
-      if (gfp->disable_reservoir) {
-	gfc->padding = FALSE;
-	/* if the user specified --nores, dont very gfc->padding either */
-	/* tiny changes in frac_SpF rounding will cause file differences */
-      }else{
+  if (gfp->padding_type == PAD_ADJUST) {
         /* padding method as described in 
          * "MPEG-Layer3 / Bitstream Syntax and Decoding"
          * by Martin Sieler, Ralph Sperschneider
@@ -377,13 +371,12 @@ int  lame_encode_mp3_frame (				// Output
 
         gfc->slot_lag -= gfc->frac_SpF;
         if (gfc->slot_lag < 0) {
-          gfc->slot_lag += gfp->out_samplerate;
-          gfc->padding = TRUE;
-        } else {
-          gfc->padding = FALSE;
+            gfc->slot_lag += gfp->out_samplerate;
+            gfc->padding = TRUE;
+        } 
+        else {
+            gfc->padding = FALSE;
         }
-      } /* reservoir enabled */
-    }
   }
 
 

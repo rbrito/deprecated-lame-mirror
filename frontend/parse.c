@@ -393,7 +393,6 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "                    force = force ms_stereo on all frames.\n"
               "                    auto = jstereo, with varialbe mid/side threshold\n"
               "    -a              downmix from stereo to mono file for mono encoding\n"
-              "    -d              allow channels to have different blocktypes\n"
 #if defined(HAVE_VORBIS_ENCODER)
               "    --ogg           encode to Ogg Vorbis instead of MP3\n"
 #endif
@@ -408,7 +407,7 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "                    or a value for an average desired bitrate and depending on\n"                       
               "                    the value specified, appropriate quality settings will be used.\n"
               "                    \"--preset help\" gives some more infos on these\n" 
- 	          "    --r3mix         use  r3mix.net VBR preset"
+              "    --r3mix         use  r3mix.net VBR preset"
               );
 
     wait_for ( fp, lessmode );
@@ -1649,7 +1648,8 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                         lame_set_highpassfreq(gfp,-1);
                         break;
                     case 'd': 
-                        (void) lame_set_allow_diff_short( gfp, 1 );
+                        fprintf(stderr,"WARNING: -d is obsolete.\n");
+                        /*(void) lame_set_allow_diff_short( gfp, 1 );*/
                         break;
                     case 'S': 
                         silent = 1;

@@ -2079,6 +2079,14 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	uselongblock[1]=0;
       }
   }
+  else if (gfp->short_blocks == short_block_dispensed) {
+    uselongblock[0]=1;
+    uselongblock[1]=1;
+  }
+  else if (gfp->short_blocks == short_block_forced) {
+    uselongblock[0]=0;
+    uselongblock[1]=0;
+  } 
 
   /* update the blocktype of the previous granule, since it depends on what
    * happend in this granule */
