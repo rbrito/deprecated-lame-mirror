@@ -215,10 +215,22 @@ quantize_01(const FLOAT *xp, gr_info *gi, fi_union *fi, int sfb,
 	sfb++;
 	if (xe > xend)
 	    xe = xend;
+#ifdef USE_IEEE754_HACK
+	{
+	    fi_union thre;
+	    thre.f = (FLOAT)(1.0-ROUNDFAC) / istep;
+	    while (xp < xend) {
+		(fi++)->i = ((int*)xp)[0] > thre.i ? 1:0;
+		(fi++)->i = ((int*)xp)[1] > thre.i ? 1:0;
+		xp += 2;
+	    }
+	}
+#else
 	do {
 	    (fi++)->i = *xp++ > istep ? 1:0;
 	    (fi++)->i = *xp++ > istep ? 1:0;
 	} while (xp < xe);
+#endif
     } while (xp < xend);
 }
 
