@@ -739,6 +739,8 @@ amp_scalefac_bands(
     else
 	return 0;
 
+    for (sfb = 0; sfb < gi->sfbmax; sfb++)
+	distort[sfb] = -1.0;
     return target_bits - gfc->scale_bitcounter(gi);
 }
 
