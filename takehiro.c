@@ -26,8 +26,6 @@
 #include "quantize-pvt.h"
 
 
-
-
 struct
 {
     unsigned region0_count;
@@ -64,7 +62,7 @@ struct
 /*	      ix_max							 */
 /*************************************************************************/
 
- static int ix_max(int *ix, int *end)
+int ix_max(int *ix, int *end)
 {
     int max = 0;
 
@@ -95,13 +93,12 @@ struct
  Function: Count the number of bits necessary to code the subregion. 
 */
 
-static int cb_esc_buf[288];
-static int *cb_esc_end;
+
 static const int huf_tbl_noESC[15] = {
     1, 2, 5, 7, 7,10,10,13,13,13,13,13,13,13,13
 };
 
- static int
+int
 count_bit_ESC(int *ix, int *end, int t1, int t2, int *s)
 {
     /* ESC-table is used */
@@ -145,8 +142,8 @@ count_bit_ESC(int *ix, int *end, int t1, int t2, int *s)
     return t1;
 }
 
- static int
-count_bit_noESC(int *ix, int *end, unsigned int table) 
+int
+count_bit_noESC(int *ix, int *end, unsigned int table, int * cb_esc_buf, int **cb_esc_end) 
 {
     /* No ESC-words */
     int	sum = 0;
@@ -163,14 +160,14 @@ count_bit_noESC(int *ix, int *end, unsigned int table)
 	sum += hlen[x];
     } while (ix < end);
 
-    cb_esc_end = p;
+    *cb_esc_end = p;
     return sum;
 }
 
 
 
- static int
-count_bit_noESC2(unsigned int table) 
+int
+count_bit_noESC2(unsigned int table,int * cb_esc_buf,int *cb_esc_end) 
 {
     /* No ESC-words */
     int	sum = 0;
@@ -200,11 +197,13 @@ count_bit_noESC2(unsigned int table)
   with any arbitrary tables.
 */
 
-static int choose_table(int *ix, int *end, int *s)
+int choose_table(int *ix, int *end, int *s)
 {
     int max;
     int choice0, sum0;
     int choice1, sum1;
+    int cb_esc_buf[288];
+    int *cb_esc_end;
 
     max = ix_max(ix, end);
 
@@ -219,14 +218,14 @@ static int choose_table(int *ix, int *end, int *s)
 	}
 	/* try tables with no linbits */
 	choice0 = huf_tbl_noESC[max - 1];
-	sum0 = count_bit_noESC(ix, end, choice0);
+	sum0 = count_bit_noESC(ix, end, choice0,cb_esc_buf,&cb_esc_end);
 	choice1 = choice0;
 
 	switch (choice0) {
 	case 7:
 	case 10:
 	    choice1++;
-	    sum1 = count_bit_noESC2(choice1);
+	    sum1 = count_bit_noESC2(choice1,cb_esc_buf,cb_esc_end);
 	    if (sum0 > sum1) {
 		sum0 = sum1;
 		choice0 = choice1;
@@ -235,7 +234,7 @@ static int choose_table(int *ix, int *end, int *s)
 	case 2:
 	case 5:
 	    choice1++;
-	    sum1 = count_bit_noESC2(choice1);
+	    sum1 = count_bit_noESC2(choice1,cb_esc_buf,cb_esc_end);
 	    if (sum0 > sum1) {
 		sum0 = sum1;
 		choice0 = choice1;
@@ -243,14 +242,14 @@ static int choose_table(int *ix, int *end, int *s)
 	    break;
 
 	case 13:
-	    sum1 = count_bit_noESC2(14);
+	    sum1 = count_bit_noESC2(14,cb_esc_buf,cb_esc_end);
 	    if (sum0 > sum1) {
 		sum0 = sum1;
 		choice0 = 16;
 	    }
 
 	    choice1 = 15;
-	    sum1 = count_bit_noESC2(choice1);
+	    sum1 = count_bit_noESC2(choice1,cb_esc_buf,cb_esc_end);
 	    if (sum0 > sum1) {
 		sum0 = sum1;
 		choice0 = choice1;
@@ -287,7 +286,7 @@ static int choose_table(int *ix, int *end, int *s)
 int bigv_short_ISO;
 
 
-static int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
+int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
 {
     int i, a1, a2;
     int bits = 0;
@@ -422,14 +421,10 @@ int count_bits(lame_global_flags *gfp,int *ix, FLOAT8 *xr, gr_info *cod_info)
   the saved bits are kept in the bit reservoir.
  **********************************************************************/
 
-static int r01_bits[7 + 15 + 1];
-static int r01_div[7 + 15 + 1];
-static int r0_tbl[7 + 15 + 1];
-static int r1_tbl[7 + 15 + 1];
-static gr_info cod_info;
 
-static INLINE void
-recalc_divide_init(lame_internal_flags *gfc, int gr, int ch, int *ix)
+INLINE void
+recalc_divide_init(lame_internal_flags *gfc, gr_info cod_info, int gr, int ch, int *ix,
+int r01_bits[],int r01_div[],int r0_tbl[],int r1_tbl[])
 {
     int r0, r1, bigv, r0t, r1t, bits;
 
@@ -463,19 +458,20 @@ recalc_divide_init(lame_internal_flags *gfc, int gr, int ch, int *ix)
     }
 }
 
-static INLINE void
-recalc_divide_sub(lame_internal_flags *gfc, int gr, int ch, gr_info *gi, int *ix)
+INLINE void
+recalc_divide_sub(lame_internal_flags *gfc,gr_info cod_info2, int gr, int ch, gr_info *gi, int *ix,
+int r01_bits[],int r01_div[],int r0_tbl[],int r1_tbl[])
 {
     int bits, r2, a2, bigv, r2t;
 
-    bigv = cod_info.big_values;
+    bigv = cod_info2.big_values;
 
     for (r2 = 2; r2 < SBMAX_l + 1; r2++) {
 	a2 = gfc->scalefac_band.l[r2];
 	if (a2 >= bigv) 
 	    break;
 
-	bits = r01_bits[r2 - 2] + cod_info.count1bits;
+	bits = r01_bits[r2 - 2] + cod_info2.count1bits;
 	if (gi->part2_3_length <= bits)
 	    break;
 
@@ -483,7 +479,7 @@ recalc_divide_sub(lame_internal_flags *gfc, int gr, int ch, gr_info *gi, int *ix
 	if (gi->part2_3_length <= bits)
 	    continue;
 
-	memcpy(gi, &cod_info, sizeof(gr_info));
+	memcpy(gi, &cod_info2, sizeof(gr_info));
 	gi->part2_3_length = bits;
 	gi->region0_count = r01_div[r2 - 2];
 	gi->region1_count = r2 - 2 - r01_div[r2 - 2];
@@ -496,15 +492,20 @@ recalc_divide_sub(lame_internal_flags *gfc, int gr, int ch, gr_info *gi, int *ix
 void best_huffman_divide(lame_internal_flags *gfc, int gr, int ch, gr_info *gi, int *ix)
 {
     int i, a1, a2;
+    gr_info cod_info2;
 
-    memcpy(&cod_info, gi, sizeof(gr_info));
+    int r01_bits[7 + 15 + 1];
+    int r01_div[7 + 15 + 1];
+    int r0_tbl[7 + 15 + 1];
+    int r1_tbl[7 + 15 + 1];
+    memcpy(&cod_info2, gi, sizeof(gr_info));
 
     if (gi->block_type == NORM_TYPE) {
-	recalc_divide_init(gfc, gr, ch, ix);
-	recalc_divide_sub(gfc,gr, ch, gi, ix);
+	recalc_divide_init(gfc, cod_info2, gr, ch, ix,r01_bits,r01_div,r0_tbl,r1_tbl);
+	recalc_divide_sub(gfc,cod_info2, gr, ch, gi, ix,r01_bits,r01_div,r0_tbl,r1_tbl);
     }
 
-    i = cod_info.big_values;
+    i = cod_info2.big_values;
     if (i == 0 || (unsigned int)(ix[i-2] | ix[i-1]) > 1)
 	return;
 
@@ -513,46 +514,46 @@ void best_huffman_divide(lame_internal_flags *gfc, int gr, int ch, gr_info *gi, 
 	return;
 
     /* Determines the number of bits to encode the quadruples. */
-    memcpy(&cod_info, gi, sizeof(gr_info));
-    cod_info.count1 = i;
+    memcpy(&cod_info2, gi, sizeof(gr_info));
+    cod_info2.count1 = i;
     a1 = a2 = 0;
 
     assert(i <= 576);
     
-    for (; i > cod_info.big_values; i -= 4) {
+    for (; i > cod_info2.big_values; i -= 4) {
 	int p = ((ix[i-4] * 2 + ix[i-3]) * 2 + ix[i-2]) * 2 + ix[i-1];
 	a1 += ht[32].hlen[p];
 	a2 += ht[33].hlen[p];
     }
-    cod_info.big_values = i;
+    cod_info2.big_values = i;
 
-    cod_info.count1table_select = 0;
+    cod_info2.count1table_select = 0;
     if (a1 > a2) {
 	a1 = a2;
-	cod_info.count1table_select = 1;
+	cod_info2.count1table_select = 1;
     }
 
-    cod_info.count1bits = a1;
-    cod_info.part2_3_length = a1 + cod_info.part2_length;
+    cod_info2.count1bits = a1;
+    cod_info2.part2_3_length = a1 + cod_info2.part2_length;
 
-    if (cod_info.block_type == NORM_TYPE)
-	recalc_divide_sub(gfc, gr, ch, gi, ix);
+    if (cod_info2.block_type == NORM_TYPE)
+	recalc_divide_sub(gfc, cod_info2, gr, ch, gi, ix,r01_bits,r01_div,r0_tbl,r1_tbl);
     else {
 	/* Count the number of bits necessary to code the bigvalues region. */
 	a1 = gfc->scalefac_band.l[7 + 1];
 	if (a1 > i) {
 	    a1 = i;
 	}
-	cod_info.table_select[0] =
-	    choose_table(ix, ix + a1, &cod_info.part2_3_length);
-	cod_info.table_select[1] =
-	    choose_table(ix + a1, ix + i, &cod_info.part2_3_length);
-	if (gi->part2_3_length > cod_info.part2_3_length)
-	    memcpy(gi, &cod_info, sizeof(gr_info));
+	cod_info2.table_select[0] =
+	    choose_table(ix, ix + a1, &cod_info2.part2_3_length);
+	cod_info2.table_select[1] =
+	    choose_table(ix + a1, ix + i, &cod_info2.part2_3_length);
+	if (gi->part2_3_length > cod_info2.part2_3_length)
+	    memcpy(gi, &cod_info2, sizeof(gr_info));
     }
 }
 
-static void
+void
 scfsi_calc(int ch,
 	   III_side_info_t *l3_side,
 	   III_scalefac_t scalefac[2][2])

@@ -147,6 +147,7 @@ typedef struct  {
   int fill_buffer_downsample_init;
   int fill_buffer_upsample_init;
   int mdct_sub48_init;
+  int psymodel_init;
 
 
   long int frameNum;              /* frame counter */
@@ -255,6 +256,64 @@ struct {
 
   
   scalefac_struct scalefac_band;
+
+
+  /* DATA FROM PSYMODEL.C */
+/* The static variables "r", "phi_sav", "new", "old" and "oldest" have    */
+/* to be remembered for the unpredictability measure.  For "r" and        */
+/* "phi_sav", the first index from the left is the channel select and     */
+/* the second index is the "age" of the data.                             */
+  FLOAT8	minval[CBANDS];
+  FLOAT8	nb_1[4][CBANDS], nb_2[4][CBANDS];
+  FLOAT8 s3_s[CBANDS + 1][CBANDS + 1];
+  FLOAT8 s3_l[CBANDS + 1][CBANDS + 1];
+
+  III_psy_xmin thm[4];
+  III_psy_xmin en[4];
+  
+  /* unpredictability calculation
+   */
+  int cw_upper_index;
+  int cw_lower_index;
+  FLOAT ax_sav[4][2][HBLKSIZE];
+  FLOAT bx_sav[4][2][HBLKSIZE];
+  FLOAT rx_sav[4][2][HBLKSIZE];
+  FLOAT cw[HBLKSIZE];
+
+  /* fft and energy calculation    */
+  FLOAT wsamp_L[2][BLKSIZE];
+  FLOAT energy[HBLKSIZE];
+  FLOAT wsamp_S[2][3][BLKSIZE_s];
+  FLOAT energy_s[3][HBLKSIZE_s];
+
+  
+  /* Scale Factor Bands    */
+  FLOAT8	w1_l[SBPSY_l], w2_l[SBPSY_l];
+  FLOAT8	w1_s[SBPSY_s], w2_s[SBPSY_s];
+  FLOAT8 mld_l[SBPSY_l],mld_s[SBPSY_s];
+  int	bu_l[SBPSY_l],bo_l[SBPSY_l] ;
+  int	bu_s[SBPSY_s],bo_s[SBPSY_s] ;
+  int	npart_l,npart_s;
+  int	npart_l_orig,npart_s_orig;
+  
+  int	s3ind[CBANDS][2];
+  int	s3ind_s[CBANDS][2];
+
+  int	numlines_s[CBANDS] ;
+  int	numlines_l[CBANDS];
+  
+  /* frame analyzer    */
+  FLOAT energy_save[4][HBLKSIZE];
+  FLOAT8 pe_save[4];
+  FLOAT8 ers_save[4];
+
+  /* ratios  */
+  FLOAT8 pe[4];
+  FLOAT8 ms_ratio_s_old,ms_ratio_l_old;
+  FLOAT8 ms_ener_ratio_old;
+
+  /* block type */
+  int	blocktype_old[2];
 
   /* used by the frame analyzer */
   plotting_data *pinfo;

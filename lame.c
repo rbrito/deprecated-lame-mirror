@@ -1355,6 +1355,10 @@ int lame_init(lame_global_flags *gfp)
   gfc->CurrentStep=4;
   gfc->masking_lower=1;
 
+  gfc->ms_ener_ratio_old=.25;
+  gfc->blocktype_old[0]=STOP_TYPE;
+  gfc->blocktype_old[1]=STOP_TYPE;
+
   return 0;
 }
 

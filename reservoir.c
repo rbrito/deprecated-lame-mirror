@@ -167,7 +167,7 @@ ResvFrameEnd(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits)
     gfc->ResvSize -= 8*mdb_bytes;
     
     if (gfp->VBR && mdb_bytes && !gfp->disable_reservoir) {
-      printf("**** drain_pre: wasting bits=%i\n",8*mdb_bytes);
+      printf("**** informative message:  drain_pre: wasting bits=%i\n",8*mdb_bytes);
     }
 
 #if 0
@@ -186,7 +186,7 @@ ResvFrameEnd(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits)
 
 
     if (gfp->VBR && stuffingBits>7 && !gfp->disable_reservoir) {
-      printf("**** drain_post: wasting bits=%i\n",stuffingBits);
+      printf("**** informative message: drain_post: wasting bits=%i\n",stuffingBits);
     }
     return;
 }

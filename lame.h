@@ -139,8 +139,6 @@ typedef struct  {
   int nVbrFrameBufferSize;
 
 
-
-
   /************************************************************************/
   /* more internal variables, which will not exist after lame_encode_finish() */
   /************************************************************************/
