@@ -1,8 +1,4 @@
 encoding core:
-0.
-There's some problem in very the first frame MDCT calculation.
-
-
 1.
 LAME has problems with test signals.
 1. pure DC input.(i.e. a square wave with a frequency well below 20 Hz)
@@ -23,9 +19,12 @@ psycho-analysis.
 3.
 Some switches to support the "BUGGY" decoders.
 --strictly-enforce-ISO is not perfect to these players.
-It seems it needs forcing coupling block type, lower IXMAX_VAL, no
-scfsi, no scalefact_scale, and so on. 
 
+--sameblock   : forcing to use coupling block type (implemented),
+                for some DVD players
+--lesserixmax : reduce IXMAX_VAL (not yet), for old winamp.
+
+it seems we do not need --noscfsi or --noscalefac options. That's good news.
 
 
 4.
@@ -37,7 +36,7 @@ And more the worse, there's sfb21 :(
 
 8.
 low bitrate quality problem and better intensity stereo support.
-LAME4 should support i-stereo even when MPEG2 Layer3 (currently not).
+and LAME4 should support i-stereo even when MPEG2 Layer3 (currently not).
 
 Note: mpg123 (and all derivatives, like xmms and lame/mpglib)
 have bugs in the intensity stereo decoding.  Bugs have been there
@@ -96,6 +95,11 @@ So we should use both of ssrc/old resample code...
 30.
 mp3x cannot display (seg-faults) short file like testcase.new.mp3.
 (LAME3.x has this bug, too)
+
+
+40.
+mp3x cannot display subblock of short blocks.
+
 
 
 50.
