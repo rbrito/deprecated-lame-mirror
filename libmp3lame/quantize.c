@@ -1096,6 +1096,12 @@ CBR_bitalloc(
     for (ch = 0; ch < gfc->channels_out; ch++)
 	bits += gfc->l3_side.tt[gr][ch].part2_length;
 
+    /* check hard limit per granule (by spec) */
+    if (max_bits > MAX_BITS)
+	max_bits = MAX_BITS;
+    if (min_bits > MAX_BITS)
+	min_bits = MAX_BITS;
+
     min_bits -= bits; assert(min_bits >= 0);
     max_bits -= bits;
 
@@ -1155,11 +1161,6 @@ ABR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
     max_bits = ResvFrameBegin(gfc, getframebytes(gfp)) / gfc->mode_gr;
     gfc->bitrate_index = 1;
     min_bits = ResvFrameBegin(gfc, getframebytes(gfp)) / gfc->mode_gr;
-    /* check hard limit per granule (by spec) */
-    if (max_bits > MAX_BITS)
-	max_bits = MAX_BITS;
-    if (min_bits > MAX_BITS)
-	min_bits = MAX_BITS;
 
     for (gr = 0; gr < gfc->mode_gr; gr++)
 	CBR_bitalloc(gfc, ratio[gr], min_bits, max_bits, factor, gr);
@@ -1209,19 +1210,11 @@ iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
 	    gfc->substep_shaping &= 0x7f;
 	}
 
-	/* max available bits per granule */
-	max_bits += mean_bits;
-
-	if (max_bits > mean_bits*2)    /* limit 2*average (need tuning) */
-	    max_bits = mean_bits*2;
-	/* check hard limit per granule (by spec) */
-	if (max_bits > MAX_BITS)
-	    max_bits = MAX_BITS;
-	if (min_bits > MAX_BITS)
-	    min_bits = MAX_BITS;
-
 	gfc->l3_side.ResvSize += mean_bits;
 
+	max_bits += mean_bits;
+	if (max_bits > mean_bits*2)    /* limit 2*average (need tuning) */
+	    max_bits = mean_bits*2;
 	CBR_bitalloc(gfc, ratio[gr], min_bits, max_bits, factor, gr);
     }
     assert(gfc->l3_side.ResvSize >= 0);
