@@ -35,31 +35,31 @@
 int main(int argc, char **argv)
 {
   char mp3buffer[LAME_MAXMP3BUFFER];
-  lame_global_flags gf;  
+  lame_global_flags *gf;  
   char outPath[MAX_NAME_SIZE];
   char inPath[MAX_NAME_SIZE];
   int ret;
 
-  lame_init_old(&gf);
+  gf=lame_init();
   if(argc <=1 ) {
-    usage(&gf, stderr, argv[0]);  /* no command-line args  */
+    usage(gf, stderr, argv[0]);  /* no command-line args  */
     return -1;
   }
-  ret = parse_args(&gf,argc, argv, inPath, outPath); 
+  ret = parse_args(gf,argc, argv, inPath, outPath); 
   if (ret < 0)
     return ret == -2 ? 0 : 1;
   
-  gf.analysis=1;
+  gf->analysis=1;
 
-  init_infile(&gf,inPath);
-  lame_init_params(&gf);
-  lame_print_config(&gf);
+  init_infile(gf,inPath);
+  lame_init_params(gf);
+  lame_print_config(gf);
 
 
   gtk_init (&argc, &argv);
-  gtkcontrol(&gf,inPath);
+  gtkcontrol(gf,inPath);
 
-  lame_encode_finish(&gf,mp3buffer,sizeof(mp3buffer));
+  lame_encode_finish(gf,mp3buffer,sizeof(mp3buffer));
   close_infile();
   return 0;
 }

@@ -19,6 +19,7 @@
 #include <time.h>
 #include <unistd.h>
 #include "lame.h"
+#include "main.h"
 #include "parse.h"
 #include "lametime.h"
 #include "timestatus.h"
@@ -114,7 +115,7 @@ int  main ( int argc, char **argv )
     char       outPath   [MAX_NAME_SIZE];
     short int  Buffer [2] [1152];
 
-    lame_global_flags gf;
+    lame_global_flags *gf;
     
     int        ret;
     int        wavsamples;
@@ -140,7 +141,7 @@ int  main ( int argc, char **argv )
 	return 1;
     }
 
-    switch (sscanf ( argv[1], "%11[.0-9]:%u:%u%c", ip, &port, &ttl, dummy )) {
+    switch (sscanf ( argv[1], "%11[.0-9]:%u:%u%c", ip, &port, &ttl, &dummy )) {
     case 1:
     case 2:
     case 3: 
@@ -155,7 +156,7 @@ int  main ( int argc, char **argv )
     initrtp ( &RTPheader );
 
     /* initialize encoder */
-    lame_init_old (&gf);
+    gf=lame_init();
 
     /* Remove the argumets that are rtp related, and then 
      * parse the command line arguments, setting various flags in the
@@ -166,7 +167,7 @@ int  main ( int argc, char **argv )
      */
      
     argv[1] = argv[0]; 
-    parse_args (&gf, argc - 1, argv + 1, inPath, outPath);
+    parse_args(gf, argc - 1, argv + 1, inPath, outPath);
 
     /* open the output file.  Filename parsed into gf.inPath */
     if ( 0 == strcmp ( outPath, "-" ) ) {
@@ -186,28 +187,28 @@ int  main ( int argc, char **argv )
      * if you want to do your own file input, skip this call and set
      * these values yourself.  
      */
-    init_infile (&gf, inPath);
+    init_infile(gf,inPath);
 
 
     /* Now that all the options are set, lame needs to analyze them and
      * set some more options 
      */
-    ret = lame_init_params (&gf);
+    ret = lame_init_params(gf);
     if ( ret < 0 ) {
         if (ret == -1) display_bitrates (stderr);
         fprintf (stderr, "fatal error during initialization\n");
         return -1;
     }
 
-    lame_print_config (&gf); /* print useful information about options being used */
+    lame_print_config(gf); /* print useful information about options being used */
 
     if (update_interval < 0.)
         update_interval = 2.;
 
     /* encode until we hit EOF */
-    while ( (wavsamples = get_audio (&gf, Buffer)) > 0 ) { /* read in 'wavsamples' samples */
+    while ( (wavsamples = get_audio(gf, Buffer)) > 0 ) { /* read in 'wavsamples' samples */
         levelmessage ( maxvalue (Buffer) );
-        mp3bytes = lame_encode_buffer ( &gf,               /* encode the frame */
+        mp3bytes = lame_encode_buffer(gf,               /* encode the frame */
 	                                Buffer[0], Buffer[1], wavsamples, 
 					mp3buffer, sizeof (mp3buffer) );
 
@@ -215,16 +216,16 @@ int  main ( int argc, char **argv )
         fwrite ( mp3buffer, 1, mp3bytes, outf );  /* write the MP3 output to file */
     }
 
-    mp3bytes = lame_encode_flush ( &gf,           /* may return one or more mp3 frame */ 
+    mp3bytes = lame_encode_flush(gf,           /* may return one or more mp3 frame */ 
                                    mp3buffer, sizeof (mp3buffer) ); 
     rtp_output ( mp3buffer, mp3bytes );           /* write MP3 output to RTP port */
     fwrite ( mp3buffer, 1, mp3bytes, outf );      /* write the MP3 output to file */
     
-    lame_mp3_tags_fid ( &gf, outf ); /* add VBR tags to mp3 file */
+    lame_mp3_tags_fid(gf, outf ); /* add VBR tags to mp3 file */
     
-    lame_close   ( &gf );
-    fclose       ( outf );
-    close_infile ();                 /* close the sound input file */
+    lame_close(gf);
+    fclose(outf);
+    close_infile();                 /* close the sound input file */
     
     return 0;
 }
