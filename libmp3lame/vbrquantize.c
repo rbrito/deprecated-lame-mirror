@@ -945,7 +945,7 @@ short_block_scalefacs (
         }
     }
 
-    if ((gfc->noise_shaping == 2) && (gfc->presetTune.use && !(gfc->presetTune.athadjust_safe_noiseshaping)))
+    if ((gfc->noise_shaping == 2) && (gfc->presetTune.use && !(gfc->presetTune.athadjust_safe_noiseshaping || gfc->ATH->adjust < 1.0)))
         /* allow scalefac_scale=1 */
         mover = Min (maxover0, maxover1);
     else
@@ -1045,7 +1045,7 @@ long_block_scalefacs (
     }
 
     mover = Min (maxover0, maxover0p);
-    if ((gfc->noise_shaping == 2) && (gfc->presetTune.use && !(gfc->presetTune.athadjust_safe_noiseshaping))) {
+    if ((gfc->noise_shaping == 2) && (gfc->presetTune.use && !(gfc->presetTune.athadjust_safe_noiseshaping || gfc->ATH->adjust < 1.0))) {
         /* allow scalefac_scale=1 */
         mover = Min (mover, maxover1);
         mover = Min (mover, maxover1p);
