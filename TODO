@@ -1,19 +1,14 @@
-1. 
-Rewrite l3bitstream/formatbitstream (the last of the ISO code)
-  First form 'metaframes':    header+side_info + data
-In a correct mp3 stream, some of the above data will be stored in the
-previous frames (depending on main_data_begin).  When we have enough
-data in the metaframes to form a complete frame, return complete
-frame to calling program.  III_flushbuffer will pad with zeroes.
-   
+1.  replace termcap with ncurses.  ncurses works fine except 
+for line-up cursor movement
 
 2. 
 When all sfb's have energy below ATH, (analog silence)
 use a 32kbs frame even if min VBR bandwidth is larger.
+(should be working -not thoroughly tested )
 
 3.
 User specified min & max bandwidth (scalefactor bands)
-(or maybe a user specified lowpass and high pass filter)
+(Better: specify lowpass and highpass frequencies)
 
 4.
 Does stdin work when LAME is compiled to use libsndfile? 

@@ -61,6 +61,7 @@ ifeq ($(UNAME),Linux)
 # Comment out next 2 lines if you want to remove VBR histogram capability
    BRHIST_SWITCH = -DBRHIST
    LIBTERMCAP = -L/usr/lib/termcap -ltermcap
+#   LIBTERMCAP = -lncurses
 
 #  for debugging:
    CC_OPTS =  -UNDEBUG -O  -Wall -g -DABORTFP 
