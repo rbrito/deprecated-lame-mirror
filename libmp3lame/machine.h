@@ -116,7 +116,6 @@ Various integer types
 
 #if defined _WIN32 && !defined __CYGWIN__
 	typedef unsigned char	u_char;
-#       define int64 __int64
 
 #elif defined __DECALPHA__
 /*       do nothing */
@@ -131,7 +130,6 @@ Various integer types
 	typedef unsigned char	u_char;
 
 #else
-#define int64 long long
 #endif
 
 
