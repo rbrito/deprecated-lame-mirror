@@ -320,22 +320,24 @@ int L3psycho_anal( lame_global_flags *gfp,
   numchn = gfc->stereo;
   /* chn=2 and 3 = Mid and Side channels */
   if (gfp->mode == MPG_MD_JOINT_STEREO) numchn=4;
+
+  
   for (chn=0; chn<numchn; chn++) {
 
-    /* there is a one granule delay.  Copy maskings computed last call
-     * into masking_ratio to return to calling program.
-     */
-    if (chn<2) {    
-      /* LR maskings  */
-      percep_entropy[chn] = gfc->pe[chn]; 
-      masking_ratio[gr_out][chn].thm = gfc->thm[chn];
-      masking_ratio[gr_out][chn].en = gfc->en[chn];
-    }else{
-      /* MS maskings  */
-      percep_MS_entropy[chn-2] = gfc->pe[chn]; 
-      masking_MS_ratio[gr_out][chn-2].en = gfc->en[chn];
-      masking_MS_ratio[gr_out][chn-2].thm = gfc->thm[chn];
-    }
+        /* there is a one granule delay.  Copy maskings computed last call
+         * into masking_ratio to return to calling program.
+         */
+        if (chn < 2) {    
+            /* LR maskings  */
+            percep_entropy            [chn]       = gfc -> pe  [chn]; 
+            masking_ratio    [gr_out] [chn]  .en  = gfc -> en  [chn];
+            masking_ratio    [gr_out] [chn]  .thm = gfc -> thm [chn];
+        } else {
+            /* MS maskings  */
+            percep_MS_entropy         [chn-2]     = gfc -> pe  [chn]; 
+            masking_MS_ratio [gr_out] [chn-2].en  = gfc -> en  [chn];
+            masking_MS_ratio [gr_out] [chn-2].thm = gfc -> thm [chn];
+        }
       
 
     /**********************************************************************
@@ -704,12 +706,12 @@ int L3psycho_anal( lame_global_flags *gfp,
 	  for ( k = gfc->s3ind[b][0]; k <= gfc->s3ind[b][1]; k++ )
 	    {
 	      ecb += gfc->s3_l[b][k] * eb[k];	/* sprdngf for Layer III */
-	      ctb += gfc->s3_l[b][k] * cb[k];
+	      ctb += gfc->s3_l[b][k] * cb[k];   /* ^^^^^^^ tgwztgwlkxcbqtsf ? */
 	    }
 	}
 
 	/* calculate the tonality of each threshold calculation partition 
-	 * calculate the SNR in each threshhold calculation partition 
+	 * calculate the SNR in each threshold calculation partition 
 	 * tonality = -0.299 - .43*log(ctb/ecb);
 	 * tonality = 0:           use NMT   (lots of masking)
 	 * tonality = 1:           use TMN   (little masking)

@@ -42,7 +42,7 @@ static FLOAT window[BLKSIZE], window_s[BLKSIZE_s/2];
 
 static INLINE void fht(FLOAT *fz, int n)
 {
-    short k4;
+    size_t  k4;
     FLOAT *fi, *fn, *gi;
     FLOAT *tri;
 
@@ -51,7 +51,7 @@ static INLINE void fht(FLOAT *fz, int n)
     k4 = 4;
     do {
 	FLOAT s1, c1;
-	short i, k1, k2, k3, kx;
+	size_t i, k1, k2, k3, kx;
 	kx  = k4 >> 1;
 	k1  = k4;
 	k2  = k4 << 1;
@@ -125,7 +125,7 @@ static INLINE void fht(FLOAT *fz, int n)
     } while (k4<n);
 }
 
-static const short rv_tbl[] = {
+static const unsigned char rv_tbl [] = {
     0x00,    0x80,    0x40,    0xc0,    0x20,    0xa0,    0x60,    0xe0,
     0x10,    0x90,    0x50,    0xd0,    0x30,    0xb0,    0x70,    0xf0,
     0x08,    0x88,    0x48,    0xc8,    0x28,    0xa8,    0x68,    0xe8,
@@ -170,11 +170,13 @@ static const short rv_tbl[] = {
 void fft_short(
     lame_global_flags *gfp, FLOAT x_real[3][BLKSIZE_s], int chn, short *buffer[2])
 {
-    short i, j, b;
+    size_t  i;
+    size_t  b;
+    int     j;
 
     for (b = 0; b < 3; b++) {
 	FLOAT *x = &x_real[b][BLKSIZE_s / 2];
-	short k = (576 / 3) * (b + 1);
+	size_t k = (576 / 3) * (b + 1);
 	j = BLKSIZE_s / 8 - 1;
 	do {
 	  FLOAT f0,f1,f2,f3, w;
@@ -206,7 +208,9 @@ void fft_short(
 void fft_long(
     lame_global_flags *gfp, FLOAT x[BLKSIZE], int chn, short *buffer[2])
 {
-    short i,jj = BLKSIZE / 8 - 1;
+    size_t  i;
+    int     jj = BLKSIZE / 8 - 1;
+
     x += BLKSIZE / 2;
 
     do {
@@ -249,13 +253,14 @@ void init_fft(lame_global_flags *gfp)
     /*
      * calculate HANN window coefficients 
      */
-    if (gfp->exp_nspsytune) {
-      for (i = 0; i < BLKSIZE ; i++)
-	window[i] = 0.42-0.5*cos(2*PI*i/(BLKSIZE-1))+0.08*cos(4*PI*i/(BLKSIZE-1)); /* blackmann window */
+    if (gfp -> exp_nspsytune) {
+        for (i = 0; i < BLKSIZE ; i++)
+	    window[i] = 0.42-0.5*cos(2*PI*i/(BLKSIZE-1))+0.08*cos(4*PI*i/(BLKSIZE-1)); /* blackmann window */
     } else {
-      for (i = 0; i < BLKSIZE ; i++)
-	window[i] = 0.5 * (1.0 - cos(2.0 * PI * (i + 0.5) / BLKSIZE));
+        for (i = 0; i < BLKSIZE ; i++)
+	    window[i] = 0.5 * (1.0 - cos(2.0 * PI * (i + 0.5) / BLKSIZE));
     }
+    
     for (i = 0; i < BLKSIZE_s/2 ; i++)
 	window_s[i] = 0.5 * (1.0 - cos(2.0 * PI * (i + 0.5) / BLKSIZE_s));
 }
