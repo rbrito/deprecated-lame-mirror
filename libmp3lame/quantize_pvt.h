@@ -46,7 +46,7 @@ extern FLOAT adj43[PRECALC_SIZE];
 #endif
 
 #define Q_MAX (256+1)
-#define Q_MAX2 116 /* minimam possible number of
+#define Q_MAX2 116 /* minimum possible number of
 		      -cod_info->global_gain
 		      + ((scalefac[] + (cod_info->preflag ? pretab[sfb] : 0))
 		      << (cod_info->scalefac_scale + 1))
@@ -56,9 +56,9 @@ extern FLOAT adj43[PRECALC_SIZE];
 		      for short block, 0+(15<<2)+7*8 = 15*4+56 = 116
 		   */
 
-extern FLOAT pow20[Q_MAX+Q_MAX2];
+extern FLOAT pow20[Q_MAX+Q_MAX2+1];
 extern FLOAT ipow20[Q_MAX];
-extern FLOAT iipow20[Q_MAX2];
+extern FLOAT iipow20[Q_MAX2+1];
 
 typedef struct calc_noise_result_t {
     FLOAT  over_noise;      /* sum of quantization noise > masking */
