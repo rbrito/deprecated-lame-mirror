@@ -558,10 +558,6 @@ OpenSndFile(lame_global_flags * gfp, char *inPath)
         (void) lame_set_in_samplerate( gfp, mp3input_data.samplerate );
         (void) lame_set_num_samples( gfp, mp3input_data.nsamp );
     }
-    else if (input_format == sf_ogg) {
-        fprintf(stderr, "sorry, vorbis support in LAME is deprecated.\n");
-        exit(1);
-    }
     else {
 
         /* Try to open the sound file */
@@ -1294,10 +1290,6 @@ OpenSndFile(lame_global_flags * gfp, char *inPath)
         (void) lame_set_in_samplerate( gfp, mp3input_data.samplerate );
         (void) lame_set_num_samples( gfp, mp3input_data.nsamp );
     }
-    else if (input_format == sf_ogg) {
-        fprintf(stderr, "sorry, vorbis support in LAME is desperated.\n");
-        exit(1);
-    }
     else {
         if (input_format != sf_raw) {
             parse_file_header(gfp, musicin);
@@ -1387,27 +1379,6 @@ is_syncword_mp123(const void *const headerptr)
 	return 0;       /* reserved enphasis mode */
     return 1;
 }
-#if 0
-static int
-is_syncword_mp3(const void *const headerptr)
-{
-    const unsigned char *const p = headerptr;
-
-    if ((p[0] & 0xFF) != 0xFF)
-        return 0;       /* first 8 bits must be '1' */
-    if ((p[1] & 0xE0) != 0xE0)
-        return 0;       /* next 3 bits are also */
-    if ((p[1] & 0x18) == 0x08)
-        return 0;       /* no MPEG-1, -2 or -2.5 */
-    if ((p[1] & 0x06) != 0x02)
-        return 0;       /* no Layer III (can be merged with 'next 3 bits are also' test, but don't do this, this decreases readability) */
-    if ((p[2] & 0xF0) == 0xF0)
-        return 0;       /* bad bitrate */
-    if ((p[2] & 0x0C) == 0x0C)
-        return 0;       /* no sample frequency with (32,44.1,48)/(1,2,4)     */
-    return 1;
-}
-#endif
 
 int
 lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
