@@ -981,7 +981,7 @@ OpenSndFile(lame_t gfp, char *inPath)
 	    int bps = 2*lame_get_num_channels(gfp);
             if (IS_MPEG123(input_format) && mp3input_data.bitrate > 0) {
 		/* if input is mp3, use its bitrate */
-		bps = 1000.0 * mp3input_data.bitrate / 8.0;
+		bps = mp3input_data.bitrate * (1000/8);
 		flen /= lame_get_in_samplerate(gfp);
             }
 	    tmp_num_samples = flen / bps;
