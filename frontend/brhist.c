@@ -21,11 +21,11 @@
 
 /* $Id$ */
 
-#ifdef BRHIST
-
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
+
+#ifdef BRHIST
 
 /* basic #define's */
 
