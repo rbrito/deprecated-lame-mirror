@@ -137,6 +137,30 @@ typedef enum {
 } amp_mode_t;
 
 
+/* Guest structure, only temporarly here */
+
+typedef enum {
+    coding_MPEG_Layer_1 = 1,
+    coding_MPEG_Layer_2 = 2,
+    coding_MPEG_Layer_3 = 3,
+    coding_MPEG_AAC     = 4,
+    coding_Ogg_Vorbis   = 5
+} coding_t;
+
+
+typedef struct {
+    unsigned long  Class_ID;
+    long double    sample_freq_in;
+    long double    sample_freq_out;
+    float          lowpass_freq;
+    int            scale_in;
+    int            scale_out;
+    sample_t**     fir;
+    sample_t*      lastsamples [2];
+    // ...
+} resample_t;
+
+
 typedef struct  {
 
   /********************************************************************
@@ -168,8 +192,14 @@ typedef struct  {
 
   int padding;                    /* padding for the current frame? */
   int mode_gr;                    /* granules per frame */
-  int channels_out;               /* number of channels in the output data stream (not used for decoding) */
-  int channels_in;		  /* number of channels in the input data stream (PCM or decoded PCM) */
+    int          channels_in;	/* number of channels in the input data stream (PCM or decoded PCM) */
+    int          channels_out;  /* number of channels in the output data stream (not used for decoding) */
+    resample_t*  resample_in;   /* context for coding (PCM=>MP3) resampling */
+    resample_t*  resample_out;	/* context for decoding (MP3=>PCM) resampling */
+    size_t       frame_size;    /* size of one frame in samples per channel */
+    lame_global_flags* gfp;     /* needed as long as the frame encoding functions must access gfp (all needed information can be added to gfc) */
+    coding_t     coding;        /* MPEG Layer 1/2/3, Ogg Vorbis, MPEG AAC, ... */
+    unsigned long frame_count;  /* Number of frames coded, 2^32 > 3 years */
   int VBR_min_bitrate;            /* min bitrate index */
   int VBR_max_bitrate;            /* max bitrate index */
   float resample_ratio;           /* input_samp_rate/output_samp_rate */

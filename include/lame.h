@@ -261,14 +261,14 @@ void CDECL lame_print_config(const lame_global_flags *);
  * This will overwrite the data in leftpcm[] and rightpcm[].
  * 
 */
-//int lame_encode_buffer(lame_global_flags *,short int leftpcm[], short int rightpcm[],int num_samples, char *mp3buffer,int  mp3buffer_size);
+//int lame_encode_buffer(lame_global_flags *,short int leftpcm[], short int rightpcm[],int num_samples, unsigned char *mp3buffer,int  mp3buffer_size);
 
 int    CDECL lame_encode_buffer (
         lame_global_flags*  gfp,
         const short int     buffer_l [],
         const short int     buffer_r [],
         const int           nsamples,
-        char* const         mp3buf,
+        unsigned char*      mp3buf,
         const int           mp3buf_size );
 
 /* as above, but input has L & R channel data interleaved.  Note: 
@@ -276,7 +276,7 @@ int    CDECL lame_encode_buffer (
  * channel, not the total number of samples in pcm[]  
  */
 int CDECL lame_encode_buffer_interleaved(lame_global_flags *,short int pcm[], 
-int num_samples, char *mp3buffer,int  mp3buffer_size);
+int num_samples, unsigned char *mp3buffer,int  mp3buffer_size);
 
 
 
@@ -287,7 +287,7 @@ int num_samples, char *mp3buffer,int  mp3buffer_size);
  *
  * return code = number of bytes output to mp3buffer.  can be 0
  */
-int CDECL lame_encode_flush(lame_global_flags *,char *mp3buffer, int size);
+int CDECL lame_encode_flush(lame_global_flags *,unsigned char *mp3buffer, int size);
 
 
 
@@ -342,7 +342,7 @@ int  CDECL lame_close (lame_global_flags *);
  * and lame_close in one call.  However, once this call is made,
  * the statistics routines will no longer function since there 
  * data will have been cleared */
-int CDECL lame_encode_finish(lame_global_flags *,char *mp3buffer, int size);
+int CDECL lame_encode_finish(lame_global_flags *,unsigned char *mp3buffer, int size);
 
 
 
@@ -384,17 +384,17 @@ int CDECL lame_decode_init(void);
  * input 1 mp3 frame, output (maybe) pcm data.  
  * lame_decode return code:  -1: error.  0: need more data.  n>0: size of pcm output
  *********************************************************************/
-int CDECL lame_decode(char *mp3buf,int len,short pcm_l[],short pcm_r[]);
+int CDECL lame_decode(unsigned char *mp3buf,int len,short pcm_l[],short pcm_r[]);
 
 /* same as lame_decode, and also returns mp3 header data */
-int CDECL lame_decode_headers(char *mp3buf,int len,short pcm_l[],short pcm_r[],
+int CDECL lame_decode_headers(unsigned char *mp3buf,int len,short pcm_l[],short pcm_r[],
 mp3data_struct *mp3data);
 
 /* same as lame_decode, but returns at most one frame */
-int CDECL lame_decode1(char *mp3buf,int len,short pcm_l[],short pcm_r[]);
+int CDECL lame_decode1(unsigned char *mp3buf,int len,short pcm_l[],short pcm_r[]);
 
 /* same as lame_decode1, but returns at most one frame and mp3 header data */
-int CDECL lame_decode1_headers(char *mp3buf,int len,short pcm_l[],short pcm_r[],
+int CDECL lame_decode1_headers(unsigned char *mp3buf,int len,short pcm_l[],short pcm_r[],
 mp3data_struct *mp3data);
 
 /* Also useful for decoding is the ability to parse Xing VBR headers: */

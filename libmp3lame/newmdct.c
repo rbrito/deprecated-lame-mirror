@@ -370,12 +370,12 @@ static const int order[] = {
 
 
 /* returns sum_j=0^31 a[j]*cos(PI*j*(k+1/2)/32), 0<=k<32 */
-inline static void window_subband(sample_t *x1, FLOAT8 a[SBLIMIT])
+inline static void window_subband ( const sample_t *x1, FLOAT8 a[SBLIMIT] )
 {
     int i;
     FLOAT8 const *wp = enwindow+10;
 
-    sample_t *x2 = &x1[238-14-286];
+    const sample_t *x2 = &x1[238-14-286];
 
     for (i = -15; i < 0; i++) {
 	FLOAT8 w, s, t;
@@ -712,11 +712,11 @@ inline static void mdct_long(FLOAT8 *out, FLOAT8 *in)
 }
 
 
-void mdct_sub48( lame_internal_flags *gfc, sample_t *w0, sample_t *w1, 
+void mdct_sub48( lame_internal_flags *gfc, const sample_t *w0, const sample_t *w1, 
                  FLOAT8 mdct_freq[2][2][576] )
 {
     int gr, k, ch;
-    sample_t *wk;
+    const sample_t *wk;
 
     wk = w0 + 286;
     /* thinking cache performance, ch->gr loop is better than gr->ch loop */

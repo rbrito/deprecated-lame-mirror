@@ -190,7 +190,7 @@ static void  writeheader (
     // Poke value into bitbuffer
     i = gfc->header[gfc->h_ptr].ptr;
     while ( 1 ) {
-        if (bitcount < 8 - (i & 7)) {
+        if (bitcount < 8 - (i & 7)) {            // 'bitcount <= ...' also possible ?
 	    gfc->header [gfc->h_ptr].buf [i >> 3] |= value << (8 - (i & 7) - bitcount);
 	    i += bitcount;
 	    break;
@@ -1203,7 +1203,7 @@ format_bitstream(lame_global_flags *gfp, int bitsPerFrame,
 }
 
 
-int copy_buffer(char *buffer,int size,Bit_stream_struc *bs)
+int copy_buffer(unsigned char* buffer,int size,Bit_stream_struc *bs)
 {
   int minimum = bs->buf_byte_idx + 1;
   if (minimum <= 0) return 0;

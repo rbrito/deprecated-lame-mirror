@@ -76,10 +76,12 @@ FFT's                    <---------1024---------->
 
 typedef FLOAT8 pedata[2][2];
 
-int lame_encode_mp3_frame(lame_global_flags *gfp,
-sample_t inbuf_l[],
-sample_t inbuf_r[],
-char *mp3buf, int mp3buf_size)
+int  lame_encode_mp3_frame (				// Output
+	lame_global_flags* const  gfp,			// Context
+	sample_t*                 inbuf_l,              // Input
+	sample_t*                 inbuf_r,              // Input
+	unsigned char*            mp3buf, 		// Output
+	size_t                    mp3buf_size )		// Output
 {
 #ifdef macintosh /* PLL 14/04/2000 */
   static FLOAT8 xr[2][2][576];
@@ -93,7 +95,7 @@ char *mp3buf, int mp3buf_size)
   III_psy_ratio masking_MS_ratio[2][2]; /*MS ratios */
   III_psy_ratio (*masking)[2][2];  /*LR ratios and MS ratios*/
   III_scalefac_t scalefac[2][2];
-  sample_t *inbuf[2];
+  const sample_t *inbuf[2];
   lame_internal_flags *gfc=gfp->internal_flags;
 
   pedata pe,pe_MS;
@@ -115,6 +117,11 @@ char *mp3buf, int mp3buf_size)
   inbuf[0]=inbuf_l;
   inbuf[1]=inbuf_r;
 
+  /* Now another nasty example about programming:
+   * A lot of lame functions destroy data, so you can't trust
+   * in that data is not modified. A lot of prophylactic copying is done.
+   */
+   
   if (gfp->scale != 0) {
     int i;
     for (i=0 ; i<gfp->framesize; ++i) {
@@ -230,7 +237,7 @@ char *mp3buf, int mp3buf_size)
      * (mt 6/99).
      */
     int ret;
-    sample_t *bufp[2];  /* address of beginning of left & right granule */
+    const sample_t *bufp[2];  /* address of beginning of left & right granule */
     int blocktype[2];
 
     ms_ratio_prev=gfc->ms_ratio[gfc->mode_gr-1];

@@ -1216,7 +1216,7 @@ FILE * OpenSndFile(lame_global_flags *gfp, char *inPath)
 
 
 #if defined(HAVE_MPGLIB)
-static int check_aid ( const char* header ) 
+static int check_aid ( const unsigned char* header ) 
 {
     return  0 == strncmp ( header, "AiD\1", 4 );
 }
@@ -1261,7 +1261,7 @@ static int is_syncword_mp3 ( const void* const headerptr )
 int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
 {
   VBRTAGDATA pTagData;
-  char buf[100];
+  unsigned char buf[100];
   int ret;
   int num_frames=0;
   int len,len2,xing_header,aid_header;
@@ -1376,7 +1376,7 @@ For lame_decode_fromfile:  return code
 int lame_decode_fromfile(FILE *fd, short pcm_l[], short pcm_r[],mp3data_struct *mp3data)
 {
   int ret=0,len;
-  char buf[100];
+  unsigned char buf[100];
   /* read until we get a valid output frame */
   while(0==ret) {
     len = fread(buf,1,100,fd);

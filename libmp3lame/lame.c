@@ -408,6 +408,8 @@ int lame_init_params ( lame_global_flags* const gfp )
     int                  j;
     lame_internal_flags* gfc = gfp -> internal_flags;
 
+    gfc -> gfp                = gfp;
+
     gfc -> Class_ID           = 0;
   
     gfc -> CPU_features_i387  = has_i387  ();
@@ -417,11 +419,13 @@ int lame_init_params ( lame_global_flags* const gfp )
     gfc -> CPU_features_SIMD2 = 0;
     
     //init_scalar_functions ( gfc );      /* Select the fastest functions for this CPU */
-  
-    gfc->channels_in = gfp->num_channels;
+
+    gfc->channels_in  = gfp->num_channels;
     if ( gfc->channels_in == 1 ) 
-	gfp->mode    = MPG_MD_MONO;
-    gfc->channels_out      = gfp->mode == MPG_MD_MONO  ?  1  :  2;
+	gfp->mode     = MPG_MD_MONO;
+    gfc->channels_out = (gfp->mode == MPG_MD_MONO)  ?  1  :  2;
+    gfc->mode_ext     = MPG_MD_LR_LR;
+    if ( gfp->mode == MPG_MD_MONO ) gfp->force_ms = 0;	// don't allow forced mid/side stereo for mono output
 
     /* Here are some hidden flaws, the first step to show them is to reformat this
      * code. The next steps are little code morphings to ease the readability of
@@ -479,12 +483,15 @@ int lame_init_params ( lame_global_flags* const gfp )
     if ( gfp->ogg ) {
         gfp->framesize     = 1024;
         gfp->encoder_delay = ENCDELAY;
+	gfc->coding        = coding_Ogg_Vorbis;
     } else {
         gfc->mode_gr       = gfp->out_samplerate <= 24000  ?  1  :  2;  // Number of granules per frame
         gfp->framesize     = 576 * gfc->mode_gr;
         gfp->encoder_delay = ENCDELAY;
+	gfc->coding        = coding_MPEG_Layer_3;
     }
-
+    
+    gfc->frame_size     = gfp->framesize;
     gfc->resample_ratio = (double)gfp->in_samplerate / gfp->out_samplerate;
 
     /* 
@@ -710,14 +717,11 @@ int lame_init_params ( lame_global_flags* const gfp )
     /************************************************************************/
     lame_init_params_ppflt (gfc);
 
-
     /***************************************************************/
     /* compute info needed for FIR filter (filter_type==1)         */
     /***************************************************************/
     /* not yet coded */
 
-    gfc->mode_ext = MPG_MD_LR_LR;
-    gfc->channels_out   = (gfp->mode == MPG_MD_MONO)  ?  1  :  2;
 
     gfc->samplerate_index = SmpFrqIndex ( gfp->out_samplerate, &gfp->version );
     if ( gfc->samplerate_index < 0 )
@@ -729,25 +733,21 @@ int lame_init_params ( lame_global_flags* const gfp )
         } else {
 	    gfc->bitrate_index = BitrateIndex ( gfp->brate, gfp->version,
                                                 gfp->out_samplerate );
-        if ( gfc->bitrate_index < 0 )
-	    return -1;  
+            if ( gfc->bitrate_index < 0 )
+	        return -1;  
         }
     }
     else { /* choose a min/max bitrate for VBR */
         /* if the user didn't specify VBR_max_bitrate: */
-	if ( 0 == gfp->VBR_max_bitrate_kbps ) {
-	    gfc->VBR_max_bitrate = 14;      /* default: allow 160 kbps (MPEG-2) or 320 kbps (MPEG-1) */
-	} else {
-	    if ( (gfc->VBR_max_bitrate = BitrateIndex ( gfp->VBR_max_bitrate_kbps, gfp->version,gfp->out_samplerate)) < 0 )
-		return -1;
-	}
+	gfc->VBR_min_bitrate =  1;      /* default: allow   8 kbps (MPEG-2) or  32 kbps (MPEG-1) */
+	gfc->VBR_max_bitrate = 14;      /* default: allow 160 kbps (MPEG-2) or 320 kbps (MPEG-1) */
 	
-	if ( 0 == gfp->VBR_min_bitrate_kbps ) {
-	    gfc->VBR_min_bitrate =  1;      /* default: allow 8 kbps (MPEG-2) or 32 kbps (MPEG-1) */
-	} else {
+	if ( gfp->VBR_min_bitrate_kbps )
 	    if ( (gfc->VBR_min_bitrate = BitrateIndex ( gfp->VBR_min_bitrate_kbps, gfp->version,gfp->out_samplerate)) < 0 )
 		return -1;	    
-	}
+	if ( gfp->VBR_max_bitrate_kbps )
+	    if ( (gfc->VBR_max_bitrate = BitrateIndex ( gfp->VBR_max_bitrate_kbps, gfp->version,gfp->out_samplerate)) < 0 )
+		return -1;
 
 	gfp->VBR_min_bitrate_kbps  = bitrate_table [gfp->version] [gfc->VBR_min_bitrate];
 	gfp->VBR_max_bitrate_kbps  = bitrate_table [gfp->version] [gfc->VBR_max_bitrate];
@@ -790,10 +790,6 @@ int lame_init_params ( lame_global_flags* const gfp )
     
     if ( gfp->VBR != vbr_off )      gfp->quality = Min ( gfp->quality, 5 );
     
-    /* don't allow forced mid/side stereo for mono output */
-    if ( gfp->mode == MPG_MD_MONO ) gfp->force_ms = 0;
-
-
     /* Do not write VBR tag if VBR flag is not specified */
     if ( gfp->VBR==vbr_off ) gfp->bWriteVbrTag = 0;
     if ( gfp->ogg )          gfp->bWriteVbrTag = 0;
@@ -1033,7 +1029,7 @@ program.
 */
 int lame_encode_frame(lame_global_flags *gfp,
 sample_t inbuf_l[],sample_t inbuf_r[],
-char *mp3buf, int mp3buf_size)
+unsigned char *mp3buf, int mp3buf_size)
 {
   int ret;
   if (gfp->ogg) {
@@ -1084,7 +1080,7 @@ int    lame_encode_buffer (
         const short int     buffer_l [],
         const short int     buffer_r [],
         int                 nsamples,
-        char*               mp3buf,
+        unsigned char*      mp3buf,
         const int           mp3buf_size )
 {
   lame_internal_flags *gfc = gfp->internal_flags;
@@ -1200,7 +1196,7 @@ int    lame_encode_buffer_interleaved (
                 lame_global_flags* gfp,
                 short int          buffer [],
                 int                nsamples,
-                char*              mp3buf,
+                unsigned char*     mp3buf,
                 int                mp3buf_size )
 {
   int mp3size = 0, ret, i, ch, mf_needed;
@@ -1304,7 +1300,7 @@ int    lame_encode_buffer_interleaved (
 int lame_encode (
         lame_global_flags* const  gfp,
         const short int           in_buffer [2] [1152],
-        char* const               mp3buf,
+        unsigned char* const      mp3buf,
         const int                 size )
 {
     lame_internal_flags*  gfc = gfp->internal_flags;
@@ -1323,7 +1319,7 @@ int lame_encode (
 
 int    lame_encode_flush (
                 lame_global_flags* gfp,
-                char*              mp3buffer,
+                unsigned char*     mp3buffer,
                 int                mp3buffer_size )
 {
     short int buffer[2][1152];
@@ -1420,7 +1416,7 @@ int  lame_close (lame_global_flags *gfp)
 
 int    lame_encode_finish (
                 lame_global_flags* gfp,
-                char*              mp3buffer,
+                unsigned char*     mp3buffer,
                 int                mp3buffer_size )
 {
     int ret = lame_encode_flush( gfp, mp3buffer, mp3buffer_size );
