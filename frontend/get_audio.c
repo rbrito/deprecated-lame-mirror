@@ -1383,6 +1383,8 @@ is_syncword_mp123(const void *const headerptr)
     if ((p[1] & 0x06) == 0x04) /* illegal Layer II bitrate/Channel Mode comb */
         if (abl2[p[2] >> 4] & (1 << (p[3] >> 6)))
             return 0;
+    if ((p[7] & 3) == 2)
+	return 0;       /* reserved enphasis mode */
     return 1;
 }
 #if 0
@@ -1416,13 +1418,13 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
     int     ret;
     int     len, aid_header;
     short int pcm_l[1152], pcm_r[1152];
-    
+    int freeformat = 0;
 
     memset(mp3data, 0, sizeof(mp3data_struct));
     lame_decode_init();
 
     len = 4;
-    if (fread(&buf, 1, len, fd) != len)
+    if (fread(buf, 1, len, fd) != len)
         return -1;      /* failed */
     if (buf[0] == 'I' && buf[1] == 'D' && buf[2] == '3') {
         fprintf(stderr, "ID3v2 found. "
@@ -1452,7 +1454,10 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
     }
 
 
-    /* look for valid 4 byte MPEG header  */
+    /* look for valid 8 byte MPEG header  */
+    if (fread(&buf[4], 1, len, fd) != len)
+        return -1;      /* failed */
+    len = 8;
     while (!is_syncword_mp123(buf)) {
         int     i;
         for (i = 0; i < len - 1; i++)
@@ -1461,6 +1466,10 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
             return -1;  /* failed */
     }
 
+    if ((buf[3] & 0xf0)==0) {
+	fprintf(stderr,"Input file is freeformat.\n");
+	freeformat = 1;
+    }
 
     /* now parse the current buffer looking for MP3 headers.    */
     /* (as of 11/00: mpglib modified so that for the first frame where  */
@@ -1483,8 +1492,9 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
             return -1;
     }
 
-    if (mp3data->bitrate==0) {
-	fprintf(stderr,"Input file is freeformat.\n"); 
+    if (mp3data->bitrate==0 && !freeformat) {
+	fprintf(stderr, "fail to sync...\n");
+	return lame_decode_initfile(fd, mp3data);
     }
 
     if (mp3data->totalframes > 0) {
