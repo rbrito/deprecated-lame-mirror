@@ -7,11 +7,11 @@
 
 #ifdef AMIGA_MPEGA
 
+#define __USE_SYSBASE
 #include "lame.h"
 #include "util.h"
 #include <stdio.h>
 #include <stdlib.h>
-#define __USE_SYSBASE
 
 /* We need a small workaround here so GCC doesn't fail upon redefinition. :P */
 #define FLOAT _FLOAT
@@ -78,7 +78,7 @@ int lame_decode_initfile(const char *fullname, mp3data_struct *mp3data)
 #endif
 	atexit(exit_cleanup);
 
-	mstream=MPEGA_open(fullname, &mctrl);
+	mstream=MPEGA_open((char *)fullname, &mctrl);
 	if(!mstream) { return (-1); }
 
 	mp3data->stereo     = mstream->dec_channels;
@@ -89,7 +89,7 @@ int lame_decode_initfile(const char *fullname, mp3data_struct *mp3data)
 	return 0;
 }
 
-int lame_decode_fromfile(FILE *fd, short pcm_l[],short pcm_r[],mp3data_struct *mp3data)
+int lame_decode_fromfile(FILE *fd, short pcm_l[], short pcm_r[], mp3data_struct *mp3data)
 {
 	int outsize=0;
 	WORD *b[MPEGA_MAX_CHANNELS];
