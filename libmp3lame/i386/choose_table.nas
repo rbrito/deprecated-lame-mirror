@@ -128,7 +128,7 @@ choose_jump_table_L:
 	dd	table_MMX.L_case_8_15
 	dd	table_MMX.L_case_8_15
 
-	segment_code
+	segment_text
 ;
 ; use MMX
 ;
@@ -147,7 +147,7 @@ choose_table_MMX:
 	add	ecx,8
 	jz	.exit
 
-	align	4
+	loopalign	16
 .lp:
 	movq	mm4,[edx+ecx]
 	movq	mm5,[edx+ecx+8]
@@ -213,7 +213,7 @@ choose_table_MMX:
 
 	jz	.H_dual_exit
 
-	align   4
+	loopalign	16
 .H_dual_lp1:
 	movq	mm0, [edx+ecx]
 	movq	mm1, [edx+ecx+8]
@@ -232,7 +232,7 @@ choose_table_MMX:
 	jnz	.H_dual_lp1
 
 .H_dual_exit:
-	pmov	mm1,mm7
+	movq	mm1,mm7
 	punpckhdq	mm7,mm7
 	paddd	mm7,mm1
 	punpckldq	mm7,mm7
@@ -325,7 +325,7 @@ from3:
 
 	jz	.choose3_exit
 
-	align	4
+	loopalign	16
 .choose3_lp1
 	movq	mm0,[edx+eax]
 	movq	mm1,[edx+eax+8]
@@ -368,12 +368,12 @@ from3:
 table_MMX.L_case_2:
 	push	dword 2
 	mov	ecx,table23
-	pmov	mm5,[mul_add23]
+	movq	mm5,[mul_add23]
 	jmp	from2
 table_MMX.L_case_3:
 	push	dword 5
 	mov	ecx,table56
-	pmov	mm5,[mul_add56]
+	movq	mm5,[mul_add56]
 from2:
 	mov	eax,[esp+8]	;eax = *begin
 ;	mov	edx,[esp+12]	;edx = *end
@@ -397,7 +397,7 @@ from2:
 	add	eax,8
 	jz	.choose2_exit
 
-	align	4
+	loopalign	16
 .choose2_lp1
 	movq	mm0,[edx+eax]
 	movq	mm1,[edx+eax+8]
