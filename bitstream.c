@@ -76,14 +76,11 @@ putbits2(lame_global_flags *gfp, unsigned int val, int j)
     bs = &gfc->bs;
 
     assert(j <= MAX_LENGTH);
-    if (j<MAX_LENGTH)
-      {
-	if (val >= (1 << j)) {
-	  DEBUGF("val=%ui %i \n",val,(1<<j));
-	}
-      assert(val < (1 << j));  /* 1 << 32 wont work on 32 bit machines */
-      }
+    if (val >= (1 << j)) {
+      DEBUGF("val=%ui %i\n",val,(1<<j));
+    }
 
+    assert((val >> j) < 1);
     while (j > 0) {
 	int k;
 	if (bs->buf_bit_idx == 0) {
