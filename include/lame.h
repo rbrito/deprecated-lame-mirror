@@ -160,10 +160,6 @@ int CDECL lame_get_bWriteVbrTag(lame_t);
 int CDECL lame_set_decode_only(lame_t, int);
 int CDECL lame_get_decode_only(lame_t);
 
-/* 1=encode a Vorbis .ogg file.  default=0 */
-int CDECL lame_set_ogg(lame_t, int);
-int CDECL lame_get_ogg(lame_t);
-
 /*
   internal algorithm selection.  True quality is determined by the bitrate
   but this variable will effect quality by selecting expensive or cheap algorithms.
