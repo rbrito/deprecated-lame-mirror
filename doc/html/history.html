@@ -19,7 +19,47 @@ Starting with LAME 3.0:
 <hr></h3>
 
 <h3>
-LAME 3.66&nbsp;&nbsp; March 21 2000</h3>
+LAME 3.80beta&nbsp; (CVS)</h3>
+
+<ul>
+<li>
+<font color="#FF0000">Takehiro Tominaga:&nbsp; more efficient and faster
+huffman encoding!</font></li>
+</ul>
+
+<h3>
+LAME 3.70&nbsp; (CVS, under branch "lame3_70")</h3>
+
+<ul>
+<li>
+LAME 3.67beta becomes LAME 3.70 "stable"?</li>
+</ul>
+
+<h3>
+LAME 3.67beta&nbsp; March 27 2000</h3>
+
+<ul>
+<li>
+<font color="#FF0000">Robert Hegemann:&nbsp; jstereo now enabled for MPEG2
+encodings</font></li>
+
+<li>
+Mark Taylor: old M/S stereo mode which used L/R maskings has been removed.</li>
+
+<li>
+Mark Taylor: Xing MPEG2 VBR headers now working.</li>
+
+<li>
+<font color="#FF0000">Mark Taylor:&nbsp; When quantized coefficients are
+all 0 in a band, set scalefactors to 0 also to save a few bits.</font></li>
+
+<li>
+<font color="#000000">Ingo Saitz:&nbsp; Problems with framesize calculation
+when using -f fast-math option fixed.</font></li>
+</ul>
+
+<h3>
+LAME 3.66beta March 21 2000</h3>
 
 <ul>
 <li>
@@ -29,7 +69,7 @@ and double.</li>
 </ul>
 
 <h3>
-LAME 3.65&nbsp;&nbsp; March 17 2000</h3>
+LAME 3.65beta&nbsp;&nbsp; March 17 2000</h3>
 
 <ul>
 <li>
@@ -51,21 +91,21 @@ Don Melton:&nbsp; id3v1.1 tags &amp; id3 bugfixes</li>
 exceed the maximum when not using -h</font></li>
 
 <li>
-<font color="#3366FF">Fitlers based on polyphase filterbank.&nbsp; should
-be slightly better since the responce is independent of the blocktype,
+<font color="#3366FF">Mark Taylor: Fitlers based on polyphase filterbank.&nbsp;
+should be slightly better since the responce is independent of the blocktype,
 and they are slightly faster.</font></li>
 
 <li>
-API:&nbsp; the API changed slightly - and this should be the final version.
-There is a new routine: lame_encode_buffer() which takes an arbritray sized
-input buffer, resamples &amp; filters if necessary, encodes, and returns
-the mp3buffer.&nbsp; There are also several new #defines, so it is possible
-to compile a simple encoding library with no decoding or file I/O or command
-line parsing.&nbsp; see the file API for details.</li>
+Mark Taylor: API:&nbsp; the API changed slightly - and this should be the
+final version. There is a new routine: lame_encode_buffer() which takes
+an arbritray sized input buffer, resamples &amp; filters if necessary,
+encodes, and returns the mp3buffer.&nbsp; There are also several new #defines,
+so it is possible to compile a simple encoding library with no decoding
+or file I/O or command line parsing.&nbsp; see the file API for details.</li>
 
 <li>
-MSVC stuff:&nbsp; lame.exe (with and without the frame analyzer) and the
-CDex lame_enc.dll</li>
+Mark Taylor: MSVC stuff:&nbsp; lame.exe (with and without the frame analyzer)
+and the CDex lame_enc.dll</li>
 
 <br>should compile under MSVC.&nbsp; The MSVC5 project files may need some
 tweaking.&nbsp; In particular,
@@ -140,11 +180,12 @@ that were effecting quality for encodings which did not use the -h option
 (now fixed).</font></li>
 
 <li>
-More modularization work.&nbsp;&nbsp; It is now possible to use LAME as
-a library where you can set the encoding parameters directly and do your
-own file i/o.&nbsp;&nbsp; The calling program is now it's own mp3 output.&nbsp;
-For an example of the LAME API, see main.c, or mp3rtp.c or mp3x.c.&nbsp;
-These can all be compiled as stand alone programs which link with libmp3lame.a.</li>
+Mark Taylor: More modularization work.&nbsp;&nbsp; It is now possible to
+use LAME as a library where you can set the encoding parameters directly
+and do your own file i/o.&nbsp;&nbsp; The calling program is now it's own
+mp3 output.&nbsp; For an example of the LAME API, see main.c, or mp3rtp.c
+or mp3x.c.&nbsp; These can all be compiled as stand alone programs which
+link with libmp3lame.a.</li>
 
 <li>
 Felix vos Leitner:&nbsp; mp3rtp fixes.&nbsp; mp3rtp is a standalone program
@@ -166,8 +207,8 @@ LAME 3.61beta&nbsp; January 14 2000</h3>
 
 <ul>
 <li>
-<font color="#FF0000">Fixed bug with lowpass filters when using VBR with
-a 64kbs or lower min bitrate setting.</font></li>
+<font color="#FF0000">Mark Taylor: Fixed bug with lowpass filters when
+using VBR with a 64kbs or lower min bitrate setting.</font></li>
 
 <li>
 <font color="#FF0000">Takehiro Tominaga:&nbsp; more efficient huffman encoding
@@ -179,11 +220,11 @@ LAME 3.60beta&nbsp;&nbsp; January 9 2000</h3>
 
 <ul>
 <li>
-Distribution now comes with self test.&nbsp; Needs work to be automated,
-see 'make test' in Makefile.</li>
+Mark Taylor: Distribution now comes with self test.&nbsp; Needs work to
+be automated, see 'make test' in Makefile.</li>
 
 <li>
-<font color="#FF0000">AAC spreading function now the default</font></li>
+<font color="#FF0000">Mark Taylor: AAC spreading function now the default</font></li>
 
 <li>
 Gabriel Bouvigne: updated HTML docs</li>
@@ -279,14 +320,14 @@ Sigbj&oslash;rn Skj&aelig;ret, patch to allow encoding from 8bit input
 files when using LIBSNDFILE</li>
 
 <li>
-Automatic downsampling to nearest valid samplerate.</li>
+Mark Taylor: Automatic downsampling to nearest valid samplerate.</li>
 
 <li>
-Scalefactor bands demarked on MDCT plot in frameanalyzer</li>
+Mark Taylor: Scalefactor bands demarked on MDCT plot in frameanalyzer</li>
 
 <li>
-Scalefactor preemphasis disabled for now.&nbsp;&nbsp; The algorithm was
-often doing more harm than good.</li>
+Mark Taylor: Scalefactor preemphasis disabled for now.&nbsp;&nbsp; The
+algorithm was often doing more harm than good.</li>
 </ul>
 
 <h3>
@@ -303,13 +344,14 @@ Vladimir Marek: id3 genre patch.</li>
 Conrad Sanderson: new applypatch script.</li>
 
 <li>
-Initial window type now "STOP_TYPE" to reduce initial attenuation.&nbsp;
+Mark Taylor: Initial window type now "STOP_TYPE" to reduce initial attenuation.&nbsp;
 This is needed because the new encoder delay is so short.&nbsp; With a
 NORM_TYPE, the first 240 samples would be attenuated.</li>
 
 <li>
-Padding at end of file now adjusted (hopefully!) to produce as little padding
-as possible while still guarantee all input samples are encoded.</li>
+Mark Taylor: Padding at end of file now adjusted (hopefully!) to produce
+as little padding as possible while still guarantee all input samples are
+encoded.</li>
 
 <li>
 <font color="#FF0000">Takehiro Tominaga:&nbsp; Reduced shortblock extra
@@ -325,17 +367,18 @@ LAME 3.55beta&nbsp; November 11 1999</h3>
 Albert Faber:&nbsp; updated BladeEnc.dll</li>
 
 <li>
-Simple lowpass filter added to linear downsampling routine.</li>
+Mark Taylor: Simple lowpass filter added to linear downsampling routine.</li>
 
 <li>
 Nils Faerber: updated man page.</li>
 
 <li>
-All floating point variables are delcared FLOAT or&nbsp; FLOAT8.&nbsp;
+Mark Taylor: All floating point variables are delcared FLOAT or&nbsp; FLOAT8.&nbsp;
 Change the definition of FLOAT8 in machine.h to run at 32bit preceision.</li>
 
 <li>
-Bug (introduced in 3.54beta) in stereo->mono downsampling fixed.</li>
+Mark Taylor: Bug (introduced in 3.54beta) in stereo->mono downsampling
+fixed.</li>
 </ul>
 
 <h3>
@@ -343,17 +386,18 @@ LAME 3.54beta&nbsp; November 8 1999</h3>
 
 <ul>
 <li>
-Encoder delay is now 48 samples.&nbsp; Can be adjusted to 1160 to sync
-with FhG (see ENCDELAY in encoder.h)&nbsp; This is kind of amazing, since
-if Takehiro put his MDCT/filterbank routine in a decoder, we could have
-a total&nbsp; delay of only 96 samples.</li>
+Mark Taylor: Encoder delay is now 48 samples.&nbsp; Can be adjusted to
+1160 to sync with FhG (see ENCDELAY in encoder.h)&nbsp; This is kind of
+amazing, since if Takehiro put his MDCT/filterbank routine in a decoder,
+we could have a total&nbsp; delay of only 96 samples.</li>
 
 <li>
-<font color="#FF0000">More inconstancies found and fixed in MPEG2 tables.</font></li>
+<font color="#FF0000">Mark Taylor: More inconstancies found and fixed in
+MPEG2 tables.</font></li>
 
 <li>
-Resampling from an MP3 input file now works.&nbsp; But we still dont have
-a lowpass filter so dont expect good results.</li>
+Mark Taylor: Resampling from an MP3 input file now works.&nbsp; But we
+still dont have a lowpass filter so dont expect good results.</li>
 </ul>
 
 <h3>
@@ -380,10 +424,10 @@ file)</li>
 By popular demand, all C++ comments changed to C style comments</li>
 
 <li>
-Linear resampling now works.&nbsp; Use --resample to set an output samplerate
-different from the input samplerate.&nbsp; (doesn't seem to work with mp3
-input files, and there is no lowpass filter, so dont expect good results
-just yet)</li>
+Mark Taylor: Linear resampling now works.&nbsp; Use --resample to set an
+output samplerate different from the input samplerate.&nbsp; (doesn't seem
+to work with mp3 input files, and there is no lowpass filter, so dont expect
+good results just yet)</li>
 
 <li>
 <font color="#3366FF">Takehiro Tominaga:&nbsp; Faster Huffman encoding
@@ -452,11 +496,12 @@ Kimmo Mustonen:&nbsp; Much code cleanup and Amiga updates</li>
 Anton Oleynikov: Borland C updates</li>
 
 <li>
-More stdin fixes:&nbsp; For some reason, forward fseek()'s would fail when
-used on pipes even though it is okay with redirection from "&lt;". So I
-changed all the forward fseek()'s to use fread().&nbsp; This should improve
-stdin support for wav/aiff files.&nbsp; If you know the input file is raw
-pcm, you can still use the '-r' option to avoid *all* seeking of any kind.</li>
+Mark Taylor: More stdin fixes:&nbsp; For some reason, forward fseek()'s
+would fail when used on pipes even though it is okay with redirection from
+"&lt;". So I changed all the forward fseek()'s to use fread().&nbsp; This
+should improve stdin support for wav/aiff files.&nbsp; If you know the
+input file is raw pcm, you can still use the '-r' option to avoid *all*
+seeking of any kind.</li>
 
 <br>&nbsp;</ul>
 
@@ -488,11 +533,11 @@ LAME 3.34beta&nbsp; October 12 1999</h3>
 
 <ul>
 <li>
-<font color="#FF0000">Bug fixed:&nbsp; minimum bitrate in VBR mode could
-be ignored for a few frames.</font></li>
+<font color="#FF0000">Mark Taylor: Bug fixed:&nbsp; minimum bitrate in
+VBR mode could be ignored for a few frames.</font></li>
 
 <li>
-<font color="#FF0000">New (minor) VBR tunings.</font></li>
+<font color="#FF0000">Mark Taylor: New (minor) VBR tunings.</font></li>
 
 <li>
 Tim Ruddick: New wav/aiff header parsing routines.&nbsp; Better parsing
@@ -530,8 +575,8 @@ Windows</font></li>
 Iwasa Kazmi:&nbsp; stdin/stdout patch for Windows</li>
 
 <li>
-New option: "--athonly" will ignore the psy-model output and use only the
-absolute threshold of hearing for the masking.</li>
+Mark Taylor: New option: "--athonly" will ignore the psy-model output and
+use only the absolute threshold of hearing for the masking.</li>
 
 <br>&nbsp;</ul>
 
@@ -593,17 +638,17 @@ MSVC</li>
 <li>
 More modulization work:&nbsp; One input sound file interface handles mp3's,
 uncompressed audio, with or without LIBSNDFILE.&nbsp; Fixes (hopefully)
-a bunch of file I/O bugs introduced in 3.29</li>
+a bunch of file I/O bugs introduced in 3.29 (Mark Taylor)</li>
 
 <li>
-LAME will now print valid samplerate/bitrate combinations</li>
+LAME will now print valid samplerate/bitrate combinations (Mark Taylor)</li>
 
 <li>
 stdin/stdout fix for OS/2 (Paul Hartman)</li>
 
 <li>
 For mp3 input files, totalframes estimated based on filesize and first
-frame bitrate.</li>
+frame bitrate. (Mark Taylor)</li>
 
 <li>
 Updated all functions with new style prototypes.&nbsp; (Sigbj&oslash;rn

@@ -178,7 +178,7 @@
 <dl> 
   <dd>This option causes LAME to ignore the output of the psy-model and only use 
     masking from the ATH. Might be useful at very high bitrates or for testing 
-    the ATH.
+    the ATH. 
   <dt><br>
   </dt>
 </dl>
@@ -214,9 +214,7 @@
     Specifies the maximum allowed bitrate when using VBR.<br>
     <br>
     <i>note: If you own an mp3 hardware player build upon a MAS 3503 chip, you 
-    must set maximum bitrate to no more than 224 kpbs.</i> 
-  <br>
-  
+    must set maximum bitrate to no more than 224 kpbs.</i> <br>
 </dl>
 <dl> 
   <dt><strong>* <kbd>-c</kbd><a name="c">&nbsp;&nbsp;&nbsp;&nbsp;copyright</a></strong> 
@@ -230,7 +228,7 @@
   </dt>
 </dl>
 <dl> 
-  <dd>Allows the left and right channels to use different block size types.
+  <dd>Allows the left and right channels to use different block size types. 
   <dt><br>
     <br>
     <strong>* <kbd>-e n/5/c</kbd><a name="e">&nbsp;&nbsp;&nbsp;&nbsp;de-emphasis</a></strong> 
@@ -266,7 +264,26 @@
   <dd> Enables specialized mid/side masking thresholds to be used in jstereo mode 
     and also enables a more accurate but slightly slower quantization formula. 
     It will sound better but is about 20% slower.<br>
-    Recommended setting. 
+    Recommended setting.<br>
+    <br>
+    In the future there may be more quality settings, ranging from 0 (highest) 
+    to 9 (lowest) but right now there are just 3: 2,5 or 9. They are enabled with:<br>
+    <br>
+    <table border="0" width="213">
+      <tr> 
+        <td>-f 'fast mode'</td>
+        <td>quality 9</td>
+      </tr>
+      <tr> 
+        <td>default</td>
+        <td>quality 5</td>
+      </tr>
+      <tr> 
+        <td> -h 'high quality'</td>
+        <td>quality 2</td>
+      </tr>
+    </table>
+    
   <dt><br>
     <br>
     <strong>* <kbd>--help</kbd><a name="-help">&nbsp;&nbsp;&nbsp;&nbsp;help</a></strong> 
@@ -368,7 +385,7 @@
     ATH</a></strong> </dt>
 </dl>
 <dl> 
-  <dd> Disable any use of the ATH for masking.
+  <dd> Disable any use of the ATH for masking. 
   <dt><br>
   </dt>
 </dl>
@@ -389,7 +406,7 @@
 </dl>
 <dl> 
   <dd> Disable the bit reservoir. Each frame will then become independent from 
-    previous ones, but the quality will be lower.
+    previous ones, but the quality will be lower. 
   <dt><br>
   </dt>
 </dl>

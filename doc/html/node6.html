@@ -48,15 +48,15 @@ all about.
   bit means). The song will take up <NOBR>44100 samples/s &middot; 2 channels 
   &middot; 2 bytes/sample &middot; 60 s/min ~ 10 MBytes</NOBR> of storage space 
   on your harddisk. 
-<P> If you wanted to download that over the internet, given an average 28.8&nbsp;modem, 
-  it would take you (at least) <NOBR>10000000 bytes &middot; 8 bits/byte / (28800 
-  bits/s) &middot; / (60 s/min) ~ 45 minutes</NOBR> 
+<P> If you wanted to download that over the internet, given an average 56k&nbsp;modem 
+  connected at 44k (which is a typical case), it would take you (at least) <NOBR>10000000 
+  bytes &middot; 8 bits/byte / (44000 bits/s) &middot; / (60 s/min) ~ 30 minutes</NOBR> 
 <DIV ALIGN="CENTER"> <B>Just to download one minute of music!</B> </DIV>
 <P> Digital audio coding, which - in this context - is synonymously called digital 
   audio compression as well, is the art of minimizing storage space (or channel 
   bandwidth) requirements for audio data. Modern perceptual audio coding techniques 
-  (like MPEG Layer-3) exploit the properties of the human ear (the perception 
-  of sound) to achieve a size reduction by a factor of 12 with little or no perceptible 
+  (like MPEG Layer III) exploit the properties of the human ear (the perception 
+  of sound) to achieve a size reduction by a factor of 11 with little or no perceptible 
   loss of quality. 
 <P> Therefore, such schemes are the key technology for high quality low bit-rate 
   applications, like soundtracks for CD-ROM games, solid-state sound memories, 
@@ -71,9 +71,9 @@ all about.
   Decoding takes the bitstream and re-expands it to a WAVE file. 
 <P> The program that effects the first part is called an audio <I>encoder</I>. 
   <i>LAME</i> is such an encoder . The program that does the second part is called 
-  an audio <I>decoder</I>. One well-known MPEG&nbsp;Layer-3 decoder is <tt>Xmms</tt>, 
+  an audio <I>decoder</I>. One well-known MPEG&nbsp;Layer III decoder is <tt>Xmms</tt>, 
   another <TT>mpg123</TT>. Both can be found on <A NAME="tex2html1"
- HREF="http://www.mp3tech.org">www.mp3tech.org</A> . 
+ HREF="http://mp3tech.tsx.org">www.mp3tech.org</A> .
 <H2><A NAME="SECTION00313000000000000000"> Compression ratios, bitrate and quality</A> 
 </H2>
 <P> It has not been explicitly mentioned up to now: What you end up with after 
@@ -88,7 +88,7 @@ all about.
   term <A NAME="365">&#160;</A><I>bitrate</I> when speaking of the strength of 
   compression. Bitrate denotes the average number of bits that one second of audio 
   data will take up in your compressed bitstream. Usually the units used will 
-  be kbps, which is <SUP>kBits</SUP>/<SUB>s</SUB>, or 1000&nbsp;<SUP>bits</SUP>/<SUB>s</SUB>. 
+  be kbps, which is <SUP>kbits</SUP>/<SUB>s</SUB>, or 1000&nbsp;<SUP>bits</SUP>/<SUB>s</SUB>. 
   To calculate the number of bytes per second of audio data, simply divide the 
   number of bits per second by eight. 
 <P> <BR>
@@ -101,27 +101,27 @@ all about.
       <TD ALIGN="LEFT" nowrap>Quality comparable to or better than</TD>
     </TR>
     <TR VALIGN="TOP"> 
-      <TD ALIGN="RIGHT" nowrap>8 kBps</TD>
+      <TD ALIGN="RIGHT" nowrap>8 kbps</TD>
       <TD ALIGN="RIGHT" nowrap>2.5 kHz</TD>
       <TD ALIGN="LEFT" nowrap>POTS (telephone sound)</TD>
     </TR>
     <TR VALIGN="TOP"> 
-      <TD ALIGN="RIGHT" nowrap>16 kBps</TD>
+      <TD ALIGN="RIGHT" nowrap>16 kbps</TD>
       <TD ALIGN="RIGHT" nowrap>4.5 kHz</TD>
       <TD ALIGN="LEFT" nowrap>shortwave radio</TD>
     </TR>
     <TR VALIGN="TOP"> 
-      <TD ALIGN="RIGHT" nowrap>32 kBps</TD>
+      <TD ALIGN="RIGHT" nowrap>32 kbps</TD>
       <TD ALIGN="RIGHT" nowrap>7.5 kHz</TD>
       <TD ALIGN="LEFT" nowrap>AM radio</TD>
     </TR>
     <TR VALIGN="TOP"> 
-      <TD ALIGN="RIGHT" nowrap>64 kBps</TD>
+      <TD ALIGN="RIGHT" nowrap>64 kbps</TD>
       <TD ALIGN="RIGHT" nowrap>11 kHz</TD>
       <TD ALIGN="LEFT" nowrap>FM radio</TD>
     </TR>
     <TR VALIGN="TOP"> 
-      <TD ALIGN="RIGHT" nowrap>128 kBps</TD>
+      <TD ALIGN="RIGHT" nowrap>128 kbps</TD>
       <TD ALIGN="RIGHT" nowrap>16 kHz</TD>
       <TD ALIGN="LEFT" nowrap>CD</TD>
     </TR>
