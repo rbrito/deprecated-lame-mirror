@@ -532,40 +532,37 @@ int  lame_encode_mp3_frame (				// Output
      * psy model has a 1 granule (576) delay that we must compensate for
      * (mt 6/99).
      */
-    int ret;
     const sample_t *bufp[2]; /* address of beginning of left & right granule */
     int blocktype[2];
 
     for (gr=0; gr < gfc->mode_gr ; gr++) {
-      for ( ch = 0; ch < gfc->channels_out; ch++ )
-	bufp[ch] = &inbuf[ch][576 + gr*576-FFTOFFSET];
+	for (ch = 0; ch < gfc->channels_out; ch++)
+	    bufp[ch] = &inbuf[ch][576 + gr*576-FFTOFFSET];
 
-      ret=L3psycho_anal_ns( gfp, bufp, gr, 
-			    masking_LR, masking_MS,
-			    pe[gr],pe_MS[gr],tot_ener[gr],blocktype);
+	L3psycho_anal_ns( gfp, bufp, gr, 
+			  masking_LR, masking_MS,
+			  pe[gr],pe_MS[gr],tot_ener[gr],blocktype);
 
-      if (ret!=0) return -4;
+	if (gfp->mode == JOINT_STEREO) {
+	    ms_ener_ratio[gr] = tot_ener[gr][2]+tot_ener[gr][3];
+	    if (ms_ener_ratio[gr]>0)
+		ms_ener_ratio[gr] = tot_ener[gr][3]/ms_ener_ratio[gr];
+	}
 
-      if (gfp->mode == JOINT_STEREO) {
-	  ms_ener_ratio[gr] = tot_ener[gr][2]+tot_ener[gr][3];
-	  if (ms_ener_ratio[gr]>0)
-	      ms_ener_ratio[gr] = tot_ener[gr][3]/ms_ener_ratio[gr];
-      }
+	/* block type flags */
+	for ( ch = 0; ch < gfc->channels_out; ch++ ) {
+	    gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
+	    cod_info->block_type=blocktype[ch];
+	    cod_info->mixed_block_flag = 0;
+	    if (cod_info->block_type != NORM_TYPE) {
+		if (gfp->mixed_blocks == 1
+		    || (gfp->mixed_blocks == 2 && cod_info->block_type < 0))
+		    cod_info->mixed_block_flag = 1;
 
-      /* block type flags */
-      for ( ch = 0; ch < gfc->channels_out; ch++ ) {
-	  gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
-	  cod_info->block_type=blocktype[ch];
-	  cod_info->mixed_block_flag = 0;
-	  if (cod_info->block_type != NORM_TYPE) {
-	      if (gfp->mixed_blocks == 1
-		  || (gfp->mixed_blocks == 2 && cod_info->block_type < 0))
-		  cod_info->mixed_block_flag = 1;
-
-	      if (cod_info->block_type < 0)
-		  cod_info->block_type = -cod_info->block_type;
-	  }
-      }
+		if (cod_info->block_type < 0)
+		    cod_info->block_type = -cod_info->block_type;
+	    }
+	}
     }
   }else{
     memset((char *) masking_LR, 0, sizeof(masking_LR));
@@ -601,15 +598,11 @@ int  lame_encode_mp3_frame (				// Output
   } else if (gfp->mode == JOINT_STEREO) {
       /* [0] and [1] are the results for the two granules in MPEG-1,
        * in MPEG-2 it's only a faked averaging of the same value
-       * _prev is the value of the last granule of the previous frame
-       * _next is the value of the first granule of the next frame
        */
       FLOAT diff_pe = 0;
-      for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
-	for ( ch = 0; ch < gfc->channels_out; ch++ ) {
+      for ( gr = 0; gr < gfc->mode_gr; gr++ )
+	for ( ch = 0; ch < gfc->channels_out; ch++ )
 	    diff_pe += pe_MS[gr][ch] - pe[gr][ch];
-	}
-      }
 
       /* based on PE: M/S coding would not use much more bits than L/R */
       if (diff_pe <= 0.0)

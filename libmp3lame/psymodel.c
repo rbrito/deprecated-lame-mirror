@@ -954,13 +954,13 @@ pecalc_l(
 
 
 
-int L3psycho_anal_ns( lame_global_flags * gfp,
-                    const sample_t *buffer[2], int gr_out, 
-		    III_psy_ratio masking_ratio[2][2],
-		    III_psy_ratio masking_MS_ratio[2][2],
-		    FLOAT percep_entropy[2],FLOAT percep_MS_entropy[2], 
-		    FLOAT energy[4],
-                    int blocktype_d[2])
+void L3psycho_anal_ns( lame_global_flags * gfp,
+		       const sample_t *buffer[2], int gr_out, 
+		       III_psy_ratio masking_ratio[2][2],
+		       III_psy_ratio masking_MS_ratio[2][2],
+		       FLOAT percep_entropy[2],FLOAT percep_MS_entropy[2], 
+		       FLOAT energy[4],
+		       int blocktype_d[2])
 {
 /* to get a good cache performance, one has to think about
  * the sequence, in which the variables are used.  
@@ -1385,5 +1385,4 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	else
 	    ppe[chn] = pecalc_l(mr);
     }
-    return 0;
 }
