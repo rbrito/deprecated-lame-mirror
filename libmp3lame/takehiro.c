@@ -734,15 +734,18 @@ best_scalefac_store(
  *  Robert Hegemann 2000-09-06
  *
  ************************************************************************/
-void 
+int
 iteration_finish_one(lame_internal_flags *gfc, int gr, int ch)
 {
+    gr_info *gi = &gfc->l3_side.tt[gr][ch];
     /*  try some better scalefac storage  */
     best_scalefac_store (gfc, gr, ch);
 
     /*  best huffman_divide may save some bits too */
     if (gfc->use_best_huffman == 1)
-	best_huffman_divide (gfc, &gfc->l3_side.tt[gr][ch]);
+	best_huffman_divide (gfc, gi);
+
+    return gi->part2_length + gi->part2_3_length;
 }
 
 /*************************************************************************

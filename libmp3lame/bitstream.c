@@ -790,6 +790,7 @@ format_bitstream(lame_global_flags *gfp)
     /* reservoir is overflowed ? */
     if (drainbits < l3_side->ResvSize - l3_side->ResvMax)
 	drainbits = l3_side->ResvSize - l3_side->ResvMax;
+    assert(drainbits >= 0);
 
     /* drain as many bits as possible into previous frame ancillary data
      * In particular, in VBR mode ResvMax may have changed, and we have

@@ -42,7 +42,7 @@ int noquant_count_bits (const lame_internal_flags * const gfc,
 void best_huffman_divide (const lame_internal_flags * const gfc, 
 			  gr_info * const cod_info);
 
-void iteration_finish_one (lame_internal_flags *gfc, int gr, int ch);
+int iteration_finish_one (lame_internal_flags *gfc, int gr, int ch);
 
 int scale_bitcount (gr_info * const cod_info);
 int scale_bitcount_lsf (gr_info * const cod_info);

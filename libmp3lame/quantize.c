@@ -154,13 +154,12 @@ on_pe(
     III_psy_ratio      ratio[2],
     int targ_bits[2],
     int mean_bits,
-    int gr
+    const int gr
     )
 {
-#define MIN_BITS 126
     int min_bits = mean_bits, bits, ch, adjustBits;
     int max_bits = gfc->l3_side.ResvSize, ResvMax = gfc->l3_side.ResvMax;
-    FLOAT factor = (mean_bits+480)*(1.0/2000.0);
+    FLOAT factor = (mean_bits+600)*(1.0/3000.0);
     if (max_bits*10 >= ResvMax*6) {
 	int add_bits = 0;
 	if (max_bits*10 >= ResvMax*9) {
@@ -181,22 +180,30 @@ on_pe(
 	gfc->substep_shaping &= 0x7f;
     }
 
+    /* max available bits per granule */
     max_bits += mean_bits;
     if (max_bits > MAX_BITS) /* hard limit per granule */
 	max_bits = MAX_BITS;
 
-    /* limit 2*average */
-    if (max_bits > mean_bits*2)
+    if (max_bits > mean_bits*2)    /* limit 2*average (need tuning) */
 	max_bits = mean_bits*2;
 
+    /* allocate minimum bits to encode part2_length (for i-stereo) */
+    bits = 0;
+    for (ch = 0; ch < gfc->channels_out; ch++)
+	bits += gfc->l3_side.tt[gr][ch].part2_length;
+
+    min_bits -= bits; assert(min_bits >= 0);
+    max_bits -= bits;
+
     /* estimate how many bits we need */
-    for (adjustBits = ch = 0; ch < gfc->channels_out; ch++) {
-	gr_info *gi = &gfc->l3_side.tt[gr][ch];
-	bits = gi->part2_length + 1; /* to avoid zero division */
-	if (ratio[ch].ath_over != 0 && gi->psymax > 0
-	    && (int)(ratio[ch].pe*factor) > bits)
+    adjustBits = 0;
+    for (ch = 0; ch < gfc->channels_out; ch++) {
+	bits = 0;
+	if (ratio[ch].ath_over != 0 && gfc->l3_side.tt[gr][ch].psymax > 0
+	    && ratio[ch].pe > 0.0)
 	    bits = (int)(ratio[ch].pe*factor);
-	adjustBits += (targ_bits[ch] = bits);
+	adjustBits += (targ_bits[ch] = ++bits); /* avoid zero division */
     }
 
     bits = 0;
@@ -211,6 +218,8 @@ on_pe(
 	    targ_bits[1] += bits - (ch0new - targ_bits[0]);
 	targ_bits[0] = ch0new;
     }
+    for (ch = 0; ch < gfc->channels_out; ch++)
+	targ_bits[ch] += gfc->l3_side.tt[gr][ch].part2_length;
 }
 
 
@@ -988,7 +997,6 @@ CBR_2nd_bitalloc(
 	distort[sfb] = 0.0;
 	j -= width;
 	if (gi_w.scalefac[sfb] > 0) {
-	    int s0 = gi_w.scalefac[sfb];
 	    FLOAT noiseold = calc_sfb_noise(gfc, j, width,
 					    scalefactor((&gi_w), sfb));
 	    while (--gi_w.scalefac[sfb] >= 0
@@ -996,7 +1004,7 @@ CBR_2nd_bitalloc(
 		   <= noiseold)
 		;
 	    gi_w.scalefac[sfb]++;
-	    if (gi_w.scalefac[sfb] != s0) {
+	    if (gi_w.scalefac[sfb] != gi->scalefac[sfb]) {
 		flag = 1;
 		distort[sfb] = -1.0;
 	    }
@@ -1260,8 +1268,7 @@ ABR_iteration_loop(
 	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    gr_info *gi = &gfc->l3_side.tt[gr][ch];
 	    CBR_1st_bitalloc(gfc, gi, ch, targ_bits[gr][ch], &ratio[gr][ch]);
-	    iteration_finish_one(gfc, gr, ch);
-	    gfc->l3_side.ResvSize -= gi->part2_length + gi->part2_3_length;
+	    gfc->l3_side.ResvSize -= iteration_finish_one(gfc, gr, ch);
 	}
     }
 
@@ -1303,15 +1310,15 @@ iteration_loop(
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 	/*  calculate needed bits */
 	on_pe(gfc, ratio[gr], targ_bits, mean_bits, gr);
+	gfc->l3_side.ResvSize += mean_bits;
 
 	for (ch=0; ch < gfc->channels_out; ch ++) {
 	    gr_info *gi = &gfc->l3_side.tt[gr][ch];
 	    CBR_1st_bitalloc(gfc, gi, ch, targ_bits[ch], &ratio[gr][ch]);
-	    iteration_finish_one(gfc, gr, ch);
-	    gfc->l3_side.ResvSize += mean_bits / gfc->channels_out
-		- gi->part2_length - gi->part2_3_length;
+	    gfc->l3_side.ResvSize -= iteration_finish_one(gfc, gr, ch);
 	}
     }
+    assert(gfc->l3_side.ResvSize >= 0);
 }
 
 
@@ -1695,8 +1702,7 @@ VBR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
 		}
 		gfc->OldValue[ch] = gi->global_gain;
 	    }
-	    iteration_finish_one(gfc, gr, ch);
-	    used_bits += gi->part2_3_length + gi->part2_length;
+	    used_bits += iteration_finish_one(gfc, gr, ch);
 	    if (used_bits > max_frame_bits) {
 		for (gr = 0; gr < gfc->mode_gr; gr++)
 		    for (ch = 0; ch < gfc->channels_out; ch++)
