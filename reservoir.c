@@ -136,18 +136,6 @@ ResvFrameEnd(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits)
     l3_side->resvDrain_pre = 0;
 
 
-#if 0
-    if (gfc->frameNum==0 && gfc->ResvSize >= 32) {
-      /* if it is the first frame, try to put 9 bytes into ancillary data */
-      /* bitstream.c will use these for LAME version string */
-      stuffingBits += Min(64,gfc->ResvSize);
-      gfc->ResvSize -= stuffingBits;
-      l3_side->resvDrain_post += stuffingBits;
-    }
-#endif
-
-
-
     over_bits = gfc->ResvSize - gfc->ResvMax;
     if ( over_bits < 0 )
 	over_bits = 0;
@@ -157,7 +145,7 @@ ResvFrameEnd(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits)
     if ( (over_bits = (gfc->ResvSize-over_bits) % 8) )
 	stuffingBits += over_bits;
 
-    /*#define NEW_DRAIN*/
+#define NEW_DRAIN
 #ifdef NEW_DRAIN
     /* drain as many bits as possible into previous frame ancillary data
      * In particular, in VBR mode ResvMax may have changed, and we have
@@ -167,18 +155,20 @@ ResvFrameEnd(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits)
     l3_side->resvDrain_pre += 8*mdb_bytes;
     stuffingBits -= 8*mdb_bytes;
     gfc->ResvSize -= 8*mdb_bytes;
+    l3_side->main_data_begin -= mdb_bytes;
+
     
-    if (gfp->VBR && mdb_bytes && !gfp->disable_reservoir) {
-      printf("**** informative message:  drain_pre: wasting bits=%i\n",8*mdb_bytes);
-    }
+    if (gfp->VBR && mdb_bytes && !gfp->disable_reservoir)  {
+	printf("**** %i informative message:  drain_pre: wasting bits=%i\n",
+             gfc->frameNum,8*mdb_bytes);
+      }
 #endif
 
 #ifdef NEW_DRAIN
-    /* drain enough to be byte aligned.  The remaining bits will
-     * be added to the reservoir, and we will deal with them next frame
-     * If the next frame
-     * is at a lower bitrate, it may have a larger ResvMax, and
-     * we will not have to waste these bits!  mt 4/00 */
+    /* drain just enough to be byte aligned.  The remaining bits will
+     * be added to the reservoir, and we will deal with them next frame.
+     * If the next frame is at a lower bitrate, it may have a larger ResvMax, 
+     * and we will not have to waste these bits!  mt 4/00 */
     l3_side->resvDrain_post += (stuffingBits % 8);
     gfc->ResvSize -= stuffingBits % 8;
 #else
@@ -189,7 +179,8 @@ ResvFrameEnd(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits)
 
 
     if (gfp->VBR && stuffingBits>7 && !gfp->disable_reservoir) {
-      printf("**** informative message: drain_post: wasting bits=%i\n",stuffingBits);
+      printf("**** %i informative message: drain_post: wasting bits=%i\n",
+	     gfc->frameNum,stuffingBits);
     }
     return;
 }
