@@ -821,12 +821,12 @@ amp_scalefac_bands(
     }
 
     noise_shaping_amp = gfc->noise_shaping_amp;
-    if (noise_shaping_amp == 3)
+    if (noise_shaping_amp == 3) {
         if (bRefine == 1)
             noise_shaping_amp = 2;
         else
             noise_shaping_amp = 1;
-
+    }
     switch (noise_shaping_amp) {
     case 2:
 	/* amplify exactly 1 band */
