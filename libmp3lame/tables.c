@@ -301,35 +301,30 @@ compute_ath(lame_t gfc)
 /************************************************************************/
 /*  initialization for iteration_loop */
 /************************************************************************/
-static const struct
-{
-    char region0_count;
-    char region1_count;
-} subdv_table[ 23 ] =
-{
-    {0, 0}, /* 0 bands */
-    {0, 0}, /* 1 bands */
-    {0, 0}, /* 2 bands */
-    {0, 0}, /* 3 bands */
-    {0, 0}, /* 4 bands */
-    {0, 1}, /* 5 bands */
-    {1, 1}, /* 6 bands */
-    {1, 1}, /* 7 bands */
-    {1, 2}, /* 8 bands */
-    {2, 2}, /* 9 bands */
-    {2, 3}, /* 10 bands */
-    {2, 3}, /* 11 bands */
-    {3, 4}, /* 12 bands */
-    {3, 4}, /* 13 bands */
-    {3, 4}, /* 14 bands */
-    {4, 5}, /* 15 bands */
-    {4, 5}, /* 16 bands */
-    {4, 6}, /* 17 bands */
-    {5, 6}, /* 18 bands */
-    {5, 6}, /* 19 bands */
-    {5, 7}, /* 20 bands */
-    {6, 7}, /* 21 bands */
-    {6, 7}, /* 22 bands */
+static const char subdv_table[23] = {
+    0 + 0*16, /* 0 bands */
+    0 + 0*16, /* 1 bands */
+    0 + 0*16, /* 2 bands */
+    0 + 0*16, /* 3 bands */
+    0 + 0*16, /* 4 bands */
+    0 + 1*16, /* 5 bands */
+    1 + 1*16, /* 6 bands */
+    1 + 1*16, /* 7 bands */
+    1 + 2*16, /* 8 bands */
+    2 + 2*16, /* 9 bands */
+    2 + 3*16, /* 10 bands */
+    2 + 3*16, /* 11 bands */
+    3 + 4*16, /* 12 bands */
+    3 + 4*16, /* 13 bands */
+    3 + 4*16, /* 14 bands */
+    4 + 5*16, /* 15 bands */
+    4 + 5*16, /* 16 bands */
+    4 + 6*16, /* 17 bands */
+    5 + 6*16, /* 18 bands */
+    5 + 6*16, /* 19 bands */
+    5 + 7*16, /* 20 bands */
+    6 + 7*16, /* 21 bands */
+    6 + 7*16, /* 22 bands */
 };
 
 static void
@@ -354,11 +349,11 @@ huffman_init(lame_t gfc)
 	gfc->scale_bitcounter = scale_bitcount_lsf;
 
     for (i = 2; i <= 576; i += 2) {
-	int scfb_anz = 0, j;
+	int scfb_anz = 0, j, k;
 	while (gfc->scalefac_band.l[++scfb_anz] < i)
 	    ;
 
-	j = subdv_table[scfb_anz].region0_count;
+	j = subdv_table[scfb_anz] & 0xf;
 	while (gfc->scalefac_band.l[j + 1] > i)
 	    j--;
 
@@ -367,17 +362,17 @@ huffman_init(lame_t gfc)
 	       be encoded as region0:  bigvalues < region0 < region1
 	       so lets set region0, region1 to some value larger
 	       than bigvalues */
-	    j = subdv_table[scfb_anz].region0_count;
+	    j = subdv_table[scfb_anz] & 0xf;
 	}
 
-	gfc->bv_scf[i-2] = j;
+	gfc->bv_scf[i-2] = k = j;
 
-	j = subdv_table[scfb_anz].region1_count;
-	while (gfc->scalefac_band.l[j + gfc->bv_scf[i-2] + 2] > i)
+	j = subdv_table[scfb_anz] >> 4;
+	while (gfc->scalefac_band.l[j + k + 2] > i)
 	    j--;
 
 	if (j < 0)
-	    j = subdv_table[scfb_anz].region1_count;
+	    j = subdv_table[scfb_anz] >> 4;
 
 	gfc->bv_scf[i-1] = j;
     }
