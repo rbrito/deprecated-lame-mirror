@@ -701,7 +701,8 @@ int  calc_noise(
   res->tot_noise   = 10. * log10 ( Max (1E-20, tot_noise ) ); 
   res->over_noise  = 10. * log10 ( Max (1E+00, over_noise) ); 
   res->max_noise   = 10. * log10 ( Max (1E-20, max_noise ) );
-  res->klemm_noise = 10. * log10 ( klemm_noise );
+  
+  res->klemm_noise = klemm_noise;   /* to Frank, log(-34) segfaults! */
 
   return over;
 }

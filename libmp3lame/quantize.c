@@ -50,6 +50,7 @@
 
 static int 
 init_outer_loop(
+    const lame_internal_flags * const gfc,
           gr_info        * const cod_info, 
           III_scalefac_t * const scalefac, 
     const FLOAT8                 xr   [576], 
@@ -83,8 +84,12 @@ init_outer_loop(
         cod_info->sfb_lmax        = 0;
         cod_info->sfb_smin        = 0;
 	if (cod_info->mixed_block_flag) {
-	    cod_info->sfb_lmax        = 8;
-	    cod_info->sfb_smin        = 3;
+            /*
+             *  MPEG-1:      sfbs 0-7 long block, 3-12 short blocks 
+             *  MPEG-2(.5):  sfbs 0-5 long block, 3-12 short blocks
+             */ 
+            cod_info->sfb_lmax    = (gfc->gfp->version == 1) ? 8 : 6;
+	    cod_info->sfb_smin    = 3;
 	}
     } else {
         cod_info->sfb_lmax        = SBPSY_l;
@@ -99,7 +104,7 @@ init_outer_loop(
 
     /*  fresh scalefactors are all zero
      */
-    memset(scalefac,0,sizeof(III_scalefac_t));
+    memset(scalefac, 0, sizeof(III_scalefac_t));
   
     /*  check if there is some energy we have to quantize
      *  and calculate xrpow matching our fresh scalefactors
@@ -814,33 +819,32 @@ outer_loop (
     calc_noise_result noise_info;
     calc_noise_result best_noise_info;
     int l3_enc_w[576]; 
-    int iteration;
-    int bits_found=0;
+    int iteration = 0;
+    int bits_found = 0;
     int huff_bits;
+    int real_bits;
     int better;
     int over=0;
 
-    int notdone=1;
-#ifdef RH_OUTERLOOP
+    int notdone = 1;
+    int copy = 0;
     int age = 0;
-#endif
 
     noise_info.over_count = 100;
     noise_info.tot_count  = 100;
     noise_info.max_noise  = 0;
     noise_info.tot_noise  = 0;
     noise_info.over_noise = 0;
-    best_noise_info = noise_info;
+    
+    best_noise_info.over_count = 100;
 
     bits_found = bin_search_StepSize (gfc, cod_info, targ_bits, 
                                       gfc->OldValue[ch], xrpow, l3_enc_w);
     gfc->OldValue[ch] = cod_info->global_gain;
 
-
     /* BEGIN MAIN LOOP */
-    iteration = 0;
-    while ( notdone  ) {
-        iteration += 1;
+    do {
+        iteration ++;
 
         /* inner_loop starts with the initial quantization step computed above
          * and slowly increases until the bits < huff_bits.
@@ -852,67 +856,59 @@ outer_loop (
             assert(iteration != 1);
             /*  scale factors too large, not enough bits. 
              *  use previous quantizaton */
-            notdone=0;
-        } else {
-            /*  if this is the first iteration, 
-             *  see if we can reuse the quantization computed in 
-             *  bin_search_StepSize above */
-            int real_bits;
+            break;
+        }
+        /*  if this is the first iteration, 
+         *  see if we can reuse the quantization computed in 
+         *  bin_search_StepSize above */
 
-            if (iteration == 1) {
-                if (bits_found > huff_bits) {
-                    cod_info->global_gain++;
-                    real_bits = inner_loop (gfc, cod_info, huff_bits, xrpow, 
-                                            l3_enc_w);
-                } else {
-                    real_bits = bits_found;
-                }
-            } else {
-                real_bits = inner_loop (gfc, cod_info, huff_bits, xrpow,
+        if (iteration == 1) {
+            if (bits_found > huff_bits) {
+                cod_info->global_gain++;
+                real_bits = inner_loop (gfc, cod_info, huff_bits, xrpow, 
                                         l3_enc_w);
-            }
-
-            cod_info->part2_3_length = real_bits;
-
-            /* compute the distortion in this quantization */
-            if (gfc->noise_shaping == 0) {
-                over = 0;
-                notdone = 0;
             } else {
-                /* coefficients and thresholds both l/r (or both mid/side) */
-                over = calc_noise (gfc, xr, l3_enc_w, cod_info, l3_xmin, 
-                                   scalefac, distort, &noise_info);
+                real_bits = bits_found;
             }
+        } else {
+            real_bits = inner_loop (gfc, cod_info, huff_bits, xrpow,
+                                    l3_enc_w);
+        }
+
+        cod_info->part2_3_length = real_bits;
+
+        /* compute the distortion in this quantization */
+        if (gfc->noise_shaping) 
+            /* coefficients and thresholds both l/r (or both mid/side) */
+            over = calc_noise (gfc, xr, l3_enc_w, cod_info, l3_xmin, 
+                               scalefac, distort, &noise_info);
+        else {
+            /* fast mode, no noise shaping, we are ready */
+            best_noise_info = noise_info;
+            over = 0;
+            copy = 0;
+            memcpy(l3enc, l3_enc_w, sizeof(int)*576);
+            break;
+        }
 
 
-            /* check if this quantization is better
-             * than our saved quantization */
-            if (iteration == 1) { /* the first iteration is always better */
-                better = 1;
-            } else { 
-                better = quant_compare (gfc->gfp->experimentalX, 
-                                        &best_noise_info, &noise_info);
-            }
-            /* save data so we can restore this quantization later */    
-            if (better) {
-                best_noise_info = noise_info;
-                memcpy (&save_scalefac, scalefac, sizeof(III_scalefac_t));
-                memcpy (&save_cod_info, cod_info, sizeof(save_cod_info) );
-                memcpy ( l3enc,         l3_enc_w, sizeof(int)*576       );
-                if (gfc->gfp->VBR == vbr_rh || gfc->gfp->VBR == vbr_mtrh) {
-                    /* store for later reuse */
-                    memcpy (save_xrpow, xrpow, sizeof(save_xrpow));
-                }
-#ifdef RH_OUTERLOOP
-                age = 0;
-#endif
-            }
-#ifdef RH_OUTERLOOP
-            else
-                age ++;
-#endif
-        } /* huffbits >= 0 */
-
+        /* check if this quantization is better
+         * than our saved quantization */
+        if (iteration == 1) /* the first iteration is always better */
+            better = 1;
+        else
+            better = quant_compare (gfc->gfp->experimentalX, 
+                                    &best_noise_info, &noise_info);
+        
+        /* save data so we can restore this quantization later */    
+        if (better) {
+            copy = 0;
+            best_noise_info = noise_info;
+            memcpy(l3enc, l3_enc_w, sizeof(int)*576);
+            age = 0;
+        }
+        else
+            age ++;
 
 #ifdef RH_OUTERLOOP
         /* allow up to 3 unsuccesful tries in serial, then stop 
@@ -920,9 +916,9 @@ outer_loop (
          * gives us more possibilities for different quant_compare modes.
          * Much more than 3 makes not a big difference, it is only slower.
          */
-        if (age > 3 && best_noise_info.over_count == 0) {
-            notdone = 0;
-        }
+        if (age > 3 && best_noise_info.over_count == 0) 
+            break;
+        
 #else
         /* do early stopping on noise_shaping_stop = 0
          * otherwise stop only if tried to amplify all bands
@@ -934,18 +930,16 @@ outer_loop (
 
         if (gfc->noise_shaping_stop < iteration) {
             /* if no bands with distortion and -X0, we are done */
-            if (gfc->gfp->experimentalX == 0
-             && (over == 0 || best_noise_info.over_count == 0))
-            {
-                notdone = 0;
-            }
+            if (gfc->gfp->experimentalX == 0 &&
+                (over == 0 || best_noise_info.over_count == 0))
+                break;
+            
             /* do at least 7 tries and stop 
              * if our best quantization so far had no distorted bands this
              * gives us more possibilities for different quant_compare modes
              */
-            if (iteration > 7 && best_noise_info.over_count == 0) {
-                notdone = 0;
-            }
+            if (iteration > 7 && best_noise_info.over_count == 0) 
+                break;
         }
 #endif
     
@@ -959,27 +953,41 @@ outer_loop (
          */
         if (gfc->sfb21_extra) {
             if (cod_info->block_type == SHORT_TYPE) {
-                if ( distort[1][SBMAX_s-1] > 1
-                  || distort[2][SBMAX_s-1] > 1
-                  || distort[3][SBMAX_s-1] > 1 ) { notdone=0; }
+                if (distort[1][SBMAX_s-1] > 1 ||
+                    distort[2][SBMAX_s-1] > 1 ||
+                    distort[3][SBMAX_s-1] > 1) break;
             } else {
-                if (distort[0][SBMAX_l-1] > 1) { notdone=0; }
+                if (distort[0][SBMAX_l-1] > 1) break;
             }
         }
 
-        if (notdone)
-            notdone = balance_noise (gfc, cod_info, scalefac, distort, xrpow);
-    } /* done with main iteration */
+        /* save data so we can restore this quantization later */    
+        if (better) {
+            copy = 1;
+            save_scalefac = *scalefac;
+            save_cod_info = *cod_info;
+            if (gfc->gfp->VBR == vbr_rh || gfc->gfp->VBR == vbr_mtrh) {
+                /* store for later reuse */
+                memcpy(save_xrpow, xrpow, sizeof(FLOAT8)*576);
+            }
+        }
+            
+        notdone = balance_noise (gfc, cod_info, scalefac, distort, xrpow);
+        
+        if (notdone == 0) 
+            break;
+    }
+    while (1); /* main iteration loop, breaks adjusted */
     
     /*  finish up
      */
-    
-    memcpy (cod_info, &save_cod_info, sizeof(save_cod_info) );
-    memcpy (scalefac, &save_scalefac, sizeof(III_scalefac_t));
-    if (gfc->gfp->VBR == vbr_rh || gfc->gfp->VBR == vbr_mtrh)
-        /* restore for reuse on next try */
-        memcpy (xrpow, save_xrpow, sizeof(save_xrpow));
-
+    if (copy) {
+        *cod_info = save_cod_info;
+        *scalefac = save_scalefac;
+        if (gfc->gfp->VBR == vbr_rh || gfc->gfp->VBR == vbr_mtrh)
+            /* restore for reuse on next try */
+            memcpy(xrpow, save_xrpow, sizeof(FLOAT8)*576);
+    }
     cod_info->part2_3_length += cod_info->part2_length;
     
     assert (cod_info->global_gain < 256);
@@ -1145,9 +1153,9 @@ VBR_encode_granule (
       
     assert(Max_bits < 4096);
   
-    memcpy( &bst_cod_info, cod_info, sizeof(gr_info)        );
-    memset( &bst_scalefac, 0,        sizeof(III_scalefac_t) );
-    memcpy( &bst_xrpow,    xrpow,    sizeof(FLOAT8)*576     );
+    bst_cod_info = *cod_info;
+    memset(&bst_scalefac, 0, sizeof(III_scalefac_t));
+    memcpy(&bst_xrpow, xrpow, sizeof(FLOAT8)*576);
       
     /*  search within round about 40 bits of optimal
      */
@@ -1169,10 +1177,10 @@ VBR_encode_granule (
 
             /*  store best quantization so far
              */
-            memcpy( &bst_cod_info,  cod_info, sizeof(gr_info)        );
-            memcpy( &bst_scalefac,  scalefac, sizeof(III_scalefac_t) );
-            memcpy(  bst_xrpow,     xrpow,    sizeof(FLOAT8)*576     );
-            memcpy(  bst_l3_enc,    l3_enc,   sizeof(int)*576        );
+            bst_cod_info = *cod_info;
+            bst_scalefac = *scalefac;
+            memcpy(bst_xrpow, xrpow, sizeof(FLOAT8)*576);
+            memcpy(bst_l3_enc, l3_enc, sizeof(int)*576);
 
             /*  try with fewer bits
              */
@@ -1190,9 +1198,9 @@ VBR_encode_granule (
             if (dbits>8) {
                 /*  start again with best quantization so far
                  */
-                memcpy( cod_info, &bst_cod_info, sizeof(gr_info)        );
-                memcpy( scalefac, &bst_scalefac, sizeof(III_scalefac_t) );
-                memcpy( xrpow,     bst_xrpow,    sizeof(FLOAT8)*576     );
+                *cod_info = bst_cod_info;
+                *scalefac = bst_scalefac;
+                memcpy(xrpow, bst_xrpow, sizeof(FLOAT8)*576);
             }
         }
     } while (dbits>8);
@@ -1200,9 +1208,9 @@ VBR_encode_granule (
     if (real_bits <= Max_bits) {
         /*  restore best quantization found
          */
-        memcpy( cod_info, &bst_cod_info, sizeof(gr_info)        );
-        memcpy( scalefac, &bst_scalefac, sizeof(III_scalefac_t) );
-        memcpy( l3_enc,    bst_l3_enc,   sizeof(int)*576        );
+        *cod_info = bst_cod_info;
+        *scalefac = bst_scalefac;
+        memcpy(l3_enc, bst_l3_enc, sizeof(int)*576);
     }
     assert(cod_info->part2_3_length <= Max_bits);
 }
@@ -1411,17 +1419,18 @@ VBR_iteration_loop (
     used_bits = 0;
     
     for (gr = 0; gr < gfc->mode_gr; gr++) {
-        for (ch = 0; ch < num_chan; ch++) { 
+        for (ch = 0; ch < num_chan; ch++) {
+            int ret; 
             cod_info = &l3_side->gr[gr].ch[ch].tt;
       
             /*  init_outer_loop sets up cod_info, scalefac and xrpow 
              */
-            if (!init_outer_loop(cod_info,&scalefac[gr][ch],xr[gr][ch],xrpow))
-            {
+            ret = init_outer_loop(gfc, cod_info, &scalefac[gr][ch], xr[gr][ch], xrpow);
+            if (ret == 0) {
                 /*  xr contains no energy 
                  *  l3_enc, our encoding data, will be quantized to zero
                  */
-                memset (l3_enc[gr][ch], 0, sizeof(int)*576);
+                memset(l3_enc[gr][ch], 0, sizeof(int)*576);
                 save_bits[gr][ch] = 0;
                 continue; /* with next channel */
             }
@@ -1434,13 +1443,13 @@ VBR_iteration_loop (
             max_bits = calc_max_bits (gfc, frameBits, min_bits);
             
             if (gfc->gfp->VBR == vbr_mtrh) {
-                int ret = VBR_noise_shaping2 (gfc, xr[gr][ch], xrpow, 
+                ret = VBR_noise_shaping2 (gfc, xr[gr][ch], xrpow, 
                                         &ratio[gr][ch], l3_enc[gr][ch], 0, 
                                         min_bits, max_bits, &scalefac[gr][ch],
                                         &l3_xmin[gr][ch], gr, ch );
                 if (ret < 0) {
-                    init_outer_loop (cod_info, &scalefac[gr][ch], xr[gr][ch],
-                                     xrpow);
+                    init_outer_loop (gfc, cod_info, &scalefac[gr][ch], 
+                                     xr[gr][ch], xrpow);
                     VBR_encode_granule (gfc, cod_info, xr[gr][ch], 
                                         &l3_xmin[gr][ch], &scalefac[gr][ch],
                                         xrpow, l3_enc[gr][ch], ch, min_bits,
@@ -1492,6 +1501,7 @@ VBR_iteration_loop (
      */  
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         for (ch = 0; ch < gfc->stereo; ch++) {
+            int ret;
             cod_info = &l3_side->gr[gr].ch[ch].tt;
       
             if (used_bits <= bits && ! (reduce_s_ch && ch == 1))
@@ -1508,12 +1518,13 @@ VBR_iteration_loop (
             }
             /*  init_outer_loop sets up cod_info, scalefac and xrpow 
              */
-            if (!init_outer_loop (cod_info,&scalefac[gr][ch],xr[gr][ch],xrpow)) 
+            ret = init_outer_loop(gfc, cod_info, &scalefac[gr][ch], xr[gr][ch], xrpow);
+            if (ret == 0) 
             {
                 /*  xr contains no energy 
                  *  l3_enc, our encoding data, will be quantized to zero
                  */
-                memset(l3_enc[gr][ch],0,sizeof(l3_enc[gr][ch]));
+                memset(l3_enc[gr][ch], 0, sizeof(int)*576);
             }
             else {
                 /*  xr contains energy we will have to encode 
@@ -1647,22 +1658,21 @@ calc_target_bits (
  *
  ********************************************************************/
 
-void ABR_iteration_loop 
-(
+void 
+ABR_iteration_loop(
     lame_internal_flags * const    gfc, 
     FLOAT8             pe           [2][2],
     FLOAT8             ms_ener_ratio[2], 
     FLOAT8             xr           [2][2][576],
     III_psy_ratio      ratio        [2][2], 
     int                l3_enc       [2][2][576],
-    III_scalefac_t     scalefac     [2][2] 
-)
+    III_scalefac_t     scalefac     [2][2] )
 {
     III_psy_xmin l3_xmin;
     FLOAT8    xrpow[576];
     int       targ_bits[2][2];
     int       bitsPerFrame, mean_bits, totbits, max_frame_bits;
-    int       ch, gr, ath_over;
+    int       ch, gr, ath_over, ret;
     int       analog_silence_bits;
     gr_info             *cod_info = NULL;
     III_side_info_t     *l3_side  = &gfc->l3_side;
@@ -1683,12 +1693,12 @@ void ABR_iteration_loop
 
             /*  cod_info, scalefac and xrpow get initialized in init_outer_loop
              */
-            if (!init_outer_loop(cod_info,&scalefac[gr][ch],xr[gr][ch],xrpow))
-            {
+            ret = init_outer_loop(gfc, cod_info, &scalefac[gr][ch], xr[gr][ch], xrpow);
+            if (ret == 0) {
                 /*  xr contains no energy 
                  *  l3_enc, our encoding data, will be quantized to zero
                  */
-                memset (l3_enc[gr][ch], 0, 576*sizeof(int));
+                memset(l3_enc[gr][ch], 0, sizeof(int)*576);
             } 
             else {
                 /*  xr contains energy we will have to encode 
@@ -1738,16 +1748,15 @@ void ABR_iteration_loop
  *
  ************************************************************************/
 
-void iteration_loop 
-(
+void 
+iteration_loop(
     lame_internal_flags * const    gfc, 
     FLOAT8             pe           [2][2],
     FLOAT8             ms_ener_ratio[2],  
     FLOAT8             xr           [2][2][576],
     III_psy_ratio      ratio        [2][2],  
     int                l3_enc       [2][2][576],
-    III_scalefac_t     scalefac     [2][2] 
-)
+    III_scalefac_t     scalefac     [2][2] )
 {
     III_psy_xmin l3_xmin[2];
     FLOAT8 xrpow[576];
@@ -1779,11 +1788,12 @@ void iteration_loop
 
             /*  init_outer_loop sets up cod_info, scalefac and xrpow 
              */
-            if (!init_outer_loop (cod_info, &scalefac[gr][ch], xr[gr][ch],
-                                  xrpow )) {
+            i = init_outer_loop(gfc, cod_info, &scalefac[gr][ch], xr[gr][ch],
+                                xrpow);
+            if (i == 0) {
                 /*  xr contains no energy, l3_enc will be quantized to zero
                  */
-                memset (l3_enc[gr][ch], 0, sizeof(int)*576);
+                memset(l3_enc[gr][ch], 0, sizeof(int)*576);
             }
             else {
                 /*  xr contains energy we will have to encode 
