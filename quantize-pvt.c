@@ -226,6 +226,7 @@ FLOAT8 ATHformula(lame_global_flags *gfp,FLOAT8 f)
   FLOAT8 ath;
   
   f  = Max(0.01, f);
+  f  = Min(18.0,f);
 
   /* from Painter & Spanias, 1997 */
   /* minimum: (i=77) 3.3kHz = -5db */
@@ -269,7 +270,9 @@ void compute_ath(lame_global_flags *gfp,FLOAT8 ATH_l[],FLOAT8 ATH_s[])
     end   = gfc->scalefac_band.l[ sfb+1 ];
     ATH_l[sfb]=1e99;
     for (i=start ; i < end; i++) {
-      ATH_f = ATHformula(gfp,samp_freq*i/(2*576)); /* freq in kHz */
+      FLOAT8 freq = samp_freq*i/(2*576);
+      assert( freq < 23 );
+      ATH_f = ATHformula(gfp,freq);  /* freq in kHz */
       ATH_l[sfb]=Min(ATH_l[sfb],ATH_f);
     }
 
@@ -287,7 +290,9 @@ samp_freq*end/(2*576),
     end   = gfc->scalefac_band.s[ sfb+1 ];
     ATH_s[sfb]=1e99;
     for (i=start ; i < end; i++) {
-      ATH_f = ATHformula(gfp,samp_freq*i/(2*192));     /* freq in kHz */
+      FLOAT8 freq = samp_freq*i/(2*192);
+      assert( freq < 23 );
+      ATH_f = ATHformula(gfp,freq);    /* freq in kHz */
       ATH_s[sfb]=Min(ATH_s[sfb],ATH_f);
     }
   }

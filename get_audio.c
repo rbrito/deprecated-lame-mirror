@@ -662,6 +662,15 @@ int read_samples_pcm(lame_global_flags *gfp,short sample_buffer[2304], int frame
 
 
 
+/* AIFF Definitions */
+
+#define IFF_ID_FORM 0x464f524d /* "FORM" */
+#define IFF_ID_AIFF 0x41494646 /* "AIFF" */
+#define IFF_ID_COMM 0x434f4d4d /* "COMM" */
+#define IFF_ID_SSND 0x53534e44 /* "SSND" */
+#define IFF_ID_MPEG 0x4d504547 /* "MPEG" */
+
+
 #define WAV_ID_RIFF 0x52494646 /* "RIFF" */
 #define WAV_ID_WAVE 0x57415645 /* "WAVE" */
 #define WAV_ID_FMT  0x666d7420 /* "fmt " */
@@ -937,10 +946,10 @@ void parse_file_header(lame_global_flags *gfp,FILE *sf)
 
 	u_int type = 0;
 	type = Read32BitsHighLow(sf);
-
-	/* fprintf(stderr,
-		"First word of input stream: %08x '%4.4s'\n", type, (char*) &type); */
-
+	/*
+	fprintf(stderr,
+		"First word of input stream: %08x '%4.4s'\n", type, (char*) &type); 
+	*/
 	gfc->count_samples_carefully=0;
 	gfp->input_format = sf_raw;
 

@@ -24,15 +24,6 @@
 #if (defined LIBSNDFILE || defined LAMESNDFILE)
 
 
-/* AIFF Definitions */
-
-#define IFF_ID_FORM 0x464f524d /* "FORM" */
-#define IFF_ID_AIFF 0x41494646 /* "AIFF" */
-#define IFF_ID_COMM 0x434f4d4d /* "COMM" */
-#define IFF_ID_SSND 0x53534e44 /* "SSND" */
-#define IFF_ID_MPEG 0x4d504547 /* "MPEG" */
-
-
 
 void CloseSndFile(sound_file_format, FILE *);
 FILE * OpenSndFile(lame_global_flags *gfp);
