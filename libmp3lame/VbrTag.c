@@ -40,6 +40,7 @@
 
 #include	<assert.h>
 #include 	<stdlib.h>
+#include 	<string.h>
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
@@ -552,7 +553,7 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 
 	uint8_t nLowpass		= ( ((gfp->lowpassfreq / 100.0)+.5) > 255 ? 255 : (gfp->lowpassfreq / 100.0)+.5 );
 
-	FLOAT fPeakSignalAmplitude	= 0;				//TODO...
+	ieee754_float32_t fPeakSignalAmplitude	= 0;				//TODO...
 	uint16_t nRadioReplayGain		= 0;				//TODO...
 	uint16_t nAudioPhileReplayGain  = 0;				//TODO...
 
@@ -701,7 +702,7 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 	pbtStreamBuffer[nBytesWritten] = nLowpass;
 	nBytesWritten++;
 
-	*(FLOAT *)(&pbtStreamBuffer[nBytesWritten]) = fPeakSignalAmplitude;
+	memmove(&pbtStreamBuffer[nBytesWritten], &fPeakSignalAmplitude, 4);
 	nBytesWritten+=4;
 
 	CreateI2(&pbtStreamBuffer[nBytesWritten],nRadioReplayGain);
