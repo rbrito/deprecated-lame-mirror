@@ -95,6 +95,8 @@ iterate=0
 
 cp ${base}.wav ${SECURE}.wav
 
+start=$(date)
+
 while [ "${iterate}" != "${num}" ]; do
 	gen="$((${iterate}+1))"
 
@@ -106,10 +108,16 @@ while [ "${iterate}" != "${num}" ]; do
 	iterate=$(echo ${iterate} | awk '{i=$1 + 1; printf "%d", i}')
 done
 
+end=$(date)
+
 mv "${SECURE}.wav" "${base}_generation_${num}.wav"
 
 # cleanup
 rm "${SECURE}.mp3"
+
+echo
+echo "Start: ${start}"
+echo "Stop : ${end}"
 
 exit 0
 
