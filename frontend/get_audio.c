@@ -46,14 +46,12 @@
 #endif
 
 
-
 /* global data for get_audio.c. */
 int count_samples_carefully;
 int pcmbitwidth;
 mp3data_struct mp3input_data;
 unsigned int num_samples_read;             
 FILE *musicin;
-int fskip(FILE *sf,long num_bytes,int dummy);
 enum byte_order NativeByteOrder = order_unknown;
 
 
@@ -78,7 +76,45 @@ void CloseSndFile(sound_file_format input, FILE *musicin);
 FILE * OpenSndFile(lame_global_flags *gfp,char *);
 
 
+/* Replacement for forward fseek(,,SEEK_CUR), because fseek() fails on pipes */
 
+/*///
+ *  Changes:
+ *    - optimized to use the advised PIPE_BUF as buffer size
+ *    - don't hang if fread can't read any further data
+ *    - works exactly in the way of fseek (and KLEMM_06 enables the usage of fseek, if available, may be a other seekable test is better???)
+ *    - error handling for wrong cases returning a -1
+ *    - now at the top of the file, so you don't need to prototype it
+ *    - static (all function not defined in the *.h file should be static)
+ */
+
+
+static int  fskip ( FILE* fp, long offset, int whence )
+{
+#ifndef PIPE_BUF
+    char    buffer [    4096];
+#else
+    char    buffer [PIPE_BUF];
+#endif
+    size_t  read;
+    
+#ifdef KLEMM_06
+    if ( 0 == fseek ( fp, offset, whence ) )
+        return 0;
+#endif	
+    
+    if ( whence != SEEK_SET  ||  offset < 0 )
+        return -1;
+
+    while ( offset > 0 ) {
+        read      = offset > sizeof(buffer)  ?  sizeof(buffer)  :  offset;
+        if ((read = fread ( buffer, (size_t)1, read, fp )) <= 0)
+	    return -1;
+        offset   -= read;
+    }
+
+    return 0;
+}
 
 
 FILE *init_outfile(char *outPath)
@@ -443,7 +479,7 @@ int lame_decoder(lame_global_flags *gfp, FILE *outf,int skip, char *inPath, char
 
     i = (16/8) * gfp->num_channels;
     assert ( i > 0 );
-    if (wavsize < 0) {
+    if (wavsize <= 0) {
         fprintf(stderr, "WAVE file contains 0 PCM samples\n");
         wavsize = 0;
     } else if ( wavsize > 0xFFFFFFC0/i ) {
@@ -1207,29 +1243,27 @@ FILE * OpenSndFile(lame_global_flags *gfp, char *inPath)
 
 
 #ifdef HAVEMPGLIB
-int check_aid(char *header) {
+static int check_aid ( const unsigned char* const header ) 
+{
   int aid_header =
     (header[0]=='A' && header[1]=='i' && header[2]=='D'
      && header[3]== (char) 1);
   return aid_header;
 }
 
-int is_syncword(char *header)
+static int is_syncword ( const unsigned char* const header )
 {
-  int mpeg1=((int) ( header[0] == (char) 0xFF)) &&
-    ((int) ( (header[1] & (char) 0xF0) == (char) 0xF0));
+    int mpeg1  = header[0] == 0xFF  &&  (header[1] & 0xF0) == 0xF0;
+    int mpeg25 = header[0] == 0xFF  &&  (header[1] & 0xF0) == 0xE0;
   
-  int mpeg25=((int) ( header[0] == (char) 0xFF)) &&
-    ((int) ( (header[1] & (char) 0xF0) == (char) 0xE0));
-  
-  return (mpeg1 || mpeg25);
+    return  mpeg1 || mpeg25;
 }
 
 
 int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
 {
   VBRTAGDATA pTagData;
-  char buf[1000];
+  unsigned char buf[1000];
   int ret;
   int num_frames=0;
   int len,len2,xing_header,aid_header;
@@ -1276,7 +1310,7 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
 
   if (xing_header && pTagData.headersize >= 48) {
     num_frames=pTagData.frames;
-    fprintf(stderr,"Xing VBR header dectected.  MP3 file has %i frames\n",num_frames);
+    fprintf(stderr,"\rXing VBR header dectected.  MP3 file has %i frames\n",num_frames);
     
     fskip(fd,pTagData.headersize-48 ,1);
     /* look for next sync word in buffer*/
@@ -1374,18 +1408,4 @@ void print_sndlib_version(FILE *fp)
 #endif
 #endif
 
-
-/* Replacement for forward fseek(,,SEEK_CUR), because fseek() fails on pipes */
-int fskip(FILE *sf,long num_bytes,int dummy)
-{
-  char data[1024];
-  int nskip = 0;
-  while (num_bytes > 0) {
-    nskip = (num_bytes>1024) ? 1024 : num_bytes;
-    num_bytes -= fread(data,(size_t)1,(size_t)nskip,sf);
-  }
-  /* return 0 if last read was successful */
-  return num_bytes;
-}
-
-
+/* end of get_audio.c */

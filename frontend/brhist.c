@@ -39,11 +39,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef TERMCAP_AVAILABLE
+#if defined(TERMCAP_AVAILABLE)
 # include <termcap.h>
 #endif
 
-#if defined(_WIN32) && !defined(__CYGWIN__) 
+#if defined(_WIN32)  &&  !defined(__CYGWIN__)
 # include <windows.h>
 #endif
 
@@ -79,16 +79,7 @@
  * printf ( "blah\n") with printf ( "blah%s\n", Console_IO.str_clreoln );
  */
 
-static struct {
-    FILE*   Console_fp;			/* filepointer to stream reporting information */
-    FILE*   Error_fp;                   /* filepointer to stream fatal error reporting information */
-#if defined(_WIN32) && !defined(__CYGWIN__) 
-    HANDLE  Console_Handle;
-#endif
-    char    str_up         [10];
-    char    str_clreoln    [10];
-    char    Console_buff [1024];
-} Console_IO;
+Console_IO_t Console_IO;
 
 static struct {
     int     vbr_bitrate_min_index;
@@ -112,10 +103,10 @@ int  brhist_init ( const lame_global_flags* const gf, const int bitrate_kbps_min
     int    unused [BRHIST_WIDTH];
 
 #ifdef TERMCAP_AVAILABLE
-    char term_buff[1024];
-    char *termname;
-    char *tp;
-    char tc[10];
+    char   term_buff [1024];
+    char*  termname;
+    char*  tp;
+    char   tc [10];
 #endif
     
     /* some internal checks */
@@ -133,7 +124,7 @@ int  brhist_init ( const lame_global_flags* const gf, const int bitrate_kbps_min
     /* buffer != BLKSIZ must be set via setvbuf */
     setvbuf ( Console_IO.Console_fp, Console_IO.Console_buff, _IOFBF, sizeof (Console_IO.Console_buff) );
 
-#if defined(_WIN32) && !defined(__CYGWIN__) 
+#if defined(_WIN32)  &&  !defined(__CYGWIN__) 
     Console_IO.Console_Handle = GetStdHandle (STD_ERROR_HANDLE);
 #endif
 
@@ -255,7 +246,7 @@ void  brhist_disp ( const lame_global_flags* const gf, const int jump_back )
     }
 #endif	
     
-#if defined(_WIN32) && !defined(__CYGWIN__) 
+#if defined(_WIN32)  &&  !defined(__CYGWIN__) 
     /* fflush is not needed for Windows, no Console O buffering */
     if ( GetFileType (Console_IO.Console_Handle) != FILE_TYPE_PIPE ) {
         COORD                       Pos;
@@ -279,22 +270,19 @@ void  brhist_disp ( const lame_global_flags* const gf, const int jump_back )
 void  brhist_disp_total ( const lame_global_flags* const gf )
 {
     int i;
-    double sum;
     int br_hist [BRHIST_WIDTH];
     int br_kbps [BRHIST_WIDTH];
     int st_mode [4];
     int st_frames = 0;
     int br_frames = 0;
+    double sum = 0.;
     
     lame_stereo_mode_hist(gf, st_mode);    /// is this information only a summary, or is this available for every framesize ?
     lame_bitrate_hist(gf, br_hist, br_kbps);
     
-    for (i = 0; i < BRHIST_WIDTH; i++) 
-        br_frames += br_hist[i];
-
-    sum=0;
     for (i = 0; i < BRHIST_WIDTH; i++) {
-	sum += br_kbps[i] * br_hist[i];
+        br_frames += br_hist[i];
+	sum       += br_hist[i] * br_kbps[i];
     }
 
     for (i = 0; i < 4; i++) {
@@ -306,10 +294,10 @@ void  brhist_disp_total ( const lame_global_flags* const gf )
     if (st_frames > 0) {
         double lr = st_mode[0] * 100. / st_frames;
         double ms = st_mode[2] * 100. / st_frames;
-        fprintf ( Console_IO.Console_fp, "   LR: %#5.4g%%   MS: %#5.4g%%\n", lr, ms );
+        fprintf ( Console_IO.Console_fp, "   LR: %#5.4g%%   MS: %#5.4g%%", lr, ms );
     }
-    
-    fflush ( Console_IO.Console_fp );
+    fprintf ( Console_IO.Console_fp, "\n" );
+    fflush  ( Console_IO.Console_fp );
 }
 
 /* end of brhist.c */

@@ -1,9 +1,9 @@
-* The LAME API is frozen.  Poorly designed as it is, dont change it, 
+* The LAME API is frozen.  Poorly designed as it is, don't change it, 
   and add to it sparingly.
 
-* Dont take it upon yourself to go through LAME with the sole purpose
+* Don't take it upon yourself to go through LAME with the sole purpose
   of updating everything to match this guide.  Especially important:
-  dont change the spacing, indentation, curly braces, etc, 
+  don't change the spacing, indentation, curly braces, etc, 
   in routines you did not write.
 
 * Respect the indentation of the author of the original function.
@@ -20,20 +20,29 @@
 
 * use int for all integer quantities.  
   LAME requires 32 bit ints, so you can assume int is at least 32 bits.  
-  Dont use 'long'.  Dont use 'unsigned' unless ABSOLUTELY necessary.
-  Dont use 'char' just to save bytes.  If 64 bits is required, use int64.
+  Don't use 'long'.  Don't use 'unsigned' unless ABSOLUTELY necessary.
+  Don't use 'char' just to save bytes.  If 64 bits is required, use int64.
+
+  Annnotation:
+  ISO C calls the 64 bit int type not int64 but int64_t.
 
 * Avoid using float or double, and instead use: (defined in machine.h).  
 
-FLOAT    for variables which require at least 32bits
-FLOAT8   for variables which require at least 64bits
+  FLOAT    for variables which require at least 32bits
+  FLOAT8   for variables which require at least 64bits
 
-On some machines, 64bit will be faster than 32bit.  Also, some math
-routines require 64bit float, so setting FLOAT=float will result in a
-lot of conversions.
+  On some machines, 64bit will be faster than 32bit.  Also, some math
+  routines require 64bit float, so setting FLOAT=float will result in a
+  lot of conversions.
+
+  Annotation (pfk):
+  The new ISO C standard passed in autumn 1999 has defined new types for
+  exactly this reason. There are called float_least32_t and float_least64_t
+  and have at least the advantage that you not need to explain their
+  meaning. 
 
 * The internal representation of PCM samples in type 'sample_t',
-  currently this is a FLOAT.  
+  currently this is a FLOAT.
 
 * Use the 'const' attribute if you don't intend to change the variable.
 
@@ -55,7 +64,7 @@ Edited version of the Linux Kernel Style Guide:
                 Chapter 1: Indentation
 
 Respect the indentation of the author of the original function.
-If the indentation is not consistent, dont change it.  If
+If the indentation is not consistent, don't change it.  If
 you are so anal-retentive about these things and you cant
 bare to even look at code with poor indentation, change it to 3.
 
@@ -147,7 +156,7 @@ variable that is used to hold a temporary value.
 
 Document functions.  
 
-Keep functions as modular as possible.  But dont adhere to artificial
+Keep functions as modular as possible.  But don't adhere to artificial
 line number limitations.  For example, lame_encode_frame() encodes a
 single MP3 frame and is a long sequence of function calls.  It makes
 no sense to break this into two or more routines.

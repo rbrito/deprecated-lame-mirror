@@ -28,4 +28,17 @@ int   brhist_init       ( const lame_global_flags *gf, int bitrate_kbps_min, int
 void  brhist_disp       ( const lame_global_flags *gf, int jump_back );
 void  brhist_disp_total ( const lame_global_flags *gf );
 
+typedef struct {
+    FILE*   Console_fp;			/* filepointer to stream reporting information */
+    FILE*   Error_fp;                   /* filepointer to stream fatal error reporting information */
+#if defined(_WIN32)  &&  !defined(__CYGWIN__) 
+    HANDLE  Console_Handle;
+#endif
+    char    str_up         [10];
+    char    str_clreoln    [10];
+    char    Console_buff [1024];
+} Console_IO_t;
+
+extern Console_IO_t  Console_IO;
+
 #endif /* LAME_BRHIST_H */

@@ -21,7 +21,7 @@
 
 #ifndef LAME_TIMESTATUS_H
 #define LAME_TIMESTATUS_H
-void timestatus_klemm(lame_global_flags *gfp);
+void timestatus_klemm(const lame_global_flags *gfp);
 
 void timestatus ( int samp_rate, 
                   int frameNum, 
@@ -29,7 +29,7 @@ void timestatus ( int samp_rate,
                   int           framesize);
 void timestatus_finish(void);
 
-void decoder_progress(lame_global_flags *gfp,mp3data_struct *);
-void decoder_progress_finish(lame_global_flags *gfp);
+void decoder_progress(const lame_global_flags *gfp,const mp3data_struct *);
+void decoder_progress_finish(const lame_global_flags *gfp);
 
 #endif /* LAME_TIMESTATUS_H */

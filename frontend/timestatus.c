@@ -18,6 +18,166 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+ 
+#ifdef KLEMM_07
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+
+#include <assert.h>
+#include <time.h>
+
+#include "lame.h"
+#include "main.h"
+#include "lametime.h"
+#include "timestatus.h"
+
+#if defined(BRHIST)
+# include "brhist.h"
+#endif
+
+typedef struct {
+    double  start_time;			  // start time of converting [s]
+    double  elapsed_time;		  // current time - start time [s]
+    double  estimated_time;		  // estimated total duration time [s]
+    double  speed_index;		  // speed relative to realtime coding [100%]
+} timestatus_t;
+
+/* 
+ *  Calculates from the input (see below) the following values:
+ *    - total estimated time
+ *    - a speed index
+ */
+
+static void  ts_calc_times (
+    timestatus_t* const  tstime,           // tstime->elapsed_time: elapsed time
+    const int            sample_freq,      // sample frequency [Hz/kHz] 
+    const int            frameNum,         // Number of the current Frame
+    const int            totalframes,      // total umber of Frames
+    const int            framesize )       // Size of a frame [bps/kbps]
+{
+    assert ( sample_freq >= 8000  &&  sample_freq <= 48000 );
+    
+    if ( frameNum > 0  &&  tstime->elapsed_time > 0 ) {
+        tstime->estimated_time = tstime->elapsed_time * totalframes / frameNum;
+        tstime->speed_index    = framesize * frameNum / (sample_freq * tstime->elapsed_time);
+    } else {
+        tstime->estimated_time = 0.;
+        tstime->speed_index    = 0.;
+    }
+}
+
+/* Decomposes a given number of seconds into a easy to read hh:mm:ss format
+ * padded with an additional character
+ */
+
+static void  ts_time_decompose ( const unsigned long time_in_sec, const char padded_char )
+{
+    const unsigned long hour = time_in_sec / 3600;
+    const unsigned int  min  = time_in_sec / 60 % 60;
+    const unsigned int  sec  = time_in_sec % 60;
+
+    if ( hour == 0 )
+        fprintf ( stderr,    "   %2u:%02u%c",       min, sec, padded_char );
+    else if ( hour < 100 )
+        fprintf ( stderr, "%2lu:%02u:%02u%c", hour, min, sec, padded_char );
+    else
+        fprintf ( stderr,         "%6lu h%c", hour,           padded_char );
+}
+
+void timestatus ( const int samp_rate, 
+                  const int frameNum,
+                  const int totalframes,
+                  const int framesize )
+{
+    static timestatus_t  real_time;
+    static timestatus_t  proc_time;
+    int                  percent;
+    static int           init = 0; /* What happens here? A work around instead of a bug fix ??? */
+
+    if ( frameNum == 0 ) {
+        real_time.start_time = GetRealTime ();
+        proc_time.start_time = GetCPUTime  ();
+    }
+    
+    real_time.elapsed_time = GetRealTime () - real_time.start_time;
+    proc_time.elapsed_time = GetCPUTime  () - proc_time.start_time;
+
+    if ( frameNum == 0 && init == 0 ) {
+        fprintf ( stderr,
+	    "\r"
+	    "    Frame          |  CPU time/estim | REAL time/estim | play/CPU |    ETA %s\n"
+            "     0/       ( 0%%)|    0:00/     :  |    0:00/     :  |    .    x|     :  %s\r",
+	    Console_IO.str_clreoln, Console_IO.str_clreoln );
+	init = 1;
+        return;
+    }  
+    /* reset init counter for next time we are called with frameNum==0 */
+    if (frameNum > 0) 
+        init = 0;
+
+    ts_calc_times ( &real_time, samp_rate, frameNum, totalframes, framesize );
+    ts_calc_times ( &proc_time, samp_rate, frameNum, totalframes, framesize );
+
+    if ( frameNum < totalframes  ) {
+        percent = (int) (100. * frameNum / (totalframes + 0.5 ));
+    } else {
+        percent = 100;
+    }
+
+    fprintf ( stderr, "\r%6i/%-6i", frameNum, totalframes );
+    fprintf ( stderr, percent < 100 ? " (%2d%%)|" : "(%3.3d%%)|", percent );
+    ts_time_decompose ( (unsigned long)proc_time.elapsed_time  , '/' );
+    ts_time_decompose ( (unsigned long)proc_time.estimated_time, '|' );
+    ts_time_decompose ( (unsigned long)real_time.elapsed_time  , '/' );
+    ts_time_decompose ( (unsigned long)real_time.estimated_time, '|' );
+    fprintf ( stderr, proc_time.speed_index <= 9999999.999 ? "%9.1f%%|" : "%9.4e%%|", 100.*proc_time.speed_index );
+    ts_time_decompose ( (unsigned long)(real_time.estimated_time - real_time.elapsed_time), ' ' );
+    fflush  ( stderr );
+}
+
+void timestatus_finish ( void )
+{
+    fprintf ( stderr, "\n" );
+    fflush  ( stderr );
+}
+
+void timestatus_klemm ( const lame_global_flags* const gfp )
+{
+    static double  last_time = 0.;
+
+    if ( !silent )
+        if ( gfp->frameNum == 0  ||  
+  	     gfp->frameNum == 9  ||
+  	     GetRealTime () - last_time >= update_interval  ||
+	     GetRealTime () - last_time <  0 ) {
+            timestatus ( gfp->out_samplerate, gfp->frameNum, gfp->totalframes, gfp->framesize );
+#ifdef BRHIST
+            if ( brhist )
+	        brhist_disp ( gfp, 1 /* jump back */ );
+#endif
+            last_time = GetRealTime ();  /* from now! disp_time seconds */
+        }
+}
+
+/* these functions are used in get_audio.c */
+
+void decoder_progress ( const lame_global_flags* const gfp, const mp3data_struct* const mp3data )
+{
+    fprintf ( stderr, "\rFrame#%6i/%-6i %3i kbps",
+              mp3data->framenum, mp3data->totalframes, mp3data->bitrate );
+    if ( mp3data->mode == MPG_MD_JOINT_STEREO )
+        fprintf ( stderr, "  %s" , 2==mp3data->mode_ext ? "M " : " S" );
+    fprintf ( stderr, "%s", Console_IO.str_clreoln );
+}
+
+void decoder_progress_finish ( const lame_global_flags* const gfp )
+{
+    fprintf ( stderr, "\n" );
+}
+
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+#else 
 
 #include "lame.h"
 #ifdef BRHIST
@@ -252,7 +412,7 @@ void timestatus_finish(void)
 }
 
 
-void timestatus_klemm(lame_global_flags *gfp)
+void timestatus_klemm(const lame_global_flags *gfp)
 {
   /* variables used for the status display */
   static double  last_time = 0.0;
@@ -268,7 +428,7 @@ void timestatus_klemm(lame_global_flags *gfp)
 		   gfp -> framesize );
 #ifdef BRHIST
       if ( brhist )
-	brhist_disp ( gfp->totalframes, 1 /* flash back */ );
+	brhist_disp ( gfp, 1 /* jump back */ );
 #endif
       last_time = GetRealTime ();  /* from now! disp_time seconds */
     }
@@ -281,7 +441,7 @@ void timestatus_klemm(lame_global_flags *gfp)
 
 /* these functions are used in get_audio.c */
 
-void decoder_progress ( lame_global_flags* gfp, mp3data_struct *mp3data )
+void decoder_progress ( const lame_global_flags* gfp, const mp3data_struct *mp3data )
 {
 #if 0
     static int  last_total = -1;
@@ -322,7 +482,9 @@ void decoder_progress ( lame_global_flags* gfp, mp3data_struct *mp3data )
 
 }
 
-void decoder_progress_finish ( lame_global_flags* gfp )
+void decoder_progress_finish ( const lame_global_flags* gfp )
 {
     fprintf ( stderr, "\n" );
 }
+
+#endif
