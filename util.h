@@ -29,7 +29,7 @@
 #define		PI			M_PI
 #endif
 #ifndef PI
-#define         PI                      3.14159265358979
+#define         PI                      3.14159265358979323846
 #endif
 #ifdef M_PI_4
 #define		PI4			M_PI_4
@@ -38,7 +38,7 @@
 #endif
 #define         PI64                    (PI/64)
 
-#define         SQRT2                   1.4142135623730951454746218587388284504414
+#define         SQRT2                   1.41421356237309504880
 
 #define         MPEG_AUDIO_ID           1
 #define		MPEG_PHASE2_LSF		0	/* 1995-07-11 SHN */
