@@ -105,13 +105,16 @@ ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, i
   As above, but now it *really* is bits per granule (both channels).  
   Mark Taylor 4/99
 */
-void ResvMaxBits(int mean_bits, int *targ_bits, int *extra_bits, int gr)
+void ResvMaxBits(int mean_bits, int *targ_bits, int *extra_bits)
 {
-  int add_bits;
+  int add_bits,full_fac;
   *targ_bits = mean_bits ;
+
+
   /* extra bits if the reservoir is almost full */
-  if (ResvSize > ((ResvMax * 9) / 10)) {
-    add_bits= ResvSize-((ResvMax * 9) / 10);
+  full_fac=9;
+  if (ResvSize > ((ResvMax * full_fac) / 10)) {
+    add_bits= ResvSize-((ResvMax * full_fac) / 10);
     *targ_bits += add_bits;
   }else {
     add_bits =0 ;
@@ -179,7 +182,9 @@ ResvFrameEnd(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits)
 	stuffingBits += over_bits;
 	ResvSize -= over_bits;
     }
-
+    if (gfp->VBR && !gfp->disable_reservoir && stuffingBits>7) {
+      printf("***** reservoir overflow: wasting bits=%i\n",stuffingBits);
+    }
 
     l3_side->resvDrain = stuffingBits;
     return;

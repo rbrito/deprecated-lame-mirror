@@ -74,7 +74,7 @@
 
 
 
-
+#define MAXQUANTERROR
 
 
 FLOAT8 calc_sfb_noise(FLOAT8 *xr, FLOAT8 *xr34, int stride, int bw, int sf)
@@ -88,7 +88,7 @@ FLOAT8 calc_sfb_noise(FLOAT8 *xr, FLOAT8 *xr34, int stride, int bw, int sf)
 
   for ( j=0; j < stride*bw ; j += stride) {
     int ix;
-    FLOAT8 temp,temp_p1,temp_m1;
+    FLOAT8 temp;
 
 #if 0
     if (xr34[j]*sfpow34 > IXMAX_VAL) return -1;
@@ -142,32 +142,16 @@ FLOAT8 calc_sfb_noise_ave(FLOAT8 *xr, FLOAT8 *xr34, int stride, int bw,int sf)
   sfpow = POW20(sf+210); /*pow(2.0,sf/4.0); */
   sfpow34  = IPOW20(sf+210); /*pow(sfpow,-3.0/4.0);*/
 
-
-  sfpow_p1 = sfpow*1.189207115;  /* pow(2,(sf+1)/4.0) */
   sfpow_m1 = sfpow*.8408964153;  /* pow(2,(sf-1)/4.0) */
-  sfpow34_p1 = sfpow34*0.878126080187;
   sfpow34_m1 = sfpow34*1.13878863476;       /* .84089 ^ -3/4 */
 
+  sfpow_p1 = sfpow*1.189207115;  
+  sfpow34_p1 = sfpow34*0.878126080187;
 
   for ( j=0; j < stride*bw ; j += stride) {
     int ix;
     FLOAT8 temp,temp_p1,temp_m1;
 
-#if 0
-    if (xr34[j]*sfpow34 > IXMAX_VAL) return -1;
-    ix=floor( xr34[j]*sfpow34);
-    temp = fabs(xr[j])- pow43[ix]*sfpow;
-    temp *= temp;
-
-    if (ix < IXMAX_VAL) {
-      temp2 = fabs(xr[j])- pow43[ix+1]*sfpow;
-      temp2 *=temp2;
-      if (temp2<temp) {
-	temp=temp2;
-	++ix;
-      }
-    }
-#else
     if (xr34[j]*sfpow34_m1 > IXMAX_VAL) return -1;
 
     temp = xr34[j]*sfpow34;
@@ -175,7 +159,7 @@ FLOAT8 calc_sfb_noise_ave(FLOAT8 *xr, FLOAT8 *xr34, int stride, int bw,int sf)
     XRPOW_FTOI(temp + QUANTFAC(ix), ix);
     temp = fabs(xr[j])- pow43[ix]*sfpow;
     temp *= temp;
-    
+
     temp_p1 = xr34[j]*sfpow34_p1;
     XRPOW_FTOI(temp_p1, ix);
     XRPOW_FTOI(temp_p1 + QUANTFAC(ix), ix);
@@ -187,8 +171,7 @@ FLOAT8 calc_sfb_noise_ave(FLOAT8 *xr, FLOAT8 *xr34, int stride, int bw,int sf)
     XRPOW_FTOI(temp_m1 + QUANTFAC(ix), ix);
     temp_m1 = fabs(xr[j])- pow43[ix]*sfpow_m1;
     temp_m1 *= temp_m1;
-#endif
-    
+
 #ifdef MAXQUANTERROR
     xfsf = Max(xfsf,temp);
     xfsf_p1 = Max(xfsf_p1,temp_p1);
@@ -306,8 +289,6 @@ int scalefac[SBPSY_s][3],int sbg[3])
 	
 	if (-(sf[sfb][i] + scalefac[sfb][i]*ifqstep) >maxover)  {
 	  maxover=-(sf[sfb][i] + scalefac[sfb][i]*ifqstep);
-	  printf("sfb=%i i=%i  sf=%i   scalefac=%i \n",sfb,i,sf[sfb][i],
-		 scalefac[sfb][i]);
 	}
       }
     }
@@ -677,7 +658,7 @@ VBR_quantize(lame_global_flags *gfp,
 {
   lame_internal_flags *gfc=gfp->internal_flags;
   int minbits,maxbits,totbits,bits,gr,ch,i,bits_ok;
-  int bitsPerFrame,mean_bits;
+  int bitsPerFrame,mean_bits,targ_bits,extra_bits;
   FLOAT8 quality=0;
   III_side_info_t * l3_side;
   gr_info *cod_info;  
@@ -695,7 +676,7 @@ VBR_quantize(lame_global_flags *gfp,
   gfc->bitrate_index=gfc->VBR_max_bitrate;
   getframebits(gfp,&bitsPerFrame, &mean_bits);
   maxbits = ResvFrameBegin(gfp,l3_side, mean_bits, bitsPerFrame);
-  maxbits = maxbits/(2*gfc->stereo);
+  maxbits = maxbits/(gfc->mode_gr*gfc->stereo);
 
   do {
   
@@ -707,6 +688,7 @@ VBR_quantize(lame_global_flags *gfp,
       int shortblock;
       cod_info = &l3_side->gr[gr].ch[ch].tt;
       shortblock = (cod_info->block_type == SHORT_TYPE);
+
 
       /* Adjust allowed masking based on quality setting */
       assert( gfp->VBR_q <= 9 );
@@ -763,13 +745,19 @@ VBR_quantize(lame_global_flags *gfp,
   
 
   for( gfc->bitrate_index = 1;
-       gfc->bitrate_index <= gfc->VBR_max_bitrate;
+       gfc->bitrate_index < gfc->VBR_max_bitrate;
        gfc->bitrate_index++    ) {
+
     getframebits (gfp,&bitsPerFrame, &mean_bits);
-    if (ResvFrameBegin(gfp,l3_side, mean_bits, bitsPerFrame)>=totbits) break;
+    maxbits = ResvFrameBegin(gfp,l3_side, mean_bits, bitsPerFrame);
+    //    maxbits = mean_bits*gfc->mode_gr;  /* mean_bits per frame */
+    //    maxbits = .5*(maxbits+mean_bits*gfc->mode_gr);  
+    if (totbits <= maxbits) break;
   }
-  //  printf("%i bits=%i  index=%i  \n",gfc->frameNum,totbits,gfc->bitrate_index);
-  assert(gfc->bitrate_index <= gfc->VBR_max_bitrate);
+  
+  getframebits (gfp,&bitsPerFrame, &mean_bits);
+  maxbits = ResvFrameBegin(gfp,l3_side, mean_bits, bitsPerFrame);
+  printf("%i bits=%i maxbits=%i index=%i  \n",gfc->frameNum,totbits,maxbits,gfc->bitrate_index);
   
 
   for (gr = 0; gr < gfc->mode_gr; gr++)

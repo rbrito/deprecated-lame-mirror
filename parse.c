@@ -8,7 +8,7 @@
 
 
 
-#define         MAX_NAME_SIZE           300
+#define         MAX_NAME_SIZE           3000
   char    inPath[MAX_NAME_SIZE];
   char    outPath[MAX_NAME_SIZE];
 

@@ -125,7 +125,7 @@ int main(int argc, char **argv)
 	}
 
 	if (fwrite(mp3buffer,1,imp3,outf) != imp3) {
-	  fprintf(stderr,"Error writing mp3 output");
+	  fprintf(stderr,"Error writing mp3 output \n");
 	  exit(1);
 	}
       } while (iread);

@@ -314,7 +314,7 @@ int targ_bits[2],int mean_bits, int gr)
   int max_bits;  /* maximum allowed bits for this granule */
 
   /* allocate targ_bits for granule */
-  ResvMaxBits( mean_bits, &tbits, &extra_bits, gr);
+  ResvMaxBits( mean_bits, &tbits, &extra_bits);
   max_bits=tbits+extra_bits;
 
   bits=0;
