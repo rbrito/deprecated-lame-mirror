@@ -1289,7 +1289,7 @@ L3psycho_anal_ns(
 	    int kk = gfc->s3ind[b][0];
 	    spread -= kk;
 // calculate same bark masking 1st
-	    ecb = spread[b] * eb2[b] + 1e-37;
+	    ecb = spread[b] * eb2[b];
 	    for (kk = 1; kk <= 3; kk++) {
 		int k2;
 
