@@ -575,11 +575,11 @@ count_bits(lame_t gfc, gr_info * const gi)
   the saved bits are kept in the bit reservoir.
  **********************************************************************/
 static void
-scfsi_calc(int ch, III_side_info_t *l3_side)
+scfsi_calc(lame_t gfc, int ch)
 {
     int i, s1 = 0, s2, c1, c2, sfb;
-    gr_info *gi = &l3_side->tt[1][ch];
-    gr_info *g0 = &l3_side->tt[0][ch];
+    gr_info *gi = &gfc->tt[1][ch];
+    gr_info *g0 = &gfc->tt[0][ch];
 
     for (i = 0; i < (int)(sizeof(scfsi_band) / sizeof(int)) - 1; i++) {
 	for (sfb = scfsi_band[i]; sfb < scfsi_band[i + 1]; sfb++) {
@@ -591,7 +591,7 @@ scfsi_calc(int ch, III_side_info_t *l3_side)
 	    for (sfb = scfsi_band[i]; sfb < scfsi_band[i + 1]; sfb++) {
 		gi->scalefac[sfb] = -1;
 	    }
-	    s1 = l3_side->scfsi[ch][i] = 1;
+	    s1 = gfc->scfsi[ch][i] = 1;
 	}
     }
 
@@ -636,11 +636,10 @@ static void
 best_scalefac_store(lame_t gfc, int gr, int ch)
 {
     /* use scalefac_scale if we can */
-    III_side_info_t * const l3_side = &gfc->l3_side;
-    gr_info *gi = &l3_side->tt[gr][ch];
+    gr_info *gi = &gfc->tt[gr][ch];
     int sfb, recalc = 0, j = 0;
 
-    memset(l3_side->scfsi[ch], 0, sizeof(l3_side->scfsi[ch]));
+    memset(gfc->scfsi[ch], 0, sizeof(gfc->scfsi[ch]));
     for (sfb = 0; sfb < gi->psymax; sfb++) {
 	int l = -gi->width[sfb];
 	int even = 0;
@@ -725,9 +724,9 @@ best_scalefac_store(lame_t gfc, int gr, int ch)
     }
 
     if (gfc->mode_gr==2 && gr == 1
-	&& l3_side->tt[0][ch].block_type != SHORT_TYPE
+	&& gfc->tt[0][ch].block_type != SHORT_TYPE
 	&& gi->block_type != SHORT_TYPE) {
-	scfsi_calc(ch, l3_side);
+	scfsi_calc(gfc, ch);
     } else if (recalc)
 	gfc->scale_bitcounter(gi);
 }
@@ -743,7 +742,7 @@ best_scalefac_store(lame_t gfc, int gr, int ch)
 int
 iteration_finish_one(lame_t gfc, int gr, int ch)
 {
-    gr_info *gi = &gfc->l3_side.tt[gr][ch];
+    gr_info *gi = &gfc->tt[gr][ch];
 
     /*  try some better scalefac storage  */
     best_scalefac_store (gfc, gr, ch);

@@ -587,7 +587,7 @@ lame_init_params(lame_t gfc)
 
     for (gr = 0; gr < gfc->mode_gr ; gr++) {
 	for (ch = 0; ch < gfc->channels_out; ch++) {
-	    gr_info *gi = &gfc->l3_side.tt[gr][ch];
+	    gr_info *gi = &gfc->tt[gr][ch];
 	    gi->block_type = NORM_TYPE;
 	    gi->mixed_block_flag = gi->subblock_gain[3] = 0;
 	    gi->global_gain = 210;

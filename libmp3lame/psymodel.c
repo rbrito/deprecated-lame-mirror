@@ -647,17 +647,17 @@ compute_masking_s(
 
     ecb = fft_s[0] * fft_s[0] * 2.0f;
     j = 1;
-    for (b = 0; b < gfc->npart_s; b++) {
+    b = 0;
+    do {
 	while (j < gfc->endlines_s[b]) {
 	    FLOAT re = fft_s[j];
 	    FLOAT im = fft_s[BLKSIZE_s-j];
 	    ecb += re * re + im * im;
 	    j++;
 	}
-	assert(j <= BLKSIZE_s);
-	eb[b] = ecb;
+	eb[b++] = ecb;
 	ecb = 0.0;
-    }
+    } while (j < BLKSIZE_s/2 + 1);
 
     enn = thmm = 0.0;
     sb = j = b = 0;
@@ -1128,8 +1128,20 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 	FLOAT enn, thmm, *p;
 	III_psy_ratio *mr = &gfc->masking_next[gr][ch];
 	static const FLOAT tab[] = {
+#if 0
+	    1.00000/0.11749,/*pow(10, -0)*/
+	    0.79433/0.11749,/*pow(10, -0.1)*/
+	    0.63096/0.11749,/*pow(10, -0.2)*/
+	    0.63096/0.11749,/*pow(10, -0.2)*/
+	    0.63096/0.11749,/*pow(10, -0.2)*/
+	    0.63096/0.11749,/*pow(10, -0.2)*/
+	    0.63096/0.11749,/*pow(10, -0.2)*/
+	    0.25119/0.11749,/*pow(10, -0.6)*/
+	    0.11749/0.11749,/*pow(10, -0.93)*/
+#else
 	    5.00/0.11749, 4.00/0.11749, 3.15/0.11749, 3.15/0.11749,
 	    3.15/0.11749, 3.15/0.11749, 3.15/0.11749, 1.25/0.11749,
+#endif
 	};
 	int b, i, j;
 	if (ch < 2)
@@ -1373,15 +1385,15 @@ psycho_analysis(
 
     /* next frame data -> current frame data (aging) */
     gfc->mode_ext = gfc->mode_ext_next;
-    blocktype_old[0] = gfc->l3_side.tt[gfc->mode_gr-1][0].block_type;
-    blocktype_old[1] = gfc->l3_side.tt[gfc->mode_gr-1][1].block_type;
+    blocktype_old[0] = gfc->tt[gfc->mode_gr-1][0].block_type;
+    blocktype_old[1] = gfc->tt[gfc->mode_gr-1][1].block_type;
 
     numchn = gfc->channels_out;
     if (gfc->mode == JOINT_STEREO)
 	numchn = 4;
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 	for (ch = 0; ch < gfc->channels_out; ch++) {
-	    gr_info *gi = &gfc->l3_side.tt[gr][ch];
+	    gr_info *gi = &gfc->tt[gr][ch];
 	    masking_d[gr][ch] = gfc->masking_next[gr][ch + gfc->mode_ext];
 	    /* not good XXX */
 	    gi->ATHadjust = gfc->ATH.adjust[ch + gfc->mode_ext];
@@ -1461,7 +1473,7 @@ psycho_analysis(
 		= gfc->blocktype_next[1][2];
 	    /* LR -> MS case */
 	    if (gfc->mode_ext_next != gfc->mode_ext) {
-		gr_info *gi = &gfc->l3_side.tt[gfc->mode_gr-1][0];
+		gr_info *gi = &gfc->tt[gfc->mode_gr-1][0];
 		int next_window_type = 1
 		    & (gi[0].block_type | gi[1].block_type);
 		gi[0].block_type |= next_window_type;
@@ -1481,23 +1493,23 @@ psycho_analysis(
     /* determine current frame block type (long/start/short/stop) */
     for (ch = 0; ch < gfc->channels_out; ch++) {
 	if (gfc->mode_gr == 1)
-	    gfc->l3_side.tt[0][ch].block_type
+	    gfc->tt[0][ch].block_type
 		|= block_type_set(blocktype_old[ch],
 				  gfc->blocktype_next[0][ch]);
 	else {
-	    gfc->l3_side.tt[0][ch].block_type
+	    gfc->tt[0][ch].block_type
 		|= block_type_set(blocktype_old[ch],
-				  gfc->l3_side.tt[1][ch].block_type);
+				  gfc->tt[1][ch].block_type);
 
-	    gfc->l3_side.tt[1][ch].block_type
-		|= block_type_set(gfc->l3_side.tt[0][ch].block_type,
+	    gfc->tt[1][ch].block_type
+		|= block_type_set(gfc->tt[0][ch].block_type,
 				  gfc->blocktype_next[0][ch]);
 	}
     }
 
     assert(!gfc->mode_ext
-	   || (gfc->l3_side.tt[0][0].block_type
-	       == gfc->l3_side.tt[0][1].block_type
-	       && gfc->l3_side.tt[gfc->mode_gr-1][0].block_type
-	       == gfc->l3_side.tt[gfc->mode_gr-1][1].block_type));
+	   || (gfc->tt[0][0].block_type
+	       == gfc->tt[0][1].block_type
+	       && gfc->tt[gfc->mode_gr-1][0].block_type
+	       == gfc->tt[gfc->mode_gr-1][1].block_type));
 }

@@ -112,29 +112,28 @@ static const int max_range_long[SBMAX_l] = {
  *          so this is the absolute maximum supported by the format.
  *
  *      mean_bytes:         target number of bytes.
- *      l3_side->ResvMax:   maximum allowed reservoir 
- *      l3_side->ResvSize:  current reservoir size
+ *      gfc->ResvMax:   maximum allowed reservoir 
+ *      gfc->ResvSize:  current reservoir size
  */
 static int
 ResvFrameBegin(lame_t gfc, int mean_bytes)
 {
-    III_side_info_t     *l3_side = &gfc->l3_side;
-    l3_side->ResvMax = (l3_side->maxmp3buf - mean_bytes)*8;
+    gfc->ResvMax = (gfc->maxmp3buf - mean_bytes)*8;
     /* main_data_begin has 9 bits in MPEG-1, 8 bits MPEG-2 */
-    if (l3_side->ResvMax > (8*256)*gfc->mode_gr-8)
-	l3_side->ResvMax = (8*256)*gfc->mode_gr-8;
-    if (l3_side->ResvMax < 0)
-	l3_side->ResvMax = 0;
-    assert ( 0 == l3_side->ResvMax % 8 );
+    if (gfc->ResvMax > (8*256)*gfc->mode_gr-8)
+	gfc->ResvMax = (8*256)*gfc->mode_gr-8;
+    if (gfc->ResvMax < 0)
+	gfc->ResvMax = 0;
+    assert((gfc->ResvMax & 7) == 0);
 
 #ifndef NOANALYSIS
     if (gfc->pinfo) {
 	gfc->pinfo->mean_bits = mean_bytes*8;
-	gfc->pinfo->resvsize  = l3_side->ResvSize;
+	gfc->pinfo->resvsize  = gfc->ResvSize;
     }
 #endif
 
-    return mean_bytes*8 + Min(l3_side->ResvSize, l3_side->ResvMax);
+    return mean_bytes*8 + Min(gfc->ResvSize, gfc->ResvMax);
 }
 
 /*  find a bitrate which can refill the resevoir to positive size. */
@@ -150,7 +149,7 @@ finish_VBR_coding(lame_t gfc)
     } while (++gfc->bitrate_index <= gfc->VBR_max_bitrate);
     assert(gfc->bitrate_index <= gfc->VBR_max_bitrate);
 
-    gfc->l3_side.ResvSize += mean_bytes*8;
+    gfc->ResvSize += mean_bytes*8;
 }
 
 /*************************************************************************
@@ -1083,7 +1082,7 @@ CBR_bitalloc(
     const int gr
     )
 {
-    int bits = gfc->l3_side.tt[gr][gfc->channels_out-1].part2_length;
+    int bits = gfc->tt[gr][gfc->channels_out-1].part2_length;
     int ch, adjustBits, targ_bits[MAX_CHANNELS];
 
     /* allocate minimum bits to encode part2_length (for i-stereo) */
@@ -1093,7 +1092,7 @@ CBR_bitalloc(
     /* estimate how many bits we need */
     adjustBits = 0;
     for (ch = 0; ch < gfc->channels_out; ch++) {
-	gr_info *gi = &gfc->l3_side.tt[gr][ch];
+	gr_info *gi = &gfc->tt[gr][ch];
 	bits = 0;
 	if (gi->psymax > 0)
 	    bits = (int)(ratio[ch].pe*factor);
@@ -1121,10 +1120,10 @@ CBR_bitalloc(
     }
 
     for (ch = 0; ch < gfc->channels_out; ch++) {
-	CBR_1st_bitalloc(gfc, &gfc->l3_side.tt[gr][ch], ch,
-			 targ_bits[ch] + gfc->l3_side.tt[gr][ch].part2_length,
+	CBR_1st_bitalloc(gfc, &gfc->tt[gr][ch], ch,
+			 targ_bits[ch] + gfc->tt[gr][ch].part2_length,
 			 &ratio[ch]);
-	gfc->l3_side.ResvSize -= iteration_finish_one(gfc, gr, ch);
+	gfc->ResvSize -= iteration_finish_one(gfc, gr, ch);
     }
 }
 
@@ -1185,21 +1184,21 @@ iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 	/*  calculate needed bits */
-	int min_bits = mean_bits, max_bits = gfc->l3_side.ResvSize;
+	int min_bits = mean_bits, max_bits = gfc->ResvSize;
 	gfc->substep_shaping &= 0x7f;
-	if (max_bits*10 >= gfc->l3_side.ResvMax*6) {
+	if (max_bits*10 >= gfc->ResvMax*6) {
 	    int add_bits = 0;
-	    if (max_bits*10 >= gfc->l3_side.ResvMax*9)
+	    if (max_bits*10 >= gfc->ResvMax*9)
 		gfc->substep_shaping |= 0x80;
-	    if (max_bits*10 >= gfc->l3_side.ResvMax*9
+	    if (max_bits*10 >= gfc->ResvMax*9
 		|| (gfc->substep_shaping & 1)) {
 		/* reservoir is filled over 90% -> forced to use reservoir */
-		add_bits = max_bits - (gfc->l3_side.ResvMax * 6) / 10;
+		add_bits = max_bits - (gfc->ResvMax * 6) / 10;
 		min_bits += add_bits;
 	    }
 	    /* max amount from the reservoir we are allowed to use. */
 	    /* ISO says 60%, but we can tune it */
-	    max_bits = (gfc->l3_side.ResvMax*6)/10 - add_bits;
+	    max_bits = (gfc->ResvMax*6)/10 - add_bits;
 	    if (max_bits < 0) max_bits = 0;
 	} else if (!(gfc->substep_shaping & 1)) {
 	    /* build up reservoir.  this builds the reservoir a little slower
@@ -1209,7 +1208,7 @@ iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 	    min_bits -= mean_bits/10;
 	}
 
-	gfc->l3_side.ResvSize += mean_bits;
+	gfc->ResvSize += mean_bits;
 
 	max_bits += mean_bits;
 	if (max_bits > mean_bits*2)    /* limit 2*average (need tuning) */
@@ -1224,7 +1223,7 @@ iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 
 	CBR_bitalloc(gfc, ratio[gr], min_bits, max_bits, factor, gr);
     }
-    assert(gfc->l3_side.ResvSize >= 0);
+    assert(gfc->ResvSize >= 0);
 }
 
 /************************************************************************
@@ -1608,7 +1607,7 @@ VBR_iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    calc_xmin (gfc, &ratio[gr][ch],
-		       &gfc->l3_side.tt[gr][ch], xmin[gr][ch]);
+		       &gfc->tt[gr][ch], xmin[gr][ch]);
 	}
     }
 
@@ -1619,7 +1618,7 @@ VBR_iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
     {used_bits = 0;
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 	for (ch = 0; ch < gfc->channels_out; ch++) {
-	    gr_info *gi = &gfc->l3_side.tt[gr][ch];
+	    gr_info *gi = &gfc->tt[gr][ch];
 	    if (init_bitalloc(gfc, gi)) {
 		gi->global_gain = gfc->OldValue[ch];
 		for (;;) {
@@ -1635,14 +1634,14 @@ VBR_iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 	    if (used_bits > max_frame_bits) {
 		for (gr = 0; gr < gfc->mode_gr; gr++)
 		    for (ch = 0; ch < gfc->channels_out; ch++)
-			bitpressure_strategy(&gfc->l3_side.tt[gr][ch],
+			bitpressure_strategy(&gfc->tt[gr][ch],
 					     xmin[gr][ch]);
 		goto VBRloop_restart;
 	    }
 	}
     }
     }
-    gfc->l3_side.ResvSize -= used_bits;
+    gfc->ResvSize -= used_bits;
 
     finish_VBR_coding(gfc);
 }
@@ -1756,7 +1755,7 @@ set_frame_pinfo(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 	int j;
 	for (j = 0; j < 1600; j++)
 	    gfc->pinfo->pcmdata[ch][j] = gfc->mfbuf[ch][j];
-	gfc->pinfo->athadjust[ch] = gfc->l3_side.tt[0][ch].ATHadjust;
+	gfc->pinfo->athadjust[ch] = gfc->tt[0][ch].ATHadjust;
     }
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
@@ -1767,7 +1766,7 @@ set_frame_pinfo(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 		- gfc->masking_next[gr][0].pe - gfc->masking_next[gr][1].pe;
 	}
         for (ch = 0; ch < gfc->channels_out; ch ++) {
-	    gr_info *gi = &gfc->l3_side.tt[gr][ch];
+	    gr_info *gi = &gfc->tt[gr][ch];
 	    int scalefac_sav[SFBMAX], sfb;
 
 	    gfc->pinfo->blocktype[gr][ch] = gi->block_type;
@@ -1778,7 +1777,7 @@ set_frame_pinfo(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 	    /* reconstruct the scalefactors in case SCFSI was used */
 	    for (sfb = 0; sfb < gi->psymax; sfb++) {
 		if (gi->scalefac[sfb] == -1) /* scfsi */
-		    gi->scalefac[sfb] = gfc->l3_side.tt[0][ch].scalefac[sfb];
+		    gi->scalefac[sfb] = gfc->tt[0][ch].scalefac[sfb];
 		if (gi->scalefac[sfb] == -2) /* anything goes */
 		    gi->scalefac[sfb] = 0;
 	    }

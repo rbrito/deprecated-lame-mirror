@@ -292,7 +292,7 @@ getframebytes(lame_t gfc)
     /* main encoding routine toggles padding on and off */
     /* one Layer3 Slot consists of 8 bits */
     return gfc->mode_gr*bit_rate*(1000*576/8) / gfc->out_samplerate
-	+ gfc->padding - gfc->l3_side.sideinfo_len;
+	+ gfc->padding - gfc->sideinfo_len;
 }
 
 #ifndef NDEBUG
@@ -558,10 +558,9 @@ writeTableHeader(gr_info *gi, int ptr, char *p)
 inline static void
 encodeBitStream(lame_t gfc)
 {
-    III_side_info_t *l3_side = &gfc->l3_side;
     char *p = gfc->bs.header[gfc->bs.h_ptr].buf;
     int gr, ch, ptr;
-    assert(l3_side->main_data_begin >= 0);
+    assert(gfc->main_data_begin >= 0);
 
     ptr = gfc->bs.h_ptr;
     gfc->bs.h_ptr = (ptr + 1) & (MAX_HEADER_BUF-1);
@@ -578,24 +577,24 @@ encodeBitStream(lame_t gfc)
     p[3] = gfc->mode*64 + gfc->mode_ext*16
 	+ gfc->copyright*8 + gfc->original*4 + gfc->emphasis;
 
-    memset(p+4, 0, l3_side->sideinfo_len-4);
+    memset(p+4, 0, gfc->sideinfo_len-4);
     ptr = 32;
     if (gfc->error_protection)
 	ptr += 16;
-    ptr = writeheader(p, l3_side->main_data_begin, 7+gfc->mode_gr, ptr);
+    ptr = writeheader(p, gfc->main_data_begin, 7+gfc->mode_gr, ptr);
     if (gfc->mode_gr == 2) {
 	/* MPEG1 */
 	ptr += 7 - gfc->channels_out*2; /* private_bits */
 	for (ch = 0; ch < gfc->channels_out; ch++)
 	    ptr = writeheader(p,
-			      l3_side->scfsi[ch][0]*8
-			      + l3_side->scfsi[ch][1]*4
-			      + l3_side->scfsi[ch][2]*2
-			      + l3_side->scfsi[ch][3], 4, ptr);
+			      gfc->scfsi[ch][0]*8
+			      + gfc->scfsi[ch][1]*4
+			      + gfc->scfsi[ch][2]*2
+			      + gfc->scfsi[ch][3], 4, ptr);
 
 	for (gr = 0; gr < 2; gr++) {
 	    for (ch = 0; ch < gfc->channels_out; ch++) {
-		gr_info *gi = &l3_side->tt[gr][ch];
+		gr_info *gi = &gfc->tt[gr][ch];
 #ifndef NDEBUG
 		int data_bits = gfc->bs.bitidx + gi->part2_length;
 #endif
@@ -629,7 +628,7 @@ encodeBitStream(lame_t gfc)
 	/* MPEG2 */
 	ptr += gfc->channels_out; /* private_bits */
 	for (ch = 0; ch < gfc->channels_out; ch++) {
-	    gr_info *gi = &l3_side->tt[0][ch];
+	    gr_info *gi = &gfc->tt[0][ch];
 	    int partition, sfb = 0, part;
 #ifndef NDEBUG
 	    int data_bits = gfc->bs.bitidx + gi->part2_length;
@@ -698,10 +697,10 @@ encodeBitStream(lame_t gfc)
 	    Huffmancodebits(gfc, gi);
 	} /* for ch */
     } /* for MPEG version */
-    assert(ptr == l3_side->sideinfo_len * 8);
+    assert(ptr == gfc->sideinfo_len * 8);
 
     if (gfc->error_protection)
-	CRC_writeheader(p, gfc->l3_side.sideinfo_len);
+	CRC_writeheader(p, gfc->sideinfo_len);
 }
 
 /* compute the number of bits required to flush all mp3 frames
@@ -733,7 +732,7 @@ compute_flushbits(lame_t gfc, int *total_bytes_output)
     if (flushbits >= 0)
 	/* if flushbits >= 0, some headers have not yet been written */
 	/* add the size of the headers to the total byte output */
-	*total_bytes_output += 8 * gfc->l3_side.sideinfo_len
+	*total_bytes_output += 8 * gfc->sideinfo_len
 	    * ((bs->h_ptr - bs->w_ptr) & (MAX_HEADER_BUF-1));
 
     /* finally, add some bits so that the last frame is complete
@@ -756,7 +755,7 @@ flush_bitstream(lame_t gfc, unsigned char *buffer, int size, int mp3data)
     /* we have padded out all frames with ancillary data, which is the
        same as filling the bitreservoir with ancillary data, so : */
     gfc->bs.bitidx += compute_flushbits(gfc, &dummy);
-    gfc->l3_side.ResvSize = gfc->l3_side.main_data_begin = 0;
+    gfc->ResvSize = gfc->main_data_begin = 0;
     return copy_buffer(gfc, buffer, size, mp3data);
 }
 
@@ -831,12 +830,11 @@ drain_into_ancillary(lame_t gfc, int remainingBits)
 int
 format_bitstream(lame_t gfc)
 {
-    III_side_info_t *l3_side = &gfc->l3_side;
-    int drainPre, drainbits = l3_side->ResvSize & 7;
+    int drainPre, drainbits = gfc->ResvSize & 7;
 
     /* reservoir is overflowed ? */
-    if (drainbits < l3_side->ResvSize - l3_side->ResvMax)
-	drainbits = l3_side->ResvSize - l3_side->ResvMax;
+    if (drainbits < gfc->ResvSize - gfc->ResvMax)
+	drainbits = gfc->ResvSize - gfc->ResvMax;
     assert(drainbits >= 0);
 
     /* drain as many bits as possible into previous frame ancillary data
@@ -844,18 +842,18 @@ format_bitstream(lame_t gfc)
      * to make sure main_data_begin does not create a reservoir bigger
      * than ResvMax  mt 4/00*/
     drainPre = drainbits & (~7U);
-    if (drainPre > l3_side->main_data_begin*8)
-	drainPre = l3_side->main_data_begin*8;
-    l3_side->main_data_begin -= drainPre/8;
+    if (drainPre > gfc->main_data_begin*8)
+	drainPre = gfc->main_data_begin*8;
+    gfc->main_data_begin -= drainPre/8;
     drain_into_ancillary(gfc, drainPre);
     encodeBitStream(gfc);
     gfc->bs.bitidx += drainbits - drainPre;
 
-    l3_side->main_data_begin = (l3_side->ResvSize -= drainbits) >> 3;
+    gfc->main_data_begin = (gfc->ResvSize -= drainbits) >> 3;
 
     assert(gfc->bs.bitidx % 8 == 0);
-    assert(l3_side->ResvSize % 8 == 0);
-    assert(l3_side->ResvSize >= 0);
+    assert(gfc->ResvSize % 8 == 0);
+    assert(gfc->ResvSize >= 0);
     return 0;
 }
 
@@ -885,7 +883,7 @@ copy_buffer(lame_t gfc, unsigned char *buffer, int size, int mp3data)
     spec_idx = 0;
     do {
 	if (bs->totbyte + spec_idx == bs->header[bs->w_ptr].write_timing) {
-	    int i = gfc->l3_side.sideinfo_len;
+	    int i = gfc->sideinfo_len;
 	    if (pbuf+i >= pend) return -1; /* buffer is too small */
 	    memcpy(pbuf, bs->header[bs->w_ptr].buf, i);
 	    pbuf += i;

@@ -28,11 +28,6 @@
 extern "C" {
 #endif
 
-/***********************************************************************
-*
-*  Global Function Prototype Declarations
-*
-***********************************************************************/
 int	BitrateIndex(int, int);
 void	disable_FPE(void);
 

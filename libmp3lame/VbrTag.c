@@ -200,7 +200,7 @@ InitVbrTag(lame_t gfc)
     gfc->TotalFrameSize
 	= ((gfc->version+1)*72000*header_bitrate) / gfc->out_samplerate;
 
-    tot = (gfc->l3_side.sideinfo_len+LAMEHEADERSIZE);
+    tot = (gfc->sideinfo_len+LAMEHEADERSIZE);
     if (!(tot <= gfc->TotalFrameSize && gfc->TotalFrameSize <= MAXFRAMESIZE)) {
 	/* disable tag, it wont fit */
 	gfc->bWriteVbrTag = 0;
@@ -540,7 +540,7 @@ PutVbrTag(lame_t gfc, FILE *fpStream)
      * in enabled, the Xing data still starts at the same offset,
      * and now it is in sideinfo data block, and thus will not
      * decode correctly by non-Xing tag aware players */
-    p = &pbtStreamBuffer[gfc->l3_side.sideinfo_len];
+    p = &pbtStreamBuffer[gfc->sideinfo_len];
     if (gfc->error_protection)
 	p -= 2;
 
@@ -566,7 +566,7 @@ PutVbrTag(lame_t gfc, FILE *fpStream)
 
     /* error_protection: add crc16 information to header !? */
     if (gfc->error_protection)
-	CRC_writeheader(pbtStreamBuffer, gfc->l3_side.sideinfo_len);
+	CRC_writeheader(pbtStreamBuffer, gfc->sideinfo_len);
 
     /* work out CRC so far: initially crc = 0 */
     for (i = 0; i < p - pbtStreamBuffer; i++)

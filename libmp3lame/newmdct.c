@@ -680,7 +680,7 @@ mdct_sub48(lame_t gfc, int ch)
 
     /* thinking cache performance, ch->gr loop is better than gr->ch loop */
     for (gr = 0; gr < gfc->mode_gr; gr++) {
-	gr_info *gi = &(gfc->l3_side.tt[gr][ch]);
+	gr_info *gi = &gfc->tt[gr][ch];
 	int type = gi->block_type, band = 0, endband = SBLIMIT;
 	FLOAT *mdct_enc = gi->xr;
 	/*

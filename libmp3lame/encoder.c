@@ -110,8 +110,8 @@ updateStats(lame_t gfc)
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 	for (ch = 0; ch < gfc->channels_out; ch++) {
-	    int bt = gfc->l3_side.tt[gr][ch].block_type;
-	    if (bt == SHORT_TYPE && gfc->l3_side.tt[gr][ch].mixed_block_flag)
+	    int bt = gfc->tt[gr][ch].block_type;
+	    if (bt == SHORT_TYPE && gfc->tt[gr][ch].mixed_block_flag)
 		bt = 4;
 	    gfc->bitrate_blockType_Hist [gfc->bitrate_index] [bt] ++;
 	    gfc->bitrate_blockType_Hist [15] [bt] ++;
@@ -125,7 +125,7 @@ static void
 init_gr_info(lame_t gfc, int gr, int ch)
 {
     int sfb, j;
-    gr_info *gi = &gfc->l3_side.tt[gr][ch];
+    gr_info *gi = &gfc->tt[gr][ch];
 
     gi->part2_3_length     = 0;
     gi->part2_length       = 0;
@@ -312,7 +312,7 @@ encode_mp3_frame(lame_t gfc, unsigned char* mp3buf, int mp3buf_size)
     if (gfc->narrowStereo != 0.0) {
 	/* narrown_stereo */
 	for (gr = 0; gr < gfc->mode_gr; gr++) {
-	    gr_info *gi = &gfc->l3_side.tt[gr][0];
+	    gr_info *gi = &gfc->tt[gr][0];
 	    int i;
 	    for (i = 0; i < gi->xrNumMax; i++) {
 		FLOAT d = (gi[0].xr[i]-gi[1].xr[i]) * gfc->narrowStereo;
@@ -326,17 +326,17 @@ encode_mp3_frame(lame_t gfc, unsigned char* mp3buf, int mp3buf_size)
 	/* convert from L/R -> Mid/Side */
 	if (1
 #if 1
-	    && (gfc->l3_side.tt[0][0].block_type != SHORT_TYPE
+	    && (gfc->tt[0][0].block_type != SHORT_TYPE
 		|| gfc->is_start_sfb_s[0] == 0)
-	    && (gfc->l3_side.tt[1][0].block_type != SHORT_TYPE
+	    && (gfc->tt[1][0].block_type != SHORT_TYPE
 		|| gfc->is_start_sfb_s[1] == 0)
 #endif
 	    && gfc->use_istereo) {
 	    for (gr = 0; gr < gfc->mode_gr; gr++) {
 		int sfb = gfc->is_start_sfb_l[gr];
-		if (gfc->l3_side.tt[gr][0].block_type == SHORT_TYPE)
+		if (gfc->tt[gr][0].block_type == SHORT_TYPE)
 		    sfb = gfc->is_start_sfb_s[gr];
-		if (sfb && sfb < gfc->l3_side.tt[gr][0].psymax) {
+		if (sfb && sfb < gfc->tt[gr][0].psymax) {
 		    gfc->mode_ext = MPG_MD_MS_I;
 		    break;
 		}
@@ -344,7 +344,7 @@ encode_mp3_frame(lame_t gfc, unsigned char* mp3buf, int mp3buf_size)
 	}
 
 	for (gr = 0; gr < gfc->mode_gr; gr++) {
-	    gr_info *gi = &gfc->l3_side.tt[gr][0];
+	    gr_info *gi = &gfc->tt[gr][0];
 	    int sfb = gfc->is_start_sfb_l[gr];
 	    int end = gfc->scalefac_band.l[sfb];
 	    int i;
@@ -365,7 +365,7 @@ encode_mp3_frame(lame_t gfc, unsigned char* mp3buf, int mp3buf_size)
     } else if (gfc->use_istereo) {
 	gfc->mode_ext = MPG_MD_LR_I;
 	for (gr = 0; gr < gfc->mode_gr; gr++) {
-	    gr_info *gi = &gfc->l3_side.tt[gr][0];
+	    gr_info *gi = &gfc->tt[gr][0];
 	    int sfb = gfc->is_start_sfb_l[gr];
 	    int end = gfc->scalefac_band.l[sfb];
 	    if (gi->block_type == SHORT_TYPE) {

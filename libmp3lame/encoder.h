@@ -19,7 +19,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
 #ifndef LAME_ENCODER_H
 #define LAME_ENCODER_H
 
@@ -209,17 +208,6 @@ typedef struct {
     int dummy_for_padding[3];
 } gr_info;
 
-/* Layer III side information. */
-typedef struct {
-    gr_info tt[MAX_GRANULES][MAX_CHANNELS];
-    int main_data_begin;  /* in bytes */
-    int ResvSize; /* in bits */
-    int ResvMax;  /* in bits */
-    int maxmp3buf; /* in bytes */
-    int sideinfo_len;
-    int scfsi[MAX_CHANNELS][4];
-} III_side_info_t;
-
 typedef struct {
     int sum;    /* what we have seen so far */
     int seen;   /* how many frames we have seen in this chunk */
@@ -241,7 +229,13 @@ struct lame_internal_flags {
     FLOAT xrwork[2][576];  /* xr^(3/4) and fabs(xr) */
 
     /* side information */
-    III_side_info_t l3_side;
+    gr_info tt[MAX_GRANULES][MAX_CHANNELS];
+    int main_data_begin;  /* in bytes */
+    int ResvSize; /* in bits */
+    int ResvMax;  /* in bits */
+    int maxmp3buf; /* in bytes */
+    int sideinfo_len;
+    int scfsi[MAX_CHANNELS][4];
 
     /* variables for subband filter and MDCT */
     FLOAT sb_sample[MAX_CHANNELS][3][18][SBLIMIT];
@@ -289,7 +283,7 @@ struct lame_internal_flags {
     FLOAT istereo_ratio;       /* intensity stereo threshold */
     FLOAT interChRatio;
 
-    int filter_type; /* 0=polyphase filter, 1= FIR filter 2=MDCT filter(bad)*/
+    int filter_type;     /* 0=polyphase filter, 1= FIR filter 2=MDCT filter */
     int use_scalefac_scale;   /* 0 = not use  1 = use */
     int use_subblock_gain;    /* 0 = not use  1 = use */
     int noise_shaping_amp;    /* 0 = ISO model: amplify all distorted bands
@@ -324,7 +318,7 @@ struct lame_internal_flags {
 
     FLOAT mld_l[SBMAX_l],mld_s[SBMAX_s];
     int	bo_l[SBMAX_l], bo_s[SBMAX_s], bo_l2s[SBMAX_s];
-    int	npart_l,npart_s;
+    int	npart_l;
 
     int	s3ind[CBANDS][2];
     int	s3ind_s[CBANDS][2];
@@ -461,7 +455,6 @@ struct lame_internal_flags {
     /* used by the frame analyzer */
     plotting_data *pinfo;
 #endif
-
 
     /* input description */
     unsigned long num_samples; /* number of samples. default=2^32-1 */

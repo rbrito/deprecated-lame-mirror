@@ -664,7 +664,6 @@ gcd(int i, int j)
 void
 iteration_init(lame_t gfc)
 {
-    III_side_info_t * const l3_side = &gfc->l3_side;
     int i, j;
 
     /**********************************************************************/
@@ -705,7 +704,7 @@ iteration_init(lame_t gfc)
 	&& gfc->mode_gr == 2 /* currently only MPEG1 */)
 	gfc->use_istereo = 1;
 
-    l3_side->main_data_begin = 0;
+    gfc->main_data_begin = 0;
     compute_ath(gfc);
 #ifdef USE_FAST_LOG
     init_log_table();
@@ -959,7 +958,7 @@ psymodel_init(lame_t gfc)
     FLOAT bval[CBANDS];
     FLOAT norm[CBANDS];
     FLOAT sfreq = gfc->out_samplerate;
-    int numlines_s[CBANDS];
+    int numlines_s[CBANDS], npart_s;
 
     for (i=0; i<MAX_CHANNELS*2; ++i) {
 	for (sb = 0; sb < SBMAX_l; sb++) {
@@ -1041,14 +1040,14 @@ psymodel_init(lame_t gfc)
     /************************************************************************
      * do the same things for short blocks
      ************************************************************************/
-    gfc->npart_s
+    npart_s
 	= init_numline(numlines_s, gfc->bo_s, bm,
 		       bval, gfc->mld_s, sfreq, BLKSIZE_s,
 		       gfc->scalefac_band.s, BLKSIZE_s/(2.0*192), SBMAX_s);
-    assert(gfc->npart_s <= CBANDS);
+    assert(npart_s <= CBANDS);
 
     /* SNR formula is removed. but we should tune s3_s more */
-    for (i=0;i<gfc->npart_s;i++) {
+    for (i = 0; i < npart_s; i++) {
 	norm[i] = db2pow(-0.25);
 
 	gfc->endlines_s[i] = numlines_s[i];
@@ -1062,13 +1061,12 @@ psymodel_init(lame_t gfc)
 	gfc->ATH.s_avg[i]
 	    = gfc->ATH.cb[bm[i]] * (BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE);
 
-    i = init_s3_values(gfc, &gfc->s3_ss, gfc->s3ind_s,
-		       gfc->npart_s, bval, norm);
+    i = init_s3_values(gfc, &gfc->s3_ss, gfc->s3ind_s, npart_s, bval, norm);
     if (i)
 	return i;
 
     assert(gfc->bo_l[SBMAX_l-1] <= gfc->npart_l);
-    assert(gfc->bo_s[SBMAX_s-1] <= gfc->npart_s);
+    assert(gfc->bo_s[SBMAX_s-1] <= npart_s);
     assert(gfc->bo_l2s[SBMAX_s-1] <= gfc->npart_l);
     init_mask_add_max_values(gfc);
 
@@ -1124,12 +1122,12 @@ init_bit_stream_w(lame_t gfc)
 
     /* determine the mean bitrate for main data */
     if (gfc->version == 1) /* MPEG 1 */
-        gfc->l3_side.sideinfo_len = (gfc->channels_out == 1) ? 4 + 17 : 4 + 32;
+        gfc->sideinfo_len = (gfc->channels_out == 1) ? 4 + 17 : 4 + 32;
     else                /* MPEG 2 */
-        gfc->l3_side.sideinfo_len = (gfc->channels_out == 1) ? 4 + 9 : 4 + 17;
+        gfc->sideinfo_len = (gfc->channels_out == 1) ? 4 + 9 : 4 + 17;
 
     if (gfc->error_protection)
-        gfc->l3_side.sideinfo_len += 2;
+        gfc->sideinfo_len += 2;
 
     /* padding method as described in 
      * "MPEG-Layer3 / Bitstream Syntax and Decoding"
@@ -1145,7 +1143,7 @@ init_bit_stream_w(lame_t gfc)
 	    = ((gfc->version+1)*72000L*gfc->mean_bitrate_kbps)
 	    % gfc->out_samplerate;
 
-    gfc->l3_side.maxmp3buf = 0;
+    gfc->maxmp3buf = 0;
     /* we cannot use reservoir over 320kbp or when indicated not to use */
     if ((gfc->VBR != cbr || gfc->mean_bitrate_kbps < 320)
 	&& !gfc->disable_reservoir) {
@@ -1154,15 +1152,15 @@ init_bit_stream_w(lame_t gfc)
 	 * Bouvigne suggests this more lax interpretation of the ISO doc 
 	 * instead of using 8*960.
 	 */
-	gfc->l3_side.maxmp3buf = 1440;
+	gfc->maxmp3buf = 1440;
         if (gfc->strict_ISO) {
 	    /* maximum allowed frame size.  dont use more than this number of
 	       bits, even if the frame has the space for them: */
-	    gfc->l3_side.maxmp3buf
+	    gfc->maxmp3buf
 		= (320000*1152 / gfc->out_samplerate + 7) >> 3;
-	    if (gfc->l3_side.maxmp3buf > MAX_BITS*gfc->mode_gr)
-		gfc->l3_side.maxmp3buf = MAX_BITS*gfc->mode_gr;
+	    if (gfc->maxmp3buf > MAX_BITS*gfc->mode_gr)
+		gfc->maxmp3buf = MAX_BITS*gfc->mode_gr;
 	}
-	gfc->l3_side.maxmp3buf -= gfc->l3_side.sideinfo_len;
+	gfc->maxmp3buf -= gfc->sideinfo_len;
     }
 }
