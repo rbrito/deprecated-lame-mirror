@@ -45,7 +45,6 @@
 #include <dmalloc.h>
 #endif
 
-
 #ifdef _DEBUG
 /*  #define DEBUG_VBRTAG */
 #endif
@@ -282,10 +281,10 @@ int CheckVbrTag(unsigned char *buf)
 		else              buf+=(9+4);
 	}
 
-	if( buf[0] != VBRTag[0] ) return 0;    /* fail */
-	if( buf[1] != VBRTag[1] ) return 0;    /* header not found*/
-	if( buf[2] != VBRTag[2] ) return 0;
-	if( buf[3] != VBRTag[3] ) return 0;
+	if( buf[0] != VBRTag[0] && buf[0] != VBRTag2[0] ) return 0;    /* fail */
+	if( buf[1] != VBRTag[1] && buf[1] != VBRTag2[1]) return 0;    /* header not found*/
+	if( buf[2] != VBRTag[2] && buf[2] != VBRTag2[2]) return 0;
+	if( buf[3] != VBRTag[3] && buf[3] != VBRTag2[3]) return 0;
 	return 1;
 }
 
@@ -293,6 +292,7 @@ int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
 {
 	int			i, head_flags;
 	int			h_bitrate,h_id, h_mode, h_sr_index;
+        int enc_delay,enc_padding; 
 
 	/* get Vbr header data */
 	pTagData->flags = 0;
@@ -328,10 +328,10 @@ int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
 		else              buf+=(9+4);
 	}
 
-	if( buf[0] != VBRTag[0] ) return 0;    /* fail */
-	if( buf[1] != VBRTag[1] ) return 0;    /* header not found*/
-	if( buf[2] != VBRTag[2] ) return 0;
-	if( buf[3] != VBRTag[3] ) return 0;
+	if( buf[0] != VBRTag[0] && buf[0] != VBRTag2[0] ) return 0;    /* fail */
+	if( buf[1] != VBRTag[1] && buf[1] != VBRTag2[1]) return 0;    /* header not found*/
+	if( buf[2] != VBRTag[2] && buf[2] != VBRTag2[2]) return 0;
+	if( buf[3] != VBRTag[3] && buf[3] != VBRTag2[3]) return 0;
 
 	buf+=4;
 
@@ -369,24 +369,34 @@ int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
 	pTagData->headersize = 
 	  ((h_id+1)*72000*h_bitrate) / pTagData->samprate;
 
+        buf+=21;
+        enc_delay = buf[0] << 4;
+        enc_delay += buf[1] >> 4;
+        enc_padding= (buf[1] & 0x0F)<<8;
+        enc_padding += buf[2];
+
+        pTagData->enc_delay=enc_delay;
+        pTagData->enc_padding=enc_padding;
 
 #ifdef DEBUG_VBRTAG
-	DEBUGF("\n\n********************* VBR TAG INFO *****************\n");
-	DEBUGF("tag         :%s\n",VBRTag);
-	DEBUGF("head_flags  :%d\n",head_flags);
-	DEBUGF("bytes       :%d\n",pTagData->bytes);
-	DEBUGF("frames      :%d\n",pTagData->frames);
-	DEBUGF("VBR Scale   :%d\n",pTagData->vbr_scale);
-	DEBUGF("toc:\n");
+	fprintf(stderr,"\n\n********************* VBR TAG INFO *****************\n");
+	fprintf(stderr,"tag         :%s\n",VBRTag);
+	fprintf(stderr,"head_flags  :%d\n",head_flags);
+	fprintf(stderr,"bytes       :%d\n",pTagData->bytes);
+	fprintf(stderr,"frames      :%d\n",pTagData->frames);
+	fprintf(stderr,"VBR Scale   :%d\n",pTagData->vbr_scale);
+        fprintf(stderr,"enc_delay  = %i \n",enc_delay);
+        fprintf(stderr,"enc_padding= %i \n",enc_padding);
+	fprintf(stderr,"toc:\n");
 	if( pTagData->toc != NULL )
 	{
 		for(i=0;i<NUMTOCENTRIES;i++)
 		{
-			if( (i%10) == 0 ) DEBUGF("\n");
-			DEBUGF(" %3d", (int)(pTagData->toc[i]));
+			if( (i%10) == 0 ) fprintf(stderr,"\n");
+			fprintf(stderr," %3d", (int)(pTagData->toc[i]));
 		}
 	}
-	DEBUGF("\n***************** END OF VBR TAG INFO ***************\n");
+	fprintf(stderr,"\n***************** END OF VBR TAG INFO ***************\n");
 #endif
 	return 1;       /* success */
 }
@@ -452,9 +462,13 @@ int InitVbrTag(lame_global_flags *gfp)
   	  ((gfp->version+1)*72000*bitrate) / gfp->out_samplerate;
 
 	tot = (gfc->sideinfo_len+LAMEHEADERSIZE);
-	
-	assert(gfp->TotalFrameSize >= tot );
-	assert(gfp->TotalFrameSize <= MAXFRAMESIZE );
+
+	if (gfp->TotalFrameSize < tot || 
+            gfp->TotalFrameSize > MAXFRAMESIZE ) {
+            // disable tag, it wont fit
+            gfp->bWriteVbrTag = 0;
+            return 0;
+        }
 
 	for (i=0; i<gfp->TotalFrameSize; ++i)
 	  add_dummy_byte(gfp,0);
@@ -665,21 +679,12 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 
 	
 	nMusicLength = nFilesize - id3v2size;		//omit current frame
-	
 	if (bId3v1Present)
-		nMusicLength-=128;						//id3v1 present.
+		nMusicLength-=128;                     //id3v1 present.
+        nMusicCRC = gfc->nMusicCRC;
 
-
-
-	//offset: after id3v2 tag, 
-	//and after this frame (i.e. where the music starts).
-	//end: before id3v1.
-	
-    nMusicCRC = gfc->nMusicCRC;
 
 	/*Write all this information into the stream*/
-	
-
 	CreateI4(&pbtStreamBuffer[nBytesWritten], nQuality);
 	nBytesWritten+=4;
 
@@ -897,27 +902,6 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
 	memcpy(&pbtStreamBuffer[nStreamIndex],btToc,sizeof(btToc));
 	nStreamIndex+=sizeof(btToc);
 
-	/* Put VBR SCALE */
-	//Now included in PutLameVBR
-
-//	CreateI4(&pbtStreamBuffer[nStreamIndex],nVbrScale);
-//	nStreamIndex+=4;
-
-
-	/* Put LAME ID */
-	
-//    sprintf ( str1, "LAME%s", get_lame_short_version () );
-//    strncpy ( pbtStreamBuffer + nStreamIndex, str1, 20 );
-
-//	nStreamIndex+=20;
-
-
-#ifdef DEBUG_VBRTAG
-	{
-	  VBRTAGDATA TestHeader;
-	  GetVbrTag(&TestHeader,pbtStreamBuffer);
-	}
-#endif
 
 	if (gfp->error_protection) {
 	  /* (jo) error_protection: add crc16 information to header */
@@ -933,6 +917,12 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
 	/*Put LAME VBR info*/
 	nStreamIndex+=PutLameVBR(gfp, fpStream, pbtStreamBuffer + nStreamIndex, id3v2TagSize,crc);
 
+#ifdef DEBUG_VBRTAG
+	{
+	  VBRTAGDATA TestHeader;
+	  GetVbrTag(&TestHeader,pbtStreamBuffer);
+	}
+#endif
 
 	/*Seek to the beginning of the stream */
 	fseek(fpStream,id3v2TagSize,SEEK_SET);

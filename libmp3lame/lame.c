@@ -903,9 +903,10 @@ lame_init_params(lame_global_flags * const gfp)
 
     }
 
-    /* Do not write VBR tag if VBR flag is not specified */
-    if ((gfp->VBR == vbr_off) && (gfp->brate<64))
-        gfp->bWriteVbrTag = 0;
+    /* for CBR, we will write an "info" tag. */
+    //    if ((gfp->VBR == vbr_off)) 
+    //  gfp->bWriteVbrTag = 0;
+
     if (gfp->ogg)
         gfp->bWriteVbrTag = 0;
 #if defined(HAVE_GTK)

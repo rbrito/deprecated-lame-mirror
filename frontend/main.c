@@ -186,7 +186,14 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath,
 
     switch (input_format) {
     case sf_mp3:
-        skip += 528 + 1; /* mp3 decoder has a 528 sample delay, plus user supplied "skip" */
+        if (skip==0) {
+            if (enc_delay>-1) skip = enc_delay + 528+1;
+            else skip=lame_get_encoder_delay(gfp)+528+1;
+        }else{
+            // user specified a value of skip. just add for decoder
+            skip += 528+1; /* mp3 decoder has a 528 sample delay, plus user supplied "skip" */
+        }
+
         if (silent < 10) fprintf(stderr, "MPEG-%u%s Layer %s", 2 - lame_get_version(gfp),
                 lame_get_out_samplerate( gfp ) < 16000 ? ".5" : "", "III");
         break;
@@ -699,7 +706,7 @@ main(int argc, char **argv)
         if (mp3_delay_set)
             lame_decoder(gf, outf, mp3_delay, inPath, outPath);
         else
-            lame_decoder(gf, outf, lame_get_encoder_delay(gf), inPath, outPath);
+            lame_decoder(gf, outf, 0, inPath, outPath);
 
     }
     else {

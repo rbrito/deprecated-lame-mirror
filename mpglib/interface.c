@@ -32,6 +32,8 @@ BOOL InitMP3( PMPSTR mp)
 
 	mp->framesize = 0;
         mp->num_frames = 0;
+        mp->enc_delay = -1;
+        mp->enc_padding = -1;
         mp->vbr_header=0;
 	mp->header_parsed=0;
 	mp->side_parsed=0;
@@ -192,12 +194,12 @@ void copy_mp(PMPSTR mp,int size,unsigned char *ptr)
   }
 }
 
-
-
+// number of bytes needed by GetVbrTag to parse header
+#define XING_HEADER_SIZE 194
 
 // traverse mp data structure without changing it
 // (just like sync_buffer)
-// pull out 48 bytes
+// pull out Xing bytes
 // call vbr header check code from LAME
 // if we find a header, parse it and also compute the VBR header size
 // if no header, do nothing.
@@ -209,7 +211,7 @@ int check_vbr_header(PMPSTR mp,int bytes)
 {
   int i,pos;
   struct buf *buf=mp->tail;
-  unsigned char xing[48];
+  unsigned char xing[XING_HEADER_SIZE];
   VBRTAGDATA pTagData;
 
   pos = buf->pos;
@@ -222,8 +224,8 @@ int check_vbr_header(PMPSTR mp,int bytes)
     }
     ++pos;
   }
-  // now read 48 bytes
-  for (i=0; i<48; ++i) {
+  // now read header
+  for (i=0; i<XING_HEADER_SIZE; ++i) {
     while(pos >= buf->size) {
       buf  = buf->next;
       pos = buf->pos;
@@ -233,10 +235,14 @@ int check_vbr_header(PMPSTR mp,int bytes)
     ++pos;
   }
 
-  /* check first 48 bytes for Xing header */
+  /* check first bytes for Xing header */
   mp->vbr_header = GetVbrTag(&pTagData,xing);
   if (mp->vbr_header) {
     mp->num_frames=pTagData.frames;
+    mp->enc_delay=pTagData.enc_delay;
+    mp->enc_padding=pTagData.enc_padding;
+
+    //fprintf(stderr,"\rmpglib: delays: %i %i \n",mp->enc_delay,mp->enc_padding);
     // fprintf(stderr,"\rmpglib: Xing VBR header dectected.  MP3 file has %i frames\n", pTagData.frames);
     return pTagData.headersize;
   }
@@ -356,7 +362,7 @@ int decodeMP3( PMPSTR mp,unsigned char *in,int isize,char *out,
 	        bytes=sync_buffer(mp,0); 
 
 	        /* now look for Xing VBR header */
-		if (mp->bsize >= bytes+48 ) {
+		if (mp->bsize >= bytes+XING_HEADER_SIZE ) {
 		    /* vbrbytes = number of bytes in entire vbr header */
 		    vbrbytes=check_vbr_header(mp,bytes);
 		} else {

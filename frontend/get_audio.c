@@ -1503,6 +1503,7 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
     int     ret;
     int     len, aid_header;
     short int pcm_l[1152], pcm_r[1152];
+    
 
     memset(mp3data, 0, sizeof(mp3data_struct));
     lame_decode_init();
@@ -1543,7 +1544,7 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
     // so mp3data->bitrate will be 0 until we have decoded the first
     // frame.  Cannot decode first frame here because we are not
     // yet prepared to handle the output.
-    ret = lame_decode1_headers(buf, len, pcm_l, pcm_r, mp3data);
+    ret = lame_decode1_headersB(buf, len, pcm_l, pcm_r, mp3data,&enc_delay,&enc_padding);
     if (-1 == ret)
         return -1;
 
@@ -1552,7 +1553,7 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
         len = fread(buf, 1, sizeof(buf), fd);
         if (len != sizeof(buf))
             return -1;
-        ret = lame_decode1_headers(buf, len, pcm_l, pcm_r, mp3data);
+        ret = lame_decode1_headersB(buf, len, pcm_l, pcm_r, mp3data,&enc_delay,&enc_padding);
         if (-1 == ret)
             return -1;
     }

@@ -74,6 +74,9 @@ int mp3_delay;              /* to adjust the number of samples truncated
                                during decode */
 int mp3_delay_set;          /* user specified the value of the mp3 encoder 
                                delay to assume for decoding */
+
+int enc_delay;
+int enc_padding;
 int disable_wav_header;
 mp3data_struct mp3input_data; /* used by Ogg and MP3 */
 
@@ -969,6 +972,8 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
     /* turn on display options. user settings may turn them off below */
     silent   = 0;
     brhist   = 1;
+    enc_padding=-1;
+    enc_delay=-1;
     mp3_delay = 0;   
     mp3_delay_set=0;
     disable_wav_header=0;

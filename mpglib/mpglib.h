@@ -23,6 +23,8 @@ typedef struct mpstr_tag {
 	struct buf *head,*tail;
         int vbr_header;               /* 1 if valid Xing vbr header detected */
         int num_frames;               /* set if vbr header present */
+        int enc_delay;                /* set if vbr header present */
+        int enc_padding;              /* set if vbr header present */
         int header_parsed;
         int side_parsed;  
         int data_parsed;  
