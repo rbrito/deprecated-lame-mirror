@@ -612,7 +612,7 @@ loop_break(const gr_info * const gi)
 {
     int sfb = gi->psymax-1;
     do {
-	if (gi->scalefac[sfb] + gi->subblock_gain[gi->wi[sfb].window] == 0)
+	if (!(gi->scalefac[sfb] | gi->subblock_gain[gi->wi[sfb].window]))
 	    return 0;
     } while (--sfb >= 0);
     return sfb;
