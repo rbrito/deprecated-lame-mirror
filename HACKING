@@ -1,3 +1,35 @@
+LAME Sytle guide:
+
+
+
+1. COSMETIC CHANGES 
+
+If you didn't write a routine, dont change the style, indentation,
+tabs, variable names, function names, #ifdef names, capitalization,
+spacing between lines, spacing between commas, spacing between
+operaters, etc etc etc, unless you have a good reason.
+
+
+Here are some examples:
+
+good reasons:
+1. Mac cant handle local arrays > 32kb.  
+2. The variable named 'stereo' is used in a confusing way.
+3. Adding or elaborating on comments
+
+bad reasons:
+1. code does not compile under g++
+2. code not in your prefered style.
+
+
+LAME compiles on all modern OS's, and under dozens of C compilers.
+This fact alone means that LAME is effectively complient C code.  No
+additional "complience" work is needed or wanted.  If you disagree, start a
+discussion in mp3encoder and try to convience other developers.
+
+
+
+
 ************************************************************************
 LAME API
 
