@@ -238,11 +238,11 @@ endif
 ##########################################################################
 ifeq ($(UNAME),OpenBSD)
 #  remove if you do not have GTK or do not want the GTK frame analyzer
-   GTK = -DHAVEGTK `gtk12-config --cflags`
-   GTKLIBS = `gtk12-config --libs` 
+   GTK = -DHAVEGTK `gtk-config --cflags`
+   GTKLIBS = `gtk-config --libs` 
 # Comment out next 2 lines if you want to remove VBR histogram capability
    BRHIST_SWITCH = -DBRHIST
-   LIBTERMCAP = -lncurses
+   LIBTERMCAP = -lcurses 
 endif
 
 
