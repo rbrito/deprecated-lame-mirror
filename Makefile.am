@@ -1,6 +1,6 @@
 ## $Id$
 
-SUBDIRS = mpglib libmp3lame frontend Dll doc include misc
+SUBDIRS = mpglib libmp3lame frontend Dll doc include misc dshow
 
 CLEANFILES = testcase.new.mp3
 AUTOMAKE_OPTIONS = foreign ansi2knr
