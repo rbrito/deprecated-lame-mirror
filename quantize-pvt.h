@@ -28,8 +28,6 @@ typedef struct calc_noise_result_t {
 	FLOAT8 over_noise;	/* sum of quantization noise > masking */
 	FLOAT8 tot_noise;	/* sum of all quantization noise */
 	FLOAT8 max_noise;	/* max quantization noise */
-	FLOAT8 over_avg_noise;	/* over_noise / over_count */
-	FLOAT8 tot_avg_noise;	/* tot_noise / tot_count */
 } calc_noise_result;
 
 void compute_ath(lame_global_flags *gfp,FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY_l]);

@@ -721,8 +721,6 @@ void outer_loop(
   noise_info.max_noise = 0;
   noise_info.tot_noise = 0;
   noise_info.over_noise = 0;
-  noise_info.tot_avg_noise = 0;
-  noise_info.over_avg_noise = 0;
   best_noise_info = noise_info;
 
 
@@ -898,8 +896,8 @@ void outer_loop(
 
   best_noise[0]=best_noise_info.over_count;
   best_noise[1]=best_noise_info.max_noise;
-  best_noise[2]=best_noise_info.over_avg_noise;
-  best_noise[3]=best_noise_info.tot_avg_noise;
+  best_noise[2]=best_noise_info.over_noise;
+  best_noise[3]=best_noise_info.tot_noise;
 }
 
 
@@ -1099,31 +1097,31 @@ int quant_compare(int experimentalX,
   default:
   case 0: better =   calc->over_count      < best->over_count
                  ||( calc->over_count     == best->over_count
-                  && calc->over_avg_noise <= best->over_avg_noise ); break;
+                  && calc->over_noise <= best->over_noise ); break;
 
   case 1: better = calc->max_noise < best->max_noise; break;
 
-  case 2: better = calc->tot_avg_noise < best->tot_avg_noise; break;
+  case 2: better = calc->tot_noise < best->tot_noise; break;
   
-  case 3: better =  calc->tot_avg_noise < best->tot_avg_noise
+  case 3: better =  calc->tot_noise < best->tot_noise
                  && calc->max_noise     < best->max_noise + 2; break;
   
   case 4: better = ( ( (0>=calc->max_noise) && (best->max_noise>2)) ||
-     ( (0>=calc->max_noise) && (best->max_noise<0) && ((best->max_noise+2)>calc->max_noise) && (calc->tot_avg_noise<best->tot_avg_noise) ) ||
-     ( (0>=calc->max_noise) && (best->max_noise>0) && ((best->max_noise+2)>calc->max_noise) && (calc->tot_avg_noise<(best->tot_avg_noise+best->over_avg_noise)) ) ||
-     ( (0<calc->max_noise) && (best->max_noise>-0.5) && ((best->max_noise+1)>calc->max_noise) && ((calc->tot_avg_noise+calc->over_avg_noise)<(best->tot_avg_noise+best->over_avg_noise)) ) ||
-     ( (0<calc->max_noise) && (best->max_noise>-1) && ((best->max_noise+1.5)>calc->max_noise) && ((calc->tot_avg_noise+calc->over_avg_noise+calc->over_avg_noise)<(best->tot_avg_noise+best->over_avg_noise+best->over_avg_noise)) ) );
+     ( (0>=calc->max_noise) && (best->max_noise<0) && ((best->max_noise+2)>calc->max_noise) && (calc->tot_noise<best->tot_noise) ) ||
+     ( (0>=calc->max_noise) && (best->max_noise>0) && ((best->max_noise+2)>calc->max_noise) && (calc->tot_noise<(best->tot_noise+best->over_noise)) ) ||
+     ( (0<calc->max_noise) && (best->max_noise>-0.5) && ((best->max_noise+1)>calc->max_noise) && ((calc->tot_noise+calc->over_noise)<(best->tot_noise+best->over_noise)) ) ||
+     ( (0<calc->max_noise) && (best->max_noise>-1) && ((best->max_noise+1.5)>calc->max_noise) && ((calc->tot_noise+calc->over_noise+calc->over_noise)<(best->tot_noise+best->over_noise+best->over_noise)) ) );
      break;
      
-  case 5: better =   calc->over_avg_noise  < best->over_avg_noise
-                 ||( calc->over_avg_noise == best->over_avg_noise
-                  && calc->tot_avg_noise   < best->tot_avg_noise ); break;
+  case 5: better =   calc->over_noise  < best->over_noise
+                 ||( calc->over_noise == best->over_noise
+                  && calc->tot_noise   < best->tot_noise ); break;
   
-  case 6: better =     calc->over_avg_noise  < best->over_avg_noise
-                 ||(   calc->over_avg_noise == best->over_avg_noise
+  case 6: better =     calc->over_noise  < best->over_noise
+                 ||(   calc->over_noise == best->over_noise
                   &&(  calc->max_noise       < best->max_noise
                    ||( calc->max_noise      == best->max_noise
-                    && calc->tot_avg_noise  <= best->tot_avg_noise ))); break;
+                    && calc->tot_noise  <= best->tot_noise ))); break;
   
   case 7: better =  calc->over_count < best->over_count
                  || calc->over_noise < best->over_noise; break;

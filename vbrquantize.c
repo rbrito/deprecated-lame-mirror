@@ -913,8 +913,8 @@ VBR_quantize(lame_global_flags *gfp,
 			      &noise_info);
 	noise[0] = noise_info.over_count;
 	noise[1] = noise_info.max_noise;
-	noise[2] = noise_info.over_avg_noise;
-	noise[3] = noise_info.tot_avg_noise;
+	noise[2] = noise_info.over_noise;
+	noise[3] = noise_info.tot_noise;
 
 	set_pinfo (gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
       }

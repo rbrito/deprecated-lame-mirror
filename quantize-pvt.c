@@ -868,11 +868,9 @@ int calc_noise( lame_global_flags *gfp,
 
   res->tot_count = count;
   res->over_count = over;
-  res->tot_noise = tot_noise;
-  res->over_noise = over_noise;
+  res->tot_noise = tot_noise / count;
+  res->over_noise = over_noise / count;
   res->max_noise = max_noise;
-  res->tot_avg_noise = tot_noise / count;
-  res->over_avg_noise = over_noise / count;
   
   return over;
 }
