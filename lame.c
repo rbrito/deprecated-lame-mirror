@@ -1279,7 +1279,7 @@ FFT's                      <---------1024---------->
   old_bitrate = info->bitrate_index;
   getframebits(info,stereo,&bitsPerFrame,&mean_bits);
   III_format_bitstream( bitsPerFrame, &fr_ps, l3_enc, &l3_side, 
-			&scalefac, &bs, xr, NULL, 0 );
+			&scalefac, &bs);
 
 
   frameBits = bs.totbit - sentBits;
