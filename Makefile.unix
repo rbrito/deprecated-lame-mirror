@@ -459,6 +459,7 @@ lib_sources = \
 	libmp3lame/util.c \
 	libmp3lame/mpglib_interface.c \
         libmp3lame/version.c \
+        libmp3lame/gain_analysis.c \
         mpglib/common.c \
         mpglib/dct64_i386.c \
         mpglib/decode_i386.c \
@@ -596,7 +597,7 @@ endif
 #  should be at most 30.
 #
 test: frontend/$(PGM)
-	frontend/$(PGM)  --nores -h testcase.wav testcase.new.mp3
+	frontend/$(PGM) -t --nores -h testcase.wav testcase.new.mp3
 	cmp -l testcase.new.mp3 testcase.mp3 | wc -l
 
 testg: frontend/$(PGM)
