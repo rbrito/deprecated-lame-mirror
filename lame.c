@@ -282,32 +282,48 @@ void lame_init_params(lame_global_flags *gfp)
   /***************************************************************/
   if (gfc->filter_type==0) {
     int band,maxband,minband;
-    FLOAT8 amp,freq;
+    FLOAT8 freq;
     if (gfc->lowpass1 > 0) {
       minband=999;
       maxband=-1;
       for (band=0;  band <=31 ; ++band) { 
 	freq = band/31.0;
-	amp = 1;
+	gfc->amp_lowpass[band] = 1;
 	/* this band and above will be zeroed: */
 	if (freq >= gfc->lowpass2) {
 	  gfc->lowpass_band= Min(gfc->lowpass_band,band);
-	  amp=0;
+	  gfc->amp_lowpass[band]=0;
 	}
 	if (gfc->lowpass1 < freq && freq < gfc->lowpass2) {
           minband = Min(minband,band);
           maxband = Max(maxband,band);
-	  amp = cos((PI/2)*(gfc->lowpass1-freq)/(gfc->lowpass2-gfc->lowpass1));
+	  gfc->amp_lowpass[band] = cos((PI/2)*(gfc->lowpass1-freq)/(gfc->lowpass2-gfc->lowpass1));
 	}
-	/* printf("lowpass band=%i  amp=%f \n",band,amp);*/
+	/*
+	printf("lowpass band=%i  amp=%f \n",band,gfc->amp_lowpass[band]);
+	*/
       }
       /* compute the *actual* transition band implemented by the polyphase filter */
       if (minband==999) gfc->lowpass1 = (gfc->lowpass_band-.75)/31.0;
       else gfc->lowpass1 = (minband-.75)/31.0;
       gfc->lowpass2 = gfc->lowpass_band/31.0;
+      
+      gfc->lowpass_start_band = minband;
+      gfc->lowpass_end_band   = maxband;
+      
+      /* as the lowpass may have changed above
+       * calculate the amplification here again
+       */
+      for (band=minband;  band <=maxband; ++band) { 
+	freq = band/31.0;
+	gfc->amp_lowpass[band] = cos((PI/2)*(gfc->lowpass1-freq)/(gfc->lowpass2-gfc->lowpass1));
+      }
+    } else {
+      gfc->lowpass_start_band = 0;
+      gfc->lowpass_end_band   = -1;  /* do not to run into for-loops */
     }
 
-    /* make sure highpass filter is within 90% of whan the effective highpass
+    /* make sure highpass filter is within 90% of what the effective highpass
      * frequency will be */
     if (gfc->highpass2 > 0) 
       if (gfc->highpass2 <  .9*(.75/31.0) ) {
@@ -321,27 +337,47 @@ void lame_init_params(lame_global_flags *gfp)
       maxband=-1;
       for (band=0;  band <=31; ++band) { 
 	freq = band/31.0;
-	amp = 1;
+	gfc->amp_highpass[band] = 1;
 	/* this band and below will be zereod */
 	if (freq <= gfc->highpass1) {
 	  gfc->highpass_band = Max(gfc->highpass_band,band);
-	  amp=0;
+	  gfc->amp_highpass[band]=0;
 	}
 	if (gfc->highpass1 < freq && freq < gfc->highpass2) {
           minband = Min(minband,band);
           maxband = Max(maxband,band);
-	  amp = cos((PI/2)*(gfc->highpass2-freq)/(gfc->highpass2-gfc->highpass1));
+	  gfc->amp_highpass[band] = cos((PI/2)*(gfc->highpass2-freq)/(gfc->highpass2-gfc->highpass1));
 	}
-	/*	printf("highpass band=%i  amp=%f \n",band,amp);*/
+	/*	
+	printf("highpass band=%i  amp=%f \n",band,gfc->amp_highpass[band]);
+	*/
       }
       /* compute the *actual* transition band implemented by the polyphase filter */
       gfc->highpass1 = gfc->highpass_band/31.0;
       if (maxband==-1) gfc->highpass2 = (gfc->highpass_band+.75)/31.0;
       else gfc->highpass2 = (maxband+.75)/31.0;
+      
+      gfc->highpass_start_band = minband;
+      gfc->highpass_end_band   = maxband;
+
+      /* as the highpass may have changed above
+       * calculate the amplification here again
+       */
+      for (band=minband;  band <=maxband; ++band) { 
+	freq = band/31.0;
+	gfc->amp_highpass[band] = cos((PI/2)*(gfc->highpass2-freq)/(gfc->highpass2-gfc->highpass1));
+      }
+    } else {
+      gfc->highpass_start_band = 0;
+      gfc->highpass_end_band   = -1;  /* do not to run into for-loops */
     }
     /*
     printf("lowpass band with amp=0:  %i \n",gfc->lowpass_band);
     printf("highpass band with amp=0:  %i \n",gfc->highpass_band);
+    printf("lowpass band start:  %i \n",gfc->lowpass_start_band);
+    printf("lowpass band end:    %i \n",gfc->lowpass_end_band);
+    printf("highpass band start:  %i \n",gfc->highpass_start_band);
+    printf("highpass band end:    %i \n",gfc->highpass_end_band);
     */
   }
 

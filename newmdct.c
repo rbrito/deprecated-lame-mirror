@@ -505,19 +505,13 @@ void mdct_sub48(lame_global_flags *gfp,
 	    /* bands <= gfc->highpass_band will be zeroed out below */
 	    /* bands >= gfc->lowpass_band  will be zeroed out below */
 	    if (gfc->filter_type==0) {
-	      FLOAT8 amp,freq;
-	      for (band=gfc->highpass_band+1;  band < gfc->lowpass_band ; band++) { 
-		freq = band/31.0;
-		if (gfc->lowpass1 < freq && freq < gfc->lowpass2) {
-		  amp = cos((PI/2)*(gfc->lowpass1-freq)/(gfc->lowpass2-gfc->lowpass1));
+              for (band=gfc->highpass_start_band;  band <= gfc->highpass_end_band; band++) { 
 		  for (k=0; k<18; k++) 
-		    gfc->sb_sample[ch][1-gr][k][order[band]]*=amp;
-		}
-		if (gfc->highpass1 < freq && freq < gfc->highpass2) {
-		  amp = cos((PI/2)*(gfc->highpass2-freq)/(gfc->highpass2-gfc->highpass1));
+		    gfc->sb_sample[ch][1-gr][k][order[band]]*=gfc->amp_highpass[band];
+	      }
+              for (band=gfc->lowpass_start_band;  band <= gfc->lowpass_end_band; band++) { 
 		  for (k=0; k<18; k++) 
-		    gfc->sb_sample[ch][1-gr][k][order[band]]*=amp;
-		}
+		    gfc->sb_sample[ch][1-gr][k][order[band]]*=gfc->amp_lowpass[band];
 	      }
 	    }
 	    

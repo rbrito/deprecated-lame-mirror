@@ -170,7 +170,10 @@ typedef struct  {
   /* polyphase filter (filter_type=0)  */
   int lowpass_band;          /* zero bands >= lowpass_band in the polyphase filterbank */
   int highpass_band;         /* zero bands <= highpass_band */
-
+  int lowpass_start_band;    /* amplify bands between start */
+  int lowpass_end_band;      /* and end for lowpass */
+  int highpass_start_band;   /* amplify bands between start */
+  int highpass_end_band;     /* and end for highpass */
 
 
   int filter_type;          /* 0=polyphase filter, 1= FIR filter 2=MDCT filter(bad)*/
@@ -236,6 +239,8 @@ typedef struct  {
   /* variables for newmdct.c */
   FLOAT8 sb_sample[2][2][18][SBLIMIT];
   FLOAT8 mdct_work[32];
+  FLOAT8 amp_lowpass[32];
+  FLOAT8 amp_highpass[32];
 
   /* variables for bitstream.c */
   /* mpeg1: buffer=511 bytes  smallest frame: 96-38(sideinfo)=58
