@@ -52,13 +52,9 @@ typedef enum vbr_mode_e {
 
 /***********************************************************************
 *
-*  Control Parameters set by User
-*
-*  instantiated by calling program
-*
-*  1.  call lame_init(&gf) to initialize to default values.
-*  2.  override any default values, if desired 
-*  3.  call lame_init_params(&gf) for more internal configuration
+*  Control Parameters set by User.  These parameters are here for
+*  backwards compatibility with the old, non-shared lib API.  
+*  Please use the lame_set_variablename() functions below
 *
 *
 ***********************************************************************/
@@ -382,29 +378,57 @@ int CDECL lame_set_exp_nspsytune(lame_global_flags *, int);
 int CDECL lame_get_exp_nspsytune(lame_global_flags *);
 
 
+
+/********************************************************************
+ * VBR control
+ ***********************************************************************/
+// Types of VBR.  default = vbr_off = CBR
+int CDECL lame_set_VBR(lame_global_flags *, vbr_mode);
+vbr_mode CDECL lame_get_exp_VBR(lame_global_flags *);
+
+// VBR quality level.  0=highest  9=lowest 
+int CDECL lame_set_VBR_q(lame_global_flags *, int);
+int CDECL lame_get_VBR_q(lame_global_flags *);
+
+// Ignored except for VBR=vbr_abr (ABR mode)
+int CDECL lame_set_VBR_mean_bitrate_kbps(lame_global_flags *, int);
+int CDECL lame_get_VBR_mean_bitrate_kbps(lame_global_flags *);
+
+int CDECL lame_set_VBR_min_bitrate_kbps(lame_global_flags *, int);
+int CDECL lame_get_VBR_min_bitrate_kbps(lame_global_flags *);
+
+int CDECL lame_set_VBR_max_bitrate_kbps(lame_global_flags *, int);
+int CDECL lame_get_VBR_max_bitrate_kbps(lame_global_flags *);
+
+// 1=stricetly enforce VBR_min_bitrate.  Normally it will be violated for
+// analog silence
+int CDECL lame_set_VBR_hard_min(lame_global_flags *, int);
+int CDECL lame_get_VBR_hard_min(lame_global_flags *);
+
+
+/********************************************************************
+ * Filtering control
+ ***********************************************************************/
+// freq in Hz to apply lowpass. Default = 0 = lame chooses.  -1 = disabled
+int CDECL lame_set_lowpassfreq(lame_global_flags *, int);
+int CDECL lame_get_lowpassfreq(lame_global_flags *);
+// width of transition band, in Hz.  Default = one polyphase filter band
+int CDECL lame_set_lowpasswidth(lame_global_flags *, int);
+int CDECL lame_get_lowpasswidth(lame_global_flags *);
+
+// freq in Hz to apply highpass. Default = 0 = lame chooses.  -1 = disabled
+int CDECL lame_set_highpassfreq(lame_global_flags *, int);
+int CDECL lame_get_highpassfreq(lame_global_flags *);
+// width of transition band, in Hz.  Default = one polyphase filter band
+int CDECL lame_set_highpasswidth(lame_global_flags *, int);
+int CDECL lame_get_highpasswidth(lame_global_flags *);
+
+
+/********************************************************************
+ * psycho acoustics and other arguments which you should not change 
+ * unless you know what you are doing
+ ***********************************************************************/
 #if 0
-  /* VBR control */
-  vbr_mode VBR;
-  int VBR_q;
-  int VBR_mean_bitrate_kbps;
-  int VBR_min_bitrate_kbps;
-  int VBR_max_bitrate_kbps;
-  int VBR_hard_min;             /* strictly enforce VBR_min_bitrate
-                                   normaly, it will be violated for analog
-                                   silence                                 */
-
-
-  /* resampling and filtering */
-  int lowpassfreq;                /* freq in Hz. 0=lame choses.
-                                     -1=no filter                          */
-  int highpassfreq;               /* freq in Hz. 0=lame choses.
-                                     -1=no filter                          */
-  int lowpasswidth;               /* freq width of filter, in Hz
-                                     (default=15%)                         */
-  int highpasswidth;              /* freq width of filter, in Hz
-                                     (default=15%)                         */
-
-
 
   /*
    * psycho acoustics and other arguments which you should not change 
@@ -568,6 +592,30 @@ int CDECL lame_encode_buffer_interleaved(
         unsigned char*      mp3buf,        /* pointer to encoded MP3 stream */
         int                 mp3buf_size ); /* number of valid octets in this
                                               stream                        */
+
+
+/* as lame_encode_buffer, but for 'float's */
+int CDECL lame_encode_buffer_float(
+        lame_global_flags*  gfp,           /* global context handle         */
+        const float     buffer_l [],       /* PCM data for left channel     */
+        const float     buffer_r [],       /* PCM data for right channel    */
+        const int           nsamples,      /* number of samples per channel */
+        unsigned char*      mp3buf,        /* pointer to encoded MP3 stream */
+        const int           mp3buf_size ); /* number of valid octets in this
+                                              stream                        */
+
+/* as lame_encode_buffer, but for long's' */
+int CDECL lame_encode_buffer_long(
+        lame_global_flags*  gfp,           /* global context handle         */
+        const long     buffer_l [],       /* PCM data for left channel     */
+        const long     buffer_r [],       /* PCM data for right channel    */
+        const int           nsamples,      /* number of samples per channel */
+        unsigned char*      mp3buf,        /* pointer to encoded MP3 stream */
+        const int           mp3buf_size ); /* number of valid octets in this
+                                              stream                        */
+
+
+
 
 
 
