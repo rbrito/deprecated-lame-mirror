@@ -159,7 +159,7 @@ typedef struct  {
 
   int padding;                    /* padding for the current frame? */
   int mode_gr;                    /* granules per frame */
-  int stereo;                     /* number of channels */
+  int channels_out;               /* number of channels */
   int VBR_min_bitrate;            /* min bitrate index */
   int VBR_max_bitrate;            /* max bitrate index */
   float resample_ratio;           /* input_samp_rate/output_samp_rate */

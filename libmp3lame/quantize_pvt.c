@@ -353,13 +353,13 @@ int targ_bits[2],int mean_bits, int gr)
 
   bits=0;
 
-  for (ch=0 ; ch < gfc->stereo ; ch ++) {
+  for (ch=0 ; ch < gfc->channels_out ; ch ++) {
     /******************************************************************
      * allocate bits for each channel 
      ******************************************************************/
     cod_info = &l3_side->gr[gr].ch[ch].tt;
     
-    targ_bits[ch]=Min(4095,tbits/gfc->stereo);
+    targ_bits[ch]=Min(4095,tbits/gfc->channels_out);
     
     add_bits[ch]=(pe[gr][ch]-750)/1.4;
     /* short blocks us a little extra, no matter what the pe */
@@ -377,11 +377,11 @@ int targ_bits[2],int mean_bits, int gr)
     bits += add_bits[ch];
   }
   if (bits > extra_bits)
-    for (ch=0 ; ch < gfc->stereo ; ch ++) {
+    for (ch=0 ; ch < gfc->channels_out ; ch ++) {
       add_bits[ch] = (extra_bits*add_bits[ch])/bits;
     }
 
-  for (ch=0 ; ch < gfc->stereo ; ch ++) {
+  for (ch=0 ; ch < gfc->channels_out ; ch ++) {
     targ_bits[ch] = targ_bits[ch] + add_bits[ch];
     extra_bits -= add_bits[ch];
   }
@@ -943,7 +943,7 @@ void set_frame_pinfo(
     
     /* reconstruct the scalefactors in case SCSFI was used 
      */
-    for (ch = 0; ch < gfc->stereo; ch ++) {
+    for (ch = 0; ch < gfc->channels_out; ch ++) {
         for (sfb = 0; sfb < SBMAX_l; sfb ++) {
             if (scalefac[1][ch].l[sfb] == -1) {/* scfsi */
                 act_scalefac[ch].l[sfb] = scalefac[0][ch].l[sfb];
@@ -957,7 +957,7 @@ void set_frame_pinfo(
     /* for every granule and channel patch l3_enc and set info
      */
     for (gr = 0; gr < gfc->mode_gr; gr ++) {
-        for (ch = 0; ch < gfc->stereo; ch ++) {
+        for (ch = 0; ch < gfc->channels_out; ch ++) {
             int i;
             gr_info *cod_info = &gfc->l3_side.gr[gr].ch[ch].tt;
             

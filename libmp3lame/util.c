@@ -563,7 +563,7 @@ void updateStats( lame_internal_flags * const gfc )
     gfc->bitrate_stereoMode_Hist [gfc->bitrate_index] [4] ++;
     
     /* count 'em for every mode extension in case of stereo encoding */
-    if (gfc->stereo == 2)
+    if (gfc->channels_out == 2)
         gfc->bitrate_stereoMode_Hist [gfc->bitrate_index] [gfc->mode_ext]++;
 }
 

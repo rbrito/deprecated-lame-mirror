@@ -1186,7 +1186,7 @@ VBR_quantize(lame_global_flags *gfp,
     if (gfc->mode_ext==MPG_MD_MS_LR) {
       ms_convert(xr[gr],xr[gr]);
     }
-    for (ch = 0; ch < gfc->stereo; ch++) {
+    for (ch = 0; ch < gfc->channels_out; ch++) {
       /* if in the following sections the quality would not be adjusted
        * then we would only have to call calc_xmin once here and
        * could drop subsequently calls (rh 2000/07/17)
@@ -1244,27 +1244,27 @@ VBR_quantize(lame_global_flags *gfp,
     gfc->bitrate_index=gfc->VBR_min_bitrate;
   }
   getframebits(gfp, &bitsPerFrame, &mean_bits);
-  minbits = (mean_bits/gfc->stereo);
+  minbits = (mean_bits/gfc->channels_out);
 
   /* compute maximum allowed bits from max allowed bitrate */
   gfc->bitrate_index=gfc->VBR_max_bitrate;
   getframebits(gfp, &bitsPerFrame, &mean_bits);
   max_frame_bits = ResvFrameBegin(gfp, l3_side, mean_bits, bitsPerFrame);
-  maxbits=2.5*(mean_bits/gfc->stereo);
+  maxbits=2.5*(mean_bits/gfc->channels_out);
 
   {
   /* compute a target  mean_bits based on compression ratio 
    * which was set based on VBR_q  
    */
-  int bit_rate = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->compression_ratio);
+  int bit_rate = gfp->out_samplerate*16*gfc->channels_out/(1000.0*gfp->compression_ratio);
   bitsPerFrame = (bit_rate*gfp->framesize*1000)/gfp->out_samplerate;
   mean_bits = (bitsPerFrame - 8*gfc->sideinfo_len) / gfc->mode_gr;
   }
 
 
   minbits = Max(minbits,125);
-  minbits=Max(minbits,.40*(mean_bits/gfc->stereo));
-  maxbits=Min(maxbits,2.5*(mean_bits/gfc->stereo));
+  minbits=Max(minbits,.40*(mean_bits/gfc->channels_out));
+  maxbits=Min(maxbits,2.5*(mean_bits/gfc->channels_out));
 
 
 
@@ -1307,13 +1307,13 @@ VBR_quantize(lame_global_flags *gfp,
 #endif
 
 
-      for (ch = 0; ch < gfc->stereo; ch++) { 
+      for (ch = 0; ch < gfc->channels_out; ch++) { 
         int adjusted,shortblock;
         cod_info = &l3_side->gr[gr].ch[ch].tt;
         
         /* ENCODE this data first pass, and on future passes unless it uses
          * a very small percentage of the max_frame_bits  */
-        if (cod_info->part2_3_length > (max_frame_bits/(2*gfc->stereo*gfc->mode_gr))) {
+        if (cod_info->part2_3_length > (max_frame_bits/(2*gfc->channels_out*gfc->mode_gr))) {
   
           shortblock = (cod_info->block_type == SHORT_TYPE);
   
@@ -1375,7 +1375,7 @@ VBR_quantize(lame_global_flags *gfp,
    * might enable scfsi which breaks the interation loops */
   totbits=0;
   for (gr = 0; gr < gfc->mode_gr; gr++) {
-    for (ch = 0; ch < gfc->stereo; ch++) {
+    for (ch = 0; ch < gfc->channels_out; ch++) {
       best_scalefac_store(gfc, gr, ch, l3_enc, l3_side, scalefac);
       totbits += l3_side->gr[gr].ch[ch].tt.part2_3_length;
     }
@@ -1403,7 +1403,7 @@ VBR_quantize(lame_global_flags *gfp,
   //  DEBUGF("%i total_bits=%i max_frame_bits=%i index=%i  \n",gfp->frameNum,totbits,max_frame_bits,gfc->bitrate_index);
 
   for (gr = 0; gr < gfc->mode_gr; gr++) {
-    for (ch = 0; ch < gfc->stereo; ch++) {
+    for (ch = 0; ch < gfc->channels_out; ch++) {
       cod_info = &l3_side->gr[gr].ch[ch].tt;
 
 

@@ -337,7 +337,7 @@ int L3psycho_anal( lame_global_flags * gfp,
 
   
   
-  numchn = gfc->stereo;
+  numchn = gfc->channels_out;
   /* chn=2 and 3 = Mid and Side channels */
   if (gfp->mode == MPG_MD_JOINT_STEREO) numchn=4;
 
@@ -352,7 +352,7 @@ int L3psycho_anal( lame_global_flags * gfp,
     };
 
 
-    for(chn=0;chn<gfc->stereo;chn++)
+    for(chn=0;chn<gfc->channels_out;chn++)
       {
 	FLOAT firbuf[576+576/3+NSFIRLEN];
 
@@ -1186,12 +1186,12 @@ int L3psycho_anal( lame_global_flags * gfp,
    * determine final block type
    ***************************************************************/
 
-  for (chn=0; chn<gfc->stereo; chn++) {
+  for (chn=0; chn<gfc->channels_out; chn++) {
     blocktype[chn] = NORM_TYPE;
   }
 
 
-  if (gfc->stereo==2) {
+  if (gfc->channels_out==2) {
     if (!gfp->allow_diff_short || gfp->mode==MPG_MD_JOINT_STEREO) {
       /* force both channels to use the same block type */
       /* this is necessary if the frame is to be encoded in ms_stereo.  */
@@ -1208,7 +1208,7 @@ int L3psycho_anal( lame_global_flags * gfp,
   
   /* update the blocktype of the previous granule, since it depends on what
    * happend in this granule */
-  for (chn=0; chn<gfc->stereo; chn++) {
+  for (chn=0; chn<gfc->channels_out; chn++) {
     if ( uselongblock[chn])
       {				/* no attack : use long blocks */
 	assert( gfc->blocktype_old[chn] != START_TYPE );

@@ -420,9 +420,9 @@ int lame_init_params ( lame_global_flags* const gfp )
       gfp->mode = MPG_MD_MONO;
   
   if (gfp->mode == MPG_MD_MONO) 
-      gfc->stereo = 1;  /* malicious variable name, really */
+      gfc->channels_out = 1;  /* malicious variable name, really */
   else
-      gfc->stereo = 2;
+      gfc->channels_out = 2;
 
   if (gfp->VBR!=vbr_off) {
     gfp->free_format=0;  /* VBR can't be mixed with free format */
@@ -444,7 +444,7 @@ int lame_init_params ( lame_global_flags* const gfp )
      * specified compression ratio 
      */
     gfp->brate = 
-      gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->compression_ratio);
+      gfp->out_samplerate*16*gfc->channels_out/(1000.0*gfp->compression_ratio);
 
     /* we need the version for the bitrate table look up */
     gfc->samplerate_index = SmpFrqIndex(gfp->out_samplerate, &gfp->version);
@@ -470,17 +470,17 @@ int lame_init_params ( lame_global_flags* const gfp )
     /* if compression ratio is > 13, choose a new samplerate to get
      * the compression ratio down to about 10 */
     if (gfp->VBR==vbr_off && gfp->brate>0) {
-      gfp->compression_ratio = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->brate);
+      gfp->compression_ratio = gfp->out_samplerate*16*gfc->channels_out/(1000.0*gfp->brate);
       if (gfp->compression_ratio > 13 ) {
-	gfp->out_samplerate = map2MP3Frequency((10*1000*gfp->brate)/(16*gfc->stereo));
+	gfp->out_samplerate = map2MP3Frequency((10*1000*gfp->brate)/(16*gfc->channels_out));
       }
     }
     if (gfp->VBR==vbr_abr) {
       gfp->compression_ratio = 
-	gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->VBR_mean_bitrate_kbps);
+	gfp->out_samplerate*16*gfc->channels_out/(1000.0*gfp->VBR_mean_bitrate_kbps);
       if (gfp->compression_ratio > 13 ) {
 	gfp->out_samplerate = 
-	  map2MP3Frequency((10*1000*gfp->VBR_mean_bitrate_kbps)/(16*gfc->stereo));
+	  map2MP3Frequency((10*1000*gfp->VBR_mean_bitrate_kbps)/(16*gfc->channels_out));
       }
     }
   }
@@ -536,10 +536,10 @@ int lame_init_params ( lame_global_flags* const gfp )
         gfp->compression_ratio = cmp [ gfp->VBR_q ];
 	break;
     case vbr_abr:
-        gfp->compression_ratio = gfp->out_samplerate * 16 * gfc->stereo / (1.e3 * gfp->VBR_mean_bitrate_kbps);
+        gfp->compression_ratio = gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 * gfp->VBR_mean_bitrate_kbps);
 	break;
     default:  
-        gfp->compression_ratio = gfp->out_samplerate * 16 * gfc->stereo / (1.e3 * gfp->brate);
+        gfp->compression_ratio = gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 * gfp->brate);
 	break;
     }
 
@@ -614,7 +614,7 @@ int lame_init_params ( lame_global_flags* const gfp )
 	
         optimum_bandwidth ( &lowpass, 
 	                    &highpass, 
-			    gfp->out_samplerate * 16 * gfc->stereo / gfp->compression_ratio,
+			    gfp->out_samplerate * 16 * gfc->channels_out / gfp->compression_ratio,
 			    gfp->out_samplerate,
 			    channels );
 			
@@ -731,7 +731,7 @@ int lame_init_params ( lame_global_flags* const gfp )
   /* not yet coded */
 
   gfc->mode_ext=MPG_MD_LR_LR;
-  gfc->stereo = (gfp->mode == MPG_MD_MONO) ? 1 : 2;
+  gfc->channels_out = (gfp->mode == MPG_MD_MONO) ? 1 : 2;
 
   gfc->samplerate_index = SmpFrqIndex(gfp->out_samplerate, &gfp->version);
   if( gfc->samplerate_index < 0) {
@@ -907,9 +907,9 @@ int lame_init_params ( lame_global_flags* const gfp )
 
     /* determine the mean bitrate for main data */
     if ( gfp->version == 1 ) /* MPEG 1 */
-	gfc->sideinfo_len = (gfc->stereo == 1)  ?  4+17  :  4+32;
+	gfc->sideinfo_len = (gfc->channels_out == 1)  ?  4+17  :  4+32;
     else                     /* MPEG 2 */
-	gfc->sideinfo_len = (gfc->stereo == 1)  ?  4+ 9  :  4+17;
+	gfc->sideinfo_len = (gfc->channels_out == 1)  ?  4+ 9  :  4+17;
   
     if ( gfp->error_protection ) 
         gfc->sideinfo_len += 2;
@@ -980,7 +980,7 @@ void lame_print_config ( const lame_global_flags* gfp )
         MSGF ("\n");  
     }
   
-    if ( gfp->num_channels==2  &&  gfc->stereo==1 /* mono */ ) {
+    if ( gfp->num_channels==2  &&  gfc->channels_out==1 /* mono */ ) {
 	MSGF ("Autoconverting from stereo to mono. Setting encoding to mono mode.\n");
     }
     
@@ -1119,7 +1119,7 @@ int    lame_encode_buffer (
   mfbuf[0]=gfc->mfbuf[0];
   mfbuf[1]=gfc->mfbuf[1];
 
-  if (gfp->num_channels==2  && gfc->stereo==1) {
+  if (gfp->num_channels==2  && gfc->channels_out==1) {
     /* downsample to mono */
     for (i=0; i<nsamples; ++i) {
       in_buffer[0][i] = 0.5 * ( (FLOAT8)in_buffer[0][i] + in_buffer[1][i] );
@@ -1134,7 +1134,7 @@ int    lame_encode_buffer (
 
     /* copy in new samples into mfbuf, with resampling if necessary */
     if (gfc->resample_ratio != 1.0)  {
-      for (ch=0; ch<gfc->stereo; ch++) {
+      for (ch=0; ch<gfc->channels_out; ch++) {
 	n_out = fill_buffer_resample(gfp,&mfbuf[ch][gfc->mf_size],gfp->framesize, in_buffer[ch],nsamples,&n_in,ch);
 	in_buffer[ch] += n_in;
       }
@@ -1143,7 +1143,7 @@ int    lame_encode_buffer (
       n_in=n_out;
       for (i = 0 ; i< n_out; ++i) {
 	mfbuf[0][gfc->mf_size+i]=in_buffer[0][i];
-	if (gfc->stereo==2)
+	if (gfc->channels_out==2)
 	  mfbuf[1][gfc->mf_size+i]=in_buffer[1][i];
       }
       in_buffer[0] += n_in;
@@ -1170,7 +1170,7 @@ int    lame_encode_buffer (
       /* shift out old samples */
       gfc->mf_size -= gfp->framesize;
       gfc->mf_samples_to_encode -= gfp->framesize;
-      for (ch=0; ch<gfc->stereo; ch++)
+      for (ch=0; ch<gfc->channels_out; ch++)
 	for (i=0; i<gfc->mf_size; i++)
 	  mfbuf[ch][i]=mfbuf[ch][i+gfp->framesize];
     }
@@ -1247,7 +1247,7 @@ int    lame_encode_buffer_interleaved (
      * averaging L & R channels if we are encoding mono with
      * stereo input */
     for (i=0; i<n_out; ++i) {
-      if (gfp->num_channels==2  && gfc->stereo==1) {
+      if (gfp->num_channels==2  && gfc->channels_out==1) {
 	mfbuf[0][gfc->mf_size+i]=((int)buffer[2*i]+(int)buffer[2*i+1])/2.0;
 	mfbuf[1][gfc->mf_size+i]=0;
       }else{
@@ -1277,7 +1277,7 @@ int    lame_encode_buffer_interleaved (
       /* shift out old samples */
       gfc->mf_size -= gfp->framesize;
       gfc->mf_samples_to_encode -= gfp->framesize;
-      for (ch=0; ch<gfc->stereo; ch++)
+      for (ch=0; ch<gfc->channels_out; ch++)
 	for (i=0; i<gfc->mf_size; i++)
 	  mfbuf[ch][i]=mfbuf[ch][i+gfp->framesize];
     }

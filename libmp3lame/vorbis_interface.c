@@ -363,7 +363,7 @@ int lame_encode_ogg_init(lame_global_flags *gfp)
     MSGF("Encoding with Vorbis mode info_A \n");
   }
 
-  vi2.channels = gfc->stereo;
+  vi2.channels = gfc->channels_out;
   vi2.rate = gfp->out_samplerate;
 
   
@@ -504,7 +504,7 @@ int lame_encode_ogg_frame(lame_global_flags *gfp,
   /* uninterleave samples */
   for(i=0;i<gfp->framesize;i++){
     buffer[0][i]=(double)inbuf_l[i]/32768.0;
-    if (gfc->stereo==2)
+    if (gfc->channels_out==2)
       buffer[1][i]=(double)inbuf_r[i]/32768.0;
   }
   
