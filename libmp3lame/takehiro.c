@@ -724,28 +724,29 @@ int noquant_count_bits(
     int bits = 0;
     int i, a1, a2;
     int *const ix = gi->l3_enc;
-    i=576;
+
+    i = Min(576, ((gi->max_nonzero_coeff+2)>>1)<<1);
 
     if (prev_noise)
         prev_noise->sfb_count1 = 0;
 
     /* Determine count1 region */
     for (; i > 1; i -= 2) 
-	if (ix[i - 1] | ix[i - 2])
-	    break;
+	    if (ix[i - 1] | ix[i - 2])
+	        break;
     gi->count1 = i;
 
     /* Determines the number of bits to encode the quadruples. */
     a1 = a2 = 0;
     for (; i > 3; i -= 4) {
-	int p;
-	/* hack to check if all values <= 1 */
-	if ((unsigned int)(ix[i-1] | ix[i-2] | ix[i-3] | ix[i-4]) > 1)
-	    break;
+	    int p;
+	    /* hack to check if all values <= 1 */
+	    if ((unsigned int)(ix[i-1] | ix[i-2] | ix[i-3] | ix[i-4]) > 1)
+	        break;
 
-	p = ((ix[i-4] * 2 + ix[i-3]) * 2 + ix[i-2]) * 2 + ix[i-1];
-	a1 += t32l[p];
-	a2 += t33l[p];
+	    p = ((ix[i-4] * 2 + ix[i-3]) * 2 + ix[i-2]) * 2 + ix[i-1];
+	    a1 += t32l[p];
+	    a2 += t33l[p];
     }
 
     bits = a1;
