@@ -48,6 +48,10 @@
     <td align="LEFT" nowrap>max VBR bitrate (8...320)</td>
   </tr>
   <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd><a href="#-bitwidth">--bitwidth</a></kbd></td>
+    <td align="LEFT" nowrap>input bit width</td>
+  </tr>
+  <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#c">-c</a></kbd></td>
     <td align="LEFT" nowrap>copyright</td>
   </tr>
@@ -183,6 +187,10 @@
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#S">-S</a></kbd></td>
     <td align="LEFT" nowrap>silent operation</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd><a href="#-scale">--scale</a></kbd></td>
+    <td align="LEFT" nowrap>scale input</td>
   </tr>
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#-strictly-enforce-ISO">--strictly-enforce-ISO</a></kbd></td>
@@ -330,6 +338,13 @@ In VBR mode, LAME is using shape 4 which adapts its shape according to the -V va
     <br>
     <i>note: If you own an mp3 hardware player build upon a MAS 3503 chip, you 
     must set maximum bitrate to no more than 224 kpbs.</i> <br>
+</dl>
+<dl> 
+  <dt><strong>* <kbd>--bitwidth 8/16/24/32</kbd><a name="-bitwidth">&nbsp;&nbsp;&nbsp;&nbsp;input bit width&nbsp;</a></strong> </dt>
+</dl>
+<dl> 
+  <dd> Required only for raw PCM input files. Otherwise it will be determined 
+    from the header of the input file. <br>
 </dl>
 <dl> 
   <hr width="50%" noshade align="center">
@@ -820,6 +835,27 @@ In VBR mode, LAME is using shape 4 which adapts its shape according to the -V va
 </dl>
 <dl> 
   <dd> Don't print progress report. 
+  <dt><br>
+    <br>
+  </dt>
+  <hr width="50%" noshade align="center">
+  <br>
+  <dl> </dl>
+  <dt><strong>* <kbd>--scale n</kbd><a name="-scale">&nbsp;&nbsp;&nbsp;&nbsp;scales input by n</a></strong> 
+  </dt>
+</dl>
+<dl> 
+  <dd>Scales input by n.  This just multiplies the PCM data
+(after it has been converted to floating point) by n.
+<br><br>
+
+n > 1:  increase volume<br>
+n = 1:  no effect<br>
+n < 1:  reduce volume<br>
+<br>
+
+Use with care, since most MP3 decoders will truncate data
+which decodes to values greater than 32768
   <dt><br>
     <br>
   </dt>
