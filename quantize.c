@@ -154,11 +154,9 @@ iteration_loop( lame_global_flags *gfp,
       ms_convert(xr[gr], xr[gr]);
     
     on_pe(gfp,pe,l3_side,targ_bits,mean_bits, gr);
-#ifdef RH_SIDE_CBR
-#else
+
     if (reduce_sidechannel) 
       reduce_side(targ_bits,ms_ener_ratio[gr],mean_bits);
-#endif      
     
     for (ch=0 ; ch < gfp->stereo ; ch ++) {
       cod_info = &l3_side->gr[gr].ch[ch].tt;	
@@ -169,7 +167,9 @@ iteration_loop( lame_global_flags *gfp,
 	   */
           memset(&scalefac[gr][ch],0,sizeof(III_scalefac_t));
           memset(l3_enc[gr][ch],0,576*sizeof(int));
+#ifdef HAVEGTK
 	  memset(xfsf,0,sizeof(xfsf));
+#endif
 	  noise[0]=noise[1]=noise[2]=noise[3]=0;
         }
       else
@@ -356,6 +356,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
         memset(l3_enc[gr][ch],0,576*sizeof(int));
         save_bits[gr][ch] = 0;
 #ifdef HAVEGTK
+	memset(xfsf,0,sizeof(xfsf));
 	if (gfp->gtkflag)
 	  set_pinfo(cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
 #endif
@@ -925,9 +926,6 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
     int start, end, l, i, over=0;
 	u_int sfb;
     FLOAT8 sum,step,bw;
-#ifdef RH_ATH
-    FLOAT8 ath_max;
-#endif
 
     int count=0;
     FLOAT8 noise;
@@ -951,9 +949,6 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
         end   = scalefac_band.l[ sfb+1 ];
         bw = end - start;
 
-#ifdef RH_ATH
-        ath_max = 0;
-#endif
         for ( sum = 0.0, l = start; l < end; l++ )
         {
             FLOAT8 temp;
@@ -961,10 +956,6 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
 #ifdef MAXNOISE
 	    temp = bw*temp*temp;
 	    sum = Max(sum,temp);
-#elif RH_ATH
-	    temp = temp*temp;
-            sum += temp;
-	    ath_max = Max( ath_max, temp/ATH_mdct_long[l] );
 #else
             sum += temp * temp;
 #endif
@@ -973,11 +964,8 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
         xfsf[0][sfb] = sum / bw;
 
 	/* max -30db noise below threshold */
-#ifdef RH_ATH
-	noise = 10*log10(Max(.001,Min(ath_max,xfsf[0][sfb]/l3_xmin->l[sfb])));
-#else
 	noise = 10*log10(Max(.001,xfsf[0][sfb] / l3_xmin->l[sfb]));
-#endif
+
         distort[0][sfb] = noise;
         if (noise>0) {
 	  over++;
@@ -1004,30 +992,21 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
 	    start = scalefac_band.s[ sfb ];
 	    end   = scalefac_band.s[ sfb+1 ];
             bw = end - start;
-#ifdef RH_ATH
-	    ath_max = 0;
-#endif
+
 	    for ( sum = 0.0, l = start; l < end; l++ ) {
 		FLOAT8 temp;
 		temp = fabs(xr[l * 3 + i]) - pow43[ix[l * 3 + i]] * step;
 #ifdef MAXNOISE
 		temp = bw*temp*temp;
 		sum = Max(sum,temp);
-#elif RH_ATH
-		temp = temp*temp;
-		sum += temp;
-		ath_max = Max( ath_max, temp/ATH_mdct_short[l] );
 #else
 		sum += temp * temp;
 #endif
             }       
 	    xfsf[i+1][sfb] = sum / bw;
 	    /* max -30db noise below threshold */
-#ifdef RH_ATH
-	    noise = 10*log10(Max(.001,Min(ath_max,xfsf[i+1][sfb]/l3_xmin->s[sfb][i])));
-#else
 	    noise = 10*log10(Max(.001,xfsf[i+1][sfb] / l3_xmin->s[sfb][i] ));
-#endif
+
             distort[i+1][sfb] = noise;
             if (noise > 0) {
 		over++;
