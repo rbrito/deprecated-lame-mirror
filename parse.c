@@ -797,12 +797,6 @@ void lame_parse_args ( lame_global_flags* gfp, int argc, char** argv )
 		    argUsed = 1;
 		    lame_presets_setup ( gfp, nextArg, ProgramName );
 
-#ifndef I_HAVE_NEVER_SEEN_LAME_ON_A_486_100_OR_A_ATHLON_1000
-                T_ELIF ("disptime")
-                    argUsed = 1;
-		    gfp -> update_interval = atof (nextArg);
-#endif
-		
 		T_ELSE
 		    ERRORF ("%s: unrec option --%s\n", ProgramName, token);
 		    

@@ -8,7 +8,6 @@
 #include "util.h"
 
 int16_t convbuffer[4096]; /* take 8k out of the data segment, not the stack */
-/*^^^^ not portable, at least on MSVC */
 int convsize;
 
 ogg_sync_state   oy; /* sync and verify incoming physical bitstream */
@@ -161,7 +160,7 @@ int lame_decode_ogg_initfile(FILE *fd,mp3data_struct *mp3data)
   mp3data->stereo = vi.channels;
   mp3data->samplerate = vi.rate;
   mp3data->bitrate = 0; //ov_bitrate_instant(&vf);
-  mp3data->nsamp=ULONG_MAX;
+  mp3data->nsamp=MAX_U_32_NUM;
   
   return 0;
 }
