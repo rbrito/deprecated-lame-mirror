@@ -3,3 +3,4 @@
 liblameasmroutines.la
 Makefile
 *.lst
+*.lo
