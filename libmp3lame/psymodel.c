@@ -548,7 +548,7 @@ ns_msfix(
 
     for ( sb = 0; sb < SBMAX_l; sb++ ) {
 	FLOAT thmL,thmR,thmM,thmS,ath;
-	ath  = gfc->ATH.l_avg[sb];
+	ath  = gfc->ATH.l_avg[sb] * gfc->ATH.adjust;
 	thmL = Max(gfc->thm[0].l[sb], ath);
 	thmR = Max(gfc->thm[1].l[sb], ath);
 	thmM = Max(gfc->thm[2].l[sb], ath);
@@ -571,7 +571,7 @@ ns_msfix(
     for ( sb = 0; sb < SBMAX_s; sb++ ) {
 	for ( sblock = 0; sblock < 3; sblock++ ) {
 	    FLOAT thmL,thmR,thmM,thmS,ath;
-	    ath  = gfc->ATH.s_avg[sb];
+	    ath  = gfc->ATH.s_avg[sb] * gfc->ATH.adjust;
 	    thmL = Max(gfc->thm[0].s[sb][sblock], ath);
 	    thmR = Max(gfc->thm[1].s[sb][sblock], ath);
 	    thmM = Max(gfc->thm[2].s[sb][sblock], ath);
@@ -821,15 +821,17 @@ inline static FLOAT mask_add(FLOAT m1,FLOAT m2,int k,int b, lame_internal_flags 
 	return m1;
 
     i = trancate(FAST_LOG10_X(ratio, 16.0));
-    if (m1 < ma_max_m*gfc->ATH.cb[k]) {
+    m2 = gfc->ATH.cb[k] * gfc->ATH.adjust;
+//	m2 = gfc->ATH.cb[k];
+    if (m1 < ma_max_m * m2) {
 	/* 3% of the total */
 	/* Originally if (m > 0) { */
-	if (m1 > gfc->ATH.cb[k]) {
+	if (m1 > m2) {
 	    FLOAT f, r;
 
 	    f = 1.0;
 	    if (i <= 13) f = table3[i];
-	    r = FAST_LOG10_X(m1 / gfc->ATH.cb[k], 10.0/15.0);
+	    r = FAST_LOG10_X(m1 / m2, 10.0/15.0);
 	    return m1 * ((table1[i]-f)*r+f);
 	}
 
