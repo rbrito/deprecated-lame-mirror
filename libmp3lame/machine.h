@@ -60,12 +60,20 @@
 //#define IPOW20(x)  pow(2.0,-((double)(x)-210)*.1875)
 
 
-#if    defined(_MSC_VER)  &&  !defined(INLINE)
-# define INLINE _inline
-#elif  defined(__SASC) || defined(__GNUC__)
-# define INLINE  __inline
-#else
-# define INLINE 
+/* in case this is used without configure */
+#ifndef inline
+# define inline
+#endif
+/* compatibility */
+#define INLINE inline
+
+#if defined(_MSC_VER)
+# undef inline
+# define inline _inline
+#elif defined(__SASC) || defined(__GNUC__)
+/* if __GNUC__ we always want to inline, not only if the user requests it */
+# undef inline
+# define inline __inline
 #endif
 
 #if    defined(_MSC_VER)
