@@ -79,12 +79,14 @@ int mp3_delay_set;          /* user specified the value of the mp3 encoder
 int enc_delay;
 int enc_padding;
 int disable_wav_header;
+int nogap_tags=0;           /* use VBR tags even in NOGAP mode */
 mp3data_struct mp3input_data; /* used by MP3 */
 
 int in_signed=1;
 int in_unsigned=0;
 int in_endian=order_littleEndian;
 int in_bitwidth=16;
+
 
 
 /**  
@@ -1492,6 +1494,9 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF ("disptime")
                     argUsed = 1;
                     update_interval = atof (nextArg);
+
+                T_ELIF ("nogaptags")
+                    nogap_tags=1;
 
 		T_ELIF ("nogapout")
 		    strcpy(outPath, nextArg);

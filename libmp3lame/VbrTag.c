@@ -199,7 +199,19 @@ void AddVbrFrame(lame_global_flags *gfp)
     int kbps = bitrate_table[gfp->version][gfc->bitrate_index];
     
     if (gfc->VBR_seek_table.bag == NULL) {
-        gfc->VBR_seek_table.sum  = 0;
+	int kbps_header;
+	if (1==gfp->version) {
+	  kbps_header = XING_BITRATE1;
+	} else {
+	  if (gfp->out_samplerate < 16000 )
+	    kbps_header = XING_BITRATE25;
+	  else
+	    kbps_header = XING_BITRATE2;
+	}
+        /* TOC should also take into account the size of the VBR header
+           itself.  so initial value of sum should be the kbps of the header */
+        gfc->VBR_seek_table.sum  = kbps_header;
+
         gfc->VBR_seek_table.seen = 0;
         gfc->VBR_seek_table.want = 1;
         gfc->VBR_seek_table.pos  = 0;
@@ -212,7 +224,11 @@ void AddVbrFrame(lame_global_flags *gfp)
             ERRORF (gfc,"Error: can't allocate VbrFrames buffer\n");
             return;
         }   
+
+
     }
+
+
     addVbr(&gfc->VBR_seek_table, kbps);
     gfp->nVbrNumFrames++;
 }
@@ -423,8 +439,9 @@ int InitVbrTag(lame_global_flags *gfp)
 
 	/* Clear Frame position array variables */
 	/*gfp->pVbrFrames=NULL; */
-	gfp->nVbrNumFrames=1;   /* we should also count the vbr tag itself */
-                            /* problem: the seek table is off by 1 frame*/
+
+        /* we shold also count the vbr tag itself */
+	gfp->nVbrNumFrames=1;
 	gfp->nVbrFrameBufferSize=0;
 
 
