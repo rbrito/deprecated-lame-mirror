@@ -617,13 +617,14 @@ compute_scalefacs_long_lsf(int *sf, const gr_info * cod_info, int *scalefac)
     for (sfb = 0; sfb < SBPSY_l; ++sfb) {
 
         if (sf[sfb] < 0) {
-            int m = -(sf[sfb] + (scalefac[sfb] << ifqstepShift));
+            int m;
             /* ifqstep*scalefac >= -sf[sfb], so round UP */
             scalefac[sfb] = (ifqstep-1-sf[sfb]) >> ifqstepShift;
             if (scalefac[sfb] > max_range[sfb])
                 scalefac[sfb] = max_range[sfb];
 
             /* sf[sfb] should now be positive: */
+            m = -(sf[sfb] + (scalefac[sfb] << ifqstepShift));
             if ( maxover < m ) {
                 maxover = m;
             }
@@ -666,13 +667,14 @@ compute_scalefacs_long(int *sf, const gr_info * cod_info, int *scalefac)
     for (sfb = 0; sfb < SBPSY_l; ++sfb) {
 
         if (sf[sfb] < 0) {
-            int m = -(sf[sfb] + (scalefac[sfb] << ifqstepShift));
+            int m;
             /* ifqstep*scalefac >= -sf[sfb], so round UP */
             scalefac[sfb] = (ifqstep-1-sf[sfb]) >> ifqstepShift;
             if (scalefac[sfb] > max_range_long[sfb])
                 scalefac[sfb] = max_range_long[sfb];
 
             /* sf[sfb] should now be positive: */
+            m = -(sf[sfb] + (scalefac[sfb] << ifqstepShift));
             if ( maxover < m ) {
                 maxover = m;
             }
@@ -709,6 +711,9 @@ static void
 block_sf(const lame_internal_flags * gfc, const FLOAT8 * l3_xmin,
 	 const FLOAT8 * xr34_orig, int * vbrsf, gr_info *gi)
 {
+    const int psymax = gi->psymax;
+    const int max_nonzero_coeff = gi->max_nonzero_coeff;
+    int     sf = 0;
     int     sfb, j;
     int     scalefac_criteria;
 
@@ -718,8 +723,12 @@ block_sf(const lame_internal_flags * gfc, const FLOAT8 * l3_xmin,
 	scalefac_criteria = gfc->gfp->quant_comp_short;
 
     j = 0;
-    for (sfb = 0; sfb < gi->psymax; sfb++) {
-        const int width = gi->width[sfb];
+    for (sfb = 0; sfb < psymax; ++sfb) {
+        int width = gi->width[sfb];
+        
+        if ( j+width > max_nonzero_coeff ) {
+            width = max_nonzero_coeff-j+1;
+        }
         switch (scalefac_criteria) {
         case 0:
             /*  the slower and better mode to use at higher quality
@@ -747,7 +756,16 @@ block_sf(const lame_internal_flags * gfc, const FLOAT8 * l3_xmin,
             vbrsf[sfb] = calc_scalefac(l3_xmin[sfb], width);
             break;
         }
-	j += width;
+        if ( sf < vbrsf[sfb] ) {
+            sf = vbrsf[sfb];
+        }
+        if ( width < gi->width[sfb] ) {
+            for ( ++sfb; sfb < psymax; ++sfb ) {
+                vbrsf[sfb] = sf;
+            }
+            break;
+        }
+        j += width;
     }
 }
 
@@ -1146,6 +1164,7 @@ static FLOAT8
 block_xr34(const lame_internal_flags * gfc,  gr_info * const cod_info,
 	   const FLOAT8 * xr34_orig, FLOAT8 * xr34)
 {
+    const int max_nonzero_coeff = cod_info->max_nonzero_coeff;
     FLOAT8  xrpow_max = cod_info->xrpow_max;
     int     sfb, j = 0, sfbmax, *scalefac = cod_info->scalefac;
 
@@ -1165,23 +1184,30 @@ block_xr34(const lame_internal_flags * gfc,  gr_info * const cod_info,
                  << (cod_info->scalefac_scale + 1))
                  + cod_info->subblock_gain[cod_info->window[sfb]] * 8;
         int l = cod_info->width[sfb];
+        
+        if ( l+j > max_nonzero_coeff ) {
+            l = max_nonzero_coeff-j+1;
+        }
 
         if (s == 0) {/* just copy */
             memcpy(&xr34[j], &xr34_orig[j], sizeof(FLOAT8)*l);
             j += l;
-            continue;
         }
-
-        fac = IIPOW20(s);
-        l >>= 1;
-        do {
-            xr34[j] = xr34_orig[j] * fac;
-            if ( xrpow_max < xr34[j] ) xrpow_max = xr34[j];
-            ++j;
-            xr34[j] = xr34_orig[j] * fac;
-            if ( xrpow_max < xr34[j] ) xrpow_max = xr34[j];
-            ++j;
-        } while (--l > 0);
+        else {
+            fac = IIPOW20(s);
+            l >>= 1;
+            while ( l-- ) {
+                xr34[j] = xr34_orig[j] * fac;
+                if ( xrpow_max < xr34[j] ) xrpow_max = xr34[j];
+                ++j;
+                xr34[j] = xr34_orig[j] * fac;
+                if ( xrpow_max < xr34[j] ) xrpow_max = xr34[j];
+                ++j;
+            }
+        }
+        if ( j > max_nonzero_coeff ) {
+            break;
+        }
     }
     return xrpow_max;
 }
@@ -1226,8 +1252,7 @@ VBR_noise_shaping(lame_internal_flags * gfc, FLOAT8 * xr34orig, int minbits, int
     vbrmin = vbrmin2;
     vbrmax = vbrmax2;
 
-    M = (vbrmax - vbrmin) / 2;
-    if ( M > 16 ) M = 16;
+    M = vbrmax - vbrmin;
     if ( M <  1 ) M = 1;
     count = M;
 
@@ -1260,12 +1285,12 @@ VBR_noise_shaping(lame_internal_flags * gfc, FLOAT8 * xr34orig, int minbits, int
         		best_huffman_divide(gfc, cod_info);
         }
 
-        if (vbrmin == vbrmax)
+        if (vbrmin >= vbrmax)
             break;
         else if (cod_info->part2_3_length < minbits) {
             int     i;
             vbrmax = vbrmin2 + (vbrmax2 - vbrmin2) * count / M;
-            vbrmin = vbrmin2;
+            /*vbrmin = vbrmin2;*/
             for (i = 0; i < cod_info->psymax; ++i) {
                 vbrsf[i] = vbrmin2 + (vbrsf2[i] - vbrmin2) * count / M;
             }
@@ -1273,7 +1298,7 @@ VBR_noise_shaping(lame_internal_flags * gfc, FLOAT8 * xr34orig, int minbits, int
         }
         else if (cod_info->part2_3_length > maxbits) {
             int     i;
-            vbrmax = vbrmax2;
+            /*vbrmax = vbrmax2;*/
             vbrmin = vbrmax2 + (vbrmin2 - vbrmax2) * count / M;
             for (i = 0; i < cod_info->psymax; ++i) {
             	vbrsf[i] = vbrmax2 + (vbrsf2[i] - vbrmax2) * count / M;
@@ -1296,12 +1321,12 @@ VBR_noise_shaping(lame_internal_flags * gfc, FLOAT8 * xr34orig, int minbits, int
         bin_search_StepSize (gfc, cod_info, minbits, ch, xr34);
     }
     if (cod_info->part2_3_length > maxbits - cod_info->part2_length) {
-	bin_search_StepSize (gfc, cod_info, maxbits, ch, xr34);
+        bin_search_StepSize (gfc, cod_info, maxbits, ch, xr34);
     }
     assert (cod_info->global_gain < 256u);
 
     if (cod_info->part2_3_length + cod_info->part2_length >= LARGE_BITS) 
-	return -2; /* Houston, we have a problem */
+        return -2; /* Houston, we have a problem */
 
     return 0;
 }
