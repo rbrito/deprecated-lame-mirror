@@ -106,10 +106,6 @@ extern "C" {
 #define         Max(A, B)       ((A) > (B) ? (A) : (B))
 
 /* log/log10 approximations */
-#ifdef TAKEHIRO_IEEE754_HACK
-#define USE_FAST_LOG
-#endif
-
 #ifdef USE_FAST_LOG
 #define         FAST_LOG10(x)       (fast_log2(x)*(LOG2/LOG10))
 #define         FAST_LOG(x)         (fast_log2(x)*LOG2)
