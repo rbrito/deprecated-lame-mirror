@@ -208,7 +208,7 @@ void lame_presets_info(lame_global_flags *gfp,char *name)  /* print syntax & exi
   fprintf(stdout,"EXAMPLES:\n");
   fprintf(stdout," a) --preset fm\n");
   fprintf(stdout,"    equals: --resample 22.05 --lowpass 10.56 --lowpass-width 0.88 -mj -b 64\n");
-  fprintf(stdout," b) -v --preset cd\n");
+  fprintf(stdout," b) -v --preset studio\n");
   fprintf(stdout,"    equals: -h -m s -V 0 -b 112 -B 320\n");
   fprintf(stdout,"\n");
 
