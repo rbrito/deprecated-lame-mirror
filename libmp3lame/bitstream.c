@@ -163,10 +163,9 @@ CRC_update(int value, int crc)
 }
 
 static int
-writeTableHeader(lame_internal_flags *gfc, gr_info *gi, int ptr)
+writeTableHeader(lame_internal_flags *gfc, gr_info *gi, int ptr, char *p)
 {
     static const int blockConv[] = {1, 3, 2};
-    char *p = gfc->bs.header[gfc->bs.h_ptr].buf;
     if (gi->block_type != NORM_TYPE) {
 	ptr = writeheader(p, 1, 1, ptr); /* window_switching_flag */
 	ptr = writeheader(p, blockConv[gi->block_type-1], 2, ptr);
@@ -415,7 +414,7 @@ encodeBitStream(lame_global_flags *gfp)
 		ptr = writeheader(p, gi->big_values / 2,        9, ptr);
 		ptr = writeheader(p, gi->global_gain,           8, ptr);
 		ptr = writeheader(p, gi->scalefac_compress,     4, ptr);
-		ptr = writeTableHeader(gfc, gi, ptr);
+		ptr = writeTableHeader(gfc, gi, ptr, p);
 		ptr = writeheader(p,
 				  (gi->preflag > 0)*4 + gi->scalefac_scale*2
 				  + gi->count1table_select, 3, ptr);
@@ -501,7 +500,7 @@ encodeBitStream(lame_global_flags *gfp)
 		assert(0);
 	    }
 	    ptr = writeheader(p, part, 9, ptr);
-	    ptr = writeTableHeader(gfc, gi, ptr);
+	    ptr = writeTableHeader(gfc, gi, ptr, p);
 	    ptr = writeheader(p, gi->scalefac_scale,     1, ptr);
 	    ptr = writeheader(p, gi->count1table_select, 1, ptr);
 
