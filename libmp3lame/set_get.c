@@ -322,7 +322,7 @@ int
 lame_set_decode_on_the_fly( lame_t  gfc,
                             int                 decode_on_the_fly )
 {
-#ifndef DECODE_ON_THE_FLY
+#ifndef HAVE_MPGLIB
     (void) gfc; (void) decode_on_the_fly;
     return -1;
 #else
