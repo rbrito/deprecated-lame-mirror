@@ -154,20 +154,20 @@ type
 //__declspec(dllexport) VOID	beVersion(PBE_VERSION pbeVersion);
 
 {
-Function beInitStream(var pbeConfig: TBE_CONFIG; var dwSample: LongWord; var dwBufferSize: LongWord; var phbeStream: THBE_STREAM ): BE_Err; stdcall; external 'Bladeenc.dll';
-//Function beEncodeChunk(hbeStream: THBE_STREAM; nSamples: LongWord; pSample: PSmallInt;pOutput: PByte; var pdwOutput: LongWord): BE_Err; stdcall; external 'Bladeenc.dll';
-Function beEncodeChunk(hbeStream: THBE_STREAM; nSamples: LongWord; var pSample;var pOutput; var pdwOutput: LongWord): BE_Err; stdcall; external 'Bladeenc.dll';
-Function beDeinitStream(hbeStream: THBE_STREAM; var pOutput; var pdwOutput: LongWord): BE_Err; stdcall; external 'Bladeenc.dll';
-Function beCloseStream(hbeStream: THBE_STREAM): BE_Err; stdcall; external 'Bladeenc.dll';
-Procedure beVersion(var pbeVersion: TBE_VERSION); stdcall; external 'Bladeenc.dll';
+Function beInitStream(var pbeConfig: TBE_CONFIG; var dwSample: LongWord; var dwBufferSize: LongWord; var phbeStream: THBE_STREAM ): BE_Err; cdecl; external 'Bladeenc.dll';
+//Function beEncodeChunk(hbeStream: THBE_STREAM; nSamples: LongWord; pSample: PSmallInt;pOutput: PByte; var pdwOutput: LongWord): BE_Err; cdecl; external 'Bladeenc.dll';
+Function beEncodeChunk(hbeStream: THBE_STREAM; nSamples: LongWord; var pSample;var pOutput; var pdwOutput: LongWord): BE_Err; stdcall; cdecl 'Bladeenc.dll';
+Function beDeinitStream(hbeStream: THBE_STREAM; var pOutput; var pdwOutput: LongWord): BE_Err; cdecl; external 'Bladeenc.dll';
+Function beCloseStream(hbeStream: THBE_STREAM): BE_Err; cdecl; external 'Bladeenc.dll';
+Procedure beVersion(var pbeVersion: TBE_VERSION); cdecl; external 'Bladeenc.dll';
 }
 
-Function beInitStream(var pbeConfig: TBE_CONFIG; var dwSample: LongWord; var dwBufferSize: LongWord; var phbeStream: THBE_STREAM ): BE_Err; stdcall; external 'Lame_enc.dll';
-//Function beEncodeChunk(hbeStream: THBE_STREAM; nSamples: LongWord; pSample: PSmallInt;pOutput: PByte; var pdwOutput: LongWord): BE_Err; stdcall; external 'Lame_enc.dll';
-Function beEncodeChunk(hbeStream: THBE_STREAM; nSamples: LongWord; var pSample;var pOutput; var pdwOutput: LongWord): BE_Err; stdcall; external 'Lame_enc.dll';
-Function beDeinitStream(hbeStream: THBE_STREAM; var pOutput; var pdwOutput: LongWord): BE_Err; stdcall; external 'Lame_enc.dll';
-Function beCloseStream(hbeStream: THBE_STREAM): BE_Err; stdcall; external 'Lame_enc.dll';
-Procedure beVersion(var pbeVersion: TBE_VERSION); stdcall; external 'Lame_enc.dll';
+Function beInitStream(var pbeConfig: TBE_CONFIG; var dwSample: LongWord; var dwBufferSize: LongWord; var phbeStream: THBE_STREAM ): BE_Err; cdecl; external 'Lame_enc.dll';
+//Function beEncodeChunk(hbeStream: THBE_STREAM; nSamples: LongWord; pSample: PSmallInt;pOutput: PByte; var pdwOutput: LongWord): BE_Err; cdecl; external 'Lame_enc.dll';
+Function beEncodeChunk(hbeStream: THBE_STREAM; nSamples: LongWord; var pSample;var pOutput; var pdwOutput: LongWord): BE_Err; cdecl; external 'Lame_enc.dll';
+Function beDeinitStream(hbeStream: THBE_STREAM; var pOutput; var pdwOutput: LongWord): BE_Err; cdecl; external 'Lame_enc.dll';
+Function beCloseStream(hbeStream: THBE_STREAM): BE_Err; cdecl; external 'Lame_enc.dll';
+Procedure beVersion(var pbeVersion: TBE_VERSION); cdecl; external 'Lame_enc.dll';
 
 Procedure EncodeWavToMP3(fs, fd: Integer);
 implementation
