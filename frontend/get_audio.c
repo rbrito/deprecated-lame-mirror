@@ -1430,20 +1430,16 @@ is_syncword_mp123(const void *const headerptr)
     static const char abl2[16] =
         { 0, 7, 7, 7, 0, 7, 0, 0, 0, 0, 0, 8, 8, 8, 8, 8 };
 
-    if ((p[0] & 0xFF) != 0xFF)
+    if (p[0] != 0xFF)
         return 0;       /* first 8 bits must be '1' */
     if ((p[1] & 0xE0) != 0xE0)
         return 0;       /* next 3 bits are also */
     if ((p[1] & 0x18) == 0x08)
         return 0;       /* no MPEG-1, -2 or -2.5 */
-    if ((p[1] & 0x06) == 0x00)
-	return 0;       /* no Layer I, II and III */
-    if ((p[1] & 0x06) == 0x03 && input_format != sf_mp1)
-	return 0; /* layer1 is not supported */
-    if ((p[1] & 0x06) == 0x02 && input_format != sf_mp2)
-	return 0; /* layer2 is not supported */
-    if ((p[1] & 0x06) == 0x01 && input_format != sf_mp3)
-	return 0; /* layer3 is not supported */
+    if (!(((p[1] & 0x06) == 0x03*2 && input_format == sf_mp1)
+	  || ((p[1] & 0x06) == 0x02*2 && input_format == sf_mp2)
+	  || ((p[1] & 0x06) == 0x01*2 && input_format == sf_mp3)))
+	return 0; /* imcompatible layer with input file format */
     if ((p[2] & 0xF0) == 0xF0)
         return 0;       /* bad bitrate */
     if ((p[2] & 0x0C) == 0x0C)
@@ -1488,7 +1484,7 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
     }
     aid_header = check_aid(buf);
     if (aid_header) {
-        if (fread(&buf, 1, 2, fd) != 2)
+	if (fread(&buf, 1, 2, fd) != 2)
             return -1;  /* failed */
         aid_header = (unsigned char) buf[0] + 256 * (unsigned char) buf[1];
         fprintf(stderr, "Album ID found.  length=%i \n", aid_header);
@@ -1500,10 +1496,7 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
 	    return -1;      /* failed */
     }
 
-
     /* look for valid 8 byte MPEG header  */
-    if (fread(&buf[4], 1, len, fd) != len)
-        return -1;      /* failed */
     len = 4;
     while (!is_syncword_mp123(buf)) {
         int     i;
