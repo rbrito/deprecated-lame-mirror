@@ -19,7 +19,7 @@ Starting with LAME 3.0:
 <hr></h3>
 
 <h3>
-LAME 3.86alpha&nbsp; (CVS)</h3>
+LAME&nbsp;3.87alpha (CVS)</h3>
 
 <ul>
 <li>
@@ -27,7 +27,50 @@ LAME 3.86alpha&nbsp; (CVS)</h3>
 </ul>
 
 <h3>
-</h3>
+LAME 3.86beta&nbsp; August 6 2000</h3>
+
+<ul>
+<li>
+Christopher Wise:&nbsp; A makefile for DJGPP, the DOS version of gcc.&nbsp;
+Now most windows users should be able to compile LAME with minimal effort.</li>
+
+<li>
+<font color="#FF0000">Robert Hegemann:&nbsp; old VBR:&nbsp;&nbsp; fixed
+some bugs and Takehiro's scalefac_scale feature is now on by default.&nbsp;
+older LAME versions did not allow to spent more than 2500 bits of 4095
+possible bits to a granule per channel, now fixed.</font></li>
+
+<li>
+Robert Hegemann:&nbsp; new VBR:&nbsp;&nbsp; analog silence treatment like
+in old VBR</li>
+
+<li>
+William Welch:&nbsp; Improved options for Linux/Alpha gcc and ccc compilers
+in Makefile.</li>
+
+<li>
+Mathew Hendry:&nbsp; setting appropriate CRC bit for additional Xing-VBR
+tagging frame</li>
+
+<li>
+Don Melton:&nbsp; added ID3 version 2 TAG support</li>
+
+<li>
+<font color="#000000">John Dahlstrom: fixed bug allowing timing information
+(for status in command line encoder) to overflow.</font></li>
+
+<li>
+<font color="#000000">Tamito KAJIYAMA, Fixed several bugs in the LAME/Vorbis
+interface.</font></li>
+
+<li>
+<font color="#000000">Mark Taylor:&nbsp; lame --decode will recognize <a href="http://albumid.cjb.net">Album
+ID tags</a></font></li>
+
+<li>
+<font color="#FF0000">Naoki Shibata:&nbsp; Additive masking and other improvements
+to psycho acoustics.&nbsp; (not yet on by default)</font></li>
+</ul>
 
 <h3>
 LAME 3.85beta&nbsp;&nbsp; July 3 2000</h3>
@@ -54,7 +97,7 @@ point.&nbsp; Default is now back to 64bit floating point.</li>
 ATH.</font></li>
 
 <li>
-<font color="#000000">S.T.J.:&nbsp; README.DJGPP - instructions for compiling
+<font color="#000000">S.T.L.:&nbsp; README.DJGPP - instructions for compiling
 LAME with DJGPP, the dos version of gcc.</font></li>
 </ul>
 

@@ -382,10 +382,10 @@ FILE * OpenSndFile(lame_global_flags *gfp)
   FILE * musicin;
   SNDFILE *gs_pSndFileIn;
   SF_INFO gs_wfInfo;
+  mp3data_struct mp3data;
 
   gfc->input_bitrate=0;
   if (gfp->input_format==sf_mp3) {
-    mp3data_struct mp3data;
 #ifdef AMIGA_MPEGA
     if (-1==lame_decode_initfile(lpszFileName,&mp3data)) {
       ERRORF("Error reading headers in mp3 input file %s.\n", lpszFileName);
@@ -1018,7 +1018,6 @@ FILE * OpenSndFile(lame_global_flags *gfp)
   }
 
   if (gfp->input_format==sf_mp3) {
-    mp3data_struct mp3data;
 #ifdef AMIGA_MPEGA
     if (-1==lame_decode_initfile(inPath,&mp3data)) {
       ERRORF("Error reading headers in mp3 input file %s.\n", inPath);
@@ -1037,7 +1036,6 @@ FILE * OpenSndFile(lame_global_flags *gfp)
     gfp->num_samples=mp3data.nsamp;
   }else if (gfp->input_format==sf_ogg) {
 #ifdef HAVEVORBIS
-    mp3data_struct mp3data;
     if (-1==lame_decode_ogg_initfile(musicin,&mp3data)) {
       ERRORF("Error reading headers in ogg input file %s.\n", inPath);
       LAME_ERROR_EXIT();
