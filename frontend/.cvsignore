@@ -6,6 +6,7 @@ config.status
 config.log
 config.cache
 mp3x
+mp3rtp
 lame
 *.d
 Debug
