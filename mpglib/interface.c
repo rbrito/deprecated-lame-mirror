@@ -58,13 +58,13 @@ static struct buf *addbuf(struct mpstr *mp,char *buf,int size)
 		fprintf(stderr,"Out of memory!\n");
 		return NULL;
 	}
-	nbuf->pnt = (unsigned char*) malloc(size);
+	nbuf->pnt = (unsigned char*) malloc((size_t)size);
 	if(!nbuf->pnt) {
 		free(nbuf);
 		return NULL;
 	}
 	nbuf->size = size;
-	memcpy(nbuf->pnt,buf,size);
+	memcpy(nbuf->pnt,buf,(size_t)size);
 	nbuf->next = NULL;
 	nbuf->prev = mp->head;
 	nbuf->pos = 0;
@@ -144,7 +144,7 @@ static void read_head(struct mpstr *mp)
 
 
 
-void copy_mp(struct mpstr *mp,int size,char *ptr) 
+void copy_mp(struct mpstr *mp,int size,unsigned char *ptr) 
 {
   int len = 0;
   while(len < size) {
@@ -156,7 +156,7 @@ void copy_mp(struct mpstr *mp,int size,char *ptr)
     else {
       nlen = blen;
     }
-    memcpy(ptr+len,mp->tail->pnt+mp->tail->pos,nlen);
+    memcpy(ptr+len,mp->tail->pnt+mp->tail->pos,(size_t)nlen);
     len += nlen;
     mp->tail->pos += nlen;
     mp->bsize -= nlen;
@@ -396,7 +396,7 @@ int set_pointer(long backstep)
   bsbufold = gmp->bsspace[1-gmp->bsnum] + 512;
   wordpointer -= backstep;
   if (backstep)
-    memcpy(wordpointer,bsbufold+gmp->fsizeold-backstep,backstep);
+    memcpy(wordpointer,bsbufold+gmp->fsizeold-backstep,(size_t)backstep);
   bitindex = 0;
   return MP3_OK;
 }

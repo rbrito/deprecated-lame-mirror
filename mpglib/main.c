@@ -97,7 +97,7 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
   }
   
   size=0;
-  ret = decodeMP3(&mp,buf,len,out,FSIZE,&size);
+  ret = decodeMP3(&mp,buf,(int)len,out,FSIZE,&size);
   if (ret==MP3_OK && size>0 && !xing_header) {
     fprintf(stderr,"Oops: first frame of mpglib output will be lost \n");
   }
@@ -153,13 +153,13 @@ int lame_decode_fromfile(FILE *fd, short pcm_l[], short pcm_r[],mp3data_struct *
   size=0;
   len = fread(buf,1,64,fd);
   if (len ==0 ) return 0;
-  ret = decodeMP3(&mp,buf,len,out,FSIZE,&size);
+  ret = decodeMP3(&mp,buf,(int)len,out,FSIZE,&size);
 
   /* read more until we get a valid output frame */
   while((ret == MP3_NEED_MORE) || !size) {
     len = fread(buf,1,100,fd);
     if (len ==0 ) return -1;
-    ret = decodeMP3(&mp,buf,len,out,FSIZE,&size);
+    ret = decodeMP3(&mp,buf,(int)len,out,FSIZE,&size);
     /* if (ret ==MP3_ERR) return -1;  lets ignore errors and keep reading... */
     /*
     printf("ret = %i size= %i  %i   %i  %i \n",ret,size,
@@ -201,13 +201,13 @@ For lame_decode:  return code
    0     ok, but need more data before outputing any samples
    n     number of samples output.  either 576 or 1152 depending on MP3 file.
 */
-int lame_decode1(char *buf,int len,short pcm_l[],short pcm_r[])
+int lame_decode1(char *buffer,int len,short pcm_l[],short pcm_r[])
 {
   int size;
   int outsize=0,j,i,ret;
 
 
-  ret = decodeMP3(&mp,buf,len,out,FSIZE,&size);
+  ret = decodeMP3(&mp,buffer,len,out,FSIZE,&size);
   if (ret==MP3_ERR) return -1;
   
   if (ret==MP3_OK) {
@@ -237,13 +237,13 @@ For lame_decode:  return code
    0     ok, but need more data before outputing any samples
    n     number of samples output.  a multiple of 576 or 1152 depending on MP3 file.
 */
-int lame_decode(char *buf,int len,short pcm_l[],short pcm_r[])
+int lame_decode(char *buffer,int len,short pcm_l[],short pcm_r[])
 {
   int size,totsize=0;
   int outsize=0,j,i,ret;
 
   do {
-    ret = decodeMP3(&mp,buf,len,out,FSIZE,&size);
+    ret = decodeMP3(&mp,buffer,len,out,FSIZE,&size);
     if (ret==MP3_ERR) return -1;
 
     if (ret==MP3_OK) {
