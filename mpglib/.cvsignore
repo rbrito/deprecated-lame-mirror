@@ -16,3 +16,4 @@ ReleaseGTK
 *.plg
 *.opt
 *.dll
+lclint.txt
