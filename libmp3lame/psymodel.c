@@ -153,25 +153,6 @@ blocktype_d[2]        block type to use for previous granule
 #endif
 
 #define NSFIRLEN 21
-#define rpelev 2
-#define rpelev2 16
-#define rpelev_s 2
-#define rpelev2_s 16
-
-/* size of each partition band, in barks: */
-#define DELBARK .34
-#define CW_LOWER_INDEX 6
-
-
-#if 1
-    /* AAC values, results in more masking over MP3 values */
-# define TMN 18
-# define NMT 6
-#else
-    /* MP3 values */
-# define TMN 29
-# define NMT 6
-#endif
 
 #ifdef M_LN10
 #define		LN_TO_LOG10		(M_LN10/10)
@@ -254,15 +235,11 @@ psycho_loudness_approx( FLOAT *energy, lame_internal_flags *gfc )
     int i;
     FLOAT loudness_power;
 
-/* tuned for output level (sensitive to energy scale) */
-#define vo_scale (1./( 14752 ))
-
     loudness_power = 0.0;
     /* apply weights to power in freq. bands*/
     for( i = 0; i < BLKSIZE/2; ++i )
 	loudness_power += energy[i] * gfc->ATH->eql_w[i];
-    loudness_power = loudness_power;
-    loudness_power *= (vo_scale * vo_scale / (BLKSIZE/2));
+    loudness_power *= VO_SCALE;
 
     return loudness_power;
 }
@@ -390,8 +367,6 @@ msfix1(
 {
     int sb, sblock;
     FLOAT8 rside,rmid,mld;
-#define chmid 2
-#define chside 3
     for ( sb = 0; sb < SBMAX_l; sb++ ) {
 	/* use this fix if L & R masking differs by 2db or less */
 	/* if db = 10*log10(x2/x1) < 2 */
@@ -400,13 +375,13 @@ msfix1(
 	 || gfc->thm[1].l[sb] > 1.58*gfc->thm[0].l[sb])
 	    continue;
 
-	mld = gfc->mld_l[sb]*gfc->en[chside].l[sb];
-	rmid = Max(gfc->thm[chmid].l[sb], Min(gfc->thm[chside].l[sb],mld));
+	mld = gfc->mld_l[sb]*gfc->en[3].l[sb];
+	rmid = Max(gfc->thm[2].l[sb], Min(gfc->thm[3].l[sb],mld));
 
-	mld = gfc->mld_l[sb]*gfc->en[chmid].l[sb];
-	rside = Max(gfc->thm[chside].l[sb], Min(gfc->thm[chmid].l[sb],mld));
-	gfc->thm[chmid].l[sb]=rmid;
-	gfc->thm[chside].l[sb]=rside;
+	mld = gfc->mld_l[sb]*gfc->en[2].l[sb];
+	rside = Max(gfc->thm[3].l[sb], Min(gfc->thm[2].l[sb],mld));
+	gfc->thm[2].l[sb]=rmid;
+	gfc->thm[3].l[sb]=rside;
     }
 
     for ( sb = 0; sb < SBMAX_s; sb++ ) {
@@ -415,16 +390,16 @@ msfix1(
 	     || gfc->thm[1].s[sb][sblock] > 1.58*gfc->thm[0].s[sb][sblock])
 		continue;
 
-	    mld = gfc->mld_s[sb]*gfc->en[chside].s[sb][sblock];
-	    rmid = Max(gfc->thm[chmid].s[sb][sblock],
-		       Min(gfc->thm[chside].s[sb][sblock],mld));
+	    mld = gfc->mld_s[sb]*gfc->en[3].s[sb][sblock];
+	    rmid = Max(gfc->thm[2].s[sb][sblock],
+		       Min(gfc->thm[3].s[sb][sblock],mld));
 
-	    mld = gfc->mld_s[sb]*gfc->en[chmid].s[sb][sblock];
-	    rside = Max(gfc->thm[chside].s[sb][sblock],
-			Min(gfc->thm[chmid].s[sb][sblock],mld));
+	    mld = gfc->mld_s[sb]*gfc->en[2].s[sb][sblock];
+	    rside = Max(gfc->thm[3].s[sb][sblock],
+			Min(gfc->thm[2].s[sb][sblock],mld));
 
-	    gfc->thm[chmid].s[sb][sblock]=rmid;
-	    gfc->thm[chside].s[sb][sblock]=rside;
+	    gfc->thm[2].s[sb][sblock]=rmid;
+	    gfc->thm[3].s[sb][sblock]=rside;
 	}
     }
 }
@@ -828,11 +803,6 @@ int L3psycho_anal( lame_global_flags * gfp,
  * tonality = 0:           use NMT   (lots of masking)
  * tonality = 1:           use TMN   (little masking)
  */
-
-/* ISO values */
-#define CONV1 (-.299)
-#define CONV2 (-.43)
-
 	    tbb = ecb;
 	    if (tbb != 0.0) {
 		tbb = ctb / tbb;
@@ -1453,10 +1423,6 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 		gfc->en [chn].s[sb][sblock] = enn;
 
 		/****   short block pre-echo control   ****/
-#define NS_PREECHO_ATT0 0.8
-#define NS_PREECHO_ATT1 0.6
-#define NS_PREECHO_ATT2 0.3
-
 		thmm *= NS_PREECHO_ATT0;
 		if (ns_attacks[sblock] >= 2 || ns_attacks[sblock+1] == 1) {
 		    int idx = (sblock != 0) ? sblock-1 : 2;
@@ -1939,24 +1905,14 @@ int psymodel_init(lame_global_flags *gfp)
     init_fft(gfc);
 
     /* setup temporal masking */
-#define temporalmask_sustain_sec 0.01
     gfc->decay = exp(-1.0*LOG10/(temporalmask_sustain_sec*sfreq/192.0));
 
     if (gfc->nsPsy.use) {
 	FLOAT8 msfix;
-
-#define NS_MSFIX 3.5
-#define NSATTACKTHRE 4.5
-#define NSATTACKTHRE_S 30
-
 	msfix = NS_MSFIX;
 	if (gfp->exp_nspsytune & 2) msfix = 1.0;
 	if (gfp->msfix != 0.0) msfix = gfp->msfix;
 	gfp->msfix = msfix;
-	if (!gfc->presetTune.use) {
-	    gfc->nsPsy.attackthre   = NSATTACKTHRE;
-	    gfc->nsPsy.attackthre_s = NSATTACKTHRE_S;
-	}
 
 	/* spread only from npart_l bands.  Normally, we use the spreading
 	 * function to convolve from npart_l down to npart_l bands 

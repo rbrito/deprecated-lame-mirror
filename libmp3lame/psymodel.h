@@ -46,5 +46,42 @@ int L3psycho_anal_ns( lame_global_flags *gfc,
 int psymodel_init(lame_global_flags *gfp);
 
 
+#define rpelev 2
+#define rpelev2 16
+#define rpelev_s 2
+#define rpelev2_s 16
+
+/* size of each partition band, in barks: */
+#define DELBARK .34
+#define CW_LOWER_INDEX 6
+
+
+#if 1
+    /* AAC values, results in more masking over MP3 values */
+# define TMN 18
+# define NMT 6
+#else
+    /* MP3 values */
+# define TMN 29
+# define NMT 6
+#endif
+
+/* ISO values */
+#define CONV1 (-.299)
+#define CONV2 (-.43)
+
+/* tuned for output level (sensitive to energy scale) */
+#define VO_SCALE (1./( 14752*14752 )/(BLKSIZE/2))
+
+#define temporalmask_sustain_sec 0.01
+
+#define NS_PREECHO_ATT0 0.8
+#define NS_PREECHO_ATT1 0.6
+#define NS_PREECHO_ATT2 0.3
+
+#define NS_MSFIX 3.5
+#define NSATTACKTHRE 4.5
+#define NSATTACKTHRE_S 30
+
 #endif /* LAME_PSYMODEL_H */
 
