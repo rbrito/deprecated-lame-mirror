@@ -19,8 +19,14 @@ char *strchr (), *strrchr ();
 
 #include "console.h"
 
-#if defined(TERMCAP_AVAILABLE)
+#if defined(HAVE_TERMCAP)
+#include <curses.h> 
+#include <term.h>
+#if defined(HAVE_TERMCAP_H)
 # include <termcap.h>
+#elif defined(HAVE_NCURSES_TERMCAP_H)
+# include <ncurses/termcap.h>
+#endif
 #endif
 
 #ifdef WITH_DMALLOC
