@@ -153,7 +153,7 @@ init_outer_loop(
              *  MPEG-2(.5):  sfbs 0-5 long block, 3-12 short blocks
              */ 
 	    cod_info->sfb_smin    = 3;
-            cod_info->sfb_lmax    = gfc->is_mpeg1 ? 8 : 6;
+            cod_info->sfb_lmax    = gfc->mode_gr*2 + 4;
 	}
 	cod_info->psymax
 	    = cod_info->sfb_lmax
@@ -349,14 +349,11 @@ trancate_smallspectrums(
 		    break;
 
 	    noise = work[start+j-width] * work[start+j-width] * nsame;
-//	    printf("%d(%d); %e * %d\n", start+j, width+j,
-//		   work[start+j-width], nsame);
 	    if (allowedNoise < noise) {
 		if (start != 0)
 		    trancateThreshold = work[start+j-width - 1];
 		break;
 	    }
-//	    printf("%e -> %e\n", allowedNoise, allowedNoise - noise);
 	    allowedNoise -= noise;
 	    start += nsame;
 	} while (start < width);
@@ -776,7 +773,7 @@ balance_noise (
     FLOAT8         * distort,
     FLOAT8         xrpow[576] )
 {
-    lame_internal_flags *const gfc = (lame_internal_flags *)gfp->internal_flags;
+    lame_internal_flags *const gfc = gfp->internal_flags;
     int status;
     
     amp_scalefac_bands ( gfp, cod_info, distort, xrpow);
@@ -794,7 +791,7 @@ balance_noise (
     /* not all scalefactors have been amplified.  so these 
      * scalefacs are possibly valid.  encode them: 
      */
-    if (gfc->is_mpeg1)
+    if (gfc->mode_gr == 2)
         status = scale_bitcount (cod_info);
     else 
         status = scale_bitcount_lsf (gfc, cod_info);
@@ -821,7 +818,7 @@ balance_noise (
     }
 
     if (!status) {
-        if (gfc->is_mpeg1 == 1) 
+        if (gfc->mode_gr == 2)
             status = scale_bitcount (cod_info);
         else 
             status = scale_bitcount_lsf (gfc, cod_info);
@@ -1321,8 +1318,8 @@ VBR_prepare (
 
     return analog_silence;
 }
- 
- 
+
+
 static void
 bitpressure_strategy(
     lame_internal_flags * gfc,
