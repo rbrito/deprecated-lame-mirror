@@ -755,21 +755,9 @@ void outer_loop(
 	scalefac->s[gr][ch][sfb][i] = scalesave_s[sfb][i];    
       }
     
-    { 
-      real_bits=save_real_bits;  
-      memcpy(l3_enc[gr][ch],save_l3_enc,sizeof(l3_enc[gr][ch]));   
-      memcpy(cod_info,&save_cod_info,sizeof(save_cod_info));
-      
-      if ( fr_ps->header->version == 1 ) {
-	status = scale_bitcount( scalefac, cod_info, gr, ch );
-      } else {
-	status = scale_bitcount_lsf( scalefac, cod_info, gr, ch );
-      }
-      if (status) {
-	fprintf(stderr,"Error recomputing scalefac_compress...this should not happen");
-	exit(-10);
-      }
-    }
+    real_bits=save_real_bits;  
+    memcpy(l3_enc[gr][ch],save_l3_enc,sizeof(l3_enc[gr][ch]));   
+    memcpy(cod_info,&save_cod_info,sizeof(save_cod_info));
     cod_info->part2_3_length = cod_info->part2_length + real_bits;
     
 #ifdef HAVEGTK
