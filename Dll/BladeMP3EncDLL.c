@@ -163,9 +163,11 @@ static void PresetOptions( lame_global_flags *gfp, LONG myPreset )
 			break;
 
 /*11*/		case LQP_ABR:					// --ALT-PRESET ABR
+				// handled in beInitStream
 			break;
 
 /*12*/		case LQP_CBR:					// --ALT-PRESET CBR
+				// handled in beInitStream
 			break;
 
 /*1000*/	case LQP_PHONE:
@@ -365,17 +367,29 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 
 //2001-12-18 Dibrom's ABR preset stuff
 
-	if(lameConfig.format.LHV1.nPreset == 11)		// --ALT-PRESET ABR
+	if(lameConfig.format.LHV1.nPreset == LQP_ABR)		// --ALT-PRESET ABR
 	{
 		actual_bitrate = lameConfig.format.LHV1.dwVbrAbr_bps / 1000;
-        lame_set_preset(gfp, actual_bitrate);
+
+		// limit range
+		if( actual_bitrate > 320)
+		{
+			actual_bitrate = 320;
+		}
+
+		if( actual_bitrate < 8 )
+		{
+			actual_bitrate = 8;
+		}
+
+		lame_set_preset( gfp, actual_bitrate );
 	}    
 
 // end Dibrom's ABR preset 2001-12-18 ****** START OF CBR
 
-	if(lameConfig.format.LHV1.nPreset == 12)		// --ALT-PRESET CBR
+	if(lameConfig.format.LHV1.nPreset == LQP_CBR)		// --ALT-PRESET CBR
 	{
-		actual_bitrate = lameConfig.format.LHV1.dwVbrAbr_bps / 1000;
+		actual_bitrate = lameConfig.format.LHV1.dwBitrate;
         lame_set_preset(gfp, actual_bitrate);
         lame_set_VBR(gfp, vbr_off);
 	}
