@@ -62,15 +62,16 @@
      (dest) = dest_; \
    } while (0)
 #else
-#  define QUANTFAC(rx)  adj43[rx]
-#  define ROUNDFAC 0.4054
-#  define XRPOW_FTOI(src,dest) ((dest) = (int)(src))
-#endif
-
 #ifdef TAKEHIRO_IEEE754_HACK
 #  define QUANTFAC(rx)  adj43asm[rx]
 #  define ROUNDFAC -0.0946
+#else
+#  define QUANTFAC(rx)  adj43[rx]
+#  define ROUNDFAC 0.4054
 #endif
+#  define XRPOW_FTOI(src,dest) ((dest) = (int)(src))
+#endif
+
 
 
 #define MAXQUANTERRORXXX
