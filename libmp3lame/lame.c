@@ -231,7 +231,7 @@ static int apply_preset(lame_global_flags*  gfp, int bitrate, vbr_mode mode)
         int    large_scalefac;
         int    method;
         int    lowpass;
-        double nsmsfix;
+        double reduce_side;
         double scale;
 	int ath_curve;
 	int ath_lower;
@@ -242,25 +242,25 @@ static int apply_preset(lame_global_flags*  gfp, int bitrate, vbr_mode mode)
 
     /* Switch mappings for target bitrate */
     const dm_abr_presets_t switch_map [] = {
-        /*  scalefac_s   lowpass     scale     athlower  short-th */
-        /* kbps    qantcomp   nsmsfix     athcurve  inter-ch */
-        {   8,  1,    1,  2000,  0,   0.90, 11,  -4, 0.0012, 1000.0 },
-        {  16,  1,    1,  3700,  0,   0.90, 11,  -4, 0.0010, 1000.0 },
-        {  24,  1,    1,  3900,  0,   0.90, 11,  -4, 0.0010, 20.0 },
-        {  32,  1,    1,  5500,  0,   0.90, 11,  -4, 0.0010, 20.0 },
-        {  40,  1,    1,  7000,  0,   0.90, 11,  -3, 0.0009, 20.0 },
-        {  48,  1,    1,  7500,  0,   0.90, 11,  -3, 0.0009, 20.0 },
-        {  56,  1,    1, 10000,  0,   0.90, 11,  -3, 0.0008, 5.0 },
-        {  64,  1,    0, 12700,  0,   0.90, 10,  -3, 0.0008, 3.0 },
-        {  80,  1,    0, 14500,  0,   0.93, 10,  -2, 0.0007, 3.0 },
-        {  96,  1,    0, 15300,  0,   0.93,  8,  -2, 0.0006, 2.5 },
-        { 112,  1,    0, 16000,  0,   0.93,  7,  -2, 0.0005, 2.5 },
-        { 128,  1,    0, 17500,  0,   0.93,  5,  -1, 0.0002, 2.5 },
-        { 160,  1,    0, 18000,  0,   0.95,  4,   0, 0.0000, 1.8 },
-        { 192,  1,    0, 19500,  0,   0.97,  3,   0, 0.0000, 1.8 },
-        { 224,  1,    0, 20000,  0,   0.98,  2,   1, 0.0000, 1.8 },
-        { 256,  0,    1, 20500,  0,   1.00,  1,   1, 0.0000, 1.8 },
-        { 320,  0,    1, 21000,  0,   1.00,  0,   1, 0.0000, 1.8 }
+        /*  scalefac_s   lowpass       scale     athlower  short-th */
+        /* kbps    qantcomp   reduceside   athcurve  inter-ch */
+        {   8,  1,    1,  2000,  0.7,   0.90, 11,  -4, 0.0012, 1000.0 },
+        {  16,  1,    1,  3700,  0.7,   0.90, 11,  -4, 0.0010, 1000.0 },
+        {  24,  1,    1,  3900,  0.7,   0.90, 11,  -4, 0.0010, 20.0 },
+        {  32,  1,    1,  5500,  0.7,   0.90, 11,  -4, 0.0010, 20.0 },
+        {  40,  1,    1,  7000,  0.7,   0.90, 11,  -3, 0.0009, 20.0 },
+        {  48,  1,    1,  7500,  0.7,   0.90, 11,  -3, 0.0009, 20.0 },
+        {  56,  1,    1, 10000,  0.7,   0.90, 11,  -3, 0.0008, 5.0 },
+        {  64,  1,    0, 12700,  0.4,   0.90, 10,  -3, 0.0008, 3.0 },
+        {  80,  1,    0, 14500,  0.4,   0.93, 10,  -2, 0.0007, 3.0 },
+        {  96,  1,    0, 15300,  0.2,   0.93,  8,  -2, 0.0006, 2.5 },
+        { 112,  1,    0, 16000,  0.2,   0.93,  7,  -2, 0.0005, 2.5 },
+        { 128,  1,    0, 17500,  0.2,   0.93,  5,  -1, 0.0002, 2.5 },
+        { 160,  1,    0, 18000,  0.0,   0.95,  4,   0, 0.0000, 1.8 },
+        { 192,  1,    0, 19500,  0.0,   0.97,  3,   0, 0.0000, 1.8 },
+        { 224,  1,    0, 20000,  0.0,   0.98,  2,   1, 0.0000, 1.8 },
+        { 256,  0,    1, 20500,  0.0,   1.00,  1,   1, 0.0000, 1.8 },
+        { 320,  0,    1, 21000,  0.0,   1.00,  0,   1, 0.0000, 1.8 }
     };
 
     int lower_range, lower_range_kbps, upper_range, upper_range_kbps;
@@ -309,8 +309,8 @@ static int apply_preset(lame_global_flags*  gfp, int bitrate, vbr_mode mode)
     if (gfp->mode_automs && gfp->mode != MONO && gfp->compression_ratio < 6.6)
 	gfp->mode = STEREO;
 
-    if (switch_map[r].nsmsfix > 0)
-	(void) lame_set_msfix( gfp, switch_map[r].nsmsfix );
+    if (gfp->internal_flags->reduce_side < 0.0)
+	lame_set_reduceSide( gfp, switch_map[r].reduce_side);
 
     if (gfp->interChRatio < 0)
 	lame_set_interChRatio(gfp, switch_map[r].interch);
@@ -338,16 +338,6 @@ static int apply_preset(lame_global_flags*  gfp, int bitrate, vbr_mode mode)
 	    lame_set_narrowenStereo(gfp, .4);
 	else
 	    lame_set_narrowenStereo(gfp, .6);
-    }
-    if (gfp->internal_flags->reduce_side < 0.0) {
-	if (bitrate >= 128)
-	    lame_set_reduceSide(gfp, 0.0);
-	else if (bitrate > 90)
-	    lame_set_reduceSide(gfp, 0.2);
-	else if (bitrate > 56)
-	    lame_set_reduceSide(gfp, 0.4);
-	else
-	    lame_set_reduceSide(gfp, 0.7);
     }
     return bitrate;
 }
@@ -865,6 +855,8 @@ lame_print_internals( const lame_global_flags * gfp )
     pc = gfp->useTemporal ? "yes" : "no";
     MSGF( gfc, "\tusing temporal masking effect: %s\n", pc );
     MSGF( gfc, "\tinterchannel masking ratio: %f\n", gfp->interChRatio );
+    MSGF( gfc, "\treduce side channel PE factor: %f\n", gfc->reduce_side);
+    MSGF( gfc, "\tnarrowen stereo factor: %f\n", gfc->narrowStereo);
     MSGF( gfc, "\t...\n" );
 
     MSGF( gfc, "\nnoisechaping & quantization:\n\n" );

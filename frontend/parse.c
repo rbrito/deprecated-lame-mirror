@@ -475,19 +475,20 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --athaa-sensitivity x  activation offset in -/+ dB for ATH auto-adjustment\n" 
               "\n"
               "  PSY related:\n"
-              "    --shortthreshold x,y  short block switching threshold\n"
-	      "                          x for L/R/M channel, y for S channel\n"
-              "    --mixedblock    use mixed blocks(experimental)\n"
-              "    --notemp        disable temporal masking effect\n"
-              "    --nssafejoint   M/S switching criterion\n"
-              "    --nsmsfix <arg> M/S switching tuning\n"
-              "    --ns-bass x     adjust masking for  0 -  6 bark\n"
-              "    --ns-alto x     adjust masking for  6 - 12 bark\n"
-              "    --ns-treble x   adjust masking for 12 - 18 bark\n"
-              "    --ns-sfb21 x    change ns-treble by x dB for 18- bark\n"
-              "    --interch x     adjust inter-channel masking ratio\n"
-              "    --is-ratio x    adjust intensity stereo usage ratio\n"
-	      "    --narrowen-stereo x    narrowen the stereo image\n"
+              "   --shortthreshold x,y  short block switching threshold\n"
+	      "                         x for L/R/M channel, y for S channel\n"
+              "   --mixedblock    use mixed blocks(experimental)\n"
+              "   --notemp        disable temporal masking effect\n"
+              "   --nssafejoint   M/S switching criterion\n"
+              "   --nsmsfix <arg> M/S switching tuning\n"
+              "   --ns-bass x     adjust masking for  0 -  6 bark\n"
+              "   --ns-alto x     adjust masking for  6 - 12 bark\n"
+              "   --ns-treble x   adjust masking for 12 - 18 bark\n"
+              "   --ns-sfb21 x    change ns-treble by x dB for 18- bark\n"
+              "   --interch x     adjust inter-channel masking ratio\n"
+              "   --is-ratio x    adjust intensity stereo usage ratio\n"
+	      "   --reduce-side x   narrowen the stereo image(0.0<x<1.0)\n"
+	      "   --narrowen-stereo x    narrowen the stereo image (0.0<x<1.0)\n"
 #if 0
 /* this is redundant, we already have --notemp */
               "    --temporal-masking n  use temporal masking effect n=0:no n=1:yes\n"
@@ -1179,6 +1180,10 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF ("notemp")
                     (void) lame_set_useTemporal( gfp, 0 );
 
+                T_ELIF_INTERNAL ("reduce-side")
+                    argUsed=1;
+                    (void) lame_set_reduceSide( gfp, atof(nextArg ) );
+
                 T_ELIF_INTERNAL ("interch")
                     argUsed=1;
                     (void) lame_set_interChRatio( gfp, atof(nextArg ) );
@@ -1199,7 +1204,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     (void) lame_set_sfscale(gfp, i);
 		}
 
-                T_ELIF ("sbgain")
+                T_ELIF_INTERNAL ("sbgain")
 		{
 		    int i = 1;
 		    if (sscanf(nextArg, "%d", &i) == 1)
@@ -1207,11 +1212,11 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     (void) lame_set_subblock_gain( gfp, i);
 		}
 
-                T_ELIF ("narrowen-stereo")
+                T_ELIF_INTERNAL ("narrowen-stereo")
                     argUsed = 1;
                     (void) lame_set_narrowenStereo(gfp, atof(nextArg));
 
-                T_ELIF ("temporal-masking")
+                T_ELIF_INTERNAL ("temporal-masking")
                     argUsed = 1;
                     (void) lame_set_useTemporal( gfp, atoi(nextArg)?1:0 );
 
