@@ -122,7 +122,7 @@ static void quantize_xrpow(const FLOAT8 *xp, int *pi, FLOAT8 istep, gr_info * co
         sfbmax = 21;
 
     for (sfb = 0; sfb <= sfbmax; sfb++) {
-	    FLOAT8 step;
+	    FLOAT8 step = -1;
 
         if (prev_data_use) {
             int s =
@@ -132,7 +132,7 @@ static void quantize_xrpow(const FLOAT8 *xp, int *pi, FLOAT8 istep, gr_info * co
 	            - cod_info->subblock_gain[cod_info->window[sfb]] * 8;
 	        step = POW20(s);
         }
-        
+        assert( cod_info->width[sfb] >= 0 );
         if (prev_data_use && (prev_noise->step[sfb] == step)){
             /* do not recompute this part*/
             fi += cod_info->width[sfb];
@@ -153,6 +153,7 @@ static void quantize_xrpow(const FLOAT8 *xp, int *pi, FLOAT8 istep, gr_info * co
                 /* no need to compute higher sfb values */
                 sfb = sfbmax + 1;
             }
+            assert( l >= 0 );
 
             remaining = l%2;
             l = l>>1;
@@ -226,7 +227,7 @@ static void quantize_xrpow_ISO(const FLOAT8 *xp, int *pi, FLOAT8 istep, gr_info 
         sfbmax = 21;
 
     for (sfb = 0; sfb <= sfbmax; sfb++) {
-	    FLOAT8 step;
+	    FLOAT8 step = -1;
 
         if (prev_data_use) {
             int s =
@@ -236,6 +237,7 @@ static void quantize_xrpow_ISO(const FLOAT8 *xp, int *pi, FLOAT8 istep, gr_info 
 	            - cod_info->subblock_gain[cod_info->window[sfb]] * 8;
 	        step = POW20(s);
         }
+        assert( cod_info->width[sfb] );
         
         if (prev_data_use && (prev_noise->step[sfb] == step)){
             /* do not recompute this part*/
@@ -254,7 +256,7 @@ static void quantize_xrpow_ISO(const FLOAT8 *xp, int *pi, FLOAT8 istep, gr_info 
                     sizeof(int)*(575-cod_info->max_nonzero_coeff));
                 l = usefullsize >> 1;
             }
-
+            assert( l >= 0 );
             remaining = l%2;
             l = l>>1;
             while (l--) {
@@ -339,7 +341,8 @@ static void quantize_xrpow(const FLOAT8 *xr, int *ix, FLOAT8 istep, gr_info * co
 	            - cod_info->subblock_gain[cod_info->window[sfb]] * 8;
 	        step = POW20(s);
         }
-        
+        assert( cod_info->width[sfb] );
+
         if (prev_data_use && (prev_noise->step[sfb] == step)){
             /* do not recompute this part */
             xr += cod_info->width[sfb];
@@ -357,7 +360,7 @@ static void quantize_xrpow(const FLOAT8 *xr, int *ix, FLOAT8 istep, gr_info * co
                     sizeof(int)*(575-cod_info->max_nonzero_coeff));
                 l = usefullsize >> 1;
             }
-
+            assert( l >= 0 );
             remaining = l%2;
             l = l>>1;
             while (l--) {
@@ -441,6 +444,7 @@ static void quantize_xrpow_ISO(const FLOAT8 *xr, int *ix, FLOAT8 istep, gr_info 
 	            - cod_info->subblock_gain[cod_info->window[sfb]] * 8;
 	        step = POW20(s);
         }
+        assert( cod_info->width[sfb] );
         
         if (prev_data_use && (prev_noise->step[sfb] == step)){
             /* do not recompute this part */
@@ -457,7 +461,7 @@ static void quantize_xrpow_ISO(const FLOAT8 *xr, int *ix, FLOAT8 istep, gr_info 
                     sizeof(int)*(575-cod_info->max_nonzero_coeff));
                 l = usefullsize;
             }
-
+            assert( l >= 0 );
             while(l--) {
                 /* depending on architecture, it may be worth calculating a few more
                    compareval's.
@@ -856,6 +860,7 @@ int count_bits(
 	for (sfb = 0; sfb < gi->sfbmax; sfb++) {
 	    int width = gi->width[sfb];
 	    int l;
+        assert( width >= 0 );
 	    j += width;
 	    if (!gfc->pseudohalf[sfb])
 		continue;
@@ -1109,6 +1114,7 @@ void best_scalefac_store(
     j = 0;
     for ( sfb = 0; sfb < gi->sfbmax; sfb++ ) {
 	int width = gi->width[sfb];
+    assert( width >= 0 );
 	j += width;
 	for (l = -width; l < 0; l++)
 	    if (gi->l3_enc[l+j]!=0)
