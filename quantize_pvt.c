@@ -6,9 +6,9 @@
 #include "quantize_pvt.h"
 
 /* if your machine is IEEE754 compatible, this may make faster binary */
-/*
-  #define TAKEHIRO_IEEE754_HACK
-*/
+#if (defined(__i386__))
+#define TAKEHIRO_IEEE754_HACK
+#endif
 
 #define NSATHSCALE 100 // Assuming dynamic range=96dB, this value should be 92
 

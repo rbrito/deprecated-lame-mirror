@@ -151,7 +151,7 @@ ifeq ($(UNAME),Linux)
 #  CC_OPTS =  -O9 -fomit-frame-pointer -fno-strength-reduce -mpentiumpro -ffast-math -finline-functions -funroll-loops -Wall -malign-double -g -march=pentiumpro -mfancy-math-387 -pipe -pedantic
 
 #  for debugging:
-  CC_OPTS =  -UNDEBUG -O -Wall -pedantic -ggdb -DABORTFP
+#  CC_OPTS =  -UNDEBUG -O -Wall -pedantic -ggdb -DABORTFP
 
 #  for lots of debugging:
 #   CC_OPTS =  -DDEBUG -UNDEBUG  -O -Wall -pedantic -g -DABORTFP 
@@ -265,6 +265,10 @@ ifeq ($(UNAME),SunOS)
    CC = cc
    CC_OPTS = -O -xCC  	
    MAKEDEP = -xM
+# for gcc, use instead:
+#   CC = gcc 
+#   CC_OPTS = -O 
+#   MAKEDEP = -M 
 endif
 
 
@@ -493,6 +497,16 @@ mp3rtp:	rtp.o mp3rtp.o libmp3lame.a
 libmp3lame.a:  $(OBJ) Makefile
 	$(AR) cr libmp3lame.a  $(OBJ) 
 	$(RANLIB) libmp3lame.a
+
+#shared library, probably linux specific?
+libmp3lame.so:  $(OBJ) Makefile
+	gcc -shared -Wl,-soname,libmp3lame.so -o libmp3lame.so $(OBJ)
+
+lib:  libmp3lame.so
+libinstall: libmp3lame.so
+	cp libmp3lame.so /usr/lib
+	cp lame.h /usr/lib
+
 
 
 clean:
