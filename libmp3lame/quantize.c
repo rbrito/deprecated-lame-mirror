@@ -792,6 +792,8 @@ outer_loop (
     over = calc_noise (gfc, cod_info, l3_xmin, &distort, &best_noise_info);
     cod_info_w = *cod_info;
     age = 0;
+    if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh)
+	memcpy(save_xrpow, xrpow, sizeof(FLOAT8)*576);
 
     /* BEGIN MAIN LOOP */
     do {
@@ -886,45 +888,34 @@ outer_loop (
 
 /************************************************************************
  *
- *      iteration_finish()                                                    
+ *      iteration_finish_one()
  *
  *  Robert Hegemann 2000-09-06
  *
  *  update reservoir status after FINAL quantization/bitrate 
  *
- *  rh 2000-09-06: it will not work with CBR due to the bitstream formatter
- *            you will get "Error: MAX_HEADER_BUF too small in bitstream.c"
- *
  ************************************************************************/
 
 static void 
-iteration_finish (
+iteration_finish_one (
     lame_internal_flags *gfc,
-    const int       mean_bits )
+    int gr, int ch)
 {
     III_side_info_t *l3_side = &gfc->l3_side;
-    int gr, ch;
-    
-    for (gr = 0; gr < gfc->mode_gr; gr++) {
-        for (ch = 0; ch < gfc->channels_out; ch++) {
-            gr_info *cod_info = &l3_side->tt[gr][ch];
+    gr_info *cod_info = &l3_side->tt[gr][ch];
 
-            /*  try some better scalefac storage
-             */
-            best_scalefac_store (gfc, gr, ch, l3_side);
+    /*  try some better scalefac storage
+     */
+    best_scalefac_store (gfc, gr, ch, l3_side);
             
-	    /*  best huffman_divide may save some bits too
-	     */
-	    if (gfc->use_best_huffman == 1) 
-		best_huffman_divide (gfc, cod_info);
+    /*  best huffman_divide may save some bits too
+     */
+    if (gfc->use_best_huffman == 1) 
+	best_huffman_divide (gfc, cod_info);
             
-            /*  update reservoir status after FINAL quantization/bitrate
-             */
-            ResvAdjust (gfc, cod_info);
-	} /* for ch */
-    }    /* for gr */
-    
-    ResvFrameEnd (gfc, mean_bits);
+    /*  update reservoir status after FINAL quantization/bitrate
+     */
+    ResvAdjust (gfc, cod_info);
 }
 
 
@@ -1366,14 +1357,14 @@ VBR_iteration_loop (
 
     /*  find lowest bitrate able to hold used bits
      */
-    if (analog_silence && !gfp->VBR_hard_min) 
-        /*  we detected analog silence and the user did not specify 
-         *  any hard framesize limit, so start with smallest possible frame
-         */
-        gfc->bitrate_index = 1;
-    else
-        gfc->bitrate_index = gfc->VBR_min_bitrate;
-     
+     if (analog_silence && !gfp->VBR_hard_min) 
+	 /*  we detected analog silence and the user did not specify 
+	  *  any hard framesize limit, so start with smallest possible frame
+	  */
+	 gfc->bitrate_index = 1;
+     else
+	 gfc->bitrate_index = gfc->VBR_min_bitrate;
+
     for( ; gfc->bitrate_index < gfc->VBR_max_bitrate; gfc->bitrate_index++) {
         if (used_bits <= frameBits[gfc->bitrate_index]) break; 
     }
@@ -1394,7 +1385,12 @@ VBR_iteration_loop (
     }   /* breaks adjusted */
     /*--------------------------------------*/
     
-    iteration_finish (gfc, mean_bits);
+    for (gr = 0; gr < gfc->mode_gr; gr++) {
+        for (ch = 0; ch < gfc->channels_out; ch++) {
+	    iteration_finish_one(gfc, gr, ch);
+	} /* for ch */
+    }    /* for gr */
+    ResvFrameEnd (gfc, mean_bits);
 }
 
 
@@ -1580,11 +1576,12 @@ ABR_iteration_loop(
                 outer_loop (gfp, cod_info, &l3_xmin,
                             xrpow, ch, targ_bits[gr][ch]);
             }
+	    iteration_finish_one(gfc, gr, ch);
 
             totbits += cod_info->part2_3_length;
         } /* ch */
     }  /* gr */
-  
+
     /*  find a bitrate which can handle totbits 
      */
     for (gfc->bitrate_index =  gfc->VBR_min_bitrate ;
@@ -1595,7 +1592,7 @@ ABR_iteration_loop(
     }
     assert (gfc->bitrate_index <= gfc->VBR_max_bitrate);
 
-    iteration_finish (gfc, mean_bits);
+    ResvFrameEnd (gfc, mean_bits);
 }
 
 
@@ -1659,18 +1656,7 @@ iteration_loop(
             }
             assert (cod_info->part2_3_length <= MAX_BITS);
 
-            /*  try some better scalefac storage
-             */
-            best_scalefac_store (gfc, gr, ch, l3_side);
-            
-            /*  best huffman_divide may save some bits too
-             */
-            if (gfc->use_best_huffman == 1) 
-                best_huffman_divide (gfc, cod_info);
-            
-            /*  update reservoir status after FINAL quantization/bitrate
-             */
-            ResvAdjust (gfc, cod_info);
+	    iteration_finish_one(gfc, gr, ch);
         } /* for ch */
     }    /* for gr */
 
