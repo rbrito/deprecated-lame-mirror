@@ -22,7 +22,7 @@
 #define LAYER2_H_INCLUDED
 
 
-struct al_table 
+struct al_table2 
 {
   short bits;
   short d;

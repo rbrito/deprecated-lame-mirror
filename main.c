@@ -13,6 +13,7 @@
 */
 #include "lame.h"
 
+ 
 #ifdef HAVEGTK
 #include "gtkanal.h"
 #include <gtk/gtk.h>
