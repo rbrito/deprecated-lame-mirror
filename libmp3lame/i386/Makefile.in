@@ -85,6 +85,7 @@ LN_S = @LN_S@
 MAINT = @MAINT@
 MAKEDEP = @MAKEDEP@
 MAKEINFO = @MAKEINFO@
+NASM_FORMAT = @NASM_FORMAT@
 OBJDUMP = @OBJDUMP@
 PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
@@ -120,7 +121,7 @@ EXTRA_DIST =  	fft.nas 	fft3dn.nas 	fftfpu.nas 	fftsse.nas 	ffttbl.nas
 
 
 NASM = @NASM@
-NASMFLAGS = -f elf -i $(top_srcdir)/libmp3lame/@CPUTYPE@/
+NASMFLAGS = @NASM_FORMAT@ -i $(top_srcdir)/libmp3lame/@CPUTYPE@/
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../../config.h
 CONFIG_CLEAN_FILES = 

@@ -1780,14 +1780,13 @@ EOF
 
 fi
 
-
 echo $ac_n "checking for Cygwin environment""... $ac_c" 1>&6
-echo "configure:1786: checking for Cygwin environment" >&5
+echo "configure:1785: checking for Cygwin environment" >&5
 if eval "test \"`echo '$''{'ac_cv_cygwin'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 1791 "configure"
+#line 1790 "configure"
 #include "confdefs.h"
 
 int main() {
@@ -1798,7 +1797,7 @@ int main() {
 return __CYGWIN__;
 ; return 0; }
 EOF
-if { (eval echo configure:1802: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:1801: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   ac_cv_cygwin=yes
 else
@@ -1814,6 +1813,7 @@ fi
 echo "$ac_t""$ac_cv_cygwin" 1>&6
 CYGWIN=
 test "$ac_cv_cygwin" = yes && CYGWIN=yes
+
 echo $ac_n "checking for mingw32 environment""... $ac_c" 1>&6
 echo "configure:1819: checking for mingw32 environment" >&5
 if eval "test \"`echo '$''{'ac_cv_mingw32'+set}'`\" = set"; then
@@ -4551,9 +4551,14 @@ else
   HAVE_NASM_FALSE=
 fi
 
+if test "x$CYGWIN" = "xyes"; then
+	NASM_FORMAT="-f coff"
+else
+	NASM_FORMAT="-f elf"
+fi
 
 echo $ac_n "checking for additional optimizations""... $ac_c" 1>&6
-echo "configure:4557: checking for additional optimizations" >&5
+echo "configure:4562: checking for additional optimizations" >&5
 # Check whether --enable-expopt or --disable-expopt was given.
 if test "${enable_expopt+set}" = set; then
   enableval="$enable_expopt"
@@ -4621,7 +4626,7 @@ fi
 
 
 echo $ac_n "checking for debug options""... $ac_c" 1>&6
-echo "configure:4625: checking for debug options" >&5
+echo "configure:4630: checking for debug options" >&5
 # Check whether --enable-debug or --disable-debug was given.
 if test "${enable_debug+set}" = set; then
   enableval="$enable_debug"
@@ -4881,6 +4886,7 @@ LDADD="${CONFIG_MATH_LIB} ${LDADD}"
 
 
 
+
 trap '' 1 2 15
 cat > confcache <<\EOF
 # This file is a shell script that caches the results of configure
@@ -5069,6 +5075,7 @@ s%@FRONTEND_LDADD@%$FRONTEND_LDADD%g
 s%@LDADD@%$LDADD%g
 s%@LIB_MAJOR_VERSION@%$LIB_MAJOR_VERSION%g
 s%@LIB_MINOR_VERSION@%$LIB_MINOR_VERSION%g
+s%@NASM_FORMAT@%$NASM_FORMAT%g
 s%@MAKEDEP@%$MAKEDEP%g
 s%@RM_F@%$RM_F%g
 s%@LIBTOOL_DEPS@%$LIBTOOL_DEPS%g
