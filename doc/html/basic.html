@@ -47,8 +47,8 @@ for the vast majority of users.
     <td align="LEFT" nowrap> help</td>
   </tr>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><kbd><a href="#m">-m</a></kbd></td>
-    <td align="LEFT" nowrap>stereo mode (s, <b>j</b>, f, m)</td>
+    <td align="LEFT" nowrap><kbd><a href="#m">-m m</a></kbd></td>
+    <td align="LEFT" nowrap>mono mode</td>
   </tr>
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#V">-V</a></kbd></td>
@@ -62,7 +62,7 @@ for the vast majority of users.
 </dl>
 <dl> 
   <dd>Turns on encoding with a targeted average bitrate of n kbits, allowing to 
-    use frames of different sizes. The allowed range of n is 4-310, you can use 
+    use frames of different sizes. The allowed range of n is 8-320, you can use 
     any integer value within that range. 
   <dt><br>
   </dt>
@@ -135,24 +135,11 @@ for the vast majority of users.
   <hr width="50%" noshade align="center">
   <br>
   <dl> </dl>
-  <dt><strong>* <kbd>-m s/<b>j</b>/m</kbd><a name="m">&nbsp;&nbsp;&nbsp;&nbsp;stereo 
+  <dt><strong>* <kbd>-m m</kbd><a name="m">&nbsp;&nbsp;&nbsp;&nbsp;mono 
     mode</a></strong> </dt>
 </dl>
 <dl> 
-  <dd> Joint-stereo is the default mode for stereo files with VBR when -v is more 
-    than 4 or fixed bitrates of 160kbs or less. At higher fixed bitrates or higher 
-    VBR settings, the default is stereo. <b><i><br>
-    <br>
-    stereo</i></b> <br>
-    Normal stereo mode.<br>
-    <br>
-    <i><b>joint stereo</b></i><br>
-    In this mode, the encoder will make use of a correlation between both channels 
-    in order to achieve higher compression. This will enhance the quality of constant 
-    bitrate recordings, and reduce the size of variable bitrate recordings.<br>
-    <br>
-    <b><i>mono</i></b><br>
-    The input will be encoded as a mono signal. 
+  <dd>The input will be encoded as a mono signal. 
   <dt><br>
     <br>
   </dt>

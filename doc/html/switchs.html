@@ -71,6 +71,10 @@
     <td align="LEFT" nowrap>enforce use of constant bitrate</td>
   </tr>
   <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd><a href="#-clipdetect">--clipdetect</a></kbd></td>
+    <td align="LEFT" nowrap>clipping detection</td>
+  </tr>
+  <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#-comp">--comp</a></kbd></td>
     <td align="LEFT" nowrap>choose compression ratio</td>
   </tr>
@@ -207,12 +211,12 @@
     <td align="LEFT" nowrap>input file is raw pcm</td>
   </tr>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><kbd><a href="#-resample">--resample</a></kbd></td>
-    <td align="LEFT" nowrap>output sampling frequency in kHz (encoding only)</td>
+    <td align="LEFT" nowrap><kbd><a href="#-replaygain">--replaygain-accurate</a></kbd></td>
+    <td align="LEFT" nowrap>more accurate ReplayGain analysis</td>
   </tr>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><kbd><a href="#-r3mix">--r3mix</a></kbd></td>
-    <td align="LEFT" nowrap>r3mix VBR preset</td>
+    <td align="LEFT" nowrap><kbd><a href="#-resample">--resample</a></kbd></td>
+    <td align="LEFT" nowrap>output sampling frequency in kHz (encoding only)</td>
   </tr>
   <TR VALIGN="TOP"> 
     <TD ALIGN="LEFT" nowrap><kbd><a href="#s">-s</a></kbd></TD>
@@ -448,11 +452,22 @@
   <hr width="50%" noshade align="center">
   <br>
   <dl> </dl>
-  <dt><strong>* <kbd>-c</kbd><a name="c">&nbsp;&nbsp;&nbsp;&nbsp;copyright</a></strong> 
+  <dt><strong>* <kbd>--clipdetect</kbd><a name="-clipdetect">&nbsp;&nbsp;&nbsp;&nbsp;clipping detection</a></strong> 
   </dt>
 </dl>
 <dl> 
-  <dd>Mark the encoded file as being copyrighted. 
+  <dd>Determine whether clipping occurs and display an appropriate message.
+  Store the MP3 peak sample in LAME Tag. 
+  <dt><br>
+    <br>
+    <hr width="50%" noshade align="center">
+    <br>
+  <dt><strong>* <kbd>--cbr</kbd><a name="-cbr">
+    &nbsp;&nbsp;&nbsp;&nbsp;enforce use of constant bitrate</a></strong> 
+  </dt>
+</dl>
+<dl> 
+  <dd>This switch enforces the use of constant bitrate encoding. 
   <dt><br>
     <br>
     <hr width="50%" noshade align="center">
@@ -991,13 +1006,12 @@
   <hr width="50%" noshade align="center">
   <br>
   <dl> </dl>
-  <dt><strong>* <kbd>--resample 8/11.025/12/16/22.05/24/32/44.1/48</kbd><a name="-resample">&nbsp;&nbsp;&nbsp;&nbsp;output 
-    sampling frequency in kHz</a></strong></dt>
+  <dt><strong>* <kbd>--replaygain-accurate</kbd><a name="-replaygain">&nbsp;&nbsp;&nbsp;&nbsp;more
+   accurate ReplayGain analysis</a></strong></dt>
 </dl>
 <dl> 
-  <dd> Select ouptut sampling frequency (for encoding only). <br>
-    If not specified, LAME will automatically resample the input when using high 
-    compression ratios. 
+  <dd>Use a slightly more accurate and much slower ReplayGain analysis. This one
+   is performing an on the the fly decoding of the mp3 data for analysis.
   <dt><br>
   </dt>
 </dl>
@@ -1005,12 +1019,13 @@
   <hr width="50%" noshade align="center">
   <br>
   <dl> </dl>
-  <dt><strong>* <kbd>--r3mix</kbd><a name="-r3mix">&nbsp;&nbsp;&nbsp;&nbsp;r3mix 
-    VBR preset</a></strong></dt>
+  <dt><strong>* <kbd>--resample 8/11.025/12/16/22.05/24/32/44.1/48</kbd><a name="-resample">&nbsp;&nbsp;&nbsp;&nbsp;output 
+    sampling frequency in kHz</a></strong></dt>
 </dl>
 <dl> 
-  <dd> Uses r3mix VBR preset. <br>
-    See <a href="http://www.r3mix.net">www.r3mix.net</a> for more details. 
+  <dd> Select ouptut sampling frequency (for encoding only). <br>
+    If not specified, LAME will automatically resample the input when using high 
+    compression ratios. 
   <dt><br>
   </dt>
 </dl>
