@@ -1,5 +1,8 @@
 $Id$
 
+USE_FFT3DN:
+ - enable 3DNow code for the FFT
+
 RH_AMP:
  -Y -> careful noise shaping, only max. distorted band at once
 
@@ -8,7 +11,7 @@ KLEMM_04:
  - sample_t instead of FLOAT for FIR coefficients
  
 KLEMM_05:
- only write brhist lines if neccessary
+ - only write brhist lines if neccessary
 
 KLEMM_06:
  fseek instead of fread (if available)
@@ -18,19 +21,19 @@ KLEMM_07 (always on):
  - more simple code
 
 KLEMM_14: (missing)
- some optimizations and code simplifications (unrolled code)
+ - some optimizations and code simplifications (unrolled code)
 
 KLEMM_36:
- portability fixes in the IO code
+ - portability fixes in the IO code
 
 KLEMM_42:
- new bandwith calculation
+ - new bandwith calculation
 
 KLEMM_43:
- cleaned up tables in tables.c
+ - cleaned up tables in tables.c
 
-KLEMM_44: (missing)
- enable code in pcm.c (new API)
+KLEMM_44:
+ - enable code in pcm.c (new API)
 
 
 USE_GOGO_SUBBAND:
@@ -55,18 +58,14 @@ NEW_DRAIN (theres a define above: NEW_DRAINXX):
    - do we lose precision here?
 
 LAME_STD_PRINT:
- more verbose output?
+ - more verbose output?
 
 PRECOMPUTE (always on, multiple defines):
- precomputes blackman window?
-
-TAKEHIRO_IEEE754_HACK (conditionally on (x86)):
- speed optimization?
- (should move into configure.in)
+ - precomputes blackman window?
 
 USE_GNUC_ASM:
- speed optimization
- (should move into configure.in)
+ - speed optimization
+   (should move into configure.in)
 
 MAXQUANTERROR:
  ?
