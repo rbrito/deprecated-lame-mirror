@@ -1100,7 +1100,7 @@ CBR_bitalloc(
 
     if (min_bits == max_bits) {
 	/* we have no way ... like 8kHz MPEG2 with 128kbps. */
-	targ_bits[0] = targ_bits[1] = min_bits;
+	targ_bits[0] = targ_bits[1] = min_bits/gfc->channels_out;
     } else {
 	/* allocate minimum bits to encode part2_length (for i-stereo) */
 	bits = gfc->l3_side.tt[gr][0].part2_length
