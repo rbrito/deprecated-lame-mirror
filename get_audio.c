@@ -627,11 +627,13 @@ int read_samples_pcm(lame_global_flags *gfp,short sample_buffer[2304], int frame
     if (16==gfc->pcmbitwidth) {
       samples_read = fread(sample_buffer, 2, (unsigned int)samples_to_read, gfp->musicin);
     }else if (8==gfc->pcmbitwidth) {
-      signed char temp[2304];
+      unsigned char temp[2304];
       int i;
       samples_read = fread(temp, 1, (unsigned int)samples_to_read, gfp->musicin);
-      for (i=0 ; i<samples_read; ++i)
-	sample_buffer[i]=(short int)temp[i]*256;
+      for (i=0 ; i<samples_read; ++i) {
+	/* note: 8bit .wav samples are unsigned */
+	sample_buffer[i]=((short int)temp[i]-127)*256;
+      }
     }else{
       ERRORF("Only 8 and 16 bit input files supported \n");
       LAME_ERROR_EXIT();
