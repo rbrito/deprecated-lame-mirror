@@ -96,7 +96,7 @@ iteration_loop( lame_global_flags *gfp,
 		      &l3_xmin[ch], l3_enc[gr][ch], 
 		      &scalefac[gr][ch], cod_info, xfsf, ch);
         }
-      best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
+      best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac,0);
       if (gfc->use_best_huffman==1 && cod_info->block_type != SHORT_TYPE) {
 	best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
       }
@@ -279,7 +279,7 @@ ABR_iteration_loop (lame_global_flags *gfp,
   for (gr = 0; gr < gfc->mode_gr; gr++)
     for (ch = 0; ch < gfc->stereo; ch++) {
       cod_info = &l3_side->gr[gr].ch[ch].tt;
-      best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
+      best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac,0);
       if (gfc->use_best_huffman==1 && cod_info->block_type != SHORT_TYPE) {
 	best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
       }
@@ -598,7 +598,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
   for (gr = 0; gr < gfc->mode_gr; gr++)
     for (ch = 0; ch < gfc->stereo; ch++) {
       cod_info = &l3_side->gr[gr].ch[ch].tt;
-      best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
+      best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac,0);
       if (gfc->use_best_huffman==1 && cod_info->block_type != SHORT_TYPE) {
 	best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
       }
@@ -712,7 +712,6 @@ void outer_loop(
   FLOAT8 xfsf_w[4][SBMAX_l];
   FLOAT8 distort[4][SBMAX_l];
 
-  int compute_stepsize=1;
   int notdone=1;
 
   noise_info.over_count = 100;
@@ -725,24 +724,29 @@ void outer_loop(
   best_noise_info = noise_info;
 
 
+
+  /* reset of iteration variables */
+  memset(&scalefac_w, 0, sizeof(III_scalefac_t));
+
+  if (cod_info->block_type==SHORT_TYPE) 
+    freorder(gfc->scalefac_band.s,xr);
+
+  for (i=0;i<576;i++) {
+    temp=fabs(xr[i]);
+    xrpow[i]=sqrt(sqrt(temp)*temp);
+  }
+  
+  bits_found=bin_search_StepSize2(gfp,targ_bits,gfc->OldValue[ch],
+				  l3_enc_w,xrpow,cod_info);
+  gfc->OldValue[ch] = cod_info->global_gain;
+
+
+
+
   /* BEGIN MAIN LOOP */
   iteration = 0;
   while ( notdone  ) {
     ++iteration;
-
-    if (compute_stepsize) {
-      /* init and compute initial quantization step */
-      compute_stepsize=0;
-      /* reset of iteration variables */
-      memset(&scalefac_w, 0, sizeof(III_scalefac_t));
-      for (i=0;i<576;i++) {
-	temp=fabs(xr[i]);
-	xrpow[i]=sqrt(sqrt(temp)*temp);
-      }
-      bits_found=bin_search_StepSize2(gfp,targ_bits,gfc->OldValue[ch],
-				      l3_enc_w,xrpow,cod_info);
-      gfc->OldValue[ch] = cod_info->global_gain;
-    }
 
 
     /* inner_loop starts with the initial quantization step computed above
@@ -759,14 +763,18 @@ void outer_loop(
       /* if this is the first iteration, see if we can reuse the quantization
        * computed in bin_search_StepSize above */
       int real_bits;
+
       if (iteration==1) {
 	if(bits_found>huff_bits) {
 	  cod_info->global_gain++;
 	  real_bits = inner_loop(gfp,xrpow, l3_enc_w, huff_bits, cod_info);
 	} else real_bits=bits_found;
       }
-      else 
+      else {
 	real_bits=inner_loop(gfp,xrpow, l3_enc_w, huff_bits, cod_info);
+      }
+
+
       cod_info->part2_3_length = real_bits;
 
       /* compute the distortion in this quantization */
@@ -774,10 +782,11 @@ void outer_loop(
       	over=0;
       }else{
 	/* coefficients and thresholds both l/r (or both mid/side) */
-	over=calc_noise1( gfp,xr, l3_enc_w, cod_info, 
+	over=calc_noise( gfp,xr, l3_enc_w, cod_info, 
 			  xfsf_w,distort, l3_xmin, &scalefac_w, 
 			  &noise_info);
       }
+
 
       /* check if this quantization is better the our saved quantization */
       if (iteration == 1) better=1;
@@ -799,6 +808,7 @@ void outer_loop(
       }
     }
 
+
     /* if no bands with distortion, we are done */
     if (!gfp->experimentalX) {
         if (gfc->noise_shaping_stop==0 && over==0)
@@ -812,8 +822,11 @@ void outer_loop(
           notdone=0;
     }
 
+
+
     if (notdone) {
 	amp_scalefac_bands( gfp, xrpow, cod_info, &scalefac_w, distort);
+
 	/* check to make sure we have not amplified too much */
 	/* loop_break returns 0 if there is an unamplified scalefac */
 	/* scale_bitcount returns 0 if no scalefactors are too large */
@@ -827,6 +840,7 @@ void outer_loop(
 		status = scale_bitcount_lsf(&scalefac_w, cod_info);
 	    }
 	    if (status) {
+
                  /*  some scalefactors are too large.  lets try setting
 		  * scalefac_scale=1 */
 		if (gfc->noise_shaping > 1 && !cod_info->scalefac_scale) {
@@ -843,11 +857,17 @@ void outer_loop(
 			status = scale_bitcount_lsf(&scalefac_w, cod_info);
 		    }
 		}
+
+
+
+
 	    }
 
 	}
 	notdone = !status;
     }
+
+
     /* Check if the last scalefactor band is distorted.
      * in VBR mode we can't get rid of the distortion, so quit now
      * and VBR mode will try again with more bits.  
@@ -867,10 +887,17 @@ void outer_loop(
             if (distort[0][SBMAX_l-1] > 0) notdone=0;
           }
       }
+
+
   }    /* done with main iteration */
 
   memcpy(cod_info,&save_cod_info,sizeof(save_cod_info));
   cod_info->part2_3_length += cod_info->part2_length;
+  if (cod_info->block_type==SHORT_TYPE) {
+    iun_reorder(gfc->scalefac_band.s,l3_enc);
+    fun_reorder(gfc->scalefac_band.s,xr);
+  }
+
 
   /* finish up */
   assert( cod_info->global_gain < 256 );
@@ -915,7 +942,7 @@ void amp_scalefac_bands(lame_global_flags *gfp,
 			III_scalefac_t *scalefac,
 			FLOAT8 distort[4][SBMAX_l])
 {
-    int start, end, l,i;
+    int start, end, l,i,j;
 	u_int	sfb;
     FLOAT8 ifqstep34;
     FLOAT8 distort_thresh;
@@ -944,26 +971,28 @@ void amp_scalefac_bands(lame_global_flags *gfp,
 
 
     for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
-	if ( distort[0][sfb]>distort_thresh  ) {
-	    scalefac->l[sfb]++;
-	    start = gfc->scalefac_band.l[sfb];
-	    end   = gfc->scalefac_band.l[sfb+1];
-	    for ( l = start; l < end; l++ )
-		xrpow[l] *= ifqstep34;
-	}
+      if ( distort[0][sfb]>distort_thresh  ) {
+	scalefac->l[sfb]++;
+	start = gfc->scalefac_band.l[sfb];
+	end   = gfc->scalefac_band.l[sfb+1];
+	for ( l = start; l < end; l++ )
+	  xrpow[l] *= ifqstep34;
+      }
     }
+    
 
-
-    for ( i = 0; i < 3; i++ ) {
-	for ( sfb = cod_info->sfb_smax; sfb < 12; sfb++ ) {
-            if ( distort[i+1][sfb]>distort_thresh) {
-                scalefac->s[sfb][i]++;
-                start = gfc->scalefac_band.s[sfb];
-                end   = gfc->scalefac_band.s[sfb+1];
-		for (l = start; l < end; l++)
-		    xrpow[l * 3 + i] *= ifqstep34;
-	    }
+    for ( j=0,sfb = cod_info->sfb_smax; sfb < 12; sfb++ ) {
+      start = gfc->scalefac_band.s[sfb];
+      end   = gfc->scalefac_band.s[sfb+1];
+      for ( i = 0; i < 3; i++ ) {
+	int j2 = j;
+	if ( distort[i+1][sfb]>distort_thresh) {
+	  scalefac->s[sfb][i]++;
+	  for (l = start; l < end; l++)
+	    xrpow[j2++] *= ifqstep34;
 	}
+	j += end-start;
+      }
     }
 }
 
@@ -973,7 +1002,7 @@ void inc_scalefac_scale(lame_global_flags *gfp,
 			gr_info *cod_info,
 			FLOAT8 xrpow[576])
 {
-    int start, end, l,i;
+    int start, end, l,i,j;
     int	sfb;
     lame_internal_flags *gfc=gfp->internal_flags;
     const FLOAT8 ifqstep34 = 1.29683955465100964055;
@@ -993,16 +1022,18 @@ void inc_scalefac_scale(lame_global_flags *gfp,
 	cod_info->preflag = 0;
     }
 
-    for ( i = 0; i < 3; i++ ) {
-	for ( sfb = cod_info->sfb_smax; sfb < 12; sfb++ ) {
+    for ( j=0,sfb = cod_info->sfb_smax; sfb < 12; sfb++ ) {
+      start = gfc->scalefac_band.s[sfb];
+      end   = gfc->scalefac_band.s[sfb+1];
+      for ( i = 0; i < 3; i++ ) {
+            int j2=j;
 	    if (scalefac->s[sfb][i] & 1) {
                 scalefac->s[sfb][i]++;
-		start = gfc->scalefac_band.s[sfb];
-		end   = gfc->scalefac_band.s[sfb+1];
 		for (l = start; l < end; l++)
-		    xrpow[l * 3 + i] *= ifqstep34;
+		  xrpow[j2++] *= ifqstep34;
 	    }
 	    scalefac->s[sfb][i] >>= 1;
+	    j += end-start;
 	}
     }
     cod_info->scalefac_scale = 1;
@@ -1016,6 +1047,9 @@ void inc_subblock_gain(lame_global_flags *gfp,
     int start, end, l,i;
     int	sfb;
     lame_internal_flags *gfc=gfp->internal_flags;
+
+    fun_reorder(gfc->scalefac_band.s,xrpow);
+
 
     for ( i = 0; i < 3; i++ ) {
 	if (cod_info->subblock_gain[i] >= 7)
@@ -1049,6 +1083,8 @@ void inc_subblock_gain(lame_global_flags *gfp,
 	}
 	cod_info->subblock_gain[i]++;
     }
+
+    freorder(gfc->scalefac_band.s,xrpow);
 }
 
 INLINE 

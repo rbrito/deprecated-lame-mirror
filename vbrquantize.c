@@ -71,7 +71,7 @@
 #undef MAXQUANTERROR
 
 
-FLOAT8 calc_sfb_noise(FLOAT8 *xr, FLOAT8 *xr34, int stride, int bw, int sf)
+FLOAT8 calc_sfb_noise(FLOAT8 *xr, FLOAT8 *xr34, int bw, int sf)
 {
   int j;
   FLOAT8 xfsf=0;
@@ -80,7 +80,7 @@ FLOAT8 calc_sfb_noise(FLOAT8 *xr, FLOAT8 *xr34, int stride, int bw, int sf)
   sfpow = POW20(sf+210); /*pow(2.0,sf/4.0); */
   sfpow34  = IPOW20(sf+210); /*pow(sfpow,-3.0/4.0);*/
 
-  for ( j=0; j < stride*bw ; j += stride) {
+  for ( j=0; j < bw ; ++j) {
     int ix;
     FLOAT8 temp;
 
@@ -126,7 +126,7 @@ FLOAT8 calc_sfb_noise(FLOAT8 *xr, FLOAT8 *xr34, int stride, int bw, int sf)
 
 
 
-FLOAT8 calc_sfb_noise_ave(FLOAT8 *xr, FLOAT8 *xr34, int stride, int bw,int sf)
+FLOAT8 calc_sfb_noise_ave(FLOAT8 *xr, FLOAT8 *xr34, int bw,int sf)
 {
   int j;
   FLOAT8 xfsf=0, xfsf_p1=0, xfsf_m1=0;
@@ -142,7 +142,7 @@ FLOAT8 calc_sfb_noise_ave(FLOAT8 *xr, FLOAT8 *xr34, int stride, int bw,int sf)
   sfpow_p1 = sfpow*1.189207115;  
   sfpow34_p1 = sfpow34*0.878126080187;
 
-  for ( j=0; j < stride*bw ; j += stride) {
+  for ( j=0; j < bw ; ++j) {
     int ix;
     FLOAT8 temp,temp_p1,temp_m1;
 
@@ -187,7 +187,7 @@ FLOAT8 calc_sfb_noise_ave(FLOAT8 *xr, FLOAT8 *xr34, int stride, int bw,int sf)
 
 
 
-int find_scalefac(FLOAT8 *xr,FLOAT8 *xr34,int stride,int sfb,
+int find_scalefac(FLOAT8 *xr,FLOAT8 *xr34,int sfb,
 		     FLOAT8 l3_xmin,int bw)
 {
   FLOAT8 xfsf;
@@ -200,8 +200,8 @@ int find_scalefac(FLOAT8 *xr,FLOAT8 *xr34,int stride,int sfb,
   sf_ok=10000;
   for (i=0; i<7; i++) {
     delsf /= 2;
-    //      xfsf = calc_sfb_noise(xr,xr34,stride,bw,sf);
-    xfsf = calc_sfb_noise_ave(xr,xr34,stride,bw,sf);
+    //      xfsf = calc_sfb_noise(xr,xr34,bw,sf);
+    xfsf = calc_sfb_noise_ave(xr,xr34,bw,sf);
 
     if (xfsf < 0) {
       /* scalefactors too small */
@@ -352,7 +352,6 @@ int compute_scalefacs_long(int sf[SBPSY_l],gr_info *cod_info,int scalefac[SBPSY_
  ************************************************************************/
 void
 VBR_quantize_granule(lame_global_flags *gfp,
-		     FLOAT8 xr[576],
                 FLOAT8 xr34[576], int l3_enc[2][2][576],
 		     III_psy_ratio *ratio,      III_psy_xmin l3_xmin,
                 III_scalefac_t scalefac[2][2],int gr, int ch)
@@ -379,15 +378,12 @@ VBR_quantize_granule(lame_global_flags *gfp,
   /* quantize xr34 */
   cod_info->part2_3_length = count_bits(gfp,l3_enc[gr][ch],xr34,cod_info);
   if (cod_info->part2_3_length >= LARGE_BITS) return;
-
   cod_info->part2_3_length += cod_info->part2_length;
 
   
   if (gfc->use_best_huffman==1 && cod_info->block_type != SHORT_TYPE) {
     best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
   }
-  
-
   return;
 }
   
@@ -437,7 +433,7 @@ VBR_noise_shaping
  int gr,int ch)
 {
   lame_internal_flags *gfc=gfp->internal_flags;
-  int       start,end,bw,sfb,l, i, vbrmax;
+  int       start,end,bw,sfb,l, i,j, vbrmax;
   III_scalefac_t vbrsf;
   III_scalefac_t save_sf;
   int maxover0,maxover1,maxover0p,maxover1p,maxover,mover;
@@ -452,25 +448,26 @@ VBR_noise_shaping
   l3_side = &gfc->l3_side;
   cod_info = &l3_side->gr[gr].ch[ch].tt;
   shortblock = (cod_info->block_type == SHORT_TYPE);
-  *ath_over = calc_xmin( gfp,xr, ratio, cod_info, &l3_xmin);
+  *ath_over = rcalc_xmin( gfp,xr, ratio, cod_info, &l3_xmin);
 
   
   for(i=0;i<576;i++) {
     FLOAT8 temp=fabs(xr[i]);
     xr34[i]=sqrt(sqrt(temp)*temp);
   }
-  
+
   
   vbrmax=-10000;
   if (shortblock) {
-    for ( sfb = 0; sfb < SBMAX_s; sfb++ )  {
+    for ( j=0, sfb = 0; sfb < SBMAX_s; sfb++ )  {
       for ( i = 0; i < 3; i++ ) {
 	start = gfc->scalefac_band.s[ sfb ];
 	end   = gfc->scalefac_band.s[ sfb+1 ];
 	bw = end - start;
-	vbrsf.s[sfb][i] = find_scalefac(&xr[3*start+i],&xr34[3*start+i],3,sfb,
+	vbrsf.s[sfb][i] = find_scalefac(&xr[j],&xr34[j],sfb,
 					l3_xmin.s[sfb][i],bw);
 	if (vbrsf.s[sfb][i]>vbrmax) vbrmax=vbrsf.s[sfb][i];
+	j += bw;
       }
     }
   }else{
@@ -478,13 +475,15 @@ VBR_noise_shaping
       start = gfc->scalefac_band.l[ sfb ];
       end   = gfc->scalefac_band.l[ sfb+1 ];
       bw = end - start;
-      vbrsf.l[sfb] = find_scalefac(&xr[start],&xr34[start],1,sfb,
+      vbrsf.l[sfb] = find_scalefac(&xr[start],&xr34[start],sfb,
 				   l3_xmin.l[sfb],bw);
 
       if (vbrsf.l[sfb]>vbrmax) vbrmax = vbrsf.l[sfb];
 
     }
   } /* compute needed scalefactors */
+
+
 
   /* save a copy of vbrsf, incase we have to recomptue scalefacs */
   memcpy(&save_sf,&vbrsf,sizeof(III_scalefac_t));
@@ -551,7 +550,7 @@ VBR_noise_shaping
     
     /* quantize xr34[] based on computed scalefactors */
     ifqstep = ( cod_info->scalefac_scale == 0 ) ? 2 : 4;
-    for ( sfb = 0; sfb < SBPSY_s; sfb++ ) {
+    for ( j=0, sfb = 0; sfb < SBPSY_s; sfb++ ) {
       start = gfc->scalefac_band.s[ sfb ];
       end   = gfc->scalefac_band.s[ sfb+1 ];
       for (i=0; i<3; i++) {
@@ -563,7 +562,7 @@ VBR_noise_shaping
 	else
 	  fac = pow(2.0,.75*ifac/4.0);
 	for ( l = start; l < end; l++ ) 
-	  xr34[3*l +i]*=fac;
+	  xr34[j++]*=fac;
       }
     }
     
@@ -657,8 +656,9 @@ VBR_noise_shaping
       }
     }
   } 
-  
-  VBR_quantize_granule(gfp,xr,xr34,l3_enc,ratio,l3_xmin,scalefac,gr,ch);
+
+  VBR_quantize_granule(gfp,xr34,l3_enc,ratio,l3_xmin,scalefac,gr,ch);
+
 
 
 
@@ -669,17 +669,6 @@ VBR_noise_shaping
     if (vbrmax+210 ==0 ) break;
     
 
-
-#if 0
-    if (gfp->frameNum==29 && ch==0 && gr==0) {
-            DEBUGF("not enough bits, decreasing vbrmax. g_gainv=%i\n",cod_info->global_gain);
-            DEBUGF("%i %i %i  minbits=%i   part2_3_length=%i  part2=%i\n",
-        	   gfp->frameNum,gr,ch,minbits,cod_info->part2_3_length,cod_info->part2_length);
-
-	    DEBUGF("xr[1] = %e  %e  \n",xr34[1],xr[1]);
-	    if (cod_info->global_gain < 130) LAME_ERROR_EXIT();
-    }
-#endif
 
     --vbrmax;
     --global_gain_adjust;
@@ -693,15 +682,19 @@ VBR_noise_shaping
 
   } while ((cod_info->part2_3_length < minbits));
 
+
+
   while (cod_info->part2_3_length > Min(maxbits,4095)) {
     /* increase global gain, keep exisiting scale factors */
     ++cod_info->global_gain;
     if (cod_info->global_gain > 255) 
       ERRORF("%ld impossible to encode this frame! bits=%d\n",
 	      gfp->frameNum,cod_info->part2_3_length);
-    VBR_quantize_granule(gfp,xr,xr34,l3_enc,ratio,l3_xmin,scalefac,gr,ch);
+    VBR_quantize_granule(gfp,xr34,l3_enc,ratio,l3_xmin,scalefac,gr,ch);
+
     ++global_gain_adjust;
   }
+
 
   return global_gain_adjust;
 }
@@ -730,11 +723,12 @@ VBR_quantize(lame_global_flags *gfp,
 
   qadjust=-2.5;   /* start with -1 db quality improvement over quantize.c VBR */
 
-
   l3_side = &gfc->l3_side;
   gfc->ATH_lower = (4-gfp->VBR_q)*4.0; 
   if (gfc->ATH_lower < 0) gfc->ATH_lower=0;
   iteration_init(gfp,l3_side,l3_enc);
+
+
 
   /* compute minimum allowed bits from minimum allowed bitrate */
   gfc->bitrate_index=gfc->VBR_min_bitrate;
@@ -770,6 +764,9 @@ VBR_quantize(lame_global_flags *gfp,
       cod_info->part2_3_length=LARGE_BITS;
     }
   }
+
+
+
 
 
 
@@ -854,18 +851,17 @@ VBR_quantize(lame_global_flags *gfp,
   } while (!bits_ok);
   
 
-
-
-
   /* find optimal scalefac storage.  Cant be done above because
    * might enable scfsi which breaks the interation loops */
   totbits=0;
   for (gr = 0; gr < gfc->mode_gr; gr++) {
     for (ch = 0; ch < gfc->stereo; ch++) {
-      best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
+      best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac,1);
       totbits += l3_side->gr[gr].ch[ch].tt.part2_3_length;
     }
   }
+
+
 
   
   if (gfp->gtkflag) {
@@ -876,13 +872,16 @@ VBR_quantize(lame_global_flags *gfp,
 	FLOAT8 noise[4];
 	FLOAT8 xfsf[4][SBMAX_l];
 	FLOAT8 distort[4][SBMAX_l];
+
+	cod_info = &l3_side->gr[gr].ch[ch].tt;
+
 	/* recompute allowed noise with no 'masking_lower' for
 	 * frame analyzer */
 	gfc->masking_lower=1.0;
 	cod_info = &l3_side->gr[gr].ch[ch].tt;	
-	calc_xmin( gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin);
+	rcalc_xmin( gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin);
 	
-	calc_noise1( gfp, xr[gr][ch], l3_enc[gr][ch], cod_info, 
+	calc_noise( gfp, xr[gr][ch], l3_enc[gr][ch], cod_info, 
 			      xfsf,distort, &l3_xmin, &scalefac[gr][ch], 
 			      &noise_info);
 	noise[0] = noise_info.over_count;
@@ -890,7 +889,17 @@ VBR_quantize(lame_global_flags *gfp,
 	noise[2] = noise_info.over_avg_noise;
 	noise[3] = noise_info.tot_avg_noise;
 	
+	if (cod_info->block_type==SHORT_TYPE) {
+	  iun_reorder(gfc->scalefac_band.s,l3_enc[gr][ch]);
+	  fun_reorder(gfc->scalefac_band.s,xr[gr][ch]);
+	}
 	set_pinfo (gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
+
+	if (cod_info->block_type==SHORT_TYPE) {
+	  ireorder(gfc->scalefac_band.s,l3_enc[gr][ch]);
+	  freorder(gfc->scalefac_band.s,xr[gr][ch]);
+	}
+
       }
     }
   }
@@ -929,6 +938,9 @@ VBR_quantize(lame_global_flags *gfp,
     }
   }
   ResvFrameEnd (gfp,l3_side, mean_bits);
+
+
+
 }
 
 

@@ -399,6 +399,7 @@ int count_bits(lame_global_flags *gfp,int *ix, FLOAT8 *xr, gr_info *cod_info)
     if (xr[i] > w)
       return LARGE_BITS;
   }
+
 #ifdef ASM_QUANTIZE
   if (gfc->quantization) 
     quantize_xrpow_ASM(xr, ix, cod_info->global_gain);
@@ -412,13 +413,8 @@ int count_bits(lame_global_flags *gfp,int *ix, FLOAT8 *xr, gr_info *cod_info)
 #endif
 
 
-  if (cod_info->block_type==SHORT_TYPE) {
-    int ix_reorder[576];
-    reorder(gfc->scalefac_band.s,ix_reorder,ix);
-    bits=count_bits_long(gfc, ix_reorder, cod_info);
-  }else{
-    bits=count_bits_long(gfc, ix, cod_info);
-  }
+  bits=count_bits_long(gfc, ix, cod_info);
+
   return bits;
 }
 
@@ -628,14 +624,20 @@ chosen and the channel/granule will not be re-encoded.
 void best_scalefac_store(lame_global_flags *gfp,int gr, int ch,
 			 int l3_enc[2][2][576],
 			 III_side_info_t *l3_side,
-			 III_scalefac_t scalefac[2][2])
+			 III_scalefac_t scalefac[2][2],int reorder)
 {
   lame_internal_flags *gfc=gfp->internal_flags;
 
     /* use scalefac_scale if we can */
     gr_info *gi = &l3_side->gr[gr].ch[ch].tt;
-    u_int sfb,i,l,start,end;
+    u_int sfb,i,j,j2,l,start,end;
 
+    if (!reorder) {
+      if (gi->block_type==SHORT_TYPE) {
+	ireorder(gfc->scalefac_band.s,l3_enc[gr][ch]);
+      }
+    }
+    
     /* remove scalefacs from bands with ix=0.  This idea comes
      * from the AAC ISO docs.  added mt 3/00 */
     /* check if l3_enc=0 */
@@ -647,17 +649,27 @@ void best_scalefac_store(lame_global_flags *gfp,int gr, int ch,
 	if (l==end) scalefac[gr][ch].l[sfb]=0;
       }
     }
-    for ( i = 0; i < 3; i++ ) {
-      for ( sfb = gi->sfb_smax; sfb < SBPSY_s; sfb++ ) {
-	if (scalefac[gr][ch].s[sfb][i]>0) {
-	  start = gfc->scalefac_band.s[ sfb ];
-	  end   = gfc->scalefac_band.s[ sfb+1 ];
-	  for ( l = start; l < end; l++ ) 
-	    if (l3_enc[gr][ch][3*l+i]!=0) break;
-	  if (l==end) scalefac[gr][ch].s[sfb][i]=0;
-        }
+    for ( j=0, sfb = gi->sfb_smax; sfb < SBPSY_s; sfb++ ) {
+	start = gfc->scalefac_band.s[ sfb ];
+	end   = gfc->scalefac_band.s[ sfb+1 ];
+	for ( i = 0; i < 3; i++ ) {
+	  if (scalefac[gr][ch].s[sfb][i]>0) {
+	    j2 = j;
+	    for ( l = start; l < end; l++ ) 
+	      if (l3_enc[gr][ch][j2++ /*3*l+i*/]!=0) break;
+	    if (l==end) scalefac[gr][ch].s[sfb][i]=0;
+	  }
+	  j += end-start;
+	}
+    }
+
+    if (!reorder) {
+      if (gi->block_type==SHORT_TYPE) {
+	iun_reorder(gfc->scalefac_band.s,l3_enc[gr][ch]);
       }
     }
+
+
 
     gi->part2_3_length -= gi->part2_length;
     if (!gi->scalefac_scale && !gi->preflag) {

@@ -437,12 +437,14 @@ inner_loop( lame_global_flags *gfp,FLOAT8 xrpow[576],
     int bits;
     assert( max_bits >= 0 );
     cod_info->global_gain--;
+
     do
     {
       cod_info->global_gain++;
       bits = count_bits(gfp,l3_enc, xrpow, cod_info);
     }
     while ( bits > max_bits );
+
     return bits;
 }
 
@@ -704,15 +706,9 @@ int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576], III_psy_ratio *ratio,
       if (gfp->ATHonly || gfp->ATHshort) {
         l3_xmin->s[sfb][b]=gfc->ATH_s[sfb];
       } else {
-
-#undef NEW_NORMALIZATION
-#ifdef NEW_NORMALIZATION
-	xmin = pow(10.0,-14.0) * ratio->thm.s[sfb][b] * gfc->masking_lower;
-#else
         xmin = ratio->en.s[sfb][b];
         if (xmin > 0.0)
           xmin = en0 * ratio->thm.s[sfb][b] * gfc->masking_lower / xmin;
-#endif
         l3_xmin->s[sfb][b] = Max(gfc->ATH_s[sfb], xmin);
       }
       
@@ -736,18 +732,70 @@ int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576], III_psy_ratio *ratio,
     if (gfp->ATHonly) {
       l3_xmin->l[sfb]=gfc->ATH_l[sfb];
     } else {
-#ifdef NEW_NORMALIZAION
-      xmin = pow(10.0,-15.2) * ratio->thm.l[sfb];
-#else
       xmin = ratio->en.l[sfb];
       if (xmin > 0.0)
         xmin = en0 * ratio->thm.l[sfb] * gfc->masking_lower / xmin;
-#endif
-#if 0
-      if (sfb >=11 && sfb <=13)
-	xmin *= pow(10.0,-10.0/10.0);
-#endif
+      l3_xmin->l[sfb]=Max(gfc->ATH_l[sfb], xmin);
+    }
+    if (en0 > gfc->ATH_l[sfb]) ath_over++;
+  }
+  }
+  return ath_over;
+}
+int rcalc_xmin( lame_global_flags *gfp,FLOAT8 xr[576], III_psy_ratio *ratio,
+	       gr_info *cod_info, III_psy_xmin *l3_xmin)
+{
+  lame_internal_flags *gfc=gfp->internal_flags;
+  int j,start, end, bw,l, b, ath_over=0;
+  u_int	sfb;
+  FLOAT8 en0, xmin, ener;
 
+  if (cod_info->block_type==SHORT_TYPE) {
+
+  for ( j=0, sfb = 0; sfb < SBMAX_s; sfb++ ) {
+    start = gfc->scalefac_band.s[ sfb ];
+    end   = gfc->scalefac_band.s[ sfb + 1 ];
+    bw = end - start;
+    for ( b = 0; b < 3; b++ ) {
+      for (en0 = 0.0, l = start; l < end; l++) {
+        ener = xr[j++];
+        ener = ener * ener;
+        en0 += ener;
+      }
+      en0 /= bw;
+      
+      if (gfp->ATHonly || gfp->ATHshort) {
+        l3_xmin->s[sfb][b]=gfc->ATH_s[sfb];
+      } else {
+        xmin = ratio->en.s[sfb][b];
+        if (xmin > 0.0)
+          xmin = en0 * ratio->thm.s[sfb][b] * gfc->masking_lower / xmin;
+        l3_xmin->s[sfb][b] = Max(gfc->ATH_s[sfb], xmin);
+      }
+      
+      if (en0 > gfc->ATH_s[sfb]) ath_over++;
+    }
+  }
+
+  }else{
+  
+  for ( sfb = 0; sfb < SBMAX_l; sfb++ ){
+    start = gfc->scalefac_band.l[ sfb ];
+    end   = gfc->scalefac_band.l[ sfb+1 ];
+    bw = end - start;
+    
+    for (en0 = 0.0, l = start; l < end; l++ ) {
+      ener = xr[l] * xr[l];
+      en0 += ener;
+    }
+    en0 /= bw;
+    
+    if (gfp->ATHonly) {
+      l3_xmin->l[sfb]=gfc->ATH_l[sfb];
+    } else {
+      xmin = ratio->en.l[sfb];
+      if (xmin > 0.0)
+        xmin = en0 * ratio->thm.l[sfb] * gfc->masking_lower / xmin;
       l3_xmin->l[sfb]=Max(gfc->ATH_l[sfb], xmin);
     }
     if (en0 > gfc->ATH_l[sfb]) ath_over++;
@@ -766,13 +814,13 @@ int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576], III_psy_ratio *ratio,
 /*            calc_noise                                                 */
 /*************************************************************************/
 /*  mt 5/99:  Function: Improved calc_noise for a single channel   */
-int calc_noise1( lame_global_flags *gfp,
+int calc_noise( lame_global_flags *gfp,
                  FLOAT8 xr[576], int ix[576], gr_info *cod_info,
 		 FLOAT8 xfsf[4][SBMAX_l], FLOAT8 distort[4][SBMAX_l],
 		 III_psy_xmin *l3_xmin, III_scalefac_t *scalefac,
 		 calc_noise_result *res)
 {
-  int start, end, l, i, over=0;
+  int start, end, j,l, i, over=0;
   u_int sfb;
   FLOAT8 sum, bw;
   lame_internal_flags *gfc=gfp->internal_flags;
@@ -785,13 +833,15 @@ int calc_noise1( lame_global_flags *gfp,
   
   if (cod_info->block_type == SHORT_TYPE) {
     int max_index = SBPSY_s;
-    
     if (gfp->VBR==vbr_rh || gfp->VBR==vbr_mt)
       {
         max_index = SBMAX_s;
       }
-    for ( i = 0; i < 3; i++ ) {
-        for ( sfb = 0; sfb < max_index; sfb++ ) {
+    for ( j=0, sfb = 0; sfb < max_index; sfb++ ) {
+         start = gfc->scalefac_band.s[ sfb ];
+         end   = gfc->scalefac_band.s[ sfb+1 ];
+         bw = end - start;
+         for ( i = 0; i < 3; i++ ) {
 	    FLOAT8 step;
 	    int s;
 
@@ -802,13 +852,11 @@ int calc_noise1( lame_global_flags *gfp,
 	    assert(s<Q_MAX);
 	    assert(s>=0);
 	    step = POW20(s);
-	    start = gfc->scalefac_band.s[ sfb ];
-	    end   = gfc->scalefac_band.s[ sfb+1 ];
-            bw = end - start;
 
 	    for ( sum = 0.0, l = start; l < end; l++ ) {
 		FLOAT8 temp;
-		temp = fabs(xr[l * 3 + i]) - pow43[ix[l * 3 + i]] * step;
+		temp = fabs(xr[j]) - pow43[ix[j]] * step;
+		++j;
 #ifdef MAXNOISE
 		temp = bw*temp*temp;
 		sum = Max(sum,temp);
@@ -1031,6 +1079,7 @@ bin_search_StepSize2 (lame_global_flags *gfp,int desired_rate, int start, int *i
     }
 
     gfc->CurrentStep = CurrentStep;
+
     return nBits;
 }
 

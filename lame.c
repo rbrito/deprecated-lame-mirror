@@ -1047,7 +1047,28 @@ char *mp3buf, int mp3buf_size)
     iteration_loop( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
     break;
   case vbr_mt:
+
+    for (gr = 0; gr < gfc->mode_gr; gr++) {
+      for (ch = 0; ch < gfc->stereo; ch++) {
+	gr_info *cod_info = &gfc->l3_side.gr[gr].ch[ch].tt;
+	if (cod_info->block_type==SHORT_TYPE) {
+	  freorder(gfc->scalefac_band.s,xr[gr][ch]);
+	}
+      }
+    }
     VBR_quantize( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
+    for (gr = 0; gr < gfc->mode_gr; gr++) {
+      for (ch = 0; ch < gfc->stereo; ch++) {
+	gr_info *cod_info = &gfc->l3_side.gr[gr].ch[ch].tt;
+	if (cod_info->block_type==SHORT_TYPE) {
+	  iun_reorder(gfc->scalefac_band.s,l3_enc[gr][ch]);
+	  fun_reorder(gfc->scalefac_band.s,xr[gr][ch]);
+	}
+      }
+    }
+
+
+
     break;
   case vbr_rh:
     VBR_iteration_loop( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
@@ -1063,6 +1084,14 @@ char *mp3buf, int mp3buf_size)
 
   /*  write the frame to the bitstream  */
   getframebits(gfp,&bitsPerFrame,&mean_bits);
+  
+  for ( ch = 0; ch < gfc->stereo; ++ch ) {
+    for (gr = 0; gr < gfc->mode_gr; ++gr) {
+      gr_info *cod_info = &gfc->l3_side.gr[gr].ch[ch].tt;
+      if (cod_info->block_type == SHORT_TYPE) 
+	ireorder(gfc->scalefac_band.s,l3_enc[gr][ch]);
+    }
+  }
   format_bitstream( gfp, bitsPerFrame, l3_enc, scalefac);
 
   /* copy mp3 bit buffer into array */

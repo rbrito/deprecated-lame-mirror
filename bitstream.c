@@ -593,7 +593,6 @@ writeMainData(lame_global_flags *gfp,
     int gr, ch, sfb,data_bits,scale_bits,tot_bits=0;
     lame_internal_flags *gfc=gfp->internal_flags;
     III_side_info_t *l3_side;
-    int ix_w[576];
 
     l3_side = &gfc->l3_side;
     if (gfp->version == 1) {
@@ -610,8 +609,6 @@ writeMainData(lame_global_flags *gfp,
 		hogege = gfc->bs.totbit;
 #endif
 		if (gi->block_type == SHORT_TYPE) {
-                    memcpy(ix_w,l3_enc[gr][ch],sizeof(ix_w));
-		    reorder(gfc->scalefac_band.s,l3_enc[gr][ch],ix_w);
 		    for (sfb = 0; sfb < SBPSY_s; sfb++) {
 			int slen = sfb < 6 ? slen1 : slen2;
 
@@ -667,8 +664,6 @@ writeMainData(lame_global_flags *gfp,
 	    sfb = 0;
 	    sfb_partition = 0;
 	    if (gi->block_type == SHORT_TYPE) {
-	      memcpy(ix_w,l3_enc[gr][ch],sizeof(ix_w));
-	      reorder(gfc->scalefac_band.s,l3_enc[gr][ch],ix_w);
 		for (; sfb_partition < 4; sfb_partition++) {
 		    int sfbs = gi->sfb_partition_table[sfb_partition] / 3;
 		    int slen = gi->slen[sfb_partition];
