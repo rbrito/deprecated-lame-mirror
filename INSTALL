@@ -75,6 +75,8 @@ Now just type:
 
 % make
 
+(for non-GNU systems: use gnumake or gmake instead of make)
+
 If it doesn't work, figure out why and send me the fix!  
 If you are using a newer version of EGCS, check the Makefile.
 There are some flags which may improve performance.

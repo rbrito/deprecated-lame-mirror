@@ -287,6 +287,8 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 			gi->table_select[2] = 16;
 		    CRC_writeheader(gfc,gi->table_select[2], 5,&crc);
 
+		    assert(gi->region0_count < 16U);
+		    assert(gi->region1_count < 8U);
 		    CRC_writeheader(gfc,gi->region0_count, 4,&crc);
 		    CRC_writeheader(gfc,gi->region1_count, 3,&crc);
 		}
@@ -335,6 +337,8 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 		    gi->table_select[2] = 16;
 		CRC_writeheader(gfc,gi->table_select[2], 5,&crc);
 
+		assert(gi->region0_count < 16U);
+		assert(gi->region1_count < 8U);
 		CRC_writeheader(gfc,gi->region0_count, 4,&crc);
 		CRC_writeheader(gfc,gi->region1_count, 3,&crc);
 	    }
@@ -503,6 +507,8 @@ HuffmanCode(lame_global_flags *gfp, unsigned int table_select, int x, int y)
 
     assert(x <= 15);
     assert(y <= 15);
+    assert(x >= 0);
+    assert(y >= 0);
 
     x = x * xlen + y;
 
