@@ -56,50 +56,49 @@ static const char log2tab[] = {
  *  |            |              |||
  *  |            |              |||
  *  |            |              |||
- *  |            |              |||
- *  +-------+----++|            |||
- *  | table |table||            |||
- *  |  5967 | 2834||            |||
- *  | (4x4) |(3x3)|||||||||||||||||
- *  |       +-----+||||||||||||||||
- *  +-------+
+ *  |            |              +--
+ *  +-----+----++|              |
+ *   table|table||              |
+ *    5967| 2834||              |
+ *   (4x4)|(3x3)|||||||||||||||||
+ *        +-----+|||||||||||||||+--
+ *  ------+
  */
 /* ixmax=4,5 (select table from 7, 11, 8, 9) */
-static const uint64_t table7B89[] = {
+static const uint64_t table7B89[16*10+2] = {
     u64const(0x02000300020001), u64const(0x04000400040004), u64const(0x07000600060007), u64const(0x09000700080009),
     u64const(0x09000900090009), u64const(0x0a000a000a000a),
-    0,0,
 /* here starts tableAFBC, ixmax=6,7 (select table from 10, 15, 11, 12 */
     u64const(0x02000400030001), u64const(0x04000400050004), u64const(0x06000600060007), u64const(0x08000800080009),
     u64const(0x0900090008000a), u64const(0x0a000a0009000a), u64const(0x09000a000a000a), u64const(0x0a000a000a000b),
+    0,0,
 
     u64const(0x04000400040004), u64const(0x04000500050006), u64const(0x06000600060008), u64const(0x0a000700080009),
     u64const(0x0a0008000a0009), u64const(0x0a000a000a000a),
-    0,0,
     u64const(0x04000400050004), u64const(0x05000500050006), u64const(0x06000600070008), u64const(0x08000700080009),
     u64const(0x0a00090009000a), u64const(0x0a00090009000b), u64const(0x09000a000a000a), u64const(0x0a000a000a000a),
+    0,0,
 
     u64const(0x07000500060007), u64const(0x06000600070007), u64const(0x08000700080009), u64const(0x0a00080009000a),
     u64const(0x0a0009000a000a), u64const(0x0b000a000b000b),
-    0,0,
     u64const(0x06000600060007), u64const(0x07000600070008), u64const(0x08000700070009), u64const(0x0900080008000a),
     u64const(0x0a00090009000b), u64const(0x0b000a0009000c), u64const(0x0a0009000a000b), u64const(0x0a000a000a000b),
+    0,0,
 
     u64const(0x09000700080008), u64const(0x0a000700080009), u64const(0x0a00080009000a), u64const(0x0b0009000b000b),
     u64const(0x0b0009000a000b), u64const(0x0c000a000c000b),
-    0,0,
     u64const(0x08000700070008), u64const(0x08000700080009), u64const(0x0900080008000a), u64const(0x0b00080009000b),
     u64const(0x0a00090009000c), u64const(0x0c000a000a000c), u64const(0x0a000a000a000b), u64const(0x0b000a000b000c),
+    0,0,
 
     u64const(0x09000800090008), u64const(0x090008000a0009), u64const(0x0a0009000a000a), u64const(0x0b0009000b000b),
     u64const(0x0c000a000b000b), u64const(0x0c000b000c000c),
-    0,0,
     u64const(0x09000800080009), u64const(0x0a00080008000a), u64const(0x0a00090009000b), u64const(0x0b00090009000c),
     u64const(0x0b000a000a000c), u64const(0x0c000a000a000c), u64const(0x0b000a000b000c), u64const(0x0c000b000b000c),
+    0,0,
 
     u64const(0x0a000900090009), u64const(0x0a0009000a000a), u64const(0x0b000a000b000b), u64const(0x0b000a000c000c),
     u64const(0x0d000b000c000c), u64const(0x0d000b000d000c),
-    0,0,
     u64const(0x0900090009000a), u64const(0x0a00090009000b), u64const(0x0b000a0009000c), u64const(0x0c000a000a000c),
     u64const(0x0c000a000a000d), u64const(0x0d000b000a000d), u64const(0x0c000a000b000c), u64const(0x0d000b000b000d),
 
@@ -427,16 +426,16 @@ choose_table(const int *ix, const int * const end, int * const s)
 	return count_bit_noESC_from2(s, ix, end);
 
     case 2:
-	return count_bit_noESC_from4(s, ix, end,  2, table7B89+100);
+	return count_bit_noESC_from4(s, ix, end,  2, table7B89+98);
 
     case 3:
-	return count_bit_noESC_from4(s, ix, end,  5, table7B89+96);
+	return count_bit_noESC_from4(s, ix, end,  5, table7B89+94);
 
     case 4: case 5:
 	return count_bit_noESC_from4(s, ix, end,  7, table7B89);
 
     case 6: case 7:
-	return count_bit_noESC_from4(s, ix, end, 10, table7B89+8);
+	return count_bit_noESC_from4(s, ix, end, 10, table7B89+6);
 
     case 8: case 9: case 10: case 11: case 12: case 13: case 14: case 15:
 	return count_bit_noESC_from4(s, ix, end, 13, tableDxEF);
