@@ -222,10 +222,10 @@ CRC_update(int value, int crc)
 static int
 writeTableHeader(lame_internal_flags *gfc, gr_info *gi, int ptr)
 {
-    static const int blockConv[] = {0, 1, 3, 2};
+    static const int blockConv[] = {1, 3, 2};
     if (gi->block_type != NORM_TYPE) {
 	ptr = writeheader(gfc, 1, 1, ptr); /* window_switching_flag */
-	ptr = writeheader(gfc, blockConv[gi->block_type], 2, ptr);
+	ptr = writeheader(gfc, blockConv[gi->block_type-1], 2, ptr);
 	ptr = writeheader(gfc, gi->mixed_block_flag, 1, ptr);
 
 	if (gi->table_select[0] == 14)
