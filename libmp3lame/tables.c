@@ -1184,21 +1184,15 @@ int psymodel_init(lame_global_flags *gfp)
 
     if (gfp->ATHtype != -1) { 
 	/* compute equal loudness weights */
-	FLOAT freq;
-	FLOAT freq_inc = gfp->out_samplerate / (BLKSIZE);
 	FLOAT eql_balance = 0.0;
-	freq = 0.0;
 	for( i = 0; i < BLKSIZE/2; ++i ) {
-	    freq += freq_inc;
-				/* convert ATH dB to relative power (not dB) */
-				/*  to determine eql_w */
-	    gfc->ATH.eql_w[i] = 1. / pow( 10, ATHformula( freq, gfp ) / 10 );
+	    FLOAT freq = gfp->out_samplerate * i / BLKSIZE;
+	    gfc->ATH.eql_w[i] = pow(10.0, -ATHformula( freq, gfp ) / 10);
 	    eql_balance += gfc->ATH.eql_w[i];
 	}
-	eql_balance = 1.0 / eql_balance;
+	eql_balance =  (vo_scale * vo_scale / (BLKSIZE/2)) / eql_balance;
 	for( i = BLKSIZE/2; --i >= 0; ) { /* scale weights */
-	    gfc->ATH.eql_w[i]
-		*= eql_balance * (vo_scale * vo_scale / (BLKSIZE/2));
+	    gfc->ATH.eql_w[i] *= eql_balance;
 	}
     }
 
