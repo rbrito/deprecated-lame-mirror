@@ -63,33 +63,31 @@ typedef union {
 static void quantize_xrpow(const FLOAT *xp, int *pi, FLOAT istep)
 {
     /* quantize on xr^(3/4) instead of xr */
-    int j;
-    fi_union *fi;
+    fi_union *fi = (fi_union *)pi;
+    FLOAT *xe = xp + 576;
 
-    fi = (fi_union *)pi;
-    for (j = 576 / 4 - 1; j >= 0; --j) {
-	double x0 = istep * xp[0];
-	double x1 = istep * xp[1];
-	double x2 = istep * xp[2];
-	double x3 = istep * xp[3];
+    do {
+	double x0 = istep * xp[0] + MAGIC_FLOAT;
+	double x1 = istep * xp[1] + MAGIC_FLOAT;
+	double x2 = istep * xp[2] + MAGIC_FLOAT;
+	double x3 = istep * xp[3] + MAGIC_FLOAT;
+	xp += 4;
 
-	x0 += MAGIC_FLOAT; fi[0].f = x0;
-	x1 += MAGIC_FLOAT; fi[1].f = x1;
-	x2 += MAGIC_FLOAT; fi[2].f = x2;
-	x3 += MAGIC_FLOAT; fi[3].f = x3;
+	fi[0].f = x0;
+	fi[1].f = x1;
+	fi[2].f = x2;
+	fi[3].f = x3;
 
 	fi[0].f = x0 + (adj43asm - MAGIC_INT)[fi[0].i];
 	fi[1].f = x1 + (adj43asm - MAGIC_INT)[fi[1].i];
 	fi[2].f = x2 + (adj43asm - MAGIC_INT)[fi[2].i];
 	fi[3].f = x3 + (adj43asm - MAGIC_INT)[fi[3].i];
-
 	fi[0].i -= MAGIC_INT;
 	fi[1].i -= MAGIC_INT;
 	fi[2].i -= MAGIC_INT;
 	fi[3].i -= MAGIC_INT;
 	fi += 4;
-	xp += 4;
-    }
+    } while (xp < xe);
 }
 
 #  define ROUNDFAC -0.0946
@@ -222,7 +220,7 @@ static void quantize_xrpow_ISO( const FLOAT *xr, int *ix, FLOAT istep )
 /*	      ix_max							 */
 /*************************************************************************/
 
-int 
+static int 
 ix_max(const int *ix, const int *end)
 {
     int max1 = 0, max2 = 0;
@@ -248,7 +246,7 @@ ix_max(const int *ix, const int *end)
 
 
 
-int
+static int
 count_bit_ESC( 
     const int *       ix, 
     const int * const end, 
@@ -650,7 +648,7 @@ recalc_divide_sub(
 	if (gi->part2_3_length <= bits)
 	    continue;
 
-	memcpy(gi, cod_info2, sizeof(gr_info));
+	*gi = *cod_info2;
 	gi->part2_3_length = bits;
 	gi->region0_count = r01_div[r2 - 2];
 	gi->region1_count = r2 - 2 - r01_div[r2 - 2];
@@ -676,39 +674,38 @@ void best_huffman_divide(
     int r0_tbl[7 + 15 + 1];
     int r1_tbl[7 + 15 + 1];
 
+    if (gi->big_values == 0)
+	return;
 
     /* SHORT BLOCK stuff fails for MPEG2 */ 
     if (gi->block_type == SHORT_TYPE && gfc->mode_gr==1) 
 	return;
 
 
-    memcpy(&cod_info2, gi, sizeof(gr_info));
+    cod_info2 = *gi;
     if (gi->block_type == NORM_TYPE) {
 	recalc_divide_init(gfc, gi, ix, r01_bits,r01_div,r0_tbl,r1_tbl);
 	recalc_divide_sub(gfc, &cod_info2, gi, ix, r01_bits,r01_div,r0_tbl,r1_tbl);
     }
 
-    i = cod_info2.big_values;
-    if (i == 0 || (unsigned int)(ix[i-2] | ix[i-1]) > 1)
+    i = gi->big_values;
+    if ((unsigned int)(ix[i-2] | ix[i-1]) > 1)
 	return;
 
     i = gi->count1 + 2;
     if (i > 576)
 	return;
 
-    /* Determines the number of bits to encode the quadruples. */
-    memcpy(&cod_info2, gi, sizeof(gr_info));
+    cod_info2 = *gi;
     cod_info2.count1 = i;
-    a1 = a2 = 0;
+    cod_info2.big_values -= 2;
 
-    assert(i <= 576);
-    
+    a1 = a2 = 0;
     for (; i > cod_info2.big_values; i -= 4) {
 	int p = ((ix[i-4] * 2 + ix[i-3]) * 2 + ix[i-2]) * 2 + ix[i-1];
 	a1 += t32l[p];
 	a2 += t33l[p];
     }
-    cod_info2.big_values = i;
 
     cod_info2.count1table_select = 0;
     if (a1 > a2) {
@@ -728,13 +725,13 @@ void best_huffman_divide(
 	    a1 = i;
 	}
 	if (a1 > 0)
-	  cod_info2.table_select[0] =
-	    gfc->choose_table(ix, ix + a1, (int *)&cod_info2.part2_3_length);
+	    cod_info2.table_select[0] =
+		gfc->choose_table(ix, ix + a1, &cod_info2.part2_3_length);
 	if (i > a1)
-	  cod_info2.table_select[1] =
-	    gfc->choose_table(ix + a1, ix + i, (int *)&cod_info2.part2_3_length);
+	    cod_info2.table_select[1] =
+		gfc->choose_table(ix + a1, ix + i, &cod_info2.part2_3_length);
 	if (gi->part2_3_length > cod_info2.part2_3_length)
-	    memcpy(gi, &cod_info2, sizeof(gr_info));
+	    *gi = cod_info2;
     }
 }
 
@@ -744,8 +741,10 @@ const int slen1_tab [16] = { 0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4 };
 const int slen2_tab [16] = { 0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3 };
 
 static void
-scfsi_calc(int ch,
-	   III_side_info_t *l3_side)
+scfsi_calc(
+    int ch,
+    III_side_info_t *l3_side
+    )
 {
     int i, s1, s2, c1, c2;
     int sfb;
