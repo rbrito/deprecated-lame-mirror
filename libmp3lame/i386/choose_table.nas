@@ -56,12 +56,11 @@ choose_table_MMX:
 	mov	edx,[esp+8]	;edx = end
 	xor	eax,eax
 	sub	ecx,edx		;ecx = begin-end(should be minus)
- 	pxor	mm0,mm0		;mm0=[0:0]
-	pxor	mm1,mm1		;mm1=[0:0]
 	test	ecx,8
+ 	pxor	mm0,mm0		;mm0=[0:0]
+	movq	mm1,[edx+ecx]
 	jz	.lp
 
-	movq	mm1,[edx+ecx]
 	add	ecx,8
 	jz	.exit
 
@@ -114,11 +113,12 @@ choose_table_MMX:
 	sub	ecx, edx
 
 	xor	esi, esi	; sum = 0
-	pxor	mm7, mm7	; linbits_sum, 14を越えたものの数
 	test    ecx, 8
+	pxor	mm7, mm7	; linbits_sum, 14を越えたものの数
 	jz	.H_dual_lp1
 
 	movq	mm0, [edx+ecx]
+	add	ecx,8
 	packssdw	mm0,mm7
 	movq	mm2, mm0
 	paddusw	mm0, mm5	; mm0 = min(ix, 15)+0xfff0
@@ -127,7 +127,6 @@ choose_table_MMX:
 	pmaddwd	mm0, mm3	; {0, 0, y, x}*{1, 16, 1, 16}
 	movd	ebx, mm0
 	mov	esi, [largetbl+ebx*4+(16*16+16)*4]
-	add	ecx,8
 
 	jz	.H_dual_exit
 
@@ -233,6 +232,7 @@ from3:
 	jz	.choose3_lp1
 ; odd length
 	movq	mm0,[edx+eax]	;mm0 = ix[0] | ix[1]
+	add	eax,8
 	packssdw	mm0,mm2
 
 	pmaddwd	mm0,mm5
@@ -240,20 +240,19 @@ from3:
 
 	movq	mm2,  [ecx+ebx*8]
 
-	add	eax,8
 	jz	.choose3_exit
 
 	align	4
 .choose3_lp1
 	movq	mm0,[edx+eax]
 	movq	mm1,[edx+eax+8]
+	add	eax,16
 	packssdw	mm0,mm1 ;mm0 = ix[0]|ix[1]|ix[2]|ix[3]
 	pmaddwd	mm0,mm5
 	movd	ebx,mm0
 	punpckhdq	mm0,mm0
 	paddd	mm2, [ecx+ebx*8]
 	movd	ebx,mm0
-	add	eax,16
 	paddd	mm2, [ecx+ebx*8]
 	jnz	.choose3_lp1
 .choose3_exit
