@@ -647,7 +647,7 @@ compute_masking_s(
     int j, b, sb;
     FLOAT eb[CBANDS], ecb, enn, thmm;
 
-    ecb = fft_s[0] * fft_s[0] * 2.0f;
+    ecb = fft_s[0] * fft_s[0] * (FLOAT)2.0;
     j = 1;
     b = 0;
     do {
