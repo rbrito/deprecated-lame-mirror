@@ -174,14 +174,8 @@ void set_masking_lower( int nbits )
 	adjust = (nbits-125)/(2500.0-125.0);
 	adjust = 4*(adjust-1);
 #endif
-	
 	masking_lower_db += adjust;
-
-#ifdef NOPOW
-	masking_lower = exp((masking_lower_db/10)*LOG10);
-#else
 	masking_lower = pow(10.0,masking_lower_db/10);
-#endif
 }
 
 /************************************************************************
@@ -854,12 +848,8 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
 
     xr_s = (D192_3 *) xr;
     ix_s = (I192_3 *) ix;
+    step = POW20(cod_info->global_gain);
 
-#ifdef NOPOW
-    step = exp( (cod_info->global_gain - 210) * (0.25 * LOG2));
-#else
-    step = pow20[cod_info->global_gain];
-#endif
     for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ )
     {
         start = scalefac_band_long[ sfb ];
@@ -896,11 +886,8 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
 
     for ( i = 0; i < 3; i++ )
     {
-#ifdef NOPOW
-        step = exp( (cod_info->global_gain - 210) * (0.25 * LOG2));
-#else
-	step = pow20[cod_info->global_gain];
-#endif
+
+	step = POW20(cod_info->global_gain);
         for ( sfb = cod_info->sfb_smax; sfb < SBPSY_s; sfb++ )
         {
             start = scalefac_band_short[ sfb ];

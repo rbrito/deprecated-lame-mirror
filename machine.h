@@ -36,6 +36,26 @@
 #include		<errno.h>
 
 
+/* three different types of pow() functions:  
+   1. table lookup   
+   2. pow()
+   3. exp()   on some machines this is claimed to be faster than pow()
+*/
+
+
+#define POW20(x)  pow20[x]
+/*
+#define POW20(x)  pow(2.0,((double)(x)-210)*.25)
+#define POW20(x)  exp( ((double)(x)-210)*(.25*LOG2) )
+*/
+
+#define IPOW20(x)  ipow20[x]
+/*
+#define IPOW20(x)  exp( -((double)(x)-210)*.1875*LOG2 ) 
+#define IPOW20(x)  pow(2.0,-((double)(x)-210)*.1875)
+*/
+
+
 #if ( defined(_MSC_VER) && !defined(INLINE))
 	#define INLINE _inline
 #else

@@ -2,7 +2,7 @@
 #define LOOP_PVT_H
 
 #define IXMAX_VAL 8206 /* ix always <= 8191+15.    see count_bits() */
-#define PRECALC_SIZE (IXMAX_VAL+1)
+#define PRECALC_SIZE (IXMAX_VAL+2)
 
 extern FLOAT masking_lower;
 extern int convert_mdct, convert_psy, reduce_sidechannel;

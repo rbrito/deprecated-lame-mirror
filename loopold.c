@@ -503,34 +503,25 @@ void calc_noise2( FLOAT8 xr[2][576], int ix[2][576], gr_info *cod_info[2],
     D192_3 *xr_s[2];
     I192_3 *ix_s[2];
 
-    static FLOAT8 pow43[PRECALC_SIZE];
     int ch;
-    static int init=0;
     FLOAT8 diff[2];
     FLOAT8 noise;
     int index;
     
-    if (init==0) {
-      init++;
-      for(i=0;i<PRECALC_SIZE;i++)
-        pow43[i] = pow((FLOAT8)i, 4.0/3.0);
-    }
     
+    for (ch=0 ; ch < gf.stereo ; ch ++ ) {
+      over[ch]=0;
+      over_noise[ch]=0;
+      tot_noise[ch]=0;
+      max_noise[ch]=-999;
+    }
     
 
     /* calc_noise2: we can assume block types of both channels must be the same
 */
     if (cod_info[0]->block_type != 2) {
     for (ch=0 ; ch < gf.stereo ; ch ++ ) {
-      over[ch]=0;
-      over_noise[ch]=0;
-      tot_noise[ch]=0;
-      max_noise[ch]=-999;
-#ifdef NOPOW
-      step = exp( (cod_info->global_gain - 210) * (0.25 * LOG2));
-#else
-      step[ch] = pow20[cod_info[ch]->global_gain];
-#endif
+      step[ch] = POW20(cod_info[ch]->global_gain);
     }
     for ( sfb = 0; sfb < SBPSY_l; sfb++ ) {
       start = scalefac_band_long[ sfb ];
@@ -585,16 +576,10 @@ void calc_noise2( FLOAT8 xr[2][576], int ix[2][576], gr_info *cod_info[2],
     /* calc_noise2: we can assume block types of both channels must be the same
 */
     if (cod_info[0]->block_type == 2) {
-#ifdef NOPOW
-      step_0 = exp( (cod_info[0]->global_gain - 210) * (0.25 * LOG2));
-      step_1 = exp( (cod_info[1]->global_gain - 210) * (0.25 * LOG2));
-#else
-      step_0 = pow20[cod_info[0]->global_gain];
-      step_1 = pow20[cod_info[1]->global_gain];
-#endif
+      step_0 = POW20(cod_info[0]->global_gain);
+      step_1 = POW20(cod_info[1]->global_gain);
 
       for (ch=0 ; ch < gf.stereo ; ch ++ ) {
-	over[ch] = 0;
 	xr_s[ch] = (D192_3 *) xr[ch];
 	ix_s[ch] = (I192_3 *) ix[ch];
       }

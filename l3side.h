@@ -1,44 +1,4 @@
 /**********************************************************************
- * ISO MPEG Audio Subgroup Software Simulation Group (1996)
- * ISO 13818-3 MPEG-2 Audio Encoder - Lower Sampling Frequency Extension
- *
- * $Id$
- *
- * $Log$
- * Revision 1.6  2000/01/30 06:17:04  takehiro
- * use lookup table to calculate pow(2.0, xx).(when not defined NOPOW)
- *
- * Revision 1.5  2000/01/09 10:54:56  takehiro
- * All Huffman code search algorithm is implemented.
- * (-h option to enable this)
- * more slower, but better quality.
- *
- * Revision 1.4  2000/01/05 10:04:20  markt
- * Check for Xing header in mp3 input files
- *
- * Revision 1.3  1999/12/21 08:18:51  markt
- * Bug fix in Mid/Side masking thresholds
- *
- * Revision 1.2  1999/11/29 02:45:59  markt
- * MS stereo switch slightly improved:  old formula was based on the average
- * of ms_ratio of both granules.  New formula uses ms_ratio from both
- * granules and the previous and next granule.  This will help avoid toggleing
- * MS stereo off for a single frame.  Long runs of MS stereo or regular
- * stereo will not be affected.
- *
- * also fixed a bug in frame analyzer - it was accessing l3_xmin in the last
- * scalefactor (l3_xmin and maskings are not computed for last scalefactor)
- *
- * Revision 1.1.1.1  1999/11/24 08:43:10  markt
- * initial checkin of LAME
- * Starting with LAME 3.57beta with some modifications
- *
- * Revision 1.1  1996/02/14 04:04:23  rowlands
- * Initial revision
- *
- * Received from Mike Coleman
- **********************************************************************/
-/**********************************************************************
  *   date   programmers                comment                        *
  * 25. 6.92  Toshiyuki Ishino          Ver 1.0                        *
  * 29.10.92  Masahiro Iwadare          Ver 2.0                        *

@@ -41,19 +41,13 @@ FLOAT8 calc_sfb_ave_noise(FLOAT8 *xr, FLOAT8 *xr34, int stride, int bw, FLOAT8 s
   for ( j=0; j < stride*bw ; j += stride) {
     int ix;
     FLOAT8 temp,temp2;
-    if (xr34[j] >= sfpow34*(PRECALC_SIZE  - .4054)) {
-      ix=(int)( xr34[j]/sfpow34  + 0.4054);
-      assert(ix >= PRECALC_SIZE);
-      return -1.0;
-    }else{ 
 
-    }
     /*    ix=(int)( xr34[j]/sfpow34  + 0.4054);*/
     ix=floor( xr34[j]/sfpow34);
-    if (ix >= PRECALC_SIZE) return -1.0;
+    if (ix > IXMAX_VAL) return -1.0;
 
     temp = fabs(xr[j])- pow43[ix]*sfpow;
-    if (ix < PRECALC_SIZE-1) {
+    if (ix < IXMAX_VAL) {
       temp2 = fabs(xr[j])- pow43[ix+1]*sfpow;
       if (temp2<temp) temp=temp2;
     }
@@ -82,11 +76,7 @@ FLOAT8 find_scalefac(FLOAT8 *xr,FLOAT8 *xr34,int stride,int sfb,FLOAT8 l3_xmin,i
   sf_ok=1000; 
   for (i=0; i<7; i++) {
     delsf /= 2;
-#ifdef NOPOW
-    sfpow = exp(sf*LOG2);
-#else
     sfpow = pow(2.0,sf);
-#endif
     xfsf = calc_sfb_ave_noise(xr,xr34,stride,bw,sfpow);
 
     if (xfsf < 0) {
@@ -132,11 +122,7 @@ FLOAT8 find_scalefac(FLOAT8 *xr,FLOAT8 *xr34,int stride,int sfb,FLOAT8 l3_xmin,i
     /* sf = sf_ok + 2*delsf was tried above, skip it:  */
     if (fabs(sf-(sf_ok+2*delsf))  < .01) sf -=.25;
 
-#ifdef NOPOW
-    sfpow = exp(sf*LOG2);
-#else
     sfpow = pow(2.0,sf);
-#endif
     xfsf = calc_sfb_ave_noise(xr,xr34,stride,bw,sfpow);
     if (xfsf > 0) {
       if (xfsf <= l3_xmin) return sf;
@@ -177,11 +163,7 @@ VBR_iteration_loop_new (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   /* db_lower varies from -10 to +8 db */
   masking_lower_db = -10 + 2*gf.VBR_q;
   /* adjust by -6(min)..0(max) depending on bitrate */
-#ifdef NOPOW
-  masking_lower = exp((masking_lower_db/10)*LOG10);
-#else
   masking_lower = pow(10.0,masking_lower_db/10);
-#endif
   masking_lower = 1;
 
 
@@ -224,11 +206,7 @@ VBR_iteration_loop_new (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 	    { 
 	      FLOAT8 xfsf;
 	      xfsf = calc_sfb_ave_noise(&xr[gr][ch][3*start+i],&xr34[3*start+i],
-#ifdef NOPOW
-				    3,bw,exp(ol_sf*LOG2));
-#else
 				    3,bw,pow(2.0,ol_sf));
-#endif
 	      if (xfsf > masking_lower*l3_xmin.s[gr][ch][sfb][i]) {
 		over++;
 	      }
@@ -250,11 +228,7 @@ VBR_iteration_loop_new (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 	    ol_sf -= ifqstep*pretab[sfb];
 
 	  { FLOAT8 xfsf;
-#ifdef NOPOW
-          xfsf=calc_sfb_ave_noise(&xr[gr][ch][start],&xr34[start],1,bw,exp(ol_sf*LOG2));
-#else
           xfsf=calc_sfb_ave_noise(&xr[gr][ch][start],&xr34[start],1,bw,pow(2.0,ol_sf));
-#endif
 	  if (xfsf > masking_lower*l3_xmin.l[gr][ch][sfb]) {
 	    over++;
 	  }

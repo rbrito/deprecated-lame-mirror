@@ -1,119 +1,4 @@
 /**********************************************************************
- * ISO MPEG Audio Subgroup Software Simulation Group (1996)
- * ISO 13818-3 MPEG-2 Audio Encoder - Lower Sampling Frequency Extension
- *
- * $Id$
- *
- * $Log$
- * Revision 1.27  2000/01/30 06:17:04  takehiro
- * use lookup table to calculate pow(2.0, xx).(when not defined NOPOW)
- *
- * Revision 1.26  2000/01/27 05:05:07  markt
- * Takehiro's fft_short and fft_long now the defaults.
- *
- * Revision 1.25  2000/01/27 03:52:58  cisc
- * Added NOPOW define, will replace certain pow()s with optimized variant.
- *
- * Revision 1.24  2000/01/26 08:39:19  markt
- * removed two c++ commends (by request)
- *
- * Revision 1.23  2000/01/15 14:35:38  takehiro
- * little bit optimization
- *
- * Revision 1.22  2000/01/13 16:26:50  takehiro
- * moved info.stereo into gf.stereo
- *
- * Revision 1.21  2000/01/13 02:07:31  markt
- * moved the rest of the global variables into gf struct
- *
- * Revision 1.20  2000/01/09 23:10:24  markt
- * moved more globalflags into the gf. struct
- *
- * Revision 1.19  2000/01/09 07:51:36  markt
- * AAC masking function now the default.  This represents less
- * masking then the old masking function.
- *
- * Revision 1.18  2000/01/09 07:34:39  markt
- * compute mid/side energy rations in addition to masking ratios.
- * in the future we might use this for side channel bit allocation.
- * it is not used at all right now.
- *
- * Revision 1.17  2000/01/09 04:11:14  markt
- * someone mistakenly uncommented the call to preemphasis().
- * this routine should *not* be used.  preemph is now taken care of
- * in scale_bitcount.
- *
- * Revision 1.16  2000/01/08 17:57:54  robert
- * define AAC_TMN_NMT at compile time to activate AAC tone masking noise
- * and noise masking tone values
- *
- * Revision 1.15  2000/01/07 06:13:05  markt
- * Robert's cw_lower_limit, upper_limit code back in.  Default is compute
- * cw[] up to 8.9Khz.  set with --cwlimit <freq>
- *
- * started putting global variables into global_flags struct.
- *
- * Revision 1.14  2000/01/05 06:20:46  markt
- * norm_l, norm_s table data replaced by formulas.
- *
- * Revision 1.13  1999/12/22 17:38:18  markt
- * AAC NMT/TMN values (commented out)
- *
- * Revision 1.12  1999/12/22 07:39:05  markt
- * added AAC spreading function (disabled by default)
- *
- * Revision 1.11  1999/12/21 08:18:51  markt
- * Bug fix in Mid/Side masking thresholds
- *
- * Revision 1.10  1999/12/19 01:47:49  markt
- * went back to ISO layer III recommended cw formulas
- *
- * Revision 1.8  1999/12/14 04:38:08  markt
- * Takehiro's fft's back in.  fft_short2(), fft_long2() will call original
- * fft's  (with one minor change:  0 protection for ax[] and bx[] was not
- * needed and has been removed).  Takehiro's routines are fft_short() and
- * fft_long().  They dont give bit-for-bit identical answers, and I still
- * want to track this down before making them the defaults.  .
- *
- * Revision 1.7  1999/12/08 05:46:52  markt
- * avoid bounds check on xr[] for non-hq mode, from Mat.
- * spelling error in psymodel.c fixed :-)
- *
- * Revision 1.6  1999/12/08 03:49:15  takehiro
- * debugged possible buffer overrun.
- *
- * Revision 1.5  1999/12/07 02:04:41  markt
- * backed out takehiro's fft changes for now
- * added latest quantize_xrpow asm from Acy and Mat
- *
- * Revision 1.2  1999/11/29 02:45:59  markt
- * MS stereo switch slightly improved:  old formula was based on the average
- * of ms_ratio of both granules.  New formula uses ms_ratio from both
- * granules and the previous and next granule.  This will help avoid toggleing
- * MS stereo off for a single frame.  Long runs of MS stereo or regular
- * stereo will not be affected.
- *
- * also fixed a bug in frame analyzer - it was accessing l3_xmin in the last
- * scalefactor (l3_xmin and maskings are not computed for last scalefactor)
- *
- * Revision 1.1.1.1  1999/11/24 08:41:25  markt
- * initial checkin of LAME
- * Starting with LAME 3.57beta with some modifications
- *
- * Revision 1.2  1998/10/05 17:06:48  larsi
- * *** empty log message ***
- *
- * Revision 1.1.1.1  1998/10/05 14:47:18  larsi
- *
- * Revision 1.2  1997/01/19 22:28:29  rowlands
- * Layer 3 bug fixes from Seymour Shlien
- *
- * Revision 1.1  1996/02/14 04:04:23  rowlands
- * Initial revision
- *
- * Received from Mike Coleman
- **********************************************************************/
-/**********************************************************************
  *   date   programmers         comment                               *
  * 2/25/91  Davis Pan           start of version 1.0 records          *
  * 5/10/91  W. Joseph Carter    Ported to Macintosh and Unix.         *
@@ -289,19 +174,11 @@ void L3psycho_anal( short int *buffer[2],
     /* formula reverse enginerred from plot in paper */
     for ( sb = 0; sb < SBPSY_s; sb++ ) {
       FLOAT8 mld = 1.25*(1-cos(PI*sb/SBPSY_s))-2.5;
-#ifdef NOPOW
-      mld_s[sb] = exp(mld*LOG10);
-#else
       mld_s[sb] = pow(10.0,mld);
-#endif
     }
     for ( sb = 0; sb < SBPSY_l; sb++ ) {
       FLOAT8 mld = 1.25*(1-cos(PI*sb/SBPSY_l))-2.5;
-#ifdef NOPOW
-      mld_l[sb] = exp(mld*LOG10);
-#else
       mld_l[sb] = pow(10.0,mld);
-#endif
     }
     
     for (i=0;i<HBLKSIZE;i++) partition_l[i]=-1;
@@ -536,7 +413,7 @@ void L3psycho_anal( short int *buffer[2],
       }
 
 
-    fft_short( wsamp_s, energy_s, chn, buffer); /* old routines */
+    fft_short( wsamp_s, energy_s, chn, buffer); 
 
     /**********************************************************************
      *     compute unpredicatibility of next 200 spectral lines            *
