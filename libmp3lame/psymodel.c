@@ -1193,7 +1193,7 @@ L3psycho_anal_ns(
     )
 {
     FLOAT wsamp_L[2][BLKSIZE];    /* fft and energy calculation   */
-    int chn, i;
+    int chn;
     FLOAT adjATH[CBANDS];
     {int i;
     for (i = 0; i < gfc->npart_l; i++)
