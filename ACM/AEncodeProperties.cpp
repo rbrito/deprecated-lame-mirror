@@ -174,17 +174,26 @@ static BOOL CALLBACK ConfigProc(
 			bResult = TRUE;
 			break;
 
-/*		case WM_HSCROLL:
-			// check if it's the Quality slider
-			if ((HWND)lParam == GetDlgItem(hwndDlg,IDC_SLIDER_QUALITY))
+		case WM_HSCROLL:
+			// check if it's the ABR sliders
+			if ((HWND)lParam == GetDlgItem(hwndDlg,IDC_SLIDER_AVERAGE_MIN))
 			{
-				UINT VbrQuality = SendMessage(GetDlgItem( hwndDlg, IDC_SLIDER_QUALITY), TBM_GETPOS, NULL, NULL);
-				char tmp[2];
-				wsprintf(tmp,"%d",VbrQuality);
-				::SetWindowText(GetDlgItem( hwndDlg, IDC_CONFIG_QUALITY), tmp);
+				the_prop->UpdateDlgFromSlides(hwndDlg);
+			}
+			else if ((HWND)lParam == GetDlgItem(hwndDlg,IDC_SLIDER_AVERAGE_MAX))
+			{
+				the_prop->UpdateDlgFromSlides(hwndDlg);
+			}
+			else if ((HWND)lParam == GetDlgItem(hwndDlg,IDC_SLIDER_AVERAGE_STEP))
+			{
+				the_prop->UpdateDlgFromSlides(hwndDlg);
+			}
+			else if ((HWND)lParam == GetDlgItem(hwndDlg,IDC_SLIDER_AVERAGE_SAMPLE))
+			{
+				the_prop->UpdateDlgFromSlides(hwndDlg);
 			}
 			break;
-*/
+
 		default:
 			bResult = FALSE; // will be treated by DefWindowProc
 	}
@@ -432,6 +441,11 @@ bool AEncodeProperties::InitConfigDlg(HWND HwndDlg)
 		SendMessage(GetDlgItem( HwndDlg, IDC_COMBO_PRESET), CB_ADDSTRING, NULL, (LPARAM) GetPresetModeString(i));
 */
 
+	// Add ABR Sliders
+	SendMessage(GetDlgItem( HwndDlg, IDC_SLIDER_AVERAGE_MIN), TBM_SETRANGE, TRUE, MAKELONG(8,320));
+	SendMessage(GetDlgItem( HwndDlg, IDC_SLIDER_AVERAGE_MAX), TBM_SETRANGE, TRUE, MAKELONG(8,320));
+	SendMessage(GetDlgItem( HwndDlg, IDC_SLIDER_AVERAGE_STEP), TBM_SETRANGE, TRUE, MAKELONG(1,16));
+
 my_debug.OutPut("call UpdateConfigs");
 
 	UpdateConfigs(HwndDlg);
@@ -475,6 +489,16 @@ bool AEncodeProperties::UpdateDlgFromValue(HWND HwndDlg)
 		}
 	}
 
+	// Add VBR Quality
+	SendMessage(GetDlgItem( HwndDlg, IDC_SLIDER_AVERAGE_MIN), TBM_SETPOS, TRUE, AverageBitrate_Min);
+	SendMessage(GetDlgItem( HwndDlg, IDC_SLIDER_AVERAGE_MAX), TBM_SETPOS, TRUE, AverageBitrate_Max);
+	SendMessage(GetDlgItem( HwndDlg, IDC_SLIDER_AVERAGE_STEP), TBM_SETPOS, TRUE, AverageBitrate_Step);
+	SendMessage(GetDlgItem( HwndDlg, IDC_SLIDER_AVERAGE_SAMPLE), TBM_SETPOS, TRUE, AverageBitrate_Max);
+
+	UpdateDlgFromSlides(HwndDlg);
+
+	EnableAbrOptions(HwndDlg, GetAbrOutputMode());
+//	UpdateAbrSteps(AverageBitrate_Min, AverageBitrate_Max, AverageBitrate_Step);
 	// Add all possible re-sampling freq
 /*	SendMessage(GetDlgItem( HwndDlg, IDC_COMBO_SAMPLEFREQ), CB_SETCURSEL, nSamplingFreqIndex, NULL);
 	
@@ -499,7 +523,6 @@ bool AEncodeProperties::UpdateDlgFromValue(HWND HwndDlg)
 		}
 	}
 
-	// Add VBR Quality
 //	SendMessage(GetDlgItem( HwndDlg, IDC_SLIDER_QUALITY), TBM_SETRANGE, TRUE, MAKELONG(0,9));
 
 	char tmp[3];
@@ -564,6 +587,12 @@ bool AEncodeProperties::UpdateValueFromDlg(HWND HwndDlg)
 //	bXingFrame    = (::IsDlgButtonChecked( HwndDlg, IDC_CHECK_XINGVBR)      == BST_CHECKED);
 //	bResample     = (::IsDlgButtonChecked( HwndDlg, IDC_CHECK_RESAMPLE)     == BST_CHECKED);
 //	bForceChannel = (::IsDlgButtonChecked( HwndDlg, IDC_CHECK_CHANNELFORCE) == BST_CHECKED);
+
+	AverageBitrate_Min  = SendMessage(GetDlgItem( HwndDlg, IDC_SLIDER_AVERAGE_MIN), TBM_GETPOS , NULL, NULL);
+	AverageBitrate_Max  = SendMessage(GetDlgItem( HwndDlg, IDC_SLIDER_AVERAGE_MAX), TBM_GETPOS , NULL, NULL);
+	AverageBitrate_Step = SendMessage(GetDlgItem( HwndDlg, IDC_SLIDER_AVERAGE_STEP), TBM_GETPOS , NULL, NULL);
+
+	EnableAbrOptions(HwndDlg, bAbrOutput);
 
 my_debug.OutPut("nChannelIndex %d, bCRC %d, bCopyright %d, bOriginal %d, bPrivate %d",nChannelIndex, bCRC, bCopyright, bOriginal, bPrivate);
 
@@ -1590,6 +1619,9 @@ my_debug.OutPut("finished saving");
 	}
 	break;
 */
+		case IDC_CHECK_ENC_ABR:
+			EnableAbrOptions(parentWnd, ::IsDlgButtonChecked( parentWnd, IDC_CHECK_ENC_ABR) == BST_CHECKED);
+			break;
 /*	case IDC_RADIO_BITRATE_CBR:
 		AEncodeProperties::DisplayVbrOptions(parentWnd, AEncodeProperties::BR_CBR);
 		break;
@@ -1843,4 +1875,73 @@ my_debug.OutPut("iterateElmt = 0x%08X",iterateElmt);
 
 		}
 	}
+}
+/*
+void AEncodeProperties::UpdateAbrSteps(unsigned int min, unsigned int max, unsigned int step) const
+{
+}
+*/
+void AEncodeProperties::UpdateDlgFromSlides(HWND hwndDlg) const
+{
+	UINT value_min, value_max, value_step, value;
+	char tmp[4];
+
+	value_min = SendMessage(GetDlgItem( hwndDlg, IDC_SLIDER_AVERAGE_MIN), TBM_GETPOS, NULL, NULL);
+	value_max = SendMessage(GetDlgItem( hwndDlg, IDC_SLIDER_AVERAGE_MAX), TBM_GETPOS, NULL, NULL);
+
+	if (value_min>value_max)
+	{
+		SendMessage(GetDlgItem( hwndDlg, IDC_SLIDER_AVERAGE_MIN), TBM_SETPOS, TRUE, value_max);
+		UpdateDlgFromSlides(hwndDlg);
+		return;
+	}
+
+	if (value_max<value_min)
+	{
+		SendMessage(GetDlgItem( hwndDlg, IDC_SLIDER_AVERAGE_MAX), TBM_SETPOS, TRUE, value_min);
+		UpdateDlgFromSlides(hwndDlg);
+		return;
+	}
+
+	wsprintf(tmp,"%3d",value_min);
+	::SetWindowText(GetDlgItem( hwndDlg, IDC_STATIC_AVERAGE_MIN_VALUE), tmp);
+	
+	SendMessage(GetDlgItem( hwndDlg, IDC_SLIDER_AVERAGE_SAMPLE), TBM_SETRANGEMIN, TRUE, value_min);
+
+	wsprintf(tmp,"%3d",value_max);
+	::SetWindowText(GetDlgItem( hwndDlg, IDC_STATIC_AVERAGE_MAX_VALUE), tmp);
+	
+	SendMessage(GetDlgItem( hwndDlg, IDC_SLIDER_AVERAGE_SAMPLE), TBM_SETRANGEMAX, TRUE, value_max);
+	
+	value_step = SendMessage(GetDlgItem( hwndDlg, IDC_SLIDER_AVERAGE_STEP), TBM_GETPOS, NULL, NULL);
+	wsprintf(tmp,"%3d",value_step);
+	::SetWindowText(GetDlgItem( hwndDlg, IDC_STATIC_AVERAGE_STEP_VALUE), tmp);
+
+	SendMessage(GetDlgItem( hwndDlg, IDC_SLIDER_AVERAGE_SAMPLE), TBM_CLEARTICS, TRUE, 0);
+	for(UINT i=value_max; i>=value_min;i-=value_step)
+	{
+		SendMessage(GetDlgItem( hwndDlg, IDC_SLIDER_AVERAGE_SAMPLE), TBM_SETTIC, 0, i);
+	}
+	SendMessage(GetDlgItem( hwndDlg, IDC_SLIDER_AVERAGE_SAMPLE), TBM_SETLINESIZE, 0, value_step);
+	SendMessage(GetDlgItem( hwndDlg, IDC_SLIDER_AVERAGE_SAMPLE), TBM_SETPAGESIZE, 0, value_step);
+	
+	value = SendMessage(GetDlgItem( hwndDlg, IDC_SLIDER_AVERAGE_SAMPLE), TBM_GETPOS, NULL, NULL);
+	wsprintf(tmp,"%3d",value);
+	::SetWindowText(GetDlgItem( hwndDlg, IDC_STATIC_AVERAGE_SAMPLE_VALUE), tmp);
+}
+
+void AEncodeProperties::EnableAbrOptions(HWND hDialog, bool enable)
+{
+	::EnableWindow(::GetDlgItem( hDialog, IDC_SLIDER_AVERAGE_MIN), enable);
+	::EnableWindow(::GetDlgItem( hDialog, IDC_SLIDER_AVERAGE_MAX), enable);
+	::EnableWindow(::GetDlgItem( hDialog, IDC_SLIDER_AVERAGE_STEP), enable);
+	::EnableWindow(::GetDlgItem( hDialog, IDC_SLIDER_AVERAGE_SAMPLE), enable);
+	::EnableWindow(::GetDlgItem( hDialog, IDC_STATIC_AVERAGE_MIN), enable);
+	::EnableWindow(::GetDlgItem( hDialog, IDC_STATIC_AVERAGE_MAX), enable);
+	::EnableWindow(::GetDlgItem( hDialog, IDC_STATIC_AVERAGE_STEP), enable);
+	::EnableWindow(::GetDlgItem( hDialog, IDC_STATIC_AVERAGE_SAMPLE), enable);
+	::EnableWindow(::GetDlgItem( hDialog, IDC_STATIC_AVERAGE_MIN_VALUE), enable);
+	::EnableWindow(::GetDlgItem( hDialog, IDC_STATIC_AVERAGE_MAX_VALUE), enable);
+	::EnableWindow(::GetDlgItem( hDialog, IDC_STATIC_AVERAGE_STEP_VALUE), enable);
+	::EnableWindow(::GetDlgItem( hDialog, IDC_STATIC_AVERAGE_SAMPLE_VALUE), enable);
 }

@@ -17,6 +17,18 @@
 #define IDC_STATIC_ABOUT_URL            1009
 #define IDC_STATIC_CONFIG_VERSION       1010
 #define IDC_CHECK_ENC_ABR               1011
+#define IDC_SLIDER_AVERAGE_MIN          1012
+#define IDC_SLIDER_AVERAGE_MAX          1013
+#define IDC_SLIDER_AVERAGE_STEP         1014
+#define IDC_SLIDER_AVERAGE_SAMPLE       1015
+#define IDC_STATIC_AVERAGE_MIN          1016
+#define IDC_STATIC_AVERAGE_MAX          1017
+#define IDC_STATIC_AVERAGE_STEP         1018
+#define IDC_STATIC_AVERAGE_SAMPLE       1019
+#define IDC_STATIC_AVERAGE_MIN_VALUE    1020
+#define IDC_STATIC_AVERAGE_MAX_VALUE    1021
+#define IDC_STATIC_AVERAGE_STEP_VALUE   1022
+#define IDC_STATIC_AVERAGE_SAMPLE_VALUE 1023
 
 // Next default values for new objects
 // 
@@ -24,7 +36,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        105
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1012
+#define _APS_NEXT_CONTROL_VALUE         1024
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
