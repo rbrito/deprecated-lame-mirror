@@ -1276,7 +1276,7 @@ inline
 void bitpressure_strategy1(
     lame_internal_flags * gfc,
     III_psy_xmin l3_xmin[2][2],
-    int min_mean_bits,  
+    int min_bits[2][2],  
     int max_bits[2][2] )  
 {
     int gr, ch, sfb;
@@ -1293,7 +1293,7 @@ void bitpressure_strategy1(
                 for (sfb = 0; sfb < SBMAX_l; sfb++) 
                     l3_xmin[gr][ch].l[sfb] *= 1.+.029*sfb*sfb/SBMAX_l/SBMAX_l;
             }
-            max_bits[gr][ch] = Max(min_mean_bits, 0.9*max_bits[gr][ch]);
+            max_bits[gr][ch] = Max(min_bits[gr][ch], 0.9*max_bits[gr][ch]);
         }
     }
 }
@@ -1426,7 +1426,7 @@ VBR_iteration_loop (
     switch ( gfc -> VBR -> bitpressure ) {
     default:
     case  1:
-        bitpressure_strategy1( gfc, l3_xmin, min_mean_bits, max_bits );
+        bitpressure_strategy1( gfc, l3_xmin, min_bits, max_bits );
         break;
     case  2:
         bitpressure_strategy2( gfc, frameBits[gfc->bitrate_index], 
