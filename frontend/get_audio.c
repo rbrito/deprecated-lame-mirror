@@ -83,7 +83,7 @@ static int  fskip ( FILE* fp, long offset, int whence )
 #else
     char    buffer [PIPE_BUF];
 #endif
-    size_t  read;
+    int read;
     
 #ifdef KLEMM_06
     if ( 0 == fseek ( fp, offset, whence ) )
@@ -151,7 +151,7 @@ void close_infile(void)
 }
 
 
-void SwapBytesInWords ( short *ptr, size_t short_words )  /* Some speedy code */
+void SwapBytesInWords ( short *ptr, int short_words )  /* Some speedy code */
 {
     unsigned long  val;
     unsigned long* p = (unsigned long*) ptr;
@@ -166,7 +166,7 @@ void SwapBytesInWords ( short *ptr, size_t short_words )  /* Some speedy code */
 # endif
 #endif /* lint */
 
-    assert( sizeof(short) != 2 );
+    assert( sizeof(short) == 2 );
 
 
 #if defined(SIZEOF_UNSIGNED_LONG) && SIZEOF_UNSIGNED_LONG == 4
@@ -240,7 +240,7 @@ int  get_audio ( lame_global_flags* const gfp, short buffer [2] [1152] )
      */
     if ( count_samples_carefully ) {
         remaining = gfp->num_samples - Min (gfp->num_samples, num_samples_read);
-        if (remaining < (unsigned int)framesize)
+        if (remaining < framesize)
             samples_to_read = remaining;
     }
 
@@ -359,9 +359,9 @@ int  read_samples_mp3 (
 }
 
 
-static int   WriteWaveHeader ( FILE* const fp, const long pcmbytes, const long double sample_freq, const int channels, const int bits )
+static int WriteWaveHeader(FILE* const fp, const int pcmbytes, 
+const int freq, const int channels, const int bits )
 {
-    int  freq  = floor ( sample_freq + 0.5 );
     int  bytes = (bits + 7) / 8;
     
     /* quick and dirty, but documented */
@@ -503,7 +503,7 @@ int lame_decoder(lame_global_flags *gfp, FILE *outf,int skip, char *inPath, char
   
     if ( ! gfp->disable_waveheader )
 	if ( ! fseek (outf, 0l, SEEK_SET) ) /* if outf is seekable, rewind and adjust length */
-            WriteWaveHeader (outf, (unsigned long)wavsize, gfp->in_samplerate, gfp->num_channels, 16 );
+            WriteWaveHeader (outf, wavsize, gfp->in_samplerate, gfp->num_channels, 16 );
     fclose (outf);
 
     decoder_progress_finish (gfp);
@@ -802,11 +802,11 @@ int read_samples_pcm(FILE *musicin,short sample_buffer[2304], int frame_size,int
     int iswav=(input_format==sf_wave);
 
     if (16==pcmbitwidth) {
-      samples_read = fread(sample_buffer, 2, (unsigned int)samples_to_read, musicin);
+      samples_read = fread(sample_buffer, 2, samples_to_read, musicin);
     }else if (8==pcmbitwidth) {
       char temp[2304];
       int i;
-      samples_read = fread(temp, 1, (unsigned int)samples_to_read, musicin);
+      samples_read = fread(temp, 1, samples_to_read, musicin);
       for (i=0 ; i<samples_read; ++i) {
 	/* note: 8bit .wav samples are unsigned */
 	sample_buffer[i]=((short int)temp[i]-127)*256;
@@ -876,8 +876,8 @@ parse_wave_header(lame_global_flags *gfp,FILE *sf)
         int channels=0;
 	int block_align=0;
 	int bits_per_sample=0;
-        unsigned int samples_per_sec=0;
-        unsigned int avg_bytes_per_sec=0;
+        int samples_per_sec=0;
+        int avg_bytes_per_sec=0;
 	
 
 	int is_wav = 0;
@@ -959,8 +959,8 @@ int  aiff_check2 ( const char* file_name, IFF_AIFF* const pcm_aiff_data )
 	return 1;
     }
     if ( pcm_aiff_data->sampleSize != sizeof(short) * CHAR_BIT ) {
-        fprintf ( stderr, "Sound data is not %u bits in '%s'\n", 
-	          (unsigned int) sizeof(short) * CHAR_BIT, file_name );
+        fprintf ( stderr, "Sound data is not %i bits in '%s'\n", 
+	          sizeof(short) * CHAR_BIT, file_name );
         return 1;
     }
     if ( pcm_aiff_data->numChannels != 1  &&  pcm_aiff_data->numChannels != 2 ) {

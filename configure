@@ -4261,13 +4261,15 @@ fi
 
 
 if test "x$GCC" = "xyes"; then
-	DEBUG_NORM_OPT="-O -g -W -Wall -Wbad-function-cast -Wcast-align \
-		-Wcast-qual -Wchar-subscripts -Wconversion \
-		-Wmissing-prototypes -Wnested-externs -Wpointer-arith \
-		-Wredundant-decls -Wshadow -Wstrict-prototypes \
-		-Wwrite-strings -Winline \
-		-Wformat -Wswitch -Waggregate-return -Wmissing-noreturn \
-		-Wimplicit-int -fno-builtin"
+	DEBUG_NORM_OPT="-O -g -Wall "
+# these options are incredibly anoying:
+#-Wbad-function-cast -Wcast-align \
+#		-Wcast-qual -Wchar-subscripts -Wconversion \
+#		-Wmissing-prototypes -Wnested-externs -Wpointer-arith \
+#		-Wredundant-decls -Wshadow -Wstrict-prototypes \
+#		-Wwrite-strings -Winline \
+#		-Wformat -Wswitch -Waggregate-return -Wmissing-noreturn \
+#		-Wimplicit-int -fno-builtin"
 
 	case "${CONFIG_DEBUG}" in
 	no)

@@ -380,17 +380,17 @@ int CDECL lame_decode_init(void);
  * input 1 mp3 frame, output (maybe) pcm data.  
  * lame_decode return code:  -1: error.  0: need more data.  n>0: size of pcm output
  *********************************************************************/
-int CDECL lame_decode(char *mp3buf,int len,short pcm_l[],short pcm_r[]);
+int CDECL lame_decode(unsigned char *mp3buf,int len,short pcm_l[],short pcm_r[]);
 
 /* same as lame_decode, and also returns mp3 header data */
-int CDECL lame_decode_headers(char *mp3buf,int len,short pcm_l[],short pcm_r[],
+int CDECL lame_decode_headers(unsigned char *mp3buf,int len,short pcm_l[],short pcm_r[],
 mp3data_struct *mp3data);
 
 /* same as lame_decode, but returns at most one frame */
-int CDECL lame_decode1(char *mp3buf,int len,short pcm_l[],short pcm_r[]);
+int CDECL lame_decode1(unsigned char *mp3buf,int len,short pcm_l[],short pcm_r[]);
 
 /* same as lame_decode1, but returns at most one frame and mp3 header data */
-int CDECL lame_decode1_headers(char *mp3buf,int len,short pcm_l[],short pcm_r[],
+int CDECL lame_decode1_headers(unsigned char *mp3buf,int len,short pcm_l[],short pcm_r[],
 mp3data_struct *mp3data);
 
 /* Also useful for decoding is the ability to parse Xing VBR headers: */

@@ -57,7 +57,7 @@ int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip, char *inPath, char 
 
 
 
-void SwapBytesInWords( short *loc, size_t words );
+void SwapBytesInWords( short *loc, int words );
 
 
 

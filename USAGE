@@ -72,6 +72,7 @@ Scripts are included to run lame on multiple files:
 
 bach script:  mlame     Run "mlame -?" for instructions.
 sh script:    auenc     Run auenc for instructions
+sh script:    misc/mugeco.sh
 
 
 
