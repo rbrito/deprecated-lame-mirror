@@ -248,7 +248,7 @@ int samplerate)   /* convert bitrate in kbps to index */
 {
     int  i;
 
-    for ( i = 1; i <= 14; i++)
+    for ( i = 0; i <= 14; i++)
         if ( bitrate_table [version] [i] == bRate )
             return i;
 	    
