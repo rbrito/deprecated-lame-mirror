@@ -1038,41 +1038,64 @@ lame_init_params(lame_global_flags * const gfp)
         if (gfp->cwlimit <= 0) gfp->cwlimit = 0.42 * gfp->out_samplerate;
         gfc->PSY->tonalityPatch = 1;
 
-        if ( gfp->experimentalX <= 4 && gfp->experimentalX >= 0 )
-        {   /* map experimentalX settings to internal secltions */
-            static char const map[] = {2,1,0,3,6};
-            gfc->VBR->quality = map[gfp->experimentalX];
-        }
-        else    /* defaulting to */
-        {
-            gfc->VBR->quality = DEFAULT_QUALITY;
-        }   
-        if ( gfc->VBR->quality > 5 ) {
-            static float const dbQ[10] = { -6,-4.75,-3.5,-2.25,-1,.25,1.5,2.75,4,5.25 };
-            gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
-            gfc->VBR->smooth = 1;   // not finally
-        }
-        else {
-            static const float dbQ[10]={-2.,-1.0,-.66,-.33,0.,0.33,.66,1.0,1.33,1.66};
-            gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
-            gfc->VBR->smooth = 1;
-        }
-        if ( gfc->VBR->quality == 1 ) {
-            static float const dbQ[10] = { -2., -1.4, -.7, 0, .7, 1.5, 2.3, 3.1, 4., 5 };
-            gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
-            gfc->VBR->smooth = 0;    
-        }
-        if ( gfc->VBR->quality == 0 ) {
-            static float const dbQ[10] = { -1., -.6, -.3, 0, 1, 2, 3, 4, 5, 6};
-            gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
-            gfc->VBR->smooth = 0;    
-            gfc->PSY->tonalityPatch = 0;
+        switch ( gfp->experimentalX ) {
+        default:
+        case 0: {
+                static const float dbQ[10]={-2.,-1.0,-.66,-.33,0.,0.33,.66,1.0,1.33,1.66};
+                gfc->VBR->quality = 0;
+                gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
+                gfc->VBR->smooth = 1;
+            } 
+            break;        
+        case 1: {
+                static float const dbQ[10] = { -2., -1.4, -.7, 0, .7, 1.5, 2.3, 3.1, 4., 5 };
+                gfc->VBR->quality = 1;
+                gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
+                gfc->VBR->smooth = 0;    
+            } 
+            break;        
+        case 2: {
+                static float const dbQ[10] = { -1., -.6, -.3, 0, 1, 2, 3, 4, 5, 6};
+                gfc->VBR->quality = 2;
+                gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
+                gfc->VBR->smooth = 0;    
+                gfc->PSY->tonalityPatch = 0;
+            } 
+            break;        
+        case 3: {
+                static const float dbQ[10]={-2.,-1.0,-.66,-.33,0.,0.33,.66,1.0,1.33,1.66};
+                gfc->VBR->quality = 3;
+                gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
+                gfc->VBR->smooth = 1;
+            } 
+            break;        
+        case 4: {
+                static float const dbQ[10] = { -6,-4.75,-3.5,-2.25,-1,.25,1.5,2.75,4,5.25 };
+                gfc->VBR->quality = 4;
+                gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
+                gfc->VBR->smooth = 1;   // not finally
+            }
+            break;        
+        case 5: {
+                static const float dbQ[10]={-2.,-1.0,-.66,-.33,0.,0.33,.66,1.0,1.33,1.66};
+                gfc->VBR->quality = 0;
+                gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
+                gfc->VBR->smooth = 2;
+            } 
+            break;        
+        case 9: {
+                static float const dbQ[10] = { -6,-4.75,-3.5,-2.25,-1,.25,1.5,2.75,4,5.25 };
+                gfc->VBR->quality = 4;
+                gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
+                gfc->VBR->smooth = 0;   // not finally
+            }
+            break;        
         }
         
         if (gfp->experimentalY)
             gfc->sfb21_extra = 0;
         else
-            gfc->sfb21_extra = (gfp->out_samplerate > 44000);
+            gfc->sfb21_extra = (gfp->out_samplerate > 36000);
         
         if ( gfp->athaa_type < 0 )
             gfc->ATH->use_adjust = 3;
@@ -1192,6 +1215,17 @@ lame_init_params(lame_global_flags * const gfp)
 		         "Specialized tunings for the preset you are using have been deactivated.\n"
                  "This is *NOT* recommended and will lead to a decrease in quality!\n"
 	             "\n*** WARNING ***\n\n");
+
+    {   /* amount of filling bits for VBR in case of -Bxxx use */
+        int bit_rate = bitrate_table[gfp->version][gfc->VBR_max_bitrate];
+        int whole_SpF = (gfp->version+1)*72000*bit_rate / gfp->out_samplerate;
+        int mbp = ((gfp->strict_ISO ? 960 : 1440)-whole_SpF)*8;
+        gfc->VBR->maxFill = (gfp->version==1) ? 8*511 : 8*255;
+        if (gfc->VBR->maxFill > mbp) 
+            gfc->VBR->maxFill = mbp;
+        if (gfc->VBR->maxFill < 0)
+            gfc->VBR->maxFill = 0; 
+    }
 
     return 0;
 }
@@ -1454,6 +1488,13 @@ lame_encode_frame(lame_global_flags * gfp,
  * mp3buffer_size in bytes = 1.25*num_samples + 7200
  *
  * return code = number of bytes output in mp3buffer.  can be 0
+ *
+ * NOTE: this routine uses LAME's internal PCM data representation,
+ * 'sample_t'.  It should not be used by any application.  
+ * applications should use lame_encode_buffer(), 
+ *                         lame_encode_buffer_float()
+ *                         lame_encode_buffer_int()
+ * etc... depending on what type of data they are working with.  
 */
 int
 lame_encode_buffer_sample_t(lame_global_flags * gfp,
@@ -1592,7 +1633,7 @@ lame_encode_buffer(lame_global_flags * gfp,
     /* make a copy of input buffer, changing type to sample_t */
     for (i = 0; i < nsamples; i++) {
         in_buffer[0][i] = buffer_l[i];
-        in_buffer[1][i] = buffer_r[i];
+	if (gfc->channels_in>1) in_buffer[1][i] = buffer_r[i];
     }
 
     ret = lame_encode_buffer_sample_t(gfp,in_buffer[0],in_buffer[1],
@@ -1631,7 +1672,7 @@ lame_encode_buffer_float(lame_global_flags * gfp,
     /* make a copy of input buffer, changing type to sample_t */
     for (i = 0; i < nsamples; i++) {
         in_buffer[0][i] = buffer_l[i];
-        in_buffer[1][i] = buffer_r[i];
+        if (gfc->channels_in>1) in_buffer[1][i] = buffer_r[i];
     }
 
     ret = lame_encode_buffer_sample_t(gfp,in_buffer[0],in_buffer[1],
@@ -1672,7 +1713,8 @@ lame_encode_buffer_int(lame_global_flags * gfp,
     for (i = 0; i < nsamples; i++) {
                                 /* internal code expects +/- 32768.0 */
       in_buffer[0][i] = buffer_l[i] * (1.0 / ( 1 << (8 * sizeof(int) - 16)));
-      in_buffer[1][i] = buffer_r[i] * (1.0 / ( 1 << (8 * sizeof(int) - 16)));
+      if (gfc->channels_in>1)
+	  in_buffer[1][i] = buffer_r[i] * (1.0 / ( 1 << (8 * sizeof(int) - 16)));
     }
 
     ret = lame_encode_buffer_sample_t(gfp,in_buffer[0],in_buffer[1],
@@ -1715,7 +1757,8 @@ lame_encode_buffer_long2(lame_global_flags * gfp,
     for (i = 0; i < nsamples; i++) {
                                 /* internal code expects +/- 32768.0 */
       in_buffer[0][i] = buffer_l[i] * (1.0 / ( 1 << (8 * sizeof(long) - 16)));
-      in_buffer[1][i] = buffer_r[i] * (1.0 / ( 1 << (8 * sizeof(long) - 16)));
+      if (gfc->channels_in>1)
+	  in_buffer[1][i] = buffer_r[i] * (1.0 / ( 1 << (8 * sizeof(long) - 16)));
     }
 
     ret = lame_encode_buffer_sample_t(gfp,in_buffer[0],in_buffer[1],
@@ -1756,7 +1799,8 @@ lame_encode_buffer_long(lame_global_flags * gfp,
     /* make a copy of input buffer, changing type to sample_t */
     for (i = 0; i < nsamples; i++) {
         in_buffer[0][i] = buffer_l[i];
-        in_buffer[1][i] = buffer_r[i];
+        if (gfc->channels_in>1)
+	    in_buffer[1][i] = buffer_r[i];
     }
 
     ret = lame_encode_buffer_sample_t(gfp,in_buffer[0],in_buffer[1],

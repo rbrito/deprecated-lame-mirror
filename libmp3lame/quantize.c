@@ -114,8 +114,7 @@ init_outer_loop(
     cod_info->count1              = 0;
     cod_info->global_gain         = 210;
     cod_info->scalefac_compress   = 0;
-    /* block_type            was set in psymodel.c? */
-    /* mixed_block_flag      would be set in ^      */
+    /* mixed_block_flag, block_type was set in psymodel.c */
     cod_info->table_select [0]    = 0;
     cod_info->table_select [1]    = 0;
     cod_info->table_select [2]    = 0;
@@ -305,19 +304,13 @@ inner_loop(
     const FLOAT8          xrpow [576])
 {
     int bits;
-    
     assert(max_bits >= 0);
-
-    /*  scalefactors may have changed, so count bits
-     */
-    bits=count_bits(gfc, xrpow, cod_info);
 
     /*  increase quantizer stepsize until needed bits are below maximum
      */
-    while (bits > max_bits && cod_info->global_gain != 255) {
+    while ((bits=count_bits(gfc, xrpow, cod_info)) > max_bits
+	   && cod_info->global_gain != 255)
         cod_info->global_gain++;
-	bits = count_bits (gfc, xrpow, cod_info);
-    }
 
     cod_info->part2_3_length = bits;
 }
@@ -1358,9 +1351,14 @@ VBR_iteration_loop (
     for( ; gfc->bitrate_index < gfc->VBR_max_bitrate; gfc->bitrate_index++) {
         if (used_bits <= frameBits[gfc->bitrate_index]) break; 
     }
-
+    if ( !analog_silence && !gfp->disable_reservoir ) {
+	int bp = gfc->VBR->maxFill;
+	for( ; bp > 0 && gfc->bitrate_index < gfc->VBR_max_bitrate; gfc->bitrate_index++) {
+	    if (used_bits+bp <= frameBits[gfc->bitrate_index]) break; 
+	}
+    }
     bits = ResvFrameBegin (gfp, &mean_bits);
-    
+
     if (used_bits <= bits) break;
 
     bitpressure_strategy( gfc, l3_xmin, min_bits, max_bits );

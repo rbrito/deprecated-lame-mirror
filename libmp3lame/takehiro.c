@@ -873,7 +873,8 @@ void best_scalefac_store(
 	    if (gi->l3_enc[l+j]!=0)
 		break;
 	if (l==0)
-	    gi->scalefac[sfb]=-2; // anything goes.
+//	    gi->scalefac[sfb]=-2; // anything goes.
+	    gi->scalefac[sfb]=0; // anything goes.
     }
 
     if (!gi->scalefac_scale && !gi->preflag) {
