@@ -46,17 +46,72 @@ typedef union {
 #define MAGIC_FLOAT (65536*(128))
 #define MAGIC_INT    0x4b000000
 
+#ifdef TAKEHIRO_IEEE754_HACK
 
-#ifndef TAKEHIRO_IEEE754_HACK
-
-
-#if (defined(__GNUC__) && defined(__i386__))
-#define USE_GNUC_ASM
+#ifdef MAXQUANTERROR 
+#define DUFFBLOCK() do { \
+        xp = xr34[0] * sfpow34_p1; \
+        xe = xr34[0] * sfpow34_eq; \
+        xm = xr34[0] * sfpow34_m1; \
+        if (xm > IXMAX_VAL)  \
+            return -1; \
+        xp += MAGIC_FLOAT; \
+        xe += MAGIC_FLOAT; \
+        xm += MAGIC_FLOAT; \
+        fi[0].f = xp; \
+        fi[1].f = xe; \
+        fi[2].f = xm; \
+        fi[0].f = xp + (adj43asm - MAGIC_INT)[fi[0].i]; \
+        fi[1].f = xe + (adj43asm - MAGIC_INT)[fi[1].i]; \
+        fi[2].f = xm + (adj43asm - MAGIC_INT)[fi[2].i]; \
+        fi[0].i -= MAGIC_INT; \
+        fi[1].i -= MAGIC_INT; \
+        fi[2].i -= MAGIC_INT; \
+        x0 = fabs(xr[0]); \
+        xp = x0 - pow43[fi[0].i] * sfpow_p1; \
+        xe = x0 - pow43[fi[1].i] * sfpow_eq; \
+        xm = x0 - pow43[fi[2].i] * sfpow_m1; \
+        xp *= xp; \
+        xe *= xe; \
+        xm *= xm; \
+        xfsf_eq = Max(xfsf_eq, xe); \
+        xfsf_p1 = Max(xfsf_p1, xp); \
+        xfsf_m1 = Max(xfsf_m1, xm); \
+        ++xr; \
+        ++xr34; \
+    } while(0)  
+#else
+#define DUFFBLOCK() do { \
+        xp = xr34[0] * sfpow34_p1; \
+        xe = xr34[0] * sfpow34_eq; \
+        xm = xr34[0] * sfpow34_m1; \
+        if (xm > IXMAX_VAL)  \
+            return -1; \
+        xp += MAGIC_FLOAT; \
+        xe += MAGIC_FLOAT; \
+        xm += MAGIC_FLOAT; \
+        fi[0].f = xp; \
+        fi[1].f = xe; \
+        fi[2].f = xm; \
+        fi[0].f = xp + (adj43asm - MAGIC_INT)[fi[0].i]; \
+        fi[1].f = xe + (adj43asm - MAGIC_INT)[fi[1].i]; \
+        fi[2].f = xm + (adj43asm - MAGIC_INT)[fi[2].i]; \
+        fi[0].i -= MAGIC_INT; \
+        fi[1].i -= MAGIC_INT; \
+        fi[2].i -= MAGIC_INT; \
+        x0 = fabs(xr[0]); \
+        xp = x0 - pow43[fi[0].i] * sfpow_p1; \
+        xe = x0 - pow43[fi[1].i] * sfpow_eq; \
+        xm = x0 - pow43[fi[2].i] * sfpow_m1; \
+        xfsf_p1 += xp * xp; \
+        xfsf_eq += xe * xe; \
+        xfsf_m1 += xm * xm; \
+        ++xr; \
+        ++xr34; \
+    } while(0)  
 #endif
-#ifdef _MSC_VER
-#define USE_MSC_ASM
-#endif
 
+#else
 
 /*********************************************************************
  * XRPOW_FTOI is a macro to convert floats to ints.  
@@ -66,29 +121,9 @@ typedef union {
  * if XRPOW_FTOI(x) = floor(x), then QUANTFAC(x)=asj43[x]   
  *                                   ROUNDFAC=0.4054
  *********************************************************************/
-#ifdef USE_GNUC_ASM
-#  define QUANTFAC(rx)  adj43asm[rx]
-#  define ROUNDFAC -0.0946
-#  define XRPOW_FTOI(src, dest) \
-     __asm__ ("fistpl %0 " : "=m"(dest) : "t"(src) : "st")
-#elif defined (USE_MSC_ASM)
-#  define QUANTFAC(rx)  adj43asm[rx]
-#  define ROUNDFAC -0.0946
-#  define XRPOW_FTOI(src, dest) do { \
-     FLOAT8 src_ = (src); \
-     int dest_; \
-     { \
-       __asm fld src_ \
-       __asm fistp dest_ \
-     } \
-     (dest) = dest_; \
-   } while (0)
-#else
 #  define QUANTFAC(rx)  adj43[rx]
 #  define ROUNDFAC 0.4054
 #  define XRPOW_FTOI(src,dest) ((dest) = (int)(src))
-#endif
-
 
 
 #endif
@@ -163,84 +198,81 @@ calc_sfb_noise(const FLOAT8 *xr, const FLOAT8 *xr34, const int bw, const int sf)
 static FLOAT8
 calc_sfb_noise_ave(const FLOAT8 *xr, const FLOAT8 *xr34, const int bw, const int sf)
 {
-  int j;
-  fi_union fi; 
-  double temp,temp_p1,temp_m1;
-  FLOAT8 xfsf=0, xfsf_p1=0, xfsf_m1=0;
-  FLOAT8 sfpow34,sfpow34_p1,sfpow34_m1;
-  FLOAT8 sfpow,sfpow_p1,sfpow_m1;
-
-  sfpow = POW20(sf+210); /*pow(2.0,sf/4.0); */
-  sfpow34  = IPOW20(sf+210); /*pow(sfpow,-3.0/4.0);*/
-
-  sfpow_m1 = sfpow*.8408964153;  /* pow(2,(sf-1)/4.0) */
-  sfpow34_m1 = sfpow34*1.13878863476;       /* .84089 ^ -3/4 */
-
-  sfpow_p1 = sfpow*1.189207115;  
-  sfpow34_p1 = sfpow34*0.878126080187;
-
-  for ( j=0; j < bw ; ++j) {
-
-    if (xr34[j]*sfpow34_m1 > IXMAX_VAL) return -1;
-
+    double xp;
+    double xe;
+    double xm;
 #ifdef TAKEHIRO_IEEE754_HACK
-    temp   = xr34[j]*sfpow34;
-    temp  += MAGIC_FLOAT; 
-    fi.f  = temp;
-    fi.f  = temp + (adj43asm - MAGIC_INT)[fi.i];
-    fi.i -= MAGIC_INT;
-#else
-    temp = xr34[j]*sfpow34;
-    XRPOW_FTOI(temp, fi.i);
-    XRPOW_FTOI(temp + QUANTFAC(fi.i), fi.i);
+    double x0;
 #endif
-    temp = fabs(xr[j])- pow43[fi.i]*sfpow;
-    temp *= temp;
+    int xx[3], j;
+    fi_union *fi = (fi_union *)xx; 
+    FLOAT8 sfpow34_eq, sfpow34_p1, sfpow34_m1;
+    FLOAT8 sfpow_eq, sfpow_p1, sfpow_m1;
+    FLOAT8 xfsf_eq = 0, xfsf_p1 = 0, xfsf_m1 = 0;
 
-#ifdef TAKEHIRO_IEEE754_HACK
-    temp_p1 = xr34[j]*sfpow34_p1;
-    temp_p1 += MAGIC_FLOAT; 
-    fi.f  = temp_p1;
-    fi.f  = temp_p1 + (adj43asm - MAGIC_INT)[fi.i];
-    fi.i -= MAGIC_INT;
-#else
-    temp_p1 = xr34[j]*sfpow34_p1;
-    XRPOW_FTOI(temp_p1, fi.i);
-    XRPOW_FTOI(temp_p1 + QUANTFAC(fi.i), fi.i);
-#endif
-    temp_p1 = fabs(xr[j])- pow43[fi.i]*sfpow_p1;
-    temp_p1 *= temp_p1;
+    sfpow_eq = POW20(sf + 210); /*pow(2.0,sf/4.0); */
+    sfpow_m1 = sfpow_eq * .8408964153;  /* pow(2,(sf-1)/4.0) */
+    sfpow_p1 = sfpow_eq * 1.189207115;  
     
+    sfpow34_eq = IPOW20(sf + 210); /*pow(sfpow,-3.0/4.0);*/
+    sfpow34_m1 = sfpow34_eq * 1.13878863476;       /* .84089 ^ -3/4 */
+    sfpow34_p1 = sfpow34_eq * 0.878126080187;
+
 #ifdef TAKEHIRO_IEEE754_HACK
-    temp_m1   = xr34[j]*sfpow34_m1;
-    temp_m1  += MAGIC_FLOAT; 
-    fi.f  = temp_m1;
-    fi.f  = temp_m1 + (adj43asm - MAGIC_INT)[fi.i];
-    fi.i -= MAGIC_INT;
+    /*
+     *  loop unrolled into "Duff's Device".   Robert Hegemann
+     */    
+    j = (bw+3) / 4;
+    switch (bw % 4) {
+        default:
+        case 0: do{ DUFFBLOCK();
+        case 3:     DUFFBLOCK();
+        case 2:     DUFFBLOCK();
+        case 1:     DUFFBLOCK(); } while (--j);
+    }
 #else
-    temp_m1 = xr34[j]*sfpow34_m1;
-    XRPOW_FTOI(temp_m1, fi.i);
-    XRPOW_FTOI(temp_m1 + QUANTFAC(fi.i), fi.i);
-#endif
-    temp_m1 = fabs(xr[j])- pow43[fi.i]*sfpow_m1;
-    temp_m1 *= temp_m1;
+    for (j = 0; j < bw; ++j) {
+
+        if (xr34[j]*sfpow34_m1 > IXMAX_VAL) return -1;
+
+        xe = xr34[j]*sfpow34_eq;
+        XRPOW_FTOI(xe, fi[0].i);
+        XRPOW_FTOI(xe + QUANTFAC(fi[0].i), fi[0].i);
+        xe = fabs(xr[j])- pow43[fi[0].i]*sfpow_eq;
+        xe *= xe;
+
+        xp = xr34[j]*sfpow34_p1;
+        XRPOW_FTOI(xp, fi[0].i);
+        XRPOW_FTOI(xp + QUANTFAC(fi[0].i), fi[0].i);
+        xp = fabs(xr[j])- pow43[fi[0].i]*sfpow_p1;
+        xp *= xp;
+
+        xm = xr34[j]*sfpow34_m1;
+        XRPOW_FTOI(xm, fi[0].i);
+        XRPOW_FTOI(xm + QUANTFAC(fi[0].i), fi[0].i);
+        xm = fabs(xr[j])- pow43[fi[0].i]*sfpow_m1;
+        xm *= xm;
 
 #ifdef MAXQUANTERROR
-    xfsf = Max(xfsf,temp);
-    xfsf_p1 = Max(xfsf_p1,temp_p1);
-    xfsf_m1 = Max(xfsf_m1,temp_m1);
+        xfsf_eq = Max(xfsf,xm);
+        xfsf_p1 = Max(xfsf_p1,xp);
+        xfsf_m1 = Max(xfsf_m1,xm);
 #else
-    xfsf += temp;
-    xfsf_p1 += temp_p1;
-    xfsf_m1 += temp_m1;
+        xfsf_eq += xe;
+        xfsf_p1 += xp;
+        xfsf_m1 += xm;
 #endif
-  }
-  if (xfsf_p1>xfsf) xfsf = xfsf_p1;
-  if (xfsf_m1>xfsf) xfsf = xfsf_m1;
+    }
+#endif
+
+    if (xfsf_eq < xfsf_p1) 
+        xfsf_eq = xfsf_p1;
+    if (xfsf_eq < xfsf_m1) 
+        xfsf_eq = xfsf_m1;
 #ifdef MAXQUANTERROR
-  return xfsf;
+    return xfsf_eq;
 #else
-  return xfsf/bw;
+    return xfsf_eq/bw;
 #endif
 }
 
@@ -903,8 +935,20 @@ short_block_xr34 (
         for (b = 0; b < 3; b++) {
             ifac = 8*cod_info->subblock_gain[b]+ifqstep*scalefac->s[sfb][b];
             fac = calc_fac( ifac );
-            for ( l = start; l < end; l++ ) {
-                xr34[j] = xr34_orig[j]*fac; j++;
+            /*
+             *  loop unrolled into "Duff's Device".  Robert Hegemann
+             */
+            l = (end-start+7) / 8;
+            switch ((end-start) % 8) {
+                default:
+                case 0: do{ xr34[j] = xr34_orig[j]*fac; j++;
+                case 7:     xr34[j] = xr34_orig[j]*fac; j++;
+                case 6:     xr34[j] = xr34_orig[j]*fac; j++;
+                case 5:     xr34[j] = xr34_orig[j]*fac; j++;
+                case 4:     xr34[j] = xr34_orig[j]*fac; j++;
+                case 3:     xr34[j] = xr34_orig[j]*fac; j++;
+                case 2:     xr34[j] = xr34_orig[j]*fac; j++;
+                case 1:     xr34[j] = xr34_orig[j]*fac; j++; } while (--l);
             }
         }
     }
@@ -920,7 +964,7 @@ long_block_xr34 (
     const FLOAT8                 xr34_orig[576],
           FLOAT8                 xr34     [576] )
 { 
-    unsigned int sfb, l;
+    unsigned int sfb, l, j;
     int    ifac, ifqstep, start, end;
     FLOAT8 fac;
         
@@ -935,8 +979,21 @@ long_block_xr34 (
 
         start = gfc->scalefac_band.l[ sfb ];
         end   = gfc->scalefac_band.l[ sfb+1 ];
-        for ( l = start; l < end; l++ ) {
-            xr34[l] = xr34_orig[l]*fac;
+        /*
+         *  loop unrolled into "Duff's Device".  Robert Hegemann
+         */
+        j = start;
+        l = (end-start+7) / 8;
+        switch ((end-start) % 8) {
+            default:
+            case 0: do{ xr34[j] = xr34_orig[j]*fac; j++;
+            case 7:     xr34[j] = xr34_orig[j]*fac; j++;
+            case 6:     xr34[j] = xr34_orig[j]*fac; j++;
+            case 5:     xr34[j] = xr34_orig[j]*fac; j++;
+            case 4:     xr34[j] = xr34_orig[j]*fac; j++;
+            case 3:     xr34[j] = xr34_orig[j]*fac; j++;
+            case 2:     xr34[j] = xr34_orig[j]*fac; j++;
+            case 1:     xr34[j] = xr34_orig[j]*fac; j++; } while (--l);
         }
     }
 }
@@ -1085,17 +1142,12 @@ VBR_noise_shaping2 (
     cod_info   = &gfc->l3_side.gr[gr].ch[ch].tt;
     shortblock = (cod_info->block_type == SHORT_TYPE);
       
-    if (shortblock)
-        vbrmax = short_block_vbr_sf (gfc, l3_xmin, xr34orig, xr, &vbrsf);  
-    else
-        vbrmax = long_block_vbr_sf (gfc, l3_xmin, xr34orig, xr, &vbrsf);  
-
-    memset (scalefac, 0, sizeof(III_scalefac_t));
-
     if (shortblock) {
+        vbrmax = short_block_vbr_sf (gfc, l3_xmin, xr34orig, xr, &vbrsf);  
         short_block_scalefacs (gfp, cod_info, scalefac, &vbrsf, &vbrmax);
         short_block_xr34      (gfc, cod_info, scalefac, xr34orig, xr34);
     } else {
+        vbrmax = long_block_vbr_sf (gfc, l3_xmin, xr34orig, xr, &vbrsf);  
         long_block_scalefacs (gfp, cod_info, scalefac, &vbrsf, &vbrmax);
         long_block_xr34      (gfc, cod_info, scalefac, xr34orig, xr34);
     } 
