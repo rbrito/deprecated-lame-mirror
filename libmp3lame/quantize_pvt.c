@@ -651,7 +651,6 @@ FLOAT calc_noise_core_c( const gr_info * const cod_info,
     const int *ix = cod_info->l3_enc;
 
     assert(cod_info->count1 != 0);
-    assert(cod_info->big_values != 0);
 
     if (j> cod_info->count1) {
 	    while (l--) {
@@ -712,7 +711,6 @@ FLOAT calc_noise_core_sse( const gr_info * const cod_info,
     _noise._m128 = _mm_set_ps1(0);
 
     assert(cod_info->count1 != 0);
-    assert(cod_info->big_values != 0);
 
     _mm_prefetch((char*)cod_info->xr, _MM_HINT_T0);
     _mm_prefetch((char*)ix, _MM_HINT_T0);
