@@ -364,11 +364,16 @@ int PutVbrTag(lame_global_flags *gfp,char* lpszFileName,int nVbrScale)
 	pbtStreamBuffer[0]=(u_char) 0xff;
 	abyte = (pbtStreamBuffer[1] & (char) 0xf0);
 	if (gfp->version==1) {
-	  pbtStreamBuffer[1]=abyte | (char) 0x0b;
+          /* changed behaviour as suggested by Mathew Hendry:
+           * as the extra Xing VBR header is no valid mpeg frame anyway,
+           * keep crc from the first valid frame without calculating it
+           * for this additional Xing frame
+           */ 
+	  pbtStreamBuffer[1]=abyte | (char) 0x0a;     /* was 0x0b; */
 	  abyte = pbtStreamBuffer[2] & (char) 0x0d;   /* AF keep also private bit */
 	  pbtStreamBuffer[2]=(char) 0x50 | abyte;     /* 64kbs MPEG1 frame */
 	}else{
-	  pbtStreamBuffer[1]=abyte | (char) 0x03;
+	  pbtStreamBuffer[1]=abyte | (char) 0x02;     /* was 0x03; */
 	  abyte = pbtStreamBuffer[2] & (char) 0x0d;   /* AF keep also private bit */
 	  pbtStreamBuffer[2]=(char) 0x80 | abyte;     /* 64kbs MPEG2 frame */
 	}
