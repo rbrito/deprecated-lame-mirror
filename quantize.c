@@ -43,7 +43,7 @@ iteration_loop( lame_global_flags *gfp,
 		III_scalefac_t scalefac[2][2])
 {
   lame_internal_flags *gfc=gfp->internal_flags;
-  FLOAT8 xfsf[4][SBPSY_l];
+  FLOAT8 xfsf[4][SBMAX_l];
   FLOAT8 noise[4]; /* over,max_noise,over_noise,tot_noise; */
   III_psy_xmin l3_xmin[2];
   gr_info *cod_info;
@@ -161,7 +161,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
   int       save_bits[2][2];
   FLOAT8    noise[4];      /* over,max_noise,over_noise,tot_noise; */
   FLOAT8    targ_noise[4]; /* over,max_noise,over_noise,tot_noise; */
-  FLOAT8    xfsf[4][SBPSY_l];
+  FLOAT8    xfsf[4][SBMAX_l];
   int       this_bits, dbits;
   int       used_bits=0;
   int       min_bits,max_bits,min_mean_bits=0;
@@ -598,7 +598,7 @@ void outer_loop(
     int l3_enc[576],         /* vector of quantized values ix(0..575) */
     III_scalefac_t *scalefac, /* scalefactors */
     gr_info *cod_info,
-    FLOAT8 xfsf[4][SBPSY_l],
+    FLOAT8 xfsf[4][SBMAX_l],
     int ch)
 {
   lame_internal_flags *gfc=gfp->internal_flags;
@@ -618,8 +618,8 @@ void outer_loop(
   FLOAT8 best_max_noise=0;
   FLOAT8 best_over_noise=0;
   FLOAT8 best_tot_noise=0;
-  FLOAT8 xfsf_w[4][SBPSY_l];
-  FLOAT8 distort[4][SBPSY_l];
+  FLOAT8 xfsf_w[4][SBMAX_l];
+  FLOAT8 distort[4][SBMAX_l];
 
   int compute_stepsize=1;
   int notdone=1;
@@ -767,7 +767,7 @@ void amp_scalefac_bands(lame_global_flags *gfp,
 			FLOAT8 xrpow[576], 
 			gr_info *cod_info,
 			III_scalefac_t *scalefac,
-			FLOAT8 distort[4][SBPSY_l])
+			FLOAT8 distort[4][SBMAX_l])
 {
     int start, end, l,i;
 	u_int	sfb;

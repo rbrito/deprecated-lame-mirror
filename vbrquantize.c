@@ -383,8 +383,8 @@ VBR_quantize_granule(lame_global_flags *gfp,
   /* do this before calling best_scalefac_store! */
   if (gfp->gtkflag) {
     FLOAT8 noise[4];
-    FLOAT8 xfsf[4][SBPSY_l];
-    FLOAT8 distort[4][SBPSY_l];
+    FLOAT8 xfsf[4][SBMAX_l];
+    FLOAT8 distort[4][SBMAX_l];
     FLOAT8 save;
     
     /* recompute allowed noise with no 'masking_lower' for

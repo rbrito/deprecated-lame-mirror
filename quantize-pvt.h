@@ -38,7 +38,7 @@ void outer_loop( lame_global_flags *gfp,
                 int l3_enc[576],    /* vector of quantized values ix(0..575) */
 		 III_scalefac_t *scalefac, /* scalefactors */
 		 gr_info *,
-                FLOAT8 xfsf[4][SBPSY_l],
+                FLOAT8 xfsf[4][SBMAX_l],
 		int ch);
 
 
@@ -61,8 +61,8 @@ int scale_bitcount_lsf( III_scalefac_t *scalefac, gr_info *cod_info);
 int calc_noise1( lame_global_flags *gfp, FLOAT8 xr[576],
                  int ix[576],
                  gr_info *cod_info,
-                 FLOAT8 xfsf[4][SBPSY_l], 
-		 FLOAT8 distort[4][SBPSY_l],
+                 FLOAT8 xfsf[4][SBMAX_l], 
+		 FLOAT8 distort[4][SBMAX_l],
                  III_psy_xmin *l3_xmin,
 		 III_scalefac_t *,
                  FLOAT8 *noise, FLOAT8 *tot_noise, FLOAT8 *max_noise);
@@ -72,7 +72,7 @@ int loop_break( III_scalefac_t *scalefac, gr_info *cod_info);
 void amp_scalefac_bands(lame_global_flags *gfp, FLOAT8 xrpow[576],
 			gr_info *cod_info,
 			III_scalefac_t *scalefac,
-			FLOAT8 distort[4][SBPSY_l]);
+			FLOAT8 distort[4][SBMAX_l]);
 
 void quantize_xrpow( FLOAT8 xr[576],
                int  ix[576],

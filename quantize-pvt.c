@@ -733,7 +733,7 @@ int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576], III_psy_ratio *ratio,
 /*  mt 5/99:  Function: Improved calc_noise for a single channel   */
 int calc_noise1( lame_global_flags *gfp,
                  FLOAT8 xr[576], int ix[576], gr_info *cod_info,
-		 FLOAT8 xfsf[4][SBPSY_l], FLOAT8 distort[4][SBPSY_l],
+		 FLOAT8 xfsf[4][SBMAX_l], FLOAT8 distort[4][SBMAX_l],
 		 III_psy_xmin *l3_xmin, III_scalefac_t *scalefac,
 		 FLOAT8 *over_noise,
 		 FLOAT8 *tot_noise, FLOAT8 *max_noise)
@@ -992,7 +992,7 @@ set_pinfo (lame_global_flags *gfp,
     III_psy_ratio *ratio, 
     III_scalefac_t *scalefac,
     FLOAT8 xr[576],        
-    FLOAT8 xfsf[4][SBPSY_l],
+    FLOAT8 xfsf[4][SBMAX_l],
     FLOAT8 noise[4],
     int gr,
     int ch
@@ -1003,7 +1003,7 @@ set_pinfo (lame_global_flags *gfp,
   int sfb;
   FLOAT ifqstep;
   int i,l,start,end,bw;
-  FLOAT8 en0;
+  FLOAT8 en0,en1;
   D192_3 *xr_s = (D192_3 *)xr;
   pinfo=gfc->pinfo;
   ifqstep = ( cod_info->scalefac_scale == 0 ) ? .5 : 1.0;
@@ -1018,12 +1018,24 @@ set_pinfo (lame_global_flags *gfp,
 	  en0 += (*xr_s)[l][i] * (*xr_s)[l][i];
 	en0=Max(en0/bw,1e-20);
 
+#if 0
 	/* conversion to FFT units */
 	en0 = ratio->en.s[sfb][i]/en0;
-
 	pinfo->xfsf_s[gr][ch][3*sfb+i] =  xfsf[i+1][sfb]*en0;
-	pinfo->thr_s[gr][ch][3*sfb+i] = Min(ratio->thm.s[sfb][i],en0*gfc->ATH_s[sfb]);
+	pinfo->thr_s[gr][ch][3*sfb+i] = Max(ratio->thm.s[sfb][i],en0*gfc->ATH_s[sfb]);
 	pinfo->en_s[gr][ch][3*sfb+i] = ratio->en.s[sfb][i]; 
+#else
+      /* convert to MDCT units */
+      en1=1e15;  /* scaling so it shows up on FFT plot */
+      pinfo->xfsf_s[gr][ch][3*sfb+i] =  en1*xfsf[i+1][sfb];
+      pinfo->en_s[gr][ch][3*sfb+i] = en1*en0;
+
+      if (ratio->en.s[sfb][i]>0)
+	en0 = en0/ratio->thm.s[sfb][i];
+      else
+	en0=0;
+      pinfo->thr_s[gr][ch][3*sfb+i] = en1*Max(en0*ratio->thm.s[sfb][i],gfc->ATH_s[sfb]);
+#endif
 
 	/* there is no scalefactor bands >= SBPSY_s */
 	if (sfb < SBPSY_s) 
@@ -1045,18 +1057,30 @@ set_pinfo (lame_global_flags *gfp,
       bw = end - start;
       for ( en0 = 0.0, l = start; l < end; l++ ) 
 	en0 += xr[l] * xr[l];
-      en0=Max(en0/bw,1e-20);
+      en0/=bw;
       /*
 	printf("diff  = %f \n",10*log10(Max(ratio[gr][ch].en.l[sfb],1e-20))
 	-(10*log10(en0)+150));
       */
-      
+
+#if 0      
       /* convert to FFT units */
-      en0 =   ratio->en.l[sfb]/en0;
-      
+      en0 =   ratio->en.l[sfb]/Max(en0,1e-20);
       pinfo->xfsf[gr][ch][sfb] =  xfsf[0][sfb]*en0;
-      pinfo->thr[gr][ch][sfb] = Min(ratio->thm.l[sfb],en0*gfc->ATH_l[sfb]);
+      pinfo->thr[gr][ch][sfb] = Max(ratio->thm.l[sfb],en0*gfc->ATH_l[sfb]);
       pinfo->en[gr][ch][sfb] = ratio->en.l[sfb];
+#else
+      /* convert to MDCT units */
+      en1=1e15;  /* scaling so it shows up on FFT plot */
+      pinfo->xfsf[gr][ch][sfb] =  en1*xfsf[0][sfb];
+      pinfo->en[gr][ch][sfb] = en1*en0;
+      if (ratio->en.l[sfb]>0)
+	en0 = en0/ratio->en.l[sfb];
+      else
+	en0=0;
+      pinfo->thr[gr][ch][sfb] = en1*Max(en0*ratio->thm.l[sfb],gfc->ATH_l[sfb]);
+#endif
+
 
       /* there is no scalefactor bands >= SBPSY_l */
       if (sfb<SBPSY_l)
