@@ -1,4 +1,11 @@
-# Makefile.MSVC: MSVC Makefile for LAME 3.87
+# Makefile.MSVC: MSVC Makefile for LAME 3.88
+
+!IF "$(CFG)" == ""
+CFG=LAME
+!MESSAGE No configuration specified.  Defaulting to LAME.
+!MESSAGE Pass CFG=MPX to build the frame analyzer.
+!MESSAGE 
+!ENDIF 
 
 PGM = lame
 
@@ -87,12 +94,22 @@ CPP_OPTS = $(CPP_OPTS) /DTAKEHIRO_IEEE754_HACK
 #	uncomment the following to enable some alternate code
 #
 CPP_OPTS = $(CPP_OPTS) /DRH_AMP /DRH_VALIDATE_MS
+# CPP_OPTS = $(CPP_OPTS) /DRH_AMP /DRH_VALIDATE_MS
 #=================================================== Robert's alternate code ==
 
 
+!IF "$(CFG)" == "LAME"
 
-CC_SWITCHES = $(CC_OPTS) $(DISTRIB) $(SNDLIB) $(GTK) \
-              /DBS_FORMAT=BINARY $(TIMER_SWITCH) $(BRHIST_SWITCH) $(VORBIS)
+CC_SWITCHES = $(CC_OPTS) $(DISTRIB) $(SNDLIB) $(BRHIST_SWITCH) \
+              /DBS_FORMAT=BINARY $(TIMER_SWITCH) $(VORBIS)
+
+!ELSE
+
+CC_SWITCHES = $(CC_OPTS) $(DISTRIB) $(SNDLIB) \
+              /DBS_FORMAT=BINARY $(TIMER_SWITCH) $(VORBIS) $(GTK)
+
+!ENDIF
+
 LN_SWITCHES = $(LN_OPTS)
 
 lame_sources = \
@@ -109,7 +126,6 @@ mpx_sources = \
 	analyzer/gpkplotting.c \
 	analyzer/gtkanal.c \
 	analyzer/mp3x.c \
-	frontend/brhist.c \
 	frontend/get_audio.c \
 	frontend/ieeefloat.c \
 	frontend/lametime.c \
@@ -148,8 +164,10 @@ lib_sources = \
 LIB_OBJ = $(lib_sources:.c=.obj)
 LAME_OBJ = $(lame_sources:.c=.obj)
 MPX_OBJ = $(mpx_sources:.c=.obj)
-all : lame.exe mpx.exe
 
+
+
+all : prg
 
 
 #== MMX =======================================================================
@@ -168,26 +186,37 @@ LIB_OBJ = $(LIB_OBJ) libmp3lame/i386/choose_table.obj
 
 
 
+
+!IF "$(CFG)" == "LAME"
+
 .c.obj: 
- 	@$(CC) $(CC_SWITCHES) $(CPP_OPTS) -Iinclude -Impglib -Ilibmp3lame -Ifrontend /c $< /Fo$@
+	@$(CC) $(CC_SWITCHES) $(CPP_OPTS) -Iinclude -Impglib -Ilibmp3lame /c $< /Fo$@
 
-lame.exe: $(LIB_OBJ) $(LAME_OBJ) Makefile.MSVC
-        @echo lame.exe
-        @$(LN) $(LN_SWITCHES) $(LIB_OBJ) $(LAME_OBJ) $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(VORBISLIB) \
-                $(LIBTERMCAP) /out:lame.exe /map:lame.map
+prg: $(LIB_OBJ) $(LAME_OBJ) Makefile.MSVC
+	@echo lame.exe
+	@$(LN) $(LN_SWITCHES) $(LIB_OBJ) $(LAME_OBJ) $(LIBS) $(LIBSNDFILE) $(VORBISLIB) \
+	       $(LIBTERMCAP) /out:lame.exe /map:lame.map
 
-mpx.exe: $(LIB_OBJ) $(MPX_OBJ) Makefile.MSVC
-        @echo mpx.exe
-        @$(LN) $(LN_SWITCHES) $(LIB_OBJ) $(MPX_OBJ) $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(VORBISLIB) \
-                $(LIBTERMCAP) /out:mpx.exe /map:mpx.map
+!ELSE
+
+.c.obj: 
+	@$(CC) $(CC_SWITCHES) $(CPP_OPTS) -Iinclude -Impglib -Ilibmp3lame -Ifrontend /c $< /Fo$@
+
+prg: $(LIB_OBJ) $(MPX_OBJ) Makefile.MSVC
+	@echo mpx.exe
+	@$(LN) $(LN_SWITCHES) $(LIB_OBJ) $(MPX_OBJ) $(LIBS) $(LIBSNDFILE) $(VORBISLIB) \
+	       $(GTKLIBS) /out:mpx.exe /map:mpx.map
+
+!ENDIF
 
 clean:
- 	@-del *.obj
- 	@-del analyzer\*.obj
- 	@-del frontend\*.obj
- 	@-del libmp3lame\*.obj
- 	@-del dll\*.obj
- 	@-del mpglib\*.obj
+	@-del *.obj
+	@-del analyzer\*.obj
+	@-del frontend\*.obj
+	@-del libmp3lame\*.obj
+	@-del libmp3lame\i386\*.obj
+	@-del dll\*.obj
+	@-del mpglib\*.obj
 
-rebuild: clean lame.exe mpx.exe
+rebuild: clean prg
 
