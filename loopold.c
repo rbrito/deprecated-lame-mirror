@@ -192,14 +192,13 @@ void outer_loop_dual(
     III_psy_ratio *ratio, FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2])
 {
   int status[2],notdone[2]={0,0},count[2]={0,0},bits_found[2];
-  int targ_bits[2],real_bits[2],tbits,extra_bits; 
+  int targ_bits[2],real_bits,tbits,extra_bits; 
   int scalesave_l[2][SBPSY_l], scalesave_s[2][SBPSY_l][3];
-  int sfb, bits, huff_bits, save_preflag[2], save_compress[2];
+  int sfb, bits, huff_bits;
   FLOAT8 xfsf[2][4][SBPSY_l];
   FLOAT8 xrpow[2][2][576],temp;
   FLOAT8 distort[2][4][SBPSY_l];
   int save_l3_enc[2][576];  
-  int save_real_bits[2];
   int i,over[2], iteration, ch, compute_stepsize;
   int better[2];
   int add_bits[2]; 
@@ -341,11 +340,13 @@ void outer_loop_dual(
 	  if (iteration==1) {
 	    if(bits_found[ch]>huff_bits) {
 	      cod_info[ch]->quantizerStepSize+=1.0;
-	      real_bits[ch] = inner_loop( xr, xrpow[gr][ch], l3_enc, huff_bits, cod_info[ch], gr, ch );
-	    } else real_bits[ch]=bits_found[ch];
+	      real_bits = inner_loop( xr, xrpow[gr][ch], l3_enc, huff_bits, cod_info[ch], gr, ch );
+	    } else real_bits=bits_found[ch];
 	  }
 	  else 
-	    real_bits[ch]=inner_loop( xr, xrpow[gr][ch], l3_enc, huff_bits, cod_info[ch], gr, ch );
+	    real_bits=inner_loop( xr, xrpow[gr][ch], l3_enc, huff_bits, cod_info[ch], gr, ch );
+
+	  cod_info[ch]->part2_3_length = real_bits;
 	}
       }
     }
@@ -395,12 +396,8 @@ void outer_loop_dual(
 	    for ( i = 0; i < 3; i++ )
 	      scalesave_s[ch][sfb][i] = scalefac->s[gr][ch][sfb][i];
 	  
-	  save_preflag[ch]  = cod_info[ch]->preflag;
-	  save_compress[ch] = cod_info[ch]->scalefac_compress;
-	  
 	  memcpy(save_l3_enc[ch],l3_enc[gr][ch],sizeof(l3_enc[gr][ch]));   
 	  memcpy(&save_cod_info[ch],cod_info[ch],sizeof(save_cod_info[ch]));
-	  save_real_bits[ch]=real_bits[ch];
 
 #ifdef HAVEGTK
 	  if (gtkflag) {
@@ -477,9 +474,6 @@ void outer_loop_dual(
   /* restore some data */
   for (ch=0 ; ch < stereo ; ch ++ ) {
     if (count[ch] ) {
-      cod_info[ch]->preflag = save_preflag[ch];
-      cod_info[ch]->scalefac_compress = save_compress[ch];
-      
       for ( sfb = 0; sfb < SBPSY_l; sfb++ ) {
 	scalefac->l[gr][ch][sfb] = scalesave_l[ch][sfb];    
       }
@@ -490,7 +484,6 @@ void outer_loop_dual(
 	}
 
       { 
-	real_bits[ch]=save_real_bits[ch];  
 	memcpy(l3_enc[gr][ch],save_l3_enc[ch],sizeof(l3_enc[gr][ch]));   
 	memcpy(cod_info[ch],&save_cod_info[ch],sizeof(save_cod_info[ch]));
 	
@@ -503,7 +496,7 @@ void outer_loop_dual(
 	  exit(-10);
 	}
       }
-      cod_info[ch]->part2_3_length = cod_info[ch]->part2_length + real_bits[ch];
+      cod_info[ch]->part2_3_length += cod_info[ch]->part2_length;
 
 #ifdef HAVEGTK
       if (gtkflag)
