@@ -19,12 +19,43 @@ Starting with LAME 3.0:
 <hr></h3>
 
 <h3>
-LAME&nbsp;3.83beta&nbsp; (CVS)</h3>
+LAME 3.84beta&nbsp; (CVS)</h3>
 
 <ul>
-Naoki Shibata and Takehiro Tominaga :&nbsp; more MDCT code work for mdct_long
 <li>
 </li>
+</ul>
+
+<h3>
+LAME 3.83beta&nbsp; May 19&nbsp; 2000</h3>
+
+<ul>
+<li>
+<font color="#FF0000">Mark Taylor:&nbsp; Bug in buffering routines:&nbsp;
+in some cases, could cause MDCT&nbsp; to read past end of buffer.&nbsp;
+Rare in MPEG2, even more rare for MPEG1, but potentially serious!</font></li>
+
+<li>
+Mark Taylor:&nbsp; MDCT/polyphase filterbank was not being "primed" properly.&nbsp;
+Does not effect output unless you set the encoder delay lower than the
+default of 576 samples.</li>
+
+<li>
+<font color="#FF0000">Mark Taylor:&nbsp; "vdbj" and "Caster"&nbsp; found
+several VBR bugs (now fixed):&nbsp;&nbsp; 1.&nbsp; Analog silence detection
+only checked frequencies up to 16khz.&nbsp; 2.&nbsp; VBR mode could still
+somehow avoid -F mode.&nbsp; 3.&nbsp; VBR mode would ignore noise above
+16khz (scalefactor band 22), Now calc_noise1 will compute the noise in
+this band when in VBR mode.&nbsp; Not calculated in CBR&nbsp; mode since
+CBR algorithm has no way of using this information.</font></li>
+
+<li>
+Mark Taylor:&nbsp; scalefactor band 22 info (masking(=ATH),&nbsp; noise
+and energy) now displayed in frame analyzer.</li>
+
+<li>
+<font color="#FF0000">VBR code ATH tuning was disabled by accident in 3.81,
+now fixed.</font></li>
 </ul>
 
 <h3>
@@ -33,6 +64,9 @@ LAME 3.82beta&nbsp;&nbsp; May 11 2000</h3>
 <ul>
 <li>
 Robert Hegemann:&nbsp; Fixed bug in high bitrate joint stereo encodings.</li>
+
+<li>
+<font color="#3366FF">Naoki Shibata:&nbsp; new long block MDCT routine</font></li>
 </ul>
 
 <h3>
@@ -43,12 +77,18 @@ LAME 3.81beta&nbsp; May 8 2000</h3>
 all ISO code removed!</li>
 
 <li>
-<font color="#3366FF">Takehiro Tominaga and Naoki Shibata:&nbsp; new MDCT
-routines.</font></li>
+<font color="#3366FF">Takehiro Tominaga and Naoki Shibata:&nbsp; new window
+subband routines.</font></li>
 
 <li>
-ISO 7680bit buffer limitation removed.&nbsp; It can be reactivated with
-"--strictly-enforce-ISO"&nbsp; Please report any trouble with high bitrates.</li>
+<font color="#000000">Naoki Shibata:&nbsp; Bug fix in mpglib (decoding)
+lib:&nbsp; in some cases, MDCT coefficients from previous granule was incorrectly
+used for the next granule.</font></li>
+
+<li>
+<font color="#FF0000">ISO 7680 bit buffer limitation removed.&nbsp; It
+can be reactivated with "--strictly-enforce-ISO"&nbsp; Please report any
+trouble with high bitrates.</font></li>
 </ul>
 
 <h3>
