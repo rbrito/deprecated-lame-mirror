@@ -149,10 +149,10 @@ lame_init_qval(lame_global_flags * gfp)
         gfc->filter_type = 0; /* 1 not yet coded */
         gfc->psymodel = 2;
         gfc->quantization = 1;
-        gfc->noise_shaping_amp = 2;
+        gfc->noise_shaping_amp = 3;
         gfc->noise_shaping_stop = 2; /* this may loose quality */
         gfc->use_best_huffman = 2;
-//        gfc->substep_shaping = 7;
+        gfc->substep_shaping = 2;
         break;
     }
 }
@@ -176,7 +176,7 @@ FindNearestBitrate(
     for ( i = 1; i <= 14; i++ )
         if ( ABS (bitrate_table[version][i] - bRate) < ABS (bitrate - bRate) )
             bitrate = bitrate_table [version] [i];
-	    
+
     return bitrate;
 }
 
@@ -662,6 +662,12 @@ lame_init_params(lame_global_flags * const gfp)
 	    && (gfc->substep_shaping & 2))
 	    gfc->sfb21_extra = 1;
     }
+
+    if (gfc->noise_shaping_amp > 2)
+	gfc->noise_shaping_amp = 2;
+
+    if (gfc->substep_shaping & 2)
+	gfc->noise_shaping_amp = 3;
 
     /* initialize internal qval settings */
     lame_init_qval(gfp);

@@ -696,10 +696,10 @@ amp_scalefac_bands(
 	if (distort[sfb] < trigger)
 	    continue;
 
-	if (!(gfc->substep_shaping & 2)
+	if (!((gfc->substep_shaping & 2) && (method == 3))
 	    || (gfc->pseudohalf[sfb] ^= 1))
 	    cod_info->scalefac[sfb]++;
-	if (method==2)
+	if (method >= 2)
 	    return;
     }
 }
@@ -919,7 +919,7 @@ outer_loop (
 		    if (current_method == 0)
 			current_method++;
 		}
-		age = (current_method*3+2) * ((gfc->substep_shaping & 2) + 1);
+		age = current_method*3+2;
 		continue;
 	    }
 	} else
@@ -941,7 +941,7 @@ outer_loop (
 	    break;
 	current_method++;
 	cod_info_w = *cod_info;
-	age = (current_method*3+2) * ((gfc->substep_shaping & 2) + 1);
+	age = current_method*3+2;
     }
 
     assert (cod_info->global_gain < 256);
