@@ -220,8 +220,7 @@ typedef struct {
     int scfsi[MAX_CHANNELS][4];
 } III_side_info_t;
 
-typedef struct 
-{
+typedef struct {
     int sum;    /* what we have seen so far */
     int seen;   /* how many frames we have seen in this chunk */
     int want;   /* how many frames we want to collect into one chunk */
@@ -273,12 +272,10 @@ struct lame_internal_flags {
     int mode_gr;        /* granules per frame */
     int channels_in;	/* number of channels in the input data stream (PCM or decoded PCM) */
     int channels_out;   /* number of channels in the output data stream (not used for decoding) */
-    FLOAT samplefreq_in;
-    FLOAT samplefreq_out;
-    FLOAT resample_ratio;      /* input_samp_rate/output_samp_rate */
 
     int mf_size;
     int mf_needed;
+    int framesize;
     int VBR_min_bitrate;            /* min bitrate index */
     int VBR_max_bitrate;            /* max bitrate index */
     int bitrate_index;
@@ -433,6 +430,7 @@ struct lame_internal_flags {
 	FLOAT *blackfilt [2*BPC+1];
 	int filter_l;
 	int bpc;
+	FLOAT ratio;      /* input_samp_rate/output_samp_rate */
     } resample;
 
     int (*scale_bitcounter)(gr_info * const gi);
@@ -450,6 +448,11 @@ struct lame_internal_flags {
 	unsigned int  SSE      : 1; /* Pentium III, Pentium 4    */
 	unsigned int  SSE2     : 1; /* Pentium 4, K8             */
     } CPU_features;
+    struct {
+	int mmx;
+	int amd3dnow;
+	int sse;
+    } asm_optimizations;
 #endif
 
 #ifdef BRHIST
@@ -486,6 +489,7 @@ struct lame_internal_flags {
 				  default = LAME picks best value */
     int force_ms;              /* force M/S mode. */
     int use_istereo;           /* use intensity stereo */
+    int mixed_blocks;          /* use mixed blocks */
     int free_format;           /* use free format? default=0 */
 
     /*
@@ -503,7 +507,15 @@ struct lame_internal_flags {
 				   checksum. default=0                    */
     int extension;              /* the MP3 'private extension' bit.
 				   Meaningless                            */
-    int strict_ISO;             /* enforce ISO spec as much as possible   */
+    int emphasis;               /* Input PCM is emphased PCM (for
+				   instance from one of the rarely
+				   emphased CDs), it is STRONGLY not
+				   recommended to use this, because
+				   psycho does not take it into account,
+				   and last but not least many decoders
+				   don't care about these bits          */
+    int version;                /* 0=MPEG-2/2.5  1=MPEG-1               */
+    int strict_ISO;             /* enforce ISO spec as much as possible */
     int forbid_diff_type;	/* forbid different block type */
 
     /* quantization/noise shaping */
@@ -529,26 +541,10 @@ struct lame_internal_flags {
     int noATH;                      /* disable ATH                          */
     FLOAT ATHcurve;                 /* change ATH formula 4 shape           */
     FLOAT ATHlower;                 /* lower ATH by this many db            */
-    int mixed_blocks;
-    int emphasis;                   /* Input PCM is emphased PCM (for
-				       instance from one of the rarely
-				       emphased CDs), it is STRONGLY not
-				       recommended to use this, because
-				       psycho does not take it into account,
-				       and last but not least many decoders
-				       don't care about these bits          */
 
-    int version;                    /* 0=MPEG-2/2.5  1=MPEG-1               */
-    int encoder_delay;
     int encoder_padding;  /* number of samples of padding appended to input */
-    int framesize;
     int frameNum;                   /* number of frames encoded             */
 
-    struct {
-	int mmx;
-	int amd3dnow;
-	int sse;
-    } asm_optimizations;
 #ifdef HAVE_MPGLIB
     PMPSTR pmp;
     PMPSTR pmp_replaygain;
@@ -568,7 +564,7 @@ int encode_buffer_sample(
    here, not in lame.h, because it returns LAME's 
    internal type sample_t. No more than 1152 samples 
    per channel are allowed. */
-int lame_decode1_unclipped(
+int decode1_unclipped(
     lame_t,
     unsigned char*  mp3buf,
     int             len,

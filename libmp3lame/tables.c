@@ -735,7 +735,7 @@ iteration_init(lame_t gfc)
 
     huffman_init(gfc);
 
-    if (gfc->resample_ratio != 1.0) {
+    if (gfc->resample.ratio != 1.0) {
 	FLOAT fcn = 1.00;
 	int bpc = gcd(gfc->out_samplerate, gfc->in_samplerate);
 	int filter_l = 31;
@@ -746,8 +746,8 @@ iteration_init(lame_t gfc)
 	if (bpc > BPC)
 	    bpc = BPC;
 
-	if (fcn < gfc->resample_ratio)
-	    fcn /= gfc->resample_ratio;
+	if (fcn < gfc->resample.ratio)
+	    fcn /= gfc->resample.ratio;
 
 	gfc->resample.inbuf_old[0] = calloc(filter_l+1,sizeof(FLOAT));
 	gfc->resample.inbuf_old[1] = calloc(filter_l+1,sizeof(FLOAT));

@@ -61,7 +61,7 @@ lame_decode_init(lame_t gfc)
  *  n     number of samples output.  either 576 or 1152 depending on MP3 file.
  */
 static int
-lame_decode1_headersB_clipchoice(
+decode1_headersB_clipchoice(
     PMPSTR pmp, unsigned char *buffer, int len,
     char pcm_l_raw[], char pcm_r_raw[], mp3data_struct * mp3data,
     int *enc_delay, int *enc_padding, 
@@ -185,7 +185,7 @@ lame_decode1_headersB(lame_t gfc, unsigned char *buffer, int len,
 {
     static char out[OUTSIZE_CLIPPED];
 
-    return lame_decode1_headersB_clipchoice(gfc->pmp, buffer, len, (char *)pcm_l, (char *)pcm_r, mp3data, enc_delay, enc_padding, out, OUTSIZE_CLIPPED, sizeof(short), decodeMP3 );
+    return decode1_headersB_clipchoice(gfc->pmp, buffer, len, (char *)pcm_l, (char *)pcm_r, mp3data, enc_delay, enc_padding, out, OUTSIZE_CLIPPED, sizeof(short), decodeMP3 );
 }
 
 
@@ -193,14 +193,14 @@ lame_decode1_headersB(lame_t gfc, unsigned char *buffer, int len,
 #define OUTSIZE_UNCLIPPED 1152*2*sizeof(FLOAT)
 
 int 
-lame_decode1_unclipped(lame_t gfc, unsigned char *buffer, int len,
+decode1_unclipped(lame_t gfc, unsigned char *buffer, int len,
 		       sample_t pcm_l[], sample_t pcm_r[])
 {
     static char out[OUTSIZE_UNCLIPPED];
     mp3data_struct mp3data;
     int enc_delay,enc_padding;
 
-    return lame_decode1_headersB_clipchoice(gfc->pmp, buffer, len, (char *)pcm_l, (char *)pcm_r, &mp3data, &enc_delay, &enc_padding, out, OUTSIZE_UNCLIPPED, sizeof(FLOAT), decodeMP3_unclipped  );
+    return decode1_headersB_clipchoice(gfc->pmp, buffer, len, (char *)pcm_l, (char *)pcm_r, &mp3data, &enc_delay, &enc_padding, out, OUTSIZE_UNCLIPPED, sizeof(FLOAT), decodeMP3_unclipped  );
 }
 
 

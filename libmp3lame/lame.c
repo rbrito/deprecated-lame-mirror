@@ -391,11 +391,6 @@ lame_init_params(lame_t gfc)
 
     gfc->Class_ID = 0;
 
-    /* report functions */
-    gfc->report.msgf   = gfc->report.msgf;
-    gfc->report.debugf = gfc->report.debugf;
-    gfc->report.errorf = gfc->report.errorf;
-
 #ifdef HAVE_NASM
     gfc->CPU_features.MMX
 	= gfc->CPU_features.SSE = gfc->CPU_features.SSE2
@@ -485,8 +480,7 @@ lame_init_params(lame_t gfc)
     gfc->framesize = 576 * gfc->mode_gr;
     gfc->mf_needed = ENCDELAY + FFTOFFSET + gfc->framesize + 480 - 1;
     gfc->mf_size = gfc->mf_needed - 576 + MDCTDELAY;
-    gfc->encoder_delay = ENCDELAY + gfc->framesize;
-    gfc->resample_ratio = (double) gfc->in_samplerate / gfc->out_samplerate;
+    gfc->resample.ratio = (double) gfc->in_samplerate / gfc->out_samplerate;
     assert(gfc->mf_needed < MFSIZE);
     /* at 160 kbps (MPEG-2/2.5)/ 320 kbps (MPEG-1) only
        Free format or CBR are possible, no ABR */
@@ -640,7 +634,7 @@ lame_print_config(lame_t gfc)
              "Autoconverting from stereo to mono. Setting encoding to mono mode.\n");
     }
 
-    if (gfc->resample_ratio != 1.) {
+    if (gfc->resample.ratio != 1.) {
         MSGF(gfc, "Resampling:  input %g kHz  output %g kHz\n",
              1.e-3 * in_samplerate, 1.e-3 * out_samplerate);
     }

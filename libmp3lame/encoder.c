@@ -422,7 +422,7 @@ fill_buffer_resample(lame_t gfc, sample_t *outbuf, sample_t *inbuf, int len,
     k = 0;
     do {
 	sample_t xvalue;
-	FLOAT time0 = k*gfc->resample_ratio - gfc->resample.itime[ch], offset;
+	FLOAT time0 = k*gfc->resample.ratio - gfc->resample.itime[ch], offset;
 	FLOAT *filter_coef;
 	j = floor(time0);
 
@@ -459,7 +459,7 @@ fill_buffer_resample(lame_t gfc, sample_t *outbuf, sample_t *inbuf, int len,
     /* adjust our input time counter.  Incriment by the number of samples used,
      * then normalize so that next output sample is at time 0, next
      * input buffer is at time itime[ch] */
-    gfc->resample.itime[ch] += *num_used - k*gfc->resample_ratio;
+    gfc->resample.itime[ch] += *num_used - k*gfc->resample.ratio;
 
     /* save the last BLACKSIZE samples into the inbuf_old buffer */
     j = *num_used-filter_l-1;
@@ -486,7 +486,7 @@ fill_buffer(lame_t gfc, sample_t *in_buffer, int nsamples, int *n_in, int ch)
     int n_out;
 
     /* copy in new samples into mfbuf, with resampling if necessary */
-    if (gfc->resample_ratio != 1.0) {
+    if (gfc->resample.ratio != 1.0) {
 	n_out = fill_buffer_resample(gfc, &gfc->mfbuf[ch][gfc->mf_size],
 				     in_buffer, nsamples, n_in, ch);
     }
@@ -548,7 +548,7 @@ encode_buffer_sample(
     in_buffer[1] = buffer_lr + nsamples;
     do {
 	int n_in, n_out, ch;
-	/* copy the new samples into mfbuf (with resampling if needed)
+	/* copy the new samples into gfc->mfbuf (with resampling if needed)
 	 * it consumes (n_in) samples from in_buffer,
 	 * and output (n_out) samples in gfc->mfbuf. */
 	ch = 0;
@@ -585,8 +585,8 @@ encode_buffer_sample(
 	gfc->mf_size -= gfc->framesize;
 	ch = 0;
 	do {
-	    memcpy(gfc->mfbuf[ch], &gfc->mfbuf[ch][gfc->framesize],
-		   sizeof(sample_t) * gfc->mf_size);
+	    memmove(gfc->mfbuf[ch], &gfc->mfbuf[ch][gfc->framesize],
+		    sizeof(sample_t) * gfc->mf_size);
 	} while (++ch < gfc->channels_out);
     } while (nsamples > 0);
     assert(nsamples == 0);
