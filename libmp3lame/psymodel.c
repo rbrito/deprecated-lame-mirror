@@ -333,7 +333,6 @@ compute_ffts(
 
 #if defined(HAVE_GTK)
     if (gfp->analysis) {
-	FLOAT mn,mx,ma=0,mb=0,mc=0;
 	for (j=0; j<HBLKSIZE ; j++) {
 	    gfc->pinfo->energy[gr_out][chn][j]=gfc->energy_save[chn][j];
 	    gfc->energy_save[chn][j]=fftenergy[j];
