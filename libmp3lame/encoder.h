@@ -210,7 +210,9 @@ typedef struct {
     FLOAT ATHadjust;
 
     unsigned char slen[4];
+#if SIZEOF_LONG!=8
     int dummy_for_padding[2];
+#endif
 } gr_info;
 
 typedef struct {
