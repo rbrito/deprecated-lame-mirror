@@ -1104,7 +1104,7 @@ mp3x display               <------LONG------>
 	 */
 	gfc->masking_next[gr][chn].en.s[0][0] = -1.0;
 	gfc->useshort_next[gr][chn] = NORM_TYPE;
-	first_attack_position[chn] = -1;
+	first_attack_position[chn] = -2;
 	for (i=0;i<3;i++) {
 	    /* calculate energies of each sub-shortblocks */
 	    if (gfc->nsPsy.subbk_ene[chn][i+2]
@@ -1114,12 +1114,9 @@ mp3x display               <------LONG------>
 	    gfc->useshort_next[gr][chn] = SHORT_TYPE;
 	    current_is_short += (1 << chn);
 	    first_attack_position[chn] = i;
-
-	    if (gfc->nsPsy.subbk_ene[chn][i+1]
-		> gfc->nsPsy.subbk_ene[chn][i+2]*0.1)
-		attack_adjust[chn]
-		    = gfc->nsPsy.subbk_ene[chn][i+1]
-		    / gfc->nsPsy.subbk_ene[chn][i+2];
+	    attack_adjust[chn]
+		= gfc->nsPsy.subbk_ene[chn][i+1]
+		/ gfc->nsPsy.subbk_ene[chn][i+2];
 	    break;
 	}
     }
@@ -1151,11 +1148,12 @@ mp3x display               <------LONG------>
 	    compute_masking_s(gfc, wsamp_S[chn&1][sblock],
 			      &gfc->masking_next[gr][chn], sblock);
 
-	    if (sblock == first_attack_position[chn]) {
+	    if (sblock == first_attack_position[chn]
+		|| sblock == first_attack_position[chn]+1) {
 		int sb;
 		for (sb = 0; sb < SBMAX_s; sb++) 
 		    gfc->masking_next[gr][chn].thm.s[sb][sblock]
-			*= attack_adjust[chn];
+			*= Max(0.1, attack_adjust[chn]);
 	    }
 	}
     } /* end loop over chn */
