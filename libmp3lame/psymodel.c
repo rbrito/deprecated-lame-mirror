@@ -1522,19 +1522,17 @@ psycho_analysis(
     int gr, ch, blocktype_old[MAX_CHANNELS];
     const sample_t *bufp[MAX_CHANNELS];
 
-    /* calculate next frame data */
-    adjust_ATH(gfc);
-
     /* next frame data -> current frame data (aging) */
     gfc->mode_ext = gfc->mode_ext_next;
     for (ch = 0; ch < 2; ch++)
 	blocktype_old[ch] = gfc->l3_side.tt[gfc->mode_gr-1][ch].block_type;
 
+    /* calculate next frame data */
+    adjust_ATH(gfc);
     for (gr=0; gr < gfc->mode_gr ; gr++) {
 	int numchn;
 	for (ch = 0; ch < gfc->channels_out; ch++) {
-	    masking_d[gr][ch]
-		= gfc->masking_next[gr][ch + (gfc->mode_ext & MPG_MD_MS_LR)];
+	    masking_d[gr][ch] = gfc->masking_next[gr][ch + gfc->mode_ext];
 	    gfc->l3_side.tt[gr][ch].block_type = gfc->blocktype_next[gr][ch];
 	    bufp[ch] = buffer[ch] + 576*(gr + gfc->mode_gr) - FFTOFFSET;
 	}
@@ -1595,8 +1593,8 @@ psycho_analysis(
     /* determine MS/LR in the next frame */
     if (gfp->mode == JOINT_STEREO) {
 	FLOAT diff_pe = 50.0;
-	if (gfc->mode_ext & MPG_MD_MS_LR)
-	    diff_pe = -50.0;
+	if (gfc->mode_ext)
+	    diff_pe = -diff_pe;
 
 	for (gr = 0; gr < gfc->mode_gr; gr++)
 	    diff_pe
@@ -1614,23 +1612,22 @@ psycho_analysis(
 		    = gfc->blocktype_next[gr][2];
 	    }
 	    /* LR -> MS case */
-	    if ((gfc->mode_ext_next ^ gfc->mode_ext) & 2
-	     && (gfc->l3_side.tt[gfc->mode_gr-1][0].block_type
-		 != gfc->l3_side.tt[gfc->mode_gr-1][1].block_type)) {
+	    if (gfc->mode_ext_next != gfc->mode_ext
+		&& (gfc->l3_side.tt[gfc->mode_gr-1][0].block_type
+		    != gfc->l3_side.tt[gfc->mode_gr-1][1].block_type)) {
 		gr_info *gi = &gfc->l3_side.tt[gfc->mode_gr-1][0];
 		gi[0].block_type |= 1;
 		gi[1].block_type |= 1;
 	    }
 	} else {
 	    gfc->mode_ext_next = MPG_MD_LR_LR;
-	    if ((gfc->mode_ext_next ^ gfc->mode_ext) & 2
+	    if (gfc->mode_ext_next != gfc->mode_ext
 		&& (gfc->blocktype_next[0][0] != gfc->blocktype_next[0][1])) {
 
 		gfc->blocktype_next[0][0] |= 2;
 		gfc->blocktype_next[0][1] |= 2;
 	    }
 	}
-	gfc->mode_ext_next |= gfp->use_istereo;
     }
 
     /* determine current frame block type (long/start/short/stop) */
@@ -1652,12 +1649,10 @@ psycho_analysis(
 				 gfc->blocktype_next[0][ch]);
 	}
     }
-    if (gfc->mode_ext & MPG_MD_MS_LR) {
-	assert(
-	    gfc->l3_side.tt[0][0].block_type
-	    == gfc->l3_side.tt[0][1].block_type);
-	assert(
-	    gfc->l3_side.tt[gfc->mode_gr-1][0].block_type
-	    == gfc->l3_side.tt[gfc->mode_gr-1][1].block_type);
+    if (gfc->mode_ext) {
+	assert(gfc->l3_side.tt[0][0].block_type
+	       == gfc->l3_side.tt[0][1].block_type);
+	assert(gfc->l3_side.tt[gfc->mode_gr-1][0].block_type
+	       == gfc->l3_side.tt[gfc->mode_gr-1][1].block_type);
     }
 }

@@ -426,6 +426,7 @@ int  lame_encode_mp3_frame (				/* Output */
 	}
     }
 
+    gfc->mode_ext |= gfp->use_istereo;
     if (gfc->mode_ext & MPG_MD_MS_LR) {
 	/* convert from L/R -> Mid/Side */
 	if (gfc->mode_ext == MPG_MD_MS_I) {
