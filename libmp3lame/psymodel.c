@@ -719,6 +719,19 @@ int L3psycho_anal( lame_global_flags * gfp,
     /* longblock threshold calculation (part 2) */
     for ( sb = 0; sb < NBPSY_l; sb++ )
       {
+#ifdef MINTHMM
+	FLOAT8 enn = gfc->w1_l[sb] * eb[gfc->bu_l[sb]] + gfc->w2_l[sb] * eb[gfc->bo_l[sb]];
+	FLOAT8 thmm = Min(thr[gfc->bu_l[sb]],thr[gfc->bo_l[sb]]);
+
+        for ( b = gfc->bu_l[sb]+1; b < gfc->bo_l[sb]; b++ )
+          {
+            enn  += eb[b];
+            thmm = Min(thmm,thr[b]);
+          }
+
+	gfc->en [chn].l[sb] = enn;
+	gfc->thm[chn].l[sb] = thmm *(gfc->bo_l[sb]-gfc->bu_l[sb]);
+#else
 	FLOAT8 enn = gfc->w1_l[sb] * eb[gfc->bu_l[sb]] + gfc->w2_l[sb] * eb[gfc->bo_l[sb]];
 	FLOAT8 thmm = gfc->w1_l[sb] *thr[gfc->bu_l[sb]] + gfc->w2_l[sb] * thr[gfc->bo_l[sb]];
 
@@ -730,6 +743,7 @@ int L3psycho_anal( lame_global_flags * gfp,
 
 	gfc->en [chn].l[sb] = enn;
 	gfc->thm[chn].l[sb] = thmm;
+#endif
       }
     
 
@@ -758,6 +772,18 @@ int L3psycho_anal( lame_global_flags * gfp,
 	  }
 
 	for ( sb = 0; sb < NBPSY_s; sb++ ){
+#ifdef MINTHMM
+            FLOAT8 enn  = gfc->w1_s[sb] * eb[gfc->bu_s[sb]] + gfc->w2_s[sb] * eb[gfc->bo_s[sb]];
+	    FLOAT8 thmm = Minthr[gfc->bu_s[sb]],thr[gfc->bo_s[sb]]);
+	    
+            for ( b = gfc->bu_s[sb]+1; b < gfc->bo_s[sb]; b++ ) {
+		enn  += eb[b];
+		thmm = Min(thmm,thr[b]);
+	    }
+
+	    gfc->en [chn].s[sb][sblock] = enn;
+	    gfc->thm[chn].s[sb][sblock] = thmm*(gfc->bo_s[sb]-gfc->bu_s[sb]);
+#else
             FLOAT8 enn  = gfc->w1_s[sb] * eb[gfc->bu_s[sb]] + gfc->w2_s[sb] * eb[gfc->bo_s[sb]];
 	    FLOAT8 thmm = gfc->w1_s[sb] *thr[gfc->bu_s[sb]] + gfc->w2_s[sb] * thr[gfc->bo_s[sb]];
 	    
@@ -768,6 +794,7 @@ int L3psycho_anal( lame_global_flags * gfp,
 
 	    gfc->en [chn].s[sb][sblock] = enn;
 	    gfc->thm[chn].s[sb][sblock] = thmm;
+#endif
 	  }
       }
   } /* end loop over chn */

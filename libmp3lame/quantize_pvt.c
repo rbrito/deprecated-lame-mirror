@@ -225,7 +225,6 @@ FLOAT8 ATHmdct( lame_global_flags *gfp, FLOAT8 f )
   
     ath = ATHformula( f , gfp );
 	  
-    /* convert to energy */
     if (gfc->nsPsy.use) {
         ath -= NSATHSCALE;
     } else {
@@ -234,6 +233,8 @@ FLOAT8 ATHmdct( lame_global_flags *gfp, FLOAT8 f )
     
     /*  modify the MDCT scaling for the ATH  */
     ath -= gfp->ATHlower;
+
+    /* convert to energy */
     ath = pow( 10.0, ath/10.0 );
     return ath;
 }
@@ -270,16 +271,14 @@ void compute_ath( lame_global_flags *gfp, FLOAT8 ATH_l[], FLOAT8 ATH_s[] )
     }
 
     /*  no-ATH mode:
-     *  reduce ATH to -200 dB, but leave ATH for the last scalefactor band, 
-     *  because VBR modes need it as it is currently the only masking computed
-     *  for that band
+     *  reduce ATH to -200 dB
      */
     
     if (gfp->noATH) {
-        for (sfb = 0; sfb < SBMAX_l-1; sfb++) {
+        for (sfb = 0; sfb < SBMAX_l; sfb++) {
             ATH_l[sfb] = 1E-37;
         }
-        for (sfb = 0; sfb < SBMAX_s-1; sfb++) {
+        for (sfb = 0; sfb < SBMAX_s; sfb++) {
             ATH_s[sfb] = 1E-37;
         }
     }

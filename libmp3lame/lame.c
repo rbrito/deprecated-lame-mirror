@@ -523,15 +523,15 @@ lame_init_qval(lame_global_flags * gfp)
  * that we allow the user to set some or all of these parameters,
  * and need to determine best possible values for the rest of them:
  *
- *   set some CPU related flags
- *   check if we are mono->mono, stereo->mono or stereo->stereo
- *   compute bitrate and output samplerate:
+ *  1. set some CPU related flags
+ *  2. check if we are mono->mono, stereo->mono or stereo->stereo
+ *  3.  compute bitrate and output samplerate:
  *          user may have set compression ratio
  *          user may have set a bitrate  
  *          user may have set a output samplerate
- *   set some options which depend on output samplerate
- *   compute the actual compression ratio
- *   set mode based on compression ratio
+ *  4. set some options which depend on output samplerate
+ *  5. compute the actual compression ratio
+ *  6. set mode based on compression ratio
  *
  *  The remaining code is much simpler - it just sets options
  *  based on the mode & compression ratio: 
@@ -555,6 +555,9 @@ lame_init_qval(lame_global_flags * gfp)
  *      see code      
  *   CBR/ABR
  *      see code   
+ *
+ *  Finally, we set the algorithm flags based on the gfp->quality value
+ *  lame_init_qval(gfp);
  *
  ********************************************************************/
 int
