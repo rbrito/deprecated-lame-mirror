@@ -67,7 +67,7 @@ void set_pinfo (
     calc_noise_result noise;
 
     calc_xmin (gfp, ratio, cod_info, l3_xmin);
-    calc_noise (gfc, cod_info, l3_xmin, xfsf, &noise);
+    calc_noise (cod_info, l3_xmin, xfsf, &noise);
 
     j = 0;
     sfb2 = cod_info->sfb_lmax;

@@ -51,20 +51,11 @@
 
 
 #ifdef TAKEHIRO_IEEE754_HACK
-
-typedef union {
-    float f;
-    int i;
-} fi_union;
-
-#define MAGIC_FLOAT (65536*(128))
-#define MAGIC_INT 0x4b000000
-
 static void quantize_xrpow(const FLOAT *xp, int *pi, FLOAT istep)
 {
     /* quantize on xr^(3/4) instead of xr */
     fi_union *fi = (fi_union *)pi;
-    FLOAT *xe = xp + 576;
+    const FLOAT *xe = xp + 576;
 
     do {
 	double x0 = istep * xp[0] + MAGIC_FLOAT;
@@ -90,7 +81,6 @@ static void quantize_xrpow(const FLOAT *xp, int *pi, FLOAT istep)
     } while (xp < xe);
 }
 
-#  define ROUNDFAC -0.0946
 static void quantize_xrpow_ISO(const FLOAT *xp, int *pi, FLOAT istep)
 {
     /* quantize on xr^(3/4) instead of xr */
@@ -114,23 +104,6 @@ static void quantize_xrpow_ISO(const FLOAT *xp, int *pi, FLOAT istep)
 }
 
 #else
-
-/*********************************************************************
- * XRPOW_FTOI is a macro to convert floats to ints.  
- * if XRPOW_FTOI(x) = nearest_int(x), then QUANTFAC(x)=adj43asm[x]
- *                                         ROUNDFAC= -0.0946
- *
- * if XRPOW_FTOI(x) = floor(x), then QUANTFAC(x)=asj43[x]   
- *                                   ROUNDFAC=0.4054
- *
- * Note: using floor() or (int) is extermely slow. On machines where
- * the TAKEHIRO_IEEE754_HACK code above does not work, it is worthwile
- * to write some ASM for XRPOW_FTOI().  
- *********************************************************************/
-#define XRPOW_FTOI(src,dest) ((dest) = (int)(src))
-#define QUANTFAC(rx)  adj43[rx]
-#define ROUNDFAC 0.4054
-
 
 static void quantize_xrpow(const FLOAT *xr, int *ix, FLOAT istep) {
     /* quantize on xr^(3/4) instead of xr */

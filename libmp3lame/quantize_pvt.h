@@ -22,13 +22,6 @@
 #ifndef LAME_QUANTIZE_PVT_H
 #define LAME_QUANTIZE_PVT_H
 
-extern const int nr_of_sfb_block[6][3][4];
-extern const int pretab[SBMAX_l];
-extern const int slen1_tab[16];
-extern const int slen2_tab[16];
-
-extern const scalefac_struct sfBandIndex[9];
-
 typedef struct calc_noise_result_t {
     FLOAT  over_noise;      /* sum of quantization noise > masking */
     FLOAT  tot_noise;       /* sum of all quantization noise */
@@ -48,19 +41,10 @@ int     calc_xmin (lame_global_flags *gfp,
 		   const gr_info * const cod_info,
                    FLOAT * const l3_xmin);
 
-void    calc_noise (const lame_internal_flags * const gfc,
-                    const gr_info * const cod_info,
+void    calc_noise (const gr_info * const cod_info,
                     const FLOAT * l3_xmin,
                     FLOAT * distort,
 		    calc_noise_result * const res);
-
-#if defined(HAVE_GTK)
-void    set_frame_pinfo (lame_global_flags *gfp,
-                         III_psy_ratio ratio[2][2]);
-#endif
-
-
-
 
 /* takehiro.c */
 
@@ -81,5 +65,28 @@ int     scale_bitcount_lsf (const lame_internal_flags *gfp,
                             gr_info * const cod_info);
 
 #define LARGE_BITS 100000
+
+typedef union {
+    float f;
+    int i;
+} fi_union;
+
+/*********************************************************************
+ * XRPOW_FTOI is a macro to convert floats to ints.  
+ * if XRPOW_FTOI(x) = nearest_int(x), then QUANTFAC(x)=adj43asm[x]
+ *                                         ROUNDFAC= -0.0946
+ *
+ * if XRPOW_FTOI(x) = floor(x), then QUANTFAC(x)=asj43[x]   
+ *                                   ROUNDFAC=0.4054
+ *********************************************************************/
+#ifdef TAKEHIRO_IEEE754_HACK
+# define MAGIC_FLOAT (65536*128)
+# define MAGIC_INT 0x4b000000
+# define ROUNDFAC -0.0946
+#else
+# define QUANTFAC(rx)  adj43[rx]
+# define XRPOW_FTOI(src,dest) ((dest) = (int)(src))
+# define ROUNDFAC 0.4054
+#endif
 
 #endif /* LAME_QUANTIZE_PVT_H */

@@ -196,10 +196,7 @@ int calc_xmin(
     for (gsfb = 0; gsfb < cod_info->psy_lmax; gsfb++) {
 	FLOAT en0, xmin;
 	int width, l;
-	if (gfp->VBR == vbr_mtrh)
-	    xmin = athAdjust(gfc->ATH.adjust, gfc->ATH.l[gsfb], gfc->ATH.floor);
-	else
-	    xmin = gfc->ATH.adjust * gfc->ATH.l[gsfb];
+	xmin = athAdjust(gfc->ATH.adjust, gfc->ATH.l[gsfb], gfc->ATH.floor);
 
 	width = cod_info->width[gsfb];
 	l = width >> 1;
@@ -223,11 +220,8 @@ int calc_xmin(
 
     for (sfb = cod_info->sfb_smin; gsfb < cod_info->psymax; sfb++, gsfb += 3) {
 	int width, b;
-	FLOAT tmpATH;
-	if (gfp->VBR == vbr_mtrh)
-	    tmpATH = athAdjust(gfc->ATH.adjust, gfc->ATH.s[sfb], gfc->ATH.floor);
-	else
-	    tmpATH = gfc->ATH.adjust * gfc->ATH.s[sfb];
+	FLOAT tmpATH
+	    = athAdjust(gfc->ATH.adjust, gfc->ATH.s[sfb], gfc->ATH.floor);
 
 	width = cod_info->width[gsfb];
 	for ( b = 0; b < 3; b++ ) {
@@ -278,7 +272,6 @@ int calc_xmin(
 
 /*  mt 5/99:  Function: Improved calc_noise for a single channel   */
 void calc_noise( 
-        const lame_internal_flags * const gfc,
         const gr_info             * const cod_info,
         const FLOAT              * l3_xmin, 
               FLOAT              * distort,
@@ -382,14 +375,6 @@ init_outer_loop(
 
 	for (i = 0; i < cod_info->psymax; i++)
 	    gfc->pseudohalf[i] = j;
-
-	/* set the method how to check if the quantization is "better" */
-	j = gfp->experimentalX;
-	if (cod_info->block_type != NORM_TYPE)
-	    j = gfc->quantcomp_type_s;
-
-	gfc->quantcomp_method = j;
-
 	return 1;
     }
 
@@ -509,7 +494,7 @@ trancate_smallspectrums(
     if ((!(gfc->substep_shaping & 4) && gi->block_type == SHORT_TYPE)
 	|| gfc->substep_shaping & 0x80)
 	return;
-    calc_noise (gfc, gi, l3_xmin, distort, &dummy);
+    calc_noise (gi, l3_xmin, distort, &dummy);
     for (j = 0; j < 576; j++) {
 	FLOAT xr = 0.0;
 	if (gi->l3_enc[j] != 0)
@@ -630,8 +615,9 @@ better_quant(
        max_noise:   max quantization noise 
      */
 
-    calc_noise (gfc, gi, l3_xmin, distort, &calc);
-    switch (gfc->quantcomp_method) {
+    calc_noise (gi, l3_xmin, distort, &calc);
+    switch (gi->block_type != NORM_TYPE
+	    ? gfc->quantcomp_method_s : gfc->quantcomp_method) {
         default:
         case 0:
 	    better = calc.over_count  < best->over_count
@@ -642,18 +628,14 @@ better_quant(
                      calc.tot_noise   < best->tot_noise  ); 
 	    break;
 
-        case 8:	    /* for backward compatibility, pass through */
+        case 2:	    /* for backward compatibility, pass through */
+        case 4:
+        case 5:
+        case 7:
+        case 8:
+        case 9:
         case 1:
 	    better = calc.max_noise < best->max_noise; 
-	    break;
-
-        case 2:
-	    better = calc.tot_noise < best->tot_noise; 
-	    break;
-
-        case 9:
-	    better = (calc.tot_noise < best->tot_noise - gfc->presetTune.quantcomp_adjust_rh_tot)
-		&& (calc.max_noise < best->max_noise - gfc->presetTune.quantcomp_adjust_rh_max);
 	    break;
 
         case 3:
@@ -661,43 +643,13 @@ better_quant(
 		&&   (calc.max_noise < best->max_noise);
 	    break;
 
-        case 4:
-	    better = ( calc.max_noise <= 0.0  &&
-                       best->max_noise >  0.2 )
-                 ||  ( calc.max_noise <= 0.0  &&
-                       best->max_noise <  0.0  &&
-                       best->max_noise >  calc.max_noise-0.2  &&
-                       calc.tot_noise <  best->tot_noise )
-                 ||  ( calc.max_noise <= 0.0  &&
-                       best->max_noise >  0.0  &&
-                       best->max_noise >  calc.max_noise-0.2  &&
-                       calc.tot_noise <  best->tot_noise+best->over_noise )
-                 ||  ( calc.max_noise >  0.0  &&
-                       best->max_noise > -0.05  &&
-                       best->max_noise >  calc.max_noise-0.1  &&
-                       calc.tot_noise+calc.over_noise < best->tot_noise+best->over_noise )
-                 ||  ( calc.max_noise >  0.0  &&
-                       best->max_noise > -0.1  &&
-                       best->max_noise >  calc.max_noise-0.15  &&
-                       calc.tot_noise+calc.over_noise+calc.over_noise < best->tot_noise+best->over_noise+best->over_noise );
-            break;
-
-        case 5:
-	    better =   calc.over_noise  < best->over_noise
-                 ||  ( calc.over_noise == best->over_noise  &&
-                       calc.tot_noise   < best->tot_noise ); 
-	    break;
         case 6:
-	    better =   calc.over_noise  < best->over_noise
-                 ||  ( calc.over_noise == best->over_noise  &&
-                     ( calc.max_noise   < best->max_noise  
-		     ||  ( calc.max_noise  == best->max_noise  &&
-                           calc.tot_noise  <= best->tot_noise )
-		      )); 
-	    break;
-        case 7:
-	    better =   calc.over_count < best->over_count
-                   ||  calc.over_noise < best->over_noise; 
+	    better =  calc.over_noise  < best->over_noise
+		||  ( calc.over_noise == best->over_noise
+		      && ( calc.max_noise   < best->max_noise  
+			   || ( calc.max_noise  == best->max_noise
+			     && calc.tot_noise  <= best->tot_noise )
+			  ));
 	    break;
     }   
     if (better)
@@ -785,7 +737,7 @@ amp_scalefac_bands(
     }
 
     j = 0;
-    for (sfb = 0; sfb < cod_info->sfbmax; sfb++ ) {
+    for (sfb = 0; sfb < cod_info->sfbmax; sfb++) {
 	int width = cod_info->width[sfb];
 	int l;
 	j += width;
@@ -1042,7 +994,7 @@ outer_loop (
 
     /* compute the distortion in this quantization */
     /* coefficients and thresholds both l/r (or both mid/side) */
-    calc_noise (gfc, cod_info, l3_xmin, distort, &best_noise_info);
+    calc_noise (cod_info, l3_xmin, distort, &best_noise_info);
     cod_info_w = *cod_info;
     age = 0;
 
