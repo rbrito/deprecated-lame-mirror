@@ -66,7 +66,7 @@ LIBTERMCAP =
 #============================================================ VORBIS SUPPORT ==
 
 
-CPP_OPTS = /DHAVEMPGLIB /DRH_AMP
+CPP_OPTS = /DHAVEMPGLIB /DUSE_LAYER_1 /DUSE_LAYER_2 /DRH_AMP
 
 CC_SWITCHES = $(CC_OPTS) $(DISTRIB) $(SNDLIB) $(GTK) \
               /DBS_FORMAT=BINARY $(TIMER_SWITCH) $(BRHIST_SWITCH) $(VORBIS)
@@ -101,6 +101,8 @@ c_sources = \
  mpglib/common.c \
  mpglib/dct64_i386.c \
  mpglib/decode_i386.c \
+ mpglib/layer1.c \
+ mpglib/layer2.c \
  mpglib/layer3.c \
  mpglib/tabinit.c \
  mpglib/interface.c \

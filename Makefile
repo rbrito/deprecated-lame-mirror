@@ -39,12 +39,15 @@ BRHIST_SWITCH =
 LIBTERMCAP = 
 RM = rm -f
 
-
-
 ##########################################################################
 # -DHAVEMPGLIB compiles the mpglib *decoding* library into libmp3lame
 ##########################################################################
 CPP_OPTS += -DHAVEMPGLIB 
+
+##########################################################################
+# -DUSE_LAYER_1/2 enables Layer1 or Layer2 *decoding* abilities 
+##########################################################################
+CPP_OPTS += -DUSE_LAYER_1 -DUSE_LAYER_2
 
 ##########################################################################
 # floating point option:
@@ -375,6 +378,8 @@ c_sources_s = \
         mpglib/common.c \
         mpglib/dct64_i386.c \
         mpglib/decode_i386.c \
+        mpglib/layer1.c \
+        mpglib/layer2.c \
         mpglib/layer3.c \
         mpglib/tabinit.c \
         mpglib/interface.c \

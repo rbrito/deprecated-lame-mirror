@@ -32,6 +32,11 @@ MAKEDEP = -M
 CPP_OPTS += -DHAVEMPGLIB 
 
 ##########################################################################
+# -DUSE_LAYER_1/2 enables Layer1 or Layer2 *decoding* abilities 
+##########################################################################
+CPP_OPTS += -DUSE_LAYER_1 -DUSE_LAYER_2
+
+##########################################################################
 # -DFLOAT8_is_float will FLOAT8 as float
 # -DFLOAT8_is_double  will FLOAT8 as double (default)
 #  NOTE: RH: 7/00:  if FLOAT8=float, it breaks resampling and VBR code 
@@ -121,6 +126,8 @@ c_sources = \
 	mpglib/common.c \
 	mpglib/dct64_i386.c \
 	mpglib/decode_i386.c \
+        mpglib/layer1.c \
+        mpglib/layer2.c \
 	mpglib/layer3.c \
 	mpglib/tabinit.c \
 	mpglib/interface.c \

@@ -189,7 +189,7 @@ int decode_header(struct frame *fr,unsigned long newhead)
 	}
         break; 
       default:
-        fprintf(stderr,"Sorry, layer %d not supported\n"); 
+        fprintf(stderr,"Sorry, layer %d not supported\n",fr->lay); 
         return (0);
     }
     /*    print_header(fr); */
