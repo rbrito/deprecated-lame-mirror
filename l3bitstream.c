@@ -5,6 +5,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.4  1999/12/03 10:11:50  takehiro
+ * foolish mistake has removed :)
+ *
  * Revision 1.3  1999/12/03 09:45:30  takehiro
  * little bit cleanup
  *
@@ -123,8 +126,7 @@ III_format_bitstream( int              bitsPerFrame,
 
 
 
-    if ( l3_side->resvDrain )
-	drain_into_ancillary_data( l3_side->resvDrain );
+    drain_into_ancillary_data( l3_side->resvDrain );
     /*
       Put frameData together for the call
       to BitstreamFrame()
@@ -480,32 +482,6 @@ static int encodeSideInfo( III_side_info_t  *si )
     return bits_sent;
 }
 
-static void
-write_ancillary_data( char *theData, int lengthInBits )
-{
-    /*
-     */
-    int bytesToSend = lengthInBits / 8;
-    int remainingBits = lengthInBits % 8;
-    unsigned wrd;
-    int i;
-
-    userFrameDataPH->part->nrEntries = 0;
-
-    for ( i = 0; i < bytesToSend; i++ )
-    {
-	wrd = theData[i];
-	userFrameDataPH = BF_addEntry( userFrameDataPH, wrd, 8 );
-    }
-    if ( remainingBits )
-    {
-	/* right-justify remaining bits */
-	wrd = theData[bytesToSend] >> (8 - remainingBits);
-	userFrameDataPH = BF_addEntry( userFrameDataPH, wrd, remainingBits );
-    }
-    
-}
-
 /*
   Some combinations of bitrate, Fs, and stereo make it impossible to stuff
   out a frame using just main_data, due to the limited number of bits to
@@ -525,10 +501,11 @@ drain_into_ancillary_data( int lengthInBits )
       userFrameDataPH->part->nrEntries set by call to write_ancillary_data()
     */
 
+    userFrameDataPH->part->nrEntries = 0;
     for ( i = 0; i < wordsToSend; i++ )
 	userFrameDataPH = BF_addEntry( userFrameDataPH, 0, 32 );
     if ( remainingBits )
-	userFrameDataPH = BF_addEntry( userFrameDataPH, 0, remainingBits );    
+	userFrameDataPH = BF_addEntry( userFrameDataPH, 0, remainingBits );
 }
 
 /*
