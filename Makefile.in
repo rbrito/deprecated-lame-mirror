@@ -94,7 +94,7 @@ VERSION = @VERSION@
 WITH_MP3RTP = @WITH_MP3RTP@
 WITH_MP3X = @WITH_MP3X@
 
-SUBDIRS = mpglib libmp3lame frontend Dll doc include misc
+SUBDIRS = mpglib libmp3lame frontend Dll doc include misc dshow
 
 CLEANFILES = testcase.new.mp3
 AUTOMAKE_OPTIONS = foreign ansi2knr
