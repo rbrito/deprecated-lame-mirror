@@ -1518,6 +1518,42 @@ lame_encode_buffer_sample_t(lame_global_flags * gfp,
     in_buffer[1]=buffer_r;  
 
 
+    /* Apply user defined re-scaling */
+
+    /* user selected scaling of the samples */
+    if (gfp->scale != 0 && gfp->scale != 1.0) {
+	for (i=0 ; i<nsamples; ++i) {
+	    in_buffer[0][i] *= gfp->scale;
+	    if (gfc->channels_out == 2)
+		in_buffer[1][i] *= gfp->scale;
+	    }
+    }
+
+    /* user selected scaling of the channel 0 (left) samples */
+    if (gfp->scale_left != 0 && gfp->scale_left != 1.0) {
+	for (i=0 ; i<nsamples; ++i) {
+	    in_buffer[0][i] *= gfp->scale_left;
+	    }
+    }
+
+    /* user selected scaling of the channel 1 (right) samples */
+	if (gfp->scale_right != 0 && gfp->scale_right != 1.0) {
+	    for (i=0 ; i<nsamples; ++i) {
+		in_buffer[1][i] *= gfp->scale_right;
+	    }
+	}
+
+    /* Downsample to Mono if 2 channels in and 1 channel out */
+	if (gfp->num_channels == 2 && gfc->channels_out == 1) {
+		for (i=0; i<nsamples; ++i) {
+			in_buffer[0][i] =
+				0.5 * ((FLOAT8) in_buffer[0][i] + in_buffer[1][i]);
+			in_buffer[1][i] = 0.0;
+		}
+	}
+
+
+
     /* some sanity checks */
 #if ENCDELAY < MDCTDELAY
 # error ENCDELAY is less than MDCTDELAY, see encoder.h
@@ -1533,22 +1569,12 @@ lame_encode_buffer_sample_t(lame_global_flags * gfp,
     mfbuf[0] = gfc->mfbuf[0];
     mfbuf[1] = gfc->mfbuf[1];
 
-    if (gfp->num_channels == 2 && gfc->channels_out == 1) {
-        /* downsample to mono */
-        for (i = 0; i < nsamples; ++i) {
-            in_buffer[0][i] =
-                0.5 * ((FLOAT8) in_buffer[0][i] + in_buffer[1][i]);
-            in_buffer[1][i] = 0.0;
-        }
-    }
-
-
     while (nsamples > 0) {
         int     n_in = 0;    /* number of input samples processed with fill_buffer */
         int     n_out = 0;   /* number of samples output with fill_buffer */
         /* n_in <> n_out if we are resampling */
 
-        /* copy in new samples into mfbuf, with resampling & scaling if necessary */
+        /* copy in new samples into mfbuf, with resampling */
         fill_buffer(gfp, mfbuf, in_buffer, nsamples, &n_in, &n_out);
 
         /* update in_buffer counters */
