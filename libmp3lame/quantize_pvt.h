@@ -116,7 +116,7 @@ void    set_frame_pinfo (lame_global_flags *gfp,
 /* takehiro.c */
 
 int     count_bits (lame_internal_flags * const gfc, const FLOAT8 * const xr,
-		    gr_info * const cod_info);
+		    gr_info * const cod_info, calc_noise_data* prev_noise);
 int     noquant_count_bits (lame_internal_flags * const gfc,
 			    gr_info * const cod_info);
 

@@ -443,7 +443,7 @@ bin_search_StepSize(
     assert(CurrentStep);
     do {
 	int step;
-        nBits = count_bits(gfc, xrpow, cod_info);  
+        nBits = count_bits(gfc, xrpow, cod_info, 0);  
 
         if (CurrentStep == 1 || nBits == desired_rate)
 	    break; /* nothing to adjust anymore */
@@ -469,14 +469,14 @@ bin_search_StepSize(
     } while (cod_info->global_gain < 256u);
 
     if (cod_info->global_gain < 0) {
-	cod_info->global_gain = 0;
-	nBits = count_bits(gfc, xrpow, cod_info);
+	    cod_info->global_gain = 0;
+	    nBits = count_bits(gfc, xrpow, cod_info, 0);
     } else if (cod_info->global_gain > 255) {
-	cod_info->global_gain = 255;
-	nBits = count_bits(gfc, xrpow, cod_info);
+	    cod_info->global_gain = 255;
+	    nBits = count_bits(gfc, xrpow, cod_info, 0);
     } else if (nBits > desired_rate) {
-	cod_info->global_gain++;
-	nBits = count_bits(gfc, xrpow, cod_info);
+	    cod_info->global_gain++;
+	    nBits = count_bits(gfc, xrpow, cod_info, 0);
     }
     gfc->CurrentStep[ch] = (start - cod_info->global_gain >= 4) ? 4 : 2;
     gfc->OldValue[ch] = cod_info->global_gain;
@@ -1127,7 +1127,7 @@ outer_loop (
 	/*  increase quantizer stepsize until needed bits are below maximum
 	 */
 	while ((cod_info_w.part2_3_length
-		= count_bits(gfc, xrpow, &cod_info_w)) > huff_bits
+		= count_bits(gfc, xrpow, &cod_info_w, &prev_noise)) > huff_bits
 	       && cod_info_w.global_gain < 256u)
 	    cod_info_w.global_gain++;
 

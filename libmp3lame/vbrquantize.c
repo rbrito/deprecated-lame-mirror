@@ -1216,7 +1216,7 @@ VBR_noise_shaping(lame_internal_flags * gfc, FLOAT8 * xr34orig, int minbits, int
 	} else {
 	    /* quantize xr34 */
 	    block_xr34(gfc, cod_info, xr34orig, xr34);
-	    cod_info->part2_3_length = count_bits(gfc, xr34, cod_info);
+	    cod_info->part2_3_length = count_bits(gfc, xr34, cod_info, 0);
 
 	    if (cod_info->part2_3_length >= LARGE_BITS)
 		ret = -2;
