@@ -27,6 +27,12 @@ struct Library  *MPEGABase=NULL;
 MPEGA_STREAM    *mstream=NULL;
 MPEGA_CTRL      mctrl;
 
+static const int smpls[2][4]={
+/* Layer x  I   II   III */
+        {0,384,1152,1152}, /* MPEG-1     */
+        {0,384,1152, 576}  /* MPEG-2(.5) */
+};
+
 
 #ifndef __GNUC__
 static int break_cleanup(void)
@@ -49,7 +55,7 @@ static void exit_cleanup(void)
 }
 
 
-int lame_decode_initfile(const char *fullname, mp3data_struct *mp3data, unsigned long *nsamp)
+int lame_decode_initfile(const char *fullname, mp3data_struct *mp3data)
 {
 	mctrl.bs_access = NULL;
 
@@ -78,15 +84,18 @@ int lame_decode_initfile(const char *fullname, mp3data_struct *mp3data, unsigned
 #endif
 	atexit(exit_cleanup);
 
+	mp3data->header_parsed = 0;
 	mstream=MPEGA_open((char *)fullname, &mctrl);
-	if(!mstream) { return (-1); }
+	if(!mstream) return (-1);
 
-	mp3data->stereo     = mstream->dec_channels;
-	mp3data->samplerate = mstream->dec_frequency;
-	mp3data->bitrate    = mstream->bitrate;
-	nsamp      = (FLOAT)mstream->ms_duration/1000 * mstream->dec_frequency;
-	mp3data->mode       = mstream->mode;
-	mp3data->mode_ext   = MPG_MD_LR_LR;	/* mpega.library doesn't supply this info! :( */
+	mp3data->header_parsed = 1;
+	mp3data->stereo        = mstream->dec_channels;
+	mp3data->samplerate    = mstream->dec_frequency;
+	mp3data->bitrate       = mstream->bitrate;
+	mp3data->nsamp         = (FLOAT)mstream->ms_duration/1000 * mstream->dec_frequency;
+	mp3data->mode          = mstream->mode;
+	mp3data->mode_ext      = MPG_MD_LR_LR;	/* mpega.library doesn't supply this info! :( */
+	mp3data->framesize     = smpls[mstream->norm-1][mstream->layer];
 
 	return 0;
 }
@@ -99,17 +108,21 @@ int lame_decode_fromfile(FILE *fd, short pcm_l[], short pcm_r[], mp3data_struct 
 	b[0]=pcm_l;
 	b[1]=pcm_r;
 
+	mp3data->header_parsed = 0;
 	while ((outsize == 0) || (outsize == MPEGA_ERR_BADFRAME))	/* Skip bad frames */
 		outsize = MPEGA_decode_frame(mstream, b);
 
-	mp3data->stereo     = mstream->dec_channels;
-	mp3data->samplerate = mstream->dec_frequency;
-	mp3data->bitrate    = mstream->bitrate;
-	mp3data->mode       = mstream->mode;
-	mp3data->mode_ext   = MPG_MD_LR_LR;	/* mpega.library doesn't supply this info! :( */
+	if (outsize < 0) return (-1);
 
-	if (outsize < 0) { return (-1); }
-	else { return outsize; }
+	mp3data->header_parsed = 1;
+	mp3data->stereo        = mstream->dec_channels;
+	mp3data->samplerate    = mstream->dec_frequency;
+	mp3data->bitrate       = mstream->bitrate;
+	mp3data->mode          = mstream->mode;
+	mp3data->mode_ext      = MPG_MD_LR_LR;	/* mpega.library doesn't supply this info! :( */
+	mp3data->framesize     = smpls[mstream->norm-1][mstream->layer];
+
+	return outsize;
 }
 
 #endif /* AMIGA_MPEGA */
