@@ -61,6 +61,11 @@ choose_jump_table_L:
 choose_table_MMX:
 	mov	ecx, [esp+4]	;ecx = begin
 	mov	edx, [esp+8]	;edx = end
+	mov	eax, [esp+12]
+	mov	eax, [eax]	;eax = *s
+	test	eax, eax
+	jge	.ixmax_end
+
 	sub	ecx, edx	;ecx = begin-end(should be minus)
 	test	ecx, 8
  	pxor	mm0, mm0	;mm0=[0:0]
@@ -93,7 +98,7 @@ choose_table_MMX:
 	psubusw	mm4, mm0
 	paddw	mm0, mm4
 	movd	eax, mm0
-
+.ixmax_end:
 	cmp	eax, 15
 	ja	with_ESC
 	jmp	[choose_jump_table_L+eax*4]
