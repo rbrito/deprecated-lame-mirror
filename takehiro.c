@@ -629,7 +629,7 @@ void best_huffman_divide(int gr, int ch, gr_info *gi, int *ix)
 	return;
 
     i = gi->count1 + 2;
-    if (i == 576)
+    if (i > 576)
 	return;
 
     /* Determines the number of bits to encode the quadruples. */
