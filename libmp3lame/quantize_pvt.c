@@ -139,13 +139,16 @@ const scalefac_struct sfBandIndex[9] =
 
 
 
-FLOAT8 pow20[Q_MAX+128];
+FLOAT8 pow20[Q_MAX+Q_MAX2];
 FLOAT8 ipow20[Q_MAX];
-FLOAT8 iipow20[128];
+FLOAT8 iipow20[Q_MAX2];
 FLOAT8 pow43[PRECALC_SIZE];
 /* initialized in first call to iteration_init */
+#ifdef TAKEHIRO_IEEE754_HACK
 FLOAT8 adj43asm[PRECALC_SIZE];
+#else
 FLOAT8 adj43[PRECALC_SIZE];
+#endif
 
 /* 
 compute the ATH for each scalefactor band 
@@ -276,20 +279,22 @@ iteration_init( lame_global_flags *gfp)
     for(i=1;i<PRECALC_SIZE;i++)
         pow43[i] = pow((FLOAT8)i, 4.0/3.0);
 
+#ifdef TAKEHIRO_IEEE754_HACK
     adj43asm[0] = 0.0;
     for (i = 1; i < PRECALC_SIZE; i++)
       adj43asm[i] = i - 0.5 - pow(0.5 * (pow43[i - 1] + pow43[i]),0.75);
+#else
     for (i = 0; i < PRECALC_SIZE-1; i++)
 	adj43[i] = (i + 1) - pow(0.5 * (pow43[i] + pow43[i + 1]), 0.75);
     adj43[i] = 0.5;
-    for (i = 0; i < Q_MAX; i++) {
+#endif
+    for (i = 0; i < Q_MAX; i++)
 	ipow20[i] = pow(2.0, (double)(i - 210) * -0.1875);
-	pow20[i+128] = pow(2.0, (double)(i - 210) * 0.25);
-    }
-    for (i = -128; i < 0; i++) {
-	pow20[i+128] = pow(2.0, (double)(i - 210) * 0.25);
-        iipow20[i+128] = pow(2.0, (double)(i+128) * 0.1875);
-    }
+    for (i = 0; i < Q_MAX+Q_MAX2; i++)
+	pow20[i] = pow(2.0, (double)(i - 210 - Q_MAX2) * 0.25);
+    for (i = 0; i < Q_MAX2; i++)
+        iipow20[i] = pow(2.0, (double)i * 0.1875);
+
     huffman_init(gfc);
   }
 }

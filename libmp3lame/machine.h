@@ -69,7 +69,7 @@ char *strchr (), *strrchr ();
  *   - exp()   on some machines this is claimed to be faster than pow()
  */
 
-#define POW20(x) (assert(-128 <= x && x < Q_MAX), pow20[x+128])
+#define POW20(x) (assert(-Q_MAX2 <= x && x < Q_MAX), pow20[x+Q_MAX2])
 //#define POW20(x)  pow(2.0,((double)(x)-210)*.25)
 //#define POW20(x)  exp( ((double)(x)-210)*(.25*LOG2) )
 
@@ -77,7 +77,7 @@ char *strchr (), *strrchr ();
 //#define IPOW20(x)  exp( -((double)(x)-210)*.1875*LOG2 )
 //#define IPOW20(x)  pow(2.0,-((double)(x)-210)*.1875)
 
-#define IIPOW20(x) (assert(0 <= x && x < 128), iipow20[x])
+#define IIPOW20(x) (assert(0 <= x && x < Q_MAX2), iipow20[x])
 
 /* in case this is used without configure */
 #ifndef inline

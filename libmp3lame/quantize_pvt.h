@@ -39,14 +39,26 @@ extern const int slen2_tab[16];
 extern const scalefac_struct sfBandIndex[9];
 
 extern FLOAT8 pow43[PRECALC_SIZE];
-extern FLOAT8 adj43[PRECALC_SIZE];
+#ifdef TAKEHIRO_IEEE754_HACK
 extern FLOAT8 adj43asm[PRECALC_SIZE];
+#else
+extern FLOAT8 adj43[PRECALC_SIZE];
+#endif
 
 #define Q_MAX 256
+#define Q_MAX2 116 /* minimam possible number of
+		      -cod_info->global_gain
+		      + ((scalefac[] + (cod_info->preflag ? pretab[sfb] : 0))
+		      << (cod_info->scalefac_scale + 1))
+		      + cod_info->subblock_gain[cod_info->window[sfb]] * 8;
 
-extern FLOAT8 pow20[Q_MAX+128];
+		      for long block, 0+((15+3)<<2) = 18*4 = 72
+		      for short block, 0+(15<<2)+7*8 = 15*4+56 = 116
+		   */
+
+extern FLOAT8 pow20[Q_MAX+Q_MAX2];
 extern FLOAT8 ipow20[Q_MAX];
-extern FLOAT8 iipow20[128];
+extern FLOAT8 iipow20[Q_MAX2];
 
 typedef struct calc_noise_result_t {
     FLOAT8  over_noise;      /* sum of quantization noise > masking */
