@@ -100,25 +100,6 @@ void  freegfc ( lame_internal_flags* const gfc )   /* bit stream structure */
 /*those ATH formulas are returning
 their minimum value for input = -1*/
 
-FLOAT8 ATHformula_old(FLOAT8 f)
-{
-  FLOAT8 ath;
-
-  if (f < -.3)
-      f=3324;
-
-  f /= 1000;  // convert to khz
-  f  = Max(0.01, f);
-  f  = Min(18.0, f);
-
-  /* from Painter & Spanias, 1997 */
-  /* minimum: (i=77) 3.3kHz = -5db */
-  ath =    3.640 * pow(f,-0.8)
-         - 6.500 * exp(-0.6*pow(f-3.3,2.0))
-         + 0.001 * pow(f,4.0);
-  return ath;
-}
-
 FLOAT8 ATHformula_GB(FLOAT8 f, FLOAT8 value)
 {
   /* from Painter & Spanias
@@ -126,11 +107,22 @@ FLOAT8 ATHformula_GB(FLOAT8 f, FLOAT8 value)
   ath =    3.640 * pow(f,-0.8)
          - 6.800 * exp(-0.6*pow(f-3.4,2.0))
          + 6.000 * exp(-0.15*pow(f-8.7,2.0))
-         + 0.6* 0.001 * pow(f,4.0);*/
+         + 0.6* 0.001 * pow(f,4.0);
 
-/*this curve is designed for VBR:
+
+  In the past LAME was using the Painter &Spanias formula.
+  But we had some recurrent problems with HF content.
+  We measured real ATH values, and found the older formula
+  to be inacurate in the higher part. So we made this new
+  formula and this solved most of HF problematic testcases.
+  The tradeoff is that in VBR mode it increases a lot the
+  bitrate.*/
+
+
+/*this curve can be udjusted according to the VBR scale:
 it adjusts from something close to Painter & Spanias
-on V9 up to Bouvigne's formula for V0*/
+on V9 up to Bouvigne's formula for V0. This way the VBR
+bitrate is more balanced according to the -V value.*/
 
   FLOAT8 ath;
 
@@ -146,12 +138,6 @@ on V9 up to Bouvigne's formula for V0*/
          + 6.000 * exp(-0.15*pow(f-8.7,2.0))
          + (0.6+0.04*value)* 0.001 * pow(f,4.0);
   return ath;
-}
-
-FLOAT8 ATHformula_GBtweak(FLOAT8 f)
-{
-    /*modification of GB formula by Roel*/
-    return ATHformula_GB(f, -.75) +6;
 }
 
 
@@ -303,13 +289,13 @@ FLOAT8 ATHformula(FLOAT8 f,lame_global_flags *gfp)
   switch(gfp->ATHtype)
     {
     case 0:
-      return ATHformula_old(f);
+      return ATHformula_GB(f, 9);
     case 1:
       return ATHformula_Frank(f);
     case 2:
       return ATHformula_GB(f, 0);
     case 3:
-      return ATHformula_GBtweak(f);
+      return ATHformula_GB(f, -.75) +6;     /*modification of GB formula by Roel*/
     case 4:
       if (!(gfp->VBR == vbr_off || gfp->VBR == vbr_abr)) /*this case should be used with true vbr only*/
         return ATHformula_GB(f,gfp->VBR_q);
