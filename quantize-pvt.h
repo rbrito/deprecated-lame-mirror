@@ -25,7 +25,7 @@ extern FLOAT8 pow43[PRECALC_SIZE];
 extern FLOAT8 pow20[Q_MAX];
 extern FLOAT8 ipow20[Q_MAX];
 
-#if RH_ATH
+#ifdef RH_ATH
 extern FLOAT8 ATH_mdct_long[576], ATH_mdct_short[192];
 #endif
 

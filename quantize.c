@@ -187,7 +187,6 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 
       on_pe(pe,l3_side,targ_bits,mean_bits, gr);
 #ifdef RH_SIDE_CBR
-#warning **** YOU TURNED SIDE CHANNEL REDUCTION OFF (RH_SIDE_CBR) ****
 #else
       if (reduce_sidechannel) 
 	reduce_side(targ_bits,ms_ener_ratio[gr],mean_bits);
@@ -262,44 +261,14 @@ set_masking_lower (int nbits)
 	/* quality setting */
 	/* Adjust allowed masking based on quality setting */
 	
-#if  (RH_QUALITY_CONTROL == 1)	
-#warning **** YOU ARE MODIFYING VBR QUALITY CONTROL (RH_QUALITY_CONTROL =1) ****
-	/* lower masking depending on Quality setting */
-	static FLOAT dbQ[10]={-9,-6,-3,-1.5,-1,-0.5,0,0.5,1,2};
-	/* adjust masking, when less these Bits are used */	
-	static FLOAT adB[10]={2250,2000,1750,1500,1250,1000,750,500,250,0};
-	
-	assert( gf.VBR_q <= 9 );
-	assert( gf.VBR_q >= 0 );
-	
-	/* masking_lower_db varies from -9 to +2 db,
-	 * based on quality setting
-	 */
-	masking_lower_db = dbQ[gf.VBR_q];
-	
-	/* adjust allowed masking by -4(min)..0(max) 
-	 * depending on bitrate and quality setting
-	 */
-	adjust  = nbits > adB[gf.VBR_q] 
-	        ? 0 
-		: 2*(sin(PI*(nbits/adB[gf.VBR_q] - 0.5))-1.0);
-	adjust *= reduce_sidechannel ? 0.707 : 1;
-#elif (RH_QUALITY_CONTROL == 2)	
-#warning **** YOU ARE MODIFYING VBR QUALITY CONTROL (RH_QUALITY_CONTROL =2) ****
-	/* lower masking depending on Quality setting
-	 * quality control together with adjusted ATH MDCT scaling
-	 */
-	static FLOAT dbQ[10]={-6,-4,-3,-2,-1,-0.5,0,0.25,0.5,1};
-	
-	assert( gf.VBR_q <= 9 );
-	assert( gf.VBR_q >= 0 );
-	
-	masking_lower_db = dbQ[gf.VBR_q];	
-	adjust = 0;
-#elif (RH_QUALITY_CONTROL == 3)	
-#warning **** YOU ARE MODIFYING VBR QUALITY CONTROL (RH_QUALITY_CONTROL =3) ****
-	/* lower masking depending on Quality setting
-	 * quality control together with adjusted ATH MDCT scaling
+#ifdef  RH_QUALITY_CONTROL	
+	/* - lower masking depending on Quality setting
+	 * - quality control together with adjusted ATH MDCT scaling
+	 *   on lower quality setting allocate more noise from
+	 *   ATH masking, and on higher quality setting allocate
+	 *   less noise from ATH masking.
+	 * - experiments show that going more than 2dB over GPSYCHO's
+	 *   limits ends up in very annoying artefacts
 	 */
 	static FLOAT dbQ[10]={-6.0,-4.5,-3.0,-1.5,0,0.3,0.6,1.0,1.5,2.0};
 	
@@ -361,7 +330,8 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   iteration_init(l3_side,l3_enc,fr_ps);
   info = fr_ps->header;
 
-#if (RH_QUALITY_CONTROL >= 2)
+#ifdef RH_QUALITY_CONTROL
+  /* with RH_QUALITY_CONTROL we have to set masking_lower only once */
   set_masking_lower( 0 );
 #endif      
 
@@ -391,8 +361,11 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   for (gr = 0; gr < gf.mode_gr; gr++) {
     int num_chan=gf.stereo;
 #ifdef  RH_SIDE_VBR
-#warning **** YOU TURNED SIDE CHANNEL REDUCTION OFF (RH_SIDE_VBR) ****
-#else	
+    /* my experiences are, that side channel reduction  
+     * does more harm than good when VBR encoding
+     * (Robert.Hegemann@gmx.de 2000-02-18)
+     */
+#else
     /* determine quality based on mid channel only */
     if (reduce_sidechannel) num_chan=1;  
 #endif
@@ -428,7 +401,10 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
       
       memcpy( &clean_cod_info, cod_info, sizeof(gr_info) );
       
-#if (RH_QUALITY_CONTROL >= 2)
+#ifdef RH_QUALITY_CONTROL
+      /*
+       * masking lower already set in the beginning
+       */
 #else
       /*
        * has to be set before calculating l3_xmin
@@ -489,7 +465,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 	   */
 	  memcpy( cod_info, &clean_cod_info, sizeof(gr_info) );
 
-#if (RH_QUALITY_CONTROL >= 2)
+#ifdef RH_QUALITY_CONTROL
           /*
 	   * there is no need for a recalculation of l3_xmin,
 	   * because masking_lower did not change within this do-while
@@ -497,9 +473,8 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 #else
 	  /* quality setting */
 	  set_masking_lower( this_bits );
-
           /* 
-	   * compute max allowed distortion, this Quality Control needs it
+	   * compute max allowed distortion, masking lower has changed
 	   */
           calc_xmin(xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin);
 #endif
@@ -564,7 +539,12 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   } /* for gr */
 
 
-#ifndef  RH_SIDE_VBR	
+#ifdef  RH_SIDE_VBR
+  /* my experiences are, that side channel reduction  
+   * does more harm than good when VBR encoding
+   * (Robert.Hegemann@gmx.de 2000-02-18)
+   */
+#else	
   if (reduce_sidechannel) {
     /* number of bits needed was found for MID channel above.  Use formula
      * (fixed bitrate code) to set the side channel bits */
@@ -629,7 +609,10 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
         }
 	else
 	{
-#if (RH_QUALITY_CONTROL >= 2)
+#ifdef RH_QUALITY_CONTROL
+          /*
+           * masking lower already set in the beginning
+           */
 #else
           /* quality setting */
           set_masking_lower( save_bits[gr][ch] );
@@ -970,7 +953,7 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
     int start, end, l, i, over=0;
 	u_int sfb;
     FLOAT8 sum,step,bw;
-#if RH_ATH
+#ifdef RH_ATH
     FLOAT8 ath_max;
 #endif
 
@@ -996,7 +979,7 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
         end   = scalefac_band.l[ sfb+1 ];
         bw = end - start;
 
-#if RH_ATH
+#ifdef RH_ATH
         ath_max = 0;
 #endif
         for ( sum = 0.0, l = start; l < end; l++ )
@@ -1007,7 +990,6 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
 	    temp = bw*temp*temp;
 	    sum = Max(sum,temp);
 #elif RH_ATH
-#warning **** YOU ARE USING A DIFFERENT NOISE CALCULATION (RH_ATH) ****
 	    temp = temp*temp;
             sum += temp;
 	    ath_max = Max( ath_max, temp/ATH_mdct_long[l] );
@@ -1019,7 +1001,7 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
         xfsf[0][sfb] = sum / bw;
 
 	/* max -30db noise below threshold */
-#if RH_ATH
+#ifdef RH_ATH
 	noise = 10*log10(Max(.001,Min(ath_max,xfsf[0][sfb]/l3_xmin->l[sfb])));
 #else
 	noise = 10*log10(Max(.001,xfsf[0][sfb] / l3_xmin->l[sfb]));
@@ -1050,7 +1032,7 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
 	    start = scalefac_band.s[ sfb ];
 	    end   = scalefac_band.s[ sfb+1 ];
             bw = end - start;
-#if RH_ATH
+#ifdef RH_ATH
 	    ath_max = 0;
 #endif
 	    for ( sum = 0.0, l = start; l < end; l++ ) {
@@ -1069,7 +1051,7 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
             }       
 	    xfsf[i+1][sfb] = sum / bw;
 	    /* max -30db noise below threshold */
-#if RH_ATH
+#ifdef RH_ATH
 	    noise = 10*log10(Max(.001,Min(ath_max,xfsf[i+1][sfb]/l3_xmin->s[sfb][i])));
 #else
 	    noise = 10*log10(Max(.001,xfsf[i+1][sfb] / l3_xmin->s[sfb][i] ));

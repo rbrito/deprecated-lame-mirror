@@ -77,10 +77,17 @@ ifeq ($(UNAME),Linux)
 
 # The following features are experimental code, 
 # so don't use them if you don't know exactly what you do! (RH 2000-01-30)
-#   FEATURES  = -DRH_ATH                # max noise instead of average noise
-#   FEATURES += -DRH_QUALITY_CONTROL=2  # tuned VBR quality control
-#   FEATURES += -DRH_SIDE_VBR           # turns side channel reduction off (VBR)
-#   FEATURES += -DRH_SIDE_CBR           # turns side channel reduction off (CBR)
+#   FEATURES  = -DRH_QUALITY_CONTROL  # tuned VBR quality control
+#   FEATURES += -DRH_SIDE_VBR         # turns side channel reduction off (VBR)
+#   FEATURES += -DRH_SIDE_CBR         # turns side channel reduction off (CBR)
+#   FEATURES += -DRH_ATH              # max noise instead of average noise
+# these options for gcc-2.95.2 to produce fast code
+#   CC_OPTS = $(FEATURES)\
+#	-Wall -O9 -fomit-frame-pointer -march=pentium \
+#	-finline-functions -fexpensive-optimizations \
+#	-ffast-math -malign-double -mfancy-math-387 \
+#	-funroll-loops -funroll-all-loops -pipe -fschedule-insns2 \
+#	-fno-strength-reduce 
 
 
 ##########################################################################

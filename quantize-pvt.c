@@ -266,6 +266,15 @@ FLOAT8 ATHformula(FLOAT8 f)
     ath -= 114;    /* MDCT scaling.  From tests by macik and MUS420 code */
     /* ath -= 109; */
   }
+#ifdef RH_QUALITY_CONTROL 
+  /* purpose of RH_QUALITY_CONTROL:
+   * at higher quality lower ATH masking abilities   => needs more bits
+   * at lower quality increase ATH masking abilities => needs less bits
+   * works together with adjusted masking lowering of GPSYCHO thresholds
+   * (Robert.Hegemann@gmx.de 2000-01-30)
+   */
+  ath -= (4-gf.VBR_q)*4.0; 
+#endif
   ath = pow( 10.0, ath/10.0 );
   return ath;
 }
@@ -276,33 +285,12 @@ void compute_ath(layer *info,FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY_l])
   int sfb,i,start,end;
   FLOAT8 ATH_f;
   FLOAT8 samp_freq = s_freq[info->version][info->sampling_frequency];
-#if RH_ATH
-  FLOAT8 adjust_mdct_scaling = 10; /* maps mdct scaling from -114 to -104 */
-  
-# if (RH_QUALITY_CONTROL == 2)
-  /* purpose of RH_QUALITY_CONTROL =2:
-   * at higher quality lower ATH masking abilities   => needs more bits
-   * at lower quality increase ATH masking abilities => needs less bits
-   * RH 2000-01-30 */
-  switch( gf.VBR_q ) {
-  case  0: /* falling */
-  case  1: /* falling */
-  case  2: adjust_mdct_scaling = pow( 10, (114-104-(3-gf.VBR_q)*4.0)/10.0 );
-           break;
-  case  7: /* falling */
-  case  8: /* falling*/
-  case  9: adjust_mdct_scaling = pow( 10, (114-104-(6-gf.VBR_q)*5.0)/10.0 ); 
-           break;
-  default: /* don't change it */
-  }
-# elif (RH_QUALITY_CONTROL == 3)
-  /* purpose of RH_QUALITY_CONTROL =3:
-   * at higher quality lower ATH masking abilities   => needs more bits
-   * at lower quality increase ATH masking abilities => needs less bits
-   * RH 2000-01-30 */
-  adjust_mdct_scaling = pow( 10, (114-104-(4-gf.VBR_q)*4.0)/10.0 ); 
-# endif
+#ifdef RH_ATH
+  /* going from average to peak level ATH masking
+   */
+  FLOAT8 adjust_mdct_scaling = 10.0; 
 #endif
+  
 
   /* last sfb is not used */
   for ( sfb = 0; sfb < SBPSY_l; sfb++ ) {
@@ -312,7 +300,7 @@ void compute_ath(layer *info,FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY_l])
     for (i=start ; i < end; i++) {
       ATH_f = ATHformula(samp_freq*i/(2*576)); /* freq in kHz */
       ATH_l[sfb]=Min(ATH_l[sfb],ATH_f);
-#if RH_ATH
+#ifdef RH_ATH
       ATH_mdct_long[i] = ATH_f*adjust_mdct_scaling;
 #endif
     }
@@ -331,7 +319,7 @@ void compute_ath(layer *info,FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY_l])
     for (i=start ; i < end; i++) {
       ATH_f = ATHformula(samp_freq*i/(2*192));     /* freq in kHz */
       ATH_s[sfb]=Min(ATH_s[sfb],ATH_f);
-#if RH_ATH
+#ifdef RH_ATH
       ATH_mdct_short[i] = ATH_f*adjust_mdct_scaling;
 #endif
     }
@@ -734,7 +722,9 @@ int calc_xmin( FLOAT8 xr[576], III_psy_ratio *ratio,
 	  if (xmin > 0.0)
 	    xmin = en0 * ratio->thm.s[sfb][b] * masking_lower / xmin;
 
-#if RH_ATH
+#ifdef RH_ATH
+          /* do not mix up ATH masking with GPSYCHO thresholds
+	   */
 	  l3_xmin->s[sfb][b] = Max(1e-20, xmin);
 #else
 	  l3_xmin->s[sfb][b] = Max(ATH_s[sfb], xmin);
@@ -759,7 +749,9 @@ int calc_xmin( FLOAT8 xr[576], III_psy_ratio *ratio,
 	  xmin = en0 * ratio->thm.l[sfb] * masking_lower / xmin;
 
 
-#if RH_ATH
+#ifdef RH_ATH
+        /* do not mix up ATH masking with GPSYCHO thresholds
+	 */
 	l3_xmin->l[sfb]=Max(1e-20, xmin);
 #else
 	l3_xmin->l[sfb]=Max(ATH_l[sfb], xmin);
