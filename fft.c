@@ -33,8 +33,6 @@
 
 #include <math.h>
 #include "util.h"
-#include "psymodel.h"
-#include "lame.h"
 #include "fft.h"
 
 static INLINE void fht(lame_internal_flags *gfc, FLOAT *fz, int n)
