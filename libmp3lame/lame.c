@@ -1239,7 +1239,7 @@ lame_init_bitstream(lame_t gfc)
 	   sizeof(gfc->bitrate_blockType_Hist));
 #endif
     gfc->frameNum=0;
-    if (gfc->decode_on_the_fly)
+    if (gfc->decode_on_the_fly && !gfc->pmp_replaygain)
 	return decode_init_for_replaygain(gfc);
 
     return 0;
