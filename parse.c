@@ -831,6 +831,8 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
   if (gfp->input_format != sf_mp3 || gfp->input_format != sf_ogg) {
     if (!(strcmp((char *) &gfp->inPath[strlen(gfp->inPath)-4],".mp3")))
       gfp->input_format = sf_mp3;
+    if (!(strcmp((char *) &gfp->inPath[strlen(gfp->inPath)-4],".mp2")))
+      gfp->input_format = sf_mp3;
     else if (!(strcmp((char *) &gfp->inPath[strlen(gfp->inPath)-4],".ogg")))
       gfp->input_format = sf_ogg;
   }

@@ -68,6 +68,9 @@ static void get_II_stuff(struct frame *fr)
 
 int head_check(unsigned long head)
 {
+  /* bits 13-14 = layer 3 */
+  int nLayer=4-((head>>17)&3);
+
   if( (head & 0xffe00000) != 0xffe00000) {
     /* syncword */
 	return FALSE;
@@ -78,9 +81,15 @@ int head_check(unsigned long head)
 	return FALSE;
   }
 #endif
-  if (3 !=  4-((head>>17)&3)) {
-    /* bits 13-14 = layer 3 */
-	return FALSE;
+
+  if (3 !=  nLayer) 
+  {
+	#if defined (USE_LAYER_1) || defined (USE_LAYER_2)
+	  if (4==nLayer)
+		  return FALSE;
+	#else
+		return FALSE;
+    #endif
   }
   if( ((head>>12)&0xf) == 0xf) {
     /* bits 16,17,18,19 = 1111  invalid bitrate */
@@ -138,34 +147,26 @@ int decode_header(struct frame *fr,unsigned long newhead)
 
     fr->stereo    = (fr->mode == MPG_MD_MONO) ? 1 : 2;
 
-
     switch(fr->lay)
     {
+#if USE_LAYER_1
       case 1:
-#if 0
-		fr->do_layer = do_layer1;
-        fr->jsbound = (fr->mode == MPG_MD_JOINT_STEREO) ? 
-                         (fr->mode_ext<<2)+4 : 32;
-        fr->framesize  = (long) tabsel_123[fr->lsf][0][fr->bitrate_index] * 12000;
-        fr->framesize /= freqs[fr->sampling_frequency];
-        fr->framesize  = ((fr->framesize+fr->padding)<<2)-4;
-#else
-        fprintf(stderr,"layer=1 Not supported!\n");
-#endif
+		fr->framesize  = (long) tabsel_123[fr->lsf][0][fr->bitrate_index] * 12000;
+		fr->framesize /= freqs[fr->sampling_frequency];
+		fr->framesize  = ((fr->framesize+fr->padding)<<2)-4;
+		fr->down_sample=0;
+		fr->down_sample_sblimit = SBLIMIT>>(fr->down_sample);
         break;
+#endif
+#if USE_LAYER_2
       case 2:
-#if 0
-		fr->do_layer = do_layer2;
-        get_II_stuff(fr);
-        fr->jsbound = (fr->mode == MPG_MD_JOINT_STEREO) ?
-                         (fr->mode_ext<<2)+4 : fr->II_sblimit;
-        fr->framesize = (long) tabsel_123[fr->lsf][1][fr->bitrate_index] * 144000;
-        fr->framesize /= freqs[fr->sampling_frequency];
-        fr->framesize += fr->padding - 4;
-#else
-        fprintf(stderr,"layer=2 Not supported!\n");
-#endif
+		fr->framesize = (long) tabsel_123[fr->lsf][1][fr->bitrate_index] * 144000;
+		fr->framesize /= freqs[fr->sampling_frequency];
+		fr->framesize += fr->padding - 4;
+		fr->down_sample=0;
+		fr->down_sample_sblimit = SBLIMIT>>(fr->down_sample);
         break;
+#endif
       case 3:
 #if 0
         fr->do_layer = do_layer3;
@@ -188,7 +189,7 @@ int decode_header(struct frame *fr,unsigned long newhead)
 	}
         break; 
       default:
-        fprintf(stderr,"Sorry, unknown layer type.\n"); 
+        fprintf(stderr,"Sorry, layer %d not supported\n"); 
         return (0);
     }
     /*    print_header(fr); */

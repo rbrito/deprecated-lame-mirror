@@ -5,6 +5,13 @@
 #include "mpg123.h"
 #include "mpglib.h"
 
+#ifdef USE_LAYER_1
+	#include "layer1.h"
+#endif
+
+#ifdef USE_LAYER_2
+	#include "layer2.h"
+#endif
 
 /* Global mp .. it's a hack */
 struct mpstr *gmp;
@@ -31,7 +38,12 @@ BOOL InitMP3(struct mpstr *mp)
 	mp->synth_bo = 1;
 
 	make_decode_tables(32767);
+
 	init_layer3(SBLIMIT);
+
+#ifdef USE_LAYER_2
+	init_layer2();
+#endif
 
 	return !0;
 }
@@ -275,7 +287,6 @@ int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
 	  else
 	    /* match channels, samplerate, etc, when syncing */
 	    bytes=sync_buffer(mp,1);
-
 		if (bytes<0) return MP3_NEED_MORE;
 		if (bytes>0) {
 		  /* bitstream problem, but we are now resynced 
@@ -330,7 +341,11 @@ int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
 	}
 
 	/* now decode side information */
-	if (!mp->side_parsed ) {
+	if (!mp->side_parsed) {
+
+		/* Layer 3 only */
+		if (mp->fr.lay==3)
+		{
                 if (mp->bsize < mp->ssize) 
 		  return MP3_NEED_MORE;
 
@@ -349,18 +364,59 @@ int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
 		/* this will force mpglib to read entire frame before decoding */
 		/* mp->dsize= mp->framesize - mp->ssize;*/
 
+		}
+
+		else
+		{
+			/* Layers 1 and 2 */
+
+			/* check if there is enough input data */
+			if(mp->fr.framesize > mp->bsize)
+				return MP3_NEED_MORE;
+
+			/* takes care that the right amount of data is copied into wordpointer */
+			mp->dsize=mp->fr.framesize;
+			mp->ssize=0;
+
+			if(mp->fr.error_protection)
+			  getbits(16);
+
+		}
+
 		mp->side_parsed=1;
 	}
 
 	/* now decode main data */
 	iret=MP3_NEED_MORE;
-	if (!mp->data_parsed) {
+	if (!mp->data_parsed ) {
 	        if(mp->dsize > mp->bsize) {
-		  return MP3_NEED_MORE;
+				return MP3_NEED_MORE;
 		}
+
 		copy_mp(mp,mp->dsize,wordpointer);
+
 		*done = 0;
-		do_layer3(&mp->fr,(unsigned char *) out,done);
+
+		//do_layer3(&mp->fr,(unsigned char *) out,done);
+		switch (mp->fr.lay)
+		{
+#ifdef USE_LAYER_1
+			case 1:
+				do_layer1(&mp->fr,(unsigned char *) out,done);
+			break;
+#endif
+#ifdef USE_LAYER_2
+			case 2:
+				do_layer2(&mp->fr,(unsigned char *) out,done);
+			break;
+#endif
+			case 3:
+				do_layer3(&mp->fr,(unsigned char *) out,done);
+			break;
+			default:
+				fprintf(stderr,"invalid layer %d\n",mp->fr.lay);
+		}
+
 		wordpointer = mp->bsspace[mp->bsnum] + 512 + mp->ssize + mp->dsize;
 
 		mp->data_parsed=1;
@@ -393,6 +449,7 @@ int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
 	if (bytes > mp->bsize) {
 	  return iret;
 	}
+
 	if (bytes>0) {
 	  int size;
 	  copy_mp(mp,bytes,wordpointer);
@@ -403,15 +460,12 @@ int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
 	    fprintf(stderr,"fatal error.  MAXFRAMESIZE not large enough.\n");
 	  }
 
-
-
-
-
-
 	}
 
 	/* the above frame is completey parsed.  start looking for next frame */
 	mp->fsizeold = mp->framesize;
+	// HACK
+	//mp->fsizeold = -1;
 	mp->old_free_format = mp->free_format;
 	mp->framesize =0;
 	mp->header_parsed=0;

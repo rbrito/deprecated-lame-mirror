@@ -59,6 +59,9 @@
 
 #define MAXFRAMESIZE 1792
 
+/* AF: ADDED FOR LAYER1/LAYER2 */
+#define         SCALE_BLOCK             12
+
 
 /* Pre Shift fo 16 to 8 bit converter table */
 #define AUSHIFT (3)
@@ -82,6 +85,16 @@ struct frame {
     int original;
     int emphasis;
     int framesize; /* computed framesize */
+
+	/* AF: ADDED FOR LAYER1/LAYER2 */
+#if defined(USE_LAYER_2) || defined(USE_LAYER_1)
+    int II_sblimit;
+    struct al_table *alloc;
+	int down_sample_sblimit;
+	int	down_sample;
+
+#endif
+
 };
 
 struct parameter {
