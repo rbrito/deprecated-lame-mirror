@@ -80,7 +80,9 @@ typedef enum preset_mode_e {
     EXTREME = 1002,
     INSANE = 1003,
     STANDARD_FAST = 1004,
-    EXTREME_FAST = 1005
+    EXTREME_FAST = 1005,
+    MEDIUM = 1006,
+    MEDIUM_FAST = 1007
 } preset_mode;
 
 
