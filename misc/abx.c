@@ -1,13 +1,13 @@
 /* $Id$ */
 
 /*
- *  Usage: abx -v original_file test_file
+ *  Usage: abx original_file test_file
  *
  *  Ask you as long as the probability is below the given percentage that
  *  you recognize differences
  *
  *  Example: abx music.wav music.mp3
- *           abx -v music.wav music.mp3
+ *           abx music.wav music.mp3 --help
  *
  *  Note: several 'decoding' utilites must be on the 'right' place
  *
@@ -25,12 +25,9 @@
  *      compile time warnings
  *      buffer overruns possible
  *      no dithering if recalcs are necessary
- *      fading time depends on sampling frequency
  *      correlation only done with one channel (2 channels, sum, what is better?)
  *      lowpass+highpass filtering (300 Hz+2*5 kHz) before delay+amplitude corr
  *      cross fade at start/stop
- *      displaying chunk times?
- *      reducing DMA buffer to < 0.1 s
  *      non portable keyboard
  *      fade out on quit, fade in on start
  *      level/delay ajustment should be switchable
@@ -39,7 +36,14 @@
  *      Größe cross corr fenster 2^16...18
  *      Stellensuche, ab 0*len oder 0.1*len oder 0.25*len, nach Effektiv oder Spitzenwert
  *      Absturz bei LPAC feeding, warum?
- *      Als 'B' beim Ratespiel sollte auch '0'...'9' verwendbar sein
+ *      Als 'B' beim Ratespiel sollte auch '0'...'9' verwendbar sein 
+ *      Kreuzkorrelations mit und ohne Differenzen durchführen?
+ *      Oder mit einem Filter 300 Hz...3 kHz vorher filtern?
+ *      Maire 12 bit+Noise spaing möchte Originalsignal
+ *      Multiple encoded differenziertes Signal
+ *      Amplitudenanpassung schaltbar machen?
+ *      Direkt auf der Kommandozeile kodieren:
+ *      abx "test.wav" "!lame -b128 test.wav -"
  */
 
 #if defined(HAVE_CONFIG_H)
@@ -75,13 +79,9 @@
 # include <linux/soundcard.h>         /* stand alone compilable for my tests */
 #endif
 
-#ifdef WITH_DMALLOC
-# include <dmalloc.h>
-#endif
-
-#define  BF           4608
+#define  BF           ((freq)/25)
 #define  MAX_LEN      (210 * 44100)
-#define  DMA_SAMPLES  (32768-BF)     /* My Linux driver uses a DMA buffer of 65536*16 bit, which is 32768 samples in 16 bit stereo mode */
+#define  DMA_SAMPLES  512	    	/* My Linux driver uses a DMA buffer of 65536*16 bit, which is 32768 samples in 16 bit stereo mode */
 
 int verbose = 0;
 
@@ -492,6 +492,10 @@ void setup ( int fdd, int samples, long freq )
     if ( -1 == (status = ioctl (fdd, SOUND_PCM_WRITE_RATE, &arg)) )
         perror ("SOUND_PCM_WRITE_WRITE ioctl failed");
     fprintf (stderr, "%5u Hz*%.3f sec\n", arg, (double)samples/arg );
+
+    org = arg = DMA_SAMPLES;
+    if ( -1 == (status = ioctl (fdd, SNDCTL_DSP_SETFRAGMENT, &arg)) )
+        perror ("SNDCTL_DSP_SETFRAGMENT ioctl failed");
 }
 
 
@@ -551,6 +555,8 @@ void testing ( const stereo_t* A, const stereo_t* B, size_t len, long freq )
                 state = 2;
             break;
 
+        case 0x100+'0' :
+        case '0' :
         case 'B' :
         case 'b' :
             strcpy ( message, "  B" );
@@ -596,17 +602,17 @@ void testing ( const stereo_t* A, const stereo_t* B, size_t len, long freq )
             index = start;
             continue;
         case 'j'  :
-            if ( start < len-freq/100 )
+            if ( start < stop-freq/100 )
                 start += freq/100;
             else
-                start = len;
+                start = stop;
             index = start;
             continue;
         case 'k'  :
-            if ( stop > freq/100 )
+            if ( stop > start+freq/100 )
                 stop -= freq/100;
             else
-                stop = 0;
+                stop = start;
             continue;
         case 'l'  :
             if ( stop < len-freq/100 )
@@ -653,7 +659,21 @@ void testing ( const stereo_t* A, const stereo_t* B, size_t len, long freq )
             fac2  = +1.;
             break;
 
-        case '0' :
+        case 0x100+'1' :
+        case 0x100+'2' :
+        case 0x100+'3' :
+        case 0x100+'4' :
+        case 0x100+'5' :
+        case 0x100+'6' :
+        case 0x100+'7' :
+        case 0x100+'8' :
+        case 0x100+'9' :
+            sprintf ( message, "  B (Errors -%c dB)", (char)c );
+            state = 9;
+            fac2  = pow (10., -0.05*(c-0x100-'0') );
+            fac1  = 1. - fac2;
+            break;
+
         case '1' :
         case '2' :
         case '3' :
@@ -774,24 +794,24 @@ void testing ( const stereo_t* A, const stereo_t* B, size_t len, long freq )
             break;
 
         case 8:
-            if ( index + 512 >= stop )
+            if ( index + BF/2 >= stop )
                 index += feed2 (fd, A+index, B+index, stop-index );
             else
-                index += feed2 (fd, A+index, B+index, 512 );
+                index += feed2 (fd, A+index, B+index, BF/2 );
             Message ( "  B", index, freq, start, stop );
-            if ( index + BF/2 >= stop )
+            if ( index + BF >= stop )
                 index += feed (fd, B+index, stop-index );
             else
-                index += feed (fd, B+index, BF/2 );
-            if ( index + 512 >= stop )
+                index += feed (fd, B+index, BF );
+            if ( index + BF/2 >= stop )
                 index += feed2 (fd, B+index, A+index, stop-index );
             else
-                index += feed2 (fd, B+index, A+index, 512 );
+                index += feed2 (fd, B+index, A+index, BF/2 );
             Message ( "A  ", index, freq, start, stop );
-            if ( index + BF/2 >= stop )
+            if ( index + BF >= stop )
                 index += feed (fd, A+index, stop-index );
             else
-                index += feed (fd, A+index, BF/2 );
+                index += feed (fd, A+index, BF );
             break;
 
         case 9: /* Liko */
@@ -853,7 +873,7 @@ const decoder_t  decoder [] = {
     { ".???"    , "echo %s '???'"                                   REDIR },  // Monkey's Audio Codec : www.monkeysaudio.com (email@monkeysaudio.com)
     { ".mod"    , "xmp -b16 -c -f44100 --stereo -o- %s | sox -r44100 -sw -c2 -traw - -twav -sw -"
                                                                     REDIR },  // Amiga's Music on Disk:
-    { ""        , "sox %s -t wav -"                                 REDIR },  // Rest, may be possible with sox
+    { ""        , "sox %s -twav -sw -"                              REDIR },  // Rest, may be possible with sox
 };
 
 #undef REDIR
@@ -920,7 +940,7 @@ int  readwave ( stereo_t* buff, size_t maxlen, const char* name, size_t* len )
     }
     pclose ( fp ); 
     fprintf (stderr, "\n" );
-    return header[12];
+    return header[12] ? header[12] : 65534;
 }
 
 
@@ -1158,9 +1178,9 @@ int  main ( int argc, char** argv )
     freq2 = readwave ( B, MAX_LEN, argv[2], &len_B );
     DC_cancel ( B, len_B );
     
-    if      ( freq1 == 65534  &&  freq2 > 0 )
+    if      ( freq1 == 65534  &&  freq2 != 65534 )
         freq1 = freq2;
-    else if ( freq2 == 65534  &&  freq1 > 0 )
+    else if ( freq2 == 65534  &&  freq1 != 65534 )
         freq2 = freq1;
     else if ( freq1 == 65534  &&  freq2 == 65534 )
         freq1 = freq2 = 44100;
