@@ -942,7 +942,7 @@ static int local_strcasecmp ( const char* s1, const char* s2 )
 
 
 
-int isnumber(const char *string){
+int is_number(const char *string){
     unsigned int i; //index variable
     int countdots=0; //keeps track of number of periods in a string
 
@@ -1329,7 +1329,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 
 #if defined(__OS2__)
       		T_ELIF ("priority")
-                if (isnumber(nextArg)) {
+                if (is_number(nextArg)) {
       		        argUsed=1;
       		        setOS2Priority(gfp, atoi(nextArg));
                 } else {
@@ -1338,7 +1338,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 #endif
 #if defined(WIN32)
       		T_ELIF ("priority")
-                if (isnumber(nextArg)) {
+                if (is_number(nextArg)) {
       		        argUsed=1;
       		        setWin32Priority(gfp, atoi(nextArg));
                 } else {
