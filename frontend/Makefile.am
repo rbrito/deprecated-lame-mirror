@@ -34,11 +34,12 @@ EXTRA_mp3x_SOURCES = $(brhist_sources)
 if WITH_BRHIST
 lame_SOURCES = main.c $(common_sources) $(brhist_sources)
 mp3rtp_SOURCES = mp3rtp.c rtp.c $(common_sources) $(brhist_sources)
-mp3x_SOURCES = gtkanal.c gpkplotting.c $(common_sources) $(brhist_sources)
+mp3x_SOURCES = mp3x.c gtkanal.c gpkplotting.c \
+	$(common_sources) $(brhist_sources)
 else
 lame_SOURCES = main.c $(common_sources)
 mp3rtp_SOURCES = mp3rtp.c rtp.c $(common_sources)
-mp3x_SOURCES = gtkanal.c gpkplotting.c $(common_sources) $(brhist_sources)
+mp3x_SOURCES = mp3x.c gtkanal.c gpkplotting.c $(common_sources)
 endif
 
 CFLAGS = @CFLAGS@ @GTK_CFLAGS@ @FRONTEND_CFLAGS@
