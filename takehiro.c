@@ -185,9 +185,9 @@ count_bit_noESC_from2(int *ix, int *end, int t1, int *s)
 
 
 #ifdef MMX_choose_table
-static unsigned long long table789[16*6];
 static unsigned long long tableABC[16*8];
 static unsigned long long tableDEF[16*16];
+#define table789 (tableABC+9)
 
 extern int
 choose_table_from3_MMX(int *ix, int *end, int t1, int *s, unsigned long long *hlen);
@@ -430,11 +430,17 @@ int count_bits(lame_global_flags *gfp,int *ix, FLOAT8 *xr, gr_info *cod_info)
     if (xr[i] > w)
       return LARGE_BITS;
   }
+#ifdef ASM_QUANTIZE
+  if (gfc->quantization) 
+    quantize_xrpow_ASM(xr, ix, cod_info->global_gain);
+  else
+    quantize_xrpow_ISO_ASM(xr, ix, cod_info->global_gain);
+#else
   if (gfc->quantization) 
     quantize_xrpow(xr, ix, cod_info);
   else
     quantize_xrpow_ISO(xr, ix, cod_info);
-
+#endif
 
 
   if (cod_info->block_type==SHORT_TYPE) {
@@ -732,11 +738,7 @@ void best_scalefac_store(lame_global_flags *gfp,int gr, int ch,
 
     if (gfc->mode_gr==2 && gr == 1
 	&& l3_side->gr[0].ch[ch].tt.block_type != SHORT_TYPE
-	&& l3_side->gr[1].ch[ch].tt.block_type != SHORT_TYPE
-	&& l3_side->gr[0].ch[ch].tt.scalefac_scale
-	== l3_side->gr[1].ch[ch].tt.scalefac_scale
-	&& l3_side->gr[0].ch[ch].tt.preflag
-	== l3_side->gr[1].ch[ch].tt.preflag) {
+	&& l3_side->gr[1].ch[ch].tt.block_type != SHORT_TYPE) {
       	scfsi_calc(ch, l3_side, scalefac);
     }
     gi->part2_3_length += gi->part2_length;
