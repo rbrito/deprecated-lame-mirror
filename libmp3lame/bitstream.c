@@ -172,8 +172,9 @@ putbits_noheaders(lame_internal_flags *gfc, int val, int j)
 */
 
 inline static void
-drain_into_ancillary(lame_internal_flags *gfc, int remainingBits)
+drain_into_ancillary(lame_global_flags *gfp, int remainingBits)
 {
+    lame_internal_flags *gfc=gfp->internal_flags;
     int i;
     assert(remainingBits >= 0);
 
@@ -205,7 +206,7 @@ drain_into_ancillary(lame_internal_flags *gfc, int remainingBits)
 
     for (; remainingBits >= 1; remainingBits -= 1 ) {
         putbits2(gfc, gfc->ancillary_flag, 1 );
-        gfc->ancillary_flag ^= 1;
+	gfc->ancillary_flag ^= !gfp->disable_reservoir;
     }
 
     assert (remainingBits == 0);
@@ -805,7 +806,7 @@ flush_bitstream(lame_global_flags *gfp)
 
 
   if ((flushbits = compute_flushbits(gfp,&nbytes)) < 0) return;  
-  drain_into_ancillary(gfc, flushbits);
+  drain_into_ancillary(gfp, flushbits);
 
   /* check that the 100% of the last frame has been written to bitstream */
   assert (gfc->header[last_ptr].write_timing + getframebits(gfp)
@@ -853,12 +854,12 @@ format_bitstream(lame_global_flags *gfp)
     l3_side = &gfc->l3_side;
 
     bitsPerFrame = getframebits(gfp);
-    drain_into_ancillary(gfc, l3_side->resvDrain_pre);
+    drain_into_ancillary(gfp, l3_side->resvDrain_pre);
 
     encodeSideInfo2(gfp,bitsPerFrame);
     bits = 8*gfc->sideinfo_len;
     bits+=writeMainData(gfp);
-    drain_into_ancillary(gfc, l3_side->resvDrain_post);
+    drain_into_ancillary(gfp, l3_side->resvDrain_post);
     bits += l3_side->resvDrain_post;
 
     l3_side->main_data_begin += (bitsPerFrame-bits)/8;
