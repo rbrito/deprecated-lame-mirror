@@ -21,7 +21,10 @@ Q_ABS		dd	0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF
 D_ROUNDFAC	dd	0.4054,0.4054
 D_1ROUNDFAC	dd	0.5946,0.5946
 D_IXMAXVAL	dd	8206.0,8206.0
+ROUNDFAC_NEAR	dd	-0.0946
 minus1		dd	-1.0
+magicfloat	dd	8388608.0
+maskpattern	dd	0xFFFFFF
 
 	segment_text
 proc	pow075_3DN
@@ -566,7 +569,8 @@ proc	quantize_sfb_3DN
 
 
 ;
-; void qnatize_sfb_3DN(FLOAT xr34end[], int -bw, int sf, int l3enc_end[])
+; void qnatize_sfb_3DN(FLOAT xr34end[], int -bw, int sf, int l3enc_end[],
+;                      int len01)
 ;
 proc	quantize_ISO_3DN
 %assign _P 0
@@ -576,6 +580,8 @@ proc	quantize_ISO_3DN
 	movq		mm5, [D_ROUNDFAC]
 	movd		mm4, [ipow20+116*4+edx*4] ; sfpow34
 	mov		edx, [esp+_P+8]	; -n
+	test		edx, edx
+	jz		.exit4
 	punpckldq	mm4, mm4		; sfpow34 x 2
 
 ;  mm0, mm1, mm2, mm3 : general work
@@ -623,4 +629,50 @@ proc	quantize_ISO_3DN
 	jnz		.lp2
 .exit2
 	femms
+	ret
+
+;
+; void qnatize_sfb_SSE(FLOAT xr34end[], int -bw, int sf, int l3enc_end[])
+;
+proc	quantize_ISO_SSE
+%assign _P 0
+	mov		edx, [esp+_P+12]
+	movss		xm0, [ipow20+116*4+edx*4] ; sfpow34
+	mov		eax, [esp+_P+4]			;xrend
+	mov		edx, [esp+_P+16]		;ixend
+	movss		xm1, [ROUNDFAC_NEAR]
+	mov		ecx, [esp+_P+8]		; bw
+	movss		xm6, [magicfloat]
+	movss		xm7, [maskpattern]
+	shufps		xm0, xm0, 0			;xm0 = [istep]
+	shufps		xm1, xm1, 0			;xm1 = [0.4054]
+	shufps		xm6, xm6, 0			;xm6 = magic float
+	shufps		xm7, xm7, 0			;xm7 = mask pattern
+.lp:
+	movaps		xm2, [eax+4* 0 + ecx*4]
+	movaps		xm3, [eax+4* 4 + ecx*4]
+	movaps		xm4, [eax+4* 8 + ecx*4]
+	movaps		xm5, [eax+4*12 + ecx*4]
+	add		ecx, byte 16
+	mulps		xm2, xm0
+	mulps		xm3, xm0
+	mulps		xm4, xm0
+	mulps		xm5, xm0
+	addps		xm2, xm1
+	addps		xm3, xm1
+	addps		xm4, xm1
+	addps		xm5, xm1
+	addps		xm2, xm6
+	addps		xm3, xm6
+	addps		xm4, xm6
+	addps		xm5, xm6
+	andps		xm2, xm7
+	andps		xm3, xm7
+	andps		xm4, xm7
+	andps		xm5, xm7
+	movaps		[edx+4* 0 + ecx*4-64], xm2
+	movaps		[edx+4* 4 + ecx*4-64], xm3
+	movaps		[edx+4* 8 + ecx*4-64], xm4
+	movaps		[edx+4*12 + ecx*4-64], xm5
+	jnz		.lp
 	ret

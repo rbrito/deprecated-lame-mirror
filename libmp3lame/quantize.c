@@ -44,6 +44,7 @@ extern void pow075_3DN(float *, float *, int, float*);
 extern void sumofsqr_3DN(const FLOAT *, int, FLOAT *);
 extern void calc_noise_sub_3DN(const FLOAT *, const int *, int, int, FLOAT *);
 extern void quantize_ISO_3DN(const FLOAT *, int, int, int *, int);
+extern void quantize_ISO_SSE(const FLOAT *, int, int, int *);
 extern FLOAT
 calc_sfb_noise_fast_3DN(lame_internal_flags *gfc, int j, int bw, int sf);
 extern FLOAT
@@ -414,12 +415,20 @@ quantize_ISO(lame_internal_flags * const gfc, gr_info *gi)
     FLOAT istep = IPOW20(gi->global_gain);
     const FLOAT *xp = xr34;
     const FLOAT *xend = &xr34[gi->big_values];
+    if (!gi->count1)
+	return;
 #ifdef HAVE_NASM
-    if (gfc->CPU_features.AMD_3DNow && gi->big_values) {
+    if (gfc->CPU_features.AMD_3DNow) {
 	fi += gi->big_values;
 	xp += gi->big_values;
 	quantize_ISO_3DN(xp, -gi->big_values, gi->global_gain, &fi[0].i,
 			 gi->count1 - gi->big_values);
+	xend = &xr34[gi->count1];
+    } else if (gfc->CPU_features.SSE) {
+	int len = (gi->count1+15)&(~15);
+	fi += len;
+	xp += len;
+	quantize_ISO_SSE(xp, -len, gi->global_gain, &fi[0].i);
 	xend = &xr34[gi->count1];
     } else
 #endif
