@@ -371,7 +371,8 @@ iteration_init( lame_global_flags *gfp)
 	    FLOAT f;
 	    if      (i <=  5) f = bass;
 	    else if (i <= 10) f = alto;
-	    else              f = treble;
+	    else if (i <= 11) f = treble;
+	    else              f = sfb21;
 
 	    gfc->nsPsy.shortfact[i] = f;
 	}
