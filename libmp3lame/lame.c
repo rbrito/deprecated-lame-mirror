@@ -466,7 +466,7 @@ lame_init_params(lame_global_flags * const gfp)
     if (gfc->channels_in == 1)
         gfp->mode = MONO;
     gfc->channels_out = (gfp->mode == MONO) ? 1 : 2;
-    gfc->mode_ext = MPG_MD_LR_LR;
+    gfc->mode_ext_next = gfc->mode_ext = MPG_MD_LR_LR;
     if (gfp->mode == MONO)
         gfp->force_ms = 0; // don't allow forced mid/side stereo for mono output
 
@@ -595,11 +595,9 @@ lame_init_params(lame_global_flags * const gfp)
     }
 
 #if defined(HAVE_GTK)
-    if (gfp->analysis)
-        gfp->bWriteVbrTag = 0;
     /* some file options not allowed if output is: not specified or stdout */
-    if (!gfc->pinfo)
-        gfp->bWriteVbrTag = 0; /* disable Xing VBR tag */
+    if (gfp->analysis || !gfc->pinfo)
+	gfp->bWriteVbrTag = 0; /* disable Xing VBR tag */
 #endif
     init_bit_stream_w(gfp);
 

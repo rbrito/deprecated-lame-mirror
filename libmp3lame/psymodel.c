@@ -742,7 +742,6 @@ compute_masking_s(
 
 static int
 block_type_set(
-    lame_global_flags * gfp,
     int blocktype_old,
     int useshort_current,
     int useshort_next
@@ -750,17 +749,17 @@ block_type_set(
 {
     /* update the blocktype of the previous granule, since it depends on what
      * happend in this granule */
-    if (useshort_current)
+    if (useshort_current == SHORT_TYPE)
 	return SHORT_TYPE;
 
-    if (useshort_next) {
+    if (useshort_next == SHORT_TYPE || useshort_next == STOP_TYPE) {
 	if (blocktype_old == SHORT_TYPE || blocktype_old == START_TYPE)
 	    return SHORT_TYPE;
 	return START_TYPE;
     }
     if (blocktype_old == SHORT_TYPE || blocktype_old == START_TYPE)
-	return STOP_TYPE;
-    return NORM_TYPE;
+	return STOP_TYPE - useshort_current;
+    return useshort_current;
 }
 
 /* mask_add optimization */
@@ -1021,46 +1020,6 @@ pecalc_l(
     return pe_l;
 }
 
-
-static int
-check_istereo(lame_internal_flags *gfc, int gr)
-{
-    int sb;
-    III_psy_ratio *mr = &gfc->masking_next[gr][0];
-    for (sb = gfc->is_start_sfb_l_next[gr]; sb < gfc->cutoff_sfb_l; sb++) {
-	FLOAT l = mr[0].en.l[sb];
-	FLOAT r = mr[1].en.l[sb];
-
-	if (mr[3].en.l[sb] > mr[3].thm.l[sb]
-	    && ((l+r) * (0.5 + 0.366025404) * 0.5 > l
-		|| (l+r) * (0.5 + 0.366025404) * 0.5 > r))
-	    return 1;
-    }
-    return 0;
-}
-
-static int
-check_istereo_LR(lame_internal_flags *gfc, int gr)
-{
-    int sb = gfc->cutoff_sfb_l, ch = 0;
-    III_psy_ratio *mr = &gfc->masking_next[gr][0];
-    while (--sb > gfc->is_start_sfb_l_next[gr]) {
-	if (mr[0].en.l[sb] > mr[0].thm.l[sb])
-	    break;
-
-	if (mr[1].en.l[sb] > mr[1].thm.l[sb]) {
-	    ch = 1;
-	    break;
-	}
-    }
-    while (--sb > gfc->is_start_sfb_l_next[gr]) {
-	FLOAT m = mr[  ch].en.l[sb];
-	FLOAT s = mr[1-ch].en.l[sb];
-	if (m*0.211324865 * 0.5 < s)
-	    return 1;
-    }
-    return 0;
-}
 
 static void
 psycho_analysis_short(
@@ -1625,25 +1584,11 @@ psycho_analysis(
 
     adjust_ATH(gfc);
     gfc->mode_ext = gfc->mode_ext_next;
-    if (gfc->mode_ext & MPG_MD_MS_LR) {
-	for (gr=0; gr < gfc->mode_gr ; gr++) {
-	    for (ch = 0; ch < 2; ch++) {
-		masking_d[gr][ch] = gfc->masking_next[gr][ch + 2];
-		gfc->l3_side.tt[gr][ch].block_type = NORM_TYPE;
-		if (gfc->useshort_next[gr][ch]) {
-		    gfc->l3_side.tt[gr][ch].block_type = SHORT_TYPE;
-		}
-	    }
-	}
-    } else {
-	for (gr=0; gr < gfc->mode_gr ; gr++) {
-	    for (ch = 0; ch < gfc->channels_out; ch++) {
-		masking_d[gr][ch] = gfc->masking_next[gr][ch];
-		gfc->l3_side.tt[gr][ch].block_type = NORM_TYPE;
-		if (gfc->useshort_next[gr][ch]) {
-		    gfc->l3_side.tt[gr][ch].block_type = SHORT_TYPE;
-		}
-	    }
+    for (gr=0; gr < gfc->mode_gr ; gr++) {
+	for (ch = 0; ch < 2; ch++) {
+	    masking_d[gr][ch]
+		= gfc->masking_next[gr][ch + (gfc->mode_ext & MPG_MD_MS_LR)];
+	    gfc->l3_side.tt[gr][ch].block_type = gfc->useshort_next[gr][ch];
 	}
     }
 
@@ -1703,7 +1648,6 @@ psycho_analysis(
 	    gfc->useshort_next[gr][2] = gfc->useshort_next[gr][3] = SHORT_TYPE;
     }
     /* determine MS/LR in the next frame */
-    gfc->mode_ext_next = MPG_MD_LR_LR;
     if (gfp->mode == JOINT_STEREO) {
 	FLOAT diff_pe = 50.0;
 	if (gfc->mode_ext & MPG_MD_MS_LR)
@@ -1720,50 +1664,52 @@ psycho_analysis(
 	if (diff_pe <= 0.0 || gfp->force_ms) {
 	    gfc->mode_ext_next = MPG_MD_MS_LR;
 	    for (gr = 0; gr < gfc->mode_gr; gr++) {
-		gfc->useshort_next[gr][0] = gfc->useshort_next[gr][2];
-		gfc->useshort_next[gr][1] = gfc->useshort_next[gr][3];
+		assert(gfc->useshort_next[gr][2] == gfc->useshort_next[gr][3]);
+		gfc->useshort_next[gr][0] = gfc->useshort_next[gr][1]
+		    = gfc->useshort_next[gr][2];
 	    }
-	    if (gfp->use_istereo
-		&& (check_istereo(gfc, 0) + check_istereo(gfc, gfc->mode_gr-1)))
-		gfc->mode_ext_next = MPG_MD_MS_I;
-
 	    /* LR -> MS case */
-	    if (gfc->mode_ext_next != gfc->mode_ext
+	    if ((gfc->mode_ext_next ^ gfc->mode_ext) & 2
 	     && (gfc->l3_side.tt[gfc->mode_gr-1][0].block_type
-		 | gfc->l3_side.tt[gfc->mode_gr-1][1].block_type))
-		gfc->l3_side.tt[gfc->mode_gr-1][0].block_type
-		    = gfc->l3_side.tt[gfc->mode_gr-1][1].block_type
-		    = SHORT_TYPE;
+		 != gfc->l3_side.tt[gfc->mode_gr-1][1].block_type)) {
+		gr_info *gi = &gfc->l3_side.tt[gfc->mode_gr-1][0];
+		if (gi[0].block_type == NORM_TYPE)
+		    gi[0].block_type = START_TYPE;
+		if (gi[0].block_type == STOP_TYPE)
+		    gi[0].block_type = SHORT_TYPE;
+
+		if (gi[1].block_type == NORM_TYPE)
+		    gi[1].block_type = START_TYPE;
+		if (gi[1].block_type == STOP_TYPE)
+		    gi[1].block_type = SHORT_TYPE;
+	    }
 	} else {
-	    if (gfc->mode_ext_next != gfc->mode_ext
-		&& (gfc->useshort_next[0][0] | gfc->useshort_next[0][1]))
-		gfc->useshort_next[0][0] = gfc->useshort_next[0][1]
-		    = SHORT_TYPE;
-	    if (gfp->use_istereo
-		&& (check_istereo_LR(gfc, 0)
-		    + check_istereo_LR(gfc, gfc->mode_gr-1)))
-		gfc->mode_ext_next = MPG_MD_LR_I;
+	    if ((gfc->mode_ext_next ^ gfc->mode_ext) & 2
+		&& (gfc->useshort_next[0][0] != gfc->useshort_next[0][1])) {
+		if (gfc->useshort_next[0][0] != SHORT_TYPE)
+		    gfc->useshort_next[0][0] = STOP_TYPE;
+		if (gfc->useshort_next[0][1] != SHORT_TYPE)
+		    gfc->useshort_next[0][1] = STOP_TYPE;
+	    }
 	}
+	gfc->mode_ext_next |= gfp->use_istereo;
     }
 
     /* determine current frame block type (long/start/short/stop) */
     for (ch = 0; ch < gfc->channels_out; ch++) {
 	if (gfc->mode_gr == 1)
 	    gfc->l3_side.tt[0][ch].block_type
-		= block_type_set(gfp,
-				 blocktype_old[ch],
+		= block_type_set(blocktype_old[ch],
 				 gfc->l3_side.tt[0][ch].block_type,
 				 gfc->useshort_next[0][ch]);
 	else {
 	    gfc->l3_side.tt[0][ch].block_type
-		= block_type_set(gfp,
-				 blocktype_old[ch],
+		= block_type_set(blocktype_old[ch],
 				 gfc->l3_side.tt[0][ch].block_type,
 				 gfc->l3_side.tt[1][ch].block_type);
 
 	    gfc->l3_side.tt[1][ch].block_type
-		= block_type_set(gfp,
-				 gfc->l3_side.tt[0][ch].block_type,
+		= block_type_set(gfc->l3_side.tt[0][ch].block_type,
 				 gfc->l3_side.tt[1][ch].block_type,
 				 gfc->useshort_next[0][ch]);
 	}
