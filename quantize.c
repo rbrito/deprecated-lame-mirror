@@ -97,7 +97,7 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
       
       for (ch=0 ; ch < stereo ; ch ++) {
 	outer_loop( xr, targ_bits[ch], noise, targ_noise, 0, &l3_xmin,l3_enc, 
-	    fr_ps, scalefac,gr,stereo, l3_side, ratio, ms_ener_ratio[gr],ch);
+		    fr_ps, scalefac,gr,stereo, l3_side, ratio, ms_ener_ratio[gr],ch);
 	cod_info = &l3_side->gr[gr].ch[ch].tt;
 	if (highq && cod_info->block_type == NORM_TYPE) {
 	  best_huffman_divide(gr, ch, cod_info, l3_enc[gr][ch]);
@@ -105,7 +105,10 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 	ResvAdjust( fr_ps, cod_info, l3_side, mean_bits );
       }
     }
-  }
+  } /* loop over gr */
+
+
+
 
   /* set the sign of l3_enc */
   for ( gr = 0; gr < mode_gr; gr++ ) {
@@ -357,6 +360,9 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   for (gr = 0; gr < mode_gr; gr++)
     for (ch = 0; ch < stereo; ch++) {
       cod_info = &l3_side->gr[gr].ch[ch].tt;
+      if (highq && cod_info->block_type == NORM_TYPE) {
+	best_huffman_divide(gr, ch, cod_info, l3_enc[gr][ch]);
+      }
       ResvAdjust (fr_ps, cod_info, l3_side, mean_bits);
     }
 
