@@ -1,0 +1,87 @@
+#ifdef AMIGA_MPEGA
+
+#include "lame.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <proto/exec.h>
+#include <dos.h>
+#include <proto/mpega.h>
+
+struct Library  *MPEGABase;
+MPEGA_STREAM    *mstream=NULL;
+MPEGA_CTRL      mctrl;
+
+
+static int break_cleanup(void)
+{
+	if(mstream) {
+		MPEGA_close(mstream);
+		mstream = NULL;
+	}
+	if(MPEGABase) {
+		CloseLibrary(MPEGABase);
+		MPEGABase = NULL;
+	}
+	return 1;
+}
+
+static void exit_cleanup(void)
+{
+	(void)break_cleanup();
+}
+
+int lame_decode_initfile(const char *fullname, int *stereo, int *samp, int *bitrate, unsigned long *nsamp)
+{
+	mctrl.bs_access = NULL;
+
+	mctrl.layer_1_2.mono.quality    = 2;
+	mctrl.layer_1_2.stereo.quality  = 2;
+	mctrl.layer_1_2.mono.freq_div   = 1;
+	mctrl.layer_1_2.stereo.freq_div = 1;
+	mctrl.layer_1_2.mono.freq_max   = 48000;
+	mctrl.layer_1_2.stereo.freq_max = 48000;
+	mctrl.layer_3.mono.quality      = 2;
+	mctrl.layer_3.stereo.quality    = 2;
+	mctrl.layer_3.mono.freq_div     = 1;
+	mctrl.layer_3.stereo.freq_div   = 1;
+	mctrl.layer_3.mono.freq_max     = 48000;
+	mctrl.layer_3.stereo.freq_max   = 48000;
+	mctrl.layer_1_2.force_mono      = 0;
+	mctrl.layer_3.force_mono        = 0;
+
+	onbreak(break_cleanup);
+	atexit(exit_cleanup);
+
+	MPEGABase = OpenLibrary("mpega.library", 2);
+	if(!MPEGABase) {
+		fprintf(stderr, "Unable to open mpega.library v2\n");
+		exit(1);
+	}
+
+	mstream=MPEGA_open(fullname, &mctrl);
+	if(!mstream) { return (-1); }
+
+	*stereo  = mstream->dec_channels;
+	*samp    = mstream->frequency;
+	*bitrate = mstream->bitrate;
+
+	return 0;
+}
+
+
+
+int lame_decode_fromfile(FILE *fd, short pcm[][1152])
+{
+	int outsize=0;
+	WORD *b[MPEGA_MAX_CHANNELS];
+
+	b[0]=&pcm[0][0];
+	b[1]=&pcm[1][0];
+
+	outsize = MPEGA_decode_frame(mstream, b);
+
+	if (outsize < 0) { return (-1); }
+	else { return outsize; }
+}
+
+#endif /* AMIGA_MPEGA */
