@@ -591,10 +591,10 @@ decoding on the fly is performed and the analysis is performed on the
 decoded data stream, that is on the output of decoding (playbacking) 
 a compressed sound file. Although theoretically this method gives more 
 accurate results, it is unrecommended, because:
-  * tests have shown that the difference in the ReplayGain values 
+  * tests have shown that the difference between the ReplayGain values 
     computed on the input data and decoded data is usually no greater 
-    than 0.5dB, although the minimum volume difference a human ear can 
-    perceive is about 1.0dB
+    than 0.5dB, although the minimum volume difference the human ear 
+    can perceive is about 1.0dB
   * decoding on the fly significantly slows down the encoding process
 
 Please note: ReplayGain analysis does not affect the content of a 
@@ -607,7 +607,8 @@ performed with the reference volume equal to 83dB.
 
 This option requires LAME to be compiled with DECODE_ON_THE_FLY.
 (note: if LAME is compiled without DECODE_ON_THE_FLY, ReplayGain 
-analysis is performed on the input data)
+analysis is performed on the input data after user-specified
+volume scaling)
 
 
 
