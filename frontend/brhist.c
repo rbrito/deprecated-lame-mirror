@@ -443,7 +443,7 @@ brhist_disp(lame_t gfp)
         stat[1] = 100. * (frames - st_frames) / frames;
     }
     if (st_frames > 0) {
-        stat[2] = 0.0;
+        stat[2] = 100. * (st_mode[LR+1] + st_mode[MS+1]) / st_frames;
         stat[3] = 100. * st_mode[LR] / st_frames;
         stat[4] = 100. * st_mode[MS] / st_frames;
     }
