@@ -83,6 +83,44 @@ ms_sparsing(lame_internal_flags* gfc, int gr)
     }
 }
 
+static void
+conv_istereo(lame_internal_flags* gfc, gr_info *gi, int sfb, int i)
+{
+    gfc->mode_ext |= 1;
+    for (; i < 576;) {
+	FLOAT lsum = 1e-30, rsum = 1e-30;
+	int end = i + gi->width[sfb];
+	do {
+	    FLOAT l = gi[0].xr[i];
+	    FLOAT r = gi[1].xr[i];
+	    gi[0].xr[i] = l+r;
+	    gi[1].xr[i] = 0.0;
+	    lsum += fabs(l);
+	    rsum += fabs(r);
+	} while (++i < end);
+	lsum = lsum / (lsum+rsum);
+
+	gi[1].scalefac[sfb] = 3;
+	gi[1].preflag = -1;
+	if (lsum < 0.5) {
+	    if (lsum < 0.211324865 * 0.5)
+		gi[1].scalefac[sfb] = 0;
+	    else if (lsum < (0.366025404 + 0.211324865) * 0.5)
+		gi[1].scalefac[sfb] = 1;
+	    else if (lsum < (0.5 + 0.366025404) * 0.5)
+		gi[1].scalefac[sfb] = 2;
+	} else {
+	    if (lsum > 1.0-0.211324865 * 0.5)
+		gi[1].scalefac[sfb] = 6;
+	    else if (lsum > 1.0-(0.366025404 + 0.211324865) * 0.5)
+		gi[1].scalefac[sfb] = 5;
+	    else if (lsum > 1.0-(0.5 + 0.366025404) * 0.5)
+		gi[1].scalefac[sfb] = 4;
+	}
+	sfb++;
+    }
+    gfc->scale_bitcounter(&gi[1]);
+}
 
 
 /***********************************************************************
@@ -428,44 +466,22 @@ int  lame_encode_mp3_frame (				// Output
 		gi[0].xr[i] = (l+r) * (FLOAT)(SQRT2*0.5);
 		gi[1].xr[i] = (l-r) * (FLOAT)(SQRT2*0.5);
 	    }
-	    if (gfp->use_istereo) {
-		gfc->mode_ext |= 1;
-		for (; i < 576;) {
-		    FLOAT lsum = 1e-30, rsum = 1e-30;
-		    end = i + gi->width[sfb];
-		    do {
-			FLOAT l = gi[0].xr[i];
-			FLOAT r = gi[1].xr[i];
-			gi[0].xr[i] = l+r;
-			gi[1].xr[i] = 0.0;
-			lsum += fabs(l);
-			rsum += fabs(r);
-		    } while (++i < end);
-		    lsum = lsum / (lsum+rsum);
-
-		    gi[1].scalefac[sfb] = 3;
-		    gi[1].preflag = -1;
-		    if (lsum < 0.5) {
-			if (lsum < 0.211324865 * 0.5)
-			    gi[1].scalefac[sfb] = 0;
-			else if (lsum < (0.366025404 + 0.211324865) * 0.5)
-			    gi[1].scalefac[sfb] = 1;
-			else if (lsum < (0.5 + 0.366025404) * 0.5)
-			    gi[1].scalefac[sfb] = 2;
-		    } else {
-			if (lsum > 1.0-0.211324865 * 0.5)
-			    gi[1].scalefac[sfb] = 6;
-			else if (lsum > 1.0-(0.366025404 + 0.211324865) * 0.5)
-			    gi[1].scalefac[sfb] = 5;
-			else if (lsum > 1.0-(0.5 + 0.366025404) * 0.5)
-			    gi[1].scalefac[sfb] = 4;
-		    }
-		    sfb++;
-		}
-	    }
-	    gfc->scale_bitcounter(&gi[1]);
+	    if (gfp->use_istereo)
+		conv_istereo(gfc, gi, sfb, i);
 	    if (gfc->sparsing)
 		ms_sparsing(gfc, gr);
+	}
+    } else if (gfp->use_istereo) {
+	for (gr = 0; gr < gfc->mode_gr; gr++) {
+	    gr_info *gi = &gfc->l3_side.tt[gr][0];
+	    int sfb = gfc->l3_side.istereo_start_sfb_l;
+	    int end = gfc->scalefac_band.l[sfb];
+	    if (gi->block_type == SHORT_TYPE) {
+		sfb = gfc->l3_side.istereo_start_sfb_s;
+		end = gfc->scalefac_band.s[sfb]*3;
+		sfb *= 3;
+	    }
+	    conv_istereo(gfc, gi, sfb, end);
 	}
     }
 

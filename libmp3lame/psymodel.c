@@ -899,10 +899,11 @@ static void nsPsy2dataRead(
 static FLOAT
 pecalc_s(
     lame_internal_flags *gfc,
-    III_psy_ratio *mr
+    III_psy_ratio *mr,
+    int sb
     )
 {
-    FLOAT pe_s;
+    FLOAT pe_s = 0;
     const static FLOAT regcoef_s[] = {
 	11.8, /* this value is tuned only for 44.1kHz... */
 	13.6,
@@ -918,14 +919,10 @@ pecalc_s(
 	130,
 	255.8
     };
-    int sb, sblock;
-
-    pe_s = 0;
-    sb = SBMAX_s - 1;
-    if (!gfc->sfb21_extra)
-	sb--;
 
     do {
+	int sblock;
+	FLOAT xx=0.0;
 	for (sblock=0;sblock<3;sblock++) {
 	    FLOAT x = mr->thm.s[sb][sblock];
 	    if (mr->en.s[sb][sblock] <= x)
@@ -933,10 +930,11 @@ pecalc_s(
 
 	    mr->ath_over++;
 	    if (mr->en.s[sb][sblock] > x*1e10)
-		pe_s += regcoef_s[sb] * (10.0 * LOG10);
+		xx += 10.0 * LOG10;
 	    else
-		pe_s += regcoef_s[sb] * FAST_LOG10(mr->en.s[sb][sblock] / x);
+		xx += FAST_LOG10(mr->en.s[sb][sblock] / x);
 	}
+	pe_s += regcoef_s[sb] * xx;
     } while (--sb >= 0);
 
     return pe_s;
@@ -945,10 +943,11 @@ pecalc_s(
 static FLOAT
 pecalc_l(
     lame_internal_flags *gfc,
-    III_psy_ratio *mr
+    III_psy_ratio *mr,
+    int sb
     )
 {
-    FLOAT pe_l;
+    FLOAT pe_l = 20.0;
     const static FLOAT regcoef_l[] = {
 	6.8, /* this value is tuned only for 44.1kHz... */
 	5.8,
@@ -973,11 +972,7 @@ pecalc_l(
 	126.1,
 	241.3
     };
-    int sb = SBMAX_l - 1;
 
-    if (!gfc->sfb21_extra)
-	sb--;
-    pe_l = 20.0;
     do {
 	FLOAT x = mr->thm.l[sb];
 	if (mr->en.l[sb] <= x)
@@ -1705,6 +1700,24 @@ psycho_analysis(
 
 	    msfix_s(gfc, gr);
 	    numchn = 4;
+	    if (gfp->use_istereo) {
+		int sb;
+		III_psy_ratio *mr = &gfc->masking_next[gr][0];
+		for (sb = gfc->l3_side.istereo_start_sfb_l; sb < SBMAX_l;
+		     sb++) {
+		    mr[0].en .l[sb] = mr[2].en .l[sb];
+		    mr[0].thm.l[sb] = mr[2].thm.l[sb];
+		}
+		for (sb = gfc->l3_side.istereo_start_sfb_s; sb < SBMAX_s;
+		     sb++) {
+		    mr[0].en .s[sb][0] = mr[2].en .s[sb][0];
+		    mr[0].thm.s[sb][0] = mr[2].thm.s[sb][0];
+		    mr[0].en .s[sb][1] = mr[2].en .s[sb][1];
+		    mr[0].thm.s[sb][1] = mr[2].thm.s[sb][1];
+		    mr[0].en .s[sb][2] = mr[2].en .s[sb][2];
+		    mr[0].thm.s[sb][2] = mr[2].thm.s[sb][2];
+		}
+	    }
 	}
 	/*********************************************************************
 	 * compute the value of PE to return
@@ -1712,13 +1725,27 @@ psycho_analysis(
 	for (ch=0;ch<numchn;ch++) {
 	    III_psy_ratio *mr = &gfc->masking_next[gr][ch];
 	    mr->ath_over = 0;
-	    if (gfc->useshort_next[gr][ch])
-		mr->pe = pecalc_s(gfc, mr);
-	    else
-		mr->pe = pecalc_l(gfc, mr);
+	    if (gfc->useshort_next[gr][ch]) {
+		int sb = SBMAX_s - 1;
+		if (!gfc->sfb21_extra)
+		    sb--;
+		if (gfp->use_istereo && (ch & 1))
+		    sb = gfc->l3_side.istereo_start_sfb_s;
+		mr->pe = pecalc_s(gfc, mr, sb);
+	    } else {
+		int sb = SBMAX_l - 1;
+		if (!gfc->sfb21_extra)
+		    sb--;
+		if (gfp->use_istereo && (ch & 1))
+		    sb = gfc->l3_side.istereo_start_sfb_l;
+		mr->pe = pecalc_l(gfc, mr, sb);
+	    }
 	}
 	if (gfc->useshort_next[gr][2] | gfc->useshort_next[gr][3])
 	    gfc->useshort_next[gr][2] = gfc->useshort_next[gr][3] = SHORT_TYPE;
+	if (gfp->use_istereo
+	    && (gfc->useshort_next[gr][0] | gfc->useshort_next[gr][1]))
+	    gfc->useshort_next[gr][0] = gfc->useshort_next[gr][1] = SHORT_TYPE;
     }
 
     /* determine MS/LR in the next frame */
@@ -1736,7 +1763,7 @@ psycho_analysis(
 		-  gfc->masking_next[gr][1].pe;
 
 	/* based on PE: M/S coding would not use much more bits than L/R */
-	if (diff_pe <= 0.0 || gfp->force_ms || gfp->use_istereo) {
+	if (diff_pe <= 0.0 || gfp->force_ms) {
 	    gfc->mode_ext_next = MPG_MD_MS_LR;
 	    for (gr = 0; gr < gfc->mode_gr; gr++) {
 		gfc->useshort_next[gr][0] = gfc->useshort_next[gr][2];
