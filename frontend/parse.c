@@ -1356,16 +1356,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF ("cwlimit")
                     val = atof (nextArg);
                     argUsed=1;
-                    /* useful are 0.001 kHz...50 kHz, 50 Hz...50000 Hz */
-                    {
-                        int my_cwlimit = val * ( val <= 50. ? 1.e3 : 1.e0 );
-                        lame_set_cwlimit( gfp, my_cwlimit );
-                        if ( my_cwlimit <= 0 ) {
-                            fprintf( stderr,
-              "Must specify cwlimit with --cwlimit freq, freq >= 0.001 kHz\n" );
-                            return -1;
-                        }
-                    }
+		    fprintf(stderr, "Warning: cwlimit is obsolete\n");
                  
                 T_ELIF ("comp")
                     argUsed=1;
@@ -1395,7 +1386,6 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     (void) lame_set_useTemporal( gfp, atoi(nextArg)?1:0 );
 
                 T_ELIF ("nspsytune")
-                    lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
                     lame_set_experimentalZ(gfp,1);
                     lame_set_experimentalX(gfp,1);
                 
