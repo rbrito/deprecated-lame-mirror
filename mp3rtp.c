@@ -62,7 +62,6 @@ int main(int argc, char **argv)
   lame_global_flags *gf;
   int iread,imp3;
   FILE *outf;
-  int samples_to_encode;
   short int Buffer[2][1152];
 
   if(argc<=2) {
@@ -149,29 +148,22 @@ int main(int argc, char **argv)
   lame_init_params();
   lame_print_config();   /* print usefull information about options being used */
 
-
-  samples_to_encode = gf->encoder_delay + 288;
   /* encode until we hit eof */
   do {
-    /* read in gf->framesize samples.  If you are doing your own file input
-     * replace this by a call to fill Buffer with exactly gf->framesize sampels */
+    /* read in 'iread' samples */
     iread=lame_readframe(Buffer);
-    imp3=lame_encode(Buffer,mp3buffer);  /* encode the frame */
+    /* check to make sure mp3buffer is big enough */
+    if (LAME_MAXMP3BUFFER < 1.25*iread + 7200) 
+      fprintf(stderr,"mp3 buffer is not big enough. \n");
+    /* encode the frame */
+    imp3=lame_encode_buffer(Buffer[0],Buffer[1],iread,
+			    mp3buffer,LAME_MAXMP3BUFFER); 
     fwrite(mp3buffer,1,imp3,outf);       /* write the MP3 output to file  */
     rtp_output(mp3buffer,imp3);          /* write MP3 output to RTP port */    
-    samples_to_encode += iread - gf->framesize;
   } while (iread);
   
-  /* encode until we flush internal buffers.  (Buffer=0 at this point */
-  while (samples_to_encode > 0) {
-    imp3=lame_encode(Buffer,mp3buffer);
-    fwrite(mp3buffer,1,imp3,outf);
-    rtp_output(mp3buffer,imp3);
-    samples_to_encode -= gf->framesize;
-  }
-  
 
-  imp3=lame_encode_finish(mp3buffer);   /* may return one more mp3 frame */
+  imp3=lame_encode_finish(mp3buffer);   /* may return one or more mp3 frame */
   fwrite(mp3buffer,1,imp3,outf);  
   rtp_output(mp3buffer,imp3);
   fclose(outf);
