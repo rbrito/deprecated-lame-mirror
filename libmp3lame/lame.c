@@ -825,11 +825,11 @@ int lame_init_params ( lame_global_flags* const gfp )
     case 3:
 	gfc->filter_type        = 0;
 	gfc->psymodel           = 1;
-	gfc->quantization       = 1; /**/
+	gfc->quantization       = 1; 
 	gfc->noise_shaping      = 1;
 	gfc->noise_shaping_amp  = 0; 
 	gfc->noise_shaping_stop = 0;
-	gfc->use_best_huffman   = 1; /**/
+	gfc->use_best_huffman   = 1; 
 	break;
 
     case 2:
@@ -837,8 +837,8 @@ int lame_init_params ( lame_global_flags* const gfp )
 	gfc->psymodel           = 1;
 	gfc->quantization       = 1;
 	gfc->noise_shaping      = 1;
-	gfc->noise_shaping_amp  = 0; 
-	gfc->noise_shaping_stop = 0;
+	gfc->noise_shaping_amp  = 1; 
+	gfc->noise_shaping_stop = 1;
 	gfc->use_best_huffman   = 1;
 	break;
 
@@ -847,20 +847,19 @@ int lame_init_params ( lame_global_flags* const gfp )
 	gfc->psymodel           = 1;
 	gfc->quantization       = 1;
 	gfc->noise_shaping      = 1; 
-	gfc->noise_shaping_amp  = 0; 
-	gfc->noise_shaping_stop = 0;
+	gfc->noise_shaping_amp  = 2; 
+	gfc->noise_shaping_stop = 1;
 	gfc->use_best_huffman   = 1;
 	break;
 
     case 0: /* 0..1 quality */
-	gfc->filter_type        = 1; /**/ /* not yet coded */
+	gfc->filter_type        = 0; /* 1 not yet coded */
 	gfc->psymodel           = 1;
 	gfc->quantization       = 1;
-	gfc->noise_shaping      = 2; /**/ /* usually lowers quality */
-	gfc->noise_shaping_amp  = 0; 
-	gfc->noise_shaping_stop = 2; /**/ /* not yet coded */
-	gfc->use_best_huffman   = 2; /**/ /* not yet coded */
-	return -2;
+	gfc->noise_shaping      = 1;  /* 2=usually lowers quality */
+	gfc->noise_shaping_amp  = 2; 
+	gfc->noise_shaping_stop = 1; 
+	gfc->use_best_huffman   = 1; /* 2 not yet coded */
     }
 
     j = gfc->samplerate_index + (3 * gfp->version) + 6 * (gfp->out_samplerate < 16000);

@@ -374,9 +374,28 @@ quant_compare(
  *        
  *  Amplify the scalefactor bands that violate the masking threshold.
  *  See ISO 11172-3 Section C.1.5.4.3.5
+ * 
+ *  distort[] = noise/masking
+ *  distort[] > 1   ==> noise is not masked
+ *  distort[] < 1   ==> noise is masked
+ *  max_dist = maximum value of distort[]
+ *  
+ *  Three algorithms:
+ *  noise_shaping_amp
+ *        0             Amplify all bands with distort[]>1.
+ *
+ *        1             Amplify all bands with distort[] >= max_dist^(.5);
+ *                     ( 50% in the db scale)
+ *
+ *        2             Amplify first band with distort[] >= max_dist;
+ *                       
+ *
+ *  For algorithms 0 and 1, if max_dist < 1, then amplify all bands 
+ *  with distort[] >= .95*max_dist.  This is to make sure we always
+ *  amplify at least one band.  
+ * 
  *
  *************************************************************************/
-
 static void 
 amp_scalefac_bands(
     lame_global_flags *gfp,
@@ -384,204 +403,82 @@ amp_scalefac_bands(
     III_scalefac_t *const scalefac,
     FLOAT8 distort[4][SBMAX_l], 
     FLOAT8 xrpow[576] )
-#ifndef RH_AMP
 {
   lame_internal_flags *gfc=gfp->internal_flags;
   int start, end, l,i,j,sfb;
-  FLOAT8 ifqstep34,distort_thresh;
+  FLOAT8 ifqstep34,distort_thresh,trigger;
 
   if (cod_info->scalefac_scale == 0) {
     ifqstep34 = 1.29683955465100964055; /* 2**(.75*.5)*/
   } else {
     ifqstep34 = 1.68179283050742922612;  /* 2**(.75*1) */
   }
-  /* distort[] = noise/masking.  Comput distort_thresh so that:
-   * distort_thresh = 1, unless all bands have distort < 1
-   * In that case, just amplify bands with distortion
-   * within 95% of largest distortion/masking ratio */
-  distort_thresh = -900;
+
+  /* compute maximum value of distort[]  */
+  distort_thresh = 0;
   for (sfb = 0; sfb < cod_info->sfb_lmax; sfb++) {
     distort_thresh = Max(distort[0][sfb],distort_thresh);
   }
-
-  for (sfb = cod_info->sfb_smin; sfb < 12; sfb++) {
+  for (sfb = cod_info->sfb_smin; sfb < SBPSY_s; sfb++) {
     for (i = 0; i < 3; i++ ) {
       distort_thresh = Max(distort[i+1][sfb],distort_thresh);
     }
   }
-  if (distort_thresh>1.0)
-    distort_thresh=1.0;
-  else
-    distort_thresh *= .95;
 
-  if (gfc->nsPsy.use && (gfp->VBR == vbr_off || gfp->VBR == vbr_abr)) {
-    int asfb = -1,ablk=0,astart=0,aend=0;
-    FLOAT8 max_dist = 0;
 
-    for (sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
-      start = gfc->scalefac_band.l[sfb];
-      end   = gfc->scalefac_band.l[sfb+1];
-    
-      if (distort[0][sfb]>distort_thresh  ) {
-        if (distort[0][sfb]-distort_thresh > max_dist) {
-          max_dist = distort[0][sfb]-distort_thresh;
-          asfb = sfb;
-        }
-      }
-    }
+  switch (gfc->noise_shaping_amp) {
 
-    if (asfb != -1) {
-      scalefac->l[asfb]++;
-      start = gfc->scalefac_band.l[asfb];
-      end   = gfc->scalefac_band.l[asfb+1];
+  case 2:
+    /* amplify exactly 1 band */
+    trigger = distort_thresh;
+    break;
+
+  case 1:
+    /* amplify bands within 50% of max (on db scale) */
+    if (distort_thresh>1.0)
+      trigger = pow(distort_thresh,.5);
+    else
+      trigger *= .95;
+    break;
+
+  case 0:
+  default:
+    /* ISO algorithm.  amplify all bands with distort>1 */
+    if (distort_thresh>1.0)
+      trigger=1.0;
+    else
+      trigger *= .95;
+    break;
+  }
+
+  for (sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
+    start = gfc->scalefac_band.l[sfb];
+    end   = gfc->scalefac_band.l[sfb+1];
+    if (distort[0][sfb]>=trigger  ) {
+      scalefac->l[sfb]++;
       for ( l = start; l < end; l++ )
-        xrpow[l] *= ifqstep34;
-    }
-
-    max_dist = 0;
-    asfb = -1;
-    for (j=0,sfb = cod_info->sfb_smin; sfb < 12; sfb++ ) {
-      start = gfc->scalefac_band.s[sfb];
-      end   = gfc->scalefac_band.s[sfb+1];
-      for (i = 0; i < 3; i++ ) {
-	if ( distort[i+1][sfb]>distort_thresh) {
-	  if (distort[i+1][sfb]>max_dist) {
-	    max_dist = distort[i+1][sfb];
-	    asfb = sfb;
-	    ablk = i;
-	    astart = j;
-	    aend = j + end - start;
-	  }
-	}
-	j += end-start;
-      }
-    }
-
-    if (asfb != -1) {
-      scalefac->s[asfb][ablk]++;
-      for (l = astart; l < aend; l++) {
 	xrpow[l] *= ifqstep34;
-      }
-    }
-  } else {
-    for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
-      if ( distort[0][sfb]>distort_thresh  ) {
-        scalefac->l[sfb]++;
-        start = gfc->scalefac_band.l[sfb];
-        end   = gfc->scalefac_band.l[sfb+1];
-        for ( l = start; l < end; l++ ) {
-          xrpow[l] *= ifqstep34;
-        }
-      }
-    }
-
-    for ( j=0,sfb = cod_info->sfb_smin; sfb < 12; sfb++ ) {
-      start = gfc->scalefac_band.s[sfb];
-      end   = gfc->scalefac_band.s[sfb+1];
-      for ( i = 0; i < 3; i++ ) {
-	int j2 = j;
-	if ( distort[i+1][sfb]>distort_thresh) {
-	  scalefac->s[sfb][i]++;
-	  for (l = start; l < end; l++) {
-	    xrpow[j2++] *= ifqstep34;
-	  }
-	}
-	j += end-start;
-      }
+      if (gfc->noise_shaping_amp==2) goto done;
     }
   }
-}
-#else
-{
-    int start, end;
-    int l,i,j;
-    int max_ind[4]={0,0,0,0};
-    int sfb;
-    FLOAT8 ifqstep34;
-    FLOAT8 distort_thresh[4] = {-1.f, -1.f, -1.f, -1.f};
-    lame_internal_flags *gfc = gfp->internal_flags;
-
-    if (cod_info->scalefac_scale == 0) 
-        ifqstep34 = 1.29683955465100964055; /* 2**(.75*0.5)*/
-    else
-        ifqstep34 = 1.68179283050742922612; /* 2**(.75*1.0) */
   
-    
-    /*  find maximum distortion and appropriate scalefactor bands
-     */    
-    for (sfb = 0; sfb < cod_info->sfb_lmax; sfb++) 
-        if (distort_thresh[0] < distort[0][sfb]) {
-            distort_thresh[0] = distort[0][sfb];
-            max_ind[0] = sfb;
-        }
-    for (sfb = cod_info->sfb_smin; sfb < 12; sfb++) 
-        for (i = 1; i < 4; i++) 
-            if (distort_thresh[i] < distort[i][sfb]) {
-                distort_thresh[i] = distort[i][sfb];
-                max_ind[i] = sfb;
-            }
-    
-    /*  adjust thresholds
-     */
-    if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh) { 
-        /* VBR modes */
-        if (gfp->experimentalY) 
-            for (i = 0; i < 4; i++) 
-                if (distort_thresh[i] > 1.0f) 
-                   /* only bands with distortion at least 50% of maximum */
-                    distort_thresh[i] = pow (distort_thresh[i], 0.50f);
-                else 
-                    /* amplify only bands near 98% of maximum noise */
-                    distort_thresh[i] = pow (distort_thresh[i], 1.02f);
-        else 
-            for (i = 0; i < 4; i++) 
-                if (distort_thresh[i] > 1.0f) 
-                    /* all distorted bands */
-                    distort_thresh[i] = 1.0f;
-                else 
-                    /* amplify only bands near 95% of maximum noise */
-                    distort_thresh[i] = pow (distort_thresh[i], 1.05f);
-    } else {
-        /* CBR/ABR modes */
-        if (!gfp->experimentalY) {
-            for (i = 0; i < 4; i++) 
-                if (distort_thresh[i] > 1.0f) 
-                    /* only bands with distortion at least 25% of maximum */
-                    distort_thresh[i] = pow (distort_thresh[i], 0.25f);
-                else 
-                    /* amplify only bands near 95% of maximum noise */
-                    distort_thresh[i] = pow (distort_thresh[i], 1.05f);
-        }   /* else only maximum distorted bands */
+  for ( j=0,sfb = cod_info->sfb_smin; sfb < SBPSY_s; sfb++ ) {
+    start = gfc->scalefac_band.s[sfb];
+    end   = gfc->scalefac_band.s[sfb+1];
+    for ( i = 0; i < 3; i++ ) {
+      int j2 = j;
+      if ( distort[i+1][sfb]>=trigger) {
+	scalefac->s[sfb][i]++;
+	for (l = start; l < end; l++) 
+	  xrpow[j2++] *= ifqstep34;
+        if (gfc->noise_shaping_amp==2) goto done;
+      }
+      j += end-start;
     }
-   
-    
-    /*  amplify bands exceeding thresholds
-     */
-    for (sfb = 0; sfb < cod_info->sfb_lmax; sfb++) {
-        if (distort[0][sfb] >= distort_thresh[0]) {
-            scalefac->l[sfb]++;
-            start = gfc->scalefac_band.l[sfb];
-            end   = gfc->scalefac_band.l[sfb+1];
-            for (l = start; l < end; l++) 
-                xrpow[l] *= ifqstep34;
-        }
-    }
-    for (j = 0, sfb = cod_info->sfb_smin; sfb < 12; sfb++ ) {
-        start = gfc->scalefac_band.s[sfb];
-        end   = gfc->scalefac_band.s[sfb+1];
-        for (i = 0; i < 3; i++) {
-            int j2 = j, b = i+1;
-            if (distort[b][sfb] >= distort_thresh[b]) {
-                scalefac->s[sfb][i]++;
-                for (l = start; l < end; l++) 
-                    xrpow[j2++] *= ifqstep34;
-            }
-            j += end-start;
-        }
-    }
+  }
+ done:
+ return;
 }
-#endif
-
 
 
 /*************************************************************************
@@ -916,8 +813,16 @@ outer_loop (
         else
             age ++;
 
-#ifdef RH_AMP
-        /* allow up to 3 unsuccesful tries in serial, then stop 
+
+        /******************************************************************/
+        /* stopping criterion */
+        /******************************************************************/
+        /* if no bands with distortion and -X0, we are done */
+        if (0==gfc->noise_shaping_stop && 
+            0==gfp->experimentalX &&
+	    (over == 0 || best_noise_info.over_count == 0) )
+            break;
+        /* Otherwise, allow up to 3 unsuccesful tries in serial, then stop 
          * if our best quantization so far had no distorted bands. This
          * gives us more possibilities for different quant_compare modes.
          * Much more than 3 makes not a big difference, it is only slower.
@@ -925,37 +830,16 @@ outer_loop (
         if (age > 3 && best_noise_info.over_count == 0) 
             break;
         
-#else
-        /* do early stopping on noise_shaping_stop = 0
-         * otherwise stop only if tried to amplify all bands
-         *
-         * note: there is currently no mode that turns on other
-         *       noise_shaping_stop than 0, so this branch will
-         *       always be executed.          Robert Hegemann 2000-10-24
-         */ 
 
-        if (gfc->noise_shaping_stop < iteration) {
-            /* if no bands with distortion and -X0, we are done */
-            if (gfp->experimentalX == 0 &&
-                (over == 0 || best_noise_info.over_count == 0))
-                break;
-            
-            /* do at least 7 tries and stop 
-             * if our best quantization so far had no distorted bands this
-             * gives us more possibilities for different quant_compare modes
-             */
-            if (iteration > 7 && best_noise_info.over_count == 0) 
-                break;
-        }
-#endif
+
+
     
         /* Check if the last scalefactor band is distorted.
          * in VBR mode we can't get rid of the distortion, so quit now
          * and VBR mode will try again with more bits.  
          * (makes a 10% speed increase, the files I tested were
          * binary identical, 2000/05/20 Robert.Hegemann@gmx.de)
-         * NOTE: distort[] = changed to:  noise/allowed noise
-         * so distort[] > 1 means noise > allowed noise
+         * distort[] > 1 means noise > allowed noise
          */
         if (gfc->sfb21_extra) {
             if (cod_info->block_type == SHORT_TYPE) {
