@@ -39,6 +39,7 @@ plotting_data Pinfo[NUMPINFO];
 
 
 /* global variables for the state of the system */
+static int frameNum=0;
 static gint idle_keepgoing;        /* processing of frames is ON */
 static gint idle_count_max;   /* number of frames to process before plotting */
 static gint idle_count;       /* pause & plot when idle_count=idel_count_max */
@@ -101,24 +102,26 @@ int gtkmakeframe(void)
   char mp3buffer[LAME_MAXMP3BUFFER];
   extern plotting_data *mpg123_pinfo;  
 
-#ifndef HAVEMPGLIB
-  ERRORF("Error: GTK frame analyzer requires MPGLIB\n");
-  LAME_ERROR_EXIT();
-#else
+
   /* even if iread=0, get_audio hit EOF and returned Buffer=all 0's.  encode
-   * and decode to flush any previous buffers from the decoder */
+   * and  decode to flush any previous buffers from the decoder */
 
   pinfo->frameNum = frameNum;
   pinfo->sampfreq=gfp->out_samplerate;
   pinfo->framesize=576*gfc->mode_gr;
   pinfo->stereo = gfc->stereo;
 
+  /* If the analsys code is enabled, lame will writes data into gfc->pinfo,
+   * and mpg123 will write data into mpg123_pinfo.  Set these so
+   * the libraries put this data in the right place: */
   gfc->pinfo = pinfo;
   mpg123_pinfo = pinfo;
+
   if (input_format == sf_mp1 ||
       input_format == sf_mp2 ||
       input_format == sf_mp3) {
     iread = readframe(gfp,Buffer);
+    ++frameNum;
 
     /* add a delay of framesize-DECDELAY, which will make the total delay
      * exactly one frame, so we can sync MP3 output with WAV input */
@@ -130,19 +133,17 @@ int gtkmakeframe(void)
     }
 
     gfc->pinfo->frameNum123 = frameNum-1;
-    gfc->pinfo->frameNum = frameNum;
-    frameNum++;
 
   }else {
 
     /* feed data to encoder until encoder produces some output */
-    while (frameNum == pinfo->frameNum) {
+    while (gfp->frameNum == pinfo->frameNum) {
       
-      if (frameNum==0 && !init) {
+      if (!init) {
+	init=1;
 	mpglag=1;
 	lame_decode_init();
       }
-      if (frameNum==1) init=0; /* reset for next time frameNum==0 */
       
       iread = readframe(gfp,Buffer);
       if (iread > gfp->framesize) {
@@ -157,14 +158,13 @@ int gtkmakeframe(void)
 
       mp3count=lame_encode_buffer(gfp,Buffer[0],Buffer[1],iread,
 				  mp3buffer,(int)sizeof(mp3buffer));
-      
-	  /* AF: not sure, but somewhere the frame number has to be bumped up */
-	  frameNum++;
 
-      assert( !(mp3count > 0 && frameNum == pinfo->frameNum));
+      assert( !(mp3count > 0 && gfp->frameNum == pinfo->frameNum));
       /* not possible to produce mp3 data without encoding at least 
        * one frame of data which would increment gfp->frameNum */
     }
+    frameNum = gfp->frameNum;  /* use the internal MP3 frame counter */
+
     
     /* decode one frame of output */
     mp3out=lame_decode1(mp3buffer,mp3count,mpg123pcm[0],mpg123pcm[1]); /* re-synthesis to pcm */
@@ -195,7 +195,6 @@ int gtkmakeframe(void)
       pinfo->frameNum123=-1;  /* no frame output */
     }
   }
-#endif
   return iread;
 }
 
