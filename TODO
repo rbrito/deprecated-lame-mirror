@@ -28,6 +28,10 @@ maxmp3buf=8*960 to see if there is a working combination.
 
    I think the only MSVC5 project that we need to preserve is
    for lame_enc.dll, since Albert Faber (still?) doesn't use VC6?
+   But no reason we cant have VC5 and VC6 project files for the dll.
+
+   
+
    
 
 
