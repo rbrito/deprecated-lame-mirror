@@ -675,7 +675,7 @@ void outer_loop(
 	    }else{
 		status = scale_bitcount_lsf(&scalefac_w, cod_info);
 	    }
-	    if (status && gfp->experimentalY && !cod_info->scalefac_scale) {
+	    if (status && gfp->experimentalZ && !cod_info->scalefac_scale) {
 		inc_scalefac_scale(gfp, &scalefac_w, cod_info, xrpow);
 		if ( gfp->version == 1 ) {
 		    status = scale_bitcount(&scalefac_w, cod_info);
