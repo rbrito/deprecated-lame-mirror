@@ -499,9 +499,9 @@ huffman_init(lame_t gfc)
     int i;
 
 #if HAVE_NASM
-    gfc->choose_table = choose_table_nonMMX;
+    gfc->ix_max = ix_max;
     if (gfc->CPU_features.MMX)
-        gfc->choose_table = choose_table_MMX;
+        gfc->ix_max = ix_max_MMX;
 #endif
 
     gfc->scale_bitcounter = scale_bitcount;

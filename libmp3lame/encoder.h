@@ -437,7 +437,7 @@ struct lame_internal_flags {
     int (*scale_bitcounter)(gr_info * const gi);
 #if HAVE_NASM
     /* functions to replace with CPU feature optimized one in takehiro.c */
-    int (*choose_table)(const int *ix, const int *end, int *s);
+    int (*ix_max)(const int *ix, const int *end);
     void (*fft_fht)(FLOAT *, int);
 
     /* CPU features */

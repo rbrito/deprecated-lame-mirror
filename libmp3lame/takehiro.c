@@ -34,9 +34,9 @@
 #include "quantize_pvt.h"
 
 #if HAVE_NASM
-# define choosetable(a,b,c) gfc->choose_table(a,b,c)
+# define ixmax(a,b) gfc->ix_max(a,b)
 #else
-# define choosetable(a,b,c) choose_table_nonMMX(a,b,c)
+# define ixmax(a,b) ix_max(a,b)
 #endif
 
 /* log2(x). the last element is for the case when sfb is over valid range.*/
@@ -184,7 +184,10 @@ count_bit_noESC_from4(
 }
 
 
-static int 
+#if !HAVE_NASM
+static
+#endif
+int
 ix_max(const int *ix, const int *end)
 {
     int max1 = 0, max2 = 0;
@@ -211,11 +214,8 @@ ix_max(const int *ix, const int *end)
  *  of the Huffman tables as defined in the IS (Table B.7), and will not work
  *  with any arbitrary tables.
  *************************************************************************/
-#if !HAVE_NASM
-static
-#endif
-int
-choose_table_nonMMX(const int *ix, const int * const end, int * const s)
+static int
+choose_table(const int *ix, const int * const end, int * const s)
 {
     int choice, choice2, max;
     static const short linmax[] = {
@@ -224,11 +224,9 @@ choose_table_nonMMX(const int *ix, const int * const end, int * const s)
     };
 
     max = *s;
-    if (max < 0)
-	max = ix_max(ix, end);
     switch (max) {
     case 0:
-	return (*s = max);
+	return max;
 
     case 1:
 	return count_bit_noESC_from2(s, ix, end);
@@ -260,7 +258,7 @@ choose_table_nonMMX(const int *ix, const int * const end, int * const s)
 		return count_bit_ESC(s, ix, end, choice, choice2);
 	    }
 	}
-	return (*s = max);
+	return max;
     }
 }
 
@@ -273,21 +271,13 @@ choose_table_nonMMX(const int *ix, const int * const end, int * const s)
 inline static int
 ix_max2(const int *ix, const int *end)
 {
-    int max1 = 0, max2 = 0;
-    if ((end - ix) & 1)
-	max1 = *ix++;
+    int max = *ix++;
     while (ix < end) {
 	int x1 = *ix++;
-	int x2 = *ix++;
-	if (max1 < x1)
-	    max1 = x1;
-
-	if (max2 < x2)
-	    max2 = x2;
+	if (max < x1)
+	    max = x1;
     }
-    if (max1 < max2)
-	max1 = max2;
-    return max1;
+    return max;
 }
 
 inline static void
@@ -301,12 +291,12 @@ recalc_divide_init(
 {
     int r0;
     for (r0 = 0; r0 <= 7 + 15; r0++) {
+	int m = 0;
 	r01_bits[r0] = LARGE_BITS;
-	if (gfc->scalefac_band.l[r0] > gi->big_values)
-	    max_info[r0] = 0;
-	else
-	    max_info[r0] = ix_max(&gi->l3_enc[gfc->scalefac_band.l[r0]],
-				  &gi->l3_enc[gfc->scalefac_band.l[r0+1]]);
+	if (gfc->scalefac_band.l[r0] <= gi->big_values)
+	    m = ixmax(&gi->l3_enc[gfc->scalefac_band.l[r0]],
+		      &gi->l3_enc[gfc->scalefac_band.l[r0+1]]);
+	max_info[r0] = m;
     }
 
     for (r0 = 0; r0 < 16; r0++) {
@@ -315,7 +305,7 @@ recalc_divide_init(
 	    break;
 	a1 = gfc->scalefac_band.l[r0 + 1];
 	r0t = ix_max2(&max_info[0], &max_info[r0+1]);
-	r0bits = choosetable(gi->l3_enc, &gi->l3_enc[a1], &r0t);
+	r0bits = choose_table(gi->l3_enc, &gi->l3_enc[a1], &r0t);
 	if (r0bits + ((gi->big_values - a1) >> 1)
 	    >= gi->part2_3_length - gi->count1bits)
 	    continue;
@@ -328,7 +318,7 @@ recalc_divide_init(
 		continue;
 
 	    r1t = ix_max2(&max_info[r0+1], &max_info[r0+r1+2]);
-	    bits = r0bits + choosetable(&gi->l3_enc[a1], &gi->l3_enc[a2], &r1t);
+	    bits = r0bits + choose_table(&gi->l3_enc[a1], &gi->l3_enc[a2], &r1t);
 	    if (r01_bits[r0 + r1] > bits) {
 		r01_bits[r0 + r1] = bits;
 		r01_info[r0 + r1] = (r0 << 16) + (r0t << 8) + r1t;
@@ -356,7 +346,7 @@ recalc_divide_sub(
 	    continue;
 
 	r2t = ix_max2(&max_info[r2+2], &max_info[7+15+1]);
-	bits += choosetable(&gi->l3_enc[a2], &gi->l3_enc[gi->big_values], &r2t);
+	bits += choose_table(&gi->l3_enc[a2], &gi->l3_enc[gi->big_values], &r2t);
 	if (gi->part2_3_length <= bits)
 	    continue;
 
@@ -423,18 +413,22 @@ best_huffman_divide(lame_t gfc, gr_info * const gi)
     } else {
 	/* Count the number of bits necessary to code the bigvalues region. */
 	gi_w.part2_3_length = a1;
-	a1 = gfc->scalefac_band.l[gi->region0_count+1];
-	if (a1 > i)
-	    a1 = i;
+	if (i > 0) {
+	    a1 = gfc->scalefac_band.l[gi->region0_count+1];
 
-	gi_w.table_select[0] = -1;
-	if (a1 > 0)
+	    if (a1 > i)
+		a1 = i;
+
+	    gi_w.table_select[0] = ixmax(ix, &ix[a1]);
 	    gi_w.part2_3_length
-		+= choosetable(ix, &ix[a1], &gi_w.table_select[0]);
-	gi_w.table_select[1] = -1;
-	if (i > a1)
-	    gi_w.part2_3_length
-		+= choosetable(&ix[a1], &ix[i], &gi_w.table_select[1]);
+		+= choose_table(ix, &ix[a1], &gi_w.table_select[0]);
+
+	    if (i > a1) {
+		gi_w.table_select[1] = ixmax(&ix[a1], &ix[i]);
+		gi_w.part2_3_length
+		    += choose_table(&ix[a1], &ix[i], &gi_w.table_select[1]);
+	    }
+	}
 	if (gi->part2_3_length > gi_w.part2_3_length)
 	    *gi = gi_w;
     }
@@ -483,11 +477,11 @@ noquant_count_bits(lame_t gfc, gr_info * const gi)
 
 	assert(a1+a2+2 < SBPSY_l);
         a2 = gfc->scalefac_band.l[a1 + a2 + 2];
-	gi->table_select[2] = -1;
-	if (a2 < i)
+	if (a2 < i) {
+	    gi->table_select[2] = ixmax(&ix[a2], &ix[i]);
 	    gi->part2_3_length
-		+= choosetable(&ix[a2], &ix[i], &gi->table_select[2]);
-	else
+		+= choose_table(&ix[a2], &ix[i], &gi->table_select[2]);
+	} else
 	    a2 = i;
     } else {
 	a1 = gi->region0_count;
@@ -503,12 +497,12 @@ noquant_count_bits(lame_t gfc, gr_info * const gi)
     if (a1 >= a2) {
 	a1 = a2;
     } else {
-	gi->table_select[1] = -1;
+	gi->table_select[1] = ixmax(&ix[a1], &ix[a2]);
 	gi->part2_3_length
-	    += choosetable(&ix[a1], &ix[a2], &gi->table_select[1]);
+	    += choose_table(&ix[a1], &ix[a2], &gi->table_select[1]);
     }
-    gi->table_select[0] = -1;
-    gi->part2_3_length += choosetable(ix, &ix[a1], &gi->table_select[0]);
+    gi->table_select[0] = ixmax(ix, &ix[a1]);
+    gi->part2_3_length += choose_table(ix, &ix[a1], &gi->table_select[0]);
 
     if (gfc->use_best_huffman == 2)
 	best_huffman_divide (gfc, gi);
