@@ -642,43 +642,6 @@ compute_scalefacs_long(int *sf, const gr_info * cod_info, int *scalefac)
 
 
 
-/************************************************************************
- *
- * quantize and encode with the given scalefacs and global gain
- *
- * compute scalefactors, l3_enc, and return number of bits needed to encode
- *
- *
- ************************************************************************/
-
-static int
-VBR_quantize_granule(lame_internal_flags * gfc, gr_info * cod_info, FLOAT8 * xr34, int gr, int ch)
-{
-    int     status;
-
-    /* encode scalefacs */
-    if (gfc->mode_gr == 2)
-        status = scale_bitcount(cod_info);
-    else
-        status = scale_bitcount_lsf(gfc, cod_info);
-
-    if (status != 0) {
-        return -1;
-    }
-
-    /* quantize xr34 */
-    cod_info->part2_3_length = count_bits(gfc, xr34, cod_info);
-    if (cod_info->part2_3_length >= LARGE_BITS)
-        return -2;
-
-    if (gfc->use_best_huffman == 1) {
-        best_huffman_divide(gfc, cod_info);
-    }
-    return 0;
-}
-
-
-
 /***********************************************************************
  *
  *      calc_short_block_vbr_sf()
@@ -697,14 +660,14 @@ block_sf(const lame_internal_flags * gfc, const FLOAT8 * l3_xmin,
 {
     int     sfb, j;
     int     scalefac_criteria;
+    static int const map[] = { 2, 1, 0, 3, 6 };
 
     if (gfc->presetTune.use) {
         /* map experimentalX settings to internal selections */
-        static char const map[] = { 2, 1, 0, 3, 6 };
         scalefac_criteria = map[gfc->presetTune.quantcomp_current];
     }
     else {
-        scalefac_criteria = gfc->VBR->quality;
+        scalefac_criteria = map[gfc->VBR->quality];
     }
 
     j = 0;
@@ -754,8 +717,8 @@ static void
 short_block_sf(const lame_internal_flags * gfc, const FLOAT8 * l3_xmin,
                int * vbrsf, int *vbrmin, int *vbrmax, gr_info *gi)
 {
-    int     sfb, b;
-    int     vbrmean, vbrmn;
+    int     sfb, b, i;
+    int     vbrmean, vbrmn, vbrmx, vbrclip;
     int     sf_cache[SBMAX_s];
 
     *vbrmax = -10000;
@@ -767,48 +730,77 @@ short_block_sf(const lame_internal_flags * gfc, const FLOAT8 * l3_xmin,
         switch (gfc->VBR->smooth) {
         default:
         case 0:
+            /*  get max value
+             */
+            for (sfb = b + gi->sfb_lmax; sfb < gi->sfbmax; sfb += 3) {
+                if (*vbrmax < vbrsf[sfb])
+                    *vbrmax = vbrsf[sfb];
+                if (*vbrmin > vbrsf[sfb])
+                    *vbrmin = vbrsf[sfb];
+            }
             break;
 
         case 1:
             /*  make working copy, get min value, select_kth_int will reorder!
              */
-            for (vbrmn = +10000, sfb = 0; sfb < SBMAX_s; ++sfb) {
-                sf_cache[sfb] = vbrsf[sfb*3+b];
-                if (vbrmn > vbrsf[sfb*3+b])
-                    vbrmn = vbrsf[sfb*3+b];
+            vbrmn = +1000;
+            vbrmx = -1000;
+	    i = 0;
+            for (sfb = b + gi->sfb_lmax; sfb < gi->sfbmax; sfb += 3) {
+                sf_cache[i++] = vbrsf[sfb];
+                if (vbrmn > sf_cache[sfb])
+                    vbrmn = sf_cache[sfb];
+                if (vbrmx < sf_cache[sfb])
+                    vbrmx = sf_cache[sfb];
             }
+            if (*vbrmin > vbrmn)
+                *vbrmin = vbrmn;
 
             /*  find median value, take it as mean 
              */
-            vbrmean = select_kth_int(sf_cache, SBMAX_s, (SBMAX_s + 1) / 2);
+            vbrmean = select_kth_int(sf_cache, i, (i + 1) / 2u);
 
             /*  cut peaks
              */
-            for (sfb = 0; sfb < SBMAX_s; ++sfb) {
-                if (vbrsf[sfb*3+b] > vbrmean + (vbrmean - vbrmn))
-                    vbrsf[sfb*3+b] = vbrmean + (vbrmean - vbrmn);
+            vbrclip = vbrmean + (vbrmean - vbrmn);
+            for (sfb = b + gi->sfb_lmax; sfb < gi->sfbmax; sfb += 3) {
+                if (vbrsf[sfb] > vbrclip)
+                    vbrsf[sfb] = vbrclip;
             }
+            if (vbrmx > vbrclip)
+                vbrmx = vbrclip;
+            if (*vbrmax < vbrmx)
+                *vbrmax = vbrmx;
             break;
 
         case 2:
-            for (sfb = 0; sfb < SBMAX_s; ++sfb) {
-                if (sfb > 0)
-                    if (vbrsf[sfb*3+b] > vbrsf[(sfb - 1)*3+b] + MAX_SF_DELTA)
-                        vbrsf[sfb*3+b] = vbrsf[(sfb - 1)*3+b] + MAX_SF_DELTA;
-                if (sfb < SBMAX_s - 1)
-                    if (vbrsf[sfb*3+b] > vbrsf[(sfb + 1)*3+b] + MAX_SF_DELTA)
-                        vbrsf[sfb*3+b] = vbrsf[(sfb + 1)*3+b] + MAX_SF_DELTA;
+            vbrclip = vbrsf[gi->sfb_lmax+b+3] + MAX_SF_DELTA;
+            if (vbrsf[gi->sfb_lmax+b] > vbrclip)
+                vbrsf[gi->sfb_lmax+b] = vbrclip;
+            if (*vbrmax < vbrsf[gi->sfb_lmax+b])
+                *vbrmax = vbrsf[gi->sfb_lmax+b];
+            if (*vbrmin > vbrsf[gi->sfb_lmax+b])
+                *vbrmin = vbrsf[gi->sfb_lmax+b];
+            for (sfb = gi->sfb_lmax+3+b; sfb < gi->sfbmax-3; sfb += 3) {
+                vbrclip = vbrsf[sfb-3] + MAX_SF_DELTA;
+                if (vbrsf[sfb] > vbrclip)
+                    vbrsf[sfb] = vbrclip;
+                vbrclip = vbrsf[sfb + 3] + MAX_SF_DELTA;
+                if (vbrsf[sfb] > vbrclip)
+                    vbrsf[sfb] = vbrclip;
+                if (*vbrmax < vbrsf[sfb])
+                    *vbrmax = vbrsf[sfb];
+                if (*vbrmin > vbrsf[sfb])
+                    *vbrmin = vbrsf[sfb];
             }
+            vbrclip = vbrsf[sfb - 3] + MAX_SF_DELTA;
+            if (vbrsf[sfb] > vbrclip)
+                vbrsf[sfb] = vbrclip;
+            if (*vbrmax < vbrsf[sfb])
+                *vbrmax = vbrsf[sfb];
+            if (*vbrmin > vbrsf[sfb])
+                *vbrmin = vbrsf[sfb];
             break;
-        }
-
-        /*  get max value
-         */
-        for (sfb = 0; sfb < SBMAX_s; ++sfb) {
-            if (*vbrmax < vbrsf[sfb*3+b])
-                *vbrmax = vbrsf[sfb*3+b];
-            if (*vbrmin > vbrsf[sfb*3+b])
-                *vbrmin = vbrsf[sfb*3+b];
         }
     }
 }
@@ -819,53 +811,77 @@ long_block_sf(const lame_internal_flags * gfc, const FLOAT8 * l3_xmin,
               int * vbrsf, int *vbrmin, int *vbrmax, gr_info *gi)
 {
     int     sfb;
-    int     vbrmean, vbrmn;
+    int     vbrmean, vbrmn, vbrmx, vbrclip;
     int     sf_cache[SBMAX_l];
 
     switch (gfc->VBR->smooth) {
     default:
     case 0:
+        /*  get max value
+         */
+        *vbrmin = *vbrmax = vbrsf[0];
+        for (sfb = 1; sfb < gi->sfb_lmax; ++sfb) {
+            if (*vbrmax < vbrsf[sfb])
+                *vbrmax = vbrsf[sfb];
+            if (*vbrmin > vbrsf[sfb])
+                *vbrmin = vbrsf[sfb];
+        }
         break;
 
     case 1:
         /*  make working copy, get min value, select_kth_int will reorder!
          */
-        for (vbrmn = +10000, sfb = 0; sfb < SBMAX_l; ++sfb) {
+	vbrmn = +1000;
+	vbrmx = -1000;
+        for (sfb = 0; sfb < gi->sfb_lmax; ++sfb) {
             sf_cache[sfb] = vbrsf[sfb];
             if (vbrmn > vbrsf[sfb])
                 vbrmn = vbrsf[sfb];
+            if (vbrmx < vbrsf[sfb])
+                vbrmx = vbrsf[sfb];
         }
         /*  find median value, take it as mean 
          */
-        vbrmean = select_kth_int(sf_cache, SBMAX_l, (SBMAX_l + 1) / 2);
+        vbrmean = select_kth_int(sf_cache, gi->sfb_lmax, (gi->sfb_lmax+1) / 2);
 
         /*  cut peaks
          */
-        for (sfb = 0; sfb < SBMAX_l; ++sfb) {
-            if (vbrsf[sfb] > vbrmean + (vbrmean - vbrmn))
-                vbrsf[sfb] = vbrmean + (vbrmean - vbrmn);
+        vbrclip = vbrmean + (vbrmean - vbrmn);
+        for (sfb = 0; sfb < gi->sfb_lmax; ++sfb) {
+            if (vbrsf[sfb] > vbrclip)
+                vbrsf[sfb] = vbrclip;
         }
+        if (vbrmx > vbrclip)
+            vbrmx = vbrclip;
+        *vbrmin = vbrmn;
+        *vbrmax = vbrmx;
         break;
 
     case 2:
-        for (sfb = 0; sfb < SBMAX_l; ++sfb) {
-            if (sfb > 0)
-                if (vbrsf[sfb] > vbrsf[sfb - 1] + MAX_SF_DELTA)
-                    vbrsf[sfb] = vbrsf[sfb - 1] + MAX_SF_DELTA;
-            if (sfb < SBMAX_l - 1)
-                if (vbrsf[sfb] > vbrsf[sfb + 1] + MAX_SF_DELTA)
-                    vbrsf[sfb] = vbrsf[sfb + 1] + MAX_SF_DELTA;
+        vbrclip = vbrsf[1] + MAX_SF_DELTA;
+        if (vbrsf[0] > vbrclip)
+            vbrsf[0] = vbrclip;
+        *vbrmin = *vbrmax = vbrsf[0];
+        for (sfb = 1; sfb < gi->sfb_lmax - 1; ++sfb) {
+            vbrclip = vbrsf[sfb - 1] + MAX_SF_DELTA;
+            if (vbrsf[sfb] > vbrclip)
+                vbrsf[sfb] = vbrclip;
+            vbrclip = vbrsf[sfb + 1] + MAX_SF_DELTA;
+            if (vbrsf[sfb] > vbrclip)
+                vbrsf[sfb] = vbrclip;
+            if (*vbrmax < vbrsf[sfb])
+                *vbrmax = vbrsf[sfb];
+            if (*vbrmin > vbrsf[sfb])
+                *vbrmin = vbrsf[sfb];
         }
-        break;
-    }
-
-    /*  get max value
-     */
-    for (*vbrmin = +10000, *vbrmax = -10000, sfb = 0; sfb < SBMAX_l; ++sfb) {
+        vbrclip = vbrsf[sfb-1] + MAX_SF_DELTA;
+        if (vbrsf[sfb] > vbrclip)
+            vbrsf[sfb] = vbrclip;
         if (*vbrmax < vbrsf[sfb])
             *vbrmax = vbrsf[sfb];
         if (*vbrmin > vbrsf[sfb])
             *vbrmin = vbrsf[sfb];
+        break;
     }
 }
 
@@ -1128,9 +1144,6 @@ VBR_noise_shaping(lame_internal_flags * gfc, FLOAT8 * xr34orig, int minbits, int
     int     M = 6;
     int     count = M;
 
-    if (gfc->substep_shaping)
-	gfc->substep_shaping = 1;
-
     cod_info = &gfc->l3_side.tt[gr][ch];
     shortblock = (cod_info->block_type == SHORT_TYPE);
 
@@ -1147,6 +1160,7 @@ VBR_noise_shaping(lame_internal_flags * gfc, FLOAT8 * xr34orig, int minbits, int
     vbrmax = vbrmax2;
 #ifdef XXL
     M = (vbrmax - vbrmin) / 2;
+    if ( M > 16 ) M = 16;
     count = M;
 #endif
     do {
@@ -1158,9 +1172,25 @@ VBR_noise_shaping(lame_internal_flags * gfc, FLOAT8 * xr34orig, int minbits, int
         else {
             long_block_scalefacs(gfc, cod_info, vbrsf, &vbrmax);
         }
-	block_xr34(gfc, cod_info, xr34orig, xr34);
 
-        ret = VBR_quantize_granule(gfc, cod_info, xr34, gr, ch);
+	/* encode scalefacs */
+	if (gfc->mode_gr == 2)
+	    ret = scale_bitcount(cod_info);
+	else
+	    ret = scale_bitcount_lsf(gfc, cod_info);
+
+	if (ret != 0) {
+	    ret = -1;
+	} else {
+	    /* quantize xr34 */
+	    block_xr34(gfc, cod_info, xr34orig, xr34);
+	    cod_info->part2_3_length = count_bits(gfc, xr34, cod_info);
+
+	    if (cod_info->part2_3_length >= LARGE_BITS)
+		ret = -2;
+	    else if (gfc->use_best_huffman == 2)
+		best_huffman_divide(gfc, cod_info);
+	}
 
         if (vbrmin == vbrmax)
             break;
@@ -1194,6 +1224,9 @@ VBR_noise_shaping(lame_internal_flags * gfc, FLOAT8 * xr34orig, int minbits, int
 
     if (ret == -1)      /* Houston, we have a problem */
         return -1;
+
+    if (gfc->substep_shaping & 2)
+	trancate_smallspectrums(gfc, cod_info, l3_xmin, xr34);
 
     if (cod_info->part2_3_length < minbits - cod_info->part2_length) {
         bin_search_StepSize (gfc, cod_info, minbits, ch, xr34);

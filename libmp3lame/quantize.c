@@ -305,7 +305,7 @@ float8compare(FLOAT8 *a, FLOAT8 *b)
     return -1;
 }
 
-static void
+void
 trancate_smallspectrums(
     lame_internal_flags *gfc,
     gr_info		* const gi,
