@@ -1274,33 +1274,30 @@ long_block_scalefacs(const lame_internal_flags *gfc, gr_info * gi, int vbrmax)
 
     if (maxov0 == vbrmax) {
         gi->scalefac_scale = 0;
-        gi->preflag = 0;
     }
-    else if (maxov0p == vbrmax) {
-        gi->scalefac_scale = 0;
-        gi->preflag = 1;
+    else if (maxov0p == vbrmax && gi->preflag == 0) {
+	gi->scalefac_scale = 0;
+	gi->preflag = 1;
     }
     else if (maxov1 == vbrmax) {
-        gi->scalefac_scale = 1;
-        gi->preflag = 0;
+	gi->scalefac_scale = 1;
     }
-    else if (maxov1p == vbrmax) {
-        gi->scalefac_scale = 1;
-        gi->preflag = 1;
+    else if (maxov1p == vbrmax && gi->preflag == 0) {
+	gi->scalefac_scale = 1;
+	gi->preflag = 1;
     } else {
-        gi->scalefac_scale = 1;
-	if (maxov1 <= maxov1p) {
-	    gi->preflag = 0;
-	    vbrmax = maxov1;
-	} else {
+	gi->scalefac_scale = 1;
+	if (maxov1 > maxov1p && gi->preflag == 0) {
 	    gi->preflag = 1;
 	    vbrmax = maxov1p;
+	} else {
+	    vbrmax = maxov1;
 	}
     }
     if (vbrmax < 0)
-        vbrmax = 0;
+	vbrmax = 0;
     if (vbrmax > 255)
-        vbrmax = 255;
+	vbrmax = 255;
     gi->global_gain = vbrmax;
 }
 

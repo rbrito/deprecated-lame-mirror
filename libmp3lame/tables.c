@@ -1024,7 +1024,7 @@ iteration_init( lame_global_flags *gfp)
     gfc->is_start_sfb_s_next[0] = gfc->is_start_sfb_s_next[1]
 	= gfc->l3_side.is_start_sfb_s[0] = gfc->l3_side.is_start_sfb_s[1]
 	= gfc->cutoff_sfb_s;
-    if (gfp->mode != MONO && gfp->compression_ratio > 12.0 && gfp->VBR != vbr
+    if (gfp->mode != MONO && gfp->compression_ratio > 12.0
 	&& gfp->internal_flags->mode_gr == 2) {
 	/* currently only MPEG1/CBR or ABR */
 	gfp->use_istereo = 1;
