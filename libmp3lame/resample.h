@@ -1,4 +1,6 @@
 
+
+
 typedef struct {
     long double  sample_freq_in;
     long double  sample_freq_out;
@@ -48,14 +50,62 @@ double  resample_freq_error ( OUT resample_t* const r );
           / (sample_freq_out*scale_in);
 }
 
-Vorteile:
-   - abgetrennte Funktionalität (Codekapslung)
-   - abgetrennter Speicher (Datenkapslung)
-   - Entschlacken von lame_internal_flags, was derzeitig ein formloser
-     Kuhhaufen ist, auf dem sich jeder bedient und rumschreibt, wer will
 
-Das ganze hat etwas Hauch von C++ und RPC, vielleicht auch etwas winziges in
-Richtung Ada95. Wird etlich stören ...
+typedef FLOAT (*scalar_t)  ( const sample_t* p, const sample_t* q );
+typedef FLOAT (*scalarn_t) ( const sample_t* p, const sample_t* q, size_t len );
 
--- 
-Frank Klemm
+extern scalar_t   scalar4;
+extern scalar_t   scalar8;
+extern scalar_t   scalar12;
+extern scalar_t   scalar16;
+extern scalar_t   scalar20;
+extern scalar_t   scalar64;
+extern scalarn_t  scalar;
+
+void init_scalar_functions ( lame_internal_flags *gfc );
+
+
+
+/**********************************************************
+ *                                                        *
+ *           Functions taken from scalar.nas              *
+ *                                                        *
+ **********************************************************/
+
+/*
+ * The scalarxx versions with xx=04,08,12,16,20,24 are fixed size for xx element scalars
+ * The scalar1n version is suitable for every non negative length
+ * The scalar4n version is only suitable for positive lengths which are a multiple of 4
+ *
+ * The following are equivalent:
+ *    scalar12 (p, q);
+ *    scalar4n (p, q, 3);
+ *    scalar1n (p, q, 12);
+ */ 
+ 
+float_t  scalar04_float32_i387  ( const float32_t* p, const float32_t* q );
+float_t  scalar08_float32_i387  ( const float32_t* p, const float32_t* q );
+float_t  scalar12_float32_i387  ( const float32_t* p, const float32_t* q );
+float_t  scalar16_float32_i387  ( const float32_t* p, const float32_t* q );
+float_t  scalar20_float32_i387  ( const float32_t* p, const float32_t* q );
+float_t  scalar24_float32_i387  ( const float32_t* p, const float32_t* q );
+float_t  scalar4n_float32_i387  ( const float32_t* p, const float32_t* q, const size_t len );
+float_t  scalar1n_float32_i387  ( const float32_t* p, const float32_t* q, const size_t len );
+
+float_t  scalar04_float32_3DNow ( const float32_t* p, const float32_t* q );
+float_t  scalar08_float32_3DNow ( const float32_t* p, const float32_t* q );
+float_t  scalar12_float32_3DNow ( const float32_t* p, const float32_t* q );
+float_t  scalar16_float32_3DNow ( const float32_t* p, const float32_t* q );
+float_t  scalar20_float32_3DNow ( const float32_t* p, const float32_t* q );
+float_t  scalar24_float32_3DNow ( const float32_t* p, const float32_t* q );
+float_t  scalar4n_float32_3DNow ( const float32_t* p, const float32_t* q, const size_t len );
+float_t  scalar1n_float32_3DNow ( const float32_t* p, const float32_t* q, const size_t len );
+
+float_t  scalar04_float32_SIMD  ( const float32_t* p, const float32_t* q );
+float_t  scalar08_float32_SIMD  ( const float32_t* p, const float32_t* q );
+float_t  scalar12_float32_SIMD  ( const float32_t* p, const float32_t* q );
+float_t  scalar16_float32_SIMD  ( const float32_t* p, const float32_t* q );
+float_t  scalar20_float32_SIMD  ( const float32_t* p, const float32_t* q );
+float_t  scalar24_float32_SIMD  ( const float32_t* p, const float32_t* q );
+float_t  scalar4n_float32_SIMD  ( const float32_t* p, const float32_t* q, const size_t len );
+float_t  scalar1n_float32_SIMD  ( const float32_t* p, const float32_t* q, const size_t len );

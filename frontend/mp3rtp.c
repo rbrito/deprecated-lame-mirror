@@ -1,5 +1,15 @@
 /* $Id$ */
 
+/* Still under work ..., need a client for test, where can I get one? */
+
+/* 
+ *  experimental translation:
+ *
+ *  gcc -I..\include -I..\libmp3lame -o mp3rtp mp3rtp.c ../libmp3lame/libmp3lame.a lametime.c get_audio.c portableio.c ieeefloat.c timestatus.c parse.c rtp.c -lm
+ *
+ *  wavrec -t 14400 -s 44100 -S /proc/self/fd/1 | ./mp3rtp 10.1.1.42 -V2 -b128 -B256 - my_mp3file.mp3
+ */
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -15,46 +25,58 @@
 #include "get_audio.h"
 #include "rtp.h"
 
-
-
-#define         MAX_NAME_SIZE           1000
+#define MAX_NAME_SIZE   2048  /* current value of Linux */
 
 /*
+ * Encode (via LAME) to mp3 with RTP streaming of the output.
+ *
+ * Author: Felix von Leitner <leitner@vim.org>
+ *
+ *   mp3rtp ip[:port[:ttl]] [lame encoding options] infile outfile
+ *
+ * examples:
+ *   arecord -b 16 -s 22050 -w | ./mp3rtp 224.17.23.42:5004:2 -b 56 - /dev/null
+ *   arecord -b 16 -s 44100 -w | ./mp3rtp 10.1.1.42 -V2 -b128 -B256 - my_mp3file.mp3
+ *
+ */
 
-encode (via LAME) to mp3 with RTP streaming of the output.
+struct rtpheader    RTPheader;
+struct sockaddr_in  rtpsi;
+int                 rtpsocket;
 
-Author:  Felix von Leitner <leitner@vim.org>
-
-mp3rtp  ip:port:ttl  [lame encoding options]  infile outfile
-
-example:
-
-arecord -b 16 -s 22050 -w | ./mp3rtp 224.17.23.42:5004:2 -b 56 - /dev/null
-
-
-
-*/
-
-
-struct rtpheader RTPheader;
-struct sockaddr_in rtpsi;
-int     rtpsocket;
-
-void
-rtp_output (char *mp3buffer, int mp3size)
+void  rtp_output ( const char* mp3buffer, const size_t mp3size )
 {
     sendrtp (rtpsocket, &rtpsi, &RTPheader, mp3buffer, mp3size);
     RTPheader.timestamp += 5;
     RTPheader.b.sequence++;
 }
 
-int  rtp_usage ( void )
+unsigned  maxvalue ( short int  Buffer [2] [1152] )
 {
-    fprintf (stderr, "usage: mp3rtp ip:port:ttl  [encoder options] <infile> <outfile>\n");
-    return 1;
+    int  max = 0;
+    int  i;
+    
+    for ( i = 0; i < 1152; i++ ) {
+        if ( abs (Buffer[0][i]) > max ) max = abs (Buffer[0][i]);
+        if ( abs (Buffer[1][i]) > max ) max = abs (Buffer[1][i]);
+    }
+    
+    return max;
 }
 
-
+void levelmessage ( unsigned maxvalue )
+{
+    char        buff [] = "|  .  |  .  |  .  |  .  |  .  |  .  |  .  |  .  |  .  |  .  |  \r";
+    static int  max = 0;
+    static int  tmp;
+    
+    buff [tmp] = '+';
+    tmp = (maxvalue*61 + 16384) / (32767 + 16384/61);
+    if (tmp > max) max = tmp;
+    buff [max] = 'x';
+    buff [tmp] = '#';
+    fwrite ( buff, 1, sizeof(buff)-1, stderr );
+}
 
 sound_file_format input_format;
 int     swapbytes;           /* force byte swapping   default=0 */
@@ -71,46 +93,52 @@ float   update_interval;     /* to use Frank's time status display */
 *
 ************************************************************************/
 
-// better error reporting will be added instead of always printing the same (pfk)
-
-int
-main (int argc, char **argv)
+int  main ( int argc, char **argv )
 {
-    char    mp3buffer[LAME_MAXMP3BUFFER];
-    char    inPath[MAX_NAME_SIZE];
-    char    outPath[MAX_NAME_SIZE];
+    char       mp3buffer [LAME_MAXMP3BUFFER];
+    char       inPath    [MAX_NAME_SIZE];
+    char       outPath   [MAX_NAME_SIZE];
+    short int  Buffer [2] [1152];
 
-    int     i, port, ttl;
-    char   *tmp, *Arg;
     lame_global_flags gf;
-    int     iread, imp3;
-    FILE   *outf;
-    short int Buffer[2][1152];
+    
+    int        ret;
+    int        wavsamples;
+    int        mp3bytes;
+    FILE*      outf;
 
-    if (argc <= 2)
-        return rtp_usage ();
+    char       ip [16];
+    unsigned   port = 5004;
+    unsigned   ttl  =    2;
+    char       dummy;
 
-    /* process args */
-    Arg = argv[1];
-    tmp = strchr (Arg, ':');
+    if ( argc <= 2 ) {
+        fprintf ( stderr, 
+"Encode (via LAME) to mp3 with RTP streaming of the output\n"
+"\n"
+"    mp3rtp ip[:port[:ttl]] [lame encoding options] infile outfile\n"
+"\n"
+"    examples:\n"
+"      arecord -b 16 -s 22050 -w | ./mp3rtp 224.17.23.42:5004:2 -b 56 - /dev/null\n"
+"      arecord -b 16 -s 44100 -w | ./mp3rtp 10.1.1.42 -V2 -b128 -B256 - my_mp3file.mp3\n"
+"\n" );
 
-    if (!tmp)
-        return rtp_usage ();
-    *tmp++ = 0;
-    port = atoi (tmp);
-    if (port <= 0)
-        return rtp_usage ();
-    tmp = strchr (tmp, ':');
-    if (!tmp)
-        return rtp_usage ();
-    *tmp++ = 0;
-    ttl = atoi (tmp);
-    if (tmp <= 0)
-        return rtp_usage ();
-    rtpsocket = makesocket (Arg, port, ttl, &rtpsi);
-    srand (getpid () ^ time (0));
-    initrtp (&RTPheader);
+	return 1;
+    }
 
+    switch (sscanf ( argv[1], "%11[.0-9]:%u:%u%c", ip, &port, &ttl, dummy )) {
+    case 1:
+    case 2:
+    case 3: 
+        break;
+    default:
+        fprintf (stderr, "Illegal destination selector '%s', must be ip[:port[:ttl]]\n", argv[1] );
+	return -1;
+    }
+
+    rtpsocket = makesocket ( ip, port, ttl, &rtpsi );
+    srand ( getpid () ^ time (NULL) );
+    initrtp ( &RTPheader );
 
     /* initialize encoder */
     lame_init_old (&gf);
@@ -122,6 +150,8 @@ main (int argc, char **argv)
      * skip this call and set the values of interest in the gf struct.  
      * (see lame.h for documentation about these parameters)
      */
+     
+    argv[1] = argv[0]; 
     parse_args (&gf, argc - 1, argv + 1, inPath, outPath);
 
     /* open the output file.  Filename parsed into gf.inPath */
@@ -148,42 +178,43 @@ main (int argc, char **argv)
     /* Now that all the options are set, lame needs to analyze them and
      * set some more options 
      */
-    i = lame_init_params (&gf);
-    if (i < 0) {
-        if (i == -1) {
-            display_bitrates (stderr);
-        }
+    ret = lame_init_params (&gf);
+    if ( ret < 0 ) {
+        if (ret == -1) display_bitrates (stderr);
         fprintf (stderr, "fatal error during initialization\n");
         return -1;
     }
 
-    lame_print_config (&gf); /* print usefull information about options being used */
+    lame_print_config (&gf); /* print useful information about options being used */
 
     if (update_interval < 0.)
         update_interval = 2.;
 
+//  lame_id3v2_tag (&gf, outf); /* add ID3 version 2 tag to mp3 file */
 
-//    lame_id3v2_tag (&gf, outf); /* add ID3 version 2 tag to mp3 file */
+    /* encode until we hit EOF */
+    while ( (wavsamples = get_audio (&gf, Buffer)) > 0 ) { /* read in 'wavsamples' samples */
+        levelmessage ( maxvalue (Buffer) );
+        mp3bytes = lame_encode_buffer ( &gf,               /* encode the frame */
+	                                Buffer[0], Buffer[1], wavsamples, 
+					mp3buffer, sizeof (mp3buffer) );
 
-    /* encode until we hit eof */
-    do {
-        /* read in 'iread' samples */
-        iread = get_audio (&gf, Buffer);
-        /* encode the frame */
-        imp3 = lame_encode_buffer (&gf, Buffer[0], Buffer[1], iread,
-                                   mp3buffer, sizeof (mp3buffer));
+        rtp_output ( mp3buffer, mp3bytes );       /* write MP3 output to RTP port */
+        fwrite ( mp3buffer, 1, mp3bytes, outf );  /* write the MP3 output to file */
+    }
 
-        fwrite (mp3buffer, 1, imp3, outf); /* write the MP3 output to file  */
-        rtp_output (mp3buffer, imp3); /* write MP3 output to RTP port */
-    } while (iread);
-
-
-    imp3 = lame_encode_flush (&gf, mp3buffer, sizeof (mp3buffer)); /* may return one or more mp3 frame */
-    fwrite (mp3buffer, 1, imp3, outf);
-    rtp_output (mp3buffer, imp3);
-    lame_mp3_tags_fid (&gf, outf); /* add ID3 version 1 or VBR tags to mp3 file */
-    lame_close (&gf);
-    fclose (outf);
-    close_infile ();    /* close the sound input file */
+    mp3bytes = lame_encode_flush ( &gf,           /* may return one or more mp3 frame */ 
+                                   mp3buffer, sizeof (mp3buffer) ); 
+    rtp_output ( mp3buffer, mp3bytes );           /* write MP3 output to RTP port */
+    fwrite ( mp3buffer, 1, mp3bytes, outf );      /* write the MP3 output to file */
+    
+    lame_mp3_tags_fid ( &gf, outf ); /* add ID3 version 1 or VBR tags to mp3 file */
+    
+    lame_close   ( &gf );
+    fclose       ( outf );
+    close_infile ();                 /* close the sound input file */
+    
     return 0;
 }
+
+/* end of mp3rtp.c */

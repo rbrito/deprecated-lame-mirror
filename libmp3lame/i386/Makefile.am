@@ -33,4 +33,4 @@ EXTRA_DIST = \
 NASM = @NASM@
 NASMFLAGS=-f elf -i .
 .nas.o:
-	$(NASM) $(NASMFLAGS) $< -o $@
+	$(NASM) $(NASMFLAGS) $< -o $@ -l $<.lst

@@ -3,6 +3,7 @@
 
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include "rtp.h"
 
 struct rtpbits {
   int sequence:16;	/* sequence number: random */
@@ -22,8 +23,8 @@ struct rtpheader {      /* in network byte order */
 };
 
 void initrtp(struct rtpheader *foo);
-int sendrtp(int fd, struct sockaddr_in *sSockAddr, struct rtpheader *foo, void *data, int len);
-int makesocket(char *szAddr,unsigned short port,int TTL,struct sockaddr_in *sSockAddr);
-void rtp_output(char *mp3buffer,int mp3size);
+int sendrtp(int fd, struct sockaddr_in *sSockAddr, struct rtpheader *foo, const void *data, size_t len);
+int makesocket(char *szAddr,unsigned short port,unsigned char TTL,struct sockaddr_in *sSockAddr);
+void rtp_output(const char *mp3buffer,size_t mp3size);
 
 #endif

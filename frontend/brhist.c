@@ -31,7 +31,7 @@
 # define BRHIST_WIDTH    14
 #endif
 #ifndef BRHIST_RES
-# define BRHIST_RES      12
+# define BRHIST_RES      11
 #endif
 
 
@@ -58,8 +58,9 @@ static struct {
     int     vbr_bitrate_min_index;
     int     vbr_bitrate_max_index;
     int     kbps [BRHIST_WIDTH];
+    int     hist_printed_lines;
     char    bar_asterisk [512 + 1];	/* buffer filled up with a lot of '*' to print a bar     */
-    char    bar_hash     [512 + 1];	/* buffer filled up with a lot of '%' to print a bar     */
+    char    bar_percent  [512 + 1];	/* buffer filled up with a lot of '%' to print a bar     */
 } brhist;
 
 static size_t  calculate_index ( const int* const array, const size_t len, const int value )
@@ -85,7 +86,7 @@ int  brhist_init ( const lame_global_flags* gf, const int bitrate_kbps_min, cons
     /* setup basics of brhist I/O channels */
     Console_IO.disp_width  = 80;
     Console_IO.disp_height = 25;
-    Console_IO.hist_printed_lines = 0;
+    brhist.hist_printed_lines = 0;
     Console_IO.Console_fp  = stderr;
     Console_IO.Error_fp    = stderr;
     Console_IO.Report_fp   = stderr;
@@ -121,7 +122,7 @@ int  brhist_init ( const lame_global_flags* gf, const int bitrate_kbps_min, cons
     }
 
     memset (brhist.bar_asterisk, '*', sizeof (brhist.bar_asterisk)-1 );
-    memset (brhist.bar_hash    , '%', sizeof (brhist.bar_hash)    -1 );
+    memset (brhist.bar_percent , '%', sizeof (brhist.bar_percent) -1 );
 
 #ifdef HAVE_TERMCAP
     /* try to catch additional information about special console sequences */
@@ -200,17 +201,17 @@ static void  brhist_disp_line ( const lame_global_flags*  gf, int i, int br_hist
     if ( Console_IO.str_clreoln [0] ) /* ClearEndOfLine available */
         fprintf ( Console_IO.Console_fp, "\n%3d%s %.*s%.*s%s", 
 	          brhist.kbps [i], brppt, 
-                  barlen_LR, brhist.bar_hash, 
+                  barlen_LR, brhist.bar_percent, 
                   barlen_TOT - barlen_LR, brhist.bar_asterisk, 
 		  Console_IO.str_clreoln );
     else
-        fprintf ( Console_IO.Console_fp, "\n%3d%s %.*s%.*s%*s ", 
+        fprintf ( Console_IO.Console_fp, "\n%3d%s %.*s%.*s%*s", 
 	          brhist.kbps [i], brppt, 
-                  barlen_LR, brhist.bar_hash, 
+                  barlen_LR, brhist.bar_percent, 
                   barlen_TOT - barlen_LR, brhist.bar_asterisk, 
 		  Console_IO.disp_width - BRHIST_RES - barlen_TOT, "" );
 		  
-    Console_IO.hist_printed_lines++;
+    hist.hist_printed_lines++;
 }
 
 
@@ -226,7 +227,7 @@ void  brhist_disp ( const lame_global_flags*  gf )
     int   frames;                       /* total number of encoded frames */
     int   most_often;                   /* usage count of the most often used frame size, but not smaller than Console_IO.disp_width-BRHIST_RES (makes this sense?) and 1 */
     
-    Console_IO.hist_printed_lines = 0;  /* printed number of lines for the brhist functionality, used to skip back the right number of lines */
+    hist.hist_printed_lines = 0;  /* printed number of lines for the brhist functionality, used to skip back the right number of lines */
 	
     lame_bitrate_hist             ( gf, br_hist    );
     lame_bitrate_stereo_mode_hist ( gf, br_sm_hist );
@@ -238,32 +239,17 @@ void  brhist_disp ( const lame_global_flags*  gf )
     }
 
 #ifdef KLEMM_05
-    i = 0;
-    for (; i < brhist.vbr_bitrate_min_index; i++) 
-        if ( br_hist [i] ) {
+    for ( i = 0; i < BRHIST_WIDTH; i++ )
+        if ( br_hist [i]  ||  (i >= brhist.vbr_bitrate_min_index  &&  i <= brhist.vbr_bitrate_max_index) )
             brhist_disp_line ( gf, i, br_hist [i], br_sm_hist [i][LR], most_often, frames );
-	}
-    for (; i <= brhist.vbr_bitrate_max_index; i++) {
-        brhist_disp_line ( gf, i, br_hist [i], br_sm_hist [i][LR], most_often, frames );
-    }
-    for (; i < BRHIST_WIDTH; i++)
-        if ( br_hist [i] ) {
-            brhist_disp_line ( gf, i, br_hist [i], br_sm_hist [i][LR], most_often, frames );
-	}
 #else
     most_often = most_often < Console_IO.disp_width - BRHIST_RES  ?  Console_IO.disp_width - BRHIST_RES : most_often;  /* makes this sense? */
-    for ( i=0 ; i < BRHIST_WIDTH; i++) {
+    for ( i=0 ; i < BRHIST_WIDTH; i++)
         brhist_disp_line ( gf, i, br_hist [i], br_sm_hist [i][LR], most_often, frames ); 
-    }
 #endif	
 
-#if defined(_WIN32)  &&  !defined(__CYGWIN__) 
-    /* fflush is needed for Windows ! */
-    fflush ( Console_IO.Console_fp );
-#else
     fputs ( "\r", Console_IO.Console_fp );
-    fflush ( Console_IO.Console_fp );
-#endif
+    fflush ( Console_IO.Console_fp );   /* fflush is ALSO needed for Windows! */
 }
 
 void brhist_jump_back( void )
@@ -274,12 +260,12 @@ void brhist_jump_back( void )
         CONSOLE_SCREEN_BUFFER_INFO  CSBI;
 	
         GetConsoleScreenBufferInfo ( Console_IO.Console_Handle, &CSBI );
-        Pos.Y = CSBI.dwCursorPosition.Y - Console_IO.hist_printed_lines ;
+        Pos.Y = CSBI.dwCursorPosition.Y - hist.hist_printed_lines ;
         Pos.X = 0;
         SetConsoleCursorPosition ( Console_IO.Console_Handle, Pos );
     }
 #else
-    while ( Console_IO.hist_printed_lines-- > 0 )
+    while ( hist.hist_printed_lines-- > 0 )
         fputs ( Console_IO.str_up, Console_IO.Console_fp );
 #endif
 }

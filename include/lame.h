@@ -457,17 +457,15 @@ extern void id3tag_set_track(lame_global_flags *gfp, const char *track);
 /* return non-zero result if genre name or number is invalid */
 extern int id3tag_set_genre(lame_global_flags *gfp, const char *genre);
 
-
-/* moved to lametime.* */
-
 /***********************************************************************
 *
-*  list of valid bitrates & samplerates.
-*  first index: 0:  mpeg2 values  (samplerates < 32khz) 
-*               1:  mpeg1 values  (samplerates >= 32khz)
+*  list of valid bitrates [kbps] & sample frequencies [Hz].
+*  first index: 0: MPEG-2   values  (sample frequencies 16...24 kHz) 
+*               1: MPEG-1   values  (sample frequencies 32...48 kHz)
+*               2: MPEG-2.5 values  (sample frequencies  8...12 kHz)
 ***********************************************************************/
-extern const int      bitrate_table[2][16];
-extern const int      samplerate_table[2][3];
+extern const int      bitrate_table    [3] [16];
+extern const int      samplerate_table [3] [ 4];
 
 
 

@@ -38,9 +38,7 @@ const char*  get_lame_version ( void )  // primary for reports on screen
 {
     static char ret [48];
 
-/*
- * Here we can also add informations about compile time configurations 
- */
+    /* Here we can also add informations about compile time configurations */
     
     if (LAME_ALPHA_VERSION > 0)
         sprintf ( ret, "%u.%02d " V1 "(alpha %u, %6.6s %5.5s)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION, LAME_ALPHA_VERSION, __DATE__, __TIME__ );

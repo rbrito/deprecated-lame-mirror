@@ -41,7 +41,6 @@ typedef struct {
 #endif
     int     disp_width;
     int     disp_height;
-	int	    hist_printed_lines;
     char    str_up         [10];
     char    str_clreoln    [10];
     char    str_emph       [10];

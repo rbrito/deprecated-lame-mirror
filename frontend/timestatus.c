@@ -25,11 +25,25 @@
 #include <config.h>
 #endif
  
-/*#define KLEMM_07
- disabled as long as there is no proper solution for Console_IO, RH */
+#define KLEMM_07
+
+/* Hope it works now, otherwise complain or flame ;-)
+ */
+ 
 #ifdef KLEMM_07
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
+
+#if 1
+# define SPEED_CHAR	"\xD7"	/* multiply sign in ANSI, ISO-8859-1 */
+# define SPEED_MULT	1.
+#elif 1
+# define SPEED_CHAR	"x"	/* character x */
+# define SPEED_MULT	1.
+#else
+# define SPEED_CHAR	"%%"
+# define SPEED_MULT	100.
+#endif
 
 #include <assert.h>
 #include <time.h>
@@ -114,7 +128,7 @@ void timestatus ( const int samp_rate,
         fprintf ( stderr,
 	    "\r"
 	    "    Frame          |  CPU time/estim | REAL time/estim | play/CPU |    ETA \n"
-            "     0/       ( 0%%)|    0:00/     :  |    0:00/     :  |      .  %%|     :  \r"
+            "     0/       ( 0%%)|    0:00/     :  |    0:00/     :  |         " SPEED_CHAR "|     :  \r"
 	    /* , Console_IO.str_clreoln, Console_IO.str_clreoln */ );
 	init = 1;
         return;
@@ -138,7 +152,9 @@ void timestatus ( const int samp_rate,
     ts_time_decompose ( (unsigned long)proc_time.estimated_time, '|' );
     ts_time_decompose ( (unsigned long)real_time.elapsed_time  , '/' );
     ts_time_decompose ( (unsigned long)real_time.estimated_time, '|' );
-    fprintf ( stderr, proc_time.speed_index <= 9999999.999 ? "%9.1f%%|" : "%9.4e%%|", 100.*proc_time.speed_index );
+    fprintf ( stderr, proc_time.speed_index <= 1.  ?  
+              "%9.4f" SPEED_CHAR "|"  :  "%#9.5g" SPEED_CHAR "|",
+	      SPEED_MULT * proc_time.speed_index );
     ts_time_decompose ( (unsigned long)(real_time.estimated_time - real_time.elapsed_time), ' ' );
     fflush  ( stderr );
 }
@@ -174,10 +190,15 @@ void decoder_progress ( const lame_global_flags* const gfp, const mp3data_struct
 {
     fprintf ( stderr, "\rFrame#%6i/%-6i %3i kbps",
               mp3data->framenum, mp3data->totalframes, mp3data->bitrate );
+              
+    // Programmed with a single frame hold delay
+    // Attention: static data
+    
     if ( mp3data->mode == MPG_MD_JOINT_STEREO ) {
-        static int last;
-        fprintf ( stderr, "  %s" , 2==mp3data->mode_ext  ?  last ? " MS " : "LMSR"  :  last ? "LMSR" : "L  R" );
-        last = 2==mp3data->mode_ext;
+        static int  last;
+        int         curr = mp3data->mode_ext & 2;
+        fprintf ( stderr, "  %s" , curr  ?  last ? " MS " : "LMSR"  :  last ? "LMSR" : "L  R" );
+        last = curr;
     }
 //    fprintf ( stderr, "%s", Console_IO.str_clreoln );
       fprintf ( stderr, "        \b\b\b\b\b\b\b\b" );

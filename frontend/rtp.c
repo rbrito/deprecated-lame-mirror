@@ -34,26 +34,26 @@ struct rtpheader {           /* in network byte order */
 void
 initrtp (struct rtpheader *foo)
 {
-    foo->b.v = 2;
-    foo->b.p = 0;
-    foo->b.x = 0;
-    foo->b.cc = 0;
-    foo->b.m = 0;
-    foo->b.pt = 14;     /* MPEG Audio */
+    foo->b.v        =  2;
+    foo->b.p        =  0;
+    foo->b.x        =  0;
+    foo->b.cc       =  0;
+    foo->b.m        =  0;
+    foo->b.pt       = 14;     /* MPEG Audio */
 #ifdef FEFE
     foo->b.sequence = 42;
-    foo->timestamp = 0;
+    foo->timestamp  =  0;
 #else
     foo->b.sequence = rand () & 65535;
-    foo->timestamp = rand ();
+    foo->timestamp  = rand ();
 #endif
-    foo->ssrc = rand ();
+    foo->ssrc       = rand ();
     foo->iAudioHeader = 0;
 }
 
 int
 sendrtp (int fd, struct sockaddr_in *sSockAddr, struct rtpheader *foo,
-         void *data, int len)
+         const void *data, size_t len)
 {
     char   *buf = alloca (len + sizeof (struct rtpheader));
     int    *cast = (int *) foo;
@@ -70,12 +70,12 @@ sendrtp (int fd, struct sockaddr_in *sSockAddr, struct rtpheader *foo,
 
 /* create a sender socket. */
 int
-makesocket (char *szAddr, unsigned short port, int TTL,
+makesocket (char *szAddr, unsigned short port, unsigned char TTL,
             struct sockaddr_in *sSockAddr)
 {
     int     iRet, iLoop = 1;
     struct sockaddr_in sin;
-    char    cTtl = (char) TTL;
+    unsigned char    cTtl = TTL;
     char    cLoop = 0;
     unsigned int tempaddr;
 

@@ -7,6 +7,7 @@
  *     - calibration file of soundcard/amplifier/head phone
  *     - worse handling
  *     - +/- handling via mouse (do you have code?) in a dark room
+ *     - ENTER as direction change
  */
 
 #include <assert.h>
