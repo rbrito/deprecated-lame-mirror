@@ -257,11 +257,14 @@ $(PGM):	main.o $(OBJ) Makefile
 mp3x:	mp3x.o $(OBJ) Makefile 
 	$(CC) -o mp3x mp3x.o  $(OBJ) $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP)
 
+mp3rtp:	rtp.o mp3rtp.o $(OBJ) Makefile 
+	$(CC) -o mp3rtp mp3rtp.o rtp.o   $(OBJ) $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP)
+
 libmp3lame.a:  $(OBJ) Makefile
 	ar cr libmp3lame.a  $(OBJ) 
 
 clean:
-	-$(RM) $(OBJ) $(DEP) $(PGM) main.o mp3x.o mp3x libmp3lame.a \
+	-$(RM) $(OBJ) $(DEP) $(PGM) main.o rtp.o mp3rtp mp3rtp.o mp3x.o mp3x libmp3lame.a \
                       mp3resample.o mp3resample	
 
 tags: TAGS
