@@ -549,7 +549,7 @@ int read_samples_pcm(lame_global_flags *gfp,short sample_buffer[2304], int frame
     int rcode;
     int iswav=(gfp->input_format==sf_wave);
 
-    samples_read = fread(sample_buffer, sizeof(short), (unsigned)samples_to_read, gfp->musicin);
+    samples_read = fread(sample_buffer, sizeof(short), (unsigned int)samples_to_read, gfp->musicin);
     if (ferror(gfp->musicin)) {
       fprintf(stderr, "Error reading input file\n");
       exit(2);

@@ -29,37 +29,37 @@ typedef struct {
 } III_psy_ratio;
 
 typedef struct {
-	unsigned part2_3_length;
-	unsigned big_values;
-	unsigned count1;
- 	unsigned global_gain;
-	unsigned scalefac_compress;
-	unsigned window_switching_flag;
-	unsigned block_type;
-	unsigned mixed_block_flag;
-	unsigned table_select[3];
-	unsigned subblock_gain[3];
-	unsigned region0_count;
-	unsigned region1_count;
-	unsigned preflag;
-	unsigned scalefac_scale;
-	unsigned count1table_select;
+	unsigned int part2_3_length;
+	unsigned int big_values;
+	unsigned int count1;
+ 	unsigned int global_gain;
+	unsigned int scalefac_compress;
+	unsigned int window_switching_flag;
+	unsigned int block_type;
+	unsigned int mixed_block_flag;
+	unsigned int table_select[3];
+	unsigned int subblock_gain[3];
+	unsigned int region0_count;
+	unsigned int region1_count;
+	unsigned int preflag;
+	unsigned int scalefac_scale;
+	unsigned int count1table_select;
 
-	unsigned part2_length;
-	unsigned sfb_lmax;
-	unsigned sfb_smax;
-	unsigned count1bits;
+	unsigned int part2_length;
+	unsigned int sfb_lmax;
+	unsigned int sfb_smax;
+	unsigned int count1bits;
 	/* added for LSF */
-	unsigned *sfb_partition_table;
-	unsigned slen[4];
+	unsigned int *sfb_partition_table;
+	unsigned int slen[4];
 } gr_info;
 
 typedef struct {
 	int main_data_begin; /* unsigned -> int */
-	unsigned private_bits;
+	unsigned int private_bits;
 	int resvDrain_pre;
 	int resvDrain_post;
-	unsigned scfsi[2][4];
+	unsigned int scfsi[2][4];
 	struct {
 		struct gr_info_ss {
 			gr_info tt;

@@ -436,7 +436,7 @@ int PutVbrTag(lame_global_flags *gfp,char* lpszFileName,int nVbrScale)
 #endif
 
         /* Put it all to disk again */
-	if (fwrite(pbtStreamBuffer,(unsigned)gfp->TotalFrameSize,1,fpStream)!=1)
+	if (fwrite(pbtStreamBuffer,(unsigned int)gfp->TotalFrameSize,1,fpStream)!=1)
 	{
 		return -1;
 	}

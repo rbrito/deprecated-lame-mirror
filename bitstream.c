@@ -213,19 +213,19 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
       writeheader(gfc,0xffe,                12);
     else
       writeheader(gfc,0xfff,                12);
-    writeheader(gfc,(unsigned)(gfp->version),            1);
+    writeheader(gfc,(unsigned int)(gfp->version),            1);
     writeheader(gfc,4 - 3,                 2);
-    writeheader(gfc,(unsigned)(!gfp->error_protection),  1);
+    writeheader(gfc,(unsigned int)(!gfp->error_protection),  1);
     /* (jo) from now on call the CRC_writeheader() wrapper to update crc */
-    CRC_writeheader(gfc,(unsigned)(gfc->bitrate_index),      4,&crc);
-    CRC_writeheader(gfc,(unsigned)(gfc->samplerate_index),   2,&crc);
-    CRC_writeheader(gfc,(unsigned)(gfc->padding),            1,&crc);
-    CRC_writeheader(gfc,(unsigned)(gfp->extension),          1,&crc);
-    CRC_writeheader(gfc,(unsigned)(gfp->mode),               2,&crc);
-    CRC_writeheader(gfc,(unsigned)(gfc->mode_ext),           2,&crc);
-    CRC_writeheader(gfc,(unsigned)(gfp->copyright),          1,&crc);
-    CRC_writeheader(gfc,(unsigned)(gfp->original),           1,&crc);
-    CRC_writeheader(gfc,(unsigned)(gfp->emphasis),           2,&crc);
+    CRC_writeheader(gfc,(unsigned int)(gfc->bitrate_index),      4,&crc);
+    CRC_writeheader(gfc,(unsigned int)(gfc->samplerate_index),   2,&crc);
+    CRC_writeheader(gfc,(unsigned int)(gfc->padding),            1,&crc);
+    CRC_writeheader(gfc,(unsigned int)(gfp->extension),          1,&crc);
+    CRC_writeheader(gfc,(unsigned int)(gfp->mode),               2,&crc);
+    CRC_writeheader(gfc,(unsigned int)(gfc->mode_ext),           2,&crc);
+    CRC_writeheader(gfc,(unsigned int)(gfp->copyright),          1,&crc);
+    CRC_writeheader(gfc,(unsigned int)(gfp->original),           1,&crc);
+    CRC_writeheader(gfc,(unsigned int)(gfp->emphasis),           2,&crc);
     if (gfp->error_protection) {
 	writeheader(gfc,0, 16); /* dummy */
     }
@@ -233,7 +233,7 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
     if (gfp->version == 1) {
 	/* MPEG1 */
 	assert(l3_side->main_data_begin >= 0);
-	CRC_writeheader(gfc,(unsigned)(l3_side->main_data_begin), 9,&crc);
+	CRC_writeheader(gfc,(unsigned int)(l3_side->main_data_begin), 9,&crc);
 
 	if (gfc->stereo == 2)
 	    CRC_writeheader(gfc,l3_side->private_bits, 3,&crc);
@@ -283,7 +283,7 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
     } else {
 	/* MPEG2 */
 	assert(l3_side->main_data_begin >= 0);
-	CRC_writeheader(gfc,(unsigned)(l3_side->main_data_begin), 8,&crc);
+	CRC_writeheader(gfc,(unsigned int)(l3_side->main_data_begin), 8,&crc);
 	CRC_writeheader(gfc,l3_side->private_bits, gfc->stereo,&crc);
 
 	gr = 0;

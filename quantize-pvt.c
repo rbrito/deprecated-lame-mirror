@@ -24,7 +24,7 @@ const int slen2_tab[16] = { 0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3 };
 
   [table_number][row_in_table][column of nr_of_sfb]
 */
-unsigned nr_of_sfb_block[6][3][4] =
+unsigned int nr_of_sfb_block[6][3][4] =
 {
   {
     {6, 5, 5, 5},
@@ -525,7 +525,7 @@ int scale_bitcount( III_scalefac_t *scalefac, gr_info *cod_info)
 /*
   table of largest scalefactor values for MPEG2
 */
-static const unsigned max_range_sfac_tab[6][4] =
+static const unsigned int max_range_sfac_tab[6][4] =
 {
  { 15, 15, 7,  7},
  { 15, 15, 7,  0},
@@ -553,7 +553,7 @@ int scale_bitcount_lsf(III_scalefac_t *scalefac, gr_info *cod_info)
 {
     int table_number, row_in_table, partition, nr_sfb, window, over;
     int i, sfb, max_sfac[ 4 ];
-    unsigned *partition_table;
+    unsigned int *partition_table;
 
     /*
       Set partition table. Note that should try to use table one,
@@ -606,7 +606,7 @@ int scale_bitcount_lsf(III_scalefac_t *scalefac, gr_info *cod_info)
 	*/
 	static const int log2tab[] = { 0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4 };
 
-	unsigned slen1, slen2, slen3, slen4;
+	unsigned int slen1, slen2, slen3, slen4;
 
         cod_info->sfb_partition_table = &nr_of_sfb_block[table_number][row_in_table][0];
 	for ( partition = 0; partition < 4; partition++ )
