@@ -95,7 +95,7 @@ unsigned long *num_samples)
   len +=2;
 
   /* check for Xing header */
-  xing_header = GetVbrTag(&pTagData,buf);
+  xing_header = GetVbrTag(&pTagData,(unsigned char*)buf);
   if (xing_header) {
     num_frames=pTagData.frames;
   }

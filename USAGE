@@ -150,7 +150,10 @@ id3 tagging:
 
 
 options not yet described:
---nores          disable bit reservoir
+--nores            disable bit reservoir
+--noath            disable ATH
+--cwlimit <freq>   specify range of tonality calculation
+
 --lowpass
 --lowpass-width
 --highpass
@@ -261,7 +264,7 @@ should de-emphasize the output during playback, although most
 decoders ignore this flag.
 
 A better solution would be to apply the de-emphasis with a standalone
-utility before encoding.
+utility before encoding, and then encode without -e.  
 
 
 
@@ -299,7 +302,6 @@ but is 20% slower.  No effect for mono files.
 
 LAME 3.58beta and up: -h also enables a more accurate but slightly
 slower quantization formula.  
-
 
 
 
@@ -360,10 +362,10 @@ MP3 input file
 =======================================================================
 --mp3input
 
-Assume the input file is a MP3 file.  Usefull for downsampling 
-from one mp3 to another.  If the filename ends in ".mp3" LAME will
-assume it is an MP3.  For stdin or MP3 files which dont end in .mp3
-you need to use this switch.  
+Assume the input file is a MP3 file.  Usefull for downsampling from
+one mp3 to another.  If the filename ends in ".mp3" LAME will assume
+it is an MP3.  For stdin or MP3 files which dont end in .mp3 you need
+to use this switch.
 
 
 =======================================================================
@@ -424,19 +426,25 @@ output sampling frequency in kHZ
 where n = 16, 22.05, 24, 32, 44.1, 48
 
 Output sampling frequency.  Resample the input if necessary.  
-If not specified, defaults to the input sampling frequency.
-(resampling code not yet implemented)
+
+If not specified, LAME may sometimes resample automatically 
+when faced with extreme compression conditions (like encoding
+a 44.1khz input file at 16kbs).  
+
+
 
 =======================================================================
 sampling frequency in kHZ
 =======================================================================
 -s  n
 
-where n = 16, 22.05, 24, 32, 44.1, 48
+where n = sampling rate in kHz.
 
 Required for raw PCM input files.  Otherwise it will be determined
 from the header information in the input file.
 
+LAME will automatically resample the input file to one of the
+supported MP3 samplerates if necessary.
 
 
 =======================================================================
@@ -540,22 +548,5 @@ swapbytes
 
 swap bytes in the input file.  for sorting out little endian/big endian
 type problems.  If your encodings sound like static, try this first.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
