@@ -386,8 +386,9 @@ void L3psycho_anal( lame_global_flags *gfp,
       FLOAT re = (*wsamp_l)[BLKSIZE/2-j];
       FLOAT im = (*wsamp_l)[BLKSIZE/2+j];
       energy[BLKSIZE/2-j] = (re * re + im * im) * (FLOAT)0.5;
-      
-      tot_ener[chn] += energy[BLKSIZE/2-j];
+
+      //      if (BLKSIZE/2-j > 25)
+	tot_ener[chn] += energy[BLKSIZE/2-j];
     }
     for (b = 2; b >= 0; --b)
     {

@@ -72,7 +72,7 @@
 
 
 
-#define MAXQUANTERROR
+#define MAXQUANTERRORXXX
 
 
 FLOAT8 calc_sfb_noise(FLOAT8 *xr, FLOAT8 *xr34, int stride, int bw, int sf)
@@ -666,6 +666,7 @@ VBR_quantize(lame_global_flags *gfp,
   static const FLOAT8 dbQ[10]={-6.0,-4.5,-3.0,-1.5,0,0.3,0.6,1.0,1.5,2.0};
 
   l3_side = &gfc->l3_side;
+  gfc->ATH_lower = 4;
   iteration_init(gfp,l3_side,l3_enc);
 
   gfc->bitrate_index=gfc->VBR_min_bitrate;
@@ -676,6 +677,7 @@ VBR_quantize(lame_global_flags *gfp,
   getframebits(gfp,&bitsPerFrame, &mean_bits);
   maxbits = ResvFrameBegin(gfp,l3_side, mean_bits, bitsPerFrame);
   maxbits = maxbits/(gfc->mode_gr*gfc->stereo);
+
 
   do {
   
@@ -695,14 +697,14 @@ VBR_quantize(lame_global_flags *gfp,
       masking_lower_db = dbQ[gfp->VBR_q] + quality;
       
       if (pe[gr][ch]>750)
-	masking_lower_db -= 2*(pe[gr][ch]-750.)/750.;
-      if (shortblock) masking_lower_db -= 2;
+      	masking_lower_db -= 4*(pe[gr][ch]-750.)/750.;
+      if (shortblock) masking_lower_db -=4;
 
       gfc->masking_lower = pow(10.0,masking_lower_db/10);
       bits = VBR_noise_shapping (gfp,xr[gr][ch],&ratio[gr][ch],l3_enc,&ath_over[gr][ch],scalefac,gr,ch);
       
 
-      while (bits > Min(4095,3*maxbits)) {
+      while (bits > Min(4095,(2+shortblock)*maxbits)) {
 	printf("quality = %f  too large bits:  %i  %i  %i  \n",masking_lower_db,minbits,bits,maxbits);
 
 	masking_lower_db  += .1;
@@ -714,7 +716,7 @@ VBR_quantize(lame_global_flags *gfp,
 	printf("new bits = %i \n",bits);
       }
       
-      while (bits < .5*minbits) {
+      while (bits < minbits) {
 	if (ath_over[gr][ch]==0) break;
 	if (cod_info->part2_3_length-cod_info->part2_length== 0) break;
 	printf("quality = %f  too small bits:  %i  %i  %i  \n",masking_lower_db,minbits,bits,maxbits);

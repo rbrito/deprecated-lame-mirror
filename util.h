@@ -220,6 +220,7 @@ typedef struct  {
   FLOAT8 ATH_l[SBPSY_l];
   FLOAT8 ATH_s[SBPSY_s];
   FLOAT8 masking_lower;
+  FLOAT8 ATH_lower;
 
 
   /* variables used by util.c */

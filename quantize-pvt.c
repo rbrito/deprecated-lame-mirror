@@ -217,6 +217,7 @@ ATH = ATH * 2.5e-10      (ener)
 */
 FLOAT8 ATHformula(lame_global_flags *gfp,FLOAT8 f)
 {
+  lame_internal_flags *gfc=gfp->internal_flags;
   FLOAT8 ath;
   f  = Max(0.02, f);
   /* from Painter & Spanias, 1997 */
@@ -238,7 +239,7 @@ FLOAT8 ATHformula(lame_global_flags *gfp,FLOAT8 f)
    * works together with adjusted masking lowering of GPSYCHO thresholds
    * (Robert.Hegemann@gmx.de 2000-01-30)
    */
-  if (gfp->VBR) ath -= (4-gfp->VBR_q)*4.0; 
+  if (gfp->VBR) ath -= gfc->ATH_lower;
 
   ath = pow( 10.0, ath/10.0 );
   return ath;
@@ -431,9 +432,11 @@ int scale_bitcount( III_scalefac_t *scalefac, gr_info *cod_info)
 {
     int i, k, sfb, max_slen1 = 0, max_slen2 = 0, /*a, b, */ ep = 2;
 
+    /* maximum values */
     static const int slen1[16] = { 1, 1, 1, 1, 8, 2, 2, 2, 4, 4, 4, 8, 8, 8,16,16 };
     static const int slen2[16] = { 1, 2, 4, 8, 1, 2, 4, 8, 2, 4, 8, 2, 4, 8, 4, 8 };
 
+    /* number of bits used to encode scalefacs */
     static const int slen1_value[16] = {0,
 	18, 36, 54, 54, 36, 54, 72, 54, 72, 90, 72, 90,108,108,126
     };

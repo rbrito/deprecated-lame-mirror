@@ -181,7 +181,7 @@ void lame_init_params(lame_global_flags *gfp)
      6                10.4            128kbs/41khz
   */
   if (gfp->VBR) {
-    compression_ratio = 5.0 + gfp->VBR_q;
+    compression_ratio = 4.4 + gfp->VBR_q;
   }
 
 

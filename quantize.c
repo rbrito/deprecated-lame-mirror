@@ -177,6 +177,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
 
   l3_side = &gfc->l3_side;
   iteration_init(gfp,l3_side,l3_enc);
+  gfc->ATH_lower = (4-gfp->VBR_q)*4.0; 
 
     /* my experiences are, that side channel reduction  
      * does more harm than good when VBR encoding
