@@ -98,6 +98,8 @@ if test "${GCC}" = "yes"; then
 	AC_MSG_RESULT(${GCC_version})
 fi
 
+AC_SYS_LARGEFILE
+
 AC_CHECK_SIZEOF(short)
 AC_CHECK_SIZEOF(unsigned short)
 AC_CHECK_SIZEOF(int)
