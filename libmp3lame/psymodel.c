@@ -755,13 +755,12 @@ block_type_set(
     if (useshort_current)
 	return SHORT_TYPE;
 
-    assert(blocktype_old != START_TYPE);
     if (useshort_next) {
-	if (blocktype_old == SHORT_TYPE)
+	if (blocktype_old == SHORT_TYPE || blocktype_old == START_TYPE)
 	    return SHORT_TYPE;
 	return START_TYPE;
     }
-    if (blocktype_old == SHORT_TYPE)
+    if (blocktype_old == SHORT_TYPE || blocktype_old == START_TYPE)
 	return STOP_TYPE;
     return NORM_TYPE;
 }
