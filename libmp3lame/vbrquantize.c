@@ -1426,20 +1426,16 @@ VBR_noise_shaping(lame_internal_flags * gfc, FLOAT8 * xr34orig, int minbits, int
     if (ret == -1)      /* Houston, we have a problem */
         return -1;
 
-    cod_info->part2_3_length += cod_info->part2_length;
-    if (cod_info->part2_3_length < minbits) {
+    if (cod_info->part2_3_length < minbits - cod_info->part2_length) {
         bin_search_StepSize (gfc, cod_info, minbits, ch, xr34);
-	cod_info->part2_3_length += cod_info->part2_length;
     }
-    if (cod_info->part2_3_length > maxbits) {
+    if (cod_info->part2_3_length > maxbits - cod_info->part2_length) {
         bin_search_StepSize (gfc, cod_info, maxbits, ch, xr34);
-	cod_info->part2_3_length += cod_info->part2_length;
     }
     assert (cod_info->global_gain < 256u);
 
-    if (cod_info->part2_3_length >= LARGE_BITS) /* Houston, we have a problem */
-	return -2;
-    
-    cod_info->part2_3_length -= cod_info->part2_length;
+    if (cod_info->part2_3_length + cod_info->part2_length >= LARGE_BITS)
+	return -2; /* Houston, we have a problem */
+
     return 0;
 }
