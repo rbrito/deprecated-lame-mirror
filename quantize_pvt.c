@@ -954,7 +954,7 @@ en1*Max(en0*ratio->thm.s[sfb][i],gfc->ATH_s[sfb]);
       bw = end - start;
       for ( en0 = 0.0, l = start; l < end; l++ ) 
 	en0 += xr[l] * xr[l];
-      en0/=bw;
+      if (!gfp->exp_nspsytune) en0/=bw;
       /*
 	DEBUGF("diff  = %f \n",10*log10(Max(ratio[gr][ch].en.l[sfb],1e-20))
 	-(10*log10(en0)+150));
