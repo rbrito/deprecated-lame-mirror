@@ -380,7 +380,7 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "                    auto = jstereo, with varialbe mid/side threshold\n"
               "    -a              downmix from stereo to mono file for mono encoding\n"
               "    -d              allow channels to have different blocktypes\n"
-#if defined(HAVE_VORBIS)
+#if defined(HAVE_VORBIS_ENCODER)
               "    --ogg           encode to Ogg Vorbis instead of MP3\n"
 #endif
               "    --freeformat    produce a free format bitstream\n"
@@ -512,7 +512,7 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    won't fit in a version 1 tag (e.g. the title string is longer than 30\n"
               "    characters), or the '--add-id3v2' or '--id3v2-only' options are used,\n"
               "    or output is redirected to stdout."
-#if defined(HAVE_VORBIS)
+#if defined(HAVE_VORBIS_ENCODER)
               "\n\n"
               "    Note: All '--t*' options (except those for track and genre) work for Ogg\n"
               "    Vorbis output, but other ID3-specific options are ignored."
@@ -1075,10 +1075,10 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     return -1;
 #endif
                 T_ELIF ("ogg")
-#if defined(HAVE_VORBIS)
+#if defined(HAVE_VORBIS_ENCODER)
                     (void) lame_set_ogg( gfp, 1 );
 #else
-                    fprintf(stderr,"Error: LAME not compiled with Vorbis support\n");
+                    fprintf(stderr,"Error: LAME not compiled with Vorbis Encoder support\n");
                     return -1;
 #endif
                 T_ELIF ("phone")

@@ -346,9 +346,9 @@ AC_MSG_RESULT($CONFIG_DECODER)
 dnl vorbis
 WARNING=
 AC_ARG_WITH(vorbis, 
-  [  --with-vorbis              Use vorbis library for ogg files]
-  [                           [default: no]],
-  CONFIG_VORBIS="${withval}", CONFIG_VORBIS="no")
+  [  --with-vorbis              Use vorbis library to decode ogg files]
+  [                           [default: yes]],
+  CONFIG_VORBIS="${withval}", CONFIG_VORBIS="yes")
 AC_ARG_WITH(vorbis-prefix,
   [  --with-vorbis-prefix=DIR   Alternate location for vorbis],
   CONFIG_VORBIS_PREFIX="${withval}", CONFIG_VORBIS_PREFIX="")

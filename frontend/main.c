@@ -585,7 +585,7 @@ main(int argc, char **argv)
     }
 
 
-#ifdef HAVE_VORBIS
+#ifdef HAVE_VORBIS_ENCODER
     if (lame_get_ogg(gf)) {
         lame_encode_ogg_init(gf);
         lame_set_VBR(gf, vbr_off); /* ignore lame's various VBR modes */

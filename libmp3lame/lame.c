@@ -1384,7 +1384,7 @@ lame_encode_frame(lame_global_flags * gfp,
     lame_internal_flags *gfc = gfp->internal_flags;
     int     ret;
     if (gfp->ogg) {
-#ifdef HAVE_VORBIS
+#ifdef HAVE_VORBIS_ENCODER
         ret = lame_encode_ogg_frame(gfp, inbuf_l, inbuf_r, mp3buf, mp3buf_size);
 #else
         return -5;      /* wanna encode ogg without vorbis */
@@ -1855,7 +1855,7 @@ lame_encode_flush(lame_global_flags * gfp,
         mp3buffer_size_remaining = 0;
 
     if (gfp->ogg) {
-#ifdef HAVE_VORBIS
+#ifdef HAVE_VORBIS_ENCODER
         /* ogg related stuff */
         imp3 = lame_encode_ogg_finish(gfp, mp3buffer, mp3buffer_size_remaining);
 #endif

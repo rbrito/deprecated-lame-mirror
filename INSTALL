@@ -7,7 +7,11 @@ Compile time options
 There are serveral targets which can be built from this
 source code:
 
-lame/lame.exe   The command line encoder
+lame, lame.exe  The command line encoder
+
+mp3x            A GTK based graphical MP3 frame analyzer.  For debugging,
+                development, and studing MP3 frames produced by any
+                encoder.
 
 lame_enc.dll    a Windows DLL used by many GUIs which support lame.
                 (Can only be compiled by MSVC???)
@@ -18,13 +22,15 @@ libmp3lame.so   shared version of libmp3lame.a                (not yet)
 
 The following compile time options can be used.  For libmp3lame.a
 and lame_enc.dll, none are required.  On non-unix systems,
-these options must be set in Makefile or in the IDE.  
+these options must be set in config.h or in the IDE.  
 On unix systems, they are set via ./configure.  
 
 
 #define HAVE_MPGLIB   compile in mpglib's mp3 *decoding* capibility
 #define HAVE_VORBIS   compile in Vorbis decoding capibility
-                     (you need libvorbis already built)
+                      (you need libvorbis already built)
+#define HAVE_VORBIS_ENCODER  compile in Vorbis encoding capability
+                             (broken as of Jan 2001)
 #define NOANALYSIS   do not compile in hooks used by the 
                      MP3 frame analyzer.
 
@@ -53,12 +59,14 @@ For the encoding library:
   --enable-mp3x               Build the mp3 frame analyzer, 'mp3x'
 
   --enable-mp3rtp             Build the encode-to-RTP program, 'mp3rtp'
+                              (broken as of August 2001)
  
 
 For the LAME front end encoder:
 
   --with-fileio=lame          Use lame's internal file io routines [default]
-               =sndfile       Use Erik de Castro Lopo's libsndfile (no stdin possible currently)
+               =sndfile       Use Erik de Castro Lopo's libsndfile 
+                              (Supports many more input formats, but no stdin possible currently)
 
   --with-sndfile-prefix=DIR   Alternate location for libsndfile
                               (if --with-fileio=sndfile)
@@ -83,7 +91,7 @@ Other usefull configure options:
                                 /usr/local/include/lame.h
 
 
-  --with-vorbis                Enable Ogg Vorbis encoding/decoding support
+  --with-vorbis                Enable Ogg Vorbis decoding support
   --with-vorbis-prefix = PATH  specify where to find Vorbis libs
 
 
