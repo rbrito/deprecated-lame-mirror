@@ -381,14 +381,11 @@ lib_sources = \
 	bitstream.c \
 	encoder.c \
 	fft.c \
-	get_audio.c \
         id3tag.c \
-	ieeefloat.c \
         lame.c \
         lametime.c \
         newmdct.c \
         parse.c \
-	portableio.c \
 	psymodel.c \
 	quantize.c \
 	quantize_pvt.c \
@@ -396,13 +393,17 @@ lib_sources = \
 	reservoir.c \
 	tables.c \
 	takehiro.c \
-	timestatus.c \
 	util.c \
-	vorbis_interface.c \
         VbrTag.c \
         version.c
 
-c_sources = @CONFIG_SOURCES@
+c_sources = @CONFIG_SOURCES@ \
+	timestatus.c \
+	portableio.c \
+	ieeefloat.c \
+	vorbis_interface.c \
+	get_audio.c
+
 lib_obj = $(lib_sources:.c=.o)
 
 OBJ = $(c_sources:.c=.o)
