@@ -328,7 +328,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 
       dbits = (max_bits-min_bits)/4;
       this_bits = (max_bits+min_bits)/2;
-      real_bits = max_bits;
+      real_bits = max_bits+1;
 
       /* bin search to within +/- 10 bits of optimal */
       do {
@@ -337,6 +337,10 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 	  assert(this_bits<=max_bits);
 
 	  if( this_bits >= real_bits ){
+	      /* 
+	       * we already found a quantization with fewer bits
+	       * so we can skip this try
+	       */
 	      save_bits[gr][ch] = this_bits;
 	      this_bits -= dbits;
 	      dbits /= 2;
@@ -369,6 +373,11 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 	  if (better) {
 	      save_bits[gr][ch] = this_bits;
 	      this_bits -= dbits;
+	      real_bits = cod_info->part2_3_length;
+	      /* 
+	       * we now know it can be done with "real_bits"
+	       * and maybe we can skip some iterations
+	       */
 	  } else {
 	      this_bits += dbits;
 	  }
