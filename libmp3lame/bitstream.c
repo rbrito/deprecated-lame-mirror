@@ -491,7 +491,8 @@ huffman_coder_count1(lame_internal_flags *gfc, gr_info *gi)
 	bits += h->hlen[p];
     }
 #ifdef DEBUG
-    DEBUGF(gfc,"%ld %d %d %d\n",gfc->bs.totbit -gegebo, gi->count1bits, gi->big_values, gi->count1);
+    DEBUGF(gfc,"count1: real: %ld counted:%d (bigv %d count1len %d)\n",
+	   gfc->bs.totbit -gegebo, gi->count1bits, gi->big_values, gi->count1);
 #endif
     return bits;
 }
@@ -679,7 +680,9 @@ writeMainData ( lame_global_flags * const gfp)
 	    int i, sfb_partition, scale_bits=0;
 	    assert(gi->sfb_partition_table);
 	    data_bits = 0;
-
+#ifdef DEBUG
+	    hogege = gfc->bs.totbit;
+#endif
 	    sfb = 0;
 	    sfb_partition = 0;
 
@@ -707,7 +710,9 @@ writeMainData ( lame_global_flags * const gfp)
 		data_bits +=LongHuffmancodebits(gfc, gi);
 	    }
 	    data_bits +=huffman_coder_count1(gfc, gi);
-
+#ifdef DEBUG
+	    DEBUGF(gfc,"<%ld> ", gfc->bs.totbit-hogege);
+#endif
 	    /* does bitcount in quantize.c agree with actual bit count?*/
 	    assert(data_bits==gi->part2_3_length);
 	    assert(scale_bits==gi->part2_length);
