@@ -587,10 +587,10 @@ void L3psycho_anal( lame_global_flags *gfp,
 	 */
 	/* dont use long block pre-echo control if previous granule was 
 	 * a short block.  This is to avoid the situation:   
-	 * frame0:  quite (very low masking)  
+	 * frame0:  quiet (very low masking)  
 	 * frame1:  surge  (triggers short blocks)
 	 * frame2:  regular frame.  looks like pre-echo when compared to 
-	 *          frame0, but all pre-echo in that case is in frame1.
+	 *          frame0, but all pre-echo was in frame1.
 	 */
 	if (gfc->blocktype_old[chn] == SHORT_TYPE )
 	  thr[b] = Min(ecb, rpelev*gfc->nb_1[chn][b]);
