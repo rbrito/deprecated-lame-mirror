@@ -1063,7 +1063,7 @@ mp3x display               <------LONG------>
 	    for (sb = 0; sb < 3; sb++)
 		fft_short(gfc, wsamp_S[ch][sb], &buffer[ch][(576/3) * (sb+1)]);
 	}
-	else if (ch == 2) {
+	else if (ch == 2 && (current_is_short & 12)) {
 	    for (sb = 0; sb < 3; sb++) {
 		for (j = 0; j < BLKSIZE_s; j++) {
 		    FLOAT l = wsamp_S[0][sb][j];
