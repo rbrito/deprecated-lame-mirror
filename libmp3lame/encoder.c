@@ -567,7 +567,7 @@ lame_encode_mp3_frame(       /* Output */
     switch (gfp->VBR) {
     default:
     case vbr_off:
-        iteration_loop(gfp, *pe_use, ms_ener_ratio, *masking);
+        CBR_iteration_loop(gfp, *pe_use, ms_ener_ratio, *masking);
         break;
     case vbr_mt:
     case vbr_rh:

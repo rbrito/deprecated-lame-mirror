@@ -965,6 +965,9 @@ lame_init_params(lame_global_flags * const gfp)
         apply_preset(gfp, gfp->VBR_mean_bitrate_kbps, 0);
         lame_set_VBR(gfp, vbrmode);
 
+        gfc->PSY->mask_adjust = gfp->maskingadjust;
+        gfc->PSY->mask_adjust_short = gfp->maskingadjust_short;
+
         break;
     }
     }

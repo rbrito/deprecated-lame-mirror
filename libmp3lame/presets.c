@@ -47,6 +47,7 @@ int apply_abr_preset(lame_global_flags*  gfp, int preset, int enforce)
         FLOAT  st_s;
         FLOAT  nsbass;
         FLOAT  scale;
+        FLOAT  masking_adj;
         FLOAT  ath_lower;
         FLOAT  ath_curve;
         FLOAT  interch;
@@ -57,24 +58,24 @@ int apply_abr_preset(lame_global_flags*  gfp, int preset, int enforce)
 
     /* Switch mappings for ABR mode */
     const abr_presets_t abr_switch_map [] = {
-        /* kbps  quant q_s safejoint nsmsfix st_lrm  st_s  ns-bass scale  ath_lwr ath_curve  interch , sfscale */
-        {   8,   9,    9,  0,        0   ,    6.60, 145  ,  0,      0.95,  -30.0,        11,  0.0012 ,       1}, /*   8, impossible to use in stereo */
-        {  16,   9,    9,  0,        0   ,    6.60, 145  ,  0,      0.95,  -25.0,        11,  0.0010 ,       1}, /*  16 */
-        {  24,   9,    9,  0,        0   ,    6.60, 145  ,  0,      0.95,  -20.0,        11,  0.0010 ,       1}, /*  24 */
-        {  32,   9,    9,  0,        0   ,    6.60, 145  ,  0,      0.95,  -15.0,        11,  0.0010 ,       1}, /*  32 */
-        {  40,   9,    9,  0,        0   ,    6.60, 145  ,  0,      0.95,  -10.0,        11,  0.0009 ,       1}, /*  40 */
-        {  48,   9,    9,  0,        0   ,    6.60, 145  ,  0,      0.95,  -10.0,        11,  0.0009 ,       1}, /*  48 */
-        {  56,   9,    9,  0,        0   ,    6.60, 145  ,  0,      0.95,   -6.0,        11,  0.0008 ,       1}, /*  56 */
-        {  64,   9,    9,  0,        0   ,    6.60, 145  ,  0,      0.95,   -2.0,        11,  0.0008 ,       1}, /*  64 */
-        {  80,   9,    9,  0,        0   ,    6.60, 145  ,  0,      0.95,     .0,         8,  0.0007 ,       1}, /*  80 */
-        {  96,   9,    9,  0,        2.50,    6.60, 145  ,  0,      0.95,    1.0,       5.5,  0.0006 ,       1}, /*  96 */
-        { 112,   9,    9,  0,        2.25,    6.60, 145  ,  0,      0.95,    2.0,       4.5,  0.0005 ,       1}, /* 112 */
-        { 128,   9,    9,  0,        1.95,    6.40, 140  ,  0,      0.95,    3.0,         4,  0.0002 ,       1}, /* 128 */
-        { 160,   9,    9,  1,        1.79,    6.00, 135  ,  0,      0.95,    5.0,       3.5,  0      ,       1}, /* 160 */
-        { 192,   9,    9,  1,        1.49,    5.60, 125  ,  0,      0.97,    7.0,         3,  0      ,       0}, /* 192 */
-        { 224,   9,    9,  1,        1.25,    5.20, 125  ,  0,      0.98,    9.0,         2,  0      ,       0}, /* 224 */
-        { 256,   9,    9,  1,        0.97,    5.20, 125  ,  0,      1.00,    9.0,         1,  0      ,       0}, /* 256 */
-        { 320,   9,    9,  1,        0.90,    5.20, 125  ,  0,      1.00,    9.0,         0,  0      ,       0}  /* 320 */
+        /* kbps  quant q_s safejoint nsmsfix st_lrm  st_s  ns-bass scale   msk ath_lwr ath_curve  interch , sfscale */
+        {   8,   9,    9,  0,        0   ,    6.60, 145  ,  0,      0.95,    0, -30.0,        11,  0.0012 ,       1}, /*   8, impossible to use in stereo */
+        {  16,   9,    9,  0,        0   ,    6.60, 145  ,  0,      0.95,    0, -25.0,        11,  0.0010 ,       1}, /*  16 */
+        {  24,   9,    9,  0,        0   ,    6.60, 145  ,  0,      0.95,    0, -20.0,        11,  0.0010 ,       1}, /*  24 */
+        {  32,   9,    9,  0,        0   ,    6.60, 145  ,  0,      0.95,    0, -15.0,        11,  0.0010 ,       1}, /*  32 */
+        {  40,   9,    9,  0,        0   ,    6.60, 145  ,  0,      0.95,    0, -10.0,        11,  0.0009 ,       1}, /*  40 */
+        {  48,   9,    9,  0,        0   ,    6.60, 145  ,  0,      0.95,    0, -10.0,        11,  0.0009 ,       1}, /*  48 */
+        {  56,   9,    9,  0,        0   ,    6.60, 145  ,  0,      0.95,    0,  -6.0,        11,  0.0008 ,       1}, /*  56 */
+        {  64,   9,    9,  0,        0   ,    6.60, 145  ,  0,      0.95,    0,  -2.0,        11,  0.0008 ,       1}, /*  64 */
+        {  80,   9,    9,  0,        0   ,    6.60, 145  ,  0,      0.95,    0,    .0,         8,  0.0007 ,       1}, /*  80 */
+        {  96,   9,    9,  0,        2.50,    6.60, 145  ,  0,      0.95,    0,   1.0,       5.5,  0.0006 ,       1}, /*  96 */
+        { 112,   9,    9,  0,        2.25,    6.60, 145  ,  0,      0.95,    0,   2.0,       4.5,  0.0005 ,       1}, /* 112 */
+        { 128,   9,    9,  0,        1.95,    6.40, 140  ,  0,      0.95,    0,   3.0,         4,  0.0002 ,       1}, /* 128 */
+        { 160,   9,    9,  1,        1.79,    6.00, 135  ,  0,      0.95,    0,   5.0,       3.5,  0      ,       1}, /* 160 */
+        { 192,   9,    9,  1,        1.49,    5.60, 125  ,  0,      0.97,    0,   7.0,         3,  0      ,       0}, /* 192 */
+        { 224,   9,    9,  1,        1.25,    5.20, 125  ,  0,      0.98,    0,   9.0,         2,  0      ,       0}, /* 224 */
+        { 256,   9,    9,  1,        0.97,    5.20, 125  ,  0,      1.00,    0,   9.0,         1,  0      ,       0}, /* 256 */
+        { 320,   9,    9,  1,        0.90,    5.20, 125  ,  0,      1.00,    0,   9.0,         0,  0      ,       0}  /* 320 */
                                        };
 
     
@@ -123,6 +124,14 @@ int apply_abr_preset(lame_global_flags*  gfp, int preset, int enforce)
     /* ABR seems to have big problems with clipping, especially at low bitrates */
     /* so we compensate for that here by using a scale value depending on bitrate */
     SET_OPTION(scale, abr_switch_map[r].scale, -1);
+
+    SET_OPTION(maskingadjust, abr_switch_map[r].masking_adj , 0);
+    if (abr_switch_map[r].masking_adj > 0) {
+        SET_OPTION(maskingadjust_short, abr_switch_map[r].masking_adj * .9 , 0);
+    } else {
+        SET_OPTION(maskingadjust_short, abr_switch_map[r].masking_adj * 1.1 , 0);
+    }
+
 
     SET_OPTION(ATHlower, abr_switch_map[r].ath_lower, 0);
     SET_OPTION(ATHcurve, abr_switch_map[r].ath_curve, -1);

@@ -24,7 +24,7 @@
 
 #include "util.h"
 
-void iteration_loop( lame_global_flags *gfp,
+void CBR_iteration_loop( lame_global_flags *gfp,
                      FLOAT pe[2][2],
 		     FLOAT ms_ratio[2], 
 		     III_psy_ratio ratio[2][2]);
