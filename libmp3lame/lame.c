@@ -986,7 +986,7 @@ lame_encode_buffer_sample_t(
             ret =
                 lame_encode_frame(gfp, mfbuf[0], mfbuf[1], mp3buf,buf_size);
 
-            if (ret < 0) goto retr;
+            if (ret < 0) return ret;
             mp3buf += ret;
             mp3size += ret;
 
@@ -999,10 +999,7 @@ lame_encode_buffer_sample_t(
         }
     }
     assert(nsamples == 0);
-    ret = mp3size;
-
-  retr:
-    return ret;
+    return mp3size;
 }
 
 

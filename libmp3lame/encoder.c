@@ -438,15 +438,9 @@ int  lame_encode_mp3_frame (				/* Output */
     /* bit and noise allocation */
     switch (gfp->VBR){ 
     default:
-    case cbr:
-	iteration_loop(gfp, masking);
-	break;
-    case vbr:
-	VBR_iteration_loop(gfp, masking);
-	break;
-    case abr:
-	ABR_iteration_loop(gfp, masking);
-	break;
+    case cbr:	    iteration_loop(gfp, masking); break;
+    case vbr:	VBR_iteration_loop(gfp, masking); break;
+    case abr:	ABR_iteration_loop(gfp, masking); break;
     }
 
     /*  write the frame to the bitstream  */
