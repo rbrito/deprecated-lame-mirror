@@ -97,6 +97,7 @@ struct gtkinfostruct {
   int totis;              /* total frames with i_stereo */
   int totshort;           /* total granules with short blocks */
   int totmix;             /* total granules with mixed blocks */
+  int totpreflag;         /* total granules with preflag */
   int pupdate;            /* plot while processing, or only when needed */
   int sfblines;           /* plot scalefactor bands in MDCT plot */
   int difference;         /* plot original - decoded instead of orig vs. decoded */
@@ -863,6 +864,7 @@ static int frameadv1(GtkWidget *widget, gpointer   data )
 	  for (ch = 0 ; ch < 2 ; ch ++) {
 	    gtkinfo.totshort += (pinfo->mpg123blocktype[gr][ch]==2);
 	    gtkinfo.totmix  += !(pinfo->mixed[gr][ch]==0);
+            gtkinfo.totpreflag += (pinfo->preflag[gr][ch]==1);
 	    pinfo->totbits += pinfo->mainbits[gr][ch];
 	  }
 	}
@@ -1196,6 +1198,8 @@ static void text_window (GtkWidget *widget, gpointer data)
     sprintf(text,"short block granules: %i \n",gtkinfo.totshort);
     gtk_text_insert(GTK_TEXT(box),NULL,NULL,NULL,text,-1);
     sprintf(text,"mixed block granules: %i \n",gtkinfo.totmix);
+    gtk_text_insert(GTK_TEXT(box),NULL,NULL,NULL,text,-1);
+    sprintf(text,"preflag granules: %i \n",gtkinfo.totpreflag);
     gtk_text_insert(GTK_TEXT(box),NULL,NULL,NULL,text,-1);
     break;
   }
