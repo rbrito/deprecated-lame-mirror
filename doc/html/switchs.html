@@ -176,8 +176,7 @@
   </tr>
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#-preset">--preset</a></kbd></td>
-    <td align="LEFT" nowrap>use built-in preset (phone, voice, fm, tape, hifi, 
-      cd, studio)</td>
+    <td align="LEFT" nowrap>use built-in preset</td>
   </tr>
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#-priority">--priority</a></kbd></td>
@@ -295,7 +294,7 @@
     lame --abr 123 -b 64 -B 192 a.wav a.mp3<br>
     which would limit the allowed frame sizes between 64 and 192 kbits. <br>
     <br>
-    Using -B is NOT RECOMMENDED. A 128kbs CBR bitstream, because of the bit reservoir, 
+    The use of -B is NOT RECOMMENDED. A 128kbs CBR bitstream, because of the bit reservoir, 
     can actually have frames which use as many bits as a 320kbs frame. VBR modes 
     minimize the use of the bit reservoir, and thus need to allow 320kbs frames 
     to get the same flexibility as CBR streams. 
@@ -495,7 +494,7 @@
     between display updates</a></strong> </dt>
 </dl>
 <dl> 
-  <dd>Set the delay in secondes between two display updates. 
+  <dd>Set the delay in seconds between two display updates. 
   <dt><br>
     <br>
   </dt>
@@ -618,7 +617,7 @@
     of highpass filtering in kHz</a></strong> </dt>
 </dl>
 <dl> 
-  <dd> Set the width of the highpass filter. The default value is 15% of highpass 
+  <dd> Set the width of the highpass filter. The default value is 15% of the highpass 
     frequency. 
   <dt><br>
     <br>
@@ -633,7 +632,7 @@
   <dd> Tells the encoder to use full bandwidth and to disable all filters. By 
     default, the encoder uses some highpass filtering at low bitrates, in order 
     to keep a good quality by giving more bits to more important frequencies.<br>
-    Increasing the bandwidth from the default setting might produces ringing artefacts 
+    Increasing the bandwidth from the default setting might produce ringing artefacts 
     at low bitrates. Use with care! 
   <dt><br>
     <br>
@@ -657,7 +656,7 @@
     of lowpass filtering in kHz</a></strong></dt>
 </dl>
 <dl> 
-  <dd> Set the width of the lowpass filter. The default value is 15% of lowpass 
+  <dd> Set the width of the lowpass filter. The default value is 15% of the lowpass 
     frequency. 
   <dt><br>
     <br>
@@ -669,9 +668,9 @@
     mode</a></strong> </dt>
 </dl>
 <dl> 
-  <dd> Joint-stereo is the default mode for stereo files with VBR when -v is more 
-    than 4 or fixed bitrates of 160kbs or less. At higher fixed bitrates or higher 
-    VBR settings, the default is stereo. <b><i><br>
+  <dd> Joint-stereo is the default mode for stereo files with VBR when -V is more 
+     than 4 or fixed bitrates of 160kbs or less. At higher fixed bitrates or higher 
+     VBR settings, the default is stereo. <b><i><br>
     <br>
     stereo</i></b> <br>
     In this mode, the encoder makes no use of potentially existing correlations 
@@ -700,7 +699,7 @@
     <b><i>dual channels </i></b><br>
     In this mode, the 2 channels will be totally indenpendently encoded. Each 
     channel will have exactly half of the bitrate. This mode is designed for applications 
-    like dual languages encoding (ex: English in one channel an French in the 
+    like dual languages encoding (ex: English in one channel and French in the 
     other). Using this encoding mode for regular stereo files will result in a 
     lower quality encoding.<br>
     <br>
@@ -720,7 +719,7 @@
 <dl> 
   <dd> Assume the input file is a MPEG Layer I file.<br>
     If the filename ends in ".mp1" or &quot;.mpg&quot; LAME will assume it is 
-    a MPEG Layer I. For stdin or Layer I files which dont end in .mp1 or .mpg 
+    a MPEG Layer I file. For stdin or Layer I files which do not end in .mp1 or .mpg 
     you need to use this switch. 
   <dt><br>
   </dt>
@@ -734,8 +733,8 @@
 </dl>
 <dl> 
   <dd> Assume the input file is a MPEG Layer II (ie MP2) file.<br>
-    If the filename ends in ".mp2" LAME will assume it is a MPEG Layer II. For 
-    stdin or Layer II files which dont end in .mp2 you need to use this switch. 
+    If the filename ends in ".mp2" LAME will assume it is a MPEG Layer II file. For 
+    stdin or Layer II files which do not end in .mp2 you need to use this switch. 
   <dt><br>
   </dt>
 </dl>
@@ -750,8 +749,8 @@
   <dd> Assume the input file is a MP3 file. Usefull for downsampling from one 
     mp3 to another. As an example, it can be usefull for streaming through an 
     IceCast server.<br>
-    If the filename ends in ".mp3" LAME will assume it is an MP3. For stdin or 
-    MP3 files which dont end in .mp3 you need to use this switch. 
+    If the filename ends in ".mp3" LAME will assume it is an MP3 file. For stdin or 
+    MP3 files which do not end in .mp3 you need to use this switch. 
   <dt><br>
   </dt>
 </dl>
@@ -849,10 +848,12 @@
   <hr width="50%" noshade align="center">
   <br>
   <dl> </dl>
-  <dt><strong>* <kbd>--preset phone/voice/fm/tape/hifi/cd/studio</kbd> <a name="-preset">&nbsp;&nbsp;&nbsp;&nbsp;use 
+  <dt><strong>* <kbd>--preset presetName</kbd> <a name="-preset">&nbsp;&nbsp;&nbsp;&nbsp;use 
     built-in preset</a></strong></dt>
 </dl>
-<dd> Use one of the built-in presets. 
+<dd> Use one of the built-in presets (phone, phon+, lw, mw-eu, mw-us, sw, fm, voice, radio, tape, hifi, cd, studio).
+<br>
+<dd>   --preset help" gives more infos about the the used options in these presets. 
 <dt><br>
   <br>
 </dt>
@@ -1013,7 +1014,7 @@
     n < 1: reduce volume<br>
     <br>
     Use with care, since most MP3 decoders will truncate data which decodes to 
-    values greater than 32768 
+    values greater than 32768. 
   <dt><br>
     <br>
   </dt>
@@ -1024,7 +1025,7 @@
     short blocks</a></strong> </dt>
 </dl>
 <dl> 
-  <dd>Let LAME using short blocks when appropriate. It is the default setting. 
+  <dd>Let LAME use short blocks when appropriate. It is the default setting. 
 </dl>
 <dl> 
   <dd>&nbsp; 
