@@ -22,12 +22,16 @@ MAKEDEP = -M
 BRHIST_SWITCH = 
 LIBTERMCAP = 
 RM = rm -f
+
+
+
 ##########################################################################
 # -DHAVEMPGLIB compiles in the mpglib *decoding* library
 # -DLAMEPARSE compiles in the command line parsing, for building the
 # 'lame' stand alone executable instead of encoding library
 ##########################################################################
 CPP_OPTS = -DHAVEMPGLIB -DLAMEPARSE
+
 
 
 
@@ -95,7 +99,7 @@ ifeq ($(UNAME),Linux)
 #  CC_OPTS =  -O9 -fomit-frame-pointer -fno-strength-reduce -mpentiumpro -ffast-math -finline-functions -funroll-loops -Wall -malign-double -g -march=pentiumpro -mfancy-math-387 -pipe 
 
 #  for debugging:
-   CC_OPTS =  -UNDEBUG -O -Wall -g -DABORTFP
+#   CC_OPTS =  -UNDEBUG -O -Wall -g -DABORTFP
 
 #  for lots of debugging:
 #   CC_OPTS =  -DDEBUG -UNDEBUG  -O -Wall -g -DABORTFP 
@@ -278,6 +282,17 @@ gtk_obj = $(gtk_sources:.c=.o)
 gtk_dep = $(gtk_sources:.c=.d)
 
 
+
+NASM = nasm
+ASFLAGS=-f elf -i i386/
+%.o: %.nas
+	$(NASM) $(ASFLAGS) $< -o $@
+%.o: %.s
+	gcc -c $< -o $@
+
+## use MMX extension. you need nasm and MMX supported CPU.
+#CC_SWITCCH += -DMMX_choose_table
+#OBJ += i386/choose_table.o
 
 %.o: %.c 
 	$(CC) $(CPP_OPTS) $(CC_SWITCHES) -c $< -o $@

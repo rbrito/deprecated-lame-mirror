@@ -184,7 +184,31 @@ count_bit_noESC_from2(int *ix, int *end, int t1, int *s)
 }
 
 
+#ifdef MMX_choose_table
+static unsigned long long table789[16*6];
+static unsigned long long tableABC[16*8];
+static unsigned long long tableDEF[16*16];
 
+extern int
+choose_table_from3_MMX(int *ix, int *end, int t1, int *s, unsigned long long *hlen);
+
+INLINE static int
+count_bit_noESC_from3(int *ix, int *end, int t1, int *s)
+{
+    /* No ESC-words */
+    unsigned long long *hlen;
+
+    if (t1 == 7)
+	hlen = table789;
+    else if (t1 == 10)
+	hlen = tableABC;
+    else
+	hlen = tableDEF;
+
+    return choose_table_from3_MMX(ix, end, t1, s, hlen);
+}
+
+#else
 INLINE static int
 count_bit_noESC_from3(int *ix, int *end, int t1, int *s)
 {
@@ -219,7 +243,7 @@ count_bit_noESC_from3(int *ix, int *end, int t1, int *s)
 
     return t;
 }
-
+#endif
 
 
 /*************************************************************************/
@@ -731,4 +755,32 @@ void huffman_init()
     for (i = 0; i < 4*4; i++) {
 	table56[i] = (((int)ht[5].hlen[i]) << 16) + ht[6].hlen[i];
     }
+#ifdef MMX_choose_table
+    for (i = 0; i < 6; i++) {
+	int j;
+	for (j = 0; j < 6; j++) {
+	    table789[i*16+j] =
+		(((long long)ht[7].hlen[i*6+j]) << 32) +
+		(((long long)ht[8].hlen[i*6+j]) << 16) +
+		(((long long)ht[9].hlen[i*6+j]));
+	}
+    }
+
+    for (i = 0; i < 8; i++) {
+	int j;
+	for (j = 0; j < 8; j++) {
+	    tableABC[i*16+j] =
+		(((long long)ht[10].hlen[i*8+j]) << 32) +
+		(((long long)ht[11].hlen[i*8+j]) << 16) +
+		(((long long)ht[12].hlen[i*8+j]));
+	}
+    }
+
+    for (i = 0; i < 16*16; i++) {
+	tableDEF[i] =
+	    (((long long)ht[13].hlen[i]) << 32) +
+	    (((long long)ht[14].hlen[i]) << 16) +
+	    (((long long)ht[15].hlen[i]));
+    }
+#endif
 }
