@@ -1024,7 +1024,7 @@ CBR_1st_bitalloc (
 		   all zero (treat as i-stereo). */
 		calc_noise(gfc, &gi_w, rxmin, distort);
 		distort[gi->psymax-1] = 20.0; /* some large value */
-		continue;
+		goto nextTry;
 	    }
 
 	    /* store this scalefactor combination if it is better */
@@ -1043,7 +1043,7 @@ CBR_1st_bitalloc (
 	    }
 	} else
 	    age = 0;
-
+    nextTry:
 	/* stopping criteria */
 	if (--age > 0 && gi_w.global_gain != 256
 	    && !noise_in_sfb21(&gi_w, distort, bestNoise))
@@ -1783,7 +1783,7 @@ set_frame_pinfo(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 		    gi->scalefac[sfb] = 0;
 	    }
 
-	    set_pinfo (gfc, gi, &ratio[gr][ch], gr, ch);
+	    set_pinfo(gfc, gi, &ratio[gr][ch], gr, ch);
 	    memcpy(gi->scalefac, scalefac_sav, sizeof(scalefac_sav));
 	} /* for ch */
     }    /* for gr */
