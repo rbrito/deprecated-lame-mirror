@@ -347,7 +347,16 @@ calc_sfb_noise_ave(const FLOAT8 * xr, const FLOAT8 * xr34, int bw, int sf)
 }
 
 
-
+/* the find_scalefac* routines calculate
+ * a quantization step size which would
+ * introduce as much noise as is allowed.
+ * The larger the step size the more
+ * quantization noise we'll get. The
+ * scalefactors are there to lower the
+ * global step size, allowing limited
+ * differences in quantization step sizes
+ * per band (shaping the noise).
+ */
 inline int
 find_scalefac(
     const FLOAT8 * xr, const FLOAT8 * xr34, FLOAT8 l3_xmin, int bw)
@@ -713,7 +722,9 @@ block_sf(const lame_internal_flags * gfc, const FLOAT8 * l3_xmin,
     }
 }
 
-
+/*
+ * See below function for comments
+ */
 static void
 short_block_sf(const lame_internal_flags * gfc, const FLOAT8 * l3_xmin,
                int * vbrsf, int *vbrmin, int *vbrmax, gr_info *gi)
@@ -807,6 +818,24 @@ short_block_sf(const lame_internal_flags * gfc, const FLOAT8 * l3_xmin,
 }
 
 
+
+
+
+/* smooth scalefactors
+ *
+ * The find_scalefac* routines calculate
+ * scalefactors which introduce as much
+ * noise as it is allowed. Because of the
+ * *flawed* psy model, at many test samples
+ * some scalefactors where too high. That's
+ * why the idea of limiting came into play
+ * to give a somehow smoother noise
+ * distribution over the scalefactor bands.
+ * According to Robert, this improved on
+ * samples with tonality problems a lot,
+ * but is only a workaround against some
+ * psymodel limitations.
+ */
 static void
 long_block_sf(const lame_internal_flags * gfc, const FLOAT8 * l3_xmin,
               int * vbrsf, int *vbrmin, int *vbrmax, gr_info *gi)
@@ -818,6 +847,8 @@ long_block_sf(const lame_internal_flags * gfc, const FLOAT8 * l3_xmin,
     switch (gfc->VBR->smooth) {
     default:
     case 0:
+        /* no smoothing */
+
         /*  get max value
          */
         *vbrmin = *vbrmax = vbrsf[0];
@@ -830,6 +861,8 @@ long_block_sf(const lame_internal_flags * gfc, const FLOAT8 * l3_xmin,
         break;
 
     case 1:
+        /* cut high scalefactors based on median */
+
         /*  make working copy, get min value, select_kth_int will reorder!
          */
 	vbrmn = +1000;
@@ -859,6 +892,8 @@ long_block_sf(const lame_internal_flags * gfc, const FLOAT8 * l3_xmin,
         break;
 
     case 2:
+        /* limit neighboring factors by a fixed delta */
+
         vbrclip = vbrsf[1] + MAX_SF_DELTA;
         if (vbrsf[0] > vbrclip)
             vbrsf[0] = vbrclip;
