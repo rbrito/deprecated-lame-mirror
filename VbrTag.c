@@ -364,6 +364,10 @@ int PutVbrTag(char* lpszFileName,int nVbrScale)
 	/* Get file size */
 	lFileSize=ftell(fpStream);
 	
+	/* Abort if file has zero length. Yes, it can happen :) */
+	if (lFileSize==0)
+		return -1;
+
 	/* Seek to first real frame */
 	fseek(fpStream,(long)TotalFrameSize,SEEK_SET);
 
