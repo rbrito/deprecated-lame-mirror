@@ -73,10 +73,6 @@ BSC32=bscmake.exe
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
 # ADD LIB32 /nologo
-# Begin Special Build Tool
-SOURCE="$(InputPath)"
-PostBuild_Cmds=copy   debug\drvACM.acm   d:\winnt\system32\ 
-# End Special Build Tool
 
 !ENDIF 
 
