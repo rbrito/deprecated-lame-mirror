@@ -802,11 +802,6 @@ scfsi_calc(int ch,
     gr_info *gi = &l3_side->tt[1][ch];
     gr_info *g0 = &l3_side->tt[0][ch];
 
-    static const int scfsi_band[5] = { 0, 6, 11, 16, 21 };
-
-    for (i = 0; i < 4; i++) 
-	l3_side->scfsi[ch][i] = 0;
-
     for (i = 0; i < (sizeof(scfsi_band) / sizeof(int)) - 1; i++) {
 	for (sfb = scfsi_band[i]; sfb < scfsi_band[i + 1]; sfb++) {
 	    if (g0->scalefac[sfb] != gi->scalefac[sfb]
@@ -864,6 +859,7 @@ void best_scalefac_store(
     /* use scalefac_scale if we can */
     gr_info *gi = &l3_side->tt[gr][ch];
     int sfb,i,j,l;
+    int recalc = 0;
 
     /* remove scalefacs from bands with ix=0.  This idea comes
      * from the AAC ISO docs.  added mt 3/00 */
@@ -876,7 +872,7 @@ void best_scalefac_store(
 	    if (gi->l3_enc[l+j]!=0)
 		break;
 	if (l==0)
-	    gi->scalefac[sfb]=-2; // anything goes.
+	    gi->scalefac[sfb] = recalc = -2; // anything goes.
     }
 
     if (!gi->scalefac_scale && !gi->preflag) {
@@ -890,15 +886,22 @@ void best_scalefac_store(
 		if (gi->scalefac[sfb] > 0)
 		    gi->scalefac[sfb] >>= 1;
 
-	    gi->scalefac_scale = 1;
-	    if (gfc->mode_gr == 2) {
-	        scale_bitcount(gi);
-	    } else {
-		scale_bitcount_lsf(gfc, gi);
-	    }
+	    gi->scalefac_scale = recalc = 1;
 	}
     }
 
+    if (!gi->preflag && gi->block_type != SHORT_TYPE) {
+	for (sfb = 11; sfb < SBPSY_l; sfb++)
+	    if (gi->scalefac[sfb] < pretab[sfb] && gi->scalefac[sfb] != -2)
+		break;
+	if (sfb == SBPSY_l) {
+	    for (sfb = 11; sfb < SBPSY_l; sfb++)
+		if (gi->scalefac[sfb] > 0)
+		    gi->scalefac[sfb] -= pretab[sfb];
+
+	    gi->preflag = recalc = 1;
+	}
+    }
 
     for ( i = 0; i < 4; i++ )
 	l3_side->scfsi[ch][i] = 0;
@@ -907,6 +910,12 @@ void best_scalefac_store(
 	&& l3_side->tt[0][ch].block_type != SHORT_TYPE
 	&& l3_side->tt[1][ch].block_type != SHORT_TYPE) {
       	scfsi_calc(ch, l3_side);
+    } else if (recalc) {
+	if (gfc->mode_gr == 2) {
+	    scale_bitcount(gi);
+	} else {
+	    scale_bitcount_lsf(gfc, gi);
+	}
     }
 }
 
