@@ -110,7 +110,8 @@ EXTRA_liblameasmroutines_la_SOURCES = $(nasm_sources)
 nasm_sources =  	choose_table.nas 	cpu_feat.nas 	scalar.nas
 
 
-CLEANFILES = *.lst
+CLEANFILES =  	choose_table.lst 	cpu_feat.lst 	scalar.lst
+
 
 @HAVE_NASM_TRUE@liblameasmroutines_la_SOURCES = $(nasm_sources)
 
