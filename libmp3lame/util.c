@@ -74,7 +74,7 @@ void disable_FPE(void) {
      */
 
 #if defined(ABORTFP)
-#if defined(_MSC_VER)
+# if defined(_MSC_VER)
     {
 
    /* set affinity to a single CPU.  Fix for EAC/lame on SMP systems from
@@ -83,13 +83,13 @@ void disable_FPE(void) {
     GetSystemInfo(&si);
     SetProcessAffinityMask(GetCurrentProcess(), si.dwActiveProcessorMask);
 
-#include <float.h>
+# include <float.h>
         unsigned int mask;
         mask = _controlfp(0, 0);
         mask &= ~(_EM_OVERFLOW | _EM_UNDERFLOW | _EM_ZERODIVIDE | _EM_INVALID);
         mask = _controlfp(mask, _MCW_EM);
     }
-#elif defined(__CYGWIN__)
+# elif defined(__CYGWIN__)
 #  define _FPU_GETCW(cw) __asm__ ("fnstcw %0" : "=m" (*&cw))
 #  define _FPU_SETCW(cw) __asm__ ("fldcw %0" : : "m" (*&cw))
 
@@ -109,13 +109,7 @@ void disable_FPE(void) {
     {
 
 #  include <fpu_control.h>
-#  ifndef _FPU_GETCW
-#  define _FPU_GETCW(cw) __asm__ ("fnstcw %0" : "=m" (*&cw))
-#  endif
-#  ifndef _FPU_SETCW
-#  define _FPU_SETCW(cw) __asm__ ("fldcw %0" : : "m" (*&cw))
-#  endif
-
+#  if (defined(_FPU_GETCW) && defined(_FPU_SETCW))
         /* 
          * Set the Linux mask to abort on most FPE's
          * if bit is set, we _mask_ SIGFPE on that error!
@@ -126,8 +120,9 @@ void disable_FPE(void) {
         _FPU_GETCW(mask);
         mask &= ~(_FPU_MASK_IM | _FPU_MASK_ZM | _FPU_MASK_OM);
         _FPU_SETCW(mask);
+#  endif
     }
-#endif
+# endif
 #endif /* ABORTFP */
 }
 
