@@ -240,8 +240,8 @@ typedef enum {
     coding_MPEG_Layer_2 = 2,
     coding_MPEG_Layer_3 = 3,
     coding_MPEG_AAC     = 4,
-    coding_Ogg_Vorbis   = 5,
-    coding_MPEG_plus    = 6
+    coding_Ogg_Vorbis   = 5, /* not supported */
+    coding_MPEG_plus    = 6  /* not supported */
 } coding_t;
 
 #define MAX_CHANNELS  2

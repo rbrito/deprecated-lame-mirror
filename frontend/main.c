@@ -208,10 +208,6 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath,
         if (silent < 10) fprintf(stderr, "MPEG-%u%s Layer %s", 2 - lame_get_version(gfp),
                 lame_get_out_samplerate( gfp ) < 16000 ? ".5" : "", "I");
         break;
-    case sf_ogg:
-        if (silent < 10) fprintf(stderr, "Ogg Vorbis");
-        skip = 0;       /* other formats have no delay *//* is += 0 not better ??? */
-        break;
     case sf_raw:
         if (silent < 10) fprintf(stderr, "raw PCM data");
         mp3input_data.nsamp = lame_get_num_samples( gfp );
@@ -239,14 +235,16 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath,
         break;
     }
 
-    if (silent < 10) fprintf(stderr, ")\noutput: %s%s(16 bit, Microsoft WAVE)\n",
-            strcmp(outPath, "-") ? outPath : "<stdout>",
-            strlen(outPath) > 45 ? "\n\t" : "  ");
+    if (silent < 10) {
+	fprintf(stderr, ")\noutput: %s%s(16 bit, Microsoft WAVE)\n",
+		strcmp(outPath, "-") ? outPath : "<stdout>",
+		strlen(outPath) > 45 ? "\n\t" : "  ");
 
-    if (skip > 0)
-        if (silent < 10) fprintf(stderr, "skipping initial %i samples (encoder+decoder delay)\n",
-                skip);
-
+	if (skip > 0)
+	    fprintf(stderr,
+		    "skipping initial %i samples (encoder+decoder delay)\n",
+		    skip);
+    }
     if ( 0 == disable_wav_header )
         WriteWaveHeader(outf, 0x7FFFFFFF, lame_get_in_samplerate( gfp ),
                         tmp_num_channels,
@@ -335,6 +333,7 @@ lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath,
         {"stereo", "force-ms", "dual-ch", "single-ch"}
     };
     int     frames;
+    const char *appendix = "";
 
     if (silent < 10) {
         lame_print_config(gf); /* print useful information about options being used */
@@ -347,42 +346,34 @@ lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath,
         fprintf(stderr,
                 "Encoding as %g kHz ", 1.e-3 * lame_get_out_samplerate(gf));
 
-        if (lame_get_ogg(gf)) {
-            fprintf(stderr, "VBR Ogg Vorbis\n");
-        }
-        else {
-            const char *appendix = "";
-
-            switch (lame_get_VBR(gf)) {
-            case vbr_mt:
-            case vbr_rh:
-            case vbr_mtrh:
-                appendix = "ca. ";
-                fprintf(stderr, "VBR(q=%i)", lame_get_VBR_q(gf));
-                break;
-            case vbr_abr:
-                fprintf(stderr, "average %d kbps",
-                        lame_get_VBR_mean_bitrate_kbps(gf));
-                break;
-            default:
-                fprintf(stderr, "%3d kbps", lame_get_brate(gf));
-                break;
-            }
-            fprintf(stderr, " %s MPEG-%u%s Layer III (%s%gx) qval=%i\n",
-                    mode_names[lame_get_force_ms(gf)][lame_get_mode(gf)],
-                    2 - lame_get_version(gf),
-                    lame_get_out_samplerate(gf) < 16000 ? ".5" : "",
-                    appendix,
-                    0.1 * (int) (10. * lame_get_compression_ratio(gf) + 0.5),
-                    lame_get_quality(gf));
-        }
-
-        if (silent <= -10)
-            lame_print_internals(gf);
-
-        fflush(stderr);
+	switch (lame_get_VBR(gf)) {
+	case vbr_mt:
+	case vbr_rh:
+	case vbr_mtrh:
+	    appendix = "ca. ";
+	    fprintf(stderr, "VBR(q=%i)", lame_get_VBR_q(gf));
+	    break;
+	case vbr_abr:
+	    fprintf(stderr, "average %d kbps",
+		    lame_get_VBR_mean_bitrate_kbps(gf));
+	    break;
+	default:
+	    fprintf(stderr, "%3d kbps", lame_get_brate(gf));
+	    break;
+	}
+	fprintf(stderr, " %s MPEG-%u%s Layer III (%s%gx) qval=%i\n",
+		mode_names[lame_get_force_ms(gf)][lame_get_mode(gf)],
+		2 - lame_get_version(gf),
+		lame_get_out_samplerate(gf) < 16000 ? ".5" : "",
+		appendix,
+		0.1 * (int) (10. * lame_get_compression_ratio(gf) + 0.5),
+		lame_get_quality(gf));
     }
 
+    if (silent <= -10)
+	lame_print_internals(gf);
+
+    fflush(stderr);
 
     /* encode until we hit eof */
     do {
@@ -692,14 +683,6 @@ main(int argc, char **argv)
     if (silent > 0 || lame_get_VBR(gf) == vbr_off) {
         brhist = 0;     /* turn off VBR histogram */
     }
-
-
-#ifdef HAVE_VORBIS_ENCODER
-    if (lame_get_ogg(gf)) {
-        lame_encode_ogg_init(gf);
-        lame_set_VBR(gf, vbr_off); /* ignore lame's various VBR modes */
-    }
-#endif
 
 
     if (lame_get_decode_only(gf)) {
