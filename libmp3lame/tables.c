@@ -1138,11 +1138,8 @@ init_s3_values(
     int i, j, k;
     int numberOfNoneZero = 0;
 
-    /* s[j][i], the value of the spreading function,
-     * centered at band j, for band i
-     *
-     * i.e.: sum over j to spread into signal barkval=i
-     * NOTE: i and j are used opposite as in the ISO docs
+    /* s[i][j], the value of the spreading function,
+     * centered at band j(masker), for band i(maskee)
      */
     for (i = 0; i < npart; i++)
 	for (j = 0; j < npart; j++) 
