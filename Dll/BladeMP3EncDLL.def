@@ -7,3 +7,11 @@ beDeinitStream		@3
 beCloseStream		@4
 beVersion			@5
 beWriteVBRHeader	@6
+
+lame_init						@100
+lame_close						@101
+lame_init_params				@102
+lame_encode_buffer_interleaved	@110
+lame_encode_flush				@120
+lame_mp3_tags_fid				@130
+

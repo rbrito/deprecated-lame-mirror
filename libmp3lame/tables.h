@@ -24,8 +24,6 @@
 
 #include "machine.h"
 
-#ifdef KLEMM_43
-
 typedef struct {
     unsigned char  no;
     unsigned char  width;
@@ -66,11 +64,6 @@ typedef struct {
 
 extern const type5_t  table5 [6];
 
-#else /* KLEMM_43 */
-
-extern const FLOAT psy_data [];
-
-#endif /* KLEMM_43 */
 
 
 #define HTN	34
