@@ -64,10 +64,10 @@ CPP_OPTS += -DHAVE_MPGLIB
 CPP_OPTS += -DUSE_LAYER_1 -DUSE_LAYER_2
 
 ##########################################################################
-# -DTAKEHIRO_IEEE754_HACK enables Takehiro's IEEE hack 
+# -DUSE_IEEE754_HACK enables hacky IEEE code
 ##########################################################################
 ifeq ($(iARCH),x86)
-	CPP_OPTS += -DTAKEHIRO_IEEE754_HACK
+	CPP_OPTS += -DUSE_IEEE754_HACK
 endif
 
 ##########################################################################
