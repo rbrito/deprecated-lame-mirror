@@ -1,4 +1,16 @@
-Modularization:
+0.   ./configure script
+
+things to check for:  
+
+   -llibsndfile      (allow user to enable)
+   -lncurses         
+   -lGTK             (allow user to disable)
+   make depend option for CC
+
+
+
+
+1. Modularization:
 
 lame_parse_args():  main.c should parse the argument list, and then
 call lame_setflags() or some other libmp3lame.a routine to 
@@ -10,41 +22,25 @@ to write the BladeEnc/lame dll so that it just uses
 #include "lame.h" and then calls to various lame_*() routines
 
 
-
-
-
-
-1.  replace termcap with ncurses.  ncurses works fine except 
-for line-up cursor movement
-
-2. 
-When all sfb's have energy below ATH, (analog silence)
-use a 32kbs frame even if min VBR bandwidth is larger.
-(should be working now.  not thoroughly tested )
-
-3.
-User specified min & max bandwidth (scalefactor bands)
-(Better: specify lowpass and highpass frequencies)
-
-4.
+2.
 Does stdin work when LAME is compiled to use libsndfile? 
 (new version of libsndfile will support this - try this out)
 
-5.
+3.
 LAME uses a linear downsampling with simple lowpass filter
 on the MDCT/polyphase coefficients.  Is this good enough, or
 would a more expensive filter give better results?
 
-6.
+4.
 make use of subblock_gain (crude algorithm enabled with -Z) 
    One method:  loop over all possible subblock_gains and
    see which combination gives best distortion?  But this puts a lot
    of faith in the short block psycho acoustics
 
-7.
+5.
 make use of scalefactor_select  (crude algorithm enabled with -Y)
 
-8.
+6.
 10Hz high-pass filter.  Probably wont help much.
 
 

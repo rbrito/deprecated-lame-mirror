@@ -1509,7 +1509,7 @@ static void III_hybrid(real fsIn[SBLIMIT][SSLIMIT],real tsOut[SSLIMIT][SBLIMIT],
 int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
 {
   int gr, ch, ss,clip=0;
-  int scalefacs[39]; /* max 39 for short[13][3] mode, mixed: 38, long: 22 */
+  int scalefacs[2][39]; /* max 39 for short[13][3] mode, mixed: 38, long: 22 */
   struct III_sideinfo sideinfo;
   int stereo = fr->stereo;
   int single = fr->single;
@@ -1562,10 +1562,10 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
       struct gr_info_s *gr_info = &(sideinfo.ch[0].gr[gr]);
       long part2bits;
       if(fr->lsf)
-        part2bits = III_get_scale_factors_2(scalefacs,gr_info,0);
+        part2bits = III_get_scale_factors_2(scalefacs[0],gr_info,0);
       else {
 #ifdef MPEG1
-        part2bits = III_get_scale_factors_1(scalefacs,gr_info);
+        part2bits = III_get_scale_factors_1(scalefacs[0],gr_info);
 #else
 	fprintf(stderr,"Not supported\n");
 #endif
@@ -1574,20 +1574,20 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
       if (gf.gtkflag) {
 	int i;
 	for (i=0; i<39; i++) 
-	  pinfo->sfb_s[gr][0][i]=scalefacs[i];
+	  pinfo->sfb_s[gr][0][i]=scalefacs[0][i];
       }
 #endif
-      if(III_dequantize_sample(hybridIn[0], scalefacs,gr_info,sfreq,part2bits))
+      if(III_dequantize_sample(hybridIn[0], scalefacs[0],gr_info,sfreq,part2bits))
         return clip;
     }
     if(stereo == 2) {
       struct gr_info_s *gr_info = &(sideinfo.ch[1].gr[gr]);
       long part2bits;
       if(fr->lsf) 
-        part2bits = III_get_scale_factors_2(scalefacs,gr_info,i_stereo);
+        part2bits = III_get_scale_factors_2(scalefacs[1],gr_info,i_stereo);
       else {
 #ifdef MPEG1
-        part2bits = III_get_scale_factors_1(scalefacs,gr_info);
+        part2bits = III_get_scale_factors_1(scalefacs[1],gr_info);
 #else
 	fprintf(stderr,"Not supported\n");
 #endif
@@ -1596,11 +1596,11 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
       if (gf.gtkflag) {
 	int i;
 	for (i=0; i<39; i++) 
-	  pinfo->sfb_s[gr][1][i]=scalefacs[i];
+	  pinfo->sfb_s[gr][1][i]=scalefacs[1][i];
       }
 #endif
 
-      if(III_dequantize_sample(hybridIn[1],scalefacs,gr_info,sfreq,part2bits))
+      if(III_dequantize_sample(hybridIn[1],scalefacs[1],gr_info,sfreq,part2bits))
           return clip;
 
       if(ms_stereo) {
@@ -1615,7 +1615,7 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
       }
 
       if(i_stereo)
-        III_i_stereo(hybridIn,scalefacs,gr_info,sfreq,ms_stereo,fr->lsf);
+        III_i_stereo(hybridIn,scalefacs[1],gr_info,sfreq,ms_stereo,fr->lsf);
 
       if(ms_stereo || i_stereo || (single == 3) ) {
         if(gr_info->maxb > sideinfo.ch[0].gr[gr].maxb) 

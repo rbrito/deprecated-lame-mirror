@@ -56,7 +56,7 @@ RM = rm -f
 # LINUX   
 ##########################################################################
 ifeq ($(UNAME),Linux)
-#  remove if you do not have GTK or do not want the GTK frame analyzer
+#  remove these lines if you dont have GTK, or dont want the GTK frame analyzer
    GTK = -DHAVEGTK `gtk-config --cflags`
    GTKLIBS = `gtk-config --libs` 
 # Comment out next 2 lines if you want to remove VBR histogram capability
@@ -302,3 +302,5 @@ test: $(PGM)
 	./lame  --nores -h testcase.wav testcase.new.mp3
 	cmp -l testcase.new.mp3 testcase.mp3 | wc
 
+testg: $(PGM)
+	./lame -g -h ../test/castanets.wav
