@@ -27,7 +27,7 @@ rem  ---------------------------------------------
 	lfnfor on
 :processArgs
 	if "%1"=="" goto endmark
-	for %%f in (%1) do %thecmd% %%f
+	for %%f in (%1) do %thecmd% "%%f"
 	if errorlevel 1 goto errormark
 	shift
 	goto processArgs
