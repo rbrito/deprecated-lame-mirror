@@ -878,6 +878,7 @@ typedef enum {
     LAME_OKAY             =   0,
     LAME_NOERROR          =   0,
     LAME_GENERICERROR     =  -1,
+    LAME_NOTINIT          =  -3,
     LAME_NOMEM            = -10,
     LAME_BADBITRATE       = -11,
     LAME_BADSAMPFREQ      = -12,

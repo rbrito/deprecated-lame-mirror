@@ -793,16 +793,13 @@ lame_encode_buffer(lame_t gfc,
     sample_t *in_buffer;
 
     if (gfc->Class_ID != LAME_ID)
-        return -3;
+        return LAME_NOTINIT;
 
     if (nsamples == 0)
         return 0;
 
-    in_buffer = malloc(sizeof(sample_t)*gfc->channels_in*nsamples);
-
-    if (!in_buffer) {
-	gfc->report.errorf("Error: can't allocate in_buffer buffer\n");
-	return -2;
+    if (!(in_buffer = malloc(sizeof(sample_t)*gfc->channels_in*nsamples))) {
+	return LAME_NOMEM;
     }
 
     /* make a copy of input buffer, changing type to sample_t */
@@ -830,16 +827,13 @@ lame_encode_buffer_float(lame_t gfc,
     sample_t *in_buffer;
 
     if (gfc->Class_ID != LAME_ID)
-        return -3;
+	return LAME_NOTINIT;
 
     if (nsamples == 0)
         return 0;
 
-    in_buffer = malloc(sizeof(sample_t)*gfc->channels_in*nsamples);
-
-    if (!in_buffer) {
-	gfc->report.errorf("Error: can't allocate in_buffer buffer\n");
-	return -2;
+    if (!(in_buffer = malloc(sizeof(sample_t)*gfc->channels_in*nsamples))) {
+	return LAME_NOMEM;
     }
 
     /* make a copy of input buffer, changing type to sample_t */
@@ -865,16 +859,13 @@ lame_encode_buffer_int(lame_t gfc,
     FLOAT scale;
 
     if (gfc->Class_ID != LAME_ID)
-        return -3;
+        return LAME_NOTINIT;
 
     if (nsamples == 0)
         return 0;
 
-    in_buffer = malloc(sizeof(sample_t)*gfc->channels_in*nsamples);
-
-    if (!in_buffer) {
-	gfc->report.errorf("Error: can't allocate in_buffer buffer\n");
-	return -2;
+    if (!(in_buffer = malloc(sizeof(sample_t)*gfc->channels_in*nsamples))) {
+	return LAME_NOMEM;
     }
 
     /* make a copy of input buffer, changing type to sample_t */
@@ -905,16 +896,13 @@ lame_encode_buffer_long2(lame_t gfc,
     FLOAT scale;
 
     if (gfc->Class_ID != LAME_ID)
-        return -3;
+        return LAME_NOTINIT;
 
     if (nsamples == 0)
         return 0;
 
-    in_buffer = malloc(sizeof(sample_t)*gfc->channels_in*nsamples);
-
-    if (!in_buffer) {
-	gfc->report.errorf("Error: can't allocate in_buffer buffer\n");
-	return -2;
+    if (!(in_buffer = malloc(sizeof(sample_t)*gfc->channels_in*nsamples))) {
+	return LAME_NOMEM;
     }
 
     /* make a copy of input buffer, changing type to sample_t */
@@ -944,16 +932,13 @@ lame_encode_buffer_long(lame_t gfc,
     sample_t *in_buffer;
 
     if (gfc->Class_ID != LAME_ID)
-        return -3;
+        return LAME_NOTINIT;
 
     if (nsamples == 0)
         return 0;
 
-    in_buffer = malloc(sizeof(sample_t)*gfc->channels_in*nsamples);
-
-    if (!in_buffer) {
-	gfc->report.errorf("Error: can't allocate in_buffer buffer\n");
-	return -2;
+    if (!(in_buffer = malloc(sizeof(sample_t)*gfc->channels_in*nsamples))) {
+	return LAME_NOMEM;
     }
 
     /* make a copy of input buffer, changing type to sample_t */
@@ -978,14 +963,13 @@ lame_encode_buffer_interleaved(lame_t gfc,
     sample_t *in_buffer;
 
     if (gfc->Class_ID != LAME_ID)
-        return -3;
+        return LAME_NOTINIT;
 
     if (nsamples == 0)
         return 0;
 
-    in_buffer = malloc(sizeof(sample_t)*2*nsamples);
-    if (!in_buffer) {
-        return -2;
+    if (!(in_buffer = malloc(sizeof(sample_t)*2*nsamples))) {
+        return LAME_NOMEM;
     }
     for (i = 0; i < nsamples; i++) {
         in_buffer[i] = buffer[2 * i]    * gfc->scale_left;
@@ -1032,12 +1016,12 @@ lame_encode_flush(lame_t gfc, unsigned char *mp3buf, int mp3buffer_size)
 //     <-----> mf_needed - mf_size
 
     int imp3, mp3count = 0, mp3buffer_size_remaining = mp3buffer_size;
-    sample_t buffer[2*(1152+ENCDELAY)] = {0};
+    sample_t buffer[2*2*(1152+ENCDELAY)];
     int samples_to_encode = gfc->mf_size + gfc->framesize;
     int i = (samples_to_encode + POSTDELAY - 1) / gfc->framesize;
 
     if (gfc->Class_ID != LAME_ID)
-        return -3;
+        return LAME_NOTINIT;
 
     /* send in a frame of 0 padding until all internal sample buffers
      * are flushed
@@ -1052,7 +1036,7 @@ lame_encode_flush(lame_t gfc, unsigned char *mp3buf, int mp3buffer_size)
     mp3buf += imp3;
     mp3count += imp3;
 
-    /* mp3 related stuff.  bit buffer might still contain some mp3 data */
+    /* bit buffer might still contain some mp3 data */
     imp3 = flush_bitstream(gfc, mp3buf, mp3buffer_size_remaining);
     if (imp3 < 0) return imp3;
 
@@ -1080,7 +1064,7 @@ lame_close(lame_t gfc)
 {
     int  i;
     if (gfc->Class_ID != LAME_ID)
-        return -3;
+        return LAME_NOTINIT;
 
     gfc->Class_ID = 0;
 
