@@ -296,7 +296,7 @@ count_bit_noESC_from4(
 {
     /* No ESC-words */
     uint64_t sum = 0;
-    int	sum1, sum2;
+    int	sum1, sum2, sum3;
     int t;
     do {
 	sum += table[(ix[0] << xlenshift) + ix[1]];
@@ -313,12 +313,13 @@ count_bit_noESC_from4(
 	if (t1 == 2)
 	    t = 8;
     }
-    sum2 = (sum>>32) & 0xffff;
+    sum3 = (sum>>32);
+    sum2 = sum3 & 0xffff;
     if (sum1 > sum2) {
 	sum1 = sum2;
 	t = t1+2;
     }
-    sum2 = sum>>48;
+    sum2 = sum3>>16;
     if (sum1 > sum2) {
 	sum1 = sum2;
 	t = t1+1;
