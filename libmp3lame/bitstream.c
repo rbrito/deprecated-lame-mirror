@@ -71,30 +71,30 @@ static const codetab_t ht6[] = {
 };
 
 static const codetab_t ht7[] = { /* can use when max=3 */
-    { 1,    1}, { 2,    4}, {10,    7}, {19,    9}, {16,    9}, {10,   10},
-    { 3,    4}, { 3,    6}, { 7,    8}, {10,    9}, { 5,    9}, { 3,   10},
-    {11,    7}, { 4,    7}, {13,    9}, {17,   10}, { 8,   10}, { 4,   11},
-    {12,    8}, {11,    9}, {18,   10}, {15,   11}, {11,   11}, { 2,   11},
-    { 7,    8}, { 6,    9}, { 9,   10}, {14,   11}, { 3,   11}, { 1,   12},
-    { 6,    9}, { 4,   10}, { 5,   11}, { 3,   12}, { 2,   12}, { 0,   12},
+    { 1, 1}, { 2, 4}, {10, 7}, {19, 9}, {16, 9}, {10,10},
+    { 3, 4}, { 3, 6}, { 7, 8}, {10, 9}, { 5, 9}, { 3,10},
+    {11, 7}, { 4, 7}, {13, 9}, {17,10}, { 8,10}, { 4,11},
+    {12, 8}, {11, 9}, {18,10}, {15,11}, {11,11}, { 2,11},
+    { 7, 8}, { 6, 9}, { 9,10}, {14,11}, { 3,11}, { 1,12},
+    { 6, 9}, { 4,10}, { 5,11}, { 3,12}, { 2,12}, { 0,12},
 };
 
 static const codetab_t ht8[] = {
-    { 3,    2}, { 4,    4}, { 6,    7}, {18,    9}, {12,    9}, { 5,   10},
-    { 5,    4}, { 1,    4}, { 2,    6}, {16,   10}, { 9,   10}, { 3,   10},
-    { 7,    7}, { 3,    6}, { 5,    8}, {14,   10}, { 7,   10}, { 3,   11},
-    {19,    9}, {17,   10}, {15,   10}, {13,   11}, {10,   11}, { 4,   12},
-    {13,    9}, { 5,    9}, { 8,   10}, {11,   11}, { 5,   12}, { 1,   12},
-    {12,   10}, { 4,   10}, { 4,   11}, { 1,   11}, { 1,   13}, { 0,   13}
+    { 3, 2}, { 4, 4}, { 6, 7}, {18, 9}, {12, 9}, { 5,10},
+    { 5, 4}, { 1, 4}, { 2, 6}, {16,10}, { 9,10}, { 3,10},
+    { 7, 7}, { 3, 6}, { 5, 8}, {14,10}, { 7,10}, { 3,11},
+    {19, 9}, {17,10}, {15,10}, {13,11}, {10,11}, { 4,12},
+    {13, 9}, { 5, 9}, { 8,10}, {11,11}, { 5,12}, { 1,12},
+    {12,10}, { 4,10}, { 4,11}, { 1,11}, { 1,13}, { 0,13}
 };
 
 static const codetab_t ht9[]   = { /* can use when max=3 */
-    { 7,    3}, { 5,    4}, { 9,    6}, {14,    7}, {15,    9}, { 7,   10},
-    { 6,    4}, { 4,    5}, { 5,    6}, { 5,    7}, { 6,    8}, { 7,   10},
-    { 7,    5}, { 6,    6}, { 8,    7}, { 8,    8}, { 8,    9}, { 5,   10},
-    {15,    7}, { 6,    7}, { 9,    8}, {10,    9}, { 5,    9}, { 1,   10},
-    {11,    8}, { 7,    8}, { 9,    9}, { 6,    9}, { 4,   10}, { 1,   11},
-    {14,    9}, { 4,    9}, { 6,   10}, { 2,   10}, { 6,   11}, { 0,   11},
+    { 7, 3}, { 5, 4}, { 9, 6}, {14, 7}, {15, 9}, { 7,10},
+    { 6, 4}, { 4, 5}, { 5, 6}, { 5, 7}, { 6, 8}, { 7,10},
+    { 7, 5}, { 6, 6}, { 8, 7}, { 8, 8}, { 8, 9}, { 5,10},
+    {15, 7}, { 6, 7}, { 9, 8}, {10, 9}, { 5, 9}, { 1,10},
+    {11, 8}, { 7, 8}, { 9, 9}, { 6, 9}, { 4,10}, { 1,11},
+    {14, 9}, { 4, 9}, { 6,10}, { 2,10}, { 6,11}, { 0,11},
 };
 
 static const codetab_t ht10[] = {
@@ -204,26 +204,9 @@ struct huffcodetab {
     int xlen;			/* max. x-index+		*/
     const codetab_t * table;	/* pointer to array[xlen][ylen]	*/
 } static const ht[] = {
-    { 2,   ht1 },
-
-    { 3,   ht2 },
-    { 3,   ht3 },
-    { 0,   NULL}, /* Apparently not used */
-
-    { 4,   ht5 },
-    { 4,   ht6 },
-
-    { 6,   ht7 },
-    { 6,   ht8 },
-    { 6,   ht9 },
-
-    { 8,   ht10},
-    { 8,   ht11},
-    { 8,   ht12},
-
-    {16,   ht13},
-    { 0,   NULL},/* Apparently not used */
-    {16,   ht15},
+    { 2, ht1 }, { 3, ht2 }, { 3, ht3 }, { 0, NULL}, { 4, ht5 },
+    { 4, ht6 }, { 6, ht7 }, { 6, ht8 }, { 6, ht9 }, { 8, ht10},
+    { 8, ht11}, { 8, ht12}, {16, ht13}, { 0, NULL}, {16, ht15}
 };
 
 /***********************************************************************
@@ -364,37 +347,32 @@ Huffmancode_esc(bit_stream_t *bs, int tablesel, int i, int end, gr_info *gi)
     } while ((i += 2) < end);
 }
 
-static void
-Huffmancode(bit_stream_t *bs, const struct huffcodetab* h,
-	    int i, int end, gr_info *gi)
-{
-    do {
-	int code, clen;
-	int x1 = gi->l3_enc[i];
-	int x2 = gi->l3_enc[i+1];
-	assert(x1 < h->xlen && x2 < h->xlen);
-
-	code = x1*h->xlen + x2;
-	clen = h->table[code].len;
-	code = h->table[code].code;
-
-	if (x1) code = code*2 + (gi->xr[i  ] < 0);
-	if (x2) code = code*2 + (gi->xr[i+1] < 0);
-
-	putbits24(bs, code, clen);
-    } while ((i += 2) < end);
-}
-
 inline static void
 Huf_bigvalue(bit_stream_t *bs, int tablesel, int start, int end, gr_info *gi)
 {
     if (tablesel == 0 || start >= end)
 	return;
 
-    if (tablesel > 15)
+    if (tablesel >= 16)
 	Huffmancode_esc(bs, tablesel-16, start, end, gi);
-    else
-	Huffmancode(bs, &ht[tablesel-1], start, end, gi);
+    else {
+	const codetab_t *t = ht[tablesel-1].table;
+	int xlen = ht[tablesel-1].xlen;
+	do {
+	    int code, clen;
+	    int x1 = gi->l3_enc[start], x2 = gi->l3_enc[start+1];
+	    assert(x1 < xlen && x2 < xlen);
+
+	    code = x1*xlen + x2;
+	    clen = t[code].len;
+	    code = t[code].code;
+
+	    if (x1) code = code*2 + (gi->xr[start  ] < 0);
+	    if (x2) code = code*2 + (gi->xr[start+1] < 0);
+
+	    putbits24(bs, code, clen);
+	} while ((start += 2) < end);
+    }
 }
 
 /*

@@ -704,7 +704,7 @@ inc_subblock_gain(gr_info * const gi, FLOAT distort[])
  *  method
  *    0             trigger = 1.0
  *
- *    1             trigger = max_dist^(.5)   (50% in the dB scale)
+ *    1             trigger = sqrt(max_dist)   (50% in the dB scale)
  *
  *    2             trigger = max_dist;
  *                  (select only the band with the strongest noise)
@@ -936,15 +936,13 @@ CBR_2nd_bitalloc(lame_t gfc, gr_info *gi, FLOAT distort[])
 	    }
 	}
     }
-    if (!flag)
+    if (!flag || adjust_global_gain(gfc, &gi_w, distort, gi_w.part2_3_length))
 	return;
 
-    if (!adjust_global_gain(gfc, &gi_w, distort, gi_w.part2_3_length)) {
-	gfc->scale_bitcounter(&gi_w);
-	assert(gi_w.part2_length + gi_w.part2_3_length
-	       <= gi->part2_length + gi->part2_3_length);
-	*gi = gi_w;
-    }
+    gfc->scale_bitcounter(&gi_w);
+    assert(gi_w.part2_length + gi_w.part2_3_length
+	   <= gi->part2_length + gi->part2_3_length);
+    *gi = gi_w;
 }
 
 static int
@@ -982,7 +980,6 @@ CBR_1st_bitalloc (
 
     gi->global_gain = gfc->OldValue[ch];
     init_global_gain(gfc, gi, targ_bits, gfc->CurrentStep[ch]);
-
 
     gfc->CurrentStep[ch] = (gfc->OldValue[ch] - gi->global_gain) >= 4 ? 4 : 2;
     gfc->OldValue[ch] = gi->global_gain;
