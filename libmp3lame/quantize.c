@@ -368,7 +368,8 @@ quant_compare(
                    ||  calc->over_noise < best->over_noise; 
 	    break;
         case 8: 
-	    better =   calc->klemm_noise < best->klemm_noise;
+	    better =   Max(1e-20, calc->klemm_noise)
+	      < Max(1e-20, best->klemm_noise);
             break;
     }   
 
