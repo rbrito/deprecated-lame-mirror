@@ -348,7 +348,7 @@ int CDECL lame_set_VBR_max_bitrate_kbps(lame_global_flags *, int);
 int CDECL lame_get_VBR_max_bitrate_kbps(const lame_global_flags *);
 
 /*
- 1=stricetly enforce VBR_min_bitrate.  Normally it will be violated for
+ 1=strictly enforce VBR_min_bitrate.  Normally it will be violated for
  analog silence
 */
 int CDECL lame_set_VBR_hard_min(lame_global_flags *, int);
@@ -423,7 +423,7 @@ int CDECL lame_get_cwlimit(const lame_global_flags *);
 int CDECL lame_set_allow_diff_short(lame_global_flags *, int);
 int CDECL lame_get_allow_diff_short(const lame_global_flags *);
 
-/* use temporal masking effect (default = 1)
+/* use temporal masking effect (default = 1) */
 int CDECL lame_set_useTemporal(lame_global_flags *, int);
 int CDECL lame_get_useTemporal(const lame_global_flags *);
 
