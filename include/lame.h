@@ -54,6 +54,7 @@ typedef enum MPEG_mode_e {
   JOINT_STEREO,
   DUAL_CHANNEL,   /* LAME doesn't supports this! */
   MONO,
+  NOT_SET,
   MAX_INDICATOR   /* Don't use this! It's used for sanity checks. */ 
 } MPEG_mode;
 

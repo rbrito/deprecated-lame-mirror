@@ -862,7 +862,7 @@ format_bitstream(lame_global_flags *gfp, int bitsPerFrame,
 }
 
 
-int copy_buffer(char *buffer,int size,Bit_stream_struc *bs)
+int copy_buffer(unsigned char *buffer,int size,Bit_stream_struc *bs)
 {
   int minimum = bs->buf_byte_idx + 1;
   if (minimum <= 0) return 0;

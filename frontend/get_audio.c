@@ -451,7 +451,7 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath,
     double  wavsize;
     int     i;
     void    (*WriteFunction) (FILE * fp, char *p, int n);
-    unsigned long tmp_num_channels = lame_get_num_channels( gfp );
+    int tmp_num_channels = lame_get_num_channels( gfp );
 
 
 
