@@ -38,6 +38,8 @@ int apply_abr_preset(lame_global_flags*  gfp, int preset)
         int    quant_comp;
         int    safejoint;
         double nsmsfix;
+        double st_lrm; /*short threshold*/
+        double st_s;
         double nsbass;
         double scale;
         double ath_curve;
@@ -48,24 +50,24 @@ int apply_abr_preset(lame_global_flags*  gfp, int preset)
 
     // Switch mappings for ABR mode
     const dm_abr_presets_t abr_switch_map [] = {
-        // kbps Z  quant safejoint nsmsfix ns-bass scale ath4_curve, interch
-        {   8,  1, 3,    0,        0   ,    0,      0.93,        11,  0.0012 }, //   8 //impossible to use in stereo
-        {  16,  1, 3,    0,        0   ,    0,      0.93,        11,  0.0010 }, //  16
-        {  24,  1, 3,    0,        0   ,    0,      0.93,        11,  0.0010 }, //  24
-        {  32,  1, 3,    0,        0   ,    0,      0.93,        11,  0.0010 }, //  32
-        {  40,  1, 3,    0,        0   ,    0,      0.93,        11,  0.0009 }, //  40
-        {  48,  1, 3,    0,        0   ,    0,      0.93,        11,  0.0009 }, //  48
-        {  56,  1, 3,    0,        0   ,    0,      0.93,        11,  0.0008 }, //  56
-        {  64,  1, 3,    0,        0   ,    0,      0.93,        11,  0.0008 }, //  64
-        {  80,  1, 3,    0,        0   ,    0,      0.93,        10,  0.0007 }, //  80
-        {  96,  1, 1,    0,        0   ,   -2,      0.93,         8,  0.0006 }, //  96
-        { 112,  1, 1,    0,        0   ,   -4,      0.93,         7,  0.0005 }, // 112
-        { 128,  1, 1,    0,        0   ,   -6,      0.93,         5,  0.0002 }, // 128
-        { 160,  1, 1,    0,        0   ,   -4,      0.95,         4,  0      }, // 160
-        { 192,  1, 1,    1,        1.7 ,   -2,      0.97,         3,  0      }, // 192
-        { 224,  1, 1,    1,        1.25,    0,      0.98,         2,  0      }, // 224
-        { 256,  0, 3,    1,        0   ,    0,      1.00,         1,  0      }, // 256
-        { 320,  0, 3,    1,        0   ,    0,      1.00,         0,  0      }  // 320
+        // kbps Z  quant safejoint nsmsfix st_lrm  st_s  ns-bass scale ath4_curve, interch
+        {   8,  1, 3,    0,        0   ,    4.50, 30   ,  0,      0.95,        11,  0.0012 }, //   8 //impossible to use in stereo
+        {  16,  1, 3,    0,        0   ,    4.50, 30   ,  0,      0.95,        11,  0.0010 }, //  16
+        {  24,  1, 3,    0,        0   ,    4.50, 30   ,  0,      0.95,        11,  0.0010 }, //  24
+        {  32,  1, 3,    0,        0   ,    4.50, 30   ,  0,      0.95,        11,  0.0010 }, //  32
+        {  40,  1, 3,    0,        0   ,    4.50, 30   ,  0,      0.95,        11,  0.0009 }, //  40
+        {  48,  1, 3,    0,        0   ,    4.50, 30   ,  0,      0.95,        11,  0.0009 }, //  48
+        {  56,  1, 3,    0,        0   ,    4.50, 30   ,  0,      0.95,        11,  0.0008 }, //  56
+        {  64,  1, 3,    0,        0   ,    4.50, 30   ,  0,      0.95,        11,  0.0008 }, //  64
+        {  80,  1, 3,    0,        0   ,    4.50, 30   ,  0,      0.95,        10,  0.0007 }, //  80
+        {  96,  1, 3,    0,        0   ,    4.50, 30   , -2,      0.95,         8,  0.0006 }, //  96
+        { 112,  1, 3,    0,        0   ,    4.50, 30   , -4,      0.95,         7,  0.0005 }, // 112
+        { 128,  1, 3,    0,        0   ,    4.40, 25   , -6,      0.95,         5,  0.0002 }, // 128
+        { 160,  1, 3,    1,        1.64,    4.25, 15   , -4,      0.95,         4,  0      }, // 160
+        { 192,  1, 3,    1,        1.38,    3.50, 15   , -2,      0.97,         3,  0      }, // 192
+        { 224,  1, 3,    1,        1.10,    3.20, 15   ,  0,      0.98,         2,  0      }, // 224
+        { 256,  0, 3,    1,        0.85,    3.10, 15   ,  0,      1.00,         1,  0      }, // 256
+        { 320,  0, 3,    1,        0.6 ,    3.00, 15   ,  0,      1.00,         0,  0      }  // 320
                                        };
 
     
@@ -86,6 +88,7 @@ int apply_abr_preset(lame_global_flags*  gfp, int preset)
     lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
     lame_set_experimentalZ(gfp, abr_switch_map[r].expZ);
     lame_set_quant_comp(gfp, abr_switch_map[r].quant_comp);
+    lame_set_quant_comp_short( gfp, abr_switch_map[r].quant_comp);
     lame_set_quality(gfp, 3);
     lame_set_mode(gfp, JOINT_STEREO);
     lame_set_interChRatio(gfp, abr_switch_map[r].interch);
@@ -96,6 +99,8 @@ int apply_abr_preset(lame_global_flags*  gfp, int preset)
 
     if (abr_switch_map[r].safejoint > 0)
         lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
+
+    lame_set_short_threshold(gfp, abr_switch_map[r].st_lrm, abr_switch_map[r].st_s);
 
     if (abr_switch_map[r].nsmsfix > 0)
             (void) lame_set_msfix( gfp, abr_switch_map[r].nsmsfix );
