@@ -4,11 +4,6 @@
 # processed by ./configure to produce Makefile
 #
 #
-# these variables are available on command line:
-#
-#   make UNAME=xxxxx ARCH=xxxxx   - specify a type of host
-#   make PGM=lame_exp             - specify a name of an executable file
-#
 #
 SHELL = @SHELL@
 @SET_MAKE@
@@ -37,7 +32,6 @@ SHARED_LIB_MAJOR = $(SHARED_LIB).@LIB_MAJOR_VERSION@
 SHARED_LIB_MINOR = $(SHARED_LIB_MAJOR).@LIB_MINOR_VERSION@
 
 # generic defaults. OS specific options go in versious sections below
-PGM ?= ./frontend/lame
 CPP_OPTS = @CPP_OPT@ -I./include -I. -I./mpglib
 CC_OPTS = -O
 AR = ar
@@ -228,7 +222,6 @@ ifeq ($(UNAME),OS/2)
    SHELL=sh	
    CC = gcc
    CC_OPTS = -O3
-   PGM ?= frontend/lame.exe
 
 # I use the following for slightly better performance on my Pentium-II
 # using pgcc-2.91.66:
@@ -246,7 +239,6 @@ endif
 ###########################################################################
 ifeq ($(UNAME),MSDOS)
   RM_F =
-  PGM ?= frontend/lame.exe
 endif
 
 ###########################################################################
@@ -279,84 +271,10 @@ endif
 
 
 
-
-
-
-
-
-
-
-
-
-
-# ** handled by configure **
-# 10/99 added -D__NO_MATH_INLINES to fix a bug in *all* versions of
-# gcc 2.8+ as of 10/99.  
-
-CC_SWITCHES = -DNDEBUG $(CC_OPTS) $(CFLAGS)
-
-lib_sources = \
-	bitstream.c \
-	encoder.c \
-	fft.c \
-        id3tag.c \
-        lame.c \
-        newmdct.c \
-	psymodel.c \
-	quantize.c \
-	quantize_pvt.c \
-	vbrquantize.c \
-	reservoir.c \
-	tables.c \
-	takehiro.c \
-	util.c \
-        VbrTag.c \
-	vorbis_interface.c \
-	mpglib_interface.c \
-        version.c
-
-lib_obj = $(lib_sources:.c=.o) 
-
-mpglib_sources = mpglib/common.c \
-        mpglib/dct64_i386.c \
-        mpglib/decode_i386.c \
-        mpglib/layer1.c \
-        mpglib/layer2.c \
-        mpglib/layer3.c \
-        mpglib/tabinit.c \
-        mpglib/interface.c 
-mpglib_obj = $(mpglib_sources:.c=.o) 
-
-lib_obj += $(mpglib_obj)
-
-OBJ = $(c_sources:.c=.o)
-DEP = $(c_sources:.c=.d) $(lib_sources:.c=.d)
-
-
-
-
-NASM = nasm
-ASFLAGS=-f elf -i i386/
-%.o: %.nas
-	$(NASM) $(ASFLAGS) $< -o $@
-%.o: %.s
-	gcc -c $< -o $@
-
-## use MMX extension. you need nasm and MMX supported CPU.
-#CC_SWITCHES += -DMMX_choose_table
-#lib_obj += i386/choose_table.o
-
-%.o: %.c 
-	$(CC) $(CPP_OPTS) $(CC_SWITCHES) -c $< -o $@
-
-%.d: %.c
-  ifeq ($(NOUNIXCMD),YES)
-	$(CC) $(MAKEDEP)  $(CPP_OPTS) $(CC_SWITCHES)  $< > $@
-  else
-	$(SHELL) -ec '$(CC) $(MAKEDEP)  $(CPP_OPTS) $(CC_SWITCHES)  $< | sed '\''s;$*.o;& $@;g'\'' > $@'
-  endif
-
-all: lib $(LIBS) $(PGM)
+all: lib frontend/lame
+	cd libmp3lame; $(MAKE) libmp3lame.so
+	cd libmp3lame; $(MAKE) libmp3lame.a
+	cd frontend; $(MAKE)
 
 lib:  @LIB_TARGETS@
 
@@ -367,7 +285,7 @@ libmp3lame/libmp3lame.so:
 libmp3lame/libmp3lame.a:  
 	cd libmp3lame; $(MAKE) libmp3lame.a
 
-$(PGM): lib
+frontend/lame:
 	cd frontend; $(MAKE)
 
 mp3x/mp3x:
@@ -376,8 +294,6 @@ mp3x/mp3x:
 frontend/mp3rtp:
 	cd frontend; $(MAKE)
 
-mpglib/mpglib.a:
-	cd mpglib; $(MAKE)
 
 install_header:
 	@mkdir -p $(INCLUDEDIR)
@@ -418,10 +334,6 @@ tags: TAGS
 TAGS: @CONFIG_SOURCES@ $(lib_sources) ${gtk_sources}
 	etags -T @CONFIG_SOURCES@ $(lib_sources) ${gtk_sources}
 
-ifneq ($(MAKECMDGOALS),clean)
-  -include $(DEP)
-endif
-
 
 #
 #  testcase.mp3 is a 2926 byte file.  The first number output by
@@ -432,9 +344,9 @@ endif
 #  number of bytes which are different may not be zero, but
 #  should be at most 30.
 #
-test: $(PGM)
-	frontend/$(PGM)  --nores -h testcase.wav testcase.new.mp3
+test: frontend/lame
+	frontend/lame  --nores -h testcase.wav testcase.new.mp3
 	cmp -l testcase.new.mp3 testcase.mp3 | wc
 
-testg: $(PGM)
-	frontend/$(PGM) -g -h ../test/castanets.wav
+testg: frontend/lame
+	frontend/lame -g -h ../test/castanets.wav
