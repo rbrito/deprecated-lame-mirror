@@ -39,7 +39,7 @@
 
 #define TRI_SIZE (5-1) /* 1024 =  4**5 */
 static FLOAT costab[TRI_SIZE*2];
-static FLOAT window[BLKSIZE / 2], window_s[BLKSIZE_s / 2], scalefac;
+static FLOAT window[BLKSIZE], window_s[BLKSIZE_s], scalefac;
 
 static void fht(FLOAT *fz, int n)
 {
