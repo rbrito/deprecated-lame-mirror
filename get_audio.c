@@ -11,6 +11,7 @@ static unsigned long num_samples;
 static int samp_freq;
 static int input_bitrate;
 static int num_channels;
+static int count_samples_carefully;
 
 int read_samples_pcm( short sample_buffer[2304],int frame_size, int samples_to_read);
 int read_samples_mp3(FILE *musicin,short int mpg123pcm[2][1152],int num_chan);
@@ -28,6 +29,7 @@ int lame_decode_fromfile(FILE *fd,short int mpg123pcm[2][1152]);
 void lame_init_infile(void)
 {
   /* open the input file */
+  count_samples_carefully=0;
   OpenSndFile(gf.inPath,gf.samplerate,gf.num_channels);  
   /* if GetSndSampleRate is non zero, use it to overwrite the default */
   if (GetSndSampleRate()) gf.samplerate=GetSndSampleRate();
@@ -94,7 +96,7 @@ int get_audio(short buffer[2][1152],int stereo)
   int samples_read;
   int framesize,samples_to_read;
   static unsigned long num_samples_read;
-  int remaining;
+  unsigned long remaining;
   int autoconvert=0;
   int num_channels = gf.num_channels;
 
@@ -103,16 +105,22 @@ int get_audio(short buffer[2][1152],int stereo)
     num_samples= GetSndSamples();
   }
   if (num_channels==2 && gf.stereo==1) autoconvert=1;
-
-  remaining=num_samples-num_samples_read;
   framesize = gf.mode_gr*576;
-  samples_to_read = (remaining > framesize ? framesize : remaining);
-  if (samples_to_read == -1 ) /* we don't know how much to read */
-    samples_to_read = framesize;
-  if (samples_to_read<0) samples_to_read=0;
+
+  samples_to_read = framesize;
+  if (count_samples_carefully) { 
+    /* if this flag has been set, then we are carefull to read 
+     * exactly num_samples and no more.  This is usefull for .wav and .aiff
+     * files which have id3 or other tags at the end.  Note that if you
+     * are using LIBSNDFILE, this is not necessary */
+    remaining=num_samples-Min(num_samples,num_samples_read);
+    if (remaining < (unsigned long)framesize) 
+      samples_to_read = remaining;
+  }
 
 
   if (gf.input_format==sf_mp3) {
+    /* decode an mp3 file for the input */
     samples_read=read_samples_mp3(musicin,buffer,num_channels);
   }else{
     samples_read = read_samples_pcm(insamp,num_channels*framesize,num_channels*samples_to_read);
@@ -473,12 +481,14 @@ int default_channels)
   if (gs_wfInfo.samples==MAX_U_32_NUM) {
     struct stat sb;
     /* try to figure out num_samples */
-    stat(lpszFileName,&sb);  /* try file size, assume 2 bytes per sample */
-    if (gf.input_format == sf_mp3) {
-      FLOAT totalseconds = (sb.st_size*8.0/(1000.0*GetSndBitrate()));
-      gs_wfInfo.samples= totalseconds*GetSndSampleRate();
-    }else{
-      gs_wfInfo.samples = sb.st_size/(2*GetSndChannels());
+    if (0==stat(lpszFileName,&sb)) {
+      /* try file size, assume 2 bytes per sample */
+      if (gf.input_format == sf_mp3) {
+	FLOAT totalseconds = (sb.st_size*8.0/(1000.0*GetSndBitrate()));
+	gs_wfInfo.samples= totalseconds*GetSndSampleRate();
+      }else{
+	gs_wfInfo.samples = sb.st_size/(2*GetSndChannels());
+      }
     }
   }
   return musicin;    
@@ -634,12 +644,14 @@ int default_channels)
     
   if (num_samples==MAX_U_32_NUM && musicin != stdin) {
     /* try to figure out num_samples */
-    stat(inPath,&sb);  /* try file size, assume 2 bytes per sample */
-    if (gf.input_format == sf_mp3) {
-      FLOAT totalseconds = (sb.st_size*8.0/(1000.0*GetSndBitrate()));
-      num_samples= totalseconds*GetSndSampleRate();
-    }else{
-      num_samples = sb.st_size/(2*GetSndChannels());
+    if (0==stat(inPath,&sb)) {  
+      /* try file size, assume 2 bytes per sample */
+      if (gf.input_format == sf_mp3) {
+	FLOAT totalseconds = (sb.st_size*8.0/(1000.0*GetSndBitrate()));
+	num_samples= totalseconds*GetSndSampleRate();
+      }else{
+	num_samples = sb.st_size/(2*GetSndChannels());
+      }
     }
   }
   return musicin;
@@ -979,18 +991,21 @@ void parse_file_header(FILE *sf)
 	/* fprintf(stderr,
 		"First word of input stream: %08x '%4.4s'\n", type, (char*) &type); */
 
+	count_samples_carefully=0;
 	gf.input_format = sf_raw;
 
 	if (type == WAV_ID_RIFF) {
 		/* It's probably a WAV file */
 		if (parse_wave_header(sf)) {
 			gf.input_format = sf_wave;
+			count_samples_carefully=1;
 		}
 
 	} else if (type == IFF_ID_FORM) {
 		/* It's probably an AIFF file */
 		if (parse_aiff_header(sf)) {
 			gf.input_format = sf_aiff;
+			count_samples_carefully=1;
 		}
 	}
 	if (gf.input_format==sf_raw) {

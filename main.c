@@ -28,8 +28,6 @@ int main(int argc, char **argv)
   lame_global_flags *gf;
   FILE *outf;
 
-
-
   gf=lame_init();                  /* initialize libmp3lame */
   if(argc==1) lame_usage(argv[0]);  /* no command-line args, print usage, exit  */
 
@@ -44,6 +42,15 @@ int main(int argc, char **argv)
 
   /* open the MP3 output file */
   if (!strcmp(gf->outPath, "-")) {
+#ifdef __EMX__
+    _fsetmode(stdout,"b");
+#elif (defined  __BORLANDC__)
+    setmode(_fileno(stdout), O_BINARY);
+#elif (defined  __CYGWIN__)
+    setmode(fileno(stdout), _O_BINARY);
+#elif (defined _WIN32)
+    _setmode(_fileno(stdout), _O_BINARY);
+#endif
     outf = stdout;
   } else {
     if ((outf = fopen(gf->outPath, "wb")) == NULL) {

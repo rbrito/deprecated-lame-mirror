@@ -281,6 +281,7 @@ void lame_parse_args(int argc, char **argv)
 	}
 	else if (strcmp(token, "nores")==0) {
 	  gf.disable_reservoir=1;
+	  gf.padding=0;
 	}
 	else if (strcmp(token, "athonly")==0) {
 	  gf.ATHonly=1;
@@ -687,18 +688,6 @@ void lame_parse_args(int argc, char **argv)
       strncpy(outPath, inPath, MAX_NAME_SIZE - 4);
       strncat(outPath, ".mp3", 4 );
     }
-  }
-  if (inPath[0]=='-') {
-    /* setup standard output on some machines. */
-#ifdef __EMX__
-    _fsetmode(stdout,"b");
-#elif (defined  __BORLANDC__)
-    setmode(_fileno(stdout), O_BINARY);
-#elif (defined  __CYGWIN__)
-    setmode(fileno(stdout), _O_BINARY);
-#elif (defined _WIN32)
-    _setmode(_fileno(stdout), _O_BINARY);
-#endif
   }
   /* some file options not allowed with stdout */
   if (outPath[0]=='-') {

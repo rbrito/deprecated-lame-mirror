@@ -61,7 +61,7 @@ typedef struct  {
   int copyright;                  /* mark as copyright */
   int original;                   /* mark as original */
   int error_protection;           /* use 2 bytes per frame for a CRC checksum */
-
+  int padding;                    /* 0=no padding, 1=always pad, 2=adjust padding */
 
   /* quantization/noise shaping */
   int disable_reservoir;          /* use bit reservoir? */
@@ -186,11 +186,11 @@ void lame_init_infile(void);
 /* REQUIRED:  sets more internal configuration based on data provided
  * above
  */
-void lame_init_params(void);
+void lame_init_params();
 
 
 /* OPTONAL:  print internal lame configuration on stderr*/
-void lame_print_config(void);
+void lame_print_config();
 
 
 /* OPTIONAL:  read one frame of PCM data from audio input file opened by 

@@ -47,11 +47,6 @@
 #include "asmstuff.h"
 #endif
 
-/* Global flags.  defined extern in globalflags.h */
-/* default values set in lame_init() */
-lame_global_flags gf;
-
-
 /* Global variable definitions for lame.c */
 Bit_stream_struc   bs;
 III_side_info_t l3_side;
@@ -60,6 +55,9 @@ int target_bitrate;
 static layer info;
 
 
+/* Global flags substantiated here.  defined extern in globalflags.h */
+/* default values set in lame_init() */
+lame_global_flags gf;
 
 
 
@@ -607,22 +605,32 @@ int lame_encode(short int Buffer[2][1152],char *mpg123bs)
 
 
   /********************** padding *****************************/
-  if (gf.VBR) {
+  switch (gf.padding) {
+  case 0: 
     info->padding=0;
-  } else {
-    if (gf.disable_reservoir) {
-      info->padding = 0;
-      /* if the user specified --nores, dont very info->padding either */
-      /* tiny changes in frac_SpF rounding will cause file differences */
-    }else{
-      if (frac_SpF != 0) {
-	if (slot_lag > (frac_SpF-1.0) ) {
-	  slot_lag -= frac_SpF;
-	  info->padding = 0;
-	}
-	else {
-	  info->padding = 1;
-	  slot_lag += (1-frac_SpF);
+    break;
+  case 1:
+    info->padding=1;
+    break;
+  case 2:
+  default:
+    if (gf.VBR) {
+      info->padding=0;
+    } else {
+      if (gf.disable_reservoir) {
+	info->padding = 0;
+	/* if the user specified --nores, dont very info->padding either */
+	/* tiny changes in frac_SpF rounding will cause file differences */
+      }else{
+	if (frac_SpF != 0) {
+	  if (slot_lag > (frac_SpF-1.0) ) {
+	    slot_lag -= frac_SpF;
+	    info->padding = 0;
+	  }
+	  else {
+	    info->padding = 1;
+	    slot_lag += (1-frac_SpF);
+	  }
 	}
       }
     }
@@ -844,9 +852,8 @@ lame_global_flags * lame_init(void)
 {
 
   /*
-   *  Debugging stuff
+   *  Disable floating point exepctions
    */
-   
 #ifdef __FreeBSD__
 # include <floatingpoint.h>
   {
@@ -858,7 +865,32 @@ lame_global_flags * lame_init(void)
   /*  fprintf(stderr,"FreeBSD mask is 0x%x\n",mask); */
   }
 #endif
+#ifdef __riscos__
+  /* Disable FPE's under RISC OS */
+  /* if bit is set, we disable trapping that error! */
+  /*   _FPE_IVO : invalid operation */
+  /*   _FPE_DVZ : divide by zero */
+  /*   _FPE_OFL : overflow */
+  /*   _FPE_UFL : underflow */
+  /*   _FPE_INX : inexact */
+  DisableFPETraps( _FPE_IVO | _FPE_DVZ | _FPE_OFL );
+#endif
+
+   
+  /*
+   *  Debugging stuff
+   */
+
 #ifdef ABORTFP
+#if defined(_MSC_VER)
+  {
+	#include <float.h>
+	unsigned int mask;
+	mask=_controlfp( 0, 0 );
+	mask&=~(_EM_OVERFLOW|_EM_UNDERFLOW|_EM_ZERODIVIDE|_EM_INVALID);
+	mask=_controlfp( mask, _MCW_EM );
+	}
+#endif
 # ifdef __CYGWIN__
 #  define _FPU_GETCW(cw) __asm__ ("fnstcw %0" : "=m" (*&cw))
 #  define _FPU_SETCW(cw) __asm__ ("fldcw %0" : : "m" (*&cw))
@@ -889,27 +921,6 @@ lame_global_flags * lame_init(void)
 # endif /* __CYGWIN__ */
 #endif /* ABORTFP    */
 
-#ifdef __riscos__
-  /* Disable FPE's under RISC OS */
-  /* if bit is set, we disable trapping that error! */
-  /*   _FPE_IVO : invalid operation */
-  /*   _FPE_DVZ : divide by zero */
-  /*   _FPE_OFL : overflow */
-  /*   _FPE_UFL : underflow */
-  /*   _FPE_INX : inexact */
-  DisableFPETraps( _FPE_IVO | _FPE_DVZ | _FPE_OFL );
-#endif
-
-
-#if defined(_MSC_VER)
-  {
-	#include <float.h>
-	unsigned int mask;
-	mask=_controlfp( 0, 0 );
-	mask&=~(_EM_OVERFLOW|_EM_UNDERFLOW|_EM_ZERODIVIDE|_EM_INVALID);
-	mask=_controlfp( mask, _MCW_EM );
-	}
-#endif
 
 
   /* Global flags.  set defaults here */
@@ -936,6 +947,7 @@ lame_global_flags * lame_init(void)
   gf.highpass2=0;
   gf.no_short_blocks=0;
   gf.resample_ratio=1;
+  gf.padding=2;
   gf.swapbytes=0;
   gf.sfb21=1;
   gf.silent=0;
@@ -977,7 +989,6 @@ lame_global_flags * lame_init(void)
   fr_ps.alloc = NULL;
   info.version = MPEG_AUDIO_ID;   /* =1   Default: MPEG-1 */
   info.extension = 0;       
-
 
   return &gf;
 }
