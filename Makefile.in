@@ -141,8 +141,7 @@ subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = config.h
-CONFIG_CLEAN_FILES = ACM/Makefile ACM/ADbg/Makefile ACM/tinyxml/Makefile \
-	lame.spec
+CONFIG_CLEAN_FILES = lame.spec
 DIST_SOURCES =
 
 RECURSIVE_TARGETS = info-recursive dvi-recursive install-info-recursive \
@@ -208,12 +207,6 @@ $(srcdir)/./stamp-h.in: $(top_srcdir)/configure.in $(ACLOCAL_M4) $(top_srcdir)/a
 
 distclean-hdr:
 	-rm -f config.h
-ACM/Makefile: $(top_builddir)/config.status $(top_srcdir)/ACM/Makefile.in
-	cd $(top_builddir) && CONFIG_FILES=$@ CONFIG_HEADERS= CONFIG_LINKS= $(SHELL) ./config.status
-ACM/ADbg/Makefile: $(top_builddir)/config.status $(top_srcdir)/ACM/ADbg/Makefile.in
-	cd $(top_builddir) && CONFIG_FILES=$@ CONFIG_HEADERS= CONFIG_LINKS= $(SHELL) ./config.status
-ACM/tinyxml/Makefile: $(top_builddir)/config.status $(top_srcdir)/ACM/tinyxml/Makefile.in
-	cd $(top_builddir) && CONFIG_FILES=$@ CONFIG_HEADERS= CONFIG_LINKS= $(SHELL) ./config.status
 lame.spec: $(top_builddir)/config.status lame.spec.in
 	cd $(top_builddir) && CONFIG_FILES=$@ CONFIG_HEADERS= CONFIG_LINKS= $(SHELL) ./config.status
 uninstall-info-am:
@@ -321,7 +314,7 @@ GZIP_ENV = --best
 distdir: $(DISTFILES)
 	-chmod -R a+w $(distdir) >/dev/null 2>&1; rm -rf $(distdir)
 	mkdir $(distdir)
-	$(mkinstalldirs) $(distdir)/. $(distdir)/ACM $(distdir)/ACM/ADbg $(distdir)/ACM/tinyxml
+	$(mkinstalldirs) $(distdir)/.
 	@for file in $(DISTFILES); do \
 	  if test -f $$file; then d=.; else d=$(srcdir); fi; \
 	  dir=`echo "$$file" | sed -e 's,/[^/]*$$,,'`; \
