@@ -88,14 +88,12 @@ void lame_init_params(lame_global_flags *gfp)
   gfc->stereo=2;
   if (gfp->mode == MPG_MD_MONO) gfc->stereo=1;
 
-#ifdef BRHIST
   if (gfp->silent) {
-    disp_brhist=0;  /* turn of VBR historgram */
+   gfp->brhist_disp=0;  /* turn of VBR historgram */
   }
   if (!gfp->VBR) {
-    disp_brhist=0;  /* turn of VBR historgram */
+    gfp->brhist_disp=0;  /* turn of VBR historgram */
   }
-#endif
 
 
   /* set the output sampling rate, and resample options if necessary
@@ -531,13 +529,10 @@ void lame_init_params(lame_global_flags *gfp)
     }
 
 
-#ifdef BRHIST
-  if (gfp->VBR) {
-    if (disp_brhist)
-      brhist_init(gfp,1, 14);
-  } else
-    disp_brhist = 0;
-#endif
+
+  if (gfp->brhist_disp)
+    brhist_init(gfp,1,14);
+
   return;
 }
 
@@ -741,13 +736,10 @@ char *mp3buf, int mp3buf_size)
     int mod = gfp->version == 0 ? 100 : 50;
     if (gfc->frameNum%mod==0) {
       timestatus(gfp->out_samplerate,gfc->frameNum,gfc->totalframes,gfc->framesize);
-#ifdef BRHIST
-      if (disp_brhist)
-	{
-	  brhist_add_count();
-	  brhist_disp();
-	}
-#endif
+
+      if (gfp->brhist_disp)
+	  brhist_disp(gfc->totalframes);
+
     }
   }
 
@@ -871,10 +863,7 @@ char *mp3buf, int mp3buf_size)
   }
 
 
-#ifdef BRHIST
-  brhist_temp[gfc->bitrate_index]++;
-#endif
-
+  brhist_add_count(gfc->bitrate_index);
 
   /*  write the frame to the bitstream  */
   getframebits(gfp,&bitsPerFrame,&mean_bits);
@@ -1140,14 +1129,13 @@ int lame_encode_finish(lame_global_flags *gfp,char *mp3buffer, int mp3buffer_siz
   gfc->frameNum--;
   if (gfc->pinfo == NULL && !gfp->silent) {
       timestatus(gfp->out_samplerate,gfc->frameNum,gfc->totalframes,gfc->framesize);
-#ifdef BRHIST
-      if (disp_brhist)
+
+      if (gfp->brhist_disp)
 	{
-	  brhist_add_count();
-	  brhist_disp();
+	  brhist_disp(gfc->totalframes);
 	  brhist_disp_total(gfp);
 	}
-#endif
+
       fprintf(stderr,"\n");
       fflush(stderr);
   }

@@ -213,6 +213,7 @@ typedef struct  {
   FLOAT8 ms_ener_ratio[2];
   FLOAT8 ms_ratio[2];
 
+
   /* variables used by quantize.c */
   int OldValue[2];
   int CurrentStep;

@@ -1,14 +1,15 @@
-#ifdef BRHIST
 #include <string.h>
 #include "brhist.h"
 #include "util.h"
+
+#ifdef OS_AMIGAOS
+#else
 #include <termcap.h>
+#endif
 
 
 #define BRHIST_BARMAX 50
-int disp_brhist = 1;
 long brhist_count[15];
-long brhist_temp[15];
 int brhist_vbrmin;
 int brhist_vbrmax;
 long brhist_max;
@@ -18,6 +19,31 @@ char brhist_bar[BRHIST_BARMAX+10];
 char brhist_spc[BRHIST_BARMAX+1];
 
 char stderr_buff[BUFSIZ];
+
+
+#ifdef OS_AMIGAOS
+/* tgetstr */
+char *
+tgetstr(char id[2], char **area)
+{
+      char *result;
+      result = NULL;
+      if (strncmp(id, "up", 2) == 0) {
+              result = "\033[A";
+      }
+      *area = result;
+      return result;
+}
+
+int
+tgetent(char *buff, char *name)
+{
+      return 1;
+}
+#endif /* OS_AMIGAOS */
+
+
+
 
 
 void brhist_init(lame_global_flags *gfp,int br_min, int br_max)
@@ -31,9 +57,8 @@ void brhist_init(lame_global_flags *gfp,int br_min, int br_max)
 
   for(i = 0; i < 15; i++)
     {
-      sprintf(brhist_bps[i], "%3d:", bitrate_table[gfp->version][i]);
+      sprintf(brhist_bps[i], "%3d", bitrate_table[gfp->version][i]);
       brhist_count[i] = 0;
-      brhist_temp[i] = 0;
     }
 
   brhist_vbrmin = br_min;
@@ -41,6 +66,7 @@ void brhist_init(lame_global_flags *gfp,int br_min, int br_max)
 
   brhist_max = 0;
 
+#ifdef BRHIST
   memset(&brhist_bar[0], '*', BRHIST_BARMAX);
   brhist_bar[BRHIST_BARMAX] = '\0';
   memset(&brhist_spc[0], ' ', BRHIST_BARMAX);
@@ -50,14 +76,14 @@ void brhist_init(lame_global_flags *gfp,int br_min, int br_max)
   if ((termname = getenv("TERM")) == NULL)
     {
       fprintf(stderr, "can't get TERM environment string.\n");
-      disp_brhist = 0;
+      gfp->brhist_disp = 0;
       return;
     }
 
   if (tgetent(term_buff, termname) != 1)
     {
       fprintf(stderr, "can't find termcap entry: %s\n", termname);
-      disp_brhist = 0;
+      gfp->brhist_disp = 0;
       return;
     }
 
@@ -68,39 +94,39 @@ void brhist_init(lame_global_flags *gfp,int br_min, int br_max)
   for(i = br_min-1; i <= br_max; i++)
     strcat(brhist_backcur, tp);
   setbuf(stderr, stderr_buff);
+#endif
 }
 
-void brhist_add_count(void)
+void brhist_add_count(int i)
 {
-  int i;
-
-  for(i = brhist_vbrmin; i <= brhist_vbrmax; i++)
-    {
-      brhist_count[i] += brhist_temp[i];
-      if (brhist_count[i] > brhist_max)
-	brhist_max = brhist_count[i];
-      brhist_temp[i] = 0;
-    }
+  ++brhist_count[i];
+  if (brhist_count[i] > brhist_max)
+    brhist_max = brhist_count[i];
 }
 
-void brhist_disp(void)
+void brhist_disp(long totalframes)
 {
   int i;
   long full;
   int barlen;
-
+  char brpercent[10];
+#ifdef BRHIST
   full = (brhist_max < BRHIST_BARMAX) ? BRHIST_BARMAX : brhist_max;
   fputc('\n', stderr);
   for(i = brhist_vbrmin; i <= brhist_vbrmax; i++)
     {
       barlen = (brhist_count[i]*BRHIST_BARMAX+full-1) / full;
       fputs(brhist_bps[i], stderr);
+      sprintf(brpercent,"[%3i%%]",(int)(100*brhist_count[i]/totalframes));
+      fputs(brpercent, stderr);
+
       fputs(&brhist_bar[BRHIST_BARMAX - barlen], stderr);
       fputs(&brhist_spc[barlen], stderr);
       fputc('\n', stderr);
     }
   fputs(brhist_backcur, stderr);
   fflush(stderr);
+#endif
 }
 
 void brhist_disp_total(lame_global_flags *gfp)
@@ -109,18 +135,11 @@ void brhist_disp_total(lame_global_flags *gfp)
   FLOAT ave;
   lame_internal_flags *gfc=gfp->internal_flags;
 
-
+#ifdef BRHIST
   for(i = brhist_vbrmin; i <= brhist_vbrmax; i++)
     fputc('\n', stderr);
-
-  ave=0;
-  for(i = brhist_vbrmin; i <= brhist_vbrmax; i++)
-    ave += bitrate_table[gfp->version][i]*
-      (FLOAT)brhist_count[i] / gfc->totalframes;
-  fprintf(stderr, "\naverage: %2.0f kbs\n",ave);
-    
-#if 0
-  fprintf(stderr, "----- bitrate statistics -----\n");
+#else
+  fprintf(stderr, "\n----- bitrate statistics -----\n");
   fprintf(stderr, " [kbps]      frames\n");
   for(i = brhist_vbrmin; i <= brhist_vbrmax; i++)
     {
@@ -130,9 +149,15 @@ void brhist_disp_total(lame_global_flags *gfp)
 	      (FLOAT)brhist_count[i] / gfc->totalframes * 100.0);
     }
 #endif
+  ave=0;
+  for(i = brhist_vbrmin; i <= brhist_vbrmax; i++)
+    ave += bitrate_table[gfp->version][i]*
+      (FLOAT)brhist_count[i] / gfc->totalframes;
+  fprintf(stderr, "\naverage: %2.0f kbs\n",ave);
+
   fflush(stderr);
 }
 
-#endif /* BRHIST */
+
 
 

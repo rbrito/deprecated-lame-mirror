@@ -290,21 +290,21 @@ drain_into_ancillary(lame_global_flags *gfp,int remainingBits)
     hoge += remainingBits;
     hogege += remainingBits;
 #endif
-#if 1
+
     if (remainingBits >= 8) {
-      putbits2(gfp,'L',8);
+      putbits2(gfp,0x4c,8);
       remainingBits -= 8;
     }
     if (remainingBits >= 8) {
-      putbits2(gfp,'A',8);
+      putbits2(gfp,0x41,8);
       remainingBits -= 8;
     }
     if (remainingBits >= 8) {
-      putbits2(gfp,'M',8);
+      putbits2(gfp,0x4d,8);
       remainingBits -= 8;
     }
     if (remainingBits >= 8) {
-      putbits2(gfp,'E',8);
+      putbits2(gfp,0x45,8);
       remainingBits -= 8;
     }
       
@@ -332,13 +332,6 @@ drain_into_ancillary(lame_global_flags *gfp,int remainingBits)
       else
 	putbits2(gfp,0x55555555, MAX_LENGTH);
     }
-#else
-    putbits2(gfp,0,remainingBits & (MAX_LENGTH - 1));
-    remainingBits /= MAX_LENGTH;
-    for (; remainingBits > 0; remainingBits--) {
-	putbits2(gfp,0, MAX_LENGTH);
-    }
-#endif
 }
 
 static INLINE int

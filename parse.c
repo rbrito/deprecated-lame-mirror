@@ -239,7 +239,9 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 
   gfp->inPath[0] = '\0';   
   gfp->outPath[0] = '\0';
-
+  /* default=0 (off).  will also be turned off if --nohist specified, 
+   * if VBR mode is not used, or if -s "silent" is specified  */
+  gfp->brhist_disp = 1;
   id3_inittag(&gfp->id3tag);
 
   /* process args */
@@ -295,10 +297,11 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	else if (strcmp(token, "athonly")==0) {
 	  gfp->ATHonly=1;
 	}
+	else if (strcmp(token, "athshort")==0) {
+	  gfp->ATHshort=1;
+	}
 	else if (strcmp(token, "nohist")==0) {
-#ifdef BRHIST
-	  disp_brhist = 0;
-#endif
+	  gfp->brhist_disp = 0;
 	}
 	/* options for ID3 tag */
  	else if (strcmp(token, "tt")==0) {

@@ -41,6 +41,7 @@ ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, i
     /*
       determine maximum size of reservoir:
       ResvMax + frameLength <= MAXMP3BUF;
+#define MAXMP3BUF 16380
     */
 #define MAXMP3BUF 7680
     if ( frameLength > MAXMP3BUF )

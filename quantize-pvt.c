@@ -662,7 +662,7 @@ int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576], III_psy_ratio *ratio,
   u_int	sfb;
   FLOAT8 en0, xmin, ener;
 
-    if (gfp->ATHonly) {    
+    if (gfp->ATHonly || (gfp->ATHshort && cod_info->block_type==SHORT_TYPE)) {    
       for ( sfb = cod_info->sfb_smax; sfb < SBPSY_s; sfb++ )
 	  for ( b = 0; b < 3; b++ )
 	      l3_xmin->s[sfb][b]=gfc->ATH_s[sfb];

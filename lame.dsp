@@ -146,6 +146,14 @@ SOURCE=.\bitstream.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\brhist.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\brhist.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\encoder.h
 # End Source File
 # Begin Source File

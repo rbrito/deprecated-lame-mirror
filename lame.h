@@ -67,10 +67,10 @@ typedef struct  {
   int gtkflag;                /* run frame analyzer?       */
   int bWriteVbrTag;           /* add Xing VBR tag?         */
   int decode_only;            /* use lame/mpglib to convert mp3 to wav */
-  /* Note: outPath must be set if you want Xing VBR or id3 tags written */
 
   int quality;                /* quality setting 0=best,  9=worst  */
   int silent;                 /* disable some status output */
+  int brhist_disp;            /* enable VBR bitrate histogram display */
   int mode;                       /* 0,1,2,3 stereo,jstereo,dual channel,mono */
   int mode_fixed;                 /* use specified the mode, do not use lame's opinion of the best mode */
   int force_ms;                   /* force M/S mode.  requires mode=1 */
@@ -103,12 +103,13 @@ typedef struct  {
   int highpasswidth;              /* freq width of filter, in Hz (default=15%)*/
 
 
-  /* input file reading - not used if calling program does the i/o */
+  /* I/O - not used if calling program does the i/o */
   sound_file_format input_format;   
   FILE * musicin;             /* file pointer to input file */
   int swapbytes;              /* force byte swapping   default=0*/
 #define         MAX_NAME_SIZE           1000
   char inPath[MAX_NAME_SIZE];
+  /* Note: outPath must be set if you want Xing VBR or id3 tags written */
   char outPath[MAX_NAME_SIZE];
 
 
@@ -121,6 +122,7 @@ typedef struct  {
   /* psycho acoustics and other aguments which you should not change 
    * unless you know what you are doing  */
   int ATHonly;                    /* only use ATH */
+  int ATHshort;                   /* only use ATH for short blocks */
   int noATH;                      /* disable ATH */
   float cwlimit;                  /* predictability limit */
   int allow_diff_short;       /* allow blocktypes to differ between channels ? */
