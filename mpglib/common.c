@@ -99,26 +99,20 @@ int head_check(unsigned long head,int check_layer)
     /* syncword */
 	return FALSE;
   }
-#if 0
-  if(!((head>>17)&3)) {
-    /* bits 13-14 = layer 3 */
-	return FALSE;
-  }
+
+#ifndef USE_LAYER_1
+  if (nLayer == 1)
+      return FALSE;
 #endif
+#ifndef USE_LAYER_2
+  if (nLayer == 2)
+      return FALSE;
+#endif
+  if (nLayer == 4)
+      return FALSE;
 
-  if (3 !=  nLayer) 
-  {
-	#if defined (USE_LAYER_1) || defined (USE_LAYER_2)
-	  if (4==nLayer)
-		  return FALSE;
-	#else
-		return FALSE;
-    #endif
-  }
-
-  if (check_layer>0) {
-      if (nLayer != check_layer) return FALSE;
-  }
+  if (check_layer > 0 && nLayer != check_layer)
+      return FALSE;
 
   if( ((head>>12)&0xf) == 0xf) {
     /* bits 16,17,18,19 = 1111  invalid bitrate */
@@ -128,6 +122,9 @@ int head_check(unsigned long head,int check_layer)
     /* bits 20,21 = 11  invalid sampling freq */
     return FALSE;
   }
+  if ((head&0x3) == 0x2 )
+      /* invalid emphasis */
+      return FALSE;
   return TRUE;
 }
 
@@ -264,7 +261,7 @@ unsigned int getbits(int number_of_bits)
 {
   unsigned long rval;
 
-  if(!number_of_bits)
+  if (number_of_bits <= 0 || !wordpointer)
     return 0;
 
   {
