@@ -48,8 +48,7 @@
 static void
 ms_sparsing(lame_internal_flags* gfc, int gr)
 {
-    int sfb, i, j = 0;
-    int width;
+    int sfb, i, j = 0, width;
 
     for (sfb = 0; sfb < gfc->l3_side.tt[gr][0].sfbmax; ++sfb) {
 	FLOAT threshold;

@@ -240,7 +240,7 @@ calc_noise(
 
 /************************************************************************
  *
- *      init_outer_loop()
+ *      init_bitalloc()
  *  mt 6/99                                    
  *
  *  initializes xrpow
@@ -250,7 +250,7 @@ calc_noise(
  ************************************************************************/
 
 static int 
-init_outer_loop(
+init_bitalloc(
     lame_internal_flags *gfc,
     gr_info *const gi, 
     FLOAT xrpow[576] )
@@ -295,7 +295,7 @@ init_outer_loop(
  *  author/date??
  *
  *  binary step size search
- *  used by outer_loop to get a quantizer step size to start with
+ *  used by CBR_1st_bitalloc to get a quantizer step size to start with
  *
  ************************************************************************/
 static int 
@@ -452,34 +452,6 @@ loop_break(const gr_info * const gi)
     return sfb;
 }
 
-
-
-
-/*************************************************************************
- *
- *      better_quant()
- *
- *  author/date??
- *
- *  several different codes to decide which quantization is better
- *
- *************************************************************************/
-
-inline static int 
-better_quant(
-    const FLOAT         * l3_xmin, 
-    FLOAT   * distort,
-    FLOAT   * best,
-    const gr_info	* const gi
-    )
-{
-    FLOAT new = calc_noise(gi, l3_xmin, distort);
-    if (*best > new) {
-	*best = new;
-	return 1;
-    }
-    return 0;
-}
 
 
 
@@ -747,7 +719,7 @@ CBR_2nd_bitalloc(
 
 /************************************************************************
  *
- *  outer_loop ()                                                       
+ *  CBR_1st_bitalloc ()                                                       
  *
  *  Function: The outer iteration loop controls the masking conditions
  *  of all scalefactor bands. It computes the best scalefac and global gain.
@@ -761,7 +733,7 @@ CBR_2nd_bitalloc(
  ************************************************************************/
 
 static void
-outer_loop (
+CBR_1st_bitalloc (
     lame_internal_flags *gfc,
     gr_info		* const gi,
     const int           ch,
@@ -770,10 +742,10 @@ outer_loop (
     )
 {
     gr_info gi_w;
-    FLOAT distort[SFBMAX], l3_xmin[SFBMAX], xrpow[576], best_noise;
+    FLOAT distort[SFBMAX], l3_xmin[SFBMAX], xrpow[576], bestNoise;
     int current_method, age;
 
-    if (!init_outer_loop(gfc, gi, xrpow) || gi->psymax == 0)
+    if (!init_bitalloc(gfc, gi, xrpow) || gi->psymax == 0)
 	return; /* digital silence */
 
     gi->global_gain = gfc->OldValue[ch];
@@ -791,8 +763,8 @@ outer_loop (
     /* compute the distortion in this quantization */
     /* coefficients and thresholds of ch0(L or Mid) or ch1(R or Side) */
     calc_xmin (gfc, ratio, gi, l3_xmin);
-    best_noise = calc_noise(gi, l3_xmin, distort);
-    if (gfc->noise_shaping_stop == 0 && best_noise < 0.0)
+    bestNoise = calc_noise(gi, l3_xmin, distort);
+    if (gfc->noise_shaping_stop == 0 && bestNoise < 0.0)
 	goto quit_quantization;
 
     /* BEGIN MAIN LOOP */
@@ -803,6 +775,8 @@ outer_loop (
 	/* try the new scalefactor conbination on gi_w */
 	int huff_bits = amp_scalefac_bands(gfc, &gi_w, distort,
 					   current_method, targ_bits);
+	FLOAT newNoise;
+
 	if (huff_bits > 0) {
 	    /* adjust global_gain to fit the available bits */
 	    while (count_bits(gfc, xrpow, &gi_w) > huff_bits
@@ -810,9 +784,10 @@ outer_loop (
 		;
 	    /* store this scalefactor combination if it is better */
 	    if (gi_w.global_gain != 256
-		&& better_quant(l3_xmin, distort, &best_noise, &gi_w)) {
+	     && bestNoise > (newNoise = calc_noise(&gi_w, l3_xmin, distort))) {
+		bestNoise = newNoise;
 		*gi = gi_w;
-		if (best_noise < 0.0) {
+		if (bestNoise < 0.0) {
 		    if (gfc->noise_shaping_stop == 0)
 			break;
 		    if (current_method == 0)
@@ -826,7 +801,7 @@ outer_loop (
 
 	/* stopping criteria */
 	if (--age > 0 && gi_w.global_gain != 256
-	    && (gi_w.psy_lmax != SBMAX_l || distort[SBMAX_l-1] > best_noise))
+	    && (gi_w.psy_lmax != SBMAX_l || distort[SBMAX_l-1] > bestNoise))
 	    continue;
 
 	/* seems we cannot get a better combination.
@@ -984,7 +959,7 @@ ABR_iteration_loop(
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    gr_info *gi = &gfc->l3_side.tt[gr][ch];
-	    outer_loop(gfc, gi, ch, targ_bits[gr][ch], &ratio[gr][ch]);
+	    CBR_1st_bitalloc(gfc, gi, ch, targ_bits[gr][ch], &ratio[gr][ch]);
 	    iteration_finish_one(gfc, gr, ch);
 	    ResvAdjust(gfc, gi->part2_length + gi->part2_3_length);
 	}
@@ -1034,7 +1009,7 @@ iteration_loop(
 
         for (ch=0 ; ch < gfc->channels_out ; ch ++) {
 	    gr_info *gi = &gfc->l3_side.tt[gr][ch];
-	    outer_loop(gfc, gi, ch, targ_bits[ch], &ratio[gr][ch]);
+	    CBR_1st_bitalloc(gfc, gi, ch, targ_bits[ch], &ratio[gr][ch]);
 	    iteration_finish_one(gfc, gr, ch);
 	    ResvAdjust(gfc,
 		       gi->part2_length + gi->part2_3_length
@@ -1436,7 +1411,7 @@ VBR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
 	for (gr = 0; gr < gfc->mode_gr; gr++) {
 	    for (ch = 0; ch < gfc->channels_out; ch++) {
 		gr_info *gi = &gfc->l3_side.tt[gr][ch];
-		if (init_outer_loop(gfc, gi, xrpow) == 0)
+		if (init_bitalloc(gfc, gi, xrpow) == 0)
 		    continue; /* digital silence */
 
 		gi->global_gain = gfc->OldValue[ch];

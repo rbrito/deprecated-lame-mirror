@@ -87,9 +87,8 @@ extern "C" {
 
 
 #define         CRC16_POLYNOMIAL        0x8005
-#define MAX_BITS 4095
+#define		MAX_BITS		4095
 
-/* "bit_stream.h" Definitions */
 #define         BUFFER_SIZE     LAME_MAXMP3BUFFER 
 
 #define         Min(A, B)       ((A) < (B) ? (A) : (B))

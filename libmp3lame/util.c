@@ -69,11 +69,9 @@ void  freegfc ( lame_internal_flags* const gfc )   /* bit stream structure */
         gfc->VBR_seek_table.size=0;
     }
     if ( gfc->s3_ll ) {
-        /* XXX allocated in psymodel_init() */
         free ( gfc->s3_ll );
     }
     if ( gfc->s3_ss ) {
-        /* XXX allocated in psymodel_init() */
         free ( gfc->s3_ss );
     }
     free ( gfc );
@@ -95,19 +93,6 @@ BitrateIndex(
 	    
     return -1;
 }
-
-/*****************************************************************************
-*
-*  End of bit_stream.c package
-*
-*****************************************************************************/
-
-
-
-
-
-
-
 
 /* resampling via FIR filter, blackman window */
 inline static FLOAT8 blackman(FLOAT8 x,FLOAT8 fcn,int l)

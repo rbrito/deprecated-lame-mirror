@@ -620,35 +620,6 @@ FLOAT adj43[PRECALC_SIZE];
 /* psymodel window */
 FLOAT window[BLKSIZE], window_s[BLKSIZE_s];
 
-/* 
-compute the ATH for each scalefactor band 
-cd range:  0..96db
-
-Input:  3.3kHz signal  32767 amplitude  (3.3kHz is where ATH is smallest = -5db)
-longblocks:  sfb=12   en0/bw=-11db    max_en0 = 1.3db
-shortblocks: sfb=5           -9db              0db
-
-Input:  1 1 1 1 1 1 1 -1 -1 -1 -1 -1 -1 -1 (repeated)
-longblocks:  amp=1      sfb=12   en0/bw=-103 db      max_en0 = -92db
-            amp=32767   sfb=12           -12 db                 -1.4db 
-
-Input:  1 1 1 1 1 1 1 -1 -1 -1 -1 -1 -1 -1 (repeated)
-shortblocks: amp=1      sfb=5   en0/bw= -99                    -86 
-            amp=32767   sfb=5           -9  db                  4db 
-
-
-MAX energy of largest wave at 3.3kHz = 1db
-AVE energy of largest wave at 3.3kHz = -11db
-Let's take AVE:  -11db = maximum signal in sfb=12.  
-Dynamic range of CD: 96db.  Therefor energy of smallest audible wave 
-in sfb=12  = -11  - 96 = -107db = ATH at 3.3kHz.  
-
-ATH formula for this wave: -5db.  To adjust to LAME scaling, we need
-ATH = ATH_formula  - 103  (db)
-ATH = ATH * 2.5e-10      (ener)
-
-*/
-
 #ifdef USE_FAST_LOG
 /***********************************************************************
  *
@@ -684,17 +655,9 @@ static void init_log_table(void)
 	log_table[j*2+1] = a;
 	log_table[j*2  ] = x - a*(1<<(23-LOG2_SIZE_L2-1))*(j*2+1) - 0x7f;
     }
-#if 0
-    for (j = 0; j < 1024; j++) {
-	FLOAT x = j / 1024.0+1.0;
-	printf("%f %f\n", log(x)/log(2.0), fast_log2(x));
-    }
-#endif
 }
 #endif /* define FAST_LOG */
 
-/*those ATH formulas are returning
-their minimum value for input = -1*/
 
 static FLOAT ATHformula(FLOAT f,lame_global_flags *gfp)
 {
@@ -715,29 +678,15 @@ static FLOAT ATHformula(FLOAT f,lame_global_flags *gfp)
 	The tradeoff is that in VBR mode it increases a lot the
 	bitrate.*/
 
-
-/*
-  this curve can be udjusted according to the VBR scale:
-  it adjusts from something close to Painter & Spanias
-  on V9 up to Bouvigne's formula for V0. This way the VBR
-  bitrate is more balanced according to the -V value.
-*/
-
-    FLOAT ath, value = gfp->ATHcurve;
-    if (f < -.3)
-	f=3410;
-
-    f /= 1000;  // convert to khz
+    f /= 1000;  /* convert to khz */
     f  = Max(0.01, f);
     f  = Min(18.0, f);
 
-    ath = 3.640 * pow(f,-0.8)
+    return 3.640 * pow(f,-0.8)
 	- 6.800 * exp(-0.6*pow(f-3.4,2.0))
 	+ 6.000 * exp(-0.15*pow(f-8.7,2.0))
-	+ (0.6+0.04*value)* 0.001 * pow(f,4.0)
+	+ (0.6+0.04*gfp->ATHcurve)* 0.001 * pow(f,4.0)
 	- gfp->ATHlower;
-
-    return ath;
 }
 
 static FLOAT ATHmdct( lame_global_flags *gfp, FLOAT f )
@@ -749,38 +698,12 @@ static FLOAT ATHmdct( lame_global_flags *gfp, FLOAT f )
 static void compute_ath( lame_global_flags *gfp )
 {
     lame_internal_flags *gfc = gfp->internal_flags;
+    FLOAT ATH_f, samp_freq = gfp->out_samplerate;
     int sfb, i, start, end;
-    FLOAT ATH_f;
-    FLOAT samp_freq = gfp->out_samplerate;
-
-    for (sfb = 0; sfb < SBMAX_l; sfb++) {
-        start = gfc->scalefac_band.l[ sfb ];
-        end   = gfc->scalefac_band.l[ sfb+1 ];
-        gfc->ATH.l[sfb] = FLOAT_MAX;
-        for (i = start ; i < end; i++) {
-            FLOAT freq = i*samp_freq/(2.0*576);
-            ATH_f = ATHmdct( gfp, freq );  /* freq in kHz */
-            if (gfc->ATH.l[sfb] > ATH_f)
-		gfc->ATH.l[sfb] = ATH_f;
-        }
-    }
-
-    for (sfb = 0; sfb < SBMAX_s; sfb++){
-        start = gfc->scalefac_band.s[ sfb ];
-        end   = gfc->scalefac_band.s[ sfb+1 ];
-        gfc->ATH.s[sfb] = FLOAT_MAX;
-        for (i = start ; i < end; i++) {
-            FLOAT freq = i*samp_freq/(2*192);
-            ATH_f = ATHmdct( gfp, freq );    /* freq in kHz */
-	    if (gfc->ATH.s[sfb] > ATH_f)
-		gfc->ATH.s[sfb] = ATH_f;
-        }
-    }
 
     /*  no-ATH mode:
      *  reduce ATH to -200 dB
      */
-    
     if (gfp->noATH) {
         for (sfb = 0; sfb < SBMAX_l; sfb++) {
             gfc->ATH.l[sfb] = 1E-37;
@@ -788,6 +711,31 @@ static void compute_ath( lame_global_flags *gfp )
         for (sfb = 0; sfb < SBMAX_s; sfb++) {
             gfc->ATH.s[sfb] = 1E-37;
         }
+	return;
+    }
+
+    for (sfb = 0; sfb < SBMAX_l; sfb++) {
+	start = gfc->scalefac_band.l[ sfb ];
+	end   = gfc->scalefac_band.l[ sfb+1 ];
+	gfc->ATH.l[sfb] = FLOAT_MAX;
+	for (i = start ; i < end; i++) {
+	    FLOAT freq = i*samp_freq/(2.0*576);
+	    ATH_f = ATHmdct( gfp, freq );  /* freq in kHz */
+	    if (gfc->ATH.l[sfb] > ATH_f)
+		gfc->ATH.l[sfb] = ATH_f;
+	}
+    }
+
+    for (sfb = 0; sfb < SBMAX_s; sfb++){
+	start = gfc->scalefac_band.s[ sfb ];
+	end   = gfc->scalefac_band.s[ sfb+1 ];
+	gfc->ATH.s[sfb] = FLOAT_MAX;
+	for (i = start ; i < end; i++) {
+	    FLOAT freq = i*samp_freq/(2*192);
+	    ATH_f = ATHmdct( gfp, freq );    /* freq in kHz */
+	    if (gfc->ATH.s[sfb] > ATH_f)
+		gfc->ATH.s[sfb] = ATH_f;
+	}
     }
 }
 
@@ -801,29 +749,29 @@ static const struct
     const int region1_count;
 } subdv_table[ 23 ] =
 {
-{0, 0}, /* 0 bands */
-{0, 0}, /* 1 bands */
-{0, 0}, /* 2 bands */
-{0, 0}, /* 3 bands */
-{0, 0}, /* 4 bands */
-{0, 1}, /* 5 bands */
-{1, 1}, /* 6 bands */
-{1, 1}, /* 7 bands */
-{1, 2}, /* 8 bands */
-{2, 2}, /* 9 bands */
-{2, 3}, /* 10 bands */
-{2, 3}, /* 11 bands */
-{3, 4}, /* 12 bands */
-{3, 4}, /* 13 bands */
-{3, 4}, /* 14 bands */
-{4, 5}, /* 15 bands */
-{4, 5}, /* 16 bands */
-{4, 6}, /* 17 bands */
-{5, 6}, /* 18 bands */
-{5, 6}, /* 19 bands */
-{5, 7}, /* 20 bands */
-{6, 7}, /* 21 bands */
-{6, 7}, /* 22 bands */
+    {0, 0}, /* 0 bands */
+    {0, 0}, /* 1 bands */
+    {0, 0}, /* 2 bands */
+    {0, 0}, /* 3 bands */
+    {0, 0}, /* 4 bands */
+    {0, 1}, /* 5 bands */
+    {1, 1}, /* 6 bands */
+    {1, 1}, /* 7 bands */
+    {1, 2}, /* 8 bands */
+    {2, 2}, /* 9 bands */
+    {2, 3}, /* 10 bands */
+    {2, 3}, /* 11 bands */
+    {3, 4}, /* 12 bands */
+    {3, 4}, /* 13 bands */
+    {3, 4}, /* 14 bands */
+    {4, 5}, /* 15 bands */
+    {4, 5}, /* 16 bands */
+    {4, 6}, /* 17 bands */
+    {5, 6}, /* 18 bands */
+    {5, 6}, /* 19 bands */
+    {5, 7}, /* 20 bands */
+    {6, 7}, /* 21 bands */
+    {6, 7}, /* 22 bands */
 };
 
 
@@ -1362,12 +1310,8 @@ int psymodel_init(lame_global_flags *gfp)
 	/* ATH */
 	FLOAT x = FLOAT_MAX;
 	for (k=0; k < gfc->numlines_l[i]; k++, j++) {
-	    FLOAT  freq = sfreq*j/(1000.0*BLKSIZE);
-	    FLOAT  level;
-	    assert( freq <= 24 );
-	    level  = ATHformula (freq*1000, gfp) - 20;
-	    level  = db2pow(level);
-	    level *= gfc->numlines_l [i];
+	    FLOAT level = db2pow(ATHformula(sfreq*j/BLKSIZE, gfp) - 20)
+		* gfc->numlines_l[i];
 	    if (x > level)
 		x = level;
 	}
@@ -1516,5 +1460,3 @@ void init_bit_stream_w(lame_global_flags *gfp)
 	    = ((gfp->version+1)*72000L*gfp->mean_bitrate_kbps)
 	    % gfp->out_samplerate;
 }
-
-/* end of tables.c */
