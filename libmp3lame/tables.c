@@ -1402,12 +1402,7 @@ int psymodel_init(lame_global_flags *gfp)
 
     /* SNR formula. short block is normalized by SNR. is it still right ? */
     for (i=0;i<gfc->npart_s;i++) {
-	double snr=-8.25;
-	if (bval[i]>=13)
-	    snr = -4.5 * (bval[i]-13)/(24.0-13.0)
-		-8.25*(bval[i]-24)/(13.0-24.0);
-
-	norm[i] = db2pow(snr+8) * NS_PREECHO_ATT0 * 0.8;
+	norm[i] = db2pow(-0.25) * NS_PREECHO_ATT0 * 0.8; /* should tune more */
 	gfc->endlines_s[i] = numlines_s[i];
 	if (i != 0)
 	    gfc->endlines_s[i] += gfc->endlines_s[i-1];
