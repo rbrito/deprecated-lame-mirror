@@ -178,6 +178,33 @@ SOURCE=.\BladeMP3EncDLL.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\configMS.h
+
+!IF  "$(CFG)" == "MP3EncDll - Win32 Release"
+
+# Begin Custom Build
+InputPath=..\configMS.h
+
+"..\config.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy ..\configMS.h ..\config.h
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "MP3EncDll - Win32 Debug"
+
+# Begin Custom Build
+InputPath=..\configMS.h
+
+"..\config.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy ..\configMS.h ..\config.h
+
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=..\libmp3lame\encoder.h
 # End Source File
 # Begin Source File
