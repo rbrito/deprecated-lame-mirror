@@ -20,14 +20,16 @@ typedef int	I192_3[192][3];
 
 
 typedef struct {
-	FLOAT8	l[SBPSY_l];
-	FLOAT8	s[SBPSY_s][3];
-} III_psy_xmin;
+	FLOAT8	thm_l[2][2][SBPSY_l];
+	FLOAT8	thm_s[2][2][SBPSY_s][3];
+	FLOAT8	en_l[2][2][SBPSY_l];
+	FLOAT8	en_s[2][2][SBPSY_s][3];
+} III_psy_ratio;
 
 typedef struct {
-    III_psy_xmin thm;
-    III_psy_xmin en;
-} III_psy_ratio;
+	FLOAT8	l[2][2][SBPSY_l];
+	FLOAT8	s[2][2][SBPSY_s][3];
+} III_psy_xmin;
 
 typedef struct {
 	unsigned part2_3_length;
@@ -71,8 +73,8 @@ typedef struct {
 /* note: there are only SBPSY_l=(SBMAX_l-1) and SBPSY_s=(SBMAX_s-1) scalefactors.
  * Dont know why these would be dimensioned SBMAX_l and SBMAX-s */
 typedef struct {
-	int l[SBMAX_l];            /* [cb] */
-	int s[SBMAX_s][3];         /* [window][cb] */
-} III_scalefac_t;  /* [gr][ch] */
+	int l[2][2][SBMAX_l];            /* [cb] */
+	int s[2][2][SBMAX_s][3];         /* [window][cb] */
+	} III_scalefac_t;  /* [gr][ch] */
 
 #endif

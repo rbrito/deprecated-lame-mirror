@@ -33,7 +33,6 @@
 #include "newmdct.h"
 #include "filters.h"
 #include "quantize.h"
-#include "quantize-pvt.h"
 #include "l3bitstream.h"
 #include "formatBitstream.h"
 #include "version.h"
@@ -427,7 +426,7 @@ void lame_print_config(void)
     (FLOAT)(bitrate[info->version][info->lay-1][info->bitrate_index]);
 
   fprintf(stderr,"LAME version %s (www.sulaco.org/mp3) \n",get_lame_version());
-  fprintf(stderr,"GPSYCHO: GPL psycho-acoustic model version %s. \n",get_psy_version());
+  fprintf(stderr,"GPSYCHO: GPL psycho-acoustic and noise shaping model version %s. \n",get_psy_version());
 #ifdef LIBSNDFILE
   fprintf(stderr,"Input handled by libsndfile (www.zip.com.au/~erikd/libsndfile)\n");
 #endif
@@ -507,10 +506,10 @@ int lame_encode(short int Buffer[2][1152],char *mpg123bs)
   FLOAT8 xr[2][2][576];
   int l3_enc[2][2][576];
   int mpg123count;
-  III_psy_ratio masking_ratio[2][2];    /*LR ratios */
-  III_psy_ratio masking_MS_ratio[2][2]; /*MS ratios */
+  III_psy_ratio masking_ratio;    /*LR ratios */
+  III_psy_ratio masking_MS_ratio; /*MS ratios */
   III_psy_ratio *masking;  /*LR ratios and MS ratios*/
-  III_scalefac_t scalefac[2][2];
+  III_scalefac_t scalefac;
 
   typedef FLOAT8 pedata[2][2];
   pedata pe,pe_MS;
@@ -666,11 +665,10 @@ FFT's                    <---------1024---------->
 	bufp[ch] = &mfbuf[ch][576 + gr*576-FFTOFFSET];
 
       L3psycho_anal( bufp, gr, info,
-		     s_freq[info->version][info->sampling_frequency] * 1000.0,
-		     check_ms_stereo,
-		     &ms_ratio[gr],&ms_ratio_next,&ms_ener_ratio[gr],
-		     masking_ratio, masking_MS_ratio,
-		     pe[gr],pe_MS[gr],blocktype);
+         s_freq[info->version][info->sampling_frequency] * 1000.0,
+	 check_ms_stereo,&ms_ratio[gr],&ms_ratio_next,&ms_ener_ratio[gr],
+         &masking_ratio, &masking_MS_ratio,
+         pe[gr],pe_MS[gr],blocktype);
 
       for ( ch = 0; ch < gf.stereo; ch++ ) 
 	l3_side.gr[gr].ch[ch].tt.block_type=blocktype[ch];
@@ -702,8 +700,7 @@ FFT's                    <---------1024---------->
 
   /* lowpass MDCT filtering */
   if (gf.sfb21 || gf.lowpass1>0 || gf.highpass2>0) 
-    filterMDCT(xr, &l3_side);
-
+    filterMDCT(xr,&l3_side,&fr_ps);
 
   if (check_ms_stereo) {
     /* make sure block type is the same in each channel */
@@ -749,19 +746,20 @@ FFT's                    <---------1024---------->
 
   /* bit and noise allocation */
   if ((MPG_MD_MS_LR == info->mode_ext) && gf.ms_masking) {
-    masking = masking_MS_ratio;    /* use MS masking */
+    masking = &masking_MS_ratio;    /* use MS masking */
     pe_use=&pe_MS;
   } else {
-    masking = masking_ratio;    /* use LR masking */
+    masking = &masking_ratio;    /* use LR masking */
     pe_use=&pe;
   }
 
+
   if (gf.VBR) {
     VBR_iteration_loop( *pe_use, ms_ratio, xr, masking, &l3_side, l3_enc, 
-			scalefac, &fr_ps);
+		    &scalefac, &fr_ps);
   }else{
     iteration_loop( *pe_use, ms_ratio, xr, masking, &l3_side, l3_enc, 
-		    scalefac, &fr_ps);
+		    &scalefac, &fr_ps);
   }
   /*
   VBR_iteration_loop_new( *pe_use, ms_ratio, xr, masking, &l3_side, l3_enc, 
@@ -778,7 +776,7 @@ FFT's                    <---------1024---------->
   /*  write the frame to the bitstream  */
   getframebits(info,&bitsPerFrame,&mean_bits);
   III_format_bitstream( bitsPerFrame, &fr_ps, l3_enc, &l3_side, 
-			scalefac, &bs);
+			&scalefac, &bs);
 
 
   frameBits = bs.totbit - sentBits;

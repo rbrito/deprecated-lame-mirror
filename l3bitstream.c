@@ -5,8 +5,8 @@
  * $Id$
  *
  * $Log$
- * Revision 1.12  2000/02/01 11:26:32  takehiro
- * scalefactor's structure changed
+ * Revision 1.12.4.1  2000/02/02 10:17:24  markt
+ * The pre-takehiro1 scalefac datastructure code
  *
  * Revision 1.11  2000/01/18 18:51:04  afaber
  * Made my bug fixes against version 1.9 instead of a previous version
@@ -60,7 +60,6 @@
 #include "l3bitstream.h" /* the public interface */
 #include "encoder.h"
 #include "quantize.h"
-#include "quantize-pvt.h"
 #include "formatBitstream.h"
 #include "tables.h"
 #include <assert.h>
@@ -106,7 +105,7 @@ III_format_bitstream( int              bitsPerFrame,
 		      frame_params     *in_fr_ps,
 		      int              l3_enc[2][2][576],
 		      III_side_info_t  *l3_side,
-		      III_scalefac_t   scalefac[2][2],
+		      III_scalefac_t   *scalefac,
 		      Bit_stream_struc *in_bs)
 {
     int gr, ch;
@@ -193,7 +192,7 @@ static unsigned slen2_tab[16] = { 0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3
 static void
 encodeMainData( int              l3_enc[2][2][576],
 		III_side_info_t  *si,
-		III_scalefac_t   scalefac[2][2] )
+		III_scalefac_t   *scalefac )
 {
     int i, gr, ch, sfb, window;
     layer *info = fr_ps->header;
@@ -227,15 +226,15 @@ encodeMainData( int              l3_enc[2][2][576],
 		    if ( gi->mixed_block_flag )
 		    {
 			for ( sfb = 0; sfb < 8; sfb++ )
-			    *pph = BF_addEntry( *pph,  scalefac[gr][ch].l[sfb], slen1 );
+			    *pph = BF_addEntry( *pph,  scalefac->l[gr][ch][sfb], slen1 );
 
 			for ( sfb = 3; sfb < 6; sfb++ )
 			    for ( window = 0; window < 3; window++ )
-				*pph = BF_addEntry( *pph,  scalefac[gr][ch].s[sfb][window], slen1 );
+				*pph = BF_addEntry( *pph,  scalefac->s[gr][ch][sfb][window], slen1 );
 
 			for ( sfb = 6; sfb < 12; sfb++ )
 			    for ( window = 0; window < 3; window++ )
-				*pph = BF_addEntry( *pph,  scalefac[gr][ch].s[sfb][window], slen2 );
+				*pph = BF_addEntry( *pph,  scalefac->s[gr][ch][sfb][window], slen2 );
 
 		    }
 		    else
@@ -243,30 +242,30 @@ encodeMainData( int              l3_enc[2][2][576],
 		    {
 			for ( sfb = 0; sfb < 6; sfb++ )
 			    for ( window = 0; window < 3; window++ )
-				*pph = BF_addEntry( *pph,  scalefac[gr][ch].s[sfb][window], slen1 );
+				*pph = BF_addEntry( *pph,  scalefac->s[gr][ch][sfb][window], slen1 );
 
 			for ( sfb = 6; sfb < 12; sfb++ )
 			    for ( window = 0; window < 3; window++ )
-				*pph = BF_addEntry( *pph,  scalefac[gr][ch].s[sfb][window], slen2 );
+				*pph = BF_addEntry( *pph,  scalefac->s[gr][ch][sfb][window], slen2 );
 		    }
 		}
 		else
 		{
 		    if ( (gr == 0) || (si->scfsi[ch][0] == 0) )
 			for ( sfb = 0; sfb < 6; sfb++ )
-			    *pph = BF_addEntry( *pph,  scalefac[gr][ch].l[sfb], slen1 );
+			    *pph = BF_addEntry( *pph,  scalefac->l[gr][ch][sfb], slen1 );
 
 		    if ( (gr == 0) || (si->scfsi[ch][1] == 0) )
 			for ( sfb = 6; sfb < 11; sfb++ )
-			    *pph = BF_addEntry( *pph,  scalefac[gr][ch].l[sfb], slen1 );
+			    *pph = BF_addEntry( *pph,  scalefac->l[gr][ch][sfb], slen1 );
 
 		    if ( (gr == 0) || (si->scfsi[ch][2] == 0) )
 			for ( sfb = 11; sfb < 16; sfb++ )
-			    *pph = BF_addEntry( *pph,  scalefac[gr][ch].l[sfb], slen2 );
+			    *pph = BF_addEntry( *pph,  scalefac->l[gr][ch][sfb], slen2 );
 
 		    if ( (gr == 0) || (si->scfsi[ch][3] == 0) )
 			for ( sfb = 16; sfb < 21; sfb++ )
-			    *pph = BF_addEntry( *pph,  scalefac[gr][ch].l[sfb], slen2 );
+			    *pph = BF_addEntry( *pph,  scalefac->l[gr][ch][sfb], slen2 );
 		}
 		Huffmancodebits( &codedDataPH[gr][ch], ix, gi );
 	    } /* for ch */
@@ -290,7 +289,7 @@ encodeMainData( int              l3_enc[2][2][576],
 		{
 		    sfb_partition = 0;
 		    for ( sfb = 0; sfb < 8; sfb++ )
-			*pph = BF_addEntry( *pph,  scalefac[gr][ch].l[sfb], gi->slen[sfb_partition] );
+			*pph = BF_addEntry( *pph,  scalefac->l[gr][ch][sfb], gi->slen[sfb_partition] );
 
 		    for ( sfb = 3, sfb_partition = 1; sfb_partition < 4; sfb_partition++ )
 		    {
@@ -298,7 +297,7 @@ encodeMainData( int              l3_enc[2][2][576],
 			int slen = gi->slen[ sfb_partition ];
 			for ( i = 0; i < sfbs; i++, sfb++ )
 			    for ( window = 0; window < 3; window++ )
-				*pph = BF_addEntry( *pph,  scalefac[gr][ch].s[sfb][window], slen );
+				*pph = BF_addEntry( *pph,  scalefac->s[gr][ch][sfb][window], slen );
 		    }
 		}
 		else
@@ -310,7 +309,7 @@ encodeMainData( int              l3_enc[2][2][576],
 			int slen = gi->slen[ sfb_partition ];
 			for ( i = 0; i < sfbs; i++, sfb++ )
 			    for ( window = 0; window < 3; window++ )
-				*pph = BF_addEntry( *pph,  scalefac[gr][ch].s[sfb][window], slen );
+				*pph = BF_addEntry( *pph,  scalefac->s[gr][ch][sfb][window], slen );
 		    }
 		}
 	    }
@@ -321,7 +320,7 @@ encodeMainData( int              l3_enc[2][2][576],
 		    int sfbs = gi->sfb_partition_table[ sfb_partition ];
 		    int slen = gi->slen[ sfb_partition ];
 		    for ( i = 0; i < sfbs; i++, sfb++ )
-			*pph = BF_addEntry( *pph,  scalefac[gr][ch].l[sfb], slen );
+			*pph = BF_addEntry( *pph,  scalefac->l[gr][ch][sfb], slen );
 		}
 	    }
 
@@ -560,6 +559,7 @@ Huffmancodebits( BF_PartHolder **pph, int *ix, gr_info *gi )
 	    int sfb, window, line, start, end;
 
 	    I192_3 *ix_s;
+	    int *scalefac = &sfBandIndex[fr_ps->header->sampling_frequency + (fr_ps->header->version * 3)].s[0];
 	    
 	    ix_s = (I192_3 *) ix;
 	    region1Start = 12;
@@ -568,8 +568,8 @@ Huffmancodebits( BF_PartHolder **pph, int *ix, gr_info *gi )
 	    for ( sfb = 0; sfb < 13; sfb++ )
 	    {
 		unsigned tableindex = 100;
-		start = scalefac_band.s[ sfb ];
-		end   = scalefac_band.s[ sfb+1 ];
+		start = scalefac[ sfb ];
+		end   = scalefac[ sfb+1 ];
 
 		if ( start < region1Start )
 		    tableindex = gi->table_select[ 0 ];
@@ -597,6 +597,7 @@ Huffmancodebits( BF_PartHolder **pph, int *ix, gr_info *gi )
 		int sfb, window, line, start, end;
 		unsigned tableindex;
 		I192_3 *ix_s;
+		int *scalefac = &sfBandIndex[fr_ps->header->sampling_frequency + (fr_ps->header->version * 3)].s[0];
 		
 		ix_s = (I192_3 *) ix;
 
@@ -619,8 +620,8 @@ Huffmancodebits( BF_PartHolder **pph, int *ix, gr_info *gi )
 
 		for ( sfb = 3; sfb < 13; sfb++ )
 		{
-		    start = scalefac_band.s[ sfb ];
-		    end   = scalefac_band.s[ sfb+1 ];           
+		    start = scalefac[ sfb ];
+		    end   = scalefac[ sfb+1 ];           
 		    
 		    for ( window = 0; window < 3; window++ )
 			for ( line = start; line < end; line += 2 )
@@ -638,6 +639,7 @@ Huffmancodebits( BF_PartHolder **pph, int *ix, gr_info *gi )
 	    else
 #endif
 	    { /* Long blocks */
+		int *scalefac = &sfBandIndex[fr_ps->header->sampling_frequency + (fr_ps->header->version * 3)].l[0];
 		unsigned scalefac_index = 100;
 		
 		if ( gi->mixed_block_flag )
@@ -649,10 +651,10 @@ Huffmancodebits( BF_PartHolder **pph, int *ix, gr_info *gi )
 		{
 		    scalefac_index = gi->region0_count + 1;
 		    assert( scalefac_index < 23 );
-		    region1Start = scalefac_band.l[ scalefac_index ];
+		    region1Start = scalefac[ scalefac_index ];
 		    scalefac_index += gi->region1_count + 1;
 		    assert( scalefac_index < 23 );    
-		    region2Start = scalefac_band.l[ scalefac_index ];
+		    region2Start = scalefac[ scalefac_index ];
 		}
 
 		for ( i = 0; i < bigvalues; i += 2 )

@@ -26,6 +26,8 @@
 #include "quantize-pvt.h"
 #include "globalflags.h"
 
+extern int *scalefac_band_long; 
+extern int *scalefac_band_short;
 
 
 
@@ -507,27 +509,27 @@ static int count_bits_long(int ix[576], gr_info *gi)
 	int index;
 	int scfb_anz = 0;
 
-	while (scalefac_band.l[++scfb_anz] < i) 
+	while (scalefac_band_long[++scfb_anz] < i) 
 	    ;
 
 	index = subdv_table[scfb_anz].region0_count;
-	while (scalefac_band.l[index + 1] > i)
+	while (scalefac_band_long[index + 1] > i)
 	    index--;
 	gi->region0_count = index;
 
 	index = subdv_table[scfb_anz].region1_count;
-	while (scalefac_band.l[index + gi->region0_count + 2] > i)
+	while (scalefac_band_long[index + gi->region0_count + 2] > i)
 	    index--;
 	gi->region1_count = index;
 
-	a1 = scalefac_band.l[gi->region0_count + 1];
-	a2 = scalefac_band.l[index + gi->region0_count + 2];
+	a1 = scalefac_band_long[gi->region0_count + 1];
+	a2 = scalefac_band_long[index + gi->region0_count + 2];
 	gi->table_select[2] = choose_table(ix + a2, ix + i, &bits);
     } else {
 	gi->region0_count = 7;
 	/*gi->region1_count = SBPSY_l - 7 - 1;*/
 	gi->region1_count = SBMAX_l -1 - 7 - 1;
-	a1 = scalefac_band.l[7 + 1];
+	a1 = scalefac_band_long[7 + 1];
 	a2 = i;
 	if (a1 > a2) {
 	    a1 = a2;
@@ -585,7 +587,7 @@ void best_huffman_divide(int gr, int ch, gr_info *gi, int *ix)
     bits = &cod_info.part2_3_length;
 
     for (r0 = 2; r0 < SBMAX_l + 1; r0++) {
-	a2 = scalefac_band.l[r0];
+	a2 = scalefac_band_long[r0];
 	if (a2 > bigv)
 	    break;
 
@@ -597,7 +599,7 @@ void best_huffman_divide(int gr, int ch, gr_info *gi, int *ix)
     }
 
     for (r0 = 0; r0 < 16; r0++) {
-	a1 = scalefac_band.l[r0 + 1];
+	a1 = scalefac_band_long[r0 + 1];
 	if (a1 > bigv)
 	    break;
 	cod_info.region0_count = r0;
@@ -611,7 +613,7 @@ void best_huffman_divide(int gr, int ch, gr_info *gi, int *ix)
 	    if (gi->part2_3_length < *bits)
 		continue;
 
-	    a2 = scalefac_band.l[r0 + r1 + 2];
+	    a2 = scalefac_band_long[r0 + r1 + 2];
 
 	    cod_info.table_select[1] = choose_table(ix + a1, ix + a2, bits);
 	    if (gi->part2_3_length < *bits)
@@ -627,7 +629,7 @@ void best_huffman_divide(int gr, int ch, gr_info *gi, int *ix)
 static void
 scfsi_calc(int ch,
 	   III_side_info_t *l3_side,
-	   III_scalefac_t scalefac[2][2])
+	   III_scalefac_t *scalefac)
 {
     int i, s1, s2, c1, c2;
     int sfb;
@@ -646,12 +648,12 @@ scfsi_calc(int ch,
 
     for (i = 0; i < sizeof(scfsi_band) / sizeof(int) - 1; i++) {
 	for (sfb = scfsi_band[i]; sfb < scfsi_band[i + 1]; sfb++) {
-	    if (scalefac[0][ch].l[sfb] != scalefac[1][ch].l[sfb])
+	    if (scalefac->l[0][ch][sfb] != scalefac->l[1][ch][sfb])
 		break;
 	}
 	if (sfb == scfsi_band[i + 1]) {
 	    for (sfb = scfsi_band[i]; sfb < scfsi_band[i + 1]; sfb++) {
-		scalefac[1][ch].l[sfb] = -1;
+		scalefac->l[1][ch][sfb] = -1;
 	    }
 	    l3_side->scfsi[ch][i] = 1;
 	}
@@ -659,20 +661,20 @@ scfsi_calc(int ch,
 
     s1 = c1 = 0;
     for (sfb = 0; sfb < 11; sfb++) {
-	if (scalefac[1][ch].l[sfb] < 0)
+	if (scalefac->l[1][ch][sfb] < 0)
 	    continue;
 	c1++;
-	if (s1 < scalefac[1][ch].l[sfb])
-	    s1 = scalefac[1][ch].l[sfb];
+	if (s1 < scalefac->l[1][ch][sfb])
+	    s1 = scalefac->l[1][ch][sfb];
     }
 
     s2 = c2 = 0;
     for (; sfb < SBPSY_l; sfb++) {
-	if (scalefac[1][ch].l[sfb] < 0)
+	if (scalefac->l[1][ch][sfb] < 0)
 	    continue;
 	c2++;
-	if (s2 < scalefac[1][ch].l[sfb])
-	    s2 = scalefac[1][ch].l[sfb];
+	if (s2 < scalefac->l[1][ch][sfb])
+	    s2 = scalefac->l[1][ch][sfb];
     }
     for (i = 0; i < 16; i++) {
 	if (s1 < slen1_n[i] && s2 < slen2_n[i]) {
@@ -687,7 +689,7 @@ scfsi_calc(int ch,
 
 void best_scalefac_store(int gr, int ch,
 			 III_side_info_t *l3_side,
-			 III_scalefac_t scalefac[2][2])
+			 III_scalefac_t *scalefac)
 {
     /* use scalefac_scale if we can */
     gr_info *gi = &l3_side->gr[gr].ch[ch].tt;
@@ -697,22 +699,22 @@ void best_scalefac_store(int gr, int ch,
 	int sfb;
 	int b, s = 0;
 	for (sfb = 0; sfb < gi->sfb_lmax; sfb++) {
-	    s |= scalefac[gr][ch].l[sfb];
+	    s |= scalefac->l[gr][ch][sfb];
 	}
 
 	for (sfb = gi->sfb_smax; sfb < SBPSY_s; sfb++) {
 	    for (b = 0; b < 3; b++) {
-		s |= scalefac[gr][ch].s[sfb][b];
+		s |= scalefac->s[gr][ch][sfb][b];
 	    }
 	}
 
 	if (!(s & 1) && s != 0) {
 	    for (sfb = 0; sfb < gi->sfb_lmax; sfb++) {
-		scalefac[gr][ch].l[sfb] /= 2;
+		scalefac->l[gr][ch][sfb] /= 2;
 	    }
 	    for (sfb = gi->sfb_smax; sfb < SBPSY_s; sfb++) {
 		for (b = 0; b < 3; b++) {
-		    scalefac[gr][ch].s[sfb][b] /= 2;
+		    scalefac->s[gr][ch][sfb][b] /= 2;
 		}
 	    }
 

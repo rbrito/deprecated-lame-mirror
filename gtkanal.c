@@ -8,7 +8,6 @@
 #include "version.h"
 #include "lame.h"
 #include "tables.h"
-#include "quantize-pvt.h"
 #include <assert.h>
 
 
@@ -414,19 +413,19 @@ void plot_frame(void)
 
     /* draw some hash marks showing scalefactor bands */
     if (gtkinfo.sfblines) {
-      int fac,nsfb, *scalefac;
+      int fac,nsfb,*scalefac_band;
       if (pplot1->blocktype[gr][ch]==SHORT_TYPE) {
 	nsfb=SBMAX_s;
 	fac=3;
-	scalefac = scalefac_band.l;
+	scalefac_band = &sfBandIndex[sampindex+ version*3].s[0];
       }else{
 	nsfb=SBMAX_l;
 	fac=1;
-	scalefac = scalefac_band.s;
+	scalefac_band = &sfBandIndex[sampindex + version*3].l[0];
       }
       for (i=nsfb-7 ; i<nsfb; i++) {
 	ycord[0] = .8*ymx;  ycord[1] = ymn;
-	xcord[0] = fac*scalefac[i];
+	xcord[0] = fac*scalefac_band[i];
 	xcord[1] = xcord[0];
 	gpk_rectangle_draw(mdctbox[gr],xcord,ycord,xmn,ymn,xmx,ymx,&yellow);
       }
