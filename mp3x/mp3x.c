@@ -21,6 +21,7 @@ int main(int argc, char **argv)
 {
   char mp3buffer[LAME_MAXMP3BUFFER];
   lame_global_flags gf;  
+  FILE *musicin; 
 
   lame_init(&gf);
   if(argc==1)  usage(&gf,argv[0]);  /* no command-line args  */
@@ -28,16 +29,16 @@ int main(int argc, char **argv)
   parse_args(&gf,argc, argv); 
   gf.analysis=1;
 
-  init_infile(&gf);
+  musicin = init_infile(&gf);
   lame_init_params(&gf);
   lame_print_config(&gf);
 
 
   gtk_init (&argc, &argv);
-  gtkcontrol(&gf);
+  gtkcontrol(&gf,musicin);
 
   lame_encode_finish(&gf,mp3buffer,sizeof(mp3buffer));
-  close_infile(&gf);
+  close_infile(&gf,musicin);
   return 0;
 }
 

@@ -21,11 +21,6 @@
 
 #include "version.h"    // macros of version numbers
 
-void  lame_print_version ( FILE* fp )
-{
-    fprintf ( fp, "LAME version %s    (http://www.mp3dev.org) \n", get_lame_version() );
- // fprintf ( fp, "GPSYCHO: GPL psycho-acoustic and noise shaping model version %s. \n", get_psy_version () );
-}
 
 const char*  get_lame_version ( void )
 {

@@ -41,7 +41,6 @@
 # define MP3X_ALPHA_VERSION      0      /* Set number if this is an alpha version, otherwise zero */
 # define MP3X_BETA_VERSION       0      /* Set number if this is a beta version, otherwise zero */
 
-const char*  get_lame_version   ( void );       /* returns lame version number string */
 const char*  get_psy_version    ( void );       /* returns psy model version number string */
 const char*  get_mp3x_version   ( void );       /* returns mp3x version number string */
 

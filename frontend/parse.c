@@ -40,7 +40,7 @@
 
 void print_license ( lame_global_flags* gfp, const char* ProgramName )  /* print version,license & exit */
 {
-    lame_print_version (stdout);
+    printf("LAME version %s    (http://www.mp3dev.org) \n", get_lame_version() );
     printf ("\n");
     printf ("Can I use LAME in my commercial program?\n");
     printf ("\n");
@@ -95,7 +95,7 @@ void print_license ( lame_global_flags* gfp, const char* ProgramName )  /* print
 
 void usage( lame_global_flags* gfp, const char* ProgramName )  /* print syntax & exit */
 {
-  lame_print_version(stderr);
+  fprintf(stderr,"LAME version %s    (http://www.mp3dev.org) \n", get_lame_version() );
   fprintf(stderr,"\n");
   fprintf(stderr,"usage: %s [options] <infile> [outfile]\n", ProgramName );
   fprintf(stderr,"\n<infile> and/or <outfile> can be \"-\", which means stdin/stdout.\n");
@@ -118,7 +118,7 @@ void usage( lame_global_flags* gfp, const char* ProgramName )  /* print syntax &
 
 void short_help ( lame_global_flags* gfp, const char* ProgramName )  /* print syntax & exit */
 {
-  lame_print_version(stdout); /* prints two lines */
+  printf("LAME version %s    (http://www.mp3dev.org) \n", get_lame_version() );
   printf("\n");
   printf("usage: %s [options] <infile> [outfile]\n", ProgramName );
   printf("\n<infile> and/or <outfile> can be \"-\", which means stdin/stdout.\n");
@@ -155,7 +155,7 @@ void short_help ( lame_global_flags* gfp, const char* ProgramName )  /* print sy
 
 void help ( lame_global_flags* gfp, const char* ProgramName )  /* print syntax & exit */
 {
-  lame_print_version(stdout);
+  printf("LAME version %s    (http://www.mp3dev.org) \n", get_lame_version() );
   printf("\n");
   printf("usage: %s [options] <infile> [outfile]\n", ProgramName );
   printf("\n<infile> and/or <outfile> can be \"-\", which means stdin/stdout.\n");
@@ -389,7 +389,7 @@ void presets_info ( lame_global_flags* gfp, const char* ProgramName )  /* print 
     size_t  i;
 
     printf ("\n");    
-    lame_print_version(stdout);
+    printf("LAME version %s    (http://www.mp3dev.org) \n", get_lame_version() );
     printf ("\n");
     printf ("Presets are some shortcuts for common settings.\n");
     printf ("They can be combined with -v if you want VBR MP3s.\n");
@@ -593,7 +593,7 @@ static int resample_rate ( double freq )
 #define T_ELSE             } else {
 #define T_END              }
 
-void parse_args ( lame_global_flags* gfp, int argc, char** argv )
+void parse_args ( lame_global_flags* gfp, int argc, char** argv, char *inPath, char *outPath )
 {
     int         err;
     int         i;
@@ -850,8 +850,8 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv )
 		    }
 		
 		T_ELIF ("nspsytune")
-		    gfp->exp_nspsytune = TRUE;
-		    gfp->experimentalZ = TRUE;
+		    gfp->exp_nspsytune = 1;
+		    gfp->experimentalZ = 1;
 		    gfp->experimentalX = 1;
 		
 		/* some more GNU-ish options could be added
@@ -948,7 +948,7 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv )
 			input_format=sf_raw;
 			break;
 		    case 'x':  /* force byte swapping */
-			swapbytes=TRUE;
+			swapbytes=1;
 			break;
 		    case 'p': /* (jo) error_protection: add crc16 information to stream */
 			gfp->error_protection = 1; 
@@ -974,23 +974,23 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv )
 			gfp->quality = 2;
 			break;
 		    case 'S': 
-			silent = TRUE;
+			silent = 1;
 			break;
 		    case 'X':        
 			argUsed = 1;   
 			gfp->experimentalX = atoi(arg); 
 			break;
 		    case 'Y': 
-			gfp->experimentalY = TRUE;
+			gfp->experimentalY = 1;
 			break;
 		    case 'Z': 
-			gfp->experimentalZ = TRUE;
+			gfp->experimentalZ = 1;
 			break;
 		    case 'f': 
 			gfp->quality= 7;
 			break;
 		    case 'g': /* turn on gtk analysis */
-			gfp->analysis = TRUE;
+			gfp->analysis = 1;
 			break;
 			
 		    case 'e':        

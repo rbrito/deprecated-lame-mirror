@@ -167,7 +167,7 @@ typedef struct ts_times {
 /*********************************************************/
 /* ts_calc_times: calculate time info (eta, speed, etc.) */
 /*********************************************************/
-void ts_calc_times(ts_times *tstime, int samp_rate, long frame, long frames,int framesize)
+void ts_calc_times(ts_times *tstime, int samp_rate, int frame, int frames,int framesize)
 {
   if (frame > 0) {
     tstime->estimated = tstime->so_far * frames / frame;
@@ -202,17 +202,14 @@ static void  ts_time_decompose ( const unsigned long time_in_sec, const char pad
         fprintf ( stderr,         "%6lu h%c", hour,           padded_char );
 }
 
-void timestatus ( unsigned long samp_rate, 
-                  unsigned long frameNum,
-                  unsigned long totalframes,
-                  int           framesize )
+void timestatus ( int samp_rate, 
+                  int frameNum,
+                  int totalframes,
+                  int framesize )
 {
     ts_times  real_time;
     ts_times  process_time;
     int       percent;
-    unsigned  dropped_frames = samp_rate <= 16000  || samp_rate == 32000  ?  2  :  1;  
-                               /* ugly and nasty work around, only obscuring another bug? */
-                               /* values of 1...3 are possible, why ??? */
 
     real_time   .so_far = ts_real_time    (frameNum);
     process_time.so_far = ts_process_time (frameNum);
@@ -226,13 +223,13 @@ void timestatus ( unsigned long samp_rate,
     ts_calc_times ( &real_time   , samp_rate, frameNum, totalframes, framesize );
     ts_calc_times ( &process_time, samp_rate, frameNum, totalframes, framesize );
 
-    if ( frameNum < totalframes - dropped_frames ) {
-        percent = (int) (100.0 * frameNum / (totalframes - dropped_frames) + 0.5 );
+    if ( frameNum < totalframes  ) {
+        percent = (int) (100.0 * frameNum / (totalframes + 0.5 );
     } else {
         percent = 100;
     }
 
-    fprintf ( stderr, "\r%6ld/%-6ld", frameNum, totalframes - dropped_frames );
+    fprintf ( stderr, "\r%6i/%-6i", frameNum, totalframes );
     fprintf ( stderr, percent < 100 ? " (%2d%%)|" : "(%3.3d%%)|", percent );
     ts_time_decompose ( (unsigned long)process_time.so_far   , '/' );
     ts_time_decompose ( (unsigned long)process_time.estimated, '|' );
@@ -257,17 +254,17 @@ void timestatus_klemm(lame_global_flags *gfp)
   static double  last_time = 0.0;
 
   if (!silent) {
-    if ( frameNum ==  0  ||  
-	 frameNum == 10  ||
+    if ( gfp->frameNum ==  0  ||  
+	 gfp->frameNum == 10  ||
 	 ( GetRealTime () - last_time >= update_interval  ||
 	   GetRealTime ()             <  update_interval )) {
       timestatus ( gfp -> out_samplerate, 
-		   frameNum, 
-		   totalframes, 
+		   gfp->frameNum, 
+		   gfp->totalframes, 
 		   gfp -> framesize );
 #ifdef BRHIST
       if ( brhist )
-	brhist_disp ( totalframes );
+	brhist_disp ( gfp->totalframes );
 #endif
       last_time = GetRealTime ();  /* from now! disp_time seconds */
     }

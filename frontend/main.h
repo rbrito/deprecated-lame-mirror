@@ -20,37 +20,18 @@
  * Boston, MA 02111-1307, USA.
  */
 
-typedef enum sound_file_format_e {
-  sf_unknown, 
-  sf_raw, 
-  sf_wave, 
-  sf_aiff, 
-  sf_mp1,  /* MPEG Layer 1, aka mpg */
-  sf_mp2,  /* MPEG Layer 2 */
-  sf_mp3,  /* MPEG Layer 3 */
-  sf_ogg 
-} sound_file_format;
 
+#include "get_audio.h"        
 
 #define         MAX_NAME_SIZE           1000
-char outPath[MAX_NAME_SIZE];
-char inPath[MAX_NAME_SIZE];
-FILE * musicin;             /* file pointer to input file */
-sound_file_format input_format;   
-int swapbytes;              /* force byte swapping   default=0*/
-int totalframes;                /* frames: 0..totalframes-1 (estimate)*/
-int silent;
-int brhist;
+extern char outPath[MAX_NAME_SIZE];
+extern char inPath[MAX_NAME_SIZE];
+extern sound_file_format input_format;   
+extern int swapbytes;              /* force byte swapping   default=0*/
+extern int silent;
+extern int brhist;
+extern float update_interval;      /* to use Frank's time status display */
 
-float update_interval;      /* to use Frank's time status display */
-
-#ifndef FALSE
-#define         FALSE                   0
-#endif
-
-#ifndef TRUE
-#define         TRUE                    (!FALSE)
-#endif
 
 
 #define         Min(A, B)       ((A) < (B) ? (A) : (B))

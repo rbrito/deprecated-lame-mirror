@@ -48,12 +48,12 @@
 
 
 /* global data for get_audio.c. */
-unsigned long num_samples_read;  
 int count_samples_carefully;
 int pcmbitwidth;
 mp3data_struct mp3input_data;
+unsigned int num_samples_read;             
 enum byte_order NativeByteOrder = order_unknown;
-
+FILE *musicin;
 int fskip(FILE *sf,long num_bytes,int dummy);
 
 
@@ -71,32 +71,68 @@ int lame_decode_fromfile(FILE *fd,short int pcm_l[],short int pcm_r[],mp3data_st
 int lame_decode_ogg_initfile(FILE *fd,mp3data_struct *mp3data);
 int lame_decode_ogg_fromfile(FILE *fd,short int pcm_l[],short int pcm_r[],mp3data_struct *mp3data);
 
-/* the simple lame decoder (interface to above routines) */
-/* After calling lame_init(), lame_init_params() and
- * init_infile(), call this routine to read the input MP3 file 
- * and output .wav data to the specified file pointer*/
-/* lame_decoder will ignore the first 528 samples, since these samples
- * represent the mpglib delay (and are all 0).  skip = number of additional
- * samples to skip, to (for example) compensate for the encoder delay,
- * only used when decoding mp3 */
-int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip);
 
-
-
-static int read_samples_pcm(short sample_buffer[2304],int frame_size, int samples_to_read);
+static int read_samples_pcm(FILE *musicin,short sample_buffer[2304],int frame_size, int samples_to_read);
 static int read_samples_mp3(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2][1152],int num_chan);
 static int read_samples_ogg(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2][1152],int num_chan);
+void CloseSndFile(sound_file_format input, FILE *musicin);
+FILE * OpenSndFile(lame_global_flags *gfp,char *);
 
 
-void init_infile(lame_global_flags *gfp)
+
+
+
+FILE *init_outfile(char *outPath)
+{
+  FILE *outf;
+  /* open the output file */
+  if (!strcmp(outPath, "-")) {
+#ifdef __EMX__
+    _fsetmode(stdout,"b");
+#elif (defined  __BORLANDC__)
+    setmode(_fileno(stdout), O_BINARY);
+#elif (defined  __CYGWIN__)
+    setmode(fileno(stdout), _O_BINARY);
+#elif (defined _WIN32)
+    _setmode(_fileno(stdout), _O_BINARY);
+#endif
+    outf = stdout;
+  } else {
+    if ((outf = fopen(outPath, "wb+")) == NULL) {
+      fprintf(stderr,"Could not create \"%s\".\n", outPath);
+      exit(-1);
+    }
+#ifdef __riscos__
+    /* Assign correct file type */
+    for (i = 0; outPath[i]; i++) {
+      if (outPath[i] == '.')
+        outPath[i] = '/';
+      else if (outPath[i] == '/')
+        outPath[i] = '.';
+    }
+    if (gf.decode_only)
+      SetFiletype(outPath, 0xfb1); /* Wave */
+    else
+      SetFiletype(outPath, 0x1ad); /* AMPEG */
+#endif
+  }
+  return outf;
+}
+
+
+
+
+
+
+void init_infile(lame_global_flags *gfp, char *inPath)
 {
   /* open the input file */
   count_samples_carefully=0;
   pcmbitwidth=16;
-  musicin=OpenSndFile(gfp);
+  musicin=OpenSndFile(gfp,inPath);
 }
 
-void close_infile(lame_global_flags *gfp)
+void close_infile(void)
 {
   CloseSndFile(input_format, musicin);
 }
@@ -151,34 +187,6 @@ enum byte_order DetermineByteOrder(void)
 
 
 
-/************************************************************************
-*
-* readframe()
-*
-* PURPOSE:  reads a frame of audio data from a file to the buffer,
-*   aligns the data for future processing, and separates the
-*   left and right channels
-*
-*
-************************************************************************/
-int readframe(lame_global_flags *gfp,short int Buffer[2][1152])
-{
-  int iread;
-
-  /* note: if input is gfp->stereo and output is mono, get_audio()
-   * will return  .5*(L+R) in channel 0,  and nothing in channel 1. */
-  iread = get_audio(gfp,Buffer);
-
-  /* check to see if we overestimated/underestimated totalframes */
-  if (iread==0)  totalframes = Min(totalframes, frameNum+2);
-  if (frameNum > (totalframes-1)) totalframes = frameNum;
-
-  return iread;
-}
-
-
-
-
 
 /************************************************************************
 *
@@ -206,6 +214,7 @@ int get_audio(lame_global_flags *gfp,short buffer[2][1152])
    * will get out of sync if we read more than framesize worth of data.
    */
   framesize = gfp->framesize;
+  assert(framesize <= 1152);
 
   samples_to_read = framesize;
   if (count_samples_carefully) {
@@ -227,7 +236,7 @@ int get_audio(lame_global_flags *gfp,short buffer[2][1152])
   } else if (input_format==sf_ogg) {
     samples_read=read_samples_ogg(gfp, musicin,buffer,num_channels);
   }else{
-    samples_read = read_samples_pcm(insamp,num_channels*framesize,num_channels*samples_to_read);
+    samples_read = read_samples_pcm(musicin,insamp,num_channels*framesize,num_channels*samples_to_read);
     samples_read /=num_channels;
 
     for(j=0;j<framesize;j++) {
@@ -332,7 +341,7 @@ void WriteWav(FILE *f,long bytes,int srate,int ch){
  * represent the mpglib delay (and are all 0).  skip = number of additional
  * samples to skip, to (for example) compensate for the encoder delay */
 
-int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip)
+int lame_decoder(lame_global_flags *gfp, FILE *outf,int skip, char *inPath, char *outPath)
 {
     short int   Buffer [2] [1152];
     int         iread;
@@ -403,7 +412,7 @@ int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip)
     assert ( gfp->num_channels >= 1 && gfp->num_channels <= 2 );
     
     do {
-	iread    = readframe (gfp, Buffer);  /* read in 'iread' samples */
+	iread=get_audio(gfp,Buffer);  /* read in 'iread' samples */
 	mp3input_data.framenum += iread/mp3input_data.framesize;
 	wavsize += iread;
 	if (!silent)
@@ -497,7 +506,7 @@ void CloseSndFile(sound_file_format input,FILE *musicin)
 
 
 
-FILE * OpenSndFile(lame_global_flags *gfp)
+FILE * OpenSndFile(lame_global_flags *gfp, char *inPath)
 {
   const char* lpszFileName = inPath;
   FILE * musicin;
@@ -521,7 +530,7 @@ FILE * OpenSndFile(lame_global_flags *gfp)
     if (-1==lame_decode_initfile(musicin,&mp3input_data)) {
 	  fprintf(stderr,"Error reading headers in mp3 input file %s.\n", lpszFileName);
 	  exit(1);
-	}
+    }
 #endif
 
     gfp->num_channels=mp3input_data.stereo;
@@ -674,7 +683,7 @@ FILE * OpenSndFile(lame_global_flags *gfp)
 *
 ************************************************************************/
 
-int read_samples_pcm(short sample_buffer[2304],int frame_size,int samples_to_read)
+int read_samples_pcm(FILE *musicin,short sample_buffer[2304],int frame_size,int samples_to_read)
 {
     int 		samples_read;
     int			rcode;
@@ -724,7 +733,7 @@ int read_samples_pcm(short sample_buffer[2304],int frame_size,int samples_to_rea
 *
 ************************************************************************/
 
-int read_samples_pcm(short sample_buffer[2304], int frame_size,int samples_to_read)
+int read_samples_pcm(FILE *musicin,short sample_buffer[2304], int frame_size,int samples_to_read)
 {
     int samples_read;
     int iswav=(input_format==sf_wave);
@@ -767,7 +776,7 @@ int read_samples_pcm(short sample_buffer[2304], int frame_size,int samples_to_re
       if (iswav && ( NativeByteOrder == order_bigEndian ))
 	SwapBytesInWords( sample_buffer, samples_read );
       
-      if (swapbytes==TRUE)
+      if (swapbytes)
 	SwapBytesInWords( sample_buffer, samples_read );
     }
 
@@ -1075,7 +1084,7 @@ void CloseSndFile(sound_file_format input,FILE * musicin)
 
 
 
-FILE * OpenSndFile(lame_global_flags *gfp)
+FILE * OpenSndFile(lame_global_flags *gfp, char *inPath)
 {
   FILE * musicin;
   struct stat sb;
@@ -1142,7 +1151,7 @@ FILE * OpenSndFile(lame_global_flags *gfp)
    if (input_format==sf_raw) {
      /* assume raw PCM */
      fprintf(stderr,"Assuming raw pcm input file");
-     if (swapbytes==TRUE)
+     if (swapbytes)
        fprintf(stderr," : Forcing byte-swapping\n");
      else
        fprintf(stderr,"\n");

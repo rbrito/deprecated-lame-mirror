@@ -153,6 +153,7 @@ typedef struct  {
   int encoder_delay;
   int framesize;                  
   int frameNum;                   /* number of frames encoded */
+  int totalframes;
 
 
   /* VBR tags */
@@ -196,17 +197,10 @@ int lame_init_params(lame_global_flags *);
 
 
 /* OPTIONAL:  get the version number, in a string. of the form:  
-   "3.63 (beta)" or just "3.63".  Max allows length is ?? characters 
-   (check source) */
-void lame_version(lame_global_flags *, char *);
+   "3.63 (beta)" or just "3.63". */
+char *get_lame_version();
 
-/* OPTIONAL:  print the program name and version info to fp */
-void lame_print_version ( FILE* fp );
-
-/* OPTIONAL: print the license */
-void lame_print_license(lame_global_flags* gfp, const char* ProgramName );
-
-/* OPTIONAL:  print internal lame configuration on stderr*/
+/* OPTIONAL:  print internal lame configuration to message handler */
 void lame_print_config(lame_global_flags *);
 
 

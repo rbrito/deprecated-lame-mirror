@@ -23,9 +23,9 @@
 #define LAME_TIMESTATUS_H
 void timestatus_klemm(lame_global_flags *gfp);
 
-void timestatus ( unsigned long samp_rate, 
-                  unsigned long frameNum, 
-                  unsigned long totalframes, 
+void timestatus ( int samp_rate, 
+                  int frameNum, 
+                  int totalframes, 
                   int           framesize);
 void timestatus_finish(void);
 

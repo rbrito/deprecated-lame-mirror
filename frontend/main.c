@@ -54,13 +54,15 @@
 #endif
 
 
-/* I/O - not used if calling program does the i/o */
-char outPath[MAX_NAME_SIZE];
-char inPath[MAX_NAME_SIZE];
-FILE * musicin;             /* file pointer to input file */
+/* GLOBAL VARIABLES.  set by parse_args() */
+/* we need to clean this up */
 sound_file_format input_format;   
 int swapbytes;              /* force byte swapping   default=0*/
-int totalframes;                /* frames: 0..totalframes-1 (estimate)*/
+int silent;
+int brhist;
+float update_interval;      /* to use Frank's time status display */
+
+
 
 /************************************************************************
 *
@@ -81,6 +83,8 @@ int main(int argc, char **argv)
   int iread,imp3;
   lame_global_flags gf;
   FILE *outf;
+  char outPath[MAX_NAME_SIZE];
+  char inPath[MAX_NAME_SIZE];
   int i;
 
 #if macintosh
@@ -102,9 +106,10 @@ int main(int argc, char **argv)
    * skip this call and set the values of interest in the gf struct.
    * (see lame.h for documentation about these parameters)
    */
-  {
-    parse_args(&gf,argc, argv);
-  }
+  parse_args(&gf,argc, argv, inPath, outPath);
+  if ( update_interval < 0. )
+    update_interval = 2.;
+
 
   /* Mostly it is not useful to use the same input and output name.
      This test is very easy and buggy and don't recognize different names
@@ -122,36 +127,13 @@ int main(int argc, char **argv)
    * if you want to do your own file input, skip this call and set
    * samplerate, num_channels and num_samples yourself.
    */
-  init_infile(&gf);
+  init_infile(&gf,inPath);
+  outf=init_outfile(outPath);
 
   /* Now that all the options are set, lame needs to analyze them and
    * set some more internal options and check for problems
    */
   i = lame_init_params(&gf);
-
-  if (gf.analysis) 
-    silent=1;
-
-  if ( update_interval < 0. )
-       update_interval = 2.;
-
-  /* estimate total frames.  must be done after setting sampling rate so
-   * we know the framesize.  */
-  {
-    double resample_ratio=1;
-    if (gf.out_samplerate != gf.in_samplerate) 
-      resample_ratio = (double)gf.in_samplerate / (double)gf.out_samplerate;
-
-    totalframes=0;
-    if(input_format == sf_mp1 && gf.decode_only)
-      totalframes = (gf.num_samples+383)/384;
-    else
-      if(input_format == sf_mp2 && gf.decode_only)
-	totalframes = (gf.num_samples+1151)/1152;
-      else
-	totalframes = 2+ gf.num_samples/(resample_ratio * gf.framesize);
-  }
-
   if (i<0)  {
     if (i == -1) {
       display_bitrates(stderr);
@@ -160,110 +142,72 @@ int main(int argc, char **argv)
     exit(-1);
   }
 
-#ifdef BRHIST
   if (silent || gf.VBR==vbr_off) {
     brhist = 0;  /* turn of VBR historgram */
   }
 
   if (brhist) {
+#ifdef BRHIST
     if (brhist_init(gf.VBR_min_bitrate_kbps,gf.VBR_max_bitrate_kbps)) {
       /* fall to initialize */
       brhist = 0;
     }
-  }
 #endif
+  }
+
 
 #ifdef HAVEVORBIS
   if (gf.ogg) {
     lame_encode_ogg_init(&gf);
-    //    gfc->filter_type = -1;   /* vorbis claims not to need filters */
     gf.VBR=vbr_off;            /* ignore lame's various VBR modes */
   }
 #endif
+  if (!gf.decode_only) {
 
-  if (gf.analysis) {
-    fprintf(stderr,"Analyzing %s \n",inPath);
-  }
-  else {
     fprintf(stderr,"Encoding %s to %s\n",
 	    (strcmp(inPath, "-")? inPath  : "<stdin>"),
 	    (strcmp(outPath,"-")? outPath : "<stdout>"));
     if (gf.ogg) {
       fprintf(stderr,"Encoding as %.1f kHz VBR Ogg Vorbis \n",
 	      gf.out_samplerate/1000.0);
-    }else
-    if (gf.VBR==vbr_mt || gf.VBR==vbr_rh || gf.VBR==vbr_mtrh)
-      fprintf(stderr,"Encoding as %.1f kHz VBR(q=%i) %s MPEG-%g LayerIII (%4.1fx estimated) qval=%i\n",
-	      gf.out_samplerate/1000.0,
-	      gf.VBR_q,mode_names[gf.mode],
-              2-gf.version+0.5*(gf.out_samplerate<16000),
-              gf.compression_ratio, gf.quality);
-    else
-    if (gf.VBR==vbr_abr)
-      fprintf(stderr,"Encoding as %.1f kHz average %d kbps %s MPEG-%g LayerIII (%4.1fx) qval=%i\n",
-	      gf.out_samplerate/1000.0,
-	      gf.VBR_mean_bitrate_kbps,mode_names[gf.mode],
-              2-gf.version+0.5*(gf.out_samplerate<16000),
-              gf.compression_ratio,gf.quality);
-    else {
-      fprintf(stderr,"Encoding as %.1f kHz %d kbps %s MPEG-%g LayerIII (%4.1fx)  qval=%i\n",
-	      gf.out_samplerate/1000.0,gf.brate,
-	      mode_names[gf.mode],
-              2-gf.version+0.5*(gf.out_samplerate<16000),
-              gf.compression_ratio,gf.quality);
+    }else{ 
+      if (gf.VBR==vbr_mt || gf.VBR==vbr_rh || gf.VBR==vbr_mtrh)
+	fprintf(stderr,"Encoding as %.1f kHz VBR(q=%i) %s MPEG-%g LayerIII (%4.1fx estimated) qval=%i\n",
+		gf.out_samplerate/1000.0,
+		gf.VBR_q,mode_names[gf.mode],
+		2-gf.version+0.5*(gf.out_samplerate<16000),
+		gf.compression_ratio, gf.quality);
+      else
+	if (gf.VBR==vbr_abr)
+	  fprintf(stderr,"Encoding as %.1f kHz average %d kbps %s MPEG-%g LayerIII (%4.1fx) qval=%i\n",
+		  gf.out_samplerate/1000.0,
+		  gf.VBR_mean_bitrate_kbps,mode_names[gf.mode],
+		  2-gf.version+0.5*(gf.out_samplerate<16000),
+		  gf.compression_ratio,gf.quality);
+	else {
+	  fprintf(stderr,"Encoding as %.1f kHz %d kbps %s MPEG-%g LayerIII (%4.1fx)  qval=%i\n",
+		  gf.out_samplerate/1000.0,gf.brate,
+		  mode_names[gf.mode],
+		  2-gf.version+0.5*(gf.out_samplerate<16000),
+		  gf.compression_ratio,gf.quality);
+	}
     }
-  }
-
-  if (!gf.decode_only)
     lame_print_config(&gf);   /* print usefull information about options being used */
-
-
-  if (!gf.analysis) {
-    /* open the output file */
-    if (!strcmp(outPath, "-")) {
-#ifdef __EMX__
-      _fsetmode(stdout,"b");
-#elif (defined  __BORLANDC__)
-      setmode(_fileno(stdout), O_BINARY);
-#elif (defined  __CYGWIN__)
-      setmode(fileno(stdout), _O_BINARY);
-#elif (defined _WIN32)
-      _setmode(_fileno(stdout), _O_BINARY);
-#endif
-      outf = stdout;
-    } else {
-      if ((outf = fopen(outPath, "wb+")) == NULL) {
-	fprintf(stderr,"Could not create \"%s\".\n", outPath);
-	exit(-1);
-      }
-    }
-#ifdef __riscos__
-    /* Assign correct file type */
-    for (i = 0; outPath[i]; i++) {
-      if (outPath[i] == '.')
-        outPath[i] = '/';
-      else if (outPath[i] == '/')
-        outPath[i] = '.';
-    }
-    if (gf.decode_only)
-      SetFiletype(outPath, 0xfb1); /* Wave */
-    else
-      SetFiletype(outPath, 0x1ad); /* AMPEG */
-#endif
   }
+
 
 
   if (gf.decode_only) {
 
     /* decode an mp3 file to a .wav */
-    lame_decoder(&gf,outf,gf.encoder_delay);
+    lame_decoder(&gf,outf,gf.encoder_delay,inPath,outPath);
 
   } else {
 
       /* encode until we hit eof */
       do {
 	/* read in 'iread' samples */
-	iread = readframe(&gf,Buffer);
+	iread = get_audio(&gf,Buffer);
 
 
 	/********************** status display  *****************************/
@@ -273,10 +217,10 @@ int main(int argc, char **argv)
 	  }else{
 	    int mod = gf.version == 0 ? 100 : 50;
 	    if (gf.frameNum % mod==0) {
-	      timestatus(gf.out_samplerate,gf.frameNum,totalframes,gf.framesize);
+	      timestatus(gf.out_samplerate,gf.frameNum,gf.totalframes,gf.framesize);
 #ifdef BRHIST
 	      if (brhist)
-		brhist_disp(totalframes);
+		brhist_disp(gf.totalframes);
 #endif
 	    }
 	  }
@@ -312,12 +256,12 @@ int main(int argc, char **argv)
       }
 
       if (!silent) {
-	timestatus(gf.out_samplerate,gf.frameNum,totalframes,gf.framesize);
+	timestatus(gf.out_samplerate,gf.frameNum,gf.totalframes,gf.framesize);
 #ifdef BRHIST
 	if (brhist) {
 	  brhist_update(imp3);
-	  brhist_disp(totalframes);
-	  brhist_disp_total(totalframes);
+	  brhist_disp(gf.totalframes);
+	  brhist_disp_total(gf.totalframes);
 	}
 #endif
 	timestatus_finish();
@@ -328,6 +272,6 @@ int main(int argc, char **argv)
       lame_mp3_tags_fid(&gf,outf);       /* add ID3 version 1 or VBR tags to mp3 file */
       fclose(outf);
     }
-  close_infile(&gf);            /* close the input file */
+  close_infile();            /* close the input file */
   return 0;
 }

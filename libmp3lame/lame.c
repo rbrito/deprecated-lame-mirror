@@ -631,6 +631,13 @@ int lame_init_params(lame_global_flags *gfp)
                    &&(gfp->out_samplerate >= 32000);
   
   gfc->exp_nspsytune = gfp->exp_nspsytune;
+
+
+
+  /* estimate total frames.  */
+  gfp->totalframes=0;
+  gfp->totalframes = 2+ gfp->num_samples/(gfc->resample_ratio * gfp->framesize);
+
   
   return 0;
 }
@@ -657,7 +664,8 @@ void lame_print_config(lame_global_flags *gfp)
   FLOAT out_samplerate=gfp->out_samplerate/1000.0;
   FLOAT in_samplerate = gfc->resample_ratio*out_samplerate;
 
-  lame_print_version(stderr);
+  MSGF("LAME version %s    (http://www.mp3dev.org) \n", get_lame_version() );
+
   if (gfp->num_channels==2 && gfc->stereo==1) {
     MSGF("Autoconverting from stereo to mono. Setting encoding to mono mode.\n");
   }
@@ -688,8 +696,6 @@ void lame_print_config(lame_global_flags *gfp)
       MSGF("Warning: many decoders cannot handle free format bitrates > 320 kbps\n");
     }
   }
-
-  fflush(stderr);
 }
 
 
@@ -729,6 +735,10 @@ char *mp3buf, int mp3buf_size)
     return lame_encode_mp3_frame(gfp,inbuf_l,inbuf_r,mp3buf,mp3buf_size);
   }
   ++gfp->frameNum;
+
+  /* check to see if we overestimated/underestimated totalframes */
+  if (gfp->frameNum > (gfp->totalframes-1)) gfp->totalframes = gfp->frameNum;
+
 }
 
 
@@ -1031,30 +1041,6 @@ void lame_mp3_tags_fid(lame_global_flags *gfp,FILE *fpStream)
 
 
 }
-
-#if 0
-void lame_mp3_tags(lame_global_flags *gfp)
-{
-  FILE *fpStream;
-
-  /* Open the bitstream again */
-  fpStream=fopen(gfp->outPath,"rb+");
-  /* Assert stream is valid */
-  if (fpStream==NULL)
-    return;
-  lame_mp3_tags_fid(gfp,fpStream);
-  fclose(fpStream);
-}
-#endif
-
-
-
-void lame_version(lame_global_flags *gfp,char *ostring) {
-  strncpy(ostring,get_lame_version(),20);
-}
-
-
-
 
 
 

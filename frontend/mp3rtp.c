@@ -111,7 +111,7 @@ int main(int argc, char **argv)
    */
   for (i=1; i<argc-1; i++)  /* remove first argument, it was for rtp */
     argv[i]=argv[i+1];
-  lame_parse_args(&gf,argc-1, argv); 
+  lame_parse_args(&gf,argc-1, argv, inPath, outPath); 
 
   /* open the output file.  Filename parsed into gf.inPath */
   if (!strcmp(outPath, "-")) {
@@ -139,20 +139,12 @@ int main(int argc, char **argv)
    * if you want to do your own file input, skip this call and set
    * these values yourself.  
    */
-  lame_init_infile(&gf);
+  init_infile(&gf,inPath);
 
 
   /* Now that all the options are set, lame needs to analyze them and
    * set some more options 
    */
-  if (outPath!=NULL && outPath[0]=='-' ) {
-    gf.bWriteVbrTag=0; /* turn off VBR tag */
-  }
-
-  if (outPath==NULL || outPath[0]=='-' ) {
-    gf.id3v1_enabled=0;       /* turn off ID3 version 1 tagging */
-  }
-
   i = lame_init_params(&gf);
   if (i<0)  {
     if (i == -1) {
@@ -164,39 +156,20 @@ int main(int argc, char **argv)
 
   lame_print_config(&gf);   /* print usefull information about options being used */
 
-  if (gf.analysis) 
-    silent=1;
-
   if ( update_interval < 0. )
        update_interval = 2.;
 
-  /* estimate total frames.  must be done after setting sampling rate so
-   * we know the framesize.  */
-  {
-    double resample_ratio=1;
-    if (gf.out_samplerate != gf.in_samplerate) 
-      resample_ratio = (double)gf.in_samplerate / (double)gf.out_samplerate;
-
-    totalframes=0;
-    if(input_format == sf_mp1 && gf.decode_only)
-      totalframes = (gf.num_samples+383)/384;
-    else
-      if(input_format == sf_mp2 && gf.decode_only)
-	totalframes = (gf.num_samples+1151)/1152;
-      else
-	totalframes = 2+ gf.num_samples/(resample_ratio * gf.framesize);
-  }
 
   lame_id3v2_tag(&gf,outf); /* add ID3 version 2 tag to mp3 file */
 
   /* encode until we hit eof */
   do {
     /* read in 'iread' samples */
-    iread=lame_readframe(&gf,Buffer);
+    iread=get_audio(&gf,Buffer);
     /* encode the frame */
     imp3=lame_encode_buffer(&gf,Buffer[0],Buffer[1],iread,
 			    mp3buffer,sizeof(mp3buffer));
-    frameNum++;
+
     fwrite(mp3buffer,1,imp3,outf);       /* write the MP3 output to file  */
     rtp_output(mp3buffer,imp3);          /* write MP3 output to RTP port */    
   } while (iread);
@@ -207,7 +180,7 @@ int main(int argc, char **argv)
   rtp_output(mp3buffer,imp3);
   lame_mp3_tags_fid(&gf,outf);       /* add ID3 version 1 or VBR tags to mp3 file */
   fclose(outf);
-  lame_close_infile(&gf);             /* close the sound input file */
+  close_infile();             /* close the sound input file */
   return 0;
 }
 

@@ -120,7 +120,7 @@ int gtkmakeframe(void)
   if (input_format == sf_mp1 ||
       input_format == sf_mp2 ||
       input_format == sf_mp3) {
-    iread = readframe(gfp,Buffer);
+    iread = get_audio(gfp,Buffer);
     ++frameNum;
 
     /* add a delay of framesize-DECDELAY, which will make the total delay
