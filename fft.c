@@ -41,7 +41,7 @@
 static FLOAT costab[TRI_SIZE*2];
 static FLOAT window[BLKSIZE / 2], window_s[BLKSIZE_s / 2];
 
-inline static void fht(FLOAT *fz, int n)
+static INLINE void fht(FLOAT *fz, int n)
 {
     int k4;
     FLOAT *fi, *fn, *gi;
