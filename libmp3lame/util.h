@@ -504,7 +504,8 @@ struct lame_internal_flags {
 	unsigned int  i387      : 1; /* FPU is a normal Intel CPU */
 	unsigned int  MMX       : 1; /* Pentium MMX, Pentium II...IV, K6, K6-2,
                                     K6-III, Athlon */
-	unsigned int  AMD_3DNow : 1; /* K6-2, K6-III, Athlon      */
+	unsigned int  AMD_3DNow : 1; /* K6-2, K6-III, Athlon, Opteron */
+	unsigned int  AMD_E3DNow: 1; /* Athlon, Opteron          */
 	unsigned int  SSE      : 1; /* Pentium III, Pentium 4    */
 	unsigned int  SSE2     : 1; /* Pentium 4, K8             */
     } CPU_features;

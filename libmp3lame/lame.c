@@ -436,10 +436,12 @@ lame_init_params(lame_global_flags * const gfp)
 
 #ifdef HAVE_NASM
     gfc->CPU_features.i387 = has_i387();
-    if (gfp->asm_optimizations.amd3dnow )
+    if (gfp->asm_optimizations.amd3dnow ) {
         gfc->CPU_features.AMD_3DNow = has_3DNow();
-    else
-        gfc->CPU_features.AMD_3DNow = 0;
+        gfc->CPU_features.AMD_E3DNow = has_E3DNow();
+    } else
+        gfc->CPU_features.AMD_3DNow
+	    = gfc->CPU_features.AMD_E3DNow = 0;
 
     if (gfp->asm_optimizations.mmx )
         gfc->CPU_features.MMX = has_MMX();
@@ -666,7 +668,8 @@ lame_print_config(const lame_global_flags * gfp)
     double  in_samplerate = gfp->in_samplerate;
 
 #ifdef HAVE_NASM
-    if (gfc->CPU_features.MMX || gfc->CPU_features.AMD_3DNow
+    if (gfc->CPU_features.MMX
+	|| gfc->CPU_features.AMD_3DNow || gfc->CPU_features.AMD_E3DNow
         || gfc->CPU_features.SSE || gfc->CPU_features.SSE2) {
         MSGF(gfc, "CPU features:");
 
@@ -676,6 +679,8 @@ lame_print_config(const lame_global_flags * gfp)
             MSGF(gfc, ", MMX (ASM used)");
         if (gfc->CPU_features.AMD_3DNow)
             MSGF(gfc, ", 3DNow! (ASM used)");
+        if (gfc->CPU_features.AMD_E3DNow)
+            MSGF(gfc, ", 3DNow!");
         if (gfc->CPU_features.SSE)
             MSGF(gfc, ", SSE (ASM used)");
         if (gfc->CPU_features.SSE2)

@@ -380,6 +380,16 @@ int  has_3DNow ( void )
 #endif
 }    
 
+int  has_E3DNow ( void )
+{
+#ifdef HAVE_NASM 
+    extern int has_E3DNow_nasm ( void );
+    return has_E3DNow_nasm ();
+#else
+    return 0;   /* don't know, assume not */
+#endif
+}    
+
 int  has_SSE ( void )
 {
 #ifdef HAVE_NASM 
