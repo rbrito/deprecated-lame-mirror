@@ -20,7 +20,7 @@ dnl
 dnl todo:
 dnl - move all system-dependent entries from Makefile here
 
-AC_INIT(lame.c)
+AC_INIT(libmp3lame/lame.c)
 AM_INIT_AUTOMAKE(lamelib,3.88,notdef)
 
 # increase this when the shared lib becomes totally incompatible
@@ -313,5 +313,5 @@ AC_FUNC_VPRINTF
 AC_CHECK_FUNCS(gettimeofday socket strtol)
 
 
-AC_OUTPUT(Makefile frontend/Makefile mp3x/Makefile )
+AC_OUTPUT(Makefile libmp3lame/Makefile frontend/Makefile mp3x/Makefile )
 

@@ -37,8 +37,7 @@ SHARED_LIB_MAJOR = $(SHARED_LIB).@LIB_MAJOR_VERSION@
 SHARED_LIB_MINOR = $(SHARED_LIB_MAJOR).@LIB_MINOR_VERSION@
 
 # generic defaults. OS specific options go in versious sections below
-PGM ?= ./frontend/lame
-CPP_OPTS = @CPP_OPT@ -I./include -I. -I./mpglib
+CPP_OPTS = @CPP_OPT@ -I../include -I. -I./mpglib
 CC_OPTS = -O
 AR = ar
 RANLIB = @RANLIB@
@@ -228,17 +227,11 @@ ifeq ($(UNAME),OS/2)
    SHELL=sh	
    CC = gcc
    CC_OPTS = -O3
-   PGM ?= frontend/lame.exe
 
 # I use the following for slightly better performance on my Pentium-II
 # using pgcc-2.91.66:
 #   CC_OPTS = -O6 -ffast-math -funroll-loops -mpentiumpro -march=pentiumpro
 
-# Uncomment & inspect the 2 GTK lines to use MP3x GTK frame analyzer.
-# Properly installed XFree86/devlibs & GTK+ is a prerequisite.
-# The following works for me using Xfree86/OS2 3.3.5 and GTK+ 1.2.3:
-#   LDFLAGS += -DHAVEGTK -IC:/XFree86/include/gtk12 -Zmt -D__ST_MT_ERRNO__ -IC:/XFree86/include/glib12 -IC:/XFree86/include
-#   CFLAGS += -LC:/XFree86/lib -Zmtd -Zsysv-signals -Zbin-files -lgtk12 -lgdk12 -lgmodule -lglib12 -lXext -lX11 -lshm -lbsd -lsocket -lm
 endif
 
 ###########################################################################
@@ -246,7 +239,6 @@ endif
 ###########################################################################
 ifeq ($(UNAME),MSDOS)
   RM_F =
-  PGM ?= frontend/lame.exe
 endif
 
 ###########################################################################
@@ -356,9 +348,6 @@ ASFLAGS=-f elf -i i386/
 	$(SHELL) -ec '$(CC) $(MAKEDEP)  $(CPP_OPTS) $(CC_SWITCHES)  $< | sed '\''s;$*.o;& $@;g'\'' > $@'
   endif
 
-all: lib $(LIBS) $(PGM)
-
-lib:  @LIB_TARGETS@
 
 libmp3lame.a:  $(lib_obj) Makefile
 	$(AR) cr libmp3lame.a  $(lib_obj)
@@ -372,49 +361,12 @@ libmp3lame.so:  $(LIBS) $(lib_obj) Makefile
 	@$(RM_F) $(SHARED_LIB)
 	$(LN_S) $(SHARED_LIB_MAJOR) $(SHARED_LIB)
 
-$(PGM): lib
-	cd frontend; $(MAKE)
 
-mp3x/mp3x:
-	cd mp3x; $(MAKE)
-
-frontend/mp3rtp:
-	cd frontend; $(MAKE)
-
-mpglib/mpglib.a:
-	cd mpglib; $(MAKE)
-
-install_header:
-	@mkdir -p $(INCLUDEDIR)
-	$(INSTALL_PROGRAM) include/lame.h $(INCLUDEDIR)
-
-install_static_lib: libmp3lame.a install_header
-	@mkdir -p $(LIBDIR)
-	$(INSTALL_PROGRAM) libmp3lame.a $(LIBDIR)
-
-install_shared_lib: libmp3lame.so install_header
-	@mkdir -p $(LIBDIR)
-	$(INSTALL_PROGRAM) $(SHARED_LIB_MINOR) $(LIBDIR)
-	@$(RM_F) $(LIBDIR)/$(SHARED_LIB_MAJOR)
-	(cd $(LIBDIR) && $(LN_S) $(SHARED_LIB_MINOR) $(SHARED_LIB_MAJOR))
-	@$(RM_F) $(LIBDIR)/$(SHARED_LIB)
-	(cd $(LIBDIR) && $(LN_S) $(SHARED_LIB_MAJOR) $(SHARED_LIB))
-
-install: @INSTALL_TARGETS@
-
-uninstall:
-	$(RM_F) $(INCLUDEDIR)/lame.h
-	$(RM_F) $(LIBDIR)/libmp3lame.a
-	$(RM_F) $(LIBDIR)/$(SHARED_LIB)
-	$(RM_F) $(LIBDIR)/$(SHARED_LIB_MAJOR)
-	$(RM_F) $(LIBDIR)/$(SHARED_LIB_MINOR)
 
 clean:
-	-$(RM_F) $(gtk_obj) $(OBJ) $(DEP) \
+	-$(RM_F) $(OBJ) $(DEP) \
          libmp3lame.a $(lib_obj) \
          $(SHARED_LIB) $(SHARED_LIB_MAJOR) $(SHARED_LIB_MINOR)
-	cd mpglib; $(MAKE) clean
-	cd frontend; $(MAKE) clean
 
 
 bla:
@@ -422,26 +374,11 @@ bla:
 
 tags: TAGS
 
-TAGS: @CONFIG_SOURCES@ $(lib_sources) ${gtk_sources}
-	etags -T @CONFIG_SOURCES@ $(lib_sources) ${gtk_sources}
+TAGS: @CONFIG_SOURCES@ $(lib_sources) 
+	etags -T @CONFIG_SOURCES@ $(lib_sources) 
 
 ifneq ($(MAKECMDGOALS),clean)
   -include $(DEP)
 endif
 
 
-#
-#  testcase.mp3 is a 2926 byte file.  The first number output by
-#  wc is the number of bytes which differ between new output
-#  and 'official' results.  
-#
-#  Because of compiler options and effects of roundoff, the 
-#  number of bytes which are different may not be zero, but
-#  should be at most 30.
-#
-test: $(PGM)
-	frontend/$(PGM)  --nores -h testcase.wav testcase.new.mp3
-	cmp -l testcase.new.mp3 testcase.mp3 | wc
-
-testg: $(PGM)
-	frontend/$(PGM) -g -h ../test/castanets.wav
