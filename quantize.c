@@ -407,11 +407,13 @@ void amp_scalefac_bands
       }
     }
 
-    scalefac->l[asfb]++;
-    start = gfc->scalefac_band.l[asfb];
-    end   = gfc->scalefac_band.l[asfb+1];
-    for ( l = start; l < end; l++ )
-      xrpow[l] *= ifqstep34;
+    if (asfb != -1) {
+      scalefac->l[asfb]++;
+      start = gfc->scalefac_band.l[asfb];
+      end   = gfc->scalefac_band.l[asfb+1];
+      for ( l = start; l < end; l++ )
+	xrpow[l] *= ifqstep34;
+    }
   } else {
     for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
       if ( distort[0][sfb]>distort_thresh  ) {
