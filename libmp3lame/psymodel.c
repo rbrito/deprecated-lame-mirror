@@ -894,15 +894,27 @@ pecalc_s(
 {
     FLOAT pe_s;
     const static FLOAT regcoef_s[] = {
-	0, 0, 0, /* I don't know why there're 0 -tt- */
-	0.434542,25.0738,
-	0, 0, 0,
-	19.5442,19.7486,60,100,0
+	0,
+	0,
+	0,	/* I don't know why there're 0 -tt- */
+	0.434542,
+       25.0738,
+	0,
+	0,
+	0,
+       19.5442,
+       19.7486,
+       60,
+      100,
+      200
     };
     int sb, sblock;
 
     pe_s = 1236.28/4;
-    for ( sb = 0; sb < SBMAX_s; sb++ ) {
+    sb = SBMAX_s - 1;
+    if (!gfc->sfb21_extra)
+	sb--;
+    do {
 	if (regcoef_s[sb] == 0.0)
 	    continue;
 	for (sblock=0;sblock<3;sblock++) {
@@ -915,7 +927,7 @@ pecalc_s(
 	    else
 		pe_s += regcoef_s[sb] * FAST_LOG10(mr->en.s[sb][sblock] / x);
 	}
-    }
+    } while (--sb >= 0);
     return pe_s;
 }
 
@@ -929,12 +941,14 @@ pecalc_l(
     const static FLOAT regcoef_l[] = {
 	10.0583,10.7484 ,7.29006,16.2714 , 6.2345 ,  4.09743,3.05468,3.33196,
 	2.54688, 3.68168,5.83109, 2.93817,-8.03277,-10.8458 ,8.48777,
-	9.13182, 2.05212,8.6674 ,50.3937 ,73.267  , 97.5664 ,0.0
+	9.13182, 2.05212,8.6674 ,50.3937 ,73.267  , 97.5664 ,200
     };
-    int sb;
+    int sb = SBMAX_l - 1;
 
+    if (!gfc->sfb21_extra)
+	sb--;
     pe_l = 1124.23/4;
-    for ( sb = 0; sb < SBMAX_l; sb++ ) {
+    do {
 	FLOAT x = mr->thm.l[sb];
 	if (mr->en.l[sb] <= x)
 	    continue;
@@ -943,7 +957,7 @@ pecalc_l(
 	    pe_l += regcoef_l[sb] * (10.0 * LOG10);
 	else
 	    pe_l += regcoef_l[sb] * FAST_LOG10(mr->en.l[sb] / x);
-    }
+    } while (--sb >= 0);
 
     return pe_l;
 }
@@ -1415,12 +1429,12 @@ L3psycho_anal_ns(
 
 	mr->en .l[SBMAX_l-1] = enn;
 	mr->thm.l[SBMAX_l-1] = thmm;
-#if 1
+
 	if (mr->en.s[0][0] >= 0.0) {
 	    partially_convert_l2s(gfc, eb, gr, chn);
 	    continue;
 	}
-#endif
+
 	/* short block may be needed but not calculated */
 	/* calculate it from converting from long */
 	b = j = 0;
