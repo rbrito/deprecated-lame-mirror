@@ -184,8 +184,8 @@ int CDECL lame_set_analysis(lame_global_flags *, int);
 int CDECL lame_get_analysis(const lame_global_flags *);
 
 /*
- 1 = write a Xing VBR header frame.
- default = 1 for VBR/ABR modes, 0 for CBR mode
+ 1 = write a Xing header (VBR) / INFO tag (CBR) frame.
+ default = 1
  this variable must have been added by a Hungarian notation Windows programmer :-)
 */
 int CDECL lame_set_bWriteVbrTag(lame_global_flags *, int);
