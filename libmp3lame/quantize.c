@@ -497,6 +497,7 @@ amp_scalefac_bands(
     int sfb;
     FLOAT8 ifqstep34;
     FLOAT8 distort_thresh[4] = {-1.f, -1.f, -1.f, -1.f};
+    lame_internal_flags *gfc = gfp->internal_flags;
 
     if (cod_info->scalefac_scale == 0) 
         ifqstep34 = 1.29683955465100964055; /* 2**(.75*0.5)*/
