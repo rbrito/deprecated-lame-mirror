@@ -47,6 +47,7 @@ BOOL InitMP3( PMPSTR mp)
 	mp->bsnum = 0;
 	wordpointer = mp->bsspace[mp->bsnum] + 512;
 	mp->synth_bo = 1;
+	mp->look_for_xing = 0;
 
 	make_decode_tables(32767);
 
@@ -346,87 +347,97 @@ int decodeMP3( PMPSTR mp,unsigned char *in,int isize,char *out,
 	/* First decode header */
 	if(!mp->header_parsed) {
 
-	    if (mp->fsizeold==-1) {
+	    if (mp->fsizeold==-1 || mp->look_for_xing) {
 	        int vbrbytes;
 
 	        /* This is the very first call.   sync with anything */
-	        bytes=sync_buffer(mp,0);
+		/* bytes= number of bytes before header */
+	        bytes=sync_buffer(mp,0); 
+
 	        /* now look for Xing VBR header */
 		if (mp->bsize >= bytes+48 ) {
-		  vbrbytes=check_vbr_header(mp,bytes);
+		    /* vbrbytes = number of bytes in entire vbr header */
+		    vbrbytes=check_vbr_header(mp,bytes);
 		} else {
-		  return MP3_NEED_MORE;
+		    /* not enough data to look for Xing header */
+		    return MP3_NEED_MORE;
 		}
 
 		if (mp->vbr_header) {
-		  if (bytes+vbrbytes > mp->bsize) return MP3_NEED_MORE;
-		  for (i=0; i<vbrbytes+bytes; ++i) read_buf_byte(mp);
-		  /* now we need to find another syncword */
-		  /* just return and make user send in more data */
-		  return MP3_NEED_MORE;
+		    /* do we have enough data to parse entire Xing header? */
+		    if (bytes+vbrbytes > mp->bsize) return MP3_NEED_MORE;
+		    
+		    /* read in Xing header.  Buffer data in case it
+		     * is used by a non zero main_data_begin for the next
+		     * frame, but otherwise dont decode Xing header */
+		    for (i=0; i<vbrbytes+bytes; ++i) read_buf_byte(mp);
+		    /* now we need to find another syncword */
+		    /* just return and make user send in more data */
+		    return MP3_NEED_MORE;
 		}
             }else{
 	        /* match channels, samplerate, etc, when syncing */
                 bytes=sync_buffer(mp,1);
 	    }
 
-		if (bytes<0) return MP3_NEED_MORE;
-		if (bytes>0) {
-		  /* bitstream problem, but we are now resynced 
-		   * should try to buffer previous data in case new
-		   * frame has nonzero main_data_begin, but we need
-		   * to make sure we do not overflow buffer
-		  */
-		  int size;
-		  fprintf(stderr,"bitstream problem: resyncing...\n");
-		  mp->old_free_format=0;
-
-		  /* skip some bytes, buffer the rest */
-		  size = (int) (wordpointer - (mp->bsspace[mp->bsnum]+512));
-
-		  if (size > MAXFRAMESIZE) {
+	    if (bytes<0) return MP3_NEED_MORE;
+	    if (bytes>0) {
+		/* there were some extra bytes in front of header.
+		 * bitstream problem, but we are now resynced 
+		 * should try to buffer previous data in case new
+		 * frame has nonzero main_data_begin, but we need
+		 * to make sure we do not overflow buffer
+		 */
+		int size;
+		fprintf(stderr,"bitstream problem: resyncing...\n");
+		mp->old_free_format=0;
+		
+		/* skip some bytes, buffer the rest */
+		size = (int) (wordpointer - (mp->bsspace[mp->bsnum]+512));
+		
+		if (size > MAXFRAMESIZE) {
 		    /* wordpointer buffer is trashed.  probably cant recover, but try anyway */
 		    fprintf(stderr,"mpglib: wordpointer trashed.  size=%i (%i)  bytes=%i \n",
 			    size,MAXFRAMESIZE,bytes);		  
 		    size=0;
 		    wordpointer = mp->bsspace[mp->bsnum]+512;
-		  }
-
-		  /* buffer contains 'size' data right now 
-		     we want to add 'bytes' worth of data, but do not 
-		     exceed MAXFRAMESIZE, so we through away 'i' bytes */
-		  i = (size+bytes)-MAXFRAMESIZE;
-		  for (; i>0; --i) {
+		}
+		
+		/* buffer contains 'size' data right now 
+		   we want to add 'bytes' worth of data, but do not 
+		   exceed MAXFRAMESIZE, so we through away 'i' bytes */
+		i = (size+bytes)-MAXFRAMESIZE;
+		for (; i>0; --i) {
 		    --bytes;
 		    read_buf_byte(mp);
-		  }
-
-		  copy_mp(mp,bytes,wordpointer);
-		  mp->fsizeold += bytes;
 		}
-
-		read_head(mp);
-		decode_header(&mp->fr,mp->header);
-		mp->header_parsed=1;
-		mp->framesize = mp->fr.framesize;
-		mp->free_format = (mp->framesize==0);
-
-		if(mp->fr.lsf)
-		  mp->ssize = (mp->fr.stereo == 1) ? 9 : 17;
-		else
-		  mp->ssize = (mp->fr.stereo == 1) ? 17 : 32;
-		if (mp->fr.error_protection) 
-		  mp->ssize += 2;
-
-		mp->bsnum = 1-mp->bsnum; /* toggle buffer */
-		wordpointer = mp->bsspace[mp->bsnum] + 512;
-		bitindex = 0;
-
-		/* for very first header, never parse rest of data */
-		if (mp->fsizeold==-1)
-		  return MP3_NEED_MORE;
+		
+		copy_mp(mp,bytes,wordpointer);
+		mp->fsizeold += bytes;
+	    }
+	    
+	    read_head(mp);
+	    decode_header(&mp->fr,mp->header);
+	    mp->header_parsed=1;
+	    mp->framesize = mp->fr.framesize;
+	    mp->free_format = (mp->framesize==0);
+	    
+	    if(mp->fr.lsf)
+		mp->ssize = (mp->fr.stereo == 1) ? 9 : 17;
+	    else
+		mp->ssize = (mp->fr.stereo == 1) ? 17 : 32;
+	    if (mp->fr.error_protection) 
+		mp->ssize += 2;
+	    
+	    mp->bsnum = 1-mp->bsnum; /* toggle buffer */
+	    wordpointer = mp->bsspace[mp->bsnum] + 512;
+	    bitindex = 0;
+	    
+	    /* for very first header, never parse rest of data */
+	    if (mp->fsizeold==-1)
+		return MP3_NEED_MORE;
 	}
-
+	
 	/* now decode side information */
 	if (!mp->side_parsed) {
 

@@ -3,8 +3,27 @@ frontend: a bunch of static variables (input_format, swapbytes,
           get_audio.  should be cleaned up.
 
 
+
+
+NOGAP encoding:
+
 -nogap:  more testing, fix options, test id3 tags?
 Can we change id3 tags without reseting the encoder??
+At the end of encoding 1.wav, call lame_get_mf_samples_to_encode()
+to find the number of non encoded buffered PCM samples.  Then
+encode samples from 2.wav until these PCM samples have been
+encoded, *THEN* call lame_encode_flush_nogap() and close
+out file 1.mp3.
+
+
+NOGAP decoding:  
+lame --decode --nogap file1.mp3 file2.mp3 file3.mp3
+should also work.  What needs to be done:
+get_audio.c:  We need a way to open a second mp3 file, without
+              calling lame_decode_init() and reinitializing mpglib.
+              And the mpglib needs to know to look for new Xing
+              tags at the beginning of file2.mp3 and file3.mp3.
+
 
 
 1.

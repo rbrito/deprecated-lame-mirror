@@ -1267,6 +1267,22 @@ lame_get_frameNum( const lame_global_flags*  gfp )
     return gfp->frameNum;
 }
 
+int
+lame_get_mf_samples_to_encode( const lame_global_flags*  gfp )
+{
+    lame_internal_flags *gfc = gfp->internal_flags;
+    return gfc->mf_samples_to_encode;
+}
+
+
+int CDECL lame_get_size_mp3buffer( const lame_global_flags*  gfp )
+{
+    int size;
+    compute_flushbits(gfp,&size);
+    return size;
+}
+
+
 
 /*
  * LAME's estimate of the total number of frames to be encoded.

@@ -44,6 +44,8 @@ void init_infile(lame_global_flags *, char *inPath);
 void close_infile(void);
 int get_audio(lame_global_flags *gfp, int buffer[2][1152]);
 int get_audio16(lame_global_flags *gfp, short buffer[2][1152]);
+int WriteWaveHeader(FILE * const fp, const int pcmbytes,
+		    const int freq, const int channels, const int bits);
 
 
 

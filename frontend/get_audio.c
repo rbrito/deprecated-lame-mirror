@@ -70,7 +70,6 @@ char   *strchr(), *strrchr();
 /* global data for get_audio.c. */
 int     count_samples_carefully;
 int     pcmbitwidth;
-mp3data_struct mp3input_data; /* used by Ogg and MP3 */
 unsigned int num_samples_read;
 FILE   *musicin;
 
@@ -488,7 +487,7 @@ read_samples_mp3(lame_global_flags * const gfp,
 }
 
 
-static int
+int
 WriteWaveHeader(FILE * const fp, const int pcmbytes,
                 const int freq, const int channels, const int bits)
 {
@@ -510,151 +509,6 @@ WriteWaveHeader(FILE * const fp, const int pcmbytes,
 
     return ferror(fp) ? -1 : 0;
 }
-
-/* the simple lame decoder */
-/* After calling lame_init(), lame_init_params() and
- * init_infile(), call this routine to read the input MP3 file
- * and output .wav data to the specified file pointer*/
-/* lame_decoder will ignore the first 528 samples, since these samples
- * represent the mpglib delay (and are all 0).  skip = number of additional
- * samples to skip, to (for example) compensate for the encoder delay */
-
-int
-lame_decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath,
-             char *outPath)
-{
-    short int Buffer[2][1152];
-    int     iread;
-    double  wavsize;
-    int     i;
-    void    (*WriteFunction) (FILE * fp, char *p, int n);
-    int tmp_num_channels = lame_get_num_channels( gfp );
-
-
-
-    fprintf(stderr, "\rinput:  %s%s(%g kHz, %i channel%s, ",
-            strcmp(inPath, "-") ? inPath : "<stdin>",
-            strlen(inPath) > 26 ? "\n\t" : "  ",
-            lame_get_in_samplerate( gfp ) / 1.e3,
-            tmp_num_channels, tmp_num_channels != 1 ? "s" : "");
-
-    switch (input_format) {
-    case sf_mp3:
-        skip += 528 + 1; /* mp3 decoder has a 528 sample delay, plus user supplied "skip" */
-        fprintf(stderr, "MPEG-%u%s Layer %s", 2 - lame_get_version(gfp),
-                lame_get_out_samplerate( gfp ) < 16000 ? ".5" : "", "III");
-        break;
-    case sf_mp2:
-        skip += 240 + 1;
-        fprintf(stderr, "MPEG-%u%s Layer %s", 2 - lame_get_version(gfp),
-                lame_get_out_samplerate( gfp ) < 16000 ? ".5" : "", "II");
-        break;
-    case sf_mp1:
-        skip += 240 + 1;
-        fprintf(stderr, "MPEG-%u%s Layer %s", 2 - lame_get_version(gfp),
-                lame_get_out_samplerate( gfp ) < 16000 ? ".5" : "", "I");
-        break;
-    case sf_ogg:
-        fprintf(stderr, "Ogg Vorbis");
-        skip = 0;       /* other formats have no delay *//* is += 0 not better ??? */
-        break;
-    case sf_raw:
-        fprintf(stderr, "raw PCM data");
-        mp3input_data.nsamp = lame_get_num_samples( gfp );
-        mp3input_data.framesize = 1152;
-        skip = 0;       /* other formats have no delay *//* is += 0 not better ??? */
-        break;
-    case sf_wave:
-        fprintf(stderr, "Microsoft WAVE");
-        mp3input_data.nsamp = lame_get_num_samples( gfp );
-        mp3input_data.framesize = 1152;
-        skip = 0;       /* other formats have no delay *//* is += 0 not better ??? */
-        break;
-    case sf_aiff:
-        fprintf(stderr, "SGI/Apple AIFF");
-        mp3input_data.nsamp = lame_get_num_samples( gfp );
-        mp3input_data.framesize = 1152;
-        skip = 0;       /* other formats have no delay *//* is += 0 not better ??? */
-        break;
-    default:
-        fprintf(stderr, "unknown");
-        mp3input_data.nsamp = lame_get_num_samples( gfp );
-        mp3input_data.framesize = 1152;
-        skip = 0;       /* other formats have no delay *//* is += 0 not better ??? */
-        assert(0);
-        break;
-    }
-
-    fprintf(stderr, ")\noutput: %s%s(16 bit, Microsoft WAVE)\n",
-            strcmp(outPath, "-") ? outPath : "<stdout>",
-            strlen(outPath) > 45 ? "\n\t" : "  ");
-
-    if (skip > 0)
-        fprintf(stderr, "skipping initial %i samples (encoder+decoder delay)\n",
-                skip);
-
-    if ( 0 == disable_wav_header )
-        WriteWaveHeader(outf, 0x7FFFFFFF, lame_get_in_samplerate( gfp ),
-                        tmp_num_channels,
-                        16);
-    /* unknown size, so write maximum 32 bit signed value */
-
-    wavsize = -skip;
-    WriteFunction = swapbytes ? WriteBytesSwapped : WriteBytes;
-    mp3input_data.totalframes = mp3input_data.nsamp / mp3input_data.framesize;
-
-    assert(tmp_num_channels >= 1 && tmp_num_channels <= 2);
-
-    do {
-        iread = get_audio16(gfp, Buffer); /* read in 'iread' samples */
-        mp3input_data.framenum += iread / mp3input_data.framesize;
-        wavsize += iread;
-
-        if (silent <= 0)
-            decoder_progress(gfp, &mp3input_data);
-
-        skip -= (i = skip < iread ? skip : iread); /* 'i' samples are to skip in this frame */
-
-        for (; i < iread; i++) {
-            if ( disable_wav_header ) {
-                WriteFunction(outf, (char *) &Buffer[0][i], sizeof(short));
-                if (tmp_num_channels == 2)
-                    WriteFunction(outf, (char *) &Buffer[1][i], sizeof(short));
-            }
-            else {
-                Write16BitsLowHigh(outf, Buffer[0][i]);
-                if (tmp_num_channels == 2)
-                    Write16BitsLowHigh(outf, Buffer[1][i]);
-            }
-        }
-    } while (iread);
-
-    i = (16 / 8) * tmp_num_channels;
-    assert(i > 0);
-    if (wavsize <= 0) {
-        fprintf(stderr, "WAVE file contains 0 PCM samples\n");
-        wavsize = 0;
-    }
-    else if (wavsize > 0xFFFFFFD0 / i) {
-        fprintf(stderr,
-                "Very huge WAVE file, can't set filesize accordingly\n");
-        wavsize = 0xFFFFFFD0;
-    }
-    else {
-        wavsize *= i;
-    }
-
-    if ( 0 == disable_wav_header )
-        if (!fseek(outf, 0l, SEEK_SET)) /* if outf is seekable, rewind and adjust length */
-            WriteWaveHeader(outf, wavsize, lame_get_in_samplerate( gfp ),
-                            tmp_num_channels, 16);
-    fclose(outf);
-
-    decoder_progress_finish(gfp);
-    return 0;
-}
-
-
 
 
 

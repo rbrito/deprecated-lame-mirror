@@ -741,9 +741,19 @@ writeMainData ( lame_global_flags * const gfp,
    currently in the buffer.  This should be the same as the
    reservoir size.  Only call this routine between frames - i.e.
    only after all headers and data have been added to the buffer
-   by format_bitstream(). */
+   by format_bitstream().
+
+   Also compute total_bits_output = 
+       size of mp3 buffer (including frame headers which may not
+       have yet been send to the mp3 buffer) + 
+       number of bits needed to flush all mp3 frames.
+
+   total_bytes_output is the size of the mp3 output buffer if 
+   lame_encode_flush_nogap() was called right now. 
+
+ */
 int
-compute_flushbits(lame_global_flags *gfp)
+compute_flushbits(lame_global_flags *gfp, int *total_bytes_output )
 {
   lame_internal_flags *gfc=gfp->internal_flags;
   int flushbits,remaining_headers;
@@ -755,6 +765,7 @@ compute_flushbits(lame_global_flags *gfp)
 
   /* add this many bits to bitstream so we can flush all headers */
   flushbits = gfc->header[last_ptr].write_timing - gfc->bs.totbit;
+  *total_bytes_output=flushbits;
 
   if (flushbits >= 0) {
     /* if flushbits >= 0, some headers have not yet been written */
@@ -772,6 +783,15 @@ compute_flushbits(lame_global_flags *gfp)
    */
   getframebits(gfp,&bitsPerFrame,&mean_bits);
   flushbits += bitsPerFrame;
+  *total_bytes_output += bitsPerFrame;
+  // round up:  
+  if (*total_bytes_output % 8) 
+      *total_bytes_output = 1 + (*total_bytes_output/8);
+  else
+      *total_bytes_output = (*total_bytes_output/8);
+  *total_bytes_output +=  gfc->bs.buf_byte_idx + 1;
+
+
   if (flushbits<0) {
 #if 0
     /* if flushbits < 0, this would mean that the buffer looks like:
@@ -797,6 +817,7 @@ flush_bitstream(lame_global_flags *gfp)
 {
   lame_internal_flags *gfc=gfp->internal_flags;
   III_side_info_t *l3_side;
+  int nbytes;
   int flushbits;
   int bitsPerFrame, mean_bits;
   int last_ptr,first_ptr;
@@ -805,7 +826,8 @@ flush_bitstream(lame_global_flags *gfp)
   if (last_ptr==-1) last_ptr=MAX_HEADER_BUF-1;   
   l3_side = &gfc->l3_side;
 
-  if ((flushbits = compute_flushbits(gfp)) < 0) return;  
+
+  if ((flushbits = compute_flushbits(gfp,&nbytes)) < 0) return;  
   drain_into_ancillary(gfp,flushbits);
 
   /* check that the 100% of the last frame has been written to bitstream */
@@ -850,7 +872,7 @@ format_bitstream(lame_global_flags *gfp, int bitsPerFrame,
   	III_scalefac_t   scalefac[2][2] )
 {
     lame_internal_flags *gfc=gfp->internal_flags;
-    int bits;
+    int bits,nbytes;
     III_side_info_t *l3_side;
     l3_side = &gfc->l3_side;
 
@@ -866,7 +888,7 @@ format_bitstream(lame_global_flags *gfp, int bitsPerFrame,
 
     /* compare number of bits needed to clear all buffered mp3 frames
      * with what we think the resvsize is: */
-    if (compute_flushbits(gfp) != gfc->ResvSize) {
+    if (compute_flushbits(gfp,&nbytes) != gfc->ResvSize) {
         ERRORF(gfc,"Internal buffer inconsistency. flushbits <> ResvSize");
     }
 

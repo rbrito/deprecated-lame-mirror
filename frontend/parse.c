@@ -67,6 +67,7 @@ int mp3_delay;              /* to adjust the number of samples truncated
 int mp3_delay_set;          /* user specified the value of the mp3 encoder 
                                delay to assume for decoding */
 int disable_wav_header;
+mp3data_struct mp3input_data; /* used by Ogg and MP3 */
 
 
 
