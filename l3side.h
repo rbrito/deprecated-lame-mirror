@@ -38,7 +38,7 @@ typedef struct {
 	unsigned block_type;
 	unsigned mixed_block_flag;
 	unsigned table_select[3];
-int /*	unsigned */ subblock_gain[3];
+	unsigned subblock_gain[3];
 	unsigned region0_count;
 	unsigned region1_count;
 	unsigned preflag;

@@ -230,7 +230,7 @@ typedef struct  {
 #define OLDBUFSIZE 5
   FLOAT8 upsample_itime[2];
   short int upsample_inbuf_old[2][OLDBUFSIZE];
-  int sideinfo_len;
+  unsigned int sideinfo_len;
 
   /* variables for newmdct.c */
   FLOAT8 sb_sample[2][2][18][SBLIMIT];
@@ -255,7 +255,7 @@ typedef struct  {
 
   int h_ptr;
   int w_ptr;
-  int ancillary_flag;
+  unsigned int ancillary_flag;
   
 
   /* variables for reservoir.c */

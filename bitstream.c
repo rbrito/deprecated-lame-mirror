@@ -54,8 +54,8 @@ void putheader_bits(lame_internal_flags *gfc,int w_ptr)
     Bit_stream_struc *bs;
     bs = &gfc->bs;
 #ifdef DEBUG
-    hoge += sideinfo_len * 8;
-    hogege += sideinfo_len * 8;
+    hoge += gfc->sideinfo_len * 8;
+    hogege += gfc->sideinfo_len * 8;
 #endif
     memcpy(&bs->buf[bs->buf_byte_idx], gfc->header[gfc->w_ptr].buf,
 	   gfc->sideinfo_len);
@@ -213,26 +213,27 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
       writeheader(gfc,0xffe,                12);
     else
       writeheader(gfc,0xfff,                12);
-    writeheader(gfc,gfp->version,            1);
+    writeheader(gfc,(unsigned)(gfp->version),            1);
     writeheader(gfc,4 - 3,                 2);
-    writeheader(gfc,!gfp->error_protection,  1);
+    writeheader(gfc,(unsigned)(!gfp->error_protection),  1);
     /* (jo) from now on call the CRC_writeheader() wrapper to update crc */
-    CRC_writeheader(gfc,gfc->bitrate_index,      4,&crc);
-    CRC_writeheader(gfc,gfc->samplerate_index,   2,&crc);
-    CRC_writeheader(gfc,gfc->padding,            1,&crc);
-    CRC_writeheader(gfc,gfp->extension,          1,&crc);
-    CRC_writeheader(gfc,gfp->mode,               2,&crc);
-    CRC_writeheader(gfc,gfc->mode_ext,           2,&crc);
-    CRC_writeheader(gfc,gfp->copyright,          1,&crc);
-    CRC_writeheader(gfc,gfp->original,           1,&crc);
-    CRC_writeheader(gfc,gfp->emphasis,           2,&crc);
+    CRC_writeheader(gfc,(unsigned)(gfc->bitrate_index),      4,&crc);
+    CRC_writeheader(gfc,(unsigned)(gfc->samplerate_index),   2,&crc);
+    CRC_writeheader(gfc,(unsigned)(gfc->padding),            1,&crc);
+    CRC_writeheader(gfc,(unsigned)(gfp->extension),          1,&crc);
+    CRC_writeheader(gfc,(unsigned)(gfp->mode),               2,&crc);
+    CRC_writeheader(gfc,(unsigned)(gfc->mode_ext),           2,&crc);
+    CRC_writeheader(gfc,(unsigned)(gfp->copyright),          1,&crc);
+    CRC_writeheader(gfc,(unsigned)(gfp->original),           1,&crc);
+    CRC_writeheader(gfc,(unsigned)(gfp->emphasis),           2,&crc);
     if (gfp->error_protection) {
 	writeheader(gfc,0, 16); /* dummy */
     }
 
     if (gfp->version == 1) {
 	/* MPEG1 */
-	CRC_writeheader(gfc,l3_side->main_data_begin, 9,&crc);
+	assert(l3_side->main_data_begin >= 0);
+	CRC_writeheader(gfc,(unsigned)(l3_side->main_data_begin), 9,&crc);
 
 	if (gfc->stereo == 2)
 	    CRC_writeheader(gfc,l3_side->private_bits, 3,&crc);
@@ -240,9 +241,9 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 	    CRC_writeheader(gfc,l3_side->private_bits, 5,&crc);
 
 	for (ch = 0; ch < gfc->stereo; ch++) {
-	    int scfsi_band;
-	    for (scfsi_band = 0; scfsi_band < 4; scfsi_band++) {
-		CRC_writeheader(gfc,l3_side->scfsi[ch][scfsi_band], 1,&crc);
+	    int band;
+	    for (band = 0; band < 4; band++) {
+		CRC_writeheader(gfc,l3_side->scfsi[ch][band], 1,&crc);
 	    }
 	}
 
@@ -281,7 +282,8 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 	}
     } else {
 	/* MPEG2 */
-	CRC_writeheader(gfc,l3_side->main_data_begin, 8,&crc);
+	assert(l3_side->main_data_begin >= 0);
+	CRC_writeheader(gfc,(unsigned)(l3_side->main_data_begin), 8,&crc);
 	CRC_writeheader(gfc,l3_side->private_bits, gfc->stereo,&crc);
 
 	gr = 0;
@@ -344,7 +346,9 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 static INLINE int
 huffman_coder_count1(lame_global_flags *gfp,int *ix, gr_info *gi)
 {
-  /*    lame_internal_flags *gfc=gfp->internal_flags;*/
+#ifdef DEBUG
+    lame_internal_flags *gfc = gfp->internal_flags;
+#endif
     /* Write count1 area */
     const struct huffcodetab *h = &ht[gi->count1table_select + 32];
     int i,bits=0;
@@ -400,7 +404,7 @@ huffman_coder_count1(lame_global_flags *gfp,int *ix, gr_info *gi)
 	bits += h->hlen[p];
     }
 #ifdef DEBUG
-    printf("%d %d %d %d\n",gfc->bs.totbit -gegebo, gi->count1_bits, gi->big_values, gi->count1);
+    printf("%ld %d %d %d\n",gfc->bs.totbit -gegebo, gi->count1bits, gi->big_values, gi->count1);
 #endif
     return bits;
 }
@@ -410,7 +414,7 @@ huffman_coder_count1(lame_global_flags *gfp,int *ix, gr_info *gi)
   */
 
 static INLINE int
-HuffmanCode(lame_global_flags *gfp,int table_select, int x, int y)
+HuffmanCode(lame_global_flags *gfp, unsigned int table_select, int x, int y)
 {
   /*    lame_internal_flags *gfc=gfp->internal_flags;*/
     unsigned int code, ext, xlen;
@@ -489,7 +493,7 @@ HuffmanCode(lame_global_flags *gfp,int table_select, int x, int y)
 }
 
 static int
-Huffmancodebits(lame_global_flags *gfp,int tableindex, int start, int end, int *ix)
+Huffmancodebits(lame_global_flags *gfp,unsigned int tableindex, int start, int end, int *ix)
 {
     int i,bits;
 
@@ -561,7 +565,7 @@ writeMainData(lame_global_flags *gfp,
       int              l3_enc[2][2][576],
   	III_scalefac_t   scalefac[2][2] )
 {
-    int i, gr, ch, sfb,data_bits,scale_bits,tot_bits=0;
+    int gr, ch, sfb,data_bits,scale_bits,tot_bits=0;
     lame_internal_flags *gfc=gfp->internal_flags;
     III_side_info_t *l3_side;
     int ix_w[576];
@@ -585,9 +589,9 @@ writeMainData(lame_global_flags *gfp,
 		    reorder(gfc->scalefac_band.s,l3_enc[gr][ch],ix_w);
 		    for (sfb = 0; sfb < SBPSY_s; sfb++) {
 			int slen = sfb < 6 ? slen1 : slen2;
-			putbits2(gfp,Max(scalefac[gr][ch].s[sfb][0], 0), slen);
-			putbits2(gfp,Max(scalefac[gr][ch].s[sfb][1], 0), slen);
-			putbits2(gfp,Max(scalefac[gr][ch].s[sfb][2], 0), slen);
+			putbits2(gfp,Max(scalefac[gr][ch].s[sfb][0], 0U), slen);
+			putbits2(gfp,Max(scalefac[gr][ch].s[sfb][1], 0U), slen);
+			putbits2(gfp,Max(scalefac[gr][ch].s[sfb][2], 0U), slen);
 			scale_bits += 3*slen;
 		    }
 		    data_bits += ShortHuffmancodebits(gfp,l3_enc[gr][ch], gi);
@@ -600,7 +604,7 @@ writeMainData(lame_global_flags *gfp,
 
 			for (sfb = scfsi_band[i]; sfb < scfsi_band[i + 1];
 			     sfb++) {
-			    putbits2(gfp,Max(scalefac[gr][ch].l[sfb], 0),
+			    putbits2(gfp,Max(scalefac[gr][ch].l[sfb], 0U),
 				    sfb < 11 ? slen1 : slen2);
 			    scale_bits += sfb < 11 ? slen1 : slen2;
 			}
@@ -609,7 +613,7 @@ writeMainData(lame_global_flags *gfp,
 		}
 		data_bits +=huffman_coder_count1(gfp,l3_enc[gr][ch], gi);
 #ifdef DEBUG
-		printf("<%d> ", gfc->bs.totbit-hogege);
+		printf("<%ld> ", gfc->bs.totbit-hogege);
 #endif
 		/* does bitcount in quantize.c agree with actual bit count?*/
 		assert(data_bits==gi->part2_3_length-gi->part2_length);
@@ -623,7 +627,7 @@ writeMainData(lame_global_flags *gfp,
 	gr = 0;
 	for (ch = 0; ch < gfc->stereo; ch++) {
 	    gr_info *gi = &l3_side->gr[gr].ch[ch].tt;
-	    int sfb_partition;
+	    int i, sfb_partition;
 	    assert(gi->sfb_partition_table);
 	    data_bits = 0;
 	    scale_bits=0;
@@ -637,9 +641,9 @@ writeMainData(lame_global_flags *gfp,
 		    int sfbs = gi->sfb_partition_table[sfb_partition] / 3;
 		    int slen = gi->slen[sfb_partition];
 		    for (i = 0; i < sfbs; i++, sfb++) {
-			putbits2(gfp,Max(scalefac[gr][ch].s[sfb][0], 0), slen);
-			putbits2(gfp,Max(scalefac[gr][ch].s[sfb][1], 0), slen);
-			putbits2(gfp,Max(scalefac[gr][ch].s[sfb][2], 0), slen);
+			putbits2(gfp,Max(scalefac[gr][ch].s[sfb][0], 0U), slen);
+			putbits2(gfp,Max(scalefac[gr][ch].s[sfb][1], 0U), slen);
+			putbits2(gfp,Max(scalefac[gr][ch].s[sfb][2], 0U), slen);
 			scale_bits += 3*slen;
 		    }
 		}
@@ -649,7 +653,7 @@ writeMainData(lame_global_flags *gfp,
 		    int sfbs = gi->sfb_partition_table[sfb_partition];
 		    int slen = gi->slen[sfb_partition];
 		    for (i = 0; i < sfbs; i++, sfb++) {
-			putbits2(gfp,Max(scalefac[gr][ch].l[sfb], 0), slen);
+			putbits2(gfp,Max(scalefac[gr][ch].l[sfb], 0U), slen);
 			scale_bits += slen;
 		    }
 		}
@@ -766,19 +770,19 @@ format_bitstream(lame_global_flags *gfp, int bitsPerFrame,
 
 
 #ifdef DEBUG
-    hoge = bs.totbit;
-    hogege = bs.totbit;
+    hoge = gfc->bs.totbit;
+    hogege = gfc->bs.totbit;
 
     printf("%d %d %d %d ->%d //\n",
-	   l3_side->tt[0][0].part2_3_length,
-	   l3_side->tt[0][1].part2_3_length,
-	   l3_side->tt[1][0].part2_3_length,
-	   l3_side->tt[1][1].part2_3_length,
+	   l3_side->gr[0].ch[0].tt.part2_3_length,
+	   l3_side->gr[0].ch[1].tt.part2_3_length,
+	   l3_side->gr[1].ch[0].tt.part2_3_length,
+	   l3_side->gr[1].ch[1].tt.part2_3_length,
 
-	   l3_side->tt[0][0].part2_3_length +
-	   l3_side->tt[0][1].part2_3_length +
-	   l3_side->tt[1][0].part2_3_length +
-	   l3_side->tt[1][1].part2_3_length);
+	   l3_side->gr[0].ch[0].tt.part2_3_length +
+	   l3_side->gr[0].ch[1].tt.part2_3_length +
+	   l3_side->gr[1].ch[0].tt.part2_3_length +
+	   l3_side->gr[1].ch[1].tt.part2_3_length);
 #endif
     drain_into_ancillary(gfp,l3_side->resvDrain_pre);
 
@@ -806,13 +810,13 @@ format_bitstream(lame_global_flags *gfp, int bitsPerFrame,
 
 #ifdef DEBUG
     printf("total bits used = %i max=%i mdb=%i \n",bits,bitsPerFrame,l3_side->main_data_begin*8);
-    printf("%d -> %d\n",
+    printf("%ld -> %ld\n",
 	   gfc->bs.totbit - hoge,
-	   l3_side->tt[0][0].part2_3_length +
-	   l3_side->tt[0][1].part2_3_length +
-	   l3_side->tt[1][0].part2_3_length +
-	   l3_side->tt[1][1].part2_3_length -
-	   (bs.totbit - hoge));
+	   l3_side->gr[0].ch[0].tt.part2_3_length +
+	   l3_side->gr[0].ch[1].tt.part2_3_length +
+	   l3_side->gr[1].ch[0].tt.part2_3_length +
+	   l3_side->gr[1].ch[1].tt.part2_3_length -
+	   (gfc->bs.totbit - hoge));
 #endif
     assert(gfc->bs.totbit % 8 == 0);
 

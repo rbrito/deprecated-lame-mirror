@@ -172,7 +172,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
   int       mean_bits;
   int       i,ch, gr, analog_silence;
   int	    reparted = 0;
-  int       reduce_sidechannel=0;
+  int       reduce_s_ch=0;
   III_side_info_t *l3_side;
 
   l3_side = &gfc->l3_side;
@@ -183,7 +183,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
      * does more harm than good when VBR encoding
      * (Robert.Hegemann@gmx.de 2000-02-18)
   if (gfc->mode_ext==MPG_MD_MS_LR) 
-    reduce_sidechannel=1;
+    reduce_s_ch=1;
      */
 
 
@@ -232,7 +232,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
   for (gr = 0; gr < gfc->mode_gr; gr++) {
     int num_chan=gfc->stereo;
     /* determine quality based on mid channel only */
-    if (reduce_sidechannel) num_chan=1;  
+    if (reduce_s_ch) num_chan=1;  
 
 
     /* copy data to be quantized into xr */
@@ -346,8 +346,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
               memcpy(  bst_l3_enc,    l3_enc  [gr][ch], sizeof(int)*576         );
               memcpy( &bst_cod_info,  cod_info,         sizeof(gr_info)         );
               if (gfp->gtkflag) {
-		plotting_data *pinfo=gfc->pinfo;
-                memcpy( &bst_pinfo, pinfo, sizeof(plotting_data) );
+                memcpy( &bst_pinfo, gfc->pinfo, sizeof(plotting_data) );
 	      }
 	      /*
 	       * try with fewer bits
@@ -369,8 +368,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
         memcpy( &scalefac[gr][ch], &bst_scalefac, sizeof(III_scalefac_t) );
         memcpy(  l3_enc  [gr][ch],  bst_l3_enc,   sizeof(int)*576        );
         if (gfp->gtkflag) {
-	  plotting_data *pinfo=gfc->pinfo;
-          memcpy( pinfo, &bst_pinfo, sizeof(plotting_data) );
+          memcpy( gfc->pinfo, &bst_pinfo, sizeof(plotting_data) );
 	}
       }
       assert((int)cod_info->part2_3_length <= max_bits);
@@ -382,7 +380,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
   } /* for gr */
 
 
-  if (reduce_sidechannel) {
+  if (reduce_s_ch) {
     /* number of bits needed was found for MID channel above.  Use formula
      * (fixed bitrate code) to set the side channel bits */
     for (gr = 0; gr < gfc->mode_gr; gr++) {
@@ -427,7 +425,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
 
   for(gr = 0; gr < gfc->mode_gr; gr++) {
     for(ch = 0; ch < gfc->stereo; ch++) {
-      if (reparted || (reduce_sidechannel && ch == 1))
+      if (reparted || (reduce_s_ch && ch == 1))
       {
         cod_info = &l3_side->gr[gr].ch[ch].tt;
 	       
@@ -465,8 +463,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
 	best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
       }
       if (gfp->gtkflag) {
-	plotting_data *pinfo=gfc->pinfo;
-	pinfo->LAMEmainbits[gr][ch]=cod_info->part2_3_length;
+	gfc->pinfo->LAMEmainbits[gr][ch]=cod_info->part2_3_length;
       }
       ResvAdjust (gfp,cod_info, l3_side, mean_bits);
     }
