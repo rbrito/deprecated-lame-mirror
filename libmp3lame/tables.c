@@ -133,9 +133,6 @@ const char nr_of_sfb_block [6*3][4] = {
 const char s1bits[] = { 0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4 };
 const char s2bits[] = { 0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3 };
 
-/* This is the scfsi_band table from 2.4.2.7 of the IS */
-const char scfsi_band[5] = { 0, 6, 11, 16, 21 };
-
 /* Table B.6: layer3 preemphasis */
 const char  pretab[SBMAX_l] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,    1, 1, 1, 1, 2, 2, 3, 3, 3, 2, 0

@@ -764,6 +764,9 @@ count_bits(lame_t gfc, gr_info * const gi)
   re-calculate the best scalefac_compress using scfsi
   the saved bits are kept in the bit reservoir.
  **********************************************************************/
+/* This is the scfsi_band table from 2.4.2.7 of the IS */
+static const char scfsi_band[5] = { 0, 6, 11, 16, 21 };
+
 static void
 scfsi_calc(lame_t gfc, int ch)
 {

@@ -26,8 +26,6 @@
 extern const char htESC_xlen[];
 extern const unsigned char quadcode[2][16*2];
 
-extern const char scfsi_band[5];
-
 extern FLOAT window[];
 extern FLOAT window_s[];
 
