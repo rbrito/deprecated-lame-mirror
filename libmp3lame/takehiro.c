@@ -68,11 +68,7 @@ static int quantize_xrpow(const FLOAT *xp, gr_info *gi)
 
     do {
 	const FLOAT *xe = xp + gi->width[sfb];
-	FLOAT istep
-	    = IPOW20(gi->global_gain
-		     - ((gi->scalefac[sfb] + (gi->preflag>0 ? pretab[sfb] : 0))
-			<< (gi->scalefac_scale + 1))
-		     - gi->subblock_gain[gi->window[sfb]] * 8);
+	FLOAT istep = IPOW20(scalefactor(gi, sfb));
 	sfb++;
 	do {
 #ifdef TAKEHIRO_IEEE754_HACK
@@ -113,11 +109,7 @@ static void quantize_xrpow_ISO(const FLOAT *xp, gr_info *gi)
     fi_union *fi = (fi_union *)gi->l3_enc;
     do {
 	const FLOAT *xe = xp + gi->width[sfb];
-	FLOAT istep
-	    = IPOW20(gi->global_gain
-		     - ((gi->scalefac[sfb] + (gi->preflag>0 ? pretab[sfb] : 0))
-			<< (gi->scalefac_scale + 1))
-		     - gi->subblock_gain[gi->window[sfb]] * 8);
+	FLOAT istep = IPOW20(scalefactor(gi, sfb));
 	sfb++;
 	do {
 #ifdef TAKEHIRO_IEEE754_HACK
@@ -380,10 +372,11 @@ int choose_table_nonMMX(
 /*************************************************************************/
 /*	      count_bit							 */
 /*************************************************************************/
-int noquant_count_bits(
-          lame_internal_flags * const gfc, 
-          gr_info * const gi
-	  )
+int
+noquant_count_bits(
+    const lame_internal_flags * const gfc, 
+    gr_info * const gi
+    )
 {
     int i, a1, a2;
     int *const ix = gi->l3_enc;
@@ -456,7 +449,7 @@ int noquant_count_bits(
 }
 
 int count_bits(
-          lame_internal_flags * const gfc, 
+    const lame_internal_flags * const gfc, 
     const FLOAT  * const xrpow,
           gr_info * const gi
     )
@@ -477,11 +470,7 @@ int count_bits(
 	    if (!gfc->pseudohalf[sfb])
 		continue;
 	    roundfac = 0.634521682242439
-		/ IPOW20(gi->global_gain
-			 - ((gi->scalefac[sfb] + (gi->preflag>0 ? pretab[sfb]:0))
-			    << (gi->scalefac_scale + 1))
-			 - gi->subblock_gain[gi->window[sfb]] * 8
-			 + gi->scalefac_scale);
+		/ IPOW20(scalefactor(gi, sfb) + gi->scalefac_scale);
 	    for (l = -width; l < 0; l++)
 		if (xrpow[j+l] < roundfac)
 		    gi->l3_enc[j+l] = 0;

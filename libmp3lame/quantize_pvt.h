@@ -27,11 +27,17 @@ typedef struct calc_noise_result_t {
     FLOAT  max_noise;       /* max quantization noise */
 } calc_noise_result;
 
+#define scalefactor(gi, sfb) \
+    (gi->global_gain \
+     - ((gi->scalefac[sfb] + (gi->preflag > 0 ? pretab[sfb] : 0)) \
+        << (gi->scalefac_scale + 1)) \
+     - gi->subblock_gain[gi->window[sfb]]*8)
+
 /* takehiro.c */
 
-int     count_bits (lame_internal_flags * const gfc, const FLOAT * const xr,
+int     count_bits (const lame_internal_flags * const gfc, const FLOAT * const xr,
 		    gr_info * const cod_info);
-int     noquant_count_bits (lame_internal_flags * const gfc,
+int     noquant_count_bits (const lame_internal_flags * const gfc,
 			    gr_info * const cod_info);
 
 

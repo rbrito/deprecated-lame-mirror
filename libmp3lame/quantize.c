@@ -51,12 +51,6 @@ static const int max_range_long[SBMAX_l] = {
 static const int max_range_long_lsf_pretab[SBMAX_l] = {
     7, 7, 7, 7, 7, 7, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-#define scalefactor(gi, sfb) \
-    (gi->global_gain \
-     - ((gi->scalefac[sfb] + (gi->preflag > 0 ? pretab[sfb] : 0)) \
-        << (gi->scalefac_scale + 1)) \
-     - gi->subblock_gain[gi->window[sfb]]*8)
-
 /************************************************************************
  * allocate bits among 2 channels based on PE
  * mt 6/99
