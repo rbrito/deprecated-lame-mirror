@@ -122,6 +122,7 @@ static const FLOAT8 enwindow[] =
 static FLOAT8 ca[8], cs[8];
 static FLOAT8 cos_s[NS / 2][NS / 2];
 static FLOAT8 win[4][36];
+static FLOAT tantab_l[NL/4];
 
 /************************************************************************
 *
@@ -378,18 +379,18 @@ static void mdct_short(FLOAT8 *out, FLOAT8 *in)
     }
 }
 
-INLINE static void mdct_long(FLOAT8 *out, FLOAT8 *in)
+INLINE static void mdct_long(FLOAT *out, FLOAT *in)
 {
 #define inc(x) in[17-(x)]
 #define ins(x) -in[8-(x)]
 
-    const FLOAT8 c0=0.98480775301220802032, c1=0.64278760968653936292, c2=0.34202014332566882393;
-    const FLOAT8 c3=0.93969262078590842791, c4=-0.17364817766693030343, c5=-0.76604444311897790243;
-    FLOAT8 tc1 = inc(0)-inc(8),tc2 = (inc(1)-inc(7))*0.86602540378443870761, tc3 = inc(2)-inc(6), tc4 = inc(3)-inc(5);
-    FLOAT8 tc5 = inc(0)+inc(8),tc6 = (inc(1)+inc(7))*0.5,                    tc7 = inc(2)+inc(6), tc8 = inc(3)+inc(5);
-    FLOAT8 ts1 = ins(0)-ins(8),ts2 = (ins(1)-ins(7))*0.86602540378443870761, ts3 = ins(2)-ins(6), ts4 = ins(3)-ins(5);
-    FLOAT8 ts5 = ins(0)+ins(8),ts6 = (ins(1)+ins(7))*0.5,                    ts7 = ins(2)+ins(6), ts8 = ins(3)+ins(5);
-    FLOAT8 ct,st;
+    const FLOAT c0=0.98480775301220802032, c1=0.64278760968653936292, c2=0.34202014332566882393;
+    const FLOAT c3=0.93969262078590842791, c4=-0.17364817766693030343, c5=-0.76604444311897790243;
+    FLOAT tc1 = inc(0)-inc(8),tc2 = (inc(1)-inc(7))*0.86602540378443870761, tc3 = inc(2)-inc(6), tc4 = inc(3)-inc(5);
+    FLOAT tc5 = inc(0)+inc(8),tc6 = (inc(1)+inc(7))*0.5,                    tc7 = inc(2)+inc(6), tc8 = inc(3)+inc(5);
+    FLOAT ts1 = ins(0)-ins(8),ts2 = (ins(1)-ins(7))*0.86602540378443870761, ts3 = ins(2)-ins(6), ts4 = ins(3)-ins(5);
+    FLOAT ts5 = ins(0)+ins(8),ts6 = (ins(1)+ins(7))*0.5,                    ts7 = ins(2)+ins(6), ts8 = ins(3)+ins(5);
+    FLOAT ct,st;
 
     ct = tc5+tc7+tc8+inc(1)+inc(4)+inc(7);
     out[0] = ct;
@@ -455,6 +456,7 @@ void mdct_sub48(lame_global_flags *gfp,
     static int init = 0;
     lame_internal_flags *gfc=gfp->internal_flags;
 
+    FLOAT8 work[18];
 
     if ( gfc->mdct_sub48_init == 0 ) {
         void mdct_init48(lame_global_flags *gfp);
@@ -536,51 +538,40 @@ void mdct_sub48(lame_global_flags *gfp,
 		  if (type == SHORT_TYPE) {
 		    for (k = 2; k >= 0; --k) {
 		      FLOAT8 w1 = win[SHORT_TYPE][k];
-		      gfc->mdct_work[k] =
+		      work[k] =
 			gfc->sb_sample[ch][gr][k+6][band_swapped] * w1 -
 			gfc->sb_sample[ch][gr][11-k][band_swapped];
-		      gfc->mdct_work[k+3] =
+		      work[k+3] =
 			gfc->sb_sample[ch][gr][k+12][band_swapped] +
 			gfc->sb_sample[ch][gr][17-k][band_swapped] * w1;
 		      
-		      gfc->mdct_work[k+6] =
+		      work[k+6] =
 			gfc->sb_sample[ch][gr][k+12][band_swapped] * w1 -
 			gfc->sb_sample[ch][gr][17-k][band_swapped];
-		      gfc->mdct_work[k+9] =
+		      work[k+9] =
 			gfc->sb_sample[ch][1-gr][k][band_swapped] +
 			gfc->sb_sample[ch][1-gr][5-k][band_swapped] * w1;
 		      
-		      gfc->mdct_work[k+12] =
+		      work[k+12] =
 			gfc->sb_sample[ch][1-gr][k][band_swapped] * w1 -
 			gfc->sb_sample[ch][1-gr][5-k][band_swapped];
-		      gfc->mdct_work[k+15] =
+		      work[k+15] =
 			gfc->sb_sample[ch][1-gr][k+6][band_swapped] +
 			gfc->sb_sample[ch][1-gr][11-k][band_swapped] * w1;
 		    }
-		    mdct_short(mdct_enc, gfc->mdct_work);
+		    mdct_short(mdct_enc, work);
 		  } else {
-		    static const FLOAT8 ctab[] = {
-			0.73727733681012397327,0.67559020761566024316,
-			0.79335334029123516508,0.60876142900872065589,
-			0.84339144581288572056,0.53729960834682388704,
-			0.8870108331782217137 ,0.4617486132350339112,
-			0.92387953251128673848,0.38268343236508978178,
-			0.95371695074822693261,0.3007057995042731191,
-			0.97629600711993336226,0.21643961393810287608,
-			0.99144486137381038215,0.1305261922200515734,
-			0.99904822158185779823,0.043619387365336000084,
-		    };
-
-		    for (k = -9; k < 0; k++) {
-			FLOAT8 a, b;
+		    for (k = -NL/4; k < 0; k++) {
+			FLOAT a, b;
 			a = win[type][k+27] * gfc->sb_sample[ch][1-gr][k+9][band_swapped]
 			  + win[type][k+36] * gfc->sb_sample[ch][1-gr][8-k][band_swapped];
 			b = win[type][k+ 9] * gfc->sb_sample[ch][gr][k+9][band_swapped]
 			  - win[type][k+18] * gfc->sb_sample[ch][gr][8-k][band_swapped];
-			gfc->mdct_work[k+ 9] =  a*ctab[k*2+19] + b*ctab[k*2+18];
-			gfc->mdct_work[k+18] = -a*ctab[k*2+18] + b*ctab[k*2+19];
+			work[k+ 9] =  a + b*tantab_l[k+9];
+			work[k+18] = -a*tantab_l[k+9] + b;
 		    }
-		    mdct_long(mdct_enc, gfc->mdct_work);
+
+		    mdct_long(mdct_enc, work);
 		  }
 		}
 		
@@ -675,11 +666,14 @@ void mdct_init48(lame_global_flags *gfp)
 	win[3][27+k] = a;
     }
 
-    for (i = 0; i < 36; i++) {
-	win[0][i] /= SCALE * NL / 4.0;
-	win[1][i] /= SCALE * NL / 4.0;
-	win[3][i] /= SCALE * NL / 4.0;
+    for (i = 0; i < NL; i++) {
+	win[0][i] *= cos((NL/4+0.5+i%9)*M_PI/NL) / SCALE/(NL/4);
+	win[1][i] *= cos((NL/4+0.5+i%9)*M_PI/NL) / SCALE/(NL/4);
+	win[3][i] *= cos((NL/4+0.5+i%9)*M_PI/NL) / SCALE/(NL/4);
     }
+
+    for (i = 0; i < NL/4; i++)
+	tantab_l[i] = tan((NL/4+0.5+i)*M_PI/NL);
 
     /* type 2(short)*/
     sq = 4.0 / NS;

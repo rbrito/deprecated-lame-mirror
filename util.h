@@ -238,7 +238,6 @@ typedef struct  {
 
   /* variables for newmdct.c */
   FLOAT8 sb_sample[2][2][18][SBLIMIT];
-  FLOAT8 mdct_work[32];
   FLOAT8 amp_lowpass[32];
   FLOAT8 amp_highpass[32];
 
