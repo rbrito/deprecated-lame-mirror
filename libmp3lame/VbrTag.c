@@ -484,6 +484,20 @@ int CRC_update_lookup(int value, int crc)
 
 /*this could be calculated elsewhere in the encoding process.... e.g. as the data is written*/
 /*the current method is TEMPORARY.... but it's fast.*/
+/*
+to compute this as the data is being encoded, two possible places:
+
+"copy_buffer" in bitstream.c.  this routine copies data out of the
+bitbuffer to be returned to the calling program.  But it includes
+vbr and id3 tag data.
+
+Three routines add data into the bit buffer:
+
+putbits2()             huffman data added to bitbuffer
+putheader_bits()       mp3 headers & sidinfo added to bitbuffer
+putbits_noheaders()    non-mp3 data added.  (vbr and id3 tags).  
+
+ */
 uint16_t GetMusicCRC(lame_global_flags *gfp, FILE *fpStream, int filesize, int id3v2size, int bId3v1)
 { 
 
@@ -771,7 +785,6 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, u_char *pbtStreamBuffer, 
         {
             int enc_delay=lame_get_encoder_delay(gfp);       // encoder delay
             int enc_padding=lame_get_encoder_padding(gfp);   // encoder padding 
-
         }
 
 	memset(pbtStreamBuffer+nBytesWritten,0, 3);		//encoder delay stuff..TODO

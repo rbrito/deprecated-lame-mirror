@@ -504,7 +504,15 @@ main(int argc, char **argv)
 #if macintosh
     argc = ccommand(&argv);
 #endif
-
+#if defined(_MSC_VER)
+    {
+   /* set affinity to a single CPU.  Fix for EAC/lame on SMP systems from
+     "Todd Richmond" <todd.richmond@openwave.com> */
+    SYSTEM_INFO si;
+    GetSystemInfo(&si);
+    SetProcessAffinityMask(GetCurrentProcess(), si.dwActiveProcessorMask);
+    }
+#endif
 #ifdef __EMX__
     /* This gives wildcard expansion on Non-POSIX shells with OS/2 */
     _wildcard(&argc, &argv);

@@ -872,17 +872,6 @@ void disable_FPE(void) {
 /*==========================================================================*/
 
 
-#if defined(_MSC_VER)
-    {
-   /* set affinity to a single CPU.  Fix for EAC/lame on SMP systems from
-     "Todd Richmond" <todd.richmond@openwave.com> */
-    SYSTEM_INFO si;
-    GetSystemInfo(&si);
-    SetProcessAffinityMask(GetCurrentProcess(), si.dwActiveProcessorMask);
-    }
-#endif
-
-
 
     /*
      *  Disable floating point exceptions
