@@ -29,11 +29,6 @@
 
 #ifdef STDC_HEADERS
 # include <string.h>
-#else
-# ifndef HAVE_MEMCPY
-#  define memcpy(d, s, n) bcopy ((s), (d), (n))
-#  define memmove(d, s, n) bcopy ((s), (d), (n))
-# endif
 #endif
 
 #ifdef WITH_DMALLOC
