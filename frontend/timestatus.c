@@ -111,7 +111,7 @@ void timestatus ( const int samp_rate,
     static timestatus_t  real_time;
     static timestatus_t  proc_time;
     int                  percent;
-    static int           init = 0; /* What happens here? A work around instead of a bug fix ??? */
+    static int           init = 0;
     double               tmx,delta;
 
 
@@ -145,9 +145,8 @@ void timestatus ( const int samp_rate,
 	init = 1;
         return;
     }  
-    /* reset init counter for next time we are called with frameNum==0 */
-    if (frameNum > 0) 
-        init = 0;
+
+    init = 0;
 
     ts_calc_times ( &real_time, samp_rate, frameNum, totalframes, framesize );
     ts_calc_times ( &proc_time, samp_rate, frameNum, totalframes, framesize );
@@ -182,8 +181,8 @@ void
 timestatus_klemm(lame_t gfp)
 {
     static double  last_time = -1.0;
-    if ( GetRealTime () - last_time >= update_interval
-	 || GetRealTime () - last_time <  0 ) {
+    double diff = GetRealTime() - last_time;
+    if (diff >= update_interval || diff < 0.0) {
 #ifdef BRHIST
 	brhist_jump_back();
 #endif
