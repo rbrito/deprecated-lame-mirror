@@ -22,6 +22,14 @@ LAME has problems with pure DC input.  i.e. a square wave with
 a frequency well below 20Hz.  Not very important, but it should
 be fixed.
 
+3. 
+Replace internal representation of PCM data to floating point
+(instead of short int).  This will help filtering (which
+has to convert back and forth) and allow lame to handle
+other than 16 bit input.   Also, modify mpglib to output
+floating point and have finaly quantization step a
+easy-to-change module so it can output other than 16bit.
+
 
 
 998.

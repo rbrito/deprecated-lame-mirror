@@ -278,15 +278,11 @@ mpglib decode capability
 --decode 
 
 This just uses LAME's mpg123/mpglib interface to decode an MP3 file to
-a raw pcm file.  The input file must be an MP3 file, and the raw pcm
-data will be written to the output file in native endian format.
-Under linux, on i386, to convert the output file to a wav, use:
+a wav file.  The input file can be any input type supported by
+encoding, including .mp3  and .ogg.  
 
-% lame --decode input.mp3 output.pcm
-% sox -c 2 -t raw -r 44100 -s -w output.pcm output.wav
-
-(assuming output.pcm came from a stereo, 44.1khz mp3 file)
-
+If -t is used (disable wav header), LAME will output
+raw pcm in native endian format (use -x to swap bytes).
 
 
 =======================================================================
@@ -379,17 +375,17 @@ slower quantization formula.
 
 
 =======================================================================
-sfb=21 cutoff
+keep all frequencies
 =======================================================================
 -k   
 
 keep all frequencies.  (Disable all filters)
 
-Without -k, LAME will automatically apply various types of lowpass
-filters.  This is because the high frequency coefficients can take up
-a lot of bits that would be better used for lower, more important
-frequencies.
+LAME will automatically apply various types of lowpass filters.  This
+is because the high frequency coefficients can take up a lot of bits
+that would be better used for lower, more important frequencies.
 
+-k will disable all lowpass filtering.  Not recommended.
 
 
 
@@ -579,8 +575,8 @@ VBR aware players correctly seek and compute playing times of VBR
 files.
 
 When '--decode' is specified (decode mp3 to wav), this flag will 
-disable writing the WAV header.  The output will thus be
-little endian, raw pcm.
+disable writing the WAV header.  The output will be raw pcm,
+native endian format.  Use -x to swap bytes.
 
 
 
@@ -671,7 +667,8 @@ swapbytes
 =======================================================================
 -x
 
-swap bytes in the input file.  for sorting out little endian/big endian
-type problems.  If your encodings sound like static, try this first.
+swap bytes in the input file (and output file when using --decode).
+For sorting out little endian/big endian type problems.  If your
+encodings sound like static, try this first.
 
 

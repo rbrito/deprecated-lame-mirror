@@ -230,16 +230,15 @@ ifeq ($(UNAME),FreeBSD)
 endif
 
 ##########################################################################
-# FreeBSD
+# OpenBSD
 ##########################################################################
 ifeq ($(UNAME),OpenBSD)
 #  remove if you do not have GTK or do not want the GTK frame analyzer
-#   GTK = -DHAVEGTK `gtk12-config --cflags`
-#   GTKLIBS = `gtk12-config --libs` 
+   GTK = -DHAVEGTK `gtk12-config --cflags`
+   GTKLIBS = `gtk12-config --libs` 
 # Comment out next 2 lines if you want to remove VBR histogram capability
    BRHIST_SWITCH = -DBRHIST
    LIBTERMCAP = -lncurses
-
 endif
 
 
@@ -433,6 +432,7 @@ libmp3lame.a:  $(OBJ) Makefile
 #	cd libmp3lame
 #	make libmp3lame
 	ar cr libmp3lame.a  $(OBJ) 
+	ranlib libmp3lame.a
 
 clean:
   ifeq ($(UNAME),MSDOS)
