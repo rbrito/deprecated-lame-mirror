@@ -807,7 +807,7 @@ static void compute_ath( lame_global_flags *gfp )
             gfc->ATH.s[sfb] = 1E-37;
         }
     }
-    
+
     /*  work in progress, don't rely on it too much
      */
     gfc->ATH.floor = 10. * log10( ATHmdct( gfp, -1. ) );
@@ -1383,7 +1383,7 @@ int psymodel_init(lame_global_flags *gfp)
 	gfc->ATH.cb[i] = x;
     }
     for (i = 0; i < SBMAX_l; i++)
-	gfc->ATH.l_avg[i] = gfc->ATH.cb[bm[i]] * db2pow(gfp->VBR_q - 4);
+	gfc->ATH.l_avg[i] = gfc->ATH.cb[bm[i]];
 
     /* table for long block threshold -> short block threshold conversion */
     init_numline_l2s(gfc->bo_l2s,
@@ -1413,10 +1413,8 @@ int psymodel_init(lame_global_flags *gfp)
 	    gfc->endlines_s[i] += gfc->endlines_s[i-1];
     }
     for (i = 0; i < SBMAX_s; i++)
-	gfc->ATH.s_avg[i] = gfc->ATH.cb[bm[i]]
-	    * db2pow(gfp->VBR_q - 4)
-	    * BLKSIZE_s / BLKSIZE;
-    
+	gfc->ATH.s_avg[i] = gfc->ATH.cb[bm[i]] * BLKSIZE_s / BLKSIZE;
+
     i = init_s3_values(gfc, &gfc->s3_ss, gfc->s3ind_s,
 		       gfc->npart_s, bval, bval_width, norm);
     if (i)

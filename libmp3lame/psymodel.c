@@ -652,11 +652,10 @@ compute_masking_s(
 
 	enn  -= eb[b] * 0.5;
 	thmm -= ecb * 0.5;
-	thmm *= gfc->masking_lower;
 	if (thmm < gfc->ATH.s_avg[sb] * gfc->ATH.adjust)
 	    thmm = gfc->ATH.s_avg[sb] * gfc->ATH.adjust;
 	mr->en .s[sb][sblock] = enn;
-	mr->thm.s[sb][sblock] = thmm;
+	mr->thm.s[sb][sblock] = thmm * gfc->masking_lower;
 	enn  = eb[b] * 0.5;
 	thmm = ecb * 0.5;
 	sb++;
@@ -1123,6 +1122,9 @@ mp3x display               <------LONG------>
     if (!current_is_short)
 	return;
 
+    if (current_is_short & 12)
+	gfc->useshort_next[gr][2] = gfc->useshort_next[gr][3] = SHORT_TYPE;
+
     for (chn=0; chn<numchn; chn++) {
 	/* fft and energy calculation   */
 	FLOAT wsamp_S[2][3][BLKSIZE_s];
@@ -1155,9 +1157,6 @@ mp3x display               <------LONG------>
 	    }
 	}
     } /* end loop over chn */
-
-    if (current_is_short & 12)
-	gfc->useshort_next[gr][2] = gfc->useshort_next[gr][3] = SHORT_TYPE;
 
     return;
 }
@@ -1195,11 +1194,12 @@ partially_convert_l2s(
 	}
 	x += .5*gfc->nb_1[chn][b];
 
-	x *= gfc->masking_lower * ((double)BLKSIZE_s / BLKSIZE);
 //	printf("%e %e %e -> %e",
 //	       mr->thm.s[sfb][0], mr->thm.s[sfb][1], mr->thm.s[sfb][2], x);
+	x *= ((double)BLKSIZE_s / BLKSIZE);
 	if (x < gfc->ATH.s_avg[sfb] * gfc->ATH.adjust)
 	    continue;
+	x *= gfc->masking_lower;
 //	printf("(%e)\n", gfc->ATH.s_avg[sfb] * gfc->ATH.adjust);
 //	printf("%e %e %e\n",
 //	       mr->en.s[sfb][0], mr->en.s[sfb][1], mr->en.s[sfb][2]);
@@ -1429,9 +1429,9 @@ L3psycho_anal_ns(
 
 	    enn  -= .5*eb[b];
 	    thmm -= .5*tmp;
-	    thmm *= gfc->masking_lower;
 	    if (thmm < gfc->ATH.l_avg[j] * gfc->ATH.adjust)
 		thmm = gfc->ATH.l_avg[j] * gfc->ATH.adjust;
+	    thmm *= gfc->masking_lower;
 
 	    mr->en .l[j] = enn;
 	    mr->thm.l[j] = thmm;
@@ -1443,9 +1443,9 @@ L3psycho_anal_ns(
 		break;
 	}
 
-	thmm *= gfc->masking_lower;
 	if (thmm < gfc->ATH.l_avg[SBMAX_l-1] * gfc->ATH.adjust)
 	    thmm = gfc->ATH.l_avg[SBMAX_l-1] * gfc->ATH.adjust;
+	thmm *= gfc->masking_lower;
 
 	mr->en .l[SBMAX_l-1] = enn;
 	mr->thm.l[SBMAX_l-1] = thmm;
@@ -1471,12 +1471,13 @@ L3psycho_anal_ns(
 
 	    enn  -= .5*eb[b];
 	    thmm -= .5*tmp;
-	    thmm *= ((double)BLKSIZE_s / BLKSIZE) * gfc->masking_lower;
+	    thmm *= ((double)BLKSIZE_s / BLKSIZE);
 	    enn  *= ((double)BLKSIZE_s / BLKSIZE);
 	    if (thmm < gfc->ATH.s_avg[j] * gfc->ATH.adjust)
 		thmm = gfc->ATH.s_avg[j] * gfc->ATH.adjust;
 
-	    mr->thm.s[j][0] = mr->thm.s[j][1] = mr->thm.s[j][2] = thmm;
+	    mr->thm.s[j][0] = mr->thm.s[j][1] = mr->thm.s[j][2]
+		= thmm * gfc->masking_lower;
 	    mr->en .s[j][0] = mr->en .s[j][1] = mr->en .s[j][2] = enn;
 
 	    enn  =  eb[b] * 0.5;
@@ -1485,7 +1486,8 @@ L3psycho_anal_ns(
 	    if (b == gfc->bo_l2s[j])
 		break;
 	}
-
+	thmm *= ((double)BLKSIZE_s / BLKSIZE);
+	enn  *= ((double)BLKSIZE_s / BLKSIZE);
 	if (thmm < gfc->ATH.s_avg[j] * gfc->ATH.adjust)
 	    thmm = gfc->ATH.s_avg[j] * gfc->ATH.adjust;
 
