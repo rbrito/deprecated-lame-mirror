@@ -22,7 +22,8 @@ and lame_enc.dll, none are required.  See Makefile for details.
 
 Exactly one of these is required for the command line encoder:
 #define LIBSNDFILE   to use Erik de Castro Lopo's libsndfile
-#define LAMESNDFILE  to use LAME's minimial internal sndfile I/O
+#define LAMESNDFILE  to use LAME's internal sound file support 
+                     (wav and raw pcm only)
 
 Other options for the command line encoder:
 #define HAVEGTK      to compile in the LAME MP3 frame analyzer
@@ -35,17 +36,20 @@ Other options for the command line encoder:
 
 
 =======================================================================
-Building the software on Windows:
+Building the software on Windows with MSVC:
 =======================================================================
 There are MSVC project files, and a Makefile.MSVC included
 with the project.  For production use, be sure to compile
-a "release" version and compile with the "maximum speed" compile
+a "Release" target, with the "maximum speed" compile
 option, and #define NDEBUG.   
 
 Note that MSVC "professional" claims to produce faster executables
 then MSVC "standard".  It is possible to compile the GTK frame
 analyzer under windows, see README.WINGTK
 
+=======================================================================
+Building the software on Windows with free compilers:
+=======================================================================
 LAME can be compiled with various Windows MSDOS ports (all free)
 of GCC (DJGPP, Mingw32).  See README.DJGPP.  
 
@@ -59,14 +63,10 @@ HANDLE CH;
 CONSOLE_SCREEN_BUFFER_INFO CSBI;
 #endif
 
+To use the Borland C compiler (now free!) see README.B32 and Makefile.B32.
+Borland can also compile the lame_enc.dll, but this is untested.
 
-The Windows Borland C compiler is now free!  Borland will also
-compile LAME, although a new makefile is needed.  If you get
-this to work, please write a README.BORLAND which I can include
-with LAME.
-
-
-
+Can DJGPP or Mingw32 produce lame_enc.dll?
 
 
 =======================================================================

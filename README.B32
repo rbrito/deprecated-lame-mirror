@@ -1,0 +1,71 @@
+ 
+Compiling LAME with Borland C++
+===============================
+
+by Magnus Holmgren <lear@algonet.se>
+
+(LAME's homepage is http://www.sulaco.org/mp3, and LAME is distributed
+under the LGPL. More information is in the README file)
+
+Compiling
+---------
+
+This document assumes you've downloaded the free Borland C++ compiler, 
+installed it, and included the appropriate bin folder to the command search 
+path. No other software is required - except for the LAME sources then. 
+
+Once the compiler is installed, there's not much you need to do. Just CD to 
+the lame folder (where you found this file) and type the following:
+
+  make -fmakefile.b32
+
+Note that during the compilation several warning messages will be displayed. 
+This is normal.
+
+Speed
+-----
+
+The Lame you get is no speed deamon, most likely due to missing code 
+optimization in the free version. Compiling without optimization makes no 
+noticable difference, speed-wise. As a comparison, using "moderate" 
+optimizations (-O2) with DJGPP makes Lame more than twice as fast as without 
+optimizations. So if you are concerned with speed, DJGPP may be a better 
+choice. However, it isn't as easy to compile a DLL with it - or so I've 
+read.
+
+Defining MMX_choose_table doesn't make any noticable difference, though some 
+un-documented defines can speed it up by some 10-15 percent (though it might 
+affect quality; I haven't tested that).
+
+Other customizations
+--------------------
+
+Compiling libsndfile is fairly easy to do (see below for some makefile notes 
+though), but I won't go into how to do that here. 
+
+I haven't tried to make all possible flavors of lame with the include 
+makefile. You may need to tweak a few things to get it working.
+
+Makefile notes
+--------------
+
+* Having a "-" in a file name is a bad idea. tlib takes that as something 
+should be removed from the library. Having a "/" in a path - used as 
+argument to tlib - is also a bad idea, since that is interpreted as the 
+start of an argument - even if it isn't preceeded by whitespace. Because of 
+this, rename quantize-pvt.c to quantize_pvt.c, if needed.
+
+* If compilation targets include folders (e.g., "foo/bar.obj"), make sure "-
+o" is the first argument to bcc32, or the object file goes to the wrong 
+folder.
+
+* To use nasm, change any "segment_code" to "segment code class=code use32" 
+and "segment_data" to "segment data class=data use32" in any .nas files you 
+want to assemble. Otherwise the linker won't find the function entry point.
+
+* To compile the DLL, make sure BladeMP3EncDLL.c includes "machine.h" before 
+it includes "BladeMP3EncDLL.h". Note that I haven't actually tested the DLL. 
+All I know is that it compiles.
+
+* The cmp utility I use for "make test" is a simple home-grown thing.
+

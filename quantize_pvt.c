@@ -3,7 +3,7 @@
 #include "gtkanal.h"
 #include "tables.h"
 #include "reservoir.h"
-#include "quantize-pvt.h"
+#include "quantize_pvt.h"
 
 /* some problems found with -O2 and above, gcc 2.95 */
 #if (defined(__GNUC__) && defined(__i386__))

@@ -25,7 +25,7 @@
 #include "tables.h"
 #include "bitstream.h"
 #include "quantize.h"
-#include "quantize-pvt.h"
+#include "quantize_pvt.h"
 #include "version.h"
 
 /* This is the scfsi_band table from 2.4.2.7 of the IS */

@@ -10,7 +10,9 @@ things to check for:
    make depend option for CC
 
 
-
+1. ACM wrapper for LAME.  Contact 
+"Florian Bruckner" <h9651030@miraculix.wu-wien.ac.at>
+for info - he is working on the VorbisACM.  
 
 1.
 Does stdin work when LAME is compiled to use libsndfile? 

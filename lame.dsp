@@ -254,11 +254,11 @@ SOURCE=.\psymodel.h
 # End Source File
 # Begin Source File
 
-SOURCE=".\quantize-pvt.c"
+SOURCE=".\quantize_pvt.c"
 # End Source File
 # Begin Source File
 
-SOURCE=".\quantize-pvt.h"
+SOURCE=".\quantize_pvt.h"
 # End Source File
 # Begin Source File
 

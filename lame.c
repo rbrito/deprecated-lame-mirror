@@ -30,7 +30,7 @@
 #include "psymodel.h"
 #include "newmdct.h"
 #include "quantize.h"
-#include "quantize-pvt.h"
+#include "quantize_pvt.h"
 #include "bitstream.h"
 #include "version.h"
 #include "VbrTag.h"

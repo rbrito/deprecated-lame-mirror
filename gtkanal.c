@@ -7,7 +7,7 @@
 #include "version.h"
 #include "lame.h"
 #include "tables.h"
-#include "quantize-pvt.h"
+#include "quantize_pvt.h"
 #include <assert.h>
 
 plotting_data *pinfo;

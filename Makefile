@@ -410,7 +410,7 @@ c_sources_s = \
 	portableio.c \
 	psymodel.c \
 	quantize.c \
-	quantize-pvt.c \
+	quantize_pvt.c \
 	vbrquantize.c \
 	reservoir.c \
 	tables.c \

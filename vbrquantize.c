@@ -22,7 +22,7 @@
 #include "l3side.h"
 #include "quantize.h"
 #include "reservoir.h"
-#include "quantize-pvt.h"
+#include "quantize_pvt.h"
 #include "gtkanal.h"
 
 

@@ -1,0 +1,217 @@
+# Makefile for LAME 3.xx using Borlands free C++ compiler.
+#
+# Based on the original LAME makefile.
+#
+
+# generic defaults. OS specific options go in versious sections below
+PGM = lame
+CC = gcc
+CC_OPTS =  -O
+GTK = 
+GTKLIBS = 
+SNDLIB = -DLAMESNDFILE
+LIBSNDFILE =  
+LIBS = -lm 
+MAKEDEP = -M
+BRHIST_SWITCH = 
+LIBTERMCAP = 
+RM = rm -f
+
+
+
+##########################################################################
+# -DHAVEMPGLIB compiles the mpglib *decoding* library into libmp3lame
+##########################################################################
+CPP_OPTS = $(CPP_OPTS) -DHAVEMPGLIB 
+
+##########################################################################
+# floating point option:
+# -DFLOAT8_is_float         most floating point variables are 4 byte
+# -DFLOAT8_is_double        most floating point variables are 8 byte (default)
+# NOTE: RH: 7/00:  if FLOAT8=float, it breaks resampling and VBR code 
+##########################################################################
+#CPP_OPTS = $(CPP_OPTS) -DFLOAT8_is_double
+
+
+
+##########################################################################
+# Define these in the OS specific sections below to compile in support
+# for the Ogg Vorbis audio format (both decoding and encoding)
+# 
+# VORBIS = -DHAVEVORBIS  -I ../vorbis/include
+# VORBIS_LIB = -L ../vorbis/lib vorbis.lib
+##########################################################################
+
+##########################################################################
+# Define these in the OS specific sections below to compile in code 
+# for the optional VBR bitrate histogram.  
+# Requires ncurses, but libtermcap also works.  
+# If you have any trouble, just dont define these
+#
+# BRHIST_SWITCH = -DBRHIST
+# LIBTERMCAP = ncurses.lib
+# LIBTERMCAP = termcap.lib
+#
+# or, to try and simulate TERMCAP (ANSI), use:
+# BRHIST_SWITCH = -DBRHIST -DNOTERMCAP
+#
+##########################################################################
+
+
+##########################################################################
+# Define these in the OS specific sections below to compile in code for:
+#
+# SNDLIB =                no file i/o 
+# SNDLIB = -DLAMESNDFILE  to use internal LAME soundfile routines 
+# SNDLIB = -DLIBSNDFILE   to use Erik de Castro Lopo's libsndfile 
+# http://www.zip.com.au/~erikd/libsndfile/
+#
+# Note: at present, libsndfile does not support input from stdin.  
+#
+# for example:
+#  SNDLIB = -DLIBSNDFILE
+#  LIBSNDFILE= ../sndfile/sndfile.lib
+#  if libsndfile is in a custom location, try:
+#  LIBSNDFILE=-L $(LIBSNDHOME) sndfile.lib -I $(LIBSNDHOME)
+##########################################################################
+
+
+##########################################################################
+# Define these in the OS specific sections below to compile in code for
+# the GTK mp3 frame analyzer
+#
+# Requires  -DHAVEMPGLIB
+# and SNDLIB = -DLAME or -DLIBSNDFILE
+#
+# GTK = -DHAVEGTK `gtk-config --cflags`
+# GTKLIBS = `gtk-config --libs` 
+#
+##########################################################################
+
+
+
+
+##########################################################################
+# Windows, Borland C++
+##########################################################################
+
+PGM = lame.exe
+CC = bcc32
+CC_OPTS = -q -5 -O2 -OS
+LIBS =
+MAKEDEP =
+RM = del
+
+# Comment out next line if you want to remove VBR histogram capability
+BRHIST_SWITCH = -DBRHIST -DNOTERMCAP
+
+# uncomment to use LIBSNDFILE
+# SNDLIB = -DLIBSNDFILE
+# LIBSNDHOME = ../libsndfile/src/
+# LIBSNDFILE= -L $(LIBSNDHOME) sndfile.lib -I $(LIBSNDHOME)
+
+# uncomment to compile in Vorbis support
+# VORBIS = -DHAVEVORBIS -I ../vorbis/include
+# VORBIS_LIB = -L ../vorbis/lib vorbis.lib
+
+# for debugging:
+# CC_OPTS = $(CC_OPTS) -UNDEBUG
+
+# special noise calculation
+# FEATURES = -DRH_NOISE_CALC
+
+
+CC_SWITCHES = -DNDEBUG $(CC_OPTS) $(SNDLIB) $(GTK) $(BRHIST_SWITCH) $(VORBIS) 
+c_sources = \
+	brhist.c \
+	bitstream.c \
+	fft.c \
+	get_audio.c \
+	id3tag.c \
+	ieeefloat.c \
+	lame.c \
+	newmdct.c \
+	parse.c \
+	portableio.c \
+	psymodel.c \
+	quantize.c \
+	quantize_pvt.c \
+	vbrquantize.c \
+	reservoir.c \
+	tables.c \
+	takehiro.c \
+	timestatus.c \
+	util.c \
+	vorbis_interface.c \
+	VbrTag.c \
+	version.c \
+	mpglib/common.c \
+	mpglib/dct64_i386.c \
+	mpglib/decode_i386.c \
+	mpglib/layer3.c \
+	mpglib/tabinit.c \
+	mpglib/interface.c \
+	mpglib/main.c 
+
+OBJ = $(c_sources:.c=.obj)
+
+gtk_sources = gtkanal.c gpkplotting.c
+gtk_obj = $(gtk_sources:.c=.obj)
+
+
+
+NASM = nasmw
+# Borland C++ specific
+ASFLAGS=-DWIN32 -f obj -i i386/
+
+.nas.obj:
+	$(NASM) $(ASFLAGS) $< -o $@
+
+## use MMX extension. you need nasm and MMX supported CPU.
+#CC_SWITCHES = $(CC_SWITCHES) -DMMX_choose_table
+#OBJ = $(OBJ) i386\choose_table.obj
+
+.c.obj:
+	$(CC) -o$@ $(CPP_OPTS) $(CC_SWITCHES) -c $<
+
+all: $(PGM)
+
+$(PGM):	main.obj $(gtk_obj) libmp3lame.lib
+	$(CC) -e$@ -WC $(CC_OPTS) main.obj $(gtk_obj) libmp3lame.lib $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
+
+mp3x:	mp3x.o $(gtk_obj) libmp3lame.lib
+	$(CC) -emp3x mp3x.obj $(gtk_obj) $(OBJ) $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
+
+mp3rtp:	rtp.obj mp3rtp.obj libmp3lame.lib
+	$(CC) -emp3rtp mp3rtp.obj rtp.o $(OBJ) $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
+
+libmp3lame.lib: $(OBJ)
+	-del $@
+	tlib /a $@ $(OBJ:/=\)
+
+Dll/lame_enc.dll: Dll/BladeMP3EncDLL.obj libmp3lame.lib
+	$(CC) -e$@ $(CC_OPTS) -WD Dll/BladeMP3EncDLL.obj libmp3lame.lib $(LIBS) $(LIBSNDFILE) $(VORBIS_LIB)
+
+clean:
+	-del *.obj
+	-del *.lib
+	-del i386\*.obj
+	-del Dll\*.obj
+	-del mpglib\*.obj
+	-del $(PGM)
+
+#
+#  testcase.mp3 is a 2926 byte file.  The first number output by
+#  wc is the number of bytes which differ between new output
+#  and 'official' results.  
+#
+#  Because of compilier options and effects of roundoff, the 
+#  number of bytes which are different may not be zero, but
+#  should be at most 30.
+#
+test: $(PGM)
+	lame  --nores -h testcase.wav testcase.new.mp3
+	cmp testcase.new.mp3 testcase.mp3
+
+testg: $(PGM)
+	lame -g -h ..\test\castanets.wav
