@@ -328,28 +328,25 @@ bin_search_StepSize(
 	  int start,
     const FLOAT          xrpow [576] ) 
 {
-    int nBits;
-    int flag_GoneOver = 0;
+    int nBits, flag_GoneOver = 0;
     binsearchDirection_t Direction = BINSEARCH_NONE;
     gi->global_gain = start;
-    desired_rate -= gi->part2_length;
 
     assert(CurrentStep);
     do {
-	int step;
         nBits = count_bits(gfc, xrpow, gi);  
 
         if (CurrentStep == 1 || nBits == desired_rate)
 	    break; /* nothing to adjust anymore */
 
         if (nBits > desired_rate) {  
-            /* increase Quantize_StepSize */
+	    /* increase Quantize_StepSize */
             if (Direction == BINSEARCH_DOWN)
                 flag_GoneOver = 1;
 
 	    if (flag_GoneOver) CurrentStep /= 2;
             Direction = BINSEARCH_UP;
-	    step = CurrentStep;
+	    gi->global_gain += CurrentStep;
         } else {
             /* decrease Quantize_StepSize */
             if (Direction == BINSEARCH_UP)
@@ -357,9 +354,8 @@ bin_search_StepSize(
 
 	    if (flag_GoneOver) CurrentStep /= 2;
             Direction = BINSEARCH_DOWN;
-	    step = -CurrentStep;
+	    gi->global_gain -= CurrentStep;
         }
-	gi->global_gain += step;
     } while (gi->global_gain < 256u);
 
     if (gi->global_gain < 0) {
@@ -828,7 +824,7 @@ outer_loop (
     if (!init_outer_loop(gfc, gi, xrpow) || gi->psymax == 0)
 	return; /* digital silence */
 
-    bin_search_StepSize (gfc, gi, targ_bits,
+    bin_search_StepSize (gfc, gi, targ_bits - gi->part2_length,
 			 gfc->CurrentStep[ch], gfc->OldValue[ch], xrpow);
 
     gfc->CurrentStep[ch]
@@ -1133,31 +1129,48 @@ bitpressure_strategy(gr_info *gi, FLOAT *pxmin)
  */
 inline static int
 find_scalefac(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, int bw,
-	      int shortflag)
+	      int shortflag, int sf)
 {
-    int sf, sf_ok, delsf;
+    int sf_ok, delsf = 8, sfmin = -7*2, endflag = 0;
 
-    /* search range of sf: (long) -209 -> 45, (short) -321 -> 45 */
-    sf = 128; delsf = 64;
-    if (shortflag) {
-	sf = 72; delsf = 80;
-    }
+    /* search range of sf.
+       on shoft blocks, we can use subblock_gain and the range is large. */
+    if (shortflag)
+	sfmin = -7*4-7*2;
+
     sf_ok = 10000;
-    for (; delsf != 0; delsf >>= 1) {
+    for (;;) {
 	FLOAT xfsf = calc_sfb_noise_fast(xr, xr34, bw, sf);
+	int step;
 
 	if (xfsf > l3_xmin) {
 	    /* distortion.  try a smaller scalefactor */
+	    endflag |= 1;
+	    if (endflag == 3)
+		delsf >>= 1;
 	    sf -= delsf;
+	    if (sf < sfmin) {
+		sf = sfmin;
+		endflag = 3;
+	    }
 	}
 	else {
-	    if (xfsf >= 0)
+	    if (xfsf >= 0.0)
 		sf_ok = sf;
+	    endflag |= 2;
+	    if (endflag == 3)
+		delsf >>= 1;
 	    sf += delsf;
+	    if (sf > 255) {
+		sf = 255;
+		endflag = 3;
+	    }
 	}
+	if (delsf == 0)
+	    break;
     }
 
-    if (sf_ok <= 255)
+    if (sfmin <= sf_ok && sf_ok < 256)
 	return sf_ok;
     return sf;
 }
@@ -1401,7 +1414,7 @@ VBR_noise_shaping(
     do {
 	int width = gi->width[sfb], gain;
 	gain = find_scalefac(&gi->xr[j], &xr34[j], l3_xmin[sfb], width,
-			     gi->block_type == SHORT_TYPE);
+			     gi->block_type == SHORT_TYPE, gi->global_gain);
 	j += width;
 	gi->scalefac[sfb] = gain;
 	if (vbrmax < gain)
@@ -1479,6 +1492,7 @@ VBR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
 		if (init_outer_loop(gfc, gi, xrpow) == 0)
 		    continue; /* digital silence */
 
+		gi->global_gain = gfc->OldValue[ch];
 		for (;;) {
 		    int ret
 			= VBR_noise_shaping(gfc, gi, xrpow, l3_xmin[gr][ch]);
@@ -1488,6 +1502,7 @@ VBR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
 			bitpressure_strategy(gi, l3_xmin[gr][ch]);
 		}
 
+		gfc->OldValue[ch] = gi->global_gain;
 		used_bits += gi->part2_3_length + gi->part2_length;
 		if (used_bits > max_frame_bits) {
 		    for (gr = 0; gr < gfc->mode_gr; gr++) 
