@@ -244,16 +244,16 @@ inline static void encodeSideInfo2 ( lame_global_flags* const gfp, int bitsPerFr
     
 	assert(l3_side->main_data_begin >= 0);
 	writeheader ( gfc, l3_side->main_data_begin         , 9 );
-	writeheader ( gfc, l3_side->private_bits            , gfc->stereo == 2  ?  3  :  5 );
+	writeheader ( gfc, l3_side->private_bits            , gfc->channels_out == 2  ?  3  :  5 );
 
-	for (ch = 0; ch < gfc->stereo; ch++) {
+	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    for (band = 0; band < 4; band++) {
 		writeheader ( gfc, l3_side->scfsi[ch][band] , 1 );
 	    }
 	}
 
 	for (gr = 0; gr < 2; gr++) {
-	    for (ch = 0; ch < gfc->stereo; ch++) {
+	    for (ch = 0; ch < gfc->channels_out; ch++) {
 		gr_info *gi = &l3_side->gr[gr].ch[ch].tt;
 		writeheader ( gfc, gi->part2_3_length       ,12 );
 		writeheader ( gfc, gi->big_values / 2       , 9 );
@@ -302,10 +302,10 @@ inline static void encodeSideInfo2 ( lame_global_flags* const gfp, int bitsPerFr
 	
 	assert(l3_side->main_data_begin >= 0);
 	writeheader ( gfc, l3_side->main_data_begin         , 8 );
-	writeheader ( gfc, l3_side->private_bits            , gfc->stereo );
+	writeheader ( gfc, l3_side->private_bits            , gfc->channels_out );
 
 	gr = 0;
-	for (ch = 0; ch < gfc->stereo; ch++) {
+	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    gr_info *gi = &l3_side->gr[gr].ch[ch].tt;
 	    writeheader ( gfc, gi->part2_3_length           ,12 );
 	    writeheader ( gfc, gi->big_values / 2           , 9 );
@@ -609,12 +609,12 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 	assert(l3_side->main_data_begin >= 0);
 	CRC_writeheader(gfc,(l3_side->main_data_begin), 9,&crc);
 
-	if (gfc->stereo == 2)
+	if (gfc->channels_out == 2)
 	    CRC_writeheader(gfc,l3_side->private_bits, 3,&crc);
 	else
 	    CRC_writeheader(gfc,l3_side->private_bits, 5,&crc);
 
-	for (ch = 0; ch < gfc->stereo; ch++) {
+	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    int band;
 	    for (band = 0; band < 4; band++) {
 		CRC_writeheader(gfc,l3_side->scfsi[ch][band], 1,&crc);
@@ -622,7 +622,7 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 	}
 
 	for (gr = 0; gr < 2; gr++) {
-	    for (ch = 0; ch < gfc->stereo; ch++) {
+	    for (ch = 0; ch < gfc->channels_out; ch++) {
 		gr_info *gi = &l3_side->gr[gr].ch[ch].tt;
 		CRC_writeheader(gfc,gi->part2_3_length,       12,&crc);
 		CRC_writeheader(gfc,gi->big_values / 2,        9,&crc);
@@ -670,10 +670,10 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 	/* MPEG2 */
 	assert(l3_side->main_data_begin >= 0);
 	CRC_writeheader(gfc,(l3_side->main_data_begin), 8,&crc);
-	CRC_writeheader(gfc,l3_side->private_bits, gfc->stereo,&crc);
+	CRC_writeheader(gfc,l3_side->private_bits, gfc->channels_out,&crc);
 
 	gr = 0;
-	for (ch = 0; ch < gfc->stereo; ch++) {
+	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    gr_info *gi = &l3_side->gr[gr].ch[ch].tt;
 	    CRC_writeheader(gfc,gi->part2_3_length,       12,&crc);
 	    CRC_writeheader(gfc,gi->big_values / 2,        9,&crc);
@@ -970,7 +970,7 @@ writeMainData ( lame_global_flags * const gfp,
     if (gfp->version == 1) {
 	/* MPEG 1 */
 	for (gr = 0; gr < 2; gr++) {
-	    for (ch = 0; ch < gfc->stereo; ch++) {
+	    for (ch = 0; ch < gfc->channels_out; ch++) {
 		gr_info *gi = &l3_side->gr[gr].ch[ch].tt;
 		int slen1 = slen1_tab[gi->scalefac_compress];
 		int slen2 = slen2_tab[gi->scalefac_compress];
@@ -1026,7 +1026,7 @@ writeMainData ( lame_global_flags * const gfp,
     } else {
 	/* MPEG 2 */
 	gr = 0;
-	for (ch = 0; ch < gfc->stereo; ch++) {
+	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    gr_info *gi = &l3_side->gr[gr].ch[ch].tt;
 	    int i, sfb_partition;
 	    assert(gi->sfb_partition_table);

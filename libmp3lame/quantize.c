@@ -1031,7 +1031,7 @@ iteration_finish (
     int gr, ch, i;
     
     for (gr = 0; gr < gfc->mode_gr; gr++) {
-        for (ch = 0; ch < gfc->stereo; ch++) {
+        for (ch = 0; ch < gfc->channels_out; ch++) {
             gr_info *cod_info = &l3_side->gr[gr].ch[ch].tt;
 
             /*  try some better scalefac storage
@@ -1105,7 +1105,7 @@ VBR_prepare (
         if (gfc->mode_ext == MPG_MD_MS_LR) 
             ms_convert (xr[gr], xr[gr]); 
     
-        for (ch = 0; ch < gfc->stereo; ch++) {
+        for (ch = 0; ch < gfc->channels_out; ch++) {
             gr_info *cod_info = &gfc->l3_side.gr[gr].ch[ch].tt;
       
             if (cod_info->block_type == SHORT_TYPE) 
@@ -1255,13 +1255,13 @@ get_framebits (
      */
     gfc->bitrate_index = gfc->VBR_min_bitrate;
     getframebits (gfp, &bitsPerFrame, &mean_bits);
-    *min_mean_bits = mean_bits / gfc->stereo;
+    *min_mean_bits = mean_bits / gfc->channels_out;
 
     /*  bits for analog silence 
      */
     gfc->bitrate_index = 1;
     getframebits (gfp, &bitsPerFrame, &mean_bits);
-    *analog_mean_bits = mean_bits / gfc->stereo;
+    *analog_mean_bits = mean_bits / gfc->channels_out;
 
     for (i = 1; i <= gfc->VBR_max_bitrate; i++) {
         gfc->bitrate_index = i;
@@ -1355,8 +1355,8 @@ calc_max_bits (
     int max_bits;
     
     max_bits  = frameBits[gfc->VBR_max_bitrate];
-    max_bits /= gfc -> stereo * gfc -> mode_gr;
-    max_bits  = Min (1200 + max_bits, 4095 - 195*(gfc -> stereo-1));
+    max_bits /= gfc -> channels_out * gfc -> mode_gr;
+    max_bits  = Min (1200 + max_bits, 4095 - 195*(gfc -> channels_out-1));
     max_bits  = Max (max_bits, min_bits);
     
     return max_bits;
@@ -1416,7 +1416,7 @@ VBR_iteration_loop (
         num_chan    = 1;
     } else {
         reduce_s_ch = 0;
-        num_chan    = gfc->stereo;
+        num_chan    = gfc->channels_out;
     }
   
     analog_silence
@@ -1512,7 +1512,7 @@ VBR_iteration_loop (
      *  and side channel when in quality=5 reduce_side is used
      */  
     for (gr = 0; gr < gfc->mode_gr; gr++) {
-        for (ch = 0; ch < gfc->stereo; ch++) {
+        for (ch = 0; ch < gfc->channels_out; ch++) {
             int ret;
             cod_info = &l3_side->gr[gr].ch[ch].tt;
       
@@ -1588,7 +1588,7 @@ calc_target_bits (
 
     gfc->bitrate_index = 1;
     getframebits (gfp, &bitsPerFrame, &mean_bits);
-    *analog_silence_bits = mean_bits / gfc->stereo;
+    *analog_silence_bits = mean_bits / gfc->channels_out;
 
     mean_bits  = gfp->VBR_mean_bitrate_kbps * gfp->framesize * 1000;
     mean_bits /= gfp->out_samplerate;
@@ -1602,14 +1602,14 @@ calc_target_bits (
         res_factor = 1.00;
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
-        for (ch = 0; ch < gfc->stereo; ch++) {
-            targ_bits[gr][ch] = res_factor * (mean_bits / gfc->stereo);
+        for (ch = 0; ch < gfc->channels_out; ch++) {
+            targ_bits[gr][ch] = res_factor * (mean_bits / gfc->channels_out);
             
             if (pe[gr][ch] > 700) {
                 int add_bits = (pe[gr][ch] - 700) / 1.4;
   
                 gr_info *cod_info = &l3_side->gr[gr].ch[ch].tt;
-                targ_bits[gr][ch] = res_factor * (mean_bits / gfc->stereo);
+                targ_bits[gr][ch] = res_factor * (mean_bits / gfc->channels_out);
  
                 /* short blocks use a little extra, no matter what the pe */
                 if (cod_info->block_type == SHORT_TYPE) {
@@ -1637,7 +1637,7 @@ calc_target_bits (
      */
     totbits=0;
     for (gr = 0; gr < gfc->mode_gr; gr++) {
-        for (ch = 0; ch < gfc->stereo; ch++) {
+        for (ch = 0; ch < gfc->channels_out; ch++) {
             if (targ_bits[gr][ch] > 4095) 
                 targ_bits[gr][ch] = 4095;
             totbits += targ_bits[gr][ch];
@@ -1648,7 +1648,7 @@ calc_target_bits (
      */
     if (totbits > *max_frame_bits) {
         for(gr = 0; gr < gfc->mode_gr; gr++) {
-            for(ch = 0; ch < gfc->stereo; ch++) {
+            for(ch = 0; ch < gfc->channels_out; ch++) {
                 targ_bits[gr][ch] *= *max_frame_bits; 
                 targ_bits[gr][ch] /= totbits; 
             }
@@ -1702,7 +1702,7 @@ ABR_iteration_loop(
         if (gfc->mode_ext == MPG_MD_MS_LR) 
             ms_convert (xr[gr], xr[gr]);
 
-        for (ch = 0; ch < gfc->stereo; ch++) {
+        for (ch = 0; ch < gfc->channels_out; ch++) {
             cod_info = &l3_side->gr[gr].ch[ch].tt;
 
             /*  cod_info, scalefac and xrpow get initialized in init_outer_loop
@@ -1798,7 +1798,7 @@ iteration_loop(
             reduce_side (targ_bits, ms_ener_ratio[gr], mean_bits, max_bits);
         }
         
-        for (ch=0 ; ch < gfc->stereo ; ch ++) {
+        for (ch=0 ; ch < gfc->channels_out ; ch ++) {
             cod_info = &l3_side->gr[gr].ch[ch].tt; 
 
             /*  init_outer_loop sets up cod_info, scalefac and xrpow 
@@ -1851,7 +1851,7 @@ iteration_loop(
        the second granule to use bits saved by the first granule.
        Requires using the --nores.  This is useful for testing only */
     for (gr = 0; gr < gfc->mode_gr; gr++) {
-        for (ch =  0; ch < gfc->stereo; ch++) {
+        for (ch =  0; ch < gfc->channels_out; ch++) {
             cod_info = &l3_side->gr[gr].ch[ch].tt;
             ResvAdjust (gfc, cod_info, l3_side, mean_bits);
         }

@@ -214,7 +214,7 @@ int samplerate)   /* convert bitrate in kbps to index */
     int  bitrate = 0;
     int  i;
   
-    for ( i = 0; i < 15; i++ )
+    for ( i = 1; i <= 14; i++ )
         if ( ABS (bitrate_table[version][i] - bRate) < ABS (bitrate - bRate) )
             bitrate = bitrate_table [version] [i];
 	    
@@ -247,7 +247,7 @@ int samplerate)   /* convert bitrate in kbps to index */
 {
     int  i;
 
-    for ( i = 0; i < 15; i++)
+    for ( i = 1; i <= 14; i++)
         if ( bitrate_table [version] [i] == bRate )
             return i;
 	    
@@ -552,8 +552,8 @@ void updateStats( lame_internal_flags * const gfc )
     /* count bitrate indices */
     gfc->bitrate_stereoMode_Hist [gfc->bitrate_index] [4] ++;
     
-    /* count 'em for every mode extension in case of stereo encoding */
-    if (gfc->stereo == 2)
+    /* count 'em for every mode extension in case of 2 channel encoding */
+    if (gfc->channels_out == 2)
         gfc->bitrate_stereoMode_Hist [gfc->bitrate_index] [gfc->mode_ext]++;
 }
 

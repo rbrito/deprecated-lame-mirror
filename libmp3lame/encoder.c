@@ -119,7 +119,7 @@ char *mp3buf, int mp3buf_size)
     int i;
     for (i=0 ; i<gfp->framesize; ++i) {
       inbuf_l[i] *= gfp->scale;
-      if (gfc->stereo==2) inbuf_r[i] *= gfp->scale;
+      if (gfc->channels_out==2) inbuf_r[i] *= gfp->scale;
     }
   }
   
@@ -160,18 +160,18 @@ char *mp3buf, int mp3buf_size)
       for (i=0, j=0; i<286+576*(1+gfc->mode_gr); ++i) {
 	if (i<576*gfc->mode_gr) {
 	  primebuff0[i]=0;
-	  if (gfc->stereo==2) 
+	  if (gfc->channels_out==2) 
 	    primebuff1[i]=0;
 	}else{
 	  primebuff0[i]=inbuf[0][j];
-	  if (gfc->stereo==2) 
+	  if (gfc->channels_out==2) 
 	    primebuff1[i]=inbuf[1][j];
 	  ++j;
 	}
       }
       /* polyphase filtering / mdct */
       for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
-	for ( ch = 0; ch < gfc->stereo; ch++ ) {
+	for ( ch = 0; ch < gfc->channels_out; ch++ ) {
 	  gfc->l3_side.gr[gr].ch[ch].tt.block_type=SHORT_TYPE;
 	}
       }
@@ -236,7 +236,7 @@ char *mp3buf, int mp3buf_size)
     ms_ratio_prev=gfc->ms_ratio[gfc->mode_gr-1];
     for (gr=0; gr < gfc->mode_gr ; gr++) {
 
-      for ( ch = 0; ch < gfc->stereo; ch++ )
+      for ( ch = 0; ch < gfc->channels_out; ch++ )
 	bufp[ch] = &inbuf[ch][576 + gr*576-FFTOFFSET];
 
       ret=L3psycho_anal( gfp, bufp, gr, 
@@ -245,7 +245,7 @@ char *mp3buf, int mp3buf_size)
 		     pe[gr],pe_MS[gr],blocktype);
       if (ret!=0) return -4;
 
-      for ( ch = 0; ch < gfc->stereo; ch++ )
+      for ( ch = 0; ch < gfc->channels_out; ch++ )
 	gfc->l3_side.gr[gr].ch[ch].tt.block_type=blocktype[ch];
 
     }
@@ -253,7 +253,7 @@ char *mp3buf, int mp3buf_size)
     gfc->ms_ratio[1]=gfc->ms_ratio[gfc->mode_gr-1];
   }else{
     for (gr=0; gr < gfc->mode_gr ; gr++)
-      for ( ch = 0; ch < gfc->stereo; ch++ ) {
+      for ( ch = 0; ch < gfc->channels_out; ch++ ) {
 	gfc->l3_side.gr[gr].ch[ch].tt.block_type=NORM_TYPE;
 	pe_MS[gr][ch]=pe[gr][ch]=700;
       }
@@ -262,7 +262,7 @@ char *mp3buf, int mp3buf_size)
 
   /* block type flags */
   for( gr = 0; gr < gfc->mode_gr; gr++ ) {
-    for ( ch = 0; ch < gfc->stereo; ch++ ) {
+    for ( ch = 0; ch < gfc->channels_out; ch++ ) {
       gr_info *cod_info = &gfc->l3_side.gr[gr].ch[ch].tt;
       cod_info->mixed_block_flag = 0;     /* never used by this model */
       if (cod_info->block_type == NORM_TYPE )
@@ -277,7 +277,7 @@ char *mp3buf, int mp3buf_size)
   mdct_sub48(gfc, inbuf[0], inbuf[1], xr);
   /* re-order the short blocks, for more efficient encoding below */
   for (gr = 0; gr < gfc->mode_gr; gr++) {
-    for (ch = 0; ch < gfc->stereo; ch++) {
+    for (ch = 0; ch < gfc->channels_out; ch++) {
       gr_info *cod_info = &gfc->l3_side.gr[gr].ch[ch].tt;
       if (cod_info->block_type==SHORT_TYPE) {
 	freorder(gfc->scalefac_band.s,xr[gr][ch]);
@@ -344,7 +344,7 @@ char *mp3buf, int mp3buf_size)
 
   if (gfp->analysis && gfc->pinfo != NULL) {
     for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
-      for ( ch = 0; ch < gfc->stereo; ch++ ) {
+      for ( ch = 0; ch < gfc->channels_out; ch++ ) {
 	gfc->pinfo->ms_ratio[gr]=gfc->ms_ratio[gr];
 	gfc->pinfo->ms_ener_ratio[gr]=gfc->ms_ener_ratio[gr];
 	gfc->pinfo->blocktype[gr][ch]=
@@ -404,7 +404,7 @@ char *mp3buf, int mp3buf_size)
 
   if (gfp->analysis && gfc->pinfo != NULL) {
     int j;
-    for ( ch = 0; ch < gfc->stereo; ch++ ) {
+    for ( ch = 0; ch < gfc->channels_out; ch++ ) {
       for ( j = 0; j < FFTOFFSET; j++ )
 	gfc->pinfo->pcmdata[ch][j] = gfc->pinfo->pcmdata[ch][j+gfp->framesize];
       for ( j = FFTOFFSET; j < 1600; j++ ) {
