@@ -1059,8 +1059,6 @@ lame_init_params(lame_global_flags * const gfp)
             gfc->PSY->tonalityPatch = 0;
         }
         
-        gfc->VBR->bitpressure = 1;
-        
         if (gfp->experimentalY)
             gfc->sfb21_extra = 0;
         else
@@ -1087,7 +1085,6 @@ lame_init_params(lame_global_flags * const gfp)
                 gfc->VBR->mask_adjust = dbQ[gfp->VBR_q]; 
             }
         }
-        gfc->VBR->bitpressure = 1;
         
         /*  use Gabriel's adaptative ATH shape for VBR by default
          */
@@ -1182,11 +1179,6 @@ lame_init_params(lame_global_flags * const gfp)
     if ( gfp->athaa_loudapprox < 0 ) gfp->athaa_loudapprox = 2;
     
     if (gfp->useTemporal < 0 ) gfp->useTemporal = 1;  // on by default
-
-
-    if ( gfp->experimentalY )
-        MSGF(gfc,"\n *** WARNING *** the meaning of the experimental -Y has changed!\n"
-                   "                 now it tells LAME to ignore sfb21 noise shaping (VBR)\n\n");
 
     if ( gfp->preset_expopts && gfc->presetTune.use < 1 )
         MSGF(gfc,"\n*** WARNING ***\n\n"

@@ -209,11 +209,10 @@ typedef struct
  */
 typedef struct
 {
-    int     quality;
-    FLOAT8  mask_adjust;    // the dbQ stuff
-    int     smooth;         // 0=no, 1=peaks, 2=+-4
-    int     bitpressure;    // strategy for bitpressure situations
     FLOAT8  scratch[192];
+    FLOAT8  mask_adjust;    // the dbQ stuff
+    int     quality;
+    int     smooth;         // 0=no, 1=peaks, 2=+-4
 } VBR_t;
 
 /**

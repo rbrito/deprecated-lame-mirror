@@ -1387,8 +1387,8 @@ bin_search_StepSize(lame_internal_flags * const gfc, gr_info * const cod_info,
  ***********************************************************************/
 #define XXL 1
 int
-VBR_noise_shaping(lame_internal_flags * gfc, FLOAT8 * xr34orig, int minbits, int maxbits,
-                  III_psy_xmin * l3_xmin, int gr, int ch)
+VBR_noise_shaping(lame_internal_flags * gfc, const FLOAT8 * xr34orig, int minbits, int maxbits,
+                  const III_psy_xmin * l3_xmin, int gr, int ch)
 {
     III_scalefac_t vbrsf;
     III_scalefac_t vbrsf2;
