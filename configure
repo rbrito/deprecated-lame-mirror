@@ -54,7 +54,7 @@ ac_help="$ac_help
   --disable-decoder-layer2   Exclude layer2 decoding"
 ac_help="$ac_help
   --with-vorbis              Use vorbis library for ogg files
-                             [default: yes, if installed]"
+                             [default: no]"
 ac_help="$ac_help
   --with-vorbis-prefix=DIR   Alternate location for vorbis"
 ac_help="$ac_help
@@ -4511,46 +4511,6 @@ else
   echo "$ac_t""no" 1>&6
 fi
 
-echo $ac_n "checking for ogg_sync_init in -lvorbis""... $ac_c" 1>&6
-echo "configure:4516: checking for ogg_sync_init in -lvorbis" >&5
-ac_lib_var=`echo vorbis'_'ogg_sync_init | sed 'y%./+-%__p_%'`
-if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  ac_save_LIBS="$LIBS"
-LIBS="-lvorbis  $LIBS"
-cat > conftest.$ac_ext <<EOF
-#line 4524 "configure"
-#include "confdefs.h"
-/* Override any gcc2 internal prototype to avoid an error.  */
-/* We use char because int might match the return type of a gcc2
-    builtin and then its argument prototype would still apply.  */
-char ogg_sync_init();
-
-int main() {
-ogg_sync_init()
-; return 0; }
-EOF
-if { (eval echo configure:4535: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
-  rm -rf conftest*
-  eval "ac_cv_lib_$ac_lib_var=yes"
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  eval "ac_cv_lib_$ac_lib_var=no"
-fi
-rm -f conftest*
-LIBS="$ac_save_LIBS"
-
-fi
-if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
-  echo "$ac_t""yes" 1>&6
-  HAVE_VORBIS="yes"
-else
-  echo "$ac_t""no" 1>&6
-fi
-
 
 
 
@@ -4604,7 +4564,7 @@ fi
   # Extract the first word of "gtk-config", so it can be a program name with args.
 set dummy gtk-config; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:4608: checking for $ac_word" >&5
+echo "configure:4568: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_GTK_CONFIG'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -4639,7 +4599,7 @@ fi
 
   min_gtk_version=1.2.0
   echo $ac_n "checking for GTK - version >= $min_gtk_version""... $ac_c" 1>&6
-echo "configure:4643: checking for GTK - version >= $min_gtk_version" >&5
+echo "configure:4603: checking for GTK - version >= $min_gtk_version" >&5
   no_gtk=""
   if test "$GTK_CONFIG" = "no" ; then
     no_gtk=yes
@@ -4662,7 +4622,7 @@ echo "configure:4643: checking for GTK - version >= $min_gtk_version" >&5
   echo $ac_n "cross compiling; assumed OK... $ac_c"
 else
   cat > conftest.$ac_ext <<EOF
-#line 4666 "configure"
+#line 4626 "configure"
 #include "confdefs.h"
 
 #include <gtk/gtk.h>
@@ -4740,7 +4700,7 @@ main ()
 }
 
 EOF
-if { (eval echo configure:4744: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:4704: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   :
 else
@@ -4774,7 +4734,7 @@ fi
           CFLAGS="$CFLAGS $GTK_CFLAGS"
           LIBS="$LIBS $GTK_LIBS"
           cat > conftest.$ac_ext <<EOF
-#line 4778 "configure"
+#line 4738 "configure"
 #include "confdefs.h"
 
 #include <gtk/gtk.h>
@@ -4784,7 +4744,7 @@ int main() {
  return ((gtk_major_version) || (gtk_minor_version) || (gtk_micro_version)); 
 ; return 0; }
 EOF
-if { (eval echo configure:4788: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4748: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
    echo "*** The test program compiled, but did not run. This usually means"
           echo "*** that the run-time linker is not finding GTK or finding the wrong"
@@ -4831,7 +4791,7 @@ fi
 
 
 echo $ac_n "checking use of ElectricFence malloc debugging""... $ac_c" 1>&6
-echo "configure:4835: checking use of ElectricFence malloc debugging" >&5
+echo "configure:4795: checking use of ElectricFence malloc debugging" >&5
 # Check whether --enable-efence or --disable-efence was given.
 if test "${enable_efence+set}" = set; then
   enableval="$enable_efence"
@@ -4844,7 +4804,7 @@ fi
 case "${CONFIG_EFENCE}" in
 yes)
 	echo $ac_n "checking for EF_Print in -lefence""... $ac_c" 1>&6
-echo "configure:4848: checking for EF_Print in -lefence" >&5
+echo "configure:4808: checking for EF_Print in -lefence" >&5
 ac_lib_var=`echo efence'_'EF_Print | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -4852,7 +4812,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lefence  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 4856 "configure"
+#line 4816 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -4863,7 +4823,7 @@ int main() {
 EF_Print()
 ; return 0; }
 EOF
-if { (eval echo configure:4867: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4827: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -4904,7 +4864,7 @@ esac
 
 
 echo $ac_n "checking use of file io""... $ac_c" 1>&6
-echo "configure:4908: checking use of file io" >&5
+echo "configure:4868: checking use of file io" >&5
 WARNING=
 # Check whether --with-fileio or --without-fileio was given.
 if test "${with_fileio+set}" = set; then
@@ -4982,7 +4942,7 @@ fi
 
 
 echo $ac_n "checking use of analyzer hooks""... $ac_c" 1>&6
-echo "configure:4986: checking use of analyzer hooks" >&5
+echo "configure:4946: checking use of analyzer hooks" >&5
 # Check whether --enable-analyzer-hooks or --disable-analyzer-hooks was given.
 if test "${enable_analyzer_hooks+set}" = set; then
   enableval="$enable_analyzer_hooks"
@@ -5009,7 +4969,7 @@ echo "$ac_t""$CONFIG_ANALYZER" 1>&6
 
 
 echo $ac_n "checking use of mpg123 decoder""... $ac_c" 1>&6
-echo "configure:5013: checking use of mpg123 decoder" >&5
+echo "configure:4973: checking use of mpg123 decoder" >&5
 # Check whether --enable-decoder or --disable-decoder was given.
 if test "${enable_decoder+set}" = set; then
   enableval="$enable_decoder"
@@ -5071,15 +5031,13 @@ fi
 echo "$ac_t""$CONFIG_DECODER" 1>&6
 
 
-echo $ac_n "checking use of vorbis""... $ac_c" 1>&6
-echo "configure:5076: checking use of vorbis" >&5
 WARNING=
 # Check whether --with-vorbis or --without-vorbis was given.
 if test "${with_vorbis+set}" = set; then
   withval="$with_vorbis"
   CONFIG_VORBIS="${withval}"
 else
-  CONFIG_VORBIS="yes"
+  CONFIG_VORBIS="no"
 fi
 
 # Check whether --with-vorbis-prefix or --without-vorbis-prefix was given.
@@ -5129,6 +5087,48 @@ if test "${CONFIG_VORBIS}" != "no" ; then
       WARNING="vorbis lib not found in specified prefix."
     fi
   fi
+
+  echo $ac_n "checking for ogg_sync_init in -lvorbis""... $ac_c" 1>&6
+echo "configure:5093: checking for ogg_sync_init in -lvorbis" >&5
+ac_lib_var=`echo vorbis'_'ogg_sync_init | sed 'y%./+-%__p_%'`
+if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  ac_save_LIBS="$LIBS"
+LIBS="-lvorbis  $LIBS"
+cat > conftest.$ac_ext <<EOF
+#line 5101 "configure"
+#include "confdefs.h"
+/* Override any gcc2 internal prototype to avoid an error.  */
+/* We use char because int might match the return type of a gcc2
+    builtin and then its argument prototype would still apply.  */
+char ogg_sync_init();
+
+int main() {
+ogg_sync_init()
+; return 0; }
+EOF
+if { (eval echo configure:5112: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+  rm -rf conftest*
+  eval "ac_cv_lib_$ac_lib_var=yes"
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  eval "ac_cv_lib_$ac_lib_var=no"
+fi
+rm -f conftest*
+LIBS="$ac_save_LIBS"
+
+fi
+if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
+  echo "$ac_t""yes" 1>&6
+  HAVE_VORBIS="yes"
+else
+  echo "$ac_t""no" 1>&6
+fi
+
+
   if test "${HAVE_VORBIS}" = "yes" ; then
     FRONTEND_LDFLAGS="-lvorbis ${FRONTEND_LDFLAGS}"
     cat >> confdefs.h <<\EOF
@@ -5139,6 +5139,8 @@ EOF
     CONFIG_VORBIS="no"
   fi
 fi
+echo $ac_n "checking use of vorbis""... $ac_c" 1>&6
+echo "configure:5144: checking use of vorbis" >&5
 echo "$ac_t""${CONFIG_VORBIS}" 1>&6
 if test "x${WARNING}" != "x" ; then
   echo "configure: warning: $WARNING" 1>&2
@@ -5147,7 +5149,7 @@ fi
 
 
 echo $ac_n "checking if mp3x is requested""... $ac_c" 1>&6
-echo "configure:5151: checking if mp3x is requested" >&5
+echo "configure:5153: checking if mp3x is requested" >&5
 # Check whether --enable-mp3x or --disable-mp3x was given.
 if test "${enable_mp3x+set}" = set; then
   enableval="$enable_mp3x"
@@ -5174,7 +5176,7 @@ if test "${HAVE_GTK}" = "no"; then
 fi
 
 echo $ac_n "checking if mp3rtp is requested""... $ac_c" 1>&6
-echo "configure:5178: checking if mp3rtp is requested" >&5
+echo "configure:5180: checking if mp3rtp is requested" >&5
 # Check whether --enable-mp3rtp or --disable-mp3rtp was given.
 if test "${enable_mp3rtp+set}" = set; then
   enableval="$enable_mp3rtp"
@@ -5201,7 +5203,7 @@ case $target in
 	# the buggy version
 
 	cat > conftest.$ac_ext <<EOF
-#line 5205 "configure"
+#line 5207 "configure"
 #include "confdefs.h"
 
 		#define __LIBC_INTERNAL_MATH_INLINES 1
@@ -5221,10 +5223,10 @@ rm -f conftest*
 
 
 	echo $ac_n "checking glibc mathinline bug""... $ac_c" 1>&6
-echo "configure:5225: checking glibc mathinline bug" >&5
+echo "configure:5227: checking glibc mathinline bug" >&5
 	if test ${bad} = "maybe" ;then
 	      cat > conftest.$ac_ext <<EOF
-#line 5228 "configure"
+#line 5230 "configure"
 #include "confdefs.h"
 
 				#define __LIBC_INTERNAL_MATH_INLINES 1
@@ -5271,7 +5273,7 @@ esac
 
 
 echo $ac_n "checking use of VBR bitrate histogram""... $ac_c" 1>&6
-echo "configure:5275: checking use of VBR bitrate histogram" >&5
+echo "configure:5277: checking use of VBR bitrate histogram" >&5
 if test "x${HAVE_TERMCAP}" != "x"; then
   BRH_DEFAULT="yes"
 else
@@ -5333,7 +5335,7 @@ esac
 
 
 echo $ac_n "checking for FLOAT8 as float""... $ac_c" 1>&6
-echo "configure:5337: checking for FLOAT8 as float" >&5
+echo "configure:5339: checking for FLOAT8 as float" >&5
 # Check whether --enable-all-float or --disable-all-float was given.
 if test "${enable_all_float+set}" = set; then
   enableval="$enable_all_float"
@@ -5362,7 +5364,7 @@ echo "$ac_t""${CONFIG_ALLFLOAT}" 1>&6
 # Extract the first word of "nasm", so it can be a program name with args.
 set dummy nasm; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:5366: checking for $ac_word" >&5
+echo "configure:5368: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_NASM'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -5400,7 +5402,7 @@ no)
 	;;
 *)
 	echo $ac_n "checking for assembler routines for this processor type""... $ac_c" 1>&6
-echo "configure:5404: checking for assembler routines for this processor type" >&5
+echo "configure:5406: checking for assembler routines for this processor type" >&5
 	for recurse_over in ${ASM_FOR_ARCH}
 	{
 		if test "${CPUTYPE}" = "${recurse_over}"; then
@@ -5440,7 +5442,7 @@ else
 fi
 
 echo $ac_n "checking for additional optimizations""... $ac_c" 1>&6
-echo "configure:5444: checking for additional optimizations" >&5
+echo "configure:5446: checking for additional optimizations" >&5
 # Check whether --enable-expopt or --disable-expopt was given.
 if test "${enable_expopt+set}" = set; then
   enableval="$enable_expopt"
@@ -5508,7 +5510,7 @@ fi
 
 
 echo $ac_n "checking for debug options""... $ac_c" 1>&6
-echo "configure:5512: checking for debug options" >&5
+echo "configure:5514: checking for debug options" >&5
 # Check whether --enable-debug or --disable-debug was given.
 if test "${enable_debug+set}" = set; then
   enableval="$enable_debug"
