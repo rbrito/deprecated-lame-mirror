@@ -73,12 +73,13 @@ quantize_01(const FLOAT *xp, gr_info *gi, fi_union *fi, int sfb,
  * count how many bits we need to encode the quantized spectrums
  */
 static int
-count_bit_ESC( 
+count_bit_ESC(
+          int * const s,
     const int *       ix, 
     const int * const end, 
           int         t1,
-    const int         t2,
-          int * const s)
+    const int         t2
+    )
 {
     /* ESC-table is used */
     int linbits = ht[t1-1].xlen * 65536 + ht[t2-1].xlen;
@@ -122,9 +123,10 @@ count_bit_ESC(
 
 inline static int
 count_bit_noESC_from2(
+          int * const s,
     const int *       ix, 
-    const int * const end,
-          int * const s)
+    const int * const end
+    )
 {
     /* No ESC-words */
     unsigned int sum = 0, sum2;
@@ -150,12 +152,13 @@ count_bit_noESC_from2(
 
 inline static int
 count_bit_noESC_from4(
+          int * const s,
     const int *       ix,
     const int * const end,
           int         xlen,
           int         t1,
-    const unsigned long long * const table,
-          int * const s)
+    const unsigned long long * const table
+    )
 {
     /* No ESC-words */
     unsigned long long sum = 0;
@@ -235,22 +238,22 @@ int choose_table_nonMMX(
 	return max;
 
     case 1:
-	return count_bit_noESC_from2(ix, end, s);
+	return count_bit_noESC_from2(s, ix, end);
 
     case 2:
-	return count_bit_noESC_from4(ix, end, 16,  2, table7B89+96, s);
+	return count_bit_noESC_from4(s, ix, end, 16,  2, table7B89+96);
 
     case 3:
-	return count_bit_noESC_from4(ix, end,  4,  5, table5967, s);
+	return count_bit_noESC_from4(s, ix, end,  4,  5, table5967);
 
     case 4: case 5:
-	return count_bit_noESC_from4(ix, end, 16,  7, table7B89, s);
+	return count_bit_noESC_from4(s, ix, end, 16,  7, table7B89);
 
     case 6: case 7:
-	return count_bit_noESC_from4(ix, end, 16, 10, table7B89+8, s);
+	return count_bit_noESC_from4(s, ix, end, 16, 10, table7B89+8);
 
     case 8: case 9: case 10: case 11: case 12: case 13: case 14: case 15:
-	return count_bit_noESC_from4(ix, end, 16, 13, tableDxEF, s);
+	return count_bit_noESC_from4(s, ix, end, 16, 13, tableDxEF);
 
     default:
 	/* try tables with linbits */
@@ -266,7 +269,7 @@ int choose_table_nonMMX(
 	    if (ht[choice-1].linmax >= max)
 		break;
 
-	return count_bit_ESC(ix, end, choice, choice2, s);
+	return count_bit_ESC(s, ix, end, choice, choice2);
     }
 }
 
