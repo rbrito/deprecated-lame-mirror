@@ -90,7 +90,6 @@ static int read_samples_pcm(FILE * musicin, int sample_buffer[2304],
                             int samples_to_read);
 static int read_samples_mp3(lame_t gfp, FILE * const musicin,
                             short int mpg123pcm[2][1152]);
-static void    CloseSndFile(sound_file_format input, FILE * musicin);
 static FILE   *OpenSndFile(lame_t gfp, char *);
 
 
@@ -101,10 +100,9 @@ static int
 fskip(FILE * fp, long offset, int whence)
 {
 #ifndef PIPE_BUF
-    char    buffer[4096];
-#else
-    char    buffer[PIPE_BUF];
+# define PIPE_BUF 4096
 #endif
+    char    buffer[PIPE_BUF];
     int     read;
 
     if (fseek(fp, offset, whence) == 0)
@@ -117,7 +115,9 @@ fskip(FILE * fp, long offset, int whence)
     }
 
     while (offset > 0) {
-        read = offset > sizeof(buffer) ? sizeof(buffer) : offset;
+        read = offset;
+	if (read > PIPE_BUF)
+	    read = PIPE_BUF;
         if ((read = fread(buffer, 1, read, fp)) <= 0)
             return -1;
         offset -= read;
@@ -127,20 +127,17 @@ fskip(FILE * fp, long offset, int whence)
 }
 
 
-static int
-set_stream_binary_mode ( FILE* const fp )
-{
 #if   defined __EMX__
-    _fsetmode ( fp, "b" );
+# define set_stream_binary_mode(fp)     _fsetmode ( fp, "b" )
 #elif defined __BORLANDC__
-    setmode   (_fileno(fp),  O_BINARY );
+# define set_stream_binary_mode(fp)     setmode   (_fileno(fp),  O_BINARY )
 #elif defined __CYGWIN__
-    setmode   ( fileno(fp), _O_BINARY );
+# define set_stream_binary_mode(fp)     setmode   ( fileno(fp), _O_BINARY )
 #elif defined _WIN32
-    _setmode  (_fileno(fp), _O_BINARY );
+# define set_stream_binary_mode(fp)     _setmode  (_fileno(fp), _O_BINARY )
+#else
+# define set_stream_binary_mode(fp)
 #endif
-    return 0;
-}
 
 FILE *
 init_outfile(char *outPath)
@@ -164,13 +161,6 @@ init_infile(lame_t gfp, char *inPath)
     pcmswapbytes=swapbytes;
     musicin = OpenSndFile(gfp, inPath);
 }
-
-void
-close_infile(void)
-{
-    CloseSndFile(input_format, musicin);
-}
-
 
 static off_t
 get_file_size(const char* const filename)
@@ -399,8 +389,8 @@ WriteWaveHeader(FILE * const fp, const int pcmbytes,
  * Boston, MA 02111-1307, USA.
  */
 
-static void
-CloseSndFile(sound_file_format input, FILE * musicin)
+void
+close_infile(void)
 {
     SNDFILE *gs_pSndFileIn = (SNDFILE *) musicin;
     if (input == sf_mp1 || input == sf_mp2 || input == sf_mp3) {
@@ -1192,8 +1182,8 @@ parse_file_header(lame_t gfp, FILE * sf)
 
 
 
-static void
-CloseSndFile(sound_file_format input, FILE * musicin)
+void
+close_infile(void)
 {
     if (fclose(musicin) != 0) {
         fprintf(stderr, "Could not close audio input file\n");
@@ -1215,7 +1205,8 @@ OpenSndFile(lame_t gfp, char *inPath)
 
 
     if (!strcmp(inPath, "-")) {
-        set_stream_binary_mode(musicin = stdin); /* Read from standard input. */
+	musicin = stdin;
+        set_stream_binary_mode(stdin); /* Read from standard input. */
     }
     else {
         if ((musicin = fopen(inPath, "rb")) == NULL) {
@@ -1349,18 +1340,18 @@ decode_initfile(lame_t gfp, FILE * fd, mp3data_struct * mp3data)
     lame_decode_init(gfp);
 
     len = 4;
-    if (fread(buf, 1, len, fd) != len)
+    if (fread(buf, len, 1, fd) != 1)
         return -1;      /* failed */
     if (buf[0] == 'I' && buf[1] == 'D' && buf[2] == '3') {
 	len = 6;
-	if (fread(&buf, 1, len, fd) != len)
+	if (fread(&buf, len, 1, fd) != 1)
 	    return -1;      /* failed */
 	buf[2] &= 127; buf[3] &= 127; buf[4] &= 127; buf[5] &= 127;
 	len = (buf[2] << 21) + (buf[3] << 14) + (buf[4] << 7) + buf[5];
 	fskip(fd, len, SEEK_CUR);
 	id3v2taglen = ftell(fd);
 	len = 4;
-	if (fread(&buf, 1, len, fd) != len)
+	if (fread(&buf, len, 1, fd) != 1)
 	    return -1;      /* failed */
     }
     aid_header = check_aid(buf);
@@ -1373,7 +1364,7 @@ decode_initfile(lame_t gfp, FILE * fd, mp3data_struct * mp3data)
         fskip(fd, aid_header - 6, SEEK_CUR);
 
         /* read 4 more bytes to set up buffer for MP3 header check */
-	if (fread(&buf, 1, len, fd) != len)
+	if (fread(&buf, len, 1, fd) != 1)
 	    return -1;      /* failed */
     }
 
