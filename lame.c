@@ -79,14 +79,12 @@ void lame_init_params(void)
   gf.stereo=2;
   if (gf.mode == MPG_MD_MONO) gf.stereo=1;
 
-#ifdef BRHIST
   if (gf.silent) {
     disp_brhist=0;  /* turn of VBR historgram */
   }
   if (!gf.VBR) {
     disp_brhist=0;  /* turn of VBR historgram */
   }
-#endif
 
   /* set the output sampling rate, and resample options if necessary 
      samplerate = input sample rate
@@ -518,7 +516,7 @@ int lame_encode(short int Buffer[2][1152],char *mpg123bs)
   int mpg123count;
   III_psy_ratio masking_ratio[2][2];    /*LR ratios */
   III_psy_ratio masking_MS_ratio[2][2]; /*MS ratios */
-  III_psy_ratio *masking;  /*LR ratios and MS ratios*/
+  III_psy_ratio (*masking)[2][2];  /*LR ratios and MS ratios*/
   III_scalefac_t scalefac[2][2];
 
   typedef FLOAT8 pedata[2][2];
@@ -757,10 +755,10 @@ FFT's                    <---------1024---------->
 
   /* bit and noise allocation */
   if ((MPG_MD_MS_LR == info->mode_ext) && gf.ms_masking) {
-    masking = masking_MS_ratio;    /* use MS masking */
+    masking = &masking_MS_ratio;    /* use MS masking */
     pe_use=&pe_MS;
   } else {
-    masking = masking_ratio;    /* use LR masking */
+    masking = &masking_ratio;    /* use LR masking */
     pe_use=&pe;
   }
 
@@ -768,10 +766,10 @@ FFT's                    <---------1024---------->
 
 
   if (gf.VBR) {
-    VBR_iteration_loop( *pe_use, ms_ratio, xr, masking, &l3_side, l3_enc, 
+    VBR_iteration_loop( *pe_use, ms_ratio, xr, *masking, &l3_side, l3_enc, 
 			scalefac, &fr_ps);
   }else{
-    iteration_loop( *pe_use, ms_ratio, xr, masking, &l3_side, l3_enc, 
+    iteration_loop( *pe_use, ms_ratio, xr, *masking, &l3_side, l3_enc, 
 		    scalefac, &fr_ps);
   }
   /*

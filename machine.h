@@ -74,8 +74,7 @@ typedef double FLOAT8;
 
 
 
-
-#ifdef _WIN32
+#if defined _WIN32 && !defined __CYGWIN__
 	# define M_PI       3.14159265358979323846
 	# define M_SQRT2	1.41421356237309504880
 	typedef unsigned long	u_long;
@@ -86,6 +85,11 @@ typedef double FLOAT8;
 	#include <fcntl.h>
 	#include <io.h>
 #endif
+#ifdef __CYGWIN__
+#include <io.h>
+#endif
+
+
 
 
 #endif

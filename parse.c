@@ -254,7 +254,7 @@ void lame_parse_args(int argc, char **argv)
 	}
 	else if (strcmp(token, "help")==0) {
 	  fclose(stderr);
-	  stderr = stdout;          /* let DOS users scroll thru the usage page */
+	  //	  stderr = stdout;          /* let DOS users scroll thru the usage page */
 	  lame_usage(programName);  /* doesn't return */
 	}
 	else if (strcmp(token, "preset")==0) {

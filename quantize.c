@@ -579,7 +579,7 @@ void outer_loop(
   int i, iteration;
   int status,count=0,bits_found=0;
   III_scalefac_t scalefac_w;
-  int sfb, huff_bits;
+  int huff_bits;
   FLOAT8 xrpow[576],temp;
   int l3_enc_w[576]; 
   int better;
@@ -696,6 +696,7 @@ void outer_loop(
 
 #ifdef HAVEGTK
 	  if (gf.gtkflag) {
+	    int sfb;
 	    FLOAT ifqstep;
 	    int l,start,end,bw;
 	    FLOAT8 en0;

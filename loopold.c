@@ -364,6 +364,7 @@ void outer_loop_dual(
 
 #ifdef HAVEGTK
 	  if (gf.gtkflag) {
+	    int sfb;
 	    for ( i = 0; i < 3; i++ ) {
 	      for ( sfb = cod_info[ch]->sfb_smax; sfb < 12; sfb++ )  {
 		pinfo->xfsf_s[gr][ch][3*sfb+i] =  
