@@ -2,7 +2,7 @@
 
 include $(top_srcdir)/Makefile.am.global
 
-SUBDIRS = i386
+SUBDIRS = i386 ppc
 
 lib_LTLIBRARIES = libmp3lame.la
 
