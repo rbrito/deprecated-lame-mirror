@@ -589,18 +589,18 @@ INLINE static void mdct_short(FLOAT8 *out, FLOAT8 *in)
     for ( l = 0; l < 3; l++ ) {
 	FLOAT tc0,tc1,tc2,ts0,ts1,ts2;
 
-	ts0 = in[5] * 1.907525191737280e-11;
-	tc0 = in[3] * 1.907525191737280e-11;
+	ts0 = in[5] * 1.907525191737280e-11; /* tritab_s[0] */
+	tc0 = in[3] * 1.907525191737280e-11; /* tritab_s[2] */
 	tc1 = ts0 + tc0;
 	tc2 = ts0 - tc0;
 
-	ts0 = in[2] * 1.907525191737280e-11;
-	tc0 = in[0] * 1.907525191737280e-11;
+	ts0 = in[2] * 1.907525191737280e-11; /* tritab_s[2] */
+	tc0 = in[0] * 1.907525191737280e-11; /* tritab_s[0] */
 	ts1 = ts0 + tc0;
 	ts2 =-ts0 + tc0;
 
-	tc0 = in[4] * 2.069978111953089e-11;
-	ts0 = in[1] * 2.069978111953089e-11;
+	tc0 = in[4] * 2.069978111953089e-11; /* tritab_s[1] */
+	ts0 = in[1] * 2.069978111953089e-11; /* tritab_s[1] */
 
 	out[3*0] = tc1 + tc0;
 	out[3*5] =-ts1 + ts0;
@@ -638,7 +638,7 @@ INLINE static void mdct_long(FLOAT8 *out, FLOAT8 *in)
     out[1] = ct+st;
     out[2] = ct-st;
 
-    ct =  tc5*cx[3] + tc6 + tc7*cx[4] + tc8*cx[5] - inc(4);
+    ct = tc5*cx[3] + tc6 + tc7*cx[4] + tc8*cx[5] - inc(4);
     st = ts1*cx[2] + ts2 + ts3*cx[0] + ts4*cx[1];
     out[3] = ct+st;
     out[4] = ct-st;
@@ -679,94 +679,6 @@ INLINE static void mdct_long(FLOAT8 *out, FLOAT8 *in)
 
 
 
-void mdct_init48()
-{
-#if 0
-    int k;
-    FLOAT8 sq;
-
-    /* prepare the aliasing reduction butterflies */
-    for (k = 0; k < 8; k++) {
-	/*
-	  This is table B.9: coefficients for aliasing reduction
-	  */
-	static const FLOAT8 c[8] = {
-	    -0.6,-0.535,-0.33,-0.185,-0.095,-0.041,-0.0142, -0.0037
-	};
-	sq = 1.0 + c[k] * c[k];
-	sq = sqrt(sq);
-	ca[k] = c[k] / sq;
-	cs[k] = 1.0 / sq;
-    }
-    /* type 0*/
-    for (i = 0; i < 36; i++)
-	win[0][i] = sin(PI/36 * (i + 0.5));
-    /* type 1*/
-    for (i = 0; i < 18; i++) 
-	win[1][i] = win[0][i];
-    for (; i < 24; i++)
-	win[1][i] = 1.0;
-    for (; i < 30; i++)
-	win[1][i] = cos(PI/12 * (i + 0.5));
-    for (; i < 36; i++)
-	win[1][i] = 0.0;
-    /* type 3*/
-    for (i = 0; i < 36; i++)
-	win[3][i] = win[1][35 - i];
-
-    /* swap window data*/
-    for (k = 0; k < 4; k++) {
-	FLOAT8 a;
-
-	a = win[0][17-k];
-	win[0][17-k] = win[0][9+k];
-	win[0][9+k] = a;
-
-	a = win[0][35-k];
-	win[0][35-k] = win[0][27+k];
-	win[0][27+k] = a;
-
-	a = win[1][17-k];
-	win[1][17-k] = win[1][9+k];
-	win[1][9+k] = a;
-
-	a = win[1][35-k];
-	win[1][35-k] = win[1][27+k];
-	win[1][27+k] = a;
-
-	a = win[3][17-k];
-	win[3][17-k] = win[3][9+k];
-	win[3][9+k] = a;
-
-	a = win[3][35-k];
-	win[3][35-k] = win[3][27+k];
-	win[3][27+k] = a;
-    }
-
-    for (i = 0; i < NL; i++) {
-	win[0][i] *= cos((NL/4+0.5+i%9)*PI/NL) / SCALE/(NL/4);
-	win[1][i] *= cos((NL/4+0.5+i%9)*PI/NL) / SCALE/(NL/4);
-	win[3][i] *= cos((NL/4+0.5+i%9)*PI/NL) / SCALE/(NL/4);
-    }
-
-    for (i = NL/2; i < NL; i++) {
-	win[0][i] *= -1;
-	win[1][i] *= -1;
-	win[3][i] *= -1;
-    }
-
-    for (i = 0; i < NL/4; i++)
-	tantab_l[i] = tan((NL/4+0.5+i)*PI/NL);
-
-    /* type 2(short)*/
-    for (i = 0; i < NS / 4; i++) {
-	FLOAT8 w2 = cos(PI / NS * (i + 0.5)) * (4.0/NS) / SCALE;
-	win[SHORT_TYPE][i] = tan(PI / NS * (i + 0.5));
-	tritab_s[i  ] = cos((0.5+2-i)*PI/NS) * w2;
-    }
-#endif
-}
-
 void mdct_sub48(lame_internal_flags *gfc,
     sample_t *w0, sample_t *w1,
     FLOAT8 mdct_freq[2][2][576],
@@ -774,15 +686,8 @@ void mdct_sub48(lame_internal_flags *gfc,
 {
     int gr, k, ch;
     sample_t *wk;
-    static int init = 0;
 
     FLOAT8 work[18];
-
-    if ( gfc->mdct_sub48_init == 0 ) {
-        gfc->mdct_sub48_init=1;
-	mdct_init48();
-	init++;
-    }
 
     wk = w0 + 286;
     /* thinking cache performance, ch->gr loop is better than gr->ch loop */
@@ -851,8 +756,8 @@ void mdct_sub48(lame_internal_flags *gfc,
 			b = gfc->sb_sample[ch][gr][k+12][band_swapped] +
 			    gfc->sb_sample[ch][gr][17-k][band_swapped] * win1;
 
-			work[k+3] = (a * win2 - b);
-			work[k  ] = (a+b*win2);
+			work[k+3] = a * win2 - b;
+			work[k  ] = b * win2 + a;
 
 			a = gfc->sb_sample[ch][gr][k+12][band_swapped] * win1 -
 			    gfc->sb_sample[ch][gr][17-k][band_swapped];
@@ -860,8 +765,8 @@ void mdct_sub48(lame_internal_flags *gfc,
 			b = gfc->sb_sample[ch][1-gr][k][band_swapped] +
 			    gfc->sb_sample[ch][1-gr][5-k][band_swapped] * win1;
 
-			work[k+9] = (a * win2 - b);
-			work[k+6] = (a + b*win2);
+			work[k+9] = a * win2 - b;
+			work[k+6] = b * win2 + a;
 
 			a = gfc->sb_sample[ch][1-gr][k][band_swapped] * win1 -
 			    gfc->sb_sample[ch][1-gr][5-k][band_swapped];
@@ -869,8 +774,8 @@ void mdct_sub48(lame_internal_flags *gfc,
 			b = gfc->sb_sample[ch][1-gr][k+6][band_swapped] +
 			    gfc->sb_sample[ch][1-gr][11-k][band_swapped] * win1;
 
-			work[k+15] = (a * win2-b);
-			work[k+12] = (a+b*win2);
+			work[k+15] = a * win2 - b;
+			work[k+12] = b * win2 + a;
 		    }
 		    mdct_short(mdct_enc, work);
 		  } else {
@@ -910,4 +815,3 @@ void mdct_sub48(lame_internal_flags *gfc,
 	}
     }
 }
-
