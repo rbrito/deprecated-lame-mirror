@@ -222,7 +222,6 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 	gr = 0;
 	for (ch = 0; ch < gfc->stereo; ch++) {
 	    gr_info *gi = &l3_side->gr[gr].ch[ch].tt;
-
 	    CRC_writeheader(gfc,gi->part2_3_length,       12,&crc);
 	    CRC_writeheader(gfc,gi->big_values / 2,        9,&crc);
 	    CRC_writeheader(gfc,gi->global_gain,           8,&crc);
@@ -670,6 +669,31 @@ flush_bitstream(lame_global_flags *gfp)
   assert (gfc->header[last_ptr].write_timing + bitsPerFrame  == gfc->bs.totbit);
 }
 
+
+
+
+void add_dummy_vbrframe(lame_global_flags *gfp,int bitsPerFrame)
+{
+  lame_internal_flags *gfc = gfp->internal_flags;
+  int bits;
+
+  gfc->header[gfc->h_ptr].ptr = 0;
+  memset(gfc->header[gfc->h_ptr].buf, 0, gfc->sideinfo_len);
+  /* vbr header frames never have CRC */
+  bits = bitsPerFrame-8*gfc->sideinfo_len - 16*gfp->error_protection;
+
+  /* add one byte, cause header to be written */
+  putbits2(gfp,0,8);   
+  /* setup for next header */
+  gfc->h_ptr = (gfc->h_ptr + 1) & (MAX_HEADER_BUF - 1);
+  gfc->header[gfc->h_ptr].write_timing = bitsPerFrame;
+
+  drain_into_ancillary(gfp,bits-8);
+
+}
+
+
+
 /*
   format_bitstream()
 
@@ -728,26 +752,6 @@ format_bitstream(lame_global_flags *gfp, int bitsPerFrame,
     return gfc->bs.totbit;
 }
 
-
-void add_dummy_vbrframe(lame_global_flags *gfp,int bitsPerFrame)
-{
-  lame_internal_flags *gfc = gfp->internal_flags;
-  int bits;
-
-  gfc->header[gfc->h_ptr].ptr = 0;
-  memset(gfc->header[gfc->h_ptr].buf, 0, gfc->sideinfo_len);
-  /* vbr header frames never have CRC */
-  bits = bitsPerFrame-8*gfc->sideinfo_len - 16*gfp->error_protection;
-
-  /* add one byte, cause header to be written */
-  putbits2(gfp,0,8);   
-  /* setup for next header */
-  gfc->h_ptr = (gfc->h_ptr + 1) & (MAX_HEADER_BUF - 1);
-  gfc->header[gfc->h_ptr].write_timing = bitsPerFrame;
-
-  drain_into_ancillary(gfp,bits-8);
-
-}
 
 
 

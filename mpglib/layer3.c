@@ -417,6 +417,7 @@ static void III_get_side_info_2(struct III_sideinfo *si,int stereo,
    int powdiff = (single == 3) ? 4 : 0;
 
    si->main_data_begin = getbits(8);
+
    if (stereo == 1)
      si->private_bits = get1bit();
    else 

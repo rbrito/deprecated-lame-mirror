@@ -53,7 +53,7 @@ ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, i
     }
     else
     {
-	resvLimit = 2040; /* main_data_begin has 8 bits in MPEG 2 */
+	resvLimit = 2040; /* =255*8  main_data_begin has 8 bits in MPEG 2 */
     }
 
     /*
@@ -71,12 +71,13 @@ ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, i
 
     /*
       determine maximum size of reservoir:
-      ResvMax + frameLength <= 7680;
+      ResvMax + frameLength <= MAXMP3BUF;
     */
-    if ( frameLength > 7680 )
+#define MAXMP3BUF 7680
+    if ( frameLength > MAXMP3BUF )
 	ResvMax = 0;
     else
-	ResvMax = 7680 - frameLength;
+	ResvMax = MAXMP3BUF - frameLength;
     if (gfp->disable_reservoir) ResvMax=0;
 
 

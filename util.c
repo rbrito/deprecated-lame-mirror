@@ -43,6 +43,7 @@ void getframebits(lame_global_flags *gfp,int *bitsPerFrame, int *mean_bits) {
   whole_SpF = floor( (gfc->framesize /samp)*(bit_rate /  8.0) + 1e-9);
   *bitsPerFrame = 8 * whole_SpF + (gfc->padding * 8);
   *mean_bits = (*bitsPerFrame - 8*gfc->sideinfo_len) / gfc->mode_gr;
+
 }
 
 

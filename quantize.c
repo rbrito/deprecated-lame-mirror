@@ -187,6 +187,7 @@ iteration_loop( lame_global_flags *gfp,
       if (gfc->use_best_huffman==1 && cod_info->block_type != SHORT_TYPE) {
 	best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
       }
+      assert((int)cod_info->part2_3_length < 4096);
 #ifdef HAVEGTK
       if (gfp->gtkflag)
 	set_pinfo (gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
@@ -504,6 +505,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
 #endif
       }
       assert((int)cod_info->part2_3_length <= max_bits);
+      assert((int)cod_info->part2_3_length < 4096);
       save_bits[gr][ch] = cod_info->part2_3_length;
       used_bits += save_bits[gr][ch];
       

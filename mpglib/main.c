@@ -35,11 +35,14 @@ printf(" syncword:  %2X   %2X   \n ",s0, s1);
 printf(" integer  %i \n",(int) ( header[0] == (char) 0xFF));
 printf(" integer  %i \n",(int) ( (header[1] & (char) 0xF0) == (char) 0xF0));
 */
-
-return 
-((int) ( header[0] == (char) 0xFF)) &&
-((int) ( (header[1] & (char) 0xF0) == (char) 0xF0));
-
+  int mpeg1=((int) ( header[0] == (char) 0xFF)) &&
+    ((int) ( (header[1] & (char) 0xF0) == (char) 0xF0));
+  
+  int mpeg25=((int) ( header[0] == (char) 0xFF)) &&
+    ((int) ( (header[1] & (char) 0xF0) == (char) 0xE0));
+  
+  return (mpeg1 || mpeg25);
+ 
 
 }
 

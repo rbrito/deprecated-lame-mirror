@@ -373,10 +373,10 @@ int targ_bits[2],int mean_bits, int gr)
     if (add_bits[ch] > .75*mean_bits) add_bits[ch]=mean_bits*.75;
     if (add_bits[ch] < 0) add_bits[ch]=0;
 
-    bits += add_bits[ch];
-    if ((targ_bits[ch]+add_bits[ch]) > 4094) 
-      add_bits[ch]=4094-targ_bits[ch];
+    if ((targ_bits[ch]+add_bits[ch]) > 4095) 
+      add_bits[ch]=Max(0,4095-targ_bits[ch]);
 
+    bits += add_bits[ch];
   }
   if (bits > extra_bits)
     for (ch=0 ; ch < gfc->stereo ; ch ++) {
