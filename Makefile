@@ -161,6 +161,8 @@ endif
 ##########################################################################
 ifeq ($(UNAME),SunOS) 
    CC = cc
+# note: these options assume you are using Sun's C compiler.
+# Remove them if you use gcc 
    CC_OPTS = -O -xCC  	
    MAKEDEP = -xM
 endif
