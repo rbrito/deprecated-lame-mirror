@@ -5,7 +5,7 @@
 #include "reservoir.h"
 #include "quantize-pvt.h"
 
-#undef TAKEHIRO_IEEE754_HACK
+#define TAKEHIRO_IEEE754_HACK
 
 
 const int slen1_tab[16] = { 0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4 };
@@ -56,10 +56,10 @@ unsigned nr_of_sfb_block[6][3][4] =
 
 
 /* Table B.6: layer3 preemphasis */
-int  pretab[21] =
+int  pretab[22] =
 {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    1, 1, 1, 1, 2, 2, 3, 3, 3, 2
+    1, 1, 1, 1, 2, 2, 3, 3, 3, 2, 0
 };
 
 /*
@@ -117,7 +117,9 @@ FLOAT8 pow20[Q_MAX];
 FLOAT8 ipow20[Q_MAX];
 FLOAT8 pow43[PRECALC_SIZE];
 /* initialized in first call to iteration_init */
+#ifndef TAKEHIRO_IEEE754_HACK
 FLOAT8 adj43[PRECALC_SIZE];
+#endif
 FLOAT8 adj43asm[PRECALC_SIZE];
 
 
@@ -140,10 +142,11 @@ iteration_init( lame_global_flags *gfp,III_side_info_t *l3_side, int l3_enc[2][2
     for(i=0;i<PRECALC_SIZE;i++)
         pow43[i] = pow((FLOAT8)i, 4.0/3.0);
 
+#ifndef TAKEHIRO_IEEE754_HACK
     for (i = 0; i < PRECALC_SIZE-1; i++)
 	adj43[i] = (i + 1) - pow(0.5 * (pow43[i] + pow43[i + 1]), 0.75);
     adj43[i] = 0.5;
-
+#endif
 
     adj43asm[0] = 0.0;
     for (i = 1; i < PRECALC_SIZE; i++)
@@ -677,19 +680,19 @@ int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576], III_psy_ratio *ratio,
     bw = end - start;
     for ( b = 0; b < 3; b++ ) {
       for (en0 = 0.0, l = start; l < end; l++) {
-	ener = xr[l * 3 + b];
-	ener = ener * ener;
-	en0 += ener;
+        ener = xr[l * 3 + b];
+        ener = ener * ener;
+        en0 += ener;
       }
       en0 /= bw;
       
       if (gfp->ATHonly || gfp->ATHshort) {
-	l3_xmin->s[sfb][b]=gfc->ATH_s[sfb];
+        l3_xmin->s[sfb][b]=gfc->ATH_s[sfb];
       } else {
-	xmin = ratio->en.s[sfb][b];
-	if (xmin > 0.0)
-	  xmin = en0 * ratio->thm.s[sfb][b] * gfc->masking_lower / xmin;
-	l3_xmin->s[sfb][b] = Max(gfc->ATH_s[sfb], xmin);
+        xmin = ratio->en.s[sfb][b];
+        if (xmin > 0.0)
+          xmin = en0 * ratio->thm.s[sfb][b] * gfc->masking_lower / xmin;
+        l3_xmin->s[sfb][b] = Max(gfc->ATH_s[sfb], xmin);
       }
       
       if (en0 > gfc->ATH_s[sfb]) ath_over++;
@@ -714,7 +717,7 @@ int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576], III_psy_ratio *ratio,
     } else {
       xmin = ratio->en.l[sfb];
       if (xmin > 0.0)
-	xmin = en0 * ratio->thm.l[sfb] * gfc->masking_lower / xmin;
+        xmin = en0 * ratio->thm.l[sfb] * gfc->masking_lower / xmin;
       l3_xmin->l[sfb]=Max(gfc->ATH_l[sfb], xmin);
     }
     if (en0 > gfc->ATH_l[sfb]) ath_over++;
@@ -1263,47 +1266,40 @@ void quantize_xrpow(FLOAT8 xr[576], int ix[576], gr_info *cod_info) {
 
 #if defined (USE_GNUC_ASM) 
   {
-      int rx[4];
       __asm__ __volatile__(
         "\n\nloop1:\n\t"
 
         "fld" F8type " 0*" F8size "(%1)\n\t"
+        "fmul %%st(1)\n\t"
         "fld" F8type " 1*" F8size "(%1)\n\t"
+        "fmul %%st(2)\n\t"
         "fld" F8type " 2*" F8size "(%1)\n\t"
+        "fmul %%st(3)\n\t"
         "fld" F8type " 3*" F8size "(%1)\n\t"
+        "fmul %%st(4)\n\t"
 
-        "fxch %%st(3)\n\t"
-        "fmul %%st(4)\n\t"
         "fxch %%st(2)\n\t"
-        "fmul %%st(4)\n\t"
+        "fistl (%3)\n\t"
         "fxch %%st(1)\n\t"
-        "fmul %%st(4)\n\t"
+        "fistl 4(%3)\n\t"
         "fxch %%st(3)\n\t"
-        "fmul %%st(4)\n\t"
+        "fistl 8(%3)\n\t"
+        "fxch %%st(2)\n\t"
+        "fistl 12(%3)\n\t"
 
         "addl $4*" F8size ", %1\n\t"
         "addl $16, %3\n\t"
-
-        "fxch %%st(2)\n\t"
-        "fistl %5\n\t"
-        "fxch %%st(1)\n\t"
-        "fistl 4+%5\n\t"
-        "fxch %%st(3)\n\t"
-        "fistl 8+%5\n\t"
-        "fxch %%st(2)\n\t"
-        "fistl 12+%5\n\t"
-
         "dec %4\n\t"
 
-        "movl %5, %%eax\n\t"
-        "movl 4+%5, %%ebx\n\t"
+        "movl -16(%3), %%eax\n\t"
+        "movl -12(%3), %%ebx\n\t"
         "fxch %%st(1)\n\t"
         "fadd" F8type " (%2,%%eax," F8size ")\n\t"
         "fxch %%st(3)\n\t"
         "fadd" F8type " (%2,%%ebx," F8size ")\n\t"
 
-        "movl 8+%5, %%eax\n\t"
-        "movl 12+%5, %%ebx\n\t"
+        "movl -8(%3), %%eax\n\t"
+        "movl -4(%3), %%ebx\n\t"
         "fxch %%st(2)\n\t"
         "fadd" F8type " (%2,%%eax," F8size ")\n\t"
         "fxch %%st(1)\n\t"
@@ -1318,7 +1314,7 @@ void quantize_xrpow(FLOAT8 xr[576], int ix[576], gr_info *cod_info) {
 
         "jnz loop1\n\n"
         : /* no outputs */
-        : "t" (istep), "r" (xr), "r" (adj43asm), "r" (ix), "r" (576 / 4), "m" (rx)
+        : "t" (istep), "r" (xr), "r" (adj43asm), "r" (ix), "r" (576 / 4)
         : "%eax", "%ebx", "memory", "cc"
       );
   }
@@ -1471,39 +1467,26 @@ void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
       __asm__ __volatile__ (
         "\n\nloop0:\n\t"
 
-        "fld" F8type " 0*" F8size "(%3)\n\t"
-        "fld" F8type " 1*" F8size "(%3)\n\t"
-        "fld" F8type " 2*" F8size "(%3)\n\t"
         "fld" F8type " 3*" F8size "(%3)\n\t"
+        "fmul %%st(1)\n\t"
+        "fld" F8type " 2*" F8size "(%3)\n\t"
+        "fmul %%st(2)\n\t"
+        "fld" F8type " 1*" F8size "(%3)\n\t"
+        "fmul %%st(3)\n\t"
+        "fld" F8type " (%3)\n\t"
+        "fmul %%st(4)\n\t"
 
         "addl $4*" F8size ", %3\n\t"
+
+        "fadd %%st(5)\n\t"
+        "fistpl (%4)\n\t"
         "addl $16, %4\n\t"
-
-        "fxch %%st(3)\n\t"
-        "fmul %%st(4)\n\t"
-        "fxch %%st(2)\n\t"
-        "fmul %%st(4)\n\t"
-        "fxch %%st(1)\n\t"
-        "fmul %%st(4)\n\t"
-        "fxch %%st(3)\n\t"
-        "fmul %%st(4)\n\t"
-
         "dec %0\n\t"
-
-        "fxch %%st(2)\n\t"
-        "fadd %%st(5)\n\t"
-        "fxch %%st(1)\n\t"
-        "fadd %%st(5)\n\t"
-        "fxch %%st(3)\n\t"
-        "fadd %%st(5)\n\t"
-        "fxch %%st(2)\n\t"
-        "fadd %%st(5)\n\t"
-
-        "fxch %%st(1)\n\t"
-        "fistpl -16(%4)\n\t"
-        "fxch %%st(2)\n\t"
+        "fadd %%st(4)\n\t"
         "fistpl -12(%4)\n\t"
+        "fadd %%st(3)\n\t"
         "fistpl -8(%4)\n\t"
+        "fadd %%st(2)\n\t"
         "fistpl -4(%4)\n\t"
 
         "jnz loop0\n\n"
