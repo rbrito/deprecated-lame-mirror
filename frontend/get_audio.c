@@ -453,6 +453,8 @@ CloseSndFile(sound_file_format input, FILE * musicin)
             fprintf(stderr, "Could not close audio input file\n");
             exit(2);
         }
+#else
+	lame_decode_exit(gfp); /* release mp3decoder memory */
 #endif
     }
     else {
@@ -1522,7 +1524,6 @@ decode_fromfile(lame_t gfp, FILE * fd, short pcm_l[], short pcm_r[],
 	    /* we are done reading the file, but check for buffered data */
 	    ret = lame_decode1_headers(gfp, buf, len, pcm_l, pcm_r, mp3data);
 	    if (ret<=0) {
-                lame_decode_exit(gfp); /* release mp3decoder memory */
                 return -1;  /* done with file */
             }
 	    break;
