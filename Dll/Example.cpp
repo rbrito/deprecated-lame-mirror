@@ -33,6 +33,7 @@ BEDEINITSTREAM		beDeinitStream=NULL;
 BECLOSESTREAM		beCloseStream=NULL;
 BEVERSION			beVersion=NULL;
 BEWRITEVBRHEADER	beWriteVBRHeader=NULL;
+BEWRITEINFOTAG		beWriteInfoTag=NULL;
 
 
 // Main program
@@ -75,27 +76,12 @@ int main(int argc, char *argv[])
 	// Load lame_enc.dll library (Make sure though that you set the 
 	// project/settings/debug Working Directory correctly, otherwhise the DLL can't be loaded
 
-#ifdef _MSC_VER
-	hDLL = LoadLibrary(".\\Debug\\lame_enc.dll");
-
-  #ifdef _DEBUG
-  	hDLL = LoadLibrary(".\\Debug\\lame_enc.dll");
-  #else
-  	hDLL = LoadLibrary(".\\Release\\lame_enc.dll");
+	hDLL = LoadLibrary("lame_enc.dll");
 
   	if ( NULL == hDLL )
   	{
-  		hDLL = LoadLibrary(".\\Release_NASM\\lame_enc.dll");
+  		hDLL = LoadLibrary("..\\..\\output\\lame_enc.dll");
   	}
-  #endif /* _DEBUG */
-#else
-        /*
-          Don't worry about dll location.
-          MSVC is the only compiler that creates
-          .\Release\ or .\Debug\ directories.
-        */
-	hDLL = LoadLibrary("lame_enc.dll");
-#endif /* _MSC_VER */
 
 	if( NULL == hDLL )
 	{
@@ -110,6 +96,7 @@ int main(int argc, char *argv[])
 	beCloseStream	= (BECLOSESTREAM) GetProcAddress(hDLL, TEXT_BECLOSESTREAM);
 	beVersion		= (BEVERSION) GetProcAddress(hDLL, TEXT_BEVERSION);
 	beWriteVBRHeader= (BEWRITEVBRHEADER) GetProcAddress(hDLL,TEXT_BEWRITEVBRHEADER);
+	beWriteInfoTag  = (BEWRITEINFOTAG) GetProcAddress(hDLL,TEXT_BEWRITEINFOTAG);
 
 	// Check if all interfaces are present
 	if(!beInitStream || !beEncodeChunk || !beDeinitStream || !beCloseStream || !beVersion || !beWriteVBRHeader)
@@ -162,11 +149,12 @@ int main(int argc, char *argv[])
 	beConfig.format.LHV1.dwReSampleRate		= 0;					// DON"T RESAMPLE
 	beConfig.format.LHV1.nMode				= BE_MP3_MODE_JSTEREO;	// OUTPUT IN STREO
 	beConfig.format.LHV1.dwBitrate			= 128;					// MINIMUM BIT RATE
-	beConfig.format.LHV1.nPreset			= LQP_HIGH_QUALITY;		// QUALITY PRESET SETTING
+	beConfig.format.LHV1.nPreset			= LQP_R3MIX;		// QUALITY PRESET SETTING
 	beConfig.format.LHV1.dwMpegVersion		= MPEG1;				// MPEG VERSION (I or II)
 	beConfig.format.LHV1.dwPsyModel			= 0;					// USE DEFAULT PSYCHOACOUSTIC MODEL 
 	beConfig.format.LHV1.dwEmphasis			= 0;					// NO EMPHASIS TURNED ON
 	beConfig.format.LHV1.bOriginal			= TRUE;					// SET ORIGINAL FLAG
+	beConfig.format.LHV1.bWriteVBRHeader	= TRUE;					// Write INFO tag
 
 //	beConfig.format.LHV1.dwMaxBitrate		= 320;					// MAXIMUM BIT RATE
 //	beConfig.format.LHV1.bCRC				= TRUE;					// INSERT CRC
@@ -260,7 +248,7 @@ int main(int argc, char *argv[])
 
 	// Are there any bytes returned from the DeInit call?
 	// If so, write them to disk
-	if(dwWrite)
+	if( dwWrite )
 	{
 		if( fwrite( pMP3Buffer, 1, dwWrite, pFileOut ) != dwWrite )
 		{
@@ -284,8 +272,15 @@ int main(int argc, char *argv[])
 	// Close output file
 	fclose( pFileOut );
 
-	// Write the INFO Tag
-	beWriteVBRHeader( strFileOut );
+	if ( beWriteInfoTag )
+	{
+		// Write the INFO Tag
+		beWriteInfoTag( hbeStream, strFileOut );
+	}
+	else
+	{
+		beWriteVBRHeader( strFileOut );
+	}
 
 	// Were done, return OK result
 	return 0;
