@@ -449,20 +449,14 @@ ns_msfix(
     msfix *= 2.0;
     msfix2 *= 2.0;
     for ( sb = 0; sb < SBMAX_l; sb++ ) {
-	FLOAT8 thmL,thmR,thmM,thmS,ath;
+	FLOAT8 thmLR,thmM,thmS,ath;
 	ath  = (gfc->ATH->cb[gfc->bm_l[sb]])*athlower;
-	thmL = Max(gfc->thm[0].l[sb],ath);
-	thmR = Max(gfc->thm[1].l[sb],ath);
+	thmLR = Min(Max(gfc->thm[0].l[sb],ath), Max(gfc->thm[1].l[sb],ath));
 	thmM = Max(gfc->thm[2].l[sb],ath);
 	thmS = Max(gfc->thm[3].l[sb],ath);
 
-	if (thmL*msfix < thmM+thmS) {
-	    FLOAT8 f = thmL * msfix2 / (thmM+thmS);
-	    thmM *= f;
-	    thmS *= f;
-	}
-	if (thmR*msfix < thmM+thmS) {
-	    FLOAT8 f = thmR * msfix2 / (thmM+thmS);
+	if (thmLR*msfix < thmM+thmS) {
+	    FLOAT8 f = thmLR * msfix2 / (thmM+thmS);
 	    thmM *= f;
 	    thmS *= f;
 	}
@@ -470,22 +464,18 @@ ns_msfix(
 	gfc->thm[3].l[sb] = Min(thmS,gfc->thm[3].l[sb]);
     }
 
+    athlower *= (BLKSIZE_s / BLKSIZE);
     for ( sb = 0; sb < SBMAX_s; sb++ ) {
 	for ( sblock = 0; sblock < 3; sblock++ ) {
-	    FLOAT8 thmL,thmR,thmM,thmS,ath;
+	    FLOAT8 thmLR,thmM,thmS,ath;
 	    ath  = (gfc->ATH->cb[gfc->bm_s[sb]])*athlower;
-	    thmL = Max(gfc->thm[0].s[sb][sblock],ath);
-	    thmR = Max(gfc->thm[1].s[sb][sblock],ath);
+	    thmLR = Min(Max(gfc->thm[0].s[sb][sblock],ath),
+			Max(gfc->thm[1].s[sb][sblock],ath));
 	    thmM = Max(gfc->thm[2].s[sb][sblock],ath);
 	    thmS = Max(gfc->thm[3].s[sb][sblock],ath);
 
-	    if (thmL*msfix < thmM+thmS) {
-		FLOAT8 f = thmL*msfix / (thmM+thmS);
-		thmM *= f;
-		thmS *= f;
-	    }
-	    if (thmR*msfix < thmM+thmS) {
-		FLOAT8 f = thmR*msfix / (thmM+thmS);
+	    if (thmLR*msfix < thmM+thmS) {
+		FLOAT8 f = thmLR*msfix / (thmM+thmS);
 		thmM *= f;
 		thmS *= f;
 	    }
@@ -894,7 +884,7 @@ int L3psycho_anal( lame_global_flags * gfp,
 	    gfc->nb_2[chn][b] = gfc->nb_1[chn][b];
 	    gfc->nb_1[chn][b] = ecb;
 
-	    ecb = Max(thr[b], gfc->ATH->cb[b]);
+	    ecb = Max(thr[b], gfc->ATH->cb[b]*gfc->ATH->adjust);
 	    if (ecb < eb[b])
 		gfc->pe[chn] -= gfc->numlines_l[b] * FAST_LOG(ecb / eb[b]);
 	}
@@ -977,7 +967,7 @@ int L3psycho_anal( lame_global_flags * gfp,
 	FLOAT8 db,x1,x2,sidetot=0,tot=0;
 	msfix1(gfc);
 	if (gfp->msfix != 0.0)
-	    ns_msfix(gfc, gfp->msfix, gfp->ATHlower);
+	    ns_msfix(gfc, gfp->msfix, gfp->ATHlower*gfc->ATH->adjust);
 
 	/* determin ms_ratio from masking thresholds*/
 	/* use ms_stereo (ms_ratio < .35) if average thresh. diff < 5 db */
@@ -1134,16 +1124,16 @@ inline static FLOAT8 mask_add(FLOAT8 m1,FLOAT8 m2,int k,int b, lame_internal_fla
       return m1;
 
   i = FAST_LOG10_X(ratio, 16.0);
-  if (m1 < ma_max_m*gfc->ATH->cb[k])  {
+  if (m1 < ma_max_m*gfc->ATH->cb[k]*gfc->ATH->adjust)  {
       /* 3% of the total */
       /* Originally if (m > 0) { */
-      if (m1 > gfc->ATH->cb[k]) {
+      if (m1 > gfc->ATH->cb[k]*gfc->ATH->adjust) {
 	  FLOAT8 f, r;
 
 	  f = 1.0;
 	  if (i <= 13) f = table3[i];
 
-	  r = FAST_LOG10_X(m1 / gfc->ATH->cb[k], 10.0/15.0);
+	  r = FAST_LOG10_X(m1 / gfc->ATH->cb[k]*gfc->ATH->adjust, 10.0/15.0);
 	  return m1 * ((table1[i]-f)*r+f);
       }
 
@@ -1618,11 +1608,8 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	FLOAT8 msfix;
 	msfix1(gfc);
 	msfix = gfp->msfix;
-	if (gfc->ATH->adjust >= gfc->presetTune.athadjust_switch_level)
-	    msfix = gfc->nsPsy.athadjust_msfix;
-
 	if (msfix != 0.0)
-	    ns_msfix(gfc, msfix, gfp->ATHlower);
+	    ns_msfix(gfc, msfix, gfp->ATHlower*gfc->ATH->adjust);
     }
 
     /*************************************************************** 
@@ -1966,9 +1953,6 @@ int psymodel_init(lame_global_flags *gfp)
 	if (gfp->exp_nspsytune & 2) msfix = 1.0;
 	if (gfp->msfix != 0.0) msfix = gfp->msfix;
 	gfp->msfix = msfix;
-	if (!gfc->presetTune.use || gfc->nsPsy.athadjust_msfix <= 0.0)
-	    gfc->nsPsy.athadjust_msfix = gfp->msfix;
-
 	if (!gfc->presetTune.use) {
 	    gfc->nsPsy.attackthre   = NSATTACKTHRE;
 	    gfc->nsPsy.attackthre_s = NSATTACKTHRE_S;
@@ -1985,12 +1969,11 @@ int psymodel_init(lame_global_flags *gfp)
     /*  prepare for ATH auto adjustment:
      *  we want to decrease the ATH by 12 dB per second
      */
-    {
-        FLOAT8 frame_duration = 576. * gfc->mode_gr / sfreq;
-        gfc->ATH->decay = pow(10., -12./10. * frame_duration);
-        gfc->ATH->adjust = 0.01; /* minimum, for leading low loudness */
-        gfc->ATH->adjust_limit = 1.0; /* on lead, allow adjust up to maximum */
-    }
+#define  frame_duration (576. * gfc->mode_gr / sfreq)
+    gfc->ATH->decay = pow(10., -12./10. * frame_duration);
+    gfc->ATH->adjust = 0.01; /* minimum, for leading low loudness */
+    gfc->ATH->adjust_limit = 1.0; /* on lead, allow adjust up to maximum */
+#undef  frame_duration
 
     gfc->bo_s[SBMAX_s-1]--;
     assert(gfc->bo_l[SBMAX_l-1] <= gfc->npart_l);

@@ -669,10 +669,7 @@ block_sf(const lame_internal_flags * gfc, const FLOAT8 * l3_xmin,
     scalefac_criteria = gfc->VBR->quality;
     /* map quant_comp settings to internal selections */
     if (gi->block_type != NORM_TYPE)
-	    scalefac_criteria = gfc->gfp->quant_comp_short;
-    else if (gfc->ATH->adjust >= gfc->presetTune.athadjust_switch_level
-	     && gfc->presetTune.quantcomp_alt_type >= 0)
-	scalefac_criteria = gfc->presetTune.quantcomp_alt_type;
+	scalefac_criteria = gfc->gfp->quant_comp_short;
 
     j = 0;
     for (sfb = 0; sfb < gi->psymax; sfb++) {
@@ -912,9 +909,7 @@ short_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
 	    maxover1 = v1;
     }
 
-    if (gfc->noise_shaping == 2 && gfc->presetTune.use
-	&& !gfc->presetTune.athadjust_safe_noiseshaping
-	&& gfc->ATH->adjust >= 1.0)
+    if (gfc->noise_shaping == 2)
         /* allow scalefac_scale=1 */
         mover = Min(maxover0, maxover1);
     else
@@ -1009,9 +1004,7 @@ long_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
     }
 
     mover = Min(maxover0, maxover0p);
-    if (gfc->noise_shaping == 2 && gfc->presetTune.use
-	&& !gfc->presetTune.athadjust_safe_noiseshaping
-	&& gfc->ATH->adjust >= 1.0) {
+    if (gfc->noise_shaping == 2) {
         /* allow scalefac_scale=1 */
         mover = Min(mover, maxover1);
         mover = Min(mover, maxover1p);

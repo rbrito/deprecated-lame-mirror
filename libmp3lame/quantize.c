@@ -915,9 +915,7 @@ balance_noise (
     /*  some scalefactors are too large.
      *  lets try setting scalefac_scale=1 
      */
-    if (gfc->noise_shaping > 1
-	&& (!gfc->presetTune.use
-	    || gfc->ATH->adjust >= gfc->presetTune.athadjust_switch_level)) {
+    if (gfc->noise_shaping > 1) {
 	memset(&gfc->pseudohalf, 0, sizeof(gfc->pseudohalf));
 	if (!cod_info->scalefac_scale) {
 	    inc_scalefac_scale (cod_info, xrpow);

@@ -1576,8 +1576,6 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
           lame_set_ATHtype(gfp, 2);
 
           gfc->presetTune.ms_maskadjust = .5;
-          gfc->presetTune.athadjust_switch_level = 2; /* Always switch */
-
           lame_set_quant_comp(gfp, 3);
           lame_set_quant_comp_short(gfp, 3);
           gfc->presetTune.quantcomp_alt_type = 3;
@@ -1611,9 +1609,6 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
           lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (12 << 20));
 
           gfc->presetTune.ms_maskadjust = .5;
-          gfc->presetTune.athadjust_switch_level = 1;
-          gfc->nsPsy.athadjust_msfix = 2.13;
-
           break;
 
         case 3:
@@ -1642,8 +1637,6 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
           /* modify sfb21 by 3.75 dB plus ns-treble=0                  */
           lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (15 << 20));
           gfc->presetTune.ms_maskadjust = .5;
-          gfc->presetTune.athadjust_switch_level = 1;
-
           break;
     default:
 	assert(0);
