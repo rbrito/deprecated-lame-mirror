@@ -86,17 +86,15 @@ iteration_loop( lame_global_flags *gfp, FLOAT8 pe[2][2],
                       l3_enc[gr][ch], &scalefac[gr][ch], cod_info, xfsf, ch,
                       xrpow);
         }
+      if (gfp->gtkflag) 
+        set_pinfo (gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], 
+                   xr[gr][ch], l3_enc[gr][ch], gr, ch);
 
       best_scalefac_store(gfc, gr, ch, l3_enc, l3_side, scalefac);
       if (gfc->use_best_huffman==1) {
 	best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
       }
       assert((int)cod_info->part2_3_length < 4096);
-
-      if (gfp->gtkflag) {
-        set_pinfo (gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], 
-                   xr[gr][ch], xfsf, noise, gr, ch);
-      }
 
 /*#define NORES_TEST */
 #ifndef NORES_TEST
@@ -252,10 +250,6 @@ ABR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
       }
 
       totbits += cod_info->part2_3_length;
-      if (gfp->gtkflag) {
-        set_pinfo(gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch],
-                  xr[gr][ch], xfsf, noise, gr, ch);
-      }
     } /* ch */
   }  /* gr */
   
@@ -280,6 +274,10 @@ ABR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
     for (ch = 0; ch < gfc->stereo; ch++) {
       cod_info = &l3_side->gr[gr].ch[ch].tt;
 
+      if (gfp->gtkflag) 
+        set_pinfo(gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch],
+                  xr[gr][ch], l3_enc[gr][ch], gr, ch);
+      
       best_scalefac_store(gfc, gr, ch, l3_enc, l3_side, scalefac);
       if (gfc->use_best_huffman==1 ) {
         best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
@@ -315,13 +313,6 @@ VBR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
                     III_psy_ratio ratio[2][2], int l3_enc[2][2][576],
                     III_scalefac_t scalefac[2][2])
 {
-  /* PLL 16/07/2000 */
-#ifdef macintosh
-  static plotting_data bst_pinfo;
-#else
-  plotting_data bst_pinfo;
-#endif
-
   III_psy_xmin l3_xmin[2][2];
   III_scalefac_t  bst_scalefac;
   gr_info         bst_cod_info;
@@ -445,11 +436,6 @@ VBR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
          */
         memset(l3_enc[gr][ch],0,576*sizeof(int));
         save_bits[gr][ch] = 0;
-        if (gfp->gtkflag) {
-          memset(xfsf,0,sizeof(xfsf));
-          set_pinfo(gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch],
-                    xr[gr][ch], xfsf, noise, gr, ch);
-        }
         continue; /* with next channel */
       }
       
@@ -515,11 +501,7 @@ VBR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
           memcpy( &bst_cod_info,  cod_info,         sizeof(gr_info)         );
           memcpy(  bst_l3_enc,    l3_enc  [gr][ch], sizeof(int)*576         );
           memcpy(  xrpow[0],      xrpow[1],         sizeof(xrpow[0])        );
-          if (gfp->gtkflag) {
-            set_pinfo(gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch],
-                      xr[gr][ch], xfsf, noise, gr, ch);
-            memcpy( &bst_pinfo, gfc->pinfo, sizeof(plotting_data) );
-          }
+
           /* try with fewer bits
            */
           max_bits = real_bits-32;
@@ -544,17 +526,6 @@ VBR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
         memcpy( &scalefac[gr][ch], &bst_scalefac, sizeof(III_scalefac_t) );
         memcpy(  cod_info,         &bst_cod_info, sizeof(gr_info)        );
         memcpy(  l3_enc  [gr][ch],  bst_l3_enc,   sizeof(int)*576        );
-        if (gfp->gtkflag) {
-          memcpy( gfc->pinfo, &bst_pinfo, sizeof(plotting_data) );
-        }
-      } else {
-        /* we didn't find any satisfying quantization above
-         * the only thing we still need to set is the gtk info field
-         */
-        if (gfp->gtkflag) {
-          set_pinfo(gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch],
-                    xr[gr][ch], xfsf, noise, gr, ch);
-        }
       }
 
       assert((int)cod_info->part2_3_length <= Max_bits);
@@ -617,10 +588,10 @@ VBR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
                       &l3_xmin[gr][ch], l3_enc[gr][ch], &scalefac[gr][ch],
                       cod_info, xfsf, ch, xrpow[0]);
         }
-        if (gfp->gtkflag) {
+      }
+      if (gfp->gtkflag) {
           set_pinfo(gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch],
-                    xr[gr][ch], xfsf, noise, gr, ch);
-        }
+                    xr[gr][ch], l3_enc[gr][ch], gr, ch);
       }
       /* update reservoir status after FINAL quantization/bitrate
        */

@@ -849,183 +849,195 @@ bin_search_StepSize2 (lame_internal_flags *gfc,int desired_rate, int start, int 
 
 
 
-/************************************************************************/
-/*  updates plotting data                                               */
-/************************************************************************/
-void 
-set_pinfo (lame_global_flags *gfp,
-    gr_info *cod_info,
-    III_psy_ratio *ratio, 
-    III_scalefac_t *scalefac,
-    FLOAT8 xr[576],        
-    FLOAT8 xfsf[4][SBMAX_l],
-    FLOAT8 noise[4],
-    int gr,
-    int ch
-)
+/************************************************************************
+ *
+ *  set_pinfo()
+ *
+ *  updates plotting data                                              
+ *
+ ************************************************************************/
+
+void set_pinfo (
+    lame_global_flags *gfp,
+    gr_info           *cod_info,
+    III_psy_ratio     *ratio, 
+    III_scalefac_t    *scalefac,
+    FLOAT8             xr[576],
+    int                l3_enc[576],        
+    int                gr,
+    int                ch )
 {
-  lame_internal_flags *gfc=gfp->internal_flags;
-  int sfb;
-  int j,i,l,start,end,bw;
-  FLOAT8 en0,en1;
-  FLOAT ifqstep = ( cod_info->scalefac_scale == 0 ) ? .5 : 1.0;
+    lame_internal_flags *gfc=gfp->internal_flags;
+    int sfb;
+    int j,i,l,start,end,bw;
+    FLOAT8 en0,en1;
+    FLOAT ifqstep = ( cod_info->scalefac_scale == 0 ) ? .5 : 1.0;
 
 
-  if (cod_info->block_type == SHORT_TYPE) {
-    for (j=0, sfb = 0; sfb < SBMAX_s; sfb++ )  {
-      start = gfc->scalefac_band.s[ sfb ];
-      end   = gfc->scalefac_band.s[ sfb + 1 ];
-      bw = end - start;
-      for ( i = 0; i < 3; i++ ) {
-	for ( en0 = 0.0, l = start; l < end; l++ ) {
-	  en0 += xr[j] * xr[j];
-	  ++j;
-	}
-	en0=Max(en0/bw,1e-20);
+    III_psy_xmin l3_xmin;
+    calc_noise_result noise_info;
+    FLOAT8 xfsf[4][SBMAX_l];
+    FLOAT8 distort[4][SBMAX_l];
+
+    calc_xmin (gfp,xr, ratio, cod_info, &l3_xmin);
+
+    calc_noise (gfp, xr, l3_enc, cod_info, xfsf, distort,
+                &l3_xmin, scalefac, &noise_info);
+
+    if (cod_info->block_type == SHORT_TYPE) {
+        for (j=0, sfb = 0; sfb < SBMAX_s; sfb++ )  {
+            start = gfc->scalefac_band.s[ sfb ];
+            end   = gfc->scalefac_band.s[ sfb + 1 ];
+            bw = end - start;
+            for ( i = 0; i < 3; i++ ) {
+                for ( en0 = 0.0, l = start; l < end; l++ ) {
+                    en0 += xr[j] * xr[j];
+                    ++j;
+                }
+                en0=Max(en0/bw,1e-20);
 
 
 #if 0
-	{
-double tot1,tot2;
-      if (sfb<SBMAX_s-1) {
-      if (sfb==0) {
-	tot1=0;
-	tot2=0;
-      }
-      tot1 += en0;
-      tot2 += ratio->en.s[sfb][i];
+{
+    double tot1,tot2;
+    if (sfb<SBMAX_s-1) {
+        if (sfb==0) {
+            tot1=0;
+            tot2=0;
+        }
+        tot1 += en0;
+        tot2 += ratio->en.s[sfb][i];
 
+        DEBUGF("%i %i sfb=%i mdct=%f fft=%f  fft-mdct=%f db \n",
+                gr,ch,sfb,
+                10*log10(Max(1e-25,ratio->en.s[sfb][i])),
+                10*log10(Max(1e-25,en0)),
+                10*log10((Max(1e-25,en0)/Max(1e-25,ratio->en.s[sfb][i]))));
 
-      DEBUGF("%i %i sfb=%i mdct=%f fft=%f  fft-mdct=%f db \n",gr,ch,sfb,
-10*log10(Max(1e-25,ratio->en.s[sfb][i])),
-10*log10(Max(1e-25,en0)),
-10*log10((Max(1e-25,en0)/Max(1e-25,ratio->en.s[sfb][i]))));
+        if (sfb==SBMAX_s-2) {
+            DEBUGF("%i %i toti %f %f ratio=%f db \n",gr,ch,
+                    10*log10(Max(1e-25,tot2)),
+                    10*log(Max(1e-25,tot1)),
+                    10*log10(Max(1e-25,tot1)/(Max(1e-25,tot2))));
 
-      if (sfb==SBMAX_s-2) {
-      DEBUGF("%i %i toti %f %f ratio=%f db \n",gr,ch,
-10*log10(Max(1e-25,tot2)),
-10*log(Max(1e-25,tot1)),
-10*log10(Max(1e-25,tot1)/(Max(1e-25,tot2))));
-
-      }
-      }
-      /*
-masking: multiplied by en0/fft_energy
-average seems to be about -135db.
-       */
-	}
+        }
+    }
+    /*
+        masking: multiplied by en0/fft_energy
+        average seems to be about -135db.
+     */
+}
 #endif
 
 
+                /* convert to MDCT units */
+                en1=1e15;  /* scaling so it shows up on FFT plot */
+                gfc->pinfo->xfsf_s[gr][ch][3*sfb+i] =  en1*xfsf[i+1][sfb];
+                gfc->pinfo->en_s[gr][ch][3*sfb+i] = en1*en0;
 
+                if (ratio->en.s[sfb][i]>0)
+                    en0 = en0/ratio->en.s[sfb][i];
+                else
+                    en0=0;
+                if (gfp->ATHonly || gfp->ATHshort)
+                    en0=0;
 
-	/* convert to MDCT units */
-	en1=1e15;  /* scaling so it shows up on FFT plot */
-	gfc->pinfo->xfsf_s[gr][ch][3*sfb+i] =  en1*xfsf[i+1][sfb];
-	gfc->pinfo->en_s[gr][ch][3*sfb+i] = en1*en0;
-	
-	if (ratio->en.s[sfb][i]>0)
-	  en0 = en0/ratio->en.s[sfb][i];
-	else
-	  en0=0;
-	if (gfp->ATHonly || gfp->ATHshort)
-	  en0=0;
+                gfc->pinfo->thr_s[gr][ch][3*sfb+i] = 
+                        en1*Max(en0*ratio->thm.s[sfb][i],gfc->ATH_s[sfb]);
 
-	gfc->pinfo->thr_s[gr][ch][3*sfb+i] = 
-en1*Max(en0*ratio->thm.s[sfb][i],gfc->ATH_s[sfb]);
-
-	
-	/* there is no scalefactor bands >= SBPSY_s */
-	if (sfb < SBPSY_s) {
-	  gfc->pinfo->LAMEsfb_s[gr][ch][3*sfb+i]=
-	    -ifqstep*scalefac->s[sfb][i];
-	} else {
-	  gfc->pinfo->LAMEsfb_s[gr][ch][3*sfb+i]=0;
-	}
-	gfc->pinfo->LAMEsfb_s[gr][ch][3*sfb+i] -= 2*cod_info->subblock_gain[i];
-      }
-    }
-  }else{
-    for ( sfb = 0; sfb < SBMAX_l; sfb++ )   {
-
-      start = gfc->scalefac_band.l[ sfb ];
-      end   = gfc->scalefac_band.l[ sfb+1 ];
-      bw = end - start;
-      for ( en0 = 0.0, l = start; l < end; l++ ) 
-	en0 += xr[l] * xr[l];
-      if (!gfp->exp_nspsytune) en0/=bw;
+ 
+                /* there is no scalefactor bands >= SBPSY_s */
+                if (sfb < SBPSY_s) {
+                    gfc->pinfo->LAMEsfb_s[gr][ch][3*sfb+i]=
+                                            -ifqstep*scalefac->s[sfb][i];
+                } else {
+                    gfc->pinfo->LAMEsfb_s[gr][ch][3*sfb+i]=0;
+                }
+                gfc->pinfo->LAMEsfb_s[gr][ch][3*sfb+i] -=
+                                             2*cod_info->subblock_gain[i];
+            }
+        }
+    } else {
+        for ( sfb = 0; sfb < SBMAX_l; sfb++ )   {
+            start = gfc->scalefac_band.l[ sfb ];
+            end   = gfc->scalefac_band.l[ sfb+1 ];
+            bw = end - start;
+            for ( en0 = 0.0, l = start; l < end; l++ ) 
+                en0 += xr[l] * xr[l];
+            en0/=bw;
       /*
-	DEBUGF("diff  = %f \n",10*log10(Max(ratio[gr][ch].en.l[sfb],1e-20))
-	-(10*log10(en0)+150));
-      */
+    DEBUGF("diff  = %f \n",10*log10(Max(ratio[gr][ch].en.l[sfb],1e-20))
+                            -(10*log10(en0)+150));
+       */
 
 #if 0
-	{
-double tot1,tot2;
-      if (sfb==0) {
-	tot1=0;
-	tot2=0;
-      }
-      tot1 += en0;
-      tot2 += ratio->en.l[sfb];
+ {
+    double tot1,tot2;
+    if (sfb==0) {
+        tot1=0;
+        tot2=0;
+    }
+    tot1 += en0;
+    tot2 += ratio->en.l[sfb];
 
 
-      DEBUGF("%i %i sfb=%i mdct=%f fft=%f  fft-mdct=%f db \n",gr,ch,sfb,
-10*log10(Max(1e-25,ratio->en.l[sfb])),
-10*log10(Max(1e-25,en0)),
-10*log10((Max(1e-25,en0)/Max(1e-25,ratio->en.l[sfb]))));
+    DEBUGF("%i %i sfb=%i mdct=%f fft=%f  fft-mdct=%f db \n",
+            gr,ch,sfb,
+            10*log10(Max(1e-25,ratio->en.l[sfb])),
+            10*log10(Max(1e-25,en0)),
+            10*log10((Max(1e-25,en0)/Max(1e-25,ratio->en.l[sfb]))));
 
-      if (sfb==SBMAX_l-1) {
-      DEBUGF("%i %i toti %f %f ratio=%f db \n",gr,ch,
-10*log10(Max(1e-25,tot2)),
-10*log(Max(1e-25,tot1)),
-10*log10(Max(1e-25,tot1)/(Max(1e-25,tot2))));
-
-      }
-      /*
-masking: multiplied by en0/fft_energy
-average seems to be about -147db.
-
-       */
-	}
+    if (sfb==SBMAX_l-1) {
+        DEBUGF("%i %i toti %f %f ratio=%f db \n",
+            gr,ch,
+            10*log10(Max(1e-25,tot2)),
+            10*log(Max(1e-25,tot1)),
+            10*log10(Max(1e-25,tot1)/(Max(1e-25,tot2))));
+    }
+    /*
+        masking: multiplied by en0/fft_energy
+        average seems to be about -147db.
+     */
+}
 #endif
 
 
+            /* convert to MDCT units */
+            en1=1e15;  /* scaling so it shows up on FFT plot */
+            gfc->pinfo->xfsf[gr][ch][sfb] =  en1*xfsf[0][sfb];
+            gfc->pinfo->en[gr][ch][sfb] = en1*en0;
+            if (ratio->en.l[sfb]>0)
+                en0 = en0/ratio->en.l[sfb];
+            else
+                en0=0;
+            if (gfp->ATHonly)
+                en0=0;
+            gfc->pinfo->thr[gr][ch][sfb] =
+                             en1*Max(en0*ratio->thm.l[sfb],gfc->ATH_l[sfb]);
 
-      /* convert to MDCT units */
-      en1=1e15;  /* scaling so it shows up on FFT plot */
-      gfc->pinfo->xfsf[gr][ch][sfb] =  en1*xfsf[0][sfb];
-      gfc->pinfo->en[gr][ch][sfb] = en1*en0;
-      if (ratio->en.l[sfb]>0)
-	en0 = en0/ratio->en.l[sfb];
-      else
-	en0=0;
-      if (gfp->ATHonly)
-	en0=0;
-      gfc->pinfo->thr[gr][ch][sfb] = en1*Max(en0*ratio->thm.l[sfb],gfc->ATH_l[sfb]);
+            /* there is no scalefactor bands >= SBPSY_l */
+            if (sfb<SBPSY_l) {
+                if (scalefac->l[sfb]<0)  /* scfsi! */
+                    gfc->pinfo->LAMEsfb[gr][ch][sfb] =
+                                            gfc->pinfo->LAMEsfb[0][ch][sfb];
+                else
+                    gfc->pinfo->LAMEsfb[gr][ch][sfb]=-ifqstep*scalefac->l[sfb];
+            }else{
+                gfc->pinfo->LAMEsfb[gr][ch][sfb]=0;
+            }
 
-      /* there is no scalefactor bands >= SBPSY_l */
-      if (sfb<SBPSY_l) {
-	if (scalefac->l[sfb]<0)  /* scfsi! */
-	  gfc->pinfo->LAMEsfb[gr][ch][sfb]=gfc->pinfo->LAMEsfb[0][ch][sfb];
-	else
-	  gfc->pinfo->LAMEsfb[gr][ch][sfb]=-ifqstep*scalefac->l[sfb];
-      }else{
-	gfc->pinfo->LAMEsfb[gr][ch][sfb]=0;
-      }
+            if (cod_info->preflag && sfb>=11) 
+                gfc->pinfo->LAMEsfb[gr][ch][sfb]-=ifqstep*pretab[sfb];
+        } /* for sfb */
+    } /* block type long */
+    gfc->pinfo->LAMEqss     [gr][ch] = cod_info->global_gain;
+    gfc->pinfo->LAMEmainbits[gr][ch] = cod_info->part2_3_length;
+    gfc->pinfo->LAMEsfbits  [gr][ch] = cod_info->part2_length;
 
-      if (cod_info->preflag && sfb>=11) 
-	gfc->pinfo->LAMEsfb[gr][ch][sfb]-=ifqstep*pretab[sfb];
-    }
-  }
-  gfc->pinfo->LAMEqss     [gr][ch] = cod_info->global_gain;
-  gfc->pinfo->LAMEmainbits[gr][ch] = cod_info->part2_3_length;
-  gfc->pinfo->LAMEsfbits  [gr][ch] = cod_info->part2_length;
-
-  gfc->pinfo->over      [gr][ch] = noise[0];
-  gfc->pinfo->max_noise [gr][ch] = noise[1];
-  gfc->pinfo->over_noise[gr][ch] = noise[2];
-  gfc->pinfo->tot_noise [gr][ch] = noise[3];
+    gfc->pinfo->over      [gr][ch] = noise_info.over_count;
+    gfc->pinfo->max_noise [gr][ch] = noise_info.max_noise;
+    gfc->pinfo->over_noise[gr][ch] = noise_info.over_noise;
+    gfc->pinfo->tot_noise [gr][ch] = noise_info.tot_noise;
 }
 
 

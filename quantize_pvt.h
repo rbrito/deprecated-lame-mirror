@@ -70,6 +70,15 @@ int calc_noise( lame_global_flags *gfp, FLOAT8 xr[576],
 		 III_scalefac_t *,
                  calc_noise_result *);
 
+void set_pinfo ( lame_global_flags *gfp,
+                 gr_info           *cod_info,
+                 III_psy_ratio     *ratio, 
+                 III_scalefac_t    *scalefac,
+                 FLOAT8             xr    [576],        
+                 int                l3_enc[576],        
+                 int                gr,
+                 int                ch );
+
 int loop_break( III_scalefac_t *scalefac, gr_info *cod_info);
 
 void amp_scalefac_bands(lame_global_flags *gfp, FLOAT8 xrpow[576],

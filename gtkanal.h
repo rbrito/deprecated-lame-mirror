@@ -69,16 +69,4 @@ int gtkcontrol(lame_global_flags *gfp);
 extern plotting_data *pinfo;
 extern int gtkflag;
 
-void 
-set_pinfo (lame_global_flags *gfp,
-    gr_info *cod_info,
-    III_psy_ratio *ratio, 
-    III_scalefac_t *scalefac,
-    FLOAT8 xr[576],        
-    FLOAT8 xfsf[4][SBMAX_l],
-    FLOAT8 noise[4],
-    int gr,
-    int ch
-	   );
-
 #endif
