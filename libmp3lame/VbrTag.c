@@ -634,7 +634,21 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 	uint8_t  nFlags			= 0;
 
 	/* if ABR, {store bitrate <=255} else { store "-b"} */
-	int nABRBitrate	= (gfp->VBR==vbr_abr)?gfp->VBR_mean_bitrate_kbps:gfp->brate;
+	int nABRBitrate;
+    switch (gfp->VBR) {
+        case vbr_abr:{
+            nABRBitrate = gfp->VBR_mean_bitrate_kbps;
+            break;
+        }
+        case vbr_off:{
+            nABRBitrate = gfp->brate;
+            break;
+        }
+        default:{ /*vbr modes*/
+            nABRBitrate = gfp->VBR_min_bitrate_kbps;
+        }
+    }
+        
 
 	/*revision and vbr method */
 	if (gfp->VBR>=0 && gfp->VBR < sizeof(vbr_type_translator))
