@@ -21,6 +21,8 @@
 
 /* $Id$ */
 
+/* see include/lame.h file for the function details */
+
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -142,18 +144,7 @@ lame_get_scale_right(lame_t gfc)
 int
 lame_set_out_samplerate(lame_t gfc, int out_samplerate)
 {
-    /*
-     * default = 0: LAME picks best value based on the amount
-     *              of compression
-     * MPEG only allows:
-     *  MPEG1    32, 44.1,   48khz
-     *  MPEG2    16, 22.05,  24
-     *  MPEG2.5   8, 11.025, 12
-     *
-     * (not used by decoding routines)
-     */
     gfc->out_samplerate = out_samplerate;
-
     return 0;
 }
 
@@ -197,15 +188,6 @@ lame_get_bWriteVbrTag(lame_t gfc)
 
 
 
-/*
- * Internal algorithm selection.
- * True quality is determined by the bitrate but this variable will effect
- * quality by selecting expensive or cheap algorithms.
- * quality=0..9.  0=best (very slow).  9=worst.  
- * recommended:  2     near-best quality, not too slow
- *               5     good quality, fast
- *               7     ok quality, really fast
- */
 int
 lame_set_quality(lame_t gfc, int quality)
 {
@@ -621,15 +603,6 @@ lame_get_VBR(lame_t gfc)
 int
 lame_set_VBR_q(lame_t gfc, int VBR_q)
 {
-    /* XXX: This should be an enum */
-    /*  to whoever added this note: why should it be an enum?
-        do you want to call a specific setting by name? 
-        say VBR quality level red? */
-    /* No, but VBR_Q_HIGHEST, VBR_Q_HIGH, ..., VBR_Q_MID, ...
-       VBR_Q_LOW, VBR_Q_LOWEST (or something like that)and a
-       VBR_Q_DEFAULT, which aliases the default setting of
-       e.g. VBR_Q_MID. */
-
     if (VBR_q < 0)
         return -1;  /* Unknown VBR quality level! */
 
@@ -693,17 +666,10 @@ lame_get_VBR_max_bitrate_kbps(lame_t gfc)
 /********************************************************************
  * Filtering control
  ***********************************************************************/
-
-/*
- * Freqency in Hz to apply lowpass.
- *   0 = default = lame chooses
- *  -1 = disabled
- */
 int
 lame_set_lowpassfreq(lame_t gfc, int lowpassfreq)
 {
     gfc->lowpassfreq = lowpassfreq;
-
     return 0;
 }
 
@@ -714,10 +680,6 @@ lame_get_lowpassfreq(lame_t gfc)
 }
 
 
-/*
- * Width of transition band (in Hz).
- *  default = one polyphase filter band
- */
 int
 lame_set_lowpasswidth(lame_t gfc, int lowpasswidth)
 {
@@ -733,11 +695,6 @@ lame_get_lowpasswidth(lame_t gfc)
 }
 
 
-/*
- * Frequency in Hz to apply highpass.
- *   0 = default = lame chooses
- *  -1 = disabled
- */
 int
 lame_set_highpassfreq(lame_t gfc, int highpassfreq)
 {
@@ -753,10 +710,6 @@ lame_get_highpassfreq(lame_t gfc)
 }
 
 
-/*
- * Width of transition band (in Hz).
- *  default = one polyphase filter band
- */
 int
 lame_set_highpasswidth(lame_t gfc, int highpasswidth)
 {
