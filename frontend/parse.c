@@ -675,6 +675,8 @@ static void  presets_longinfo_dm ( FILE* msgfp )
         "            disadvantage to the speed switch is that often times the\n"
         "            bitrate will be slightly higher than with the normal mode\n"
         "            and quality may be slightly lower also.\n"
+	"   Warning: with the current version fast presets might result in too\n"
+	"            high bitrate compared to regular presets.\n"
         "\n"
         "   \"cbr\"  - If you use the ABR mode (read above) with a significant\n"
         "            bitrate such as 80, 96, 112, 128, 160, 192, 224, 256, 320,\n"
