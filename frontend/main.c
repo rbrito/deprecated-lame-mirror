@@ -544,7 +544,7 @@ main(int argc, char **argv)
     lame_t  gfp;
     char    outPath[PATH_MAX + 1];
     char    nogapdir[PATH_MAX + 1];
-    char    inPath[PATH_MAX + 1];
+    char    inPath[PATH_MAX + 1] = {0};
 
     /* support for "nogap" encoding of up to 200 .wav files */
 #define MAX_NOGAP 200
@@ -570,8 +570,6 @@ main(int argc, char **argv)
         nogap_inPath[i] = malloc(PATH_MAX + 1);
     }
 
-    memset(inPath, 0, sizeof(inPath));
-    
     /* initialize libmp3lame */
     input_format = sf_unknown;
     if (!(gfp = lame_init())) {
