@@ -257,6 +257,9 @@ void lame_parse_args(int argc, char **argv)
 	  gf.voice_mode=1;
 	  gf.no_short_blocks=1;
 	}
+	else if (strcmp(token, "noshort")==0) {
+	  gf.no_short_blocks=1;
+	}
 	else if (strcmp(token, "noath")==0) {
 	  gf.noATH=1;
 	}
@@ -831,6 +834,7 @@ case 't':  /* dont write VBR tag */
 
   /* copy some header information */
   fr_ps.actual_mode = info->mode;
+  /*  fr_ps.stereo = (info->mode == MPG_MD_MONO) ? 1 : 2;*/
   gf.stereo = (info->mode == MPG_MD_MONO) ? 1 : 2;
 
 #ifdef BRHIST
