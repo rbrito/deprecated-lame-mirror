@@ -305,7 +305,6 @@ typedef struct  {
   /* variables used by lame.c */
   Bit_stream_struc   bs;
   III_side_info_t l3_side;
-  FLOAT8 ms_ener_ratio[2];
   FLOAT8 ms_ratio[2];
   /* used for padding */
   int frac_SpF;

@@ -85,7 +85,7 @@ The general outline is as follows:
 Each partition band is considiered a "masker".  The strength
 of the i'th masker in band j is given by:
 
-    s3(i-j)*strength(i)
+    s3(bark(i)-bark(j))*strength(i)
 
 The strength of the masker is a function of the energy and tonality.
 The more tonal, the less masking.  LAME uses a simple linear formula
@@ -105,7 +105,7 @@ masking(j) = sum_over_i  s3(i-j)*strength(i)  = s3 o strength
 where "o" = convolution operator.  s3 is given by a formula determined
 via listening tests.  It is normalized so that s3 o 1 = 1.
 
-Note: instead of a simle convolution, LAME also has the
+Note: instead of a simple convolution, LAME also has the
 option of using "additive masking"
 
 The most critical part is step 2, computing the tonality of each
@@ -120,6 +120,18 @@ Finally, in step 5, the maskings for the mid and side
 channel are possibly increased.  Under certain circumstances,
 noise in the mid & side channels is assumed to also
 be masked by strong maskers in the L or R channels.
+
+
+Other data computed by the psy-model:
+
+ms_ratio        side-channel / mid-channel masking ratio (for previous granule)
+ms_ratio_next   side-channel / mid-channel masking ratio for this granule
+
+percep_entropy[2]     L and R values (prev granule) of PE - A measure of how 
+                      much pre-echo is in the previous granule
+percep_entropy_MS[2]  mid and side channel values (prev granule) of percep_entropy
+energy[4]             L,R,M,S energy in each channel, prev granule
+blocktype_d[2]        block type to use for previous granule
 
 
 */
@@ -160,6 +172,14 @@ be masked by strong maskers in the L or R channels.
     /* MP3 values */
 # define TMN 29
 # define NMT 6
+#endif
+
+#ifdef NOTABLES
+#define NBPSY_l  (SBMAX_l)
+#define NBPSY_s  (SBMAX_s)
+#else
+#define NBPSY_l  (SBMAX_l-1)
+#define NBPSY_s  (SBMAX_s-1)
 #endif
 
 
@@ -203,7 +223,6 @@ int L3psycho_anal( lame_global_flags * gfp,
                     const sample_t *buffer[2], int gr_out, 
                     FLOAT8 *ms_ratio,
                     FLOAT8 *ms_ratio_next,
-		    FLOAT8 *ms_ener_ratio,
 		    III_psy_ratio masking_ratio[2][2],
 		    III_psy_ratio masking_MS_ratio[2][2],
 		    FLOAT8 percep_entropy[2],FLOAT8 percep_MS_entropy[2], 
@@ -252,7 +271,6 @@ int L3psycho_anal( lame_global_flags * gfp,
   numchn = gfc->channels_out;
   /* chn=2 and 3 = Mid and Side channels */
   if (gfp->mode == MPG_MD_JOINT_STEREO) numchn=4;
-
 
   for (chn=0; chn<numchn; chn++) {
       for (i=0; i<numchn; ++i) {
@@ -703,7 +721,7 @@ int L3psycho_anal( lame_global_flags * gfp,
      * compute masking thresholds for both short and long blocks
      ***************************************************************/
     /* longblock threshold calculation (part 2) */
-    for ( sb = 0; sb < SBPSY_l; sb++ )
+    for ( sb = 0; sb < NBPSY_l; sb++ )
       {
 	FLOAT8 enn = gfc->w1_l[sb] * eb[gfc->bu_l[sb]] + gfc->w2_l[sb] * eb[gfc->bo_l[sb]];
 	FLOAT8 thmm = gfc->w1_l[sb] *thr[gfc->bu_l[sb]] + gfc->w2_l[sb] * thr[gfc->bo_l[sb]];
@@ -743,7 +761,7 @@ int L3psycho_anal( lame_global_flags * gfp,
 	    thr[b] = Max (1e-6, ecb);
 	  }
 
-	for ( sb = 0; sb < SBPSY_s; sb++ )
+	for ( sb = 0; sb < NBPSY_s; sb++ )
 	  {
             FLOAT8 enn  = gfc->w1_s[sb] * eb[gfc->bu_s[sb]] + gfc->w2_s[sb] * eb[gfc->bo_s[sb]];
 	    FLOAT8 thmm = gfc->w1_s[sb] *thr[gfc->bu_s[sb]] + gfc->w2_s[sb] * thr[gfc->bo_s[sb]];
@@ -762,11 +780,11 @@ int L3psycho_anal( lame_global_flags * gfp,
 
 
   /* compute M/S thresholds from Johnston & Ferreira 1992 ICASSP paper */
-  if ( numchn==4 /* mid/side and r/l */) {
+  if (gfp->mode == MPG_MD_JOINT_STEREO) {
     FLOAT8 rside,rmid,mld;
     int chmid=2,chside=3; 
     
-    for ( sb = 0; sb < SBPSY_l; sb++ ) {
+    for ( sb = 0; sb < NBPSY_l; sb++ ) {
       /* use this fix if L & R masking differs by 2db or less */
       /* if db = 10*log10(x2/x1) < 2 */
       /* if (x2 < 1.58*x1) { */
@@ -783,7 +801,7 @@ int L3psycho_anal( lame_global_flags * gfp,
 	gfc->thm[chside].l[sb]=rside;
       }
     }
-    for ( sb = 0; sb < SBPSY_s; sb++ ) {
+    for ( sb = 0; sb < NBPSY_s; sb++ ) {
       for ( sblock = 0; sblock < 3; sblock++ ) {
 	if (gfc->thm[0].s[sb][sblock] <= 1.58*gfc->thm[1].s[sb][sblock]
 	    && gfc->thm[1].s[sb][sblock] <= 1.58*gfc->thm[0].s[sb][sblock]) {
@@ -805,7 +823,7 @@ int L3psycho_anal( lame_global_flags * gfp,
     /* determin ms_ratio from masking thresholds*/
     /* use ms_stereo (ms_ratio < .35) if average thresh. diff < 5 db */
     FLOAT8 db,x1,x2,sidetot=0,tot=0;
-    for (sb= SBPSY_l/4 ; sb< SBPSY_l; sb ++ ) {
+    for (sb= NBPSY_l/4 ; sb< NBPSY_l; sb ++ ) {
       x1 = Min(gfc->thm[0].l[sb],gfc->thm[1].l[sb]);
       x2 = Max(gfc->thm[0].l[sb],gfc->thm[1].l[sb]);
       /* thresholds difference in db */
@@ -820,7 +838,7 @@ int L3psycho_anal( lame_global_flags * gfp,
     
     sidetot=0; tot=0;
     for ( sblock = 0; sblock < 3; sblock++ )
-      for ( sb = SBPSY_s/4; sb < SBPSY_s; sb++ ) {
+      for ( sb = NBPSY_s/4; sb < NBPSY_s; sb++ ) {
 	x1 = Min(gfc->thm[0].s[sb][sblock],gfc->thm[1].s[sb][sblock]);
 	x2 = Max(gfc->thm[0].s[sb][sblock],gfc->thm[1].s[sb][sblock]);
 	/* thresholds difference in db */
@@ -899,23 +917,6 @@ int L3psycho_anal( lame_global_flags * gfp,
   /* we dont know the block type of this frame yet - assume long */
   *ms_ratio_next = ms_ratio_l;
 
-
-
-  /*********************************************************************/
-  /* compute side_energy / (side+mid)_energy */
-  /* 0 = no energy in side channel */
-  /* .5 = half of total energy in side channel */
-  /*********************************************************************/
-  if (numchn==4)  {
-    FLOAT tmp = gfc->tot_ener[3]+gfc->tot_ener[2];
-    *ms_ener_ratio = gfc->ms_ener_ratio_old;
-    gfc->ms_ener_ratio_old=0;
-    if (tmp>0) gfc->ms_ener_ratio_old=gfc->tot_ener[3]/tmp;
-  } else
-    /* we didn't compute ms_ener_ratios */
-    *ms_ener_ratio = 0;
-
-
   return 0;
 }
 
@@ -977,7 +978,6 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
                     const sample_t *buffer[2], int gr_out, 
                     FLOAT8 *ms_ratio,
                     FLOAT8 *ms_ratio_next,
-		    FLOAT8 *ms_ener_ratio,
 		    III_psy_ratio masking_ratio[2][2],
 		    III_psy_ratio masking_MS_ratio[2][2],
 		    FLOAT8 percep_entropy[2],FLOAT8 percep_MS_entropy[2], 
@@ -1423,7 +1423,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
      * compute masking thresholds for long blocks
      ***************************************************************/
 
-    for ( sb = 0; sb < SBPSY_l; sb++ )
+    for ( sb = 0; sb < NBPSY_l; sb++ )
       {
 	FLOAT8 enn = gfc->w1_l[sb] * eb[gfc->bu_l[sb]] + gfc->w2_l[sb] * eb[gfc->bo_l[sb]];
 	FLOAT8 thmm = gfc->w1_l[sb] *thr[gfc->bu_l[sb]] + gfc->w2_l[sb] * thr[gfc->bo_l[sb]];
@@ -1466,7 +1466,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	    thr[b] = Max (1e-6, ecb);
 	  }
 
-	for ( sb = 0; sb < SBPSY_s; sb++ )
+	for ( sb = 0; sb < NBPSY_s; sb++ )
 	  {
             FLOAT8 enn  = gfc->w1_s[sb] * eb[gfc->bu_s[sb]] + gfc->w2_s[sb] * eb[gfc->bo_s[sb]];
 	    FLOAT8 thmm = gfc->w1_s[sb] *thr[gfc->bu_s[sb]] + gfc->w2_s[sb] * thr[gfc->bo_s[sb]];
@@ -1526,7 +1526,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 
     for ( sblock = 0; sblock < 3; sblock++ )
       {
-	for ( sb = 0; sb < SBPSY_s; sb++ )
+	for ( sb = 0; sb < NBPSY_s; sb++ )
 	  {
 	    gfc->nsPsy.last_thm[chn][sb][sblock] = gfc->thm[chn].s[sb][sblock];
 	  }
@@ -1549,7 +1549,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
     FLOAT8 rside,rmid,mld;
     int chmid=2,chside=3; 
     
-    for ( sb = 0; sb < SBPSY_l; sb++ ) {
+    for ( sb = 0; sb < NBPSY_l; sb++ ) {
       /* use this fix if L & R masking differs by 2db or less */
       /* if db = 10*log10(x2/x1) < 2 */
       /* if (x2 < 1.58*x1) { */
@@ -1566,7 +1566,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	gfc->thm[chside].l[sb]=rside;
       }
     }
-    for ( sb = 0; sb < SBPSY_s; sb++ ) {
+    for ( sb = 0; sb < NBPSY_s; sb++ ) {
       for ( sblock = 0; sblock < 3; sblock++ ) {
 	if (gfc->thm[0].s[sb][sblock] <= 1.58*gfc->thm[1].s[sb][sblock]
 	    && gfc->thm[1].s[sb][sblock] <= 1.58*gfc->thm[0].s[sb][sblock]) {
@@ -1593,7 +1593,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
     FLOAT msfix = NS_MSFIX;
     if (gfc->nsPsy.safejoint) msfix = 1;
 
-    for ( sb = 0; sb < SBPSY_l; sb++ )
+    for ( sb = 0; sb < NBPSY_l; sb++ )
       {
 	FLOAT8 thmL,thmR,thmM,thmS,ath;
 	ath  = (gfc->ATH->cb[(gfc->bu_l[sb] + gfc->bo_l[sb])/2])*pow(10,-gfp->ATHlower/10.0);
@@ -1617,7 +1617,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	gfc->thm[3].l[sb] = Min(thmS,gfc->thm[3].l[sb]);
       }
 
-    for ( sb = 0; sb < SBPSY_s; sb++ ) {
+    for ( sb = 0; sb < NBPSY_s; sb++ ) {
       for ( sblock = 0; sblock < 3; sblock++ ) {
 	FLOAT8 thmL,thmR,thmM,thmS,ath;
 	ath  = (gfc->ATH->cb[(gfc->bu_s[sb] + gfc->bo_s[sb])/2])*pow(10,-gfp->ATHlower/10.0);
@@ -1662,7 +1662,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	FLOAT8 msum = regcoef[0]/4;
 	int sb;
 
-	for ( sb = 0; sb < SBPSY_l; sb++ )
+	for ( sb = 0; sb < NBPSY_l; sb++ )
 	  {
 	    FLOAT8 t;
 	      
@@ -1687,7 +1687,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 
 	for(sblock=0;sblock<3;sblock++)
 	  {
-	    for ( sb = 0; sb < SBPSY_s; sb++ )
+	    for ( sb = 0; sb < NBPSY_s; sb++ )
 	      {
 		FLOAT8 t;
 	      
@@ -1781,22 +1781,9 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
     }
 
 
-  /*********************************************************************
-   * compute side_energy / (side+mid)_energy
-   *********************************************************************/
-  if (numchn==4)  {
-    /* 0 = no energy in side channel */
-    /* .5 = half of total energy in side channel */
-    FLOAT tmp = gfc->tot_ener[3]+gfc->tot_ener[2];
-    *ms_ener_ratio = gfc->ms_ener_ratio_old;
-    gfc->ms_ener_ratio_old=0;
-    if (tmp>0) gfc->ms_ener_ratio_old=gfc->tot_ener[3]/tmp;
-  } else
-    /* we didn't compute ms_ener_ratios */
-    *ms_ener_ratio = 0;
-
   return 0;
 }
+
 
 
 
@@ -2262,8 +2249,8 @@ i,*npart_s_orig,freq,numlines_s[i],j2-j,j,j2-1,bark1,bark2);
   assert(*npart_s_orig<=CBANDS);
 
   
-  *npart_l=bo_l[SBPSY_l-1]+1;
-  *npart_s=bo_s[SBPSY_s-1]+1;
+  *npart_l=bo_l[NBPSY_l-1]+1;
+  *npart_s=bo_s[NBPSY_s-1]+1;
   
 #ifdef NOTABLES
   assert(*npart_l <= *npart_l_orig);
@@ -2281,21 +2268,21 @@ i,*npart_s_orig,freq,numlines_s[i],j2-j,j,j2-1,bark1,bark2);
    * npart_l below.  */
   if (*npart_l > *npart_l_orig) {
     *npart_l=*npart_l_orig;
-    bo_l[SBPSY_l-1]=(*npart_l)-1;
-    w2_l[SBPSY_l-1]=1.0;
+    bo_l[NBPSY_l-1]=(*npart_l)-1;
+    w2_l[NBPSY_l-1]=1.0;
   }
 
   if (*npart_s > *npart_s_orig) {
     *npart_s=*npart_s_orig;
-    bo_s[SBPSY_s-1]=(*npart_s)-1;
-    w2_s[SBPSY_s-1]=1.0;
+    bo_s[NBPSY_s-1]=(*npart_s)-1;
+    w2_s[NBPSY_s-1]=1.0;
   }
 #endif
 
 
     /* setup stereo demasking thresholds */
     /* formula reverse enginerred from plot in paper */
-    for ( i = 0; i < SBPSY_s; i++ ) {
+    for ( i = 0; i < NBPSY_s; i++ ) {
       FLOAT8 arg,mld;
       arg = freq2bark(sfreq*gfc->scalefac_band.s[i]/(2*192));
       arg = (Min(arg, 15.5)/15.5);
@@ -2303,7 +2290,7 @@ i,*npart_s_orig,freq,numlines_s[i],j2-j,j,j2-1,bark1,bark2);
       mld = 1.25*(1-cos(PI*arg))-2.5;
       gfc->mld_s[i] = pow(10.0,mld);
     }
-    for ( i = 0; i < SBPSY_l; i++ ) {
+    for ( i = 0; i < NBPSY_l; i++ ) {
       FLOAT8 arg,mld;
       arg = freq2bark(sfreq*gfc->scalefac_band.l[i]/(2*576));
       arg = (Min(arg, 15.5)/15.5);
@@ -2373,12 +2360,12 @@ int psymodel_init(lame_global_flags *gfp)
 	gfc->nb_1[i][j]=1e20;
 	gfc->nb_2[i][j]=1e20;
       }
-      for ( sb = 0; sb < SBPSY_l; sb++ ) {
+      for ( sb = 0; sb < NBPSY_l; sb++ ) {
 	gfc->en[i].l[sb] = 1e20;
 	gfc->thm[i].l[sb] = 1e20;
       }
       for (j=0; j<3; ++j) {
-	for ( sb = 0; sb < SBPSY_s; sb++ ) {
+	for ( sb = 0; sb < NBPSY_s; sb++ ) {
 	  gfc->en[i].s[sb][j] = 1e20;
 	  gfc->thm[i].s[sb][j] = 1e20;
 	}
@@ -2386,7 +2373,7 @@ int psymodel_init(lame_global_flags *gfp)
     }
     for (i=0; i<4; ++i) {
       for (j=0; j<3; ++j) {
-	for ( sb = 0; sb < SBPSY_s; sb++ ) {
+	for ( sb = 0; sb < NBPSY_s; sb++ ) {
 	  gfc->nsPsy.last_thm[i][sb][j] = 1e20;
 	}
       }

@@ -92,14 +92,15 @@ int  lame_encode_mp3_frame (				// Output
   int l3_enc[2][2][576];
 #endif
   int mp3count;
-  III_psy_ratio masking_ratio[2][2];    /*LR ratios */
-  III_psy_ratio masking_MS_ratio[2][2]; /*MS ratios */
-  III_psy_ratio (*masking)[2][2];  /*LR ratios and MS ratios*/
+  III_psy_ratio masking_LR[2][2];    /*LR masking & energy */
+  III_psy_ratio masking_MS[2][2]; /*MS masking & energy */
+  III_psy_ratio (*masking)[2][2];  /*pointer to selected maskings*/
   III_scalefac_t scalefac[2][2];
   const sample_t *inbuf[2];
   lame_internal_flags *gfc=gfp->internal_flags;
 
   FLOAT8 tot_ener[2][4];   
+  FLOAT8 ms_ener_ratio[2]={.5,.5};
   chgrdata pe,pe_MS;
   chgrdata *pe_use;
 
@@ -111,12 +112,13 @@ int  lame_encode_mp3_frame (				// Output
   FLOAT8 ms_ratio_prev = 0.;
 
 
-  memset((char *) masking_ratio, 0, sizeof(masking_ratio));
-  memset((char *) masking_MS_ratio, 0, sizeof(masking_MS_ratio));
+  memset((char *) masking_LR, 0, sizeof(masking_LR));
+  memset((char *) masking_MS, 0, sizeof(masking_MS));
   memset((char *) scalefac, 0, sizeof(scalefac));
   inbuf[0]=inbuf_l;
   inbuf[1]=inbuf_r;
 
+  check_ms_stereo =  (gfp->mode == MPG_MD_JOINT_STEREO);
   gfc->mode_ext = MPG_MD_LR_LR;
 
   if (gfc->lame_encode_frame_init==0 )  {
@@ -293,19 +295,25 @@ int  lame_encode_mp3_frame (				// Output
 
       if (gfc->nsPsy.use) {
 	ret=L3psycho_anal_ns( gfp, bufp, gr, 
-			      &gfc->ms_ratio[gr],&ms_ratio_next,&gfc->ms_ener_ratio[gr],
-			      masking_ratio, masking_MS_ratio,
+			      &gfc->ms_ratio[gr],&ms_ratio_next,
+			      masking_LR, masking_MS,
 			      pe[gr],pe_MS[gr],tot_ener[gr],blocktype);
       } else {
 	ret=L3psycho_anal( gfp, bufp, gr, 
-			   &gfc->ms_ratio[gr],&ms_ratio_next,&gfc->ms_ener_ratio[gr],
-			   masking_ratio, masking_MS_ratio,
+			   &gfc->ms_ratio[gr],&ms_ratio_next,
+			   masking_LR, masking_MS,
 			   pe[gr],pe_MS[gr],tot_ener[gr],blocktype);
       }
       if (ret!=0) return -4;
 
       for ( ch = 0; ch < gfc->channels_out; ch++ )
 	gfc->l3_side.gr[gr].ch[ch].tt.block_type=blocktype[ch];
+
+      if (check_ms_stereo) {
+	  ms_ener_ratio[gr] = tot_ener[gr][2]+tot_ener[gr][3];
+	  if (ms_ener_ratio[gr]>0)
+	      ms_ener_ratio[gr] = tot_ener[gr][3]/ms_ener_ratio[gr];
+      }
 
     }
   }else{
@@ -344,7 +352,6 @@ int  lame_encode_mp3_frame (				// Output
   
 
   /* use m/s gfc->channels_out? */
-  check_ms_stereo =  (gfp->mode == MPG_MD_JOINT_STEREO);
   if (check_ms_stereo) {
     int gr0 = 0, gr1 = gfc->mode_gr-1;
     /* make sure block type is the same in each channel */
@@ -361,9 +368,11 @@ int  lame_encode_mp3_frame (				// Output
   if (gfp->force_ms) {
     gfc->mode_ext = MPG_MD_MS_LR;
   } else if (check_ms_stereo) {
-      /* ms_ratio = is like the ratio of side_energy/total_energy */
-      /*     ms_ratio_ave =  .50 * (ms_ratio[0] + ms_ratio[1]);*/
-      
+      /* ms_ratio = is scaled, for historical reasons, to look like
+	 a ratio of side_channel / total.  
+         0 = signal is 100% mono
+         .5 = L & R uncorrelated
+      */
       
       /* [0] and [1] are the results for the two granules in MPEG-1,
        * in MPEG-2 it's only a faked averaging of the same value
@@ -375,11 +384,15 @@ int  lame_encode_mp3_frame (				// Output
       FLOAT8  threshold1    = 0.35;
       FLOAT8  threshold2    = 0.45;
 
-      if (gfc->mode_gr==1) 
-	  gfc->ms_ratio[1]=gfc->ms_ratio[0];
-
-      ms_ratio_ave1 = 0.25 * ( gfc->ms_ratio[0] + gfc->ms_ratio[1] + ms_ratio_prev + ms_ratio_next );
-      ms_ratio_ave2 = 0.50 * ( gfc->ms_ratio[0] + gfc->ms_ratio[1] );
+      /* take an average */
+      if (gfc->mode_gr==1) {
+	  /* MPEG2 - no second granule */
+	  ms_ratio_ave1 = 0.33 * ( gfc->ms_ratio[0] + ms_ratio_prev + ms_ratio_next );
+	  ms_ratio_ave2 = gfc->ms_ratio[0];
+      }else{
+	  ms_ratio_ave1 = 0.25 * ( gfc->ms_ratio[0] + gfc->ms_ratio[1] + ms_ratio_prev + ms_ratio_next );
+	  ms_ratio_ave2 = 0.50 * ( gfc->ms_ratio[0] + gfc->ms_ratio[1] );
+      }
       
       if (gfp->mode_automs) {
 	  if ( gfp->compression_ratio < 11.025 ) {
@@ -403,16 +416,17 @@ int  lame_encode_mp3_frame (				// Output
   }
 
 
-
+  /* copy data for MP3 frame analyzer */
   if (gfp->analysis && gfc->pinfo != NULL) {
     for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
       for ( ch = 0; ch < gfc->channels_out; ch++ ) {
 	gfc->pinfo->ms_ratio[gr]=gfc->ms_ratio[gr];
-	gfc->pinfo->ms_ener_ratio[gr]=gfc->ms_ener_ratio[gr];
+	gfc->pinfo->ms_ener_ratio[gr]=ms_ener_ratio[gr];
 	gfc->pinfo->blocktype[gr][ch]=
 	  gfc->l3_side.gr[gr].ch[ch].tt.block_type;
 	memcpy(gfc->pinfo->xr[gr][ch],xr[gr][ch],sizeof(xr[gr][ch]));
-	/* if MS stereo, switch to MS psy data */
+	/* in psymodel, LR and MS data was stored in pinfo.  
+	   switch to MS data: */
 	if (gfc->mode_ext==MPG_MD_MS_LR) {
 	  gfc->pinfo->pe[gr][ch]=gfc->pinfo->pe[gr][ch+2];
 	  gfc->pinfo->ers[gr][ch]=gfc->pinfo->ers[gr][ch+2];
@@ -428,10 +442,10 @@ int  lame_encode_mp3_frame (				// Output
 
   /* bit and noise allocation */
   if (MPG_MD_MS_LR == gfc->mode_ext) {
-    masking = &masking_MS_ratio;    /* use MS masking */
+    masking = &masking_MS;    /* use MS masking */
     pe_use = &pe_MS;
   } else {
-    masking = &masking_ratio;    /* use LR masking */
+    masking = &masking_LR;    /* use LR masking */
     pe_use = &pe;
   }
 
@@ -472,17 +486,17 @@ int  lame_encode_mp3_frame (				// Output
   switch (gfp->VBR){ 
   default:
   case vbr_off:
-    iteration_loop( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
+    iteration_loop( gfp,*pe_use,ms_ener_ratio, xr, *masking, l3_enc, scalefac);
     break;
   case vbr_mt:
-    VBR_quantize( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
+    VBR_quantize( gfp,*pe_use,ms_ener_ratio, xr, *masking, l3_enc, scalefac);
     break;
   case vbr_rh:
   case vbr_mtrh:
-    VBR_iteration_loop( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
+    VBR_iteration_loop( gfp,*pe_use,ms_ener_ratio, xr, *masking, l3_enc, scalefac);
     break;
   case vbr_abr:
-    ABR_iteration_loop( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
+    ABR_iteration_loop( gfp,*pe_use,ms_ener_ratio, xr, *masking, l3_enc, scalefac);
     break;
   }
 
@@ -497,6 +511,7 @@ int  lame_encode_mp3_frame (				// Output
   if (gfp->bWriteVbrTag) AddVbrFrame(gfp);
 
 
+  /* copy data for MP3 frame analyzer */
   if (gfp->analysis && gfc->pinfo != NULL) {
     int j;
     for ( ch = 0; ch < gfc->channels_out; ch++ ) {
