@@ -49,7 +49,7 @@
 #define XSTR(x)  STR(x)
 
 #ifdef HAVE_NASM
-# define V  "MMX, 3DNow!"
+# define V  "MMX, [E]3DNow!, SSE"
 #else
 # define V  ""
 #endif
