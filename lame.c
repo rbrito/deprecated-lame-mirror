@@ -436,12 +436,7 @@ void lame_print_config(void)
     (FLOAT)(gf.stereo*16*resamplerate)/
     (FLOAT)(bitrate[info->version][info->lay-1][info->bitrate_index]);
 
-  fprintf(stderr,"LAME version %s (www.sulaco.org/mp3) \n",get_lame_version());
-  fprintf(stderr,"GPSYCHO: GPL psycho-acoustic and noise shaping model version %s. \n",get_psy_version());
-#ifdef LIBSNDFILE
-  fprintf(stderr,"Input handled by libsndfile (www.zip.com.au/~erikd/libsndfile)\n");
-#endif
-
+  lame_print_version(stderr);
   if (gf.num_channels==2 && gf.stereo==1) {
     fprintf(stderr, "Autoconverting from stereo to mono. Setting encoding to mono mode.\n");
   }

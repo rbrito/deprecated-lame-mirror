@@ -37,7 +37,8 @@
 #define MP3X_ALPHAVERSION	0	/* Set number if this is an alpha version, otherwise zero */
 #define MP3X_BETAVERSION	0	/* Set number if this is a beta version, otherwise zero */
 
-
+#include "machine.h"
+void lame_print_version(FILE *);
 char* get_lame_version(void);		/* returns lame version number string */
 char* get_psy_version(void);		/* returns psy model version number string */
 char* get_mp3x_version(void);		/* returns mp3x version number string */

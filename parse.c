@@ -20,6 +20,7 @@
 
 void lame_usage(char *name)  /* print syntax & exit */
 {
+  lame_print_version(stderr);
   fprintf(stderr,"\n");
   fprintf(stderr,"USAGE   :  %s [options] <infile> [outfile]\n",name);
   fprintf(stderr,"\n<infile> and/or <outfile> can be \"-\", which means stdin/stdout.\n");
@@ -40,6 +41,7 @@ void lame_usage(char *name)  /* print syntax & exit */
 
 void lame_help(char *name)  /* print syntax & exit */
 {
+  lame_print_version(stdout);
   fprintf(stdout,"\n");
   fprintf(stdout,"USAGE   :  %s [options] <infile> [outfile]\n",name);
   fprintf(stdout,"\n<infile> and/or <outfile> can be \"-\", which means stdin/stdout.\n");

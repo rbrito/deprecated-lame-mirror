@@ -25,6 +25,15 @@
 
 static char lpszVersion[80];
 
+void lame_print_version(FILE *ofile) {
+  fprintf(ofile,"LAME version %s (www.sulaco.org/mp3) \n",get_lame_version());
+  fprintf(ofile,"GPSYCHO: GPL psycho-acoustic and noise shaping model version %s. \n",get_psy_version());
+#ifdef LIBSNDFILE
+  fprintf(ofile,"Input handled by libsndfile (www.zip.com.au/~erikd/libsndfile)\n");
+#endif
+}
+
+
 char* get_lame_version(void)
 {
 	if (LAME_ALPHAVERSION>0)
