@@ -486,9 +486,9 @@ id3tag_write_v2(lame_global_flags *gfp)
             /* clear any padding bytes */
             memset(p, 0, tag_size - (p - tag));
             /* write tag directly into bitstream at current position */
-            for (index = 0; index < tag_size; ++index) {
-                add_dummy_byte(gfp, tag[index]);
-            }
+            for (index = 0; index < tag_size; ++index)
+		add_dummy_byte(gfc, tag[index]);
+
             free(tag);
             return tag_size;
         }
@@ -538,9 +538,9 @@ id3tag_write_v1(lame_global_flags *gfp)
         }
         *p++ = gfc->tag_spec.genre;
         /* write tag directly into bitstream at current position */
-        for (index = 0; index < 128; ++index) {
-            add_dummy_byte(gfp, tag[index]);
-        }
+        for (index = 0; index < 128; ++index)
+	    add_dummy_byte(gfc, tag[index]);
+
         return 128;
     }
     return 0;

@@ -114,10 +114,8 @@ putbits2(lame_internal_flags *gfc, int val, int j)
 
 /*write j bits into the bit stream, ignoring frame headers */
 inline static void
-putbits_noheaders(lame_internal_flags *gfc, int val, int j)
+putbits_noheaders(Bit_stream_struc *bs, int val, int j)
 {
-    Bit_stream_struc *bs = &gfc->bs;
-
     assert(j < MAX_LENGTH-2);
     while (j > 0) {
 	int k;
@@ -734,13 +732,13 @@ flush_bitstream(lame_global_flags *gfp)
 
 
 
-void  add_dummy_byte ( lame_global_flags* const gfp, unsigned char val )
+void  add_dummy_byte (lame_internal_flags* gfc, unsigned char val )
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
+    Bit_stream_struc *bs = &gfc->bs;
     int i;
-    putbits_noheaders(gfc, val, 8);   
+    putbits_noheaders(bs, val, 8);
     for (i = 0 ; i < MAX_HEADER_BUF ; i++)
-	gfc->bs.header[i].write_timing += 8;
+	bs->header[i].write_timing += 8;
 }
 
 /*
