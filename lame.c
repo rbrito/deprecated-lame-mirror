@@ -56,7 +56,7 @@ static Bit_stream_struc   bs;
 static III_side_info_t l3_side;
 static frame_params fr_ps;
 static int target_bitrate;
-static layer info;
+static layer g_info;
 #define MFSIZE (1152+1152+ENCDELAY-MDCTDELAY)
 static short int mfbuf[2][MFSIZE];
 static int mf_size;
@@ -71,9 +71,24 @@ static int mf_samples_to_encode;
  ********************************************************************/
 void lame_init_params(void)
 {
-  layer *info = fr_ps.header;
   int i,framesize;
   FLOAT compression_ratio;
+  layer *info = &g_info;
+
+
+  /* Clear info structure */
+  memset(info,0,sizeof(layer));
+  memset(&bs, 0, sizeof(Bit_stream_struc));
+  memset(&fr_ps, 0, sizeof(frame_params));
+  memset(&l3_side,0x00,sizeof(III_side_info_t));
+
+  fr_ps.header = info;
+  fr_ps.tab_num = -1;             /* no table loaded */
+  fr_ps.alloc = NULL;
+  info->version = MPEG_AUDIO_ID;   /* =1   Default: MPEG-1 */
+  info->extension = gf.private;
+
+
 
   gf.frameNum=0;
   gf.force_ms=0;
@@ -504,11 +519,10 @@ void lame_print_config(void)
 {
   layer *info = fr_ps.header;
   char *mode_names[4] = { "stereo", "j-stereo", "dual-ch", "single-ch" };
-  FLOAT out_samplerate=s_freq[info->version][info->sampling_frequency];
+  FLOAT out_samplerate=gf.out_samplerate/1000.0;
   FLOAT in_samplerate = gf.resample_ratio*out_samplerate;
   FLOAT compression=
-    (FLOAT)(gf.stereo*16*out_samplerate)/
-    (FLOAT)(bitrate[info->version][info->lay-1][info->bitrate_index]);
+    (FLOAT)(gf.stereo*16*out_samplerate)/(FLOAT)(gf.brate);
 
   lame_print_version(stderr);
   if (gf.num_channels==2 && gf.stereo==1) {
@@ -536,12 +550,11 @@ void lame_print_config(void)
 	    (strcmp(gf.outPath, "-")? gf.outPath : "stdout"));
     if (gf.VBR)
       fprintf(stderr, "Encoding as %.1fkHz VBR(q=%i) %s MPEG%i LayerIII  qual=%i\n",
-	      s_freq[info->version][info->sampling_frequency],
+	      gf.out_samplerate/1000.0,
 	      gf.VBR_q,mode_names[info->mode],2-info->version,gf.quality);
     else
       fprintf(stderr, "Encoding as %.1f kHz %d kbps %s MPEG%i LayerIII (%4.1fx)  qual=%i\n",
-	      s_freq[info->version][info->sampling_frequency],
-	      bitrate[info->version][info->lay-1][info->bitrate_index],
+	      gf.out_samplerate/1000.0,gf.brate,
 	      mode_names[info->mode],2-info->version,compression,gf.quality);
   }
   fflush(stderr);
@@ -636,7 +649,7 @@ int lame_encode_frame(short int inbuf_l[],short int inbuf_r[],int mf_size,char *
     /* Figure average number of 'slots' per frame. */
     FLOAT8 avg_slots_per_frame;
     FLOAT8 sampfreq =   s_freq[info->version][info->sampling_frequency];
-    int bit_rate = bitrate[info->version][info->lay-1][info->bitrate_index];
+    int bit_rate = gf.brate;
     sentBits = 0;
     bitsPerSlot = 8;
     avg_slots_per_frame = (bit_rate*samplesPerFrame) /
@@ -1193,6 +1206,7 @@ lame_global_flags * lame_init(void)
   gf.brate=0;
   gf.copyright=0;
   gf.original=1;
+  gf.private=0;
   gf.error_protection=0;
   gf.emphasis=0;
   gf.in_samplerate=1000*44.1;
@@ -1203,20 +1217,6 @@ lame_global_flags * lame_init(void)
   gf.inPath=NULL;
   gf.outPath=NULL;
   id3tag.used=0;
-
-  /* Clear info structure */
-  memset(&info,0,sizeof(info));
-  memset(&bs, 0, sizeof(Bit_stream_struc));
-  memset(&fr_ps, 0, sizeof(frame_params));
-  memset(&l3_side,0x00,sizeof(III_side_info_t));
-
-
-
-  fr_ps.header = &info;
-  fr_ps.tab_num = -1;             /* no table loaded */
-  fr_ps.alloc = NULL;
-  info.version = MPEG_AUDIO_ID;   /* =1   Default: MPEG-1 */
-  info.extension = 0;
 
   return &gf;
 }
@@ -1243,7 +1243,7 @@ int lame_encode_finish(char *mp3buffer)
 
   gf.frameNum--;
   if (!gf.gtkflag && !gf.silent) {
-      timestatus(&info,gf.frameNum,gf.totalframes);
+      timestatus(&g_info,gf.frameNum,gf.totalframes);
 #ifdef BRHIST
       if (disp_brhist)
 	{

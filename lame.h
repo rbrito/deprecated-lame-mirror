@@ -64,6 +64,7 @@ typedef struct  {
   int original;                   /* mark as original */
   int error_protection;           /* use 2 bytes per frame for a CRC checksum */
   int padding;                    /* 0=no padding, 1=always pad, 2=adjust padding */
+  int private;                    /* the MP3 'private' bit.  meaningless */
 
   /* quantization/noise shaping */
   int disable_reservoir;          /* use bit reservoir? */
