@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "id3tag.h"
-
+ID3TAGDATA id3tag;
  
 /*
  * If "string" is shorter than "length", pad it with ' ' (spaces)

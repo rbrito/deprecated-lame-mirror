@@ -11,7 +11,6 @@
 #include <assert.h>
 
 
-extern char inPath[MAX_NAME_SIZE];
 extern int makeframe(void);
 
 /* global variables for the state of the system */
@@ -1144,7 +1143,7 @@ int gtkcontrol(void)
     pplot = &Pinfo[READ_AHEAD];
 
     strcpy(frameinfo,"MP3x: ");
-    strncat(frameinfo,inPath,70);
+    strncat(frameinfo,gf.inPath,70);
 
     window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title (GTK_WINDOW (window), frameinfo);

@@ -247,8 +247,6 @@ void SwapBytesInWords( short *loc, int words )
   functions are available.
 ********************************************************************/
 
-/*open_bit_stream_w(); open the device to write the bit stream into it    */
-/*open_bit_stream_r(); open the device to read the bit stream from it     */
 /*alloc_buffer();      open and initialize the buffer;                    */
 /*desalloc_buffer();   empty and close the buffer                         */
 /*back_track_buffer();     goes back N bits in the buffer                 */
@@ -260,35 +258,6 @@ void SwapBytesInWords( short *loc, int words )
 /*                 otherwise returns 0                                      */
 
 
-
-/* empty the buffer to the output device when the buffer becomes full */
-/* mt 3/99: modified so we can call empty_buffer even if buffer is not full */
-/* add error checking -- 1999/06 Alvaro Martinez Echevarria */
-/* someone gimme a good reason for writing bytes one by
- * one; changed -- 1999/06 Alvaro Martinez Echevarria */
-void write_buffer(bs)
-Bit_stream_struc *bs;   /* bit stream structure */
-{
-   register int i,j;
-   int minimum=1+bs->buf_byte_idx;    /* end of the buffer to empty */
-   unsigned char *tmpbuf;
-   if (bs->buf_size-minimum <= 0) return;
-
-   tmpbuf=(unsigned char *)malloc(bs->buf_size-minimum);
-   if (tmpbuf==NULL) {
-     perror("write_buffer(): error in malloc()\n");
-     exit(1);
-   }
-   for (i=bs->buf_size-1,j=0;i>=minimum;i--,j++) {
-     tmpbuf[j]=bs->buf[i];
-   }
-   fwrite(tmpbuf,1,bs->buf_size-minimum,bs->pt);
-   if (ferror(bs->pt)) {
-     fprintf(stderr,"error en fwrite()\n");
-     exit(1);
-   }
-   free(tmpbuf);
-}
 
 int copy_buffer(char *buffer,Bit_stream_struc *bs)
 {
@@ -312,36 +281,10 @@ void empty_buffer(Bit_stream_struc *bs)
 
 
 
-/* open the device to write the bit stream into it */
-void open_bit_stream_w(	
-Bit_stream_struc* bs,	/* bit stream structure */
-char* bs_filenam,	/* name of the bit stream file */
-int size,              /* size of the buffer */
-int nowrite             /* =1 to disable output */)
+void init_bit_stream_w(Bit_stream_struc* bs)
 {
-  if (!nowrite) {
-    if (!strcmp(bs_filenam, "-")) {
-      /* Write to standard output. */
-#ifdef __EMX__
-      _fsetmode(stdout,"b");
-#elif (defined  __BORLANDC__)
-      setmode(_fileno(stdout), O_BINARY);
-#elif (defined  __CYGWIN__)
-      setmode(fileno(stdout), _O_BINARY);
-#elif (defined _WIN32)
-      _setmode(_fileno(stdout), _O_BINARY);
-#endif
-      bs->pt = stdout;
-    } else {
-      if ((bs->pt = fopen(bs_filenam, "wb")) == NULL) {
-	fprintf(stderr,"Could not create \"%s\".\n", bs_filenam);
-	exit(1);
-      }
-    }
-  }
-
-   alloc_buffer(bs, size);
-   bs->buf_byte_idx = size-1;
+   alloc_buffer(bs, BUFFER_SIZE);
+   bs->buf_byte_idx = BUFFER_SIZE-1;
    bs->buf_bit_idx=8;
    bs->totbit=0;
 }

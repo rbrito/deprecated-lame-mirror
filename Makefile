@@ -212,6 +212,7 @@ endif
 
 CC_SWITCHES = -DNDEBUG -D__NO_MATH_INLINES $(CC_OPTS) $(SNDLIB) $(GTK) $(BRHIST_SWITCH)
 c_sources = \
+        brhist.c \
 	filters.c \
 	formatBitstream.c \
 	fft.c \
@@ -221,6 +222,7 @@ c_sources = \
 	ieeefloat.c \
         lame.c \
         newmdct.c \
+        parse.c \
 	portableio.c \
 	psymodel.c \
 	quantize.c \

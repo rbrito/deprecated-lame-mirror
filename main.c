@@ -23,13 +23,30 @@ int main(int argc, char **argv)
 
   char mp3buffer[LAME_MAXMP3BUFFER];
   short int Buffer[2][1152];
+  int iread,imp3;
   lame_global_flags *gf;
+  FILE *outf;
 
-  gf=lame_init(0,0);
+  gf=lame_init();
   if(argc==1) lame_usage(argv[0]);  /* no command-line args  */
+
   lame_parse_args(argc, argv);
+
+  /* open the output file */
+  if (!strcmp(gf->outPath, "-")) {
+    outf = stdout;
+  } else {
+    if ((outf = fopen(gf->outPath, "wb")) == NULL) {
+      fprintf(stderr,"Could not create \"%s\".\n", gf->outPath);
+      exit(1);
+    }
+  }
+  lame_init_infile();
   lame_init_params();
   lame_print_config();
+
+
+
 
 #ifdef HAVEGTK
   if (gf->gtkflag) gtk_init (&argc, &argv);
@@ -37,24 +54,27 @@ int main(int argc, char **argv)
   else 
 #endif
     {
-      int iread;
       int samples_to_encode = gf->encoder_delay + 288;
 
       /* encode until we hit eof */
       do {
 	iread=lame_readframe(Buffer);
-	lame_encode(Buffer,mp3buffer);
+	imp3=lame_encode(Buffer,mp3buffer);
+	fwrite(mp3buffer,1,imp3,outf);
 	samples_to_encode += iread - gf->framesize;
       } while (iread);
 
       /* encode until we flush internal buffers.  (Buffer=0 at this point */
       while (samples_to_encode > 0) {
-	lame_encode(Buffer,mp3buffer);
+	imp3=lame_encode(Buffer,mp3buffer);
+	fwrite(mp3buffer,1,imp3,outf);
 	samples_to_encode -= gf->framesize;
       }
     }
   
-  lame_cleanup(mp3buffer);
+  imp3=lame_cleanup(mp3buffer);
+  fwrite(mp3buffer,1,imp3,outf);
+  fclose(outf);
   return 0;
 }
 

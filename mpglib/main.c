@@ -128,6 +128,20 @@ unsigned long *num_samples)
 
 
 
+int lame_decode_init(void)
+{
+  InitMP3(&mp);
+  memset(buf, 0, sizeof(buf));
+  return 0;
+}
+
+
+/*
+For lame_decode_fromfile:  return code
+  -1     error
+   0     ok, but need more data before outputing any samples
+   n     number of samples output.  either 576 or 1152 depending on MP3 file.
+*/
 int lame_decode_fromfile(FILE *fd, short pcm[][1152])
 {
   int size,stereo;
@@ -171,14 +185,14 @@ int lame_decode_fromfile(FILE *fd, short pcm[][1152])
 }
 
 
-int lame_decode_init(void)
-{
-  InitMP3(&mp);
-  memset(buf, 0, sizeof(buf));
-  return 0;
-}
 
 
+/*
+For lame_decode:  return code
+  -1     error
+   0     ok, but need more data before outputing any samples
+   n     number of samples output.  either 576 or 1152 depending on MP3 file.
+*/
 int lame_decode(char *buf,int len,short pcm[][1152])
 {
   int size;

@@ -38,10 +38,9 @@
 #include "version.h"
 #include "VbrTag.h"
 #include "id3tag.h"
-#include "get_audio.h"
 #include "tables.h"
-
-
+#include "brhist.h"
+#include "get_audio.h"
 
 /* Global flags.  defined extern in globalflags.h */
 /* default values set in lame_init() */
@@ -49,103 +48,11 @@ lame_global_flags gf;
 
 
 /* Global variable definitions for lame.c */
-int force_ms;
-ID3TAGDATA id3tag;
 Bit_stream_struc   bs;
 III_side_info_t l3_side;
 frame_params fr_ps;
-char    inPath[MAX_NAME_SIZE];
-char    outPath[MAX_NAME_SIZE];
 int target_bitrate;
-char               *programName;
 static layer info;
-
-#ifdef BRHIST
-#include <string.h>
-#include <termcap.h>
-void brhist_init(int br_min, int br_max);
-void brhist_add_count(void);
-void brhist_disp(void);
-void brhist_disp_total(void);
-extern long brhist_temp[15];
-int disp_brhist = 1;
-#endif
-
-#define DFLT_MOD        'j'    /* default mode is stereo */
-#define DFLT_SFQ        44.1   /* default input sampling rate is 44.1 kHz */
-#define DFLT_EXT        ".mp3" /* default output file extension */
-
-
-/************************************************************************
-*
-* usage
-*
-* PURPOSE:  Writes command line syntax to the file specified by #stderr#
-*
-************************************************************************/
-
-void lame_usage(char *name)  /* print syntax & exit */
-{
-  fprintf(stderr,"\n");
-  fprintf(stderr,"USAGE   :  %s [options] <infile> [outfile]\n",name);
-  fprintf(stderr,"\n<infile> and/or <outfile> can be \"-\", which means stdin/stdout.\n");
-  fprintf(stderr,"\n");
-  fprintf(stderr,"OPTIONS :\n");
-  fprintf(stderr,"    -m mode         (s)tereo, (j)oint, (f)orce or (m)ono  (default %c)\n",DFLT_MOD);
-  fprintf(stderr,"                    force = force ms_stereo on all frames. Faster\n");
-  fprintf(stderr,"    -b bitrate      set the bitrate, default 128kbps\n");
-  fprintf(stderr,"    -s sfreq        sampling frequency of input file(kHz) - default %4.1f\n",DFLT_SFQ);
-  fprintf(stderr,"  --resample sfreq  sampling frequency of output file(kHz)- default=input sfreq\n");
-  fprintf(stderr,"  --mp3input        input file is a MP3 file\n");
-  fprintf(stderr,"  --voice           experimental voice mode\n");
-  fprintf(stderr,"\n");
-  fprintf(stderr,"  --lowpass freq         frequency(kHz), lowpass filter cutoff above freq\n");
-  fprintf(stderr,"  --lowpass-width freq   frequency(kHz) - default 15%% of lowpass freq\n");
-  fprintf(stderr,"  --highpass freq        frequency(kHz), highpass filter cutoff below freq\n");
-  fprintf(stderr,"  --highpass-width freq  frequency(kHz) - default 15%% of highpass freq\n");
-  fprintf(stderr,"\n");
-  fprintf(stderr,"    -v              use variable bitrate (VBR)\n");
-  fprintf(stderr,"    -V n            quality setting for VBR.  default n=%i\n",gf.VBR_q);
-  fprintf(stderr,"                    0=high quality,bigger files. 9=smaller files\n");
-  fprintf(stderr,"    -b bitrate      specify minimum allowed bitrate, default 32kbs\n");
-  fprintf(stderr,"    -B bitrate      specify maximum allowed bitrate, default 256kbs\n");
-  fprintf(stderr,"    -t              disable Xing VBR informational tag\n");
-  fprintf(stderr,"    --nohist        disable VBR histogram display\n");
-  fprintf(stderr,"\n");
-  fprintf(stderr,"    -h              use (maybe) quality improvements\n");
-  fprintf(stderr,"    -f              fast mode (low quality)\n");
-  fprintf(stderr,"    -k              keep ALL frequencies (disables all filters)\n");
-  fprintf(stderr,"    -d              allow channels to have different blocktypes\n");
-  fprintf(stderr,"  --athonly         only use the ATH for masking\n");
-  fprintf(stderr,"  --noath           disable the ATH for masking\n");
-  fprintf(stderr,"  --noshort         do not use short blocks\n");
-  fprintf(stderr,"  --nores           disable the bit reservoir\n");
-  fprintf(stderr,"  --cwlimit freq    compute tonality up to freq (in kHz)\n");
-  fprintf(stderr,"\n");
-  fprintf(stderr,"    -r              input is raw pcm\n");
-  fprintf(stderr,"    -x              force byte-swapping of input\n");
-  fprintf(stderr,"    -a              downmix from stereo to mono file for mono encoding\n");
-  fprintf(stderr,"    -e emp          de-emphasis n/5/c  (obsolete)\n");
-  fprintf(stderr,"    -p              error protection.  adds 16bit checksum to every frame\n");
-  fprintf(stderr,"                    (the checksum is computed correctly)\n");
-  fprintf(stderr,"    -c              mark as copyright\n");
-  fprintf(stderr,"    -o              mark as non-original\n");
-  fprintf(stderr,"    -S              don't print progress report, VBR histograms\n");
-  fprintf(stderr,"\n");
-  fprintf(stderr,"  Specifying any of the following options will add an ID3 tag:\n");
-  fprintf(stderr,"     --tt \"title\"     title of song (max 30 chars)\n");
-  fprintf(stderr,"     --ta \"artist\"    artist who did the song (max 30 chars)\n");
-  fprintf(stderr,"     --tl \"album\"     album where it came from (max 30 chars)\n");
-  fprintf(stderr,"     --ty \"year\"      year in which the song/album was made (max 4 chars)\n");
-  fprintf(stderr,"     --tc \"comment\"   additional info (max 30 chars)\n");
-  fprintf(stderr,"     --tg \"genre\"     genre of song (name or number)\n");
-  fprintf(stderr,"\n");
-#ifdef HAVEGTK
-  fprintf(stderr,"    -g              run graphical analysis on <infile>\n");
-#endif
-  display_bitrates(2);
-  exit(1);
-}
 
 
 
@@ -163,7 +70,7 @@ void lame_init_params(void)
   FLOAT compression_ratio;
 
   gf.frameNum=0;
-  force_ms=FALSE;
+  gf.force_ms=0;
   InitFormatBitStream();
   if (gf.num_channels==1) {
     gf.mode = MPG_MD_MONO;
@@ -396,10 +303,21 @@ void lame_init_params(void)
 
   if (gf.VBR) gf.highq=1;                    /* always use highq with VBR */
   /* dont allow forced mid/side stereo for mono output */
-  if (gf.mode == MPG_MD_MONO) force_ms=0;  
+  if (gf.mode == MPG_MD_MONO) gf.force_ms=0;  
+
+
+  /* Do not write VBR tag if VBR flag is not specified */
+  if (gf.VBR==0) gf.bWriteVbrTag=0;
+
+  /* some file options not allowed if output is: not specified or stdout */
+  if (gf.outPath==NULL || gf.outPath[0]=='-' ) {
+    gf.bWriteVbrTag=0; /* turn off VBR tag */
+    id3tag.used=0;         /* turn of id3 tagging */
+  }
+
+
 
   if (gf.gtkflag) {
-    gf.lame_nowrite=1;    /* disable all file output */
     gf.bWriteVbrTag=0;  /* disable Xing VBR tag */
   }
 
@@ -407,15 +325,13 @@ void lame_init_params(void)
     gf.bWriteVbrTag=0;      /* no MPEG2 Xing VBR tags yet */
   }
 
-  /* open the output file */
-  /* if gtkflag, no output.  but set outfile = stdout */
-  open_bit_stream_w(&bs, outPath, BUFFER_SIZE,gf.lame_nowrite);  
+  init_bit_stream_w(&bs);
 
 
 #ifdef BRHIST
   if (gf.VBR) {
     if (disp_brhist)
-      brhist_init(1, 14);
+      brhist_init(1, 14, info);
   } else
     disp_brhist = 0;
 #endif
@@ -425,410 +341,13 @@ void lame_init_params(void)
     {
       /* Write initial VBR Header to bitstream */
       InitVbrTag(&bs,info->version-1,gf.mode,info->sampling_frequency);
-      /* flush VBR header frame to mp3 file */
-      if (!gf.lame_nowrite) 
-	  {
-		write_buffer(&bs);
-		empty_buffer(&bs);
-	  }
-      /* note: if lame_nowrite==0, we do not empty the buffer, the VBR header will
-       * remain in the bit buffer and the first mp3 frame will be
-       * appeneded.  this way, lame_encode() will return to the calling
-       * program the VBR header along with the first mp3 frame */
     }
+
   return;
 }
 
 
 
-
-
-
-
-/************************************************************************
-*
-* parse_args
-*
-* PURPOSE:  Sets encoding parameters to the specifications of the
-* command line.  Default settings are used for parameters
-* not specified in the command line.
-*
-* If the input file is in WAVE or AIFF format, the sampling frequency is read
-* from the AIFF header.
-*
-* The input and output filenames are read into #inpath# and #outpath#.
-*
-************************************************************************/
-void lame_parse_args(int argc, char **argv)
-{
-  FLOAT srate;
-  int   err = 0, i = 0;
-  int autoconvert=0;
-
-
-  programName = argv[0]; 
-  inPath[0] = '\0';   
-  outPath[0] = '\0';
-
-  id3_inittag(&id3tag);
-  id3tag.used = 0;
-
-  /* process args */
-  while(++i<argc && err == 0) {
-    char c, *token, *arg, *nextArg;
-    int  argUsed;
-    
-    token = argv[i];
-    if(*token++ == '-') {
-      if(i+1 < argc) nextArg = argv[i+1];
-      else           nextArg = "";
-      argUsed = 0;
-      if (! *token) {
-	/* The user wants to use stdin and/or stdout. */
-	if(inPath[0] == '\0')       strncpy(inPath, argv[i],MAX_NAME_SIZE);
-	else if(outPath[0] == '\0') strncpy(outPath, argv[i],MAX_NAME_SIZE);
-      } 
-      if (*token == '-') {
-	/* GNU style */
-	token++;
-
-	if (strcmp(token, "resample")==0) {
-	  argUsed=1;
-	  srate = atof( nextArg );
-	  /* samplerate = rint( 1000.0 * srate ); $A  */
-	  gf.resamplerate =  (( 1000.0 * srate ) + 0.5);
-	  if (srate  < 1) {
-	    fprintf(stderr,"Must specify a samplerate with --resample\n");
-	    exit(1);
-	  }
-	}
-	else if (strcmp(token, "mp3input")==0) {
-	  gf.input_format=sf_mp3;
-	}
-	else if (strcmp(token, "voice")==0) {
-	  gf.lowpassfreq=12000;
-	  gf.VBR_max_bitrate_kbps=160;
-	  gf.no_short_blocks=1;
-	}
-	else if (strcmp(token, "noshort")==0) {
-	  gf.no_short_blocks=1;
-	}
-	else if (strcmp(token, "noath")==0) {
-	  gf.noATH=1;
-	}
-	else if (strcmp(token, "nores")==0) {
-	  gf.disable_reservoir=1;
-	}
-	else if (strcmp(token, "athonly")==0) {
-	  gf.ATHonly=1;
-	}
-	else if (strcmp(token, "nohist")==0) {
-#ifdef BRHIST
-	  disp_brhist = 0;
-#endif
-	}
-	/* options for ID3 tag */
- 	else if (strcmp(token, "tt")==0) {
- 		id3tag.used=1;      argUsed = 1;
-  		strncpy(id3tag.title, nextArg, 30);
- 		}
- 	else if (strcmp(token, "ta")==0) {
- 		id3tag.used=1; argUsed = 1;
-  		strncpy(id3tag.artist, nextArg, 30);
- 		}
- 	else if (strcmp(token, "tl")==0) {
- 		id3tag.used=1; argUsed = 1;
-  		strncpy(id3tag.album, nextArg, 30);
- 		}
- 	else if (strcmp(token, "ty")==0) {
- 		id3tag.used=1; argUsed = 1;
-  		strncpy(id3tag.year, nextArg, 4);
- 		}
- 	else if (strcmp(token, "tc")==0) {
- 		id3tag.used=1; argUsed = 1;
-  		strncpy(id3tag.comment, nextArg, 30);
- 		}
- 	else if (strcmp(token, "tg")==0) {
-		argUsed = strtol (nextArg, &token, 10);
-		if (nextArg==token) {
-		  /* Genere was given as a string, so it's number*/
-		  for (argUsed=0; argUsed<=genre_last; argUsed++) {
-		    if (!strcmp (genre_list[argUsed], nextArg)) { break; }
-		  }
- 		}
-		if (argUsed>genre_last) { 
-		  argUsed=255; 
-		  fprintf(stderr,"Unknown genre: %s.  Specifiy genre number \n", nextArg);
-		}
-	        argUsed &= 255; c=(char)(argUsed);
-
- 		id3tag.used=1; argUsed = 1;
-  		strncpy(id3tag.genre, &c, 1);
-	       }
-	else if (strcmp(token, "lowpass")==0) {
-	  argUsed=1;
-	  gf.lowpassfreq =  (( 1000.0 * atof( nextArg ) ) + 0.5);
-	  if (gf.lowpassfreq  < 1) {
-	    fprintf(stderr,"Must specify lowpass with --lowpass freq, freq >= 0.001 kHz\n");
-	    exit(1);
-	  }
-	}
-	else if (strcmp(token, "lowpass-width")==0) {
-	  argUsed=1;
-	  gf.lowpasswidth =  (( 1000.0 * atof( nextArg ) ) + 0.5);
-	  if (gf.lowpasswidth  < 0) {
-	    fprintf(stderr,"Must specify lowpass width with --lowpass-width freq, freq >= 0 kHz\n");
-	    exit(1);
-	  }
-	}
-	else if (strcmp(token, "highpass")==0) {
-	  argUsed=1;
-	  gf.highpassfreq =  (( 1000.0 * atof( nextArg ) ) + 0.5);
-	  if (gf.highpassfreq  < 1) {
-	    fprintf(stderr,"Must specify highpass with --highpass freq, freq >= 0.001 kHz\n");
-	    exit(1);
-	  }
-	}
-	else if (strcmp(token, "highpass-width")==0) {
-	  argUsed=1;
-	  gf.highpasswidth =  (( 1000.0 * atof( nextArg ) ) + 0.5);
-	  if (gf.highpasswidth  < 0) {
-	    fprintf(stderr,"Must specify highpass width with --highpass-width freq, freq >= 0 kHz\n");
-	    exit(1);
-	  }
-	}
-	else if (strcmp(token, "cwlimit")==0) {
-	  argUsed=1;
-	  gf.cwlimit =  atoi( nextArg );
-	  if (gf.cwlimit <= 0 ) {
-	    fprintf(stderr,"Must specify cwlimit in kHz\n");
-	    exit(1);
-	  }
-	}
-	else
-	  {
-	    fprintf(stderr,"%s: unrec option --%s\n",
-		    programName, token);
-	  }
-	i += argUsed;
-	
-      } else  while( (c = *token++) ) {
-	if(*token ) arg = token;
-	else                             arg = nextArg;
-	switch(c) {
-	case 'm':        argUsed = 1;   gf.mode_fixed = 1;
-	  if (*arg == 's')
-	    { gf.mode = MPG_MD_STEREO; }
-	  else if (*arg == 'd')
-	    { gf.mode = MPG_MD_DUAL_CHANNEL; }
-	  else if (*arg == 'j')
-	    { gf.mode = MPG_MD_JOINT_STEREO; }
-	  else if (*arg == 'f')
-	    { gf.mode = MPG_MD_JOINT_STEREO; force_ms=1; }
-	  else if (*arg == 'm')
-	    { gf.mode = MPG_MD_MONO; }
-	  else {
-	    fprintf(stderr,"%s: -m mode must be s/d/j/f/m not %s\n",
-		    programName, arg);
-	    err = 1;
-	  }
-	  break;
-	case 'V':        argUsed = 1;   gf.VBR = 1;  
-	  if (*arg == '0')
-	    { gf.VBR_q=0; }
-	  else if (*arg == '1')
-	    { gf.VBR_q=1; }
-	  else if (*arg == '2')
-	    { gf.VBR_q=2; }
-	  else if (*arg == '3')
-	    { gf.VBR_q=3; }
-	  else if (*arg == '4')
-	    { gf.VBR_q=4; }
-	  else if (*arg == '5')
-	    { gf.VBR_q=5; }
-	  else if (*arg == '6')
-	    { gf.VBR_q=6; }
-	  else if (*arg == '7')
-	    { gf.VBR_q=7; }
-	  else if (*arg == '8')
-	    { gf.VBR_q=8; }
-	  else if (*arg == '9')
-	    { gf.VBR_q=9; }
-	  else {
-	    fprintf(stderr,"%s: -V n must be 0-9 not %s\n",
-		    programName, arg);
-	    err = 1;
-	  }
-	  break;
-	  
-	case 's':
-	  argUsed = 1;
-	  srate = atof( arg );
-	  /* samplerate = rint( 1000.0 * srate ); $A  */
-	  gf.samplerate =  (( 1000.0 * srate ) + 0.5);
-	  break;
-	case 'b':        
-	  argUsed = 1;
-	  gf.brate = atoi(arg); 
-	  gf.VBR_min_bitrate_kbps=gf.brate;
-	  break;
-	case 'B':        
-	  argUsed = 1;
-	  gf.VBR_max_bitrate_kbps=atoi(arg); 
-	  break;	
-case 't':  /* dont write VBR tag */
-		gf.bWriteVbrTag=0;
-	  break;
-	case 'r':  /* force raw pcm input file */
-#ifdef LIBSNDFILE
-	  fprintf(stderr,"WARNING: libsndfile may ignore -r and perform fseek's on the input.\n");
-	  fprintf(stderr,"Compile without libsndfile if this is a problem.\n");
-#endif
-	  gf.input_format=sf_raw;
-	  break;
-	case 'x':  /* force byte swapping */
-	  gf.swapbytes=TRUE;
-	  break;
-	case 'p': /* (jo) error_protection: add crc16 information to stream */
-	  gf.error_protection = 1; 
-	  break;
-	case 'a': /* autoconvert input file from stereo to mono - for mono mp3 encoding */
-	  autoconvert=1;
-	  gf.mode=MPG_MD_MONO;
-	  gf.mode_fixed=1;
-	  break;
-	case 'h': 
-	  gf.highq = TRUE;
-	  break;
-	case 'k': 
-	  gf.sfb21=0;  
-	  gf.lowpassfreq=-1;
-	  gf.highpassfreq=-1;
-	  break;
-	case 'd': 
-	  gf.allow_diff_short = 1;
-	  break;
-	case 'v': 
-	  gf.VBR = 1; 
-	  break;
-	case 'S': 
-	  gf.silent = TRUE;
-	  break;
-	case 'X':        argUsed = 1;   gf.experimentalX = 0;
-	  if (*arg == '0')
-	    { gf.experimentalX=0; }
-	  else if (*arg == '1')
-	    { gf.experimentalX=1; }
-	  else if (*arg == '2')
-	    { gf.experimentalX=2; }
-	  else if (*arg == '3')
-	    { gf.experimentalX=3; }
-	  else if (*arg == '4')
-	    { gf.experimentalX=4; }
-	  else if (*arg == '5')
-	    { gf.experimentalX=5; }
-	  else if (*arg == '6')
-	    { gf.experimentalX=6; }
-	  else {
-	    fprintf(stderr,"%s: -X n must be 0-6, not %s\n",
-		    programName, arg);
-	    err = 1;
-	  }
-	  break;
-
-
-	case 'Y': 
-	  gf.experimentalY = TRUE;
-	  break;
-	case 'Z': 
-	  gf.experimentalZ = TRUE;
-	  break;
-	case 'f': 
-	  gf.fast_mode = 1;
-	  break;
-#ifdef HAVEGTK
-	case 'g': /* turn on gtk analysis */
-	  gf.gtkflag = TRUE;
-	  break;
-#endif
-	case 'e':        argUsed = 1;
-	  if (*arg == 'n')                    gf.emphasis = 0;
-	  else if (*arg == '5')               gf.emphasis = 1;
-	  else if (*arg == 'c')               gf.emphasis = 3;
-	  else {
-	    fprintf(stderr,"%s: -e emp must be n/5/c not %s\n",
-		    programName, arg);
-	    err = 1;
-	  }
-	  break;
-	case 'c':       gf.copyright = 1; break;
-	case 'o':       gf.original  = 0; break;
-	default:        fprintf(stderr,"%s: unrec option %c\n",
-				programName, c);
-	err = 1; break;
-	}
-	if(argUsed) {
-	  if(arg == token)    token = "";   /* no more from token */
-	  else                ++i;          /* skip arg we used */
-	  arg = ""; argUsed = 0;
-	}
-      }
-    } else {
-      if(inPath[0] == '\0')       strncpy(inPath, argv[i], MAX_NAME_SIZE);
-      else if(outPath[0] == '\0') strncpy(outPath, argv[i], MAX_NAME_SIZE);
-      else {
-	fprintf(stderr,"%s: excess arg %s\n", programName, argv[i]);
-	err = 1;
-      }
-    }
-  }  /* loop over args */
-
-  /* Do not write VBR tag if VBR flag is not specified */
-  if (gf.bWriteVbrTag==1 && gf.VBR==0) gf.bWriteVbrTag=0;
-
-  if(err || inPath[0] == '\0') lame_usage(programName);  /* never returns */
-  if (inPath[0]=='-') gf.silent=1;  /* turn off status - it's broken for stdin */
-  if(outPath[0] == '\0') {
-    if (inPath[0]=='-') {
-      /* if input is stdin, default output is stdout */
-      strcpy(outPath,"-");
-    }else {
-      strncpy(outPath, inPath, MAX_NAME_SIZE - strlen(DFLT_EXT));
-      strncat(outPath, DFLT_EXT, strlen(DFLT_EXT) );
-    }
-  }
-  /* some file options not allowed with stdout */
-  if (outPath[0]=='-') {
-    gf.bWriteVbrTag=0; /* turn off VBR tag */
-    if (id3tag.used) {
-      id3tag.used=0;         /* turn of id3 tagging */
-      fprintf(stderr,"id3tag ignored: id3 tagging not supported for stdout.\n");
-    }
-  }
-
-
-  /* if user did not explicitly specify input is mp3, check file name */
-  if (gf.input_format != sf_mp3)
-    if (!(strcmp((char *) &inPath[strlen(inPath)-4],".mp3")))
-      gf.input_format = sf_mp3;
-
-  /* default guess for number of channels */
-  if (autoconvert) gf.num_channels=2; 
-  else if (gf.mode == MPG_MD_MONO) gf.num_channels=1;
-  else gf.num_channels=2;
-  
-#ifndef _BLADEDLL
-  if (!gf.lame_noread) {
-    /* open the input file */
-    OpenSndFile(inPath,gf.samplerate,gf.num_channels);  
-    /* if GetSndSampleRate is non zero, use it to overwrite the default */
-    if (GetSndSampleRate()) gf.samplerate=GetSndSampleRate();
-    if (GetSndChannels()) gf.num_channels=GetSndChannels();
-    gf.num_samples = GetSndSamples();
-  }
-#endif
-
-}
 
 
 
@@ -880,12 +399,12 @@ void lame_print_config(void)
   }
 
   if (gf.gtkflag) {
-    fprintf(stderr, "Analyzing %s \n",inPath);
+    fprintf(stderr, "Analyzing %s \n",gf.inPath);
   }
   else {
     fprintf(stderr, "Encoding %s to %s\n",
-	    (strcmp(inPath, "-")? inPath : "stdin"),
-	    (strcmp(outPath, "-")? outPath : "stdout"));
+	    (strcmp(gf.inPath, "-")? gf.inPath : "stdin"),
+	    (strcmp(gf.outPath, "-")? gf.outPath : "stdout"));
     if (gf.VBR)
       fprintf(stderr, "Encoding as %.1fkHz VBR(q=%i) %s MPEG%i LayerIII file\n",
 	      s_freq[info->version][info->sampling_frequency],
@@ -902,138 +421,6 @@ void lame_print_config(void)
 
 
  
-#ifdef BRHIST
-
-#define BRHIST_BARMAX 50
-
-long brhist_count[15];
-long brhist_temp[15];
-int brhist_vbrmin;
-int brhist_vbrmax;
-long brhist_max;
-char brhist_bps[15][5];
-char brhist_backcur[200];
-char brhist_bar[BRHIST_BARMAX+10];
-char brhist_spc[BRHIST_BARMAX+1];
-
-char stderr_buff[BUFSIZ];
-
-
-void brhist_init(int br_min, int br_max)
-{
-  int i;
-  char term_buff[1024];
-  layer *info = fr_ps.header;
-  char *termname;
-  char *tp;
-  char tc[10];
-
-  for(i = 0; i < 15; i++)
-    {
-      sprintf(brhist_bps[i], "%3d:", bitrate[info->version][info->lay-1][i]);
-      brhist_count[i] = 0;
-      brhist_temp[i] = 0;
-    }
-
-  brhist_vbrmin = br_min;
-  brhist_vbrmax = br_max;
-
-  brhist_max = 0;
-
-  memset(&brhist_bar[0], '*', BRHIST_BARMAX);
-  brhist_bar[BRHIST_BARMAX] = '\0';
-  memset(&brhist_spc[0], ' ', BRHIST_BARMAX);
-  brhist_spc[BRHIST_BARMAX] = '\0';
-  brhist_backcur[0] = '\0';
-
-  if ((termname = getenv("TERM")) == NULL)
-    {
-      fprintf(stderr, "can't get TERM environment string.\n");
-      disp_brhist = 0;
-      return;
-    }
-
-  if (tgetent(term_buff, termname) != 1)
-    {
-      fprintf(stderr, "can't find termcap entry: %s\n", termname);
-      disp_brhist = 0;
-      return;
-    }
-
-  tc[0] = '\0';
-  tp = &tc[0];
-  tp=tgetstr("up", &tp);
-  brhist_backcur[0] = '\0';
-  for(i = br_min-1; i <= br_max; i++)
-    strcat(brhist_backcur, tp);
-  setbuf(stderr, stderr_buff);
-}
-
-void brhist_add_count(void)
-{
-  int i;
-
-  for(i = brhist_vbrmin; i <= brhist_vbrmax; i++)
-    {
-      brhist_count[i] += brhist_temp[i];
-      if (brhist_count[i] > brhist_max)
-	brhist_max = brhist_count[i];
-      brhist_temp[i] = 0;
-    }
-}
-
-void brhist_disp(void)
-{
-  int i;
-  long full;
-  int barlen;
-
-  full = (brhist_max < BRHIST_BARMAX) ? BRHIST_BARMAX : brhist_max;
-  fputc('\n', stderr);
-  for(i = brhist_vbrmin; i <= brhist_vbrmax; i++)
-    {
-      barlen = (brhist_count[i]*BRHIST_BARMAX+full-1) / full;
-      fputs(brhist_bps[i], stderr);
-      fputs(&brhist_bar[BRHIST_BARMAX - barlen], stderr);
-      fputs(&brhist_spc[barlen], stderr);
-      fputc('\n', stderr);
-    }
-  fputs(brhist_backcur, stderr);
-  fflush(stderr);
-}
-
-void brhist_disp_total(void)
-{
-  int i;
-  FLOAT ave;
-  layer *info = fr_ps.header;
-
-  for(i = brhist_vbrmin; i <= brhist_vbrmax; i++)
-    fputc('\n', stderr);
-
-  ave=0;
-  for(i = brhist_vbrmin; i <= brhist_vbrmax; i++)
-    ave += bitrate[info->version][info->lay-1][i]*
-      (FLOAT)brhist_count[i] / gf.totalframes;
-  fprintf(stderr, "\naverage: %2.0f kbs\n",ave);
-    
-#if 0
-  fprintf(stderr, "----- bitrate statistics -----\n");
-  fprintf(stderr, " [kbps]      frames\n");
-  for(i = brhist_vbrmin; i <= brhist_vbrmax; i++)
-    {
-      fprintf(stderr, "   %3d  %8ld (%.1f%%)\n",
-	      bitrate[info->version][info->lay-1][i],
-	      brhist_count[i],
-	      (FLOAT)brhist_count[i] / gf.totalframes * 100.0);
-    }
-#endif
-  fflush(stderr);
-}
-
-#endif /* BRHIST */
-
-
 
 
 
@@ -1276,7 +663,7 @@ FFT's                    <---------1024---------->
 			 ms_ratio_prev + ms_ratio_next);
     if ( ms_ratio_ave <.35) info->mode_ext = MPG_MD_MS_LR;
   }
-  if (force_ms) info->mode_ext = MPG_MD_MS_LR;
+  if (gf.force_ms) info->mode_ext = MPG_MD_MS_LR;
 
 
 #ifdef HAVEGTK
@@ -1349,7 +736,6 @@ FFT's                    <---------1024---------->
 
   /* copy mp3 bit buffer into array */
   mpg123count = copy_buffer(mpg123bs,&bs);
-  if (!gf.lame_nowrite) write_buffer(&bs);  /* ouput to mp3 file */
   empty_buffer(&bs);  /* empty buffer */
 
   if (gf.bWriteVbrTag) AddVbrFrame((int)(sentBits/8));
@@ -1376,7 +762,7 @@ FFT's                    <---------1024---------->
 
 
 /* initialize mp3 encoder */
-lame_global_flags * lame_init(int nowrite, int noread)
+lame_global_flags * lame_init(void)
 {
 
 #ifdef __FreeBSD__
@@ -1420,8 +806,6 @@ lame_global_flags * lame_init(int nowrite, int noread)
   gf.gtkflag=0;
   gf.highq=0;
   gf.input_format=sf_unknown;
-  gf.lame_nowrite=nowrite;
-  gf.lame_noread=noread;
   gf.lowpassfreq=0;
   gf.highpassfreq=0;
   gf.lowpasswidth=-1;
@@ -1441,24 +825,21 @@ lame_global_flags * lame_init(int nowrite, int noread)
   gf.VBR_min_bitrate_kbps=0;
   gf.VBR_max_bitrate_kbps=0;
 
-  switch(DFLT_MOD) {
-  case 's': gf.mode = MPG_MD_STEREO; break;
-  case 'd': gf.mode = MPG_MD_DUAL_CHANNEL; break;
-  case 'j': gf.mode = MPG_MD_JOINT_STEREO; break;
-  case 'm': gf.mode = MPG_MD_MONO; break;
-  default:
-    fprintf(stderr, "%s: Bad mode dflt %c\n", programName, DFLT_MOD);
-    abort();
-  }
+  gf.mode = MPG_MD_JOINT_STEREO; 
+  gf.force_ms=0;
   gf.brate=0;
   gf.copyright=0;
   gf.original=1;
   gf.error_protection=0;
   gf.emphasis=0;
-  gf.samplerate=1000*DFLT_SFQ;
+  gf.samplerate=1000*44.1;
   gf.resamplerate=0;
   gf.num_channels=2;
   gf.num_samples=MAX_U_32_NUM;
+
+  gf.inPath=NULL;
+  gf.outPath=NULL;
+  id3tag.used=0;
 
   /* Clear info structure */
   memset(&info,0,sizeof(info));
@@ -1494,7 +875,7 @@ int lame_cleanup(char *mpg123bs)
 	{
 	  brhist_add_count();
 	  brhist_disp();
-	  brhist_disp_total();
+	  brhist_disp_total(fr_ps.header);
 	}
 #endif
       fprintf(stderr,"\n");
@@ -1508,28 +889,22 @@ int lame_cleanup(char *mpg123bs)
   III_FlushBitstream();
   mpg123count = copy_buffer(mpg123bs,&bs);
 
-  if (!gf.lame_nowrite)
-  {
-    write_buffer(&bs);  /* ouput to mp3 file */
-    empty_buffer(&bs);  /* empty buffer */
-    fclose(bs.pt);    /* Close the file */
-    desalloc_buffer(&bs);    /* Deallocate all buffers */
+  desalloc_buffer(&bs);    /* Deallocate all buffers */
   
-    if (gf.bWriteVbrTag)
-	{
-	  /* Calculate relative quality of VBR stream  
-	   * 0=best, 100=worst */
-		int nQuality=gf.VBR_q*100/9;
-		/* Write Xing header again */
-		PutVbrTag(outPath,nQuality);
-	}
-
-    
-    /* write an ID3 tag  */
-    if(id3tag.used) {
-      id3_buildtag(&id3tag);
-      id3_writetag(outPath, &id3tag);
+  if (gf.bWriteVbrTag)
+    {
+      /* Calculate relative quality of VBR stream  
+       * 0=best, 100=worst */
+      int nQuality=gf.VBR_q*100/9;
+      /* Write Xing header again */
+      PutVbrTag(gf.outPath,nQuality);
     }
+  
+  
+  /* write an ID3 tag  */
+  if(id3tag.used) {
+    id3_buildtag(&id3tag);
+    id3_writetag(gf.outPath, &id3tag);
   }
   return mpg123count;
 }

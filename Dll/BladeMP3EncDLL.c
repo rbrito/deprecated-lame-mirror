@@ -71,7 +71,7 @@ static void InitParams()
     // Initialize output buffer
     bs.pbtOutBuf=NULL;
     bs.nOutBufPos=0;
-    gf=lame_init(1,1);  /* 1,1 means LAME will do no file I/O */
+    gf=lame_init();
 
 }
 
@@ -388,16 +388,7 @@ __declspec(dllexport) BE_ERR	beEncodeChunk(HBE_STREAM hbeStream, DWORD nSamples,
 	// Set output buffer
 	bs.pbtOutBuf=pOutput;
 	bs.nOutBufPos=0;
-/*
-	if (g_bFirstFrame)
-	{
-		// Write initial VBR Header to bitstream
-		InitVbrTag(&bs,info->version-1,info->mode,info->sampling_frequency);
-		if (!lame_nowrite) 
-		  write_buffer(&bs);
-		empty_buffer(&bs);
-	}
-*/
+
 	// Is this the last (incomplete) frame
 	if (nSamples<dwSampleBufferSize)
 	{

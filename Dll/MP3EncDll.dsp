@@ -104,6 +104,14 @@ SOURCE=.\BladeMP3EncDLL.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\brhist.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\brhist.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\encoder.h
 # End Source File
 # Begin Source File
@@ -205,6 +213,10 @@ SOURCE=..\newmdct.c
 # Begin Source File
 
 SOURCE=..\newmdct.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\parse.c
 # End Source File
 # Begin Source File
 

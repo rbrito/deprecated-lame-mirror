@@ -12,11 +12,7 @@ things to check for:
 
 1. Modularization:
 
-lame_parse_args():  main.c should parse the argument list, and then
-call lame_setflags() or some other libmp3lame.a routine to 
-set all the various flags. 
-
-lame.dll:  BladeEnc.dll was written before lame was 'modularized'
+BladeEnc.dll was written before lame was 'modularized'
 this should be cleaned up to look like main.c:  It should be possible
 to write the BladeEnc/lame dll so that it just uses
 #include "lame.h" and then calls to various lame_*() routines

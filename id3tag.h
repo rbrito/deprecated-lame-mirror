@@ -23,6 +23,7 @@ int id3_writetag(char* filename, ID3TAGDATA *tag);
 /*
  * Array of all possible music genre. Grabbed from id3ed
  */
+extern ID3TAGDATA id3tag;          /* id3tag info */
 extern int genre_last;
 extern char *genre_list[];
 #endif

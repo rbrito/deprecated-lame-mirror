@@ -55,7 +55,8 @@ int main(int argc, char **argv)
   int port,ttl;
   char *tmp,*Arg;
   lame_global_flags *gf;
-  int iread;
+  int iread,imp3;
+  FILE *outf;
   int samples_to_encode;
   short int Buffer[2][1152];
 
@@ -63,8 +64,6 @@ int main(int argc, char **argv)
     rtp_usage();
     exit(1);
   }
-
-  gf=lame_init(0,0);
 
   /* process args */
   Arg = argv[1];
@@ -96,28 +95,46 @@ int main(int argc, char **argv)
   initrtp(&RTPheader);
 
 
+  /* initialize encoder */
+  gf=lame_init();
+
+  /* parse the rest of the options (for LAME), including input and output file names */
   lame_parse_args(argc-1, &argv[1]); 
+
+  /* open the output file */
+  if (!strcmp(gf->outPath, "-")) {
+    outf = stdout;
+  } else {
+    if ((outf = fopen(gf->outPath, "wb")) == NULL) {
+      fprintf(stderr,"Could not create \"%s\".\n", gf->outPath);
+      exit(1);
+    }
+  }
+
+  /* open the input file and parse headers if possible */
+  lame_init_infile();
+
   lame_init_params();
   lame_print_config();
-
-
   samples_to_encode = gf->encoder_delay + 288;
-
   /* encode until we hit eof */
   do {
     iread=lame_readframe(Buffer);
-    lame_encode(Buffer,mp3buffer);
+    imp3=lame_encode(Buffer,mp3buffer);
+    fwrite(mp3buffer,1,imp3,outf);
     samples_to_encode += iread - gf->framesize;
   } while (iread);
   
   /* encode until we flush internal buffers.  (Buffer=0 at this point */
   while (samples_to_encode > 0) {
-    lame_encode(Buffer,mp3buffer);
+    imp3=lame_encode(Buffer,mp3buffer);
+    fwrite(mp3buffer,1,imp3,outf);
     samples_to_encode -= gf->framesize;
   }
   
 
-  lame_cleanup(mp3buffer);
+  imp3=lame_cleanup(mp3buffer);
+  fwrite(mp3buffer,1,imp3,outf);
   return 0;
 }
 

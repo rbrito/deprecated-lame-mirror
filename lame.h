@@ -57,6 +57,7 @@ typedef struct  {
   int silent;                 /* disable some status output */
   int mode;                       /* mono, stereo, jstereo */
   int mode_fixed;                 /* use specified mode, not lame's opinion of the best mode */
+  int force_ms;                   /* force M/S mode */
   int brate;                      /* bitrate */
 
   /* frame params */
@@ -144,10 +145,13 @@ default      filter_type=0
   */
               
 
-
-  /* input file reading - not used if you handle your own i/o */
+  /* input file reading - not used if calling program does the i/o */
   sound_file_format input_format;   
   int swapbytes;              /* force byte swapping   default=0*/
+  char *inPath;               /* name of input file */
+  char *outPath;              /* name of output file. */
+  /* Note: outPath must be set if you want Xing VBR or id3 tags
+   * written */
 
 
 
@@ -159,8 +163,6 @@ default      filter_type=0
   long totalframes;               /* frames: 0..totalframes-1 (estimate)*/
   int encoder_delay;
   int framesize;
-  int lame_nowrite;               /* user will take care of output */
-  int lame_noread;                /* user will take care of input */
   int mode_gr;                    /* granules per frame */
   int stereo;                     /* number of channels */
   int VBR_min_bitrate;       
@@ -173,58 +175,87 @@ default      filter_type=0
 
 
 
-/* if no_output=1, all LAME output is disabled, and it is up to the
- * calling program to write the mp3 data (returned by lame_encode() and
- * lame_cleanup()).  In this case, the calling program is responsible 
- * for filling in the Xing VBR header data and adding the id3 tag.
- * see lame_cleanup() for details. */
-lame_global_flags *lame_init(int no_output, int no_input);
 
-/* lame_cleanup will flush the buffers and may return a final mp3 frame */
-int lame_cleanup(char *mp3buf);
 
+
+/*
+
+The LAME API
+
+ */
+
+
+/* REQUIRED: initialize the encoder.  sets default for all encoder paramters,
+ * returns pointer to encoder parameters listed above 
+ */
+lame_global_flags *lame_init(void);
+
+/* OPTIONAL: call this to print a command line interface usage guide and quit 
+ */
 void lame_usage(char *);
-void lame_parse_args(int, char **);
+
+
+/* OPTIONAL: set internal options via command line argument parsing 
+ * You can skip this call if you like the default values, or if
+ * set the encoder parameters your self 
+ */
+void lame_parse_args(int argc, char **argv);
+
+
+/* OPTIONAL: open the input file, and parse headers if possible 
+ * you can skip this call if you will do your own PCM input 
+ */
+void lame_init_infile(void);
+
+
+/* REQUIRED:  sets more internal configuration based on data provided
+ * above
+ */
 void lame_init_params(void);
+
+
+/* OPTONAL:  print internal lame configuration on stderr*/
 void lame_print_config(void);
 
 
-/* read one frame of PCM data from audio input file opened by lame_parse_args*/
-/* input file can be either mp3 or uncompressed audio file */
+/* OPTIONAL:  read one frame of PCM data from audio input file opened by 
+ * lame_init_infile.  Input file can be wav, aiff, raw pcm, anything
+ * supported by libsndfile, or an mp3 file
+ */
 int lame_readframe(short int Buffer[2][1152]);
 
-/* 
-NOTE: for lame_encode and lame_decode, because of the bit reservoir
-capability of mp3 frames, there can be a delay between the input
-and output.  lame_decode/lame_encode should always return exactly
-one frame of output, but it may not return any output 
-until a second call with a second frame.  (or even 3 or 4 more calls)
-*/
 
 /* input 1 pcm frame, output (maybe) 1 mp3 frame. */ 
 /* return code = number of bytes output in mp3buffer.  can be 0 */
 int lame_encode(short int Buffer[2][1152],char *mp3buffer);
 
 
+/* here's a better interface (not yet written).  It will do the 1152 frame
+ * buffering for you, as well as downsampling.  User is required to
+ * provide the mp3buffer size (is there any good way around this?)
+ *
+ * return code = number of bytes output in mp3buffer.  can be 0 
+*/
+int lame_encode_buffer(short int leftpcm[], short int rightpcm[],int num_samples,
+char *mp3buffer,int  mp3buffer_size);
 
-/* input 1 mp3 frame, output (maybe) 1 pcm frame.   */
+
+
+
+/* REQUIRED:  lame_cleanup will flush the buffers and may return a 
+ *final mp3 frame 
+*/
+int lame_cleanup(char *mp3buf);
+
+
+
+
+/* a simple interface to mpglib, part of mpg123, is also included:
+ * input 1 mp3 frame, output (maybe) 1 pcm frame.   
+ * lame_decode return code:  -1: error.  0: need more data.  n>0: size of pcm output
+ */
 int lame_decode_init(void);
 int lame_decode(char *mp3buf,int len,short pcm[][1152]);
 
-/* read mp3 file until mpglib returns one frame of PCM data */
-#ifdef AMIGA_MPEGA
-int lame_decode_initfile(const char *fullname,int *stereo,int *samp,int *bitrate, unsigned long *nsamp);
-#else
-int lame_decode_initfile(FILE *fd,int *stereo,int *samp,int *bitrate, unsigned long *nsamp);
-#endif
-int lame_decode_fromfile(FILE *fd,short int mpg123pcm[2][1152]);
-/*
-For lame_decode_*:  return code
-  -1     error
-   0     ok, but need more data before outputing any samples
-   n     number of samples output.  either 576 or 1152 depending on MP3 file.
-*/
-
-extern int force_ms;
 
 #endif

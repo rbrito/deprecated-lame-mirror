@@ -1,8 +1,6 @@
 #include "util.h"
 #include "get_audio.h"
-//#include "machine.h"
 #include "globalflags.h"
-//#include "lame.h"
 #ifdef HAVEGTK
 #include "gtkanal.h"
 #include <gtk/gtk.h>
@@ -17,6 +15,28 @@ static int bitwidth;
 
 int read_samples_pcm( short sample_buffer[2304],int frame_size, int samples_to_read);
 int read_samples_mp3(FILE *musicin,short int mpg123pcm[2][1152],int num_chan);
+
+/* read mp3 file until mpglib returns one frame of PCM data */
+#ifdef AMIGA_MPEGA
+int lame_decode_initfile(const char *fullname,int *stereo,int *samp,int *bitrate, unsigned long *nsamp);
+#else
+int lame_decode_initfile(FILE *fd,int *stereo,int *samp,int *bitrate, unsigned long *nsamp);
+#endif
+int lame_decode_fromfile(FILE *fd,short int mpg123pcm[2][1152]);
+
+
+
+void lame_init_infile(void)
+{
+  /* open the input file */
+  OpenSndFile(gf.inPath,gf.samplerate,gf.num_channels);  
+  /* if GetSndSampleRate is non zero, use it to overwrite the default */
+  if (GetSndSampleRate()) gf.samplerate=GetSndSampleRate();
+  if (GetSndChannels()) gf.num_channels=GetSndChannels();
+  gf.num_samples = GetSndSamples();
+}
+
+
 
 
 /************************************************************************
@@ -448,7 +468,7 @@ int default_channels)
 
   if (gs_wfInfo.samples==MAX_U_32_NUM) {
     /* try to figure out num_samples */
-    stat(inPath,&sb);  /* try file size, assume 2 bytes per sample */
+    stat(lpszFileName,&sb);  /* try file size, assume 2 bytes per sample */
     if (gf.input_format == sf_mp3) {
       FLOAT totalseconds = (sb.st_size*8.0/(1000.0*GetSndBitrate()));
       gs_wfInfo.samples= totalseconds*GetSndSampleRate();

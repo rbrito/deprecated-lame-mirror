@@ -7,7 +7,7 @@
 ***********************************************************************/
 #include "machine.h"
 #include "encoder.h"
-
+#include "lame.h"
 
 /***********************************************************************
 *
@@ -58,7 +58,6 @@
 #define		MPEG_PHASE2_LSF		0	/* 1995-07-11 SHN */
 
 #define         BITS_IN_A_BYTE          8
-#define         MAX_NAME_SIZE           300
 #define         HAN_SIZE                512
 #define         CRC16_POLYNOMIAL        0x8005
 
@@ -82,7 +81,7 @@
 #define         MINIMUM         4    /* Minimum size of the buffer in bytes */
 #define         MAX_LENGTH      32   /* Maximum length of word written or
                                         read from bit stream */
-#define         BUFFER_SIZE     16384
+#define         BUFFER_SIZE     LAME_MAXMP3BUFFER 
 
 #define         Min(A, B)       ((A) < (B) ? (A) : (B))
 #define         Max(A, B)       ((A) > (B) ? (A) : (B))
@@ -174,9 +173,7 @@ extern int            SmpFrqIndex(long, int*);
 extern void           *mem_alloc(unsigned long, char*);
 extern void           empty_buffer(Bit_stream_struc*);
 extern int            copy_buffer(char *buffer,Bit_stream_struc *bs);
-extern void           write_buffer(Bit_stream_struc*);
-extern void           open_bit_stream_w(Bit_stream_struc*, char*, int, int);
-extern void           close_bit_stream_w(Bit_stream_struc*);
+extern void           init_bit_stream_w(Bit_stream_struc*);
 extern void           alloc_buffer(Bit_stream_struc*, int);
 extern void           desalloc_buffer(Bit_stream_struc*);
 extern void           putbits(Bit_stream_struc*, unsigned int, int);
