@@ -226,6 +226,8 @@ calc_noise(
 	FLOAT step = POW20(scalefactor(gi, sfb));
 	FLOAT noise = 0.0;
 	int l = gi->width[sfb] >> 1;
+	if (j > gi->count1)
+	    break;
 	do {
 	    FLOAT temp;
 	    temp = fabs(gi->xr[j]) - pow43[gi->l3_enc[j]] * step; j++;
@@ -243,6 +245,25 @@ calc_noise(
 	}
 	max_noise=Max(max_noise,noise);
     } while (++sfb < gi->psymax);
+
+    for (;sfb < gi->psymax; sfb++) {
+	FLOAT noise = 0.0;
+	int l = gi->width[sfb] >> 1;
+	do {
+	    FLOAT t0 = gi->xr[j], t1 = gi->xr[j+1];
+	    noise += t0*t0 + t1*t1;
+	    j += 2;
+	} while (--l > 0);
+	noise = *distort++ = noise / *l3_xmin++;
+
+	noise = FAST_LOG10(Max(noise,1E-20));
+	if (noise > 0.0) {
+	    /* multiplying here is adding in dB -but can overflow */
+	    /* over_noise *= noise; */
+	    over_noise_db += noise;
+	}
+	max_noise=Max(max_noise,noise);
+    }
 
     if (max_noise > 0.0 && gi->block_type == SHORT_TYPE) {
 	distort -= sfb;
@@ -495,11 +516,11 @@ trancate_smallspectrums(
 inline static int
 loop_break(const gr_info * const gi)
 {
-    int sfb = 0;
+    int sfb = gi->psymax;
     do {
 	if (gi->scalefac[sfb] + gi->subblock_gain[gi->window[sfb]] == 0)
 	    return 0;
-    } while (++sfb < gi->psymax);
+    } while (--sfb >= 0);
     return sfb;
 }
 
@@ -1534,9 +1555,9 @@ VBR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
 
     /*  find a bitrate which can refill the resevoir to positive size.
      */
-    gfc->bitrate_index = gfc->VBR_min_bitrate;
-    if (!ath_over && !gfp->VBR_hard_min)
-	gfc->bitrate_index = 1;
+    gfc->bitrate_index = 1;
+    if (ath_over || gfp->VBR_hard_min)
+	gfc->bitrate_index = gfc->VBR_min_bitrate;
     for (; gfc->bitrate_index <= gfc->VBR_max_bitrate; gfc->bitrate_index++)
 	if (ResvFrameBegin (gfp, &mean_bits) >= 0)
 	    break;
