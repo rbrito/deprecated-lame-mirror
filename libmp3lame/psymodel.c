@@ -233,16 +233,16 @@ void fht(FLOAT *fz, int n)
 	fi[2+12]  = f1     - f3;
 	fi[2+ 4]  = f1     + f3;
 
-	a       = (SQRT2*0.5)*(fi[1+4] + fi[3+4]);
+	a       = (FLOAT)(SQRT2*0.5)*(fi[1+4] + fi[3+4]);
 	f1      = fi[1+0 ]    - a;
 	f0      = fi[1+0 ]    + a;
-	a       = (SQRT2*0.5)*(fi[1+4] - fi[3+4]);
+	a       = (FLOAT)(SQRT2*0.5)*(fi[1+4] - fi[3+4]);
 	g1      = fi[3+0 ]    - a;
 	g0      = fi[3+0 ]    + a;
-	a       = (SQRT2*0.5)*(fi[1+12] + fi[3+12]);
+	a       = (FLOAT)(SQRT2*0.5)*(fi[1+12] + fi[3+12]);
 	f3      = fi[1+8]    - a;
 	f2      = fi[1+8]    + a;
-	a       = (SQRT2*0.5)*(fi[1+12] - fi[3+12]);
+	a       = (FLOAT)(SQRT2*0.5)*(fi[1+12] - fi[3+12]);
 	g2      = fi[3+8]    + a;
 	g3      = fi[3+8]    - a;
 	a       = tri[0]*f2     + tri[1]*g3;
@@ -495,8 +495,8 @@ msfix_l(lame_t gfc, int gr)
     for (sb = 0; sb < SBMAX_l; sb++) {
 	/* use ns-msfix if L & R masking differs larger than 2db (*1.58) */
 	FLOAT thmS, thmM, x;
-	if (mr[0].thm.l[sb] > 1.58*mr[1].thm.l[sb]
-	 || mr[1].thm.l[sb] > 1.58*mr[0].thm.l[sb])
+	if (mr[0].thm.l[sb] > (FLOAT)1.58*mr[1].thm.l[sb]
+	 || mr[1].thm.l[sb] > (FLOAT)1.58*mr[0].thm.l[sb])
 	{
 	    FLOAT thmLR
 		= Min(mr[0].thm.l[sb], mr[1].thm.l[sb])*gfc->nsPsy.msfix;
@@ -534,8 +534,8 @@ msfix_s(lame_t gfc, int gr)
     for (sb = 0; sb < SBMAX_s; sb++) {
 	for (sblock = 0; sblock < 3; sblock++) {
 	    FLOAT thmS, thmM, x;
-	    if (mr[0].thm.s[sb][sblock] > 1.58 * mr[1].thm.s[sb][sblock]
-	     || mr[1].thm.s[sb][sblock] > 1.58 * mr[0].thm.s[sb][sblock])
+	    if (mr[0].thm.s[sb][sblock] > (FLOAT)1.58*mr[1].thm.s[sb][sblock]
+	     || mr[1].thm.s[sb][sblock] > (FLOAT)1.58*mr[0].thm.s[sb][sblock])
 	    {
 		FLOAT thmLR
 		    = Min(mr[0].thm.s[sb][sblock], mr[1].thm.s[sb][sblock])
@@ -673,15 +673,15 @@ compute_masking_s(
 	if (b != gfc->bo_s[sb])
 	    continue;
 
-	enn  -= .5*eb[b];
-	thmm -= .5*ecb;
+	enn  -= (FLOAT).5*eb[b];
+	thmm -= (FLOAT).5*ecb;
 	if (thmm < gfc->ATH.s_avg[sb] * gfc->ATH.adjust[ch]) {
 	    thmm = gfc->ATH.s_avg[sb] * gfc->ATH.adjust[ch];
 	    enn  = -enn;
 	}
 	mr->en.s[sb][sblock] = enn; mr->thm.s[sb][sblock] = thmm * adjust;
-	enn  = .5*eb[b];
-	thmm = .5*ecb;
+	enn  = (FLOAT).5*eb[b];
+	thmm = (FLOAT).5*ecb;
 	sb++;
 	if (sb == SBMAX_s)
 	    break;
@@ -736,7 +736,7 @@ trancate(FLOAT x)
 	float f;
 	int i;
     } fi;
-    fi.f = x+(0.5+MAGIC_FLOAT);
+    fi.f = x + (double)(0.5+MAGIC_FLOAT);
     return fi.i - MAGIC_INT - 1;
 }
 #else /* USE_IEEE754_HACK */
@@ -777,7 +777,7 @@ mask_add_samebark(FLOAT m1, FLOAT m2)
 	m1 = m1/m2;
     }
 
-    return m * table2[trancate(FAST_LOG10_X(m1, 16.0))];
+    return m * table2[trancate(FAST_LOG10_X(m1, (FLOAT)16.0))];
 }
 
 inline static FLOAT
@@ -812,7 +812,7 @@ mask_add(FLOAT m1, FLOAT m2, FLOAT ATH)
 	    return m;
 	m1 = m1/m2;
     }
-    i = trancate(FAST_LOG10_X(m1, 16.0));
+    i = trancate(FAST_LOG10_X(m1, (FLOAT)16.0));
 
     /* 10% of total */
     if (m >= ATH)
@@ -1030,8 +1030,8 @@ mp3x display               <------LONG------>
 		for (j = 0; j < BLKSIZE_s; j++) {
 		    FLOAT l = wsamp_S[0][sb][j];
 		    FLOAT r = wsamp_S[1][sb][j];
-		    wsamp_S[0][sb][j] = (l+r)*(SQRT2*0.5);
-		    wsamp_S[1][sb][j] = (l-r)*(SQRT2*0.5);
+		    wsamp_S[0][sb][j] = (l+r)*(FLOAT)(SQRT2*0.5);
+		    wsamp_S[1][sb][j] = (l-r)*(FLOAT)(SQRT2*0.5);
 		}
 	    }
 	}
@@ -1078,10 +1078,10 @@ partially_convert_l2s(lame_t gfc, III_psy_ratio *mr, FLOAT *nb_1,
 	    x += nb_1[b];
 	}
 	if (sfb != SBMAX_s-1)
-	    x += .5 * nb_1[b];
+	    x += (FLOAT).5 * nb_1[b];
 	x *= (FLOAT)(((double)BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE));
 	if (x < gfc->ATH.s_avg[sfb] * ATHadjust)
-	    continue;
+	    x = gfc->ATH.s_avg[sfb] * ATHadjust;
 	mr->thm.s[sfb][0] = mr->thm.s[sfb][1] = mr->thm.s[sfb][2] = x;
     }
 }
@@ -1123,10 +1123,11 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 	 *********************************************************************/
 	p = wsamp_L[ch & 1];
 	enn = p[0] * p[0];
-	eb[0] = enn;
+	thmm = enn+enn;
 
-	max[0] = enn * 2.0;
-	avg[0] = enn * 2.0 * gfc->rnumlines_l[0];
+	eb[0] = enn;
+	max[0] = thmm;
+	avg[0] = thmm * gfc->rnumlines_l[0];
 
 	for (b = j = 1; b < gfc->npart_l; b++) {
 	    thmm = enn = p[j]*p[j] + p[BLKSIZE-j]*p[BLKSIZE-j];
@@ -1139,7 +1140,7 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 		if (thmm < el)
 		    thmm = el;
 	    }
-	    eb[b] = enn * 0.5f;
+	    eb[b] = enn * (FLOAT)0.5;
 	    max[b] = thmm;
 	    avg[b] = enn * gfc->rnumlines_l[b];
 	}
@@ -1150,7 +1151,7 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 	    gfc->pinfo->energy_save[gr][ch][0] = p[0]*p[0];
 	    for (j = 1; j < HBLKSIZE; j++)
 		gfc->pinfo->energy_save[gr][ch][j]
-		    = (p[j]*p[j] + p[BLKSIZE-j]*p[BLKSIZE-j]) * 0.5;
+		    = (p[j]*p[j] + p[BLKSIZE-j]*p[BLKSIZE-j]) * (FLOAT)0.5;
 	}
 #endif
 	/*********************************************************************
@@ -1184,10 +1185,10 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 	    a = avg[0] + avg[1];
 	    if (a != (FLOAT)0.0) {
 		m = max[0]; if (m < max[1]) m = max[1];
-		a *= 3.0/2.0;
+		a *= (FLOAT)(3.0/2.0);
 		m = (m-a) / a * gfc->rnumlines_ls[0];
 		a = eb[0];
-		if (m < sizeof(tab)/sizeof(tab[0]))
+		if (m < (FLOAT)(sizeof(tab)/sizeof(tab[0])))
 		    a *= tab[trancate(m)];
 	    }
 	    eb2[0] = a;
@@ -1200,7 +1201,7 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 		    if (m < max[b+1]) m = max[b+1];
 		    m = (m-a) / a * gfc->rnumlines_ls[b];
 		    a = eb[b];
-		    if (m < sizeof(tab)/sizeof(tab[0]))
+		    if (m < (FLOAT)(sizeof(tab)/sizeof(tab[0])))
 			a *= tab[trancate(m)];
 		}
 		eb2[b] = a;
@@ -1210,10 +1211,10 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 	    if (a != (FLOAT)0.0) {
 		m = max[b-1];
 		if (m < max[b]) m = max[b];
-		a *= 3.0/2.0;
+		a *= (FLOAT)(3.0/2.0);
 		m = (m-a) / a * gfc->rnumlines_ls[b];
 		a = eb[b];
-		if (m < sizeof(tab)/sizeof(tab[0]))
+		if (m < (FLOAT)(sizeof(tab)/sizeof(tab[0])))
 		    a *= tab[trancate(m)];
 	    }
 	    eb2[b] = a;
@@ -1261,8 +1262,8 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 	    if (j == SBMAX_l - 1)
 		break;
 
-	    enn  -= .5*eb[b];
-	    thmm -= .5*ecb;
+	    enn  -= (FLOAT).5*eb[b];
+	    thmm -= (FLOAT).5*ecb;
 
 	    if (thmm < gfc->ATH.l_avg[j] * gfc->ATH.adjust[ch]) {
 		thmm = gfc->ATH.l_avg[j] * gfc->ATH.adjust[ch];
@@ -1270,8 +1271,8 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 	    }
 	    mr->en.l[j] = enn; mr->thm.l[j] = thmm;
 
-	    enn  = .5*eb[b];
-	    thmm = .5*ecb;
+	    enn  = (FLOAT).5*eb[b];
+	    thmm = (FLOAT).5*ecb;
 	    j++;
 	    if (b == gfc->bo_l[j])
 		break;
@@ -1301,8 +1302,8 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 	    if (j == SBMAX_s - 1)
 		break;
 
-	    enn  -= .5*eb[b];
-	    thmm -= .5*tmp;
+	    enn  -= (FLOAT).5*eb[b];
+	    thmm -= (FLOAT).5*tmp;
 	    thmm *= (FLOAT)(((double)BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE));
 	    enn  *= (FLOAT)(((double)BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE));
 	    if (thmm < gfc->ATH.s_avg[j] * gfc->ATH.adjust[ch]) {
@@ -1314,8 +1315,8 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 	    if (i & 2) {mr->thm.s[j][1] = thmm; mr->en.s[j][1] = enn;}
 	    if (i & 4) {mr->thm.s[j][2] = thmm; mr->en.s[j][2] = enn;}
 
-	    enn  = .5*eb[b];
-	    thmm = .5*tmp;
+	    enn  = (FLOAT).5*eb[b];
+	    thmm = (FLOAT).5*tmp;
 	    j++;
 	    if (b == gfc->bo_l2s[j])
 		break;
