@@ -611,7 +611,7 @@ lame_init_params(lame_global_flags * const gfp)
         }
 
         if (gfp->mode == MONO)
-            lowpass *= 1.6;
+            lowpass *= 1.5;
 
         if (gfp->out_samplerate == 0)
             gfp->out_samplerate = optimum_samplefreq( (int)lowpass, gfp->in_samplerate);
