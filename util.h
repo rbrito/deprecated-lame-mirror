@@ -311,9 +311,6 @@ extern int            BitrateIndex(int, int,int);
 extern int            FindNearestBitrate(int,int,int);
 extern int            validSamplerate(int samplerate);
 extern int            SmpFrqIndex(int, int*);
-extern int            copy_buffer(char *buffer,int buffer_size,Bit_stream_struc *bs);
-extern void           init_bit_stream_w(lame_internal_flags *gfc);
-extern void           freegfc(lame_internal_flags *gfc);
 extern FLOAT8         ATHformula(FLOAT8 f);
 extern FLOAT8         freq2bark(FLOAT8 freq);
 extern FLOAT8         freq2cbw(FLOAT8 freq);
@@ -346,8 +343,6 @@ extern void lame_errorf(const char *, ...);
 #define FLUSH_ERROR()	fflush(stderr)
 #define FLUSH_MSG()	fflush(stderr)
 
-/* for displaying version, help strings, and bitrates */
-#define PRINTF1		printf
 #endif
 
 

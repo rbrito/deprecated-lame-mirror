@@ -929,3 +929,43 @@ format_bitstream(lame_global_flags *gfp, int bitsPerFrame,
 
 
 
+int copy_buffer(char *buffer,int size,Bit_stream_struc *bs)
+{
+  int minimum = bs->buf_byte_idx + 1;
+  if (minimum <= 0) return 0;
+  if (size!=0 && minimum>size) return -1; /* buffer is too small */
+  memcpy(buffer,bs->buf,minimum);
+  bs->buf_byte_idx = -1;
+  bs->buf_bit_idx = 0;
+  return minimum;
+}
+
+
+
+
+
+void init_bit_stream_w(lame_internal_flags *gfc)
+{
+   gfc->bs.buf = (unsigned char *)       malloc(BUFFER_SIZE);
+   gfc->bs.buf_size = BUFFER_SIZE;
+
+   gfc->h_ptr = gfc->w_ptr = 0;
+   gfc->header[gfc->h_ptr].write_timing = 0;
+   gfc->bs.buf_byte_idx = -1;
+   gfc->bs.buf_bit_idx = 0;
+   gfc->bs.totbit = 0;
+}
+
+
+/*empty and close mallocs in gfc */
+void freegfc(lame_internal_flags *gfc)   /* bit stream structure */
+{
+   free(gfc->bs.buf);
+   free(gfc);
+}
+
+
+
+
+
+
