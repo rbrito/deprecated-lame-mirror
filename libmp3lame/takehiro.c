@@ -69,93 +69,6 @@ quantize_01(const FLOAT *xp, gr_info *gi, fi_union *fi, int sfb,
     } while (xp < xend);
 }
 
-static int
-quantize_best(const FLOAT *xp, gr_info *gi)
-{
-    /* quantize on xr^(3/4) instead of xr */
-    int sfb = 0;
-    fi_union *fi = (fi_union *)gi->l3_enc;
-    const FLOAT *xend = &xp[gi->count1];
-    const FLOAT *xe01 = &xp[gi->big_values];
-
-    do {
-	const FLOAT *xe;
-	FLOAT istep = IPOW20(scalefactor(gi, sfb));
-	if (xp > xe01) {
-	    quantize_01(xp, gi, fi, sfb, xend);
-	    return 0;
-	}
-
-	xe = xp + gi->width[sfb];
-	if (xe > xend)
-	    xe = xend;
-
-	sfb++;
-	do {
-#ifdef TAKEHIRO_IEEE754_HACK
-	    double x0 = istep * xp[0] + MAGIC_FLOAT;
-	    double x1 = istep * xp[1] + MAGIC_FLOAT;
-	    xp += 2;
-	    if (x0 > MAGIC_FLOAT + IXMAX_VAL) x0 = MAGIC_FLOAT + IXMAX_VAL;
-	    if (x1 > MAGIC_FLOAT + IXMAX_VAL) x1 = MAGIC_FLOAT + IXMAX_VAL;
-	    fi[0].f = x0;
-	    fi[1].f = x1;
-	    fi[0].f = x0 + (adj43asm - MAGIC_INT)[fi[0].i];
-	    fi[1].f = x1 + (adj43asm - MAGIC_INT)[fi[1].i];
-	    fi[0].i -= MAGIC_INT;
-	    fi[1].i -= MAGIC_INT;
-	    fi += 2;
-#else
-	    FLOAT x0 = *xp++ * istep;
-	    FLOAT x1 = *xp++ * istep;
-	    if (x0 > IXMAX_VAL) x0 = IXMAX_VAL;
-	    if (x1 > IXMAX_VAL) x1 = IXMAX_VAL;
-	    (fi++)->i = (int)(x0 + adj43[(int)x0]);
-	    (fi++)->i = (int)(x1 + adj43[(int)x1]);
-#endif
-	} while (xp < xe);
-    } while (xp < xend);
-    return 0;
-}
-
-
-static void
-quantize_ISO(const FLOAT *xp, gr_info *gi)
-{
-    /* quantize on xr^(3/4) instead of xr */
-    int sfb = 0;
-    fi_union *fi = (fi_union *)gi->l3_enc;
-    const FLOAT *xend = &xp[gi->count1];
-    const FLOAT *xe01 = &xp[gi->big_values];
-
-    do {
-	const FLOAT *xe;
-	FLOAT istep = IPOW20(scalefactor(gi, sfb));
-	if (xp > xe01) {
-	    quantize_01(xp, gi, fi, sfb, xend);
-	    return;
-	}
-
-	xe = xp + gi->width[sfb];
-	if (xe > xend)
-	    xe = xend;
-	sfb++;
-	do {
-#ifdef TAKEHIRO_IEEE754_HACK
-	    fi[0].f = istep * xp[0] + (ROUNDFAC_NEAR + MAGIC_FLOAT);
-	    fi[1].f = istep * xp[1] + (ROUNDFAC_NEAR + MAGIC_FLOAT);
-	    xp += 2;
-	    fi[0].i -= MAGIC_INT;
-	    fi[1].i -= MAGIC_INT;
-	    fi += 2;
-#else
-	    (fi++)->i = (int)(*xp++ * istep + ROUNDFAC);
-	    (fi++)->i = (int)(*xp++ * istep + ROUNDFAC);
-#endif
-	} while (xp < xe);
-    } while (xp < xend);
-}
-
 /*
  * count how many bits we need to encode the quantized spectrums
  */
@@ -458,12 +371,50 @@ noquant_count_bits(const lame_internal_flags * const gfc, gr_info * const gi)
 int
 count_bits(const lame_internal_flags * const gfc, gr_info * const gi)
 {
-    if (gfc->quantization > 0) {
-	int i = quantize_best(xr34, gi);
-	if (i)
-	    return i;
-    } else
-	quantize_ISO(xr34, gi);
+    /* quantize on xr^(3/4) instead of xr */
+    int sfb = 0;
+    fi_union *fi = (fi_union *)gi->l3_enc;
+    const FLOAT *xp = xr34;
+    const FLOAT *xe01 = &xp[gi->big_values];
+    const FLOAT *xend = &xp[gi->count1];
+
+    do {
+	const FLOAT *xe;
+	FLOAT istep = IPOW20(scalefactor(gi, sfb));
+	if (xp > xe01) {
+	    quantize_01(xp, gi, fi, sfb, xend);
+	    break;
+	}
+
+	xe = xp + gi->width[sfb];
+	if (xe > xend)
+	    xe = xend;
+
+	sfb++;
+	do {
+#ifdef TAKEHIRO_IEEE754_HACK
+	    double x0 = istep * xp[0] + MAGIC_FLOAT;
+	    double x1 = istep * xp[1] + MAGIC_FLOAT;
+	    xp += 2;
+	    if (x0 > MAGIC_FLOAT + IXMAX_VAL) x0 = MAGIC_FLOAT + IXMAX_VAL;
+	    if (x1 > MAGIC_FLOAT + IXMAX_VAL) x1 = MAGIC_FLOAT + IXMAX_VAL;
+	    fi[0].f = x0;
+	    fi[1].f = x1;
+	    fi[0].f = x0 + (adj43asm - MAGIC_INT)[fi[0].i];
+	    fi[1].f = x1 + (adj43asm - MAGIC_INT)[fi[1].i];
+	    fi[0].i -= MAGIC_INT;
+	    fi[1].i -= MAGIC_INT;
+	    fi += 2;
+#else
+	    FLOAT x0 = *xp++ * istep;
+	    FLOAT x1 = *xp++ * istep;
+	    if (x0 > IXMAX_VAL) x0 = IXMAX_VAL;
+	    if (x1 > IXMAX_VAL) x1 = IXMAX_VAL;
+	    (fi++)->i = (int)(x0 + adj43[(int)x0]);
+	    (fi++)->i = (int)(x1 + adj43[(int)x1]);
+#endif
+	} while (xp < xe);
+    } while (xp < xend);
 
     if (gfc->substep_shaping & 2) {
 	int sfb, j = 0;

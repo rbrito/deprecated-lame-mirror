@@ -68,36 +68,28 @@ lame_init_qval(lame_global_flags * gfp)
     case 9:            /* no psymodel, no noise shaping */
         gfc->filter_type = 0;
         gfc->psymodel = 0;
-        gfc->quantization = 0;
         gfc->noise_shaping_amp = 0;
-        gfc->noise_shaping_stop = 0;
         gfc->use_best_huffman = 0;
         break;
 
     case 8:            /* use psymodel (for short block and m/s switching), but no noise shapping */
         gfc->filter_type = 0;
         gfc->psymodel = 1;
-        gfc->quantization = 0;
         gfc->noise_shaping_amp = 0;
-        gfc->noise_shaping_stop = 0;
         gfc->use_best_huffman = 0;
         break;
 
     case 7:	/* same as the default setting(-q 5) before LAME 3.70 */
         gfc->filter_type = 0;
         gfc->psymodel = 2;
-        gfc->quantization = 0;
 	gfc->noise_shaping_amp = 0;
-        gfc->noise_shaping_stop = 0;
         gfc->use_best_huffman = 0;
         break;
 
     case 6:
         gfc->filter_type = 0;
         gfc->psymodel = 2;
-        gfc->quantization = 1;
 	gfc->noise_shaping_amp = 1;
-        gfc->noise_shaping_stop = 1;
         gfc->use_best_huffman = 0;
         break;
 
@@ -105,54 +97,42 @@ lame_init_qval(lame_global_flags * gfp)
 	/* LAME4's new default */
         gfc->filter_type = 0;
         gfc->psymodel = 2;
-        gfc->quantization = 1;
         gfc->noise_shaping_amp = 1;
-        gfc->noise_shaping_stop = 1;
         gfc->use_best_huffman = 1;
         break;
 
     case 4:
         gfc->filter_type = 0;
         gfc->psymodel = 2;
-        gfc->quantization = 1;
         gfc->noise_shaping_amp = 2;
-        gfc->noise_shaping_stop = 1;
         gfc->use_best_huffman = 1;
         break;
 
     case 3:
         gfc->filter_type = 0;
         gfc->psymodel = 2;
-        gfc->quantization = 1;
         gfc->noise_shaping_amp = 3;
-        gfc->noise_shaping_stop = 1;
         gfc->use_best_huffman = 1;
         break;
 
     case 2:	/* aliased -h */
         gfc->filter_type = 0;
         gfc->psymodel = 2;
-        gfc->quantization = 1;
         gfc->noise_shaping_amp = 3;
-        gfc->noise_shaping_stop = 1;
         gfc->use_best_huffman = 2; /* inner loop, PAINFULLY SLOW */
         break;
 
     case 1:	/* same with -q 2 */
         gfc->filter_type = 0;
         gfc->psymodel = 2;
-        gfc->quantization = 1;
-        gfc->noise_shaping_amp = 3;
-        gfc->noise_shaping_stop = 1; /* 2 not yet coded */
+        gfc->noise_shaping_amp = 3; /* 4 not yet coded */
         gfc->use_best_huffman = 2;
         break;
 
     case 0:	/* same with -q 2 */
         gfc->filter_type = 0; /* 1 not yet coded */
         gfc->psymodel = 2;
-        gfc->quantization = 1;
         gfc->noise_shaping_amp = 3;
-        gfc->noise_shaping_stop = 1;
         gfc->use_best_huffman = 2;
         break;
     }
@@ -848,12 +828,9 @@ lame_print_internals( const lame_global_flags * gfp )
     case  2: pc = "best (inside loop, slow)"; break;
     }
     MSGF( gfc, "\thuffman search: %s\n", pc );
-    pc = gfc->quantization ? "xr^3/4" : "ISO";
-    MSGF( gfc, "\tquantization: %s\n", pc );
     if (gfp->VBR != vbr) {
 	MSGF( gfc, "\tnoise shaping: %s\n", gfc->psymodel > 1 ? "used" : "not used");
 	MSGF( gfc, "\t ^ amplification: %d\n", gfc->noise_shaping_amp );
-	MSGF( gfc, "\t ^ stopping: %d\n", gfc->noise_shaping_stop );
 	MSGF( gfc, "\tallow large scalefactor range=%s\n",
 	      gfc->use_scalefac_scale ? "yes" : "no");
 	MSGF( gfc, "\tuse subblock gain=%s\n",

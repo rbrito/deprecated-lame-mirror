@@ -348,13 +348,13 @@ struct lame_internal_flags {
     FLOAT reduce_side;         /* side channel PE reduce factor */
 
     int filter_type;          /* 0=polyphase filter, 1= FIR filter 2=MDCT filter(bad)*/
-    int quantization;         /* 0 = ISO formual,  1=best amplitude */
-
     int use_scalefac_scale;   /* 0 = not use  1 = use */
     int use_subblock_gain;    /* 0 = not use  1 = use */
     int noise_shaping_amp;    /* 0 = ISO model: amplify all distorted bands
 				 1 = amplify within 50% of max (on db scale)
 				 2 = amplify only most distorted band
+				 3 = half amplify only most distorted band
+				 4 = do not stop when all scalefacs amplified
 			      */
     int substep_shaping;  /* 0 = no substep
 			     1 = use substep only long
@@ -365,12 +365,6 @@ struct lame_internal_flags {
 			     1 = use psychomodel but no noise shaping.
 			     0 = don't use psychomodel
 			  */
-    int noise_shaping_stop; /* 0 = stop at over=0, all scalefacs amplified or
-			           a scalefac has reached max value
-			       1 = stop when all scalefacs amplified or
-				   a scalefac has reached max value
-			       2 = stop when all scalefacs amplified (not yet)
-			    */
     int use_best_huffman;   /* 0 = no.  1=outside loop  2=inside loop(slow) */
 
     /* used for padding */

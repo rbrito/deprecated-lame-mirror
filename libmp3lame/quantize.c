@@ -489,6 +489,52 @@ init_bitalloc(lame_internal_flags *gfc, gr_info *const gi)
  * used by CBR_1st_bitalloc to get a quantizer step size to start with
  ************************************************************************/
 static void
+quantize_ISO(lame_internal_flags * const gfc, gr_info *gi)
+{
+    /* quantize on xr^(3/4) instead of xr */
+    fi_union *fi = (fi_union *)gi->l3_enc;
+    FLOAT istep = IPOW20(gi->global_gain);
+    const FLOAT *xp = xr34;
+    const FLOAT *xend = &xr34[gi->big_values];
+
+    while (xp < xend) {
+#ifdef TAKEHIRO_IEEE754_HACK
+	fi[0].f = istep * xp[0] + (ROUNDFAC_NEAR + MAGIC_FLOAT);
+	fi[1].f = istep * xp[1] + (ROUNDFAC_NEAR + MAGIC_FLOAT);
+	fi[2].f = istep * xp[2] + (ROUNDFAC_NEAR + MAGIC_FLOAT);
+	fi[3].f = istep * xp[3] + (ROUNDFAC_NEAR + MAGIC_FLOAT);
+	xp += 4;
+	fi[0].i -= MAGIC_INT;
+	fi[1].i -= MAGIC_INT;
+	fi[2].i -= MAGIC_INT;
+	fi[3].i -= MAGIC_INT;
+	fi += 4;
+#else
+	(fi++)->i = (int)(*xp++ * istep + ROUNDFAC);
+	(fi++)->i = (int)(*xp++ * istep + ROUNDFAC);
+#endif
+    }
+
+    istep = (1.0-ROUNDFAC) / istep;
+    xend = &xr34[gi->count1];
+    while (xp < xend) {
+	(fi++)->i = *xp++ > istep ? 1:0;
+	(fi++)->i = *xp++ > istep ? 1:0;
+    }
+    if (gfc->noise_shaping_amp >= 3) {
+	istep = istep * (0.634521682242439 / (1.0-ROUNDFAC));
+	xp = xr34;
+	while (xp < xend) {
+	    if (*xp++ < istep) fi[0].i = 0;
+	    if (*xp++ < istep) fi[1].i = 0;
+	    if (*xp++ < istep) fi[2].i = 0;
+	    if (*xp++ < istep) fi[3].i = 0;
+	    fi += 4;
+	}
+    }
+}
+
+static void
 init_global_gain(
     lame_internal_flags * const gfc,
     gr_info * const gi,
@@ -502,7 +548,8 @@ init_global_gain(
     do {
 	if (flag_GoneOver & 2)
 	    gi->big_values = gi->count1 = gi->xrNumMax;
-	nbits = count_bits(gfc, gi);
+	quantize_ISO(gfc, gi);
+	nbits = noquant_count_bits(gfc, gi);
 
 	if (CurrentStep == 1 || nbits == desired_rate)
 	    break; /* nothing to adjust anymore */
@@ -1020,7 +1067,7 @@ CBR_1st_bitalloc (
     current_method = 0;
     age = 3;
     if (bestNoise < 1.0) {
-	if (gfc->noise_shaping_stop == 0)
+	if (gfc->noise_shaping_amp == 0)
 	    goto quit_quantization;
 	current_method = 1;
 	age = 5;
@@ -1050,7 +1097,7 @@ CBR_1st_bitalloc (
 		bestNoise = newNoise;
 		*gi = gi_w;
 		if (bestNoise < 1.0 && current_method == 0) {
-		    if (gfc->noise_shaping_stop == 0)
+		    if (gfc->noise_shaping_amp == 0)
 			break;
 		    current_method++;
 		}
@@ -1076,8 +1123,7 @@ CBR_1st_bitalloc (
     }
     assert (gi->global_gain < 256);
 
-    if (gfc->quantization > 0)
-	CBR_2nd_bitalloc(gfc, gi, distort);
+    CBR_2nd_bitalloc(gfc, gi, distort);
  quit_quantization:
     if ((gi->block_type == SHORT_TYPE && (gfc->substep_shaping & 2))
      || (gi->block_type != SHORT_TYPE && (gfc->substep_shaping & 1)))

@@ -62,12 +62,12 @@ typedef union {
  * when converting float->int by floor(x)
  *      round offset = ROUNDFAC =  0.4054, QUANTFAC(x)=asj43[x]
  *********************************************************************/
+#define ROUNDFAC 0.4054
+
 #ifdef TAKEHIRO_IEEE754_HACK
 # define MAGIC_FLOAT (65536*128)
 # define MAGIC_INT 0x4b000000
-# define ROUNDFAC_NEAR -0.0946
-#else
-# define ROUNDFAC 0.4054
+# define ROUNDFAC_NEAR (ROUNDFAC-0.5)
 #endif
 
 #endif /* LAME_QUANTIZE_PVT_H */
