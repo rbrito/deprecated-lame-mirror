@@ -27,6 +27,11 @@
 // This DLL should be a wrapper around libmp3lame, and thus only need to 
 // include 'lame.h'.  However, the DLL provides better version information
 // that is currently available via libmp3lame and thus needs version.h
+// (is this still true as of 6/2001?).  Also, DLL has not been updated
+// to use the lame_set/get functions, and so still needs lame_global_flags.h
+// All of this is fine for the DLL (which is recompiled everytime LAME
+// changes, but you are writing your own wrapper to libmp3lame, dont
+// follow this example :-) 
 #include "lame.h"
 #include "lame_global_flags.h"
 #include "version.h"
