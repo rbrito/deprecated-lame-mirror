@@ -12,6 +12,19 @@ maxmp3buf=8*960 to see if there is a working combination.
 3 frontend: code is a complete mess. But it has so many debugged
   features it will be a lot of work to re-write.
 
+4. MSVC project files.  It would be nice to create a working
+   MSVC6 workspace, which included all the projects as possible
+   targets:
+          lame.exe
+          mp3x.exe   (require GTK libs)
+          lame_enc.dll
+          ACM codec
+          directshow codec
+
+   I think the only MSVC5 project that we need to preserve is
+   for lame_enc.dll, since Albert Faber (still?) doesn't use VC6?
+   
+
 
 NOGAP encoding:
 
