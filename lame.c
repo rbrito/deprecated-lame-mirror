@@ -1106,180 +1106,6 @@ int lame_encode(lame_global_flags *gfp, short int in_buffer[2][1152],char *mp3bu
 }
 
 
-
-
-/* initialize mp3 encoder */
-int lame_init(lame_global_flags *gfp)
-{
-  lame_internal_flags *gfc;
-
-  /*
-   *  Disable floating point exepctions
-   */
-#ifdef __FreeBSD__
-# include <floatingpoint.h>
-  {
-  /* seet floating point mask to the Linux default */
-  fp_except_t mask;
-  mask=fpgetmask();
-  /* if bit is set, we get SIGFPE on that error! */
-  fpsetmask(mask & ~(FP_X_INV|FP_X_DZ));
-  /*  fprintf(stderr,"FreeBSD mask is 0x%x\n",mask); */
-  }
-#endif
-#if defined(__riscos__) && !defined(ABORTFP)
-  /* Disable FPE's under RISC OS */
-  /* if bit is set, we disable trapping that error! */
-  /*   _FPE_IVO : invalid operation */
-  /*   _FPE_DVZ : divide by zero */
-  /*   _FPE_OFL : overflow */
-  /*   _FPE_UFL : underflow */
-  /*   _FPE_INX : inexact */
-  DisableFPETraps( _FPE_IVO | _FPE_DVZ | _FPE_OFL );
-#endif
-
-
-  /*
-   *  Debugging stuff
-   *  The default is to ignore FPE's, unless compiled with -DABORTFP
-   *  so add code below to ENABLE FPE's.
-   */
-
-#if defined(ABORTFP) && !defined(__riscos__)
-#if defined(_MSC_VER)
-  {
-	#include <float.h>
-	unsigned int mask;
-	mask=_controlfp( 0, 0 );
-	mask&=~(_EM_OVERFLOW|_EM_UNDERFLOW|_EM_ZERODIVIDE|_EM_INVALID);
-	mask=_controlfp( mask, _MCW_EM );
-	}
-#elif defined(__CYGWIN__)
-#  define _FPU_GETCW(cw) __asm__ ("fnstcw %0" : "=m" (*&cw))
-#  define _FPU_SETCW(cw) __asm__ ("fldcw %0" : : "m" (*&cw))
-
-#  define _EM_INEXACT     0x00000001 /* inexact (precision) */
-#  define _EM_UNDERFLOW   0x00000002 /* underflow */
-#  define _EM_OVERFLOW    0x00000004 /* overflow */
-#  define _EM_ZERODIVIDE  0x00000008 /* zero divide */
-#  define _EM_INVALID     0x00000010 /* invalid */
-  {
-    unsigned int mask;
-    _FPU_GETCW(mask);
-    /* Set the FPU control word to abort on most FPEs */
-    mask &= ~(_EM_UNDERFLOW | _EM_OVERFLOW | _EM_ZERODIVIDE | _EM_INVALID);
-    _FPU_SETCW(mask);
-  }
-# else
-  {
-#  include <fpu_control.h>
-#ifndef _FPU_GETCW
-#define _FPU_GETCW(cw) __asm__ ("fnstcw %0" : "=m" (*&cw))
-#endif
-#ifndef _FPU_SETCW
-#define _FPU_SETCW(cw) __asm__ ("fldcw %0" : : "m" (*&cw))
-#endif
-    unsigned int mask;
-    _FPU_GETCW(mask);
-    /* Set the Linux mask to abort on most FPE's */
-    /* if bit is set, we _mask_ SIGFPE on that error! */
-    /*  mask &= ~( _FPU_MASK_IM | _FPU_MASK_ZM | _FPU_MASK_OM | _FPU_MASK_UM );*/
-    mask &= ~( _FPU_MASK_IM | _FPU_MASK_ZM | _FPU_MASK_OM );
-    _FPU_SETCW(mask);
-  }
-#endif
-#endif /* ABORTFP && !__riscos__ */
-
-
-  if (NULL==(gfp->internal_flags = malloc(sizeof(lame_internal_flags))))
-    return -1;
-  
-  gfc=(lame_internal_flags *) gfp->internal_flags;
-
-
-  /* Global flags.  set defaults here */
-  gfp->mode = MPG_MD_JOINT_STEREO;
-  gfp->force_ms=0;
-  gfp->brate=0;
-  gfp->copyright=0;
-  gfp->original=1;
-  gfp->extension=0;
-  gfp->error_protection=0;
-  gfp->emphasis=0;
-  gfp->in_samplerate=1000*44.1;
-  gfp->out_samplerate=0;
-  gfp->num_channels=2;
-  gfp->num_samples=MAX_U_32_NUM;
-
-  gfp->allow_diff_short=0;
-  gfp->ATHonly=0;
-  gfp->noATH=0;
-  gfp->bWriteVbrTag=1;
-  gfp->cwlimit=0;
-  gfp->disable_reservoir=0;
-  gfp->experimentalX = 0;
-  gfp->experimentalY = 0;
-  gfp->experimentalZ = 0;
-  gfp->gtkflag=0;
-  gfp->quality=5;
-  gfp->input_format=sf_unknown;
-
-  gfp->lowpassfreq=0;
-  gfp->highpassfreq=0;
-  gfp->lowpasswidth=-1;
-  gfp->highpasswidth=-1;
-
-  gfp->no_short_blocks=0;
-  gfp->padding_type=2;
-  gfp->swapbytes=0;
-  gfp->silent=0;
-  gfp->VBR=0;
-  gfp->VBR_q=4;
-  gfp->VBR_min_bitrate_kbps=0;
-  gfp->VBR_max_bitrate_kbps=0;
-
-  gfp->inPath=NULL;
-  gfp->outPath=NULL;
-
-  gfc->lame_init_params_init=0;
-  gfc->lame_encode_frame_init=0;
-  gfc->iteration_init_init=0;
-  gfc->fill_buffer_downsample_init=0;
-  gfc->fill_buffer_upsample_init=0;
-  gfc->mdct_sub48_init=0;
-
-  gfc->frameNum=0;
-  gfc->filter_type=0;
-
-  gfc->resample_ratio=1;
-  gfc->lowpass1=0;
-  gfc->lowpass2=0;
-  gfc->highpass1=0;
-  gfc->highpass2=0;
-  gfc->lowpass_band=32;
-  gfc->highpass_band=-1;
-
-  gfc->padding=0;
-  gfc->totalframes=0;
-  gfc->VBR_min_bitrate=1;
-  gfc->VBR_max_bitrate=13;
-
-  gfc->version = 1;   /* =1   Default: MPEG-1 */
-
-  gfc->ms_ener_ratio[0]=0;
-  gfc->ms_ener_ratio[1]=0;
-  gfc->ms_ratio[0]=0;
-  gfc->ms_ratio[1]=0;
-  gfc->OldValue[0]=180;
-  gfc->OldValue[1]=180;
-  gfc->CurrentStep=4;
-
-  id3tag.used=0;
-  return 0;
-}
-
-
-
 /*****************************************************************/
 /* flush internal mp3 buffers,                                   */
 /*****************************************************************/
@@ -1372,4 +1198,183 @@ void lame_mp3_tags(lame_global_flags *gfp)
 void lame_version(lame_global_flags *gfp,char *ostring) {
   strncpy(ostring,get_lame_version(),20);
 }
+
+
+
+
+
+
+
+/* initialize mp3 encoder */
+int lame_init(lame_global_flags *gfp)
+{
+  lame_internal_flags *gfc;
+
+  /*
+   *  Disable floating point exepctions
+   */
+#ifdef __FreeBSD__
+# include <floatingpoint.h>
+  {
+  /* seet floating point mask to the Linux default */
+  fp_except_t mask;
+  mask=fpgetmask();
+  /* if bit is set, we get SIGFPE on that error! */
+  fpsetmask(mask & ~(FP_X_INV|FP_X_DZ));
+  /*  fprintf(stderr,"FreeBSD mask is 0x%x\n",mask); */
+  }
+#endif
+#if defined(__riscos__) && !defined(ABORTFP)
+  /* Disable FPE's under RISC OS */
+  /* if bit is set, we disable trapping that error! */
+  /*   _FPE_IVO : invalid operation */
+  /*   _FPE_DVZ : divide by zero */
+  /*   _FPE_OFL : overflow */
+  /*   _FPE_UFL : underflow */
+  /*   _FPE_INX : inexact */
+  DisableFPETraps( _FPE_IVO | _FPE_DVZ | _FPE_OFL );
+#endif
+
+
+  /*
+   *  Debugging stuff
+   *  The default is to ignore FPE's, unless compiled with -DABORTFP
+   *  so add code below to ENABLE FPE's.
+   */
+
+#if defined(ABORTFP) 
+#if defined(_MSC_VER)
+  {
+	#include <float.h>
+	unsigned int mask;
+	mask=_controlfp( 0, 0 );
+	mask&=~(_EM_OVERFLOW|_EM_UNDERFLOW|_EM_ZERODIVIDE|_EM_INVALID);
+	mask=_controlfp( mask, _MCW_EM );
+	}
+#elif defined(__CYGWIN__)
+#  define _FPU_GETCW(cw) __asm__ ("fnstcw %0" : "=m" (*&cw))
+#  define _FPU_SETCW(cw) __asm__ ("fldcw %0" : : "m" (*&cw))
+
+#  define _EM_INEXACT     0x00000001 /* inexact (precision) */
+#  define _EM_UNDERFLOW   0x00000002 /* underflow */
+#  define _EM_OVERFLOW    0x00000004 /* overflow */
+#  define _EM_ZERODIVIDE  0x00000008 /* zero divide */
+#  define _EM_INVALID     0x00000010 /* invalid */
+  {
+    unsigned int mask;
+    _FPU_GETCW(mask);
+    /* Set the FPU control word to abort on most FPEs */
+    mask &= ~(_EM_UNDERFLOW | _EM_OVERFLOW | _EM_ZERODIVIDE | _EM_INVALID);
+    _FPU_SETCW(mask);
+  }
+# elif (defined(__linux__) || defined(__FreeBSD__))
+  {
+#  include <fpu_control.h>
+#  ifndef _FPU_GETCW
+#  define _FPU_GETCW(cw) __asm__ ("fnstcw %0" : "=m" (*&cw))
+#  endif
+#  ifndef _FPU_SETCW
+#  define _FPU_SETCW(cw) __asm__ ("fldcw %0" : : "m" (*&cw))
+#  endif
+    unsigned int mask;
+    _FPU_GETCW(mask);
+    /* Set the Linux mask to abort on most FPE's */
+    /* if bit is set, we _mask_ SIGFPE on that error! */
+    /*  mask &= ~( _FPU_MASK_IM | _FPU_MASK_ZM | _FPU_MASK_OM | _FPU_MASK_UM );*/
+    mask &= ~( _FPU_MASK_IM | _FPU_MASK_ZM | _FPU_MASK_OM );
+    _FPU_SETCW(mask);
+  }
+#endif
+#endif /* ABORTFP */
+
+
+
+  memset(gfp,0,sizeof(lame_global_flags));
+  if (NULL==(gfp->internal_flags = malloc(sizeof(lame_internal_flags))))
+    return -1;
+  gfc=(lame_internal_flags *) gfp->internal_flags;
+  memset(gfc,0,sizeof(lame_internal_flags));
+
+  /* Global flags.  set defaults here */
+  gfp->mode = MPG_MD_JOINT_STEREO;
+  gfp->mode_fixed=0;
+  gfp->force_ms=0;
+  gfp->brate=0;
+  gfp->copyright=0;
+  gfp->original=1;
+  gfp->extension=0;
+  gfp->error_protection=0;
+  gfp->emphasis=0;
+  gfp->in_samplerate=1000*44.1;
+  gfp->out_samplerate=0;
+  gfp->num_channels=2;
+  gfp->num_samples=MAX_U_32_NUM;
+
+  gfp->allow_diff_short=0;
+  gfp->ATHonly=0;
+  gfp->noATH=0;
+  gfp->bWriteVbrTag=1;
+  gfp->cwlimit=0;
+  gfp->disable_reservoir=0;
+  gfp->experimentalX = 0;
+  gfp->experimentalY = 0;
+  gfp->experimentalZ = 0;
+  gfp->gtkflag=0;
+  gfp->quality=5;
+  gfp->input_format=sf_unknown;
+
+  gfp->lowpassfreq=0;
+  gfp->highpassfreq=0;
+  gfp->lowpasswidth=-1;
+  gfp->highpasswidth=-1;
+
+  gfp->no_short_blocks=0;
+  gfp->padding_type=2;
+  gfp->swapbytes=0;
+  gfp->silent=0;
+  gfp->VBR=0;
+  gfp->VBR_q=4;
+  gfp->VBR_min_bitrate_kbps=0;
+  gfp->VBR_max_bitrate_kbps=0;
+
+  gfp->inPath=NULL;
+  gfp->outPath=NULL;
+
+  gfc->lame_init_params_init=0;
+  gfc->lame_encode_frame_init=0;
+  gfc->iteration_init_init=0;
+  gfc->fill_buffer_downsample_init=0;
+  gfc->fill_buffer_upsample_init=0;
+  gfc->mdct_sub48_init=0;
+
+  gfc->frameNum=0;
+  gfc->filter_type=0;
+
+  gfc->resample_ratio=1;
+  gfc->lowpass1=0;
+  gfc->lowpass2=0;
+  gfc->highpass1=0;
+  gfc->highpass2=0;
+  gfc->lowpass_band=32;
+  gfc->highpass_band=-1;
+
+  gfc->padding=0;
+  gfc->totalframes=0;
+  gfc->VBR_min_bitrate=1;
+  gfc->VBR_max_bitrate=13;
+
+  gfc->version = 1;   /* =1   Default: MPEG-1 */
+
+  gfc->ms_ener_ratio[0]=0;
+  gfc->ms_ener_ratio[1]=0;
+  gfc->ms_ratio[0]=0;
+  gfc->ms_ratio[1]=0;
+  gfc->OldValue[0]=180;
+  gfc->OldValue[1]=180;
+  gfc->CurrentStep=4;
+
+  id3tag.used=0;
+  return 0;
+}
+
 

@@ -393,7 +393,7 @@ int fill_buffer_downsample(lame_global_flags *gfp,short int *outbuf,int desired_
   /* time of j'th element in inbuf = itime + j/ifreq; */
   /* time of k'th element in outbuf   =  j/ofreq */
   for (k=0;k<desired_len;k++) {
-    FLOAT8 time0;
+    FLOAT8 time0,sum;
     
     time0 = k*gfc->resample_ratio;       /* time of k'th output sample */
     j = floor( time0 -gfc->itime[ch]  );
@@ -413,10 +413,11 @@ int fill_buffer_downsample(lame_global_flags *gfp,short int *outbuf,int desired_
       int j2 = i+j-filter_l/2;
       int y;
       y = (j2<0) ? inbuf_old[BLACKSIZE+j2] : inbuf[j2];
-      if (intratio) 
+      if (intratio) {
 	xvalue += y*gfc->blackfilt[i];
-      else
+      }else{
 	xvalue += y*blackman(i,offset,fcn,filter_l);
+      }
 #ifdef DEBUG
       printf("i=%i  filter=%10.5f  y=%i \n",i,blackman(i,offset,fcn,filter_l),
                y);
@@ -427,7 +428,7 @@ int fill_buffer_downsample(lame_global_flags *gfp,short int *outbuf,int desired_
     else if (value < -32767) outbuf[k]=-32767;
     else outbuf[k]=value;
 #ifdef DEBUG
-    printf("final value:  outbuf=%i \n\n",outbuf[k]);
+    printf("final value:  outbuf=%i  \n\n",outbuf[k]);
 #endif
   }
 
