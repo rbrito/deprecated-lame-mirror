@@ -1,5 +1,37 @@
 LAME 3.xx    3/00 Mark Taylor (http://www.sulaco.org/mp3)
 
+
+=======================================================================
+Compile time options
+=======================================================================
+There are serveral targets which can be built from this
+source code:
+
+lame/lame.exe   The command line encoder
+lame_enc.dll    a Windows DLL used by many GUIs which support lame.
+libmp3lame.a    the *NIX style encoding library
+
+
+The following compile time options can be used.  For libmp3lame.a
+and lame_enc.dll, none are required.  See Makefile for details.
+
+
+#define HAVEMPGLIB   to compile in mpglib's mp3 *decoding* capibility
+#define HAVEVORBIS   to compile in Vorbis decoding and encoding capibility
+
+Exactly one of these is required for the command line encoder:
+#define LIBSNDFILE   to use Erik de Castro Lopo's libsndfile
+#define LAMESNDFILE  to use LAME's minimial internal sndfile I/O
+
+Other options for the command line encoder:
+#define HAVEGTK      to compile in the LAME MP3 frame analyzer
+#define BRHIST       to allow the optional display of the VBR historgram
+#define NOTERMCAP    to try and emulate termcap/ncurses directly (ANSI)
+                     only needed if BRHIST is used
+
+
+
+
 =======================================================================
 Building the MPEG audio encoding software on Windows:
 =======================================================================
@@ -12,7 +44,10 @@ Note that MSVC "professional" claims to produce faster executables
 then MSVC "standard".  It is possible to compile the GTK frame
 analyzer under windows, see README.WINGTK
 
-
+The Windows Borland C compiler is now free!  Borland will also
+compile LAME, although a new makefile is needed.  If you get
+this to work, please write a README.BORLAND which I can include
+with LAME!
 
 
 

@@ -37,9 +37,8 @@ CPP_OPTS = -DHAVEMPGLIB
 # Define these in the OS specific sections below to compile in support
 # for the Ogg Vorbis audio format (both decoding and encoding)
 # 
-# VORBIS = -DHAVEVORBIS
+# VORBIS = -DHAVEVORBIS  -I ../vorbis/include
 # VORBIS_LIB = -L ../vorbis/lib -lvorbis
-# VORBIS_INC = -I ../vorbis/include
 ##########################################################################
 
 ##########################################################################
@@ -47,9 +46,14 @@ CPP_OPTS = -DHAVEMPGLIB
 # for the optional VBR bitrate histogram.  
 # Requires ncurses, but libtermcap also works.  
 # If you have any trouble, just dont define these
+#
 # BRHIST_SWITCH = -DBRHIST
 # LIBTERMCAP = -lncurses
 # LIBTERMCAP = -ltermcap
+#
+# or, to try and simulate TERMCAP (ANSI), use:
+# BRHIST_SWITCH = -DBRHIST -DNOTERMCAP
+#
 ##########################################################################
 
 
@@ -57,10 +61,10 @@ CPP_OPTS = -DHAVEMPGLIB
 # Define these in the OS specific sections below to compile in code for:
 #
 # SNDLIB =                no file i/o 
-# SNDLIB = -DLAMESNDFILE  to use internal LAME soundfile routines
+# SNDLIB = -DLAMESNDFILE  to use internal LAME soundfile routines 
 # SNDLIB = -DLIBSNDFILE   to use Erik de Castro Lopo's libsndfile 
 # http://www.zip.com.au/~erikd/libsndfile/
-# otherwise LAME can only read 16bit wav, aiff and pcm inputfiles.
+#
 # Note: at present, libsndfile does not support input from stdin.  
 #
 # for example:
@@ -100,9 +104,9 @@ ifeq ($(UNAME),Linux)
 #   SNDLIB = -DLIBSNDFILE
 #   LIBSNDFILE=-lsndfile 
 
-#   VORBIS = -DHAVEVORBIS
+# uncomment to compile in Vorbis support
+#   VORBIS = -DHAVEVORBIS -I/home/mt/mp3/vorbis/include
 #   VORBIS_LIB = -L/home/mt/mp3/vorbis/lib -lvorbis
-#   VORBIS_INC = -I/home/mt/mp3/vorbis/include
 
 
 # suggested for gcc-2.7.x
@@ -111,6 +115,7 @@ ifeq ($(UNAME),Linux)
 
 #  for debugging:
 #   CC_OPTS =  -UNDEBUG -O -Wall -g -DABORTFP
+#   CC_OPTS =  -UNDEBUG -O -Wall -g 
 
 #  for lots of debugging:
 #   CC_OPTS =  -DDEBUG -UNDEBUG  -O -Wall -g -DABORTFP 
@@ -255,7 +260,7 @@ endif
 # gcc 2.8+ as of 10/99.  
 
 CC_SWITCHES = -DNDEBUG -D__NO_MATH_INLINES $(CC_OPTS) $(SNDLIB) $(GTK) \
-$(BRHIST_SWITCH) $(VORBIS) $(VORBIS_INC)
+$(BRHIST_SWITCH) $(VORBIS) 
 c_sources = \
         brhist.c \
 	bitstream.c \
