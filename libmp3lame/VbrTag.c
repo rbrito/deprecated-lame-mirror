@@ -615,7 +615,7 @@ int PutVbrTag(lame_global_flags *gfp, FILE *fpStream)
     size_t id3v2TagSize;
     int bitrate;
 
-    if (gfc->VBR_seek_table.pos <= 0)
+    if (gfc->VBR_seek_table.pos <= 0 && gfp->VBR != cbr)
 	return -1;
 
     /* Get file size */
