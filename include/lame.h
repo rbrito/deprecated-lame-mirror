@@ -312,7 +312,8 @@ int CDECL lame_set_experimentalZ(lame_global_flags *, int);
 int CDECL lame_get_experimentalZ(const lame_global_flags *);
 
 /* set/get how to compare the quantization values */
-int CDECL lame_set_quantcomp_method(lame_global_flags *, int);
+int CDECL lame_set_quant_comp(lame_global_flags *, int);
+int CDECL lame_set_quant_comp_short(lame_global_flags *, int);
 int CDECL lame_get_quantcomp_method(const lame_global_flags *);
 
 /* set/get large scalefactor range */
