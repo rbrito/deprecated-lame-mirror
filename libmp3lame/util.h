@@ -150,13 +150,13 @@ typedef struct  bit_stream_struc {
 typedef struct {
   /* variables for nspsytune */
   int   use; /* indicates the use of nspsytune */
-  int   safejoint; /* safe joint stereo mode */
   FLOAT last_en_subshort[4][9];
   FLOAT last_attack_intensity[4][9];
   FLOAT	last_thm[4][SBMAX_s][3];
   int   last_attacks[4][3];
   FLOAT pefirbuf[19];
   FLOAT bass,alto,treble,sfb21;
+  FLOAT athadjust_msfix;             // msfix adjustment based on athadjust
 
   // short block tuning
   FLOAT     attackthre;
@@ -187,7 +187,6 @@ typedef struct {
 //FLOAT8  athadjust_max_val;           // maximum value of athadjust before limit is applied
   FLOAT8  athadjust_switch_level;      // level of athadjust at which to apply tunings at
                                        // x <= 0 == never switch, x >= 1 == always switch
-  FLOAT8  athadjust_msfix;             // msfix adjustment based on athadjust
   int     athadjust_safe_noiseshaping; // if 0, noise shaping 2 will not be used no matter what
                                        // the noise shaping type would normally be set to
   FLOAT8  athadjust_safe_noiseshaping_thre; // value which max_pow_alt must be greater than

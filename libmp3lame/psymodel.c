@@ -1303,15 +1303,17 @@ pecalc_s(
     pe_s = 1236.28/4;
     for(sblock=0;sblock<3;sblock++) {
 	for ( sb = 0; sb < SBMAX_s; sb++ ) {
-	    if (mr->thm.s[sb][sblock] <= 0.0
-		|| regcoef_s[sb] == 0.0
+	    FLOAT x;
+	    if (regcoef_s[sb] == 0.0
+		|| mr->thm.s[sb][sblock] <= 0.0
 		|| mr->en.s[sb][sblock]
-		<= mr->thm.s[sb][sblock] * masking_lower)
+		<= (x = mr->thm.s[sb][sblock] * masking_lower))
 		continue;
 
-	    pe_s += regcoef_s[sb] *
-		log(mr->en.s[sb][sblock]
-		    / (mr->thm.s[sb][sblock] * masking_lower));
+	    if (mr->en.s[sb][sblock] > x*1e10)
+		pe_s += regcoef_s[sb] * (10.0 * LOG10);
+	    else
+		pe_s += regcoef_s[sb] * FAST_LOG10(mr->en.s[sb][sblock] / x);
 	}
     }
     return pe_s;
@@ -1333,12 +1335,15 @@ pecalc_l(
 
     pe_l = 1124.23/4;
     for ( sb = 0; sb < SBMAX_l; sb++ ) {
-	if (mr->thm.l[sb] == 0.0
-	    || mr->en.l[sb] <= mr->thm.l[sb]*masking_lower)
+	FLOAT x;
+	if (mr->thm.l[sb] <= 0.0
+	    || mr->en.l[sb] <= (x = mr->thm.l[sb]*masking_lower))
 	    continue;
 
-	pe_l += regcoef_l[sb] * 
-	    log(mr->en.l[sb] / (mr->thm.l[sb]*masking_lower));
+	if (mr->en.l[sb] > x*1e10)
+	    pe_l += regcoef_l[sb] * (10.0 * LOG10);
+	else
+	    pe_l += regcoef_l[sb] * FAST_LOG10(mr->en.l[sb] / x);
     }
 
     return pe_l;
@@ -1699,9 +1704,8 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	FLOAT8 msfix;
 	msfix1(gfc);
 	msfix = gfp->msfix;
-	if (gfc->presetTune.use
-	    && gfc->ATH->adjust >= gfc->presetTune.athadjust_switch_level)
-	    msfix = gfc->presetTune.athadjust_msfix;
+	if (gfc->ATH->adjust >= gfc->presetTune.athadjust_switch_level)
+	    msfix = gfc->nsPsy.athadjust_msfix;
 
 	if (msfix != 0.0)
 	    ns_msfix(gfc, msfix, gfp->ATHlower);
@@ -2048,15 +2052,15 @@ int psymodel_init(lame_global_flags *gfp)
 #define NSATTACKTHRE_S 300
 
 	msfix = NS_MSFIX;
-	if (gfc->nsPsy.safejoint) msfix = 1.0;
+	if (gfp->exp_nspsytune & 2) msfix = 1.0;
 	if (gfp->msfix != 0.0) msfix = gfp->msfix;
 	gfp->msfix = msfix;
+	if (!gfc->presetTune.use || gfc->nsPsy.athadjust_msfix <= 0.0)
+	    gfc->nsPsy.athadjust_msfix = gfp->msfix;
 
 	if (!gfc->presetTune.use) {
 	    gfc->nsPsy.attackthre   = NSATTACKTHRE;
 	    gfc->nsPsy.attackthre_s = NSATTACKTHRE_S;
-	    if (gfc->presetTune.athadjust_msfix <= 0.0)
-		gfc->presetTune.athadjust_msfix = gfp->msfix;
 	}
 
 	/* spread only from npart_l bands.  Normally, we use the spreading

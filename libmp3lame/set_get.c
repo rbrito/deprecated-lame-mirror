@@ -1579,7 +1579,7 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
 
           gfc->presetTune.ms_maskadjust = .5;
           gfc->presetTune.athadjust_switch_level = 1;
-          gfc->presetTune.athadjust_msfix = 2.13;
+          gfc->nsPsy.athadjust_msfix = 2.13;
 
           break;
 
