@@ -53,6 +53,12 @@
 #include <dmalloc.h>
 #endif
 
+#ifdef __sun__
+/* woraround for SunOS 4.x, it has SEEK_* defined here */
+#include <unistd.h>
+#endif
+
+
 #ifdef _DEBUG
 /*  #define DEBUG_VBRTAG */
 #endif

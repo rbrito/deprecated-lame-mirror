@@ -48,6 +48,12 @@
 #include <dmalloc.h>
 #endif
 
+#ifdef __sun__
+/* woraround for SunOS 4.x, it has SEEK_* defined here */
+#include <unistd.h>
+#endif
+
+
 #define DEFAULT_QUALITY 2
 
 static void
