@@ -253,9 +253,8 @@ calc_noise(
               calc_noise_result   * const res )
 {
     FLOAT over_noise_db = 0.0;
-    FLOAT tot_noise_db  = 0.0; /*    0 dB relative to masking */
     FLOAT max_noise   = -20.0; /* -200 dB relative to masking */
-    int sfb = 0, over=0, j = 0;
+    int sfb = 0, j = 0;
 
     do {
 	FLOAT step
@@ -275,12 +274,7 @@ calc_noise(
 	noise = *distort++ = noise / *l3_xmin++;
 
 	noise = FAST_LOG10(Max(noise,1E-20));
-	/* multiplying here is adding in dB, but can overflow */
-	/* tot_noise *= Max(noise, 1E-20); */
-	tot_noise_db += noise;
-
 	if (noise > 0.0) {
-	    over++;
 	    /* multiplying here is adding in dB -but can overflow */
 	    /* over_noise *= noise; */
 	    over_noise_db += noise;
@@ -288,7 +282,7 @@ calc_noise(
 	max_noise=Max(max_noise,noise);
     } while (++sfb < gi->psymax);
 
-    if (over && gi->block_type == SHORT_TYPE) {
+    if (max_noise > 0.0 && gi->block_type == SHORT_TYPE) {
 	distort -= sfb;
 	max_noise = -20.0;
 	over_noise_db = 0.0;
@@ -311,14 +305,10 @@ calc_noise(
 
 	    if (max_noise < nsum)
 		max_noise = nsum;
-	    if (noise > 0) {
-		over += 3;
+	    if (noise > 0)
 		over_noise_db += noise;
-	    }
 	}
     }
-    res->over_count = over;
-    res->tot_noise   = tot_noise_db;
     res->over_noise  = over_noise_db;
     res->max_noise   = max_noise;
 }
@@ -580,47 +570,24 @@ better_quant(
 {
     calc_noise_result calc;
     int better;
+    FLOAT new;
     /*
        noise is given in decibels (dB) relative to masking thesholds.
 
        over_noise:  sum of noise which exceed the threshold.
-       tot_noise:   sum of noise, including "not exceeded" noise.
        max_noise:   max quantization noise 
      */
 
     calc_noise (gi, l3_xmin, distort, &calc);
-    switch (gi->block_type == SHORT_TYPE
-	    ? gfc->quantcomp_method_s : gfc->quantcomp_method) {
-        default:
-        case 0:
-	    better = calc.over_count  < best->over_count
-               ||  ( calc.over_count == best->over_count  &&
-                     calc.over_noise  < best->over_noise )
-               ||  ( calc.over_count == best->over_count  &&
-                     calc.over_noise == best->over_noise  &&
-                     calc.tot_noise   < best->tot_noise  ); 
-	    break;
+    new = calc.max_noise;
+    if (gi->block_type == SHORT_TYPE
+	? gfc->quantcomp_method_s : gfc->quantcomp_method) {
 
-        case 2:	    /* for backward compatibility, pass through */
-        case 4:
-        case 5:
-        case 7:
-        case 8:
-        case 9:
-        case 1:
-	    better = calc.max_noise < best->max_noise; 
-	    break;
-
-        case 3:	    /* for backward compatibility, pass through */
-        case 6:
-	    better =  calc.over_noise  < best->over_noise
-		||  ( calc.over_noise == best->over_noise
-		      && ( calc.max_noise   < best->max_noise  
-			   || ( calc.max_noise  == best->max_noise
-			     && calc.tot_noise  <= best->tot_noise )
-			  ));
-	    break;
+	new = calc.over_noise;
+	calc.max_noise = new;
     }
+
+    better = new < best->max_noise;
     if (better)
 	*best = calc;
     return better;
@@ -712,20 +679,21 @@ inc_subblock_gain (
  *  Change the scalefactor value of the band where the noise is not masked.
  *  See ISO 11172-3 Section C.1.5.4.3.5
  * 
- *  distort[] = noise/masking
- *  distort[] > 1   ==> noise is not masked (need more bits)
- *  distort[] < 1   ==> noise is masked
- *  max_dist = maximum value of distort[]
+ *  We select "the band" if the distort[] is larger than "trigger",
+ *  which has 3 algorithms to be calculated.
  *  
- *  Three algorithms are available to select "the band":
  *  method
- *    0             all bands with distort[]>1.
+ *    0             trigger = 1.0
  *
- *    1             all bands with distort[] >= max_dist^(.5);
- *                  (50% in the dB scale)
+ *    1             trigger = max_dist^(.5)   (50% in the dB scale)
  *
- *    2             only the one band with distort[] = max_dist;
- *                  (The band with the strongest distortion)
+ *    2             trigger = max_dist;
+ *                  (select only the band with the strongest distortion)
+ * where
+ *  distort[] = noise/masking
+ *   distort[] > 1   ==> noise is not masked (need more bits)
+ *   distort[] < 1   ==> noise is masked
+ *  max_dist = maximum value of distort[]
  *
  *  For algorithms 0 and 1, if max_dist < 1, then change all bands 
  *  with distort[] >= .95*max_dist.  This is to make sure we always
@@ -841,10 +809,10 @@ outer_loop (
 	return;
 
     /* compute the distortion in this quantization */
-    /* coefficients and thresholds both l/r (or both mid/side) */
+    /* coefficients and thresholds of ch0(L or Mid) or ch1(R or Side) */
     calc_xmin (gfp, ratio, gi, l3_xmin);
     calc_noise (gi, l3_xmin, distort, &best_noise_info);
-    if (gfc->noise_shaping_stop == 0 && best_noise_info.over_count == 0)
+    if (gfc->noise_shaping_stop == 0 && best_noise_info.max_noise < 0.0)
 	goto quit_quantization;
 
     /* BEGIN MAIN LOOP */
@@ -865,7 +833,7 @@ outer_loop (
 		&& better_quant(gfc, l3_xmin, distort, &best_noise_info,
 				&cod_info_w)) {
 		*gi = cod_info_w;
-		if (best_noise_info.over_count == 0) {
+		if (best_noise_info.max_noise < 0.0) {
 		    if (gfc->noise_shaping_stop == 0)
 			break;
 		    if (current_method == 0)
@@ -1657,10 +1625,10 @@ void set_pinfo (
     gfc->pinfo->LAMEmainbits[gr][ch] = gi->part2_3_length + gi->part2_length;
     gfc->pinfo->LAMEsfbits  [gr][ch] = gi->part2_length;
 
-    gfc->pinfo->over      [gr][ch] = noise.over_count;
+    gfc->pinfo->over      [gr][ch] = -1;
     gfc->pinfo->max_noise [gr][ch] = noise.max_noise * 10.0;
     gfc->pinfo->over_noise[gr][ch] = noise.over_noise * 10.0;
-    gfc->pinfo->tot_noise [gr][ch] = noise.tot_noise * 10.0;
+    gfc->pinfo->tot_noise [gr][ch] = -1.0;
 }
 
 

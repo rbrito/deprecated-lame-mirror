@@ -24,9 +24,7 @@
 
 typedef struct calc_noise_result_t {
     FLOAT  over_noise;      /* sum of quantization noise > masking */
-    FLOAT  tot_noise;       /* sum of all quantization noise */
     FLOAT  max_noise;       /* max quantization noise */
-    int    over_count;      /* number of quantization noise > masking */
 } calc_noise_result;
 
 /* takehiro.c */
