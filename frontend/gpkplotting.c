@@ -91,9 +91,9 @@ static GdkPixmap **findpixmap(GtkWidget *widget)
 
 void gpk_graph_draw(GtkWidget *widget,               /* plot on this widged */
 		   int n,                           /* number of data points */
-		   gdouble *xcord, gdouble *ycord,  /* data */
-		   gdouble xmn,gdouble ymn,         /* coordinates of corners */
-		   gdouble xmx,gdouble ymx,
+		   gfloat *xcord, gfloat *ycord,  /* data */
+		   gfloat xmn,gfloat ymn,         /* coordinates of corners */
+		   gfloat xmx,gfloat ymx,
                    int clear,                       /* clear old plot first */
 		   char *title,                     /* add a title (only if clear=1) */
                    GdkColor *color)		    
@@ -148,9 +148,9 @@ void gpk_graph_draw(GtkWidget *widget,               /* plot on this widged */
 
 
 void gpk_rectangle_draw(GtkWidget *widget,              /* plot on this widged */
-			gdouble *xcord, gdouble *ycord, /* corners */
-			gdouble xmn,gdouble ymn,        /* coordinates of corners */
-			gdouble xmx,gdouble ymx,
+			gfloat *xcord, gfloat *ycord, /* corners */
+			gfloat xmn,gfloat ymn,        /* coordinates of corners */
+			gfloat xmx,gfloat ymx,
 			GdkColor *color)
 {
   GdkPixmap **ppixmap;
@@ -186,9 +186,9 @@ void gpk_rectangle_draw(GtkWidget *widget,              /* plot on this widged *
 
 void gpk_bargraph_draw(GtkWidget *widget,           /* plot on this widged */
 		   int n,                           /* number of data points */
-		   gdouble *xcord, gdouble *ycord,  /* data */
-		   gdouble xmn,gdouble ymn,         /* coordinates of corners */
-		   gdouble xmx,gdouble ymx,
+		   gfloat *xcord, gfloat *ycord,  /* data */
+		   gfloat xmn,gfloat ymn,         /* coordinates of corners */
+		   gfloat xmx,gfloat ymx,
                    int clear,                       /* clear old plot first */
 		   char *title,                     /* add a title (only if clear=1) */
                    int barwidth,                    /* bar width. 0=compute based on window size */    

@@ -89,7 +89,7 @@ struct gtkinfostruct {
   int chflag;             /* toggle between L & R channels */
   int kbflag;             /* toggle between wave # and barks */
   int flag123;            /* show mpg123 frame info, OR ISO encoder frame info */
-  double avebits;         /* running average bits per frame */
+  float avebits;         /* running average bits per frame */
   int approxbits;         /* (approx) bits per frame */
   int maxbits;            /* max bits per frame used so far*/
   int totemph;            /* total of frames with de-emphasis */
@@ -226,16 +226,16 @@ int gtkmakeframe(void)
 void plot_frame(void)
 {
   int i,j,n,ch,gr;
-  gdouble *xcord,*ycord;
-  gdouble xmx,xmn,ymx,ymn;
-  double *data,*data2,*data3;
+  gfloat *xcord,*ycord;
+  gfloat xmx,xmn,ymx,ymn;
+  float *data,*data2,*data3;
   char title2[80];
   char label[80],label2[80];
   char *title;
   plotting_data *pplot1;
   plotting_data *pplot2 = NULL;
 
-  double en,samp;
+  float en,samp;
   int sampindex,version=0;
   int barthick;
   static int firstcall=1;
@@ -350,8 +350,8 @@ void plot_frame(void)
    * draw the PCM data *
    *******************************************************************/
   n = 1600;  /* PCM frame + FFT window:   224 + 1152 + 224  */
-  xcord = g_malloc(n*sizeof(gdouble));
-  ycord = g_malloc(n*sizeof(gdouble));
+  xcord = g_malloc(n*sizeof(gfloat));
+  ycord = g_malloc(n*sizeof(gfloat));
 
 
   if (gtkinfo.msflag) 
@@ -567,7 +567,7 @@ void plot_frame(void)
     ymn=9e20;
     ymx=-9e20;
     for (i=0; i<n; i++) {
-      double coeff;
+      float coeff;
       xcord[i] = i;
       if (gtkinfo.msflag){
 	coeff = ch ?  .5*(data[i]-data2[i]) : .5*(data[i]+data2[i]) ;
@@ -577,7 +577,7 @@ void plot_frame(void)
       if (blocktype[gr][ch]==SHORT_TYPE && !subblock_draw[i % 3])
         coeff = 0;
       ycord[i]=coeff*coeff*1e10;
-      ycord[i] = log10( MAX( ycord[i],(double) 1)); 
+      ycord[i] = log10( MAX( ycord[i],(float) 1)); 
 
 #if 0
       if (ch==0) 
@@ -630,7 +630,7 @@ void plot_frame(void)
         if (blocktype[gr][ch]==SHORT_TYPE && !subblock_draw[i % 3])
           ycord[i] = 0;
         else
-	  ycord[i] = log10( MAX( data[i],(double) 1));
+	  ycord[i] = log10( MAX( data[i],(float) 1));
 	ymx=(ycord[i] > ymx) ? ycord[i] : ymx;
 	ymn=(ycord[i] < ymn) ? ycord[i] : ymn;
       }
@@ -672,7 +672,7 @@ void plot_frame(void)
         if (blocktype[gr][ch]==SHORT_TYPE && !subblock_draw[i % 3])
           ycord[i] = 0;
         else
-	  ycord[i] = log10( MAX( data[i],(double) 1));
+	  ycord[i] = log10( MAX( data[i],(float) 1));
 	/*
 	ymx=(ycord[i] > ymx) ? ycord[i] : ymx;
 	ymn=(ycord[i] < ymn) ? ycord[i] : ymn;
@@ -707,7 +707,7 @@ void plot_frame(void)
         if (blocktype[gr][ch]==SHORT_TYPE && !subblock_draw[i % 3])
           ycord[i] = 0;
         else
-	  ycord[i] = log10( MAX( data2[i], (double) 1));
+	  ycord[i] = log10( MAX( data2[i], (float) 1));
       }
 
       gpk_bargraph_draw(enerbox[gr],n,xcord,ycord,
@@ -718,7 +718,7 @@ void plot_frame(void)
         if (blocktype[gr][ch]==SHORT_TYPE && !subblock_draw[i % 3])
           ycord[i] = 0;
         else
-	  ycord[i] = log10( MAX( data3[i], (double) 1));
+	  ycord[i] = log10( MAX( data3[i], (float) 1));
       }
       gpk_bargraph_draw(enerbox[gr],n,xcord,ycord,
 			xmn,ymn,xmx,ymx,0,title2,barthick,&red);  
@@ -800,7 +800,7 @@ static void update_progress(void)
 
   sprintf(label,"Frame:%4i/%4i  %6.2fs",
 	 pplot->frameNum,(int)tf-1, pplot->frametime);
-  gtk_progress_set_value (GTK_PROGRESS (frameprogress), (gdouble) pplot->frameNum);
+  gtk_progress_set_value (GTK_PROGRESS (frameprogress), (gfloat) pplot->frameNum);
   gtk_label_set_text(GTK_LABEL(framecounter),label);
 }
 
@@ -1457,7 +1457,7 @@ int gtkcontrol(lame_global_flags *gfp2,char *inPath)
      * %l - lower range value
      * %u - upper range value */
     gtk_progress_set_format_string (GTK_PROGRESS (frameprogress), "%p%%");
-    gtk_progress_set_value (GTK_PROGRESS (frameprogress), (gdouble) 0);
+    gtk_progress_set_value (GTK_PROGRESS (frameprogress), (gfloat) 0);
     gtk_progress_set_show_text (GTK_PROGRESS (frameprogress),TRUE);
     gtk_widget_show (frameprogress);
     gtk_box_pack_end (GTK_BOX (box2), frameprogress, FALSE, TRUE, 0);
