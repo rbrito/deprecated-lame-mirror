@@ -32,6 +32,8 @@
 #include <assert.h>
 #include <windows.h>
 
+#ifdef ENABLE_DECODING
+
 #include "adebug.h"
 
 #include "DecodeStream.h"
@@ -250,3 +252,4 @@ unsigned int DecodeStream::GetOutputSampleRate(int samples_per_sec, int bitrate,
 	return OutputFrequency;
 }
 
+#endif // ENABLE_DECODING
