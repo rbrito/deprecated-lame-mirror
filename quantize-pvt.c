@@ -1139,7 +1139,86 @@ set_pinfo (lame_global_flags *gfp,
 
 
 
-/* NOTE: GNUC quantize_xrpow is broken as of 1.107 */
+
+
+/*********************************************************************
+ * nonlinear quantization of xr 
+ * More accurate formula than the ISO formula.  Takes into account
+ * the fact that we are quantizing xr -> ix, but we want ix^4/3 to be 
+ * as close as possible to x^4/3.  (taking the nearest int would mean
+ * ix is as close as possible to xr, which is different.)
+ * From Segher Boessenkool <segher@eastsite.nl>  11/1999
+ * ASM optimization from 
+ *    Mathew Hendry <scampi@dial.pipex.com> 11/1999
+ *    Acy Stapp <AStapp@austin.rr.com> 11/1999
+ *    Takehiro Tominaga <tominaga@isoternet.org> 11/1999
+ *********************************************************************/
+
+#ifdef TAKEHIRO_IEEE754_HACK
+
+#define MAGIC_FLOAT (65536*(128))
+#define MAGIC_INT 0x4b000000
+
+void quantize_xrpow(FLOAT8 xp[576], int pi[576], gr_info *cod_info)
+{
+    /* quantize on xr^(3/4) instead of xr */
+    const FLOAT8 istep = IPOW20(cod_info->global_gain);
+
+    int j;
+    for (j = 576 / 4; j > 0; --j) {
+	double x0 = istep * xp[0] + MAGIC_FLOAT;
+	double x1 = istep * xp[1] + MAGIC_FLOAT;
+	double x2 = istep * xp[2] + MAGIC_FLOAT;
+	double x3 = istep * xp[3] + MAGIC_FLOAT;
+
+	((float*)pi)[0] = x0;
+	((float*)pi)[1] = x1;
+	((float*)pi)[2] = x2;
+	((float*)pi)[3] = x3;
+
+	((float *)pi)[0] = (x0 + adj43asm[pi[0] - MAGIC_INT]);
+	((float *)pi)[1] = (x1 + adj43asm[pi[1] - MAGIC_INT]);
+	((float *)pi)[2] = (x2 + adj43asm[pi[2] - MAGIC_INT]);
+	((float *)pi)[3] = (x3 + adj43asm[pi[3] - MAGIC_INT]);
+
+	pi[0] -= MAGIC_INT;
+	pi[1] -= MAGIC_INT;
+	pi[2] -= MAGIC_INT;
+	pi[3] -= MAGIC_INT;
+	pi += 4;
+	xp += 4;
+    }
+}
+
+#  define ROUNDFAC -0.0946
+void quantize_xrpow_ISO(FLOAT8 xp[576], int pi[576], gr_info *cod_info)
+{
+    /* quantize on xr^(3/4) instead of xr */
+    const FLOAT8 istep = IPOW20(cod_info->global_gain);
+
+    register int j;
+    for (j=576/4;j>0;j--) {
+	((float *)pi)[0] = (istep * xp[0]) + (ROUNDFAC + MAGIC_FLOAT);
+	((float *)pi)[1] = (istep * xp[1]) + (ROUNDFAC + MAGIC_FLOAT);
+	((float *)pi)[2] = (istep * xp[2]) + (ROUNDFAC + MAGIC_FLOAT);
+	((float *)pi)[3] = (istep * xp[3]) + (ROUNDFAC + MAGIC_FLOAT);
+
+	pi[0] -= MAGIC_INT;
+	pi[1] -= MAGIC_INT;
+	pi[2] -= MAGIC_INT;
+	pi[3] -= MAGIC_INT;
+	pi+=4;
+	xp+=4;
+    }
+}
+
+#else
+
+
+
+
+
+
 #if (defined(__GNUC__) && defined(__i386__))
 #define USE_GNUC_ASM
 #endif
@@ -1207,78 +1286,6 @@ set_pinfo (lame_global_flags *gfp,
 #  error invalid FLOAT8 type for USE_GNUC_ASM
 # endif
 #endif
-
-/*********************************************************************
- * nonlinear quantization of xr 
- * More accurate formula than the ISO formula.  Takes into account
- * the fact that we are quantizing xr -> ix, but we want ix^4/3 to be 
- * as close as possible to x^4/3.  (taking the nearest int would mean
- * ix is as close as possible to xr, which is different.)
- * From Segher Boessenkool <segher@eastsite.nl>  11/1999
- * ASM optimization from 
- *    Mathew Hendry <scampi@dial.pipex.com> 11/1999
- *    Acy Stapp <AStapp@austin.rr.com> 11/1999
- *    Takehiro Tominaga <tominaga@isoternet.org> 11/1999
- *********************************************************************/
-
-#ifdef TAKEHIRO_IEEE754_HACK
-
-#define MAGIC_FLOAT (65536*(128))
-#define MAGIC_INT 0x4b000000
-
-void quantize_xrpow(FLOAT8 xp[576], int pi[576], gr_info *cod_info)
-{
-    /* quantize on xr^(3/4) instead of xr */
-    const FLOAT8 istep = IPOW20(cod_info->global_gain);
-
-    int j;
-    for (j = 576 / 4; j > 0; --j) {
-	double x0 = istep * xp[0] + MAGIC_FLOAT;
-	double x1 = istep * xp[1] + MAGIC_FLOAT;
-	double x2 = istep * xp[2] + MAGIC_FLOAT;
-	double x3 = istep * xp[3] + MAGIC_FLOAT;
-
-	((float*)pi)[0] = x0;
-	((float*)pi)[1] = x1;
-	((float*)pi)[2] = x2;
-	((float*)pi)[3] = x3;
-
-	((float *)pi)[0] = (x0 + adj43asm[pi[0] - MAGIC_INT]);
-	((float *)pi)[1] = (x1 + adj43asm[pi[1] - MAGIC_INT]);
-	((float *)pi)[2] = (x2 + adj43asm[pi[2] - MAGIC_INT]);
-	((float *)pi)[3] = (x3 + adj43asm[pi[3] - MAGIC_INT]);
-
-	pi[0] -= MAGIC_INT;
-	pi[1] -= MAGIC_INT;
-	pi[2] -= MAGIC_INT;
-	pi[3] -= MAGIC_INT;
-	pi += 4;
-	xp += 4;
-    }
-}
-
-void quantize_xrpow_ISO(FLOAT8 xp[576], int pi[576], gr_info *cod_info)
-{
-    /* quantize on xr^(3/4) instead of xr */
-    const FLOAT8 istep = IPOW20(cod_info->global_gain);
-
-    register int j;
-    for (j=576/4;j>0;j--) {
-	((float *)pi)[0] = (istep * xp[0]) + (ROUNDFAC + MAGIC_FLOAT);
-	((float *)pi)[1] = (istep * xp[1]) + (ROUNDFAC + MAGIC_FLOAT);
-	((float *)pi)[2] = (istep * xp[2]) + (ROUNDFAC + MAGIC_FLOAT);
-	((float *)pi)[3] = (istep * xp[3]) + (ROUNDFAC + MAGIC_FLOAT);
-
-	pi[0] -= MAGIC_INT;
-	pi[1] -= MAGIC_INT;
-	pi[2] -= MAGIC_INT;
-	pi[3] -= MAGIC_INT;
-	pi+=4;
-	xp+=4;
-    }
-}
-
-#else
 
 void quantize_xrpow(FLOAT8 xr[576], int ix[576], gr_info *cod_info) {
   /* quantize on xr^(3/4) instead of xr */
