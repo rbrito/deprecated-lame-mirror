@@ -862,7 +862,7 @@ fi
 
 PACKAGE=lame
 
-VERSION=3.89
+VERSION=3.90
 
 if test "`cd $srcdir && pwd`" != "`pwd`" && test -f $srcdir/config.status; then
   { echo "configure: error: source directory already configured; run "make distclean" there first" 1>&2; exit 1; }
@@ -1885,7 +1885,7 @@ else
   if { (eval echo configure:1886: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; }; then
     for file in conftest.*; do
       case $file in
-      *.c | *.o | *.obj) ;;
+      *.c | *.C | *.o | *.obj) ;;
       *) ac_cv_exeext=`echo $file | sed -e s/conftest//` ;;
       esac
     done
@@ -4473,7 +4473,7 @@ else
     fi
   done
   IFS="$ac_save_ifs"
-  test -z "$ac_cv_path_GTK_CONFIG" && ac_cv_path_GTK_CONFIG="gtk-config"
+  test -z "$ac_cv_path_GTK_CONFIG" && ac_cv_path_GTK_CONFIG="gtk12-config"
   ;;
 esac
 fi
@@ -5356,11 +5356,10 @@ if test "x$GCC" = "xyes"; then
 
 
 
-	OPTIMIZATION_NORM="-fthread-jumps -malign-double -frerun-loop-opt \
-		-fgcse -fexpensive-optimizations"
+	OPTIMIZATION_NORM="-malign-double -fschedule-insns2"
 
-	OPTIMIZATION_FULL="-fmove-all-movables -fschedule-insns2 \
-		-freduce-all-givs"
+	OPTIMIZATION_FULL="-fmove-all-movables -freduce-all-givs \
+			-fsched-interblock -fbranch-count-reg -fforce-addr"
 
 	case "${CONFIG_EXPOPT}" in
 	no)
@@ -5422,7 +5421,7 @@ fi
 
 
 echo $ac_n "checking for debug options""... $ac_c" 1>&6
-echo "configure:5426: checking for debug options" >&5
+echo "configure:5425: checking for debug options" >&5
 # Check whether --enable-debug or --disable-debug was given.
 if test "${enable_debug+set}" = set; then
   enableval="$enable_debug"
