@@ -96,11 +96,13 @@ WITH_MP3X = @WITH_MP3X@
 
 AUTOMAKE_OPTIONS = foreign $(top_srcdir)/ansi2knr
 
-EXTRA_PROGRAMS = abx ath
+EXTRA_PROGRAMS = abx ath scalartest
 
 abx_SOURCES = abx.c
 
 ath_SOURCES = ath.c
+
+scalartest_SOURCES = scalartest.c
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../config.h
 CONFIG_CLEAN_FILES = 
@@ -118,6 +120,10 @@ ath_OBJECTS =  ath$U.o
 ath_LDADD = $(LDADD)
 ath_DEPENDENCIES = 
 ath_LDFLAGS = 
+scalartest_OBJECTS =  scalartest$U.o
+scalartest_LDADD = $(LDADD)
+scalartest_DEPENDENCIES = 
+scalartest_LDFLAGS = 
 CFLAGS = @CFLAGS@
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -130,9 +136,9 @@ DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
 TAR = tar
 GZIP_ENV = --best
-DEP_FILES =  .deps/abx.P .deps/ath.P
-SOURCES = $(abx_SOURCES) $(ath_SOURCES)
-OBJECTS = $(abx_OBJECTS) $(ath_OBJECTS)
+DEP_FILES =  .deps/abx.P .deps/ath.P .deps/scalartest.P
+SOURCES = $(abx_SOURCES) $(ath_SOURCES) $(scalartest_SOURCES)
+OBJECTS = $(abx_OBJECTS) $(ath_OBJECTS) $(scalartest_OBJECTS)
 
 all: all-redirect
 .SUFFIXES:
@@ -199,11 +205,18 @@ abx: $(abx_OBJECTS) $(abx_DEPENDENCIES)
 ath: $(ath_OBJECTS) $(ath_DEPENDENCIES)
 	@rm -f ath
 	$(LINK) $(ath_LDFLAGS) $(ath_OBJECTS) $(ath_LDADD) $(LIBS)
+
+scalartest: $(scalartest_OBJECTS) $(scalartest_DEPENDENCIES)
+	@rm -f scalartest
+	$(LINK) $(scalartest_LDFLAGS) $(scalartest_OBJECTS) $(scalartest_LDADD) $(LIBS)
 abx_.c: abx.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/abx.c; then echo $(srcdir)/abx.c; else echo abx.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > abx_.c
 ath_.c: ath.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/ath.c; then echo $(srcdir)/ath.c; else echo ath.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > ath_.c
-abx_.o abx_.lo ath_.o ath_.lo : $(ANSI2KNR)
+scalartest_.c: scalartest.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/scalartest.c; then echo $(srcdir)/scalartest.c; else echo scalartest.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > scalartest_.c
+abx_.o abx_.lo ath_.o ath_.lo scalartest_.o scalartest_.lo : \
+$(ANSI2KNR)
 
 tags: TAGS
 
