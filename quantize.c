@@ -370,7 +370,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
     FLOAT8 masking_lower_db;
     assert( gfp->VBR_q <= 9 );
     assert( gfp->VBR_q >= 0 );
-    masking_lower_db = dbQ[gfp->VBR_q];	
+    masking_lower_db = dbQ[gfp->VBR_q];
     gfc->masking_lower = pow(10.0,masking_lower_db/10);
   }
   

@@ -101,10 +101,6 @@ void L3psycho_anal( lame_global_flags *gfp,
 
 
 
-
-
-
-
   if(gfc->psymodel_init==0) {
     FLOAT8	SNR_s[CBANDS];
     int	partition_l[HBLKSIZE];

@@ -17,7 +17,7 @@ extern FLOAT8 pow43[PRECALC_SIZE];
 extern FLOAT8 adj43[PRECALC_SIZE];
 extern FLOAT8 adj43asm[PRECALC_SIZE];
 
-#define Q_MAX 256
+#define Q_MAX 330
 
 extern FLOAT8 pow20[Q_MAX];
 extern FLOAT8 ipow20[Q_MAX];

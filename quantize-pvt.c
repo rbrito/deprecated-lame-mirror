@@ -697,9 +697,15 @@ int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576], III_psy_ratio *ratio,
       if (gfp->ATHonly || gfp->ATHshort) {
         l3_xmin->s[sfb][b]=gfc->ATH_s[sfb];
       } else {
+
+#undef NEW_NORMALIZATION
+#ifdef NEW_NORMALIZATION
+	xmin = pow(10.0,-14.0) * ratio->thm.s[sfb][b] * gfc->masking_lower;
+#else
         xmin = ratio->en.s[sfb][b];
         if (xmin > 0.0)
           xmin = en0 * ratio->thm.s[sfb][b] * gfc->masking_lower / xmin;
+#endif
         l3_xmin->s[sfb][b] = Max(gfc->ATH_s[sfb], xmin);
       }
       
@@ -723,9 +729,13 @@ int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576], III_psy_ratio *ratio,
     if (gfp->ATHonly) {
       l3_xmin->l[sfb]=gfc->ATH_l[sfb];
     } else {
+#ifdef NEW_NORMALIZAION
+      xmin = pow(10.0,-15.2) * ratio->thm.l[sfb];
+#else
       xmin = ratio->en.l[sfb];
       if (xmin > 0.0)
         xmin = en0 * ratio->thm.l[sfb] * gfc->masking_lower / xmin;
+#endif
       l3_xmin->l[sfb]=Max(gfc->ATH_l[sfb], xmin);
     }
     if (en0 > gfc->ATH_l[sfb]) ath_over++;
@@ -1022,11 +1032,18 @@ set_pinfo (lame_global_flags *gfp,
 {
   lame_internal_flags *gfc=gfp->internal_flags;
   int sfb;
-  FLOAT ifqstep;
   int i,l,start,end,bw;
   FLOAT8 en0,en1;
   D192_3 *xr_s = (D192_3 *)xr;
-  ifqstep = ( cod_info->scalefac_scale == 0 ) ? .5 : 1.0;
+  FLOAT ifqstep = ( cod_info->scalefac_scale == 0 ) ? .5 : 1.0;
+
+double tot1,tot2;
+static double ave[50];
+static int iave=9; 
+
+
+
+
 
   if (cod_info->block_type == SHORT_TYPE) {
     for ( i = 0; i < 3; i++ ) {
@@ -1038,13 +1055,39 @@ set_pinfo (lame_global_flags *gfp,
 	  en0 += (*xr_s)[l][i] * (*xr_s)[l][i];
 	en0=Max(en0/bw,1e-20);
 
+
 #if 0
-	/* conversion to FFT units */
-	en0 = ratio->en.s[sfb][i]/en0;
-	gfc->pinfo->xfsf_s[gr][ch][3*sfb+i] =  xfsf[i+1][sfb]*en0;
-	gfc->pinfo->thr_s[gr][ch][3*sfb+i] = Max(ratio->thm.s[sfb][i],en0*gfc->ATH_s[sfb]);
-	gfc->pinfo->en_s[gr][ch][3*sfb+i] = ratio->en.s[sfb][i]; 
-#else
+      if (sfb<SBMAX_s-1) {
+      if (sfb==0) {
+	tot1=0;
+	tot2=0;
+      }
+      tot1 += en0;
+      tot2 += ratio->en.s[sfb][i];
+
+
+      printf("%i %i sfb=%i mdct=%f fft=%f  fft-mdct=%f db \n",gr,ch,sfb,
+10*log10(Max(1e-25,ratio->en.s[sfb][i])),
+10*log10(Max(1e-25,en0)),
+10*log10((Max(1e-25,en0)/Max(1e-25,ratio->en.s[sfb][i]))));
+
+      if (sfb==SBMAX_s-2) {
+      printf("%i %i toti %f %f ratio=%f db \n",gr,ch,
+10*log10(Max(1e-25,tot2)),
+10*log(Max(1e-25,tot1)),
+10*log10(Max(1e-25,tot1)/(Max(1e-25,tot2))));
+
+      }
+      }
+      /*
+masking: multiplied by en0/fft_energy
+average seems to be about -135db.
+       */
+#endif
+
+
+
+
 	/* convert to MDCT units */
 	en1=1e15;  /* scaling so it shows up on FFT plot */
 	gfc->pinfo->xfsf_s[gr][ch][3*sfb+i] =  en1*xfsf[i+1][sfb];
@@ -1058,7 +1101,7 @@ set_pinfo (lame_global_flags *gfp,
 	  en0=0;
 
 	gfc->pinfo->thr_s[gr][ch][3*sfb+i] = en1*Max(en0*ratio->thm.s[sfb][i],gfc->ATH_s[sfb]);
-#endif
+
 	
 	/* there is no scalefactor bands >= SBPSY_s */
 	if (sfb < SBPSY_s) {
@@ -1072,6 +1115,7 @@ set_pinfo (lame_global_flags *gfp,
     }
   }else{
     for ( sfb = 0; sfb < SBMAX_l; sfb++ )   {
+
       start = gfc->scalefac_band.l[ sfb ];
       end   = gfc->scalefac_band.l[ sfb+1 ];
       bw = end - start;
@@ -1083,13 +1127,43 @@ set_pinfo (lame_global_flags *gfp,
 	-(10*log10(en0)+150));
       */
 
-#if 0      
-      /* convert to FFT units */
-      en0 =   ratio->en.l[sfb]/Max(en0,1e-20);
-      gfc->pinfo->xfsf[gr][ch][sfb] =  xfsf[0][sfb]*en0;
-      gfc->pinfo->thr[gr][ch][sfb] = Max(ratio->thm.l[sfb],en0*gfc->ATH_l[sfb]);
-      gfc->pinfo->en[gr][ch][sfb] = ratio->en.l[sfb];
-#else
+#if 0
+      if (sfb==0) {
+	tot1=0;
+	tot2=0;
+      }
+      tot1 += en0;
+      tot2 += ratio->en.l[sfb];
+
+
+      printf("%i %i sfb=%i mdct=%f fft=%f  fft-mdct=%f db \n",gr,ch,sfb,
+10*log10(Max(1e-25,ratio->en.l[sfb])),
+10*log10(Max(1e-25,en0)),
+10*log10((Max(1e-25,en0)/Max(1e-25,ratio->en.l[sfb]))));
+
+      if (sfb==SBMAX_l-1) {
+      printf("%i %i toti %f %f ratio=%f db \n",gr,ch,
+10*log10(Max(1e-25,tot2)),
+10*log(Max(1e-25,tot1)),
+10*log10(Max(1e-25,tot1)/(Max(1e-25,tot2))));
+
+      iave = (iave+1) % 50;
+      ave[iave]=10*log10(Max(1e-25,tot1)/(Max(1e-25,tot2)));
+
+      for (tot1=0, i=0; i<10; ++i) {
+	tot1 += ave[i]/10;
+      }
+      printf("%i aveareg of last 10:  %f \n",iave,tot1);
+      }
+      /*
+masking: multiplied by en0/fft_energy
+average seems to be about -147db.
+
+       */
+#endif
+
+
+
       /* convert to MDCT units */
       en1=1e15;  /* scaling so it shows up on FFT plot */
       gfc->pinfo->xfsf[gr][ch][sfb] =  en1*xfsf[0][sfb];
@@ -1101,13 +1175,6 @@ set_pinfo (lame_global_flags *gfp,
       if (gfp->ATHonly)
 	en0=0;
       gfc->pinfo->thr[gr][ch][sfb] = en1*Max(en0*ratio->thm.l[sfb],gfc->ATH_l[sfb]);
-#endif
-#if 0
-      printf("%i %i sfb=%i %e %e %e xfsf>thr? %i\n",gr,ch,sfb,gfc->pinfo->en[gr][ch][sfb],
-	     gfc->pinfo->thr[gr][ch][sfb],gfc->pinfo->xfsf[gr][ch][sfb],
-	     gfc->pinfo->thr[gr][ch][sfb]<gfc->pinfo->xfsf[gr][ch][sfb]
-	     );
-#endif
 
       /* there is no scalefactor bands >= SBPSY_l */
       if (sfb<SBPSY_l) {

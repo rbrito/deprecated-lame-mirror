@@ -25,9 +25,6 @@
 #include "quantize-pvt.h"
 #include "gtkanal.h"
 
-#if (defined(__GNUC__) && defined(__i386__))
-#define TAKEHIRO_IEEE754_HACK
-#endif
 
 #if (defined(__GNUC__) && defined(__i386__))
 #define USE_GNUC_ASM
@@ -64,19 +61,14 @@
      (dest) = dest_; \
    } while (0)
 #else
-#ifdef TAKEHIRO_IEEE754_HACK
-#  define QUANTFAC(rx)  adj43asm[rx]
-#  define ROUNDFAC -0.0946
-#else
 #  define QUANTFAC(rx)  adj43[rx]
 #  define ROUNDFAC 0.4054
-#endif
 #  define XRPOW_FTOI(src,dest) ((dest) = (int)(src))
 #endif
 
 
 
-#define MAXQUANTERRORXXX
+#undef MAXQUANTERROR
 
 
 FLOAT8 calc_sfb_noise(FLOAT8 *xr, FLOAT8 *xr34, int stride, int bw, int sf)
@@ -472,29 +464,16 @@ VBR_noise_shaping
       }
     }
   }else{
-    int sflist[3]={-10000,-10000,-10000};
     for ( sfb = 0; sfb < SBPSY_l; sfb++ )   {
       start = gfc->scalefac_band.l[ sfb ];
       end   = gfc->scalefac_band.l[ sfb+1 ];
       bw = end - start;
       vbrsf.l[sfb] = find_scalefac(&xr[start],&xr34[start],1,sfb,
 				   l3_xmin.l[sfb],bw);
+
       if (vbrsf.l[sfb]>vbrmax) vbrmax = vbrsf.l[sfb];
 
-      /* code to find the 3 largest (counting duplicates) contributed
-       * by Microsoft Employee #12 */
-      if (vbrsf.l[sfb]>sflist[0]) {
-	sflist[2]=sflist[1];
-	sflist[1]=sflist[0];
-	sflist[0]=vbrsf.l[sfb];
-      } else if (vbrsf.l[sfb]>sflist[1]) {
-	sflist[2]=sflist[1];
-	sflist[1]=vbrsf.l[sfb];
-      } else if (vbrsf.l[sfb]>sflist[2]) {
-	sflist[2]=vbrsf.l[sfb];
-      }
     }
-    //    vbrmax=sflist[2];
   } /* compute needed scalefactors */
 
   /* save a copy of vbrsf, incase we have to recomptue scalefacs */
@@ -723,7 +702,7 @@ VBR_quantize(lame_global_flags *gfp,
   /* from quantize.c VBR algorithm */
   static const FLOAT8 dbQ[10]={-5.0,-3.75,-2.5,-1.25,  0,  0.4,  0.8, 1.2, 1.6,2.0};
 
-  qadjust=-1;   /* start with -1 db quality improvement over quantize.c VBR */
+  qadjust=-2.5;   /* start with -1 db quality improvement over quantize.c VBR */
 
 
   l3_side = &gfc->l3_side;
@@ -731,10 +710,12 @@ VBR_quantize(lame_global_flags *gfp,
   if (gfc->ATH_lower < 0) gfc->ATH_lower=0;
   iteration_init(gfp,l3_side,l3_enc);
 
+  /* compute minimum allowed bits from minimum allowed bitrate */
   gfc->bitrate_index=gfc->VBR_min_bitrate;
   getframebits(gfp,&bitsPerFrame, &mean_bits);
-  minbits = .4*(mean_bits/gfc->stereo);
+  minbits = (mean_bits/gfc->stereo);
 
+  /* compute maximum allowed bits from max allowed bitrate */
   gfc->bitrate_index=gfc->VBR_max_bitrate;
   getframebits(gfp,&bitsPerFrame, &mean_bits);
   max_frame_bits = ResvFrameBegin(gfp,l3_side, mean_bits, bitsPerFrame);
@@ -749,8 +730,9 @@ VBR_quantize(lame_global_flags *gfp,
   mean_bits = (bitsPerFrame - 8*gfc->sideinfo_len) / gfc->mode_gr;
   }
 
-  minbits=Max(minbits,.4*(mean_bits/gfc->stereo));
+  minbits=Max(minbits,.66*(mean_bits/gfc->stereo));
   maxbits=Min(maxbits,2.5*(mean_bits/gfc->stereo));
+
 
   if (gfc->mode_ext==MPG_MD_MS_LR) 
     for (gr = 0; gr < gfc->mode_gr; gr++) 
@@ -784,6 +766,18 @@ VBR_quantize(lame_global_flags *gfp,
   
     totbits=0;
     for (gr = 0; gr < gfc->mode_gr; gr++) {
+      int minbits_lr[2];
+      minbits_lr[0]=minbits;
+      minbits_lr[1]=minbits;
+      if (gfc->mode_ext==MPG_MD_MS_LR) {
+	FLOAT8 fac;
+	fac = .33*(.5-ms_ener_ratio[gr])/.5;
+	if (fac<0) fac=0;
+	if (fac>.5) fac=.5;
+	minbits_lr[0] *= 1+fac;
+	minbits_lr[1] *= 1-fac;
+      }
+
       for (ch = 0; ch < gfc->stereo; ch++) { 
 	int adjusted,shortblock;
 	cod_info = &l3_side->gr[gr].ch[ch].tt;
@@ -805,7 +799,9 @@ VBR_quantize(lame_global_flags *gfp,
 	  
 	  
 	  gfc->masking_lower = pow(10.0,masking_lower_db/10);
-	  adjusted = VBR_noise_shaping (gfp,xr[gr][ch],&ratio[gr][ch],l3_enc,&ath_over[gr][ch],minbits,maxbits,scalefac,gr,ch);
+	    
+	  adjusted = VBR_noise_shaping (gfp,xr[gr][ch],&ratio[gr][ch],l3_enc,
+              &ath_over[gr][ch],minbits_lr[ch],maxbits,scalefac,gr,ch);
 	  if (adjusted>10) {
 	    /* global_gain was changed by a large amount to get bits < maxbits */
 	    /* quality is set to high.  we could set bits = LARGE_BITS
