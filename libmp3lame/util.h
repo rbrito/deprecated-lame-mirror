@@ -212,14 +212,15 @@ typedef struct
  */
 typedef struct
 {
-    int     use_adjust;     // method for the auto adjustment 
-    FLOAT8  adjust;         // lowering based on peak volume, 1 = no lowering
-    FLOAT8  adjust_limit;   // limit for dynamic ATH adjust
-    FLOAT8  decay;          // determined to lower x dB each second
-    FLOAT8  floor;          // lowest ATH value
-    FLOAT8  l[SBMAX_l];     // ATH for sfbs in long blocks
-    FLOAT8  s[SBMAX_s];     // ATH for sfbs in short blocks
-    FLOAT8  cb[CBANDS];     // ATH for convolution bands
+    int     use_adjust;     /* method for the auto adjustment */
+    FLOAT8  adjust;         /* lowering based on peak volume, 1 = no lowering */
+    FLOAT8  adjust_limit;   /* limit for dynamic ATH adjust */
+    FLOAT8  decay;          /* determined to lower x dB each second */
+    FLOAT8  floor;          /* lowest ATH value */
+    FLOAT8  l[SBMAX_l];     /* ATH for sfbs in long blocks */
+    FLOAT8  s[SBMAX_s];     /* ATH for sfbs in short blocks */
+    FLOAT8  cb[CBANDS];     /* ATH for convolution bands */
+    FLOAT   eql_w[BLKSIZE/2];	/* equal loudness weights (based on ATH) */
 } ATH_t;
 
 /**
