@@ -626,7 +626,8 @@ set_istereo_sfb(lame_internal_flags *gfc, int gr)
     gfc->l3_side.is_start_sfb_l[gr] = gfc->is_start_sfb_l_next[gr];
     gfc->l3_side.is_start_sfb_s[gr] = gfc->is_start_sfb_s_next[gr];
     if (!gfc->useshort_next[gr][0] && !gfc->useshort_next[gr][1]) {
-	for (sb = SBMAX_l-2; sb >= 11; --sb) {
+	sb = gfc->cutoff_sfb_l - 1;
+	do {
 	    FLOAT x1, x2;
 	    if (mr[3].en.l[sb] < mr[3].thm.l[sb]
 		|| mr[0].en.l[sb] < mr[0].thm.l[sb]
@@ -648,7 +649,7 @@ set_istereo_sfb(lame_internal_flags *gfc, int gr)
 		printf("%d %e %e %e\n", sb, (x2+1e-10)/(x1+1e-10), x1, x2);
 #endif
 	    break;
-	}
+	} while (--sb >= 0);
 	gfc->is_start_sfb_l_next[gr] = ++sb;
 	for (; sb < SBMAX_l; sb++) {
 	    mr[0].en .l[sb] = mr[2].en .l[sb];
@@ -656,7 +657,8 @@ set_istereo_sfb(lame_internal_flags *gfc, int gr)
 	}
     }
 
-    for (sb = SBMAX_s-2; sb >= 6; --sb) {
+    sb = gfc->cutoff_sfb_s;
+    do {
 	int sblock;
 	for (sblock = 0; sblock < 3; sblock++) {
 	    FLOAT x1, x2;
@@ -683,9 +685,8 @@ set_istereo_sfb(lame_internal_flags *gfc, int gr)
 	}
 	if (sblock != 3)
 	    break;
-    }
+    } while (--sb >= 0);
     gfc->is_start_sfb_s_next[gr] = ++sb;
-
     for (; sb < SBMAX_s; sb++) {
 	mr[0].en .s[sb][0] = mr[2].en .s[sb][0];
 	mr[0].thm.s[sb][0] = mr[2].thm.s[sb][0];
@@ -1717,12 +1718,12 @@ psycho_analysis(
 	    mr->ath_over = 0;
 	    if (gfc->useshort_next[gr][ch]) {
 		int sb = gfc->cutoff_sfb_s;
-		if (gfp->use_istereo && (ch & 1))
+		if (ch & 1)
 		    sb = gfc->is_start_sfb_s_next[gr];
 		mr->pe = pecalc_s(gfc, mr, sb);
 	    } else {
 		int sb = gfc->cutoff_sfb_l;
-		if (gfp->use_istereo && (ch & 1))
+		if (ch & 1)
 		    sb = gfc->is_start_sfb_l_next[gr];
 		mr->pe = pecalc_l(gfc, mr, sb);
 	    }
