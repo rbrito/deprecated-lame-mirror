@@ -130,7 +130,7 @@ void plot_frame(void)
   plotting_data *pplot2;
 
   double en,samp;
-  int sampindex,version;
+  int sampindex,version=0;
   static int firstcall=1;
   static GdkColor *barcolor,*color,*grcolor[2];
   static GdkColor yellow,gray,cyan,magenta,orange,pink,red,green,blue,black,oncolor,offcolor;

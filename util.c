@@ -141,6 +141,9 @@ int SmpFrqIndex(  /* convert samp frq in Hz to index */
 long sRate,             /* legal rates 16000, 22050, 24000, 32000, 44100, 48000 */
 int  *version)
 {
+	/* Assign default value */
+	*version=0;
+
     if (sRate == 44100L) {
         *version = MPEG_AUDIO_ID; return(0);
     }
