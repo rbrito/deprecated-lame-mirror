@@ -55,12 +55,12 @@ static DWORD	dwSampleBufferSize=0;
 void dump_config( char *inPath, char *outPath);
 #endif
 
-lame_global_flags *gfp;
+lame_global_flags gf;
 
 static void InitParams()
 {
     bFirstFrame=TRUE;
-    gfp=lame_init();
+    lame_init(&gf);
 
 }
 
@@ -148,21 +148,21 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
   	switch (lameConfig.format.LHV1.nMode)
 	{
 		case BE_MP3_MODE_STEREO:
-			gfp->mode=0;
-			gfp->mode_fixed=1;  /* dont allow LAME to change the mode */
+			gf.mode=0;
+			gf.mode_fixed=1;  /* dont allow LAME to change the mode */
 		break;
 		case BE_MP3_MODE_JSTEREO:
-			gfp->mode=1;
-			gfp->mode_fixed=1;
+			gf.mode=1;
+			gf.mode_fixed=1;
 		break;
 		case BE_MP3_MODE_MONO:
-			gfp->mode=3;
-			gfp->mode_fixed=1;
+			gf.mode=3;
+			gf.mode_fixed=1;
 		break;
 		case BE_MP3_MODE_DUALCHANNEL:
-			gfp->force_ms=1;
-			gfp->mode=1;
-			gfp->mode_fixed=1;
+			gf.force_ms=1;
+			gf.mode=1;
+			gf.mode_fixed=1;
 		break;
 		default:
 		{
@@ -178,79 +178,79 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 		case NORMAL_QUALITY:	// Nothing special
 			break;
 		case LOW_QUALITY:		// -f flag
-			gfp->quality=9;
+			gf.quality=9;
 			break;
 		case HIGH_QUALITY:		// -h flag for high qualtiy
-			gfp->quality=2;
+			gf.quality=2;
         break;
 		case VOICE_QUALITY:		// --voice flag for experimental voice mode
-			gfp->lowpassfreq=12000;
-			gfp->VBR_max_bitrate_kbps=160;
-			gfp->no_short_blocks=1;
+			gf.lowpassfreq=12000;
+			gf.VBR_max_bitrate_kbps=160;
+			gf.no_short_blocks=1;
 		break;
 	}
 
 	if (lameConfig.format.LHV1.bEnableVBR)
 	{
 		// 0=no vbr 1..10 is VBR quality setting -1
-		gfp->VBR=1;
-		gfp->VBR_q=lameConfig.format.LHV1.nVBRQuality;
+		gf.VBR=1;
+		gf.VBR_q=lameConfig.format.LHV1.nVBRQuality;
 	}
 
 	// Set frequency
-	gfp->in_samplerate=lameConfig.format.LHV1.dwSampleRate;
+	gf.in_samplerate=lameConfig.format.LHV1.dwSampleRate;
 
 	// Set frequency resampling rate, if specified
 	if (lameConfig.format.LHV1.dwReSampleRate>0)
-		gfp->out_samplerate=lameConfig.format.LHV1.dwReSampleRate;
+		gf.out_samplerate=lameConfig.format.LHV1.dwReSampleRate;
 		
 	
 	// Set bitrate.  (CDex users always specify bitrate=Min bitrate when using VBR)
-	gfp->brate=lameConfig.format.LHV1.dwBitrate;
-	gfp->VBR_min_bitrate_kbps=gfp->brate;
+	gf.brate=lameConfig.format.LHV1.dwBitrate;
+	gf.VBR_min_bitrate_kbps=gf.brate;
 			
 	// Set Maxbitrate, if specified
 	if (lameConfig.format.LHV1.dwMaxBitrate>0)
-		gfp->VBR_max_bitrate_kbps=lameConfig.format.LHV1.dwMaxBitrate;
+		gf.VBR_max_bitrate_kbps=lameConfig.format.LHV1.dwMaxBitrate;
 	
 	// Set copyright flag?
     if (lameConfig.format.LHV1.bCopyright)
-		gfp->copyright=1;
+		gf.copyright=1;
 
 	// Do we have to tag  it as non original 
     if (!lameConfig.format.LHV1.bOriginal)
-		gfp->original=0;
+		gf.original=0;
 
 	// Add CRC?
     if (lameConfig.format.LHV1.bCRC)
-		gfp->error_protection=1;
+		gf.error_protection=1;
 
-	lame_init_params();	
+	lame_init_params(&gf);	
 
 	// Set the encoder variables
 	// lame_parse_args(nDllArgC,argv);
-	gfp->silent=1;  /* disable status ouput */
+	gf.silent=1;  /* disable status ouput */
 
 	// Set private bit?
 	if (lameConfig.format.LHV1.bPrivate)
 	{
-		gfp->extension = 0;
+		gf.extension = 0;
 	}
 	else
 	{
-		gfp->extension = 1;
+		gf.extension = 1;
 	}
 	
 
 	//LAME encoding call will accept any number of samples.  Lets use 1152
-	*dwSamples=1152*gfp->stereo;
+	*dwSamples=1152*gf.stereo;
 
 
 	// Set the input sample buffer size, so we know what we can expect
 	dwSampleBufferSize=*dwSamples;
 
 #ifdef _DEBUGDLL
-	dump_config(gfp->inPath,gfp->outPath);
+	dump_config(gf.inPath,gf.outPath);
 #endif
 
 	// Everything went OK, thus return SUCCESSFUL
@@ -262,7 +262,7 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 __declspec(dllexport) BE_ERR	beDeinitStream(HBE_STREAM hbeStream, PBYTE pOutput, PDWORD pdwOutput)
 {
 
-        *pdwOutput =   lame_encode_finish(pOutput);
+        *pdwOutput =   lame_encode_finish(&gf,pOutput);
 
 	return BE_ERR_SUCCESSFUL;
 }
@@ -327,14 +327,14 @@ __declspec(dllexport) BE_ERR	beEncodeChunk(HBE_STREAM hbeStream, DWORD nSamples,
 											  PSHORT pSamples, PBYTE pOutput, PDWORD pdwOutput)
 {
 	int iSampleIndex;
-	int n=nSamples/gfp->stereo;
+	int n=nSamples/gf.stereo;
     PSHORT LBuffer,RBuffer;
 	LBuffer=malloc(sizeof(short)*n);
 	RBuffer=malloc(sizeof(short)*n);
 	
 		
 
-	if (gfp->stereo==2)
+	if (gf.stereo==2)
 	{
 		for (iSampleIndex=0;iSampleIndex<n;iSampleIndex++)
 		{
@@ -355,7 +355,7 @@ __declspec(dllexport) BE_ERR	beEncodeChunk(HBE_STREAM hbeStream, DWORD nSamples,
 
 
 	// Encode it
-	*pdwOutput=lame_encode_buffer(LBuffer,RBuffer,n,pOutput,1);
+	*pdwOutput=lame_encode_buffer(&gf,LBuffer,RBuffer,n,pOutput,0);
 
 
 	free(LBuffer);
@@ -366,11 +366,11 @@ __declspec(dllexport) BE_ERR	beEncodeChunk(HBE_STREAM hbeStream, DWORD nSamples,
 
 __declspec(dllexport) BE_ERR beWriteVBRHeader(LPCSTR lpszFileName)
 {
-	if (gfp->bWriteVbrTag)
+	if (gf.bWriteVbrTag)
 	{
 		// Calculate relative quality of VBR stream 
 		// 0=best, 100=worst
-		int nQuality=gfp->VBR_q*100/9;
+		int nQuality=gf.VBR_q*100/9;
 
 		// Write Xing header again
 		return PutVbrTag((LPSTR)lpszFileName,nQuality);
@@ -418,36 +418,36 @@ void dump_config( char *inPath, char *outPath)
 	OutputDebugString("Encoding configuration:\n");
 
 
-	sprintf(strTmp,"Write VBR Header=%s\n",(gfp->bWriteVbrTag)?"Yes":"No");
+	sprintf(strTmp,"Write VBR Header=%s\n",(gf.bWriteVbrTag)?"Yes":"No");
 	OutputDebugString(strTmp);
 
-	sprintf(strTmp,"version=%d\n",gfp->version);
-	OutputDebugString(strTmp);
-
-
-	sprintf(strTmp,"Layer=3   mode=%d  \n",gfp->mode);
+	sprintf(strTmp,"version=%d\n",gf.version);
 	OutputDebugString(strTmp);
 
 
-	sprintf(strTmp,"samp frq=%.1f kHz   total bitrate=%d kbps\n",gfp->in_samplerate/1000.0);
+	sprintf(strTmp,"Layer=3   mode=%d  \n",gf.mode);
 	OutputDebugString(strTmp);
 
-	sprintf(strTmp,"de-emph=%d   c/right=%d   orig=%d   errprot=%s\n",gfp->emphasis, gfp->copyright, gfp->original,((gfp->error_protection) ? "on" : "off"));
+
+	sprintf(strTmp,"samp frq=%.1f kHz   total bitrate=%d kbps\n",gf.in_samplerate/1000.0);
+	OutputDebugString(strTmp);
+
+	sprintf(strTmp,"de-emph=%d   c/right=%d   orig=%d   errprot=%s\n",gf.emphasis, gf.copyright, gf.original,((gf.error_protection) ? "on" : "off"));
 	OutputDebugString(strTmp);
 
 //	sprintf(strTmp,"16 Khz cut off is %s\n",(0)?"enabled":"disabled");
 //	OutputDebugString(strTmp);
 
-	sprintf(strTmp,"Fast mode is %s\n",(gfp->quality==9)?"enabled":"disabled");
+	sprintf(strTmp,"Fast mode is %s\n",(gf.quality==9)?"enabled":"disabled");
 	OutputDebugString(strTmp);
 
-	sprintf(strTmp,"Force ms %s\n",(gfp->force_ms)?"enabled":"disabled");
+	sprintf(strTmp,"Force ms %s\n",(gf.force_ms)?"enabled":"disabled");
 	OutputDebugString(strTmp);
 
 //	sprintf(strTmp,"GPsycho acoustic model is %s\n",(gpsycho)?"enabled":"disabled");
 //	OutputDebugString(strTmp);
 
-	sprintf(strTmp,"VRB is %s, VBR_q value is  %d\n",(gfp->VBR)?"enabled":"disabled",gfp->VBR_q);
+	sprintf(strTmp,"VRB is %s, VBR_q value is  %d\n",(gf.VBR)?"enabled":"disabled",gf.VBR_q);
 	OutputDebugString(strTmp);
 
 	sprintf(strTmp,"input file: '%s'   output file: '%s'\n", inPath, outPath);
@@ -456,7 +456,7 @@ void dump_config( char *inPath, char *outPath)
 //	sprintf(strTmp,"Voice mode %s\n",(voice_mode)?"enabled":"disabled");
 //	OutputDebugString(strTmp);
 
-	sprintf(strTmp,"Encoding as %.1f kHz %d kbps %d MPEG-%d LayerIII file\n",gfp->out_samplerate/1000.0,gfp->brate,gfp->mode,3 - gfp->mode_gr);
+	sprintf(strTmp,"Encoding as %.1f kHz %d kbps %d MPEG-%d LayerIII file\n",gf.out_samplerate/1000.0,gf.brate,gf.mode,3 - gf.mode_gr);
 	OutputDebugString(strTmp);
 }
 
