@@ -343,13 +343,13 @@ get_audio_common( lame_global_flags * const gfp,
                              num_channels * samples_to_read);
 	p = insamp + samples_read;
         samples_read /= num_channels;
-	if( buffer != NULL ) {	/* output to int buffer */
-	    if( num_channels == 2 ) {
+	if (buffer) {	/* output to int buffer */
+	    if (num_channels == 2) {
 		for( i = samples_read; --i >= 0; ) {
 		    buffer[1][i] = *--p;
  		    buffer[0][i] = *--p;
 		}
-	    } else if( num_channels == 1 ) {
+	    } else if (num_channels == 1) {
 		memset( buffer[1], 0, samples_read * sizeof(int) );
 		for( i = samples_read; --i >= 0; ) {
  		    buffer[0][i] = *--p;
@@ -387,7 +387,6 @@ get_audio_common( lame_global_flags * const gfp,
 		assert(0);
 	}
     }
-
 
     /* if num_samples = MAX_U_32_NUM, then it is considered infinitely long.
        Don't count the samples */
@@ -892,12 +891,11 @@ read_samples_pcm(FILE * musicin, int sample_buffer[2304], int frame_size,
     int     hi_lo_order;	/* byte order of input stream */
 
     if( (32 == pcmbitwidth) || (24 == pcmbitwidth) || (16 == pcmbitwidth) ) {
-				/* assume only recognized wav files are */
-				/*  in little endian byte order */
+	/* assume only recognized wav files are */
+	/*  in little endian byte order */
 	hi_lo_order = (!iswav == !pcmswapbytes);
         samples_read = unpack_read_samples(samples_to_read, pcmbitwidth/8, 
-                                           hi_lo_order,sample_buffer, musicin );
-       
+					   hi_lo_order,sample_buffer, musicin);
     } else if( 8 == pcmbitwidth ) {
 	samples_read = unpack_read_samples( samples_to_read, 1, 0,
 					    sample_buffer, musicin );
@@ -956,99 +954,57 @@ read_samples_pcm(FILE * musicin, int sample_buffer[2304], int frame_size,
 void SetIDTagsFromRiffTags(lame_global_flags * gfp, FILE * sf)
 {
     int subSize = Read32BitsLowHigh(sf);
+    if (Read32BitsHighLow(sf) != WAV_ID_INFO) {
+	fskip(sf, subSize, SEEK_CUR);
+	return;
+    }
+
+    subSize -= 4;
     while (subSize && !feof(sf)) {
 	int type = Read32BitsHighLow(sf);
-	subSize -= 4;
-	if (WAV_ID_INAM == type) {
+	char buf[INFO_SIZE+1];
+	unsigned int length=Read32BitsLowHigh(sf);
+	if (length > INFO_SIZE)
+	    return; /* XXX ugly FIX ME */
+	ReadBytes(sf, buf, (length+1) & ~1); /* resolve word padding */
+	buf[length] = 0;
+	subSize -= 4 + ((length+1) & ~1);
+	switch (type) {
+	case WAV_ID_INAM:
 	    /* Track Name */
-	    char buf[INFO_SIZE]={0};
-	    unsigned int length=Read32BitsLowHigh(sf);
-	    subSize -= 4;
+	    id3tag_set_title(gfp,strdup(buf));
+	    break;
 
-	    ReadBytes(sf,&buf[0],length);
-	    id3tag_set_title(gfp,strdup(&buf[0]));
-
-	    subSize -= length;
-	    if (length & 0x00000001) {
-		/* resolve word padding */
-		ReadByte(sf);
-		subSize--;
-	    }
-	} else if (WAV_ID_IART == type) {
+	case WAV_ID_IART:
 	    /* Artist Name */
-	    unsigned int length=Read32BitsLowHigh(sf);
-	    char buf[INFO_SIZE]={0};
-	    subSize -= 4;
-
-	    ReadBytes(sf,&buf[0],length);
-	    id3tag_set_artist(gfp, strdup(&buf[0]));
-
-	    subSize -= length;
-	    if (length & 0x00000001) {
-		/* resolve word padding */
-		ReadByte(sf);
-		subSize--;
-	    }
-	} else if (WAV_ID_IGNR == type) {
+	    id3tag_set_artist(gfp, strdup(buf));
+	    break;
+	case WAV_ID_IGNR:
 	    /* Genre Name */
-	    char buf[INFO_SIZE]={0};
-	    unsigned int length=Read32BitsLowHigh(sf);
-	    subSize -= 4;
-
-	    ReadBytes(sf,&buf[0],length);
-	    if (id3tag_set_genre(gfp,strdup(&buf[0]))) {
+	    if (id3tag_set_genre(gfp,strdup(buf)))
 		fprintf(stderr,"Unknown genre: %s.  Specify genre name or number\n", buf);
-	    }
-	    subSize -= length;
-	    if (length & 0x00000001) {
-		/* resolve word padding */
-		ReadByte(sf);
-		subSize--;
-	    }
-	} else if (WAV_ID_IPRD == type) {
+	    break;
+
+	case WAV_ID_IPRD:
 	    /* Title */
-	    char buf[INFO_SIZE]={0};
-	    unsigned int length=Read32BitsLowHigh(sf);
-	    subSize -= 4;
+	    id3tag_set_album(gfp, strdup(buf));
+	    break;
 
-	    ReadBytes(sf,&buf[0],length);
-	    id3tag_set_album(gfp, strdup(&buf[0]));
-
-	    subSize -= length;
-	    if (length & 0x00000001) {
-		/* resolve word padding */
-		ReadByte(sf);
-		subSize--;
-	    }
-	} else if (WAV_ID_ITRK == type) {
-	    /* Track Number */
-	    char buf[INFO_SIZE]={0};
-	    unsigned int length=Read32BitsLowHigh(sf);
-	    subSize -= 4;
-
-	    ReadBytes(sf,&buf[0],length);
-	    id3tag_set_track(gfp, strdup(&buf[0]));
-
-	    subSize -= length;
-	    if (length & 1) {
-		/* resolve word padding */
-		ReadByte(sf);
-		subSize--;
-	    }
+	case WAV_ID_ITRK:
+	    id3tag_set_track(gfp, strdup(buf));
+	    break;
 	}
     }
 }
 
 /*****************************************************************************
  *
- *	Read Microsoft Wave headers
+ * Read Microsoft Wave headers
  *
- *	By the time we get here the first 32-bits of the file have already been
- *	read, and we're pretty sure that we're looking at a WAV file.
+ * By the time we get here the first 32-bits of the file have already been
+ * read, and we're pretty sure that we're looking at a WAV file.
  *
  *****************************************************************************/
-
-
 static int
 parse_wave_header(lame_global_flags * gfp, FILE * sf)
 {
@@ -1102,7 +1058,7 @@ parse_wave_header(lame_global_flags * gfp, FILE * sf)
 
             /* DEBUGF("   skipping %d bytes\n", subSize); */
 
-            if (subSize > 0 && fskip(sf, (long) subSize, SEEK_CUR) != 0)
+            if (subSize > 0 && fskip(sf, subSize, SEEK_CUR) != 0)
 		return 0;
         }
         else if (type == WAV_ID_DATA) {
@@ -1302,10 +1258,10 @@ parse_aiff_header(lame_global_flags * gfp, FILE * sf)
 *
 * parse_file_header
 *
-* PURPOSE: Read the header from a bytestream.  Try to determine whether
-*		   it's a WAV file or AIFF without rewinding, since rewind
-*		   doesn't work on pipes and there's a good chance we're reading
-*		   from stdin (otherwise we'd probably be using libsndfile).
+* Read the header from a bytestream.  Try to determine whether
+* it's a WAV file or AIFF without rewinding, since rewind
+* doesn't work on pipes and there's a good chance we're reading
+* from stdin (otherwise we'd probably be using libsndfile).
 *
 * When this function returns, the file offset will be positioned at the
 * beginning of the sound data.
@@ -1317,10 +1273,6 @@ parse_file_header(lame_global_flags * gfp, FILE * sf)
 {
 
     int     type = Read32BitsHighLow(sf);
-    /*
-       DEBUGF(
-       "First word of input stream: %08x '%4.4s'\n", type, (char*) &type); 
-     */
     count_samples_carefully = 0;
     input_format = sf_raw;
 
