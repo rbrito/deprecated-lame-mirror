@@ -540,7 +540,8 @@ plot_frame(void)
 
     /* draw some hash marks showing scalefactor bands */
     if (gtkinfo.sfblines) {
-      int fac, nsfb, *scalefac;
+      int fac, nsfb;
+      short *scalefac;
       if (blocktype[gr][ch]==SHORT_TYPE) {
 	nsfb=SBMAX_s;
 	i = nsfb-7;
