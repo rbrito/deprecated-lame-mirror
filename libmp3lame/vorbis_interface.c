@@ -12,7 +12,6 @@ export CONFIG_DEFS="-DUSE_FFT3DN"
 
 make clean
 ../configure
-#echo "#define KLEMM_42  1" >> config.h
 make
 
 You can also do this with the "--with-vorbis" options in configure.
