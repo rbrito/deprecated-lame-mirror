@@ -1012,7 +1012,7 @@ iteration_init( lame_global_flags *gfp)
     }
     gfc->cutoff_sfb_l = i;
     for (i = 0; i < SBMAX_s; i++) {
-	if (gfc->scalefac_band.s[i] > gfc->lowpass2*576)
+	if (gfc->scalefac_band.s[i] > gfc->lowpass2*192)
 	    break;
     }
     gfc->cutoff_sfb_s = i;
