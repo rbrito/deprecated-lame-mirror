@@ -799,7 +799,7 @@ int loop_break( III_scalefac_t *scalefac, gr_info *cod_info)
 
 
 #if (defined(__GNUC__) && defined(__i386__))
-/*#define USE_GNUC_ASM*/
+#define USE_GNUC_ASM
 #endif
 #ifdef _MSC_VER
 #define USE_MSC_ASM
@@ -1263,6 +1263,7 @@ bin_search_StepSize2 (int desired_rate, int start, int *ix,
 	    }
 	    Direction = BINSEARCH_UP;
 	    StepSize += CurrentStep;
+	    if (StepSize > 255) break;
 	}
 	else if (nBits < desired_rate)
 	{
@@ -1273,6 +1274,7 @@ bin_search_StepSize2 (int desired_rate, int start, int *ix,
 	    }
 	    Direction = BINSEARCH_DOWN;
 	    StepSize -= CurrentStep;
+	    if (StepSize < 0) break;
 	}
 	else break; /* nBits == desired_rate;; most unlikely to happen.*/
     } while (1); /* For-ever, break is adjusted. */
