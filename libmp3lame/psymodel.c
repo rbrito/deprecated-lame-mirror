@@ -1224,6 +1224,19 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
     
 
     /**********************************************************************
+     * compute loudness approximation (used for adaptive ATH adjust) 
+     **********************************************************************/
+    if( gfp->adapt_thres_type == 2 ) {
+      if( chn < 2 ) {		/* no loudness for mid and side channels */
+	gfc->loudness_sq[gr_out][chn] = gfc->loudness_sq_save[chn];
+	gfc->loudness_sq_save[chn]
+	  = psycho_loudness_approx( gfc->energy, gfp);
+      }
+    }
+
+
+
+    /**********************************************************************
      *    Calculate the energy and the tonality of each partition.
      **********************************************************************/
 

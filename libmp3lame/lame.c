@@ -1172,8 +1172,7 @@ lame_init_params(lame_global_flags * const gfp)
     gfc->sampfreq_in = unround_samplefrequency(gfp->in_samplerate);
     gfc->sampfreq_out = gfp->out_samplerate;
     gfc->resample_in = resample_open(gfc->sampfreq_in,
-                                     gfc->sampfreq_out, -1 .0 /* Auto */ ,
-                                     32);
+                                     gfc->sampfreq_out, -1.0 /* Auto */, 32);
 #endif
 
     /* initialize internal adaptive ATH settings  -jd */
