@@ -35,7 +35,7 @@
 #define _RELEASEDEBUG 0
 
 const int MAJORVERSION=1;
-const int MINORVERSION=19;
+const int MINORVERSION=20;
 
 
 // Local variables
@@ -461,11 +461,20 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 __declspec(dllexport) BE_ERR	beDeinitStream(HBE_STREAM hbeStream, PBYTE pOutput, PDWORD pdwOutput)
 {
 
-	*pdwOutput = lame_encode_finish(&gf,pOutput,0);
+//	*pdwOutput = lame_encode_finish(&gf,pOutput,0);
+
+    *pdwOutput = lame_encode_flush( &gf, pOutput, 0 );
 
 	if (*pdwOutput<0) {
 		*pdwOutput=0;
 		return BE_ERR_BUFFER_TOO_SMALL;
+	}
+
+    
+
+	if ( !gf.bWriteVbrTag )
+	{
+		lame_close( &gf );
 	}
 
 	return BE_ERR_SUCCESSFUL;
@@ -593,6 +602,13 @@ __declspec(dllexport) BE_ERR beWriteVBRHeader(LPCSTR lpszFileName)
 
 		// Close the file stream
 		fclose(fpStream);
+
+	}
+
+	if ( gf.bWriteVbrTag )
+	{
+		// clean up of allocated memory
+		lame_close( &gf );
 	}
 
 	// return result
@@ -665,9 +681,10 @@ static void dump_config( )
 
 	switch (gf.VBR)
 	{
-		case vbr_off: DebugPrintf("vbr_off\n");	break;
-		case vbr_mt : DebugPrintf("vbr_mt \n");	break;
-		case vbr_rh : DebugPrintf("vbr_rh \n");	break;
+		case vbr_off:	DebugPrintf("vbr_off\n");	break;
+		case vbr_mt :	DebugPrintf("vbr_mt \n");	break;
+		case vbr_rh :	DebugPrintf("vbr_rh \n");	break;
+		case vbr_mtrh:	DebugPrintf("vbr_mtrh \n");	break;
 		case vbr_abr: 
 			DebugPrintf(" vbr_abr (average bitrate %d kbps)\n",gf.VBR_mean_bitrate_kbps);
 		break;
