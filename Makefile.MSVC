@@ -240,7 +240,7 @@ PGM = $(T_LAME)
 !	IF "$(CPU)" == "P1"
 CC_OPTS = /G5 /QaxiMK
 !	ELSE
-CC_OPTS = /G6 /Qax
+CC_OPTS = /G6 /Qaxi
 !	ENDIF
 
 !	IF "$(OPT)" == "NORMAL"
