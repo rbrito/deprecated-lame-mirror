@@ -232,10 +232,17 @@ void lame_print_config(lame_global_flags *);
  * samplerate and encoding rate, but here is a worst case estimate:
  *
  * mp3buffer_size in bytes = 1.25*num_samples + 7200
- * 
- * set mp3buffer_size = 0 if you dont want LAME to check if the mp3 buffer
- * is large enough
  *
+ * I think a tighter bound could be:  (mt, March 2000)
+ * MPEG1:
+ *    num_samples*(bitrate/8)/samplerate + 4*1152*(bitrate/8)/samplerate + 512
+ * MPEG2:
+ *    num_samples*(bitrate/8)/samplerate + 4*576*(bitrate/8)/samplerate + 256
+ *
+ * but test first if you use that!
+ *
+ * set mp3buffer_size = 0 and LAME will not check if mp3buffer_size is
+ * large enough.
  *
  * NOTE: if gfp->num_channels=2, but gfp->mode = 3 (mono), the L & R channels
  * will be averaged into the L channel before encoding only the L channel
