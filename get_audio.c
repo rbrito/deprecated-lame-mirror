@@ -281,10 +281,12 @@ int GetSndChannels(void)
 void CloseSndFile(void)
 {
   if (input_format==sf_mp3) {
+#ifndef AMIGA_MPEGA
     if (fclose(musicin) != 0){
       fprintf(stderr, "Could not close audio input file\n");
       exit(2);
     }
+#endif
   }else{
 	if (gs_pSndFileIn)
 	{
@@ -312,10 +314,12 @@ int default_channels)
 {
   input_bitrate=0;
   if (input_format==sf_mp3) {
+#ifndef AMIGA_MPEGA
     if ((musicin = fopen(lpszFileName, "rb")) == NULL) {
       fprintf(stderr, "Could not find \"%s\".\n", lpszFileName);
       exit(1);
     }
+#endif
 #ifdef AMIGA_MPEGA
     if (-1==lame_decode_initfile(lpszFileName,&num_channels,&samp_freq,&input_bitrate,&num_samples)) {
 #else
