@@ -1096,6 +1096,10 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     argUsed=1;
                     (void) lame_set_substep( gfp, atof(nextArg) );
                        
+                T_ELIF_INTERNAL ("sbgain")
+                    argUsed=1;
+                    (void) lame_set_subblock_gain( gfp, atoi(nextArg) );
+                       
                     
                 T_ELIF ("abr")
                     argUsed=1;

@@ -317,8 +317,10 @@ lame_init_qval(lame_global_flags * gfp)
         gfc->psymodel = 1;
         gfc->quantization = 0;
         gfc->noise_shaping = 1;
-         /**/ gfc->noise_shaping_amp = 0;
+        gfc->noise_shaping_amp = 0;
         gfc->noise_shaping_stop = 0;
+        if (gfc->subblock_gain == -1)
+            gfc->subblock_gain = 1;
         gfc->use_best_huffman = 0;
         break;
 
@@ -329,6 +331,8 @@ lame_init_qval(lame_global_flags * gfp)
         gfc->noise_shaping = 1;
         gfc->noise_shaping_amp = 0;
         gfc->noise_shaping_stop = 0;
+        if (gfc->subblock_gain == -1)
+            gfc->subblock_gain = 1;
         gfc->use_best_huffman = 1;
         break;
 
@@ -339,6 +343,8 @@ lame_init_qval(lame_global_flags * gfp)
         gfc->noise_shaping = 1;
         gfc->noise_shaping_amp = 1;
         gfc->noise_shaping_stop = 1;
+        if (gfc->subblock_gain == -1)
+            gfc->subblock_gain = 1;
         gfc->use_best_huffman = 1;
         break;
 
@@ -351,6 +357,8 @@ lame_init_qval(lame_global_flags * gfp)
 	        gfc->substep_shaping = 2;
         gfc->noise_shaping_amp = 1;
         gfc->noise_shaping_stop = 1;
+        if (gfc->subblock_gain == -1)
+            gfc->subblock_gain = 1;
         gfc->use_best_huffman = 1; /* inner loop */
         break;
 
@@ -363,6 +371,8 @@ lame_init_qval(lame_global_flags * gfp)
 	        gfc->substep_shaping = 2;
         gfc->noise_shaping_amp = 2;
         gfc->noise_shaping_stop = 1;
+        if (gfc->subblock_gain == -1)
+            gfc->subblock_gain = 1;
         gfc->use_best_huffman = 1;
         break;
 
@@ -693,8 +703,6 @@ lame_init_params(lame_global_flags * const gfp)
         if (gfp->mode != MONO && gfp->compression_ratio < 6.6)
             gfp->mode = STEREO;
     }
-
-
 
 
 
@@ -1309,6 +1317,7 @@ lame_print_internals( const lame_global_flags * gfp )
     case short_block_forced:    pc = "forced";          break;
     }
     MSGF( gfc, "\tusing short blocks: %s\n", pc );    
+    MSGF( gfc, "\tsubblock gain: %d\n", gfc->subblock_gain );
     MSGF( gfc, "\tadjust masking: %g dB\n", gfp->maskingadjust );
     MSGF( gfc, "\tadjust masking short: %g dB\n", gfp->maskingadjust_short );
     MSGF( gfc, "\tquantization comparison: %d\n", gfp->quant_comp );
@@ -2045,6 +2054,7 @@ lame_init_old(lame_global_flags * gfp)
     gfp->bWriteVbrTag = 1;
     gfp->quality = -1;
     gfp->short_blocks = short_block_not_set;
+    gfc->subblock_gain = -1;
 
     gfp->lowpassfreq = 0;
     gfp->highpassfreq = 0;

@@ -347,6 +347,7 @@ struct lame_internal_flags {
                                2 = stop when all scalefacs amplified 
 			    */
 
+  int subblock_gain;        /*  0 = no, 1 = yes */
   int use_best_huffman;     /* 0 = no.  1=outside loop  2=inside loop(slow) */
 
 

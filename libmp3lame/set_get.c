@@ -1457,6 +1457,21 @@ lame_get_substep(const lame_global_flags*  gfp )
     return gfc->substep_shaping;
 }
 
+/* subblock gain */
+int
+lame_set_subblock_gain(lame_global_flags *gfp, int sbgain)
+{
+    gfp->internal_flags->subblock_gain = sbgain;
+    return sbgain;
+}
+
+int
+lame_get_subblock_gain(const lame_global_flags * gfp)
+{
+    return gfp->internal_flags->subblock_gain;
+}
+
+
 /* Disable short blocks. */
 int
 lame_set_no_short_blocks( lame_global_flags*  gfp,

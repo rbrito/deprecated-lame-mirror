@@ -1005,16 +1005,16 @@ balance_noise (
      *  lets try setting scalefac_scale=1 
      */
     if (gfc->noise_shaping > 1) {
-	memset(&gfc->pseudohalf, 0, sizeof(gfc->pseudohalf));
-	if (!cod_info->scalefac_scale) {
-	    inc_scalefac_scale (cod_info, xrpow);
-	    status = 0;
-	} else {
-	    if (cod_info->block_type == SHORT_TYPE && gfp->experimentalZ > 0) {
-		status = inc_subblock_gain (gfc, cod_info, xrpow)
-		    || loop_break (cod_info);
+	    memset(&gfc->pseudohalf, 0, sizeof(gfc->pseudohalf));
+	    if (!cod_info->scalefac_scale) {
+	        inc_scalefac_scale (cod_info, xrpow);
+	        status = 0;
+	    } else {
+	        if (cod_info->block_type == SHORT_TYPE && gfc->subblock_gain > 0) {
+		    status = inc_subblock_gain (gfc, cod_info, xrpow)
+		        || loop_break (cod_info);
+	        }
 	    }
-	}
     }
 
     if (!status) {
