@@ -29,7 +29,7 @@ total:    512+16
    suggested: 800
    set to 1160 to sync with FhG.
 */
-#define ENCDELAY 800
+#define ENCDELAY 576
 
 
 
