@@ -19,6 +19,10 @@
 #ifndef INTERFACE_H_INCLUDED
 #define INTERFACE_H_INCLUDED
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "common.h"
 
 BOOL InitMP3(PMPSTR mp);
@@ -27,5 +31,9 @@ void ExitMP3(PMPSTR mp);
 
 /* added remove_buf to support mpglib seeking */
 void remove_buf(PMPSTR mp);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
