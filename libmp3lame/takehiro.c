@@ -638,22 +638,37 @@ best_scalefac_store(
     /* use scalefac_scale if we can */
     III_side_info_t * const l3_side = &gfc->l3_side;
     gr_info *gi = &l3_side->tt[gr][ch];
-    int sfb,j,recalc=0;
+    int sfb, recalc = 0, j = 0;
 
     memset(l3_side->scfsi[ch], 0, sizeof(l3_side->scfsi[ch]));
-
-    /* remove scalefacs from bands with all ix=0.
-     * This idea comes from the AAC ISO docs.  added mt 3/00 */
-    j = 0;
     for (sfb = 0; sfb < gi->psymax; sfb++) {
 	int l = -gi->width[sfb];
+	int even = 0;
 	j -= l;
 	do {
-	    if (gi->l3_enc[l+j]!=0)
-		break;
+	    even |= gi->l3_enc[l+j];
 	} while (++l < 0);
-	if (l==0)
-	    gi->scalefac[sfb] = recalc = -2; /* anything goes. */
+	/* remove scalefacs from bands with all ix=0.
+	 * This idea comes from the AAC ISO docs.  added mt 3/00 */
+	if (even == 0) {
+	    gi->scalefac[sfb] = recalc = -2;
+	    continue;
+	}
+	/* if all the ix[] is even number, we can losslessly reduce the
+	   scalefactor value and ix[]. */
+	while (!(even & 1) && gi->scalefac[sfb] >= (2 >> gi->scalefac_scale)) {
+	    l = -gi->width[sfb];
+	    do {
+		gi->l3_enc[l+j] >>= 1;
+	    } while (++l < 0);
+	    gi->scalefac[sfb] -= (2 >> gi->scalefac_scale);
+	    even >>= 1;
+	    recalc = even;
+	}
+    }
+    if (recalc) {
+	gfc->scale_bitcounter(gi);
+	noquant_count_bits(gfc, gi);
     }
 
     if (gi->psymax > gi->sfbmax && gi->block_type != SHORT_TYPE
