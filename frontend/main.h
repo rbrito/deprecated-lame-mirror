@@ -22,7 +22,9 @@
 
 
 #include "get_audio.h"        
-#include <sys/param.h>
+#ifdef WIN32
+# include <sys/param.h>
+#endif
 
 #ifndef MAXPATHLEN
 #define MAXPATHLEN 1024
