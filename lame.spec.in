@@ -1,6 +1,5 @@
 %define name @PACKAGE@
 %define ver @VERSION@
-%define quality beta
 %define rel 1
 %define prefix %{_usr}
 %define docdir %{_defaultdocdir}
@@ -8,7 +7,7 @@
 Summary : LAME Ain't an MP3 Encoder... but it's the best.
 Summary(fr) : LAME n'est pas un encodeur MP3 ;->
 Name: %{name}
-Version: %{ver}%{quality}
+Version: %{ver}
 Release: %{rel}
 Copyright: LGPL
 Vendor: The LAME Project
@@ -18,7 +17,7 @@ Group: Applications/Multimedia
 Source: ftp://lame.sourceforge.net/pub/lame/src/%{name}-%{version}.tar.bz2
 BuildRoot: %{_tmppath}/%{name}-root
 Requires: ncurses >= 5.0
-BuildRequires: gcc3, /usr/bin/find, ncurses-devel
+BuildRequires: gcc3 = 3.0.1, /usr/bin/find, ncurses-devel
 Provides: mp3encoder
 
 %description
@@ -55,7 +54,7 @@ these libraries.
 export CC_OPTS="-O3 -march=i386 -mcpu=i686 -fomit-frame-pointer  -funroll-loops -ffast-math -finline-functions -Wall -pedantic"
 
 %ifarch i686
-	export CC_OPTS="-O3 -fomit-frame-pointer -mcpu=athlon -march=athlon -malign-functions=4 -funroll-loops -fexpensive-optimizations -fschedule-insns2 -Wall -mfancy-math-387 -pipe"
+	export CC_OPTS="-O3 -fomit-frame-pointer -mcpu=i686 -march=i686 -malign-functions=4 -funroll-loops -fexpensive-optimizations -fschedule-insns2 -Wall -mfancy-math-387 -pipe"
 %endif
 %ifarch athlon
 	export CC_OPTS="-O3 -fomit-frame-pointer -fno-strength-reduce -mcpu=athlon -march=athlon -malign-functions=4 -funroll-loops  -fexpensive-optimizations -fschedule-insns2 -Wall -mfancy-math-387 -pipe"
@@ -66,9 +65,10 @@ rm -f config.cache
  
 %configure \
 	--enable-nasm \
+	--enable-decoder \
 	--without-vorbis \
 	--enable-analyzer=no \
-	--disable-brhist \
+	--enable-brhist \
 	--disable-debug
 
 make CC="gcc3" CFLAGS="${CC_OPTS}" test
@@ -78,6 +78,8 @@ rm -rf %{buildroot}
 find . -name CVS | xargs rm -rf
 mkdir -p %{buildroot}%{_bindir}
 %makeinstall
+
+ln -sf lame/lame.h %{buildroot}%{_includedir}/lame.h
 install -D -m 644 doc/man/lame.1 %{buildroot}%{_mandir}/man/lame.1
 
 # move back lame.h
@@ -104,9 +106,22 @@ rm -rf %{buildroot}
 %{_libdir}/libmp3lame.a
 %{_libdir}/libmp3lame.la
 %{_libdir}/libmp3lame.so
+%{_includedir}/lame
 %{_includedir}/lame.h
 
 %changelog
+
+* Sat May 11 2002 Yosi Markovich <yosim@bigfoot.com>
+- Fixes to the spec file that include:
+- Making sure the compiler is gcc version 3.0.1. Lame compiled with a version
+  greater than 3.0.1 is broken.
+- Optimization flags for i686 will use i686 for march and mcpu, and not 
+  athlon.
+- Fix the dates in this Changelog section.
+- Various small fixes merged from Matthias Saou.
+- Thanks Fred Maciel <fred-m@crl.hitachi.co.jp> for his useful comments.
+
+- 
 * Tue Jan 22 2002 Mark Taylor <mt@mp3dev.org>
 - replaced lame.spec.in with Yosi's version.  Merged some stuff from
   the prevous lame.spec.in file, and appended changelog below.
@@ -143,14 +158,14 @@ rm -rf %{buildroot}
 * Sun Feb 11 2001 Matthias Saou <matthias.saou@est.une.marmotte.net>
 - Split the package, there is now a -devel
 
-* Thu Oct 26 2000 Matthias Saou <matthias.saou@est.une.marmotte.net>
+* Thu Nov 26 2000 Matthias Saou <matthias.saou@est.une.marmotte.net>
 - Initial RPM release for RedHat 7.0 from scratch
 
-* Wed Nov 21 2001 Eric Lassauge <lassauge@mail.dotcom.fr>
+* Wed Nov 21 2000 Eric Lassauge <lassauge@mail.dotcom.fr>
 - Updated and corrected RPM to 3.89beta.
 - Added french translations
 
-* Sat Aug 04 2001 Markus Linnala «maage@cs.tut.fi»
+* Sat Aug 04 2000 Markus Linnala «maage@cs.tut.fi»
 - Build and include docs and libs correctly
 - Build extra programs
 
@@ -167,3 +182,5 @@ rm -rf %{buildroot}
 
 * Thu May 30 2000 Georges Seguin «crow@planete.net» 
 - First RPM build around 3.83beta
+
+
