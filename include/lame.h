@@ -25,10 +25,6 @@
 extern "C" {
 #endif
 
-/*
- *  Part of the lib would be better. So it's part of the apps and host moving is more difficult. 
- */
-#define LAME_URL    "http://www.mp3dev.org/"
 
 
 typedef enum vbr_mode_e {

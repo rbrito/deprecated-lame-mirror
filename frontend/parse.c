@@ -92,10 +92,6 @@ int  print_license ( const lame_global_flags* gfp, FILE* const fp, const char* P
               "The decoding functions provided in LAME use the mpglib decoding engine which\n"
               "is under the GPL.  They may not be used by any program not released under the\n"
               "GPL unless you obtain such permission from the MPG123 project (www.mpg123.de).\n"
-              "\n"
-              "LAME has built-in support to read raw pcm and some wav and aiff files. More\n"
-              "robust file I/O can be handled by compiling in LIBSNDFILE, but LIBSNDFILE is\n"
-              "also under the GPL and may not be used by other programs not under the GPL.\n"
               "\n" );
     return 0;
 }
