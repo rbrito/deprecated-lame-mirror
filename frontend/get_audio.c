@@ -10,7 +10,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
@@ -362,19 +362,24 @@ parse_file_header(lame_t gfp, FILE * sf)
 	    input_format = sf_wave;
 	    count_samples_carefully = 1;
 	} else {
-	    fprintf(stderr, "Warning: corrupt or unsupported WAVE format\n"); 
+	    /* It's probably a WAV file, but we do not know how to handle it */
+#ifdef LIBSNDFILE
+	    /* use libsndfile */
+	    input_format = sf_unknown;
+	    useLibsndfile = 1;
+#endif
 	}
     }
 
     if (input_format == sf_raw) {
-        /*
-	 * Assume it's raw PCM.  Since the audio data is assumed to begin
+        /* input file is unsupported WAVE format or corrupt WAVE file.
+	 * Assume it's as raw PCM.  Since the audio data is assumed to begin
 	 * at byte zero, this will unfortunately require seeking.
          */
 	if (fseek(sf, 0L, SEEK_SET) != 0) {
 	    /* ignore errors */
-        }
-	input_format = sf_raw;
+	}
+	fprintf(stderr, "Warning: corrupt or unsupported WAVE format\n"); 
     }
 }
 
@@ -894,45 +899,60 @@ OpenSndFile(lame_t gfp, char *inPath)
 #endif
 
 #ifdef LIBSNDFILE
-    if (useLibsndfile) {
-	/* Try to open the sound file with libsndfile */
-	/* set some defaults in case input is raw PCM */
-	gs_wfInfo.seekable = 1;
-	gs_wfInfo.samplerate = lame_get_in_samplerate(gfp);
-	gs_wfInfo.channels = lame_get_num_channels(gfp);
+    /* Try to open the sound file with libsndfile */
+    /* set some defaults in case input is raw PCM */
+    gs_wfInfo.seekable = 1;
+    gs_wfInfo.samplerate = lame_get_in_samplerate(gfp);
+    gs_wfInfo.channels = lame_get_num_channels(gfp);
 
-	if (in_bitwidth == 8) {
-	    if (in_signed)
-		gs_wfInfo.format = SF_FORMAT_PCM_S8;
-	    else
-		gs_wfInfo.format = SF_FORMAT_PCM_U8;
-	} else {
-	    if (!in_signed) {
-		fprintf(stderr,
-			"Unsigned input only supported with bitwidth 8\n");
-		exit(1);
-	    }
-	    if (in_endian != order_unknown) {
-		if (in_endian == order_littleEndian)
-		    gs_wfInfo.format = SF_ENDIAN_LITTLE;
-		else
-		    gs_wfInfo.format = SF_ENDIAN_BIG;
-	    } else {
-# ifndef WORDS_BIGENDIAN
-		/* little endian */
-		if (pcmswapbytes)
-		    gs_wfInfo.format = SF_ENDIAN_BIG;
-		else
-		    gs_wfInfo.format = SF_ENDIAN_LITTLE;
-# else
-		if (pcmswapbytes)
-		    gs_wfInfo.format = SF_ENDIAN_LITTLE;
-		else
-		    gs_wfInfo.format = SF_ENDIAN_BIG;
-# endif
-	    }
+    if (in_bitwidth == 8) {
+	if (in_signed)
+	    gs_wfInfo.format = SF_FORMAT_PCM_S8;
+	else
+	    gs_wfInfo.format = SF_FORMAT_PCM_U8;
+    } else {
+	if (!in_signed) {
+	    fprintf(stderr,
+		    "Unsigned input only supported with bitwidth 8\n");
+	    exit(1);
 	}
+	if (in_endian != order_unknown) {
+	    if (in_endian == order_littleEndian)
+		gs_wfInfo.format = SF_ENDIAN_LITTLE;
+	    else
+		gs_wfInfo.format = SF_ENDIAN_BIG;
+	} else {
+# ifndef WORDS_BIGENDIAN
+	    /* little endian */
+	    if (pcmswapbytes)
+		gs_wfInfo.format = SF_ENDIAN_BIG;
+	    else
+		gs_wfInfo.format = SF_ENDIAN_LITTLE;
+# else
+	    if (pcmswapbytes)
+		gs_wfInfo.format = SF_ENDIAN_LITTLE;
+	    else
+		gs_wfInfo.format = SF_ENDIAN_BIG;
+# endif
+	}
+    }
+#endif /* LIBSNDFILE */
 
+    if (input_format == sf_wave) {
+	parse_file_header(gfp, fp);
+    }
+
+    if (input_format == sf_raw) {
+	/* assume raw PCM */
+	fprintf(stderr, "Assuming raw pcm input file");
+	if (pcmswapbytes)
+	    fprintf(stderr, " : Forcing byte-swapping\n");
+	else
+	    fprintf(stderr, "\n");
+    }
+
+#ifdef LIBSNDFILE
+    if (useLibsndfile) {
         g_inputHandler = gs_pSndFileIn = sf_open(inPath, SFM_READ, &gs_wfInfo);
 
         /* Check result */
@@ -949,23 +969,8 @@ OpenSndFile(lame_t gfp, char *inPath)
 	    exit(1);
 	}
 	lame_set_in_samplerate(gfp, gs_wfInfo.samplerate);
-    } else
-#endif /* LIBSNDFILE */
-    {
-        if (input_format != sf_raw && !IS_MPEG123(input_format)) {
-	    parse_file_header(gfp, fp);
-        }
-
-	if (input_format == sf_raw) {
-	    /* assume raw PCM */
-	    fprintf(stderr, "Assuming raw pcm input file");
-	    if (pcmswapbytes)
-		fprintf(stderr, " : Forcing byte-swapping\n");
-	    else
-		fprintf(stderr, "\n");
-	}
     }
-
+#endif /* LIBSNDFILE */
 
     if (lame_get_num_samples(gfp) == MAX_U_32_NUM) {
         /* try to figure out num_samples */
