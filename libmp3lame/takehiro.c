@@ -487,43 +487,37 @@ int count_bits(
 }
 
 /***********************************************************************
-  re-calculate the best scalefac_compress using scfsi
+  best huffman table selection for scalefactor band
   the saved bits are kept in the bit reservoir.
  **********************************************************************/
-
-
 inline static void
 recalc_divide_init(
     const lame_internal_flags * const gfc,
-          gr_info         *cod_info,
-          int     * const ix,
+          gr_info         *gi,
           int             r01_bits[],
           int             r01_div [],
           int             r0_tbl  [],
           int             r1_tbl  [] )
 {
-    int r0, r1, bigv, r0t, r1t, bits;
-
-    bigv = cod_info->big_values;
-
-    for (r0 = 0; r0 <= 7 + 15; r0++) {
+    int r0;
+    for (r0 = 0; r0 <= 7 + 15; r0++)
 	r01_bits[r0] = LARGE_BITS;
-    }
 
     for (r0 = 0; r0 < 16; r0++) {
-	int a1 = gfc->scalefac_band.l[r0 + 1], r0bits;
-	if (a1 >= bigv)
+	int a1, r0bits, r1, r0t, r1t, bits;
+	if (gfc->scalefac_band.l[r0 + 2] >= gi->big_values)
 	    break;
 	r0bits = 0;
-	r0t = choosetable(ix, ix + a1, &r0bits);
+	a1 = gfc->scalefac_band.l[r0 + 1];
+	r0t = choosetable(gi->l3_enc, &gi->l3_enc[a1], &r0bits);
 
 	for (r1 = 0; r1 < 8; r1++) {
 	    int a2 = gfc->scalefac_band.l[r0 + r1 + 2];
-	    if (a2 >= bigv)
+	    if (a2 >= gi->big_values)
 		break;
 
 	    bits = r0bits;
-	    r1t = choosetable(ix + a1, ix + a2, &bits);
+	    r1t = choosetable(&gi->l3_enc[a1], &gi->l3_enc[a2], &bits);
 	    if (r01_bits[r0 + r1] > bits) {
 		r01_bits[r0 + r1] = bits;
 		r01_div[r0 + r1] = r0;
@@ -538,38 +532,31 @@ inline static int
 recalc_divide_sub(
     const lame_internal_flags * const gfc,
           gr_info         *gi,
-    const int     * const ix,
     const int             r01_bits[],
     const int             r01_div [],
     const int             r0_tbl  [],
     const int             r1_tbl  [] )
 {
-    int bits, r2, a2, bigv, r2t, flag = 0;
-
-    bigv = gi->big_values;
-
-    for (r2 = 2; r2 < SBMAX_l + 1; r2++) {
-	a2 = gfc->scalefac_band.l[r2];
-	if (a2 >= bigv) 
-	    break;
-
-	bits = r01_bits[r2 - 2] + gi->count1bits;
+    int bits, r2, a2, r2t, old = gi->part2_3_length;
+    for (r2 = 0; r2 < SBMAX_l - 1; r2++) {
+	bits = r01_bits[r2] + gi->count1bits;
 	if (gi->part2_3_length <= bits)
 	    break;
 
-	r2t = choosetable(ix + a2, ix + bigv, &bits);
+	a2 = gfc->scalefac_band.l[r2+2];
+	assert(a2 < gi->big_values);
+	r2t = choosetable(&gi->l3_enc[a2], &gi->l3_enc[gi->big_values], &bits);
 	if (gi->part2_3_length <= bits)
 	    continue;
 
 	gi->part2_3_length = bits;
-	gi->region0_count = r01_div[r2 - 2];
-	gi->region1_count = r2 - 2 - r01_div[r2 - 2];
-	gi->table_select[0] = r0_tbl[r2 - 2];
-	gi->table_select[1] = r1_tbl[r2 - 2];
+	gi->region0_count = r01_div[r2];
+	gi->region1_count = r2 - r01_div[r2];
+	gi->table_select[0] = r0_tbl[r2];
+	gi->table_select[1] = r1_tbl[r2];
 	gi->table_select[2] = r2t;
-	flag = 1;
     }
-    return flag;
+    return gi->part2_3_length - old;
 }
 
 
@@ -580,7 +567,7 @@ best_huffman_divide(
     const lame_internal_flags * const gfc, gr_info * const gi)
 {
     int i, a1, a2;
-    gr_info cod_info2;
+    gr_info cod_info_w;
     int * const ix = gi->l3_enc;
 
     int r01_bits[7 + 15 + 1];
@@ -592,8 +579,8 @@ best_huffman_divide(
 	return;
 
     if (gi->block_type == NORM_TYPE) {
-	recalc_divide_init(gfc, gi, ix, r01_bits,r01_div,r0_tbl,r1_tbl);
-	recalc_divide_sub(gfc, gi, ix, r01_bits,r01_div,r0_tbl,r1_tbl);
+	recalc_divide_init(gfc, gi, r01_bits,r01_div,r0_tbl,r1_tbl);
+	recalc_divide_sub(gfc, gi, r01_bits,r01_div,r0_tbl,r1_tbl);
     }
 
     i = gi->big_values;
@@ -604,46 +591,50 @@ best_huffman_divide(
     if (i > 576)
 	return;
 
-    cod_info2 = *gi;
-    cod_info2.count1 = i;
-    cod_info2.big_values -= 2;
+    cod_info_w = *gi;
+    cod_info_w.count1 = i;
+    cod_info_w.big_values -= 2;
 
     a1 = a2 = 0;
-    for (; i > cod_info2.big_values; i -= 4) {
+    for (; i > cod_info_w.big_values; i -= 4) {
 	int p = ((ix[i-4] * 2 + ix[i-3]) * 2 + ix[i-2]) * 2 + ix[i-1];
 	a1 += t32l[p];
 	a2 += t33l[p];
     }
 
-    cod_info2.count1table_select = 0;
+    cod_info_w.count1table_select = 0;
     if (a1 > a2) {
 	a1 = a2;
-	cod_info2.count1table_select = 1;
+	cod_info_w.count1table_select = 1;
     }
 
-    cod_info2.count1bits = a1;
+    cod_info_w.count1bits = a1;
 
-    if (cod_info2.block_type == NORM_TYPE) {
-	if (recalc_divide_sub(gfc, &cod_info2, ix, r01_bits,r01_div,r0_tbl,r1_tbl))
-	    *gi = cod_info2;
+    if (cod_info_w.block_type == NORM_TYPE) {
+	if (recalc_divide_sub(gfc, &cod_info_w, r01_bits,r01_div,r0_tbl,r1_tbl))
+	    *gi = cod_info_w;
     } else {
 	/* Count the number of bits necessary to code the bigvalues region. */
-	cod_info2.part2_3_length = a1;
+	cod_info_w.part2_3_length = a1;
 	a1 = gfc->scalefac_band.l[gi->region0_count+1];
-	if (a1 > i) {
+	if (a1 > i)
 	    a1 = i;
-	}
+
 	if (a1 > 0)
-	    cod_info2.table_select[0] =
-		choosetable(ix, ix + a1, &cod_info2.part2_3_length);
+	    cod_info_w.table_select[0] =
+		choosetable(ix, ix + a1, &cod_info_w.part2_3_length);
 	if (i > a1)
-	    cod_info2.table_select[1] =
-		choosetable(ix + a1, ix + i, &cod_info2.part2_3_length);
-	if (gi->part2_3_length > cod_info2.part2_3_length)
-	    *gi = cod_info2;
+	    cod_info_w.table_select[1] =
+		choosetable(ix + a1, ix + i, &cod_info_w.part2_3_length);
+	if (gi->part2_3_length > cod_info_w.part2_3_length)
+	    *gi = cod_info_w;
     }
 }
 
+/***********************************************************************
+  re-calculate the best scalefac_compress using scfsi
+  the saved bits are kept in the bit reservoir.
+ **********************************************************************/
 static const int slen1_n[16] = { 1, 1, 1, 1, 8, 2, 2, 2, 4, 4, 4, 8, 8, 8,16,16 };
 static const int slen2_n[16] = { 1, 2, 4, 8, 1, 2, 4, 8, 2, 4, 8, 2, 4, 8, 4, 8 };
 const int slen1_tab [16] = { 0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4 };
@@ -721,18 +712,17 @@ best_scalefac_store(
     int sfb,i,j,l;
     int recalc = 0;
 
-    /* remove scalefacs from bands with ix=0.  This idea comes
-     * from the AAC ISO docs.  added mt 3/00 */
-    /* check if l3_enc=0 */
+    /* remove scalefacs from bands with all ix=0.
+     * This idea comes from the AAC ISO docs.  added mt 3/00 */
     j = 0;
-    for ( sfb = 0; sfb < gi->sfbmax; sfb++ ) {
+    for (sfb = 0; sfb < gi->sfbmax; sfb++) {
 	int width = gi->width[sfb];
 	j += width;
 	for (l = -width; l < 0; l++)
 	    if (gi->l3_enc[l+j]!=0)
 		break;
 	if (l==0)
-	    gi->scalefac[sfb] = recalc = -2; // anything goes.
+	    gi->scalefac[sfb] = recalc = -2; /* anything goes. */
     }
 
     if (!gi->scalefac_scale && !gi->preflag) {
@@ -821,7 +811,7 @@ static const int scale_long[16] = {
 int
 scale_bitcount(gr_info * const gi)
 {
-    int k, sfb, max_slen1 = 0, max_slen2 = 0, *scalefac = gi->scalefac;
+    int k, sfb, max_slen1 = 0, max_slen2 = 0;
     const int *tab;
 
     /* maximum values */
@@ -833,24 +823,24 @@ scale_bitcount(gr_info * const gi)
         tab = scale_long;
 	if (!gi->preflag) {
 	    for ( sfb = 11; sfb < SBPSY_l; sfb++ )
-		if (scalefac[sfb] < pretab[sfb])
+		if (gi->scalefac[sfb] < pretab[sfb])
 		    break;
 
 	    if (sfb == SBPSY_l) {
 		gi->preflag = 1;
 		for ( sfb = 11; sfb < SBPSY_l; sfb++ )
-		    scalefac[sfb] -= pretab[sfb];
+		    gi->scalefac[sfb] -= pretab[sfb];
 	    }
 	}
     }
 
     for (sfb = 0; sfb < gi->sfbdivide; sfb++)
-	if (max_slen1 < scalefac[sfb])
-	    max_slen1 = scalefac[sfb];
+	if (max_slen1 < gi->scalefac[sfb])
+	    max_slen1 = gi->scalefac[sfb];
 
     for (; sfb < gi->sfbmax; sfb++)
-	if (max_slen2 < scalefac[sfb])
-	    max_slen2 = scalefac[sfb];
+	if (max_slen2 < gi->scalefac[sfb])
+	    max_slen2 = gi->scalefac[sfb];
 
     /* from Takehiro TOMINAGA <tominaga@isoternet.org> 10/99
      * loop over *all* posible values of scalefac_compress to find the
@@ -873,8 +863,8 @@ scale_bitcount(gr_info * const gi)
 /*            scale_bitcount_lsf                                         */
 /*************************************************************************/
 
-/* counts the number of bits to encode the scalefacs but for MPEG 2,2.5
- * Lower sampling frequencies  (24, 22.05 and 16 kHz.)
+/* counts the number of bits to encode the scalefacs but for MPEG 2 and 2.5
+ * Lower sampling frequencies  (lower than 24kHz.)
  *
  * This is reverse-engineered from section 2.4.3.2 of the MPEG2 IS,
  * "Audio Decoding Layer III"
