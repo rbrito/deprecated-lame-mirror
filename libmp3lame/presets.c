@@ -113,7 +113,7 @@ int apply_abr_preset(lame_global_flags*  gfp, int preset)
     lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
     lame_set_experimentalZ(gfp, abr_switch_map[r].expZ);
     lame_set_experimentalX(gfp, abr_switch_map[r].expX);
-    lame_set_quality(gfp, 2);
+    lame_set_quality(gfp, 3);
     lame_set_lowpassfreq(gfp, abr_switch_map[r].lowpass);
     lame_set_mode(gfp, JOINT_STEREO);
 
