@@ -1019,89 +1019,62 @@ s3_func(FLOAT bark)
     return db2pow(tempy);
 }
 
+/* compute numlines (the number of spectral lines in each partition band),
+   bark value and partition number id of each sfb.
+   each partition band should be about DELBARK wide, but sometimes not. */
 static int
 init_numline(
-    int *numlines, int *bo, int *bm,
-    FLOAT *bval, FLOAT *mld,
-
-    FLOAT sfreq, int blksize, int *scalepos,
-    FLOAT deltafreq, int sbmax
-    )
+    int *numlines, int *bo, int *bm, FLOAT *bval, FLOAT *mld,
+    FLOAT sfreq, int blksize, int *scalepos, FLOAT deltafreq, int sbmax)
 {
-    int partition[HBLKSIZE];
-    int i, j, k;
-    int sfb;
+    int partition[HBLKSIZE], i, j, sfb;
 
     sfreq /= blksize;
-    j = 0;
-    /* compute numlines, the number of spectral lines in each partition band */
-    /* each partition band should be about DELBARK wide. */
-    for (i=0;i<CBANDS;i++) {
-	FLOAT bark1;
+    for (i = j = 0; i < CBANDS; i++) {
+	FLOAT bark1 = freq2bark(sfreq*j);
 	int j2;
-	bark1 = freq2bark(sfreq*j);
 	for (j2 = j; freq2bark(sfreq*j2) - bark1 < DELBARK && j2 <= blksize/2;
 	     j2++)
 	    ;
 
+	bval[i] = freq2bark(sfreq*(j+j2)*0.5);
 	numlines[i] = j2 - j;
 	while (j<j2)
 	    partition[j++]=i;
 	if (j > blksize/2) break;
     }
 
-    for ( sfb = 0; sfb < sbmax; sfb++ ) {
-	int i1,i2,start,end;
+    for (sfb = 0; sfb < sbmax; sfb++) {
 	FLOAT arg;
-	start = scalepos[sfb];
-	end   = scalepos[sfb+1];
+	int i1 = (int)(.5 + deltafreq*scalepos[sfb]);
+	int i2 = (int)(.5 + deltafreq*scalepos[sfb+1]);
 
-	i1 = floor(.5 + deltafreq*(start-.5));
-	if (i1<0) i1=0;
-	i2 = floor(.5 + deltafreq*(end-.5));
-	if (i2>blksize/2) i2=blksize/2;
+	if (i2>blksize/2)
+	    i2=blksize/2;
 
-	bm[sfb] = (partition[i1]+partition[i2])/2;
 	bo[sfb] = partition[i2];
+	bm[sfb] = (partition[i1]+partition[i2])/2;
 
 	/* setup stereo demasking thresholds */
 	/* formula reverse enginerred from plot in paper */
-	arg = freq2bark(sfreq*scalepos[sfb]*deltafreq);
-	arg = (Min(arg, 15.5)/15.5);
-
-	mld[sfb] = db2pow(-12.5*(1+cos(PI*arg)));
+	arg = freq2bark(sfreq*(i1+i2)/2*deltafreq)/15.5;
+	mld[sfb] = db2pow(-12.5*(1+cos(PI*Min(arg, 1.0))));
     }
 
-    /* compute bark values of each critical band */
-    j = 0;
-    for (k = 0; k < i+1; k++) {
-	int w = numlines[k];
-	bval[k] = freq2bark(sfreq*(j+w*0.5));
-	j += w;
-    }
     return i+1;
 }
 
 static void
 init_numline_l2s(
-    int *bo,
-
-    FLOAT sfreq, int blksize, int *scalepos,
-    FLOAT deltafreq, int sbmax
-    )
+    int *bo, FLOAT sfreq, int blksize, int *scalepos,
+    FLOAT deltafreq, int sbmax)
 {
-    int partition[HBLKSIZE];
-    int i, j;
-    int sfb;
+    int partition[HBLKSIZE], i, j, sfb;
 
     sfreq /= blksize;
-    j = 0;
-    /* compute numlines, the number of spectral lines in each partition band */
-    /* each partition band should be about DELBARK wide. */
-    for (i=0;i<CBANDS;i++) {
-	FLOAT bark1;
+    for (i = j = 0; i < CBANDS; i++) {
+	FLOAT bark1 = freq2bark(sfreq*j);
 	int j2;
-	bark1 = freq2bark(sfreq*j);
 	for (j2 = j; freq2bark(sfreq*j2) - bark1 < DELBARK && j2 <= blksize/2;
 	     j2++)
 	    ;
@@ -1111,12 +1084,10 @@ init_numline_l2s(
 	if (j > blksize/2) break;
     }
 
-    for ( sfb = 0; sfb < sbmax; sfb++ ) {
-	int i2, end;
-	end   = scalepos[sfb+1];
-
-	i2 = floor(.5 + deltafreq*(end-.5));
-	if (i2>blksize/2) i2=blksize/2;
+    for (sfb = 0; sfb < sbmax; sfb++) {
+	int i2 = (int)(.5 + deltafreq*scalepos[sfb+1]);
+	if (i2>blksize/2)
+	    i2=blksize/2;
 	bo[sfb] = partition[i2];
     }
 }
@@ -1195,7 +1166,8 @@ init_s3_values(
     return 0;
 }
 
-int psymodel_init(lame_global_flags *gfp)
+int
+psymodel_init(lame_global_flags *gfp)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     int i,j,sb,k;

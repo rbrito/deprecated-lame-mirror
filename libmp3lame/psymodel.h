@@ -29,8 +29,8 @@
 
 #define TEMPORALMASK_SUSTAIN_SEC 0.01
 
-/* ATH FFT -> MDCT conversion factor, 32768*32768*1024*2 */
-#define FFT2MDCT 1e12
+/* FFT -> MDCT conversion factor */
+#define FFT2MDCT (32768.0*32768*1024)
 
 #define NS_MSFIX 4.0
 

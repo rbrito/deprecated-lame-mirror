@@ -34,6 +34,7 @@
 #include "quantize_pvt.h"
 #include "machine.h"
 #include "tables.h"
+#include "psymodel.h"
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
@@ -1648,16 +1649,14 @@ set_pinfo (
 
     over = j = 0;
     for (sfb2 = 0; sfb2 < gi->psy_lmax; sfb2++) {
-	bw = gi->width[sfb2];
-	end = j + bw;
+	end = j + gi->width[sfb2];
 	for (en0 = 0.0; j < end; j++) 
 	    en0 += gi->xr[j] * gi->xr[j];
 	en0=Max(en0, 1e-20);
 	/* convert to MDCT units */
-	en1=1e15/bw;  /* scaling so it shows up on FFT plot */
-	gfc->pinfo->  en[gr][ch][sfb2] = en1*en0;
-	gfc->pinfo-> thr[gr][ch][sfb2] = en1*xmin[sfb2];
-	gfc->pinfo->xfsf[gr][ch][sfb2] = en1*xmin[sfb2]*distort[sfb2];
+	gfc->pinfo->  en[gr][ch][sfb2] = FFT2MDCT*en0;
+	gfc->pinfo-> thr[gr][ch][sfb2] = FFT2MDCT*xmin[sfb2];
+	gfc->pinfo->xfsf[gr][ch][sfb2] = FFT2MDCT*xmin[sfb2]*distort[sfb2];
 	en1 = FAST_LOG10(distort[sfb2]);
 	if (en1 > 0.0) {
 	    over++;
@@ -1674,17 +1673,15 @@ set_pinfo (
 
     for (sfb = gi->sfb_smin; sfb2 < gi->psymax; sfb++) {
 	for (i = 0; i < 3; i++, sfb2++) {
-	    bw = gi->width[sfb2];
-	    end = j + bw;
+	    end = j + gi->width[sfb2];
 	    for (en0 = 0.0; j < end; j++)
 		en0 += gi->xr[j] * gi->xr[j];
 
 	    en0 = Max(en0, 1e-20);
 	    /* convert to MDCT units */
-	    en1=1e15/bw;  /* scaling so it shows up on FFT plot */
-	    gfc->pinfo->  en_s[gr][ch][3*sfb+i] = en1*en0;
-	    gfc->pinfo-> thr_s[gr][ch][3*sfb+i] = en1*xmin[sfb2];
-	    gfc->pinfo->xfsf_s[gr][ch][3*sfb+i] = en1*xmin[sfb2]*distort[sfb2];
+	    gfc->pinfo->  en_s[gr][ch][3*sfb+i] = FFT2MDCT*en0;
+	    gfc->pinfo-> thr_s[gr][ch][3*sfb+i] = FFT2MDCT*xmin[sfb2];
+	    gfc->pinfo->xfsf_s[gr][ch][3*sfb+i] = FFT2MDCT*xmin[sfb2]*distort[sfb2];
 	    en1 = FAST_LOG10(distort[sfb2]);
 	    if (en1 > 0.0) {
 		over++;
