@@ -2,7 +2,7 @@
 ;
 ; 	assembler routines to detect CPU-features
 ;
-;	MMX / 3DNow! / SIMD
+;	MMX / 3DNow! / SIMD / SIMD2
 ;
 ;	for the LAME project
 ;	Frank Klemm, Robert Hegemann 2000-10-12
@@ -13,23 +13,11 @@
 	globaldef	has_MMX_nasm
 	globaldef	has_3DNow_nasm
 	globaldef	has_SIMD_nasm
+	globaldef	has_SIMD2_nasm
 
         segment_code
 
-
-
-;---------------------------------------
-;	int has_MMX_nasm(void)
-;---------------------------------------
-
-	align	16
-        
-has_MMX_nasm:
-
-	push	ebp
-	mov	ebp,esp
-        
-        pushad
+testCPUID:
 	pushfd	                        
 	pop	eax
 	mov	ecx,eax
@@ -39,122 +27,81 @@ has_MMX_nasm:
 	pushfd
 	pop	eax
 	cmp	eax,ecx
-	jz	NO_MMX_FEATURE	; no CPUID command
+	ret
+
+;---------------------------------------
+;	int  has_MMX_nasm (void)
+;---------------------------------------
+
+has_MMX_nasm:
+        pushad
+	call	testCPUID
+	jz	return0		; no CPUID command, so no MMX
 
 	mov	eax,0x1
 	CPUID
 	test	edx,0x800000
-	jz	NO_MMX_FEATURE	; no MMX support
-	popad
-	mov	eax,0x1
-	jmp	return_MMX
-        
-NO_MMX_FEATURE:
-
-	popad
-	xor	eax,eax
-
-return_MMX:    
-
-	mov	esp,ebp
-	pop	ebp
-        ret
-
-        
+	jz	return0		; no MMX support
+	jmp	return1		; MMX support
         
 ;---------------------------------------
-;	int has_SIMD_nasm(void)
+;	int  has_SIMD_nasm (void)
 ;---------------------------------------
 
-	align	16
-        
 has_SIMD_nasm:
-
-	push	ebp
-	mov	ebp,esp
-        
         pushad
-	pushfd	                        
-	pop	eax
-	mov	ecx,eax
-	xor	eax,0x200000
-	push	eax
-	popfd
-	pushfd
-	pop	eax
-	cmp	eax,ecx
-	jz	NO_SIMD_FEATURE	; no CPUID command
+	call	testCPUID
+	jz	return0		; no CPUID command, so no SIMD
         
 	mov	eax,0x1
 	CPUID
-	test	edx,0x2000000
-	jz	NO_SIMD_FEATURE	; no SIMD support
-	popad
-	mov	eax,0x1
-
-	jmp	return_SIMD
-
-NO_SIMD_FEATURE:
-
-	popad
-	xor	eax,eax
-
-return_SIMD:    
-
-	mov	esp,ebp
-	pop	ebp
-        ret
-
-
+	test	edx,0x02000000
+	jz	return0		; no SIMD support
+	jmp	return1		; SIMD support
         
 ;---------------------------------------
-;	int has_3DNow_nasm(void)
+;	int  has_SIMD2_nasm (void)
 ;---------------------------------------
 
-	align	16
-        
-has_3DNow_nasm:
-
-	push	ebp
-	mov	ebp,esp
-        
+has_SIMD2_nasm:
         pushad
-	pushfd	                        
-	pop	eax
-	mov	ecx,eax
-	xor	eax,0x200000
-	push	eax
-	popfd
-	pushfd
-	pop	eax
-	cmp	eax,ecx
-	jz	NO_3DNow_FEATURE	; no CPUID command
+	call	testCPUID
+	jz	return0		; no CPUID command, so no SIMD2
+        
+	mov	eax,0x1
+	CPUID
+	test	edx,0x04000000
+	jz	return0		; no SIMD2 support
+	jmp	return1		; SIMD2 support
+        
+;---------------------------------------
+;	int  has_3DNow_nasm (void)
+;---------------------------------------
+
+has_3DNow_nasm:
+        pushad
+	call	testCPUID
+	jz	return0		; no CPUID command, so no 3DNow!
 
 	mov	eax,0x80000000
 	CPUID
 	cmp	eax,0x80000000
-	jbe	NO_3DNow_FEATURE	; no extended MSR1
+	jbe	return0		; no extended MSR(1), so no 3DNow!
 
 	mov	eax,0x80000001
 	CPUID
 	test	edx,0x80000000
-	jz	NO_3DNow_FEATURE	; no 3DNow!
-	popad
-	mov	eax,0x1
-
-	jmp	return_3DNow
-
-NO_3DNow_FEATURE:
-
+	jz	return0		; no 3DNow! support
+				; 3DNow! support
+return1:
 	popad
 	xor	eax,eax
+	inc	eax
+	ret
 
-return_3DNow:    
-
-	mov	esp,ebp
-	pop	ebp
-        ret
-        
-        
+return0:
+	popad
+	xor	eax,eax
+	ret
         
         end

@@ -200,6 +200,8 @@ typedef struct  {
     lame_global_flags* gfp;     /* needed as long as the frame encoding functions must access gfp (all needed information can be added to gfc) */
     coding_t     coding;        /* MPEG Layer 1/2/3, Ogg Vorbis, MPEG AAC, ... */
     unsigned long frame_count;  /* Number of frames coded, 2^32 > 3 years */
+    float          ampl;	  /* amplification at the end of the current chunk (1. = 0 dB) */
+    float          last_ampl;	  /* amplification at the end of the last chunk    (1. = 0 dB) */
   int VBR_min_bitrate;            /* min bitrate index */
   int VBR_max_bitrate;            /* max bitrate index */
   float resample_ratio;           /* input_samp_rate/output_samp_rate */
@@ -451,7 +453,7 @@ extern int  has_i387  ( void );
 extern int  has_MMX   ( void );
 extern int  has_3DNow ( void );
 extern int  has_SIMD  ( void );
-
+extern int  has_SIMD2 ( void );
 
 extern void updateStats (lame_internal_flags *gfc);
 

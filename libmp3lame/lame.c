@@ -416,7 +416,7 @@ int lame_init_params ( lame_global_flags* const gfp )
     gfc -> CPU_features_3DNow = has_3DNow ();
     gfc -> CPU_features_MMX   = has_MMX   ();
     gfc -> CPU_features_SIMD  = has_SIMD  ();
-    gfc -> CPU_features_SIMD2 = 0;
+    gfc -> CPU_features_SIMD2 = has_SIMD2 ();
     
     //init_scalar_functions ( gfc );      /* Select the fastest functions for this CPU */
 
@@ -940,7 +940,7 @@ int lame_init_params ( lame_global_flags* const gfp )
     /* estimate total frames.  */
     gfp->totalframes           = 2 + gfp->num_samples/(gfc->resample_ratio * gfp->framesize);
     gfc->Class_ID              = LAME_ID;
-    
+
     return 0;
 }
 

@@ -527,6 +527,15 @@ int  has_SIMD ( void )
 #endif
 }    
 
+int  has_SIMD2 ( void )
+{
+#ifdef HAVE_NASM 
+    extern int has_SIMD2_nasm ( void );
+    return has_SIMD2_nasm ();
+#else
+    return 0;   /* don't know, assume not */
+#endif
+}    
 
 /***********************************************************************
  *
