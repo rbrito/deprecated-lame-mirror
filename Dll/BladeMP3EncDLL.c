@@ -876,8 +876,6 @@ static void dump_config( )
 	DebugPrintf("Output sample rate     =%.1f kHz\n", lame_get_out_samplerate( gfp ) /1000.0 );
 
 	DebugPrintf("bitrate                =%d kbps\n", lame_get_brate( gfp ) );
-	DebugPrintf("Vbr Min bitrate        =%d kbps\n", lame_get_VBR_min_bitrate_kbps( gfp ) );
-	DebugPrintf("Vbr Max bitrate        =%d kbps\n", lame_get_VBR_max_bitrate_kbps( gfp ) );
 	DebugPrintf("Quality Setting        =%d\n", lame_get_quality( gfp ) );
 
 	DebugPrintf("Low pass frequency     =%d\n", lame_get_lowpassfreq( gfp ) );
@@ -886,7 +884,8 @@ static void dump_config( )
 	DebugPrintf("High pass frequency    =%d\n", lame_get_highpassfreq( gfp ) );
 	DebugPrintf("High pass width        =%d\n", lame_get_highpasswidth( gfp ) );
 
-	DebugPrintf("No Short Blocks        =%d\n", lame_get_no_short_blocks( gfp ) );
+	DebugPrintf("No short blocks        =%d\n", lame_get_no_short_blocks( gfp ) );
+	DebugPrintf("Force short blocks     =%d\n", lame_get_force_short_blocks( gfp ) );
 
 	DebugPrintf("de-emphasis            =%d\n", lame_get_emphasis( gfp ) );
 	DebugPrintf("private flag           =%d\n", lame_get_extension( gfp ) );
@@ -898,6 +897,11 @@ static void dump_config( )
 	DebugPrintf("Force mid/side stereo  =%s\n", ( lame_get_force_ms( gfp ) )?"enabled":"disabled" );
 	DebugPrintf("Padding Type           =%d\n", lame_get_padding_type( gfp ) );
 	DebugPrintf("Disable Resorvoir      =%d\n", lame_get_disable_reservoir( gfp ) );
+	DebugPrintf("Allow diff-short       =%d\n", lame_get_allow_diff_short( gfp ) );
+	DebugPrintf("Temporal masking effect=%d\n", lame_get_interChRatio( gfp ) );
+	DebugPrintf("Strict ISO Encoding    =%s\n", ( lame_get_strict_ISO( gfp ) ) ?"Yes":"No");
+	DebugPrintf("Scale                  =%5.2f\n", lame_get_scale( gfp ) );
+
 	DebugPrintf("VBR                    =%s, VBR_q =%d, VBR method =",
 					( lame_get_VBR( gfp ) !=vbr_off ) ? "enabled": "disabled",
 		            lame_get_VBR_q( gfp ) );
@@ -916,8 +920,27 @@ static void dump_config( )
 		break;
 	}
 
+	DebugPrintf("Vbr Min bitrate        =%d kbps\n", lame_get_VBR_min_bitrate_kbps( gfp ) );
+	DebugPrintf("Vbr Max bitrate        =%d kbps\n", lame_get_VBR_max_bitrate_kbps( gfp ) );
+
 	DebugPrintf("Write VBR Header       =%s\n", ( lame_get_bWriteVbrTag( gfp ) ) ?"Yes":"No");
-	DebugPrintf("Strict ISO Encoding    =%s\n", ( lame_get_strict_ISO( gfp ) ) ?"Yes":"No");
+	DebugPrintf("VBR Hard min           =%d\n", lame_get_VBR_hard_min( gfp ) );
+
+	DebugPrintf("ATH Only               =%d\n", lame_get_ATHonly( gfp ) );
+	DebugPrintf("ATH short              =%d\n", lame_get_ATHshort( gfp ) );
+	DebugPrintf("ATH short              =%d\n", lame_get_ATHshort( gfp ) );
+	DebugPrintf("ATH no                 =%d\n", lame_get_noATH( gfp ) );
+	DebugPrintf("ATH type               =%d\n", lame_get_ATHtype( gfp ) );
+	DebugPrintf("ATH lower              =%d\n", lame_get_ATHlower( gfp ) );
+	DebugPrintf("ATH aa                 =%d\n", lame_get_athaa_type( gfp ) );
+	DebugPrintf("ATH aa  loudapprox     =%d\n", lame_get_athaa_loudapprox( gfp ) );
+	DebugPrintf("ATH aa  sensitivity    =%d\n", lame_get_athaa_sensitivity( gfp ) );
+	DebugPrintf("ATHtype                =%d\n", lame_get_ATHtype( gfp ) );
+
+	DebugPrintf("Experimental nspsytune =%d\n", lame_get_exp_nspsytune( gfp ) );
+	DebugPrintf("Experimental X         =%d\n", lame_get_experimentalX( gfp ) );
+	DebugPrintf("Experimental Y         =%d\n", lame_get_experimentalY( gfp ) );
+	DebugPrintf("Experimental Z         =%d\n", lame_get_experimentalZ( gfp ) );
 }
 
 
