@@ -176,8 +176,8 @@ SmpFrqIndex (int sample_freq)
 static int
 get_bitrate(lame_global_flags * gfp)
 {
-    /* assume 16bit linear PCM input */
-    return gfp->in_samplerate * 16 * gfp->internal_flags->channels_in
+    /* assume 16bit linear PCM input, and in_sample = out_sample */
+    return gfp->in_samplerate * 16 * gfp->internal_flags->channels_out
 	/ (1.e3 * gfp->compression_ratio);
 }
 
