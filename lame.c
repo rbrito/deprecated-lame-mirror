@@ -1062,11 +1062,18 @@ int lame_encode_buffer_interleaved(lame_global_flags *gfp,
   mf_needed = BLKSIZE+gfp->framesize-FFTOFFSET;
   assert(MFSIZE>=mf_needed);
 
+  if (gfp->num_channels == 1) {
+    return lame_encode_buffer(gfp,buffer, NULL ,nsamples,mp3buf,mp3buf_size);
+  }
+
   if (gfp->resample_ratio!=1)  {
     short int *buffer_l;
     short int *buffer_r;
     buffer_l=malloc(sizeof(short int)*nsamples);
     buffer_r=malloc(sizeof(short int)*nsamples);
+    if (buffer_l == NULL || buffer_r == NULL) {
+      return -1;
+    }
     for (i=0; i<nsamples; i++) {
       buffer_l[i]=buffer[2*i];
       buffer_r[i]=buffer[2*i+1];
@@ -1099,10 +1106,12 @@ int lame_encode_buffer_interleaved(lame_global_flags *gfp,
     int n_out;
     /* copy in new samples */
     n_out = Min(gfp->framesize,nsamples);
-    for (i=0; i<n_out; ++i); {
+    for (i=0; i<n_out; ++i) {
       mfbuf[0][mf_size+i]=buffer[2*i];
       mfbuf[1][mf_size+i]=buffer[2*i+1];
     }
+    buffer += 2*n_out;
+
     nsamples -= n_out;
     mf_size += n_out;
     assert(mf_size<=MFSIZE);
