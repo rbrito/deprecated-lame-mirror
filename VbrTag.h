@@ -78,9 +78,9 @@ typedef struct
 int CheckVbrTag(unsigned char *buf);
 int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf);
 int SeekPoint(unsigned char TOC[NUMTOCENTRIES], int file_bytes, float percent);
-int InitVbrTag(lame_global_flags *gfp,int nVersion,int nMode, int SampIndex);
-int PutVbrTag(char* lpszFileName,int nVbrScale,int nVersion);
-void AddVbrFrame(int nStreamPos);
+int InitVbrTag(lame_global_flags *gfp);
+int PutVbrTag(lame_global_flags *gfp,char* lpszFileName,int nVbrScale);
+void AddVbrFrame(lame_global_flags *gfp);
 
 
 #endif

@@ -20,11 +20,11 @@ void lame_init_infile(lame_global_flags *gfp)
   lame_internal_flags *gfc=gfp->internal_flags;
   /* open the input file */
   gfc->count_samples_carefully=0;
-  gfc->musicin=OpenSndFile(gfp);
+  gfp->musicin=OpenSndFile(gfp);
 }
 void lame_close_infile(lame_global_flags *gfp)
 {
-  CloseSndFile(gfp);
+  CloseSndFile(gfp->input_format,gfp->musicin);
 }
 
 
@@ -97,7 +97,7 @@ int get_audio(lame_global_flags *gfp,short buffer[2][1152],int stereo)
 
   if (gfp->input_format==sf_mp3) {
     /* decode an mp3 file for the input */
-    samples_read=read_samples_mp3(gfp,gfc->musicin,buffer,num_channels);
+    samples_read=read_samples_mp3(gfp,gfp->musicin,buffer,num_channels);
   }else{
     samples_read = read_samples_pcm(gfp,insamp,num_channels*framesize,num_channels*samples_to_read);
     samples_read /=num_channels;
@@ -199,13 +199,12 @@ int read_samples_mp3(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2]
 
 
 
-void CloseSndFile(lame_global_flags *gfp)
+void CloseSndFile(sound_file_format input,FILE *musicin)
 {
-  lame_internal_flags *gfc=gfp->internal_flags;
-  SNDFILE *gs_pSndFileIn=(SNDFILE*)gfc->musicin;
-  if (gfp->input_format==sf_mp3) {
+  SNDFILE *gs_pSndFileIn=(SNDFILE*)musicin;
+  if (input==sf_mp3) {
 #ifndef AMIGA_MPEGA
-    if (fclose(gfc->musicin) != 0){
+    if (fclose(musicin) != 0){
       fprintf(stderr, "Could not close audio input file\n");
       exit(2);
     }
@@ -385,7 +384,7 @@ int read_samples_pcm(lame_global_flags *gfp,short sample_buffer[2304],int frame_
     int			rcode;
     lame_internal_flags *gfc=gfp->internal_flags;
     SNDFILE * gs_pSndFileIn;
-    gs_pSndFileIn = (SNDFILE *)gfc->musicin;
+    gs_pSndFileIn = (SNDFILE *)gfp->musicin;
 
     samples_read=sf_read_short(gs_pSndFileIn,sample_buffer,samples_to_read);
     
@@ -440,10 +439,9 @@ int fskip(FILE *sf,long num_bytes,int dummy)
 
 
 
-void CloseSndFile(lame_global_flags *gfp)
+void CloseSndFile(sound_file_format input,FILE * musicin)
 {
-  lame_internal_flags *gfc=gfp->internal_flags;
-  if (fclose(gfc->musicin) != 0){
+  if (fclose(musicin) != 0){
     fprintf(stderr, "Could not close audio input file\n");
     exit(2);
   }
@@ -547,8 +545,8 @@ int read_samples_pcm(lame_global_flags *gfp,short sample_buffer[2304], int frame
     int rcode;
     int iswav=(gfp->input_format==sf_wave);
 
-    samples_read = fread(sample_buffer, sizeof(short), samples_to_read, gfc->musicin);
-    if (ferror(gfc->musicin)) {
+    samples_read = fread(sample_buffer, sizeof(short), samples_to_read, gfp->musicin);
+    if (ferror(gfp->musicin)) {
       fprintf(stderr, "Error reading input file\n");
       exit(2);
     }

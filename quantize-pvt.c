@@ -75,7 +75,7 @@ const scalefac_struct sfBandIndex[9] =
     {0,6,12,18,24,30,36,44,54,66,80,96,116,140,168,200,238,284,336,396,464,522,576},
     {0,4,8,12,18,24,32,42,56,74,100,132,174,192}
   },
-  { /* Table B.2.c: 24 kHz */                 /* docs: 332. mpg123: 330 */
+  { /* Table B.2.c: 24 kHz */                 /* docs: 332. mpg123(broken): 330 */
     {0,6,12,18,24,30,36,44,54,66,80,96,114,136,162,194,232,278, 332, 394,464,540,576},
     {0,4,8,12,18,26,36,48,62,80,104,136,180,192}
   },
@@ -314,7 +314,7 @@ int targ_bits[2],int mean_bits, int gr)
   int max_bits;  /* maximum allowed bits for this granule */
 
   /* allocate targ_bits for granule */
-  ResvMaxBits( mean_bits, &tbits, &extra_bits);
+  ResvMaxBits(gfp, mean_bits, &tbits, &extra_bits);
   max_bits=tbits+extra_bits;
 
   bits=0;

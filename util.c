@@ -37,7 +37,7 @@ void getframebits(lame_global_flags *gfp,int *bitsPerFrame, int *mean_bits) {
 
   
   samp =      gfp->out_samplerate/1000.0;
-  bit_rate = bitrate_table[gfc->version][gfc->bitrate_index];
+  bit_rate = bitrate_table[gfp->version][gfc->bitrate_index];
 
   /* -f fast-math option causes some strange rounding here, be carefull: */  
   whole_SpF = floor( (gfc->framesize /samp)*(bit_rate /  8.0) + 1e-9);

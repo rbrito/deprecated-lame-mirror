@@ -371,7 +371,7 @@ VBR_quantize_granule(lame_global_flags *gfp,
   cod_info = &l3_side->gr[gr].ch[ch].tt;
 
   /* encode scalefacs */
-  if ( gfc->version == 1 ) 
+  if ( gfp->version == 1 ) 
     scale_bitcount(&scalefac[gr][ch], cod_info);
   else
 	scale_bitcount_lsf(&scalefac[gr][ch], cod_info);

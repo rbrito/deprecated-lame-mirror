@@ -297,7 +297,7 @@ void L3psycho_anal( lame_global_flags *gfp,
     }
 
     /* MPEG1 SNR_s data is given in db, convert to energy */
-    if (gfc->version == 1) {
+    if (gfp->version == 1) {
       for ( b = 0;b < npart_s; b++ ) {
 	SNR_s[b]=exp( (FLOAT8) SNR_s[b] * LN_TO_LOG10 );
       }

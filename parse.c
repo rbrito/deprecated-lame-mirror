@@ -246,8 +246,7 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
   gfp->inPath=inPath;
   gfp->outPath=outPath;
 
-  id3_inittag(&id3tag);
-  id3tag.used = 0;
+  id3_inittag(&gfp->id3tag);
 
   /* process args */
   while(++i<argc && err == 0) {
@@ -306,31 +305,31 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	}
 	/* options for ID3 tag */
  	else if (strcmp(token, "tt")==0) {
- 		id3tag.used=1;      argUsed = 1;
-  		strncpy(id3tag.title, nextArg, 30);
+ 		gfp->id3tag_used=1;      argUsed = 1;
+  		strncpy(gfp->id3tag.title, nextArg, 30);
  		}
  	else if (strcmp(token, "ta")==0) {
- 		id3tag.used=1; argUsed = 1;
-  		strncpy(id3tag.artist, nextArg, 30);
+ 		gfp->id3tag_used=1; argUsed = 1;
+  		strncpy(gfp->id3tag.artist, nextArg, 30);
  		}
  	else if (strcmp(token, "tl")==0) {
- 		id3tag.used=1; argUsed = 1;
-  		strncpy(id3tag.album, nextArg, 30);
+ 		gfp->id3tag_used=1; argUsed = 1;
+  		strncpy(gfp->id3tag.album, nextArg, 30);
  		}
  	else if (strcmp(token, "ty")==0) {
- 		id3tag.used=1; argUsed = 1;
-  		strncpy(id3tag.year, nextArg, 4);
+ 		gfp->id3tag_used=1; argUsed = 1;
+  		strncpy(gfp->id3tag.year, nextArg, 4);
  		}
  	else if (strcmp(token, "tc")==0) {
- 		id3tag.used=1; argUsed = 1;
-  		strncpy(id3tag.comment, nextArg, 30);
+ 		gfp->id3tag_used=1; argUsed = 1;
+  		strncpy(gfp->id3tag.comment, nextArg, 30);
  		}
  	else if (strcmp(token, "tn")==0) {
- 		id3tag.used=1; argUsed = 1;
+ 		gfp->id3tag_used=1; argUsed = 1;
   		track = atoi(nextArg);
   		if (track < 1) { track = 1; }
   		if (track > 99) { track = 99; }
-  		id3tag.track = track;
+  		gfp->id3tag.track = track;
  		}
  	else if (strcmp(token, "tg")==0) {
 		argUsed = strtol (nextArg, &token, 10);
@@ -346,8 +345,8 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 		}
 	        argUsed &= 255; c=(char)(argUsed);
 
- 		id3tag.used=1; argUsed = 1;
-  		strncpy(id3tag.genre, &c, 1);
+ 		gfp->id3tag_used=1; argUsed = 1;
+  		strncpy(gfp->id3tag.genre, &c, 1);
 	       }
 	else if (strcmp(token, "lowpass")==0) {
 	  argUsed=1;
@@ -734,8 +733,8 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
   /* some file options not allowed with stdout */
   if (outPath[0]=='-') {
     gfp->bWriteVbrTag=0; /* turn off VBR tag */
-    if (id3tag.used) {
-      id3tag.used=0;         /* turn of id3 tagging */
+    if (gfp->id3tag_used) {
+      gfp->id3tag_used=0;         /* turn of id3 tagging */
       fprintf(stderr,"id3tag ignored: id3 tagging not supported for stdout.\n");
     }
   }

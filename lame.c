@@ -338,12 +338,12 @@ void lame_init_params(lame_global_flags *gfp)
   gfc->stereo = (gfp->mode == MPG_MD_MONO) ? 1 : 2;
 
 
-  gfc->samplerate_index = SmpFrqIndex((long)gfp->out_samplerate, &gfc->version);
+  gfc->samplerate_index = SmpFrqIndex((long)gfp->out_samplerate, &gfp->version);
   if( gfc->samplerate_index < 0) {
     display_bitrates(stderr);
     exit(1);
   }
-  if( (gfc->bitrate_index = BitrateIndex(gfp->brate, gfc->version,gfp->out_samplerate)) < 0) {
+  if( (gfc->bitrate_index = BitrateIndex(gfp->brate, gfp->version,gfp->out_samplerate)) < 0) {
     display_bitrates(stderr);
     exit(1);
   }
@@ -363,7 +363,7 @@ void lame_init_params(lame_global_flags *gfp)
       if (gfp->VBR_q >= 8) gfc->VBR_max_bitrate=9;    /* low quality, max = 128kbs */
 #endif
     }else{
-      if( (gfc->VBR_max_bitrate  = BitrateIndex(gfp->VBR_max_bitrate_kbps, gfc->version,gfp->out_samplerate)) < 0) {
+      if( (gfc->VBR_max_bitrate  = BitrateIndex(gfp->VBR_max_bitrate_kbps, gfp->version,gfp->out_samplerate)) < 0) {
 	display_bitrates(stderr);
 	exit(1);
       }
@@ -371,7 +371,7 @@ void lame_init_params(lame_global_flags *gfp)
     if (0==gfp->VBR_min_bitrate_kbps) {
       gfc->VBR_min_bitrate=1;  /* 32 kbps */
     }else{
-      if( (gfc->VBR_min_bitrate  = BitrateIndex(gfp->VBR_min_bitrate_kbps, gfc->version,gfp->out_samplerate)) < 0) {
+      if( (gfc->VBR_min_bitrate  = BitrateIndex(gfp->VBR_min_bitrate_kbps, gfp->version,gfp->out_samplerate)) < 0) {
 	display_bitrates(stderr);
 	exit(1);
       }
@@ -402,7 +402,7 @@ void lame_init_params(lame_global_flags *gfp)
   }
 
   if (gfp->outPath==NULL || gfp->outPath[0]=='-' ) {
-    id3tag.used=0;         /* turn of id3 tagging */
+    gfp->id3tag_used=0;         /* turn of id3 tagging */
   }
 
 
@@ -494,19 +494,19 @@ void lame_init_params(lame_global_flags *gfp)
 
   for (i = 0; i < SBMAX_l + 1; i++) {
     gfc->scalefac_band.l[i] =
-      sfBandIndex[gfc->samplerate_index + (gfc->version * 3) + 
+      sfBandIndex[gfc->samplerate_index + (gfp->version * 3) + 
              6*(gfp->out_samplerate<16000)].l[i];
   }
   for (i = 0; i < SBMAX_s + 1; i++) {
     gfc->scalefac_band.s[i] =
-      sfBandIndex[gfc->samplerate_index + (gfc->version * 3) + 
+      sfBandIndex[gfc->samplerate_index + (gfp->version * 3) + 
              6*(gfp->out_samplerate<16000)].s[i];
   }
 
 
   /* determine the mean bitrate for main data */
   gfc->sideinfo_len = 4;
-  if ( gfc->version == 1 )
+  if ( gfp->version == 1 )
     {   /* MPEG 1 */
       if ( gfc->stereo == 1 )
 	gfc->sideinfo_len += 17;
@@ -527,7 +527,7 @@ void lame_init_params(lame_global_flags *gfp)
   if (gfp->bWriteVbrTag)
     {
       /* Write initial VBR Header to bitstream */
-      InitVbrTag(gfp,1-gfc->version,gfp->mode,gfc->samplerate_index);
+      InitVbrTag(gfp);
     }
 
 
@@ -593,11 +593,11 @@ void lame_print_config(lame_global_flags *gfp)
     if (gfp->VBR)
       fprintf(stderr, "Encoding as %.1fkHz VBR(q=%i) %s MPEG%i LayerIII  qval=%i\n",
 	      gfp->out_samplerate/1000.0,
-	      gfp->VBR_q,mode_names[gfp->mode],2-gfc->version,gfp->quality);
+	      gfp->VBR_q,mode_names[gfp->mode],2-gfp->version,gfp->quality);
     else
       fprintf(stderr, "Encoding as %.1f kHz %d kbps %s MPEG%i LayerIII (%4.1fx)  qval=%i\n",
 	      gfp->out_samplerate/1000.0,gfp->brate,
-	      mode_names[gfp->mode],2-gfc->version,compression,gfp->quality);
+	      mode_names[gfp->mode],2-gfp->version,compression,gfp->quality);
   }
   fflush(stderr);
 }
@@ -738,7 +738,7 @@ char *mp3buf, int mp3buf_size)
 
   /********************** status display  *****************************/
   if (gfc->pinfo == NULL && !gfp->silent) {
-    int mod = gfc->version == 0 ? 100 : 50;
+    int mod = gfp->version == 0 ? 100 : 50;
     if (gfc->frameNum%mod==0) {
       timestatus(gfp->out_samplerate,gfc->frameNum,gfc->totalframes,gfc->framesize);
 #ifdef BRHIST
@@ -887,7 +887,7 @@ char *mp3buf, int mp3buf_size)
   /* copy mp3 bit buffer into array */
   mp3count = copy_buffer(mp3buf,mp3buf_size,&gfc->bs);
 
-  if (gfp->bWriteVbrTag) AddVbrFrame((int)(gfc->bs.totbit/8));
+  if (gfp->bWriteVbrTag) AddVbrFrame(gfp);
 
 
   if (gfc->pinfo != NULL) {
@@ -1180,22 +1180,20 @@ int lame_encode_finish(lame_global_flags *gfp,char *mp3buffer, int mp3buffer_siz
 /*****************************************************************/
 void lame_mp3_tags(lame_global_flags *gfp)
 {
-  lame_internal_flags *gfc=gfp->internal_flags;
-
   if (gfp->bWriteVbrTag)
     {
       /* Calculate relative quality of VBR stream
        * 0=best, 100=worst */
       int nQuality=gfp->VBR_q*100/9;
       /* Write Xing header again */
-      PutVbrTag(gfp->outPath,nQuality,1-gfc->version);
+      PutVbrTag(gfp,gfp->outPath,nQuality);
     }
 
 
   /* write an ID3 tag  */
-  if(id3tag.used) {
-    id3_buildtag(&id3tag);
-    id3_writetag(gfp->outPath, &id3tag);
+  if(gfp->id3tag_used) {
+    id3_buildtag(&gfp->id3tag);
+    id3_writetag(gfp->outPath, &gfp->id3tag);
   }
 }
 
@@ -1351,14 +1349,12 @@ int lame_init(lame_global_flags *gfp)
   gfc->highpass_band=-1;
   gfc->VBR_min_bitrate=1;
   gfc->VBR_max_bitrate=13;
-  gfc->version = 1;   /* =1   Default: MPEG-1 */
 
   gfc->OldValue[0]=180;
   gfc->OldValue[1]=180;
   gfc->CurrentStep=4;
   gfc->masking_lower=1;
 
-  id3tag.used=0;
   return 0;
 }
 

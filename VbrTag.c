@@ -30,22 +30,14 @@
 #endif
 
 
-int SizeOfEmptyFrame[2][2]=
+const static char	VBRTag[]={"Xing"};
+const int SizeOfEmptyFrame[2][2]=
 {
-	{32,17},
 	{17,9},
+	{32,17},
 };
 
-static u_char pbtStreamBuffer[216];   
-static long g_Position[NUMTOCENTRIES];
-static int nZeroStreamSize=0;
-static int TotalFrameSize=0;
-static char	VBRTag[]={"Xing"};
 
-
-int* pVbrFrames=NULL;
-int nVbrNumFrames=0;
-int nVbrFrameBufferSize=0;
 
 /****************************************************************************
  * AddVbrFrame: Add VBR entry, used to fill the VBR the TOC entries
@@ -54,30 +46,34 @@ int nVbrFrameBufferSize=0;
  *				(in Bytes NOT Bits)
  ****************************************************************************
 */
-void AddVbrFrame(int nStreamPos)
+void AddVbrFrame(lame_global_flags *gfp)
 {
+  int nStreamPos;
+  lame_internal_flags *gfc=gfp->internal_flags;
+  nStreamPos = (gfc->bs.totbit/8);
+
         /* Simple exponential growing buffer */
-	if (pVbrFrames==NULL || nVbrFrameBufferSize==0)
+	if (gfp->pVbrFrames==NULL || gfp->nVbrFrameBufferSize==0)
 	{
                 /* Start with 100 frames */
-		nVbrFrameBufferSize=100;
+		gfp->nVbrFrameBufferSize=100;
 
 		/* Allocate them */
-		pVbrFrames=(int*)malloc((size_t)(nVbrFrameBufferSize*sizeof(int)));
+		gfp->pVbrFrames=(int*)malloc((size_t)(gfp->nVbrFrameBufferSize*sizeof(int)));
 	}
 
 	/* Is buffer big enough to store this new frame */
-	if (nVbrNumFrames==nVbrFrameBufferSize)
+	if (gfp->nVbrNumFrames==gfp->nVbrFrameBufferSize)
 	{
                 /* Guess not, double th e buffer size */
-		nVbrFrameBufferSize*=2;
+		gfp->nVbrFrameBufferSize*=2;
 
 		/* Allocate new buffer */
-		pVbrFrames=(int*)realloc(pVbrFrames,(size_t)(nVbrFrameBufferSize*sizeof(int)));
+		gfp->pVbrFrames=(int*)realloc(gfp->pVbrFrames,(size_t)(gfp->nVbrFrameBufferSize*sizeof(int)));
 	}
 
 	/* Store values */
-	pVbrFrames[nVbrNumFrames++]=nStreamPos;
+	gfp->pVbrFrames[gfp->nVbrNumFrames++]=nStreamPos;
 }
 
 
@@ -237,43 +233,38 @@ int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
  * InitVbrTag: Initializes the header, and write empty frame to stream
  * Paramters:
  *				fpStream: pointer to output file stream
- *				nVersion: 0= MPEG1 1=MPEG2
  *				nMode	: Channel Mode: 0=STEREO 1=JS 2=DS 3=MONO
  ****************************************************************************
 */
-int InitVbrTag(lame_global_flags *gfp,int nVersion, int nMode, int SampIndex)
+int InitVbrTag(lame_global_flags *gfp)
 {
-	int i;
+	int i,nMode,SampIndex;
 	lame_internal_flags *gfc = gfp->internal_flags;
 	Bit_stream_struc* pBs=&gfc->bs;
+	u_char pbtStreamBuffer[216];   
+	nMode = gfp->mode;
+	SampIndex = gfc->samplerate_index;
+
 
 	/* Clear Frame position array variables */
-	pVbrFrames=NULL;
-	nVbrNumFrames=0;
-	nVbrFrameBufferSize=0;
+	gfp->pVbrFrames=NULL;
+	gfp->nVbrNumFrames=0;
+	gfp->nVbrFrameBufferSize=0;
 
-	/* Clear struct */
-	memset(g_Position,0x00,sizeof(g_Position));
 
 	/* Clear stream buffer */
 	memset(pbtStreamBuffer,0x00,sizeof(pbtStreamBuffer));
-
-	/* Set TOC values to 255 */
-	for (i=0;i<NUMTOCENTRIES;i++)
-	{
-		g_Position[i]=-1;
-	}
 
 
 
 	/* Reserve the proper amount of bytes */
 	if (nMode==3)
 	{
-		nZeroStreamSize=SizeOfEmptyFrame[nVersion][1]+4;
+		gfp->nZeroStreamSize=SizeOfEmptyFrame[gfp->version][1]+4;
 	}
 	else
 	{
-		nZeroStreamSize=SizeOfEmptyFrame[nVersion][0]+4;
+		gfp->nZeroStreamSize=SizeOfEmptyFrame[gfp->version][0]+4;
 	}
 
 	/*
@@ -299,21 +290,21 @@ int InitVbrTag(lame_global_flags *gfp,int nVersion, int nMode, int SampIndex)
 	  fprintf(stderr,"illegal sampling frequency index\n");
 	  exit(-1);
 	}
-	TotalFrameSize= framesize[SampIndex];
-	tot = (nZeroStreamSize+VBRHEADERSIZE);
+	gfp->TotalFrameSize= framesize[SampIndex];
+	tot = (gfp->nZeroStreamSize+VBRHEADERSIZE);
 	tot += 20;  /* extra 20 bytes for LAME & version string */
 	
-	if (TotalFrameSize < tot ) {
+	if (gfp->TotalFrameSize < tot ) {
 	  fprintf(stderr,"Xing VBR header problem...use -t\n");
 	  exit(-1);
 	}
 	}
 
 	if (pBs->bstype){
-	  add_dummy_vbrframe(gfp,8*TotalFrameSize);
+	  add_dummy_vbrframe(gfp,8*gfp->TotalFrameSize);
 	}else{
 	  /* Put empty bytes into the bitstream */
-	  for (i=0;i<TotalFrameSize;i++)
+	  for (i=0;i<gfp->TotalFrameSize;i++)
 	    {
 	      /* Write a byte to the bitstream */
 	      putbits(pBs,0,8);
@@ -330,11 +321,10 @@ int InitVbrTag(lame_global_flags *gfp,int nVersion, int nMode, int SampIndex)
  * PutVbrTag: Write final VBR tag to the file
  * Paramters:
  *				lpszFileName: filename of MP3 bit stream
- *				nVersion: 0= MPEG1 1=MPEG2
  *				nVbrScale	: encoder quality indicator (0..100)
  ****************************************************************************
 */
-int PutVbrTag(char* lpszFileName,int nVbrScale,int nVersion)
+int PutVbrTag(lame_global_flags *gfp,char* lpszFileName,int nVbrScale)
 {
 	int			i;
 	long lFileSize;
@@ -342,10 +332,10 @@ int PutVbrTag(char* lpszFileName,int nVbrScale,int nVersion)
 	char abyte;
 	u_char		btToc[NUMTOCENTRIES];
 	FILE *fpStream;
+        u_char pbtStreamBuffer[216];   
 	char str1[80];
 
-
-	if (nVbrNumFrames==0 || pVbrFrames==NULL)
+	if (gfp->nVbrNumFrames==0 || gfp->pVbrFrames==NULL)
 		return -1;
 
 	/* Open the bitstream again */
@@ -369,7 +359,7 @@ int PutVbrTag(char* lpszFileName,int nVbrScale,int nVersion)
 		return -1;
 
 	/* Seek to first real frame */
-	fseek(fpStream,(long)TotalFrameSize,SEEK_SET);
+	fseek(fpStream,(long)gfp->TotalFrameSize,SEEK_SET);
 
 	/* Read the header (first valid frame) */
 	fread(pbtStreamBuffer,4,1,fpStream);
@@ -379,7 +369,7 @@ int PutVbrTag(char* lpszFileName,int nVbrScale,int nVersion)
 	/* from first valid frame */
 	pbtStreamBuffer[0]=(u_char) 0xff;    
 	abyte = (pbtStreamBuffer[1] & (char) 0xf0);
-	if (nVersion==0) {
+	if (gfp->version==1) {
 	  pbtStreamBuffer[1]=abyte | (char) 0x0b;    
 	  abyte = pbtStreamBuffer[2] & (char) 0x0c;   
 	  pbtStreamBuffer[2]=(char) 0x50 | abyte;     /* 64kbs MPEG1 frame */
@@ -399,10 +389,10 @@ int PutVbrTag(char* lpszFileName,int nVbrScale,int nVersion)
         for (i=1;i<NUMTOCENTRIES;i++) /* Don't touch zero point... */
         {
                 /* Calculate frame from given percentage */
-                int frameNum=(int)(floor(0.01*i*nVbrNumFrames));
+                int frameNum=(int)(floor(0.01*i*gfp->nVbrNumFrames));
 
                 /*  Calculate relative file postion, normalized to 0..256!(?) */
-                float fRelStreamPos=(float)256.0*(float)pVbrFrames[frameNum]/(float)lFileSize;
+                float fRelStreamPos=(float)256.0*(float)gfp->pVbrFrames[frameNum]/(float)lFileSize;
 
                 /* Just to be safe */
                 if (fRelStreamPos>255) fRelStreamPos=255;
@@ -414,7 +404,7 @@ int PutVbrTag(char* lpszFileName,int nVbrScale,int nVersion)
 
 
 	/* Start writing the tag after the zero frame */
-	nStreamIndex=nZeroStreamSize;
+	nStreamIndex=gfp->nZeroStreamSize;
 
 	/* Put Vbr tag */
 	pbtStreamBuffer[nStreamIndex++]=VBRTag[0];
@@ -427,7 +417,7 @@ int PutVbrTag(char* lpszFileName,int nVbrScale,int nVersion)
 	nStreamIndex+=4;
 
 	/* Put Total Number of frames */
-	CreateI4(&pbtStreamBuffer[nStreamIndex],nVbrNumFrames);
+	CreateI4(&pbtStreamBuffer[nStreamIndex],gfp->nVbrNumFrames);
 	nStreamIndex+=4;
 
 	/* Put Total file size */
@@ -456,15 +446,15 @@ int PutVbrTag(char* lpszFileName,int nVbrScale,int nVersion)
 #endif
 
         /* Put it all to disk again */
-	if (fwrite(pbtStreamBuffer,TotalFrameSize,1,fpStream)!=1)
+	if (fwrite(pbtStreamBuffer,gfp->TotalFrameSize,1,fpStream)!=1)
 	{
 		return -1;
 	}
 	fclose(fpStream);
 
 	/* Save to delete the frame buffer */
-	free(pVbrFrames);
-	pVbrFrames=NULL;
+	free(gfp->pVbrFrames);
+	gfp->pVbrFrames=NULL;
 
 	return 0;       /* success */
 }

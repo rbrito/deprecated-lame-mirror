@@ -153,7 +153,6 @@ typedef struct  {
   long totalframes;               /* frames: 0..totalframes-1 (estimate)*/
   int encoder_delay;
   int framesize;                  
-  int version;                    /* 0=MPEG2  1=MPEG1 */
   int padding;                    /* padding for the current frame? */
   int mode_gr;                    /* granules per frame */
   int stereo;                     /* number of channels */
@@ -197,7 +196,6 @@ typedef struct  {
   unsigned long num_samples_read;  
   int count_samples_carefully;
   int input_bitrate;
-  FILE * musicin;
   int pcmbitwidth;
 
 
@@ -248,6 +246,12 @@ struct {
 } header[MAX_HEADER_BUF];
      int h_ptr;
      int w_ptr;
+  int ancillary_flag;
+
+
+  /* variables for reservoir.c */
+  int ResvSize; /* in bits */
+  int ResvMax;  /* in bits */
 
   
   scalefac_struct scalefac_band;

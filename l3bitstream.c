@@ -163,7 +163,7 @@ encodeMainData( lame_global_flags *gfp,
 	for ( ch = 0; ch < gfc->stereo; ch++ )
 	    codedDataPH[gr][ch]->part->nrEntries = 0;
 
-    if ( gfc->version == 1 )
+    if ( gfp->version == 1 )
     {  /* MPEG 1 */
 	for ( gr = 0; gr < 2; gr++ )
 	{
@@ -283,7 +283,7 @@ static int encodeSideInfo( lame_global_flags *gfp,III_side_info_t  *si )
       headerPH = BF_addEntry( headerPH, 0xffe,                    12 );
     else
       headerPH = BF_addEntry( headerPH, 0xfff,                    12 );
-    headerPH = BF_addEntry( headerPH, gfc->version,            1 );
+    headerPH = BF_addEntry( headerPH, gfp->version,            1 );
     headerPH = BF_addEntry( headerPH, 1,                        2 );
     headerPH = BF_addEntry( headerPH, !gfp->error_protection,     1 );
     /* (jo) from now on call the CRC_BF_addEntry() wrapper to update crc */
@@ -310,7 +310,7 @@ static int encodeSideInfo( lame_global_flags *gfp,III_side_info_t  *si )
 	for ( ch = 0; ch < gfc->stereo; ch++ )
 	    spectrumSIPH[gr][ch]->part->nrEntries = 0;
 
-    if ( gfc->version == 1 )
+    if ( gfp->version == 1 )
     {  /* MPEG1 */
 	frameSIPH = CRC_BF_addEntry( frameSIPH, si->main_data_begin, 9 );
 

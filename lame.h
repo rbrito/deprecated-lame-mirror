@@ -29,6 +29,19 @@
 typedef enum sound_file_format_e {
 	sf_unknown, sf_wave, sf_aiff, sf_mp3, sf_raw
 } sound_file_format;
+typedef struct
+{
+	int valid;
+	char title[31];
+	char artist[31];
+	char album[31];
+	char year[5];
+	char comment[31];
+	char tagtext[128];
+	char genre[1];
+	unsigned char track;
+
+}   ID3TAGDATA;
 
 
 
@@ -49,7 +62,6 @@ typedef struct  {
   int num_channels;           /* input number of channels. default=2  */
   int in_samplerate;          /* input_samp_rate. default=44.1kHz     */
   int out_samplerate;         /* output_samp_rate. (usually determined automatically)   */ 
-
 
   /* general control params */
   int gtkflag;                /* run frame analyzer?       */
@@ -92,9 +104,14 @@ typedef struct  {
 
   /* input file reading - not used if calling program does the i/o */
   sound_file_format input_format;   
+  FILE * musicin;             /* file pointer to input file */
   int swapbytes;              /* force byte swapping   default=0*/
   char *inPath;               /* name of input file */
   char *outPath;              /* name of output file. */
+
+  /* optional id3 tags  */
+  int id3tag_used;
+  ID3TAGDATA id3tag;
 
 
   /* psycho acoustics and other aguments which you should not change 
@@ -106,6 +123,27 @@ typedef struct  {
   int no_short_blocks;        /* disable short blocks       */
   int emphasis;                   /* obsolete */
 
+
+
+
+  /************************************************************************/
+  /* internal variables, do not set... */
+  /************************************************************************/
+  int version;                /* 0=MPEG2  1=MPEG1 */
+
+  /* VBR tags */
+  int nZeroStreamSize;
+  int TotalFrameSize;
+  int* pVbrFrames;
+  int nVbrNumFrames;
+  int nVbrFrameBufferSize;
+
+
+
+
+  /************************************************************************/
+  /* more internal variables, which will not exist after lame_encode_finish() */
+  /************************************************************************/
   void *internal_flags;
 
 } lame_global_flags;

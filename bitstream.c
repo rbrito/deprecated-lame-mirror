@@ -26,6 +26,7 @@
 #include "bitstream.h"
 #include "quantize.h"
 #include "quantize-pvt.h"
+#include "version.h"
 
 /* This is the scfsi_band table from 2.4.2.7 of the IS */
 const int scfsi_band[5] = { 0, 6, 11, 16, 21 };
@@ -75,7 +76,9 @@ putbits2(lame_global_flags *gfp, unsigned int val, int j)
     bs = &gfc->bs;
 
     assert(j <= MAX_LENGTH);
-    assert(val < (1 << j));
+    if (j<MAX_LENGTH)
+      assert(val < (1 << j));  /* 1 << 32 wont work on 32 bit machines */
+    
     while (j > 0) {
 	int k;
 	if (bs->buf_bit_idx == 0) {
@@ -148,7 +151,7 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
       writeheader(gfc,0xffe,                12);
     else
       writeheader(gfc,0xfff,                12);
-    writeheader(gfc,gfc->version,            1);
+    writeheader(gfc,gfp->version,            1);
     writeheader(gfc,4 - 3,                 2);
     writeheader(gfc,!gfp->error_protection,  1);
     /* (jo) from now on call the CRC_writeheader() wrapper to update crc */
@@ -165,7 +168,7 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 	writeheader(gfc,0, 16); /* dummy */
     }
 
-    if (gfc->version == 1) {
+    if (gfp->version == 1) {
 	/* MPEG1 */
 	CRC_writeheader(gfc,l3_side->main_data_begin, 9,&crc);
 
@@ -279,19 +282,63 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 static INLINE void
 drain_into_ancillary(lame_global_flags *gfp,int remainingBits)
 {
-  /*    lame_internal_flags *gfc=gfp->internal_flags;*/
+    lame_internal_flags *gfc=gfp->internal_flags;
+    int i,bits;
     assert(remainingBits >= 0);
 #ifdef DEBUG
     printf("remain %d\n",remainingBits);
     hoge += remainingBits;
     hogege += remainingBits;
 #endif
+#if 1
+    if (remainingBits >= 8) {
+      putbits2(gfp,'L',8);
+      remainingBits -= 8;
+    }
+    if (remainingBits >= 8) {
+      putbits2(gfp,'A',8);
+      remainingBits -= 8;
+    }
+    if (remainingBits >= 8) {
+      putbits2(gfp,'M',8);
+      remainingBits -= 8;
+    }
+    if (remainingBits >= 8) {
+      putbits2(gfp,'E',8);
+      remainingBits -= 8;
+    }
+      
+    if (remainingBits >= 32) {
+      char * version;
+      version = get_lame_version();
+      if (remainingBits >= 32) 
+	for (i=0; i<strlen(version) && remainingBits >=8 ; ++i) {
+	  remainingBits -= 8;
+	  putbits2(gfp,(unsigned int)version[i],8);
+	}
+    }
 
-    putbits2(gfp,0, remainingBits & (MAX_LENGTH - 1));
+
+    bits = remainingBits & (MAX_LENGTH - 1);
+    for (i=0; i<bits; ++i) {
+      putbits2(gfp,gfc->ancillary_flag,1);
+      gfc->ancillary_flag = 1-gfc->ancillary_flag;
+    }
+
+    remainingBits /= MAX_LENGTH;
+    for (; remainingBits > 0; remainingBits--) {
+      if (gfc->ancillary_flag)
+	putbits2(gfp,0xAAAAAAAA, MAX_LENGTH);
+      else
+	putbits2(gfp,0x55555555, MAX_LENGTH);
+    }
+#else
+    putbits2(gfp,0,remainingBits & (MAX_LENGTH - 1));
     remainingBits /= MAX_LENGTH;
     for (; remainingBits > 0; remainingBits--) {
 	putbits2(gfp,0, MAX_LENGTH);
     }
+#endif
 }
 
 static INLINE int
@@ -520,7 +567,7 @@ writeMainData(lame_global_flags *gfp,
     int ix_w[576];
 
     l3_side = &gfc->l3_side;
-    if (gfc->version == 1) {
+    if (gfp->version == 1) {
 	/* MPEG 1 */
 	for (gr = 0; gr < 2; gr++) {
 	    for (ch = 0; ch < gfc->stereo; ch++) {
@@ -739,6 +786,10 @@ format_bitstream(lame_global_flags *gfp, int bitsPerFrame,
     bits += l3_side->resvDrain_post;
 
     l3_side->main_data_begin += (bitsPerFrame-bits)/8;
+    assert( (l3_side->main_data_begin * 8) == gfc->ResvSize );
+
+
+
 #ifdef DEBUG
     printf("total bits used = %i max=%i mdb=%i \n",bits,bitsPerFrame,l3_side->main_data_begin*8);
     printf("%d -> %d\n",

@@ -56,7 +56,7 @@ iteration_loop( lame_global_flags *gfp,
   l3_side = &gfc->l3_side;
 
   iteration_init(gfp,l3_side,l3_enc);
-  bit_rate = bitrate_table[gfc->version][gfc->bitrate_index];
+  bit_rate = bitrate_table[gfp->version][gfc->bitrate_index];
 
 
   getframebits(gfp,&bitsPerFrame, &mean_bits);
@@ -713,7 +713,7 @@ void outer_loop(
 	/* loop_break returns 0 if there is an unamplified scalefac */
 	/* scale_bitcount returns 0 if no scalefactors are too large */
 	if ( (status = loop_break(&scalefac_w, cod_info)) == 0 ) {
-	    if ( gfc->version == 1 ) {
+	    if ( gfp->version == 1 ) {
 		status = scale_bitcount(&scalefac_w, cod_info);
 	    }else{
 		status = scale_bitcount_lsf(&scalefac_w, cod_info);
