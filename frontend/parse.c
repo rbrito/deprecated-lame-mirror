@@ -703,7 +703,7 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
                     gfp->mode_fixed=1;
 		    gfp->ATHtype=3;
 		    gfp->VBR_min_bitrate_kbps=64;
-		    gfp->ATH_auto_adjust = 1;
+		    /* gfp->ATH_auto_adjust = 1; */
 		
 		T_ELIF ("abr")
 		    argUsed=1;
