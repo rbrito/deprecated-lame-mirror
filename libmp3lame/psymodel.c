@@ -1030,9 +1030,9 @@ pecalc_l(
 static int
 check_istereo(lame_internal_flags *gfc, int gr)
 {
-    int sb = gfc->is_start_sfb_l_next[gr];
+    int sb;
     III_psy_ratio *mr = &gfc->masking_next[gr][0];
-    for (; sb < SBMAX_l; sb++) {
+    for (sb = gfc->is_start_sfb_l_next[gr]; sb < gfc->cutoff_sfb_l; sb++) {
 	FLOAT l = mr[0].en.l[sb];
 	FLOAT r = mr[1].en.l[sb];
 
@@ -1047,7 +1047,7 @@ check_istereo(lame_internal_flags *gfc, int gr)
 static int
 check_istereo_LR(lame_internal_flags *gfc, int gr)
 {
-    int sb = SBMAX_l, ch = 0;
+    int sb = gfc->cutoff_sfb_l, ch = 0;
     III_psy_ratio *mr = &gfc->masking_next[gr][0];
     while (--sb > gfc->is_start_sfb_l_next[gr]) {
 	if (mr[0].en.l[sb] > mr[0].thm.l[sb])
