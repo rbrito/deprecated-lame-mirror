@@ -48,6 +48,10 @@ char   *strchr(), *strrchr();
 # include <fcntl.h>
 #endif
 
+#if defined(_WIN32)
+# include <windows.h>
+#endif
+
 
 /*
  main.c is example code for how to use libmp3lame.a.  To use this library,
