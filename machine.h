@@ -88,12 +88,14 @@
    to disable the ASM routines (or fix them :) */
 
 #ifdef FLOAT8_is_double
-typedef double FLOAT8;
-#elifdef FLOAT8_is_float
-typedef float FLOAT8;
+	typedef double FLOAT8;
 #else
-typedef double FLOAT8;
-#define FLOAT8_is_double
+	#if defined(FLOAT8_is_float)
+		typedef float FLOAT8;
+	#else
+		typedef double FLOAT8;
+		#define FLOAT8_is_double
+	#endif
 #endif
 
 
