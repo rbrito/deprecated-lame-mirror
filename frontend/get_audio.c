@@ -1294,37 +1294,42 @@ static int check_aid ( const char* header )
     return  0 == strncmp ( header, "AiD\1", 4 );
 }
 
-
-static int is_syncword(char *header)  
-// bitstreams should be 'unsigned char', ISO otherwise not guarantees a lot !!!
-// bit operator on 'char' are not portable.
-{
-#ifdef KLEMM_08
-    const unsigned char* p = header;
-    
-    int mpeg1  = p[0] == 0xFF  &&  (p[1] & 0xF0) == 0xF0;
-    int mpeg25 = p[0] == 0xFF  &&  (p[1] & 0xF0) == 0xE0;
-  
-    return mpeg1 | mpeg25;
-    
-#else
-    // Sorry, I'm not a parser, I'm a human. I can't read this. I can only hope ...
 /*
-unsigned int s0,s1;
-s0 = (unsigned char) header[0];
-s1 = (unsigned char) header[1] ;
-printf(" syncword:  %2X   %2X   \n ",s0, s1);
-*/
+ * Please check this and don't kill me if there's a bug
+ * This is a (nearly?) complete header analysis for a MPEG-1/2/2.5 Layer I, II or III
+ * data stream
+ */
 
-  int mpeg1=((int) ( header[0] == (char) 0xFF)) &&
-    ((int) ( (header[1] & (char) 0xF0) == (char) 0xF0));
-  
-  int mpeg25=((int) ( header[0] == (char) 0xFF)) &&
-    ((int) ( (header[1] & (char) 0xF0) == (char) 0xE0));
-  
-  return (mpeg1 || mpeg25);
-#endif 
+static int is_syncword_mp123 ( const void* const headerptr )
+{
+    const unsigned char* const  p         = headerptr;
+    static const char           abl2 [16] = { 0, 7, 7, 7, 0, 7, 0, 0, 0, 0, 0, 8, 8, 8, 8, 8 };
+    
+    if ( (p[0] & 0xFF) != 0xFF ) return 0;   // first 8 bits must be '1'
+    if ( (p[1] & 0xE0) != 0xE0 ) return 0;   // next 3 bits are also
+    if ( (p[1] & 0x18) == 0x08 ) return 0;   // no MPEG-1, -2 or -2.5
+    if ( (p[1] & 0x06) == 0x00 ) return 0;   // no Layer I, II and III
+    if ( (p[2] & 0xF0) == 0xF0 ) return 0;   // bad bitrate
+    if ( (p[2] & 0x0C) == 0x0C ) return 0;   // no sample frequency with (32,44.1,48)/(1,2,4)    
+    if ( (p[1] & 0x06) == 0x04 )             // illegal Layer II bitrate/Channel Mode comb
+        if ( abl2 [p[2] >> 4]  &  (1 << (p[3] >> 6)) )
+            return 0;
+    return 1;
 }
+
+static int is_syncword_mp3 ( const void* const headerptr )
+{
+    const unsigned char* const  p = headerptr;
+    
+    if ( (p[0] & 0xFF) != 0xFF ) return 0;   // first 8 bits must be '1'
+    if ( (p[1] & 0xE0) != 0xE0 ) return 0;   // next 3 bits are also
+    if ( (p[1] & 0x18) == 0x08 ) return 0;   // no MPEG-1, -2 or -2.5
+    if ( (p[1] & 0x06) != 0x02 ) return 0;   // no Layer III (can be merged with 'next 3 bits are also' test, but don't do this, this decreases readability)
+    if ( (p[2] & 0xF0) == 0xF0 ) return 0;   // bad bitrate
+    if ( (p[2] & 0x0C) == 0x0C ) return 0;   // no sample frequency with (32,44.1,48)/(1,2,4)    
+    return 1;
+}
+
 
 int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
 {
@@ -1355,8 +1360,8 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
 
 
   /* look for sync word  FFF */
-  if (len<2) return -1;
-  while (!is_syncword(buf)) {
+  if (len<4) return -1;                /* is_sync_word no checks the next 4 byte, call for fix this line */
+  while (!is_syncword_mp123(buf)) {
     int i;
     for (i=0; i<len-1; i++)
       buf[i]=buf[i+1]; 
@@ -1367,7 +1372,7 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
   
   /* read the rest of header and enough bytes to check for Xing header */
   len2 = fread(&buf[len],1,48-len,fd);
-  if (len2 ==0 ) return -1;
+  if (len2 ==0 ) return -1;            // what happens when only 1 byte is read ???
   len +=len2;
 
 
@@ -1379,17 +1384,28 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
     fprintf(stderr,"\rXing VBR header dectected.  MP3 file has %i frames\n",num_frames);
     
     fskip ( fd, pTagData.headersize-48 ,SEEK_CUR );
+    
+    /* 
+     *  pfk: This is a fix, please check this. The is_sync now needs all 4 bytes !!! 
+     *  This code can be wrong !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     */
+    
     /* look for next sync word in buffer*/
-    len=2;
-    buf[0]=buf[1]=0;
-    while (!is_syncword(buf)) {
-      buf[0]=buf[1]; 
-      if (fread(&buf[1],1,1,fd) == 0) return -1;  /* fread failed */
+    len = 4;
+    buf[0] = buf[1] = buf[2] = buf[3] = 0;
+    
+    while ( !is_syncword_mp123(buf) ) {
+        buf[0] = buf[1];
+        buf[1] = buf[2];
+        buf[2] = buf[3];
+        if (fread ( buf+3, 1, 1, fd ) != 1 )
+            return -1;  /* fread failed */
     }
     /* read the rest of header */
-    len2 = fread(&buf[2],1,2,fd);
-    if (len2 ==0 ) return -1;
-    len +=len2;
+    // len2 = fread(&buf[2],1,2,fd);
+    // if (len2 ==0 ) return -1;
+    // wrong, if ( len != 2) is right
+    // len +=len2;
 
 
   } else {

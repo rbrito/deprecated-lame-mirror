@@ -1195,7 +1195,7 @@ int L3psycho_anal( lame_global_flags *gfp,
   }
 
   /*************************************************************** 
-   * determin final block type
+   * determine final block type
    ***************************************************************/
 
   for (chn=0; chn<gfc->stereo; chn++) {
@@ -1517,33 +1517,31 @@ i,*npart_l_orig,freq,numlines_l[i],j2-j,j,j2-1,bark1,bark2);
 
 
   /* compute bark value and ATH of each critical band */
-  j=0;
-  for(i=0;i<*npart_l_orig;i++)
-    {
-      FLOAT8 ji,bark;
-	  /* FLOAT8 mval,freq; */
-      int k;
+  j = 0;
+  for ( i = 0; i < *npart_l_orig; i++ ) {
+      int     k;
+      FLOAT8  bark;
+      /* FLOAT8 mval,freq; */
 
-      ji = j;
-      bark = freq2bark(sfreq*ji/BLKSIZE);
+      // Calculating the medium bark scaled frequency of the spectral lines
+      // from j ... j + numlines[i]-1  (scaleband i ???)
 
-      ji = j + (numlines_l[i]-1);
-      bark = .5*(bark + freq2bark(sfreq*ji/BLKSIZE));
-      bval_l[i]=bark;
-      //      j += numlines_l[i];
+      k         = numlines_l[i] - 1;
+      bark      = 0.5 * ( freq2bark (sfreq*(j+0)/BLKSIZE) + 
+                          freq2bark (sfreq*(j+k)/BLKSIZE) );
+      bval_l[i] = bark;
 
-
-      gfc->ATH_partitionbands[i]=1e99;
-      for (k=0; k < numlines_l[i]; ++k) {
-	FLOAT8 freq = sfreq*j/(1000.0*BLKSIZE);
-	assert( freq < 25 );
-	//	freq = Min(.1,freq);    /* ignore ATH below 100hz */
-	freq= ATHformula(freq);  
-	freq += -20; /* scale to FFT units */
-	freq = pow( 10.0, freq/10.0 );  /* convert from db -> energy */
-	freq *= numlines_l[i];
-	gfc->ATH_partitionbands[i]=Min(gfc->ATH_partitionbands[i],freq);
-	++j;
+      gfc->ATH_partitionbands [i] = 1.e37; // preinit for minimum search
+      for (k=0; k < numlines_l[i]; k++, j++) {
+	FLOAT8  freq = sfreq*j/(1000.0*BLKSIZE);
+	FLOAT8  level;
+	assert( freq <= 24 );              // or only '<'
+	//	freq = Min(.1,freq);       // ATH below 100 Hz constant, not further climbing
+	level  = ATHformula (freq) - 20;   // scale to FFT units; returned value is in dB
+	level  = pow ( 10., 0.1*level );   // convert from dB -> energy
+	level *= numlines_l [i];
+	if ( level < gfc->ATH_partitionbands [i] )
+	    gfc->ATH_partitionbands [i] = level;
       }
 
 
@@ -1675,19 +1673,17 @@ i,*npart_s_orig,freq,numlines_s[i],j2-j,j,j2-1,bark1,bark2);
   j = 0;
   for(i=0;i<*npart_s_orig;i++)
     {
-      FLOAT8 ji, bark;
+      int     k;
+      FLOAT8  bark;
 	  /* FLOAT8 freq, snr;*/
-
-      ji = j;
-      bark = freq2bark(sfreq*ji/BLKSIZE_s);
-
-      ji = j + numlines_s[i] -1;
-      bark = .5*(bark+freq2bark(sfreq*ji/BLKSIZE_s));
+      k    = numlines_s[i] - 1;
+      bark = 0.5 * (freq2bark (sfreq*(j+0)/BLKSIZE_s) +
+                    freq2bark (sfreq*(j+k)/BLKSIZE_s) );
       /*
       DEBUGF("%i %i bval_s = %f  %f  numlines=%i  formula=%f \n",i,j,bval_s[i],freq,numlines_s[i],bark);
       */
-      bval_s[i]=bark;
-      j += numlines_s[i];
+      bval_s[i] = bark;
+      j        += k+1;
 
       /* SNR formula needs work 
       ji = j;

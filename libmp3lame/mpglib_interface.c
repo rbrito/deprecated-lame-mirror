@@ -1,13 +1,17 @@
 #ifdef HAVEMPGLIB
-#include "interface.h"
-#include "lame.h"
 
 #include <limits.h>
 #include <stdlib.h>
+#include <assert.h>
 
-static char buf[16384];
-#define FSIZE 8192  
-static char out[FSIZE];
+#include "interface.h"
+#include "lame.h"
+
+
+///////// #define FSIZE 8192  
+
+static char buf [16384];
+static char out  [8192];
 MPSTR mp;
 plotting_data *mpg123_pinfo=NULL;
 
@@ -16,40 +20,6 @@ static const int smpls[2][4]={
         {0,384,1152,1152}, /* MPEG-1     */
         {0,384,1152, 576}  /* MPEG-2(.5) */
 };
-
-
-
-
-static int is_syncword(char *header)  
-// bitstreams should be 'unsigned char', ISO otherwise not guarantees a lot !!!
-// bit operator on 'char' are not portable.
-{
-#ifdef KLEMM_08
-    const unsigned char* p = header;
-    
-    int mpeg1  = p[0] == 0xFF  &&  (p[1] & 0xF0) == 0xF0;
-    int mpeg25 = p[0] == 0xFF  &&  (p[1] & 0xF0) == 0xE0;
-  
-    return mpeg1 | mpeg25;
-    
-#else
-    // Sorry, I'm not a parser, I'm a human. I can't read this. I can only hope ...
-/*
-unsigned int s0,s1;
-s0 = (unsigned char) header[0];
-s1 = (unsigned char) header[1] ;
-printf(" syncword:  %2X   %2X   \n ",s0, s1);
-*/
-
-  int mpeg1=((int) ( header[0] == (char) 0xFF)) &&
-    ((int) ( (header[1] & (char) 0xF0) == (char) 0xF0));
-  
-  int mpeg25=((int) ( header[0] == (char) 0xFF)) &&
-    ((int) ( (header[1] & (char) 0xF0) == (char) 0xE0));
-  
-  return (mpeg1 || mpeg25);
-#endif 
-}
 
 
 int lame_decode_init(void)
@@ -72,11 +42,19 @@ int lame_decode1_headers(char *buffer,int len,
                          short pcm_l[],short pcm_r[],
                          mp3data_struct *mp3data)
 {
-  int size;
-  int outsize=0,j,i,ret;
+    signed short int*  p = (signed short int*) out;
+    int                processed_bytes;
+    int                processed_samples;  // processed samples per channel
+    int                ret;
+    int                i;
 
   mp3data->header_parsed=0;
-  ret = decodeMP3(&mp,buffer,len,out,FSIZE,&size);
+  
+    // The static global out buffer is a really worse thing
+  ret = decodeMP3(&mp,buffer,len,(char*)p, sizeof(out)/sizeof(*out), &processed_bytes );
+    //                                     ^^^^^^^^^^^^^^^^^^^^^^^^
+    //  maybe sizeof(out) is the right meaning, but the translation of the origin code has this meaning
+  
   if (mp.header_parsed) {
     mp3data->header_parsed=1;
     mp3data->stereo = mp.fr.stereo;
@@ -92,25 +70,43 @@ int lame_decode1_headers(char *buffer,int len,
     mp3data->mode_ext=mp.fr.mode_ext;
     mp3data->framesize = smpls[mp.fr.lsf][mp.fr.lay];
   }
-    
-  if (ret==MP3_ERR) return -1;
+
+    switch ( ret ) {
+    case MP3_OK:
+        switch ( mp.fr.stereo ) {
+	case 1:
+            processed_samples = processed_bytes >> 1;
+            for ( i = 0; i < processed_samples; i++ ) 
+	        pcm_l [i] = *p++;
+	    break;
+	case 2:
+            processed_samples = processed_bytes >> 2;
+            for ( i = 0; i < processed_samples; i++ ) {
+	        pcm_l [i] = *p++;
+		pcm_r [i] = *p++;
+	    }
+	    break;
+	default:
+	    assert (0);
+	    break;
+        }    
+	break;
+	
+    case MP3_NEED_MORE:
+        processed_samples = 0;
+	break;
+	
+    default:
+        assert (0);
+    case MP3_ERR: 
+        processed_samples = -1;
+	break;
+	
+    }
   
-  if (ret==MP3_OK) {
-    outsize = size/(2*mp.fr.stereo);
-    
-    for (j=0; j<mp.fr.stereo; j++)
-      for (i=0; i<outsize; i++) 
-	if (j==0) pcm_l[i] = ((short *) out)[mp.fr.stereo*i+j];
-	else pcm_r[i] = ((short *) out)[mp.fr.stereo*i+j];
-  }
-  if (ret==MP3_NEED_MORE) 
-    outsize=0;
-  
-  /*
-  printf("ok, more, err:  %i %i %i  \n",MP3_OK, MP3_NEED_MORE, MP3_ERR);
-  printf("ret = %i out=%i \n",ret,totsize);
-  */
-  return outsize;
+    //  printf ( "ok, more, err:  %i %i %i\n", MP3_OK, MP3_NEED_MORE, MP3_ERR );
+    //  printf ( "ret = %i out=%i\n", ret, totsize );
+    return processed_samples;
 }
 
 
@@ -139,19 +135,18 @@ For lame_decode:  return code
 int lame_decode_headers(char *buffer,int len,short pcm_l[],short pcm_r[],
                          mp3data_struct *mp3data)
 {
-  int ret,totsize=0;
+    int  ret;
+    int  totsize = 0;   // number of decoded samples per channel
 
-  do {
-    ret = lame_decode1_headers(buffer,len,&pcm_l[totsize],&pcm_r[totsize],mp3data);
-    if (-1==ret) return -1;
-    totsize += ret;
-    len=0;  /* future calls to decodeMP3 are just to flush buffers */
-  } while (ret>0);
-  /*
-  printf("ok, more, err:  %i %i %i  \n",MP3_OK, MP3_NEED_MORE, MP3_ERR);
-  printf("ret = %i out=%i \n",ret,totsize);
-  */
-  return totsize;
+    while (1) {
+        switch ( ret = lame_decode1_headers ( buffer, len, pcm_l+totsize, pcm_r+totsize, mp3data ) ) {
+        case -1: return ret;
+        case  0: return totsize;
+        default: totsize += ret;
+                 len      = 0;  /* future calls to decodeMP3 are just to flush buffers */
+                 break;
+        }
+    }
 }
 
 
