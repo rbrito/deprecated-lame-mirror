@@ -692,7 +692,7 @@ set_subblock_gain(gr_info * cod_info, const int *vbrsfmin, int sf[])
                 minsf = v;
             }
         }
-        for (; sfb < psymax; sfb += 3) { /* part 2 */
+        for (; sfb < SFBMAX; sfb += 3) { /* part 2 */
             int     v = -sf[sfb];
             if (maxsf2 < v) {
                 maxsf2 = v;
