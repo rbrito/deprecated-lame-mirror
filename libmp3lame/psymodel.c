@@ -1227,8 +1227,6 @@ mp3x display               <------LONG------>
 #endif
 	}
     } /* end loop over chn */
-
-    return;
 }
 
 /* in some scalefactor band, 
@@ -1748,6 +1746,12 @@ psycho_analysis(
 		&& (check_istereo_LR(gfc, 0)
 		    + check_istereo_LR(gfc, gfc->mode_gr-1)))
 		gfc->mode_ext_next = MPG_MD_LR_I;
+	    else {
+		gfc->is_start_sfb_l_next[gfc->mode_gr-1]
+		    = gfc->is_start_sfb_l_next[0] = gfc->cutoff_sfb_l;
+		gfc->is_start_sfb_s_next[gfc->mode_gr-1]
+		    = gfc->is_start_sfb_s_next[0] = gfc->cutoff_sfb_s;
+	    }
 	}
     }
 
