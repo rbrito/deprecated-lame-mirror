@@ -983,8 +983,8 @@ int VBR_prepare
     int                  bands         [2][2]
 )
 {
-    static const FLOAT8 dbQ[10] = {-4.,-3.,-2.,-1.,0,.5,1.,1.5,2.,2.5};
-    static const FLOAT8 smrdbQ[10] = {0,1,2,3,4,4.75,5.3,5.8,6.2,6.5};
+    static const FLOAT8 dbQ   [10] = {-4.,-3.,-2.,-1.,0.,0.5,1.,1.5,2.,2.5};
+    static const FLOAT8 smrdbQ[10] = {-1., 0., 1., 2.,3.,3.5,4.,4.5,5.,5.5};
     
     FLOAT8   masking_lower_db, adjust;
     int      gr, ch;
@@ -1005,9 +1005,13 @@ int VBR_prepare
             else 
                 adjust = 2/(1+exp(3.5-pe[gr][ch]/300.))-0.05;
       
-            masking_lower_db   = smrdbQ[gfp->VBR_q] - dbQ[gfp->VBR_q]; 
-            masking_lower_db  *= gfp->raiseSMR; 
-            masking_lower_db  += dbQ[gfp->VBR_q]; 
+            if (gfp->exp_nspsytune) {
+                masking_lower_db   = dbQ[gfp->VBR_q]; 
+            } else {
+                masking_lower_db   = smrdbQ[gfp->VBR_q] - dbQ[gfp->VBR_q]; 
+                masking_lower_db  *= gfp->raiseSMR; 
+                masking_lower_db  += dbQ[gfp->VBR_q]; 
+            }
             masking_lower_db  -= adjust; 
             gfc->masking_lower = pow (10.0, masking_lower_db * 0.1);
       
