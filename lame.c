@@ -173,15 +173,15 @@ void lame_init_params(lame_global_flags *gfp)
   compression_ratio = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->brate);
 
 
-  /* for VBR, take a guess at the compression_ratio */
+  /* for VBR, take a guess at the compression_ratio. for example: */
   /* VBR_q           compression       like
-     0                4.4             320kbs
-     1                5.4             256kbs
-     3                7.4             192kbs
-     4                8.8             160kbs
-     6                10.4            128kbs
+     0                4.4             320kbs/41khz
+     1                5.4             256kbs/41khz
+     3                7.4             192kbs/41khz
+     4                8.8             160kbs/41khz
+     6                10.4            128kbs/41khz
   */
-  if (gfp->VBR && compression_ratio>11) {
+  if (gfp->VBR) {
     compression_ratio = 4.4 + gfp->VBR_q;
   }
 
