@@ -580,8 +580,8 @@ ShortHuffmancodebits(lame_internal_flags *gfc, int *ix, gr_info *gi)
     int region1Start;
     
     region1Start = 3*gfc->scalefac_band.s[3];
-    if (region1Start > gi->big_values) 	
-        region1Start = gi->big_values;
+    if (region1Start > gi->big_values)
+	region1Start = gi->big_values;
 
     /* short blocks do not have a region2 */
     bits  = Huffmancodebits(gfc, gi->table_select[0], 0, region1Start, ix);
@@ -592,7 +592,7 @@ ShortHuffmancodebits(lame_internal_flags *gfc, int *ix, gr_info *gi)
 static int
 LongHuffmancodebits(lame_internal_flags *gfc, int *ix, gr_info *gi)
 {
-    int i, bigvalues,bits=0;
+    int i, bigvalues, bits;
     int region1Start, region2Start;
 
     bigvalues = gi->big_values;
@@ -611,7 +611,7 @@ LongHuffmancodebits(lame_internal_flags *gfc, int *ix, gr_info *gi)
     if (region2Start > bigvalues)
 	region2Start = bigvalues;
 
-    bits +=Huffmancodebits(gfc, gi->table_select[0], 0, region1Start, ix);
+    bits  =Huffmancodebits(gfc, gi->table_select[0], 0, region1Start, ix);
     bits +=Huffmancodebits(gfc, gi->table_select[1], region1Start, region2Start, ix);
     bits +=Huffmancodebits(gfc, gi->table_select[2], region2Start, bigvalues, ix);
     return bits;
