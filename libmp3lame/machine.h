@@ -123,13 +123,21 @@ char *strchr (), *strrchr ();
 # define FLOAT_MAX FLT_MAX
 #endif
 
-#ifndef FLOAT
+#ifdef ALLDOUBLE
+typedef double FLOAT;
+# ifdef DBL_MAX
+#  define FLOAT_MAX DBL_MAX
+# endif
+#endif
+#else
 typedef float   FLOAT;
 # ifdef FLT_MAX
 #  define FLOAT_MAX FLT_MAX
-# else
-#  define FLOAT_MAX 1e37 /* approx */
 # endif
+#endif
+
+#ifndef FLOAT_MAX
+# define FLOAT_MAX 1e37 /* approx */
 #endif
 
 /* sample_t must be floating point, at least 32 bits */

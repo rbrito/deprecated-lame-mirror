@@ -1045,7 +1045,7 @@ Optional Features:
   --enable-mp3rtp            Build mp3rtp default: no
   --enable-brhist            Include the VBR bitrate histogram feature
                              default: yes if any termcap available
-  --enable-all-float         Whether to make all floting point variables as float, not double
+  --enable-double-float      Whether to make all floting point variables as double, not float
                              default: no
   --enable-expopt=full,norm  Whether to enable experimental optimizations
                              default: no
@@ -27025,33 +27025,33 @@ esac
 
 
 
-echo "$as_me:$LINENO: checking for FLOAT8 as float" >&5
-echo $ECHO_N "checking for FLOAT8 as float... $ECHO_C" >&6
-# Check whether --enable-all-float or --disable-all-float was given.
-if test "${enable_all_float+set}" = set; then
-  enableval="$enable_all_float"
+echo "$as_me:$LINENO: checking for FLOAT as double" >&5
+echo $ECHO_N "checking for FLOAT as double... $ECHO_C" >&6
+# Check whether --enable-double-float or --disable-double-float was given.
+if test "${enable_double_float+set}" = set; then
+  enableval="$enable_double_float"
   CONFIG_ALLFLOAT="${enableval}"
 else
-  CONFIG_ALLFLOAT="no"
+  CONFIG_ALLDOUBLE="no"
 fi;
-case "${CONFIG_ALLFLOAT}" in
+case "${CONFIG_ALLDOUBLE}" in
 no)
 	;;
 yes)
 
 cat >>confdefs.h <<\_ACEOF
-#define FLOAT8 float
+#define ALLDOUBLE double
 _ACEOF
 
 	;;
 *)
-	{ { echo "$as_me:$LINENO: error: bad value »${CONFIG_ALLFLOAT}« for all-float option" >&5
-echo "$as_me: error: bad value »${CONFIG_ALLFLOAT}« for all-float option" >&2;}
+	{ { echo "$as_me:$LINENO: error: bad value »${CONFIG_ALLDOUBLE}« for double-float option" >&5
+echo "$as_me: error: bad value »${CONFIG_ALLDOUBLE}« for double-float option" >&2;}
    { (exit 1); exit 1; }; }
 	;;
 esac
-echo "$as_me:$LINENO: result: ${CONFIG_ALLFLOAT}" >&5
-echo "${ECHO_T}${CONFIG_ALLFLOAT}" >&6
+echo "$as_me:$LINENO: result: ${CONFIG_ALLDOUBLE}" >&5
+echo "${ECHO_T}${CONFIG_ALLDOUBLE}" >&6
 
 
 
