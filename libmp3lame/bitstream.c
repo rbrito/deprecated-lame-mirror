@@ -533,10 +533,13 @@ Huf_bigvalue(bit_stream_t *bs, int tablesel, int start, int end, gr_info *gi)
 	    code = x1*xlen + x2;
 	    clen = t[code+1].len;
 	    code = t[code+1].code;
-
+#ifdef TAKEHIRO_IEEE754_HACK
+	    if (x1) code = code*2 + (((unsigned int*)gi->xr)[start  ] >> 31);
+	    if (x2) code = code*2 + (((unsigned int*)gi->xr)[start+1] >> 31);
+#else
 	    if (x1) code = code*2 + (gi->xr[start  ] < 0);
 	    if (x2) code = code*2 + (gi->xr[start+1] < 0);
-
+#endif
 	    putbits24(bs, code, clen);
 	} while ((start += 2) < end);
     }
