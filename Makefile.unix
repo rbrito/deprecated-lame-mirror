@@ -140,16 +140,7 @@ ifeq ($(UNAME),Linux)
 
 
 ifeq ($(CFG),RH)
-ifeq ($(PREC),SINGLE)
   CPP_OPTS += -DFLOAT8=float -DREAL_IS_FLOAT=1
-endif
-# these options for gcc-2.95.2 to produce fast code
-#   CC_OPTS = \
-#	-Wall -O9 -fomit-frame-pointer -march=pentiumpro \
-#	-finline-functions -fexpensive-optimizations \
-#	-funroll-loops -funroll-all-loops -pipe -fschedule-insns2 \
-#	-fstrength-reduce \
-#	-malign-double -mfancy-math-387 -ffast-math 
 # these options for gcc-3.2 & AthlonXP
    CC_OPTS = \
 	-Wall -ansic99 -pipe -O9 \
@@ -161,7 +152,6 @@ endif
 	-fomit-frame-pointer \
     -ftracer \
     -maccumulate-outgoing-args -fschedule-insns2
-#    -pg
 	       
    HAVE_NEWER_GLIBC = YES
    HAVE_NASM = YES

@@ -761,11 +761,11 @@ static const int max_range_long_lsf_pretab[SBMAX_l] =
     ol_sf -= ifqstep*scalefac[gr][ch].s[sfb][i];
 
 */
-inline int
+static void
 compute_scalefacs_short(int sf[], const gr_info * cod_info, const int *vbrsfmin)
 {
     const int maxrange1 = 15, maxrange2 = 7;
-    int     maxrange, maxover = 0;
+    int     maxrange;
     int     sfb, i;
     const int ifqstep = (cod_info->scalefac_scale == 0) ? 2 : 4;
     const int ifqstepShift = (cod_info->scalefac_scale == 0) ? 1 : 2;
@@ -775,21 +775,21 @@ compute_scalefacs_short(int sf[], const gr_info * cod_info, const int *vbrsfmin)
     for (i = 0; i < 3; ++i) {
         int     maxsf1 = 0, maxsf2 = 0, minsf = 1000, maxsfmin = 0;
         /* see if we should use subblock gain */
-        for (sfb = 0; sfb < 6; ++sfb) { /* part 1 */
-            int     v = -sf[sfb * 3 + i];
+        for (sfb = i; sfb < 18; sfb += 3) { /* part 1 */
+            int     v = -sf[sfb];
             if (maxsf1 < v)
                 maxsf1 = v;
-            if (maxsfmin < vbrsfmin[sfb * 3 + i])
-                maxsfmin = vbrsfmin[sfb * 3 + i];
+            if (maxsfmin < vbrsfmin[sfb])
+                maxsfmin = vbrsfmin[sfb];
             if (minsf > v)
                 minsf = v;
         }
-        for (; sfb < SBPSY_s; ++sfb) { /* part 2 */
-            int     v = -sf[sfb * 3 + i];
+        for (; sfb < cod_info->psymax; sfb += 3) { /* part 2 */
+            int     v = -sf[sfb];
             if (maxsf2 < v)
                 maxsf2 = v;
-            if (maxsfmin < vbrsfmin[sfb * 3 + i])
-                maxsfmin = vbrsfmin[sfb * 3 + i];
+            if (maxsfmin < vbrsfmin[sfb])
+                maxsfmin = vbrsfmin[sfb];
             if (minsf > v)
                 minsf = v;
         }
@@ -815,45 +815,39 @@ compute_scalefacs_short(int sf[], const gr_info * cod_info, const int *vbrsfmin)
             int     m2 = (maxsf1 + 7) >> 3;
             sbg[i] = Max(m1, m2);
         }
-        if (sbg[i] > 0 && (sbg[i] << 3) > cod_info->global_gain - maxsfmin) {
+        if (sbg[i] > 0 && maxsfmin > (cod_info->global_gain - sbg[i]*8)) {
             sbg[i] = (cod_info->global_gain - maxsfmin) >> 3;
         }
         if (sbg[i] > 7)
             sbg[i] = 7;
+        for (sfb = i; sfb < cod_info->psymax; sfb += 3) {
+            sf[sfb] += sbg[i] << 3;
 
-        for (sfb = 0; sfb < SBPSY_s; ++sfb) {
-            int     j = sfb * 3 + i;
-            sf[j] += sbg[i] << 3;
-
-            if (sf[j] < 0) {
+            if (sf[sfb] < 0) {
                 int     m;
-                maxrange = sfb < 6 ? maxrange1 : maxrange2;
+                maxrange = sfb < 18 ? maxrange1 : maxrange2;
 
-                scalefac[j] = (ifqstep - 1 - sf[j]) >> ifqstepShift;
+                scalefac[sfb] = (ifqstep - 1 - sf[sfb]) >> ifqstepShift;
 
-                if (scalefac[j] > maxrange)
-                    scalefac[j] = maxrange;
-                m = cod_info->global_gain - (sbg[i] << 3) - vbrsfmin[j];
-                if (scalefac[j] > 0 && (scalefac[j] << ifqstepShift) > m) {
-                    scalefac[j] = m >> ifqstepShift;
-                }
-                m = -(sf[j] + (scalefac[j] << ifqstepShift));
-                if (maxover < m) {
-                    maxover = m;
+                if (scalefac[sfb] > maxrange)
+                    scalefac[sfb] = maxrange;
+                m = cod_info->global_gain - (sbg[i] << 3) - vbrsfmin[sfb];
+                if (scalefac[sfb] > 0 && (scalefac[sfb] << ifqstepShift) > m) {
+                    scalefac[sfb] = m >> ifqstepShift;
                 }
             }
             else {
-                scalefac[j] = 0;
+                scalefac[sfb] = 0;
             }
         }
-        scalefac[SBPSY_s * 3 + i] = 0;
     }
-
-    return maxover;
+    for ( sfb = cod_info->psymax; sfb <= cod_info->sfbmax; ++sfb ) {
+        scalefac[sfb] = 0;
+    }
 }
 
 
-
+ 
 /*
 	  ifqstep = ( cod_info->scalefac_scale == 0 ) ? 2 : 4;
 	  ol_sf =  (cod_info->global_gain-210.0);
@@ -861,7 +855,7 @@ compute_scalefacs_short(int sf[], const gr_info * cod_info, const int *vbrsfmin)
 	  if (cod_info->preflag && sfb>=11) 
 	  ol_sf -= ifqstep*pretab[sfb];
 */
-inline int
+static void
 compute_scalefacs_long_lsf(int *sf, const gr_info * cod_info, const int *vbrsfmin)
 {
     const int *max_range = max_range_long;
@@ -869,16 +863,14 @@ compute_scalefacs_long_lsf(int *sf, const gr_info * cod_info, const int *vbrsfmi
     const int ifqstepShift = (cod_info->scalefac_scale == 0) ? 1 : 2;
     int    *scalefac = cod_info->scalefac;
     int     sfb;
-    int     maxover;
 
     if (cod_info->preflag) {
         max_range = max_range_long_lsf_pretab;
-        for (sfb = 11; sfb < SBPSY_l; ++sfb)
+        for (sfb = 11; sfb < cod_info->psymax; ++sfb)
             sf[sfb] += pretab[sfb] << ifqstepShift;
     }
 
-    maxover = 0;
-    for (sfb = 0; sfb < SBPSY_l; ++sfb) {
+    for (sfb = 0; sfb < cod_info->psymax; ++sfb) {
 
         if (sf[sfb] < 0) {
             int     m;
@@ -892,19 +884,14 @@ compute_scalefacs_long_lsf(int *sf, const gr_info * cod_info, const int *vbrsfmi
             if (scalefac[sfb] > 0 && (scalefac[sfb] << ifqstepShift) > m) {
                 scalefac[sfb] = m >> ifqstepShift;
             }
-
-            m = -(sf[sfb] + (scalefac[sfb] << ifqstepShift));
-            if (maxover < m) {
-                maxover = m;
-            }
         }
         else {
             scalefac[sfb] = 0;
         }
     }
-    scalefac[SBPSY_l] = 0; /* sfb21 */
-
-    return maxover;
+    for ( sfb = cod_info->psymax; sfb <= cod_info->sfbmax; ++sfb ) {
+        scalefac[sfb] = 0; /* sfb21 */
+    }
 }
 
 
@@ -918,23 +905,21 @@ compute_scalefacs_long_lsf(int *sf, const gr_info * cod_info, const int *vbrsfmi
 	  if (cod_info->preflag && sfb>=11) 
 	  ol_sf -= ifqstep*pretab[sfb];
 */
-inline int
+static void
 compute_scalefacs_long(int *sf, const gr_info * cod_info, const int *vbrsfmin)
 {
     const int ifqstep = (cod_info->scalefac_scale == 0) ? 2 : 4;
     const int ifqstepShift = (cod_info->scalefac_scale == 0) ? 1 : 2;
     int    *scalefac = cod_info->scalefac;
     int     sfb;
-    int     maxover;
 
     if (cod_info->preflag) {
-        for (sfb = 11; sfb < SBPSY_l; ++sfb) {
+        for (sfb = 11; sfb < cod_info->psymax; ++sfb) {
             sf[sfb] += pretab[sfb] << ifqstepShift;
         }
     }
 
-    maxover = 0;
-    for (sfb = 0; sfb < SBPSY_l; ++sfb) {
+    for (sfb = 0; sfb < cod_info->psymax; ++sfb) {
 
         if (sf[sfb] < 0) {
             int     m;
@@ -948,19 +933,14 @@ compute_scalefacs_long(int *sf, const gr_info * cod_info, const int *vbrsfmin)
             if (scalefac[sfb] > 0 && (scalefac[sfb] << ifqstepShift) > m) {
                 scalefac[sfb] = m >> ifqstepShift;
             }
-
-            m = -(sf[sfb] + (scalefac[sfb] << ifqstepShift));
-            if (maxover < m) {
-                maxover = m;
-            }
         }
         else {
             scalefac[sfb] = 0;
         }
     }
-    scalefac[SBPSY_l] = 0; /* sfb21 */
-
-    return maxover;
+    for ( sfb = cod_info->psymax; sfb <= cod_info->sfbmax; ++sfb ) {
+        scalefac[sfb] = 0; /* sfb21 */
+    }
 }
 
 
@@ -1258,7 +1238,18 @@ checkScalefactor(const gr_info * cod_info, const int vbrsfmin[SFBMAX])
                        << (cod_info->scalefac_scale + 1))
             + cod_info->subblock_gain[cod_info->window[sfb]] * 8;
 
-        if (cod_info->global_gain - s < vbrsfmin[sfb]) {
+        if ((cod_info->global_gain - s) < vbrsfmin[sfb]) {
+            /*
+            fprintf( stdout, "sf %d\n", sfb );
+            fprintf( stdout, "min %d\n", vbrsfmin[sfb] );
+            fprintf( stdout, "ggain %d\n", cod_info->global_gain );
+            fprintf( stdout, "scalefac %d\n", cod_info->scalefac[sfb] );
+            fprintf( stdout, "pretab %d\n", (cod_info->preflag ? pretab[sfb] : 0) );
+            fprintf( stdout, "scale %d\n", (cod_info->scalefac_scale + 1) );
+            fprintf( stdout, "subgain %d\n", cod_info->subblock_gain[cod_info->window[sfb]] * 8 );
+            fflush( stdout );
+            exit(-1);
+            */
             return 0;
         }
     }
@@ -1277,7 +1268,7 @@ short_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
 {
     int     sfb, b;
     int     maxover0, maxover1, mover;
-    int     v0, v1, vm0, vm1, maxminsfb = 0;
+    int     v0, v1, maxminsfb = 0;
     maxover0 = 0;
     maxover1 = 0;
     for (sfb = 0; sfb < cod_info->psymax; ++sfb) {
@@ -1291,14 +1282,6 @@ short_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
             maxover1 = v1;
         if (maxminsfb < vbrsfmin[sfb])
             maxminsfb = vbrsfmin[sfb];
-    }
-    for (vm0 = 0, vm1 = 0, sfb = 0; sfb < cod_info->psymax; ++sfb) {
-        int     a = (vbrmax - vbrsfmin[sfb]) - 2 * max_range_long[sfb];
-        int     b = (vbrmax - vbrsfmin[sfb]) - 4 * max_range_long[sfb];
-        if (a <= 0)
-            vm0 = Min(vm0, a);
-        if (b <= 0)
-            vm1 = Min(vm1, b);
     }
 
     if (gfc->noise_shaping == 2)
@@ -1336,7 +1319,7 @@ short_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
     }
     assert(cod_info->global_gain < 256);
     compute_scalefacs_short(vbrsf, cod_info, vbrsfmin);
-    /*assert(checkScalefactor(cod_info, vbrsfmin));*/
+    assert(checkScalefactor(cod_info, vbrsfmin));
 }
 
 
@@ -1354,7 +1337,7 @@ long_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
     const int *max_rangep;
     int     sfb;
     int     maxover0, maxover1, maxover0p, maxover1p, mover;
-    int     v0, v1, v0p, v1p, vm0p, vm1p, vm0, vm1, maxminsfb = 0;
+    int     v0, v1, v0p, v1p, vm0p = 1, vm1p = 1, maxminsfb = 0, old_vbrmax, do_again=1;
 
     max_rangep = gfc->mode_gr == 2 ? max_range_long : max_range_long_lsf_pretab;
 
@@ -1381,7 +1364,7 @@ long_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
         if (maxminsfb < vbrsfmin[sfb])
             maxminsfb = vbrsfmin[sfb];
     }
-    for (vm0p = 1, vm1p = 1, sfb = 0; sfb < cod_info->psymax; ++sfb) {
+    for (sfb = 0; sfb < cod_info->psymax; ++sfb) {
         int     a = (vbrmax - vbrsfmin[sfb]) - 2 * pretab[sfb];
         int     b = (vbrmax - vbrsfmin[sfb]) - 4 * max_rangep[sfb];
         if (a <= 0)
@@ -1389,52 +1372,65 @@ long_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
         if (b <= 0)
             vm1p = 0;
     }
-    for (vm0 = 0, vm1 = 0, sfb = 0; sfb < cod_info->psymax; ++sfb) {
-        int     a = (vbrmax - vbrsfmin[sfb]) - 2 * (max_range_long[sfb] + 1);
-        int     b = (vbrmax - vbrsfmin[sfb]) - 4 * (max_range_long[sfb] + 1);
-        if (a <= 0)
-            vm0 = Min(vm0, a);
-        if (b <= 0)
-            vm1 = Min(vm1, b);
-    }
+    old_vbrmax = vbrmax;
 
-    mover = Min(maxover0, maxover0p);
-    if (gfc->noise_shaping == 2) {
-        /* allow scalefac_scale=1 */
-        mover = Min(mover, maxover1);
-        mover = Min(mover, maxover1p);
-    }
-
-    vbrmax -= mover;
+    do {
+        do_again = 0;    
+        vbrmax = old_vbrmax;
+    
+        if ( vm0p == 0 ) maxover0p = maxover0;
+        if ( vm1p == 0 ) maxover1p = maxover1;
+    
+        mover = Min(maxover0, maxover0p);
+        if (gfc->noise_shaping == 2) {
+            /* allow scalefac_scale=1 */
+            mover = Min(mover, maxover1);
+            mover = Min(mover, maxover1p);
+        }
+    
+        vbrmax -= mover;
+        if (vbrmax < maxminsfb) {
+            vbrmax = maxminsfb;
+        }
+        if ( vm0p == 1 || vm1p == 1 ) {
+            for (sfb = 0; sfb < cod_info->psymax; ++sfb) {
+                int     a = (vbrmax - vbrsfmin[sfb]) - 2 * pretab[sfb];
+                int     b = (vbrmax - vbrsfmin[sfb]) - 4 * max_rangep[sfb];
+                if (a <= 0 && vm0p == 1) {
+                    vm0p = 0;
+                    do_again = 1;
+                }
+                if (b <= 0 && vm1p == 1) {
+                    vm1p = 0;
+                    do_again = 1;
+                }
+            }
+        }
+    } while ( do_again );
     maxover0 -= mover;
     maxover0p -= mover;
     maxover1 -= mover;
     maxover1p -= mover;
 
-
     if (maxover0 == 0) {
         cod_info->scalefac_scale = 0;
         cod_info->preflag = 0;
     }
-    else if (maxover0p == 0 && vm0p) {
+    else if (maxover0p == 0) {
         cod_info->scalefac_scale = 0;
         cod_info->preflag = 1;
     }
-    else if (maxover1 == 0 || ((maxover0p == 0) && !vm0p)) {
+    else if (maxover1 == 0) {
         cod_info->scalefac_scale = 1;
         cod_info->preflag = 0;
     }
     else if (maxover1p == 0) {
         cod_info->scalefac_scale = 1;
-        cod_info->preflag = vm1p;
+        cod_info->preflag = 1;
     }
     else {
         assert(0);      /* this should not happen */
     }
-
-    if (vbrmax < maxminsfb)
-        vbrmax = maxminsfb;
-
     cod_info->global_gain = vbrmax;
     if (cod_info->global_gain < 0) {
         cod_info->global_gain = 0;
@@ -1449,7 +1445,7 @@ long_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
         compute_scalefacs_long(vbrsf, cod_info, vbrsfmin);
     else
         compute_scalefacs_long_lsf(vbrsf, cod_info, vbrsfmin);
-    /*assert(checkScalefactor(cod_info, vbrsfmin));*/
+    assert(checkScalefactor(cod_info, vbrsfmin));
 }
 
 
@@ -1486,7 +1482,6 @@ long_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
         int remaining;                                                                  \
         int l = cod_info->width[sfb];                                                   \
         const int notpseudohalf = !(gfc->pseudohalf[sfb]&&(gfc->substep_shaping & 2));  \
-                                                                                        \
         FLOAT fac = IIPOW20(s);                                                        \
         FLOAT jstep = fac*istep;                                                       \
         if ( l >= max_nonzero_coeff-j+1 ) {                                             \
