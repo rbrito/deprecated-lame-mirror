@@ -506,12 +506,12 @@ void L3psycho_anal( short int *buffer[2],
     for ( j = 0; j < HBLKSIZE; j++ )
       {
 	int tp = partition_l[j];
-	if ( tp >= 0 )
-	  {
-	    eb[tp] += energy[j];
-	    cb[tp] += cw[j] * energy[j];
-	  }
 	assert(tp<npart_l_orig);
+	if ( tp < 0 )
+	  break;
+
+	eb[tp] += energy[j];
+	cb[tp] += cw[j] * energy[j];
       }
     
     
@@ -661,7 +661,8 @@ void L3psycho_anal( short int *buffer[2],
 	}
       for ( j = 0; j < HBLKSIZE_s; j++ ) {
 	assert(partition_s[j] < npart_s_orig);
-	assert(partition_s[j]>=0);
+	if (partition_s[j]<0)
+	  break;
 	eb[partition_s[j]] += energy_s[sblock][j];
       }
       for ( b = 0; b < npart_s; b++ )
