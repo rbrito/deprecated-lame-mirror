@@ -239,7 +239,7 @@ on_pe(
 
 /*************************************************************************
  *	calc_xmin()
- * Calculate the allowed distortion(threshold) for each scalefactor band,
+ * Calculate the allowed noise threshold for each scalefactor band,
  * as determined by the psychoacoustic model.
  * xmin(sb) = ratio(sb) * en(sb)
  *************************************************************************/
@@ -660,7 +660,7 @@ inc_subblock_gain(gr_info * const gi, FLOAT distort[])
  *    1             trigger = max_dist^(.5)   (50% in the dB scale)
  *
  *    2             trigger = max_dist;
- *                  (select only the band with the strongest distortion)
+ *                  (select only the band with the strongest noise)
  * where
  *  distort[] = noise/masking
  *   distort[] > 1   ==> noise is not masked (need more bits)
@@ -876,19 +876,16 @@ CBR_2nd_bitalloc(
 {
     int sfb, j = 0;
     for (sfb = 0; sfb < gi->psymax; sfb++) {
-	FLOAT noisenew, noiseold;
 	int width = gi->width[sfb];
 	distort[sfb] = 0.0;
 	if (gi->scalefac[sfb] > 0) {
 	    int s0 = gi->scalefac[sfb];
-	    noiseold = calc_sfb_noise(&gi->xr[j], &xr34[j], width,
-				      scalefactor(gi, sfb));
-	    do {
-		if (--gi->scalefac[sfb] < 0)
-		    break;
-		noisenew = calc_sfb_noise(&gi->xr[j], &xr34[j], width,
-					  scalefactor(gi, sfb));
-	    } while (noisenew <= noiseold);
+	    FLOAT noiseold = calc_sfb_noise(&gi->xr[j], &xr34[j], width,
+					    scalefactor(gi, sfb));
+	    while (--gi->scalefac[sfb] >= 0
+		   && calc_sfb_noise(&gi->xr[j], &xr34[j], width,
+				     scalefactor(gi, sfb)) <= noiseold)
+		;
 	    gi->scalefac[sfb]++;
 	    if (gi->scalefac[sfb] != s0)
 		distort[sfb] = -1.0;
@@ -898,14 +895,6 @@ CBR_2nd_bitalloc(
     gfc->scale_bitcounter(gi);
     adjust_global_gain(gfc, xr34, gi, distort, gi->part2_3_length);
 }
-
-/************************************************************************
- *
- *  CBR_1st_bitalloc ()
- *
- *  find the best scalefactor and global gain combination
- *  as long as it satisfy the bitrate condition.
- ************************************************************************/
 
 static int
 noise_in_sfb21(gr_info *gi, FLOAT distort[], FLOAT threshold)
@@ -917,6 +906,13 @@ noise_in_sfb21(gr_info *gi, FLOAT distort[], FLOAT threshold)
     return 0;
 }
 
+/************************************************************************
+ *
+ *  CBR_1st_bitalloc ()
+ *
+ *  find the best scalefactor and global gain combination
+ *  as long as it satisfy the bitrate condition.
+ ************************************************************************/
 static void
 CBR_1st_bitalloc (
     lame_internal_flags *gfc,
@@ -943,11 +939,11 @@ CBR_1st_bitalloc (
     if (gfc->psymodel < 2) 
 	return; /* fast mode, no noise shaping, we are ready */
 
-    /* compute the distortion in this quantization */
-    /* coefficients and thresholds of ch0(L or Mid) or ch1(R or Side) */
+    /* compute the noise */
     calc_xmin (gfc, ratio, gi, xmin);
-
     newNoise = bestNoise = calc_noise_allband(gi, xmin, distort, rxmin);
+    if (noise_in_sfb21(gi, distort, bestNoise))
+	goto quit_quantization;
     current_method = 0;
     age = 3;
     if (bestNoise < 1.0) {
@@ -956,8 +952,6 @@ CBR_1st_bitalloc (
 	current_method = 1;
 	age = 5;
     }
-    if (noise_in_sfb21(gi, distort, bestNoise))
-	goto quit_quantization;
 
     /* BEGIN MAIN LOOP */
     gi_w = *gi;
@@ -1022,7 +1016,7 @@ CBR_1st_bitalloc (
 
 /********************************************************************
  *
- *  calc_target_bits()
+ *  ABR_calc_target_bits()
  *
  *  calculates target bits for ABR encoding
  *
@@ -1211,17 +1205,17 @@ iteration_loop(
  *
  ************************************************************************/
 static void
-bitpressure_strategy(gr_info *gi, FLOAT *pxmin)
+bitpressure_strategy(gr_info *gi, FLOAT *xmin)
 {
     int sfb;
     for (sfb = 0; sfb < gi->psy_lmax; sfb++) 
-	*pxmin++ *= 1.+(.029/(SBMAX_l*SBMAX_l))*(sfb*sfb+1);
+	*xmin++ *= 1.+(.029/(SBMAX_l*SBMAX_l))*(sfb*sfb+1);
 
     for (sfb = gi->sfb_smin; sfb < gi->psymax; sfb+=3) {
 	FLOAT x = 1.+(.029/(SBMAX_s*SBMAX_s*9))*(sfb*sfb+1);
-	*pxmin++ *= x;
-	*pxmin++ *= x;
-	*pxmin++ *= x;
+	*xmin++ *= x;
+	*xmin++ *= x;
+	*xmin++ *= x;
     }
 }
 
@@ -1240,7 +1234,7 @@ find_scalefac(const FLOAT * xr, const FLOAT * xr34, FLOAT xmin, int bw,
     do {
 	FLOAT xfsf = calc_sfb_noise_fast(xr, xr34, bw, sf);
 	if (xfsf > xmin) {
-	    /* distortion.  try a smaller scalefactor */
+	    /* there's noticible noise. try a smaller scalefactor */
 	    endflag |= 1;
 	    if (endflag == 3)
 		delsf >>= 1;
@@ -1633,8 +1627,6 @@ VBR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
  *  updates plotting data    
  *
  *  Mark Taylor 2000-??-??
- *
- *  Robert Hegemann: moved noise/distortion calc into it
  *
  ************************************************************************/
 static void
