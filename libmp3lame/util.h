@@ -560,6 +560,7 @@ int lame_decode1_unclipped(
 extern int  has_i387  ( void );
 extern int  has_MMX   ( void );
 extern int  has_3DNow ( void );
+extern int  has_E3DNow( void );
 extern int  has_SSE   ( void );
 extern int  has_SSE2  ( void );
 
