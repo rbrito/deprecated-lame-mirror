@@ -34,6 +34,13 @@ At the high frequency region, LAME4 increases the threshold too much.
 And more the worse, there's sfb21 :(
 
 
+5.
+Tag problem.
+Still there're some tag problems between VBR(LAME) tag and MS-Windows.
+Clipping detection/replaygain tag is supported LAME3.x, but LAME4 does not.
+
+
+
 8.
 low bitrate quality problem and better intensity stereo support.
 and LAME4 should support i-stereo even when MPEG2 Layer3 (currently not).
@@ -49,11 +56,6 @@ for years since there are very few intensity stereo mp3's out there.
 We should rewrite all the documentation, such as PRESET, INSTALL, README*,...
 
 
-10.
-Clipping detection and replaygain tag:
-LAME 3.x supports this, but LAME4 does not.
-
-
 11.
 Tuning reservoir handling (especially for low bitrates); CBR/ABR arround
 90kbps (-b 90) is worse than VBR quality 9 (-V 9). This is probabry
@@ -64,6 +66,10 @@ psymodel. Now they are all changed and we should re-tune these code.
 
 2-pass VBR/ABR will perfectly solve the problem, but before it,
 we should improve the 1-pass encoding.
+
+And about ABR, it should be removed and new "VBR but some constant bitrate"
+algorithm, IMHO.
+
 
 
 15. 
