@@ -488,7 +488,7 @@ int fill_buffer_resample(
     xvalue = 0.;
     for (i=0 ; i<=filter_l ; ++i) {
       int j2 = i+j-filter_l/2;
-      int y;
+      sample_t y;
       assert(j2<len);
       assert(j2+BLACKSIZE >= 0);
       y = (j2<0) ? inbuf_old[BLACKSIZE+j2] : inbuf[j2];
