@@ -283,7 +283,7 @@ int  lame_encode_mp3_frame (				// Output
 	for (ch=0; ch< gfc->channels_out; ++ch) 
 	    max_val=Max(max_val,tot_ener[gr][ch]);
 	// scale to 0..1, and then rescale to 0..32767 
-	max_val *= 32767/9e12;
+	max_val *= 32767/1e13;
         
         /*  adjust ATH depending on range of maximum value
          */
