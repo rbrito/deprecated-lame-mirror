@@ -364,8 +364,6 @@ iteration_init( lame_global_flags *gfp)
 	    else if (i <= 13) f = alto;
 	    else if (i <= 20) f = treble;
 	    else              f = sfb21;
-	    if ((gfp->VBR == vbr_off || gfp->VBR == vbr_abr) && gfp->quality <= 1)
-		f *= 0.001;
 
 	    gfc->nsPsy.longfact[i] = f;
 	}
@@ -374,9 +372,6 @@ iteration_init( lame_global_flags *gfp)
 	    if      (i <=  5) f = bass;
 	    else if (i <= 10) f = alto;
 	    else              f = treble;
-
-	    if ((gfp->VBR == vbr_off || gfp->VBR == vbr_abr) && gfp->quality <= 1)
-		f *= 0.001;
 
 	    gfc->nsPsy.shortfact[i] = f;
 	}
