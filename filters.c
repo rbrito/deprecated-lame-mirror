@@ -45,7 +45,7 @@ void filterMDCT( FLOAT8 xr_org[2][2][576],
 	  start = lowpass1*192;
 	  stop  = lowpass2*192;
 	  for (j=0; j<3; j++) {
-	    for ( i = floor(start);  i < 192; i++ ) {
+	    for ( i = ceil(start);  i < 192; i++ ) {
 	      int i0 = 3*i+j; 
 	      if (i<=stop) xr_org[gr][ch][i0]*=cos((PI/2)*(i-start)/(stop-start));
 	      else xr_org[gr][ch][i0] = 0;
@@ -54,8 +54,34 @@ void filterMDCT( FLOAT8 xr_org[2][2][576],
 	}else{
 	  start = lowpass1*576;
 	  stop  = lowpass2*576;
-	  for ( i = floor(start) ; i < 576; i++ )
+	  for ( i = ceil(start) ; i < 576; i++ )
 	    if (i<=stop) xr_org[gr][ch][i] *=  cos((PI/2)*(i-start)/(stop-start));
+	    else xr_org[gr][ch][i]=0;
+	}
+      }
+    }
+  }
+  if (highpass2>0) {
+    FLOAT start,stop;
+    for ( gr = 0; gr < mode_gr; gr++ ) {
+      for (ch =0 ; ch < stereo ; ch++) {
+	int shortblock = (l3_side->gr[gr].ch[ch].tt.block_type==SHORT_TYPE);
+	if (shortblock) {
+	  int j;
+	  start = highpass1*192;
+	  stop  = highpass2*192;
+	  for (j=0; j<3; j++) {
+	    for ( i = 0;  i < stop; i++ ) {
+	      int i0 = 3*i+j; 
+	      if (i>=start) xr_org[gr][ch][i0]*=cos((PI/2)*(stop-i)/(stop-start));
+	      else xr_org[gr][ch][i0] = 0;
+	    }
+	  }
+	}else{
+	  start = highpass1*576;
+	  stop  = highpass2*576;
+	  for ( i = 0 ; i < stop; i++ )
+	    if (i>=start) xr_org[gr][ch][i] *=  cos((PI/2)*(stop-i)/(stop-start));
 	    else xr_org[gr][ch][i]=0;
 	}
       }

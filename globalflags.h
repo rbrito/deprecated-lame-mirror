@@ -28,6 +28,7 @@ extern int highq;
 extern sound_file_format input_format;
 extern int lame_nowrite;
 extern FLOAT lowpass1,lowpass2;
+extern FLOAT highpass1,highpass2;
 extern int no_short_blocks;
 extern FLOAT resample_ratio;     /* if > 0, = input_samp/output_samp */
 extern int sfb21;
