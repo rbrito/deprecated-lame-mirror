@@ -43,40 +43,6 @@
  *
  * $Id$
  *
- * $Log$
- * Revision 1.2  2000/10/29 12:45:54  aleidinger
- * support for config.h
- *
- * Revision 1.1  2000/09/28 16:36:53  takehiro
- * moved frontend staffs into frontend/
- * Need to debug vorbis/mpglib/analyzer/bitrate histgram.
- * still long way to go...
- *
- * HAVEGTK is changed ANALYSIS(library side) and HAVEGTK(frontend side)
- *
- * BRHIST is deleted from library. all the bitrate histogram works are
- * now in frontend(but not works properly, yet).
- *
- * timestatus things are also moved to frontend.
- *
- * parse.c is now out of library.
- *
- * Revision 1.4  2000/06/07 22:56:02  sbellon
- * added support for FPA10 hardware (RISC OS only)
- *
- * Revision 1.3  2000/02/21 23:05:05  markt
- * some 64bit DEC Alpha patches
- *
- * Revision 1.2  2000/02/19 13:32:30  afaber
- * Fixed many warning messages when compiling with MSVC
- *
- * Revision 1.1.1.1  1999/11/24 08:42:58  markt
- * initial checkin of LAME
- * Starting with LAME 3.57beta with some modifications
- *
- * Revision 1.1  1993/06/11  17:45:46  malcolm
- * Initial revision
- *
  */
 
 #ifdef HAVE_CONFIG_H
