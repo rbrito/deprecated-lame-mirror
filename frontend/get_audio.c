@@ -90,8 +90,8 @@ int     lame_decode_initfile(FILE * fd, mp3data_struct * mp3data);
 #endif
 
 /* read mp3 file until mpglib returns one frame of PCM data */
-static int     lame_decode_fromfile(FILE * fd, short int pcm_l[], short int pcm_r[],
-                             mp3data_struct * mp3data);
+static int     decode_fromfile(FILE * fd, short int pcm_l[], short int pcm_r[],
+			       mp3data_struct * mp3data);
 
 
 static int read_samples_pcm(FILE * musicin, int sample_buffer[2304],
@@ -406,12 +406,10 @@ read_samples_mp3(lame_global_flags * const gfp,
 #if defined(AMIGA_MPEGA)  ||  defined(HAVE_MPGLIB)
     static const char type_name[] = "MP3 file";
 
-    out =
-        lame_decode_fromfile(musicin, mpg123pcm[0], mpg123pcm[1],
-                             &mp3input_data);
+    out = decode_fromfile(musicin, mpg123pcm[0], mpg123pcm[1], &mp3input_data);
     /*
      * out < 0:  error, probably EOF
-     * out = 0:  not possible with lame_decode_fromfile() ???
+     * out = 0:  not possible with decode_fromfile() ???
      * out > 0:  number of output samples
      */
     if (out < 0) {
@@ -1425,7 +1423,6 @@ check_aid(const unsigned char *header)
  * This is a (nearly?) complete header analysis for a MPEG-1/2/2.5 Layer I, II or III
  * data stream
  */
-static int layer = 0, srate = 0;
 static int
 is_syncword_mp123(const void *const headerptr)
 {
@@ -1451,8 +1448,6 @@ is_syncword_mp123(const void *const headerptr)
     if ((p[3] & 3) == 2)
 	return 0;       /* reserved enphasis mode */
 
-    layer = (p[1] & 0x0E);
-    srate = (p[2] & 0xF0);
     return 1;
 }
 
@@ -1568,7 +1563,7 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
 }
 
 /*
-For lame_decode_fromfile:  return code
+For decode_fromfile:  return code
   -1     error
    n     number of samples output.  either 576 or 1152 depending on MP3 file.
 
@@ -1579,19 +1574,18 @@ For lame_decode1_headers():  return code
    n     number of samples output.  either 576 or 1152 depending on MP3 file.
 */
 static int
-lame_decode_fromfile(FILE * fd, short pcm_l[], short pcm_r[],
-                     mp3data_struct * mp3data)
+decode_fromfile(FILE * fd, short pcm_l[], short pcm_r[],
+		mp3data_struct * mp3data)
 {
-    int     ret = 0, len=0;
+    int     ret, len = 0;
     unsigned char buf[1024];
 
     /* first see if we still have data buffered in the decoder: */
     ret = lame_decode1_headers(buf, len, pcm_l, pcm_r, mp3data);
-    if (ret!=0) return ret;
-
+    if (ret != 0) return ret;
 
     /* read until we get a valid output frame */
-    while (1) {
+    do {
         len = fread(buf, 1, 1024, fd);
         if (len == 0) {
 	    /* we are done reading the file, but check for buffered data */
@@ -1606,10 +1600,9 @@ lame_decode_fromfile(FILE * fd, short pcm_l[], short pcm_r[],
         ret = lame_decode1_headers(buf, len, pcm_l, pcm_r, mp3data);
         if (ret == -1) {
             lame_decode_exit();  /* release mp3decoder memory */
-            return -1;
+            return ret;
         }
-	if (ret >0) break;
-    }
+    } while (ret == 0);
     return ret;
 }
 #endif /* defined(HAVE_MPGLIB) */
