@@ -144,7 +144,7 @@ static void quantize_xrpow(const FLOAT8 *xp, int *pi, FLOAT8 istep, gr_info * co
             l = cod_info->width[sfb] >> 1;
 
             if ((j+cod_info->width[sfb])>cod_info->max_nonzero_coeff) {
-                int usefullsize;
+                unsigned int usefullsize;
                 usefullsize = cod_info->max_nonzero_coeff - j +1;
                 memset(&pi[cod_info->max_nonzero_coeff],0,
                     sizeof(int)*(576-cod_info->max_nonzero_coeff));
