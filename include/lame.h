@@ -279,7 +279,6 @@ int CDECL lame_get_free_format(const lame_global_flags *);
 int CDECL lame_set_ReplayGain_input(lame_global_flags *, int);
 int CDECL lame_get_ReplayGain_input(const lame_global_flags *);
 
-#ifdef DECODE_ON_THE_FLY
 /* perform ReplayGain analysis on decoded data?  default = 0 (disabled) 
  * NOTE: this option enables decoding on the fly and therefore if it is
  * set the build-in decoder should not be used */
@@ -291,7 +290,6 @@ int CDECL lame_get_ReplayGain_decode(const lame_global_flags *);
  * set the build-in decoder should not be used */
 int CDECL lame_set_findPeakSample(lame_global_flags *, int);
 int CDECL lame_get_findPeakSample(const lame_global_flags *);
-#endif
 
 /*
  * OPTIONAL:
@@ -562,13 +560,11 @@ int CDECL lame_get_RadioGain(const lame_global_flags *);
 /* AudiophileGain value */
 int CDECL lame_get_AudiophileGain(const lame_global_flags *);
 
-#ifdef DECODE_ON_THE_FLY
 /* the peak sample */
 float CDECL lame_get_PeakSample(const lame_global_flags *);
 
 /* is decoding on the fly going to be performed */
 int CDECL lame_get_decode_on_the_fly(const lame_global_flags *);
-#endif
 
 
 

@@ -448,12 +448,14 @@ lame_get_ReplayGain_input( const lame_global_flags*  gfp )
 }
 
 
-#ifdef DECODE_ON_THE_FLY
 /* Perform ReplayGain analysis on decoded data. */
 int
 lame_set_ReplayGain_decode( lame_global_flags*  gfp,
                             int                 ReplayGain_decode )
 {
+#ifndef DECODE_ON_THE_FLY
+    return -1;
+#else
     /* default = 0 (disabled) */
 
     /* enforce disable/enable meaning, if we need more than two values
@@ -465,6 +467,7 @@ lame_set_ReplayGain_decode( lame_global_flags*  gfp,
     gfp->ReplayGain_decode = ReplayGain_decode;
 
     return 0;
+#endif
 }
 
 int
@@ -481,6 +484,9 @@ int
 lame_set_findPeakSample( lame_global_flags*  gfp,
                          int                 findPeakSample )
 {
+#ifndef DECODE_ON_THE_FLY
+    return -1;
+#else
     /* default = 0 (disabled) */
 
     /* enforce disable/enable meaning, if we need more than two values
@@ -492,6 +498,7 @@ lame_set_findPeakSample( lame_global_flags*  gfp,
     gfp->findPeakSample = findPeakSample;
 
     return 0;
+#endif
 }
 
 int
@@ -501,7 +508,6 @@ lame_get_findPeakSample( const lame_global_flags*  gfp )
 
     return gfp->findPeakSample;
 }
-#endif
 
 
 /* message handlers */
@@ -1717,7 +1723,6 @@ lame_get_AudiophileGain( const lame_global_flags*  gfp )
     return gfc->AudiophileGain;
 }
 
-#ifdef DECODE_ON_THE_FLY
 float
 lame_get_PeakSample( const lame_global_flags*  gfp )
 {
@@ -1731,7 +1736,6 @@ lame_get_decode_on_the_fly( const lame_global_flags* gfp )
     lame_internal_flags *gfc = gfp->internal_flags;
     return gfc->decode_on_the_fly; 
 }
-#endif
 
 
 /*
