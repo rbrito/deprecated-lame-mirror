@@ -56,13 +56,17 @@ int getframebytes(const lame_global_flags * gfp)
 	+ gfc->padding - gfc->l3_side.sideinfo_len;
 }
 
+#ifndef NDEBUG
+# define putbits24(a,b,c) assert(0 < (c) <= 24), assert((b) <= (1UL << (c))), putbits24main(a,b,c)
+#else
+# define putbits24(a,b,c) putbits24main(a,b,c)
+#endif
+
 /*write j bits into the bit stream */
 inline static void
-putbits24(bit_stream_t *bs, unsigned int val, int j)
+putbits24main(bit_stream_t *bs, unsigned int val, int j)
 {
     char *p = &bs->buf[bs->bitidx >> 3];
-    assert(0 < j <= 24);
-    assert(val <= (1UL << j));
 
     val <<= (32 - j - (bs->bitidx & 7));
     bs->bitidx += j;
@@ -592,7 +596,7 @@ format_bitstream(lame_global_flags *gfp)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     III_side_info_t *l3_side = &gfc->l3_side;
-    int drainPre, drainbits = l3_side->ResvSize % 8;
+    int drainPre, drainbits = l3_side->ResvSize & 7;
 
     /* reservoir is overflowed ? */
     if (drainbits < l3_side->ResvSize - l3_side->ResvMax)
