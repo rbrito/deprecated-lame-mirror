@@ -14,147 +14,126 @@ typedef struct lame_internal_flags lame_internal_flags;
 *
 ***********************************************************************/
 struct lame_global_struct {
-  /* input description */
-  unsigned long num_samples;  /* number of samples. default=2^32-1           */
-  int num_channels;           /* input number of channels. default=2         */
-  int in_samplerate;          /* input_samp_rate in Hz. default=44.1 kHz     */
-  int out_samplerate;         /* output_samp_rate.
-                                   default: LAME picks best value 
-                                   at least not used for MP3 decoding:
-                                   Remember 44.1 kHz MP3s and AC97           */
-  float scale;                /* scale input by this amount before encoding
-                                 at least not used for MP3 decoding          */
-  float scale_left;           /* scale input of channel 0 (left) by this
-			         amount before encoding                      */
-  float scale_right;          /* scale input of channel 1 (right) by this
-			         amount before encoding                      */
+    /* input description */
+    unsigned long num_samples; /* number of samples. default=2^32-1 */
+    int num_channels;          /* input number of channels. default=2 */
+    int in_samplerate;         /* input_samp_rate in Hz. default=44.1 kHz */
+    int out_samplerate;        /* output_samp_rate.
+				  default: LAME picks best value 
+				  at least not used for MP3 decoding:
+				  Remember 44.1 kHz MP3s and AC97 */
+    float scale;               /* scale input by this amount before encoding
+				  at least not used for MP3 decoding */
+    float scale_left;          /* scale input of channel 0 (left) by this
+				  amount before encoding */
+    float scale_right;         /* scale input of channel 1 (right) by this
+				  amount before encoding */
 
-  /* general control params */
-  int bWriteVbrTag;           /* add Xing VBR tag?                           */
-  int decode_only;            /* use lame/mpglib to convert mp3/ogg to wav   */
+    /* general control params */
+    int bWriteVbrTag;          /* add Xing VBR tag? */
+    int decode_only;           /* use lame/mpglib to convert mp3 to wav */
 
-  int quality;                /* quality setting 0=best,  9=worst  default=5 */
-  MPEG_mode mode;             /* see enum in lame.h
-                                 default = LAME picks best value             */
-  int force_ms;               /* force M/S mode. */
-  int use_istereo;            /* use intensity stereo */
-  int free_format;            /* use free format? default=0                  */
+    int quality;               /* quality setting 0=best, 9=worst  default=5 */
+    MPEG_mode mode;            /* see enum in lame.h
+				  default = LAME picks best value */
+    int force_ms;              /* force M/S mode. */
+    int use_istereo;           /* use intensity stereo */
+    int free_format;           /* use free format? default=0 */
 
-  /*
-   * set either mean_bitrate_kbps>0  or compression_ratio>0,
-   * LAME will compute the value of the variable not set.
-   * Default is compression_ratio = 11.025
-   */
-  int mean_bitrate_kbps;      /* bitrate                                    */
-  float compression_ratio;    /* sizeof(wav file)/sizeof(mp3 file)          */
+    /*
+     * set either mean_bitrate_kbps>0  or compression_ratio>0,
+     * LAME will compute the value of the variable not set.
+     * Default is compression_ratio = 11.025
+     */
+    int mean_bitrate_kbps;      /* bitrate */
+    float compression_ratio;    /* sizeof(wav file)/sizeof(mp3 file) */
 
+    /* frame params */
+    int copyright;              /* mark as copyright. default=0           */
+    int original;               /* mark as original. default=1            */
+    int error_protection;       /* use 2 bytes per frame for a CRC
+				   checksum. default=0                    */
+    int extension;              /* the MP3 'private extension' bit.
+				   Meaningless                            */
+    int strict_ISO;             /* enforce ISO spec as much as possible   */
 
-  /* frame params */
-  int copyright;                  /* mark as copyright. default=0           */
-  int original;                   /* mark as original. default=1            */
-  int error_protection;           /* use 2 bytes per frame for a CRC
-                                     checksum. default=0                    */
-  int extension;                  /* the MP3 'private extension' bit.
-                                     Meaningless                            */
-  int strict_ISO;                 /* enforce ISO spec as much as possible   */
+    /* quantization/noise shaping */
+    int disable_reservoir;      /* use bit reservoir? */
+    int experimentalX;
+    int experimentalY;
+    int experimentalZ;
+    int exp_nspsytune;
 
-  /* quantization/noise shaping */
-  int disable_reservoir;          /* use bit reservoir?                     */
-  int experimentalX;
-  int experimentalY;
-  int experimentalZ;
-  int exp_nspsytune;
+    /* VBR control */
+    vbr_mode VBR;
+    int VBR_q;
+    int VBR_min_bitrate_kbps;
+    int VBR_max_bitrate_kbps;
+    int VBR_hard_min;           /* strictly enforce VBR_min_bitrate
+				   normaly, it will be violated for analog
+				   silence */
+    /* resampling and filtering */
+    int lowpassfreq;                /* freq in Hz. 0=lame choses.
+				       -1=no filter                          */
+    int highpassfreq;               /* freq in Hz. 0=lame choses.
+				       -1=no filter                          */
+    int lowpasswidth;               /* freq width of filter, in Hz
+				       (default=15%)                         */
+    int highpasswidth;              /* freq width of filter, in Hz
+				       (default=15%)                         */
+    /*
+     * psycho acoustics and other arguments which you should not change 
+     * unless you know what you are doing
+     */
+    int ATHonly;                    /* only use ATH                         */
+    int ATHshort;                   /* only use ATH for short blocks        */
+    int noATH;                      /* disable ATH                          */
+    float ATHcurve;                 /* change ATH formula 4 shape           */
+    float ATHlower;                 /* lower ATH by this many db            */
+    float athaa_sensitivity;        /* dB, tune active region of auto-level */
+    int mixed_blocks;
+    int useTemporal;                /* use temporal masking effect          */
+    float interChRatio;
+    int emphasis;                   /* Input PCM is emphased PCM (for
+				       instance from one of the rarely
+				       emphased CDs), it is STRONGLY not
+				       recommended to use this, because
+				       psycho does not take it into account,
+				       and last but not least many decoders
+				       don't care about these bits          */
+    struct {
+	void (*msgf)  (const char *format, va_list ap);
+	void (*debugf)(const char *format, va_list ap);
+	void (*errorf)(const char *format, va_list ap);
+    } report;
 
-  int preset_expopts;
-  int preset;
+    /************************************************************************/
+    /* internal variables, do not set...                                    */
+    /* provided because they may be of use to calling application           */
+    /************************************************************************/
 
-  /* VBR control */
-  vbr_mode VBR;
-  int VBR_q;
-  int VBR_min_bitrate_kbps;
-  int VBR_max_bitrate_kbps;
-  int VBR_hard_min;             /* strictly enforce VBR_min_bitrate
-                                   normaly, it will be violated for analog
-                                   silence                                 */
+    int version;                    /* 0=MPEG-2/2.5  1=MPEG-1               */
+    int encoder_delay;
+    int encoder_padding;  /* number of samples of padding appended to input */
+    int framesize;                  
+    int frameNum;                   /* number of frames encoded             */
+    int lame_allocated_gfp;         /* is this struct owned by calling
+				       program or lame?                     */
 
+    /*************************************************************************/
+    /* more internal variables, which won't exist after lame_encode_finish() */
+    /*************************************************************************/
+    lame_internal_flags *internal_flags;
 
-  /* resampling and filtering */
-  int lowpassfreq;                /* freq in Hz. 0=lame choses.
-                                     -1=no filter                          */
-  int highpassfreq;               /* freq in Hz. 0=lame choses.
-                                     -1=no filter                          */
-  int lowpasswidth;               /* freq width of filter, in Hz
-                                     (default=15%)                         */
-  int highpasswidth;              /* freq width of filter, in Hz
-                                     (default=15%)                         */
+    /* VBR tags. */
+    int TotalFrameSize;
+    int nVbrNumFrames;
 
-
-
-  /*
-   * psycho acoustics and other arguments which you should not change 
-   * unless you know what you are doing
-   */
-  int ATHonly;                    /* only use ATH                         */
-  int ATHshort;                   /* only use ATH for short blocks        */
-  int noATH;                      /* disable ATH                          */
-  float ATHcurve;                 /* change ATH formula 4 shape           */
-  float ATHlower;                 /* lower ATH by this many db            */
-  float athaa_sensitivity;        /* dB, tune active region of auto-level */
-  int mixed_blocks;
-  int useTemporal;                /* use temporal masking effect          */
-  float interChRatio;
-  int emphasis;                   /* Input PCM is emphased PCM (for
-                                     instance from one of the rarely
-                                     emphased CDs), it is STRONGLY not
-                                     recommended to use this, because
-				     psycho does not take it into account,
-				     and last but not least many decoders
-                                     don't care about these bits          */
-
-  int   tune;               /* 0 off, 1 on */
-  float tune_value_a;       /* used to pass values for debugging and stuff */
-
-  
-  int   sparsing;
-  FLOAT sparse_low;
-  FLOAT sparse_high;
-
-  struct {
-    void (*msgf)  (const char *format, va_list ap);
-    void (*debugf)(const char *format, va_list ap);
-    void (*errorf)(const char *format, va_list ap);
-  } report;
-
-  /************************************************************************/
-  /* internal variables, do not set...                                    */
-  /* provided because they may be of use to calling application           */
-  /************************************************************************/
-
-  int version;                    /* 0=MPEG-2/2.5  1=MPEG-1               */
-  int encoder_delay;
-  int encoder_padding;  /* number of samples of padding appended to input */
-  int framesize;                  
-  int frameNum;                   /* number of frames encoded             */
-  int lame_allocated_gfp;         /* is this struct owned by calling
-                                     program or lame?                     */
-
-
-
-  /****************************************************************************/
-  /* more internal variables, which will not exist after lame_encode_finish() */
-  /****************************************************************************/
-  lame_internal_flags *internal_flags;
-
-  /* VBR tags. */
-  int TotalFrameSize;
-  int nVbrNumFrames;
-
-  struct {
-      int mmx;
-      int amd3dnow;
-      int sse;
-
-  } asm_optimizations;
-} ;
+    struct {
+	int mmx;
+	int amd3dnow;
+	int sse;
+    } asm_optimizations;
+};
 
 #endif /* LAME_GLOBAL_FLAGS_H */

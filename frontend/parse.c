@@ -880,34 +880,12 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF ("cbr")
                     lame_set_VBR(gfp, vbr_off); 
 
-                /**
-                 *  please, do *not* DOCUMENT this one
-                 *  it is a developers only switch (rh)
-                 */
-                T_ELIF_INTERNAL ("tune")
-                    argUsed=1;
-                    {extern void lame_set_tune(lame_t gfp, float val);
-                    lame_set_tune(gfp,atof(nextArg));} 
-
-                T_ELIF_INTERNAL ("ms-sparsing")
-                    argUsed=1;
-                    {extern void lame_set_ms_sparsing(lame_t gfp, int val);
-                    lame_set_ms_sparsing(gfp,atoi(nextArg));}                    
-                T_ELIF_INTERNAL ("ms-sparse-low")
-                    argUsed=1;
-                    {extern void lame_set_ms_sparse_low(lame_t gfp, float val);
-                    lame_set_ms_sparse_low(gfp,atof(nextArg));}
-
-                T_ELIF_INTERNAL ("ms-sparse-high")
-                    argUsed=1;
-                    {extern void lame_set_ms_sparse_high(lame_t gfp, float val);
-                    lame_set_ms_sparse_high(gfp,atof(nextArg));}
-
                 T_ELIF ("abr")
                     argUsed=1;
                     lame_set_VBR(gfp,vbr_abr); 
                     lame_set_VBR_mean_bitrate_kbps(gfp,atoi(nextArg));
-                    /* values larger than 8000 are bps (like Fraunhofer), so it's strange to get 320000 bps MP3 when specifying 8000 bps MP3 */
+                    /* values larger than 8000 are bps (like Fraunhofer),
+		       so it's strange to get 320000 bps MP3 when specifying 8000 bps MP3 */
                     if ( lame_get_VBR_mean_bitrate_kbps(gfp) >= 8000 )
                         lame_set_VBR_mean_bitrate_kbps(gfp,( lame_get_VBR_mean_bitrate_kbps(gfp) + 500 ) / 1000);
 

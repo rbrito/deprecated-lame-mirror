@@ -935,14 +935,6 @@ iteration_init( lame_global_flags *gfp)
     /*******************************************************/
     /* not yet coded */
 
-    /* mid side sparsing */
-    gfc->sparsing = gfp->sparsing;
-    gfc->sparseA = gfp->sparse_low;
-    gfc->sparseB = gfp->sparse_low-gfp->sparse_high;
-    if ( gfc->sparseA < 0 ) gfc->sparseA = 0;
-    if ( gfc->sparseB < 0 ) gfc->sparseB = 0;
-    if ( gfc->sparseB > gfc->sparseA ) gfc->sparseB = gfc->sparseA;
-
     /* scalefactor band start/end position */
     j = gfc->samplerate_index
 	+ (3 * gfp->version) + 6 * (gfp->out_samplerate < 16000);

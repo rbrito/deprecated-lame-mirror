@@ -576,7 +576,8 @@ PutLameVBR(lame_global_flags *gfp, FILE *fpStream,
     pbtStreamBuffer[nBytesWritten++] = nMisc;
     pbtStreamBuffer[nBytesWritten++] = 0;	/*unused in rev1 */
 
-    CreateI2(&pbtStreamBuffer[nBytesWritten], gfp->preset);
+    /* preset value for LAME4 is always 0 */
+    CreateI2(&pbtStreamBuffer[nBytesWritten], 0);
     nBytesWritten+=2;
 
     CreateI4(&pbtStreamBuffer[nBytesWritten], nMusicLength);

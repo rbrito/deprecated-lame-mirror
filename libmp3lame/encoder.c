@@ -41,45 +41,6 @@
 #endif
 
 
-/* Robert Hegemann - 2002-10-24
- * sparsing of mid side channels
- * 2DO: replace mld by something with finer resolution
- */
-static void
-ms_sparsing(lame_internal_flags* gfc, int gr)
-{
-    int sfb, i, j = 0;
-    for (sfb = 0; sfb < gfc->l3_side.tt[gr][0].sfbmax; ++sfb) {
-	FLOAT threshold;
-	if (sfb < gfc->l3_side.tt[gr][0].sfb_lmax)
-	    threshold
-		= db2pow(-(gfc->sparseA - gfc->mld_l[sfb]*gfc->sparseB));
-	else {
-	    int sfb2 = (sfb - gfc->l3_side.tt[gr][0].sfb_lmax) / 3;
-	    threshold
-		= db2pow(-(gfc->sparseA - gfc->mld_s[sfb2]*gfc->sparseB));
-	}
-
-	i = j + gfc->l3_side.tt[gr][0].width[sfb];
-	do {
-	    FLOAT *m = gfc->l3_side.tt[gr][0].xr+j;
-	    FLOAT *s = gfc->l3_side.tt[gr][1].xr+j;
-	    FLOAT m02 = m[0] * m[0];
-	    FLOAT m12 = m[1] * m[1];
-	    FLOAT s02 = s[0] * s[0];
-	    FLOAT s12 = s[1] * s[1];
-	    if ( s02 < m02*threshold && s12 < m12*threshold ) { 
-		m[0] += s[0]; s[0] = 0;
-		m[1] += s[1]; s[1] = 0;
-	    }
-	    if ( m02 < s02*threshold && m12 < s12*threshold ) { 
-		s[0] += m[0]; m[0] = 0;
-		s[1] += m[1]; m[1] = 0;
-	    }
-	} while ((j += 2) < i);
-    }
-}
-
 static void
 conv_istereo(lame_internal_flags* gfc, gr_info *gi, int sfb, int i)
 {
@@ -459,8 +420,6 @@ int  lame_encode_mp3_frame (				/* Output */
 	    }
 	    if (gfc->mode_ext & 1)
 		conv_istereo(gfc, gi, sfb, end);
-	    if (gfc->sparsing)
-		ms_sparsing(gfc, gr);
 	}
     } else if (gfc->mode_ext & 1) {
 	for (gr = 0; gr < gfc->mode_gr; gr++) {

@@ -1550,12 +1550,6 @@ lame_init_old(lame_global_flags * gfp)
     gfp->asm_optimizations.amd3dnow = 1;
     gfp->asm_optimizations.sse = 1;
 #endif
-    gfp->preset = 0;
-    
-    gfp->sparsing = 0;
-    gfp->sparse_low = 9.0;
-    gfp->sparse_high = 3.0;
-    
     return 0;
 }
 

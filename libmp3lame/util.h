@@ -317,19 +317,19 @@ struct lame_internal_flags {
     int iteration_init_init;
     int fill_buffer_resample_init;
 
-    int padding;          /* padding for the current frame? */
-    int mode_gr;          /* granules per frame */
+    int padding;        /* padding for the current frame? */
+    int mode_gr;        /* granules per frame */
     int channels_in;	/* number of channels in the input data stream (PCM or decoded PCM) */
-    int channels_out;     /* number of channels in the output data stream (not used for decoding) */
-    resample_t*  resample_in;   /* context for coding (PCM=>MP3) resampling */
-    resample_t*  resample_out;	/* context for decoding (MP3=>PCM) resampling */
+    int channels_out;   /* number of channels in the output data stream (not used for decoding) */
+    resample_t*  resample_in;  /* context for coding (PCM=>MP3) resampling */
+    resample_t*  resample_out; /* context for decoding (MP3=>PCM) resampling */
     FLOAT samplefreq_in;
     FLOAT samplefreq_out;
-    FLOAT resample_ratio;           /* input_samp_rate/output_samp_rate */
+    FLOAT resample_ratio;      /* input_samp_rate/output_samp_rate */
 
-    lame_global_flags* gfp;     /* needed as long as the frame encoding functions must access gfp (all needed information can be added to gfc) */
-    int          mf_samples_to_encode;
-    int          mf_size;
+    lame_global_flags* gfp;    /* needed as long as the frame encoding functions must access gfp (all needed information can be added to gfc) */
+    int mf_samples_to_encode;
+    int mf_size;
     int VBR_min_bitrate;            /* min bitrate index */
     int VBR_max_bitrate;            /* max bitrate index */
     int bitrate_index;
@@ -369,11 +369,6 @@ struct lame_internal_flags {
     /* used for padding */
     int frac_SpF;
     int slot_lag;
-
-    /* side channel sparsing */
-    int   sparsing;
-    FLOAT sparseA;
-    FLOAT sparseB;
 
     /* intensity stereo threshold */
     FLOAT istereo_ratio;
@@ -430,9 +425,9 @@ struct lame_internal_flags {
 	FLOAT adjust;     /* lowering based on peak volume, 1 = no lowering */
 	FLOAT adjust_limit;   /* limit for dynamic ATH adjust */
 	FLOAT eql_w[BLKSIZE/2];/* equal loudness weights (based on ATH) */
+
 	/* factor for tuning the (sample power) point below which adaptive
-	 * threshold of hearing adjustment occurs 
-	 */
+	 * threshold of hearing adjustment occurs */
 	FLOAT aa_sensitivity_p;
     } ATH;
 
@@ -450,7 +445,6 @@ struct lame_internal_flags {
 
     /* variables for bitstream.c */
     Bit_stream_struc   bs;
-    int ancillary_flag;
 
     /* optional ID3 tags, used in id3tag.c  */
     struct id3tag_spec {
@@ -494,7 +488,7 @@ struct lame_internal_flags {
     /* CPU features */
     struct {
 	unsigned int  MMX       : 1; /* Pentium MMX, Pentium II...IV, K6, K6-2,
-                                    K6-III, Athlon */
+					K6-III, Athlon */
 	unsigned int  AMD_3DNow : 1; /* K6-2, K6-III, Athlon, Opteron */
 	unsigned int  AMD_E3DNow: 1; /* Athlon, Opteron          */
 	unsigned int  SSE      : 1; /* Pentium III, Pentium 4    */
@@ -503,13 +497,13 @@ struct lame_internal_flags {
 #endif
 
 #ifdef BRHIST
-  /* simple statistics */
-  int   bitrate_stereoMode_Hist [16] [4+1];
-  int	bitrate_blockType_Hist  [16] [4+1+1];/*norm/start/short/stop/mixed(short)/sum*/
+    /* simple statistics */
+    int bitrate_stereoMode_Hist[16][4+1];
+    int	bitrate_blockType_Hist [16][4+1+1];/*norm/start/short/stop/mixed(short)/sum*/
 #endif
 #ifndef NOANALYSIS
-  /* used by the frame analyzer */
-  plotting_data *pinfo;
+    /* used by the frame analyzer */
+    plotting_data *pinfo;
 #endif
 };
 
