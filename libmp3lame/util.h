@@ -144,8 +144,8 @@ inline static ieee754_float32_t fast_log2(ieee754_float32_t xx)
 /* bitstream handling structure */
 typedef struct {
     int totbit;         /* bit counter of bit stream */
-    int buf_byte_idx;   /* pointer to top byte in buffer */
-    unsigned char buf[BUFFER_SIZE];         /* bit stream buffer */
+    char *pbuf;         /* pointer to top byte in buffer */
+    char buf[BUFFER_SIZE];         /* bit stream buffer */
     /* mpeg1: buffer=511 bytes  smallest frame: 96-38(sideinfo)=58
      * max number of frames in reservoir:  8 
      * mpeg2: buffer=255 bytes.  smallest frame: 24-23bytes=1

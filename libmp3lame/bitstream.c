@@ -61,82 +61,41 @@ int getframebits(const lame_global_flags * gfp)
 		+ gfc->padding);
 }
 
-
-
-
-static void
-putheader_bits(lame_internal_flags *gfc)
-{
-    Bit_stream_struc *bs = &gfc->bs;
-    memcpy(&bs->buf[bs->buf_byte_idx], bs->header[bs->w_ptr].buf,
-	   gfc->l3_side.sideinfo_len);
-    bs->buf_byte_idx += gfc->l3_side.sideinfo_len;
-    bs->totbit += gfc->l3_side.sideinfo_len * 8;
-    bs->w_ptr = (bs->w_ptr + 1) & (MAX_HEADER_BUF-1);
-}
-
-
-
-
 /*write j bits into the bit stream */
 inline static void
-putbits2(lame_internal_flags *gfc, int val, int j)
+putbits(lame_internal_flags *gfc, int val, int j)
 {
     Bit_stream_struc *bs = &gfc->bs;
+    int timing = bs->header[bs->w_ptr].write_timing;
+    char *p = bs->pbuf;
 
-    assert(j < MAX_LENGTH-2);
-
-    while (j > 0) {
-	int k, bit_idx = 8 - (bs->totbit & 7);
-	if (bit_idx == 8) {
-	    bs->buf_byte_idx++;
-	    assert(bs->buf_byte_idx < BUFFER_SIZE);
-	    assert(bs->header[bs->w_ptr].write_timing >= bs->totbit
-		||(bs->header[bs->w_ptr].write_timing ^ bs->totbit) < 0);
-	    if (bs->header[bs->w_ptr].write_timing == bs->totbit)
-		putheader_bits(gfc);
-	    bs->buf[bs->buf_byte_idx] = 0;
+    assert(0 < j && j < MAX_LENGTH-2);
+    do {
+	int k, bit_idx;
+	if (timing == bs->totbit) {
+	    memcpy(p, bs->header[bs->w_ptr].buf, gfc->l3_side.sideinfo_len);
+	    p += gfc->l3_side.sideinfo_len;
+	    bs->totbit += gfc->l3_side.sideinfo_len * 8;
+	    bs->w_ptr = (bs->w_ptr + 1) & (MAX_HEADER_BUF-1);
 	}
 
+	bit_idx = 8 - (bs->totbit & 7);
 	k = Min(j, bit_idx);
-	j -= k;
 
+	j -= k;
 	bit_idx -= k;
 
-	assert (j < MAX_LENGTH); /* 32 too large on 32 bit machines */
-        assert (bit_idx < 8u);
-
-        bs->buf[bs->buf_byte_idx] |= ((val >> j) << bit_idx);
+	*p++ |= ((val >> j) << bit_idx);
 	bs->totbit += k;
-    }
+    } while (j > 0);
+
+    if (bs->totbit & 7)
+	p--;
+    bs->pbuf = p;
+    assert(p < &bs->buf[BUFFER_SIZE]);
+    assert(bs->header[bs->w_ptr].write_timing >= bs->totbit
+	   ||(bs->header[bs->w_ptr].write_timing ^ bs->totbit) < 0);
 }
-
-/*write j bits into the bit stream, ignoring frame headers */
-inline static void
-putbits_noheaders(Bit_stream_struc *bs, int val, int j)
-{
-    assert(j < MAX_LENGTH-2);
-    while (j > 0) {
-	int k, bit_idx = 8 - (bs->totbit & 7);
-	if (bit_idx == 8) {
-	    bs->buf_byte_idx++;
-	    assert(bs->buf_byte_idx < BUFFER_SIZE);
-	    bs->buf[bs->buf_byte_idx] = 0;
-	}
-
-	k = Min(j, bit_idx);
-	j -= k;
-        
-	bit_idx -= k;
-        
-	assert (j < MAX_LENGTH); /* 32 too large on 32 bit machines */
-        assert (bit_idx < 8u);
-	
-        bs->buf[bs->buf_byte_idx] |= ((val >> j) << bit_idx);
-	bs->totbit += k;
-    }
-}
-
 
 /*
   Some combinations of bitrate, Fs, and stereo make it impossible to stuff
@@ -153,19 +112,19 @@ drain_into_ancillary(lame_global_flags *gfp, int remainingBits)
     assert(remainingBits >= 0);
 
     if (remainingBits >= 8) {
-	putbits2(gfc,0x4c,8);
+	putbits(gfc,0x4c,8);
 	remainingBits -= 8;
     }
     if (remainingBits >= 8) {
-	putbits2(gfc,0x41,8);
+	putbits(gfc,0x41,8);
 	remainingBits -= 8;
     }
     if (remainingBits >= 8) {
-	putbits2(gfc,0x4d,8);
+	putbits(gfc,0x4d,8);
 	remainingBits -= 8;
     }
     if (remainingBits >= 8) {
-	putbits2(gfc,0x45,8);
+	putbits(gfc,0x45,8);
 	remainingBits -= 8;
     }
 
@@ -176,14 +135,15 @@ drain_into_ancillary(lame_global_flags *gfp, int remainingBits)
 	const char *version = get_lame_short_version ();
 	for (i=0; remainingBits >=8 ; ++i) {
 	    if (i < strlen(version))
-		putbits2(gfc,version[i],8);
+		putbits(gfc,version[i],8);
 	    else
-		putbits2(gfc,pad,8);
+		putbits(gfc,pad,8);
 	    remainingBits -= 8;
 	}
     }
 
-    putbits2(gfc, pad >> (8 - remainingBits), remainingBits);
+    if (remainingBits)
+	putbits(gfc, pad >> (8 - remainingBits), remainingBits);
 }
 
 /*write N bits into the header */
@@ -431,7 +391,7 @@ Huf_count1(lame_internal_flags *gfc, gr_info *gi)
 	    p++;
 	    huffbits = huffbits*2 + (gi->xr[index+3] < 0);
 	}
-	putbits2(gfc, huffbits + hcode[p+16], hcode[p]);
+	putbits(gfc, huffbits + hcode[p+16], hcode[p]);
     }
 }
 
@@ -480,8 +440,9 @@ Huffmancode_esc( lame_internal_flags* const gfc, const struct huffcodetab* h,
 	xbits -= cbits;
 	cbits += h->hlen  [x1];
 
-	putbits2(gfc, h->table [x1], cbits );
-	putbits2(gfc, ext, xbits);
+	putbits(gfc, h->table [x1], cbits);
+	if (xbits)
+	    putbits(gfc, ext, xbits);
     } while ((index += 2) < end);
 }
 
@@ -502,7 +463,7 @@ Huffmancode( lame_internal_flags* const gfc, const struct huffcodetab* h,
 	if (x1) code = code*2 + (gi->xr[index  ] < 0);
 	if (x2) code = code*2 + (gi->xr[index+1] < 0);
 
-	putbits2(gfc, code, clen);
+	putbits(gfc, code, clen);
     } while ((index += 2) < end);
 }
 
@@ -576,21 +537,23 @@ writeMainData (lame_internal_flags *gfc)
 		int data_bits = gfc->bs.totbit;
 		int wptr = gfc->bs.w_ptr;
 #endif
-		for (sfb = 0; sfb < gi->sfbdivide; sfb++) {
-		    if (gi->scalefac[sfb] == -1)
-			continue; /* scfsi is used */
-		    if (gi->scalefac[sfb] == -2)
-			gi->scalefac[sfb] = 0;
-		    putbits2(gfc, gi->scalefac[sfb], slen);
-		}
+		if (slen)
+		    for (sfb = 0; sfb < gi->sfbdivide; sfb++) {
+			if (gi->scalefac[sfb] == -1)
+			    continue; /* scfsi is used */
+			if (gi->scalefac[sfb] == -2)
+			    gi->scalefac[sfb] = 0;
+			putbits(gfc, gi->scalefac[sfb], slen);
+		    }
 		slen = s2bits[gi->scalefac_compress];
-		for (; sfb < gi->sfbmax; sfb++) {
-		    if (gi->scalefac[sfb] == -1)
-			continue; /* scfsi is used */
-		    if (gi->scalefac[sfb] == -2)
-			gi->scalefac[sfb] = 0;
-		    putbits2(gfc, gi->scalefac[sfb], slen);
-		}
+		if (slen)
+		    for (sfb = gi->sfbdivide; sfb < gi->sfbmax; sfb++) {
+			if (gi->scalefac[sfb] == -1)
+			    continue; /* scfsi is used */
+			if (gi->scalefac[sfb] == -2)
+			    gi->scalefac[sfb] = 0;
+			putbits(gfc, gi->scalefac[sfb], slen);
+		    }
 #ifndef NDEBUG
 		data_bits += gi->part2_length
 		    + ((gfc->bs.w_ptr-wptr)&(MAX_HEADER_BUF-1))
@@ -616,8 +579,10 @@ writeMainData (lame_internal_flags *gfc)
 		int sfbend
 		    = sfb + nr_of_sfb_block[gi->scalefac_compress][partition];
 		int slen = gi->slen[partition];
-		for (; sfb < sfbend; sfb++)
-		    putbits2(gfc, Max(gi->scalefac[sfb], 0U), slen);
+		if (slen)
+		    for (; sfb < sfbend; sfb++)
+			putbits(gfc, Max(gi->scalefac[sfb], 0U), slen);
+		sfb = sfbend;
 	    }
 #ifndef NDEBUG
 	    data_bits += gi->part2_length
@@ -680,7 +645,7 @@ compute_flushbits( const lame_global_flags * gfp, int *total_bytes_output )
 	*total_bytes_output = 1 + (*total_bytes_output/8);
     else
 	*total_bytes_output = (*total_bytes_output/8);
-    *total_bytes_output +=  bs->buf_byte_idx + 1;
+    *total_bytes_output += bs->pbuf - bs->buf;
 
     if (flushbits<0) {
 /* if flushbits < 0, this would mean that the buffer looks like:
@@ -717,7 +682,8 @@ void  add_dummy_byte (lame_internal_flags* gfc, unsigned char val )
 {
     Bit_stream_struc *bs = &gfc->bs;
     int i;
-    putbits_noheaders(bs, val, 8);
+    assert((bs->totbit & 7) == 0);
+    *bs->pbuf++ = val;
     for (i = 0 ; i < MAX_HEADER_BUF ; i++)
 	bs->header[i].write_timing += 8;
 }
@@ -780,11 +746,12 @@ copy_buffer(
     lame_internal_flags *gfc,unsigned char *buffer,int size,int mp3data)
 {
     Bit_stream_struc *bs=&gfc->bs;
-    int minimum = bs->buf_byte_idx + 1;
+    int minimum = bs->pbuf - bs->buf;
     if (minimum <= 0) return 0;
     if (size!=0 && minimum>size) return -1; /* buffer is too small */
     memcpy(buffer,bs->buf,minimum);
-    bs->buf_byte_idx = -1;
+    memset(bs->buf, 0, minimum);
+    bs->pbuf = bs->buf;
 
     if (mp3data) {
 	UpdateMusicCRC(&gfc->nMusicCRC,buffer,minimum);
