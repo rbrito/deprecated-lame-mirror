@@ -112,8 +112,6 @@ int apply_abr_preset(lame_global_flags*  gfp, int preset)
     if (abr_switch_map[r].scale != 1)
         (void) lame_set_scale( gfp, abr_switch_map[r].scale );
 
-    lame_set_ATHtype(gfp, 2);
-
     return preset;
 }
 
