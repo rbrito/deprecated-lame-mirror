@@ -21,14 +21,6 @@
 #include <dmalloc.h>
 #endif
 
-/* GLOBAL VARIABLES.  set by parse_args() */
-/* we need to clean this up */
-sound_file_format input_format;   
-int swapbytes;              /* force byte swapping   default=0*/
-int silent;
-int brhist;
-float update_interval;      /* to use Frank's time status display */
-
 
 
 

@@ -97,11 +97,6 @@ void levelmessage ( unsigned maxvalue )
     fwrite ( buff, 1, sizeof(buff)-1, stderr );
 }
 
-sound_file_format input_format;
-int     swapbytes;           /* force byte swapping   default=0 */
-int     silent;
-int     brhist;
-float   update_interval;     /* to use Frank's time status display */
 
 /************************************************************************
 *
