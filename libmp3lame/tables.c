@@ -1340,9 +1340,11 @@ int psymodel_init(lame_global_flags *gfp)
 	if (i != gfc->npart_l-1)
 	    l += gfc->numlines_l[i+1];
 
-	norm[i] = 0.11749;
-	if (gfc->numlines_l[i] == 1)
-	    norm[i] *= 0.01;
+	norm[i] = 0.11749/5.0;
+	if (i < 8)
+	    norm[i] = 0.001/5;
+	if (i > 50)
+	    norm[i] *= 2;
 	gfc->rnumlines_ls[i] = 20.0/(l-1);
 	gfc->rnumlines_l[i] = 1.0 / (gfc->numlines_l[i] * 3);
     }
