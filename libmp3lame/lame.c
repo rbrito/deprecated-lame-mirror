@@ -847,23 +847,25 @@ lame_print_internals( const lame_global_flags * gfp )
     MSGF( gfc, "\t...\n" );
 
     MSGF( gfc, "\nnoisechaping & quantization:\n\n" );
-    MSGF( gfc, "\tnoise shaping: %s\n", gfc->psymodel > 1 ? "used" : "not used");
-    MSGF( gfc, "\t ^ amplification: %d\n", gfc->noise_shaping_amp );
-    MSGF( gfc, "\t ^ stopping: %d\n", gfc->noise_shaping_stop );
-    pc = gfc->quantization ? "xr^3/4" : "ISO";
-    MSGF( gfc, "\tquantization: %s\n", pc );
     switch( gfc->use_best_huffman ) {
     default: pc = "normal"; break;
     case  1: pc = "best (outside loop)"; break;
     case  2: pc = "best (inside loop, slow)"; break;
-    } 
-    MSGF( gfc, "\thuffman search: %s\n", pc ); 
-    MSGF( gfc, "\tquantcomp_long/short=%d,%d\n",
-	  gfc->quantcomp_method, gfc->quantcomp_method_s);
-    MSGF( gfc, "\tallow large scalefactor range=%s\n",
-	  gfc->use_scalefac_scale ? "yes" : "no");
-    MSGF( gfc, "\tuse subblock gain=%s\n",
-	  gfc->use_subblock_gain ? "yes" : "no");
+    }
+    MSGF( gfc, "\thuffman search: %s\n", pc );
+    pc = gfc->quantization ? "xr^3/4" : "ISO";
+    MSGF( gfc, "\tquantization: %s\n", pc );
+    if (gfp->VBR != vbr) {
+	MSGF( gfc, "\tnoise shaping: %s\n", gfc->psymodel > 1 ? "used" : "not used");
+	MSGF( gfc, "\t ^ amplification: %d\n", gfc->noise_shaping_amp );
+	MSGF( gfc, "\t ^ stopping: %d\n", gfc->noise_shaping_stop );
+	MSGF( gfc, "\tquantcomp_long/short=%d,%d\n",
+	      gfc->quantcomp_method, gfc->quantcomp_method_s);
+	MSGF( gfc, "\tallow large scalefactor range=%s\n",
+	      gfc->use_scalefac_scale ? "yes" : "no");
+	MSGF( gfc, "\tuse subblock gain=%s\n",
+	      gfc->use_subblock_gain ? "yes" : "no");
+    }
     MSGF( gfc, "\tsubstep shaping=%d\n", gfc->substep_shaping);
     MSGF( gfc, "\t...\n" );
 
