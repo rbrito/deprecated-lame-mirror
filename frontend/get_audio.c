@@ -59,8 +59,6 @@
 
 #include "main.h"
 #include "get_audio.h"
-#include "portableio.h"
-
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
@@ -93,9 +91,49 @@ static int read_samples_mp3(lame_t gfp, FILE * const musicin,
 static FILE   *OpenSndFile(lame_t gfp, char *);
 
 
+static unsigned int ReadByte(FILE* fp)
+{
+    int  result = getc (fp);
+    return result == EOF  ?  0  : result;
+}
+
+static int  Read16Bits(FILE* fp)
+{
+    int  low  = ReadByte(fp);
+    int  high = ReadByte(fp);
+
+    return (int) ((short)((high << 8) | low));
+}
+
+static void Write16Bits(FILE *fp, int i)
+{
+    putc(i & 0xff, fp);
+    putc((i >> 8) & 0xff, fp);
+}
+
+static int Read32Bits(FILE* fp)
+{
+    int  low  = ReadByte(fp);
+    int  medl = ReadByte(fp);
+    int  medh = ReadByte(fp);
+    int  high = ReadByte(fp);
+
+    return (high << 24) | (medh << 16) | (medl << 8) | low;
+}
+
+static void Write32Bits(FILE *fp, int i)
+{
+    Write16Bits(fp, i);
+    Write16Bits(fp, i >> 16);
+}
+
+static void ReadBytes(FILE *fp, char *p, int n)
+{
+    memset ( p, 0, n );
+    fread  ( p, 1, n, fp );
+}
+
 /* Replacement for forward fseek(,,SEEK_CUR), because fseek() fails on pipes */
-
-
 static int
 fskip(FILE * fp, long offset, int whence)
 {
@@ -303,17 +341,17 @@ WriteWaveHeader(FILE * const fp, const int pcmbytes,
 
     /* quick and dirty, but documented */
     fwrite("RIFF", 1, 4, fp); /* label */
-    Write32BitsLowHigh(fp, pcmbytes + 44 - 8); /* length in bytes without header */
+    Write32Bits(fp, pcmbytes + 44 - 8); /* length in bytes without header */
     fwrite("WAVEfmt ", 2, 4, fp); /* 2 labels */
-    Write32BitsLowHigh(fp, 2 + 2 + 4 + 4 + 2 + 2); /* length of PCM format declaration area */
-    Write16BitsLowHigh(fp, 1); /* is PCM? */
-    Write16BitsLowHigh(fp, channels); /* number of channels */
-    Write32BitsLowHigh(fp, freq); /* sample frequency in [Hz] */
-    Write32BitsLowHigh(fp, freq * channels * bytes); /* bytes per second */
-    Write16BitsLowHigh(fp, channels * bytes); /* bytes per sample time */
-    Write16BitsLowHigh(fp, bits); /* bits per sample */
+    Write32Bits(fp, 2 + 2 + 4 + 4 + 2 + 2); /* length of PCM format declaration area */
+    Write16Bits(fp, 1); /* is PCM? */
+    Write16Bits(fp, channels); /* number of channels */
+    Write32Bits(fp, freq); /* sample frequency in [Hz] */
+    Write32Bits(fp, freq * channels * bytes); /* bytes per second */
+    Write16Bits(fp, channels * bytes); /* bytes per sample time */
+    Write16Bits(fp, bits); /* bits per sample */
     fwrite("data", 1, 4, fp); /* label */
-    Write32BitsLowHigh(fp, pcmbytes); /* length in bytes of raw PCM data */
+    Write32Bits(fp, pcmbytes); /* length in bytes of raw PCM data */
 
     return ferror(fp) ? -1 : 0;
 }
@@ -746,17 +784,17 @@ read_samples_pcm(FILE * const musicin, int sample_buffer[1152*2],
 static void
 SetIDTagsFromRiffTags(lame_t gfp, FILE * sf)
 {
-    int subSize = Read32BitsLowHigh(sf);
-    if (Read32BitsLowHigh(sf) != WAV_ID_INFO) {
+    int subSize = Read32Bits(sf);
+    if (Read32Bits(sf) != WAV_ID_INFO) {
 	fskip(sf, subSize, SEEK_CUR);
 	return;
     }
 
     subSize -= 4;
     while (subSize && !feof(sf)) {
-	int type = Read32BitsLowHigh(sf);
+	int type = Read32Bits(sf);
 	char buf[INFO_SIZE+1];
-	unsigned int length = Read32BitsLowHigh(sf);
+	unsigned int length = Read32Bits(sf);
 	if (length > INFO_SIZE)
 	    return; /* XXX ugly FIX ME */
 	ReadBytes(sf, buf, (length+1) & ~1); /* resolve word padding */
@@ -814,18 +852,18 @@ parse_wave_header(lame_t gfp, FILE * sf)
     long    data_length = 0, file_length, subSize = 0;
     int     loop_sanity = 0;
 
-    file_length = Read32BitsLowHigh(sf);
+    file_length = Read32Bits(sf);
 
-    if (Read32BitsLowHigh(sf) != WAV_ID_WAVE)
+    if (Read32Bits(sf) != WAV_ID_WAVE)
 	return 0;
 
     for (loop_sanity = 0; loop_sanity < 20; ++loop_sanity) {
-	int type = Read32BitsLowHigh(sf);
+	int type = Read32Bits(sf);
 	if (feof(sf))
 	    break;
 
         if (type == WAV_ID_FMT) {
-	    subSize = Read32BitsLowHigh(sf);
+	    subSize = Read32Bits(sf);
 
 	    if (subSize < 16) {
 		/* too short 'fmt ' chunk */
@@ -833,18 +871,18 @@ parse_wave_header(lame_t gfp, FILE * sf)
 	    }
 	    subSize -= 16;
 
-	    format_tag = Read16BitsLowHigh(sf);
-	    channels = Read16BitsLowHigh(sf);
-	    samples_per_sec = Read32BitsLowHigh(sf);
-	    avg_bytes_per_sec = Read32BitsLowHigh(sf);
-	    block_align = Read16BitsLowHigh(sf);
-	    bits_per_sample = Read16BitsLowHigh(sf);
+	    format_tag = Read16Bits(sf);
+	    channels = Read16Bits(sf);
+	    samples_per_sec = Read32Bits(sf);
+	    avg_bytes_per_sec = Read32Bits(sf);
+	    block_align = Read16Bits(sf);
+	    bits_per_sample = Read16Bits(sf);
 
 	    if (subSize > 0 && fskip(sf, subSize, SEEK_CUR) != 0)
 		return 0;
         }
         else if (type == WAV_ID_DATA) {
-            subSize = Read32BitsLowHigh(sf);
+            subSize = Read32Bits(sf);
 	    if (data_offset != MAX_U_32_NUM) {
 		/* multiple 'data' chunk */
 		return 0;
@@ -862,7 +900,7 @@ parse_wave_header(lame_t gfp, FILE * sf)
 	}
 	else {
 	    /* unknown chunk */
-	    subSize = Read32BitsLowHigh(sf);
+	    subSize = Read32Bits(sf);
 	    if (fskip(sf, (long) subSize, SEEK_CUR) != 0)
 		return 0;
         }
@@ -908,7 +946,7 @@ parse_wave_header(lame_t gfp, FILE * sf)
 static void
 parse_file_header(lame_t gfp, FILE * sf)
 {
-    int type = Read32BitsLowHigh(sf);
+    int type = Read32Bits(sf);
     count_samples_carefully = 0;
     input_format = sf_raw;
 

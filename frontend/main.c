@@ -61,7 +61,6 @@
 #include "parse.h"
 #include "main.h"
 #include "get_audio.h"
-#include "portableio.h"
 #include "timestatus.h"
 
 /* PLL 14/04/2000 */
@@ -259,16 +258,9 @@ decoder(lame_t gfp, FILE * outf, int skip, char *inPath, char *outPath)
 	    i = iread;
 	skip -= i;
 	for (; i < iread; i++) {
-	    if (disable_wav_header) {
-		WriteShort(outf, Buffer[0][i]);
-		if (tmp_num_channels == 2)
-		    WriteShort(outf, Buffer[1][i]);
-	    }
-	    else {
-		Write16BitsLowHigh(outf, Buffer[0][i] >> 16);
-		if (tmp_num_channels == 2)
-		    Write16BitsLowHigh(outf, Buffer[1][i] >> 16);
-	    }
+	    WriteShort(outf, Buffer[0][i]);
+	    if (tmp_num_channels == 2)
+		WriteShort(outf, Buffer[1][i]);
 	}
     } while (iread);
 

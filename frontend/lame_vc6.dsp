@@ -134,10 +134,6 @@ SOURCE=.\parse.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\portableio.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\timestatus.c
 # End Source File
 # End Group
@@ -163,10 +159,6 @@ SOURCE=.\main.h
 # Begin Source File
 
 SOURCE=.\parse.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\portableio.h
 # End Source File
 # Begin Source File
 

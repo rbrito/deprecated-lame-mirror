@@ -46,10 +46,5 @@ extern FILE *musicin;
 
 #ifdef LIBSNDFILE
 # include "sndfile.h"
-#else
-/*****************************************************************
- * LAME/ISO built in audio file I/O routines 
- *******************************************************************/
-# include "portableio.h"
-#endif	/* ifdef LIBSNDFILE */
+#endif /* ifdef LIBSNDFILE */
 #endif	/* ifndef LAME_GET_AUDIO_H */

@@ -121,10 +121,6 @@ SOURCE=..\frontend\parse.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\frontend\portableio.c
-# End Source File
-# Begin Source File
-
 SOURCE=..\frontend\timestatus.c
 # End Source File
 # End Group
@@ -154,10 +150,6 @@ SOURCE=..\frontend\lametime.h
 # Begin Source File
 
 SOURCE=..\frontend\parse.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\frontend\portableio.h
 # End Source File
 # Begin Source File
 

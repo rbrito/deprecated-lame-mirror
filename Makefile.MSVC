@@ -367,7 +367,6 @@ dll_sources = \
 	dll/BladeMP3EncDll.c
 
 common_sources = \
-	frontend/portableio.c \
 	frontend/get_audio.c \
 	frontend/parse.c \
 	frontend/timestatus.c \

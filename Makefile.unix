@@ -442,7 +442,6 @@ frontend_sources = \
 	frontend/get_audio.c \
         frontend/lametime.c \
         frontend/parse.c \
-	frontend/portableio.c \
 	frontend/timestatus.c 
 
 lib_sources = \
