@@ -658,6 +658,29 @@ __declspec(dllexport) BE_ERR	beEncodeChunk(HBE_STREAM hbeStream, DWORD nSamples,
 }
 
 
+// accept floating point audio samples, scaled to the range of a signed 16-bit
+//  integer (within +/- 32768), in non-interleaved channels  -- DSPguru, jd
+__declspec(dllexport) BE_ERR	beEncodeChunkFloatS16NI(HBE_STREAM hbeStream, DWORD nSamples, 
+			PFLOAT buffer_l, PFLOAT buffer_r, PBYTE pOutput, PDWORD pdwOutput)
+{
+	int nOutputSamples;
+
+	nOutputSamples = lame_encode_buffer_sample_t(gfp,buffer_l,buffer_r,nSamples,pOutput,0);
+
+	if ( nOutputSamples >= 0 )
+	{
+		*pdwOutput = (DWORD) nOutputSamples;
+	}
+	else
+	{
+		*pdwOutput=0;
+		return BE_ERR_BUFFER_TOO_SMALL;
+	}
+
+	return BE_ERR_SUCCESSFUL;
+}
+
+
 __declspec(dllexport) BE_ERR beWriteVBRHeader(LPCSTR lpszFileName)
 {
 	FILE* fpStream	=NULL;
@@ -787,4 +810,3 @@ static void DispErr(LPSTR strErr)
 {
 	MessageBox(NULL,strErr,"",MB_OK);
 }
-

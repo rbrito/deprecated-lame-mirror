@@ -221,6 +221,8 @@ typedef struct	{
 
 typedef BE_ERR	(*BEINITSTREAM)			(PBE_CONFIG, PDWORD, PDWORD, PHBE_STREAM);
 typedef BE_ERR	(*BEENCODECHUNK)		(HBE_STREAM, DWORD, PSHORT, PBYTE, PDWORD);
+// added for floating point audio  -- DSPguru, jd
+typedef BE_ERR	(*BEENCODECHUNKFLOATS16NI)	(HBE_STREAM, DWORD, PFLOAT, PFLOAT, PBYTE, PDWORD);
 typedef BE_ERR	(*BEDEINITSTREAM)		(HBE_STREAM, PBYTE, PDWORD);
 typedef BE_ERR	(*BECLOSESTREAM)		(HBE_STREAM);
 typedef VOID	(*BEVERSION)			(PBE_VERSION);
@@ -228,6 +230,7 @@ typedef VOID	(*BEWRITEVBRHEADER)		(LPCSTR);
 
 #define	TEXT_BEINITSTREAM		"beInitStream"
 #define	TEXT_BEENCODECHUNK		"beEncodeChunk"
+#define	TEXT_BEENCODECHUNKFLOATS16NI	"beEncodeChunkFloatS16NI"
 #define	TEXT_BEDEINITSTREAM		"beDeinitStream"
 #define	TEXT_BECLOSESTREAM		"beCloseStream"
 #define	TEXT_BEVERSION			"beVersion"
@@ -237,11 +240,12 @@ typedef VOID	(*BEWRITEVBRHEADER)		(LPCSTR);
 
 __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples, PDWORD dwBufferSize, PHBE_STREAM phbeStream);
 __declspec(dllexport) BE_ERR	beEncodeChunk(HBE_STREAM hbeStream, DWORD nSamples, PSHORT pSamples, PBYTE pOutput, PDWORD pdwOutput);
+// added for floating point audio  -- DSPguru, jd
+__declspec(dllexport) BE_ERR	beEncodeChunkFloatS16NI(HBE_STREAM hbeStream, DWORD nSamples, PFLOAT buffer_l, PFLOAT buffer_r, PBYTE pOutput, PDWORD pdwOutput);
 __declspec(dllexport) BE_ERR	beDeinitStream(HBE_STREAM hbeStream, PBYTE pOutput, PDWORD pdwOutput);
 __declspec(dllexport) BE_ERR	beCloseStream(HBE_STREAM hbeStream);
 __declspec(dllexport) VOID		beVersion(PBE_VERSION pbeVersion);
 __declspec(dllexport) BE_ERR	beWriteVBRHeader(LPCSTR lpszFileName);
-
 
 #endif
 

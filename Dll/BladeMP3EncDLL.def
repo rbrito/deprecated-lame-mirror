@@ -7,6 +7,7 @@ beDeinitStream		@3
 beCloseStream		@4
 beVersion			@5
 beWriteVBRHeader	@6
+beEncodeChunkFloatS16NI	@7
 
 lame_init						@100
 lame_close						@101
