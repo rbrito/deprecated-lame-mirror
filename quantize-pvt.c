@@ -27,6 +27,7 @@ if (convert_psy), then calc_noise will compute the noise for the L/R
 channels from M/S MDCT data and L/R psy-model threshold information.
 Distortion in ether L or R channel will be marked as distortion in
 both Mid and Side channels.  
+NOTE: 3/00: this mode has been removed.  
 
 if (reduce_sidechannel) then outer_loop will allocate less bits
 to the side channel and more bits to the mid channel based on relative 

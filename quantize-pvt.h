@@ -49,23 +49,6 @@ void outer_loop( lame_global_flags *gfp,
 		int ch);
 
 
-void outer_loop_dual( lame_global_flags *gfp,
-                FLOAT8 xr[2][576],     /*vector of the magnitudees of the spectral values */
-		FLOAT8 xr_org[2][576],
-                int mean_bits,
-                int bit_rate,
-		int best_over[2],
-                III_psy_xmin l3_xmin[2], /* the allowed distortion of the scalefactor */
-                int l3_enc[2][576],    /* vector of quantized values ix(0..575) */
-                III_scalefac_t scalefac[2], /* scalefactors */
-                int gr,
-		III_side_info_t *l3_side,
-		III_psy_ratio ratio[2], 
-		FLOAT8 pe[2][2],
-		FLOAT8 ms_ratio[2]);
-
-
-
 
 void iteration_init( lame_global_flags *gfp,III_side_info_t *l3_side, int l3_enc[2][2][576]);
 
@@ -90,17 +73,6 @@ int calc_noise1( FLOAT8 xr[576],
                  III_psy_xmin *l3_xmin,
 		 III_scalefac_t *,
                  FLOAT8 *noise, FLOAT8 *tot_noise, FLOAT8 *max_noise);
-
-void calc_noise2( FLOAT8 xr[2][576],
-                 int ix[2][576],
-                 gr_info *cod_info[2],
-                 FLOAT8 xfsf[2][4][SBPSY_l], 
-		 FLOAT8 distort[2][4][SBPSY_l],
-                 III_psy_xmin l3_xmin[2],
-		 III_scalefac_t scalefac[2],
-		 int over[2], 
-                 FLOAT8 noise[2], FLOAT8 tot_noise[2], FLOAT8 max_noise[2]);
-
 
 int loop_break( III_scalefac_t *scalefac, gr_info *cod_info);
 

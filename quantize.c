@@ -124,16 +124,14 @@ set_pinfo (
 void
 iteration_loop( lame_global_flags *gfp,
                 FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
-		FLOAT8 xr_org[2][2][576], III_psy_ratio ratio[2][2],
+		FLOAT8 xr[2][2][576], III_psy_ratio ratio[2][2],
 		III_side_info_t *l3_side, int l3_enc[2][2][576],
 		III_scalefac_t scalefac[2][2])
 {
-  FLOAT8 xr[2][576];
   FLOAT8 xfsf[4][SBPSY_l];
   FLOAT8 noise[4]; /* over,max_noise,over_noise,tot_noise; */
   III_psy_xmin l3_xmin[2];
   gr_info *cod_info;
-  int over[2];
   int bitsPerFrame;
   int mean_bits;
   int ch, gr, i, bit_rate;
@@ -154,7 +152,7 @@ iteration_loop( lame_global_flags *gfp,
     int targ_bits[2];
 
     if (convert_mdct) 
-      ms_convert(xr_org[gr], xr_org[gr]);
+      ms_convert(xr[gr], xr[gr]);
     
     on_pe(gfp,pe,l3_side,targ_bits,mean_bits, gr);
 #ifdef RH_SIDE_CBR
@@ -165,7 +163,7 @@ iteration_loop( lame_global_flags *gfp,
     
     for (ch=0 ; ch < gfp->stereo ; ch ++) {
       cod_info = &l3_side->gr[gr].ch[ch].tt;	
-      if (!init_outer_loop(gfp,xr_org[gr][ch], cod_info))
+      if (!init_outer_loop(gfp,xr[gr][ch], cod_info))
         {
           /* xr contains no energy 
            * cod_info was set in init_outer_loop above
@@ -176,8 +174,8 @@ iteration_loop( lame_global_flags *gfp,
         }
       else
 	{
-          calc_xmin(gfp,xr_org[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin[ch]);
-	  outer_loop( gfp,xr_org[gr][ch], targ_bits[ch], noise,
+          calc_xmin(gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin[ch]);
+	  outer_loop( gfp,xr[gr][ch], targ_bits[ch], noise,
 		      &l3_xmin[ch], l3_enc[gr][ch], 
 		      &scalefac[gr][ch], cod_info, xfsf, ch);
         }
@@ -187,12 +185,12 @@ iteration_loop( lame_global_flags *gfp,
       }
 #ifdef HAVEGTK
       if (gfp->gtkflag)
-	set_pinfo (cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr_org[gr][ch], xfsf, noise, gr, ch);
+	set_pinfo (cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
 #endif
       ResvAdjust(gfp,cod_info, l3_side, mean_bits );
       /* set the sign of l3_enc */
       for ( i = 0; i < 576; i++) {
-	if (xr_org[gr][ch][i] < 0)
+	if (xr[gr][ch][i] < 0)
 	  l3_enc[gr][ch][i] *= -1;
       }
     }
