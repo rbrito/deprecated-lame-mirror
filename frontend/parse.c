@@ -537,7 +537,6 @@ long_help ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramNam
               "                               0,1 = Low priority (IDLE_PRIORITY_CLASS)\n"
               "                               2 = normal priority (NORMAL_PRIORITY_CLASS, default)\n"
               "                               3,4 = High priority (HIGH_PRIORITY_CLASS))\n"
-              "    Note: Calling '--priority' without a parameter will select priority 0.\n"
 #endif
 #if defined(__OS2__)
               "\n\nOS/2-specific options:\n"
@@ -547,7 +546,6 @@ long_help ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramNam
               "                               2 = Regular priority (REGULAR, delta = -31)\n"
               "                               3 = High priority (REGULAR, delta = 0)\n"
               "                               4 = Maximum priority (REGULAR, delta = +31)\n"
-              "    Note: Calling '--priority' without a parameter will select priority 0.\n"
 #endif
 
               );
