@@ -174,7 +174,7 @@ proc	pow075_SSE
 proc	sumofsqr_3DN
 %assign _P 0
 	mov	eax, [esp+_P+4]		; eax = xr
-	mov	ecx, [esp+_P+8]		; edx = n
+	mov	ecx, [esp+_P+8]		; ecx = n
 	mov	edx, [esp+_P+12]	; edx = psum
 
 	pxor	mm0, mm0		; mm0 = sum0
@@ -201,4 +201,72 @@ proc	sumofsqr_3DN
 	pfmul	mm0, mm2
 	movd	[edx], mm0
 	femms
+	ret
+
+
+
+
+
+	externdef	pow43
+	externdef	pow20
+
+proc	calc_noise_sub_3DN
+%assign _P 16
+	push		ebx
+	push		esi
+	push		edi
+	push		ebp
+
+	mov		edx, [esp+_P+16] ; scalefact
+	mov		eax, [esp+_P+4]  ; absxr(end)
+	mov		ecx, [esp+_P+8]  ; ix(end)
+	movd		mm6, [pow20+116*4+edx*4] ; step
+	mov		edx, [esp+_P+12] ; -n
+
+	pxor		mm4, mm4
+	pxor		mm5, mm5
+	punpckldq	mm6, mm6
+
+	test		edx, 2
+	jz		.lp4
+	mov		ebp, [ecx+ 0+ edx*4]
+	mov		esi, [ecx+ 4+ edx*4]
+	movd		mm4, [pow43+ebp*4]
+	punpckldq	mm4, [pow43+esi*4]
+	pfmul		mm4, mm6
+	pfsubr		mm4, [eax+ 0+ edx*4]
+	add		edx, byte 2
+	pfmul		mm4, mm4
+
+	loopalignK7	16
+.lp4:
+	mov		ebp, [ecx+ 0+ edx*4]
+	mov		edi, [ecx+ 8+ edx*4]
+	mov		esi, [ecx+ 4+ edx*4]
+	mov		ebx, [ecx+12+ edx*4]
+	movd		mm0, [pow43+ebp*4]
+	movd		mm1, [pow43+edi*4]
+	punpckldq	mm0, [pow43+esi*4]
+	punpckldq	mm1, [pow43+ebx*4]
+	pfmul		mm0, mm6
+	pfmul		mm1, mm6
+	pfsubr		mm0, [eax+ 0+ edx*4]
+	pfsubr		mm1, [eax+ 8+ edx*4]
+	add		edx, byte 4
+	pfmul		mm0, mm0
+	pfmul		mm1, mm1
+	pfadd		mm4, mm0
+	pfadd		mm5, mm1
+	jnz		.lp4
+
+	pfadd		mm4, mm5
+	mov		edx, [esp+_P+20] ; result
+	pfacc		mm4, mm4
+	movd		[edx], mm4
+	femms
+
+	pop		ebp
+	pop		edi
+	pop		esi
+	pop		ebx
 	ret

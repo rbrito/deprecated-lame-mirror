@@ -330,15 +330,22 @@ calc_noise(
 	l = -gi->width[sfb];
 	j -= l;
 	if (noise < 0.0) {
-	    FLOAT step = POW20(scalefactor(gi, sfb));
-	    noise = 0.0;
-	    do {
-		FLOAT temp;
-		temp = absxr[j+l] - pow43[gi->l3_enc[j+l]] * step; l++;
-		noise += temp * temp;
-		temp = absxr[j+l] - pow43[gi->l3_enc[j+l]] * step; l++;
-		noise += temp * temp;
-	    } while (l < 0);
+#ifdef HAVE_NASM
+	    if (gfc->CPU_features.AMD_3DNow) {
+		calc_noise_sub_3DN(&absxr[j], &gi->l3_enc[j], l, scalefactor(gi, sfb), &noise);
+	    } else
+#endif
+	    {
+		FLOAT step = POW20(scalefactor(gi, sfb));
+		noise = 0.0;
+		do {
+		    FLOAT temp;
+		    temp = absxr[j+l] - pow43[gi->l3_enc[j+l]] * step; l++;
+		    noise += temp * temp;
+		    temp = absxr[j+l] - pow43[gi->l3_enc[j+l]] * step; l++;
+		    noise += temp * temp;
+		} while (l < 0);
+	    }
 	    *distort = (noise *= *rxmin);
 	}
 	max_noise=Max(max_noise,noise);
