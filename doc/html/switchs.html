@@ -44,8 +44,16 @@
     <td align="LEFT" nowrap>copyright</td>
   </tr>
   <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd><a href="#-comp">--comp</a></kbd></td>
+    <td align="LEFT" nowrap>choose compression ratio</td>
+  </tr>
+  <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#d">-d</a></kbd></td>
     <td align="LEFT" nowrap>block type control</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd><a href="#-decode">--decode</a></kbd></td>
+    <td align="LEFT" nowrap>decoding only</td>
   </tr>
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#e">-e</a></kbd></td>
@@ -54,6 +62,14 @@
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#f">-f</a></kbd></td>
     <td align="LEFT" nowrap> fast mode</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd><a href="#FF">-F</a></kbd></td>
+    <td align="LEFT" nowrap> strictly enforce the -b option</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd><a href="#-freeformat">--freeformat</a></kbd></td>
+    <td align="LEFT" nowrap> free format bitstream</td>
   </tr>
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd>-g</kbd></td>
@@ -177,8 +193,8 @@
 </dl>
 <dl> 
   <dd>This option causes LAME to ignore the output of the psy-model and only use 
-    masking from the ATH. Might be useful at very high bitrates or for testing 
-    the ATH. 
+    masking from the ATH (absolute threshold of hearing). Might be useful at very 
+    high bitrates or for testing the ATH. 
   <dt><br>
   </dt>
 </dl>
@@ -193,10 +209,11 @@
     For MPEG2 (sampling frequencies of 16, 22.05 and 24kHz)<br>
     n = 8,16,24,32,40,48,56,64,80,96,112,128,144,160<br>
     <br>
-    Default is 128kbs for MPEG1 and 80kbs for MPEG2. <br>
+    Default is 128 kbs for MPEG1 and 80 kbs for MPEG2. <br>
     <br>
     When used with variable bitrate encoding (VBR), -b specifies the minimum bitrate 
-    to be used. 
+    to be used. However, during silence, the smallest frame size available will 
+    be used.
   <dt><br>
   </dt>
 </dl>
@@ -224,11 +241,27 @@
   <dd>Mark the encoded file as being copyrighted. 
   <dt><br>
     <br>
+  <dt><strong>* <kbd>--comp</kbd><a name="-comp">&nbsp;&nbsp;&nbsp;&nbsp;choose 
+    compression ratio</a></strong> </dt>
+</dl>
+<dl> 
+  <dd>Instead of choosing bitrate, using this option, user can choose compression 
+    ratio to achieve. 
+  <dt><br>
+    <br>
   <dt><strong>* <kbd>-d</kbd><a name="d">&nbsp;&nbsp;&nbsp;&nbsp;block type control</a></strong> 
   </dt>
 </dl>
 <dl> 
   <dd>Allows the left and right channels to use different block size types. 
+  <dt><br>
+    <br>
+  <dt><strong>* <kbd>--decode</kbd><a name="-decode">&nbsp;&nbsp;&nbsp;&nbsp;decoding 
+    only</a></strong> </dt>
+</dl>
+<dl> 
+  <dd>Use LAME for decoding.<br>
+    input=mp3 file, output=raw pcm
   <dt><br>
     <br>
     <strong>* <kbd>-e n/5/c</kbd><a name="e">&nbsp;&nbsp;&nbsp;&nbsp;de-emphasis</a></strong> 
@@ -257,6 +290,24 @@
     or streaming on slowest computers. 
   <dt><br>
     <br>
+    <strong>* <kbd>-F</kbd><a name="FF">&nbsp;&nbsp;&nbsp;strictly enforce the 
+    -b option</a></strong> </dt>
+</dl>
+<dl> 
+  <dd> This is mainly for use with hardware players that do not support low bitrate 
+    mp3.
+  <dt><br>
+    <br>
+    <strong>* <kbd>--freeformat</kbd><a name="-freeformat">&nbsp;&nbsp;&nbsp;&nbsp;free 
+    format bitstream</a></strong> </dt>
+</dl>
+<dl> 
+  <dd> Produces a free format bitstream. With this option, you can use -b with 
+    any bitrate higher than 8 kbps.<br>
+    However, even if an mp3 decoder is required to support free bitrates at least 
+    up to 320 kbps, many players are unable to deal with it.
+  <dt><br>
+    <br>
     <strong>* <kbd>-h</kbd><a name="h">&nbsp;&nbsp;&nbsp;&nbsp;high quality</a></strong> 
   </dt>
 </dl>
@@ -283,7 +334,6 @@
         <td>quality 2</td>
       </tr>
     </table>
-    
   <dt><br>
     <br>
     <strong>* <kbd>--help</kbd><a name="-help">&nbsp;&nbsp;&nbsp;&nbsp;help</a></strong> 
@@ -385,7 +435,7 @@
     ATH</a></strong> </dt>
 </dl>
 <dl> 
-  <dd> Disable any use of the ATH for masking. 
+  <dd> Disable any use of the ATH (absolute threshold of hearing) for masking. 
   <dt><br>
   </dt>
 </dl>
