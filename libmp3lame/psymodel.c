@@ -1095,15 +1095,12 @@ mp3x display               <------LONG------>
 
 	    compute_masking_s(gfc, wsamp_S[ch&1][sblock],
 			      &gfc->masking_next[gr][ch], sblock);
-#if 0
-	    if (sblock == first_attack_position[ch]
-		|| sblock == first_attack_position[ch]+1) {
+	    if (sblock == first_attack_position[ch]) {
 		int sb;
 		for (sb = 0; sb < SBMAX_s; sb++) 
 		    gfc->masking_next[gr][ch].thm.s[sb][sblock]
 			*= Max(0.01, attack_adjust[ch]);
 	    }
-#endif
 	}
     } /* end loop over ch */
 }

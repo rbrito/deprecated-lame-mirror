@@ -32,10 +32,6 @@
 /* ??? Assuming dynamic range=96dB, this value should be 92 */
 #define NSATHSCALE 110
 
-#define NS_PREECHO_ATT0 1.0 /* 0.8 */
-#define NS_PREECHO_ATT1 0.6
-#define NS_PREECHO_ATT2 0.3
-
 #define NS_MSFIX 4.0
 
 void psycho_analysis( lame_global_flags *gfp,
