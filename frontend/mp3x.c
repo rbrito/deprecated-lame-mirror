@@ -45,7 +45,7 @@ int main(int argc, char **argv)
     usage(gf, stderr, argv[0]);  /* no command-line args  */
     return -1;
   }
-  ret = parse_args(gf,argc, argv, inPath, outPath); 
+  ret = parse_args(gf,argc, argv, inPath, outPath,NULL,NULL); 
   if (ret < 0)
     return ret == -2 ? 0 : 1;
   

@@ -582,7 +582,7 @@ lame_init_params(lame_global_flags * const gfp)
     lame_internal_flags *gfc = gfp->internal_flags;
 
     if (gfp->error_protection) {
-	ERRORF(gfc,"Error: CRC is temporarily broken as of 5/2001!!!");
+	ERRORF(gfc,"Error: CRC is temporarily broken as of 5/2001!!!\n");
 	return -2;
     }
 
@@ -1001,9 +1001,6 @@ lame_init_params(lame_global_flags * const gfp)
     else
         gfc->is_mpeg1 = 0; /* no */
 
-    /* estimate total frames.  */
-    gfp->totalframes =
-        2 + gfp->num_samples / (gfc->resample_ratio * gfp->framesize);
     gfc->Class_ID = LAME_ID;
 
 
@@ -1416,10 +1413,7 @@ lame_encode_frame(lame_global_flags * gfp,
         ret = lame_encode_mp3_frame(gfp, inbuf_l, inbuf_r, mp3buf, mp3buf_size);
     }
 
-    /* check to see if we underestimated totalframes */
     gfp->frameNum++;
-    if (gfp->totalframes < gfp->frameNum)
-        gfp->totalframes = gfp->frameNum;
     return ret;
 }
 

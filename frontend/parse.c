@@ -69,6 +69,7 @@ int mp3_delay_set;          /* user specified the value of the mp3 encoder
 int disable_wav_header;
 
 
+
 /************************************************************************
 *
 * license
@@ -681,13 +682,17 @@ static int resample_rate ( double freq )
 #define T_ELSE             } else {
 #define T_END              }
 
-int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inPath, char* const outPath )
+int  parse_args ( lame_global_flags* gfp, int argc, char** argv, 
+char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 {
     int         err;
+    int         input_file=0;  // set to 1 if we parse an input file name 
     int         i;
     int         autoconvert  = 0;
     double      val;
+    int         nogap=0;
     const char* ProgramName  = argv[0]; 
+    int count_nogap=0;
 
     inPath [0] = '\0';   
     outPath[0] = '\0';
@@ -737,29 +742,29 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 		    lame_set_VBR(gfp,vbr_mtrh); 
 
 		T_ELIF ("r3mix")
-            gfp->VBR = vbr_rh; 
-            gfp->VBR_q = 1;
-            (void) lame_set_quality( gfp, 2 );
-            gfp->lowpassfreq = 19500;
-            (void) lame_set_mode( gfp, JOINT_STEREO );
-            (void) lame_set_ATHtype( gfp, 3 );
-            gfp->VBR_min_bitrate_kbps=112;
-		
+		    gfp->VBR = vbr_rh; 
+		    gfp->VBR_q = 1;
+		    (void) lame_set_quality( gfp, 2 );
+		    gfp->lowpassfreq = 19500;
+		    (void) lame_set_mode( gfp, JOINT_STEREO );
+		    (void) lame_set_ATHtype( gfp, 3 );
+		    gfp->VBR_min_bitrate_kbps=112;
+		    
 		
                 /**
                  *  please, do *not* DOCUMENT this one
                  *  it is a developers only switch (rh)
                  */
                 T_ELIF ("remix")
-            gfp->VBR = vbr_mtrh; 
-            gfp->VBR_q = 3;
-            (void) lame_set_quality( gfp, 2 );
-            gfp->lowpassfreq = 19500;
-            (void) lame_set_mode( gfp, JOINT_STEREO );
-            (void) lame_set_ATHtype( gfp, 3 );
-            gfp->VBR_min_bitrate_kbps=112;
-		
-                
+		    gfp->VBR = vbr_mtrh; 
+		    gfp->VBR_q = 3;
+		    (void) lame_set_quality( gfp, 2 );
+		    gfp->lowpassfreq = 19500;
+		    (void) lame_set_mode( gfp, JOINT_STEREO );
+		    (void) lame_set_ATHtype( gfp, 3 );
+		    gfp->VBR_min_bitrate_kbps=112;
+		    
+		    
 		T_ELIF ("abr")
 		    argUsed=1;
 		    gfp->VBR = vbr_abr; 
@@ -1087,6 +1092,9 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
                 T_ELIF ("disptime")
                     argUsed = 1;
 		    update_interval = atof (nextArg);
+
+                T_ELIF ("nogap")
+                    nogap=1;
 		    
 		T_ELSE
 		    fprintf(stderr,"%s: unrec option --%s\n", ProgramName, token);
@@ -1258,19 +1266,35 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 		}
 	    }	
 	} else {
-	    if (inPath [0] == '\0')       
-	        strncpy(inPath , argv[i], MAX_NAME_SIZE);
-	    else 
-	    if (outPath[0] == '\0') 
-	        strncpy(outPath, argv[i], MAX_NAME_SIZE);
-	    else {
-		fprintf(stderr,"%s: excess arg %s\n", ProgramName, argv[i]);
-		err = 1;
+            if (nogap) {
+		if ((num_nogap != NULL) && (count_nogap < *num_nogap)) {
+		    strncpy(nogap_inPath[count_nogap++],argv[i],MAX_NAME_SIZE);
+                    input_file=1;
+		} else {
+		    /* sorry, calling program did not allocate enough space */
+		    fprintf(stderr,"Error: 'nogap option'.  Calling program does not allow nogap option, or\nyou have exceeded maximum number of input files for the nogap option\n");
+		    *num_nogap=-1;
+		    return -1;
+		}
+	    }else{
+		/* normal options:   inputfile  [outputfile], and
+                   either one can be a '-' for stdin/stdout */
+		if (inPath [0] == '\0') {     
+		    strncpy(inPath , argv[i], MAX_NAME_SIZE);
+		    input_file=1;
+		} else {
+		    if (outPath[0] == '\0') 
+			strncpy(outPath, argv[i], MAX_NAME_SIZE);
+		    else {
+			fprintf(stderr,"%s: excess arg %s\n", ProgramName, argv[i]);
+			err = 1;
+		    }
+		}
 	    }
 	}
     }  /* loop over args */
     
-    if ( err  ||  inPath[0] == '\0' ) {
+    if ( err  ||  !input_file ) {
         usage ( gfp, stderr, ProgramName );
         return -1;
     }
@@ -1331,6 +1355,7 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 	    return -1;
 	}
     }
+    if (num_nogap!=NULL) *num_nogap=count_nogap;
     return 0;
 }
 

@@ -184,7 +184,7 @@ int  main ( int argc, char **argv )
      */
      
     argv[1] = argv[0]; 
-    parse_args(gf, argc - 1, argv + 1, inPath, outPath);
+    parse_args(gf, argc - 1, argv + 1, inPath, outPath,NULL,NULL);
 
     /* open the output file.  Filename parsed into gf.inPath */
     if ( 0 == strcmp ( outPath, "-" ) ) {

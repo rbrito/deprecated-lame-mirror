@@ -64,7 +64,7 @@ knocked down by the huge number of possibilities to setup lame.
 
 997..
 ACM wrapper for LAME.  Note: ACM is obsolete and was replaced
-with DirectShow.  We do have a beta directshow filter.
+with DirectShow and/or a "DMO".  We do have a beta directshow filter.
 
 Contact "Florian Bruckner" <h9651030@miraculix.wu-wien.ac.at> for info - 
 he is working on the VorbisACM.

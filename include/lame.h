@@ -195,7 +195,6 @@ typedef struct  {
   int encoder_delay;
   int framesize;                  
   int frameNum;                   /* number of frames encoded             */
-  int totalframes;
   int lame_allocated_gfp;         /* is this struct owned by calling
                                      program or lame?                     */
 
@@ -721,6 +720,8 @@ int CDECL lame_encode_flush(
  * to a different file.  The two mp3 files will play back with no gaps
  * if they are concatenated together.
  *
+ * This routine will NOT write id3v1 tags into the bitstream.
+ *
  * return code = number of bytes output to mp3buf. Can be 0
  */
 int CDECL lame_encode_flush_nogap(
@@ -861,31 +862,6 @@ int CDECL lame_decode1_headers(
         short            pcm_l[],
         short            pcm_r[],
         mp3data_struct*  mp3data );
-
-#if 0
-/* Also useful for decoding is the ability to parse Xing VBR headers: */
-#define NUMTOCENTRIES 100
-typedef struct
-{
-  int		h_id;			/* from MPEG header, 0=MPEG2, 1=MPEG1 */
-  int		samprate;		/* determined from MPEG header        */
-  int		flags;			/* from Vbr header data               */
-  int		frames;			/* total bit stream frames from Vbr
-                                           header data                        */
-  int		bytes;			/* total bit stream bytes from Vbr
-                                           header data                        */
-  int		vbr_scale;		/* encoded vbr scale from Vbr header
-                                           data                               */
-  unsigned char	toc[NUMTOCENTRIES];	/* may be NULL if toc not desired     */
-  int           headersize;             /* size of VBR header, in bytes       */
-}   VBRTAGDATA;
-
-int CDECL GetVbrTag(
-        VBRTAGDATA*     pTagData,
-        unsigned char*  buf);
-#endif
-
-
 
 
 

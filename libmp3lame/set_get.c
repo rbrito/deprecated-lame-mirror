@@ -1275,5 +1275,15 @@ lame_get_frameNum( const lame_global_flags*  gfp )
 int
 lame_get_totalframes( const lame_global_flags*  gfp )
 {
-    return gfp->totalframes;
+    int totalframes;
+    /* estimate based on user set num_samples: */
+    totalframes =
+        2 + ((double)gfp->num_samples * gfp->out_samplerate) / 
+              ((double)gfp->in_samplerate * gfp->framesize);
+
+    /* check to see if we underestimated totalframes */
+    //    if (totalframes < gfp->frameNum)
+    //        totalframes = gfp->frameNum;
+
+    return totalframes;
 }

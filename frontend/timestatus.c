@@ -113,6 +113,7 @@ void timestatus ( const int samp_rate,
     int                  percent;
     static int           init = 0; /* What happens here? A work around instead of a bug fix ??? */
 
+
     if ( frameNum == 0 ) {
         real_time.start_time = GetRealTime ();
         proc_time.start_time = GetCPUTime  ();

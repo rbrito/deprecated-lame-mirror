@@ -782,7 +782,7 @@ static void update_progress(void)
 {    
   char label[80];
 
-  int tf = gfp->totalframes;
+  int tf = lame_get_totalframes(gfp);
   if (gtkinfo.totalframes>0) tf=gtkinfo.totalframes;
 
   sprintf(label,"Frame:%4i/%4i  %6.2fs",
@@ -1409,7 +1409,7 @@ int gtkcontrol(lame_global_flags *gfp2,char *inPath)
     gtk_widget_show(framecounter);
     gtk_box_pack_start(GTK_BOX (box2),framecounter, FALSE, TRUE, 0);
 
-    adj = (GtkAdjustment *) gtk_adjustment_new (0, 0,(gint) gfp->totalframes-1, 0, 0, 0);
+    adj = (GtkAdjustment *) gtk_adjustment_new (0, 0,(gint) lame_get_totalframes(gfp)-1, 0, 0, 0);
     frameprogress = gtk_progress_bar_new_with_adjustment (adj);
     /* Set the format of the string that can be displayed in the
      * trough of the progress bar:

@@ -14,13 +14,36 @@ All of these steps should be done for every MP3 to be encoded.
 1. (optional) Get the version number of the encoder, if you are interested.  
    void get_lame_version(char *strbuf, size_t buflen, const char *prefix);
 
-2. Initialize the encoder.  sets default for all encoder parameters.
+
+2. Error messages.  By default, LAME will write error messages to
+stderr using vfprintf().  For GUI applications, this is often a problem
+and you need to set your own error message handlers:
+
+   lame_set_errorf(gfp,error_handler_function);
+   lame_set_debugf(gfp,error_handler_function);
+   lame_set_msgf(gfp,error_handler_function);
+  
+The default behavoir is equivilent to this:
+
+void  error_handler_function (const char* format, ... )
+{
+    va_list  args;
+    va_start ( args, format );
+    vfprintf ( stderr, format, args );
+    va_end   ( args );
+}
+
+
+
+3. Initialize the encoder.  sets default for all encoder parameters.
 
    #include "lame.h"
    lame_global_flags *gfp;
    gfp = lame_init();
 
-Then override various default settings as necessary, for example:
+The default (if you set nothing) is a a J-Stereo, 44.1khz
+128kbps CBR mp3 file at quality 5.  Override various default settings 
+as necessary, for example:
 
    lame_set_num_channels(gfp,2);
    lame_set_in_samplerate(gfp,44100);
@@ -29,24 +52,25 @@ Then override various default settings as necessary, for example:
    lame_set_quality(gfp,2);   /* 2=high  5 = medium  7=low */ 
 
 
-The default (if you set nothing) is a a J-Stereo, 44.1khz
-128kbps CBR mp3 file at quality 5.
-		
 See lame.h for the complete list of options.
 
 
 
-3. sets more internal configuration based on data provided above,
+4. Set more internal configuration based on data provided above,
    as well as checking for problems.  Check that ret_code >= 0.
 
    ret_code = lame_init_params(gfp);
 
 
-4. Encode some data.  input pcm data, output (maybe) mp3 frames.
+
+5. Encode some data.  input pcm data, output (maybe) mp3 frames.
 This routine handles all buffering, resampling and filtering for you.
 The required mp3buffer_size can be computed from num_samples, 
 samplerate and encoding rate, but here is a worst case estimate:
-mp3buffer_size (in bytes) = 1.25*num_samples + 7200
+mp3buffer_size (in bytes) = 1.25*num_samples + 7200.
+num_samples = the number of PCM samples in each channel.  It is
+not the sum of the number of samples in the L and R channels.
+
 The return code = number of bytes output in mp3buffer.  This can be 0.
 If it is <0, an error occured.  
 
@@ -59,20 +83,20 @@ There are also routines for various types of input
 (float, long, interleaved, etc).  See lame.h for details.
 
 
-5. lame_encode_flush will flush the buffers and may return a 
+6. lame_encode_flush will flush the buffers and may return a 
 final few mp3 frames.  mp3buffer should be at least 7200 bytes.
 return code = number of bytes output to mp3buffer.  This can be 0.
 
 int lame_encode_flush(lame_global_flags *,char *mp3buffer, int mp3buffer_size);
 
 
-6.  Write all remaining data to mp3 file.  If the file was
+7.  Write all remaining data to mp3 file.  If the file was
 encoded using VBR and you want to add a Xing VBR header:
 
 void lame_mp3_tags_fid(lame_global_flags *,FILE* fid);
 
 
-7. free the internal data structures.
+8. free the internal data structures.
 
 void lame_close(lame_global_flags *); 
 

@@ -179,6 +179,7 @@ init_infile(lame_global_flags * gfp, char *inPath)
 {
     /* open the input file */
     count_samples_carefully = 0;
+    num_samples_read=0;
     pcmbitwidth = 16;
     musicin = OpenSndFile(gfp, inPath);
 }
