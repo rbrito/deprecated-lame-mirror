@@ -704,7 +704,7 @@ int
 lame_set_experimentalZ( lame_global_flags*  gfp,
                         int                 experimentalZ )
 {
-    gfp->experimentalZ = experimentalZ;
+    gfp->experimentalZ += experimentalZ;
 
     return 0;
 }
