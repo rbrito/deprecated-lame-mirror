@@ -1274,7 +1274,7 @@ lame_set_substep( lame_global_flags*  gfp,
 		  int                 method )
 {
     lame_internal_flags *gfc = gfp->internal_flags;
-    /* default = 0.0 (no inter-cahnnel maskin) */
+    /* default = 0.0 (no substep noise shaping) */
     if (! (0 <= method && method <= 7))
         return -1;
 
