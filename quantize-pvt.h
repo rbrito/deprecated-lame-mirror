@@ -32,7 +32,6 @@ typedef struct calc_noise_result_t {
 	FLOAT8 tot_avg_noise;	/* tot_noise / tot_count */
 } calc_noise_result;
 
-FLOAT8 ATHformula(lame_global_flags *gfp,FLOAT8 f);
 void compute_ath(lame_global_flags *gfp,FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY_l]);
 void ms_convert(FLOAT8 xr[2][576],FLOAT8 xr_org[2][576]);
 int on_pe(lame_global_flags *gfp,FLOAT8 pe[2][2],III_side_info_t *l3_side,

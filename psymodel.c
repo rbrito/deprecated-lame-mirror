@@ -241,12 +241,6 @@ int L3psycho_anal( lame_global_flags *gfp,
       /*DEBUGF("%i  norm=%f  norm_l=%f \n",b,1/norm,norm_l[b]);*/
     }
 
-    /* MPEG1 SNR_s data is given in db, convert to energy */
-    if (gfp->version == 1) {
-      for ( b = 0;b < gfc->npart_s; b++ ) {
-	SNR_s[b]=exp( (FLOAT8) SNR_s[b] * LN_TO_LOG10 );
-      }
-    }
 
     for ( b = 0;b < gfc->npart_s; b++ ) {
       FLOAT8 norm=0;
@@ -615,7 +609,7 @@ int L3psycho_anal( lame_global_flags *gfp,
 	 *          frame0, but all pre-echo was in frame1.
 	 */
 	if (gfc->blocktype_old[chn] == SHORT_TYPE )
-	  thr[b] = Min(ecb, rpelev*gfc->nb_1[chn][b]);
+	  thr[b] = ecb; /* Min(ecb, rpelev*gfc->nb_1[chn][b]); */
 	else
 	  thr[b] = Min(ecb, Min(rpelev*gfc->nb_1[chn][b],rpelev2*gfc->nb_2[chn][b]) );
 
@@ -624,11 +618,16 @@ int L3psycho_anal( lame_global_flags *gfp,
 	gfc->nb_2[chn][b] = gfc->nb_1[chn][b];
 	gfc->nb_1[chn][b] = ecb;
 
-	if (thr[b] < eb[b])
-	  {
-	    if (thr[b]<1e-6) thr[b]=1e-6;
-	    gfc->pe[chn] -= gfc->numlines_l[b] * log(thr[b] / eb[b]);
-	  }
+	{
+	  FLOAT8 thrpe;
+	  thrpe = Max(thr[b],1e-6);
+	  //	  thrpe = Max(thr[b],gfc->ATH_partitionbands[b]);
+	  /*
+	    printf("%i thr=%e   ATH=%e  \n",b,thr[b],gfc->ATH_partitionbands[b]);
+	  */
+	  if (thrpe < eb[b])
+	    gfc->pe[chn] -= gfc->numlines_l[b] * log(thrpe / eb[b]);
+	}
       }
 
 
@@ -941,7 +940,6 @@ int L3psycho_anal( lame_global_flags *gfp,
 
 
 
-
 int L3para_read(lame_global_flags *gfp, FLOAT8 sfreq, int *numlines_l,int *numlines_s, 
 FLOAT8 *minval,
 FLOAT8 s3_l[CBANDS][CBANDS], FLOAT8 s3_s[CBANDS][CBANDS],
@@ -1021,6 +1019,13 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 	p += cbmax_tp * 6;
     }
   *npart_s_orig = cbmax;
+
+  /* MPEG1 SNR_s data is given in db, convert to energy */
+  if (gfp->version == 1) {
+    for ( i = 0;i < *npart_s_orig; i++ ) {
+      SNR[i]=exp( (FLOAT8) SNR[i] * LN_TO_LOG10 );
+    }
+  }
 
 
 
@@ -1112,7 +1117,7 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
   j=0;
   for(i=0;i<CBANDS;i++)
     {
-      FLOAT8 ji, freq, bark1,bark2,delbark=.34;
+      FLOAT8 ji, bark1,bark2,delbark=.34;
       int k,j2;
 
       j2 = j;
@@ -1121,20 +1126,17 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
       do {
 	/* find smallest j2 >= j so that  (bark - bark_l[i-1]) < delbark */
 	ji = j;
-	freq = sfreq*ji/(1000.0*BLKSIZE);
-	bark1 = 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5));
+	bark1 = freq2bark(sfreq*ji/BLKSIZE);
 	
 	++j2;
 	ji = j2;
-	freq = sfreq*ji/(1000.0*BLKSIZE);
-	bark2  = 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5));
+	bark2  = freq2bark(sfreq*ji/BLKSIZE);
       } while ((bark2 - bark1) < delbark  && j2<=BLKSIZE/2);
 
       /*
       DEBUGF("%i old n=%i  %f old numlines:  %i   new=%i (%i,%i) (%f,%f) \n",
 i,*npart_l_orig,freq,numlines_l[i],j2-j,j,j2-1,bark1,bark2);
       */
-
       for (k=j; k<j2; ++k)
 	partition[k]=i;
       numlines_l[i]=(j2-j);
@@ -1171,24 +1173,48 @@ i,*npart_l_orig,freq,numlines_l[i],j2-j,j,j2-1,bark1,bark2);
 #endif
 
 
-  /* compute bark values of each critical band */
+  /* compute bark value and ATH of each critical band */
   j=0;
   for(i=0;i<*npart_l_orig;i++)
     {
-      FLOAT8 ji, freq, bark;
+      FLOAT8 ji, freq, mval, bark;
+      int k;
 
       ji = j;
-      freq = sfreq*ji/1024000.0;
-      bark = 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5));
+      bark = freq2bark(sfreq*ji/BLKSIZE);
 
       ji = j + (numlines_l[i]-1);
-      freq = sfreq*ji/1024000.0;
-      bark = .5*(bark + 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5)));
-      /*
-      DEBUGF("freq=%f bark=%f  del_bark=%f %f \n",freq,bark,bark-bval_l[i-1],24.5/cbmax );
-      */
+      bark = .5*(bark + freq2bark(sfreq*ji/BLKSIZE));
       bval_l[i]=bark;
-      j += numlines_l[i];
+      //      j += numlines_l[i];
+
+
+      gfc->ATH_partitionbands[i]=1e99;
+      for (k=0; k < numlines_l[i]; ++k) {
+	FLOAT8 freq = sfreq*j/(1000.0*BLKSIZE);
+	assert( freq < 25 );
+	//	freq = Min(.1,freq);    /* ignore large, low frequency ATH */
+	freq= ATHformula(freq);  
+	freq += -114 + 145; /* MDCT scaling, followed by MDCT->FFT scaling*/
+	freq = pow( 10.0, freq/10.0 );
+	gfc->ATH_partitionbands[i]=Min(gfc->ATH_partitionbands[i],freq);
+	++j;
+      }
+
+
+      /*  minval formula needs work
+      ji = j;
+      freq = sfreq*ji/BLKSIZE;
+      mval = Max(27.0 - freq/50.0, 0.0);
+      //      mval = exp(-mval * LN_TO_LOG10);
+
+      DEBUGF("%2i old minval=%f  new = %f  ",
+	     i,-log(minval[i])/LN_TO_LOG10,mval);
+      if (mval < minval[i]) 
+      DEBUGF("less masking than ISO tables \n");
+      else
+      DEBUGF("more masking than ISO tables \n");
+      */
     }
 
 
@@ -1242,7 +1268,7 @@ i,*npart_l_orig,freq,numlines_l[i],j2-j,j,j2-1,bark1,bark2);
   j=0;
   for(i=0;i<CBANDS;i++)
     {
-      FLOAT8 ji, freq, bark1,bark2,delbark=.34;
+      FLOAT8 ji, bark1,bark2,delbark=.34;
       int k,j2;
 
       j2 = j;
@@ -1251,13 +1277,12 @@ i,*npart_l_orig,freq,numlines_l[i],j2-j,j,j2-1,bark1,bark2);
       do {
 	/* find smallest j2 >= j so that  (bark - bark_s[i-1]) < delbark */
 	ji = j;
-	freq = sfreq*ji/(1000.0*BLKSIZE_s);
-	bark1 = 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5));
+	bark1  = freq2bark(sfreq*ji/BLKSIZE_s);
 	
 	++j2;
 	ji = j2;
-	freq = sfreq*ji/(1000.0*BLKSIZE_s);
-	bark2  = 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5));
+	bark2  = freq2bark(sfreq*ji/BLKSIZE_s);
+
       } while ((bark2 - bark1) < delbark  && j2<=BLKSIZE_s/2);
 
       /*
@@ -1305,19 +1330,25 @@ i,*npart_s_orig,freq,numlines_s[i],j2-j,j,j2-1,bark1,bark2);
   j = 0;
   for(i=0;i<*npart_s_orig;i++)
     {
-      FLOAT8 ji, freq, bark;
+      FLOAT8 ji, bark, freq, snr;
       ji = j;
-      freq = sfreq*ji/256000.0;
-      bark = 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5));
+      bark = freq2bark(sfreq*ji/BLKSIZE_s);
 
       ji = j + numlines_s[i] -1;
-      freq = sfreq*ji/256000.0;
-      bark = .5*(bark + 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5)));
+      bark = .5*(bark+freq2bark(sfreq*ji/BLKSIZE_s));
       /*
       DEBUGF("%i %i bval_s = %f  %f  numlines=%i  formula=%f \n",i,j,bval_s[i],freq,numlines_s[i],bark);
       */
       bval_s[i]=bark;
       j += numlines_s[i];
+
+      /* SNR formula needs work 
+      ji = j;
+      freq = sfreq*ji/BLKSIZE;
+      snr  = .14 + freq/80000;
+      DEBUGF("%2i old SNR=%f  new = %f \n ",
+	     i,SNR[i],snr);
+      */
     }
 
 

@@ -276,6 +276,7 @@ typedef struct  {
   FLOAT8	nb_1[4][CBANDS], nb_2[4][CBANDS];
   FLOAT8 s3_s[CBANDS][CBANDS];
   FLOAT8 s3_l[CBANDS][CBANDS];
+  FLOAT8 ATH_partitionbands[CBANDS];
 
   III_psy_xmin thm[4];
   III_psy_xmin en[4];
@@ -346,7 +347,8 @@ extern int            copy_buffer(char *buffer,int buffer_size,Bit_stream_struc 
 extern void           init_bit_stream_w(lame_internal_flags *gfc);
 extern void           alloc_buffer(Bit_stream_struc*, unsigned int);
 extern void           freegfc(lame_internal_flags *gfc);
-
+extern FLOAT8         ATHformula(FLOAT8 f);
+extern FLOAT8         freq2bark(FLOAT8 freq);
 extern void ireorder(int scalefac_band[],int ix_orig[576]);
 extern void iun_reorder(int scalefac_band[],int ix_orig[576]);
 extern void freorder(int scalefac_band[],FLOAT8 ix_orig[576]);

@@ -26,6 +26,32 @@ enum byte_order NativeByteOrder = order_unknown;
 *  Global Function Definitions
 *
 ***********************************************************************/
+FLOAT8 ATHformula(FLOAT8 f)
+{
+  FLOAT8 ath;
+  f  = Max(0.01, f);
+  f  = Min(18.0,f);
+
+  /* from Painter & Spanias, 1997 */
+  /* minimum: (i=77) 3.3kHz = -5db */
+  ath =    3.640 * pow(f,-0.8)
+         - 6.500 * exp(-0.6*pow(f-3.3,2.0))
+         + 0.001 * pow(f,4.0);
+  return ath;
+}
+
+
+FLOAT8 freq2bark(FLOAT8 freq)
+{
+  /* input: freq in hz  output: barks */
+    freq = freq * 0.001;
+    return 13.0*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5));
+}
+
+
+
+
+
 
 
 /***********************************************************************

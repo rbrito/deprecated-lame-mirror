@@ -218,19 +218,13 @@ ATH = ATH_formula  - 103  (db)
 ATH = ATH * 2.5e-10      (ener)
 
 */
-FLOAT8 ATHformula(lame_global_flags *gfp,FLOAT8 f)
+
+FLOAT8 ATHmdct(lame_global_flags *gfp,FLOAT8 f)
 {
   lame_internal_flags *gfc=gfp->internal_flags;
   FLOAT8 ath;
   
-  f  = Max(0.01, f);
-  f  = Min(18.0,f);
-
-  /* from Painter & Spanias, 1997 */
-  /* minimum: (i=77) 3.3kHz = -5db */
-  ath =    3.640 * pow(f,-0.8)
-         - 6.500 * exp(-0.6*pow(f-3.3,2.0))
-         + 0.001 * pow(f,4.0);
+  ath = ATHformula(f);
 	  
   /* convert to energy */
   ath -= 114;    /* MDCT scaling.  From tests by macik and MUS420 code */
@@ -266,16 +260,17 @@ void compute_ath(lame_global_flags *gfp,FLOAT8 ATH_l[],FLOAT8 ATH_s[])
     for (i=start ; i < end; i++) {
       FLOAT8 freq = samp_freq*i/(2*576);
       assert( freq < 25 );
-      ATH_f = ATHformula(gfp,freq);  /* freq in kHz */
+      ATH_f = ATHmdct(gfp,freq);  /* freq in kHz */
       ATH_l[sfb]=Min(ATH_l[sfb],ATH_f);
     }
+
 
     /*
     DEBUGF("sfb=%2i freq(khz): %5.2f ..%5.2f  ATH=%6.2f %6.2f  %6.2f   \n",sfb,samp_freq*start/(2*576),
 samp_freq*end/(2*576),
 10*log10(ATH_l[sfb]),
-10*log10( ATHformula(gfp,samp_freq*start/(2*576)))  ,
-10*log10(ATHformula(gfp,samp_freq*end/(2*576))));
+10*log10( ATHmdct(gfp,samp_freq*start/(2*576)))  ,
+10*log10(ATHmdct(gfp,samp_freq*end/(2*576))));
     */
   }
 
@@ -286,7 +281,7 @@ samp_freq*end/(2*576),
     for (i=start ; i < end; i++) {
       FLOAT8 freq = samp_freq*i/(2*192);
       assert( freq < 25 );
-      ATH_f = ATHformula(gfp,freq);    /* freq in kHz */
+      ATH_f = ATHmdct(gfp,freq);    /* freq in kHz */
       ATH_s[sfb]=Min(ATH_s[sfb],ATH_f);
     }
   }

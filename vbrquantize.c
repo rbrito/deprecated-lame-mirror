@@ -456,7 +456,7 @@ VBR_noise_shaping
     xr34[i]=sqrt(sqrt(temp)*temp);
   }
 
-  
+#define MAX_SF_DELTA 4  
   vbrmax=-10000;
   if (shortblock) {
     for ( j=0, sfb = 0; sfb < SBMAX_s; sfb++ )  {
@@ -466,10 +466,25 @@ VBR_noise_shaping
 	bw = end - start;
 	vbrsf.s[sfb][i] = find_scalefac(&xr[j],&xr34[j],sfb,
 					l3_xmin.s[sfb][i],bw);
-	if (vbrsf.s[sfb][i]>vbrmax) vbrmax=vbrsf.s[sfb][i];
 	j += bw;
       }
     }
+
+    for ( sfb = 0; sfb < SBMAX_s; sfb++ )  {
+      for ( i = 0; i < 3; i++ ) {
+	if (sfb>0) 
+	  vbrsf.s[sfb][i] = Min(vbrsf.s[sfb-1][i]+MAX_SF_DELTA,vbrsf.s[sfb][i]);
+	if (sfb< SBMAX_s-1) 
+	  vbrsf.s[sfb][i] = Min(vbrsf.s[sfb+1][i]+MAX_SF_DELTA,vbrsf.s[sfb][i]);
+      }
+    }
+
+    for ( j=0, sfb = 0; sfb < SBMAX_s; sfb++ )  {
+      for ( i = 0; i < 3; i++ ) {
+	if (vbrsf.s[sfb][i]>vbrmax) vbrmax=vbrsf.s[sfb][i];
+      }
+    }
+
   }else{
     for ( sfb = 0; sfb < SBMAX_l; sfb++ )   {
       start = gfc->scalefac_band.l[ sfb ];
@@ -478,9 +493,20 @@ VBR_noise_shaping
       vbrsf.l[sfb] = find_scalefac(&xr[start],&xr34[start],sfb,
 				   l3_xmin.l[sfb],bw);
 
-      if (vbrsf.l[sfb]>vbrmax) vbrmax = vbrsf.l[sfb];
+    }
+
+    for ( sfb = 0; sfb < SBMAX_l; sfb++ )   {
+      if (sfb>0) 
+	vbrsf.l[sfb] = Min(vbrsf.l[sfb-1]+MAX_SF_DELTA,vbrsf.l[sfb]);
+      if (sfb< SBMAX_l-1) 
+	vbrsf.l[sfb] = Min(vbrsf.l[sfb+1]+MAX_SF_DELTA,vbrsf.l[sfb]);
 
     }
+
+    for ( sfb = 0; sfb < SBMAX_l; sfb++ )   
+      if (vbrsf.l[sfb]>vbrmax) vbrmax = vbrsf.l[sfb];
+
+
   } /* compute needed scalefactors */
 
 
@@ -817,11 +843,12 @@ VBR_quantize(lame_global_flags *gfp,
 	  assert( gfp->VBR_q <= 9 );
 	  assert( gfp->VBR_q >= 0 );
 	  masking_lower_db = dbQ[gfp->VBR_q] + qadjust;
-	  
+
 	  if (pe[gr][ch]>750)
-	    masking_lower_db -= 4*(pe[gr][ch]-750.)/750.;
-	  //      if (shortblock) masking_lower_db -= 1;
-	  
+	    masking_lower_db -= Min(10,4*(pe[gr][ch]-750.)/750.);
+	  /*
+	  if (shortblock) masking_lower_db -= 4;
+	  */
 	  
 	  gfc->masking_lower = pow(10.0,masking_lower_db/10);
 	    
