@@ -56,10 +56,10 @@ extern FLOAT pow43[PRECALC_SIZE*2];
 
 #define Q_MAX (256+1)
 #define Q_MAX2 116 /* minimam possible number of
-		      -cod_info->global_gain
-		      + ((scalefac[] + (cod_info->preflag ? pretab[sfb] : 0))
-		      << (cod_info->scalefac_scale + 1))
-		      + cod_info->subblock_gain[cod_info->window[sfb]] * 8;
+		      -gi->global_gain
+		      + ((scalefac[] + (gi->preflag ? pretab[sfb] : 0))
+		      << (gi->scalefac_scale + 1))
+		      + gi->subblock_gain[gi->window[sfb]] * 8;
 
 		      for long block, 0+((15+3)<<2) = 18*4 = 72
 		      for short block, 0+(15<<2)+7*8 = 15*4+56 = 116
