@@ -163,16 +163,17 @@ struct lame_global_struct {
 
 
   /****************************************************************************/
-  /* more internal variables, which will not exist after lame_encode_finish() */
+  /* more internal variables are stored in this structure:
   /****************************************************************************/
   lame_internal_flags *internal_flags;
 
-  /* VBR tags.  This data is here because VBR header is writen after
-   * input file is closed and *internal_flags struct is free'd */
+
+  /* VBR tag data */
   int TotalFrameSize;
-  /*int* pVbrFrames; */
   int nVbrNumFrames;
-  int nVbrFrameBufferSize;
+  /*int nVbrFrameBufferSize;*/
+  /*int* pVbrFrames; */
+
 
   struct {
     int integer[16];

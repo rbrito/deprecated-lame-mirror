@@ -442,7 +442,7 @@ int InitVbrTag(lame_global_flags *gfp)
 
         /* we shold also count the vbr tag itself */
 	gfp->nVbrNumFrames=1;
-	gfp->nVbrFrameBufferSize=0;
+	/*gfp->nVbrFrameBufferSize=0;*/
 
 
 	/* Clear stream buffer */
