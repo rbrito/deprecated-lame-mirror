@@ -1455,7 +1455,7 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
             return -1;  /* failed */
     }
 
-    if ((buf[3] & 0xf0)==0) {
+    if ((buf[2] & 0xf0)==0) {
 	fprintf(stderr,"Input file is freeformat.\n");
 	freeformat = 1;
     }
