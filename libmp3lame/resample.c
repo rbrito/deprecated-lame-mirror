@@ -79,7 +79,25 @@ double  blackman ( double x )
     x = cospi (x);
     return (0.16 * x + 0.50) * x + 0.34;        // using addition theorem of arc functions
 }
+
+double  blackman1 ( double x )
+{
+    if ( fabs (x) >= 1 )
+        return 0.;
+
+    x += 1.;
+    return 0.42 - 0.50*cospi(x) + 0.08*cospi(2*x);
+}
  
+double  blackman2 ( double x )
+{
+    if ( fabs (x) >= 1 )
+        return 0.;
+
+    x += 1.;
+    return 0.375 - 0.50*cospi(x) + 0.125*cospi(2*x);
+}
+
 double  blackmanharris_nuttall ( double x )
 {
     if ( fabs (x) >= 1 )

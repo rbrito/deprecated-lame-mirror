@@ -11,12 +11,14 @@
 #define INOUT
 #define IN
 
-double  sinpi    ( double x );
-double  cospi    ( double x );
-double  sinc     ( double x );
-double  hanning  ( double x );
-double  hamming  ( double x );
-double  blackman ( double x );
+double  sinpi     ( double x );
+double  cospi     ( double x );
+double  sinc      ( double x );
+double  hanning   ( double x );
+double  hamming   ( double x );
+double  blackman  ( double x );
+double  blackman1 ( double x );
+double  blackman2 ( double x );
 double  blackmanharris_nuttall ( double x );
 double  blackmanharris_min4    ( double x );
 

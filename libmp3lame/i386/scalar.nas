@@ -436,12 +436,10 @@ proc	scalar04_float32_3DNow
 	pfmul   mm1,qword [edx+8]
 
         pfadd   mm0,mm1
-        sub     esp,byte 8
-        pmov    qword [esp],mm0
+        pmov    qword [sp(%$p)],mm0
 	femms
-	fld     dword [esp]
-        fadd    dword [esp+4]
-        add     esp,byte 8
+	fld     dword [sp(%$p)]
+        fadd    dword [sp(%$p)+4]
 endproc
 
 
@@ -464,12 +462,10 @@ proc	scalar08_float32_3DNow
         pfadd   mm1,mm3
 
         pfadd   mm0,mm1
-        sub     esp,byte 8
-        pmov    qword [esp],mm0
+        pmov    qword [sp(%$p)],mm0
 	femms
-	fld     dword [esp]
-        fadd    dword [esp+4]
-        add     esp,byte 8
+	fld     dword [sp(%$p)]
+        fadd    dword [sp(%$p)+4]
 endproc
 
 
@@ -499,12 +495,10 @@ proc	scalar12_float32_3DNow
         pfadd   mm1,mm3
 
         pfadd   mm0,mm1
-        sub     esp,byte 8
-        pmov    qword [esp],mm0
+        pmov    qword [sp(%$p)],mm0
 	femms
-	fld     dword [esp]
-        fadd    dword [esp+4]
-        add     esp,byte 8
+	fld     dword [sp(%$p)]
+        fadd    dword [sp(%$p)+4]
 endproc
 
 
@@ -541,12 +535,10 @@ proc	scalar16_float32_3DNow
         pfadd   mm1,mm3
 
         pfadd   mm0,mm1
-        sub     esp,byte 8
-        pmov    qword [esp],mm0
+        pmov    qword [sp(%$p)],mm0
 	femms
-	fld     dword [esp]
-        fadd    dword [esp+4]
-        add     esp,byte 8
+	fld     dword [sp(%$p)]
+        fadd    dword [sp(%$p)+4]
 endproc
 
 
@@ -590,12 +582,10 @@ proc	scalar20_float32_3DNow
         pfadd   mm1,mm3
 
         pfadd   mm0,mm1
-        sub     esp,byte 8
-        pmov    qword [esp],mm0
+        pmov    qword [sp(%$p)],mm0
 	femms
-	fld     dword [esp]
-        fadd    dword [esp+4]
-        add     esp,byte 8
+	fld     dword [sp(%$p)]
+        fadd    dword [sp(%$p)+4]
 endproc
 
 
@@ -646,17 +636,48 @@ proc	scalar24_float32_3DNow
         pfadd   mm1,mm3
 
         pfadd   mm0,mm1
-        sub     esp,byte 8
-        pmov    qword [esp],mm0
+        pmov    qword [sp(%$p)],mm0
 	femms
-	fld     dword [esp]
-        fadd    dword [esp+4]
-        add     esp,byte 8
+	fld     dword [sp(%$p)]
+        fadd    dword [sp(%$p)+4]
 endproc
 
 
 proc	scalar4n_float32_3DNow
-	jmp	scalar24_float32_i387
+%$p	arg	4
+%$q	arg	4
+%$len	arg	4
+
+        mov     eax,[sp(%$p)]
+        mov     edx,[sp(%$q)]
+        mov     ecx,[sp(%$len)]
+
+	pmov    mm0,qword [eax]
+	pmov    mm1,qword [eax+8]
+        pfmul   mm0,qword [edx]
+	pfmul   mm1,qword [edx+8]
+        dec     ecx
+        jz      .ret4
+	
+	add	eax,byte 16
+	add	edx,byte 16
+.lbl4:	
+	pmov    mm2,qword [eax+16]
+	pmov    mm3,qword [eax+24]
+        pfmul   mm2,qword [edx+16]
+	pfmul   mm3,qword [edx+24]
+	add	eax,byte 16
+	add	edx,byte 16
+        pfadd   mm0,mm2
+        pfadd   mm1,mm3
+        dec     ecx
+        jnz     .lbl4
+
+.ret4:  pfadd   mm0,mm1
+        pmov    qword [sp(%$p)],mm0
+	femms
+	fld     dword [sp(%$p)]
+        fadd    dword [sp(%$p)+4]
 endproc
 
 
@@ -696,12 +717,12 @@ endproc
 
 
 proc	scalar4n_float32_SIMD
-	jmp	scalar24_float32_i387
+	jmp	scalar4n_float32_i387
 endproc
 
 
 proc	scalar1n_float32_SIMD
-	jmp	scalar24_float32_i387
+	jmp	scalar1n_float32_i387
 endproc
 
 ; end of scalar.nas

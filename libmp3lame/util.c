@@ -41,16 +41,29 @@
 *
 ***********************************************************************/
 /*empty and close mallocs in gfc */
-void freegfc(lame_internal_flags *gfc)   /* bit stream structure */
-{
-   int i;
-   for (i=0 ; i<2*BPC+1 ; ++i)
-     if (gfc->blackfilt[i]) free(gfc->blackfilt[i]);
 
-   if (gfc->bs.buf) free(gfc->bs.buf);
-   if (gfc->inbuf_old[0]) free(gfc->inbuf_old[0]);
-   if (gfc->inbuf_old[1]) free(gfc->inbuf_old[1]);
-   free(gfc);
+void  freegfc ( lame_internal_flags* const gfc )   /* bit stream structure */
+{
+    int  i;
+   
+    for ( i = 0 ; i <= 2*BPC; i++ )
+        if ( gfc->blackfilt[i] != NULL ) {
+            free ( gfc->blackfilt[i] );
+	    gfc->blackfilt[i] = NULL;
+	}
+    if ( gfc->bs.buf != NULL ) {
+        free ( gfc->bs.buf );
+	gfc->bs.buf = NULL;
+    }
+    if ( gfc->inbuf_old[0] ) { 
+        free ( gfc->inbuf_old[0] );
+	gfc->inbuf_old[0] = NULL;
+    }
+    if ( gfc->inbuf_old[1] ) { 
+        free ( gfc->inbuf_old[1] );
+	gfc->inbuf_old[1] = NULL;
+    }
+    free ( gfc );
 }
 
 #ifdef KLEMM_01
@@ -338,6 +351,8 @@ int gcd ( int i, int j )
 }
 
 
+
+
 int fill_buffer_resample(
        lame_global_flags *gfp,
        sample_t *outbuf,
@@ -351,10 +366,10 @@ int fill_buffer_resample(
   
   lame_internal_flags *gfc=gfp->internal_flags;
   int BLACKSIZE;
-  FLOAT offset,xvalue;
+  double offset,xvalue;
   int i,j=0,k;
   int filter_l;
-  FLOAT fcn,intratio;
+  double fcn,intratio;
   FLOAT *inbuf_old;
   int bpc;   /* number of convolution functions to pre-compute */
   bpc = gfp->out_samplerate/gcd(gfp->out_samplerate,gfp->in_samplerate);
@@ -363,7 +378,7 @@ int fill_buffer_resample(
   intratio=( fabs(gfc->resample_ratio - floor(.5+gfc->resample_ratio)) < .0001 );
   fcn = .90/gfc->resample_ratio;
   if (fcn>.90) fcn=.90;
-  filter_l=19;
+  filter_l = gfp->quality < 7 ? 31 : 7;
   if (0==filter_l % 2 ) --filter_l;  /* must be odd */
 
   /* if resample_ratio = int, filter_l should be even */
@@ -372,27 +387,28 @@ int fill_buffer_resample(
   BLACKSIZE = filter_l+1;  /* size of data needed for FIR */
 
   
-  if (!gfc->fill_buffer_resample_init) {
+  if ( gfc->fill_buffer_resample_init == 0 ) {
     gfc->inbuf_old[0]=calloc(BLACKSIZE,sizeof(gfc->inbuf_old[0][0]));
     gfc->inbuf_old[1]=calloc(BLACKSIZE,sizeof(gfc->inbuf_old[0][0]));
-    for (i=0; i<2*bpc+1; ++i)
-      gfc->blackfilt[i]=malloc(BLACKSIZE*sizeof(gfc->blackfilt[0][0]));
+    for (i=0; i<=2*bpc; ++i)
+      gfc->blackfilt[i]=calloc(BLACKSIZE,sizeof(gfc->blackfilt[0][0]));
 
-    gfc->fill_buffer_resample_init=1;
     gfc->itime[0]=0;
     gfc->itime[1]=0;
 
     /* precompute blackman filter coefficients */
-    for (j= 0; j<= 2*bpc; ++j) {
-      FLOAT sum=0;
-      offset=(FLOAT)(j-bpc)/(FLOAT)(2*bpc);
-      for (i=0; i<=filter_l; ++i) {
-	sum+= gfc->blackfilt[j][i]=blackman(i,offset,fcn,filter_l);
-      }
-      //      gfc->blackfilt[j][i] /= sum;
+    for ( j = 0; j <= 2*bpc; j++ ) {
+        double sum = 0.; 
+        offset = (j-bpc) / (2.*bpc);
+        for ( i = 0; i <= filter_l; i++ ) 
+            sum += 
+	    gfc->blackfilt[j][i]  = blackman (i,offset,fcn,filter_l);
+        for ( i = 0; i <= filter_l; i++ ) 
+            gfc->blackfilt[j][i] /= sum;
     }
-
+    gfc->fill_buffer_resample_init = 1;
   }
+  
   inbuf_old=gfc->inbuf_old[ch];
 
   /* time of j'th element in inbuf = itime + j/ifreq; */
@@ -414,7 +430,7 @@ int fill_buffer_resample(
     assert(fabs(offset)<=.500001);
     joff = floor((offset*2*bpc) + bpc +.5);
 
-    xvalue=0;
+    xvalue = 0.;
     for (i=0 ; i<=filter_l ; ++i) {
       int j2 = i+j-filter_l/2;
       int y;
@@ -545,87 +561,6 @@ void updateStats( lame_internal_flags * const gfc )
     /* count 'em for every mode extension in case of stereo encoding */
     if (gfc->stereo == 2)
         gfc->bitrate_stereoMode_Hist [gfc->bitrate_index] [gfc->mode_ext]++;
-}
-
-
-static FLOAT  std_scalar4  ( const sample_t* p, const sample_t* q )
-{
-    return  p[0]*q[0] + p[1]*q[1] + p[2]*q[2] + p[3]*q[3];
-}
-
-static FLOAT  std_scalar8  ( const sample_t* p, const sample_t* q )
-{
-    return  p[0]*q[0] + p[1]*q[1] + p[2]*q[2] + p[3]*q[3]
-          + p[4]*q[4] + p[5]*q[5] + p[6]*q[6] + p[7]*q[7];
-}
-
-static FLOAT  std_scalar12 ( const sample_t* p, const sample_t* q )
-{
-    return  p[0]*q[0] + p[1]*q[1] + p[ 2]*q[ 2] + p[ 3]*q[ 3]
-          + p[4]*q[4] + p[5]*q[5] + p[ 6]*q[ 6] + p[ 7]*q[ 7]
-          + p[8]*q[8] + p[9]*q[9] + p[10]*q[10] + p[11]*q[11];
-}
-
-static FLOAT  std_scalar16 ( const sample_t* p, const sample_t* q )
-{
-    return  p[ 0]*q[ 0] + p[ 1]*q[ 1] + p[ 2]*q[ 2] + p[ 3]*q[ 3]
-          + p[ 4]*q[ 4] + p[ 5]*q[ 5] + p[ 6]*q[ 6] + p[ 7]*q[ 7]
-          + p[ 8]*q[ 8] + p[ 9]*q[ 9] + p[10]*q[10] + p[11]*q[11]
-          + p[12]*q[12] + p[13]*q[13] + p[14]*q[14] + p[15]*q[15];
-}
-
-static FLOAT  std_scalar20 ( const sample_t* p, const sample_t* q )
-{
-    return  p[ 0]*q[ 0] + p[ 1]*q[ 1] + p[ 2]*q[ 2] + p[ 3]*q[ 3]
-          + p[ 4]*q[ 4] + p[ 5]*q[ 5] + p[ 6]*q[ 6] + p[ 7]*q[ 7]
-          + p[ 8]*q[ 8] + p[ 9]*q[ 9] + p[10]*q[10] + p[11]*q[11]
-          + p[12]*q[12] + p[13]*q[13] + p[14]*q[14] + p[15]*q[15]
-          + p[16]*q[16] + p[17]*q[17] + p[18]*q[18] + p[19]*q[19];
-}
-
-
-/* currently len must be a multiple of 4 and >= 8. This is necessary for SIMD1 */
-
-static FLOAT  std_scalar ( const sample_t* p, const sample_t* q, size_t len )
-{
-    double sum = p[0]*q[0] + p[1]*q[1] + p[2]*q[2] + p[3]*q[3];
-
-    assert (len >= 8);
-        
-    do {
-        p   += 4;
-        q   += 4;
-        len -= 4;
-        sum += p[0]*q[0] + p[1]*q[1] + p[2]*q[2] + p[3]*q[3];
-    } while ( len > 4 );
-    
-    assert (len == 0);
-    
-    return sum;
-}
-
-static FLOAT  std_scalar64 ( const sample_t* p, const sample_t* q )
-{
-    return std_scalar ( p, q, 64 );
-}
-
-scalar_t   scalar4;
-scalar_t   scalar8;
-scalar_t   scalar12;
-scalar_t   scalar16;
-scalar_t   scalar20;
-scalar_t   scalar64;
-scalarn_t  scalar;
-
-void init_scalar_functions ( lame_internal_flags *gfc )
-{
-    scalar4  = std_scalar4;
-    scalar8  = std_scalar8;
-    scalar12 = std_scalar12;
-    scalar16 = std_scalar16;
-    scalar20 = std_scalar20;
-    scalar64 = std_scalar64;
-    scalar   = std_scalar;
 }
 
 /* end of util.c */
