@@ -251,8 +251,8 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 @HAVE_NASM_TRUE@@LIB_WITH_DECODER_FALSE@	$(top_builddir)/libmp3lame/@CPUTYPE@/liblameasmroutines.la
 am_libmp3lame_la_OBJECTS = VbrTag$U.lo bitstream$U.lo encoder$U.lo \
 	id3tag$U.lo lame$U.lo newmdct$U.lo psymodel$U.lo quantize$U.lo \
-	set_get$U.lo tables$U.lo takehiro$U.lo util$U.lo \
-	version$U.lo mpglib_interface$U.lo
+	set_get$U.lo tables$U.lo takehiro$U.lo util$U.lo version$U.lo \
+	mpglib_interface$U.lo
 libmp3lame_la_OBJECTS = $(am_libmp3lame_la_OBJECTS)
 
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
@@ -286,7 +286,7 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive pdf-recursive \
 	installdirs-recursive install-recursive uninstall-recursive \
 	check-recursive installcheck-recursive
 DIST_COMMON = $(noinst_HEADERS) $(top_srcdir)/Makefile.am.global \
-	Makefile.am Makefile.in depcomp
+	Makefile.am Makefile.in
 DIST_SUBDIRS = $(SUBDIRS)
 SOURCES = $(libmp3lame_la_SOURCES)
 
@@ -425,10 +425,10 @@ VbrTag_.$(OBJEXT) VbrTag_.lo bitstream_.$(OBJEXT) bitstream_.lo \
 encoder_.$(OBJEXT) encoder_.lo id3tag_.$(OBJEXT) id3tag_.lo \
 lame_.$(OBJEXT) lame_.lo mpglib_interface_.$(OBJEXT) \
 mpglib_interface_.lo newmdct_.$(OBJEXT) newmdct_.lo psymodel_.$(OBJEXT) \
-psymodel_.lo quantize_.$(OBJEXT) quantize_.lo \
-set_get_.$(OBJEXT) set_get_.lo tables_.$(OBJEXT) \
-tables_.lo takehiro_.$(OBJEXT) takehiro_.lo util_.$(OBJEXT) util_.lo \
-version_.$(OBJEXT) version_.lo : $(ANSI2KNR)
+psymodel_.lo quantize_.$(OBJEXT) quantize_.lo set_get_.$(OBJEXT) \
+set_get_.lo tables_.$(OBJEXT) tables_.lo takehiro_.$(OBJEXT) \
+takehiro_.lo util_.$(OBJEXT) util_.lo version_.$(OBJEXT) version_.lo : \
+$(ANSI2KNR)
 
 mostlyclean-libtool:
 	-rm -f *.lo

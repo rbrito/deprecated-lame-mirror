@@ -309,7 +309,7 @@ DIST_SOURCES = $(am__lame__EXEEXT__SOURCES_DIST) \
 HEADERS = $(noinst_HEADERS)
 
 DIST_COMMON = $(noinst_HEADERS) $(top_srcdir)/Makefile.am.global \
-	Makefile.am Makefile.in depcomp
+	Makefile.am Makefile.in
 SOURCES = $(lame__EXEEXT__SOURCES) $(EXTRA_lame__EXEEXT__SOURCES) $(mp3rtp__EXEEXT__SOURCES) $(EXTRA_mp3rtp__EXEEXT__SOURCES) $(mp3x__EXEEXT__SOURCES) $(EXTRA_mp3x__EXEEXT__SOURCES)
 
 all: all-am

@@ -225,8 +225,7 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 DIST_SOURCES = $(abx_SOURCES) $(ath_SOURCES) $(scalartest_SOURCES)
-DIST_COMMON = $(top_srcdir)/Makefile.am.global Makefile.am Makefile.in \
-	depcomp
+DIST_COMMON = $(top_srcdir)/Makefile.am.global Makefile.am Makefile.in
 SOURCES = $(abx_SOURCES) $(ath_SOURCES) $(scalartest_SOURCES)
 
 all: all-am

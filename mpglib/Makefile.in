@@ -242,7 +242,7 @@ DIST_SOURCES = $(libmpgdecoder_la_SOURCES)
 HEADERS = $(noinst_HEADERS)
 
 DIST_COMMON = README $(noinst_HEADERS) $(top_srcdir)/Makefile.am.global \
-	Makefile.am Makefile.in TODO depcomp
+	Makefile.am Makefile.in TODO
 SOURCES = $(libmpgdecoder_la_SOURCES)
 
 all: all-am

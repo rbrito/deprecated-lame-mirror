@@ -27123,7 +27123,6 @@ cat >>confdefs.h <<\_ACEOF
 #define HAVE_NASM 1
 _ACEOF
 
-
 	else
 		include_asm_routines="no"
 		NASM="no"
