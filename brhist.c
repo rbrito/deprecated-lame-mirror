@@ -48,7 +48,7 @@ void brhist_init(lame_global_flags *gfp,int br_min, int br_max)
       brhist_count[i] = 0;
     }
 
-  brhist_vbrmin = br_min;
+  brhist_vbrmin = 1;
   brhist_vbrmax = br_max;
 
   brhist_count_max = 0;
