@@ -123,15 +123,15 @@ typedef struct  {
   int filter_type;          /* 0=MDCT filter, 1= (expensive) filters */
   int quantization;         /* 0 = ISO formual,  1=best amplitude */
   int noise_shaping;        /* 0 = none 
-                               1 = ISO model
-                               2 = allow multiple scalefacs to hit maximum
-                               3 = allow scalefac_select=1  
+                               1 = ISO AAC model
+                               2 = allow scalefac_select=1  
                              */
 
   int noise_shaping_stop;   /* 0 = stop at over=0, all scalefacs amplified or
                                    a scalefac has reached max value
                                1 = stop when all scalefacs amplified or        
                                    a scalefac has reached max value
+                               2 = stop when all scalefacs amplified 
 			    */
 
   int psymodel;             /* 0 = none   1=gpsycho */
