@@ -26,6 +26,8 @@
 #include "quantize-pvt.h"
 
 static unsigned int largetbl[16*16];
+static unsigned int table23[3*3];
+static unsigned int table56[4*4];
 
 struct
 {
@@ -155,25 +157,29 @@ INLINE static int
 count_bit_noESC_from2(int *ix, int *end, int t1, int *s)
 {
     /* No ESC-words */
-    int	sum1 = 0;
-    int	sum2 = 0;
+    unsigned int sum = 0, sum2;
     const unsigned int xlen = ht[t1].xlen;
-    const unsigned char *hlen1 = ht[t1].hlen;
-    const unsigned char *hlen2 = ht[t1+1].hlen;
+    unsigned int *hlen;
+    if (t1 == 2)
+	hlen = table23;
+    else
+	hlen = table56;
 
     do {
 	int x = ix[0] * xlen + ix[1];
 	ix += 2;
-	sum1 += hlen1[x];
-	sum2 += hlen2[x];
+	sum += hlen[x];
     } while (ix < end);
 
-    if (sum1 > sum2) {
-	sum1 = sum2;
+    sum2 = sum & 0xffff;
+    sum >>= 16;
+
+    if (sum > sum2) {
+	sum = sum2;
 	t1++;
     }
-    *s += sum1;
 
+    *s += sum;
     return t1;
 }
 
@@ -716,5 +722,13 @@ void huffman_init()
 
     for (i = 0; i < 16*16; i++) {
 	largetbl[i] = (((int)ht[16].hlen[i]) << 16) + ht[24].hlen[i];
+    }
+
+    for (i = 0; i < 3*3; i++) {
+	table23[i] = (((int)ht[2].hlen[i]) << 16) + ht[3].hlen[i];
+    }
+
+    for (i = 0; i < 4*4; i++) {
+	table56[i] = (((int)ht[5].hlen[i]) << 16) + ht[6].hlen[i];
     }
 }
