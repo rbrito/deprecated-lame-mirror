@@ -69,11 +69,12 @@ int main(int argc, char **argv)
    * set some more options
    */
   lame_init_params(&gf);
-  lame_print_config(&gf);   /* print usefull information about options being used */
+  if (!gf.decode_only)
+    lame_print_config(&gf);   /* print usefull information about options being used */
 
 
   if (!gf.gtkflag) {
-    /* open the MP3 output file */
+    /* open the output file */
     if (!strcmp(gf.outPath, "-")) {
 #ifdef __EMX__
       _fsetmode(stdout,"b");
@@ -103,12 +104,28 @@ int main(int argc, char **argv)
 
 
   if (gf.gtkflag) {
+
 #ifdef HAVEGTK
     gtk_init (&argc, &argv);
     gtkcontrol(&gf);
 #else
     fprintf(stderr,"Error: lame not compiled with GTK support \n");
 #endif
+
+  } else if (gf.decode_only) {
+
+    /* decode an mp3 file to raw pcm */
+    do {
+      int i;
+      /* read in 'iread' samples */
+      iread=lame_readframe(&gf,Buffer);
+      for (i=0; i<iread; ++i) {
+	fwrite(&Buffer[0][i],2,1,outf);
+	if (gf.num_channels==2) fwrite(&Buffer[1][i],2,1,outf);
+      }
+    } while (iread);
+    fclose(outf);
+
   } else {
 
       /* encode until we hit eof */

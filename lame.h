@@ -66,6 +66,7 @@ typedef struct  {
   /* general control params */
   int gtkflag;                /* run frame analyzer?       */
   int bWriteVbrTag;           /* add Xing VBR tag?         */
+  int decode_only;            /* use lame/mpglib to convert mp3 to wav */
   /* Note: outPath must be set if you want Xing VBR or id3 tags written */
 
   int quality;                /* quality setting 0=best,  9=worst  */

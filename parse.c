@@ -121,6 +121,7 @@ void lame_help(lame_global_flags *gfp,char *name)  /* print syntax & exit */
   fprintf(stdout,"    -a              downmix from stereo to mono file for mono encoding\n");
   fprintf(stdout,"    -d              allow channels to have different blocktypes\n");
   fprintf(stdout,"    -S              don't print progress report, VBR histograms\n");
+  fprintf(stdout,"    --decode        input=mp3 file, output=raw pcm\n");
   fprintf(stdout,"    --athonly       only use the ATH for masking\n");
   fprintf(stdout,"    --noath         disable the ATH for masking\n");
   fprintf(stdout,"    --noshort       do not use short blocks\n");
@@ -280,6 +281,9 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	}
 	else if (strcmp(token, "noshort")==0) {
 	  gfp->no_short_blocks=1;
+	}
+	else if (strcmp(token, "decode")==0) {
+	  gfp->decode_only=1;
 	}
 	else if (strcmp(token, "noath")==0) {
 	  gfp->noATH=1;
@@ -720,7 +724,10 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
       strcpy(gfp->outPath,"-");
     }else {
       strncpy(gfp->outPath, gfp->inPath, MAX_NAME_SIZE - 4);
-      strncat(gfp->outPath, ".mp3", 4 );
+      if (gfp->decode_only)
+	strncat(gfp->outPath, ".pcm", 4 );
+      else
+	strncat(gfp->outPath, ".mp3", 4 );
     }
   }
   /* some file options not allowed with stdout */

@@ -101,13 +101,14 @@ Variable Bit Rate (VBR)
 Experimental (undocumented):  may work better or worse:
 
 -X n           try different quality measures (when comparing quantizations)
--Y             try to use scalefac_select 
--Z             try to use subblock_gain
+-Y             
+-Z             
 
 
 Operational:
 
 -r             assume input file is raw PCM
+--decode       assume input file is an mp3 file, and decode to raw pcm.  
 -s  n          input sampling frequency in kHz (for raw PCM input files)
 --resample n   output sampling frequency
 --mp3input     input file is an MP3 file.  decode using mpglib/mpg123
@@ -228,6 +229,22 @@ Allows the left and right channels to use different block types.
 Normally this is not allowed, only because the FhG encoder does
 not seem to allow it either.  If anyone finds a sample where -d
 produces better results, let me know.  (mt@sulaco.org)
+
+
+=======================================================================
+mpglib decode capability
+=======================================================================
+--decode 
+
+This just uses LAME's mpg123/mpglib interface to decode an MP3 file to
+a raw pcm file.  The input file must be an MP3 file, and the raw pcm
+data will be written to the output file in native endian format.
+Under linux, on i386, to convert the output file to a wav, use:
+
+% lame --decode input.mp3 output.pcm
+% sox -c 2 -t raw -r 44100 -s -w output.pcm output.wav
+
+(assuming output.pcm came from a stereo, 44.1khz mp3 file)
 
 
 
