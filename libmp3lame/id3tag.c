@@ -233,7 +233,7 @@ id3tag_set_track(lame_t gfc, const char *track)
     if (!track)
 	return;
 
-    n = sscanf("%d/%d", track, &num, &totalnum);
+    n = sscanf(track, "%d/%d", &num, &totalnum);
     if (n >= 1) {
 	gfc->tag_spec.track = num;
 	gfc->tag_spec.flags |= CHANGED_FLAG;
@@ -369,7 +369,7 @@ id3tag_write_v2(lame_t gfc)
             size_t encoder_length;
             char year[5];
             size_t year_length;
-            char track[3];
+            char track[100];
             size_t track_length;
             char genre[6];
             size_t genre_length;
@@ -405,9 +405,9 @@ id3tag_write_v2(lame_t gfc)
             }
             if (gfc->tag_spec.track) {
 		if (gfc->tag_spec.totaltrack > 0) {
-		    track_length = sprintf(track, "%d/%d",
-					   gfc->tag_spec.track,
-					   gfc->tag_spec.totaltrack);
+		    track_length = snprintf(track, sizeof(track), "%d/%d",
+					    gfc->tag_spec.track,
+					    gfc->tag_spec.totaltrack);
 		} else {
 		    track_length = sprintf(track, "%d", gfc->tag_spec.track);
 		}
