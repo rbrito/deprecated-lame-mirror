@@ -18,7 +18,6 @@
  *          Use a, b, x, ^a, ^b, Q
  *          Nur 1200 tests möglich
  *          Nicht mehr als 2 Dateien vergleichbar
- *          
  */
 
 #ifdef HAVE_CONFIG_H
@@ -181,7 +180,7 @@ int feed2 ( int fd, const stereo_t* p1, const stereo_t* p2, int len )
 }
 
 
-void setup ( int fdd, int samples )
+void setup ( int fdd, int samples, long freq )
 {
     int status, org, arg;
 
@@ -209,13 +208,13 @@ void setup ( int fdd, int samples )
     if ((arg & org) == 0)
         perror ("unable to set data format");
 
-    org = arg = 44100;
+    org = arg = freq;
     if ( -1 == (status = ioctl (fdd, SOUND_PCM_WRITE_RATE, &arg)) )
         perror ("SOUND_PCM_WRITE_WRITE ioctl failed");
     fprintf (stderr, "%5u Hz*%.3f s\n", arg, (double)samples/arg );
 }
 
-void testing ( const stereo_t* A, const stereo_t* B, size_t len )
+void testing ( const stereo_t* A, const stereo_t* B, size_t len, long freq )
 {
     int  c;
     int  fd;
@@ -230,7 +229,7 @@ void testing ( const stereo_t* A, const stereo_t* B, size_t len )
         return;
     }
 
-    setup ( fd, len );
+    setup ( fd, len, freq );
     
     fprintf (stderr, "\rListening A " );
     while ( 1 ) {
@@ -362,7 +361,7 @@ int  has_ext ( const char* name, const char* ext )
     return strcasecmp (name, ext)  ?  0  :  1;
 }
 
-void readwave ( stereo_t* buff, size_t maxlen, const char* name, size_t* len )
+int  readwave ( stereo_t* buff, size_t maxlen, const char* name, size_t* len )
 {
     char*           command = malloc (strlen(name) + 128);
     unsigned short  header [22];
@@ -417,6 +416,7 @@ void readwave ( stereo_t* buff, size_t maxlen, const char* name, size_t* len )
     *len = fread ( buff, sizeof(stereo_t), maxlen, fp );
     pclose ( fp ); 
     fprintf (stderr, "\n" );
+    return header[12];
 }
 
 
@@ -432,17 +432,24 @@ int main ( int argc, char** argv )
     static stereo_t  B [180 * 44100];
     size_t           len_A;
     size_t           len_B;
-    
+    long             freq1;
+    long             freq2;
+
     if (argc != 3) {
         print_usage();
         exit(1);
     }
 
-    readwave ( A, sizeof(A)/sizeof(*A), argv[1], &len_A );
-    readwave ( B, sizeof(B)/sizeof(*B), argv[2], &len_B );
+    freq1 = readwave ( A, sizeof(A)/sizeof(*A), argv[1], &len_A );
+    freq2 = readwave ( B, sizeof(B)/sizeof(*B), argv[2], &len_B );
+
+    if ( freq1 != freq2 ) {
+        fprintf ( stderr, "Different sample frequencies currently not supported\n");
+        return 2;
+    }
 
     set ();
-    testing ( A, B, len_A < len_B  ?  len_A  :  len_B );
+    testing ( A, B, len_A < len_B  ?  len_A  :  len_B, freq1 );
     reset ();
     
     return 0;
