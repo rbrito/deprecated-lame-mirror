@@ -1538,23 +1538,22 @@ psycho_analysis(
     int gr, ch, blocktype_old[MAX_CHANNELS];
     const sample_t *bufp[MAX_CHANNELS];
 
+    /* calculate next frame data */
+    adjust_ATH(gfc);
+
     /* next frame data -> current frame data (aging) */
     gfc->mode_ext = gfc->mode_ext_next;
-	for (ch = 0; ch < 2; ch++) {
+    for (ch = 0; ch < 2; ch++)
 	blocktype_old[ch] = gfc->l3_side.tt[gfc->mode_gr-1][ch].block_type;
-	for (gr=0; gr < gfc->mode_gr ; gr++) {
+
+    for (gr=0; gr < gfc->mode_gr ; gr++) {
+	int numchn;
+	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    masking_d[gr][ch]
 		= gfc->masking_next[gr][ch + (gfc->mode_ext & MPG_MD_MS_LR)];
 	    gfc->l3_side.tt[gr][ch].block_type = gfc->blocktype_next[gr][ch];
-	}
-    }
-
-    /* calculate next frame data */
-    adjust_ATH(gfc);
-    for (gr=0; gr < gfc->mode_gr ; gr++) {
-	int numchn;
-	for (ch = 0; ch < gfc->channels_out; ch++)
 	    bufp[ch] = buffer[ch] + 576*(gr + gfc->mode_gr) - FFTOFFSET;
+	}
 
 	numchn = gfc->channels_out;
 	if (gfp->mode == JOINT_STEREO)
