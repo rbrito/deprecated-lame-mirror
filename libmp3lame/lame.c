@@ -329,7 +329,8 @@ static int apply_preset(lame_global_flags*  gfp, int preset, vbr_mode mode)
     if (mode != vbr) {
 	lame_set_use_largescalefac(gfp, abr_switch_map[r].large_scalefac);
 	lame_set_use_subblock_gain(gfp, abr_switch_map[r].large_scalefac);
-	lame_set_quantcomp_method(gfp, abr_switch_map[r].method);
+	if (gfp->internal_flags->quantcomp_method < 0)
+	    lame_set_quantcomp_method(gfp, abr_switch_map[r].method);
 	/*
 	 * ABR seems to have big problems with clipping, especially at
 	 * low bitrates. so we compensate for that here by using a scale
@@ -355,15 +356,16 @@ static int apply_preset(lame_global_flags*  gfp, int preset, vbr_mode mode)
     lame_set_ATHcurve(gfp, abr_switch_map[r].ath_curve);
     lame_set_ATHlower(gfp, (double)abr_switch_map[r].ath_lower);
 
-    if (actual_bitrate >= 160)
-	lame_set_short_threshold(gfp, 1.8, 10.0);
-    else if (actual_bitrate > 90)
-	lame_set_short_threshold(gfp, 2.5, 15.0);
-    else if (actual_bitrate > 16)
-	lame_set_short_threshold(gfp, 10.0, 20.0);
-    else
-	lame_set_short_threshold(gfp, 100.0, 100.0); /* no short blocks */
-
+    if (gfp->internal_flags->nsPsy.attackthre < 0.0) {
+	if (actual_bitrate >= 160)
+	    lame_set_short_threshold(gfp, 1.8, 10.0);
+	else if (actual_bitrate > 90)
+	    lame_set_short_threshold(gfp, 2.5, 15.0);
+	else if (actual_bitrate > 16)
+	    lame_set_short_threshold(gfp, 10.0, 20.0);
+	else
+	    lame_set_short_threshold(gfp, 100.0, 100.0); /* no short blocks */
+    }
     return preset;
 }
 
@@ -579,6 +581,8 @@ lame_init_params(lame_global_flags * const gfp)
     gfp->framesize = 576 * gfc->mode_gr;
     gfp->encoder_delay = ENCDELAY;
     gfc->resample_ratio = (double) gfp->in_samplerate / gfp->out_samplerate;
+    if (.9999 < gfc->resample_ratio && gfc->resample_ratio < 1.0001)
+	gfc->resample_ratio = 1.0;
 
     /*******************************************************
      * bitrate index
@@ -715,7 +719,7 @@ lame_print_config(const lame_global_flags * gfp)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
     double  out_samplerate = gfp->out_samplerate;
-    double  in_samplerate = gfp->out_samplerate * gfc->resample_ratio;
+    double  in_samplerate = gfp->in_samplerate;
 
     MSGF(gfc, "LAME version %s (%s)\n", get_lame_version(), get_lame_url());
 
@@ -1589,8 +1593,7 @@ lame_init_old(lame_global_flags * gfp)
     gfp->VBR_max_bitrate_kbps = 0;
     gfp->VBR_hard_min = 0;
 
-
-    gfc->resample_ratio = 1;
+    gfc->quantcomp_method = gfc->quantcomp_method_s = -1;
 
     gfc->OldValue[0] = 180;
     gfc->OldValue[1] = 180;
@@ -1598,8 +1601,7 @@ lame_init_old(lame_global_flags * gfp)
     gfc->CurrentStep[1] = 4;
     gfc->masking_lower = 1.0;
 
-    gfc->nsPsy.attackthre   = NSATTACKTHRE;
-    gfc->nsPsy.attackthre_s = NSATTACKTHRE_S;
+    gfc->nsPsy.attackthre = gfc->nsPsy.attackthre_s = -1.0;
     gfc->nsPsy.msfix = NS_MSFIX*M_SQRT2;
 
     gfp->ATHcurve = 4;

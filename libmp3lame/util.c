@@ -156,7 +156,7 @@ void fill_buffer(lame_global_flags *gfp,
     int ch,i;
 
     /* copy in new samples into mfbuf, with resampling if necessary */
-    if ( (gfc->resample_ratio < .9999) || (gfc->resample_ratio > 1.0001) ){
+    if (gfc->resample_ratio != 1.0) {
 	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    *n_out =
 		fill_buffer_resample(gfp, &mfbuf[ch][gfc->mf_size],
@@ -174,7 +174,6 @@ void fill_buffer(lame_global_flags *gfp,
 	}
     }
 }
-    
 
 
 
@@ -187,8 +186,6 @@ int fill_buffer_resample(
        int *num_used,
        int ch) 
 {
-
-  
   lame_internal_flags *gfc=gfp->internal_flags;
   int BLACKSIZE;
   FLOAT8 offset,xvalue;
