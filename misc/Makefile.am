@@ -14,6 +14,7 @@ EXTRA_SCRIPTS = \
 EXTRA_DIST = \
 	$(EXTRA_SCRIPTS) \
 	Lame.vbs \
+	lameGUI.html \
 	lame4dos.bat \
 	mlame_corr.c
 
