@@ -1,5 +1,5 @@
 #include "util.h"
-#include "tables.h"
+#include "quantize-pvt.h"
 #include "globalflags.h"
 
 
@@ -7,16 +7,9 @@
 /************************************************************************
  *  lowpass filter on MDCT coefficients
  ************************************************************************/
-void filterMDCT( FLOAT8 xr_org[2][2][576], 
-		III_side_info_t *l3_side, frame_params *fr_ps)
+void filterMDCT( FLOAT8 xr_org[2][2][576], III_side_info_t *l3_side)
 {
   int gr,ch,i;
-  layer *info  = fr_ps->header;
-  int *scalefac_band_long;
-  int *scalefac_band_short;
-
-  scalefac_band_long  = &sfBandIndex[info->sampling_frequency + (info->version * 3)].l[0];
-  scalefac_band_short = &sfBandIndex[info->sampling_frequency + (info->version * 3)].s[0];
 
   if (gf.lowpass1>0) {
     FLOAT start,stop;
@@ -78,14 +71,14 @@ void filterMDCT( FLOAT8 xr_org[2][2][576],
 	if (shortblock) {
 	  int j;
 	  for (j=0; j<3; j++) {
-	    int start = scalefac_band_short[ SBPSY_s ];
+	    int start = scalefac_band.s[ SBPSY_s ];
 	    for ( i = start; i < 192; i++ ) {
 	      int i0 = 3*i+j; 
 	      xr_org[gr][ch][i0]=0;
 	    }
 	  }
 	}else{
-	  int start = scalefac_band_long[ SBPSY_l ];
+	  int start = scalefac_band.l[ SBPSY_l ];
 	  for ( i = start; i < 576; i++ ) xr_org[gr][ch][i]=0;
 	}
       }

@@ -12,7 +12,7 @@ ARCH = $(shell uname -m)
 # defaults:
 PGM = lame
 CC = gcc
-CC_OPTS = -O   	
+CC_OPTS =  -O9 -fomit-frame-pointer -fno-strength-reduce -mpentiumpro -ffast-math -finline-functions -funroll-loops -Wall -malign-double -g -march=pentiumpro -mfancy-math-387 -pipe -UNDEBUG
 GTK = 
 GTKLIBS = 
 SNDLIB = 
@@ -64,11 +64,11 @@ ifeq ($(UNAME),Linux)
    LIBTERMCAP = -lncurses
 
 # suggested for gcc-2.7.x
-   CC_OPTS =  -O3 -fomit-frame-pointer -funroll-loops -ffast-math \
-                    -finline-functions 
+#   CC_OPTS =  -O3 -fomit-frame-pointer -funroll-loops -ffast-math \
+#                    -finline-functions 
 
 #  for debugging:
-   CC_OPTS =  -UNDEBUG -O  -Wall -g -DABORTFP 
+#   CC_OPTS =  -UNDEBUG -O  -Wall -g -DABORTFP 
 
 
 #  for lots of debugging:

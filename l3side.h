@@ -73,8 +73,8 @@ typedef struct {
 /* note: there are only SBPSY_l=(SBMAX_l-1) and SBPSY_s=(SBMAX_s-1) scalefactors.
  * Dont know why these would be dimensioned SBMAX_l and SBMAX-s */
 typedef struct {
-	int l[2][2][SBMAX_l];            /* [cb] */
-	int s[2][2][SBMAX_s][3];         /* [window][cb] */
-	} III_scalefac_t;  /* [gr][ch] */
+	int l[SBMAX_l];            /* [cb] */
+	int s[SBMAX_s][3];         /* [window][cb] */
+} III_scalefac_t;  /* [gr][ch] */
 
 #endif

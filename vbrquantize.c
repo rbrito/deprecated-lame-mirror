@@ -144,7 +144,7 @@ void
 VBR_iteration_loop_new (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
                 FLOAT8 xr_org[2][2][576], III_psy_ratio *ratio,
                 III_side_info_t * l3_side, int l3_enc[2][2][576],
-                III_scalefac_t * scalefac, frame_params * fr_ps)
+                III_scalefac_t scalefac[2][2], frame_params * fr_ps)
 {
   III_psy_xmin l3_xmin;
   layer    *info;
@@ -193,15 +193,15 @@ VBR_iteration_loop_new (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
       if (shortblock) {
 	for ( sfb = 0; sfb < SBPSY_s; sfb++ )  {
 	  for ( i = 0; i < 3; i++ ) {
-	    start = scalefac_band_short[ sfb ];
-	    end   = scalefac_band_short[ sfb+1 ];
+	    start = scalefac_band.s[ sfb ];
+	    end   = scalefac_band.s[ sfb+1 ];
 	    bw = end - start;
 	    vbr_sf = find_scalefac(&xr[gr][ch][3*start+i],&xr34[3*start+i],3,sfb,
 		   masking_lower*l3_xmin.s[gr][ch][sfb][i],bw);
 
             ol_sf =  (cod_info->global_gain-210.0)/4.0;
 	    ol_sf -= 2*cod_info->subblock_gain[i];
-	    ol_sf -= ifqstep*scalefac->s[gr][ch][sfb][i];
+	    ol_sf -= ifqstep*scalefac[gr][ch].s[sfb][i];
 
 	    { 
 	      FLOAT8 xfsf;
@@ -215,15 +215,15 @@ VBR_iteration_loop_new (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 	}
       }else{
 	for ( sfb = 0; sfb < SBPSY_l; sfb++ )   {
-	  start = scalefac_band_long[ sfb ];
-	  end   = scalefac_band_long[ sfb+1 ];
+	  start = scalefac_band.l[ sfb ];
+	  end   = scalefac_band.l[ sfb+1 ];
 	  bw = end - start;
 	  vbr_sf = find_scalefac(&xr[gr][ch][start],&xr34[start],1,sfb,
 				 masking_lower*l3_xmin.l[gr][ch][sfb],bw);
 	  
 	  /* compare with outer_loop scalefacs */
 	  ol_sf =  (cod_info->global_gain-210.0)/4.0;
-	  ol_sf -= ifqstep*scalefac->l[gr][ch][sfb];
+	  ol_sf -= ifqstep*scalefac[gr][ch].l[sfb];
 	  if (cod_info->preflag && sfb>=11) 
 	    ol_sf -= ifqstep*pretab[sfb];
 

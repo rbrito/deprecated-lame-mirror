@@ -85,8 +85,37 @@ int  pretab[21] =
     1, 1, 1, 1, 2, 2, 3, 3, 3, 2
 };
 
-int *scalefac_band_long; 
-int *scalefac_band_short;
+/* Table B.8 */
+
+struct scalefac_struct sfBandIndex[6] =
+{
+  { /* Table B.2.b: 22.05 kHz */
+    {0,6,12,18,24,30,36,44,54,66,80,96,116,140,168,200,238,284,336,396,464,522,576},
+    {0,4,8,12,18,24,32,42,56,74,100,132,174,192}
+  },
+  { /* Table B.2.c: 24 kHz */
+    {0,6,12,18,24,30,36,44,54,66,80,96,114,136,162,194,232,278,332,394,464,540,576},
+    {0,4,8,12,18,26,36,48,62,80,104,136,180,192}
+  },
+  { /* Table B.2.a: 16 kHz */
+    {0,6,12,18,24,30,36,44,54,66,80,96,116,140,168,200,238,284,336,396,464,522,576},
+    {0,4,8,12,18,26,36,48,62,80,104,134,174,192}
+  },
+  { /* Table B.8.b: 44.1 kHz */
+    {0,4,8,12,16,20,24,30,36,44,52,62,74,90,110,134,162,196,238,288,342,418,576},
+    {0,4,8,12,16,22,30,40,52,66,84,106,136,192}
+  },
+  { /* Table B.8.c: 48 kHz */
+    {0,4,8,12,16,20,24,30,36,42,50,60,72,88,106,128,156,190,230,276,330,384,576},
+    {0,4,8,12,16,22,28,38,50,64,80,100,126,192}
+  },
+  { /* Table B.8.a: 32 kHz */
+    {0,4,8,12,16,20,24,30,36,44,54,66,82,102,126,156,194,240,296,364,448,550,576},
+    {0,4,8,12,16,22,30,42,58,78,104,138,180,192}
+  }
+};
+
+struct scalefac_struct scalefac_band;
 
 
 FLOAT8 pow20[Q_MAX];
@@ -116,8 +145,15 @@ iteration_init( FLOAT8 xr_org[2][2][576],
   l3_side->resvDrain = 0;
 
   if ( gf.frameNum==0 ) {
-    scalefac_band_long  = &sfBandIndex[info->sampling_frequency + (info->version * 3)].l[0];
-    scalefac_band_short = &sfBandIndex[info->sampling_frequency + (info->version * 3)].s[0];
+    for (i = 0; i < SBMAX_l + 1; i++) {
+      scalefac_band.l[i] =
+	sfBandIndex[info->sampling_frequency + (info->version * 3)].l[i];
+    }
+    for (i = 0; i < SBMAX_s + 1; i++) {
+      scalefac_band.s[i] =
+	sfBandIndex[info->sampling_frequency + (info->version * 3)].s[i];
+    }
+
     l3_side->main_data_begin = 0;
     memset((char *) &l3_xmin, 0, sizeof(l3_xmin));
     compute_ath(info,ATH_l,ATH_s);
@@ -272,8 +308,8 @@ void compute_ath(layer *info,FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY_l])
 
   /* last sfb is not used */
   for ( sfb = 0; sfb < SBPSY_l; sfb++ ) {
-    start = scalefac_band_long[ sfb ];
-    end   = scalefac_band_long[ sfb+1 ];
+    start = scalefac_band.l[ sfb ];
+    end   = scalefac_band.l[ sfb+1 ];
     ATH_l[sfb]=1e99;
     for (i=start ; i < end; i++) {
       ATH_f = ATHformula(samp_freq*i/(2*576)); /* freq in kHz */
@@ -291,8 +327,8 @@ void compute_ath(layer *info,FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY_l])
   }
 
   for ( sfb = 0; sfb < SBPSY_s; sfb++ ){
-    start = scalefac_band_short[ sfb ];
-    end   = scalefac_band_short[ sfb+1 ];
+    start = scalefac_band.s[ sfb ];
+    end   = scalefac_band.s[ sfb+1 ];
     ATH_s[sfb]=1e99;
     for (i=start ; i < end; i++) {
       ATH_f = ATHformula(samp_freq*i/(2*192));     /* freq in kHz */
@@ -313,8 +349,8 @@ void ms_convert(FLOAT8 xr[2][576],FLOAT8 xr_org[2][576])
 {
   int i;
   for ( i = 0; i < 576; i++ ) {
-    xr[0][i] = (xr_org[0][i]+xr_org[1][i])/SQRT2;
-    xr[1][i] = (xr_org[0][i]-xr_org[1][i])/SQRT2;
+    xr[0][i] = (xr_org[0][i]+xr_org[1][i])*(SQRT2*0.5);
+    xr[1][i] = (xr_org[0][i]-xr_org[1][i])*(SQRT2*0.5);
   }
 }
 
@@ -428,7 +464,7 @@ inner_loop( FLOAT8 xr[2][2][576], FLOAT8 xrpow[576],
 
 /* Also calculates the number of bits necessary to code the scalefactors. */
 
-int scale_bitcount( III_scalefac_t *scalefac, gr_info *cod_info,
+int scale_bitcount( III_scalefac_t scalefac[2][2], gr_info *cod_info,
 		int gr, int ch )
 {
     int i, k, sfb, max_slen1 = 0, max_slen2 = 0, /*a, b, */ ep = 2;
@@ -452,11 +488,11 @@ int scale_bitcount( III_scalefac_t *scalefac, gr_info *cod_info,
             for ( i = 0; i < 3; i++ )
             {
                 for ( sfb = 0; sfb < 6; sfb++ )
-                    if ( scalefac->s[gr][ch][sfb][i] > max_slen1 )
-                        max_slen1 = scalefac->s[gr][ch][sfb][i];
+                    if ( scalefac[gr][ch].s[sfb][i] > max_slen1 )
+                        max_slen1 = scalefac[gr][ch].s[sfb][i];
                 for (sfb = 6; sfb < SBPSY_s; sfb++ )
-                    if ( scalefac->s[gr][ch][sfb][i] > max_slen2 )
-                        max_slen2 = scalefac->s[gr][ch][sfb][i];
+                    if ( scalefac[gr][ch].s[sfb][i] > max_slen2 )
+                        max_slen2 = scalefac[gr][ch].s[sfb][i];
             }
     }
     else
@@ -464,24 +500,24 @@ int scale_bitcount( III_scalefac_t *scalefac, gr_info *cod_info,
         tab = slen2_tab;
         /* a = 11; b = 10;   */
         for ( sfb = 0; sfb < 11; sfb++ )
-            if ( scalefac->l[gr][ch][sfb] > max_slen1 )
-                max_slen1 = scalefac->l[gr][ch][sfb];
+            if ( scalefac[gr][ch].l[sfb] > max_slen1 )
+                max_slen1 = scalefac[gr][ch].l[sfb];
 
 	if (!cod_info->preflag) {
 	    for ( sfb = 11; sfb < SBPSY_l; sfb++ )
-		if (scalefac->l[gr][ch][sfb] < pretab[sfb])
+		if (scalefac[gr][ch].l[sfb] < pretab[sfb])
 		    break;
 
 	    if (sfb == SBPSY_l) {
 		cod_info->preflag = 1;
 		for ( sfb = 11; sfb < SBPSY_l; sfb++ )
-		    scalefac->l[gr][ch][sfb] -= pretab[sfb];
+		    scalefac[gr][ch].l[sfb] -= pretab[sfb];
 	    }
 	}
 
         for ( sfb = 11; sfb < SBPSY_l; sfb++ )
-            if ( scalefac->l[gr][ch][sfb] > max_slen2 )
-                max_slen2 = scalefac->l[gr][ch][sfb];
+            if ( scalefac[gr][ch].l[sfb] > max_slen2 )
+                max_slen2 = scalefac[gr][ch].l[sfb];
     }
 
 
@@ -546,7 +582,7 @@ static unsigned max_range_sfac_tab[6][4] =
 /*  This is reverse-engineered from section 2.4.3.2 of the MPEG2 IS,     */
 /* "Audio Decoding Layer III"                                            */
 
-int scale_bitcount_lsf( III_scalefac_t *scalefac, gr_info *cod_info,
+int scale_bitcount_lsf( III_scalefac_t scalefac[2][2], gr_info *cod_info,
 		    int gr, int ch )
 {
     int table_number, row_in_table, partition, nr_sfb, window, over;
@@ -574,8 +610,8 @@ int scale_bitcount_lsf( III_scalefac_t *scalefac, gr_info *cod_info,
 		nr_sfb = partition_table[ partition ] / 3;
 		for ( i = 0; i < nr_sfb; i++, sfb++ )
 		    for ( window = 0; window < 3; window++ )
-			if ( scalefac->s[gr][ch][sfb][window] > max_sfac[partition] )
-			    max_sfac[partition] = scalefac->s[gr][ch][sfb][window];
+			if ( scalefac[gr][ch].s[sfb][window] > max_sfac[partition] )
+			    max_sfac[partition] = scalefac[gr][ch].s[sfb][window];
 	    }
     }
     else
@@ -586,8 +622,8 @@ int scale_bitcount_lsf( III_scalefac_t *scalefac, gr_info *cod_info,
 	{
 	    nr_sfb = partition_table[ partition ];
 	    for ( i = 0; i < nr_sfb; i++, sfb++ )
-		if ( scalefac->l[gr][ch][sfb] > max_sfac[partition] )
-		    max_sfac[partition] = scalefac->l[gr][ch][sfb];
+		if ( scalefac[gr][ch].l[sfb] > max_sfac[partition] )
+		    max_sfac[partition] = scalefac[gr][ch].l[sfb];
 	}
     }
 
@@ -688,8 +724,8 @@ int calc_xmin( FLOAT8 xr[2][2][576], III_psy_ratio *ratio,
     }else{
 
       for ( sfb = cod_info->sfb_smax; sfb < SBPSY_s; sfb++ ){
-	start = scalefac_band_short[ sfb ];
-        end   = scalefac_band_short[ sfb + 1 ];
+	start = scalefac_band.s[ sfb ];
+        end   = scalefac_band.s[ sfb + 1 ];
 	bw = end - start;
         for ( b = 0; b < 3; b++ ) {
 	  for ( enmax=0.0, en0 = 0.0, l = start; l < end; l++ ) {
@@ -715,8 +751,8 @@ int calc_xmin( FLOAT8 xr[2][2][576], III_psy_ratio *ratio,
       
       
       for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ){
-	start = scalefac_band_long[ sfb ];
-	end   = scalefac_band_long[ sfb+1 ];
+	start = scalefac_band.l[ sfb ];
+	end   = scalefac_band.l[ sfb+1 ];
 	bw = end - start;
 	
         for ( enmax=0.0, en0 = 0.0, l = start; l < end; l++ ) {
@@ -757,18 +793,18 @@ int calc_xmin( FLOAT8 xr[2][2][576], III_psy_ratio *ratio,
     amplified. Otherwise it returns one. 
 */
 
-int loop_break( III_scalefac_t *scalefac, gr_info *cod_info,
+int loop_break( III_scalefac_t scalefac[2][2], gr_info *cod_info,
 	    int gr, int ch )
 {
     int i, sfb;
 
     for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ )
-        if ( scalefac->l[gr][ch][sfb] == 0 )
+        if ( scalefac[gr][ch].l[sfb] == 0 )
 	    return 0;
 
     for ( sfb = cod_info->sfb_smax; sfb < SBPSY_s; sfb++ )
         for ( i = 0; i < 3; i++ )
-            if ( scalefac->s[gr][ch][sfb][i] == 0 )
+            if ( scalefac[gr][ch].s[sfb][i] == 0 )
 		return 0;
 
     return 1;

@@ -37,12 +37,6 @@ extern struct huffcodetab ht[HTN];/* global memory block		*/
 				/* 0..31 Huffman code table 0..31	*/
 				/* 32,33 count1-tables			*/
 
-struct scalefac_struct
-{
-   int l[1+SBMAX_l];
-   int s[1+SBMAX_s];
-};
-extern struct scalefac_struct sfBandIndex[];  /* Table B.8 -- in loop.c */
 
 
 

@@ -33,6 +33,7 @@
 #include "newmdct.h"
 #include "filters.h"
 #include "quantize.h"
+#include "quantize-pvt.h"
 #include "l3bitstream.h"
 #include "formatBitstream.h"
 #include "version.h"
@@ -509,7 +510,7 @@ int lame_encode(short int Buffer[2][1152],char *mpg123bs)
   III_psy_ratio masking_ratio;    /*LR ratios */
   III_psy_ratio masking_MS_ratio; /*MS ratios */
   III_psy_ratio *masking;  /*LR ratios and MS ratios*/
-  III_scalefac_t scalefac;
+  III_scalefac_t scalefac[2][2];
 
   typedef FLOAT8 pedata[2][2];
   pedata pe,pe_MS;
@@ -700,7 +701,7 @@ FFT's                    <---------1024---------->
 
   /* lowpass MDCT filtering */
   if (gf.sfb21 || gf.lowpass1>0 || gf.highpass2>0) 
-    filterMDCT(xr,&l3_side,&fr_ps);
+    filterMDCT(xr, &l3_side);
 
 
   if (check_ms_stereo) {
@@ -756,10 +757,10 @@ FFT's                    <---------1024---------->
 
   if (gf.VBR) {
     VBR_iteration_loop( *pe_use, ms_ratio, xr, masking, &l3_side, l3_enc, 
-		    &scalefac, &fr_ps);
+			scalefac, &fr_ps);
   }else{
     iteration_loop( *pe_use, ms_ratio, xr, masking, &l3_side, l3_enc, 
-		    &scalefac, &fr_ps);
+		    scalefac, &fr_ps);
   }
   /*
   VBR_iteration_loop_new( *pe_use, ms_ratio, xr, masking, &l3_side, l3_enc, 
@@ -776,7 +777,7 @@ FFT's                    <---------1024---------->
   /*  write the frame to the bitstream  */
   getframebits(info,&bitsPerFrame,&mean_bits);
   III_format_bitstream( bitsPerFrame, &fr_ps, l3_enc, &l3_side, 
-			&scalefac, &bs);
+			scalefac, &bs);
 
 
   frameBits = bs.totbit - sentBits;

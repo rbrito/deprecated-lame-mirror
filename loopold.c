@@ -40,7 +40,7 @@ void init_outer_loop_dual(
     FLOAT8 xr[2][2][576],        /*  could be L/R OR MID/SIDE */
     FLOAT8 xr_org[2][2][576],
     III_psy_xmin  *l3_xmin,   /* the allowed distortion of the scalefactor */
-    III_scalefac_t *scalefac, /* scalefactors */
+    III_scalefac_t scalefac[2][2], /* scalefactors */
     int gr, III_side_info_t *l3_side,
     III_psy_ratio *ratio, int ch)
 {
@@ -57,10 +57,10 @@ void init_outer_loop_dual(
   /* reset of iteration variables */
     
   for ( sfb = 0; sfb < SBMAX_l; sfb++ )
-    scalefac->l[gr][ch][sfb] = 0;
+    scalefac[gr][ch].l[sfb] = 0;
   for ( sfb = 0; sfb < SBMAX_s; sfb++ )
     for ( i = 0; i < 3; i++ )
-      scalefac->s[gr][ch][sfb][i] = 0;
+      scalefac[gr][ch].s[sfb][i] = 0;
   
   for ( i = 0; i < 4; i++ )
     cod_info->slen[i] = 0;
@@ -180,7 +180,7 @@ void outer_loop_dual(
     III_psy_xmin  *l3_xmin,   /* the allowed distortion of the scalefactor */
     int l3_enc[2][2][576],    /* vector of quantized values ix(0..575) */
     frame_params *fr_ps,
-    III_scalefac_t *scalefac, /* scalefactors */
+    III_scalefac_t scalefac[2][2], /* scalefactors */
     int gr, III_side_info_t *l3_side,
     III_psy_ratio *ratio, FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2])
 {
@@ -318,14 +318,10 @@ void outer_loop_dual(
       if (notdone[ch]) {
 	huff_bits = targ_bits[ch] - cod_info[ch]->part2_length;
 	if (huff_bits < 0) {
-	  if (iteration==1) {
-	    fprintf(stderr,"ERROR: outer_loop(): huff_bits < 0. \n");
-	    exit(-5);
-	  }else{
-	    /* scale factors too large, not enough bits. use previous quantizaton */
-	    notdone[ch]=0;
-	    over[ch]=999;
-	  }
+	  assert(iteration != 1);
+	  /* scale factors too large, not enough bits. use previous quantizaton */
+	  notdone[ch]=0;
+	  over[ch]=999;
 	}else{
 	  /* if this is the first iteration, see if we can reuse the quantization
 	   * computed in bin_search_StepSize above */
@@ -334,8 +330,7 @@ void outer_loop_dual(
 	      cod_info[ch]->global_gain++;
 	      real_bits = inner_loop( xr, xrpow[gr][ch], l3_enc, huff_bits, cod_info[ch], gr, ch );
 	    } else real_bits=bits_found[ch];
-	  }
-	  else 
+	  } else
 	    real_bits=inner_loop( xr, xrpow[gr][ch], l3_enc, huff_bits, cod_info[ch], gr, ch );
 
 	  cod_info[ch]->part2_3_length = real_bits;
@@ -382,11 +377,11 @@ void outer_loop_dual(
 	best_max_noise[ch]=max_noise[ch];
 	if (notdone[ch]) {
 	  for ( sfb = 0; sfb < SBPSY_l; sfb++ ) /* save scaling factors */
-	    scalesave_l[ch][sfb] = scalefac->l[gr][ch][sfb];
+	    scalesave_l[ch][sfb] = scalefac[gr][ch].l[sfb];
 	  
 	  for ( sfb = 0; sfb < SBPSY_s; sfb++ )
 	    for ( i = 0; i < 3; i++ )
-	      scalesave_s[ch][sfb][i] = scalefac->s[gr][ch][sfb][i];
+	      scalesave_s[ch][sfb][i] = scalefac[gr][ch].s[sfb][i];
 	  
 	  memcpy(save_l3_enc[ch],l3_enc[gr][ch],sizeof(l3_enc[gr][ch]));   
 	  memcpy(&save_cod_info[ch],cod_info[ch],sizeof(save_cod_info[ch]));
@@ -457,12 +452,12 @@ void outer_loop_dual(
   for (ch=0 ; ch < gf.stereo ; ch ++ ) {
     if (count[ch]) {
       for ( sfb = 0; sfb < SBPSY_l; sfb++ ) {
-	scalefac->l[gr][ch][sfb] = scalesave_l[ch][sfb];    
+	scalefac[gr][ch].l[sfb] = scalesave_l[ch][sfb];    
       }
       
       for ( i = 0; i < 3; i++ )
 	for ( sfb = 0; sfb < SBPSY_s; sfb++ ) {
-	  scalefac->s[gr][ch][sfb][i] = scalesave_s[ch][sfb][i];    
+	  scalefac[gr][ch].s[sfb][i] = scalesave_s[ch][sfb][i];    
 	}
 
       memcpy(l3_enc[gr][ch],save_l3_enc[ch],sizeof(l3_enc[gr][ch]));   
@@ -524,8 +519,8 @@ void calc_noise2( FLOAT8 xr[2][576], int ix[2][576], gr_info *cod_info[2],
       step[ch] = POW20(cod_info[ch]->global_gain);
     }
     for ( sfb = 0; sfb < SBPSY_l; sfb++ ) {
-      start = scalefac_band_long[ sfb ];
-      end   = scalefac_band_long[ sfb+1 ];
+      start = scalefac_band.l[ sfb ];
+      end   = scalefac_band.l[ sfb+1 ];
       bw = end - start;
 
       for ( sum[0]=0, sum[1]=0, l = start; l < end; l++ ) {
@@ -585,8 +580,8 @@ void calc_noise2( FLOAT8 xr[2][576], int ix[2][576], gr_info *cod_info[2],
       }
 
     for ( sfb = 0 ; sfb < SBPSY_s; sfb++ ) {
-      start = scalefac_band_short[ sfb ];
-      end   = scalefac_band_short[ sfb+1 ];
+      start = scalefac_band.s[ sfb ];
+      end   = scalefac_band.s[ sfb+1 ];
       bw = end - start;
       for ( i = 0; i < 3; i++ ) {           
         for (ch=0 ; ch < gf.stereo ; ch ++ ) sum[ch] = 0.0;

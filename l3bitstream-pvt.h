@@ -5,6 +5,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.3  2000/02/01 11:26:32  takehiro
+ * scalefactor's structure changed
+ *
  * Revision 1.2  1999/12/09 00:44:34  cisc
  * Removed write_ancillary_data() prototype. (No longer used)
  *
@@ -25,7 +28,7 @@ static int encodeSideInfo( III_side_info_t  *si );
 
 static void encodeMainData( int              l3_enc[2][2][576],
 			    III_side_info_t  *si,
-			    III_scalefac_t   *scalefac );
+			    III_scalefac_t   scalefac[2][2] );
 
 static void drain_into_ancillary_data( int lengthInBits );
 

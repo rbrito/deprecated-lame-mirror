@@ -47,7 +47,7 @@ static INLINE void fht(FLOAT *fz, int n)
     FLOAT *fi, *fn, *gi;
     FLOAT *tri;
 
-    fn = fi = fz + n;
+    fn = fz + n;
     tri = &costab[0];
     k4 = 4;
     do {
@@ -85,8 +85,8 @@ static INLINE void fht(FLOAT *fz, int n)
 	s1 = tri[1];
 	for (i = 1; i < kx; i++) {
 	    FLOAT c2,s2;
-	    c2 = 1.0 - 2.0*s1*s1;
-	    s2 = 2.0*s1*c1;
+	    c2 = 1.0 - (2.0*s1)*s1;
+	    s2 = (2.0*s1)*c1;
 	    fi = fz + i;
 	    gi = fz + k1 - i;
 	    do {
