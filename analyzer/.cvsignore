@@ -1,2 +1,15 @@
 Makefile
+config.status
+config.log
+config.cache
+mp3x
 *.d
+Debug
+Release
+WinGTK
+*.ncb
+*.plg
+*.opt
+*.dll
+*.new.mp3
+*.wav.mp3
