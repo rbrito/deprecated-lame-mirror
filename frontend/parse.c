@@ -278,11 +278,9 @@ int  usage ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramNa
               "Try:\n"
               "     \"%s --help\"           for general usage information\n" 
               " or:\n"
-              "     \"%s --preset help\"    for information on suggested predefined settings\n"
-              " or:\n"
               "     \"%s --longhelp\"\n"
               "  or \"%s -?\"              for a complete options list\n\n",
-              ProgramName, ProgramName, ProgramName, ProgramName, ProgramName ); 
+              ProgramName, ProgramName, ProgramName, ProgramName ); 
     return 0;
 }
 
@@ -316,11 +314,6 @@ int  short_help ( const lame_global_flags* gfp, FILE* const fp, const char* Prog
               "    -m mode         (s)tereo, (j)oint, (m)ono or (a)uto\n"
               "                    default is (j) or (s) depending on bitrate\n"
               "    -V n            quality setting for VBR.  default n=%i\n"
-              "\n"
-              "    --preset type   type must be \"standard\", \"extreme\", \"insane\",\n"
-              "                    or a value for an average desired bitrate and depending on\n"                       
-              "                    the value specified, appropriate quality settings will be used.\n"
-              "                    \"--preset help\" gives some more infos on these\n"
               "\n"
 #if defined(__OS2__)
               "    --priority type  sets the process priority (OS/2 only):\n"
@@ -405,10 +398,6 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --scale <arg>   scale input (multiply PCM data) by <arg>\n"
 	      "    --scale-l <arg> scale channel 0 (left) input (multiply PCM data) by <arg>\n"
               "    --scale-r <arg> scale channel 1 (right) input (multiply PCM data) by <arg>\n"
-              "    --preset type   type must be \"standard\", \"extreme\", \"insane\",\n"
-              "                    or a value for an average desired bitrate and depending on\n"                       
-              "                    the value specified, appropriate quality settings will be used.\n"
-              "                    \"--preset help\" gives some more infos on these\n" 
               );
 
     wait_for ( fp, lessmode );
@@ -590,21 +579,6 @@ int  display_bitrates ( FILE* const fp )
 }
 
 
-/*  note: for presets it would be better to externalize them in a file.
-    suggestion:  lame --preset <file-name> ...
-            or:  lame --preset my-setting  ... and my-setting is defined in lame.ini
- */
- 
-/*
-Note from GB on 08/25/2002:
-I am merging --presets and --alt-presets. Old presets are now aliases for
-corresponding abr values from old alt-presets. This way we now have a 
-unified preset system, and I hope than more people will use the new tuned
-presets instead of the old unmaintained ones.
-*/
-
-
- 
 /************************************************************************
 *
 * usage
@@ -616,82 +590,22 @@ presets instead of the old unmaintained ones.
 
 static void  presets_longinfo_dm ( FILE* msgfp )
 {
-        fprintf ( msgfp,
-        "\n" 
-        "The --preset switches are designed to provide the highest possible quality.\n"
-        "\n"
-        "They have for the most part been subject to and tuned via rigorous double blind\n"
-        "listening tests to verify and achieve this objective.\n"
-        "\n"
-        "These are continually updated to coincide with the latest developments that\n"
-        "occur and as a result should provide you with nearly the best quality\n"
-        "currently possible from LAME.\n"
-        "\n"
-        "To activate these presets:\n"
-        "\n"
-        "   For VBR modes (generally highest quality):\n"
-        "\n"
-        "     \"--preset standard\" This preset should generally be transparent\n"
-        "                             to most people on most music and is already\n"
-        "                             quite high in quality.\n"
-        "\n"
-        "     \"--preset extreme\" If you have extremely good hearing and similar\n"
-        "                             equipment, this preset will generally provide\n"
-        "                             slightly higher quality than the \"standard\"\n"
-        "                             mode.\n"
-        "\n"
-        "   For CBR 320kbps (highest quality possible from the --preset switches):\n"
-        "\n"
-        "     \"--preset insane\"  This preset will usually be overkill for most\n"
-        "                             people and most situations, but if you must\n"
-        "                             have the absolute highest quality with no\n"
-        "                             regard to filesize, this is the way to go.\n"
-        "\n"
-        "   For ABR modes (high quality per given bitrate but not as high as VBR):\n"
-        "\n"
-        "     \"--preset <kbps>\"  Using this preset will usually give you good\n"
-        "                             quality at a specified bitrate. Depending on the\n"
-        "                             bitrate entered, this preset will determine the\n"
-        "                             optimal settings for that particular situation.\n"
-        "                             While this approach works, it is not nearly as\n"
-        "                             flexible as VBR, and usually will not attain the\n"
-        "                             same level of quality as VBR at higher bitrates.\n"  
-        "\n"
-        "The following options are also available for the corresponding profiles:\n"
-        "\n"
-        "   <fast>        standard\n"
-        "   <fast>        extreme\n"
-        "                 insane\n"
-        "   <cbr> (ABR Mode) - The ABR Mode is implied. To use it,\n"
-        "                      simply specify a bitrate. For example:\n"
-        "                      \"--preset 185\" activates this\n"
-        "                      preset and uses 185 as an average kbps.\n" 
-        "\n"
-        "   \"fast\" - Enables the new fast VBR for a particular profile. The\n"
-        "            disadvantage to the speed switch is that often times the\n"
-        "            bitrate will be slightly higher than with the normal mode\n"
-        "            and quality may be slightly lower also.\n"
-        "\n"
-        "   \"cbr\"  - If you use the ABR mode (read above) with a significant\n"
-        "            bitrate such as 80, 96, 112, 128, 160, 192, 224, 256, 320,\n"
-        "            you can use the \"cbr\" option to force CBR mode encoding\n"
-        "            instead of the standard abr mode. ABR does provide higher\n"
-        "            quality but CBR may be useful in situations such as when\n"
-        "            streaming an mp3 over the internet may be important.\n"
-        "\n"
-        "    For example:\n"
-        "\n"
-        "    \"--preset fast standard <input file> <output file>\"\n"
-        " or \"--preset cbr 192 <input file> <output file>\"\n"
-        " or \"--preset 172 <input file> <output file>\"\n"
-        " or \"--preset extreme <input file> <output file>\"\n"
-        "\n"
-        "\n"
-        "A few aliases are available for ABR mode:\n"
-        "phone => 16kbps/mono        phon+/lw/mw-eu/sw => 24kbps/mono\n"
-        "mw-us => 40kbps/mono        voice => 56kbps/mono\n"
-        "fm/radio/tape => 112kbps    hifi => 160kbps\n"
-        "cd => 192kbps               studio => 256kbps\n");
+    fprintf ( msgfp,
+	      "\n"
+	      "  --preset standard => -v 4\n"
+	      "  --preset extreme  => -v 2\n"
+	      "  --preset insane   => -b 320\n"
+	      "  --preset XXX      => --abr XXX\n"
+	      "  --preset cbr XXX  => -b XXX\n"
+	      "\n"
+	      "  --preset phone    => --abr 16 -mm\n"
+	      "  --preset phon+/lw/mw-eu/sw => --abr 24 -mm\n"
+	      "  --preset mw-us    => --abr 40 -mm\n"
+	      "  --preset voice    => --abr 56 -mm\n"
+	      "  --preset fm/radio/tape => --abr 112\n"
+	      "  --preset hifi     => --abr 160\n"
+	      "  --preset cd       => --abr 192\n"
+	      "  --preset studio   => --abr 256\n");
 }
 
 
@@ -703,18 +617,19 @@ extern void lame_set_msfix( lame_t gfp, double msfix );
  */
 static int  presets_set( lame_t gfp, int fast, int cbr, const char* preset_name, const char* ProgramName )
 {
-    int mono = 0;
+    int mono = 0, rate;
 
-    if ((strcmp(preset_name, "help") == 0) && (fast < 1)
-	                                   && (cbr  < 1)) {
+    fprintf(stdout,
+	    "\n"
+	    "The --preset switches are obsoleted and discouraged to use.\n"
+	    "All the presets are only alias to the simple VBR/ABR/CBR mode\n"
+	);
+
+    if (strcmp(preset_name, "help") == 0) {
         lame_version_print ( stdout );
         presets_longinfo_dm( stdout );
         return -1;
     }
-
-
-
-    /* aliases for compatibility with old presets */
 
     if (strcmp(preset_name, "phone") == 0) {
         preset_name = "16";
@@ -751,114 +666,62 @@ static int  presets_set( lame_t gfp, int fast, int cbr, const char* preset_name,
     if (strcmp(preset_name, "studio") == 0) {
         preset_name = "256";
     }
+    if (strcmp(preset_name, "insane") == 0) {
+	preset_name = "320";
+    }
 
-    if (strcmp(preset_name, "dm-radio") == 0) {
-	lame_set_preset(gfp, DM_RADIO);
+    if (strcmp(preset_name, "dm-radio") == 0
+	|| strcmp(preset_name, "radio") == 0) {
+	lame_set_VBR(gfp, vbr_default);
+	lame_set_VBR_q(gfp, 7);
 	return 0;
     }
 
     if (strcmp(preset_name, "portable") == 0) {
-	lame_set_preset(gfp, PORTABLE);
-
+	lame_set_VBR(gfp, vbr_default);
+	lame_set_VBR_q(gfp, 6);
 	return 0;
     }
 
-    if (strcmp(preset_name, "dm-medium") == 0) {
-	lame_set_preset(gfp, DM_MEDIUM);
-
-	return 0;
-    }
-
-    if (strcmp(preset_name, "medium") == 0) {
-	if (fast > 0)
-	    lame_set_preset(gfp, MEDIUM_FAST);
-        else
-	    lame_set_preset(gfp, MEDIUM);
-
+    if (strcmp(preset_name, "dm-medium") == 0
+	|| strcmp(preset_name, "medium") == 0) {
+	lame_set_VBR(gfp, vbr_default);
+	lame_set_VBR_q(gfp, 5);
 	return 0;
     }
 
     if (strcmp(preset_name, "standard") == 0) {
-
-        if (fast > 0)
-           lame_set_preset(gfp, STANDARD_FAST);
-        else
-           lame_set_preset(gfp, STANDARD);
-
-        return 0;
+	lame_set_VBR(gfp, vbr_default);
+	lame_set_VBR_q(gfp, 4);
+	return 0;
     }
-    
-    else if (strcmp(preset_name, "extreme") == 0){
 
-        if (fast > 0)
-           lame_set_preset(gfp, EXTREME_FAST);
-        else
-           lame_set_preset(gfp, EXTREME);
-
-        return 0;
-    }
-    					
-    else if (((strcmp(preset_name, "insane") == 0) || 
-              (strcmp(preset_name, "320"   ) == 0))   && (fast < 1)) {
-
-        lame_set_preset(gfp, INSANE);
- 
-        return 0;
+    if (strcmp(preset_name, "extreme") == 0){
+	lame_set_VBR(gfp, vbr_default);
+	lame_set_VBR_q(gfp, 2);
+	return 0;
     }
 
     /* Generic ABR Preset */
-    if (((atoi(preset_name)) > 0) &&  (fast < 1)) {
-        if ((atoi(preset_name)) >= 8 && (atoi(preset_name)) <= 320){
-            lame_set_preset(gfp, atoi(preset_name));
-
-            if (cbr == 1 )
-                lame_set_VBR(gfp, vbr_off);
-
-	    if (mono == 1 ) {
-		lame_set_mode(gfp, MONO);
-	    }
-
-            return 0;
-
-        }
-        else {
-            lame_version_print ( stderr );
-            fprintf(stderr,"Error: The bitrate specified is out of the valid range for this preset\n"
-                           "\n"
-                           "When using this mode you must enter a value between \"32\" and \"320\"\n"
-                           "\n"
-                           "For further information try: \"%s --preset help\"\n"                  
-
-                           , ProgramName
-                   );
-            return -1;
-        }
+    rate = atoi(preset_name);
+    if (8 <= rate && rate <= 320) {
+	if (cbr == 1)
+	    lame_set_VBR(gfp, vbr_off);
+	else
+	    lame_set_VBR(gfp, vbr_abr);
+	
+	if (mono == 1 )
+	    lame_set_mode(gfp, MONO);
+	
+	lame_set_brate(gfp, rate);
+	return 0;
     }
 
     lame_version_print ( stderr );
-    fprintf(stderr,"Error: You did not enter a valid profile and/or options with --preset\n"
-                   "\n"
-                   "Available profiles are:\n"
-                   "\n"
-                   "   <fast>        standard\n"
-                   "   <fast>        extreme\n"
-                   "                 insane\n"
-                   "          <cbr> (ABR Mode) - The ABR Mode is implied. To use it,\n"
-                   "                             simply specify a bitrate. For example:\n"
-                   "                             \"--preset 185\" activates this\n"
-                   "                             preset and uses 185 as an average kbps.\n" 
-                   "\n"
-                   "    Some examples:\n"
-                   "\n"
-                   " or \"%s --preset fast standard <input file> <output file>\"\n"
-                   " or \"%s --preset cbr 192 <input file> <output file>\"\n"
-                   " or \"%s --preset 172 <input file> <output file>\"\n"
-                   " or \"%s --preset extreme <input file> <output file>\"\n"                   
-                   "\n"
-                   "For further information try: \"%s --preset help\"\n"                  
-
-                   , ProgramName, ProgramName, ProgramName, ProgramName, ProgramName
-           );
+    fprintf(stderr,
+	    "Error: You did not enter a valid profile and/or options with --preset\n"
+	    "For further information try: \"%s --preset help\"\n"
+	    , ProgramName);
     return -1;
 }
 

@@ -60,29 +60,6 @@ typedef enum MPEG_mode_e {
   MAX_INDICATOR   /* Don't use this! It's used for sanity checks. */ 
 } MPEG_mode;
 
-/*presets*/
-typedef enum preset_mode_e {
-    /*values from 8 to 320 should be reserved for abr bitrates*/
-    /*for abr I'd suggest to directly use the targeted bitrate as a value*/
-    ABR_8 = 8,
-    ABR_320 = 320,
-    R3MIX = 1000,
-    STANDARD = 1001,
-    EXTREME = 1002,
-    INSANE = 1003,
-    STANDARD_FAST = 1004,
-    EXTREME_FAST = 1005,
-    MEDIUM = 1006,
-    MEDIUM_FAST = 1007,
-    DM_MEDIUM = 1008,
-    DM_MEDIUM_FAST = 1009,
-    PORTABLE = 1010,
-    PORTABLE_FAST = 1011,
-    DM_RADIO = 1012,
-    DM_RADIO_FAST = 1013
-} preset_mode;
-
-
 /*asm optimizations*/
 typedef enum asm_optimizations_e {
     MMX = 1,
@@ -263,7 +240,6 @@ int CDECL lame_set_compression_ratio(lame_global_flags *, float);
 float CDECL lame_get_compression_ratio(const lame_global_flags *);
 
 
-int CDECL lame_set_preset( lame_global_flags*  gfp, int );
 int CDECL lame_set_asm_optimizations( lame_global_flags*  gfp, int, int );
 
 
