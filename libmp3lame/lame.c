@@ -1266,6 +1266,7 @@ lame_print_internals( const lame_global_flags * gfp )
     MSGF( gfc, "\tATH: %s\n", pc );
     MSGF( gfc, "\t ^ type: %d\n", gfp->ATHtype );
     MSGF( gfc, "\t ^ shape: %g%s\n", gfp->ATHcurve, " (only for type 4)" );
+    MSGF( gfc, "\t ^ level adjustement: %g\n", gfp->ATHlower );
     MSGF( gfc, "\t ^ adjust type: %d\n", gfc->ATH->use_adjust );
     MSGF( gfc, "\t ^ adjust sensitivity power: %d\n", gfc->ATH->aa_sensitivity_p );
     MSGF( gfc, "\t ^ adapt threshold type: %d\n", gfp->athaa_loudapprox );
@@ -1280,7 +1281,7 @@ lame_print_internals( const lame_global_flags * gfp )
     }
     pc = gfp->useTemporal ? "yes" : "no";
     MSGF( gfc, "\tusing temporal masking effect: %s\n", pc );
-    MSGF( gfc, "\tinterchannel masking ratio: %f\n", gfp->interChRatio );
+    MSGF( gfc, "\tinterchannel masking ratio: %g\n", gfp->interChRatio );
     MSGF( gfc, "\t...\n" );
     
     /*  that's all ?
