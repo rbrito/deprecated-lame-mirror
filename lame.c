@@ -714,7 +714,7 @@ case 't':  /* dont write VBR tag */
   /* At higher quality (lower compression) use STEREO instead of JSTEREO.
    * (unless the user explicitly specified a mode ) */
   if ( (!mode_given) && (info->mode !=MPG_MD_MONO)) {
-    if (compression_ratio <= 9 ) {
+    if (compression_ratio < 9 ) {
       info->mode = MPG_MD_STEREO; info->mode_ext = MPG_MD_LR_LR;
     }
   }
@@ -737,22 +737,30 @@ case 't':  /* dont write VBR tag */
      */
     /* disable sfb21 cutoff for low amounts of compression */
     if (compression_ratio<9.0) gf.sfb21=0;
-    
+
+
+    /* Should we use some lowpass filters? */    
+    if (!gf.VBR) {
     if (brate/gf.stereo <= 32  ) {
       /* high compression, low bitrates, lets use a filter */
       gf.sfb21=0; /* not needed */
-      gf.lowpass1=.85;
-      gf.lowpass2=.99;
       if (compression_ratio > 15.5) {
 	gf.lowpass1=.35;  /* good for 16kHz 16kbs compression = 16*/
 	gf.lowpass2=.50;
       }else if (compression_ratio > 14) {
 	gf.lowpass1=.40;  /* good for 22kHz 24kbs compression = 14.7*/
 	gf.lowpass2=.55;
-      }else {
+      }else if (compression_ratio > 10) {
 	gf.lowpass1=.55;  /* good for 16kHz 24kbs compression = 10.7*/
 	gf.lowpass2=.70;
+      }else if (compression_ratio > 8) {
+	gf.lowpass1=.65; 
+	gf.lowpass2=.80;
+      }else {
+	gf.lowpass1=.85;
+	gf.lowpass2=.99;
       }
+    }
     }
     
     /* 14.5khz = .66  16kHz = .73 */
@@ -763,7 +771,6 @@ case 't':  /* dont write VBR tag */
     
     /* apply user driven filters, may override above calculations 
      */
-    
     if ( highpassrate > 0 ) {
       gf.highpass1 = 2.0*highpassrate/resamplerate; /* will always be >=0 */
       if ( highpasswidth >= 0 ) {
@@ -793,11 +800,9 @@ case 't':  /* dont write VBR tag */
       gf.lowpass1 = Min( 1, gf.lowpass1 );
       gf.lowpass2 = Min( 1, gf.lowpass2 );
     }
-    /* printf("%g %g %g %g\n", highpass1, highpass2, lowpass1, lowpass2 );
-     */
-    if ( gf.highpass2>0 || gf.lowpass1>0 ) {
-      gf.sfb21 = 0;
-    }
+   
+    /* dont use cutoff filter and lowpass filter */
+    if ( gf.lowpass1>0 ) gf.sfb21 = 0;
   }
   
   

@@ -168,7 +168,7 @@ void set_masking_lower( int nbits )
 	adjust *= reduce_sidechannel ? 0.707 : 1;
 #else
 	/* masking_lower varies from -8 to +10 db */
-	masking_lower_db = -8 + 2*gf.VBR_q;
+	masking_lower_db = -6 + 2*gf.VBR_q;
 	/* adjust by -6(min)..0(max) depending on bitrate */
 	adjust = (nbits-125)/(2500.0-125.0);
 	adjust = 4*(adjust-1);
