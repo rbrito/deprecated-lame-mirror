@@ -346,7 +346,7 @@ static void quantize_xrpow(const FLOAT8 *xp, int *pi, FLOAT8 istep, gr_info * co
         assert( cod_info->width[sfb] >= 0 );
         if (prev_data_use && (prev_noise->step[sfb] == step)){
             /* do not recompute this part*/
-            iData += cod_info->width[sfb];
+            xp += cod_info->width[sfb];
             iData += cod_info->width[sfb];
         } else {
             int l;
