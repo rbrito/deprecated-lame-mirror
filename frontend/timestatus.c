@@ -118,6 +118,8 @@ void timestatus ( const int samp_rate,
     if ( frameNum == 0 ) {
         real_time.last_time = GetRealTime ();
         proc_time.last_time = GetCPUTime  ();
+        real_time.elapsed_time = 0;
+        proc_time.elapsed_time = 0;
     }
 
     // we need rollover protection for GetCPUTime, and maybe GetRealTime():
