@@ -39,6 +39,7 @@ extern const unsigned char quadcode[2][16*2];
 extern const unsigned int   largetbl    [16*16];
 extern const unsigned int   table23       [3*3];
 extern const unsigned int   table56       [4*4];
+extern const unsigned int   table13       [2*2];
 
 extern const int scfsi_band[5];
 

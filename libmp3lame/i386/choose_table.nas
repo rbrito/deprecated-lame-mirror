@@ -10,7 +10,7 @@
 	globaldef	MMX_masking
 
 	externdef	largetbl
-	externdef	t1l
+	externdef	table13
 	externdef	table23
 	externdef	table56
 
@@ -19,6 +19,7 @@
 D14_14_14_14	dd	0x000E000E, 0x000E000E
 D15_15_15_15	dd	0xfff0fff0, 0xfff0fff0
 mul_add		dd	0x00010010, 0x00010010
+mul_add13	dd	0x00010002, 0x00010002
 mul_add23	dd	0x00010003, 0x00010003
 mul_add56	dd	0x00010004, 0x00010004
 tableDEF
@@ -270,25 +271,6 @@ table_MMX.L_case_0:
 	emms
 	ret
 
-table_MMX.L_case_1:
-	emms
-	mov	eax, [esp+12] ; *s
-	mov	ecx, [esp+4] ; *ix
-;	mov	edx, [esp+8] ; *end
-	sub	ecx, edx
-	push	ebx
-.lp:
-	mov	ebx, [edx+ecx]
-	add	ebx, ebx
-	add	ebx, [edx+ecx+4]
-	movzx	ebx, byte [ebx+t1l]
-	add	[eax], ebx
-	add	ecx, 8
-	jnz	.lp
-	pop	ebx
-	mov	eax, 1
-	ret
-
 table_MMX.L_case_45:
 	push	dword 7
 	mov	ecx, tableABC+9*8
@@ -366,6 +348,11 @@ table.from3:
 	add	[ecx], edx
 	ret
 
+table_MMX.L_case_1:
+	push	eax	; dword 1
+	mov	ecx, table13
+	movq	mm5, [mul_add13]
+	jmp	near table.from2
 table_MMX.L_case_2:
 	push	eax	; dword 2
 	mov	ecx,table23
@@ -425,7 +412,8 @@ table.from2:
 	cmp	edx, ecx
 	jle	.choose2_s1
 	mov	edx, ecx
-	inc	eax
+	cmp	eax, 2	; CF = (eax < 2) ? 1 : 0
+	adc	eax, 1	; eax += CF+1 <=> eax += (eax==1) ? 2:1
 .choose2_s1:
 	mov	ecx, [esp+12] ; *s
 	add	[ecx], edx

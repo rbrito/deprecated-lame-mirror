@@ -121,23 +121,6 @@ count_bit_ESC(
 
 
 inline static int
-count_bit_noESC(const int * ix, const int * const end, int * const s)
-{
-    /* No ESC-words */
-    int	sum1 = 0;
-    const char *hlen1 = ht[1].hlen;
-
-    do {
-	int x = ix[0] * 2 + ix[1];
-	ix += 2;
-	sum1 += hlen1[x];
-    } while (ix < end);
-
-    *s += sum1;
-    return 1;
-}
-
-inline static int
 count_bit_noESC_from2(
     const int *       ix, 
     const int * const end,
@@ -147,12 +130,9 @@ count_bit_noESC_from2(
     /* No ESC-words */
     unsigned int sum = 0, sum2;
     const int xlen = ht[t1].xlen;
-    const unsigned int *hlen;
-    if (t1 == 2)
-	hlen = table23;
-    else
-	hlen = table56;
-
+    static const unsigned int *from2_tables[] = {
+	table13, table23, NULL, NULL, table56};
+    const unsigned int *hlen = from2_tables[t1-1];
     do {
 	int x = ix[0] * xlen + ix[1];
 	ix += 2;
@@ -164,6 +144,8 @@ count_bit_noESC_from2(
 
     if (sum > sum2) {
 	sum = sum2;
+	if (t1 == 1)
+	    t1++;
 	t1++;
     }
 
@@ -259,8 +241,6 @@ int choose_table_nonMMX(
 	return max;
 
     case 1:
-	return count_bit_noESC(ix, end, s);
-
     case 2:
     case 3:
 	return count_bit_noESC_from2(ix, end, huf_tbl_noESC[max - 1], s);
