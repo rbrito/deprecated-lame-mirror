@@ -484,7 +484,7 @@ recalc_divide_init(
     )
 {
     int r0;
-    for (r0 = 0; r0 <= 7 + 15; r0++) {
+    for (r0 = 0; r0 < SBMAX_l; r0++) {
 	int m = 0;
 	r01_bits[r0] = LARGE_BITS;
 	if (gfc->scalefac_band.l[r0] <= gi->big_values)
@@ -558,9 +558,9 @@ best_huffman_divide(lame_t gfc, gr_info * const gi)
     gr_info gi_w;
     int * const ix = gi->l3_enc;
 
-    int r01_bits[7 + 15 + 1];
-    int r01_info[7 + 15 + 1];
-    int max_info[7 + 15 + 1];
+    int r01_bits[SBMAX_l];
+    int r01_info[SBMAX_l];
+    int max_info[SBMAX_l];
 
     if (gi->big_values == 0)
 	return;
