@@ -50,7 +50,6 @@ int pcmbitwidth;
 mp3data_struct mp3input_data; /* used by Ogg and MP3 */
 unsigned int num_samples_read;             
 FILE *musicin;
-enum byte_order NativeByteOrder = order_unknown;
 
 
 #ifdef AMIGA_MPEGA
@@ -152,43 +151,56 @@ void close_infile(void)
 }
 
 
-void SwapBytesInWords ( short* loc, size_t words )
+void SwapBytesInWords ( short *ptr, size_t short_words )  /* Some speedy code */
 {
-    int i;
-    short thisval;
-    char *dst, *src;
-    src = (char *) &thisval;
-    for ( i = 0; i < words; i++ )
-    {
-        thisval = *loc;
-        dst = (char *) loc++;
-        dst[0] = src[1];
-        dst[1] = src[0];
+    unsigned long  val;
+    unsigned long* p = (unsigned long*) ptr;
+
+#ifndef lint
+# if defined(CHAR_BIT)
+#  if CHAR_BIT != 8
+#   error CHAR_BIT != 8
+#  endif
+# else
+#  error can not determine number of bits in a char
+# endif
+#endif /* lint */
+
+    assert( sizeof(short) != 2 );
+
+
+#if defined(SIZEOF_UNSIGNED_LONG) && SIZEOF_UNSIGNED_LONG == 4
+    for ( ; short_words >= 2; short_words -= 2, p++ ) {
+        val = *p;
+        *p  = ((val<<8) & 0xFF00FF00) | ((val>>8) & 0x00FF00FF);
     }
+    ptr = (short*)p;
+    for ( ; short_words >= 1; short_words -= 1, ptr++ ) {
+        val   = *ptr;
+        *ptr  = ((val<<8) & 0xFF00) | ((val>>8) & 0x00FF);
+    }
+#elif defined(SIZEOF_UNSIGNED_LONG) && SIZEOF_UNSIGNED_LONG == 8
+    for ( ; short_words >= 4; short_words -= 4, p++ ) {
+        val = *p;
+        *p  = ((val<<8) & 0xFF00FF00FF00FF00) | ((val>>8) & 0x00FF00FF00FF00FF);
+    }
+    ptr = (short*)p;
+    for ( ; short_words >= 1; short_words -= 1, ptr++ ) {
+        val   = *ptr;
+        *ptr  = ((val<<8) & 0xFF00) | ((val>>8) & 0x00FF);
+    }
+#else
+# ifdef SIZEOF_UNSIGNED_LONG
+#  warning Using unoptimized SwapBytesInWords().
+# endif
+    for ( ; short_words >= 1; short_words -= 1, ptr++ ) {
+        val   = *ptr;
+        *ptr  = ((val<<8) & 0xFF00) | ((val>>8) & 0x00FF);
+    }
+#endif
+
+    assert ( short_words == 0 );
 }
-
-
-/*****************************************************************************
-*
-*  Routines to determine byte order and swap bytes
-*
-*****************************************************************************/
-
-enum byte_order DetermineByteOrder(void)
-{
-    static unsigned char  test [8] = { 1, 2, 3, 4, 5, 6, 7, 8 };
-    unsigned long         t        = *(unsigned long*) test;
-
-    if ( t == 0x04030201  ||  t == 0x0807060504030201 )
-        return order_littleEndian;
-    if ( t == 0x01020304  ||  t == 0x0102030405060708 )
-        return order_bigEndian;
-        
-    return order_unknown;
-}
-
-
-
 
 
 /************************************************************************
@@ -620,13 +632,14 @@ FILE * OpenSndFile(lame_global_flags *gfp, char *inPath)
     gs_wfInfo.samplerate=gfp->in_samplerate;
     gs_wfInfo.pcmbitwidth=16;
     gs_wfInfo.channels=gfp->num_channels;
-    if (DetermineByteOrder()==order_littleEndian) {
+#ifndef WORDS_BIGENDIAN
+      /* little endian */
       if (swapbytes) gs_wfInfo.format=SF_FORMAT_RAW_BE;
       else gs_wfInfo.format=SF_FORMAT_RAW_LE;
-    } else {
+#else
       if (swapbytes) gs_wfInfo.format=SF_FORMAT_RAW_LE;
       else gs_wfInfo.format=SF_FORMAT_RAW_BE;
-    }
+#endif
 
     gs_pSndFileIn=sf_open_read(lpszFileName,&gs_wfInfo);
     musicin = (SNDFILE *) gs_pSndFileIn;
@@ -810,22 +823,17 @@ int read_samples_pcm(FILE *musicin,short sample_buffer[2304], int frame_size,int
 
 
     if (16==pcmbitwidth) {
-      if ( NativeByteOrder == order_unknown )
-	{
-	  NativeByteOrder = DetermineByteOrder();
-	  if ( NativeByteOrder == order_unknown )
-	    {
-	      fprintf(stderr,"byte order not determined\n" );
-	      exit(1);
-	    }
-	}
       /* intel=littleEndian.  wav files are always little endian */
-      if (!iswav && ( NativeByteOrder == order_littleEndian ))
+#ifndef WORDS_BIGENDIAN
+      /* little endian */
+      if (!iswav)
 	SwapBytesInWords( sample_buffer, samples_read );
-      
-      if (iswav && ( NativeByteOrder == order_bigEndian ))
+#else
+      /* big endian */
+      if (iswav)
 	SwapBytesInWords( sample_buffer, samples_read );
-      
+#endif
+
       if (swapbytes)
 	SwapBytesInWords( sample_buffer, samples_read );
     }
