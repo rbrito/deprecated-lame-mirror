@@ -626,9 +626,9 @@ int  calc_noise(
     FLOAT8 tot_noise_db  = 0; /*    0 dB relative to masking */
     FLOAT8 max_noise = -20.0; /* -200 dB relative to masking */
     int j = 0;
-    int *ix = cod_info->l3_enc;
+    const int *ix = cod_info->l3_enc;
     const int *scalefac = cod_info->scalefac;
-    FLOAT8 *xr = cod_info->xr;
+//    FLOAT8 *xr = cod_info->xr;
 
 
     for (sfb = 0; sfb < cod_info->psymax; sfb++) {
@@ -640,15 +640,36 @@ int  calc_noise(
 	FLOAT8 step = POW20(s);
 	FLOAT8 noise = 0.0;
 
-	l = cod_info->width[sfb];
+	l = cod_info->width[sfb] >> 1;
 	do {
-        if (! *ix) { /*60%*/
+        FLOAT8 temp;
+        temp = fabs(cod_info->xr[j]) - pow43[ix[j]] * step; j++;
+	    noise += temp * temp;
+	    temp = fabs(cod_info->xr[j]) - pow43[ix[j]] * step; j++;
+	    noise += temp * temp;
+	} while (--l > 0);
+	noise = *distort++ = noise / *l3_xmin++;
+
+/*
+note by GB:
+By looking at this loop, I noticed that ix[j] was 60%
+of the time 0 and 20% of the time 1. So I wrote the
+following version in order to take advantage of this.
+However, tests showed that this is slower.
+I still believe that it should be possible to have
+a speedup by taking advantage of frequent ix values,
+but the question is how?
+
+
+    l = cod_info->width[sfb];
+	do {
+        if (! *ix) { 
     	    noise += *xr * *xr;
-        } else  if (*ix == 1) { /*20%*/
+        } else  if (*ix == 1) {
     	    FLOAT8 temp;
             temp = fabs(*xr) - step;
     	    noise += temp * temp;
-        } else  {  /*20%*/
+        } else  {  
     	    FLOAT8 temp;
 	        temp = fabs(*xr) - pow43[*ix] * step;
     	    noise += temp * temp;
@@ -656,7 +677,9 @@ int  calc_noise(
         ix++;
         xr++;
 	} while (--l);
-	noise = *distort++ = noise / *l3_xmin++;
+	noise = *distort++ = noise / *l3_xmin++;*/
+
+
 
 	noise = FAST_LOG10(Max(noise,1E-20));
 	/* multiplying here is adding in dB, but can overflow */
