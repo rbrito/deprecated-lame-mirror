@@ -146,7 +146,7 @@ int CDECL lame_get_out_samplerate(const lame_global_flags *);
 /********************************************************************
  *  general control parameters
  ***********************************************************************/
-// 1=cause LAME to collect data for an MP3 frame analzyer. default=0
+// 1=cause LAME to collect data for an MP3 frame analyzer. default=0
 int CDECL lame_set_analysis(lame_global_flags *, int);
 int CDECL lame_get_analysis(const lame_global_flags *);
 
@@ -178,7 +178,7 @@ int CDECL lame_get_quality(const lame_global_flags *);
 int CDECL lame_set_mode(lame_global_flags *, MPEG_mode);
 MPEG_mode CDECL lame_get_mode(const lame_global_flags *);
 
-// mode_automs.  Us a M/S mode with a switching threshold based on 
+// mode_automs.  Use a M/S mode with a switching threshold based on 
 // compression ratio
 // default = 0 (disabled)
 int CDECL lame_set_mode_automs(lame_global_flags *, int);
@@ -232,7 +232,7 @@ int CDECL lame_get_copyright(const lame_global_flags *);
 int CDECL lame_set_original(lame_global_flags *, int);
 int CDECL lame_get_original(const lame_global_flags *);
 
-// error_protection.  Use 2 bytes from each fraome for CRC checksum. default=0
+// error_protection.  Use 2 bytes from each frame for CRC checksum. default=0
 int CDECL lame_set_error_protection(lame_global_flags *, int);
 int CDECL lame_get_error_protection(const lame_global_flags *);
 
