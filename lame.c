@@ -434,7 +434,7 @@ int lame_init_params(lame_global_flags *gfp)
     display_bitrates(stderr);
     return -1;
   }
-  if (gfp->free_format) {
+  if (gfp->free_format || gfp->VBR!=vbr_off) {
     gfc->bitrate_index=0;
   }else{
     if( (gfc->bitrate_index = BitrateIndex(gfp->brate, gfp->version,gfp->out_samplerate)) < 0) {
