@@ -960,7 +960,7 @@ lame_init_params(lame_global_flags * const gfp)
         }
 
         if (gfp->ATHtype == -1)
-            gfp->ATHtype = 0;
+            gfp->ATHtype = 4;
 
         gfc->nsPsy.bass = gfc->nsPsy.alto = gfc->nsPsy.treble = 0;
 
