@@ -11,6 +11,692 @@
 
 -- 
 
+2004-01-10 12:13  aleidinger
+
+	* libmp3lame/version.h:
+
+	Preperation for 3.95 RELEASE.
+
+	Please notify me and Gabriel in case you change something from this
+	point in time upto the 3.96 version bump.
+
+2004-01-10 12:10  aleidinger
+
+	* doc/html/history.html:
+
+	faster on PPC
+
+2004-01-10 12:03  aleidinger
+
+	* libmp3lame/util.h:
+
+	do not use FastLog implicitely
+
+2004-01-10 12:02  aleidinger
+
+	* configMS.h:
+
+	explicit use of FastLog
+
+2004-01-10 11:42  aleidinger
+
+	* configure:
+
+	regen
+
+2004-01-10 11:35  aleidinger
+
+	* configure.in:
+
+	- use the IEEE 754 hack and FastLog on x86 and PPC only
+	- make the use of FastLog explicit
+
+	PPC performance:
+		1GHz G4
+		"Standard"   : 396 s (100%)
+		FastLog      : 371 s ( 93%)
+		FastLog, 754 : 365 s ( 92%)
+		754          : 388 s ( 98%)
+
+		2GHz G5 (dual), cbr, vbr
+		"Standard"   : 166 s (100%), 328 s (100%)
+		FastLog      : 169 s (102%), 338 s (102%)
+		FastLog, 754 : 148 s ( 90%), 288 s ( 88%)
+		754          : 145 s ( 87%), 279 s ( 85%)
+
+	On a G5 we shouldn't use FastLog (I assume highly optimized for G5 log*()
+	routines in the standard math library), but configure doesn't know ATM how
+	do check for a G5.
+
+2004-01-10 10:38  takehiro
+
+	* frontend/get_audio.c:
+
+	backport from my experimental branch to fix the crash when invalid input.
+
+2004-01-10 10:27  takehiro
+
+	* mpglib/: common.c, interface.c, layer1.c, layer3.c:
+
+	backport from my experimenhtal branch, to fix the crash when invalid input.
+
+2004-01-10 09:55  takehiro
+
+	* doc/html/history.html:
+
+	effetc->affect reported at sf.net (BugID #867502)
+
+2004-01-08 19:55  olcios
+
+	* libmp3lame/gain_analysis.c:
+
+	comment update (clarification)
+
+2004-01-08 19:14  olcios
+
+	* USAGE:
+
+	Removed --replaygain from USAGE, because it had been defaulted and the option removed from LAME. Updated information on --replaygain-accurate.
+
+2004-01-08 15:58  bouvigne
+
+	* configMS.h, doc/html/history.html, doc/html/index.html:
+
+	predicted release date: January 11th
+
+2004-01-07 17:58  aleidinger
+
+	* frontend/Makefile.in:
+
+	regen
+
+2004-01-07 17:57  aleidinger
+
+	* frontend/Makefile.am:
+
+	Add mp3x_vc6.dsp.
+
+	Requested by:	Gabriel
+
+2004-01-07 17:35  bouvigne
+
+	* README.WINGTK, lame_vc6.dsw, frontend/lame_vc6.dsp,
+	frontend/mp3x_vc6.dsp, libmp3lame/libmp3lame_vc6.dsp,
+	mpglib/mpglib_vc6.dsp:
+
+	added back mp3x to the VC6 projects
+
+2004-01-07 15:57  aleidinger
+
+	* configure:
+
+	regen
+
+2004-01-07 15:51  aleidinger
+
+	* configure.in:
+
+	- bump version to 3.95
+	- disable layer1 decoding by default
+	- reword the layer options and some option descriptions
+	- enable the use of the fast log function on every CPU (for x86 this
+	  is implicit by the ieee hack)
+
+2004-01-07 15:26  aleidinger
+
+	* config.h.in:
+
+	add the fast log option
+
+2004-01-07 13:26  bouvigne
+
+	* mpglib/mpglib_vc6.dsp:
+
+	disable layer I
+
+2004-01-06 14:38  bouvigne
+
+	* libmp3lame/version.h:
+
+	bump alpha
+
+2004-01-06 13:53  bouvigne
+
+	* libmp3lame/VbrTag.c:
+
+	do not include the vbr header into the vbr seek table as it breaks a player
+
+2004-01-05 18:58  takehiro
+
+	* libmp3lame/: lame.c, quantize.c, tables.c
+	(takehiro-2002_05_07-experimental):
+
+	fix ABR bitrate
+	changed VBR quality <-> compression ratio mapping.
+	changed gfc->masking_lower setting
+
+2004-01-05 17:51  takehiro
+
+	* frontend/get_audio.c (takehiro-2002_05_07-experimental):
+
+	fix a warning.
+	reduce prefetch length.
+
+2004-01-05 16:25  bouvigne
+
+	* doc/html/history.html:
+
+	history
+
+2004-01-05 16:19  bouvigne
+
+	* ACM/ACMStream.cpp:
+
+	fixed a buffer requirement error
+
+2004-01-05 09:45  bouvigne
+
+	* libmp3lame/: l3side.h, quantize.c, takehiro.c:
+
+	faster count_bits
+
+2004-01-05 07:35  takehiro
+
+	* mpglib/common.c (takehiro-2002_05_07-experimental):
+
+	one more fix for seg.fault
+
+2004-01-05 07:30  takehiro
+
+	* mpglib/common.c (takehiro-2002_05_07-experimental):
+
+	fix seg.fault (not good way, indeed)
+
+2004-01-05 07:16  takehiro
+
+	* configure.in (takehiro-2002_05_07-experimental):
+
+	fix typo and disable LAYER1 decoding by default.
+
+2004-01-05 07:15  takehiro
+
+	* libmp3lame/i386/Makefile.in, configure
+	(takehiro-2002_05_07-experimental):
+
+	regen
+
+2004-01-05 07:14  takehiro
+
+	* libmp3lame/i386/Makefile.am (takehiro-2002_05_07-experimental):
+
+	fix build problem
+
+2004-01-05 06:47  takehiro
+
+	* frontend/get_audio.c (takehiro-2002_05_07-experimental):
+
+	more strict syncword check when no LAYER1/2 support.
+
+2004-01-04 19:45  takehiro
+
+	* libmp3lame/: lame.c, tables.c, util.h
+	(takehiro-2002_05_07-experimental):
+
+	finished fixing mono encoding (initialization problem of inter-channel masking value)
+	remove useless code in stereo->mono mix down.
+	fix ATH adjustment code initialization.
+
+2004-01-04 17:35  takehiro
+
+	* libmp3lame/lame.c (takehiro-2002_05_07-experimental):
+
+	fix mono-mode bitrate selection.
+
+2004-01-04 15:39  takehiro
+
+	* libmp3lame/lame.c (takehiro-2002_05_07-experimental):
+
+	fix the condition to use freeformat or not.
+
+2004-01-04 11:04  bouvigne
+
+	* libmp3lame/lame.c:
+
+	corrected -k
+
+2004-01-03 17:08  takehiro
+
+	* libmp3lame/lame.c (takehiro-2002_05_07-experimental):
+
+	trivial clean up and fix comments.
+
+2004-01-03 16:47  bouvigne
+
+	* doc/html/history.html:
+
+	history
+
+2004-01-03 16:22  takehiro
+
+	* libmp3lame/lame.c (takehiro-2002_05_07-experimental):
+
+	fix possible highpass filter display problem.
+
+2004-01-03 16:17  takehiro
+
+	* libmp3lame/lame.c (takehiro-2002_05_07-experimental):
+
+	changed short block switching threshold for 8/16 kbps.
+
+2004-01-03 04:11  takehiro
+
+	* libmp3lame/psymodel.c (takehiro-2002_05_07-experimental):
+
+	fix "FATAL" typo.
+	some code clean up.
+
+2004-01-03 04:10  takehiro
+
+	* libmp3lame/quantize.c (takehiro-2002_05_07-experimental):
+
+	fix for mono encoding.
+
+2004-01-02 19:53  bouvigne
+
+	* libmp3lame/lame.c:
+
+	changed quality mapping
+
+2004-01-02 19:51  bouvigne
+
+	* libmp3lame/takehiro.c:
+
+	faster count_bits
+
+2004-01-02 19:49  bouvigne
+
+	* libmp3lame/: quantize.c, quantize_pvt.h, takehiro.c,
+	vbrquantize.c:
+
+	Faster quantizations
+	Only 5% speedup when using Takehiro's ieee754 hack, but about 60%
+	speedup otherwise. (Should please Mac users)
+
+2004-01-02 09:02  takehiro
+
+	* mpglib/common.c (takehiro-2002_05_07-experimental):
+
+	check emphasis bits in mpeg header.
+
+2004-01-01 17:52  takehiro
+
+	* libmp3lame/machine.h (takehiro-2002_05_07-experimental):
+
+	fix warning on mingw (and probabry VC)
+
+2004-01-01 17:51  takehiro
+
+	* frontend/get_audio.c (takehiro-2002_05_07-experimental):
+
+	changed function name, lame_decode_fromfile -> decode_fromfile because it is not LAME standard API.
+
+2004-01-01 17:23  takehiro
+
+	* mpglib/layer1.c (takehiro-2002_05_07-experimental):
+
+	fix stereo value handling.
+
+2004-01-01 15:22  takehiro
+
+	* frontend/get_audio.c (takehiro-2002_05_07-experimental):
+
+	fix location where emphasis is recorded.
+
+2004-01-01 15:21  takehiro
+
+	* frontend/get_audio.c (takehiro-2002_05_07-experimental):
+
+	prepare for better MP3 header detection.
+
+2003-12-31 19:07  takehiro
+
+	* libmp3lame/quantize.c (takehiro-2002_05_07-experimental):
+
+	fix assertion condition.
+	fix i-stereo bit usage counting.
+
+2003-12-31 04:27  takehiro
+
+	* libmp3lame/: encoder.c, lame.c, psymodel.c, quantize.c
+	(takehiro-2002_05_07-experimental):
+
+	trivial clean up
+
+2003-12-30 19:10  takehiro
+
+	* libmp3lame/quantize.c (takehiro-2002_05_07-experimental):
+
+	trivial clean up.(code to check the MAX_BITS is moved)
+
+2003-12-30 18:52  takehiro
+
+	* libmp3lame/version.h (takehiro-2002_05_07-experimental):
+
+	ok, new years present.
+	here goes alpha10!
+
+2003-12-30 18:47  takehiro
+
+	* ACM/ddk/.cvsignore (takehiro-2002_05_07-experimental):
+
+	added to ignore Makefile
+
+2003-12-30 18:46  takehiro
+
+	* libmp3lame/quantize.c (takehiro-2002_05_07-experimental):
+
+	fix it makes invalid mp3 file when 320kbps.
+
+2003-12-30 18:45  takehiro
+
+	* libmp3lame/bitstream.c (takehiro-2002_05_07-experimental):
+
+	added one more check.
+	trivial coding clean up.
+
+2003-12-30 17:12  takehiro
+
+	* Makefile.in, aclocal.m4, configure, ACM/Makefile.in,
+	ACM/ADbg/Makefile.in, ACM/ddk/Makefile.in, ACM/tinyxml/Makefile.in,
+	Dll/Makefile.in, debian/Makefile.in, doc/Makefile.in,
+	doc/html/Makefile.in, doc/man/Makefile.in, dshow/Makefile.in,
+	frontend/Makefile.in, include/Makefile.in, libmp3lame/Makefile.in,
+	libmp3lame/i386/Makefile.in, mac/Makefile.in, misc/Makefile.in,
+	mpglib/Makefile.in (takehiro-2002_05_07-experimental):
+
+	regen with automake1.7.9, autoconf 2.59 on cygwin.
+
+2003-12-30 13:03  takehiro
+
+	* testcase.mp3, libmp3lame/lame.c, libmp3lame/psymodel.c,
+	libmp3lame/tables.c (takehiro-2002_05_07-experimental):
+
+	trivial clean up.
+
+2003-12-30 12:28  takehiro
+
+	* libmp3lame/psymodel.c (takehiro-2002_05_07-experimental):
+
+	fix masking_lower hadling
+
+2003-12-30 12:26  takehiro
+
+	* libmp3lame/psymodel.c (takehiro-2002_05_07-experimental):
+
+	do not store FFT value when not using analyzer
+
+2003-12-30 10:23  takehiro
+
+	* configure, ACM/Makefile.in, ACM/ddk/Makefile.in
+	(takehiro-2002_05_07-experimental):
+
+	regen
+
+2003-12-30 10:19  takehiro
+
+	* libmp3lame/psymodel.c (takehiro-2002_05_07-experimental):
+
+	trivial optimization
+
+2003-12-29 18:45  takehiro
+
+	* libmp3lame/: lame.c, psymodel.c, quantize.c, tables.c, util.h
+	(takehiro-2002_05_07-experimental):
+
+	hadling masking_lower is moved to quantize.c from psymodel.c
+	fix bug in threshold calculation of short block last sfb.
+	better intensity stereo band selection.(do not use IS at lower frequency)
+	fix comments
+
+2003-12-29 18:09  takehiro
+
+	* libmp3lame/newmdct.c (takehiro-2002_05_07-experimental):
+
+	omit MDCT calculation beyond cutoff.
+	The gain(for MDCT) is arround 15% when 18kHz cutoff.
+
+2003-12-29 08:05  takehiro
+
+	* libmp3lame/: set_get.c, tables.c
+	(takehiro-2002_05_07-experimental):
+
+	reservoir size fix for 320kbps over.
+
+2003-12-29 08:05  takehiro
+
+	* libmp3lame/bitstream.c (takehiro-2002_05_07-experimental):
+
+	added one error check.
+
+2003-12-28 15:41  takehiro
+
+	* libmp3lame/tables.c (takehiro-2002_05_07-experimental):
+
+	fix reservoir max size configuration.
+
+2003-12-28 13:57  takehiro
+
+	* libmp3lame/tables.c (takehiro-2002_05_07-experimental):
+
+	fix free format detection. 320kbps is not always free format.
+
+2003-12-28 12:48  takehiro
+
+	* libmp3lame/bitstream.c (takehiro-2002_05_07-experimental):
+
+	fix MPEG2 scalefactor output.
+
+2003-12-28 12:47  takehiro
+
+	* libmp3lame/bitstream.c (takehiro-2002_05_07-experimental):
+
+	better error detection for debug mode.
+
+2003-12-28 12:11  takehiro
+
+	* frontend/parse.c, libmp3lame/lame.c
+	(takehiro-2002_05_07-experimental):
+
+	fix -k option.
+
+2003-12-28 11:49  takehiro
+
+	* libmp3lame/quantize.c (takehiro-2002_05_07-experimental):
+
+	fix warning
+
+2003-12-28 11:48  takehiro
+
+	* libmp3lame/: psymodel.c, psymodel.h, quantize.c, tables.c
+	(takehiro-2002_05_07-experimental):
+
+	many cosmetic change and clean up.
+
+2003-12-27 17:45  takehiro
+
+	* libmp3lame/: psymodel.c, tables.c, util.h
+	(takehiro-2002_05_07-experimental):
+
+	use more fine resolution infomation for block switching.
+
+2003-12-27 14:55  takehiro
+
+	* testcase.mp3, libmp3lame/psymodel.c
+	(takehiro-2002_05_07-experimental):
+
+	update testcase
+	clean up psymodel.c
+
+2003-12-27 14:24  takehiro
+
+	* frontend/gtkanal.c, libmp3lame/encoder.c,
+	libmp3lame/lame-analysis.h, libmp3lame/lame.c,
+	libmp3lame/lame_global_flags.h, libmp3lame/psymodel.c,
+	libmp3lame/psymodel.h, libmp3lame/quantize.c, libmp3lame/set_get.c,
+	libmp3lame/tables.c, libmp3lame/util.h, libmp3lame/version.h
+	(takehiro-2002_05_07-experimental):
+
+	now psymodel version 0.91-3
+	- new ATH adjustment.
+	  * ATH adjustment per channel, not per granule.
+	- display ATH adjustment value in mp3x.
+	- new long/short block switching code.
+	  * now it is aware of post masking.
+	  * switch to short block when post echo may happen.
+	- better long->short masking (threshold/energy) conversion.
+
+2003-12-23 10:29  takehiro
+
+	* libmp3lame/psymodel.c (takehiro-2002_05_07-experimental):
+
+	added one comment.
+
+2003-12-23 10:22  takehiro
+
+	* libmp3lame/psymodel.c (takehiro-2002_05_07-experimental):
+
+	trivial clean up.
+
+2003-12-23 10:13  takehiro
+
+	* libmp3lame/tables.c (takehiro-2002_05_07-experimental):
+
+	tuning/fixing norm[] values of the spreading function.
+
+2003-12-22 16:36  bouvigne
+
+	* doc/html/history.html:
+
+	history
+
+2003-12-22 09:44  bouvigne
+
+	* libmp3lame/quantize_pvt.c:
+
+	reduced warnings
+
+2003-12-21 18:41  bouvigne
+
+	* frontend/: get_audio.c, main.c, parse.c:
+
+	reduced warnings
+
+2003-12-21 18:14  bouvigne
+
+	* libmp3lame/: encoder.c, psymodel.c, psymodel.h, quantize.c,
+	quantize_pvt.c, quantize_pvt.h, util.h:
+
+	FLOAT8 -> FLOAT
+
+2003-12-21 16:09  takehiro
+
+	* libmp3lame/: psymodel.c, psymodel.h, tables.c
+	(takehiro-2002_05_07-experimental):
+
+	safer threshold calculation arround attack detected position.
+
+2003-12-21 15:12  takehiro
+
+	* configure.in, ACM/Makefile.am (takehiro-2002_05_07-experimental):
+
+	added ACM/ddk directory
+
+2003-12-21 15:06  takehiro
+
+	* libmp3lame/tables.c (takehiro-2002_05_07-experimental):
+
+	update comment as is done in main line.
+
+2003-12-21 15:03  takehiro
+
+	* libmp3lame/tables.c (takehiro-2002_05_07-experimental):
+
+	fix short block ATH scaling and masking threshold.
+
+2003-12-21 13:30  takehiro
+
+	* libmp3lame/: psymodel.c, lame.c, tables.c
+	(takehiro-2002_05_07-experimental):
+
+	- temporal masking aware short/long block switching.
+	- tuning reduce side value.
+	- fixed long->short block threshold conversion factor.
+	- fixed array declaration bug in short block threshold calculation.
+
+2003-12-21 12:46  bouvigne
+
+	* libmp3lame/: encoder.c, lame.c, presets.c, psymodel.c,
+	psymodel.h, quantize.c, quantize.h, quantize_pvt.c, quantize_pvt.h,
+	util.h:
+
+	FLOAT8 -> FLOAT
+
+2003-12-21 12:30  takehiro
+
+	* libmp3lame/tables.c (takehiro-2002_05_07-experimental):
+
+	remove bval_width[] related code.
+
+2003-12-21 12:25  takehiro
+
+	* mpglib/layer3.c (takehiro-2002_05_07-experimental):
+
+	fix 8kbps decode bug (backport from main line)
+
+2003-12-21 10:16  bouvigne
+
+	* libmp3lame/: VbrTag.c, lame.c, psymodel.c, util.c, util.h:
+
+	FLOAT8 -> FLOAT
+
+2003-12-20 14:48  bouvigne
+
+	* libmp3lame/psymodel.c:
+
+	fixed calc_interchannel_masking when encoding to mono
+
+2003-12-20 14:33  bouvigne
+
+	* libmp3lame/lame.c:
+
+	fixed lowpass value for high bitrate vbr profiles
+
+2003-12-20 14:31  bouvigne
+
+	* libmp3lame/version.h:
+
+	Using 3.95 as version number.
+	We will decide latter what to choose about version numbers
+
+2003-12-19 13:55  bouvigne
+
+	* libmp3lame/version.h:
+
+	Moved back to 3.94b in order to not have some 3.95b spreading on the web.
+	We now have to decide if we should go in the 3.94release direction or in the 3.95b direction
+
+2003-12-18 18:47  bouvigne
+
+	* libmp3lame/version.h:
+
+	welcome in 3.95
+
+2003-12-18 17:13  aleidinger
+
+	* ChangeLog:
+
+	ChangeLog for 3.94b.
+
 2003-12-18 15:46  bouvigne
 
 	* libmp3lame/version.h:
