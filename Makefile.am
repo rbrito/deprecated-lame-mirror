@@ -46,3 +46,6 @@ update:
 
 diff:
 	cvs -z3 diff -u
+
+frontend/lame:
+	cd frontend; $(MAKE)
