@@ -69,7 +69,6 @@ int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf);
 
 int InitVbrTag(lame_global_flags *gfp);
 int PutVbrTag(lame_global_flags *gfp, FILE *fid);
-int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer, uint32_t id3v2size, uint16_t crc);
 void AddVbrFrame(lame_global_flags *gfp);
 void ReportLameTagProgress(lame_global_flags *gfp,int nStart);
 void UpdateMusicCRC(uint16_t *crc,unsigned char *buffer, int size);

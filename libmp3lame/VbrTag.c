@@ -402,7 +402,7 @@ static void CreateI2(unsigned char *buf, int nValue)
 }
 
 
-int
+static int
 PutLameVBR(lame_global_flags *gfp, FILE *fpStream,
 	   uint8_t *pbtStreamBuffer, uint32_t id3v2size,  uint16_t crc)
 {
