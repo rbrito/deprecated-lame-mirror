@@ -259,6 +259,7 @@ void init_fft(lame_internal_flags * const gfc)
     FLOAT *window_s = &gfc->window_s[0];
     int i;
 
+#if 0
     if (gfc->nsPsy.use) {
       for (i = 0; i < BLKSIZE ; i++)
 	/* blackman window */
@@ -270,6 +271,15 @@ void init_fft(lame_internal_flags * const gfc)
       for (i = 0; i < BLKSIZE ; i++)
 	window[i] = 0.5 * (1.0 - cos(2.0 * PI * (i + 0.5) / BLKSIZE));
     }
+#endif
+
+    // The type of window used here will make no real difference, but
+    // in the interest of merging nspsytune stuff - switch to blackman window
+    for (i = 0; i < BLKSIZE ; i++)
+      /* blackman window */
+      window[i] = 0.42-0.5*cos(2*PI*(i+.5)/BLKSIZE)+
+	0.08*cos(4*PI*(i+.5)/BLKSIZE);
+
     for (i = 0; i < BLKSIZE_s/2 ; i++)
 	window_s[i] = 0.5 * (1.0 - cos(2.0 * PI * (i + 0.5) / BLKSIZE_s));
 }
