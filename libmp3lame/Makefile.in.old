@@ -1,0 +1,413 @@
+#
+# Makefile.in for LAME 3.xx lib
+#
+# processed by ./configure to produce Makefile
+#
+#
+# these variables are available on command line:
+#
+#   make UNAME=xxxxx ARCH=xxxxx   - specify a type of host
+#   make PGM=lame_exp             - specify a name of an executable file
+#
+#
+SHELL = @SHELL@
+@SET_MAKE@
+
+UNAME = $(shell uname)
+ARCH = $(shell uname -m)
+
+
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+
+BINDIR = @bindir@
+LIBDIR = $(prefix)/lib
+INCLUDEDIR = $(prefix)/include
+CC     = @CC@
+CFLAGS = @CONFIG_OPTS@
+LIBS   = @CONFIG_LIBS@
+LDFLAGS= @CONFIG_LDFLAGS@
+INSTALL= @INSTALL@
+INSTALL_PROGRAM=@INSTALL_PROGRAM@
+INSTALL_DATA=@INSTALL_DATA@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
+
+SHARED_LIB = libmp3lame.so
+SHARED_LIB_MAJOR = $(SHARED_LIB).@LIB_MAJOR_VERSION@
+SHARED_LIB_MINOR = $(SHARED_LIB_MAJOR).@LIB_MINOR_VERSION@
+
+# generic defaults. OS specific options go in versious sections below
+CPP_OPTS = @CPP_OPT@ -I../include -I. -I../mpglib
+CC_OPTS = -O
+AR = ar
+RANLIB = @RANLIB@
+MAKEDEP = -M
+RM_F = rm -f
+LN_S = @LN_S@
+
+
+
+
+
+##########################################################################
+# LINUX   
+##########################################################################
+ifeq ($(UNAME),Linux)
+
+# suggested for gcc-2.7.x
+   CC_OPTS =  -O3 -fomit-frame-pointer -funroll-loops -ffast-math  -finline-functions -Wall -pedantic
+#  CC_OPTS =  -O9 -fomit-frame-pointer -fno-strength-reduce -mpentiumpro -ffast-math -finline-functions -funroll-loops -Wall -malign-double -g -march=pentiumpro -mfancy-math-387 -pipe -pedantic
+
+#  for debugging:
+#  CC_OPTS =  -UNDEBUG -O -Wall -pedantic -ggdb -DABORTFP
+
+#  for lots of debugging:
+#   CC_OPTS =  -DDEBUG -UNDEBUG  -O -Wall -pedantic -g -DABORTFP 
+
+
+#  some alternate code (work in progress Robert.Hegemann@gmx.de)
+#  CPP_OPTS += -DRH_AMP -DRH_VALIDATE_MS
+#  CPP_OPTS += -DKLEMM_01
+# these options for gcc-2.95.2 to produce fast code
+#   CC_OPTS = \
+#	-Wall -O9 -fomit-frame-pointer -march=pentium \
+#	-finline-functions -fexpensive-optimizations \
+#	-funroll-loops -funroll-all-loops -pipe -fschedule-insns2 \
+#	-fstrength-reduce \
+#	-malign-double -mfancy-math-387 -ffast-math 
+
+
+##########################################################################
+# LINUX on Digital/Compaq Alpha CPUs
+##########################################################################
+ifeq ($(ARCH),alpha)
+
+################################################################
+#### Check if 'ccc' is in our path
+####   if not, use 'gcc'
+################################################################
+ifeq ($(shell which ccc 2>/dev/null | grep -c ccc),0)
+
+# double is faster than float on Alpha
+CC_OPTS =       -O4 -pedantic -Wall -fomit-frame-pointer -ffast-math -funroll-loops \
+                -mfp-regs -fschedule-insns -fschedule-insns2 \
+                -finline-functions \
+#                -DFLOAT=double
+# add "-mcpu=21164a -Wa,-m21164a" to optimize for 21164a (ev56) CPU
+
+################################################################
+#### else, use 'ccc'
+################################################################
+else
+
+# Compaq's C Compiler
+CC = ccc
+
+################################################################
+#### set 'CC_OPTS = -arch host -tune host' to generate/tune instructions for this machine
+####     'CC_OPTS += -migrate -fast -inline speed -unroll 0' tweak to run as fast as possible :)
+####     'CC_OPTS += -w0 -pedantic -Wall' set warning and linking flags
+################################################################
+CC_OPTS = -arch host -tune host
+CC_OPTS += -migrate -fast -inline speed -unroll 0
+CC_OPTS += -w0 -pedantic -Wall
+
+
+################################################################
+#### to debug, uncomment
+################################################################
+# For Debugging
+#CC_OPTS += -g3
+
+################################################################
+#### define __DECALPHA__ (i was getting re-declaration warnings
+####   in machine.h
+################################################################
+# Define DEC Alpha
+CPP_OPTS += -D__DECALPHA__
+
+# standard Linux libm
+#LDFLAGS	+=	-lm
+# optimized libffm (free fast math library)
+#LDFLAGS	+=	-lffm
+# Compaq's fast math library
+LDFLAGS    +=       -lcpml
+endif  #  gcc or ccc?
+endif  #  alpha 
+endif  #  linux
+
+
+
+##########################################################################
+# FreeBSD
+##########################################################################
+ifeq ($(UNAME),FreeBSD)
+  # nothing left...
+endif
+
+
+##########################################################################
+# OpenBSD
+##########################################################################
+ifeq ($(UNAME),OpenBSD)
+  # nothing left...
+endif
+
+
+
+##########################################################################
+# SunOS
+##########################################################################
+ifeq ($(UNAME),SunOS) 
+   CC = cc
+   CC_OPTS = -O -xCC  	
+   MAKEDEP = -xM
+# for gcc, use instead:
+#   CC = gcc 
+#   CC_OPTS = -O 
+#   MAKEDEP = -M 
+endif
+
+
+##########################################################################
+# SGI
+##########################################################################
+ifeq ($(UNAME),IRIX64) 
+   CC = cc
+   CC_OPTS = -O3 -woff all 
+
+endif
+
+ifeq ($(UNAME),IRIX) 
+   CC = cc
+   CC_OPTS = -O3 -woff all 
+endif
+
+
+
+##########################################################################
+# Compaq Alpha running Dec Unix (OSF)
+##########################################################################
+ifeq ($(UNAME),OSF1)
+   CC = cc
+   CC_OPTS = -fast -O3 -std -g3 -non_shared
+endif
+
+##########################################################################
+# BeOS
+##########################################################################
+ifeq ($(UNAME),BeOS)
+   CC = $(BE_C_COMPILER)
+ifeq ($(ARCH),BePC)
+   CC_OPTS = -O9 -fomit-frame-pointer -march=pentium \
+   -mcpu=pentium -ffast-math -funroll-loops \
+   -fprofile-arcs -fbranch-probabilities
+else
+   CC_OPTS = -opt all
+   MAKEDEP = -make
+endif
+endif
+
+###########################################################################
+# MOSXS (Rhapsody PPC)
+###########################################################################
+ifeq ($(UNAME),Rhapsody)
+   CC = cc
+   CC_OPTS = -O9 -ffast-math -funroll-loops -fomit-frame-pointer
+   MAKEDEP = -make 
+endif
+
+##########################################################################
+# OS/2
+##########################################################################
+# Properly installed EMX runtime & development package is a prerequisite.
+# tools I used: make 3.76.1, uname 1.12, sed 2.05, PD-ksh 5.2.13
+#
+##########################################################################
+ifeq ($(UNAME),OS/2)
+   SHELL=sh	
+   CC = gcc
+   CC_OPTS = -O3
+
+# I use the following for slightly better performance on my Pentium-II
+# using pgcc-2.91.66:
+#   CC_OPTS = -O6 -ffast-math -funroll-loops -mpentiumpro -march=pentiumpro
+
+endif
+
+###########################################################################
+# MSDOS/Windows
+###########################################################################
+ifeq ($(UNAME),MSDOS)
+  RM_F =
+endif
+
+###########################################################################
+# AmigaOS
+###########################################################################
+# Type 'Make ARCH=PPC' for PowerUP and 'Make ARCH=WOS' for WarpOS
+#
+###########################################################################
+ifeq ($(UNAME),AmigaOS)
+	CC = gcc -noixemul
+	CC_OPTS = -O3 -ffast-math -funroll-loops -m68020-60 -m68881
+	MAKEDEP = -MM
+	ifeq ($(ARCH),WOS)
+		CC = ppc-amigaos-gcc -warpup
+		CC_OPTS = -O3 -ffast-math -fomit-frame-pointer -funroll-loops \
+		-mmultiple -mcpu=603e
+		AR = ppc-amigaos-ar
+		RANLIB = ppc-amigaos-ranlib
+	endif
+	ifeq ($(ARCH),PPC)
+		CC = ppc-amigaos-gcc
+		CC_OPTS = -O3 -ffast-math -fomit-frame-pointer -funroll-loops \
+		-mmultiple -mcpu=603e
+		AR = ppc-amigaos-ar
+		RANLIB = ppc-amigaos-ranlib
+	endif
+endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ** handled by configure **
+# 10/99 added -D__NO_MATH_INLINES to fix a bug in *all* versions of
+# gcc 2.8+ as of 10/99.  
+
+CC_SWITCHES = -DNDEBUG $(CC_OPTS) $(CFLAGS)
+
+lib_sources = \
+	bitstream.c \
+	encoder.c \
+	fft.c \
+        id3tag.c \
+        lame.c \
+        newmdct.c \
+	psymodel.c \
+	quantize.c \
+	quantize_pvt.c \
+	vbrquantize.c \
+	reservoir.c \
+	tables.c \
+	takehiro.c \
+	util.c \
+        VbrTag.c \
+	vorbis_interface.c \
+	mpglib_interface.c \
+        version.c
+
+lib_obj = $(lib_sources:.c=.o) 
+
+mpglib_sources = ../mpglib/common.c \
+        ../mpglib/dct64_i386.c \
+        ../mpglib/decode_i386.c \
+        ../mpglib/layer1.c \
+        ../mpglib/layer2.c \
+        ../mpglib/layer3.c \
+        ../mpglib/tabinit.c \
+        ../mpglib/interface.c 
+mpglib_obj = $(mpglib_sources:.c=.o) 
+
+lib_obj += $(mpglib_obj)
+
+DEP = $(mpglib_sources:.c=.d) $(lib_sources:.c=.d)
+
+
+
+
+NASM = nasm
+ASFLAGS=-f elf -i i386/
+%.o: %.nas
+	$(NASM) $(ASFLAGS) $< -o $@
+%.o: %.s
+	gcc -c $< -o $@
+
+## have NASM
+#CC_SWITCHES += -DHAVE_NASM
+#lib_obj += i386/cpu_feat.o
+
+## use MMX extension. you need nasm and MMX supported CPU.
+#CC_SWITCHES += -DMMX_choose_table
+#lib_obj += i386/choose_table.o
+
+%.o: %.c 
+	$(CC) $(CPP_OPTS) $(CC_SWITCHES) -c $< -o $@
+
+%.d: %.c
+  ifeq ($(NOUNIXCMD),YES)
+	$(CC) $(MAKEDEP)  $(CPP_OPTS) $(CC_SWITCHES)  $< > $@
+  else
+	$(SHELL) -ec '$(CC) $(MAKEDEP)  $(CPP_OPTS) $(CC_SWITCHES)  $< | sed '\''s;$*.o;& $@;g'\'' > $@'
+  endif
+
+all: @LIB_TARGETS@
+
+
+libmp3lame.a:  $(lib_obj) Makefile
+	$(AR) cr libmp3lame.a  $(lib_obj)
+	$(RANLIB) libmp3lame.a
+
+#shared library, probably GNU specific?
+libmp3lame.so:  $(LIBS) $(lib_obj) Makefile
+	$(CC) -shared -Wl,-soname,$(SHARED_LIB_MAJOR) -o $(SHARED_LIB_MINOR) $(LIBS) $(LDFLAGS) $(lib_obj)
+	@$(RM_F) $(SHARED_LIB_MAJOR)
+	$(LN_S) $(SHARED_LIB_MINOR) $(SHARED_LIB_MAJOR)
+	@$(RM_F) $(SHARED_LIB)
+	$(LN_S) $(SHARED_LIB_MAJOR) $(SHARED_LIB)
+
+install_header:
+	@mkdir -p $(INCLUDEDIR)
+	$(INSTALL_DATA) ../include/lame.h $(INCLUDEDIR)
+
+install_static_lib: libmp3lame.a install_header
+	@mkdir -p $(LIBDIR)
+	$(INSTALL_DATA) libmp3lame.a $(LIBDIR)
+
+install_shared_lib: libmp3lame.so install_header
+	@mkdir -p $(LIBDIR)
+	$(INSTALL_DATA) $(SHARED_LIB_MINOR) $(LIBDIR)
+	@$(RM_F) $(LIBDIR)/$(SHARED_LIB_MAJOR)
+	(cd $(LIBDIR) && $(LN_S) $(SHARED_LIB_MINOR) $(SHARED_LIB_MAJOR))
+	@$(RM_F) $(LIBDIR)/$(SHARED_LIB)
+	(cd $(LIBDIR) && $(LN_S) $(SHARED_LIB_MAJOR) $(SHARED_LIB))
+
+install: @LIB_INSTALL_TARGETS@
+
+uninstall:
+	$(RM_F) $(INCLUDEDIR)/lame.h
+	$(RM_F) $(LIBDIR)/libmp3lame.a
+	$(RM_F) $(LIBDIR)/$(SHARED_LIB)
+	$(RM_F) $(LIBDIR)/$(SHARED_LIB_MAJOR)
+	$(RM_F) $(LIBDIR)/$(SHARED_LIB_MINOR)
+
+
+clean:
+	-$(RM_F) $(lib_obj) $(DEP) \
+         libmp3lame.a $(SHARED_LIB) $(SHARED_LIB_MAJOR) $(SHARED_LIB_MINOR)
+
+
+bla:
+	echo "LIB=$(SHARED_LIB) MAJOR=$(SHARED_LIB_MAJOR) MINOR=$(SHARED_LIB_MINOR)"
+
+tags: TAGS
+
+TAGS: @CONFIG_SOURCES@ $(lib_sources) 
+	etags -T @CONFIG_SOURCES@ $(lib_sources) 
+
+ifneq ($(MAKECMDGOALS),clean)
+  -include $(DEP)
+endif
+
+
