@@ -262,7 +262,7 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 __declspec(dllexport) BE_ERR	beDeinitStream(HBE_STREAM hbeStream, PBYTE pOutput, PDWORD pdwOutput)
 {
 
-        *pdwOutput =   lame_encode_finish(&gf,pOutput);
+        *pdwOutput =   lame_encode_finish(&gf,pOutput,0);
 
 	return BE_ERR_SUCCESSFUL;
 }
