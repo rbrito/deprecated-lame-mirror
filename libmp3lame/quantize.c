@@ -680,7 +680,8 @@ quant_compare(
                     better = calc->bits < best->bits;
             } else {
                 /* no distorted sfb*/
-                better = calc->max_noise <= best->max_noise;
+                better = ((calc->max_noise < 0) &&
+                          ((calc->max_noise*10 + calc->bits) <= (best->max_noise*10 + best->bits)));
             }
 	        break;
         }
