@@ -474,15 +474,12 @@ void outer_loop(
 
   int i, iteration;
   int status,count=0,bits_found=0;
-  int real_bits=0;
   int scalesave_l[SBPSY_l], scalesave_s[SBPSY_l][3];
   int sfb, huff_bits;
   FLOAT8 xfsf[4][SBPSY_l];
   FLOAT8 xrpow[576],temp;
   FLOAT8 distort[4][SBPSY_l];
   int save_l3_enc[576];  
-  int save_real_bits=0;
-  int save_preflag=0, save_compress=0;
   int better;
   int over=0;
   FLOAT8 max_noise;
@@ -553,6 +550,7 @@ void outer_loop(
     }else{
       /* if this is the first iteration, see if we can reuse the quantization
        * computed in bin_search_StepSize above */
+      int real_bits;
       if (iteration==1) {
 	if(bits_found>huff_bits) {
 	  cod_info->quantizerStepSize+=1.0;
@@ -561,6 +559,7 @@ void outer_loop(
       }
       else 
 	real_bits=inner_loop( xr, xrpow, l3_enc, huff_bits, cod_info, gr, ch );
+      cod_info->part2_3_length = real_bits;
     }
     
     
@@ -599,12 +598,8 @@ void outer_loop(
 	  for ( i = 0; i < 3; i++ )
 	    scalesave_s[sfb][i] = scalefac->s[gr][ch][sfb][i];
 	
-	save_preflag  = cod_info->preflag;
-	save_compress = cod_info->scalefac_compress;
-	
 	memcpy(save_l3_enc,l3_enc[gr][ch],sizeof(l3_enc[gr][ch]));   
 	memcpy(&save_cod_info,cod_info,sizeof(save_cod_info));
-	save_real_bits=real_bits;
 	
 #ifdef HAVEGTK
 	if (gtkflag) {
@@ -743,9 +738,6 @@ void outer_loop(
   if (!sloppy)
   /* restore some data */
   if (count ) {
-    cod_info->preflag = save_preflag;
-    cod_info->scalefac_compress = save_compress;
-    
     for ( sfb = 0; sfb < SBPSY_l; sfb++ ) {
       scalefac->l[gr][ch][sfb] = scalesave_l[sfb];    
     }
@@ -755,10 +747,9 @@ void outer_loop(
 	scalefac->s[gr][ch][sfb][i] = scalesave_s[sfb][i];    
       }
     
-    real_bits=save_real_bits;  
     memcpy(l3_enc[gr][ch],save_l3_enc,sizeof(l3_enc[gr][ch]));   
     memcpy(cod_info,&save_cod_info,sizeof(save_cod_info));
-    cod_info->part2_3_length = cod_info->part2_length + real_bits;
+    cod_info->part2_3_length += cod_info->part2_length;
     
 #ifdef HAVEGTK
     if (gtkflag)
