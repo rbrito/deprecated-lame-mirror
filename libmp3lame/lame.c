@@ -1095,7 +1095,7 @@ lame_init_params(lame_global_flags * const gfp)
      * Robert Hegemann 2000-06-22
      */
     gfc->slot_lag = gfc->frac_SpF = 0;
-    if (gfp->VBR == vbr_off && !gfp->disable_reservoir)
+    if (gfp->VBR == vbr_off)
 	gfc->slot_lag = gfc->frac_SpF
 	    = ((gfp->version+1)*72000L*gfp->brate) % gfp->out_samplerate;
 
