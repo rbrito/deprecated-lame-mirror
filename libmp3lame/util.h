@@ -362,6 +362,10 @@ struct lame_internal_flags {
                                 3 = amplify only most distorted band and
 				    use pseudo half step
 			     */
+  int substep_shaping;      /* 0 = no substep
+			       1 = use substep shaping at last step(VBR only)
+			       2 = use substep inside loop
+			    */
 
   int psymodel;             /* 1 = gpsycho. 0 = none */
   int noise_shaping_stop;   /* 0 = stop at over=0, all scalefacs amplified or
@@ -392,9 +396,8 @@ struct lame_internal_flags {
   /* variables used by quantize.c */
   int OldValue[2];
   int CurrentStep;
-  FLOAT8 decay;
-  FLOAT8 masking_lower;
 
+  FLOAT8 masking_lower;
   char bv_scf[576];
   
   int sfb21_extra; /* will be set in lame_init_params */
@@ -454,6 +457,8 @@ struct lame_internal_flags {
   FLOAT8	nb_s1[4][CBANDS], nb_s2[4][CBANDS];
   FLOAT8  *s3_ss;
   FLOAT8  *s3_ll;
+  FLOAT8 decay;
+  FLOAT8 interChRatio;
 
   III_psy_xmin thm[4];
   III_psy_xmin en[4];
