@@ -7,7 +7,7 @@ EXTRA_PROGRAMS = mp3rtp mp3x
 
 brhist_sources = brhist.c brhist.h
 
-EXTRA_DIST = $(brhist_sources) README.Win32 mp3x.dsp mp3x.dsw
+EXTRA_DIST = $(brhist_sources) README.Win32 mp3x.dsp mp3x.dsw amiga_mpega.c
 
 common_sources = \
 	get_audio.c \

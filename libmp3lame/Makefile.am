@@ -23,7 +23,7 @@ libmp3lame_la_LDFLAGS = -version-info @LIB_MAJOR_VERSION@:@LIB_MINOR_VERSION@
 
 INCLUDES = @INCLUDES@ -I$(top_srcdir)/mpglib/ -I$(top_srcdir)
 
-EXTRA_DIST = amiga_mpega.c \
+EXTRA_DIST = \
 	debugscalefac.c \
 	libmp3lame.dsp
 
