@@ -7,7 +7,7 @@ SUBDIRS = i386
 lib_LTLIBRARIES = libmp3lame.la
 
 if HAVE_NASM
-nasm_ldadd = $(top_builddir)/libmp3lame/@CPUTYPE@/liblameasmroutines.a
+nasm_ldadd = $(top_builddir)/libmp3lame/@CPUTYPE@/liblameasmroutines.la
 else
 nasm_ldadd =
 endif
@@ -92,3 +92,6 @@ lclint.txt: ${libmp3lame_la_SOURCES} ${noinst_HEADERS}
 lclint: lclint.txt
 	more lclint.txt
 
+#$(OBJECTS): libtool
+#libtool: $(LIBTOOL_DEPS)
+#	$(SHELL) $(top_builddir)/config.status --recheck
