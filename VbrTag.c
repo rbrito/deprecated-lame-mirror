@@ -391,7 +391,8 @@ int PutVbrTag(lame_global_flags *gfp,char* lpszFileName,int nVbrScale)
 	abyte = (pbtStreamBuffer[1] & (char) 0xf1);
 	if (gfp->version==1) {
           /* changed behaviour as suggested by Mathew Hendry:
-           * as the extra Xing VBR header is no valid mpeg frame anyway,
+           * The Xing VBR header is a valid mpeg.  But because some
+	   * decoders require CRC on for all frames, or off for all frames,
            * keep crc from the first valid frame without calculating it
            * for this additional Xing frame
            */ 
@@ -484,33 +485,3 @@ int PutVbrTag(lame_global_flags *gfp,char* lpszFileName,int nVbrScale)
 	return 0;       /* success */
 }
 
-/*-------------------------------------------------------------*/
-int SeekPoint(unsigned char TOC[NUMTOCENTRIES], int file_bytes, float percent)
-{
-/* interpolate in TOC to get file seek point in bytes */
-int a, seekpoint;
-float fa, fb, fx;
-
-
-if( percent < (float)0.0 )   percent = (float)0.0;
-if( percent > (float)100.0 ) percent = (float)100.0;
-
-a = (int)percent;
-if( a > 99 ) a = 99;
-fa = TOC[a];
-if( a < 99 ) {
-    fb = TOC[a+1];
-}
-else {
-    fb = (float)256.0;
-}
-
-
-fx = fa + (fb-fa)*(percent-a);
-
-seekpoint = (int)(((float)(1.0/256.0))*fx*file_bytes);
-
-
-return seekpoint;
-}
-/*-------------------------------------------------------------*/

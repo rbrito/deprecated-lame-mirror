@@ -6,14 +6,16 @@
 *
 ***********************************************************************/
 /* 
-layerIII enc->dec delay:  1056    (observed)
-layerII  enc->dec dealy:   480    (observed)
+layerIII enc->dec delay:  1056 (1057?)   (observed)
+layerII  enc->dec dealy:   480 (481?)    (observed)
 
 
 polyphase 256-16             (dec or enc)        = 240
 mdct      256+32  (9*32)     (dec or enc)        = 288
 total:    512+16
 
+My guess is that delay of polyphase filterbank is actualy 240.5
+So total Encode+Decode delay = ENCDELAY + 528 + 1
 */
 
 

@@ -258,7 +258,7 @@ int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip)
 
   if (gfp->input_format==sf_mp3) {
     /* mp3 decoder has a 528 sample delay, plus user supplied "skip" */
-    skip+=528;
+    skip+=528 + 1;
     MSGF("input:    %s %.1fkHz MPEG%i %i channel LayerIII\n",
 	  (strcmp(gfp->inPath, "-")? gfp->inPath : "stdin"),
 	  gfp->in_samplerate/1000.0,2-gfp->version,gfp->num_channels);
