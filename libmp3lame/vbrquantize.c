@@ -34,13 +34,30 @@
 #include "lame-analysis.h"
 
 
+/* if your machine is IEEE754 compatible, this may make faster binary */
+#if (defined(__i386__))
+#define TAKEHIRO_IEEE754_HACK
+#endif
+
+
+typedef union {
+    float f;
+    int   i;
+} fi_union;
+
+#define MAGIC_FLOAT (65536*(128))
+#define MAGIC_INT    0x4b000000
+
+
+#ifndef TAKEHIRO_IEEE754_HACK
+
+
 #if (defined(__GNUC__) && defined(__i386__))
 #define USE_GNUC_ASM
 #endif
 #ifdef _MSC_VER
 #define USE_MSC_ASM
 #endif
-
 
 
 /*********************************************************************
@@ -76,12 +93,18 @@
 
 
 
+#endif
+
+
 #undef MAXQUANTERROR
 
 static FLOAT8
 calc_sfb_noise(const FLOAT8 *xr, const FLOAT8 *xr34, const int bw, const int sf)
 {
   int j;
+//  int ix;
+  fi_union fi; 
+  FLOAT8 temp;
   FLOAT8 xfsf=0;
   FLOAT8 sfpow,sfpow34;
 
@@ -89,9 +112,6 @@ calc_sfb_noise(const FLOAT8 *xr, const FLOAT8 *xr34, const int bw, const int sf)
   sfpow34  = IPOW20(sf+210); /*pow(sfpow,-3.0/4.0);*/
 
   for ( j=0; j < bw ; ++j) {
-    int ix;
-    FLOAT8 temp;
-
 #if 0
     if (xr34[j]*sfpow34 > IXMAX_VAL) return -1;
     ix=floor( xr34[j]*sfpow34);
@@ -109,10 +129,19 @@ calc_sfb_noise(const FLOAT8 *xr, const FLOAT8 *xr34, const int bw, const int sf)
 #else
     if (xr34[j]*sfpow34 > IXMAX_VAL) return -1;
 
+#ifdef TAKEHIRO_IEEE754_HACK
+    temp   = sfpow34*xr34[j];
+    temp  += MAGIC_FLOAT; 
+    fi.f  = temp;
+    fi.f  = temp + (adj43asm - MAGIC_INT)[fi.i];
+    fi.i -= MAGIC_INT;
+#else
     temp = xr34[j]*sfpow34;
-    XRPOW_FTOI(temp, ix);
-    XRPOW_FTOI(temp + QUANTFAC(ix), ix);
-    temp = fabs(xr[j])- pow43[ix]*sfpow;
+    XRPOW_FTOI(temp, fi.i);
+    XRPOW_FTOI(temp + QUANTFAC(fi.i), fi.i);
+#endif
+
+    temp = fabs(xr[j])- pow43[fi.i]*sfpow;
     temp *= temp;
     
 #endif
@@ -137,6 +166,8 @@ static FLOAT8
 calc_sfb_noise_ave(const FLOAT8 *xr, const FLOAT8 *xr34, const int bw, const int sf)
 {
   int j;
+  fi_union fi; 
+  double temp,temp_p1,temp_m1;
   FLOAT8 xfsf=0, xfsf_p1=0, xfsf_m1=0;
   FLOAT8 sfpow34,sfpow34_p1,sfpow34_m1;
   FLOAT8 sfpow,sfpow_p1,sfpow_m1;
@@ -151,27 +182,49 @@ calc_sfb_noise_ave(const FLOAT8 *xr, const FLOAT8 *xr34, const int bw, const int
   sfpow34_p1 = sfpow34*0.878126080187;
 
   for ( j=0; j < bw ; ++j) {
-    int ix;
-    FLOAT8 temp,temp_p1,temp_m1;
 
     if (xr34[j]*sfpow34_m1 > IXMAX_VAL) return -1;
 
+#ifdef TAKEHIRO_IEEE754_HACK
+    temp   = xr34[j]*sfpow34;
+    temp  += MAGIC_FLOAT; 
+    fi.f  = temp;
+    fi.f  = temp + (adj43asm - MAGIC_INT)[fi.i];
+    fi.i -= MAGIC_INT;
+#else
     temp = xr34[j]*sfpow34;
-    XRPOW_FTOI(temp, ix);
-    XRPOW_FTOI(temp + QUANTFAC(ix), ix);
-    temp = fabs(xr[j])- pow43[ix]*sfpow;
+    XRPOW_FTOI(temp, fi.i);
+    XRPOW_FTOI(temp + QUANTFAC(fi.i), fi.i);
+#endif
+    temp = fabs(xr[j])- pow43[fi.i]*sfpow;
     temp *= temp;
 
+#ifdef TAKEHIRO_IEEE754_HACK
     temp_p1 = xr34[j]*sfpow34_p1;
-    XRPOW_FTOI(temp_p1, ix);
-    XRPOW_FTOI(temp_p1 + QUANTFAC(ix), ix);
-    temp_p1 = fabs(xr[j])- pow43[ix]*sfpow_p1;
+    temp_p1 += MAGIC_FLOAT; 
+    fi.f  = temp_p1;
+    fi.f  = temp_p1 + (adj43asm - MAGIC_INT)[fi.i];
+    fi.i -= MAGIC_INT;
+#else
+    temp_p1 = xr34[j]*sfpow34_p1;
+    XRPOW_FTOI(temp_p1, fi.i);
+    XRPOW_FTOI(temp_p1 + QUANTFAC(fi.i), fi.i);
+#endif
+    temp_p1 = fabs(xr[j])- pow43[fi.i]*sfpow_p1;
     temp_p1 *= temp_p1;
     
+#ifdef TAKEHIRO_IEEE754_HACK
+    temp_m1   = xr34[j]*sfpow34_m1;
+    temp_m1  += MAGIC_FLOAT; 
+    fi.f  = temp_m1;
+    fi.f  = temp_m1 + (adj43asm - MAGIC_INT)[fi.i];
+    fi.i -= MAGIC_INT;
+#else
     temp_m1 = xr34[j]*sfpow34_m1;
-    XRPOW_FTOI(temp_m1, ix);
-    XRPOW_FTOI(temp_m1 + QUANTFAC(ix), ix);
-    temp_m1 = fabs(xr[j])- pow43[ix]*sfpow_m1;
+    XRPOW_FTOI(temp_m1, fi.i);
+    XRPOW_FTOI(temp_m1 + QUANTFAC(fi.i), fi.i);
+#endif
+    temp_m1 = fabs(xr[j])- pow43[fi.i]*sfpow_m1;
     temp_m1 *= temp_m1;
 
 #ifdef MAXQUANTERROR
