@@ -1137,8 +1137,8 @@ bitpressure_strategy(
     }
 }
 
-static  FLOAT
-calc_sfb_noise(const FLOAT * xr, const FLOAT * xr34, int bw, int sf)
+inline static  FLOAT
+calc_sfb_noise_fast(const FLOAT * xr, const FLOAT * xr34, int bw, int sf)
 {
     FLOAT xfsf = 0.0;
     FLOAT sfpow = POW20(sf);  /*pow(2.0,sf/4.0); */
@@ -1146,35 +1146,79 @@ calc_sfb_noise(const FLOAT * xr, const FLOAT * xr34, int bw, int sf)
 
     bw >>= 1;
     do {
-	fi_union fi0, fi1;
-	FLOAT t1, t2;
+ 	fi_union fi0, fi1;
+	FLOAT t0, t1;
 #ifdef TAKEHIRO_IEEE754_HACK
-	fi0.f = sfpow34 * xr34[0] + (ROUNDFAC + MAGIC_FLOAT);
-	fi1.f = sfpow34 * xr34[1] + (ROUNDFAC + MAGIC_FLOAT);
-
-	if (fi0.i > MAGIC_INT + IXMAX_VAL) return -1;
-	if (fi1.i > MAGIC_INT + IXMAX_VAL) return -1;
-	t1 = fabs(xr[0]) - (pow43 - MAGIC_INT)[fi0.i] * sfpow;
-	t2 = fabs(xr[1]) - (pow43 - MAGIC_INT)[fi1.i] * sfpow;
+ 	fi0.f = sfpow34 * xr34[0] + (ROUNDFAC + MAGIC_FLOAT);
+ 	fi1.f = sfpow34 * xr34[1] + (ROUNDFAC + MAGIC_FLOAT);
+ 
+ 	if (fi0.i > MAGIC_INT + IXMAX_VAL) return -1;
+ 	if (fi1.i > MAGIC_INT + IXMAX_VAL) return -1;
+	t0 = fabs(xr[0]) - (pow43 - MAGIC_INT)[fi0.i] * sfpow;
+	t1 = fabs(xr[1]) - (pow43 - MAGIC_INT)[fi1.i] * sfpow;
 #else
-        XRPOW_FTOI(sfpow34 * xr34[0] + ROUNDFAC, fi0.i);
-        XRPOW_FTOI(sfpow34 * xr34[1] + ROUNDFAC, fi1.i);
-
-	if (fi0.i > IXMAX_VAL) return -1;
-	if (fi1.i > IXMAX_VAL) return -1;
-	t1 = fabs(xr[0]) - pow43[fi0.i] * sfpow;
-	t2 = fabs(xr[1]) - pow43[fi1.i] * sfpow;
+	XRPOW_FTOI(sfpow34 * xr34[0] + ROUNDFAC, fi0.i);
+	XRPOW_FTOI(sfpow34 * xr34[1] + ROUNDFAC, fi1.i);
+ 
+ 	if (fi0.i > IXMAX_VAL) return -1;
+ 	if (fi1.i > IXMAX_VAL) return -1;
+	t0 = fabs(xr[0]) - pow43[fi0.i] * sfpow;
+	t1 = fabs(xr[1]) - pow43[fi1.i] * sfpow;
 #endif
-        xfsf += t1*t1 + t2*t2;
+        xfsf += t0*t0 + t1*t1;
 	xr34 += 2;
 	xr += 2;
     } while (--bw > 0);
     return xfsf;
 }
 
+inline static  FLOAT
+calc_sfb_noise(const FLOAT * xr, const FLOAT * xr34, int bw, int sf)
+{
+    FLOAT xfsf = 0.0;
+    FLOAT sfpow = POW20(sf);  /*pow(2.0,sf/4.0); */
+    FLOAT sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
+ 
+    bw >>= 1;
+    do {
+	fi_union fi0, fi1;
+	FLOAT t0, t1;
+#ifdef TAKEHIRO_IEEE754_HACK
+	fi0.f = (t0 = sfpow34 * xr34[0] + (ROUNDFAC + MAGIC_FLOAT));
+	fi1.f = (t1 = sfpow34 * xr34[1] + (ROUNDFAC + MAGIC_FLOAT));
 
+	if (fi0.i > MAGIC_INT + IXMAX_VAL) return -1.0;
+	if (fi1.i > MAGIC_INT + IXMAX_VAL) return -1.0;
+	fi0.f = t0 + (adj43asm - MAGIC_INT)[fi0.i];
+	fi1.f = t1 + (adj43asm - MAGIC_INT)[fi1.i];
+	t0 = fabs(xr[0]) - (pow43 - MAGIC_INT)[fi0.i] * sfpow;
+	t1 = fabs(xr[1]) - (pow43 - MAGIC_INT)[fi1.i] * sfpow;
+#else
+	fi0.i = (int) (t0 = sfpow34 * xr34[0]);
+        fi1.i = (int) (t1 = sfpow34 * xr34[1]);
+	if (fi0.i > IXMAX_VAL) return -1.0;
+	if (fi1.i > IXMAX_VAL) return -1.0;
 
+	t0 = fabs(xr[0]) - pow43[(int)(t0 + adj43[fi0.i])] * sfpow;
+	t1 = fabs(xr[1]) - pow43[(int)(t1 + adj43[fi1.i])] * sfpow;
+#endif
+	xfsf += t0*t0 + t1*t1;
+	xr34 += 2;
+	xr += 2;
+    } while (--bw > 0);
+    return xfsf;
+}
 
+/* the find_scalefac* routines calculate
+ * a quantization step size which would
+ * introduce as much noise as is allowed.
+ * The larger the step size the more
+ * quantization noise we'll get. The
+ * scalefactors are there to lower the
+ * global step size, allowing limited
+ * differences in quantization step sizes
+ * per band (shaping the noise).
+ */
 inline int
 find_scalefac(
     const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, int bw)
@@ -1189,23 +1233,18 @@ find_scalefac(
 
     sf_ok = 10000;
     for (i = 0; i < 7; ++i) {
-        delsf >>= 1;
-        xfsf = calc_sfb_noise(xr, xr34, bw, sf);
+	delsf >>= 1;
+	xfsf = calc_sfb_noise_fast(xr, xr34, bw, sf);
 
-        if (xfsf < 0) {
-            /* scalefactors too small */
-            sf += delsf;
-        }
-        else {
-            if (xfsf > l3_xmin) {
-                /* distortion.  try a smaller scalefactor */
-                sf -= delsf;
-            }
-            else {
-                sf_ok = sf;
-                sf += delsf;
-            }
-        }
+	if (xfsf > l3_xmin) {
+	    /* distortion.  try a smaller scalefactor */
+	    sf -= delsf;
+	}
+	else {
+	    if (xfsf >= 0)
+                 sf_ok = sf;
+	    sf += delsf;
+	}
     }
 
     /*  returning a scalefac without distortion, if possible
