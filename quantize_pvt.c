@@ -547,7 +547,7 @@ int calc_noise( lame_global_flags *gfp,
   
   if (cod_info->block_type == SHORT_TYPE) {
     int max_index = SBPSY_s;
-    if ((gfp->VBR==vbr_rh || gfp->VBR==vbr_mt)&&(gfp->out_samplerate >=32000))
+    if ((gfp->VBR==vbr_rh || gfp->VBR==vbr_mtrh || gfp->VBR==vbr_mt)&&(gfp->out_samplerate >=32000))
       {
         max_index = SBMAX_s;
       }
@@ -599,7 +599,7 @@ int calc_noise( lame_global_flags *gfp,
   }else{
     int max_index = SBPSY_l;
     
-    if ((gfp->VBR==vbr_rh || gfp->VBR==vbr_mt)&&(gfp->out_samplerate >=32000))
+    if ((gfp->VBR==vbr_rh || gfp->VBR==vbr_mtrh || gfp->VBR==vbr_mt)&&(gfp->out_samplerate >=32000))
       {
         max_index = SBMAX_l;
       }

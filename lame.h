@@ -48,9 +48,10 @@ typedef enum sound_file_format_e {
 
 typedef enum vbr_mode_e {
   vbr_off=0,
-  vbr_mt=1,
-  vbr_rh=2,
-  vbr_abr=3,
+  vbr_mt,
+  vbr_rh,
+  vbr_abr,
+  vbr_mtrh,
   vbr_default=vbr_rh  /* change this to change the default VBR mode of LAME */ 
 } vbr_mode;
 

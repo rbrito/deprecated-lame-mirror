@@ -30,26 +30,6 @@
 
 
 
-//#define RH_VBR_MTRH
-#ifdef RH_VBR_MTRH
-/* using Mark's noise shaping */
-int VBR_noise_shaping (
-        lame_global_flags *gfp,
-        FLOAT8             xr[576], 
-        FLOAT8             xr34orig[576], 
-        III_psy_ratio     *ratio,
-        int                l3_enc[576], 
-        int                digital_silence, 
-        int                minbits, 
-        int                maxbits,
-        III_scalefac_t    *scalefac, 
-        III_psy_xmin      *l3_xmin,
-        int                gr,
-        int                ch );
-
-#endif
-
-
 
 /************************************************************************
  *
@@ -868,7 +848,7 @@ void outer_loop
          * NOTE: distort[] = changed to:  noise/allowed noise
          * so distort[] > 1 means noise > allowed noise
          */
-        if (gfp->VBR == vbr_rh || iteration > 100) {
+        if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh || iteration > 100) {
             if (cod_info->block_type == SHORT_TYPE) {
                 if ( distort[1][SBMAX_s-1] > 1
                   || distort[2][SBMAX_s-1] > 1
@@ -1375,17 +1355,17 @@ void VBR_iteration_loop
                                       min_mean_bits, analog_silence, ch);
       
             max_bits = calc_max_bits (gfc, frameBits, min_bits);
+            
+            if (gfp->VBR == vbr_mtrh) 
+                VBR_noise_shaping (gfp, xr[gr][ch], xrpow, &ratio[gr][ch],
+                                   l3_enc[gr][ch], 0 /*digital_silence*/, 
+                                   min_bits, max_bits, &scalefac[gr][ch],
+                                   &l3_xmin[gr][ch], gr, ch );
+            else
+                VBR_encode_granule (gfp, cod_info, xr[gr][ch], &l3_xmin[gr][ch],
+                                    &scalefac[gr][ch], xrpow, l3_enc[gr][ch],
+                                    ch, min_bits, max_bits );
 
-#ifdef RH_VBR_MTRH
-            VBR_noise_shaping (gfp, xr[gr][ch], xrpow, &ratio[gr][ch],
-                               l3_enc[gr][ch], 0 /*digital_silence*/, 
-                               min_bits, max_bits, &scalefac[gr][ch],
-                               &l3_xmin[gr][ch], gr, ch );
-#else
-            VBR_encode_granule (gfp, cod_info, xr[gr][ch], &l3_xmin[gr][ch],
-                                &scalefac[gr][ch], xrpow, l3_enc[gr][ch],
-                                ch, min_bits, max_bits );
-#endif
             used_bits += save_bits[gr][ch] = cod_info->part2_3_length;
         } /* for ch */
     }    /* for gr */

@@ -334,7 +334,7 @@ int lame_init_params(lame_global_flags *gfp)
      9                14.7             96kbs
      for lower bitrates, downsample with --resample
   */
-  if (gfp->VBR==vbr_mt || gfp->VBR==vbr_rh) {
+  if (gfp->VBR==vbr_mt || gfp->VBR==vbr_rh || gfp->VBR==vbr_mtrh) {
     gfp->compression_ratio = 5.0 + gfp->VBR_q;
   }else
   if (gfp->VBR==vbr_abr) {
@@ -483,7 +483,7 @@ int lame_init_params(lame_global_flags *gfp)
       gfc->ATH_vbrlower = (4-gfp->VBR_q)*4.0; 
     }
     
-    if (gfp->VBR == vbr_rh)
+    if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh)
     {
       gfc->ATH_vbrlower = (4-gfp->VBR_q)*4.0;     
     }
@@ -717,7 +717,7 @@ void lame_print_config(lame_global_flags *gfp)
       MSGF("Encoding as %.1f kHz VBR Ogg Vorbis \n",
 	      gfp->out_samplerate/1000.0);
     }else
-    if (gfp->VBR==vbr_mt || gfp->VBR==vbr_rh)
+    if (gfp->VBR==vbr_mt || gfp->VBR==vbr_rh || gfp->VBR==vbr_mtrh)
       MSGF("Encoding as %.1f kHz VBR(q=%i) %s MPEG-%g LayerIII (%4.1fx estimated) qval=%i\n",
 	      gfp->out_samplerate/1000.0,
 	      gfp->VBR_q,mode_names[gfp->mode],
@@ -769,39 +769,6 @@ void lame_id3v2_tag(lame_global_flags *gfp,FILE *outf)
   }
 #endif
 }
-
-
-
-#ifdef RH_VALIDATE_MS
-/* check if this frame is with a high probability 
- * a candidate for mid sum coding
- * (adapted from korr.c by Frank Klemm, RH 2000-08-23)
- */
-
-int is_probably_MS ( const short *L, const short *R, size_t len )
-{
-  double  x = 0, x2 = 0, y = 0, y2 = 0, xy = 0;
-  double  t1;
-  double  t2;
-  double  r;
-  int i = len;
-
-  for ( ; i--; ) {
-    x  += (t1 = (double)(*L++));
-    x2 += t1*t1;
-    y  += (t2 = (double)(*R++));
-    y2 += t2*t2;
-    xy += t1*t2;
-  }
-  r = (x2*len - x*x) * (y2*len - y*y);
-  r = r > 0 ? (xy*len - x*y) / sqrt (r) :  1.l;
-
-  return r > 0.33;
-}
-#endif
-
-
-
 
 
 
@@ -1066,11 +1033,22 @@ char *mp3buf, int mp3buf_size)
 			 ms_ratio_prev + ms_ratio_next);
     if ( (ms_ratio_ave <.35) && (.5*(gfc->ms_ratio[0]+gfc->ms_ratio[1])<.45) )
 #ifdef RH_VALIDATE_MS
-      if (       (pe_MS[0][0]+pe_MS[0][1]+pe_MS[1][0]+pe_MS[1][1])
-          < 1.07*(pe   [0][0]+pe   [0][1]+pe   [1][0]+pe   [1][1])
-        && is_probably_MS(inbuf_l, inbuf_r, gfp->framesize)       )
+        {
+            int sum_pe_MS, sum_pe_LR;
+            
+            sum_pe_MS = pe_MS[0][0] + pe_MS[0][1] + pe_MS[1][0] + pe_MS[1][1];
+            sum_pe_LR = pe   [0][0] + pe   [0][1] + pe   [1][0] + pe   [1][1];
+            
+            if (sum_pe_MS <= 1.07 * sum_pe_LR) {
+                /* based on PE:
+                 * M/S coding would not use much more bits than L/R coding 
+                 */
+                gfc->mode_ext = MPG_MD_MS_LR;
+            }
+        }
+#else
+            gfc->mode_ext = MPG_MD_MS_LR;
 #endif
-         gfc->mode_ext = MPG_MD_MS_LR;
   }
 
 
@@ -1116,6 +1094,7 @@ char *mp3buf, int mp3buf_size)
     VBR_quantize( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
     break;
   case vbr_rh:
+  case vbr_mtrh:
     VBR_iteration_loop( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
     break;
   case vbr_abr:

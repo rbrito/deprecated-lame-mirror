@@ -566,6 +566,10 @@ void lame_parse_args ( lame_global_flags* gfp, int argc, char** argv )
 		    gfp->VBR = vbr_mt; 
 		    gfp->quality = 2;
 		
+		T_ELIF ("vbr-mtrh")
+		    gfp->VBR = vbr_mtrh; 
+		    gfp->quality = 2;
+		
 		T_ELIF ("abr")
 		    argUsed=1;
 		    gfp->VBR = vbr_abr; 
