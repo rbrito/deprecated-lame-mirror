@@ -1147,7 +1147,9 @@ static inline FLOAT8 NS_INTERP(FLOAT8 x, FLOAT8 y, FLOAT8 r)
 {
     /* was pow((x),(r))*pow((y),1-(r))*/
     if(r==1.0)
-        return x;              /* 99.7% of the time */ 
+        return x;              /* 99.7% of the time */
+    if(r==0.0)
+	return y;
     if(y>0.0)
         return pow(x/y,r)*y;   /* rest of the time */ 
     return 0.0;                /* never happens */ 
