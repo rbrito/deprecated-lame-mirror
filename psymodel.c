@@ -36,7 +36,7 @@ static FLOAT8 s3_l[CBANDS][CBANDS]; /* needed global static by sprdngfs */
 void L3para_read( FLOAT8 sfreq, int numlines[CBANDS],int numlines_s[CBANDS], int partition_l[HBLKSIZE],
 		  FLOAT8 minval[CBANDS], FLOAT8 qthr_l[CBANDS], 
 		  FLOAT8 s3_l[CBANDS][CBANDS],  FLOAT8 s3_s[CBANDS][CBANDS], 
-                  int partition_s[HBLKSIZE_s], FLOAT8 qthr_s[CBANDS],
+                  FLOAT8 qthr_s[CBANDS],
 		  FLOAT8 SNR_s[CBANDS],
 		  int bu_l[SBPSY_l], int bo_l[SBPSY_l],
 		  FLOAT8 w1_l[SBPSY_l], FLOAT8 w2_l[SBPSY_l],
@@ -115,7 +115,7 @@ void L3psycho_anal( short int *buffer[2],
   static FLOAT8	w1_s[SBPSY_s], w2_s[SBPSY_s];
   static int	blocktype_old[2];
   int	sb,sblock;
-  static int	partition_l[HBLKSIZE],partition_s[HBLKSIZE_s];
+  static int	partition_l[HBLKSIZE];
   static int npart_l,npart_s;
   static int npart_l_orig,npart_s_orig;
   
@@ -177,10 +177,9 @@ void L3psycho_anal( short int *buffer[2],
     }
     
     for (i=0;i<HBLKSIZE;i++) partition_l[i]=-1;
-    for (i=0;i<HBLKSIZE_s;i++) partition_s[i]=-1;
 
     L3para_read( sfreq,numlines_l,numlines_s,partition_l,minval,qthr_l,s3_l,s3_s,
-		 partition_s,qthr_s,SNR_s,
+		 qthr_s,SNR_s,
 		 bu_l,bo_l,w1_l,w2_l, bu_s,bo_s,w1_s,w2_s );
     
     
@@ -189,15 +188,15 @@ void L3psycho_anal( short int *buffer[2],
     npart_l_orig=0; npart_s_orig=0;
     for (i=0;i<HBLKSIZE;i++) 
       if (partition_l[i]>npart_l_orig) npart_l_orig=partition_l[i];
-    for (i=0;i<HBLKSIZE_s;i++) 
-      if (partition_s[i]>npart_s_orig) npart_s_orig=partition_s[i];
     npart_l_orig++;
-    npart_s_orig++;
+
+    for (i=0;numlines_s[i]>=0;i++)
+      ;
+    npart_s_orig = i;
     
     npart_l=bo_l[SBPSY_l-1]+1;
     npart_s=bo_s[SBPSY_s-1]+1;
-    
-    
+
     /* MPEG2 tables are screwed up 
      * the mapping from paritition bands to scalefactor bands will use
      * more paritition bands than we have.  
@@ -398,11 +397,9 @@ void L3psycho_anal( short int *buffer[2],
 	if( (den=rn+fabs(2.0*r1-r2)) != 0.0 ) {
 	  numre = (an+bn)/2.0-numre;
 	  numim = (an-bn)/2.0-numim;
-	  cw[j] = sqrt(numre*numre+numim*numim)/den;
-	} else {
-	  cw[j] = 0.0;
+	  den = sqrt(numre*numre+numim*numim)/den;
 	}
-	
+	cw[j] = den;
       }
 
 
@@ -498,6 +495,7 @@ void L3psycho_anal( short int *buffer[2],
      *    Calculate the energy and the unpredictability in the threshold   *
      *    calculation partitions                                           *
      **********************************************************************/
+#if 1
     for ( b = 0; b < CBANDS; b++ )
       {
 	eb[b] = 0.0;
@@ -506,16 +504,51 @@ void L3psycho_anal( short int *buffer[2],
     for ( j = 0; j < HBLKSIZE; j++ )
       {
 	int tp = partition_l[j];
+	if ( tp >= 0 )
+	  {
+	    eb[tp] += energy[j];
+	    cb[tp] += cw[j] * energy[j];
+	  }
 	assert(tp<npart_l_orig);
-	if ( tp < 0 )
-	  break;
-
-	eb[tp] += energy[j];
-	cb[tp] += cw[j] * energy[j];
       }
-    
-    
-    
+#else
+    b = 0;
+    j = 0;
+    for (j = 0; j < cw_upper_index;)
+      {
+	FLOAT8 ebb, cbb;
+	int i;
+
+	ebb = energy[j];
+	cbb = energy[j] * cw[j];
+	j++;
+
+	for (i = numlines_l[b] - 1; i > 0; i--)
+	  {
+	    ebb += energy[j];
+	    cbb += energy[j] * cw[j];
+	    j++;
+	  }
+	eb[b] = ebb;
+	cb[b] = cbb;
+	b++;
+      }
+
+    for (; b < npart_l; b++ )
+      {
+	int i;
+	FLOAT8 ebb = energy[j++];
+
+	for (i = numlines_l[b] - 1; i > 0; i--)
+	  {
+	    ebb += energy[j++];
+	  }
+	eb[b] = ebb;
+	cb[b] = ebb * 0.4;
+      }
+#endif
+
+
     /**********************************************************************
      *      convolve the partitioned energy and unpredictability           *
      *      with the spreading function, s3_l[b][k]                        *
@@ -543,19 +576,22 @@ void L3psycho_anal( short int *buffer[2],
 	    tbb = ctb / tbb;
 	    if (tbb <= 0.04875584301)
 	      {
-		tbb = LN_TO_LOG10 * (TMN - NMT);
+		tbb = exp(-LN_TO_LOG10 * (TMN - NMT));
+	      }
+	    else if (tbb > 0.4989003827)
+	      {
+		tbb = 1.0;
 	      }
 	    else
 	      {
 		tbb = log(tbb);
-		tbb = -0.299 - 0.43*tbb;  /* conv1=-0.299, conv2=-0.43 */
-		tbb = maximum( 0.0, tbb);  /* 0<tbb<1 */
-		tbb *= LN_TO_LOG10 * (TMN - NMT);
+		tbb = exp((LN_TO_LOG10 * (TMN - NMT) * 0.299)
+			+ (LN_TO_LOG10 * (TMN - NMT) * 0.43)*tbb);  /* conv1=-0.299, conv2=-0.43 */
 	      }
 	  }
 
-	tbb = maximum( minval[b], tbb);
-	nb[b] = ecb * exp(-tbb);
+	tbb = minimum(minval[b], tbb);
+	nb[b] = ecb * tbb;
 
 	/* pre-echo control */
 	/* rpelev=2.0, rpelev2=16.0 */
@@ -572,10 +608,29 @@ void L3psycho_anal( short int *buffer[2],
 	  {
 	    /* there's no non sound portition, because thr[b] is
 	     maximum of qthr_l and temp_1 */
-	    pe[chn] -= numlines_l[b] * log((thr[b]) / (eb[b]) );
+	    pe[chn] -= numlines_l[b] * log(thr[b] / eb[b]);
 	  }
       }
 
+    /*************************************************************** 
+     * compute masking thresholds for both short and long blocks
+     ***************************************************************/
+    /* threshold calculation (part 2) */
+    for ( sb = 0; sb < SBPSY_l; sb++ )
+      {
+	FLOAT8 enn = w1_l[sb] * eb[bu_l[sb]] + w2_l[sb] * eb[bo_l[sb]];
+	FLOAT8 thmm = w1_l[sb] *thr[bu_l[sb]] + w2_l[sb] * thr[bo_l[sb]];
+	for ( b = bu_l[sb]+1; b < bo_l[sb]; b++ )
+	  {
+	    enn  += eb[b];
+	    thmm += thr[b];
+	  }
+	en[chn].l[sb] = enn;
+	thm[chn].l[sb] = thmm;
+      }
+
+
+    
     
     
     
@@ -622,7 +677,7 @@ void L3psycho_anal( short int *buffer[2],
 	mx = maximum(mx,estot[chn][2]);
 	
 	uselongblock[chn] = 1;
-	
+
 	/* tuned for t1.wav.  doesnt effect most other samples */
 	if (pe[chn] > 3000) uselongblock[chn]=0; 
 	
@@ -636,35 +691,20 @@ void L3psycho_anal( short int *buffer[2],
     
     
     
-    /*************************************************************** 
-     * compute masking thresholds for both short and long blocks
-     ***************************************************************/
-    /* threshold calculation (part 2) */
-    for ( sb = 0; sb < SBPSY_l; sb++ )
-      {
-	en[chn].l[sb] = w1_l[sb] * eb[bu_l[sb]] + w2_l[sb] * eb[bo_l[sb]];
-	thm[chn].l[sb] = w1_l[sb] *thr[bu_l[sb]] + w2_l[sb] * thr[bo_l[sb]];
-	for ( b = bu_l[sb]+1; b < bo_l[sb]; b++ )
-	  {
-	    en[chn].l[sb]  += eb[b];
-	    thm[chn].l[sb] += thr[b];
-	  }
-      }
-
-
-    
     /* threshold calculation for short blocks */
     for ( sblock = 0; sblock < 3; sblock++ )    {
-      for ( b = 0; b < CBANDS; b++ )
+      j = 0;
+      for ( b = 0; b < npart_s; b++ )
 	{
-	  eb[b] = 0.0;
+	  int i;
+	  FLOAT8 ecb = energy_s[sblock][j++];
+	  for (i = numlines_s[b]; i > 0; i--)
+	    {
+	      ecb += energy_s[sblock][j++];
+	    }
+	  eb[b] = ecb;
 	}
-      for ( j = 0; j < HBLKSIZE_s; j++ ) {
-	assert(partition_s[j] < npart_s_orig);
-	if (partition_s[j]<0)
-	  break;
-	eb[partition_s[j]] += energy_s[sblock][j];
-      }
+
       for ( b = 0; b < npart_s; b++ )
 	{
 	  FLOAT8 ecb = 0.0;
@@ -675,16 +715,18 @@ void L3psycho_anal( short int *buffer[2],
 	  nb[b] = ecb;
 	  thr[b] = maximum (qthr_s[b],nb[b]);
 	}
-      
+
       for ( sb = 0; sb < SBPSY_s; sb++ )
 	{
-	  en[chn].s[sb][sblock] = w1_s[sb] * eb[bu_s[sb]] + w2_s[sb] * eb[bo_s[sb]];
-	  thm[chn].s[sb][sblock] = w1_s[sb] *thr[bu_s[sb]] + w2_s[sb] * thr[bo_s[sb]];
+	  FLOAT8 enn  = w1_s[sb] * eb[bu_s[sb]] + w2_s[sb] * eb[bo_s[sb]];
+	  FLOAT8 thmm = w1_s[sb] *thr[bu_s[sb]] + w2_s[sb] * thr[bo_s[sb]];
 	  for ( b = bu_s[sb]+1; b < bo_s[sb]; b++ )
 	    {
-	      en[chn].s[sb][sblock] += eb[b];
-	      thm[chn].s[sb][sblock] += thr[b];
+	      enn  += eb[b];
+	      thmm += thr[b];
 	    }
+	  en[chn].s[sb][sblock] = enn;
+	  thm[chn].s[sb][sblock] = thmm;
 	}
     } 
   } /* end loop over chn */
@@ -743,13 +785,13 @@ void L3psycho_anal( short int *buffer[2],
       x1 = minimum(thm[0].l[sb],thm[1].l[sb]);
       x2 = maximum(thm[0].l[sb],thm[1].l[sb]);
       /* thresholds difference in db */
-      if (x2 >= 1000*x1)  db=30;
-      else db = 10*log10(x2/x1);  
+      if (x2 >= 1000*x1)  db=3;
+      else db = log10(x2/x1);  
       /*  printf("db = %f %e %e  \n",db,thm[0].l[sb],thm[1].l[sb]);*/
       sidetot += db;
       tot++;
     }
-    ms_ratio_l= .35*(sidetot/tot)/5.0;
+    ms_ratio_l= .35*(sidetot/tot)/5.0*10;
     ms_ratio_l = Min(ms_ratio_l,.5);
     
     sidetot=0; tot=0;
@@ -758,12 +800,12 @@ void L3psycho_anal( short int *buffer[2],
 	x1 = minimum(thm[0].s[sb][sblock],thm[1].s[sb][sblock]);
 	x2 = maximum(thm[0].s[sb][sblock],thm[1].s[sb][sblock]);
 	/* thresholds difference in db */
-	if (x2 >= 1000*x1)  db=30;
-	else db = 10*log10(x2/x1);  
+	if (x2 >= 1000*x1)  db=3;
+	else db = log10(x2/x1);  
 	sidetot += db;
 	tot++;
       }
-    ms_ratio_s = .35*(sidetot/tot)/5.0;
+    ms_ratio_s = .35*(sidetot/tot)/5.0*10.0;
     ms_ratio_s = Min(ms_ratio_s,.5);
     }
   }
@@ -867,7 +909,7 @@ void L3psycho_anal( short int *buffer[2],
 
 void L3para_read(FLOAT8 sfreq, int *numlines_l,int *numlines_s, int *partition_l, FLOAT8 *minval,
 FLOAT8 *qthr_l, FLOAT8 (*s3_l)[63], FLOAT8 s3_s[CBANDS][CBANDS],
-int *partition_s, FLOAT8 *qthr_s, FLOAT8 *SNR, 
+FLOAT8 *qthr_s, FLOAT8 *SNR, 
 int *bu_l, int *bo_l, FLOAT8 *w1_l, FLOAT8 *w2_l, 
 int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s)
 {
@@ -903,7 +945,7 @@ int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s)
 	    {
 	      j = (int) *p++;
 	      numlines_l[i] = (int) *p++;
-	      minval[i] = (*p++) * LN_TO_LOG10 - LN_TO_LOG10 * NMT;
+	      minval[i] = exp(-((*p++) - NMT) * LN_TO_LOG10);
 	      qthr_l[i] = *p++;
 	      /* norm_l[i] = *p++*/ p++;
 	      bval_l[i] = *p++;
@@ -923,15 +965,19 @@ int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s)
 #define NEWBARKXXX
 #ifdef NEWBARK
   /* compute bark values of each critical band */
-  for(i=0;i<cbmax;i++) {
-    for (j=0;(i != partition_l[j]);j++);
-    { FLOAT8 ji = j + (numlines_l[i]-1)/2.0;
-    FLOAT8 freq = sfreq*ji/1024000.0;
-    FLOAT8 bark = 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5));
-    printf("%i %i bval_l table=%f  f=%f  formaula=%f \n",i,j,bval_l[i],freq,bark);
-    bval_l[i]=bark;
+  j = 0;
+  for(i=0;i<cbmax;i++)
+    {
+      FLOAT8 ji, freq, bark;
+
+      ji = j + (numlines_l[i]-1)/2.0;
+      freq = sfreq*ji/1024000.0;
+      bark = 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5));
+
+      printf("%i %i bval_l table=%f  f=%f  formaula=%f \n",i,j,bval_l[i],freq,bark);
+      bval_l[i]=bark;
+      j += numlines_l[i];
     }
-  }
 #endif
 
   /************************************************************************
@@ -1003,9 +1049,9 @@ int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s)
 		  fprintf(stderr,"3. please check \"psy_data\"");
 		  exit(-1);
 		}
-	      for(k=0;k<numlines_s[i];k++) 
-		partition_s[k2++] = i ;
+	      numlines_s[i]--;
 	    }
+	  numlines_s[i] = -1;
 	}
       else
 	p += cbmax_tp * 6;
@@ -1014,15 +1060,17 @@ int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s)
 
 #ifdef NEWBARK
   /* compute bark values of each critical band */
-  for(i=0;i<cbmax;i++) {
-    for (j=0;(i != partition_s[j]);j++);
-    { FLOAT8 ji = j + (numlines_s[i]-1)/2.0;
-    FLOAT8 freq = sfreq*ji/256000.0;
-    FLOAT8 bark = 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5));
-    printf("%i %i bval_s = %f  %f  %f \n",i,j,bval_s[i],freq,bark);
-    bval_s[i]=bark;
+  j = 0;
+  for(i=0;i<cbmax;i++)
+    {
+      FLOAT8 ji, freq, bark;
+      ji = (j * 2 + numlines_s[i]) / 2.0;
+      freq = sfreq*ji/256000.0;
+      bark = 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5));
+      printf("%i %i bval_s = %f  %f  %f \n",i,j,bval_s[i],freq,bark);
+      bval_s[i]=bark;
+      j += numlines_s[i] + 1;
     }
-  }
 #endif
 
 
