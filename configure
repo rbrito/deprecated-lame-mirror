@@ -9403,11 +9403,15 @@ fi
 
 
 if test "${ac_cv_sizeof_unsigned_int}" = "4"; then
-
+	cat >>confdefs.h <<\_ACEOF
+#define A_UINT32_T unsigned int
+_ACEOF
 
 else
 	if test "${ac_cv_sizeof_unsigned_long}" = "4"; then
-
+		cat >>confdefs.h <<\_ACEOF
+#define A_UINT32_T unsigned long
+_ACEOF
 
 	else
 		{ { echo "$as_me:$LINENO: error: CHECK_TYPE_uint32_t - please report to lame-dev@lists.sourceforge.net" >&5
@@ -9416,12 +9420,19 @@ echo "$as_me: error: CHECK_TYPE_uint32_t - please report to lame-dev@lists.sourc
 	fi
 fi
 
-if test "${ac_cv_sizeof_int}" = "4"; then
 
+
+
+if test "${ac_cv_sizeof_int}" = "4"; then
+	cat >>confdefs.h <<\_ACEOF
+#define A_INT32_T int
+_ACEOF
 
 else
 	if test "${ac_cv_sizeof_long}" = "4"; then
-
+		cat >>confdefs.h <<\_ACEOF
+#define A_INT32_T long
+_ACEOF
 
 	else
 		{ { echo "$as_me:$LINENO: error: CHECK_TYPE_int32_t - please report to lame-dev@lists.sourceforge.net" >&5
@@ -9430,12 +9441,19 @@ echo "$as_me: error: CHECK_TYPE_int32_t - please report to lame-dev@lists.source
 	fi
 fi
 
-if test "${ac_cv_sizeof_unsigned_long}" = "8"; then
 
+
+
+if test "${ac_cv_sizeof_unsigned_long}" = "8"; then
+	cat >>confdefs.h <<\_ACEOF
+#define A_UINT64_T unsigned long
+_ACEOF
 
 else
 	if test "${ac_cv_sizeof_unsigned_long_long}" = "8"; then
-
+		cat >>confdefs.h <<\_ACEOF
+#define A_UINT64_T unsigned long long
+_ACEOF
 
 	else
 		{ { echo "$as_me:$LINENO: error: CHECK_TYPE_uint64_t - please report to lame-dev@lists.sourceforge.net" >&5
@@ -9444,12 +9462,19 @@ echo "$as_me: error: CHECK_TYPE_uint64_t - please report to lame-dev@lists.sourc
 	fi
 fi
 
-if test "${ac_cv_sizeof_long}" = "8"; then
 
+
+
+if test "${ac_cv_sizeof_long}" = "8"; then
+	cat >>confdefs.h <<\_ACEOF
+#define A_INT64_T long
+_ACEOF
 
 else
 	if test "${ac_cv_sizeof_long_long}" = "8"; then
-
+		cat >>confdefs.h <<\_ACEOF
+#define A_INT64_T long long
+_ACEOF
 
 	else
 		{ { echo "$as_me:$LINENO: error: CHECK_TYPE_int64_t - please report to lame-dev@lists.sourceforge.net" >&5
@@ -9457,6 +9482,9 @@ echo "$as_me: error: CHECK_TYPE_int64_t - please report to lame-dev@lists.source
    { (exit 1); exit 1; }; }
 	fi
 fi
+
+
+
 
 echo "$as_me:$LINENO: checking for IEEE854 compliant 80 bit floats" >&5
 echo $ECHO_N "checking for IEEE854 compliant 80 bit floats... $ECHO_C" >&6
