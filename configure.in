@@ -145,13 +145,17 @@ AH_VERBATIM([HAVE_INT16_T],
 	typedef short int16_t;
 #endif])
 
-if test "${ac_cv_sizeof_unsigned_int}" = "4"; then
-	AC_DEFINE(A_UINT32_T,unsigned int)
+if test "${ac_cv_sizeof_unsigned_short}" = "4"; then
+	AC_DEFINE(A_UINT32_T,unsigned short)
 else
-	if test "${ac_cv_sizeof_unsigned_long}" = "4"; then
-		AC_DEFINE(A_UINT32_T,unsigned long)
+	if test "${ac_cv_sizeof_unsigned_int}" = "4"; then
+		AC_DEFINE(A_UINT32_T,unsigned int)
 	else
-		AC_MSG_ERROR([CHECK_TYPE_uint32_t - please report to lame-dev@lists.sourceforge.net])
+		if test "${ac_cv_sizeof_unsigned_long}" = "4"; then
+			AC_DEFINE(A_UINT32_T,unsigned long)
+		else
+			AC_MSG_ERROR([CHECK_TYPE_uint32_t - please report to lame-dev@lists.sourceforge.net])
+		fi
 	fi
 fi
 
@@ -163,13 +167,17 @@ AH_VERBATIM([HAVE_UINT32_T],
 	typedef A_UINT32_T uint32_t;
 #endif])
 
-if test "${ac_cv_sizeof_int}" = "4"; then
-	AC_DEFINE(A_INT32_T,int)
+if test "${ac_cv_sizeof_short}" = "4"; then
+	AC_DEFINE(A_INT32_T,short)
 else
-	if test "${ac_cv_sizeof_long}" = "4"; then
-		AC_DEFINE(A_INT32_T,long)
+	if test "${ac_cv_sizeof_int}" = "4"; then
+		AC_DEFINE(A_INT32_T,int)
 	else
-		AC_MSG_ERROR([CHECK_TYPE_int32_t - please report to lame-dev@lists.sourceforge.net])
+		if test "${ac_cv_sizeof_long}" = "4"; then
+			AC_DEFINE(A_INT32_T,long)
+		else
+			AC_MSG_ERROR([CHECK_TYPE_int32_t - please report to lame-dev@lists.sourceforge.net])
+		fi
 	fi
 fi
 
@@ -244,6 +252,28 @@ AC_HEADER_TIME
 dnl Checks for library functions.
 AC_FUNC_ALLOCA
 AC_CHECK_FUNCS(gettimeofday socket strtol)
+if test $ac_cv_func_socket = no; then
+	# maybe it is in libsocket
+	AC_CHECK_LIB(socket, socket, [AC_DEFINE(HAVE_SOCKET)
+		LIBS="$LIBS -lsocket"])
+
+	if test "X${ac_cv_lib_socket_socket}" != "Xyes"; then
+		AC_MSG_ERROR([function socket is mandatory])
+	else
+		case ${host_os} in
+		*solaris*)
+			LIBS="$LIBS -lnsl"
+			;;
+		esac
+	fi
+fi
+
+if test "X${ac_cv_func_strtol}" != "Xyes"; then
+	AC_MSG_ERROR([function strtol is mandatory])
+fi
+if test "X${ac_cv_func_gettimeofday}" != "Xyes"; then
+	AC_MSG_ERROR([function strtol is mandatory])
+fi
 
 
 dnl Initialize configuration variables for the Makefile
@@ -637,13 +667,29 @@ if test "x$GCC" = "xyes"; then
 			-fforce-mem"
         	;;
 	3.0*)
+		# -funroll-loops seems to produce buggy code with gcc 3.0.3
 		OPTIMIZATION="-O -fomit-frame-pointer -ffast-math"
+			OPTIMIZATION_FULL="-fmove-all-movables -freduce-all-givs \
+			-fbranch-count-reg -fforce-addr -fforce-mem"
+		;;
+	3.2*)
+		# -fomit-frame-pointer seems to be buggy on cygwin
+		case ${host_os} in
+		*cygwin*)
+			OMIT_FRAME_POINTER=
+			;;
+		*)
+			OMIT_FRAME_POINTER=-fomit-frame-pointer
+			;;
+		esac
+
+		OPTIMIZATION="-O ${OMIT_FRAME_POINTER} -ffast-math"
 		OPTIMIZATION_FULL="-fmove-all-movables -freduce-all-givs \
 			-fbranch-count-reg -fforce-addr -fforce-mem"
 		;;
 	*)
 		# default
-		OPTIMIZATION="-O3 -fomit-frame-pointer -ffast-math \
+		OPTIMIZATION="-O3 ${OMIT_FRAME_POINTER} -ffast-math \
 			-funroll-loops"
 		OPTIMIZATION_FULL="-fmove-all-movables -freduce-all-givs \
 				-fbranch-count-reg -fforce-addr -fforce-mem"
