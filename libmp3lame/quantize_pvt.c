@@ -334,7 +334,7 @@ int on_pe( lame_global_flags *gfp, FLOAT8 pe[][2], III_side_info_t *l3_side,
     int     ch;
 
     /* allocate targ_bits for granule */
-    ResvMaxBits( gfp, mean_bits, &tbits, &extra_bits );
+    ResvMaxBits( gfp, mean_bits, &tbits, &extra_bits, gr);
     max_bits = tbits + extra_bits;
     if (max_bits > MAX_BITS) /* hard limit per granule */
         max_bits = MAX_BITS;
