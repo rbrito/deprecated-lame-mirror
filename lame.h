@@ -66,11 +66,6 @@ typedef struct  {
   int error_protection;           /* use 2 bytes per frame for a CRC checksum */
 
 
-  /* psycho acoustics */
-  int ATHonly;                    /* only use ATH */
-  int noATH;                      /* disable ATH */
-  float cwlimit;                  /* predictability limit */
-
   /* resampling and filtering */
   int resamplerate;               /* output_samp_rate.   */ 
   int lowpassfreq;                /* freq in Hz. 0=lame choses. -1=no filter */
@@ -91,14 +86,63 @@ typedef struct  {
   int VBR_min_bitrate_kbps;
   int VBR_max_bitrate_kbps;
 
+
+  /* psycho acoustics */
+  int ATHonly;                    /* only use ATH */
+  int noATH;                      /* disable ATH */
+  float cwlimit;                  /* predictability limit */
+
   /* not yet coded: */
-  int filter_type;          /* MDCT filter, or true (expensive) filters */
-  int no_noise_shaping;     /* disable noise shaping */
-  int no_psymodel;          /* dont compute maskings */
-  int no_ms_masking;        /* dont use mid/side maskings */
+  int filter_type;          /* 0=MDCT filter, 1= (expensive) filters */
+  int noise_shaping;        /* 0 = none 
+                               1 = ISO model
+                               2 = allow multiple scalefacs to hit maximum
+                               3 = allow scalefac_select=1  
+                             */
+
+  int noise_shaping_stop;   /* 0 = stop at over=0. 
+                               1=stop when all scalefacs amplified  
+			    */
+
+  int psymodel;             /* 0 = none   1=gpsycho */
+  int ms_masking;           /* 0 = no,  1 = use mid/side maskings */
   int use_best_huffman;     /* 0 = no.  1=outside loop  2=inside loop(slow) */
-  int scalefac_search;      /* 0=standard, 1=more thorough */
-  int stopping_criterion;   /* 0=stop at over=0.  1=stop when all scalefacs too large */
+
+
+  /* 
+map commandline options to quality settings:
+
+--qual=9 (worst)
+ -f          filter_type=0
+             noise_shaping=0
+             psymodel=0
+
+--qual=?
+default      filter_type=0
+             noise_shaping=1
+	     noise_shaping_stop=0
+             psymodel=1
+             ms_masking=0
+             use_best_huffman=0
+
+--qual=?
+-h           filter_type=0
+             noise_shaping=2
+	     noise_shaping_stop=0
+             psymodel=1
+             ms_masking=1
+             use_best_huffman=1
+
+--qual=0 (best, very slow)
+             filter_type=1
+             noise_shaping=3
+	     noise_shaping_stop=1
+             psymodel=1
+             ms_masking=1
+             use_best_huffman=2
+
+  */
+              
 
 
   /* input file reading - not used if you handle your own i/o */
