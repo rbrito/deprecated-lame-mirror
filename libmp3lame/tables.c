@@ -1438,7 +1438,7 @@ int psymodel_init(lame_global_flags *gfp)
 	    snr = -4.5 * (bval[i]-13)/(24.0-13.0)
 		-8.25*(bval[i]-24)/(13.0-24.0);
 
-	norm[i] = db2pow(snr-8) * NS_PREECHO_ATT0 * 0.8;
+	norm[i] = db2pow(snr+8) * NS_PREECHO_ATT0 * 0.8;
 	gfc->endlines_s[i] = numlines_s[i];
 	if (i != 0)
 	    gfc->endlines_s[i] += gfc->endlines_s[i-1];
@@ -1529,9 +1529,6 @@ int psymodel_init(lame_global_flags *gfp)
 void init_bit_stream_w(lame_global_flags *gfp)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
-    gfc->bs.buf = (unsigned char *)       malloc(BUFFER_SIZE);
-    gfc->bs.buf_size = BUFFER_SIZE;
-
     gfc->h_ptr = gfc->w_ptr = 0;
     gfc->header[gfc->h_ptr].write_timing = 0;
     gfc->bs.buf_byte_idx = -1;

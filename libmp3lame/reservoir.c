@@ -125,9 +125,6 @@ ResvFrameBegin(lame_global_flags *gfp, int *mean_bits)
  *
  */
 
-    /* main_data_begin has 9 bits in MPEG-1, 8 bits MPEG-2 */
-    resvLimit = (8*256)*gfc->mode_gr-8;
-
     if (gfp->mean_bitrate_kbps >= 320) {
         /* in freeformat the buffer is constant*/
         maxmp3buf = 8*((int)((gfp->mean_bitrate_kbps*1000)
@@ -142,23 +139,23 @@ ResvFrameBegin(lame_global_flags *gfp, int *mean_bits)
 	maxmp3buf = 8*1440;
 
         if (gfp->strict_ISO)
-	    maxmp3buf=8*((int)(320000/(gfp->out_samplerate / 1152.0)/8 +.5));
+	    maxmp3buf = ((int)(320000*1152 / gfp->out_samplerate + 4)) & (~7);
     }
 
     gfc->ResvMax = maxmp3buf - frameLength;
+    /* main_data_begin has 9 bits in MPEG-1, 8 bits MPEG-2 */
+    resvLimit = (8*256)*gfc->mode_gr-8;
     if (gfc->ResvMax > resvLimit)
 	gfc->ResvMax = resvLimit;
     if (gfc->ResvMax < 0 ||  gfp->disable_reservoir)
 	gfc->ResvMax = 0;
+    assert ( 0 == gfc->ResvMax % 8 );
 
     fullFrameBits
 	= *mean_bits * gfc->mode_gr + Min ( gfc->ResvSize, gfc->ResvMax );
 
     if (fullFrameBits > maxmp3buf)
         fullFrameBits = maxmp3buf;
-
-    assert ( 0 == gfc->ResvMax % 8 );
-    assert ( gfc->ResvMax >= 0 );
 
     l3_side->resvDrain_pre = 0;
 #ifdef HAVE_GTK
@@ -247,22 +244,14 @@ ResvFrameEnd(lame_internal_flags *gfc, int mean_bits)
 
 
     gfc->ResvSize += mean_bits * gfc->mode_gr;
-    stuffingBits=0;
     l3_side->resvDrain_post = 0;
     l3_side->resvDrain_pre = 0;
 
     /* we must be byte aligned */
-    if ( (over_bits = gfc->ResvSize % 8) != 0 )
-	stuffingBits += over_bits;
-
-
+    stuffingBits = gfc->ResvSize % 8;
     over_bits = (gfc->ResvSize - stuffingBits) - gfc->ResvMax;
-    if (over_bits > 0) {
-      assert ( 0 == over_bits % 8 );
-      assert ( over_bits >= 0 );
-      stuffingBits += over_bits;
-    }
-
+    if (over_bits > 0) /* reservoir is overflowed */
+	stuffingBits += over_bits;
 
 #undef NEW_DRAIN
 #ifdef NEW_DRAIN
@@ -294,5 +283,3 @@ ResvFrameEnd(lame_internal_flags *gfc, int mean_bits)
 
     return;
 }
-
-

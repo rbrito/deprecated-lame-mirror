@@ -61,7 +61,7 @@ int getframebits(const lame_global_flags * gfp)
     lame_internal_flags *gfc=gfp->internal_flags;
     int  bit_rate;
 
-    /* get bitrate in kbps [?] */
+    /* get bitrate in kbps */
     if (gfc->bitrate_index) 
 	bit_rate = bitrate_table[gfp->version][gfc->bitrate_index];
     else
@@ -70,7 +70,7 @@ int getframebits(const lame_global_flags * gfp)
 
     /* main encoding routine toggles padding on and off */
     /* one Layer3 Slot consists of 8 bits */
-    return 8 * ((gfp->version+1)*72000*bit_rate / gfp->out_samplerate
+    return 8 * (gfc->mode_gr*72000*bit_rate / gfp->out_samplerate
 		+ gfc->padding);
 }
 
@@ -79,8 +79,7 @@ int getframebits(const lame_global_flags * gfp)
 
 void putheader_bits(lame_internal_flags *gfc,int w_ptr)
 {
-    Bit_stream_struc *bs;
-    bs = &gfc->bs;
+    Bit_stream_struc *bs = &gfc->bs;
 #ifdef DEBUG
     hoge += gfc->sideinfo_len * 8;
     hogege += gfc->sideinfo_len * 8;
@@ -99,8 +98,7 @@ void putheader_bits(lame_internal_flags *gfc,int w_ptr)
 inline static void
 putbits2(lame_internal_flags *gfc, int val, int j)
 {
-    Bit_stream_struc *bs;
-    bs = &gfc->bs;
+    Bit_stream_struc *bs = &gfc->bs;
 
     assert(j < MAX_LENGTH-2);
 
@@ -134,8 +132,7 @@ putbits2(lame_internal_flags *gfc, int val, int j)
 inline static void
 putbits_noheaders(lame_internal_flags *gfc, int val, int j)
 {
-    Bit_stream_struc *bs;
-    bs = &gfc->bs;
+    Bit_stream_struc *bs = &gfc->bs;
 
     assert(j < MAX_LENGTH-2);
 
@@ -173,42 +170,41 @@ inline static void
 drain_into_ancillary(lame_global_flags *gfp, int remainingBits)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
-    int i;
+    int i, pad;
     assert(remainingBits >= 0);
 
     if (remainingBits >= 8) {
-      putbits2(gfc,0x4c,8);
-      remainingBits -= 8;
+	putbits2(gfc,0x4c,8);
+	remainingBits -= 8;
     }
     if (remainingBits >= 8) {
-      putbits2(gfc,0x41,8);
-      remainingBits -= 8;
+	putbits2(gfc,0x41,8);
+	remainingBits -= 8;
     }
     if (remainingBits >= 8) {
-      putbits2(gfc,0x4d,8);
-      remainingBits -= 8;
+	putbits2(gfc,0x4d,8);
+	remainingBits -= 8;
     }
     if (remainingBits >= 8) {
-      putbits2(gfc,0x45,8);
-      remainingBits -= 8;
+	putbits2(gfc,0x45,8);
+	remainingBits -= 8;
     }
-      
-    if (remainingBits >= 32) {
-      const char *version = get_lame_short_version ();
-      if (remainingBits >= 32) 
-	for (i=0; i<(int)strlen(version) && remainingBits >=8 ; ++i) {
-	  remainingBits -= 8;
-	  putbits2(gfc,version[i],8);
+
+    pad = 0xaa;
+    if (gfp->disable_reservoir)
+	pad = 0;
+    if (remainingBits >= 8) {
+	const char *version = get_lame_short_version ();
+	for (i=0; remainingBits >=8 ; ++i) {
+	    if (i < strlen(version))
+		putbits2(gfc,version[i],8);
+	    else
+		putbits2(gfc,pad,8);
+	    remainingBits -= 8;
 	}
     }
 
-    for (; remainingBits >= 1; remainingBits -= 1 ) {
-        putbits2(gfc, gfc->ancillary_flag, 1 );
-	gfc->ancillary_flag ^= !gfp->disable_reservoir;
-    }
-
-    assert (remainingBits == 0);
-
+    putbits2(gfc, pad >> (8 - remainingBits), remainingBits);
 }
 
 /*write N bits into the header */
@@ -616,14 +612,14 @@ LongHuffmancodebits(lame_internal_flags *gfc, gr_info *gi)
 }
 
 inline static int
-writeMainData ( lame_global_flags * const gfp)
+writeMainData (lame_internal_flags *gfc)
 {
     int gr, ch, sfb,data_bits,tot_bits=0;
-    lame_internal_flags *gfc=gfp->internal_flags;
+    
     III_side_info_t *l3_side;
 
     l3_side = &gfc->l3_side;
-    if (gfp->version == 1) {
+    if (gfc->mode_gr == 2) {
 	/* MPEG 1 */
 	for (gr = 0; gr < 2; gr++) {
 	    for (ch = 0; ch < gfc->channels_out; ch++) {
@@ -856,7 +852,7 @@ format_bitstream(lame_global_flags *gfp)
 
     encodeSideInfo2(gfp,bitsPerFrame);
     bits = 8*gfc->sideinfo_len;
-    bits+=writeMainData(gfp);
+    bits+=writeMainData(gfc);
     drain_into_ancillary(gfp, l3_side->resvDrain_post);
     bits += l3_side->resvDrain_post;
 

@@ -144,13 +144,10 @@ static inline ieee754_float32_t fast_log2(ieee754_float32_t x)
 /* "bit_stream.h" Type Definitions */
 
 typedef struct  bit_stream_struc {
-    unsigned char *buf;         /* bit stream buffer */
-    int         buf_size;       /* size of buffer (in number of bytes) */
     int         totbit;         /* bit counter of bit stream */
     int         buf_byte_idx;   /* pointer to top byte in buffer */
     int         buf_bit_idx;    /* pointer to top bit of top byte in buffer */
-    
-    /* format of file in rd mode (BINARY/ASCII) */
+    unsigned char buf[BUFFER_SIZE];         /* bit stream buffer */
 } Bit_stream_struc;
 
 /* max scalefactor band, max(SBMAX_l, SBMAX_s*3, (SBMAX_s-3)*3+8) */
@@ -318,7 +315,6 @@ struct lame_internal_flags {
   FLOAT samplefreq_out;
   FLOAT resample_ratio;           /* input_samp_rate/output_samp_rate */
 
-  size_t       frame_size;    /* size of one frame in samples per channel */
   lame_global_flags* gfp;     /* needed as long as the frame encoding functions must access gfp (all needed information can be added to gfc) */
   coding_t     coding;        /* MPEG Layer 1/2/3, Ogg Vorbis, MPEG AAC, ... */
   unsigned long frame_count;  /* Number of frames coded, 2^32 > 3 years */
@@ -362,7 +358,7 @@ struct lame_internal_flags {
                                    a scalefac has reached max value
                                1 = stop when all scalefacs amplified or
 			           a scalefac has reached max value
-                               2 = stop when all scalefacs amplified 
+                               2 = stop when all scalefacs amplified (not yet)
 			    */
 
   int use_best_huffman;     /* 0 = no.  1=outside loop  2=inside loop(slow) */
@@ -496,16 +492,6 @@ struct lame_internal_flags {
     int nogap_total;
     int nogap_current;  
 
-    /* CPU features */
-    struct {
-	unsigned int  i387      : 1; /* FPU is a normal Intel CPU */
-	unsigned int  MMX       : 1; /* Pentium MMX, Pentium II...IV, K6, K6-2,
-                                    K6-III, Athlon */
-	unsigned int  AMD_3DNow : 1; /* K6-2, K6-III, Athlon      */
-	unsigned int  SIMD      : 1; /* Pentium III, Pentium 4    */
-	unsigned int  SIMD2     : 1; /* Pentium 4, K8             */
-    } CPU_features;
-   
     struct {
 	void (*msgf)  (const char *format, va_list ap);
 	void (*debugf)(const char *format, va_list ap);
@@ -522,6 +508,18 @@ struct lame_internal_flags {
   sample_t *inbuf_old [2];
   sample_t *blackfilt [2*BPC+1];
   FLOAT itime[2];
+
+#ifdef HAVE_NASM
+    /* CPU features */
+    struct {
+	unsigned int  i387      : 1; /* FPU is a normal Intel CPU */
+	unsigned int  MMX       : 1; /* Pentium MMX, Pentium II...IV, K6, K6-2,
+                                    K6-III, Athlon */
+	unsigned int  AMD_3DNow : 1; /* K6-2, K6-III, Athlon      */
+	unsigned int  SIMD      : 1; /* Pentium III, Pentium 4    */
+	unsigned int  SIMD2     : 1; /* Pentium 4, K8             */
+    } CPU_features;
+#endif
 
 #ifdef BRHIST
   /* simple statistics */
@@ -545,12 +543,9 @@ struct lame_internal_flags {
 *  Global Function Prototype Declarations
 *
 ***********************************************************************/
-void                  freegfc(lame_internal_flags * const gfc);
-extern int            BitrateIndex(int, int,int);
-extern int            FindNearestBitrate(int,int,int);
-extern int            map2MP3Frequency(int freq);
-extern int            SmpFrqIndex(int, int* const);
-void disable_FPE(void);
+void	freegfc(lame_internal_flags * const gfc);
+int	BitrateIndex(int, int,int);
+void	disable_FPE(void);
 
 void fill_buffer(lame_global_flags *gfp,
 		 sample_t *mfbuf[2],

@@ -35,7 +35,6 @@
 #include "tables.h"
 #include "bitstream.h"
 #include "VbrTag.h"
-#include "quantize_pvt.h"
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
@@ -424,7 +423,7 @@ int  lame_encode_mp3_frame (				// Output
 		    =gfc->l3_side.tt[gr][ch].block_type;
 		gfc->pinfo->pe[gr][ch]=masking[gr][ch].pe;
 		memcpy(gfc->pinfo->xr[gr][ch], &gfc->l3_side.tt[gr][ch].xr,
-		       sizeof(FLOAT)*576);
+		       sizeof(gfc->pinfo->xr[gr][ch]));
 	    }
 	}
 	for ( ch = 0; ch < gfc->channels_out; ch++ ) {

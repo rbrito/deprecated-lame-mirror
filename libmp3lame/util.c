@@ -25,8 +25,6 @@
 # include <config.h>
 #endif
 
-#define PRECOMPUTE
-
 #include "util.h"
 #include <ctype.h>
 #include <assert.h>
@@ -65,11 +63,6 @@ void  freegfc ( lame_internal_flags* const gfc )   /* bit stream structure */
 	gfc->inbuf_old[1] = NULL;
     }
 
-    if ( gfc->bs.buf != NULL ) {
-        free ( gfc->bs.buf );
-        gfc->bs.buf = NULL;
-    }
-
     if ( gfc->VBR_seek_table.bag ) {
         free ( gfc->VBR_seek_table.bag );
     }
@@ -86,46 +79,11 @@ void  freegfc ( lame_internal_flags* const gfc )   /* bit stream structure */
 
 
 
-#define ABS(A) (((A)>0) ? (A) : -(A))
-
-int FindNearestBitrate(
-int bRate,        /* legal rates from 32 to 448 */
-int version,      /* MPEG-1 or MPEG-2 LSF */
-int samplerate)   /* convert bitrate in kbps to index */
-{
-    int  bitrate = 0;
-    int  i;
-  
-    for ( i = 1; i <= 14; i++ )
-        if ( ABS (bitrate_table[version][i] - bRate) < ABS (bitrate - bRate) )
-            bitrate = bitrate_table [version] [i];
-	    
-    return bitrate;
-}
-
-
-/* map frequency to a valid MP3 sample frequency
- *
- * Robert.Hegemann@gmx.de 2000-07-01
- */
-int map2MP3Frequency(int freq)
-{
-    if (freq <=  8000) return  8000;
-    if (freq <= 11025) return 11025;
-    if (freq <= 12000) return 12000;
-    if (freq <= 16000) return 16000;
-    if (freq <= 22050) return 22050;
-    if (freq <= 24000) return 24000;
-    if (freq <= 32000) return 32000;
-    if (freq <= 44100) return 44100;
-    
-    return 48000;
-}
-
-int BitrateIndex(
-int bRate,        /* legal rates from 32 to 448 kbps */
-int version,      /* MPEG-1 or MPEG-2/2.5 LSF */
-int samplerate)   /* convert bitrate in kbps to index */
+int
+BitrateIndex(
+    int bRate,        /* legal rates from 32 to 448 kbps */
+    int version,      /* MPEG-1 or MPEG-2/2.5 LSF */
+    int samplerate)   /* convert bitrate in kbps to index */
 {
     int  i;
 
@@ -135,25 +93,6 @@ int samplerate)   /* convert bitrate in kbps to index */
 	    
     return -1;
 }
-
-/* convert samp freq in Hz to index */
-
-int SmpFrqIndex ( int sample_freq, int* const version )
-{
-    switch ( sample_freq ) {
-    case 44100: *version = 1; return  0;
-    case 48000: *version = 1; return  1;
-    case 32000: *version = 1; return  2;
-    case 22050: *version = 0; return  0;
-    case 24000: *version = 0; return  1;
-    case 16000: *version = 0; return  2;
-    case 11025: *version = 0; return  0;
-    case 12000: *version = 0; return  1;
-    case  8000: *version = 0; return  2;
-    default:    *version = 0; return -1;
-    }
-}
-
 
 /*****************************************************************************
 *
@@ -321,17 +260,11 @@ int fill_buffer_resample(
       assert(j2<len);
       assert(j2+BLACKSIZE >= 0);
       y = (j2<0) ? inbuf_old[BLACKSIZE+j2] : inbuf[j2];
-#define PRECOMPUTE
-#ifdef PRECOMPUTE
       xvalue += y*gfc->blackfilt[joff][i];
-#else
-      xvalue += y*blackman(i-offset,fcn,filter_l);  /* very slow! */
-#endif
     }
     outbuf[k]=xvalue;
   }
 
-  
   /* k = number of samples added to outbuf */
   /* last k sample used data from [j-filter_l/2,j+filter_l-filter_l/2]  */
 
