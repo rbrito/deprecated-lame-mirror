@@ -113,7 +113,7 @@ int gtkmakeframe(void)
   static int frameNum=0;
 
   pinfo->frameNum = frameNum;
-  pinfo->sampfreq=gfp->out_samplerate;
+  pinfo->sampfreq = lame_get_out_samplerate ( gfp );
   pinfo->framesize=576*gfc->mode_gr;
   pinfo->stereo = gfc->channels_out;
 

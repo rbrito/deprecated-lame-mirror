@@ -174,7 +174,10 @@ void timestatus_klemm ( const lame_global_flags* const gfp )
 #ifdef BRHIST
             brhist_jump_back();
 #endif
-            timestatus ( gfp->out_samplerate, gfp->frameNum, gfp->totalframes, gfp->framesize );
+            timestatus ( lame_get_out_samplerate( gfp ),
+                         gfp->frameNum,
+                         gfp->totalframes,
+                         gfp->framesize );
 #ifdef BRHIST
             if ( brhist ) {
 	        brhist_disp ( gfp );
@@ -199,7 +202,7 @@ void decoder_progress ( const lame_global_flags* const gfp, const mp3data_struct
     // "'00' subbands 4-31 in intensity_stereo, bound==4"
     // is this really intensity_stereo or is it MS stereo?
     
-    if ( mp3data->mode == MPG_MD_JOINT_STEREO ) {
+    if ( mp3data->mode == JOINT_STEREO ) {
         int         curr = mp3data->mode_ext;
         fprintf ( stderr, "  %s  %c" , 
                   curr&2  ?  last&2 ? " MS " : "LMSR"  :  last&2 ? "LMSR" : "L  R",

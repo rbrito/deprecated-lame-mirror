@@ -175,7 +175,7 @@ int main(int argc, char **argv)
    * samplerate, num_channels and num_samples yourself.
    */
   init_infile ( gf, inPath );
-  if ((outf = init_outfile (outPath, gf->decode_only)) == NULL ) {
+  if ( (outf = init_outfile( outPath, lame_get_decode_only( gf ) )) == NULL ) {
       fprintf (stderr, "Can't init outfile '%s'\n", outPath);
       return -42;
   }
@@ -210,12 +210,12 @@ int main(int argc, char **argv)
 
 
 #ifdef HAVE_VORBIS
-  if (gf->ogg) {
+  if( lame_get_ogg( gf ) ) {
     lame_encode_ogg_init(gf);
     gf->VBR=vbr_off;            /* ignore lame's various VBR modes */
   }
 #endif
-  if (!gf->decode_only && silent < 10) {
+  if ( 0 == lame_get_decode_only( gf ) && silent < 10 ) {
     lame_print_config(gf);   /* print useful information about options being used */
 
     fprintf ( stderr, "Encoding %s%s to %s\n",
@@ -223,9 +223,11 @@ int main(int argc, char **argv)
 	      strlen (inPath)+strlen(outPath) < 66 ? "" : "\n     ",
 	      strcmp(outPath,"-") ? outPath : "<stdout>" );
 	    
-    fprintf ( stderr, "Encoding as %g kHz ", 1.e-3 * gf->out_samplerate );
+    fprintf ( stderr,
+              "Encoding as %g kHz ",
+              1.e-3 * lame_get_out_samplerate( gf ) );
     
-    if ( gf->ogg ) {
+    if( lame_get_ogg( gf ) ) {
         fprintf ( stderr, "VBR Ogg Vorbis\n" );
     } else { 
         const char* appendix = "";
@@ -247,17 +249,17 @@ int main(int argc, char **argv)
         fprintf ( stderr, " %s MPEG-%u%s Layer III (%s%gx) qval=%i\n", 
                   mode_names [gf->force_ms] [gf->mode],
 	  	  2 - gf->version, 
-		  gf->out_samplerate < 16000 ? ".5" : "",
+		  lame_get_out_samplerate( gf ) < 16000 ? ".5" : "",
                   appendix, 
 		  0.1 * (int)(10.*gf->compression_ratio + 0.5), 
-		  gf->quality );
+		  lame_get_quality( gf ) );
     }
     fflush ( stderr );
   }
 
 
 
-  if (gf->decode_only) {
+  if ( lame_get_decode_only( gf ) ) {
     /* decode an mp3 file to a .wav */
     if (mp3_delay_set) 
       lame_decoder(gf,outf,mp3_delay,inPath,outPath);
@@ -279,9 +281,12 @@ int main(int argc, char **argv)
 	  }else{
 	    if (0==gf->frameNum % 50) {
 #ifdef BRHIST
-          brhist_jump_back();
+              brhist_jump_back();
 #endif
-	      timestatus(gf->out_samplerate,gf->frameNum,gf->totalframes,gf->framesize);
+	      timestatus( lame_get_out_samplerate( gf ),
+                          gf->frameNum,
+                          gf->totalframes,
+                          gf->framesize );
 #ifdef BRHIST
 	      if (brhist)
 		brhist_disp(gf);
@@ -318,7 +323,10 @@ int main(int argc, char **argv)
 #ifdef BRHIST
 	brhist_jump_back();
 #endif
-	timestatus(gf->out_samplerate,gf->frameNum,gf->totalframes,gf->framesize);
+	timestatus( lame_get_out_samplerate( gf ),
+                    gf->frameNum,
+                    gf->totalframes,
+                    gf->framesize );
 #ifdef BRHIST
 	if (brhist) {
 	  brhist_disp(gf);

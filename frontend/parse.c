@@ -407,7 +407,7 @@ typedef struct {
     short       lowpass_width;		// lowpass width in Hz
     signed char no_short_blocks;	// use of short blocks, 1: no, 0: yes
     signed char quality;		// quality, the same as -f or -h
-    signed char mode;			// channel mode (mono, stereo, joint)
+    MPEG_mode   mode;			// channel mode (mono, stereo, joint)
     short       cbr;			// CBR data rate in kbps (8...320)
     signed char vbr_mode;		// VBR mode (0...9)
     short       vbr_min;		// minimum VBR rate in kbps ( 8...256)
@@ -416,19 +416,19 @@ typedef struct {
 
 const preset_t Presets [] = {
    // name       fs     fu    fo    dfo shrt qual  mode              cbr vbr_mode/min/max
-    { "phone" ,  8000, 125,  3400,    0,  1,  5, MPG_MD_MONO        ,  16,  6,   8,  24 },  // phone standard 300-3400
-    { "phon+" , 11025, 100,  4000,    0,  1,  5, MPG_MD_MONO        ,  24,  4,  16,  32 },  // phone theoretical limits
-    { "lw"    , 11025,  -1,  4000,    0,  0,  5, MPG_MD_MONO        ,  24,  3,  16,  56 },  // LW
-    { "mw-eu" , 11025,  -1,  4000,    0,  0,  5, MPG_MD_MONO        ,  24,  3,  16,  56 },  // MW in europe
-    { "mw-us" , 16000,  -1,  7500,    0,  0,  5, MPG_MD_MONO        ,  40,  3,  24, 112 },  // MW in U.S.A.
-    { "sw"    , 11025,  -1,  4000,    0,  0,  5, MPG_MD_MONO        ,  24,  3,  16,  56 },  // SW
-    { "fm"    , 32000,  -1, 15000,    0,  0,  3, MPG_MD_JOINT_STEREO, 112,  3,  80, 256 },
-    { "voice" , 24000,  -1, 12000,    0,  1,  5, MPG_MD_MONO        ,  56,  4,  40, 112 },
-    { "radio" ,    -1,  -1, 15000,    0,  0,  3, MPG_MD_JOINT_STEREO, 128,  3,  96, 256 },
-    { "tape"  ,    -1,  -1, 18000,  900,  0,  3, MPG_MD_JOINT_STEREO, 128,  3,  96, 256 },
-    { "hifi"  ,    -1,  -1, 18000,  900,  0, -1, MPG_MD_JOINT_STEREO, 160,  2, 112, 320 },
-    { "cd"    ,    -1,  -1,    -1,   -1,  0, -1, MPG_MD_STEREO      , 192,  1, 128, 320 },
-    { "studio",    -1,  -1,    -1,   -1,  0, -1, MPG_MD_STEREO      , 256,  0, 160, 320 },
+    { "phone" ,  8000, 125,  3400,    0,  1,  5, MONO        ,  16,  6,   8,  24 },  // phone standard 300-3400
+    { "phon+" , 11025, 100,  4000,    0,  1,  5, MONO        ,  24,  4,  16,  32 },  // phone theoretical limits
+    { "lw"    , 11025,  -1,  4000,    0,  0,  5, MONO        ,  24,  3,  16,  56 },  // LW
+    { "mw-eu" , 11025,  -1,  4000,    0,  0,  5, MONO        ,  24,  3,  16,  56 },  // MW in europe
+    { "mw-us" , 16000,  -1,  7500,    0,  0,  5, MONO        ,  40,  3,  24, 112 },  // MW in U.S.A.
+    { "sw"    , 11025,  -1,  4000,    0,  0,  5, MONO        ,  24,  3,  16,  56 },  // SW
+    { "fm"    , 32000,  -1, 15000,    0,  0,  3, JOINT_STEREO, 112,  3,  80, 256 },
+    { "voice" , 24000,  -1, 12000,    0,  1,  5, MONO        ,  56,  4,  40, 112 },
+    { "radio" ,    -1,  -1, 15000,    0,  0,  3, JOINT_STEREO, 128,  3,  96, 256 },
+    { "tape"  ,    -1,  -1, 18000,  900,  0,  3, JOINT_STEREO, 128,  3,  96, 256 },
+    { "hifi"  ,    -1,  -1, 18000,  900,  0, -1, JOINT_STEREO, 160,  2, 112, 320 },
+    { "cd"    ,    -1,  -1,    -1,   -1,  0, -1, STEREO      , 192,  1, 128, 320 },
+    { "studio",    -1,  -1,    -1,   -1,  0, -1, STEREO      , 256,  0, 160, 320 },
 };
 
 
@@ -483,9 +483,9 @@ static int  presets_info ( const lame_global_flags* gfp, FILE* const fp, const c
     fprintf ( fp, "\n                ");
     for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
         switch ( Presets[i].mode ) {
-        case MPG_MD_MONO:         fprintf ( fp, "   -mm"); break;
-        case MPG_MD_JOINT_STEREO: fprintf ( fp, "   -mj"); break;
-        case MPG_MD_STEREO:       fprintf ( fp, "   -ms"); break;
+        case MONO:         fprintf ( fp, "   -mm"); break;
+        case JOINT_STEREO: fprintf ( fp, "   -mj"); break;
+        case STEREO:       fprintf ( fp, "   -ms"); break;
         case -1:                  fprintf ( fp, "      "); break;
         default:                  assert (0);              break;
         }
@@ -535,15 +535,15 @@ static int  presets_setup ( lame_global_flags* gfp, const char* preset_name, con
     for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++ )
         if ( 0 == strncmp (preset_name, Presets[i].name, strlen (preset_name) ) ) {
             if ( Presets[i].resample >= 0 )
-	        gfp -> out_samplerate   = Presets[i].resample;
+	        (void) lame_set_out_samplerate( gfp, Presets[i].resample );
 	    if ( Presets[i].highpass_freq >= 0 )
 	        gfp -> highpassfreq     = Presets[i].highpass_freq,
 	        gfp -> highpasswidth    = 0;
 	    gfp -> lowpassfreq          = Presets[i].lowpass_freq;
 	    gfp -> lowpasswidth         = Presets[i].lowpass_width;
 	    gfp -> no_short_blocks      = Presets[i].no_short_blocks;
-	    gfp -> quality              = Presets[i].quality;
-	    gfp -> mode                 = Presets[i].mode;
+	    (void) lame_set_quality( gfp, Presets[i].quality );
+	    (void) lame_set_mode   ( gfp, Presets[i].mode    );
 	    gfp -> brate                = Presets[i].cbr;
 	    gfp -> VBR_q                = Presets[i].vbr_mode;
 	    gfp -> VBR_min_bitrate_kbps = Presets[i].vbr_min;
@@ -686,7 +686,8 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 
 		T_IF ("resample")
 		    argUsed = 1;
-		    gfp -> out_samplerate = resample_rate ( atof (nextArg) );
+		    (void) lame_set_out_samplerate( gfp,
+                        resample_rate ( atof (nextArg) ) );
 		
 		T_ELIF ("vbr-old")
 		    gfp->VBR = vbr_rh; 
@@ -700,9 +701,9 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 		T_ELIF ("r3mix")
 		    gfp->VBR = vbr_rh; 
                     gfp->VBR_q = 1;
-                    gfp->quality = 2;
+                    (void) lame_set_quality( gfp, 2 );
                     gfp->lowpassfreq = 19500;
-                    gfp->mode=MPG_MD_JOINT_STEREO;
+                    (void) lame_set_mode( gfp, JOINT_STEREO );
 		    gfp->ATHtype=3;
 		    gfp->VBR_min_bitrate_kbps=64;
 		
@@ -734,7 +735,7 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 #endif
 		T_ELIF ("ogg")
 #if defined(HAVE_VORBIS)
-		    gfp->ogg=1;
+		    (void) lame_set_ogg( gfp, 1 );
 #else
 		    fprintf(stderr,"Error: LAME not compiled with Vorbis support\n");
 		    return -1;
@@ -770,7 +771,7 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 		    gfp->no_short_blocks=0;
 		
 		T_ELIF ("decode")
-		    gfp->decode_only=1;
+		    (void) lame_set_decode_only( gfp, 1 );
 
 		T_ELIF ("decode-mp3delay")
 		    mp3_delay = atoi( nextArg );
@@ -800,7 +801,7 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 		
 		T_ELIF ("scale")
 		    argUsed=1;
-		    gfp->scale = atof(nextArg);
+		    (void) lame_set_scale( gfp, atof(nextArg) );
 		
 		T_ELIF ("freeformat")
 		    gfp->free_format=1;
@@ -1025,12 +1026,24 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 			argUsed           = 1;   
 			
 			switch ( *arg ) {
-			case 's': gfp->mode = MPG_MD_STEREO;       break;
-			case 'd': gfp->mode = MPG_MD_DUAL_CHANNEL; break;
-			case 'f': gfp->force_ms = 1;               /* fall through */
-			case 'j': gfp->mode = MPG_MD_JOINT_STEREO; break;
-			case 'm': gfp->mode = MPG_MD_MONO;         break;
-			case 'a': gfp->mode_automs = 1;            break; /* lame picks mode, and uses variable MS threshold*/
+			case 's': (void) lame_set_mode( gfp, STEREO       );
+                                  break;
+			case 'd': (void) lame_set_mode( gfp, DUAL_CHANNEL );
+                                  fprintf( stderr,
+                                           "%s: dual channel is not supported yet, the result (perhaps stereo)\n"
+                                           "  may not be what you expect\n",
+                                           ProgramName );
+                                  break;
+			case 'f': gfp->force_ms = 1;
+                                 /* FALLTHROUGH */
+			case 'j': (void) lame_set_mode( gfp, JOINT_STEREO );
+                                  break;
+			case 'm': (void) lame_set_mode( gfp, MONO         );
+                                  break;
+			case 'a': (void) lame_set_mode_automs( gfp, 1 );
+                                  /* lame picks mode and uses variable MS
+                                     threshold */
+                                  break; 
 			default : fprintf(stderr,"%s: -m mode must be s/d/j/f/m not %s\n", ProgramName, arg);
 			    err = 1;
 			    break;
@@ -1050,22 +1063,29 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
                             gfp->VBR = vbr_default; 
 			break;
 
-		    case 'q':        argUsed = 1; 
-			gfp->quality = atoi(arg);
-			if (gfp->quality<0) gfp->quality=0;
-			if (gfp->quality>9) gfp->quality=9;
+		    case 'q':        argUsed = 1;
+                        {
+                            int tmp_quality = atoi( arg );
+
+                            /* XXX should we move this into lame_set_quality()? */
+                            if( tmp_quality < 0 ) tmp_quality = 0;
+                            if( tmp_quality > 9 ) tmp_quality = 9;
+
+			    (void) lame_set_quality( gfp, tmp_quality );
+                        }
 			break;
 		    case 'f': 
-			gfp->quality= 7;
+			(void) lame_set_quality( gfp, 7 );
 			break;
 		    case 'h': 
-                        gfp->quality = 2;
+                        (void) lame_set_quality( gfp, 2 );
                         break;
 
 		    case 's':
 			argUsed = 1;
 			val = atof( arg );
-			gfp->in_samplerate = val * ( val <= 192 ? 1.e3 : 1.e0 ) + 0.5;
+			(void) lame_set_in_samplerate( gfp,
+                            val * ( val <= 192 ? 1.e3 : 1.e0 ) + 0.5 );
 			break;
 		    case 'b':        
 			argUsed = 1;
@@ -1080,8 +1100,8 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 			gfp->VBR_hard_min=1;
 			break;	
 		    case 't':  /* dont write VBR tag */
-			gfp->bWriteVbrTag=0;
-			gfp->disable_waveheader=1;
+			(void) lame_set_bWriteVbrTag( gfp, 0 );
+			(void) lame_set_disable_waveheader( gfp, 1 );
 			break;
 		    case 'r':  /* force raw pcm input file */
 #if defined(LIBSNDFILE)
@@ -1098,7 +1118,7 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 			break;
 		    case 'a': /* autoconvert input file from stereo to mono - for mono mp3 encoding */
 			autoconvert=1;
-			gfp->mode=MPG_MD_MONO;
+			(void) lame_set_mode( gfp, MONO );
 			break;
 		    case 'k': 
 			gfp->lowpassfreq=-1;
@@ -1122,7 +1142,7 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 			break;
 #if defined(HAVE_GTK)
 		    case 'g': /* turn on gtk analysis */
-			gfp->analysis = 1;
+			(void) lame_set_analysis( gfp, 1 );
 			break;
 #endif			
 		    case 'e':        
@@ -1187,9 +1207,9 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 	    strcpy(outPath,"-");
 	} else {
 	    strncpy(outPath, inPath, MAX_NAME_SIZE - 4);
-	    if (gfp->decode_only) {
+	    if ( lame_get_decode_only( gfp ) ) {
 	        strncat (outPath, ".wav", 4 );
-	    } else if (gfp->ogg) {
+	    } else if( lame_get_ogg( gfp ) ) {
 		strncat (outPath, ".ogg", 4 );
 	    } else {
 		strncat (outPath, ".mp3", 4 );
@@ -1198,7 +1218,7 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
     }
     /* some file options not allowed with stdout */
     if (outPath[0]=='-') {
-	gfp->bWriteVbrTag=0; /* turn off VBR tag */
+	(void) lame_set_bWriteVbrTag( gfp, 0 ); /* turn off VBR tag */
     }
     
     /* if user did not explicitly specify input is mp3, check file name */
@@ -1222,11 +1242,11 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 #endif
     /* default guess for number of channels */
     if (autoconvert) 
-        gfp -> num_channels = 2; 
-    else if (gfp->mode == MPG_MD_MONO) 
-        gfp -> num_channels = 1;
+        (void) lame_set_num_channels( gfp, 2 ); 
+    else if( MONO == lame_get_mode( gfp ) ) 
+        (void) lame_set_num_channels( gfp, 1 );
     else 
-        gfp -> num_channels = 2;
+        (void) lame_set_num_channels( gfp, 2 );
     
     if ( gfp->free_format ) {
 	if ( gfp -> brate < 8  ||  gfp -> brate > 640 ) {
