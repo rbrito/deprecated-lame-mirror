@@ -210,34 +210,6 @@ get_bitrate(lame_global_flags * gfp)
 static void
 set_compression_ratio(lame_global_flags * gfp)
 {
-    /* 
-     *  sample freq       bitrate     compression ratio
-     *     [kHz]      [kbps/channel]   for 16 bit input
-     *     44.1            56               12.6
-     *     44.1            64               11.025
-     *     44.1            80                8.82
-     *     22.05           24               14.7
-     *     22.05           32               11.025
-     *     22.05           40                8.82
-     *     16              16               16.0
-     *     16              24               10.667
-     *
-     */
-    /* 
-     *  For VBR, take a guess at the compression_ratio. 
-     *  For example:
-     *
-     *    VBR_q    compression     like
-     *     -        4.4         320 kbps/44 kHz
-     *   0...1      5.5         256 kbps/44 kHz
-     *     2        7.3         192 kbps/44 kHz
-     *     4        8.8         160 kbps/44 kHz
-     *     6       11           128 kbps/44 kHz
-     *     9       14.7          96 kbps
-     *
-     *  for lower bitrates, downsample with --resample
-     */
-
     if (gfp->compression_ratio != 0)
 	return;
 
@@ -245,13 +217,13 @@ set_compression_ratio(lame_global_flags * gfp)
 	FLOAT  cmp[] = { 5.7, 6.5, 7.3, 8.2, 10, 11.9, 13, 14, 15, 16.5 };
 	gfp->compression_ratio = cmp[gfp->VBR_q];
     } else {
-        gfp->compression_ratio
+	gfp->compression_ratio
 	    = gfp->in_samplerate * 16 * gfp->internal_flags->channels_in
 	    / (1.e3 * gfp->mean_bitrate_kbps);
     }
 }
 
-static int apply_preset(lame_global_flags*  gfp, int preset, vbr_mode mode)
+static int apply_preset(lame_global_flags*  gfp, int bitrate, vbr_mode mode)
 {
     typedef struct {
         int    abr_kbps;
@@ -268,16 +240,16 @@ static int apply_preset(lame_global_flags*  gfp, int preset, vbr_mode mode)
 
     /* Switch mappings for target bitrate */
     const dm_abr_presets_t abr_switch_map [] = {
-        //  scalefac_s   lowpass     scale     athlower
-        // kbps    qantcomp   nsmsfix     athcurve  inter-ch
-        {   8,  1,    3,  2000,  0,   0.93, 11,  -4, 0.0012 }, // impossible to use in stereo
-        {  16,  1,    3,  3700,  0,   0.93, 11,  -4, 0.0010 },
-        {  24,  1,    3,  3900,  0,   0.93, 11,  -4, 0.0010 },
-        {  32,  1,    3,  5500,  0,   0.93, 11,  -4, 0.0010 },
-        {  40,  1,    3,  7000,  0,   0.93, 11,  -3, 0.0009 },
-        {  48,  1,    3,  7500,  0,   0.93, 11,  -3, 0.0009 },
-        {  56,  1,    3, 10000,  0,   0.93, 11,  -3, 0.0008 },
-        {  64,  1,    3, 11000,  0,   0.93, 11,  -3, 0.0008 },
+        /*  scalefac_s   lowpass     scale     athlower */
+        /* kbps    qantcomp   nsmsfix     athcurve  inter-ch */
+        {   8,  1,    3,  2000,  0,   0.90, 11,  -4, 0.0012 }, // impossible to use in stereo
+        {  16,  1,    3,  3700,  0,   0.90, 11,  -4, 0.0010 },
+        {  24,  1,    3,  3900,  0,   0.90, 11,  -4, 0.0010 },
+        {  32,  1,    3,  5500,  0,   0.90, 11,  -4, 0.0010 },
+        {  40,  1,    3,  7000,  0,   0.90, 11,  -3, 0.0009 },
+        {  48,  1,    3,  7500,  0,   0.90, 11,  -3, 0.0009 },
+        {  56,  1,    3, 10000,  0,   0.90, 11,  -3, 0.0008 },
+        {  64,  1,    3, 12000,  0,   0.90, 11,  -3, 0.0008 },
         {  80,  1,    3, 13500,  0,   0.93, 10,  -2, 0.0007 },
         {  96,  1,    1, 15300,  0,   0.93,  8,  -2, 0.0006 },
         { 112,  1,    1, 16000,  0,   0.93,  7,  -2, 0.0005 },
@@ -289,25 +261,11 @@ static int apply_preset(lame_global_flags*  gfp, int preset, vbr_mode mode)
         { 320,  0,    3, 21000,  0,   1.00,  0,   0, 0.0 }
     };
 
-    // Variables for the ABR stuff
-    int actual_bitrate = preset;
+    int lower_range, lower_range_kbps, upper_range, upper_range_kbps;
+    int r, b;
 
-    int lower_range = 0, lower_range_kbps = 0,
-        upper_range = 0, upper_range_kbps = 0;
-
-    int r; // r = resolved range
-    int b;
-
-    // We assume specified bitrate will be 320kbps
-    upper_range_kbps = abr_switch_map[16].abr_kbps;
-    upper_range = 16;
-    lower_range_kbps = abr_switch_map[16].abr_kbps;
-    lower_range = 16;
- 
-    // Determine which significant bitrates the value specified falls between,
-    // if loop ends without breaking then we were correct above that the value was 320
     for (b = 1; b < sizeof(abr_switch_map)/sizeof(abr_switch_map[0])-1
-	     && actual_bitrate > abr_switch_map[b].abr_kbps; b++)
+	     && bitrate > abr_switch_map[b].abr_kbps; b++)
 	;
 
     upper_range_kbps = abr_switch_map[b].abr_kbps;
@@ -315,15 +273,13 @@ static int apply_preset(lame_global_flags*  gfp, int preset, vbr_mode mode)
     lower_range_kbps = abr_switch_map[b-1].abr_kbps;
     lower_range = (b-1);
 
-    // Determine which range the value specified is closer to
-    if ((upper_range_kbps - actual_bitrate) > (actual_bitrate - lower_range_kbps))
+    /* Determine which range the value specified is closer to */
+    r = upper_range;
+    if (upper_range_kbps - bitrate > bitrate - lower_range_kbps)
         r = lower_range;
-    else
-        r = upper_range;
-
 
     lame_set_VBR(gfp, mode);
-    lame_set_VBR_mean_bitrate_kbps(gfp, actual_bitrate);
+    lame_set_VBR_mean_bitrate_kbps(gfp, bitrate);
     lame_set_brate(gfp, lame_get_VBR_mean_bitrate_kbps(gfp));
 
     if (mode != vbr) {
@@ -357,16 +313,18 @@ static int apply_preset(lame_global_flags*  gfp, int preset, vbr_mode mode)
     lame_set_ATHlower(gfp, (double)abr_switch_map[r].ath_lower);
 
     if (gfp->internal_flags->nsPsy.attackthre < 0.0) {
-	if (actual_bitrate >= 160)
+	if (bitrate >= 160)
 	    lame_set_short_threshold(gfp, 1.8, 10.0);
-	else if (actual_bitrate > 90)
+	else if (bitrate > 90)
 	    lame_set_short_threshold(gfp, 2.5, 15.0);
-	else if (actual_bitrate > 16)
+	else if (bitrate > 56)
+	    lame_set_short_threshold(gfp, 2.5, 20.0);
+	else if (bitrate > 16)
 	    lame_set_short_threshold(gfp, 10.0, 20.0);
 	else
 	    lame_set_short_threshold(gfp, 100.0, 100.0); /* no short blocks */
     }
-    return preset;
+    return bitrate;
 }
 
 
