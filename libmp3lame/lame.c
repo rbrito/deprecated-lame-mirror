@@ -789,6 +789,7 @@ int lame_init_params ( lame_global_flags* const gfp )
      */
     
     if ( gfp->VBR != vbr_off )      gfp->quality = Min ( gfp->quality, 5 );
+    
     /* don't allow forced mid/side stereo for mono output */
     if ( gfp->mode == MPG_MD_MONO ) gfp->force_ms = 0;
 
@@ -912,6 +913,33 @@ int lame_init_params ( lame_global_flags* const gfp )
                     && ( gfp->out_samplerate >= 32000 );
   
     gfc->nsPsy.use = gfp->exp_nspsytune;
+
+    switch (gfp->VBR) {
+    case vbr_mt:
+    case vbr_rh:
+    case vbr_mtrh:
+        if (gfc->nsPsy.use == 1 || gfp->experimentalY == 1) 
+            gfc->amp_mode = amp_mode_mid;
+        else
+            gfc->amp_mode = gfp->quality > 2 ? amp_mode_all : amp_mode_low; 
+        break;
+    default:
+    case vbr_off:
+    case vbr_abr:
+        if (gfc->nsPsy.use == 1 || gfp->experimentalY == 1)
+            gfc->amp_mode = amp_mode_max;
+        else
+#ifdef RH_AMP
+            gfc->amp_mode = gfp->quality > 2 ? amp_mode_all : amp_mode_low; 
+#else
+            gfc->amp_mode = amp_mode_all; 
+#endif
+        break;
+    }
+    if (gfp->version == 1) /* 0 indicates use lower sample freqs algorithm */
+        gfc->is_mpeg1 = 1; /* yes */
+    else
+        gfc->is_mpeg1 = 0; /* no */
 
     /* estimate total frames.  */
     gfp->totalframes           = 2 + gfp->num_samples/(gfc->resample_ratio * gfp->framesize);

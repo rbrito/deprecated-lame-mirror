@@ -52,14 +52,14 @@
 
 static int 
 init_outer_loop(
-    lame_global_flags *gfp,
     gr_info *const cod_info, 
     III_scalefac_t *const scalefac, 
+    const int is_mpeg1,
     const FLOAT8 xr[576], 
     FLOAT8 xrpow[576] )
 {
-  //    lame_internal_flags *gfc=gfp->internal_flags;
-    int i, o=0;
+    FLOAT8 tmp, sum = 0;
+    int i;
 
     /*  initialize fresh cod_info
      */
@@ -91,7 +91,7 @@ init_outer_loop(
              *  MPEG-1:      sfbs 0-7 long block, 3-12 short blocks 
              *  MPEG-2(.5):  sfbs 0-5 long block, 3-12 short blocks
              */ 
-            cod_info->sfb_lmax    = (gfp->version == 1) ? 8 : 6;
+            cod_info->sfb_lmax    = is_mpeg1 ? 8 : 6;
 	    cod_info->sfb_smin    = 3;
 	}
     } else {
@@ -112,14 +112,14 @@ init_outer_loop(
     /*  check if there is some energy we have to quantize
      *  and calculate xrpow matching our fresh scalefactors
      */
-    for (i = 0; i < 576; i++) {
-        FLOAT8 temp = fabs (xr[i]);
-        xrpow[i] = sqrt (temp * sqrt(temp));
-        o += (temp > 1E-20);
+    for (i = 0; i < 576; ++i) {
+        tmp  = fabs (xr[i]);
+        sum += tmp;
+        xrpow[i] = sqrt (tmp * sqrt(tmp));
     }
    /*  return 1 if we have something to quantize, else 0
     */
-   return o > 0;
+   return sum > (FLOAT8)1E-20;
 }
 
 
@@ -379,127 +379,16 @@ quant_compare(
 
 static void 
 amp_scalefac_bands(
-    lame_global_flags *gfp,
+    lame_internal_flags *gfc,
     const gr_info  *const cod_info, 
     III_scalefac_t *const scalefac,
-    FLOAT8 distort[4][SBMAX_l], 
+    calc_noise_result * noise_info, 
     FLOAT8 xrpow[576] )
-#ifndef RH_AMP
 {
-  lame_internal_flags *gfc=gfp->internal_flags;
-  int start, end, l,i,j,sfb;
-  FLOAT8 ifqstep34,distort_thresh;
-
-  if (cod_info->scalefac_scale == 0) {
-    ifqstep34 = 1.29683955465100964055; /* 2**(.75*.5)*/
-  } else {
-    ifqstep34 = 1.68179283050742922612;  /* 2**(.75*1) */
-  }
-  /* distort[] = noise/masking.  Comput distort_thresh so that:
-   * distort_thresh = 1, unless all bands have distort < 1
-   * In that case, just amplify bands with distortion
-   * within 95% of largest distortion/masking ratio */
-  distort_thresh = -900;
-  for (sfb = 0; sfb < cod_info->sfb_lmax; sfb++) {
-    distort_thresh = Max(distort[0][sfb],distort_thresh);
-  }
-
-  for (sfb = cod_info->sfb_smin; sfb < 12; sfb++) {
-    for (i = 0; i < 3; i++ ) {
-      distort_thresh = Max(distort[i+1][sfb],distort_thresh);
-    }
-  }
-  if (distort_thresh>1.0)
-    distort_thresh=1.0;
-  else
-    distort_thresh *= .95;
-
-  if (gfc->nsPsy.use && (gfp->VBR == vbr_off || gfp->VBR == vbr_abr)) {
-    int asfb = -1,ablk=0,astart=0,aend=0;
-    FLOAT8 max_dist = 0;
-
-    for (sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
-      start = gfc->scalefac_band.l[sfb];
-      end   = gfc->scalefac_band.l[sfb+1];
-    
-      if (distort[0][sfb]>distort_thresh  ) {
-        if (distort[0][sfb]-distort_thresh > max_dist) {
-          max_dist = distort[0][sfb]-distort_thresh;
-          asfb = sfb;
-        }
-      }
-    }
-
-    if (asfb != -1) {
-      scalefac->l[asfb]++;
-      start = gfc->scalefac_band.l[asfb];
-      end   = gfc->scalefac_band.l[asfb+1];
-      for ( l = start; l < end; l++ )
-        xrpow[l] *= ifqstep34;
-    }
-
-    max_dist = 0;
-    asfb = -1;
-    for (j=0,sfb = cod_info->sfb_smin; sfb < 12; sfb++ ) {
-      start = gfc->scalefac_band.s[sfb];
-      end   = gfc->scalefac_band.s[sfb+1];
-      for (i = 0; i < 3; i++ ) {
-	if ( distort[i+1][sfb]>distort_thresh) {
-	  if (distort[i+1][sfb]>max_dist) {
-	    max_dist = distort[i+1][sfb];
-	    asfb = sfb;
-	    ablk = i;
-	    astart = j;
-	    aend = j + end - start;
-	  }
-	}
-	j += end-start;
-      }
-    }
-
-    if (asfb != -1) {
-      scalefac->s[asfb][ablk]++;
-      for (l = astart; l < aend; l++) {
-	xrpow[l] *= ifqstep34;
-      }
-    }
-  } else {
-    for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
-      if ( distort[0][sfb]>distort_thresh  ) {
-        scalefac->l[sfb]++;
-        start = gfc->scalefac_band.l[sfb];
-        end   = gfc->scalefac_band.l[sfb+1];
-        for ( l = start; l < end; l++ ) {
-          xrpow[l] *= ifqstep34;
-        }
-      }
-    }
-
-    for ( j=0,sfb = cod_info->sfb_smin; sfb < 12; sfb++ ) {
-      start = gfc->scalefac_band.s[sfb];
-      end   = gfc->scalefac_band.s[sfb+1];
-      for ( i = 0; i < 3; i++ ) {
-	int j2 = j;
-	if ( distort[i+1][sfb]>distort_thresh) {
-	  scalefac->s[sfb][i]++;
-	  for (l = start; l < end; l++) {
-	    xrpow[j2++] *= ifqstep34;
-	  }
-	}
-	j += end-start;
-      }
-    }
-  }
-}
-#else
-{
-    int start, end;
-    int l,i,j;
-    int max_ind[4]={0,0,0,0};
-    int sfb;
+    unsigned int start, end, sfb;
+    unsigned int l,i,j;
     FLOAT8 ifqstep34;
-    FLOAT8 distort_thresh[4] = {-1.f, -1.f, -1.f, -1.f};
-    lame_internal_flags *gfc = gfp->internal_flags;
+    FLOAT8 distort_thresh = -1.f;
 
     if (cod_info->scalefac_scale == 0) 
         ifqstep34 = 1.29683955465100964055; /* 2**(.75*0.5)*/
@@ -510,55 +399,54 @@ amp_scalefac_bands(
     /*  find maximum distortion and appropriate scalefactor bands
      */    
     for (sfb = 0; sfb < cod_info->sfb_lmax; sfb++) 
-        if (distort_thresh[0] < distort[0][sfb]) {
-            distort_thresh[0] = distort[0][sfb];
-            max_ind[0] = sfb;
+        if (distort_thresh < noise_info->dist_l[sfb]) {
+            distort_thresh = noise_info->dist_l[sfb];
         }
     for (sfb = cod_info->sfb_smin; sfb < 12; sfb++) 
-        for (i = 1; i < 4; i++) 
-            if (distort_thresh[i] < distort[i][sfb]) {
-                distort_thresh[i] = distort[i][sfb];
-                max_ind[i] = sfb;
+        for (i = 0; i < 3; i++) 
+            if (distort_thresh < noise_info->dist_s[i][sfb]) {
+                distort_thresh = noise_info->dist_s[i][sfb];
             }
     
-    /*  adjust thresholds
+    /*  adjust threshold
      */
-    if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh) { 
-        /* VBR modes */
-        if (gfp->experimentalY) 
-            for (i = 0; i < 4; i++) 
-                if (distort_thresh[i] > 1.0f) 
-                   /* only bands with distortion at least 50% of maximum */
-                    distort_thresh[i] = pow (distort_thresh[i], 0.50f);
-                else 
-                    /* amplify only bands near 98% of maximum noise */
-                    distort_thresh[i] = pow (distort_thresh[i], 1.02f);
-        else 
-            for (i = 0; i < 4; i++) 
-                if (distort_thresh[i] > 1.0f) 
-                    /* all distorted bands */
-                    distort_thresh[i] = 1.0f;
-                else 
-                    /* amplify only bands near 95% of maximum noise */
-                    distort_thresh[i] = pow (distort_thresh[i], 1.05f);
-    } else {
-        /* CBR/ABR modes */
-        if (!gfp->experimentalY) {
-            for (i = 0; i < 4; i++) 
-                if (distort_thresh[i] > 1.0f) 
-                    /* only bands with distortion at least 25% of maximum */
-                    distort_thresh[i] = pow (distort_thresh[i], 0.25f);
-                else 
-                    /* amplify only bands near 95% of maximum noise */
-                    distort_thresh[i] = pow (distort_thresh[i], 1.05f);
-        }   /* else only maximum distorted bands */
+     
+    switch (gfc->amp_mode) {
+    default:
+    case amp_mode_all:
+            if (distort_thresh > 1.0f) 
+               /* all bands with distortion */
+                distort_thresh = 1.0f;
+            else 
+                /* amplify some bands */
+                distort_thresh *= 0.95;
+            break;
+    case amp_mode_low:
+            if (distort_thresh > 1.0f) 
+                /* only bands with distortion at least 20% of maximum */
+                distort_thresh = pow (distort_thresh, 0.20f);
+            else 
+                /* amplify only bands near 95% of maximum noise */
+                distort_thresh = powf (distort_thresh, 1.05f);
+            break;
+    case amp_mode_mid:
+            if (distort_thresh > 1.0f) 
+               /* only bands with distortion at least 50% of maximum */
+                distort_thresh = pow (distort_thresh, 0.50f);
+            else 
+                /* amplify only bands near 98% of maximum noise */
+                distort_thresh = pow (distort_thresh, 1.02f);
+            break;
+    case amp_mode_max:
+            /* nothing to adjust */
+            break;
     }
    
     
     /*  amplify bands exceeding thresholds
      */
     for (sfb = 0; sfb < cod_info->sfb_lmax; sfb++) {
-        if (distort[0][sfb] >= distort_thresh[0]) {
+        if (noise_info->dist_l[sfb] >= distort_thresh) {
             scalefac->l[sfb]++;
             start = gfc->scalefac_band.l[sfb];
             end   = gfc->scalefac_band.l[sfb+1];
@@ -570,8 +458,8 @@ amp_scalefac_bands(
         start = gfc->scalefac_band.s[sfb];
         end   = gfc->scalefac_band.s[sfb+1];
         for (i = 0; i < 3; i++) {
-            int j2 = j, b = i+1;
-            if (distort[b][sfb] >= distort_thresh[b]) {
+            int j2 = j;
+            if (noise_info->dist_s[i][sfb] >= distort_thresh) {
                 scalefac->s[sfb][i]++;
                 for (l = start; l < end; l++) 
                     xrpow[j2++] *= ifqstep34;
@@ -580,7 +468,6 @@ amp_scalefac_bands(
         }
     }
 }
-#endif
 
 
 
@@ -695,7 +582,6 @@ inc_subblock_gain (
             }
 
             scalefac->s[sfb][window] = 0;
-            //gf.distort[band] = -1.0;
             width = gfc->scalefac_band.s[sfb] - gfc->scalefac_band.s[sfb+1];
             i = gfc->scalefac_band.s[sfb] * 3 + width * window;
             amp = IPOW20(210 + (s << (cod_info->scalefac_scale + 1)));
@@ -730,13 +616,13 @@ balance_noise (
     lame_global_flags  *gfp,
     gr_info        * const cod_info,
     III_scalefac_t * const scalefac, 
-    FLOAT8                 distort[4][SBMAX_l],
+    calc_noise_result * noise_info,
     FLOAT8                 xrpow[576] )
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     int status;
     
-    amp_scalefac_bands ( gfp, cod_info, scalefac, distort, xrpow);
+    amp_scalefac_bands ( gfc, cod_info, scalefac, noise_info, xrpow);
 
     /* check to make sure we have not amplified too much 
      * loop_break returns 0 if there is an unamplified scalefac
@@ -822,7 +708,6 @@ outer_loop (
     III_scalefac_t save_scalefac;
     gr_info save_cod_info;
     FLOAT8 save_xrpow[576];
-    FLOAT8 distort[4][SBMAX_l];
     calc_noise_result noise_info;
     calc_noise_result best_noise_info;
     int l3_enc_w[576]; 
@@ -888,7 +773,7 @@ outer_loop (
         if (gfc->noise_shaping) 
             /* coefficients and thresholds both l/r (or both mid/side) */
             over = calc_noise (gfc, xr, l3_enc_w, cod_info, l3_xmin, 
-                               scalefac, distort, &noise_info);
+                               scalefac, &noise_info);
         else {
             /* fast mode, no noise shaping, we are ready */
             best_noise_info = noise_info;
@@ -960,11 +845,11 @@ outer_loop (
          */
         if (gfc->sfb21_extra) {
             if (cod_info->block_type == SHORT_TYPE) {
-                if (distort[1][SBMAX_s-1] > 1 ||
-                    distort[2][SBMAX_s-1] > 1 ||
-                    distort[3][SBMAX_s-1] > 1) break;
+                if (noise_info.dist_s[0][SBMAX_s-1] > 1 ||
+                    noise_info.dist_s[1][SBMAX_s-1] > 1 ||
+                    noise_info.dist_s[2][SBMAX_s-1] > 1) break;
             } else {
-                if (distort[0][SBMAX_l-1] > 1) break;
+                if (noise_info.dist_l[SBMAX_l-1] > 1) break;
             }
         }
 
@@ -979,7 +864,7 @@ outer_loop (
             }
         }
             
-        notdone = balance_noise (gfp, cod_info, scalefac, distort, xrpow);
+        notdone = balance_noise (gfp, cod_info, scalefac, &noise_info, xrpow);
         
         if (notdone == 0) 
             break;
@@ -1437,7 +1322,8 @@ VBR_iteration_loop (
       
             /*  init_outer_loop sets up cod_info, scalefac and xrpow 
              */
-            ret = init_outer_loop(gfp, cod_info, &scalefac[gr][ch], xr[gr][ch], xrpow);
+            ret = init_outer_loop(cod_info, &scalefac[gr][ch], gfp->version,
+                                  xr[gr][ch], xrpow);
             if (ret == 0) {
                 /*  xr contains no energy 
                  *  l3_enc, our encoding data, will be quantized to zero
@@ -1460,7 +1346,7 @@ VBR_iteration_loop (
                                         min_bits, max_bits, &scalefac[gr][ch],
                                         &l3_xmin[gr][ch], gr, ch );
                 if (ret < 0) {
-                    init_outer_loop (gfp, cod_info, &scalefac[gr][ch], 
+                    init_outer_loop (cod_info, &scalefac[gr][ch], gfp->version,
                                      xr[gr][ch], xrpow);
                     VBR_encode_granule (gfp, cod_info, xr[gr][ch], 
                                         &l3_xmin[gr][ch], &scalefac[gr][ch],
@@ -1530,7 +1416,8 @@ VBR_iteration_loop (
             }
             /*  init_outer_loop sets up cod_info, scalefac and xrpow 
              */
-            ret = init_outer_loop(gfp, cod_info, &scalefac[gr][ch], xr[gr][ch], xrpow);
+            ret = init_outer_loop(cod_info, &scalefac[gr][ch], gfp->version,
+                                  xr[gr][ch], xrpow);
             if (ret == 0) 
             {
                 /*  xr contains no energy 
@@ -1707,7 +1594,8 @@ ABR_iteration_loop(
 
             /*  cod_info, scalefac and xrpow get initialized in init_outer_loop
              */
-            ret = init_outer_loop(gfp, cod_info, &scalefac[gr][ch], xr[gr][ch], xrpow);
+            ret = init_outer_loop(cod_info, &scalefac[gr][ch], gfp->version,
+                                  xr[gr][ch], xrpow);
             if (ret == 0) {
                 /*  xr contains no energy 
                  *  l3_enc, our encoding data, will be quantized to zero
@@ -1803,8 +1691,8 @@ iteration_loop(
 
             /*  init_outer_loop sets up cod_info, scalefac and xrpow 
              */
-            i = init_outer_loop(gfp, cod_info, &scalefac[gr][ch], xr[gr][ch],
-                                xrpow);
+            i = init_outer_loop(cod_info, &scalefac[gr][ch], gfp->version, 
+                                xr[gr][ch], xrpow);
             if (i == 0) {
                 /*  xr contains no energy, l3_enc will be quantized to zero
                  */

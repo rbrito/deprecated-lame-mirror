@@ -1140,17 +1140,12 @@ VBR_noise_shaping2 (
     cod_info   = &gfc->l3_side.gr[gr].ch[ch].tt;
     shortblock = (cod_info->block_type == SHORT_TYPE);
       
-    if (shortblock)
-        vbrmax = short_block_vbr_sf (gfc, l3_xmin, xr34orig, xr, &vbrsf);  
-    else
-        vbrmax = long_block_vbr_sf (gfc, l3_xmin, xr34orig, xr, &vbrsf);  
-
-    memset (scalefac, 0, sizeof(III_scalefac_t));
-
     if (shortblock) {
+        vbrmax = short_block_vbr_sf (gfc, l3_xmin, xr34orig, xr, &vbrsf);  
         short_block_scalefacs (gfp, cod_info, scalefac, &vbrsf, &vbrmax);
         short_block_xr34      (gfc, cod_info, scalefac, xr34orig, xr34);
     } else {
+        vbrmax = long_block_vbr_sf (gfc, l3_xmin, xr34orig, xr, &vbrsf);  
         long_block_scalefacs (gfp, cod_info, scalefac, &vbrsf, &vbrmax);
         long_block_xr34      (gfc, cod_info, scalefac, xr34orig, xr34);
     } 
