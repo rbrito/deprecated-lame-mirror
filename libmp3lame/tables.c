@@ -1366,7 +1366,7 @@ void init_bit_stream_w(lame_global_flags *gfp)
 	    % gfp->out_samplerate;
 
     /* resv. size */
-    if (gfp->mean_bitrate_kbps >= 320) {
+    if (gfp->free_format) {
         /* in freeformat the buffer is constant*/
 	gfc->l3_side.maxmp3buf
 	    = ((int)((gfp->mean_bitrate_kbps*1000 * 1152/8)
