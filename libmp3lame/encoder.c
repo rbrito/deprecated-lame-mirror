@@ -57,11 +57,11 @@ ms_sparsing(lame_internal_flags* gfc, int gr)
         width = gfc->l3_side.tt[gr][0].width[sfb];
 	if (sfb < gfc->l3_side.tt[gr][0].sfb_lmax)
 	    threshold
-		= pow(10.0, -(gfc->sparseA - gfc->mld_l[sfb]*gfc->sparseB)/10.);
+		= db2pow(-(gfc->sparseA - gfc->mld_l[sfb]*gfc->sparseB));
 	else {
 	    int sfb2 = (sfb - gfc->l3_side.tt[gr][0].sfb_lmax) / 3;
 	    threshold
-		= pow(10.0, -(gfc->sparseA - gfc->mld_s[sfb2]*gfc->sparseB)/10.);
+		= db2pow(-(gfc->sparseA - gfc->mld_s[sfb2]*gfc->sparseB));
 	}
 
 	i = j + width;

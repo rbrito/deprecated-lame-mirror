@@ -87,6 +87,10 @@ char *strchr (), *strrchr ();
 
 #define IIPOW20(x) (assert(0 <= x && x < Q_MAX2), iipow20[x])
 
+#define db2pow(x) (exp(x*LOG10*0.1))
+//#define db2pow(x) pow(10.0, x*0.1)
+//#define db2pow(x) pow(10.0, x/10.0)
+
 /* in case this is used without configure */
 #ifndef inline
 # define inline

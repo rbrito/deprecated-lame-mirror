@@ -632,7 +632,7 @@ FLOAT adj43[PRECALC_SIZE];
 #endif
 
 /* psymodel window */
-FLOAT window[BLKSIZE], window_s[BLKSIZE_s/2];
+FLOAT window[BLKSIZE], window_s[BLKSIZE_s];
 
 /* 
 compute the ATH for each scalefactor band 
@@ -714,7 +714,7 @@ static FLOAT ATHmdct( lame_global_flags *gfp, FLOAT f )
     FLOAT ath = ATHformula( f , gfp ) - NSATHSCALE;
 
     /* modify the MDCT scaling for the ATH and convert to energy */
-    return pow( 10.0, ath/10.0 + gfp->ATHlower);
+    return db2pow((ath+gfp->ATHlower*10.0));
 }
 
 static void compute_ath( lame_global_flags *gfp )
@@ -904,24 +904,24 @@ iteration_init( lame_global_flags *gfp)
     i = (gfp->exp_nspsytune >> 2) & 63;
     if (i >= 32)
 	i -= 64;
-    bass = pow(10, i / 4.0 / 10.0);
+    bass = db2pow(i*0.25);
 
     i = (gfp->exp_nspsytune >> 8) & 63;
     if (i >= 32)
 	i -= 64;
-    alto = pow(10, i / 4.0 / 10.0);
+    alto = db2pow(i*0.25);
 
     i = (gfp->exp_nspsytune >> 14) & 63;
     if (i >= 32)
 	i -= 64;
-    treble = pow(10, i / 4.0 / 10.0);
+    treble = db2pow(i*0.25);
 
     /*  to be compatible with Naoki's original code, the next 6 bits
      *  define only the amount of changing treble for sfb21 */
     i = (gfp->exp_nspsytune >> 20) & 63;
     if (i >= 32)
 	i -= 64;
-    sfb21 = treble * pow(10, i / 4.0 / 10.0);
+    sfb21 = treble * db2pow(i*0.25);
 
     for (i = 0; i < SBMAX_l; i++) {
 	FLOAT f;
@@ -1033,7 +1033,7 @@ init_numline(
 	arg = freq2bark(sfreq*scalepos[sfb]*deltafreq);
 	arg = (Min(arg, 15.5)/15.5);
 
-	mld[sfb] = pow(10.0, 1.25*(1-cos(PI*arg))-2.5);
+	mld[sfb] = db2pow(-12.5*(1+cos(PI*arg)));
     }
 
     /* compute bark values of each critical band */
@@ -1196,7 +1196,7 @@ int psymodel_init(lame_global_flags *gfp)
 	gfc->ATH.cb[i] = x;
     }
     for (i = 0; i < SBMAX_l; i++)
-	gfc->ATH.l_avg[i] = gfc->ATH.cb[bm[i]] * pow(10.0, gfp->ATHlower);
+	gfc->ATH.l_avg[i] = gfc->ATH.cb[bm[i]] * db2pow(gfp->ATHlower*10.0);
 
     /************************************************************************
      * do the same things for short blocks
@@ -1215,13 +1215,13 @@ int psymodel_init(lame_global_flags *gfp)
 	    snr = -4.5 * (bval[i]-13)/(24.0-13.0)
 		-8.25*(bval[i]-24)/(13.0-24.0);
 
-	norm[i] = pow(10.0, snr/10.0) * NS_PREECHO_ATT0;
+	norm[i] = db2pow(snr) * NS_PREECHO_ATT0;
 	gfc->endlines_s[i] = numlines_s[i];
 	if (i != 0)
 	    gfc->endlines_s[i] += gfc->endlines_s[i-1];
     }
     for (i = 0; i < SBMAX_s; i++)
-	gfc->ATH.s_avg[i] = gfc->ATH.cb[bm[i]] * pow(10.0, gfp->ATHlower);
+	gfc->ATH.s_avg[i] = gfc->ATH.cb[bm[i]] * db2pow(gfp->ATHlower*10.0);
     
     i = init_s3_values(gfc, &gfc->s3_ss, gfc->s3ind_s,
 		       gfc->npart_s, bval, bval_width, norm);
@@ -1234,7 +1234,7 @@ int psymodel_init(lame_global_flags *gfp)
 	FLOAT eql_balance = 0.0;
 	for( i = 0; i < BLKSIZE/2; ++i ) {
 	    FLOAT freq = gfp->out_samplerate * i / BLKSIZE;
-	    gfc->ATH.eql_w[i] = pow(10.0, -ATHformula( freq, gfp ) / 10);
+	    gfc->ATH.eql_w[i] = db2pow(-ATHformula( freq, gfp ));
 	    eql_balance += gfc->ATH.eql_w[i];
 	}
 	eql_balance =  (vo_scale * vo_scale / (BLKSIZE/2)) / eql_balance;
@@ -1297,7 +1297,7 @@ int psymodel_init(lame_global_flags *gfp)
      */
     {
         FLOAT frame_duration = 576. * gfc->mode_gr / sfreq;
-        gfc->ATH.decay = pow(10., -12./10. * frame_duration);
+        gfc->ATH.decay = db2pow(-12.0 * frame_duration);
         gfc->ATH.adjust = 0.01; /* minimum, for leading low loudness */
         gfc->ATH.adjust_limit = 1.0; /* on lead, allow adjust up to maximum */
     }
@@ -1313,7 +1313,7 @@ int psymodel_init(lame_global_flags *gfp)
       window[i] =
 	  0.42-0.5*cos(2*PI*(i+.5)/BLKSIZE) + 0.08*cos(4*PI*(i+.5)/BLKSIZE);
 
-    for (i = 0; i < BLKSIZE_s/2 ; i++)
+    for (i = 0; i < BLKSIZE_s; i++)
 	window_s[i] = 0.5 * (1.0 - cos(2.0 * PI * (i + 0.5) / BLKSIZE_s));
 
     {

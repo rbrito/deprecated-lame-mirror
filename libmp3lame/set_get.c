@@ -1552,7 +1552,7 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
 	    gfc->presetTune.quantcomp_type_s = 4;
 	    gfc->presetTune.quantcomp_alt_type = 0;
 	    lame_set_athaa_sensitivity(
-		gfp, pow(10., -.8) * lame_get_athaa_sensitivity(gfp));
+		gfp, db2pow(-8.0) * lame_get_athaa_sensitivity(gfp));
 	}
 	else {
 	    lame_set_experimentalX(gfp, 3);
@@ -1581,7 +1581,7 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
 	    gfc->presetTune.quantcomp_alt_type = 0;
 	    (void) lame_set_ATHlower( gfp, -2 );
 	    lame_set_athaa_sensitivity(
-		gfp, pow(10., -.8) * lame_get_athaa_sensitivity(gfp));
+		gfp, db2pow(-8.0) * lame_get_athaa_sensitivity(gfp));
 	}
 	else {
 	    gfc->presetTune.quantcomp_type_s = 3;

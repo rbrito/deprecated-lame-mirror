@@ -159,8 +159,8 @@ static FLOAT athAdjust( FLOAT a, FLOAT x, FLOAT athFloor )
 {
     /*  work in progress
      */
-    FLOAT const o = 90.30873362;
-    FLOAT const p = 94.82444863;
+#define o 90.30873362
+#define p 94.82444863
     FLOAT u = FAST_LOG10_X(x, 10.0); 
     FLOAT v = a*a;
     FLOAT w = 0.0;
@@ -169,8 +169,9 @@ static FLOAT athAdjust( FLOAT a, FLOAT x, FLOAT athFloor )
     if ( w < 0  )    w = 0.; 
     u *= w; 
     u += athFloor + o-p;                            // redo scaling
-
-    return pow( 10., 0.1*u );
+#undef o
+#undef p
+    return db2pow(u);
 }
 
 
