@@ -2,7 +2,7 @@
 
 include $(top_srcdir)/Makefile.am.global
 
-SUBDIRS = ADbg tinyxml
+SUBDIRS = ADbg ddk tinyxml
 
 EXTRA_DIST = \
 	ACM.cpp \
