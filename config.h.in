@@ -30,6 +30,9 @@
    */
 #undef HAVE_ALLOCA_H
 
+/* Define to 1 if you have the <dlfcn.h> header file. */
+#undef HAVE_DLFCN_H
+
 /* we link against libefence */
 #undef HAVE_EFENCE
 
@@ -77,13 +80,6 @@
 #ifndef HAVE_INT32_T
 #undef A_INT32_T
 	typedef A_INT32_T int32_t;
-#endif
-
-/* add int64_t type */
-#undef HAVE_INT64_T
-#ifndef HAVE_INT64_T
-#undef A_INT64_T
-	typedef A_INT64_T int64_t;
 #endif
 
 /* add int8_t type */
@@ -153,6 +149,9 @@
 /* Define to 1 if you have the <termcap.h> header file. */
 #undef HAVE_TERMCAP_H
 
+/* Define to 1 if you have the <term.h> header file. */
+#undef HAVE_TERM_H
+
 /* add uint16_t type */
 #undef HAVE_UINT16_T
 #ifndef HAVE_UINT16_T
@@ -166,13 +165,6 @@
 	typedef A_UINT32_T uint32_t;
 #endif
 
-/* add uint64_t type */
-#undef HAVE_UINT64_T
-#ifndef HAVE_UINT64_T
-#undef A_UINT64_T
-	typedef A_UINT64_T uint64_t;
-#endif
-
 /* add uint8_t type */
 #undef HAVE_UINT8_T
 #ifndef HAVE_UINT8_T
@@ -181,9 +173,6 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
-
-/* build with vorbis support */
-#undef HAVE_VORBIS
 
 /* requested by Frank, seems to be temporary needed for a smooth transition */
 #undef LAME_LIBRARY_BUILD

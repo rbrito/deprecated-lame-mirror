@@ -23,6 +23,9 @@ AC_CONFIG_SRCDIR([libmp3lame/lame.c])
 
 dnl check system
 AC_CANONICAL_HOST
+AC_AIX
+AC_MINIX
+AC_ISC_POSIX
 
 dnl automake
 AM_INIT_AUTOMAKE(lame,4.0)
@@ -43,9 +46,6 @@ LIB_MAJOR_VERSION=0
 LIB_MINOR_VERSION=0
 
 dnl check environment
-AC_AIX
-AC_ISC_POSIX
-AC_MINIX
 case $host_os in
   *cygwin* ) CYGWIN=yes;;
          * ) CYGWIN=no;;
@@ -115,7 +115,7 @@ if test "${ac_cv_c_have_long_double}" = "yes" ; then
 	AC_CHECK_SIZEOF(long double)
 fi
 
-AC_CHECK_TYPES([uint8_t, int8_t, uint16_t, int16_t, uint32_t, int32_t, uint64_t, int64_t])
+AC_CHECK_TYPES([uint8_t, int8_t, uint16_t, int16_t, uint32_t, int32_t])
 
 AH_VERBATIM([HAVE_UINT8_T],
 [/* add uint8_t type */
@@ -179,42 +179,6 @@ AH_VERBATIM([HAVE_INT32_T],
 #ifndef HAVE_INT32_T
 #undef A_INT32_T
 	typedef A_INT32_T int32_t;
-#endif])
-
-if test "${ac_cv_sizeof_unsigned_long}" = "8"; then
-	AC_DEFINE(A_UINT64_T,unsigned long)
-else
-	if test "${ac_cv_sizeof_unsigned_long_long}" = "8"; then
-		AC_DEFINE(A_UINT64_T,unsigned long long)
-	else
-		AC_MSG_ERROR([CHECK_TYPE_uint64_t - please report to lame-dev@lists.sourceforge.net])
-	fi
-fi
-
-AH_VERBATIM([HAVE_UINT64_T],
-[/* add uint64_t type */
-#undef HAVE_UINT64_T
-#ifndef HAVE_UINT64_T
-#undef A_UINT64_T
-	typedef A_UINT64_T uint64_t;
-#endif])
-
-if test "${ac_cv_sizeof_long}" = "8"; then
-	AC_DEFINE(A_INT64_T,long)
-else
-	if test "${ac_cv_sizeof_long_long}" = "8"; then
-		AC_DEFINE(A_INT64_T,long long)
-	else
-		AC_MSG_ERROR([CHECK_TYPE_int64_t - please report to lame-dev@lists.sourceforge.net])
-	fi
-fi
-
-AH_VERBATIM([HAVE_INT64_T],
-[/* add int64_t type */
-#undef HAVE_INT64_T
-#ifndef HAVE_INT64_T
-#undef A_INT64_T
-	typedef A_INT64_T int64_t;
 #endif])
 
 alex_IEEE854_FLOAT80
