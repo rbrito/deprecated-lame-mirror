@@ -27,7 +27,7 @@ endif
 PGM ?= lame
 CC = gcc
 CC_OPTS =  -O
-CPP_OPTS = 
+CPP_OPTS = -Iinclude -Impglib -Ifrontend -Ilibmp3lame
 AR = ar
 RANLIB = ranlib
 GTK = 
@@ -471,25 +471,25 @@ ASFLAGS=-f elf -i i386/
 
 all: $(PGM)
 
-$(PGM):	frontend/main.o $(frontend_obj)  libmp3lame.a 
+$(PGM):	frontend/main.o $(frontend_obj)  libmp3lame/libmp3lame.a 
 	$(CC) $(CC_OPTS) -o $(PGM)  frontend/main.o $(frontend_obj) \
         -I./frontend \
-        libmp3lame.a $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) 
+        libmp3lame/libmp3lame.a $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) \
         $(VORBIS_LIB)
 
-mp3x:	mp3x/mp3x.o $(frontend_obj) $(gtk_obj) libmp3lame.a
-	$(CC) -o mp3x mp3x/mp3x.o $(frontend_obj) $(gtk_obj) libmp3lame.a $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
+mp3x:	mp3x/mp3x.o $(frontend_obj) $(gtk_obj) libmp3lame/libmp3lame.a
+	$(CC) -o mp3x mp3x/mp3x.o $(frontend_obj) $(gtk_obj) libmp3lame/libmp3lame.a $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
 
-mp3rtp:	frontend/rtp.o frontend/mp3rtp.o  $(frontend_obj) libmp3lame.a
-	$(CC) -o mp3rtp mp3rtp.o rtp.o $(frontend_obj) libmp3lame.a $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
+mp3rtp:	frontend/rtp.o frontend/mp3rtp.o  $(frontend_obj) libmp3lame/libmp3lame.a
+	$(CC) -o mp3rtp mp3rtp.o rtp.o $(frontend_obj) libmp3lame/libmp3lame.a $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
 
-libmp3lame.a:  $(OBJ) Makefile
-	$(AR) cr libmp3lame.a  $(OBJ) 
+libmp3lame/libmp3lame.a:  $(lib_obj)
+	$(AR) cr libmp3lame.a  $(lib_obj)
 	$(RANLIB) libmp3lame.a
 
 #shared library.  GNU specific?
-libmp3lame.so:  $(OBJ) Makefile
-	gcc -shared -Wl,-soname,libmp3lame.so -o libmp3lame.so $(OBJ)
+libmp3lame/libmp3lame.so:  $(lib_obj)
+	gcc -shared -Wl,-soname,libmp3lame.so -o libmp3lame/libmp3lame.so $(lib_obj)
 
 install:  $(PGM) #libmp3lame.a
 	cp $(PGM) /usr/bin
