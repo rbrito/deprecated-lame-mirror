@@ -664,7 +664,7 @@ VBR_noise_shapping
     
     printf("not enough bits, decreasing vbrmax=%i...\n",vbrmax);
     printf("%i minbits=%i   part2_3_length=%i  part2=%i\n",
-	   gfc->frameNum,minbits,cod_info->part2_3_length,cod_info->part2_length);
+	   gfp->frameNum,minbits,cod_info->part2_3_length,cod_info->part2_length);
     --vbrmax;
     --global_gain_adjust;
   }
@@ -761,7 +761,7 @@ VBR_quantize(lame_global_flags *gfp,
   }
   bits_ok=1;
   if (totbits>4*maxbits) {
-    printf("%i Trying again... totbits=%i  maxbits=%i \n",gfc->frameNum,totbits,4*maxbits);
+    printf("%i Trying again... totbits=%i  maxbits=%i \n",gfp->frameNum,totbits,4*maxbits);
     quality += .1 + (totbits-4*maxbits)/500.0;
     bits_ok=0;
   }
@@ -791,7 +791,7 @@ VBR_quantize(lame_global_flags *gfp,
   
   getframebits (gfp,&bitsPerFrame, &mean_bits);
   maxbits = ResvFrameBegin(gfp,l3_side, mean_bits, bitsPerFrame);
-  //  printf("%i bits=%i maxbits=%i index=%i  \n",gfc->frameNum,totbits,maxbits,gfc->bitrate_index);
+  //  printf("%i bits=%i maxbits=%i index=%i  \n",gfp->frameNum,totbits,maxbits,gfc->bitrate_index);
   
 
   for (gr = 0; gr < gfc->mode_gr; gr++)

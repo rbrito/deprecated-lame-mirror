@@ -149,10 +149,6 @@ typedef struct  {
   int psymodel_init;
 
 
-  long int frameNum;              /* frame counter */
-  long totalframes;               /* frames: 0..totalframes-1 (estimate)*/
-  int encoder_delay;
-  int framesize;                  
   int padding;                    /* padding for the current frame? */
   int mode_gr;                    /* granules per frame */
   int stereo;                     /* number of channels */

@@ -291,7 +291,7 @@ bitrate will be ignored for passages of analog silence.
 =======================================================================
 free format bitstreams
 =======================================================================
--freeformat   
+--freeformat   
 
 LAME will produce a fixed bitrate, free format bitstream.
 User must specify the desired bitrate in kbs, which can

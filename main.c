@@ -111,12 +111,13 @@ int main(int argc, char **argv)
 #endif
 
   } else if (gf.decode_only) {
-
     /* decode an mp3 file to raw pcm */
     do {
       int i;
       /* read in 'iread' samples */
       iread=lame_readframe(&gf,Buffer);
+      if (!gf.silent)
+	fprintf(stderr,"\rFrame# %i [ %i]",gf.frameNum,gf.totalframes-1);
       for (i=0; i<iread; ++i) {
 	fwrite(&Buffer[0][i],2,1,outf);
 	if (gf.num_channels==2) fwrite(&Buffer[1][i],2,1,outf);

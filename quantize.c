@@ -394,8 +394,9 @@ VBR_iteration_loop (lame_global_flags *gfp,
    ******************************************************************/
   for( gfc->bitrate_index =   ((analog_silence && !gfp->VBR_hard_min) ? 1 : gfc->VBR_min_bitrate );
        gfc->bitrate_index < gfc->VBR_max_bitrate;
-       gfc->bitrate_index++    )
+       gfc->bitrate_index++    ) {
     if( used_bits <= frameBits[gfc->bitrate_index] ) break;
+  }
 
   /*******************************************************************
    * calculate quantization for this bitrate

@@ -51,8 +51,11 @@ int lame_readframe(lame_global_flags *gfp,short int Buffer[2][1152])
   iread = get_audio(gfp,Buffer,gfc->stereo);
   
   /* check to see if we overestimated/underestimated totalframes */
-  if (iread==0)  gfc->totalframes = Min(gfc->totalframes,gfc->frameNum+2);
-  if (gfc->frameNum > (gfc->totalframes-1)) gfc->totalframes = gfc->frameNum;
+  if (iread==0)  gfp->totalframes = Min(gfp->totalframes,gfp->frameNum+2);
+  if (gfp->frameNum > (gfp->totalframes-1)) gfp->totalframes = gfp->frameNum;
+
+  /* normally, frame counter is incremented every time we encode a frame, but: */
+  if (gfp->decode_only) ++gfp->frameNum;
   return iread;
 }
 
@@ -151,14 +154,14 @@ int read_samples_mp3(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2]
     /* add a delay of framesize-DECDELAY, which will make the total delay
      * exactly one frame, so we can sync MP3 output with WAV input */
     for ( ch = 0; ch < stereo; ch++ ) {
-      for ( j = 0; j < gfc->framesize-DECDELAY; j++ )
-	pinfo->pcmdata2[ch][j] = pinfo->pcmdata2[ch][j+gfc->framesize];
-      for ( j = 0; j < gfc->framesize; j++ ) 
-	pinfo->pcmdata2[ch][j+gfc->framesize-DECDELAY] = mpg123pcm[ch][j];
+      for ( j = 0; j < gfp->framesize-DECDELAY; j++ )
+	pinfo->pcmdata2[ch][j] = pinfo->pcmdata2[ch][j+gfp->framesize];
+      for ( j = 0; j < gfp->framesize; j++ ) 
+	pinfo->pcmdata2[ch][j+gfp->framesize-DECDELAY] = mpg123pcm[ch][j];
     }
   
-  pinfo->frameNum123 = gfc->frameNum-1;
-  pinfo->frameNum = gfc->frameNum;
+  pinfo->frameNum123 = gfp->frameNum-1;
+  pinfo->frameNum = gfp->frameNum;
   }
 
   if (out==-1) return 0;

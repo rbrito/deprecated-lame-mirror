@@ -141,6 +141,11 @@ typedef struct  {
   /* internal variables, do not set... */
   /************************************************************************/
   int version;                /* 0=MPEG2  1=MPEG1 */
+  long int frameNum;              /* frame counter */
+  long totalframes;               /* frames: 0..totalframes-1 (estimate)*/
+  int encoder_delay;
+  int framesize;                  
+
 
   /* VBR tags */
   int nZeroStreamSize;

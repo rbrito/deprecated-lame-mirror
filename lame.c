@@ -78,7 +78,7 @@ void lame_init_params(lame_global_flags *gfp)
   gfc->mf_size=ENCDELAY-MDCTDELAY;  /* we pad input with this many 0's */
 
 
-  gfc->frameNum=0;
+  gfp->frameNum=0;
   if (gfp->num_channels==1) {
     gfp->mode = MPG_MD_MONO;
   }
@@ -161,8 +161,8 @@ void lame_init_params(lame_global_flags *gfp)
   }
 
   gfc->mode_gr = (gfp->out_samplerate <= 24000) ? 1 : 2;  /* mode_gr = 2 */
-  gfc->encoder_delay = ENCDELAY;
-  gfc->framesize = gfc->mode_gr*576;
+  gfp->encoder_delay = ENCDELAY;
+  gfp->framesize = gfc->mode_gr*576;
 
 
   gfc->resample_ratio=1;
@@ -171,8 +171,8 @@ void lame_init_params(lame_global_flags *gfp)
 
   /* estimate total frames.  must be done after setting sampling rate so
    * we know the framesize.  */
-  gfc->totalframes=0;
-  gfc->totalframes = 2+ gfp->num_samples/(gfc->resample_ratio*gfc->framesize);
+  gfp->totalframes=0;
+  gfp->totalframes = 2+ gfp->num_samples/(gfc->resample_ratio*gfp->framesize);
 
 
 
@@ -630,7 +630,7 @@ void lame_print_config(lame_global_flags *gfp)
 	    gfc->lowpass1*out_samplerate*500,
 	    gfc->lowpass2*out_samplerate*500);
 
-  if (gfc->pinfo != NULL) {
+  if (gfp->gtkflag) {
     fprintf(stderr, "Analyzing %s \n",gfp->inPath);
   }
   else {
@@ -744,7 +744,7 @@ char *mp3buf, int mp3buf_size)
     int bit_rate = gfp->brate;
     gfc->lame_encode_frame_init=1;
 
-    avg_slots_per_frame = (bit_rate*gfc->framesize) /
+    avg_slots_per_frame = (bit_rate*gfp->framesize) /
       (sampfreq* 8);
     /* -f fast-math option causes some strange rounding here, be carefull: */
     gfc->frac_SpF  = avg_slots_per_frame - floor(avg_slots_per_frame + 1e-9);
@@ -756,7 +756,7 @@ char *mp3buf, int mp3buf_size)
     /* check FFT will not use a negative starting offset */
     assert(576>=FFTOFFSET);
     /* check if we have enough data for FFT */
-    assert(gfc->mf_size>=(BLKSIZE+gfc->framesize-FFTOFFSET));
+    assert(gfc->mf_size>=(BLKSIZE+gfp->framesize-FFTOFFSET));
   }
 
 
@@ -796,11 +796,11 @@ char *mp3buf, int mp3buf_size)
   /********************** status display  *****************************/
   if (!gfp->gtkflag && !gfp->silent) {
     int mod = gfp->version == 0 ? 100 : 50;
-    if (gfc->frameNum%mod==0) {
-      timestatus(gfp->out_samplerate,gfc->frameNum,gfc->totalframes,gfc->framesize);
+    if (gfp->frameNum%mod==0) {
+      timestatus(gfp->out_samplerate,gfp->frameNum,gfp->totalframes,gfp->framesize);
 
       if (gfp->brhist_disp)
-	  brhist_disp(gfc->totalframes);
+	  brhist_disp(gfp->totalframes);
 
     }
   }
@@ -941,14 +941,14 @@ char *mp3buf, int mp3buf_size)
     plotting_data *pinfo=gfc->pinfo;
     for ( ch = 0; ch < gfc->stereo; ch++ ) {
       for ( j = 0; j < FFTOFFSET; j++ )
-	pinfo->pcmdata[ch][j] = pinfo->pcmdata[ch][j+gfc->framesize];
+	pinfo->pcmdata[ch][j] = pinfo->pcmdata[ch][j+gfp->framesize];
       for ( j = FFTOFFSET; j < 1600; j++ ) {
 	pinfo->pcmdata[ch][j] = inbuf[ch][j-FFTOFFSET];
       }
     }
   }
 
-  gfc->frameNum++;
+  gfp->frameNum++;
   return mp3count;
 }
 
@@ -985,7 +985,7 @@ int lame_encode_buffer(lame_global_flags *gfp,
   /* some sanity checks */
   assert(ENCDELAY>=MDCTDELAY);
   assert(BLKSIZE-FFTOFFSET >= 0);
-  mf_needed = BLKSIZE+gfc->framesize-FFTOFFSET;
+  mf_needed = BLKSIZE+gfp->framesize-FFTOFFSET;
   assert(MFSIZE>=mf_needed);
 
   mfbuf[0]=gfc->mfbuf[0];
@@ -1007,13 +1007,13 @@ int lame_encode_buffer(lame_global_flags *gfp,
 
     for (ch=0; ch<gfc->stereo; ch++) {
       if (gfc->resample_ratio>1)  {
-	n_out=fill_buffer_downsample(gfp,&mfbuf[ch][gfc->mf_size],gfc->framesize,
+	n_out=fill_buffer_downsample(gfp,&mfbuf[ch][gfc->mf_size],gfp->framesize,
 					  in_buffer[ch],nsamples,&n_in,ch);
       } else if (gfc->resample_ratio<1) {
-	n_out=fill_buffer_upsample(gfp,&mfbuf[ch][gfc->mf_size],gfc->framesize,
+	n_out=fill_buffer_upsample(gfp,&mfbuf[ch][gfc->mf_size],gfp->framesize,
 					  in_buffer[ch],nsamples,&n_in,ch);
       } else {
-	n_out=Min(gfc->framesize,nsamples);
+	n_out=Min(gfp->framesize,nsamples);
 	n_in = n_out;
 	memcpy( (char *) &mfbuf[ch][gfc->mf_size],(char *)in_buffer[ch],sizeof(short int)*n_out);
       }
@@ -1034,11 +1034,11 @@ int lame_encode_buffer(lame_global_flags *gfp,
       mp3size += ret;
 
       /* shift out old samples */
-      gfc->mf_size -= gfc->framesize;
-      gfc->mf_samples_to_encode -= gfc->framesize;
+      gfc->mf_size -= gfp->framesize;
+      gfc->mf_samples_to_encode -= gfp->framesize;
       for (ch=0; ch<gfc->stereo; ch++)
 	for (i=0; i<gfc->mf_size; i++)
-	  mfbuf[ch][i]=mfbuf[ch][i+gfc->framesize];
+	  mfbuf[ch][i]=mfbuf[ch][i+gfp->framesize];
     }
   }
   assert(nsamples==0);
@@ -1064,7 +1064,7 @@ int lame_encode_buffer_interleaved(lame_global_flags *gfp,
   /* some sanity checks */
   assert(ENCDELAY>=MDCTDELAY);
   assert(BLKSIZE-FFTOFFSET >= 0);
-  mf_needed = BLKSIZE+gfc->framesize-FFTOFFSET;
+  mf_needed = BLKSIZE+gfp->framesize-FFTOFFSET;
   assert(MFSIZE>=mf_needed);
 
   if (gfp->num_channels == 1) {
@@ -1102,7 +1102,7 @@ int lame_encode_buffer_interleaved(lame_global_flags *gfp,
   while (nsamples > 0) {
     int n_out;
     /* copy in new samples */
-    n_out = Min(gfc->framesize,nsamples);
+    n_out = Min(gfp->framesize,nsamples);
     for (i=0; i<n_out; ++i) {
       mfbuf[0][gfc->mf_size+i]=buffer[2*i];
       mfbuf[1][gfc->mf_size+i]=buffer[2*i+1];
@@ -1125,11 +1125,11 @@ int lame_encode_buffer_interleaved(lame_global_flags *gfp,
       mp3size += ret;
 
       /* shift out old samples */
-      gfc->mf_size -= gfc->framesize;
-      gfc->mf_samples_to_encode -= gfc->framesize;
+      gfc->mf_size -= gfp->framesize;
+      gfc->mf_samples_to_encode -= gfp->framesize;
       for (ch=0; ch<gfc->stereo; ch++)
 	for (i=0; i<gfc->mf_size; i++)
-	  mfbuf[ch][i]=mfbuf[ch][i+gfc->framesize];
+	  mfbuf[ch][i]=mfbuf[ch][i+gfp->framesize];
     }
   }
   assert(nsamples==0);
@@ -1169,9 +1169,9 @@ int lame_encode_finish(lame_global_flags *gfp,char *mp3buffer, int mp3buffer_siz
     if (mp3buffer_size == 0) mp3buffer_size_remaining=0;  
 
     /* send in a frame of 0 padding until all internal sample buffers flushed */
-    imp3=lame_encode_buffer(gfp,buffer[0],buffer[1],gfc->framesize,mp3buffer,mp3buffer_size_remaining);
+    imp3=lame_encode_buffer(gfp,buffer[0],buffer[1],gfp->framesize,mp3buffer,mp3buffer_size_remaining);
     /* dont count the above padding: */
-    gfc->mf_samples_to_encode -= gfc->framesize;
+    gfc->mf_samples_to_encode -= gfp->framesize;
 
     if (imp3 < 0) {
       /* some type of fatel error */
@@ -1183,13 +1183,13 @@ int lame_encode_finish(lame_global_flags *gfp,char *mp3buffer, int mp3buffer_siz
   }
 
 
-  gfc->frameNum--;
+  gfp->frameNum--;
   if (!gfp->gtkflag && !gfp->silent) {
-      timestatus(gfp->out_samplerate,gfc->frameNum,gfc->totalframes,gfc->framesize);
+      timestatus(gfp->out_samplerate,gfp->frameNum,gfp->totalframes,gfp->framesize);
 
       if (gfp->brhist_disp)
 	{
-	  brhist_disp(gfc->totalframes);
+	  brhist_disp(gfp->totalframes);
 	  brhist_disp_total(gfp);
 	}
 

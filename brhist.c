@@ -125,7 +125,7 @@ void brhist_disp_total(lame_global_flags *gfp)
 {
   int i;
   FLOAT ave;
-  lame_internal_flags *gfc=gfp->internal_flags;
+  /*  lame_internal_flags *gfc=gfp->internal_flags;*/
 
 #ifdef BRHIST
   for(i = brhist_vbrmin; i <= brhist_vbrmax; i++)
@@ -138,13 +138,13 @@ void brhist_disp_total(lame_global_flags *gfp)
       fprintf(stderr, "   %3d  %8ld (%.1f%%)\n",
 	      bitrate_table[gfp->version][i],
 	      brhist_count[i],
-	      (FLOAT)brhist_count[i] / gfc->totalframes * 100.0);
+	      (FLOAT)brhist_count[i] / gfp->totalframes * 100.0);
     }
 #endif
   ave=0;
   for(i = brhist_vbrmin; i <= brhist_vbrmax; i++)
     ave += bitrate_table[gfp->version][i]*
-      (FLOAT)brhist_count[i] / gfc->totalframes;
+      (FLOAT)brhist_count[i] / gfp->totalframes;
   fprintf(stderr, "\naverage: %2.0f kbs\n",ave);
 
   fflush(stderr);
