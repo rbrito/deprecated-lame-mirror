@@ -973,7 +973,7 @@ void outer_loop(
      * NOTE: distort[] = changed to:  noise/allowed noise
      * so distort[] > 1 means noise > allowed noise
      */
-    if (gfp->VBR==vbr_rh || iteration>100) {
+    if (gfp->VBR==vbr_rh) {
       if (cod_info->block_type == SHORT_TYPE) {
         if ((distort[1][SBMAX_s-1] > 1)
           ||(distort[2][SBMAX_s-1] > 1)
@@ -981,6 +981,9 @@ void outer_loop(
       } else {
         if (distort[0][SBMAX_l-1] > 1) { notdone=0; }
       }
+    }
+    if (iteration>100) {
+      notdone=0; 
     }
 
   }    /* done with main iteration */
