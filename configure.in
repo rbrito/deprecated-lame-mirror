@@ -333,8 +333,8 @@ if test "${CONFIG_BRHIST}" != "no" ; then
 	if test "${BRH_DEFAULT}" = "yes" ; then
 		FRONTEND_LDADD="-l${HAVE_TERMCAP} ${FRONTEND_LDADD}"
 		CONFIG_BRHIST="yes, with ${HAVE_TERMCAP}"
+		AC_DEFINE(HAVE_TERMCAP, 1, have termcap)
 	else
-		AC_DEFINE(NOTERMCAP, 1, didn't have termcap)
 		CONFIG_BRHIST="yes, simulated termcap"
 	fi
 fi

@@ -3757,11 +3757,11 @@ EOF
 	if test "${BRH_DEFAULT}" = "yes" ; then
 		FRONTEND_LDADD="-l${HAVE_TERMCAP} ${FRONTEND_LDADD}"
 		CONFIG_BRHIST="yes, with ${HAVE_TERMCAP}"
-	else
 		cat >> confdefs.h <<\EOF
-#define NOTERMCAP 1
+#define HAVE_TERMCAP 1
 EOF
 
+	else
 		CONFIG_BRHIST="yes, simulated termcap"
 	fi
 fi

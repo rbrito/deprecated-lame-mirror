@@ -120,8 +120,8 @@
 /* enable VBR bitrate histogram */
 #undef BRHIST
 
-/* didn't have termcap */
-#undef NOTERMCAP
+/* have termcap */
+#undef HAVE_TERMCAP
 
 /* float instead of double */
 #undef FLOAT8

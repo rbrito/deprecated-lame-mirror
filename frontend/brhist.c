@@ -27,12 +27,6 @@
 
 /* basic #define's */
 
-#ifdef NOTERMCAP            /* work around to change the !NOTERMCAP to TERMCAP_AVAILABLE */
-# undef  TERMCAP_AVAILABLE
-#else
-# define TERMCAP_AVAILABLE
-#endif
-
 #ifndef BRHIST_WIDTH
 # define BRHIST_WIDTH    14
 #endif
@@ -46,7 +40,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if defined(TERMCAP_AVAILABLE)
+#if defined(HAVE_TERMCAP)
 # include <termcap.h>
 #endif
 
@@ -80,7 +74,7 @@ static size_t  calculate_index ( const int* const array, const size_t len, const
 
 int  brhist_init ( const lame_global_flags* gf, const int bitrate_kbps_min, const int bitrate_kbps_max )
 {
-#ifdef TERMCAP_AVAILABLE
+#ifdef HAVE_TERMCAP
     char         term_buff [2048];  // see 1)
     const char*  term_name;
     char*        tp;
@@ -129,7 +123,7 @@ int  brhist_init ( const lame_global_flags* gf, const int bitrate_kbps_min, cons
     memset (brhist.bar_asterisk, '*', sizeof (brhist.bar_asterisk)-1 );
     memset (brhist.bar_hash    , '%', sizeof (brhist.bar_hash)    -1 );
 
-#ifdef TERMCAP_AVAILABLE
+#ifdef HAVE_TERMCAP
     /* try to catch additional information about special console sequences */
     
     if ((term_name = getenv("TERM")) == NULL) {
@@ -168,7 +162,7 @@ int  brhist_init ( const lame_global_flags* gf, const int bitrate_kbps_min, cons
     if (tp != NULL)
         strcpy ( Console_IO.str_norm, tp );
         
-#endif /* TERMCAP_AVAILABLE */
+#endif /* HAVE_TERMCAP */
 
     return 0;
 }
