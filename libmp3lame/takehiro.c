@@ -793,7 +793,7 @@ static const int slen2_n[16] = { 1, 2, 4, 8, 1, 2, 4, 8, 2, 4, 8, 2, 4, 8, 4, 8 
 const int slen1_tab [16] = { 0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4 };
 const int slen2_tab [16] = { 0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3 };
 
-void
+static void
 scfsi_calc(int ch,
 	   III_side_info_t *l3_side)
 {
@@ -877,7 +877,6 @@ void best_scalefac_store(
 		break;
 	if (l==0)
 	    gi->scalefac[sfb]=-2; // anything goes.
-//	    gi->scalefac[sfb]=0; // anything goes.
     }
 
     if (!gi->scalefac_scale && !gi->preflag) {
