@@ -27113,16 +27113,31 @@ cat >>confdefs.h <<\_ACEOF
 #define TAKEHIRO_IEEE754_HACK 1
 _ACEOF
 
-	;;
-*)
-	CPUTYPE="no"
-
-	# it has enough precission for us...
 
 cat >>confdefs.h <<\_ACEOF
 #define USE_FAST_LOG 1
 _ACEOF
 
+	;;
+powerpc)
+	CPUTYPE="no"
+
+	# use internal knowledge of the IEEE 754 layout
+
+cat >>confdefs.h <<\_ACEOF
+#define TAKEHIRO_IEEE754_HACK 1
+_ACEOF
+
+
+	# The following should not get enabled on a G5. HOWTO check for a G5?
+
+cat >>confdefs.h <<\_ACEOF
+#define USE_FAST_LOG 1
+_ACEOF
+
+	;;
+*)
+	CPUTYPE="no"
 	;;
 esac
 
