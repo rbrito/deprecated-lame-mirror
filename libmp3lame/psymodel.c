@@ -1550,7 +1550,7 @@ L3psycho_anal_ns(
 static void
 adjust_ATH(lame_internal_flags* const  gfc)
 {
-    FLOAT max_pow, max_pow_alt, adj_lim_new;
+    FLOAT max_pow;
 
     /* jd - 2001 mar 12, 27, jun 30 */
     /* loudness based on equal loudness curve; */
@@ -1565,11 +1565,9 @@ adjust_ATH(lame_internal_flags* const  gfc)
 	    + gfc->loudness_next[1][gfc->channels_out-1];
 	max_pow = Max( max_pow, gr2_max );
     }
-    max_pow *= 0.5;		/* max_pow approaches 1.0 for full band noise*/
 
     /* jd - 2001 mar 31, jun 30 */
     /* user tuning of ATH adjustment region */
-    max_pow_alt = max_pow;
     max_pow *= gfc->ATH.aa_sensitivity_p;
     /* jd - 2001 feb27, mar12,20, jun30, jul22 */
     /* continuous curves based on approximation to GB's original values. */
@@ -1579,7 +1577,7 @@ adjust_ATH(lame_internal_flags* const  gfc)
     /* For a loudness decrease, reduce ATH adjust*/
     /* towards adjust_limit gradually. */
     /* max_pow is a loudness squared or a power. */
-    if (max_pow > 0.03125) { /* ((1 - 0.000625)/ 31.98) from curve below */
+    if (max_pow > 0.03125*2.0) { /* ((1 - 0.000625)/ 31.98) from curve below */
 	if (gfc->ATH.adjust >= 1.0)
 	    gfc->ATH.adjust = 1.0;
 	else {
@@ -1592,16 +1590,16 @@ adjust_ATH(lame_internal_flags* const  gfc)
 	gfc->ATH.adjust_limit = 1.0;
     } else {
 	/* adjustment curve, about 32 dB maximum adjust (0.000625) */
-	adj_lim_new = 31.98 * max_pow + 0.000625;
-	if (gfc->ATH.adjust >= adj_lim_new) {
+	max_pow = 31.98 * 0.5 * max_pow + 0.000625;
+	if (gfc->ATH.adjust >= max_pow) {
 	    /* descend gradually */
-	    gfc->ATH.adjust *= adj_lim_new * 0.075 + 0.925;
-	    if( gfc->ATH.adjust < adj_lim_new)
-		gfc->ATH.adjust = adj_lim_new; /* stop descent */
+	    gfc->ATH.adjust *= max_pow * 0.075 + 0.925;
+	    if( gfc->ATH.adjust < max_pow)
+		gfc->ATH.adjust = max_pow; /* stop descent */
 	} else {
 	    /* ascend */
-	    if (gfc->ATH.adjust_limit >= adj_lim_new)
-		gfc->ATH.adjust = adj_lim_new;
+	    if (gfc->ATH.adjust_limit >= max_pow)
+		gfc->ATH.adjust = max_pow;
 	    else {
 		/* preceding frame has lower ATH adjust; */
 		/* ascend only to the preceding adjust_limit */
@@ -1609,7 +1607,7 @@ adjust_ATH(lame_internal_flags* const  gfc)
 		    gfc->ATH.adjust = gfc->ATH.adjust_limit;
 	    }
 	}
-	gfc->ATH.adjust_limit = adj_lim_new;
+	gfc->ATH.adjust_limit = max_pow;
     }
 }
 
