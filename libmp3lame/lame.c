@@ -1149,7 +1149,7 @@ lame_init(void)
 
     disable_FPE();      /* disable floating point exceptions */
 
-    gfc = (lame_t)(((unsigned int)work + 15) & ~15);
+    gfc = (lame_t)(((unsigned long)work + 15) & ~15);
     gfc->alignment = (unsigned char*)gfc - (unsigned char*)work;
 
     gfc->report.debugf = gfc->report.msgf = gfc->report.errorf = msgf;
