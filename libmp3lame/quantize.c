@@ -335,6 +335,8 @@ calc_noise(
     for (;sfb < gi->psymax; sfb++) {
 	FLOAT noise = 0.0;
 	int l = gi->width[sfb] >> 1;
+	if (l > gi->xrNumMax - j)
+	    l = gi->xrNumMax - j;
 	do {
 	    FLOAT t0 = gi->xr[j], t1 = gi->xr[j+1];
 	    noise += t0*t0 + t1*t1;
