@@ -311,37 +311,47 @@ calc_noise(
     int sfb = 0, j = 0;
 
     do {
-	FLOAT step, noise;
-	int l;
+	FLOAT noise;
 	if (j > gi->count1)
 	    break;
-	step = POW20(scalefactor(gi, sfb));
-	noise = 0.0;
-	l = gi->width[sfb] >> 1;
-	do {
-	    FLOAT temp;
-	    temp = fabs(gi->xr[j]) - pow43[gi->l3_enc[j]] * step; j++;
-	    noise += temp * temp;
-	    temp = fabs(gi->xr[j]) - pow43[gi->l3_enc[j]] * step; j++;
-	    noise += temp * temp;
-	} while (--l > 0);
-	noise = *distort++ = noise / *l3_xmin++;
+	if (*distort >= 0.0) {
+	    noise = *distort++;
+	    l3_xmin++;
+	    j += gi->width[sfb];
+	} else {
+	    int l = gi->width[sfb] >> 1;
+	    FLOAT step = POW20(scalefactor(gi, sfb));
+	    noise = 0.0;
+	    do {
+		FLOAT temp;
+		temp = fabs(gi->xr[j]) - pow43[gi->l3_enc[j]] * step; j++;
+		noise += temp * temp;
+		temp = fabs(gi->xr[j]) - pow43[gi->l3_enc[j]] * step; j++;
+		noise += temp * temp;
+	    } while (--l > 0);
+	    noise = *distort++ = noise / *l3_xmin++;
+	}
 
 	noise = FAST_LOG10(Max(noise,1E-20));
 	max_noise=Max(max_noise,noise);
     } while (++sfb < gi->psymax);
 
     for (;sfb < gi->psymax; sfb++) {
-	FLOAT noise = 0.0;
-	int l = gi->width[sfb];
-	l >>= 1;
-	do {
-	    FLOAT t0 = gi->xr[j], t1 = gi->xr[j+1];
-	    noise += t0*t0 + t1*t1;
-	    j += 2;
-	} while (--l > 0);
-	noise = *distort++ = noise / *l3_xmin++;
-
+	FLOAT noise;
+	if (*distort >= 0.0) {
+	    noise = *distort++;
+	    l3_xmin++;
+	    j += gi->width[sfb];
+	} else {
+	    int l = gi->width[sfb] >> 1;
+	    noise = 0.0;
+	    do {
+		FLOAT t0 = gi->xr[j], t1 = gi->xr[j+1];
+		noise += t0*t0 + t1*t1;
+		j += 2;
+	    } while (--l > 0);
+	    noise = *distort++ = noise / *l3_xmin++;
+	}
 	noise = FAST_LOG10(Max(noise,1E-20));
 	max_noise=Max(max_noise,noise);
     }
@@ -359,6 +369,19 @@ calc_noise(
 	}
     }
     return max_noise;
+}
+
+static FLOAT
+calc_noise_allband(
+  const gr_info           * const gi,
+  const FLOAT             * l3_xmin,
+	FLOAT             * distort
+    )
+{
+    int sfb;
+    for (sfb = 0; sfb < gi->psymax; sfb++)
+	distort[sfb] = -1.0;
+    return calc_noise(gi, l3_xmin, distort);
 }
 
 /************************************************************************
@@ -500,7 +523,7 @@ trancate_smallspectrums(
     int sfb, j, width;
     FLOAT distort[SFBMAX];
 
-    calc_noise(gi, l3_xmin, distort);
+    calc_noise_allband(gi, l3_xmin, distort);
     for (j = 0; j < gi->xrNumMax; j++) {
 	FLOAT xr = 0.0;
 	if (gi->l3_enc[j] != 0)
@@ -942,7 +965,8 @@ CBR_1st_bitalloc (
     /* compute the distortion in this quantization */
     /* coefficients and thresholds of ch0(L or Mid) or ch1(R or Side) */
     calc_xmin (gfc, ratio, gi, l3_xmin);
-    bestNoise = calc_noise(gi, l3_xmin, distort);
+
+    bestNoise = calc_noise_allband(gi, l3_xmin, distort);
     current_method = 0;
     age = 3;
     if (bestNoise < 0.0) {
@@ -964,9 +988,12 @@ CBR_1st_bitalloc (
 	    /* adjust global_gain to fit the available bits */
 	    gi_w.count1 = gi->xrNumMax;
 	    if (adjust_global_gain(gfc, xrpow, &gi_w, distort, huff_bits)) {
+		int sfb;
 		while (count_bits(gfc, xrpow, &gi_w) > huff_bits
 		       && ++gi_w.global_gain < 256u)
 		    ;
+		for (sfb = 0; sfb < gi->psymax; sfb++)
+		    distort[sfb] = -1.0;
 	    }
 
 	    /* store this scalefactor combination if it is better */
@@ -1666,7 +1693,7 @@ set_pinfo (
     FLOAT l3_xmin[SFBMAX], distort[SFBMAX];
 
     calc_xmin (gfc, ratio, gi, l3_xmin);
-    max_noise = calc_noise(gi, l3_xmin, distort);
+    max_noise = calc_noise_allband(gi, l3_xmin, distort);
 
     over = j = 0;
     for (sfb2 = 0; sfb2 < gi->psy_lmax; sfb2++) {
