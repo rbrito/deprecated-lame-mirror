@@ -470,14 +470,15 @@ int calc_xmin(
     lame_internal_flags *gfc = gfp->internal_flags;
     int sfb,j,start, end, bw,l, b, ath_over=0;
     FLOAT8 en0, xmin, ener, tmpATH;
+    ATH_t * ATH = gfc->ATH;
 
     if (cod_info->block_type == SHORT_TYPE) {
 
         for ( j = 0, sfb = 0; sfb < SBMAX_s; sfb++ ) {
-            tmpATH = gfp->experimentalY
-            ? athAdjust( gfc->ATH->adjust, gfc->ATH->s[sfb], gfc->ATH->floor )
-            : gfc->ATH->adjust * gfc->ATH->s[sfb];
-        
+            if ( gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh )
+                tmpATH = athAdjust( ATH->adjust, ATH->s[sfb], ATH->floor );
+            else
+                tmpATH = ATH->adjust * ATH->s[sfb];
             start = gfc->scalefac_band.s[ sfb ];
             end   = gfc->scalefac_band.s[ sfb + 1 ];
             bw = end - start;
@@ -529,10 +530,10 @@ int calc_xmin(
     else {
         
         for ( sfb = 0; sfb < SBMAX_l; sfb++ ){
-            tmpATH = gfp->experimentalY
-            ? athAdjust( gfc->ATH->adjust, gfc->ATH->l[sfb], gfc->ATH->floor )
-            : gfc->ATH->adjust * gfc->ATH->l[sfb];
-          
+            if ( gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh )
+                tmpATH = athAdjust( ATH->adjust, ATH->l[sfb], ATH->floor );
+            else
+                tmpATH = ATH->adjust * ATH->l[sfb];
             start = gfc->scalefac_band.l[ sfb ];
             end   = gfc->scalefac_band.l[ sfb+1 ];
             bw = end - start;

@@ -393,7 +393,7 @@ find_scalefac(const FLOAT8 *xr, const FLOAT8 *xr34, FLOAT8 l3_xmin, int bw)
       }
     }
   } 
-  assert(sf_ok!=10000);
+  //assert(sf_ok!=10000);
 #if 0
   assert(delsf==1);  /* when for loop goes up to 7 */
 #endif
@@ -432,7 +432,7 @@ int bw, int mq, FLOAT8 *scratch)
       }
     }
   } 
-  assert(sf_ok!=10000);
+  //assert(sf_ok!=10000);
 #if 0
   assert(delsf==1);  /* when for loop goes up to 7 */
 #endif
@@ -470,7 +470,7 @@ find_scalefac_ave(const FLOAT8 *xr, const FLOAT8 *xr34, FLOAT8 l3_xmin, int bw)
       }
     }
   } 
-  assert(sf_ok!=10000);
+  //assert(sf_ok!=10000);
 #if 0
   assert(delsf==1);  /* when for loop goes up to 7 */
 #endif

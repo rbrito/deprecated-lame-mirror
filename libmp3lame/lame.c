@@ -1044,7 +1044,7 @@ lame_init_params(lame_global_flags * const gfp)
 
         /*  tonality
          */
-        if (gfp->cwlimit <= 0) gfp->cwlimit = 0.454 * gfp->out_samplerate;
+        if (gfp->cwlimit <= 0) gfp->cwlimit = 0.42 * gfp->out_samplerate;
         gfc->PSY->tonalityPatch = 1;
 
         gfc->VBR->quality = Min( 9, Max( 0, gfp->quality ) );
@@ -1061,7 +1061,7 @@ lame_init_params(lame_global_flags * const gfp)
             gfc->VBR->gain_adjust = 0;
             gfc->VBR->smooth = 1;
         }
-        if ( gfc->VBR->quality < 2 ) {
+        if ( gfc->VBR->quality == 1 ) {
             static float const dbQ[10] = { -2., -1.4, -.7, 0, .7, 1.5, 2.3, 3.1, 4., 5 };
             gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
             gfc->VBR->smooth = 0;    
@@ -1074,18 +1074,16 @@ lame_init_params(lame_global_flags * const gfp)
         }
         gfc->VBR->bitpressure = 1;
         
-        gfc->sfb21_extra = (gfp->out_samplerate > 44000);
+        if (gfp->experimentalY)
+            gfc->sfb21_extra = 0;
+        else
+            gfc->sfb21_extra = (gfp->out_samplerate > 44000);
         
         if ( gfp->adjust_type < 0 )
             gfc->ATH->use_adjust = 3;
         else
             gfc->ATH->use_adjust = gfp->adjust_type;
         
-        // on/off switches different from usual defaults
-        if (gfp->useTemporal   < 0 ) gfp->useTemporal   = 0;  // off by default
-        if (gfp->experimentalY < 1 ) gfp->experimentalY = 1;  // on by default
-        else                         gfp->experimentalY = 0;  // turned off if given
-          
         break;
         
     case vbr_mt:
@@ -1111,7 +1109,6 @@ lame_init_params(lame_global_flags * const gfp)
             else {
                 gfc->PSY->tonalityPatch = 1;
                 gfc->VBR->mask_adjust = dbQ[gfp->VBR_q]; 
-                if (gfp->useTemporal < 0 ) gfp->useTemporal = 0;  // off by default
             }
         }
         gfc->VBR->bitpressure = 1;
@@ -1130,7 +1127,10 @@ lame_init_params(lame_global_flags * const gfp)
 
         /*  sfb21 extra only with MPEG-1 at higher sampling rates
          */
-        gfc->sfb21_extra = (gfp->out_samplerate > 44000);
+        if ( gfp->experimentalY )
+            gfc->sfb21_extra = 0;
+        else 
+            gfc->sfb21_extra = (gfp->out_samplerate > 44000);
 
         /*  VBR needs at least the output of GPSYCHO,
          *  so we have to garantee that by setting a minimum 
@@ -1197,6 +1197,12 @@ lame_init_params(lame_global_flags * const gfp)
     if ( gfp->adapt_thres_type < 0 ) gfp->adapt_thres_type = 2;
     
     if (gfp->useTemporal < 0 ) gfp->useTemporal = 1;  // on by default
+
+
+    if ( gfp->experimentalY )
+        MSGF(gfc,"\n *** WARNING *** the meaning of the experimental -Y has changed!\n"
+                   "                 now it tells LAME to ignore sfb21 noise shaping (VBR)\n\n");
+
     return 0;
 }
 

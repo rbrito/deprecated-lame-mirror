@@ -952,15 +952,16 @@ VBR_encode_granule (
           int                    min_bits, 
           int                    max_bits )
 {
-    //lame_internal_flags *gfc=gfp->internal_flags;
+    lame_internal_flags *gfc=gfp->internal_flags;
     gr_info         bst_cod_info;
     III_scalefac_t  bst_scalefac;
     FLOAT8          bst_xrpow [576]; 
     int             bst_l3_enc[576];
     int Max_bits  = max_bits;
     int real_bits = max_bits+1;
-    int this_bits = min_bits+(max_bits-min_bits)/2;
-    int dbits, over;
+    int this_bits = (min_bits+max_bits)/2;
+    int dbits, over, found = 0;
+    int sfb21_extra = gfc->sfb21_extra;
       
     assert(Max_bits <= MAX_BITS);
   
@@ -973,6 +974,12 @@ VBR_encode_granule (
     do {
         assert(this_bits >= min_bits);
         assert(this_bits <= max_bits);
+        assert(min_bits <= max_bits);
+
+        if (this_bits > Max_bits-42) 
+            gfc->sfb21_extra = 0;
+        else
+            gfc->sfb21_extra = sfb21_extra;
 
         over = outer_loop ( gfp, cod_info, xr, l3_xmin, scalefac,
                             xrpow, l3_enc, ch, this_bits );
@@ -981,6 +988,7 @@ VBR_encode_granule (
          *  in this case: is no scalefactor band distorted?
          */
         if (over <= 0) {
+            found = 1;
             /*  now we know it can be done with "real_bits"
              *  and maybe we can skip some iterations
              */
@@ -997,16 +1005,17 @@ VBR_encode_granule (
              */
             max_bits  = real_bits-32;
             dbits     = max_bits-min_bits;
-            this_bits = min_bits+dbits/2;
+            this_bits = (min_bits+max_bits)/2;
         } 
         else {
             /*  try with more bits
              */
             min_bits  = this_bits+32;
             dbits     = max_bits-min_bits;
-            this_bits = min_bits+dbits/2;
-
-            if (dbits>8) {
+            this_bits = (min_bits+max_bits)/2;
+            
+            if (found) {
+                found = 2;
                 /*  start again with best quantization so far
                  */
                 *cod_info = bst_cod_info;
@@ -1016,11 +1025,13 @@ VBR_encode_granule (
         }
     } while (dbits>8);
 
-    if (real_bits <= Max_bits) {
-        /*  restore best quantization found
-         */
-        *cod_info = bst_cod_info;
-        *scalefac = bst_scalefac;
+    gfc->sfb21_extra = sfb21_extra;
+
+    /*  found=0 => nothing found, use last one
+     *  found=1 => we just found the best and left the loop
+     *  found=2 => we restored a good one and have now l3_enc to restore too
+     */
+    if (found==2) {
         memcpy(l3_enc, bst_l3_enc, sizeof(int)*576);
     }
     assert(cod_info->part2_3_length <= Max_bits);
@@ -1247,6 +1258,7 @@ VBR_prepare (
                                       *min_mean_bits, analog_silence, ch);
       
             max_bits[gr][ch] = calc_max_bits (gfc, frameBits, min_bits[gr][ch]); 
+            
             used_bits += min_bits[gr][ch];           
     
         } /* for ch */
@@ -1254,7 +1266,7 @@ VBR_prepare (
     
     *min_mean_bits = Max(125, *min_mean_bits);
     bits = 0.8*frameBits[gfc->VBR_max_bitrate];
-    if (used_bits >= bits) 
+    if (used_bits >= bits) { 
         for (gr = 0; gr < gfc->mode_gr; gr++) {
             for (ch = 0; ch < gfc->channels_out; ch++) {
                 min_bits[gr][ch] *= bits;
@@ -1267,7 +1279,7 @@ VBR_prepare (
                     max_bits[gr][ch] = *min_mean_bits;
             }
         }
-    
+    }
   
     return analog_silence;
 }
@@ -1297,6 +1309,9 @@ void bitpressure_strategy1(
             max_bits[gr][ch] = Max(min_bits[gr][ch], 0.9*max_bits[gr][ch]);
         }
     }
+/*
+{static int count = 0;printf("count=%i\n",++count);}
+*/
 }
 
 inline
@@ -1358,7 +1373,25 @@ VBR_iteration_loop (
     analog_silence = VBR_prepare (gfp, pe, ms_ener_ratio, xr, ratio, 
                                   l3_xmin, frameBits, &analog_mean_bits,
                                   &min_mean_bits, min_bits, max_bits, bands);
-  
+/* quick'n'dirty HACK */
+{
+int bpf, avg, mxb;
+    gfc->bitrate_index = gfc->VBR_max_bitrate;
+    getframebits (gfp, &bpf, &avg);
+    ResvFrameBegin (gfp, l3_side, avg, bpf );
+
+    for (gr = 0; gr < gfc->mode_gr; gr++) {
+        mxb = on_pe (gfp, pe, l3_side, max_bits[gr], avg, gr);
+        if (gfc->mode_ext == MPG_MD_MS_LR) {
+            reduce_side (max_bits[gr], ms_ener_ratio[gr], avg, mxb);
+        }
+        if (min_bits[gr][0] > max_bits[gr][0]) 
+            min_bits[gr][0] = max_bits[gr][0];
+        if (min_bits[gr][1] > max_bits[gr][1]) 
+            min_bits[gr][1] = max_bits[gr][1];
+    }
+}  
+
     /*---------------------------------*/
     for(;;) {  
     
@@ -1423,7 +1456,9 @@ VBR_iteration_loop (
     bits = ResvFrameBegin (gfp, l3_side, mean_bits, bitsPerFrame);
     
     if (used_bits <= bits) break;
-     
+/*
+printf("bits=%i used=%i %i %i %i %i\n",bits,used_bits,save_bits[0][0],save_bits[0][1],save_bits[1][0],save_bits[1][1]);     
+*/
     switch ( gfc -> VBR -> bitpressure ) {
     default:
     case  1:
