@@ -227,13 +227,19 @@ void lame_print_config(lame_global_flags *);
  *
  * return code = number of bytes output in mp3buffer.  can be 0 
  * if return code = -1:  mp3buffer was too small
+ *
+ * NOTE: if gfp->num_channels=2, but gfp->mode = 3 (mono), the L & R channels
+ * will be averaged into the L channel before encoding only the L channel
+ * This will overwrite the data in leftpcm[] and rightpcm[].
+ * 
 */
 int lame_encode_buffer(lame_global_flags *,short int leftpcm[], short int rightpcm[],int num_samples,
 char *mp3buffer,int  mp3buffer_size);
 
-
-/* as above.  Note:  num_samples = number of samples in the L (or R)
-   channel, not the total number of samples in pcm[]  */
+/* as above, but input has L & R channel data interleaved.  Note: 
+ * num_samples = number of samples in the L (or R)
+ * channel, not the total number of samples in pcm[]  
+ */
 int lame_encode_buffer_interleaved(lame_global_flags *,short int pcm[], 
 int num_samples, char *mp3buffer,int  mp3buffer_size);
 

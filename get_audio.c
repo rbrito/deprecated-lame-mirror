@@ -87,14 +87,12 @@ int get_audio(lame_global_flags *gfp,short buffer[2][1152],int stereo)
   int framesize,samples_to_read;
   static unsigned long num_samples_read;
   unsigned long remaining;
-  int autoconvert=0;
   int num_channels = gfp->num_channels;
 
   if (gfp->frameNum==0) {
     num_samples_read=0;
     num_samples= GetSndSamples();
   }
-  if (num_channels==2 && gfp->stereo==1) autoconvert=1;
   framesize = gfp->mode_gr*576;
 
   samples_to_read = framesize;
@@ -120,10 +118,6 @@ int get_audio(lame_global_flags *gfp,short buffer[2][1152],int stereo)
       buffer[0][j] = insamp[num_channels*j];
       if (num_channels==2) buffer[1][j] = insamp[2*j+1];
       else buffer[1][j]=0;
-      if (autoconvert) {
-	buffer[0][j] = (buffer[0][j] + buffer[1][j])/2;
-	buffer[1][j] = 0;
-      }
     }
   }
 
@@ -158,8 +152,6 @@ int read_samples_mp3(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2]
   static int framesize=0;
   int ch;
 #endif
-  int autoconvert=0;
-  if (gfp->num_channels==2  && gfp->stereo==1) autoconvert=1;
 
   out=lame_decode_fromfile(musicin,mpg123pcm[0],mpg123pcm[1]);
   /* out = -1:  error, probably EOF */
@@ -169,12 +161,6 @@ int read_samples_mp3(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2]
   if (out==-1) {
     for ( j = 0; j < 1152; j++ ) {
       mpg123pcm[0][j] = 0;
-      mpg123pcm[1][j] = 0;
-    }
-  }
-  if (autoconvert) {
-    for ( j = 0; j < out; j++ ) {
-      mpg123pcm[0][j] = ((int)mpg123pcm[0][j] + (int)mpg123pcm[1][j])/2;
       mpg123pcm[1][j] = 0;
     }
   }

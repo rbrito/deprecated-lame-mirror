@@ -564,7 +564,7 @@ void lame_print_config(lame_global_flags *gfp)
 * encode a single frame
 *
 ************************************************************************
-lame_encode_frame(inbuf,mpg123bs)
+lame_encode_frame()
 
 
                        gr 0            gr 1
@@ -590,7 +590,9 @@ FFT's                    <---------1024---------->
     FFT starts at 576-224-MDCTDELAY (304)  = 576-FFTOFFSET
 
 */
-int lame_encode_frame(lame_global_flags *gfp,short int inbuf_l[],short int inbuf_r[],int mf_size,char *mp3buf, int mp3buf_size)
+int lame_encode_frame(lame_global_flags *gfp,
+short int inbuf_l[],short int inbuf_r[],
+int mf_size,char *mp3buf, int mp3buf_size)
 {
   static unsigned long frameBits;
   static unsigned long bitsPerSlot;
@@ -998,6 +1000,15 @@ int lame_encode_buffer(lame_global_flags *gfp,
     frame_buffered=0;
   }
 
+  if (gfp->num_channels==2  && gfp->stereo==1) {
+    /* downsample to mono */
+    for (i=0; i<nsamples; ++i) {
+      in_buffer[0][i]=((int)in_buffer[0][i]+(int)in_buffer[1][i])/2;
+      in_buffer[1][i]=0;
+    }
+  }
+
+
   while (nsamples > 0) {
     int n_in=0;
     int n_out=0;
@@ -1012,6 +1023,8 @@ int lame_encode_buffer(lame_global_flags *gfp,
       }
       in_buffer[ch] += n_in;
     }
+
+
     nsamples -= n_in;
     mf_size += n_out;
     assert(mf_size<=MFSIZE);
@@ -1048,8 +1061,6 @@ int lame_encode_buffer_interleaved(lame_global_flags *gfp,
   static int frame_buffered=0;
   int mp3size=0,ret,i,ch,mf_needed;
 
-  short int *in_buffer[2];
-
   /* some sanity checks */
   assert(ENCDELAY>=MDCTDELAY);
   assert(BLKSIZE-FFTOFFSET >= 0);
@@ -1068,6 +1079,7 @@ int lame_encode_buffer_interleaved(lame_global_flags *gfp,
     return lame_encode_buffer(gfp,buffer_l,buffer_r,nsamples,mp3buf,mp3buf_size);
   }
 
+
   if (gfp->frameNum==0 && !frame_buffered) {
     memset((char *) mfbuf, 0, sizeof(mfbuf));
     frame_buffered=1;
@@ -1078,6 +1090,15 @@ int lame_encode_buffer_interleaved(lame_global_flags *gfp,
     /* reset, for the next time frameNum==0 */
     frame_buffered=0;
   }
+
+  if (gfp->num_channels==2  && gfp->stereo==1) {
+    /* downsample to mono */
+    for (i=0; i<nsamples; ++i) {
+      buffer[2*i]=((int)buffer[2*i]+(int)buffer[2*i+1])/2;
+      buffer[2*i+1]=0;
+    }
+  }
+
 
   while (nsamples > 0) {
     int n_out;
