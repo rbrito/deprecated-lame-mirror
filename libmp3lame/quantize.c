@@ -484,7 +484,7 @@ void amp_scalefac_bands
     int max_ind[4]={0,0,0,0};
     int sfb;
     FLOAT8 ifqstep34;
-    FLOAT8 distort_thresh[4] = {1E-20,1E-20,1E-20,1E-20};
+    FLOAT8 distort_thresh[4] = {-1.f, -1.f, -1.f, -1.f};
     lame_internal_flags *gfc = (lame_internal_flags *)gfp->internal_flags;
 
     if (cod_info->scalefac_scale == 0) 
@@ -492,54 +492,59 @@ void amp_scalefac_bands
     else
         ifqstep34 = 1.68179283050742922612; /* 2**(.75*1.0) */
   
-    /* distort[] = noise/masking.  Compute distort_thresh so that:
-     * distort_thresh = 1, unless all bands have distort < 1
-     * In that case, just amplify bands with distortion
-     * within 95% of largest distortion/masking ratio */
-    for (sfb = 0; sfb < cod_info->sfb_lmax; sfb++) {
+    
+    /*  find maximum distortion and appropriate scalefactor bands
+     */    
+    for (sfb = 0; sfb < cod_info->sfb_lmax; sfb++) 
         if (distort_thresh[0] < distort[0][sfb]) {
             distort_thresh[0] = distort[0][sfb];
             max_ind[0] = sfb;
         }
-    }
-    if (distort_thresh[0] > 1.0) 
-#ifdef RH_AMP2
-        if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh) 
-            distort_thresh[0] = 1.0;
-        else
-            distort_thresh[0] = pow(distort_thresh[0], 0.50);
-#else
-        distort_thresh[0] = 1.0;
-#endif
-    else 
-        distort_thresh[0] = pow (distort_thresh[0], 1.05); /* 95% */
-  
-    for (i = 1; i < 4; i++) {
-        for (sfb = cod_info->sfb_smin; sfb < 12; sfb++) {
+    for (sfb = cod_info->sfb_smin; sfb < 12; sfb++) 
+        for (i = 1; i < 4; i++) 
             if (distort_thresh[i] < distort[i][sfb]) {
                 distort_thresh[i] = distort[i][sfb];
                 max_ind[i] = sfb;
             }
-        }
-        if (distort_thresh[i] > 1.0)
-#ifdef RH_AMP2
-            if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh) 
-                distort_thresh[i] = 1.0;
-            else
-                distort_thresh[i] = pow (distort_thresh[i], 0.50);
-#else
-            distort_thresh[i] = 1.0;
-#endif
-        else
-            distort_thresh[i] = pow (distort_thresh[i], 1.05); /* 95% */
+    
+    /*  adjust thresholds
+     */
+    if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh) { 
+        /* VBR modes */
+        if (gfp->experimentalY) 
+            for (i = 0; i < 4; i++) 
+                if (distort_thresh[i] > 1.0f) 
+                   /* only bands with distortion at least 50% of maximum */
+                    distort_thresh[i] = pow (distort_thresh[i], 0.50f);
+                else 
+                    /* amplify only bands near 98% of maximum noise */
+                    distort_thresh[i] = pow (distort_thresh[i], 1.02f);
+        else 
+            for (i = 0; i < 4; i++) 
+                if (distort_thresh[i] > 1.0f) 
+                    /* all distorted bands */
+                    distort_thresh[i] = 1.0f;
+                else 
+                    /* amplify only bands near 95% of maximum noise */
+                    distort_thresh[i] = pow (distort_thresh[i], 1.05f);
+    } else {
+        /* CBR/ABR modes */
+        if (!gfp->experimentalY) {
+            for (i = 0; i < 4; i++) 
+                if (distort_thresh[i] > 1.0f) 
+                    /* only bands with distortion at least 25% of maximum */
+                    distort_thresh[i] = pow (distort_thresh[i], 0.25f);
+                else 
+                    /* amplify only bands near 95% of maximum noise */
+                    distort_thresh[i] = pow (distort_thresh[i], 1.05f);
+        }   /* else only maximum distorted bands */
     }
-  
-    /*  amplify distorted bands in long block
+   
+    
+    /*  amplify bands exceeding thresholds
      */
     for (sfb = 0; sfb < cod_info->sfb_lmax; sfb++) {
-        if (distort[0][sfb] >= distort_thresh[0]
-         &&(sfb == max_ind[0] || !gfp->experimentalY))
-        {
+        if (distort[0][sfb] >= distort_thresh[0]) {
             scalefac->l[sfb]++;
             start = gfc->scalefac_band.l[sfb];
             end   = gfc->scalefac_band.l[sfb+1];
@@ -547,17 +552,12 @@ void amp_scalefac_bands
                 xrpow[l] *= ifqstep34;
         }
     }
-    
-    /*  amplify distorted bands in short blocks
-     */
     for (j = 0, sfb = cod_info->sfb_smin; sfb < 12; sfb++ ) {
         start = gfc->scalefac_band.s[sfb];
         end   = gfc->scalefac_band.s[sfb+1];
         for (i = 0; i < 3; i++) {
-            int j2 = j;
-            if (distort[i+1][sfb] >= distort_thresh[i+1]
-             &&(sfb == max_ind[i+1] || !gfp->experimentalY))
-            {
+            int j2 = j, b = i+1;
+            if (distort[b][sfb] >= distort_thresh[b]) {
                 scalefac->s[sfb][i]++;
                 for (l = start; l < end; l++) 
                     xrpow[j2++] *= ifqstep34;
