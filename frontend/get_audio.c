@@ -475,6 +475,7 @@ int lame_decoder(lame_global_flags *gfp, FILE *outf,int skip, char *inPath, char
 	iread=get_audio(gfp,Buffer);  /* read in 'iread' samples */
 	mp3input_data.framenum += iread/mp3input_data.framesize;
 	wavsize += iread;
+
 	if (!silent)
             decoder_progress(gfp,&mp3input_data);
 	    
@@ -1198,6 +1199,7 @@ FILE * OpenSndFile(lame_global_flags *gfp, char *inPath)
    }
  }
 
+
   if (gfp->num_samples==MAX_U_32_NUM && musicin != stdin) {
     long flen = lame_get_file_size (inPath);      /* try to figure out num_samples */
 
@@ -1270,13 +1272,14 @@ static int is_syncword_mp3 ( const void* const headerptr )
 
 int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
 {
-  VBRTAGDATA pTagData;
+  //  VBRTAGDATA pTagData;
+  // int xing_header,len2,num_frames;
   unsigned char buf[100];
   int ret;
-  int num_frames=0;
-  int len,len2,xing_header,aid_header;
+  int len,aid_header;
   short int pcm_l[1152],pcm_r[1152];
 
+  memset(mp3data,0,sizeof(mp3data_struct));
   lame_decode_init();
 
   len=4;
@@ -1304,7 +1307,7 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
   }
 
 
-  
+#if 0  
   /* buffer 48 bytes so we can check for Xing header */
   len2 = fread(&buf[len],1,48-len,fd);
   if (len2 != 48-len ) return -1;
@@ -1332,7 +1335,7 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
       len -= 44;
     }
   }
-
+#endif
 
   // now parse the current buffer looking for MP3 headers 
   // we dont want to feed too much data to lame_decode1_headers -  
@@ -1342,8 +1345,6 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
   // now a moot point.
   ret = lame_decode1_headers(buf,len,pcm_l,pcm_r,mp3data);
   if (-1==ret) return -1;
-  if (ret>0 && !xing_header) 
-    fprintf(stderr,"Oops1: first frame of mpglib output will be lost \n"); 
 
   /* repeat until we decode a valid mp3 header */
   while (!mp3data->header_parsed) {
@@ -1351,16 +1352,21 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
     if (len != sizeof(buf) ) return -1;
     ret = lame_decode1_headers(buf,len,pcm_l,pcm_r,mp3data);
     if (-1==ret) return -1;
-
-    if (ret>0 && !xing_header)
-      fprintf(stderr,"Oops2: first frame of mpglib output will be lost \n"); 
-
   }
 
+
+#if 1
+  if (mp3data->totalframes>0) {
+    /* mpglib found a Xing VBR header and computed nsamp & totalframes */
+  }else{
+    mp3data->nsamp=MAX_U_32_NUM;
+  }
+#else
   mp3data->nsamp=MAX_U_32_NUM;
   if (xing_header && num_frames) {
     mp3data->nsamp=mp3data->framesize * num_frames;
   }
+#endif
 
 
   /*

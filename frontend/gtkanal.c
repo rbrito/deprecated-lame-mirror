@@ -49,7 +49,6 @@ plotting_data Pinfo[NUMPINFO];
 
 
 /* global variables for the state of the system */
-static int frameNum=0;
 static gint idle_keepgoing;        /* processing of frames is ON */
 static gint idle_count_max;   /* number of frames to process before plotting */
 static gint idle_count;       /* pause & plot when idle_count=idel_count_max */
@@ -111,10 +110,7 @@ int gtkmakeframe(void)
   int mp3out = 0;
   char mp3buffer[LAME_MAXMP3BUFFER];
   extern plotting_data *mpg123_pinfo;  
-
-
-  /* even if iread=0, get_audio hit EOF and returned Buffer=all 0's.  encode
-   * and  decode to flush any previous buffers from the decoder */
+  static int frameNum=0;
 
   pinfo->frameNum = frameNum;
   pinfo->sampfreq=gfp->out_samplerate;
@@ -131,18 +127,19 @@ int gtkmakeframe(void)
       input_format == sf_mp2 ||
       input_format == sf_mp3) {
     iread = get_audio(gfp,Buffer);
-    ++frameNum;
+
 
     /* add a delay of framesize-DECDELAY, which will make the total delay
      * exactly one frame, so we can sync MP3 output with WAV input */
     for ( ch = 0; ch < gfc->channels_out; ch++ ) {
       for ( j = 0; j < gfp->framesize-DECDELAY; j++ )
-	gfc->pinfo->pcmdata2[ch][j] = gfc->pinfo->pcmdata2[ch][j+gfp->framesize];
+	pinfo->pcmdata2[ch][j] = pinfo->pcmdata2[ch][j+gfp->framesize];
       for ( j = 0; j < gfp->framesize; j++ )
-	gfc->pinfo->pcmdata2[ch][j+gfp->framesize-DECDELAY] = Buffer[ch][j];
+	pinfo->pcmdata2[ch][j+gfp->framesize-DECDELAY] = Buffer[ch][j];
     }
 
-    gfc->pinfo->frameNum123 = frameNum-1;
+    pinfo->frameNum123 = frameNum-1;
+    ++frameNum;
 
   }else {
 
