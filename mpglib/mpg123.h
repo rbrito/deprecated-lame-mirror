@@ -86,12 +86,6 @@ struct frame {
 
 };
 
-/* extern unsigned int   get1bit(void); */
-extern int set_pointer(long);
-
-extern unsigned char *wordpointer;
-extern int bitindex;
-
 struct gr_info_s {
       int scfsi;
       unsigned part2_3_length;

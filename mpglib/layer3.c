@@ -11,8 +11,6 @@
 #include "lame-analysis.h"
 
 
-extern struct mpstr *gmp;
-
 #define MPEG1
 
 

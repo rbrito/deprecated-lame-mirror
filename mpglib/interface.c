@@ -15,10 +15,6 @@
 #endif
 
 
-/* Global mp .. it's a hack */
-struct mpstr *gmp;
-
-
 BOOL InitMP3(struct mpstr *mp) 
 {
 	memset(mp,0,sizeof(struct mpstr));
@@ -479,19 +475,4 @@ int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
 }
 
 	
-int set_pointer(long backstep)
-{
-  unsigned char *bsbufold;
-
-  if(gmp->fsizeold < 0 && backstep > 0) {
-    fprintf(stderr,"Can't step back %ld!\n",backstep);
-    return MP3_ERR; 
-  }
-  bsbufold = gmp->bsspace[1-gmp->bsnum] + 512;
-  wordpointer -= backstep;
-  if (backstep)
-    memcpy(wordpointer,bsbufold+gmp->fsizeold-backstep,(size_t)backstep);
-  bitindex = 0;
-  return MP3_OK;
-}
 

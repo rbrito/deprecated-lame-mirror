@@ -25,16 +25,23 @@
 
 extern const int  tabsel_123[2][3][16];
 extern const long freqs[9];
+extern unsigned char *wordpointer;
+extern int bitindex;
+
+
+extern struct mpstr *gmp;
+
 
 #if defined( USE_LAYER_1 ) || defined ( USE_LAYER_1 )
   extern real muls[27][64];
 #endif
 
-int head_check(unsigned long head);
-int decode_header(struct frame *fr,unsigned long newhead);
+int  head_check(unsigned long head);
+int  decode_header(struct frame *fr,unsigned long newhead);
 void print_header(struct frame *fr);
 void print_header_compact(struct frame *fr);
 unsigned int getbits(int number_of_bits);
 unsigned int getbits_fast(int number_of_bits);
+int  set_pointer(long);
 
 #endif

@@ -18,11 +18,9 @@
 #endif
 #include <string.h>
 
-#include "mpg123.h"
-#include "mpglib.h"
+#include "common.h"
 #include "tabinit.h"
 
-extern struct mpstr *gmp;
 
  /* old WRITE_SAMPLE */
 #define WRITE_SAMPLE(samples,sum,clip) \
