@@ -16,6 +16,7 @@ EXTRA_DIST = \
 	lame_vc6.dsp \
 	mp3x.dsp \
 	mp3x.dsw \
+	mp3x_vc6.dsp \
 	amiga_mpega.c
 
 DEFS = @DEFS@ @CONFIG_DEFS@
