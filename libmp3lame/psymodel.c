@@ -1088,6 +1088,55 @@ int L3psycho_anal( lame_global_flags * gfp,
   return 0;
 }
 
+
+
+/* mask_add optimization */
+/* init the limit values used to avoid computing log in mask_add when it is not necessary */
+
+/* For example, with i = 10*log10(m2/m1)/10*16         (= log10(m2/m1)*16)
+ *
+ * abs(i)>8 is equivalent (as i is an integer) to
+ * abs(i)>=9
+ * i>=9 || i<=-9
+ * equivalent to (as i is the biggest integer smaller than log10(m2/m1)*16 
+ * or the smallest integer bigger than log10(m2/m1)*16 depending on the sign of log10(m2/m1)*16)
+ * log10(m2/m1)>=9/16 || log10(m2/m1)<=-9/16
+ * exp10 is strictly increasing thus this is equivalent to
+ * m2/m1 >= 10^(9/16) || m2/m1<=10^(-9/16) which are comparisons to constants
+ */
+
+
+#define I1LIMIT 8   /* as in if(i>8)  */ 
+#define I2LIMIT 24  /* as in if(i>24) */ 
+#define MLIMIT  15  /* as in if(m<15) */ 
+
+static FLOAT8 ma_max_i1;
+static FLOAT8 ma_min_i1;
+static FLOAT8 ma_max_i2;
+static FLOAT8 ma_min_i2;
+static FLOAT8 ma_max_m;
+
+
+
+void init_mask_add_max_values(void)
+{
+  static int init=0;
+
+  if(!init) {
+    ma_max_i1 = pow(10,(I1LIMIT+1)/16.0);
+    ma_min_i1 = pow(10,-(I1LIMIT+1)/16.0);
+    ma_max_i2 = pow(10,(I2LIMIT+1)/16.0);
+    ma_min_i2 = pow(10,-(I2LIMIT+1)/16.0);
+    ma_max_m  = pow(10,(MLIMIT)/10.0);
+    init = 1;
+  }
+}
+
+
+
+
+
+
 /* addition of simultaneous masking   Naoki Shibata 2000/7 */
 inline static FLOAT8 mask_add(FLOAT8 m1,FLOAT8 m2,int k,int b, lame_internal_flags * const gfc)
 {
@@ -1111,34 +1160,83 @@ inline static FLOAT8 mask_add(FLOAT8 m1,FLOAT8 m2,int k,int b, lame_internal_fla
 
   int i;
   FLOAT8 m;
+  FLOAT ratio;
 
   if (m1 == 0) return m2;
 
+  ratio = m2/m1;
+
   if (b < 0) b = -b;
 
-  i = 10*log10(m2 / m1)/10*16;
-  m = 10*log10((m1+m2)/gfc->ATH->cb[k]);
+  /*i = abs(10*log10(m2 / m1)/10*16);
+  m = 10*log10((m1+m2)/gfc->ATH->cb[k]);*/
 
-  if (i < 0) i = -i;
+
+  /* Should always be true, just checking */
+  assert(m1>=0);
+  assert(m2>=0);
+  assert(gfc->ATH->cb[k]>=0);
+
 
   if (b <= 3) {  /* approximately, 1 bark = 3 partitions */
-    if (i > 8) return m1+m2;
+    /* 65% of the cases */
+
+    /* originally 'if(i > 8)' */
+    if(ratio>=ma_max_i1 || ratio <=ma_min_i1) {
+      /* 43% of the total */
+      return m1+m2;
+    }
+
+    /* 22% of the total */
+    i = fabs(FAST_LOG10(ratio))*16;
+    if (i > I1LIMIT)
+      return m1+m2; /* just in case  8.99999 <= log10(m2/m1)*16 < 9 */
+
     return (m1+m2)*table2[i];
   }
 
-  if (m<15) {
-    if (m > 0) {
+
+  /* m<15 equ log10((m1+m2)/gfc->ATH->cb[k])<1.5
+   * equ (m1+m2)/gfc->ATH->cb[k]<10^1.5
+   * equ (m1+m2)<10^1.5 * gfc->ATH->cb[k]
+   */
+
+  if((m1+m2)<ma_max_m*gfc->ATH->cb[k])  {
+    /* 3% of the total */
+    i = fabs(FAST_LOG10(ratio))*16;
+
+    /* Originally if (m > 0) { */
+    if(m1+m2>gfc->ATH->cb[k]) {
       FLOAT8 f=1.0,r;
+
       if (i > 24) return m1+m2;
+
       if (i > 13) f = 1; else f = table3[i];
+
+      m = 10*FAST_LOG10((m1+m2)/gfc->ATH->cb[k]);
       r = (m-0)/15;
+
       return (m1+m2)*(table1[i]*r+f*(1-r));
     }
+
     if (i > 13) return m1+m2;
+
     return (m1+m2)*table3[i];
   }
 
-  if (i > 24) return m1+m2;
+
+  /* orginally 'if (i > 24) {' */
+  if(ratio>=ma_max_i2 || ratio <=ma_min_i2) {
+    /* 22% of total */
+    return m1+m2;
+  }
+
+  
+  /* 10% of total */
+  i = fabs(FAST_LOG10(ratio))*16;
+  if (i > I2LIMIT)
+    return m1+m2; /* just in case... */
+
   return (m1+m2)*table1[i];
 }
 
@@ -1151,7 +1249,7 @@ inline FLOAT8 NS_INTERP(FLOAT8 x, FLOAT8 y, FLOAT8 r)
         return x;              /* 99.7% of the time */ 
     if(y!=0.0)
         return pow(x/y,r)*y;   /* rest of the time */ 
-    return 0.0;                       /* never happens */ 
+    return 0.0;                /* never happens */ 
 }
 
 
@@ -1233,25 +1331,36 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
       -8.65163e-18,
     };
 
-    for(chn=0;chn<gfc->channels_out;chn++)
-      {
-	FLOAT firbuf[576+576/3+NSFIRLEN];
+    /* Don't copy the input buffer into a temporary buffer */
+    /* unroll the loop 4 times */
+    for(chn=0;chn<gfc->channels_out;chn++) {
+      
+      /* apply high pass filter of fs/4 */
+      const sample_t * const firbuf = &buffer[chn][576-350-NSFIRLEN];
 
-	/* apply high pass filter of fs/4 */
-	
-	for(i=-NSFIRLEN;i<576+576/3;i++)
-	  firbuf[i+NSFIRLEN] = buffer[chn][576-350+(i)];
+      for(i=0;i<576+576/3-NSFIRLEN;i++) {
+        FLOAT sum1 = 0, sum2=0, sum3=0, sum4=0;
+        
+        /* align on 4 */
+        for(j=0;j<(NSFIRLEN%4);j++)
+          sum1 += fircoef[j] * firbuf[i+j];
 
-	for(i=0;i<576+576/3-NSFIRLEN;i++)
-          {
-	    FLOAT sum = 0;
-	    for(j=0;j<NSFIRLEN;j++)
-	      sum += fircoef[j] * firbuf[i+j];
-	    ns_hpfsmpl[chn][i] = sum;
-	  }
-	for(;i<576+576/3;i++)
-	  ns_hpfsmpl[chn][i] = 0;
+        /* aligned on 4 */
+        for(;j<NSFIRLEN;j+=4) {
+          sum1 += fircoef[j] * firbuf[i+j];
+          sum2 += fircoef[j+1] * firbuf[i+j+1];
+          sum3 += fircoef[j+2] * firbuf[i+j+2];
+          sum4 += fircoef[j+3] * firbuf[i+j+3];
+        }
+
+        ns_hpfsmpl[chn][i] = sum1+sum2+sum3+sum4;
+
       }
+
+      for(;i<576+576/3;i++)
+        ns_hpfsmpl[chn][i] = 0;
+    }
+
 
     if (gfp->mode == JOINT_STEREO) {
       for(i=0;i<576+576/3;i++)
@@ -1437,8 +1546,8 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	    }
 	  }
  
-	a /= c1;
-	tonality2[b] = a == 0 ? 0 : (m / a - 1)/(c2-1);
+  if(a) tonality2[b] = (m*c1-a) / (a*(c2-1));
+    else  tonality2[b] = 0;
       }
 
     if (gfc->nsPsy.use2) {
@@ -2409,6 +2518,9 @@ int psymodel_init(lame_global_flags *gfp)
     FLOAT8 s3_s[CBANDS][CBANDS];
     FLOAT8 s3_l[CBANDS][CBANDS];
     int numberOfNoneZero;
+
+
+    init_mask_add_max_values();
 
     samplerate = gfp->out_samplerate;
     gfc->ms_ener_ratio_old=.25;
