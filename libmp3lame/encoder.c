@@ -530,6 +530,30 @@ int  lame_encode_mp3_frame (				// Output
       pe_use = &pe;
   }
 
+
+#if defined(HAVE_GTK)
+  /* copy data for MP3 frame analyzer */
+  if (gfp->analysis && gfc->pinfo != NULL) {
+    for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
+      for ( ch = 0; ch < gfc->channels_out; ch++ ) {
+	gfc->pinfo->ms_ratio[gr]=gfc->ms_ratio[gr];
+	gfc->pinfo->ms_ener_ratio[gr]=ms_ener_ratio[gr];
+	gfc->pinfo->blocktype[gr][ch]=gfc->l3_side.tt[gr][ch].block_type;
+	gfc->pinfo->pe[gr][ch]=(*pe_use)[gr][ch];
+	memcpy(gfc->pinfo->xr[gr][ch], &gfc->l3_side.tt[gr][ch].xr,
+	       sizeof(FLOAT8)*576);
+	/* in psymodel, LR and MS data was stored in pinfo.  
+	   switch to MS data: */
+	if (gfc->mode_ext==MPG_MD_MS_LR) {
+	  gfc->pinfo->ers[gr][ch]=gfc->pinfo->ers[gr][ch+2];
+	  memcpy(gfc->pinfo->energy[gr][ch],gfc->pinfo->energy[gr][ch+2],
+		 sizeof(gfc->pinfo->energy[gr][ch]));
+	}
+      }
+    }
+  }
+#endif
+
   if (gfc->nsPsy.use && (gfp->VBR == vbr_off || gfp->VBR == vbr_abr)) {
     static FLOAT fircoef[19] = {
       -0.0207887,-0.0378413,-0.0432472,-0.031183,
@@ -591,26 +615,7 @@ int  lame_encode_mp3_frame (				// Output
 
 
 #if defined(HAVE_GTK)
-  /* copy data for MP3 frame analyzer */
   if (gfp->analysis && gfc->pinfo != NULL) {
-    for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
-      for ( ch = 0; ch < gfc->channels_out; ch++ ) {
-	gfc->pinfo->ms_ratio[gr]=gfc->ms_ratio[gr];
-	gfc->pinfo->ms_ener_ratio[gr]=ms_ener_ratio[gr];
-	gfc->pinfo->blocktype[gr][ch]=gfc->l3_side.tt[gr][ch].block_type;
-	memcpy(gfc->pinfo->xr[gr][ch], &gfc->l3_side.tt[gr][ch].xr,
-	       sizeof(FLOAT8)*576);
-	/* in psymodel, LR and MS data was stored in pinfo.  
-	   switch to MS data: */
-	if (gfc->mode_ext==MPG_MD_MS_LR) {
-	  gfc->pinfo->pe[gr][ch]=gfc->pinfo->pe[gr][ch+2];
-	  gfc->pinfo->ers[gr][ch]=gfc->pinfo->ers[gr][ch+2];
-	  memcpy(gfc->pinfo->energy[gr][ch],gfc->pinfo->energy[gr][ch+2],
-		 sizeof(gfc->pinfo->energy[gr][ch]));
-	}
-      }
-    }
-
     for ( ch = 0; ch < gfc->channels_out; ch++ ) {
       int j;
       for ( j = 0; j < FFTOFFSET; j++ )
