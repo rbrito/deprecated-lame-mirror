@@ -474,7 +474,7 @@ quant_compare(
 
     switch (experimentalX) {
         default:
-        case 0: 
+        case 0:
 	    better = calc->over_count  < best->over_count
                ||  ( calc->over_count == best->over_count  &&
                      calc->over_noise  < best->over_noise )
@@ -486,23 +486,21 @@ quant_compare(
         case 8:
 	    calc->max_noise = get_klemm_noise(distort, gi);
 	    /* pass through */
-        case 1: 
+        case 1:
 	    better = calc->max_noise < best->max_noise; 
 	    break;
-        case 2: 
+        case 2:
 	    better = calc->tot_noise < best->tot_noise; 
 	    break;
         case 3:
-	    better = ( calc->tot_noise <
-		       (gfc->presetTune.use &&
-			gi->block_type != NORM_TYPE ? (best->tot_noise - gfc->presetTune.quantcomp_adjust_rh_tot)
-			:  best->tot_noise ) &&
-		       calc->max_noise <
-		       (gfc->presetTune.use && gi->block_type != NORM_TYPE
-			? best->max_noise - gfc->presetTune.quantcomp_adjust_rh_max
-			:  best->max_noise ));
+	    if (gfc->presetTune.use && gi->block_type != NORM_TYPE)
+		better = (calc->tot_noise < best->tot_noise - gfc->presetTune.quantcomp_adjust_rh_tot)
+		    && (calc->max_noise < best->max_noise - gfc->presetTune.quantcomp_adjust_rh_max);
+	    else 
+		better = (calc->tot_noise < best->tot_noise)
+		    &&   (calc->max_noise < best->max_noise);
 	    break;
-        case 4: 
+        case 4:
 	    better = ( calc->max_noise <= 0.0  &&
                        best->max_noise >  0.2 )
                  ||  ( calc->max_noise <= 0.0  &&
@@ -522,12 +520,12 @@ quant_compare(
                        best->max_noise >  calc->max_noise-0.15  &&
                        calc->tot_noise+calc->over_noise+calc->over_noise < best->tot_noise+best->over_noise+best->over_noise );
             break;
-        case 5: 
+        case 5:
 	    better =   calc->over_noise  < best->over_noise
                  ||  ( calc->over_noise == best->over_noise  &&
                        calc->tot_noise   < best->tot_noise ); 
 	    break;
-        case 6: 
+        case 6:
 	    better =   calc->over_noise  < best->over_noise
                  ||  ( calc->over_noise == best->over_noise  &&
                      ( calc->max_noise   < best->max_noise  
@@ -535,7 +533,7 @@ quant_compare(
                            calc->tot_noise  <= best->tot_noise )
 		      )); 
 	    break;
-        case 7: 
+        case 7:
 	    better =   calc->over_count < best->over_count
                    ||  calc->over_noise < best->over_noise; 
 	    break;
