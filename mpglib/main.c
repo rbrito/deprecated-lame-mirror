@@ -13,6 +13,7 @@
 #include "../VbrTag.h"
 #endif 
 
+#include <limits.h>
 #include <stdlib.h>
 
 static char buf[16384];
@@ -161,7 +162,7 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
   mp3data->stereo = mp.fr.stereo;
   mp3data->samplerate = freqs[mp.fr.sampling_frequency];
   mp3data->bitrate = tabsel_123[mp.fr.lsf][mp.fr.lay-1][mp.fr.bitrate_index];
-  mp3data->nsamp=MAX_U_32_NUM;
+  mp3data->nsamp=ULONG_MAX;
 
   framesize = smpls[mp.fr.lsf][mp.fr.lay];
   if (xing_header && num_frames) {

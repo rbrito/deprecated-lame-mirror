@@ -77,9 +77,11 @@
 
 /* "bit_stream.h" Definitions */
 
-#define         MINIMUM         4    /* Minimum size of the buffer in bytes */
-#define         MAX_LENGTH      32   /* Maximum length of word written or
-                                        read from bit stream */
+// BITSINABYTE is wrong, MINIMUM not used, MAX_LENGTH redefined in bitstream.h
+
+//#define         MINIMUM         4    /* Minimum size of the buffer in bytes */
+//#define         MAX_LENGTH      32   /* Maximum length of word written or
+//                                        read from bit stream */
 #define         BUFFER_SIZE     LAME_MAXMP3BUFFER 
 
 #define         Min(A, B)       ((A) < (B) ? (A) : (B))

@@ -191,6 +191,10 @@ typedef struct  {
   /************************************************************************/
   void *internal_flags;
 
+#ifndef I_HAVE_NEVER_SEEN_LAME_ON_A_486_100_OR_A_ATHLON_1000
+  float update_interval;
+#endif
+
 } lame_global_flags;
 
 

@@ -1,10 +1,12 @@
 #include <stdio.h>
+#include <limits.h>
 #include <assert.h>
 #include "util.h"
 #include "get_audio.h"
 #include "portableio.h"
 #include "gtkanal.h"
 #include "timestatus.h"
+
 
 #if (defined LIBSNDFILE || defined LAMESNDFILE)
 
@@ -131,7 +133,8 @@ int get_audio(lame_global_flags *gfp,short buffer[2][1152],int stereo)
   }
 
   /* dont count things in this case to avoid overflows */
-  if (gfp->num_samples!=MAX_U_32_NUM) gfc->num_samples_read += samples_read;
+  // useless, for other solution see pfk1 tree 
+  // if (gfp->num_samples!=MAX_U_32_NUM) gfc->num_samples_read += samples_read;
   return(samples_read);
 
 }
@@ -542,7 +545,7 @@ FILE * OpenSndFile(lame_global_flags *gfp)
     gfc->pcmbitwidth=gs_wfInfo.pcmbitwidth;
   }
 
-  if (gfp->num_samples==MAX_U_32_NUM) {
+  if (gfp->num_samples == ULONG_MAX) {  // may be changed to support > 4 GByte and a less difficult program
     struct stat sb;
 #ifdef __riscos__
     _kernel_swi_regs reg;
@@ -820,9 +823,9 @@ aiff_check2(const char *file_name, IFF_AIFF *pcm_aiff_data)
 	   LAME_ERROR_EXIT();
 	}
 
-	if (pcm_aiff_data->sampleSize != sizeof(short) * BITS_IN_A_BYTE) {
+	if (pcm_aiff_data->sampleSize != sizeof(short) * CHAR_BIT) {
 		ERRORF("Sound data is not %d bits in \"%s\".\n",
-				(unsigned int) sizeof(short) * BITS_IN_A_BYTE, file_name);
+				(unsigned int) sizeof(short) * CHAR_BIT, file_name);
 		LAME_ERROR_EXIT();
 	}
 
@@ -1013,7 +1016,7 @@ FILE * OpenSndFile(lame_global_flags *gfp)
   mp3data_struct mp3data;
 
   /* set the defaults from info incase we cannot determine them from file */
-  gfp->num_samples=MAX_U_32_NUM;
+  gfp->num_samples=ULONG_MAX;  // or UINT32_MAX?
   gfc->input_bitrate=0;
 
 
@@ -1084,7 +1087,7 @@ FILE * OpenSndFile(lame_global_flags *gfp)
    }
  }
 
-  if (gfp->num_samples==MAX_U_32_NUM && musicin != stdin) {
+  if (gfp->num_samples==ULONG_MAX && musicin != stdin) {
 #ifdef __riscos__
     _kernel_swi_regs reg;
 #endif
@@ -1118,3 +1121,10 @@ FILE * OpenSndFile(lame_global_flags *gfp)
 #endif  /* LAMESNDFILE */
 
 
+/*
+   Remark for MT: number of samples should be count in a >32 bit variable
+   (64 bit int is fine, 64 bit double is portable). Rounding should be done at the end.
+   So you only need one place to handle num_samples overruns. Do every thing at one place.
+   Overruns of double or uint64 are very unlikely, you need at least 11900 years of music.
+   May be this is possible (studio archive), but not in ONE file.
+ */

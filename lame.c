@@ -20,14 +20,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
+#include <limits.h>
 #include <assert.h>
 #include <time.h>
-#ifdef __unix__
-   #include <sys/time.h>
-   #include <unistd.h>
-#endif
-
+#include "lametime.h"
 
 #include "gtkanal.h"
 #include "lame.h"
@@ -656,6 +652,11 @@ int lame_init_params(lame_global_flags *gfp)
   }
 #endif
 
+#ifndef I_HAVE_NEVER_SEEN_LAME_ON_A_486_100_OR_A_ATHLON_1000
+  if ( gfp -> update_interval  <= 0. )
+      gfp -> update_interval = 2.;
+#endif      
+
   return 0;
 }
 
@@ -938,6 +939,7 @@ char *mp3buf, int mp3buf_size)
 
 
   /********************** status display  *****************************/
+#ifdef I_HAVE_NEVER_SEEN_LAME_ON_A_486_100_OR_A_ATHLON_1000
   if (!gfp->silent) {
     int mod = gfp->version == 0 ? 100 : 50;
     if (gfp->frameNum%mod==0) {
@@ -948,6 +950,30 @@ char *mp3buf, int mp3buf_size)
 
     }
   }
+#else
+
+#ifndef MY_PREFERED_UPDATE_STEP
+# define MY_PREFERED_UPDATE_STEP 1
+#endif
+
+    if (! gfp -> silent) {
+        if ( gfp -> frameNum ==  0  ||  
+             gfp -> frameNum == 10  || 
+             gfp -> frameNum % MY_PREFERED_UPDATE_STEP == 0  &&
+	     ( GetRealTime () - gfc -> last_time >= gfp -> update_interval  ||
+               GetRealTime ()                    <  gfp -> update_interval ) ) {
+            timestatus ( gfp -> out_samplerate, 
+                         gfp -> frameNum, 
+                         gfp -> totalframes, 
+                         gfp -> framesize );
+
+            if ( gfp -> brhist_disp )
+	        brhist_disp ( gfp -> totalframes );
+	        
+	    gfc -> last_time = GetRealTime ();  /* from now! disp_time seconds */
+        }
+  }
+#endif
 
 
   if (gfc->psymodel) {
@@ -1598,7 +1624,7 @@ int lame_init(lame_global_flags *gfp)
   gfp->in_samplerate=1000*44.1;
   gfp->out_samplerate=0;
   gfp->num_channels=2;
-  gfp->num_samples=MAX_U_32_NUM;
+  gfp->num_samples=ULONG_MAX;
 
   gfp->allow_diff_short=0;
   gfp->ATHonly=0;

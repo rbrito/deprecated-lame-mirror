@@ -408,6 +408,7 @@ c_sources_s = \
         id3tag.c \
 	ieeefloat.c \
         lame.c \
+        lametime.c \
         newmdct.c \
         parse.c \
 	portableio.c \
