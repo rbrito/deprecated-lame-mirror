@@ -3,7 +3,7 @@
 /* debug define */
 #undef ABORTFP
 
-/* double is faster than float on Alpha */
+/* use double instead of float */
 #undef ALLDOUBLE
 
 /* enable VBR bitrate histogram */
@@ -120,6 +120,9 @@
 
 /* Define to 1 if you have the <term.h> header file. */
 #undef HAVE_TERM_H
+
+/* Define to 1 if you have the <tgmath.h> header file. */
+#undef HAVE_TGMATH_H
 
 /* add uint16_t type */
 #undef HAVE_UINT16_T
