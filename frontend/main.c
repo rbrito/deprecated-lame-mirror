@@ -53,6 +53,7 @@
 #include "parse.h"
 #include "main.h"
 #include "get_audio.h"
+#include "bitstream.h"
 #include "timestatus.h"
 
 /* PLL 14/04/2000 */
@@ -94,8 +95,6 @@ int main(int argc, char **argv)
 #if macintosh
   argc = ccommand(&argv);
 #endif
-
-  extern void main_CRC_init (void);
 
   main_CRC_init ();  /* ulgy, it's C, not Ada, C++ or Modula */
   
