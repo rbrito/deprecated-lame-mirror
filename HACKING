@@ -29,7 +29,7 @@ lame_encode_buffer() handles buffering and resampling, and
 then calls lame_encode_frame() for each frame.  lame_encode_frame()
 looks like this:
 
-lame_encode_frame():
+lame_encode_frame_mp3():
    l3psycho_anal()        compute masking thresholds
    mdct_sub()             compute MDCT coefficients
    iteration_loop()       choose scalefactors (via iteration)

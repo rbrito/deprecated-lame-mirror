@@ -108,14 +108,18 @@ int gtkmakeframe(void)
   int ch,j;
   int mp3count = 0;
   int mp3out = 0;
+  int channels_out;
   char mp3buffer[LAME_MAXMP3BUFFER];
   extern plotting_data *mpg123_pinfo;  
   static int frameNum=0;
+  int framesize = lame_get_framesize(gfp);
+
+  channels_out = (lame_get_mode(gfp)==MONO) ? 1 : 2;
 
   pinfo->frameNum = frameNum;
   pinfo->sampfreq = lame_get_out_samplerate ( gfp );
-  pinfo->framesize=576*gfc->mode_gr;
-  pinfo->stereo = gfc->channels_out;
+  pinfo->framesize= framesize;
+  pinfo->stereo = channels_out;
 
   /* If the analsys code is enabled, lame will writes data into gfc->pinfo,
    * and mpg123 will write data into mpg123_pinfo.  Set these so
@@ -131,11 +135,11 @@ int gtkmakeframe(void)
 
     /* add a delay of framesize-DECDELAY, which will make the total delay
      * exactly one frame, so we can sync MP3 output with WAV input */
-    for ( ch = 0; ch < gfc->channels_out; ch++ ) {
-      for ( j = 0; j < gfp->framesize-DECDELAY; j++ )
-	pinfo->pcmdata2[ch][j] = pinfo->pcmdata2[ch][j+gfp->framesize];
-      for ( j = 0; j < gfp->framesize; j++ )
-	pinfo->pcmdata2[ch][j+gfp->framesize-DECDELAY] = Buffer[ch][j];
+    for ( ch = 0; ch < channels_out; ch++ ) {
+      for ( j = 0; j < framesize-DECDELAY; j++ )
+	pinfo->pcmdata2[ch][j] = pinfo->pcmdata2[ch][j+framesize];
+      for ( j = 0; j < framesize; j++ )
+	pinfo->pcmdata2[ch][j+framesize-DECDELAY] = Buffer[ch][j];
     }
 
     pinfo->frameNum123 = frameNum-1;
@@ -153,7 +157,7 @@ int gtkmakeframe(void)
       }
       
       iread = get_audio16(gfp,Buffer);
-      if (iread > gfp->framesize) {
+      if (iread > framesize) {
 	/* NOTE: frame analyzer requires that we encode one frame 
 	 * for each pass through this loop.  If lame_encode_buffer()
 	 * is feed data too quickly, it will sometimes encode multiple frames

@@ -301,11 +301,11 @@ get_audio_common( lame_global_flags * const gfp,
     /* 
      * NOTE: LAME can now handle arbritray size input data packets,
      * so there is no reason to read the input data in chuncks of
-     * size "gfp->framesize".  EXCEPT:  the LAME graphical frame analyzer 
+     * size "framesize".  EXCEPT:  the LAME graphical frame analyzer 
      * will get out of sync if we read more than framesize worth of data.
      */
 
-    samples_to_read = framesize = gfp->framesize;
+    samples_to_read = framesize = lame_get_framesize(gfp);
     assert(framesize <= 1152);
 
     /* get num_samples */
@@ -538,17 +538,17 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath,
     switch (input_format) {
     case sf_mp3:
         skip += 528 + 1; /* mp3 decoder has a 528 sample delay, plus user supplied "skip" */
-        fprintf(stderr, "MPEG-%u%s Layer %s", 2 - gfp->version,
+        fprintf(stderr, "MPEG-%u%s Layer %s", 2 - lame_get_version(gfp),
                 lame_get_out_samplerate( gfp ) < 16000 ? ".5" : "", "III");
         break;
     case sf_mp2:
         skip += 240 + 1;
-        fprintf(stderr, "MPEG-%u%s Layer %s", 2 - gfp->version,
+        fprintf(stderr, "MPEG-%u%s Layer %s", 2 - lame_get_version(gfp),
                 lame_get_out_samplerate( gfp ) < 16000 ? ".5" : "", "II");
         break;
     case sf_mp1:
         skip += 240 + 1;
-        fprintf(stderr, "MPEG-%u%s Layer %s", 2 - gfp->version,
+        fprintf(stderr, "MPEG-%u%s Layer %s", 2 - lame_get_version(gfp),
                 lame_get_out_samplerate( gfp ) < 16000 ? ".5" : "", "I");
         break;
     case sf_ogg:

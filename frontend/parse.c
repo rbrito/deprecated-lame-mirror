@@ -197,7 +197,7 @@ int  short_help ( const lame_global_flags* gfp, FILE* const fp, const char* Prog
               "\n"
               "    --longhelp      full list of options\n"
               "\n",
-              ProgramName, gfp->VBR_q );
+              ProgramName, lame_get_VBR_q(gfp) );
  
     return 0;
 }
@@ -304,7 +304,8 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    -F              strictly enforce the -b option, for use with players that\n"
               "                    do not support low bitrate mp3 (Apex AD600-A DVD/mp3 player)\n"
               "    -t              disable writing Xing VBR informational tag\n"
-              "    --nohist        disable VBR histogram display", gfp->VBR_q );
+              "    --nohist        disable VBR histogram display", 
+                                                     lame_get_VBR_q(gfp) );
   
     wait_for ( fp, lessmode );  
     fprintf ( fp,
@@ -691,13 +692,13 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
                         resample_rate ( atof (nextArg) ) );
 		
 		T_ELIF ("vbr-old")
-		    gfp->VBR = vbr_rh; 
+		    lame_set_VBR(gfp,vbr_rh); 
 		
 		T_ELIF ("vbr-new")
-		    gfp->VBR = vbr_mt; 
+		    lame_set_VBR(gfp,vbr_mt); 
 		
 		T_ELIF ("vbr-mtrh")
-		    gfp->VBR = vbr_mtrh; 
+		    lame_set_VBR(gfp,vbr_mtrh); 
 
 		T_ELIF ("r3mix")
             gfp->VBR = vbr_rh; 
@@ -1162,13 +1163,13 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 			break;
 		    case 'X':        
 			argUsed = 1;   
-			gfp->experimentalX = atoi(arg); 
+			lame_set_experimentalX(gfp,atoi(arg)); 
 			break;
 		    case 'Y': 
-			gfp->experimentalY = 1;
+			lame_set_experimentalY(gfp,1);
 			break;
 		    case 'Z': 
-			gfp->experimentalZ = 1;
+			lame_set_experimentalZ(gfp,1);
 			break;
 #if defined(HAVE_GTK)
 		    case 'g': /* turn on gtk analysis */
@@ -1179,19 +1180,19 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 			argUsed = 1;
 			
 			switch (*arg) {
-			case 'n': (void) lame_set_emphasis( gfp, 0 ); break;
-			case '5': (void) lame_set_emphasis( gfp, 1 ); break;
-			case 'c': (void) lame_set_emphasis( gfp, 3 ); break;
+			case 'n': lame_set_emphasis( gfp, 0 ); break;
+			case '5': lame_set_emphasis( gfp, 1 ); break;
+			case 'c': lame_set_emphasis( gfp, 3 ); break;
 			default : fprintf(stderr,"%s: -e emp must be n/5/c not %s\n", ProgramName, arg );
 			    err = 1;
 			    break;
 			}
 			break;
 		    case 'c':   
-		        gfp->copyright = 1; 
+		        lame_set_copyright(gfp,1);
 		        break;
 		    case 'o':   
-		        gfp->original  = 0; 
+		        lame_set_original(gfp,0);
 		        break;
 			
 		    case '?':   
@@ -1278,8 +1279,8 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
     else 
         (void) lame_set_num_channels( gfp, 2 );
     
-    if ( gfp->free_format ) {
-	if ( gfp -> brate < 8  ||  gfp -> brate > 640 ) {
+    if ( lame_get_free_format(gfp) ) {
+	if ( lame_get_brate(gfp) < 8  ||  lame_get_brate(gfp) > 640 ) {
 	    fprintf(stderr,"For free format, specify a bitrate between 8 and 640 kbps\n");
 	    return -1;
 	}
