@@ -589,18 +589,18 @@ INLINE static void mdct_short(FLOAT8 *out, FLOAT8 *in)
     for ( l = 0; l < 3; l++ ) {
 	FLOAT tc0,tc1,tc2,ts0,ts1,ts2;
 
-	ts0 = in[5] * 1.907525191737280e-11; /* tritab_s[0] */
-	tc0 = in[3] * 1.907525191737280e-11; /* tritab_s[2] */
+	ts0 = (in[2] * win[SHORT_TYPE][0] - in[5]) * 1.907525191737280e-11; /* tritab_s[0] */
+	tc0 = (in[0] * win[SHORT_TYPE][2] - in[3]) * 1.907525191737280e-11; /* tritab_s[2] */
 	tc1 = ts0 + tc0;
 	tc2 = ts0 - tc0;
 
-	ts0 = in[2] * 1.907525191737280e-11; /* tritab_s[2] */
-	tc0 = in[0] * 1.907525191737280e-11; /* tritab_s[0] */
+	ts0 = (in[5] * win[SHORT_TYPE][0] + in[2]) * 1.907525191737280e-11; /* tritab_s[2] */
+	tc0 = (in[3] * win[SHORT_TYPE][2] + in[0]) * 1.907525191737280e-11; /* tritab_s[0] */
 	ts1 = ts0 + tc0;
 	ts2 =-ts0 + tc0;
 
-	tc0 = in[4] * 2.069978111953089e-11; /* tritab_s[1] */
-	ts0 = in[1] * 2.069978111953089e-11; /* tritab_s[1] */
+	tc0 = (in[1] * win[SHORT_TYPE][1] - in[4]) * 2.069978111953089e-11; /* tritab_s[1] */
+	ts0 = (in[4] * win[SHORT_TYPE][1] + in[1]) * 2.069978111953089e-11; /* tritab_s[1] */
 
 	out[3*0] = tc1 + tc0;
 	out[3*5] =-ts1 + ts0;
@@ -747,35 +747,32 @@ void mdct_sub48(lame_internal_flags *gfc,
 		  if (type == SHORT_TYPE) {
 		    for (k = 2; k >= 0; --k) {
 			FLOAT8 win1 = win[SHORT_TYPE][k];
-			FLOAT8 win2 = win[SHORT_TYPE][2-k];
-			FLOAT8 a, b;
 
-			a = gfc->sb_sample[ch][gr][k+6][band_swapped] * win1 -
+			work[k  ] =
+			    gfc->sb_sample[ch][gr][k+6][band_swapped] * win1 -
 			    gfc->sb_sample[ch][gr][11-k][band_swapped];
 
-			b = gfc->sb_sample[ch][gr][k+12][band_swapped] +
+			work[k+3] =
+			    gfc->sb_sample[ch][gr][k+12][band_swapped] +
 			    gfc->sb_sample[ch][gr][17-k][band_swapped] * win1;
 
-			work[k+3] = a * win2 - b;
-			work[k  ] = b * win2 + a;
 
-			a = gfc->sb_sample[ch][gr][k+12][band_swapped] * win1 -
+			work[k+6] =
+			    gfc->sb_sample[ch][gr][k+12][band_swapped] * win1 -
 			    gfc->sb_sample[ch][gr][17-k][band_swapped];
 
-			b = gfc->sb_sample[ch][1-gr][k][band_swapped] +
+			work[k+9] =
+			    gfc->sb_sample[ch][1-gr][k][band_swapped] +
 			    gfc->sb_sample[ch][1-gr][5-k][band_swapped] * win1;
 
-			work[k+9] = a * win2 - b;
-			work[k+6] = b * win2 + a;
 
-			a = gfc->sb_sample[ch][1-gr][k][band_swapped] * win1 -
+			work[k+12] =
+			    gfc->sb_sample[ch][1-gr][k][band_swapped] * win1 -
 			    gfc->sb_sample[ch][1-gr][5-k][band_swapped];
 
-			b = gfc->sb_sample[ch][1-gr][k+6][band_swapped] +
+			work[k+15] =
+			    gfc->sb_sample[ch][1-gr][k+6][band_swapped] +
 			    gfc->sb_sample[ch][1-gr][11-k][band_swapped] * win1;
-
-			work[k+15] = a * win2 - b;
-			work[k+12] = b * win2 + a;
 		    }
 		    mdct_short(mdct_enc, work);
 		  } else {
