@@ -35,9 +35,18 @@
 #include "util.h"
 #include "fft.h"
 
+#define TRI_SIZE (5-1) /* 1024 =  4**5 */
+
+static const FLOAT costab[TRI_SIZE*2] = {
+  9.238795325112867e-01, 3.826834323650898e-01,
+  9.951847266721969e-01, 9.801714032956060e-02,
+  9.996988186962042e-01, 2.454122852291229e-02,
+  9.999811752826011e-01, 6.135884649154475e-03
+};
+
 static INLINE void fht(lame_internal_flags *gfc, FLOAT *fz, int n)
 {
-    const FLOAT *tri = (const FLOAT *)&gfc->costab[0];
+    const FLOAT *tri = costab;
     int           k4;
     FLOAT *fi, *fn, *gi;
 
@@ -236,25 +245,18 @@ void fft_long( lame_internal_flags *gfc,
 
 void init_fft(lame_internal_flags *gfc)
 {
-    FLOAT *costab   = &gfc->costab[0];
     FLOAT *window   = &gfc->window[0];
     FLOAT *window_s = &gfc->window_s[0];
     int i;
 
-    FLOAT r = (FLOAT)(PI*0.125);
-    for (i = 0; i < TRI_SIZE; i++) {
-	costab[i*2  ] = cos(r);
-	costab[i*2+1] = sin(r);
-	r *= 0.25;
-    }
-
-    /*
-     * calculate HANN window coefficients 
-     */
     if (gfc->exp_nspsytune) {
       for (i = 0; i < BLKSIZE ; i++)
-	window[i] = 0.42-0.5*cos(2*PI*i/(BLKSIZE-1))+0.08*cos(4*PI*i/(BLKSIZE-1)); /* blackman window */
+	/* blackman window */
+	window[i] = 0.42-0.5*cos(2*PI*i/(BLKSIZE-1))+0.08*cos(4*PI*i/(BLKSIZE-1));
     } else {
+      /*
+       * calculate HANN window coefficients 
+       */
       for (i = 0; i < BLKSIZE ; i++)
 	window[i] = 0.5 * (1.0 - cos(2.0 * PI * (i + 0.5) / BLKSIZE));
     }
