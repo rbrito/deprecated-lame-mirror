@@ -43,8 +43,6 @@ On unix systems, they are set via ./configure.
 #define HAVE_MPGLIB   compile in mpglib's mp3 *decoding* capibility
 #define HAVE_VORBIS   compile in Vorbis decoding capibility
                       (you need libvorbis already built)
-#define HAVE_VORBIS_ENCODER  compile in Vorbis encoding capability
-                             (broken as of Jan 2001)
 #define NOANALYSIS   do not compile in hooks used by the 
                      MP3 frame analyzer.
 
