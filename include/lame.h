@@ -219,12 +219,86 @@ int CDECL lame_init_old(lame_global_flags *);
 /*
  * OPTIONAL:
  * set as needed to override defaults
- * NOTE:
- * these routines are not yet written
  */
+
+/********************************************************************
+ *  input stream description
+ ***********************************************************************/
+// number of samples.  default = 2^32-1  
+int CDECL lame_set_num_samples(lame_global_flags *, unsigned long);
+unsigned long CDECL lame_get_num_samples(lame_global_flags *);
+
+// input sample rate in Hz.  default = 44100hz
+int CDECL lame_set_in_samplerate(lame_global_flags *, int);
+int CDECL lame_get_in_samplerate(lame_global_flags *);
+
+// number of channels in input stream. default=2 
+int CDECL lame_set_num_channels(lame_global_flags *, int);
+int CDECL lame_get_num_channels(lame_global_flags *);
+
+// scale the input by this amount before encoding.  default=0 (disabled)
+// (not used by decoding routines)
+int CDECL lame_set_scale(lame_global_flags *, float);
+float CDECL lame_get_scale(lame_global_flags *);
+
+// output sample rate in Hz.  default = 0, which means LAME picks best value 
+// based on the amount of compression.  MPEG only allows:
+// MPEG1    32, 44.1,   48khz
+// MPEG2    16, 22.05,  24
+// MPEG2.5   8, 11.025, 12
+// (not used by decoding routines)
+int CDECL lame_set_out_samplerate(lame_global_flags *, int);
+int CDECL lame_get_out_samplerate(lame_global_flags *);
+
+
+/********************************************************************
+ *  general control parameters
+ ***********************************************************************/
+// 1=cause LAME to collect data for an MP3 frame analzyer. default=0
+int CDECL lame_set_analysis(lame_global_flags *, int);
+int CDECL lame_get_analysis(lame_global_flags *);
+
+// 1 = write a Xing VBR header frame.
+// default = 1 for VBR/ABR modes, 0 for CBR mode
+// this variable must have been added by a Hungarian notation Windows programmer :-)
+int CDECL lame_set_bWriteVbrTag(lame_global_flags *, int);
+int CDECL lame_get_bWriteVbrTag(lame_global_flags *);
+
+// 1=disable writing a wave header with *decoding*.  default=0
+int CDECL lame_set_disable_waveheader(lame_global_flags *, int);
+int CDECL lame_get_disable_waveheader(lame_global_flags *);
+
+// 1=decode only.  use lame/mpglib to convert mp3/ogg to wav.  default=0
+int CDECL lame_set_decode_only(lame_global_flags *, int);
+int CDECL lame_get_decode_only(lame_global_flags *);
+
+// 1=encode a Vorbis .ogg file.  default=0
+int CDECL lame_set_ogg(lame_global_flags *, int);
+int CDECL lame_get_ogg(lame_global_flags *);
+
+// internal algorithm selection.  True quality is determined by the bitrate
+// but this variable will effect quality by selecting expensive or cheap algorithms.
+// quality=0..9.  0=best (very slow).  9=worst.  
+// recommended:  2     near-best quality, not too slow
+//               5     good quality, fast
+//               7     ok quality, really fast
+int CDECL lame_set_quality(lame_global_flags *, int);
+int CDECL lame_get_quality(lame_global_flags *);
+
+
+
+
+
+
 /* set one of these.  default is compression ratio of 11.  */
 int CDECL lame_set_brate            (lame_global_flags *, int);
+int CDECL lame_get_brate            (lame_global_flags *);
+
 int CDECL lame_set_compression_ratio(lame_global_flags *, int);
+int CDECL lame_get_compression_ratio(lame_global_flags *);
+
+
+
 
 
 
