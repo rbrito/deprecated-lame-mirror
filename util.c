@@ -89,7 +89,7 @@ void getframebits(layer *info, int stereo, int *bitsPerFrame, int *mean_bits) {
 
 void display_bitrates(int layr)
 {
-  int i,index,version;
+  int index,version;
 
   version = MPEG_AUDIO_ID;
   fprintf(stderr,"\n");

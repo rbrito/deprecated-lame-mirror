@@ -1005,21 +1005,25 @@ int lame_encode(short int Buffer[2][1152],char *mpg123bs)
   FLOAT8 xr[2][2][576];
   int l3_enc[2][2][576];
   int mpg123count;
-  III_psy_ratio ratio;
+  III_psy_ratio masking_ratio;    /*LR ratios */
+  III_psy_ratio masking_MS_ratio; /*MS ratios */
+  III_psy_ratio *masking;  /*LR ratios and MS ratios*/
   III_scalefac_t scalefac;
+
+  typedef FLOAT8 pedata[2][2];
+  pedata pe,pe_MS;
+  pedata *pe_use;
 
   int ch,gr,mean_bits;
   int bitsPerFrame;
-  FLOAT8 pe[2][4];
-  FLOAT8 pe_use[2][2];
-  FLOAT pe_sum_old=0;
-  static FLOAT pe_sum=0;
   static int frame_buffered=0;
   int stereo;
   layer *info;
   int i;
   int check_ms_stereo;
-  FLOAT8 ms_ener_ratio[2];
+  static FLOAT8 ms_ratio[2]={0,0};
+  FLOAT8 ms_ratio_next=0;
+  FLOAT8 ms_ratio_prev=0;
 
   stereo = fr_ps.stereo;
   info = fr_ps.header;
@@ -1027,7 +1031,7 @@ int lame_encode(short int Buffer[2][1152],char *mpg123bs)
   /* use m/s stereo? */
   check_ms_stereo =   ((info->mode == MPG_MD_JOINT_STEREO) && 
 		       (info->version == 1) &&
-		       (stereo==2));
+		       (stereo==2) );
   if (frameNum==0) old_bitrate=info->bitrate_index;
   info->bitrate_index = old_bitrate;
 
@@ -1141,23 +1145,28 @@ FFT's                      <---------1024---------->
    */
   if (!fast_mode) {  
     /* psychoacoustic model 
-     * psy model adds a 544 delay to sync with the filterbanks
-     * in addition to this delay, it also adds a 1 granule (576) delay
-     * that we must compensate for (mt 6/99). 
+     * psy model has a 1 granule (576) delay that we must compensate for 
+     * (mt 6/99). 
      */
     short int *bufp[2];  /* address of beginning of left & right granule */
     int blocktype[2];
-    
+
+    ms_ratio_prev=ms_ratio[mode_gr-1];
     for (gr=0; gr < mode_gr ; gr++) {
+
       for ( ch = 0; ch < stereo; ch++ )
 	bufp[ch] = &mfbuf[ch][576 + gr*576-FFTOFFSET];
 
       L3psycho_anal( bufp, stereo, gr, info,
          s_freq[info->version][info->sampling_frequency] * 1000.0,
-	 check_ms_stereo,&ms_ener_ratio[gr],
-         ratio.l[gr], ratio.s[gr], pe[gr], blocktype);
+	 check_ms_stereo,&ms_ratio[gr],&ms_ratio_next,
+         masking_ratio.l[gr], masking_ratio.s[gr], 
+         masking_MS_ratio.l[gr], masking_MS_ratio.s[gr], 
+         pe[gr],pe_MS[gr],blocktype);
+
       for ( ch = 0; ch < stereo; ch++ ) 
 	l3_side.gr[gr].ch[ch].tt.block_type=blocktype[ch];
+
     }
   }else{
     for (gr=0; gr < mode_gr ; gr++) 
@@ -1165,31 +1174,6 @@ FFT's                      <---------1024---------->
 	l3_side.gr[gr].ch[ch].tt.block_type=NORM_TYPE;
 	pe[gr][ch]=700;
       }
-  }
-
-
-
-
-  pe_sum_old=pe_sum;
-  pe_sum=0;
-  for( gr = 0; gr < mode_gr; gr++ ) 
-    for ( ch = 0; ch < stereo; ch++ ) 
-      pe_sum+=pe[gr][ch];
-  
-
-
-  /* for VBR, what bitrate should we try first? */
-  if (VBR){
-    info->bitrate_index=old_bitrate-1;
-    if (abs(pe_sum_old - pe_sum)>200){
-      if (pe_sum_old>pe_sum)
-        info->bitrate_index--;
-    }
-
-    if (info->bitrate_index < VBR_min_bitrate)
-      info->bitrate_index=VBR_min_bitrate;
-    if (info->bitrate_index > VBR_max_bitrate)
-      info->bitrate_index=VBR_max_bitrate;
   }
 
 
@@ -1220,66 +1204,70 @@ FFT's                      <---------1024---------->
       (l3_side.gr[1].ch[0].tt.block_type==l3_side.gr[1].ch[1].tt.block_type);
   }
   if (check_ms_stereo) {
-    if (( (ms_ener_ratio[0] + ms_ener_ratio[1])<.70) || force_ms )
+    /* ms_ratio = is like the ratio of side_energy/total_energy */
+    FLOAT8 ms_ratio_ave;
+    /*     ms_ratio_ave = .5*(ms_ratio[0] + ms_ratio[1]);*/
+    ms_ratio_ave = .25*(ms_ratio[0] + ms_ratio[1]+ 
+			 ms_ratio_prev + ms_ratio_next);
+    if (( ms_ratio_ave <.35) || force_ms )
            info->mode_ext = MPG_MD_MS_LR;
-    ms_ener_ratio[0]=Min(ms_ener_ratio[0],.5);
-    ms_ener_ratio[1]=Min(ms_ener_ratio[1],.5);
   }
+
 
 #ifdef HAVEGTK
   if (gtkflag) { 
     int j;
-    for ( gr = 0; gr < mode_gr; gr++ )
+    for ( gr = 0; gr < mode_gr; gr++ ) {
       for ( ch = 0; ch < stereo; ch++ ) {
-	pinfo->ms_ratio[gr]=ms_ener_ratio[gr];
+	pinfo->ms_ratio[gr]=ms_ratio[gr];
 	pinfo->blocktype[gr][ch]=
 	  l3_side.gr[gr].ch[ch].tt.block_type;
 	for ( j = 0; j < 576; j++ ) pinfo->xr[gr][ch][j]=xr[gr][ch][j];
-      }
-  }
-#endif
+	/* if MS stereo, switch to MS psy data */
+	if (highq && (info->mode_ext==MPG_MD_MS_LR)) {
+	  pinfo->pe[gr][ch]=pinfo->pe[gr][ch+2];
+	  pinfo->ers[gr][ch]=pinfo->ers[gr][ch+2];
+	  memcpy(pinfo->energy[gr][ch],pinfo->energy[gr][ch+2],
+		 sizeof(pinfo->energy[gr][ch]));
 
-  /* if MS stereo, switch to MS psy data */
-  for ( gr = 0; gr < mode_gr; gr++ ) {
-    for ( ch = 0; ch < stereo; ch++ ) {
-      if (highq && (info->mode_ext==MPG_MD_MS_LR)) {
-	pe_use[gr][ch]=pe[gr][ch+2];
-	memcpy(ratio.l[gr][ch],ratio.l[gr][ch+2],sizeof(ratio.l[gr][ch]));
-	memcpy(ratio.s[gr][ch],ratio.s[gr][ch+2],sizeof(ratio.s[gr][ch]));
-#ifdef HAVEGTK
-       if (gtkflag) {
-	 pinfo->ers[gr][ch]=pinfo->ers[gr][ch+2];
-	 pinfo->pe[gr][ch]=pinfo->pe[gr][ch+2];
-         memcpy(pinfo->energy[gr][ch],pinfo->energy[gr][ch+2],
-		sizeof(pinfo->energy[gr][ch]));
-	 memcpy(pinfo->thr[gr][ch],pinfo->thr[gr][ch+2],
-		sizeof(pinfo->thr[gr][ch]));
-	 memcpy(pinfo->en[gr][ch],pinfo->en[gr][ch+2],
-		sizeof(pinfo->en[gr][ch]));
-	 memcpy(pinfo->thr_s[gr][ch],pinfo->thr_s[gr][ch+2],
-                sizeof(pinfo->thr_s[gr][ch]));
-	 memcpy(pinfo->en_s[gr][ch],pinfo->en_s[gr][ch+2],
-		sizeof(pinfo->en_s[gr][ch]));
-       }
-#endif
-      }else{
-	pe_use[gr][ch]=pe[gr][ch];
+	  memcpy(pinfo->thr[gr][ch],pinfo->thr[gr][ch+2],
+		 sizeof(pinfo->thr[gr][ch]));
+	  memcpy(pinfo->en[gr][ch],pinfo->en[gr][ch+2],
+		 sizeof(pinfo->en[gr][ch]));
+	  memcpy(pinfo->thr_s[gr][ch],pinfo->thr_s[gr][ch+2],
+		 sizeof(pinfo->thr_s[gr][ch]));
+	  memcpy(pinfo->en_s[gr][ch],pinfo->en_s[gr][ch+2],
+		 sizeof(pinfo->en_s[gr][ch]));
+	}
       }
     }
   }
+#endif
+
+
+
 
   /* bit and noise allocation */
+  if ((MPG_MD_MS_LR == info->mode_ext) && highq) {
+    masking = &masking_MS_ratio;    /* use MS masking */
+    pe_use=&pe_MS;
+  } else {
+    masking = &masking_ratio;    /* use LR masking */
+    pe_use=&pe;
+  }
+
   if (VBR) {
-    VBR_iteration_loop( pe_use, ms_ener_ratio, xr, &ratio, &l3_side, l3_enc, 
+    VBR_iteration_loop( *pe_use, ms_ratio, xr, masking, &l3_side, l3_enc, 
 		    &scalefac, &fr_ps);
   }else{
-    iteration_loop( pe_use, ms_ener_ratio, xr, &ratio, &l3_side, l3_enc, 
+    iteration_loop( *pe_use, ms_ratio, xr, masking, &l3_side, l3_enc, 
 		    &scalefac, &fr_ps);
   }
   /*
-  VBR_iteration_loop_new( pe_use, ms_ener_ratio, xr, &ratio, &l3_side, l3_enc, 
+  VBR_iteration_loop_new( *pe_use, ms_ratio, xr, masking, &l3_side, l3_enc, 
 			  &scalefac, &fr_ps);
   */
+
 
 
 #ifdef BRHIST
@@ -1324,6 +1312,7 @@ FFT's                      <---------1024---------->
   }
 #endif
   frameNum++;
+
   return mpg123count;
 }
 

@@ -17,22 +17,23 @@ typedef struct {
   double frametime;       /* starting time of frame, in seconds */
   double pcmdata[2][1600];
   double pcmdata2[2][1152+1152-DECDELAY];
-  double energy[2][4][BLKSIZE];
   double xr[2][2][576];
   double mpg123xr[2][2][576];
-  double pe[2][4];
   double ms_ratio[2];
 
+  /* L,R, M and S values */
+  double energy[2][4][BLKSIZE];
+  double pe[2][4];
   double thr[2][4][SBMAX_l];
   double en[2][4][SBMAX_l];
   double thr_s[2][4][3*SBMAX_s];
   double en_s[2][4][3*SBMAX_s];
   double ers[2][4];
 
-  double sfb[2][4][SBMAX_l];
-  double sfb_s[2][4][3*SBMAX_s];
-  double LAMEsfb[2][4][SBMAX_l];
-  double LAMEsfb_s[2][4][3*SBMAX_s];
+  double sfb[2][2][SBMAX_l];
+  double sfb_s[2][2][3*SBMAX_s];
+  double LAMEsfb[2][2][SBMAX_l];
+  double LAMEsfb_s[2][2][3*SBMAX_s];
 
   int LAMEqss[2][2];
   int qss[2][2];

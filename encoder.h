@@ -26,6 +26,7 @@ total:    512+16
    Setting ENCDELAY < MDCTDELAY will result in loss of PCM samples
    samples at the start of the file will be lost.
 
+   suggested: 48
    set to 1160 to sync with FhG.
 */
 #define ENCDELAY 48

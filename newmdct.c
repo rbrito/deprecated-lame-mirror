@@ -28,7 +28,6 @@
 #include "util.h"
 #include "l3side.h"
 #include "newmdct.h"
-#include "psymodel.h"
 #include "globalflags.h"
 
 #define SCALE 32768

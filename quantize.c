@@ -632,8 +632,9 @@ void outer_loop(
 	      */
 	      pinfo->xfsf_s[gr][ch][3*sfb+i] =  
 		pinfo->en_s[gr][ch][3*sfb+i]*xfsf[i+1][sfb]/en0;
-	      pinfo->thr_s[gr][ch][3*sfb+i] =  
-		pinfo->en_s[gr][ch][3*sfb+i]*l3_xmin->s[gr][ch][sfb][i]/en0;
+	      if (sfb < SBPSY_l) 
+		pinfo->thr_s[gr][ch][3*sfb+i] =  
+		  pinfo->en_s[gr][ch][3*sfb+i]*l3_xmin->s[gr][ch][sfb][i]/en0;
 
 	      pinfo->LAMEsfb_s[gr][ch][3*sfb+i]=-2*cod_info->subblock_gain[i];
 	      pinfo->LAMEsfb_s[gr][ch][3*sfb+i]-=ifqstep*scalefac->s[gr][ch][sfb][i];
@@ -658,8 +659,9 @@ void outer_loop(
 	    printf("diff  = %f \n",10*log10(Max(pinfo->en[gr][ch][sfb],1e-20))
 		   -(10*log10(en0)+150));
 	    */
-	    pinfo->thr[gr][ch][sfb] =  
-	      pinfo->en[gr][ch][sfb]*l3_xmin->l[gr][ch][sfb]/en0;
+	    if (sfb < SBPSY_l) 
+	      pinfo->thr[gr][ch][sfb] =  
+		pinfo->en[gr][ch][sfb]*l3_xmin->l[gr][ch][sfb]/en0;
 
 	    pinfo->LAMEsfb[gr][ch][sfb]=-ifqstep*scalefac->l[gr][ch][sfb];
 	    if (cod_info->preflag && sfb>=11) 

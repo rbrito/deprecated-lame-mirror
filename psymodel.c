@@ -5,8 +5,19 @@
  * $Id$
  *
  * $Log$
- * Revision 1.1  1999/11/24 08:41:25  markt
- * Initial revision
+ * Revision 1.2  1999/11/29 02:45:59  markt
+ * MS stereo switch slightly improved:  old formula was based on the average
+ * of ms_ratio of both granules.  New formula uses ms_ratio from both
+ * granules and the previous and next granule.  This will help avoid toggleing
+ * MS stereo off for a single frame.  Long runs of MS stereo or regular
+ * stereo will not be affected.
+ *
+ * also fixed a bug in frame analyzer - it was accessing l3_xmin in the last
+ * scalefactor (l3_xmin and maskings are not computed for last scalefactor)
+ *
+ * Revision 1.1.1.1  1999/11/24 08:41:25  markt
+ * initial checkin of LAME
+ * Starting with LAME 3.57beta with some modifications
  *
  * Revision 1.2  1998/10/05 17:06:48  larsi
  * *** empty log message ***
@@ -167,10 +178,13 @@ void L3psycho_energy( short int *buffer[2],
 
 void L3psycho_anal( short int *buffer[2], int stereo,
 		    int gr_out , layer * info,
-		    FLOAT8 sfreq, 
-		    int check_ms_stereo, FLOAT8 *ms_ener_ratio,
-		    FLOAT8 ratio_d[4][21], FLOAT8 ratio_ds[4][12][3],
-		    FLOAT8 percep_energy[4], int blocktype_d[2])
+		    FLOAT8 sfreq, int check_ms_stereo, 
+                    FLOAT8 *ms_ratio,
+                    FLOAT8 *ms_ratio_next,
+		    FLOAT8 masking_ratio_d[2][SBPSY_l], FLOAT8 masking_ratio_ds[2][SBPSY_s][3],
+		    FLOAT8 masking_MS_ratio_d[2][SBPSY_l], FLOAT8 masking_MS_ratio_ds[2][SBPSY_s][3],
+		    FLOAT8 percep_entropy[2],FLOAT8 percep_MS_entropy[2], 
+                    int blocktype_d[2])
 {
   static FLOAT8 pe[4]={0,0,0,0};
   static FLOAT8 ms_ratio_s_old=0,ms_ratio_l_old=0;
@@ -264,11 +278,11 @@ void L3psycho_anal( short int *buffer[2], int stereo,
     /* setup stereo demasking thresholds */
     /* formula reverse enginerred from plot in paper */
     for ( sb = 0; sb < SBPSY_s; sb++ ) {
-      FLOAT8 mld = 1.25*(1-cos(3.14159*sb/SBPSY_s))-2.5;
+      FLOAT8 mld = 1.25*(1-cos(PI*sb/SBPSY_s))-2.5;
       mld_s[sb] = pow(10.0,mld);
     }
     for ( sb = 0; sb < SBPSY_l; sb++ ) {
-      FLOAT8 mld = 1.25*(1-cos(3.14159*sb/SBPSY_l))-2.5;
+      FLOAT8 mld = 1.25*(1-cos(PI*sb/SBPSY_l))-2.5;
       mld_l[sb] = pow(10.0,mld);
     }
     
@@ -389,13 +403,26 @@ void L3psycho_anal( short int *buffer[2], int stereo,
   numchn=stereo;
   if (highq && (info->mode == MPG_MD_JOINT_STEREO)) numchn=4;
   for (chn=0; chn<numchn; chn++) {
+
+    if (chn<2) {    
+      /* LR maskings  */
+      percep_entropy[chn] = pe[chn]; 
+      for ( j = 0; j < SBPSY_l; j++ )
+	masking_ratio_d[chn][j] = ratio[chn][j];
+      for ( j = 0; j < SBPSY_s; j++ )
+	for ( i = 0; i < 3; i++ )
+	  masking_ratio_ds[chn][j][i] = ratio_s[chn][j][i];
+    }else{
+      /* MS maskings  */
+      percep_MS_entropy[chn-2] = pe[chn]; 
+      for ( j = 0; j < SBPSY_l; j++ )
+	masking_MS_ratio_d[chn-2][j] = ratio[chn][j];
+      for ( j = 0; j < SBPSY_s; j++ )
+	for ( i = 0; i < 3; i++ )
+	  masking_MS_ratio_ds[chn-2][j][i] = ratio_s[chn][j][i];
+    }
     
-    for ( j = 0; j < 21; j++ )
-      ratio_d[chn][j] = ratio[chn][j];
-    for ( j = 0; j < 12; j++ )
-      for ( i = 0; i < 3; i++ )
-	ratio_ds[chn][j][i] = ratio_s[chn][j][i];
-    percep_energy[chn] = pe[chn]; 
+
     
     /**********************************************************************
      *  compute FFTs
@@ -834,10 +861,12 @@ void L3psycho_anal( short int *buffer[2], int stereo,
       /* thresholds difference in db */
       if (x2 >= 1000*x1)  db=30;
       else db = 10*log10(x2/x1);  
+      //      printf("db = %f %e %e  \n",db,thm_save[0][sb],thm_save[1][sb]);
       sidetot += db;
       tot++;
     }
     ms_ratio_l= .35*(sidetot/tot)/5.0;
+    ms_ratio_l = Min(ms_ratio_l,.5);
     
     sidetot=0; tot=0;
     for ( sblock = 0; sblock < 3; sblock++ )
@@ -851,6 +880,7 @@ void L3psycho_anal( short int *buffer[2], int stereo,
 	tot++;
       }
     ms_ratio_s = .35*(sidetot/tot)/5.0;
+    ms_ratio_s = Min(ms_ratio_s,.5);
     }
   }
   
@@ -912,14 +942,17 @@ void L3psycho_anal( short int *buffer[2], int stereo,
     blocktype_old[chn] = blocktype[chn];    /* save for next call to l3psy_anal */
   }
   
-  if (blocktype_d[0]==2)
-    *ms_ener_ratio = ms_ratio_s_old;
+  if (blocktype_d[0]==2) 
+    *ms_ratio = ms_ratio_s_old;
   else
-    *ms_ener_ratio = ms_ratio_l_old;
+    *ms_ratio = ms_ratio_l_old;
+
   ms_ratio_s_old = ms_ratio_s;
   ms_ratio_l_old = ms_ratio_l;
-  
-  
+
+  /* we dont know the block type of this frame yet - assume long */
+  *ms_ratio_next = ms_ratio_l;
+
   
 }
 

@@ -5,8 +5,19 @@
  * $Id$
  *
  * $Log$
- * Revision 1.1  1999/11/24 08:43:10  markt
- * Initial revision
+ * Revision 1.2  1999/11/29 02:45:59  markt
+ * MS stereo switch slightly improved:  old formula was based on the average
+ * of ms_ratio of both granules.  New formula uses ms_ratio from both
+ * granules and the previous and next granule.  This will help avoid toggleing
+ * MS stereo off for a single frame.  Long runs of MS stereo or regular
+ * stereo will not be affected.
+ *
+ * also fixed a bug in frame analyzer - it was accessing l3_xmin in the last
+ * scalefactor (l3_xmin and maskings are not computed for last scalefactor)
+ *
+ * Revision 1.1.1.1  1999/11/24 08:43:10  markt
+ * initial checkin of LAME
+ * Starting with LAME 3.57beta with some modifications
  *
  * Revision 1.1  1996/02/14 04:04:23  rowlands
  * Initial revision
@@ -35,13 +46,13 @@ typedef int	I192_3[192][3];
 
 
 typedef struct {
-	FLOAT8	l[2][4][21];
-	FLOAT8	s[2][4][12][3];
+	FLOAT8	l[2][2][SBPSY_l];
+	FLOAT8	s[2][2][SBPSY_s][3];
 } III_psy_ratio;
 
 typedef struct {
-	FLOAT8	l[2][2][21];
-	FLOAT8	s[2][2][12][3];
+	FLOAT8	l[2][2][SBPSY_l];
+	FLOAT8	s[2][2][SBPSY_s][3];
 } III_psy_xmin;
 
 typedef struct {
