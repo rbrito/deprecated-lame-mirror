@@ -4,12 +4,13 @@ There's some problem in very the first frame MDCT calculation.
 
 
 1.
-tuning lowpass with fixed SFB21 oddness code.
-Old LAME (3.x) has bugs in sfb21 handling code and it decrease quality
-over 16kHz region. So the lowpass values are adjusted to conceal the bug.
-
-Now the bug is almost removed. We need re-tuning the lowpass values for
-new LAME.
+LAME has problems with test signals.
+1. pure DC input.(i.e. a square wave with a frequency well below 20 Hz)
+2. sin sweep signal (i.e. 20Hz->22kHz in 60sec)
+3. steep/saw wave (i.e. 100Hz)
+Seems not very important, but they are related to "REAL" problem of
+some kind of music. 1 and 2 are caused by ATH handling problem.
+3 is by short block threshold problem.
 
 
 
@@ -23,7 +24,6 @@ scfsi, no scalefact_scale, and so on.
 4.
 There're some sound quality regression compared with LAME3.x
 - short block problem (i.e. spahm.wav)
-- white noise problem (i.e. dr4.wav)
 
 LAME4's block switching is better than LAME3 with nspsy,
 but the threshold calculation of short blocks is not.
@@ -31,6 +31,7 @@ It does not support temporal masking, and so on.
 
 At the high frequency region, LAME4 increases the threshold too much.
 And more the worse, there's sfb21 :(
+
 
 
 5.
@@ -42,18 +43,10 @@ have bugs in the intensity stereo decoding.  Bugs have been there
 for years since there are very few intensity stereo mp3's out there.
 
 
-7.
-LAME has problems with test signals.
-1. pure DC input.(i.e. a square wave with a frequency well below 20 Hz)
-2. sin sweep signal (i.e. 20Hz->22kHz in 60sec)
-3. steep/saw wave (i.e. 100Hz)
-Seems not very important, but they are related to "REAL" problem of
-some kind of music. 1 and 2 are caused by ATH handling problem.
-3 is by short block threshold problem.
 
 
 8.
-Tuning resorvoir handling (especially for low bitrates); CBR/ABR arround
+Tuning reservoir handling (especially for low bitrates); CBR/ABR arround
 90kbps (-b 90) is much worse than VBR quality 9 (-V 9). This is probabry
 because of poor resorvoir handling.
 
