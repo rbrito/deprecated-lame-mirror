@@ -141,7 +141,7 @@ Use mixed blocks.
 
 
 90.
-Use intensity stereo. This is a must-have for low bitrates, but if the
+Better intensity stereo. This is a must-have for low bitrates, but if the
 algorythm is very good it could also be used in every case.
 Note: mpg123 (and all derivatives, like xmms and lame/mpglib)
 have bugs in the intensity stereo decoding.  Bugs have been there
