@@ -179,7 +179,7 @@ int samplerate)   /* convert bitrate in kbps to index */
  *
  * Robert.Hegemann@gmx.de 2000-07-01
  */
-long validSamplerate(long samplerate)
+int validSamplerate(int samplerate)
 {
     if (samplerate<= 8000) return  8000;
     if (samplerate<=11025) return 11025;
@@ -217,37 +217,37 @@ int     found = 0;
 }
 
 int SmpFrqIndex(  /* convert samp frq in Hz to index */
-long sRate,             /* legal rates 16000, 22050, 24000, 32000, 44100, 48000 */
+int sRate,             /* legal rates 16000, 22050, 24000, 32000, 44100, 48000 */
 int  *version)
 {
 	/* Assign default value */
 	*version=0;
 
-    if (sRate == 44100L) {
+    if (sRate == 44100) {
         *version = 1; return(0);
     }
-    else if (sRate == 48000L) {
+    else if (sRate == 48000) {
         *version = 1; return(1);
     }
-    else if (sRate == 32000L) {
+    else if (sRate == 32000) {
         *version = 1; return(2);
     }
-    else if (sRate == 24000L) {
+    else if (sRate == 24000) {
         *version = 0; return(1);
     }
-    else if (sRate == 22050L) {
+    else if (sRate == 22050) {
         *version = 0; return(0);
     }
-    else if (sRate == 16000L) {
+    else if (sRate == 16000) {
         *version = 0; return(2);
     }
-    else if (sRate == 12000L) {
+    else if (sRate == 12000) {
         *version = 0; return(1);
     }
-    else if (sRate == 11025L) {
+    else if (sRate == 11025) {
         *version = 0; return(0);
     }
-    else if (sRate ==  8000L) {
+    else if (sRate ==  8000) {
         *version = 0; return(2);
     }
     else {

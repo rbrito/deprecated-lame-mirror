@@ -37,6 +37,7 @@ mdct      256+32  (9*32)     (dec or enc)        = 288
 total:    512+16
 
 My guess is that delay of polyphase filterbank is actualy 240.5
+(there are technical reasons for this, see postings in mp3encoder)
 So total Encode+Decode delay = ENCDELAY + 528 + 1
 */
 

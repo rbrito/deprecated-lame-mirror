@@ -236,7 +236,7 @@ int lame_init_params(lame_global_flags *gfp)
       gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->compression_ratio);
 
     /* we need the version for the bitrate table look up */
-    gfc->samplerate_index = SmpFrqIndex((long)gfp->out_samplerate, &gfp->version);
+    gfc->samplerate_index = SmpFrqIndex(gfp->out_samplerate, &gfp->version);
     /* find the nearest allowed bitrate */
     if (!gfp->free_format)
       gfp->brate = FindNearestBitrate(gfp->brate,gfp->version,gfp->out_samplerate);
@@ -262,7 +262,7 @@ int lame_init_params(lame_global_flags *gfp)
       gfp->compression_ratio = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->brate);
       if (gfp->compression_ratio > 13 ) {
 	/* automatic downsample, if possible */
-	gfp->out_samplerate = validSamplerate((10*1000L*gfp->brate)/(16*gfc->stereo));
+	gfp->out_samplerate = validSamplerate((10*1000*gfp->brate)/(16*gfc->stereo));
       }
     }
     if (gfp->VBR==vbr_abr) {
@@ -270,7 +270,7 @@ int lame_init_params(lame_global_flags *gfp)
       gfp->compression_ratio = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->VBR_mean_bitrate_kbps);
       if (gfp->compression_ratio > 13 ) {
 	/* automatic downsample, if possible */
-	gfp->out_samplerate = validSamplerate((10*1000L*gfp->VBR_mean_bitrate_kbps)/(16*gfc->stereo));
+	gfp->out_samplerate = validSamplerate((10*1000*gfp->VBR_mean_bitrate_kbps)/(16*gfc->stereo));
       }
     }
   }
@@ -419,7 +419,7 @@ int lame_init_params(lame_global_flags *gfp)
   gfc->mode_ext=MPG_MD_LR_LR;
   gfc->stereo = (gfp->mode == MPG_MD_MONO) ? 1 : 2;
 
-  gfc->samplerate_index = SmpFrqIndex((long)gfp->out_samplerate, &gfp->version);
+  gfc->samplerate_index = SmpFrqIndex(gfp->out_samplerate, &gfp->version);
   if( gfc->samplerate_index < 0) {
     display_bitrates(stderr);
     return -1;

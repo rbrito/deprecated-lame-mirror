@@ -213,8 +213,8 @@ typedef struct  {
   FLOAT8 ms_ener_ratio[2];
   FLOAT8 ms_ratio[2];
   /* used for padding */
-  long frac_SpF;
-  long slot_lag;
+  int frac_SpF;
+  int slot_lag;
 
 
   /* variables used by quantize.c */
@@ -345,8 +345,8 @@ extern int            fskip(FILE *sf,long num_bytes,int dummy);
 extern void           display_bitrates(FILE *out_fh);
 extern int            BitrateIndex(int, int,int);
 extern int            FindNearestBitrate(int,int,int);
-extern long           validSamplerate(long samplerate);
-extern int            SmpFrqIndex(long, int*);
+extern int            validSamplerate(int samplerate);
+extern int            SmpFrqIndex(int, int*);
 extern int            copy_buffer(char *buffer,int buffer_size,Bit_stream_struc *bs);
 extern void           init_bit_stream_w(lame_internal_flags *gfc);
 extern void           freegfc(lame_internal_flags *gfc);
