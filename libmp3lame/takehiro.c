@@ -537,7 +537,7 @@ recalc_divide_sub(
 	if (gi->part2_3_length <= bits + ((gi->big_values - a2) >> 1) + 2)
 	    continue;
 
-	r2t = ix_max2(&max_info[r2+2], &max_info[7+15+1]);
+	r2t = ix_max2(&max_info[r2+2], &max_info[SBMAX_l-1]);
 	bits += choose_table(&gi->l3_enc[a2], &gi->l3_enc[gi->big_values], &r2t);
 	if (gi->part2_3_length <= bits)
 	    continue;
