@@ -1445,7 +1445,7 @@ OpenSndFile(lame_global_flags * gfp, char *inPath)
 static int
 check_aid(const unsigned char *header)
 {
-    return 0 == strncmp(header, "AiD\1", 4);
+    return 0 == memcmp(header, "AiD\1", 4);
 }
 
 /*
