@@ -701,33 +701,34 @@ best_scalefac_store(
     /* use scalefac_scale if we can */
     III_side_info_t * const l3_side = &gfc->l3_side;
     gr_info *gi = &l3_side->tt[gr][ch];
-    int sfb,j,l,recalc;
+    int sfb,j,l,recalc=0;
 
     memset(l3_side->scfsi[ch], 0, sizeof(l3_side->scfsi[ch]));
-    if (gi->preflag < 0) /* this means sub channel of intensity stereo */
-	return;
+    if (gi->preflag >= 0) {
+	/* It is not the sub channel of intensity stereo */
 
-    /* remove scalefacs from bands with all ix=0.
-     * This idea comes from the AAC ISO docs.  added mt 3/00 */
-    recalc = j = 0;
-    for (sfb = 0; sfb < gi->sfbmax; sfb++) {
-	int width = gi->width[sfb];
-	j += width;
-	for (l = -width; l < 0; l++)
-	    if (gi->l3_enc[l+j]!=0)
-		break;
-	if (l==0)
-	    gi->scalefac[sfb] = recalc = -2; /* anything goes. */
+	/* remove scalefacs from bands with all ix=0.
+	 * This idea comes from the AAC ISO docs.  added mt 3/00 */
+	j = 0;
+	for (sfb = 0; sfb < gi->sfbmax; sfb++) {
+	    int width = gi->width[sfb];
+	    j += width;
+	    for (l = -width; l < 0; l++)
+		if (gi->l3_enc[l+j]!=0)
+		    break;
+	    if (l==0)
+		gi->scalefac[sfb] = recalc = -2; /* anything goes. */
+	}
     }
 
-    if (!gi->scalefac_scale && !gi->preflag) {
+    if (!gi->scalefac_scale && gi->preflag <= 0) {
 	int s = 0;
-	for (sfb = 0; sfb < gi->sfbmax; sfb++)
+	for (sfb = 0; sfb < gi->psymax; sfb++)
 	    if (gi->scalefac[sfb] > 0)
 		s |= gi->scalefac[sfb];
 
 	if (!(s & 1) && s != 0) {
-	    for (sfb = 0; sfb < gi->sfbmax; sfb++)
+	    for (sfb = 0; sfb < gi->psymax; sfb++)
 		if (gi->scalefac[sfb] > 0)
 		    gi->scalefac[sfb] >>= 1;
 
@@ -735,12 +736,12 @@ best_scalefac_store(
 	}
     }
 
-    if (gfc->mode_gr == 2 && !gi->preflag && gi->block_type != SHORT_TYPE) {
-	for (sfb = 11; sfb < SBPSY_l; sfb++)
+    if (gfc->mode_gr == 2 && gi->preflag <= 0 && gi->block_type != SHORT_TYPE) {
+	for (sfb = 11; sfb < gi->psymax; sfb++)
 	    if (gi->scalefac[sfb] < pretab[sfb] && gi->scalefac[sfb] != -2)
 		break;
-	if (sfb == SBPSY_l) {
-	    for (sfb = 11; sfb < SBPSY_l; sfb++)
+	if (sfb == gi->psymax) {
+	    for (sfb = 11; sfb < gi->psymax; sfb++)
 		if (gi->scalefac[sfb] > 0)
 		    gi->scalefac[sfb] -= pretab[sfb];
 
