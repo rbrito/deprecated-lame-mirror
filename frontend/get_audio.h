@@ -60,7 +60,7 @@ typedef struct  IFF_AIFF_struct {
     short           numChannels;
     unsigned long   numSampleFrames;
     short           sampleSize;
-    FLOAT           sampleRate;
+    double          sampleRate;
     unsigned long   sampleType;
     blockAlign      blkAlgn;
 } IFF_AIFF;

@@ -21,10 +21,10 @@
 
 #include <stdio.h>
 #include <assert.h>
+#include "lame.h"
 #include "util.h"
 #include "get_audio.h"
 #include "portableio.h"
-#include "analysis.h"
 #include "timestatus.h"
 
 #if (defined LIBSNDFILE || defined LAMESNDFILE)
@@ -599,7 +599,7 @@ FILE * OpenSndFile(lame_global_flags *gfp)
       if (gfp->input_format == sf_mp1 ||
           gfp->input_format == sf_mp2 ||
           gfp->input_format == sf_mp3) {
-	FLOAT totalseconds = (sb.st_size*8.0/(1000.0*mp3input_data.bitrate));
+	double totalseconds = (sb.st_size*8.0/(1000.0*mp3input_data.bitrate));
 	gfp->num_samples= totalseconds*gfp->in_samplerate;
 	mp3input_data.nsamp = gfp->num_samples;
       }else{
@@ -1122,7 +1122,7 @@ FILE * OpenSndFile(lame_global_flags *gfp)
           gfp->input_format == sf_mp2 ||
           gfp->input_format == sf_mp3) {
 	if (mp3input_data.bitrate>0) {
-	  FLOAT totalseconds = (sb.st_size*8.0/(1000.0*mp3input_data.bitrate));
+	  double totalseconds = (sb.st_size*8.0/(1000.0*mp3input_data.bitrate));
 	  gfp->num_samples= totalseconds*gfp->in_samplerate;
 	  mp3input_data.nsamp = gfp->num_samples;
 	}
@@ -1146,7 +1146,7 @@ int check_aid(char *header) {
      && header[3]== (char) 1);
   return aid_header;
 }
-int is_syncword2(char *header)
+int is_syncword(char *header)
 {
   int mpeg1=((int) ( header[0] == (char) 0xFF)) &&
     ((int) ( (header[1] & (char) 0xF0) == (char) 0xF0));
@@ -1189,7 +1189,7 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
 
   /* look for sync word  FFF */
   if (len<2) return -1;
-  while (!is_syncword2(buf)) {
+  while (!is_syncword(buf)) {
     int i;
     for (i=0; i<len-1; i++)
       buf[i]=buf[i+1]; 

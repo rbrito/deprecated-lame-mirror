@@ -125,7 +125,7 @@ int brhist_init(int br_min, int br_max)
 }
 
 
-void brhist_update(int coulumn)
+void brhist_update(int column)
 {
     brhist.count[column]++;
 }

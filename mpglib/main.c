@@ -20,7 +20,7 @@ static const int smpls[2][4]={
 
 
 
-int is_syncword(char *header)
+static int is_syncword(char *header)
 {
 
 /*
