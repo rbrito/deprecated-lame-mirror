@@ -1481,7 +1481,7 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
 	if (fread(&buf, 1, len, fd) != len)
 	    return -1;      /* failed */
 	buf[2] &= 127; buf[3] &= 127; buf[4] &= 127; buf[5] &= 127;
-	len = ((((buf[2] << 7) + buf[3] << 7) + buf[4]) << 7) + buf[5];
+	len = (buf[2] << 21) + (buf[3] << 14) + (buf[4] << 7) + buf[5];
 	fskip(fd, len, SEEK_CUR);
 	id3v2taglen = ftell(fd);
 	len = 4;
@@ -1506,7 +1506,7 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
     /* look for valid 8 byte MPEG header  */
     if (fread(&buf[4], 1, len, fd) != len)
         return -1;      /* failed */
-    len = 8;
+    len = 4;
     while (!is_syncword_mp123(buf)) {
         int     i;
         for (i = 0; i < len - 1; i++)
