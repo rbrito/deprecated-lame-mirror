@@ -694,6 +694,16 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 		T_ELIF ("vbr-mtrh")
 		    gfp->VBR = vbr_mtrh; 
 		    gfp->quality = 1;
+
+		T_ELIF ("r3mix")
+		    gfp->VBR = vbr_rh; 
+		    gfp->quality = 2;
+                    gfp->lowpassfreq = 19000;
+                    gfp->mode=MPG_MD_JOINT_STEREO;
+                    gfp->mode_fixed=1;
+		    gfp->ATHtype=3;
+		    gfp->VBR_min_bitrate_kbps=64;
+		    gfp->ATH_auto_adjust = 1;
 		
 		T_ELIF ("abr")
 		    argUsed=1;
@@ -763,6 +773,7 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 
 		T_ELIF ("decode-mp3delay")
 		    mp3_delay = atoi( nextArg );
+                    mp3_delay_set=1;
 		    argUsed=1;
 		
 		T_ELIF ("noath")

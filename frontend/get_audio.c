@@ -776,8 +776,8 @@ static int  read_samples_pcm ( FILE* const musicin, short sample_buffer [2304], 
     case 16:
         break;
     default:
-        assert (0);
-        break;
+      fprintf(stderr,"Only 8 and 16 bit input files supported \n");
+      exit(1);
     }
 
     return samples_read;
