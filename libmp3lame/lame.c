@@ -251,20 +251,22 @@ int lame_init_params(lame_global_flags *gfp)
     /* if resamplerate is not valid, find a valid value */
     gfp->out_samplerate = validSamplerate(gfp->out_samplerate);
 
+
+    /* check if user specified bitrate requires downsampling */
+    /* if compression ratio is > 13, choose a new samplerate to get
+     * the compression ratio down to about 10 */
     if (gfp->VBR==vbr_off && gfp->brate>0) {
-      /* check if user specified bitrate requires downsampling */
       gfp->compression_ratio = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->brate);
       if (gfp->compression_ratio > 13 ) {
-	/* automatic downsample, if possible */
 	gfp->out_samplerate = validSamplerate((10*1000*gfp->brate)/(16*gfc->stereo));
       }
     }
     if (gfp->VBR==vbr_abr) {
-      /* check if user specified bitrate requires downsampling */
-      gfp->compression_ratio = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->VBR_mean_bitrate_kbps);
+      gfp->compression_ratio = 
+	gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->VBR_mean_bitrate_kbps);
       if (gfp->compression_ratio > 13 ) {
-	/* automatic downsample, if possible */
-	gfp->out_samplerate = validSamplerate((10*1000*gfp->VBR_mean_bitrate_kbps)/(16*gfc->stereo));
+	gfp->out_samplerate = 
+	  validSamplerate((10*1000*gfp->VBR_mean_bitrate_kbps)/(16*gfc->stereo));
       }
     }
   }
