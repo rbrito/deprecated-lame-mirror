@@ -519,13 +519,6 @@ lame_init_params(lame_global_flags * const gfp)
         gfp->free_format = 0; /* VBR can't be mixed with free format */
 
     if (gfp->VBR == vbr_off && gfp->brate == 0) {
-        /* no bitrate or compression ratio specified, use a compression ratio of 11.025 */
-        if (gfp->compression_ratio == 0)
-            gfp->compression_ratio = 11.025; /* rate to compress a CD down to exactly 128000 bps */
-    }
-
-
-    if (gfp->VBR == vbr_off && gfp->brate == 0) {
         /* no bitrate or compression ratio specified, use 11.025 */
         if (gfp->compression_ratio == 0)
             gfp->compression_ratio = 11.025; /* rate to compress a CD down to exactly 128000 bps */
@@ -627,12 +620,6 @@ lame_init_params(lame_global_flags * const gfp)
 
         if (gfp->mode == MONO && (gfp->VBR == vbr_off || gfp->VBR == vbr_abr))
             lowpass *= 1.5;
-
-        if (gfp->out_samplerate == 0)
-            gfp->out_samplerate = optimum_samplefreq( (int)lowpass, gfp->in_samplerate);
-
-        lowpass = Min(20500, lowpass);
-        lowpass = Min(gfp->out_samplerate / 2, lowpass);
         
         gfp->lowpassfreq = lowpass;
     }
@@ -641,10 +628,13 @@ lame_init_params(lame_global_flags * const gfp)
     if (gfp->out_samplerate == 0)
         gfp->out_samplerate = optimum_samplefreq( (int)gfp->lowpassfreq, gfp->in_samplerate);
 
+    gfp->lowpassfreq = Min(20500, gfp->lowpassfreq);
+    gfp->lowpassfreq = Min(gfp->out_samplerate / 2, gfp->lowpassfreq);
+
     if (gfp->VBR == vbr_off) {
         gfp->compression_ratio =
             gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 *
-                                                            gfp->brate);
+                                                        gfp->brate);
     }
     if (gfp->VBR == vbr_abr) {
         gfp->compression_ratio =
