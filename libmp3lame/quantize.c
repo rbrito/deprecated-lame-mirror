@@ -220,7 +220,7 @@ extern FLOAT8 athAdjust( FLOAT8 a, FLOAT8 x, FLOAT8 athFloor );
 GB feb 2003
 Analog silence detection in partitionned sfb21.
 
-From top to bottom of sfb21, is changes to 0
+From top to bottom of sfb21, changes to 0
 coeffs which are below ath. It stops on the first
 coeff higher than ath.
 
@@ -250,11 +250,13 @@ void psfb21_analogsilence(
             else
                 ath21 = ATH->adjust * ATH->psfb21[gsfb];
 
-            for (j = end-1; j>=start && !stop; j--) {
+            for (j = end-1; j>=start; j--) {
                 if ( fabs(xr[j]) < ath21)
                     xr[j] = 0;
-                else
+                else {
                     stop = 1;
+                    break;
+                }
             }
         }
     }
