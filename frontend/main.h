@@ -29,6 +29,7 @@ extern int swapbytes;              /* force byte swapping   default=0*/
 extern int silent;
 extern int brhist;
 extern float update_interval;      /* to use Frank's time status display */
+extern int mp3_delay;              /* for decoder only */
 
 
 

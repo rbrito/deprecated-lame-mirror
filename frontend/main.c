@@ -63,7 +63,8 @@ int swapbytes;              /* force byte swapping   default=0*/
 int silent;
 int brhist;
 float update_interval;      /* to use Frank's time status display */
-
+int mp3_delay;         /* to adjust the number of samples truncated
+                               during decode */
 
 
 
@@ -250,9 +251,11 @@ int main(int argc, char **argv)
 
 
   if (gf->decode_only) {
-
     /* decode an mp3 file to a .wav */
-    lame_decoder(gf,outf,gf->encoder_delay,inPath,outPath);
+    if (mp3_delay < 0) 
+      lame_decoder(gf,outf,gf->encoder_delay,inPath,outPath);
+    else /* user specified an encoder_delay */
+      lame_decoder(gf,outf,mp3_delay,inPath,outPath);
 
   } else {
 

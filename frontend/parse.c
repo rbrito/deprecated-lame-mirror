@@ -719,6 +719,10 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 		
 		T_ELIF ("decode")
 		    gfp->decode_only=1;
+
+		T_ELIF ("decode-mp3delay")
+		    mp3_delay = atoi( nextArg );
+		    argUsed=1;
 		
 		T_ELIF ("noath")
 		    gfp->noATH=1;
