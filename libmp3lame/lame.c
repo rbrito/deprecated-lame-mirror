@@ -127,7 +127,6 @@ init_qval(lame_t gfc)
         gfc->use_best_huffman = 2;
         break;
     }
-//	gfc->filter_type = 1;
 }
 
 #define ABS(A) (((A)>0) ? (A) : -(A))
@@ -1000,7 +999,6 @@ lame_encode_buffer_interleaved(lame_t gfc,
 {
     int     ret, i;
     sample_t *in_buffer;
-
     if (gfc->Class_ID != LAME_ID)
         return LAME_NOTINIT;
 
@@ -1010,6 +1008,7 @@ lame_encode_buffer_interleaved(lame_t gfc,
     if (!(in_buffer = malloc(sizeof(sample_t)*2*nsamples))) {
         return LAME_NOMEM;
     }
+
     for (i = 0; i < nsamples; i++) {
         in_buffer[i] = buffer[2 * i]    * gfc->scale_left;
         in_buffer[i+nsamples] = buffer[2 * i + 1]* gfc->scale_right;
@@ -1636,7 +1635,7 @@ encode_mp3_frame(lame_t gfc, unsigned char* mp3buf, int mp3buf_size)
 #endif
 
  exit_encode_frame:
-    /* shift out old samples/subband fileter output */
+    /* shift out old samples/subband filter output */
     gfc->mf_size -= gfc->framesize;
     ch = 0;
     do {
