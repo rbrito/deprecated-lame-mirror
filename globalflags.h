@@ -25,6 +25,10 @@ typedef struct  {
   int experimentalX;
   int experimentalY;
   int experimentalZ;
+  int fast_mode; 
+  long int frameNum;
+  int gtkflag;
+  int bWriteVbrTag;
 
 } global_flags;
 
@@ -36,11 +40,6 @@ typedef struct  {
 ***********************************************************************/
 extern global_flags gf;
 
-extern int fast_mode; 
-extern long int frameNum;
-extern int gtkflag;
-extern int g_bWriteVbrTag;
-extern int gpsycho;
 extern int highq;
 extern sound_file_format input_format;
 extern int lame_nowrite;

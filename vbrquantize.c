@@ -90,7 +90,7 @@ FLOAT8 find_scalefac(FLOAT8 *xr,FLOAT8 *xr34,int stride,int sfb,FLOAT8 l3_xmin,i
       sf += delsf; 
     }else{
 #ifdef DEBUG
-      if (stride==1 && sfb==2 && frameNum==50) {
+      if (stride==1 && sfb==2 && gf.frameNum==50) {
 	printf("sfb=%i q=%f  xfsf=%f   masking=%f  sf_ok=%f \n",sfb,sf,
 	       10*log10(1e-20+xfsf),10*log10(1e-20+l3_xmin),sf_ok);
       }
@@ -245,7 +245,7 @@ VBR_iteration_loop_new (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 	  
 	}
       } /* compute scalefactors */
-      //    printf("%i %i %i new vbr over=%i  \n",frameNum,gr,ch,over);
+      //    printf("%i %i %i new vbr over=%i  \n",gf.frameNum,gr,ch,over);
     } /* ch */
   } /* gr */
 }

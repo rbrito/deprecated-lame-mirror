@@ -76,9 +76,9 @@ int gtkmakeframe()
    * and decode to flush any previous buffers from the decoder */
   if (input_format == sf_mp3) {
     iread=lame_readframe(Buffer);
-    frameNum++;
+    gf.frameNum++;
   }else {
-    if (frameNum==0) {
+    if (gf.frameNum==0) {
       mpglag=1;
       lame_decode_init();
     }

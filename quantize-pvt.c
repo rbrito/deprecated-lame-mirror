@@ -116,7 +116,7 @@ iteration_init( FLOAT8 xr_org[2][2][576],
   l3_side->resvDrain = 0;
   mode_gr = (info->version == 1) ? 2 : 1;
 
-  if ( frameNum==0 ) {
+  if ( gf.frameNum==0 ) {
     scalefac_band_long  = &sfBandIndex[info->sampling_frequency + (info->version * 3)].l[0];
     scalefac_band_short = &sfBandIndex[info->sampling_frequency + (info->version * 3)].s[0];
     l3_side->main_data_begin = 0;

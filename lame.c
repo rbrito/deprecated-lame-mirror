@@ -46,12 +46,6 @@
 /* default values set in lame_init() */
 global_flags gf;
 
-int force_ms;
-int fast_mode;
-long int frameNum;
-int gtkflag;
-int g_bWriteVbrTag;
-int gpsycho;
 int highq;
 int no_short_blocks;
 sound_file_format input_format;
@@ -69,7 +63,7 @@ int VBR_min_bitrate;   /* 32kbs */
 int VBR_max_bitrate;  /* 256kbs */
 int voice_mode;
 
-
+int force_ms;
 
 /* Global variable definitions for "musicin.c" */
 ID3TAGDATA id3tag;
@@ -447,7 +441,7 @@ void lame_parse_args(int argc, char **argv)
 	  VBR_max_bitrate_kbps=atoi(arg); 
 	  break;	
 case 't':  /* dont write VBR tag */
-		g_bWriteVbrTag=0;
+		gf.bWriteVbrTag=0;
 	  break;
 	case 'r':  /* force raw pcm input file */
 #ifdef LIBSNDFILE
@@ -510,11 +504,11 @@ case 't':  /* dont write VBR tag */
 	  gf.experimentalZ = TRUE;
 	  break;
 	case 'f': 
-	  fast_mode = 1;
+	  gf.fast_mode = 1;
 	  break;
 #ifdef HAVEGTK
 	case 'g': /* turn on gtk analysis */
-	  gtkflag = TRUE;
+	  gf.gtkflag = TRUE;
 	  break;
 #endif
 	case 'e':        argUsed = 1;
@@ -550,7 +544,7 @@ case 't':  /* dont write VBR tag */
   }  /* loop over args */
 
   /* Do not write VBR tag if VBR flag is not specified */
-  if (g_bWriteVbrTag==1 && VBR==0) g_bWriteVbrTag=0;
+  if (gf.bWriteVbrTag==1 && VBR==0) gf.bWriteVbrTag=0;
 
   if(err || inPath[0] == '\0') lame_usage(programName);  /* never returns */
   if (inPath[0]=='-') silent=1;  /* turn off status - it's broken for stdin */
@@ -565,7 +559,7 @@ case 't':  /* dont write VBR tag */
   }
   /* some file options not allowed with stdout */
   if (outPath[0]=='-') {
-    g_bWriteVbrTag=0; /* turn off VBR tag */
+    gf.bWriteVbrTag=0; /* turn off VBR tag */
     if (id3tag.used) {
       id3tag.used=0;         /* turn of id3 tagging */
       fprintf(stderr,"id3tag ignored: id3 tagging not supported for stdout.\n");
@@ -838,13 +832,13 @@ case 't':  /* dont write VBR tag */
   /* dont allow forced mid/side stereo for mono output */
   if (info->mode == MPG_MD_MONO) force_ms=0;  
 
-  if (gtkflag) {
+  if (gf.gtkflag) {
     lame_nowrite=1;    /* disable all file output */
-    g_bWriteVbrTag=0;  /* disable Xing VBR tag */
+    gf.bWriteVbrTag=0;  /* disable Xing VBR tag */
   }
 
   if (info->version==0) {
-    g_bWriteVbrTag=0;      /* no MPEG2 Xing VBR tags yet */
+    gf.bWriteVbrTag=0;      /* no MPEG2 Xing VBR tags yet */
   }
 
 
@@ -865,7 +859,7 @@ case 't':  /* dont write VBR tag */
     disp_brhist = 0;
 #endif
 
-  if (g_bWriteVbrTag)
+  if (gf.bWriteVbrTag)
     {
       /* Write initial VBR Header to bitstream */
       InitVbrTag(&bs,info->version-1,info->mode,info->sampling_frequency);
@@ -902,7 +896,7 @@ void lame_print_config(void)
     (FLOAT)(fr_ps.stereo*16*s_freq[info->version][info->sampling_frequency])/
     (FLOAT)(bitrate[info->version][info->lay-1][info->bitrate_index]);
 
-  if (gtkflag) {
+  if (gf.gtkflag) {
     fprintf(stderr, "Analyzing %s \n",inPath);
   }
   else {
@@ -1130,7 +1124,7 @@ int lame_encode(short int Buffer[2][1152],char *mpg123bs)
   info = fr_ps.header;
   info->mode_ext = MPG_MD_LR_LR; 
 
-  if (frameNum==0 )  {    
+  if (gf.frameNum==0 )  {    
     FLOAT8 avg_slots_per_frame;
     FLOAT8 sampfreq =   s_freq[info->version][info->sampling_frequency];
     int bit_rate = bitrate[info->version][info->lay-1][info->bitrate_index];
@@ -1170,7 +1164,7 @@ int lame_encode(short int Buffer[2][1152],char *mpg123bs)
 
 #if (ENCDELAY < 800) 
    /* just buffer the first frame, and return */
-   if (frameNum==0 && !frame_buffered) {
+   if (gf.frameNum==0 && !frame_buffered) {
      frame_buffered=1;
      return 0;
    }else {
@@ -1205,10 +1199,10 @@ int lame_encode(short int Buffer[2][1152],char *mpg123bs)
 
 #ifndef _BLADEDLL
   /********************** status display  *****************************/
-  if (!gtkflag && !silent) {
+  if (!gf.gtkflag && !silent) {
     int mod = info->version == 0 ? 100 : 20;
-    if (frameNum%mod==0) {
-      timestatus(info,frameNum,totalframes);
+    if (gf.frameNum%mod==0) {
+      timestatus(info,gf.frameNum,totalframes);
 #ifdef BRHIST
       if (disp_brhist)
 	{
@@ -1248,7 +1242,7 @@ FFT's                    <---------1024---------->
     FFT starts at 576-224-MDCTDELAY (304)
 
    */
-  if (!fast_mode) {  
+  if (!gf.fast_mode) {  
     /* psychoacoustic model 
      * psy model has a 1 granule (576) delay that we must compensate for 
      * (mt 6/99). 
@@ -1319,7 +1313,7 @@ FFT's                    <---------1024---------->
 
 
 #ifdef HAVEGTK
-  if (gtkflag) { 
+  if (gf.gtkflag) { 
     int j;
     for ( gr = 0; gr < mode_gr; gr++ ) {
       for ( ch = 0; ch < stereo; ch++ ) {
@@ -1391,10 +1385,10 @@ FFT's                    <---------1024---------->
   if (!lame_nowrite) write_buffer(&bs);  /* ouput to mp3 file */
   empty_buffer(&bs);  /* empty buffer */
 
-  if (g_bWriteVbrTag) AddVbrFrame((int)(sentBits/8));
+  if (gf.bWriteVbrTag) AddVbrFrame((int)(sentBits/8));
 
 #ifdef HAVEGTK 
-  if (gtkflag) { 
+  if (gf.gtkflag) { 
     int j;
     int framesize = (info->version==0) ? 576 : 1152;
     for ( ch = 0; ch < stereo; ch++ ) {
@@ -1406,7 +1400,7 @@ FFT's                    <---------1024---------->
     }
   }
 #endif
-  frameNum++;
+  gf.frameNum++;
 
   return mpg123count;
 }
@@ -1420,9 +1414,9 @@ int lame_readframe(short int Buffer[2][1152])
    * will  .5*(L+R) in channel 0,  and nothing in channel 1. */
   /* DOWNSAMPLE, ETC */
 #ifdef HAVEGTK
-  if (gtkflag) {
+  if (gf.gtkflag) {
     ofreq=1000*s_freq[info.version][info.sampling_frequency];  /* output */
-    pinfo->frameNum = frameNum;
+    pinfo->frameNum = gf.frameNum;
     pinfo->sampfreq=ofreq;
     pinfo->framesize=(fr_ps.header->version==0) ? 576 : 1152;
     pinfo->stereo = fr_ps.stereo;
@@ -1436,8 +1430,8 @@ int lame_readframe(short int Buffer[2][1152])
   }
 
   /* check to see if we overestimated/underestimated totalframes */
-  if (iread==0)  totalframes = Min(totalframes,frameNum+2);
-  if (frameNum > (totalframes-1)) totalframes = frameNum;
+  if (iread==0)  totalframes = Min(totalframes,gf.frameNum+2);
+  if (gf.frameNum > (totalframes-1)) totalframes = gf.frameNum;
   return iread;
 }
 #endif /* _BLADEDLL */
@@ -1489,13 +1483,12 @@ void lame_init(int nowrite)
   gf.experimentalX = 0;
   gf.experimentalY = 0;
   gf.experimentalZ = 0;
+  gf.fast_mode=0;
+  gf.frameNum=0;
+  gf.bWriteVbrTag=1;
+  gf.gtkflag=0;
 
 
-  fast_mode=0;
-  frameNum=0;
-  g_bWriteVbrTag=1;
-  gtkflag=0;
-  gpsycho=1;
   highq=0;
   input_format=sf_unknown;
   lame_nowrite=nowrite;
@@ -1550,9 +1543,9 @@ void lame_getmp3info(lame_mp3info *mp3info)
 int lame_cleanup(char *mpg123bs)
 {
   int mpg123count;
-  frameNum--;
-  if (!gtkflag && !silent) {
-      timestatus(&info,frameNum,totalframes);
+  gf.frameNum--;
+  if (!gf.gtkflag && !silent) {
+      timestatus(&info,gf.frameNum,totalframes);
 #ifdef BRHIST
       if (disp_brhist)
 	{
@@ -1582,7 +1575,7 @@ int lame_cleanup(char *mpg123bs)
     fclose(bs.pt);    /* Close the file */
     desalloc_buffer(&bs);    /* Deallocate all buffers */
   
-    if (g_bWriteVbrTag)
+    if (gf.bWriteVbrTag)
 	{
 	  /* Calculate relative quality of VBR stream  
 	   * 0=best, 100=worst */

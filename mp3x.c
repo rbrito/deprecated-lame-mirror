@@ -23,7 +23,7 @@ int main(int argc, char **argv)
   else lame_parse_args(argc, argv); 
   lame_print_config();
 
-  gtkflag=1;
+  gf.gtkflag=1;
   gtk_init (&argc, &argv);
   gtkcontrol();
 

@@ -73,8 +73,8 @@ int main(int argc, char **argv)
   lame_getmp3info(&mp3info);
 
 #ifdef HAVEGTK
-  if (gtkflag) gtk_init (&argc, &argv);
-  if (gtkflag) gtkcontrol();
+  if (gf.gtkflag) gtk_init (&argc, &argv);
+  if (gf.gtkflag) gtkcontrol();
   else 
 #endif
     while (makeframe());

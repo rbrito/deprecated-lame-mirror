@@ -1,6 +1,6 @@
 #ifndef GTKANAL_DOT_H
 #define GTKANAL_DOT_H
-
+#include "globalflags.h"
 #include "encoder.h"
 
 #define READ_AHEAD 10             /* number of frames to read ahead */
@@ -61,6 +61,5 @@ typedef struct {
 
 int gtkcontrol(void);
 extern plotting_data *pinfo;
-extern int gtkflag;
 
 #endif

@@ -352,7 +352,7 @@ void outer_loop_dual(
 
 
     /* compute the distortion in this quantization */
-    if (fast_mode) {
+    if (gf.fast_mode) {
       for (ch=0; ch<stereo; ch++)
 	over[ch]=0;
     }else{
@@ -398,7 +398,7 @@ void outer_loop_dual(
 	  memcpy(&save_cod_info[ch],cod_info[ch],sizeof(save_cod_info[ch]));
 
 #ifdef HAVEGTK
-	  if (gtkflag) {
+	  if (gf.gtkflag) {
 	    for ( i = 0; i < 3; i++ ) {
 	      for ( sfb = cod_info[ch]->sfb_smax; sfb < 12; sfb++ )  {
 		pinfo->xfsf_s[gr][ch][3*sfb+i] =  
@@ -485,15 +485,15 @@ void outer_loop_dual(
       memcpy(cod_info[ch],&save_cod_info[ch],sizeof(save_cod_info[ch]));
       cod_info[ch]->part2_3_length += cod_info[ch]->part2_length;
 
-#ifdef HAVEGTK
-      if (gtkflag)
-	pinfo->LAMEmainbits[gr][ch]=cod_info[ch]->part2_3_length;
-#endif
     }      
   }
   
   /* finish up */
   for (ch=0 ; ch < stereo ; ch ++ ) {
+#ifdef HAVEGTK
+    if (gf.gtkflag)
+      pinfo->LAMEmainbits[gr][ch]=cod_info[ch]->part2_3_length;
+#endif
     ResvAdjust( fr_ps, cod_info[ch], l3_side, mean_bits );
     cod_info[ch]->global_gain = cod_info[ch]->quantizerStepSize + 210.0;
     assert( cod_info[ch]->global_gain < 256 );

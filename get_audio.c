@@ -38,7 +38,7 @@ int get_audio(short buffer[2][1152],int stereo, layer* info)
   int num_channels;
   unsigned long remaining;
 
-  if (frameNum==0) {
+  if (gf.frameNum==0) {
     num_samples_read=0;
     num_samples= GetSndSamples();
   }
@@ -109,7 +109,7 @@ int get_audio_resample(short int Buffer[2][1152],FLOAT resample_ratio,int stereo
   if (iread==0) rcode=0;
 
 
-  if (frameNum==0) {
+  if (gf.frameNum==0) {
     r0=&bufa[0];
     r1=&bufa[1];
     in_framesize=out_framesize;
@@ -208,7 +208,7 @@ int read_samples_mp3(FILE *musicin,short int mpg123pcm[2][1152],int stereo)
 
 
 #ifdef HAVEGTK
-  if (gtkflag) {
+  if (gf.gtkflag) {
     framesize=1152;
     if (out==576) framesize=576;
     
@@ -222,8 +222,8 @@ int read_samples_mp3(FILE *musicin,short int mpg123pcm[2][1152],int stereo)
 	pinfo->pcmdata2[ch][j+framesize-DECDELAY] = mpg123pcm[ch][j];
     }
   
-  pinfo->frameNum123 = frameNum-1;
-  pinfo->frameNum = frameNum;
+  pinfo->frameNum123 = gf.frameNum-1;
+  pinfo->frameNum = gf.frameNum;
   }
 #endif
   if (out==-1) return 0;

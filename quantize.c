@@ -102,6 +102,10 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 	if (highq && cod_info->block_type == NORM_TYPE) {
 	  best_huffman_divide(gr, ch, cod_info, l3_enc[gr][ch]);
 	}
+#ifdef HAVEGTK
+	if (gf.gtkflag)
+	  pinfo->LAMEmainbits[gr][ch]=cod_info->part2_3_length;
+#endif
 	ResvAdjust( fr_ps, cod_info, l3_side, mean_bits );
       }
     }
@@ -363,6 +367,10 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
       if (highq && cod_info->block_type == NORM_TYPE) {
 	best_huffman_divide(gr, ch, cod_info, l3_enc[gr][ch]);
       }
+#ifdef HAVEGTK
+      if (gf.gtkflag)
+	pinfo->LAMEmainbits[gr][ch]=cod_info->part2_3_length;
+#endif
       ResvAdjust (fr_ps, cod_info, l3_side, mean_bits);
     }
 
@@ -605,7 +613,7 @@ void outer_loop(
     
     if (notdone) {
       /* compute the distortion in this quantization */
-      if (fast_mode) {
+      if (gf.fast_mode) {
       	over=0;
       }else{
 	/* coefficients and thresholds both l/r (or both mid/side) */
@@ -642,7 +650,7 @@ void outer_loop(
 	memcpy(&save_cod_info,cod_info,sizeof(save_cod_info));
 	
 #ifdef HAVEGTK
-	if (gtkflag) {
+	if (gf.gtkflag) {
 	  FLOAT ifqstep;
 	  int l,start,end,bw;
 	  FLOAT8 en0;
@@ -700,7 +708,6 @@ void outer_loop(
 	  pinfo->max_noise[gr][ch]=max_noise;
 	  pinfo->tot_noise[gr][ch]=tot_noise;
 	  pinfo->over_noise[gr][ch]=over_noise;
-	  
 	}
 #endif
         } /* end of sloppy skipping */
@@ -784,10 +791,6 @@ void outer_loop(
     memcpy(cod_info,&save_cod_info,sizeof(save_cod_info));
     cod_info->part2_3_length += cod_info->part2_length;
 
-#ifdef HAVEGTK
-    if (gtkflag)
-      pinfo->LAMEmainbits[gr][ch]=cod_info->part2_3_length;
-#endif
   }      
   /* finish up */
   cod_info->global_gain = cod_info->quantizerStepSize + 210.0;
