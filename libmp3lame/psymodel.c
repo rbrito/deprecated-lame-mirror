@@ -1355,12 +1355,6 @@ L3psycho_anal_ns(
 	    gfc->loudness_next[gr][chn]
 		= psycho_loudness_approx(fftenergy, gfc);
 
-	/* total energy */
-	enn = 0.0;
-	for (j = 11; j < gfc->npart_l; j++)
-	    enn += eb[j];
-	gfc->tot_ener_next[gr][chn] = enn;
-
 #ifdef HAVE_GTK
 	if (gfp->analysis)
 	    memcpy(gfc->energy_save[gr][chn], fftenergy, sizeof(fftenergy));
@@ -1618,7 +1612,6 @@ void
 psycho_analysis(
     lame_global_flags * gfp,
     const sample_t *buffer[2],
-    FLOAT ms_ener_ratio_d[2],
     III_psy_ratio masking_d[2][2],
     FLOAT sbsmpl[2][2*1152]
     )
@@ -1640,11 +1633,6 @@ psycho_analysis(
     gfc->mode_ext = gfc->mode_ext_next;
     if (gfc->mode_ext & MPG_MD_MS_LR) {
 	for (gr=0; gr < gfc->mode_gr ; gr++) {
-	    FLOAT e0 = gfc->tot_ener_next[gr][2] + gfc->tot_ener_next[gr][3];
-	    if (e0 > 0.0)
-		e0 = gfc->tot_ener_next[gr][3] / e0;
-	    ms_ener_ratio_d[gr] = e0;
-
 	    for (ch = 0; ch < 2; ch++) {
 		masking_d[gr][ch] = gfc->masking_next[gr][ch + 2];
 		gfc->l3_side.tt[gr][ch].block_type = NORM_TYPE;

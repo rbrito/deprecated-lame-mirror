@@ -337,7 +337,6 @@ int  lame_encode_mp3_frame (				/* Output */
     III_psy_ratio masking[2][2];  /*pointer to selected maskings*/
     const sample_t *inbuf[2];
     lame_internal_flags *gfc=gfp->internal_flags;
-    FLOAT ms_ener_ratio[2];
     FLOAT sbsmpl[MAX_CHANNELS][2*1152];
 
     int ch,gr;
@@ -383,9 +382,8 @@ int  lame_encode_mp3_frame (				/* Output */
 	/*          1152+576+286 samples for two granules */
 	assert(gfc->mf_size>=(286+576*(1+gfc->mode_gr)));
 
-	if (gfc->psymodel) {
-	    psycho_analysis(gfp, inbuf, ms_ener_ratio, masking, sbsmpl);
-	}
+	if (gfc->psymodel)
+	    psycho_analysis(gfp, inbuf, masking, sbsmpl);
     }
 
     /********************** padding *****************************/
@@ -417,7 +415,7 @@ int  lame_encode_mp3_frame (				/* Output */
 	    memcpy(gfc->pinfo->energy, gfc->energy_save,
 		   sizeof(gfc->energy_save));
 #endif
-	psycho_analysis(gfp, inbuf, ms_ener_ratio, masking, sbsmpl);
+	psycho_analysis(gfp, inbuf, masking, sbsmpl);
     } else {
 	memset(masking, 0, sizeof(masking));
 	for (gr=0; gr < gfc->mode_gr ; gr++)
@@ -477,7 +475,7 @@ int  lame_encode_mp3_frame (				/* Output */
 		gi[1].xr[i] = (l-r) * (FLOAT)(SQRT2*0.5);
 	    }
 	    if (gfc->mode_ext & 1)
-		conv_istereo(gfc, gi, sfb, i);
+		conv_istereo(gfc, gi, sfb, end);
 	    if (gfc->sparsing)
 		ms_sparsing(gfc, gr);
 	}
@@ -499,7 +497,7 @@ int  lame_encode_mp3_frame (				/* Output */
     /* copy data for MP3 frame analyzer */
     if (gfc->pinfo) {
 	for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
-	    gfc->pinfo->ms_ener_ratio[gr] = ms_ener_ratio[gr];
+	    gfc->pinfo->ms_ener_ratio[gr] = 0.0;
 	    for ( ch = 0; ch < gfc->channels_out; ch++ ) {
 		gfc->pinfo->blocktype[gr][ch]
 		    =gfc->l3_side.tt[gr][ch].block_type;
@@ -532,13 +530,13 @@ int  lame_encode_mp3_frame (				/* Output */
     switch (gfp->VBR){ 
     default:
     case cbr:
-	iteration_loop( gfp, ms_ener_ratio, masking);
+	iteration_loop( gfp, masking);
 	break;
     case vbr:
 	VBR_iteration_loop( gfp, masking);
 	break;
     case abr:
-	ABR_iteration_loop( gfp, ms_ener_ratio, masking);
+	ABR_iteration_loop( gfp, masking);
 	break;
     }
 

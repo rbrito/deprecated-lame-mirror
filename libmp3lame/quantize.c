@@ -942,7 +942,6 @@ static void
 ABR_calc_target_bits (
     lame_global_flags * gfp,
     III_psy_ratio     ratio        [2][2],
-    FLOAT             ms_ener_ratio[2],
     int               targ_bits    [2][2]
     )
 {
@@ -1050,7 +1049,6 @@ ABR_calc_target_bits (
 void 
 ABR_iteration_loop(
     lame_global_flags *gfp,
-    FLOAT             ms_ener_ratio[2], 
     III_psy_ratio      ratio        [2][2])
 {
     lame_internal_flags *gfc=gfp->internal_flags;
@@ -1058,7 +1056,7 @@ ABR_iteration_loop(
     int mean_bits;
     int gr, ch;
 
-    ABR_calc_target_bits (gfp, ratio, ms_ener_ratio, targ_bits);
+    ABR_calc_target_bits (gfp, ratio, targ_bits);
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    gr_info *gi = &gfc->l3_side.tt[gr][ch];
@@ -1098,7 +1096,6 @@ ABR_iteration_loop(
 void 
 iteration_loop(
     lame_global_flags *gfp, 
-    FLOAT             ms_ener_ratio[2],
     III_psy_ratio      ratio        [2][2])
 {
     lame_internal_flags *gfc=gfp->internal_flags;

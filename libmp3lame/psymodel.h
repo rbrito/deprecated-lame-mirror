@@ -42,7 +42,6 @@
 
 void psycho_analysis( lame_global_flags *gfp,
 		      const sample_t *buffer[2],
-		      FLOAT ms_ener_ratio_d[2],
 		      III_psy_ratio masking[2][2],
 		      FLOAT sbsmpl[2][2*1152] );
 

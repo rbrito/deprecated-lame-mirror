@@ -399,7 +399,6 @@ struct lame_internal_flags {
 
     /* for next frame data */
     III_psy_ratio masking_next[2][MAX_CHANNELS*2];
-    FLOAT tot_ener_next[2][MAX_CHANNELS*2];
     FLOAT loudness_next[2][MAX_CHANNELS];  /* loudness^2 approx. per granule and channel */
     int useshort_next[2][MAX_CHANNELS*2]; /* for block type */
     int mode_ext_next;

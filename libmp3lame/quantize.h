@@ -25,14 +25,12 @@
 #include "util.h"
 
 void iteration_loop( lame_global_flags *gfp,
-		     FLOAT ms_ratio[2], 
 		     III_psy_ratio ratio[2][2]);
 
 void VBR_iteration_loop( lame_global_flags *gfp,
 			 III_psy_ratio ratio[2][2]);
 
 void ABR_iteration_loop( lame_global_flags *gfp,
-			 FLOAT ms_ratio[2], 
 			 III_psy_ratio ratio[2][2]);
 
 void    iteration_init (lame_global_flags *gfp);
