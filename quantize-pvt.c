@@ -339,7 +339,7 @@ void ms_convert(FLOAT8 xr[2][576],FLOAT8 xr_org[2][576])
  * allocate bits among 2 channels based on PE
  * mt 6/99
  ************************************************************************/
-void on_pe(lame_global_flags *gfp,FLOAT8 pe[2][2],III_side_info_t *l3_side,
+int on_pe(lame_global_flags *gfp,FLOAT8 pe[2][2],III_side_info_t *l3_side,
 int targ_bits[2],int mean_bits, int gr)
 {
   lame_internal_flags *gfc=gfp->internal_flags;
@@ -347,9 +347,11 @@ int targ_bits[2],int mean_bits, int gr)
   int extra_bits,tbits,bits;
   int add_bits[2]; 
   int ch;
+  int max_bits;  /* maximum allowed bits for this granule */
 
   /* allocate targ_bits for granule */
   ResvMaxBits( mean_bits, &tbits, &extra_bits, gr);
+  max_bits=tbits+extra_bits;
 
   bits=0;
 
@@ -361,14 +363,16 @@ int targ_bits[2],int mean_bits, int gr)
     
     targ_bits[ch]=tbits/gfc->stereo;
     
-    /* extra bits based on PE > 700 */
-    add_bits[ch]=(pe[gr][ch]-750)/1.55;  /* 1.4; */
+    add_bits[ch]=(pe[gr][ch]-750)/1.55;
+    /* short blocks us 50% extra, no matter what the pe */
+    if (cod_info->block_type==SHORT_TYPE) {
+      if (add_bits[ch]<mean_bits/4) add_bits[ch]=mean_bits/4;
+    }
+
+    /* at most increase bits by 1.5*average */
+    if (add_bits[ch] > .75*mean_bits) add_bits[ch]=mean_bits*.75;
     if (add_bits[ch] < 0) add_bits[ch]=0;
 
-    /* short blocks need extra, no matter what the pe */
-    if (cod_info->block_type==SHORT_TYPE) 
-      if (add_bits[ch]<500) add_bits[ch]=500;
-    
     bits += add_bits[ch];
     if ((targ_bits[ch]+add_bits[ch]) > 4094) 
       add_bits[ch]=4094-targ_bits[ch];
@@ -383,25 +387,39 @@ int targ_bits[2],int mean_bits, int gr)
     targ_bits[ch] = targ_bits[ch] + add_bits[ch];
     extra_bits -= add_bits[ch];
   }
-
+  return max_bits;
 }
 
-void reduce_side(int targ_bits[2],FLOAT8 ms_ener_ratio,int mean_bits)
+
+
+
+void reduce_side(int targ_bits[2],FLOAT8 ms_ener_ratio,int mean_bits,int max_bits)
 {
-int ch;
-int numchn=2;
-    /*  ms_ener_ratio = 0:  allocate 66/33  mid/side  fac=.33  
-     *  ms_ener_ratio =.5:  allocate 50/50 mid/side   fac= 0 */
-    /* 75/25 split is fac=.5 */
-    /* float fac = .50*(.5-ms_ener_ratio[gr])/.5;*/
-    float fac = .33*(.5-ms_ener_ratio)/.5;
-    if (fac<0) fac=0;
+  int move_bits;
+  FLOAT fac;
+
+  /* mid channel already has 2x more than average, dont bother */
+  /* mean_bits = bits per granule (for both channels) */
+  if (targ_bits[0] > mean_bits)
+    return;
+
+  /*  ms_ener_ratio = 0:  allocate 66/33  mid/side  fac=.33  
+   *  ms_ener_ratio =.5:  allocate 50/50 mid/side   fac= 0 */
+  /* 75/25 split is fac=.5 */
+  /* float fac = .50*(.5-ms_ener_ratio[gr])/.5;*/
+  fac = .33*(.5-ms_ener_ratio)/.5;
+  if (fac<0) fac=0;
+  if (fac>.5) fac=.5;
+  
+    /* number of bits to move from side channel to mid channel */
+    /*    move_bits = fac*targ_bits[1];  */
+    move_bits = fac*.5*(targ_bits[0]+targ_bits[1]);  
     
     if (targ_bits[1] >= 125) {
       /* dont reduce side channel below 125 bits */
-      if (targ_bits[1]-targ_bits[1]*fac > 125) {
-	targ_bits[0] += targ_bits[1]*fac;
-	targ_bits[1] -= targ_bits[1]*fac;
+      if (targ_bits[1]-move_bits > 125) {
+	targ_bits[0] += move_bits;
+	targ_bits[1] -= move_bits;
       } else {
 	targ_bits[0] += targ_bits[1] - 125;
 	targ_bits[1] = 125;
@@ -409,13 +427,11 @@ int numchn=2;
     }
     
     /* dont allow to many bits per channel */  
-    for (ch=0; ch<numchn; ch++) {
-      int max_bits = Min(4095,mean_bits/2 + 1200);
-      if (targ_bits[ch] > max_bits) {
-	targ_bits[ch] = max_bits;
-      }
+    move_bits=targ_bits[0]+targ_bits[1];
+    if (move_bits > max_bits) {
+      targ_bits[0]=(max_bits*targ_bits[0])/move_bits;
+      targ_bits[1]=(max_bits*targ_bits[1])/move_bits;
     }
-
 }
 
 /*************************************************************************** 

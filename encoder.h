@@ -26,7 +26,7 @@ total:    512+16
    less than 96 will result in lost data in the first 96-ENCDELAY
    samples. 
 
-   suggested: 800
+   suggested: 576
    set to 1160 to sync with FhG.
 */
 #define ENCDELAY 576

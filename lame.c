@@ -811,12 +811,13 @@ char *mp3buf, int mp3buf_size)
   }
   if (check_ms_stereo) {
     /* ms_ratio = is like the ratio of side_energy/total_energy */
-    FLOAT8 ms_ratio_ave,ms_ener_ratio_ave;
+    FLOAT8 ms_ratio_ave;
     /*     ms_ratio_ave = .5*(ms_ratio[0] + ms_ratio[1]);*/
     ms_ratio_ave = .25*(gfc->ms_ratio[0] + gfc->ms_ratio[1]+
 			 ms_ratio_prev + ms_ratio_next);
-    ms_ener_ratio_ave = .5*(gfc->ms_ener_ratio[0]+gfc->ms_ener_ratio[1]);
-    if ( ms_ratio_ave <.35 ) gfc->mode_ext = MPG_MD_MS_LR;
+    if ( (ms_ratio_ave <.35) &&  
+         (gfc->ms_ratio[0]<.45) &&
+         (gfc->ms_ratio[1]<.45) )  gfc->mode_ext = MPG_MD_MS_LR;
   }
   if (gfp->force_ms) gfc->mode_ext = MPG_MD_MS_LR;
 

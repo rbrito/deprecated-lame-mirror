@@ -134,7 +134,7 @@ iteration_loop( lame_global_flags *gfp,
   III_psy_xmin l3_xmin[2];
   gr_info *cod_info;
   int bitsPerFrame;
-  int mean_bits;
+  int mean_bits,max_bits;
   int ch, gr, i, bit_rate;
   III_side_info_t *l3_side;
 
@@ -157,10 +157,10 @@ iteration_loop( lame_global_flags *gfp,
     if (convert_mdct) 
       ms_convert(xr[gr], xr[gr]);
     
-    on_pe(gfp,pe,l3_side,targ_bits,mean_bits, gr);
+    max_bits=on_pe(gfp,pe,l3_side,targ_bits,mean_bits, gr);
 
     if (reduce_sidechannel) 
-      reduce_side(targ_bits,ms_ener_ratio[gr],mean_bits);
+      reduce_side(targ_bits,ms_ener_ratio[gr],mean_bits,max_bits);
     
     for (ch=0 ; ch < gfc->stereo ; ch ++) {
       cod_info = &l3_side->gr[gr].ch[ch].tt;	
