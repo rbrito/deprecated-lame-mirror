@@ -172,6 +172,11 @@ typedef struct {
 } III_psy_ratio;
 
 typedef struct {
+    short width;
+    short window;
+} winfo_t;
+
+typedef struct {
     FLOAT xr[576];
     int l3_enc[576];
     int scalefac[SFBMAX];
@@ -200,13 +205,12 @@ typedef struct {
     int psymax;
     int sfbdivide;
     int xrNumMax;
-    int width[SFBMAX];
-    int window[SFBMAX];
+    winfo_t wi[SFBMAX];
     int count1bits;
     /* added for LSF */
     int slen[4];
 
-    int dummy_for_padding[2];
+    int dummy_for_padding[1];
 } gr_info;
 
 typedef struct {

@@ -154,7 +154,7 @@ calc_xmin(
     for (gsfb = 0; gsfb < gi->psy_lmax; gsfb++) {
 	FLOAT threshold = gi->ATHadjust * gfc->ATH.l[gsfb];
 	FLOAT x = ratio->en.l[gsfb];
-	int l = gi->width[gsfb];
+	int l = gi->wi[gsfb].width;
 	j -= l;
 	if (x > 0.0) {
 	    x = ratio->thm.l[gsfb] / x;
@@ -183,7 +183,7 @@ calc_xmin(
 	int b;
 	for (b = 0; b < 3; b++) {
 	    FLOAT threshold = tmpATH, x = ratio->en.s[sfb][b];
-	    int l = gi->width[gsfb];
+	    int l = gi->wi[gsfb].width;
 	    j -= l;
 	    if (x > 0.0) {
 		x = ratio->thm.s[sfb][b] / x;
@@ -226,7 +226,7 @@ calc_noise(
 	if (j > gi->big_values)
 	    break;
 	noise = *distort;
-	l = gi->width[sfb];
+	l = gi->wi[sfb].width;
 	j -= l;
 	if (noise < 0.0) {
 #ifdef HAVE_NASM
@@ -255,7 +255,7 @@ calc_noise(
 	if (j > gi->count1)
 	    break;
 	noise = *distort;
-	l = gi->width[sfb];
+	l = gi->wi[sfb].width;
 	j -= l;
 	if (noise < 0.0) {
 	    FLOAT step = POW20(scalefactor(gi, sfb)) * pow43[1];
@@ -274,7 +274,7 @@ calc_noise(
 
     for (;sfb < gi->psymax; rxmin++, distort++, sfb++) {
 	FLOAT noise = *distort;
-	l = gi->width[sfb];
+	l = gi->wi[sfb].width;
 	j -= l;
 	if (noise < 0.0) {
 #ifdef HAVE_NASM
@@ -540,7 +540,7 @@ trancate_smallspectrums(lame_t gfc, gr_info* const gi, const FLOAT* const xmin)
     j = sfb = 0;
     do {
 	FLOAT threshold;
-	int nsame, start, width2, k = j, width = gi->width[sfb];
+	int nsame, start, width2, k = j, width = gi->wi[sfb].width;
 	j -= width;
 
 	if (distort[sfb] >= xmin[sfb])
@@ -590,7 +590,7 @@ loop_break(const gr_info * const gi)
 {
     int sfb = gi->psymax-1;
     do {
-	if (gi->scalefac[sfb] + gi->subblock_gain[gi->window[sfb]] == 0)
+	if (gi->scalefac[sfb] + gi->subblock_gain[gi->wi[sfb].window] == 0)
 	    return 0;
     } while (--sfb >= 0);
     return sfb;
@@ -833,7 +833,7 @@ adjust_global_gain(lame_t gfc, gr_info *gi, FLOAT *distort, int huffbits)
     int sfb = 0, j = 0, end = gi->xrNumMax;
 
     do {
-	int bw = gi->width[sfb];
+	int bw = gi->wi[sfb].width;
 	FLOAT istep;
 	j -= bw;
 	if (distort[sfb] >= 0.0)
@@ -875,7 +875,7 @@ adjust_global_gain(lame_t gfc, gr_info *gi, FLOAT *distort, int huffbits)
 	    continue;
 	istep = 0.634521682242439
 	    / IPOW20(scalefactor(gi, sfb) + gi->scalefac_scale);
-	for (bw = gi->width[sfb]; bw < 0; bw++)
+	for (bw = gi->wi[sfb].width; bw < 0; bw++)
 	    if (xr34[j+bw] < istep)
 		fi[j+bw].i = 0;
     } while (++sfb < gi->psymax && j < end);
@@ -892,7 +892,7 @@ CBR_2nd_bitalloc(lame_t gfc, gr_info *gi, FLOAT distort[])
     gr_info gi_w = *gi;
     int sfb, j = 0, flag = 0;
     for (sfb = 0; sfb < gi_w.psymax; sfb++) {
-	int width = gi_w.width[sfb];
+	int width = gi_w.wi[sfb].width;
 	distort[sfb] = 0.0;
 	j -= width;
 	if (gi_w.scalefac[sfb] > 0) {
@@ -995,7 +995,7 @@ CBR_1st_bitalloc (
 		&& ((gi->block_type != SHORT_TYPE
 		     && gfc->scalefac_band.l[gi->psymax-1] > gi->count1)
 		    || (gfc->scalefac_band.s[gi->psymax/3]*3
-			+ gi->width[gi->psymax-1]) > gi->count1)) {
+			+ gi->wi[gi->psymax-1].width) > gi->count1)) {
 		/* some scalefac band which we do not want to be i-stereo is
 		   all zero (treat as i-stereo). */
 		calc_noise(gfc, &gi_w, rxmin, distort);
@@ -1363,7 +1363,7 @@ set_scalefactor_values(gr_info *gi)
     int ifqstep = (1 << (1 + gi->scalefac_scale)) - 1, sfb = 0;
     do {
 	int s = (gi->global_gain - gi->scalefac[sfb]
-		 - gi->subblock_gain[gi->window[sfb]]*8 + ifqstep)
+		 - gi->subblock_gain[gi->wi[sfb].window]*8 + ifqstep)
 		     >> (1 + gi->scalefac_scale);
 	if (gi->preflag > 0)
 	    s -= pretab[sfb];
@@ -1381,7 +1381,7 @@ noisesfb(lame_t gfc, gr_info *gi, FLOAT * xmin, int startsfb)
 {
     int sfb, j = 0;
     for (sfb = 0; sfb < gi->psymax; sfb++) {
-	int width = gi->width[sfb];
+	int width = gi->wi[sfb].width;
 	j -= width;
 	if (sfb >= startsfb) {
 	    int s = scalefactor(gi, sfb);
@@ -1445,7 +1445,7 @@ VBR_3rd_bitalloc(lame_t gfc, gr_info *gi, FLOAT * xmin)
 	return r;
 
     for (j = sfb = 0; sfb < gi->psymax; sfb++) {
-	int width = gi->width[sfb];
+	int width = gi->wi[sfb].width;
 	j -= width;
 	while (gi->scalefac[sfb] > 0) {
 	    gi->scalefac[sfb]--;
@@ -1481,7 +1481,7 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
 	sfmin = -7*8-7*4;
     do {
 	FLOAT maxXR = 0.0;
-	int i = gi->width[sfb];
+	int i = gi->wi[sfb].width;
 	j -= i;
 	do {
 	    if (maxXR < xr34[i+j])
@@ -1492,7 +1492,7 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
 
 	if (maxXR != 0.0) {
 	    gfc->maxXR[sfb] = (maxXR = IXMAX_VAL / maxXR);
-	    gain = find_scalefac(gfc, j, xmin[sfb], gi->width[sfb], maxXR,
+	    gain = find_scalefac(gfc, j, xmin[sfb], gi->wi[sfb].width, maxXR,
 				 sfmin, gain);
 	    if (gain <= 255 && vbrmax < gain)
 		vbrmax = gain;
@@ -1656,7 +1656,7 @@ set_pinfo(lame_t gfc, gr_info *gi, const III_psy_ratio *ratio, int gr, int ch)
 
     over = j = 0;
     for (sfb2 = 0; sfb2 < gi->psy_lmax; sfb2++) {
-	end = j - gi->width[sfb2];
+	end = j - gi->wi[sfb2].width;
 	for (en0 = 0.0; j < end; j++) 
 	    en0 += gi->xr[j] * gi->xr[j];
 	en0=Max(en0, 1e-20);
@@ -1680,7 +1680,7 @@ set_pinfo(lame_t gfc, gr_info *gi, const III_psy_ratio *ratio, int gr, int ch)
 
     for (sfb = gi->sfb_smin; sfb2 < gi->psymax; sfb++) {
 	for (i = 0; i < 3; i++, sfb2++) {
-	    end = j - gi->width[sfb2];
+	    end = j - gi->wi[sfb2].width;
 	    for (en0 = 0.0; j < end; j++)
 		en0 += gi->xr[j] * gi->xr[j];
 

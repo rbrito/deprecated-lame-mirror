@@ -23,7 +23,7 @@
 #define LAME_QUANTIZE_PVT_H
 
 #define scalefactor(gi, sfb) \
-    (gi->global_gain - gi->subblock_gain[gi->window[sfb]]*8) \
+    (gi->global_gain - gi->subblock_gain[gi->wi[sfb].window]*8) \
      - ((gi->scalefac[sfb] + ((gi->preflag > 0) ? pretab[sfb] : 0)) \
         << (gi->scalefac_scale + 1))
 

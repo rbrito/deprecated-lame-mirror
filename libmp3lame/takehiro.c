@@ -213,7 +213,7 @@ quantize_01(const FLOAT *xp, gr_info *gi, fi_union *fi, int sfb,
 	    const FLOAT *xend)
 {
     do {
-	const FLOAT *xe = xp - gi->width[sfb];
+	const FLOAT *xe = xp - gi->wi[sfb].width;
 	FLOAT istep = (1.0 - 0.4054) / IPOW20(scalefactor(gi, sfb));
 	sfb++;
 	if (xe > xend)
@@ -675,7 +675,7 @@ count_bits(lame_t gfc, gr_info * const gi)
 	    break;
 	}
 
-	xe = xp - gi->width[sfb];
+	xe = xp - gi->wi[sfb].width;
 	if (xe > xend)
 	    xe = xend;
 #ifdef HAVE_NASM
@@ -722,7 +722,7 @@ count_bits(lame_t gfc, gr_info * const gi)
 	int j = 0;
 	for (sfb = 0; sfb < gi->psymax && j < gi->count1; sfb++) {
 	    FLOAT roundfac;
-	    int l = gi->width[sfb];
+	    int l = gi->wi[sfb].width;
 	    j -= l;
 	    if (!gfc->pseudohalf[sfb])
 		continue;
@@ -808,7 +808,7 @@ best_scalefac_store(lame_t gfc, int gr, int ch)
 
     memset(gfc->scfsi[ch], 0, sizeof(gfc->scfsi[ch]));
     for (sfb = 0; sfb < gi->psymax; sfb++) {
-	int l = gi->width[sfb];
+	int l = gi->wi[sfb].width;
 	int even = 0;
 	j -= l;
 	do {
@@ -825,7 +825,7 @@ best_scalefac_store(lame_t gfc, int gr, int ch)
 	   scalefactor value and ix[]. */
 	while (((even & 7) == 0)
 	       && gi->scalefac[sfb] >= (8 >> gi->scalefac_scale)) {
-	    l = gi->width[sfb];
+	    l = gi->wi[sfb].width;
 	    do {
 		gi->l3_enc[l+j] >>= 3;
 	    } while (++l < 0);
