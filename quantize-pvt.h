@@ -42,7 +42,6 @@ void outer_loop( FLOAT8 xr[576],     /*vector of the magnitudees of the spectral
 		FLOAT8 noise[4],
                 III_psy_xmin *l3_xmin, /* the allowed distortion of the scalefactor */
                 int l3_enc[576],    /* vector of quantized values ix(0..575) */
-		frame_params *fr_ps,
 		 III_scalefac_t *scalefac, /* scalefactors */
 		 gr_info *,
                 FLOAT8 xfsf[4][SBPSY_l],
@@ -56,7 +55,6 @@ void outer_loop_dual( FLOAT8 xr[2][576],     /*vector of the magnitudees of the 
 		int best_over[2],
                 III_psy_xmin l3_xmin[2], /* the allowed distortion of the scalefactor */
                 int l3_enc[2][576],    /* vector of quantized values ix(0..575) */
-		frame_params *fr_ps,
                 III_scalefac_t scalefac[2], /* scalefactors */
                 int gr,
 		III_side_info_t *l3_side,
@@ -67,8 +65,7 @@ void outer_loop_dual( FLOAT8 xr[2][576],     /*vector of the magnitudees of the 
 
 
 
-void iteration_init( III_side_info_t *l3_side, int l3_enc[2][2][576],
-		frame_params *fr_ps);
+void iteration_init( III_side_info_t *l3_side, int l3_enc[2][2][576]);
 
 int inner_loop( FLOAT8 xrpow[576],
                 int l3_enc[576],

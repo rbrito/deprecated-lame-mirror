@@ -154,7 +154,6 @@ void outer_loop_dual(
     int best_over[2],
     III_psy_xmin l3_xmin[2], /* the allowed distortion of the scalefactor */
     int l3_enc[2][576],    /* vector of quantized values ix(0..575) */
-    frame_params *fr_ps,
     III_scalefac_t scalefac[2], /* scalefactors */
     int gr, III_side_info_t *l3_side,
     III_psy_ratio ratio[2], FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2])

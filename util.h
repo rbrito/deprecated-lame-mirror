@@ -104,16 +104,6 @@ typedef sb_alloc        al_table[SBLIMIT][16];
 /* Header Information Structure */
 
 
-/* Parent Structure Interpreting some Frame Parameters in Header */
-
-typedef struct {
-    int         actual_mode;    /* when writing IS, may forget if 0 chs */
-    al_table    *alloc;         /* bit allocation table read in */
-    int         tab_num;        /* number of table as loaded */
-    int         jsbound;        /* first band of joint stereo coding */
-    int         sblimit;        /* total number of sub bands */
-} frame_params;
-
 
 enum byte_order { order_unknown, order_bigEndian, order_littleEndian };
 extern enum byte_order NativeByteOrder;
@@ -153,7 +143,6 @@ extern void           display_bitrates(FILE *out_fh);
 extern int            BitrateIndex(int, int,int);
 extern int            SmpFrqIndex(long, int*);
 extern void           *mem_alloc(unsigned long, char*);
-extern void           empty_buffer(Bit_stream_struc*);
 extern int            copy_buffer(char *buffer,Bit_stream_struc *bs);
 extern void           init_bit_stream_w(Bit_stream_struc*);
 extern void           alloc_buffer(Bit_stream_struc*, int);

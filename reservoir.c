@@ -36,7 +36,7 @@ static int ResvMax  = 0; /* in bits */
   was set properly by the formatter
 */
 int
-ResvFrameBegin( frame_params *fr_ps, III_side_info_t *l3_side, int mean_bits, int frameLength )
+ResvFrameBegin( III_side_info_t *l3_side, int mean_bits, int frameLength )
 {
     int fullFrameBits;
     int resvLimit;

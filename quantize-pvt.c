@@ -134,8 +134,7 @@ FLOAT8 ATH_mdct_short[192];
 /*  initialization for iteration_loop */
 /************************************************************************/
 void
-iteration_init( III_side_info_t *l3_side, int l3_enc[2][2][576],
-		frame_params *fr_ps)
+iteration_init( III_side_info_t *l3_side, int l3_enc[2][2][576])
 {
   gr_info *cod_info;
   int ch, gr, i;

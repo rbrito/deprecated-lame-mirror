@@ -5,6 +5,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.3  2000/03/14 21:01:47  markt
+ * removed fr_ps struct
+ *
  * Revision 1.2  2000/01/13 16:26:50  takehiro
  * moved info.stereo into gf.stereo
  *
@@ -29,7 +32,7 @@
 #ifndef RESERVOIR_H
 #define RESERVOIR_H
 
-int ResvFrameBegin( frame_params *fr_ps, III_side_info_t *l3_side, int mean_bits, int frameLength );
+int ResvFrameBegin( III_side_info_t *l3_side, int mean_bits, int frameLength );
 void ResvMaxBits2( int mean_bits, int *targ_bits, int *max_bits, int gr);
 void ResvAdjust(gr_info *gi, III_side_info_t *l3_side, int mean_bits );
 void ResvFrameEnd(III_side_info_t *l3_side, int mean_bits );

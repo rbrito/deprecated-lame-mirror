@@ -55,7 +55,6 @@ lame_global_flags gf;
 /* Global variable definitions for lame.c */
 static Bit_stream_struc   bs;
 static III_side_info_t l3_side;
-static frame_params fr_ps;
 static int target_bitrate;
 #define MFSIZE (1152+1152+ENCDELAY-MDCTDELAY)
 static short int mfbuf[2][MFSIZE];
@@ -76,11 +75,8 @@ void lame_init_params(void)
 
   /* Clear info structure */
   memset(&bs, 0, sizeof(Bit_stream_struc));
-  memset(&fr_ps, 0, sizeof(frame_params));
   memset(&l3_side,0x00,sizeof(III_side_info_t));
 
-  fr_ps.tab_num = -1;             /* no table loaded */
-  fr_ps.alloc = NULL;
 
   gf.frameNum=0;
   gf.force_ms=0;
@@ -339,7 +335,6 @@ void lame_init_params(void)
 
 
   gf.mode_ext=MPG_MD_LR_LR;
-  fr_ps.actual_mode = gf.mode;
   gf.stereo = (gf.mode == MPG_MD_MONO) ? 1 : 2;
 
 
@@ -808,14 +803,14 @@ int lame_encode_frame(short int inbuf_l[],short int inbuf_r[],int mf_size,char *
 
   if (gf.VBR) {
     VBR_iteration_loop( *pe_use, ms_ratio, xr, *masking, &l3_side, l3_enc,
-			scalefac, &fr_ps);
+			scalefac);
   }else{
     iteration_loop( *pe_use, ms_ratio, xr, *masking, &l3_side, l3_enc,
-		    scalefac, &fr_ps);
+		    scalefac);
   }
   /*
   VBR_iteration_loop_new( *pe_use, ms_ratio, xr, masking, &l3_side, l3_enc,
-			  &scalefac, &fr_ps);
+			  &scalefac);
   */
 
 
@@ -842,7 +837,6 @@ int lame_encode_frame(short int inbuf_l[],short int inbuf_r[],int mf_size,char *
 
   /* copy mp3 bit buffer into array */
   mpg123count = copy_buffer(mpg123bs,&bs);
-  empty_buffer(&bs);  /* empty buffer */
 
   if (gf.bWriteVbrTag) AddVbrFrame((int)(sentBits/8));
 
@@ -1238,7 +1232,6 @@ int lame_encode_finish(char *mp3buffer)
 
   III_FlushBitstream();
   mp3count += copy_buffer(mp3buffer,&bs);
-  empty_buffer(&bs);  /* empty buffer */
 
   desalloc_buffer(&bs);    /* Deallocate all buffers */
 

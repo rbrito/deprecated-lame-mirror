@@ -252,15 +252,6 @@ void SwapBytesInWords( short *loc, int words )
 
 
 
-int copy_buffer(char *buffer,Bit_stream_struc *bs)
-{
-  int i,j=0;
-  for (i=bs->buf_size-1 ; i > bs->buf_byte_idx ; (i-- ))
-    buffer[j++]=bs->buf[i];
-  return j;
-}
-
-
 void empty_buffer(Bit_stream_struc *bs)
 {
    int minimum=1+bs->buf_byte_idx;    /* end of the buffer to empty */
@@ -271,6 +262,16 @@ void empty_buffer(Bit_stream_struc *bs)
    bs->buf[bs->buf_byte_idx] = 0;  /* what does this do? */
 
 }
+int copy_buffer(char *buffer,Bit_stream_struc *bs)
+{
+  int i,j=0;
+  for (i=bs->buf_size-1 ; i > bs->buf_byte_idx ; (i-- ))
+    buffer[j++]=bs->buf[i];
+  empty_buffer(bs);  /* empty buffer */
+  return j;
+}
+
+
 
 
 

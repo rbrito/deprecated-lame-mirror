@@ -125,7 +125,7 @@ void
 iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 		FLOAT8 xr_org[2][2][576], III_psy_ratio ratio[2][2],
 		III_side_info_t *l3_side, int l3_enc[2][2][576],
-		III_scalefac_t scalefac[2][2], frame_params *fr_ps)
+		III_scalefac_t scalefac[2][2])
 {
   FLOAT8 xr[2][576];
   FLOAT8 xfsf[4][SBPSY_l];
@@ -138,12 +138,12 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   int ch, gr, i, bit_rate;
 
 
-  iteration_init(l3_side,l3_enc,fr_ps);
+  iteration_init(l3_side,l3_enc);
   bit_rate = bitrate_table[gf.version][gf.bitrate_index];
 
 
   getframebits(&bitsPerFrame, &mean_bits);
-  ResvFrameBegin( fr_ps, l3_side, mean_bits, bitsPerFrame );
+  ResvFrameBegin( l3_side, mean_bits, bitsPerFrame );
 
   /* quantize! */
 
@@ -155,7 +155,7 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
        * maskings (by constantly reconstructing L/R data).  Used before we
        * we had proper mid/side maskings. */
       outer_loop_dual( xr, xr_org[gr], mean_bits, bit_rate, over,
-		       l3_xmin, l3_enc[gr], fr_ps, scalefac[gr],
+		       l3_xmin, l3_enc[gr], scalefac[gr],
 		       gr, l3_side, ratio[gr], pe, ms_ener_ratio);
 
       /* finish up */
@@ -204,7 +204,7 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 	{
           calc_xmin(xr_org[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin[ch]);
 	  outer_loop( xr_org[gr][ch], targ_bits[ch], noise,
-		      &l3_xmin[ch], l3_enc[gr][ch], fr_ps,
+		      &l3_xmin[ch], l3_enc[gr][ch], 
 		      &scalefac[gr][ch], cod_info, xfsf, ch);
         }
 	best_scalefac_store(gr, ch, l3_side, scalefac);
@@ -232,7 +232,7 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   for ( gr = 0; gr < mode_gr; gr++ ) {
     for ( ch =  0; ch < stereo; ch++ ) {
 	cod_info = &l3_side->gr[gr].ch[ch].tt;
-	ResvAdjust( fr_ps, cod_info, l3_side, mean_bits );
+	ResvAdjust( cod_info, l3_side, mean_bits );
     }
   }
 #endif
@@ -291,7 +291,7 @@ void
 VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
                 FLOAT8 xr[2][2][576], III_psy_ratio ratio[2][2],
                 III_side_info_t * l3_side, int l3_enc[2][2][576],
-                III_scalefac_t scalefac[2][2], frame_params * fr_ps)
+                III_scalefac_t scalefac[2][2])
 {
 #ifdef HAVEGTK
   plotting_data bst_pinfo;
@@ -316,7 +316,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   int       i,ch, gr, analog_silence;
   int	    reparted = 0;
 
-  iteration_init(l3_side,l3_enc,fr_ps);
+  iteration_init(l3_side,l3_enc);
 
 #ifdef RH_QUALITY_CONTROL
   /* with RH_QUALITY_CONTROL we have to set masking_lower only once */
@@ -336,7 +336,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
       min_mean_bits=mean_bits/gf.stereo;
     }
     frameBits[gf.bitrate_index]=
-      ResvFrameBegin (fr_ps, l3_side, mean_bits, bitsPerFrame);
+      ResvFrameBegin (l3_side, mean_bits, bitsPerFrame);
   }
 
   gf.bitrate_index=gf.VBR_max_bitrate;
@@ -467,7 +467,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
           calc_xmin(xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin);
 #endif
 	  outer_loop( xr[gr][ch], this_bits, noise, 
-		      &l3_xmin, l3_enc[gr][ch], fr_ps,
+		      &l3_xmin, l3_enc[gr][ch],
 		      &scalefac[gr][ch], cod_info, xfsf,
 		      ch);
 
@@ -557,7 +557,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
    * calculate quantization for this bitrate
    *******************************************************************/  
   getframebits (&bitsPerFrame, &mean_bits);
-  bits=ResvFrameBegin (fr_ps, l3_side, mean_bits, bitsPerFrame);
+  bits=ResvFrameBegin (l3_side, mean_bits, bitsPerFrame);
 
   /* repartion available bits in same proportion */
   if (used_bits > bits ) {
@@ -608,7 +608,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
           calc_xmin(xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin);
 	
           outer_loop( xr[gr][ch], save_bits[gr][ch], noise,
-	 	      &l3_xmin, l3_enc[gr][ch], fr_ps, 
+	 	      &l3_xmin, l3_enc[gr][ch], 
 		      &scalefac[gr][ch], cod_info, xfsf, ch);
 	}
 #ifdef HAVEGTK
@@ -770,7 +770,6 @@ void outer_loop(
     FLOAT8 best_noise[4],
     III_psy_xmin *l3_xmin,   /* the allowed distortion of the scalefactor */
     int l3_enc[576],         /* vector of quantized values ix(0..575) */
-    frame_params *fr_ps,
     III_scalefac_t *scalefac, /* scalefactors */
     gr_info *cod_info,
     FLOAT8 xfsf[4][SBPSY_l],
