@@ -156,7 +156,6 @@ blocktype_d[2]        block type to use for previous granule
 #endif
 
 #define NSFIRLEN 21
-#define NOTABLES
 #define rpelev 2
 #define rpelev2 16
 
@@ -174,13 +173,8 @@ blocktype_d[2]        block type to use for previous granule
 # define NMT 6
 #endif
 
-#ifdef NOTABLES
 #define NBPSY_l  (SBMAX_l)
 #define NBPSY_s  (SBMAX_s)
-#else
-#define NBPSY_l  (SBMAX_l-1)
-#define NBPSY_s  (SBMAX_s-1)
-#endif
 
 
 #ifdef M_LN10
@@ -1846,160 +1840,8 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
   int partition[HBLKSIZE]; 
   int loop, k2;
 
-#ifndef NOTABLES
-  /******************************************************************/
-  /* Read long block data */
-  /******************************************************************/
-  for(loop=0;loop<6;loop++)
-    {
-      freq_tp = *p++;
-      cbmax_tp = (int) *p++;
-      cbmax_tp++;
-
-      if (sfreq == freq_tp/freq_scale )
-	{
-	  cbmax = cbmax_tp;
-	  for(i=0,k2=0;i<cbmax_tp;i++)
-	    {
-	      j = (int) *p++;
-	      numlines_l[i] = (int) *p++;
-	      minval[i] = exp(-((*p++) ) * LN_TO_LOG10);
-	      /* qthr_l[i] = *p++ */ p++;
-	      /* norm_l[i] = *p++*/ p++;
-	      /* bval_l[i] = *p++; */ p++;
-	      if (j!=i)
-		{
-		  ERRORF(gfc,"1. please check \"psy_data\"");
-		  return -1;
-		}
-	    }
-	}
-      else
-	p += cbmax_tp * 6;
-    }
-
-  *npart_l_orig = cbmax;
-
-  /* Read short block data */
-  for(loop=0;loop<6;loop++)
-    {
-      freq_tp = *p++;
-      cbmax_tp = (int) *p++;
-      cbmax_tp++;
-      if (sfreq == freq_tp/freq_scale )
-	{
-	  cbmax = cbmax_tp;
-	  for(i=0,k2=0;i<cbmax_tp;i++)
-	    {
-	      j = (int) *p++;
-	      numlines_s[i] = (int) *p++;
-	      /* qthr_s[i] = *p++*/  p++;         
-	      /* norm_s[i] =*p++ */ p++;         
-	      SNR[i] = *p++;            
-	      /* bval_s[i] = *p++ */ p++;
-	      if (j!=i)
-		{
-		  ERRORF(gfc,"3. please check \"psy_data\"");
-		  return -1;
-		}
-	    }
-	}
-      else
-	p += cbmax_tp * 6;
-    }
-  *npart_s_orig = cbmax;
-
-  /* MPEG1 SNR_s data is given in db, convert to energy */
-  if (gfp->version == 1) {
-    for ( i = 0;i < *npart_s_orig; i++ ) {
-      SNR[i]=exp( (FLOAT8) SNR[i] * LN_TO_LOG10 );
-    }
-  }
 
 
-
-
-  /* Read long block data for converting threshold calculation 
-     partitions to scale factor bands */
-
-  for(loop=0;loop<6;loop++)
-    {
-      freq_tp = *p++;
-      sbmax =  (int) *p++;
-      sbmax++;
-
-      if (sfreq == freq_tp/freq_scale)
-	{
-	  for(i=0;i<sbmax;i++)
-	    {
-	      j = (int) *p++;
-	      p++;             
-	      bu_l[i] = (int) *p++;
-	      bo_l[i] = (int) *p++;
-	      w1_l[i] = (FLOAT8) *p++;
-	      w2_l[i] = (FLOAT8) *p++;
-	      if (j!=i)
-		{ ERRORF(gfc,"30:please check \"psy_data\"\n");
-		return -1;
-		}
-
-	      if (i!=0)
-		if ( (fabs(1.0-w1_l[i]-w2_l[i-1]) > 0.01 ) )
-		  {
-		    ERRORF(gfc,"31l: please check \"psy_data.\"\n"
-                           "w1,w2: %f %f \n",w1_l[i],w2_l[i-1]);
-		    return -1;
-		  }
-	    }
-	}
-      else
-	p += sbmax * 6;
-    }
-
-  /* Read short block data for converting threshold calculation 
-     partitions to scale factor bands */
-
-  for(loop=0;loop<6;loop++)
-    {
-      freq_tp = *p++;
-      sbmax = (int) *p++;
-      sbmax++;
-
-      if (sfreq == freq_tp/freq_scale)
-	{
-	  for(i=0;i<sbmax;i++)
-	    {
-	      j = (int) *p++;
-	      p++;
-	      bu_s[i] = (int) *p++;
-	      bo_s[i] = (int) *p++;
-	      w1_s[i] = *p++;
-	      w2_s[i] = *p++;
-	      if (j!=i)
-		{ ERRORF(gfc,"30:please check \"psy_data\"\n");
-		return -1;
-		}
-
-	      if (i!=0)
-		if ( (fabs(1.0-w1_s[i]-w2_s[i-1]) > 0.01 ) )
-		  { 
-                  ERRORF(gfc,"31s: please check \"psy_data.\"\n"
-                         "w1,w2: %f %f \n",w1_s[i],w2_s[i-1]);
-		  return -1;
-		  }
-	    }
-	}
-      else
-	p += sbmax * 6;
-    }
-
-  /******************************************************************/
-  /* done reading table data */
-  /******************************************************************/
-#endif
-
-
-#ifdef NOTABLES
   /* compute numlines */
   j=0;
   for(i=0;i<CBANDS;i++)
@@ -2053,8 +1895,6 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
     }
   }
 
-#endif
-
 
   /* compute bark value and ATH of each critical band */
   j = 0;
@@ -2091,7 +1931,6 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 
     }
 
-#ifdef NOTABLES
   for(i=0;i<*npart_l_orig;i++){
     double x = (-20+bval_l[i]*20.0/10.0);
     if (bval_l[i]>10) x = 0;
@@ -2103,10 +1942,8 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
     else
       fprintf(stderr,"(less masking) \n");
 #endif
-
     minval[i]=pow(10.0,x/10);
   }
-#endif
 
 
 
@@ -2118,7 +1955,6 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
   /* SHORT BLOCKS */
   /************************************************************************/
 
-#ifdef NOTABLES
   /* compute numlines */
   j=0;
   for(i=0;i<CBANDS;i++)
@@ -2173,7 +2009,7 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
     }
   }
 
-#endif
+
 
 
 
@@ -2200,12 +2036,8 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
       else 
 	  snr  = -4.5 * (bval_s[i]-13)/(24.0-13.0)  + 
 	      -8.25*(bval_s[i]-24)/(13.0-24.0);
-#ifdef NOTABLES
+
       SNR[i]=pow(10.0,snr/10.0);
-      //fprintf(stderr,"%2i old SNR=%f(%f)  new = %f(%f) \n ",i,10*log10(SNR[i]),SNR[i],snr,pow(10.0,snr/10.0));
-#endif
-
-
     }
 
 
@@ -2240,36 +2072,9 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
   *npart_l=bo_l[NBPSY_l-1]+1;
   *npart_s=bo_s[NBPSY_s-1]+1;
   
-#ifdef NOTABLES
   //  DEBUGF(gfc,"\n npart_l_orig, npart_l: %i %i \n",*npart_l_orig,*npart_l);
   assert(*npart_l <= *npart_l_orig);
   assert(*npart_s <= *npart_s_orig);
-#else
-  assert(*npart_l_orig <=CBANDS);
-  assert(*npart_s_orig<=CBANDS);
-
-  /* if npart_l = npart_l_orig + 1, we can fix that below.  else: */
-  assert(*npart_l <= *npart_l_orig+1);
-  assert(*npart_s <= *npart_s_orig+1);
-
-
-  /* MPEG2 tables are screwed up 
-   * the mapping from paritition bands to scalefactor bands will use
-   * more paritition bands than we have.  
-   * So we will not compute these fictitious partition bands by reducing
-   * npart_l below.  */
-  if (*npart_l > *npart_l_orig) {
-    *npart_l=*npart_l_orig;
-    bo_l[NBPSY_l-1]=(*npart_l)-1;
-    w2_l[NBPSY_l-1]=1.0;
-  }
-
-  if (*npart_s > *npart_s_orig) {
-    *npart_s=*npart_s_orig;
-    bo_s[NBPSY_s-1]=(*npart_s)-1;
-    w2_s[NBPSY_s-1]=1.0;
-  }
-#endif
 
 
     /* setup stereo demasking thresholds */
@@ -2324,23 +2129,6 @@ int psymodel_init(lame_global_flags *gfp)
     FLOAT cwlimit;
 
     samplerate = gfp->out_samplerate;
-#ifndef NOTABLES
-    switch(gfp->out_samplerate){
-    case 32000: break;
-    case 44100: break;
-    case 48000: break;
-    case 16000: break;
-    case 22050: break;
-    case 24000: break;
-    case  8000: samplerate *= 2; break;  /* kludge so mpeg2.5 uses mpeg2 tables  for now */
-    case 11025: samplerate *= 2; break;
-    case 12000: samplerate *= 2; break;
-    default:    ERRORF(gfc,"error, invalid sampling frequency: %d Hz\a\n",
-			gfp->out_samplerate);
-    return -1;
-    }
-#endif
-
     gfc->ms_ener_ratio_old=.25;
     gfc->blocktype_old[0]=STOP_TYPE;
     gfc->blocktype_old[1]=STOP_TYPE;
