@@ -5509,8 +5509,14 @@ else
 	NASM_FORMAT="-f elf"
 fi
 
+#
+# 'expopt' is used for "additional optimizations", not for optimizations which
+# are marked as "experimental" in the guide for the compiler.
+# They are "experimental" here in the LAME project (at least
+# "--enable-expopt=full").
+#
 echo $ac_n "checking for additional optimizations""... $ac_c" 1>&6
-echo "configure:5514: checking for additional optimizations" >&5
+echo "configure:5520: checking for additional optimizations" >&5
 # Check whether --enable-expopt or --disable-expopt was given.
 if test "${enable_expopt+set}" = set; then
   enableval="$enable_expopt"
@@ -5534,8 +5540,8 @@ if test "x$GCC" = "xyes"; then
         	;;
 	3.*)
 		# -funroll-loops seems to produce buggy code with gcc 3.0.3
-		OPTIMIZATION="-O3 -fomit-frame-pointer -ffast-math \
-			-maccumulate-outgoing-args -fssa -fdce"
+		OPTIMIZATION="-O -fomit-frame-pointer -ffast-math \
+			-funroll-loops -maccumulate-outgoing-args"
 		;;
 	*)
 		# default
@@ -5549,7 +5555,8 @@ if test "x$GCC" = "xyes"; then
 	OPTIMIZATION_NORM="-fschedule-insns2"
 
 	OPTIMIZATION_FULL="-fmove-all-movables -freduce-all-givs \
-			-fsched-interblock -fbranch-count-reg -fforce-addr"
+			-fsched-interblock -fbranch-count-reg -fforce-addr \
+			-fforce-mem"
 
 	case "${CONFIG_EXPOPT}" in
 	no)
@@ -5576,7 +5583,8 @@ if test "x$GCC" = "xyes"; then
 				;;
 			*686)
 				OPTIMIZATION="${OPTIMIZATION} -mcpu=pentiumpro \
-					-march=pentiumpro -mfancy-math-387"
+					-march=pentiumpro -mfancy-math-387 \
+					-malign-double"
 				;;
 			*86)
 				OPTIMIZATION="${OPTIMIZATION} -mfancy-math-387"
@@ -5611,7 +5619,7 @@ fi
 
 
 echo $ac_n "checking for debug options""... $ac_c" 1>&6
-echo "configure:5615: checking for debug options" >&5
+echo "configure:5622: checking for debug options" >&5
 # Check whether --enable-debug or --disable-debug was given.
 if test "${enable_debug+set}" = set; then
   enableval="$enable_debug"
