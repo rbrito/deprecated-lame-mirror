@@ -689,29 +689,31 @@ VBR_quantize_granule(lame_internal_flags * gfc, gr_info * cod_info, FLOAT8 * xr3
 static const int MAX_SF_DELTA = 4;
 
 static void
-short_block_sf(const lame_internal_flags * gfc, const III_psy_xmin * l3_xmin,
-               const FLOAT8 * xr34_orig, const FLOAT8 * xr34, III_scalefac_t * vbrsf, int *vbrmin,
-               int *vbrmax)
+short_block_sf(const lame_internal_flags * gfc, const gr_info * cod_info,
+               const III_psy_xmin * l3_xmin, const FLOAT8 * xr34_orig, const FLOAT8 * xr34,
+               III_scalefac_t * vbrsf, int *vbrmin, int *vbrmax)
 {
-    int     j, sfb, b;
-    int     vbrmean, vbrmn;
+    const unsigned int lb = cod_info->sfb_smin;
+    const unsigned int ub = cod_info->psy_smax;
+    unsigned int j, sfb, b;
+    int     vbrmean, vbrmn, vbrmx, vbrclip;
     int     sf_cache[SBMAX_s];
     int     scalefac_criteria;
+    static char const map[] = { 2, 1, 0, 3, 6 };
 
     if (gfc->presetTune.use) {
         /* map experimentalX settings to internal selections */
-        static char const map[] = { 2, 1, 0, 3, 6 };
         scalefac_criteria = map[gfc->presetTune.quantcomp_current];
     }
     else {
-        scalefac_criteria = gfc->VBR->quality;
+        scalefac_criteria = map[gfc->VBR->quality];
     }
 
-    for (j = 0, sfb = 0; sfb < SBMAX_s; ++sfb) {
-        for (b = 0; b < 3; ++b) {
-            const int start = gfc->scalefac_band.s[sfb];
-            const int end = gfc->scalefac_band.s[sfb + 1];
-            const int width = end - start;
+    for (j = 0u, sfb = lb; sfb < ub; ++sfb) {
+        const unsigned int start = gfc->scalefac_band.s[sfb];
+        const unsigned int end = gfc->scalefac_band.s[sfb + 1];
+        const unsigned int width = end - start;
+        for (b = 0u; b < 3u; ++b) {
 
             switch (scalefac_criteria) {
             default:
@@ -752,88 +754,121 @@ short_block_sf(const lame_internal_flags * gfc, const III_psy_xmin * l3_xmin,
             j += width;
         }
     }
-
+    if (!gfc->sfb21_extra) {
+        vbrsf->s[SBPSY_s][0] = vbrsf->s[SBPSY_s - 1u][0];
+        vbrsf->s[SBPSY_s][1] = vbrsf->s[SBPSY_s - 1u][1];
+        vbrsf->s[SBPSY_s][2] = vbrsf->s[SBPSY_s - 1u][2];
+    }
     *vbrmax = -10000;
     *vbrmin = +10000;
 
-    for (b = 0; b < 3; ++b) {
+    for (b = 0u; b < 3u; ++b) {
 
         /*  smoothing
          */
         switch (gfc->VBR->smooth) {
         default:
         case 0:
+            /*  get max value
+             */
+            for (sfb = lb; sfb < ub; ++sfb) {
+                if (*vbrmax < vbrsf->s[sfb][b])
+                    *vbrmax = vbrsf->s[sfb][b];
+                if (*vbrmin > vbrsf->s[sfb][b])
+                    *vbrmin = vbrsf->s[sfb][b];
+            }
             break;
 
         case 1:
             /*  make working copy, get min value, select_kth_int will reorder!
              */
-            for (vbrmn = +10000, sfb = 0; sfb < SBMAX_s; ++sfb) {
+            vbrmn = +1000;
+            vbrmx = -1000;
+            for (sfb = lb; sfb < ub; ++sfb) {
                 sf_cache[sfb] = vbrsf->s[sfb][b];
-                if (vbrmn > vbrsf->s[sfb][b])
-                    vbrmn = vbrsf->s[sfb][b];
+                if (vbrmn > sf_cache[sfb])
+                    vbrmn = sf_cache[sfb];
+                if (vbrmx < sf_cache[sfb])
+                    vbrmx = sf_cache[sfb];
             }
+            if (*vbrmin > vbrmn)
+                *vbrmin = vbrmn;
 
             /*  find median value, take it as mean 
              */
-            vbrmean = select_kth_int(sf_cache, SBMAX_s, (SBMAX_s + 1) / 2);
+            vbrmean = select_kth_int(&sf_cache[lb], ub - lb, (ub - lb + 1u) / 2u);
 
             /*  cut peaks
              */
-            for (sfb = 0; sfb < SBMAX_s; ++sfb) {
-                if (vbrsf->s[sfb][b] > vbrmean + (vbrmean - vbrmn))
-                    vbrsf->s[sfb][b] = vbrmean + (vbrmean - vbrmn);
+            vbrclip = vbrmean + (vbrmean - vbrmn);
+            for (sfb = lb; sfb < ub; ++sfb) {
+                if (vbrsf->s[sfb][b] > vbrclip)
+                    vbrsf->s[sfb][b] = vbrclip;
             }
+            if (vbrmx > vbrclip)
+                vbrmx = vbrclip;
+            if (*vbrmax < vbrmx)
+                *vbrmax = vbrmx;
             break;
 
         case 2:
-            for (sfb = 0; sfb < SBMAX_s; ++sfb) {
-                if (sfb > 0)
-                    if (vbrsf->s[sfb][b] > vbrsf->s[sfb - 1][b] + MAX_SF_DELTA)
-                        vbrsf->s[sfb][b] = vbrsf->s[sfb - 1][b] + MAX_SF_DELTA;
-                if (sfb < SBMAX_s - 1)
-                    if (vbrsf->s[sfb][b] > vbrsf->s[sfb + 1][b] + MAX_SF_DELTA)
-                        vbrsf->s[sfb][b] = vbrsf->s[sfb + 1][b] + MAX_SF_DELTA;
+            vbrclip = vbrsf->s[lb + 1u][b] + MAX_SF_DELTA;
+            if (vbrsf->s[lb][b] > vbrclip)
+                vbrsf->s[lb][b] = vbrclip;
+            if (*vbrmax < vbrsf->s[lb][b])
+                *vbrmax = vbrsf->s[lb][b];
+            if (*vbrmin > vbrsf->s[lb][b])
+                *vbrmin = vbrsf->s[lb][b];
+            for (sfb = lb + 1u; sfb < ub - 1u; ++sfb) {
+                vbrclip = vbrsf->s[sfb - 1u][b] + MAX_SF_DELTA;
+                if (vbrsf->s[sfb][b] > vbrclip)
+                    vbrsf->s[sfb][b] = vbrclip;
+                vbrclip = vbrsf->s[sfb + 1u][b] + MAX_SF_DELTA;
+                if (vbrsf->s[sfb][b] > vbrclip)
+                    vbrsf->s[sfb][b] = vbrclip;
+                if (*vbrmax < vbrsf->s[sfb][b])
+                    *vbrmax = vbrsf->s[sfb][b];
+                if (*vbrmin > vbrsf->s[sfb][b])
+                    *vbrmin = vbrsf->s[sfb][b];
             }
+            vbrclip = vbrsf->s[ub - 2u][b] + MAX_SF_DELTA;
+            if (vbrsf->s[ub - 1u][b] > vbrclip)
+                vbrsf->s[ub - 1u][b] = vbrclip;
+            if (*vbrmax < vbrsf->s[ub - 1u][b])
+                *vbrmax = vbrsf->s[ub - 1u][b];
+            if (*vbrmin > vbrsf->s[ub - 1u][b])
+                *vbrmin = vbrsf->s[ub - 1u][b];
             break;
         }
 
-        /*  get max value
-         */
-        for (sfb = 0; sfb < SBMAX_s; ++sfb) {
-            if (*vbrmax < vbrsf->s[sfb][b])
-                *vbrmax = vbrsf->s[sfb][b];
-            if (*vbrmin > vbrsf->s[sfb][b])
-                *vbrmin = vbrsf->s[sfb][b];
-        }
     }
 }
 
 
-    /* a variation for vbr-mtrh */
 static void
-long_block_sf(const lame_internal_flags * gfc, const III_psy_xmin * l3_xmin,
-              const FLOAT8 * xr34_orig, const FLOAT8 * xr34, III_scalefac_t * vbrsf, int *vbrmin,
-              int *vbrmax)
+long_block_sf(const lame_internal_flags * gfc, const gr_info * cod_info,
+              const III_psy_xmin * l3_xmin, const FLOAT8 * xr34_orig, const FLOAT8 * xr34,
+              III_scalefac_t * vbrsf, int *vbrmin, int *vbrmax)
 {
-    int     sfb;
-    int     vbrmean, vbrmn;
+    const unsigned int ub = cod_info->psy_lmax;
+    unsigned int sfb;
+    int     vbrmean, vbrmn, vbrmx, vbrclip;
     int     sf_cache[SBMAX_l];
     int     scalefac_criteria;
+    static char const map[] = { 2, 1, 0, 3, 6 };
 
     if (gfc->presetTune.use) {
         /* map experimentalX settings to internal selections */
-        static char const map[] = { 2, 1, 0, 3, 6 };
         scalefac_criteria = map[gfc->presetTune.quantcomp_current];
     }
     else {
-        scalefac_criteria = gfc->VBR->quality;
+        scalefac_criteria = map[gfc->VBR->quality];
     }
 
-    for (sfb = 0; sfb < SBMAX_l; ++sfb) {
-        const int start = gfc->scalefac_band.l[sfb];
-        const int end = gfc->scalefac_band.l[sfb + 1];
-        const int width = end - start;
+    for (sfb = 0; sfb < ub; ++sfb) {
+        const unsigned int start = gfc->scalefac_band.l[sfb];
+        const unsigned int end = gfc->scalefac_band.l[sfb + 1];
+        const unsigned int width = end - start;
 
         switch (scalefac_criteria) {
         default:
@@ -872,51 +907,77 @@ long_block_sf(const lame_internal_flags * gfc, const III_psy_xmin * l3_xmin,
         }
     }
 
+    if (!gfc->sfb21_extra) {
+        vbrsf->l[SBPSY_l] = vbrsf->l[SBPSY_l - 1];
+    }
     switch (gfc->VBR->smooth) {
     default:
     case 0:
+        /*  get max value
+         */
+        *vbrmin = *vbrmax = vbrsf->l[0];
+        for (sfb = 1; sfb < ub; ++sfb) {
+            if (*vbrmax < vbrsf->l[sfb])
+                *vbrmax = vbrsf->l[sfb];
+            if (*vbrmin > vbrsf->l[sfb])
+                *vbrmin = vbrsf->l[sfb];
+        }
         break;
 
     case 1:
         /*  make working copy, get min value, select_kth_int will reorder!
          */
-        for (vbrmn = +10000, sfb = 0; sfb < SBMAX_l; ++sfb) {
+        for (vbrmn = +1000, vbrmx = -1000, sfb = 0; sfb < ub; ++sfb) {
             sf_cache[sfb] = vbrsf->l[sfb];
             if (vbrmn > vbrsf->l[sfb])
                 vbrmn = vbrsf->l[sfb];
+            if (vbrmx < vbrsf->l[sfb])
+                vbrmx = vbrsf->l[sfb];
         }
         /*  find median value, take it as mean 
          */
-        vbrmean = select_kth_int(sf_cache, SBMAX_l, (SBMAX_l + 1) / 2);
+        vbrmean = select_kth_int(sf_cache, ub, (ub + 1) / 2);
 
         /*  cut peaks
          */
-        for (sfb = 0; sfb < SBMAX_l; ++sfb) {
-            if (vbrsf->l[sfb] > vbrmean + (vbrmean - vbrmn))
-                vbrsf->l[sfb] = vbrmean + (vbrmean - vbrmn);
+        vbrclip = vbrmean + (vbrmean - vbrmn);
+        for (sfb = 0; sfb < ub; ++sfb) {
+            if (vbrsf->l[sfb] > vbrclip)
+                vbrsf->l[sfb] = vbrclip;
         }
+        if (vbrmx > vbrclip)
+            vbrmx = vbrclip;
+        *vbrmin = vbrmn;
+        *vbrmax = vbrmx;
         break;
 
     case 2:
-        for (sfb = 0; sfb < SBMAX_l; ++sfb) {
-            if (sfb > 0)
-                if (vbrsf->l[sfb] > vbrsf->l[sfb - 1] + MAX_SF_DELTA)
-                    vbrsf->l[sfb] = vbrsf->l[sfb - 1] + MAX_SF_DELTA;
-            if (sfb < SBMAX_l - 1)
-                if (vbrsf->l[sfb] > vbrsf->l[sfb + 1] + MAX_SF_DELTA)
-                    vbrsf->l[sfb] = vbrsf->l[sfb + 1] + MAX_SF_DELTA;
+        vbrclip = vbrsf->l[1] + MAX_SF_DELTA;
+        if (vbrsf->l[0] > vbrclip)
+            vbrsf->l[0] = vbrclip;
+        *vbrmin = *vbrmax = vbrsf->l[0];
+        for (sfb = 1; sfb < ub - 1; ++sfb) {
+            vbrclip = vbrsf->l[sfb - 1] + MAX_SF_DELTA;
+            if (vbrsf->l[sfb] > vbrclip)
+                vbrsf->l[sfb] = vbrclip;
+            vbrclip = vbrsf->l[sfb + 1] + MAX_SF_DELTA;
+            if (vbrsf->l[sfb] > vbrclip)
+                vbrsf->l[sfb] = vbrclip;
+            if (*vbrmax < vbrsf->l[sfb])
+                *vbrmax = vbrsf->l[sfb];
+            if (*vbrmin > vbrsf->l[sfb])
+                *vbrmin = vbrsf->l[sfb];
         }
+        vbrclip = vbrsf->l[ub - 2] + MAX_SF_DELTA;
+        if (vbrsf->l[ub - 1] > vbrclip)
+            vbrsf->l[ub - 1] = vbrclip;
+        if (*vbrmax < vbrsf->l[ub - 1])
+            *vbrmax = vbrsf->l[ub - 1];
+        if (*vbrmin > vbrsf->l[ub - 1])
+            *vbrmin = vbrsf->l[ub - 1];
         break;
     }
 
-    /*  get max value
-     */
-    for (*vbrmin = +10000, *vbrmax = -10000, sfb = 0; sfb < SBMAX_l; ++sfb) {
-        if (*vbrmax < vbrsf->l[sfb])
-            *vbrmax = vbrsf->l[sfb];
-        if (*vbrmin > vbrsf->l[sfb])
-            *vbrmin = vbrsf->l[sfb];
-    }
 }
 
 
@@ -1123,8 +1184,9 @@ static void
 short_block_xr34(const lame_internal_flags * gfc, const gr_info * cod_info,
                  const FLOAT8 * xr34_orig, FLOAT8 * xr34)
 {
-    int     sfb, l, j, b;
-    int     ifac, ifqstep, start, end;
+    const unsigned int lb = cod_info->sfb_smin;
+    unsigned int sfb, l, j, b, start, end;
+    int     ifac, ifqstep;
     FLOAT8  fac;
 
     /* even though there is no scalefactor for sfb12
@@ -1132,43 +1194,17 @@ short_block_xr34(const lame_internal_flags * gfc, const gr_info * cod_info,
      * we have to go up to SBMAX_s
      */
     ifqstep = (cod_info->scalefac_scale == 0) ? 2 : 4;
-    for (j = 0, sfb = 0; sfb < SBMAX_s; ++sfb) {
+    j = gfc->scalefac_band.s[lb] * 3;
+    for (sfb = lb; sfb < SBMAX_s; ++sfb) {
         start = gfc->scalefac_band.s[sfb];
         end = gfc->scalefac_band.s[sfb + 1];
         for (b = 0; b < 3; ++b) {
             ifac = 8 * cod_info->subblock_gain[b] + ifqstep * cod_info->scalefac.s[sfb][b];
 
             if (ifac == 0) { /* just copy */
-                l = (end - start + 7) / 8;
-                switch ((end - start) % 8) {
-                default:
-                case 0:
-                    do {
-                        xr34[j] = xr34_orig[j];
-                        ++j;
-                case 7:
-                        xr34[j] = xr34_orig[j];
-                        ++j;
-                case 6:
-                        xr34[j] = xr34_orig[j];
-                        ++j;
-                case 5:
-                        xr34[j] = xr34_orig[j];
-                        ++j;
-                case 4:
-                        xr34[j] = xr34_orig[j];
-                        ++j;
-                case 3:
-                        xr34[j] = xr34_orig[j];
-                        ++j;
-                case 2:
-                        xr34[j] = xr34_orig[j];
-                        ++j;
-                case 1:
-                        xr34[j] = xr34_orig[j];
-                        ++j;
-                    } while (--l);
-                }
+                l = end - start;
+                memcpy(&xr34[j], &xr34_orig[j], sizeof(FLOAT8) * l);
+                j += l;
                 continue;
             }
             if (ifac < Q_MAX - 210)
@@ -1179,8 +1215,8 @@ short_block_xr34(const lame_internal_flags * gfc, const gr_info * cod_info,
             /*
              *  loop unrolled into "Duff's Device".  Robert Hegemann
              */
-            l = (end - start + 7) / 8;
-            switch ((end - start) % 8) {
+            l = (end - start + 7u) / 8u;
+            switch ((end - start) % 8u) {
             default:
             case 0:
                 do {
@@ -1219,12 +1255,13 @@ static void
 long_block_xr34(const lame_internal_flags * gfc, const gr_info * cod_info, const FLOAT8 * xr34_orig,
                 FLOAT8 * xr34)
 {
-    int     sfb, l, j;
-    int     ifac, ifqstep, start, end;
+    const unsigned int ub = cod_info->mixed_block_flag ? cod_info->psy_lmax : SBMAX_l;
+    unsigned int sfb, l, j, start, end;
+    int     ifac, ifqstep;
     FLOAT8  fac;
 
     ifqstep = (cod_info->scalefac_scale == 0) ? 2 : 4;
-    for (sfb = 0; sfb < SBMAX_l; ++sfb) {
+    for (sfb = 0u; sfb < ub; ++sfb) {
 
         ifac = ifqstep * cod_info->scalefac.l[sfb];
         if (cod_info->preflag)
@@ -1234,37 +1271,7 @@ long_block_xr34(const lame_internal_flags * gfc, const gr_info * cod_info, const
         end = gfc->scalefac_band.l[sfb + 1];
 
         if (ifac == 0) { /* just copy */
-            j = start;
-            l = (end - start + 7) / 8;
-            switch ((end - start) % 8) {
-            default:
-            case 0:
-                do {
-                    xr34[j] = xr34_orig[j];
-                    ++j;
-            case 7:
-                    xr34[j] = xr34_orig[j];
-                    ++j;
-            case 6:
-                    xr34[j] = xr34_orig[j];
-                    ++j;
-            case 5:
-                    xr34[j] = xr34_orig[j];
-                    ++j;
-            case 4:
-                    xr34[j] = xr34_orig[j];
-                    ++j;
-            case 3:
-                    xr34[j] = xr34_orig[j];
-                    ++j;
-            case 2:
-                    xr34[j] = xr34_orig[j];
-                    ++j;
-            case 1:
-                    xr34[j] = xr34_orig[j];
-                    ++j;
-                } while (--l);
-            }
+            memcpy(&xr34[start], &xr34_orig[start], sizeof(FLOAT8) * (end - start));
             continue;
         }
         if (ifac < Q_MAX - 210)
@@ -1276,8 +1283,8 @@ long_block_xr34(const lame_internal_flags * gfc, const gr_info * cod_info, const
          *  loop unrolled into "Duff's Device".  Robert Hegemann
          */
         j = start;
-        l = (end - start + 7) / 8;
-        switch ((end - start) % 8) {
+        l = (end - start + 7u) / 8u;
+        switch ((end - start) % 8u) {
         default:
         case 0:
             do {
@@ -1374,6 +1381,159 @@ bin_search_StepSize(lame_internal_flags * const gfc, gr_info * const cod_info,
     return nBits;
 }
 
+#define XXL 1
+static int
+long_block_shaping(lame_internal_flags * gfc, const FLOAT8 * xr34orig, FLOAT8 xr34[576],
+                   int minbits, int maxbits, const III_psy_xmin * l3_xmin, int gr, int ch)
+{
+    III_scalefac_t vbrsf;
+    III_scalefac_t vbrsf2;
+    gr_info *cod_info;
+    int     ret;
+    int     vbrmin, vbrmax, vbrmin2, vbrmax2;
+    int     M = 6;
+    int     count = M;
+
+    cod_info = &gfc->l3_side.tt[gr][ch];
+
+    long_block_sf(gfc, cod_info, l3_xmin, xr34orig, cod_info->xr, &vbrsf2, &vbrmin2, &vbrmax2);
+
+    vbrsf = vbrsf2;
+    vbrmin = vbrmin2;
+    vbrmax = vbrmax2;
+#ifdef XXL
+    M = (vbrmax - vbrmin)/2;
+    if ( M > 16 ) M = 16;
+    count = M;
+#endif
+    do {
+        long_block_scalefacs(gfc, cod_info, &vbrsf, &vbrmax);
+        long_block_xr34(gfc, cod_info, xr34orig, xr34);
+
+        ret = VBR_quantize_granule(gfc, cod_info, xr34, gr, ch);
+
+        --count;
+        if (count < 0 || vbrmin == vbrmax)
+            break;
+        else if (cod_info->part2_3_length < minbits) {
+            int     i;
+            vbrmax = vbrmin2 + (vbrmax2 - vbrmin2) * count / M;
+            vbrmin = vbrmin2;
+            for (i = 0; i < SBMAX_l; ++i) {
+#ifdef XXL
+                vbrsf.l[i] = vbrmin2 + (vbrsf2.l[i] - vbrmin2) * count / M;
+#else
+                vbrsf.l[i] = Min(vbrsf2.l[i], vbrmax);
+#endif
+            }
+        }
+        else if (cod_info->part2_3_length > maxbits) {
+            int     i;
+            vbrmax = vbrmax2;
+            vbrmin = vbrmax2 + (vbrmin2 - vbrmax2) * count / M;
+            for (i = 0; i < SBMAX_l; ++i) {
+#ifdef XXL
+                vbrsf.l[i] = vbrmax2 + (vbrsf2.l[i] - vbrmax2) * count / M;
+#else
+                vbrsf.l[i] = Max(vbrsf2.l[i], vbrmin);
+#endif
+            }
+        }
+        else
+            break;
+    } while (ret != -1);
+    return ret;
+}
+
+static int
+short_block_shaping(lame_internal_flags * gfc, const FLOAT8 * xr34orig, FLOAT8 xr34[576],
+                    int minbits, int maxbits, const III_psy_xmin * l3_xmin, int gr, int ch)
+{
+    III_scalefac_t vbrsf;
+    III_scalefac_t vbrsf2;
+    gr_info *cod_info;
+    int     ret;
+    int     vbrmin, vbrmax, vbrmin2, vbrmax2;
+    int     M = 6;
+    int     count = M;
+
+    cod_info = &gfc->l3_side.tt[gr][ch];
+
+    short_block_sf(gfc, cod_info, l3_xmin, xr34orig, cod_info->xr, &vbrsf2, &vbrmin2, &vbrmax2);
+
+    vbrsf = vbrsf2;
+    vbrmin = vbrmin2;
+    vbrmax = vbrmax2;
+#ifdef XXL
+    M = (vbrmax - vbrmin)/2;
+    if ( M > 16 ) M = 16;
+    count = M;
+#endif
+    do {
+        short_block_scalefacs(gfc, cod_info, &vbrsf, &vbrmax);
+        short_block_xr34(gfc, cod_info, xr34orig, xr34);
+
+        ret = VBR_quantize_granule(gfc, cod_info, xr34, gr, ch);
+
+        --count;
+        if (count < 0 || vbrmin == vbrmax)
+            break;
+        else if (cod_info->part2_3_length < minbits) {
+            int     i;
+            vbrmax = vbrmin2 + (vbrmax2 - vbrmin2) * count / M;
+            vbrmin = vbrmin2;
+            for (i = 0; i < SBMAX_s; ++i) {
+#ifdef XXL
+                vbrsf.s[i][0] = vbrmin2 + (vbrsf2.s[i][0] - vbrmin2) * count / M;
+                vbrsf.s[i][1] = vbrmin2 + (vbrsf2.s[i][1] - vbrmin2) * count / M;
+                vbrsf.s[i][2] = vbrmin2 + (vbrsf2.s[i][2] - vbrmin2) * count / M;
+#else
+                vbrsf.s[i][0] = Min(vbrsf2.s[i][0], vbrmax);
+                vbrsf.s[i][1] = Min(vbrsf2.s[i][1], vbrmax);
+                vbrsf.s[i][2] = Min(vbrsf2.s[i][2], vbrmax);
+#endif
+            }
+        }
+        else if (cod_info->part2_3_length > maxbits) {
+            int     i;
+            vbrmax = vbrmax2;
+            vbrmin = vbrmax2 + (vbrmin2 - vbrmax2) * count / M;
+            for (i = 0; i < SBMAX_s; ++i) {
+#ifdef XXL
+                vbrsf.s[i][0] = vbrmax2 + (vbrsf2.s[i][0] - vbrmax2) * count / M;
+                vbrsf.s[i][1] = vbrmax2 + (vbrsf2.s[i][1] - vbrmax2) * count / M;
+                vbrsf.s[i][2] = vbrmax2 + (vbrsf2.s[i][2] - vbrmax2) * count / M;
+#else
+                vbrsf.s[i][0] = Max(vbrsf2.s[i][0], vbrmin);
+                vbrsf.s[i][1] = Max(vbrsf2.s[i][1], vbrmin);
+                vbrsf.s[i][2] = Max(vbrsf2.s[i][2], vbrmin);
+#endif
+            }
+        }
+        else
+            break;
+    } while (ret != -1);
+    return ret;
+}
+
+static int
+mixed_block_shaping(lame_internal_flags * gfc, const FLOAT8 * xr34orig, FLOAT8 xr34[576],
+                    int minbits, int maxbits, const III_psy_xmin * l3_xmin, int gr, int ch)
+{                       /* not yet */
+    III_scalefac_t vbrsf;
+    III_scalefac_t vbrsf2;
+    gr_info *cod_info;
+    int     ret;
+    int     vbrmin_s, vbrmax_s, vbrmin_l, vbrmax_l;
+    int     M = 6;
+    int     count = M;
+
+    cod_info = &gfc->l3_side.tt[gr][ch];
+
+    short_block_sf(gfc, cod_info, l3_xmin, xr34orig, cod_info->xr, &vbrsf2, &vbrmin_s, &vbrmax_s);
+    long_block_sf(gfc, cod_info, l3_xmin, xr34orig, cod_info->xr, &vbrsf2, &vbrmin_l, &vbrmax_l);
+    return -2;
+}
 
 
 /************************************************************************
@@ -1385,109 +1545,23 @@ bin_search_StepSize(lame_internal_flags * const gfc, gr_info * const cod_info,
  *  Robert Hegemann 2000-10-25
  *
  ***********************************************************************/
-#define XXL 1
+
 int
 VBR_noise_shaping(lame_internal_flags * gfc, const FLOAT8 * xr34orig, int minbits, int maxbits,
                   const III_psy_xmin * l3_xmin, int gr, int ch)
 {
-    III_scalefac_t vbrsf;
-    III_scalefac_t vbrsf2;
-    gr_info *cod_info;
     FLOAT8  xr34[576];
-    int     shortblock, ret, bits, huffbits;
-    int     vbrmin, vbrmax, vbrmin2, vbrmax2;
-    int     M = 6;
-    int     count = M;
+    int     ret, bits, huffbits;
+    gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
 
-    cod_info = &gfc->l3_side.tt[gr][ch];
-    shortblock = (cod_info->block_type == SHORT_TYPE);
-
-    if (shortblock) {
-        short_block_sf(gfc, l3_xmin, xr34orig, cod_info->xr, &vbrsf2, &vbrmin2, &vbrmax2);
+    switch (cod_info->block_type) {
+    default:
+        ret = long_block_shaping(gfc, xr34orig, xr34, minbits, maxbits, l3_xmin, gr, ch);
+        break;
+    case SHORT_TYPE:
+        ret = short_block_shaping(gfc, xr34orig, xr34, minbits, maxbits, l3_xmin, gr, ch);
+        break;
     }
-    else {
-        long_block_sf(gfc, l3_xmin, xr34orig, cod_info->xr, &vbrsf2, &vbrmin2, &vbrmax2);
-    }
-    vbrsf = vbrsf2;
-    vbrmin = vbrmin2;
-    vbrmax = vbrmax2;
-#ifdef XXL
-    M = (vbrmax - vbrmin) / 2;
-    count = M;
-#endif
-    do {
-        --count;
-
-        if (shortblock) {
-            short_block_scalefacs(gfc, cod_info, &vbrsf, &vbrmax);
-            short_block_xr34(gfc, cod_info, xr34orig, xr34);
-        }
-        else {
-            long_block_scalefacs(gfc, cod_info, &vbrsf, &vbrmax);
-            long_block_xr34(gfc, cod_info, xr34orig, xr34);
-        }
-
-        ret = VBR_quantize_granule(gfc, cod_info, xr34, gr, ch);
-
-        if (vbrmin == vbrmax)
-            break;
-        else if (cod_info->part2_3_length < minbits) {
-            int     i;
-            vbrmax = vbrmin2 + (vbrmax2 - vbrmin2) * count / M;
-            vbrmin = vbrmin2;
-            if (shortblock) {
-                for (i = 0; i < SBMAX_s; ++i) {
-#ifdef XXL
-                    vbrsf.s[i][0] = vbrmin2 + (vbrsf2.s[i][0] - vbrmin2) * count / M;
-                    vbrsf.s[i][1] = vbrmin2 + (vbrsf2.s[i][1] - vbrmin2) * count / M;
-                    vbrsf.s[i][2] = vbrmin2 + (vbrsf2.s[i][2] - vbrmin2) * count / M;
-#else
-                    vbrsf.s[i][0] = Min(vbrsf2.s[i][0], vbrmax);
-                    vbrsf.s[i][1] = Min(vbrsf2.s[i][1], vbrmax);
-                    vbrsf.s[i][2] = Min(vbrsf2.s[i][2], vbrmax);
-#endif
-                }
-            }
-            else {
-                for (i = 0; i < SBMAX_l; ++i) {
-#ifdef XXL
-                    vbrsf.l[i] = vbrmin2 + (vbrsf2.l[i] - vbrmin2) * count / M;
-#else
-                    vbrsf.l[i] = Min(vbrsf2.l[i], vbrmax);
-#endif
-                }
-            }
-        }
-        else if (cod_info->part2_3_length > maxbits) {
-            int     i;
-            vbrmax = vbrmax2;
-            vbrmin = vbrmax2 + (vbrmin2 - vbrmax2) * count / M;
-            if (shortblock) {
-                for (i = 0; i < SBMAX_s; ++i) {
-#ifdef XXL
-                    vbrsf.s[i][0] = vbrmax2 + (vbrsf2.s[i][0] - vbrmax2) * count / M;
-                    vbrsf.s[i][1] = vbrmax2 + (vbrsf2.s[i][1] - vbrmax2) * count / M;
-                    vbrsf.s[i][2] = vbrmax2 + (vbrsf2.s[i][2] - vbrmax2) * count / M;
-#else
-                    vbrsf.s[i][0] = Max(vbrsf2.s[i][0], vbrmin);
-                    vbrsf.s[i][1] = Max(vbrsf2.s[i][1], vbrmin);
-                    vbrsf.s[i][2] = Max(vbrsf2.s[i][2], vbrmin);
-#endif
-                }
-            }
-            else {
-                for (i = 0; i < SBMAX_l; ++i) {
-#ifdef XXL
-                    vbrsf.l[i] = vbrmax2 + (vbrsf2.l[i] - vbrmax2) * count / M;
-#else
-                    vbrsf.l[i] = Max(vbrsf2.l[i], vbrmin);
-#endif
-                }
-            }
-        }
-        else
-            break;
-    } while (ret != -1);
 
     if (ret == -1)      /* Houston, we have a problem */
         return -1;
