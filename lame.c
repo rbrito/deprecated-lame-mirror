@@ -54,7 +54,6 @@
 void lame_init_params(lame_global_flags *gfp)
 {
   int i;
-  FLOAT compression_ratio;
   lame_internal_flags *gfc=gfp->internal_flags;
 
   gfc->lame_init_params_init=1;
@@ -97,12 +96,12 @@ void lame_init_params(lame_global_flags *gfp)
 
   if (!gfp->VBR && gfp->brate==0) {
     /* no bitrate or compression ratio specified, use 11 */
-    if (gfp->user_comp_ratio==0) gfp->user_comp_ratio=11;
+    if (gfp->compression_ratio==0) gfp->compression_ratio=11;
   }
 
 
   /* find bitrate if user specify a compression ratio */
-  if (!gfp->VBR && gfp->user_comp_ratio > 0) {
+  if (!gfp->VBR && gfp->compression_ratio > 0) {
     
     if (gfp->out_samplerate==0) 
       gfp->out_samplerate=gfp->in_samplerate;   
@@ -111,7 +110,7 @@ void lame_init_params(lame_global_flags *gfp)
      * specifed compression ratio 
      */
     gfp->brate = 
-      gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->user_comp_ratio);
+      gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->compression_ratio);
 
     /* we need the version for the bitrate table look up */
     gfc->samplerate_index = SmpFrqIndex((long)gfp->out_samplerate, &gfp->version);
@@ -146,8 +145,8 @@ void lame_init_params(lame_global_flags *gfp)
 
     if (!gfp->VBR && gfp->brate>0) {
       /* check if user specified bitrate requires downsampling */
-      compression_ratio = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->brate);
-      if (compression_ratio > 13 ) {
+      gfp->compression_ratio = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->brate);
+      if (gfp->compression_ratio > 13 ) {
 	/* automatic downsample, if possible */
 	gfp->out_samplerate = (10*1000.0*gfp->brate)/(16*gfc->stereo);
 	if (gfp->out_samplerate<=16000) gfp->out_samplerate=16000;
@@ -201,16 +200,16 @@ void lame_init_params(lame_global_flags *gfp)
      6                10.4            128kbs/41khz
   */
   if (gfp->VBR) 
-    compression_ratio = 4.4 + gfp->VBR_q;
+    gfp->compression_ratio = 4.4 + gfp->VBR_q;
   else
-    compression_ratio = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->brate);
+    gfp->compression_ratio = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->brate);
 
 
 
   /* At higher quality (lower compression) use STEREO instead of JSTEREO.
    * (unless the user explicitly specified a mode ) */
   if ( (!gfp->mode_fixed) && (gfp->mode !=MPG_MD_MONO)) {
-    if (compression_ratio < 9 ) {
+    if (gfp->compression_ratio < 9 ) {
       gfp->mode = MPG_MD_STEREO;
     }
   }
@@ -236,7 +235,7 @@ void lame_init_params(lame_global_flags *gfp)
 
 
     /* Should we use some lowpass filters? */
-    int band = 1+floor(.5 + 14-18*log(compression_ratio/16.0));
+    int band = 1+floor(.5 + 14-18*log(gfp->compression_ratio/16.0));
     if (gfc->resample_ratio != 1) {
       /* resampling.  if we are resampling, add lowpass at least 90% */
       band = Min(band,29);
@@ -641,11 +640,9 @@ void lame_print_config(lame_global_flags *gfp)
 	      gfp->out_samplerate/1000.0,
 	      gfp->VBR_q,mode_names[gfp->mode],2-gfp->version,gfp->quality);
     else {
-      FLOAT compression=
-	(FLOAT)(gfc->stereo*16*out_samplerate)/(FLOAT)(gfp->brate);
       fprintf(stderr, "Encoding as %.1f kHz %d kbps %s MPEG%i LayerIII (%4.1fx)  qval=%i\n",
 	      gfp->out_samplerate/1000.0,gfp->brate,
-	      mode_names[gfp->mode],2-gfp->version,compression,gfp->quality);
+	      mode_names[gfp->mode],2-gfp->version,gfp->compression_ratio,gfp->quality);
     }
   }
   if (gfp->free_format) {
@@ -1392,9 +1389,6 @@ int lame_init(lame_global_flags *gfp)
   gfc->CurrentStep=4;
   gfc->masking_lower=1;
 
-  gfc->ms_ener_ratio_old=.25;
-  gfc->blocktype_old[0]=STOP_TYPE;
-  gfc->blocktype_old[1]=STOP_TYPE;
 
 
   return 0;

@@ -728,13 +728,25 @@ VBR_quantize(lame_global_flags *gfp,
   iteration_init(gfp,l3_side,l3_enc);
 
   gfc->bitrate_index=gfc->VBR_min_bitrate;
-  getframebits (gfp,&bitsPerFrame, &mean_bits);
-  minbits = mean_bits/gfc->stereo;
+  getframebits(gfp,&bitsPerFrame, &mean_bits);
+  minbits = (mean_bits/gfc->stereo);
 
   gfc->bitrate_index=gfc->VBR_max_bitrate;
   getframebits(gfp,&bitsPerFrame, &mean_bits);
   max_frame_bits = ResvFrameBegin(gfp,l3_side, mean_bits, bitsPerFrame);
-  maxbits=800;
+  maxbits=2.5*(mean_bits/gfc->stereo);
+
+  {
+  /* compute a target  mean_bits based on compression ratio 
+   * which was set based on VBR_q  
+   */
+  int bit_rate = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->compression_ratio);
+  bitsPerFrame = (bit_rate*gfp->framesize*1000)/gfp->out_samplerate;
+  mean_bits = (bitsPerFrame - 8*gfc->sideinfo_len) / gfc->mode_gr;
+  }
+
+  minbits=Max(minbits,.4*(mean_bits/gfc->stereo));
+  maxbits=Min(maxbits,2.5*(mean_bits/gfc->stereo));
 
   do {
   
@@ -757,28 +769,25 @@ VBR_quantize(lame_global_flags *gfp,
       	masking_lower_db -= 4*(pe[gr][ch]-750.)/750.;
       //      if (shortblock) masking_lower_db -= 1;
 
-      gfc->masking_lower = pow(10.0,masking_lower_db/10);
-      VBR_noise_shapping (gfp,xr[gr][ch],&ratio[gr][ch],l3_enc,&ath_over[gr][ch],minbits,scalefac,gr,ch);
-      bits = cod_info->part2_3_length;
 
-      while (bits > Min(4095,(2+shortblock)*maxbits)) {
-	printf("quality = %f  too large bits:  %i  %i  %i  \n",masking_lower_db,minbits,bits,maxbits);
-
-	masking_lower_db  += .25;
-
+      do {
 	gfc->masking_lower = pow(10.0,masking_lower_db/10);
 	VBR_noise_shapping (gfp,xr[gr][ch],&ratio[gr][ch],l3_enc,&ath_over[gr][ch],minbits,scalefac,gr,ch);
 	bits = cod_info->part2_3_length;
-	printf("new bits = %i \n",bits);
-      }
-      
+	if (bits>maxbits) {
+	  printf("%i masking_lower=%f  bits>maxbits. bits:  %i  %i  %i  \n",gfp->frameNum,masking_lower_db,minbits,bits,maxbits);
+	  masking_lower_db  += Max(.33,(bits-maxbits)/200.0);
+	}
+
+      }	while (bits > maxbits);
+
       totbits += bits;
     }
   }
   bits_ok=1;
   if (totbits>max_frame_bits) {
-    printf("%i Trying again... totbits=%i  maxbits=%i \n",gfp->frameNum,totbits,max_frame_bits);
-    quality += Max(.10,(totbits-max_frame_bits)/250.0);
+    printf("%i totbits>max_frame_bits   totbits=%i  maxbits=%i \n",gfp->frameNum,totbits,max_frame_bits);
+    quality += Max(.33,(totbits-max_frame_bits)/200.0);
     bits_ok=0;
   }
 
@@ -789,26 +798,20 @@ VBR_quantize(lame_global_flags *gfp,
 
   
 
-  for( gfc->bitrate_index = 1;
+  for( gfc->bitrate_index = (gfp->VBR_hard_min ? gfc->VBR_min_bitrate : 1);
        gfc->bitrate_index < gfc->VBR_max_bitrate;
        gfc->bitrate_index++    ) {
 
     getframebits (gfp,&bitsPerFrame, &mean_bits);
     maxbits = ResvFrameBegin(gfp,l3_side, mean_bits, bitsPerFrame);
-    //    maxbits = mean_bits*gfc->mode_gr;  /* mean_bits per frame */
-    //    maxbits = .5*(maxbits+mean_bits*gfc->mode_gr);  
     if (totbits <= maxbits) break;
   }
-  if (gfp->VBR_hard_min) {
-    /* actual frame must use min bitrate or higher */
-    if (gfc->bitrate_index < gfc->VBR_min_bitrate)
-      gfc->bitrate_index = gfc->VBR_min_bitrate;
+  if (gfc->bitrate_index == gfc->VBR_max_bitrate) {
+    getframebits (gfp,&bitsPerFrame, &mean_bits);
+    maxbits = ResvFrameBegin(gfp,l3_side, mean_bits, bitsPerFrame);
   }
-  
-  getframebits (gfp,&bitsPerFrame, &mean_bits);
-  maxbits = ResvFrameBegin(gfp,l3_side, mean_bits, bitsPerFrame);
-  //  printf("%i bits=%i maxbits=%i index=%i  \n",gfp->frameNum,totbits,maxbits,gfc->bitrate_index);
-  
+
+  //  printf("%i total_bits=%i max_frame_bits=%i index=%i  \n",gfp->frameNum,totbits,max_frame_bits,gfc->bitrate_index);
 
   for (gr = 0; gr < gfc->mode_gr; gr++) {
     for (ch = 0; ch < gfc->stereo; ch++) {

@@ -401,8 +401,8 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	} 
 	else if (strcmp(token, "comp")==0) {
 	  argUsed=1;
-	  gfp->user_comp_ratio =  atof( nextArg );
-	  if (gfp->user_comp_ratio < 1.0 ) {
+	  gfp->compression_ratio =  atof( nextArg );
+	  if (gfp->compression_ratio < 1.0 ) {
 	    fprintf(stderr,"Must specify compression ratio >= 1.0\n");
 	    exit(1);
 	  }

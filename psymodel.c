@@ -92,7 +92,6 @@ void L3psycho_anal( lame_global_flags *gfp,
     gfc->psymodel_init=1;
 
 
-    
     samplerate = gfp->out_samplerate;
     switch(gfp->out_samplerate){
     case 32000: break;
@@ -109,20 +108,25 @@ void L3psycho_anal( lame_global_flags *gfp,
       exit(-1);
     }
 
+    gfc->ms_ener_ratio_old=.25;
+    gfc->blocktype_old[0]=STOP_TYPE;
+    gfc->blocktype_old[1]=STOP_TYPE;
+    gfc->blocktype_old[0]=SHORT_TYPE;
+    gfc->blocktype_old[1]=SHORT_TYPE;
 
     for (i=0; i<4; ++i) {
       for (j=0; j<CBANDS; ++j) {
-	gfc->nb_1[i][j]=1e10;
-	gfc->nb_2[i][j]=1e10;
+	gfc->nb_1[i][j]=1e20;
+	gfc->nb_2[i][j]=1e20;
       }
       for ( sb = 0; sb < SBPSY_l; sb++ ) {
-	gfc->en[i].l[sb] = 1e10;
-	gfc->thm[i].l[sb] = 1e10;
+	gfc->en[i].l[sb] = 1e20;
+	gfc->thm[i].l[sb] = 1e20;
       }
       for (j=0; j<3; ++j) {
 	for ( sb = 0; sb < SBPSY_s; sb++ ) {
-	  gfc->en[i].s[sb][j] = 1e10;
-	  gfc->thm[i].s[sb][j] = 1e10;
+	  gfc->en[i].s[sb][j] = 1e20;
+	  gfc->thm[i].s[sb][j] = 1e20;
 	}
       }
     }

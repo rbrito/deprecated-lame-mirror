@@ -75,7 +75,7 @@ typedef struct  {
   int mode_fixed;                 /* use specified the mode, do not use lame's opinion of the best mode */
   int force_ms;                   /* force M/S mode.  requires mode=1 */
   int brate;                      /* bitrate */
-  int user_comp_ratio;            /* user specified compression ratio, instead of brate */
+  float compression_ratio;          /* user specified compression ratio, instead of brate */
   int free_format;                /* use free format? */
 
   /* frame params */

@@ -776,7 +776,6 @@ format_bitstream(lame_global_flags *gfp, int bitsPerFrame,
 	   l3_side->tt[1][0].part2_3_length +
 	   l3_side->tt[1][1].part2_3_length);
 #endif
-    /* these bits are part of the previous frame */
     drain_into_ancillary(gfp,l3_side->resvDrain_pre);
 
     encodeSideInfo2(gfp,bitsPerFrame);
@@ -795,8 +794,6 @@ format_bitstream(lame_global_flags *gfp, int bitsPerFrame,
       fprintf(stderr,"header and sideinfo:      %i \n",8*gfc->sideinfo_len);
       fprintf(stderr,"data bits:                %i \n",bits-l3_side->resvDrain_post-8*gfc->sideinfo_len);
     };
-
-
 
 #ifdef DEBUG
     printf("total bits used = %i max=%i mdb=%i \n",bits,bitsPerFrame,l3_side->main_data_begin*8);
