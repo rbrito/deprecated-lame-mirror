@@ -413,7 +413,7 @@ init_bitalloc(lame_t gfc, gr_info *const gi)
  * used by CBR_1st_bitalloc to get a quantizer step size to start with
  ************************************************************************/
 static void
-quantize_ISO(const lame_t gfc, gr_info *gi)
+quantize_ISO(lame_t gfc, gr_info *gi)
 {
     /* quantize on xr^(3/4) instead of xr */
     fi_union *fi = (fi_union *)gi->l3_enc;
@@ -478,10 +478,7 @@ quantize_ISO(const lame_t gfc, gr_info *gi)
 
 static void
 init_global_gain(
-    const lame_t gfc,
-    gr_info * const gi,
-    int desired_rate,
-    int CurrentStep)
+    lame_t gfc, gr_info * const gi, int desired_rate, int CurrentStep)
 {
     int nbits, flag_GoneOver = 0;
     assert(CurrentStep);
@@ -1368,7 +1365,7 @@ short_block_scalefacs(gr_info * gi, int vbrmax)
 
 
 static void
-long_block_scalefacs(const lame_t gfc, gr_info * gi, int vbrmax)
+long_block_scalefacs(lame_t gfc, gr_info * gi, int vbrmax)
 {
     int sfb, maxov0, maxov1, maxov0p, maxov1p;
 

@@ -134,7 +134,6 @@ be masked by strong maskers in the L or R channels.
 #endif
 
 #include "util.h"
-#include "encoder.h"
 #include "psymodel.h"
 #include "tables.h"
 #include "machine.h"

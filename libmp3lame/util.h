@@ -503,7 +503,7 @@ void fill_buffer(lame_t, sample_t *mfbuf[2], sample_t *in_buffer[2],
 		 int nsamples, int *n_in, int *n_out);
 
 int  lame_encode_mp3_frame (		/* Output */
-    const lame_t	gfc,		/* Context */
+    lame_t	gfc,		/* Context */
     sample_t*           inbuf_l,	/* Input */
     sample_t*           inbuf_r,	/* Input */
     unsigned char*      mp3buf, 	/* Output */
@@ -542,9 +542,9 @@ extern int  has_SSE2  ( void );
 *  Macros about Message Printing and Exit
 *
 ***********************************************************************/
-extern void lame_errorf(const lame_t gfc, const char *, ...);
-extern void lame_debugf(const lame_t gfc, const char *, ...);
-extern void lame_msgf  (const lame_t gfc, const char *, ...);
+extern void lame_errorf(lame_t gfc, const char *, ...);
+extern void lame_debugf(lame_t gfc, const char *, ...);
+extern void lame_msgf  (lame_t gfc, const char *, ...);
 #define DEBUGF  lame_debugf
 #define ERRORF	lame_errorf
 #define MSGF	lame_msgf

@@ -12,7 +12,6 @@
 
 #include "interface.h"
 #include "util.h"
-#include "lame.h"
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>

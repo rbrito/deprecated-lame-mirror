@@ -41,18 +41,15 @@
 /* number of samples */
 /* it's unlikely for this function to return an error */
 int
-lame_set_num_samples(lame_t  gfc,
-                     unsigned long       num_samples)
+lame_set_num_samples(lame_t gfc, unsigned long num_samples)
 {
     /* default = 2^32-1 */
-
     gfc->num_samples = num_samples;
-
     return 0;
 }
 
 unsigned long
-lame_get_num_samples( const lame_t  gfc )
+lame_get_num_samples(lame_t gfc)
 {
     return gfc->num_samples;
 }
@@ -60,17 +57,15 @@ lame_get_num_samples( const lame_t  gfc )
 
 /* input samplerate */
 int
-lame_set_in_samplerate( lame_t   gfc,
-                        int                 in_samplerate )
+lame_set_in_samplerate(lame_t gfc, int in_samplerate)
 {
     /* input sample rate in Hz,  default = 44100 Hz */
     gfc->in_samplerate = in_samplerate;
-
     return 0;
 }
 
 int
-lame_get_in_samplerate( const lame_t   gfc )
+lame_get_in_samplerate(lame_t gfc)
 {
     return gfc->in_samplerate;
 }
@@ -78,21 +73,18 @@ lame_get_in_samplerate( const lame_t   gfc )
 
 /* number of channels in input stream */
 int
-lame_set_num_channels( lame_t   gfc,
-                       int                 num_channels )
+lame_set_num_channels(lame_t gfc, int num_channels)
 {
     /* default = 2 */
-
-    if ( 2 < num_channels || 0 == num_channels )
+    if (!(0 < num_channels && num_channels <= 2))
         return -1;    /* we don't support more than 2 channels */
 
     gfc->num_channels = num_channels;
-
     return 0;
 }
 
 int
-lame_get_num_channels( const lame_t   gfc )
+lame_get_num_channels(lame_t gfc)
 {
     return gfc->num_channels;
 }
@@ -100,17 +92,15 @@ lame_get_num_channels( const lame_t   gfc )
 
 /* scale the input by this amount before encoding (not used for decoding) */
 int
-lame_set_scale( lame_t   gfc,
-                float               scale )
+lame_set_scale(lame_t gfc, float scale)
 {
     /* default = 0 */
     gfc->scale = scale;
-
     return 0;
 }
 
 float
-lame_get_scale( const lame_t   gfc )
+lame_get_scale(lame_t gfc)
 {
     return gfc->scale;
 }
@@ -119,17 +109,15 @@ lame_get_scale( const lame_t   gfc )
 /* scale the channel 0 (left) input by this amount before 
    encoding (not used for decoding) */
 int
-lame_set_scale_left( lame_t   gfc,
-                     float               scale )
+lame_set_scale_left(lame_t gfc, float scale)
 {
     /* default = 0 */
     gfc->scale_left = scale;
-
     return 0;
 }
 
 float
-lame_get_scale_left( const lame_t   gfc )
+lame_get_scale_left(lame_t gfc)
 {
     return gfc->scale_left;
 }
@@ -138,17 +126,15 @@ lame_get_scale_left( const lame_t   gfc )
 /* scale the channel 1 (right) input by this amount before 
    encoding (not used for decoding) */
 int
-lame_set_scale_right( lame_t   gfc,
-                      float               scale )
+lame_set_scale_right(lame_t gfc, float scale)
 {
     /* default = 0 */
     gfc->scale_right = scale;
-
     return 0;
 }
 
 float
-lame_get_scale_right( const lame_t   gfc )
+lame_get_scale_right(lame_t gfc)
 {
     return gfc->scale_right;
 }
@@ -156,8 +142,7 @@ lame_get_scale_right( const lame_t   gfc )
 
 /* output sample rate in Hz */
 int
-lame_set_out_samplerate( lame_t   gfc,
-                         int                 out_samplerate )
+lame_set_out_samplerate(lame_t gfc, int out_samplerate)
 {
     /*
      * default = 0: LAME picks best value based on the amount
@@ -175,7 +160,7 @@ lame_set_out_samplerate( lame_t   gfc,
 }
 
 int
-lame_get_out_samplerate( const lame_t   gfc )
+lame_get_out_samplerate(lame_t gfc)
 {
     return gfc->out_samplerate;
 }
@@ -189,15 +174,14 @@ lame_get_out_samplerate( const lame_t   gfc )
 
 /* write a Xing VBR header frame */
 int
-lame_set_bWriteVbrTag( lame_t   gfc,
-                       int bWriteVbrTag )
+lame_set_bWriteVbrTag(lame_t gfc, int bWriteVbrTag)
 {
     /* default = 1 (on) for VBR/ABR modes, 0 (off) for CBR mode */
 
     /* enforce disable/enable meaning, if we need more than two values
        we need to switch to an enum to have an apropriate representation
        of the possible meanings of the value */
-    if ( 0 > bWriteVbrTag || 1 < bWriteVbrTag )
+    if ( 0 > bWriteVbrTag || 1 < bWriteVbrTag)
         return -1;
 
     gfc->bWriteVbrTag = bWriteVbrTag;
@@ -206,9 +190,9 @@ lame_set_bWriteVbrTag( lame_t   gfc,
 }
 
 int
-lame_get_bWriteVbrTag( const lame_t   gfc )
+lame_get_bWriteVbrTag(lame_t gfc)
 {
-    assert( 0 <= gfc->bWriteVbrTag && 1 >= gfc->bWriteVbrTag );
+    assert( 0 <= gfc->bWriteVbrTag && 1 >= gfc->bWriteVbrTag);
 
     return gfc->bWriteVbrTag;
 }
@@ -225,8 +209,7 @@ lame_get_bWriteVbrTag( const lame_t   gfc )
  *               7     ok quality, really fast
  */
 int
-lame_set_quality( lame_t   gfc,
-                  int                 quality )
+lame_set_quality(lame_t gfc, int quality)
 {
     if (quality < 0)
 	quality = 0;
@@ -238,7 +221,7 @@ lame_set_quality( lame_t   gfc,
 }
 
 int
-lame_get_quality( const lame_t   gfc )
+lame_get_quality(lame_t gfc)
 {
     return gfc->quality;
 }
@@ -246,8 +229,7 @@ lame_get_quality( const lame_t   gfc )
 
 /* mode = STEREO, JOINT_STEREO, DUAL_CHANNEL (not supported), MONO */
 int
-lame_set_mode( lame_t   gfc,
-               MPEG_mode           mode )
+lame_set_mode(lame_t gfc, MPEG_mode mode)
 {
     /* default: lame chooses based on compression ratio and input channels */
 
@@ -260,7 +242,7 @@ lame_set_mode( lame_t   gfc,
 }
 
 MPEG_mode
-lame_get_mode( const lame_t   gfc )
+lame_get_mode(lame_t gfc)
 {
     assert((unsigned int)gfc->mode < MAX_INDICATOR);
 
@@ -273,15 +255,14 @@ lame_get_mode( const lame_t   gfc )
  * Requires mode = 1.
  */
 int
-lame_set_force_ms( lame_t   gfc,
-                   int                 force_ms )
+lame_set_force_ms(lame_t gfc, int force_ms)
 {
     /* default = 0 (disabled) */
 
     /* enforce disable/enable meaning, if we need more than two values
        we need to switch to an enum to have an apropriate representation
        of the possible meanings of the value */
-    if ( 0 > force_ms || 1 < force_ms )
+    if ( 0 > force_ms || 1 < force_ms)
         return -1;
 
     gfc->force_ms = force_ms;
@@ -290,9 +271,9 @@ lame_set_force_ms( lame_t   gfc,
 }
 
 int
-lame_get_force_ms( const lame_t   gfc )
+lame_get_force_ms(lame_t gfc)
 {
-    assert( 0 <= gfc->force_ms && 1 >= gfc->force_ms );
+    assert( 0 <= gfc->force_ms && 1 >= gfc->force_ms);
 
     return gfc->force_ms;
 }
@@ -300,15 +281,14 @@ lame_get_force_ms( const lame_t   gfc )
 
 /* Use free_format. */
 int
-lame_set_free_format( lame_t   gfc,
-                      int                 free_format )
+lame_set_free_format(lame_t gfc, int free_format)
 {
     /* default = 0 (disabled) */
 
     /* enforce disable/enable meaning, if we need more than two values
        we need to switch to an enum to have an apropriate representation
        of the possible meanings of the value */
-    if ( 0 > free_format || 1 < free_format )
+    if ( 0 > free_format || 1 < free_format)
         return -1;
 
     gfc->free_format = free_format;
@@ -317,9 +297,9 @@ lame_set_free_format( lame_t   gfc,
 }
 
 int
-lame_get_free_format( const lame_t   gfc )
+lame_get_free_format(lame_t gfc)
 {
-    assert( 0 <= gfc->free_format && 1 >= gfc->free_format );
+    assert( 0 <= gfc->free_format && 1 >= gfc->free_format);
 
     return gfc->free_format;
 }
@@ -327,8 +307,7 @@ lame_get_free_format( const lame_t   gfc )
 
 /* message handlers */
 int
-lame_set_errorf( lame_t   gfc,
-                 void                (*func)( const char*, va_list ) )
+lame_set_errorf(lame_t gfc, void (*func)( const char*, va_list))
 {
     gfc->report.errorf = func;
 
@@ -336,8 +315,7 @@ lame_set_errorf( lame_t   gfc,
 }
 
 int
-lame_set_debugf( lame_t   gfc,
-                 void                (*func)( const char*, va_list ) )
+lame_set_debugf(lame_t gfc, void (*func)( const char*, va_list))
 {
     gfc->report.debugf = func;
 
@@ -345,8 +323,7 @@ lame_set_debugf( lame_t   gfc,
 }
 
 int
-lame_set_msgf( lame_t   gfc,
-               void                (*func)( const char *, va_list ) )
+lame_set_msgf(lame_t gfc, void (*func)( const char *, va_list))
 {
     gfc->report.msgf = func;
 
@@ -362,30 +339,27 @@ lame_set_msgf( lame_t   gfc,
  * Default is compression ratio of 11.
  */
 int
-lame_set_brate( lame_t   gfc,
-                int                 brate )
+lame_set_brate(lame_t gfc, int brate)
 {
     gfc->mean_bitrate_kbps = brate;
     return 0;
 }
 
 int
-lame_get_brate( const lame_t   gfc )
+lame_get_brate(lame_t gfc)
 {
     return gfc->mean_bitrate_kbps;
 }
 
 int
-lame_set_compression_ratio( lame_t   gfc,
-                            float               compression_ratio )
+lame_set_compression_ratio(lame_t gfc, float compression_ratio)
 {
     gfc->compression_ratio = compression_ratio;
-
     return 0;
 }
 
 float
-lame_get_compression_ratio( const lame_t   gfc )
+lame_get_compression_ratio(lame_t gfc)
 {
     return gfc->compression_ratio;
 }
@@ -399,15 +373,14 @@ lame_get_compression_ratio( const lame_t   gfc )
 
 /* Mark as copyright protected. */
 int
-lame_set_copyright( lame_t   gfc,
-                    int                 copyright )
+lame_set_copyright(lame_t gfc, int copyright)
 {
     /* default = 0 (disabled) */
 
     /* enforce disable/enable meaning, if we need more than two values
        we need to switch to an enum to have an apropriate representation
        of the possible meanings of the value */
-    if ( 0 > copyright || 1 < copyright )
+    if ( 0 > copyright || 1 < copyright)
         return -1;
 
     gfc->copyright = copyright;
@@ -416,9 +389,9 @@ lame_set_copyright( lame_t   gfc,
 }
 
 int
-lame_get_copyright( const lame_t   gfc )
+lame_get_copyright(lame_t gfc)
 {
-    assert( 0 <= gfc->copyright && 1 >= gfc->copyright );
+    assert( 0 <= gfc->copyright && 1 >= gfc->copyright);
 
     return gfc->copyright;
 }
@@ -426,15 +399,14 @@ lame_get_copyright( const lame_t   gfc )
 
 /* Mark as original. */
 int
-lame_set_original( lame_t   gfc,
-                   int                 original )
+lame_set_original(lame_t gfc, int original)
 {
     /* default = 1 (enabled) */
 
     /* enforce disable/enable meaning, if we need more than two values
        we need to switch to an enum to have an apropriate representation
        of the possible meanings of the value */
-    if ( 0 > original || 1 < original )
+    if ( 0 > original || 1 < original)
         return -1;
 
     gfc->original = original;
@@ -443,9 +415,9 @@ lame_set_original( lame_t   gfc,
 }
 
 int
-lame_get_original( const lame_t   gfc )
+lame_get_original(lame_t gfc)
 {
-    assert( 0 <= gfc->original && 1 >= gfc->original );
+    assert( 0 <= gfc->original && 1 >= gfc->original);
 
     return gfc->original;
 }
@@ -456,15 +428,14 @@ lame_get_original( const lame_t   gfc )
  * Use 2 bytes from each frame for CRC checksum.
  */
 int
-lame_set_error_protection( lame_t   gfc,
-                           int                 error_protection )
+lame_set_error_protection(lame_t gfc, int error_protection)
 {
     /* default = 0 (disabled) */
 
     /* enforce disable/enable meaning, if we need more than two values
        we need to switch to an enum to have an apropriate representation
        of the possible meanings of the value */
-    if ( 0 > error_protection || 1 < error_protection )
+    if ( 0 > error_protection || 1 < error_protection)
         return -1;
 
     gfc->error_protection = error_protection;
@@ -473,9 +444,9 @@ lame_set_error_protection( lame_t   gfc,
 }
 
 int
-lame_get_error_protection( const lame_t   gfc )
+lame_get_error_protection(lame_t gfc)
 {
-    assert( 0 <= gfc->error_protection && 1 >= gfc->error_protection );
+    assert( 0 <= gfc->error_protection && 1 >= gfc->error_protection);
 
     return gfc->error_protection;
 }
@@ -483,15 +454,14 @@ lame_get_error_protection( const lame_t   gfc )
 
 /* MP3 'private extension' bit. Meaningless. */
 int
-lame_set_extension( lame_t   gfc,
-                    int                 extension )
+lame_set_extension(lame_t gfc, int extension)
 {
     /* default = 0 (disabled) */
 
     /* enforce disable/enable meaning, if we need more than two values
        we need to switch to an enum to have an apropriate representation
        of the possible meanings of the value */
-    if ( 0 > extension || 1 < extension )
+    if ( 0 > extension || 1 < extension)
         return -1;
 
     gfc->extension = extension;
@@ -500,9 +470,9 @@ lame_set_extension( lame_t   gfc,
 }
 
 int
-lame_get_extension( const lame_t   gfc )
+lame_get_extension(lame_t gfc)
 {
-    assert( 0 <= gfc->extension && 1 >= gfc->extension );
+    assert( 0 <= gfc->extension && 1 >= gfc->extension);
 
     return gfc->extension;
 }
@@ -510,15 +480,14 @@ lame_get_extension( const lame_t   gfc )
 
 /* Enforce strict ISO compliance. */
 int
-lame_set_strict_ISO( lame_t   gfc,
-                     int                 strict_ISO )
+lame_set_strict_ISO(lame_t gfc, int strict_ISO)
 {
     /* default = 0 (disabled) */
 
     /* enforce disable/enable meaning, if we need more than two values
        we need to switch to an enum to have an apropriate representation
        of the possible meanings of the value */
-    if ( 0 > strict_ISO || 1 < strict_ISO )
+    if ( 0 > strict_ISO || 1 < strict_ISO)
         return -1;
 
     gfc->strict_ISO = strict_ISO;
@@ -527,9 +496,9 @@ lame_set_strict_ISO( lame_t   gfc,
 }
 
 int
-lame_get_strict_ISO( const lame_t   gfc )
+lame_get_strict_ISO(lame_t gfc)
 {
-    assert( 0 <= gfc->strict_ISO && 1 >= gfc->strict_ISO );
+    assert( 0 <= gfc->strict_ISO && 1 >= gfc->strict_ISO);
 
     return gfc->strict_ISO;
 }
@@ -543,15 +512,14 @@ lame_get_strict_ISO( const lame_t   gfc )
 
 /* Disable the bit reservoir. For testing only. */
 int
-lame_set_disable_reservoir( lame_t   gfc,
-                            int                 disable_reservoir )
+lame_set_disable_reservoir(lame_t gfc, int disable_reservoir)
 {
     /* default = 0 (disabled) */
 
     /* enforce disable/enable meaning, if we need more than two values
        we need to switch to an enum to have an apropriate representation
        of the possible meanings of the value */
-    if ( 0 > disable_reservoir || 1 < disable_reservoir )
+    if ( 0 > disable_reservoir || 1 < disable_reservoir)
         return -1;
 
     gfc->disable_reservoir = disable_reservoir;
@@ -560,9 +528,9 @@ lame_set_disable_reservoir( lame_t   gfc,
 }
 
 int
-lame_get_disable_reservoir( const lame_t   gfc )
+lame_get_disable_reservoir(lame_t gfc)
 {
-    assert( 0 <= gfc->disable_reservoir && 1 >= gfc->disable_reservoir );
+    assert( 0 <= gfc->disable_reservoir && 1 >= gfc->disable_reservoir);
 
     return gfc->disable_reservoir;
 }
@@ -571,28 +539,23 @@ lame_get_disable_reservoir( const lame_t   gfc )
 
 
 int
-lame_set_sfscale( lame_t   gfc,
-		  int                 method)
+lame_set_sfscale(lame_t gfc,	int method)
 {
     gfc->use_scalefac_scale = method;
-
     return 0;
 }
 
 
 int
-lame_set_subblock_gain( lame_t   gfc,
-			int                 method)
+lame_set_subblock_gain(lame_t gfc, int method)
 {
     gfc->use_subblock_gain = method;
-
     return 0;
 }
 
 
 int
-lame_set_narrowenStereo(lame_t gfc,
-			float factor)
+lame_set_narrowenStereo(lame_t gfc, float factor)
 {
     if (factor < 0.0 || factor > 1.0)
 	return -1;
@@ -602,8 +565,7 @@ lame_set_narrowenStereo(lame_t gfc,
 
 /* Naoki's psycho acoustic model. */
 int
-lame_set_exp_nspsytune( lame_t   gfc,
-                        int                 exp_nspsytune )
+lame_set_exp_nspsytune(lame_t gfc, int exp_nspsytune)
 {
     gfc->nsPsy.tune = exp_nspsytune;
 
@@ -611,7 +573,7 @@ lame_set_exp_nspsytune( lame_t   gfc,
 }
 
 int
-lame_get_exp_nspsytune( const lame_t   gfc )
+lame_get_exp_nspsytune(lame_t gfc)
 {
     return gfc->nsPsy.tune;
 }
@@ -623,8 +585,7 @@ lame_get_exp_nspsytune( const lame_t   gfc )
 
 /* Types of VBR.  default = CBR */
 int
-lame_set_VBR( lame_t   gfc,
-              vbr_mode            VBR )
+lame_set_VBR(lame_t gfc, vbr_mode VBR)
 {
     if ((unsigned int)VBR >= vbr_max_indicator)
         return -1;  /* Unknown VBR mode! */
@@ -635,7 +596,7 @@ lame_set_VBR( lame_t   gfc,
 }
 
 vbr_mode
-lame_get_VBR( const lame_t   gfc )
+lame_get_VBR(lame_t gfc)
 {
     assert((unsigned int)gfc->VBR < vbr_max_indicator);
     return gfc->VBR;
@@ -648,15 +609,14 @@ lame_get_VBR( const lame_t   gfc )
  *  9 = lowest 
  */
 int
-lame_set_VBR_q( lame_t   gfc,
-                int                 VBR_q )
+lame_set_VBR_q(lame_t gfc, int VBR_q)
 {
     /* XXX: This should be an enum */
     /*  to whoever added this note: why should it be an enum?
         do you want to call a specific setting by name? 
         say VBR quality level red? */
     /* No, but VBR_Q_HIGHEST, VBR_Q_HIGH, ..., VBR_Q_MID, ...
-       VBR_Q_LOW, VBR_Q_LOWEST (or something like that )and a
+       VBR_Q_LOW, VBR_Q_LOWEST (or something like that)and a
        VBR_Q_DEFAULT, which aliases the default setting of
        e.g. VBR_Q_MID. */
 
@@ -668,7 +628,7 @@ lame_set_VBR_q( lame_t   gfc,
 }
 
 int
-lame_get_VBR_q( const lame_t   gfc )
+lame_get_VBR_q(lame_t gfc)
 {
     assert(0 <= gfc->VBR_q);
 
@@ -678,8 +638,7 @@ lame_get_VBR_q( const lame_t   gfc )
 
 /* Ignored except for VBR = abr (ABR mode) */
 int
-lame_set_VBR_mean_bitrate_kbps( lame_t   gfc,
-                                int                 VBR_mean_bitrate_kbps )
+lame_set_VBR_mean_bitrate_kbps(lame_t gfc, int VBR_mean_bitrate_kbps)
 {
     gfc->mean_bitrate_kbps = VBR_mean_bitrate_kbps;
 
@@ -687,14 +646,13 @@ lame_set_VBR_mean_bitrate_kbps( lame_t   gfc,
 }
 
 int
-lame_get_VBR_mean_bitrate_kbps( const lame_t   gfc )
+lame_get_VBR_mean_bitrate_kbps(lame_t gfc)
 {
     return gfc->mean_bitrate_kbps;
 }
 
 int
-lame_set_VBR_min_bitrate_kbps( lame_t   gfc,
-                               int                 VBR_min_bitrate_kbps )
+lame_set_VBR_min_bitrate_kbps(lame_t gfc, int VBR_min_bitrate_kbps)
 {
     gfc->VBR_min_bitrate_kbps = VBR_min_bitrate_kbps;
 
@@ -702,14 +660,13 @@ lame_set_VBR_min_bitrate_kbps( lame_t   gfc,
 }
 
 int
-lame_get_VBR_min_bitrate_kbps( const lame_t   gfc )
+lame_get_VBR_min_bitrate_kbps(lame_t gfc)
 {
     return gfc->VBR_min_bitrate_kbps;
 }
 
 int
-lame_set_VBR_max_bitrate_kbps( lame_t   gfc,
-                               int                 VBR_max_bitrate_kbps )
+lame_set_VBR_max_bitrate_kbps(lame_t gfc, int VBR_max_bitrate_kbps)
 {
     gfc->VBR_max_bitrate_kbps = VBR_max_bitrate_kbps;
 
@@ -717,7 +674,7 @@ lame_set_VBR_max_bitrate_kbps( lame_t   gfc,
 }
 
 int
-lame_get_VBR_max_bitrate_kbps( const lame_t   gfc )
+lame_get_VBR_max_bitrate_kbps(lame_t gfc)
 {
     return gfc->VBR_max_bitrate_kbps;
 }
@@ -733,8 +690,7 @@ lame_get_VBR_max_bitrate_kbps( const lame_t   gfc )
  *  -1 = disabled
  */
 int
-lame_set_lowpassfreq( lame_t   gfc,
-                      int                 lowpassfreq )
+lame_set_lowpassfreq(lame_t gfc, int lowpassfreq)
 {
     gfc->lowpassfreq = lowpassfreq;
 
@@ -742,7 +698,7 @@ lame_set_lowpassfreq( lame_t   gfc,
 }
 
 int
-lame_get_lowpassfreq( const lame_t   gfc )
+lame_get_lowpassfreq(lame_t gfc)
 {
     return gfc->lowpassfreq;
 }
@@ -753,8 +709,7 @@ lame_get_lowpassfreq( const lame_t   gfc )
  *  default = one polyphase filter band
  */
 int
-lame_set_lowpasswidth( lame_t   gfc,
-                       int                 lowpasswidth )
+lame_set_lowpasswidth(lame_t gfc, int lowpasswidth)
 {
     gfc->lowpasswidth = lowpasswidth;
 
@@ -762,7 +717,7 @@ lame_set_lowpasswidth( lame_t   gfc,
 }
 
 int
-lame_get_lowpasswidth( const lame_t   gfc )
+lame_get_lowpasswidth(lame_t gfc)
 {
     return gfc->lowpasswidth;
 }
@@ -774,8 +729,7 @@ lame_get_lowpasswidth( const lame_t   gfc )
  *  -1 = disabled
  */
 int
-lame_set_highpassfreq( lame_t   gfc,
-                       int                 highpassfreq )
+lame_set_highpassfreq(lame_t gfc, int highpassfreq)
 {
     gfc->highpassfreq = highpassfreq;
 
@@ -783,7 +737,7 @@ lame_set_highpassfreq( lame_t   gfc,
 }
 
 int
-lame_get_highpassfreq( const lame_t   gfc )
+lame_get_highpassfreq(lame_t gfc)
 {
     return gfc->highpassfreq;
 }
@@ -794,8 +748,7 @@ lame_get_highpassfreq( const lame_t   gfc )
  *  default = one polyphase filter band
  */
 int
-lame_set_highpasswidth( lame_t   gfc,
-                        int                 highpasswidth )
+lame_set_highpasswidth(lame_t gfc, int highpasswidth)
 {
     gfc->highpasswidth = highpasswidth;
 
@@ -803,7 +756,7 @@ lame_set_highpasswidth( lame_t   gfc,
 }
 
 int
-lame_get_highpasswidth( const lame_t   gfc )
+lame_get_highpasswidth(lame_t gfc)
 {
     return gfc->highpasswidth;
 }
@@ -818,16 +771,14 @@ lame_get_highpasswidth( const lame_t   gfc )
 
 /* Adjust masking values. */
 int
-lame_set_maskingadjust( lame_t   gfc,
-                   float               adjust )
+lame_set_maskingadjust(lame_t gfc, float adjust)
 {
     gfc->masking_lower = db2pow(adjust);
     return 0;
 }
 
 int
-lame_set_maskingadjust_short( lame_t   gfc,
-                   float               adjust )
+lame_set_maskingadjust_short(lame_t gfc, float adjust)
 {
     gfc->masking_lower_short = db2pow(adjust);
     return 0;
@@ -835,8 +786,7 @@ lame_set_maskingadjust_short( lame_t   gfc,
 
 /* Only use ATH for masking. */
 int
-lame_set_ATHonly( lame_t   gfc,
-                  int                 ATHonly )
+lame_set_ATHonly(lame_t gfc, int ATHonly)
 {
     gfc->ATHonly = ATHonly;
 
@@ -844,7 +794,7 @@ lame_set_ATHonly( lame_t   gfc,
 }
 
 int
-lame_get_ATHonly( const lame_t   gfc )
+lame_get_ATHonly(lame_t gfc)
 {
     return gfc->ATHonly;
 }
@@ -852,16 +802,14 @@ lame_get_ATHonly( const lame_t   gfc )
 
 /* Only use ATH for short blocks. */
 int
-lame_set_ATHshort( lame_t   gfc,
-                   int                 ATHshort )
+lame_set_ATHshort(lame_t gfc, int ATHshort)
 {
     gfc->ATHshort = ATHshort;
-
     return 0;
 }
 
 int
-lame_get_ATHshort( const lame_t   gfc )
+lame_get_ATHshort(lame_t gfc)
 {
     return gfc->ATHshort;
 }
@@ -869,8 +817,7 @@ lame_get_ATHshort( const lame_t   gfc )
 
 /* Disable ATH. */
 int
-lame_set_noATH( lame_t   gfc,
-                int                 noATH )
+lame_set_noATH(lame_t gfc, int noATH)
 {
     gfc->noATH = noATH;
 
@@ -878,7 +825,7 @@ lame_set_noATH( lame_t   gfc,
 }
 
 int
-lame_get_noATH( const lame_t   gfc )
+lame_get_noATH(lame_t gfc)
 {
     return gfc->noATH;
 }
@@ -886,8 +833,7 @@ lame_get_noATH( const lame_t   gfc )
 
 /* Select ATH formula 4 shape. */
 int
-lame_set_ATHcurve( lame_t   gfc,
-                   float ATHcurve )
+lame_set_ATHcurve(lame_t gfc, float ATHcurve)
 {
     if (ATHcurve < 0)
 	ATHcurve = 0;
@@ -897,7 +843,7 @@ lame_set_ATHcurve( lame_t   gfc,
 }
 
 int
-lame_get_ATHcurve( const lame_t   gfc )
+lame_get_ATHcurve(lame_t gfc)
 {
     return gfc->ATHcurve;
 }
@@ -905,15 +851,14 @@ lame_get_ATHcurve( const lame_t   gfc )
 
 /* Lower ATH by this many db. */
 int
-lame_set_ATHlower( lame_t   gfc,
-                   float               ATHlower )
+lame_set_ATHlower(lame_t gfc, float ATHlower)
 {
     gfc->ATHlower = db2pow(-ATHlower);
     return 0;
 }
 
 float
-lame_get_ATHlower( const lame_t   gfc )
+lame_get_ATHlower(lame_t gfc)
 {
     return gfc->ATHlower;
 }
@@ -921,22 +866,21 @@ lame_get_ATHlower( const lame_t   gfc )
 
 /* Adjust (in dB) the point below which adaptive ATH level adjustment occurs. */
 int
-lame_set_athaa_sensitivity( lame_t   gfc,
-                            float               athaa_sensitivity )
+lame_set_athaa_sensitivity(lame_t gfc, float athaa_sensitivity)
 {
     gfc->ATH.aa_decay = db2pow(athaa_sensitivity);
     return 0;
 }
 
 float
-lame_get_athaa_sensitivity( const lame_t   gfc )
+lame_get_athaa_sensitivity(lame_t gfc)
 {
     return FAST_LOG10(gfc->ATH.aa_decay) * 10.0;
 }
 
 
 int
-lame_set_short_threshold( lame_t   gfc, float s)
+lame_set_short_threshold(lame_t gfc, float s)
 {
     gfc->nsPsy.attackthre   = s;
     return 0;
@@ -945,8 +889,7 @@ lame_set_short_threshold( lame_t   gfc, float s)
 
 /* Use intensity stereo effect */
 int
-lame_set_istereoRatio( lame_t   gfc,
-		       float               ratio )
+lame_set_istereoRatio(lame_t gfc, float ratio)
 {
     if (! (0 <= ratio && ratio <= 1.0))
         return -1;
@@ -958,8 +901,7 @@ lame_set_istereoRatio( lame_t   gfc,
 
 /* Use inter-channel masking effect */
 int
-lame_set_interChRatio( lame_t   gfc,
-			float               ratio )
+lame_set_interChRatio(lame_t gfc, float ratio)
 {
     if (! (0 <= ratio && ratio <= 1.0))
         return -1;
@@ -971,8 +913,7 @@ lame_set_interChRatio( lame_t   gfc,
 
 /* reduce side channel PE */
 int
-lame_set_reduceSide( lame_t   gfc,
-		     float               ratio )
+lame_set_reduceSide(lame_t gfc, float ratio)
 {
     if (! (0 <= ratio && ratio <= 1.0))
         return -1;
@@ -983,7 +924,7 @@ lame_set_reduceSide( lame_t   gfc,
 }
 
 float
-lame_get_interChRatio( const lame_t   gfc )
+lame_get_interChRatio(lame_t gfc)
 {
     assert( 0 <= gfc->interChRatio
 	    && gfc->interChRatio <= 1.0);
@@ -994,8 +935,7 @@ lame_get_interChRatio( const lame_t   gfc )
 
 /* Use pseudo substep shaping method */
 int
-lame_set_substep( lame_t   gfc,
-		  int                 method )
+lame_set_substep(lame_t gfc, int method)
 {
     /* default = 0.0 (no inter-cahnnel maskin) */
     if (! (0 <= method && method <= 7))
@@ -1006,7 +946,7 @@ lame_set_substep( lame_t   gfc,
 }
 
 int
-lame_get_substep(const lame_t   gfc )
+lame_get_substep(lame_t gfc)
 {
     assert(0 <= gfc->substep_shaping && gfc->substep_shaping <= 3);
     return gfc->substep_shaping;
@@ -1014,8 +954,7 @@ lame_get_substep(const lame_t   gfc )
 
 /* Use mixed block. */
 int
-lame_set_use_mixed_blocks( lame_t   gfc,
-			   int                 use_mixed_blocks )
+lame_set_use_mixed_blocks(lame_t gfc, int use_mixed_blocks)
 {
     /* 0 ... not use the mixed block
        1 ... use all short block as mixed block
@@ -1037,11 +976,10 @@ lame_set_use_mixed_blocks( lame_t   gfc,
  * ignore these bits
  */
 int
-lame_set_emphasis( lame_t   gfc,
-                   int                 emphasis )
+lame_set_emphasis(lame_t gfc, int emphasis)
 {
     /* XXX: emphasis should be converted to an enum */
-    if ( 0 > emphasis || 4 <= emphasis )
+    if ( 0 > emphasis || 4 <= emphasis)
         return -1;
 
     gfc->emphasis = emphasis;
@@ -1050,9 +988,9 @@ lame_set_emphasis( lame_t   gfc,
 }
 
 int
-lame_get_emphasis( const lame_t   gfc )
+lame_get_emphasis(lame_t gfc)
 {
-    assert( 0 <= gfc->emphasis && 4 > gfc->emphasis );
+    assert( 0 <= gfc->emphasis && 4 > gfc->emphasis);
 
     return gfc->emphasis;
 }
@@ -1071,7 +1009,7 @@ lame_get_emphasis( const lame_t   gfc )
  * (2 = MPEG-2.5)    
  */
 int
-lame_get_version( const lame_t  gfc )
+lame_get_version(lame_t gfc)
 {
     return gfc->version;
 }
@@ -1079,14 +1017,14 @@ lame_get_version( const lame_t  gfc )
 
 /* Encoder delay. */
 int
-lame_get_encoder_delay( const lame_t   gfc )
+lame_get_encoder_delay(lame_t gfc)
 {
     return gfc->encoder_delay;
 }
 
 /* padding added to the end of the input */
 int
-lame_get_encoder_padding( const lame_t   gfc )
+lame_get_encoder_padding(lame_t gfc)
 {
     return gfc->encoder_padding;
 }
@@ -1094,7 +1032,7 @@ lame_get_encoder_padding( const lame_t   gfc )
 
 /* Size of MPEG frame. */
 int
-lame_get_framesize( const lame_t   gfc )
+lame_get_framesize(lame_t gfc)
 {
     return gfc->framesize;
 }
@@ -1102,19 +1040,19 @@ lame_get_framesize( const lame_t   gfc )
 
 /* Number of frames encoded so far. */
 int
-lame_get_frameNum( const lame_t   gfc )
+lame_get_frameNum(lame_t gfc)
 {
     return gfc->frameNum;
 }
 
 int
-lame_get_mf_samples_to_encode( const lame_t   gfc )
+lame_get_mf_samples_to_encode(lame_t gfc)
 {
     return gfc->mf_samples_to_encode;
 }
 
 
-int CDECL lame_get_size_mp3buffer( const lame_t   gfc )
+int CDECL lame_get_size_mp3buffer(lame_t gfc)
 {
     int size;
     compute_flushbits(gfc,&size);
@@ -1128,7 +1066,7 @@ int CDECL lame_get_size_mp3buffer( const lame_t   gfc )
  * Only valid if calling program set num_samples.
  */
 int
-lame_get_totalframes( const lame_t   gfc )
+lame_get_totalframes(lame_t gfc)
 {
     int totalframes;
     /* estimate based on user set num_samples: */
@@ -1146,27 +1084,27 @@ lame_get_totalframes( const lame_t   gfc )
 
 /* Custom msfix hack */
 void
-lame_set_msfix( lame_t   gfc, double msfix )
+lame_set_msfix(lame_t gfc, float msfix)
 {
     gfc->nsPsy.msfix = msfix;
 }
 
 /* Custom msfix hack */
 void
-lame_set_forbid_diff_blocktype( lame_t   gfc, int val )
+lame_set_forbid_diff_blocktype(lame_t gfc, int val)
 {
     gfc->forbid_diff_type = val;
 }
 
 
 void
-lame_set_analysis(lame_t   gfc, plotting_data *pinfo)
+lame_set_analysis(lame_t gfc, plotting_data *pinfo)
 {
     gfc->pinfo = pinfo;
 }
 
 int 
-lame_set_asm_optimizations( lame_t   gfc, int optim, int mode)
+lame_set_asm_optimizations(lame_t gfc, int optim, int mode)
 {
     mode = (mode == 1? 1 : 0);
     switch (optim){
@@ -1182,6 +1120,7 @@ lame_set_asm_optimizations( lame_t   gfc, int optim, int mode)
             gfc->asm_optimizations.sse = mode;
             return optim;
         }
-        default: return optim;
+        default:
+	    return optim;
     }
 }

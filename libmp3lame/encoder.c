@@ -27,7 +27,6 @@
 
 #include <assert.h>
 
-#include "lame.h"
 #include "util.h"
 #include "newmdct.h"
 #include "psymodel.h"
@@ -104,7 +103,7 @@ may use these stats, even if it's only a Windows DLL
 I'll extend the stats for block types used
 */
 static void
-updateStats(const lame_t gfc)
+updateStats(lame_t gfc)
 {
     int gr, ch;
     assert ( gfc->bitrate_index < 16u );
@@ -280,7 +279,7 @@ FFT's                    <---------1024---------->
 
 int
 lame_encode_mp3_frame (		/* Output */
-    const lame_t	gfc,		/* Context */
+    lame_t	gfc,
     sample_t*           inbuf_l,	/* Input */
     sample_t*           inbuf_r,	/* Input */
     unsigned char*      mp3buf, 	/* Output */

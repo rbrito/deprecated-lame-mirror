@@ -281,12 +281,12 @@ int choose_table_nonMMX(
  **********************************************************************/
 inline static void
 recalc_divide_init(
-    const lame_t   gfc,
-          gr_info *gi,
-          int      r01_bits[],
-          int      r01_div [],
-          int      r0_tbl  [],
-          int      r1_tbl  [] )
+    lame_t   gfc,
+    gr_info *gi,
+    int      r01_bits[],
+    int      r01_div [],
+    int      r0_tbl  [],
+    int      r1_tbl  [] )
 {
     int r0;
     for (r0 = 0; r0 <= 7 + 15; r0++)
@@ -319,8 +319,8 @@ recalc_divide_init(
 
 inline static int
 recalc_divide_sub(
-    const lame_t  gfc,
-          gr_info *gi,
+    lame_t  gfc,
+    gr_info *gi,
     const int     r01_bits[],
     const int     r01_div [],
     const int     r0_tbl  [],
@@ -350,7 +350,7 @@ recalc_divide_sub(
 }
 
 static void
-best_huffman_divide(const lame_t gfc, gr_info * const gi)
+best_huffman_divide(lame_t gfc, gr_info * const gi)
 {
     int i, a1, a2;
     gr_info gi_w;
@@ -419,7 +419,7 @@ best_huffman_divide(const lame_t gfc, gr_info * const gi)
 }
 
 int
-noquant_count_bits(const lame_t gfc, gr_info * const gi)
+noquant_count_bits(lame_t gfc, gr_info * const gi)
 {
     int i, a1, a2;
     int *const ix = gi->l3_enc;
@@ -492,7 +492,7 @@ noquant_count_bits(const lame_t gfc, gr_info * const gi)
 }
 
 int
-count_bits(const lame_t gfc, gr_info * const gi)
+count_bits(lame_t gfc, gr_info * const gi)
 {
     /* quantize on xr^(3/4) instead of xr */
     int sfb = 0;

@@ -33,11 +33,11 @@
 
 /* takehiro.c */
 
-int count_bits (const lame_t gfc, gr_info * const cod_info);
-int noquant_count_bits (const lame_t gfc, gr_info * const cod_info);
+int count_bits (lame_t gfc, gr_info * const gi);
+int noquant_count_bits (lame_t gfc, gr_info * const gi);
 int iteration_finish_one (lame_t gfc, int gr, int ch);
-int scale_bitcount (gr_info * const cod_info);
-int scale_bitcount_lsf (gr_info * const cod_info);
+int scale_bitcount (gr_info * const gi);
+int scale_bitcount_lsf (gr_info * const gi);
 
 #ifdef HAVE_NASM
 extern void quantize_sfb_3DN(const FLOAT *, int, int, int *);

@@ -95,7 +95,7 @@ void make_decode_tables(long scaleval)
     kr=0x10>>i; divv=0x40>>i;
     costab = pnts[i];
     for(k=0;k<kr;k++)
-      costab[k] = (real)( 1.0 / (2.0 * cos(M_PI * ((double) k * 2.0 + 1.0) / (double) divv)) );
+      costab[k] = (real)( 1.0 / (2.0 * cos(PI * ((double) k * 2.0 + 1.0) / (double) divv)) );
   }
 
   table = decwin;

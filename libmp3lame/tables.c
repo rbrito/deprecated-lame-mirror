@@ -843,7 +843,7 @@ static const struct
 
 
 static void
-huffman_init(const lame_t gfc)
+huffman_init(lame_t gfc)
 {
     int i;
     extern int choose_table_nonMMX(const int *ix, const int *end, int *s);
@@ -901,7 +901,7 @@ filter_coef(FLOAT x)
 }
 
 static void
-lame_init_params_ppflt(const lame_t gfc)
+lame_init_params_ppflt(lame_t gfc)
 {
     /***************************************************************/
     /* compute info needed for polyphase filter (filter type==0, default) */
@@ -984,7 +984,7 @@ lame_init_params_ppflt(const lame_t gfc)
 
 
 void
-iteration_init(const lame_t gfc)
+iteration_init(lame_t gfc)
 {
     III_side_info_t * const l3_side = &gfc->l3_side;
     int i, j;
@@ -1194,13 +1194,7 @@ init_numline_l2s(
 
 static int
 init_s3_values(
-    const lame_t gfc,
-    FLOAT **p,
-    int (*s3ind)[2],
-    int npart,
-    FLOAT *bval,
-    FLOAT *norm
-    )
+    lame_t gfc, FLOAT **p, int (*s3ind)[2], int npart, FLOAT *bval, FLOAT *norm)
 {
     FLOAT s3[CBANDS][CBANDS];
     int i, j, k;
@@ -1429,7 +1423,8 @@ psymodel_init(lame_t gfc)
 }
 
 
-void init_bit_stream_w(const lame_t gfc)
+void
+init_bit_stream_w(lame_t gfc)
 {
     gfc->bs.h_ptr = gfc->bs.w_ptr = 0;
     gfc->bs.header[gfc->bs.h_ptr].write_timing = 0;

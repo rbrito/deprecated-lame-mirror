@@ -145,34 +145,34 @@ void init_layer3(int down_sample_sblimit)
 
   for(i=0;i<18;i++)
   {
-    win[0][i]    = win[1][i]    = 0.5 * sin( M_PI / 72.0 * (double) (2*(i+0) +1) ) / cos ( M_PI * (double) (2*(i+0) +19) / 72.0 );
-    win[0][i+18] = win[3][i+18] = 0.5 * sin( M_PI / 72.0 * (double) (2*(i+18)+1) ) / cos ( M_PI * (double) (2*(i+18)+19) / 72.0 );
+    win[0][i]    = win[1][i]    = 0.5 * sin( PI / 72.0 * (double) (2*(i+0) +1) ) / cos ( PI * (double) (2*(i+0) +19) / 72.0 );
+    win[0][i+18] = win[3][i+18] = 0.5 * sin( PI / 72.0 * (double) (2*(i+18)+1) ) / cos ( PI * (double) (2*(i+18)+19) / 72.0 );
   }
   for(i=0;i<6;i++)
   {
-    win[1][i+18] = 0.5 / cos ( M_PI * (double) (2*(i+18)+19) / 72.0 );
-    win[3][i+12] = 0.5 / cos ( M_PI * (double) (2*(i+12)+19) / 72.0 );
-    win[1][i+24] = 0.5 * sin( M_PI / 24.0 * (double) (2*i+13) ) / cos ( M_PI * (double) (2*(i+24)+19) / 72.0 );
+    win[1][i+18] = 0.5 / cos ( PI * (double) (2*(i+18)+19) / 72.0 );
+    win[3][i+12] = 0.5 / cos ( PI * (double) (2*(i+12)+19) / 72.0 );
+    win[1][i+24] = 0.5 * sin( PI / 24.0 * (double) (2*i+13) ) / cos ( PI * (double) (2*(i+24)+19) / 72.0 );
     win[1][i+30] = win[3][i] = 0.0;
-    win[3][i+6 ] = 0.5 * sin( M_PI / 24.0 * (double) (2*i+1) )  / cos ( M_PI * (double) (2*(i+6 )+19) / 72.0 );
+    win[3][i+6 ] = 0.5 * sin( PI / 24.0 * (double) (2*i+1) )  / cos ( PI * (double) (2*(i+6 )+19) / 72.0 );
   }
 
   for(i=0;i<9;i++)
-    COS9[i] = cos( M_PI / 18.0 * (double) i);
+    COS9[i] = cos( PI / 18.0 * (double) i);
 
   for(i=0;i<9;i++)
-    tfcos36[i] = 0.5 / cos ( M_PI * (double) (i*2+1) / 36.0 );
+    tfcos36[i] = 0.5 / cos ( PI * (double) (i*2+1) / 36.0 );
   for(i=0;i<3;i++)
-    tfcos12[i] = 0.5 / cos ( M_PI * (double) (i*2+1) / 12.0 );
+    tfcos12[i] = 0.5 / cos ( PI * (double) (i*2+1) / 12.0 );
 
-  COS6_1 = cos( M_PI / 6.0 * (double) 1);
-  COS6_2 = cos( M_PI / 6.0 * (double) 2);
+  COS6_1 = cos( PI / 6.0 * (double) 1);
+  COS6_2 = cos( PI / 6.0 * (double) 2);
 
   for(i=0;i<12;i++)
   {
-    win[2][i]  = 0.5 * sin( M_PI / 24.0 * (double) (2*i+1) ) / cos ( M_PI * (double) (2*i+7) / 24.0 );
+    win[2][i]  = 0.5 * sin( PI / 24.0 * (double) (2*i+1) ) / cos ( PI * (double) (2*i+7) / 24.0 );
     for(j=0;j<6;j++)
-      COS1[i][j] = cos( M_PI / 24.0 * (double) ((2*i+7)*(2*j+1)) );
+      COS1[i][j] = cos( PI / 24.0 * (double) ((2*i+7)*(2*j+1)) );
   }
 
   for(j=0;j<4;j++) {
@@ -185,11 +185,11 @@ void init_layer3(int down_sample_sblimit)
 
   for(i=0;i<16;i++)
   {
-    double t = tan( (double) i * M_PI / 12.0 );
+    double t = tan( (double) i * PI / 12.0 );
     tan1_1[i] = t / (1.0+t);
     tan2_1[i] = 1.0 / (1.0 + t);
-    tan1_2[i] = M_SQRT2 * t / (1.0+t);
-    tan2_2[i] = M_SQRT2 / (1.0 + t);
+    tan1_2[i] = SQRT2 * t / (1.0+t);
+    tan2_2[i] = SQRT2 / (1.0 + t);
 
     for(j=0;j<2;j++) {
       double base = pow(2.0,-0.25*(j+1.0));
@@ -202,8 +202,8 @@ void init_layer3(int down_sample_sblimit)
       }
       pow1_1[j][i] = p1;
       pow2_1[j][i] = p2;
-      pow1_2[j][i] = M_SQRT2 * p1;
-      pow2_2[j][i] = M_SQRT2 * p2;
+      pow1_2[j][i] = SQRT2 * p1;
+      pow2_2[j][i] = SQRT2 * p2;
     }
   }
 

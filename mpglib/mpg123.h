@@ -3,44 +3,9 @@
 
 #include        <stdio.h>
 
-#ifdef STDC_HEADERS
-# include <string.h>
-#else
-# ifndef HAVE_MEMCPY
-#  define memcpy(d, s, n) bcopy ((s), (d), (n))
-#  define memmove(d, s, n) bcopy ((s), (d), (n))
-# endif
-#endif
+#include "machine.h"
 
-#include        <signal.h>
-
-
-#if defined(__riscos__) && defined(FPA10)
-#include	"ymath.h"
-#else
-#include	<math.h>
-#endif
-
-#ifndef M_PI
-#define M_PI       3.14159265358979323846
-#endif
-#ifndef M_SQRT2
-#define M_SQRT2    1.41421356237309504880
-#endif
-
-#ifndef FALSE
-#define         FALSE                   0
-#endif
-#ifndef TRUE
-#define         TRUE                    1
-#endif
-
-
-#ifdef REAL_IS_FLOAT
-#  define real float
-#else
-#  define real double
-#endif
+#define real FLOAT
 
 #define         SBLIMIT                 32
 #define         SSLIMIT                 18
@@ -91,33 +56,33 @@ struct frame {
 };
 
 struct gr_info_s {
-      int scfsi;
-      unsigned part2_3_length;
-      unsigned big_values;
-      unsigned scalefac_compress;
-      unsigned block_type;
-      unsigned mixed_block_flag;
-      unsigned table_select[3];
-      unsigned subblock_gain[3];
-      unsigned maxband[3];
-      unsigned maxbandl;
-      unsigned maxb;
-      unsigned region1start;
-      unsigned region2start;
-      unsigned preflag;
-      unsigned scalefac_scale;
-      unsigned count1table_select;
-      real *full_gain[3];
-      real *pow2gain;
+    int scfsi;
+    unsigned part2_3_length;
+    unsigned big_values;
+    unsigned scalefac_compress;
+    unsigned block_type;
+    unsigned mixed_block_flag;
+    unsigned table_select[3];
+    unsigned subblock_gain[3];
+    unsigned maxband[3];
+    unsigned maxbandl;
+    unsigned maxb;
+    unsigned region1start;
+    unsigned region2start;
+    unsigned preflag;
+    unsigned scalefac_scale;
+    unsigned count1table_select;
+    real *full_gain[3];
+    real *pow2gain;
 };
 
 struct III_sideinfo
 {
-  unsigned main_data_begin;
-  unsigned private_bits;
-  struct {
-    struct gr_info_s gr[2];
-  } ch[2];
+    unsigned main_data_begin;
+    unsigned private_bits;
+    struct {
+	struct gr_info_s gr[2];
+    } ch[2];
 };
 
 

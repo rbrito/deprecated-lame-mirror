@@ -70,6 +70,7 @@ char *strchr (), *strrchr ();
 #endif
 
 #if INTERNAL_OPTS
+# include "lame-analysis.h"
 # include "set_get.h"
 int experimentalX = 0;
 int experimentalY = 0;

@@ -22,8 +22,7 @@
 #ifndef LAME_VRBTAG_H
 #define LAME_VRBTAG_H
 
-#include "lame.h"
-#include "machine.h"
+#include "util.h"
 
 /* -----------------------------------------------------------
  * A Vbr header may be present in the ancillary

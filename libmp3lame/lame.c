@@ -27,9 +27,8 @@
 
 #include <assert.h>
 
-#include "lame.h"
-#include "set_get.h"
 #include "util.h"
+#include "set_get.h"
 #include "bitstream.h"
 #include "version.h"
 #include "tables.h"
@@ -397,7 +396,7 @@ optimum_samplefreq(int lowpassfreq, int input_samplefreq)
  *
  ********************************************************************/
 int
-lame_init_params(const lame_t gfc)
+lame_init_params(lame_t gfc)
 {
     int gr, ch;
 
@@ -620,7 +619,7 @@ lame_init_params(const lame_t gfc)
  */
 
 void
-lame_print_config(const lame_t gfc)
+lame_print_config(lame_t gfc)
 {
     double  out_samplerate = gfc->out_samplerate;
     double  in_samplerate = gfc->in_samplerate;
@@ -692,7 +691,7 @@ lame_print_config(const lame_t gfc)
  *      add more, if you see more...
  */
 void 
-lame_print_internals( const lame_t gfc )
+lame_print_internals(lame_t gfc)
 {
     const char * pc = "";
     FLOAT bass, alto, treble, sfb21;
@@ -1154,8 +1153,7 @@ lame_encode_buffer_long(lame_t gfc,
 
 int
 lame_encode_buffer_interleaved(lame_t gfc,
-                               short int buffer[],
-                               int nsamples,
+                               short int buffer[], int nsamples,
                                unsigned char *mp3buf, int mp3buf_size)
 {
     int     ret, i;
@@ -1479,7 +1477,7 @@ lame_init(void)
  */
 
 void
-lame_bitrate_kbps(const lame_t gfc, int bitrate_kbps[14])
+lame_bitrate_kbps(lame_t gfc, int bitrate_kbps[14])
 {
     int     i;
 
@@ -1493,7 +1491,7 @@ lame_bitrate_kbps(const lame_t gfc, int bitrate_kbps[14])
 
 #ifdef BRHIST
 void
-lame_bitrate_hist(const lame_t gfc, int bitrate_count[14])
+lame_bitrate_hist(lame_t gfc, int bitrate_count[14])
 {
     int     i, j;
 
@@ -1510,7 +1508,7 @@ lame_bitrate_hist(const lame_t gfc, int bitrate_count[14])
 
 
 void
-lame_stereo_mode_hist(const lame_t gfc, int stmode_count[4])
+lame_stereo_mode_hist(lame_t gfc, int stmode_count[4])
 {
     int     i, j;
 
@@ -1528,8 +1526,7 @@ lame_stereo_mode_hist(const lame_t gfc, int stmode_count[4])
 
 
 void
-lame_bitrate_stereo_mode_hist(const lame_t gfc,
-                              int bitrate_stmode_count[14][4])
+lame_bitrate_stereo_mode_hist(lame_t gfc, int bitrate_stmode_count[14][4])
 {
     int     i, j;
 
@@ -1544,7 +1541,7 @@ lame_bitrate_stereo_mode_hist(const lame_t gfc,
 
 
 void
-lame_block_type_hist(const lame_t gfc, int btype_count[6])
+lame_block_type_hist(lame_t gfc, int btype_count[6])
 {
     int     i, total = 0;
 
@@ -1561,8 +1558,7 @@ lame_block_type_hist(const lame_t gfc, int btype_count[6])
 
 
 void 
-lame_bitrate_block_type_hist(const lame_t gfc,
-                             int bitrate_btype_count[14][6])
+lame_bitrate_block_type_hist(lame_t gfc, int bitrate_btype_count[14][6])
 {
     int     i, j;
     if (!bitrate_btype_count || !gfc)

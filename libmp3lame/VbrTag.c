@@ -27,7 +27,6 @@
 
 #include "machine.h"
 #include "bitstream.h"
-#include "lame.h"
 #include "VbrTag.h"
 #include "version.h"
 #include "id3tag.h"

@@ -39,7 +39,7 @@
  * compute bits-per-frame
  **********************************************************************/
 int
-getframebytes(const lame_t gfc)
+getframebytes(lame_t gfc)
 {
     int  bit_rate;
 
@@ -477,7 +477,7 @@ encodeBitStream(lame_t gfc)
    lame_encode_flush_nogap() was called right now. 
 */
 int
-compute_flushbits(const lame_t gfc, int *total_bytes_output)
+compute_flushbits(lame_t gfc, int *total_bytes_output)
 {
     bit_stream_t *bs = &gfc->bs;
     int flushbits;

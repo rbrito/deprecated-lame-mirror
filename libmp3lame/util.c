@@ -215,9 +215,7 @@ fill_buffer_resample(
 
 
 
-void fill_buffer(lame_t gfc,
-		 sample_t *mfbuf[2],
-		 sample_t *in_buffer[2],
+void fill_buffer(lame_t gfc, sample_t *mfbuf[2], sample_t *in_buffer[2],
 		 int nsamples, int *n_in, int *n_out)
 {
     int ch,i;
@@ -249,7 +247,7 @@ void fill_buffer(lame_t gfc,
 *  Message Output
 *
 ***********************************************************************/
-void  lame_debugf (const lame_t gfc, const char* format, ... )
+void  lame_debugf (lame_t gfc, const char* format, ... )
 {
     va_list  args;
 
@@ -266,7 +264,7 @@ void  lame_debugf (const lame_t gfc, const char* format, ... )
 }
 
 
-void  lame_msgf (const lame_t gfc, const char* format, ... )
+void  lame_msgf (lame_t gfc, const char* format, ... )
 {
     va_list  args;
 
@@ -283,7 +281,7 @@ void  lame_msgf (const lame_t gfc, const char* format, ... )
 }
 
 
-void  lame_errorf (const lame_t gfc, const char* format, ... )
+void  lame_errorf (lame_t gfc, const char* format, ... )
 {
     va_list  args;
 

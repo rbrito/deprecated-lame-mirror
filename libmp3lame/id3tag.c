@@ -46,9 +46,8 @@
 #endif
 
 
-#include "lame.h"
-#include "id3tag.h"
 #include "util.h"
+#include "id3tag.h"
 #include "bitstream.h"
 
 #ifdef WITH_DMALLOC
