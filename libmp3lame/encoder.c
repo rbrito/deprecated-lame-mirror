@@ -40,6 +40,107 @@
 #include <dmalloc.h>
 #endif
 
+
+/*
+ * auto-adjust of ATH, useful for low volume
+ * Gabriel Bouvigne 3 feb 2001
+ *
+ * modifies some values in
+ *   gfp->internal_flags->ATH
+ *   (gfc->ATH)
+ */
+void
+adjust_ATH( lame_global_flags* const  gfp,
+            const FLOAT8              tot_ener[2][4] )
+{
+    lame_internal_flags* const  gfc = gfp->internal_flags;
+    int gr, channel;
+
+    if (gfc->ATH->use_adjust) {
+        FLOAT8 max_val = 0;
+
+	for ( gr = 0; gr < gfc->mode_gr; ++gr ) 
+	    for ( channel = 0; channel < gfc->channels_out; ++channel ) 
+	        max_val = Max( max_val, tot_ener[gr][channel] );
+	/* scale to 0..1, and then rescale to 0..32767 */
+	max_val *= 32767/1e13;
+
+        /*  adjust ATH depending on range of maximum value
+         */
+        if (vbr_mtrh == gfp->VBR) {
+            /*  this code reduces slowly the ATH (speed of 12 dB per second)
+             *  with some supporting stages to limit the reduction
+             *    640  ->  ~17 dB
+             *         :
+             *  32640  ->  ~0.01 dB
+             */
+            FLOAT8 
+            x = Max (640, 320*(int)(max_val/320));
+            x = x/32768;
+            gfc->ATH->adjust *= gfc->ATH->decay;
+            if (gfc->ATH->adjust < x)       /* but not more than f(x) dB */
+                gfc->ATH->adjust = x;
+        }
+        else {
+#ifdef OLD_ATH_AUTO_ADJUST
+            if      (0.5 < max_val / 32768) {       /* value above 50 % */
+                    gfc->ATH->adjust = 1.0;         /* do not reduce ATH */
+            }
+            else if (0.3 < max_val / 32768) {       /* value above 30 % */
+                    gfc->ATH->adjust *= 0.955;      /* reduce by ~0.2 dB */
+                    if (gfc->ATH->adjust < 0.3)     /* but ~5 dB in maximum */
+                        gfc->ATH->adjust = 0.3;            
+            }
+            else {                                  /* value below 30 % */
+                    gfc->ATH->adjust *= 0.93;       /* reduce by ~0.3 dB */
+                    if (gfc->ATH->adjust < 0.01)    /* but 20 dB in maximum */
+                        gfc->ATH->adjust = 0.01;
+            }
+#else				/* jd - 27 feb 2001 */
+				/* continuous curves based on approximation */
+				/* to GB's original values */
+	  FLOAT8 max_val_n = max_val / 32768;
+	  FLOAT8 adj_lim_new;
+				/* For an increase in approximate loudness, */
+				/* set ATH adjust to adjust_limit immediately*/
+				/* after a delay of one frame. */
+				/* For a loudness decrease, reduce ATH adjust*/
+				/* towards adjust_limit gradually. */
+	  if( max_val_n > 0.25) { /* sqrt((1 - 0.01) / 15.84) from curve below*/
+	    if( gfc->ATH->adjust >= 1.0) {
+	      gfc->ATH->adjust = 1.0;
+	    } else {		/* preceding frame has lower ATH adjust; */
+				/* ascend only to the preceding adjust_limit */
+				/* in case there is leading low volume */
+	      if( gfc->ATH->adjust < gfc->ATH->adjust_limit) {
+		gfc->ATH->adjust = gfc->ATH->adjust_limit;
+	      }
+	    }
+	    gfc->ATH->adjust_limit = 1.0;
+	  } else {		/* adjustment curve (parabolic) */
+	    adj_lim_new = 15.84 * (max_val_n * max_val_n) + 0.01;
+	    if( gfc->ATH->adjust >= adj_lim_new) { /* descend gradually */
+	      gfc->ATH->adjust *= adj_lim_new * 0.075 + 0.925;
+	      if( gfc->ATH->adjust < adj_lim_new) { /* stop descent */
+		gfc->ATH->adjust = adj_lim_new;
+	      }
+	    } else {		/* ascend */
+	      if( gfc->ATH->adjust_limit >= adj_lim_new) {
+		gfc->ATH->adjust = adj_lim_new;
+	      } else {		/* preceding frame has lower ATH adjust; */
+				/* ascend only to the preceding adjust_limit */
+		if( gfc->ATH->adjust < gfc->ATH->adjust_limit) {
+		  gfc->ATH->adjust = gfc->ATH->adjust_limit;
+		}
+	      }
+	    }
+	    gfc->ATH->adjust_limit = adj_lim_new;
+	  }
+#endif
+        }
+    }
+}
+
 /************************************************************************
 *
 * encodeframe()           Layer 3
@@ -118,7 +219,7 @@ int  lame_encode_mp3_frame (				// Output
   inbuf[0]=inbuf_l;
   inbuf[1]=inbuf_r;
 
-  check_ms_stereo =  (gfp->mode == MPG_MD_JOINT_STEREO);
+  check_ms_stereo =  (gfp->mode == JOINT_STEREO);
   gfc->mode_ext = MPG_MD_LR_LR;
 
   if (gfc->lame_encode_frame_init==0 )  {
@@ -181,6 +282,7 @@ int  lame_encode_mp3_frame (				// Output
         FLOAT8 frame_duration = 576. * gfc->mode_gr / gfp->out_samplerate;
         gfc->ATH->decay = pow(10., -12./10. * frame_duration);
         gfc->ATH->adjust = 1.0;
+        gfc->ATH->adjust_limit = 0.01;
     }
   }
 
@@ -223,7 +325,6 @@ int  lame_encode_mp3_frame (				// Output
     }
   }
 
-    
 
   if (gfc->psymodel) {
     /* psychoacoustic model
@@ -273,55 +374,8 @@ int  lame_encode_mp3_frame (				// Output
 
 
 
-
-    /*  auto-adjust of ATH, useful for low volume
-     *  Gabriel Bouvigne 3 feb 2001
-     */
-    if (gfc->ATH->use_adjust) {
-        FLOAT8 max_val = 0;
-	for (gr=0; gr< gfc->mode_gr; ++gr) 
-	for (ch=0; ch< gfc->channels_out; ++ch) 
-	    max_val=Max(max_val,tot_ener[gr][ch]);
-	// scale to 0..1, and then rescale to 0..32767 
-	max_val *= 32767/1e13;
-        
-        /*  adjust ATH depending on range of maximum value
-         */
-        if (vbr_mtrh == gfp->VBR) {
-            /*  this code reduces slowly the ATH (speed of 12 dB per second)
-             *  with some supporting stages to limit the reduction
-             *    640  ->  ~17 dB
-             *         :
-             *  32640  ->  ~0.01 dB
-             */
-            FLOAT8 
-            x = Max (640, 320*(int)(max_val/320));
-            x = x/32768;
-            gfc->ATH->adjust *= gfc->ATH->decay;
-            if (gfc->ATH->adjust < x)       /* but not more than f(x) dB */
-                gfc->ATH->adjust = x;
-        }
-        else {
-            if      (0.5 < max_val / 32768) {       /* value above 50 % */
-                    gfc->ATH->adjust = 1.0;         /* do not reduce ATH */
-            }
-            else if (0.3 < max_val / 32768) {       /* value above 30 % */
-                    gfc->ATH->adjust *= 0.955;      /* reduce by ~0.2 dB */
-                    if (gfc->ATH->adjust < 0.3)     /* but ~5 dB in maximum */
-                        gfc->ATH->adjust = 0.3;            
-            }
-            else {                                  /* value below 30 % */
-                    gfc->ATH->adjust *= 0.93;       /* reduce by ~0.3 dB */
-                    if (gfc->ATH->adjust < 0.01)    /* but 20 dB in maximum */
-                        gfc->ATH->adjust = 0.01;
-            }
-        }
-    }
-
-
-
-
-
+  /* auto-adjust of ATH, useful for low volume */
+  adjust_ATH( gfp, tot_ener );
 
 
 

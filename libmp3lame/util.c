@@ -577,48 +577,54 @@ int fill_buffer_resample(
 *  Message Output
 *
 ***********************************************************************/
-int  lame_debugf (const lame_internal_flags *gfc, const char* format, ... )
+void  lame_debugf (const lame_internal_flags *gfc, const char* format, ... )
 {
     va_list  args;
-    int      ret;
 
-    if (gfc->debugf == NULL) return 0;
-    
     va_start ( args, format );
-    ret = vfprintf ( gfc->debugf, format, args );
+
+    if ( gfc->report.debugf != NULL ) {
+        gfc->report.debugf( format, args );
+    } else {
+        (void) vfprintf ( stderr, format, args );
+        fflush ( stderr );      /* an debug function should flush immediately */
+    }
+
     va_end   ( args );
-    fflush   ( gfc->debugf );   // a error function should flush immediately
-    return ret;			// if this function is used for normal reporting, this is quite dirty
 }
 
 
-int  lame_msgf (const lame_internal_flags *gfc, const char* format, ... )
+void  lame_msgf (const lame_internal_flags *gfc, const char* format, ... )
 {
     va_list  args;
-    int      ret;
 
-    if (gfc->msgf == NULL) return 0;
-    
     va_start ( args, format );
-    ret = vfprintf ( gfc->msgf, format, args );
+   
+    if ( gfc->report.msgf != NULL ) {
+        gfc->report.msgf( format, args );
+    } else {
+        (void) vfprintf ( stderr, format, args );
+        fflush ( stderr );     /* we print to stderr, so me may want to flush */
+    }
+
     va_end   ( args );
-    fflush   ( gfc->msgf );     // a error function should flush immediately
-    return ret;			// if this function is used for normal reporting, this is quite dirty
 }
 
 
-int  lame_errorf (const lame_internal_flags *gfc, const char* format, ... )
+void  lame_errorf (const lame_internal_flags *gfc, const char* format, ... )
 {
     va_list  args;
-    int      ret;
-    
-    if (gfc->errorf == NULL) return 0;
 
     va_start ( args, format );
-    ret = vfprintf ( gfc->errorf, format, args );
+    
+    if ( gfc->report.errorf != NULL ) {
+        gfc->report.errorf( format, args );
+    } else {
+        (void) vfprintf ( stderr, format, args );
+        fflush   ( stderr );    /* an error function should flush immediately */
+    }
+
     va_end   ( args );
-    fflush   ( gfc->errorf );        // a error function should flush immediately
-    return ret;			// if this function is used for normal reporting, this is quite dirty
 }
 
 

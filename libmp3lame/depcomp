@@ -48,6 +48,12 @@ if test "$depmode" = dashXmstdout; then
 fi
 
 case "$depmode" in
+gcc3)
+## gcc 3 implements dependency tracking that does exactly what
+## we want.  Yay!
+   exec "$@" -MT "$object" -MF "$depfile" -MD -MP
+   ;;
+
 gcc)
 ## There are various ways to get dependency output from gcc.  Here's
 ## why we pick this rather obscure method:
@@ -97,20 +103,6 @@ hp)
   exit 1
   ;;
 
-dashmd)
-  # The Java front end to gcc doesn't run cpp, so we can't use the -Wp
-  # trick.  Instead we must use -M and then rename the resulting .d
-  # file.  This is also the case for older versions of gcc, which
-  # don't implement -Wp.
-  if "$@" -MD; then :
-  else
-    stat=$?
-    rm -f FIXME
-    exit $stat
-  fi
-  FIXME: rewrite the file
-  ;;
-
 sgi)
   if test "$libtool" = yes; then
     "$@" "-Wp,-MDupdate,$tmpdepfile"
@@ -120,13 +112,54 @@ sgi)
   stat=$?
   if test $stat -eq 0; then :
   else
-    stat=$?
     rm -f "$tmpdepfile"
     exit $stat
   fi
   rm -f "$depfile"
 
   if test -f "$tmpdepfile"; then  # yes, the sourcefile depend on other files
+    echo "$object : \\" > "$depfile"
+
+    # Clip off the initial element (the dependent). Don't try to be
+    # clever and replace this with sed code, as IRIX sed won't handle
+    # lines with more than a fixed number of characters (4096 in
+    # IRIX 6.2 sed, 8192 in IRIX 6.5).
+    tr ' ' '
+' < "$tmpdepfile" | sed 's/^[^\.]*\.o://' | tr '
+' ' ' >> $depfile
+
+    tr ' ' '
+' < "$tmpdepfile" | \
+## Some versions of the HPUX 10.20 sed can't process this invocation
+## correctly.  Breaking it into two sed invocations is a workaround.
+      sed -e 's/^\\$//' -e '/^$/d' -e '/:$/d' | sed -e 's/$/ :/' >> "$depfile"
+  else
+    # The sourcefile does not contain any dependencies, so just
+    # store a dummy comment line, to avoid errors with the Makefile
+    # "include basename.Plo" scheme.
+    echo "#dummy" > "$depfile"
+  fi
+  rm -f "$tmpdepfile"
+  ;;
+
+aix)
+  # The C for AIX Compiler uses -M and outputs the dependencies
+  # in a .u file.
+  tmpdepfile=`echo "$object" | sed 's/\(.*\)\..*$/\1.u/'`
+  if test "$libtool" = yes; then
+    "$@" -Wc,-M
+  else
+    "$@" -M
+  fi
+
+  stat=$?
+  if test $stat -eq 0; then :
+  else
+    rm -f "$tmpdepfile"
+    exit $stat
+  fi
+
+  if test -f "$tmpdepfile"; then
     echo "$object : \\" > "$depfile"
 
     # Clip off the initial element (the dependent). Don't try to be

@@ -152,6 +152,7 @@ typedef struct
 {
     int     use_adjust;     // do we want to use the auto adjustment yes/no
     FLOAT8  adjust;         // lowering based on peak volume, 1 = no lowering
+    FLOAT8  adjust_limit;   // limit for dynamic ATH adjust
     FLOAT8  decay;          // determined to lower x dB each second
     FLOAT8  l[SBMAX_l];     // ATH for sfbs in long blocks
     FLOAT8  s[SBMAX_s];     // ATH for sfbs in short blocks
@@ -224,7 +225,11 @@ typedef struct  {
   #define  LAME_ID   0xFFF88E3B
   unsigned long Class_ID;
 
-  FILE *errorf, *msgf, *debugf ;
+  struct {
+    void (*msgf)  (const char *format, va_list ap);
+    void (*debugf)(const char *format, va_list ap);
+    void (*errorf)(const char *format, va_list ap);
+  } report;
   
   int lame_encode_frame_init;     
   int iteration_init_init;
@@ -518,10 +523,10 @@ extern void updateStats (lame_internal_flags *gfc);
 *  Macros about Message Printing and Exit
 *
 ***********************************************************************/
-extern int lame_errorf(const lame_internal_flags *gfc, const char *, ...);
-extern int lame_debugf(const lame_internal_flags *gfc, const char *, ...);
-extern int lame_msgf(const lame_internal_flags *gfc, const char *, ...);
-#define DEBUGF	lame_debugf
+extern void lame_errorf(const lame_internal_flags *gfc, const char *, ...);
+extern void lame_debugf(const lame_internal_flags *gfc, const char *, ...);
+extern void lame_msgf  (const lame_internal_flags *gfc, const char *, ...);
+#define DEBUGF  lame_debugf
 #define ERRORF	lame_errorf
 #define MSGF	lame_msgf
 

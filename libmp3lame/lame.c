@@ -572,6 +572,11 @@ lame_init_params(lame_global_flags * const gfp)
 
     gfc->Class_ID = 0;
 
+    /* report functions */
+    gfc->report.msgf   = gfp->report.msgf;
+    gfc->report.debugf = gfp->report.debugf;
+    gfc->report.errorf = gfp->report.errorf;
+
     gfc->CPU_features.i387 = has_i387();
     gfc->CPU_features.AMD_3DNow = has_3DNow();
     gfc->CPU_features.MMX = has_MMX();
@@ -592,10 +597,10 @@ lame_init_params(lame_global_flags * const gfp)
 
     gfc->channels_in = gfp->num_channels;
     if (gfc->channels_in == 1)
-        gfp->mode = MPG_MD_MONO;
-    gfc->channels_out = (gfp->mode == MPG_MD_MONO) ? 1 : 2;
+        gfp->mode = MONO;
+    gfc->channels_out = (gfp->mode == MONO) ? 1 : 2;
     gfc->mode_ext = MPG_MD_LR_LR;
-    if (gfp->mode == MPG_MD_MONO)
+    if (gfp->mode == MONO)
         gfp->force_ms = 0; // don't allow forced mid/side stereo for mono output
 
 
@@ -754,20 +759,20 @@ lame_init_params(lame_global_flags * const gfp)
      */
     if (gfp->mode == -1) {
         if (gfp->compression_ratio < 8)
-            gfp->mode = MPG_MD_STEREO;
+            gfp->mode = STEREO;
         else
-            gfp->mode = MPG_MD_JOINT_STEREO;
+            gfp->mode = JOINT_STEREO;
     }
 
     /* KLEMM's jstereo with ms threshold adjusted via compression ratio */
     if (gfp->mode_automs) {
-        if (gfp->mode != MPG_MD_MONO && gfp->compression_ratio < 6.6)
-            gfp->mode = MPG_MD_STEREO;
+        if (gfp->mode != MONO && gfp->compression_ratio < 6.6)
+            gfp->mode = STEREO;
     }
 
 
     if (gfp->allow_diff_short == -1) {
-        if (gfp->mode == MPG_MD_STEREO)
+        if (gfp->mode == STEREO)
             gfp->allow_diff_short = 1;
     }
 
@@ -783,14 +788,14 @@ lame_init_params(lame_global_flags * const gfp)
         double  channels;
 
         switch (gfp->mode) {
-        case MPG_MD_MONO:
+        case MONO:
             channels = 1.;
             break;
-        case MPG_MD_JOINT_STEREO:
+        case JOINT_STEREO:
             channels = 2. + 0.00;
             break;
-        case MPG_MD_DUAL_CHANNEL:
-        case MPG_MD_STEREO:
+        case DUAL_CHANNEL:
+        case STEREO:
             channels = 3.;
             break;
         default:    
@@ -1732,10 +1737,6 @@ lame_init_old(lame_global_flags * gfp)
     gfc->CurrentStep = 4;
     gfc->masking_lower = 1;
 
-    gfc->errorf=stderr;
-    gfc->msgf=stderr;
-    gfc->debugf=stderr;
-
     gfp->ATHtype = -1;  /* default = -1 = set in lame_init_params */
     gfp->useTemporal = 1;
 
@@ -1871,282 +1872,5 @@ lame_bitrate_stereo_mode_hist(const lame_global_flags * const gfp,
         for (i = 0; i < 4; i++)
             bitrate_stmode_count[j][i] = gfc->bitrate_stereoMode_Hist[j + 1][i];
 }
-
-
-
-/********************************************************************
- *  input stream description
- ***********************************************************************/
-// number of samples.  default = 2^32-1  
-int CDECL lame_set_num_samples(lame_global_flags *, unsigned long);
-unsigned long CDECL lame_get_num_samples(lame_global_flags *);
-
-// input sample rate in Hz.  default = 44100hz
-int CDECL lame_set_in_samplerate(lame_global_flags *, int);
-int CDECL lame_get_in_samplerate(lame_global_flags *);
-
-// number of channels in input stream. default=2 
-int CDECL lame_set_num_channels(lame_global_flags *, int);
-int CDECL lame_get_num_channels(lame_global_flags *);
-
-// scale the input by this amount before encoding.  default=0 (disabled)
-// (not used by decoding routines)
-int CDECL lame_set_scale(lame_global_flags *, float);
-float CDECL lame_get_scale(lame_global_flags *);
-
-// output sample rate in Hz.  default = 0, which means LAME picks best value 
-// based on the amount of compression.  MPEG only allows:
-// MPEG1    32, 44.1,   48khz
-// MPEG2    16, 22.05,  24
-// MPEG2.5   8, 11.025, 12
-// (not used by decoding routines)
-int CDECL lame_set_out_samplerate(lame_global_flags *, int);
-int CDECL lame_get_out_samplerate(lame_global_flags *);
-
-
-/********************************************************************
- *  general control parameters
- ***********************************************************************/
-// 1=cause LAME to collect data for an MP3 frame analzyer. default=0
-int CDECL lame_set_analysis(lame_global_flags *, int);
-int CDECL lame_get_analysis(lame_global_flags *);
-
-// 1 = write a Xing VBR header frame.
-// default = 1 for VBR/ABR modes, 0 for CBR mode
-// this variable must have been added by a Hungarian notation Windows programmer :-)
-int CDECL lame_set_bWriteVbrTag(lame_global_flags *, int);
-int CDECL lame_get_bWriteVbrTag(lame_global_flags *);
-
-// 1=disable writing a wave header with *decoding*.  default=0
-int CDECL lame_set_disable_waveheader(lame_global_flags *, int);
-int CDECL lame_get_disable_waveheader(lame_global_flags *);
-
-// 1=decode only.  use lame/mpglib to convert mp3/ogg to wav.  default=0
-int CDECL lame_set_decode_only(lame_global_flags *, int);
-int CDECL lame_get_decode_only(lame_global_flags *);
-
-// 1=encode a Vorbis .ogg file.  default=0
-int CDECL lame_set_ogg(lame_global_flags *, int);
-int CDECL lame_get_ogg(lame_global_flags *);
-
-// internal algorithm selection.  True quality is determined by the bitrate
-// but this variable will effect quality by selecting expensive or cheap algorithms.
-// quality=0..9.  0=best (very slow).  9=worst.  
-// recommended:  2     near-best quality, not too slow
-//               5     good quality, fast
-//               7     ok quality, really fast
-int CDECL lame_set_quality(lame_global_flags *, int);
-int CDECL lame_get_quality(lame_global_flags *);
-
-// mode = 0,1,2,3 = stereo, jstereo, dual channel (not supported), mono
-// default: lame picks based on compression ration and input channels
-int CDECL lame_set_mode(lame_global_flags *, int);
-int CDECL lame_get_mode(lame_global_flags *);
-
-// mode_automs.  Us a M/S mode with a switching threshold based on 
-// compression ratio
-// default = 0 (disabled)
-int CDECL lame_set_mode_automs(lame_global_flags *, int);
-int CDECL lame_get_mode_automs(lame_global_flags *);
-
-// force_ms.  Force M/S for all frames.  For testing only.
-// default = 0 (disabled)
-int CDECL lame_set_force_ms(lame_global_flags *, int);
-int CDECL lame_get_force_ms(lame_global_flags *);
-
-// use free_format?  default = 0 (disabled)
-int CDECL lame_set_free_format(lame_global_flags *, int);
-int CDECL lame_get_free_format(lame_global_flags *);
-
-// attach a file to these pointers to have error, debug and normal messages
-// written to the file.  For command line encoders, use stderr
-// for GUIs, you will need to read the file and display it in a popup window
-// default = stderr.  To disable, set to NULL!
-int CDECL lame_set_errorf(lame_global_flags *, FILE *);
-FILE * CDECL lame_get_errorf(lame_global_flags *);
-int CDECL lame_set_debugf(lame_global_flags *, FILE *);
-FILE * CDECL lame_get_debugf(lame_global_flags *);
-int CDECL lame_set_msgf(lame_global_flags *, FILE *);
-FILE * CDECL lame_get_msgf(lame_global_flags *);
-
-
-
-/* set one of brate compression ratio.  default is compression ratio of 11.  */
-int CDECL lame_set_brate(lame_global_flags *, int);
-int CDECL lame_get_brate(lame_global_flags *);
-int CDECL lame_set_compression_ratio(lame_global_flags *, float);
-float CDECL lame_get_compression_ratio(lame_global_flags *);
-
-/********************************************************************
- *  frame params
- ***********************************************************************/
-// mark as copyright.  default=0
-int CDECL lame_set_copyright(lame_global_flags *, int);
-int CDECL lame_get_copyright(lame_global_flags *);
-
-// mark as original.  default=1
-int CDECL lame_set_original(lame_global_flags *, int);
-int CDECL lame_get_original(lame_global_flags *);
-
-// error_protection.  Use 2 bytes from each fraome for CRC checksum. default=0
-int CDECL lame_set_error_protection(lame_global_flags *, int);
-int CDECL lame_get_error_protection(lame_global_flags *);
-
-// padding_type.  0=pad no frames  1=pad all frames 2=adjust padding(default)
-int CDECL lame_set_padding_type(lame_global_flags *, int);
-int CDECL lame_get_padding_type(lame_global_flags *);
-
-// MP3 'private extension' bit  Meaningless
-int CDECL lame_set_extension(lame_global_flags *, int);
-int CDECL lame_get_extension(lame_global_flags *);
-
-// enforce strict ISO complience.  default=0
-int CDECL lame_set_strict_ISO(lame_global_flags *, int);
-int CDECL lame_get_strict_ISO(lame_global_flags *);
- 
-
-/********************************************************************
- * quantization/noise shaping 
- ***********************************************************************/
-
-// disable the bit reservoir. For testing only. default=0
-int CDECL lame_set_disable_reservoir(lame_global_flags *, int);
-int CDECL lame_get_disable_reservoir(lame_global_flags *);
-
-// select a different "best quantization" function. default=0 
-int CDECL lame_set_experimentalX(lame_global_flags *, int);
-int CDECL lame_get_experimentalX(lame_global_flags *);
-
-// another experimental option.  for testing only
-int CDECL lame_set_experimentalY(lame_global_flags *, int);
-int CDECL lame_get_experimentalY(lame_global_flags *);
-
-// another experimental option.  for testing only
-int CDECL lame_set_experimentalZ(lame_global_flags *, int);
-int CDECL lame_get_experimentalZ(lame_global_flags *);
-
-// Naoki's psycho acoustic model.  default=0
-int CDECL lame_set_exp_nspsytune(lame_global_flags *, int);
-int CDECL lame_get_exp_nspsytune(lame_global_flags *);
-
-
-
-/********************************************************************
- * VBR control
- ***********************************************************************/
-// Types of VBR.  default = vbr_off = CBR
-int CDECL lame_set_VBR(lame_global_flags *, vbr_mode);
-vbr_mode CDECL lame_get_exp_VBR(lame_global_flags *);
-
-// VBR quality level.  0=highest  9=lowest 
-int CDECL lame_set_VBR_q(lame_global_flags *, int);
-int CDECL lame_get_VBR_q(lame_global_flags *);
-
-// Ignored except for VBR=vbr_abr (ABR mode)
-int CDECL lame_set_VBR_mean_bitrate_kbps(lame_global_flags *, int);
-int CDECL lame_get_VBR_mean_bitrate_kbps(lame_global_flags *);
-
-int CDECL lame_set_VBR_min_bitrate_kbps(lame_global_flags *, int);
-int CDECL lame_get_VBR_min_bitrate_kbps(lame_global_flags *);
-
-int CDECL lame_set_VBR_max_bitrate_kbps(lame_global_flags *, int);
-int CDECL lame_get_VBR_max_bitrate_kbps(lame_global_flags *);
-
-// 1=stricetly enforce VBR_min_bitrate.  Normally it will be violated for
-// analog silence
-int CDECL lame_set_VBR_hard_min(lame_global_flags *, int);
-int CDECL lame_get_VBR_hard_min(lame_global_flags *);
-
-
-/********************************************************************
- * Filtering control
- ***********************************************************************/
-// freq in Hz to apply lowpass. Default = 0 = lame chooses.  -1 = disabled
-int CDECL lame_set_lowpassfreq(lame_global_flags *, int);
-int CDECL lame_get_lowpassfreq(lame_global_flags *);
-// width of transition band, in Hz.  Default = one polyphase filter band
-int CDECL lame_set_lowpasswidth(lame_global_flags *, int);
-int CDECL lame_get_lowpasswidth(lame_global_flags *);
-
-// freq in Hz to apply highpass. Default = 0 = lame chooses.  -1 = disabled
-int CDECL lame_set_highpassfreq(lame_global_flags *, int);
-int CDECL lame_get_highpassfreq(lame_global_flags *);
-// width of transition band, in Hz.  Default = one polyphase filter band
-int CDECL lame_set_highpasswidth(lame_global_flags *, int);
-int CDECL lame_get_highpasswidth(lame_global_flags *);
-
-
-/********************************************************************
- * psycho acoustics and other arguments which you should not change 
- * unless you know what you are doing
- ***********************************************************************/
-// only use ATH for masking
-int CDECL lame_set_ATHonly(lame_global_flags *, int);
-int CDECL lame_get_ATHonly(lame_global_flags *);
-
-// only use ATH for short blocks
-int CDECL lame_set_ATHshort(lame_global_flags *, int);
-int CDECL lame_get_ATHshort(lame_global_flags *);
-
-// disable ATH
-int CDECL lame_set_noATH(lame_global_flags *, int);
-int CDECL lame_get_noATH(lame_global_flags *);
-
-// select ATH formula
-int CDECL lame_set_ATHtype(lame_global_flags *, int);
-int CDECL lame_get_ATHtype(lame_global_flags *);
-
-// lower ATH by this many db
-int CDECL lame_set_ATHlower(lame_global_flags *, float);
-float CDECL lame_get_ATHlower(lame_global_flags *);
-
-// predictability limit (ISO tonality formula)
-int CDECL lame_set_cwlimit(lame_global_flags *, int);
-int CDECL lame_get_cwlimit(lame_global_flags *);
-
-// allow blocktypes to differ between channels?
-// default: 0 for jstereo, 1 for stereo
-int CDECL lame_set_cwlimit(lame_global_flags *, int);
-int CDECL lame_get_cwlimit(lame_global_flags *);
-
-// use temporal masking effect (default = 1)
-int CDECL lame_set_useTemporal(lame_global_flags *, int);
-int CDECL lame_get_useTemporal(lame_global_flags *);
-
-// disable short blocks
-int CDECL lame_set_no_short_blocks(lame_global_flags *, int);
-int CDECL lame_get_no_short_blocks(lame_global_flags *);
-
-/* Input PCM is emphased PCM (for instance from one of the rarely
-   emphased CDs), it is STRONGLY not recommended to use this, because
-   psycho does not take it into account, and last but not least many decoders
-   ignore these bits */
-int CDECL lame_set_emphasis(lame_global_flags *, int);
-int CDECL lame_get_emphasis(lame_global_flags *);
-
-
-
-/************************************************************************/
-/* internal variables, cannot be set...                                 */
-/* provided because they may be of use to calling application           */
-/************************************************************************/
-// version  0=MPEG-2  1=MPEG-1  (2=MPEG-2.5)    
-int CDECL lame_get_version(lame_global_flags *);
-
-// encoder delay
-int CDECL lame_get_encoder_delay(lame_global_flags *);
-
-// size of MPEG frame
-int CDECL lame_get_framesize(lame_global_flags *);
-
-// number of frames encoded so far
-int CDECL lame_get_frameNum(lame_global_flags *);
-
-// lame's estimate of the total number of frames to be encoded
-// only valid if calling program set num_samples 
-int CDECL lame_get_totalframes(lame_global_flags *);
-
-
-
 
 /* end of lame.c */
