@@ -349,24 +349,7 @@ encoder(lame_t gfp, FILE * outf, int nogap, char *inPath, char *outPath)
 
 	/********************** status display  *****************************/
 	if (silent <= 0) {
-            if (update_interval > 0) {
-                timestatus_klemm(gfp);
-            }
-            else {
-                if (0 == frames % 50) {
-#ifdef BRHIST
-                    brhist_jump_back();
-#endif
-                    timestatus(lame_get_out_samplerate(gfp),
-                               frames,
-                               lame_get_totalframes(gfp),
-                               lame_get_framesize(gfp));
-#ifdef BRHIST
-                    if (disp_brhist)
-                        brhist_disp(gfp);
-#endif
-                }
-            }
+	    timestatus_klemm(gfp);
         }
 
         /* encode */
@@ -409,9 +392,7 @@ encoder(lame_t gfp, FILE * outf, int nogap, char *inPath, char *outPath)
 	timestatus(lame_get_out_samplerate(gfp),
 		   frames, lame_get_totalframes(gfp), lame_get_framesize(gfp));
 #ifdef BRHIST
-	if (disp_brhist) {
-	    brhist_disp(gfp);
-	}
+	brhist_disp(gfp);
 	brhist_disp_total(gfp);
 #endif
 	timestatus_finish();
@@ -629,8 +610,8 @@ main(int argc, char **argv)
     if (ret < 0)
         return ret == -2 ? 0 : 1;
 
-    if (update_interval < 0.)
-	update_interval = 2.;
+    if (update_interval <= 0.)
+	update_interval = .5;
 
     if (outPath[0] != '\0' && max_nogap>0) {
 	strncpy(nogapdir, outPath, PATH_MAX + 1);

@@ -182,26 +182,22 @@ void
 timestatus_klemm(lame_t gfp)
 {
     static double  last_time = 0.;
-
-    if ( silent <= 0 )
-        if ( lame_get_frameNum(gfp) == 0  ||  
-  	     lame_get_frameNum(gfp) == 9  ||
-  	     GetRealTime () - last_time >= update_interval  ||
-	     GetRealTime () - last_time <  0 ) {
+    if ( lame_get_frameNum(gfp) == 0  ||  
+	 lame_get_frameNum(gfp) == 9  ||
+	 GetRealTime () - last_time >= update_interval  ||
+	 GetRealTime () - last_time <  0 ) {
 #ifdef BRHIST
-            brhist_jump_back();
+	brhist_jump_back();
 #endif
-            timestatus ( lame_get_out_samplerate(gfp),
-                         lame_get_frameNum(gfp),
-                         lame_get_totalframes(gfp),
-                         lame_get_framesize(gfp) );
+	timestatus ( lame_get_out_samplerate(gfp),
+		     lame_get_frameNum(gfp),
+		     lame_get_totalframes(gfp),
+		     lame_get_framesize(gfp) );
 #ifdef BRHIST
-            if (disp_brhist) {
-	        brhist_disp ( gfp );
-	    }
+	brhist_disp ( gfp );
 #endif
-            last_time = GetRealTime ();  /* from now! disp_time seconds */
-        }
+	last_time = GetRealTime ();  /* from now! disp_time seconds */
+    }
 }
 
 /* these functions are used in get_audio.c */
