@@ -493,39 +493,32 @@ huffman_coder_count1(lame_internal_flags *gfc, gr_info *gi)
   Implements the pseudocode of page 98 of the IS
   */
 inline static int
-Huffmancode( lame_internal_flags* const gfc, const int tableindex,
-	     int start, int end, gr_info *gi)
+Huffmancode_esc( lame_internal_flags* const gfc, const struct huffcodetab* h,
+		 int index, int end, gr_info *gi)
 {
-    const struct huffcodetab* h = &ht[tableindex];
-    int index, bits = 0;
-
-    assert(tableindex < 32u);
-    if (!tableindex)
-	return bits;
-
-    for (index = start; index < end; index += 2) {
+    int bits = 0;
+    int xlen = h->xlen;
+    for (; index < end; index += 2) {
 	int cbits   = 0;
 	int xbits   = 0;
-	int xlen    = h->xlen;
 	int ext = 0;
 	int x1 = gi->l3_enc[index];
 	int x2 = gi->l3_enc[index+1];
 
 	if (x1 != 0) {
+	    /* use ESC-words */
+	    if (x1 > 14) {
+		assert ( x1 <= h->linmax+15 );
+		ext    = (x1-15) << 1;
+		xbits  = xlen;
+		x1     = 15;
+	    }
 	    if (gi->xr[index] < 0)
 		ext++;
 	    cbits--;
 	}
 
-	if (tableindex > 15) {
-	    /* use ESC-words */
-	    if (x1 > 14) {
-		assert ( x1 <= h->linmax+15 );
-		ext   |= (x1-15) << 1;
-		xbits  = xlen;
-		x1     = 15;
-	    }
-
+	if (x2 != 0) {
 	    if (x2 > 14) {
 		assert ( x2 <= h->linmax+15 );
 		ext  <<= xlen;
@@ -533,10 +526,6 @@ Huffmancode( lame_internal_flags* const gfc, const int tableindex,
 		xbits += xlen;
 		x2     = 15;
 	    }
-	    xlen = 16;
-	}
-
-	if (x2 != 0) {
 	    ext <<= 1;
 	    if (gi->xr[index+1] < 0)
 		ext++;
@@ -544,14 +533,44 @@ Huffmancode( lame_internal_flags* const gfc, const int tableindex,
 	}
 
 	assert ( (x1|x2) < 16u );
-
-	x1 = x1 * xlen + x2;
+	x1 = x1*16 + x2;
 	xbits -= cbits;
 	cbits += h->hlen  [x1];
 
 	putbits2(gfc, h->table [x1], cbits );
-	putbits2(gfc, ext,  xbits );
+	putbits2(gfc, ext, xbits);
 	bits += cbits + xbits;
+    }
+    return bits;
+}
+
+inline static int
+Huffmancode( lame_internal_flags* const gfc, const struct huffcodetab* h,
+	     int index, int end, gr_info *gi)
+{
+    int bits = 0, xlen = h->xlen;
+    for (; index < end; index += 2) {
+	int code, clen;
+	int x1 = gi->l3_enc[index];
+	int x2 = gi->l3_enc[index+1];
+	assert ( (x1|x2) < 16u );
+
+	code = x1*xlen + x2;
+	clen = h->hlen[code];
+	code = h->table[code];
+
+	if (x1 != 0) {
+	    code <<= 1;
+	    if (gi->xr[index] < 0)
+		code++;
+	}
+	if (x2 != 0) {
+	    code <<= 1;
+	    if (gi->xr[index+1] < 0)
+		code++;
+	}
+	bits += clen;
+	putbits2(gfc, code, clen);
     }
     return bits;
 }
@@ -581,9 +600,17 @@ Huffmancodebits(lame_internal_flags *gfc, gr_info *gi)
     regionStart[3] = gi->big_values;
 
     bits = 0;
-    for (i = 0; i < 3; i++)
-	bits += Huffmancode(gfc, gi->table_select[i],
-			    regionStart[i], regionStart[i+1], gi);
+    for (i = 0; i < 3; i++) {
+	const struct huffcodetab* h;
+	if (gi->table_select[i] == 0)
+	    continue;
+	h = &ht[gi->table_select[i]];
+	if (gi->table_select[i] <= 15)
+	    bits += Huffmancode(gfc, h, regionStart[i], regionStart[i+1], gi);
+	else
+	    bits += Huffmancode_esc(
+		gfc, h, regionStart[i], regionStart[i+1], gi);
+    }
 
     bits += huffman_coder_count1(gfc, gi);
     return bits;
