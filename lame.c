@@ -210,60 +210,32 @@ void lame_init_params(void)
 
 
     /* Should we use some lowpass filters? */
-    gf.lowpass_band = floor(.5 + 14-18*log(compression_ratio/16.0));
-    //    printf("gf.lowpassband = %i %f \n",gf.lowpass_band,14-18*log(compression_ratio/16.0) );
-    if (gf.lowpass_band < 31) {
-      gf.lowpass1 = (gf.lowpass_band+1-.75)/31.0;
-      gf.lowpass2 = (gf.lowpass_band+1+.75)/31.0;
+    int band = 1+floor(.5 + 14-18*log(compression_ratio/16.0));
+    if (band < 31) {
+      gf.lowpass1 = band/31.0;
+      gf.lowpass2 = band/31.0;
     }
   }
+
 
 
 
   /****************************************************************/
   /* apply user driven filters*/
   /****************************************************************/
-  /* polyphase filter bank filter */
-  if (gf.filter_type==0) {
-    FLOAT8 freq;
-    int band;
-    if ( gf.lowpassfreq > 0 ) {
-      freq=(2.0*(FLOAT8)gf.lowpassfreq/gf.resamplerate);
-      band = floor(freq*31 + .5);
-      gf.lowpass_band= band - 1;
-      if (gf.lowpass_band < 31) {
-	gf.lowpass1 = (band-.75)/31.0;
-	gf.lowpass2 = Min(1.0,(band+.75)/31.0);
-      }
-    }
-    if ( gf.highpassfreq > 0 ) {
-      /* note: for highpass filtering, keep the band which contains the
-	 given highpass frequency */
-      freq=(2.0*(FLOAT8)gf.highpassfreq/gf.resamplerate);
-      band=floor(freq*31 +.5)-1;
-      if (band >= 0 ) {
-	gf.highpass_band= band + 1;
-	gf.highpass1 = Max(0.0,(band-.75)/31.0);
-	gf.highpass2 = (band+.75)/31.0;
-      }
-    }
-  }
-
-  /* FIR filter.  not yet coded */
-  if (gf.filter_type==1) {
   if ( gf.highpassfreq > 0 ) {
     gf.highpass1 = 2.0*gf.highpassfreq/gf.resamplerate; /* will always be >=0 */
     if ( gf.highpasswidth >= 0 ) {
       gf.highpass2 = 2.0*(gf.highpassfreq+gf.highpasswidth)/gf.resamplerate;
     } else {
-      gf.highpass2 = 1.15*2.0*gf.highpassfreq/gf.resamplerate; /* 15% above on default */
-    }
-    if ( gf.highpass1 == gf.highpass2 ) { /* ensure highpass1 < highpass2 */
-      gf.highpass2 += 1E-6;
+      /* 15% above on default */
+      /* gf.highpass2 = 1.15*2.0*gf.highpassfreq/gf.resamplerate;  */
+      gf.highpass2 = 1.00*2.0*gf.highpassfreq/gf.resamplerate; 
     }
     gf.highpass1 = Min( 1, gf.highpass1 );
     gf.highpass2 = Min( 1, gf.highpass2 );
   }
+
   if ( gf.lowpassfreq > 0 ) {
     gf.lowpass2 = 2.0*gf.lowpassfreq/gf.resamplerate; /* will always be >=0 */
     if ( gf.lowpasswidth >= 0 ) {
@@ -272,15 +244,91 @@ void lame_init_params(void)
 	gf.lowpass1 = 0;
       }
     } else {
-      gf.lowpass1 = 0.85*2.0*gf.lowpassfreq/gf.resamplerate; /* 15% below on default */
-    }
-    if ( gf.lowpass1 == gf.lowpass2 ) { /* ensure lowpass1 < lowpass2 */
-      gf.lowpass2 += 1E-6;
+      /* 15% below on default */
+      /* gf.lowpass1 = 0.85*2.0*gf.lowpassfreq/gf.resamplerate;  */
+      gf.lowpass1 = 1.00*2.0*gf.lowpassfreq/gf.resamplerate;
     }
     gf.lowpass1 = Min( 1, gf.lowpass1 );
     gf.lowpass2 = Min( 1, gf.lowpass2 );
   }
+
+
+  /***************************************************************/
+  /* compute info needed for polyphase filter                    */
+  /***************************************************************/
+  if (gf.filter_type==0) {
+    int band,maxband,minband;
+    FLOAT8 amp,freq;
+    if (gf.lowpass1 > 0) {
+      minband=999;
+      maxband=-1;
+      for (band=0;  band <=31 ; ++band) { 
+	freq = band/31.0;
+	amp = 1;
+	/* this band and above will be zeroed: */
+	if (freq >= gf.lowpass2) {
+	  gf.lowpass_band= Min(gf.lowpass_band,band);
+	  amp=0;
+	}
+	if (gf.lowpass1 < freq && freq < gf.lowpass2) {
+          minband = Min(minband,band);
+          maxband = Max(maxband,band);
+	  amp = cos((PI/2)*(gf.lowpass1-freq)/(gf.lowpass2-gf.lowpass1));
+	}
+	/* printf("lowpass band=%i  amp=%f \n",band,amp);*/
+      }
+      /* compute the *actual* passband implemented by the polyphase filter */
+      if (minband==999) gf.lowpass1 = (gf.lowpass_band-.75)/31.0;
+      else gf.lowpass1 = (minband-.75)/31.0;
+      gf.lowpass2 = gf.lowpass_band/31.0;
+    }
+
+    /* make sure highpass filter is within 90% of whan the effective highpass
+     * frequency will be */
+    if (gf.highpass2 > 0) 
+      if (gf.highpass2 <  .9*(.75/31.0) ) {
+	gf.highpass1=0; gf.highpass2=0;
+	fprintf(stderr,"Warning: highpass filter disabled.  highpass frequency to small\n");
+      }
+    
+
+    if (gf.highpass2 > 0) {
+      minband=999;
+      maxband=-1;
+      for (band=0;  band <=31; ++band) { 
+	freq = band/31.0;
+	amp = 1;
+	/* this band and below will be zereod */
+	if (freq <= gf.highpass1) {
+	  gf.highpass_band = Max(gf.highpass_band,band);
+	  amp=0;
+	}
+	if (gf.highpass1 < freq && freq < gf.highpass2) {
+          minband = Min(minband,band);
+          maxband = Max(maxband,band);
+	  amp = cos((PI/2)*(gf.highpass2-freq)/(gf.highpass2-gf.highpass1));
+	}
+	/*	printf("highpass band=%i  amp=%f \n",band,amp);*/
+      }
+      /* compute the *actual* passband implemented by the polyphase filter */
+      gf.highpass1 = gf.highpass_band/31.0;
+      if (maxband==-1) gf.highpass2 = (gf.highpass_band+.75)/31.0;
+      else gf.highpass2 = (maxband+.75)/31.0;
+    }
+    /*
+    printf("lowpass band with amp=0:  %i \n",gf.lowpass_band);
+    printf("highpass band with amp=0:  %i \n",gf.highpass_band);
+    */
   }
+
+
+
+  /***************************************************************/
+  /* compute info needed for FIR filter */
+  /***************************************************************/
+  if (gf.filter_type==1) {
+  }
+
 
 
 
@@ -1123,8 +1171,8 @@ lame_global_flags * lame_init(void)
   gf.lowpass2=0;
   gf.highpass1=0;
   gf.highpass2=0;
-  gf.lowpass_band=31;
-  gf.highpass_band=0;
+  gf.lowpass_band=32;
+  gf.highpass_band=-1;
 
   gf.no_short_blocks=0;
   gf.resample_ratio=1;

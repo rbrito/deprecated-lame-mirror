@@ -361,82 +361,99 @@ void mdct_sub48(
 		wk += 64;
 	    }
 
+
 	    /* apply filters on the polyphase filterbank outputs */
+	    /* bands <= gf.highpass_band will be zeroed out below */
+	    /* bands >= gf.lowpass_band  will be zeroed out below */
 	    if (gf.filter_type==0) {
-	      for (band=gf.lowpass_band+1; band < 32; band++) { 
-		for (k=0; k<18; k++)
-		  sb_sample[ch][1-gr][k][band]=0;
-	      }
-	      for (band=0; band < gf.highpass_band; band++) {
-		for (k=0; k<18; k++)
-		  sb_sample[ch][1-gr][k][band]=0;
+	      FLOAT8 amp,freq;
+	      for (band=gf.highpass_band+1;  band < gf.lowpass_band ; band++) { 
+		freq = band/31.0;
+		if (gf.lowpass1 < freq && freq < gf.lowpass2) {
+		  amp = cos((PI/2)*(gf.lowpass1-freq)/(gf.lowpass2-gf.lowpass1));
+		  for (k=0; k<18; k++) 
+		    sb_sample[ch][1-gr][k][band]*=amp;
+		}
+		if (gf.highpass1 < freq && freq < gf.highpass2) {
+		  amp = cos((PI/2)*(gf.highpass2-freq)/(gf.highpass2-gf.highpass1));
+		  for (k=0; k<18; k++) 
+		    sb_sample[ch][1-gr][k][band]*=amp;
+		}
 	      }
 	    }
-
+	    
 
 
 	    /*
 	     * Perform imdct of 18 previous subband samples
 	     * + 18 current subband samples
 	     */
-	    for (band = 0; band < 32; band++, mdct_enc += 18) {
+	    for (band = 0; band < 32; band++, mdct_enc += 18) 
+              {
 		int type = gi->block_type;
 #ifdef ALLOW_MIXED
 		if (gi->mixed_block_flag && band < 2)
 		    type = 0;
 #endif
-		if (type == SHORT_TYPE) {
+		if (band >= gf.lowpass_band || band <= gf.highpass_band) {
+		    memset((char *)mdct_enc,0,18*sizeof(FLOAT8));
+		}else {
+		  if (type == SHORT_TYPE) {
 		    for (k = 2; k >= 0; --k) {
-			FLOAT8 w1 = win[SHORT_TYPE][k];
-			work[k] =
-			    sb_sample[ch][gr][k+6][band] * w1 -
-			    sb_sample[ch][gr][11-k][band];
-			work[k+3] =
-			    sb_sample[ch][gr][k+12][band] +
-			    sb_sample[ch][gr][17-k][band] * w1;
-
-			work[k+6] =
-			    sb_sample[ch][gr][k+12][band] * w1 -
-			    sb_sample[ch][gr][17-k][band];
-			work[k+9] =
-			    sb_sample[ch][1-gr][k][band] +
-			    sb_sample[ch][1-gr][5-k][band] * w1;
-
-			work[k+12] =
-			    sb_sample[ch][1-gr][k][band] * w1 -
-			    sb_sample[ch][1-gr][5-k][band];
-			work[k+15] =
-			    sb_sample[ch][1-gr][k+6][band] +
-			    sb_sample[ch][1-gr][11-k][band] * w1;
+		      FLOAT8 w1 = win[SHORT_TYPE][k];
+		      work[k] =
+			sb_sample[ch][gr][k+6][band] * w1 -
+			sb_sample[ch][gr][11-k][band];
+		      work[k+3] =
+			sb_sample[ch][gr][k+12][band] +
+			sb_sample[ch][gr][17-k][band] * w1;
+		      
+		      work[k+6] =
+			sb_sample[ch][gr][k+12][band] * w1 -
+			sb_sample[ch][gr][17-k][band];
+		      work[k+9] =
+			sb_sample[ch][1-gr][k][band] +
+			sb_sample[ch][1-gr][5-k][band] * w1;
+		      
+		      work[k+12] =
+			sb_sample[ch][1-gr][k][band] * w1 -
+			sb_sample[ch][1-gr][5-k][band];
+		      work[k+15] =
+			sb_sample[ch][1-gr][k+6][band] +
+			sb_sample[ch][1-gr][11-k][band] * w1;
 		    }
 		    mdct_short(mdct_enc, work);
-		} else {
+		  } else {
 		    for (k = 8; k >= 0; --k) {
-			work[k] =
-			    win[type][k  ] * sb_sample[ch][gr][k   ][band]
-			  - win[type][k+9] * sb_sample[ch][gr][17-k][band];
-
-			work[9+k] =
-			    win[type][k+18] * sb_sample[ch][1-gr][k   ][band]
-			  + win[type][k+27] * sb_sample[ch][1-gr][17-k][band];
+		      work[k] =
+			win[type][k  ] * sb_sample[ch][gr][k   ][band]
+			- win[type][k+9] * sb_sample[ch][gr][17-k][band];
+		      
+		      work[9+k] =
+			win[type][k+18] * sb_sample[ch][1-gr][k   ][band]
+			+ win[type][k+27] * sb_sample[ch][1-gr][17-k][band];
 		    }
 		    mdct_long(mdct_enc, work);
-
-		    /*
-		      Perform aliasing reduction butterfly
-		    */
-		    if (band == 0)
-			continue;
-		    for (k = 7; k >= 0; --k) {
-			FLOAT8 bu,bd;
-			bu = mdct_enc[k] * ca[k] + mdct_enc[-1-k] * cs[k];
-			bd = mdct_enc[k] * cs[k] - mdct_enc[-1-k] * ca[k];
-
-			mdct_enc[-1-k] = bu;
-			mdct_enc[k]    = bd;
-		    }
+		  }
 		}
-	    }
+		
+		
+		/*
+		  Perform aliasing reduction butterfly
+		*/
+		if (type != SHORT_TYPE) {
+		  if (band == 0)
+		    continue;
+		  for (k = 7; k >= 0; --k) {
+		    FLOAT8 bu,bd;
+		    bu = mdct_enc[k] * ca[k] + mdct_enc[-1-k] * cs[k];
+		    bd = mdct_enc[k] * cs[k] - mdct_enc[-1-k] * ca[k];
+		    
+		    mdct_enc[-1-k] = bu;
+		    mdct_enc[k]    = bd;
+		  }
+		}
+	      }
 	}
 	wk = w1;
 	if (gf.mode_gr == 1) {
