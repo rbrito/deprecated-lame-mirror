@@ -125,6 +125,7 @@ EXTRA_DIST = \
 	Makefile.DJGPP \
 	Makefile.MSVC \
 	Makefile.unix \
+	Makefile.am.global \
 	PRESETS.draft \
 	README.B32 \
 	README.DJGPP \
