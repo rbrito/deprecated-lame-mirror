@@ -942,7 +942,7 @@ static int outer_loop
              * if our best quantization so far had no distorted bands this
              * gives us more possibilities for different quant_compare modes
              */
-            if (iteration > 7 && best_noise->over_count == 0) {
+            if (iteration > 7 && best_noise_info.over_count == 0) {
                 notdone = 0;
             }
         }
