@@ -635,12 +635,7 @@ int  calc_noise(
     int j = 0;
     int max_index = 0;
 
-    if (cod_info->block_type != SHORT_TYPE)
-	max_index = gfc->sfb21_extra ? SBMAX_l : SBPSY_l;
-    else if (cod_info->mixed_block_flag)
-	max_index = 3;
-
-    for (sfb = 0; sfb < max_index; sfb++) {
+    for (sfb = 0; sfb < cod_info->sfb_lmax; sfb++) {
 	int s =
 	    cod_info->global_gain
 	    - ((scalefac->l[sfb] + (cod_info->preflag ? pretab[sfb] : 0))
@@ -671,43 +666,36 @@ int  calc_noise(
 	}
     }
 
-    if (cod_info->block_type == SHORT_TYPE) {
-	max_index = gfc->sfb21_extra ? SBMAX_s : SBPSY_s;
-	sfb = 0;
-	if (cod_info->mixed_block_flag)
-	    sfb = 8;
-	for (; sfb < max_index; sfb++) {
-	    int width =
-		gfc->scalefac_band.s[sfb+1] - gfc->scalefac_band.s[sfb];
-	    for ( i = 0; i < 3; i++ ) {
-		int s =
-		    cod_info->global_gain
-		    - (scalefac->s[sfb][i] << (cod_info->scalefac_scale + 1))
-		    - cod_info->subblock_gain[i] * 8;
-		FLOAT8 step = POW20(s);
-		FLOAT8 noise = 0.0;
-		l = width;
-		do {
-		    FLOAT8 temp;
-		    temp = pow43[ix[j]] * step - fabs(xr[j]);
-		    noise += temp * temp;
-		    j++;
-		} while (--l > 0);
-		noise = xfsf->s[sfb][i]  = noise / l3_xmin->s[sfb][i];
+    for (sfb = cod_info->sfb_smin; sfb < cod_info->psy_smax; sfb++) {
+	int width = gfc->scalefac_band.s[sfb+1] - gfc->scalefac_band.s[sfb];
+	for ( i = 0; i < 3; i++ ) {
+	    int s =
+		cod_info->global_gain
+		- (scalefac->s[sfb][i] << (cod_info->scalefac_scale + 1))
+		- cod_info->subblock_gain[i] * 8;
+	    FLOAT8 step = POW20(s);
+	    FLOAT8 noise = 0.0;
+	    l = width;
+	    do {
+		FLOAT8 temp;
+		temp = pow43[ix[j]] * step - fabs(xr[j]);
+		noise += temp * temp;
+		j++;
+	    } while (--l > 0);
+	    noise = xfsf->s[sfb][i]  = noise / l3_xmin->s[sfb][i];
 
-		max_noise    = Max(max_noise,noise);
-		klemm_noise += penalties (noise);
+	    max_noise    = Max(max_noise,noise);
+	    klemm_noise += penalties (noise);
 
-		noise = log10(Max(noise,1E-20));
-		tot_noise_db += noise;
+	    noise = log10(Max(noise,1E-20));
+	    tot_noise_db += noise;
 
-		if (noise > 0.0) {
-		    over++;
-		    over_noise_db += noise;
-		}
+	    if (noise > 0.0) {
+		over++;
+		over_noise_db += noise;
 	    }
 	}
-    } /* cod_info->block_type == SHORT_TYPE */
+    }
 
     res->over_count = over;
     res->tot_noise   = 10.*tot_noise_db;

@@ -70,6 +70,8 @@ typedef struct {
 	 int part2_length;
 	 int sfb_lmax;
 	 int sfb_smin;
+	 int psy_lmax;
+	 int psy_smax;
 	 int count1bits;
 	/* added for LSF */
 	 const int *sfb_partition_table;

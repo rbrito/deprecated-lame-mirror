@@ -87,6 +87,8 @@ init_outer_loop(
     if (cod_info->block_type == SHORT_TYPE) {
         cod_info->sfb_lmax        = 0;
         cod_info->sfb_smin        = 0;
+        cod_info->psy_lmax        = 0;
+        cod_info->psy_smax        = gfc->sfb21_extra ? SBMAX_s : SBPSY_s;
 	if (cod_info->mixed_block_flag) {
             /*
              *  MPEG-1:      sfbs 0-7 long block, 3-12 short blocks 
@@ -98,6 +100,8 @@ init_outer_loop(
     } else {
         cod_info->sfb_lmax        = SBPSY_l;
         cod_info->sfb_smin        = SBPSY_s;
+        cod_info->psy_lmax        = gfc->sfb21_extra ? SBMAX_l : SBPSY_l;
+        cod_info->psy_smax        = 0;
     }   
     cod_info->count1bits          = 0;  
     cod_info->sfb_partition_table = nr_of_sfb_block[0][0];
