@@ -228,7 +228,7 @@ CLEANFILES = \
 	quantSSE.lo.lst
 
 EXTRA_DIST = 
-NASMFLAGS = @NASM_FORMAT@ -i $(top_srcdir)/libmp3lame/@CPUTYPE@/
+NASMFLAGS = @NASM_FORMAT@ -I $(top_srcdir)/libmp3lame/@CPUTYPE@/
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 

@@ -45,7 +45,7 @@ CLEANFILES = \
 EXTRA_DIST =
 
 NASM = @NASM@
-NASMFLAGS=@NASM_FORMAT@ -i $(top_srcdir)/libmp3lame/@CPUTYPE@/
+NASMFLAGS=@NASM_FORMAT@ -I $(top_srcdir)/libmp3lame/@CPUTYPE@/
 
 .nas.o: $< nasm.h
 	$(NASM) $(NASMFLAGS) $< -o $@ -l $@.lst
