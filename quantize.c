@@ -737,18 +737,23 @@ void outer_loop(
   FLOAT8 xrpow[576],temp;
   int better;
   int over=0;
-  FLOAT8 max_noise;
-  FLOAT8 over_noise;
-  FLOAT8 tot_noise;
-  int best_over=100;
-  FLOAT8 best_max_noise=0;
-  FLOAT8 best_over_noise=0;
-  FLOAT8 best_tot_noise=0;
+  calc_noise_result noise_info;
+  calc_noise_result best_noise_info;
   FLOAT8 xfsf_w[4][SBMAX_l];
   FLOAT8 distort[4][SBMAX_l];
 
   int compute_stepsize=1;
   int notdone=1;
+
+  noise_info.over_count = 100;
+  noise_info.tot_count = 100;
+  noise_info.max_noise = 0;
+  noise_info.tot_noise = 0;
+  noise_info.over_noise = 0;
+  noise_info.tot_avg_noise = 0;
+  noise_info.over_avg_noise = 0;
+  best_noise_info = noise_info;
+
 
   /* BEGIN MAIN LOOP */
   iteration = 0;
@@ -800,23 +805,19 @@ void outer_loop(
       }else{
 	/* coefficients and thresholds both l/r (or both mid/side) */
 	over=calc_noise1( gfp,xr, l3_enc_w, cod_info, 
-			  xfsf_w,distort, l3_xmin, &scalefac_w, &over_noise, 
-			  &tot_noise, &max_noise);
+			  xfsf_w,distort, l3_xmin, &scalefac_w, 
+			  &noise_info);
       }
 
       /* check if this quantization is better the our saved quantization */
       if (iteration == 1) better=1;
       else 
 	better=quant_compare(gfp->experimentalX,
-	     best_over,best_tot_noise,best_over_noise,best_max_noise,
-                  over,     tot_noise,     over_noise,     max_noise);
+	     &best_noise_info, &noise_info);
 
       /* save data so we can restore this quantization later */    
       if (better) {
-	best_over=over;
-	best_max_noise=max_noise;
-	best_over_noise=over_noise;
-	best_tot_noise=tot_noise;
+	best_noise_info = noise_info;
 
 	memcpy(scalefac, &scalefac_w, sizeof(III_scalefac_t));
 	memcpy(l3_enc,l3_enc_w,sizeof(int)*576);
@@ -895,10 +896,10 @@ void outer_loop(
   /* finish up */
   assert( cod_info->global_gain < 256 );
 
-  best_noise[0]=best_over;
-  best_noise[1]=best_max_noise;
-  best_noise[2]=best_over_noise;
-  best_noise[3]=best_tot_noise;
+  best_noise[0]=best_noise_info.over_count;
+  best_noise[1]=best_noise_info.max_noise;
+  best_noise[2]=best_noise_info.over_avg_noise;
+  best_noise[3]=best_noise_info.tot_avg_noise;
 }
 
 
@@ -1072,8 +1073,8 @@ void inc_subblock_gain(lame_global_flags *gfp,
 }
 
 int quant_compare(int experimentalX,
-int best_over,FLOAT8 best_tot_noise,FLOAT8 best_over_noise,FLOAT8 best_max_noise,
-int over,FLOAT8 tot_noise, FLOAT8 over_noise, FLOAT8 max_noise)
+	calc_noise_result *best,
+	calc_noise_result *calc)
 {
   /*
     noise is given in decibals (db) relative to masking thesholds.
@@ -1086,41 +1087,47 @@ int over,FLOAT8 tot_noise, FLOAT8 over_noise, FLOAT8 max_noise)
   int better=0;
 
   if (experimentalX==0) {
-    better = ((over < best_over) ||
-	      ((over==best_over) && (over_noise<=best_over_noise)) ) ;
+    better = ( (calc->over_count < best->over_count) ||
+    	          ((calc->over_count == best->over_count)
+		     && (calc->over_avg_noise <= best->over_avg_noise)) ) ;
   }
 
   if (experimentalX==1) 
-    better = max_noise < best_max_noise;
+    better = calc->max_noise < best->max_noise;
 
   if (experimentalX==2) {
-    better = tot_noise < best_tot_noise;
+    better = calc->tot_avg_noise < best->tot_avg_noise;
   }
   if (experimentalX==3) {
-    better = (tot_noise < best_tot_noise) &&
-      (max_noise < best_max_noise + 2);
+    better = (calc->tot_avg_noise < best->tot_avg_noise) &&
+      (calc->max_noise < best->max_noise + 2);
   }
   if (experimentalX==4) {
-    better = ( ( (0>=max_noise) && (best_max_noise>2)) ||
-     ( (0>=max_noise) && (best_max_noise<0) && ((best_max_noise+2)>max_noise) && (tot_noise<best_tot_noise) ) ||
-     ( (0>=max_noise) && (best_max_noise>0) && ((best_max_noise+2)>max_noise) && (tot_noise<(best_tot_noise+best_over_noise)) ) ||
-     ( (0<max_noise) && (best_max_noise>-0.5) && ((best_max_noise+1)>max_noise) && ((tot_noise+over_noise)<(best_tot_noise+best_over_noise)) ) ||
-     ( (0<max_noise) && (best_max_noise>-1) && ((best_max_noise+1.5)>max_noise) && ((tot_noise+over_noise+over_noise)<(best_tot_noise+best_over_noise+best_over_noise)) ) );
+    better = ( ( (0>=calc->max_noise) && (best->max_noise>2)) ||
+     ( (0>=calc->max_noise) && (best->max_noise<0) && ((best->max_noise+2)>calc->max_noise) && (calc->tot_avg_noise<best->tot_avg_noise) ) ||
+     ( (0>=calc->max_noise) && (best->max_noise>0) && ((best->max_noise+2)>calc->max_noise) && (calc->tot_avg_noise<(best->tot_avg_noise+best->over_avg_noise)) ) ||
+     ( (0<calc->max_noise) && (best->max_noise>-0.5) && ((best->max_noise+1)>calc->max_noise) && ((calc->tot_avg_noise+calc->over_avg_noise)<(best->tot_avg_noise+best->over_avg_noise)) ) ||
+     ( (0<calc->max_noise) && (best->max_noise>-1) && ((best->max_noise+1.5)>calc->max_noise) && ((calc->tot_avg_noise+calc->over_avg_noise+calc->over_avg_noise)<(best->tot_avg_noise+best->over_avg_noise+best->over_avg_noise)) ) );
   }
   if (experimentalX==5) {
-    better =   (over_noise <  best_over_noise)
-      || ((over_noise == best_over_noise)&&(tot_noise < best_tot_noise));
+    better =   (calc->over_avg_noise <  best->over_avg_noise)
+      || ((calc->over_avg_noise == best->over_avg_noise)&&(calc->tot_avg_noise < best->tot_avg_noise));
   }
   if (experimentalX==6) {
-    better = (over_noise < best_over_noise)
-           ||( (over_noise == best_over_noise)
-             &&( (max_noise < best_max_noise)
-               ||( (max_noise == best_max_noise)
-                 &&(tot_noise <= best_tot_noise)
+    better = (calc->over_avg_noise < best->over_avg_noise)
+           ||( (calc->over_avg_noise == best->over_avg_noise)
+             &&( (calc->max_noise < best->max_noise)
+               ||( (calc->max_noise == best->max_noise)
+                 &&(calc->tot_avg_noise <= best->tot_avg_noise)
                  )
                ) 
 	     );
   }
+  if (experimentalX==7) {
+    better = ( (calc->over_count < best->over_count) ||
+               (calc->over_noise <  best->over_noise) );
+  }
+
 
   return better;
 }

@@ -758,8 +758,7 @@ int calc_noise1( lame_global_flags *gfp,
                  FLOAT8 xr[576], int ix[576], gr_info *cod_info,
 		 FLOAT8 xfsf[4][SBMAX_l], FLOAT8 distort[4][SBMAX_l],
 		 III_psy_xmin *l3_xmin, III_scalefac_t *scalefac,
-		 FLOAT8 *over_noise,
-		 FLOAT8 *tot_noise, FLOAT8 *max_noise)
+		 calc_noise_result *res)
 {
   int start, end, l, i, over=0;
   u_int sfb;
@@ -768,9 +767,9 @@ int calc_noise1( lame_global_flags *gfp,
   
   int count=0;
   FLOAT8 noise;
-  *over_noise=0;
-  *tot_noise=0;
-  *max_noise = -999;
+  FLOAT8 over_noise=0;
+  FLOAT8 tot_noise=0;
+  FLOAT8 max_noise = -999;
   
   if (cod_info->block_type == SHORT_TYPE) {
     int max_index = SBPSY_s;
@@ -810,10 +809,10 @@ int calc_noise1( lame_global_flags *gfp,
             distort[i+1][sfb] = noise;
             if (noise > 0) {
 		over++;
-		*over_noise += noise;
+		over_noise += noise;
 	    }
-	    *tot_noise += noise;
-	    *max_noise=Max(*max_noise,noise);
+	    tot_noise += noise;
+	    max_noise=Max(max_noise,noise);
 	    count++;	    
         }
     }
@@ -857,18 +856,23 @@ int calc_noise1( lame_global_flags *gfp,
         distort[0][sfb] = noise;
         if (noise>0) {
 	  over++;
-	  *over_noise += noise;
+	  over_noise += noise;
 	}
-	*tot_noise += noise;
-	*max_noise=Max(*max_noise,noise);
+	tot_noise += noise;
+	max_noise=Max(max_noise,noise);
 	count++;
 
     }
 
   }
 
-  if (count>1) *tot_noise /= count;
-  if (over>1) *over_noise /= over;
+  res->tot_count = count;
+  res->over_count = over;
+  res->tot_noise = tot_noise;
+  res->over_noise = over_noise;
+  res->max_noise = max_noise;
+  res->tot_avg_noise = count ? (tot_noise / count) : tot_noise;
+  res->over_avg_noise = over ? (over_noise / over) : over_noise;
   
   return over;
 }

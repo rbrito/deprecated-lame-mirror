@@ -844,6 +844,7 @@ VBR_quantize(lame_global_flags *gfp,
     for (gr = 0; gr < gfc->mode_gr; gr++) {
       for (ch = 0; ch < gfc->stereo; ch++) {
 	III_psy_xmin l3_xmin;
+	calc_noise_result noise_info;
 	FLOAT8 noise[4];
 	FLOAT8 xfsf[4][SBMAX_l];
 	FLOAT8 distort[4][SBMAX_l];
@@ -853,9 +854,13 @@ VBR_quantize(lame_global_flags *gfp,
 	cod_info = &l3_side->gr[gr].ch[ch].tt;	
 	calc_xmin( gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin);
 	
-	noise[0]=calc_noise1( gfp, xr[gr][ch], l3_enc[gr][ch], cod_info, 
+	calc_noise1( gfp, xr[gr][ch], l3_enc[gr][ch], cod_info, 
 			      xfsf,distort, &l3_xmin, &scalefac[gr][ch], 
-			      &noise[2],&noise[3],&noise[1]);
+			      &noise_info);
+	noise[0] = noise_info.over_count;
+	noise[1] = noise_info.max_noise;
+	noise[2] = noise_info.over_avg_noise;
+	noise[3] = noise_info.tot_avg_noise;
 	
 	set_pinfo (gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
       }

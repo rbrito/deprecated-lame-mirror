@@ -22,6 +22,16 @@ extern FLOAT8 adj43asm[PRECALC_SIZE];
 extern FLOAT8 pow20[Q_MAX];
 extern FLOAT8 ipow20[Q_MAX];
 
+typedef struct calc_noise_result_t {
+	int over_count;		/* number of quantization noise > masking */
+	int tot_count;		/* all */
+	FLOAT8 over_noise;	/* sum of quantization noise > masking */
+	FLOAT8 tot_noise;	/* sum of all quantization noise */
+	FLOAT8 max_noise;	/* max quantization noise */
+	FLOAT8 over_avg_noise;	/* over_noise / over_count */
+	FLOAT8 tot_avg_noise;	/* tot_noise / tot_count */
+} calc_noise_result;
+
 FLOAT8 ATHformula(lame_global_flags *gfp,FLOAT8 f);
 void compute_ath(lame_global_flags *gfp,FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY_l]);
 void ms_convert(FLOAT8 xr[2][576],FLOAT8 xr_org[2][576]);
@@ -67,7 +77,7 @@ int calc_noise1( lame_global_flags *gfp, FLOAT8 xr[576],
 		 FLOAT8 distort[4][SBMAX_l],
                  III_psy_xmin *l3_xmin,
 		 III_scalefac_t *,
-                 FLOAT8 *noise, FLOAT8 *tot_noise, FLOAT8 *max_noise);
+                 calc_noise_result *);
 
 int loop_break( III_scalefac_t *scalefac, gr_info *cod_info);
 
@@ -93,9 +103,7 @@ int bin_search_StepSize2(lame_global_flags *gfp,int desired_rate, int start, int
 int count_bits(lame_global_flags *gfp,int  *ix, FLOAT8 xr[576], gr_info *cod_info);
 
 
-int quant_compare(int type,
-int best_over,FLOAT8 best_tot_noise,FLOAT8 best_over_noise,FLOAT8 best_max_over,
-int over,FLOAT8 tot_noise, FLOAT8 over_noise,FLOAT8 max_noise);
+int quant_compare(int type, calc_noise_result *best_noise, calc_noise_result *noise);
 
 int VBR_compare(
 int best_over,FLOAT8 best_tot_noise,FLOAT8 best_over_noise,FLOAT8 best_max_over,
