@@ -272,7 +272,7 @@ typedef struct {
 
 const preset_t Presets [] = {
    // name       fs     fu    fo    dfo shrt qual  mode              cbr vbr_mode/min/max
-    { "phone" ,  8000, 200,  3400,    0,  1,  5, MPG_MD_MONO        ,  16,  6,   8,  24 },  // phone standard 300-3400
+    { "phone" ,  8000, 125,  3400,    0,  1,  5, MPG_MD_MONO        ,  16,  6,   8,  24 },  // phone standard 300-3400
     { "phon+" ,  8000, 100,  4050,    0,  1,  5, MPG_MD_MONO        ,  24,  4,  16,  32 },  // phone theoretical limits
     { "lw"    , 11025,  -1,  4300,    0,  0,  5, MPG_MD_MONO        ,  24,  3,  16,  56 },  // LW           use df= 9 kHz
     { "mw-eu" , 11025,  -1,  4300,    0,  0,  5, MPG_MD_MONO        ,  24,  3,  16,  56 },  // MW in europe use df= 9 kHz
@@ -281,10 +281,10 @@ const preset_t Presets [] = {
     { "fm"    , 32000,  -1, 15000,    0,  0,  5, MPG_MD_JOINT_STEREO, 112,  3,  80, 256 },
     { "voice" , 24000,  -1, 12100,    0,  1,  5, MPG_MD_MONO        ,  56,  4,  40, 112 },
     { "radio" ,    -1,  -1, 15000,    0,  0,  5, MPG_MD_JOINT_STEREO, 128,  3,  96, 256 },
-    { "tape"  ,    -1,  -1, 18000, 1800,  0,  5, MPG_MD_JOINT_STEREO, 128,  3,  96, 256 },
-    { "hifi"  ,    -1,  -1, 18000, 1800,  0,  2, MPG_MD_JOINT_STEREO, 160,  2, 112, 320 },  // 144 seems to be enough
-    { "cd"    ,    -1,  -1,    -1,   -1,  0,  2, MPG_MD_STEREO      , 192,  1, 128, 320 },  // 160 seems to be enough
-    { "studio",    -1,  -1,    -1,   -1,  0,  2, MPG_MD_STEREO      , 256,  0, 160, 320 },  // 176 seems to be enough
+    { "tape"  ,    -1,  -1, 18000,  900,  0,  5, MPG_MD_JOINT_STEREO, 128,  3,  96, 256 },
+    { "hifi"  ,    -1,  -1, 18000,  900,  0,  2, MPG_MD_JOINT_STEREO, 160,  2, 112, 320 },
+    { "cd"    ,    -1,  -1,    -1,   -1,  0,  2, MPG_MD_STEREO      , 192,  1, 128, 320 },
+    { "studio",    -1,  -1,    -1,   -1,  0,  2, MPG_MD_STEREO      , 256,  0, 160, 320 },
 };
 
 
@@ -446,6 +446,9 @@ static int filename_to_type ( const char* FileName )
     if ( 0 == local_strcasecmp ( FileName, ".mp2" ) ) return sf_mp2;
     if ( 0 == local_strcasecmp ( FileName, ".mp3" ) ) return sf_mp3;
     if ( 0 == local_strcasecmp ( FileName, ".ogg" ) ) return sf_ogg;
+    if ( 0 == local_strcasecmp ( FileName, ".wav" ) ) return sf_wave;
+    if ( 0 == local_strcasecmp ( FileName, ".aif" ) ) return sf_aiff;
+    if ( 0 == local_strcasecmp ( FileName, ".raw" ) ) return sf_raw;
     return sf_unknown;
 }
 
@@ -948,17 +951,21 @@ void lame_parse_args ( lame_global_flags* gfp, int argc, char** argv )
     }
     
     /* if user did not explicitly specify input is mp3, check file name */
-    if ( gfp -> input_format != sf_mp1  || 
-	 gfp -> input_format != sf_mp2  ||
-	 gfp -> input_format != sf_mp3  ||
-	 gfp -> input_format != sf_ogg )
+    if (gfp -> input_format == sf_unknown)
 	gfp -> input_format = filename_to_type ( gfp -> inPath );
     
 #if !(defined HAVEMPGLIB || defined AMIGA_MPEGA)
     if ( gfp->input_format == sf_mp1 ||
 	 gfp->input_format == sf_mp2 ||
 	 gfp->input_format == sf_mp3) {
-	ERRORF("Error: libmp3lame not compiled with mp3 *decoding* support \n");
+	ERRORF("Error: libmp3lame not compiled with mpg123 *decoding* support \n");
+	LAME_ERROR_EXIT();
+    }
+#endif
+
+#if !(defined HAVEVORBIS)
+    if ( gfp->input_format == sf_ogg ) {
+	ERRORF("Error: libmp3lame not compiled with ogg *decoding* support \n");
 	LAME_ERROR_EXIT();
     }
 #endif
