@@ -727,8 +727,6 @@ lame_print_internals( const lame_global_flags * gfp )
     MSGF( gfc, "\t ^ ch0 (left) : %f\n", gfp->scale_left );
     MSGF( gfc, "\t ^ ch1 (right): %f\n", gfp->scale_right );
     MSGF( gfc, "\tfilter type: %d\n", gfc->filter_type );
-    MSGF( gfc, "\texperimental X=%d Y=%d Z=%d\n",
-	  gfp->experimentalX, gfp->experimentalY, gfp->experimentalZ );
     MSGF( gfc, "\t...\n" );
 
     /*  everything controlling the stream format 

@@ -59,9 +59,6 @@ struct lame_global_struct {
 
     /* quantization/noise shaping */
     int disable_reservoir;      /* use bit reservoir? */
-    int experimentalX;
-    int experimentalY;
-    int experimentalZ;
 
     /* VBR control */
     vbr_mode VBR;

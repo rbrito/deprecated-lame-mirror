@@ -64,12 +64,17 @@ char *strchr (), *strrchr ();
 #include <dmalloc.h>
 #endif
 
-#if defined DEBUG || _DEBUG
+#if (defined DEBUG) || (defined _DEBUG)
 #define INTERNAL_OPTS 1
 #else
 #define INTERNAL_OPTS LAME_ALPHA_VERSION
 #endif
 
+#if INTERNAL_OPTS
+int experimentalX = 0;
+int experimentalY = 0;
+int experimentalZ = 0;
+#endif
 
 
 /* GLOBAL VARIABLES.  set by parse_args() */
@@ -1166,10 +1171,9 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     (void) lame_set_useTemporal( gfp, atoi(nextArg)?1:0 );
 
                 T_ELIF ("nspsytune")
-                    lame_set_experimentalZ(gfp,1);
-                    lame_set_experimentalX(gfp,1);
-                
-                T_ELIF ("nssafejoint")
+		    fprintf(stderr, "note: nspsytune is defaulted and no need to specify the option.\n");
+
+		T_ELIF ("nssafejoint")
                     lame_set_exp_nspsytune(gfp,lame_get_exp_nspsytune(gfp) | 2);
 
                 T_ELIF ("nsmsfix")
@@ -1426,13 +1430,13 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                         break;
                     case 'X':        
                         argUsed = 1;   
-                        lame_set_experimentalX(gfp,atoi(arg)); 
+			experimentalX = atoi(arg);
                         break;
                     case 'Y': 
-                        lame_set_experimentalY(gfp,1);
+                        experimentalY = 1;
                         break;
                     case 'Z': 
-                        lame_set_experimentalZ(gfp,1);
+                        experimentalZ = 1;
                         break;
                     case 'e':        
                         argUsed = 1;
