@@ -27,7 +27,7 @@ CFG=lame - Win32 Debug GTK
 # Begin Project
 # PROP Scc_ProjName ""
 # PROP Scc_LocalPath ""
-CPP=cl.exe
+CPP=xicl.exe
 RSC=rc.exe
 
 !IF  "$(CFG)" == "lame - Win32 Release"
@@ -50,7 +50,7 @@ RSC=rc.exe
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=link.exe
+LINK32=xilink.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /profile /map /machine:I386
 
@@ -74,7 +74,7 @@ LINK32=link.exe
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=link.exe
+LINK32=xilink.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
 
@@ -99,7 +99,7 @@ LINK32=link.exe
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=link.exe
+LINK32=xilink.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib glib-1.2.lib gdk-1.3.lib gtk-1.3.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept /libpath:"./WinGTK/glib-1.2" /libpath:"./WinGTK/gtk-plus/gdk" /libpath:"./WinGTK/gtk-plus/gtk"
 
@@ -124,7 +124,7 @@ LINK32=link.exe
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=link.exe
+LINK32=xilink.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /profile /map /machine:I386
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib glib-1.2.lib gdk-1.3.lib gtk-1.3.lib /nologo /subsystem:console /profile /map /machine:I386 /libpath:"./WinGTK/glib-1.2" /libpath:"./WinGTK/gtk-plus/gdk" /libpath:"./WinGTK/gtk-plus/gtk"
 
@@ -194,10 +194,6 @@ SOURCE=.\gtkanal.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\huffman.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\id3tag.c
 # End Source File
 # Begin Source File
@@ -250,11 +246,15 @@ SOURCE=.\main.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\musicin.h
+SOURCE=.\mp3x.c
 # End Source File
 # Begin Source File
 
 SOURCE=.\newmdct.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\newmdct.h
 # End Source File
 # Begin Source File
 
@@ -263,10 +263,6 @@ SOURCE=.\portableio.c
 # Begin Source File
 
 SOURCE=.\portableio.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\profile.txt
 # End Source File
 # Begin Source File
 
@@ -299,10 +295,6 @@ SOURCE=.\reservoir.c
 # Begin Source File
 
 SOURCE=.\reservoir.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\sqrttab.h
 # End Source File
 # Begin Source File
 
@@ -351,10 +343,6 @@ SOURCE=.\version.c
 # Begin Source File
 
 SOURCE=.\version.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\wavheader.h
 # End Source File
 # Begin Source File
 

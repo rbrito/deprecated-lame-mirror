@@ -857,7 +857,7 @@ void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
           asm ("fistpl %0 ": "=m"(*(ix++)): "t"(istep_l*(*(xr++)) - 0.0946): "st");
 #elif defined(MSVC_XRPOW_ASM)
       /* asm from Acy Stapp <AStapp@origin.ea.com> */
-      temp0 = 0.0946;
+      float temp0 = 0.0946;
       _asm {
           mov ecx, 576/4;
           fld qword ptr [temp0];
