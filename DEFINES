@@ -7,9 +7,6 @@ USE_FAST_LOG:
 KLEMM_36:
  - portability fixes in the IO code
 
-KLEMM_44:
- - enable code in pcm.c
-
 NON_LINEAR_PSYMODEL
  - use a non linear psymodel in the GPSYCHO case
 
