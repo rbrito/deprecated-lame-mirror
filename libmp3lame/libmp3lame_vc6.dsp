@@ -125,6 +125,10 @@ SOURCE=.\tags.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\gain_analysis.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\lame.c
 # End Source File
 # Begin Source File
@@ -220,6 +224,10 @@ SOURCE=.\fft.h
 # Begin Source File
 
 SOURCE=.\tags.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\gain_analysis.h
 # End Source File
 # Begin Source File
 

@@ -386,6 +386,7 @@ lamelib_sources = \
 	libmp3lame/takehiro.c \
 	libmp3lame/util.c \
 	libmp3lame/mpglib_interface.c \
+	libmp3lame/gain_analysis.c \
 	libmp3lame/version.c
 
 mpglib_sources = \
