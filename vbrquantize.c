@@ -238,7 +238,7 @@ int find_scalefac(FLOAT8 *xr,FLOAT8 *xr34,int sfb,
 
 */
 int compute_scalefacs_short(int sf[SBPSY_s][3],gr_info *cod_info,
-int scalefac[SBPSY_s][3],unsigned int sbg[3])
+int scalefac[SBPSY_s][3],int sbg[3])
 {
   int maxrange,maxrange1,maxrange2,maxover;
   int sfb,i;
@@ -268,7 +268,7 @@ int scalefac[SBPSY_s][3],unsigned int sbg[3])
     maxsf1 = Max(maxsf1-maxrange1*ifqstep,maxsf2-maxrange2*ifqstep);
     sbg[i]=0;
     if (minsf >0 ) sbg[i] = floor(.125*minsf + .001);
-    if (maxsf1 > 0)  sbg[i] = Max(sbg[i],(u_int)(maxsf1/8 + (maxsf1 % 8 != 0)));
+    if (maxsf1 > 0)  sbg[i] = Max(sbg[i],(maxsf1/8 + (maxsf1 % 8 != 0)));
     if (sbg[i] > 7) sbg[i]=7;
 
 
