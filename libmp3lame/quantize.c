@@ -112,6 +112,8 @@ init_outer_loop(
     memset(&cod_info->scalefac, 0, sizeof(III_scalefac_t));
     memset(&gfc->pseudohalf, 0, sizeof(gfc->pseudohalf));
 
+    if ( xrpow == 0 ) return 0;
+    
     /*  check if there is some energy we have to quantize
      *  and calculate xrpow matching our fresh scalefactors
      */
@@ -1242,7 +1244,8 @@ VBR_prepare (
             masking_lower_db   = gfc->VBR->mask_adjust - adjust; 
             gfc->masking_lower = pow (10.0, masking_lower_db * 0.1);
       
-            bands[gr][ch] = calc_xmin (gfp, &ratio[gr][ch], 
+            init_outer_loop( gfc, cod_info, 0 );
+	    bands[gr][ch] = calc_xmin (gfp, &ratio[gr][ch], 
                                        cod_info, l3_xmin[gr]+ch);
             if (bands[gr][ch]) 
                 analog_silence = 0;
