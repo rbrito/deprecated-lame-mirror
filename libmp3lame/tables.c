@@ -539,7 +539,7 @@ const unsigned int table13[2*2] = {
 };
 
 /* ixmax=8,9,...,15 (select table from 13, 14=16, 15) */
-const unsigned long long tableDxEF[] = {
+const uint64_t tableDxEF[] = {
     0x01000300630001LL, 0x05000500630005LL, 0x07000600630007LL, 0x09000800630008LL,
     0x0a000800630009LL, 0x0a00090063000aLL, 0x0b000a0063000aLL, 0x0b000a0063000bLL,
     0x0c000a0063000aLL, 0x0c000b0063000bLL, 0x0c000b0063000cLL, 0x0d000c0063000cLL,
@@ -607,7 +607,7 @@ const unsigned long long tableDxEF[] = {
 };
 
 /* ixmax=3 (select table from 5, 9, 6, 7) */
-const unsigned long long table5967[] = {
+const uint64_t table5967[] = {
     0x03000100030001LL, 0x04000400040004LL, 0x06000700060007LL, 0x08000900070008LL,
     0x04000400040004LL, 0x04000600050005LL, 0x06000800060008LL, 0x07000900070009LL,
     0x05000700050007LL, 0x06000700060008LL, 0x07000900070009LL, 0x08000a0008000aLL,
@@ -615,7 +615,7 @@ const unsigned long long table5967[] = {
 };
 
 /* ixmax=4,5 (select table from 7, 11, 8, 9) */
-const unsigned long long table7B89[] = {
+const uint64_t table7B89[] = {
     0x02000300020001LL, 0x04000400040004LL, 0x07000600060007LL, 0x09000700080009LL,
     0x09000900090009LL, 0x0a000a000a000aLL, 0xff006300630063LL, 0xff006300630063LL,
 /* here starts tableAFBC, ixmax=6,7 (select table from 10, 15, 11, 12 */

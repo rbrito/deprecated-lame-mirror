@@ -157,11 +157,11 @@ count_bit_noESC_from4(
     const int * const end,
           int         xlen,
           int         t1,
-    const unsigned long long * const table
+    const uint64_t * const table
     )
 {
     /* No ESC-words */
-    unsigned long long sum = 0;
+    uint64_t sum = 0;
     int	sum1, sum2;
     int t;
     do {

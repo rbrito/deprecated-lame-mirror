@@ -110,20 +110,13 @@ AC_CHECK_SIZEOF(unsigned long long)
 AC_CHECK_SIZEOF(float)
 AC_CHECK_SIZEOF(double)
 
-AC_CHECK_TYPES([uint8_t, int8_t, uint16_t, int16_t, uint32_t, int32_t])
+AC_CHECK_TYPES([uint8_t, uint16_t, int16_t, uint32_t, int32_t, uint64_t])
 
 AH_VERBATIM([HAVE_UINT8_T],
 [/* add uint8_t type */
 #undef HAVE_UINT8_T
 #ifndef HAVE_UINT8_T
 	typedef unsigned char uint8_t;
-#endif])
-
-AH_VERBATIM([HAVE_INT8_T],
-[/* add int8_t type */
-#undef HAVE_INT8_T
-#ifndef HAVE_INT8_T
-	typedef char int8_t;
 #endif])
 
 AH_VERBATIM([HAVE_UINT16_T],
@@ -182,6 +175,28 @@ AH_VERBATIM([HAVE_INT32_T],
 #ifndef HAVE_INT32_T
 #undef A_INT32_T
 	typedef A_INT32_T int32_t;
+#endif])
+
+if test "${ac_cv_sizeof_unsigned_int}" = "8"; then
+	AC_DEFINE(A_UINT64_T,unsigned int)
+else
+	if test "${ac_cv_sizeof_unsigned_long}" = "8"; then
+		AC_DEFINE(A_UINT64_T,unsigned long)
+	else
+		if test "${ac_cv_sizeof_unsigned_long_long}" = "8"; then
+			AC_DEFINE(A_UINT64_T,unsigned long long)
+		else
+			AC_MSG_ERROR([CHECK_TYPE_uint64_t - please report to lame-dev@lists.sourceforge.net])
+		fi
+	fi
+fi
+
+AH_VERBATIM([HAVE_UINT64_T],
+[/* add uint64_t type */
+#undef HAVE_UINT64_T
+#ifndef HAVE_UINT64_T
+#undef A_UINT64_T
+	typedef A_UINT64_T uint64_t;
 #endif])
 
 AC_CHECK_TYPES([ieee754_float64_t, ieee754_float32_t])
