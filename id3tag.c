@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "util.h"
+#include "bitstream.h"
 
 static const char *genre_names[] =
 {
@@ -427,7 +428,7 @@ id3tag_write_v2(lame_global_flags *gfp,struct id3tag_spec *spec)
             /* clear any padding bytes */
             memset(p, 0, tag_size - (p - tag));
             /* write tag directly into bit stream at current position */
-	    {int i;
+			{ unsigned int i;
 	    for (i=0 ; i<tag_size; ++i)
 	      add_dummy_byte(gfp,tag[i]);
 	    }
