@@ -458,15 +458,17 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --scale-l <arg> scale channel 0 (left) input (multiply PCM data) by <arg>\n"
               "    --scale-r <arg> scale channel 1 (right) input (multiply PCM data) by <arg>\n"
               );
-#ifdef DECODE_ON_THE_FLY
     fprintf ( fp,
               "    --replaygain-fast   compute RG fast but slightly inaccurately (default)\n"
+#ifdef DECODE_ON_THE_FLY
               "    --replaygain-accurate   compute RG more accurately and find the peak sample\n"
+#endif
               "    --noreplaygain  disable ReplayGain analysis\n"
+#ifdef DECODE_ON_THE_FLY
               "    --clipdetect    enable --replaygain-accurate and print a message whether\n"
               "                    clipping occurs and how far the waveform is from full scale\n"
-              );
 #endif
+              );
     fprintf ( fp,
               "    --preset type   type must be \"medium\", \"standard\", \"extreme\", \"insane\",\n"
               "                    or a value for an average desired bitrate and depending\n"                       
