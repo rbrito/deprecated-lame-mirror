@@ -162,7 +162,9 @@ static const HUFFBITS      t33HB[]   = {
   7 << 1,  6 << 2,  5 << 2,  4 << 3,  3 << 2,  2 << 3,  1 << 3,  0 << 4};
 
 
-static const unsigned char t1l[] = {
+/*  t1l is not static, it is needed by i386/choose_table.nas
+ */
+const unsigned char t1l[] = {
  1,  4, 
  3,  5};
 
