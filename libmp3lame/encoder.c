@@ -222,7 +222,7 @@ init_gr_info(
 		    for (l = start; l < end; l++)
 			*ix++ = ixwork[3*l+window];
 		    cod_info->width [j] = end - start;
-		    cod_info->window[j] = 0;
+		    cod_info->window[j] = window;
 		    j++;
 		}
 	    }
