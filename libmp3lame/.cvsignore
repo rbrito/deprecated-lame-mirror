@@ -6,6 +6,7 @@ config.cache
 mp3x
 lame
 *.d
+*.lo
 Debug
 DebugGTK
 Release
