@@ -133,7 +133,7 @@
 typedef struct {
     int totbyte;        /* byte counter of bit stream */
     int bitidx;         /* pointer to top byte in buffer */
-    char buf[LAME_MAXMP3BUFFER];         /* bit stream buffer */
+    unsigned char buf[LAME_MAXMP3BUFFER];         /* bit stream buffer */
     /* mpeg1: buffer=511 bytes  smallest frame: 96-38(sideinfo)=58
      * max number of frames in reservoir:  8 
      * mpeg2: buffer=255 bytes.  smallest frame: 24-23bytes=1

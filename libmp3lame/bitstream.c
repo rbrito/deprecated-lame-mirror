@@ -274,12 +274,9 @@ static const short escHB[] = {
  1033,280,278,274, 267, 264, 259, 382, 378, 372, 367, 363, 360, 358,  356,  0,
    43, 20, 19, 17,  15,  13,  11,   9,   7,   6,   4,   7,   5,   3,    1,  3};
 
-/* copy data out of the internal MP3 bit buffer into a user supplied
-   unsigned char buffer.
-
-   mp3data=0      indicates data in buffer is an id3tags and VBR tags
-   mp3data=1      data is real mp3 frame data. 
-*/
+/*
+ * copy data out of the internal MP3 bit buffer into a user supplied buffer.
+ */
 static int
 copy_buffer(lame_t gfc, unsigned char *buffer, int size)
 {

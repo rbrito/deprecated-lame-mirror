@@ -685,8 +685,6 @@ inc_subblock_gain(gr_info * const gi, FLOAT distort[])
     return 0;
 }
 
-
-
 /*************************************************************************
  *
  *          amp_scalefac_bands() 
