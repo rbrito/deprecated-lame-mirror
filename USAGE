@@ -76,8 +76,8 @@ sh script:    auenc     Run auenc for instructions
 sh script:    mugeco.sh
 
 Windows scripts:
-lame4dos.bat
-Lame.vbs
+lame4dos.bat  
+Lame.vbs   (and an HTML frontend: LameGUI.html)
 
 
 =======================================================================

@@ -1,26 +1,40 @@
-' lame.vbs WindowsScript wrapper v0.2, 10/2000
+' lame.vbs WindowsScript wrapper v0.3, 10/2000
 '
 ' *Purpose*
 ' Use this WindowsScript to encode WAVs using drag&drop:
-' 0. make sure you have the latest windows script host on your system
-'    (enter 'cscript' in a DOS-Box, you should have version >=5.1)
-' 1. adjust the path settings below to fit your needs
-' 2. put this file somewhere on the desktop
-' 3. drag one or more wav-files on the icon and watch them being lamed.
+' 0.  make sure you have windows script host v2.0 on your system
+'     (enter 'cscript' in a DOS-Box, you should have version >=5.0)
+' 1.  adjust the path settings below to fit your needs
+' 2a. put this file somewhere on the desktop
+' 3a. drag one or more wav-files on the icon and watch them being lamed.
 '
+' 2b. start->execute, enter "sendto", drag the script or a link to it in
+'     sendto window
+' 3b. select wave-file(s) and send it via the send-to menu to lame!
 '
 ' feel free to extend this with a better user-interface ;-)
 '
 ' Ralf Kempkens, ralf.kempkens@epost.de
-
+'
+'
+' *History*
+' V0.3 * fixed bug that prevented lame.exe to be located in a path that 
+'        contained a space
+'      * experimental HTML UI support (disabled by default)
+' V0.2 added multiple file support
+' V0.1 initial release
 
 ' *** change path to your needs ***
-   
-    lame = "D:\Audio\Lame\" & "lame.exe"
+    path = "D:\Audio\Lame\"
+    lame = "lame.exe"
 
 ' *** change default options to your needs ***
-   
     opts = "--preset cd"
+
+' *** HTML GUI (experimental) ***
+    useGUI = False
+' it set to True, opens file lameGUI.html residing in the same path as lame.exe
+' to choose options. Please look at the HTML-file for further information.
 
 Dim wsh, args, infile, fs
 
@@ -34,23 +48,44 @@ End If
 
 ' check path
 Set fs = CreateObject("Scripting.FileSystemObject")
-If Not fs.FileExists(lame) Then
-  wsh.Popup "Could not find LAME!" & Chr(13) & "(looked for '" & lame & "')", , "Error", 16
+If Not fs.FileExists(path & lame) Then
+  wsh.Popup "Could not find LAME!" & vbCR & "(looked for '" & lame & "')", , "Error", 16
   WScript.Quit
 End If
 
+' start GUI
+if useGUI Then
+  set ie=WScript.CreateObject("InternetExplorer.Application", "ie_")
+  ie.navigate(path & "lameGUI.html")
+  do 
+    WScript.Sleep 100 
+  loop until ie.ReadyState=4 'wait for GUI
+
+  ie.Width=500
+  ie.Height=450
+  ie.Toolbar=false
+  ie.Statusbar=false
+  ie.visible=true
+
+  'link to GUI
+  set document=ie.document
+  document.forms.lameform.okbutton.onClick=GetRef("okbutton")
+
+  'wait for user pressing ok...
+  do 
+    WScript.Sleep 300 
+  loop until process
+end if
+
+'process files
 For i = 0 To args.Count-1
   infile = args(i)
-  outfile = Left(infile,Instr(infile,"."))
-  outfile = outfile & "mp3"
-
   ' check input file
   If Not fs.FileExists(infile) Then
-    wsh.Popup "Error opening input-file" & Chr(13) & "'" & infile & "'", , "Error", 16
+    wsh.Popup "Error opening input-file" & vbCR & "'" & infile & "'", , "Error", 16
   Else
     ' run lame
-    ret = wsh.Run(lame & """" & opts & " """ & infile & """ """ & outfile & """", 1, True)
-
+    ret = wsh.Run(CHR(34) & path & lame & CHR(34) & Chr(32) & opts & Chr(32) & Chr(34) & infile & Chr(34), 1, True)
 
     ' diagnostics
     Select Case ret
@@ -63,4 +98,20 @@ For i = 0 To args.Count-1
     End Select
   End If
 Next
+
+WScript.Quit
+
+' *******************************************************************
+' manage link to IE HTML-interface
+
+sub okbutton
+  'process inputs
+  opts=document.all.lameoptions.Value
+  ie.Quit
+  MsgBox "LAME options:" & vbCR & opts
+end sub
+
+sub ie_onQuit
+  process=True
+end sub
 'eof

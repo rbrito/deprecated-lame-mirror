@@ -1,0 +1,179 @@
+<html>
+<!-- LAME HTML GUI V0.1 for LAME.VBS by Ralf Kempkens (ralf.kempkens@epost.de)
+  -- 
+  -- purpose of this page is being a frontend for lame.vbs v0.3
+  -- it is launched from lame.vbs if useGUI in lame.vbs is set to 'True'
+  -- automatically
+  -- lame will then use the options chosen
+  --
+  -- TODO: add other options, especially ID3-tags, nicer layout...
+  -->
+<head>
+<meta http-equiv="Content-Type"
+content="text/html; charset=iso-8859-1">
+<meta name="GENERATOR" content="Microsoft FrontPage Express 2.0">
+<title>Lame</title>
+<script>
+  function updateOptions() {
+  var f=document.forms.lameform;
+  var opts="";
+  opts+=f.bitrate.options[f.bitrate.selectedIndex].value + " " + 
+        f.mode.value;
+
+    if (f.high_quality.checked)
+      opts+= " " + f.high_quality.value;
+    
+    if (f.fast.checked)
+      opts+=" "+f.fast.value;
+    
+    if (f.vbr.checked){
+      opts+=" "+f.vbr.value+ " " + f.vbr_quality.value + " " + f.max_bitrate.value;
+      if (f.enforce_min_bitrate.checked)
+         opts+= " " + f.enforce_min_bitrate.value;
+    }
+        
+    if (f.copyright.checked)
+      opts+=opts + " " + f.copyright.value;
+    
+    if (f.copy.checked)
+      opts+=opts + " " + f.copy.value;
+    
+    if (f.no_filters.checked)
+      opts+=opts + " " + f.no_filters.value;
+    
+    f.lameoptions.value=opts;;
+    return;
+  }
+</script>
+</head>
+
+<body bgcolor="#FFFFFF" topmargin="4" leftmargin="4">
+
+<form name="lameform" method="POST">
+    <input type="hidden" name="lameoptions" value="not processed">
+    <h1><font face="Arial">LAME Frontend</font></h1>
+    <table border="0">
+        <tr>
+            <td><font face="Arial"><strong>Fixed Bitrate</strong></font></td>
+            <td>&nbsp;</td>
+        </tr>
+        <tr>
+            <td><font face="Arial">bitrate (-b) <select
+            name="bitrate" size="1" onChange="updateOptions()">
+                <option value="-b 8">8 kbs</option>
+                <option value="-b 16">16 kbs</option>
+                <option value="-b 24">24 kbs</option>
+                <option value="-b 32">32 kbs</option>
+                <option value="-b 40">40 kbs</option>
+                <option value="-b 48">48 kbs</option>
+                <option value="-b 56">56 kbs</option>
+                <option value="-b 64">64 kbs</option>
+                <option value="-b 80">80 kbs</option>
+                <option value="-b 96">96 kbs</option>
+                <option selected value="-b 128">128 kbs</option>
+                <option value="-b 112">112 kbs</option>
+                <option value="-b 144">144 kbs</option>
+                <option value="-b 160">160 kbs</option>
+                <option value="-b 192">192 kbs</option>
+                <option value="-b 224">224 kbs</option>
+                <option value="-b 256">256 kbs</option>
+                <option value="-b 320">320 kbs</option>
+            </select></font></td>
+            <td><font face="Arial"><input type="checkbox" onChange="updateOptions()" checked
+            name="high_quality" value="-h">high quality (-h)</font></td>
+        </tr>
+        <tr>
+            <td>&nbsp;</td>
+            <td><font face="Arial"><input type="checkbox" onChange="updateOptions()"
+            name="fast" value="-f">fast (no noise shaping)</font></td>
+        </tr>
+        <tr>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+        </tr>
+        <tr>
+            <td><font face="Arial"><strong>Variable Bitrate</strong></font></td>
+            <td>&nbsp;</td>
+        </tr>
+        <tr>
+            <td><font face="Arial"><input type="checkbox"
+            name="vbr" value="-v" onChange="updateOptions()">variable bitrate (-v)</font></td>
+            <td><font face="Arial">VBR quality (-V) <select
+            name="vbr_quality" size="1" onChange="updateOptions()">
+                <option value="-V 0">0 (highest)</option>
+                <option value="-V 1">1</option>
+                <option value="-V 2">2</option>
+                <option value="-V 3">3</option>
+                <option value="-V 4">4</option>
+                <option selected value="-V 5">5</option>
+                <option value="-V 6">6</option>
+                <option value="-V 7">7</option>
+                <option value="-V 8">8</option>
+                <option value="-V 9">9 (lowest)</option>
+            </select></font></td>
+        </tr>
+        <tr>
+            <td><font face="Arial">maximum bitrate (-B) <select
+            name="max_bitrate" size="1" onChange="updateOptions()">
+                <option selected value>none</option>
+                <option value="-B 8">8 kbs</option>
+                <option value="-B 16">16 kbs</option>
+                <option value="-B 24">24 kbs</option>
+                <option value="-B 32">32 kbs</option>
+                <option value="-B 40">40 kbs</option>
+                <option value="-B 48">48 kbs</option>
+                <option value="-B 56">56 kbs</option>
+                <option value="-B 64">64 kbs</option>
+                <option value="-B 80">80 kbs</option>
+                <option value="-B 96">96 kbs</option>
+                <option value="-b 128">128 kbs</option>
+                <option value="-B 112">112 kbs</option>
+                <option value="-B 144">144 kbs</option>
+                <option value="-B 160">160 kbs</option>
+                <option value="-b 192">192 kbs</option>
+                <option value="-B 224">224 kbs</option>
+                <option value="-B 256">256 kbs</option>
+                <option value="-B 320">320 kbs</option>
+            </select></font></td>
+            <td><font face="Arial"><input type="checkbox"
+            name="enforce_min_bitrate" value="-F" onChange="updateOptions()">enforce min.
+            bitrate (-F)</font></td>
+        </tr>
+        <tr>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+        </tr>
+        <tr>
+            <td><font face="Arial"><strong>General</strong></font></td>
+            <td>&nbsp;</td>
+        </tr>
+        <tr>
+            <td><font face="Arial">mode (-m) <select name="mode"
+            size="1" onChange="updateOptions()">
+                <option value="-m m">mono</option>
+                <option value="-m s">stereo</option>
+                <option selected value="-m j">joint stereo</option>
+                <option value="-m f">mid/side stereo</option>
+            </select></font></td>
+            <td><font face="Arial"><input type="checkbox"
+            name="no_filters" value="-k" onChange="updateOptions()">disable all filters (-k)</font></td>
+        </tr>
+        <tr>
+            <td><font face="Arial"><input type="checkbox"
+            name="copyright" value="-c" onChange="updateOptions()">copyrighted (-c)</font></td>
+            <td><font face="Arial"><input type="checkbox"
+            name="copy" value="-o" onChange="updateOptions()">copy flag (-o)</font></td>
+        </tr>
+        <tr>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+        </tr>
+        <tr>
+            <td><font face="Arial"><input type="button"
+            name="okbutton" value="Start LAME"</font></td>
+            <td>&nbsp;</td>
+        </tr>
+    </table>
+</form>
+</body>
+</html>

@@ -23,16 +23,7 @@ and you need to set your own error message handlers:
    lame_set_debugf(gfp,error_handler_function);
    lame_set_msgf(gfp,error_handler_function);
   
-The default behavoir is equivilent to this:
-
-void  error_handler_function (const char* format, ... )
-{
-    va_list  args;
-    va_start ( args, format );
-    vfprintf ( stderr, format, args );
-    va_end   ( args );
-}
-
+See lame.h for details.
 
 
 3. Initialize the encoder.  sets default for all encoder parameters.
