@@ -176,7 +176,6 @@ brhist_init(lame_t gfp, const int bitrate_kbps_min, const int bitrate_kbps_max)
 
 #ifdef HAVE_TERMCAP
     /* try to catch additional information about special console sequences */
-    
     if ((term_name = getenv("TERM")) == NULL) {
 	fprintf(Console_IO.Error_fp,
 		"LAME: Can't get \"TERM\" environment string.\n");
@@ -448,7 +447,9 @@ brhist_disp(lame_t gfp)
         int     show = br_hist[i];
         show = show && (lines > 1);
         if (show || (i >= brhist.vbr_bitrate_min_index && i <= brhist.vbr_bitrate_max_index))
-            brhist_disp_line(i, br_hist[i], br_sm_hist[i][LR], most_often, frames);
+            brhist_disp_line(i, br_hist[i],
+			     br_sm_hist[i][LR]+br_sm_hist[i][LR+1],
+			     most_often, frames);
     }
 
     for (i = 0; i < 4; i++) {
