@@ -639,6 +639,11 @@ lame_init_params(lame_global_flags * const gfp)
     }
 
 
+    /*do not compute ReplayGain values if we can't store them*/
+    if (!gfp->bWriteVbrTag){
+        gfp->ReplayGain_input = 0;
+        gfp->ReplayGain_decode = 0;
+    }
 
 
     if (gfp->ReplayGain_input)
