@@ -60,12 +60,15 @@ AC_DEFUN(alex_IEEE854_FLOAT80,
 [AC_TRY_RUN([
 int   float2long_IEEE_compliance ( void )
 {
-    float  f;
-    f = 12582912.; if ( *(long*)(&f) != 1262485504l ) return 0;
-    f = 12615679.; if ( *(long*)(&f) != 1262518271l ) return 0;
-    f = 13582912.; if ( *(long*)(&f) != 1263485504l ) return 0;
-    f = 12550145.; if ( *(long*)(&f) != 1262452737l ) return 0;
-    f = 11582912.; if ( *(long*)(&f) != 1261485504l ) return 0;
+    struct {
+        long padding; /* to prevent unaligned access */
+        float  f;
+    } s;
+    s.f = 12582912.; if ( *(long*)(&s.f) != 1262485504l ) return 0;
+    s.f = 12615679.; if ( *(long*)(&s.f) != 1262518271l ) return 0;
+    s.f = 13582912.; if ( *(long*)(&s.f) != 1263485504l ) return 0;
+    s.f = 12550145.; if ( *(long*)(&s.f) != 1262452737l ) return 0;
+    s.f = 11582912.; if ( *(long*)(&s.f) != 1261485504l ) return 0;
     return 1;
 }
 
