@@ -37,7 +37,7 @@ SHARED_LIB_MAJOR = $(SHARED_LIB).@LIB_MAJOR_VERSION@
 SHARED_LIB_MINOR = $(SHARED_LIB_MAJOR).@LIB_MINOR_VERSION@
 
 # generic defaults. OS specific options go in versious sections below
-CPP_OPTS = @CPP_OPT@ -I../include -I. -I./mpglib
+CPP_OPTS = @CPP_OPT@ -I../include -I. -I../mpglib
 CC_OPTS = -O
 AR = ar
 RANLIB = @RANLIB@
@@ -309,20 +309,19 @@ lib_sources = \
 
 lib_obj = $(lib_sources:.c=.o) 
 
-mpglib_sources = mpglib/common.c \
-        mpglib/dct64_i386.c \
-        mpglib/decode_i386.c \
-        mpglib/layer1.c \
-        mpglib/layer2.c \
-        mpglib/layer3.c \
-        mpglib/tabinit.c \
-        mpglib/interface.c 
+mpglib_sources = ../mpglib/common.c \
+        ../mpglib/dct64_i386.c \
+        ../mpglib/decode_i386.c \
+        ../mpglib/layer1.c \
+        ../mpglib/layer2.c \
+        ../mpglib/layer3.c \
+        ../mpglib/tabinit.c \
+        ../mpglib/interface.c 
 mpglib_obj = $(mpglib_sources:.c=.o) 
 
 lib_obj += $(mpglib_obj)
 
-OBJ = $(c_sources:.c=.o)
-DEP = $(c_sources:.c=.d) $(lib_sources:.c=.d)
+DEP = $(mpglib_sources:.c=.d) $(lib_sources:.c=.d)
 
 
 
@@ -364,9 +363,8 @@ libmp3lame.so:  $(LIBS) $(lib_obj) Makefile
 
 
 clean:
-	-$(RM_F) $(OBJ) $(DEP) \
-         libmp3lame.a $(lib_obj) \
-         $(SHARED_LIB) $(SHARED_LIB_MAJOR) $(SHARED_LIB_MINOR)
+	-$(RM_F) $(lib_obj) $(DEP) \
+         libmp3lame.a $(SHARED_LIB) $(SHARED_LIB_MAJOR) $(SHARED_LIB_MINOR)
 
 
 bla:
