@@ -29219,11 +29219,19 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
 	;;
+powerpc)
+	# use internal knowledge of the IEEE 754 layout
+	CPUTYPE="no"
+
+
+cat >>confdefs.h <<\_ACEOF
+#define USE_IEEE754_HACK 1
+_ACEOF
+
+	;;
 *)
 	CPUTYPE="no"
 	;;
-# seems sparc/power pc cannot get any performance gain from IEEE754_HACK
-
 esac
 
 
@@ -29471,7 +29479,7 @@ if test "x$GCC" = "xyes"; then
 			;;
 		esac
 
-		OPTIMIZATION="-O ${OMIT_FRAME_POINTER} -ffast-math"
+		OPTIMIZATION="-O3 ${OMIT_FRAME_POINTER} -ffast-math"
 		OPTIMIZATION_FULL="-fmove-all-movables -freduce-all-givs \
 			-fbranch-count-reg -fforce-addr -fforce-mem"
 		;;
