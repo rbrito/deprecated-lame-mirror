@@ -383,8 +383,8 @@ typedef struct  {
 /* the second index is the "age" of the data.                             */
   FLOAT8	minval[CBANDS];
   FLOAT8	nb_1[4][CBANDS], nb_2[4][CBANDS];
-  FLOAT8 s3_s[CBANDS][CBANDS];
-  FLOAT8 s3_l[CBANDS][CBANDS];
+  FLOAT8  *s3_ss;
+  FLOAT8  *s3_ll;
 
   III_psy_xmin thm[4];
   III_psy_xmin en[4];
