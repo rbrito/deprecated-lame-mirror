@@ -253,7 +253,7 @@ int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip)
     double      wavsize;
     int         layer = 1;
     size_t      i;
-    CLINK void  (*WriteFunction) (FILE* fp, char *p, int n);
+    void        (*WriteFunction) (FILE* fp, char *p, int n);
 
     MSGF ( "\rinput:  %s%s(%g kHz, %i channel%s, ", 
            strcmp (gfp->inPath, "-")  ?  gfp->inPath  :  "<stdin>",

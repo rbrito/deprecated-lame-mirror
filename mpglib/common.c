@@ -48,7 +48,7 @@ static void get_II_stuff(struct frame *fr)
        { 0,3,3,0,0,0,1,1,1,1,1,1,1,1,1,0 } } };
 
   int table,sblim;
-  static struct al_table *tables[5] = 
+  static const struct al_table2 *tables[5] = 
        { alloc_0, alloc_1, alloc_2, alloc_3 , alloc_4 };
   static int sblims[5] = { 27 , 30 , 8, 12 , 30 };
 
