@@ -625,15 +625,18 @@ void best_huffman_divide(int gr, int ch, gr_info *gi, int *ix)
     }
 
     i = cod_info.big_values;
-    if (i == 0 || i == 576 || (unsigned int)(ix[i-2] | ix[i-1]) > 1)
+    if (i == 0 || (unsigned int)(ix[i-2] | ix[i-1]) > 1)
 	return;
 
-    memcpy(&cod_info, gi, sizeof(gr_info));
+    i = gi->count1 + 2;
+    if (i == 576)
+	return;
 
     /* Determines the number of bits to encode the quadruples. */
-    i = (cod_info.count1 += 2);
+    memcpy(&cod_info, gi, sizeof(gr_info));
+    cod_info.count1 = i;
     a1 = a2 = 0;
-    
+
     assert(i <= 576);
     
     for (; i > cod_info.big_values; i -= 4) {
