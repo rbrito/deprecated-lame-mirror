@@ -160,6 +160,7 @@ WriteShort(FILE * fp, short s)
 	short s;
 	char c[2];
     } sc;
+    sc.s = s;
     if (swapbytes) {
 	int l = sc.c[0];
 	sc.c[0] = sc.c[1];
