@@ -67,7 +67,7 @@ void putheader_bits(lame_internal_flags *gfc,int w_ptr)
 
 /*write j bits into the bit stream */
 static INLINE void
-putbits2(lame_global_flags *gfp, int val, int j)
+putbits(lame_global_flags *gfp, int val, int j)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     Bit_stream_struc *bs;
@@ -153,10 +153,10 @@ static INLINE void drain_into_ancillary ( lame_global_flags* gfp, int remainingB
     sprintf ( p = buffer, "LAME%s", get_lame_short_version () );
 
     for (; *p != '\0'  &&  remainingBits >= 8; p++, remainingBits -= 8 )
-        putbits2 ( gfp, *p, 8 );
+        putbits ( gfp, *p, 8 );
 
     for (; remainingBits >= 1; remainingBits -= 1 ) {
-        putbits2 ( gfp, gfc->ancillary_flag, 1 );
+        putbits ( gfp, gfc->ancillary_flag, 1 );
         gfc->ancillary_flag = 1 - gfc->ancillary_flag;
     }
 
@@ -179,19 +179,19 @@ drain_into_ancillary(lame_global_flags *gfp,int remainingBits)
 #endif
 
     if (remainingBits >= 8) {
-      putbits2(gfp,0x4c,8);
+      putbits(gfp,0x4c,8);
       remainingBits -= 8;
     }
     if (remainingBits >= 8) {
-      putbits2(gfp,0x41,8);
+      putbits(gfp,0x41,8);
       remainingBits -= 8;
     }
     if (remainingBits >= 8) {
-      putbits2(gfp,0x4d,8);
+      putbits(gfp,0x4d,8);
       remainingBits -= 8;
     }
     if (remainingBits >= 8) {
-      putbits2(gfp,0x45,8);
+      putbits(gfp,0x45,8);
       remainingBits -= 8;
     }
       
@@ -201,23 +201,23 @@ drain_into_ancillary(lame_global_flags *gfp,int remainingBits)
       if (remainingBits >= 32) 
 	for (i=0; i<(int)strlen(version) && remainingBits >=8 ; ++i) {
 	  remainingBits -= 8;
-	  putbits2(gfp,version[i],8);
+	  putbits(gfp,version[i],8);
 	}
     }
 
     /* drain the rest 16 bits at a time */
     bits = remainingBits & (16 - 1);
     for (i=0; i<bits; ++i) {
-      putbits2(gfp,gfc->ancillary_flag,1);
+      putbits(gfp,gfc->ancillary_flag,1);
       gfc->ancillary_flag = 1-gfc->ancillary_flag;
     }
 
     remainingBits /= 16;
     for (; remainingBits > 0; remainingBits--) {
       if (gfc->ancillary_flag)
-	putbits2(gfp,0xAAAA, 16);
+	putbits(gfp,0xAAAA, 16);
       else
-	putbits2(gfp,0x5555, 16);
+	putbits(gfp,0x5555, 16);
     }
 }
 
@@ -556,7 +556,7 @@ huffman_coder_count1(lame_global_flags *gfp,int *ix, gr_info *gi)
 	}
 
 	ix += 4;
-	putbits2(gfp,huffbits + h->table[p], h->hlen[p]);
+	putbits(gfp,huffbits + h->table[p], h->hlen[p]);
 	bits += h->hlen[p];
     }
 #ifdef DEBUG
@@ -645,8 +645,8 @@ HuffmanCode(lame_global_flags *gfp, int table_select, int x, int y)
     assert(cbits <= MAX_LENGTH);
     assert(xbits <= MAX_LENGTH);
 
-    putbits2(gfp,code, cbits);
-    putbits2(gfp, ext, xbits);
+    putbits(gfp,code, cbits);
+    putbits(gfp, ext, xbits);
     return cbits+xbits;
 }
 
@@ -748,9 +748,9 @@ writeMainData(lame_global_flags *gfp,
 			assert(scalefac[gr][ch].s[sfb][1]>=0);
 			assert(scalefac[gr][ch].s[sfb][2]>=0);
 
-			putbits2(gfp,scalefac[gr][ch].s[sfb][0], slen);
-			putbits2(gfp,scalefac[gr][ch].s[sfb][1], slen);
-			putbits2(gfp,scalefac[gr][ch].s[sfb][2], slen);
+			putbits(gfp,scalefac[gr][ch].s[sfb][0], slen);
+			putbits(gfp,scalefac[gr][ch].s[sfb][1], slen);
+			putbits(gfp,scalefac[gr][ch].s[sfb][2], slen);
 			scale_bits += 3*slen;
 		    }
 		    data_bits += ShortHuffmancodebits(gfp,l3_enc[gr][ch], gi);
@@ -765,7 +765,7 @@ writeMainData(lame_global_flags *gfp,
 			     sfb++) {
 
 			    assert(scalefac[gr][ch].l[sfb]>=0);
-			    putbits2(gfp,scalefac[gr][ch].l[sfb],
+			    putbits(gfp,scalefac[gr][ch].l[sfb],
 				    sfb < 11 ? slen1 : slen2);
 			    scale_bits += sfb < 11 ? slen1 : slen2;
 			}
@@ -800,9 +800,9 @@ writeMainData(lame_global_flags *gfp,
 		    int sfbs = gi->sfb_partition_table[sfb_partition] / 3;
 		    int slen = gi->slen[sfb_partition];
 		    for (i = 0; i < sfbs; i++, sfb++) {
-			putbits2(gfp,Max(scalefac[gr][ch].s[sfb][0], 0U), slen);
-			putbits2(gfp,Max(scalefac[gr][ch].s[sfb][1], 0U), slen);
-			putbits2(gfp,Max(scalefac[gr][ch].s[sfb][2], 0U), slen);
+			putbits(gfp,Max(scalefac[gr][ch].s[sfb][0], 0U), slen);
+			putbits(gfp,Max(scalefac[gr][ch].s[sfb][1], 0U), slen);
+			putbits(gfp,Max(scalefac[gr][ch].s[sfb][2], 0U), slen);
 			scale_bits += 3*slen;
 		    }
 		}
@@ -812,7 +812,7 @@ writeMainData(lame_global_flags *gfp,
 		    int sfbs = gi->sfb_partition_table[sfb_partition];
 		    int slen = gi->slen[sfb_partition];
 		    for (i = 0; i < sfbs; i++, sfb++) {
-			putbits2(gfp,Max(scalefac[gr][ch].l[sfb], 0U), slen);
+			putbits(gfp,Max(scalefac[gr][ch].l[sfb], 0U), slen);
 			scale_bits += slen;
 		    }
 		}
