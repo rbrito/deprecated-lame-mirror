@@ -1862,7 +1862,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 
         fprintf(stderr, "\nError: input cannot be MPEG when --clipdetect is used\n"
 	    	        "\n--clipdetect requires decoding of MPEG *output* on the fly which\n"
-			"cannot be performed simultaneously with decoding of MPEG *input*.\n"
+			"cannot be performed simultaneously with decoding MPEG *input*.\n"
 			"\nUse a plain .wav file as input with --clipdetect.\n");
 
 	return -1;
