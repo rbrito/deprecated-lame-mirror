@@ -41,6 +41,18 @@
 #include "util.h"
 #include "fft.h"
 
+typedef void (*FHT_PROC)(FLOAT *fz, int n);
+
+static FHT_PROC fht;
+
+#define ARCH_X86
+ 
+#ifdef ARCH_X86
+void _cdecl fht_3DN(FLOAT *fz, int n);
+void _cdecl fht_SSE(FLOAT *fz, int n);
+void _cdecl fht_FPU(FLOAT *fz, int n);
+#endif
+
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
 #endif
@@ -55,7 +67,7 @@ static const FLOAT costab[TRI_SIZE*2] = {
   9.999811752826011e-01, 6.135884649154475e-03
 };
 
-inline static void fht(FLOAT *fz, int n)
+static void fht_c(FLOAT *fz, int n)
 {
     const FLOAT *tri = costab;
     int           k4;
@@ -286,4 +298,21 @@ void init_fft(lame_internal_flags * const gfc)
 
     for (i = 0; i < BLKSIZE_s/2 ; i++)
 	window_s[i] = 0.5 * (1.0 - cos(2.0 * PI * (i + 0.5) / BLKSIZE_s));
+
+#ifdef ARCH_X86
+	if (gfc->CPU_features.AMD_3DNow) {
+		fht = fht_3DN;
+	} else if (gfc->CPU_features.SIMD) {
+		fht = fht_SSE;
+	} else if (gfc->CPU_features.i387) {
+		fht = fht_FPU;
+	} else {
+#endif
+
+	fht = fht_c;
+
+#ifdef ARCH_X86
+	}
+#endif
+
 }
