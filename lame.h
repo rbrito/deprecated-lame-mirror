@@ -154,7 +154,6 @@ typedef struct  {
   int use_best_huffman;     /* 0 = no.  1=outside loop  2=inside loop(slow) */
 
 
-
 } lame_global_flags;
 
 

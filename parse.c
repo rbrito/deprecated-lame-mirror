@@ -81,6 +81,7 @@ void lame_help(char *name)  /* print syntax & exit */
   fprintf(stdout,"    -h              higher quality, but a little slower\n");
   fprintf(stdout,"    -f              fast mode (very low quality)\n");
   fprintf(stdout,"    -d              allow channels to have different blocktypes\n");
+  fprintf(stdout,"    -S              don't print progress report, VBR histograms\n");
   fprintf(stdout,"    --athonly       only use the ATH for masking\n");
   fprintf(stdout,"    --noath         disable the ATH for masking\n");
   fprintf(stdout,"    --noshort       do not use short blocks\n");
@@ -95,7 +96,6 @@ void lame_help(char *name)  /* print syntax & exit */
   fprintf(stdout,"    -b bitrate      specify minimum allowed bitrate, default 32kbs\n");
   fprintf(stdout,"    -B bitrate      specify maximum allowed bitrate, default 256kbs\n");
   fprintf(stdout,"    -t              disable Xing VBR informational tag\n");
-  fprintf(stdout,"    -S              don't print progress report, VBR histograms\n");
   fprintf(stdout,"    --nohist        disable VBR histogram display\n");
   fprintf(stdout,"\n");
   fprintf(stdout,"  MP3 header/stream options:\n");

@@ -733,7 +733,6 @@ void best_scalefac_store(int gr, int ch,
 	== l3_side->gr[1].ch[ch].tt.scalefac_scale
 	&& l3_side->gr[0].ch[ch].tt.preflag
 	== l3_side->gr[1].ch[ch].tt.preflag) {
-
       	scfsi_calc(ch, l3_side, scalefac);
     }
     gi->part2_3_length += gi->part2_length;

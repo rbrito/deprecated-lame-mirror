@@ -22,8 +22,8 @@ total:    512+16
 
    Minimum allowed is MDCTDELAY (see below)
    
-   The first 288 samples will be attenuated, so using a value
-   less than 288 will result in lost data in the first 288-ENCDELAY
+   The first 96 samples will be attenuated, so using a value
+   less than 96 will result in lost data in the first 96-ENCDELAY
    samples. 
 
    suggested: 800

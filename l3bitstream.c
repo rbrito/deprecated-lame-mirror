@@ -465,7 +465,7 @@ drain_into_ancillary_data( int lengthInBits )
     /*
       userFrameDataPH->part->nrEntries set by call to write_ancillary_data()
     */
-
+    
     userFrameDataPH->part->nrEntries = 0;
     for ( i = 0; i < wordsToSend; i++ )
 	userFrameDataPH = BF_addEntry( userFrameDataPH, 0, 32 );

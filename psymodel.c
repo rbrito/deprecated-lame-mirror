@@ -682,27 +682,6 @@ void L3psycho_anal( short int *buffer[2],int gr_out ,
 	  }
       }
 
-    /*************************************************************** 
-     * compute masking thresholds for both short and long blocks
-     ***************************************************************/
-    /* threshold calculation (part 2) */
-    for ( sb = 0; sb < SBPSY_l; sb++ )
-      {
-	FLOAT8 enn = w1_l[sb] * eb[bu_l[sb]] + w2_l[sb] * eb[bo_l[sb]];
-	FLOAT8 thmm = w1_l[sb] *thr[bu_l[sb]] + w2_l[sb] * thr[bo_l[sb]];
-	for ( b = bu_l[sb]+1; b < bo_l[sb]; b++ )
-	  {
-	    enn  += eb[b];
-	    thmm += thr[b];
-	  }
-	en[chn].l[sb] = enn;
-	thm[chn].l[sb] = thmm;
-      }
-
-
-    
-    
-    
 
 #ifdef HAVEGTK
     if (gf.gtkflag) {
@@ -725,7 +704,6 @@ void L3psycho_anal( short int *buffer[2],int gr_out ,
       pe_save[chn]=pe[chn];
     }
 #endif
-    
     
     /*************************************************************** 
      * determine the block type (window type) based on L & R channels
@@ -765,6 +743,25 @@ void L3psycho_anal( short int *buffer[2],int gr_out ,
 	} 
       }
     }
+
+
+
+    /*************************************************************** 
+     * compute masking thresholds for both short and long blocks
+     ***************************************************************/
+    /* longblock threshold calculation (part 2) */
+    for ( sb = 0; sb < SBPSY_l; sb++ )
+      {
+	FLOAT8 enn = w1_l[sb] * eb[bu_l[sb]] + w2_l[sb] * eb[bo_l[sb]];
+	FLOAT8 thmm = w1_l[sb] *thr[bu_l[sb]] + w2_l[sb] * thr[bo_l[sb]];
+	for ( b = bu_l[sb]+1; b < bo_l[sb]; b++ )
+	  {
+	    enn  += eb[b];
+	    thmm += thr[b];
+	  }
+	en[chn].l[sb] = enn;
+	thm[chn].l[sb] = thmm;
+      }
     
     
     /* threshold calculation for short blocks */
