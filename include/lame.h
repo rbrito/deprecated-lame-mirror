@@ -179,6 +179,15 @@ lame_global_flags *lame_init(void);
 int lame_init_old(lame_global_flags *);
 
 
+/* optional.  set as needed to override defaults */
+/* note: these routines not yet written: */
+
+/* set one of these.  default is compression ratio of 11.  */
+lame_set_brate(lame_global_flags *, int);
+lame_set_compression_ratio(lame_global_flags *, int);
+
+
+
 /* REQUIRED:  sets more internal configuration based on data provided
  * above.  returns -1 if something failed.
  */
@@ -292,14 +301,15 @@ by LAME because the output is not a regular file, this call does nothing
 void lame_mp3_tags_fid(lame_global_flags *,FILE* fid);
 
 
+/* REQUIRED:  final call to free all remaining buffers */
+void lame_close(lame_global_flags *);
+
 /* OBSOLETE:  lame_encode_finish combines lame_encode_flush
  * and lame_close in one call.  However, once this call is made,
  * the statistics routines will no longer function since there 
  * data will have been cleared */
 int lame_encode_finish(lame_global_flags *,char *mp3buffer, int size);
 
-/* REQUIRED:  final call to free all remaining buffers */
-void lame_close(lame_global_flags *);
 
 
 
@@ -441,6 +451,15 @@ extern int id3tag_set_genre(lame_global_flags *gfp, const char *genre);
  *
  *  May be someone finds a better place for this without adding this code
  *  to every front-end.
+ *
+ *  Frank: lame_set_stream_binary_mode only needs to be called under
+ *  windows and OS/2.  
+ *  lame_get_file_size is just stat(), except on riscos.
+ *
+ *  Two special cases means that this is NOT code that will appear
+ *  in every front end.  Other than 'lame', most frontends are OS
+ *  specific and thus do not need these calls.
+ *
  */
 
 extern int    lame_set_stream_binary_mode ( FILE* const fp );
