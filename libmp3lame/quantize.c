@@ -397,32 +397,32 @@ quant_compare(
         case 2: 
 	    better = calc->tot_noise < best->tot_noise; 
 	    break;
-        case 3: 
-		better = ( calc->tot_noise <
-			   (gfc->presetTune.use &&
-			    gi->block_type != NORM_TYPE ? (best->tot_noise - gfc->presetTune.quantcomp_adjust_rh_tot)
-			    :  best->tot_noise ) &&
-                   calc->max_noise <
-			   (gfc->presetTune.use &&
-			    gi->block_type != NORM_TYPE ? (best->max_noise - gfc->presetTune.quantcomp_adjust_rh_max*0.1)
-			    :  best->max_noise ));
+        case 3:
+	    better = ( calc->tot_noise <
+		       (gfc->presetTune.use &&
+			gi->block_type != NORM_TYPE ? (best->tot_noise - gfc->presetTune.quantcomp_adjust_rh_tot)
+			:  best->tot_noise ) &&
+		       calc->max_noise <
+		       (gfc->presetTune.use && gi->block_type != NORM_TYPE
+			? best->max_noise - gfc->presetTune.quantcomp_adjust_rh_max
+			:  best->max_noise ));
 	    break;
         case 4: 
-	    better = ( calc->max_noise <= 0  &&
+	    better = ( calc->max_noise <= 0.0  &&
                        best->max_noise >  0.2 )
-                 ||  ( calc->max_noise <= 0  &&
-                       best->max_noise <  0  &&
+                 ||  ( calc->max_noise <= 0.0  &&
+                       best->max_noise <  0.0  &&
                        best->max_noise >  calc->max_noise-0.2  &&
                        calc->tot_noise <  best->tot_noise )
-                 ||  ( calc->max_noise <= 0  &&
-                       best->max_noise >  0  &&
+                 ||  ( calc->max_noise <= 0.0  &&
+                       best->max_noise >  0.0  &&
                        best->max_noise >  calc->max_noise-0.2  &&
                        calc->tot_noise <  best->tot_noise+best->over_noise )
-                 ||  ( calc->max_noise >  0  &&
+                 ||  ( calc->max_noise >  0.0  &&
                        best->max_noise > -0.05  &&
                        best->max_noise >  calc->max_noise-0.1  &&
                        calc->tot_noise+calc->over_noise < best->tot_noise+best->over_noise )
-                 ||  ( calc->max_noise >  0  &&
+                 ||  ( calc->max_noise >  0.0  &&
                        best->max_noise > -0.1  &&
                        best->max_noise >  calc->max_noise-0.15  &&
                        calc->tot_noise+calc->over_noise+calc->over_noise < best->tot_noise+best->over_noise+best->over_noise );

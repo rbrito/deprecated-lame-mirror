@@ -1542,8 +1542,8 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
           }
           else {
              lame_set_experimentalX(gfp, 3);
-             gfc->presetTune.quantcomp_adjust_rh_tot = 600;
-			 gfc->presetTune.quantcomp_adjust_rh_max = 60;
+             gfc->presetTune.quantcomp_adjust_rh_tot = 60;
+			 gfc->presetTune.quantcomp_adjust_rh_max = 6;
              gfc->presetTune.quantcomp_type_s = 3;
              gfc->presetTune.quantcomp_alt_type = 1;
           }
@@ -1576,8 +1576,8 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
           }
           else {
              gfc->presetTune.quantcomp_type_s = 3;
-             gfc->presetTune.quantcomp_adjust_rh_tot = 600;
-			 gfc->presetTune.quantcomp_adjust_rh_max = 60;
+             gfc->presetTune.quantcomp_adjust_rh_tot = 60;
+			 gfc->presetTune.quantcomp_adjust_rh_max = 6;
              (void) lame_set_ATHlower( gfp, -1 );
           }
 

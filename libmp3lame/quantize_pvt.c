@@ -637,7 +637,6 @@ int  calc_noise(
 	    noise += temp * temp;
 	} while (--l > 0);
 	noise = *distort++ = noise / *l3_xmin++;
-	max_noise=Max(max_noise,noise);
 
 	noise = log10(Max(noise,1E-20));
 	/* multiplying here is adding in dB, but can overflow */
@@ -650,12 +649,13 @@ int  calc_noise(
 	    //over_noise *= noise;
 	    over_noise_db += noise;
 	}
+	max_noise=Max(max_noise,noise);
     }
 
     res->over_count = over;
     res->tot_noise   = tot_noise_db;
     res->over_noise  = over_noise_db;
-    res->max_noise   = log10(max_noise);
+    res->max_noise   = max_noise;
 
     return over;
 }
