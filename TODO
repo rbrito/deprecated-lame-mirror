@@ -1,8 +1,12 @@
 encoding core:
 1.
-Better VBR code. LAME4's VBR is based on vbr-new. It assumes
-the noise is monotone function of the scalefactor, but it is not true.
-It occasionary makes sound very bad.
+tuning lowpass with fixed SFB21 oddness code.
+Old LAME (3.x) has bugs in sfb21 handling code and it decrease quality
+over 16kHz region. So the lowpass values are adjusted to conceal the bug.
+
+Now the bug is almost removed. We need re-tuning the lowpass values for
+new LAME.
+
 
 
 2. New Xing VBR header is incompable with MS Media Player.  but works
@@ -21,16 +25,19 @@ scfsi, no scalefact_scale, and so on.
 
 
 5.
-Better intensity stereo. This is a must-have for low bitrates, but if the
-algorythm is very good it could also be used in every case.
+Better intensity stereo. Currently LAME4 only supports it when
+MPEG1 Layer3, CBR or ABR (it does not when MPEG2 and VBR mode).
+
 Note: mpg123 (and all derivatives, like xmms and lame/mpglib)
 have bugs in the intensity stereo decoding.  Bugs have been there
 for years since there are very few intensity stereo mp3's out there.
+
 
 6. 
 LAME has a 31 point FIR filter used for resampling, which
 can also be used as a lowpass.  When resampling is done, 
 use that filter to also lowpass instead of the polyphase filter.
+
 
 7.
 Even when resampling is not needed, should we use an FIR filter
@@ -38,14 +45,16 @@ for the lowpass?  If it is not too much slower, yes.  If it
 is slower, then it should be an option since it will produce
 higher quality.  
 
+
 8.
-We should consider moving the experts options from the *long
-help* text into an *experts only* help text. The average Joe gets
-knocked down by the huge number of possibilities to setup lame.
+Threshold calculation on short blocks. LAME4's block switching is
+better than LAME3, but threshold calculation is not. It does not
+support temporal masking, and so on.
+
 
 9.
-Clipping detection: This could be done by decoding on the fly
-and adjusting the replay gain flag of the INFO tag.
+Clipping detection and replaygain tag:
+LAME 3.x supports this, but LAME4 does not.
 
 
 10.
@@ -60,7 +69,7 @@ fault.  Workaround in place for now:  resampling disabled if
 input/output samplerates agree to 4 digits.
 
 I plan to replace the resampling code of ssrc (Shibatch sampling rate
-conv.) and solve this problem.
+conv.) and solve this problem. (takehiro)
 
 
 
@@ -81,10 +90,8 @@ and lowpass are way too low for very low bitrates (less than 50kbps)
 
 50.
 Better tonality estimation.
-Gpsycho uses predictability, and so needs a delay to detect the tonality
-of a sound.
 Nspsytune seems to miss tonals when several of them are too narrow.
-We would probably need the best of both.
+maybe nspsy2 based model will solve it.
 
 
 
@@ -153,7 +160,10 @@ Does stdin work when LAME is compiled to use libsndfile?
 Code is a complete mess. But it has so many debugged features it will
 be a lot of work to re-write.
 
-
+8.
+We should consider moving the experts options from the *long
+help* text into an *experts only* help text. The average Joe gets
+knocked down by the huge number of possibilities to setup lame.
 
 999.
 It would be nice to save some information whilst encoding when
