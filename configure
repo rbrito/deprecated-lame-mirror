@@ -28945,8 +28945,11 @@ if test "x$GCC" = "xyes"; then
 	*86)
 		case "${GCC_version}" in
 		3.*)
-			OPTIMIZATION="${OPTIMIZATION} \
-				-maccumulate-outgoing-args"
+			if test -x /bin/uname; then
+				/bin/uname -a | grep i686 > /dev/null 2>&1 && \
+				OPTIMIZATION="${OPTIMIZATION} \
+						-mcpu=pentiumpro"
+			fi
 			;;
 		esac
 		;;
