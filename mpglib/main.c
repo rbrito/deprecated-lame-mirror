@@ -73,9 +73,12 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
   aid_header = check_aid(buf);
   if (aid_header) {
     if (fread(&buf,1,2,fd) == 0) return -1;  /* failed */
-    aid_header = buf[0] + 256*buf[1];
-    fprintf(stderr,"Album ID found.  length=%i\n",aid_header);
-    fskip(fd,aid_header,1);
+    aid_header = (unsigned char) buf[0] + 256*(unsigned char)buf[1];
+    fprintf(stderr,"Album ID found.  length=%i \n",aid_header);
+    /* skip rest of AID, except for 6 bytes we have already read */
+    fskip(fd,aid_header-6,1);
+
+    /* read 2 more bytes to set up buffer for MP3 header check */
     if (fread(&buf,1,2,fd) == 0) return -1;  /* failed */
     len =2;
   }
