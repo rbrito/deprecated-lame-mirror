@@ -241,10 +241,10 @@ int choose_table_nonMMX(
 	return max;
 
     case 1:
-    case 2:
     case 3:
 	return count_bit_noESC_from2(ix, end, huf_tbl_noESC[max - 1], s);
 
+    case 2:
     case 4: case 5: case 6:
     case 7: case 8: case 9:
     case 10: case 11: case 12:

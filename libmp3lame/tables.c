@@ -295,19 +295,24 @@ static const  char t3l[] = { /* can use when max=1 */
  4,  4,  7, 
  6,  7,  8};
 
+static const  char t4_6l[] = { /* this is actually a table 6 */
+ 3,  4,  6,
+ 4,  4,  6,
+ 5,  6,  7};
+
 static const  char t5l[] = {
  1,  4,  7,  8, 
  4,  5,  8,  9, 
  7,  8,  9, 10, 
  8,  8,  9, 10};
 
-static const  char t6l[] = { /* can use when max=2 */
+static const  char t6l[] = {
  3,  4,  6,  8,
  4,  4,  6,  7,
  5,  6,  7,  8,
  7,  7,  8,  9};
 
-static const  char t7l[] = {
+static const  char t7l[] = { /* can use when max=3, but really rare... */
  1,  4,  7,  9,  9, 10,
  4,  6,  8,  9,  9, 10,
  7,  7,  9, 10, 10, 11,
@@ -323,7 +328,7 @@ static const  char t8l[] = {
  9,  9, 10, 11, 12, 12,
 10, 10, 11, 11, 13, 13};
 
-static const  char t9l[] = { /* can use as max=3 */
+static const  char t9l[] = { /* can use when max=3, but really rare... */
  3,  4,  6,  7,  9, 10,
  4,  5,  6,  7,  8, 10,
  5,  6,  7,  8,  9, 10,
@@ -397,7 +402,7 @@ static const  char t15l[] = {
 13, 13, 13, 13, 13, 13, 13, 13, 14, 14, 14, 14, 15, 15, 14, 15,
 13, 13, 13, 13, 13, 13, 13, 14, 14, 14, 14, 14, 15, 15, 15, 15};
 
-static const  char t16_5l[] = {
+static const  char t16_5l[] = { /* this is actually table 16 without escape */
  1,  5,  7,  9, 10, 10, 11, 11, 12, 12, 12, 13, 13, 13, 14, 11,
  4,  6,  8,  9, 10, 11, 11, 11, 12, 12, 12, 13, 14, 13, 14, 11,
  7,  8,  9, 10, 11, 11, 12, 12, 13, 12, 13, 13, 13, 14, 14, 12,
@@ -472,17 +477,22 @@ const struct huffcodetab ht[] = {
   /* xlen, linmax, table, hlen */
   { 0,   0,NULL,NULL},
   { 2,   0,t1HB, t1l},
+
   { 3,   0,t2HB, t2l},
   { 3,   0,t3HB, t3l},
-  { 0,   0,NULL,NULL},/* Apparently not used */
+  { 0,   0,NULL, t4_6l},/* Apparently not used */
+
   { 4,   0,t5HB, t5l},
   { 4,   0,t6HB, t6l},
+
   { 6,   0,t7HB, t7l},
   { 6,   0,t8HB, t8l},
   { 6,   0,t9HB, t9l},
+
   { 8,   0,t10HB, t10l},
   { 8,   0,t11HB, t11l},
   { 8,   0,t12HB, t12l},
+
   {16,   0,t13HB, t13l},
   { 0,   0,NULL,  t16_5l},/* Apparently not used */
   {16,   0,t15HB, t15l},
