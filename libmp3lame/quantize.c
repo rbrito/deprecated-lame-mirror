@@ -958,17 +958,16 @@ outer_loop (
     }
     while (cod_info_w.global_gain < 255u);
 
+    assert (cod_info->global_gain < 256);
+
     /*  finish up
      */
     if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh)
 	/* restore for reuse on next try */
 	memcpy(xrpow, save_xrpow, sizeof(FLOAT8)*576);
-
-    assert (cod_info->global_gain < 256);
-
     /*  do the 'substep shaping'
      */
-    if (!gfp->VBR && (gfc->substep_shaping & 1))
+    else if (gfc->substep_shaping & 1)
 	trancate_smallspectrums(gfc, cod_info, l3_xmin, xrpow);
 
     return best_noise_info.over_count;
@@ -1511,6 +1510,8 @@ calc_target_bits (
     *analog_silence_bits = mean_bits / (gfc->mode_gr * gfc->channels_out);
 
     mean_bits  = gfp->VBR_mean_bitrate_kbps * gfp->framesize * 1000;
+    if (gfc->substep_shaping & 1)
+	mean_bits *= 1.09;
     mean_bits /= gfp->out_samplerate;
     mean_bits -= gfc->sideinfo_len*8;
     mean_bits /= (gfc->mode_gr * gfc->channels_out);
