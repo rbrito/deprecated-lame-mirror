@@ -25,9 +25,7 @@
 
 #if (defined LIBSNDFILE || defined LAMESNDFILE)
 
-
-
-void CloseSndFile(sound_file_format, FILE *);
+void CloseSndFile(sound_file_format input, FILE *musicin);
 FILE * OpenSndFile(lame_global_flags *gfp);
 
 int get_audio(lame_global_flags *gfp,short buffer[2][1152],int stereo);
@@ -35,15 +33,12 @@ int get_audio(lame_global_flags *gfp,short buffer[2][1152],int stereo);
 
 
 #ifdef LIBSNDFILE
+
 /* INCLUDE the sound library header file */
-#ifdef _MSC_VER
-	/* one byte alignment for WIN32 platforms */
-	#pragma pack(push,1)
-	#include "./libsndfile/src/sndfile.h"
-	#pragma pack(pop,1)
-#else
-	#include "sndfile.h"
-#endif
+/* (you should have this in your system includes, or alternatively in project dir) */
+#include "sndfile.h"
+/* One byte alignment for WIN32 should already be part of sndfile.h, */
+/* so no longer needed here (if not, get newer libsndfile) */
 
 
 #else
