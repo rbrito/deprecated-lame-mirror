@@ -219,14 +219,14 @@ static int setOS2Priority(int Priority)
 
 /************************************************************************
 *
-* license
+* license/version
 *
 * PURPOSE:  Writes version and license to the file specified by fp
 *
 ************************************************************************/
 
 void
-lame_version_print(FILE* const fp)
+print_version (FILE* const fp)
 {
     fprintf(fp, "LAME version %s (%s)\n\n",
 	    get_lame_version (), get_lame_url ());

@@ -565,7 +565,7 @@ main(int argc, char **argv)
     argc = ccommand(&argv);
 #endif
 
-    lame_version_print (stdout);
+    print_version (stdout);
 
 #ifdef __EMX__
     /* This gives wildcard expansion on Non-POSIX shells with OS/2 */

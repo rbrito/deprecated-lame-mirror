@@ -43,7 +43,7 @@ int main(int argc, char **argv)
   int ret;
   extern plotting_data Pinfo[];
 
-  lame_version_print (stdout);
+  print_version (stdout);
   gf=lame_init();
   if(argc <=1 ) {
     usage(stderr, argv[0]);  /* no command-line args  */

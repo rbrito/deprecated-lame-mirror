@@ -57,4 +57,4 @@ extern int decode_only;
 #define         Min(A, B)       ((A) < (B) ? (A) : (B))
 #define         Max(A, B)       ((A) > (B) ? (A) : (B))
 
-extern void lame_version_print ( FILE* const fp );
+extern void print_version ( FILE* const fp );
