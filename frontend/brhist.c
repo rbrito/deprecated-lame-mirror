@@ -72,6 +72,7 @@ char *strchr (), *strrchr ();
 #include <dmalloc.h>
 #endif
 
+
 /* Structure holding all data related to the Console I/O 
  * may be this should be a more global frontend structure. So it
  * makes sense to print all files instead with
@@ -87,6 +88,8 @@ static struct {
     int     hist_printed_lines;
     char    bar_asterisk [512 + 1];	/* buffer filled up with a lot of '*' to print a bar     */
     char    bar_percent  [512 + 1];	/* buffer filled up with a lot of '%' to print a bar     */
+    char    bar_coded    [512 + 1];	/* buffer filled up with a lot of ' ' to print a bar     */
+    char    bar_space    [512 + 1];	/* buffer filled up with a lot of ' ' to print a bar     */
 } brhist;
 
 static int calculate_index ( const int* const array, const int len, const int value )
@@ -126,6 +129,7 @@ int  brhist_init ( const lame_global_flags* gf, const int bitrate_kbps_min, cons
 
     strcpy ( Console_IO.str_up, "\033[A" );
     
+#ifndef RH_HIST    
     /* some internal checks */
     if ( bitrate_kbps_min > bitrate_kbps_max ) {
 	fprintf ( Console_IO.Error_fp, "lame internal error: VBR min %d kbps > VBR max %d kbps.\n", bitrate_kbps_min, bitrate_kbps_max );
@@ -135,6 +139,7 @@ int  brhist_init ( const lame_global_flags* gf, const int bitrate_kbps_min, cons
 	fprintf ( Console_IO.Error_fp, "lame internal error: VBR min %d kbps or VBR max %d kbps out of range.\n", bitrate_kbps_min, bitrate_kbps_max );
 	return -1;
     }
+#endif 
 
     /* initialize histogramming data structure */
     lame_bitrate_kbps ( gf, brhist.kbps );
@@ -149,6 +154,8 @@ int  brhist_init ( const lame_global_flags* gf, const int bitrate_kbps_min, cons
 
     memset (brhist.bar_asterisk, '*', sizeof (brhist.bar_asterisk)-1 );
     memset (brhist.bar_percent , '%', sizeof (brhist.bar_percent) -1 );
+    memset (brhist.bar_space   , '#', sizeof (brhist.bar_space)   -1 );
+    memset (brhist.bar_coded   , '-', sizeof (brhist.bar_space)   -1 );
 
 #ifdef HAVE_TERMCAP
     /* try to catch additional information about special console sequences */
@@ -260,33 +267,147 @@ static void  brhist_disp_line ( const lame_global_flags*  gf, int i, int br_hist
 }
 
 
+#ifdef RH_HIST
+static void  progress_line ( const lame_global_flags* gf, int full, int frames )
+{
+    char    cur[] = "<\0";
+    int     barlen_TOT = 0, barlen_COD = 0, barlen_RST = 0;
+    int     res = 1; /* BRHIST_RES */
+
+    if ( full < frames ) full = frames;
+    if ( frames > full ) {
+        frames = full;
+    }
+    if ( full != 0 ) {
+        /* some problems when br_hist_TOT \approx br_hist_LR: You can't see that there are still MS frames */
+        barlen_TOT = (full * (Console_IO.disp_width-res) + full-1 ) / full;  /* round up */
+        barlen_COD = (frames  * (Console_IO.disp_width-res) + full-1 ) / full;  /* round up */
+        barlen_RST = barlen_TOT-barlen_COD;
+        if (barlen_RST == 0) {
+            cur[0] = brhist.bar_coded[0];
+        }
+    } else {
+        barlen_TOT = barlen_COD = barlen_RST = 0;
+        cur[0] = 0;
+    }
+    if ( Console_IO.str_clreoln [0] ) {/* ClearEndOfLine available */
+        fprintf ( Console_IO.Console_fp, "\n%.*s%s%.*s%s", 
+                  barlen_COD, brhist.bar_coded,
+                  cur, 
+                  barlen_RST, brhist.bar_space, 
+		  Console_IO.str_clreoln );
+    }
+    else {
+        fprintf ( Console_IO.Console_fp, "\n%.*s%s%.*s%*s", 
+                  barlen_COD, brhist.bar_coded,
+                  cur, 
+                  barlen_RST, brhist.bar_space, 
+		  Console_IO.disp_width - BRHIST_RES - barlen_TOT, "" );
+	}	  
+    brhist.hist_printed_lines++;
+}
+
+
+static void  stats_line ( const lame_global_flags* gf, double* stat )
+{
+    char* h = "\n   kbps       mono   LR    MS    IS  %%     long switch short mixed %%";
+    char* f = "\n  %5.1f      %5.1f %5.1f %5.1f %5.1f       %5.1f %5.1f %5.1f %5.1f  ";
+
+    fprintf ( Console_IO.Console_fp, h );
+    brhist.hist_printed_lines++;
+    if ( Console_IO.str_clreoln [0] ) /* ClearEndOfLine available */
+        fprintf ( Console_IO.Console_fp, f, 
+	              stat[0], 
+	              stat[8], 
+                  stat[1],
+                  stat[2],
+                  0.,
+                  stat[3],
+                  stat[4]+stat[6],
+                  stat[5],
+                  stat[7],
+		  Console_IO.str_clreoln );
+    else
+        fprintf ( Console_IO.Console_fp, f, 
+	              stat[0], 
+	              stat[8], 
+                  stat[1],
+                  stat[2],
+                  0.,
+                  stat[3],
+                  stat[4]+stat[6],
+                  stat[5],
+                  stat[7],
+		  Console_IO.disp_width - BRHIST_RES, "" );
+		  
+    brhist.hist_printed_lines++;
+}
+#endif
+
 /* Yes, not very good */
 #define LR  0
 #define MS  2
 
 void  brhist_disp ( const lame_global_flags*  gf )
 {
-    int   i;
+    int   i, lines = 0;
     int   br_hist [BRHIST_WIDTH];       /* how often a frame size was used */
     int   br_sm_hist [BRHIST_WIDTH] [4];/* how often a special frame size/stereo mode commbination was used */
+    int st_mode [4];
+    int bl_type [6];
     int   frames;                       /* total number of encoded frames */
     int   most_often;                   /* usage count of the most often used frame size, but not smaller than Console_IO.disp_width-BRHIST_RES (makes this sense?) and 1 */
+    double sum = 0.;
+#ifdef RH_HIST
+    double stat[9] = { 0 };
+    int st_frames = 0;
+#endif
     
     brhist.hist_printed_lines = 0;  /* printed number of lines for the brhist functionality, used to skip back the right number of lines */
 	
-    lame_bitrate_hist             ( gf, br_hist    );
     lame_bitrate_stereo_mode_hist ( gf, br_sm_hist );
+    lame_bitrate_hist             ( gf, br_hist    );
+    lame_stereo_mode_hist ( gf, st_mode );
+    lame_block_type_hist  ( gf, bl_type );
 
     frames = most_often = 0;
     for (i = 0; i < BRHIST_WIDTH; i++) {
         frames += br_hist[i];
+    	sum    += br_hist[i] * brhist.kbps[i];
         if (most_often < br_hist[i]) most_often = br_hist[i];
+        if ( br_hist[i] ) ++lines;
     }
 
-    for ( i = 0; i < BRHIST_WIDTH; i++ )
-        if ( br_hist [i]  ||  (i >= brhist.vbr_bitrate_min_index  &&  i <= brhist.vbr_bitrate_max_index) )
+    for ( i = 0; i < BRHIST_WIDTH; i++ ) {
+        int show = br_hist[i];
+#ifdef RH_HIST
+        show = show && (lines > 1);
+#endif
+        if ( show || (i >= brhist.vbr_bitrate_min_index  &&  i <= brhist.vbr_bitrate_max_index) )
             brhist_disp_line ( gf, i, br_hist [i], br_sm_hist [i][LR], most_often, frames );
-
+    }
+#ifdef RH_HIST
+    for (i = 0; i < 4; i++) {
+        st_frames += st_mode[i];
+    }
+    if ( frames > 0 ) {
+        stat[0] = sum / frames;
+        stat[8] = 100. * (frames-st_frames) / frames;
+    }
+    if ( st_frames > 0 ) {
+        stat[1] = 100. * st_mode[LR] / st_frames;
+        stat[2] = 100. * st_mode[MS] / st_frames;
+    }
+    if ( bl_type[5] > 0 ) {
+        stat[3] = 100. * bl_type[0] / bl_type[5];
+        stat[4] = 100. * bl_type[1] / bl_type[5];
+        stat[5] = 100. * bl_type[2] / bl_type[5];
+        stat[6] = 100. * bl_type[3] / bl_type[5];
+        stat[7] = 100. * bl_type[4] / bl_type[5];
+    }
+    progress_line( gf, lame_get_totalframes(gf), frames );
+    stats_line( gf, stat ); 
+#endif
     fputs ( "\r", Console_IO.Console_fp );
     fflush ( Console_IO.Console_fp );   /* fflush is ALSO needed for Windows! */
 }
@@ -319,7 +440,6 @@ void  brhist_disp_total ( const lame_global_flags* gf )
     int st_frames = 0;
     int br_frames = 0;
     double sum = 0.;
-    extern int silent;
     
     lame_stereo_mode_hist ( gf, st_mode );
     lame_bitrate_hist     ( gf, br_hist );
@@ -333,12 +453,15 @@ void  brhist_disp_total ( const lame_global_flags* gf )
     for (i = 0; i < 4; i++) {
         st_frames += st_mode[i];
     }
+    
+#ifndef RH_HIST
 
     if (0==br_frames) return;
 
     fprintf ( Console_IO.Console_fp, "\naverage: %5.1f kbps", sum / br_frames);
 
     /* I'm very unhappy because this is only printed out in VBR modes */
+    
     if (st_frames > 0) {
         if ( st_mode[LR] > 0 )
             fprintf ( Console_IO.Console_fp, "   LR: %d (%#5.4g%%)", st_mode[LR], 100. * st_mode[LR] / st_frames );
@@ -349,7 +472,9 @@ void  brhist_disp_total ( const lame_global_flags* gf )
     }
     fprintf ( Console_IO.Console_fp, "\n" );
 
-    if (bl_type[5] > 0 && silent <= -5 && silent > -10) {
+    if (bl_type[5] > 0) {
+        extern int silent;
+      if (silent <= -5 && silent > -10) {
         fprintf ( Console_IO.Console_fp, "block type");
         fprintf ( Console_IO.Console_fp,  " long: %#4.3f", 100. * bl_type[0] / bl_type[5] );
         fprintf ( Console_IO.Console_fp, " start: %#4.3f", 100. * bl_type[1] / bl_type[5] );
@@ -357,15 +482,18 @@ void  brhist_disp_total ( const lame_global_flags* gf )
         fprintf ( Console_IO.Console_fp,  " stop: %#4.3f", 100. * bl_type[3] / bl_type[5] );
         fprintf ( Console_IO.Console_fp, " mixed: %#4.3f", 100. * bl_type[4] / bl_type[5] );
         fprintf ( Console_IO.Console_fp, " (%%)\n" );
-    }
-    else if (bl_type[5] > 0 && silent <= -10) {
+      }
+      else if (silent <= -10) {
         fprintf ( Console_IO.Console_fp, "block types   granules   percent\n" );
         fprintf ( Console_IO.Console_fp, "      long: % 10d  % 8.3f%%\n", bl_type[0], 100. * bl_type[0] / bl_type[5] );
         fprintf ( Console_IO.Console_fp, "     start: % 10d  % 8.3f%%\n", bl_type[1], 100. * bl_type[1] / bl_type[5] );
         fprintf ( Console_IO.Console_fp, "     short: % 10d  % 8.3f%%\n", bl_type[2], 100. * bl_type[2] / bl_type[5] );
         fprintf ( Console_IO.Console_fp, "      stop: % 10d  % 8.3f%%\n", bl_type[3], 100. * bl_type[3] / bl_type[5] );
         fprintf ( Console_IO.Console_fp, "     mixed: % 10d  % 8.3f%%\n", bl_type[4], 100. * bl_type[4] / bl_type[5] );
+      }
     }
+#endif
+
     fflush  ( Console_IO.Console_fp );
 }
 

@@ -452,6 +452,7 @@ lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath,
 #ifdef BRHIST
         brhist_jump_back();
 #endif
+        frames = lame_get_frameNum(gf);
         timestatus(lame_get_out_samplerate(gf),
                    frames, lame_get_totalframes(gf), lame_get_framesize(gf));
 #ifdef BRHIST
@@ -737,7 +738,11 @@ main(int argc, char **argv)
         return i;
     }
 
-    if (silent > 0 || lame_get_VBR(gf) == vbr_off) {
+    if (silent > 0 
+#ifndef RH_HIST   
+    || lame_get_VBR(gf) == vbr_off
+#endif
+    ) {
         brhist = 0;     /* turn off VBR histogram */
     }
 

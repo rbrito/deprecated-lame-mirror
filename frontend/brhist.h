@@ -50,5 +50,7 @@ typedef struct {
 
 extern Console_IO_t  Console_IO;
 
+#define RH_HIST
+
 #endif /* LAME_BRHIST_H */
 
