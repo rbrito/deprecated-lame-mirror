@@ -43,4 +43,15 @@ extern const struct huffcodetab ht [HTN];
 extern const char t32l [];
 extern const char t33l [];
 
+extern const unsigned int   largetbl    [16*16];
+extern const unsigned int   table23       [3*3];
+extern const unsigned int   table56       [4*4];
+#ifdef MMX_choose_table
+extern const unsigned int64 tableABC     [16*8];
+#define table789 (tableABC+9)
+extern const unsigned int64 tableDEF    [16*16];
+extern const unsigned int64 linbits32      [13];
+extern const unsigned short choose_table_H [13];
+#endif
+
 #endif /* LAME_TABLES_H */

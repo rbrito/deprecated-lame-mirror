@@ -25,7 +25,7 @@
 #include "tables.h"
 #include "quantize_pvt.h"
 
-const struct
+static const struct
 {
     const int region0_count;
     const int region1_count;
@@ -57,19 +57,7 @@ const struct
 };
 
 
-/* These tables break thread-safeness.  Should be moved into util.h */ 
-unsigned int largetbl[16*16];
-unsigned int table23[3*3];
-unsigned int table56[4*4];
 
-unsigned int64 tableABC[16*8];
-unsigned int64 tableDEF[16*16];
-#define table789 (tableABC+9)
-
-unsigned int64 linbits32[13];
-unsigned short choose_table_H[13];
-
-extern int choose_table_MMX(int *ix, int *end, int *s);
 
 /*************************************************************************/
 /*	      ix_max							 */
@@ -168,7 +156,7 @@ count_bit_noESC_from2(int *ix, int *end, int t1, int *s)
     /* No ESC-words */
     unsigned int sum = 0, sum2;
     const int xlen = ht[t1].xlen;
-    unsigned int *hlen;
+    const unsigned int *hlen;
     if (t1 == 2)
 	hlen = table23;
     else
@@ -929,72 +917,17 @@ int scale_bitcount_lsf(III_scalefac_t *scalefac, gr_info *cod_info)
 
 
 
-
 void huffman_init(lame_internal_flags *gfc)
 {
     int i;
 
     gfc->choose_table = choose_table_nonMMX;
     
-    for (i = 0; i < 16*16; i++) {
-	largetbl[i] = ((ht[16].hlen[i]) << 16) + ht[24].hlen[i];
-    }
-
-    for (i = 0; i < 3*3; i++) {
-	table23[i] = ((ht[2].hlen[i]) << 16) + ht[3].hlen[i];
-    }
-
-    for (i = 0; i < 4*4; i++) {
-	table56[i] = ((ht[5].hlen[i]) << 16) + ht[6].hlen[i];
-    }
 #ifdef MMX_choose_table
-    for (i = 0; i < 6; i++) {
-	int j;
-	for (j = 0; j < 6; j++) {
-	    table789[i*16+j] =
-		(((int64)ht[7].hlen[i*6+j]) << 32) +
-		(((int64)ht[8].hlen[i*6+j]) << 16) +
-		(((int64)ht[9].hlen[i*6+j]));
-	}
-    }
-
-    for (i = 0; i < 8; i++) {
-	int j;
-	for (j = 0; j < 8; j++) {
-	    tableABC[i*16+j] =
-		(((int64)ht[10].hlen[i*8+j]) << 32) +
-		(((int64)ht[11].hlen[i*8+j]) << 16) +
-		(((int64)ht[12].hlen[i*8+j]));
-	}
-    }
-
-    for (i = 0; i < 16*16; i++) {
-	tableDEF[i] =
-	    (((int64)ht[13].hlen[i]) << 32) +
-	    (((int64)ht[14].hlen[i]) << 16) +
-	    (((int64)ht[15].hlen[i]));
-    }
-    for (i = 0; i < 13; i++) {
-	int t1, t2;
-	for (t2 = 24; t2 < 32; t2++) {
-	    if (ht[t2].xlen > i) {
-		break;
-	    }
-	}
-	for (t1 = t2 - 8; t1 < 24; t1++) {
-	    if (ht[t1].xlen > i) {
-		break;
-	    }
-	}
-
-	choose_table_H[i] = t1+t2*256;
-
-	linbits32[i] =
-	    ((int64)ht[t1].xlen << 48) + ((int64)ht[t1].xlen << 32) +
-	    ((int64)ht[t2].xlen << 16) + ((int64)ht[t2].xlen);
-    }
-    if (gfc->CPU_features_MMX)
+    if (gfc->CPU_features_MMX) {
+        extern int choose_table_MMX(int *ix, int *end, int *s);
         gfc->choose_table = choose_table_MMX;
+    }
 #endif
 
     for (i = 2; i <= 576; i += 2) {
