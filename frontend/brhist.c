@@ -53,14 +53,13 @@ char *strchr (), *strrchr ();
 #endif
 
 
-#if defined(HAVE_TERMCAP)
-#include <curses.h>
-#include <term.h>
 #if defined(HAVE_NCURSES_TERMCAP_H)
 # include <ncurses/termcap.h>
 #elif defined(HAVE_TERMCAP_H)
 # include <termcap.h>
-#endif
+#elif defined(HAVE_TERMCAP)
+#include <curses.h>
+#include <term.h>
 #endif
 
 #include "brhist.h"
