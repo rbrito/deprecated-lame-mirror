@@ -38,21 +38,25 @@ black = usability, portability, other
       <li><font color="#ff0000">use ATH value as short block masking lower limit</font></li>
       <li><font color="#ff0000">several fixes in psychoacoustic model</font></li>
       <li>more robust decoding</li>
-    </ul>
+    </ul></li>
   <li>Mark Taylor / Gabriel Bouvigne: fixed issues in VBR header</li>
   <li>Mark Taylor: workaround against some hardware decoder defficiencies</li>
   <li>Aleksander Korzynski: ability to compute ReplayGain and detect clipping 
     on the fly. ReplayGain value is stored into the Lame tag.</li>
-  <li>Gabriel Bouvigne:</li>
+  <li>Gabriel Bouvigne:
   <ul>
     <li><font color="#ff0000">work on presets</font></li>
     <li><font color="#ff0000">analog silence detection in partitionned sfb21</font></li>
     <li><font color="#3366ff">do not compute noise in upper 0 part of the spectrum</font></li>
-  </ul>
-  <li>Guillaume Lessard:</li>
+  </ul></li>
+  <li>Guillaume Lessard:
   <ul>
     <li>nogap related changes</li>
-  </ul>
+  </ul></li>
+  <li>Alexander Leidinger:
+  <ul>
+    <li>prevent closing the input fd prematurely if the input is a named pipe</li>
+  </ul></li>
 </ul>
 <br>
 <h3>LAME 3.93.1 &nbsp; &nbsp;December 1 2002</h3>
