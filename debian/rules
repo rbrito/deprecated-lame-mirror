@@ -12,7 +12,7 @@ configure: configure-stamp
 configure-stamp:
 	dh_testdir
 	# Add here commands to configure the package.
-	./configure --prefix=/usr --with-fileio=lame --disable-mp3x --disable-mp3rtp --disable-analyzer-hooks --without-vorbis --host=$$(dpkg-architecture -qDEB_HOST_GNU_TYPE)
+	./configure --prefix=/usr --with-fileio=lame --disable-mp3x --disable-mp3rtp --disable-analyzer-hooks --without-vorbis --host=$$(dpkg-architecture -qDEB_HOST_GNU_TYPE) --enable-nasm --enable-expopt
 
 	touch configure-stamp
 

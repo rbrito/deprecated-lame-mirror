@@ -1,3 +1,11 @@
+lame (3.93-0.1) unstable; urgency=low
+
+  * Prevent lame 3.93 shipping and still building a 3.92 debian package;
+  * Use --enable-nasm, as is shouldn't break compilation on non-x86;
+  * Use --enable-expopt, to get a bit more of speed.
+
+ -- Rogério Brito <rbrito@users.sf.net>  Sun, 25 Aug 2002 18:58:16 -0300
+
 lame (3.92-1) unstable; urgency=low
 
   * New upstream release.
