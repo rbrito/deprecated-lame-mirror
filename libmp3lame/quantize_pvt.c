@@ -509,7 +509,7 @@ int calc_xmin(
 	  xmin = ratio->en.l[sfb];
 	  if (xmin > 0.0)
 	    xmin = en0 * ratio->thm.l[sfb] * gfc->masking_lower / xmin;
-          xmin=Max(gfc->ATH_l[sfb], xmin);
+          xmin=Max(gfc->adjust_ath*gfc->ATH_l[sfb], xmin);
 	}
 	l3_xmin->l[sfb]=xmin;
 
@@ -521,7 +521,7 @@ int calc_xmin(
 	  l3_xmin->l[sfb] *= gfc->nsPsy.treble;
 	}
 
-	if (en0 > gfc->ATH_l[sfb]) ath_over++;
+	if (en0 > gfc->adjust_ath*gfc->ATH_l[sfb]) ath_over++;
 	if ((gfp->VBR == vbr_off || gfp->VBR == vbr_abr) && gfp->quality <= 1)
           l3_xmin->l[sfb] *= 0.001;
       }
