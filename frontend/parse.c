@@ -540,9 +540,9 @@ long_help (lame_t gfc, FILE* const fp, const char* ProgramName, int lessmode )  
 #if defined(WIN32)
               "\n\nMS-Windows-specific options:\n"
               "    --priority <type>     sets the process priority:\n"
-              "                               0,1 = Low priority (IDLE_PRIORITY_CLASS)\n"
-              "                               2 = normal priority (NORMAL_PRIORITY_CLASS, default)\n"
-              "                               3,4 = High priority (HIGH_PRIORITY_CLASS))\n"
+              "                           0,1 = Low priority (IDLE_PRIORITY_CLASS)\n"
+              "                           2 = normal priority (NORMAL_PRIORITY_CLASS, default)\n"
+              "                           3,4 = High priority (HIGH_PRIORITY_CLASS))\n"
 #endif
 #if defined(__OS2__)
               "\n\nOS/2-specific options:\n"
