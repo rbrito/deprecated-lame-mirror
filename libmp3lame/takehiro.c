@@ -493,9 +493,12 @@ count_bits(lame_t gfc, gr_info * const gi)
     /* quantize on xr^(3/4) instead of xr */
     int sfb = 0;
     fi_union *fi = (fi_union *)gi->l3_enc;
-    const FLOAT *xp = xr34;
+    const FLOAT *xp = xr34, *xend;
     const FLOAT *xe01 = &xp[gi->big_values];
-    const FLOAT *xend = &xp[gi->count1];
+
+    if (gi->count1 > gi->xrNumMax)
+	gi->count1 = gi->xrNumMax;
+    xend = &xp[gi->count1];
 
     do {
 	const FLOAT *xe; FLOAT istep;
