@@ -1,10 +1,11 @@
 The LAME API
 
 This is the simple interface to the lightweight encoding library
-obtained by compiling libmp3lame.a with out defining any of
-the followin extra fetures:
+obtained by compiling libmp3lame.a without defining any of
+the following extra features:
 
 #define HAVEMPGLIB   to use mpglib's mp3 *decoding* capibility
+#define AMIGA_MPEGA  to use mpega.library (Amiga), don't use with HAVEMPGLIB
 #define BRHIST       to allow the display of the VBR historgram
 #define LIBSNDFILE   to use Erik de Castro Lopo's libsndfile
 #define LAMESNDFILE  to use LAME's minimial internal sndfile I/O
@@ -19,7 +20,7 @@ main.c
 =========================================================================
 
 
-Initialize the encoder.  sets default for all encoder paramters,
+Initialize the encoder.  sets default for all encoder parameters,
 returns pointer to encoder parameters listed above 
 
    #include "lame.h"
