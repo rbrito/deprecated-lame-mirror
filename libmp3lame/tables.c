@@ -393,14 +393,10 @@ filter_coef(FLOAT x)
 }
 
 static void
-lame_init_params_ppflt(lame_t gfc)
+init_filter0(lame_t gfc)
 {
-    /***************************************************************/
-    /* compute info needed for polyphase filter (filter type==0, default) */
-    /***************************************************************/
-
     int band, maxband, minband;
-    int lowpass_band = 32;
+    int lowpass_band = SBLIMIT;
     int highpass_band = -1;
     FLOAT   freq;
 
@@ -419,13 +415,13 @@ lame_init_params_ppflt(lame_t gfc)
 
         /* compute the *actual* transition band implemented by
          * the polyphase filter */
-        if (minband == 999) {
-            gfc->lowpass1 = (lowpass_band - .75) / 31.0;
-        }
-        else {
-            gfc->lowpass1 = (minband - .75) / 31.0;
-        }
-        gfc->lowpass2 = lowpass_band / 31.0;
+	if (minband == 999) {
+	    gfc->lowpass1 = (lowpass_band - .75) / 31.0;
+	}
+	else {
+	    gfc->lowpass1 = (minband - .75) / 31.0;
+	}
+	gfc->lowpass2 = lowpass_band / 31.0;
     }
 
     /* make sure highpass filter is within 90% of what the effective
@@ -437,41 +433,124 @@ lame_init_params_ppflt(lame_t gfc)
     }
 
     if (gfc->highpass2 > 0) {
-        maxband = -1;
-        for (band = 0; band <= 31; band++) {
-            freq = band / 31.0;
-            /* this band and below will be zereod */
-            if (freq <= gfc->highpass1) {
-                highpass_band = Max(highpass_band, band);
-            }
-            if (gfc->highpass1 < freq && freq < gfc->highpass2) {
-                maxband = Max(maxband, band);
-            }
-        }
-        /* compute the *actual* transition band implemented by
-         * the polyphase filter */
-        gfc->highpass1 = highpass_band / 31.0;
-        if (maxband == -1) {
-            gfc->highpass2 = (highpass_band + .75) / 31.0;
-        }
-        else {
-            gfc->highpass2 = (maxband + .75) / 31.0;
-        }
+	maxband = -1;
+	for (band = 0; band <= 31; band++) {
+	    freq = band / 31.0;
+	    /* this band and below will be zereod */
+	    if (freq <= gfc->highpass1) {
+		highpass_band = Max(highpass_band, band);
+	    }
+	    if (gfc->highpass1 < freq && freq < gfc->highpass2) {
+		maxband = Max(maxband, band);
+	    }
+	}
+	/* compute the *actual* transition band implemented by
+	 * the polyphase filter */
+	gfc->highpass1 = highpass_band / 31.0;
+	if (maxband == -1) {
+	    gfc->highpass2 = (highpass_band + .75) / 31.0;
+	}
+	else {
+	    gfc->highpass2 = (maxband + .75) / 31.0;
+	}
     }
 
-    for (band = 0; band < 32; band++) {
+    for (band = 0; band < SBLIMIT; band++) {
 	freq = band / 31.0;
-	gfc->amp_filter[band]
+	gfc->amp_filter0[band]
 	    = filter_coef((gfc->highpass2 - freq)
 			  / (gfc->highpass2 - gfc->highpass1 + 1e-37))
 	    * filter_coef((freq - gfc->lowpass1)
 			  / (gfc->lowpass2 - gfc->lowpass1 - 1e-37));
     }
     while (--band >= 0) {
-	if (gfc->amp_filter[band] > 1e-20)
+	if (gfc->amp_filter0[band] > 1e-20)
 	    break;
     }
     gfc->xrNumMax_longblock = (band+1) * 18;
+}
+
+
+static void
+init_filter1(lame_t gfc)
+{
+    int band, maxband, minband;
+    int lowpass_band = 192;
+    int highpass_band = -1;
+    FLOAT   freq;
+
+    if (gfc->lowpass1 > 0) {
+	minband = 999;
+	for (band = 0; band <= 191; band++) {
+	    freq = band / 191.0;
+	    /* this band and above will be zeroed: */
+	    if (freq >= gfc->lowpass2) {
+		lowpass_band = Min(lowpass_band, band);
+	    }
+	    if (gfc->lowpass1 < freq && freq < gfc->lowpass2) {
+		minband = Min(minband, band);
+	    }
+	}
+
+        /* compute the *actual* transition band implemented by
+         * the polyphase filter */
+	if (minband == 999) {
+	    gfc->lowpass1 = (lowpass_band - .75) / 191.0;
+	}
+	else {
+	    gfc->lowpass1 = (minband - .75) / 191.0;
+	}
+	gfc->lowpass2 = lowpass_band / 191.0;
+    }
+
+    /* make sure highpass filter is within 90% of what the effective
+     * highpass frequency will be */
+    if (gfc->highpass2 > 0 && gfc->highpass2 < .9 * (.75 / 191.0)) {
+	gfc->highpass1 = gfc->highpass2 = 0;
+	gfc->report.msgf(
+	    "Warning: highpass filter disabled (the frequency too small)\n");
+    }
+
+    if (gfc->highpass2 > 0) {
+	maxband = -1;
+	for (band = 0; band <= 191; band++) {
+	    freq = band / 191.0;
+	    /* this band and below will be zereod */
+	    if (freq <= gfc->highpass1) {
+		highpass_band = Max(highpass_band, band);
+	    }
+	    if (gfc->highpass1 < freq && freq < gfc->highpass2) {
+		maxband = Max(maxband, band);
+	    }
+	}
+	/* compute the *actual* transition band implemented by
+	 * the polyphase filter */
+	gfc->highpass1 = highpass_band / 191.0;
+	if (maxband == -1) {
+	    gfc->highpass2 = (highpass_band + .75) / 191.0;
+	}
+	else {
+	    gfc->highpass2 = (maxband + .75) / 191.0;
+	}
+    }
+
+    for (band = 0; band < 192; band++) {
+	freq = band / 191.0;
+	gfc->amp_filter1[band]
+	    = filter_coef((gfc->highpass2 - freq)
+			  / (gfc->highpass2 - gfc->highpass1 + 1e-37))
+	    * filter_coef((freq - gfc->lowpass1)
+			  / (gfc->lowpass2 - gfc->lowpass1 - 1e-37));
+    }
+    band = SBLIMIT;
+    while (--band >= 0) {
+	if (gfc->amp_filter1[band*6] > 1e-20)
+	    break;
+    }
+    gfc->xrNumMax_longblock = (band+1) * 18;
+
+    while (--band >= 0)
+	gfc->amp_filter0[band] = 1.0;
 }
 
 
@@ -510,15 +589,18 @@ iteration_init(lame_t gfc)
 {
     int i, j;
 
-    /**********************************************************************/
-    /* compute info needed for polyphase filter (filter type==0, default) */
-    /**********************************************************************/
-    lame_init_params_ppflt(gfc);
-
-    /*******************************************************/
-    /* compute info needed for FIR filter (filter_type==1) */
-    /*******************************************************/
+    /******************************************************/
+    /* compute info needed for frequency region filtering */
+    /******************************************************/
+    if (gfc->filter_type == 0)
+	init_filter0(gfc);
+    if (gfc->filter_type == 1)
+	init_filter1(gfc);
+#if 0
     /* not yet coded */
+    if (gfc->filter_type == 2)
+	init_filter2(gfc);
+#endif
 
     /* scalefactor band start/end position */
     gfc->scalefac_band
@@ -918,7 +1000,7 @@ psymodel_init(lame_t gfc)
     gfc->nsPsy.decay = db2pow(-(576.0/3)/(TEMPORALMASK_SUSTAIN_SEC*sfreq)*20);
 
     /* long/short switching, use subbandded sample in f > 2kHz */
-    i = (int) (4000.0 / (sfreq / 2.0 / 32.0) + 0.5);
+    i = (int) (4000.0 / (sfreq / 2.0 / SBLIMIT) + 0.5);
     gfc->nsPsy.switching_band = Min(i, 30);
 
     /*  prepare for ATH auto adjustment:

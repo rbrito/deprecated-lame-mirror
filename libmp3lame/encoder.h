@@ -266,7 +266,8 @@ struct lame_internal_flags {
     int noclipGainChange;  /* gain change required for preventing clipping */
     FLOAT noclipScale;     /* user-specified scale factor required for preventing clipping */
 
-    FLOAT amp_filter[SBLIMIT];
+    FLOAT amp_filter0[SBLIMIT];
+    FLOAT amp_filter1[SBLIMIT*6];
     int xrNumMax_longblock;
 /*
  * Some remarks to the Class_ID field:

@@ -127,6 +127,7 @@ init_qval(lame_t gfc)
         gfc->use_best_huffman = 2;
         break;
     }
+//	gfc->filter_type = 1;
 }
 
 #define ABS(A) (((A)>0) ? (A) : -(A))
@@ -675,24 +676,31 @@ lame_print_config(lame_t gfc)
 			 1.e-3 * in_samplerate, 1.e-3 * out_samplerate);
     }
 
+
     if (gfc->filter_type == 0) {
+	gfc->report.msgf("Using polyphase  filter\n");
+    }
+    else if (gfc->filter_type == 1) {
+	gfc->report.msgf("Using MDCT filter\n");
+    }
+    else {
+        gfc->report.msgf("Filters are disabled\n");
+    }
+    if (gfc->filter_type <= 1) {
         if (0. < gfc->highpass2 && gfc->highpass2 < 1.0)
             gfc->report.msgf(
-		"Using polyphase highpass filter, transition band: %5.0f Hz - %5.0f Hz\n",
+		"  Highpass filter, transition band: %5.0f Hz - %5.0f Hz\n",
                  0.5 * gfc->highpass1 * out_samplerate,
                  0.5 * gfc->highpass2 * out_samplerate);
         if (0. < gfc->lowpass1 && gfc->lowpass1 < 1.0) {
 	    gfc->report.msgf(
-		"Using polyphase lowpass  filter, transition band: %5.0f Hz - %5.0f Hz\n",
+		"  Lowpass  filter, transition band: %5.0f Hz - %5.0f Hz\n",
 		 0.5 * gfc->lowpass1 * out_samplerate,
 		 0.5 * gfc->lowpass2 * out_samplerate);
 	}
         else {
-            gfc->report.msgf("polyphase lowpass filter disabled\n");
+            gfc->report.msgf("  No Lowpass filter\n");
         }
-    }
-    else {
-        gfc->report.msgf("polyphase filters disabled\n");
     }
 
     if (gfc->free_format) {

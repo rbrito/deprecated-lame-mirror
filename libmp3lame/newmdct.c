@@ -727,6 +727,16 @@ mdct_sub48(lame_t gfc, int ch)
 		mdct_short(mdct_enc);
 	    }
 	} while (++band, (mdct_enc += 18) < endband);
+	if (gfc->filter_type == 1) {
+	    mdct_enc = gi->xr;
+	    k = 0;
+	    do {
+		mdct_enc[0] *= gfc->amp_filter1[k];
+		mdct_enc[1] *= gfc->amp_filter1[k];
+		mdct_enc[2] *= gfc->amp_filter1[k];
+		mdct_enc += 3;
+	    } while (mdct_enc < endband);
+	}
 	memset(mdct_enc, 0, sizeof(FLOAT)*(SBLIMIT-band)*18);
     }
 }
@@ -738,8 +748,8 @@ subband(lame_t gfc, const sample_t *wk, FLOAT *samp)
     wk += 286 + FFTOFFSET;
     for (k = 0; k < (18 / 2) * gfc->mode_gr; k++) {
 	int band;
-	window_subband(gfc->amp_filter, wk, samp);
-	window_subband(gfc->amp_filter, wk + 32, samp + 32);
+	window_subband(gfc->amp_filter0, wk, samp);
+	window_subband(gfc->amp_filter0, wk + 32, samp + 32);
 	samp += 64;
 	wk += 64;
 	for (band = -16; band < 0; band++)
