@@ -81,10 +81,7 @@ FILE   *musicin;
 int id3v2taglen = 0;
 
 
-#ifdef AMIGA_MPEGA
-static int decode_initfile(const char *fullname,
-			   mp3data_struct * const mp3data);
-#elif defined(HAVE_MPGLIB)
+#if defined(HAVE_MPGLIB)
 static int decode_initfile(lame_t gfp, FILE * fd, mp3data_struct * mp3data);
 /* read mp3 file until mpglib returns one frame of PCM data */
 static int     decode_fromfile(lame_t gfp,
@@ -348,7 +345,7 @@ read_samples_mp3(lame_t gfp, FILE * const musicin,
 		 short int mpg123pcm[2][1152])
 {
     int     out;
-#if defined(AMIGA_MPEGA)  ||  defined(HAVE_MPGLIB)
+#if defined(HAVE_MPGLIB)
     static const char type_name[] = "MP3 file";
 
     out = decode_fromfile(gfp, musicin, mpg123pcm[0], mpg123pcm[1], &mp3input_data);
@@ -406,19 +403,6 @@ WriteWaveHeader(FILE * const fp, const int pcmbytes,
 
 #if defined(LIBSNDFILE)
 
-#if 0                   /* currently disabled */
-# include "sndfile.h"   /* prototype for sf_get_lib_version() */
-void
-print_sndlib_version(FILE * fp)
-{
-    char    tmp[80];
-    sf_get_lib_version(tmp, sizeof(tmp));
-    fprintf(fp,
-            "Input handled by %s  (http://www.zip.com.au/~erikd/libsndfile/)\n",
-            tmp);
-}
-#endif
-
 /*
 ** Copyright (C) 1999 Albert Faber
 **
@@ -438,24 +422,15 @@ print_sndlib_version(FILE * fp)
  * Boston, MA 02111-1307, USA.
  */
 
-
-
-
-
-
 static void
 CloseSndFile(sound_file_format input, FILE * musicin)
 {
     SNDFILE *gs_pSndFileIn = (SNDFILE *) musicin;
     if (input == sf_mp1 || input == sf_mp2 || input == sf_mp3) {
-#ifndef AMIGA_MPEGA
         if (fclose(musicin) != 0) {
             fprintf(stderr, "Could not close audio input file\n");
             exit(2);
         }
-#else
-	lame_decode_exit(gfp); /* release mp3decoder memory */
-#endif
     }
     else {
         if (gs_pSndFileIn) {
@@ -479,13 +454,6 @@ OpenSndFile(lame_t gfp, char *inPath)
 
     if (input_format == sf_mp1 ||
         input_format == sf_mp2 || input_format == sf_mp3) {
-#ifdef AMIGA_MPEGA
-        if (-1 == decode_initfile(lpszFileName, &mp3input_data)) {
-            fprintf(stderr, "Error reading headers in mp3 input file %s.\n",
-                    lpszFileName);
-            exit(1);
-        }
-#endif
 #ifdef HAVE_MPGLIB
         if ((musicin = fopen(lpszFileName, "rb")) == NULL) {
             fprintf(stderr, "Could not find \"%s\".\n", lpszFileName);
@@ -1273,13 +1241,6 @@ OpenSndFile(lame_t gfp, char *inPath)
 
     if (input_format == sf_mp1 ||
         input_format == sf_mp2 || input_format == sf_mp3) {
-#ifdef AMIGA_MPEGA
-        if (-1 == decode_initfile(inPath, &mp3input_data)) {
-            fprintf(stderr, "Error reading headers in mp3 input file %s.\n",
-                    inPath);
-            exit(1);
-        }
-#endif
 #ifdef HAVE_MPGLIB
         if (-1 == decode_initfile(gfp, musicin, &mp3input_data)) {
             fprintf(stderr, "Error reading headers in mp3 input file %s.\n",
@@ -1531,7 +1492,6 @@ decode_fromfile(lame_t gfp, FILE * fd, short pcm_l[], short pcm_r[],
 
         ret = lame_decode1_headers(gfp, buf, len, pcm_l, pcm_r, mp3data);
         if (ret == -1) {
-            lame_decode_exit(gfp);  /* release mp3decoder memory */
             return ret;
         }
     } while (ret == 0);
@@ -1540,4 +1500,3 @@ decode_fromfile(lame_t gfp, FILE * fd, short pcm_l[], short pcm_r[],
 #endif /* defined(HAVE_MPGLIB) */
 
 /* end of get_audio.c */
-
