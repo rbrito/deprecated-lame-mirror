@@ -1002,15 +1002,10 @@ iteration_init( lame_global_flags *gfp)
 
     /* intensity stereo */
     gfp->use_istereo = 0;
-    l3_side->istereo_start_sfb_l = SBMAX_l;
-    l3_side->istereo_start_sfb_s = SBMAX_s;
     if (gfp->mode != MONO && gfp->compression_ratio > 12.0 && gfp->VBR != vbr
 	&& gfp->internal_flags->mode_gr == 2) {
 	/* currently only MPEG1/CBR or ABR */
 	gfp->use_istereo = 1;
-	/* select sfb_divide as istereo border */
-	l3_side->istereo_start_sfb_l = 11; /* about 2.3kHz(fs=44.1) 1.8k(fs=32) */
-	l3_side->istereo_start_sfb_s = 6;
     }
 
     /* scalefactor band start/end position */

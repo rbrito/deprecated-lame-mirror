@@ -395,6 +395,9 @@ float CDECL lame_get_athaa_sensitivity( const lame_global_flags* );
 int CDECL lame_set_useTemporal(lame_global_flags *, int);
 int CDECL lame_get_useTemporal(const lame_global_flags *);
 
+/* intensity stereo usage ratio */
+int CDECL lame_set_istereoRatio(lame_global_flags *, float);
+
 /* use temporal masking effect (default = 1) */
 int CDECL lame_set_interChRatio(lame_global_flags *, float);
 float CDECL lame_get_interChRatio(const lame_global_flags *);

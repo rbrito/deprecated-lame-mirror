@@ -477,15 +477,15 @@ calc_interchannel_masking(
     int gr
     )
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
     FLOAT ratio = gfp->interChRatio;
-    III_psy_ratio *mr = &gfc->masking_next[gr][0];
+    III_psy_ratio *mr = gfp->internal_flags->masking_next[gr];
 
     int sb, sblock;
     FLOAT l, r;
     for ( sb = 0; sb < SBMAX_l; sb++ ) {
 	l = mr[0].thm.l[sb];
 	r = mr[1].thm.l[sb];
+
 	mr[0].thm.l[sb] += r*ratio;
 	mr[1].thm.l[sb] += l*ratio;
     }
@@ -615,6 +615,82 @@ msfix_s(
 	    mr[2].thm.s[sb][sblock] = thmM;
 	    mr[3].thm.s[sb][sblock] = thmS;
 	}
+    }
+}
+
+static void
+set_istereo_sfb(lame_internal_flags *gfc, int gr)
+{
+    int sb;
+    III_psy_ratio *mr = &gfc->masking_next[gr][0];
+    if (!gfc->useshort_next[gr][0] && !gfc->useshort_next[gr][1]) {
+	for (sb = SBMAX_l-2; sb >= 11; --sb) {
+	    FLOAT x1, x2;
+	    if (mr[3].en.l[sb] < mr[3].thm.l[sb]
+		|| mr[0].en.l[sb] < mr[0].thm.l[sb]
+		|| mr[1].en.l[sb] < mr[1].thm.l[sb])
+		continue; /* almost mono */
+
+	    if (mr[2].en.l[sb] < mr[2].thm.l[sb])
+		break; /* out of phase */
+
+	    x1 = mr[0].en.l[sb] * mr[1].thm.l[sb];
+	    x2 = mr[1].en.l[sb] * mr[0].thm.l[sb];
+
+	    if (x1*gfc->istereo_ratio <= x2 && x2*gfc->istereo_ratio <= x1)
+		continue;
+#if 0
+	    if (x1>x2)
+		printf("%d %e %e %e\n", sb, (x1+1e-10)/(x2+1e-10), x1, x2);
+	    else
+		printf("%d %e %e %e\n", sb, (x2+1e-10)/(x1+1e-10), x1, x2);
+#endif
+	    break;
+	}
+	gfc->l3_side.istereo_start_sfb_l = ++sb;
+	for (; sb < SBMAX_l; sb++) {
+	    mr[0].en .l[sb] = mr[2].en .l[sb];
+	    mr[0].thm.l[sb] = mr[2].thm.l[sb];
+	}
+    }
+
+    for (sb = SBMAX_s-2; sb >= 6; --sb) {
+	int sblock;
+	for (sblock = 0; sblock < 3; sblock++) {
+	    FLOAT x1, x2;
+	    if (mr[3].en.s[sb][sblock] < mr[3].thm.s[sb][sblock]
+		|| mr[0].en.s[sb][sblock] < mr[0].thm.s[sb][sblock]
+		|| mr[1].en.s[sb][sblock] < mr[1].thm.s[sb][sblock])
+		continue; /* almost mono */
+
+	    if (mr[2].en.s[sb][sblock] < mr[2].thm.s[sb][sblock])
+		break; /* out of phase */
+
+	    x1 = mr[0].en.s[sb][sblock] * mr[1].thm.s[sb][sblock];
+	    x2 = mr[1].en.s[sb][sblock] * mr[0].thm.s[sb][sblock];
+
+	    if (x1*gfc->istereo_ratio <= x2 && x2*gfc->istereo_ratio <= x1)
+		continue;
+#if 0
+	    if (x1>x2)
+		printf("%d %e %e %e\n", sb, (x1+1e-10)/(x2+1e-10), x1, x2);
+	    else
+		printf("%d %e %e %e\n", sb, (x2+1e-10)/(x1+1e-10), x1, x2);
+#endif
+	    break;
+	}
+	if (sblock != 3)
+	    break;
+    }
+    gfc->l3_side.istereo_start_sfb_s = ++sb;
+
+    for (; sb < SBMAX_s; sb++) {
+	mr[0].en .s[sb][0] = mr[2].en .s[sb][0];
+	mr[0].thm.s[sb][0] = mr[2].thm.s[sb][0];
+	mr[0].en .s[sb][1] = mr[2].en .s[sb][1];
+	mr[0].thm.s[sb][1] = mr[2].thm.s[sb][1];
+	mr[0].en .s[sb][2] = mr[2].en .s[sb][2];
+	mr[0].thm.s[sb][2] = mr[2].thm.s[sb][2];
     }
 }
 
@@ -1681,12 +1757,10 @@ psycho_analysis(
 
 	psycho_analysis_short(gfp, bufp, sbsmpl, gr);
 	if (gr == 0) {
-	    L3psycho_anal_ns(gfp, bufp, blocktype_old, gr);
+	    L3psycho_anal_ns(gfp, bufp, blocktype_old, 0);
 	} else {
-	    L3psycho_anal_ns(gfp, bufp, gfc->useshort_next[0], gr);
+	    L3psycho_anal_ns(gfp, bufp, gfc->useshort_next[0], 1);
 	}
-
-	numchn = gfc->channels_out;
 
 	/*********************************************************************
 	 * other masking effect
@@ -1694,30 +1768,15 @@ psycho_analysis(
 	if (gfp->interChRatio != 0.0)
 	    calc_interchannel_masking(gfp, gr);
 
+	numchn = gfc->channels_out;
 	if (gfp->mode == JOINT_STEREO) {
 	    if (!gfc->useshort_next[gr][ch]) 
 		msfix_l(gfc, gr);
 
 	    msfix_s(gfc, gr);
 	    numchn = 4;
-	    if (gfp->use_istereo) {
-		int sb;
-		III_psy_ratio *mr = &gfc->masking_next[gr][0];
-		for (sb = gfc->l3_side.istereo_start_sfb_l; sb < SBMAX_l;
-		     sb++) {
-		    mr[0].en .l[sb] = mr[2].en .l[sb];
-		    mr[0].thm.l[sb] = mr[2].thm.l[sb];
-		}
-		for (sb = gfc->l3_side.istereo_start_sfb_s; sb < SBMAX_s;
-		     sb++) {
-		    mr[0].en .s[sb][0] = mr[2].en .s[sb][0];
-		    mr[0].thm.s[sb][0] = mr[2].thm.s[sb][0];
-		    mr[0].en .s[sb][1] = mr[2].en .s[sb][1];
-		    mr[0].thm.s[sb][1] = mr[2].thm.s[sb][1];
-		    mr[0].en .s[sb][2] = mr[2].en .s[sb][2];
-		    mr[0].thm.s[sb][2] = mr[2].thm.s[sb][2];
-		}
-	    }
+	    if (gfp->use_istereo)
+		set_istereo_sfb(gfc, gr);
 	}
 	/*********************************************************************
 	 * compute the value of PE to return

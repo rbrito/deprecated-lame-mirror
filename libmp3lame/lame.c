@@ -235,42 +235,43 @@ static int apply_preset(lame_global_flags*  gfp, int bitrate, vbr_mode mode)
 	int ath_curve;
 	int ath_lower;
 	double interch;
+	double shortthreshold;
     } dm_abr_presets_t;
 
 
     /* Switch mappings for target bitrate */
-    const dm_abr_presets_t abr_switch_map [] = {
-        /*  scalefac_s   lowpass     scale     athlower */
+    const dm_abr_presets_t switch_map [] = {
+        /*  scalefac_s   lowpass     scale     athlower  short-th */
         /* kbps    qantcomp   nsmsfix     athcurve  inter-ch */
-        {   8,  0,    1,  2000,  0,   0.90, 11,  -4, 0.0012 }, // impossible to use in stereo
-        {  16,  0,    1,  3700,  0,   0.90, 11,  -4, 0.0010 },
-        {  24,  0,    1,  3900,  0,   0.90, 11,  -4, 0.0010 },
-        {  32,  0,    1,  5500,  0,   0.90, 11,  -4, 0.0010 },
-        {  40,  0,    1,  7000,  0,   0.90, 11,  -3, 0.0009 },
-        {  48,  0,    1,  7500,  0,   0.90, 11,  -3, 0.0009 },
-        {  56,  0,    1, 10000,  0,   0.90, 11,  -3, 0.0008 },
-        {  64,  0,    0, 11500,  0,   0.90, 11,  -3, 0.0008 },
-        {  80,  0,    0, 13500,  0,   0.93, 10,  -2, 0.0007 },
-        {  96,  0,    0, 15300,  0,   0.93,  8,  -2, 0.0006 },
-        { 112,  0,    0, 16000,  0,   0.93,  7,  -2, 0.0005 },
-        { 128,  0,    0, 17500,  0,   0.93,  5,  -1, 0.0002 },
-        { 160,  0,    0, 18000,  0,   0.95,  4,   0, 0.0 },
-        { 192,  0,    0, 19500,  0,   0.97,  3,   0, 0.0 },
-        { 224,  0,    0, 20000,  0,   0.98,  2,   1, 0.0 },
-        { 256,  1,    1, 20500,  0,   1.00,  1,   1, 0.0 },
-        { 320,  1,    1, 21000,  0,   1.00,  0,   1, 0.0 }
+        {   8,  0,    1,  2000,  0,   0.90, 11,  -4, 0.0012, 1000.0 },
+        {  16,  0,    1,  3700,  0,   0.90, 11,  -4, 0.0010, 1000.0 },
+        {  24,  0,    1,  3900,  0,   0.90, 11,  -4, 0.0010, 20.0 },
+        {  32,  0,    1,  5500,  0,   0.90, 11,  -4, 0.0010, 20.0 },
+        {  40,  0,    1,  7000,  0,   0.90, 11,  -3, 0.0009, 20.0 },
+        {  48,  0,    1,  7500,  0,   0.90, 11,  -3, 0.0009, 20.0 },
+        {  56,  0,    1, 10000,  0,   0.90, 11,  -3, 0.0008, 20.0 },
+        {  64,  0,    0, 11500,  0,   0.90, 11,  -3, 0.0008, 5.0 },
+        {  80,  0,    0, 13500,  0,   0.93, 10,  -2, 0.0007, 5.0 },
+        {  96,  0,    0, 15300,  0,   0.93,  8,  -2, 0.0006, 2.5 },
+        { 112,  0,    0, 16000,  0,   0.93,  7,  -2, 0.0005, 2.5 },
+        { 128,  0,    0, 17500,  0,   0.93,  5,  -1, 0.0002, 2.5 },
+        { 160,  0,    0, 18000,  0,   0.95,  4,   0, 0.0000, 1.8 },
+        { 192,  0,    0, 19500,  0,   0.97,  3,   0, 0.0000, 1.8 },
+        { 224,  0,    0, 20000,  0,   0.98,  2,   1, 0.0000, 1.8 },
+        { 256,  1,    1, 20500,  0,   1.00,  1,   1, 0.0000, 1.8 },
+        { 320,  1,    1, 21000,  0,   1.00,  0,   1, 0.0000, 1.8 }
     };
 
     int lower_range, lower_range_kbps, upper_range, upper_range_kbps;
     int r, b;
 
-    for (b = 1; b < sizeof(abr_switch_map)/sizeof(abr_switch_map[0])-1
-	     && bitrate > abr_switch_map[b].abr_kbps; b++)
+    for (b = 1; b < sizeof(switch_map)/sizeof(switch_map[0])-1
+	     && bitrate > switch_map[b].abr_kbps; b++)
 	;
 
-    upper_range_kbps = abr_switch_map[b].abr_kbps;
+    upper_range_kbps = switch_map[b].abr_kbps;
     upper_range = b;
-    lower_range_kbps = abr_switch_map[b-1].abr_kbps;
+    lower_range_kbps = switch_map[b-1].abr_kbps;
     lower_range = (b-1);
 
     /* Determine which range the value specified is closer to */
@@ -283,23 +284,23 @@ static int apply_preset(lame_global_flags*  gfp, int bitrate, vbr_mode mode)
     lame_set_brate(gfp, lame_get_VBR_mean_bitrate_kbps(gfp));
 
     if (mode != vbr) {
-	lame_set_use_largescalefac(gfp, abr_switch_map[r].large_scalefac);
-	lame_set_use_subblock_gain(gfp, abr_switch_map[r].large_scalefac);
-	lame_set_ATHcurve(gfp, abr_switch_map[r].ath_curve);
-	lame_set_ATHlower(gfp, (double)abr_switch_map[r].ath_lower);
+	lame_set_use_largescalefac(gfp, switch_map[r].large_scalefac);
+	lame_set_use_subblock_gain(gfp, switch_map[r].large_scalefac);
+	lame_set_ATHcurve(gfp, switch_map[r].ath_curve);
+	lame_set_ATHlower(gfp, (double)switch_map[r].ath_lower);
 	if (gfp->internal_flags->quantcomp_method < 0)
-	    lame_set_quantcomp_method(gfp, abr_switch_map[r].method);
+	    lame_set_quantcomp_method(gfp, switch_map[r].method);
 	/*
 	 * ABR seems to have big problems with clipping, especially at
 	 * low bitrates. so we compensate for that here by using a scale
 	 * value depending on bitrate
 	 */
-	if (abr_switch_map[r].scale != 1)
-	    (void) lame_set_scale( gfp, abr_switch_map[r].scale );
+	if (switch_map[r].scale != 1)
+	    (void) lame_set_scale( gfp, switch_map[r].scale );
     }
 
     if (gfp->lowpassfreq == 0)
-	lame_set_lowpassfreq(gfp, abr_switch_map[r].lowpass);
+	lame_set_lowpassfreq(gfp, switch_map[r].lowpass);
 
     if (gfp->mode == NOT_SET)
 	gfp->mode = JOINT_STEREO;
@@ -307,22 +308,25 @@ static int apply_preset(lame_global_flags*  gfp, int bitrate, vbr_mode mode)
     if (gfp->mode_automs && gfp->mode != MONO && gfp->compression_ratio < 6.6)
 	gfp->mode = STEREO;
 
-    if (abr_switch_map[r].nsmsfix > 0)
-	(void) lame_set_msfix( gfp, abr_switch_map[r].nsmsfix );
+    if (switch_map[r].nsmsfix > 0)
+	(void) lame_set_msfix( gfp, switch_map[r].nsmsfix );
 
-    lame_set_interChRatio(gfp, abr_switch_map[r].interch);
+    if (gfp->interChRatio < 0)
+	lame_set_interChRatio(gfp, switch_map[r].interch);
 
-    if (gfp->internal_flags->nsPsy.attackthre < 0.0) {
-	if (bitrate >= 160)
-	    lame_set_short_threshold(gfp, 1.8, 1.8);
+    if (gfp->internal_flags->nsPsy.attackthre < 0.0)
+	lame_set_short_threshold(gfp, switch_map[r].shortthreshold,
+				 switch_map[r].shortthreshold);
+
+    if (gfp->internal_flags->istereo_ratio < 0.0) {
+	if (bitrate >= 128)
+	    lame_set_istereoRatio(gfp, 1.0);
 	else if (bitrate > 90)
-	    lame_set_short_threshold(gfp, 2.5, 2.5);
+	    lame_set_istereoRatio(gfp, 0.8);
 	else if (bitrate > 56)
-	    lame_set_short_threshold(gfp, 5.0, 5.0);
-	else if (bitrate > 16)
-	    lame_set_short_threshold(gfp, 20.0, 20.0);
+	    lame_set_istereoRatio(gfp, 0.5);
 	else
-	    lame_set_short_threshold(gfp, 100.0, 100.0); /* no short blocks */
+	    lame_set_istereoRatio(gfp, 0.3);
     }
     return bitrate;
 }
@@ -647,7 +651,7 @@ lame_init_params(lame_global_flags * const gfp)
 
     if ( gfp->athaa_loudapprox < 0 ) gfp->athaa_loudapprox = 2;
 
-    if (gfp->useTemporal < 0 ) gfp->useTemporal = 1;  // on by default
+//    if (gfp->useTemporal < 0 ) gfp->useTemporal = 1;  // on by default
 
     lame_init_bitstream(gfp);
     iteration_init(gfp);
@@ -1567,6 +1571,7 @@ lame_init_old(lame_global_flags * gfp)
     gfc->masking_lower = 1.0;
 
     gfc->nsPsy.attackthre = gfc->nsPsy.attackthre_s = -1.0;
+    gfc->istereo_ratio = -1.0;
     gfc->nsPsy.msfix = NS_MSFIX*M_SQRT2;
 
     gfp->ATHcurve = 4;
@@ -1575,7 +1580,7 @@ lame_init_old(lame_global_flags * gfp)
                                 /* 2 = equal loudness curve */
     gfp->athaa_sensitivity = 0.0; /* no offset */
     gfp->useTemporal = -1;
-    gfp->interChRatio = 0.0;
+    gfp->interChRatio = -1.0;
 
     /* The reason for
      *       int mf_samples_to_encode = ENCDELAY + POSTDELAY;

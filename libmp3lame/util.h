@@ -366,6 +366,9 @@ struct lame_internal_flags {
   FLOAT sparseA;
   FLOAT sparseB;
 
+    /* intensity stereo threshold */
+    FLOAT istereo_ratio;
+
     /* psymodel */
     FLOAT nb_1[4][CBANDS];
     FLOAT *s3_ss;
