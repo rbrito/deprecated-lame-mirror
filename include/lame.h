@@ -72,7 +72,13 @@ typedef enum preset_mode_e {
     STANDARD_FAST = 1004,
     EXTREME_FAST = 1005,
     MEDIUM = 1006,
-    MEDIUM_FAST = 1007
+    MEDIUM_FAST = 1007,
+    DM_MEDIUM = 1008,
+    DM_MEDIUM_FAST = 1009,
+    PORTABLE = 1010,
+    PORTABLE_FAST = 1011,
+    DM_RADIO = 1012,
+    DM_RADIO_FAST = 1013
 } preset_mode;
 
 
@@ -175,7 +181,7 @@ int CDECL lame_get_analysis(const lame_global_flags *);
 
 /*
   1 = write a Xing VBR header frame.
-  default = 1 for VBR/ABR modes, 0 for CBR mode
+  default = 1
   this variable must have been added by a Hungarian notation Windows programmer :-)
 */
 int CDECL lame_set_bWriteVbrTag(lame_global_flags *, int);
@@ -750,6 +756,14 @@ void CDECL lame_stereo_mode_hist(
 void CDECL lame_bitrate_stereo_mode_hist ( 
         const lame_global_flags * const gfp, 
         int  bitrate_stmode_count [14] [4] );
+
+void CDECL lame_block_type_hist (
+        const lame_global_flags * const gfp, 
+        int btype_count[6] );
+
+void CDECL lame_bitrate_block_type_hist ( 
+        const lame_global_flags * const gfp, 
+        int bitrate_btype_count[14][6] );
 
 
 /*
