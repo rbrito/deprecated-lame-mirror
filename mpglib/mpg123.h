@@ -13,7 +13,8 @@
 #endif
 
 #ifdef _MSC_VER
-
+#pragma warning( disable : 4244 )
+#pragma warning( disable : 4305 )
 # define REAL_IS_FLOAT
 # define NEW_DCT9
 

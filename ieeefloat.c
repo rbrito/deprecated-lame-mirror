@@ -44,8 +44,12 @@
  * $Id$
  *
  * $Log$
- * Revision 1.1  1999/11/24 08:42:58  markt
- * Initial revision
+ * Revision 1.2  2000/02/19 13:32:30  afaber
+ * Fixed many warning messages when compiling with MSVC
+ *
+ * Revision 1.1.1.1  1999/11/24 08:42:58  markt
+ * initial checkin of LAME
+ * Starting with LAME 3.57beta with some modifications
  *
  * Revision 1.1  1993/06/11  17:45:46  malcolm
  * Initial revision
@@ -177,10 +181,10 @@ ConvertToIeeeSingle(defdouble num, char* bytes)
 		}
 	}
 
-	bytes[0] = bits >> 24;	/* Copy to byte string */
-	bytes[1] = bits >> 16;
-	bytes[2] = bits >> 8;
-	bytes[3] = bits;
+	bytes[0] = (char)(bits >> 24);	/* Copy to byte string */
+	bytes[1] = (char)(bits >> 16);
+	bytes[2] = (char)(bits >> 8);
+	bytes[3] = (char)(bits);
 }
 
 
@@ -307,14 +311,14 @@ ConvertToIeeeDouble(defdouble num, char *bytes)
 		}
 	}
 	
-	bytes[0] = first >> 24;
-	bytes[1] = first >> 16;
-	bytes[2] = first >> 8;
-	bytes[3] = first;
-	bytes[4] = second >> 24;
-	bytes[5] = second >> 16;
-	bytes[6] = second >> 8;
-	bytes[7] = second;
+	bytes[0] = (char)(first >> 24);
+	bytes[1] = (char)(first >> 16);
+	bytes[2] = (char)(first >> 8);
+	bytes[3] = (char)(first);
+	bytes[4] = (char)(second >> 24);
+	bytes[5] = (char)(second >> 16);
+	bytes[6] = (char)(second >> 8);
+	bytes[7] = (char)(second);
 }
 
 
@@ -407,14 +411,14 @@ ConvertToIeeeExtended(defdouble num, char *bytes)
 	
 	bytes[0] = expon >> 8;
 	bytes[1] = expon;
-	bytes[2] = hiMant >> 24;
-	bytes[3] = hiMant >> 16;
-	bytes[4] = hiMant >> 8;
-	bytes[5] = hiMant;
-	bytes[6] = loMant >> 24;
-	bytes[7] = loMant >> 16;
-	bytes[8] = loMant >> 8;
-	bytes[9] = loMant;
+	bytes[2] = (char)(hiMant >> 24);
+	bytes[3] = (char)(hiMant >> 16);
+	bytes[4] = (char)(hiMant >> 8);
+	bytes[5] = (char)(hiMant);
+	bytes[6] = (char)(loMant >> 24);
+	bytes[7] = (char)(loMant >> 16);
+	bytes[8] = (char)(loMant >> 8);
+	bytes[9] = (char)(loMant);
 }
 
 /****************************************************************

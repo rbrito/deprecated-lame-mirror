@@ -5,6 +5,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.13  2000/02/19 13:32:30  afaber
+ * Fixed many warning messages when compiling with MSVC
+ *
  * Revision 1.12  2000/02/01 11:26:32  takehiro
  * scalefactor's structure changed
  *
@@ -85,7 +88,7 @@ BF_PartHolder *userSpectrumPH[ MAX_GRANULES ][ MAX_CHANNELS ];
 BF_PartHolder *userFrameDataPH;
 
 
-void putMyBits( uint32 val, uint16 len )
+void putMyBits( u_int val, u_int len )
 {
     putbits( bs, val, len );
 }
@@ -335,9 +338,9 @@ encodeMainData( int              l3_enc[2][2][576],
 static unsigned int crc = 0; /* (jo) current crc */
 
 /* (jo) this wrapper function for BF_addEntry() updates also the crc */
-static BF_PartHolder *CRC_BF_addEntry( BF_PartHolder *thePH, uint32 value, uint16 length )
+static BF_PartHolder *CRC_BF_addEntry( BF_PartHolder *thePH, u_int value, u_int length )
 {
-   unsigned int bit = 1 << length;
+   u_int bit = 1 << length;
    
    while((bit >>= 1)){
       crc <<= 1;
@@ -723,7 +726,7 @@ Huffmancodebits( BF_PartHolder **pph, int *ix, gr_info *gi )
 	    *pph = BF_addEntry( *pph, ~0, remainingBits );
 	bitsWritten += stuffingBits;
     }
-    assert( bitsWritten == gi->part2_3_length - gi->part2_length );
+    assert( bitsWritten == (int)(gi->part2_3_length - gi->part2_length) );
 #ifdef DEBUG
     fprintf(stderr, "## %d Huffman bits written (%02d + %02d), part2_length = %d, part2_3_length = %d, %d stuffing ##\n",
 	    bitsWritten, bvbits, c1bits, gi->part2_length, gi->part2_3_length, stuffingBits );
@@ -757,7 +760,7 @@ L3_huffman_coder_count1( BF_PartHolder **pph, struct huffcodetab *h, int v, int 
 
     huffbits = h->table[p];
     len = h->hlen[ p ];
-    *pph = BF_addEntry(*pph, (uint32) huffbits, len);
+    *pph = BF_addEntry(*pph, huffbits, len);
     totalBits += len;
     if ( v )
     {

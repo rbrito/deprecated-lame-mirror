@@ -94,7 +94,7 @@ int get_audio(short buffer[2][1152],int stereo)
   int samples_read;
   int framesize,samples_to_read;
   static unsigned long num_samples_read;
-  unsigned long remaining;
+  int remaining;
   int autoconvert=0;
   int num_channels = gf.num_channels;
 
@@ -106,7 +106,7 @@ int get_audio(short buffer[2][1152],int stereo)
 
   remaining=num_samples-num_samples_read;
   framesize = gf.mode_gr*576;
-  samples_to_read = remaining > framesize ? framesize : remaining;
+  samples_to_read = (remaining > framesize ? framesize : remaining);
   if (samples_to_read<0) samples_to_read=0;
 
 

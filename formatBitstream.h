@@ -13,6 +13,9 @@
   1995/09/06  mc@fivebats.com           created
 
 */
+
+#include "machine.h"
+
 #ifndef MAX_CHANNELS
 #define MAX_CHANNELS 2
 #endif
@@ -21,17 +24,13 @@
 #define MAX_GRANULES 2
 #endif
 
-/* Find the ANSI header for these! */
-typedef unsigned int   uint32;
-typedef unsigned short uint16;
-
 /*
   This is the prototype for the function pointer you must
   provide to write bits to the bitstream. It should write
   'length' bits from 'value,' msb first. Bits in value are
   assumed to be right-justified.
 */
-void putMyBits( uint32 value, uint16 length );
+void putMyBits( u_int value, u_int length );
 
 /*
   A BitstreamElement contains encoded data
@@ -41,8 +40,8 @@ void putMyBits( uint32 value, uint16 length );
 */
 typedef struct
 {
-    uint32 value;
-    uint16 length;
+    u_int value;
+    u_short length;
 } BF_BitstreamElement;
 
 /*
@@ -54,7 +53,7 @@ typedef struct
 */
 typedef struct
 {
-    uint32              nrEntries;
+    u_int              nrEntries;
     BF_BitstreamElement *element;
 } BF_BitstreamPart;
 
@@ -125,7 +124,7 @@ typedef struct BF_PartHolder
 BF_PartHolder *BF_newPartHolder( int max_elements );
 BF_PartHolder *BF_resizePartHolder( BF_PartHolder *oldPH, int max_elements );
 BF_PartHolder *BF_addElement( BF_PartHolder *thePH, BF_BitstreamElement *theElement );
-BF_PartHolder *BF_addEntry( BF_PartHolder *thePH, uint32 value, uint16 length );
+BF_PartHolder *BF_addEntry( BF_PartHolder *thePH, u_int value, u_int length );
 BF_PartHolder *BF_NewHolderFromBitstreamPart( BF_BitstreamPart *thePart );
 BF_PartHolder *BF_LoadHolderFromBitstreamPart( BF_PartHolder *theHolder, BF_BitstreamPart *thePart );
 BF_PartHolder *BF_freePartHolder( BF_PartHolder *thePH );

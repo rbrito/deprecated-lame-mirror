@@ -556,7 +556,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
           memcpy( pinfo, &bst_pinfo, sizeof(plotting_data) );
 #endif
       }
-      assert(cod_info->part2_3_length <= max_bits);
+      assert((int)cod_info->part2_3_length <= max_bits);
       save_bits[gr][ch] = cod_info->part2_3_length;
       used_bits += save_bits[gr][ch];
       
@@ -967,7 +967,8 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
 		 FLOAT8 *over_noise,
 		 FLOAT8 *tot_noise, FLOAT8 *max_noise)
 {
-    int start, end, sfb, l, i, over=0;
+    int start, end, l, i, over=0;
+	u_int sfb;
     FLOAT8 sum,step,bw;
 #if RH_ATH
     FLOAT8 ath_max;
@@ -1109,7 +1110,8 @@ void amp_scalefac_bands(FLOAT8 xrpow[576],
 			III_scalefac_t *scalefac,
 			FLOAT8 distort[4][SBPSY_l])
 {
-    int start, end, l, sfb, i;
+    int start, end, l,i;
+	u_int	sfb;
     FLOAT8 ifqstep34;
     FLOAT8 distort_thresh;
 

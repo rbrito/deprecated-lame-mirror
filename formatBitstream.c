@@ -34,9 +34,8 @@ static int store_side_info( BF_FrameData *frameInfo );
 static int main_data( BF_FrameData *frameInfo, BF_FrameResults *results );
 static int side_queue_elements( int *forwardFrameLength, int *forwardSILength );
 static void free_side_queues(void);
-static void WriteMainDataBits( unsigned val,
-                               unsigned nbits,
-			       BF_FrameResults *results );
+static void WriteMainDataBits( u_int val,u_int nbits,BF_FrameResults *results );
+
 /*
   BitStreamFrame is the public interface to the bitstream
   formatting package. It writes one frame of main data per call.
@@ -118,11 +117,11 @@ int
 BF_PartLength( BF_BitstreamPart *part )
 {
     BF_BitstreamElement *ep = part->element;
-    int i, bits;
+    u_int i;
+	int	bits=0;
 
-    bits = 0;
     for ( i = 0; i < part->nrEntries; i++, ep++ )
-	bits += ep->length;
+		bits += ep->length;
     return bits;
 }
 
@@ -152,17 +151,17 @@ static int
 writePartMainData( BF_BitstreamPart *part, BF_FrameResults *results )
 {
     BF_BitstreamElement *ep;
-    int i, bits;
+    u_int	i;
+	int		bits=0;
 
     assert( results );
     assert( part );
 
-    bits = 0;
     ep = part->element;
     for ( i = 0; i < part->nrEntries; i++, ep++ )
     {
-	WriteMainDataBits( ep->value, ep->length, results );
-	bits += ep->length;
+		WriteMainDataBits( ep->value, ep->length, results );
+		bits += ep->length;
     }
     return bits;
 }
@@ -171,16 +170,16 @@ static int
 writePartSideInfo( BF_BitstreamPart *part, BF_FrameResults *results )
 {
     BF_BitstreamElement *ep;
-    int i, bits;
+    u_int	i;
+	int		bits=0;
 
     assert( part );
 
-    bits = 0;
     ep = part->element;
     for ( i = 0; i < part->nrEntries; i++, ep++ )
     {
-	putMyBits( ep->value, ep->length );
-	bits += ep->length;
+		putMyBits( ep->value, ep->length );
+		bits += ep->length;
     }
     return bits;
 }
@@ -211,8 +210,8 @@ main_data( BF_FrameData *fi, BF_FrameResults *results )
 */
 
 static void
-WriteMainDataBits( unsigned val,
-		   unsigned nbits,
+WriteMainDataBits( u_int val,
+		   u_int nbits,
 		   BF_FrameResults *results )
 {
     assert( nbits <= 32 );
@@ -223,7 +222,7 @@ WriteMainDataBits( unsigned val,
     }
     if ( nbits == 0 )
 	return;
-    if ( nbits > BitsRemaining )
+    if ( nbits > (u_int)BitsRemaining )
     {
 	unsigned extra = val >> (nbits - BitsRemaining);
 	nbits -= BitsRemaining;
@@ -460,7 +459,7 @@ BF_PartHolder *BF_NewHolderFromBitstreamPart( BF_BitstreamPart *thePart )
 BF_PartHolder *BF_LoadHolderFromBitstreamPart( BF_PartHolder *theHolder, BF_BitstreamPart *thePart )
 {
     BF_BitstreamElement *pElem;
-    int i;
+    u_int i;
 
     theHolder->part->nrEntries = 0;
     for ( i = 0; i < thePart->nrEntries; i++ )
@@ -531,13 +530,14 @@ BF_PartHolder *BF_addElement( BF_PartHolder *thePH, BF_BitstreamElement *theElem
 /*
   Add a bit value and length to the element list in thePH
 */
-BF_PartHolder *BF_addEntry( BF_PartHolder *thePH, uint32 value, uint16 length )
+BF_PartHolder *BF_addEntry( BF_PartHolder *thePH, u_int value, u_int length )
 {
     BF_BitstreamElement myElement;
     myElement.value  = value;
     myElement.length = length;
+
     if ( length )
-	return BF_addElement( thePH, &myElement );
+		return BF_addElement( thePH, &myElement );
     else
-	return thePH;
+		return thePH;
 }

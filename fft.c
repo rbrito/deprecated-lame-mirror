@@ -261,7 +261,7 @@ void fft_short(
 void fft_long(
     FLOAT x[BLKSIZE], int chn, short *buffer[2])
 {
-    int i, j, jj = BLKSIZE / 8 - 1;
+    int i,jj = BLKSIZE / 8 - 1;
     x += BLKSIZE / 2;
 
     if (chn < 2) {

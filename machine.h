@@ -65,6 +65,10 @@
 	#define INLINE inline
 #endif
 
+#if ( defined(_MSC_VER))
+	#pragma warning( disable : 4244 )
+	#pragma warning( disable : 4305 )
+#endif
 
 #if ( defined(_MSC_VER) || defined(__BORLANDC__) )
 	#define WIN32_LEAN_AND_MEAN

@@ -354,13 +354,13 @@ static int choose_table(int *ix, int *end, int *s)
 	max -= 15;
 
 	for (choice1 = 24; choice1 < 32; choice1++) {
-	    if (ht[choice1].linmax >= max) {
+	    if ((int)ht[choice1].linmax >= max) {
 		break;
 	    }
 	}
 
 	for (choice0 = choice1 - 8; choice0 < 24; choice0++) {
-	    if (ht[choice0].linmax >= max) {
+	    if ((int)ht[choice0].linmax >= max) {
 		break;
 	    }
 	}
@@ -430,13 +430,13 @@ static int choose_table_short(int *ix, int *end, int * s)
 	/* try tables with linbits */
 	max -= 15;
 	for (choice1 = 24; choice1 < 32; choice1++) {
-	    if (ht[choice1].linmax >= max) {
+	    if ((int)ht[choice1].linmax >= max) {
 		break;
 	    }
 	}
 
 	for (choice0 = choice1 - 8; choice0 < 24; choice0++) {
-	    if (ht[choice0].linmax >= max) {
+	    if ((int)ht[choice0].linmax >= max) {
 		break;
 	}
 	}
@@ -604,18 +604,18 @@ void best_huffman_divide(int gr, int ch, gr_info *gi, int *ix)
 	cod_info.region0_count = r0;
 	r1_bits = 0;
 	cod_info.table_select[0] = choose_table(ix, ix + a1, &r1_bits);
-	if (gi->part2_3_length < r1_bits)
+	if ((int)gi->part2_3_length < r1_bits)
 	    break;
 
 	for (r1 = 0; r1 < 8; r1++) {
 	    *bits = r1_bits + r3_bits[r0 + r1 + 2];
-	    if (gi->part2_3_length < *bits)
+	    if ((int)gi->part2_3_length < *bits)
 		continue;
 
 	    a2 = scalefac_band.l[r0 + r1 + 2];
 
 	    cod_info.table_select[1] = choose_table(ix + a1, ix + a2, bits);
-	    if (gi->part2_3_length < *bits)
+	    if ((int)gi->part2_3_length < *bits)
 		continue;
 
 	    cod_info.region1_count = r1;
@@ -678,7 +678,7 @@ scfsi_calc(int ch,
     for (i = 0; i < 16; i++) {
 	if (s1 < slen1_n[i] && s2 < slen2_n[i]) {
 	    int c = slen1_tab[i] * c1 + slen2_tab[i] * c2;
-	    if (gi->part2_length > c) {
+	    if ((int)gi->part2_length > c) {
 		gi->part2_length = c;
 		gi->scalefac_compress = i;
 	    }
@@ -695,7 +695,7 @@ void best_scalefac_store(int gr, int ch,
 
     gi->part2_3_length -= gi->part2_length;
     if (!gi->scalefac_scale && !gi->preflag) {
-	int sfb;
+	u_int sfb;
 	int b, s = 0;
 	for (sfb = 0; sfb < gi->sfb_lmax; sfb++) {
 	    s |= scalefac[gr][ch].l[sfb];

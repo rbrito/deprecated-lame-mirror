@@ -529,7 +529,7 @@ int scale_bitcount( III_scalefac_t *scalefac, gr_info *cod_info)
     for ( k = 0; k < 16; k++ )
     {
         if ( (max_slen1 < slen1[k]) && (max_slen2 < slen2[k]) &&
-             (cod_info->part2_length > tab[k])) {
+             ((int)cod_info->part2_length > tab[k])) {
 	  cod_info->part2_length=tab[k];
 	  cod_info->scalefac_compress=k;
 	  ep=0;  /* we found a suitable scalefac_compress */
@@ -627,7 +627,7 @@ int scale_bitcount_lsf(III_scalefac_t *scalefac, gr_info *cod_info)
 
     for ( over = 0, partition = 0; partition < 4; partition++ )
     {
-	if ( max_sfac[partition] > max_range_sfac_tab[table_number][partition] )
+	if ( max_sfac[partition] > (int)max_range_sfac_tab[table_number][partition] )
 	    over++;
     }
     if ( !over )
@@ -705,7 +705,8 @@ int scale_bitcount_lsf(III_scalefac_t *scalefac, gr_info *cod_info)
 int calc_xmin( FLOAT8 xr[576], III_psy_ratio *ratio,
 	       gr_info *cod_info, III_psy_xmin *l3_xmin)
 {
-    int start, end, bw, sfb, l, b, ath_over=0;
+    int start, end, bw,l, b, ath_over=0;
+	u_int	sfb;
     FLOAT8 en0, xmin, ener;
 
     if (gf.ATHonly) {    
@@ -781,7 +782,8 @@ int calc_xmin( FLOAT8 xr[576], III_psy_ratio *ratio,
 
 int loop_break( III_scalefac_t *scalefac, gr_info *cod_info)
 {
-    int i, sfb;
+    int i;
+	u_int sfb;
 
     for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ )
         if ( scalefac->l[sfb] == 0 )
