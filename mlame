@@ -2,7 +2,7 @@
 #!/usr/local/bin/bash
 ############################################################################
 #   
-#  Run the LAME encoder on multible files, with option to delete .wav files
+#  Run the LAME encoder on multiple files, with option to delete .wav files
 #  after encoding.  "mlame -h" will give instructions.
 #
 #  Robert Hegemann <Robert.Hegemann@gmx.de>
