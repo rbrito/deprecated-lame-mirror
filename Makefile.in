@@ -392,7 +392,7 @@ lib_sources = \
 	mpglib_interface.c \
         version.c
 
-lib_obj = $(lib_sources:.c=.o)
+lib_obj = $(lib_sources:.c=.o) mpglib/mpglib.a
 
 OBJ = $(c_sources:.c=.o)
 DEP = $(c_sources:.c=.d) $(lib_sources:.c=.d)
@@ -440,8 +440,8 @@ libmp3lame.so:  $(LIBS) $(lib_obj) Makefile
 $(PGM): lib
 	cd frontend; make
 
-frontend/mp3x:
-	cd frontend; make
+mp3x/mp3x:
+	cd mp3x; make
 
 frontend/mp3rtp:
 	cd frontend; make
@@ -452,8 +452,6 @@ mpglib/mpglib.a:
 install_header:
 	@mkdir -p $(INCLUDEDIR)
 	$(INSTALL_PROGRAM) include/lame.h $(INCLUDEDIR)
-	$(INSTALL_PROGRAM) include/lame-id3tag.h $(INCLUDEDIR)
-	$(INSTALL_PROGRAM) include/lame-analysis.h $(INCLUDEDIR)
 
 install_static_lib: libmp3lame.a install_header
 	@mkdir -p $(LIBDIR)

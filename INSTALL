@@ -27,14 +27,13 @@ On unix systems, they are set via ./configure.
 #define HAVEVORBIS   compile in Vorbis decoding and encoding capibility
                      (you need libvorbis already built)
 
-Exactly one of these is required for the command line encoder:
+
+Options for the command line encoder:
 #define LIBSNDFILE   to use Erik de Castro Lopo's libsndfile
                      (no stdin support yet)
 #define LAMESNDFILE  to use LAME's internal sound file support 
                      (16 bit wav and raw pcm only, files or stdin )
 
-Other options for the command line encoder:
-#define HAVEGTK      to compile in the LAME MP3 frame analyzer
 #define BRHIST       to allow the optional display of the VBR historgram
 #define NOTERMCAP    to try and emulate termcap/ncurses directly (ANSI)
                      only needed if BRHIST is used.  Works under Amiga

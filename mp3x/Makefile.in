@@ -33,7 +33,7 @@ INSTALL_DATA=@INSTALL_DATA@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 # generic defaults. OS specific options go in versious sections below
-PGM ?= lame
+PGM ?= mp3x
 CPP_OPTS = @CPP_OPT@ -I ../include -I ./ -I ../
 CC_OPTS = -O
 AR = ar
@@ -287,7 +287,7 @@ ifeq ($(UNAME),OS/2)
    SHELL=sh	
    CC = gcc
    CC_OPTS = -O3
-   PGM ?= lame.exe
+   PGM ?= mp3x.exe
 
 # I use the following for slightly better performance on my Pentium-II
 # using pgcc-2.91.66:
@@ -305,7 +305,7 @@ endif
 ###########################################################################
 ifeq ($(UNAME),MSDOS)
   RM_F =
-  PGM ?= lame.exe
+  PGM ?= mp3x.exe
 endif
 
 ###########################################################################
@@ -392,20 +392,8 @@ ASFLAGS=-f elf -i i386/
 
 all: $(PGM)
 
-$(PGM):	main.o @GTK_OBJ@ ../libmp3lame.a $(LIBS) $(OBJ)
-	$(CC) -o $(PGM)  main.o  $(OBJ) $(LIBS) $(LDFLAGS) -L.. -lmp3lame
-
-mp3x:	mp3x.o @GTK_OBJ@ ../libmp3lame.a $(LIBS) $(OBJ)
+$(PGM):	mp3x.o @GTK_OBJ@ ../libmp3lame.a $(LIBS) $(OBJ)
 	$(CC) -o mp3x mp3x.o -L.. $(OBJ) $(LIBS) $(LDFLAGS) -L.. -lmp3lame
-
-mp3rtp:	rtp.o mp3rtp.o ../libmp3lame.a $(LIBS) $(OBJ)
-	$(CC) -o mp3rtp mp3rtp.o rtp.o -L..   $(OBJ) $(LIBS) $(LDFLAGS) -L.. -lmp3lame
-
-
-
-
-
-
 
 
 

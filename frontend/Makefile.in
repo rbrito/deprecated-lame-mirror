@@ -293,11 +293,6 @@ ifeq ($(UNAME),OS/2)
 # using pgcc-2.91.66:
 #   CC_OPTS = -O6 -ffast-math -funroll-loops -mpentiumpro -march=pentiumpro
 
-# Uncomment & inspect the 2 GTK lines to use MP3x GTK frame analyzer.
-# Properly installed XFree86/devlibs & GTK+ is a prerequisite.
-# The following works for me using Xfree86/OS2 3.3.5 and GTK+ 1.2.3:
-#   LDFLAGS += -DHAVEGTK -IC:/XFree86/include/gtk12 -Zmt -D__ST_MT_ERRNO__ -IC:/XFree86/include/glib12 -IC:/XFree86/include
-#   CFLAGS += -LC:/XFree86/lib -Zmtd -Zsysv-signals -Zbin-files -lgtk12 -lgdk12 -lgmodule -lglib12 -lXext -lX11 -lshm -lbsd -lsocket -lm
 endif
 
 ###########################################################################
@@ -354,9 +349,6 @@ endif
 
 CC_SWITCHES = -DNDEBUG $(CC_OPTS) $(CFLAGS)
 
-gtk_sources = gtkanal.c gpkplotting.c
-gtk_obj = $(gtk_sources:.c=.o)
-
 brhist_sources = brhist.c
 
 c_sources = @CONFIG_SOURCES@ \
@@ -392,14 +384,13 @@ ASFLAGS=-f elf -i i386/
 
 all: $(PGM)
 
-$(PGM):	main.o @GTK_OBJ@ ../libmp3lame.a $(LIBS) $(OBJ)
-	$(CC) -o $(PGM)  main.o  $(OBJ) $(LIBS) $(LDFLAGS) -L.. -lmp3lame
-
-mp3x:	mp3x.o @GTK_OBJ@ ../libmp3lame.a $(LIBS) $(OBJ)
-	$(CC) -o mp3x mp3x.o -L.. $(OBJ) $(LIBS) $(LDFLAGS) -L.. -lmp3lame
+# these applications are to be statically linked for now:
+# i.e dont use -L -lmp3lame, since the default will pick up the shared lib
+$(PGM):	main.o ../libmp3lame.a $(LIBS) $(OBJ)
+	$(CC) -o $(PGM)  main.o  $(OBJ) $(LIBS) $(LDFLAGS) ../libmp3lame.a
 
 mp3rtp:	rtp.o mp3rtp.o ../libmp3lame.a $(LIBS) $(OBJ)
-	$(CC) -o mp3rtp mp3rtp.o rtp.o -L..   $(OBJ) $(LIBS) $(LDFLAGS) -L.. -lmp3lame
+	$(CC) -o mp3rtp mp3rtp.o rtp.o -L..   $(OBJ) $(LIBS) $(LDFLAGS) ../libmp3lame.a
 
 
 
@@ -424,7 +415,7 @@ clean:
 	-del *.a
 	-del $(PGM)
   else
-	-$(RM_F) $(gtk_obj) $(OBJ) $(DEP) $(PGM) main.o rtp.o mp3rtp mp3rtp.o \
+	-$(RM_F) $(OBJ) $(DEP) $(PGM) main.o rtp.o mp3rtp mp3rtp.o \
          mp3x.o mp3x main.d rtp.d mp3rtp.d
   endif
 

@@ -1,11 +1,9 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl
 dnl include support and option for
-dnl - GTK            done.
 dnl - VBR histogram  done.
 dnl - SNDLIB         done.
 dnl - VORBIS         done.
-dnl - decoder        done.
 dnl - disable shared done.
 dnl - shared lib version
 dnl - debugging mode
@@ -140,65 +138,8 @@ if test ".$WARNING" != "." ; then
 fi
 
 
-dnl mpg123 decoder
-AC_MSG_CHECKING(use of mpg123 decoder)
-AC_ARG_ENABLE(decoder, 
-  [  --enable-decoder            Include mpg123 decoder [default:yes]],
-  CONFIG_DECODER="$enableval", CONFIG_DECODER="yes")
-AC_ARG_ENABLE(decode-layer1, 
-  [  --enable-decoder-layer1     Include layer1 decoding [default:yes]],
-  CONFIG_DECODER_L1="$enableval", CONFIG_DECODER_L1="yes")
-AC_ARG_ENABLE(decode-layer1, 
-  [  --enable-decoder-layer2     Include layer2 decoding [default:yes]],
-  CONFIG_DECODER_L2="$enableval", CONFIG_DECODER_L2="yes")
-AC_MSG_RESULT($CONFIG_DECODER)
-
-if test "$CONFIG_DECODER" != "no" ; then
-  CONFIG_DECODER=yes
-  CONFIG_LIBS="../mpglib/mpglib.a $CONFIG_LIBS"
-  CONFIG_OPTS="-DHAVEMPGLIB $CONFIG_OPTS"
-fi
 
 
-dnl analyzer interface
-AC_ARG_ENABLE(analyzer, 
-    [  --enable-analyzer=yes,no    Whether to include the analyzer interface[default yes]]
-    CONFIG_ANALYZER="$enableval", CONFIG_ANALYZER="yes")
-
-if test "$CONFIG_ANALYZER" != "no" ; then
-	CPP_OPT="-DANALYSIS $CPP_OPT"
-fi
-
-
-
-
-dnl basic check for GTK...actually just for gtk-config...
-AC_PATH_PROG(GTK_CONFIG, gtk-config, no)
-AC_MSG_CHECKING(use of GTK frame analyzer)
-if test ".$GTK_CONFIG" != ".no" \
-    && test "$CONFIG_DECODER" != "no" \
-    && test "$CONFIG_FILEIO" != "no"; then
-  FA_DEFAULT=yes
-else
-  FA_DEFAULT=no
-fi
-
-dnl todo: display actual default value
-AC_ARG_ENABLE(gtkanalyzer, 
-    [  --enable-gtkanalyzer=yes,no Whether to include the GTK frame analyzer [default yes if possible]]
-    [                          It requires installed GTK, file io and the decoder.],
-    CONFIG_FA="$enableval", CONFIG_FA="$FA_DEFAULT")
-
-if test "$CONFIG_ANALYZER" != "no" && test "$FA_DEFAULT" != "no" && test "$CONFIG_FA" != "no" ; then
-  CONFIG_LDFLAGS="`$GTK_CONFIG --libs` $CONFIG_LDFLAGS"
-  CONFIG_OPTS="-DHAVEGTK `$GTK_CONFIG --cflags` $CONFIG_OPTS"
-  GTK_SOURCE="\$(gtk_sources)"
-  CONFIG_FA=yes
-  GTK_OBJ="\$(gtk_obj)"
-else
-  CONFIG_FA=no
-fi
-AC_MSG_RESULT($CONFIG_FA)
 
 
 INSTALL_TARGETS="install_program"

@@ -37,7 +37,6 @@
  to the library.
 */
 #include "lame.h"
-#include "lame-id3tag.h"
 
 #ifdef __riscos__
 #include "asmstuff.h"

@@ -196,35 +196,28 @@ The LAME API
  */
 int lame_init(lame_global_flags *);
 
-
-
-
-/*********************************************************************
- * command line argument parsing & option setting.  Only supported
- * if libmp3lame compiled with LAMEPARSE defined 
- *********************************************************************/
-void lame_print_license(lame_global_flags* gfp, const char* ProgramName );
-
-/* OPTIONAL: get the version number, in a string. of the form:  "3.63 (beta)" or 
-   just "3.63".  Max allows length is 20 characters  */
-void lame_version(lame_global_flags *, char *);
-void lame_print_version ( FILE* fp );
-
-
-
-
-
 /* REQUIRED:  sets more internal configuration based on data provided
  * above.  returns -1 if something failed.
  */
 int lame_init_params(lame_global_flags *);
 
 
+/* OPTIONAL:  get the version number, in a string. of the form:  
+   "3.63 (beta)" or just "3.63".  Max allows length is ?? characters 
+   (check source) */
+void lame_version(lame_global_flags *, char *);
 
+/* OPTIONAL:  print the program name and version info to fp */
+void lame_print_version ( FILE* fp );
 
+/* OPTIONAL: print the license */
+void lame_print_license(lame_global_flags* gfp, const char* ProgramName );
 
-/* OPTONAL:  print internal lame configuration on stderr*/
+/* OPTIONAL:  print internal lame configuration on stderr*/
 void lame_print_config(lame_global_flags *);
+
+
+
 
 /* input pcm data, output (maybe) mp3 frames.
  * This routine handles all buffering, resampling and filtering for you.
@@ -292,6 +285,9 @@ Note: if VBR  tags are turned off by the user, or turned off
 by LAME because the output is not a regular file, this call does nothing
 */
 void lame_mp3_tags_fid(lame_global_flags *,FILE* fid);
+
+
+
 
 
 
@@ -397,6 +393,70 @@ int SeekPoint(unsigned char TOC[NUMTOCENTRIES], int file_bytes, float percent);
 int InitVbrTag(lame_global_flags *gfp);
 int PutVbrTag(lame_global_flags *gfp,FILE *fid,int nVbrScale);
 void AddVbrFrame(lame_global_flags *gfp);
+
+
+/*
+ * id3tag.h -- Interface to write ID3 version 1 and 2 tags.
+ *
+ * Copyright (C) 2000 Don Melton.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+ */
+
+
+
+/* utility to obtain alphabetically sorted list of genre names with numbers */
+extern void id3tag_genre_list(void (*handler)(int, const char *, void *),
+    void *cookie);
+
+
+extern void id3tag_init(struct id3tag_spec *spec);
+
+/* force addition of version 2 tag */
+extern void id3tag_add_v2(struct id3tag_spec *spec);
+/* add only a version 1 tag */
+extern void id3tag_v1_only(struct id3tag_spec *spec);
+/* add only a version 2 tag */
+extern void id3tag_v2_only(struct id3tag_spec *spec);
+/* pad version 1 tag with spaces instead of nulls */
+extern void id3tag_space_v1(struct id3tag_spec *spec);
+/* pad version 2 tag with extra 128 bytes */
+extern void id3tag_pad_v2(struct id3tag_spec *spec);
+
+extern void id3tag_set_title(struct id3tag_spec *spec, const char *title);
+extern void id3tag_set_artist(struct id3tag_spec *spec, const char *artist);
+extern void id3tag_set_album(struct id3tag_spec *spec, const char *album);
+extern void id3tag_set_year(struct id3tag_spec *spec, const char *year);
+extern void id3tag_set_comment(struct id3tag_spec *spec, const char *comment);
+extern void id3tag_set_track(struct id3tag_spec *spec, const char *track);
+
+/* return non-zero result if genre name or number is invalid */
+extern int id3tag_set_genre(struct id3tag_spec *spec, const char *genre);
+
+/*
+ * NOTE: A version 2 tag will NOT be added unless one of the text fields won't
+ * fit in a version 1 tag (e.g. the title string is longer than 30 characters),
+ * or the "id3tag_add_v2" or "id3tag_v2_only" functions are used.
+ */
+
+/* write tag into stream at current position */
+extern int id3tag_write_v2(lame_global_flags *gfp,struct id3tag_spec *spec);
+extern int id3tag_write_v1(lame_global_flags *gfp,struct id3tag_spec *spec);
+
+
+
 
 
 #if defined(__cplusplus)
