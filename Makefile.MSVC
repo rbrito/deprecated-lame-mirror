@@ -236,8 +236,8 @@ prg: config lib common Makefile.MSVC $(MPX_OBJ)
 
 dll: config lib common Makefile.MSVC $(DLL_OBJ)
 	@echo lame.dll
-	@$(LN) $(LN_SWITCHES) $(LIB_OBJ) $(CMMN_OBJ) $(DLL_OBJ) $(LIBSNDFILE) $(VORBISLIB) \
-	       /DLL /out:lame.dll /map:lamedll.map
+	@$(LN) $(LN_SWITCHES) $(LIB_OBJ) $(DLL_OBJ) $(VORBISLIB) \
+	       /DLL /out:lame_enc.dll /map
 
 lib: config Makefile.MSVC $(LIB_OBJ)
 

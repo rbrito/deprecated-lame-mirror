@@ -19,6 +19,8 @@
  * Boston, MA  02111-1307, USA.
  */
 
+#include <windows.h>
+#include <Windef.h>
 #include "BladeMP3EncDLL.h"
 #include <assert.h>
 // This DLL should be a wrapper around libmp3lame, and thus only need to 
@@ -33,7 +35,7 @@
 #define _RELEASEDEBUG 0
 
 const int MAJORVERSION=1;
-const int MINORVERSION=18;
+const int MINORVERSION=19;
 
 
 // Local variables
@@ -362,6 +364,7 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 		if (lameConfig.format.LHV1.dwMaxBitrate>0)
 			gf.VBR_max_bitrate_kbps=lameConfig.format.LHV1.dwMaxBitrate;
 
+		gf.VBR = vbr_mtrh;
 		// Use ABR?
 		if (lameConfig.format.LHV1.dwVbrAbr_bps>0)
 		{
