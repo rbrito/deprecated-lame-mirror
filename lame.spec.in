@@ -1,11 +1,12 @@
 %define name @PACKAGE@
 %define ver @VERSION@
-%define quality alpha
+%define quality beta
 %define rel 1
 %define prefix %{_usr}
 %define docdir %{_defaultdocdir}
 
 Summary : LAME Ain't an MP3 Encoder
+Summary(fr) : LAME n'est pas un encodeur MP3 ;->
 Name: %{name}
 Version: %{ver}%{quality}
 Release: %{rel}
@@ -25,14 +26,26 @@ psycho acoustics, noise shaping and speed of MP3.  Another goal of the LAME
 project is to use these improvements for the basis of a  patent free audio
 compression codec for the GNU project.
 
+%description -l fr
+LAME est un outil d'enseignement pour l'apprentissage de l'encodage MP3.
+Le but du projet LAME est d'utiliser un modèle "open source" afin
+d'améliorer la qualité et la vitesse du MP3. Un autre but du projet LAME
+est d'utiliser ces améliorations pour créer la base d'un algorithme de
+compression audio libre de droits pour le projet GNU.
+ 
+
 %prep -q
 
 %setup -n %{name}-%{ver} -q
 
 %build -q
+
 LC_ALL=POSIX
 export LC_ALL
-CFLAGS="$RPM_OPT_FLAGS" ./configure --prefix=%prefix --enable-nasm --enable-mp3x --enable-mp3rtp --quiet
+% nasm broken on most RH systems.  
+% mp3rtp broken as of 6/2001
+%CFLAGS="$RPM_OPT_FLAGS" ./configure --prefix=%prefix --enable-nasm --enable-mp3x --enable-mp3rtp --quiet
+CFLAGS="$RPM_OPT_FLAGS" ./configure --prefix=%prefix --enable-mp3x --quiet
 
 numcpu=`egrep -c "^processor[[:space:]]+:[[:space:]]+[0-9]+" /proc/cpuinfo`
 if [ "$numcpu""x" != "x" ]; then
@@ -58,6 +71,10 @@ rm -rf /usr/src/redhat/BUILD/%{name}-%{ver}
 %{prefix}/man
 
 %changelog
+* Wed Nov 21 2001 Eric Lassauge <lassauge@mail.dotcom.fr>
+- Updated and corrected RPM to 3.89beta.
+- Added french translations
+
 * Sat Aug 04 2001 Markus Linnala «maage@cs.tut.fi»
 - Build and include docs and libs correctly
 - Build extra programs
