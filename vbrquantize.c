@@ -381,7 +381,7 @@ VBR_quantize_granule(lame_global_flags *gfp,
   assert((int)count_bits != LARGE_BITS);
   
   /* do this before calling best_scalefac_store! */
-  if (gfc->pinfo != NULL) {
+  if (gfp->gtkflag) {
     FLOAT8 noise[4];
     FLOAT8 xfsf[4][SBPSY_l];
     FLOAT8 distort[4][SBPSY_l];
@@ -442,14 +442,27 @@ VBR_quantize_granule(lame_global_flags *gfp,
  *
  * compute scalefactors, l3_enc, and return number of bits needed to encode
  *
+ * return code:    0   scalefactors were found with all noise < masking
+ *
+ *               n>0   scalefactors required too many bits.  global gain
+ *                     was decreased by n
+ *                     If n is large, we should probably recompute scalefacs
+ *                     with a lower quality.
+ *
+ *               n<0   scalefactors used less than minbits.
+ *                     global gain was increased by n.  
+ *                     If n is large, might want to recompute scalefacs
+ *                     with a higher quality setting?
  *
  ************************************************************************/
 int
-VBR_noise_shapping (lame_global_flags *gfp,
-                FLOAT8 xr[576], III_psy_ratio *ratio,
-                int l3_enc[2][2][576], int *ath_over,
-                III_scalefac_t scalefac[2][2],
-		int gr,int ch)
+VBR_noise_shapping
+(
+ lame_global_flags *gfp,
+ FLOAT8 xr[576], III_psy_ratio *ratio,
+ int l3_enc[2][2][576], int *ath_over, int minbits,
+ III_scalefac_t scalefac[2][2],
+ int gr,int ch)
 {
   lame_internal_flags *gfc=gfp->internal_flags;
   int       start,end,bw,sfb,l, i, vbrmax;
@@ -461,8 +474,8 @@ VBR_noise_shapping (lame_global_flags *gfp,
   gr_info *cod_info;  
   FLOAT8 xr34[576];
   int shortblock;
+  int global_gain_adjust=0;
 
-  memset(&scalefac[gr][ch],0,sizeof(III_scalefac_t));
   l3_side = &gfc->l3_side;
   cod_info = &l3_side->gr[gr].ch[ch].tt;
   shortblock = (cod_info->block_type == SHORT_TYPE);
@@ -499,9 +512,11 @@ VBR_noise_shapping (lame_global_flags *gfp,
     
   } /* compute needed scalefactors */
   
-  
-  
-  
+
+  do { 
+
+  memset(&scalefac[gr][ch],0,sizeof(III_scalefac_t));
+    
   if (shortblock) {
     /******************************************************************
      *
@@ -524,8 +539,7 @@ VBR_noise_shapping (lame_global_flags *gfp,
       cod_info->scalefac_scale = 1;
       vbrmax -= maxover1;
     }
-    
-    
+
     /* sf =  (cod_info->global_gain-210.0) */
     cod_info->global_gain = vbrmax +210;
     if (cod_info->global_gain>255) cod_info->global_gain=255;
@@ -641,7 +655,33 @@ VBR_noise_shapping (lame_global_flags *gfp,
   } 
   
   VBR_quantize_granule(gfp,xr,xr34,l3_enc,ratio,l3_xmin,scalefac,gr,ch);
-  return cod_info->part2_3_length;
+
+  if (cod_info->part2_3_length < minbits) {
+    /* decrease global gain, recompute scale factors */
+    if (*ath_over==0) break;  
+    if (cod_info->part2_3_length-cod_info->part2_length== 0) break;
+    if (vbrmax+210 ==0 ) break;
+    
+    printf("not enough bits, decreasing vbrmax=%i...\n",vbrmax);
+    printf("%i minbits=%i   part2_3_length=%i  part2=%i\n",
+	   gfc->frameNum,minbits,cod_info->part2_3_length,cod_info->part2_length);
+    --vbrmax;
+    --global_gain_adjust;
+  }
+
+  } while ((cod_info->part2_3_length < minbits));
+
+
+  while (cod_info->part2_3_length > 4095) {
+    /* increase global gain, keep exisiting scale factors */
+    ++cod_info->global_gain;
+    if (cod_info->global_gain > 255) 
+      fprintf(stderr,"impossible to encode this frame! \n");
+    VBR_quantize_granule(gfp,xr,xr34,l3_enc,ratio,l3_xmin,scalefac,gr,ch);
+    ++global_gain_adjust;
+  }
+
+  return global_gain_adjust;
 }
 
 
@@ -656,7 +696,7 @@ VBR_quantize(lame_global_flags *gfp,
 {
   lame_internal_flags *gfc=gfp->internal_flags;
   int minbits,maxbits,totbits,bits,gr,ch,i,bits_ok;
-  int bitsPerFrame,mean_bits,targ_bits,extra_bits;
+  int bitsPerFrame,mean_bits;
   FLOAT8 quality=0;
   III_side_info_t * l3_side;
   gr_info *cod_info;  
@@ -665,7 +705,7 @@ VBR_quantize(lame_global_flags *gfp,
   static const FLOAT8 dbQ[10]={-6.0,-4.5,-3.0,-1.5,0,0.3,0.6,1.0,1.5,2.0};
 
   l3_side = &gfc->l3_side;
-  gfc->ATH_lower = 4;
+  gfc->ATH_lower = 0;
   iteration_init(gfp,l3_side,l3_enc);
 
   gfc->bitrate_index=gfc->VBR_min_bitrate;
@@ -700,8 +740,8 @@ VBR_quantize(lame_global_flags *gfp,
       if (shortblock) masking_lower_db -=4;
 
       gfc->masking_lower = pow(10.0,masking_lower_db/10);
-      bits = VBR_noise_shapping (gfp,xr[gr][ch],&ratio[gr][ch],l3_enc,&ath_over[gr][ch],scalefac,gr,ch);
-      
+      VBR_noise_shapping (gfp,xr[gr][ch],&ratio[gr][ch],l3_enc,&ath_over[gr][ch],minbits,scalefac,gr,ch);
+      bits = cod_info->part2_3_length;
 
       while (bits > Min(4095,(2+shortblock)*maxbits)) {
 	printf("quality = %f  too large bits:  %i  %i  %i  \n",masking_lower_db,minbits,bits,maxbits);
@@ -711,22 +751,11 @@ VBR_quantize(lame_global_flags *gfp,
 	  masking_lower_db  += (bits-2*maxbits)/100.0;
 
 	gfc->masking_lower = pow(10.0,masking_lower_db/10);
-	bits = VBR_noise_shapping (gfp,xr[gr][ch],&ratio[gr][ch],l3_enc,&ath_over[gr][ch],scalefac,gr,ch);
+	VBR_noise_shapping (gfp,xr[gr][ch],&ratio[gr][ch],l3_enc,&ath_over[gr][ch],minbits,scalefac,gr,ch);
+	bits = cod_info->part2_3_length;
 	printf("new bits = %i \n",bits);
       }
       
-      while (bits < minbits) {
-	if (ath_over[gr][ch]==0) break;
-	if (cod_info->part2_3_length-cod_info->part2_length== 0) break;
-	printf("quality = %f  too small bits:  %i  %i  %i  \n",masking_lower_db,minbits,bits,maxbits);
-
-	masking_lower_db  -= .1;
-	masking_lower_db  -= (bits-.5*minbits)/100.0;
-	gfc->masking_lower = pow(10.0,masking_lower_db/10);
-
-	bits = VBR_noise_shapping (gfp,xr[gr][ch],&ratio[gr][ch],l3_enc,&ath_over[gr][ch],scalefac,gr,ch);
-	printf("new bits = %i \n",bits);
-      }
       totbits += bits;
     }
   }

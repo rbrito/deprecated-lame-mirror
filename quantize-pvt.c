@@ -1017,7 +1017,7 @@ set_pinfo (lame_global_flags *gfp,
 	en0 = ratio->en.s[sfb][i]/en0;
 
 	pinfo->xfsf_s[gr][ch][3*sfb+i] =  xfsf[i+1][sfb]*en0;
-	pinfo->thr_s[gr][ch][3*sfb+i] = ratio->thm.s[sfb][i];
+	pinfo->thr_s[gr][ch][3*sfb+i] = Min(ratio->thm.s[sfb][i],en0*gfc->ATH_s[sfb]);
 	pinfo->en_s[gr][ch][3*sfb+i] = ratio->en.s[sfb][i]; 
 
 	pinfo->LAMEsfb_s[gr][ch][3*sfb+i]=
@@ -1042,7 +1042,7 @@ set_pinfo (lame_global_flags *gfp,
       en0 =   ratio->en.l[sfb]/en0;
       
       pinfo->xfsf[gr][ch][sfb] =  xfsf[0][sfb]*en0;
-      pinfo->thr[gr][ch][sfb] = ratio->thm.l[sfb];
+      pinfo->thr[gr][ch][sfb] = Min(ratio->thm.l[sfb],en0*gfc->ATH_l[sfb]);
       pinfo->en[gr][ch][sfb] = ratio->en.l[sfb];
       
       pinfo->LAMEsfb[gr][ch][sfb]=-ifqstep*scalefac->l[sfb];
