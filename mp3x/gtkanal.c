@@ -158,6 +158,9 @@ int gtkmakeframe(void)
       mp3count=lame_encode_buffer(gfp,Buffer[0],Buffer[1],iread,
 				  mp3buffer,(int)sizeof(mp3buffer));
       
+	  /* AF: not sure, but somewhere the frame number has to be bumped up */
+	  frameNum++;
+
       assert( !(mp3count > 0 && frameNum == pinfo->frameNum));
       /* not possible to produce mp3 data without encoding at least 
        * one frame of data which would increment gfp->frameNum */
@@ -905,6 +908,9 @@ static void delete_event( GtkWidget *widget,
                    GdkEvent  *event,
 		   gpointer   data )
 {
+	/* set MP3 done flag in case the File/Quit menu item has been selected */
+	mp3done=1;
+
     gtk_main_quit ();
 }
 
