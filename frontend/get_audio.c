@@ -317,7 +317,7 @@ get_audio_common( lame_global_flags * const gfp,
      */
     if (count_samples_carefully) {
         remaining = tmp_num_samples - Min(tmp_num_samples, num_samples_read);
-        if (remaining < framesize && 0 != remaining)
+        if (remaining < framesize && 0 != tmp_num_samples)
             /* in case the input is a FIFO (at least it's reproducible with
                a FIFO) tmp_num_samples may be 0 and therefore remaining
                would be 0, but we need to read some samples, so don't
