@@ -60,7 +60,7 @@ static FLOAT8
 filter_coef(FLOAT8 x)
 {
     if (x > 1.0) return 0.0;
-    if (x < 0.0) return 1.0;
+    if (x <= 0.0) return 1.0;
 
     return cos(PI/2 * x);
 }
@@ -142,7 +142,7 @@ lame_init_params_ppflt(lame_global_flags * gfp)
 	    = filter_coef((gfc->highpass2 - freq)
 			  / (gfc->highpass2 - gfc->highpass1 + 1e-37))
 	    * filter_coef((freq - gfc->lowpass1)
-			  / (gfc->lowpass2 - gfc->lowpass1 + 1e-37));
+			  / (gfc->lowpass2 - gfc->lowpass1 - 1e-37));
     }
 }
 
