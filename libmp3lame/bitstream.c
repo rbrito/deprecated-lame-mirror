@@ -811,10 +811,11 @@ format_bitstream(lame_global_flags *gfp)
              bitsPerFrame
       );
 
-      ERRORF(gfc,"This is a fatal error.  It has several possible causes:");
-      ERRORF(gfc,"90%  LAME compiled with buggy version of gcc using advanced optimizations");
-      ERRORF(gfc," 9%  Your system is overclocked");
-      ERRORF(gfc," 1%  bug in LAME encoding library");
+      ERRORF(gfc,
+	     "This is a fatal error.  It has several possible causes:\n"
+	     "90%%  LAME compiled with buggy version of gcc using advanced optimizations\n"
+	     " 9%%  Your system is overclocked\n"
+	     " 1%%  bug in LAME encoding library");
 
       gfc->ResvSize = l3_side->main_data_begin*8;
     };
