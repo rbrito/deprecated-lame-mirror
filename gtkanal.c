@@ -66,6 +66,7 @@ struct gtkinfostruct {
 int gtkmakeframe(void)
 {
   int iread;
+  static int init=0;
   static int mpglag;
   static short int Buffer[2][1152];
   int ch,j;
@@ -86,12 +87,22 @@ int gtkmakeframe(void)
     iread=lame_readframe(Buffer);
     gf.frameNum++;
   }else {
-    if (gf.frameNum==0) {
-      mpglag=1;
-      lame_decode_init();
+    while (gf.frameNum == pinfo->frameNum) {
+      if (gf.frameNum==0 && !init) {
+	mpglag=1;
+	lame_decode_init();
+      }
+      if (gf.frameNum==1) init=0; /* reset for next time frameNum==0 */
+      iread=lame_readframe(Buffer);
+      
+      /* frame analyzer wont work with resampling */
+      //      assert(gf.resample_ratio==1);
+      
+      mp3count=lame_encode(Buffer,mp3buffer); /* encode frame */
+      assert( !(mp3count > 0 && gf.frameNum == pinfo->frameNum));
+      /* not possible to produce mp3 data without encoding at least 
+       * one frame of data which would increment gf.frameNum */
     }
-    iread=lame_readframe(Buffer);
-    mp3count=lame_encode(Buffer,mp3buffer); /* encode frame */
     mp3out=lame_decode(mp3buffer,mp3count,mpg123pcm); /* re-synthesis to pcm */
     /* mp3out = 0:  need more data to decode */
     /* mp3out = -1:  error.  Lets assume 0 pcm output */
@@ -861,24 +872,27 @@ static gint key_press_event (GtkWidget *widget, GdkEventKey *event)
     subblock_draw[0] = 1;
     subblock_draw[1] = 0;
     subblock_draw[2] = 0;
+    analyze();
   }
   else if (event->keyval == '2') {
     subblock_draw[0] = 0;
     subblock_draw[1] = 1;
     subblock_draw[2] = 0;
+    analyze();
   }
   else if (event->keyval == '3') {
     subblock_draw[0] = 0;
     subblock_draw[1] = 0;
     subblock_draw[2] = 1;
+    analyze();
   }
-  else {
+  else if (event->keyval == '0') {
     subblock_draw[0] = 1;
     subblock_draw[1] = 1;
     subblock_draw[2] = 1;
+    analyze();
   }
-
-  analyze();
+  /* analyze(); */  /* dont redraw entire window for every key! */
   return 0;
 }
 
@@ -1196,9 +1210,11 @@ int gtkcontrol(void)
     gtk_window_set_title (GTK_WINDOW (window), frameinfo);
     gtk_signal_connect (GTK_OBJECT (window), "delete_event",
 			GTK_SIGNAL_FUNC (delete_event), NULL);
+
     gtk_signal_connect_object (GTK_OBJECT (window), "key_press_event",
 		      GTK_SIGNAL_FUNC(key_press_event),
 		      GTK_OBJECT (window));
+
     gtk_container_set_border_width (GTK_CONTAINER (window), 0);
 
 

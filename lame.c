@@ -200,33 +200,22 @@ void lame_init_params(void)
 
 
     /* Should we use some lowpass filters? */    
-    if (!gf.VBR) {
-    if (gf.brate/gf.stereo <= 32  ) {
-      /* high compression, low bitrates, lets use a filter */
-      if (compression_ratio > 15.5) {
-	gf.lowpass1=.35;  /* good for 16kHz 16kbs compression = 16*/
-	gf.lowpass2=.50;
-      }else if (compression_ratio > 14) {
-	gf.lowpass1=.40;  /* good for 22kHz 24kbs compression = 14.7*/
-	gf.lowpass2=.55;
-      }else if (compression_ratio > 10) {
-	gf.lowpass1=.55;  /* good for 16kHz 24kbs compression = 10.7*/
-	gf.lowpass2=.70;
-      }else if (compression_ratio > 8) {
-	gf.lowpass1=.65; 
-	gf.lowpass2=.80;
-      }else {
-	gf.lowpass1=.85;
-	gf.lowpass2=.99;
-      }
+    if (!gf.VBR && (gf.mode_gr==1)) {
+      gf.lowpass2 = .70 + .041*(10.7-compression_ratio);
+
+      gf.lowpass2 = .70;
+      gf.lowpass1 = gf.lowpass2;
     }
-    }
-    /* 14.5khz = .66  16kHz = .73 */
-    /*
-      lowpass1 = .73-.10;
-      lowpass2 = .73+.05;
+
+    /*    44.1khz/64kbs  11x  band 22+
+	  16khz/24kbs  10.7x  band 22+
+	  22kHz/24kbs  14.7   band 17+
+          16    16     16x    band 15+
     */
+
   }
+
+
     
 
 
@@ -394,7 +383,7 @@ void lame_init_params(void)
     exit(-99);  
   }
 
-  gf.filter_type=2;
+  gf.filter_type=0;
 
   /* best_quant algorithms not based on over=0 require this: */
   if (gf.experimentalX) gf.noise_shaping_stop=1;
@@ -439,10 +428,10 @@ void lame_print_config(void)
 {
   layer *info = fr_ps.header;
   char *mode_names[4] = { "stereo", "j-stereo", "dual-ch", "single-ch" };
-  FLOAT resamplerate=s_freq[info->version][info->sampling_frequency];    
-  FLOAT samplerate = gf.resample_ratio*resamplerate;
+  FLOAT out_samplerate=s_freq[info->version][info->sampling_frequency];    
+  FLOAT in_samplerate = gf.resample_ratio*out_samplerate;
   FLOAT compression=
-    (FLOAT)(gf.stereo*16*resamplerate)/
+    (FLOAT)(gf.stereo*16*out_samplerate)/
     (FLOAT)(bitrate[info->version][info->lay-1][info->bitrate_index]);
 
   lame_print_version(stderr);
@@ -451,20 +440,20 @@ void lame_print_config(void)
   }
   if (gf.resample_ratio!=1) {
     fprintf(stderr,"Resampling:  input=%ikHz  output=%ikHz\n",
-	    (int)samplerate,(int)resamplerate);
+	    (int)in_samplerate,(int)out_samplerate);
   }
   if (gf.highpass2>0.0)
-    fprintf(stderr, "Highpass filter: cutoff below %g Hz, increasing upto %g Hz\n",
-	    gf.highpass1*resamplerate*500, 
-	    gf.highpass2*resamplerate*500);
+    fprintf(stderr, "Using highpass filter with passband: %.0f Hz -  %.0f Hz\n",
+	    gf.highpass2*out_samplerate*500, 
+	    gf.highpass1*out_samplerate*500);
   if (gf.lowpass1>0.0)
-    fprintf(stderr, "Lowpass filter: cutoff above %g Hz, decreasing from %g Hz\n",
-	    gf.lowpass2*resamplerate*500, 
-	    gf.lowpass1*resamplerate*500);
+    fprintf(stderr, "Using lowpass filter with passband:  %.0f Hz - %.0f Hz\n",
+	    gf.lowpass1*out_samplerate*500, 
+	    gf.lowpass2*out_samplerate*500);
   if (gf.sfb21) {
     int *scalefac_band_long = &sfBandIndex[info->sampling_frequency + (info->version * 3)].l[0];
-    fprintf(stderr, "sfb21 filter: sharp cutoff above %g Hz\n",
-            scalefac_band_long[SBPSY_l]/576.0*resamplerate*500);
+    fprintf(stderr, "sfb21 filter: sharp cutoff above %.0f Hz\n",
+            scalefac_band_long[SBPSY_l]/576.0*out_samplerate*500);
   }
 
   if (gf.gtkflag) {
@@ -837,7 +826,7 @@ int fill_buffer_resample(short int *outbuf,int desired_len,
 
   /* if downsampling by an integer multiple, use linear resampling,
    * otherwise use quadratic */
-  linear = ( .0001 > fabs(gf.resample_ratio - floor(.5+gf.resample_ratio)));
+  linear = ( fabs(gf.resample_ratio - floor(.5+gf.resample_ratio)) < .0001 );
 
   /* time of j'th element in inbuf = itime + j/ifreq; */
   /* time of k'th element in outbuf   =  j/ofreq */
@@ -880,7 +869,6 @@ int fill_buffer_resample(short int *outbuf,int desired_len,
   /* last k sample used data from j,j+1, or j+1 overflowed buffer */
   /* remove num_used samples from inbuf: */
   *num_used = Min(len,j+2);
-  assert(*num_used > OLDBUFSIZE);
   itime[ch] += *num_used - k*gf.resample_ratio;
   for (i=0;i<OLDBUFSIZE;i++)
     inbuf_old[ch][i]=inbuf[*num_used + i -OLDBUFSIZE];

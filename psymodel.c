@@ -763,11 +763,9 @@ void L3psycho_anal( short int *buffer[2],
 	  {/* medium surge, medium pe - use short blocks */
 	    uselongblock[chn] = 0;
 	  }
-	  
 	} 
       }
     }
-    
     
     
     /* threshold calculation for short blocks */
@@ -895,8 +893,10 @@ void L3psycho_anal( short int *buffer[2],
   for (chn=0; chn<gf.stereo; chn++) {
     blocktype[chn] = NORM_TYPE;
   }
-  
-  if (!gf.allow_diff_short || info->mode==MPG_MD_JOINT_STEREO) {
+
+
+  if (gf.stereo==2) {
+    if (!gf.allow_diff_short || info->mode==MPG_MD_JOINT_STEREO) {
       /* force both channels to use the same block type */
       /* this is necessary if the frame is to be encoded in ms_stereo.  */
       /* But even without ms_stereo, FhG  does this */
@@ -906,8 +906,8 @@ void L3psycho_anal( short int *buffer[2],
 	uselongblock[1]=0;
       }
     }
-  
-  
+  }
+
   
   
   /* update the blocktype of the previous granule, since it depends on what

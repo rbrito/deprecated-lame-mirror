@@ -362,29 +362,37 @@ void mdct_sub48(
 	    }
 
 	    /* apply filters on the polyphase filterbank outputs */
-	    if (gf.filter_type==0) {
+	    if (gf.filter_type==0 && gf.lowpass1>0) {
 	      FLOAT8 amp,freq;
 	      for (band=0; band < 32; band++) {
 		/* normalized freq of center of band:  (band+.5)/32 */
 		freq = (band+.5)/32;
 		if (freq >= gf.lowpass1) {
-		  amp = cos((PI/2)*(freq-gf.lowpass1)/(gf.lowpass2-gf.lowpass1));
-		  if (freq > gf.lowpass2) amp=0;
+		  if (freq >= gf.lowpass2) amp=0;
+		  else amp = 
+                     cos((PI/2)*(freq-gf.lowpass1)/(gf.lowpass2-gf.lowpass1));
+		  if (gf.frameNum==0) {
+		    printf("band=%i  amp=%f \n",band,amp);
+		  }
 		  for (k=0; k<18; k++)
-		    sb_sample[ch][gr][k][band]*=amp;
+		    sb_sample[ch][1-gr][k][band]*=amp;
 		}
-
-		if (freq <= gf.highpass2) {
-		  amp = cos((PI/2)*(gf.highpass2-freq)/(gf.highpass2-gf.highpass1));
-		  if (freq < gf.highpass1) amp=0;
-		  for (k=0; k<18; k++)
-		    sb_sample[ch][gr][k][band]*=amp;
-		}
-
 	      }
-
-
 	    }
+	    if (gf.filter_type==0 && gf.highpass2>0) {
+	      FLOAT8 amp,freq;
+	      for (band=0; band < 32; band++) {
+		freq = (band+.5)/32;
+		if (freq <= gf.highpass2) {
+		  if (freq <= gf.highpass1) amp=0;
+                  else amp = 
+                     cos((PI/2)*(gf.highpass2-freq)/(gf.highpass2-gf.highpass1));
+		  for (k=0; k<18; k++)
+		    sb_sample[ch][1-gr][k][band]*=amp;
+		}
+	      }
+	    }
+
 
 
 	    /*
