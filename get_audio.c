@@ -55,7 +55,7 @@ int lame_readframe(lame_global_flags *gfp, sample_t Buffer [2] [1152] )
   lame_internal_flags *gfc=gfp->internal_flags;
 
 
-  /* note: if input is gfp->channels and output is mono, get_audio()
+  /* note: if input is stereo and output is mono, get_audio()
    * will return  .5*(L+R) in channel 0,  and nothing in channel 1. */
   iread = get_audio ( gfp, Buffer, gfc->channels );
 
