@@ -1516,7 +1516,7 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
     if (gi->block_type == SHORT_TYPE)
 	sfmin = -7*8-7*4;
     do {
-	FLOAT maxXR = (FLOAT)0.0;
+	FLOAT maxXR;
 	int i = gi->wi[sfb].width;
 	j -= i;
 #ifdef HAVE_NASM
@@ -1525,6 +1525,7 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
 	} else
 #endif
 	{
+	    maxXR = (FLOAT)0.0;
 	    do {
 		if (maxXR < xr34[i+j])
 		    maxXR = xr34[i+j];
@@ -1538,7 +1539,7 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
 	    maxXR = IXMAX_VAL / maxXR;
 	    gain = find_scalefac(gfc, j, xmin[sfb], gi->wi[sfb].width, maxXR,
 				 sfmin, gain);
-	    if (gain != 256) {
+	    if (gain < 256) {
 		gi->scalefac[sfb] = gain;
 		gfc->maxXR[sfb] = maxXR;
 		if (vbrmax < gain)
