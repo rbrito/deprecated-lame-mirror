@@ -2,9 +2,9 @@
 #include <string.h>
 #include <stdio.h>
 #include <fcntl.h>
+
 #ifdef _WIN32
-/* needed to set stdout to binary */
-#include <io.h>
+# include <io.h>              /* needed to set stdout to binary */
 #endif
 /*
  main.c is example code for how to use libmp3lame.a.  To use this library,
@@ -20,6 +20,16 @@
 
 #ifdef __riscos__
 #include "asmstuff.h"
+
+void riscos_FileNameConvert ( char* p )
+{
+    for (; *p; p++)
+        switch (*p) {
+	case '.' : *p = '/'; break;
+	case '/' : *p = '.'; break;
+	}
+}
+
 #endif
 
 /* PLL 14/04/2000 */
@@ -40,17 +50,39 @@
 ************************************************************************/
 
 
-int main(int argc, char **argv)
+void setbinary ( FILE* fp )
+{
+#if   defined __EMX__
+      _fsetmode ( fp, "b" );
+#elif defined  __BORLANDC__
+      setmode   (_fileno (fp),  O_BINARY );
+#elif defined  __CYGWIN__
+      setmode   ( fileno (fp), _O_BINARY );
+#elif defined _WIN32
+      _setmode  (_fileno (fp), _O_BINARY );
+#endif
+}
+
+
+void encoder_error ( int errorcode )
+{
+    if ( errorcode == -1 ) 
+        fprintf ( stderr, "mp3 buffer is not big enough ...\n");
+    else 
+        fprintf ( stderr, "mp3 internal error: error code = %i\n", -errorcode );
+    exit (-1);
+}
+
+
+int main ( int argc, char** argv )
 {
 
-  char mp3buffer[LAME_MAXMP3BUFFER];
-  short int Buffer[2][1152];
-  int iread,imp3;
-  lame_global_flags gf;
-  FILE *outf;
-#ifdef __riscos__
-  int i;
-#endif
+    char               mp3buffer [LAME_MAXMP3BUFFER];
+    sample_t           Buffer [2] [1152];
+    int                iread;
+    int                imp3;
+    lame_global_flags  gf;
+    FILE*              outf;
 
 #if macintosh
   argc = ccommand(&argv);
@@ -106,22 +138,13 @@ int main(int argc, char **argv)
   }
 
   if (!gf.decode_only)
-    lame_print_config(&gf);   /* print usefull information about options being used */
+    lame_print_config(&gf);   /* print useful information about options being used */
 
 
   if (!gf.gtkflag) {
     /* open the output file */
     if (!strcmp(gf.outPath, "-")) {
-#ifdef __EMX__
-      _fsetmode(stdout,"b");
-#elif (defined  __BORLANDC__)
-      setmode(_fileno(stdout), O_BINARY);
-#elif (defined  __CYGWIN__)
-      setmode(fileno(stdout), _O_BINARY);
-#elif (defined _WIN32)
-      _setmode(_fileno(stdout), _O_BINARY);
-#endif
-      outf = stdout;
+        setbinary ( outf = stdout );
     } else {
       if ((outf = fopen(gf.outPath, "wb+")) == NULL) {
 	fprintf(stderr,"Could not create \"%s\".\n", gf.outPath);
@@ -129,17 +152,8 @@ int main(int argc, char **argv)
       }
     }
 #ifdef __riscos__
-    /* Assign correct file type */
-    for (i = 0; gf.outPath[i]; i++) {
-      if (gf.outPath[i] == '.')
-        gf.outPath[i] = '/';
-      else if (gf.outPath[i] == '/')
-        gf.outPath[i] = '.';
-    }
-    if (gf.decode_only)
-      SetFiletype(gf.outPath, 0xfb1); /* Wave */
-    else
-      SetFiletype(gf.outPath, 0x1ad); /* AMPEG */
+    riscos_FileNameConvert ( gf.outPath );  /* Assign correct file type */
+    SetFiletype (gf.outPath, gf.decode_only  ?  0xfb1 /* WAV */  :  0x1ad /* AMPEG*/ );
 #endif
   }
 
@@ -162,40 +176,34 @@ int main(int argc, char **argv)
 
       lame_id3v2_tag(&gf,outf); /* add ID3 version 2 tag to mp3 file */
 
-      /* encode until we hit eof */
-      do {
-	/* read in 'iread' samples */
-	iread=lame_readframe(&gf,Buffer);
-
+      while ( ( iread = lame_readframe ( &gf, Buffer ) ) > 0 ) {
 
 	/* encode */
-	imp3=lame_encode_buffer(&gf,Buffer[0],Buffer[1],iread,
-              mp3buffer,(int)sizeof(mp3buffer));
+	imp3 = lame_encode_buffer (&gf, Buffer[0], Buffer[1], iread, mp3buffer, sizeof(mp3buffer) );
 
 	/* was our output buffer big enough? */
-	if (imp3<0) {
-	  if (imp3==-1) fprintf(stderr,"mp3 buffer is not big enough... \n");
-	  else fprintf(stderr,"mp3 internal error:  error code=%i\n",imp3);
-	  exit(-1);
-	}
+	if ( imp3 < 0 ) encoder_error ( imp3 );
 
-	/* imp3 is not negative, but fwrite needs an unsigned here */
-	if (fwrite(mp3buffer,1,(unsigned int)imp3,outf) != imp3) {
-	  fprintf(stderr,"Error writing mp3 output \n");
-	  exit(-1);
+	/* imp3 is not negative, but fwrite needs an size_t here */
+	if ( 1 != fwrite ( mp3buffer, (size_t)imp3, 1, outf ) ) {
+	  fprintf ( stderr, "Error writing mp3 output, disk full?\n" );
+	  return -1;
 	}
-      } while (iread);
-      imp3=lame_encode_finish(&gf,mp3buffer,(int)sizeof(mp3buffer));   /* may return one more mp3 frame */
-      if (imp3<0) {
-	if (imp3==-1) fprintf(stderr,"mp3 buffer is not big enough... \n");
-	else fprintf(stderr,"mp3 internal error:  error code=%i\n",imp3);
-	exit(-1);
       }
-      /* imp3 is not negative, but fwrite needs an unsigned here */
-      fwrite(mp3buffer,1,(unsigned int)imp3,outf);
+      
+      imp3 = lame_encode_finish ( &gf, mp3buffer, sizeof(mp3buffer) ); /* may return one more mp3 frame */
+
+      if ( imp3 < 0 ) encoder_error ( imp3 );
+
+      if ( 1 != fwrite ( mp3buffer, (size_t)imp3, 1, outf ) ) {
+	  fprintf ( stderr, "Error writing mp3 output, disk full?\n" );
+	  return -1;
+      }
+      
       lame_mp3_tags_fid(&gf,outf);       /* add ID3 version 1 or VBR tags to mp3 file */
       fclose(outf);
     }
+    
   lame_close_infile(&gf);            /* close the input file */
   return 0;
 }

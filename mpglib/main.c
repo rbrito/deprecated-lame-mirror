@@ -194,7 +194,7 @@ For lame_decode_fromfile:  return code
    0     ok, but need more data before outputing any samples
    n     number of samples output.  either 576 or 1152 depending on MP3 file.
 */
-int lame_decode_fromfile(FILE *fd, short pcm_l[], short pcm_r[],mp3data_struct *mp3data)
+int lame_decode_fromfile(FILE *fd, sample_t pcm_l[], sample_t pcm_r[], mp3data_struct *mp3data)
 {
   int size,stereo;
   int outsize=0,j,i,ret;
@@ -234,8 +234,8 @@ int lame_decode_fromfile(FILE *fd, short pcm_l[], short pcm_r[],mp3data_struct *
 
     for (j=0; j<stereo; j++)
       for (i=0; i<outsize; i++) 
-	if (j==0) pcm_l[i] = ((short *) out)[mp.fr.stereo*i+j];
-	else pcm_r[i] = ((short *) out)[mp.fr.stereo*i+j];
+	if (j==0) pcm_l[i] = ((sample_t *) out)[mp.fr.stereo*i+j];
+	else pcm_r[i] = ((sample_t *) out)[mp.fr.stereo*i+j];
 
   }
   if (ret==MP3_ERR) return -1;
@@ -251,7 +251,7 @@ For lame_decode:  return code
    0     ok, but need more data before outputing any samples
    n     number of samples output.  either 576 or 1152 depending on MP3 file.
 */
-int lame_decode1(char *buffer,int len,short pcm_l[],short pcm_r[])
+int lame_decode1(char *buffer,size_t len,sample_t pcm_l[],sample_t pcm_r[])
 {
   int size;
   int outsize=0,j,i,ret;
@@ -265,8 +265,8 @@ int lame_decode1(char *buffer,int len,short pcm_l[],short pcm_r[])
     
     for (j=0; j<mp.fr.stereo; j++)
       for (i=0; i<outsize; i++) 
-	if (j==0) pcm_l[i] = ((short *) out)[mp.fr.stereo*i+j];
-	else pcm_r[i] = ((short *) out)[mp.fr.stereo*i+j];
+	if (j==0) pcm_l[i] = ((sample_t *) out)[mp.fr.stereo*i+j];
+	else pcm_r[i] = ((sample_t *) out)[mp.fr.stereo*i+j];
   }
   if (ret==MP3_NEED_MORE) 
     outsize=0;
@@ -287,7 +287,7 @@ For lame_decode:  return code
    0     ok, but need more data before outputing any samples
    n     number of samples output.  a multiple of 576 or 1152 depending on MP3 file.
 */
-int lame_decode(char *buffer,int len,short pcm_l[],short pcm_r[])
+int lame_decode(char *buffer,size_t len,sample_t pcm_l[],sample_t pcm_r[])
 {
   int size,totsize=0;
   int outsize=0,j,i,ret;
@@ -301,8 +301,8 @@ int lame_decode(char *buffer,int len,short pcm_l[],short pcm_r[])
       
       for (j=0; j<mp.fr.stereo; j++)
 	for (i=0; i<outsize; i++) 
-	  if (j==0) pcm_l[totsize + i] = ((short *) out)[mp.fr.stereo*i+j];
-	  else pcm_r[totsize + i] = ((short *) out)[mp.fr.stereo*i+j];
+	  if (j==0) pcm_l[totsize + i] = ((sample_t *) out)[mp.fr.stereo*i+j];
+	  else pcm_r[totsize + i] = ((sample_t *) out)[mp.fr.stereo*i+j];
 
       totsize += outsize;
     }

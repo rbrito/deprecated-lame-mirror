@@ -101,7 +101,7 @@ INLINE FLOAT8 mask_add(FLOAT8 m1,FLOAT8 m2,int k,int b,lame_internal_flags *gfc)
 }
 
 int L3psycho_anal( lame_global_flags *gfp,
-                    short int *buffer[2],int gr_out , 
+                    sample_t *buffer[2],int gr_out , 
                     FLOAT8 *ms_ratio,
                     FLOAT8 *ms_ratio_next,
 		    FLOAT8 *ms_ener_ratio,

@@ -398,8 +398,10 @@ endif
 # 10/99 added -D__NO_MATH_INLINES to fix a bug in *all* versions of
 # gcc 2.8+ as of 10/99.  
 
-CC_SWITCHES = -DNDEBUG -D__NO_MATH_INLINES $(CC_OPTS) $(SNDLIB) $(GTK) \
-$(BRHIST_SWITCH) $(VORBIS) 
+CC_SWITCHES = -D__NO_MATH_INLINES $(CC_OPTS) $(SNDLIB) $(GTK) $(BRHIST_SWITCH) $(VORBIS) 
+
+# CC_SWITCHES = -DNDEBUG -D__NO_MATH_INLINES $(CC_OPTS) $(SNDLIB) $(GTK) $(BRHIST_SWITCH) $(VORBIS) 
+
 c_sources_s = \
         brhist.c \
 	bitstream.c \

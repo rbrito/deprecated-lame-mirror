@@ -561,7 +561,7 @@ int calc_noise( lame_global_flags *gfp,
 {
   int start, end, j,l, i, over=0;
   u_int sfb;
-  FLOAT8 sum, osum, bw;
+  FLOAT8 sum, bw;
   lame_internal_flags *gfc=gfp->internal_flags;
   
   int count=0;

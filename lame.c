@@ -778,7 +778,50 @@ void lame_id3v2_tag(lame_global_flags *gfp,FILE *outf)
  * (adapted from korr.c by Frank Klemm, RH 2000-08-23)
  */
 
-int is_probably_MS ( const short *L, const short *R, size_t len )
+
+/*
+  Remark from pfk@uni-jena.de: 
+  
+  this makes not so much sense, because of a handicap of MP3: MP3 can only
+  handle MS (dp=45°) and LR (dp=0°), no things between this. So highly
+  correlated signals of L and R can't be used by MP3, MP3 needs highly
+  identically signals.
+  
+  A much better approach would be (but I can't change the MP3 file format,
+  who invents time travels ???) to allow a generic rotation of the
+  coordinate axis':
+  
+  n   = 8 bit rotation angle = 0...255
+  phi = n/256 * pi/2
+  
+   / CH1 \     /  cos phi  +sin phi \     / L \
+  (       ) = (                      ) * (     )
+   \ CH2 /     \ -sin phi   cos phi /     \ R /
+  
+   LR: n =   0, phi =  0
+   MS: n = 128, phi = 45°  
+  
+   Advantages:
+     No LR <=> MS switching artefacts
+     Much better compression of unbalanced quasi mono signals 
+          (for instance: R = 0.76*L => n = 106 => phi = 0.6504 = 37°)
+
+   / M \     /  0.7958  0.6055 \     /   L    \
+  (     ) = (                   ) * (          )
+   \ S /     \ -0.6055  0.7958 /     \ 0.76*L /
+
+
+     Which gives a:
+
+     M =  1.256  L
+     S = -0.0007 L
+     
+     So S is 65 dB below the M signal. Simple MS stereo gives only 17 dB,
+     so a lot of bandwidth must be waste for the L-R signal.
+  
+ */  
+  
+int is_probably_MS ( const sample_t *L, const sample_t *R, size_t len )
 {
   double  x = 0, x2 = 0, y = 0, y2 = 0, xy = 0;
   double  t1;
@@ -840,8 +883,8 @@ FFT's                    <---------1024---------->
 */
 
 int lame_encode_mp3_frame(lame_global_flags *gfp,
-short int inbuf_l[],short int inbuf_r[],
-char *mp3buf, int mp3buf_size)
+sample_t inbuf_l[],sample_t inbuf_r[],
+char *mp3buf, size_t mp3buf_size)
 {
 #ifdef macintosh /* PLL 14/04/2000 */
   static FLOAT8 xr[2][2][576];
@@ -855,7 +898,7 @@ char *mp3buf, int mp3buf_size)
   III_psy_ratio masking_MS_ratio[2][2]; /*MS ratios */
   III_psy_ratio (*masking)[2][2];  /*LR ratios and MS ratios*/
   III_scalefac_t scalefac[2][2];
-  short int *inbuf[2];
+  sample_t *inbuf[2];
   lame_internal_flags *gfc=gfp->internal_flags;
 
 
@@ -905,8 +948,8 @@ char *mp3buf, int mp3buf_size)
     /* prime the MDCT/polyphase filterbank with a short block */
     { 
       int i,j;
-      short primebuff0[286+1152+576];
-      short primebuff1[286+1152+576];
+      sample_t primebuff0[286+1152+576];
+      sample_t primebuff1[286+1152+576];
       for (i=0, j=0; i<286+576*(1+gfc->mode_gr); ++i) {
 	if (i<576*gfc->mode_gr) {
 	  primebuff0[i]=0;
@@ -1012,7 +1055,7 @@ char *mp3buf, int mp3buf_size)
      * (mt 6/99).
      */
     int ret;
-    short int *bufp[2];  /* address of beginning of left & right granule */
+    sample_t *bufp[2];  /* address of beginning of left & right granule */
     int blocktype[2];
 
     ms_ratio_prev=gfc->ms_ratio[gfc->mode_gr-1];
@@ -1182,8 +1225,8 @@ encoding engine.  All buffering, resampling, etc, handled by calling
 program.  
 */
 int lame_encode_frame(lame_global_flags *gfp,
-short int inbuf_l[],short int inbuf_r[],
-char *mp3buf, int mp3buf_size)
+sample_t inbuf_l[],sample_t inbuf_r[],
+char *mp3buf, size_t mp3buf_size)
 {
   if (gfp->ogg) {
 #ifdef HAVEVORBIS
@@ -1221,23 +1264,26 @@ char *mp3buf, int mp3buf_size)
  * return code = number of bytes output in mp3buffer.  can be 0
 */
 int lame_encode_buffer(lame_global_flags *gfp,
-   short int buffer_l[], short int buffer_r[],int nsamples,
-   char *mp3buf, int mp3buf_size)
+   sample_t buffer_l[], sample_t buffer_r[],size_t nsamples,
+   char *mp3buf, size_t mp3buf_size)
 {
   int mp3size = 0, ret, i, ch, mf_needed;
   lame_internal_flags *gfc=gfp->internal_flags;
-  short int *mfbuf[2];
-  short int *in_buffer[2];
-  in_buffer[0] = buffer_l;
-  in_buffer[1] = buffer_r;
+  sample_t *mfbuf[2];
+  sample_t *in_buffer[2] = { buffer_l, buffer_r };
+  
+  assert (nsamples > 0);
+  
+//  in_buffer[0] = buffer_l;
+//  in_buffer[1] = buffer_r;
 
   if (!gfc->lame_init_params_init) return -3;
 
   /* some sanity checks */
   assert(ENCDELAY>=MDCTDELAY);
   assert(BLKSIZE-FFTOFFSET >= 0);
-  mf_needed = BLKSIZE+gfp->framesize-FFTOFFSET;  /* ammount needed for FFT */
-  mf_needed = Max(mf_needed,286+576*(1+gfc->mode_gr)); /* ammount needed for MDCT/filterbank */
+  mf_needed = BLKSIZE+gfp->framesize-FFTOFFSET;  /* amount needed for FFT */
+  mf_needed = Max(mf_needed,286+576*(1+gfc->mode_gr)); /* amount needed for MDCT/filterbank */
   assert(MFSIZE>=mf_needed);
 
   mfbuf[0]=gfc->mfbuf[0];
@@ -1267,7 +1313,7 @@ int lame_encode_buffer(lame_global_flags *gfp,
       } else {
 	n_out=Min(gfp->framesize,nsamples);
 	n_in = n_out;
-	memcpy( (char *) &mfbuf[ch][gfc->mf_size],(char *)in_buffer[ch],sizeof(short int)*n_out);
+	memcpy( (char *) &mfbuf[ch][gfc->mf_size],(char *)in_buffer[ch],sizeof(sample_t)*n_out);
       }
       in_buffer[ch] += n_in;
     }
@@ -1303,11 +1349,13 @@ int lame_encode_buffer(lame_global_flags *gfp,
 
 
 int lame_encode_buffer_interleaved(lame_global_flags *gfp,
-   short int buffer[], int nsamples, char *mp3buf, int mp3buf_size)
+   sample_t buffer[], size_t nsamples, char *mp3buf, size_t mp3buf_size)
 {
   int mp3size = 0, ret, i, ch, mf_needed;
   lame_internal_flags *gfc=gfp->internal_flags;
-  short int *mfbuf[2];
+  sample_t *mfbuf[2];
+
+  assert (nsamples > 0);
 
   if (!gfc->lame_init_params_init) return -3;
 
@@ -1325,10 +1373,10 @@ int lame_encode_buffer_interleaved(lame_global_flags *gfp,
   }
 
   if (gfc->resample_ratio!=1)  {
-    short int *buffer_l;
-    short int *buffer_r;
-    buffer_l=malloc(sizeof(short int)*nsamples);
-    buffer_r=malloc(sizeof(short int)*nsamples);
+    sample_t *buffer_l;
+    sample_t *buffer_r;
+    buffer_l=malloc(sizeof(sample_t)*nsamples);
+    buffer_r=malloc(sizeof(sample_t)*nsamples);
     if (buffer_l == NULL || buffer_r == NULL) {
       return -2;
     }
@@ -1393,7 +1441,7 @@ int lame_encode_buffer_interleaved(lame_global_flags *gfp,
 
 
 /* old LAME interface.  use lame_encode_buffer instead */
-int lame_encode(lame_global_flags *gfp, short int in_buffer[2][1152],char *mp3buf,int size){
+int lame_encode(lame_global_flags *gfp, sample_t in_buffer[2][1152],char *mp3buf,size_t size){
   int imp3;
   lame_internal_flags *gfc=gfp->internal_flags;
   if (!gfc->lame_init_params_init) return -3;
@@ -1405,10 +1453,10 @@ int lame_encode(lame_global_flags *gfp, short int in_buffer[2][1152],char *mp3bu
 /*****************************************************************/
 /* flush internal mp3 buffers,                                   */
 /*****************************************************************/
-int lame_encode_finish(lame_global_flags *gfp,char *mp3buffer, int mp3buffer_size)
+int lame_encode_finish(lame_global_flags *gfp,char *mp3buffer, size_t mp3buffer_size)
 {
   int imp3=0,mp3count,mp3buffer_size_remaining;
-  short int buffer[2][1152];
+  sample_t buffer[2][1152];
   lame_internal_flags *gfc=gfp->internal_flags;
 
   memset((char *)buffer,0,sizeof(buffer));
@@ -1690,7 +1738,7 @@ int lame_init(lame_global_flags *gfp)
   memset(&gfc->bs, 0, sizeof(Bit_stream_struc));
   memset(&gfc->l3_side,0x00,sizeof(III_side_info_t));
 
-  memset((char *) gfc->mfbuf, 0, sizeof(short)*2*MFSIZE);
+  memset((char *) gfc->mfbuf, 0, sizeof(sample_t)*2*MFSIZE);
 
   /* The reason for
    *       int mf_samples_to_encode = ENCDELAY + 288;

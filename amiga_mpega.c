@@ -89,13 +89,10 @@ int lame_decode_initfile(const char *fullname, mp3data_struct *mp3data)
 	return 0;
 }
 
-int lame_decode_fromfile(FILE *fd, short pcm_l[],short pcm_r[],mp3data_struct *mp3data)
+int lame_decode_fromfile(FILE *fd, sample_t pcm_l[],sample_t pcm_r[],mp3data_struct *mp3data)
 {
 	int outsize=0;
-	WORD *b[MPEGA_MAX_CHANNELS];
-
-	b[0]=pcm_l;
-	b[1]=pcm_r;
+	WORD *b[MPEGA_MAX_CHANNELS] = { pcm_l, pcm_r };
 
 	while ((outsize == 0) || (outsize == MPEGA_ERR_BADFRAME))	/* Skip bad frames */
 		outsize = MPEGA_decode_frame(mstream, b);

@@ -205,7 +205,7 @@ typedef struct  {
 #define MFSIZE (3*1152+ENCDELAY-MDCTDELAY)
   int mf_size;
   int mf_samples_to_encode;
-  short int mfbuf[2][MFSIZE];
+  sample_t mfbuf [2] [MFSIZE];
   FLOAT8 ms_ener_ratio[2];
   FLOAT8 ms_ratio[2];
   /* used for padding */
@@ -226,12 +226,12 @@ typedef struct  {
   /* variables used by util.c */
 #define BLACKSIZE 30
 #define BPC 16
-  short int inbuf_old[2][BLACKSIZE];
+  sample_t inbuf_old [2] [BLACKSIZE];
   FLOAT blackfilt[2*BPC+1][BLACKSIZE];
   FLOAT8 itime[2];
 #define OLDBUFSIZE 5
   FLOAT8 upsample_itime[2];
-  short int upsample_inbuf_old[2][OLDBUFSIZE];
+  sample_t upsample_inbuf_old [2] [OLDBUFSIZE];
   unsigned int sideinfo_len;
 
   /* variables for newmdct.c */
@@ -359,13 +359,13 @@ extern void freorder(int scalefac_band[],FLOAT8 ix_orig[576]);
 extern void fun_reorder(int scalefac_band[],FLOAT8 ix_orig[576]);
 
 extern enum byte_order DetermineByteOrder(void);
-extern void SwapBytesInWords( short *loc, int words );
+extern void SwapBytesInWords( short *loc, size_t words );
 
-extern int fill_buffer_downsample(lame_global_flags *gfp,short int *outbuf,int desired_len,
-	 short int *inbuf,int len,int *num_used,int ch);
+extern int fill_buffer_downsample(lame_global_flags *gfp, sample_t* outbuf,int desired_len,
+	 sample_t* inbuf,int len,int *num_used,int ch);
 
-extern int fill_buffer_upsample(lame_global_flags *gfp,short int *outbuf,int desired_len,
-	 short int *inbuf,int len,int *num_used,int ch);
+extern int fill_buffer_upsample(lame_global_flags *gfp, sample_t* outbuf,int desired_len,
+	 sample_t* inbuf,int len,int *num_used,int ch);
 
 extern void 
 getframebits(lame_global_flags *gfp,int *bitsPerFrame, int *mean_bits);

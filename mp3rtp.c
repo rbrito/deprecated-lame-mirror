@@ -62,7 +62,7 @@ int main(int argc, char **argv)
   lame_global_flags gf;
   int iread,imp3;
   FILE *outf;
-  short int Buffer[2][1152];
+  sample_t Buffer [2] [1152];
 
   if(argc<=2) {
     rtp_usage();
@@ -109,9 +109,10 @@ int main(int argc, char **argv)
    * skip this call and set the values of interest in the gf struct.  
    * (see lame.h for documentation about these parameters)
    */
-  for (i=1; i<argc-1; i++)  /* remove first argument, it was for rtp */
-    argv[i]=argv[i+1];
-  lame_parse_args(&gf,argc-1, argv); 
+//  for (i=1; i<argc-1; i++)  /* remove first argument, it was for rtp */
+//    argv[i]=argv[i+1];
+
+  lame_parse_args(&gf,--argc, ++argv); 
 
   /* open the output file.  Filename parsed into gf.inPath */
   if (!strcmp(gf.outPath, "-")) {
@@ -170,4 +171,3 @@ int main(int argc, char **argv)
   lame_close_infile(&gf);             /* close the sound input file */
   return 0;
 }
-

@@ -19,9 +19,9 @@
 #endif
 
 
-int read_samples_pcm(lame_global_flags *gfp,short sample_buffer[2304],int frame_size, int samples_to_read);
-int read_samples_mp3(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2][1152],int num_chan);
-int read_samples_ogg(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2][1152],int num_chan);
+int read_samples_pcm (lame_global_flags* gfp, sample_t sample_buffer [2*1152], int frame_size, int samples_to_read );
+int read_samples_mp3 (lame_global_flags* gfp, FILE*    musicin, sample_t mpg123pcm [2] [1152],int num_chan );
+int read_samples_ogg (lame_global_flags* gfp, FILE*    musicin, sample_t mpg123pcm [2] [1152],int num_chan );
 
 
 void lame_init_infile(lame_global_flags *gfp)
@@ -49,7 +49,7 @@ void lame_close_infile(lame_global_flags *gfp)
 *
 *
 ************************************************************************/
-int lame_readframe(lame_global_flags *gfp,short int Buffer[2][1152])
+int lame_readframe(lame_global_flags *gfp, sample_t Buffer [2] [1152] )
 {
   int iread;
   lame_internal_flags *gfc=gfp->internal_flags;
@@ -82,11 +82,11 @@ int lame_readframe(lame_global_flags *gfp,short int Buffer[2][1152])
 *
 *
 ************************************************************************/
-int get_audio(lame_global_flags *gfp,short buffer[2][1152],int stereo)
+int get_audio(lame_global_flags *gfp, sample_t buffer [2] [1152],int stereo)
 {
 
   int		j;
-  short	insamp[2304];
+  sample_t	insamp [2*1152];
   int samples_read;
   int framesize,samples_to_read;
   unsigned long remaining;
@@ -141,7 +141,7 @@ int get_audio(lame_global_flags *gfp,short buffer[2][1152],int stereo)
 
 
 
-int read_samples_ogg(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2][1152],int stereo)
+int read_samples_ogg(lame_global_flags *gfp,FILE *musicin, sample_t mpg123pcm [2] [1152], int stereo)
 {
 #ifdef HAVEVORBIS
   int out=0;
@@ -174,7 +174,7 @@ int read_samples_ogg(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2]
 }
 
 
-int read_samples_mp3(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2][1152],int stereo)
+int read_samples_mp3(lame_global_flags *gfp,FILE *musicin, sample_t mpg123pcm [2] [1152], int stereo )
 {
 #if (defined  AMIGA_MPEGA || defined HAVEMPGLIB)
   int j,out=0;
@@ -246,9 +246,9 @@ void WriteWav(FILE *f,long bytes,int srate,int ch){
  * represent the mpglib delay (and are all 0).  skip = number of additional
  * samples to skip, to (for example) compensate for the encoder delay */
 
-int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip)
+int lame_decoder ( lame_global_flags* gfp, FILE* outf, int skip )
 {
-    short int   Buffer [2] [1152];
+    sample_t    Buffer [2] [1152];
     int         iread;
     double      wavsize;
     int         layer = 1;
@@ -322,8 +322,8 @@ int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip)
 
         for ( ; i < iread; i++ ) {
     	    if ( gfp -> disable_waveheader ) {
-        	WriteFunction (outf,(char*)Buffer[0]+i,sizeof(short));
-        	if (gfp->num_channels==2) WriteFunction (outf,(char*)Buffer[1]+i,sizeof(short));
+        	WriteFunction (outf,(char*)Buffer[0]+i,sizeof(sample_t));
+        	if (gfp->num_channels==2) WriteFunction (outf,(char*)Buffer[1]+i,sizeof(sample_t));
             } else {
         	Write16BitsLowHigh (outf,Buffer[0][i]);
                 if (gfp->num_channels==2) Write16BitsLowHigh (outf,Buffer[1][i]);
@@ -588,7 +588,7 @@ FILE * OpenSndFile(lame_global_flags *gfp)
 *
 ************************************************************************/
 
-int read_samples_pcm(lame_global_flags *gfp,short sample_buffer[2304],int frame_size,int samples_to_read)
+int read_samples_pcm(lame_global_flags *gfp,sample_t sample_buffer[2*1152],int frame_size,int samples_to_read)
 {
     int 		samples_read;
     int			rcode;
@@ -640,7 +640,7 @@ int read_samples_pcm(lame_global_flags *gfp,short sample_buffer[2304],int frame_
 *
 ************************************************************************/
 
-int read_samples_pcm(lame_global_flags *gfp,short sample_buffer[2304], int frame_size,int samples_to_read)
+int read_samples_pcm(lame_global_flags *gfp, sample_t sample_buffer [2*1152], int frame_size,int samples_to_read)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     int samples_read;
@@ -654,7 +654,7 @@ int read_samples_pcm(lame_global_flags *gfp,short sample_buffer[2304], int frame
       samples_read = fread(temp, 1, (unsigned int)samples_to_read, gfp->musicin);
       for (i=0 ; i<samples_read; ++i) {
 	/* note: 8bit .wav samples are unsigned */
-	sample_buffer[i]=((short int)temp[i]-127)*256;
+	sample_buffer[i]=((sample_t)temp[i]-127)*256;
       }
     }else{
       ERRORF("Only 8 and 16 bit input files supported \n");
@@ -820,9 +820,9 @@ aiff_check2(const char *file_name, IFF_AIFF *pcm_aiff_data)
 	   LAME_ERROR_EXIT();
 	}
 
-	if (pcm_aiff_data->sampleSize != sizeof(short) * BITS_IN_A_BYTE) {
+	if (pcm_aiff_data->sampleSize != sizeof(sample_t) * BITS_IN_A_BYTE) {
 		ERRORF("Sound data is not %d bits in \"%s\".\n",
-				(unsigned int) sizeof(short) * BITS_IN_A_BYTE, file_name);
+				(unsigned int) sizeof(sample_t) * BITS_IN_A_BYTE, file_name);
 		LAME_ERROR_EXIT();
 	}
 

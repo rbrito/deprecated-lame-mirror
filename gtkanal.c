@@ -70,11 +70,11 @@ int gtkmakeframe(void)
   int iread = 0;
   static int init=0;
   static int mpglag;
-  static short int Buffer[2][1152];
+  static sample_t Buffer [2] [1152];
   int ch,j;
   int mp3count = 0;
   int mp3out = 0;
-  short mpg123pcm[2][1152];
+  sample_t  mpg123pcm [2] [1152];
   char mp3buffer[LAME_MAXMP3BUFFER];
   extern plotting_data *mpg123_pinfo;  
 

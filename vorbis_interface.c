@@ -173,7 +173,7 @@ int lame_decode_ogg_initfile(FILE *fd,mp3data_struct *mp3data)
   0     ok, but need more data before outputing any samples
   n     number of samples output.  
 */
-int lame_decode_ogg_fromfile(FILE *fd,short int pcm_l[],short int pcm_r[],mp3data_struct *mp3data)
+int lame_decode_ogg_fromfile(FILE *fd, sample_t pcm_l[], sample_t int pcm_r[],mp3data_struct *mp3data)
 {
   int samples,result,i,j,eof=0,eos=0,bout=0;
   double **pcm;
@@ -430,7 +430,7 @@ int lame_encode_ogg_init(lame_global_flags *gfp)
 
 
 int lame_encode_ogg_finish(lame_global_flags *gfp,
-			  char *mp3buf, int mp3buf_size)
+			  char *mp3buf, size_t mp3buf_size)
 {
   int eos=0,bytes=0;
 
@@ -481,8 +481,8 @@ int lame_encode_ogg_finish(lame_global_flags *gfp,
 
 
 int lame_encode_ogg_frame(lame_global_flags *gfp,
-			  short int inbuf_l[],short int inbuf_r[],
-			  char *mp3buf, int mp3buf_size)
+			  sample_t inbuf_l[],sample_t inbuf_r[],
+			  char *mp3buf, size_t mp3buf_size)
 {
 
   lame_internal_flags *gfc=gfp->internal_flags;

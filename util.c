@@ -159,17 +159,16 @@ int samplerate)   /* convert bitrate in kbps to index */
  *
  * Robert.Hegemann@gmx.de 2000-07-01
  */
-long validSamplerate(long samplerate)
+long validSamplerate ( long samplerate )
 {
-    if (samplerate<= 8000) return  8000;
-    if (samplerate<=11025) return 11025;
-    if (samplerate<=12000) return 12000;
-    if (samplerate<=16000) return 16000;
-    if (samplerate<=22050) return 22050;
-    if (samplerate<=24000) return 24000;
-    if (samplerate<=32000) return 32000;
-    if (samplerate<=44100) return 44100;
-    
+    if (samplerate <=  9500) return  8000;
+    if (samplerate <= 11500) return 11025;
+    if (samplerate <= 14000) return 12000;
+    if (samplerate <= 19000) return 16000;
+    if (samplerate <= 23000) return 22050;
+    if (samplerate <= 28000) return 24000;
+    if (samplerate <= 38000) return 32000;
+    if (samplerate <= 46000) return 44100;
     return 48000;
 }
 
@@ -178,61 +177,43 @@ int bRate,        /* legal rates from 32 to 448 */
 int version,      /* MPEG-1 or MPEG-2 LSF */
 int samplerate)   /* convert bitrate in kbps to index */
 {
-int     index = 0;
-int     found = 0;
+    int* t = bitrate_table [version];
 
-    while(!found && index<15)   {
-        if(bitrate_table[version][index] == bRate)
-            found = 1;
-        else
-            ++index;
-    }
-    if(found)
-        return(index);
-    else {
-        ERRORF("Bitrate %dkbs not legal for %iHz output sampling.\n",
-                bRate, samplerate);
-        return(-1);     /* Error! */
-    }
+    if ( bRate == t [ 1] ) return  1;
+    if ( bRate == t [ 2] ) return  2;
+    if ( bRate == t [ 3] ) return  3;
+    if ( bRate == t [ 4] ) return  4;
+    if ( bRate == t [ 5] ) return  5;
+    if ( bRate == t [ 6] ) return  6;
+    if ( bRate == t [ 7] ) return  7;
+    if ( bRate == t [ 8] ) return  8;
+    if ( bRate == t [ 9] ) return  9;
+    if ( bRate == t [10] ) return 10;
+    if ( bRate == t [11] ) return 11;
+    if ( bRate == t [12] ) return 12;
+    if ( bRate == t [13] ) return 13;
+    if ( bRate == t [14] ) return 14;
+
+    ERRORF ("Bitrate %d kbps not legal for %i Hz output sampling.\n", bRate, samplerate );
+    return -1;
 }
 
-int SmpFrqIndex(  /* convert samp frq in Hz to index */
-long sRate,             /* legal rates 16000, 22050, 24000, 32000, 44100, 48000 */
-int  *version)
-{
-	/* Assign default value */
-	*version=0;
+/* convert Sample Frequency in Hz to MPEG version and index */
 
-    if (sRate == 44100L) {
-        *version = 1; return(0);
-    }
-    else if (sRate == 48000L) {
-        *version = 1; return(1);
-    }
-    else if (sRate == 32000L) {
-        *version = 1; return(2);
-    }
-    else if (sRate == 24000L) {
-        *version = 0; return(1);
-    }
-    else if (sRate == 22050L) {
-        *version = 0; return(0);
-    }
-    else if (sRate == 16000L) {
-        *version = 0; return(2);
-    }
-    else if (sRate == 12000L) {
-        *version = 0; return(1);
-    }
-    else if (sRate == 11025L) {
-        *version = 0; return(0);
-    }
-    else if (sRate ==  8000L) {
-        *version = 0; return(2);
-    }
-    else {
-        ERRORF("SmpFrqIndex: %ldHz is not a legal sample rate\n", sRate);
-        return(-1);     /* Error! */
+int SmpFrqIndex ( long SampleFreq, int* MPEGversion )
+{
+    switch ( SampleFreq ) {
+    case 44100: *MPEGversion = 1; return  0;
+    case 48000: *MPEGversion = 1; return  1;
+    case 32000: *MPEGversion = 1; return  2;
+    case 11025:
+    case 22050: *MPEGversion = 0; return  0;
+    case 12000:
+    case 24000: *MPEGversion = 0; return  1;
+    case  8000:
+    case 16000: *MPEGversion = 0; return  2;
+    default   : ERRORF ("SmpFrqIndex: %ld Hz is not a legal sample frequency\n", SampleFreq );
+	        *MPEGversion = 1; return -1;
     }
 }
 
@@ -266,7 +247,9 @@ enum byte_order DetermineByteOrder(void)
             return order_unknown;
 }
 
-void SwapBytesInWords( short *loc, int words )
+
+#if 0
+void SwapBytesInWords( short *loc, size_t words )
 {
     int i;
     short thisval;
@@ -280,10 +263,22 @@ void SwapBytesInWords( short *loc, int words )
         dst[1] = src[0];
     }
 }
-
-
-
-
+#else
+void SwapBytesInWords ( short* loc, size_t words )
+{
+    unsigned long*  p = (unsigned long*) loc;
+    
+    for ( ; words >= 2; words -= 2, p++ )
+        *p = ((*p << 8) & 0xFF00FF00) |
+             ((*p >> 8) & 0x00FF00FF);
+    
+    if ( words ) {
+        loc  = (short*) p;    
+        *loc = ((*loc << 8) & 0xFF00) |
+               ((*loc >> 8) & 0x00FF);
+    }
+}
+#endif
 
 
 /*****************************************************************************
@@ -455,7 +450,48 @@ void fun_reorder(int scalefac_band[],FLOAT8 ix_orig[576]) {
 
 
 /* resampling via FIR filter, blackman window */
-INLINE double blackman(int i,double offset,double fcn,int l)
+
+
+/* calculates window function with an carrier of (-1,+1) */
+
+INLINE double blackman_slow (double x)
+{
+   if ( fabs (x) >= 1. )
+       return 0.;
+
+   x *= PI;
+   return 0.42 + 0.5 * cos(x) + 0.08 * cos(2*x); // original formula
+}
+
+INLINE double blackman ( double x )
+{
+    if ( fabs (x) >= 1)
+        return 0.;
+
+    x = cos (x * PI);
+
+    // using addition theorem of arc functions
+    return (0.16 * x + 0.5) * x + 0.34;
+}
+
+
+/* calculates sinc function, zero crosses are at ..., -2, -1, +1, +2, ... */
+
+INLINE double sinc ( double x )
+{
+    if ( x == 0. )
+        return 1.;
+
+    if ( x <  0. )
+        x = -x;
+
+    // mirroring argument of sin to [-pi/2,+pi/2), so zero crosses are really exact zero
+    return sin ( (x - (int) ( x + 0.5 )) * PI ) / x;
+}
+
+/* Can someone rewrite this function using blackman() and sinc() and a short comment? */
+
+INLINE double snafucate (int i,double offset,double fcn,int l)
 {
   double bkwn;
   double wcn = (PI * fcn);
@@ -463,22 +499,21 @@ INLINE double blackman(int i,double offset,double fcn,int l)
   double x = i-offset;
   if (x<0) x=0;
   if (x>l) x=l;
-  bkwn = 0.42 - 0.5 * cos((x * 2) * PI /l)
-    + 0.08 * cos((x * 4) * PI /l);
-  if (fabs(x-dly)<1e-9) return wcn/PI;
+  bkwn = 0.42 - 0.5 * cos((x * 2) * PI / l) + 0.08 * cos((x * 4) * PI / l);
+  if (fabs(x-dly)<1.045124723174582173568712e-9) return wcn/PI;
   else 
     return  (sin( (wcn *  ( x - dly))) / (PI * ( x - dly)) * bkwn );
 }
 
-int fill_buffer_downsample(lame_global_flags *gfp,short int *outbuf,int desired_len,
-			 short int *inbuf,int len,int *num_used,int ch) {
+int fill_buffer_downsample(lame_global_flags *gfp,sample_t *outbuf,int desired_len,
+			 sample_t *inbuf,int len,int *num_used,int ch) {
   
   lame_internal_flags *gfc=gfp->internal_flags;
   FLOAT8 offset,xvalue;
   int i,j=0,k,value;
   int filter_l;
   FLOAT8 fcn,intratio;
-  short int *inbuf_old;
+  sample_t *inbuf_old;
 
   intratio=( fabs(gfc->resample_ratio - floor(.5+gfc->resample_ratio)) < .0001 );
   fcn = .90/gfc->resample_ratio;
@@ -492,12 +527,12 @@ int fill_buffer_downsample(lame_global_flags *gfp,short int *outbuf,int desired_
     gfc->fill_buffer_downsample_init=1;
     gfc->itime[0]=0;
     gfc->itime[1]=0;
-    memset((char *) gfc->inbuf_old, 0, sizeof(short int)*2*BLACKSIZE);
+    memset((char *) gfc->inbuf_old, 0, sizeof(sample_t)*2*BLACKSIZE);
     /* precompute blackman filter coefficients */
     for (j= 0; j<= 2*BPC; ++j) {
       offset=(double)(j-BPC)/(double)(2*BPC);
       for (i=0; i<=filter_l; ++i) {
-	gfc->blackfilt[j][i]=blackman(i,offset,fcn,filter_l);
+	gfc->blackfilt[j][i]=snafucate(i,offset,fcn,filter_l);
       }
     }
 
@@ -532,7 +567,7 @@ int fill_buffer_downsample(lame_global_flags *gfp,short int *outbuf,int desired_
       if (intratio) 
 	xvalue += y*gfc->blackfilt[joff][i];
       else
-	xvalue += y*blackman(i,offset,fcn,filter_l);  /* very slow! */
+	xvalue += y*snafucate(i,offset,fcn,filter_l);  /* very slow! */
 #endif
     }
     value = floor(.5+xvalue);
@@ -554,18 +589,18 @@ int fill_buffer_downsample(lame_global_flags *gfp,short int *outbuf,int desired_
 
 
 /* 4 point interpolation routine for upsampling */
-int fill_buffer_upsample(lame_global_flags *gfp,short int *outbuf,int desired_len,
-        short int *inbuf,int len,int *num_used,int ch) {
+int fill_buffer_upsample(lame_global_flags *gfp,sample_t *outbuf,int desired_len,
+        sample_t *inbuf,int len,int *num_used,int ch) {
 
   int i,j=0,k,linear,value;
   lame_internal_flags *gfc=gfp->internal_flags;
-  short int *inbuf_old;
+  sample_t* inbuf_old;
 
   if (!gfc->fill_buffer_upsample_init) {
     gfc->fill_buffer_upsample_init=1;
     gfc->upsample_itime[0]=0;
     gfc->upsample_itime[1]=0;
-    memset((char *) gfc->upsample_inbuf_old, 0, sizeof(short int)*2*OLDBUFSIZE);
+    memset((char *) gfc->upsample_inbuf_old, 0, sizeof(sample_t)*2*OLDBUFSIZE);
   }
 
 
