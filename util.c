@@ -60,7 +60,7 @@ void getframebits(lame_global_flags *gfp,int *bitsPerFrame, int *mean_bits) {
   if (gfp->error_protection) sideinfo_len += 16;
   
   
-  whole_SpF =  (gfp->framesize /samp)*(bit_rate /  (FLOAT8)bitsPerSlot);
+  whole_SpF = floor( (gfp->framesize /samp)*(bit_rate /  (FLOAT8)bitsPerSlot) );
   *bitsPerFrame = 8 * whole_SpF + (gfp->padding * 8);
   *mean_bits = (*bitsPerFrame - sideinfo_len) / gfp->mode_gr;
 }

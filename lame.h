@@ -20,6 +20,9 @@
 #ifndef LAME_H_INCLUDE
 #define LAME_H_INCLUDE
 #include <stdio.h>
+
+/* maximum size of mp3buffer needed if you encode at most 1152 samples for
+   each call to lame_encode_buffer.  see lame_encode_buffer() below  */
 #define LAME_MAXMP3BUFFER 16384
 
 
@@ -43,26 +46,26 @@ typedef enum sound_file_format_e {
 ***********************************************************************/
 typedef struct  {
   /* input file description */
-  unsigned long num_samples;  /* number of samples         */
-  int num_channels;           /* input number of channels  */
-  int in_samplerate;          /* input_samp_rate           */
+  unsigned long num_samples;  /* number of samples. default=2^32-1    */
+  int num_channels;           /* input number of channels. default=2  */
+  int in_samplerate;          /* input_samp_rate. default=44.1kHz     */
   int out_samplerate;         /* output_samp_rate. (usually determined automatically)   */ 
 
 
   /* general control params */
-  int gtkflag;                /* frame analyzer?       */
-  int bWriteVbrTag;           /* Xing VBR tag?         */
+  int gtkflag;                /* run frame analyzer?       */
+  int bWriteVbrTag;           /* add Xing VBR tag?         */
   int quality;                /* quality setting 0=best,  9=worst  */
   int silent;                 /* disable some status output */
   int mode;                       /* 0,1,2,3 stereo,jstereo,dual channel,mono */
-  int mode_fixed;                 /* use specified mode, not lame's opinion of the best mode */
+  int mode_fixed;                 /* use specified the mode, do not use lame's opinion of the best mode */
   int force_ms;                   /* force M/S mode */
   int brate;                      /* bitrate */
 
   /* frame params */
-  int copyright;                  /* mark as copyright */
-  int original;                   /* mark as original */
-  int error_protection;           /* use 2 bytes per frame for a CRC checksum */
+  int copyright;                  /* mark as copyright. default=0 */
+  int original;                   /* mark as original. default=1 */
+  int error_protection;           /* use 2 bytes per frame for a CRC checksum. default=0*/
   int padding_type;               /* 0=no padding, 1=always pad, 2=adjust padding */
   int extension;                  /* the MP3 'private extension' bit.  meaningless */
 
@@ -217,6 +220,15 @@ void lame_print_config(lame_global_flags *);
 
 /* input pcm data, output (maybe) mp3 frames.
  * This routine handles all buffering, resampling and filtering for you.
+ * 
+ * leftpcm[]       array of 16bit pcm data, left channel
+ * rightpcm[]      array of 16bit pcm data, right channel
+ * num_samples     number of samples in leftpcm[] and rightpcm[] (if stereo)
+ * mp3buffer       pointer to buffer where mp3 output is written
+ * mp3buffer_size  size of mp3buffer, in bytes
+ * return code     number of bytes output in mp3buffer.  can be 0 
+ *                 if return code = -1:  mp3buffer was too small
+ *
  * The required mp3buffer_size can be computed from num_samples, 
  * samplerate and encoding rate, but here is a worst case estimate:
  *
@@ -225,8 +237,6 @@ void lame_print_config(lame_global_flags *);
  * set mp3buffer_size = 0 if you dont want LAME to check if the mp3 buffer
  * is large enough
  *
- * return code = number of bytes output in mp3buffer.  can be 0 
- * if return code = -1:  mp3buffer was too small
  *
  * NOTE: if gfp->num_channels=2, but gfp->mode = 3 (mono), the L & R channels
  * will be averaged into the L channel before encoding only the L channel

@@ -91,6 +91,7 @@ int decode_header(struct frame *fr,unsigned long newhead)
       fr->lsf = 1;
       fr->mpeg25 = 1;
     }
+
     
     fr->lay = 4-((newhead>>17)&3);
     if( ((newhead>>10)&0x3) == 0x3) {

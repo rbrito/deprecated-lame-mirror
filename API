@@ -26,21 +26,22 @@ main.c
 returns pointer to encoder parameters listed above 
 
    #include "lame.h"
-   lame_global_flags *gf;
-   gf = lame_global_flags *lame_init(void);
+   lame_global_flags gf;
+   lame_init(%gf);
 
-The override various default settings as necessary, for example:
+Then override various default settings as necessary, for example:
 
-   gf->in_samplerate = 44100
-   gf->brate = 128
-   gf->mode = 0,1 or 3      /* stereo, jstereo, mono */
-   gf->quality = 2,5 or 9       /* 2=high, 5=medium 9=low */
+   gf.num_channels=2;
+   gf.in_samplerate = 44100;
+   gf.brate = 128;
+   gf.mode = 0,1 or 3      /* stereo, jstereo, mono */
+   gf.quality = 2,5 or 9       /* 2=high, 5=medium 9=low */
 
 see lame.h for the complete list of options.
 
 
 3. sets more internal configuration based on data provided above:
-   void lame_init_params(void);
+   lame_init_params(&gf);
 
 
 
@@ -50,17 +51,18 @@ The required mp3buffer_size can be computed from num_samples,
 samplerate and encoding rate, but here is a worst case estimate:
 mp3buffer_size (in bytes) = 1.25*num_samples + 7200
 The return code = number of bytes output in mp3buffer.  This can be 0.
+If it is -1, an error occured.  
 
-   int lame_encode_buffer(short int leftpcm[], short int rightpcm[],
+   int lame_encode_buffer(lame_global_flags *gfp,
+         short int leftpcm[], short int rightpcm[],
          int num_samples,char *mp3buffer,int  mp3buffer_size);
-
 
 
 5. lame_encode_finish will flush the buffers and may return a 
 final few mp3 frames.  mp3buffer should be at least 7200 bytes.
 return code = number of bytes output to mp3buffer.  This can be 0.
 
-   int lame_encode_finish(char *mp3buffer);
+   int lame_encode_finish(lame_global_flags *gfp,char *mp3buffer);
 
 
 
