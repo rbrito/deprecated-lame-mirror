@@ -955,7 +955,7 @@ pecalc_s(
 	255.8
     };
 
-    do {
+    while (--sb >= 0) {
 	int sblock;
 	FLOAT xx=0.0;
 	for (sblock=0;sblock<3;sblock++) {
@@ -970,7 +970,7 @@ pecalc_s(
 		xx += FAST_LOG10(mr->en.s[sb][sblock] / x);
 	}
 	pe_s += regcoef_s[sb] * xx;
-    } while (--sb >= 0);
+    }
 
     return pe_s;
 }
@@ -1008,7 +1008,7 @@ pecalc_l(
 	241.3
     };
 
-    do {
+    while (--sb >= 0) {
 	FLOAT x = mr->thm.l[sb];
 	if (mr->en.l[sb] <= x)
 	    continue;
@@ -1019,7 +1019,7 @@ pecalc_l(
 	    pe_l += regcoef_l[sb] * (10.0 * LOG10);
 	else
 	    pe_l += regcoef_l[sb] * FAST_LOG10(mr->en.l[sb] / x);
-    } while (--sb >= 0);
+    }
 
     return pe_l;
 }
@@ -1688,13 +1688,17 @@ psycho_analysis(
 
 	numchn = gfc->channels_out;
 	if (gfp->mode == JOINT_STEREO) {
-	    if (!gfc->useshort_next[gr][ch]) 
+	    if (!gfc->useshort_next[gr][2])
 		msfix_l(gfc, gr);
 
 	    msfix_s(gfc, gr);
-	    numchn = 4;
-	    if (gfp->use_istereo)
+	    if (gfp->use_istereo) {
+		if (gfc->useshort_next[gr][0] | gfc->useshort_next[gr][1])
+		    gfc->useshort_next[gr][0] = gfc->useshort_next[gr][1]
+			= SHORT_TYPE;
 		set_istereo_sfb(gfc, gr);
+	    }
+	    numchn = 4;
 	}
 	/*********************************************************************
 	 * compute the value of PE to return
@@ -1717,9 +1721,6 @@ psycho_analysis(
 	gfc->masking_next[gr][3].pe *= gfc->reduce_side;
 	if (gfc->useshort_next[gr][2] | gfc->useshort_next[gr][3])
 	    gfc->useshort_next[gr][2] = gfc->useshort_next[gr][3] = SHORT_TYPE;
-	if (gfp->use_istereo
-	    && (gfc->useshort_next[gr][0] | gfc->useshort_next[gr][1]))
-	    gfc->useshort_next[gr][0] = gfc->useshort_next[gr][1] = SHORT_TYPE;
     }
     /* determine MS/LR in the next frame */
     gfc->mode_ext_next = MPG_MD_LR_LR;
