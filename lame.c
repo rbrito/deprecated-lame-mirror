@@ -1214,13 +1214,18 @@ void lame_init(lame_global_flags *gfp)
 /*****************************************************************/
 int lame_encode_finish(lame_global_flags *gfp,char *mp3buffer, int mp3buffer_size)
 {
-  int imp3,mp3count;
+  int imp3,mp3count,mp3buffer_size_remaining;
   short int buffer[2][1152];
   memset((char *)buffer,0,sizeof(buffer));
   mp3count = 0;
 
   while (mf_samples_to_encode > 0) {
-    imp3=lame_encode(gfp,buffer,mp3buffer,mp3buffer_size-mp3count);
+
+    mp3buffer_size_remaining = mp3buffer_size - mp3count;
+    /* if user specifed buffer size = 0, dont check size */
+    if (mp3buffer_size == 0) mp3buffer_size_remaining=0;  
+    imp3=lame_encode(gfp,buffer,mp3buffer,mp3buffer_size_remaining);
+
     if (imp3 == -1) {
       /* fatel error: mp3buffer too small */
       desalloc_buffer(&bs);    /* Deallocate all buffers */
@@ -1249,7 +1254,11 @@ int lame_encode_finish(lame_global_flags *gfp,char *mp3buffer, int mp3buffer_siz
 
 
   III_FlushBitstream();
-  imp3= copy_buffer(mp3buffer,mp3buffer_size-mp3count,&bs);
+  mp3buffer_size_remaining = mp3buffer_size - mp3count;
+  /* if user specifed buffer size = 0, dont check size */
+  if (mp3buffer_size == 0) mp3buffer_size_remaining=0;  
+
+  imp3= copy_buffer(mp3buffer,mp3buffer_size_remaining,&bs);
   if (imp3 == -1) {
     /* fatel error: mp3buffer too small */
     desalloc_buffer(&bs);    /* Deallocate all buffers */
