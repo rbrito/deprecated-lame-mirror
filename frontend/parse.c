@@ -343,7 +343,6 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    -v              use variable bitrate (VBR) (--vbr-old)\n"
               "    --vbr-old       use old variable bitrate (VBR) routine\n"
               "    --vbr-new       use new variable bitrate (VBR) routine\n"
-              "    --vbr-mtrh      a merger of old and new (VBR) routine\n"
               "    -V n            quality setting for VBR.  default n=%i\n"
               "                    0=high quality,bigger files. 9=smaller files\n"
               "    -b <bitrate>    specify minimum allowed bitrate, default  32 kbps\n"
@@ -909,7 +908,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     lame_set_VBR(gfp,vbr_rh); 
                 
                 T_ELIF ("vbr-new")
-                    lame_set_VBR(gfp,vbr_mt); 
+                    lame_set_VBR(gfp,vbr_mtrh); 
                 
                 T_ELIF ("vbr-mtrh")
                     lame_set_VBR(gfp,vbr_mtrh); 
