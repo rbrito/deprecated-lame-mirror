@@ -147,7 +147,6 @@ Operational:
 -o              mark the encoded file as a copy
 -S              don't print progress report, VBR histogram
 --strictly-enforce-ISO   comply as much as possible to ISO MPEG spec
---replaygain    perform ReplayGain analysis and store the result in LAME Tag
 --replaygain-accurate  slightly more accurate and much slower ReplayGain
 --clipdetect    determine whether clipping occurs and display an appropriate 
                 message. store the MP3 peak sample in LAME Tag
@@ -576,38 +575,39 @@ Not supported if LAME is compiled to use LIBSNDFILE.
 
 
 =======================================================================
-perform ReplayGain analysis 
-=======================================================================
---replaygain
-
-Perform ReplayGain analysis with reference volume equal 83dB on the input
-data and store RadioGain in the LAME Tag. If --scale option is used, 
-perform the analysis on the scaled data.
-
-More info on the algorithms used: http://www.replaygain.org
-
-NOTE: the results may be slightly inaccurate due to volume differences 
-      between the input data and data decoded from the MP3 file
-
-See also: --replaygain-accurate
-
-
-
-=======================================================================
 perform slightly more accurate ReplayGain analysis
 =======================================================================
 --replaygain-accurate
 
-Decode on the fly, perform ReplayGain analysis with reference volume
-equal 83dB on the decoded data and store RadioGain in the LAME Tag. 
+Enables decoding on the fly and performs ReplayGain analysis on 
+the decoded data stream.
 
-More info on the algorithms used: http://www.replaygain.org
+By default, LAME performs ReplayGain analysis on the input data (more 
+precisely: data only after the user-specified volume scaling). This
+behaviour might give slightly inaccurate results, because the data on 
+the output of a lossy compression/decompression sequence differs from 
+the initial input data. When --replaygain-accurate is specified then 
+decoding on the fly is performed and the analysis is performed on the
+decoded data stream, that is on the output of decoding (playbacking) 
+a compressed sound file. Although theoretically this method gives more 
+accurate results, it is unrecommended, because:
+  * tests have shown that the difference in the ReplayGain values 
+    computed on the input data and decoded data is usually no greater 
+    than 0.5dB, although the minimum volume difference a human ear can 
+    perceive is about 1.0dB
+  * decoding on the fly significantly slows down the encoding process
 
-NOTE: decoding on the fly significantly slows down the encoding process.
+Please note: ReplayGain analysis does not affect the content of a 
+compressed data stream itself, it is a value stored in the header 
+of a sound file. Information on the purpose of ReplayGain and the
+algorithms used is available at: http://www.replaygain.org/
 
-Requires LAME to be compiled with DECODE_ON_THE_FLY.
+The ReplayGain values are stored in the LAME tag. The analysis is 
+performed with the reference volume equal to 83dB. 
 
-See also: --replaygain
+This option requires LAME to be compiled with DECODE_ON_THE_FLY.
+(note: if LAME is compiled without DECODE_ON_THE_FLY, ReplayGain 
+analysis is performed on the input data)
 
 
 
