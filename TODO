@@ -20,7 +20,8 @@ we should add the some highpass filter(cut < 20Hz or so) before
 psycho-analysis.
 
 
-3. Some switches to support the "BUGGY" decoders.
+3.
+Some switches to support the "BUGGY" decoders.
 --strictly-enforce-ISO is not perfect to these players.
 It seems it needs forcing coupling block type, lower IXMAX_VAL, no
 scfsi, no scalefact_scale, and so on. 
@@ -28,41 +29,21 @@ scfsi, no scalefact_scale, and so on.
 
 
 4.
-short block encoding quality problem (i.e. spahm.wav)
-
-LAME4's block switching is better than LAME3 with nspsy,
-but the threshold calculation of short blocks is not.
-It does not support temporal masking, and so on.
-
-A temporal masking is not considered in block switching.
+short block encoding quality problem
 
 At the high frequency region, LAME4 increases the threshold too much.
 And more the worse, there's sfb21 :(
 
 
-5.
-low bitrate quality problem (i.e. "-b 8") and better intensity stereo support.
-
-at 8kbps, LAME4 is definitely worse than LAME3.94.
-and LAME4 should support i-stereo even when MPEG2 Layer3 (currently not).
+8.
+low bitrate quality problem and better intensity stereo support.
+LAME4 should support i-stereo even when MPEG2 Layer3 (currently not).
 
 Note: mpg123 (and all derivatives, like xmms and lame/mpglib)
 have bugs in the intensity stereo decoding.  Bugs have been there
 for years since there are very few intensity stereo mp3's out there.
 
 
-
-
-8.
-Tuning reservoir handling (especially for low bitrates); CBR/ABR arround
-90kbps (-b 90) is much worse than VBR quality 9 (-V 9). This is probabry
-because of poor resorvoir handling.
-
-Right now the code is tuned with the LAME3's pe calculation and
-psymodel. Now they are all changed and we should re-tune these code.
-
-2-pass VBR/ABR will perfectly solve the problem, but before it,
-we should improve the 1-pass encoding.
 
 
 9.
@@ -72,6 +53,18 @@ We should rewrite all the documentation, such as PRESET, INSTALL, README*,...
 10.
 Clipping detection and replaygain tag:
 LAME 3.x supports this, but LAME4 does not.
+
+
+11.
+Tuning reservoir handling (especially for low bitrates); CBR/ABR arround
+90kbps (-b 90) is worse than VBR quality 9 (-V 9). This is probabry
+because of poor resorvoir handling.
+
+Right now the code is tuned with the LAME3's pe calculation and
+psymodel. Now they are all changed and we should re-tune these code.
+
+2-pass VBR/ABR will perfectly solve the problem, but before it,
+we should improve the 1-pass encoding.
 
 
 15. 
@@ -95,8 +88,9 @@ And setting highpass filtering to enhance the playback frequency range.
 
 20.
 Replacing the resampling code of ssrc (Shibatch sampling rate conv.)
-will bring better result.
+will bring better result. But ssrc only supports some specific frequencies.
 
+So we should use both of ssrc/old resample code...
 
 
 30.
@@ -129,12 +123,12 @@ Integrate plusV extensions
 
 
 
-decoding core:
+decoding support.
 1.
 mp3 decoding is not reentrant nor thread safe.
 
 2.
-mp3 decoder crashes when some invlid mp3 file.
+mp3 decoding support code has poor error recovery.
 
 3
 mgplib has bugs with i-stereo.  flag denoting invalid
