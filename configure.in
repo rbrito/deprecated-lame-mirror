@@ -99,6 +99,8 @@ if test "${GCC}" = "yes"; then
 	AC_MSG_RESULT(${GCC_version})
 fi
 
+AC_SYS_LARGEFILE
+
 AC_CHECK_SIZEOF(short)
 AC_CHECK_SIZEOF(unsigned short)
 AC_CHECK_SIZEOF(int)
@@ -249,7 +251,7 @@ fi
 dnl Check if we have winsock, if so, we are on a mingw system
 dnl and need libwsock32
 SOCKETFUNCTION=YES
-AC_CHECK_HEADER(winsock2.h, [AC_DEFINE(HAVE_WINSOCKET)
+AC_CHECK_HEADER(winsock2.h, [AC_DEFINE([HAVE_WINSOCKET], [], [winsock])
 		LIBS="$LIBS -lwsock32"])  
 if test $ac_cv_header_winsock2_h = no; then
 	AC_CHECK_FUNCS(socket)
@@ -429,7 +431,7 @@ AC_MSG_RESULT($CONFIG_DECODER)
 
 AC_MSG_CHECKING(if the lame frontend should be build)
 AC_ARG_ENABLE(frontend,
-  [  --disable-frontend         Do not build the lame executable [default: build it]],
+  [  --disable-frontend         Do not build the lame executable [default=build]],
     WITH_FRONTEND="${enableval}", WITH_FRONTEND=yes)
 if test "x${WITH_FRONTEND}" = "xyes"; then
 	WITH_FRONTEND=lame${ac_exeext}
@@ -443,7 +445,7 @@ fi
 
 AC_MSG_CHECKING(if mp3x is requested)
 AC_ARG_ENABLE(mp3x,
-  [  --enable-mp3x              Build GTK frame analyzer [default: no]],
+  [  --enable-mp3x              Build GTK frame analyzer [default=no]],
     WITH_MP3X="${enableval}", WITH_MP3X=no)
 if test "x${WITH_MP3X}" = "xyes"; then
 	WITH_MP3X=mp3x${ac_exeext}
@@ -466,7 +468,7 @@ fi
 
 AC_MSG_CHECKING(if mp3rtp is requested)
 AC_ARG_ENABLE(mp3rtp,
-  [  --enable-mp3rtp            Build mp3rtp [default: no]],
+  [  --enable-mp3rtp            Build mp3rtp [default=no]],
     WITH_MP3RTP="${enableval}", WITH_MP3RTP=no)
 if test "x${WITH_MP3RTP}" = "xyes"; then
 	if test ${SOCKETFUNCTION} = NO; then
@@ -534,18 +536,19 @@ dnl configure use of VBR bitrate histogram
 dnl todo: always use yes as default, use simulation instead ?
 AC_MSG_CHECKING(use of VBR bitrate histogram)
 if test "x${HAVE_TERMCAP}" != "x"; then
-  BRH_DEFAULT="yes"
+  TERMCAP_DEFAULT="yes"
 else
-  BRH_DEFAULT="no"
+  TERMCAP_DEFAULT="no"
 fi
+
 AC_ARG_ENABLE(brhist, 
-  [  --enable-brhist            Include the VBR bitrate histogram feature]
-  [                           [default: yes if any termcap available]],
-  CONFIG_BRHIST="${enableval}", CONFIG_BRHIST="${BRH_DEFAULT}")
+  [  --disable-brhist          Include the VBR bitrate histogram feature]
+  [                           [default=yes]],
+  CONFIG_BRHIST="${enableval}", CONFIG_BRHIST="yes")
 if test "${CONFIG_BRHIST}" != "no" ; then
 	AC_DEFINE(BRHIST, 1, enable VBR bitrate histogram)
 
-	if test "${BRH_DEFAULT}" = "yes" ; then
+	if test "${TERMCAP_DEFAULT}" = "yes" ; then
 		FRONTEND_LDADD="-l${HAVE_TERMCAP} ${FRONTEND_LDADD}"
 		CONFIG_BRHIST="yes, with ${HAVE_TERMCAP}"
 		AC_DEFINE(HAVE_TERMCAP, 1, have termcap)
@@ -563,13 +566,13 @@ case $host_cpu in
 *86)
 	CPUTYPE="i386"
 
-	# this may make a faster binary
+	# use internal knowledge of the IEEE 754 layout
 	AC_DEFINE(TAKEHIRO_IEEE754_HACK, 1, IEEE754 compatible machine)
 	;;
 x86_64)
-dns CPUTYPE="i386" because nasm does not support elf64 currently
+dns do not set CPUTYPE="i386" because nasm does not support elf64 currently
 
-	# this may make a faster binary
+	# use internal knowledge of the IEEE 754 layout
 	AC_DEFINE(TAKEHIRO_IEEE754_HACK, 1, IEEE754 compatible machine)
 	;;
 *)
@@ -582,7 +585,7 @@ esac
 AC_MSG_CHECKING(for FLOAT as double)
 AC_ARG_ENABLE(double-float,
   [  --enable-double-float      Whether to make all floting point variables as double, not float]
-  [                           [default: no]],
+  [                           [default=no]],
     CONFIG_ALLFLOAT="${enableval}", CONFIG_ALLDOUBLE="no")
 case "${CONFIG_ALLDOUBLE}" in
 no)
@@ -641,7 +644,7 @@ esac
 AC_MSG_CHECKING(for additional optimizations)
 AC_ARG_ENABLE(expopt,
   [  --enable-expopt=full,norm  Whether to enable experimental optimizations]
-  [                           [default: no]],   
+  [                           [default=no]],   
     CONFIG_EXPOPT="${enableval}", CONFIG_EXPOPT="no")
 
 if test "x$GCC" = "xyes"; then
@@ -825,7 +828,7 @@ fi
 AC_MSG_CHECKING(for debug options)
 AC_ARG_ENABLE(debug,
   [  --enable-debug=alot,norm   Enable debugging (disables optimizations)]
-  [                           [default: no]],
+  [                           [default=no]],
     CONFIG_DEBUG="${enableval}", CONFIG_DEBUG="no")
 
 if test "x$GCC" = "xyes"; then
