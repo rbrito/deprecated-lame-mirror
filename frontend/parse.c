@@ -401,7 +401,6 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "                    or a value for an average desired bitrate and depending on\n"                       
               "                    the value specified, appropriate quality settings will be used.\n"
               "                    \"--preset help\" gives some more infos on these\n" 
-              "    --r3mix         use  r3mix.net VBR preset"
               );
 
     wait_for ( fp, lessmode );
@@ -421,36 +420,35 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "                    -q 9:  Poor quality, but fast \n"
               "    -h              Same as -q 2.   Recommended.\n"
               "    -f              Same as -q 7.   Fast, ok quality\n" 
+              "    --substep n     use pseudo substep noise shaping method types 0-7\n"
               );
 
     wait_for ( fp, lessmode );
     fprintf ( fp,
-              "  CBR (constant bitrate, the default) options:\n"
-              "    -b <bitrate>    set the bitrate in kbps, default 128 kbps\n"
-              "    --cbr           enforce use of constant bitrate\n"
-              "\n"
-              "  ABR options:\n"
-              "    --abr <bitrate> specify average bitrate desired (instead of quality)\n"
-              "\n"
-              "  VBR options:\n"
-              "    -v              use variable bitrate (VBR) (--vbr-old)\n"
-              "    --vbr-old       use old variable bitrate (VBR) routine\n"
-              "    --vbr-new       use new variable bitrate (VBR) routine\n"
-              "    -V n            quality setting for VBR.  default n=%i\n"
-              "                    0=high quality,bigger files. 9=smaller files\n"
-              "    -b <bitrate>    specify minimum allowed bitrate, default  32 kbps\n"
-              "    -B <bitrate>    specify maximum allowed bitrate, default 320 kbps\n"
-              "    -F              strictly enforce the -b option, for use with players that\n"
-              "                    do not support low bitrate mp3\n"
-              "    -t              disable writing LAME Tag\n"
+"  CBR (constant bitrate, the default) options:\n"
+"    -b <bitrate>    set the bitrate in kbps, default 128 kbps\n"
+"    --cbr           enforce use of constant bitrate\n"
+"\n"
+"  ABR options:\n"
+"    --abr <bitrate> specify average bitrate desired (instead of quality)\n"
+"\n"
+"  VBR options:\n"
+"    -v              use variable bitrate (VBR)\n"
+"    -V n            quality setting for VBR.  default n=%i\n"
+"                    0=high quality,bigger files. 9=smaller files\n"
+"    -b <bitrate>    specify minimum allowed bitrate, default  32 kbps\n"
+"    -B <bitrate>    specify maximum allowed bitrate, default 320 kbps\n"
+"    -F              strictly enforce the -b option, for use with players that\n"
+"                    do not support low bitrate mp3\n"
+"    -t              disable writing LAME Tag\n"
               , lame_get_VBR_q(gfp) );
-  
+
     wait_for ( fp, lessmode );  
     fprintf ( fp,
               "  ATH related:\n"
               "    --noath         turns ATH down to a flat noise floor\n"
-              "    --athshort      ignore GPSYCHO for short blocks, use ATH only\n"
-              "    --athonly       ignore GPSYCHO completely, use ATH only\n"
+              "    --athonly       use ATH only\n"
+              "    --athshort      use ATH only for short blocks\n"
               "    --athtype n     selects between different ATH types [0-5]\n"
               "    --athlower x    lowers ATH by x dB\n"
               "    --athaa-type n  ATH auto adjust types 1-3, else no adjustment\n"
@@ -458,25 +456,22 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --athaa-sensitivity x  activation offset in -/+ dB for ATH auto-adjustment\n" 
               "\n"
               "  PSY related:\n"
-              "    --short         use short blocks when appropriate\n"
-              "    --noshort       do not use short blocks\n"
-              "    --mixedblock    use mixed blocks\n"
-              "    --allshort      use only short blocks\n"
-              "    --cwlimit <freq>  compute tonality up to freq (in kHz) default 8.8717\n"
-#if 0
-/* this is redundant, we already have --notemp */
-              "    --temporal-masking n  use temporal masking effect n=0:no n=1:yes\n"
-#endif
+              "    --shortthreshold x,y  short block switching threshold\n"
+	      "                          x for L/R/M channel, y for S channel\n"
+              "    --mixedblock    use mixed blocks(experimental)\n"
               "    --notemp        disable temporal masking effect\n"
-              "    --nspsytune     experimental PSY tunings by Naoki Shibata\n"
               "    --nssafejoint   M/S switching criterion\n"
               "    --nsmsfix <arg> M/S switching tuning [effective 0-3.5]\n"
               "    --interch x     adjust inter-channel masking ratio\n"
-              "    --substep n     use pseudo substep noise shaping method types 0-2\n"
               "    --ns-bass x     adjust masking for sfbs  0 -  6 (long)  0 -  5 (short)\n"
               "    --ns-alto x     adjust masking for sfbs  7 - 13 (long)  6 - 10 (short)\n"         
               "    --ns-treble x   adjust masking for sfbs 14 - 21 (long) 11 - 12 (short)\n"
               "    --ns-sfb21 x    change ns-treble by x dB for sfb21\n"
+#if 0
+/* this is redundant, we already have --notemp */
+              "    --temporal-masking n  use temporal masking effect n=0:no n=1:yes\n"
+              "    --nspsytune     experimental PSY tunings by Naoki Shibata\n"
+#endif
             );
 
     wait_for ( fp, lessmode );  
@@ -1003,21 +998,9 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     (void) lame_set_out_samplerate( gfp,
                         resample_rate ( atof (nextArg) ) );
                 
-                T_ELIF ("vbr-old")
-                    lame_set_VBR(gfp,vbr_rh); 
-                
-                T_ELIF ("vbr-new")
-                    lame_set_VBR(gfp,vbr_mtrh); 
-                
-                T_ELIF ("vbr-mtrh")
-                    lame_set_VBR(gfp,vbr_mtrh); 
-
                 T_ELIF ("cbr")
-                    lame_set_VBR(gfp,vbr_off); 
+                    lame_set_VBR(gfp, vbr_off); 
 
-                T_ELIF ("r3mix")
-		    lame_set_preset(gfp, R3MIX);
-                                    
                 /**
                  *  please, do *not* DOCUMENT this one
                  *  it is a developers only switch (rh)
@@ -1038,8 +1021,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     argUsed=1;
                     {extern void lame_set_ms_sparse_high(lame_t gfp, float val);
                     lame_set_ms_sparse_high(gfp,atof(nextArg));}
-                       
-                    
+
                 T_ELIF ("abr")
                     argUsed=1;
                     lame_set_VBR(gfp,vbr_abr); 
@@ -1076,47 +1058,22 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF ("mp3input")
                     input_format=sf_mp3;
                 
-                T_ELIF ("phone")
-                    if (presets_set( gfp, 0, 0, token, ProgramName ) < 0)
-                        return -1;
-                    fprintf(stderr, "Warning: --phone is deprecated, use --preset phone instead!");
-                    
-                T_ELIF ("voice")
-                    if (presets_set( gfp, 0, 0, token, ProgramName ) < 0)
-                        return -1;
-                    fprintf(stderr, "Warning: --voice is deprecated, use --preset voice instead!");
-                    
-                T_ELIF ("radio")
-                    if (presets_set( gfp, 0, 0, token, ProgramName ) < 0)
-                        return -1;
-                    fprintf(stderr, "Warning: --radio is deprecated, use --preset radio instead!");
-
-                T_ELIF ("tape")
-                    if (presets_set( gfp, 0, 0, token, ProgramName ) < 0)
-                        return -1;
-                fprintf(stderr, "Warning: --tape is deprecated, use --preset tape instead!");
-                    
-                T_ELIF ("cd")
-                    if (presets_set( gfp, 0, 0, token, ProgramName ) < 0)
-                        return -1;
-                fprintf(stderr, "Warning: --cd is deprecated, use --preset cd instead!");
-                    
-                T_ELIF ("studio")
-                    if (presets_set( gfp, 0, 0, token, ProgramName ) < 0)
-                        return -1;
-                fprintf(stderr, "Warning: --studio is deprecated, use --preset studio instead!");
-                    
-                T_ELIF ("noshort")
-                    (void) lame_set_no_short_blocks( gfp, 1 );
-                
                 T_ELIF ("mixedblock")
                     (void) lame_set_use_mixed_blocks( gfp, 2);
-                
-                T_ELIF ("short")
-                    (void) lame_set_no_short_blocks( gfp, 0 );
-                
+
                 T_ELIF ("allshort")
-                    (void) lame_set_force_short_blocks( gfp, 1 );
+                    (void) lame_set_short_threshold( gfp, 0.0f, 0.0f);
+                
+                T_ELIF ("shortthreshold")
+		{
+		    float x,y;
+		    int i;
+		    argUsed=1;
+		    i = sscanf(nextArg, "%f,%f", &x, &y);
+		    if (i == 1)
+			y = x;
+                    (void) lame_set_short_threshold( gfp, x, y);
+		}
                 
                 T_ELIF ("decode")
                     (void) lame_set_decode_only( gfp, 1 );
@@ -1283,11 +1240,6 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     }
                     lame_set_highpasswidth(gfp,val);
                 
-                T_ELIF ("cwlimit")
-                    val = atof (nextArg);
-                    argUsed=1;
-		    fprintf(stderr, "Warning: cwlimit is obsolete\n");
-                 
                 T_ELIF ("comp")
                     argUsed=1;
                     val = atof( nextArg );
@@ -1297,9 +1249,6 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     }
                     lame_set_compression_ratio(gfp,val);
                 
-                T_ELIF ("no-preset-tune")
-                    (void) lame_set_preset_notune( gfp, 0 );					
-
                 T_ELIF ("notemp")
                     (void) lame_set_useTemporal( gfp, 0 );
 
