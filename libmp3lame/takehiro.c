@@ -147,7 +147,7 @@ count_bit_noESC_from4(
           int * const s,
     const int *       ix,
     const int * const end,
-          int         xlen,
+          int         xlenshift,
           int         t1,
     const uint64_t * const table
     )
@@ -157,7 +157,7 @@ count_bit_noESC_from4(
     int	sum1, sum2;
     int t;
     do {
-	sum += table[ix[0] * xlen + ix[1]];
+	sum += table[(ix[0] << xlenshift) + ix[1]];
     } while ((ix += 2) < end);
 
     t = t1;
@@ -238,19 +238,19 @@ choose_table_nonMMX(const int *ix, const int * const end, int * const s)
 	return count_bit_noESC_from2(s, ix, end);
 
     case 2:
-	return count_bit_noESC_from4(s, ix, end, 16,  2, table7B89+96);
+	return count_bit_noESC_from4(s, ix, end, 4,  2, table7B89+96);
 
     case 3:
-	return count_bit_noESC_from4(s, ix, end,  4,  5, table5967);
+	return count_bit_noESC_from4(s, ix, end, 2,  5, table5967);
 
     case 4: case 5:
-	return count_bit_noESC_from4(s, ix, end, 16,  7, table7B89);
+	return count_bit_noESC_from4(s, ix, end, 4,  7, table7B89);
 
     case 6: case 7:
-	return count_bit_noESC_from4(s, ix, end, 16, 10, table7B89+8);
+	return count_bit_noESC_from4(s, ix, end, 4, 10, table7B89+8);
 
     case 8: case 9: case 10: case 11: case 12: case 13: case 14: case 15:
-	return count_bit_noESC_from4(s, ix, end, 16, 13, tableDxEF);
+	return count_bit_noESC_from4(s, ix, end, 4, 13, tableDxEF);
 
     default:
 	/* try tables with linbits */
