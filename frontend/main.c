@@ -1,7 +1,7 @@
 /*
- *	Command line frontend program
+ *      Command line frontend program
  *
- *	Copyright (c) 1999 Mark Taylor
+ *      Copyright (c) 1999 Mark Taylor
  *                    2000 Takehiro TOMIANGA
  *
  * This library is free software; you can redistribute it and/or
@@ -11,7 +11,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
@@ -423,9 +423,9 @@ lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath,
 
     if (nogap) {
         imp3 = lame_encode_flush_nogap(gf, mp3buffer, sizeof(mp3buffer)); /* may return one more mp3 frame */
-	/* reinitialize bitstream for next encoding.  this is normally done
-	 * by lame_init_params(), but we cannot call that routine twice */ 
-	lame_init_bitstream(gf);
+        /* reinitialize bitstream for next encoding.  this is normally done
+         * by lame_init_params(), but we cannot call that routine twice */
+        lame_init_bitstream(gf);
     } else {
         imp3 = lame_encode_flush(gf, mp3buffer, sizeof(mp3buffer)); /* may return one more mp3 frame */
     }
@@ -504,6 +504,12 @@ main(int argc, char **argv)
 #if macintosh
     argc = ccommand(&argv);
 #endif
+
+#ifdef __EMX__
+    /* This gives wildcard expansion on Non-POSIX shells with OS/2 */
+    _wildcard(&argc, &argv);
+#endif
+
     for (i = 0; i < max_nogap; ++i) {
         nogap_inPath[i] = malloc(MAX_NAME_SIZE);
     }
