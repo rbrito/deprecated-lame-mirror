@@ -234,7 +234,7 @@ int  lame_encode_mp3_frame (				// Output
     /*  auto-adjust of ATH, useful for low volume
      *  Gabriel Bouvigne 3 feb 2001
      */
-    if (gfp->ATH_auto_adjust) {
+    if (gfp->ATH_auto_adjust || vbr_mtrh == gfp->VBR) {
         FLOAT8 max_val = 0;
         int i;
         
@@ -253,18 +253,28 @@ int  lame_encode_mp3_frame (				// Output
         
         /*  adjust ATH depending on range of maximum value
          */
-        if      (0.5 < max_val / 32768) {       /* value above 50 % */
-                gfc->adjust_ath = 1.0;          /* do not reduce ATH */
+        if (vbr_mtrh == gfp->VBR) {
+            FLOAT8 
+            x = Max (1024, 1024*(int)(max_val/1024));
+            x = x/32768;
+            gfc->adjust_ath *= 0.93;        /* reduce by ~0.3 dB */
+            if (gfc->adjust_ath < x)
+                gfc->adjust_ath = x;
         }
-        else if (0.3 < max_val / 32768) {       /* value above 30 % */
-                gfc->adjust_ath *= 0.955;       /* reduce by ~0.2 dB */
-                if (gfc->adjust_ath < 0.3)      /* but ~5 dB in maximum */
-                    gfc->adjust_ath = 0.3;            
-        }
-        else {                                  /* value below 30 % */
-                gfc->adjust_ath *= 0.93;        /* reduce by ~0.3 dB */
-                if (gfc->adjust_ath < 0.01)     /* but 20 dB in maximum */
-                    gfc->adjust_ath = 0.01;
+        else {
+            if      (0.5 < max_val / 32768) {       /* value above 50 % */
+                    gfc->adjust_ath = 1.0;          /* do not reduce ATH */
+            }
+            else if (0.3 < max_val / 32768) {       /* value above 30 % */
+                    gfc->adjust_ath *= 0.955;       /* reduce by ~0.2 dB */
+                    if (gfc->adjust_ath < 0.3)      /* but ~5 dB in maximum */
+                        gfc->adjust_ath = 0.3;            
+            }
+            else {                                  /* value below 30 % */
+                    gfc->adjust_ath *= 0.93;        /* reduce by ~0.3 dB */
+                    if (gfc->adjust_ath < 0.01)     /* but 20 dB in maximum */
+                        gfc->adjust_ath = 0.01;
+            }
         }
     }
 

@@ -534,7 +534,7 @@ int scalefac[SBPSY_s][3],int sbg[3])
 
       if (sf[sfb][i] < 0) {
 	maxrange = sfb < 6 ? maxrange1 : maxrange2;
-	scalefac[sfb][i]=-sf[sfb][i]/ifqstep + (-sf[sfb][i]%ifqstep != 0);
+        scalefac[sfb][i]= -sf[sfb][i]/ifqstep + (-sf[sfb][i]%ifqstep != 0);
 	if (scalefac[sfb][i]>maxrange) scalefac[sfb][i]=maxrange;
 	
 	if (-(sf[sfb][i] + scalefac[sfb][i]*ifqstep) >maxover)  {
@@ -574,7 +574,7 @@ compute_scalefacs_long(int sf[SBPSY_l],gr_info *cod_info,int scalefac[SBPSY_l])
 
     if (sf[sfb]<0) {
       /* ifqstep*scalefac >= -sf[sfb], so round UP */
-      scalefac[sfb]=-sf[sfb]/ifqstep  + (-sf[sfb] % ifqstep != 0);
+      scalefac[sfb]= -sf[sfb]/ifqstep + (-sf[sfb] % ifqstep != 0);
       if (scalefac[sfb] > max_range_long[sfb]) scalefac[sfb]=max_range_long[sfb];
       
       /* sf[sfb] should now be positive: */
@@ -780,14 +780,12 @@ short_block_sf (
          */
         vbrmean = select_kth_int (sf_cache, SBPSY_s, SBMAX_s/2);
         
-        /*  get min and max values
+        /*  get min value
          */
         vbrmin = 10000;
         for (sfb = 0; sfb < SBMAX_s; sfb++) { 
             if (vbrmin > vbrsf->s[sfb][b])
                 vbrmin = vbrsf->s[sfb][b];
-            if (vbrmax < vbrsf->s[sfb][b])
-                vbrmax = vbrsf->s[sfb][b];
         }
         
         /*  patch sfb12
@@ -800,6 +798,13 @@ short_block_sf (
         for (sfb = 0; sfb < SBMAX_s; sfb++) {
             if (vbrsf->s[sfb][b] > vbrmean+(vbrmean-vbrmin))
                 vbrsf->s[sfb][b] = vbrmean+(vbrmean-vbrmin);
+        }
+        
+        /*  get max value
+         */
+        for (sfb = 0; sfb < SBMAX_s; sfb++) { 
+            if (vbrmax < vbrsf->s[sfb][b])
+                vbrmax = vbrsf->s[sfb][b];
         }
     }
     
@@ -848,15 +853,12 @@ long_block_sf (
      */
     vbrmean = select_kth_int (sf_cache, SBPSY_l, SBMAX_l/2);
 
-    /*  get min and max values
+    /*  get min value
      */
     vbrmin = +10000;
-    vbrmax = -10000;
     for (sfb = 0; sfb < SBMAX_l; sfb++) {
         if (vbrmin > vbrsf->l[sfb])
             vbrmin = vbrsf->l[sfb];
-        if (vbrmax < vbrsf->l[sfb]) 
-            vbrmax = vbrsf->l[sfb];
     }
     
     /*  patch sfb21
@@ -869,6 +871,14 @@ long_block_sf (
     for (sfb = 0; sfb < SBMAX_l; sfb++) {
         if (vbrsf->l[sfb] > vbrmean+(vbrmean-vbrmin))
             vbrsf->l[sfb] = vbrmean+(vbrmean-vbrmin);
+    }
+    
+    /*  get max value
+     */
+    vbrmax = -10000;
+    for (sfb = 0; sfb < SBMAX_l; sfb++) {
+        if (vbrmax < vbrsf->l[sfb]) 
+            vbrmax = vbrsf->l[sfb];
     }
         
     return vbrmax;
@@ -931,6 +941,12 @@ short_block_scalefacs (
     /* sf =  (cod_info->global_gain-210.0) */
     cod_info->global_gain = vbrmax + 210;
     assert(cod_info->global_gain < 256);
+    
+    if (vbr_mtrh == gfp->VBR && cod_info->global_gain > 1) {
+        /*  just to be safe, reduce global_gain by one
+         */
+        cod_info->global_gain -= 1; 
+    }
     
     if (cod_info->global_gain > 255)
         cod_info->global_gain = 255;
@@ -1048,6 +1064,13 @@ long_block_scalefacs (
     /* sf =  (cod_info->global_gain-210.0) */
     cod_info->global_gain = vbrmax + 210;
     assert (cod_info->global_gain < 256);
+
+    if (vbr_mtrh == gfp->VBR && cod_info->global_gain > 1) {
+        /*  just to be safe, reduce global gain by one
+         */
+        cod_info->global_gain -= 1; 
+    }
+    
     if (cod_info->global_gain > 255) 
         cod_info->global_gain = 255;
     
