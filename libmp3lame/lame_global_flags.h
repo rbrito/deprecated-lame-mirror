@@ -80,7 +80,6 @@ struct lame_global_struct {
   int quant_comp;
   int quant_comp_short;
   int experimentalY;
-  int experimentalZ;
   int exp_nspsytune;
 
   double newmsfix;

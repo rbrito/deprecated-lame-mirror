@@ -840,20 +840,17 @@ lame_get_experimentalY( const lame_global_flags*  gfp )
 }
 
 
-/* Another experimental option. For testing only. */
 int
 lame_set_experimentalZ( lame_global_flags*  gfp,
                         int                 experimentalZ )
 {
-    gfp->experimentalZ += experimentalZ;
-
     return 0;
 }
 
 int
 lame_get_experimentalZ( const lame_global_flags*  gfp )
 {
-    return gfp->experimentalZ;
+    return 0;
 }
 
 
@@ -1455,6 +1452,24 @@ lame_get_substep(const lame_global_flags*  gfp )
     lame_internal_flags *gfc = gfp->internal_flags;
     assert(0 <= gfc->substep_shaping && gfc->substep_shaping <= 7);
     return gfc->substep_shaping;
+}
+
+/* scalefactors scale */
+int
+lame_set_sfscale( lame_global_flags* gfp,
+                int val )
+{
+    if (val)
+        gfp->internal_flags->noise_shaping = 2;
+    else
+        gfp->internal_flags->noise_shaping = 1;
+    return 0;
+}
+
+int
+lame_get_sfscale(const lame_global_flags*  gfp )
+{
+    return (gfp->internal_flags->noise_shaping == 2);
 }
 
 /* subblock gain */

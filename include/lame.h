@@ -481,6 +481,10 @@ float CDECL lame_get_interChRatio(const lame_global_flags *);
 int CDECL lame_set_substep(lame_global_flags *, int);
 int CDECL lame_get_substep(const lame_global_flags *);
 
+/* scalefactors scale */
+int CDECL lame_set_sfscale(lame_global_flags *, int);
+int CDECL lame_get_sfscale(const lame_global_flags *);
+
 /* subblock gain */
 int CDECL lame_set_subblock_gain(lame_global_flags *, int);
 int CDECL lame_get_subblock_gain(const lame_global_flags *);

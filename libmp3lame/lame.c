@@ -316,7 +316,8 @@ lame_init_qval(lame_global_flags * gfp)
         gfc->filter_type = 0;
         gfc->psymodel = 1;
         gfc->quantization = 0;
-        gfc->noise_shaping = 1;
+        if (gfc->noise_shaping == 0)
+            gfc->noise_shaping = 1;
         gfc->noise_shaping_amp = 0;
         gfc->noise_shaping_stop = 0;
         if (gfc->subblock_gain == -1)
@@ -328,7 +329,8 @@ lame_init_qval(lame_global_flags * gfp)
         gfc->filter_type = 0;
         gfc->psymodel = 1;
         gfc->quantization = 1;
-        gfc->noise_shaping = 1;
+        if (gfc->noise_shaping == 0)
+            gfc->noise_shaping = 1;
         gfc->noise_shaping_amp = 0;
         gfc->noise_shaping_stop = 0;
         if (gfc->subblock_gain == -1)
@@ -340,7 +342,8 @@ lame_init_qval(lame_global_flags * gfp)
         gfc->filter_type = 0;
         gfc->psymodel = 1;
         gfc->quantization = 1;
-        gfc->noise_shaping = 1;
+        if (gfc->noise_shaping == 0)
+            gfc->noise_shaping = 1;
         gfc->noise_shaping_amp = 1;
         gfc->noise_shaping_stop = 1;
         if (gfc->subblock_gain == -1)
@@ -352,7 +355,8 @@ lame_init_qval(lame_global_flags * gfp)
         gfc->filter_type = 0;
         gfc->psymodel = 1;
         gfc->quantization = 1;
-        gfc->noise_shaping = 1;
+        if (gfc->noise_shaping == 0)
+            gfc->noise_shaping = 1;
         if (gfc->substep_shaping != 0)
 	        gfc->substep_shaping = 2;
         gfc->noise_shaping_amp = 1;
@@ -366,7 +370,8 @@ lame_init_qval(lame_global_flags * gfp)
         gfc->filter_type = 0; /* 1 not yet coded */
         gfc->psymodel = 1;
         gfc->quantization = 1;
-        gfc->noise_shaping = 1;
+        if (gfc->noise_shaping == 0)
+            gfc->noise_shaping = 1;
         if (gfc->substep_shaping != 0)
 	        gfc->substep_shaping = 2;
         gfc->noise_shaping_amp = 2;
@@ -380,21 +385,18 @@ lame_init_qval(lame_global_flags * gfp)
         gfc->filter_type = 0; /* 1 not yet coded */
         gfc->psymodel = 1;
         gfc->quantization = 1;
-        gfc->noise_shaping = 1; /* 2=usually lowers quality */
+        if (gfc->noise_shaping == 0)
+            gfc->noise_shaping = 1;
         if (gfc->substep_shaping != 0)
 	        gfc->substep_shaping = 2;
         gfc->noise_shaping_amp = 2;
         gfc->noise_shaping_stop = 1;
+        if (gfc->subblock_gain == -1)
+            gfc->subblock_gain = 1;
         gfc->use_best_huffman = 2;
         break;
     }
 
-    /* modifications to the above rules: */
-
-    /* -Z option toggles scalefactor_scale: */
-    if (gfp->experimentalZ & 1) {
-        gfc->noise_shaping = 2;
-    }
 }
 
 
@@ -1257,7 +1259,7 @@ lame_print_internals( const lame_global_flags * gfp )
     case  2: pc = "best (inside loop, slow)"; break;
     } 
     MSGF( gfc, "\thuffman search: %s\n", pc ); 
-    MSGF( gfc, "\texperimental Y=%d Z=%d\n", gfp->experimentalY, gfp->experimentalZ );
+    MSGF( gfc, "\texperimental Y=%d\n", gfp->experimentalY);
     MSGF( gfc, "\t...\n" );
 
     /*  everything controlling the stream format 
