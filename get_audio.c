@@ -343,12 +343,12 @@ FILE * OpenSndFile(lame_global_flags *gfp)
 	printf("sections          :%d\n",gs_wfInfo.sections);
 	printf("seekable          :\n",gs_wfInfo.seekable);
 #endif
-  }
 
-  gfp->num_samples = gs_wfInfo.samples;
-  gfp->num_channels = gs_wfInfo.channels;
-  gfp->in_samplerate = gs_wfInfo.samplerate;
-  gfc->pcmbitwidth=gs_wfInfo.pcmbitwidth;
+    gfp->num_samples = gs_wfInfo.samples;
+    gfp->num_channels = gs_wfInfo.channels;
+    gfp->in_samplerate = gs_wfInfo.samplerate;
+    gfc->pcmbitwidth=gs_wfInfo.pcmbitwidth;
+  }
 
   if (gfp->num_samples==MAX_U_32_NUM) {
     struct stat sb;
