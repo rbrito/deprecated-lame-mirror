@@ -754,7 +754,7 @@ static int  presets_set( lame_t gfp, int fast, int cbr, const char* preset_name,
     if (strcmp(preset_name, "fm") == 0) {
         preset_name = "112";
     }
-    if ( (strcmp(preset_name, "radio") == 0) ||
+    if ( /*(strcmp(preset_name, "radio") == 0) ||*/
          (strcmp(preset_name, "tape") == 0)) {
         preset_name = "112";
     }
@@ -768,6 +768,18 @@ static int  presets_set( lame_t gfp, int fast, int cbr, const char* preset_name,
         preset_name = "256";
     }
 
+    if (strcmp(preset_name, "streaming") == 0) {
+        lame_set_preset(gfp, STREAMING);
+
+	return 0;
+    }
+
+    if (strcmp(preset_name, "radio") == 0) {
+        lame_set_preset(gfp, RADIO);
+
+	return 0;
+    }
+
     if (strcmp(preset_name, "portable") == 0) {
         lame_set_preset(gfp, PORTABLE);
 
@@ -776,18 +788,6 @@ static int  presets_set( lame_t gfp, int fast, int cbr, const char* preset_name,
 
     if (strcmp(preset_name, "portable1") == 0) {
         lame_set_preset(gfp, PORTABLE1);
-
-	return 0;
-    }
-
-    if (strcmp(preset_name, "portable2") == 0) {
-        lame_set_preset(gfp, PORTABLE2);
-
-	return 0;
-    }
-
-    if (strcmp(preset_name, "portable3") == 0) {
-        lame_set_preset(gfp, PORTABLE3);
 
 	return 0;
     }

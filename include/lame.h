@@ -91,8 +91,8 @@ typedef enum preset_mode_e {
 
     PORTABLE = 1010,
     PORTABLE1 = 1014,
-    PORTABLE2 = 1015,
-    PORTABLE3 = 1016
+    RADIO = 1015,
+    STREAMING = 1016
 } preset_mode;
 
 
@@ -415,7 +415,7 @@ int CDECL lame_get_highpasswidth(const lame_global_flags *);
  ***********************************************************************/
 
 int CDECL lame_set_vbr_smooth( lame_global_flags *, int);
-float CDECL lame_get_vbr_smooth( const lame_global_flags *);
+int CDECL lame_get_vbr_smooth( const lame_global_flags *);
 
 int CDECL lame_set_maskingadjust( lame_global_flags *, float);
 float CDECL lame_get_maskingadjust( const lame_global_flags *);
