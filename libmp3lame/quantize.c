@@ -830,32 +830,31 @@ inc_subblock_gain (
          * we have to go up to SBMAX_s
          */
         cod_info->subblock_gain[window]++;
-	j = gfc->scalefac_band.l[cod_info->sfb_lmax]
-	    + cod_info->width[cod_info->sfb_lmax] * window;
+	j = gfc->scalefac_band.l[cod_info->sfb_lmax];
 	for (sfb = cod_info->sfb_lmax+window;
 	     sfb < cod_info->sfbmax; sfb += 3) {
 	    FLOAT8 amp;
 	    int width = cod_info->width[sfb], s = scalefac[sfb];
-
-	    j += width;
-	    if (s < 0)
-                continue; /* ???? */
+	    assert(s >= 0);
 	    s = s - (4 >> cod_info->scalefac_scale);
             if (s >= 0) {
 		scalefac[sfb] = s;
+		j += width*3;
 		continue;
 	    }
 
 	    scalefac[sfb] = 0;
 	    amp = IPOW20(210 + (s << (cod_info->scalefac_scale + 1)));
+	    j += width * (window+1);
 	    for (l = -width; l < 0; l++) {
 		xrpow[j+l] *= amp;
             }
+	    j += width*(3 - window - 1);
         }
 
 	{
 	    FLOAT8 amp = IPOW20(210 - 8);
-	    j += cod_info->width[sfb];
+	    j += cod_info->width[sfb] * (window+1);
 	    for (l = -cod_info->width[sfb]; l < 0; l++)
 		xrpow[j+l] *= amp;
         }
