@@ -711,17 +711,15 @@ best_scalefac_store(
     /* use scalefac_scale if we can */
     III_side_info_t * const l3_side = &gfc->l3_side;
     gr_info *gi = &l3_side->tt[gr][ch];
-    int sfb,i,j,l;
-    int recalc = 0;
+    int sfb,j,l,recalc;
 
     memset(l3_side->scfsi[ch], 0, sizeof(l3_side->scfsi[ch]));
-
     if (gi->preflag < 0) /* this means sub channel of intensity stereo */
 	return;
 
     /* remove scalefacs from bands with all ix=0.
      * This idea comes from the AAC ISO docs.  added mt 3/00 */
-    j = 0;
+    recalc = j = 0;
     for (sfb = 0; sfb < gi->sfbmax; sfb++) {
 	int width = gi->width[sfb];
 	j += width;
