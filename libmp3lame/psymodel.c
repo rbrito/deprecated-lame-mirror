@@ -156,7 +156,7 @@ blocktype_d[2]        block type to use for previous granule
 #endif
 
 #define NSFIRLEN 21
-#undef NOTABLES
+#define NOTABLES
 #define rpelev 2
 #define rpelev2 16
 
