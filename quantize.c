@@ -357,6 +357,7 @@ VBR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
     /* copy data to be quantized into xr */
     if (gfc->mode_ext==MPG_MD_MS_LR) { ms_convert(xr[gr],xr[gr]); }
     for (ch = 0; ch < gfc->stereo; ch++) {
+      cod_info = &l3_side->gr[gr].ch[ch].tt;
       /* - lower masking depending on Quality setting
        * - quality control together with adjusted ATH MDCT scaling
        *   on lower quality setting allocate more noise from
@@ -367,31 +368,31 @@ VBR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
        */
       {
         static const FLOAT8 dbQ[10]={-4.,-3.,-2.,-1.,0,.5,1.,1.5,2.,2.5};
-        FLOAT8 masking_lower_db;
+        FLOAT8 masking_lower_db, adjust = 0;
         assert( gfp->VBR_q <= 9 );
         assert( gfp->VBR_q >= 0 );
         masking_lower_db = dbQ[gfp->VBR_q];
 /*
  * experimental code
  *
+ */
 #if 0
         if (cod_info->block_type==SHORT_TYPE) {
-          masking_lower_db -= 10/(1+exp(3.5-pe[gr][ch]/300.))-0.25;
+          adjust = 10/(1+exp(3.5-pe[gr][ch]/300.))-0.25;
         }
 #else
         if (cod_info->block_type==SHORT_TYPE) {
-          masking_lower_db -= 5/(1+exp(3.5-pe[gr][ch]/300.))-0.25;
+          adjust = 5/(1+exp(3.5-pe[gr][ch]/300.))-0.25;
         } else {
-          masking_lower_db -= 2/(1+exp(3.5-pe[gr][ch]/300.))-0.25;
+          adjust = 2/(1+exp(3.5-pe[gr][ch]/300.))-0.25;
         }
 #endif
- */
         if (gfc->noise_shaping==2) {
-          masking_lower_db -= 1.25;
+          adjust = Max(1.25,adjust);
         }
+        masking_lower_db -= adjust; 
         gfc->masking_lower = pow(10.0,masking_lower_db/10);
       }
-      cod_info = &l3_side->gr[gr].ch[ch].tt;
       bands[gr][ch] = calc_xmin(gfp,xr[gr][ch], &ratio[gr][ch], 
                                 cod_info, &l3_xmin[gr][ch]);
       if (bands[gr][ch]) {
@@ -541,7 +542,7 @@ VBR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
         }
       }
 
-      assert((int)cod_info->part2_3_length <= max_bits);
+      assert((int)cod_info->part2_3_length <= Max_bits);
       assert((int)cod_info->part2_3_length < 4096);
       save_bits[gr][ch] = cod_info->part2_3_length;
       used_bits += save_bits[gr][ch];
