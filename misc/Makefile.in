@@ -113,6 +113,8 @@ AUTOMAKE_OPTIONS = 1.4d foreign $(top_srcdir)/ansi2knr
 
 EXTRA_PROGRAMS = abx ath scalartest
 
+CLEANFILES = $(EXTRA_PROGRAMS)
+
 EXTRA_SCRIPTS = \
 	auenc \
 	mugeco.sh \
@@ -326,6 +328,7 @@ installdirs:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-rm -f Makefile $(CONFIG_CLEAN_FILES)

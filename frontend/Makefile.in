@@ -167,7 +167,7 @@ LDADD = @LDADD@ @FRONTEND_LDADD@ \
 
 mp3x_LDADD = $(LDADD) @GTK_LIBS@
 
-CLEANFILES = lclint.txt
+CLEANFILES = lclint.txt $(EXTRA_PROGRAMS)
 
 LCLINTFLAGS = \
 	+posixlib \
