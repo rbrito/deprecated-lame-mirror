@@ -468,7 +468,7 @@ int  lame_encode_mp3_frame (				// Output
     if (gfp->bWriteVbrTag) AddVbrFrame(gfp);
 
 #if defined(HAVE_GTK)
-    if (gfc->pinfo != NULL)
+    if (gfc->pinfo)
 	set_frame_pinfo (gfp, masking);
 #endif
 

@@ -312,7 +312,7 @@ void  lame_debugf (const lame_internal_flags *gfc, const char* format, ... )
 
     va_start ( args, format );
 
-    if ( gfc->report.debugf != NULL ) {
+    if ( gfc->report.debugf ) {
         gfc->report.debugf( format, args );
     } else {
         (void) vfprintf ( stderr, format, args );
@@ -329,7 +329,7 @@ void  lame_msgf (const lame_internal_flags *gfc, const char* format, ... )
 
     va_start ( args, format );
    
-    if ( gfc->report.msgf != NULL ) {
+    if ( gfc->report.msgf ) {
         gfc->report.msgf( format, args );
     } else {
         (void) vfprintf ( stderr, format, args );
@@ -346,7 +346,7 @@ void  lame_errorf (const lame_internal_flags *gfc, const char* format, ... )
 
     va_start ( args, format );
     
-    if ( gfc->report.errorf != NULL ) {
+    if ( gfc->report.errorf ) {
         gfc->report.errorf( format, args );
     } else {
         (void) vfprintf ( stderr, format, args );

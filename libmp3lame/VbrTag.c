@@ -333,7 +333,7 @@ int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
 
 	if( head_flags & TOC_FLAG )
 	{
-		if( pTagData->toc != NULL )
+		if(pTagData->toc)
 		{
 			for(i=0;i<NUMTOCENTRIES;i++)
 				pTagData->toc[i] = buf[i];
@@ -374,7 +374,7 @@ int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
         fprintf(stderr,"enc_delay  = %i \n",enc_delay);
         fprintf(stderr,"enc_padding= %i \n",enc_padding);
 	fprintf(stderr,"toc:\n");
-	if( pTagData->toc != NULL )
+	if( pTagData->toc )
 	{
 		for(i=0;i<NUMTOCENTRIES;i++)
 		{
@@ -454,9 +454,9 @@ int InitVbrTag(lame_global_flags *gfp)
     gfc->VBR_seek_table.seen = 0;
     gfc->VBR_seek_table.want = 1;
     gfc->VBR_seek_table.pos  = 0;
-    if (gfc->VBR_seek_table.bag == NULL) {
+    if (!gfc->VBR_seek_table.bag) {
 	gfc->VBR_seek_table.bag  = malloc (400*sizeof(int));
-	if (gfc->VBR_seek_table.bag != NULL) {
+	if (gfc->VBR_seek_table.bag) {
 	    gfc->VBR_seek_table.size = 400;
 	}
 	else {
