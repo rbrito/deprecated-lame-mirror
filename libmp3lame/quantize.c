@@ -1072,8 +1072,13 @@ outer_loop (
 	     * gives us more possibilities for different quant_compare modes.
 	     * Much more than 3 makes not a big difference, it is only slower.
 	     */
-	    if (++age > 3 && best_noise_info.over_count == 0)
-		break;
+        if (gfc->substep_shaping & 2) {
+	        if (++age > 20 && best_noise_info.over_count == 0)
+		        break;
+        }else {
+	        if (++age > 3 && best_noise_info.over_count == 0)
+		        break;
+        }
 	}
     }
     while (cod_info_w.global_gain < 255u);
