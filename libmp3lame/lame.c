@@ -157,13 +157,12 @@ optimum_bandwidth(double *const lowerlimit,
 {
 /* 
  *  Input:
- *      bitrate     total bitrate in bps
+ *      bitrate     total bitrate in kbps
  *
  *   Output:
  *      lowerlimit: best lowpass frequency limit for input filter in Hz
  *      upperlimit: best highpass frequency limit for input filter in Hz
  */
-    int  br;
     int index;
 
     typedef struct {
@@ -192,8 +191,7 @@ optimum_bandwidth(double *const lowerlimit,
     };
 
 
-    br = bitrate/1000;
-    index = nearestBitrateFullIndex(br);
+    index = nearestBitrateFullIndex(bitrate);
 
     *lowerlimit = freq_map[index].lowpass;
 
@@ -544,57 +542,6 @@ lame_init_params(lame_global_flags * const gfp)
         gfp->VBR = vbr_off; /* at 160 kbps (MPEG-2/2.5)/ 320 kbps (MPEG-1) only Free format or CBR are possible, no VBR */
 
 
-    if (gfp->VBR == vbr_off) {
-        gfp->compression_ratio =
-            gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 *
-                                                            gfp->brate);
-        if (gfp->compression_ratio > 13.)
-            gfp->out_samplerate =
-                map2MP3Frequency( (int)( (10. * 1.e3 * gfp->brate) /
-                                 (16 * gfc->channels_out)));
-    }
-    if (gfp->VBR == vbr_abr) {
-        gfp->compression_ratio =
-            gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 *
-                                                            gfp->
-                                                            VBR_mean_bitrate_kbps);
-        if (gfp->compression_ratio > 13.)
-            gfp->out_samplerate =
-                map2MP3Frequency((int)((10. * 1.e3 * gfp->VBR_mean_bitrate_kbps) /
-                                 (16 * gfc->channels_out)));
-    }
-
-
-    if (gfp->out_samplerate == 0 && (gfp->VBR == vbr_off || gfp->VBR == vbr_abr)) { /* if output sample frequency is not given, find an useful value */
-        gfp->out_samplerate = map2MP3Frequency( (int)( 0.97 * gfp->in_samplerate ) );
-
-
-        /* check if user specified bitrate requires downsampling, if compression    */
-        /* ratio is > 13, choose a new samplerate to get the ratio down to about 10 */
-
-        if (gfp->VBR == vbr_off && gfp->brate > 0) {
-            gfp->compression_ratio =
-                gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 *
-                                                                gfp->brate);
-            if (gfp->compression_ratio > 13.)
-                gfp->out_samplerate =
-                    map2MP3Frequency( (int)( (10. * 1.e3 * gfp->brate) /
-                                     (16 * gfc->channels_out)));
-        }
-        if (gfp->VBR == vbr_abr) {
-            gfp->compression_ratio =
-                gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 *
-                                                                gfp->
-                                                                VBR_mean_bitrate_kbps);
-            if (gfp->compression_ratio > 13.)
-                gfp->out_samplerate =
-                    map2MP3Frequency((int)((10. * 1.e3 * gfp->VBR_mean_bitrate_kbps) /
-                                     (16 * gfc->channels_out)));
-        }
-    }
-
-
-
 
 
   /****************************************************************/
@@ -603,23 +550,21 @@ lame_init_params(lame_global_flags * const gfp)
     if (gfp->lowpassfreq == 0) {
         double lowpass = 16000;
         double highpass;
-        int channels;
 
-        switch (gfp->mode) {
-        case MONO:
-            channels = 1;
-            break;
-        default:    
-            channels = 2;
-            break;
-        }
-
-        if ((gfp->VBR == vbr_off) || (gfp->VBR == vbr_abr)){ 
+        switch (gfp->VBR) {
+        case vbr_off: {
             optimum_bandwidth(&lowpass,
                               &highpass,
-                              gfp->out_samplerate * 16 * gfc->channels_out /
-                              gfp->compression_ratio);
-        } else {
+                              gfp->brate);
+            break;
+        }
+        case vbr_abr: {
+            optimum_bandwidth(&lowpass,
+                              &highpass,
+                              gfp->VBR_mean_bitrate_kbps);
+            break;
+        }
+        default: {
             switch (gfp->VBR_q) {
             case 9: {
                 lowpass = 10000;
@@ -662,18 +607,35 @@ lame_init_params(lame_global_flags * const gfp)
                 break;
             }
             }
-            if (gfp->out_samplerate == 0)
-                gfp->out_samplerate = optimum_samplefreq( (int)lowpass, gfp->in_samplerate);
         }
-
+        }
 
         if (gfp->mode == MONO)
             lowpass *= 1.6;
+
+        if (gfp->out_samplerate == 0)
+            gfp->out_samplerate = optimum_samplefreq( (int)lowpass, gfp->in_samplerate);
 
         lowpass = Min(20500, lowpass);
         lowpass = Min(gfp->out_samplerate / 2, lowpass);
         
         gfp->lowpassfreq = lowpass;
+    }
+
+
+    if (gfp->out_samplerate == 0)
+        gfp->out_samplerate = optimum_samplefreq( (int)gfp->lowpassfreq, gfp->in_samplerate);
+
+    if (gfp->VBR == vbr_off) {
+        gfp->compression_ratio =
+            gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 *
+                                                            gfp->brate);
+    }
+    if (gfp->VBR == vbr_abr) {
+        gfp->compression_ratio =
+            gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 *
+                                                            gfp->
+                                                            VBR_mean_bitrate_kbps);
     }
 
 
