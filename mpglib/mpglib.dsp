@@ -83,7 +83,7 @@ LIB32=link.exe -lib
 # PROP Intermediate_Dir "DebugGTK"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /Z7 /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /Z7 /Od /I "../WinGTK/glib-1.2" /I "../WinGTK/gtk-plus" /D "_DEBUG" /D "HAVEGTK" /D "WIN32" /D "_WINDOWS" /D "USE_LAYER_2" /D "USE_LAYER_1" /D "HAVEMPGLIB" /YX /FD /c
+# ADD CPP /nologo /W3 /GX /Z7 /Od /D "_DEBUG" /D "HAVEGTK" /D "WIN32" /D "_WINDOWS" /D "USE_LAYER_2" /D "USE_LAYER_1" /D "HAVEMPGLIB" /YX /FD /c
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
@@ -104,7 +104,7 @@ LIB32=link.exe -lib
 # PROP Intermediate_Dir "ReleaseGTK"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /O2 /I "../WinGTK/glib-1.2" /I "../WinGTK/gtk-plus" /D "NDEBUG" /D "HAVEGTK" /D "HAVEMPGLIB" /D "WIN32" /D "_WINDOWS" /D "USE_LAYER_2" /D "USE_LAYER_1" /YX /FD /c
+# ADD CPP /nologo /W3 /GX /O2 /D "NDEBUG" /D "HAVEGTK" /D "HAVEMPGLIB" /D "WIN32" /D "_WINDOWS" /D "USE_LAYER_2" /D "USE_LAYER_1" /YX /FD /c
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
