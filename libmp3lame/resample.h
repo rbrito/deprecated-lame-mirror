@@ -1,6 +1,5 @@
 
 
-#define INLINE         static inline
 #define MAX_TABLES     1001
 #define FLOAT          float
 #define float_t        long double
