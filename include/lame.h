@@ -460,29 +460,7 @@ extern void id3tag_set_track(lame_global_flags *gfp, const char *track);
 extern int id3tag_set_genre(lame_global_flags *gfp, const char *genre);
 
 
-/*
- *  From the view of design these functions is a front-end function.
- *  But you need this function for every useful coding system handling
- *  with binary data, so this function is currently coded in every front-end.
- *  I advice to add this function to the lame core, so it is much easier
- *  to write a portable MP3 handing program without a lot of #ifdef STUFF.
- *
- *  May be someone finds a better place for this without adding this code
- *  to every front-end.
- *
- *  Frank: lame_set_stream_binary_mode only needs to be called under
- *  windows and OS/2.  
- *  lame_get_file_size is just stat(), except on riscos.
- *
- *  Two special cases means that this is NOT code that will appear
- *  in every front end.  Other than 'lame', most frontends are OS
- *  specific and thus do not need these calls.
- *
- */
-
-extern int    lame_set_stream_binary_mode ( FILE* const fp );
-extern off_t  lame_get_file_size          ( const char* const filename );
-
+/* moved to lametime.* */
 
 /***********************************************************************
 *

@@ -168,31 +168,41 @@ int main(int argc, char **argv)
   }
 #endif
   if (!gf.decode_only) {
-    lame_print_config(&gf);   /* print usefull information about options being used */
+    lame_print_config(&gf);   /* print useful information about options being used */
 
-    fprintf(stderr,"Encoding %s to %s\n",
-	    (strcmp(inPath, "-")? inPath  : "<stdin>"),
-	    (strcmp(outPath,"-")? outPath : "<stdout>"));
+    fprintf ( stderr, "Encoding %s%s to %s\n",
+	      strcmp(inPath, "-") ? inPath  : "<stdin>",
+	      strlen (inPath)+strlen(outPath) < 66 ? "" : "\n     ",
+	      strcmp(outPath,"-") ? outPath : "<stdout>" );
 	    
     fprintf ( stderr, "Encoding as %g kHz ", 1.e-3 * gf.out_samplerate );
     
-    if (gf.ogg) {
-      fprintf(stderr,"VBR Ogg Vorbis\n" );
-    }else{ 
-      if (gf.VBR==vbr_mt || gf.VBR==vbr_rh || gf.VBR==vbr_mtrh)
-	fprintf(stderr,"VBR(q=%i) %s MPEG-%g Layer III (ca. ",
-		gf.VBR_q,mode_names[gf.force_ms][gf.mode],
-		2-gf.version+0.5*(gf.out_samplerate<16000) );
-      else if (gf.VBR==vbr_abr)
-	  fprintf(stderr,"average %d kbps %s MPEG-%g Layer III (",
-		  gf.VBR_mean_bitrate_kbps,mode_names[gf.force_ms][gf.mode],
-		  2-gf.version+0.5*(gf.out_samplerate<16000) );
-      else
-	  fprintf(stderr,"%d kbps %s MPEG-%g Layer III (",
-		  gf.brate,
-		  mode_names[gf.force_ms][gf.mode],
-		  2-gf.version+0.5*(gf.out_samplerate<16000) );
-      fprintf ( stderr, "%.1fx) qval=%i\n", gf.compression_ratio, gf.quality );
+    if ( gf.ogg ) {
+        fprintf ( stderr, "VBR Ogg Vorbis\n" );
+    } else { 
+        const char* appendix = "";
+      
+        switch ( gf.VBR ) {
+        case vbr_mt:
+        case vbr_rh:
+        case vbr_mtrh:
+            appendix = "ca. ";
+	    fprintf ( stderr, "VBR(q=%i)", gf.VBR_q );
+	    break;
+        case vbr_abr:
+	    fprintf ( stderr, "average %d kbps", gf.VBR_mean_bitrate_kbps );
+            break;
+        default:
+	    fprintf ( stderr, "%3d kbps", gf.brate );
+	    break;
+        }
+        fprintf ( stderr, " %s MPEG-%u%s Layer III (%s%gx) qval=%i\n", 
+                  mode_names [gf.force_ms] [gf.mode],
+	  	  2 - gf.version, 
+		  gf.out_samplerate < 16000 ? ".5" : "",
+                  appendix, 
+		  0.1 * (int)(10.*gf.compression_ratio + 0.5), 
+		  gf.quality );
     }
   }
 

@@ -30,7 +30,7 @@
 #include "get_audio.h"
 #include "portableio.h"
 #include "timestatus.h"
-
+#include "lametime.h"
 
 #ifdef _WIN32
 // /* needed to set stdin to binary on windoze machines */

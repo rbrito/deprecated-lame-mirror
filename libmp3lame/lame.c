@@ -124,7 +124,7 @@ lame_init_params_ppflt(lame_internal_flags *gfc)
 			gfc->highpass1 = 0;
 			gfc->highpass2 = 0;
 			MSGF("Warning: highpass filter disabled.  "
-			     "highpass frequency to small\n");
+			     "highpass frequency too small\n");
 		}
 	}
 
@@ -196,7 +196,7 @@ lame_init_params_ppflt(lame_internal_flags *gfc)
  *   (globalflags struct filled in by calling program)
  *
  ********************************************************************/
-int lame_init_params(lame_global_flags *gfp)
+int lame_init_params ( lame_global_flags* const gfp )
 {
     /* A third dbQ table */
     /* Can all dbQ setup can be done here using a switch statement? */
@@ -939,7 +939,8 @@ int    lame_encode_buffer (
       /* encode the frame.  */
       ret = lame_encode_frame(gfp,mfbuf[0],mfbuf[1],mp3buf,mp3buf_size);
 
-      if (ret < 0) return ret;
+      if (ret < 0) 
+          goto retr;
       mp3buf += ret;
       mp3size += ret;
 
@@ -952,11 +953,13 @@ int    lame_encode_buffer (
     }
   }
   assert(nsamples==0);
+  ret = mp3size;
 
+retr:
   free (fn_buffer [0]);
   free (fn_buffer [1]);
 
-  return mp3size;
+  return ret;
 }
 
 

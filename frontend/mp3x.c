@@ -7,7 +7,7 @@
 #include "parse.h"
 #include "get_audio.h"
 #include "gtkanal.h"
-
+#include "lametime.h"
 
 #include "main.h"
 /* GLOBAL VARIABLES.  set by parse_args() */

@@ -301,28 +301,25 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
 }
 
 
-int  display_bitrates ( FILE* const fp )
+static void  display_bitrate ( FILE* const fp, const char* const version, const int div, const int index )
 {
     int  i;
-
-    fprintf ( fp, "\nMPEG-1   layer III sample frequencies (kHz): 32 44.1 48\n" );
-    fprintf ( fp, "bitrates (kbps):" );
-    for (i = 1; i < 15; i++ )
-        fprintf ( fp, " %i", bitrate_table [1] [i] );
-    fprintf ( fp, "\n" );
-  
-    fprintf ( fp, "\nMPEG-2   layer III sample frequencies (kHz): 16 22.05 24\n" );
-    fprintf ( fp, "bitrates (kbps):" );
-    for ( i = 1 ; i < 15 ; i++ )
-        fprintf ( fp, " %i", bitrate_table [0] [i] );
-    fprintf ( fp, "\n" );
-
-    fprintf ( fp, "\nMPEG-2.5 layer III sample frequencies (kHz): 8 11.025 12\n" );
-    fprintf ( fp, "bitrates (kbps):" );
-    for ( i = 1; i < 15; i++ )
-        fprintf ( fp, " %i", bitrate_table [0] [i] );
-    fprintf ( fp, "\n\n" );
     
+    fprintf ( fp,
+              "\nMPEG-%-3s layer III sample frequencies (kHz):  %2d  %2d  %g\n"
+              "bitrates (kbps):", 
+              version, 32/div, 48/div, 44.1/div );
+    for (i = 1; i < 15; i++ )
+        fprintf ( fp, " %2i", bitrate_table [index] [i] );
+    fprintf ( fp, "\n" );
+}
+
+int  display_bitrates ( FILE* const fp )
+{
+    display_bitrate ( fp, "1"  , 1, 1 );
+    display_bitrate ( fp, "2"  , 2, 0 );
+    display_bitrate ( fp, "2.5", 4, 0 );
+    fprintf ( fp, "\n" );
     fflush  ( fp );
     return 0;
 }

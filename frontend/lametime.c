@@ -32,6 +32,7 @@
  * Can someone integrate this into this function (if useful)?
  */
 
+#include <stdio.h>
 #include <assert.h>
 #include <time.h>
 
@@ -54,7 +55,7 @@ double GetCPUTime ( void )
  * description: returns real (human) time elapsed relative to a fixed time (mostly 1970-01-01 00:00:00)
  * input:       none
  * output:      time in seconds
- * known bugs:  bad precission with time()
+ * known bugs:  bad precision with time()
  */
 
 #if defined(__unix__)  ||  defined(SVR4)  ||  defined(BSD)
@@ -98,5 +99,56 @@ double GetRealTime ( void )			/* conforming:  SVr4, SVID, POSIX, X/OPEN, BSD 4.3
 #endif
                               
 
+#ifdef _WIN32
+# include <io.h>
+# include <fcntl.h>
+#else
+# include <unistd.h>
+#endif
+
+int  lame_set_stream_binary_mode ( FILE* const fp )
+{
+#if   defined __EMX__
+    _fsetmode ( fp, "b" );
+#elif defined __BORLANDC__
+    setmode   (_fileno(fp),  O_BINARY );
+#elif defined __CYGWIN__
+    setmode   ( fileno(fp), _O_BINARY );
+#elif defined _WIN32
+    _setmode  (_fileno(fp), _O_BINARY );
+#endif
+    return 0;
+}
+
+
+#if defined(__riscos__)
+# include <kernel.h>
+# include <sys/swis.h>
+#elif defined(_WIN32)
+# include <sys/stat.h>
+# include <unistd.h>
+#else
+# include <sys/stat.h>
+# include <unistd.h>
+#endif
+
+off_t  lame_get_file_size ( const char* const filename )
+{
+    struct stat       sb;
+
+#ifndef __riscos__
+    if ( 0 == stat ( filename, &sb ) )
+        return sb.st_size;
+#else
+    _kernel_swi_regs  reg;
+    
+    reg.r [0] = 17;
+    reg.r [1] = (int) filename;
+    _kernel_swi ( OS_File, &reg, &reg );
+    if ( reg.r [0] == 1 )
+        return (off_t) reg.r [4];
+#endif
+    return (off_t) -1;
+}
 
 /* End of lametime.c */

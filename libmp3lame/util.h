@@ -301,7 +301,7 @@ typedef struct  {
   FLOAT8 ers_save[4];
   
   /* simple statistics */
-  int   bitrate_stereoMode_Hist [16] [5];
+  int   bitrate_stereoMode_Hist [16] [4+1];
 
   /* ratios  */
   FLOAT8 pe[4];
@@ -327,6 +327,8 @@ typedef struct  {
   
   /* variables used for --nspsytune */
   int exp_nspsytune;
+  
+  unsigned crcvalue;
 
   FLOAT ns_last_en_subshort[4][9];
   FLOAT ns_last_attack_intensity[4][9];
