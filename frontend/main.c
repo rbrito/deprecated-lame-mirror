@@ -65,7 +65,6 @@
 #include "get_audio.h"
 #include "portableio.h"
 #include "timestatus.h"
-#include "VbrTag.h"
 
 /* PLL 14/04/2000 */
 #if macintosh
