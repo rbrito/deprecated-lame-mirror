@@ -586,8 +586,7 @@ read_samples_mp3(lame_t gfp, short mpg123pcm[2*1152])
 {
 #ifndef HAVE_MPGLIB
     return -1;
-#endif
-
+#else
     int     out;
 
     out = decode_fromfile(gfp, g_inputHandler, &mpg123pcm[0], &mpg123pcm[1152],
@@ -609,6 +608,7 @@ read_samples_mp3(lame_t gfp, short mpg123pcm[2*1152])
 	fprintf(stderr,
 		"Error: sample frequency has changed in an MP3 file - not supported\n");
     return out;
+#endif
 }
 
 /************************************************************************
