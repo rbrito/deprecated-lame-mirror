@@ -1,4 +1,3 @@
-/* $Id$ */
 /*
  * Known bugs (sorted by importance): 
  *     - human delay (ca. 200 ms or more???) and buffering delay (341 ms @48 kHz/64 KByte)
@@ -9,13 +8,20 @@
  *     - worse handling
  *     - +/- handling via mouse (do you have code?) in a dark room
  *     - ENTER as direction change
+ *     - finer precalculated ATH for pre-emphasis
  */
 
-#ifdef HAVE_CONFIG_H
-# include <config.h>
-#elif defined(HAVE_CONFIG_MS_H)
-# include <configMS.h>
-#endif
+/* 
+ * Suggested level ranges:
+ *     180 Hz...13.5 kHz:  50...70 dB
+ *     100 Hz...15.0 kHz:  40...70 dB
+ *      70 Hz...16.0 kHz:  30...70 dB
+ *      45 Hz...16.5 kHz:  20...70 dB
+ *      30 Hz...17.5 kHz:  10...70 dB
+ *      25 Hz...18.0 kHz:   5...75 dB
+ *      20 Hz...19.0 kHz:   0...80 dB
+ *      16 Hz...20.0 kHz: -10...80 dB
+ */
 
 #include <assert.h>
 #include <stdio.h>
@@ -32,15 +38,8 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-
-#ifdef HAVE_SYS_SOUNDCARD_H
-# include <sys/soundcard.h>
-#elif defined(HAVE_LINUX_SOUNDCARD_H)
-# include <linux/soundcard.h>
-#else
-# error no soundcard include
-#endif
-
+#include <linux/soundcard.h>
+     
 
 #define AUDIO_DEVICE       "/dev/dsp"
 //#define COOLEDIT_FILE      "/mnt/dosd/cooledit.wav"
@@ -238,6 +237,17 @@ long double  iterate_generator ( generator_t* const g )
 	g->phase -= 16.;
     return sin ( 2.*M_PI * g->phase );
 }
+
+long double  get_sine ( generator_t* const g )
+{
+    return sin ( 2.*M_PI * g->phase );
+}
+
+long double  get_cosine ( generator_t* const g )
+{
+    return cos ( 2.*M_PI * g->phase );
+}
+
 
 long double  frequency ( const generator_t* const g )
 {
@@ -585,6 +595,16 @@ int  report_close ( void )
  *  main stuff
  ******************************************************************************************************/
 
+typedef enum { 
+    left     = 0, 
+    right    = 1, 
+    phase0   = 2, 
+    both     = 2,
+    phase90  = 3, 
+    phase180 = 4, 
+    phasemod = 5 
+} earmode_t;
+
 static long double scalar ( const double* a, const double* b )
 {
     return  a[ 0]*b[ 0] + a[ 1]*b[ 1] + a[ 2]*b[ 2] + a[ 3]*b[ 3]
@@ -593,35 +613,75 @@ static long double scalar ( const double* a, const double* b )
            +a[12]*b[12] + a[13]*b[13] + a[14]*b[14] + a[15]*b[15];
 }
 
-int experiment ( generator_t* const g,
-		 amplitude_t* const a,
-		 keyboard_t*  const k,
-		 soundcard_t* const s )
+int experiment ( generator_t* const  g,
+		 amplitude_t* const  a,
+		 keyboard_t*  const  k,
+		 soundcard_t* const  s,
+		 earmode_t           earmode )
 {    
-    long          i;
-    int           j;
-    stereo_t      samples [512];
+    long           i;
+    int            j;
+    stereo_t       samples [512];
+    static double  quant_errors [2] [16];
+    long double    val;
+    double         ampl;
+    long           ival;
     
     fprintf ( stderr, "\r+++  up  +++" );
     for ( i = 0; i < g->duration; i += sizeof(samples)/sizeof(*samples) ) {
         fprintf ( stderr, "%3lu%%\b\b\b\b", i*100lu/g->duration );
 	
 	for (j = 0; j < sizeof(samples)/sizeof(*samples); j++ ) {
-	    static double  quant_errors [16];
-	    long double    val  = iterate_generator (g) * iterate_amplifier (a) * ATH (frequency (g));
-	    long           ival = (long) floor ( val + 0.5 + scalar(quant_errors, s->dither) );
+	    ampl = iterate_amplifier (a) * ATH (frequency (g));
+	    val  = ampl * iterate_generator (g);
+	    ival = (long) floor ( val + 0.5 + scalar (quant_errors[0], s->dither) );
 	    
 	    if ( ival != (sample_t) ival ) {
 		report (g, a);
 		fprintf ( stderr, "\rOverrun     \n\n" );
 		return -1;
 	    }
-	    samples [j] [0]  = samples [j] [1] = ival;
-	    memmove ( quant_errors+1, quant_errors+0, sizeof(quant_errors) - sizeof(*quant_errors) );
-	    quant_errors [0] = val - ival; 
+	    memmove ( & quant_errors [0] [1], & quant_errors [0] [0], 
+	              sizeof(quant_errors[0]) - sizeof(quant_errors[0][0]) );
+	    quant_errors [0] [0] = val - ival; 
+	    switch ( earmode ) {
+	    case both: 
+	        samples [j] [0] = samples [j] [1] = ival; 
+		break;
+	    case left: 
+	        samples [j] [0] = ival;
+		samples [j] [1] = 0; 
+		break;
+	    case right: 
+	        samples [j] [0] = 0;
+		samples [j] [1] = ival; 
+		break;
+	    case phase180: 
+	        samples [j] [0] = ival == -32768 ? 32767 : -ival;
+		samples [j] [1] = +ival; 
+		break;
+	    case phase90:
+	        samples [j] [0] = ival;
+	        val  = ampl * get_cosine (g);
+	        ival = (long) floor ( val + 0.5 + scalar (quant_errors[1], s->dither) );
+	        if ( ival != (sample_t) ival ) {
+		    report (g, a);
+		    fprintf ( stderr, "\rOverrun     \n\n" );
+		    return -1;
+	        }
+	        memmove ( & quant_errors [1] [1], & quant_errors [1] [0], 
+	              sizeof(quant_errors[1]) - sizeof(quant_errors[1][0]) );
+  	        quant_errors [1] [0] = val - ival; 
+	        samples [j] [1] = ival;
+		break;
+	    default:
+	        assert (0);
+		return -1;
+	    }
 	}
 	play_soundcard ( s, samples, sizeof(samples)/sizeof(*samples) );
-	if ( amplitude (a) * ATH (frequency (g)) <= 3.16e-6 ) {
+	if ( amplitude (a) * ATH (frequency (g)) <= 3.16227766e-6 ) {
+            report (g, a);
 	    fprintf ( stderr, "\rUnderrun      \n\n" );
 	    return -1;
 	}
@@ -666,10 +726,10 @@ int experiment ( generator_t* const g,
 static void usage ( void )
 {
     static const char help[] = 
-        "'Absolute Threshold of Hearing' -- Version 0.05   (C) Frank Klemm 2000\n"
+        "'Absolute Threshold of Hearing' -- Version 0.07   (C) Frank Klemm 2000\n"
 	"\n"
 	"usage:\n" 
-	"    ath  type minfreq maxfreq duration ampl_speed [start_level] > reportfile\n"
+	"    ath  type minfreq maxfreq duration ampl_speed [start_level [earmode] > reportfile\n"
 	"\n"
 	"         type:         linear, logarithm, square, cubic, erb, recip\n"
 	"         minfreq:      initial frequency [Hz]\n"
@@ -677,6 +737,7 @@ static void usage ( void )
 	"         duration:     duration of the experiment [s]\n"
 	"         ampl_speed:   amplitude slope speed [phon/s]\n"
 	"         start_level:  absolute level at startup [0...1]\n"
+	"         earmode:      left, right, both, phase90, phase180\n"
 	"\n"
 	"example:\n"
         "    ath  erb  700 22000 600 3 0.0001 > result1\n"
@@ -698,6 +759,7 @@ int main ( int argc, char** argv )
     soundcard_t  s;
     keyboard_t   k;
     genmode_t    genmode;
+    earmode_t    earmode;
 
     if ( argc == 1 ) {
         usage ();
@@ -722,6 +784,18 @@ int main ( int argc, char** argv )
 	usage ();
 	return 1;
     }
+
+    if      ( argc < 8 )                              earmode = both;
+    else if ( 0 == strncmp ( argv[7], "le"     , 2) ) earmode = left;
+    else if ( 0 == strncmp ( argv[7], "ri"     , 2) ) earmode = right;
+    else if ( 0 == strncmp ( argv[7], "bo"     , 2) ) earmode = both;
+    else if ( 0 == strncmp ( argv[7], "phase9" , 6) ) earmode = phase90;
+    else if ( 0 == strncmp ( argv[7], "phase1" , 6) ) earmode = phase180;
+    else {
+	usage ();
+	return 1;
+    }
+
     
     open_soundcard ( &s, AUDIO_DEVICE, sizeof(stereo_t)/sizeof(sample_t), CHAR_BIT*sizeof(sample_t), 96000.0 );
     open_generator ( &g, &s, genmode, atof (argv[4]), atof (argv[2]), atof (argv[3]) );
@@ -729,7 +803,7 @@ int main ( int argc, char** argv )
     open_keyboard  ( &k );
 
     report_open    ( );
-    experiment     ( &g, &a, &k, &s );
+    experiment     ( &g, &a, &k, &s, earmode );
     report_close   ( );
     
     close_keyboard ( &k );
@@ -741,3 +815,5 @@ int main ( int argc, char** argv )
 }
 
 /* end of ath.c */
+
+

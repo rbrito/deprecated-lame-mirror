@@ -221,7 +221,7 @@ FLOAT8 ATHmdct( lame_global_flags *gfp, FLOAT8 f )
     lame_internal_flags *gfc = gfp->internal_flags;
     FLOAT8 ath;
   
-    ath = ATHformula( f );
+    ath = ATHformula( 1.e3 * f );
 	  
     /* convert to energy */
     if (gfc->nsPsy.use) {

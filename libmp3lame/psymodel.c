@@ -187,7 +187,7 @@ int L3psycho_anal( lame_global_flags * gfp,
     case  8000: samplerate *= 2; break;  /* kludge so mpeg2.5 uses mpeg2 tables  for now */
     case 11025: samplerate *= 2; break;
     case 12000: samplerate *= 2; break;
-    default:    ERRORF("error, invalid sampling frequency: %d Hz\n",
+    default:    ERRORF("error, invalid sampling frequency: %d Hz\a\n",
 			gfp->out_samplerate);
     return -1;
     }
@@ -1302,159 +1302,141 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
   int   cbmax=0, cbmax_tp;
   const FLOAT* p = psy_data;
   int  sbmax ;
-  int  i,j,k2,loop;
+  int  i,j;
   int freq_scale=1;
-/*  int partition[HBLKSIZE]; */
 
-  /******************************************************************/
-  /* Read long block data */
-  /******************************************************************/
-  for(loop=0;loop<6;loop++)
-    {
-      freq_tp = *p++;
-      cbmax_tp = (int) *p++;
-      cbmax_tp++;
 
-      if (sfreq == freq_tp/freq_scale )
-	{
-	  cbmax = cbmax_tp;
-	  for(i=0,k2=0;i<cbmax_tp;i++)
-	    {
-	      j = (int) *p++;
-	      numlines_l[i] = (int) *p++;
-	      minval[i] = exp(-((*p++) ) * LN_TO_LOG10);
-	      /* qthr_l[i] = *p++ */ p++;
-	      /* norm_l[i] = *p++*/ p++;
-	      /* bval_l[i] = *p++; */ p++;
-	      if (j!=i)
-		{
-		  ERRORF("1. please check \"psy_data\"");
-		  return -1;
-		}
-	    }
-	}
-      else
-	p += cbmax_tp * 6;
+    /******************************************************************/
+    /* Read long block data (part 1)                                  */
+    /******************************************************************/
+
+    for ( j = 0; j < 6; j++ ) {
+        freq_tp  = p[0];
+        cbmax_tp = (int) p[1];
+        p       += 2;
+
+        if ( sfreq == freq_tp/freq_scale ) {
+            cbmax = cbmax_tp;
+            for ( i = 0; i < cbmax_tp; i++, p += 6 ) {
+                if ( i != p[0] ) {   // now also no fractional part are allowed
+                    ERRORF ("psy_data(%u): idx=%d  table idx=%f\a\n", 1, i, p[0] );
+                    return -1;
+                }
+                numlines_l  [i] = (int) p[1];
+                minval      [i] = exp ( -LN_TO_LOG10 * p[2] );
+                // qthr_l [i] = p[3];
+                // norm_l [i] = p[4];
+                // bval_l [i] = p[5];
+            }
+        } else {
+            p += cbmax_tp * 6;
+        }
+    }
+    *npart_l_orig = cbmax;
+
+    /******************************************************************/
+    /* Read short block data (part 2)                                 */
+    /******************************************************************/
+
+    for ( j = 0; j < 6; j++ ) {
+        freq_tp  = p[0];
+        cbmax_tp = (int) p[1];
+        p       += 2;
+        if ( sfreq == freq_tp/freq_scale ) {
+            cbmax = cbmax_tp;
+            for ( i = 0; i < cbmax_tp; i++, p += 6 ) {
+                if ( i != p[0] ) {
+                    ERRORF ("psy_data(%u): idx=%d  table idx=%f\a\n", 2, i, p[0] );
+                    return -1;
+                }
+                numlines_s [i]  = (int) p[1];
+                // qthr_s [i] = p[2];
+                // norm_s [i] = p[3];
+                SNR [i]         = p[4];
+                // bval_s [i] = p[5];
+                if ( SNR[i] <= 0 ) {
+                    ERRORF ("psy_data(%u): idx=%d  bad SNR: %f\a\n", 2, i, SNR[i] );
+                    return -1;
+                }
+            }
+        } else {
+            p += cbmax_tp * 6;
+        }
+    }
+    *npart_s_orig = cbmax;
+
+    /* MPEG1 SNR_s data is given in dB, convert to energy, data table now converted */
+
+    /******************************************************************/
+    /* Read long block data for converting threshold                  */
+    /* calculation partitions to scale factor bands (part 3)          */
+    /******************************************************************/
+
+    for ( j = 0; j < 6; j++ ) {
+        freq_tp = p[0];
+        sbmax   = (int) p[1];
+        p      += 2;
+
+        if (sfreq == freq_tp/freq_scale) {
+            for ( i = 0; i < sbmax; i++, p += 6 ) {
+                if ( i != p[0] ) {
+                    ERRORF ("psy_data(%u): idx=%d  table idx=%f\a\n", 3, i, p[0] );
+                    return -1;
+                }
+                bu_l [i] = (int) p[2];
+                bo_l [i] = (int) p[3];
+                w1_l [i] = p[4] / 576.;
+                w2_l [i] = p[5] / 576.;
+
+                if ( i != 0  &&  fabs (1.-w1_l[i]-w2_l[i-1] > 1.e-6 ) ) {
+                    ERRORF ("psy_data(%u): idx=%d  sum error: w1=%f w2=%f\a\n", 3, i, w1_l [i], w2_l [i-1] );
+                    return -1;
+                }
+            }
+        } else {
+            p += sbmax * 6;
+        }
     }
 
-  *npart_l_orig = cbmax;
+    /******************************************************************/
+    /* Read short block data for converting threshold                 */
+    /* calculation partitions to scale factor bands (part 4)          */
+    /******************************************************************/
 
-  /* Read short block data */
-  for(loop=0;loop<6;loop++)
-    {
-      freq_tp = *p++;
-      cbmax_tp = (int) *p++;
-      cbmax_tp++;
-      if (sfreq == freq_tp/freq_scale )
-	{
-	  cbmax = cbmax_tp;
-	  for(i=0,k2=0;i<cbmax_tp;i++)
-	    {
-	      j = (int) *p++;
-	      numlines_s[i] = (int) *p++;
-	      /* qthr_s[i] = *p++*/  p++;         
-	      /* norm_s[i] =*p++ */ p++;         
-	      SNR[i] = *p++;            
-	      /* bval_s[i] = *p++ */ p++;
-	      if (j!=i)
-		{
-		  ERRORF("3. please check \"psy_data\"");
-		  return -1;
-		}
-	    }
-	}
-      else
-	p += cbmax_tp * 6;
-    }
-  *npart_s_orig = cbmax;
+    for ( j = 0; j < 6; j++ ) {
+        freq_tp = p[0];
+        sbmax   = (int) p[1];
+        p      += 2;
 
-  /* MPEG1 SNR_s data is given in db, convert to energy */
-  if (gfp->version == 1) {
-    for ( i = 0;i < *npart_s_orig; i++ ) {
-      SNR[i]=exp( (FLOAT8) SNR[i] * LN_TO_LOG10 );
-    }
-  }
+        if ( sfreq == freq_tp/freq_scale ) {
+            for ( i = 0; i < sbmax; i++, p += 6 ) {
+                if ( i != p[0] ) {
+                    ERRORF ("psy_data(%u): idx=%d  table idx=%f\a\n", 4, i, p[0] );
+                    return -1;
+                }
+                bu_s [i] = (int) p[2];
+                bo_s [i] = (int) p[3];
+                w1_s [i] = p[4] / 576.;
+                w2_s [i] = p[5] / 576.;
 
-
-
-
-  /* Read long block data for converting threshold calculation 
-     partitions to scale factor bands */
-
-  for(loop=0;loop<6;loop++)
-    {
-      freq_tp = *p++;
-      sbmax =  (int) *p++;
-      sbmax++;
-
-      if (sfreq == freq_tp/freq_scale)
-	{
-	  for(i=0;i<sbmax;i++)
-	    {
-	      j = (int) *p++;
-	      p++;             
-	      bu_l[i] = (int) *p++;
-	      bo_l[i] = (int) *p++;
-	      w1_l[i] = (FLOAT8) *p++;
-	      w2_l[i] = (FLOAT8) *p++;
-	      if (j!=i)
-		{ ERRORF("30:please check \"psy_data\"\n");
-		return -1;
-		}
-
-	      if (i!=0)
-		if ( (fabs(1.0-w1_l[i]-w2_l[i-1]) > 0.01 ) )
-		  {
-		    ERRORF("31l: please check \"psy_data.\"\n"
-                           "w1,w2: %f %f \n",w1_l[i],w2_l[i-1]);
-		    return -1;
-		  }
-	    }
-	}
-      else
-	p += sbmax * 6;
+                if ( i != 0  &&  fabs (1.-w1_s[i]-w2_s[i-1] > 1.e-6 ) ) {
+                    ERRORF ("psy_data(%u): idx=%d  sum error: w1=%f w2=%f\a\n", 3, i, w1_s [i], w2_s [i-1] );
+                    return -1;
+                }
+            }
+        } else {
+            p += sbmax * 6;
+        }
     }
 
-  /* Read short block data for converting threshold calculation 
-     partitions to scale factor bands */
+    /******************************************************************/
+    /* Final check for data integrity                                 */
+    /******************************************************************/
 
-  for(loop=0;loop<6;loop++)
-    {
-      freq_tp = *p++;
-      sbmax = (int) *p++;
-      sbmax++;
-
-      if (sfreq == freq_tp/freq_scale)
-	{
-	  for(i=0;i<sbmax;i++)
-	    {
-	      j = (int) *p++;
-	      p++;
-	      bu_s[i] = (int) *p++;
-	      bo_s[i] = (int) *p++;
-	      w1_s[i] = *p++;
-	      w2_s[i] = *p++;
-	      if (j!=i)
-		{ ERRORF("30:please check \"psy_data\"\n");
-		return -1;
-		}
-
-	      if (i!=0)
-		if ( (fabs(1.0-w1_s[i]-w2_s[i-1]) > 0.01 ) )
-		  { 
-                  ERRORF("31s: please check \"psy_data.\"\n"
-                         "w1,w2: %f %f \n",w1_s[i],w2_s[i-1]);
-		  return -1;
-		  }
-	    }
-	}
-      else
-	p += sbmax * 6;
+    if (*p != -1.2345676422119140625 ) {
+        ERRORF ("psy_data(end): End Of Data Marker missing: value is %f instead of -1.234567...\n", *p );
+        return -1;
     }
-
-  /******************************************************************/
-  /* done reading table data */
-  /******************************************************************/
 
 
 
@@ -1481,10 +1463,8 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 	bark2  = freq2bark(sfreq*ji/BLKSIZE);
       } while ((bark2 - bark1) < delbark  && j2<=BLKSIZE/2);
 
-      /*
-      DEBUGF("%i old n=%i  %f old numlines:  %i   new=%i (%i,%i) (%f,%f) \n",
-i,*npart_l_orig,freq,numlines_l[i],j2-j,j,j2-1,bark1,bark2);
-      */
+      // DEBUGF("%i old n=%i  %f old numlines:  %i   new=%i (%i,%i) (%f,%f) \n", i,*npart_l_orig,freq,numlines_l[i],j2-j,j,j2-1,bark1,bark2);
+      
       for (k=j; k<j2; ++k)
 	partition[k]=i;
       numlines_l[i]=(j2-j);
@@ -1538,10 +1518,10 @@ i,*npart_l_orig,freq,numlines_l[i],j2-j,j,j2-1,bark1,bark2);
 
       gfc->ATH_partitionbands [i] = 1.e37; // preinit for minimum search
       for (k=0; k < numlines_l[i]; k++, j++) {
-	FLOAT8  freq = sfreq*j/(1000.0*BLKSIZE);
+	FLOAT8  freq = sfreq*j/BLKSIZE;
 	FLOAT8  level;
-	assert( freq <= 24 );              // or only '<'
-	//	freq = Min(.1,freq);       // ATH below 100 Hz constant, not further climbing
+	assert( freq <= 24000 );              // or only '<'
+	//	freq = Min(100,freq);       // ATH below 100 Hz constant, not further climbing
 	level  = ATHformula (freq) - 20;   // scale to FFT units; returned value is in dB
 	level  = pow ( 10., 0.1*level );   // convert from dB -> energy
 	level *= numlines_l [i];
@@ -1793,3 +1773,5 @@ i,*npart_s_orig,freq,numlines_s[i],j2-j,j,j2-1,bark1,bark2);
   
   return 0;
 }
+
+/* end of psymodel.c */
