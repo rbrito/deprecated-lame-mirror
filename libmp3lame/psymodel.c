@@ -1924,14 +1924,9 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 
 	for ( sb = 0; sb < NBPSY_l; sb++ )
 	  {
-	    FLOAT8 t;
-	      
-	    if (gfc->thm[chn].l[sb]*gfc->masking_lower != 0 &&
-		gfc->en[chn].l[sb]/(gfc->thm[chn].l[sb]*gfc->masking_lower) > 1)
-	      t = log(gfc->en[chn].l[sb]/(gfc->thm[chn].l[sb]*gfc->masking_lower));
-	    else
-	      t = 0;
-	    msum += regcoef[sb+1] * t;
+	    if (gfc->thm[chn].l[sb] != 0 &&
+		gfc->en[chn].l[sb] > gfc->thm[chn].l[sb]*gfc->masking_lower)
+		msum += regcoef[sb+1] * log(gfc->en[chn].l[sb]/(gfc->thm[chn].l[sb]*gfc->masking_lower));
 	  }
 
 	gfc->nsPsy.pe_l[chn] = msum;
@@ -1949,14 +1944,9 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	  {
 	    for ( sb = 0; sb < NBPSY_s; sb++ )
 	      {
-		FLOAT8 t;
-	      
-		if (gfc->thm[chn].s[sb][sblock] * gfc->masking_lower != 0 &&
-		    gfc->en[chn].s[sb][sblock] / (gfc->thm[chn].s[sb][sblock] * gfc->masking_lower) > 1)
-		  t = log(gfc->en[chn].s[sb][sblock] / (gfc->thm[chn].s[sb][sblock] * gfc->masking_lower));
-		else
-		  t = 0;
-		msum += regcoef[sb+1] * t;
+		if (gfc->thm[chn].s[sb][sblock] != 0 &&
+		    gfc->en[chn].s[sb][sblock] > gfc->thm[chn].s[sb][sblock] * gfc->masking_lower)
+		    msum += regcoef[sb+1] * log(gfc->en[chn].s[sb][sblock] / (gfc->thm[chn].s[sb][sblock] * gfc->masking_lower));
 	      }
 	  }
 
@@ -2020,12 +2010,12 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
             gfc->presetTune.quantcomp_current = gfc->presetTune.quantcomp_type_s;
         else
             gfc->presetTune.quantcomp_current = gfp->experimentalX;
-    
-        if (gfc->ATH->adjust >= gfc->presetTune.athadjust_switch_level && 
-			                             blocktype_d[chn] == NORM_TYPE &&
-										 gfc->presetTune.quantcomp_alt_type > -1) {
-		    gfc->presetTune.quantcomp_current = gfc->presetTune.quantcomp_alt_type;
-		}
+
+        if (gfc->ATH->adjust >= gfc->presetTune.athadjust_switch_level
+	    && blocktype_d[chn] == NORM_TYPE
+	    && gfc->presetTune.quantcomp_alt_type > -1) {
+	    gfc->presetTune.quantcomp_current = gfc->presetTune.quantcomp_alt_type;
+	}
     }
   }
   
