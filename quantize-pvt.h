@@ -50,7 +50,7 @@ void outer_loop( FLOAT8 xr[576],     /*vector of the magnitudees of the spectral
 		III_side_info_t *l3_side,
 		III_psy_ratio *ratio, 
 		FLOAT8 ms_ratio,
-		int ch);
+		int gr, int ch);
 
 
 void outer_loop_dual( FLOAT8 xr[2][576],     /*vector of the magnitudees of the spectral values */

@@ -68,7 +68,7 @@ ifeq ($(UNAME),Linux)
                     -finline-functions 
 
 #  for debugging:
-   CC_OPTS =  -UNDEBUG -O  -Wall -g -DABORTFP 
+   CC_OPTS =  -UNDEBUG -O -Wall -g -DABORTFP 
 
 
 #  for lots of debugging:

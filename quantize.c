@@ -90,7 +90,7 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 	best_scalefac_store(gr, ch, l3_side, scalefac);
 #ifdef HAVEGTK
 	if (gf.gtkflag)
-	  pinfo->LAMEmainbits[gr][ch]=cod_info[ch]->part2_3_length;
+	  pinfo->LAMEmainbits[gr][ch]=cod_info->part2_3_length;
 #endif
 	ResvAdjust(cod_info, l3_side, mean_bits );
 	assert(cod_info->global_gain < 256 );
@@ -110,12 +110,12 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 #endif      
 
       for (ch=0 ; ch < gf.stereo ; ch ++) {
+	cod_info = &l3_side->gr[gr].ch[ch].tt;
 	outer_loop( xr[ch], targ_bits[ch], noise, targ_noise, 0,
 		    &l3_xmin[ch], l3_enc[gr][ch], fr_ps,
-		    &scalefac[gr][ch],
-		    &l3_side->gr[gr].ch[ch].tt,
-		    l3_side, &ratio[gr][ch], ms_ener_ratio[gr],ch);
-	cod_info = &l3_side->gr[gr].ch[ch].tt;
+		    &scalefac[gr][ch], cod_info,
+		    l3_side, &ratio[gr][ch], ms_ener_ratio[gr],gr,ch);
+
 
 	best_scalefac_store(gr, ch, l3_side, scalefac);
 	if (gf.use_best_huffman==1 && cod_info->block_type == NORM_TYPE) {
@@ -125,6 +125,13 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 	if (gf.gtkflag)
 	  pinfo->LAMEmainbits[gr][ch]=cod_info->part2_3_length;
 #endif
+	//	printf("%i %i %i bits=%i  %e %e %e %e \n",
+	//          gf.frameNum,gr,ch,cod_info->part2_3_length,
+	//          noise[0],noise[1],noise[2],noise[3] );
+
+	//	printf("%i %i  sf=%i %i \n",gf.frameNum,l3_enc[gr][ch][0],
+	//           scalefac[gr][ch].l[0],cod_info->global_gain);
+
 	ResvAdjust(cod_info, l3_side, mean_bits );
       }
     }
@@ -353,7 +360,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 		      &l3_xmin, l3_enc[gr][ch], fr_ps,
 		      &scalefac[gr][ch],
 		      &l3_side->gr[gr].ch[ch].tt,
-		      l3_side, &ratio[gr][ch], ms_ener_ratio[gr], ch);
+		      l3_side, &ratio[gr][ch], ms_ener_ratio[gr], gr, ch);
 
 	  /* is quantization as good as we are looking for ? */
 	  better=VBR_compare((int)targ_noise[0],targ_noise[3],targ_noise[2],
@@ -427,7 +434,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 		  &l3_xmin, l3_enc[gr][ch], fr_ps, 
 		  &scalefac[gr][ch],
 		  &l3_side->gr[gr].ch[ch].tt,
-		  l3_side, &ratio[gr][ch], ms_ener_ratio[gr], ch);
+		  l3_side, &ratio[gr][ch], ms_ener_ratio[gr], gr,ch);
     }
   }
 
@@ -554,19 +561,19 @@ void init_outer_loop(
  *  added VBR support mt 5/99
  ************************************************************************/
 void outer_loop(
-    FLOAT8 xr[576],        /*  could be L/R OR MID/SIDE */
+    FLOAT8 xr[576],        
     int targ_bits,
     FLOAT8 best_noise[4],
     FLOAT8 targ_noise[4],
     int sloppy,
     III_psy_xmin *l3_xmin,   /* the allowed distortion of the scalefactor */
-    int l3_enc[576],    /* vector of quantized values ix(0..575) */
+    int l3_enc[576],         /* vector of quantized values ix(0..575) */
     frame_params *fr_ps,
     III_scalefac_t *scalefac, /* scalefactors */
     gr_info *cod_info,
     III_side_info_t *l3_side,
     III_psy_ratio *ratio, FLOAT8 ms_ener_ratio,
-    int ch)
+    int gr,int ch)
 {
   int i, iteration;
   int status,count=0,bits_found=0;
@@ -660,6 +667,9 @@ void outer_loop(
 			  &tot_noise, &max_noise);
 
       }
+
+
+
       /* check if this quantization is better the our saved quantization */
       if (iteration == 1) better=1;
       else 
@@ -667,7 +677,6 @@ void outer_loop(
 	     best_over,best_tot_noise,best_over_noise,best_max_noise,
                   over,     tot_noise,     over_noise,     max_noise);
 
-      
       /* save data so we can restore this quantization later */    
       if (better) {
 	best_over=over;
@@ -899,7 +908,7 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
         for ( sfb = cod_info->sfb_smax; sfb < SBPSY_s; sfb++ ) {
 	    int s;
 
-	    s = (scalefac->s[i][sfb] << (cod_info->scalefac_scale + 1))
+	    s = (scalefac->s[sfb][i] << (cod_info->scalefac_scale + 1))
 		+ cod_info->subblock_gain[i] * 8;
 	    s = cod_info->global_gain - s;
 
@@ -989,7 +998,6 @@ void amp_scalefac_bands(FLOAT8 xrpow[576],
 	    distort_thresh = Max(distort[i+1][sfb],distort_thresh);
 	}
     }
-
     distort_thresh=Min(distort_thresh * 1.05, 0.0);
 
 
@@ -1003,7 +1011,6 @@ void amp_scalefac_bands(FLOAT8 xrpow[576],
 		xrpow[l] *= ifqstep34;
 	}
     }
-
 
 
     for ( i = 0; i < 3; i++ ) {
@@ -1037,7 +1044,8 @@ int over,FLOAT8 tot_noise, FLOAT8 over_noise, FLOAT8 max_noise)
 
   if (gf.experimentalX==0) {
     better = ((over < best_over) ||
-	    ((over==best_over) && (over_noise<best_over_noise)) ) ;
+	      ((over==best_over) && (over_noise<=best_over_noise)) ) ;
+	      //	    ((over==best_over) && (over_noise<best_over_noise)) ) ;
   }
 
   if (gf.experimentalX==1) 

@@ -438,12 +438,12 @@ void calc_noise2( FLOAT8 xr[2][576], int ix[2][576], gr_info *cod_info[2],
 	for ( i = 0; i < 3; i++ ) {           
 	  int s;
 
-	  s = (scalefac[0].s[i][sfb] << (cod_info[0]->scalefac_scale + 1))
+	  s = (scalefac[0].s[sfb][i] << (cod_info[0]->scalefac_scale + 1))
 	    + cod_info[0]->subblock_gain[i] * 8;
 	  s = cod_info[0]->global_gain - s;
 	  step_0 = POW20(s);
 
-	  s = (scalefac[1].s[i][sfb] << (cod_info[1]->scalefac_scale + 1))
+	  s = (scalefac[1].s[sfb][i] << (cod_info[1]->scalefac_scale + 1))
 	    + cod_info[1]->subblock_gain[i] * 8;
 	  s = cod_info[1]->global_gain - s;
 	  step_1 = POW20(s);

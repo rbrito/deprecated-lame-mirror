@@ -497,6 +497,23 @@ void L3psycho_anal( short int *buffer[2],
      *    Calculate the energy and the unpredictability in the threshold   *
      *    calculation partitions                                           *
      **********************************************************************/
+#if 1
+    for ( b = 0; b < CBANDS; b++ )
+      {
+	eb[b] = 0.0;
+	cb[b] = 0.0;
+      }
+    for ( j = 0; j < HBLKSIZE; j++ )
+      {
+	int tp = partition_l[j];
+	if ( tp >= 0 )
+	  {
+	    eb[tp] += energy[j];
+	    cb[tp] += cw[j] * energy[j];
+	  }
+	assert(tp<npart_l_orig);
+      }
+#else
     b = 0;
     for (j = 0; j < cw_upper_index;)
       {
@@ -518,7 +535,7 @@ void L3psycho_anal( short int *buffer[2],
 	b++;
       }
 
-    for (; b < npart_l; b++ )
+    for (; b < npart_l_orig; b++ )
       {
 	int i;
 	FLOAT8 ebb = energy[j++];
@@ -530,7 +547,7 @@ void L3psycho_anal( short int *buffer[2],
 	eb[b] = ebb;
 	cb[b] = ebb * 0.4;
       }
-
+#endif
 
     /**********************************************************************
      *      convolve the partitioned energy and unpredictability           *
@@ -678,7 +695,7 @@ void L3psycho_anal( short int *buffer[2],
     for ( sblock = 0; sblock < 3; sblock++ )
       {
 	j = 0;
-	for ( b = 0; b < npart_s; b++ )
+	for ( b = 0; b < npart_s_orig; b++ )
 	  {
 	    int i;
 	    FLOAT8 ecb = energy_s[sblock][j++];

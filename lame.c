@@ -288,6 +288,7 @@ void lame_init_params(void)
     if (0==gf.VBR_max_bitrate_kbps) {
       /* default max bitrate is 256kbs */
       /* we do not normally allow 320bps frams with VBR, unless: */
+      gf.VBR_max_bitrate=13;   /* default: allow 256kbs */
       if (gf.VBR_min_bitrate_kbps>=256) gf.VBR_max_bitrate=14;  
       if (gf.VBR_q == 0) gf.VBR_max_bitrate=14;   /* allow 320kbs */
       if (gf.VBR_q >= 4) gf.VBR_max_bitrate=12;   /* max = 224kbs */
@@ -890,6 +891,9 @@ lame_global_flags * lame_init(void)
   gf.VBR_q=4;
   gf.VBR_min_bitrate_kbps=0;
   gf.VBR_max_bitrate_kbps=0;
+  gf.VBR_min_bitrate=1;
+  gf.VBR_max_bitrate=13;
+
 
   gf.mode = MPG_MD_JOINT_STEREO; 
   gf.force_ms=0;

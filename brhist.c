@@ -1,16 +1,13 @@
+#ifdef BRHIST
 #include <string.h>
 #include "brhist.h"
 #include "util.h"
 #include "globalflags.h"
-
-int disp_brhist = 1;
-
-#ifdef BRHIST
 #include <termcap.h>
 
 
 #define BRHIST_BARMAX 50
-
+int disp_brhist = 1;
 long brhist_count[15];
 long brhist_temp[15];
 int brhist_vbrmin;

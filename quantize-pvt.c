@@ -715,6 +715,7 @@ int calc_xmin( FLOAT8 xr[576], III_psy_ratio *ratio,
 	  l3_xmin->l[sfb]=ATH_l[sfb];
 
     }else{
+
       for ( sfb = cod_info->sfb_smax; sfb < SBPSY_s; sfb++ ) {
 	start = scalefac_band.s[ sfb ];
         end   = scalefac_band.s[ sfb + 1 ];
@@ -740,12 +741,10 @@ int calc_xmin( FLOAT8 xr[576], III_psy_ratio *ratio,
 	}
       }
 
-
       for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ){
 	start = scalefac_band.l[ sfb ];
 	end   = scalefac_band.l[ sfb+1 ];
 	bw = end - start;
-	
         for (en0 = 0.0, l = start; l < end; l++ ) {
 	  ener = xr[l] * xr[l];
 	  en0 += ener;
@@ -791,7 +790,7 @@ int loop_break( III_scalefac_t *scalefac, gr_info *cod_info)
 	    return 0;
 
     for ( sfb = cod_info->sfb_smax; sfb < SBPSY_s; sfb++ )
-        for ( i = 0; i < 3; i++ )
+      for ( i = 0; i < 3; i++ ) 
             if ( scalefac->s[sfb][i] == 0 )
 		return 0;
 
