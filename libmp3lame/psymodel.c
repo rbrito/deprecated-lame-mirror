@@ -122,9 +122,6 @@ be masked by strong maskers in the L or R channels.
 
 Other data computed by the psy-model:
 
-ms_ratio        side-channel / mid-channel masking ratio (for previous granule)
-ms_ratio_next   side-channel / mid-channel masking ratio for this granule
-
 percep_entropy[2]     L and R values (prev granule) of PE - A measure of how 
                       much pre-echo is in the previous granule
 percep_entropy_MS[2]  mid and side channel values (prev granule) of percep_entropy
@@ -959,12 +956,10 @@ pecalc_l(
 
 int L3psycho_anal_ns( lame_global_flags * gfp,
                     const sample_t *buffer[2], int gr_out, 
-                    FLOAT8 *ms_ratio,
-                    FLOAT8 *ms_ratio_next,
 		    III_psy_ratio masking_ratio[2][2],
 		    III_psy_ratio masking_MS_ratio[2][2],
 		    FLOAT8 percep_entropy[2],FLOAT8 percep_MS_entropy[2], 
-		    FLOAT8 energy[4], 
+		    FLOAT8 energy[4],
                     int blocktype_d[2])
 {
 /* to get a good cache performance, one has to think about
@@ -1368,7 +1363,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
     /*********************************************************************
      * compute the value of PE to return ... no delay and advance
      *********************************************************************/
-    for(chn=0;chn<numchn;chn++) {
+    for (chn=0;chn<numchn;chn++) {
 	FLOAT8 *ppe;
 	int type;
 	III_psy_ratio *mr;

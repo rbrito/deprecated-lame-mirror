@@ -349,7 +349,6 @@ struct lame_internal_flags {
   /* variables used by lame.c */
   Bit_stream_struc   bs;
   III_side_info_t l3_side;
-  FLOAT8 ms_ratio[2];
   /* used for padding */
   int frac_SpF;
   int slot_lag;
@@ -447,11 +446,6 @@ struct lame_internal_flags {
   int	numlines_l[CBANDS];
   FLOAT rnumlines_l[CBANDS];
   FLOAT rnumlines_ls[CBANDS];
-
-  /* ratios  */
-  FLOAT8 pe[4];
-  FLOAT8 ms_ratio_s_old,ms_ratio_l_old;
-  FLOAT8 ms_ener_ratio_old;
 
   /* block type */
   int	blocktype_old[2];

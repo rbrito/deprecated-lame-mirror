@@ -468,10 +468,6 @@ int  lame_encode_mp3_frame (				// Output
 
   int ch,gr;
 
-  FLOAT8 ms_ratio_next = 0.;
-  FLOAT8 ms_ratio_prev = 0.;
-
-
   inbuf[0]=inbuf_l;
   inbuf[1]=inbuf_r;
 
@@ -537,16 +533,14 @@ int  lame_encode_mp3_frame (				// Output
      * (mt 6/99).
      */
     int ret;
-    const sample_t *bufp[2];  /* address of beginning of left & right granule */
+    const sample_t *bufp[2]; /* address of beginning of left & right granule */
     int blocktype[2];
 
-    ms_ratio_prev=gfc->ms_ratio[gfc->mode_gr-1];
     for (gr=0; gr < gfc->mode_gr ; gr++) {
       for ( ch = 0; ch < gfc->channels_out; ch++ )
 	bufp[ch] = &inbuf[ch][576 + gr*576-FFTOFFSET];
 
       ret=L3psycho_anal_ns( gfp, bufp, gr, 
-			    &gfc->ms_ratio[gr],&ms_ratio_next,
 			    masking_LR, masking_MS,
 			    pe[gr],pe_MS[gr],tot_ener[gr],blocktype);
 
@@ -605,12 +599,6 @@ int  lame_encode_mp3_frame (				// Output
   if (gfp->force_ms) {
       gfc->mode_ext = MPG_MD_MS_LR;
   } else if (gfp->mode == JOINT_STEREO) {
-      /* ms_ratio = is scaled, for historical reasons, to look like
-	 a ratio of side_channel / total.
-	 0 = signal is 100% mono
-	 .5 = L & R uncorrelated
-      */
-
       /* [0] and [1] are the results for the two granules in MPEG-1,
        * in MPEG-2 it's only a faked averaging of the same value
        * _prev is the value of the last granule of the previous frame
@@ -679,7 +667,7 @@ int  lame_encode_mp3_frame (				// Output
   if (gfp->analysis && gfc->pinfo != NULL) {
     for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
       for ( ch = 0; ch < gfc->channels_out; ch++ ) {
-	gfc->pinfo->ms_ratio[gr]=gfc->ms_ratio[gr];
+	gfc->pinfo->ms_ratio[gr]=ms_ener_ratio[gr];
 	gfc->pinfo->ms_ener_ratio[gr]=ms_ener_ratio[gr];
 	gfc->pinfo->blocktype[gr][ch]=gfc->l3_side.tt[gr][ch].block_type;
 	gfc->pinfo->pe[gr][ch]=(*pe_use)[gr][ch];

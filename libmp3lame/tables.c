@@ -1071,7 +1071,6 @@ int psymodel_init(lame_global_flags *gfp)
     FLOAT8 sfreq = gfp->out_samplerate;
     int numlines_s[CBANDS];
 
-    gfc->ms_ener_ratio_old=.25;
     gfc->blocktype_old[0] = gfc->blocktype_old[1] = SHORT_TYPE;
 
     for (i=0; i<4; ++i) {
