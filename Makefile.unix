@@ -528,7 +528,7 @@ mp3x:   frontend/mp3x.o $(frontend_obj) $(gtk_obj) $(MP3LIB)
         $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
 
 mp3rtp:	frontend/rtp.o frontend/mp3rtp.o  $(frontend_obj) $(MP3LIB)
-	$(CC) $(CC_OPTS) -o frontend/mp3rtp mp3rtp.o rtp.o $(frontend_obj) $(MP3LIB) \
+	$(CC) $(CC_OPTS) -o frontend/mp3rtp frontend/mp3rtp.o frontend/rtp.o $(frontend_obj) $(MP3LIB) \
         $(LIBS) $(LIBSNDFILE) $(LIBTERMCAP) $(VORBIS_LIB)
 
 libmp3lame/libmp3lame.a:  $(lib_obj)
