@@ -8,11 +8,16 @@
 
 /*
 
+encode (via LAME) to mp3 with RTP streaming of the output.
+
+Author:  Felix von Leitner <leitner@vim.org>
+
 mp3rtp  ip:port:ttl  [lame encoding options]  infile outfile
 
 example:
 
 arecord -b 16 -s 22050 -w | ./mp3rtp 224.17.23.42:5004:2 -b 56 - /dev/null
+
 
 
 */
