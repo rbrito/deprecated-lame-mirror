@@ -598,24 +598,24 @@ writeMainData (lame_internal_flags *gfc)
 	for (gr = 0; gr < 2; gr++) {
 	    for (ch = 0; ch < gfc->channels_out; ch++) {
 		gr_info *gi = &gfc->l3_side.tt[gr][ch];
-		int slen1 = s1_bits[gi->scalefac_compress];
-		int slen2 = s2_bits[gi->scalefac_compress];
+		int slen = s1_bits[gi->scalefac_compress];
 		int data_bits = 0;
 		for (sfb = 0; sfb < gi->sfbdivide; sfb++) {
 		    if (gi->scalefac[sfb] == -1)
 			continue; /* scfsi is used */
 		    if (gi->scalefac[sfb] == -2)
 			gi->scalefac[sfb] = 0;
-		    putbits2(gfc, gi->scalefac[sfb], slen1);
-		    data_bits += slen1;
+		    putbits2(gfc, gi->scalefac[sfb], slen);
+		    data_bits += slen;
 		}
+		slen = s2_bits[gi->scalefac_compress];
 		for (; sfb < gi->sfbmax; sfb++) {
 		    if (gi->scalefac[sfb] == -1)
 			continue; /* scfsi is used */
 		    if (gi->scalefac[sfb] == -2)
 			gi->scalefac[sfb] = 0;
-		    putbits2(gfc, gi->scalefac[sfb], slen2);
-		    data_bits += slen2;
+		    putbits2(gfc, gi->scalefac[sfb], slen);
+		    data_bits += slen;
 		}
 		assert(data_bits == gi->part2_length);
 		data_bits += Huffmancodebits(gfc, gi);
