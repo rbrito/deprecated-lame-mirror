@@ -65,11 +65,9 @@ target_alias = @target_alias@
 target_triplet = @target@
 AS = @AS@
 CC = @CC@
-CONFIG_DEFS = @CONFIG_DEFS@
 CPP = @CPP@
 CPUTYPE = @CPUTYPE@
 DLLTOOL = @DLLTOOL@
-ENCODER_DEFS = @ENCODER_DEFS@
 FRONTEND_CFLAGS = @FRONTEND_CFLAGS@
 FRONTEND_LDADD = @FRONTEND_LDADD@
 FRONTEND_LDFLAGS = @FRONTEND_LDFLAGS@
@@ -96,7 +94,6 @@ WITH_MP3RTP = @WITH_MP3RTP@
 WITH_MP3X = @WITH_MP3X@
 
 INCLUDES = @INCLUDES@ -I$(top_srcdir)/libmp3lame
-DEFS = @DEFS@ @CONFIG_DEFS@
 
 noinst_LTLIBRARIES = libmpgdecoder.la
 
@@ -110,9 +107,12 @@ EXTRA_DIST = README
 
 AUTOMAKE_OPTIONS = foreign $(top_srcdir)/ansi2knr
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+CONFIG_HEADER = ../config.h
 CONFIG_CLEAN_FILES = 
 LTLIBRARIES =  $(noinst_LTLIBRARIES)
 
+
+DEFS = @DEFS@ -I. -I$(srcdir) -I..
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@

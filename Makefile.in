@@ -65,11 +65,9 @@ target_alias = @target_alias@
 target_triplet = @target@
 AS = @AS@
 CC = @CC@
-CONFIG_DEFS = @CONFIG_DEFS@
 CPP = @CPP@
 CPUTYPE = @CPUTYPE@
 DLLTOOL = @DLLTOOL@
-ENCODER_DEFS = @ENCODER_DEFS@
 FRONTEND_CFLAGS = @FRONTEND_CFLAGS@
 FRONTEND_LDADD = @FRONTEND_LDADD@
 FRONTEND_LDFLAGS = @FRONTEND_LDFLAGS@
@@ -105,10 +103,12 @@ EXTRA_DIST =  	API HACKING 	INSTALL.configure 	LICENSE 	Lame.vbs 	Makefile.B32 	
 
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES =  lame.spec
-DIST_COMMON =  README COPYING INSTALL Makefile.am Makefile.in TODO \
-acinclude.m4 aclocal.m4 config.guess config.sub configure configure.in \
-install-sh lame.spec.in ltconfig ltmain.sh missing mkinstalldirs
+DIST_COMMON =  README ./stamp-h.in COPYING INSTALL Makefile.am \
+Makefile.in TODO acconfig.h acinclude.m4 aclocal.m4 config.guess \
+config.h.in config.sub configure configure.in install-sh lame.spec.in \
+ltconfig ltmain.sh missing mkinstalldirs
 
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
@@ -131,6 +131,34 @@ config.status: $(srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	$(SHELL) ./config.status --recheck
 $(srcdir)/configure: @MAINTAINER_MODE_TRUE@$(srcdir)/configure.in $(ACLOCAL_M4) $(CONFIGURE_DEPENDENCIES)
 	cd $(srcdir) && $(AUTOCONF)
+
+config.h: stamp-h
+	@if test ! -f $@; then \
+		rm -f stamp-h; \
+		$(MAKE) stamp-h; \
+	else :; fi
+stamp-h: $(srcdir)/config.h.in $(top_builddir)/config.status
+	cd $(top_builddir) \
+	  && CONFIG_FILES= CONFIG_HEADERS=config.h \
+	     $(SHELL) ./config.status
+	@echo timestamp > stamp-h 2> /dev/null
+$(srcdir)/config.h.in: @MAINTAINER_MODE_TRUE@$(srcdir)/stamp-h.in
+	@if test ! -f $@; then \
+		rm -f $(srcdir)/stamp-h.in; \
+		$(MAKE) $(srcdir)/stamp-h.in; \
+	else :; fi
+$(srcdir)/stamp-h.in: $(top_srcdir)/configure.in $(ACLOCAL_M4) acconfig.h
+	cd $(top_srcdir) && $(AUTOHEADER)
+	@echo timestamp > $(srcdir)/stamp-h.in 2> /dev/null
+
+mostlyclean-hdr:
+
+clean-hdr:
+
+distclean-hdr:
+	-rm -f config.h
+
+maintainer-clean-hdr:
 lame.spec: $(top_builddir)/config.status lame.spec.in
 	cd $(top_builddir) && CONFIG_FILES=$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
@@ -199,7 +227,7 @@ ID: $(HEADERS) $(SOURCES) $(LISP)
 	here=`pwd` && cd $(srcdir) \
 	  && mkid -f$$here/ID $$unique $(LISP)
 
-TAGS: tags-recursive $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) $(LISP)
+TAGS: tags-recursive $(HEADERS) $(SOURCES) config.h.in $(TAGS_DEPENDENCIES) $(LISP)
 	tags=; \
 	here=`pwd`; \
 	list='$(SUBDIRS)'; for subdir in $$list; do \
@@ -211,8 +239,8 @@ TAGS: tags-recursive $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) $(LISP)
 	unique=`for i in $$list; do echo $$i; done | \
 	  awk '    { files[$$0] = 1; } \
 	       END { for (i in files) print i; }'`; \
-	test -z "$(ETAGS_ARGS)$$unique$(LISP)$$tags" \
-	  || (cd $(srcdir) && etags $(ETAGS_ARGS) $$tags  $$unique $(LISP) -o $$here/TAGS)
+	test -z "$(ETAGS_ARGS)config.h.in$$unique$(LISP)$$tags" \
+	  || (cd $(srcdir) && etags $(ETAGS_ARGS) $$tags config.h.in $$unique $(LISP) -o $$here/TAGS)
 
 mostlyclean-tags:
 
@@ -294,6 +322,9 @@ check-am: all-am
 check: check-recursive
 installcheck-am:
 installcheck: installcheck-recursive
+all-recursive-am: config.h
+	$(MAKE) $(AM_MAKEFLAGS) all-recursive
+
 install-exec-am:
 install-exec: install-exec-recursive
 
@@ -305,8 +336,8 @@ install-am: all-am
 install: install-recursive
 uninstall-am:
 uninstall: uninstall-recursive
-all-am: Makefile
-all-redirect: all-recursive
+all-am: Makefile config.h
+all-redirect: all-recursive-am
 install-strip:
 	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
 installdirs: installdirs-recursive
@@ -323,38 +354,38 @@ distclean-generic:
 	-rm -f config.cache config.log stamp-h stamp-h[0-9]*
 
 maintainer-clean-generic:
-mostlyclean-am:  mostlyclean-tags mostlyclean-generic
+mostlyclean-am:  mostlyclean-hdr mostlyclean-tags mostlyclean-generic
 
 mostlyclean: mostlyclean-recursive
 
-clean-am:  clean-tags clean-generic mostlyclean-am
+clean-am:  clean-hdr clean-tags clean-generic mostlyclean-am
 
 clean: clean-recursive
 
-distclean-am:  distclean-tags distclean-generic clean-am
+distclean-am:  distclean-hdr distclean-tags distclean-generic clean-am
 	-rm -f libtool
 
 distclean: distclean-recursive
 	-rm -f config.status
 
-maintainer-clean-am:  maintainer-clean-tags maintainer-clean-generic \
-		distclean-am
+maintainer-clean-am:  maintainer-clean-hdr maintainer-clean-tags \
+		maintainer-clean-generic distclean-am
 	@echo "This command is intended for maintainers to use;"
 	@echo "it deletes files that may require special tools to rebuild."
 
 maintainer-clean: maintainer-clean-recursive
 	-rm -f config.status
 
-.PHONY: install-data-recursive uninstall-data-recursive \
-install-exec-recursive uninstall-exec-recursive installdirs-recursive \
-uninstalldirs-recursive all-recursive check-recursive \
-installcheck-recursive info-recursive dvi-recursive \
-mostlyclean-recursive distclean-recursive clean-recursive \
+.PHONY: mostlyclean-hdr distclean-hdr clean-hdr maintainer-clean-hdr \
+install-data-recursive uninstall-data-recursive install-exec-recursive \
+uninstall-exec-recursive installdirs-recursive uninstalldirs-recursive \
+all-recursive check-recursive installcheck-recursive info-recursive \
+dvi-recursive mostlyclean-recursive distclean-recursive clean-recursive \
 maintainer-clean-recursive tags tags-recursive mostlyclean-tags \
 distclean-tags clean-tags maintainer-clean-tags distdir info-am info \
-dvi-am dvi check check-am installcheck-am installcheck install-exec-am \
-install-exec install-data-am install-data install-am install \
-uninstall-am uninstall all-redirect all-am all installdirs-am \
+dvi-am dvi check check-am installcheck-am installcheck all-recursive-am \
+install-exec-am install-exec install-data-am install-data install-am \
+install uninstall-am uninstall all-redirect all-am all installdirs-am \
 installdirs mostlyclean-generic distclean-generic clean-generic \
 maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 

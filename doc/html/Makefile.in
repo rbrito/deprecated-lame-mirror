@@ -65,11 +65,9 @@ target_alias = @target_alias@
 target_triplet = @target@
 AS = @AS@
 CC = @CC@
-CONFIG_DEFS = @CONFIG_DEFS@
 CPP = @CPP@
 CPUTYPE = @CPUTYPE@
 DLLTOOL = @DLLTOOL@
-ENCODER_DEFS = @ENCODER_DEFS@
 FRONTEND_CFLAGS = @FRONTEND_CFLAGS@
 FRONTEND_LDADD = @FRONTEND_LDADD@
 FRONTEND_LDFLAGS = @FRONTEND_LDFLAGS@
@@ -108,6 +106,7 @@ pkghtml_DATA =  	contributors.html 	examples.html 	history.html 	id3.html 	index
 
 EXTRA_DIST = $(pkghtml_DATA)
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+CONFIG_HEADER = ../../config.h
 CONFIG_CLEAN_FILES = 
 DATA =  $(pkghtml_DATA)
 

@@ -65,11 +65,9 @@ target_alias = @target_alias@
 target_triplet = @target@
 AS = @AS@
 CC = @CC@
-CONFIG_DEFS = @CONFIG_DEFS@
 CPP = @CPP@
 CPUTYPE = @CPUTYPE@
 DLLTOOL = @DLLTOOL@
-ENCODER_DEFS = @ENCODER_DEFS@
 FRONTEND_CFLAGS = @FRONTEND_CFLAGS@
 FRONTEND_LDADD = @FRONTEND_LDADD@
 FRONTEND_LDFLAGS = @FRONTEND_LDFLAGS@
@@ -99,8 +97,6 @@ AUTOMAKE_OPTIONS = foreign $(top_srcdir)/ansi2knr
 bin_PROGRAMS = lame @WITH_MP3RTP@ @WITH_MP3X@
 EXTRA_PROGRAMS = mp3rtp mp3x
 
-DEFS = @DEFS@ @CONFIG_DEFS@
-
 brhist_sources = brhist.c brhist.h
 
 EXTRA_DIST = $(brhist_sources) README.Win32 mp3x.dsp mp3x.dsw
@@ -124,16 +120,19 @@ EXTRA_mp3x_SOURCES = $(brhist_sources)
 CFLAGS = @CFLAGS@ @GTK_CFLAGS@ @FRONTEND_CFLAGS@
 LDFLAGS = @LDFLAGS@ @FRONTEND_LDFLAGS@
 
-INCLUDES = -I$(top_srcdir)/libmp3lame -I$(top_srcdir)/include
+INCLUDES = -I$(top_srcdir)/libmp3lame -I$(top_srcdir)/include -I$(top_srcdir)
 
 LDADD = @LDADD@ @FRONTEND_LDADD@ 	$(top_srcdir)/libmp3lame/libmp3lame.la
 
 
 mp3x_LDADD = $(LDADD) @GTK_LIBS@
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+CONFIG_HEADER = ../config.h
 CONFIG_CLEAN_FILES = 
 PROGRAMS =  $(bin_PROGRAMS)
 
+
+DEFS = @DEFS@ -I. -I$(srcdir) -I..
 CPPFLAGS = @CPPFLAGS@
 LIBS = @LIBS@
 ANSI2KNR = $(top_srcdir)/ansi2knr

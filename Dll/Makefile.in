@@ -65,11 +65,9 @@ target_alias = @target_alias@
 target_triplet = @target@
 AS = @AS@
 CC = @CC@
-CONFIG_DEFS = @CONFIG_DEFS@
 CPP = @CPP@
 CPUTYPE = @CPUTYPE@
 DLLTOOL = @DLLTOOL@
-ENCODER_DEFS = @ENCODER_DEFS@
 FRONTEND_CFLAGS = @FRONTEND_CFLAGS@
 FRONTEND_LDADD = @FRONTEND_LDADD@
 FRONTEND_LDFLAGS = @FRONTEND_LDFLAGS@
@@ -101,6 +99,7 @@ AUTOMAKE_OPTIONS = foreign ansi2knr
 EXTRA_DIST = BladeMP3EncDLL.c 	BladeMP3EncDLL.def 	BladeMP3EncDLL.h 	Example.cpp 	Example.dsp 	Example.dsw 	LameDLLInterface.htm 	MP3EncDll.dsp 	MP3EncDll.dsw 	MP3export.pas 	README
 
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+CONFIG_HEADER = ../config.h
 CONFIG_CLEAN_FILES = 
 DIST_COMMON =  README Makefile.am Makefile.in
 

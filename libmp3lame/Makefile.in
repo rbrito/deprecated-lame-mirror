@@ -65,11 +65,9 @@ target_alias = @target_alias@
 target_triplet = @target@
 AS = @AS@
 CC = @CC@
-CONFIG_DEFS = @CONFIG_DEFS@
 CPP = @CPP@
 CPUTYPE = @CPUTYPE@
 DLLTOOL = @DLLTOOL@
-ENCODER_DEFS = @ENCODER_DEFS@
 FRONTEND_CFLAGS = @FRONTEND_CFLAGS@
 FRONTEND_LDADD = @FRONTEND_LDADD@
 FRONTEND_LDFLAGS = @FRONTEND_LDFLAGS@
@@ -97,8 +95,6 @@ WITH_MP3X = @WITH_MP3X@
 
 AUTOMAKE_OPTIONS = foreign $(top_srcdir)/ansi2knr
 
-DEFS = @DEFS@ @CONFIG_DEFS@ @ENCODER_DEFS@
-
 SUBDIRS = i386
 
 lib_LTLIBRARIES = libmp3lame.la
@@ -110,7 +106,7 @@ lib_LTLIBRARIES = libmp3lame.la
 libmp3lame_la_LIBADD = $(nasm_ldadd) $(decoder_ldadd)
 libmp3lame_la_LDFLAGS = -version-info @LIB_MAJOR_VERSION@:@LIB_MINOR_VERSION@
 
-INCLUDES = @INCLUDES@ -I$(top_srcdir)/mpglib/
+INCLUDES = @INCLUDES@ -I$(top_srcdir)/mpglib/ -I$(top_srcdir)
 
 EXTRA_DIST = amiga_mpega.c 	debugscalefac.c 	libmp3lame.dsp
 
@@ -121,9 +117,12 @@ libmp3lame_la_SOURCES =          VbrTag.c 	bitstream.c 	encoder.c 	fft.c        
 noinst_HEADERS =  	VbrTag.h 	bitstream.h 	encoder.h 	fft.h 	id3tag.h 	l3side.h 	lame-analysis.h 	machine.h 	newmdct.h 	psymodel.h 	quantize.h  	quantize_pvt.h 	reservoir.h 	tables.h 	util.h 	version.h
 
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+CONFIG_HEADER = ../config.h
 CONFIG_CLEAN_FILES = 
 LTLIBRARIES =  $(lib_LTLIBRARIES)
 
+
+DEFS = @DEFS@ -I. -I$(srcdir) -I..
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
