@@ -85,7 +85,7 @@ FLOAT8 find_scalefac(FLOAT8 *xr,FLOAT8 *xr34,int stride,int sfb,
       sf += delsf; 
     }else{
 #ifdef DEBUG
-      if (stride==1 && sfb==2 && gf.frameNum==50) {
+      if (stride==1 && sfb==2 ) {
 	printf("sfb=%i q=%f  xfsf=%f   masking=%f  sf_ok=%f \n",sfb,sf,
 	       10*log10(1e-20+xfsf),10*log10(1e-20+l3_xmin),sf_ok);
       }
