@@ -29,7 +29,7 @@ static void PutNum(long num,FILE *f,int endianness,int bytes){
     i=bytes-1;
   while(bytes--){
     c=(num>>(i<<3))&0xff;
-    if(fwrite(&c,1,1,f)==-1){
+    if(fwrite(&c,1,1,f)<1){
       perror("Could not write to output.");
       exit(1);
     }
