@@ -393,7 +393,8 @@ best_huffman_divide(const lame_internal_flags * const gfc, gr_info * const gi)
 
     gi_w.count1bits = a1;
 
-    if (gi_w.block_type == NORM_TYPE) {
+    if (gi_w.block_type == NORM_TYPE
+	&& gi->big_values > gfc->scalefac_band.l[2]) {
 	if (recalc_divide_sub(gfc, &gi_w, r01_bits,r01_div,r0_tbl,r1_tbl))
 	    *gi = gi_w;
     } else {
