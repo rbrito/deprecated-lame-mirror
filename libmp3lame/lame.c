@@ -264,7 +264,7 @@ static int apply_preset(lame_t gfc, int bitrate, vbr_mode mode)
 	 * low bitrates. so we compensate for that here by using a scale
 	 * value depending on bitrate
 	 */
-	if (gfc->scale != 0.0)
+	if (gfc->scale == 0.0)
 	    (void) lame_set_scale( gfc, switch_map[r].scale );
     }
 
