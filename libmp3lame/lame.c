@@ -493,9 +493,15 @@ lame_init_params(lame_global_flags * const gfp)
     apply_preset(gfp, get_bitrate(gfp), gfp->VBR);
 
     /* output sampling rate is determined by the lowpass value */
-    if (gfp->out_samplerate == 0)
-	gfp->out_samplerate
-	    = optimum_samplefreq(gfp->lowpassfreq, gfp->in_samplerate);
+    if (gfp->out_samplerate == 0) {
+	if (gfp->lowpassfreq < 0)
+	    gfp->out_samplerate
+		= optimum_samplefreq(gfp->in_samplerate/2.0,
+				     gfp->in_samplerate);
+	else
+	    gfp->out_samplerate
+		= optimum_samplefreq(gfp->lowpassfreq, gfp->in_samplerate);
+    }
     gfc->samplerate_index = SmpFrqIndex(gfp->out_samplerate);
     if (gfc->samplerate_index < 0)
         return -1;

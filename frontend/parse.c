@@ -1573,7 +1573,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                         break;
                     case 'k': 
                         lame_set_lowpassfreq(gfp,-1);
-                        lame_set_highpassfreq(gfp,-1);
+                        lame_set_highpassfreq(gfp,0);
                         break;
                     case 'd': 
                         fprintf(stderr,"WARNING: -d is obsolete.\n");
