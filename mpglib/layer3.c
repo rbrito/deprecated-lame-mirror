@@ -699,7 +699,18 @@ static int III_dequantize_sample(real xr[SBLIMIT][SSLIMIT],int *scf,
       }
     }
   }
- 
+  /* MDH crash fix */
+  {
+      int i;
+      for (i = 0; i < 3; i++) {
+	  if (l[i] < 0) {
+	      fprintf(stderr, "mpg123: Bogus region length (%d)\n", l[i]);
+	      l[i] = 0;
+	  }
+      }
+  }
+  /* end MDH crash fix */
+
   if(gr_infos->block_type == 2) {
     /*
      * decoding with short or mixed mode BandIndex table 
