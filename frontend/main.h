@@ -39,6 +39,8 @@ sound_file_format input_format;
 int swapbytes;              /* force byte swapping   default=0*/
 int totalframes;                /* frames: 0..totalframes-1 (estimate)*/
 int frameNum;                   /* frame counter */
+int silent;
+int brhist;
 
 float update_interval;      /* to use Frank's time status display */
 

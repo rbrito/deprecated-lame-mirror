@@ -94,8 +94,6 @@ typedef struct  {
   int ogg;                    /* encode to Vorbis .ogg file */
 
   int quality;                /* quality setting 0=best,  9=worst  */
-  int silent;                 /* disable some status output */
-  int brhist_disp;            /* enable VBR bitrate histogram display */
   int mode;                       /* 0,1,2,3 stereo,jstereo,dual channel,mono */
   int mode_fixed;                 /* use specified the mode, do not use lame's opinion of the best mode */
   int force_ms;                   /* force M/S mode.  requires mode=1 */

@@ -141,6 +141,9 @@ int main(int argc, char **argv)
    */
   i = lame_init_params(&gf);
 
+  if (gf.analysis) 
+    silent=1;
+
   if ( update_interval < 0. )
        update_interval = 2.;
 
@@ -170,14 +173,14 @@ int main(int argc, char **argv)
   }
 
 #ifdef BRHIST
-  if (gf.silent || gf.VBR==vbr_off) {
-    gf.brhist_disp=0;  /* turn of VBR historgram */
+  if (silent || gf.VBR==vbr_off) {
+    brhist = 0;  /* turn of VBR historgram */
   }
 
-  if (gf.brhist_disp) {
+  if (brhist) {
     if (brhist_init(gf.VBR_min_bitrate_kbps,gf.VBR_max_bitrate_kbps)) {
       /* fall to initialize */
-      gf.brhist_disp = 0;
+      brhist = 0;
     }
   }
 #endif
@@ -285,15 +288,15 @@ int main(int argc, char **argv)
 
 
 	/********************** status display  *****************************/
-	if (!gf.silent) {
-	  if (gf.update_interval>0) {
+	if (!silent) {
+	  if (update_interval>0) {
 	    timestatus_klemm(&gf);
 	  }else{
 	    int mod = gf.version == 0 ? 100 : 50;
 	    if (frameNum % mod==0) {
 	      timestatus(gf.out_samplerate,frameNum,totalframes,gf.framesize);
 #ifdef BRHIST
-	      if (gf.brhist_disp)
+	      if (brhist)
 		brhist_disp(totalframes);
 #endif
 	    }
@@ -307,7 +310,7 @@ int main(int argc, char **argv)
 
 #ifdef BRHIST
 	/* update VBR histogram data */
-	if (gf.brhist_disp)
+	if (brhist)
 	  brhist_update(imp3*8);
 #endif
 	/* was our output buffer big enough? */
@@ -330,10 +333,10 @@ int main(int argc, char **argv)
 	exit(-1);
       }
 
-      if (!gf.silent) {
+      if (!silent) {
 	timestatus(gf.out_samplerate,frameNum,totalframes,gf.framesize);
 #ifdef BRHIST
-	if (gf.brhist_disp) {
+	if (brhist) {
 	  brhist_update(imp3);
 	  brhist_disp(totalframes);
 	  brhist_disp_total(totalframes);

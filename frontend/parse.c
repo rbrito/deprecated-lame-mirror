@@ -612,8 +612,8 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv )
     inPath [0] = '\0';   
     gfp -> outPath[0] = '\0';
     /* turn on display options. user settings may turn them off below */
-    gfp -> silent        = 0;
-    gfp -> brhist_disp   = 1;
+    silent   = 0;
+    brhist   = 1;
     gfp -> id3v1_enabled = 1;
     id3tag_init (&gfp->tag_spec);
 
@@ -750,7 +750,7 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv )
 		    gfp->ATHshort=1;
 		
 		T_ELIF ("nohist")
-		    gfp->brhist_disp = 0;
+		    brhist = 0;
 		
 		/* options for ID3 tag */
 		T_ELIF ("tt")
@@ -982,7 +982,7 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv )
 			gfp->quality = 2;
 			break;
 		    case 'S': 
-			gfp->silent = TRUE;
+			silent = TRUE;
 			break;
 		    case 'X':        
 			argUsed = 1;   
@@ -1052,7 +1052,7 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv )
         usage (gfp,ProgramName);  /* never returns */
 	
     if ( inPath[0] == '-' ) 
-        gfp -> silent = 1;  /* turn off status - it's broken for stdin */
+        silent = 1;  /* turn off status - it's broken for stdin */
 	
     if ( gfp->outPath[0] == '\0' ) {
 	if ( inPath[0] == '-' ) {

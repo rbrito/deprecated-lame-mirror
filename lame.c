@@ -209,9 +209,6 @@ int lame_init_params(lame_global_flags *gfp)
   gfc->stereo=2;
   if (gfp->mode == MPG_MD_MONO) gfc->stereo=1;
 
-  if (gfp->analysis) 
-    gfp->silent=1;
-
   if (gfp->VBR!=vbr_off) {
     gfp->free_format=0;  /* VBR cant mix with free format */
   }
@@ -1192,7 +1189,6 @@ int lame_init(lame_global_flags *gfp)
   gfp->raiseSMR = 0;
 
   gfp->padding_type=2;
-  gfp->silent=1;
   gfp->VBR=vbr_off;
   gfp->VBR_q=4;
   gfp->VBR_mean_bitrate_kbps=128;

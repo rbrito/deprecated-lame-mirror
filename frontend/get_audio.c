@@ -411,7 +411,7 @@ int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip)
 	iread    = readframe (gfp, Buffer);  /* read in 'iread' samples */
 	mp3input_data.framenum += iread/mp3input_data.framesize;
 	wavsize += iread;
-	if (!gfp->silent)
+	if (!silent)
             decoder_progress(gfp,&mp3input_data);
 	    
 	skip -= (i = skip<iread ? skip : iread);  /* 'i' samples are to skip in this frame */

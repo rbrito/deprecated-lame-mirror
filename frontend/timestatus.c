@@ -248,7 +248,7 @@ void timestatus_klemm(lame_global_flags *gfp)
   /* variables used for the status display */
   static double  last_time = 0.0;
 
-  if (! gfp -> silent) {
+  if (!silent) {
     if ( frameNum ==  0  ||  
 	 frameNum == 10  ||
 	 ( GetRealTime () - last_time >= update_interval  ||
@@ -258,7 +258,7 @@ void timestatus_klemm(lame_global_flags *gfp)
 		   totalframes, 
 		   gfp -> framesize );
 #ifdef BRHIST
-      if ( gfp -> brhist_disp )
+      if ( brhist )
 	brhist_disp ( totalframes );
 #endif
       last_time = GetRealTime ();  /* from now! disp_time seconds */
