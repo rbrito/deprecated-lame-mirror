@@ -5,12 +5,11 @@
 #include "reservoir.h"
 #include "quantize_pvt.h"
 
-/* some problems found with -O2 and above, gcc 2.95
-#if (defined(__GNUC__) && defined(__i386__))
-#undef TAKEHIRO_IEEE754_HACK
-#endif
-should be solved with the use of -fno-strict-aliasing at compile time */
- 
+/* if your machine is IEEE754 compatible, this may make faster binary */
+/*
+  #define TAKEHIRO_IEEE754_HACK
+*/
+
 #define NSATHSCALE 100 // Assuming dynamic range=96dB, this value should be 92
 
 const char  slen1_tab [16] = { 0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4 };
@@ -915,27 +914,33 @@ void quantize_xrpow(FLOAT8 xp[576], int pi[576], gr_info *cod_info)
     const FLOAT8 istep = IPOW20(cod_info->global_gain);
 
     int j;
-    for (j = 576 / 4; j > 0; --j) {
+    union {
+	float f;
+	int i;
+    } *fi;
+
+    fi = pi;
+    for (j = 576 / 4 - 1; j >= 0; --j) {
 	double x0 = istep * xp[0] + MAGIC_FLOAT;
 	double x1 = istep * xp[1] + MAGIC_FLOAT;
 	double x2 = istep * xp[2] + MAGIC_FLOAT;
 	double x3 = istep * xp[3] + MAGIC_FLOAT;
 
-	((float*)pi)[0] = x0;
-	((float*)pi)[1] = x1;
-	((float*)pi)[2] = x2;
-	((float*)pi)[3] = x3;
+	fi[0].f = x0;
+	fi[1].f = x1;
+	fi[2].f = x2;
+	fi[3].f = x3;
 
-	((float *)pi)[0] = (x0 + adj43asm[pi[0] - MAGIC_INT]);
-	((float *)pi)[1] = (x1 + adj43asm[pi[1] - MAGIC_INT]);
-	((float *)pi)[2] = (x2 + adj43asm[pi[2] - MAGIC_INT]);
-	((float *)pi)[3] = (x3 + adj43asm[pi[3] - MAGIC_INT]);
+	fi[0].f = (x0 + (adj43asm - MAGIC_INT)[pi[0]]);
+	fi[1].f = (x1 + (adj43asm - MAGIC_INT)[pi[1]]);
+	fi[2].f = (x2 + (adj43asm - MAGIC_INT)[pi[2]]);
+	fi[3].f = (x3 + (adj43asm - MAGIC_INT)[pi[3]]);
 
-	pi[0] -= MAGIC_INT;
-	pi[1] -= MAGIC_INT;
-	pi[2] -= MAGIC_INT;
-	pi[3] -= MAGIC_INT;
-	pi += 4;
+	fi[0].i -= MAGIC_INT;
+	fi[1].i -= MAGIC_INT;
+	fi[2].i -= MAGIC_INT;
+	fi[3].i -= MAGIC_INT;
+	fi += 4;
 	xp += 4;
     }
 }
@@ -945,19 +950,24 @@ void quantize_xrpow_ISO(FLOAT8 xp[576], int pi[576], gr_info *cod_info)
 {
     /* quantize on xr^(3/4) instead of xr */
     const FLOAT8 istep = IPOW20(cod_info->global_gain);
+    int j;
+    union {
+	float f;
+	int i;
+    } *fi;
 
-    register int j;
-    for (j=576/4;j>0;j--) {
-	((float *)pi)[0] = (istep * xp[0]) + (ROUNDFAC + MAGIC_FLOAT);
-	((float *)pi)[1] = (istep * xp[1]) + (ROUNDFAC + MAGIC_FLOAT);
-	((float *)pi)[2] = (istep * xp[2]) + (ROUNDFAC + MAGIC_FLOAT);
-	((float *)pi)[3] = (istep * xp[3]) + (ROUNDFAC + MAGIC_FLOAT);
+    fi = pi;
+    for (j=576/4 - 1;j>=0;j--) {
+	fi[0].f = (istep * xp[0]) + (ROUNDFAC + MAGIC_FLOAT);
+	fi[1].f = (istep * xp[1]) + (ROUNDFAC + MAGIC_FLOAT);
+	fi[2].f = (istep * xp[2]) + (ROUNDFAC + MAGIC_FLOAT);
+	fi[3].f = (istep * xp[3]) + (ROUNDFAC + MAGIC_FLOAT);
 
-	pi[0] -= MAGIC_INT;
-	pi[1] -= MAGIC_INT;
-	pi[2] -= MAGIC_INT;
-	pi[3] -= MAGIC_INT;
-	pi+=4;
+	fi[0].i -= MAGIC_INT;
+	fi[1].i -= MAGIC_INT;
+	fi[2].i -= MAGIC_INT;
+	fi[3].i -= MAGIC_INT;
+	fi+=4;
 	xp+=4;
     }
 }
