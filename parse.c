@@ -676,7 +676,7 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	  gfp->silent = TRUE;
 	  break;
 	case 'X':        argUsed = 1;   
-	  gfp->VBR_max_bitrate_kbps=atoi(arg); 
+	  gfp->experimentalX=atoi(arg); 
 	  break;
 
 
