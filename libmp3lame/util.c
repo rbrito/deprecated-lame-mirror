@@ -91,6 +91,7 @@ double  ATHformula ( double freq )
     double    freq_log;
     unsigned  index;
     
+    freq *= 1000.;
     if ( freq <    10. ) freq =    10.;
     if ( freq > 25000. ) freq = 25000.;
     
