@@ -1058,11 +1058,11 @@ inline static FLOAT8 mask_add(FLOAT8 m1,FLOAT8 m2,int k,int b, lame_internal_fla
 
 
   if (m2 > m1) {
-      if (m2 > (m1*ma_max_i2))
+      if (m2 >= (m1*ma_max_i2))
           return (m1+m2);
       ratio = m2/m1;
   } else {
-      if (m1 > (m2*ma_max_i2))
+      if (m1 >= (m2*ma_max_i2))
           return (m1+m2);
       ratio = m1/m2;
   }
