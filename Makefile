@@ -26,14 +26,21 @@ RM = rm -f
 
 
 ##########################################################################
-# -DHAVEMPGLIB compiles in the mpglib *decoding* library
-# -DLAMEPARSE compiles in the command line parsing, for building the
-# 'lame' stand alone executable instead of encoding library
+# -DHAVEMPGLIB compiles the mpglib *decoding* library into libmp3lame
 ##########################################################################
-CPP_OPTS = -DHAVEMPGLIB -DLAMEPARSE
+CPP_OPTS = -DHAVEMPGLIB 
 
 
 
+
+##########################################################################
+# Define these in the OS specific sections below to compile in support
+# for the Ogg Vorbis audio format (both decoding and encoding)
+# 
+# VORBIS = -DHAVEVORBIS
+# VORBIS_LIB = -L ../vorbis/lib -lvorbis
+# VORBIS_INC = -I ../vorbis/include
+##########################################################################
 
 ##########################################################################
 # Define these in the OS specific sections below to compile in code 
@@ -93,6 +100,10 @@ ifeq ($(UNAME),Linux)
 #   SNDLIB = -DLIBSNDFILE
 #   LIBSNDFILE=-lsndfile 
 
+#   VORBIS = -DHAVEVORBIS
+#   VORBIS_LIB = -L/home/mt/mp3/vorbis/lib -lvorbis
+#   VORBIS_INC = -I/home/mt/mp3/vorbis/include
+
 
 # suggested for gcc-2.7.x
    CC_OPTS =  -O3 -fomit-frame-pointer -funroll-loops -ffast-math  -finline-functions -Wall
@@ -102,11 +113,7 @@ ifeq ($(UNAME),Linux)
 #   CC_OPTS =  -UNDEBUG -O -Wall -g -DABORTFP
 
 #  for lots of debugging:
-#   CC_OPTS =  -DDEBUG -UNDEBUG  -O -Wall -g -DABORTFP \
-#	-Wconversion \
-#	-Wcast-align -Wcast-qual \
-#	-Wredundant-decls \
-#	-Wshadow
+#   CC_OPTS =  -DDEBUG -UNDEBUG  -O -Wall -g -DABORTFP 
 
 
 
@@ -165,8 +172,6 @@ endif
 ##########################################################################
 ifeq ($(UNAME),SunOS) 
    CC = cc
-# note: these options assume you are using Sun's C compiler.
-# Remove them if you use gcc 
    CC_OPTS = -O -xCC  	
    MAKEDEP = -xM
 endif
@@ -249,7 +254,8 @@ endif
 # 10/99 added -D__NO_MATH_INLINES to fix a bug in *all* versions of
 # gcc 2.8+ as of 10/99.  
 
-CC_SWITCHES = -DNDEBUG -D__NO_MATH_INLINES $(CC_OPTS) $(SNDLIB) $(GTK) $(BRHIST_SWITCH)
+CC_SWITCHES = -DNDEBUG -D__NO_MATH_INLINES $(CC_OPTS) $(SNDLIB) $(GTK) \
+$(BRHIST_SWITCH) $(VORBIS) $(VORBIS_INC)
 c_sources = \
         brhist.c \
 	bitstream.c \
@@ -270,6 +276,7 @@ c_sources = \
 	takehiro.c \
 	timestatus.c \
 	util.c \
+	vorbis_interface.c \
         VbrTag.c \
         version.c \
         mpglib/common.c \
@@ -307,13 +314,13 @@ ASFLAGS=-f elf -i i386/
 	$(SHELL) -ec '$(CC) $(MAKEDEP)  $(CPP_OPTS) $(CC_SWITCHES)  $< | sed '\''s;$*.o;& $@;g'\'' > $@'
 
 $(PGM):	main.o $(gtk_obj) libmp3lame.a 
-	$(CC) -o $(PGM)  main.o $(gtk_obj) -L. -lmp3lame $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP)
+	$(CC) -o $(PGM)  main.o $(gtk_obj) -L. -lmp3lame $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
 
 mp3x:	mp3x.o $(gtk_obj) libmp3lame.a
-	$(CC) -o mp3x mp3x.o $(gtk_obj) $(OBJ) $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP)
+	$(CC) -o mp3x mp3x.o $(gtk_obj) $(OBJ) $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
 
 mp3rtp:	rtp.o mp3rtp.o libmp3lame.a
-	$(CC) -o mp3rtp mp3rtp.o rtp.o   $(OBJ) $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP)
+	$(CC) -o mp3rtp mp3rtp.o rtp.o   $(OBJ) $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
 
 libmp3lame.a:  $(OBJ) Makefile
 #	cd libmp3lame
