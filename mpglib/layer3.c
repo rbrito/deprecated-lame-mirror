@@ -1683,6 +1683,8 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
       tabsel_123[fr->lsf][fr->lay-1][fr->bitrate_index];
     pinfo->sampfreq = freqs[sfreq];
     pinfo->emph = fr->emphasis;
+    pinfo->crc = fr->error_protection;
+    pinfo->padding = fr->padding;
     pinfo->stereo = fr->stereo;
     pinfo->js =   (fr->mode == MPG_MD_JOINT_STEREO);
     pinfo->ms_stereo = ms_stereo;

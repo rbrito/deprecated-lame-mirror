@@ -223,16 +223,22 @@ void plot_frame(void)
   gtk_text_set_point(GTK_TEXT(headerbox),0);
   gtk_text_insert(GTK_TEXT(headerbox),NULL,&oncolor,NULL,title2, -1);
   title = " mono ";
-  if (2==pplot1->stereo) title = pplot1->js ? " jstereo " : " stereo ";
+  if (2==pplot1->stereo) title = pplot1->js ? " js " : " s ";
   gtk_text_insert (GTK_TEXT(headerbox), NULL, &oncolor, NULL,title, -1);
   color = pplot1->ms_stereo ? &oncolor : &offcolor ; 
-  gtk_text_insert (GTK_TEXT(headerbox), NULL, color, NULL,"ms_stereo ", -1);
+  gtk_text_insert (GTK_TEXT(headerbox), NULL, color, NULL,"ms ", -1);
   color = pplot1->i_stereo ? &oncolor : &offcolor ; 
-  gtk_text_insert (GTK_TEXT(headerbox), NULL, color, NULL,"i_stereo ", -1);
+  gtk_text_insert (GTK_TEXT(headerbox), NULL, color, NULL,"is ", -1);
+
+  color = pplot1->crc ? &oncolor : &offcolor ; 
+  gtk_text_insert (GTK_TEXT(headerbox), NULL, color, NULL,"crc ", -1);
+  color = pplot1->padding ? &oncolor : &offcolor ; 
+  gtk_text_insert (GTK_TEXT(headerbox), NULL, color, NULL,"pad ", -1);
+
   color = pplot1->emph ? &oncolor : &offcolor ; 
-  gtk_text_insert (GTK_TEXT(headerbox), NULL, color, NULL,"emph ", -1);
+  gtk_text_insert (GTK_TEXT(headerbox), NULL, color, NULL,"em ", -1);
   color = pplot1->scfsi[ch] ? &oncolor : &offcolor ; 
-  sprintf(title2,"scfsi=%i ",pplot1->scfsi[ch]);
+  sprintf(title2,"scfsi=%i            ",pplot1->scfsi[ch]);
   gtk_text_insert (GTK_TEXT(headerbox), NULL, color, NULL,title2, -1);
   if (gtkinfo.filetype) 
     sprintf(title2," mdb=%i %i/NA",pplot1->maindata,pplot1->totbits);
@@ -266,6 +272,12 @@ void plot_frame(void)
   else 
     title=ch ? "Right Channel" : "Left Channel";
 
+  sprintf(title2,"%s  mask_ratio=%3.2f  %3.2f  ener_ratio=%3.2f  %3.2f",
+	  title,
+	  pplot->ms_ratio[0],pplot->ms_ratio[1],
+	  pplot->ms_ener_ratio[0],pplot->ms_ener_ratio[1]);
+
+
   ymn = -32767 ; 
   ymx =  32767;
   xmn = 0;
@@ -277,7 +289,7 @@ void plot_frame(void)
    */
 
   /* draw the title */
-  gpk_graph_draw(pcmbox,0,xcord,ycord,xmn,ymn,xmx,ymx,1,title,
+  gpk_graph_draw(pcmbox,0,xcord,ycord,xmn,ymn,xmx,ymx,1,title2,
 		 &black);
 
 
@@ -318,12 +330,12 @@ void plot_frame(void)
   if (!gtkinfo.filetype) {
     n = 224;    /* number of points on end of blue part */
     /* data left of frame */
-    gpk_graph_draw(pcmbox,n+1,xcord,ycord,xmn,ymn,xmx,ymx,0,title,&black);
+    gpk_graph_draw(pcmbox,n+1,xcord,ycord,xmn,ymn,xmx,ymx,0,title2,&black);
     /* data right of frame */
     gpk_graph_draw(pcmbox,n+1,&xcord[1152+n-1],&ycord[1152+n-1],
-		   xmn,ymn,xmx,ymx,0,title,&black);
+		   xmn,ymn,xmx,ymx,0,title2,&black);
     /* the actual frame */
-    gpk_graph_draw(pcmbox,1152,&xcord[n],&ycord[n],xmn,ymn,xmx,ymx,0,title,&black);
+    gpk_graph_draw(pcmbox,1152,&xcord[n],&ycord[n],xmn,ymn,xmx,ymx,0,title2,&black);
   }
 
 
@@ -331,11 +343,12 @@ void plot_frame(void)
   /* draw the PCM re-synthesis data */
   /*******************************************************************/
   n = 1152;
-
+  /*
   sprintf(title2,"Re-synthesis  mask_ratio=%3.2f  %3.2f  ener_ratio=%3.2f  %3.2f",
 	  pplot->ms_ratio[0],pplot->ms_ratio[1],
 	  pplot->ms_ener_ratio[0],pplot->ms_ener_ratio[1]);
-  title=title2;
+  */
+  title="Re-synthesis";
 
 
   ymn = -32767 ; 
@@ -496,14 +509,7 @@ void plot_frame(void)
    * draw the psy model energy spectrum (k space) 
    * l3psy.c computes pe, en, thm for THIS granule.  
    *******************************************************************/
-  if (gtkinfo.msflag || gtkinfo.filetype) {
-    /* erase everything */
-    gpk_bargraph_draw(enerbox[0],0,xcord,ycord,
-		      xmn,ymn,xmx,ymx,1," ",0,barcolor);
-    gpk_bargraph_draw(enerbox[1],0,xcord,ycord,
-		      xmn,ymn,xmx,ymx,1," ",0,barcolor);
-  }
-  else if (gtkinfo.kbflag){
+ if (gtkinfo.kbflag){
     for (gr = 0 ; gr < mode_gr ; gr ++) {
       n = HBLKSIZE; /* only show half the spectrum */
 
@@ -638,13 +644,13 @@ void plot_frame(void)
 
       if (blocktype[gr][ch]==2) {
 	sprintf(label2,
-		"SFB %i %i%i%i",
+		"SFB scale=%i %i%i%i",
 		pplot1->scalefac_scale[gr][ch],
 		pplot1->sub_gain[gr][ch][0],
 		pplot1->sub_gain[gr][ch][1],
 		pplot1->sub_gain[gr][ch][2]);
       }else{
-	sprintf(label2,"SFB %i",pplot1->scalefac_scale[gr][ch]);
+	sprintf(label2,"SFB scale=%i",pplot1->scalefac_scale[gr][ch]);
       }
       
       if (gtkinfo.flag123) ggain = -(pplot1->qss[gr][ch]-210)/4.0;

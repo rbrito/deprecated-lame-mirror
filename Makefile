@@ -12,7 +12,7 @@ ARCH = $(shell uname -m)
 # defaults:
 PGM = lame
 CC = gcc
-CC_OPTS =  -O9 -fomit-frame-pointer -fno-strength-reduce -mpentiumpro -ffast-math -finline-functions -funroll-loops -Wall -malign-double -g -march=pentiumpro -mfancy-math-387 -pipe
+CC_OPTS =  -O
 GTK = 
 GTKLIBS = 
 SNDLIB = -DLAMESNDFILE
@@ -73,16 +73,16 @@ ifeq ($(UNAME),Linux)
    GTK = -DHAVEGTK `gtk-config --cflags`
    GTKLIBS = `gtk-config --libs` 
 # Comment out next 2 lines if you want to remove VBR histogram capability
-#   BRHIST_SWITCH = -DBRHIST
-#   LIBTERMCAP = -lncurses
+   BRHIST_SWITCH = -DBRHIST
+   LIBTERMCAP = -lncurses
+
 
 # suggested for gcc-2.7.x
-#   CC_OPTS =  -O3 -fomit-frame-pointer -funroll-loops -ffast-math \
-#                    -finline-functions 
-#  CC_OPTS =  -O9 -fomit-frame-pointer -fno-strength-reduce -mpentiumpro -ffast-math -finline-functions -funroll-loops -Wall -malign-double -g -march=pentiumpro -mfancy-math-387 -pipe -UNDEBUG
+   CC_OPTS =  -O3 -fomit-frame-pointer -funroll-loops -ffast-math  -finline-functions -Wall
+#  CC_OPTS =  -O9 -fomit-frame-pointer -fno-strength-reduce -mpentiumpro -ffast-math -finline-functions -funroll-loops -Wall -malign-double -g -march=pentiumpro -mfancy-math-387 -pipe 
 
 #  for debugging:
-#   CC_OPTS =  -UNDEBUG -Wall -g -DABORTFP 
+   CC_OPTS =  -UNDEBUG -O -Wall -g -DABORTFP 
 
 #  for lots of debugging:
 #   CC_OPTS =  -DDEBUG -UNDEBUG  -O -Wall -g -DABORTFP 

@@ -180,15 +180,15 @@ iteration_loop( lame_global_flags *gfp,
 		      &scalefac[gr][ch], cod_info, xfsf, ch);
         }
       best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
-      if (gfp->use_best_huffman==1 && cod_info->block_type != SHORT_TYPE) {
+      if (gfp->use_best_huffman==1 && cod_info->block_type == SHORT_TYPE) {
 	best_huffman_divide(gr, ch, cod_info, l3_enc[gr][ch]);
       }
 #ifdef HAVEGTK
       if (gfp->gtkflag)
 	set_pinfo (cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
 #endif
-/*#define NORESTEST*/
-#ifndef NORESTEST
+/*#define NORES_TEST */
+#ifndef NORES_TEST
       ResvAdjust(gfp,cod_info, l3_side, mean_bits );
 #endif
       /* set the sign of l3_enc */
@@ -199,7 +199,7 @@ iteration_loop( lame_global_flags *gfp,
     }
   } /* loop over gr */
 
-#ifdef NORESTEST
+#ifdef NORES_TEST
   /* replace ResvAdjust above with this code if you do not want
      the second granule to use bits saved by the first granule.
      when combined with --nores, this is usefull for testing only */
@@ -601,7 +601,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
     for (ch = 0; ch < gfp->stereo; ch++) {
       cod_info = &l3_side->gr[gr].ch[ch].tt;
       best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
-      if (cod_info->block_type == NORM_TYPE) {
+      if (cod_info->block_type != SHORT_TYPE) {
 	best_huffman_divide(gr, ch, cod_info, l3_enc[gr][ch]);
       }
 #ifdef HAVEGTK

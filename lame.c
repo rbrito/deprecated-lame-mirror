@@ -404,42 +404,56 @@ void lame_init_params(lame_global_flags *gfp)
   /* set internal feature flags.  USER should not access these since
    * some combinations will produce strange results */
 
-  gfp->filter_type=0;
-  gfp->quantization=0;
-  gfp->psymodel=0;
-  gfp->noise_shaping=0;
-  gfp->noise_shaping_stop=0;
-  gfp->use_best_huffman=0;
-
-  if (gfp->quality<9) {
-    /* 5..8 quality, the default  */
-    gfp->psymodel=1;
-    gfp->noise_shaping=1;
-    if (!gfp->mode_fixed && gfp->mode==1) gfp->mode=0;  /* dont use jstereo */
+  if (gfp->quality==9) {
+    gfp->filter_type=0;
+    gfp->psymodel=0;
+    gfp->quantization=0;
+    gfp->noise_shaping=0;
+    gfp->noise_shaping_stop=0;
     gfp->use_best_huffman=0;
   }
 
-  if (gfp->quality<5) {
-    /* 2..4 quality */
+  if (gfp->quality==5) {
+    /* the default */
+    /* jstereo (which is slower) not enabled at this quality level  */
+    if (!gfp->mode_fixed && gfp->mode==1) gfp->mode=0;  
+    gfp->filter_type=0;
+    gfp->psymodel=1;
+    gfp->quantization=0;
+    gfp->noise_shaping=1;
+    gfp->noise_shaping_stop=0;
+    gfp->use_best_huffman=0;
+  }
+
+  if (gfp->quality==2) {
+    gfp->filter_type=0;
+    gfp->psymodel=1;
     gfp->quantization=1;
+    gfp->noise_shaping=1;
+    gfp->noise_shaping_stop=0;
     gfp->use_best_huffman=1;
   }
 
-  if (gfp->quality<3) {
-    /* 0..1 quality */
+  if (gfp->quality==1) {
+    gfp->filter_type=0;
+    gfp->psymodel=1;
+    gfp->quantization=1;
+    gfp->noise_shaping=1;
     gfp->noise_shaping_stop=1;
+    gfp->use_best_huffman=1;
   }
 
-  if (gfp->quality<2) {
+  if (gfp->quality==0) {
     /* 0..1 quality */
     gfp->filter_type=1;         /* not yet coded */
+    gfp->psymodel=1;
+    gfp->quantization=1;
     gfp->noise_shaping=3;       /* not yet coded */
     gfp->noise_shaping_stop=2;  /* not yet coded */
     gfp->use_best_huffman=2;   /* not yet coded */
     exit(-99);
   }
 
-  gfp->filter_type=0;
 
   for (i = 0; i < SBMAX_l + 1; i++) {
     scalefac_band.l[i] =
@@ -634,11 +648,6 @@ int mf_size,char *mp3buf, int mp3buf_size)
   }
 
 
-  /* use m/s gfp->stereo? */
-  check_ms_stereo =   (gfp->mode == MPG_MD_JOINT_STEREO);
-
-
-
   /********************** padding *****************************/
   switch (gfp->padding_type) {
   case 0:
@@ -735,6 +744,8 @@ int mf_size,char *mp3buf, int mp3buf_size)
   /* polyphase filtering / mdct */
   mdct_sub48(gfp,inbuf[0], inbuf[1], xr, &l3_side);
 
+  /* use m/s gfp->stereo? */
+  check_ms_stereo =  (gfp->mode == MPG_MD_JOINT_STEREO);
   if (check_ms_stereo) {
     /* make sure block type is the same in each channel */
     check_ms_stereo =
@@ -743,11 +754,12 @@ int mf_size,char *mp3buf, int mp3buf_size)
   }
   if (check_ms_stereo) {
     /* ms_ratio = is like the ratio of side_energy/total_energy */
-    FLOAT8 ms_ratio_ave;
+    FLOAT8 ms_ratio_ave,ms_ener_ratio_ave;
     /*     ms_ratio_ave = .5*(ms_ratio[0] + ms_ratio[1]);*/
     ms_ratio_ave = .25*(ms_ratio[0] + ms_ratio[1]+
 			 ms_ratio_prev + ms_ratio_next);
-    if ( ms_ratio_ave <.35) gfp->mode_ext = MPG_MD_MS_LR;
+    ms_ener_ratio_ave = .5*(ms_ener_ratio[0]+ms_ener_ratio[1]);
+    if ( ms_ratio_ave <.35 && ms_ener_ratio_ave<.75 ) gfp->mode_ext = MPG_MD_MS_LR;
   }
   if (gfp->force_ms) gfp->mode_ext = MPG_MD_MS_LR;
 
