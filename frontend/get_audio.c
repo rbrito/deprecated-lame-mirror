@@ -79,6 +79,7 @@ int     pcmbitwidth;
 int     pcmswapbytes = 0;
 unsigned int num_samples_read;
 FILE   *musicin;
+int id3v2taglen = 0;
 
 
 #ifdef AMIGA_MPEGA
@@ -1538,13 +1539,12 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
     if (fread(buf, 1, len, fd) != len)
         return -1;      /* failed */
     if (buf[0] == 'I' && buf[1] == 'D' && buf[2] == '3') {
-        fprintf(stderr, "ID3v2 found. "
-		"Be sure the tag is lost when transcoding currently.\n");
 	len = 6;
 	if (fread(&buf, 1, len, fd) != len)
 	    return -1;      /* failed */
 	buf[2] &= 127; buf[3] &= 127; buf[4] &= 127; buf[5] &= 127;
-	len = ((((buf[2] << 7) + buf[3] << 7) + buf[4]) << 7) + buf[5];
+	id3v2taglen
+	    = len = ((((buf[2] << 7) + buf[3] << 7) + buf[4]) << 7) + buf[5];
 	fskip(fd, len, SEEK_CUR);
 	len = 4;
 	if (fread(&buf, 1, len, fd) != len)

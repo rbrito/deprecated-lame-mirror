@@ -181,13 +181,12 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath,
     void    (*WriteFunction) (FILE * fp, char *p, int n);
     int tmp_num_channels = lame_get_num_channels( gfp );
 
-
-
-    if (silent < 10) fprintf(stderr, "\rinput:  %s%s(%g kHz, %i channel%s, ",
-            strcmp(inPath, "-") ? inPath : "<stdin>",
-            strlen(inPath) > 26 ? "\n\t" : "  ",
-            lame_get_in_samplerate( gfp ) / 1.e3,
-            tmp_num_channels, tmp_num_channels != 1 ? "s" : "");
+    if (silent < 10)
+	fprintf(stderr, "\rinput:  %s%s(%g kHz, %i channel%s, ",
+		strcmp(inPath, "-") ? inPath : "<stdin>",
+		strlen(inPath) > 26 ? "\n\t" : "  ",
+		lame_get_in_samplerate( gfp ) / 1.e3,
+		tmp_num_channels, tmp_num_channels > 1 ? "s":"");
 
     switch (input_format) {
     case sf_mp3:
@@ -376,6 +375,8 @@ lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath,
 	lame_print_internals(gf);
 
     fflush(stderr);
+    if (input_format == sf_mp3 && keeptag && id3v2taglen)
+	fseek(outf, id3v2taglen, SEEK_CUR);
 
     /* encode until we hit eof */
     do {
@@ -459,13 +460,21 @@ lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath,
 
     /* id3 tag */
     if (input_format == sf_mp3 && keeptag) {
-#define ID3TAGSIZE 128
 	extern FILE * musicin;
+#define ID3TAGSIZE 128
 	char id3tag[ID3TAGSIZE];
 	fseek(musicin, -ID3TAGSIZE, SEEK_CUR);
 	fread(id3tag, 1, ID3TAGSIZE, musicin);
-	if (memcmp(id3tag, "TAG", 3) == 0) {
+	if (memcmp(id3tag, "TAG", 3) == 0)
 	    fwrite(id3tag, 1, ID3TAGSIZE, outf);
+
+	if (id3v2taglen) {
+	    char *id3v2tag = malloc(id3v2taglen);
+	    fseek(outf, 0, SEEK_SET);
+	    fseek(musicin, 0, SEEK_SET);
+	    fread(id3v2tag, 1, id3v2taglen, musicin);
+	    fwrite(id3v2tag, 1, id3v2taglen, outf);
+	    free(id3v2tag);
 	}
     }
     return 0;

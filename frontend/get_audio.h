@@ -100,7 +100,7 @@ extern int parse_wavheader(void);
 extern int parse_aiff(const char fn[]);
 extern void   aiff_check(const char*, IFF_AIFF*, int*);
 
-
+extern int id3v2taglen;
 
 #endif	/* ifdef LIBSNDFILE */
 #endif	/* ifndef LAME_GET_AUDIO_H */
