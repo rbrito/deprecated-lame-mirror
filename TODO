@@ -176,17 +176,12 @@ get_audio.c:  We need a way to open a second mp3 file, without
 frontend code:
 
 1.
-Does stdin work when LAME is compiled to use libsndfile? 
-(new version of libsndfile will support this - try this out)
+raw file format and options.
+--signed, --unsigned, --little-endian and --big-endian do not work correctly.
 
 2.
 Code is a complete mess. But it has so many debugged features it will
 be a lot of work to re-write.
-
-8.
-We should consider moving the experts options from the *long
-help* text into an *experts only* help text. The average Joe gets
-knocked down by the huge number of possibilities to setup lame.
 
 999.
 It would be nice to save some information whilst encoding when
