@@ -303,21 +303,6 @@ void compute_ath( lame_global_flags *gfp, FLOAT8 ATH_l[], FLOAT8 ATH_s[] )
 
 
 
-/* convert from L/R <-> Mid/Side, src == dst allowed */
-void ms_convert(III_side_info_t *l3_side, int gr)
-{
-    int i;
-    for (i = 0; i < 576; ++i) {
-	FLOAT8 l, r;
-        l = l3_side->tt[gr][0].xr[i];
-        r = l3_side->tt[gr][1].xr[i];
-        l3_side->tt[gr][0].xr[i] = (l+r) * (FLOAT8)(SQRT2*0.5);
-        l3_side->tt[gr][1].xr[i] = (l-r) * (FLOAT8)(SQRT2*0.5);
-    }
-}
-
-
-
 /************************************************************************
  * allocate bits among 2 channels based on PE
  * mt 6/99
