@@ -91,9 +91,13 @@ public:
 	*/
 	inline const bool GetPrivateMode() const { return bPrivate; }
 	/**
-		\brief Check wether the Encode process should use the Private bit
+		\brief Check wether the Encode process should use the Smart Bitrate output
 	*/
 	inline const bool GetSmartOutputMode() const { return bSmartOutput; }
+	/**
+		\brief Check wether the Encode process should allow Average Bitrate output
+	*/
+	inline const bool GetAbrOutputMode() const { return bAbrOutput; }
 
 	/**
 		\brief Check wether the Encode process shouldn't use the Bit Reservoir
@@ -138,9 +142,14 @@ public:
 	inline void SetPrivateMode(const bool bMode) { bPrivate = bMode; }
 
 	/**
-		\brief Set wether the Encode process should use the Copyright bit
+		\brief Set wether the Encode process should use the Smart Bitrate output
 	*/
 	inline void SetSmartOutputMode(const bool bMode) { bSmartOutput = bMode; }
+	/**
+		\brief Set wether the Encode process should use the Average Bitrate output
+	*/
+	inline void SetAbrOutputMode(const bool bMode) { bAbrOutput = bMode; }
+
 
 	/**
 		\brief Set wether the Encode process shouldn't use the Bit Reservoir
@@ -224,6 +233,22 @@ public:
 		\brief Get the number of possible sampling frequencies
 	*/
 	inline const unsigned int GetResampleFreq() const { return the_SamplingFreqs[nSamplingFreqIndex]; }
+	/**
+		\brief Get the max compression ratio allowed (1:15 default)
+	*/
+	inline double GetSmartRatio() const { return SmartRatioMax;}
+	/**
+		\brief Get the min ABR bitrate possible
+	*/
+	inline unsigned int GetAbrBitrateMin() const { return AverageBitrate_Min;}
+	/**
+		\brief Get the max ABR bitrate possible
+	*/
+	inline unsigned int GetAbrBitrateMax() const { return AverageBitrate_Max;}
+	/**
+		\brief Get the step between ABR bitrates
+	*/
+	inline unsigned int GetAbrBitrateStep() const { return AverageBitrate_Step;}
 
 	/**
 		\brief Get the VBR attributes for a specified MPEG version
@@ -359,9 +384,14 @@ private:
 	bool bForceChannel;
 	bool bResample;
 	bool bSmartOutput;
+	bool bAbrOutput;
 
 	int VbrQuality;
-	int AverageBitrate;
+	unsigned int AverageBitrate_Min;
+	unsigned int AverageBitrate_Max;
+	unsigned int AverageBitrate_Step;
+
+	double SmartRatioMax;
 
 	static const unsigned int the_ChannelModes[3];
 	int nChannelIndex;

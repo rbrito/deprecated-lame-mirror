@@ -459,6 +459,7 @@ bool AEncodeProperties::UpdateDlgFromValue(HWND HwndDlg)
 	::CheckDlgButton( HwndDlg, IDC_CHECK_PRIVATE,      GetPrivateMode()    ?BST_CHECKED:BST_UNCHECKED );
 	::CheckDlgButton( HwndDlg, IDC_CHECK_COPYRIGHT,    GetCopyrightMode()  ?BST_CHECKED:BST_UNCHECKED );
 	::CheckDlgButton( HwndDlg, IDC_CHECK_ENC_SMART,    GetSmartOutputMode()?BST_CHECKED:BST_UNCHECKED );
+	::CheckDlgButton( HwndDlg, IDC_CHECK_ENC_ABR,      GetAbrOutputMode()  ?BST_CHECKED:BST_UNCHECKED );
 //	::CheckDlgButton( HwndDlg, IDC_CHECK_RESERVOIR,    !GetNoBiResMode() ?BST_CHECKED:BST_UNCHECKED );
 //	::CheckDlgButton( HwndDlg, IDC_CHECK_XINGVBR,      GetXingFrameMode()?BST_CHECKED:BST_UNCHECKED );
 //	::CheckDlgButton( HwndDlg, IDC_CHECK_RESAMPLE,     GetResampleMode() ?BST_CHECKED:BST_UNCHECKED );
@@ -558,6 +559,7 @@ bool AEncodeProperties::UpdateValueFromDlg(HWND HwndDlg)
 	bOriginal     = (::IsDlgButtonChecked( HwndDlg, IDC_CHECK_ORIGINAL)     == BST_CHECKED);
 	bPrivate      = (::IsDlgButtonChecked( HwndDlg, IDC_CHECK_PRIVATE)      == BST_CHECKED);
 	bSmartOutput  = (::IsDlgButtonChecked( HwndDlg, IDC_CHECK_ENC_SMART)    == BST_CHECKED);
+	bAbrOutput    = (::IsDlgButtonChecked( HwndDlg, IDC_CHECK_ENC_ABR)      == BST_CHECKED);
 //	bNoBitRes     =!(::IsDlgButtonChecked( HwndDlg, IDC_CHECK_RESERVOIR)    == BST_CHECKED);
 //	bXingFrame    = (::IsDlgButtonChecked( HwndDlg, IDC_CHECK_XINGVBR)      == BST_CHECKED);
 //	bResample     = (::IsDlgButtonChecked( HwndDlg, IDC_CHECK_RESAMPLE)     == BST_CHECKED);
@@ -638,6 +640,12 @@ void AEncodeProperties::ParamsRestore()
 	bResample     = false;
 	bForceChannel = false;
 	bSmartOutput  = true;
+	bAbrOutput    = true;
+	
+	AverageBitrate_Min = 80; // a bit lame
+	AverageBitrate_Max = 160; // a bit lame
+	AverageBitrate_Step = 8; // a bit lame
+	SmartRatioMax = 15.0;
 
 	nChannelIndex = 2; // joint-stereo
 	mBRmode       = BR_CBR;
@@ -645,7 +653,7 @@ void AEncodeProperties::ParamsRestore()
 	nMaxBitrateIndex = 4; // 160 kbps (works for both MPEGI and II)
 	nPresetIndex = 0; // None
 	VbrQuality = 1; // Quite High
-	AverageBitrate = 128; // a bit lame
+//	AverageBitrate = 128; // a bit lame
 	nSamplingFreqIndex = 1; // 44100
 
 //	OutputDir = "c:\\";
@@ -871,6 +879,31 @@ void AEncodeProperties::GetValuesFromKey(const std::string & config_name, const 
 			tmpname = tmpElt->Attribute("use");
 			if (tmpname != NULL)
 				bSmartOutput = (tmpname->compare("true") == 0);
+			
+			tmpname = tmpElt->Attribute("ratio");
+			if (tmpname != NULL)
+				SmartRatioMax = atof(tmpname->c_str());
+		}
+
+		// Smart output parameter
+		tmpElt = iterateElmt->FirstChildElement("ABR");
+		if (tmpElt != NULL)
+		{
+			tmpname = tmpElt->Attribute("use");
+			if (tmpname != NULL)
+				bAbrOutput = (tmpname->compare("true") == 0);
+			
+			tmpname = tmpElt->Attribute("min");
+			if (tmpname != NULL)
+				AverageBitrate_Min = atoi(tmpname->c_str());
+
+			tmpname = tmpElt->Attribute("max");
+			if (tmpname != NULL)
+				AverageBitrate_Max = atoi(tmpname->c_str());
+
+			tmpname = tmpElt->Attribute("step");
+			if (tmpname != NULL)
+				AverageBitrate_Step = atoi(tmpname->c_str());
 		}
 
 		// Copyright parameter
@@ -1101,6 +1134,11 @@ bool AEncodeProperties::operator !=(const AEncodeProperties & the_instance) cons
 		 || (bOriginal != the_instance.bOriginal)
 		 || (bPrivate != the_instance.bPrivate)
 		 || (bSmartOutput != the_instance.bSmartOutput)
+		 || (SmartRatioMax != the_instance.SmartRatioMax)
+		 || (bAbrOutput != the_instance.bAbrOutput)
+		 || (AverageBitrate_Min != the_instance.AverageBitrate_Min)
+		 || (AverageBitrate_Max != the_instance.AverageBitrate_Max)
+		 || (AverageBitrate_Step != the_instance.AverageBitrate_Step)
 		 || (bNoBitRes != the_instance.bNoBitRes)
 		 || (mBRmode != the_instance.mBRmode)
 		 || (bXingFrame != the_instance.bXingFrame)
@@ -1111,7 +1149,7 @@ bool AEncodeProperties::operator !=(const AEncodeProperties & the_instance) cons
 		 || (nMaxBitrateIndex != the_instance.nMaxBitrateIndex)
 		 || (nPresetIndex != the_instance.nPresetIndex)
 		 || (VbrQuality != the_instance.VbrQuality)
-		 || (AverageBitrate != the_instance.AverageBitrate)
+//		 || (AverageBitrate != the_instance.AverageBitrate)
 		 || (nSamplingFreqIndex != the_instance.nSamplingFreqIndex)
 //		 || (OutputDir.compare(the_instance.OutputDir) != 0)
 		);
@@ -1183,11 +1221,32 @@ void AEncodeProperties::SaveValuesToElement(TiXmlElement * the_element) const
 	{
 		tmpElt = new TiXmlElement("Smart");
 		SetAttributeBool( tmpElt, "use", bSmartOutput);
+		tmpElt->SetAttribute("ratio", SmartRatioMax);
 		the_element->InsertEndChild(*tmpElt);
 	}
 	else
 	{
 		SetAttributeBool( tmpElt, "use", bSmartOutput);
+		tmpElt->SetAttribute("ratio", SmartRatioMax);
+	}
+
+	// Smart Output parameter
+	tmpElt = the_element->FirstChildElement("ABR");
+	if (tmpElt == NULL)
+	{
+		tmpElt = new TiXmlElement("ABR");
+		SetAttributeBool( tmpElt, "use", bAbrOutput);
+		tmpElt->SetAttribute("min", AverageBitrate_Min);
+		tmpElt->SetAttribute("max", AverageBitrate_Max);
+		tmpElt->SetAttribute("step", AverageBitrate_Step);
+		the_element->InsertEndChild(*tmpElt);
+	}
+	else
+	{
+		SetAttributeBool( tmpElt, "use", bAbrOutput);
+		tmpElt->SetAttribute("min", AverageBitrate_Min);
+		tmpElt->SetAttribute("max", AverageBitrate_Max);
+		tmpElt->SetAttribute("step", AverageBitrate_Step);
 	}
 
 	// CRC parameter

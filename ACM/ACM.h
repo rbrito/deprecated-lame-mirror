@@ -32,15 +32,29 @@
 #pragma once
 #endif // _MSC_VER >= 1000
 
+#include <vector>
+
 #include <windows.h>
 #include <mmsystem.h>
 #include <mmreg.h>
 #include <msacm.h>
 #include <msacmdrv.h>
 
+#include "lame.h"
+
 #include "ADbg/ADbg.h"
 
 class AEncodeProperties;
+
+class bitrate_item {
+	public:
+		unsigned int frequency;
+		unsigned int bitrate;
+		unsigned int channels;
+		vbr_mode     mode;
+	
+		bool operator<(const bitrate_item & bitrate) const;
+};
 
 class ACM  
 {
@@ -71,14 +85,16 @@ protected:
 	void GetPCMFormatForIndex(const DWORD the_Index, WAVEFORMATEX & the_Format, unsigned short the_String[ACMFORMATDETAILS_FORMAT_CHARS]) const;
 	DWORD GetNumberEncodingFormats() const;
 	bool IsSmartOutput(const int frequency, const int bitrate, const int channels) const;
+	void BuildBitrateTable();
+	void FlushBitrateTable();
 
 	HMODULE my_hModule;
 	HICON   my_hIcon;
 	ADbg    my_debug;
 	AEncodeProperties my_EncodingProperties;
+	std::vector<bitrate_item *> bitrate_table;
 
 	static char VersionString[20];
-
 };
 
 #endif // !defined(_ACM_H__INCLUDED_)

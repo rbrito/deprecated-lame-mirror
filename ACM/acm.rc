@@ -73,13 +73,13 @@ BEGIN
             VALUE "Comments", "This is currently a test of an ACM driver for Win32 using Lame to encode and mpglib to decode\0"
             VALUE "CompanyName", "http://www.mp3dev.org/\0"
             VALUE "FileDescription", "Lame MP3 codec engine\0"
-            VALUE "FileVersion", "0.8.0\0"
+            VALUE "FileVersion", "0.9.0\0"
             VALUE "InternalName", "lameACM\0"
             VALUE "LegalCopyright", "Copyright © 2002 Steve Lhomme\0"
             VALUE "LegalTrademarks", "LGPL (see gnu.org)\0"
             VALUE "OriginalFilename", "lameACM.acm\0"
             VALUE "ProductName", "Lame MP3 codec\0"
-            VALUE "ProductVersion", "0.8.0\0"
+            VALUE "ProductVersion", "0.9.0\0"
         END
     END
     BLOCK "VarFileInfo"
@@ -127,10 +127,13 @@ BEGIN
                     WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "Stereo mode",IDC_STATIC,23,24,41,8
     CONTROL         "Smart Encode",IDC_CHECK_ENC_SMART,"Button",
-                    BS_AUTOCHECKBOX | BS_FLAT | WS_GROUP | WS_TABSTOP,49,45,
+                    BS_AUTOCHECKBOX | BS_FLAT | WS_GROUP | WS_TABSTOP,49,39,
                     61,10
     ICON            IDI_ICON,IDC_STATIC_ENC_ICON,189,79,20,20
     LTEXT           "v0.0.0 - 0.00",IDC_STATIC_CONFIG_VERSION,179,111,43,8
+    CONTROL         "Average BitRate",IDC_CHECK_ENC_ABR,"Button",
+                    BS_AUTOCHECKBOX | BS_FLAT | WS_GROUP | WS_TABSTOP,49,53,
+                    68,10
 END
 
 IDD_ABOUT DIALOG DISCARDABLE  0, 0, 187, 77
