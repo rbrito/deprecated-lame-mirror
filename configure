@@ -4617,7 +4617,7 @@ else
     fi
   done
   IFS="$ac_save_ifs"
-  test -z "$ac_cv_path_GTK_CONFIG" && ac_cv_path_GTK_CONFIG="gtk12-config"
+  test -z "$ac_cv_path_GTK_CONFIG" && ac_cv_path_GTK_CONFIG="gtk-config"
   ;;
 esac
 fi
