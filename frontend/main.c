@@ -307,7 +307,8 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath,
                             tmp_num_channels, 16);
     fclose(outf);
 
-    decoder_progress_finish(gfp);
+    if (silent <= 0)
+	decoder_progress_finish(gfp);
     return 0;
 }
 
