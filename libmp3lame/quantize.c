@@ -145,92 +145,71 @@ ResvFrameBegin(lame_global_flags *gfp, int *mean_bits)
 }
 
 
-/*
-  ResvMaxBits
-  returns targ_bits:  target number of bits to use for 1 granule
-         extra_bits:  amount extra available from reservoir
-  Mark Taylor 4/99
-*/
-static int
-ResvMaxBits(lame_internal_flags *gfc, int mean_bits, int *extra_bits)
-{
-    int ResvSize = gfc->l3_side.ResvSize, ResvMax = gfc->l3_side.ResvMax;
-    if (ResvSize*10 >= ResvMax*6) {
-	int add_bits = 0;
-	if (ResvSize*10 >= ResvMax*9) {
-	    /* reservoir is filled over 90% -> forced to use excessed bits */
-	    add_bits = ResvSize - (ResvMax * 9) / 10;
-	    mean_bits += add_bits;
-	    gfc->substep_shaping |= 0x80;
-	}
-	/* max amount from the reservoir we are allowed to use. ISO says 60% */
-	ResvSize = (ResvMax*6)/10 - add_bits;
-	if (ResvSize < 0) ResvSize = 0;
-    } else {
-	/* build up reservoir.  this builds the reservoir a little slower
-	 * than FhG.  It could simple be mean_bits/15, but this was rigged
-	 * to always produce 100 (the old value) at 128kbs */
-	/*    *targ_bits -= (int) (mean_bits/15.2);*/
-	if (!(gfc->substep_shaping & 1))
-	    mean_bits -= mean_bits/10;
-	gfc->substep_shaping &= 0x7f;
-    }
-
-    *extra_bits = ResvSize;
-    return mean_bits;
-}
-
 /************************************************************************
- * allocate bits among 2 channels based on PE
- * mt 6/99
- * bugfixes rh 8/01: often allocated more than the allowed 4095 bits
+ * allocate bits among 2 channels based on PE (no multichannel support)
  ************************************************************************/
 static void
 on_pe(
     lame_internal_flags *gfc,
     III_psy_ratio      ratio[2],
     int targ_bits[2],
-    int mean_bits
+    int mean_bits,
+    int gr
     )
 {
-    int extra_bits, tbits, bits, ch;
-    int max_bits;  /* maximum allowed bits for this granule */
+#define MIN_BITS 126
+    int min_bits = mean_bits, bits, ch, adjustBits;
+    int max_bits = gfc->l3_side.ResvSize, ResvMax = gfc->l3_side.ResvMax;
+    FLOAT factor = (mean_bits+480)*(1.0/2000.0);
+    if (max_bits*10 >= ResvMax*6) {
+	int add_bits = 0;
+	if (max_bits*10 >= ResvMax*9) {
+	    /* reservoir is filled over 90% -> forced to use excessed bits */
+	    add_bits = max_bits - (ResvMax * 9) / 10;
+	    min_bits += add_bits;
+	    gfc->substep_shaping |= 0x80;
+	}
+	/* max amount from the reservoir we are allowed to use. ISO says 60% */
+	max_bits = (ResvMax*6)/10 - add_bits;
+	if (max_bits < 0) max_bits = 0;
+    } else {
+	/* build up reservoir.  this builds the reservoir a little slower
+	 * than FhG.  It could simple be mean_bits/15, but this was rigged
+	 * to always produce 100 (the old value) at 128kbs */
+	/*    *targ_bits -= (int) (mean_bits/15.2);*/
+	min_bits -= mean_bits/10;
+	gfc->substep_shaping &= 0x7f;
+    }
 
-    /* allocate targ_bits for granule */
-    tbits = ResvMaxBits( gfc, mean_bits, &extra_bits);
-
-    max_bits = tbits + extra_bits;
+    max_bits += mean_bits;
     if (max_bits > MAX_BITS) /* hard limit per granule */
 	max_bits = MAX_BITS;
 
-    /* at most increase bits by 1.5*average */
-    mean_bits = tbits+mean_bits*3/2;
-    tbits /= gfc->channels_out;
-    mean_bits /= gfc->channels_out;
+    /* limit 2*average */
+    if (max_bits > mean_bits*2)
+	max_bits = mean_bits*2;
 
-    for (bits = ch = 0; ch < gfc->channels_out; ch++) {
-	if (ratio[ch].ath_over == 0) {
-	    targ_bits[ch] = 126;
-	} else {
-	    targ_bits[ch] = tbits;
-	    if (ratio[ch].pe*(2.0/3) > tbits) {
-		targ_bits[ch] = ratio[ch].pe*tbits/700;
-		if (targ_bits[ch] > mean_bits) 
-		    targ_bits[ch] = mean_bits;
-	    }
-	}
-	bits += targ_bits[ch];
+    /* estimate how many bits we need */
+    for (adjustBits = ch = 0; ch < gfc->channels_out; ch++) {
+	gr_info *gi = &gfc->l3_side.tt[gr][ch];
+	bits = gi->part2_length + 1; /* to avoid zero division */
+	if (ratio[ch].ath_over != 0 && gi->psymax > 0
+	    && (int)(ratio[ch].pe*factor) > bits)
+	    bits = (int)(ratio[ch].pe*factor);
+	adjustBits += (targ_bits[ch] = bits);
     }
 
-    if (bits > max_bits) {
-	for (ch = 0; ch < gfc->channels_out; ch++) {
-	    targ_bits[ch]
-		= tbits + extra_bits * (targ_bits[ch] - tbits) / bits;
-	}
-    } else if (bits < tbits) {
-	tbits = tbits - bits / gfc->channels_out;
-	for (ch = 0; ch < gfc->channels_out; ch++)
-	    targ_bits[ch] += tbits;
+    bits = 0;
+    if (adjustBits > max_bits)
+	bits = max_bits - adjustBits; /* reduce */
+    else if (adjustBits < min_bits)
+	bits = min_bits - adjustBits; /* increase */
+
+    if (bits) {
+	int ch0new = targ_bits[0] + (bits * targ_bits[0]) / adjustBits;
+	if (gfc->channels_out == 2)
+	    targ_bits[1] += bits - (ch0new - targ_bits[0]);
+	targ_bits[0] = ch0new;
     }
 }
 
@@ -618,6 +597,8 @@ trancate_smallspectrums(
     int sfb, j;
     FLOAT distort[SFBMAX], work[576]; /* 576 is too much */
     assert(gi->psymax != 0);
+    if (gfc->substep_shaping & 0x80)
+	return;
 
     for (sfb = 0; sfb < gi->psymax; sfb++) {
 	work[sfb] = 1.0;
@@ -1130,7 +1111,7 @@ CBR_1st_bitalloc (
     }
     assert (gi->global_gain < 256);
 
-    CBR_2nd_bitalloc(gfc, gi, distort);
+//    CBR_2nd_bitalloc(gfc, gi, distort);
  quit_quantization:
     if ((gi->block_type == SHORT_TYPE && (gfc->substep_shaping & 2))
      || (gi->block_type != SHORT_TYPE && (gfc->substep_shaping & 1)))
@@ -1311,7 +1292,7 @@ iteration_loop(
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 	/*  calculate needed bits */
-	on_pe(gfc, ratio[gr], targ_bits, mean_bits);
+	on_pe(gfc, ratio[gr], targ_bits, mean_bits, gr);
 
 	for (ch=0; ch < gfc->channels_out; ch ++) {
 	    gr_info *gi = &gfc->l3_side.tt[gr][ch];
@@ -1706,7 +1687,6 @@ VBR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
 	    }
 	    iteration_finish_one(gfc, gr, ch);
 	    used_bits += gi->part2_3_length + gi->part2_length;
-
 	    if (used_bits > max_frame_bits) {
 		for (gr = 0; gr < gfc->mode_gr; gr++)
 		    for (ch = 0; ch < gfc->channels_out; ch++)

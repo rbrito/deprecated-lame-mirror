@@ -1585,23 +1585,30 @@ psycho_analysis(
 	 *********************************************************************/
 	for (ch=0;ch<numchn;ch++) {
 	    III_psy_ratio *mr = &gfc->masking_next[gr][ch];
+	    FLOAT pe;
 	    mr->ath_over = 0;
 	    if (gfc->blocktype_next[gr][ch]) {
 		int sb = gfc->cutoff_sfb_s;
 		if (ch & 1)
 		    sb = gfc->is_start_sfb_s_next[gr];
-		mr->pe = pecalc_s(mr, sb);
+		pe = pecalc_s(mr, sb);
 	    } else {
 		int sb = gfc->cutoff_sfb_l;
 		if (ch & 1)
 		    sb = gfc->is_start_sfb_l_next[gr];
-		mr->pe = pecalc_l(mr, sb);
+		pe = pecalc_l(mr, sb);
 	    }
+	    if (pe > 500.0)
+		pe = pe*0.5+750;
+	    else
+		pe *= 1.5;
+	    mr->pe = pe;
 	}
 	gfc->masking_next[gr][3].pe *= gfc->reduce_side;
 	if (gfc->blocktype_next[gr][2] | gfc->blocktype_next[gr][3])
 	    gfc->blocktype_next[gr][2] = gfc->blocktype_next[gr][3] = SHORT_TYPE;
     }
+
     /* determine MS/LR in the next frame */
     if (gfp->mode == JOINT_STEREO) {
 	FLOAT diff_pe = 50.0;
