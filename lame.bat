@@ -4,10 +4,6 @@ rem  PURPOSE:
 rem  - put this Batch-Command on your Desktop, 
 rem    so you can drag and drop wave files on it
 rem    and LAME will encode them to mp3 format.
-rem    NOTE: DOS has only 8+3 file names!
-rem    (if someone knows how to configure Windows
-rem     to hand over long file names with "drag 
-rem     and drop" to batch files, please tell me)
 rem  - put this Batch-Command in a place mentioned
 rem    in your PATH environment, start the DOS-BOX
 rem    and change to a directory where your wave 
