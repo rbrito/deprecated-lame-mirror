@@ -31,7 +31,7 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 IDD_AUDIOENCPROPS DIALOGEX 0, 0, 228, 121
 STYLE WS_CHILD | WS_VISIBLE
-FONT 8, "MS Shell Dlg"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL         "Constant Bit Rate",IDC_RADIO_CBR,"Button",
                     BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,4,2,71,10
@@ -126,6 +126,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_AUDIO_PROPS_TITLE   "MPEG-2 Audio Encoder"
     IDS_AUDIO_ADVANCED_TITLE "Advanced"
+    IDS_ABOUT               "About"
 END
 
 #endif    // Russian resources
@@ -180,6 +181,21 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,7,101,53,10
 END
 
+IDD_ABOUT DIALOG DISCARDABLE  0, 0, 228, 121
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+    ICON            IDI_ICON2,IDC_STATIC,13,30,20,20
+    LTEXT           "LAME Ain't MP3 Encoder",IDC_STATIC,7,7,91,8
+    LTEXT           "Direct Show Filter",IDC_STATIC,7,18,70,8
+    LTEXT           "Copyrigt (c) 2000 - 2001 Elecard Ltd",IDC_STATIC,41,36,
+                    163,8
+    LTEXT           "LAME Project Homepage: http://www.mp3dev.org",
+                    IDC_STATIC,7,55,192,8
+    EDITTEXT        IDC_EDIT_TEXT,7,74,214,40,ES_MULTILINE | ES_AUTOVSCROLL | 
+                    ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -196,9 +212,26 @@ BEGIN
         TOPMARGIN, 5
         BOTTOMMARGIN, 114
     END
+
+    IDD_ABOUT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 221
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 114
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_ICON2               ICON    DISCARDABLE     "elogo.ico"
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 

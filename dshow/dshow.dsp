@@ -96,6 +96,10 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;hpj;bat;for;f90"
 # Begin Source File
 
+SOURCE=.\aboutprp.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\Encoder.cpp
 # End Source File
 # Begin Source File
@@ -128,6 +132,10 @@ SOURCE=.\REG.CPP
 # PROP Default_Filter "h;hpp;hxx;hm;inl;fi;fd"
 # Begin Source File
 
+SOURCE=.\aboutprp.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Encoder.h
 # End Source File
 # Begin Source File
@@ -154,10 +162,22 @@ SOURCE=.\PropPage_adv.h
 
 SOURCE=.\reg.h
 # End Source File
+# Begin Source File
+
+SOURCE=.\resource.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\uids.h
+# End Source File
 # End Group
 # Begin Group "Resource Files"
 
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;cnt;rtf;gif;jpg;jpeg;jpe"
+# Begin Source File
+
+SOURCE=.\elogo.ico
+# End Source File
 # End Group
 # End Target
 # End Project

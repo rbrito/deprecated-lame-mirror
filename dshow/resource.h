@@ -4,8 +4,11 @@
 //
 #define IDS_AUDIO_PROPS_TITLE           3
 #define IDS_AUDIO_ADVANCED_TITLE        4
+#define IDS_ABOUT                       5
 #define IDD_AUDIOENCPROPS               100
 #define IDD_ADVPROPS                    102
+#define IDD_ABOUT                       105
+#define IDI_ICON2                       106
 #define IDC_COMBO_CBR                   1004
 #define IDC_CHECK_COPYRIGHT             1007
 #define IDC_CHECK_ORIGINAL              1008
@@ -32,6 +35,8 @@
 #define IDC_CHECK_XING_TAG              1036
 #define IDC_CHECK_FORCE_MS              1037
 #define IDC_CHECK_MODE_FIXED            1038
+#define IDC_RICHEDIT_LAME               1039
+#define IDC_EDIT_TEXT                   1044
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -39,9 +44,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
-#define _APS_NEXT_RESOURCE_VALUE        103
+#define _APS_NEXT_RESOURCE_VALUE        107
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1039
+#define _APS_NEXT_CONTROL_VALUE         1045
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

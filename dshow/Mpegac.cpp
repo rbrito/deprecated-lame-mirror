@@ -30,6 +30,8 @@
 
 #include "PropPage.h"
 #include "PropPage_adv.h"
+#include "aboutprp.h"
+
 #include "Encoder.h"
 #include "Reg.h"
 
@@ -113,7 +115,8 @@ CFactoryTemplate g_Templates[] =
 {
   { L"LAME MPEG Layer III Audio Encoder", &CLSID_LAMEDShowFilter, CMpegAudEnc::CreateInstance, NULL, &sudMpgAEnc },
   { L"LAME MPEG Layer III Audio Encoder Property Page", &CLSID_LAMEDShow_PropertyPage, CMpegAudEncPropertyPage::CreateInstance},
-  { L"LAME MPEG Layer III Audio Encoder Advanced Property Page", &CLSID_LAMEDShow_PropertyPageAdv, CMpegAudEncPropertyPageAdv::CreateInstance}
+  { L"LAME MPEG Layer III Audio Encoder Advanced Property Page", &CLSID_LAMEDShow_PropertyPageAdv, CMpegAudEncPropertyPageAdv::CreateInstance},
+  { L"LAME MPEG Layer III Audio Encoder About", &CLSID_LAMEDShow_About, CMAEAbout::CreateInstance}
 };
 // Count of objects listed in g_cTemplates
 int g_cTemplates = sizeof(g_Templates) / sizeof(g_Templates[0]);
@@ -611,14 +614,17 @@ HRESULT CMpegAudEnc::GetPages(CAUUID *pcauuid)
 {
     GUID *pguid;
    
-	pcauuid->cElems = 2;
+	pcauuid->cElems = 3;
     pcauuid->pElems = pguid = (GUID *) CoTaskMemAlloc(sizeof(GUID) * pcauuid->cElems);
 
     if (pcauuid->pElems == NULL)
         return E_OUTOFMEMORY;
 
-    pguid[0] = CLSID_LAMEDShow_PropertyPage;
-    pguid[1] = CLSID_LAMEDShow_PropertyPageAdv;
+	pguid[0] = CLSID_LAMEDShow_About;
+    pguid[1] = CLSID_LAMEDShow_PropertyPage;
+    pguid[2] = CLSID_LAMEDShow_PropertyPageAdv;
+	
+
 
     return S_OK;
 }
