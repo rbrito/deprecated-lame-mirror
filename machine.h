@@ -30,13 +30,21 @@
 #else
 #include	<math.h>
 #endif
+
 #include        <stdlib.h>
 #include		<ctype.h>
 #include		<signal.h>
-#include		<sys/types.h>
-#include		<sys/stat.h>
 #include		<fcntl.h>
 #include		<errno.h>
+
+#ifdef macintosh
+#include   <types.h>
+#include   <stat.h>
+#else
+#include  <sys/types.h>
+#include  <sys/stat.h>
+#endif
+
 
 
 /* three different types of pow() functions:

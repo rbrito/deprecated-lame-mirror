@@ -313,7 +313,13 @@ VBR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
                     III_psy_ratio ratio[2][2], int l3_enc[2][2][576],
                     III_scalefac_t scalefac[2][2])
 {
+  /* PLL 16/07/2000 */
+#ifdef macintosh
+  static plotting_data bst_pinfo;
+#else
   plotting_data bst_pinfo;
+#endif
+
   gr_info         bst_cod_info, clean_cod_info;
   III_scalefac_t  bst_scalefac;
   int             bst_l3_enc[576]; 

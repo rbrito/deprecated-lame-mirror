@@ -16,6 +16,14 @@
 #define M_SQRT2    1.41421356237309504880
 #endif
 
+#ifndef FALSE
+#define         FALSE                   0
+#endif
+#ifndef TRUE
+#define         TRUE                    1
+#endif
+
+
 #ifdef _MSC_VER
 #pragma warning( disable : 4244 )
 #pragma warning( disable : 4305 )

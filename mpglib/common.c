@@ -3,8 +3,13 @@
 #include <stdlib.h>
 #include <signal.h>
 
-#include <sys/types.h>
-#include <sys/stat.h>
+#ifdef macintosh
+#include   <types.h>
+#include   <stat.h>
+#else
+#include  <sys/types.h>
+#include  <sys/stat.h>
+#endif
 #include <fcntl.h>
 
 #include "mpg123.h"

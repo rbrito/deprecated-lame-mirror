@@ -13,7 +13,7 @@ fixed bit rate jstereo 128kbs encoding, highest quality:  (recommended)
 To disable joint stereo encoding (slightly faster, but less quality at bitrates<=128kbs)
 % lame -m s sample.wav  sample.mp3     
 
-Fast encode, low quality  (no psycho-acoustics)
+Fast encode, low quality  (no noise shaping)
 % lame -f sample.wav  sample.mp3     
 
 Variable Bitrate (VBR): (use -V n to adjust quality/filesize)

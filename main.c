@@ -18,6 +18,11 @@
 #include "asmstuff.h"
 #endif
 
+/* PLL 14/04/2000 */
+#if macintosh
+#include <console.h>
+#endif
+
 
 
 
@@ -41,6 +46,10 @@ int main(int argc, char **argv)
   FILE *outf;
 #ifdef __riscos__
   int i;
+#endif
+
+#if macintosh
+  argc = ccommand(&argv);
 #endif
 
 

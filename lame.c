@@ -772,8 +772,13 @@ int lame_encode_mp3_frame(lame_global_flags *gfp,
 short int inbuf_l[],short int inbuf_r[],
 char *mp3buf, int mp3buf_size)
 {
+#ifdef macintosh /* PLL 14/04/2000 */
+  static FLOAT8 xr[2][2][576];
+  static int l3_enc[2][2][576];
+#else
   FLOAT8 xr[2][2][576];
   int l3_enc[2][2][576];
+#endif
   int mp3count;
   III_psy_ratio masking_ratio[2][2];    /*LR ratios */
   III_psy_ratio masking_MS_ratio[2][2]; /*MS ratios */
