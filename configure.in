@@ -623,12 +623,19 @@ case $host_cpu in
 
 	# use internal knowledge of the IEEE 754 layout
 	AC_DEFINE(TAKEHIRO_IEEE754_HACK, 1, IEEE754 compatible machine)
+	AC_DEFINE(USE_FAST_LOG, 1, faster log implementation with less but enough precission)
+	;;
+powerpc)
+	CPUTYPE="no"
+
+	# use internal knowledge of the IEEE 754 layout
+	AC_DEFINE(TAKEHIRO_IEEE754_HACK, 1, IEEE754 compatible machine)
+
+	# The following should not get enabled on a G5. HOWTO check for a G5?
+	AC_DEFINE(USE_FAST_LOG, 1, faster log implementation with less but enough precission)
 	;;
 *)
 	CPUTYPE="no"
-
-	# it has enough precission for us...
-	AC_DEFINE(USE_FAST_LOG, 1, fast log implementation with limited precission)
 	;;
 esac
 
