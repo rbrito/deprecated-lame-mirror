@@ -69,6 +69,7 @@
 
 	typedef float  float32_t;
 	typedef double float64_t;
+#define inline __inline
 #elif defined (__GNUC__)
 #define uint8_t unsigned char
 #define uint16_t unsigned short
