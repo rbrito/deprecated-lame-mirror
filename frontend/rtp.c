@@ -289,8 +289,7 @@ sizeof(int));
         iRet = setsockopt(s, IPPROTO_IP, IP_MULTICAST_TTL, &cTTL, 
 sizeof(char));
         if (iRet < 0) {
-            fprintf(stderr,"setsockopt IP_MULTICAST_TTL failed.    multicast 
-in kernel?\n");
+            fprintf(stderr,"setsockopt IP_MULTICAST_TTL failed.    multicast in kernel?\n");
             exit(1);
         }
 
@@ -299,8 +298,7 @@ in kernel?\n");
 		            &cLoop, sizeof(char));
         if (iRet < 0)
         {
-            fprintf(stderr,"setsockopt IP_MULTICAST_LOOP failed.    
-multicast in kernel?\n");
+            fprintf(stderr,"setsockopt IP_MULTICAST_LOOP failed.    multicast in kernel?\n");
             exit(1);
         }
     }
