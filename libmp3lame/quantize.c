@@ -440,6 +440,7 @@ init_bitalloc(lame_internal_flags *gfc, gr_info *const gi)
 {
     FLOAT tmp, sum = 0.0;
     int i, end = gi->xrNumMax;
+    memset(&gi->l3_enc[end], 0, sizeof(int)*(576-end));
 
     /*  check if there is some energy we have to quantize
      *  and calculate xr34(gfc->xrwork[0]) matching our fresh scalefactors */
@@ -468,7 +469,6 @@ init_bitalloc(lame_internal_flags *gfc, gr_info *const gi)
     }
     memset(&xr34[end], 0, sizeof(FLOAT)*(576-end));
     memset(&absxr[end], 0, sizeof(FLOAT)*(576-end));
-    memset(&gi->l3_enc[end], 0, sizeof(int)*(576-end));
 
     if (sum > (FLOAT)1e-20) {
 	int j = 0;
