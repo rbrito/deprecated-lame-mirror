@@ -1408,25 +1408,13 @@ int psymodel_init(lame_global_flags *gfp)
 
 #ifdef HAVE_NASM
     {
-        extern void fht(FLOAT *fz, int n);
-        gfc->fft_fht = fht;
+	extern void fht(FLOAT *fz, int n);
+	gfc->fft_fht = fht;
     }
     if (gfc->CPU_features.AMD_3DNow) {
-        extern void fht_3DN(FLOAT *fz, int n);
-        gfc->fft_fht = fht_3DN;
+	extern void fht_3DN(FLOAT *fz, int n);
+	gfc->fft_fht = fht_3DN;
     }
-# ifdef USE_FFTSSE
-    else  if (gfc->CPU_features.SIMD) {
-        extern void fht_SSE(FLOAT *fz, int n);
-        gfc->fft_fht = fht_SSE;
-    }
-# endif
-# ifdef USE_FFTFPU
-    else  if (gfc->CPU_features.i387) {
-        extern void fht_FPU(FLOAT *fz, int n);
-        gfc->fft_fht = fht_FPU;
-    }
-# endif
 #endif
 
     return 0;
