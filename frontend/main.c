@@ -191,7 +191,7 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath,
             if (enc_delay>-1) skip = enc_delay + 528+1;
             else skip=lame_get_encoder_delay(gfp)+528+1;
         }else{
-            // user specified a value of skip. just add for decoder
+            /* user specified a value of skip. just add for decoder */
             skip += 528+1; /* mp3 decoder has a 528 sample delay, plus user supplied "skip" */
         }
 
@@ -422,14 +422,10 @@ lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath,
 
     } while (iread);
 
-    if (nogap) {
+    if (nogap)
         imp3 = lame_encode_flush_nogap(gf, mp3buffer, sizeof(mp3buffer)); /* may return one more mp3 frame */
-        /* reinitialize bitstream for next encoding.  this is normally done
-         * by lame_init_params(), but we cannot call that routine twice */
-        lame_init_bitstream(gf);
-    } else {
+    else
         imp3 = lame_encode_flush(gf, mp3buffer, sizeof(mp3buffer)); /* may return one more mp3 frame */
-    }
 
     if (imp3 < 0) {
         if (imp3 == -1)
@@ -489,7 +485,7 @@ brhist_init_package(lame_global_flags * gf)
         }
     }
     else {
-        brhist_init(gf, 128, 128); // Dirty hack
+        brhist_init(gf, 128, 128); /* Dirty hack */
     }
 #endif
 }
@@ -665,10 +661,6 @@ main(int argc, char **argv)
          * specify the output file name, only an optional output directory. */
         parse_nogap_filenames(nogapout,nogap_inPath[0],outPath,nogapdir);
         outf = init_files(gf, nogap_inPath[0], outPath);
-        if (lame_get_bWriteVbrTag(gf)) {
-            fprintf(stderr,"Note: Disabling VBR Xing/Info tag since it interferes with --nogap\n");
-            lame_set_bWriteVbrTag( gf, 0 );
-        }
     }
     else {
         outf = init_files(gf, inPath, outPath);
@@ -726,6 +718,10 @@ main(int argc, char **argv)
                 
                 fclose(outf); /* close the output file */
                 close_infile(); /* close the input file */
+                /* reinitialize bitstream for next encoding.  this is normally done
+                 * by lame_init_params(), but we cannot call that routine twice */
+                if (use_flush_nogap) 
+                    lame_init_bitstream(gf);
             }
             lame_close(gf);
 

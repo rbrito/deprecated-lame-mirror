@@ -44,9 +44,9 @@
 #endif
 
 
-//! Stringify \a x.
+/*! Stringify \a x.*/
 #define STR(x)   #x
-//! Stringify \a x, perform macro expansion.
+/*! Stringify \a x, perform macro expansion.*/
 #define XSTR(x)  STR(x)
 
 #define MP3X_MAJOR_VERSION      0      /* Major version number */
@@ -990,41 +990,38 @@ static void spec_option (GtkWidget *widget, gpointer data)
 
 static gint key_press_event (GtkWidget *widget, GdkEventKey *event)
 {
-    // is a switch() statement in lame forbidden?
-  if (event->keyval == '1') {
-    subblock_draw[0] = 1;
-    subblock_draw[1] = 0;
-    subblock_draw[2] = 0;
-    analyze();
-  }
-  else if (event->keyval == '2') {
-    subblock_draw[0] = 0;
-    subblock_draw[1] = 1;
-    subblock_draw[2] = 0;
-    analyze();
-  }
-  else if (event->keyval == '3') {
-    subblock_draw[0] = 0;
-    subblock_draw[1] = 0;
-    subblock_draw[2] = 1;
-    analyze();
-  }
-  else if (event->keyval == '0') {
-    subblock_draw[0] = 1;
-    subblock_draw[1] = 1;
-    subblock_draw[2] = 1;
-    analyze();
-  }
-  /* analyze(); */  /* dont redraw entire window for every key! */
-  return 0;
+    switch (event->keyval) {
+    case '1':
+	subblock_draw[0] = 1;
+	subblock_draw[1] = 0;
+	subblock_draw[2] = 0;
+	analyze();
+	break;
+    case '2':
+	subblock_draw[0] = 0;
+	subblock_draw[1] = 1;
+	subblock_draw[2] = 0;
+	analyze();
+	break;
+    case '3':
+	subblock_draw[0] = 0;
+	subblock_draw[1] = 0;
+	subblock_draw[2] = 1;
+	analyze();
+	break;
+    case '0':
+	subblock_draw[0] = 1;
+	subblock_draw[1] = 1;
+	subblock_draw[2] = 1;
+	analyze();
+	break;
+    }
+    /* analyze(); */  /* dont redraw entire window for every key! */
+    return 0;
 }
 
 
-//! Get the mp3x version string.
-/*!
-  \param void
-  \return a pointer to a string which describes the version of mp3x.
-*/
+/*! Get the mp3x version string.*/
 const char*  get_mp3x_version ( void )
 {
 #if   MP3X_ALPHA_VERSION > 0
@@ -1077,7 +1074,7 @@ static void text_window (GtkWidget *widget, gpointer data)
     gtk_window_set_title (GTK_WINDOW (textwindow), "Documentation");
     gtk_widget_set_usize(box,450,500); 
     gtk_text_set_word_wrap(GTK_TEXT(box),TRUE);
-    // text should be moved outside this function, may be in a separate file
+    /* text should be moved outside this function, may be in a separate file */
     gtk_text_insert(GTK_TEXT(box),NULL,NULL,NULL,
 		"Frame header information: "\
 		"First the bitrate, sampling frequency and mono, stereo or jstereo "\

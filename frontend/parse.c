@@ -57,6 +57,7 @@ char *strchr (), *strrchr ();
 #include "parse.h"
 #include "main.h"
 #include "get_audio.h"
+#include "version.h"
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
@@ -96,7 +97,7 @@ int in_bitwidth=16;
 static void  
 dosToLongFileName( char *fn )
 {
-    const int MSIZE = PATH_MAX + 1 - 4;  //  we wanna add ".mp3" later
+    const int MSIZE = PATH_MAX + 1 - 4;  /*  we wanna add ".mp3" later */
     WIN32_FIND_DATAA lpFindFileData;
     HANDLE h = FindFirstFileA( fn, &lpFindFileData );
     if ( h != INVALID_HANDLE_VALUE ) {
@@ -208,6 +209,11 @@ static int  lame_version_print ( FILE* const fp )
         /* text too long, wrap url into next line, right aligned */
         fprintf ( fp, "LAME version %s\n%*s(%s)\n\n", v, lw-2-lenu, "", u );
     
+    if (LAME_ALPHA_VERSION)
+	fprintf ( fp, "warning: alpha versions should be used for testing only\
+n\n");
+
+
     return 0;
 }
 
@@ -380,7 +386,8 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
  	      "    --nogap <file1> <file2> <...>\n"
  	      "                    gapless encoding for a set of contiguous files\n"
  	      "    --nogapout <dir>\n"
- 	      "                    output dir for gapless encoding (must precede --nogap)"
+ 	      "                    output dir for gapless encoding (must precede --nogap)\n"
+ 	      "    --nogaptags     allow the use of VBR tags in gapless encoding"
               , ProgramName );
 
     wait_for ( fp, lessmode );
@@ -568,7 +575,7 @@ static void  display_bitrate ( FILE* const fp, const char* const version, const 
               "\nMPEG-%-3s layer III sample frequencies (kHz):  %2d  %2d  %g\n"
               "bitrates (kbps):", 
               version, 32/div, 48/div, 44.1/div );
-    for (i = 1; i <= 14; i++ )          // 14 numbers are printed, not 15, and it was a bug of me
+    for (i = 1; i <= 14; i++ )          /* 14 numbers are printed, not 15, and it was a bug of me */
         fprintf ( fp, " %2i", bitrate_table [index] [i] );
     fprintf ( fp, "\n" );
 }
@@ -708,7 +715,7 @@ static int  presets_set( lame_t gfp, int fast, int cbr, const char* preset_name,
 
 
 
-    //aliases for compatibility with old presets
+    /* aliases for compatibility with old presets */
 
     if (strcmp(preset_name, "phone") == 0) {
         preset_name = "16";
@@ -747,26 +754,17 @@ static int  presets_set( lame_t gfp, int fast, int cbr, const char* preset_name,
     }
 
     if (strcmp(preset_name, "dm-radio") == 0) {
-	//if (fast > 0)
-	//      lame_set_preset(gfp, DM_RADIO_FAST);
-	//else
 	lame_set_preset(gfp, DM_RADIO);
 	return 0;
     }
 
     if (strcmp(preset_name, "portable") == 0) {
-	//if (fast > 0)
-	//      lame_set_preset(gfp, PORTABLE_FAST);
-	//else
 	lame_set_preset(gfp, PORTABLE);
 
 	return 0;
     }
 
     if (strcmp(preset_name, "dm-medium") == 0) {
-	//if (fast > 0)
-	//    lame_set_preset(gfp, DM_MEDIUM_FAST);
-	//else
 	lame_set_preset(gfp, DM_MEDIUM);
 
 	return 0;
@@ -809,7 +807,7 @@ static int  presets_set( lame_t gfp, int fast, int cbr, const char* preset_name,
         return 0;
     }
 
-    // Generic ABR Preset
+    /* Generic ABR Preset */
     if (((atoi(preset_name)) > 0) &&  (fast < 1)) {
         if ((atoi(preset_name)) >= 8 && (atoi(preset_name)) <= 320){
             lame_set_preset(gfp, atoi(preset_name));
@@ -905,9 +903,11 @@ static int local_strcasecmp ( const char* s1, const char* s2 )
 }
 
 
-// LAME is a simple frontend which just uses the file extension
-// to determine the file type.  Trying to analyze the file
-// contents is well beyond the scope of LAME and should not be added.
+/*
+ * LAME is a simple frontend which just uses the file extension
+ * to determine the file type.  Trying to analyze the file
+ * contents is well beyond the scope of LAME and should not be added.
+ */
 static int filename_to_type ( const char* FileName )
 {
     int len = strlen (FileName);
@@ -956,11 +956,12 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv,
 char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 {
     int         err;
-    int         input_file=0;  // set to 1 if we parse an input file name 
+    int         input_file=0;  /* set to 1 if we parse an input file name */
     int         i;
     int         autoconvert  = 0;
     double      val;
     int         nogap=0;
+    int         nogap_tags=0;  /* set to 1 to use VBR tags in NOGAP mode */
     const char* ProgramName  = argv[0]; 
     int count_nogap=0;
 
@@ -1120,16 +1121,16 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     argUsed=1;
                     (void) lame_set_ATHlower( gfp, atof( nextArg ) );
                 
-                T_ELIF ("athcurve")
-                    argUsed=1;
-                    (void) lame_set_ATHcurve( gfp, atof( nextArg ) );
-
                 T_ELIF ("athtype")
                     argUsed=1;
                     (void) lame_set_ATHtype( gfp, atoi( nextArg ) );
 
-                T_ELIF ("athaa-type")   //  switch for developing, no DOCU
-                    argUsed=1;          //  1:Gaby, 2:Robert, 3:Jon, else:off
+                T_ELIF ("athcurve")
+                    argUsed=1;
+                    (void) lame_set_ATHcurve( gfp, atof( nextArg ) );
+
+		T_ELIF ("athaa-type") /* switch for developing, no DOCU */
+                    argUsed=1;        /* 1:Gaby, 2:Robert, 3:Jon, else:off */
                     lame_set_athaa_type( gfp, atoi(nextArg) );
 
                 T_ELIF ("athaa-loudapprox")
@@ -1399,7 +1400,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     silent = -5;     /* print few info on screen */
                     
                 T_ELIF ("verbose")
-                    silent = -10;    /* print a lot on screen, the default */
+                    silent = -10;    /* print a lot on screen */
                     
                 T_ELIF2 ("version", "license")
                     print_license ( gfp, stdout, ProgramName );
@@ -1450,6 +1451,9 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF ("disptime")
                     argUsed = 1;
                     update_interval = atof (nextArg);
+
+		T_ELIF ("nogaptags")
+                    nogap_tags=1;
 
 		T_ELIF ("nogapout")
 		    strcpy(outPath, nextArg);
@@ -1549,6 +1553,11 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     case 't':  /* dont write VBR tag */
                         (void) lame_set_bWriteVbrTag( gfp, 0 );
                         disable_wav_header=1;
+                        break;
+                    case 'T':  /* do write VBR tag */
+                        (void) lame_set_bWriteVbrTag( gfp, 1 );
+                        nogap_tags=1;
+                        disable_wav_header=0;
                         break;
                     case 'r':  /* force raw pcm input file */
 #if defined(LIBSNDFILE)
@@ -1684,6 +1693,12 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
         }
     }
     
+    /* disable VBR tags with nogap unless the VBR tags are forced */
+    if (nogap && lame_get_bWriteVbrTag(gfp) && nogap_tags==0) {
+      fprintf(stderr,"Note: Disabling VBR Xing/Info tag since it interferes with --nogap\n");
+      lame_set_bWriteVbrTag( gfp, 0 );
+    }
+
     /* some file options not allowed with stdout */
     if (outPath[0]=='-') {
         (void) lame_set_bWriteVbrTag( gfp, 0 ); /* turn off VBR tag */
