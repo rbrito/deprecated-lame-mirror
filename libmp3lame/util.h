@@ -498,10 +498,10 @@ struct lame_internal_flags {
   int RadioGain;
   int AudiophileGain;
 
-#ifdef DECODE_ON_THE_FLY
   int decode_on_the_fly;
   sample_t PeakSample;
-#endif
+  int noclipGainChange;  /* gain change required for preventing clipping */
+  FLOAT noclipScale;     /* user-specified scale factor required for preventing clipping */
 
 #ifdef BRHIST
   /* simple statistics */

@@ -421,12 +421,12 @@ lame_get_free_format( const lame_global_flags*  gfp )
 }
 
 
-/* Perform ReplayGain analysis on input data. */
+/* Perform ReplayGain analysis on the input data. */
 int
 lame_set_ReplayGain_input( lame_global_flags*  gfp,
                            int                 ReplayGain_input )
 {
-    /* default = 0 (disabled) */
+    /* default = 1 (enabled) */
 
     /* enforce disable/enable meaning, if we need more than two values
        we need to switch to an enum to have an apropriate representation
@@ -448,7 +448,8 @@ lame_get_ReplayGain_input( const lame_global_flags*  gfp )
 }
 
 
-/* Perform ReplayGain analysis on decoded data. */
+/* Decode on the fly, perform ReplayGain analysis on the decoded data
+   and find the peak sample. */
 int
 lame_set_ReplayGain_decode( lame_global_flags*  gfp,
                             int                 ReplayGain_decode )
@@ -479,7 +480,8 @@ lame_get_ReplayGain_decode( const lame_global_flags*  gfp )
 }
 
 
-/* find peak sample. */
+/* find the peak sample. 
+   DEPRECATED: now does the same as lame_set_ReplayGain_decode() */
 int
 lame_set_findPeakSample( lame_global_flags*  gfp,
                          int                 findPeakSample )
@@ -1735,6 +1737,27 @@ lame_get_decode_on_the_fly( const lame_global_flags* gfp )
 {
     lame_internal_flags *gfc = gfp->internal_flags;
     return gfc->decode_on_the_fly; 
+}
+
+int
+lame_get_findReplayGain( const lame_global_flags* gfp )
+{
+    lame_internal_flags *gfc = gfp->internal_flags;
+    return gfc->findReplayGain; 
+}
+
+int
+lame_get_noclipGainChange( const lame_global_flags* gfp )
+{
+    lame_internal_flags *gfc = gfp->internal_flags;
+    return gfc->noclipGainChange; 
+}
+
+float
+lame_get_noclipScale( const lame_global_flags* gfp )
+{
+    lame_internal_flags *gfc = gfp->internal_flags;
+    return gfc->noclipScale; 
 }
 
 

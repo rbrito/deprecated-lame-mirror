@@ -71,7 +71,6 @@ char   *strchr(), *strrchr();
 #include "get_audio.h"
 #include "portableio.h"
 #include "timestatus.h"
-#include "VbrTag.h"
 
 /* PLL 14/04/2000 */
 #if macintosh
@@ -572,6 +571,59 @@ void parse_nogap_filenames(int nogapout, char *inPath, char *outPath, char *outd
 }
 
 
+  
+
+void print_lame_tag_leading_info(lame_global_flags *gf) {
+    if(lame_get_bWriteVbrTag(gf))
+      printf("Writing LAME Tag...");
+}
+
+void print_trailing_info(lame_global_flags *gf)
+{
+    if (lame_get_bWriteVbrTag(gf))
+      printf("done\n");
+
+    if (lame_get_findReplayGain(gf) ) {
+      int RadioGain = lame_get_RadioGain(gf);
+      printf("ReplayGain: %s%.1fdB\n", RadioGain > 0 ? "+" : "", ((float)RadioGain) / 10.0);
+      if (RadioGain > 0x1FE || RadioGain < -0x1FE) 
+	printf("WARNING: ReplayGain exceeds the -51dB to +51dB range. Such a result is too\n"
+	       "         high to be stored in the header.\n" );
+    }
+	
+    if(print_clipping_info) {
+      float noclipGainChange = (float)lame_get_noclipGainChange(gf) / 10.0;
+      float noclipScale = lame_get_noclipScale(gf);
+
+      if (noclipGainChange > 0.0) { /* clipping occurs */
+	printf("WARNING: clipping occurs at the current gain. Set your decoder to decrease\n"
+	       "         the  gain  by  at least %.1fdB or encode again ", noclipGainChange); 
+                                                                            
+	/* advice the user on the scale factor */
+	if (noclipScale > 0) {
+	  printf("using  --scale %.2f\n", noclipScale);
+	  printf("         or less (the value under --scale is approximate).\n" );
+	}
+	else {
+          /* the user specified his own scale factor. We could suggest 
+           * the scale factor of (32767.0/gfp->PeakSample)*(gfp->scale)
+           * but it's usually very inaccurate. So we'd rather advice him to 
+           * disable scaling first and see our suggestion on the scale factor then. */
+	  printf("using --scale <arg>\n"
+	         "         (For   a   suggestion  on  the  optimal  value  of  <arg>  encode\n"
+	         "         with  --scale 1  first)\n" );
+	}
+		    
+      }
+      else { /* no clipping */
+	if (noclipGainChange > -0.1)
+	  printf("\nThe waveform does not clip and is less than 0.1dB away from full scale.\n" );
+	else                                                                                        
+	  printf("\nThe waveform does not clip and is at least %.1fdB away from full scale.\n", -noclipGainChange);
+      }                                                                                             
+    }
+  
+}
 
 
 
@@ -713,9 +765,10 @@ main(int argc, char **argv)
                     lame_encoder(gf, outf, use_flush_nogap, nogap_inPath[i],
                                  outPath);	
                 
-                if (silent<=0) ReportLameTagProgress(gf,1);
+                if (silent<=0) print_lame_tag_leading_info(gf);
                 lame_mp3_tags_fid(gf, outf); /* add VBR tags to mp3 file */
-                if (silent<=0) ReportLameTagProgress(gf,0);
+		
+                if (silent<=0) print_trailing_info(gf);
                 
                 fclose(outf); /* close the output file */
                 close_infile(); /* close the input file */
@@ -735,9 +788,10 @@ main(int argc, char **argv)
             brhist_init_package(gf);
             ret = lame_encoder(gf, outf, 0, inPath, outPath);
             
-            if (silent<=0) ReportLameTagProgress(gf,1);
+            if (silent<=0) print_lame_tag_leading_info(gf);
             lame_mp3_tags_fid(gf, outf); /* add VBR tags to mp3 file */
-            if (silent<=0) ReportLameTagProgress(gf,0);
+	    
+            if (silent<=0) print_trailing_info(gf);
             
             fclose(outf); /* close the output file */
             close_infile(); /* close the input file */
@@ -746,4 +800,6 @@ main(int argc, char **argv)
     }
     return ret;
 }
+
+
 

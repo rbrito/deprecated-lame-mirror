@@ -643,50 +643,32 @@ lame_init_params(lame_global_flags * const gfp)
                                                             VBR_mean_bitrate_kbps);
     }
 
-#ifdef DECODE_ON_THE_FLY
-    if (gfp->findPeakSample) {
+    
+    if (gfp->ReplayGain_decode || gfp->findPeakSample) {
       gfc->decode_on_the_fly = 1;
       gfp->ReplayGain_input = 0;
       gfp->ReplayGain_decode = 1;
+      gfp->findPeakSample = 1;
     }
-#endif
 
-    /*do not compute ReplayGain values if we can't store them*/
+    /* do not compute ReplayGain values if we can't store them */
     if (!gfp->bWriteVbrTag){
 	gfp->ReplayGain_input = 0;
-#ifdef DECODE_ON_THE_FLY
-        gfp->ReplayGain_decode = 0;
-#endif
+        gfp->ReplayGain_decode = 0;	
     }
 
 
-    if (gfp->ReplayGain_input)
+    if (gfp->ReplayGain_decode || gfp->ReplayGain_input) 
         gfc->findReplayGain = 1;
-#ifdef DECODE_ON_THE_FLY
-    if (gfp->ReplayGain_decode) {
-        gfp->ReplayGain_input = 0;
-        gfc->findReplayGain = 1;
-	gfc->decode_on_the_fly = 1;
-    }
-#endif
 
-    if (gfp->ReplayGain_input) {
+
+    if (gfc->findReplayGain) {
       if (InitGainAnalysis(gfp->out_samplerate) == INIT_GAIN_ANALYSIS_ERROR)
         return -6;
     }
-#ifdef DECODE_ON_THE_FLY
-    else {
-      if (gfp->ReplayGain_decode) {
-        if (InitGainAnalysis(gfp->out_samplerate) == INIT_GAIN_ANALYSIS_ERROR)
-          return -6;
-      }
-    }
-#endif
 
-#ifdef DECODE_ON_THE_FLY
     if (gfc->decode_on_the_fly && !gfp->decode_only)
       lame_decode_init();  /* initialize the decoder  */
-#endif
 
 
     gfc->mode_gr = gfp->out_samplerate <= 24000 ? 1 : 2; /* Number of granules per frame */
@@ -1825,9 +1807,7 @@ lame_init_bitstream(lame_global_flags * gfp)
 	   sizeof(gfc->bitrate_blockType_Hist));
 #endif
 
-#ifdef DECODE_ON_THE_FLY
     gfc->PeakSample = 0.0;
-#endif
 
     /* Write initial VBR Header to bitstream and init VBR data */
     if (gfp->bWriteVbrTag) 
@@ -1977,13 +1957,6 @@ lame_encode_finish(lame_global_flags * gfp,
 void
 lame_mp3_tags_fid(lame_global_flags * gfp, FILE * fpStream)
 {
-
-    if (gfp->internal_flags->findReplayGain) {
-        FLOAT RadioGain = (FLOAT) GetTitleGain();
-        assert(RadioGain != GAIN_NOT_ENOUGH_SAMPLES); 
-        gfp->internal_flags->RadioGain = (int) floor( RadioGain * 10.0 + 0.5 ); /* round to nearest */
-    }
-
     if (gfp->bWriteVbrTag) {
         /* Map VBR_q to Xing quality value: 0=worst, 100=best */
         int     nQuality = ((9-gfp->VBR_q) * 100) / 9;
@@ -1992,7 +1965,6 @@ lame_mp3_tags_fid(lame_global_flags * gfp, FILE * fpStream)
         if (fpStream && !fseek(fpStream, 0, SEEK_SET))
             PutVbrTag(gfp, fpStream, nQuality);
     }
-
 }
 
 lame_global_flags *
@@ -2115,6 +2087,8 @@ lame_init_old(lame_global_flags * gfp)
 
     gfc->RadioGain = 0.0;
     gfc->AudiophileGain = 0.0;
+    gfc->noclipGainChange = 0.0;
+    gfc->noclipScale = -1;
 
     gfp->asm_optimizations.mmx = 1;
     gfp->asm_optimizations.amd3dnow = 1;

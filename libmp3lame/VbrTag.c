@@ -501,64 +501,6 @@ void UpdateMusicCRC(uint16_t *crc,unsigned char *buffer, int size){
 
 
 
-void ReportLameTagProgress(lame_global_flags *gfp,int nStart)
-{
-	if (nStart) {
-		if (gfp->bWriteVbrTag)
-		  MSGF( gfp->internal_flags, "Writing LAME Tag...");
-	}
-	else {
-		lame_internal_flags * gfc = gfp->internal_flags;
-
-		if (gfp->bWriteVbrTag)
-		  MSGF( gfc, "done\n");
-
-		if( gfc->findReplayGain ) {
-		  MSGF( gfc, "ReplayGain: %s%.1fdB\n", gfc->RadioGain > 0 ? "+" : "", ((FLOAT)gfc->RadioGain) / 10.0 );
-		  if( gfc->RadioGain > 0x1FE || gfc->RadioGain < -0x1FE ) {
-		    MSGF( gfc, "WARNING: ReplayGain  exceeds  -51dB to +51dB  range.  Such a result is too\n" );
-		    MSGF( gfc, "         high to be stored in the header.\n" );
-		  }
-		}
-                                                                                         
-#ifdef DECODE_ON_THE_FLY
-		if( gfp->findPeakSample ) {
-		  FLOAT GainChange = 20.0 * log10( ((FLOAT)gfc->PeakSample) / 32767.0 );
-
-		  if (GainChange > 0.0) { /* clipping occurs */
-		    MSGF( gfc, "\nWARNING: clipping occurs at the current gain. Set your decoder to decrease\n");
-		    MSGF( gfc,   "         the  gain  by  at least %.1fdB or encode again ", ceil(GainChange * 10.0) / 10.0 );  /* round up */
-                                                                            
-		    /* advice the user on the scale factor */
-		    if (gfp->scale == 1.0 || gfp->scale == 0.0) {
-		      FLOAT scale = floor( (32767.0 / ((FLOAT)gfc->PeakSample)) * 100.0 ) / 100.0;  /* round down */
-		      MSGF( gfc, "using  --scale %.2f\n", scale);
-		      MSGF( gfc, "         or less (the value under --scale is approximate).\n" );
-		    }
-		    else {                      
-                      /* the user specified his own scale factor. We could suggest 
-                       * the scale factor of (32767.0/gfc->PeakSample)*(gfp->scale)
-                       * but it's usually very inaccurate. So we'd rather advice him to 
-                       * disable scaling first and see our suggestion on the scale factor then. */
-		      MSGF( gfc, "using --scale <arg>\n");
-		      MSGF( gfc, "         (For   a   suggestion  on  the  optimum  value  of  <arg>  encode\n" );
-		      MSGF( gfc, "         with  --scale 1  first)\n" );
-		    }
-		    
-		  }
-		  else { /* no clipping */
-		    if (GainChange > -0.1)
-		      MSGF( gfc, "\nThe MP3 file does not clip and is less than 0.1dB away from full scale.\n" );
-		    else                                                                                        
-		      MSGF( gfc, "\nThe MP3 file does not clip and is at least %.1fdB away from full scale.\n", floor((-GainChange) * 10.0) / 10.0);  /* round down */
-		  }                                                                                             
-		}
-#endif
-
-	}
-
-}
-
 
 /****************************************************************************
  * Jonathan Dee 2001/08/31
@@ -597,11 +539,8 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 
 	uint8_t nLowpass		= ( ((gfp->lowpassfreq / 100.0)+.5) > 255 ? 255 : (gfp->lowpassfreq / 100.0)+.5 );
 
-#ifdef DECODE_ON_THE_FLY
-    uint32_t nPeakSignalAmplitude = abs((int)((((FLOAT8)gfc->PeakSample) / 32767.0 ) * pow(2,23) +.5));
-#else
-    uint32_t nPeakSignalAmplitude = 0;
-#endif
+        uint32_t nPeakSignalAmplitude = 0;
+
   	uint16_t nRadioReplayGain		= 0; 
 	uint16_t nAudiophileReplayGain		= 0;
 
@@ -673,7 +612,10 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 	    nRadioReplayGain |= -gfc->RadioGain; /* set gain adjustment */
 	  }
 	}
-	
+
+        /* peak sample */	
+        if(gfp->findPeakSample)
+          nPeakSignalAmplitude = abs((int)((((FLOAT8)gfc->PeakSample) / 32767.0 ) * pow(2,23) +.5));
 
 	/*nogap */
 	if (nNoGapCount != -1)

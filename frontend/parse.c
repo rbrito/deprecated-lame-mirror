@@ -94,6 +94,7 @@ int enc_delay;
 int enc_padding;
 int disable_wav_header;
 mp3data_struct mp3input_data; /* used by MP3 */
+int print_clipping_info;      /* print info whether waveform clips */
 
 int in_signed=1;
 int in_unsigned=0;
@@ -1017,6 +1018,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
     enc_delay=-1;
     mp3_delay = 0;   
     mp3_delay_set=0;
+    print_clipping_info = 0;
     disable_wav_header=0;
     id3tag_init (gfp);
 
@@ -1275,7 +1277,8 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     lame_set_ReplayGain_decode(gfp,1);
 
                 T_ELIF ("clipdetect")
-                    lame_set_findPeakSample(gfp,1);
+   		    print_clipping_info = 1;
+		    lame_set_ReplayGain_decode(gfp,1);
 #endif
 
                 T_ELIF ("athshort")
@@ -1852,7 +1855,21 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
     }
 #endif
 
-#ifdef DECODE_ON_THE_FLY
+
+    if (( input_format == sf_mp1 ||
+          input_format == sf_mp2 ||
+          input_format == sf_mp3) && 
+	  print_clipping_info ){
+
+        fprintf(stderr, "\nError: input cannot be MPEG when --clipdetect is used\n"
+	    	        "\n--clipdetect requires decoding of MPEG *output* on the fly which\n"
+			"cannot be performed simultaneously with decoding MPEG *input*.\n"
+			"\nUse a plain .wav file as input with --clipdetect.\n");
+
+	return -1;
+    }
+
+    
     if (( input_format == sf_mp1 ||
           input_format == sf_mp2 ||
           input_format == sf_mp3) && 
@@ -1866,19 +1883,6 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 	return -1;
     }
 
-    if (( input_format == sf_mp1 ||
-          input_format == sf_mp2 ||
-          input_format == sf_mp3) && 
-	  lame_get_findPeakSample( gfp ) ){
-
-        fprintf(stderr, "\nError: input cannot be MPEG when --clipdetect is used\n"
-	    	        "\n--clipdetect requires decoding of MPEG *output* on the fly which\n"
-			"cannot be performed simultaneously with decoding MPEG *input*.\n"
-			"\nUse a plain .wav file as input with --clipdetect.\n");
-
-	return -1;
-    }
-#endif
     
     if ( input_format == sf_ogg ) {
         fprintf(stderr, "sorry, vorbis support in LAME is deprecated.\n");
