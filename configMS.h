@@ -29,13 +29,13 @@
 #define STDC_HEADERS
 
 /* Define if you have the <errno.h> header file.  */
-#undef HAVE_ERRNO_H
+#define HAVE_ERRNO_H
 
 /* Define if you have the <fcntl.h> header file.  */
-#undef HAVE_FCNTL_H
+#define HAVE_FCNTL_H
 
 /* Define if you have the <limits.h> header file.  */
-#undef HAVE_LIMITS_H
+#define HAVE_LIMITS_H
 
 /* Name of package */
 #define PACKAGE "lame"
