@@ -442,7 +442,14 @@ void lame_init_params(lame_global_flags *gfp)
 
   }
 
-
+  /* VBR needs at least the output of GPSYCHO,
+   * so we have to garantee that by setting a minimum 
+   * quality level, actually level 7 does it.
+   * the -v and -V x settings switch the quality to level 2
+   * you would have to add a -f or -q 5 to reduce the quality
+   * down to level 7 or 5
+   */
+  if (gfp->VBR) gfp->quality=Min(gfp->quality,7);
   /* dont allow forced mid/side stereo for mono output */
   if (gfp->mode == MPG_MD_MONO) gfp->force_ms=0;
 
@@ -835,7 +842,7 @@ char *mp3buf, int mp3buf_size)
     }
   }
 
-  {
+  if (gfc->psymodel) {
     /* psychoacoustic model
      * psy model has a 1 granule (576) delay that we must compensate for
      * (mt 6/99).
@@ -856,7 +863,14 @@ char *mp3buf, int mp3buf_size)
 
       for ( ch = 0; ch < gfc->stereo; ch++ )
 	gfc->l3_side.gr[gr].ch[ch].tt.block_type=blocktype[ch];
+
     }
+  }else{
+    for (gr=0; gr < gfc->mode_gr ; gr++)
+      for ( ch = 0; ch < gfc->stereo; ch++ ) {
+	gfc->l3_side.gr[gr].ch[ch].tt.block_type=NORM_TYPE;
+	pe[gr][ch]=700;
+      }
   }
 
 

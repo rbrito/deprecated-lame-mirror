@@ -87,6 +87,23 @@ void L3psycho_anal( lame_global_flags *gfp,
   int	sb,sblock;
   FLOAT cwlimit;
 
+  /*  use a simplified spreading function: */
+    /*#define NEWS3  */ 
+#if 1
+    /* AAC values, results in more masking over MP3 values */
+# define TMN 18
+# define NMT 6
+#else
+    /* MP3 values */
+# define TMN 29
+# define NMT 6
+#endif
+
+
+
+
+
+
 
   if(gfc->psymodel_init==0) {
     FLOAT8	SNR_s[CBANDS];
@@ -236,16 +253,6 @@ void L3psycho_anal( lame_global_flags *gfp,
     
 
 
-    /* #define NEWS3     use a simplified spreading function */
-#if 1
-    /* AAC values, results in more masking over MP3 values */
-# define TMN 18
-# define NMT 6
-#else
-    /* MP3 values */
-# define TMN 29
-# define NMT 6
-#endif
 
 #define rpelev 2
 #define rpelev2 16

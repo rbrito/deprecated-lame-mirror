@@ -86,7 +86,7 @@ Quality related:
 Constant Bit Rate (CBR)
 -b  n          set bitrate (8,16,24,...,320)
 -h             higher quality but slower
--f             disable psycho-acoustics.  Encoding much faster but lower quality
+-f             disable noise shaping.  Encodes faster, but lower quality
 --freeformat   produce a free format bitstream.  User must also specify
                a bitrate with -b, between 8 and 320 kbs.
 
@@ -276,7 +276,9 @@ fast mode
 =======================================================================
 -f   
 
-disable psycho-acoustics.  Encoding much faster but lower quality
+disable noise shaping.  Encodes faster, but lower quality.
+Psycho acoustics are computed for bit allocation and 
+pre-echo detection.
 
 =======================================================================
 strictly enforce VBR minimum bitrate

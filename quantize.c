@@ -133,6 +133,166 @@ iteration_loop( lame_global_flags *gfp,
   ResvFrameEnd(gfp,l3_side, mean_bits );
 }
 
+#undef SAFE_VBR
+#if SAFE_VBR
+void
+VBR_iteration_loop (lame_global_flags *gfp,
+                FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
+                FLOAT8 xr[2][2][576], III_psy_ratio ratio[2][2],
+                int l3_enc[2][2][576],
+                III_scalefac_t scalefac[2][2])
+{
+  lame_internal_flags *gfc=gfp->internal_flags;
+  
+  III_psy_xmin l3_xmin;
+  gr_info  *cod_info = NULL;
+  int       targ_bits[2][2];
+  FLOAT8    xfsf[4][SBMAX_l];
+  FLOAT8    noise[4];
+  int       bit_rate,bitsPerFrame, mean_bits,totbits,max_frame_bits;
+  int       i,ch, gr, ath_over;
+  int       analog_silence_bits;
+  III_side_info_t *l3_side;
+
+  l3_side = &gfc->l3_side;
+  iteration_init(gfp,l3_side,l3_enc);
+
+  gfc->bitrate_index = gfc->VBR_max_bitrate;
+  getframebits (gfp,&bitsPerFrame, &mean_bits);
+  max_frame_bits=ResvFrameBegin (gfp,l3_side, mean_bits, bitsPerFrame);
+
+  gfc->bitrate_index = 1;
+  getframebits (gfp,&bitsPerFrame, &mean_bits);
+  analog_silence_bits = mean_bits/gfc->stereo;
+
+  /* compute a target  mean_bits based on compression ratio 
+   * which was set based on VBR_q  
+   */
+  bit_rate = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->compression_ratio);
+  bitsPerFrame = (bit_rate*gfp->framesize*1000)/gfp->out_samplerate;
+  mean_bits = (bitsPerFrame - 8*gfc->sideinfo_len) / gfc->mode_gr;
+
+
+
+  for(gr = 0; gr < gfc->mode_gr; gr++) {
+
+    for(ch = 0; ch < gfc->stereo; ch++) {
+      int add_bits=(pe[gr][ch]-750)/1.4;
+
+      cod_info = &l3_side->gr[gr].ch[ch].tt;
+      targ_bits[gr][ch]=mean_bits/gfc->stereo;
+      
+      /* short blocks us a little extra, no matter what the pe */
+      if (cod_info->block_type==SHORT_TYPE) {
+	if (add_bits<mean_bits/4) add_bits=mean_bits/4;
+      }
+      /* at most increase bits by 1.5*average */
+      if (add_bits > .75*mean_bits) add_bits=mean_bits*.75;
+      if (add_bits < 0) add_bits=0;
+      
+      targ_bits[gr][ch] += add_bits;
+    }
+  }
+  if (gfc->mode_ext==MPG_MD_MS_LR) 
+    for(gr = 0; gr < gfc->mode_gr; gr++) 
+      reduce_side(targ_bits[gr],ms_ener_ratio[gr],mean_bits,4095);
+
+
+  totbits=0;
+  for(gr = 0; gr < gfc->mode_gr; gr++) {
+    for(ch = 0; ch < gfc->stereo; ch++) {
+      if (targ_bits[gr][ch] > 4095) targ_bits[gr][ch]=4095;
+      totbits += targ_bits[gr][ch];
+    }
+  }
+
+  if (totbits > max_frame_bits) {
+    for(gr = 0; gr < gfc->mode_gr; gr++) 
+      for(ch = 0; ch < gfc->stereo; ch++) 
+	targ_bits[gr][ch] *= (max_frame_bits/totbits); 
+  }
+
+
+  totbits=0;
+  for(gr = 0; gr < gfc->mode_gr; gr++) {
+
+    if (gfc->mode_ext==MPG_MD_MS_LR) 
+      ms_convert(xr[gr], xr[gr]);
+
+    for(ch = 0; ch < gfc->stereo; ch++) {
+      cod_info = &l3_side->gr[gr].ch[ch].tt;
+
+      if (!init_outer_loop(gfp,xr[gr][ch], cod_info))
+        {
+          /* xr contains no energy 
+           * cod_info was set in init_outer_loop above
+	   */
+          memset(&scalefac[gr][ch],0,sizeof(III_scalefac_t));
+          memset(l3_enc[gr][ch],0,576*sizeof(int));
+	  noise[0]=noise[1]=noise[2]=noise[3]=0;
+        }
+      else
+	{
+	  ath_over = calc_xmin(gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin);
+	  if (0==ath_over) {
+	    /* analog silence */
+	    targ_bits[gr][ch]=analog_silence_bits;
+	  }
+	  outer_loop( gfp,xr[gr][ch], targ_bits[gr][ch], noise,
+		      &l3_xmin, l3_enc[gr][ch], 
+		      &scalefac[gr][ch], cod_info, xfsf, ch);
+	}
+      totbits += cod_info->part2_3_length;
+      if (gfp->gtkflag) 
+	set_pinfo(gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
+    }
+  }
+  /*******************************************************************
+   * find a bitrate which can handle totbits 
+   *******************************************************************/
+  for( gfc->bitrate_index =  gfc->VBR_min_bitrate ;
+       gfc->bitrate_index <= gfc->VBR_max_bitrate;
+       gfc->bitrate_index++    ) {
+    getframebits (gfp,&bitsPerFrame, &mean_bits);
+    max_frame_bits=ResvFrameBegin (gfp,l3_side, mean_bits, bitsPerFrame);
+
+    if( totbits <= max_frame_bits) break;
+  }
+  assert (gfc->bitrate_index <= gfc->VBR_max_bitrate);
+
+
+
+  /*******************************************************************
+   * update reservoir status after FINAL quantization/bitrate 
+   *******************************************************************/
+  for (gr = 0; gr < gfc->mode_gr; gr++)
+    for (ch = 0; ch < gfc->stereo; ch++) {
+      cod_info = &l3_side->gr[gr].ch[ch].tt;
+      best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
+      if (gfc->use_best_huffman==1 && cod_info->block_type != SHORT_TYPE) {
+	best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
+      }
+      if (gfp->gtkflag) {
+	gfc->pinfo->LAMEmainbits[gr][ch]=cod_info->part2_3_length;
+      }
+      ResvAdjust (gfp,cod_info, l3_side, mean_bits);
+    }
+
+  /*******************************************************************
+   * set the sign of l3_enc from the sign of xr
+   *******************************************************************/
+  for (gr = 0; gr < gfc->mode_gr; gr++)
+    for (ch = 0; ch < gfc->stereo; ch++) {
+      for ( i = 0; i < 576; i++) {
+        if (xr[gr][ch][i] < 0) l3_enc[gr][ch][i] *= -1;
+      }
+    }
+
+  ResvFrameEnd (gfp,l3_side, mean_bits);
+}
+
+#else
+
 
 
 /************************************************************************
@@ -480,7 +640,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
 
   ResvFrameEnd (gfp,l3_side, mean_bits);
 }
-
+#endif
 
 
 

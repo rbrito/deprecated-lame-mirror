@@ -68,7 +68,7 @@ void lame_short_help(lame_global_flags *gfp,char *name)  /* print syntax & exit 
   fprintf(stdout,"\n");
   fprintf(stdout,"OPTIONS :\n");
   fprintf(stdout,"    -b bitrate      set the bitrate, default 128kbps\n");
-  fprintf(stdout,"    -f              fast mode (very low quality)\n");
+  fprintf(stdout,"    -f              fast mode (lower quality)\n");
   fprintf(stdout,"    -h              higher quality, but a little slower.  Recommended.\n");
   fprintf(stdout,"    -k              keep ALL frequencies (disables all filters)\n");
   fprintf(stdout,"    -m mode         (s)tereo, (j)oint, (f)orce or (m)ono  (default j)\n");
@@ -690,7 +690,7 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	  gfp->experimentalZ = TRUE;
 	  break;
 	case 'f': 
-	  gfp->quality= 9;
+	  gfp->quality= 7;
 	  break;
 	case 'g': /* turn on gtk analysis */
 	  gfp->gtkflag = TRUE;
