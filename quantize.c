@@ -27,7 +27,6 @@
 #include "l3side.h"
 #include "quantize.h"
 #include "l3bitstream.h"
-#include "tables.h"
 #include "reservoir.h"
 #include "quantize-pvt.h"
 #ifdef HAVEGTK
@@ -39,69 +38,6 @@
 
 
 
-
-
-
-/************************************************************************/
-/*  initialization for iteration_loop */
-/************************************************************************/
-void
-iteration_init( FLOAT8 xr_org[2][2][576], 
-		III_side_info_t *l3_side, int l3_enc[2][2][576],
-		frame_params *fr_ps, III_psy_xmin *l3_xmin)
-{
-  gr_info *cod_info;
-  layer *info  = fr_ps->header;
-  int stereo = fr_ps->stereo;
-  int ch, gr, i, mode_gr;
-
-  l3_side->resvDrain = 0;
-  mode_gr = (info->version == 1) ? 2 : 1;
-
-  if ( frameNum==0 ) {
-    scalefac_band_long  = &sfBandIndex[info->sampling_frequency + (info->version * 3)].l[0];
-    scalefac_band_short = &sfBandIndex[info->sampling_frequency + (info->version * 3)].s[0];
-    l3_side->main_data_begin = 0;
-    memset((char *) &l3_xmin, 0, sizeof(l3_xmin));
-    compute_ath(info,ATH_l,ATH_s);
-  }
-
-  
-
-  convert_mdct=0;
-  convert_psy=0;
-  reduce_sidechannel=0;
-  if (info->mode_ext==MPG_MD_MS_LR) {
-    if (highq) {
-      convert_mdct = 1;
-      convert_psy = 0;
-      reduce_sidechannel=1;
-    }else{
-      convert_mdct = 1;
-      convert_psy = 1;
-      reduce_sidechannel=1;
-    }
-  }
-  if (convert_psy) memset(l3_enc,0,sizeof(int)*2*2*576);
-  
-  /* some intializations. */
-  for ( gr = 0; gr < mode_gr; gr++ ){
-    for ( ch = 0; ch < stereo; ch++ ){
-      cod_info = (gr_info *) &(l3_side->gr[gr].ch[ch]);
-      gr_deco(cod_info);
-    }
-  }
-
-
-  /* dont bother with scfsi. */
-  for ( ch = 0; ch < stereo; ch++ )
-    for ( i = 0; i < 4; i++ )
-      l3_side->scfsi[ch][i] = 0;
-
-
-  
-
-}
 
 
 
@@ -878,20 +814,12 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
     D192_3 *xr_s;
     I192_3 *ix_s;
 
-    static FLOAT8 pow43[PRECALC_SIZE];
-    static int init=0;
     int count=0;
     FLOAT8 noise;
     *over_noise=0;
     *tot_noise=0;
     *max_noise=-999;
 
-    if (init==0) {
-      init++;
-      for(i=0;i<PRECALC_SIZE;i++)
-        pow43[i] = pow((FLOAT8)i, 4.0/3.0);
-    }
-      
     xr_s = (D192_3 *) xr;
     ix_s = (I192_3 *) ix;
 

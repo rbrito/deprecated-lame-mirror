@@ -10,8 +10,11 @@ extern int pretab[21];
 extern int *scalefac_band_long; 
 extern int *scalefac_band_short;
 
+
 extern FLOAT8 ATH_l[SBPSY_l];
 extern FLOAT8 ATH_s[SBPSY_l];
+extern FLOAT8 pow43[PRECALC_SIZE];
+extern FLOAT8 adj43[PRECALC_SIZE];
 
 
 FLOAT8 ATHformula(FLOAT8 f);
@@ -58,10 +61,10 @@ void outer_loop_dual( FLOAT8 xr[2][2][576],     /*vector of the magnitudees of t
 
 
 
-int part2_length( III_scalefac_t *scalefac,
-		  int version, gr_info *cod_info);
 
-int quantanf_init( FLOAT8 xr[576] );
+void iteration_init( FLOAT8 xr_org[2][2][576], 
+		III_side_info_t *l3_side, int l3_enc[2][2][576],
+		frame_params *fr_ps, III_psy_xmin *l3_xmin);
 
 int inner_loop( FLOAT8 xr[2][2][576], FLOAT8 xrpow[576],
                 int l3_enc[2][2][576],
@@ -75,27 +78,8 @@ void calc_xmin( FLOAT8 xr[2][2][576],
                III_psy_xmin *l3_xmin,
                int gr,
                int ch );
-FLOAT8 xr_max( FLOAT8 xr[576],
-               unsigned int begin,
-               unsigned int end );
-
-void calc_scfsi( FLOAT8  xr[576],
-                 III_side_info_t *l3_side,
-                 III_psy_xmin  *l3_xmin,
-                 int ch,
-                 int gr );
-
-void gr_deco( gr_info *cod_info );
 
 
-int count_bit( int ix[576], unsigned int start, unsigned int end, unsigned int table);
-int bigv_bitcount( int ix[576], gr_info *cod_info );
-int choose_table( int max);
-void bigv_tab_select( int ix[576], gr_info *cod_info );
-void subdivide( gr_info *cod_info );
-int count1_bitcount( int ix[576], gr_info *cod_info );
-void  calc_runlen( int ix[576],
-                   gr_info *cod_info );
 int scale_bitcount( III_scalefac_t *scalefac,
                     gr_info *cod_info,
                     int gr,
@@ -140,16 +124,9 @@ int amp_scalefac_bands( FLOAT8 xr[576], FLOAT8 xrpow[576],
                         int ch,
 			int iteration,
                         FLOAT8 distort[4][SBPSY_l]);
-int quantize( FLOAT8 xr[576],
-               int  ix[576],
-               gr_info *cod_info );
 void quantize_xrpow( FLOAT8 xr[576],
                int  ix[576],
                gr_info *cod_info );
-int ix_max( int ix[576],
-            unsigned int begin,
-            unsigned int end );
-
 
 int
 new_choose_table( int ix[576],
@@ -157,8 +134,6 @@ new_choose_table( int ix[576],
 		  unsigned int end, int * s );
 
 /* New SS 20-12-96 */
-int bin_search_StepSize(int desired_rate, FLOAT8 start, int bot, int ix[576],
-           FLOAT8 xrs[576], FLOAT8 xrspow[576], gr_info * cod_info);
 int bin_search_StepSize2(int desired_rate, FLOAT8 start, int bot, int ix[576],
            FLOAT8 xrs[576], FLOAT8 xrspow[576], gr_info * cod_info);
 int count_bits(int  *ix,gr_info *cod_info);

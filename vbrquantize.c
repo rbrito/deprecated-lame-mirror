@@ -17,16 +17,12 @@
  * along with this program; see the file COPYING.  If not, write to
  * the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-
-
-
 #include <assert.h>
 #include "globalflags.h"
 #include "util.h"
 #include "l3side.h"
 #include "quantize.h"
 #include "l3bitstream.h"
-#include "tables.h"
 #include "reservoir.h"
 #include "quantize-pvt.h"
 #ifdef HAVEGTK
@@ -35,77 +31,42 @@
 
 
 
-
-
+#define DEBUG
 FLOAT8 calc_sfb_ave_noise(FLOAT8 *xr, FLOAT8 *xr34, int stride, int bw, FLOAT8 sfpow)
 {
   int j;
   FLOAT8 xfsf=0;
   FLOAT8 sfpow34 = pow(sfpow,3.0/4.0);
-#define PRECALC_SIZE 8206 /* 8191+15. should never be outside this. see count_bits() */
-  static FLOAT8 pow43[PRECALC_SIZE];
   static int init=0;
-
-  if (init==0) {
-    init++;
-    for(j=0;j<PRECALC_SIZE;j++)
-      pow43[j] = pow((FLOAT8)j, 4.0/3.0);
-  }
 
   for ( j=0; j < stride*bw ; j += stride) {
     int ix;
-    FLOAT8 temp;
+    FLOAT8 temp,temp2;
     if (xr34[j] >= sfpow34*(PRECALC_SIZE  - .4054)) {
       ix=(int)( xr34[j]/sfpow34  + 0.4054);
       assert(ix >= PRECALC_SIZE);
       return -1.0;
     }else{ 
-      ix=(int)( xr34[j]/sfpow34  + 0.4054);
+
     }
-    assert(ix < PRECALC_SIZE);
+    /*    ix=(int)( xr34[j]/sfpow34  + 0.4054);*/
+    ix=floor( xr34[j]/sfpow34);
+    if (ix >= PRECALC_SIZE) return -1.0;
+
     temp = fabs(xr[j])- pow43[ix]*sfpow;
-    //    xfsf += temp * temp;
+    if (ix < PRECALC_SIZE-1) {
+      temp2 = fabs(xr[j])- pow43[ix+1]*sfpow;
+      if (temp2<temp) temp=temp2;
+    }
+#ifdef MAXQUANTERROR
     temp *= temp;
-    xfsf = Max(xfsf,temp);
+    xfsf = bw*Max(xfsf,temp);
+#else
+    xfsf += temp * temp;
+#endif
   }
-  return xfsf;
+  return xfsf/bw;
 }
-FLOAT8 calc_sfb_max_noise(FLOAT8 *xr, FLOAT8 *xr34, int stride, int bw, FLOAT8 sfpow)
-{
-  int j;
-  FLOAT8 xfsf=0;
-  FLOAT8 sfpow34 = pow(sfpow,3.0/4.0);
-#define PRECALC_SIZE 8206 /* 8191+15. should never be outside this. see count_bits() */
-  static FLOAT8 pow43[PRECALC_SIZE];
-  static int init=0;
-
-  if (init==0) {
-    init++;
-    for(j=0;j<PRECALC_SIZE;j++)
-      pow43[j] = pow((FLOAT8)j, 4.0/3.0);
-  }
-
-  for ( j=0; j < stride*bw ; j += stride) {
-    int ix;
-    FLOAT8 temp;
-    if (xr34[j] >= sfpow34*(PRECALC_SIZE  - .4054)) {
-      ix=(int)( xr34[j]/sfpow34  + 0.4054);
-      assert(ix >= PRECALC_SIZE);
-      return -1.0;
-    }else{ 
-      ix=(int)( xr34[j]/sfpow34  + 0.4054);
-    }
-    assert(ix < PRECALC_SIZE);
-    temp = fabs(xr[j])- pow43[ix]*sfpow;
-    //    xfsf += temp * temp;
-    xfsf = Max(xfsf,temp);
-  }
-  xfsf = xfsf / bw;
-  return xfsf;
-}
-
-
-
 
 
 
@@ -117,24 +78,24 @@ FLOAT8 find_scalefac(FLOAT8 *xr,FLOAT8 *xr34,int stride,int sfb,FLOAT8 l3_xmin,i
   /* search will range from -52.25 -> 11.25  */
   /* 31.75 */
   sf = -20.5;
-  delsf = 16;
+  delsf = 32;
 
   sf_ok=1000; 
-  for (i=0; i<6; i++) {  /* find  sf +/- 1 */
-    //        sf=-17  + .25*i;
+  for (i=0; i<7; i++) {
+    delsf /= 2;
     sfpow = pow(2.0,sf);
-    xfsf = calc_sfb_max_noise(xr,xr34,stride,bw,sfpow);
+    xfsf = calc_sfb_ave_noise(xr,xr34,stride,bw,sfpow);
 
     if (xfsf < 0) {
       /* scalefactors too small */
       sf += delsf; 
     }else{
-
+#ifdef DEBUG
       if (stride==1 && sfb==2 && frameNum==50) {
 	printf("sfb=%i q=%f  xfsf=%f   masking=%f  sf_ok=%f \n",sfb,sf,
 	       10*log10(1e-20+xfsf),10*log10(1e-20+l3_xmin),sf_ok);
       }
-
+#endif
       if (sf_ok==1000) sf_ok=sf;  
       if (xfsf > l3_xmin)  {
 	/* distortion.  try a smaller scalefactor */
@@ -144,30 +105,38 @@ FLOAT8 find_scalefac(FLOAT8 *xr,FLOAT8 *xr34,int stride,int sfb,FLOAT8 l3_xmin,i
 	sf += delsf;
       }
     }
-    delsf /= 2;
   } 
+  /* sf_ok accurate to within +/- 2*final_value_of_delsf */
   assert(sf_ok!=1000);
 
   /* NOTE: noise is not a monotone function of the sf, even though
    * the number of bits used is!  do a brute force search in the 
-   * neighborhood of sf_ok: */
-  sf = sf_ok + 1.5;
-  do { 
-    sfpow = pow(2.0,sf);
-    xfsf = calc_sfb_max_noise(xr,xr34,stride,bw,sfpow);
-    if (xfsf > 0) {
+   * neighborhood of sf_ok: 
+   * 
+   *  sf = sf_ok + 1.75     works  1% of the time 
+   *  sf = sf_ok + 1.50     works  1% of the time 
+   *  sf = sf_ok + 1.25     works  2% of the time 
+   *  sf = sf_ok + 1.00     works  3% of the time 
+   *  sf = sf_ok + 0.75     works  9% of the time 
+   *  sf = sf_ok + 0.50     0 %  (because it was tried above)
+   *  sf = sf_ok + 0.25     works 39% of the time 
+   *  sf = sf_ok + 0.00     works the rest of the time
+   */
 
-      if (stride==1 && sfb==2 && frameNum==50) {
-	printf("bruteforce loop: sfb=%i q=%f  xfsf=%f   masking=%f   \n",sfb,sf,
-	       10*log10(1e-20+xfsf),10*log10(1e-20+l3_xmin));
-      }
-      
+  sf = sf_ok + 0.75;
+
+  while (sf>(sf_ok+.01)) { 
+    /* sf = sf_ok + 2*delsf was tried above, skip it:  */
+    if (fabs(sf-(sf_ok+2*delsf))  < .01) sf -=.25;
+
+    sfpow = pow(2.0,sf);
+    xfsf = calc_sfb_ave_noise(xr,xr34,stride,bw,sfpow);
+    if (xfsf > 0) {
       if (xfsf <= l3_xmin) return sf;
-      sf -= .25;
     }
-  } while (xfsf>0);
-  /* we hit a scalefactor that is too small, use last value: */
-  return sf+.25;
+    sf -= .25;
+  }
+  return sf_ok;
 }
 
 
@@ -187,35 +156,16 @@ VBR_iteration_loop_new (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   III_psy_xmin l3_xmin;
   layer    *info;
   FLOAT8    xr[2][2][576];
-  //  FLOAT8    masking_lower_db;
+  FLOAT8    masking_lower_db;
   FLOAT8    ifqstep,ol_sf,vbr_sf;
   int       stereo = fr_ps->stereo;
   int       start,end,bw,sfb, i,ch, gr, mode_gr, over;
 
+  /*
+  iteration_init(xr_org,l3_side,l3_enc,fr_ps,&l3_xmin);
+  */
   info = fr_ps->header;
   mode_gr = (info->version == 1) ? 2 : 1;
-
-  convert_mdct=0;
-  reduce_sidechannel=0;
-  if (info->mode_ext==MPG_MD_MS_LR) {
-      convert_mdct = 1;
-      reduce_sidechannel=1;
-  }
-  /* dont bother with scfsi. */
-  for ( ch = 0; ch < stereo; ch++ )
-    for ( i = 0; i < 4; i++ )
-      l3_side->scfsi[ch][i] = 0;
-
-#if 0
-  l3_side->resvDrain = 0;
-  if ( frameNum==0 ) {
-    scalefac_band_long  = &sfBandIndex[info->sampling_frequency + (info->version * 3)].l[0];
-    scalefac_band_short = &sfBandIndex[info->sampling_frequency + (info->version * 3)].s[0];
-    l3_side->main_data_begin = 0;
-    memset((char *) &l3_xmin, 0, sizeof(l3_xmin));
-    compute_ath(info,ATH_l,ATH_s);
-  }
-
 
 
   /* Adjust allowed masking based on quality setting */
@@ -223,7 +173,6 @@ VBR_iteration_loop_new (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   masking_lower_db = -10 + 2*VBR_q;
   /* adjust by -6(min)..0(max) depending on bitrate */
   masking_lower = pow(10.0,masking_lower_db/10);
-#endif
   masking_lower = 1;
 
 
@@ -269,9 +218,6 @@ VBR_iteration_loop_new (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 				    3,bw,pow(2.0,ol_sf));
 	      if (xfsf > masking_lower*l3_xmin.s[gr][ch][sfb][i]) {
 		over++;
-		//		printf("xfsf, l3_xmin  %e %e \n",xfsf,l3_xmin.s[gr][ch][sfb][i]);
-		//	      printf("short %i %i %i sfb=%i  %f %f  \n",frameNum,gr,ch,sfb,
-		//		     ol_sf,vbr_sf);
 	      }
 	    }
 	  }
@@ -294,9 +240,6 @@ VBR_iteration_loop_new (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
           xfsf=calc_sfb_ave_noise(&xr[gr][ch][start],&xr34[start],1,bw,pow(2.0,ol_sf));
 	  if (xfsf > masking_lower*l3_xmin.l[gr][ch][sfb]) {
 	    over++;
-	    //	    printf("xfsf, l3_xmin  %e %e \n",xfsf,l3_xmin.l[gr][ch][sfb]);
-	    //	    printf("long %i %i %i sfb=%i old_sfb=%f vbr_sfb=%f \n",
-	    //   frameNum,gr,ch,sfb,ol_sf,vbr_sf);
 	  }
 	  }
 

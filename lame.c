@@ -1279,6 +1279,7 @@ FFT's                      <---------1024---------->
 			  &scalefac, &fr_ps);
   */
 
+
 #ifdef BRHIST
   brhist_temp[info->bitrate_index]++;
 #endif

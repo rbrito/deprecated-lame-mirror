@@ -275,12 +275,12 @@ test19: $(PGM)
 test19h: $(PGM)
 	./lame  -h  ../test/castanets.wav
 	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref19h.mp3 | head
-test18: $(PGM)
+test20: $(PGM)
 	./lame  ../test/castanets.wav
-	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref18.mp3 | head
-test18h: $(PGM)
+	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref20.mp3 | head
+test20h: $(PGM)
 	./lame  -h  ../test/castanets.wav
-	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref18h.mp3 | head
+	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref20h.mp3 | head
 testg: $(PGM)
 	./lame -h -g ../test/castanets.wav
 

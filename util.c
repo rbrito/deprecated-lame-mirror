@@ -286,7 +286,7 @@ Bit_stream_struc *bs;   /* bit stream structure */
 
    tmpbuf=(unsigned char *)malloc(bs->buf_size-minimum);
    if (tmpbuf==NULL) {
-     perror("error in malloc()\n");
+     perror("write_buffer(): error in malloc()\n");
      exit(1);
    }
    for (i=bs->buf_size-1,j=0;i>=minimum;i--,j++) {

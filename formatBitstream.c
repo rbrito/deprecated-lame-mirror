@@ -446,7 +446,7 @@ BF_PartHolder *BF_newPartHolder( int max_elements )
     newPH->part          = (BF_BitstreamPart*) calloc( 1, sizeof(BF_BitstreamPart) );
     assert( newPH->part );
     newPH->part->element = (BF_BitstreamElement*) calloc( max_elements, sizeof(BF_BitstreamElement) );
-    assert( newPH->part->element );
+    if (max_elements>0) assert( newPH->part->element );
     newPH->part->nrEntries = 0;
     return newPH;
 }

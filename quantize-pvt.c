@@ -1,6 +1,7 @@
 #include <assert.h>
 #include "globalflags.h"
 #include "util.h"
+#include "tables.h"
 #include "reservoir.h"
 #include "quantize-pvt.h"
 
@@ -94,6 +95,90 @@ int *scalefac_band_short;
 
 FLOAT8 ATH_l[SBPSY_l];
 FLOAT8 ATH_s[SBPSY_l];
+FLOAT8 pow43[PRECALC_SIZE];
+FLOAT8 adj43[PRECALC_SIZE];
+
+
+
+/************************************************************************/
+/*  initialization for iteration_loop */
+/************************************************************************/
+void
+iteration_init( FLOAT8 xr_org[2][2][576], 
+		III_side_info_t *l3_side, int l3_enc[2][2][576],
+		frame_params *fr_ps, III_psy_xmin *l3_xmin)
+{
+  gr_info *cod_info;
+  layer *info  = fr_ps->header;
+  int stereo = fr_ps->stereo;
+  int ch, gr, i, mode_gr;
+
+  l3_side->resvDrain = 0;
+  mode_gr = (info->version == 1) ? 2 : 1;
+
+  if ( frameNum==0 ) {
+    scalefac_band_long  = &sfBandIndex[info->sampling_frequency + (info->version * 3)].l[0];
+    scalefac_band_short = &sfBandIndex[info->sampling_frequency + (info->version * 3)].s[0];
+    l3_side->main_data_begin = 0;
+    memset((char *) &l3_xmin, 0, sizeof(l3_xmin));
+    compute_ath(info,ATH_l,ATH_s);
+
+    for(i=0;i<PRECALC_SIZE;i++)
+        pow43[i] = pow((FLOAT8)i, 4.0/3.0);
+
+    for (i = 0; i < PRECALC_SIZE - 1; i++)
+	adj43[i] = (i + 1) - pow(0.5 * (pow43[i] + pow43[i + 1]), 0.75);
+    adj43[i] = 0.5;
+
+  }
+
+  
+
+  convert_mdct=0;
+  convert_psy=0;
+  reduce_sidechannel=0;
+  if (info->mode_ext==MPG_MD_MS_LR) {
+    if (highq) {
+      convert_mdct = 1;
+      convert_psy = 0;
+      reduce_sidechannel=1;
+    }else{
+      convert_mdct = 1;
+      convert_psy = 1;
+      reduce_sidechannel=1;
+    }
+  }
+  if (convert_psy) memset(l3_enc,0,sizeof(int)*2*2*576);
+  
+  /* some intializations. */
+  for ( gr = 0; gr < mode_gr; gr++ ){
+    for ( ch = 0; ch < stereo; ch++ ){
+      cod_info = (gr_info *) &(l3_side->gr[gr].ch[ch]);
+
+      if ( cod_info->window_switching_flag != 0 && cod_info->block_type == SHORT_TYPE )
+        {
+	  cod_info->sfb_lmax = 0; /* No sb*/
+	  cod_info->sfb_smax = 0;
+        }
+      else
+	{
+	  /* MPEG 1 doesnt use last scalefactor band */
+	  cod_info->sfb_lmax = SBPSY_l;
+	  cod_info->sfb_smax = SBPSY_s;    /* No sb */
+	}
+
+    }
+  }
+
+
+  /* dont bother with scfsi. */
+  for ( ch = 0; ch < stereo; ch++ )
+    for ( i = 0; i < 4; i++ )
+      l3_side->scfsi[ch][i] = 0;
+
+}
+
+
 
 
 
@@ -606,6 +691,47 @@ int loop_break( III_scalefac_t *scalefac, gr_info *cod_info,
 }
 
 
+
+
+#define QUANTFAC_OLD  0.4054
+#define QUANTFAC  adj43[(int)x]
+void quantize_xrpow( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
+{
+  /* quantize on xr^(3/4) instead of xr */
+  register int j;
+  FLOAT8 x,quantizerStepSize;
+  FLOAT8 istep_l,istep0,istep1,istep2;
+
+  quantizerStepSize = cod_info->quantizerStepSize;
+  
+  istep_l = pow ( 2.0, quantizerStepSize * -0.1875 );
+  
+  if ((cod_info->block_type==SHORT_TYPE))
+    {
+      istep0 = istep_l * pow(2.0,1.5* (FLOAT8) cod_info->subblock_gain[0]);
+      istep1 = istep_l * pow(2.0,1.5* (FLOAT8) cod_info->subblock_gain[1]);
+      istep2 = istep_l * pow(2.0,1.5* (FLOAT8) cod_info->subblock_gain[2]);
+      for (j=192;j>0;j--) 
+        {
+	  x = istep0 * *xr++;
+          *(ix++) = (int)( x  + QUANTFAC);
+	  x = istep1 * *xr++;
+          *(ix++) = (int)( x  + QUANTFAC);
+	  x = istep2 * *xr++;
+          *(ix++) = (int)( x  + QUANTFAC);
+        }
+    }
+  else
+    {
+      for (j=576;j>0;j--) {
+	x = istep_l * *xr++;
+	*(ix++) = (int)( x  +  QUANTFAC);
+      }
+    }
+}
+
+
+
 #ifdef _MSC_VER
 #define MSVC_XRPOW_ASM
 #ifdef MSVC_XRPOW_ASM
@@ -620,8 +746,7 @@ int loop_break( III_scalefac_t *scalefac, gr_info *cod_info,
   } while (0)
 # endif
 #endif
-
-void quantize_xrpow( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
+void quantize_xrpow_orig( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
 {
   /* quantize on xr^(3/4) instead of xr */
   register int j;
@@ -697,47 +822,6 @@ void quantize_xrpow( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
 
 
 
-
-
-/*
-  Seymour's comment:  Jan 8 1995
-  When mixed_block_flag is set, the low subbands 0-1 undergo the long
-  window transform and are each split into 18 frequency lines, while
-  the remaining 30 subbands undergo the short window transform and are
-  each split into 6 frequency lines. A problem now arises, as neither
-  the short or long scale factor bands apply to this mixed spectrum.
-  The standard resolves this situation by using the first 8 long scale
-  factor bands for the low spectrum and the short scale factor bands
-  in the range of 3 to 11 (inclusive) for the remaining frequency lines.
-  These scale factor bands do not match exactly to the 0-1 subbands
-  for all sampling frequencies (32,44.1 and 48 kHz); however they
-  were designed so that there would not be a frequency gap or overlap
-  at the switch over point. (Note multiply short frequency lines by 3
-  to account for wider frequency line.) 
-  */
-
-/* mt 4/99:  ISO code cannot produces mixed blocks,
- * Fhg Code also never seems to use them, so no need to add them
- * to this code 
- */
-/*************************************************************************/
-/*            gr_deco                                                    */
-/*************************************************************************/
-
-void gr_deco( gr_info *cod_info )
-{
-    if ( cod_info->window_switching_flag != 0 && cod_info->block_type == SHORT_TYPE )
-        {
-            cod_info->sfb_lmax = 0; /* No sb*/
-            cod_info->sfb_smax = 0;
-        }
-    else
-    {
-      /* MPEG 1 doesnt use last scalefactor band? */
-        cod_info->sfb_lmax = SBPSY_l;
-        cod_info->sfb_smax = SBPSY_s;    /* No sb */
-    }
-}
 
 
 

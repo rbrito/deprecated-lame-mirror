@@ -5,8 +5,12 @@
  * $Id$
  *
  * $Log$
- * Revision 1.1  1999/11/24 08:43:09  markt
- * Initial revision
+ * Revision 1.2  1999/11/27 23:39:25  markt
+ * More accurate quantization from Segher Boessenkool
+ *
+ * Revision 1.1.1.1  1999/11/24 08:43:09  markt
+ * initial checkin of LAME
+ * Starting with LAME 3.57beta with some modifications
  *
  * Revision 1.1  1996/02/14 04:04:23  rowlands
  * Initial revision
@@ -557,7 +561,6 @@ static void
 Huffmancodebits( BF_PartHolder **pph, int *ix, gr_info *gi )
 {
     int L3_huffman_coder_count1( BF_PartHolder **pph, struct huffcodetab *h, int v, int w, int x, int y );
-    int bigv_bitcount( int ix[576], gr_info *cod_info );
 
     int region1Start;
     int region2Start;
