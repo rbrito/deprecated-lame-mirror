@@ -907,13 +907,13 @@ balance_noise (
         return 1; /* amplified some bands not exceeding limits */
     
     /*  some scalefactors are too large. */
-    if (gfc->use_scalefac_scale && !cod_info->scalefac_scale) {
-	/*  lets try setting scalefac_scale=1 */
-	inc_scalefac_scale (cod_info, xrpow);
-    } else if (gfc->use_subblock_gain && cod_info->block_type == SHORT_TYPE) {
+    if (gfc->use_subblock_gain && cod_info->block_type == SHORT_TYPE) {
 	/* try to use subblcok gain */
 	if (inc_subblock_gain (gfc, cod_info, xrpow) || loop_break (cod_info))
 	    return 0;
+    } else if (gfc->use_scalefac_scale && !cod_info->scalefac_scale) {
+	/*  lets try setting scalefac_scale=1 */
+	inc_scalefac_scale (cod_info, xrpow);
     } else
 	return 0;
 
