@@ -158,6 +158,7 @@ typedef struct  {
   int samplerate_index;
   int mode_ext;
 
+
   /* lowpass and highpass filter control */
   float lowpass1,lowpass2;        /* normalized frequency bounds of passband */
   float highpass1,highpass2;      /* normalized frequency bounds of passband */

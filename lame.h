@@ -23,7 +23,8 @@
 #include "id3tag.h"
 
 /* maximum size of mp3buffer needed if you encode at most 1152 samples for
-   each call to lame_encode_buffer.  see lame_encode_buffer() below  */
+   each call to lame_encode_buffer.  see lame_encode_buffer() below  
+   (LAME_MAXMP3BUFFER is now obsolete)  */
 #define LAME_MAXMP3BUFFER 16384
 
 
@@ -37,7 +38,7 @@ typedef enum vbr_mode_e {
   vbr_mt=1,
   vbr_rh=2,
   vbr_abr=3,
-  vbr_default=vbr_rh  /* change this to change the default VBR mode of LAME */ 
+  vbr_default=vbr_mt  /* change this to change the default VBR mode of LAME */ 
 } vbr_mode;
 
 
