@@ -39,38 +39,38 @@ typedef struct {
     unsigned char len;
 } codetab_t;
 
-static const codetab_t ht1[] = {
+static const codetab_t ht1[] = {    {0, 2},
     {1, 1}, {1, 4},
     {1, 3}, {0, 5},
 };
 
-static const codetab_t ht2[] = {
+static const codetab_t ht2[] = {    {0, 3},
     {1, 1}, {2, 4}, {1, 7},
     {3, 4}, {1, 5}, {1, 7},
     {3, 6}, {2, 7}, {0, 8},
 };
 
-static const codetab_t ht3[] = { /* can use when max=1 */
+static const codetab_t ht3[] = {    {0, 3},
     {3, 2}, {2, 3}, {1, 7},
     {1, 4}, {1, 4}, {1, 7},
     {3, 6}, {2, 7}, {0, 8},
 };
 
-static const codetab_t ht5[] = {
+static const codetab_t ht5[] = {    {0, 4},
     {1,  1}, {2,  4}, {6,  7}, {5,  8},
     {3,  4}, {1,  5}, {4,  8}, {4,  9},
     {7,  7}, {5,  8}, {7,  9}, {1, 10},
     {6,  8}, {1,  8}, {1,  9}, {0, 10},
 };
 
-static const codetab_t ht6[] = {
+static const codetab_t ht6[] = {    {0, 4},
     {7, 3}, {3, 4}, {5, 6}, {1, 8},
     {6, 4}, {2, 4}, {3, 6}, {2, 7},
     {5, 5}, {4, 6}, {4, 7}, {1, 8},
     {3, 7}, {3, 7}, {2, 8}, {0, 9},
 };
 
-static const codetab_t ht7[] = { /* can use when max=3 */
+static const codetab_t ht7[] = {    {0, 6},
     { 1, 1}, { 2, 4}, {10, 7}, {19, 9}, {16, 9}, {10,10},
     { 3, 4}, { 3, 6}, { 7, 8}, {10, 9}, { 5, 9}, { 3,10},
     {11, 7}, { 4, 7}, {13, 9}, {17,10}, { 8,10}, { 4,11},
@@ -79,7 +79,7 @@ static const codetab_t ht7[] = { /* can use when max=3 */
     { 6, 9}, { 4,10}, { 5,11}, { 3,12}, { 2,12}, { 0,12},
 };
 
-static const codetab_t ht8[] = {
+static const codetab_t ht8[] = {    {0, 6},
     { 3, 2}, { 4, 4}, { 6, 7}, {18, 9}, {12, 9}, { 5,10},
     { 5, 4}, { 1, 4}, { 2, 6}, {16,10}, { 9,10}, { 3,10},
     { 7, 7}, { 3, 6}, { 5, 8}, {14,10}, { 7,10}, { 3,11},
@@ -88,7 +88,7 @@ static const codetab_t ht8[] = {
     {12,10}, { 4,10}, { 4,11}, { 1,11}, { 1,13}, { 0,13}
 };
 
-static const codetab_t ht9[]   = { /* can use when max=3 */
+static const codetab_t ht9[] = {    {0, 6},
     { 7, 3}, { 5, 4}, { 9, 6}, {14, 7}, {15, 9}, { 7,10},
     { 6, 4}, { 4, 5}, { 5, 6}, { 5, 7}, { 6, 8}, { 7,10},
     { 7, 5}, { 6, 6}, { 8, 7}, { 8, 8}, { 8, 9}, { 5,10},
@@ -97,7 +97,7 @@ static const codetab_t ht9[]   = { /* can use when max=3 */
     {14, 9}, { 4, 9}, { 6,10}, { 2,10}, { 6,11}, { 0,11},
 };
 
-static const codetab_t ht10[] = {
+static const codetab_t ht10[] = {    {0, 8},
     { 1, 1}, { 2, 4}, {10, 7}, {23, 9}, {35,10}, {30,10}, {12,10}, {17,11},
     { 3, 4}, { 3, 6}, { 8, 8}, {12, 9}, {18,10}, {21,11}, {12,10}, { 7,10},
     {11, 7}, { 9, 8}, {15, 9}, {21,10}, {32,11}, {40,12}, {19,11}, { 6,11},
@@ -108,7 +108,7 @@ static const codetab_t ht10[] = {
     { 9,10}, { 8,10}, { 7,11}, { 8,12}, { 4,12}, { 4,13}, { 2,13}, { 0,13},
 };
 
-static const codetab_t ht11[] = { /* can use when max=4,5 */
+static const codetab_t ht11[] = {    {0, 8},
     { 3, 2}, { 4, 4}, {10, 6}, {24, 8}, {34, 9}, {33,10}, {21, 9}, {15,10},
     { 5, 4}, { 3, 5}, { 4, 6}, {10, 8}, {32,10}, {17,10}, {11, 9}, {10,10},
     {11, 6}, { 7, 7}, {13, 8}, {18, 9}, {30,10}, {31,11}, {20,10}, { 5,10},
@@ -119,7 +119,7 @@ static const codetab_t ht11[] = { /* can use when max=4,5 */
     {11, 9}, { 4, 9}, { 6,10}, { 6,11}, { 6,12}, { 3,12}, { 2,12}, { 0,12},
 };
 
-static const codetab_t ht12[] = { /* can use when max=4/5, but really rare. */
+static const codetab_t ht12[] = {    {0, 8},
     { 9, 4}, { 6, 4}, {16, 6}, {33, 8}, {41, 9}, {39,10}, {38,10}, {26,10},
     { 7, 4}, { 5, 5}, { 6, 6}, { 9, 7}, {23, 9}, {16, 9}, {26,10}, {11,10},
     {17, 6}, { 7, 6}, {11, 7}, {14, 8}, {21, 9}, {30,10}, {10, 9}, { 7,10},
@@ -130,7 +130,7 @@ static const codetab_t ht12[] = { /* can use when max=4/5, but really rare. */
     {27,10}, {12,10}, { 8,10}, {12,11}, { 6,11}, { 3,11}, { 1,11}, { 0,12},
 };
 
-static const codetab_t ht13[] = {
+static const codetab_t ht13[] = {    {0, 16},
     { 1, 1}, { 5, 5}, {14, 7}, {21, 8}, { 34, 9}, {51,10}, { 46,10}, {71,11},
     {42,10}, {52,11}, {68,12}, {52,12}, { 67,13}, {44,13}, { 43,14}, {19,14},
     { 3, 4}, { 4, 6}, {12, 8}, {19, 9}, { 31,10}, {26,10}, { 44,11}, {33,11},
@@ -165,7 +165,7 @@ static const codetab_t ht13[] = {
     {17,17}, {12,17}, {16,18}, { 8,18}, {  1,21}, { 1,20}, {  0,21}, { 1,18},
 };
 
-static const codetab_t ht15[] = {
+static const codetab_t ht15[] = {    {0, 16},
     {  7, 3},{ 12, 5},{ 18, 6},{ 53, 8},{ 47, 8},{76, 9},{124,10},{108,10},
     { 89,10},{123,11},{108,11},{119,12},{107,12},{81,12},{122,13},{ 63,14},
     { 13, 5},{  5, 5},{ 16, 7},{ 27, 8},{ 46, 9},{36, 9},{ 61,10},{ 51,10},
@@ -198,15 +198,6 @@ static const codetab_t ht15[] = {
     { 37,14},{ 24,14},{ 17,14},{ 12,14},{ 15,15},{10,15},{  2,14},{  1,15},
     { 71,13},{ 37,13},{ 34,13},{ 30,13},{ 28,13},{20,13},{ 17,13},{ 26,14},
     { 21,14},{ 16,14},{ 10,14},{  6,14},{  8,15},{ 6,15},{  2,15},{  0,15},
-};
-
-struct huffcodetab {
-    int xlen;			/* max. x-index+		*/
-    const codetab_t * table;	/* pointer to array[xlen][ylen]	*/
-} static const ht[] = {
-    { 2, ht1 }, { 3, ht2 }, { 3, ht3 }, { 0, NULL}, { 4, ht5 },
-    { 4, ht6 }, { 6, ht7 }, { 6, ht8 }, { 6, ht9 }, { 8, ht10},
-    { 8, ht11}, { 8, ht12}, {16, ht13}, { 0, NULL}, {16, ht15}
 };
 
 /***********************************************************************
@@ -356,16 +347,20 @@ Huf_bigvalue(bit_stream_t *bs, int tablesel, int start, int end, gr_info *gi)
     if (tablesel >= 16)
 	Huffmancode_esc(bs, tablesel-16, start, end, gi);
     else {
-	const codetab_t *t = ht[tablesel-1].table;
-	int xlen = ht[tablesel-1].xlen;
+	static const codetab_t * htTable[] = {
+	    ht1, ht2, ht3, NULL, ht5, ht6, ht7, ht8, ht9, ht10,
+	    ht11,ht12,ht13, NULL, ht15
+	};
+	const codetab_t *t = htTable[tablesel-1];
+	int xlen = t[0].len;
 	do {
 	    int code, clen;
 	    int x1 = gi->l3_enc[start], x2 = gi->l3_enc[start+1];
 	    assert(x1 < xlen && x2 < xlen);
 
 	    code = x1*xlen + x2;
-	    clen = t[code].len;
-	    code = t[code].code;
+	    clen = t[code+1].len;
+	    code = t[code+1].code;
 
 	    if (x1) code = code*2 + (gi->xr[start  ] < 0);
 	    if (x2) code = code*2 + (gi->xr[start+1] < 0);
