@@ -54,6 +54,8 @@ typedef struct  {
   /* general control params */
   int gtkflag;                /* run frame analyzer?       */
   int bWriteVbrTag;           /* add Xing VBR tag?         */
+  /* Note: outPath must be set if you want Xing VBR or id3 tags written */
+
   int quality;                /* quality setting 0=best,  9=worst  */
   int silent;                 /* disable some status output */
   int mode;                       /* 0,1,2,3 stereo,jstereo,dual channel,mono */
@@ -93,8 +95,6 @@ typedef struct  {
   int swapbytes;              /* force byte swapping   default=0*/
   char *inPath;               /* name of input file */
   char *outPath;              /* name of output file. */
-  /* Note: outPath must be set if you want Xing VBR or id3 tags
-   * written */
 
 
   /* psycho acoustics and other aguments which you should not change 

@@ -9,7 +9,7 @@ UNAME = $(shell uname)
 ARCH = $(shell uname -m)
 
 
-# defaults:
+# generic defaults. OS specific options go in versious sections below
 PGM = lame
 CC = gcc
 CC_OPTS =  -O
@@ -22,47 +22,57 @@ MAKEDEP = -M
 BRHIST_SWITCH = 
 LIBTERMCAP = 
 RM = rm -f
+##########################################################################
+# -DHAVEMPGLIB compiles in the mpglib *decoding* library
+# -DLAMEPARSE compiles in the command line parsing, for building the
+# 'lame' stand alone executable instead of encoding library
+##########################################################################
 CPP_OPTS = -DHAVEMPGLIB -DLAMEPARSE
 
 
 
 ##########################################################################
-# To remove support for mp3 *decoding*, 
-# remove -DHAVEMPGLIB to CPP_OPTS
-##########################################################################
-
-
-##########################################################################
-# Define these to compile in code for the optional VBR bitrate histogram.  
+# Define these in the OS specific sections below to compile in code 
+# for the optional VBR bitrate histogram.  
 # Requires ncurses, but libtermcap also works.  
 # If you have any trouble, just dont define these
+# BRHIST_SWITCH = -DBRHIST
+# LIBTERMCAP = -lncurses
+# LIBTERMCAP = -ltermcap
 ##########################################################################
-#BRHIST_SWITCH = -DBRHIST
-#LIBTERMCAP = -lncurses
-#LIBTERMCAP = -ltermcap
 
 
 ##########################################################################
-# SNDLIB =         no file i/o 
+# Define these in the OS specific sections below to compile in code for:
+#
+# SNDLIB =                no file i/o 
 # SNDLIB = -DLAMESNDFILE  to use internal LAME soundfile routines
 # SNDLIB = -DLIBSNDFILE   to use Erik de Castro Lopo's libsndfile 
 # http://www.zip.com.au/~erikd/libsndfile/
 # otherwise LAME can only read 16bit wav, aiff and pcm inputfiles.
 # Note: at present, libsndfile does not support input from stdin.  
+#
+# for example:
+#  SNDLIB = -DLIBSNDFILE
+#  LIBSNDFILE=-lsndfile 
+#  if libsndfile is in a custom location, try:
+#  LIBSNDFILE=-L $(LIBSNDHOME) -lsndfile  -I $(LIBSNDHOME)
 ##########################################################################
-#SNDLIB = -DLIBSNDFILE
-#LIBSNDFILE=-lsndfile 
-# if libsndfile is in a custom location, try:
-#LIBSNDFILE=-L $(LIBSNDHOME) -lsndfile  -I $(LIBSNDHOME)
 
 
 ##########################################################################
-# define these to use compile in support for the GTK mp3 frame analyzer
+# Define these in the OS specific sections below to compile in code for
+# the GTK mp3 frame analyzer
+#
 # Requires  -DHAVEMPGLIB
 # and SNDLIB = -DLAME or -DLIBSNDFILE
+#
+# GTK = -DHAVEGTK `gtk-config --cflags`
+# GTKLIBS = `gtk-config --libs` 
+#
 ##########################################################################
-#GTK = -DHAVEGTK `gtk-config --cflags`
-#GTKLIBS = `gtk-config --libs` 
+
+
 
 
 ##########################################################################
@@ -75,6 +85,9 @@ ifeq ($(UNAME),Linux)
 # Comment out next 2 lines if you want to remove VBR histogram capability
    BRHIST_SWITCH = -DBRHIST
    LIBTERMCAP = -lncurses
+#  uncomment to use LIBSNDFILE
+#   SNDLIB = -DLIBSNDFILE
+#   LIBSNDFILE=-lsndfile 
 
 
 # suggested for gcc-2.7.x

@@ -35,13 +35,7 @@
 
 
 void CloseSndFile(lame_global_flags *gfp);
-FILE * OpenSndFile(lame_global_flags *gfp,const char* lpszFileName,int default_samp, int 
-   default_chan);
-unsigned long GetSndSamples(void);
-int		GetSndSampleRate(void);
-int		GetSndChannels(void);
-int		GetSndBitrate(void);
-
+FILE * OpenSndFile(lame_global_flags *gfp);
 
 int get_audio(lame_global_flags *gfp,short buffer[2][1152],int stereo);
 

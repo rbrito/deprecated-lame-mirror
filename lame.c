@@ -798,8 +798,11 @@ char *mp3buf, int mp3buf_size)
     }
   }
 
+
   /* polyphase filtering / mdct */
   mdct_sub48(gfp,inbuf[0], inbuf[1], xr, &gfc->l3_side);
+
+
 
   /* use m/s gfc->stereo? */
   check_ms_stereo =  (gfp->mode == MPG_MD_JOINT_STEREO);
@@ -1344,7 +1347,7 @@ int lame_init(lame_global_flags *gfp)
   gfp->inPath=NULL;
   gfp->outPath=NULL;
 
-
+  gfc->pcmbitwidth = 16;
   gfc->resample_ratio=1;
   gfc->lowpass_band=32;
   gfc->highpass_band=-1;
