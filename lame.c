@@ -979,13 +979,13 @@ char *mp3buf, int mp3buf_size)
 	gfc->l3_side.gr[gr].ch[ch].tt.block_type=blocktype[ch];
 
     }
-    /* at LSF there is no 2cnd granule */
+    /* at LSF there is no 2nd granule */
     gfc->ms_ratio[1]=gfc->ms_ratio[gfc->mode_gr-1];
   }else{
     for (gr=0; gr < gfc->mode_gr ; gr++)
       for ( ch = 0; ch < gfc->stereo; ch++ ) {
 	gfc->l3_side.gr[gr].ch[ch].tt.block_type=NORM_TYPE;
-	pe[gr][ch]=700;
+	pe_MS[gr][ch]=pe[gr][ch]=700;
       }
   }
 
