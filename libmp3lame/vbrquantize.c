@@ -171,24 +171,21 @@ calc_sfb_noise(const FLOAT8 * xr, const FLOAT8 * xr34, unsigned int bw, int sf)
     unsigned int j;
     fi_union fi;
     FLOAT8  temp;
-    FLOAT8  xfsf = 0;
-    FLOAT8  sfpow, sfpow34;
-
-    sfpow = POW20(sf);  /*pow(2.0,sf/4.0); */
-    sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
+    FLOAT8  xfsf = 0.0;
+    FLOAT8 const sfpow   =  POW20(sf); /*pow(2.0,sf/4.0); */
+    FLOAT8 const sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
 
     for (j = 0; j < bw; ++j) {
-        if (xr34[j] * sfpow34 > IXMAX_VAL)
+        temp = xr34[j] * sfpow34;
+        if (temp > IXMAX_VAL)
             return -1;
 
 #ifdef TAKEHIRO_IEEE754_HACK
-        temp = sfpow34 * xr34[j];
         temp += MAGIC_FLOAT;
         fi.f = temp;
         fi.f = temp + (adj43asm - MAGIC_INT)[fi.i];
         fi.i -= MAGIC_INT;
 #else
-        temp = xr34[j] * sfpow34;
         XRPOW_FTOI(temp, fi.i);
         XRPOW_FTOI(temp + QUANTFAC(fi.i), fi.i);
 #endif
@@ -208,23 +205,21 @@ calc_sfb_noise_mq(const FLOAT8 * xr, const FLOAT8 * xr34, int bw, int sf, int mq
     int     j, k;
     fi_union fi;
     FLOAT8  temp;
-    FLOAT8  sfpow, sfpow34, xfsfm = 0, xfsf = 0;
-
-    sfpow = POW20(sf);  /*pow(2.0,sf/4.0); */
-    sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
+    FLOAT8 xfsfm = 0.0, xfsf = 0.0;
+    FLOAT8 const sfpow   =  POW20(sf); /*pow(2.0,sf/4.0); */
+    FLOAT8 const sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
 
     for (j = 0; j < bw; ++j) {
-        if (xr34[j] * sfpow34 > IXMAX_VAL)
+        temp = xr34[j] * sfpow34;
+        if (temp > IXMAX_VAL)
             return -1;
 
 #ifdef TAKEHIRO_IEEE754_HACK
-        temp = sfpow34 * xr34[j];
         temp += MAGIC_FLOAT;
         fi.f = temp;
         fi.f = temp + (adj43asm - MAGIC_INT)[fi.i];
         fi.i -= MAGIC_INT;
 #else
-        temp = xr34[j] * sfpow34;
         XRPOW_FTOI(temp, fi.i);
         XRPOW_FTOI(temp + QUANTFAC(fi.i), fi.i);
 #endif
@@ -259,26 +254,24 @@ static const FLOAT8 fac34p1 = 0.878126080187;
 static  FLOAT8
 calc_sfb_noise_ave(const FLOAT8 * xr, const FLOAT8 * xr34, int bw, int sf)
 {
-    double  xp;
-    double  xe;
-    double  xm;
+    FLOAT8  xp;
+    FLOAT8  xe;
+    FLOAT8  xm;
 #ifdef TAKEHIRO_IEEE754_HACK
-    double  x0;
+    FLOAT8  x0;
     unsigned int index = 0;
 #endif
     int     xx[3], j;
     fi_union *fi = (fi_union *) xx;
-    FLOAT8  sfpow34_eq, sfpow34_p1, sfpow34_m1;
-    FLOAT8  sfpow_eq, sfpow_p1, sfpow_m1;
-    FLOAT8  xfsf_eq = 0, xfsf_p1 = 0, xfsf_m1 = 0;
+    FLOAT8  xfsf_eq = 0.0, xfsf_p1 = 0.0, xfsf_m1 = 0.0;
 
-    sfpow_eq = POW20(sf); /*pow(2.0,sf/4.0); */
-    sfpow_m1 = sfpow_eq * facm1;
-    sfpow_p1 = sfpow_eq * facp1;
+    FLOAT8 const sfpow_eq = POW20(sf); /*pow(2.0,sf/4.0); */
+    FLOAT8 const sfpow_m1 = sfpow_eq * facm1;
+    FLOAT8 const sfpow_p1 = sfpow_eq * facp1;
 
-    sfpow34_eq = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
-    sfpow34_m1 = sfpow34_eq * fac34m1;
-    sfpow34_p1 = sfpow34_eq * fac34p1;
+    FLOAT8 const sfpow34_eq = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
+    FLOAT8 const sfpow34_m1 = sfpow34_eq * fac34m1;
+    FLOAT8 const sfpow34_p1 = sfpow34_eq * fac34p1;
 
 #ifdef TAKEHIRO_IEEE754_HACK
     /*
@@ -301,8 +294,15 @@ calc_sfb_noise_ave(const FLOAT8 * xr, const FLOAT8 * xr34, int bw, int sf)
 #else
     for (j = 0; j < bw; ++j) {
 
-        if (xr34[j] * sfpow34_m1 > IXMAX_VAL)
+        xm = xr34[j] * sfpow34_m1;
+
+        if (xm > IXMAX_VAL)
             return -1;
+
+        XRPOW_FTOI(xm, fi[0].i);
+        XRPOW_FTOI(xm + QUANTFAC(fi[0].i), fi[0].i);
+        xm = fabs(xr[j]) - pow43[fi[0].i] * sfpow_m1;
+        xm *= xm;
 
         xe = xr34[j] * sfpow34_eq;
         XRPOW_FTOI(xe, fi[0].i);
@@ -316,15 +316,9 @@ calc_sfb_noise_ave(const FLOAT8 * xr, const FLOAT8 * xr34, int bw, int sf)
         xp = fabs(xr[j]) - pow43[fi[0].i] * sfpow_p1;
         xp *= xp;
 
-        xm = xr34[j] * sfpow34_m1;
-        XRPOW_FTOI(xm, fi[0].i);
-        XRPOW_FTOI(xm + QUANTFAC(fi[0].i), fi[0].i);
-        xm = fabs(xr[j]) - pow43[fi[0].i] * sfpow_m1;
-        xm *= xm;
-
+        xfsf_m1 += xm;
         xfsf_eq += xe;
         xfsf_p1 += xp;
-        xfsf_m1 += xm;
     }
 #endif
 
@@ -1381,7 +1375,7 @@ bin_search_StepSize(lame_internal_flags * const gfc, gr_info * const cod_info,
     return nBits;
 }
 
-#define XXL 1
+
 static int
 long_block_shaping(lame_internal_flags * gfc, const FLOAT8 * xr34orig, FLOAT8 xr34[576],
                    int minbits, int maxbits, const III_psy_xmin * l3_xmin, int gr, int ch)
@@ -1401,11 +1395,10 @@ long_block_shaping(lame_internal_flags * gfc, const FLOAT8 * xr34orig, FLOAT8 xr
     vbrsf = vbrsf2;
     vbrmin = vbrmin2;
     vbrmax = vbrmax2;
-#ifdef XXL
     M = (vbrmax - vbrmin)/2;
     if ( M > 16 ) M = 16;
     count = M;
-#endif
+
     do {
         long_block_scalefacs(gfc, cod_info, &vbrsf, &vbrmax);
         long_block_xr34(gfc, cod_info, xr34orig, xr34);
@@ -1420,11 +1413,7 @@ long_block_shaping(lame_internal_flags * gfc, const FLOAT8 * xr34orig, FLOAT8 xr
             vbrmax = vbrmin2 + (vbrmax2 - vbrmin2) * count / M;
             vbrmin = vbrmin2;
             for (i = 0; i < SBMAX_l; ++i) {
-#ifdef XXL
                 vbrsf.l[i] = vbrmin2 + (vbrsf2.l[i] - vbrmin2) * count / M;
-#else
-                vbrsf.l[i] = Min(vbrsf2.l[i], vbrmax);
-#endif
             }
         }
         else if (cod_info->part2_3_length > maxbits) {
@@ -1432,11 +1421,7 @@ long_block_shaping(lame_internal_flags * gfc, const FLOAT8 * xr34orig, FLOAT8 xr
             vbrmax = vbrmax2;
             vbrmin = vbrmax2 + (vbrmin2 - vbrmax2) * count / M;
             for (i = 0; i < SBMAX_l; ++i) {
-#ifdef XXL
                 vbrsf.l[i] = vbrmax2 + (vbrsf2.l[i] - vbrmax2) * count / M;
-#else
-                vbrsf.l[i] = Max(vbrsf2.l[i], vbrmin);
-#endif
             }
         }
         else
@@ -1464,11 +1449,9 @@ short_block_shaping(lame_internal_flags * gfc, const FLOAT8 * xr34orig, FLOAT8 x
     vbrsf = vbrsf2;
     vbrmin = vbrmin2;
     vbrmax = vbrmax2;
-#ifdef XXL
     M = (vbrmax - vbrmin)/2;
     if ( M > 16 ) M = 16;
     count = M;
-#endif
     do {
         short_block_scalefacs(gfc, cod_info, &vbrsf, &vbrmax);
         short_block_xr34(gfc, cod_info, xr34orig, xr34);
@@ -1483,15 +1466,9 @@ short_block_shaping(lame_internal_flags * gfc, const FLOAT8 * xr34orig, FLOAT8 x
             vbrmax = vbrmin2 + (vbrmax2 - vbrmin2) * count / M;
             vbrmin = vbrmin2;
             for (i = 0; i < SBMAX_s; ++i) {
-#ifdef XXL
                 vbrsf.s[i][0] = vbrmin2 + (vbrsf2.s[i][0] - vbrmin2) * count / M;
                 vbrsf.s[i][1] = vbrmin2 + (vbrsf2.s[i][1] - vbrmin2) * count / M;
                 vbrsf.s[i][2] = vbrmin2 + (vbrsf2.s[i][2] - vbrmin2) * count / M;
-#else
-                vbrsf.s[i][0] = Min(vbrsf2.s[i][0], vbrmax);
-                vbrsf.s[i][1] = Min(vbrsf2.s[i][1], vbrmax);
-                vbrsf.s[i][2] = Min(vbrsf2.s[i][2], vbrmax);
-#endif
             }
         }
         else if (cod_info->part2_3_length > maxbits) {
@@ -1499,15 +1476,9 @@ short_block_shaping(lame_internal_flags * gfc, const FLOAT8 * xr34orig, FLOAT8 x
             vbrmax = vbrmax2;
             vbrmin = vbrmax2 + (vbrmin2 - vbrmax2) * count / M;
             for (i = 0; i < SBMAX_s; ++i) {
-#ifdef XXL
                 vbrsf.s[i][0] = vbrmax2 + (vbrsf2.s[i][0] - vbrmax2) * count / M;
                 vbrsf.s[i][1] = vbrmax2 + (vbrsf2.s[i][1] - vbrmax2) * count / M;
                 vbrsf.s[i][2] = vbrmax2 + (vbrsf2.s[i][2] - vbrmax2) * count / M;
-#else
-                vbrsf.s[i][0] = Max(vbrsf2.s[i][0], vbrmin);
-                vbrsf.s[i][1] = Max(vbrsf2.s[i][1], vbrmin);
-                vbrsf.s[i][2] = Max(vbrsf2.s[i][2], vbrmin);
-#endif
             }
         }
         else
@@ -1515,26 +1486,6 @@ short_block_shaping(lame_internal_flags * gfc, const FLOAT8 * xr34orig, FLOAT8 x
     } while (ret != -1);
     return ret;
 }
-
-static int
-mixed_block_shaping(lame_internal_flags * gfc, const FLOAT8 * xr34orig, FLOAT8 xr34[576],
-                    int minbits, int maxbits, const III_psy_xmin * l3_xmin, int gr, int ch)
-{                       /* not yet */
-    III_scalefac_t vbrsf;
-    III_scalefac_t vbrsf2;
-    gr_info *cod_info;
-    int     ret;
-    int     vbrmin_s, vbrmax_s, vbrmin_l, vbrmax_l;
-    int     M = 6;
-    int     count = M;
-
-    cod_info = &gfc->l3_side.tt[gr][ch];
-
-    short_block_sf(gfc, cod_info, l3_xmin, xr34orig, cod_info->xr, &vbrsf2, &vbrmin_s, &vbrmax_s);
-    long_block_sf(gfc, cod_info, l3_xmin, xr34orig, cod_info->xr, &vbrsf2, &vbrmin_l, &vbrmax_l);
-    return -2;
-}
-
 
 /************************************************************************
  *
