@@ -1115,8 +1115,8 @@ psycho_analysis_short(
 		for (j = 0; j < BLKSIZE_s; j++) {
 		    FLOAT l = wsamp_S[0][sblock][j];
 		    FLOAT r = wsamp_S[1][sblock][j];
-		    wsamp_S[0][sblock][j] = l+r;
-		    wsamp_S[1][sblock][j] = l-r;
+		    wsamp_S[0][sblock][j] = (l+r)*(SQRT2*0.5);
+		    wsamp_S[1][sblock][j] = (l-r)*(SQRT2*0.5);
 		}
 	    }
 
