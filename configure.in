@@ -31,9 +31,8 @@ AM_MAINTAINER_MODE
 
 dnl libtool
 AC_DISABLE_SHARED
-cflags_safe="${CFLAGS}"
 AC_PROG_LIBTOOL
-CFLAGS="${cflags_safe}"
+CFLAGS="${ac_save_CFLAGS}"
 
 # increase this when the shared lib becomes totally incompatible
 LIB_MAJOR_VERSION=0
@@ -48,6 +47,18 @@ AC_ISC_POSIX
 AC_MINIX
 AC_CYGWIN
 AC_EXEEXT
+
+dnl# work around for a bug, don't know where it is exactly
+dnlif test "${ac_cv_cygwin}" = "yes"; then
+dnl	AC_MSG_CHECKING(if CC is set)
+dnl	old_cc="${CC-cc_wasnt_set}"
+dnl	CC=gcc
+dnl	if test "old_cc" = "cc_wasnt_set"; then
+dnl		AC_MSG_RESULT(no, setting it to 'gcc')
+dnl	else
+dnl		AC_MSG_RESULT(yes)
+dnl	fi
+dnlfi
 
 dnl check programs
 AM_PROG_CC_STDC
@@ -75,7 +86,9 @@ AC_CHECK_HEADERS( \
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_C_INLINE
-AC_C_BIGENDIAN
+if test ${cross_compiling} = "no"; then
+	AC_C_BIGENDIAN
+fi
 
 AC_CHECK_SIZEOF(short, 2)
 AC_CHECK_SIZEOF(unsigned short, 2)
@@ -83,9 +96,55 @@ AC_CHECK_SIZEOF(int, 4)
 AC_CHECK_SIZEOF(unsigned int, 4)
 AC_CHECK_SIZEOF(long, 4)
 AC_CHECK_SIZEOF(unsigned long, 4)
+AC_CHECK_SIZEOF(long long, 8)
+AC_CHECK_SIZEOF(unsigned long long, 8)
 AC_CHECK_SIZEOF(float, 4)
 AC_CHECK_SIZEOF(double, 8)
-AC_CHECK_SIZEOF(long double, 12)
+
+if test ${cross_compiling} = "no"; then
+	AC_C_LONG_DOUBLE
+fi
+if test "${ac_cv_c_have_long_double}" = "yes" ; then
+	AC_CHECK_SIZEOF(long double, 12)
+fi
+
+AC_CHECK_TYPE(uint8_t, unsigned char)
+AC_CHECK_TYPE(int8_t, char)
+AC_CHECK_TYPE(uint16_t, unsigned short)
+AC_CHECK_TYPE(int16_t, short)
+if test "${ac_cv_sizeof_int}" = "4" ; then
+	AC_CHECK_TYPE(uint32_t, unsigned int)
+	AC_CHECK_TYPE(int32_t, int)
+elif test "${ac_cv_sizeof_long}" = "4" ; then
+	AC_CHECK_TYPE(uint32_t, unsigned long)
+	AC_CHECK_TYPE(int32_t, long)
+else
+	# can't determine default value in case the type isn't present
+	AC_MSG_ERROR(CHECK_TYPE_int32_t - please report to lame-dev@lists.sourceforge.net)
+fi
+if test "${ac_cv_sizeof_long}" = "8" ; then
+	AC_CHECK_TYPE(uint64_t, unsigned long)
+	AC_CHECK_TYPE(int64_t, long)
+elif test "${ac_cv_sizeof_long_long}" = "8" ; then
+	AC_CHECK_TYPE(uint64_t, unsigned long long)
+	AC_CHECK_TYPE(int64_t, long long)
+else
+	# can't determine default value in case the type isn't present
+	AC_MSG_ERROR(CHECK_TYPE_int64_t - please report to lame-dev@lists.sourceforge.net)
+fi
+
+alex_IEEE854_FLOAT80
+if test "${alex_cv_ieee854_float80}" = "yes" ; then
+	if test "${ac_cv_c_long_double}" = "yes" ; then
+		AC_CHECK_TYPE(ieee854_float80_t, long double)
+		AC_DEFINE(HAVE_IEEE854_FLOAT80, 1, [system has 80 bit floats])
+	fi
+fi
+AC_CHECK_TYPE(ieee754_float64_t, double)
+AC_CHECK_TYPE(ieee754_float32_t, float)
+
+AC_DEFINE(LAME_LIBRARY_BUILD, 1, [requested by Frank, seems to be temporary needed for a smooth transition])
+
 
 if test ${cross_compiling} = "yes"; then
 	AC_MSG_WARN([]
@@ -612,7 +671,7 @@ alpha*-*-linux*)
 ################################################################
 #### Check if 'ccc' is in our path
 ################################################################
-if test "`which ccc 2>/dev/null | grep -c ccc`" != ".0" ; then
+if test "`which ccc 2>/dev/null | grep -c ccc`" != "0" ; then
 	# Compaq's C Compiler
 	CC=ccc
 
