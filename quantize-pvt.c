@@ -540,15 +540,10 @@ int calc_noise( lame_global_flags *gfp,
   
   int count=0;
   FLOAT8 noise;
-#ifndef RH_NOISE_CALC
-  FLOAT8 over_noise=0;
-  FLOAT8 tot_noise=0;
-  FLOAT8 max_noise = -999;
-#else
   FLOAT8 over_noise = 1;     /*    0 dB relative to masking */
   FLOAT8 tot_noise  = 1;     /*    0 dB relative to masking */
   FLOAT8 max_noise  = 1E-20; /* -200 dB relative to masking */
-#endif
+
   
   if (cod_info->block_type == SHORT_TYPE) {
     int max_index = SBPSY_s;
@@ -595,21 +590,13 @@ int calc_noise( lame_global_flags *gfp,
 
 	    xfsf[i+1][sfb] = sum / bw;
 	    noise = xfsf[i+1][sfb] / l3_xmin->s[sfb][i];
-#ifndef RH_NOISE_CALC
-	    tot_noise += Max(noise, 1E-20);
-#else
 	    /* multiplying here is adding in dB */
 	    tot_noise *= Max(noise, 1E-20);
-#endif
 
             if (noise > 1) {
 		over++;
-#ifndef RH_NOISE_CALC
-		over_noise += noise;
-#else
 	        /* multiplying here is adding in dB */
 		over_noise *= noise;
-#endif
 	    }
 	    max_noise=Max(max_noise,noise);
             distort[i+1][sfb] = noise;
@@ -663,20 +650,12 @@ int calc_noise( lame_global_flags *gfp,
         xfsf[0][sfb] = sum / bw;
 
 	noise = xfsf[0][sfb] / l3_xmin->l[sfb];
-#ifndef RH_NOISE_CALC
-	tot_noise += Max(noise, 1E-20);
-#else
 	/* multiplying here is adding in dB */
         tot_noise *= Max(noise, 1E-20);
-#endif
         if (noise>1) {
 	  over++;
-#ifndef RH_NOISE_CALC
-	  over_noise += noise;
-#else
 	  /* multiplying here is adding in dB */
 	  over_noise *= noise;
-#endif
 	}
 	max_noise=Max(max_noise,noise);
         distort[0][sfb] = noise;
@@ -693,6 +672,14 @@ int calc_noise( lame_global_flags *gfp,
 
 #ifndef RH_NOISE_CALC
   /* convert to db. DO NOT CHANGE THESE */
+  /* tot_noise = is really the average over each sfb of: 
+     [noise(db) - allowed_noise(db)]
+
+     and over_noise is the same average, only over only the
+     bands with noise > allowed_noise.  
+
+  */
+
   res->tot_noise = 10*log10(Max(.00001,tot_noise)); 
   res->over_noise = 10*log10(Max(1.0,over_noise)); 
   res->max_noise = 10*log10(Max(.00001,max_noise));
