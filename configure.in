@@ -86,7 +86,7 @@ if test "$CONFIG_FILEIO" = "sndfile" ; then
     fi
   fi
   if test "$HAVE_SNDFILE" = "yes" ; then
-    CONFIG_LIBS="-lsndfile $CONFIG_LIBS"
+    CONFIG_LDFLAGS="-lsndfile $CONFIG_LDFLAGS"
     CONFIG_OPTS="-DLIBSNDFILE $CONFIG_OPTS"
   else
     # default
@@ -127,7 +127,7 @@ if test "$CONFIG_VORBIS" != "no" ; then
     fi
   fi
   if test "$HAVE_VORBIS" = "yes" ; then
-    CONFIG_LIBS="-lvorbis $CONFIG_LIBS"
+    CONFIG_LDFLAGS="-lvorbis $CONFIG_LDFLAGS"
     CONFIG_OPTS="-DHAVEVORBIS $CONFIG_OPTS"
   else
     CONFIG_VORBIS="no"
@@ -150,20 +150,13 @@ AC_ARG_ENABLE(decode-layer1,
 AC_ARG_ENABLE(decode-layer1, 
   [  --enable-decoder-layer2     Include layer2 decoding [default:yes]],
   CONFIG_DECODER_L2="$enableval", CONFIG_DECODER_L2="yes")
-if test "$CONFIG_DECODER" != "no" ; then
-  CONFIG_OPTS="-DHAVEMPGLIB $CONFIG_OPTS"
-  CONFIG_DECODER=yes
-  MPGLIB_SOURCE="\$(mpglib_sources)"
-
-  if test "$CONFIG_DECODER_L1" != "no" ; then
-    CONFIG_OPTS="-DUSE_LAYER_1 $CONFIG_OPTS"
-  fi
-
-  if test "$CONFIG_DECODER_L2" != "no" ; then
-    CONFIG_OPTS="-DUSE_LAYER_2 $CONFIG_OPTS"
-  fi
-fi
 AC_MSG_RESULT($CONFIG_DECODER)
+
+if test "$CONFIG_DECODER" != "no" ; then
+  CONFIG_DECODER=yes
+  CONFIG_LIBS="mpglib/mpglib.a $CONFIG_LIBS"
+  AC_CONFIG_SUBDIRS(mpglib)
+fi
 
 
 dnl basic check for GTK...actually just for gtk-config...
@@ -182,7 +175,7 @@ AC_ARG_ENABLE(analyzer,
     [                          It requires installed GTK, file io and the decoder.],
     CONFIG_FA="$enableval", CONFIG_FA="$FA_DEFAULT")
 if test "$FA_DEFAULT" != "no" && test "$CONFIG_FA" != "no" ; then
-  CONFIG_LIBS="`$GTK_CONFIG --libs` $CONFIG_LIBS"
+  CONFIG_LDFLAGS="`$GTK_CONFIG --libs` $CONFIG_LDFLAGS"
   CONFIG_OPTS="-DHAVEGTK `$GTK_CONFIG --cflags` $CONFIG_OPTS"
   GTK_SOURCE="\$(gtk_sources)"
   CONFIG_FA=yes
@@ -275,7 +268,7 @@ AC_ARG_ENABLE(brhist,
 if test "$CONFIG_BRHIST" != "no" ; then
   BRHIST_SOURCE="\$(brhist_sources)"
   if test "$BRH_DEFAULT" = "yes" ; then
-    CONFIG_LIBS="-l$HAVE_TERMCAP $CONFIG_LIBS"
+    CONFIG_LDFLAGS="-l$HAVE_TERMCAP $CONFIG_LDFLAGS"
     CONFIG_OPTS="-DBRHIST $CONFIG_OPTS"
     CONFIG_BRHIST="yes, with $HAVE_TERMCAP"
   else
@@ -285,7 +278,12 @@ if test "$CONFIG_BRHIST" != "no" ; then
 fi
 AC_MSG_RESULT($CONFIG_BRHIST)
 
-CONFIG_LIBS="$HAVE_LIBM $CONFIG_LIBS"
+
+#AC_CONFIG_SUBDIRS(frontend)
+#AC_CONFIG_SUBDIRS(libmp3lame)
+
+
+CONFIG_LDFLAGS="$HAVE_LIBM $CONFIG_LDFLAGS"
 AC_SUBST(CONFIG_OPTS)
 AC_SUBST(CONFIG_LIBS)
 AC_SUBST(CONFIG_LDFLAGS)

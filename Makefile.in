@@ -38,7 +38,7 @@ SHARED_LIB_MINOR = $(SHARED_LIB_MAJOR).@LIB_MINOR_VERSION@
 
 # generic defaults. OS specific options go in versious sections below
 PGM ?= lame
-CPP_OPTS = @CPP_OPT@
+CPP_OPTS = @CPP_OPT@ -I ./include
 CC_OPTS = -O
 AR = ar
 RANLIB = @RANLIB@
@@ -204,11 +204,11 @@ CC_OPTS += -w0 -pedantic -Wall
 CPP_OPTS += -D__DECALPHA__
 
 # standard Linux libm
-#LIBS	=	-lm
+#LDFLAGS	+=	-lm
 # optimized libffm (free fast math library)
-#LIBS	=	-lffm
+#LDFLAGS	+=	-lffm
 # Compaq's fast math library
-LIBS    =       -lcpml
+LDFLAGS    +=       -lcpml
 endif  #  gcc or ccc?
 endif  #  alpha 
 endif  #  linux
@@ -275,7 +275,6 @@ endif
 ##########################################################################
 ifeq ($(UNAME),BeOS)
    CC = $(BE_C_COMPILER)
-   LIBS =
 ifeq ($(ARCH),BePC)
    CC_OPTS = -O9 -fomit-frame-pointer -march=pentium \
    -mcpu=pentium -ffast-math -funroll-loops \
@@ -291,7 +290,6 @@ endif
 ###########################################################################
 ifeq ($(UNAME),Rhapsody)
    CC = cc
-   LIBS =
    CC_OPTS = -O9 -ffast-math -funroll-loops -fomit-frame-pointer
    MAKEDEP = -make 
 endif
@@ -308,7 +306,6 @@ ifeq ($(UNAME),OS/2)
    CC = gcc
    CC_OPTS = -O3
    PGM ?= lame.exe
-   LIBS =
 
 # I use the following for slightly better performance on my Pentium-II
 # using pgcc-2.91.66:
@@ -317,7 +314,7 @@ ifeq ($(UNAME),OS/2)
 # Uncomment & inspect the 2 GTK lines to use MP3x GTK frame analyzer.
 # Properly installed XFree86/devlibs & GTK+ is a prerequisite.
 # The following works for me using Xfree86/OS2 3.3.5 and GTK+ 1.2.3:
-#   LIBS += -DHAVEGTK -IC:/XFree86/include/gtk12 -Zmt -D__ST_MT_ERRNO__ -IC:/XFree86/include/glib12 -IC:/XFree86/include
+#   LDFLAGS += -DHAVEGTK -IC:/XFree86/include/gtk12 -Zmt -D__ST_MT_ERRNO__ -IC:/XFree86/include/glib12 -IC:/XFree86/include
 #   CFLAGS += -LC:/XFree86/lib -Zmtd -Zsysv-signals -Zbin-files -lgtk12 -lgdk12 -lgmodule -lglib12 -lXext -lX11 -lshm -lbsd -lsocket -lm
 endif
 
@@ -345,7 +342,6 @@ ifeq ($(UNAME),AmigaOS)
 		-mmultiple -mcpu=603e
 		AR = ppc-amigaos-ar
 		RANLIB = ppc-amigaos-ranlib
-		LIBS =
 	endif
 	ifeq ($(ARCH),PPC)
 		CC = ppc-amigaos-gcc
@@ -353,7 +349,6 @@ ifeq ($(UNAME),AmigaOS)
 		-mmultiple -mcpu=603e
 		AR = ppc-amigaos-ar
 		RANLIB = ppc-amigaos-ranlib
-		LIBS =
 	endif
 endif
 
@@ -375,21 +370,10 @@ endif
 # 10/99 added -D__NO_MATH_INLINES to fix a bug in *all* versions of
 # gcc 2.8+ as of 10/99.  
 
-CC_SWITCHES = -DNDEBUG $(CC_OPTS) $(CFLAGS) $(LDFLAGS)
+CC_SWITCHES = -DNDEBUG $(CC_OPTS) $(CFLAGS)
 
 gtk_sources = gtkanal.c gpkplotting.c
 gtk_obj = $(gtk_sources:.c=.o)
-
-mpglib_sources = \
-        mpglib/common.c \
-        mpglib/dct64_i386.c \
-        mpglib/decode_i386.c \
-        mpglib/layer1.c \
-        mpglib/layer2.c \
-        mpglib/layer3.c \
-        mpglib/tabinit.c \
-        mpglib/interface.c \
-        mpglib/main.c 
 
 brhist_sources = brhist.c
 
@@ -450,20 +434,23 @@ ASFLAGS=-f elf -i i386/
 	$(SHELL) -ec '$(CC) $(MAKEDEP)  $(CPP_OPTS) $(CC_SWITCHES)  $< | sed '\''s;$*.o;& $@;g'\'' > $@'
   endif
 
-all: $(PGM) lib
+all: $(PGM) lib $(LIBS)
 
-$(PGM):	main.o @GTK_OBJ@ libmp3lame.a 
-	$(CC) $(CC_OPTS) -o $(PGM)  main.o @GTK_OBJ@ -L. -lmp3lame $(LIBS) $(CFLAGS) $(LDFLAGS)
+$(PGM):	main.o @GTK_OBJ@ libmp3lame.a $(LIBS) $(OBJ)
+	$(CC) -o $(PGM)  main.o @GTK_OBJ@ -L. -lmp3lame $(LIBS) $(LDFLAGS)
 
-mp3x:	mp3x.o @GTK_OBJ@ libmp3lame.a
-	$(CC) -o mp3x mp3x.o @GTK_OBJ@ $(OBJ) $(LIBS) $(LDFLAGS) $(CFLAGS)
+mp3x:	mp3x.o @GTK_OBJ@ libmp3lame.a $(LIBS) $(OBJ)
+	$(CC) -o mp3x mp3x.o @GTK_OBJ@ $(OBJ) $(LIBS) $(LDFLAGS)
 
-mp3rtp:	rtp.o mp3rtp.o libmp3lame.a
-	$(CC) -o mp3rtp mp3rtp.o rtp.o   $(OBJ) $(LIBS) $(LDFLAGS) $(CFLAGS)
+mp3rtp:	rtp.o mp3rtp.o libmp3lame.a $(LIBS) $(OBJ)
+	$(CC) -o mp3rtp mp3rtp.o rtp.o   $(OBJ) $(LIBS) $(LDFLAGS)
 
 libmp3lame.a:  $(OBJ) Makefile
 	$(AR) cr libmp3lame.a  $(OBJ)
 	$(RANLIB) libmp3lame.a
+
+mpglib/mpglib.a:
+	cd mpglib; $(MAKE)
 
 #shared library, probably GNU specific?
 libmp3lame.so:  $(OBJ) Makefile
@@ -523,8 +510,8 @@ bla:
 
 tags: TAGS
 
-TAGS: ${c_sources} ${mpglib_sources} ${gtk_sources}
-	etags -T ${c_sources}
+TAGS: ${c_sources} ${gtk_sources}
+	etags -T ${c_sources} ${gtk_sources}
 
 ifneq ($(MAKECMDGOALS),clean)
   -include $(DEP)
