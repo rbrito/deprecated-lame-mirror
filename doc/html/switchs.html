@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
 <HTML>
 <HEAD>
-<TITLE>Command line switch reference</TITLE>
+<TITLE>Full command line switch reference</TITLE>
 <META NAME="description" CONTENT="Command line switch reference">
 <META NAME="keywords" CONTENT="lame">
 <META NAME="resource-type" CONTENT="document">
@@ -20,102 +20,114 @@
 <P> 
 <TABLE CELLPADDING=3 BORDER="1">
   <TR VALIGN="TOP"> 
-    <TD ALIGN="LEFT" nowrap>switch</TD>
-    <TD ALIGN="LEFT" nowrap>parameter</TD>
+    <TD ALIGN="LEFT" nowrap><b>switch</b></TD>
+    <TD ALIGN="LEFT" nowrap><b>parameter</b></TD>
   </TR>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><tt><a href="#a">-a</a></tt></td>
+    <td align="LEFT" nowrap><kbd><a href="#a">-a</a></kbd></td>
     <td align="LEFT" nowrap>downmix stereo file to mono</td>
   </tr>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><tt><a href="#b">-b</a></tt></td>
+    <td align="LEFT" nowrap><kbd><a href="#b">-b</a></kbd></td>
     <td align="LEFT" nowrap>bitrate (8...320)</td>
   </tr>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><tt><a href="#Bmax">-B</a></tt></td>
+    <td align="LEFT" nowrap><kbd><a href="#Bmax">-B</a></kbd></td>
     <td align="LEFT" nowrap>max VBR bitrate (8...320)</td>
   </tr>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><tt><a href="#c">-c</a></tt></td>
+    <td align="LEFT" nowrap><kbd><a href="#c">-c</a></kbd></td>
     <td align="LEFT" nowrap>copyright</td>
   </tr>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><tt><a href="#e">-e</a></tt></td>
+    <td align="LEFT" nowrap><kbd><a href="#e">-e</a></kbd></td>
     <td align="LEFT" nowrap>de-emphasis (<b>n</b>, 5, c)</td>
   </tr>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><tt><a href="#f">-f</a></tt></td>
+    <td align="LEFT" nowrap><kbd><a href="#f">-f</a></kbd></td>
     <td align="LEFT" nowrap> fast mode</td>
   </tr>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><tt>-g</tt></td>
+    <td align="LEFT" nowrap><kbd>-g</kbd></td>
     <td align="LEFT" nowrap>turn on MP3x graphical frame analyser (might not be 
       available on your release)</td>
   </tr>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><tt><a href="#h">-h</a></tt></td>
+    <td align="LEFT" nowrap><kbd><a href="#h">-h</a></kbd></td>
     <td align="LEFT" nowrap>high quality</td>
   </tr>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><tt><a href="#k">-k</a></tt></td>
+    <td align="LEFT" nowrap><kbd><a href="#-highpass">--highpass</a></kbd></td>
+    <td align="LEFT" nowrap> highpass filtering frequency in kHz</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd><a href="#k">-k</a></kbd></td>
     <td align="LEFT" nowrap> full bandwidth</td>
   </tr>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><tt><a href="#m">-m</a></tt></td>
+    <td align="LEFT" nowrap><kbd><a href="#-lowpass">--lowpass</a></kbd></td>
+    <td align="LEFT" nowrap> lowpass filtering frequency in kHz</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd><a href="#m">-m</a></kbd></td>
     <td align="LEFT" nowrap>stereo mode (s, <b>j</b>, f, m)</td>
   </tr>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><tt><a href="#-mp3input">--mp3input</a></tt></td>
+    <td align="LEFT" nowrap><kbd><a href="#-mp3input">--mp3input</a></kbd></td>
     <td align="LEFT" nowrap>mp3 input file</td>
   </tr>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><tt><a href="#-nohist">--nohist</a></tt></td>
+    <td align="LEFT" nowrap><kbd><a href="#-nohist">--nohist</a></kbd></td>
     <td align="LEFT" nowrap>disable histogram display</td>
   </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd><a href="#-noshort">--noshort</a></kbd></td>
+    <td align="LEFT" nowrap>disable short blocks frames</td>
+  </tr>
   <TR VALIGN="TOP"> 
-    <TD ALIGN="LEFT" nowrap><tt><a href="#o">-o</a></tt></TD>
+    <TD ALIGN="LEFT" nowrap><kbd><a href="#o">-o</a></kbd></TD>
     <TD ALIGN="LEFT" nowrap>non-original</TD>
   </TR>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><tt><a href="#p">-p</a></tt></td>
+    <td align="LEFT" nowrap><kbd><a href="#p">-p</a></kbd></td>
     <td align="LEFT" nowrap>error protection</td>
   </tr>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><tt><a href="#r">-r</a></tt></td>
+    <td align="LEFT" nowrap><kbd><a href="#r">-r</a></kbd></td>
     <td align="LEFT" nowrap>input file is raw pcm</td>
   </tr>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><tt><a href="#-resample">--resample</a></tt></td>
+    <td align="LEFT" nowrap><kbd><a href="#-resample">--resample</a></kbd></td>
     <td align="LEFT" nowrap>output sampling frequency in kHz</td>
   </tr>
   <TR VALIGN="TOP"> 
-    <TD ALIGN="LEFT" nowrap><TT><a href="#s">-s</a></TT></TD>
+    <TD ALIGN="LEFT" nowrap><kbd><a href="#s">-s</a></kbd></TD>
     <TD ALIGN="LEFT" nowrap>sampling frequency in kHz</TD>
   </TR>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><tt><a href="#S">-S</a></tt></td>
+    <td align="LEFT" nowrap><kbd><a href="#S">-S</a></kbd></td>
     <td align="LEFT" nowrap>silent operation</td>
   </tr>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><tt><a href="#t">-t</a></tt></td>
+    <td align="LEFT" nowrap><kbd><a href="#t">-t</a></kbd></td>
     <td align="LEFT" nowrap>disable VBR tag</td>
   </tr>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><tt><a href="#V">-V</a></tt></td>
+    <td align="LEFT" nowrap><kbd><a href="#V">-V</a></kbd></td>
     <td align="LEFT" nowrap>VBR quality setting (0...9)</td>
   </tr>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><tt><a href="#-voice">--voice</a></tt></td>
+    <td align="LEFT" nowrap><kbd><a href="#-voice">--voice</a></kbd></td>
     <td align="LEFT" nowrap>voice encoding mode</td>
   </tr>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><tt><a href="#x">-x</a></tt></td>
+    <td align="LEFT" nowrap><kbd><a href="#x">-x</a></kbd></td>
     <td align="LEFT" nowrap>swapbytes</td>
   </tr>
 </TABLE>
 <BR>
 <dl> 
-  <dt><strong><tt>* -a</tt><a name="a">&nbsp;&nbsp;&nbsp;&nbsp;downmix&#160;</a></strong> 
+  <dt><strong>* <kbd>-a</kbd><a name="a">&nbsp;&nbsp;&nbsp;&nbsp;downmix&#160;</a></strong> 
   <dd>Mix the stereo input file to mono and encode as mono. This option is only 
     needed in the case of raw PCM stereo input (because LAME cannot determine 
     the number of channels in the input file).<br>
@@ -127,7 +139,7 @@
   <dt><br>
     <br>
   </dt>
-  <dt><strong><tt>* -b</tt><a name="b">&nbsp;&nbsp;&nbsp;&nbsp;bitrate</a></strong> 
+  <dt><strong>* <kbd>-b</kbd><a name="b">&nbsp;&nbsp;&nbsp;&nbsp;bitrate</a></strong> 
   </dt>
 </dl>
 <dl> 
@@ -145,7 +157,7 @@
   </dt>
 </dl>
 <dl> 
-  <dt><strong><tt>* -B</tt><a name="Bmax">&nbsp;&nbsp;&nbsp;&nbsp;maximum VBR 
+  <dt><strong>* <kbd>-B</kbd><a name="Bmax">&nbsp;&nbsp;&nbsp;&nbsp;maximum VBR 
     bitrate&nbsp;</a></strong> </dt>
 </dl>
 <dl> 
@@ -158,27 +170,36 @@
     Specifies the maximum allowed bitrate when using VBR.<br>
     <br>
     <i>note: If you own an mp3 hardware player build upon a MAS 3503 chip, you 
-    must set maximum bitrate to no more than 224 kpbs.</i>
+    must set maximum bitrate to no more than 224 kpbs.</i> 
   <dt><br>
   </dt>
 </dl>
 <dl> 
-  <dt><strong><tt>* -c</tt><a name="c">&nbsp;&nbsp;&nbsp;&nbsp;copyright</a></strong> 
+  <dt><strong>* <kbd>-c</kbd><a name="c">&nbsp;&nbsp;&nbsp;&nbsp;copyright</a></strong> 
   </dt>
 </dl>
 <dl> 
   <dd>Mark the encoded file as being copyrighted. 
   <dt><br>
     <br>
-    <strong><tt>* -e n/5/c</tt><a name="e">&nbsp;&nbsp;&nbsp;&nbsp;de-emphasis</a></strong> 
+    <strong>* <kbd>-e n/5/c</kbd><a name="e">&nbsp;&nbsp;&nbsp;&nbsp;de-emphasis</a></strong> 
   </dt>
 </dl>
 <dl> 
   <dd> <br>
-    default=n (none) 
+    n = (none, default)<br>
+    5 = 0/15 microseconds<br>
+    c = citt j.17<br>
+    <br>
+    All this does is set a flag in the bitstream. If you have a PCM input file 
+    where one of the above types of (obsolete) emphasis has been applied, you 
+    can set this flag in LAME. Then the mp3 decoder should de-emphasize the output 
+    during playback, although most decoders ignore this flag.<br>
+    A better solution would be to apply the de-emphasis with a standalone utility 
+    before encoding. 
   <dt><br>
     <br>
-    <strong><tt>* -f</tt><a name="f">&nbsp;&nbsp;&nbsp;&nbsp;fast mode</a></strong> 
+    <strong>* <kbd>-f</kbd><a name="f">&nbsp;&nbsp;&nbsp;&nbsp;fast mode</a></strong> 
   </dt>
 </dl>
 <dl> 
@@ -187,16 +208,25 @@
     or streaming on slowest computers. 
   <dt><br>
     <br>
-    <strong><tt>* -h</tt><a name="h">&nbsp;&nbsp;&nbsp;&nbsp;high quality</a></strong> 
+    <strong>* <kbd>-h</kbd><a name="h">&nbsp;&nbsp;&nbsp;&nbsp;high quality</a></strong> 
   </dt>
 </dl>
 <dl> 
   <dd> Enables specialized mid/side masking thresholds to be used in jstereo mode 
     and also enables a more accurate but slightly slower quantization formula. 
-    It will sound better but is about 20% slower.
+    It will sound better but is about 20% slower.<br>
+    Recommended setting.
   <dt><br>
     <br>
-    <strong><tt>* -k</tt><a name="k">&nbsp;&nbsp;&nbsp;&nbsp;full bandwidth</a></strong> 
+    <strong>* <kbd>--highpass</kbd><a name="-highpass">&nbsp;&nbsp;&nbsp;&nbsp;highpass 
+    filtering frequency in kHz</a></strong> </dt>
+</dl>
+<dl> 
+  <dd> Set an highpass filtering frequency. Frequencies below the specified one 
+    will be cutoff. 
+  <dt><br>
+    <br>
+    <strong>* <kbd>-k</kbd><a name="k">&nbsp;&nbsp;&nbsp;&nbsp;full bandwidth</a></strong> 
   </dt>
 </dl>
 <dl> 
@@ -206,11 +236,19 @@
     at low bitrates. Use with care! 
   <dt><br>
     <br>
-    <strong><tt>* -m s/<b>j/</b>f/m</tt><a name="m">&nbsp;&nbsp;&nbsp;&nbsp;stereo 
+    <strong>* <kbd>--lowpass</kbd><a name="-lowpass">&nbsp;&nbsp;&nbsp;&nbsp;lowpass 
+    filtering frequency in kHz</a></strong></dt>
+</dl>
+<dl> 
+  <dd> Set a lowpass filtering frequency. Frequencies above the specified one 
+    will be cutoff. 
+  <dt><br>
+    <br>
+    <strong>* <kbd>-m s/<b>j/</b>f/m</kbd><a name="m">&nbsp;&nbsp;&nbsp;&nbsp;stereo 
     mode</a></strong> </dt>
 </dl>
 <dl> 
-  <dd> jstereo is the default mode for stereo files with VBR or fixed bitrates 
+  <dd> Joint-stereo is the default mode for stereo files with VBR or fixed bitrates 
     of 160kbs or less. At higher fixed bitrates, the default is stereo. <b><i><br>
     <br>
     stereo</i></b> <br>
@@ -235,11 +273,11 @@
     <b><i>mono</i></b><br>
     The input will be encoded as a mono signal. If it was a stereo signal, it 
     will be downsampled to mono. The downmix is calculated as the sum of the left 
-    and right channel, attenuated by 6 dB.
+    and right channel, attenuated by 6 dB. 
   <dt><br>
     <br>
   </dt>
-  <dt><strong><tt>* --mp3input</tt><a name="-mp3input">&nbsp;&nbsp;&nbsp;&nbsp;mp3 
+  <dt><strong>* <kbd>--mp3input</kbd><a name="-mp3input">&nbsp;&nbsp;&nbsp;&nbsp;mp3 
     input file</a></strong> </dt>
 </dl>
 <dl> 
@@ -252,7 +290,7 @@
   </dt>
 </dl>
 <dl> 
-  <dt><strong><tt>* --nohist</tt><a name="-nohist">&nbsp;&nbsp;&nbsp;&nbsp;disable 
+  <dt><strong>* <kbd>--nohist</kbd><a name="-nohist">&nbsp;&nbsp;&nbsp;&nbsp;disable 
     histogram display</a></strong> </dt>
 </dl>
 <dl> 
@@ -263,20 +301,31 @@
   </dt>
 </dl>
 <dl> 
-  <dt><strong><tt>* -o</tt><a name="o">&nbsp;&nbsp;&nbsp;&nbsp;non-original</a></strong> 
+  <dt><strong>* <kbd>--noshort</kbd><a name="-noshort">&nbsp;&nbsp;&nbsp;&nbsp;disable 
+    short blocks frames</a></strong> </dt>
+</dl>
+<dl> 
+  <dd> Encode all frames using long blocks only. This could increase quality when 
+    encoding to very low bitrates, but can produce serious pre-echo artefacts.<br>
+    For expert users only 
+  <dt><br>
+  </dt>
+</dl>
+<dl> 
+  <dt><strong>* <kbd>-o</kbd><a name="o">&nbsp;&nbsp;&nbsp;&nbsp;non-original</a></strong> 
   </dt>
 </dl>
 <dl> 
   <dd> Mark the encoded file as a copy. 
   <dt><br>
     <br>
-    <strong><tt>* -p</tt><a name="p">&nbsp;&nbsp;&nbsp;&nbsp;error protection</a></strong></dt>
+    <strong>* <kbd>-p</kbd><a name="p">&nbsp;&nbsp;&nbsp;&nbsp;error protection</a></strong></dt>
 </dl>
 <dl> 
   <dd> Turn on CRC error protection. 
   <dt><br>
     <br>
-    <strong><tt>* -r</tt><a name="r">&nbsp;&nbsp;&nbsp;&nbsp;input file is raw 
+    <strong>* <kbd>-r</kbd><a name="r">&nbsp;&nbsp;&nbsp;&nbsp;input file is raw 
     pcm</a></strong></dt>
 </dl>
 <dl> 
@@ -287,7 +336,7 @@
   <dt><br>
     <br>
   </dt>
-  <dt><strong><tt>* --resample</tt><a name="-resample">&nbsp;&nbsp;&nbsp;&nbsp;output 
+  <dt><strong>* <kbd>--resample</kbd><a name="-resample">&nbsp;&nbsp;&nbsp;&nbsp;output 
     sampling frequency in kHz</a></strong></dt>
 </dl>
 <dl> 
@@ -299,7 +348,7 @@
   </dt>
 </dl>
 <dl> 
-  <dt><strong><tt>* -s 16/22.05/24/32/44.1/48</tt><a name="s">&nbsp;&nbsp;&nbsp;&nbsp;sampling 
+  <dt><strong>* <kbd>-s 16/22.05/24/32/44.1/48</kbd><a name="s">&nbsp;&nbsp;&nbsp;&nbsp;sampling 
     frequency</a></strong> </dt>
 </dl>
 <dl> 
@@ -307,14 +356,14 @@
     from the header. 
   <dt><br>
     <br>
-    <strong><tt>* -S</tt><a name="S">&nbsp;&nbsp;&nbsp;&nbsp;silent operation</a></strong> 
+    <strong>* <kbd>-S</kbd><a name="S">&nbsp;&nbsp;&nbsp;&nbsp;silent operation</a></strong> 
   </dt>
 </dl>
 <dl> 
   <dd> Don't print progress report. 
   <dt><br>
     <br>
-    <strong><tt>* -t</tt><a name="t">&nbsp;&nbsp;&nbsp;&nbsp;disable VBR tag</a></strong></dt>
+    <strong>* <kbd>-t</kbd><a name="t">&nbsp;&nbsp;&nbsp;&nbsp;disable VBR tag</a></strong></dt>
 </dl>
 <dl> 
   <dd> Disable writing of the VBR Tag (only valid in VBR mode).<br>
@@ -323,7 +372,7 @@
   <dt><br>
     <br>
   </dt>
-  <dt><strong><tt>* -V 0...9</tt><a name="V">&nbsp;&nbsp;&nbsp;&nbsp;VBR quality 
+  <dt><strong>* <kbd>-V 0...9</kbd><a name="V">&nbsp;&nbsp;&nbsp;&nbsp;VBR quality 
     setting</a></strong></dt>
 </dl>
 <dl> 
@@ -334,7 +383,7 @@
   </dt>
 </dl>
 <dl> 
-  <dt><strong><tt>* --voice</tt><a name="-voice">&nbsp;&nbsp;&nbsp;&nbsp;voice 
+  <dt><strong>* <kbd>--voice</kbd><a name="-voice">&nbsp;&nbsp;&nbsp;&nbsp;voice 
     encoding mode</a></strong></dt>
 </dl>
 <dl> 
@@ -345,7 +394,7 @@
   </dt>
 </dl>
 <dl> 
-  <dt><strong><tt>* -x</tt><a name="x">&nbsp;&nbsp;&nbsp;&nbsp;swapbytes</a></strong> 
+  <dt><strong>* <kbd>-x</kbd><a name="x">&nbsp;&nbsp;&nbsp;&nbsp;swapbytes</a></strong> 
   </dt>
 </dl>
 <dl> 
