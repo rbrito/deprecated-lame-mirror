@@ -804,8 +804,8 @@ static const int scale_long[16] = {
 int
 scale_bitcount(gr_info * const gi)
 {
-    int k, sfb, max_slen1 = 0, max_slen2 = 0;
-    int *tab, *scalefac = gi->scalefac;
+    int k, sfb, max_slen1 = 0, max_slen2 = 0, *scalefac = gi->scalefac;
+    const int *tab;
 
     /* maximum values */
     if ( gi->block_type == SHORT_TYPE ) {
