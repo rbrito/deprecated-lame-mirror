@@ -117,7 +117,7 @@ void lame_help(lame_global_flags *gfp,char *name)  /* print syntax & exit */
   fprintf(stdout,"  --highpass freq        frequency(kHz), highpass filter cutoff below freq\n");
   fprintf(stdout,"  --highpass-width freq  frequency(kHz) - default 15%% of highpass freq\n");
   fprintf(stdout,"  --resample sfreq  sampling frequency of output file(kHz)- default=input sfreq\n");
-  fprintf(stdout,"  --cwlimit freq    compute tonality up to freq (in kHz)\n");
+  fprintf(stdout,"  --cwlimit freq    compute tonality up to freq (in kHz) default 8.8717\n");
   fprintf(stdout,"\n");
   fprintf(stdout,"  Operational options:\n");
   fprintf(stdout,"    -m mode         (s)tereo, (j)oint, (f)orce or (m)ono  (default j)\n");
@@ -383,7 +383,7 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	}
 	else if (strcmp(token, "cwlimit")==0) {
 	  argUsed=1;
-	  gfp->cwlimit =  atoi( nextArg );
+	  gfp->cwlimit =  atof( nextArg );
 	  if (gfp->cwlimit <= 0 ) {
 	    fprintf(stderr,"Must specify cwlimit in kHz\n");
 	    exit(1);
