@@ -439,7 +439,6 @@ int  lame_encode_mp3_frame (				/* Output */
     /* copy data for MP3 frame analyzer */
     if (gfc->pinfo) {
 	for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
-	    gfc->pinfo->ms_ener_ratio[gr] = 0.0;
 	    for ( ch = 0; ch < gfc->channels_out; ch++ ) {
 		gfc->pinfo->blocktype[gr][ch]
 		    =gfc->l3_side.tt[gr][ch].block_type;

@@ -42,7 +42,6 @@ typedef struct {
   float xr[2][2][576];
   float mpg123xr[2][2][576];
   float ms_ratio[2];
-  float ms_ener_ratio[2];
   float ms_ratio_next[2];
 
   /* L,R, M and S values */

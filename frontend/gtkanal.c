@@ -357,10 +357,10 @@ void plot_frame(void)
   else 
     title=ch ? "Right Channel" : "Left Channel";
 
-  sprintf(title2,"%s  mask_ratio=%3.2f  %3.2f  ener_ratio=%3.2f  %3.2f",
-	  title,
-	  pplot->ms_ratio[0],pplot->ms_ratio[1],
-	  pplot->ms_ener_ratio[0],pplot->ms_ener_ratio[1]);
+  sprintf(title2,"%s pe_diff = %3.2f + %3.2f = %3.2f",
+	  title, pplot->ms_ratio[0],pplot->ms_ratio[1],
+	  pplot->ms_ratio[0] + pplot->ms_ratio[1]
+      );
 
 
   ymn = -32767 ; 
