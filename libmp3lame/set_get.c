@@ -1135,14 +1135,15 @@ lame_get_cwlimit( const lame_global_flags*  gfp )
 /*
  * Allow blocktypes to differ between channels.
  * default:
- *  0 for jstereo,
- *  1 for stereo
+ *  0 for jstereo => block types coupled
+ *  1 for stereo  => block types may differ
  */
 int
 lame_set_allow_diff_short( lame_global_flags*  gfp,
                            int                 allow_diff_short )
 {
-    gfp->allow_diff_short = allow_diff_short;
+    gfp->short_blocks = 
+        allow_diff_short ? short_block_allowed : short_block_coupled;
 
     return 0;
 }
@@ -1150,7 +1151,10 @@ lame_set_allow_diff_short( lame_global_flags*  gfp,
 int
 lame_get_allow_diff_short( const lame_global_flags*  gfp )
 {
-    return gfp->allow_diff_short;
+    if ( gfp->short_blocks == short_block_allowed ) 
+        return 1; /* short blocks allowed to differ */
+    else 
+        return 0; /* not set, dispensed, forced or coupled */
 }
 
 
@@ -1192,16 +1196,54 @@ lame_set_no_short_blocks( lame_global_flags*  gfp,
     if ( 0 > no_short_blocks || 1 < no_short_blocks )
         return -1;
 
-    gfp->no_short_blocks = no_short_blocks;
+    gfp->short_blocks = 
+        no_short_blocks ? short_block_dispensed : short_block_allowed;
 
     return 0;
 }
 int
 lame_get_no_short_blocks( const lame_global_flags*  gfp )
 {
-    assert( 0 <= gfp->no_short_blocks && 1 >= gfp->no_short_blocks );
+    switch ( gfp->short_blocks ) {
+    default:
+    case short_block_not_set:   return -1;
+    case short_block_dispensed: return 1;
+    case short_block_allowed:
+    case short_block_coupled:
+    case short_block_forced:    return 0;
+    }
+}
 
-    return gfp->no_short_blocks;
+
+/* Force short blocks. */
+int
+lame_set_force_short_blocks( lame_global_flags*  gfp,
+                          int                 short_blocks )
+{
+    /* enforce disable/enable meaning, if we need more than two values
+       we need to switch to an enum to have an apropriate representation
+       of the possible meanings of the value */
+    if ( 0 > short_blocks || 1 < short_blocks )
+        return -1;
+
+    if (short_blocks == 1)
+        gfp->short_blocks = short_block_forced;
+    else if (gfp->short_blocks == short_block_forced) 
+        gfp->short_blocks = short_block_allowed;
+
+    return 0;
+}
+int
+lame_get_force_short_blocks( const lame_global_flags*  gfp )
+{
+    switch ( gfp->short_blocks ) {
+    default:
+    case short_block_not_set:   return -1;
+    case short_block_dispensed: 
+    case short_block_allowed:
+    case short_block_coupled:   return 0;
+    case short_block_forced:    return 1;
+    }
 }
 
 

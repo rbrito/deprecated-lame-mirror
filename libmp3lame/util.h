@@ -179,8 +179,7 @@ typedef struct
  */
 typedef struct
 {
-    char    force_same_blocks;  // more like a bool 
-    char    tonalityPatch;      // temporaly needed by VBR
+    int     tonalityPatch;      // temporaly needed by VBR
     FLOAT   cwlimit;
     FLOAT8  prvTonRed[CBANDS];
 } PSY_t; 

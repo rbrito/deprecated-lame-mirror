@@ -309,6 +309,7 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --athlower x    lower the ATH x dB\n"
               "    --notemp        disable temporal masking effect\n"
               "    --short         use short blocks\n"
+              "    --allshort      use always short blocks\n"
               "    --noshort       do not use short blocks\n"
               "    --voice         experimental voice mode\n"
               "    --preset type   type must be phone, voice, fm, tape, hifi, cd or studio\n"
@@ -508,9 +509,9 @@ const preset_t Presets [] = {
     { "voice" , 24000,  -1, 12000,    0,  1,  5, MONO        ,  56,  4,  40, 112 },
     { "radio" ,    -1,  -1, 15000,    0,  0,  3, JOINT_STEREO, 128,  3,  96, 256 },
     { "tape"  ,    -1,  -1, 18000,  900,  0,  3, JOINT_STEREO, 128,  3,  96, 256 },
-    { "hifi"  ,    -1,  -1, 18000,  900,  0, -1, JOINT_STEREO, 160,  2, 112, 320 },
-    { "cd"    ,    -1,  -1,    -1,   -1,  0, -1, STEREO      , 192,  1, 128, 320 },
-    { "studio",    -1,  -1,    -1,   -1,  0, -1, STEREO      , 256,  0, 160, 320 },
+    { "hifi"  ,    -1,  -1, 18000,  900,  0,  2, JOINT_STEREO, 160,  2, 112, 320 },
+    { "cd"    ,    -1,  -1,    -1,   -1,  0,  2, STEREO      , 192,  1, 128, 320 },
+    { "studio",    -1,  -1,    -1,   -1,  0,  1, STEREO      , 256,  0, 160, 320 },
 };
 
 
@@ -889,6 +890,9 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 
                 T_ELIF ("short")
                     (void) lame_set_no_short_blocks( gfp, 0 );
+                
+                T_ELIF ("allshort")
+                    (void) lame_set_force_short_blocks( gfp, 1 );
                 
                 T_ELIF ("decode")
                     (void) lame_set_decode_only( gfp, 1 );

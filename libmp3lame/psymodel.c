@@ -728,8 +728,10 @@ int L3psycho_anal( lame_global_flags * gfp,
 	  }
 	
 	/* disable short blocks */
-	if (gfp->no_short_blocks /*|| gfc->pe[chn] > 12000*/)
+	if (gfp->short_blocks == short_block_dispensed)
 	  uselongblock[chn]=1;
+	if (gfp->short_blocks == short_block_forced)
+	  uselongblock[chn]=0;
       }
     }
 
@@ -915,7 +917,7 @@ int L3psycho_anal( lame_global_flags * gfp,
   }
 
 
-  if (gfc->PSY->force_same_blocks) {
+  if (gfp->short_blocks == short_block_coupled) {
       /* force both channels to use the same block type */
       /* this is necessary if the frame is to be encoded in ms_stereo.  */
       /* But even without ms_stereo, FhG  does this */
@@ -1458,9 +1460,13 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	  gfc->nsPsy.last_attack_intensity[chn][i] = attack_intensity[i];
 	}
 
-      if (gfp->no_short_blocks) {
+      if (gfp->short_blocks == short_block_dispensed) {
 	uselongblock[chn] = 1;
-      } else {
+      } 
+      else if (gfp->short_blocks == short_block_forced) {
+	uselongblock[chn] = 0;
+      }
+      else {
 	if (chn < 2) {
 	  uselongblock[chn] = ns_uselongblock;
 	} else {
@@ -1800,7 +1806,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
     blocktype[chn] = NORM_TYPE;
   }
 
-  if (gfc->PSY->force_same_blocks) {
+  if (gfp->short_blocks == short_block_coupled) {
       /* force both channels to use the same block type */
       /* this is necessary if the frame is to be encoded in ms_stereo.  */
       /* But even without ms_stereo, FhG  does this */

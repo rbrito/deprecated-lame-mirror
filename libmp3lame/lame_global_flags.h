@@ -5,6 +5,15 @@
 struct lame_internal_flags;
 typedef struct lame_internal_flags lame_internal_flags;
 
+
+typedef enum short_block_e {
+    short_block_not_set = -1,   /* allow LAME to decide */
+    short_block_allowed = 0,    /* LAME may use them, even different block types for L/R */
+    short_block_coupled,        /* LAME may use them, but always same block types in L/R */
+    short_block_dispensed,      /* LAME will not use short blocks, long blocks only */
+    short_block_forced          /* LAME will not use long blocks, short blocks only */
+} short_block_t;
+
 /***********************************************************************
 *
 *  Control Parameters set by User.  These parameters are here for
@@ -105,10 +114,11 @@ struct lame_global_struct {
   int adapt_thres_type;           /* select ATH auto-level adjust formula */
   float adapt_thres_level;        /* dB, tune active region of auto-level */
   int cwlimit;                    /* predictability limit                 */
-  int allow_diff_short;           /* allow blocktypes to differ between
+  short_block_t short_blocks;
+/*  int allow_diff_short;            allow blocktypes to differ between
                                      channels?                            */
   int useTemporal;                /* use temporal masking effect          */
-  int no_short_blocks;            /* disable short blocks                 */
+/*  int no_short_blocks;             disable short blocks                 */
   int emphasis;                   /* Input PCM is emphased PCM (for
                                      instance from one of the rarely
                                      emphased CDs), it is STRONGLY not
@@ -117,6 +127,9 @@ struct lame_global_struct {
 				     and last but not least many decoders
                                      don't care about these bits          */
 
+  float tune_value_a;       /* used to pass values for debugging and stuff
+                             */
+  
   struct {
     void (*msgf)  (const char *format, va_list ap);
     void (*debugf)(const char *format, va_list ap);

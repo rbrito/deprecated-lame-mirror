@@ -805,12 +805,6 @@ lame_init_params(lame_global_flags * const gfp)
     }
 
 
-    if (gfp->allow_diff_short == -1) {
-        if (gfp->mode == STEREO)
-            gfp->allow_diff_short = 1;
-        else
-            gfp->allow_diff_short = 0;
-    }
 
 
 
@@ -1092,7 +1086,6 @@ lame_init_params(lame_global_flags * const gfp)
         if (gfp->experimentalY < 1 ) gfp->experimentalY = 1;  // on by default
         else                         gfp->experimentalY = 0;  // turned off if given
           
-        gfp->allow_diff_short = 1;
         break;
         
     case vbr_mt:
@@ -1155,10 +1148,6 @@ lame_init_params(lame_global_flags * const gfp)
         if (gfp->quality < 0)
             gfp->quality = 2;
 
-        /*  allow left and right channels to have different block types
-         */
-        gfp->allow_diff_short = 1;
-
         break;
 
     default:
@@ -1197,8 +1186,13 @@ lame_init_params(lame_global_flags * const gfp)
 
 
     gfc->PSY->cwlimit = gfp->cwlimit <= 0 ? 8871.7f : gfp->cwlimit;
-    gfc->PSY->force_same_blocks = gfc->channels_out > 1 &&
-                        !(gfp->allow_diff_short && gfp->mode == STEREO);
+    
+    if (gfp->short_blocks == short_block_not_set) {
+        gfp->short_blocks =  short_block_allowed;
+    }
+    if (gfp->short_blocks == short_block_allowed && gfp->mode == JOINT_STEREO) {
+        gfp->short_blocks =  short_block_coupled;
+    }    
     
     if ( gfp->adapt_thres_type < 0 ) gfp->adapt_thres_type = 2;
     
@@ -1367,11 +1361,15 @@ lame_print_internals( const lame_global_flags * gfp )
     MSGF( gfc, "\npsychoacoustic:\n\n" );
     
     MSGF( gfc, "\ttonality estimation limit: %f Hz\n", gfc->PSY->cwlimit );
-    pc = gfc->PSY->force_same_blocks ? "yes" : "no";
-    MSGF( gfc, "\tforce channels to have same block types: %s\n", pc );    
-    if ( gfp->no_short_blocks )
-    MSGF( gfc, "\tforbid using short blocks\n" );
-    
+    switch ( gfp->short_blocks ) {
+    default:
+    case short_block_not_set:   pc = "?";               break;
+    case short_block_allowed:   pc = "allowed";         break;
+    case short_block_coupled:   pc = "channel coupled"; break;
+    case short_block_dispensed: pc = "dispensed";       break;
+    case short_block_forced:    pc = "forced";          break;
+    }
+    MSGF( gfc, "\tusing short blocks: %s\n", pc );    
     MSGF( gfc, "\tadjust masking: %f dB\n", gfc->VBR->mask_adjust );
     MSGF( gfc, "\tpsymodel: %d\n", gfc->psymodel );
     MSGF( gfc, "\tnoise shaping: %d\n", gfc->noise_shaping );
@@ -2003,7 +2001,7 @@ lame_init_old(lame_global_flags * gfp)
 
     gfp->bWriteVbrTag = 1;
     gfp->quality = -1;
-    gfp->allow_diff_short = -1;
+    gfp->short_blocks = short_block_not_set;
 
     gfp->lowpassfreq = 0;
     gfp->highpassfreq = 0;

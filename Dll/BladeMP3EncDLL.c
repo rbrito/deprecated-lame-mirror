@@ -120,7 +120,7 @@ static void PresetOptions( lame_global_flags *gfp, LONG myPreset )
 		case LQP_VOICE_QUALITY:		// --voice flag for experimental voice mode
 			gf.lowpassfreq=12000;
 			gf.VBR_max_bitrate_kbps=160;
-			gf.no_short_blocks=1;
+			gf.short_blocks=short_block_dispensed;
 		break;
 		case LQP_R3MIX_QUALITY:
 			gf.VBR = vbr_rh; 
@@ -137,7 +137,7 @@ static void PresetOptions( lame_global_flags *gfp, LONG myPreset )
 			gfp->out_samplerate =  8000;
 			gfp->lowpassfreq = 3200;
 			gfp->lowpasswidth = 1000;
-			gfp->no_short_blocks = 1;
+			gfp->short_blocks = short_block_dispensed;
 			gfp->quality = 5;
 			gfp->mode = MONO; 
 			gfp->brate = 16; 
@@ -183,7 +183,7 @@ static void PresetOptions( lame_global_flags *gfp, LONG myPreset )
 			gfp->out_samplerate = 32000; 
 			gfp->lowpassfreq = 12300;
 			gfp->lowpasswidth = 2000;
-			gfp->no_short_blocks = 1;
+			gfp->short_blocks = short_block_dispensed;
 			gfp->quality = 5;
 			gfp->mode = MONO; 
 			gfp->brate = 56; 
@@ -705,7 +705,7 @@ static void dump_config( )
 	DebugPrintf("Quality Setting        =%d\n",gf.quality);
 	DebugPrintf("Low pass frequency     =%d\n",gf.lowpassfreq);
 	DebugPrintf("High pass frequency    =%d\n",gf.highpassfreq);
-	DebugPrintf("No Short Blocks        =%s\n",(gf.no_short_blocks)?"yes":"no");
+	DebugPrintf("No Short Blocks        =%d\n",gf.short_blocks);
 	DebugPrintf("de-emphasis            =%d\n",gf.emphasis);
 	DebugPrintf("private flag           =%d\n",gf.extension);
 	DebugPrintf("copyright flag         =%d\n",gf.copyright);

@@ -361,6 +361,10 @@ int CDECL lame_get_useTemporal(const lame_global_flags *);
 int CDECL lame_set_no_short_blocks(lame_global_flags *, int);
 int CDECL lame_get_no_short_blocks(const lame_global_flags *);
 
+// force short blocks
+int CDECL lame_set_force_short_blocks(lame_global_flags *, int);
+int CDECL lame_get_force_short_blocks(const lame_global_flags *);
+
 /* Input PCM is emphased PCM (for instance from one of the rarely
    emphased CDs), it is STRONGLY not recommended to use this, because
    psycho does not take it into account, and last but not least many decoders
