@@ -1541,14 +1541,11 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	ns_attacks[0] = ns_attacks[1] = ns_attacks[2] = ns_attacks[3] = 0;
 	attackThreshold = (chn == 3)
 	    ? gfc->presetTune.attackthre_s : gfc->presetTune.attackthre;
-	for (i=0;i<12;i++) {
-	    if (ns_attacks[i/3])
-		continue;
-	
-	    if (attack_intensity[i] > attackThreshold)
+	for (i=0;i<12;i++)
+	    if (!ns_attacks[i/3] && attack_intensity[i] > attackThreshold)
 		ns_attacks[i/3] = (i % 3)+1;
-	}
-        if (ns_attacks[0] && gfc->nsPsy.last_attacks[chn][2])
+
+	if (ns_attacks[0] && gfc->nsPsy.last_attacks[chn][2])
 	    ns_attacks[0] = 0;
 
 	if (gfc->nsPsy.last_attacks[chn][2] == 3 ||
@@ -2053,6 +2050,16 @@ int psymodel_init(lame_global_flags *gfp)
 	for (b=0;b<gfc->npart_l;b++)
 	    if (gfc->s3ind[b][1] > gfc->npart_l-1)
 		gfc->s3ind[b][1] = gfc->npart_l-1;
+    }
+
+    /*  prepare for ATH auto adjustment:
+     *  we want to decrease the ATH by 12 dB per second
+     */
+    {
+        FLOAT8 frame_duration = 576. * gfc->mode_gr / sfreq;
+        gfc->ATH->decay = pow(10., -12./10. * frame_duration);
+        gfc->ATH->adjust = 0.01; /* minimum, for leading low loudness */
+        gfc->ATH->adjust_limit = 1.0; /* on lead, allow adjust up to maximum */
     }
 
     gfc->bo_s[SBMAX_s-1]--;
