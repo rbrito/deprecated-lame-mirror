@@ -226,9 +226,9 @@ typedef struct {
 
 /* Layer III side information. */
 typedef struct {
+    gr_info tt[2][2];
     int main_data_begin; 
     int private_bits;
-    gr_info tt[2][2];
     int ResvSize; /* in bits */
     int ResvMax;  /* in bits */
     int maxmp3buf; /* in bits */
@@ -369,7 +369,7 @@ struct lame_internal_flags {
   int use_best_huffman;     /* 0 = no.  1=outside loop  2=inside loop(slow) */
 
   /* variables used by lame.c */
-  III_side_info_t l3_side;
+  align16 III_side_info_t l3_side;
 
   /* used for padding */
   int frac_SpF;
