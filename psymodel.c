@@ -5,6 +5,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.26  2000/01/27 05:05:07  markt
+ * Takehiro's fft_short and fft_long now the defaults.
+ *
  * Revision 1.25  2000/01/27 03:52:58  cisc
  * Added NOPOW define, will replace certain pow()s with optimized variant.
  *
@@ -450,8 +453,7 @@ void L3psycho_anal( short int *buffer[2],
     /**********************************************************************
      *  compute FFTs
      **********************************************************************/
-    fft_long2( wsamp, energy, chn, buffer); /* old version */
-    /*fft_long( wsamp, energy, chn, buffer);*/
+    fft_long( wsamp, energy, chn, buffer);
 
     if (check_ms_stereo) {
       /* used for MS stereo criterion */
@@ -531,19 +533,7 @@ void L3psycho_anal( short int *buffer[2],
       }
 
 
-    fft_short2( wsamp_s, energy_s, chn, buffer); /* old routines */
-#if 0
-    {
-      FLOAT wsamp_new[3][BLKSIZE_s];
-           fft_short( wsamp_new, energy_s, chn, buffer);
-           for (j=0 ; j<3; j++) {
-           for (i=0 ; i<HBLKSIZE ; i++) {
-	     printf("old=%f  new=%f  \n",wsamp_s[j][i],wsamp_new[j][i]);
-           }
-	   }
-    }
-#endif
-
+    fft_short( &wsamp_s[0][0], energy_s, chn, buffer);
     /**********************************************************************
      *     compute unpredicatibility of next 200 spectral lines            *
      **********************************************************************/ 
@@ -607,15 +597,6 @@ void L3psycho_anal( short int *buffer[2],
 	
 	cw[j+1] = cw[j+2] = cw[j+3] = cw[j];
       }
-#if 0    
-    /**********************************************************************
-     *    Set unpredicatiblility of remaining spectral lines to 0.4  206..513 *
-     **********************************************************************/
-    /*   for ( j = 206; j < HBLKSIZE; j++ )*/
-    for ( ; j < HBLKSIZE; j++ )
-      cw[j] = 0.4;
-   
-#endif  /* moved to the initialization section */   
     
 #if 0
     for ( j = 14; j < HBLKSIZE-4; j += 4 )
