@@ -5,6 +5,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.6  1999/12/08 03:49:15  takehiro
+ * debugged possible buffer overrun.
+ *
  * Revision 1.5  1999/12/07 02:04:41  markt
  * backed out takehiro's fft changes for now
  * added latest quantize_xrpow asm from Acy and Mat
@@ -339,7 +342,7 @@ void L3psycho_anal( short int *buffer[2], int stereo,
       }
       s3ind[i][0] = j;
       
-      for (j = npart_l_orig; j > 0; j--) {
+      for (j = npart_l_orig - 1; j > 0; j--) {
 	if (s3_l[i][j] != 0.0)
 	  break;
       }
@@ -354,7 +357,7 @@ void L3psycho_anal( short int *buffer[2], int stereo,
       }
       s3ind_s[i][0] = j;
       
-      for (j = npart_s_orig; j > 0; j--) {
+      for (j = npart_s_orig - 1; j > 0; j--) {
 	if (s3_s[i][j] != 0.0)
 	  break;
       }
