@@ -24,7 +24,7 @@ scfsi, no scalefact_scale, and so on.
 
 
 
-5.
+4.
 Better intensity stereo. Currently LAME4 only supports it when
 MPEG1 Layer3, CBR or ABR (it does not when MPEG2 and VBR mode).
 
@@ -33,23 +33,30 @@ have bugs in the intensity stereo decoding.  Bugs have been there
 for years since there are very few intensity stereo mp3's out there.
 
 
-6. 
-LAME has a 31 point FIR filter used for resampling, which
-can also be used as a lowpass.  When resampling is done, 
-use that filter to also lowpass instead of the polyphase filter.
-
-
-7.
-Even when resampling is not needed, should we use an FIR filter
-for the lowpass?  If it is not too much slower, yes.  If it
-is slower, then it should be an option since it will produce
-higher quality.  
-
-
-8.
+5.
 Threshold calculation on short blocks. LAME4's block switching is
 better than LAME3, but threshold calculation is not. It does not
 support temporal masking, and so on.
+
+
+6.
+LAME has problems with test signals.
+1. pure DC input.(i.e. a square wave with a frequency well below 20 Hz)
+2. sin sweep signal (i.e. 20Hz->22kHz in 60sec)
+3. steep/saw wave (i.e. 100Hz)
+Seems not very important, but they are related to "REAL" problem of
+some kind of music. 1 and 2 are caused by ATH handling problem.
+3 is by short block threshold problem.
+
+
+7.
+Tuning resorvoir handling (especially for low bitrates).
+Right now the code is tuned with the LAME3's pe calculation and
+psymodel. Now they are all changed and we should re-tune these code.
+
+
+8.
+We should rewrite all the documentation, such as PRESET, INSTALL, README*,...
 
 
 9.
@@ -57,7 +64,20 @@ Clipping detection and replaygain tag:
 LAME 3.x supports this, but LAME4 does not.
 
 
-10.
+10. 
+LAME has a 31 point FIR filter used for resampling, which
+can also be used as a lowpass.  When resampling is done, 
+use that filter to also lowpass instead of the polyphase filter.
+
+
+11.
+Even when resampling is not needed, should we use an FIR filter
+for the lowpass?  If it is not too much slower, yes.  If it
+is slower, then it should be an option since it will produce
+higher quality.  
+
+
+12.
 better highpass/lowpass filter:
 We need to first replace the polyphase filter with an FIR filter.
 And setting highpass filtering to enhance the playback frequency range.
@@ -74,33 +94,10 @@ conv.) and solve this problem. (takehiro)
 
 
 
-20.
-LAME has problems with pure DC input.  i.e. a square wave with
-a frequency well below 20 Hz.  Not very important, but it should
-be fixed.
-
-
-
-20.
-Tuning for low bitrates: Right now the default sampling freq
-and lowpass are way too low for very low bitrates (less than 50kbps)
-
-
-
-
 50.
 Better tonality estimation.
 Nspsytune seems to miss tonals when several of them are too narrow.
 maybe nspsy2 based model will solve it.
-
-
-
-
-60.
-Different ATH handling for sfb21. We are using the minimum value of
-ath in each whole sfb. in sfb21 this leads to very high bitrates.
-We could perhaps use 2 or 3 ath partitions in sfb21 (pseudo
-scalefactor band)
 
 
 
