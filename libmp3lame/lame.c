@@ -1362,7 +1362,7 @@ lame_close(lame_t gfc)
 /*****************************************************************/
 int
 lame_encode_finish(lame_t gfc,
-                   unsigned char *mp3buffer, int mp3buffer_size)
+		   unsigned char *mp3buffer, int mp3buffer_size)
 {
     int     ret = lame_encode_flush(gfc, mp3buffer, mp3buffer_size);
 
@@ -1382,14 +1382,23 @@ lame_mp3_tags_fid(lame_t gfc, FILE * fpStream)
 	PutVbrTag(gfc, fpStream);
 }
 
-/* initialize mp3 encoder */
-static int
-init_core(lame_t gfc)
+/****************************************************************/
+/* initialize mp3 encoder					*/
+/****************************************************************/
+lame_t
+lame_init(void)
 {
+    lame_t gfc;
+    void *work = calloc(1, sizeof(struct lame_internal_flags) + 16);
+    if (!work)
+        return NULL;
+
     disable_FPE();      /* disable floating point exceptions */
 
+    gfc = (lame_t)((unsigned int)(work + 15) & ~15);
+    gfc->alignment = (unsigned char*)gfc - (unsigned char*)work;
+
     /* Global flags.  set defaults here for non-zero values */
-    /* see lame.h for description */
     /* set integer values to -1 to mean that LAME will compute the
      * best value, UNLESS the calling program as set it
      * (and the value is no longer -1)
@@ -1430,7 +1439,7 @@ init_core(lame_t gfc)
 
     /* The reason for
      *       int mf_samples_to_encode = ENCDELAY + POSTDELAY;
-     * ENCDELAY = internal encoder delay.  And then we have to add POSTDELAY=288
+     * ENCDELAY = internal encoder delay. And then we have to add POSTDELAY=288
      * because of the 50% MDCT overlap.  A 576 MDCT granule decodes to
      * 1152 samples.  To synthesize the 576 samples centered under this granule
      * we need the previous granule for the first 288 samples (no problem), and
@@ -1452,26 +1461,6 @@ init_core(lame_t gfc)
 #endif
 
     id3tag_init (gfc);
-    return 0;
-}
-
-lame_t
-lame_init(void)
-{
-    lame_t gfc;
-    int ret;
-    void *work = calloc(1, sizeof(struct lame_internal_flags) + 16);
-    if (!work)
-        return NULL;
-
-    gfc = (lame_t)((unsigned int)(work + 15) & ~15);
-    gfc->alignment = (unsigned char*)gfc - (unsigned char*)work;
-
-    ret = init_core(gfc);
-    if (ret != 0) {
-        free(gfc);
-        return NULL;
-    }
 
     return gfc;
 }
@@ -1507,9 +1496,7 @@ lame_bitrate_kbps(const lame_t gfc, int bitrate_kbps[14])
 {
     int     i;
 
-    if (!bitrate_kbps)
-        return;
-    if (!gfc)
+    if (!bitrate_kbps || !gfc)
         return;
 
     for (i = 0; i < 14; i++)
