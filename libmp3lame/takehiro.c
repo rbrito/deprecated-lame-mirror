@@ -910,7 +910,8 @@ best_scalefac_store(lame_t gfc, int gr, int ch)
 	if (gi->global_gain - (minsfbp << (gi->scalefac_scale+1)) < 0)
 	    minsfbp = gi->global_gain >> (gi->scalefac_scale+1);
 	if (minsfbp != 0) {
-	    gr_info gi_w = *gi;
+	    gr_info gi_w;
+	    gi_work_copy(&gi_w, gi);
 	    gi->global_gain -= minsfbp << (gi->scalefac_scale+1);
 	    for (sfb = 0; sfb < gi->psymax; sfb++)
 		if (gi->scalefac[sfb] != SCALEFAC_ANYTHING_GOES)
@@ -921,7 +922,7 @@ best_scalefac_store(lame_t gfc, int gr, int ch)
 
 	    gfc->scale_bitcounter(gi);
 	    if (gi->part2_length > gi_w.part2_length)
-		*gi = gi_w;
+		gi_work_copy(gi, &gi_w);
 	}
     }
 
@@ -1017,11 +1018,11 @@ scale_bitcount(gr_info * const gi)
 
     s1 = s2 = 0;
     for (sfb = 0; sfb < gi->sfbdivide; sfb++)
-	if (s1 < (signed char)gi->scalefac[sfb])
-	    s1 = (signed char)gi->scalefac[sfb];
+	if (s1 < gi->scalefac[sfb])
+	    s1 = gi->scalefac[sfb];
     for (; sfb < gi->sfbmax; sfb++)
-	if (s2 < (signed char)gi->scalefac[sfb])
-	    s2 = (signed char)gi->scalefac[sfb];
+	if (s2 < gi->scalefac[sfb])
+	    s2 = gi->scalefac[sfb];
     s1 = log2tab[s1];
     s2 = log2tab[s2];
 

@@ -179,15 +179,15 @@ typedef struct {
 typedef struct {
     FLOAT xr[576];
     int l3_enc[576];
-    int scalefac[SFBMAX];
+    short scalefac[SFBMAX];
 
+    char region0_count;
+    char region1_count;
     int part2_length;
     int part2_3_length;
     int count1bits;
     int big_values;
     int count1;
-    int region0_count;
-    int region1_count;
     int table_select[3+1]; /* last one for count1 region */
     int scalefac_compress;
 
@@ -210,7 +210,7 @@ typedef struct {
     FLOAT ATHadjust;
 
     unsigned char slen[4];
-    int dummy_for_padding[1];
+    int dummy_for_padding[2];
 } gr_info;
 
 typedef struct {

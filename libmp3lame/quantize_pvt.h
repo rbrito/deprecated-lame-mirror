@@ -39,6 +39,12 @@ void check_preflag (gr_info * const gi);
 int scale_bitcount (gr_info * const gi);
 int scale_bitcount_lsf (gr_info * const gi);
 
+inline static void gi_work_copy(gr_info *gi_w, const gr_info *gi)
+{
+    memcpy(&gi_w->scalefac, &gi->scalefac,
+	   sizeof(*gi_w) -  sizeof(gi_w->xr) - sizeof(gi_w->l3_enc));
+}
+
 #if HAVE_NASM
 int ix_max(const int *ix, const int *end);
 void quantize_sfb_3DN(const FLOAT *, int, int, int *);
