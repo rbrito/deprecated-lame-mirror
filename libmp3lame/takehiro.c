@@ -224,7 +224,7 @@ int
 choose_table_nonMMX(const int *ix, const int * const end, int * const s)
 {
     int choice, choice2, max = ix_max(ix, end);
-    short linmax[] = {
+    static const short linmax[] = {
 	 2+15,  4+15,  8+15,  16+15,  64+15,  256+15,  1024+15,  8192+15,
 	16+15, 32+15, 64+15, 128+15, 256+15,  512+15,  2048+15,  8192+15
     };
@@ -830,9 +830,7 @@ static const int max_range_sfac_tab[6][4] = {
 int
 scale_bitcount_lsf(gr_info * const gi)
 {
-    int part, i, sfb, table_type, tableID;
-
-    table_type = 0;
+    int part, i, sfb, tableID, table_type = 0;
     if (gi->preflag < 0)
 	table_type = 3; /* intensity stereo */
 

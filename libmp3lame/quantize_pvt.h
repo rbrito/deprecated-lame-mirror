@@ -40,7 +40,9 @@ int scale_bitcount (gr_info * const gi);
 int scale_bitcount_lsf (gr_info * const gi);
 
 #ifdef HAVE_NASM
-extern void quantize_sfb_3DN(const FLOAT *, int, int, int *);
+int choose_table_nonMMX(const int *ix, const int *end, int *s);
+int choose_table_MMX(const int *ix, const int *end, int *s);
+void quantize_sfb_3DN(const FLOAT *, int, int, int *);
 #endif
 
 #define LARGE_BITS	100000

@@ -46,10 +46,8 @@ extern void sumofsqr_3DN(const float *, int, float *);
 extern void calc_noise_sub_3DN(const float *, const int *, int, int, float *);
 extern void quantize_ISO_3DN(const float *, int, int, int *, int);
 extern void quantize_ISO_SSE(const float *, int, int, int *);
-extern FLOAT
-calc_sfb_noise_fast_3DN(lame_t gfc, int j, int bw, int sf);
-extern FLOAT
-calc_sfb_noise_3DN(lame_t gfc, int j, int bw, int sf);
+extern FLOAT calc_sfb_noise_fast_3DN(lame_t gfc, int j, int bw, int sf);
+extern FLOAT calc_sfb_noise_3DN(lame_t gfc, int j, int bw, int sf);
 #endif
 
 static const int max_range_short[SBMAX_s*3] = {
@@ -1766,21 +1764,17 @@ set_frame_pinfo(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 	if (gfc->mode == JOINT_STEREO) {
 	    gfc->pinfo->ms_ratio[gr] = gfc->pinfo->ms_ratio_next[gr];
 	    gfc->pinfo->ms_ratio_next[gr]
-		= gfc->masking_next[gr][2].pe
-		+ gfc->masking_next[gr][3].pe
-		- gfc->masking_next[gr][0].pe
-		- gfc->masking_next[gr][1].pe;
+		= gfc->masking_next[gr][2].pe + gfc->masking_next[gr][3].pe
+		- gfc->masking_next[gr][0].pe - gfc->masking_next[gr][1].pe;
 	}
         for (ch = 0; ch < gfc->channels_out; ch ++) {
 	    gr_info *gi = &gfc->l3_side.tt[gr][ch];
-	    int scalefac_sav[SFBMAX];
-	    int sfb;
-	    memcpy(scalefac_sav, gi->scalefac, sizeof(scalefac_sav));
+	    int scalefac_sav[SFBMAX], sfb;
 
 	    gfc->pinfo->blocktype[gr][ch] = gi->block_type;
 	    gfc->pinfo->pe[gr][ch] = ratio[gr][ch].pe;
-	    memcpy(gfc->pinfo->xr[gr][ch], gi->xr,
-		   sizeof(gfc->pinfo->xr[gr][ch]));
+	    memcpy(gfc->pinfo->xr[gr][ch], gi->xr, sizeof(gi->xr));
+	    memcpy(scalefac_sav, gi->scalefac, sizeof(scalefac_sav));
 
 	    /* reconstruct the scalefactors in case SCFSI was used */
 	    for (sfb = 0; sfb < gi->psymax; sfb++) {

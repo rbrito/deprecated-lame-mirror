@@ -43,8 +43,7 @@
 
   [table_number*3+row_in_table][column of nr_of_sfb]
 */
-const int  nr_of_sfb_block [6*3][4] =
-{
+const int  nr_of_sfb_block [6*3][4] = {
     {6, 5, 5, 5}, /* long/start/stop */
     {9, 9, 9, 9}, /* short */
     {6, 9, 9, 9}  /* mixed */
@@ -688,10 +687,10 @@ FLOAT window[BLKSIZE], window_s[BLKSIZE_s];
  *
  ***********************************************************************/
 
-
 ieee754_float32_t log_table[LOG2_SIZE*2];
 
-static void init_log_table(void)
+static void
+init_log_table(void)
 {
     int j;
     /* Range for log2(x) over [1,2[ is [0,1[ */
@@ -790,7 +789,6 @@ compute_ath(lame_t gfc)
     }
 }
 
-
 /************************************************************************/
 /*  initialization for iteration_loop */
 /************************************************************************/
@@ -825,20 +823,15 @@ static const struct
     {6, 7}, /* 22 bands */
 };
 
-
-
 static void
 huffman_init(lame_t gfc)
 {
     int i;
-    extern int choose_table_nonMMX(const int *ix, const int *end, int *s);
 
 #if HAVE_NASM
     gfc->choose_table = choose_table_nonMMX;
-    if (gfc->CPU_features.MMX) {
-        extern int choose_table_MMX(const int *ix, const int *end, int *s);
+    if (gfc->CPU_features.MMX)
         gfc->choose_table = choose_table_MMX;
-    }
 #endif
 
     gfc->scale_bitcounter = scale_bitcount;
@@ -968,36 +961,34 @@ lame_init_params_ppflt(lame_t gfc)
 
 
 /* resampling via FIR filter, blackman window */
-inline static FLOAT blackman(FLOAT x,FLOAT fcn,int l)
+static FLOAT
+blackman(FLOAT x, FLOAT fcn, int l)
 {
     /* This algorithm from:
        SIGNAL PROCESSING ALGORITHMS IN FORTRAN AND C
        S.D. Stearns and R.A. David, Prentice-Hall, 1992
     */
-    FLOAT bkwn,x2;
-    FLOAT wcn = (PI * fcn);
-  
-    x /= l;
-    if (x<0) x=0;
-    if (x>1) x=1;
+    FLOAT x2, wcn = PI * fcn;
+
+    if (x<0) x=0.0;
+    else if (x>l) x=1.0;
+    else x /= l;
     x2 = x - .5;
 
-    bkwn = 0.42 - 0.5*cos(2*x*PI)  + 0.08*cos(4*x*PI);
-    if (fabs(x2)<1e-9) return wcn/PI;
-    else 
-	return  (  bkwn*sin(l*wcn*x2)  / (PI*l*x2)  );
+    if (fabs(x2)<1e-9)
+	return wcn/PI;
+
+    return (0.42 - 0.5*cos(2*x*PI)  + 0.08*cos(4*x*PI))*sin(l*wcn*x2)
+	/ (PI*l*x2);
 }
 
 /* gcd - greatest common divisor */
 /* Joint work of Euclid and M. Hendry */
-
 static int
 gcd(int i, int j)
 {
     return j ? gcd(j, i % j) : i;
 }
-
-
 
 void
 iteration_init(lame_t gfc)
@@ -1115,13 +1106,10 @@ iteration_init(lame_t gfc)
     }
 }
 
-
-
-
-
 /* Mapping from frequency to barks */
 /* see for example "Zwicker: Psychoakustik, 1982; ISBN 3-540-11401-7 */
-static FLOAT freq2bark(FLOAT freq)
+static FLOAT
+freq2bark(FLOAT freq)
 {
     FLOAT bark;
     /* input: freq in hz  output: barks */
@@ -1164,9 +1152,9 @@ s3_func(FLOAT bark)
    bark value and partition number id of each sfb.
    each partition band should be about DELBARK wide, but sometimes not. */
 static int
-init_numline(
-    int *numlines, int *bo, int *bm, FLOAT *bval, FLOAT *mld,
-    FLOAT sfreq, int blksize, int *scalepos, FLOAT deltafreq, int sbmax)
+init_numline(int *numlines, int *bo, int *bm, FLOAT *bval, FLOAT *mld,
+	     FLOAT sfreq, int blksize, int *scalepos, FLOAT deltafreq,
+	     int sbmax)
 {
     int partition[HBLKSIZE], i, j, sfb;
 
@@ -1212,9 +1200,8 @@ init_numline(
 }
 
 static void
-init_numline_l2s(
-    int *bo, FLOAT sfreq, int blksize, int *scalepos,
-    FLOAT deltafreq, int sbmax)
+init_numline_l2s(int *bo, FLOAT sfreq, int blksize, int *scalepos,
+		 FLOAT deltafreq, int sbmax)
 {
     int partition[HBLKSIZE], i, j, sfb;
 
@@ -1247,8 +1234,8 @@ init_numline_l2s(
 }
 
 static int
-init_s3_values(
-    lame_t gfc, FLOAT **p, int (*s3ind)[2], int npart, FLOAT *bval, FLOAT *norm)
+init_s3_values(lame_t gfc, FLOAT **p, int (*s3ind)[2],
+	       int npart, FLOAT *bval, FLOAT *norm)
 {
     FLOAT s3[CBANDS][CBANDS];
     int i, j, k;
@@ -1450,8 +1437,8 @@ psymodel_init(lame_t gfc)
     /* The type of window used here will make no real difference, but
      * use blackman window for long block. */
     for (i = 0; i < BLKSIZE ; i++)
-      window[i] =
-	  0.42-0.5*cos(2*PI*(i+.5)/BLKSIZE) + 0.08*cos(4*PI*(i+.5)/BLKSIZE);
+      window[i]
+	  = 0.42-0.5*cos(2*PI*(i+.5)/BLKSIZE) + 0.08*cos(4*PI*(i+.5)/BLKSIZE);
 
     for (i = 0; i < BLKSIZE_s; i++)
 	window_s[i] = 0.5 * (1.0 - cos(2.0 * PI * (i + 0.5) / BLKSIZE_s));

@@ -56,7 +56,7 @@ getframebytes(lame_t gfc)
 }
 
 #ifndef NDEBUG
-# define putbits24(a,b,c) assert(0 < (c) && (c) <= 24), assert((b) <= (1UL << (c))), putbits24main(a,b,c)
+# define putbits24(a,b,c) assert(((unsigned int)c) <= 24U), assert(((unsigned int)b) <= (1UL << (c))), putbits24main(a,b,c)
 #else
 # define putbits24(a,b,c) putbits24main(a,b,c)
 #endif
@@ -543,7 +543,6 @@ inline static void
 drain_into_ancillary(lame_t gfc, int remainingBits)
 {
     bit_stream_t *bs = &gfc->bs;
-    int i, pad;
     assert(remainingBits >= 0);
 
     if (remainingBits >= 8) {
@@ -563,20 +562,21 @@ drain_into_ancillary(lame_t gfc, int remainingBits)
 	remainingBits -= 8;
     }
 
-    pad = 0xaa;
+#define PADDING_PATTERN 0xaa
     if (remainingBits >= 8) {
 	const char *version = get_lame_short_version ();
+	int len = strlen(version), i;
 	for (i=0; remainingBits >=8 ; ++i) {
-	    if (i < strlen(version))
+	    if (i < len)
 		putbits24(bs,version[i],8);
 	    else
-		putbits24(bs,pad,8);
+		putbits24(bs,PADDING_PATTERN,8);
 	    remainingBits -= 8;
 	}
     }
 
     if (remainingBits)
-	putbits24(bs, pad >> (8 - remainingBits), remainingBits);
+	putbits24(bs, PADDING_PATTERN >> (8 - remainingBits), remainingBits);
 }
 
 /*
