@@ -254,9 +254,13 @@ ATHformula_jd( FLOAT8 freq )
         /* 17500 */ 43.5, 51.5, 58.5, 65.0, 71.5,
         /* 20000 */ 78.0, 79.5, 80.0, 80.5, 80.5,    80.5 };
 
-  const FLOAT *ath_table[4] = { ath_lt100, ath_lt500, ath_gt500, ath_gt500 };
+  const FLOAT *ath_table[4];
   const int ath_table_step[4] =     {   20,  100,   500,   500 };
   const FLOAT ath_table_xratio[4] = { 0.05, 0.01, 0.002, 0.002 };
+
+  ath_table[0] = ath_lt100;
+  ath_table[1] = ath_lt500;
+  ath_table[3] = ath_gt500;
 
   if( freq >= -0.5 && freq < 22000 ) {
       ifreq = (int) freq;
