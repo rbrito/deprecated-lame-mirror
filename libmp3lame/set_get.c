@@ -1422,8 +1422,20 @@ lame_set_msfix( lame_global_flags*  gfp, double msfix )
 
 }
 
+/*
+ *  alternative scaling to prevent clipping problems
+ */
+void
+lame_set_gglower( lame_t gfp, int gglower )
+{
+    gfp->gglower = gglower;
+}
 
-
+int
+lame_get_gglower( lame_t gfp )
+{
+    return gfp->gglower;
+}
 
 
 
