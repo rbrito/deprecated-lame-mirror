@@ -259,6 +259,10 @@ SOURCE=.\set_get.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\set_get.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\tables.h
 # End Source File
 # Begin Source File
