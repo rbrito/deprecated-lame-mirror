@@ -23,6 +23,15 @@ black = usability, portability, other
 <hr>
 <h3>LAME 3.97 alpha (CVS)</h3>
 <ul>
+  <li>Gabriel Bouvigne: 
+    <ul>
+      <li>Changed FLOAT8 to FLOAT</li>
+    </ul>
+  </li>
+</ul>
+<br>
+<h3>LAME 3.96.1 &nbsp; &nbsp;July 25 2004</h3>
+<ul>
   <li>Robert Hegemann: 
     <ul>
       <li><font color="#ff0000">Fixed a rare bug in vbr-new (could lead to crashes or data corruption)</font></li>
@@ -30,8 +39,9 @@ black = usability, portability, other
   </li>
   <li>Gabriel Bouvigne: 
     <ul>
-      <li>Changed FLOAT8 to FLOAT</li>
-      <li>restored use of padding when not using bit reservoir</li>
+      <li>some fixes in ACM codec</li>
+      <li>fixed padding when encoding to 320kbps</li>
+      <li><font color="#ff0000">fixed block size selection for mid and side channels</font></li>
     </ul>
   </li>
 </ul>
