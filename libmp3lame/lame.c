@@ -201,7 +201,7 @@ set_compression_ratio(lame_global_flags * gfp)
 }
 
 /* Switch mappings for target bitrate */
-struct {
+static struct {
     int    kbps;
     int    large_scalefac;
     int    lowpass;
@@ -1253,6 +1253,7 @@ lame_init_bitstream(lame_global_flags * gfp)
         InitVbrTag(gfp);
 
     gfp->frameNum=0;
+    id3tag_write_v2(gfp);
 
     return 0;
 }
