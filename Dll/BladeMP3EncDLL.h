@@ -57,6 +57,8 @@ typedef		unsigned long			BE_ERR;
 #define		BE_MP3_MODE_DUALCHANNEL	2
 #define		BE_MP3_MODE_MONO		3
 
+
+
 #define		MPEG1	1
 #define		MPEG2	0
 
@@ -78,6 +80,17 @@ typedef enum
 } LAME_QUALTIY_PRESET;
 
 */
+
+
+typedef enum
+{
+	VBR_METHOD_NONE =0,
+	VBR_METHOD_OLD,
+	VBR_METHOD_NEW,
+	VBR_METHOD_MTRH,
+	VBR_METHOD_ABR,
+	VBR_METHOD_R3MIX,
+} VBRMETHOD;
 
 typedef enum 
 {
@@ -150,9 +163,10 @@ typedef struct	{
 			BOOL			bEnableVBR;			// USE VBR ENCODING (TRUE/FALSE)
 			INT				nVBRQuality;		// VBR QUALITY 0..9
 			DWORD			dwVbrAbr_bps;		// Use ABR in stead of nVBRQuality
+			VBRMETHOD		nVbrMethod;
 			BOOL			bNoRes;				// Disable Bit resorvoir
 
-			BYTE			btReserved[255-2*sizeof(DWORD)];	// FUTURE USE, SET TO 0
+			BYTE			btReserved[255-3*sizeof(DWORD)];	// FUTURE USE, SET TO 0
 
 			} LHV1;					// LAME header version 1
 

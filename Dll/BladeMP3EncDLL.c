@@ -366,6 +366,41 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 
 		}
 
+
+		if (lameConfig.format.LHV1.bEnableVBR)
+		{
+			switch ( lameConfig.format.LHV1.nVbrMethod)
+			{
+				case VBR_METHOD_NONE:
+				break;
+
+				case VBR_METHOD_OLD:
+					gf.VBR = vbr_rh; 
+				break;
+
+				case VBR_METHOD_NEW:
+					gf.VBR = vbr_mt; 
+				break;
+
+				case VBR_METHOD_MTRH:
+					gf.VBR = vbr_mtrh; 
+				break;
+
+				case VBR_METHOD_ABR:
+					gf.VBR = vbr_abr; 
+				break;
+
+				case VBR_METHOD_R3MIX:
+					gf.VBR = vbr_rh; 
+					gf.VBR_q = 1;
+					gf.quality = 2;
+					gf.lowpassfreq = 19500;
+					gf.mode = JOINT_STEREO;
+					gf.ATHtype = 3 ;
+					gf.VBR_min_bitrate_kbps=64;
+				break;
+			}
+		}
 	}
 	
 	// Set copyright flag?
