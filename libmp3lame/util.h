@@ -206,10 +206,11 @@ typedef struct  {
   int sfb21_extra; /* will be set in lame_init_params */
 
   /* variables used by util.c */
-#define BLACKSIZE 25
-#define BPC 160
-  short int inbuf_old[2][BLACKSIZE];
-  FLOAT blackfilt[2*BPC+1][BLACKSIZE];
+  /* be sure to malloc this stuff during initalizatin, and
+   * free the memory in freegfc().  see HACKING for instructions */
+#define BPC 320
+  FLOAT *inbuf_old[2];
+  FLOAT *blackfilt[2*BPC+1];
   FLOAT8 itime[2];
   int sideinfo_len;
 
