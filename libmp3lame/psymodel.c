@@ -915,7 +915,7 @@ pecalc_s(
     };
     int sb, sblock;
 
-    pe_s = 0.0;
+    pe_s = 0;
     sb = SBMAX_s - 1;
     if (!gfc->sfb21_extra)
 	sb--;
@@ -1232,6 +1232,9 @@ L3psycho_anal_ns(
 	    1.0    /0.11749, 0.79433/0.11749, 0.63096/0.11749, 0.63096/0.11749,
 	    0.63096/0.11749, 0.63096/0.11749, 0.63096/0.11749, 0.25119/0.11749
 	};
+	static const FLOAT tab2[] = {
+	    1.0/0.11749, 0.79433/0.11749, 0.63096/0.11749, 0.25119/0.11749
+	};
 	int b, i, j;
 	if (chn < 2)
 	    fft_long ( gfc, wsamp_L[chn], buffer[chn]);
@@ -1298,12 +1301,26 @@ L3psycho_anal_ns(
 		a *= 3.0/2.0;
 		m = (m-a) / a * gfc->rnumlines_ls[0];
 		a = eb[0];
-		if (m < sizeof(tab)/sizeof(tab[0]))
-		    a *= tab[trancate(m)];
+		if (m < sizeof(tab2)/sizeof(tab2[0]))
+		    a *= tab2[trancate(m)];
 	    }
 	    eb2[0] = a;
 
-	    for (b = 1; b < gfc->npart_l-1; b++) {
+	    for (b = 1; b < 12*3; b++) {
+		a = avg[b-1] + avg[b] + avg[b+1];
+		if (a != 0.0) {
+		    m = max[b-1];
+		    if (m < max[b  ]) m = max[b];
+		    if (m < max[b+1]) m = max[b+1];
+		    m = (m-a) / a * gfc->rnumlines_ls[b];
+		    a = eb[b];
+		    if (m < sizeof(tab2)/sizeof(tab2[0]))
+			a *= tab2[trancate(m)];
+		}
+		eb2[b] = a;
+	    }
+
+	    for (; b < gfc->npart_l-1; b++) {
 		a = avg[b-1] + avg[b] + avg[b+1];
 		if (a != 0.0) {
 		    m = max[b-1];
@@ -1702,7 +1719,10 @@ psycho_analysis(
     /* determine MS/LR in the next frame */
     gfc->mode_ext_next = MPG_MD_LR_LR;
     if (gfp->mode == JOINT_STEREO) {
-	FLOAT diff_pe = 0.0;
+	FLOAT diff_pe = 50.0;
+	if (gfc->mode_ext & MPG_MD_MS_LR)
+	    diff_pe = -50.0;
+
 	for (gr = 0; gr < gfc->mode_gr; gr++)
 	    diff_pe
 		+= gfc->masking_next[gr][2].pe
