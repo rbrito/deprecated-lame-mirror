@@ -15,9 +15,7 @@ pkghtml_DATA = \
 	index.html \
 	lame.css \
 	modes.html \
-	node5.html \
 	node6.html \
-	node7.html \
 	switchs.html
 
 EXTRA_DIST = $(pkghtml_DATA)
