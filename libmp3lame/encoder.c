@@ -86,7 +86,6 @@ ms_sparsing(lame_internal_flags* gfc, int gr)
 static void
 conv_istereo(lame_internal_flags* gfc, gr_info *gi, int sfb, int i)
 {
-    gfc->mode_ext |= 1;
     for (; i < 576;) {
 	FLOAT lsum = 1e-30, rsum = 1e-30;
 	int end = i + gi->width[sfb];
@@ -452,11 +451,11 @@ int  lame_encode_mp3_frame (				// Output
 	/* convert from L/R <-> Mid/Side */
 	for (gr = 0; gr < gfc->mode_gr; gr++) {
 	    gr_info *gi = &gfc->l3_side.tt[gr][0];
-	    int sfb = gfc->l3_side.istereo_start_sfb_l;
+	    int sfb = gfc->l3_side.is_start_sfb_l[gr];
 	    int end = gfc->scalefac_band.l[sfb];
 	    int i;
 	    if (gi->block_type == SHORT_TYPE) {
-		sfb = gfc->l3_side.istereo_start_sfb_s;
+		sfb = gfc->l3_side.is_start_sfb_s[gr];
 		end = gfc->scalefac_band.s[sfb]*3;
 		sfb *= 3;
 	    }
@@ -466,18 +465,18 @@ int  lame_encode_mp3_frame (				// Output
 		gi[0].xr[i] = (l+r) * (FLOAT)(SQRT2*0.5);
 		gi[1].xr[i] = (l-r) * (FLOAT)(SQRT2*0.5);
 	    }
-	    if (gfp->use_istereo)
+	    if (gfc->mode_ext & 1)
 		conv_istereo(gfc, gi, sfb, i);
 	    if (gfc->sparsing)
 		ms_sparsing(gfc, gr);
 	}
-    } else if (gfp->use_istereo) {
+    } else if (gfc->mode_ext & 1) {
 	for (gr = 0; gr < gfc->mode_gr; gr++) {
 	    gr_info *gi = &gfc->l3_side.tt[gr][0];
-	    int sfb = gfc->l3_side.istereo_start_sfb_l;
+	    int sfb = gfc->l3_side.is_start_sfb_l[gr];
 	    int end = gfc->scalefac_band.l[sfb];
 	    if (gi->block_type == SHORT_TYPE) {
-		sfb = gfc->l3_side.istereo_start_sfb_s;
+		sfb = gfc->l3_side.is_start_sfb_s[gr];
 		end = gfc->scalefac_band.s[sfb]*3;
 		sfb *= 3;
 	    }

@@ -647,7 +647,7 @@ set_istereo_sfb(lame_internal_flags *gfc, int gr)
 #endif
 	    break;
 	}
-	gfc->l3_side.istereo_start_sfb_l = ++sb;
+	gfc->is_start_sfb_l_next[gr] = ++sb;
 	for (; sb < SBMAX_l; sb++) {
 	    mr[0].en .l[sb] = mr[2].en .l[sb];
 	    mr[0].thm.l[sb] = mr[2].thm.l[sb];
@@ -682,7 +682,7 @@ set_istereo_sfb(lame_internal_flags *gfc, int gr)
 	if (sblock != 3)
 	    break;
     }
-    gfc->l3_side.istereo_start_sfb_s = ++sb;
+    gfc->is_start_sfb_s_next[gr] = ++sb;
 
     for (; sb < SBMAX_s; sb++) {
 	mr[0].en .s[sb][0] = mr[2].en .s[sb][0];
@@ -1720,6 +1720,11 @@ psycho_analysis(
 	    = gfc->l3_side.tt[gfc->mode_gr-1][ch].block_type;
     }
     /* next frame data -> current frame data (aging) */
+    gfc->l3_side.is_start_sfb_l[0] = gfc->is_start_sfb_l_next[0];
+    gfc->l3_side.is_start_sfb_l[1] = gfc->is_start_sfb_l_next[1];
+    gfc->l3_side.is_start_sfb_s[0] = gfc->is_start_sfb_s_next[0];
+    gfc->l3_side.is_start_sfb_s[1] = gfc->is_start_sfb_s_next[1];
+
     adjust_ATH(gfp);
     gfc->mode_ext = gfc->mode_ext_next;
     if (gfc->mode_ext & MPG_MD_MS_LR) {
@@ -1789,14 +1794,14 @@ psycho_analysis(
 		if (!gfc->sfb21_extra)
 		    sb--;
 		if (gfp->use_istereo && (ch & 1))
-		    sb = gfc->l3_side.istereo_start_sfb_s;
+		    sb = gfc->is_start_sfb_s_next[gr];
 		mr->pe = pecalc_s(gfc, mr, sb);
 	    } else {
 		int sb = SBMAX_l - 1;
 		if (!gfc->sfb21_extra)
 		    sb--;
 		if (gfp->use_istereo && (ch & 1))
-		    sb = gfc->l3_side.istereo_start_sfb_l;
+		    sb = gfc->is_start_sfb_l_next[gr];
 		mr->pe = pecalc_l(gfc, mr, sb);
 	    }
 	}
@@ -1806,9 +1811,10 @@ psycho_analysis(
 	    && (gfc->useshort_next[gr][0] | gfc->useshort_next[gr][1]))
 	    gfc->useshort_next[gr][0] = gfc->useshort_next[gr][1] = SHORT_TYPE;
     }
-
     /* determine MS/LR in the next frame */
     gfc->mode_ext_next = MPG_MD_LR_LR;
+    if (gfp->use_istereo)
+	gfc->mode_ext_next = MPG_MD_LR_I;
     if (gfp->mode == JOINT_STEREO) {
 	FLOAT diff_pe = 50.0;
 	if (gfc->mode_ext & MPG_MD_MS_LR)
@@ -1828,6 +1834,10 @@ psycho_analysis(
 		gfc->useshort_next[gr][0] = gfc->useshort_next[gr][2];
 		gfc->useshort_next[gr][1] = gfc->useshort_next[gr][3];
 	    }
+	    if (gfp->use_istereo
+		&& (gfc->masking_next[0][3].ath_over
+		    + gfc->masking_next[gfc->mode_gr][3].ath_over != 0))
+		gfc->mode_ext_next = MPG_MD_MS_I;
 	    /* LR -> MS case */
 	    if (gfc->mode_ext_next != gfc->mode_ext
 	     && (gfc->l3_side.tt[gfc->mode_gr-1][0].block_type
