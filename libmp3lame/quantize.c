@@ -212,7 +212,7 @@ init_xrpow(
 
 
 
-extern FLOAT8 athAdjust( FLOAT8 a, FLOAT8 x, FLOAT8 athFloor );
+extern FLOAT athAdjust( FLOAT a, FLOAT x, FLOAT athFloor );
 
 
 

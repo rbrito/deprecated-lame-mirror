@@ -301,7 +301,7 @@ compute_ffts(
 	}
     }
     /* total energy */
-    {FLOAT8 totalenergy=0.0;
+    {FLOAT totalenergy=0.0;
     for (j=11;j < HBLKSIZE; j++)
 	totalenergy += fftenergy[j];
 
@@ -333,12 +333,12 @@ compute_ffts(
 static void
 calc_interchannel_masking(
     lame_global_flags * gfp,
-    FLOAT8 ratio
+    FLOAT ratio
     )
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     int sb, sblock;
-    FLOAT8 l, r;
+    FLOAT l, r;
     if (gfc->channels_out > 1){
         for ( sb = 0; sb < SBMAX_l; sb++ ) {
 	        l = gfc->thm[0].l[sb];
@@ -424,7 +424,7 @@ ns_msfix(
     msfix *= 2.0;
     msfix2 *= 2.0;
     for ( sb = 0; sb < SBMAX_l; sb++ ) {
-	FLOAT8 thmLR,thmM,thmS,ath;
+	FLOAT thmLR,thmM,thmS,ath;
 	ath  = (gfc->ATH->cb[gfc->bm_l[sb]])*athlower;
 	thmLR = Min(Max(gfc->thm[0].l[sb],ath), Max(gfc->thm[1].l[sb],ath));
 	thmM = Max(gfc->thm[2].l[sb],ath);
@@ -450,7 +450,7 @@ ns_msfix(
 	    thmS = Max(gfc->thm[3].s[sb][sblock],ath);
 
 	    if (thmLR*msfix < thmM+thmS) {
-		FLOAT8 f = thmLR*msfix / (thmM+thmS);
+		FLOAT f = thmLR*msfix / (thmM+thmS);
 		thmM *= f;
 		thmS *= f;
 	    }
@@ -586,7 +586,7 @@ int L3psycho_anal( lame_global_flags * gfp,
 		    III_psy_ratio masking_ratio[2][2],
 		    III_psy_ratio masking_MS_ratio[2][2],
 		    FLOAT percep_entropy[2],FLOAT percep_MS_entropy[2], 
-                    FLOAT8 energy[4],
+                    FLOAT energy[4],
                     int blocktype_d[2])
 {
     lame_internal_flags *gfc=gfp->internal_flags;
@@ -1269,7 +1269,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 		    III_psy_ratio masking_ratio[2][2],
 		    III_psy_ratio masking_MS_ratio[2][2],
 		    FLOAT percep_entropy[2],FLOAT percep_MS_entropy[2], 
-		    FLOAT8 energy[4], 
+		    FLOAT energy[4], 
                     int blocktype_d[2])
 {
 /* to get a good cache performance, one has to think about

@@ -52,12 +52,12 @@
  */
 static void
 adjust_ATH( lame_global_flags* const  gfp,
-            FLOAT8              tot_ener[2][4] )
+            FLOAT              tot_ener[2][4] )
 {
     lame_internal_flags* const  gfc = gfp->internal_flags;
     int gr, channel;
     FLOAT max_pow;
-    FLOAT8 max_val;
+    FLOAT max_val;
 
     if (gfc->ATH->use_adjust == 0 || gfp->athaa_loudapprox == 0) {
         gfc->ATH->adjust = 1.0;	/* no adjustment */
@@ -132,9 +132,8 @@ adjust_ATH( lame_global_flags* const  gfp,
       {                         /* by Robert Hegemann */
         /*  this code reduces slowly the ATH (speed of 12 dB per second)
          */
-        FLOAT8 
         /*x = Max (640, 320*(int)(max_val/320)); */
-        x = Max (32, 32*(int)(max_val/32));
+        FLOAT x = Max (32, 32*(int)(max_val/32));
         x = x/32768;
         gfc->ATH->adjust *= gfc->ATH->decay;
         if (gfc->ATH->adjust < x)       /* but not more than f(x) dB */
@@ -146,7 +145,7 @@ adjust_ATH( lame_global_flags* const  gfp,
       {                         /* jd - 2001 feb27, mar12,20, jun30, jul22 */
                                 /* continuous curves based on approximation */
                                 /* to GB's original values. */
-        FLOAT8 adj_lim_new;
+        FLOAT adj_lim_new;
                                 /* For an increase in approximate loudness, */
                                 /* set ATH adjust to adjust_limit immediately*/
                                 /* after a delay of one frame. */
@@ -321,7 +320,7 @@ int  lame_encode_mp3_frame (				/* Output */
   const sample_t *inbuf[2];
   lame_internal_flags *gfc=gfp->internal_flags;
 
-  FLOAT8 tot_ener[2][4];
+  FLOAT tot_ener[2][4];
   FLOAT ms_ener_ratio[2]={.5,.5};
   chgrdata pe,pe_MS;
   chgrdata *pe_use;
@@ -557,7 +556,7 @@ change the following to
         };
 
         int i;
-        FLOAT8 f;
+        FLOAT f;
 
         for(i=0;i<18;i++) gfc->nsPsy.pefirbuf[i] = gfc->nsPsy.pefirbuf[i+1];
 

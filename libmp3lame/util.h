@@ -307,8 +307,8 @@ struct lame_internal_flags {
   unsigned long frame_count;  /* Number of frames coded, 2^32 > 3 years */
   int          mf_samples_to_encode;
   int          mf_size;
-  FLOAT8       ampl;	  /* amplification at the end of the current chunk (1. = 0 dB) */
-  FLOAT8       last_ampl;	  /* amplification at the end of the last chunk    (1. = 0 dB) */
+  FLOAT        ampl;	  /* amplification at the end of the current chunk (1. = 0 dB) */
+  FLOAT        last_ampl;	  /* amplification at the end of the last chunk    (1. = 0 dB) */
   int VBR_min_bitrate;            /* min bitrate index */
   int VBR_max_bitrate;            /* max bitrate index */
   int bitrate_index;
