@@ -260,15 +260,15 @@ calc_xmin(
 	    x = ratio->thm.l[gsfb] / x;
 #ifdef HAVE_NASM
 	    if (gfc->CPU_features.AMD_3DNow)
-		sumofsqr_3DN(&absxr[j-l], l, &x);
+		sumofsqr_3DN(&gi->xr[j-l], l, &x);
 	    else
 #endif
 	    {
 		FLOAT en0 = 0.0;
 		l = -l;
 		do {
-		    en0 += absxr[j+l  ] * absxr[j+l  ];
-		    en0 += absxr[j+l+1] * absxr[j+l+1];
+		    en0 += gi->xr[j+l  ] * gi->xr[j+l  ];
+		    en0 += gi->xr[j+l+1] * gi->xr[j+l+1];
 		} while ((l+=2) < 0);
 		x *= en0;
 	    }
@@ -289,15 +289,15 @@ calc_xmin(
 		x = ratio->thm.s[sfb][b] / x;
 #ifdef HAVE_NASM
 		if (gfc->CPU_features.AMD_3DNow)
-		    sumofsqr_3DN(&absxr[j-l], l, &x);
+		    sumofsqr_3DN(&gi->xr[j-l], l, &x);
 		else
 #endif
 		{
 		    FLOAT en0 = 0.0;
 		    l = -l;
 		    do {
-			en0 += absxr[j+l  ] * absxr[j+l  ];
-			en0 += absxr[j+l+1] * absxr[j+l+1];
+			en0 += gi->xr[j+l  ] * gi->xr[j+l  ];
+			en0 += gi->xr[j+l+1] * gi->xr[j+l+1];
 		    } while ((l+=2) > 0);
 		    x *= en0;
 		}
