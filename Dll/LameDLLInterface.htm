@@ -13,12 +13,12 @@ content="text/html; charset=iso-8859-1">
 <p align="center">&nbsp; </p>
 
 <p align="center"><font size="7">Lame-enc DLL</font> <br>
-<font size="5">version 1.11</font> <br>
-(Lame engine version 3.86) <br>
-<font size="6">Programmers Manual</font> </p>
+<font size="5">version 1.16</font> <br>
+(Lame engine version 3.87) <br>
+<font size="6">Programmers Manual</font></p>
 
-<p align="center"><i>Lame-enc.DLL and this manual is copyright by
-Albert L Faber<br>
+<p align="center"><i>The lame_enc.dll and this manual is
+copyright by Albert L Faber<br>
 Originally the the DLL interface is modeled after the lame_encder
 DLL interface<br>
 which is copyrighted by Tord Jansson and Jukka Poikolainen<br>
@@ -48,7 +48,7 @@ far as I'm concerned, but should be aware that lame_enc.dll might
 infringe certain MP3 related software patents held by Fraunhofer
 IIS in certain countries. </p>
 
-<p> <br>
+<p><br>
 &nbsp; </p>
 
 <p><font size="5">Disclaimer</font> </p>
@@ -75,22 +75,37 @@ and prevent users from running your program with a later version
 of lame_enc.DLL. <br>
 &nbsp; </p>
 
+<hr>
+
 <p><font size="5">How to use the DLL</font> </p>
 
-<p>1. Fill in a BE_CONFIG structure and send it to
-beInitStream(). Make sure that BE_ERR_SUCCESSFUL is returned. </p>
+<p>1. Fill in a <a href="#The BE_CONFIG Structure">BE_CONFIG </a>structure
+and send it to <a href="#beInitStream()">beInitStream()</a>. Make
+sure that BE_ERR_SUCCESSFUL is returned. </p>
 
 <p>2. Reserve at least the amount of memory returned in
 dwBufferSize as your output buffer. </p>
 
-<p>3. Call beEncodeChunk() until you've encoded everything you
-want. </p>
+<p>3. Call <a href="#beEncodeChunk()">beEncodeChunk()</a> until
+you've encoded everything you want. </p>
 
-<p>4. Call beDeinitStream() to make sure that all encoded data is
-flushed out before closing the stream. </p>
+<p>4. Call <a href="#beDeinitStream()">beDeinitStream()</a> to
+make sure that all encoded data is flushed out before closing the
+stream. </p>
 
-<p>5. Close the stream using beCloseStream(). <br>
+<p>5. Close the stream using <a href="#beCloseStream()">beCloseStream()
+</a></p>
+
+<p>6. And optionally call the <a href="#beWriteVBRHeader()">beWriteVBRHeader()</a>
+functions, to insert a Xing MP3 Header</p>
+
+<p>A handy feature is the available <a
+href="#Lame_enc.dll debug option">Lame_enc.dll debug option</a>,
+which will dump the important lame internal settings to a text
+file.<br>
 &nbsp; </p>
+
+<p><font size="5"></font>&nbsp;</p>
 
 <p><font size="5">Return Values</font> </p>
 
@@ -99,7 +114,9 @@ values. All functions should return BE_ERR_SUCCESSFUL unless
 something went wrong. <br>
 &nbsp; </p>
 
-<p><font size="5">Type definitions</font></p>
+<hr>
+
+<h1><a name="Type definitions"><font size="5">Type definitions</font></a></h1>
 
 <p>The DLL is by default compiled with the MS Visual C/C++
 compiler, which has the following type definitions:</p>
@@ -159,12 +176,24 @@ compiler, which has the following type definitions:</p>
     </tr>
 </table>
 
-<p>Within the lame-enc.dll All the structure elements are one
+<p>Within the lame_enc.dll All the structure elements are one
 byte alligned (due to backwards compatibility wiht BladEnc.DLL!</p>
 
 <p>&nbsp;</p>
 
-<p><font size="5">The MP3 BE_CONFIG - structure (OBSOLETE)</font></p>
+<hr>
+
+<h1><a name="The BE_CONFIG Structure"><font size="5">The
+BE_CONFIG Structure </font></a></h1>
+
+<p><font size="3">Currently there the BE_CONFIG structure has to
+varians, the old MP3 config structure that is truly compatible
+with the old BladeEnc interface, and the new defined LHV1
+structure, which can set far more options in the lame encoder</font></p>
+
+<p><font size="4"></font>&nbsp;</p>
+
+<h2><font size="5">The MP3 BE_CONFIG - structure (OBSOLETE)</font></h2>
 
 <p>This is the old structure as it was originally defined by the
 BladeEnc.DLL interface. However, I do highly recommend to use the
@@ -221,7 +250,7 @@ fill in before you call beInitStream(): <br>
 
 <p>&nbsp;</p>
 
-<p><font size="5">The LHV1 BE_CONFIG - structure (recommended)</font></p>
+<h2><font size="5">The LHV1 BE_CONFIG - structure (recommended)</font></h2>
 
 <p>These are the members of the LHV1 BE_CONFIG structure, you
 need to fill in before you call beInitStream(): <br>
@@ -298,10 +327,6 @@ need to fill in before you call beInitStream(): <br>
         <td>&nbsp;</td>
     </tr>
     <tr>
-        <td><b>format.LHV1.bitrate</b></td>
-        <td>Bitrate (i.e. size) of MP3 file in kBit/s. </td>
-    </tr>
-    <tr>
         <td>&nbsp;</td>
         <td>&nbsp;</td>
     </tr>
@@ -347,24 +372,42 @@ need to fill in before you call beInitStream(): <br>
         9 is lowest quality)</td>
     </tr>
     <tr>
+        <td><strong>format.LHV1.dwVbrAbr_bps</strong></td>
+        <td>If the Average Bit Rate is specified, the lame
+        encoder ignores the nVBRQuality settings</td>
+    </tr>
+    <tr>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+    </tr>
+    <tr>
+        <td><strong>format.LHV1.bNoBitRes</strong></td>
+        <td>Disables the bit-resorvoir and disables the insertion
+        of padded frames</td>
+    </tr>
+    <tr>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+    </tr>
+    <tr>
         <td><b>format.mp3.btReserved</b></td>
-        <td>For future use, zer all ementes to zero</td>
+        <td>For future use, set all elements to zero</td>
     </tr>
 </table>
 
 <p>&nbsp;</p>
 
-<p><br>
-&nbsp; </p>
+<p>&nbsp; </p>
 
 <hr>
 
-<p><font size="5">beInitStream()</font> </p>
+<h1><a name="beInitStream()"><font size="5">beInitStream()</font></a>
+</h1>
 
 <table border="0" cellspacing="16" width="100%">
     <tr>
         <td valign="top" width="20%"><b>Synopsis:</b></td>
-        <td valign="top" width="80%">&nbsp;BE_ERR beInitStream(
+        <td valign="top" width="80%">BE_ERR beInitStream(
         PBE_CONFIG <i>pbeConfig</i>, PDWORD <i>dwSamples</i>,
         PDWORD <i>dwBufferSize</i>, PHBE_STREAM <i>phbeStream</i>
         )</td>
@@ -406,9 +449,8 @@ need to fill in before you call beInitStream(): <br>
 
 <hr>
 
-<p><br>
-<font size="5">&nbsp;</font> <br>
-<font size="5">beEncodeChunk()</font> </p>
+<h1><a name="beEncodeChunk()"><font size="5">beEncodeChunk()</font>
+</a></h1>
 
 <table border="0" cellspacing="16" width="100%">
     <tr>
@@ -464,7 +506,8 @@ need to fill in before you call beInitStream(): <br>
 
 <hr>
 
-<p><font size="5">beDeinitStream()</font> </p>
+<h1><a name="beDeinitStream()"><font size="5">beDeinitStream()</font>
+</a></h1>
 
 <table border="0" cellspacing="16" width="100%">
     <tr>
@@ -508,7 +551,8 @@ need to fill in before you call beInitStream(): <br>
 
 <hr>
 
-<p><font size="5">beCloseStream()</font> </p>
+<h1><a name="beCloseStream()"><font size="5">beCloseStream()</font></a>
+</h1>
 
 <table border="0" cellspacing="16" width="100%">
     <tr>
@@ -537,7 +581,7 @@ need to fill in before you call beInitStream(): <br>
 
 <hr>
 
-<p><font size="5">beVersion()</font> </p>
+<h1><a name="beVersion()"><font size="5">beVersion()</font> </a></h1>
 
 <table border="0" cellspacing="16" width="100%">
     <tr>
@@ -573,7 +617,8 @@ need to fill in before you call beInitStream(): <br>
 
 <p>&nbsp;</p>
 
-<p><font size="5">beWriteVBRHeader()</font> </p>
+<h1><a name="beWriteVBRHeader()"><font size="5">beWriteVBRHeader()</font>
+</a></h1>
 
 <table border="0" cellspacing="16" width="100%">
     <tr>
@@ -604,6 +649,32 @@ need to fill in before you call beInitStream(): <br>
         set to TRUE</td>
     </tr>
 </table>
+
+<p>&nbsp;</p>
+
+<p>&nbsp;</p>
+
+<hr>
+
+<p>&nbsp;</p>
+
+<h1><a name="Lame_enc.dll debug option">Lame_enc.dll debug option</a></h1>
+
+<p>The lame_enc.dll has a built-in debug options, that dumps all
+the important internal settings to a text file. To enable this
+feature, create a text file in the Windwos directory which is
+named lame_enc.ini, and should contain the following two lines</p>
+
+<p>[debug]<br>
+WriteLogFile=1</p>
+
+<p>Save this text file, and each time you encode a file, the
+settings are added to a file name lame_enc.txt, that is located
+in the same directory as the lame_enc.dll</p>
+
+<p>&nbsp;</p>
+
+<p>&nbsp;</p>
 
 <p>&nbsp;</p>
 
