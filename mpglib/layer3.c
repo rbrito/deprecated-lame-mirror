@@ -446,7 +446,7 @@ static void III_get_side_info_2(PMPSTR mp, struct III_sideinfo *si,int channels,
        qss=getbits_fast(mp,8);
        gr_infos->pow2gain = gainpow2+256 - qss + powdiff;
 #ifndef NOANALYSIS
-       if (mpg123_pinfo!=NULL) {
+       if (mpg123_pinfo) {
 	   mpg123_pinfo->qss[0][ch]=qss;
        }
 #endif
@@ -472,7 +472,7 @@ static void III_get_side_info_2(PMPSTR mp, struct III_sideinfo *si,int channels,
 	   unsigned int sbg = (getbits_fast(mp,3)<<3);
            gr_infos->full_gain[i] = gr_infos->pow2gain + sbg;
 #ifndef NOANALYSIS
-	   if (mpg123_pinfo!=NULL)
+	   if (mpg123_pinfo)
 	     mpg123_pinfo->sub_gain[0][ch][i]=sbg/8;
 #endif
 
@@ -1639,11 +1639,9 @@ do_layer3( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point,
       }
 
 #ifndef NOANALYSIS
-      if (mpg123_pinfo!=NULL) {
-	int i;
+      if (mpg123_pinfo) {
 	mpg123_pinfo->sfbits[gr][0] = part2bits;
-	for (i=0; i<39; i++) 
-	  mpg123_pinfo->sfb_s[gr][0][i]=scalefacs[0][i];
+	memcpy(mpg123_pinfo->sfb_s[gr][0], scalefacs[0], sizeof(int)*39);
       }
 #endif
 
@@ -1660,11 +1658,9 @@ do_layer3( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point,
 	  part2bits = III_get_scale_factors_1(mp, scalefacs[1],gr_infos);
       }
 #ifndef NOANALYSIS
-      if (mpg123_pinfo!=NULL) {
-	int i;
+      if (mpg123_pinfo) {
 	mpg123_pinfo->sfbits[gr][1] = part2bits;
-	for (i=0; i<39; i++) 
-	  mpg123_pinfo->sfb_s[gr][1][i]=scalefacs[1][i];
+	memcpy(mpg123_pinfo->sfb_s[gr][1], scalefacs[1], sizeof(int)*39);
       }
 #endif
 
@@ -1714,7 +1710,7 @@ do_layer3( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point,
     }
 
 #ifndef NOANALYSIS
-    if (mpg123_pinfo!=NULL) {
+    if (mpg123_pinfo) {
     int i,sb;
     float ifqstep;
 
