@@ -126,7 +126,8 @@ typedef struct  bit_stream_struc {
 
 /* variables used for --nspsytune */
 typedef struct {
-  int   use; /* indicates the use of exp_nspsytune */
+  /* variables for nspsytune */
+  int   use; /* indicates the use of nspsytune */
   int   safejoint; /* safe joint stereo mode */
   FLOAT last_en_subshort[4][9];
   FLOAT last_attack_intensity[4][9];
@@ -135,6 +136,10 @@ typedef struct {
   FLOAT pe_l[4],pe_s[4];
   FLOAT pefirbuf[19];
   FLOAT bass,alto,treble,sfb21;
+
+  /* variables for nspsytune2 */
+  int use2; /* indicates the use of nspsytune2 */
+  FILE *pass1fp;
 } nsPsy_t;
 
 /* variables used for --alt-preset */

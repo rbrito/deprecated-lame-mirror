@@ -1407,32 +1407,53 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	tonality2[b] = a == 0 ? 0 : (m / a - 1)/(c2-1);
       }
 
-    for (b=0; b < gfc->npart_l_orig; b++ )
-      {
-#if 0
-	static FLOAT8 tab[20] =
-	{  0,  1,  2,  2,  2,  2,  2,  6,9.3,9.3,9.3,9.3,9.3,9.3,9.3,9.3,9.3,9.3,9.3,9.3};
+    if (gfc->nsPsy.use2) {
+      int rch;
 
-	static int init = 1;
-	if (init) {
-	  int j;
-	  for(j=0;j<20;j++) {
-	    tab[j] = pow(10.0,-tab[j]/10.0);
-	  }
-	  init = 0;
+      for(;;)
+	{
+	  char chname[] = {'L','R','M','S'};
+	  char c;
+
+	  fscanf(gfc->nsPsy.pass1fp,"%c",&c);
+
+	  for (b=0; b < gfc->npart_l_orig; b++ )
+	    {
+	      fscanf(gfc->nsPsy.pass1fp,"%lf",&eb2[b]);
+	    }
+
+	  if (feof(gfc->nsPsy.pass1fp)) abort();
+
+	  if (c == chname[chn]) break;
 	}
+
+    } else {
+      for (b=0; b < gfc->npart_l_orig; b++ )
+	{
+#if 0
+	  static FLOAT8 tab[20] =
+	  {  0,  1,  2,  2,  2,  2,  2,  6,9.3,9.3,9.3,9.3,9.3,9.3,9.3,9.3,9.3,9.3,9.3,9.3};
+
+	  static int init = 1;
+	  if (init) {
+	    int j;
+	    for(j=0;j<20;j++) {
+	      tab[j] = pow(10.0,-tab[j]/10.0);
+	    }
+	    init = 0;
+	  }
 #else
-	static FLOAT8 tab[20] = {
-	  1,0.79433,0.63096,0.63096,0.63096,0.63096,0.63096,0.25119,0.11749,0.11749,
-	  0.11749,0.11749,0.11749,0.11749,0.11749,0.11749,0.11749,0.11749,0.11749,0.11749
-	};
+	  static FLOAT8 tab[20] = {
+	    1,0.79433,0.63096,0.63096,0.63096,0.63096,0.63096,0.25119,0.11749,0.11749,
+	    0.11749,0.11749,0.11749,0.11749,0.11749,0.11749,0.11749,0.11749,0.11749,0.11749
+	  };
 #endif
 
-	int t = 20*tonality2[b];
-	if (t > 19) t = 19;
-	eb2[b] = eb[b] * tab[t];
-      }
-
+	  int t = 20*tonality2[b];
+	  if (t > 19) t = 19;
+	  eb2[b] = eb[b] * tab[t];
+	}
+    }
 
     /**********************************************************************
      *      convolve the partitioned energy and unpredictability

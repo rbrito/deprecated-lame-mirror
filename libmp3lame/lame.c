@@ -981,6 +981,11 @@ lame_init_params(lame_global_flags * const gfp)
         gfc->nsPsy.sfb21 = pow(10, (i+j) / 4.0 / 10.0);
     }
 
+    if (gfp->exp_nspsytune2.pointer[0]) {
+      gfc->nsPsy.pass1fp = gfp->exp_nspsytune2.pointer[0];
+      gfc->nsPsy.use2 = 1;
+    }
+
     assert( gfp->VBR_q <= 9 );
     assert( gfp->VBR_q >= 0 );
     
