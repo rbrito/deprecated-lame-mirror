@@ -37,12 +37,9 @@
 
 
 const int MAJORVERSION=1;
-const int MINORVERSION=05;
+const int MINORVERSION=10;
 const int CURRENT_STRUCT_VERSION=1;
 const int CURRENT_STRUCT_SIZE=sizeof(BE_CONFIG);
-
-
-
 
 
 // Local variables
@@ -435,8 +432,8 @@ void dump_config( char *inPath, char *outPath)
 //	sprintf(strTmp,"Voice mode %s\n",(voice_mode)?"enabled":"disabled");
 //	OutputDebugString(strTmp);
 
-//	sprintf(strTmp,"Encoding as %.1f kHz %d kbps %d MPEG-%d LayerIII file\n",gf.out_samplerate/1000.0,gf.brate,gf.mode,3 - gf.mode_gr);
-//	OutputDebugString(strTmp);
+	sprintf(strTmp,"Encoding as %.1f kHz %d kbps %d MPEG-%d LayerIII file\n",gf.out_samplerate/1000.0,gf.brate,gf.mode,3 - gf.version);
+	OutputDebugString(strTmp);
 }
 
 
