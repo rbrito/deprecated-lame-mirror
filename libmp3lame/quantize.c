@@ -288,7 +288,6 @@ calc_noise(
 
     if (over && cod_info->block_type == SHORT_TYPE) {
 	distort -= sfb;
-	over = 0;
 	max_noise = -20.0;
 	over_noise_db = 0.0;
 	for (sfb = cod_info->sfb_smin; sfb < cod_info->psymax; sfb += 3) {
@@ -311,7 +310,7 @@ calc_noise(
 	    if (max_noise < nsum)
 		max_noise = nsum;
 	    if (noise > 0) {
-		over++;
+		over += 3;
 		over_noise_db += noise;
 	    }
 	}
