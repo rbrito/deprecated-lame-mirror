@@ -34,6 +34,12 @@
 #include "util.h"
 #include "tables.h"
 
+#ifdef TAKEHIRO_IEEE754_HACK
+# define signbits(x) (*((unsigned int*)&x) >> 31)
+#else
+# define signbits(x) (x < (FLOAT)0.)
+#endif
+
 typedef struct {
     unsigned char code;
     unsigned char len;
@@ -437,22 +443,22 @@ Huf_count1(bit_stream_t *bs, gr_info *gi)
 
 	if (gi->l3_enc[i  ]) {
 	    p = 8;
-	    huffbits = huffbits + (gi->xr[i  ] < 0);
+	    huffbits = huffbits   + signbits(gi->xr[i  ]);
 	}
 
 	if (gi->l3_enc[i+1]) {
 	    p += 4;
-	    huffbits = huffbits*2 + (gi->xr[i+1] < 0);
+	    huffbits = huffbits*2 + signbits(gi->xr[i+1]);
 	}
 
 	if (gi->l3_enc[i+2]) {
 	    p += 2;
-	    huffbits = huffbits*2 + (gi->xr[i+2] < 0);
+	    huffbits = huffbits*2 + signbits(gi->xr[i+2]);
 	}
 
 	if (gi->l3_enc[i+3]) {
 	    p++;
-	    huffbits = huffbits*2 + (gi->xr[i+3] < 0);
+	    huffbits = huffbits*2 + signbits(gi->xr[i+3]);
 	}
 	putbits24(bs, huffbits + hcode[p+16], hcode[p]);
     }
@@ -483,7 +489,7 @@ Huffmancode_esc(bit_stream_t *bs, int tablesel, int i, int end, gr_info *gi)
 		xbits  = xlen;
 		x1     = 15;
 	    }
-	    ext += (gi->xr[i] < 0);
+	    ext += signbits(gi->xr[i]);
 	    cbits--;
 	    x1 *= 16;
 	}
@@ -496,7 +502,7 @@ Huffmancode_esc(bit_stream_t *bs, int tablesel, int i, int end, gr_info *gi)
 		xbits += xlen;
 		x2     = 15;
 	    }
-	    ext = ext*2 + (gi->xr[i+1] < 0);
+	    ext = ext*2 + signbits(gi->xr[i+1]);
 	    cbits--;
 	    x1 += x2;
 	}
@@ -533,13 +539,8 @@ Huf_bigvalue(bit_stream_t *bs, int tablesel, int start, int end, gr_info *gi)
 	    code = x1*xlen + x2;
 	    clen = t[code+1].len;
 	    code = t[code+1].code;
-#ifdef TAKEHIRO_IEEE754_HACK
-	    if (x1) code = code*2 + (((unsigned int*)gi->xr)[start  ] >> 31);
-	    if (x2) code = code*2 + (((unsigned int*)gi->xr)[start+1] >> 31);
-#else
-	    if (x1) code = code*2 + (gi->xr[start  ] < 0);
-	    if (x2) code = code*2 + (gi->xr[start+1] < 0);
-#endif
+	    if (x1) code = code*2 + signbits(gi->xr[start  ]);
+	    if (x2) code = code*2 + signbits(gi->xr[start+1]);
 	    putbits24(bs, code, clen);
 	} while ((start += 2) < end);
     }
