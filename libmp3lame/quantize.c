@@ -1212,7 +1212,7 @@ VBR_prepare (
     lame_internal_flags *gfc=gfp->internal_flags;
     
     
-    FLOAT8   masking_lower_db, adjust;
+    FLOAT8   masking_lower_db, adjust = 0.0;
     int      gr, ch;
     int      used_bits = 0, bits;
     int      analog_silence = 1;
@@ -1226,11 +1226,12 @@ VBR_prepare (
         for (ch = 0; ch < gfc->channels_out; ch++) {
             gr_info *cod_info = &gfc->l3_side.gr[gr].ch[ch].tt;
       
+            if (gfc->nsPsy.use && gfp->VBR == vbr_rh) {
             if (cod_info->block_type == NORM_TYPE) 
                 adjust = 1.28/(1+exp(3.5-pe[gr][ch]/300.))-0.05;
             else 
                 adjust = 2.56/(1+exp(3.5-pe[gr][ch]/300.))-0.14;
-      
+            }
             masking_lower_db   = gfc->VBR->mask_adjust - adjust; 
             gfc->masking_lower = pow (10.0, masking_lower_db * 0.1);
       

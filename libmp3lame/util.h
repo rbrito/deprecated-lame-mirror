@@ -408,6 +408,7 @@ struct lame_internal_flags {
 /* the second index is the "age" of the data.                             */
   FLOAT8	minval[CBANDS];
   FLOAT8	nb_1[4][CBANDS], nb_2[4][CBANDS];
+  FLOAT8	nb_s1[4][CBANDS], nb_s2[4][CBANDS];
   FLOAT8  *s3_ss;
   FLOAT8  *s3_ll;
 

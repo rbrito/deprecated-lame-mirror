@@ -158,6 +158,8 @@ blocktype_d[2]        block type to use for previous granule
 #define NSFIRLEN 21
 #define rpelev 2
 #define rpelev2 16
+#define rpelev_s 2
+#define rpelev2_s 16
 
 /* size of each partition band, in barks: */
 #define DELBARK .34
@@ -259,6 +261,11 @@ int L3psycho_anal( lame_global_flags * gfp,
       psymodel_init(gfp);
       init_fft(gfc);
       gfc->psymodel_init=1;
+      
+      for (chn = 0; chn < 4; ++chn )
+      for (b = 0; b < CBANDS; ++b ) 
+        gfc->nb_s1[chn][b] = gfc->nb_s2[chn][b] = 1.0;
+      
   }
   
 
@@ -649,16 +656,23 @@ int L3psycho_anal( lame_global_flags * gfp,
 	  /* chn=0,1   L and R channels
 	     chn=2,3   S and M channels.  
 	  */
-        
-	  if (gfc->blocktype_old[chn>1 ? chn-2 : chn] == SHORT_TYPE )
-	    if (vbr_mtrh == gfp->VBR)
-                thr[b] = Min(ecb, rpelev*gfc->nb_1[chn][b]);
-            else
-                thr[b] = ecb; /* Min(ecb, rpelev*gfc->nb_1[chn][b]); */
-	  else
-	    thr[b] = Min(ecb, Min(rpelev*gfc->nb_1[chn][b],rpelev2*gfc->nb_2[chn][b]) );
 
-	  gfc->nb_2[chn][b] = gfc->nb_1[chn][b];
+        
+            if ( vbr_off == gfp->VBR || vbr_abr == gfp->VBR ) {
+                if (gfc->blocktype_old[chn>1 ? chn-2 : chn] == SHORT_TYPE )
+                    thr[b] = ecb; /* Min(ecb, rpelev*gfc->nb_1[chn][b]); */
+                else
+                    thr[b] = Min(ecb, Min(rpelev*gfc->nb_1[chn][b],rpelev2*gfc->nb_2[chn][b]) );
+            }
+            else {
+                thr[b] = Min(ecb, rpelev*gfc->nb_1[chn][b]);
+                if (gfc->blocktype_old[chn>1 ? chn-2 : chn] != SHORT_TYPE )
+                    thr[b] = Min(thr[b], rpelev2*gfc->nb_2[chn][b]);
+                thr[b] = Max( thr[b], 1e-37 );
+            }
+                
+                
+          gfc->nb_2[chn][b] = gfc->nb_1[chn][b];
 	  gfc->nb_1[chn][b] = ecb;
 	  {
 	    FLOAT8 thrpe;
@@ -784,7 +798,22 @@ int L3psycho_anal( lame_global_flags * gfp,
 		ecb += gfc->s3_ss[kk++] * eb[k];
 	      }
 	      ecb *= gfc->SNR_s[b];
-	      thr[b] = Max (1e-6, ecb);
+
+/* 2001-07-13 */
+        if ( gfp->VBR == vbr_off || gfp->VBR == vbr_abr ) {
+            /* this looks like a BUG to me. robert */
+            thr[b] = Max (1e-6, ecb);
+        }
+        else {
+            thr[b] = Min( ecb, rpelev_s  * gfc->nb_s1[chn][b] );
+            if (gfc->blocktype_old[chn>1 ? chn-2 : chn] == SHORT_TYPE ) {
+                thr[b] = Min( thr[b], rpelev2_s * gfc->nb_s2[chn][b] );
+            }
+            thr[b] = Max( thr[b], 1e-37 );
+            gfc->nb_s2[chn][b] = gfc->nb_s1[chn][b];
+            gfc->nb_s1[chn][b] = ecb;
+        }
+        
 	    }
 
 	  for ( sb = 0; sb < NBPSY_s; sb++ )
@@ -1507,7 +1536,20 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 		{
 		  ecb += gfc->s3_ss[kk++] * eb[k];
 		}
-	      thr[b] = Max (1e-6, ecb);
+
+/* 2001-07-13 */
+            /* this looks like a BUG  */
+            thr[b] = Max (1e-6, ecb);
+            
+            if (gfp->VBR == vbr_mtrh) {
+                thr[b] = Min( ecb, rpelev_s  * gfc->nb_s1[chn][b] );
+                if (gfc->blocktype_old[chn>1 ? chn-2 : chn] == SHORT_TYPE ) {
+                   thr[b] = Min( thr[b], rpelev2_s * gfc->nb_s2[chn][b] );
+                }
+                thr[b] = Max( thr[b], 1e-37 );
+                gfc->nb_s2[chn][b] = gfc->nb_s1[chn][b];
+                gfc->nb_s1[chn][b] = ecb;
+                }
 	    }
 	}
 	for ( sb = 0; sb < NBPSY_s; sb++ )
