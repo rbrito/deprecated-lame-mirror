@@ -171,13 +171,11 @@ int over[2],FLOAT8 tot_noise[2], FLOAT8 over_noise[2], FLOAT8 max_noise[2])
  *  and chooses best quantization instead of last quantization when 
  *  no distortion free quantization can be found.  
  *  
- *  added VBR support mt 5/99
  ************************************************************************/
 void outer_loop_dual(
     FLOAT8 xr[2][2][576],        /*  could be L/R OR MID/SIDE */
     FLOAT8 xr_org[2][2][576],
     int mean_bits,
-    int VBRbits[2][2],
     int bit_rate,
     int best_over[2],
     III_psy_xmin  *l3_xmin,   /* the allowed distortion of the scalefactor */
@@ -198,6 +196,7 @@ void outer_loop_dual(
   int save_real_bits[2];
   int i,over[2], iteration, ch, compute_stepsize;
   int better[2];
+  int add_bits[2]; 
   FLOAT8 max_noise[2];
   FLOAT8 best_max_noise[2];
   FLOAT8 over_noise[2];
@@ -230,44 +229,36 @@ void outer_loop_dual(
   /******************************************************************
    * allocate bits for each channel 
    ******************************************************************/
-  if (VBR) {
-    for (ch=0 ; ch < stereo ; ch ++ )
-      targ_bits[ch]=VBRbits[gr][ch];
-
-  }else { 
-    int add_bits[2]; 
-
-    /* allocate targ_bits for granule */
-    ResvMaxBits2( mean_bits, &tbits, &extra_bits, gr);
-
-    for (ch=0 ; ch < stereo ; ch ++ )
-      targ_bits[ch]=tbits/stereo;
-
+  /* allocate targ_bits for granule */
+  ResvMaxBits2( mean_bits, &tbits, &extra_bits, gr);
+  
+  for (ch=0 ; ch < stereo ; ch ++ )
+    targ_bits[ch]=tbits/stereo;
+  
+  
+  /* allocate extra bits from reservoir based on PE */
+  bits=0;
+  for (ch=0; ch<stereo; ch++) {
+    FLOAT8 pe_temp=pe[gr][ch];
+    if (convert_psy) pe_temp=Max(pe[gr][0],pe[gr][1]);
     
-    /* allocate extra bits from reservoir based on PE */
-    bits=0;
-    for (ch=0; ch<stereo; ch++) {
-      FLOAT8 pe_temp=pe[gr][ch];
-      if (convert_psy) pe_temp=Max(pe[gr][0],pe[gr][1]);
-
-      /* extra bits based on PE > 700 */
-      add_bits[ch]=(pe_temp-750)/1.55;  /* 2.0; */
-
-      
-      /* short blocks need extra, no matter what the pe */
-      if (cod_info[ch]->block_type==2) 
-	if (add_bits[ch]<500) add_bits[ch]=500;
-      
-      if (add_bits[ch] < 0) add_bits[ch]=0;
-      bits += add_bits[ch];
-    }
-    for (ch=0; ch<stereo; ch++) {
-      if (bits > extra_bits) add_bits[ch] = (extra_bits*add_bits[ch])/bits;
-      targ_bits[ch] = targ_bits[ch] + add_bits[ch];
-    }
-    for (ch=0; ch<stereo; ch++) 
-      extra_bits -= add_bits[ch];
+    /* extra bits based on PE > 700 */
+    add_bits[ch]=(pe_temp-750)/1.55;  /* 2.0; */
+    
+    
+    /* short blocks need extra, no matter what the pe */
+    if (cod_info[ch]->block_type==2) 
+      if (add_bits[ch]<500) add_bits[ch]=500;
+    
+    if (add_bits[ch] < 0) add_bits[ch]=0;
+    bits += add_bits[ch];
   }
+  for (ch=0; ch<stereo; ch++) {
+    if (bits > extra_bits) add_bits[ch] = (extra_bits*add_bits[ch])/bits;
+    targ_bits[ch] = targ_bits[ch] + add_bits[ch];
+  }
+  for (ch=0; ch<stereo; ch++) 
+    extra_bits -= add_bits[ch];
 
   if (reduce_sidechannel) {
     /*  ms_ener_ratio = 0:  allocate 66/33  mid/side  fac=.33  
@@ -515,7 +506,7 @@ void outer_loop_dual(
   
   /* finish up */
   for (ch=0 ; ch < stereo ; ch ++ ) {
-    if (!VBR) ResvAdjust( fr_ps, cod_info[ch], l3_side, mean_bits );
+    ResvAdjust( fr_ps, cod_info[ch], l3_side, mean_bits );
     cod_info[ch]->global_gain = nint2( cod_info[ch]->quantizerStepSize + 210.0 );
     assert( cod_info[ch]->global_gain < 256 );
   }

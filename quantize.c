@@ -54,7 +54,6 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   III_psy_xmin l3_xmin;
   gr_info *cod_info;
   layer *info;
-  int VBRbits[2][2];
   int over[2];
   FLOAT8 noise[4]; /* over,max_noise,over_noise,tot_noise; */
   FLOAT8 targ_noise[4]; /* over,max_noise,over_noise,tot_noise; */
@@ -81,7 +80,7 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
       /* dual channel version can quantize Mid/Side channels with L/R
        * maskings (by constantly reconstructing L/R data).  Used before we
        * we had proper mid/side maskings. */
-      outer_loop_dual( xr, xr_org, mean_bits, VBRbits, bit_rate, over,
+      outer_loop_dual( xr, xr_org, mean_bits, bit_rate, over,
 	       &l3_xmin,l3_enc, fr_ps, 
 	       scalefac,gr,stereo, l3_side, ratio, pe, ms_ener_ratio);
     } else {
@@ -90,7 +89,6 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
       if (convert_mdct) ms_convert(xr[gr],xr_org[gr]);
       else memcpy(xr[gr],xr_org[gr],sizeof(FLOAT8)*2*576);   
       
-      for (ch=0 ; ch < stereo ; ch ++) targ_bits[ch]=VBRbits[gr][ch];
       on_pe(pe,l3_side,targ_bits,mean_bits,stereo,gr);
       if (reduce_sidechannel) 
 	reduce_side(targ_bits,ms_ener_ratio[gr],mean_bits);

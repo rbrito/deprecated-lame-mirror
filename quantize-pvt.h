@@ -47,7 +47,6 @@ void outer_loop( FLOAT8 xr[2][2][576],     /*vector of the magnitudees of the sp
 void outer_loop_dual( FLOAT8 xr[2][2][576],     /*vector of the magnitudees of the spectral values */
 		 FLOAT8 xr_org[2][2][576],
                 int mean_bits,
-                int VBRbits[2][2],
                 int bit_rate,
 		int best_over[2],
                 III_psy_xmin  *l3_xmin, /* the allowed distortion of the scalefactor */
