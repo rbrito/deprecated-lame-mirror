@@ -192,8 +192,8 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
         case vbr_rh: {
             SET_OPTION(short_threshold_lrm, 6.60f, -1);
             SET_OPTION(short_threshold_s, 145.0f, -1);
-            SET_OPTION(quant_comp, 1, -1);
-            SET_OPTION(quant_comp_short, 0, -1);
+            SET_OPTION(quant_comp, 9, -1);
+            SET_OPTION(quant_comp_short, 9, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
             SET_OPTION(maskingadjust, 1.6, 0);
             SET_OPTION(maskingadjust_short, 1.6, 0);
@@ -233,13 +233,13 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
         case vbr_rh: {
             SET_OPTION(short_threshold_lrm, 6.60f, -1);
             SET_OPTION(short_threshold_s, 145.0f, -1);
-            SET_OPTION(quant_comp, 1, -1);
-            SET_OPTION(quant_comp_short, 0, -1);
+            SET_OPTION(quant_comp, 9, -1);
+            SET_OPTION(quant_comp_short, 9, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
             SET_OPTION(maskingadjust, 1.2, 0);
             SET_OPTION(maskingadjust_short, 1.15, 0);
             SET_OPTION(interChRatio, 0.0007, -1);
-            SET_OPTION(ATHlower, -28, 0);
+            SET_OPTION(ATHlower, -27.5, 0);
             SET_OPTION(ATHcurve, 10, -1);
             SET_OPTION(athaa_sensitivity, -23, 0);
 
@@ -274,14 +274,14 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
         case vbr_rh: {
             SET_OPTION(short_threshold_lrm, 6.60f, -1);
             SET_OPTION(short_threshold_s, 145.0f, -1);
-            SET_OPTION(quant_comp, 1, -1);
-            SET_OPTION(quant_comp_short, 0, -1);
+            SET_OPTION(quant_comp, 9, -1);
+            SET_OPTION(quant_comp_short, 9, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
             SET_OPTION(msfix, 2.70, -1);
             SET_OPTION(maskingadjust, .8, 0);
             SET_OPTION(maskingadjust_short, .75, 0);
             SET_OPTION(interChRatio, 0.0006, -1);
-            SET_OPTION(ATHlower, -20, 0);
+            SET_OPTION(ATHlower, -19.7, 0);
             SET_OPTION(ATHcurve, 8, -1);
             SET_OPTION(athaa_sensitivity, -22, 0);
 
@@ -317,14 +317,14 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
         case vbr_rh: {
             SET_OPTION(short_threshold_lrm, 6.60f, -1);
             SET_OPTION(short_threshold_s, 145.0f, -1);
-            SET_OPTION(quant_comp, 1, -1);
-            SET_OPTION(quant_comp_short, 0, -1);
+            SET_OPTION(quant_comp, 9, -1);
+            SET_OPTION(quant_comp_short, 9, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
             SET_OPTION(msfix, 2.30, -1);
             SET_OPTION(maskingadjust, .67, 0);
             SET_OPTION(maskingadjust_short, .65, 0);
             SET_OPTION(interChRatio, 0.0004, -1);
-            SET_OPTION(ATHlower, -14.9, 0);
+            SET_OPTION(ATHlower, -14.7, 0);
             SET_OPTION(ATHcurve, 6.5, -1);
             SET_OPTION(athaa_sensitivity, -19, 0);
 
@@ -360,15 +360,15 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             case vbr_rh: {
             SET_OPTION(short_threshold_lrm, 6.40f, -1);
             SET_OPTION(short_threshold_s, 140.0f, -1);
-            SET_OPTION(quant_comp, 1, -1);
-            SET_OPTION(quant_comp_short, 0, -1);
+            SET_OPTION(quant_comp, 9, -1);
+            SET_OPTION(quant_comp_short, 9, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
             SET_OPTION(msfix, 1.95, -1);
             SET_OPTION(maskingadjust, .5, 0);
             SET_OPTION(maskingadjust_short, .4, 0);
             SET_OPTION(interChRatio, 0.0002, -1);
-            SET_OPTION(ATHlower, -8.5, 0);
-            SET_OPTION(ATHcurve, 5, -1);
+            SET_OPTION(ATHlower, -7.5, 0);
+            SET_OPTION(ATHcurve, 4, -1);
             SET_OPTION(athaa_sensitivity, -16, 0);
 
             lame_set_experimentalY(gfp, 1);
@@ -387,8 +387,8 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             SET_OPTION(maskingadjust, 0.45, 0);
             SET_OPTION(maskingadjust_short, 0.35, 0);
             SET_OPTION(interChRatio, 0.0002, -1);
-            SET_OPTION(ATHlower, -7.0, 0);
-            SET_OPTION(ATHcurve, 5, -1);
+            SET_OPTION(ATHlower, -7.7, 0);
+            SET_OPTION(ATHcurve, 4, -1);
             SET_OPTION(athaa_sensitivity, -16, 0);
 
             lame_set_experimentalY(gfp, 1);
@@ -403,15 +403,15 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
         case vbr_rh: {
             SET_OPTION(short_threshold_lrm, 6.00f, -1);
             SET_OPTION(short_threshold_s, 135.0f, -1);
-            SET_OPTION(quant_comp, 3, -1);
-            SET_OPTION(quant_comp_short, 3, -1);
+            SET_OPTION(quant_comp, 9, -1);
+            SET_OPTION(quant_comp_short, 9, -1);
             SET_OPTION(psy_model, PSY_NSPSYTUNE, -1);
             lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
             SET_OPTION(msfix, 1.79, -1);
-            SET_OPTION(maskingadjust, 1.0, 0);
-            SET_OPTION(maskingadjust_short, .6, 0);
-            SET_OPTION(ATHlower, -10.95, 0);
-            SET_OPTION(ATHcurve, 4, -1);
+            SET_OPTION(maskingadjust, -.7, 0);
+            SET_OPTION(maskingadjust_short, -1.1, 0);
+            SET_OPTION(ATHlower, 1.1, 0);
+            SET_OPTION(ATHcurve, 3.5, -1);
             SET_OPTION(athaa_sensitivity, -8, 0);
 
             lame_set_experimentalY(gfp, 1);
@@ -431,7 +431,7 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             SET_OPTION(maskingadjust, -.7, 0);
             SET_OPTION(maskingadjust_short, -1.1, 0);
             SET_OPTION(ATHlower, 0, 0);
-            SET_OPTION(ATHcurve, 4, -1);
+            SET_OPTION(ATHcurve, 3.5, -1);
             SET_OPTION(athaa_sensitivity, -8, 0);
 
             lame_set_experimentalY(gfp, 1);
