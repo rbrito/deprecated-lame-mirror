@@ -54,10 +54,12 @@ char *strchr (), *strrchr ();
 
 
 #if defined(HAVE_TERMCAP)
-#if defined(HAVE_TERMCAP_H)
-# include <termcap.h>
-#elif defined(HAVE_NCURSES_TERMCAP_H)
+#include <curses.h>
+#include <term.h>
+#if defined(HAVE_NCURSES_TERMCAP_H)
 # include <ncurses/termcap.h>
+#elif defined(HAVE_TERMCAP_H)
+# include <termcap.h>
 #endif
 #endif
 
