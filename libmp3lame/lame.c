@@ -628,7 +628,7 @@ lame_init_params(lame_global_flags * const gfp)
                break;
             }
             case 8: {
-                lowpass = 10000;
+                lowpass = 12500;
                 break;
             }
             case 7: {
@@ -636,7 +636,7 @@ lame_init_params(lame_global_flags * const gfp)
                 break;
             }
             case 6: {
-                 lowpass = 14900;
+                lowpass = 16000;
                 break;
             }
             case 5: {
