@@ -91,23 +91,13 @@ void set_frame_pinfo(
               III_scalefac_t            scalefac [2][2] );
 
 
-#ifdef ASM_QUANTIZE
-void quantize_xrpow_ASM( FLOAT8 xr[576],
-               int  ix[576],
-               int );
-
-void quantize_xrpow_ISO_ASM( FLOAT8 xr[576],
-               int  ix[576],
-               int);
-#else
 void quantize_xrpow( FLOAT8 xr[576],
-               int  ix[576],
-               gr_info *cod_info );
+		     int  ix[576],
+		     FLOAT8 istep );
 
 void quantize_xrpow_ISO( FLOAT8 xr[576],
-               int  ix[576],
-               gr_info *cod_info );
-#endif
+			 int  ix[576],
+			 FLOAT8 istep );
 
 
 

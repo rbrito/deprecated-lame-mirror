@@ -69,7 +69,7 @@ typedef struct {
 
 	 int part2_length;
 	 int sfb_lmax;
-	 int sfb_smax;
+	 int sfb_smin;
 	 int count1bits;
 	/* added for LSF */
 	 const int *sfb_partition_table;

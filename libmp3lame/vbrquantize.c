@@ -818,11 +818,15 @@ VBR_quantize(lame_global_flags *gfp,
       
       if (cod_info->block_type == SHORT_TYPE) {
           cod_info->sfb_lmax = 0; /* No sb*/
-          cod_info->sfb_smax = 0;
+          cod_info->sfb_smin = 0;
       } else {
           /* MPEG 1 doesnt use last scalefactor band */
           cod_info->sfb_lmax = SBPSY_l;
-          cod_info->sfb_smax = SBPSY_s;    /* No sb */
+          cod_info->sfb_smin = SBPSY_s;    /* No sb */
+	  if (cod_info->mixed_block_flag) {
+	    cod_info->sfb_lmax        = 8;
+	    cod_info->sfb_smin        = 3;
+	  }
       }
       
       /* quality setting */

@@ -994,11 +994,9 @@ typedef union {
 #define MAGIC_FLOAT (65536*(128))
 #define MAGIC_INT 0x4b000000
 
-void quantize_xrpow(FLOAT8 xp[576], int pi[576], gr_info *cod_info)
+void quantize_xrpow(FLOAT8 xp[576], int pi[576], FLOAT8 istep)
 {
     /* quantize on xr^(3/4) instead of xr */
-    const FLOAT8 istep = IPOW20(cod_info->global_gain);
-
     int j;
     fi_union *fi;
 
@@ -1029,10 +1027,9 @@ void quantize_xrpow(FLOAT8 xp[576], int pi[576], gr_info *cod_info)
 }
 
 #  define ROUNDFAC -0.0946
-void quantize_xrpow_ISO(FLOAT8 xp[576], int pi[576], gr_info *cod_info)
+void quantize_xrpow_ISO(FLOAT8 xp[576], int pi[576], FLOAT8 istep)
 {
     /* quantize on xr^(3/4) instead of xr */
-    const FLOAT8 istep = IPOW20(cod_info->global_gain);
     int j;
     fi_union *fi;
 
@@ -1071,9 +1068,8 @@ void quantize_xrpow_ISO(FLOAT8 xp[576], int pi[576], gr_info *cod_info)
 #define ROUNDFAC 0.4054
 
 
-void quantize_xrpow(FLOAT8 xr[576], int ix[576], gr_info *cod_info) {
+void quantize_xrpow(FLOAT8 xr[576], int ix[576], FLOAT8 istep) {
     /* quantize on xr^(3/4) instead of xr */
-    const FLOAT8 istep = IPOW20(cod_info->global_gain);
     /* from Wilfried.Behne@t-online.de.  Reported to be 2x faster than 
        the above code (when not using ASM) on PowerPC */
     int j;
@@ -1121,10 +1117,9 @@ void quantize_xrpow(FLOAT8 xr[576], int ix[576], gr_info *cod_info) {
 
 
 
-void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
+void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], FLOAT8 istep )
 {
     /* quantize on xr^(3/4) instead of xr */
-    const FLOAT8 istep = IPOW20(cod_info->global_gain);
     const FLOAT8 compareval0 = (1.0 - 0.4054)/istep;
     int j;
     /* depending on architecture, it may be worth calculating a few more

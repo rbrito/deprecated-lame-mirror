@@ -736,10 +736,8 @@ void mdct_sub48(lame_internal_flags *gfc,
 		FLOAT8 *band0, *band1;
 		band0 = gfc->sb_sample[ch][  gr][0] + order[band];
 		band1 = gfc->sb_sample[ch][1-gr][0] + order[band];
-#ifdef ALLOW_MIXED
 		if (gi->mixed_block_flag && band < 2)
 		    type = 0;
-#endif
 		if (band >= gfc->lowpass_band || band <= gfc->highpass_band) {
 		    memset((char *)mdct_enc,0,18*sizeof(FLOAT8));
 		} else {

@@ -385,17 +385,10 @@ int count_bits(lame_internal_flags *gfc,int *ix, FLOAT8 *xr, gr_info *cod_info)
       return LARGE_BITS;
   }
 
-#ifdef ASM_QUANTIZE
   if (gfc->quantization) 
-    quantize_xrpow_ASM(xr, ix, cod_info->global_gain);
+    quantize_xrpow(xr, ix, IPOW20(cod_info->global_gain));
   else
-    quantize_xrpow_ISO_ASM(xr, ix, cod_info->global_gain);
-#else
-  if (gfc->quantization) 
-    quantize_xrpow(xr, ix, cod_info);
-  else
-    quantize_xrpow_ISO(xr, ix, cod_info);
-#endif
+    quantize_xrpow_ISO(xr, ix, IPOW20(cod_info->global_gain));
 
   bits=count_bits_long(gfc, ix, cod_info);
 
@@ -487,7 +480,6 @@ void best_huffman_divide(lame_internal_flags *gfc, int gr, int ch, gr_info *gi, 
     int r01_div[7 + 15 + 1];
     int r0_tbl[7 + 15 + 1];
     int r1_tbl[7 + 15 + 1];
-    memcpy(&cod_info2, gi, sizeof(gr_info));
 
 
     /* SHORT BLOCK stuff fails for MPEG2 */ 
@@ -495,6 +487,7 @@ void best_huffman_divide(lame_internal_flags *gfc, int gr, int ch, gr_info *gi, 
           return;
 
 
+    memcpy(&cod_info2, gi, sizeof(gr_info));
     if (gi->block_type == NORM_TYPE) {
 	recalc_divide_init(gfc, cod_info2, ix, r01_bits,r01_div,r0_tbl,r1_tbl);
 	recalc_divide_sub(gfc, cod_info2, gi, ix, r01_bits,r01_div,r0_tbl,r1_tbl);
@@ -638,7 +631,7 @@ void best_scalefac_store(lame_internal_flags *gfc,int gr, int ch,
 	if (l==end) scalefac[gr][ch].l[sfb]=0;
       }
     }
-    for ( j=0, sfb = gi->sfb_smax; sfb < SBPSY_s; sfb++ ) {
+    for ( j=0, sfb = gi->sfb_smin; sfb < SBPSY_s; sfb++ ) {
 	start = gfc->scalefac_band.s[ sfb ];
 	end   = gfc->scalefac_band.s[ sfb+1 ];
 	for ( i = 0; i < 3; i++ ) {
@@ -660,7 +653,7 @@ void best_scalefac_store(lame_internal_flags *gfc,int gr, int ch,
 	    s |= scalefac[gr][ch].l[sfb];
 	}
 
-	for (sfb = gi->sfb_smax; sfb < SBPSY_s; sfb++) {
+	for (sfb = gi->sfb_smin; sfb < SBPSY_s; sfb++) {
 	    for (b = 0; b < 3; b++) {
 		s |= scalefac[gr][ch].s[sfb][b];
 	    }
@@ -670,7 +663,7 @@ void best_scalefac_store(lame_internal_flags *gfc,int gr, int ch,
 	    for (sfb = 0; sfb < gi->sfb_lmax; sfb++) {
 		scalefac[gr][ch].l[sfb] /= 2;
 	    }
-	    for (sfb = gi->sfb_smax; sfb < SBPSY_s; sfb++) {
+	    for (sfb = gi->sfb_smin; sfb < SBPSY_s; sfb++) {
 		for (b = 0; b < 3; b++) {
 		    scalefac[gr][ch].s[sfb][b] /= 2;
 		}
@@ -730,13 +723,19 @@ int scale_bitcount( III_scalefac_t *scalefac, gr_info *cod_info)
 
     if ( cod_info->block_type == SHORT_TYPE ) {
 	tab = scale_short;
-	for ( i = 0; i < 3; i++ )
-	{
-	    for ( sfb = 0; sfb < 6; sfb++ )
-		if (scalefac->s[sfb][i] > max_slen1 )
+	if (cod_info->mixed_block_flag) {
+	    tab = scale_mixed;
+	    for ( sfb = 0 ; sfb < cod_info->sfb_lmax; sfb++ )
+		if (max_slen1 < scalefac->l[sfb])
+		    max_slen1 = scalefac->l[sfb];
+	}
+
+	for ( i = 0; i < 3; i++ ) {
+	    for ( sfb = cod_info->sfb_smin; sfb < 6; sfb++ )
+		if (max_slen1 < scalefac->s[sfb][i])
 		    max_slen1 = scalefac->s[sfb][i];
 	    for (sfb = 6; sfb < SBPSY_s; sfb++ )
-		if ( scalefac->s[sfb][i] > max_slen2 )
+		if (max_slen2 < scalefac->s[sfb][i])
 		    max_slen2 = scalefac->s[sfb][i];
 	}
     }

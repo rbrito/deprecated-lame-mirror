@@ -77,10 +77,14 @@ int init_outer_loop
     cod_info->part2_length        = 0;
     if (cod_info->block_type == SHORT_TYPE) {
         cod_info->sfb_lmax        = 0;
-        cod_info->sfb_smax        = 0;
+        cod_info->sfb_smin        = 0;
+	if (cod_info->mixed_block_flag) {
+	    cod_info->sfb_lmax        = 8;
+	    cod_info->sfb_smin        = 3;
+	}
     } else {
         cod_info->sfb_lmax        = SBPSY_l;
-        cod_info->sfb_smax        = SBPSY_s;
+        cod_info->sfb_smin        = SBPSY_s;
     }   
     cod_info->count1bits          = 0;  
     cod_info->sfb_partition_table = nr_of_sfb_block[0][0];
@@ -246,7 +250,7 @@ int loop_break
         if (scalefac->l[sfb] == 0)
             return 0;
 
-    for (sfb = cod_info->sfb_smax; sfb < SBPSY_s; sfb++)
+    for (sfb = cod_info->sfb_smin; sfb < SBPSY_s; sfb++)
         for (i = 0; i < 3; i++) 
             if (scalefac->s[sfb][i] + cod_info->subblock_gain[i] == 0)
                 return 0;
@@ -386,7 +390,7 @@ void amp_scalefac_bands
     distort_thresh = Max(distort[0][sfb],distort_thresh);
   }
 
-  for ( sfb = cod_info->sfb_smax; sfb < 12; sfb++ ) {
+  for ( sfb = cod_info->sfb_smin; sfb < 12; sfb++ ) {
     for ( i = 0; i < 3; i++ ) {
       distort_thresh = Max(distort[i+1][sfb],distort_thresh);
     }
@@ -422,7 +426,7 @@ void amp_scalefac_bands
 
     max_dist = 0;
     asfb = -1;
-    for ( j=0,sfb = cod_info->sfb_smax; sfb < 12; sfb++ ) {
+    for ( j=0,sfb = cod_info->sfb_smin; sfb < 12; sfb++ ) {
       start = gfc->scalefac_band.s[sfb];
       end   = gfc->scalefac_band.s[sfb+1];
       for ( i = 0; i < 3; i++ ) {
@@ -457,7 +461,7 @@ void amp_scalefac_bands
       }
     }
 
-    for ( j=0,sfb = cod_info->sfb_smax; sfb < 12; sfb++ ) {
+    for ( j=0,sfb = cod_info->sfb_smin; sfb < 12; sfb++ ) {
       start = gfc->scalefac_band.s[sfb];
       end   = gfc->scalefac_band.s[sfb+1];
       for ( i = 0; i < 3; i++ ) {
@@ -504,7 +508,7 @@ void amp_scalefac_bands
         distort_thresh[0] = pow (distort_thresh[0], 1.05); /* 95% */
   
     for (i = 1; i < 4; i++) {
-        for (sfb = cod_info->sfb_smax; sfb < 12; sfb++) {
+        for (sfb = cod_info->sfb_smin; sfb < 12; sfb++) {
             if (distort_thresh[i] < distort[i][sfb]) {
                 distort_thresh[i] = distort[i][sfb];
                 max_ind[i] = sfb;
@@ -532,7 +536,7 @@ void amp_scalefac_bands
     
     /*  amplify distorted bands in short blocks
      */
-    for (j = 0, sfb = cod_info->sfb_smax; sfb < 12; sfb++ ) {
+    for (j = 0, sfb = cod_info->sfb_smin; sfb < 12; sfb++ ) {
         start = gfc->scalefac_band.s[sfb];
         end   = gfc->scalefac_band.s[sfb+1];
         for (i = 0; i < 3; i++) {
@@ -587,7 +591,7 @@ void inc_scalefac_scale
         cod_info->preflag = 0;
     }
 
-    for (j = 0, sfb = cod_info->sfb_smax; sfb < SBPSY_s; sfb++) {
+    for (j = 0, sfb = cod_info->sfb_smin; sfb < SBPSY_s; sfb++) {
     start = gfc->scalefac_band.s[sfb];
     end   = gfc->scalefac_band.s[sfb+1];
     for (i = 0; i < 3; i++) {
@@ -629,7 +633,7 @@ int inc_subblock_gain(
         int sfb;
         s1 = s2 = 0;
 
-        for (sfb = cod_info->sfb_smax; sfb < 6; sfb++) {
+        for (sfb = cod_info->sfb_smin; sfb < 6; sfb++) {
             if (s1 < scalefac->s[sfb][window])
             s1 = scalefac->s[sfb][window];
         }
@@ -649,7 +653,7 @@ int inc_subblock_gain(
          * we have to go up to SBMAX_s
          */
         cod_info->subblock_gain[window]++;
-        for (sfb = cod_info->sfb_smax; sfb < SBMAX_s; sfb++) {
+        for (sfb = cod_info->sfb_smin; sfb < SBMAX_s; sfb++) {
             int i, width;
             int s = scalefac->s[sfb][window];
             FLOAT8 amp;
