@@ -70,16 +70,16 @@ BEGIN
     BEGIN
         BLOCK "040904b0"
         BEGIN
-            VALUE "Comments", "This is currently a test of an ACM driver for Win32, it will later be used for the ACM Driver of Lame (OSS MP3 encoder)\0"
-            VALUE "CompanyName", "Open Source\0"
-            VALUE "FileDescription", "Dummy ACM driver\0"
-            VALUE "FileVersion", "0.3.0\0"
-            VALUE "InternalName", "drvACM\0"
-            VALUE "LegalCopyright", "Copyright © 2001 Steve Lhomme\0"
-            VALUE "LegalTrademarks", "See BSD license\0"
-            VALUE "OriginalFilename", "drvACM.acm\0"
-            VALUE "ProductName", "ACM dummy test\0"
-            VALUE "ProductVersion", "0.3.0\0"
+            VALUE "Comments", "This is currently a test of an ACM driver for Win32 using Lame to encode and mpglib to decode\0"
+            VALUE "CompanyName", "http://www.mp3dev.org/\0"
+            VALUE "FileDescription", "Lame MP3 codec engine\0"
+            VALUE "FileVersion", "0.7.1\0"
+            VALUE "InternalName", "lameACM\0"
+            VALUE "LegalCopyright", "Copyright © 2002 Steve Lhomme\0"
+            VALUE "LegalTrademarks", "LGPL (see gnu.org)\0"
+            VALUE "OriginalFilename", "lameACM.acm\0"
+            VALUE "ProductName", "Lame MP3 codec\0"
+            VALUE "ProductVersion", "0.7.1\0"
         END
     END
     BLOCK "VarFileInfo"
@@ -167,4 +167,5 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+
 

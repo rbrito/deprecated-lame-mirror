@@ -1,6 +1,8 @@
 ; Lame codec
 ; enable MP3 compression in Windows
 
+; Usage : right-click on this file and choose "Install" in the pop up menu
+
 [Version]
 Signature = "$CHICAGO$"
 Class = MEDIA
@@ -84,3 +86,4 @@ DisplayNameWin="Lame ACM MP3 Codec (encode-only)"
 UnInstallPath="Software\Microsoft\Windows\CurrentVersion\Uninstall\LameACM"
 MediaClassName="Media Devices"
 mfgname="Steve Lhomme"
+

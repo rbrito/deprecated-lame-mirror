@@ -1,36 +1,29 @@
-/************************************************************************
-Project               : MP3 Windows ACM driver using lame
-File version          : 0.1
-
-BSD License post 1999 : 
-
-Copyright (c) 2001, Steve Lhomme
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met: 
-
-- Redistributions of source code must retain the above copyright notice, this
-list of conditions and the following disclaimer.
-
-- Redistributions in binary form must reproduce the above copyright notice, 
-this list of conditions and the following disclaimer in the documentation
-and/or other materials provided with the distribution. 
-
-- The name of the author may not be used to endorse or promote products derived
-from this software without specific prior written permission. 
-
-THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED 
-WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
-MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO 
-EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, 
-EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
-OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING 
-IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY 
-OF SUCH DAMAGE. 
-************************************************************************/
+/**
+ *
+ * Lame ACM wrapper, encode/decode MP3 based RIFF/AVI files in MS Windows
+ *
+ *  Copyright (c) 2002 Steve Lhomme <steve.lhomme at free.fr>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+ 
+/*!
+	\author Steve Lhomme
+	\version \$Id$
+*/
 
 #if !defined(STRICT)
 #define STRICT
@@ -66,16 +59,16 @@ ACMStream::ACMStream() :
  m_WorkingBufferUseSize(0),
  gfp(NULL)
 {
-	 // TODO : get the debug level from the registry
-	my_debug = new ADbg(DEBUG_LEVEL_CREATION);
+	 /// \todo get the debug level from the registry
+my_debug = new ADbg(DEBUG_LEVEL_CREATION);
 	if (my_debug != NULL) {
 		unsigned char DebugFileName[512];
 
-		my_debug->setPrefix("LAMEstream"); // TODO : get it from the registry
-		my_debug->setIncludeTime(true);  // TODO : get it from the registry
+		my_debug->setPrefix("LAMEstream"); /// \todo get it from the registry
+my_debug->setIncludeTime(true);  /// \todo get it from the registry
 
-		// Check in the registry if we have to Output Debug information
-		DebugFileName[0] = '\0';
+// Check in the registry if we have to Output Debug information
+DebugFileName[0] = '\0';
 
 		HKEY OssKey;
 		if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, "SOFTWARE\\MUKOLI", 0, KEY_READ , &OssKey ) == ERROR_SUCCESS) {
@@ -114,19 +107,19 @@ bool ACMStream::init(const int nSamplesPerSec, const int nOutputSamplesPerSec, c
 	bool bResult = false;
 
 #ifdef ENABLE_DECODING
-	if (m_MadDLL.Load("in_mad.dll"))
+if (m_MadDLL.Load("in_mad.dll"))
 	{
 		char path[512];
 		m_MadDLL.GetFullLocation(path, 512);
 my_debug->OutPut(DEBUG_LEVEL_FUNC_CODE, "MAD Winamp DLL found in %s",path);
 	}
 	else
-	{
+{
 my_debug->OutPut(DEBUG_LEVEL_FUNC_CODE, "MAD Winamp DLL not found !");
 	}
 #endif // ENABLE_DECODING
 
-	my_SamplesPerSec  = nSamplesPerSec;
+my_SamplesPerSec  = nSamplesPerSec;
 	my_OutBytesPerSec = nOutputSamplesPerSec;
 	my_Channels       = nChannels;
 	my_AvgBytesPerSec = nAvgBytesPerSec;
@@ -152,46 +145,46 @@ my_debug->OutPut(DEBUG_LEVEL_FUNC_CODE, "Lame DLL %d.%d (v%d.%d) found in %s",ve
 																		  ver.byDLLMinorVersion,
 																		  path);
 */
-	// Init the MP3 Stream
-	// Init the global flags structure
-	gfp = lame_init();
+// Init the MP3 Stream
+// Init the global flags structure
+gfp = lame_init();
 
 	// Set input sample frequency
-	lame_set_in_samplerate( gfp, my_SamplesPerSec );
+lame_set_in_samplerate( gfp, my_SamplesPerSec );
 
 	lame_set_num_channels( gfp, my_Channels );
 	if (my_Channels == 1)
 		lame_set_mode( gfp, MONO );
 	else
-		lame_set_mode( gfp, JOINT_STEREO ); /// \todo Get the mode from the default configuration
+lame_set_mode( gfp, JOINT_STEREO ); /// \todo Get the mode from the default configuration
 
-	lame_set_VBR( gfp, vbr_off ); /// \note VBR not supported for the moment
+lame_set_VBR( gfp, vbr_off ); /// \note VBR not supported for the moment
 
-	// Set bitrate
-	lame_set_brate( gfp, my_AvgBytesPerSec * 8 / 1000 );
+// Set bitrate
+lame_set_brate( gfp, my_AvgBytesPerSec * 8 / 1000 );
 	
 	/// \todo Get the mode from the default configuration
-	// Set copyright flag?
-	lame_set_copyright( gfp, 0 );
+// Set copyright flag?
+lame_set_copyright( gfp, 0 );
 	// Do we have to tag  it as non original 
-	lame_set_original( gfp, 0 );
+lame_set_original( gfp, 0 );
 	// Add CRC?
-	lame_set_error_protection( gfp, 1 );
+lame_set_error_protection( gfp, 1 );
 	// Set private bit?
-	lame_set_extension( gfp, 0 );
+lame_set_extension( gfp, 0 );
 
 	if (0 == lame_init_params( gfp ))
 	{
 		//LAME encoding call will accept any number of samples.  
-		if ( 0 == lame_get_version( gfp ) )
+if ( 0 == lame_get_version( gfp ) )
 		{
 			// For MPEG-II, only 576 samples per frame per channel
-			my_SamplesPerBlock = 576 * lame_get_num_channels( gfp );
+my_SamplesPerBlock = 576 * lame_get_num_channels( gfp );
 		}
 		else
-		{
+{
 			// For MPEG-I, 1152 samples per frame per channel
-			my_SamplesPerBlock = 1152 * lame_get_num_channels( gfp );
+my_SamplesPerBlock = 1152 * lame_get_num_channels( gfp );
 		}
 	}
 
@@ -204,7 +197,7 @@ my_debug->OutPut(DEBUG_LEVEL_FUNC_CODE, "Lame DLL %d.%d (v%d.%d) found in %s",ve
 		case DUAL_CHANNEL: my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG,  "mode                   =Forced Stereo" ); break;
 		case MONO:         my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG,  "mode                   =Mono" ); break;
 		case NOT_SET:      /* FALLTROUGH */
-		default:           my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG,  "mode                   =Error (unknown)" ); break;
+default:           my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG,  "mode                   =Error (unknown)" ); break;
 	}
 
 	my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG, "sampling frequency     =%.1f kHz", lame_get_in_samplerate( gfp ) /1000.0 );
@@ -252,25 +245,18 @@ my_debug->OutPut(DEBUG_LEVEL_FUNC_CODE, "Lame DLL %d.%d (v%d.%d) found in %s",ve
 	my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG, "Write VBR Header       =%s\n", ( lame_get_bWriteVbrTag( gfp ) ) ?"Yes":"No");
 
 #ifdef FROM_DLL
-	beConfig.format.LHV1.dwReSampleRate		= my_OutBytesPerSec;	  // force the user resampling
+beConfig.format.LHV1.dwReSampleRate		= my_OutBytesPerSec;	  // force the user resampling
 #endif // FROM_DLL
 
-	bResult = true;
+bResult = true;
 
 	return bResult;
 }
 
 bool ACMStream::close(LPBYTE pOutputBuffer, DWORD *pOutputSize)
 {
-#ifdef FROM_DLL
-	m_LameDLL.DeinitStream( pOutputBuffer, pOutputSize);
 
-	m_LameDLL.CloseStream( );
-
-	m_LameDLL.Free();
-#endif // FROM_DLL
-
-	bool bResult = false;
+bool bResult = false;
 
 	int nOutputSamples = 0;
 
@@ -279,20 +265,20 @@ bool ACMStream::close(LPBYTE pOutputBuffer, DWORD *pOutputSize)
 	if ( nOutputSamples < 0 )
 	{
 		// BUFFER_TOO_SMALL
-		*pOutputSize = 0;
+*pOutputSize = 0;
 	}
 	else
-	{
+{
 		*pOutputSize = nOutputSamples;
 
 		bResult = true;
 	}
 
 	// lame will be close in VbrWriteTag function
-	if ( !lame_get_bWriteVbrTag( gfp ) )
+if ( !lame_get_bWriteVbrTag( gfp ) )
 	{
 		// clean up of allocated memory
-		lame_close( gfp );
+lame_close( gfp );
 	}
     
 	return bResult;
@@ -304,7 +290,7 @@ DWORD ACMStream::GetOutputSizeForInput(const DWORD the_SrcLength) const
 
 	OutputInputRatio *= 1.15; // allow 15% more
 
-	DWORD Result;
+DWORD Result;
 
 	Result = DWORD(double(the_SrcLength) * OutputInputRatio);
 
@@ -317,15 +303,16 @@ bool ACMStream::ConvertBuffer(LPACMDRVSTREAMHEADER a_StreamHeader)
 {
 	bool result;
 
+if (my_debug != NULL)
+{
+my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG, "enter ACMStream::ConvertBuffer");
+}
+
 	DWORD InSize = a_StreamHeader->cbSrcLength / 2, OutSize = a_StreamHeader->cbDstLength; // 2 for 8<->16 bits
 
-#ifdef FROM_DLL
-	result = m_LameDLL.Encode(InSize, (PSHORT)a_StreamHeader->pbSrc, my_Channels, &OutSize, a_StreamHeader->pbDst, my_Channels);
-#endif // FROM_DLL
-
-	// Encode it
-	int dwSamples;
-	int	nOutputSamples = 0;
+// Encode it
+int dwSamples;
+	int nOutputSamples = 0;
 
 	dwSamples = InSize / lame_get_num_channels( gfp );
 
@@ -341,7 +328,14 @@ bool ACMStream::ConvertBuffer(LPACMDRVSTREAMHEADER a_StreamHeader)
 	a_StreamHeader->cbSrcLengthUsed = a_StreamHeader->cbSrcLength;
 	a_StreamHeader->cbDstLengthUsed = nOutputSamples;
 
-	my_debug->OutPut(DEBUG_LEVEL_FUNC_CODE, "UsedSize = %d / EncodedSize = %d", InSize, OutSize);
+	result = a_StreamHeader->cbDstLengthUsed <= a_StreamHeader->cbDstLength;
+
+	my_debug->OutPut(DEBUG_LEVEL_FUNC_CODE, "UsedSize = %d / EncodedSize = %d, result = %d", InSize, OutSize, result);
+
+if (my_debug != NULL)
+{
+my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG, "ACMStream::ConvertBuffer result = %d",result);
+}
 
 	return result;
 }
@@ -353,7 +347,8 @@ unsigned int ACMStream::GetOutputSampleRate(int samples_per_sec, int bitrate, in
 	if (compression_ratio > 13.)
 		OutputFrequency = map2MP3Frequency( (10. * bitrate * 8) / (16 * channels));
 	else
-		OutputFrequency = map2MP3Frequency( 0.97 * samples_per_sec );
+OutputFrequency = map2MP3Frequency( 0.97 * samples_per_sec );
 
 	return OutputFrequency;
 }
+

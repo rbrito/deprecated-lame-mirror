@@ -1,5 +1,5 @@
 # Microsoft Developer Studio Project File - Name="lameACM" - Package Owner=<4>
-# Microsoft Developer Studio Generated Build File, Format Version 6.00
+# Microsoft Developer Studio Generated Build File, Format Version 5.00
 # ** DO NOT EDIT **
 
 # TARGTYPE "Win32 (x86) Dynamic-Link Library" 0x0102
@@ -17,14 +17,16 @@ CFG=lameACM - Win32 Debug NASM
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
-!MESSAGE "lameACM - Win32 Release" (based on "Win32 (x86) Dynamic-Link Library")
+!MESSAGE "lameACM - Win32 Release" (based on\
+ "Win32 (x86) Dynamic-Link Library")
 !MESSAGE "lameACM - Win32 Debug" (based on "Win32 (x86) Dynamic-Link Library")
-!MESSAGE "lameACM - Win32 Debug NASM" (based on "Win32 (x86) Dynamic-Link Library")
-!MESSAGE "lameACM - Win32 Release NASM" (based on "Win32 (x86) Dynamic-Link Library")
+!MESSAGE "lameACM - Win32 Debug NASM" (based on\
+ "Win32 (x86) Dynamic-Link Library")
+!MESSAGE "lameACM - Win32 Release NASM" (based on\
+ "Win32 (x86) Dynamic-Link Library")
 !MESSAGE 
 
 # Begin Project
-# PROP AllowPerConfigDependencies 0
 # PROP Scc_ProjName ""
 # PROP Scc_LocalPath ""
 CPP=cl.exe
@@ -45,9 +47,9 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /Zp2 /MT /W3 /GX /Ox /Ot /Og /Ob2 /I "../libmp3lame" /I "../include" /I "../" /I "../../" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_CONFIG_H" /YX /FD /c
-# ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
-# ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+# ADD CPP /nologo /Zp2 /MT /W3 /GX /Ox /Ot /Og /Ob2 /I "../libmp3lame" /I "../include" /I ".." /I "../.." /I "../mpglib" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_CONFIG_H" /D "HAVE_MPGLIB" /YX /FD /c
+# ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o /win32 "NUL"
+# ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o /win32 "NUL"
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -71,9 +73,9 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /Zp2 /MTd /W3 /Gm /GX /ZI /Od /I "../libmp3lame" /I "../include" /I "../" /I "../../" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_CONFIG_H" /YX /FD /c
-# ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
-# ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
+# ADD CPP /nologo /Zp2 /MTd /W3 /GX /Od /I "../libmp3lame" /I "../include" /I ".." /I "../.." /I "../mpglib" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_CONFIG_H" /D "HAVE_MPGLIB" /YX /FD /ZI /c
+# ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o /win32 "NUL"
+# ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o /win32 "NUL"
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -84,7 +86,7 @@ LINK32=link.exe
 # ADD LINK32 winmm.lib advapi32.lib user32.lib kernel32.lib libcd.lib /nologo /subsystem:windows /dll /debug /machine:I386 /nodefaultlib /out:"Debug\lameACM.acm" /pdbtype:sept
 # SUBTRACT LINK32 /map
 # Begin Special Build Tool
-SOURCE="$(InputPath)"
+SOURCE=$(InputPath)
 PostBuild_Cmds=copy Debug\lameACM.acm e:\winnt\system32\lameACM.acm
 # End Special Build Tool
 
@@ -92,9 +94,8 @@ PostBuild_Cmds=copy Debug\lameACM.acm e:\winnt\system32\lameACM.acm
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 1
-# PROP BASE Output_Dir "MP3EncDl"
-# PROP BASE Intermediate_Dir "MP3EncDl"
-# PROP BASE Ignore_Export_Lib 0
+# PROP BASE Output_Dir "Debug_NASM"
+# PROP BASE Intermediate_Dir "Debug_NASM"
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 1
@@ -102,28 +103,31 @@ PostBuild_Cmds=copy Debug\lameACM.acm e:\winnt\system32\lameACM.acm
 # PROP Intermediate_Dir "Debug_NASM"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /Zp2 /MTd /W3 /Gm /GX /Zi /Od /I "../libmp3lame" /I "../include" /I "../" /I "../../" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_CONFIG_H" /YX /FD /c
-# ADD CPP /nologo /Zp2 /MTd /W3 /Gm /GX /ZI /Od /I "../libmp3lame" /I "../include" /I "../" /I "../../" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_CONFIG_H" /D "HAVE_NASM" /D "MMX_choose_table" /YX /FD /c
-# ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
-# ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o "NUL" /win32
+# ADD BASE CPP /nologo /Zp2 /MTd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
+# ADD CPP /nologo /Zp2 /MTd /W3 /GX /Od /I "../libmp3lame" /I "../include" /I ".." /I "../.." /I "../mpglib" /D "_DEBUG" /D "HAVE_NASM" /D "MMX_choose_table" /D "WIN32" /D "_WINDOWS" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_CONFIG_H" /D "HAVE_MPGLIB" /YX /FD /ZI /c
+# ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o /win32 "NUL"
+# ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o /win32 "NUL"
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
-# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /out:"Debug\lameACM.acm" /pdbtype:sept
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept
 # SUBTRACT BASE LINK32 /map
-# ADD LINK32 winmm.lib advapi32.lib user32.lib kernel32.lib libcmtd.lib ADbg\Debug\adbg.lib /nologo /subsystem:windows /dll /debug /machine:I386 /nodefaultlib /out:"Debug_NASM\lameACM.acm" /pdbtype:sept
+# ADD LINK32 winmm.lib advapi32.lib user32.lib kernel32.lib libcd.lib ADbg/Debug/adbg.lib ../mpglib/Debug/mpglib.lib /nologo /subsystem:windows /dll /debug /machine:I386 /nodefaultlib /out:"Debug_NASM\lameACM.acm" /pdbtype:sept
 # SUBTRACT LINK32 /map
+# Begin Special Build Tool
+SOURCE=$(InputPath)
+PostBuild_Cmds=copy Debug_NASM\lameACM.acm d:\winnt\system32\lameACM.acm
+# End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "lameACM - Win32 Release NASM"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 0
-# PROP BASE Output_Dir "MP3EncD0"
-# PROP BASE Intermediate_Dir "MP3EncD0"
-# PROP BASE Ignore_Export_Lib 0
+# PROP BASE Output_Dir "Release_NASM"
+# PROP BASE Intermediate_Dir "Release_NASM"
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 0
@@ -131,18 +135,18 @@ LINK32=link.exe
 # PROP Intermediate_Dir "Release_NASM"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /Zp2 /MT /W3 /GX /Ox /Ot /Og /Ob2 /I "../libmp3lame" /I "../include" /I "../" /I "../../" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_CONFIG_H" /YX /FD /c
-# ADD CPP /nologo /Zp2 /MT /W3 /GX /Ox /Ot /Og /Ob2 /I "../libmp3lame" /I "../include" /I "../" /I "../../" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_CONFIG_H" /D "HAVE_NASM" /D "MMX_choose_table" /YX /FD /c
-# ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
-# ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
+# ADD BASE CPP /nologo /Zp2 /MT /W3 /GX /Ox /Ot /Og /Ob2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
+# ADD CPP /nologo /Zp2 /MT /W3 /GX /Ox /Ot /Og /Ob2 /I "../libmp3lame" /I "../include" /I ".." /I "../.." /I "../mpglib" /D "NDEBUG" /D "HAVE_NASM" /D "MMX_choose_table" /D "WIN32" /D "_WINDOWS" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_CONFIG_H" /D "HAVE_MPGLIB" /YX /FD /c
+# ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o /win32 "NUL"
+# ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o /win32 "NUL"
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
-# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /map /machine:I386 /out:"Release\lameACM.acm"
-# ADD LINK32 winmm.lib advapi32.lib user32.lib kernel32.lib libcmt.lib ADbg\Release\adbg.lib /nologo /subsystem:windows /dll /map /machine:I386 /nodefaultlib /out:"Release_NASM\lameACM.acm"
+# ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /map /machine:I386
+# ADD LINK32 winmm.lib advapi32.lib user32.lib kernel32.lib libc.lib ADbg\Release\adbg.lib /nologo /subsystem:windows /dll /map /machine:I386 /nodefaultlib /out:"Release_NASM\lameACM.acm"
 
 !ENDIF 
 
@@ -190,6 +194,10 @@ SOURCE=.\lameACM.def
 # Begin Source File
 
 SOURCE=.\main.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\libmp3lame\mpglib_interface.c
 # End Source File
 # Begin Source File
 
@@ -381,26 +389,28 @@ SOURCE=..\libmp3lame\i386\choose_table.nas
 !ELSEIF  "$(CFG)" == "lameACM - Win32 Debug NASM"
 
 # Begin Custom Build - Assembling
-InputDir=\Perso\Programmes\lame\lame-3.91\libmp3lame\i386
+InputDir="\users\slhomme\perso\lame\lame-3.90\libmp3lame\i386"
 OutDir=.\Debug_NASM
 InputPath=..\libmp3lame\i386\choose_table.nas
 InputName=choose_table
 
 "$(OutDir)/$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o    $(OutDir)/$(InputName).obj
+	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o\
+       $(OutDir)/$(InputName).obj
 
 # End Custom Build
 
 !ELSEIF  "$(CFG)" == "lameACM - Win32 Release NASM"
 
 # Begin Custom Build - Assembling
-InputDir=\Perso\Programmes\lame\lame-3.91\libmp3lame\i386
+InputDir="\users\slhomme\perso\lame\lame-3.90\libmp3lame\i386"
 OutDir=.\Release_NASM
 InputPath=..\libmp3lame\i386\choose_table.nas
 InputName=choose_table
 
 "$(OutDir)/$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o    $(OutDir)/$(InputName).obj
+	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o\
+       $(OutDir)/$(InputName).obj
 
 # End Custom Build
 
@@ -416,39 +426,42 @@ SOURCE=..\libmp3lame\i386\cpu_feat.nas
 !ELSEIF  "$(CFG)" == "lameACM - Win32 Debug"
 
 # Begin Custom Build - Assembling
-InputDir=\Perso\Programmes\lame\lame-3.91\libmp3lame\i386
+InputDir="\users\slhomme\perso\lame\lame-3.90\libmp3lame\i386"
 OutDir=.\Debug
 InputPath=..\libmp3lame\i386\cpu_feat.nas
 InputName=cpu_feat
 
 "$(OutDir)/$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o    $(OutDir)/$(InputName).obj
+	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o\
+       $(OutDir)/$(InputName).obj
 
 # End Custom Build
 
 !ELSEIF  "$(CFG)" == "lameACM - Win32 Debug NASM"
 
 # Begin Custom Build - Assembling
-InputDir=\Perso\Programmes\lame\lame-3.91\libmp3lame\i386
+InputDir="\users\slhomme\perso\lame\lame-3.90\libmp3lame\i386"
 OutDir=.\Debug_NASM
 InputPath=..\libmp3lame\i386\cpu_feat.nas
 InputName=cpu_feat
 
 "$(OutDir)/$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o    $(OutDir)/$(InputName).obj
+	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o\
+       $(OutDir)/$(InputName).obj
 
 # End Custom Build
 
 !ELSEIF  "$(CFG)" == "lameACM - Win32 Release NASM"
 
 # Begin Custom Build - Assembling
-InputDir=\Perso\Programmes\lame\lame-3.91\libmp3lame\i386
+InputDir="\users\slhomme\perso\lame\lame-3.90\libmp3lame\i386"
 OutDir=.\Release_NASM
 InputPath=..\libmp3lame\i386\cpu_feat.nas
 InputName=cpu_feat
 
 "$(OutDir)/$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o    $(OutDir)/$(InputName).obj
+	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o\
+       $(OutDir)/$(InputName).obj
 
 # End Custom Build
 
@@ -470,26 +483,28 @@ SOURCE=..\libmp3lame\i386\fft3dn.nas
 !ELSEIF  "$(CFG)" == "lameACM - Win32 Debug NASM"
 
 # Begin Custom Build - Assembling
-InputDir=\Perso\Programmes\lame\lame-3.91\libmp3lame\i386
+InputDir="\users\slhomme\perso\lame\lame-3.90\libmp3lame\i386"
 OutDir=.\Debug_NASM
 InputPath=..\libmp3lame\i386\fft3dn.nas
 InputName=fft3dn
 
 "$(OutDir)/$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o    $(OutDir)/$(InputName).obj
+	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o\
+       $(OutDir)/$(InputName).obj
 
 # End Custom Build
 
 !ELSEIF  "$(CFG)" == "lameACM - Win32 Release NASM"
 
 # Begin Custom Build - Assembling
-InputDir=\Perso\Programmes\lame\lame-3.91\libmp3lame\i386
+InputDir="\users\slhomme\perso\lame\lame-3.90\libmp3lame\i386"
 OutDir=.\Release_NASM
 InputPath=..\libmp3lame\i386\fft3dn.nas
 InputName=fft3dn
 
 "$(OutDir)/$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o    $(OutDir)/$(InputName).obj
+	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o\
+       $(OutDir)/$(InputName).obj
 
 # End Custom Build
 
@@ -517,39 +532,42 @@ SOURCE=..\libmp3lame\i386\scalar.nas
 !ELSEIF  "$(CFG)" == "lameACM - Win32 Debug"
 
 # Begin Custom Build - Assembling
-InputDir=\Perso\Programmes\lame\lame-3.91\libmp3lame\i386
+InputDir="\users\slhomme\perso\lame\lame-3.90\libmp3lame\i386"
 OutDir=.\Debug
 InputPath=..\libmp3lame\i386\scalar.nas
 InputName=scalar
 
 "$(OutDir)/$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o    $(OutDir)/$(InputName).obj
+	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o\
+       $(OutDir)/$(InputName).obj
 
 # End Custom Build
 
 !ELSEIF  "$(CFG)" == "lameACM - Win32 Debug NASM"
 
 # Begin Custom Build - Assembling
-InputDir=\Perso\Programmes\lame\lame-3.91\libmp3lame\i386
+InputDir="\users\slhomme\perso\lame\lame-3.90\libmp3lame\i386"
 OutDir=.\Debug_NASM
 InputPath=..\libmp3lame\i386\scalar.nas
 InputName=scalar
 
 "$(OutDir)/$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o    $(OutDir)/$(InputName).obj
+	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o\
+       $(OutDir)/$(InputName).obj
 
 # End Custom Build
 
 !ELSEIF  "$(CFG)" == "lameACM - Win32 Release NASM"
 
 # Begin Custom Build - Assembling
-InputDir=\Perso\Programmes\lame\lame-3.91\libmp3lame\i386
+InputDir="\users\slhomme\perso\lame\lame-3.90\libmp3lame\i386"
 OutDir=.\Release_NASM
 InputPath=..\libmp3lame\i386\scalar.nas
 InputName=scalar
 
 "$(OutDir)/$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o    $(OutDir)/$(InputName).obj
+	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o\
+       $(OutDir)/$(InputName).obj
 
 # End Custom Build
 
@@ -563,6 +581,17 @@ InputName=scalar
 # Begin Source File
 
 SOURCE=.\acm.rc
+
+!IF  "$(CFG)" == "lameACM - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "lameACM - Win32 Debug"
+
+!ELSEIF  "$(CFG)" == "lameACM - Win32 Debug NASM"
+
+!ELSEIF  "$(CFG)" == "lameACM - Win32 Release NASM"
+
+!ENDIF 
+
 # End Source File
 # End Group
 # Begin Group "Install"
@@ -580,6 +609,10 @@ SOURCE=.\lame.ico
 # Begin Source File
 
 SOURCE=.\readme.txt
+# End Source File
+# Begin Source File
+
+SOURCE=.\TODO
 # End Source File
 # End Target
 # End Project
