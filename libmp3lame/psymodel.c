@@ -503,10 +503,6 @@ int L3psycho_anal( lame_global_flags * gfp,
 	  tot+=gfc->energy_s[sblock][k];
 	ave = gfc->energy[j+1]+ gfc->energy[j+2]+ gfc->energy[j+3]+ gfc->energy[j];
 	ave /= 4.;
-	/*
-	  DEBUGF("energy / tot %i %5.2f   %e  %e\n",j,ave/(tot*16./3.),
-	  ave,tot*16./3.);
-	*/
 	gfc->energy[j+1] = gfc->energy[j+2] = gfc->energy[j+3] =  gfc->energy[j]=tot;
       }
 #endif
@@ -829,7 +825,7 @@ int L3psycho_anal( lame_global_flags * gfp,
       /* thresholds difference in db */
       if (x2 >= 1000*x1)  db=3;
       else db = log10(x2/x1);  
-      /*  DEBUGF("db = %f %e %e  \n",db,gfc->thm[0].l[sb],gfc->thm[1].l[sb]);*/
+      /*  DEBUGF(gfc,"db = %f %e %e  \n",db,gfc->thm[0].l[sb],gfc->thm[1].l[sb]);*/
       sidetot += db;
       tot++;
     }
@@ -2031,7 +2027,8 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
       j = j2;
       if (j > BLKSIZE/2) break;
     }
-  *npart_l_orig = i;
+  *npart_l_orig = i+1;
+  assert(*npart_l_orig <= CBANDS);
 
   /* compute which partition bands are in which scalefactor bands */
   { int i1,i2,sfb,start,end;
@@ -2047,8 +2044,7 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
       i2 = floor(.5 + BLKSIZE*freq2/sfreq);
       if (i2>BLKSIZE/2) i2=BLKSIZE/2;
 
-      DEBUGF("longblock:  old: (%i,%i)  new: (%i,%i) %i %i \n",bu_l[sfb],bo_l[sfb],
-	     partition[i1],partition[i2],i1,i2);
+      //      DEBUGF(gfc,"longblock:  old: (%i,%i)  new: (%i,%i) %i %i \n",bu_l[sfb],bo_l[sfb],partition[i1],partition[i2],i1,i2);
 
       w1_l[sfb]=.5;
       w2_l[sfb]=.5;
@@ -2100,15 +2096,16 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
   for(i=0;i<*npart_l_orig;i++){
     double x = (-20+bval_l[i]*20.0/10.0);
     if (bval_l[i]>10) x = 0;
-#if 0
-    fprintf(stderr,"bval=%f  orig=%f   new=%f    ",
-	    bval_l[i],10*log10(minval[i]),x);    
 
+#if 0
+    fprintf(stderr,"bval=%f  minval  orig=%f   new=%f    ", bval_l[i],10*log10(minval[i]),x);    
     if (fabs(x) < fabs(10*log10(minval[i])))
       fprintf(stderr,"(more masking) \n");
     else
       fprintf(stderr,"(less masking) \n");
 #endif
+
+    minval[i]=pow(10.0,x/10);
   }
 #endif
 
@@ -2144,17 +2141,14 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 
       } while ((bark2 - bark1) < DELBARK  && j2<=BLKSIZE_s/2);
 
-      /*
-      DEBUGF("%i old n=%i  %f old numlines:  %i   new=%i (%i,%i) (%f,%f) \n",
-i,*npart_s_orig,freq,numlines_s[i],j2-j,j,j2-1,bark1,bark2);
-      */
       for (k=j; k<j2; ++k)
 	partition[k]=i;
       numlines_s[i]=(j2-j);
       j = j2;
       if (j > BLKSIZE_s/2) break;
     }
-  *npart_s_orig = i;
+  *npart_s_orig = i+1;
+  assert(*npart_s_orig <= CBANDS);
 
   /* compute which partition bands are in which scalefactor bands */
   { int i1,i2,sfb,start,end;
@@ -2170,8 +2164,7 @@ i,*npart_s_orig,freq,numlines_s[i],j2-j,j,j2-1,bark1,bark2);
       i2 = floor(.5 + BLKSIZE_s*freq2/sfreq);
       if (i2>BLKSIZE_s/2) i2=BLKSIZE_s/2;
 
-      DEBUGF("shortblock: old: (%i,%i)  new: (%i,%i) %i %i \n",bu_s[sfb],bo_s[sfb],
-	     partition[i1],partition[i2],i1,i2);
+      //DEBUGF(gfc,"shortblock: old: (%i,%i)  new: (%i,%i) %i %i \n",bu_s[sfb],bo_s[sfb], partition[i1],partition[i2],i1,i2);
 
       w1_s[sfb]=.5;
       w2_s[sfb]=.5;
@@ -2253,6 +2246,7 @@ i,*npart_s_orig,freq,numlines_s[i],j2-j,j,j2-1,bark1,bark2);
   *npart_s=bo_s[NBPSY_s-1]+1;
   
 #ifdef NOTABLES
+  //  DEBUGF(gfc,"\n npart_l_orig, npart_l: %i %i \n",*npart_l_orig,*npart_l);
   assert(*npart_l <= *npart_l_orig);
   assert(*npart_s <= *npart_s_orig);
 #else
