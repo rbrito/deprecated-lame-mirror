@@ -1069,12 +1069,11 @@ static FLOAT s3_func(FLOAT bark) {
     if (tempx>=0) tempx *= 3;
     else tempx *=1.5;
 
-    if (tempx>=0.5 && tempx<=2.5)
-      {
+    x = 0.0;
+    if (0.5 <= tempx && tempx <= 2.5) {
 	temp = tempx - 0.5;
 	x = 8.0 * (temp*temp - 2.0 * temp);
-      }
-    else x = 0.0;
+    }
     tempx += 0.474;
     tempy = 15.811389 + 7.5*tempx - 17.5*sqrt(1.0+tempx*tempx);
 
@@ -1152,16 +1151,12 @@ init_numline(
 	int w = numlines[k];
 	FLOAT  bark1,bark2;
 
-	bark1 = freq2bark (sfreq*(j    ));
-	bark2 = freq2bark (sfreq*(j+w-1));
+	bark1 = freq2bark (sfreq*(j  ));
+	bark2 = freq2bark (sfreq*(j+w));
 	bval[k] = .5*(bark1+bark2);
-
-	bark1 = freq2bark (sfreq*(j  -.5));
-	bark2 = freq2bark (sfreq*(j+w-.5));
 	bval_width[k] = bark2-bark1;
 	j += w;
     }
-
     return i+1;
 }
 
@@ -1226,7 +1221,7 @@ init_s3_values(
      * NOTE: i and j are used opposite as in the ISO docs
      */
     for (i = 0; i < npart; i++)
-	for (j = 0; j < npart; j++)
+	for (j = 0; j < npart; j++) 
 	    s3[i][j] = s3_func(bval[i] - bval[j]) * bval_width[j] * norm[i];
 
     for (i = 0; i < npart; i++) {
@@ -1345,8 +1340,10 @@ int psymodel_init(lame_global_flags *gfp)
 	if (i != gfc->npart_l-1)
 	    l += gfc->numlines_l[i+1];
 
-	gfc->rnumlines_ls[i] = 20.0/(l-1);
 	norm[i] = 0.11749;
+	if (gfc->numlines_l[i] == 1)
+	    norm[i] *= 0.01;
+	gfc->rnumlines_ls[i] = 20.0/(l-1);
 	gfc->rnumlines_l[i] = 1.0 / (gfc->numlines_l[i] * 3);
     }
     i = init_s3_values(gfc, &gfc->s3_ll, gfc->s3ind,
