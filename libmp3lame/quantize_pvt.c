@@ -269,21 +269,6 @@ void compute_ath( lame_global_flags *gfp, FLOAT8 ATH_l[], FLOAT8 ATH_s[] )
         }
     }
 
-#if 0
-    /*  kludge for sfb21:
-     *  lowering the ATH seems to be problematic for sfb21
-     *  where the ATH is the only masking we currently have
-     *  so this patch reverts back ATH-lowering for the last 
-     *  scalefactor bands
-     */
-     
-    /*  RH 2001-01-18:
-     *  disabled kludge, because of the newly used ATH
-     */
-    ATH_l[SBMAX_l-1] *= pow( 10.0, gfp->ATHlower/10.0 );
-    ATH_s[SBMAX_s-1] *= pow( 10.0, gfp->ATHlower/10.0 );
-#endif
-
     /*  no-ATH mode:
      *  reduce ATH to -200 dB, but leave ATH for the last scalefactor band, 
      *  because VBR modes need it as it is currently the only masking computed
@@ -292,19 +277,10 @@ void compute_ath( lame_global_flags *gfp, FLOAT8 ATH_l[], FLOAT8 ATH_s[] )
     
     if (gfp->noATH) {
         for (sfb = 0; sfb < SBMAX_l-1; sfb++) {
-            ATH_l[sfb] = 1E-20;
+            ATH_l[sfb] = 1E-37;
         }
         for (sfb = 0; sfb < SBMAX_s-1; sfb++) {
-            ATH_s[sfb] = 1E-20;
-        }
-    }
-    
-    if (vbr_mtrh == gfp->VBR) {
-        for (sfb = 0; sfb < SBMAX_l-1; sfb++) {
-            ATH_l[sfb] = Max(ATH_l[sfb], 5.82E-12);
-        }
-        for (sfb = 0; sfb < SBMAX_s-1; sfb++) {
-            ATH_s[sfb] = Max(ATH_s[sfb], 5.82E-12);
+            ATH_s[sfb] = 1E-37;
         }
     }
 }
@@ -485,7 +461,7 @@ int calc_xmin(
         xmin = ratio->en.s[sfb][b];
         if (xmin > 0.0)
           xmin = en0 * ratio->thm.s[sfb][b] * gfc->masking_lower / xmin;
-        xmin = Max(gfc->ATH_s[sfb], xmin);
+        xmin = Max(gfc->adjust_ath*gfc->ATH_s[sfb], xmin);
       }
       l3_xmin->s[sfb][b] = xmin * bw;
 
@@ -499,7 +475,7 @@ int calc_xmin(
 	}
       }
 
-      if (en0 > gfc->ATH_s[sfb]) ath_over++;
+      if (en0 > gfc->adjust_ath*gfc->ATH_s[sfb]) ath_over++;
       if (gfc->nsPsy.use && (gfp->VBR == vbr_off || gfp->VBR == vbr_abr) && gfp->quality <= 1)
         l3_xmin->s[sfb][b] *= 0.001;
     }
@@ -514,34 +490,6 @@ int calc_xmin(
 	    l3_xmin->s[sfb][b] = xmin;
       }
     }
-  }
-
-  if (vbr_mtrh == gfp->VBR) {
-    /*
-     *  fake masking for sfb12, remove it if true maskings available
-     */
-#if 0
-    int bw_3 = gfc->scalefac_band.s[SBMAX_s-3] - gfc->scalefac_band.s[SBPSY_s-3];
-    int bw_2 = gfc->scalefac_band.s[SBMAX_s-2] - gfc->scalefac_band.s[SBPSY_s-2];
-    int bw_1 = gfc->scalefac_band.s[SBMAX_s-1] - gfc->scalefac_band.s[SBPSY_s-1];
-    int bw_0 = gfc->scalefac_band.s[SBMAX_s-0] - gfc->scalefac_band.s[SBPSY_s-0];
-    for (b = 0; b < 3; b++) {
-      ener = bw_0 * dreinorm( l3_xmin->s[SBPSY_s-1][b]/bw_1,
-                              l3_xmin->s[SBPSY_s-2][b]/bw_2,
-                              l3_xmin->s[SBPSY_s-3][b]/bw_3 );
-      l3_xmin->s[SBPSY_s][b] = ener;
-    }
-#else
-    int bw_0 = gfc->scalefac_band.s[SBMAX_s] - gfc->scalefac_band.s[SBPSY_s];
-    for (b = 0; b < 3; b++) {
-        FLOAT8 m = 1e37;
-        for (sfb = 6; sfb < SBPSY_s; sfb ++) {
-            bw = gfc->scalefac_band.s[sfb+1] - gfc->scalefac_band.s[sfb];
-            m = Min(m, l3_xmin->s[sfb][b]/bw);
-        }        
-        l3_xmin->s[SBPSY_s][b] = 0.25 * bw_0 * m;
-    }
-#endif
   }
 
   }else{
@@ -561,7 +509,7 @@ int calc_xmin(
 	  xmin = ratio->en.l[sfb];
 	  if (xmin > 0.0)
 	    xmin = en0 * ratio->thm.l[sfb] * gfc->masking_lower / xmin;
-          xmin=Max(gfc->ATH_l[sfb], xmin);
+          xmin=Max(gfc->adjust_ath*gfc->ATH_l[sfb], xmin);
 	}
 	l3_xmin->l[sfb]=xmin;
 
@@ -573,7 +521,7 @@ int calc_xmin(
 	  l3_xmin->l[sfb] *= gfc->nsPsy.treble;
 	}
 
-	if (en0 > gfc->ATH_l[sfb]) ath_over++;
+	if (en0 > gfc->adjust_ath*gfc->ATH_l[sfb]) ath_over++;
 	if ((gfp->VBR == vbr_off || gfp->VBR == vbr_abr) && gfp->quality <= 1)
           l3_xmin->l[sfb] *= 0.001;
       }
@@ -595,34 +543,11 @@ int calc_xmin(
 	  xmin = ratio->en.l[sfb];
 	  if (xmin > 0.0)
 	    xmin = en0 * ratio->thm.l[sfb] * gfc->masking_lower / xmin;
-          xmin=Max(gfc->ATH_l[sfb], xmin);
+          xmin=Max(gfc->adjust_ath*gfc->ATH_l[sfb], xmin);
 	}
 	l3_xmin->l[sfb]=xmin*bw;
 	
-        if (en0 > gfc->ATH_l[sfb]) ath_over++;
-      }
-      if (vbr_mtrh == gfp->VBR) {
-        /*
-         *  fake masking for sfb21, remove it if true maskings available
-         */
-#if 0
-        int bw_3 = gfc->scalefac_band.l[SBMAX_l-3] - gfc->scalefac_band.l[SBPSY_l-3];
-        int bw_2 = gfc->scalefac_band.l[SBMAX_l-2] - gfc->scalefac_band.l[SBPSY_l-2];
-        int bw_1 = gfc->scalefac_band.l[SBMAX_l-1] - gfc->scalefac_band.l[SBPSY_l-1];
-        int bw_0 = gfc->scalefac_band.l[SBMAX_l-0] - gfc->scalefac_band.l[SBPSY_l-0];
-        ener = bw_0 * dreinorm( l3_xmin->l[SBPSY_l-1]/bw_1,
-                                l3_xmin->l[SBPSY_l-2]/bw_2,
-                                l3_xmin->l[SBPSY_l-3]/bw_3 );
-        l3_xmin->l[SBPSY_l] = ener;
-#else
-        FLOAT8 m = 1e37;
-        int bw_0 = gfc->scalefac_band.l[SBMAX_l] - gfc->scalefac_band.l[SBPSY_l];
-        for (sfb = 11; sfb < SBPSY_l; sfb ++) {
-            bw = gfc->scalefac_band.l[sfb+1] - gfc->scalefac_band.l[sfb];
-            m = Min(m, l3_xmin->l[sfb]/bw);
-        }
-        l3_xmin->l[SBPSY_l] = 0.25*bw_0 * m;
-#endif
+        if (en0 > gfc->adjust_ath*gfc->ATH_l[sfb]) ath_over++;
       }
     }
   }

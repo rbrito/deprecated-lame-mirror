@@ -125,6 +125,7 @@ typedef struct  {
 
   /* psycho acoustics and other arguments which you should not change 
    * unless you know what you are doing  */
+  int ATH_auto_adjust;            /* adjust ATH automatic on low volume */
   int ATHonly;                    /* only use ATH */
   int ATHshort;                   /* only use ATH for short blocks */
   int noATH;                      /* disable ATH */

@@ -263,6 +263,7 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --athonly       only use the ATH for masking\n"
               "    --noath         disable the ATH for masking\n"
               "    --athlower x    lower the ATH x dB\n"
+              "    --athadjust     auto adjust ATH at low volume\n"
               "    --short         use short blocks\n"
               "    --temporal <n>  use temporal masking effect (type n)\n"
               "    --noshort       do not use short blocks\n"
@@ -786,6 +787,9 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 		    argUsed=1;
 		    gfp->ATHtype = atoi(nextArg);
 		
+		T_ELIF ("athadjust")
+		    gfp->ATH_auto_adjust = 1;
+		
 		T_ELIF ("scale")
 		    argUsed=1;
 		    gfp->scale = atof(nextArg);
@@ -1223,11 +1227,6 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 	    fprintf(stderr,"For free format, specify a bitrate between 8 and 320 (550) kbps\n");
 	    return -1;
 	}
-    }
-
-    if (gfp->VBR !=0 && gfp->VBR !=vbr_abr) {
-	fprintf(stderr,"\n**** Warning ****  VBR modes are under heavy development!\n");
-	fprintf(stderr,"In many cases, CBR and ABR will produce better results.\n\n");
     }
     return 0;
 }
