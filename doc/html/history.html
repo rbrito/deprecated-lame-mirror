@@ -19,14 +19,27 @@ Starting with LAME 3.0:
 <hr></h3>
 
 <h3>
-LAME 3.81beta&nbsp; (CVS)</h3>
+LAME 3.81beta&nbsp;&nbsp; (CVS)</h3>
 
 <ul>
 <li>
-all ISO&nbsp;code removed!</li>
+</li>
+</ul>
+
+<h3>
+LAME 3.81beta&nbsp; March 8 2000</h3>
+
+<ul>
+<li>
+all ISO code removed!</li>
 
 <li>
-</li>
+<font color="#3366FF">Takehiro Tominaga and Naoki Shibata:&nbsp; new MDCT
+routines.</font></li>
+
+<li>
+ISO 7680bit buffer limitation removed.&nbsp; It can be reactivated with
+"--strictly-enforce-ISO"&nbsp; Please report any trouble with high bitrate.</li>
 </ul>
 
 <h3>
@@ -47,8 +60,7 @@ now supported!</font></li>
 
 <li>
 <font color="#000000">Mark Taylor: incorporated Takehiro's bitstream.c!&nbsp;
-bitstream.c used by default, but old ISO&nbsp;bitstream code can also be
-used.</font></li>
+bitstream.c used by default, but old ISO bitstream code can also be used.</font></li>
 
 <li>
 <font color="#FF0000">Scott&nbsp; Manley and Mark Taylor:&nbsp; good resampling
@@ -74,17 +86,24 @@ Kimmo Mustonen:&nbsp; VBR histogram support for Amiga.</li>
 Casper Gripenberg:&nbsp; VBR stats (but not histogram) for DOS verson.</li>
 
 <li>
-Robert Hegemann:&nbsp; rare VBR&nbsp;overflow bug fixed.</li>
+Robert Hegemann:&nbsp; rare VBR overflow bug fixed.</li>
 
 <li>
-Zack:&nbsp; -F&nbsp;option strictly enforces the VBR&nbsp;min bitrate.&nbsp;
-Without -F, LAME&nbsp;will ignore the minimum bitrate when encoding analog
-silence.</li>
+Zack:&nbsp; -F option strictly enforces the VBR min bitrate.&nbsp; Without
+-F, LAME will ignore the minimum bitrate when encoding analog silence.</li>
 
 <li>
 Shawn Riley:&nbsp; User can now specify a compression ratio (--comp &lt;arg>)
 instead of a bit rate.&nbsp; Default settings based on a compression ratio
 of 11.0</li>
+
+<li>
+Mark Taylor:&nbsp; free format bitstreams can be created with --freeformat,
+and specify any integer bitrate from 8 to 320kbs with -b.</li>
+
+<li>
+Mark Taylor: lame be used as a decoder (output raw pcm only):&nbsp; lame
+--decode input.mp3 output.pcm</li>
 </ul>
 
 <h3>
