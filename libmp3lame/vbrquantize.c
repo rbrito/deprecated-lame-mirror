@@ -657,7 +657,7 @@ VBR_quantize_granule(lame_internal_flags * gfc, gr_info * cod_info, FLOAT8 * xr3
     int     status;
 
     /* encode scalefacs */
-    if (gfc->is_mpeg1)
+    if (gfc->mode_gr == 2)
         status = scale_bitcount(cod_info);
     else
         status = scale_bitcount_lsf(gfc, cod_info);
@@ -972,7 +972,8 @@ long_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
     int     v0, v1, v0p, v1p;
     int     vbrmax = *VBRmax;
 
-    max_rangep = gfc->is_mpeg1 ? max_range_long : max_range_long_lsf_pretab;
+    max_rangep
+      = gfc->mode_gr == 2 ? max_range_long : max_range_long_lsf_pretab;
 
     maxover0 = 0;
     maxover1 = 0;
@@ -1043,7 +1044,7 @@ long_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
     for (sfb = 0; sfb < SBMAX_l; ++sfb)
         vbrsf[sfb] -= vbrmax;
 
-    if (gfc->is_mpeg1 == 1)
+    if (gfc->mode_gr == 2)
         maxover = compute_scalefacs_long(vbrsf, cod_info, cod_info->scalefac);
     else
         maxover = compute_scalefacs_long_lsf(vbrsf, cod_info, cod_info->scalefac);
