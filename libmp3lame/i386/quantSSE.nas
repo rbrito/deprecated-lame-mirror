@@ -168,7 +168,7 @@ proc	pow075_SSE
 	ret
 
 ;*psum = sum_{i=0}^{i=n} x_i^2,
-;	n should be even number and greater than 4.
+;	n should be even number and greater than or equal to 2.
 ;	x should be aligned to 8
 ;void sumofsqr(
 ;	float x[],
@@ -189,6 +189,7 @@ proc	sumofsqr_3DN
 	movq	mm0, [eax+ecx*4]
 	add	ecx, 2
 	pfmul	mm0, mm0
+	jz	.exit
 	loopalign 16
 .lp:
 	movq	mm2, [eax+ecx*4+ 0]
@@ -199,9 +200,9 @@ proc	sumofsqr_3DN
 	pfadd	mm0, mm2
 	pfadd	mm1, mm3
 	jnz near	.lp
-
-	movd	mm2, [edx]
 	pfadd	mm0, mm1
+.exit:
+	movd	mm2, [edx]
 	pfacc	mm0, mm0
 	pfmul	mm0, mm2
 	movd	[edx], mm0
@@ -243,6 +244,7 @@ proc	calc_noise_sub_3DN
 	pfsubr		mm4, [eax+ 0+ edx*4]
 	add		edx, byte 2
 	pfmul		mm4, mm4
+	jz		.exit4
 
 	loopalignK7	16
 .lp4:
@@ -264,7 +266,7 @@ proc	calc_noise_sub_3DN
 	pfadd		mm4, mm0
 	pfadd		mm5, mm1
 	jnz		.lp4
-
+.exit4:
 	pfadd		mm4, mm5
 	mov		edx, [esp+_P+20] ; result
 	pfacc		mm4, mm4
