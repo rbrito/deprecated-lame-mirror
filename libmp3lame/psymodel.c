@@ -571,6 +571,7 @@ static void convert_partition2scalefac_l(
 {
     int sb, b;
     FLOAT8 enn, thmm;
+    /* it seems bug... tt 2002/Aug/25 */
 #if 1
     b = 0;
     enn  = 0.5*eb[0];
@@ -937,7 +938,7 @@ int L3psycho_anal( lame_global_flags * gfp,
 		/* convert to tonality index */
 		/* tonality small:   tbb=1 */
 		/* tonality large:   tbb=-.299 */
-		tbb = CONV1 + CONV2*log(tbb);
+		tbb = CONV1 + CONV2*FAST_LOG(tbb);
 		if (tbb < 0.0) tbb = exp(-LN_TO_LOG10*NMT);
 		else if (tbb > 1.0) tbb = exp(-LN_TO_LOG10*TMN);
 		else tbb = exp(-LN_TO_LOG10 * ( (TMN-NMT)*tbb + NMT ));
@@ -983,7 +984,7 @@ int L3psycho_anal( lame_global_flags * gfp,
 
 	    tbb = Max(thr[b],gfc->ATH->cb[b]);
 	    if (tbb < eb[b])
-		gfc->pe[chn] -= gfc->numlines_l[b] * log(tbb / eb[b]);
+		gfc->pe[chn] -= gfc->numlines_l[b] * FAST_LOG(tbb / eb[b]);
 
 	    if ( gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh ) {
 		thr[b] = Min(ecb, rpelev*gfc->nb_1[chn][b]);
@@ -1013,7 +1014,7 @@ int L3psycho_anal( lame_global_flags * gfp,
 
 	    /* bit allocation is based on pe.  */
 	    if (mx>mn) {
-		FLOAT8 tmp = 400*log(mx/(1e-12+mn));
+		FLOAT8 tmp = 400*FAST_LOG(mx/(1e-12+mn));
 		if (tmp>gfc->pe[chn]) gfc->pe[chn]=tmp;
 	    }
 
@@ -1074,7 +1075,7 @@ int L3psycho_anal( lame_global_flags * gfp,
 	    x2 = Max(gfc->thm[0].l[sb],gfc->thm[1].l[sb]);
 	    /* thresholds difference in db */
 	    if (x2 >= 1000*x1)  db=3;
-	    else db = log10(x2/x1);  
+	    else db = FAST_LOG10(x2/x1);  
 	    /*  DEBUGF(gfc,"db = %f %e %e  \n",db,gfc->thm[0].l[sb],gfc->thm[1].l[sb]);*/
 	    sidetot += db;
 	    tot++;
@@ -1089,7 +1090,7 @@ int L3psycho_anal( lame_global_flags * gfp,
 		x2 = Max(gfc->thm[0].s[sb][sblock],gfc->thm[1].s[sb][sblock]);
 		/* thresholds difference in db */
 		if (x2 >= 1000*x1)  db=3;
-		else db = log10(x2/x1);
+		else db = FAST_LOG10(x2/x1);
 		sidetot += db;
 		tot++;
 	    }
@@ -1344,7 +1345,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 
     /* variables used for --nspsytune */
     int ns_attacks[4];
-    FLOAT ns_hpfsmpl[4][576+576/3+NSFIRLEN];
+    FLOAT ns_hpfsmpl[2][576];
     FLOAT pe_l[4],pe_s[4];
     FLOAT pcfact;
     FLOAT8 max[CBANDS],avg[CBANDS],tonality2[CBANDS];
@@ -1363,41 +1364,26 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
      *  Apply HPF of fs/4 to the input signal.
      *  This is used for attack detection / handling.
      **********************************************************************/
-    {
+    /* Don't copy the input buffer into a temporary buffer */
+    /* unroll the loop 4 times */
+    for(chn=0;chn<gfc->channels_out;chn++) {
 	static const FLOAT fircoef[] = {
 	    -8.65163e-18,-0.00851586,-6.74764e-18, 0.0209036,
 	    -3.36639e-17,-0.0438162 ,-1.54175e-17, 0.0931738,
-	    -5.52212e-17,-0.313819  , 0.5        ,-0.313819,
-	    -5.52212e-17, 0.0931738 ,-1.54175e-17,-0.0438162,
-	    -3.36639e-17, 0.0209036 ,-6.74764e-18,-0.00851586,
-	    -8.65163e-18,
+	    -5.52212e-17,-0.313819
 	};
 
-	/* Don't copy the input buffer into a temporary buffer */
-	/* unroll the loop 4 times */
-	for(chn=0;chn<gfc->channels_out;chn++) {
-	    /* apply high pass filter of fs/4 */
-	    const sample_t * const firbuf = &buffer[chn][576-350-NSFIRLEN+192];
-	    for (i=0;i<576;i++) {
-		FLOAT sum1 = 0, sum2=0, sum3=0, sum4=0;
-		/* align on 4 */
-		for (j=0;j<(NSFIRLEN%4);j++)
-		    sum1 += fircoef[j] * firbuf[i+j];
-		/* aligned on 4 */
-		for(;j<NSFIRLEN;j+=4) {
-		    sum1 += fircoef[j] * firbuf[i+j];
-		    sum2 += fircoef[j+1] * firbuf[i+j+1];
-		    sum3 += fircoef[j+2] * firbuf[i+j+2];
-		    sum4 += fircoef[j+3] * firbuf[i+j+3];
-		}
-		ns_hpfsmpl[chn][i] = sum1+sum2+sum3+sum4;
+	/* apply high pass filter of fs/4 */
+	const sample_t * const firbuf = &buffer[chn][576-350-NSFIRLEN+192];
+	for (i=0;i<576;i++) {
+	    FLOAT sum1, sum2;
+	    sum1 = 0.5 * firbuf[i + 10];
+	    sum2 = 0.0;
+	    for (j=0;j<(NSFIRLEN-1)/2;j+=2) {
+		sum1 += fircoef[j  ] * (firbuf[i+j  ]+firbuf[i+NSFIRLEN-j  ]);
+		sum2 += fircoef[j+1] * (firbuf[i+j+1]+firbuf[i+NSFIRLEN-j-1]);
 	    }
-	}
-	if (gfp->mode == JOINT_STEREO) {
-	    for(i=0;i<576;i++) {
-		ns_hpfsmpl[2][i] = ns_hpfsmpl[0][i]+ns_hpfsmpl[1][i];
-		ns_hpfsmpl[3][i] = ns_hpfsmpl[0][i]-ns_hpfsmpl[1][i];
-	    }
+	    ns_hpfsmpl[chn][i] = sum1 + sum2;
 	}
     }
 
@@ -1536,17 +1522,28 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 		= en_subshort[i] / gfc->nsPsy.last_en_subshort[chn][i+4];
 	}
 
-	j = 0;
-	for (i=0;i<9;i++) {
-	    double p = 0.0;
-	    k = j + 576/9;
-	    for (; j < k; j++)
-		p += ns_hpfsmpl[chn][j] * ns_hpfsmpl[chn][j];
+	if (chn == 2) {
+	    for(i=0;i<576;i++) {
+		FLOAT l, r;
+		l = ns_hpfsmpl[0][i];
+		r = ns_hpfsmpl[1][i];
+		ns_hpfsmpl[0][i] = l+r;
+		ns_hpfsmpl[1][i] = l-r;
+	    }
+	}
+	{
+	    FLOAT *pf = ns_hpfsmpl[chn & 1];
+	    for (i=0;i<9;i++) {
+		double p = 0.0;
+		FLOAT *pfe = pf + 576/9;
+		for (; pf < pfe; pf++)
+		    p += *pf * *pf;
 
-	    if (p < 100.0)
-		p = 100.0;
-	    gfc->nsPsy.last_en_subshort[chn][i] = en_subshort[i+3] = p;
-	    attack_intensity[i+3] = p / en_subshort[i+3-2];
+		if (p < 100.0)
+		    p = 100.0;
+		gfc->nsPsy.last_en_subshort[chn][i] = en_subshort[i+3] = p;
+		attack_intensity[i+3] = p / en_subshort[i+3-2];
+	    }
 	}
 
 	/* compare energies between sub-shortblocks */
@@ -1698,7 +1695,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 		continue;
 
 	    msum += regcoef_l[sb] * 
-		log(gfc->en[chn].l[sb]
+		FAST_LOG(gfc->en[chn].l[sb]
 		    / (gfc->thm[chn].l[sb]*gfc->masking_lower));
 	}
 	gfc->nsPsy.pe_l[chn] = msum;
@@ -1712,7 +1709,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 		    <= gfc->thm[chn].s[sb][sblock] * gfc->masking_lower)
 		    continue;
 		msum += regcoef_s[sb] *
-		    log(gfc->en[chn].s[sb][sblock]
+		    FAST_LOG(gfc->en[chn].s[sb][sblock]
 			/ (gfc->thm[chn].s[sb][sblock] * gfc->masking_lower));
 	    }
 	}
