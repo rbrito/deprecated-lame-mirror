@@ -16,6 +16,7 @@
 
 #ifdef USE_LAYER_1
 
+#include <assert.h>
 #include "common.h"
 #include "decode_i386.h"
 

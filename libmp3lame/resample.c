@@ -1,3 +1,7 @@
+/* $Id$ */
+
+#include <assert.h>
+
 /* FIR resampling */
 
 INLINE double sinpi ( double x )
