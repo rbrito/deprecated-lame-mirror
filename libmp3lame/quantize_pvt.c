@@ -303,7 +303,7 @@ void compute_ath( lame_global_flags *gfp, FLOAT8 ATH_l[], FLOAT8 ATH_s[] )
 
 
 
-/* convert from L/R <-> Mid/Side, src == dst allowed */
+/* convert from L/R <-> Mid/Side */
 void ms_convert(III_side_info_t *l3_side, int gr)
 {
     int i;
