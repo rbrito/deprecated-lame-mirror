@@ -314,6 +314,10 @@ typedef struct  {
   /* used by the frame analyzer */
   plotting_data *pinfo;
   
+  /* CPU features */
+  int CPU_features_3DNow;
+  int CPU_features_MMX;
+  int CPU_features_SIMD;
   
   /* copied from lame_global_flags */
   
@@ -343,6 +347,9 @@ extern int fill_buffer_resample(lame_global_flags *gfp,sample_t *outbuf,int desi
 extern void 
 getframebits(lame_global_flags *gfp,int *bitsPerFrame, int *mean_bits);
 
+extern int has_3DNow (void);
+extern int has_MMX   (void);
+extern int has_SIMD  (void);
 
 
 /***********************************************************************

@@ -201,6 +201,10 @@ int lame_init_params(lame_global_flags *gfp)
   lame_internal_flags *gfc=gfp->internal_flags;
   gfc->lame_init_params_init=1;
 
+  gfc->CPU_features_3DNow = has_3DNow();
+  gfc->CPU_features_3DNow = has_MMX();
+  gfc->CPU_features_3DNow = has_SIMD();
+
   if (gfp->num_channels==1) {
     gfp->mode = MPG_MD_MONO;
   }

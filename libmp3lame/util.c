@@ -386,3 +386,112 @@ lame_errorf(const char * s, ...)
 
 #endif
 
+
+
+/***********************************************************************
+ *
+ *      routines to detect CPU specific features like 3DNow, MMX, SIMD
+ *
+ *  donated by Frank Klemm
+ *  added Robert Hegemann 2000-10-10
+ *
+ ***********************************************************************/
+
+int has_3DNow (void)
+{
+    __asm__ (
+        "pushal \n"
+        "pushfl \n"                             
+        "popl  %eax \n"
+        "movl  %eax,%ecx \n"
+        "xorl  $0x00200000,%eax \n"
+        "pushl %eax \n"
+        "popfl \n"
+        "pushfl \n"
+        "popl  %eax \n"
+        "cmpl  %ecx,%eax \n"
+        "jz    NO_CPUID1 \n"
+
+        "movl  $0x80000000,%eax \n"
+        "CPUID \n"
+        "cmpl  $0x80000000,%eax \n"
+        "jbe   NO_EXTENDED_MSR1 \n"
+
+        "movl  $0x80000001,%eax \n"
+        "CPUID \n"
+        "testl $0x80000000,%edx \n"
+        "jz    NO_3DNow1 \n"
+        "popal \n"
+        "movl  $1,%eax \n"
+        "jmp   return1 \n"
+    "NO_CPUID1: \n"
+    "NO_EXTENDED_MSR1: \n"
+    "NO_3DNow1: \n"
+        "popal \n"
+        "xorl  %eax,%eax \n"
+    "return1: \n"    
+    );
+    return;
+}    
+
+int has_MMX (void)
+{
+    __asm__ (
+        "pushal \n"
+        "pushfl \n"                             
+        "popl  %eax \n"
+        "movl  %eax,%ecx \n"
+        "xorl  $0x00200000,%eax \n"
+        "pushl %eax \n"
+        "popfl \n"
+        "pushfl \n"
+        "popl  %eax \n"
+        "cmpl  %ecx,%eax \n"
+        "jz    NO_CPUID2 \n"
+
+        "movl  $1,%eax \n"
+        "CPUID \n"
+        "testl $0x800000,%edx \n"
+        "jz    NO_MMX2 \n"
+        "popal \n"
+        "movl  $1,%eax \n"
+        "jmp   return2 \n"
+    "NO_CPUID2: \n"
+    "NO_MMX2: \n"
+        "popal \n"
+        "xorl  %eax,%eax \n"
+    "return2: \n"    
+    );
+    return;
+}    
+
+int has_SIMD (void)
+{
+    __asm__ (
+        "pushal \n"
+        "pushfl \n"                             
+        "popl  %eax \n"
+        "movl  %eax,%ecx \n"
+        "xorl  $0x00200000,%eax \n"
+        "pushl %eax \n"
+        "popfl \n"
+        "pushfl \n"
+        "popl  %eax \n"
+        "cmpl  %ecx,%eax \n"
+        "jz    NO_CPUID3 \n"
+
+        "movl  $1,%eax \n"
+        "CPUID \n"
+        "testl $0x2000000,%edx \n"
+        "jz    NO_SIMD3 \n"
+        "popal \n"
+        "movl  $1,%eax \n"
+        "jmp   return3 \n"
+    "NO_CPUID3: \n"
+    "NO_SIMD3: \n"
+        "popal \n"
+        "xorl  %eax,%eax \n"
+    "return3: \n"    
+    );
+    return;
+}    
