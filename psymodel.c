@@ -178,7 +178,7 @@ void L3psycho_anal( short int *buffer[2],
     
     for (i=0;i<HBLKSIZE;i++) partition_l[i]=-1;
     for (i=0;i<HBLKSIZE_s;i++) partition_s[i]=-1;
-    
+
     L3para_read( sfreq,numlines_l,numlines_s,partition_l,minval,qthr_l,s3_l,s3_s,
 		 partition_s,qthr_s,SNR_s,
 		 bu_l,bo_l,w1_l,w2_l, bu_s,bo_s,w1_s,w2_s );
@@ -253,7 +253,20 @@ void L3psycho_anal( short int *buffer[2],
 
 #define AACS3
 #define NEWS3XX
-    
+
+#ifdef AACS3
+    /* AAC values, results in more masking over MP3 values */
+# define TMN 18
+# define NMT 6
+#else
+    /* MP3 values */
+# define TMN 29
+# define NMT 6
+#endif
+
+#define rpelev 2
+#define rpelev2 16
+
     /* compute norm_l, norm_s instead of relying on table data */
     for ( b = 0;b < npart_l; b++ ) {
       FLOAT8 norm=0;
@@ -261,7 +274,7 @@ void L3psycho_anal( short int *buffer[2],
 	norm += s3_l[b][k];
       }
       for ( k = s3ind[b][0]; k <= s3ind[b][1]; k++ ) {
-	s3_l[b][k] /= norm;
+	s3_l[b][k] *= exp(-LN_TO_LOG10 * NMT) / norm;
       }
       /*printf("%i  norm=%f  norm_l=%f \n",b,1/norm,norm_l[b]);*/
     }
@@ -449,14 +462,12 @@ void L3psycho_anal( short int *buffer[2],
 	if( (den=rn+fabs(2.0*r1-r2)) != 0.0 ) {
 	  FLOAT8 an = wsamp_s[1][k]; 
 	  FLOAT8 bn = wsamp_s[1][BLKSIZE_s-k];
-	  numre = (an+bn)/2.0-numre;
-	  numim = (an-bn)/2.0-numim;
-	  cw[j] = sqrt(numre*numre+numim*numim)/den;
-	} else {
-	  cw[j] = 0.0;
+	  numre = (an+bn)*0.5-numre;
+	  numim = (an-bn)*0.5-numim;
+	  den = sqrt(numre*numre+numim*numim)/den;
 	}
 	
-	cw[j+1] = cw[j+2] = cw[j+3] = cw[j];
+	cw[j+1] = cw[j+2] = cw[j+3] = cw[j] = den;
       }
     
 #if 0
@@ -512,7 +523,7 @@ void L3psycho_anal( short int *buffer[2],
     pe[chn] = 0.0;		/*  calculate percetual entropy */
     for ( b = 0;b < npart_l; b++ )
       {
-	FLOAT8 cbb,tbb,ecb,ctb;
+	FLOAT8 tbb,ecb,ctb;
 	FLOAT8 temp_1; /* BUG of IS */
 
 	ecb = 0.0;
@@ -523,34 +534,28 @@ void L3psycho_anal( short int *buffer[2],
 	    ctb += s3_l[b][k] * cb[k];
 	  }
 
-#ifdef AACS3
-    /* AAC values, results in more masking over MP3 values */
-# define TMN 18
-# define NMT 6
-#else
-    /* MP3 values */
-# define TMN 29
-# define NMT 6
-#endif
-
-#define rpelev 2
-#define rpelev2 16
-
 	/* calculate the tonality of each threshold calculation partition */
 	/* calculate the SNR in each threshhold calculation partition */
 
-	cbb = ecb;
-	if (cbb != 0.0)
+	tbb = ecb;
+	if (tbb != 0.0)
 	  {
-	    cbb = ctb / cbb;
-	    if (cbb <0.01) cbb = 0.01;
-	    cbb = log(cbb);
+	    tbb = ctb / tbb;
+	    if (tbb <= 0.04875584301)
+	      {
+		tbb = LN_TO_LOG10 * (TMN - NMT);
+	      }
+	    else
+	      {
+		tbb = log(tbb);
+		tbb = -0.299 - 0.43*tbb;  /* conv1=-0.299, conv2=-0.43 */
+		tbb = maximum( 0.0, tbb);  /* 0<tbb<1 */
+		tbb *= LN_TO_LOG10 * (TMN - NMT);
+	      }
 	  }
 
-	tbb = -0.299 - 0.43*cbb;  /* conv1=-0.299, conv2=-0.43 */
-	tbb = minimum( 1.0, maximum( 0.0, tbb) ) ;  /* 0<tbb<1 */
-	tbb = maximum( minval[b], TMN*tbb+NMT*(1.0-tbb) );
-	nb[b] = ecb * exp(-tbb * LN_TO_LOG10 );
+	tbb = maximum( minval[b], tbb);
+	nb[b] = ecb * exp(-tbb);
 
 	/* pre-echo control */
 	/* rpelev=2.0, rpelev2=16.0 */
@@ -565,8 +570,9 @@ void L3psycho_anal( short int *buffer[2],
 
 	if (thr[b] < eb[b])
 	  {
-	    /* thr[b] -> thr[b]+1.0 : for non sound portition */
-	    pe[chn] -= numlines_l[b] * log((thr[b]+1.0) / (eb[b]+1.0) );
+	    /* there's no non sound portition, because thr[b] is
+	     maximum of qthr_l and temp_1 */
+	    pe[chn] -= numlines_l[b] * log((thr[b]) / (eb[b]) );
 	  }
       }
 
@@ -896,7 +902,7 @@ int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s)
 	    {
 	      j = (int) *p++;
 	      numlines_l[i] = (int) *p++;
-	      minval[i] = *p++;
+	      minval[i] = (*p++) * LN_TO_LOG10 - LN_TO_LOG10 * NMT;
 	      qthr_l[i] = *p++;
 	      /* norm_l[i] = *p++*/ p++;
 	      bval_l[i] = *p++;
