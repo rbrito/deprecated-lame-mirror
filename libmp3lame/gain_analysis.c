@@ -115,7 +115,7 @@ typedef int32_t         Int32_t;
 #define MAX_dB            120.          /* Table entries for 0...MAX_dB (normal max. values are 70...80 dB) */
 
 #define MAX_ORDER               (BUTTER_ORDER > YULE_ORDER ? BUTTER_ORDER : YULE_ORDER)
-#define MAX_SAMPLES_PER_WINDOW  (size_t) (MAX_SAMP_FREQ * RMS_WINDOW_TIME)      /* max. Samples per Time slice */
+#define MAX_SAMPLES_PER_WINDOW  (size_t) (MAX_SAMP_FREQ * RMS_WINDOW_TIME +1)      /* max. Samples per Time slice */
 #define PINK_REF                64.82       /* 298640883795 */         /* calibration value */
 
 Float_t          linprebuf [MAX_ORDER * 2];
