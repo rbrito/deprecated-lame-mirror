@@ -1414,9 +1414,147 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
   int   cbmax=0, cbmax_tp;
   const FLOAT* p = psy_data;
   int  sbmax ;
-  int  i,j,k2,loop;
+  int  i,j;
   int freq_scale=1;
-/*  int partition[HBLKSIZE]; */
+
+#ifdef KLEMM_43
+
+    /******************************************************************/
+    /* Read long block data (part 1)                                  */
+    /******************************************************************/
+
+    for ( j = 0; j < 6; j++ ) {
+        freq_tp  = p[0];
+        cbmax_tp = (int) p[1];
+        p       += 2;
+
+        if ( sfreq == freq_tp/freq_scale ) {
+            cbmax = cbmax_tp;
+            for ( i = 0; i < cbmax_tp; i++, p += 6 ) {
+                if ( i != p[0] ) {   // now also no fractional part are allowed
+                    ERRORF ("psy_data(%u): idx=%d  table idx=%f\a\n", 1, i, p[0] );
+                    return -1;
+                }
+                numlines_l  [i] = (int) p[1];
+                minval      [i] = exp ( -LN_TO_LOG10 * p[2] );
+                // qthr_l [i] = p[3];
+                // norm_l [i] = p[4];
+                // bval_l [i] = p[5];
+            }
+        } else {
+            p += cbmax_tp * 6;
+        }
+    }
+    *npart_l_orig = cbmax;
+
+    /******************************************************************/
+    /* Read short block data (part 2)                                 */
+    /******************************************************************/
+
+    for ( j = 0; j < 6; j++ ) {
+        freq_tp  = p[0];
+        cbmax_tp = (int) p[1];
+        p       += 2;
+        if ( sfreq == freq_tp/freq_scale ) {
+            cbmax = cbmax_tp;
+            for ( i = 0; i < cbmax_tp; i++, p += 6 ) {
+                if ( i != p[0] ) {
+                    ERRORF ("psy_data(%u): idx=%d  table idx=%f\a\n", 2, i, p[0] );
+                    return -1;
+                }
+                numlines_s [i]  = (int) p[1];
+                // qthr_s [i] = p[2];
+                // norm_s [i] = p[3];
+                SNR [i]         = p[4];
+                // bval_s [i] = p[5];
+                if ( SNR[i] <= 0 ) {
+                    ERRORF ("psy_data(%u): idx=%d  bad SNR: %f\a\n", 2, i, SNR[i] );
+                    return -1;
+                }
+            }
+        } else {
+            p += cbmax_tp * 6;
+        }
+    }
+    *npart_s_orig = cbmax;
+
+    /* MPEG1 SNR_s data is given in dB, convert to energy, data table now converted */
+
+    /******************************************************************/
+    /* Read long block data for converting threshold                  */
+    /* calculation partitions to scale factor bands (part 3)          */
+    /******************************************************************/
+
+    for ( j = 0; j < 6; j++ ) {
+        freq_tp = p[0];
+        sbmax   = (int) p[1];
+        p      += 2;
+
+        if (sfreq == freq_tp/freq_scale) {
+            for ( i = 0; i < sbmax; i++, p += 6 ) {
+                if ( i != p[0] ) {
+                    ERRORF ("psy_data(%u): idx=%d  table idx=%f\a\n", 3, i, p[0] );
+                    return -1;
+                }
+                bu_l [i] = (int) p[2];
+                bo_l [i] = (int) p[3];
+                w1_l [i] = p[4] / 576.;
+                w2_l [i] = p[5] / 576.;
+
+                if ( i != 0  &&  fabs (1.-w1_l[i]-w2_l[i-1] > 1.e-6 ) ) {
+                    ERRORF ("psy_data(%u): idx=%d  sum error: w1=%f w2=%f\a\n", 3, i, w1_l [i], w2_l [i-1] );
+                    return -1;
+                }
+            }
+        } else {
+            p += sbmax * 6;
+        }
+    }
+
+    /******************************************************************/
+    /* Read short block data for converting threshold                 */
+    /* calculation partitions to scale factor bands (part 4)          */
+    /******************************************************************/
+
+    for ( j = 0; j < 6; j++ ) {
+        freq_tp = p[0];
+        sbmax   = (int) p[1];
+        p      += 2;
+
+        if ( sfreq == freq_tp/freq_scale ) {
+            for ( i = 0; i < sbmax; i++, p += 6 ) {
+                if ( i != p[0] ) {
+                    ERRORF ("psy_data(%u): idx=%d  table idx=%f\a\n", 4, i, p[0] );
+                    return -1;
+                }
+                bu_s [i] = (int) p[2];
+                bo_s [i] = (int) p[3];
+                w1_s [i] = p[4] / 576.;
+                w2_s [i] = p[5] / 576.;
+
+                if ( i != 0  &&  fabs (1.-w1_s[i]-w2_s[i-1] > 1.e-6 ) ) {
+                    ERRORF ("psy_data(%u): idx=%d  sum error: w1=%f w2=%f\a\n", 3, i, w1_s [i], w2_s [i-1] );
+                    return -1;
+                }
+            }
+        } else {
+            p += sbmax * 6;
+        }
+    }
+
+    /******************************************************************/
+    /* Final check for data integrity                                 */
+    /******************************************************************/
+
+    if (*p != -1.2345676422119140625 ) {
+        ERRORF ("psy_data(end): End Of Data Marker missing: value is %f instead of -1.234567...\n", *p );
+        return -1;
+    }
+
+
+#else /* KLEMM_43 */
+
+  int loop, k2;
 
   /******************************************************************/
   /* Read long block data */
@@ -1569,7 +1707,7 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
   /******************************************************************/
 
 
-
+#endif  /* KLEMM_43 */
 
 #undef NOTABLES
 #ifdef NOTABLES

@@ -551,7 +551,7 @@ VBR_quantize_granule(
 
 
   /* encode scalefacs */
-  if ( gfp->version == 1 ) 
+  if ( gfc->is_mpeg1 ) 
     status=scale_bitcount(scalefac, cod_info);
   else
     status=scale_bitcount_lsf(scalefac, cod_info);
@@ -680,7 +680,7 @@ short_block_scalefacs (
     int minsfb;
     int vbrmax = *VBRmax;
     
-    max_range = gfp->version ? max_range_short : max_range_short_lsf;
+    max_range = gfc->is_mpeg1 ? max_range_short : max_range_short_lsf;
     
     maxover0 = 0;
     maxover1 = 0;
@@ -721,7 +721,7 @@ short_block_scalefacs (
             vbrsf->s[sfb][b] -= vbrmax;
         }
     }
-    if ( gfp->version == 1 ) 
+    if ( gfc->is_mpeg1 ) 
         maxover = compute_scalefacs_short (vbrsf->s, cod_info, scalefac->s,
                                            cod_info->subblock_gain);
     else
@@ -772,8 +772,8 @@ long_block_scalefacs (
     int v0, v1, v0p, v1p;
     int vbrmax = *VBRmax;
 
-    max_range  = gfp->version ? max_range_long : max_range_long_lsf;
-    max_rangep = gfp->version ? max_range_long : max_range_long_lsf_pretab;
+    max_range  = gfc->is_mpeg1 ? max_range_long : max_range_long_lsf;
+    max_rangep = gfc->is_mpeg1 ? max_range_long : max_range_long_lsf_pretab;
     
     maxover0  = 0;
     maxover1  = 0;
@@ -835,7 +835,7 @@ long_block_scalefacs (
     for (sfb = 0; sfb < SBPSY_l; sfb++)   
         vbrsf->l[sfb] -= vbrmax;
     
-    if ( gfp->version == 1 ) 
+    if ( gfc->is_mpeg1 == 1 ) 
         maxover = compute_scalefacs_long (vbrsf->l, cod_info, scalefac->l);
     else
         maxover = compute_scalefacs_long_lsf (vbrsf->l, cod_info, scalefac->l);

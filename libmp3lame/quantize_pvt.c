@@ -319,16 +319,18 @@ void compute_ath( lame_global_flags *gfp, FLOAT8 ATH_l[], FLOAT8 ATH_s[] )
 
 
 
-/* convert from L/R <-> Mid/Side */
-void ms_convert(FLOAT8 xr[2][576],FLOAT8 xr_org[2][576])
+/* convert from L/R <-> Mid/Side, src == dst allowed */
+void ms_convert(FLOAT8 dst[2][576], FLOAT8 src[2][576])
 {
-  int i;
-  for ( i = 0; i < 576; i++ ) {
-    FLOAT8 l = xr_org[0][i];
-    FLOAT8 r = xr_org[1][i];
-    xr[0][i] = (l+r)*(SQRT2*0.5);
-    xr[1][i] = (l-r)*(SQRT2*0.5);
-  }
+    FLOAT8 l;
+    FLOAT8 r;
+    int i;
+    for (i = 0; i < 576; ++i) {
+        l = src[0][i];
+        r = src[1][i];
+        dst[0][i] = (l+r) * (FLOAT8)(SQRT2*0.5);
+        dst[1][i] = (l-r) * (FLOAT8)(SQRT2*0.5);
+    }
 }
 
 
@@ -575,7 +577,7 @@ int  calc_noise(
         const III_psy_xmin      * const l3_xmin, 
         const III_scalefac_t    * const scalefac,
               FLOAT8                    xfsf [4][SBMAX_l], 
-              calc_noise_result *       res )
+              calc_noise_result * const res )
 {
   int sfb,start, end, j,l, i, over=0;
   FLOAT8 sum, bw;

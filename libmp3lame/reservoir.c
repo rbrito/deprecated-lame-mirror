@@ -37,6 +37,42 @@
   size of the reservoir, and checks to make sure main_data_begin
   was set properly by the formatter
 */
+
+/*
+ *  Background information:
+ *
+ *  This is the original text from the ISO standard. Because of 
+ *  sooo many bugs and irritations correcting comments are added 
+ *  in brackets []. A '^W' means you should remove the last word.
+ *
+ *  1) The following rule can be used to calculate the maximum 
+ *     number of bits used for one granule [^W frame]: 
+ *     At the highest possible bitrate of Layer III (320 kbps 
+ *     per stereo signal [^W^W^W], 48 kHz) the frames must be of
+ *     [^W^W^W are designed to have] constant length, i.e. 
+ *     one buffer [^W^W the frame] length is:
+ *
+ *         320 kbps * 1152/48 kHz = 7680 bit = 960 byte
+ *
+ *     This value is used as the maximum buffer per channel [^W^W] at 
+ *     lower bitrates [than 320 kbps]. At 64 kbps mono or 128 kbps 
+ *     stereo the main granule length is 64 kbps * 576/48 kHz = 768 bit
+ *     [per granule and channel] at 48 kHz sampling frequency. 
+ *     This means that there is a maximum deviation (short time buffer 
+ *     [= reservoir]) of 7680 - 2*2*768 = 4608 bits is allowed at 64 kbps. 
+ *     The actual deviation is equal to the number of bytes [with the 
+ *     meaning of octets] denoted by the main_data_end offset pointer. 
+ *     The actual maximum deviation is (2^9-1)*8 bit = 4088 bits 
+ *     [for MPEG-1 and (2^8-1)*8 bit for MPEG-2, both are hard limits].
+ *     ... The xchange of buffer bits between the left and right channel
+ *     is allowed without restrictions [exception: dual channel].
+ *     Because of the [constructed] constraint on the buffer size
+ *     main_data_end is always set to 0 in the case of bit_rate_index==14, 
+ *     i.e. data rate 320 kbps per stereo signal [^W^W^W]. In this case 
+ *     all data are allocated between adjacent header [^W sync] words 
+ *     [, i.e. there is no buffering at all].
+ */
+
 int
 ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, int frameLength )
 {
@@ -45,37 +81,60 @@ ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, i
     int resvLimit;
     int maxmp3buf;
 
+/*
+ *  Meaning of the variables:
+ *      resvLimit: (0, 8, ..., 8*255 (MPEG-2), 8*511 (MPEG-1))
+ *          Number of bits can be stored in previous frame(s) due to 
+ *          counter size constaints
+ *      maxmp3buf: ( ??? ... 8*1951 (MPEG-1 and 2), 8*2047 (MPEG-2.5))
+ *          Number of bits allowed to encode one frame (you can take 8*511 bit 
+ *          from the bit reservoir and at most 8*1440 bit from the current 
+ *          frame (320 kbps, 32 kHz), so 8*1951 bit is the largest possible 
+ *          value for MPEG-1 and -2)
+ *      fullFrameBits:
+ *
+ *      mean_bits:
+ *
+ *      frameLength:
+ *
+ *      gfc->ResvMax:
+ *
+ *      gfc->ResvSize:
+ *
+ *      l3_side->resvDrain_pre:
+ *
+ */
 
-    /* main_data_begin has 9 bits in MPEG 1, 8 bits MPEG2 */
+    /* main_data_begin has 9 bits in MPEG-1, 8 bits MPEG-2 */
     resvLimit = (gfp->version==1) ? 8*511 : 8*255 ;
 
 
     /* maximum allowed frame size */
-    if (gfp->strict_ISO)
-      maxmp3buf = 8*960;
-    else
-      maxmp3buf = 8*2047;
+    maxmp3buf = (gfp->strict_ISO) ? 8*960 : 8*2047;
 
-    if ( frameLength > maxmp3buf )
+    if ( frameLength > maxmp3buf ||  gfp->disable_reservoir ) {
 	gfc->ResvMax = 0;
-    else
+    } else {
 	gfc->ResvMax = maxmp3buf - frameLength;
-    if (gfp->disable_reservoir) gfc->ResvMax=0;
-    if ( gfc->ResvMax > resvLimit ) gfc->ResvMax = resvLimit;
+	if ( gfc->ResvMax > resvLimit )
+	  gfc->ResvMax = resvLimit;
+    }
+
+    fullFrameBits = mean_bits * gfc->mode_gr + Min ( gfc->ResvSize, gfc->ResvMax );
+    
+    if ( gfp->strict_ISO  &&  fullFrameBits > maxmp3buf )
+        fullFrameBits = maxmp3buf;
+
     assert ( 0 == gfc->ResvMax % 8 );
     assert ( gfc->ResvMax >= 0 );
 
     l3_side->resvDrain_pre = 0;
 
-    if (gfc->pinfo != NULL){
-      gfc->pinfo->mean_bits=mean_bits/2;  /* expected bits per channel per granule */
-      gfc->pinfo->resvsize=gfc->ResvSize;
+    if ( gfc->pinfo != NULL ) {
+        gfc->pinfo->mean_bits = mean_bits / 2;  /* expected bits per channel per granule [is this also right for mono/stereo, MPEG-1/2 ?] */
+        gfc->pinfo->resvsize  = gfc->ResvSize;
     }
 
-    fullFrameBits = mean_bits * gfc->mode_gr + Min(gfc->ResvSize,gfc->ResvMax);
-    if (gfp->strict_ISO) {
-      if (fullFrameBits>maxmp3buf) fullFrameBits=maxmp3buf;
-    }
     return fullFrameBits;
 }
 

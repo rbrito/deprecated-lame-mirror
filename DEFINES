@@ -55,6 +55,9 @@ KLEMM_36:
 KLEMM_42:
  new bandwith calculation
 
+KLEMM_43:
+ cleaned up tables in tables.c
+
 KLEMM_44: (missing)
  enable code in pcm.c (new API)
 

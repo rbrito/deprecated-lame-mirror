@@ -52,14 +52,14 @@
 
 static int 
 init_outer_loop(
-    lame_global_flags *gfp,
     gr_info *const cod_info, 
     III_scalefac_t *const scalefac, 
+    const int is_mpeg1,
     const FLOAT8 xr[576], 
     FLOAT8 xrpow[576] )
 {
-  //    lame_internal_flags *gfc=gfp->internal_flags;
-    int i, o=0;
+    FLOAT8 tmp, sum = 0;
+    int i;
 
     /*  initialize fresh cod_info
      */
@@ -91,7 +91,7 @@ init_outer_loop(
              *  MPEG-1:      sfbs 0-7 long block, 3-12 short blocks 
              *  MPEG-2(.5):  sfbs 0-5 long block, 3-12 short blocks
              */ 
-            cod_info->sfb_lmax    = (gfp->version == 1) ? 8 : 6;
+            cod_info->sfb_lmax    = is_mpeg1 ? 8 : 6;
 	    cod_info->sfb_smin    = 3;
 	}
     } else {
@@ -112,14 +112,14 @@ init_outer_loop(
     /*  check if there is some energy we have to quantize
      *  and calculate xrpow matching our fresh scalefactors
      */
-    for (i = 0; i < 576; i++) {
-        FLOAT8 temp = fabs (xr[i]);
-        xrpow[i] = sqrt (temp * sqrt(temp));
-        o += (temp > 1E-20);
+    for (i = 0; i < 576; ++i) {
+        tmp = fabs (xr[i]);
+	sum += tmp;
+        xrpow[i] = sqrt (tmp * sqrt(tmp));
     }
    /*  return 1 if we have something to quantize, else 0
     */
-   return o > 0;
+   return sum > (FLOAT8)1E-20;
 }
 
 
@@ -695,7 +695,6 @@ inc_subblock_gain (
             }
 
             scalefac->s[sfb][window] = 0;
-            //gf.distort[band] = -1.0;
             width = gfc->scalefac_band.s[sfb] - gfc->scalefac_band.s[sfb+1];
             i = gfc->scalefac_band.s[sfb] * 3 + width * window;
             amp = IPOW20(210 + (s << (cod_info->scalefac_scale + 1)));
@@ -727,13 +726,13 @@ inc_subblock_gain (
 inline
 static int 
 balance_noise (
-    lame_global_flags  *gfp,
+    lame_global_flags  *const gfp,
     gr_info        * const cod_info,
     III_scalefac_t * const scalefac, 
     FLOAT8                 distort[4][SBMAX_l],
     FLOAT8                 xrpow[576] )
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
+    lame_internal_flags *const gfc = (lame_internal_flags *)gfp->internal_flags;
     int status;
     
     amp_scalefac_bands ( gfp, cod_info, scalefac, distort, xrpow);
@@ -751,7 +750,7 @@ balance_noise (
     /* not all scalefactors have been amplified.  so these 
      * scalefacs are possibly valid.  encode them: 
      */
-    if (gfp->version == 1)
+    if (gfc->is_mpeg1)
         status = scale_bitcount (scalefac, cod_info);
     else 
         status = scale_bitcount_lsf (scalefac, cod_info);
@@ -778,7 +777,7 @@ balance_noise (
         }
     }
     if (!status) {
-        if (gfp->version == 1) 
+        if (gfc->is_mpeg1 == 1) 
             status = scale_bitcount (scalefac, cod_info);
         else 
             status = scale_bitcount_lsf (scalefac, cod_info);
@@ -1439,7 +1438,8 @@ VBR_iteration_loop (
       
             /*  init_outer_loop sets up cod_info, scalefac and xrpow 
              */
-            ret = init_outer_loop(gfp, cod_info, &scalefac[gr][ch], xr[gr][ch], xrpow);
+            ret = init_outer_loop(cod_info, &scalefac[gr][ch], gfc->is_mpeg1,
+				  xr[gr][ch], xrpow);
             if (ret == 0) {
                 /*  xr contains no energy 
                  *  l3_enc, our encoding data, will be quantized to zero
@@ -1462,8 +1462,8 @@ VBR_iteration_loop (
                                         min_bits, max_bits, &scalefac[gr][ch],
                                         &l3_xmin[gr][ch], gr, ch );
                 if (ret < 0) {
-                    init_outer_loop (gfp, cod_info, &scalefac[gr][ch], 
-                                     xr[gr][ch], xrpow);
+		  init_outer_loop (cod_info, &scalefac[gr][ch], gfc->is_mpeg1,
+				   xr[gr][ch], xrpow);
                     VBR_encode_granule (gfp, cod_info, xr[gr][ch], 
                                         &l3_xmin[gr][ch], &scalefac[gr][ch],
                                         xrpow, l3_enc[gr][ch], ch, min_bits,
@@ -1532,7 +1532,8 @@ VBR_iteration_loop (
             }
             /*  init_outer_loop sets up cod_info, scalefac and xrpow 
              */
-            ret = init_outer_loop(gfp, cod_info, &scalefac[gr][ch], xr[gr][ch], xrpow);
+            ret = init_outer_loop(cod_info, &scalefac[gr][ch], gfc->is_mpeg1,
+				  xr[gr][ch], xrpow);
             if (ret == 0) 
             {
                 /*  xr contains no energy 
@@ -1709,7 +1710,8 @@ ABR_iteration_loop(
 
             /*  cod_info, scalefac and xrpow get initialized in init_outer_loop
              */
-            ret = init_outer_loop(gfp, cod_info, &scalefac[gr][ch], xr[gr][ch], xrpow);
+            ret = init_outer_loop(cod_info, &scalefac[gr][ch], gfc->is_mpeg1,
+				  xr[gr][ch], xrpow);
             if (ret == 0) {
                 /*  xr contains no energy 
                  *  l3_enc, our encoding data, will be quantized to zero
@@ -1805,8 +1807,8 @@ iteration_loop(
 
             /*  init_outer_loop sets up cod_info, scalefac and xrpow 
              */
-            i = init_outer_loop(gfp, cod_info, &scalefac[gr][ch], xr[gr][ch],
-                                xrpow);
+            i = init_outer_loop(cod_info, &scalefac[gr][ch], gfc->is_mpeg1,
+				xr[gr][ch], xrpow);
             if (i == 0) {
                 /*  xr contains no energy, l3_enc will be quantized to zero
                  */
