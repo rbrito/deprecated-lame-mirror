@@ -650,7 +650,7 @@ balance_noise (
     if (gfc->is_mpeg1)
         status = scale_bitcount (scalefac, cod_info);
     else 
-        status = scale_bitcount_lsf (scalefac, cod_info);
+        status = scale_bitcount_lsf (gfc, scalefac, cod_info);
     
     if (!status) 
         return 1; /* amplified some bands not exceeding limits */
@@ -674,7 +674,7 @@ balance_noise (
         if (gfc->is_mpeg1 == 1) 
             status = scale_bitcount (scalefac, cod_info);
         else 
-            status = scale_bitcount_lsf (scalefac, cod_info);
+            status = scale_bitcount_lsf (gfc, scalefac, cod_info);
     }    
     return !status;
 }
@@ -900,7 +900,7 @@ outer_loop (
 
 static void 
 iteration_finish (
-    lame_internal_flags * const gfc,
+    lame_internal_flags *gfc,
     FLOAT8          xr      [2][2][576],
     int             l3_enc  [2][2][576],
     III_psy_ratio   ratio   [2][2],  

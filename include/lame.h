@@ -310,6 +310,19 @@ int CDECL lame_get_force_ms(lame_global_flags *);
 int CDECL lame_set_free_format(lame_global_flags *, int);
 int CDECL lame_get_free_format(lame_global_flags *);
 
+// attach a file to these pointers to have error, debug and normal messages
+// written to the file.  For command line encoders, use stderr
+// for GUIs, you will need to read the file and display it in a popup window
+// default = stderr.  To disable, set to NULL!
+int CDECL lame_set_errorf(lame_global_flags *, FILE *);
+FILE * CDECL lame_get_errorf(lame_global_flags *);
+int CDECL lame_set_debugf(lame_global_flags *, FILE *);
+FILE * CDECL lame_get_debugf(lame_global_flags *);
+int CDECL lame_set_msgf(lame_global_flags *, FILE *);
+FILE * CDECL lame_get_msgf(lame_global_flags *);
+
+
+
 /* set one of brate compression ratio.  default is compression ratio of 11.  */
 int CDECL lame_set_brate(lame_global_flags *, int);
 int CDECL lame_get_brate(lame_global_flags *);

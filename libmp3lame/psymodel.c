@@ -1842,7 +1842,7 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 	      /* bval_l[i] = *p++; */ p++;
 	      if (j!=i)
 		{
-		  ERRORF("1. please check \"psy_data\"");
+		  ERRORF(gfc,"1. please check \"psy_data\"");
 		  return -1;
 		}
 	    }
@@ -1872,7 +1872,7 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 	      /* bval_s[i] = *p++ */ p++;
 	      if (j!=i)
 		{
-		  ERRORF("3. please check \"psy_data\"");
+		  ERRORF(gfc,"3. please check \"psy_data\"");
 		  return -1;
 		}
 	    }
@@ -1912,14 +1912,14 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 	      w1_l[i] = (FLOAT8) *p++;
 	      w2_l[i] = (FLOAT8) *p++;
 	      if (j!=i)
-		{ ERRORF("30:please check \"psy_data\"\n");
+		{ ERRORF(gfc,"30:please check \"psy_data\"\n");
 		return -1;
 		}
 
 	      if (i!=0)
 		if ( (fabs(1.0-w1_l[i]-w2_l[i-1]) > 0.01 ) )
 		  {
-		    ERRORF("31l: please check \"psy_data.\"\n"
+		    ERRORF(gfc,"31l: please check \"psy_data.\"\n"
                            "w1,w2: %f %f \n",w1_l[i],w2_l[i-1]);
 		    return -1;
 		  }
@@ -1949,14 +1949,14 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 	      w1_s[i] = *p++;
 	      w2_s[i] = *p++;
 	      if (j!=i)
-		{ ERRORF("30:please check \"psy_data\"\n");
+		{ ERRORF(gfc,"30:please check \"psy_data\"\n");
 		return -1;
 		}
 
 	      if (i!=0)
 		if ( (fabs(1.0-w1_s[i]-w2_s[i-1]) > 0.01 ) )
 		  { 
-                  ERRORF("31s: please check \"psy_data.\"\n"
+                  ERRORF(gfc,"31s: please check \"psy_data.\"\n"
                          "w1,w2: %f %f \n",w1_s[i],w2_s[i-1]);
 		  return -1;
 		  }
@@ -2342,7 +2342,7 @@ int psymodel_init(lame_global_flags *gfp)
     case  8000: samplerate *= 2; break;  /* kludge so mpeg2.5 uses mpeg2 tables  for now */
     case 11025: samplerate *= 2; break;
     case 12000: samplerate *= 2; break;
-    default:    ERRORF("error, invalid sampling frequency: %d Hz\a\n",
+    default:    ERRORF(gfc,"error, invalid sampling frequency: %d Hz\a\n",
 			gfp->out_samplerate);
     return -1;
     }

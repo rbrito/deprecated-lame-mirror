@@ -30,10 +30,7 @@
 #include "util.h"
 #include <ctype.h>
 #include <assert.h>
-
-#ifdef LAME_STD_PRINT
 #include <stdarg.h>
-#endif
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
@@ -314,8 +311,6 @@ int samplerate)   /* convert bitrate in kbps to index */
         if ( bitrate_table [version] [i] == bRate )
             return i;
 	    
-    ERRORF ( "Bitrate %d kbps not legal for %i Hz output sampling frequency.\n", 
-             bRate, samplerate );
     return -1;
 }
 
@@ -333,8 +328,7 @@ int SmpFrqIndex ( int sample_freq, int* const version )
     case 11025: *version = 0; return  0;
     case 12000: *version = 0; return  1;
     case  8000: *version = 0; return  2;
-    default:    ERRORF ( "SmpFrqIndex: %d Hz is not a legal sample frequency\n", sample_freq );
-		*version = 0; return -1;
+    default:    *version = 0; return -1;
     }
 }
 
@@ -571,22 +565,51 @@ int fill_buffer_resample(
 *  Message Output
 *
 ***********************************************************************/
+int  lame_debugf (lame_internal_flags *gfc, const char* format, ... )
+{
+    va_list  args;
+    int      ret;
 
-#ifdef LAME_STD_PRINT
+    if (gfc->debugf == NULL) return 0;
+    
+    va_start ( args, format );
+    ret = vfprintf ( gfc->debugf, format, args );
+    va_end   ( args );
+    fflush   ( gfc->debugf );   // a error function should flush immediately
+    return ret;			// if this function is used for normal reporting, this is quite dirty
+}
 
-int  lame_errorf ( const char* format, ... )
+
+int  lame_msgf (lame_internal_flags *gfc, const char* format, ... )
+{
+    va_list  args;
+    int      ret;
+
+    if (gfc->msgf == NULL) return 0;
+    
+    va_start ( args, format );
+    ret = vfprintf ( gfc->msgf, format, args );
+    va_end   ( args );
+    fflush   ( gfc->msgf );     // a error function should flush immediately
+    return ret;			// if this function is used for normal reporting, this is quite dirty
+}
+
+
+int  lame_errorf (lame_internal_flags *gfc, const char* format, ... )
 {
     va_list  args;
     int      ret;
     
+    if (gfc->errorf == NULL) return 0;
+
     va_start ( args, format );
-    ret = vfprintf ( stderr, format, args );
+    ret = vfprintf ( gfc->errorf, format, args );
     va_end   ( args );
-    fflush   ( stderr );        // a error function should flush immediately
+    fflush   ( gfc->errorf );        // a error function should flush immediately
     return ret;			// if this function is used for normal reporting, this is quite dirty
 }
 
-#endif
+
 
 /***********************************************************************
  *

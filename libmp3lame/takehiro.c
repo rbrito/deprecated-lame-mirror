@@ -661,13 +661,14 @@ Only call this routine after final scalefactors have been
 chosen and the channel/granule will not be re-encoded.
  */
 void best_scalefac_store(
-    const lame_internal_flags * const gfc,
+    const lame_internal_flags *gfc,
     const int             gr,
     const int             ch,
           int             l3_enc[2][2][576],
           III_side_info_t * const l3_side,
           III_scalefac_t          scalefac[2][2] )
 {
+
     /* use scalefac_scale if we can */
     gr_info *gi = &l3_side->gr[gr].ch[ch].tt;
     int sfb,i,j,j2,l,start,end;
@@ -726,7 +727,7 @@ void best_scalefac_store(
 	    if (gfc->mode_gr == 2) {
 	        scale_bitcount(&scalefac[gr][ch], gi);
 	    } else {
-		scale_bitcount_lsf(&scalefac[gr][ch], gi);
+		scale_bitcount_lsf(gfc,&scalefac[gr][ch], gi);
 	    }
 	}
     }
@@ -862,7 +863,7 @@ static const int max_range_sfac_tab[6][4] =
 /*  This is reverse-engineered from section 2.4.3.2 of the MPEG2 IS,     */
 /* "Audio Decoding Layer III"                                            */
 
-int scale_bitcount_lsf(
+int scale_bitcount_lsf(lame_internal_flags *gfc,
     const III_scalefac_t * const scalefac, gr_info * const cod_info)
 {
     int table_number, row_in_table, partition, nr_sfb, window, over;
@@ -951,13 +952,13 @@ int scale_bitcount_lsf(
 	    break;
 
 	  default:
-	    ERRORF("intensity stereo not implemented yet\n" );
+	    ERRORF(gfc,"intensity stereo not implemented yet\n" );
 	    break;
 	}
     }
 #ifdef DEBUG
     if ( over ) 
-        ERRORF( "---WARNING !! Amplification of some bands over limits\n" );
+        ERRORF(gfc, "---WARNING !! Amplification of some bands over limits\n" );
 #endif
     if (!over) {
       assert( cod_info->sfb_partition_table );     

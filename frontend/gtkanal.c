@@ -159,7 +159,7 @@ int gtkmakeframe(void)
 	 * is feed data too quickly, it will sometimes encode multiple frames
 	 * breaking this loop.
 	 */
-	MSGF("Warning: get_audio is returning too much data.\n");
+	fprintf(stderr,"Warning: get_audio is returning too much data.\n");
       }
       if (0==iread) break; /* eof */
 
@@ -194,9 +194,9 @@ int gtkmakeframe(void)
       }
     }else{
       if (mpglag == MAXMPGLAG) {
-	ERRORF("READ_AHEAD set too low - not enough frame buffering.\n"
+	fprintf(stderr,"READ_AHEAD set too low - not enough frame buffering.\n"
 	       "MP3x display of input and output PCM data out of sync.\n");
-	FLUSH_ERROR();
+	fflush(stderr);
       }
       else mpglag++; 
       pinfo->frameNum123=-1;  /* no frame output */
@@ -237,7 +237,7 @@ void plot_frame(void)
     }
   }
   if (i > MAXMPGLAG) {
-    ERRORF("input/output pcm syncing problem.  should not happen!\n");
+    fprintf(stderr,"input/output pcm syncing problem.  should not happen!\n");
     pplot2=pplot-1;
   }
 

@@ -116,7 +116,7 @@ void    best_scalefac_store (const lame_internal_flags * gfc, int gr, int ch,
 
 int     scale_bitcount (III_scalefac_t * scalefac, gr_info * cod_info);
 
-int     scale_bitcount_lsf (const III_scalefac_t * scalefac,
+int     scale_bitcount_lsf (lame_internal_flags *gfp, const III_scalefac_t * scalefac,
                             gr_info * cod_info);
 
 void    huffman_init (lame_internal_flags * gfc);

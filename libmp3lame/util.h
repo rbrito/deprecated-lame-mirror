@@ -223,6 +223,8 @@ typedef struct  {
   
   #define  LAME_ID   0xFFF88E3B
   unsigned long Class_ID;
+
+  FILE *errorf, *msgf, *debugf ;
   
   int lame_encode_frame_init;     
   int iteration_init_init;
@@ -527,21 +529,12 @@ extern void updateStats (lame_internal_flags *gfc);
 *  Macros about Message Printing and Exit
 *
 ***********************************************************************/
-
-#define LAME_STD_PRINT
-
-#ifdef LAME_STD_PRINT
-extern int lame_errorf(const char *, ...);
-
-#define DEBUGF	printf
+extern int lame_errorf(lame_internal_flags *gfc, const char *, ...);
+extern int lame_debugf(lame_internal_flags *gfc, const char *, ...);
+extern int lame_msgf(lame_internal_flags *gfc, const char *, ...);
+#define DEBUGF	lame_debugf
 #define ERRORF	lame_errorf
-#define MSGF	lame_errorf
-
-#define FLUSH_DEBUG()	fflush(stdout)
-#define FLUSH_ERROR()	fflush(stderr)
-#define FLUSH_MSG()	fflush(stderr)
-
-#endif
+#define MSGF	lame_msgf
 
 
 int select_kth_int(int b[], int N, int k);

@@ -84,8 +84,9 @@ lame_init_params_ppflt_lowpass(FLOAT8 amp_lowpass[32], FLOAT lowpass1,
 /* static void   lame_init_params_ppflt         (lame_internal_flags *gfc)                                                                                        *//*{{{ */
 
 static void
-lame_init_params_ppflt(lame_internal_flags * gfc)
+lame_init_params_ppflt(lame_global_flags * gfp)
 {
+    lame_internal_flags *gfc = gfp->internal_flags;
   /***************************************************************/
     /* compute info needed for polyphase filter (filter type==0, default) */
   /***************************************************************/
@@ -133,7 +134,7 @@ lame_init_params_ppflt(lame_internal_flags * gfc)
         if (gfc->highpass2 < .9 * (.75 / 31.0)) {
             gfc->highpass1 = 0;
             gfc->highpass2 = 0;
-            MSGF("Warning: highpass filter disabled.  "
+            MSGF(gfc, "Warning: highpass filter disabled.  "
                  "highpass frequency too small\n");
         }
     }
@@ -622,7 +623,8 @@ lame_init_params(lame_global_flags * const gfp)
          */
         gfp->brate =
             gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 *
-                                                            gfp->compression_ratio);
+                                                            gfp->
+                                                            compression_ratio);
 
         /* we need the version for the bitrate table look up */
         gfc->samplerate_index = SmpFrqIndex(gfp->out_samplerate, &gfp->version);
@@ -656,7 +658,8 @@ lame_init_params(lame_global_flags * const gfp)
         if (gfp->VBR == vbr_abr) {
             gfp->compression_ratio =
                 gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 *
-                                                                gfp->VBR_mean_bitrate_kbps);
+                                                                gfp->
+                                                                VBR_mean_bitrate_kbps);
             if (gfp->compression_ratio > 13.)
                 gfp->out_samplerate =
                     map2MP3Frequency((10. * 1.e3 * gfp->VBR_mean_bitrate_kbps) /
@@ -720,7 +723,8 @@ lame_init_params(lame_global_flags * const gfp)
     case vbr_abr:
         gfp->compression_ratio =
             gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 *
-                                                            gfp->VBR_mean_bitrate_kbps);
+                                                            gfp->
+                                                            VBR_mean_bitrate_kbps);
         break;
     default:
         gfp->compression_ratio =
@@ -797,16 +801,19 @@ lame_init_params(lame_global_flags * const gfp)
                           gfp);
 
         if (lowpass < 0.5 * gfp->out_samplerate) {
-            //MSGF("Lowpass @ %7.1f Hz\n", lowpass);
+            //MSGF(gfc,"Lowpass @ %7.1f Hz\n", lowpass);
             gfc->lowpass1 = gfc->lowpass2 =
                 lowpass / (0.5 * gfp->out_samplerate);
         }
+#if 0
         if (gfp->out_samplerate !=
             optimum_samplefreq(lowpass, gfp->in_samplerate)) {
-            MSGF("I would suggest to use %u Hz instead of %u Hz sample frequency\n",
-                    optimum_samplefreq(lowpass, gfp->in_samplerate),
-                    gfp->out_samplerate);
+            MSGF(gfc,
+                 "I would suggest to use %u Hz instead of %u Hz sample frequency\n",
+                 optimum_samplefreq(lowpass, gfp->in_samplerate),
+                 gfp->out_samplerate);
         }
+#endif
         fflush(stderr);
     }
 
@@ -844,7 +851,7 @@ lame_init_params(lame_global_flags * const gfp)
   /**********************************************************************/
     /* compute info needed for polyphase filter (filter type==0, default) */
   /**********************************************************************/
-    lame_init_params_ppflt(gfc);
+    lame_init_params_ppflt(gfp);
 
 
   /*******************************************************/
@@ -962,7 +969,7 @@ lame_init_params(lame_global_flags * const gfp)
             gfc->nsPsy.pefirbuf[i] = 700;
 
         if (gfp->VBR == vbr_mtrh || gfp->VBR == vbr_mt) {
-            ERRORF("\n**** nspsytune doesn't support --vbr-new **** \n\n");
+            ERRORF(gfc, "\n**** nspsytune doesn't support --vbr-new **** \n\n");
             gfp->VBR = vbr_rh;
         }
 
@@ -1107,65 +1114,70 @@ lame_print_config(const lame_global_flags * gfp)
     double  out_samplerate = gfp->out_samplerate;
     double  in_samplerate = gfp->out_samplerate * gfc->resample_ratio;
 
-    MSGF("LAME version %s (%s)\n", get_lame_version(), get_lame_url());
+    MSGF(gfc, "LAME version %s (%s)\n", get_lame_version(), get_lame_url());
 
     if (gfc->CPU_features.MMX
         || gfc->CPU_features.AMD_3DNow
         || gfc->CPU_features.SIMD || gfc->CPU_features.SIMD2) {
-        MSGF("CPU features:");
+        MSGF(gfc, "CPU features:");
 
         if (gfc->CPU_features.i387)
-            MSGF(" i387");
+            MSGF(gfc, " i387");
         if (gfc->CPU_features.MMX)
 #ifdef MMX_choose_table
-            MSGF(", MMX (ASM used)");
+            MSGF(gfc, ", MMX (ASM used)");
 #else
-            MSGF(", MMX");
+            MSGF(gfc, ", MMX");
 #endif
         if (gfc->CPU_features.AMD_3DNow)
-            MSGF(", 3DNow!");
+            MSGF(gfc, ", 3DNow!");
         if (gfc->CPU_features.SIMD)
-            MSGF(", SIMD");
+            MSGF(gfc, ", SIMD");
         if (gfc->CPU_features.SIMD2)
-            MSGF(", SIMD2");
-        MSGF("\n");
+            MSGF(gfc, ", SIMD2");
+        MSGF(gfc, "\n");
     }
 
     if (gfp->num_channels == 2 && gfc->channels_out == 1 /* mono */ ) {
         MSGF
-            ("Autoconverting from stereo to mono. Setting encoding to mono mode.\n");
+            (gfc,
+             "Autoconverting from stereo to mono. Setting encoding to mono mode.\n");
     }
 
     if (gfc->resample_ratio != 1.) {
-        MSGF("Resampling:  input %g kHz  output %g kHz\n",
+        MSGF(gfc, "Resampling:  input %g kHz  output %g kHz\n",
              1.e-3 * in_samplerate, 1.e-3 * out_samplerate);
     }
 
     if (gfc->filter_type == 0) {
         if (gfc->highpass2 > 0.)
             MSGF
-                ("Using polyphase highpass filter, transition band: %5.0f Hz - %5.0f Hz\n",
+                (gfc,
+                 "Using polyphase highpass filter, transition band: %5.0f Hz - %5.0f Hz\n",
                  0.5 * gfc->highpass1 * out_samplerate,
                  0.5 * gfc->highpass2 * out_samplerate);
         if (gfc->lowpass1 > 0.) {
             MSGF
-                ("Using polyphase lowpass  filter, transition band: %5.0f Hz - %5.0f Hz\n",
+                (gfc,
+                 "Using polyphase lowpass  filter, transition band: %5.0f Hz - %5.0f Hz\n",
                  0.5 * gfc->lowpass1 * out_samplerate,
                  0.5 * gfc->lowpass2 * out_samplerate);
         }
         else {
-            MSGF("polyphase lowpass filter disabled\n");
+            MSGF(gfc, "polyphase lowpass filter disabled\n");
         }
     }
     else {
-        MSGF("polyphase filters disabled\n");
+        MSGF(gfc, "polyphase filters disabled\n");
     }
 
     if (gfp->free_format) {
-        MSGF("Warning: many decoders cannot handle free format bitstreams\n");
+        MSGF(gfc,
+             "Warning: many decoders cannot handle free format bitstreams\n");
         if (gfp->brate > 320) {
             MSGF
-                ("Warning: many decoders cannot handle free format bitrates >320 kbps (see documentation)\n");
+                (gfc,
+                 "Warning: many decoders cannot handle free format bitrates >320 kbps (see documentation)\n");
         }
     }
 }
@@ -1242,7 +1254,7 @@ lame_encode_buffer(lame_global_flags * gfp,
     fn_buffer[1] = in_buffer[1] = calloc(sizeof(sample_t), nsamples);
 
     if (in_buffer[0] == NULL || in_buffer[1] == NULL) {
-        ERRORF("Error: can't allocate in_buffer buffer\n");
+        ERRORF(gfc, "Error: can't allocate in_buffer buffer\n");
         return -2;
     }
 
@@ -1610,8 +1622,12 @@ lame_init_old(lame_global_flags * gfp)
     gfc->CurrentStep = 4;
     gfc->masking_lower = 1;
 
-    gfp->ATHtype = -1;    /* default = -1 = set in lame_init_params */
-    gfp->useTemporal = 1;  
+    gfc->errorf=stderr;
+    gfc->msgf=stderr;
+    gfc->debugf=stderr;
+
+    gfp->ATHtype = -1;  /* default = -1 = set in lame_init_params */
+    gfp->useTemporal = 1;
 
     /* The reason for
      *       int mf_samples_to_encode = ENCDELAY + 288;

@@ -154,7 +154,7 @@ inline static void
 drain_into_ancillary(lame_global_flags *gfp,int remainingBits)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
-    int i,bits;
+    int i;
     assert(remainingBits >= 0);
 
     if (remainingBits >= 8) {
@@ -393,7 +393,7 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 
 	if (gfc->h_ptr == gfc->w_ptr) {
 	  /* yikes! we are out of header buffer space */
-	  ERRORF("Error: MAX_HEADER_BUF too small in bitstream.c \n");
+	  ERRORF(gfc,"Error: MAX_HEADER_BUF too small in bitstream.c \n");
 	}
 
     }
@@ -774,7 +774,7 @@ flush_bitstream(lame_global_flags *gfp)
     DEBUGF("bitsperframe:              %i \n",bitsPerFrame);
     DEBUGF("sidelen:                   %i \n",gfc->sideinfo_len);
 #endif
-    ERRORF("strange error flushing buffer ... \n");
+    ERRORF(gfc,"strange error flushing buffer ... \n");
   } else {
     drain_into_ancillary(gfp,flushbits);
   }
@@ -827,7 +827,7 @@ format_bitstream(lame_global_flags *gfp, int bitsPerFrame,
 
     l3_side->main_data_begin += (bitsPerFrame-bits)/8;
     if ((l3_side->main_data_begin * 8) != gfc->ResvSize ) {
-      ERRORF("bit reservoir error: \n"
+      ERRORF(gfc,"bit reservoir error: \n"
              "l3_side->main_data_begin: %i \n"
              "Resvoir size:             %i \n"
              "resv drain (post)         %i \n"
