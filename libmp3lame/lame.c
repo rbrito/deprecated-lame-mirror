@@ -1554,7 +1554,7 @@ lame_init_old(lame_global_flags * gfp)
 
     gfc->nsPsy.attackthre = gfc->nsPsy.attackthre_s = -1.0;
     gfc->istereo_ratio = -1.0;
-    gfc->nsPsy.msfix = NS_MSFIX*M_SQRT2;
+    gfc->nsPsy.msfix = NS_MSFIX*SQRT2;
 
     gfp->ATHcurve = 4;
     gfp->athaa_sensitivity = 0.0; /* no offset */
