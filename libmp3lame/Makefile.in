@@ -186,6 +186,7 @@ EXTRA_DIST = libmp3lame_vc6.dsp
 
 libmp3lame_la_SOURCES = \
 	bitstream.c \
+	gain_analysis.c \
         tags.c \
         lame.c \
         newmdct.c \
@@ -202,6 +203,7 @@ libmp3lame_la_SOURCES = \
 noinst_HEADERS = \
 	tags.h \
 	bitstream.h \
+	gain_analysis.h \
 	encoder.h \
 	lame-analysis.h \
 	machine.h \
@@ -242,8 +244,8 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 @HAVE_NASM_TRUE@@LIB_WITH_DECODER_TRUE@	$(top_builddir)/mpglib/libmpgdecoder.la
 @HAVE_NASM_TRUE@@LIB_WITH_DECODER_FALSE@libmp3lame_la_DEPENDENCIES = \
 @HAVE_NASM_TRUE@@LIB_WITH_DECODER_FALSE@	$(top_builddir)/libmp3lame/@CPUTYPE@/liblameasmroutines.la
-am_libmp3lame_la_OBJECTS = bitstream$U.lo tags$U.lo lame$U.lo \
-	newmdct$U.lo psymodel$U.lo quantize$U.lo set_get$U.lo \
+am_libmp3lame_la_OBJECTS = bitstream$U.lo gain_analysis$U.lo tags$U.lo \
+	lame$U.lo newmdct$U.lo psymodel$U.lo quantize$U.lo set_get$U.lo \
 	tables$U.lo takehiro$U.lo util$U.lo version$U.lo \
 	mpglib_interface$U.lo
 libmp3lame_la_OBJECTS = $(am_libmp3lame_la_OBJECTS)
@@ -252,6 +254,7 @@ DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 @AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/bitstream$U.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/gain_analysis$U.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/lame$U.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/mpglib_interface$U.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/newmdct$U.Plo \
@@ -335,6 +338,7 @@ mostlyclean-kr:
 	-test "$U" = "" || rm -f *_.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bitstream$U.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gain_analysis$U.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lame$U.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mpglib_interface$U.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/newmdct$U.Plo@am__quote@
@@ -381,6 +385,8 @@ mostlyclean-kr:
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ `test -f '$<' || echo '$(srcdir)/'`$<
 bitstream_.c: bitstream.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/bitstream.c; then echo $(srcdir)/bitstream.c; else echo bitstream.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
+gain_analysis_.c: gain_analysis.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/gain_analysis.c; then echo $(srcdir)/gain_analysis.c; else echo gain_analysis.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
 lame_.c: lame.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/lame.c; then echo $(srcdir)/lame.c; else echo lame.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
 mpglib_interface_.c: mpglib_interface.c $(ANSI2KNR)
@@ -403,12 +409,13 @@ util_.c: util.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/util.c; then echo $(srcdir)/util.c; else echo util.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
 version_.c: version.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/version.c; then echo $(srcdir)/version.c; else echo version.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
-bitstream_.$(OBJEXT) bitstream_.lo lame_.$(OBJEXT) lame_.lo \
-mpglib_interface_.$(OBJEXT) mpglib_interface_.lo newmdct_.$(OBJEXT) \
-newmdct_.lo psymodel_.$(OBJEXT) psymodel_.lo quantize_.$(OBJEXT) \
-quantize_.lo set_get_.$(OBJEXT) set_get_.lo tables_.$(OBJEXT) \
-tables_.lo tags_.$(OBJEXT) tags_.lo takehiro_.$(OBJEXT) takehiro_.lo \
-util_.$(OBJEXT) util_.lo version_.$(OBJEXT) version_.lo : $(ANSI2KNR)
+bitstream_.$(OBJEXT) bitstream_.lo gain_analysis_.$(OBJEXT) \
+gain_analysis_.lo lame_.$(OBJEXT) lame_.lo mpglib_interface_.$(OBJEXT) \
+mpglib_interface_.lo newmdct_.$(OBJEXT) newmdct_.lo psymodel_.$(OBJEXT) \
+psymodel_.lo quantize_.$(OBJEXT) quantize_.lo set_get_.$(OBJEXT) \
+set_get_.lo tables_.$(OBJEXT) tables_.lo tags_.$(OBJEXT) tags_.lo \
+takehiro_.$(OBJEXT) takehiro_.lo util_.$(OBJEXT) util_.lo \
+version_.$(OBJEXT) version_.lo : $(ANSI2KNR)
 
 mostlyclean-libtool:
 	-rm -f *.lo
