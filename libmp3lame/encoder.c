@@ -444,30 +444,31 @@ int  lame_encode_mp3_frame (				// Output
       for ( ch = 0; ch < gfc->channels_out; ch++ ) {
 	  gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
 	  cod_info->mixed_block_flag = 0;
-	  if (gfp->mixed_blocks == 1 && cod_info->block_type != NORM_TYPE)
-	      cod_info->mixed_block_flag = 1;
-	  if (gfp->mixed_blocks == 2 && cod_info->block_type < 0) {
-	      cod_info->mixed_block_flag = 1;
-	      cod_info->block_type = -cod_info->block_type;
+	  if (cod_info->block_type != NORM_TYPE) {
+	      if (gfp->mixed_blocks == 1
+		  || (gfp->mixed_blocks == 2 && cod_info->block_type < 0))
+		  cod_info->mixed_block_flag = 1;
+
+	      if (cod_info->block_type < 0)
+		  cod_info->block_type = -cod_info->block_type;
 	  }
       }
   }
-
 
   /* polyphase filtering / mdct */
   mdct_sub48(gfc, inbuf[0], inbuf[1]);
 
   /* use m/s gfc->channels_out? */
   if (check_ms_stereo) {
-    int gr0 = 0, gr1 = gfc->mode_gr-1;
-    /* make sure block type is the same in each channel */
-    check_ms_stereo =
-      (gfc->l3_side.tt[gr0][0].block_type==gfc->l3_side.tt[gr0][1].block_type) &&
-      (gfc->l3_side.tt[gr1][0].block_type==gfc->l3_side.tt[gr1][1].block_type);
+      gr_info *gi0 = &gfc->l3_side.tt[0][0];
+      gr_info *gi1 = &gfc->l3_side.tt[gfc->mode_gr-1][0];
+      /* make sure block type is the same in each channel */
+      check_ms_stereo
+	  =  (gi0[0].block_type == gi0[1].block_type)
+	  && (gi1[0].block_type == gi1[1].block_type);
   }
-  
-  /* Here will be selected MS or LR coding of the 2 stereo channels */
 
+  /* Here will be selected MS or LR coding of the 2 stereo channels */
   assert (  gfc->mode_ext == MPG_MD_LR_LR );
   gfc->mode_ext = MPG_MD_LR_LR;
   
@@ -511,8 +512,8 @@ int  lame_encode_mp3_frame (				// Output
       }
       
       if ((ms_ratio_ave1 < threshold1  &&  ms_ratio_ave2 < threshold2) || gfc->nsPsy.use) {
-	  int  sum_pe_MS = 0;
-	  int  sum_pe_LR = 0;
+	  FLOAT8 sum_pe_MS = 0;
+	  FLOAT8 sum_pe_LR = 0;
 	  for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
 	      for ( ch = 0; ch < gfc->channels_out; ch++ ) {
 		  sum_pe_MS += pe_MS[gr][ch];
@@ -552,17 +553,22 @@ int  lame_encode_mp3_frame (				// Output
 #endif
 
 
-
-
   /* bit and noise allocation */
   if (MPG_MD_MS_LR == gfc->mode_ext) {
-    masking = &masking_MS;    /* use MS masking */
-    pe_use = &pe_MS;
-  } else {
-    masking = &masking_LR;    /* use LR masking */
-    pe_use = &pe;
-  }
+      gr_info *gi0 = &gfc->l3_side.tt[0][0];
+      gr_info *gi1 = &gfc->l3_side.tt[gfc->mode_gr-1][0];
+      masking = &masking_MS;    /* use MS masking */
+      pe_use = &pe_MS;
 
+      if (gi0[0].mixed_block_flag != gi0[1].mixed_block_flag)
+	  gi0[0].mixed_block_flag = gi0[1].mixed_block_flag = 0;
+
+      if (gi1[0].mixed_block_flag != gi1[1].mixed_block_flag)
+	  gi1[0].mixed_block_flag = gi1[1].mixed_block_flag = 0;
+  } else {
+      masking = &masking_LR;    /* use LR masking */
+      pe_use = &pe;
+  }
 
   if (gfc->nsPsy.use && (gfp->VBR == vbr_off || gfp->VBR == vbr_abr)) {
     static FLOAT fircoef[19] = {
