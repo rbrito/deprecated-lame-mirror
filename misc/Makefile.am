@@ -7,6 +7,7 @@ EXTRA_PROGRAMS = abx ath scalartest
 CLEANFILES = $(EXTRA_PROGRAMS)
 
 EXTRA_SCRIPTS = \
+	lame.bat \
 	auenc \
 	lameid3.pl \
 	mugeco.sh \

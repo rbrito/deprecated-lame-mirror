@@ -26,7 +26,6 @@ EXTRA_DIST = \
 	STYLEGUIDE \
 	USAGE \
 	configMS.h \
-	lame.bat \
 	lame.spec.in \
 	lame.spec \
 	lame_projects_vc6.dsp \
@@ -64,3 +63,5 @@ frontend/lame$(EXEEXT):
 
 frontend/mp3x$(EXEEXT): frontend/lame$(EXEEXT)
 
+dist-hook:
+	chmod +x debian/rules

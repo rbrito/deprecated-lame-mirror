@@ -138,7 +138,6 @@ EXTRA_DIST = \
 	STYLEGUIDE \
 	USAGE \
 	configMS.h \
-	lame.bat \
 	lame.spec.in \
 	lame.spec \
 	lame_projects_vc6.dsp \
@@ -356,6 +355,9 @@ distdir: $(DISTFILES)
 	      || exit 1; \
 	  fi; \
 	done
+	$(MAKE) $(AM_MAKEFLAGS) \
+	  top_distdir="${top_distdir}" distdir="$(distdir)" \
+	  dist-hook
 	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
@@ -529,6 +531,9 @@ frontend/lame$(EXEEXT):
 	$(MAKE) $(MAKEFLAGS)
 
 frontend/mp3x$(EXEEXT): frontend/lame$(EXEEXT)
+
+dist-hook:
+	chmod +x debian/rules
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
