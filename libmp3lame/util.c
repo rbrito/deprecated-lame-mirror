@@ -28,7 +28,6 @@
 #define PRECOMPUTE
 
 #include "util.h"
-#include "tools.h"
 #include <ctype.h>
 #include <assert.h>
 #include <stdarg.h>

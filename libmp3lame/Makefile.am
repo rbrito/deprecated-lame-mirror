@@ -30,8 +30,6 @@ EXTRA_DIST = \
 	debugscalefac.c \
 	libmp3lame.dsp \
 	libmp3lame_vc6.dsp \
-	tools.c \
-	tools.h \
 	vbrquantize.h
 
 libmp3lame_la_SOURCES = \
@@ -72,7 +70,6 @@ noinst_HEADERS= \
 	quantize_pvt.h \
 	reservoir.h \
 	tables.h \
-	tools.h \
 	util.h \
 	vbrquantize.h \
 	version.h
