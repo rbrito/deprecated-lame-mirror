@@ -299,11 +299,7 @@ struct lame_internal_flags {
 #ifndef  MFSIZE
 # define MFSIZE  ( 3*1152 + ENCDELAY - MDCTDELAY )
 #endif
-#ifdef  KLEMM_44
-  sample_t*    mfbuf [MAX_CHANNELS];
-#else
   sample_t     mfbuf [2] [MFSIZE];
-#endif
 
 #  define  LAME_ID   0xFFF88E3B
   unsigned long Class_ID;
@@ -405,14 +401,12 @@ struct lame_internal_flags {
   FLOAT sparseA;
   FLOAT sparseB;
 
-#ifndef KLEMM_44
   /* variables used by util.c */
   /* BPC = maximum number of filter convolution windows to precompute */
 #define BPC 320
   sample_t *inbuf_old [2];
   sample_t *blackfilt [2*BPC+1];
   FLOAT8 itime[2];
-#endif
   int sideinfo_len;
 
   /* variables for newmdct.c */

@@ -495,11 +495,6 @@ lame_init_params(lame_global_flags * const gfp)
     if (NULL == gfc->PSY)
         return -2;
         
-#ifdef KLEMM_44
-    /* Select the fastest functions for this CPU */
-    init_scalar_functions(gfc);
-#endif
-
     gfc->channels_in = gfp->num_channels;
     if (gfc->channels_in == 1)
         gfp->mode = MONO;
@@ -1013,14 +1008,6 @@ lame_init_params(lame_global_flags * const gfp)
     /* initialize internal qval settings */
     lame_init_qval(gfp);
 
-#ifdef KLEMM_44
-    gfc->mfbuf[0] = (sample_t *) calloc(sizeof(sample_t), MFSIZE);
-    gfc->mfbuf[1] = (sample_t *) calloc(sizeof(sample_t), MFSIZE);
-    gfc->sampfreq_in = unround_samplefrequency(gfp->in_samplerate);
-    gfc->sampfreq_out = gfp->out_samplerate;
-    gfc->resample_in = resample_open(gfc->sampfreq_in,
-                                     gfc->sampfreq_out, -1.0 /* Auto */, 32);
-#endif
 
     /* initialize internal adaptive ATH settings  -jd */
     gfc->ATH->aa_sensitivity_p = pow( 10.0, gfp->athaa_sensitivity / -10.0 );
@@ -2032,10 +2019,6 @@ lame_init_old(lame_global_flags * gfp)
     gfp->encoder_padding = 0;
     gfc->mf_size = ENCDELAY - MDCTDELAY; /* we pad input with this many 0's */
 
-#ifdef KLEMM_44
-    /* XXX: this wasn't protectes by KLEMM_44 initially! */
-    gfc->last_ampl = gfc->ampl = +1.0;
-#endif
 #ifdef DECODE_ON_THE_FLY
     lame_decode_init()  /* initialize the decoder  */
 #endif
