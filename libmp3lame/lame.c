@@ -355,7 +355,7 @@ static int apply_preset(lame_global_flags*  gfp, int preset, vbr_mode mode)
     lame_set_ATHcurve(gfp, abr_switch_map[r].ath_curve);
     lame_set_ATHlower(gfp, (double)abr_switch_map[r].ath_lower);
 
-    if (actual_bitrate >= 128)
+    if (actual_bitrate >= 160)
 	lame_set_short_threshold(gfp, 1.8, 10.0);
     else if (actual_bitrate > 90)
 	lame_set_short_threshold(gfp, 2.5, 15.0);
@@ -661,7 +661,7 @@ lame_init_params(lame_global_flags * const gfp)
 	    gfc->sfb21_extra = 1;
     } else {
         if (!gfp->experimentalY && gfp->out_samplerate > 36000
-	    && (gfc->substep_shaping & 2))
+	    && (gfc->substep_shaping & 1))
 	    gfc->sfb21_extra = 1;
     }
 
@@ -684,6 +684,19 @@ lame_init_params(lame_global_flags * const gfp)
     lame_init_bitstream(gfp);
     iteration_init(gfp);
     psymodel_init(gfp);
+
+    /* scaling */
+    if (gfp->scale == 0.0)
+	gfp->scale = 1.0;
+
+    if (gfp->scale_left == 0.0)
+	gfp->scale_left = 1.0;
+
+    if (gfp->scale_right == 0.0)
+	gfp->scale_right = 1.0;
+
+    gfp->scale_left  *= gfp->scale;
+    gfp->scale_right *= gfp->scale;
 
     return 0;
 }
@@ -785,9 +798,9 @@ lame_print_internals( const lame_global_flags * gfp )
      */
     MSGF( gfc, "\nmisc:\n\n" );
     
-    MSGF( gfc, "\tscaling: %f\n", gfp->scale );
-    MSGF( gfc, "\tch0 (left) scaling: %f\n", gfp->scale_left );
-    MSGF( gfc, "\tch1 (right) scaling: %f\n", gfp->scale_right );
+    MSGF( gfc, "\tscaling: \n");
+    MSGF( gfc, "\t ^ ch0 (left) : %f\n", gfp->scale_left );
+    MSGF( gfc, "\t ^ ch1 (right): %f\n", gfp->scale_right );
     MSGF( gfc, "\tfilter type: %d\n", gfc->filter_type );
     MSGF( gfc, "\texperimental X=%d Y=%d Z=%d\n",
 	  gfp->experimentalX, gfp->experimentalY, gfp->experimentalZ );
@@ -971,29 +984,15 @@ lame_encode_buffer_sample_t(
 
 
     /* Apply user defined re-scaling */
-
-    /* user selected scaling of the samples */
-    if (gfp->scale != 0 && gfp->scale != 1.0) {
-	for (i=0 ; i<nsamples; ++i) {
-	    in_buffer[0][i] *= gfp->scale;
-	    if (gfc->channels_out == 2)
-		in_buffer[1][i] *= gfp->scale;
-	    }
-    }
-
     /* user selected scaling of the channel 0 (left) samples */
-    if (gfp->scale_left != 0 && gfp->scale_left != 1.0) {
-	for (i=0 ; i<nsamples; ++i) {
+    if (gfp->scale_left != 1.0)
+	for (i=0 ; i<nsamples; ++i)
 	    in_buffer[0][i] *= gfp->scale_left;
-	}
-    }
 
     /* user selected scaling of the channel 1 (right) samples */
-    if (gfp->scale_right != 0 && gfp->scale_right != 1.0) {
-	for (i=0 ; i<nsamples; ++i) {
+    if (gfp->scale_right != 1.0)
+	for (i=0 ; i<nsamples; ++i)
 	    in_buffer[1][i] *= gfp->scale_right;
-	}
-    }
 
     /* Downsample to Mono if 2 channels in and 1 channel out */
     if (gfp->num_channels == 2 && gfc->channels_out == 1) {
@@ -1003,8 +1002,6 @@ lame_encode_buffer_sample_t(
 		in_buffer[1][i] = 0.0;
 	}
     }
-
-
 
     /* some sanity checks */
 #if ENCDELAY < MDCTDELAY
@@ -1560,9 +1557,8 @@ lame_init_old(lame_global_flags * gfp)
 
     memset(gfp, 0, sizeof(lame_global_flags));
 
-    if (NULL ==
-        (gfc = gfp->internal_flags =
-         calloc(1, sizeof(lame_internal_flags)))) return -1;
+    if (!(gfc = gfp->internal_flags =
+	  calloc(1, sizeof(lame_internal_flags)))) return -1;
 
     /* Global flags.  set defaults here for non-zero values */
     /* see lame.h for description */
