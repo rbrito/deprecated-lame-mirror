@@ -27578,16 +27578,16 @@ if test "${enable_decoder+set}" = set; then
 else
   CONFIG_DECODER="yes"
 fi;
-# Check whether --enable-decode-layer1 or --disable-decode-layer1 was given.
-if test "${enable_decode_layer1+set}" = set; then
-  enableval="$enable_decode_layer1"
+# Check whether --enable-decoder-layer1 or --disable-decoder-layer1 was given.
+if test "${enable_decoder_layer1+set}" = set; then
+  enableval="$enable_decoder_layer1"
   CONFIG_DECODER_L1="${enableval}"
 else
   CONFIG_DECODER_L1="no"
 fi;
-# Check whether --enable-decode-layer2 or --disable-decode-layer2 was given.
-if test "${enable_decode_layer2+set}" = set; then
-  enableval="$enable_decode_layer2"
+# Check whether --enable-decoder-layer2 or --disable-decoder-layer2 was given.
+if test "${enable_decoder_layer2+set}" = set; then
+  enableval="$enable_decoder_layer2"
   CONFIG_DECODER_L2="${enableval}"
 else
   CONFIG_DECODER_L2="yes"
