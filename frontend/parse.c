@@ -437,6 +437,7 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
     fprintf ( fp,
               "  CBR (constant bitrate, the default) options:\n"
               "    -b <bitrate>    set the bitrate in kbps, default 128 kbps\n"
+              "    --cbr           enforce use of constant bitrate\n"
               "\n"
               "  ABR options:\n"
               "    --abr <bitrate> specify average bitrate desired (instead of quality)\n"
@@ -1381,6 +1382,9 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 
                 T_ELIF ("vbr-mtrh")
                     lame_set_VBR(gfp,vbr_mtrh); 
+
+                T_ELIF ("cbr")
+                    lame_set_VBR(gfp,vbr_off); 
 
                 T_ELIF ("r3mix")
 		    presets_set_r3mix(gfp, "", stderr);
