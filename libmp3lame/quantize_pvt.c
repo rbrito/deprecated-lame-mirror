@@ -930,7 +930,6 @@ void set_frame_pinfo(
     unsigned int          sfb;
     int                   ch;
     int                   gr;
-    int                   act_l3enc[576];
     III_scalefac_t        act_scalefac [2];
     int scsfi[2] = {0,0};
     
@@ -955,7 +954,6 @@ void set_frame_pinfo(
      */
     for (gr = 0; gr < gfc->mode_gr; gr ++) {
         for (ch = 0; ch < gfc->channels_out; ch ++) {
-            int i;
             gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
             
             if (gr == 1 && scsfi[ch]) 
