@@ -1752,7 +1752,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
   }
 
   if (gfc->channels_out==2) {
-    if (!gfp->allow_diff_short) {
+    if (!gfc->PSY->allow_diff_short) {
       /* force both channels to use the same block type */
       /* this is necessary if the frame is to be encoded in ms_stereo.  */
       /* But even without ms_stereo, FhG  does this */
