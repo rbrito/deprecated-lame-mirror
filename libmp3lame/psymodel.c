@@ -1747,10 +1747,10 @@ psycho_analysis(
 		&& (check_istereo(gfc, 0) + check_istereo(gfc, gfc->mode_gr-1)))
 		gfc->mode_ext_next = MPG_MD_MS_I;
 	    else {
-		gfc->is_start_sfb_l_next[0]
-		    = gfc->is_start_sfb_l_next[gfc->mode_gr-1] = SBMAX_l;
-		gfc->is_start_sfb_s_next[0]
-		    = gfc->is_start_sfb_s_next[gfc->mode_gr-1] = SBMAX_s;
+		gfc->is_start_sfb_l_next[gfc->mode_gr-1]
+		    = gfc->is_start_sfb_l_next[0] = gfc->cutoff_sfb_l;
+		gfc->is_start_sfb_s_next[gfc->mode_gr-1]
+		    = gfc->is_start_sfb_s_next[0] = gfc->cutoff_sfb_s;
 	    }
 	    /* LR -> MS case */
 	    if (gfc->mode_ext_next != gfc->mode_ext
