@@ -41,23 +41,13 @@
 #include "util.h"
 #include "fft.h"
 
-typedef void (*FHT_PROC)(FLOAT *fz, int n);
 
-static FHT_PROC fht;
 
-/* #define ARCH_X86 */
  
-#ifdef ARCH_X86
-void _cdecl fht_3DN(FLOAT *fz, int n);
-void _cdecl fht_SSE(FLOAT *fz, int n);
-void _cdecl fht_FPU(FLOAT *fz, int n);
-#endif
-
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
 #endif
 
-#ifndef USE_FFT3DN
 #define TRI_SIZE (5-1) /* 1024 =  4**5 */
 
 static const FLOAT costab[TRI_SIZE*2] = {
@@ -67,12 +57,13 @@ static const FLOAT costab[TRI_SIZE*2] = {
   9.999811752826011e-01, 6.135884649154475e-03
 };
 
-static void fht_c(FLOAT *fz, int n)
+static void fht(FLOAT *fz, int n)
 {
     const FLOAT *tri = costab;
     int           k4;
     FLOAT *fi, *fn, *gi;
 
+    n <<= 1;        /* to get BLKSIZE, because of 3DNow! ASM routine */
     fn = fz + n;
     k4 = 4;
     do {
@@ -150,9 +141,6 @@ static void fht_c(FLOAT *fz, int n)
 	tri += 2;
     } while (k4<n);
 }
-#else
-#define fht(a,b) fht_3DN(a,b/2)
-#endif /* USE_FFT3DN */
 
 static const unsigned char rv_tbl[] = {
     0x00,    0x80,    0x40,    0xc0,    0x20,    0xa0,    0x60,    0xe0,
@@ -231,7 +219,8 @@ void fft_short(lame_internal_flags *gfc,
 	  x[BLKSIZE_s / 2 + 3] = f1 - f3;
 	} while (--j >= 0);
 
-	fht(x, BLKSIZE_s);
+	gfc->fft_fht(x, BLKSIZE_s/2);   
+        /* BLKSIZE_s/2 because of 3DNow! ASM routine */
     }
 }
 
@@ -265,7 +254,8 @@ void fft_long(lame_internal_flags * const gfc,
       x[BLKSIZE / 2 + 3] = f1 - f3;
     } while (--jj >= 0);
 
-    fht(x, BLKSIZE);
+    gfc->fft_fht(x, BLKSIZE/2);
+    /* BLKSIZE/2 because of 3DNow! ASM routine */
 }
 
 
@@ -299,20 +289,23 @@ void init_fft(lame_internal_flags * const gfc)
     for (i = 0; i < BLKSIZE_s/2 ; i++)
 	window_s[i] = 0.5 * (1.0 - cos(2.0 * PI * (i + 0.5) / BLKSIZE_s));
 
-#ifdef ARCH_X86
-	if (gfc->CPU_features.AMD_3DNow) {
-		fht = fht_3DN;
-	} else if (gfc->CPU_features.SIMD) {
-		fht = fht_SSE;
-	} else if (gfc->CPU_features.i387) {
-		fht = fht_FPU;
-	} else {
+#ifdef USE_FFT3DN
+    if (gfc->CPU_features.AMD_3DNow) {
+        extern void fht_3DN(FLOAT *fz, int n);
+        gfc->fft_fht = fht_3DN;
+    } else 
 #endif
-
-	fht = fht_c;
-
-#ifdef ARCH_X86
-	}
+#ifdef USE_FFTSSE
+    if (gfc->CPU_features.SIMD) {
+        extern void fht_SSE(FLOAT *fz, int n);
+        gfc->fft_fht = fht_SSE;
+    } else 
 #endif
-
+#ifdef USE_FFTFPU
+    if (gfc->CPU_features.i387) {
+        extern void fht_FPU(FLOAT *fz, int n);
+        gfc->fft_fht = fht_FPU;
+    } else
+#endif
+        gfc->fft_fht = fht;
 }

@@ -493,6 +493,7 @@ struct lame_internal_flags {
   /* functions to replace with CPU feature optimized versions in takehiro.c */
   int (*choose_table)(const int *ix, const int *end, int *s);
   
+  void (*fft_fht)(FLOAT *, int);
 
   nsPsy_t nsPsy;  /* variables used for --nspsytune */
   
