@@ -273,8 +273,21 @@ lame_encode_frame()
 
 
                        gr 0            gr 1
-inbuf:           |--------------|---------------|-------------|
-MDCT output:  |--------------|---------------|-------------|
+inbuf:           |--------------|--------------|--------------|
+
+
+Polyphase (18 windows, each shifted 32)
+gr 0:
+window1          <----512---->
+window18                 <----512---->
+
+gr 1:
+window1                         <----512---->
+window18                                <----512---->
+
+
+
+MDCT output:  |--------------|--------------|--------------|
 
 FFT's                    <---------1024---------->
                                          <---------1024-------->
@@ -290,8 +303,18 @@ FFT's                    <---------1024---------->
     FFT is centered over granule:  224+576+224
     So FFT starts at:   576-224-MDCTDELAY
 
-    MPEG2:  FFT ends at:  BLKSIZE+576-224-MDCTDELAY
+    MPEG2:  FFT ends at:  BLKSIZE+576-224-MDCTDELAY      (1328)
     MPEG1:  FFT ends at:  BLKSIZE+2*576-224-MDCTDELAY    (1904)
+
+    MPEG2:  polyphase first window:  [0..511]
+                      18th window:   [544..1055]          (1056)
+    MPEG1:            36th window:   [1120..1631]         (1632)
+            data needed:  512+framesize-32
+
+    A close look newmdct.c shows that the polyphase filterbank
+    only uses data from [0..510] for each window.  Perhaps because the window
+    used by the filterbank is zero for the last point, so Takehiro's
+    code doesn't bother to compute with it.
 
     FFT starts at 576-224-MDCTDELAY (304)  = 576-FFTOFFSET
 
@@ -360,9 +383,7 @@ int  lame_encode_mp3_frame (				/* Output */
       /* check if we have enough data for FFT */
       assert(gfc->mf_size>=(BLKSIZE+gfp->framesize-FFTOFFSET));
       /* check if we have enough data for polyphase filterbank */
-      /* it needs 1152 samples + 286 samples ignored for one granule */
-      /*          1152+576+286 samples for two granules */
-      assert(gfc->mf_size>=(286+576*(1+gfc->mode_gr)));
+      assert(gfc->mf_size>=(512+gfp->framesize-32));
   }
 
 

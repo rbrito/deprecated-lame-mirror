@@ -1413,7 +1413,9 @@ lame_encode_buffer_sample_t(lame_global_flags * gfp,
 #endif
 
     mf_needed = BLKSIZE + gfp->framesize - FFTOFFSET; /* amount needed for FFT */
-    mf_needed = Max(mf_needed, 286 + 576 * (1 + gfc->mode_gr)); /* amount needed for MDCT/filterbank */
+    //mf_needed = Max(mf_needed, 286 + 576 * (1 + gfc->mode_gr)); 
+    mf_needed = Max(mf_needed, 512+gfp->framesize-32 );
+
     assert(MFSIZE >= mf_needed);
 
     mfbuf[0] = gfc->mfbuf[0];
