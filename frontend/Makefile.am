@@ -21,7 +21,6 @@ common_sources = \
 noinst_HEADERS = get_audio.h \
 	gtkanal.h \
 	gpkplotting.h \
-	ieeefloat.h \
 	lametime.h \
 	main.h \
 	parse.h \
