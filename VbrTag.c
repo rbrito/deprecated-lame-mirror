@@ -275,7 +275,8 @@ int InitVbrTag(Bit_stream_struc* pBs,int nVersion, int nMode, int SampIndex)
 
 	/*
 	// Xing VBR pretends to be a 48kbs layer III frame.  (at 44.1kHz).
-        // what do they do at 48kHz?  frame not big enough for Xing header.
+        // (at 48kHz they use 56kbs since 48kbs frame not big enough for 
+        // table of contents)
 	// let's always embed Xing header inside a 64kbs layer III frame.  
 	// this gives us enough room for a LAME version string too.
 	// size determined by sampling frequency (MPEG1)
@@ -284,33 +285,25 @@ int InitVbrTag(Bit_stream_struc* pBs,int nVersion, int nMode, int SampIndex)
 	// 48kHz:    144 bytes          192
 	// 
 	// MPEG 2 values are half the above.  Need to go to a 128kbs frame
-	// to have room for the table of contents.  not yet supported.
+	// to have room for the table of contents.
 	*/
-	if (nVersion == 0 ) {
-	  int tot;
-#define XING64
-#ifdef XING64
-	  int framesize[3]={208,192,288};
-#else
-	  int framesize[3]={156,144,216}; 
-#endif
-	  if (SampIndex==3) {
-	    fprintf(stderr,"illegal sampling frequency index\n");
-	    exit(-1);
-	  }
-	  TotalFrameSize= framesize[SampIndex];
-	  tot = (nZeroStreamSize+VBRHEADERSIZE);
-#ifdef XING64
-	  tot += 20;  /* extra 20 bytes for LAME & version string */
-#endif
-	  if (TotalFrameSize < tot ) {
-	    fprintf(stderr,"Xing VBR header problem...use -t\n");
-	    exit(-1);
-	  }
-	}
-	if (nVersion == 1) {
-	  fprintf(stderr,"MPEG 2 Xing VBR header not supported. use -t\n");
+	{
+	int tot;
+	int framesize[3]={208,192,288};  /* 64kbs MPEG1 or 128kbs MPEG2  framesize */
+	/* int framesize[3]={156,144,216}; */ /* 48kbs framesize */
+	
+	if (SampIndex>2) {
+	  fprintf(stderr,"illegal sampling frequency index\n");
 	  exit(-1);
+	}
+	TotalFrameSize= framesize[SampIndex];
+	tot = (nZeroStreamSize+VBRHEADERSIZE);
+	tot += 20;  /* extra 20 bytes for LAME & version string */
+	
+	if (TotalFrameSize < tot ) {
+	  fprintf(stderr,"Xing VBR header problem...use -t\n");
+	  exit(-1);
+	}
 	}
 
 
@@ -331,10 +324,11 @@ int InitVbrTag(Bit_stream_struc* pBs,int nVersion, int nMode, int SampIndex)
  * PutVbrTag: Write final VBR tag to the file
  * Paramters:
  *				lpszFileName: filename of MP3 bit stream
+ *				nVersion: 0= MPEG1 1=MPEG2
  *				nVbrScale	: encoder quality indicator (0..100)
  ****************************************************************************
 */
-int PutVbrTag(char* lpszFileName,int nVbrScale)
+int PutVbrTag(char* lpszFileName,int nVbrScale,int nVersion)
 {
 	int			i;
 	long lFileSize;
@@ -378,13 +372,16 @@ int PutVbrTag(char* lpszFileName,int nVbrScale)
 	/* but sampling freq, mode andy copyright/copy protection taken */
 	/* from first valid frame */
 	pbtStreamBuffer[0]=(u_char) 0xff;    
-	pbtStreamBuffer[1]=(u_char) 0xfb;    
-	abyte = pbtStreamBuffer[2] & (char) 0x0c;   
-#ifdef XING64
-	pbtStreamBuffer[2]=(char) 0x50 | abyte;     /* 64kbs frame */
-#else
-	pbtStreamBuffer[2]=(char) 0x30 | abyte;  /* 48kbs frame */
-#endif
+	if (nVersion==0) {
+	  pbtStreamBuffer[1]=(u_char) 0xfb;    
+	  abyte = pbtStreamBuffer[2] & (char) 0x0c;   
+	  pbtStreamBuffer[2]=(char) 0x50 | abyte;     /* 64kbs MPEG1 frame */
+	}else{
+	  pbtStreamBuffer[1]=(u_char) 0xf3;    
+	  abyte = pbtStreamBuffer[2] & (char) 0x0c;   
+	  pbtStreamBuffer[2]=(char) 0xc0 | abyte;     /* 128kbs MPEG2 frame */
+	}
+
 
 	/*Seek to the beginning of the stream */
 	fseek(fpStream,0,SEEK_SET);

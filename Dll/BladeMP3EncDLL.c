@@ -376,7 +376,7 @@ __declspec(dllexport) BE_ERR beWriteVBRHeader(LPCSTR lpszFileName)
 		int nQuality=gf.VBR_q*100/9;
 
 		// Write Xing header again
-		return PutVbrTag((LPSTR)lpszFileName,nQuality);
+		return PutVbrTag((LPSTR)lpszFileName,nQuality,1-gf.version);
 	}
 	return BE_ERR_INVALID_FORMAT_PARAMETERS;
 }

@@ -470,7 +470,7 @@ void lame_init_params(lame_global_flags *gfp)
   if (gfp->bWriteVbrTag)
     {
       /* Write initial VBR Header to bitstream */
-      InitVbrTag(&bs,gfp->version-1,gfp->mode,gfp->samplerate_index);
+      InitVbrTag(&bs,1-gfp->version,gfp->mode,gfp->samplerate_index);
     }
 
 #ifdef HAVEGTK
@@ -1386,7 +1386,7 @@ void lame_mp3_tags(lame_global_flags *gfp)
        * 0=best, 100=worst */
       int nQuality=gfp->VBR_q*100/9;
       /* Write Xing header again */
-      PutVbrTag(gfp->outPath,nQuality);
+      PutVbrTag(gfp->outPath,nQuality,1-gfp->version);
     }
 
 

@@ -79,7 +79,7 @@ int CheckVbrTag(unsigned char *buf);
 int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf);
 int SeekPoint(unsigned char TOC[NUMTOCENTRIES], int file_bytes, float percent);
 int InitVbrTag(Bit_stream_struc* pBs,int nVersion,int nMode, int SampIndex);
-int PutVbrTag(char* lpszFileName,int nVbrScale);
+int PutVbrTag(char* lpszFileName,int nVbrScale,int nVersion);
 void AddVbrFrame(int nStreamPos);
 
 
