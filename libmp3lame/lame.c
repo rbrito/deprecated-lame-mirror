@@ -1610,7 +1610,8 @@ lame_init_old(lame_global_flags * gfp)
     gfc->CurrentStep = 4;
     gfc->masking_lower = 1;
 
-    gfp->ATHtype = -1;  /* default = -1 = set in lame_init_params */
+    gfp->ATHtype = -1;    /* default = -1 = set in lame_init_params */
+    gfp->useTemporal = 1;  
 
     /* The reason for
      *       int mf_samples_to_encode = ENCDELAY + 288;

@@ -183,6 +183,7 @@ options not yet described:
 --athshort         use only the ATH for short blocks
 --cwlimit <freq>   specify range of tonality calculation
 --disptime
+--notemp           disable temporal masking
 
 --lowpass
 --lowpass-width
