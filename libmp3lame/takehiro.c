@@ -819,7 +819,8 @@ check_preflag(gr_info * const gi)
 	return;
 
     for (sfb = 11; sfb < gi->psymax; sfb++)
-	if (gi->scalefac[sfb] < pretab[sfb])
+	if (gi->scalefac[sfb] < pretab[sfb]
+	    && gi->scalefac[sfb] != SCALEFAC_ANYTHING_GOES)
 	    return;
 
     gi->preflag = 1;
