@@ -502,6 +502,9 @@ calc_interchannel_masking(
 
 /*************************************************************** 
  * compute M/S thresholds from Johnston & Ferreira 1992 ICASSP paper
+ * when the masking threshold of L/R channels are almost same
+ * (the sound is positioned almost center), more masking is produced
+ * because you cannot detect the sound position properly.
  ***************************************************************/
 static void
 msfix1(
@@ -1075,7 +1078,7 @@ psycho_analysis_short(
 	if (gfc->nsPsy.last_attacks[chn] == 3 ||
 	    ns_attacks[chn][0] + ns_attacks[chn][1] + ns_attacks[chn][2] + ns_attacks[chn][3]) {
 	    gfc->useshort_next[gr][chn] = SHORT_TYPE;
-	    current_is_short = 1;
+	    current_is_short |= 1 << chn;
 
 	    if (ns_attacks[chn][3] && ns_attacks[chn][2]) ns_attacks[chn][3] = 0;
 	    if (ns_attacks[chn][2] && ns_attacks[chn][1]) ns_attacks[chn][2] = 0;
@@ -1101,7 +1104,7 @@ psycho_analysis_short(
 	    if (chn < 2)
 		fft_short( gfc, wsamp_S[chn][sblock],
 			   &buffer[chn][(576/3) * (sblock+1)]);
-	    else if (chn == 2) {
+	    else if (chn == 2 && (current_is_short & 12)) {
 		for (j = 0; j < BLKSIZE_s; j++) {
 		    FLOAT l = wsamp_S[0][sblock][j];
 		    FLOAT r = wsamp_S[1][sblock][j];
@@ -1121,7 +1124,7 @@ psycho_analysis_short(
 	}
     } /* end loop over chn */
 
-    if (gfc->useshort_next[gr][2] || gfc->useshort_next[gr][3])
+    if (current_is_short & 12)
 	gfc->useshort_next[gr][2] = gfc->useshort_next[gr][3] = SHORT_TYPE;
     return;
 }
@@ -1194,11 +1197,20 @@ L3psycho_anal_ns(
     numchn = gfc->channels_out;
     if (gfp->mode == JOINT_STEREO) numchn=4;
 
-    if (gfp->VBR==vbr_off) pcfact = gfc->ResvMax == 0 ? 0 : ((FLOAT)gfc->ResvSize)/gfc->ResvMax*0.5;
-    else if (gfp->VBR == vbr_rh  ||  gfp->VBR == vbr_mtrh  ||  gfp->VBR == vbr_mt) {
+    switch (gfp->VBR) {
+    case cbr:
+	pcfact = gfc->ResvMax == 0
+	    ? 0 : ((FLOAT)gfc->ResvSize)/gfc->ResvMax*0.5;
+	break;
+    case vbr: {
 	static const FLOAT pcQns[10]={1.0,1.0,1.0,0.8,0.6,0.5,0.4,0.3,0.2,0.1};
 	pcfact = pcQns[gfp->VBR_q];
-    } else pcfact = 1.0;
+	break;
+    }
+    case abr:
+    default:
+	pcfact = 1.0;
+    }
 
     for (chn=0; chn<numchn; chn++) {
 	FLOAT fftenergy[HBLKSIZE];

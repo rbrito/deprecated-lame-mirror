@@ -1402,7 +1402,7 @@ calc_target_bits (
     mean_bits = getframebits(gfp) - gfc->sideinfo_len * 8;
     *analog_silence_bits = mean_bits / (gfc->mode_gr * gfc->channels_out);
 
-    mean_bits  = gfp->VBR_mean_bitrate_kbps * gfp->framesize * 1000;
+    mean_bits  = gfp->mean_bitrate_kbps * gfp->framesize * 1000;
     if (gfc->substep_shaping & 1)
 	mean_bits *= 1.09;
     mean_bits /= gfp->out_samplerate;

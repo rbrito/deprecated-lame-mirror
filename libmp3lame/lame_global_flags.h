@@ -44,11 +44,11 @@ struct lame_global_struct {
   int free_format;            /* use free format? default=0                  */
 
   /*
-   * set either brate>0  or compression_ratio>0, LAME will compute
-   * the value of the variable not set.
+   * set either mean_bitrate_kbps>0  or compression_ratio>0,
+   * LAME will compute the value of the variable not set.
    * Default is compression_ratio = 11.025
    */
-  int brate;                  /* bitrate                                    */
+  int mean_bitrate_kbps;      /* bitrate                                    */
   float compression_ratio;    /* sizeof(wav file)/sizeof(mp3 file)          */
 
 
@@ -74,7 +74,6 @@ struct lame_global_struct {
   /* VBR control */
   vbr_mode VBR;
   int VBR_q;
-  int VBR_mean_bitrate_kbps;
   int VBR_min_bitrate_kbps;
   int VBR_max_bitrate_kbps;
   int VBR_hard_min;             /* strictly enforce VBR_min_bitrate

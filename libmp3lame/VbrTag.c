@@ -457,8 +457,8 @@ int InitVbrTag(lame_global_flags *gfp)
 	    bitrate = XING_BITRATE2;
 	}
 
-	if (gfp->VBR==vbr_off)
-			bitrate = gfp->brate;
+	if (gfp->VBR == cbr)
+	    bitrate = gfp->mean_bitrate_kbps;
 	
 	gfp->TotalFrameSize= 
   	  ((gfp->version+1)*72000*bitrate) / gfp->out_samplerate;
@@ -583,7 +583,7 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 	uint8_t  nFlags			= 0;
 
 	// if ABR, {store bitrate <=255} else { store "-b"}
-	int nABRBitrate	= (gfp->VBR==vbr_abr)?gfp->VBR_mean_bitrate_kbps:gfp->brate;
+	int nABRBitrate	= gfp->mean_bitrate_kbps;
 
 	//revision and vbr method
 	if (gfp->VBR>=0 && gfp->VBR < sizeof(vbr_type_translator))
@@ -835,8 +835,8 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
 			bitrate = XING_BITRATE2;
 		}
 		
-		if (gfp->VBR==vbr_off)
-			bitrate = gfp->brate;
+		if (gfp->VBR==cbr)
+		    bitrate = gfp->mean_bitrate_kbps;
 
 		bbyte = 16*BitrateIndex(bitrate,gfp->version,gfp->out_samplerate);
 	}
@@ -872,7 +872,7 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
 	if (gfp->error_protection) nStreamIndex -= 2;
 
 	/* Put Vbr tag */
-	if (gfp->VBR == vbr_off)
+	if (gfp->VBR == cbr)
 	{
 		pbtStreamBuffer[nStreamIndex++]=VBRTag2[0];
 		pbtStreamBuffer[nStreamIndex++]=VBRTag2[1];

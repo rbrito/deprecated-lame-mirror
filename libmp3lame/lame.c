@@ -314,6 +314,54 @@ lame_init_qval(lame_global_flags * gfp)
 
 
 
+static int
+get_bitrate(lame_global_flags * gfp)
+{
+    /* assume 16bit linear PCM input */
+    return gfp->out_samplerate * 16 * gfp->internal_flags->channels_out
+	/ (1.e3 * gfp->compression_ratio);
+}
+
+static void
+set_compression_ratio(lame_global_flags * gfp)
+{
+    /* 
+     *  sample freq       bitrate     compression ratio
+     *     [kHz]      [kbps/channel]   for 16 bit input
+     *     44.1            56               12.6
+     *     44.1            64               11.025
+     *     44.1            80                8.82
+     *     22.05           24               14.7
+     *     22.05           32               11.025
+     *     22.05           40                8.82
+     *     16              16               16.0
+     *     16              24               10.667
+     *
+     */
+    /* 
+     *  For VBR, take a guess at the compression_ratio. 
+     *  For example:
+     *
+     *    VBR_q    compression     like
+     *     -        4.4         320 kbps/44 kHz
+     *   0...1      5.5         256 kbps/44 kHz
+     *     2        7.3         192 kbps/44 kHz
+     *     4        8.8         160 kbps/44 kHz
+     *     6       11           128 kbps/44 kHz
+     *     9       14.7          96 kbps
+     *
+     *  for lower bitrates, downsample with --resample
+     */
+
+    if (gfp->VBR == vbr) {
+	FLOAT  cmp[] = { 5.7, 6.5, 7.3, 8.2, 9.1, 10, 11, 12, 13, 14 };
+	gfp->compression_ratio = cmp[gfp->VBR_q];
+    } else {
+        gfp->compression_ratio
+	    = gfp->out_samplerate * 16 * gfp->internal_flags->channels_out
+	    / (1.e3 * gfp->mean_bitrate_kbps);
+    }
+}
 
 /********************************************************************
  *   initialize internal params based on data in gf
@@ -366,9 +414,6 @@ lame_init_qval(lame_global_flags * gfp)
 int
 lame_init_params(lame_global_flags * const gfp)
 {
-
-    int     i;
-    int     j;
     lame_internal_flags *gfc = gfp->internal_flags;
 
     gfc->gfp = gfp;
@@ -380,9 +425,8 @@ lame_init_params(lame_global_flags * const gfp)
     gfc->report.debugf = gfp->report.debugf;
     gfc->report.errorf = gfp->report.errorf;
 
+#ifdef HAVE_NASM
     gfc->CPU_features.i387 = has_i387();
-
-
     if (gfp->asm_optimizations.amd3dnow )
         gfc->CPU_features.AMD_3DNow = has_3DNow();
     else
@@ -400,7 +444,7 @@ lame_init_params(lame_global_flags * const gfp)
         gfc->CPU_features.SIMD = 0;
         gfc->CPU_features.SIMD2 = 0;
     }
-
+#endif
 
     gfc->channels_in = gfp->num_channels;
     if (gfc->channels_in == 1)
@@ -411,76 +455,64 @@ lame_init_params(lame_global_flags * const gfp)
         gfp->force_ms = 0; // don't allow forced mid/side stereo for mono output
 
 
-    if (gfp->VBR != vbr_off)
-        gfp->free_format = 0; /* VBR can't be mixed with free format */
-
-    if (gfp->VBR == vbr_off && gfp->brate == 0) {
-        /* no bitrate or compression ratio specified, use a compression ratio of 11.025 */
-        if (gfp->compression_ratio == 0)
-            gfp->compression_ratio = 11.025; /* rate to compress a CD down to exactly 128000 bps */
+    if (gfp->VBR != cbr) {
+	/* at 160 kbps (MPEG-2/2.5)/ 320 kbps (MPEG-1) only
+	   Free format or CBR are possible, no VBR */
+	if (gfp->mean_bitrate_kbps >= 320 / gfc->channels_out) {
+	    gfp->VBR = cbr;
+	    gfp->free_format = 1;
+	} else
+	    gfp->free_format = 0; /* VBR can't be mixed with free format */
     }
+    if (gfp->VBR == cbr) {
+	/* automatic output sampling rate decision.
+	   round up with a margin of 3% */
+	if (gfp->mean_bitrate_kbps == 0) {
+	    if (gfp->out_samplerate == 0)
+		gfp->out_samplerate
+		    = map2MP3Frequency( (int)( 0.97 * gfp->in_samplerate ) );
+	    /* no bitrate or compression ratio specified,
+	       use default compression ratio of 11.025,
+	       which is the rate to compress a CD down to exactly 128000 bps */
+	    if (gfp->compression_ratio <= 0)
+		gfp->compression_ratio = 11.025;
 
-
-    if (gfp->VBR == vbr_off && gfp->brate == 0) {
-        /* no bitrate or compression ratio specified, use 11.025 */
-        if (gfp->compression_ratio == 0)
-            gfp->compression_ratio = 11.025; /* rate to compress a CD down to exactly 128000 bps */
+	    /* choose a bitrate for the output samplerate which achieves
+	     * specified compression ratio 
+	     */
+	    gfp->mean_bitrate_kbps = get_bitrate(gfp);
+	} else if (gfp->out_samplerate == 0) {
+	    /* CBR and bitrate is given but output fs is not given.
+	       check if user specified bitrate requires downsampling.
+	       if compression ratio is > 13, choose a new samplerate to
+	       get the ratio down to about 10 */
+	    if (gfp->out_samplerate == 0)
+		gfp->out_samplerate
+		    = map2MP3Frequency( (int)( 0.97 * gfp->in_samplerate ) );
+	    set_compression_ratio(gfp);
+	    if (gfp->compression_ratio > 13.) {
+		gfp->out_samplerate = map2MP3Frequency(
+		    (int)(gfp->out_samplerate * 10 / gfp->compression_ratio));
+	    }
+	}
+    } else {
+	if (gfp->out_samplerate == 0)
+	    gfp->out_samplerate
+		= map2MP3Frequency( (int)( 0.97 * gfp->in_samplerate ) );
     }
-
-    /* find bitrate if user specify a compression ratio */
-    if (gfp->VBR == vbr_off && gfp->compression_ratio > 0) {
-
-        if (gfp->out_samplerate == 0)
-            gfp->out_samplerate = map2MP3Frequency( (int)( 0.97 * gfp->in_samplerate ) ); /* round up with a margin of 3% */
-
-        /* choose a bitrate for the output samplerate which achieves
-         * specified compression ratio 
-         */
-        gfp->brate =
-            gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 *
-                                                            gfp->
-                                                            compression_ratio);
-
-        /* we need the version for the bitrate table look up */
-        gfc->samplerate_index = SmpFrqIndex(gfp->out_samplerate, &gfp->version);
-
-        if (!gfp->free_format) /* for non Free Format find the nearest allowed bitrate */
-            gfp->brate =
-                FindNearestBitrate(gfp->brate, gfp->version,
-                                   gfp->out_samplerate);
-    }
-
-    if (gfp->VBR != vbr_off && gfp->brate >= 320)
-        gfp->VBR = vbr_off; /* at 160 kbps (MPEG-2/2.5)/ 320 kbps (MPEG-1) only Free format or CBR are possible, no VBR */
-
-
-    if (gfp->out_samplerate == 0) { /* if output sample frequency is not given, find an useful value */
-        gfp->out_samplerate = map2MP3Frequency( (int)( 0.97 * gfp->in_samplerate ) );
-
-
-        /* check if user specified bitrate requires downsampling, if compression    */
-        /* ratio is > 13, choose a new samplerate to get the ratio down to about 10 */
-
-        if (gfp->VBR == vbr_off && gfp->brate > 0) {
-            gfp->compression_ratio =
-                gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 *
-                                                                gfp->brate);
-            if (gfp->compression_ratio > 13.)
-                gfp->out_samplerate =
-                    map2MP3Frequency( (int)( (10. * 1.e3 * gfp->brate) /
-                                     (16 * gfc->channels_out)));
-        }
-        if (gfp->VBR == vbr_abr) {
-            gfp->compression_ratio =
-                gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 *
-                                                                gfp->
-                                                                VBR_mean_bitrate_kbps);
-            if (gfp->compression_ratio > 13.)
-                gfp->out_samplerate =
-                    map2MP3Frequency((int)((10. * 1.e3 * gfp->VBR_mean_bitrate_kbps) /
-                                     (16 * gfc->channels_out)));
-        }
-    }
+    gfc->samplerate_index = SmpFrqIndex(gfp->out_samplerate, &gfp->version);
+    if (gfc->samplerate_index < 0)
+        return -1;
+    /* for non Free Format find the nearest allowed bitrate */
+    if (gfp->VBR == cbr && !gfp->free_format) {
+	gfp->mean_bitrate_kbps = FindNearestBitrate(
+	    gfp->mean_bitrate_kbps, gfp->version, gfp->out_samplerate);
+	gfc->bitrate_index = BitrateIndex(
+	    gfp->mean_bitrate_kbps, gfp->version, gfp->out_samplerate);
+	if (gfc->bitrate_index < 0)
+	    return -1;
+    } else
+	gfc->bitrate_index = 0;
 
     gfc->mode_gr = gfp->out_samplerate <= 24000 ? 1 : 2; // Number of granules per frame
     gfp->framesize = 576 * gfc->mode_gr;
@@ -488,56 +520,7 @@ lame_init_params(lame_global_flags * const gfp)
     gfc->coding = coding_MPEG_Layer_3;
     gfc->frame_size = gfp->framesize;
     gfc->resample_ratio = (double) gfp->in_samplerate / gfp->out_samplerate;
-
-    /* 
-     *  sample freq       bitrate     compression ratio
-     *     [kHz]      [kbps/channel]   for 16 bit input
-     *     44.1            56               12.6
-     *     44.1            64               11.025
-     *     44.1            80                8.82
-     *     22.05           24               14.7
-     *     22.05           32               11.025
-     *     22.05           40                8.82
-     *     16              16               16.0
-     *     16              24               10.667
-     *
-     */
-    /* 
-     *  For VBR, take a guess at the compression_ratio. 
-     *  For example:
-     *
-     *    VBR_q    compression     like
-     *     -        4.4         320 kbps/44 kHz
-     *   0...1      5.5         256 kbps/44 kHz
-     *     2        7.3         192 kbps/44 kHz
-     *     4        8.8         160 kbps/44 kHz
-     *     6       11           128 kbps/44 kHz
-     *     9       14.7          96 kbps
-     *
-     *  for lower bitrates, downsample with --resample
-     */
-
-    switch (gfp->VBR) {
-    case vbr_mt:
-    case vbr_rh:
-    case vbr_mtrh:
-        {
-            FLOAT  cmp[] = { 5.7, 6.5, 7.3, 8.2, 9.1, 10, 11, 12, 13, 14 };
-            gfp->compression_ratio = cmp[gfp->VBR_q];
-        }
-        break;
-    case vbr_abr:
-        gfp->compression_ratio =
-            gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 *
-                                                            gfp->
-                                                            VBR_mean_bitrate_kbps);
-        break;
-    default:
-        gfp->compression_ratio =
-            gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 * gfp->brate);
-        break;
-    }
-
+    set_compression_ratio(gfp);
 
     /* mode = -1 (not set by user) or 
      * mode = MONO (because of only 1 input channel).  
@@ -555,26 +538,16 @@ lame_init_params(lame_global_flags * const gfp)
      *   fs < 32 kHz I have not tested.
      */
     if (gfp->mode == NOT_SET) {
+	gfp->mode = JOINT_STEREO;
         if (gfp->compression_ratio < 8)
             gfp->mode = STEREO;
-        else
-            gfp->mode = JOINT_STEREO;
     }
+    if (gfp->mode_automs && gfp->mode != MONO && gfp->compression_ratio < 6.6)
+	gfp->mode = STEREO;
 
-    /* KLEMM's jstereo with ms threshold adjusted via compression ratio */
-    if (gfp->mode_automs) {
-        if (gfp->mode != MONO && gfp->compression_ratio < 6.6)
-            gfp->mode = STEREO;
-    }
-
-
-
-
-
-
-  /****************************************************************/
-  /* if a filter has not been enabled, see if we should add one: */
-  /****************************************************************/
+    /****************************************************************/
+    /* if a filter has not been enabled, see if we should add one: */
+    /****************************************************************/
     if (gfp->lowpassfreq == 0) {
         double  lowpass;
         double  highpass;
@@ -592,7 +565,7 @@ lame_init_params(lame_global_flags * const gfp)
             channels = 3.;
             break;
         default:    
-            channels = 1.;  // just to make data flow analysis happy :-)
+            channels = 1.;  /* just to make data flow analysis happy :-) */
             assert(0);
             break;
         }
@@ -640,58 +613,35 @@ lame_init_params(lame_global_flags * const gfp)
 
 
 
-  /*******************************************************
-   * samplerate and bitrate index
-   *******************************************************/
-    gfc->samplerate_index = SmpFrqIndex(gfp->out_samplerate, &gfp->version);
-    if (gfc->samplerate_index < 0)
-        return -1;
-
-    if (gfp->VBR == vbr_off) {
-        if (gfp->free_format) {
-            gfc->bitrate_index = 0;
-        }
-        else {
-            gfc->bitrate_index = BitrateIndex(gfp->brate, gfp->version,
-                                              gfp->out_samplerate);
-            if (gfc->bitrate_index < 0)
-                return -1;
-        }
-    }
-    else {              /* choose a min/max bitrate for VBR */
+    /*******************************************************
+     * samplerate and bitrate index
+     *******************************************************/
+    if (gfp->VBR != cbr) {
+	/* choose a min/max bitrate for VBR */
         /* if the user didn't specify VBR_max_bitrate: */
         gfc->VBR_min_bitrate = 1; /* default: allow   8 kbps (MPEG-2) or  32 kbps (MPEG-1) */
         gfc->VBR_max_bitrate = 14; /* default: allow 160 kbps (MPEG-2) or 320 kbps (MPEG-1) */
 
-        if (gfp->VBR_min_bitrate_kbps)
-            if (
-                (gfc->VBR_min_bitrate =
-                 BitrateIndex(gfp->VBR_min_bitrate_kbps, gfp->version,
-                              gfp->out_samplerate)) < 0) return -1;
-        if (gfp->VBR_max_bitrate_kbps)
-            if (
-                (gfc->VBR_max_bitrate =
-                 BitrateIndex(gfp->VBR_max_bitrate_kbps, gfp->version,
-                              gfp->out_samplerate)) < 0) return -1;
+        if (gfp->VBR_min_bitrate_kbps
+	    && (gfc->VBR_min_bitrate =
+		BitrateIndex(gfp->VBR_min_bitrate_kbps, gfp->version,
+			     gfp->out_samplerate)) < 0) return -1;
+        if (gfp->VBR_max_bitrate_kbps
+	    && (gfc->VBR_max_bitrate =
+		BitrateIndex(gfp->VBR_max_bitrate_kbps, gfp->version,
+			     gfp->out_samplerate)) < 0) return -1;
 
         gfp->VBR_min_bitrate_kbps =
             bitrate_table[gfp->version][gfc->VBR_min_bitrate];
         gfp->VBR_max_bitrate_kbps =
             bitrate_table[gfp->version][gfc->VBR_max_bitrate];
 
-        gfp->VBR_mean_bitrate_kbps =
-            Min(bitrate_table[gfp->version][gfc->VBR_max_bitrate],
-                gfp->VBR_mean_bitrate_kbps);
-        gfp->VBR_mean_bitrate_kbps =
-            Max(bitrate_table[gfp->version][gfc->VBR_min_bitrate],
-                gfp->VBR_mean_bitrate_kbps);
+        if (gfp->mean_bitrate_kbps < gfp->VBR_max_bitrate_kbps)
+	    gfp->mean_bitrate_kbps = gfp->VBR_max_bitrate_kbps;
 
-
+        if (gfp->mean_bitrate_kbps > gfp->VBR_min_bitrate_kbps)
+	    gfp->mean_bitrate_kbps = gfp->VBR_min_bitrate_kbps;
     }
-
-    /* for CBR, we will write an "info" tag. */
-    //    if ((gfp->VBR == vbr_off)) 
-    //  gfp->bWriteVbrTag = 0;
 
 #if defined(HAVE_GTK)
     if (gfp->analysis)
@@ -700,30 +650,9 @@ lame_init_params(lame_global_flags * const gfp)
     if (gfc->pinfo != NULL)
         gfp->bWriteVbrTag = 0; /* disable Xing VBR tag */
 #endif
-    init_bit_stream_w(gfc);
-
-    j = gfc->samplerate_index
-	+ (3 * gfp->version) + 6 * (gfp->out_samplerate < 16000);
-    for (i = 0; i < SBMAX_l + 1; i++)
-        gfc->scalefac_band.l[i] = sfBandIndex[j].l[i];
-    for (i = 0; i < SBMAX_s + 1; i++)
-        gfc->scalefac_band.s[i] = sfBandIndex[j].s[i];
-
-    /* determine the mean bitrate for main data */
-    if (gfp->version == 1) /* MPEG 1 */
-        gfc->sideinfo_len = (gfc->channels_out == 1) ? 4 + 17 : 4 + 32;
-    else                /* MPEG 2 */
-        gfc->sideinfo_len = (gfc->channels_out == 1) ? 4 + 9 : 4 + 17;
-
-    if (gfp->error_protection)
-        gfc->sideinfo_len += 2;
-
-    lame_init_bitstream(gfp);
+    init_bit_stream_w(gfp);
 
     gfc->Class_ID = LAME_ID;
-
-    for (i = 0; i < 19; i++)
-	gfc->nsPsy.pefirbuf[i] = 700*gfc->mode_gr*gfc->channels_out;
 
     if (gfp->ATHtype < 0)
 	gfp->ATHtype = 4;
@@ -776,34 +705,13 @@ lame_init_params(lame_global_flags * const gfp)
     lame_init_qval(gfp);
 
     /* initialize internal adaptive ATH settings  -jd */
-    gfc->ATH.aa_sensitivity_p = pow( 10.0, gfp->athaa_sensitivity / -10.0 );
-
+    gfc->ATH.aa_sensitivity_p = db2pow(-gfp->athaa_sensitivity);
 
     if ( gfp->athaa_loudapprox < 0 ) gfp->athaa_loudapprox = 2;
 
     if (gfp->useTemporal < 0 ) gfp->useTemporal = 1;  // on by default
 
-    /* padding method as described in 
-     * "MPEG-Layer3 / Bitstream Syntax and Decoding"
-     * by Martin Sieler, Ralph Sperschneider
-     *
-     * note: there is no padding for the very first frame
-     *
-     * Robert.Hegemann@gmx.de 2000-06-22
-     */
-    gfc->slot_lag = gfc->frac_SpF = 0;
-    if (gfp->VBR == vbr_off && !gfp->disable_reservoir)
-	gfc->slot_lag = gfc->frac_SpF
-	    = ((gfp->version+1)*72000L*gfp->brate) % gfp->out_samplerate;
-
-    /* mid side sparsing */
-    gfc->sparsing = gfp->sparsing;
-    gfc->sparseA = gfp->sparse_low;
-    gfc->sparseB = gfp->sparse_low-gfp->sparse_high;
-    if ( gfc->sparseA < 0 ) gfc->sparseA = 0;
-    if ( gfc->sparseB < 0 ) gfc->sparseB = 0;
-    if ( gfc->sparseB > gfc->sparseA ) gfc->sparseB = gfc->sparseA;
-
+    lame_init_bitstream(gfp);
     iteration_init(gfp);
     psymodel_init(gfp);
 
@@ -890,9 +798,8 @@ lame_print_config(const lame_global_flags * gfp)
     if (gfp->free_format) {
         MSGF(gfc,
              "Warning: many decoders cannot handle free format bitstreams\n");
-        if (gfp->brate > 320) {
-            MSGF
-                (gfc,
+        if (gfp->mean_bitrate_kbps > 320) {
+            MSGF(gfc,
                  "Warning: many decoders cannot handle free format bitrates >320 kbps (see documentation)\n");
         }
     }
@@ -955,21 +862,19 @@ lame_print_internals( const lame_global_flags * gfp )
     MSGF( gfc, "\t%d channel - %s\n", gfc->channels_out, pc );
     
     switch (gfp->VBR) {
-    case vbr_off   : pc = "off";    break;
-    default        : pc = "all";    break;
+    case cbr   : pc = "off";    break;
+    default    : pc = "all";    break;
     }
     MSGF( gfc, "\tpadding: %s\n", pc );
-    
+
     if ( vbr_default == gfp->VBR )  pc = "(default)";
     else if ( gfp->free_format )    pc = "(free format)";
     else pc = "";
     switch ( gfp->VBR ) {
-    case vbr_off : MSGF( gfc, "\tconstant bitrate - CBR %s\n",      pc ); break;
-    case vbr_abr : MSGF( gfc, "\tvariable bitrate - ABR %s\n",      pc ); break;
-    case vbr_rh  : MSGF( gfc, "\tvariable bitrate - VBR rh %s\n",   pc ); break;
-    case vbr_mt  : MSGF( gfc, "\tvariable bitrate - VBR mt %s\n",   pc ); break;
-    case vbr_mtrh: MSGF( gfc, "\tvariable bitrate - VBR mtrh %s\n", pc ); break; 
-    default      : MSGF( gfc, "\t ?? oops, some new one ?? \n" );         break;
+    case cbr : MSGF( gfc, "\tconstant bitrate - CBR %s\n",      pc ); break;
+    case abr : MSGF( gfc, "\tvariable bitrate - ABR %s\n",      pc ); break;
+    case vbr : MSGF( gfc, "\tvariable bitrate - VBR rh %s\n",   pc ); break;
+    default  : MSGF( gfc, "\t ?? oops, some new one ?? \n" );         break;
     }
     if (gfp->bWriteVbrTag) 
     MSGF( gfc, "\tusing LAME Tag\n" );
@@ -1697,9 +1602,9 @@ lame_init_old(lame_global_flags * gfp)
     gfp->lowpasswidth = -1;
     gfp->highpasswidth = -1;
 
-    gfp->VBR = vbr_off;
+    gfp->VBR = cbr;
     gfp->VBR_q = 4;
-    gfp->VBR_mean_bitrate_kbps = 128;
+    gfp->mean_bitrate_kbps = 0;
     gfp->VBR_min_bitrate_kbps = 0;
     gfp->VBR_max_bitrate_kbps = 0;
     gfp->VBR_hard_min = 0;

@@ -128,9 +128,10 @@ ResvFrameBegin(lame_global_flags *gfp, int *mean_bits)
     /* main_data_begin has 9 bits in MPEG-1, 8 bits MPEG-2 */
     resvLimit = (8*256)*gfc->mode_gr-8;
 
-    if (gfp->brate >= 320) {
+    if (gfp->mean_bitrate_kbps >= 320) {
         /* in freeformat the buffer is constant*/
-        maxmp3buf = 8*((int)((gfp->brate*1000)/(gfp->out_samplerate / 1152.0)/8 +.5));
+        maxmp3buf = 8*((int)((gfp->mean_bitrate_kbps*1000)
+			     /(gfp->out_samplerate / 1152.0)/8 +.5));
     } else {
         /* maximum allowed frame size.  dont use more than this number of
            bits, even if the frame has the space for them: */

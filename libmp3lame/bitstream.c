@@ -65,7 +65,7 @@ int getframebits(const lame_global_flags * gfp)
     if (gfc->bitrate_index) 
 	bit_rate = bitrate_table[gfp->version][gfc->bitrate_index];
     else
-	bit_rate = gfp->brate;
+	bit_rate = gfp->mean_bitrate_kbps;
     assert ( bit_rate <= 550 );
 
     /* main encoding routine toggles padding on and off */
@@ -972,17 +972,5 @@ int copy_buffer(lame_internal_flags *gfc,unsigned char *buffer,int size,int mp3d
     return minimum;
 }
 
-
-void init_bit_stream_w(lame_internal_flags *gfc)
-{
-   gfc->bs.buf = (unsigned char *)       malloc(BUFFER_SIZE);
-   gfc->bs.buf_size = BUFFER_SIZE;
-
-   gfc->h_ptr = gfc->w_ptr = 0;
-   gfc->header[gfc->h_ptr].write_timing = 0;
-   gfc->bs.buf_byte_idx = -1;
-   gfc->bs.buf_bit_idx = 0;
-   gfc->bs.totbit = 0;
-}
 
 /* end of bitstream.c */

@@ -433,7 +433,7 @@ lame_set_msgf( lame_global_flags*  gfp,
 
 /*
  * Set one of
- *  - brate
+ *  - bitrate
  *  - compression ratio.
  *
  * Default is compression ratio of 11.
@@ -442,7 +442,7 @@ int
 lame_set_brate( lame_global_flags*  gfp,
                 int                 brate )
 {
-    gfp->brate = brate;
+    gfp->mean_bitrate_kbps = brate;
 
     if (brate >= 320) {
         gfp->disable_reservoir = 1;
@@ -454,7 +454,7 @@ lame_set_brate( lame_global_flags*  gfp,
 int
 lame_get_brate( const lame_global_flags*  gfp )
 {
-    return gfp->brate;
+    return gfp->mean_bitrate_kbps;
 }
 
 int
@@ -739,7 +739,7 @@ lame_set_exp_nspsytune2_pointer( lame_global_flags*  gfp,
  * VBR control
  ***********************************************************************/
 
-// Types of VBR.  default = vbr_off = CBR
+// Types of VBR.  default = CBR
 int
 lame_set_VBR( lame_global_flags*  gfp,
               vbr_mode            VBR )
@@ -797,12 +797,12 @@ lame_get_VBR_q( const lame_global_flags*  gfp )
 }
 
 
-/* Ignored except for VBR = vbr_abr (ABR mode) */
+/* Ignored except for VBR = abr (ABR mode) */
 int
 lame_set_VBR_mean_bitrate_kbps( lame_global_flags*  gfp,
                                 int                 VBR_mean_bitrate_kbps )
 {
-    gfp->VBR_mean_bitrate_kbps = VBR_mean_bitrate_kbps;
+    gfp->mean_bitrate_kbps = VBR_mean_bitrate_kbps;
 
     return 0;
 }
@@ -810,7 +810,7 @@ lame_set_VBR_mean_bitrate_kbps( lame_global_flags*  gfp,
 int
 lame_get_VBR_mean_bitrate_kbps( const lame_global_flags*  gfp )
 {
-    return gfp->VBR_mean_bitrate_kbps;
+    return gfp->mean_bitrate_kbps;
 }
 
 int
@@ -1452,8 +1452,8 @@ static int apply_abr_preset(lame_global_flags*  gfp, int preset)
         r = upper_range;
 
 
-    lame_set_VBR(gfp, vbr_abr); 
-    lame_set_VBR_mean_bitrate_kbps(gfp, (actual_bitrate));
+    lame_set_VBR(gfp, abr);
+    lame_set_VBR_mean_bitrate_kbps(gfp, actual_bitrate);
     lame_set_VBR_mean_bitrate_kbps(gfp, Min(lame_get_VBR_mean_bitrate_kbps(gfp), 320)); 
     lame_set_VBR_mean_bitrate_kbps(gfp, Max(lame_get_VBR_mean_bitrate_kbps(gfp), 8)); 
     lame_set_brate(gfp, lame_get_VBR_mean_bitrate_kbps(gfp));
@@ -1482,6 +1482,13 @@ static int apply_abr_preset(lame_global_flags*  gfp, int preset)
 
     lame_set_ATHtype(gfp, 2);
 
+    if (actual_bitrate < 160)
+	lame_set_short_threshold(gfp, 4.5, 15.0);
+    else if (actual_bitrate < 90)
+	lame_set_short_threshold(gfp, 15.0, 15.0);
+    else if (actual_bitrate < 32)
+	lame_set_short_threshold(gfp, 100.0, 100.0); /* no short blocks */
+
     return preset;
 }
 
@@ -1496,7 +1503,7 @@ lame_set_preset( lame_global_flags*  gfp, int preset )
     switch (preset) {
     case DM_RADIO:
     case DM_RADIO_FAST: {
-	lame_set_VBR(gfp, vbr_mtrh);
+	lame_set_VBR(gfp, vbr);
 
 	lame_set_preset_expopts(gfp, 3);
 	lame_set_quality(gfp, 4);
@@ -1513,7 +1520,7 @@ lame_set_preset( lame_global_flags*  gfp, int preset )
     }
     case PORTABLE:
     case PORTABLE_FAST: {
-	lame_set_VBR(gfp, vbr_mtrh);
+	lame_set_VBR(gfp, vbr);
 
 	lame_set_preset_expopts(gfp, 3);
 	lame_set_quality(gfp, 4);
@@ -1529,7 +1536,7 @@ lame_set_preset( lame_global_flags*  gfp, int preset )
     }
     case DM_MEDIUM:
     case DM_MEDIUM_FAST: {
-	lame_set_VBR(gfp, vbr_mtrh);
+	lame_set_VBR(gfp, vbr);
 
 	lame_set_preset_expopts(gfp, 3);
 	lame_set_quality(gfp, 5);
@@ -1544,7 +1551,7 @@ lame_set_preset( lame_global_flags*  gfp, int preset )
     }
     case MEDIUM:
     case MEDIUM_FAST: {
-	lame_set_VBR(gfp, vbr_mtrh);
+	lame_set_VBR(gfp, vbr);
 
 	lame_set_preset_expopts(gfp, 3);
 	lame_set_quality(gfp, 5);
@@ -1559,7 +1566,7 @@ lame_set_preset( lame_global_flags*  gfp, int preset )
     }
     case STANDARD:
     case STANDARD_FAST: {
-	lame_set_VBR(gfp, vbr_mtrh);
+	lame_set_VBR(gfp, vbr);
 
 	lame_set_preset_expopts(gfp, 3);
 	lame_set_quality(gfp, 5);
@@ -1570,7 +1577,7 @@ lame_set_preset( lame_global_flags*  gfp, int preset )
     }
     case EXTREME:
     case EXTREME_FAST: {
-	lame_set_VBR(gfp, vbr_mtrh);
+	lame_set_VBR(gfp, vbr);
 
 	lame_set_preset_expopts(gfp, 2);
 	lame_set_quality(gfp, 5);
@@ -1593,12 +1600,12 @@ lame_set_preset( lame_global_flags*  gfp, int preset )
 
 	lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (8 << 20));
 
-	lame_set_VBR(gfp,vbr_mtrh);
-	lame_set_VBR_q(gfp,1);
-	lame_set_quality( gfp, 3);
+	lame_set_VBR(gfp, vbr);
+	lame_set_VBR_q(gfp, 1);
+	lame_set_quality(gfp, 3);
 	lame_set_lowpassfreq(gfp,19500);
-	lame_set_mode( gfp, JOINT_STEREO );
-	lame_set_ATHtype( gfp, 3 );
+	lame_set_mode(gfp, JOINT_STEREO);
+	lame_set_ATHtype(gfp, 3);
 	lame_set_VBR_min_bitrate_kbps(gfp,96);
 	return preset;
     }

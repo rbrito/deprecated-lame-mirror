@@ -439,7 +439,7 @@ int  lame_encode_mp3_frame (				// Output
     }
 #endif
 
-    if (gfp->VBR == vbr_off || gfp->VBR == vbr_abr) {
+    if (gfp->VBR != vbr) {
 	static const FLOAT fircoef[9] = {
 	    -0.0207887 *5,	-0.0378413*5,	-0.0432472*5,	-0.031183*5,
 	    7.79609e-18*5,	 0.0467745*5,	 0.10091*5,	0.151365*5,
@@ -470,15 +470,13 @@ int  lame_encode_mp3_frame (				// Output
 
     switch (gfp->VBR){ 
     default:
-    case vbr_off:
+    case cbr:
 	iteration_loop( gfp, ms_ener_ratio, masking);
 	break;
-    case vbr_mt:
-    case vbr_rh:
-    case vbr_mtrh:
+    case vbr:
 	VBR_iteration_loop( gfp, ms_ener_ratio, masking);
 	break;
-    case vbr_abr:
+    case abr:
 	ABR_iteration_loop( gfp, ms_ener_ratio, masking);
 	break;
     }

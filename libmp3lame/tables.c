@@ -761,8 +761,9 @@ static FLOAT ATHformula(FLOAT f,lame_global_flags *gfp)
     case 3:
       return ATHformula_GB(f, 1) +6;     /*modification of GB formula by Roel*/
     case 4:
-      if (!(gfp->VBR == vbr_off || gfp->VBR == vbr_abr)) /*this case should be used with true vbr only*/
-        return ATHformula_GB(f,gfp->VBR_q);
+	if (gfp->VBR == vbr)
+	    /*this case should be used with true vbr only*/
+	    return ATHformula_GB(f,gfp->VBR_q);
     }
 
     return ATHformula_GB(f, 0);
@@ -1004,26 +1005,41 @@ iteration_init( lame_global_flags *gfp)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     III_side_info_t * const l3_side = &gfc->l3_side;
-    int i;
+    int i, j;
     FLOAT bass, alto, treble, sfb21;
-
-  /**********************************************************************/
-  /* compute info needed for polyphase filter (filter type==0, default) */
-  /**********************************************************************/
-    lame_init_params_ppflt(gfp);
-
-
-  /*******************************************************/
-  /* compute info needed for FIR filter (filter_type==1) */
-  /*******************************************************/
-   /* not yet coded */
-
-
 
     if (gfc->iteration_init_init)
 	return;
-
     gfc->iteration_init_init=1;
+
+    /**********************************************************************/
+    /* compute info needed for polyphase filter (filter type==0, default) */
+    /**********************************************************************/
+    lame_init_params_ppflt(gfp);
+
+    /*******************************************************/
+    /* compute info needed for FIR filter (filter_type==1) */
+    /*******************************************************/
+    /* not yet coded */
+
+    /* mid side sparsing */
+    gfc->sparsing = gfp->sparsing;
+    gfc->sparseA = gfp->sparse_low;
+    gfc->sparseB = gfp->sparse_low-gfp->sparse_high;
+    if ( gfc->sparseA < 0 ) gfc->sparseA = 0;
+    if ( gfc->sparseB < 0 ) gfc->sparseB = 0;
+    if ( gfc->sparseB > gfc->sparseA ) gfc->sparseB = gfc->sparseA;
+
+    /* scalefactor band start/end position */
+    j = gfc->samplerate_index
+	+ (3 * gfp->version) + 6 * (gfp->out_samplerate < 16000);
+    for (i = 0; i < SBMAX_l + 1; i++)
+        gfc->scalefac_band.l[i] = sfBandIndex[j].l[i];
+    for (i = 0; i < SBMAX_s + 1; i++)
+        gfc->scalefac_band.s[i] = sfBandIndex[j].s[i];
+
+    for (i = 0; i < 19; i++)
+	gfc->nsPsy.pefirbuf[i] = 700*gfc->mode_gr*gfc->channels_out;
 
     l3_side->main_data_begin = 0;
     compute_ath(gfp);
@@ -1081,7 +1097,7 @@ iteration_init( lame_global_flags *gfp)
 	else if (i <= 13) f = alto;
 	else if (i <= 20) f = treble;
 	else              f = sfb21;
-	if ((gfp->VBR == vbr_off || gfp->VBR == vbr_abr) && gfp->quality <= 1)
+	if (gfp->VBR != vbr && gfp->quality <= 1)
 	    f *= 0.001;
 
 	gfc->nsPsy.longfact[i] = f;
@@ -1091,7 +1107,7 @@ iteration_init( lame_global_flags *gfp)
 	if      (i <=  5) f = bass;
 	else if (i <= 10) f = alto;
 	else              f = treble;
-	if ((gfp->VBR == vbr_off || gfp->VBR == vbr_abr) && gfp->quality <= 1)
+	if (gfp->VBR != vbr && gfp->quality <= 1)
 	    f *= 0.001;
 
 	gfc->nsPsy.shortfact[i] = f;
@@ -1509,5 +1525,41 @@ int psymodel_init(lame_global_flags *gfp)
     return 0;
 }
 
+
+void init_bit_stream_w(lame_global_flags *gfp)
+{
+    lame_internal_flags *gfc = gfp->internal_flags;
+    gfc->bs.buf = (unsigned char *)       malloc(BUFFER_SIZE);
+    gfc->bs.buf_size = BUFFER_SIZE;
+
+    gfc->h_ptr = gfc->w_ptr = 0;
+    gfc->header[gfc->h_ptr].write_timing = 0;
+    gfc->bs.buf_byte_idx = -1;
+    gfc->bs.buf_bit_idx = 0;
+    gfc->bs.totbit = 0;
+
+    /* determine the mean bitrate for main data */
+    if (gfp->version == 1) /* MPEG 1 */
+        gfc->sideinfo_len = (gfc->channels_out == 1) ? 4 + 17 : 4 + 32;
+    else                /* MPEG 2 */
+        gfc->sideinfo_len = (gfc->channels_out == 1) ? 4 + 9 : 4 + 17;
+
+    if (gfp->error_protection)
+        gfc->sideinfo_len += 2;
+
+    /* padding method as described in 
+     * "MPEG-Layer3 / Bitstream Syntax and Decoding"
+     * by Martin Sieler, Ralph Sperschneider
+     *
+     * note: there is no padding for the very first frame
+     *
+     * Robert.Hegemann@gmx.de 2000-06-22
+     */
+    gfc->slot_lag = gfc->frac_SpF = 0;
+    if (gfp->VBR == cbr && !gfp->disable_reservoir)
+	gfc->slot_lag = gfc->frac_SpF
+	    = ((gfp->version+1)*72000L*gfp->mean_bitrate_kbps)
+	    % gfp->out_samplerate;
+}
 
 /* end of tables.c */

@@ -347,9 +347,7 @@ lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath,
                 "Encoding as %g kHz ", 1.e-3 * lame_get_out_samplerate(gf));
 
 	switch (lame_get_VBR(gf)) {
-	case vbr_mt:
-	case vbr_rh:
-	case vbr_mtrh:
+	case vbr:
 	    appendix = "ca. ";
 	    fprintf(stderr, "VBR(q=%i)", lame_get_VBR_q(gf));
 	    break;
