@@ -219,7 +219,6 @@ void plot_frame(void)
   
   headbits = 32 + ((pplot1->stereo==2) ? 256 : 136);
   gtkinfo.approxbits = (pplot1->bitrate*1000*1152.0/samp) - headbits;
-  /*font = gdk_font_load ("-misc-fixed-medium-r-*-*-*-100-*-*-*-*-*-*");*/
   sprintf(title2,"%3.1fkHz %ikbs ",samp/1000,pplot1->bitrate);
   gtk_text_freeze (GTK_TEXT(headerbox));
   gtk_text_backward_delete(GTK_TEXT(headerbox),

@@ -81,7 +81,7 @@ void gpk_graph_draw(GtkWidget *widget,               /* plot on this widged */
 #ifndef _WIN32
       fixed_font = gdk_font_load ("-misc-fixed-medium-r-*-*-*-100-*-*-*-*-*-*");
 #else
-      fixed_font = gdk_font_load ("-misc-fixed-large-r-*-*-*-100-*-*-*-*-*-*");
+      fixed_font = gdk_font_load ("-misc-fixed-medium-r-*-*-*-100-*-*-*-*-iso8859-1");
 #endif
 
       gdk_draw_text (*ppixmap,fixed_font,
@@ -177,7 +177,7 @@ void gpk_bargraph_draw(GtkWidget *widget,           /* plot on this widged */
 #ifndef _WIN32
       fixed_font = gdk_font_load ("-misc-fixed-medium-r-*-*-*-100-*-*-*-*-*-*");
 #else
-      fixed_font = gdk_font_load ("-misc-fixed-large-r-*-*-*-100-*-*-*-*-*-*");
+      fixed_font = gdk_font_load ("-misc-fixed-medium-r-*-*-*-100-*-*-*-*-iso8859-1");
 #endif
 
       gdk_draw_text (*ppixmap,fixed_font,
