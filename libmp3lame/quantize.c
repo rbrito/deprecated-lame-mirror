@@ -829,8 +829,6 @@ outer_loop (
         
 
 
-
-    
         /* Check if the last scalefactor band is distorted.
          * in VBR mode we can't get rid of the distortion, so quit now
          * and VBR mode will try again with more bits.  
@@ -847,7 +845,8 @@ outer_loop (
                 if (distort.l[SBMAX_l-1] > 1) break;
             }
         }
-
+    
+    
         /* save data so we can restore this quantization later */    
         if (better) {
             copy = 1;
@@ -1314,24 +1313,11 @@ VBR_iteration_loop (
     int       min_bits[2][2], max_bits[2][2];
     int       analog_mean_bits, min_mean_bits;
     int       mean_bits;
-    int       ch, num_chan, gr, analog_silence;
-    int       reduce_s_ch, sfb21_extra;
+    int       ch, gr, analog_silence;
+    int       sfb21_extra;
     gr_info             *cod_info;
     III_side_info_t     *l3_side  = &gfc->l3_side;
 
-    if (gfc->mode_ext == MPG_MD_MS_LR && gfp->quality >= 5) {
-        /*  my experiences are, that side channel reduction  
-         *  does more harm than good when VBR encoding
-         *  (Robert.Hegemann@gmx.de 2000-02-18)
-         *  2000-09-06: code is enabled at quality level 5
-         */
-        reduce_s_ch = 1;
-        num_chan    = 1;
-    } else {
-        reduce_s_ch = 0;
-        num_chan    = gfc->channels_out;
-    }
-  
     analog_silence = VBR_prepare (gfp, pe, ms_ener_ratio, xr, ratio, 
                                   l3_xmin, frameBits, &analog_mean_bits,
                                   &min_mean_bits, min_bits, max_bits, bands);
@@ -1346,7 +1332,7 @@ VBR_iteration_loop (
     used_bits2 = 0;
    
     for (gr = 0; gr < gfc->mode_gr; gr++) {
-        for (ch = 0; ch < num_chan; ch++) {
+        for (ch = 0; ch < gfc->channels_out; ch++) {
             int ret; 
             cod_info = &l3_side->gr[gr].ch[ch].tt;
       
@@ -1362,10 +1348,6 @@ VBR_iteration_loop (
                 save_bits[gr][ch] = 0;
                 continue; /* with next channel */
             }
-#if 0
-            if (gfc->mode_ext == MPG_MD_MS_LR && ch == 1)  
-                min_bits[gr][ch] = Max (min_bits[gr][ch], save_bits[gr][0]/5);
-#endif
       
             if (gfp->VBR == vbr_mtrh) {
                 ret = VBR_noise_shaping2 (gfp, xr[gr][ch], xrpow, 
@@ -1387,19 +1369,6 @@ VBR_iteration_loop (
         } /* for ch */
     }    /* for gr */
 
-    /*  special on quality=5, we didn't quantize side channel above
-     */
-    if (reduce_s_ch) {
-        /*  number of bits needed was found for MID channel above.  Use formula
-         *  (fixed bitrate code) to set the side channel bits */
-        for (gr = 0; gr < gfc->mode_gr; gr++) {
-            FLOAT8 fac = .33*(.5-ms_ener_ratio[gr])/.5;
-            save_bits[gr][1] = (int)(((1-fac)/(1+fac)) * save_bits[gr][0]);
-            save_bits[gr][1] = Max (analog_mean_bits, save_bits[gr][1]);
-            used_bits += save_bits[gr][1];
-        }
-    }
-
     /*  find lowest bitrate able to hold used bits
      */
     if (analog_silence && !gfp->VBR_hard_min) 
@@ -1418,7 +1387,6 @@ VBR_iteration_loop (
     bits = ResvFrameBegin (gfp, l3_side, mean_bits, bitsPerFrame);
     
     if (used_bits > bits){
-        //printf("# %d used %d have %d\n",gfp->frameNum,used_bits,bits);
         if(gfp->VBR == vbr_mtrh) {        
             for (gr = 0; gr < gfc->mode_gr; gr++) {
                 for (ch = 0; ch < gfc->channels_out; ch++) {
@@ -1445,7 +1413,6 @@ VBR_iteration_loop (
                         for (sfb = 0; sfb < SBMAX_l; sfb++) 
                             l3_xmin[gr][ch].l[sfb] *= 1.+.029*sfb*sfb/SBMAX_l/SBMAX_l;
                     }
-//                  min_bits[gr][ch] = Max(min_mean_bits, 0.9*min_bits[gr][ch]);
                     max_bits[gr][ch] = Max(min_mean_bits, 0.9*max_bits[gr][ch]);
                 }
             }
@@ -1461,25 +1428,23 @@ VBR_iteration_loop (
     gfc->sfb21_extra = 0;     
         
     /*  quantize granules which violate bit constraints again
-     *  and side channel when in quality=5 reduce_side is used
      */  
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         for (ch = 0; ch < gfc->channels_out; ch++) {
             int ret;
             cod_info = &l3_side->gr[gr].ch[ch].tt;
       
-            if (used_bits <= bits && ! (reduce_s_ch && ch == 1))
+            if (used_bits <= bits)
                 /*  we have enough bits
                  *  and have already encoded the side channel 
                  */
                 continue; /* with next ch */
             
-            if (used_bits > bits) {
-                /*  repartion available bits in same proportion
-                 */
-                save_bits[gr][ch] *= frameBits[gfc->bitrate_index];
-                save_bits[gr][ch] /= used_bits;
-            }
+            /*  repartion available bits in same proportion
+             */
+            save_bits[gr][ch] *= frameBits[gfc->bitrate_index];
+            save_bits[gr][ch] /= used_bits;
+
             /*  init_outer_loop sets up cod_info, scalefac and xrpow 
              */
             ret = init_outer_loop(cod_info, &scalefac[gr][ch], gfc->is_mpeg1,

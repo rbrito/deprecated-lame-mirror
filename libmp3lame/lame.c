@@ -1032,36 +1032,39 @@ lame_init_params(lame_global_flags * const gfp)
 
     case vbr_mtrh:
 
-        {   static const FLOAT8 dbQmtrh[10] = { -4., -3., -2., -1., 0., 0.5, 1., 1.5, 2., 2.5 };
-            gfc->VBR->mask_adjust = dbQmtrh[gfp->VBR_q];
-        }
-        gfc->sfb21_extra = (gfp->out_samplerate > 44000);
-        
         /*  tonality
          */
         if (gfp->cwlimit <= 0) gfp->cwlimit = 0.454 * gfp->out_samplerate;
 
-        gfc->VBR->quality = Min( 6, Max( 0, gfp->quality ) );
+        gfc->VBR->quality = Min( 9, Max( 0, gfp->quality ) );
              
-        gfp->quality = 1;   // the usual stuff at level 1
-        
         if ( gfc->VBR->quality > 5 ) {
-            gfc->VBR->gain_adjust = (gfp->VBR_q-9)/3;
-            gfc->VBR->smooth = 1;
+            static float const dbQ[10] = { -6,-4.75,-3.5,-2.25,-1,.25,1.5,2.75,4,5.25 };
+            gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
+            gfc->VBR->gain_adjust = 0;
+            gfc->VBR->smooth = 1;   // not finally
         }
         else {
+            static float const dbQ[10] = { -4., -3., -2., -1., 0., 0.5, 1., 1.5, 2., 2.5 };
+            gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
             gfc->VBR->gain_adjust = -1;
             gfc->VBR->smooth = 1;
         }    
+        gfc->sfb21_extra = (gfp->out_samplerate > 44000);
+        
         gfc->ATH->use_adjust = 1;
         
         if (gfp->ATHtype == -1) gfp->ATHtype = 4;
         gfp->allow_diff_short = 1;
-        
+        gfp->quality = 1;   // the usual stuff at level 1
+                
         break;
         
     case vbr_mt:
 
+        {   static const FLOAT8 dbQ[10]={-6.06,-4.4,-2.9,-1.57, -0.4, 0.61, 1.45, 2.13, 2.65, 3.0};
+            gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
+        }
         gfc->VBR->quality = 0;
         gfc->VBR->gain_adjust = 0;
         gfc->VBR->smooth = 2;
@@ -1071,6 +1074,7 @@ lame_init_params(lame_global_flags * const gfp)
 
     case vbr_rh:
 
+        if (gfp->VBR == vbr_rh) /* because of above fall thru */
         {   static const FLOAT8 dbQ[10]={-2.,-1.0,-.66,-.33,0.,0.33,.66,1.0,1.33,1.66};
             static const FLOAT8 dbQns[10]={- 4,- 3,-2,-1,0,0.7,1.4,2.1,2.8,3.5};
             /*static const FLOAT8 atQns[10]={-16,-12,-8,-4,0,  1,  2,  3,  4,  5};*/

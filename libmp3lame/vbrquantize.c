@@ -1407,20 +1407,10 @@ VBR_quantize(lame_global_flags *gfp,
   int digital_silence[2][2];
   FLOAT8 masking_lower_db=0;
   FLOAT8 xr34[2][2][576];
-  // static const FLOAT8 dbQ[10]={-6.0,-5.0,-4.0,-3.0, -2.0, -1.0, -.25, .5, 1.25, 2.0};
-  /* from quantize.c VBR algorithm */
-  /*static const FLOAT8 dbQ[10]=
-   {-5.5,-4.25,-3.0,-2.50, -1.75, -.75, -.5, -.25, .25, .75};*/
-  /* a third dbQ table ?!? */
-  static const FLOAT8 dbQ[10]=
-  {-6.06,-4.4,-2.9,-1.57, -0.4, 0.61, 1.45, 2.13, 2.65, 3.0};
   
   qadjust=0;   /* start with -1 db quality improvement over quantize.c VBR */
 
   l3_side = &gfc->l3_side;
-  //gfc->ATHlower += (4-gfp->VBR_q)*4.0; 
-  //if (gfc->ATHlower < 0) gfc->ATHlower=0;
-
 
   /* now find out: if the frame can be considered analog silent
    *               if each granule can be considered digital silent
@@ -1452,13 +1442,13 @@ VBR_quantize(lame_global_flags *gfp,
           cod_info->sfb_lmax = SBPSY_l;
           cod_info->sfb_smin = SBPSY_s;    /* No sb */
 	  if (cod_info->mixed_block_flag) {
-	    cod_info->sfb_lmax        = 8;
+	    cod_info->sfb_lmax        = gfc->is_mpeg1 ? 8 : 6;
 	    cod_info->sfb_smin        = 3;
 	  }
       }
       
       /* quality setting */
-      masking_lower_db = dbQ[gfp->VBR_q];
+      masking_lower_db = gfc->VBR->mask_adjust;
       if (pe[gr][ch]>750) {
         masking_lower_db -= Min(10,4*(pe[gr][ch]-750.)/750.);
       }
@@ -1568,7 +1558,7 @@ VBR_quantize(lame_global_flags *gfp,
   
           /* Adjust allowed masking based on quality setting */
           if (qadjust!=0 /*|| shortblock*/) {
-            masking_lower_db = dbQ[gfp->VBR_q] + qadjust;
+            masking_lower_db = gfc->VBR->mask_adjust + qadjust;
 
             /*
             if (shortblock) masking_lower_db -= 4;
