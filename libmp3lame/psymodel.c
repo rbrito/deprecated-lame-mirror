@@ -1747,9 +1747,9 @@ psycho_analysis(
 		&& (gfc->useshort_next[0][0] | gfc->useshort_next[0][1]))
 		gfc->useshort_next[0][0] = gfc->useshort_next[0][1]
 		    = SHORT_TYPE;
-	    else if (gfp->use_istereo
-		     && (check_istereo_LR(gfc, 0)
-			 + check_istereo_LR(gfc, gfc->mode_gr-1)))
+	    if (gfp->use_istereo
+		&& (check_istereo_LR(gfc, 0)
+		    + check_istereo_LR(gfc, gfc->mode_gr-1)))
 		gfc->mode_ext_next = MPG_MD_LR_I;
 	}
     }
