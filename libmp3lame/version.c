@@ -31,6 +31,10 @@
 #include <stdio.h>
 #include "version.h"    /* macros of version numbers */
 
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
+
 #define STR(x)  #x
 #define XSTR(x) STR(x)
 

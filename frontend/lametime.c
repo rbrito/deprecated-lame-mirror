@@ -44,6 +44,10 @@
 #include <assert.h>
 #include <time.h>
 
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
+
 double GetCPUTime ( void )
 {
     clock_t  t;

@@ -77,6 +77,11 @@ dnl more automake stuff
 AM_PROG_CC_STDC
 AM_C_PROTOTYPES
 
+AC_CHECK_HEADER(dmalloc.h)
+if test "$ac_cv_header_dmalloc_h" = "yes"; then
+	AM_WITH_DMALLOC
+fi
+
 dnl Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS(fcntl.h \

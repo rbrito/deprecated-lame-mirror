@@ -39,6 +39,10 @@
 #include "VbrTag.h"
 #include	<assert.h>
 
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
+
 
 #ifdef _DEBUG
 /*  #define DEBUG_VBRTAG */

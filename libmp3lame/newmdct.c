@@ -36,6 +36,10 @@
 #include "l3side.h"
 #include "newmdct.h"
 
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
+
 #define SCALE (32768.0/ 2.384e-06)
 
 #ifndef USE_GOGO_SUBBAND

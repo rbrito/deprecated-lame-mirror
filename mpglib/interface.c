@@ -22,6 +22,10 @@
 	#include "layer2.h"
 #endif
 
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
+
 
 BOOL InitMP3( PMPSTR mp) 
 {

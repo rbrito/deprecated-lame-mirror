@@ -30,6 +30,10 @@
 #include "gpkplotting.h"
 #include "string.h"
 
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
+
 static gint num_plotwindows = 0;
 static gint max_plotwindows = 10;
 static GdkPixmap *pixmaps[10];

@@ -17,6 +17,10 @@
 #include "dct64_i386.h"
 #include "tabinit.h"
 
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
+
 static void dct64_1(real *out0,real *out1,real *b1,real *b2,real *samples)
 {
 

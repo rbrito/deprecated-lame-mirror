@@ -45,6 +45,10 @@
 #include "util.h"
 #include "bitstream.h"
 
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
+
 
 static const char *const  genre_names [] = {
     /*

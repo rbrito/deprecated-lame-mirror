@@ -19,6 +19,10 @@
 #include "lame-analysis.h"
 #include "decode_i386.h"
 
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
+
 #define MPEG1
 
 

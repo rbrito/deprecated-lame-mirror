@@ -39,6 +39,10 @@
 #include "main.h"
 #include "get_audio.h"
 
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
+
 /************************************************************************
 *
 * license

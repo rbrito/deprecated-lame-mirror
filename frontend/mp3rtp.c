@@ -27,6 +27,10 @@
 #include "get_audio.h"
 #include "rtp.h"
 
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
+
 #define MAX_NAME_SIZE   2048  /* current value of Linux */
 
 /*

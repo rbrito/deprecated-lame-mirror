@@ -133,6 +133,9 @@
 /* Define if compiler has function prototypes */
 #undef PROTOTYPES
 
+/* Define if using the dmalloc debugging malloc package */
+#undef WITH_DMALLOC
+
 /* have working GTK */
 #undef HAVE_GTK
 

@@ -48,6 +48,10 @@
 
 #include "brhist.h"
 
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
+
 /* Structure holding all data related to the Console I/O 
  * may be this should be a more global frontend structure. So it
  * makes sense to print all files instead with

@@ -30,6 +30,10 @@
 #include "dct64_i386.h"
 #include "tabinit.h"
 
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
+
 
  /* old WRITE_SAMPLE */
 #define WRITE_SAMPLE(samples,sum,clip) \

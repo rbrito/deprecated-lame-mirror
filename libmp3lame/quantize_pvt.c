@@ -34,6 +34,10 @@
 #include "reservoir.h"
 #include "quantize_pvt.h"
 
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
+
 
 #define NSATHSCALE 100 // Assuming dynamic range=96dB, this value should be 92
 

@@ -15,6 +15,10 @@
 #include "interface.h"
 #include "lame.h"
 
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
+
 
 MPSTR           mp;
 plotting_data*  mpg123_pinfo = NULL;

@@ -38,6 +38,9 @@
 #include "bitstream.h"
 #include "VbrTag.h"
 
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
 
 /************************************************************************
 *

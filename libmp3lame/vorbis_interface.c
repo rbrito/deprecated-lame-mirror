@@ -15,6 +15,10 @@
 #include "lame.h"
 //#include "util.h"
 
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
+
 short int convbuffer[4096]; /* take 8k out of the data segment, not the stack */
 int convsize;
 

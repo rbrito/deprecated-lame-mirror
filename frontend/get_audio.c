@@ -43,6 +43,10 @@
 #include "timestatus.h"
 #include "lametime.h"
 
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
+
 
 /* global data for get_audio.c. */
 int count_samples_carefully;

@@ -31,6 +31,10 @@
 #include "util.h"
 #include "reservoir.h"
 
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
+
 /*
   ResvFrameBegin:
   Called (repeatedly) at the beginning of a frame. Updates the maximum

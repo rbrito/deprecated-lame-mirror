@@ -53,6 +53,10 @@
 #include <console.h>
 #endif
 
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
+
 
 /* GLOBAL VARIABLES.  set by parse_args() */
 /* we need to clean this up */

@@ -18,6 +18,11 @@
 #include "lametime.h"
 
 #include "main.h"
+
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
+
 /* GLOBAL VARIABLES.  set by parse_args() */
 /* we need to clean this up */
 sound_file_format input_format;   

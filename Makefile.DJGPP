@@ -19,7 +19,7 @@
 # generic defaults. OS specific options go in versious sections below
 PGM = lame
 CC = gcc
-CC_OPTS =  -O
+CC_OPTS =  -O -Iinclude -I. -Impglib -Ilibmp3lame -Ifrontend
 SNDLIB = -DLAMESNDFILE
 LIBSNDFILE =  
 LIBS = -lm 

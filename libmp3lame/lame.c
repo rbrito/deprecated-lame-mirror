@@ -46,6 +46,10 @@
 #include "asmstuff.h"
 #endif
 
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
+
 
 static void
 lame_init_params_ppflt_lowpass(FLOAT8 amp_lowpass[32], FLOAT lowpass1,

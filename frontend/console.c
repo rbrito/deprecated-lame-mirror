@@ -11,6 +11,9 @@
 # include <termcap.h>
 #endif
 
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
 
 #define CLASS_ID           0x434F4E53
 #define REPORT_BUFF_SIZE   1024

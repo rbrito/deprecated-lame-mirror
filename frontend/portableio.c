@@ -60,6 +60,10 @@
 #endif
 #include	"portableio.h"
 
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
+
 /****************************************************************
  * Big/little-endian independent I/O routines.
  ****************************************************************/

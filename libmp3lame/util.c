@@ -37,6 +37,10 @@
 #include <stdarg.h>
 #endif
 
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
+
 /***********************************************************************
 *
 *  Global Function Definitions

@@ -41,6 +41,10 @@
 #include "get_audio.h"
 #include "gtkanal.h"
 
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
+
 plotting_data *pinfo;
 plotting_data *pplot;
 plotting_data Pinfo[NUMPINFO];

@@ -21,6 +21,10 @@
 #include "l2tables.h"
 #include "decode_i386.h"
 
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
+
 static int grp_3tab[32 * 3] = { 0, };   /* used: 27 */
 static int grp_5tab[128 * 3] = { 0, };  /* used: 125 */
 static int grp_9tab[1024 * 3] = { 0, }; /* used: 729 */

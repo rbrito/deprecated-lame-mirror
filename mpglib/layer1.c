@@ -22,6 +22,10 @@
 #include "common.h"
 #include "decode_i386.h"
 
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
+
 void I_step_one(unsigned int balloc[], unsigned int scale_index[2][SBLIMIT],struct frame *fr)
 {
   unsigned int *ba=balloc;

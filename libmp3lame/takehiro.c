@@ -33,6 +33,10 @@
 #include "tables.h"
 #include "quantize_pvt.h"
 
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
+
 static const struct
 {
     const int region0_count;

@@ -36,7 +36,9 @@
 #include "quantize_pvt.h"
 #include "lame-analysis.h"
 
-
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
 
 
 /************************************************************************

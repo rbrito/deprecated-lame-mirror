@@ -59,6 +59,10 @@
 # include "brhist.h"
 #endif
 
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
+
 typedef struct {
     double  start_time;			  // start time of converting [s]
     double  elapsed_time;		  // current time - start time [s]
@@ -241,6 +245,10 @@ void decoder_progress_finish ( const lame_global_flags* const gfp )
 #include "timestatus.h"
 #include "lametime.h"
 #include "main.h"
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
+
 
 #if defined(CLOCKS_PER_SEC)
 /* ANSI/ISO systems */

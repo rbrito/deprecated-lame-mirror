@@ -9,7 +9,6 @@ EXTRA_DIST = \
 	API HACKING \
 	INSTALL.configure \
 	LICENSE \
-	Lame.vbs \
 	Makefile.B32 \
 	Makefile.DJGPP \
 	Makefile.MSVC \
@@ -18,12 +17,9 @@ EXTRA_DIST = \
 	README.DJGPP \
 	STYLEGUIDE \
 	USAGE \
-	auenc \
 	configMS.h \
 	lame.bat \
 	lame.spec.in \
-	lame4dos.bat \
-	mlame \
 	testcase.mp3 \
 	testcase.wav
 

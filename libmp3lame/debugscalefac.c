@@ -6,6 +6,10 @@
 # include <configMS.h>
 #endif
 
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
+
 {
 /*******************************************************************
 

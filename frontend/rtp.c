@@ -16,6 +16,10 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
+
 struct rtpbits {
     int     sequence:16;     /* sequence number: random */
     int     pt:7;            /* payload type: 14 for MPEG audio */

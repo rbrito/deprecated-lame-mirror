@@ -35,6 +35,10 @@
 #include "quantize_pvt.h"
 #include "version.h"
 
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
+
 /* This is the scfsi_band table from 2.4.2.7 of the IS */
 const int scfsi_band[5] = { 0, 6, 11, 16, 21 };
 

@@ -5,6 +5,10 @@
 
 #include "resample.h"
 
+#ifdef WITH_DMALLOC
+#include <dmalloc.h>
+#endif
+
 /* FIR resampling */
 
 double  sinpi ( double x )
