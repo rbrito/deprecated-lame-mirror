@@ -944,36 +944,6 @@ static inline FLOAT NS_INTERP(FLOAT x, FLOAT y, FLOAT r)
 
 
 
-static void nsPsy2dataRead(
-    FILE *fp,
-    FLOAT *eb2,
-    FLOAT *eb,
-    int chn,
-    int npart_l
-    )
-{
-    int b;
-    for(;;) {
-	static const char chname[] = {'L','R','M','S'};
-	char c;
-
-	fscanf(fp, "%c",&c);
-	for (b=0; b < npart_l; b++) {
-	    double e;
-	    fscanf(fp, "%lf",&e);
-	    eb2[b] = e;
-	}
-
-	if (feof(fp)) abort();
-	if (c == chname[chn]) break;
-	abort();
-    }
-
-    eb2[62] = eb2[61];
-    for (b=0; b < npart_l; b++ )
-	eb2[b] = eb2[b] * eb[b];
-}
-
 static FLOAT
 pecalc_s(
     lame_internal_flags *gfc,
@@ -1408,9 +1378,7 @@ L3psycho_anal_ns(
 	if (gfp->analysis)
 	    memcpy(gfc->energy_save[gr][chn], fftenergy, sizeof(fftenergy));
 #endif
-	if (gfc->nsPsy.pass1fp)
-	    nsPsy2dataRead(gfc->nsPsy.pass1fp, eb2, eb, chn, gfc->npart_l);
-	else {
+	{
 	    FLOAT m,a;
 	    a = avg[0] + avg[1];
 	    if (a != 0.0) {

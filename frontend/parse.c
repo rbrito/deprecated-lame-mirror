@@ -1203,21 +1203,6 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                       lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 20));
                     }
                 
-                T_ELIF ("nspsytune2")
-		    {
-		      FILE *fp = fopen( nextArg, "r" );
-		      if (!fp) {
-			  perror("nspsytune2 : error opening 1st pass output\n");
-			  abort();
-		      }
-		      lame_set_exp_nspsytune2_pointer(gfp,0,fp);
-		    }
-		  /* nspsytune2 implies nspsytune */
-                    argUsed=1;
-                    lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
-                    lame_set_experimentalZ(gfp,1);
-                    lame_set_experimentalX(gfp,1);
-                
                 /* some more GNU-ish options could be added
                  * brief         => few messages on screen (name, status report)
                  * o/output file => specifies output filename

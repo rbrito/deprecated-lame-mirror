@@ -605,11 +605,6 @@ lame_init_params(lame_global_flags * const gfp)
 
     gfc->Class_ID = LAME_ID;
 
-    if (gfp->exp_nspsytune2.pointer[0])
-	gfc->nsPsy.pass1fp = gfp->exp_nspsytune2.pointer[0];
-    else
-	gfc->nsPsy.pass1fp = NULL;
-
     assert( gfp->VBR_q <= 9 );
     assert( gfp->VBR_q >= 0 );
 
@@ -1438,11 +1433,6 @@ lame_close(lame_global_flags * gfp)
 
     if (gfc->Class_ID != LAME_ID)
         return -3;
-
-    if (gfp->exp_nspsytune2.pointer[0]) {
-	fclose((FILE *)gfp->exp_nspsytune2.pointer[0]);
-	gfp->exp_nspsytune2.pointer[0] = NULL;
-    }
 
     gfc->Class_ID = 0;
 
