@@ -968,12 +968,11 @@ scale_bitcount(gr_info * const gi)
     const char *tab;
 
     /* maximum values */
+    tab = scale_long;
     if (gi->block_type == SHORT_TYPE) {
 	tab = scale_short;
 	if (gi->mixed_block_flag)
 	    tab = scale_mixed;
-    } else {
-	tab = scale_long;
     }
 
     s1 = s2 = 0;
@@ -1011,7 +1010,7 @@ scale_bitcount(gr_info * const gi)
  * "Audio Decoding Layer III"
  ************************************************************************/
 /* table of largest scalefactor values for MPEG2 */
-static const int max_range_sfac_tab[6][4] = {
+static const char max_range_sfac_tab[6][4] = {
     { 4, 4, 3, 3}, { 4, 4, 3, 0}, { 3, 2, 0, 0},
     { 4, 5, 5, 0}, { 3, 3, 3, 0}, { 2, 2, 0, 0}
 };
