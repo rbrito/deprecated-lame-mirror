@@ -252,10 +252,6 @@ SOURCE=..\reservoir.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\sqrttab.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\tables.c
 # End Source File
 # Begin Source File
@@ -301,10 +297,6 @@ SOURCE=..\version.c
 # Begin Source File
 
 SOURCE=..\version.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\wavheader.h
 # End Source File
 # End Target
 # End Project
