@@ -433,8 +433,6 @@ void lame_parse_args(int argc, char **argv)
 	    gf.brate = 96; 
 	    gf.highpassfreq=30;
 	    gf.highpasswidth=0;
-	    gf.lowpassfreq=15000;
-	    gf.lowpasswidth=0;
 	    gf.VBR_q=4;
 	    gf.VBR_min_bitrate_kbps=32;
 	    gf.VBR_max_bitrate_kbps=192;
@@ -448,8 +446,6 @@ void lame_parse_args(int argc, char **argv)
 	    gf.brate = 128; 
 	    gf.highpassfreq=15;
 	    gf.highpasswidth=15;
-	    gf.lowpassfreq=18000;
-	    gf.lowpasswidth=2000;
 	    gf.VBR_q=4;
 	    gf.VBR_min_bitrate_kbps=32;
 	    gf.VBR_max_bitrate_kbps=192;
@@ -462,8 +458,6 @@ void lame_parse_args(int argc, char **argv)
 	    gf.brate = 160; 
 	    gf.highpassfreq=15;
 	    gf.highpasswidth=15;
-	    gf.lowpassfreq=20000;
-	    gf.lowpasswidth=3000;
 	    gf.VBR_q=3;
 	    gf.VBR_min_bitrate_kbps=32;
 	    gf.VBR_max_bitrate_kbps=224;
@@ -477,9 +471,6 @@ void lame_parse_args(int argc, char **argv)
 	    gf.VBR_q=2;
 	    gf.VBR_min_bitrate_kbps=80;
 	    gf.VBR_max_bitrate_kbps=256;
-	    gf.sfb21=0;  
-	    gf.lowpassfreq=-1;
-	    gf.highpassfreq=-1;
 	    gf.mode = MPG_MD_STEREO; 
 	    gf.mode_fixed = 1; 
 	    gf.quality = 2;
@@ -490,9 +481,6 @@ void lame_parse_args(int argc, char **argv)
 	    gf.VBR_q=0;
 	    gf.VBR_min_bitrate_kbps=112;
 	    gf.VBR_max_bitrate_kbps=320;
-	    gf.sfb21=0;  
-	    gf.lowpassfreq=-1;
-	    gf.highpassfreq=-1;
 	    gf.mode = MPG_MD_STEREO; 
 	    gf.mode_fixed = 1; 
 	    gf.quality = 2; /* should be 0, but does not work now */
@@ -604,7 +592,6 @@ void lame_parse_args(int argc, char **argv)
 	  gf.quality = 2;
 	  break;
 	case 'k': 
-	  gf.sfb21=0;  
 	  gf.lowpassfreq=-1;
 	  gf.highpassfreq=-1;
 	  break;

@@ -167,12 +167,17 @@ void lame_init_params(void)
   if (gf.brate >= 320) gf.VBR=0;  /* dont bother with VBR at 320kbs */
   compression_ratio = gf.resamplerate*16*gf.stereo/(1000.0*gf.brate);
 
-  /* if the user did not specify a large VBR_min_bitrate (=brate),
-   * compression_ratio not well defined.  take a guess: */
+
+  /* for VBR, take a guess at the compression_ratio */
+  /* VBR_q           compression       like  
+     0                4.4             320kbs
+     1                5.4             256kbs
+     3                7.4             192kbs
+     4                8.8             160kbs
+     6                10.4            128kbs
+  */
   if (gf.VBR && compression_ratio>11) {
-    compression_ratio = 11.025;               /* like 44kHz/64kbs per channel */
-    if (gf.VBR_q <= 4) compression_ratio=8.82;   /* like 44kHz/80kbs per channel */
-    if (gf.VBR_q <= 3) compression_ratio=7.35;   /* like 44kHz/96kbs per channel */
+    compression_ratio = 4.4 + gf.VBR_q;
   }
 
 
@@ -184,42 +189,70 @@ void lame_init_params(void)
     }
   }
 
+
+
   /****************************************************************/
   /* if a filter has not been enabled, see if we should add one: */
   /****************************************************************/
   if (gf.lowpassfreq == 0) {
-    /* Should we disable the scalefactor band 21 cutoff? 
-     * FhG does this for bps <= 128kbs, so we will too.  
-     * This amounds to a 16kHz low-pass filter.  If that offends you, you
-     * probably should not be encoding at 128kbs!
-     * There is no ratio[21] or xfsf[21], so when these coefficients are
-     * included they are just quantized as is.  mt 5/99
-     */
-    /* disable sfb21 cutoff for low amounts of compression */
-    if (compression_ratio<9.0) gf.sfb21=0;
+    /* If the user has not selected their own filter, add a lowpass
+     * filter based on the compression ratio.  Formula based on 
+          44.1   /160    4.4x
+          44.1   /128    5.5x      keep all bands
+          44.1   /96kbs  7.3x      keep band 28
+          44.1   /80kbs  8.8x      keep band 25
+          44.1khz/64kbs  11x       keep band 21  22?
+
+	  16khz/24kbs  10.7x       keep band 21
+	  22kHz/32kbs  11x         keep band ?
+	  22kHz/24kbs  14.7x       keep band 16
+          16    16     16x         keep band 14
+    */
 
 
     /* Should we use some lowpass filters? */    
-    if (!gf.VBR && (gf.mode_gr==1)) {
-      gf.lowpass2 = .70 + .041*(10.7-compression_ratio);
-
-      gf.lowpass2 = .70;
-      gf.lowpass1 = gf.lowpass2;
+    gf.lowpass_band = floor(.5 -18*log(compression_ratio/16.0)+14);
+    if (gf.lowpass_band < 31) {
+      gf.lowpass1 = (gf.lowpass_band+1-.75)/31.0;
+      gf.lowpass2 = (gf.lowpass_band+1+.75)/31.0;
+      //	printf("keeping band = %i \n",gf.lowpass_band);
     }
-
-    /*    44.1khz/64kbs  11x  band 22+
-	  16khz/24kbs  10.7x  band 22+
-	  22kHz/24kbs  14.7   band 17+
-          16    16     16x    band 15+
-    */
-
   }
 
 
-    
 
-
+  /****************************************************************/
   /* apply user driven filters*/
+  /****************************************************************/
+  /* polyphase filter bank filter */
+  if (gf.filter_type==0) {
+    FLOAT8 freq;
+    int band;
+    if ( gf.lowpassfreq > 0 ) {
+      freq=(2.0*(FLOAT8)gf.lowpassfreq/gf.resamplerate);
+      band = floor(freq*31 + .5);
+      gf.lowpass_band= band - 1;
+      if (gf.lowpass_band < 31) {
+	gf.lowpass1 = (band-.75)/31.0;
+	gf.lowpass2 = Min(1.0,(band+.75)/31.0);
+      }
+    }
+    if ( gf.highpassfreq > 0 ) {
+      /* note: for highpass filtering, keep the band which contains the
+	 given highpass frequency */
+      freq=(2.0*(FLOAT8)gf.highpassfreq/gf.resamplerate);
+      band=floor(freq*31 +.5)-1;
+      if (band >= 0 ) {
+	gf.highpass_band= band + 1;
+	gf.highpass1 = Max(0.0,(band-.75)/31.0);
+	gf.highpass2 = (band+.75)/31.0;
+	printf("keeping band = %i \n",gf.highpass_band);
+      }
+    }
+  }
+
+  /* FIR filter.  not yet coded */
+  if (gf.filter_type==1) {  
   if ( gf.highpassfreq > 0 ) {
     gf.highpass1 = 2.0*gf.highpassfreq/gf.resamplerate; /* will always be >=0 */
     if ( gf.highpasswidth >= 0 ) {
@@ -249,12 +282,9 @@ void lame_init_params(void)
     gf.lowpass1 = Min( 1, gf.lowpass1 );
     gf.lowpass2 = Min( 1, gf.lowpass2 );
   }
+  }
 
   
-  /* dont use cutoff filter and lowpass filter */
-  if ( gf.lowpass1>0 ) gf.sfb21 = 0;
-
-
 
   info->emphasis = gf.emphasis;
   info->copyright = gf.copyright;
@@ -443,11 +473,11 @@ void lame_print_config(void)
 	    (int)in_samplerate,(int)out_samplerate);
   }
   if (gf.highpass2>0.0)
-    fprintf(stderr, "Using highpass filter with passband: %.0f Hz -  %.0f Hz\n",
-	    gf.highpass2*out_samplerate*500, 
-	    gf.highpass1*out_samplerate*500);
+    fprintf(stderr, "Using polyphase highpass filter, passband: %.0f Hz -  %.0f Hz\n",
+	    gf.highpass1*out_samplerate*500, 
+	    gf.highpass2*out_samplerate*500);
   if (gf.lowpass1>0.0)
-    fprintf(stderr, "Using lowpass filter with passband:  %.0f Hz - %.0f Hz\n",
+    fprintf(stderr, "Using polyphase lowpass filter,  passband:  %.0f Hz - %.0f Hz\n",
 	    gf.lowpass1*out_samplerate*500, 
 	    gf.lowpass2*out_samplerate*500);
   if (gf.sfb21) {
@@ -688,9 +718,8 @@ int lame_encode_frame(short int inbuf_l[],short int inbuf_r[],int mf_size,char *
   /* polyphase filtering / mdct */
   mdct_sub48(inbuf[0], inbuf[1], xr, &l3_side);
 
-  /* lowpass MDCT filtering */
-  if (gf.sfb21 || (gf.filter_type==2 && gf.lowpass1>0) || (gf.filter_type==2 && gf.highpass2>0)) 
-    filterMDCT(xr, &l3_side);
+  /* lowpass MDCT filtering (obsolete)*/
+  if (gf.sfb21) filterMDCT(xr, &l3_side);
 
   if (check_ms_stereo) {
     /* make sure block type is the same in each channel */
@@ -1104,12 +1133,14 @@ lame_global_flags * lame_init(void)
   gf.lowpass2=0;
   gf.highpass1=0;
   gf.highpass2=0;
+  gf.lowpass_band=31;
+  gf.highpass_band=0;
 
   gf.no_short_blocks=0;
   gf.resample_ratio=1;
   gf.padding=2;
   gf.swapbytes=0;
-  gf.sfb21=1;
+  gf.sfb21=0;
   gf.silent=0;
   gf.totalframes=0;
   gf.VBR=0;

@@ -119,9 +119,14 @@ typedef struct  {
   int VBR_max_bitrate;            /* max bitrate index */
   float resample_ratio;           /* input_samp_rate/output_samp_rate */
 
+  /* for FIR filter (filter_type=1).  A value of 0 = disabled */
   float lowpass1,lowpass2;        /* normalized frequency bounds of passband */
   float highpass1,highpass2;      /* normalized frequency bounds of passband */
-                                  /* for the above, 0 = disabled */
+                                  
+  /* polyphase filter (filter_type=0)  */
+  int lowpass_band;               /* remove bands > lowpass_band.  31=disabled */
+  int highpass_band;              /* remove bands < highpass_band.  0=disabled */
+
 
 
   int filter_type;          /* 0=polyphase filter, 1= FIR filter 2=MDCT filter(bad)*/
