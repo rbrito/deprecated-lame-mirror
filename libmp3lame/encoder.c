@@ -104,7 +104,8 @@ adjust_ATH( lame_global_flags* const  gfp,
                                 /* user tuning of ATH adjustment region */
     max_pow_alt = max_pow;
     max_pow *= gfc->athaa_sensitivity_p;
-	max_pow_alt *= pow( 10.0, gfc->presetTune.athadjust_safe_athaasensitivity / -10.0 );
+    if (gfc->presetTune.use)
+        max_pow_alt *= pow( 10.0, gfc->presetTune.athadjust_safe_athaasensitivity / -10.0 );
 
     /*  adjust ATH depending on range of maximum value
      */
@@ -160,20 +161,24 @@ adjust_ATH( lame_global_flags* const  gfp,
         if( max_pow > 0.03125) { /* ((1 - 0.000625)/ 31.98) from curve below */
             if( gfc->ATH->adjust >= 1.0) {
                 gfc->ATH->adjust = 1.0;
-				if ( max_pow_alt > gfc->presetTune.athadjust_safe_noiseshaping_thre)
-					gfc->presetTune.athadjust_safe_noiseshaping = 1;
-				else
-					gfc->presetTune.athadjust_safe_noiseshaping = 0;
+                if (gfc->presetTune.use) {
+		        if (max_pow_alt > gfc->presetTune.athadjust_safe_noiseshaping_thre)
+			      gfc->presetTune.athadjust_safe_noiseshaping = 1;
+		        else
+			      gfc->presetTune.athadjust_safe_noiseshaping = 0;
+                }
             } else {
                                 /* preceding frame has lower ATH adjust; */
                                 /* ascend only to the preceding adjust_limit */
                                 /* in case there is leading low volume */
                 if( gfc->ATH->adjust < gfc->ATH->adjust_limit) {
                     gfc->ATH->adjust = gfc->ATH->adjust_limit;
-				    if ( max_pow_alt > gfc->presetTune.athadjust_safe_noiseshaping_thre)
-						gfc->presetTune.athadjust_safe_noiseshaping = 1;
-				    else
-						gfc->presetTune.athadjust_safe_noiseshaping = 0;
+                    if (gfc->presetTune.use) {
+                        if (max_pow_alt > gfc->presetTune.athadjust_safe_noiseshaping_thre)
+                            gfc->presetTune.athadjust_safe_noiseshaping = 1;
+                        else
+                            gfc->presetTune.athadjust_safe_noiseshaping = 0;
+                    }
                 }
             }
             gfc->ATH->adjust_limit = 1.0;
