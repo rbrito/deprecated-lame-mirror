@@ -805,7 +805,9 @@ outer_loop (
 	    age = 0;
 
 	/* stopping criteria */
-	if (--age > 0 && cod_info_w.global_gain != 256)
+	if (--age > 0 && cod_info_w.global_gain != 256
+	    && (cod_info_w.psy_lmax != SBMAX_l
+		|| distort[SBMAX_l-1] > best_noise_info.max_noise))
 	    continue;
 
 	/* seems we cannot get a better combination.
