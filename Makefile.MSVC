@@ -1,4 +1,4 @@
-# Makefile.MSVC: MSVC Makefile for LAME 3.81 (alpha1)
+# Makefile.MSVC: MSVC Makefile for LAME 3.87
 
 PGM = lame
 
@@ -27,6 +27,15 @@ CC_OPTS = /nologo /DNDEBUG /Qunroll /O2 /G5AFs /QaxM /Qipo_obj /QIfist-
 LN_OPTS = /nologo
 
 
+SNDLIB = /DLAMESNDFILE
+LIBSNDFILE =
+LIBS =
+MAKEDEP =
+TIMER_SWITCH =
+BRHIST_SWITCH = /DBRHIST /DNOTERMCAP
+LIBTERMCAP =
+
+
 #== FRAME ANALYZER SUPPORT ====================================================
 # assuming you have "glib-dev" and "gtk+-dev" installed
 # and the system DLLs "glib-1.3.dll", "gdk-1.3.dll" and "gtk-1.3.dll"
@@ -36,25 +45,16 @@ LN_OPTS = /nologo
 # you need the above mentioned libraries 
 # and to uncomment the following lines
 #
-#GTK = /DHAVEGTK         \
-#      -I../src/glib     \
-#      -I../src/gtk+     \
-#      -I../src/gtk+/gtk \
-#      -I../src/gtk+/gdk
-#GTKLIBS = /LIBPATH:../src/gtk+/gtk \
-#          /LIBPATH:../src/gtk+/gdk \
-#		   /LIBPATH:../src/glib     \
-#		   glib-1.3.lib gdk-1.3.lib gtk-1.3.lib
+GTK = /DHAVEGTK         \
+      -I../src/glib     \
+      -I../src/gtk+     \
+      -I../src/gtk+/gtk \
+      -I../src/gtk+/gdk
+GTKLIBS = /LIBPATH:../src/gtk+/gtk \
+          /LIBPATH:../src/gtk+/gdk \
+          /LIBPATH:../src/glib     \
+          glib-1.3.lib gdk-1.3.lib gtk-1.3.lib
 #==================================================== FRAME ANALYZER SUPPORT ==
-
-
-SNDLIB = /DLAMESNDFILE
-LIBSNDFILE =
-LIBS =
-MAKEDEP =
-TIMER_SWITCH =
-BRHIST_SWITCH = /DBRHIST /DNOTERMCAP
-LIBTERMCAP =
 
 
 #== VORBIS SUPPORT ============================================================
@@ -66,66 +66,107 @@ LIBTERMCAP =
 #============================================================ VORBIS SUPPORT ==
 
 
-CPP_OPTS = /DTAKEHIRO_IEEE754_HACK /DHAVEMPGLIB /DUSE_LAYER_1 /DUSE_LAYER_2 /DRH_AMP /DRH_VALIDATE_MS
+#== MPG123 DECODING ===========================================================
+#
+#	uncomment the following if you want decoding support
+#
+CPP_OPTS = $(CPP_OPTS) /DHAVEMPGLIB /DUSE_LAYER_1 /DUSE_LAYER_2
+#=========================================================== MPG123 DECODING ==
+
+
+#== Takehiro's IEEE hack ======================================================
+#
+#	uncomment the following to enable Takehiro's IEEE hack
+#
+CPP_OPTS = $(CPP_OPTS) /DTAKEHIRO_IEEE754_HACK
+#====================================================== Takehiro's IEEE hack ==
+
+
+#== Robert's alternate code ===================================================
+#
+#	uncomment the following to enable some alternate code
+#
+CPP_OPTS = $(CPP_OPTS) /DRH_AMP /DRH_VALIDATE_MS
+#=================================================== Robert's alternate code ==
+
+
 
 CC_SWITCHES = $(CC_OPTS) $(DISTRIB) $(SNDLIB) $(GTK) \
               /DBS_FORMAT=BINARY $(TIMER_SWITCH) $(BRHIST_SWITCH) $(VORBIS)
 LN_SWITCHES = $(LN_OPTS)
 
 c_sources = \
- main.c \
-        gtkanal.c \
-        gpkplotting.c \
- brhist.c \
- bitstream.c \
- encoder.c \
- fft.c \
- get_audio.c \
- id3tag.c \
- ieeefloat.c \
- lame.c \
- lametime.c \
- newmdct.c \
- parse.c \
- portableio.c \
- psymodel.c \
- quantize.c \
- quantize_pvt.c \
- vbrquantize.c \
- reservoir.c \
- tables.c \
- takehiro.c \
- timestatus.c \
- util.c \
- VbrTag.c \
- version.c \
- vorbis_interface.c \
- mpglib/common.c \
- mpglib/dct64_i386.c \
- mpglib/decode_i386.c \
- mpglib/layer1.c \
- mpglib/layer2.c \
- mpglib/layer3.c \
- mpglib/tabinit.c \
- mpglib/interface.c \
- mpglib/main.c 
+ 	main.c \
+ 	gtkanal.c \
+ 	gpkplotting.c \
+ 	brhist.c \
+ 	bitstream.c \
+ 	encoder.c \
+ 	fft.c \
+ 	get_audio.c \
+	id3tag.c \
+ 	ieeefloat.c \
+ 	lame.c \
+ 	lametime.c \
+ 	newmdct.c \
+ 	parse.c \
+ 	portableio.c \
+ 	psymodel.c \
+ 	quantize.c \
+ 	quantize_pvt.c \
+ 	vbrquantize.c \
+ 	reservoir.c \
+ 	tables.c \
+ 	takehiro.c \
+ 	timestatus.c \
+ 	util.c \
+ 	VbrTag.c \
+ 	version.c \
+ 	vorbis_interface.c \
+ 	mpglib/common.c \
+ 	mpglib/dct64_i386.c \
+ 	mpglib/decode_i386.c \
+ 	mpglib/layer1.c \
+ 	mpglib/layer2.c \
+ 	mpglib/layer3.c \
+ 	mpglib/tabinit.c \
+ 	mpglib/interface.c \
+ 	mpglib/main.c 
 
 OBJ = $(c_sources:.c=.obj)
 
+
+all : $(PGM).exe
+
+
+
+#== MMX =======================================================================
+#
+#	uncomment the following if you have NASM and a processor with MMX 
+#	NASM: Netwide Assembler
+#
+i386/choose_table.obj: i386/choose_table.nas
+	@echo assemble MMX featured choose table, using NASM the Netwide Assembler
+	@nasmw -f win32 -i i386/ -DWIN32 i386/choose_table.nas -o i386/choose_table.obj
+
+CC_SWITCHES = $(CC_SWITCHES) /DMMX_choose_table
+OBJ = $(OBJ) i386/choose_table.obj
+#======================================================================= MMX ==
+
+
+
 .c.obj:
- @$(CC) $(CC_SWITCHES) $(CPP_OPTS) /c $< /Fo$@
+ 	@$(CC) $(CC_SWITCHES) $(CPP_OPTS) /c $< /Fo$@
 
 $(PGM).exe: $(OBJ) Makefile.MSVC
- @echo $(PGM).exe
- @$(LN) $(LN_SWITCHES) $(OBJ) $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(VORBISLIB) \
-   $(LIBTERMCAP) /out:$(PGM).exe /map:$(PGM).map
+	@echo $(PGM).exe
+ 	@$(LN) $(LN_SWITCHES) $(OBJ) $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(VORBISLIB) \
+   		$(LIBTERMCAP) /out:$(PGM).exe /map:$(PGM).map
 
 clean:
- @-del *.obj
- @-del dll\*.obj
- @-del mpglib\*.obj
+ 	@-del *.obj
+ 	@-del dll\*.obj
+ 	@-del mpglib\*.obj
 
 rebuild: clean $(PGM).exe
-
-
 
