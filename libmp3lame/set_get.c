@@ -1407,29 +1407,32 @@ static int apply_abr_preset(lame_global_flags*  gfp, int preset)
         double nsmsfix;
         double nsbass;
         double scale;
+	int ath_curve;
+	double interch;
     } dm_abr_presets_t;
 
 
     // Switch mappings for ABR mode
     const dm_abr_presets_t abr_switch_map [] = {
-        // kbps Z method  lowpass nsmsfix ns-bass scale
-        {   8,  1,     6,  2000,  0   ,   -3,      0.85 }, //   8 //impossible to use in stereo
-        {  16,  1,     6,  3700,  0   ,   -3,      0.85 }, //  16
-        {  24,  1,     1,  3900,  0   ,   -3,      0.85 }, //  24
-        {  32,  1,     1,  5500,  0   ,   -3,      0.85 }, //  32
-        {  40,  1,     1,  7000,  0   ,   -3,      0.85 }, //  40
-        {  48,  1,     1,  7500,  0   ,   -3,      0.85 }, //  48
-        {  56,  1,     1, 10000,  0   ,   -3,      0.85 }, //  56
-        {  64,  1,     1, 11000,  0   ,   -3,      0.85 }, //  64
-        {  80,  1,     1, 13500,  0   ,   -3,      0.85 }, //  80
-        {  96,  1,     1, 15300,  0   ,   -4,      0.85 }, //  96
-        { 112,  1,     1, 16000,  0   ,   -5,      0.87 }, // 112
-        { 128,  1,     1, 17500,  0   ,   -6,      0.93 }, // 128
-        { 160,  1,     1, 18000,  0   ,   -4,      0.95 }, // 160
-        { 192,  1,     1, 19500,  1.7 ,   -2,      0.97 }, // 192
-        { 224,  1,     1, 20000,  1.25,    0,      0.98 }, // 224
-        { 256,  0,     3, 20500,  0   ,    0,      1.00 }, // 256
-        { 320,  0,     3, 21000,  0   ,    0,      1.00 }  // 320
+        //  scalefac_s   lowpass   ns-bass   athcurve
+        // kbps    qantcomp   nsmsfix    scale    inter-ch
+        {   8,  1,    3,  2000,  0,  -3,  0.93, 11, 0.0012 }, // impossible to use in stereo
+        {  16,  1,    3,  3700,  0,  -3,  0.93, 11, 0.0010 },
+        {  24,  1,    3,  3900,  0,  -3,  0.93, 11, 0.0010 },
+        {  32,  1,    3,  5500,  0,  -3,  0.93, 11, 0.0010 },
+        {  40,  1,    3,  7000,  0,  -3,  0.93, 11, 0.0009 },
+        {  48,  1,    3,  7500,  0,  -3,  0.93, 11, 0.0009 },
+        {  56,  1,    3, 10000,  0,  -3,  0.93, 11, 0.0008 },
+        {  64,  1,    3, 11000,  0,  -3,  0.93, 11, 0.0008 },
+        {  80,  1,    3, 13500,  0,  -3,  0.93, 10, 0.0007 },
+        {  96,  1,    1, 15300,  0,  -4,  0.93,  8, 0.0006 },
+        { 112,  1,    1, 16000,  0,  -5,  0.93,  7, 0.0005 },
+        { 128,  1,    1, 17500,  0,  -6,  0.93,  5, 0.0002 },
+        { 160,  1,    1, 18000,  0,  -4,  0.95,  4, 0.0 },
+        { 192,  1,    1, 19500,1.7,  -2,  0.97,  3, 0.0 },
+        { 224,  1,    1, 20000,1.25,  0,  0.98,  2, 0.0 },
+        { 256,  0,    3, 20500,  0,   0,  1.00,  1, 0.0 },
+        { 320,  0,    3, 21000,  0,   0,  1.00,  0, 0.0 }
     };
 
     // Variables for the ABR stuff
@@ -1498,7 +1501,9 @@ static int apply_abr_preset(lame_global_flags*  gfp, int preset)
     if (abr_switch_map[r].scale != 1)
         (void) lame_set_scale( gfp, abr_switch_map[r].scale );
 
-    lame_set_ATHtype(gfp, 2);
+    lame_set_interChRatio(gfp, abr_switch_map[r].interch);
+    lame_set_ATHtype(gfp, 4);
+    lame_set_ATHcurve(gfp, abr_switch_map[r].ath_curve);
 
     if (actual_bitrate < 160)
 	lame_set_short_threshold(gfp, 4.5, 15.0);
