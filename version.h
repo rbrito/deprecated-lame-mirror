@@ -19,8 +19,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef VERSION_H_INCLUDED
-# define VERSION_H_INCLUDED
+#ifndef LAME_VERSION_H
+#define LAME_VERSION_H
 
 # include <stdio.h>
 
@@ -46,6 +46,6 @@ const char*  get_lame_version   ( void );       /* returns lame version number s
 const char*  get_psy_version    ( void );       /* returns psy model version number string */
 const char*  get_mp3x_version   ( void );       /* returns mp3x version number string */
 
-#endif  /* VERSION_H_INCLUDED */
+#endif  /* LAME_VERSION_H */
 
 /* End of version.h */

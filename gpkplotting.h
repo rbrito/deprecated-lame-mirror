@@ -19,8 +19,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef GTKPLOTTING_H_INCLUDED
-#define GTKPLOTTING_H_INCLUDED
+#ifndef LAME_GPKPLOTTING_H
+#define LAME_GPKPLOTTING_H
 
 #include <gtk/gtk.h>
 

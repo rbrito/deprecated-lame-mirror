@@ -1,3 +1,6 @@
+#ifndef LAME_RTP_H
+#define LAME_RTP_H
+
 #include <sys/socket.h>
 #include <netinet/in.h>
 
@@ -22,3 +25,5 @@ void initrtp(struct rtpheader *foo);
 int sendrtp(int fd, struct sockaddr_in *sSockAddr, struct rtpheader *foo, void *data, int len);
 int makesocket(char *szAddr,unsigned short port,int TTL,struct sockaddr_in *sSockAddr);
 void rtp_output(char *mp3buffer,int mp3size);
+
+#endif

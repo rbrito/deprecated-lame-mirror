@@ -19,8 +19,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef PSYMODEL_H_INCLUDED
-#define PSYMODEL_H_INCLUDED
+#ifndef LAME_PSYMODEL_H
+#define LAME_PSYMODEL_H
 
 #include "l3side.h"
 
@@ -34,4 +34,4 @@ int L3psycho_anal( lame_global_flags *gfp,
 		    FLOAT8 pe[2], FLOAT8 pe_MS[2], 
                     int blocktype_d[2]); 
 
-#endif /* PSYMODEL_H_INCLUDED */
+#endif /* LAME_PSYMODEL_H */

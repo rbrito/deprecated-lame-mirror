@@ -19,8 +19,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef VRBTAG_H_INCLUDED
-#define VRBTAG_H_INCLUDED
+#ifndef LAME_VRBTAG_H
+#define LAME_VRBTAG_H
 #include "lame.h"
 /* -----------------------------------------------------------
  * A Vbr header may be present in the ancillary

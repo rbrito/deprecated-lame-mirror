@@ -18,8 +18,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef ID3TAG_H_
-#define ID3TAG_H_
+#ifndef LAME_ID3TAG_H
+#define LAME_ID3TAG_H
 
 #ifdef ID3TAG_INDEPENDENCE
 #include <stdio.h>

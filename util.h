@@ -19,8 +19,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef UTIL_H_INCLUDED
-#define UTIL_H_INCLUDED
+#ifndef LAME_UTIL_H
+#define LAME_UTIL_H
 
 /***********************************************************************
 *
@@ -423,4 +423,4 @@ extern void lame_errorf(const char *, ...);
 
 int local_strcasecmp ( const char* s1, const char* s2 );
 
-#endif /* UTIL_H_INCLUDED */
+#endif /* LAME_UTIL_H */

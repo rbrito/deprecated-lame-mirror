@@ -19,8 +19,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef QUANTIZE_H_INCLUDED
-#define QUANTIZE_H_INCLUDED
+#ifndef LAME_QUANTIZE_H
+#define LAME_QUANTIZE_H
 
 #include "util.h"
 /*#include "l3side.h"
@@ -72,4 +72,4 @@ int VBR_noise_shaping(
                     int                gr,
                     int                ch);
 
-#endif /* QUANTIZE_H_INCLUDED */
+#endif /* LAME_QUANTIZE_H */

@@ -19,8 +19,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef GTKANAL_H_INCLUDED
-#define GTKANAL_H_INCLUDED
+#ifndef LAME_GTKANAL_H
+#define LAME_GTKANAL_H
 
 #include "lame.h"
 #include "encoder.h"

@@ -1,5 +1,5 @@
-#ifndef IEEE_FLOAT_H__
-#define IEEE_FLOAT_H__
+#ifndef LAME_IEEEFLOAT_H
+#define LAME_IEEEFLOAT_H
 /* Copyright (C) 1988-1991 Apple Computer, Inc.
  * All Rights Reserved.
  *
@@ -46,6 +46,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.3  2000/09/17 04:19:09  cisc
+ * conformed all this-is-included-defines to match 'project_file_name' style
+ *
  * Revision 1.2  2000/06/07 22:56:02  sbellon
  * added support for FPA10 hardware (RISC OS only)
  *

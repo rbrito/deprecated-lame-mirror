@@ -29,8 +29,8 @@
  *        excuse
  */
  
-#ifndef  LAMETYPE_H_DEFINED
-#define LAMETYPE_H_DEFINED
+#ifndef LAME_LAMETYPE_H
+#define LAME_LAMETYPE_H
 
 #include <stdio.h> 
 #include <limits.h>
@@ -401,6 +401,6 @@ typedef struct {
 
 
  
-#endif  /* LAMETYPE_H_DEFINED */
+#endif  /* LAME_LAMETYPE_H */
 
 /* end of lametype.h */

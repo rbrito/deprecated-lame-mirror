@@ -19,11 +19,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef NEWMDCT_H_INCLUDED
-#define NEWMDCT_H_INCLUDED
+#ifndef LAME_NEWMDCT_H
+#define LAME_NEWMDCT_H
 
 void mdct_sub48(lame_global_flags *gfp,short *w0, short *w1,
 	      FLOAT8 mdct_freq[2][2][576],
 	      III_side_info_t *l3_side);
 
-#endif /* NEWMDCT_H_INCLUDED */
+#endif /* LAME_NEWMDCT_H */

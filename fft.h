@@ -19,10 +19,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __FFT_H__
-# define __FFT_H__
+#ifndef LAME_FFT_H
+#define LAME_FFT_H
 
-# include "encoder.h"
+#include "encoder.h"
 
 void fft_long  ( lame_global_flags* gfp, FLOAT x_real     [BLKSIZE  ], int, sample_t ** );
 void fft_short ( lame_global_flags* gfp, FLOAT x_real [3] [BLKSIZE_s], int, sample_t ** );

@@ -19,8 +19,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef L3SIDE_H_INCLUDED
-#define L3SIDE_H_INCLUDED
+#ifndef LAME_L3SIDE_H
+#define LAME_L3SIDE_H
 
 #include "encoder.h"
 #include "machine.h"

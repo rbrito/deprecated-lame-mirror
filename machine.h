@@ -20,8 +20,8 @@
  */
 
 
-#ifndef MACHINE_H_INCLUDED
-#define MACHINE_H_INCLUDED
+#ifndef LAME_MACHINE_H
+#define LAME_MACHINE_H
 
 #include        <stdio.h>
 #include        <string.h>

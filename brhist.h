@@ -20,8 +20,8 @@
  */
 
 
-#ifndef BRHIST_H_INCLUDED
-#define BRHIST_H_INCLUDED
+#ifndef LAME_BRHIST_H
+#define LAME_BRHIST_H
 
 
 #include "lame.h"

@@ -19,8 +19,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef QUANTIZE_PVT_H_INCLUDED
-#define QUANTIZE_PVT_H_INCLUDED
+#ifndef LAME_QUANTIZE_PVT_H
+#define LAME_QUANTIZE_PVT_H
 
 #include "l3side.h"
 #define IXMAX_VAL 8206 /* ix always <= 8191+15.    see count_bits() */
@@ -125,5 +125,5 @@ void huffman_init (lame_internal_flags *gfp );
 
 #define LARGE_BITS 100000
 
-#endif /* QUANTIZE_PVT_H_INCLUDED */
+#endif /* LAME_QUANTIZE_PVT_H */
 

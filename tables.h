@@ -19,8 +19,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef TABLES_H_INCLUDED
-#define TABLES_H_INCLUDED
+#ifndef LAME_TABLES_H
+#define LAME_TABLES_H
 
 #include "machine.h"
 extern const FLOAT8 psy_data [];
@@ -43,4 +43,4 @@ extern const struct huffcodetab ht [HTN];
 extern const char t32l [];
 extern const char t33l [];
 
-#endif /* TABLES_H_INCLUDED */
+#endif /* LAME_TABLES_H */

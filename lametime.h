@@ -19,8 +19,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef LAMETIME_H_INCLUDED
-#define LAMETIME_H_INCLUDED
+#ifndef LAME_LAMETIME_H
+#define LAME_LAMETIME_H
 
 #include "lame.h"
 
@@ -29,5 +29,5 @@ double GetRealTime ( void );
 
 void timestatus_klemm(lame_global_flags *gfp);
 
-#endif /* LAMETIME_H_INCLUDED */
+#endif /* LAME_LAMETIME_H */
                               

@@ -17,8 +17,8 @@
  * along with this program; see the file COPYING.  If not, write to
  * the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-#ifndef LAME_H_INCLUDE
-#define LAME_H_INCLUDE
+#ifndef LAME_LAME_H
+#define LAME_LAME_H
 #include <stdio.h>
 #if defined(__cplusplus)
 extern "C" {

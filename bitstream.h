@@ -19,8 +19,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef BITSTREAM_H
-#define BITSTREAM_H
+#ifndef LAME_BITSTREAM_H
+#define LAME_BITSTREAM_H
 #include "util.h"
 int format_bitstream(lame_global_flags *gfp, int i,
       int              l3_enc[2][2][576],

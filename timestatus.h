@@ -19,8 +19,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef TIMESTATUS_H_INCLUDED
-#define TIMESTATUS_H_INCLUDED
+#ifndef LAME_TIMESTATUS_H
+#define LAME_TIMESTATUS_H
 
 void timestatus ( unsigned long samp_rate, 
                   unsigned long frameNum, 
@@ -34,4 +34,4 @@ void decoder_progress_finish(lame_global_flags *gfp);
 #endif
 
 
-#endif /* TIMESTATUS_H_INCLUDED */
+#endif /* LAME_TIMESTATUS_H */

@@ -20,8 +20,8 @@
  */
 
 
-#ifndef ENCODER_DOT_H
-#define ENCODER_DOT_H
+#ifndef LAME_ENCODER_H
+#define LAME_ENCODER_H
 /***********************************************************************
 *
 *  encoder and decoder delays
