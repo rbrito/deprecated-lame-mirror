@@ -53,10 +53,10 @@ testg: frontend/mp3x$(EXEEXT) $(top_srcdir)/../test/castanets.wav
 	frontend/mp3x$(EXEEXT) -h $(top_srcdir)/../test/castanets.wav
 
 update:
-	CVS_RSH=ssh cvs -z3 -q update -d -A -P || true
+	cd $(top_srcdir) && CVS_RSH=ssh cvs -z3 -q update -dAP || true
 
 diff:
-	CVS_RSH=ssh cvs -z3 diff -u || true
+	cd $(top_srcdir) && CVS_RSH=ssh cvs -z3 diff -u || true
 
 frontend/lame$(EXEEXT):
 	$(MAKE) $(MAKEFLAGS)
