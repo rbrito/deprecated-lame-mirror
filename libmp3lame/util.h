@@ -500,13 +500,13 @@ struct lame_internal_flags {
 int	BitrateIndex(int, int);
 void	disable_FPE(void);
 
-int  lame_encode_mp3_frame (		/* Output */
-    lame_t	gfc,		/* Context */
-    sample_t*           inbuf_l,	/* Input */
-    sample_t*           inbuf_r,	/* Input */
-    unsigned char*      mp3buf, 	/* Output */
-    int                 mp3buf_size);	/* Output */
-
+int	lame_encode_buffer_sample_t(
+    lame_t gfc,
+    sample_t buffer_lr[],
+    int nsamples,
+    unsigned char *mp3buf,
+    const int mp3buf_size
+    );
 /* same as lame_decode1 (look in lame.h), but returns 
    unclipped raw floating-point samples. It is declared
    here, not in lame.h, because it returns LAME's 
