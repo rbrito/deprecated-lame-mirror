@@ -36,11 +36,10 @@ lame -h --abr 128  sample.wav sample.mp3
 VBR is a true variable bitrate mode which bases the number of bits for
 each frame on the measured quantization error relative to the
 estimated allowed masking.  VBR is currently under heavy development.
-Right now it can often result in too much compression.  I do not
-recommend using VBR.  But if you must, you should at least use a
-minimum bitrate of 112 kbps.  This will let LAME increase the bitrate
-for difficult-to-encode frames, but prevent LAME from being too
-aggressive for simple frames:
+It can on occasion result in too much compression, so it should be
+used with a minimum bitrate of 112 kbps.  This will let LAME increase
+the bitrate for difficult-to-encode frames, but prevent LAME from
+being too aggressive for simple frames:
 
 Variable Bitrate (VBR): (use -V n to adjust quality/filesize)
 % lame -h -v -b 112 sample.wav sample.mp3
