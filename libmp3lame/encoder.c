@@ -218,16 +218,12 @@ init_gr_info(
 		int start = gfc->scalefac_band.s[sfb];
 		int end   = gfc->scalefac_band.s[sfb + 1];
 		int window, l;
-		cod_info->width[j] = cod_info->width[j+1] = cod_info->width[j + 2]
-		    = end - start;
-		cod_info->window[j  ] = 0;
-		cod_info->window[j+1] = 1;
-		cod_info->window[j+2] = 2;
-		j += 3;
 		for (window = 0; window < 3; window++) {
-		    for (l = start; l < end; l++) {
+		    for (l = start; l < end; l++)
 			*ix++ = ixwork[3*l+window];
-		    }
+		    cod_info->width [j] = end - start;
+		    cod_info->window[j] = 0;
+		    j++;
 		}
 	    }
 	}
