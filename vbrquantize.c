@@ -663,7 +663,7 @@ VBR_quantize(lame_global_flags *gfp,
   gr_info *cod_info;  
   int ath_over[2][2];
   FLOAT8 masking_lower_db;
-  static const FLOAT8 dbQ[10]={-7.5, -6.0,-4.5,-3.0,-1.5,0,0.3,0.6,1.0,1.5};
+  static const FLOAT8 dbQ[10]={-6.0,-4.5,-3.0,-1.5,0,0.3,0.6,1.0,1.5,2.0};
 
   l3_side = &gfc->l3_side;
   iteration_init(gfp,l3_side,l3_enc);
@@ -756,7 +756,7 @@ VBR_quantize(lame_global_flags *gfp,
   
   getframebits (gfp,&bitsPerFrame, &mean_bits);
   maxbits = ResvFrameBegin(gfp,l3_side, mean_bits, bitsPerFrame);
-  printf("%i bits=%i maxbits=%i index=%i  \n",gfc->frameNum,totbits,maxbits,gfc->bitrate_index);
+  //  printf("%i bits=%i maxbits=%i index=%i  \n",gfc->frameNum,totbits,maxbits,gfc->bitrate_index);
   
 
   for (gr = 0; gr < gfc->mode_gr; gr++)
