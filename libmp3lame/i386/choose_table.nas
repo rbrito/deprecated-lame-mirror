@@ -274,6 +274,7 @@ table_MMX.L_case_1:
 	emms
 	mov	eax, [esp+12] ; *s
 	mov	ecx, [esp+4] ; *ix
+;	mov	edx, [esp+8] ; *end
 	sub	ecx, edx
 	push	ebx
 .lp:
@@ -291,17 +292,17 @@ table_MMX.L_case_1:
 table_MMX.L_case_45:
 	push	dword 7
 	mov	ecx, tableABC+9*8
-	jmp	from3
+	jmp	table.from3
 
 table_MMX.L_case_67:
 	push	dword 10
 	mov	ecx, tableABC
-	jmp	from3
+	jmp	table.from3
 
 table_MMX.L_case_8_15:
 	push	dword 13
 	mov	ecx, tableDEF
-from3:
+table.from3:
 	mov	eax,[esp+8]	;eax = *begin
 ;	mov	edx,[esp+12]	;edx = *end
 
@@ -348,7 +349,7 @@ from3:
 	movd	edx, mm2	; edx = sum
 
 	cmp	edx, ebx
-	jle	.choose3_s1
+	jle	near .choose3_s1
 	mov	edx, ebx
 	inc	eax
 .choose3_s1:
@@ -366,15 +367,15 @@ from3:
 	ret
 
 table_MMX.L_case_2:
-	push	dword 2
+	push	eax	; dword 2
 	mov	ecx,table23
 	movq	mm5,[mul_add23]
-	jmp	from2
+	jmp	near table.from2
 table_MMX.L_case_3:
 	push	dword 5
 	mov	ecx,table56
 	movq	mm5,[mul_add56]
-from2:
+table.from2:
 	mov	eax,[esp+8]	;eax = *begin
 ;	mov	edx,[esp+12]	;edx = *end
 	push	ebx

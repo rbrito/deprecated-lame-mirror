@@ -40,14 +40,14 @@ proc	fht_3DN
 
 	pmov	mm7, [r3]
 
+	loopalign 16
 .do1
 	lea	r3, [r3+16]	;tri += 2;
 	pmov	mm6, [costab+8]
 	lea	r2, [r4+r4*2]		;k3*fsize/2
 	mov	r5, 4		;i = 1*fsize
 
-;	jmp	.do2
-	align 16
+	loopalign 16
 .do2:
 	lea	r1, [r0+r4]		;gi = fi + kx
 	;f
@@ -112,8 +112,7 @@ proc	fht_3DN
 
 	pmov	mm6, [r3+r5]	; this is not aligned address!!
 
-	jmp	.for
-	align 16
+	loopalign 16
 .for:
 ;
 ; mm6 = c1 | s1
@@ -154,9 +153,8 @@ proc	fht_3DN
 
 	sub	r1, r5		;r1 = gi
 	add	r0, r5		;r0 = fi
-;	jmp	.do3
 
-	align 16
+	loopalign 16
 .do3:
 	pmov	mm2, [r0+r4*2] ; fi[k1]
 	pmov	mm4, [r1+r4*2] ; gi[k1]
