@@ -233,6 +233,13 @@ typedef struct  {
                                2 = allow scalefac_select=1  
                              */
 
+  int noise_shaping_amp;    /*  0 = ISO model: amplify all distorted bands
+                                1 = amplify only most distorted band
+                                2 = amplify bands using? 
+                                3 = amplify bands using?
+			     */
+
+  int psymodel;             /* 1 = gpsycho. 0 = none */
   int noise_shaping_stop;   /* 0 = stop at over=0, all scalefacs amplified or
                                    a scalefac has reached max value
                                1 = stop when all scalefacs amplified or        
@@ -240,7 +247,6 @@ typedef struct  {
                                2 = stop when all scalefacs amplified 
 			    */
 
-  int psymodel;             /* 0 = none   1=gpsycho */
   int use_best_huffman;     /* 0 = no.  1=outside loop  2=inside loop(slow) */
 
 

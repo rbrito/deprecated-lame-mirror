@@ -819,6 +819,7 @@ int lame_init_params ( lame_global_flags* const gfp )
 	gfc->psymodel           = 0;
 	gfc->quantization       = 0;
 	gfc->noise_shaping      = 0;
+	gfc->noise_shaping_amp  = 0; 
 	gfc->noise_shaping_stop = 0;
 	gfc->use_best_huffman   = 0;
         break;
@@ -830,6 +831,7 @@ int lame_init_params ( lame_global_flags* const gfp )
 	gfc->psymodel           = 1; /**/
 	gfc->quantization       = 0;
 	gfc->noise_shaping      = 0;
+	gfc->noise_shaping_amp  = 0; 
 	gfc->noise_shaping_stop = 0;
 	gfc->use_best_huffman   = 0;
 	break;
@@ -841,6 +843,7 @@ int lame_init_params ( lame_global_flags* const gfp )
 	gfc->psymodel           = 1;
 	gfc->quantization       = 0;
 	gfc->noise_shaping      = 1; /**/
+	gfc->noise_shaping_amp  = 0; 
 	gfc->noise_shaping_stop = 0;
 	gfc->use_best_huffman   = 0;
 	break;
@@ -852,6 +855,7 @@ int lame_init_params ( lame_global_flags* const gfp )
 	gfc->psymodel           = 1;
 	gfc->quantization       = 1; /**/
 	gfc->noise_shaping      = 1;
+	gfc->noise_shaping_amp  = 0; 
 	gfc->noise_shaping_stop = 0;
 	gfc->use_best_huffman   = 1; /**/
 	break;
@@ -861,6 +865,7 @@ int lame_init_params ( lame_global_flags* const gfp )
 	gfc->psymodel           = 1;
 	gfc->quantization       = 1;
 	gfc->noise_shaping      = 1;
+	gfc->noise_shaping_amp  = 0; 
 	gfc->noise_shaping_stop = 0;
 	gfc->use_best_huffman   = 1;
 	break;
@@ -869,7 +874,8 @@ int lame_init_params ( lame_global_flags* const gfp )
 	gfc->filter_type        = 0;
 	gfc->psymodel           = 1;
 	gfc->quantization       = 1;
-	gfc->noise_shaping      = 2; /**/
+	gfc->noise_shaping      = 1; 
+	gfc->noise_shaping_amp  = 0; 
 	gfc->noise_shaping_stop = 0;
 	gfc->use_best_huffman   = 1;
 	break;
@@ -878,7 +884,8 @@ int lame_init_params ( lame_global_flags* const gfp )
 	gfc->filter_type        = 1; /**/ /* not yet coded */
 	gfc->psymodel           = 1;
 	gfc->quantization       = 1;
-	gfc->noise_shaping      = 3; /**/ /* not yet coded */
+	gfc->noise_shaping      = 2; /**/ /* usually lowers quality */
+	gfc->noise_shaping_amp  = 0; 
 	gfc->noise_shaping_stop = 2; /**/ /* not yet coded */
 	gfc->use_best_huffman   = 2; /**/ /* not yet coded */
 	return -2;

@@ -1297,7 +1297,7 @@ calc_min_bits (
     lame_internal_flags *gfc=gfp->internal_flags;
     int min_bits, min_pe_bits;
     
-    if (((lame_internal_flags*)gfp->internal_flags)->nsPsy.use) return 1;
+    if (gfc->nsPsy.use) return 1;
 
     /*  base amount of minimum bits
      */
