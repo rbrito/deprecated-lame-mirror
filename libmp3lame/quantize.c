@@ -899,7 +899,7 @@ static int outer_loop
                 memcpy (&save_scalefac, scalefac, sizeof(III_scalefac_t));
                 memcpy (&save_cod_info, cod_info, sizeof(save_cod_info) );
                 memcpy ( l3_enc,        l3_enc_w, sizeof(int)*576       );
-                if (gfp->VBR == vbr_rh) {
+                if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh) {
                     /* store for later reuse */
                     memcpy (save_xrpow, xrpow, sizeof(save_xrpow));
                 }
@@ -977,7 +977,8 @@ static int outer_loop
     
     memcpy (cod_info, &save_cod_info, sizeof(save_cod_info) );
     memcpy (scalefac, &save_scalefac, sizeof(III_scalefac_t));
-    if (gfp->VBR == vbr_rh) /* restore for reuse on next try */
+    if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh)
+        /* restore for reuse on next try */
         memcpy (xrpow, save_xrpow, sizeof(save_xrpow));
 
     cod_info->part2_3_length += cod_info->part2_length;
@@ -1445,11 +1446,20 @@ void VBR_iteration_loop
       
             max_bits = calc_max_bits (gfc, frameBits, min_bits);
             
-            if (gfp->VBR == vbr_mtrh) 
-                VBR_noise_shaping2 (gfp, xr[gr][ch], xrpow, &ratio[gr][ch],
-                                    l3_enc[gr][ch], 0 /*digital_silence*/, 
-                                    min_bits, max_bits, &scalefac[gr][ch],
-                                    &l3_xmin[gr][ch], gr, ch );
+            if (gfp->VBR == vbr_mtrh) {
+                int ret = VBR_noise_shaping2 (gfp, xr[gr][ch], xrpow, 
+                                        &ratio[gr][ch], l3_enc[gr][ch], 0, 
+                                        min_bits, max_bits, &scalefac[gr][ch],
+                                        &l3_xmin[gr][ch], gr, ch );
+                if (ret < 0) {
+                    init_outer_loop (cod_info, &scalefac[gr][ch], xr[gr][ch],
+                                     xrpow);
+                    VBR_encode_granule (gfp, cod_info, xr[gr][ch], 
+                                        &l3_xmin[gr][ch], &scalefac[gr][ch],
+                                        xrpow, l3_enc[gr][ch], ch, min_bits,
+                                        max_bits );
+                }
+            } 
             else
                 VBR_encode_granule (gfp, cod_info, xr[gr][ch], &l3_xmin[gr][ch],
                                     &scalefac[gr][ch], xrpow, l3_enc[gr][ch],
@@ -1493,7 +1503,6 @@ void VBR_iteration_loop
     /*  quantize granules which violate bit constraints again
      *  and side channel when in quality=5 reduce_side is used
      */  
-
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         for (ch = 0; ch < gfc->stereo; ch++) {
             cod_info = &l3_side->gr[gr].ch[ch].tt;

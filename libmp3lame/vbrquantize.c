@@ -294,7 +294,9 @@ int scalefac[SBPSY_s][3],int sbg[3])
 
 
 
-
+/*  ???
+        How do the following tables look like for MPEG-2-LSF
+                                                            ??? */
 
 static const int max_range_short[SBPSY_s]=
 {15, 15, 15, 15, 15, 15 ,  7,    7,    7,    7,   7,     7 };
@@ -356,7 +358,7 @@ compute_scalefacs_long(int sf[SBPSY_l],gr_info *cod_info,int scalefac[SBPSY_l])
  *
  ************************************************************************/
 
-static void
+static int
 VBR_quantize_granule(lame_global_flags *gfp,
                 FLOAT8 xr34[576], int l3_enc[576],
 		     III_psy_ratio *ratio,  
@@ -377,19 +379,19 @@ VBR_quantize_granule(lame_global_flags *gfp,
     status=scale_bitcount_lsf(scalefac, cod_info);
 
   if (status!=0) {
-    return;
+    return -1;
   }
   
   /* quantize xr34 */
   cod_info->part2_3_length = count_bits(gfc,l3_enc,xr34,cod_info);
-  if (cod_info->part2_3_length >= LARGE_BITS) return;
+  if (cod_info->part2_3_length >= LARGE_BITS) return -2;
   cod_info->part2_3_length += cod_info->part2_length;
 
 
   if (gfc->use_best_huffman==1) {
     best_huffman_divide(gfc, gr, ch, cod_info, l3_enc);
   }
-  return;
+  return 0;
 }
 
 
@@ -885,14 +887,12 @@ VBR_noise_shaping2 (
     III_scalefac_t vbrsf;
     gr_info *cod_info;  
     FLOAT8 xr34[576];
-    int shortblock;
+    int shortblock, ret, bits, huffbits;
     int vbrmax, best_huffman = gfc->use_best_huffman;
 
     cod_info   = &gfc->l3_side.gr[gr].ch[ch].tt;
     shortblock = (cod_info->block_type == SHORT_TYPE);
-    
-    gfc->use_best_huffman = 0;
-    
+      
     if (shortblock)
         vbrmax = short_block_vbr_sf (gfc, l3_xmin, xr34orig, xr, &vbrsf);  
     else
@@ -907,26 +907,42 @@ VBR_noise_shaping2 (
         long_block_scalefacs (gfc, cod_info, scalefac, &vbrsf, &vbrmax);
         long_block_xr34      (gfc, cod_info, scalefac, xr34orig, xr34);
     } 
-    VBR_quantize_granule (gfp, xr34, l3_enc, ratio, scalefac, gr, ch);
     
-
-    if (cod_info->part2_3_length < minbits) {
-        bin_search_StepSize (gfc, cod_info, minbits-cod_info->part2_length, 
-                             gfc->OldValue[ch], l3_enc, xr34);
-        VBR_quantize_granule (gfp, xr34, l3_enc, ratio, scalefac, gr, ch);
-    }
-    if (cod_info->part2_3_length > maxbits) {
-        int bits =
-        bin_search_StepSize (gfc, cod_info, maxbits-cod_info->part2_length, 
-                             gfc->OldValue[ch], l3_enc, xr34);
-        if (bits > maxbits) 
-            inner_loop (gfc, cod_info, xr34, l3_enc, maxbits);
-        VBR_quantize_granule (gfp, xr34, l3_enc, ratio, scalefac, gr, ch);
-    }
-
-    assert (cod_info->global_gain < 256);
+    gfc->use_best_huffman = 0; /* we will do it later */
+ 
+    ret = VBR_quantize_granule (gfp, xr34, l3_enc, ratio, scalefac, gr, ch);
     
     gfc->use_best_huffman = best_huffman;
+
+    if (ret != 0) /* Houston, we have a problem */
+        return -1;
+
+    if (cod_info->part2_3_length < minbits) {
+        huffbits = minbits - cod_info->part2_length;
+        bits = bin_search_StepSize (gfc, cod_info, huffbits, 
+                                    gfc->OldValue[ch], l3_enc, xr34);
+        gfc->OldValue[ch] = cod_info->global_gain;
+        cod_info->part2_3_length  = bits + cod_info->part2_length;
+    }
+    if (cod_info->part2_3_length > maxbits) {
+        huffbits = maxbits - cod_info->part2_length;
+        bits = bin_search_StepSize (gfc, cod_info, huffbits, 
+                                    gfc->OldValue[ch], l3_enc, xr34);
+        gfc->OldValue[ch] = cod_info->global_gain;
+        cod_info->part2_3_length = bits;
+        if (bits > huffbits) {
+            bits = inner_loop (gfc, cod_info, xr34, l3_enc, huffbits);
+            cod_info->part2_3_length  = bits;
+        }
+        if (bits >= LARGE_BITS) /* Houston, we have a problem */
+            return -1;
+        cod_info->part2_3_length += cod_info->part2_length;
+    }
+
+    if (cod_info->part2_length >= LARGE_BITS) /* Houston, we have a problem */
+        return -1;
+        
+    assert (cod_info->global_gain < 256);
     
     return 0;
 }
