@@ -1532,6 +1532,8 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
 
     /* default = 0 (disabled) */
     gfp->preset_expopts = preset_expopts;
+    gfc->presetTune.attackthre   = 80;
+    gfc->presetTune.attackthre_s = 150;
 
     switch (preset_expopts)
     {
@@ -1542,10 +1544,8 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
           lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); // safejoint
           lame_set_ATHtype(gfp, 2);
 
-          gfc->presetTune.attackthre   = 35;
-          gfc->presetTune.attackthre_s = 150;
           gfc->presetTune.ms_maskadjust = .5;
-		  gfc->presetTune.quantcomp_type_s = 3;
+	  gfc->presetTune.quantcomp_type_s = 3;
           gfc->presetTune.quantcomp_alt_type = 3;
           gfc->presetTune.athadjust_switch_level = 2; // Always switch
 
@@ -1559,12 +1559,12 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
              gfc->presetTune.quantcomp_type_s = 4;
              gfc->presetTune.quantcomp_alt_type = 0;
              gfc->presetTune.athadjust_safe_noiseshaping_thre = 0.0;
-			 gfc->presetTune.athadjust_safe_athaasensitivity = 8.0;
+	     gfc->presetTune.athadjust_safe_athaasensitivity = 8.0;
           }
           else {
              lame_set_experimentalX(gfp, 3);
              gfc->presetTune.quantcomp_adjust_rh_tot = 60;
-			 gfc->presetTune.quantcomp_adjust_rh_max = 6;
+	     gfc->presetTune.quantcomp_adjust_rh_max = 6;
              gfc->presetTune.quantcomp_type_s = 3;
              gfc->presetTune.quantcomp_alt_type = 1;
           }
@@ -1577,8 +1577,6 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
           // modify sfb21 by 3 dB plus ns-treble=0                 
           lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (12 << 20));
 
-          gfc->presetTune.attackthre   = 35;
-          gfc->presetTune.attackthre_s = 150;
           gfc->presetTune.ms_maskadjust = .5;
           gfc->presetTune.athadjust_switch_level = 1;
           gfc->presetTune.athadjust_msfix = 2.13;
@@ -1590,15 +1588,15 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
           if (gfp->VBR == vbr_mtrh) {
              gfc->presetTune.quantcomp_type_s = 4;
              gfc->presetTune.quantcomp_adjust_mtrh = 9;
-			 gfc->presetTune.quantcomp_alt_type = 0;
+	     gfc->presetTune.quantcomp_alt_type = 0;
              (void) lame_set_ATHlower( gfp, -2 );
              gfc->presetTune.athadjust_safe_noiseshaping_thre = 0.0;
-			 gfc->presetTune.athadjust_safe_athaasensitivity = 8.0;
+	     gfc->presetTune.athadjust_safe_athaasensitivity = 8.0;
           }
           else {
              gfc->presetTune.quantcomp_type_s = 3;
              gfc->presetTune.quantcomp_adjust_rh_tot = 60;
-			 gfc->presetTune.quantcomp_adjust_rh_max = 6;
+	     gfc->presetTune.quantcomp_adjust_rh_max = 6;
              (void) lame_set_ATHlower( gfp, -1 );
           }
 
@@ -1607,13 +1605,10 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
           lame_set_experimentalX(gfp, 1);
           lame_set_VBR_q(gfp, 2);
           lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); // safejoint
-   (void) lame_set_msfix( gfp, 2.13 );
+	  (void) lame_set_msfix( gfp, 2.13 );
           lame_set_ATHtype(gfp, 4);
           // modify sfb21 by 3.75 dB plus ns-treble=0                 
           lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (15 << 20));
-
-          gfc->presetTune.attackthre   = 35;
-          gfc->presetTune.attackthre_s = 150;
           gfc->presetTune.ms_maskadjust = .5;
           gfc->presetTune.athadjust_switch_level = 1;
 
