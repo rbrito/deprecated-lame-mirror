@@ -876,13 +876,14 @@ pecalc_s(III_psy_ratio *mr, int sb)
 	FLOAT xx=0.0;
 	for (sblock=0;sblock<3;sblock++) {
 	    FLOAT x = mr->thm.s[sb][sblock], en = fabs(mr->en.s[sb][sblock]);
+	    FLOAT f = 0.9 + (sblock*0.1);
 	    if (en <= x)
 		continue;
 
 	    if (en > x*1e10)
-		xx += 10.0 * LOG10;
+		xx += 10.0 * LOG10 * f;
 	    else
-		xx += FAST_LOG10(en / x);
+		xx += FAST_LOG10(en / x) * f;
 	}
 	pe_s += regcoef_s[sb] * xx;
     }
