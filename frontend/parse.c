@@ -31,12 +31,6 @@
 #include "main.h"
 #include "get_audio.h"
 
-#define LAME_EXIT(n)		exit(n)
-#define LAME_NORMAL_EXIT()	exit(0)
-#define LAME_ERROR_EXIT()	exit(1)
-#define LAME_FATAL_EXIT()	exit(2)
-
-
 /************************************************************************
 *
 * license
@@ -45,7 +39,7 @@
 *
 ************************************************************************/
 
-void lame_print_license ( lame_global_flags* gfp, const char* ProgramName )  /* print version,license & exit */
+void print_license ( lame_global_flags* gfp, const char* ProgramName )  /* print version,license & exit */
 {
     lame_print_version (stdout);
     printf ("\n");
@@ -87,7 +81,7 @@ void lame_print_license ( lame_global_flags* gfp, const char* ProgramName )  /* 
     printf ("robust file I/O can be handled by compiling in LIBSNDFILE, but LIBSNDFILE is\n");
     printf ("also under the GPL and may not be used by other programs not under the GPL.\n");
     printf ("\n");
-    LAME_NORMAL_EXIT ();
+    exit(0);
 }
 
 
@@ -109,7 +103,7 @@ void usage( lame_global_flags* gfp, const char* ProgramName )  /* print syntax &
   fprintf(stderr,"\n");
   fprintf(stderr,"Try \"%s --help\"     for more information\n", ProgramName );
   fprintf(stderr," or \"%s --longhelp\" for a complete options list\n\n", ProgramName );
-  LAME_ERROR_EXIT();
+  exit(1);
 }
 
 
@@ -123,7 +117,7 @@ void usage( lame_global_flags* gfp, const char* ProgramName )  /* print syntax &
 *
 ************************************************************************/
 
-void lame_short_help ( lame_global_flags* gfp, const char* ProgramName )  /* print syntax & exit */
+void short_help ( lame_global_flags* gfp, const char* ProgramName )  /* print syntax & exit */
 {
   lame_print_version(stdout); /* prints two lines */
   printf("\n");
@@ -149,7 +143,7 @@ void lame_short_help ( lame_global_flags* gfp, const char* ProgramName )  /* pri
   printf("    --longhelp      full list of options\n");
   printf("\n");
  
-  LAME_NORMAL_EXIT();
+  exit(0);
 }
 
 /************************************************************************
@@ -160,7 +154,7 @@ void lame_short_help ( lame_global_flags* gfp, const char* ProgramName )  /* pri
 *
 ************************************************************************/
 
-void lame_help ( lame_global_flags* gfp, const char* ProgramName )  /* print syntax & exit */
+void help ( lame_global_flags* gfp, const char* ProgramName )  /* print syntax & exit */
 {
   lame_print_version(stdout);
   printf("\n");
@@ -272,7 +266,7 @@ void lame_help ( lame_global_flags* gfp, const char* ProgramName )  /* print syn
   printf("    -g              run graphical analysis on <infile>\n");
 #endif
   display_bitrates(stdout);
-  LAME_NORMAL_EXIT();
+  exit(0);
 }
 
 
@@ -391,7 +385,7 @@ const preset_t Presets [] = {
 };
 
 
-void lame_presets_info ( lame_global_flags* gfp, const char* ProgramName )  /* print syntax & exit */
+void presets_info ( lame_global_flags* gfp, const char* ProgramName )  /* print syntax & exit */
 {
     size_t  i;
 
@@ -480,12 +474,12 @@ void lame_presets_info ( lame_global_flags* gfp, const char* ProgramName )  /* p
     printf ("    equal to: -mj -b112 --resample 32 --lowpass 15 --lowpass-width 0\n");
     printf (" b) -v --preset studio\n");
     printf ("    equals to: -h -ms -V0 -b160 -B320\n");
-
-    LAME_NORMAL_EXIT ();
+ 
+    exit(0);
 }
 
 
-void lame_presets_setup ( lame_global_flags* gfp, const char* preset_name, const char* ProgramName )
+void presets_setup ( lame_global_flags* gfp, const char* preset_name, const char* ProgramName )
 {
     size_t  i;
 
@@ -509,7 +503,7 @@ void lame_presets_setup ( lame_global_flags* gfp, const char* preset_name, const
 	    return;
 	}
 
-    lame_presets_info ( gfp, ProgramName );
+    presets_info ( gfp, ProgramName );
     assert (0);
 }
 
@@ -680,32 +674,32 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv )
 		    input_format=sf_ogg;
 #else
 		    fprintf(stderr,"Error: LAME not compiled with Vorbis support\n");
-		    LAME_ERROR_EXIT();
+		    exit(1);
 #endif
 		T_ELIF ("ogg")
 #ifdef HAVEVORBIS
 		    gfp->ogg=1;
 #else
 		    fprintf(stderr,"Error: LAME not compiled with Vorbis support\n");
-		    LAME_ERROR_EXIT();
+		    exit(1);
 #endif
 		T_ELIF ("phone")
-                    lame_presets_setup ( gfp, token, ProgramName );
+                    presets_setup ( gfp, token, ProgramName );
                     
 		T_ELIF ("voice")
-                    lame_presets_setup ( gfp, token, ProgramName );
+                    presets_setup ( gfp, token, ProgramName );
                     
 		T_ELIF ("radio")
-                    lame_presets_setup ( gfp, token, ProgramName );
+                    presets_setup ( gfp, token, ProgramName );
                     
 		T_ELIF ("tape")
-                    lame_presets_setup ( gfp, token, ProgramName );
+                    presets_setup ( gfp, token, ProgramName );
                     
 		T_ELIF ("cd")
-                    lame_presets_setup ( gfp, token, ProgramName );
+                    presets_setup ( gfp, token, ProgramName );
                     
 		T_ELIF ("studio")
-                    lame_presets_setup ( gfp, token, ProgramName );
+                    presets_setup ( gfp, token, ProgramName );
                     
 		T_ELIF ("noshort")
 		    gfp->no_short_blocks=1;
@@ -781,7 +775,7 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv )
 		    argUsed=1;
 		    if (id3tag_set_genre(&gfp->tag_spec, nextArg)) {
 			fprintf(stderr,"Unknown genre: %s.  Specify genre name or number\n", nextArg);
-			LAME_ERROR_EXIT();
+			exit(1);
 		    }
 		
 		T_ELIF ("add-id3v2")
@@ -801,7 +795,7 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv )
 		
 		T_ELIF ("genre-list")
 		    id3tag_genre_list(genre_list_handler, NULL);
-		    LAME_NORMAL_EXIT();
+		    exit(0);
 		
 		T_ELIF ("lowpass")
 		    freq = atof( nextArg );
@@ -810,7 +804,7 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv )
 		    gfp -> lowpassfreq = freq * (freq < 50. ? 1.e3 : 1.e0 ) + 0.5;
 		    if ( freq < 0.001 || freq > 50000. ) {
 			fprintf(stderr,"Must specify lowpass with --lowpass freq, freq >= 0.001 kHz\n");
-			LAME_ERROR_EXIT();
+			exit(1);
 		    }
 		
 		T_ELIF ("lowpass-width")
@@ -818,7 +812,7 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv )
 		    gfp->lowpasswidth =  1000.0 * atof( nextArg ) + 0.5;
 		    if (gfp->lowpasswidth  < 0) {
 			fprintf(stderr,"Must specify lowpass width with --lowpass-width freq, freq >= 0 kHz\n");
-			LAME_ERROR_EXIT();
+			exit(1);
 		    }
 		
 		T_ELIF ("highpass")
@@ -828,7 +822,7 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv )
 		    gfp->highpassfreq =  freq * (freq < 16. ? 1.e3 : 1.e0 ) + 0.5;
 		    if ( freq < 0.001 || freq > 50000. ) {
 			fprintf(stderr,"Must specify highpass with --highpass freq, freq >= 0.001 kHz\n");
-			LAME_ERROR_EXIT();
+			exit(1);
 		    }
 		
 		T_ELIF ("highpass-width")
@@ -836,7 +830,7 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv )
 		    gfp->highpasswidth =  1000.0 * atof( nextArg ) + 0.5;
 		    if (gfp->highpasswidth  < 0) {
 			fprintf(stderr,"Must specify highpass width with --highpass-width freq, freq >= 0 kHz\n");
-			LAME_ERROR_EXIT();
+			exit(1);
 		    }
 		
 		T_ELIF ("cwlimit")
@@ -846,7 +840,7 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv )
 		    gfp -> cwlimit = freq * ( freq <= 50. ? 1.e3 : 1.e0 );
 		    if (gfp->cwlimit <= 0 ) {
 			fprintf(stderr,"Must specify cwlimit with --cwlimit freq, freq >= 0.001 kHz\n");
-			LAME_ERROR_EXIT();
+			exit(1);
 		    }
 		 
 		T_ELIF ("comp")
@@ -854,7 +848,7 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv )
 		    gfp->compression_ratio =  atof( nextArg );
 		    if (gfp->compression_ratio < 1.0 ) {
 			fprintf(stderr,"Must specify compression ratio >= 1.0\n");
-			LAME_ERROR_EXIT();
+			exit(1);
 		    }
 		
 		T_ELIF ("nspsytune")
@@ -873,17 +867,17 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv )
 		 * I             => stdin
 		 */
 		T_ELIF2 ("version", "license")
-		    lame_print_license (gfp,ProgramName);  /* doesn't return */
+		    print_license (gfp,ProgramName);  /* doesn't return */
 		
 		T_ELIF2 ("help", "usage")
-		    lame_short_help (gfp,ProgramName);  /* doesn't return */
+		    short_help (gfp,ProgramName);  /* doesn't return */
 		
 		T_ELIF ("longhelp")
-		    lame_help (gfp,ProgramName);  /* doesn't return */
+		    help (gfp,ProgramName);  /* doesn't return */
 		
 		T_ELIF ("preset")
 		    argUsed = 1;
-		    lame_presets_setup ( gfp, nextArg, ProgramName );
+		    presets_setup ( gfp, nextArg, ProgramName );
                 T_ELIF ("disptime")
                     argUsed = 1;
 		    update_interval = atof (nextArg);
@@ -1021,7 +1015,7 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv )
 		        break;
 			
 		    case '?':   
-		        lame_help(gfp,ProgramName);  /* doesn't return */
+		        help(gfp,ProgramName);  /* doesn't return */
 		        
 		    default:    
 		        fprintf(stderr,"%s: unrec option %c\n", ProgramName, c);
@@ -1089,14 +1083,14 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv )
 	 input_format == sf_mp2 ||
 	 input_format == sf_mp3) {
 	fprintf(stderr,"Error: libmp3lame not compiled with mpg123 *decoding* support \n");
-	LAME_ERROR_EXIT();
+	exit(1);
     }
 #endif
 
 #if !(defined HAVEVORBIS)
     if ( input_format == sf_ogg ) {
         fprintf(stderr,"Error: LAME not compiled with Vorbis support\n");
-        LAME_ERROR_EXIT();
+	exit(1);
     }
 #endif
     /* default guess for number of channels */
@@ -1114,7 +1108,7 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv )
     if ( gfp->free_format ) {
 	if ( gfp -> brate < 8  ||  gfp -> brate > 550 ) {
 	    fprintf(stderr,"For free format, specify a bitrate between 8 and 320 (550) kbps\n");
-	    LAME_ERROR_EXIT();
+	    exit(1);
 	}
     }
     
