@@ -143,8 +143,8 @@ FLOAT8 pow20[Q_MAX];
 FLOAT8 ipow20[Q_MAX];
 FLOAT8 pow43[PRECALC_SIZE];
 /* initialized in first call to iteration_init */
-static FLOAT8 adj43[PRECALC_SIZE];
-static FLOAT8 adj43asm[PRECALC_SIZE];
+FLOAT8 adj43[PRECALC_SIZE];
+FLOAT8 adj43asm[PRECALC_SIZE];
 static FLOAT8 ATH_l[SBPSY_l];
 static FLOAT8 ATH_s[SBPSY_l];
 
@@ -266,7 +266,7 @@ FLOAT8 ATHformula(lame_global_flags *gfp,FLOAT8 f)
     ath -= 200; /* disables ATH */
   else {
     ath -= 114;    /* MDCT scaling.  From tests by macik and MUS420 code */
-    /* ath -= 109; */
+    /*ath -= 109; */
   }
 #ifdef RH_QUALITY_CONTROL 
   /* purpose of RH_QUALITY_CONTROL:

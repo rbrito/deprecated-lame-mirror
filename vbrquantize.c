@@ -29,35 +29,134 @@
 #endif
 
 
+#if (defined(__GNUC__) && defined(__i386__))
+#define USE_GNUC_ASM
+#endif
+#ifdef _MSC_VER
+#define USE_MSC_ASM
+#endif
 
-#define DEBUGXX
-FLOAT8 calc_sfb_ave_noise(FLOAT8 *xr, FLOAT8 *xr34, int stride, int bw, FLOAT8 sfpow)
+
+
+/*********************************************************************
+ * XRPOW_FTOI is a macro to convert floats to ints.  
+ * if XRPOW_FTOI(x) = nearest_int(x), then QUANTFAC(x)=adj43asm[x]
+ *                                         ROUNDFAC= -0.0946
+ *
+ * if XRPOW_FTOI(x) = floor(x), then QUANTFAC(x)=asj43[x]   
+ *                                   ROUNDFAC=0.4054
+ *********************************************************************/
+#ifdef USE_GNUC_ASM
+#  define QUANTFAC(rx)  adj43asm[rx]
+#  define ROUNDFAC -0.0946
+#  define XRPOW_FTOI(src, dest) \
+     asm ("fistpl %0 " : "=m"(dest) : "t"(src) : "st")
+#elif defined (USE_MSC_ASM)
+#  define QUANTFAC(rx)  adj43asm[rx]
+#  define ROUNDFAC -0.0946
+#  define XRPOW_FTOI(src, dest) do { \
+     FLOAT8 src_ = (src); \
+     int dest_; \
+     { \
+       __asm fld src_ \
+       __asm fistp dest_ \
+     } \
+     (dest) = dest_; \
+   } while (0)
+#else
+#  define QUANTFAC(rx)  adj43[rx]
+#  define ROUNDFAC 0.4054
+#  define XRPOW_FTOI(src,dest) ((dest) = (int)(src))
+#endif
+
+
+
+
+
+
+
+
+
+FLOAT8 calc_sfb_ave_noise(int average,FLOAT8 *xr, FLOAT8 *xr34, int stride, int bw, FLOAT8 sfpow)
 {
   int j;
-  FLOAT8 xfsf=0;
-  FLOAT8 sfpow34 = pow(sfpow,3.0/4.0);
+  FLOAT8 xfsf=0, xfsf_p1=0, xfsf_m1=0;
+  FLOAT8 sfpow34,sfpow34_p1,sfpow34_m1;
+  FLOAT8 sfpow_p1,sfpow_m1;
+
+
+  sfpow34  = pow(sfpow,-3.0/4.0);
+  sfpow_p1 = sfpow*1.189207115;  /* pow(2,(sf+1)/4.0) */
+  sfpow_m1 = sfpow*.8408964153;  /* pow(2,(sf-1)/4.0) */
+  sfpow34_p1 = sfpow34*0.878126080187;
+  sfpow34_m1 = sfpow34*1.13878863476;       /* .84089 ^ -3/4 */
+
 
   for ( j=0; j < stride*bw ; j += stride) {
     int ix;
-    FLOAT8 temp,temp2;
+    FLOAT8 temp,temp_p1,temp_m1;
 
-    /*    ix=(int)( xr34[j]/sfpow34  + 0.4054);*/
-    ix=floor( xr34[j]/sfpow34);
-    if (ix > IXMAX_VAL) return -1.0;
-
+#if 0
+    if (xr34[j]*sfpow34 > IXMAX_VAL) return -1;
+    ix=floor( xr34[j]*sfpow34);
     temp = fabs(xr[j])- pow43[ix]*sfpow;
+    temp *= temp;
+
     if (ix < IXMAX_VAL) {
       temp2 = fabs(xr[j])- pow43[ix+1]*sfpow;
-      if (fabs(temp2)<fabs(temp)) temp=temp2;
+      temp2 *=temp2;
+      if (temp2<temp) {
+	temp=temp2;
+	++ix;
+      }
     }
-#ifdef MAXQUANTERROR
-    temp *= temp;
-    xfsf = bw*Max(xfsf,temp);
 #else
-    xfsf += temp * temp;
+    if (xr34[j]*sfpow34_m1 > IXMAX_VAL) return -1;
+
+    temp = xr34[j]*sfpow34;
+    XRPOW_FTOI(temp, ix);
+    XRPOW_FTOI(temp + QUANTFAC(ix), ix);
+    temp = fabs(xr[j])- pow43[ix]*sfpow;
+    temp *= temp;
+    
+    if (average) {
+      temp_p1 = xr34[j]*sfpow34_p1;
+      XRPOW_FTOI(temp_p1, ix);
+      XRPOW_FTOI(temp_p1 + QUANTFAC(ix), ix);
+      temp_p1 = fabs(xr[j])- pow43[ix]*sfpow_p1;
+      temp_p1 *= temp_p1;
+      
+      temp_m1 = xr34[j]*sfpow34_m1;
+      XRPOW_FTOI(temp_m1, ix);
+      XRPOW_FTOI(temp_m1 + QUANTFAC(ix), ix);
+      temp_m1 = fabs(xr[j])- pow43[ix]*sfpow_m1;
+      temp_m1 *= temp_m1;
+    }
+#endif
+    
+#ifdef MAXQUANTERROR
+    xfsf = Max(xfsf,temp);
+    if (average) {
+      xfsf_p1 = Max(xfsf_p1,temp_p1);
+      xfsf_m1 = Max(xfsf_m1,temp_m1);
+    }
+#else
+    xfsf += temp;
+    if (average) {
+      xfsf_p1 += temp_p1;
+      xfsf_m1 += temp_m1;
+    }
 #endif
   }
+  if (average) {
+    if (xfsf_p1>xfsf) xfsf = xfsf_p1;
+    if (xfsf_m1>xfsf) xfsf = xfsf_m1;
+  }
+#ifdef MAXQUANTERROR
+  return xfsf;
+#else
   return xfsf/bw;
+#endif
 }
 
 
@@ -76,7 +175,8 @@ int find_scalefac(FLOAT8 *xr,FLOAT8 *xr34,int stride,int sfb,
   for (i=0; i<7; i++) {
     delsf /= 2;
     sfpow = pow(2.0,sf/4.0); 
-    xfsf = calc_sfb_ave_noise(xr,xr34,stride,bw,sfpow);
+    //    xfsf = calc_sfb_ave_noise(0,xr,xr34,stride,bw,sfpow);
+    xfsf = calc_sfb_ave_noise(1,xr,xr34,stride,bw,sfpow);
 
     if (xfsf < 0) {
       /* scalefactors too small */
@@ -92,37 +192,10 @@ int find_scalefac(FLOAT8 *xr,FLOAT8 *xr34,int stride,int sfb,
       }
     }
   } 
-  /* sf_ok accurate to within +/- 2*final_value_of_delsf */
   assert(sf_ok!=10000);
+  assert(delsf==1);
 
-  /* NOTE: noise is not a monotone function of the sf, even though
-   * the number of bits used is!  do a brute force search in the 
-   * neighborhood of sf_ok: 
-   * 
-   *  sf = sf_ok + 1.75     works  1% of the time 
-   *  sf = sf_ok + 1.50     works  1% of the time 
-   *  sf = sf_ok + 1.25     works  2% of the time 
-   *  sf = sf_ok + 1.00     works  3% of the time 
-   *  sf = sf_ok + 0.75     works  9% of the time 
-   *  sf = sf_ok + 0.50     0 %  (because it was tried above)
-   *  sf = sf_ok + 0.25     works 39% of the time 
-   *  sf = sf_ok + 0.00     works the rest of the time
-   */
-
-  sf = sf_ok + 3;
-
-  while (sf>(sf_ok+.01)) { 
-    /* sf = sf_ok + 2*delsf was tried above, skip it:  */
-    if (sf == sf_ok+2*delsf) sf -=1;
-
-    sfpow = pow(2.0,sf/4.0);
-    xfsf = calc_sfb_ave_noise(xr,xr34,stride,bw,sfpow);
-    if (xfsf > 0) {
-      if (xfsf <= l3_xmin) return sf;
-    }
-    sf -= 1;
-  }
-  return sf_ok;
+  return sf;
 }
 
 
@@ -248,9 +321,11 @@ int compute_scalefacs_long(int sf[SBPSY_l],gr_info *cod_info,int scalefac[SBPSY_
  *
  * VBR_noise_shapping()
  *
+ * compute scalefactors, l3_enc, and return number of bits needed to encode
+ *
  *
  ************************************************************************/
-void
+int
 VBR_noise_shapping (lame_global_flags *gfp,
                 FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
                 FLOAT8 xr[2][2][576], III_psy_ratio ratio[2][2],
@@ -268,13 +343,6 @@ VBR_noise_shapping (lame_global_flags *gfp,
 
   l3_side = &gfc->l3_side;
   iteration_init(gfp,l3_side,l3_enc);
-
-  /* Adjust allowed masking based on quality setting */
-  /* db_lower varies from -10 to +8 db */
-  masking_lower_db = -10 + 2*gfp->VBR_q;
-  /* adjust by -6(min)..0(max) depending on bitrate */
-  masking_lower = pow(10.0,masking_lower_db/10);
-  masking_lower = 1;
 
 
   bits = 0; 
@@ -323,6 +391,7 @@ VBR_noise_shapping (lame_global_flags *gfp,
 
 
 
+
       if (shortblock) {
 	/******************************************************************
 	 *
@@ -342,7 +411,6 @@ VBR_noise_shapping (lame_global_flags *gfp,
 	else if (maxover1==0)
 	  cod_info->scalefac_scale = 1;
 	else {
-	  //	  printf("%i  extreme case (short)! maxover1=%f\n",(int)gfc->frameNum,maxover1);
 	  cod_info->scalefac_scale = 1;
           vbrmax -= maxover1;
 	}
@@ -359,6 +427,16 @@ VBR_noise_shapping (lame_global_flags *gfp,
 	}
 	maxover=compute_scalefacs_short(vbrsf.s,cod_info,scalefac[gr][ch].s,cod_info->subblock_gain);
 	assert(maxover <=0);
+	{
+	  int minsfb=999;
+	  for (i=0; i<3; i++) minsfb = Min(minsfb,cod_info->subblock_gain[i]);
+	  minsfb = Min(cod_info->global_gain/8,minsfb);
+	  vbrmax -= 8*minsfb; 
+	  cod_info->global_gain -= 8*minsfb;
+	  for (i=0; i<3; i++) cod_info->subblock_gain[i] -= minsfb;
+	}
+
+
 
 	/* quantize xr34[] based on computed scalefactors */
 	ifqstep = ( cod_info->scalefac_scale == 0 ) ? 2 : 4;
@@ -428,7 +506,10 @@ VBR_noise_shapping (lame_global_flags *gfp,
 	ifqstep = ( cod_info->scalefac_scale == 0 ) ? 2 : 4;
 	for ( sfb = 0; sfb < SBPSY_l; sfb++ ) {
           FLOAT8 fac;
-	  fac = ifqstep*(scalefac[gr][ch].l[sfb]+cod_info->preflag);
+	  fac = ifqstep*scalefac[gr][ch].l[sfb];
+	  if (cod_info->preflag)
+	    fac += ifqstep*pretab[sfb];
+
 	  assert(fac >= -vbrsf.l[sfb]);
 	  fac=pow(2.0,.75*fac/4.0);
 	  start = gfc->scalefac_band.l[ sfb ];
@@ -451,12 +532,8 @@ VBR_noise_shapping (lame_global_flags *gfp,
       cod_info->part2_3_length += cod_info->part2_length;
       assert((int)count_bits != LARGE_BITS);
 
-      if (gfc->use_best_huffman==1 && cod_info->block_type != SHORT_TYPE) {
-	best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
-      }
-
-
 #ifdef HAVEGTK
+      /* do this before calling best_scalefac_store! */
       if (gfp->gtkflag) {
 	FLOAT8 noise[4];
 	FLOAT8 xfsf[4][SBPSY_l];
@@ -469,41 +546,70 @@ VBR_noise_shapping (lame_global_flags *gfp,
 	set_pinfo (gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
       }
 #endif
-    } /* ch */
-  } /* gr */
 
-
-
-  /*******************************************************************
-   * cant do this above since it may turn on scfsi and set
-   * scalefacs = -1 in second granule  
-   *******************************************************************/
-  for (gr = 0; gr < gfc->mode_gr; gr++){
-    for (ch = 0; ch < gfc->stereo; ch++) {
       cod_info = &l3_side->gr[gr].ch[ch].tt;
       best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
+      if (gfc->use_best_huffman==1 && cod_info->block_type != SHORT_TYPE) {
+	best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
+      }
+
       bits+=cod_info->part2_3_length;
 #ifdef HAVEGTK
       if (gfp->gtkflag)
 	pinfo->LAMEmainbits[gr][ch]=cod_info->part2_3_length;
 #endif
-    }
-  }
-  
 
-  
+    } /* ch */
+  } /* gr */
+  return bits;
+}
+
+
+
+
+
+
+
+
+void
+VBR_quantize(lame_global_flags *gfp,
+                FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
+                FLOAT8 xr[2][2][576], III_psy_ratio ratio[2][2],
+                int l3_enc[2][2][576],
+                III_scalefac_t scalefac[2][2])
+{
+  lame_internal_flags *gfc=gfp->internal_flags;
+  int bits,gr,ch,i;
+  III_side_info_t * l3_side;
+  gr_info *cod_info;  
+  FLOAT8 masking_lower_db;
+  static const FLOAT dbQ[10]={-6.0,-4.5,-3.0,-1.5,0,0.3,0.6,1.0,1.5,2.0};
+
+
+  /* Adjust allowed masking based on quality setting */
+  assert( gfp->VBR_q <= 9 );
+  assert( gfp->VBR_q >= 0 );
+  masking_lower_db = dbQ[gfp->VBR_q];	
+
+  masking_lower_db = 0;
+  masking_lower = pow(10.0,masking_lower_db/10);
+
+
+  bits = VBR_noise_shapping (gfp,pe, ms_ener_ratio,
+     xr, ratio,l3_enc,scalefac);
+
+
   /*******************************************************************
    * how many bits are available for each bitrate?
    *******************************************************************/
   { int bitsPerFrame,mean_bits;
+  l3_side = &gfc->l3_side;
   for( gfc->bitrate_index = 1;
        gfc->bitrate_index <= gfc->VBR_max_bitrate;
        gfc->bitrate_index++    ) {
     getframebits (gfp,&bitsPerFrame, &mean_bits);
     if (ResvFrameBegin(gfp,l3_side, mean_bits, bitsPerFrame)>=bits) break;
   }
-  printf("%i bits=%i  analog=%i  needed index=%i \n",
-	 gfc->frameNum,bits,analog_silence,gfc->bitrate_index);
   assert(gfc->bitrate_index <= gfc->VBR_max_bitrate);
 
   for (gr = 0; gr < gfc->mode_gr; gr++)

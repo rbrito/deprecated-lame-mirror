@@ -154,6 +154,7 @@ void plot_frame(void)
 
   double en,samp;
   int sampindex,version=0;
+  int barthick;
   static int firstcall=1;
   static GdkColor *barcolor,*color,*grcolor[2];
   static GdkColor yellow,gray,cyan,magenta,orange,pink,red,green,blue,black,oncolor,offcolor;
@@ -443,8 +444,7 @@ void plot_frame(void)
     /* draw title, erase old plot */
     if (gtkinfo.flag123) bits=pplot1->mainbits[gr][ch];
     else bits=pplot->LAMEmainbits[gr][ch];
-    sprintf(title2,"MDCT%1i(%s) bits=%i q=%i ",gr,label,bits,
-	      pplot1->qss[gr][ch]);
+    sprintf(title2,"MDCT%1i(%s) bits=%i ",gr,label,bits);
     gpk_bargraph_draw(mdctbox[gr],0,xcord,ycord,
 		      xmn,ymn,xmx,ymx,1,title2,0,barcolor);
 
@@ -495,8 +495,7 @@ void plot_frame(void)
     else bits=pplot->LAMEmainbits[gr][ch];
     
     
-    sprintf(title2,"MDCT%1i(%s) bits=%i q=%i ",gr,label,bits,
-	      pplot1->qss[gr][ch]);
+    sprintf(title2,"MDCT%1i(%s) bits=%i ",gr,label,bits);
 
     xmn = 0;
     xmx = n-1;
@@ -577,23 +576,40 @@ void plot_frame(void)
 
       /* en = max energy difference amoung the 3 short FFTs for this granule */
       en = pplot->ers[gr][ch];
+      if (en>999) en=999;
       sprintf(title2,"FFT%1i pe=%4.1fK/%3.1f n=%i/%3.1f/%3.1f/%3.1f",gr,
 	      pplot->pe[gr][ch]/1000,en,pplot->over[gr][ch],
 	      pplot->max_noise[gr][ch],
 	      pplot->over_noise[gr][ch],
 	      pplot->tot_noise[gr][ch]);
 
+      barthick=3;
+      if (blocktype[gr][ch]==SHORT_TYPE) barthick=2;
+      if (!(subblock_draw[0] && subblock_draw[1] && subblock_draw[2]))
+	barthick=3;
 
       ymn = 3;
       ymx = 15;
       xmn = 1;
       xmx = n+1; /* a little extra because of the bar thickness */
       gpk_bargraph_draw(enerbox[gr],n,xcord,ycord,
-			xmn,ymn,xmx,ymx,1,title2,0,barcolor);
-
+			xmn,ymn,xmx,ymx,1,title2,barthick,barcolor);
 
       for (i=0; i<n; i++) {
-	xcord[i] = i+1;
+	xcord[i] = i+1 + .20;
+        if (blocktype[gr][ch]==SHORT_TYPE && !subblock_draw[i % 3])
+          ycord[i] = 0;
+        else
+	  ycord[i] = log10( MAX( data2[i], (double) 1));
+	ymx=(ycord[i] > ymx) ? ycord[i] : ymx;
+	ymn=(ycord[i] < ymn) ? ycord[i] : ymn;
+      }
+
+      gpk_bargraph_draw(enerbox[gr],n,xcord,ycord,
+			xmn,ymn,xmx,ymx,0,title2,barthick,grcolor[gr]);
+
+      for (i=0; i<n; i++) {
+	xcord[i] = i+1 + .40;
         if (blocktype[gr][ch]==SHORT_TYPE && !subblock_draw[i % 3])
           ycord[i] = 0;
         else
@@ -602,20 +618,8 @@ void plot_frame(void)
 	ymn=(ycord[i] < ymn) ? ycord[i] : ymn;
       }
       gpk_bargraph_draw(enerbox[gr],n,xcord,ycord,
-			xmn,ymn,xmx,ymx,0,title2,3,&red);  
+			xmn,ymn,xmx,ymx,0,title2,barthick,&red);  
 
-      
-      for (i=0; i<n; i++) {
-	xcord[i] = i+1 + (.25*n)/SBMAX_l;
-        if (blocktype[gr][ch]==SHORT_TYPE && !subblock_draw[i % 3])
-          ycord[i] = 0;
-        else
-	  ycord[i] = log10( MAX( data2[i], (double) 1));
-	ymx=(ycord[i] > ymx) ? ycord[i] : ymx;
-	ymn=(ycord[i] < ymn) ? ycord[i] : ymn;
-      }
-      gpk_bargraph_draw(enerbox[gr],n,xcord,ycord,
-			xmn,ymn,xmx,ymx,0,title2,3,grcolor[gr]);
     }
   }
 
@@ -623,7 +627,7 @@ void plot_frame(void)
    * draw scalefactors 
    *******************************************************************/
   for (gr = 0 ; gr < mode_gr ; gr ++) {
-      double ggain;
+      int ggain;
       if (blocktype[gr][ch]==2) {
 	n = 3*SBMAX_s; 
 	if (gtkinfo.flag123) data = pplot1->sfb_s[gr][ch];
@@ -657,10 +661,10 @@ void plot_frame(void)
 	sprintf(label2,"SFB scale=%i",pplot1->scalefac_scale[gr][ch]);
       }
       
-      if (gtkinfo.flag123) ggain = -(pplot1->qss[gr][ch]-210)/4.0;
-      else ggain = -(pplot->LAMEqss[gr][ch]-210)/4.0;
+      if (gtkinfo.flag123) ggain = -(pplot1->qss[gr][ch]);
+      else ggain = -(pplot->LAMEqss[gr][ch]);
 
-      sprintf(title2," gain=%4.1f",ggain);
+      sprintf(title2," ggain=%i",ggain);
       strcat(label2,title2);
       
       xmn = 1;
@@ -1214,10 +1218,10 @@ set_pinfo (lame_global_flags *gfp,
 	for ( en0 = 0.0, l = start; l < end; l++ ) 
 	  en0 += (*xr_s)[l][i] * (*xr_s)[l][i];
 	en0=Max(en0/bw,1e-20);
-		
+
 	/* conversion to FFT units */
 	en0 = ratio->en.s[sfb][i]/en0;
-	
+
 	pinfo->xfsf_s[gr][ch][3*sfb+i] =  xfsf[i+1][sfb]*en0;
 	pinfo->thr_s[gr][ch][3*sfb+i] = ratio->thm.s[sfb][i];
 	pinfo->en_s[gr][ch][3*sfb+i] = ratio->en.s[sfb][i]; 
@@ -1225,6 +1229,7 @@ set_pinfo (lame_global_flags *gfp,
 	pinfo->LAMEsfb_s[gr][ch][3*sfb+i]=
 	  -2*cod_info->subblock_gain[i]-ifqstep*scalefac->s[sfb][i];
       }
+      pinfo->LAMEsfb_s[gr][ch][3*sfb+i]=-2*cod_info->subblock_gain[i];
     }
   }else{
     for ( sfb = 0; sfb < SBPSY_l; sfb++ )   {
@@ -1250,6 +1255,7 @@ set_pinfo (lame_global_flags *gfp,
       if (cod_info->preflag && sfb>=11) 
 	pinfo->LAMEsfb[gr][ch][sfb]-=ifqstep*pretab[sfb];
     }
+    pinfo->LAMEsfb[gr][ch][sfb]=0;  /* there is no 22 scalefactor */
   }
   pinfo->LAMEqss[gr][ch] = cod_info->global_gain;
   pinfo->LAMEmainbits[gr][ch] = cod_info->part2_3_length;
@@ -1285,7 +1291,7 @@ int gtkcontrol(lame_global_flags *gfp2)
     gint tableops,graphx,graphy;
     char frameinfo[80];
 
-    graphx = 500;  /* minimum allowed size of pixmap */
+    graphx = 600;  /* minimum allowed size of pixmap */
     graphy = 95;
 
     gfp=gfp2;

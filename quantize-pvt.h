@@ -15,6 +15,8 @@ extern const int slen2_tab[16];
 extern const scalefac_struct sfBandIndex[9];
 
 extern FLOAT8 pow43[PRECALC_SIZE];
+extern FLOAT8 adj43[PRECALC_SIZE];
+extern FLOAT8 adj43asm[PRECALC_SIZE];
 
 #define Q_MAX 256
 

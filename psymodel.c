@@ -668,9 +668,14 @@ void L3psycho_anal( lame_global_flags *gfp,
 	tbb = Min(minval[b], tbb);
 	ecb *= tbb;
 
-	/* pre-echo control */
+	/* long block pre-echo control.   */
+	/* dont use if previous granule was a short block */
 	/* rpelev=2.0, rpelev2=16.0 */
-	temp_1 = Min(ecb, Min(rpelev*nb_1[chn][b],rpelev2*nb_2[chn][b]) );
+	if (blocktype_old[chn] == SHORT_TYPE )
+	  temp_1 = ecb;
+	else
+	  temp_1 = Min(ecb, Min(rpelev*nb_1[chn][b],rpelev2*nb_2[chn][b]) );
+
 	thr[b] = Max( qthr_l[b], temp_1 ); 
 	nb_2[chn][b] = nb_1[chn][b];
 	nb_1[chn][b] = ecb;
