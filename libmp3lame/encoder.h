@@ -414,8 +414,7 @@ struct lame_internal_flags {
     uint16_t nMusicCRC;
 
     /* VBR tags. */
-    VBR_seek_info_t VBR_seek_table; /* used for Xing VBR header */
-    int TotalFrameSize;
+    VBR_seek_info_t seekTable; /* used for Xing VBR header */
 
     struct {
 	void (*msgf)  (const char *format, ...);

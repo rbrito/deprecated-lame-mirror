@@ -666,7 +666,7 @@ void CDECL lame_bitrate_block_type_hist(
  * if VBR tags are turned off by the user, or turned off by LAME because
  * the output is not a regular file, this call does nothing
 */
-void CDECL lame_mp3_tags_fid(lame_t, FILE* fid);
+int CDECL lame_mp3_tags_fid(lame_t, FILE* fid);
 
 
 /*

@@ -1080,10 +1080,10 @@ lame_close(lame_t gfc)
 	}
     }
 
-    if (gfc->VBR_seek_table.bag) {
-	free(gfc->VBR_seek_table.bag);
-	gfc->VBR_seek_table.bag=NULL;
-	gfc->VBR_seek_table.size=0;
+    if (gfc->seekTable.bag) {
+	free(gfc->seekTable.bag);
+	gfc->seekTable.bag=NULL;
+	gfc->seekTable.size=0;
     }
 
     if (gfc->s3_ll) free(gfc->s3_ll);

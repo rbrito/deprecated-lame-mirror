@@ -567,30 +567,6 @@ id3tag_write_v1(lame_t gfc, unsigned char *buf, int size)
 static const char	VBRTag[]={"Xing"};
 static const char	VBRTag2[]={"Info"};
 
-/***********************************************************************
- *  Robert Hegemann 2001-01-17
- ***********************************************************************/
-static void
-Xing_seek_table(VBR_seek_info_t * v, unsigned char *t)
-{
-    int i, idx, seek_point;
-    if (v->pos <= 0)
-        return;
-
-    for (i = 1; i < NUMTOCENTRIES; ++i) {
-	float j = i/(float)NUMTOCENTRIES, act, sum;
-        idx = (int)(floor(j * v->pos));
-        if (idx > v->pos-1)
-            idx = v->pos-1;
-        act = v->bag[idx];
-        sum = v->sum;
-        seek_point = (int)(256. * act / sum);
-        if (seek_point > 255)
-            seek_point = 255;
-        t[i] = seek_point;
-    }
-}
-
 /****************************************************************************
  * AddVbrFrame: Add VBR entry, used to fill the VBR the TOC entries
  ****************************************************************************/
@@ -598,25 +574,25 @@ void
 AddVbrFrame(lame_t gfc)
 {
     int i, bitrate = bitrate_table[gfc->version][gfc->bitrate_index];
-    assert(gfc->VBR_seek_table.bag);
+    assert(gfc->seekTable.bag);
 
-    gfc->VBR_seek_table.sum += bitrate;
-    gfc->VBR_seek_table.seen++;
+    gfc->seekTable.sum += bitrate;
+    gfc->seekTable.seen++;
 
-    if (gfc->VBR_seek_table.seen < gfc->VBR_seek_table.want)
+    if (gfc->seekTable.seen < gfc->seekTable.want)
         return;
 
-    if (gfc->VBR_seek_table.pos < gfc->VBR_seek_table.size) {
-	gfc->VBR_seek_table.bag[gfc->VBR_seek_table.pos++]
-	    = gfc->VBR_seek_table.sum;
-        gfc->VBR_seek_table.seen = 0;
+    if (gfc->seekTable.pos < gfc->seekTable.size) {
+	gfc->seekTable.bag[gfc->seekTable.pos++]
+	    = gfc->seekTable.sum;
+        gfc->seekTable.seen = 0;
     }
-    if (gfc->VBR_seek_table.pos == gfc->VBR_seek_table.size) {
-        for (i = 1; i < gfc->VBR_seek_table.size; i += 2)
-            gfc->VBR_seek_table.bag[i/2] = gfc->VBR_seek_table.bag[i]; 
+    if (gfc->seekTable.pos == gfc->seekTable.size) {
+        for (i = 1; i < gfc->seekTable.size; i += 2)
+            gfc->seekTable.bag[i/2] = gfc->seekTable.bag[i]; 
 
-        gfc->VBR_seek_table.want *= 2;
-        gfc->VBR_seek_table.pos  /= 2;
+        gfc->seekTable.want *= 2;
+        gfc->seekTable.pos  /= 2;
     }
 }
 
@@ -628,7 +604,7 @@ int
 InitVbrTag(lame_t gfc)
 {
 #define MAXFRAMESIZE 2880 /* the max framesize freeformat 640 32kHz */
-    int bitrate, tot;
+    int bitrate, tot, totalFrameSize;
 
     if (!gfc->bWriteVbrTag)
 	return 0;
@@ -655,31 +631,30 @@ InitVbrTag(lame_t gfc)
 	bitrate = bitrate_table[gfc->version][bitrate];
     }
 
-    gfc->TotalFrameSize
-	= ((gfc->version+1)*72000*bitrate) / gfc->out_samplerate;
+    totalFrameSize = ((gfc->version+1)*72000*bitrate) / gfc->out_samplerate;
 
     tot = (gfc->sideinfo_len+LAMEHEADERSIZE);
-    if (!(tot <= gfc->TotalFrameSize && gfc->TotalFrameSize <= MAXFRAMESIZE)) {
+    if (!(tot <= totalFrameSize && totalFrameSize <= MAXFRAMESIZE)) {
 	/* disable tag, it wont fit */
 	gfc->bWriteVbrTag = 0;
 	return 0;
     }
-    if (!gfc->VBR_seek_table.bag
-	&& !(gfc->VBR_seek_table.bag  = malloc (400*sizeof(int)))) {
-	gfc->VBR_seek_table.size = 0;
+    if (!gfc->seekTable.bag
+	&& !(gfc->seekTable.bag  = malloc (400*sizeof(int)))) {
+	gfc->seekTable.size = 0;
 	gfc->bWriteVbrTag = 0;
 	gfc->report.errorf("Error: can't allocate VbrFrames buffer\n");
 	return LAME_NOMEM;
     }   
 
     /*TOC shouldn't take into account the size of the VBR header itself, too*/
-    gfc->VBR_seek_table.sum  = 0;
-    gfc->VBR_seek_table.seen = 0;
-    gfc->VBR_seek_table.want = 1;
-    gfc->VBR_seek_table.pos  = 0;
-    gfc->VBR_seek_table.size = 400;
+    gfc->seekTable.sum  = 0;
+    gfc->seekTable.seen = 0;
+    gfc->seekTable.want = 1;
+    gfc->seekTable.pos  = 0;
+    gfc->seekTable.size = 400;
 
-    return gfc->TotalFrameSize;
+    return totalFrameSize;
 }
 
 /****************************************************************************
@@ -814,14 +789,15 @@ PutLameVBR(lame_t gfc, size_t nMusicLength, uint8_t *p, uint8_t *p0)
  * Paramters:
  *			fpStream: pointer to output file stream
  ***********************************************************************/
-static int
-PutVbrTag(lame_t gfc, FILE *fpStream)
+int
+lame_mp3_tags_fid(lame_t gfc, FILE * fpStream)
 {
-    uint8_t buf[MAXFRAMESIZE] = {0}, *p, id3v2Header[10];
-    size_t id3v2TagSize, lFileSize;
-    int i, bitrate;
+    uint8_t buf[MAXFRAMESIZE], *p;
+    size_t id3v2TagSize, lFileSize, totalFrameSize;
+    int i, idx, bitrate;
 
-    if (gfc->VBR_seek_table.pos <= 0 && gfc->VBR != cbr)
+    if (!gfc->bWriteVbrTag || !fpStream
+	|| (gfc->seekTable.pos <= 0 && gfc->VBR != cbr))
 	return LAME_GENERICERROR;
 
     /* Get file size */
@@ -837,34 +813,30 @@ PutVbrTag(lame_t gfc, FILE *fpStream)
     /* read 10 bytes from very the beginning,
        in case there's an ID3 version 2 header here */
     fseek(fpStream, 0, SEEK_SET);
-    fread(id3v2Header, 1, sizeof id3v2Header, fpStream);
+    fread(buf, 1, 10, fpStream);
 
     id3v2TagSize = 0;
-    if (!strncmp(id3v2Header, "ID3", 3)) {
+    if (!strncmp(buf, "ID3", 3)) {
 	/* the tag size (minus the 10-byte header) is encoded into four
 	 * bytes where the most significant bit is clear in each byte */
-	id3v2TagSize=(((id3v2Header[6] & 0x7f)<<21)
-		      | ((id3v2Header[7] & 0x7f)<<14)
-		      | ((id3v2Header[8] & 0x7f)<<7)
-		      | (id3v2Header[9] & 0x7f))
-	    + sizeof id3v2Header;
+	id3v2TagSize = 10 + (((buf[6] & 0x7f)<<21)
+			     | ((buf[7] & 0x7f)<<14)
+			     | ((buf[8] & 0x7f)<<7)
+			     |  (buf[9] & 0x7f));
     }
-
-    /* Read the header of the first valid frame */
-    fseek(fpStream, id3v2TagSize + gfc->TotalFrameSize, SEEK_SET);
-    fread(buf, 4, 1, fpStream);
 
     /* the default VBR header. 48 kbps layer III, no padding, no crc */
     /* but sampling freq, mode andy copyright/copy protection taken */
     /* from first valid frame */
-    if (gfc->VBR != cbr) {
-	bitrate = XING_BITRATE1_INDEX;
-	if (gfc->version != 1) {
-	    bitrate = XING_BITRATE2_INDEX;
-	}
-	assert(gfc->free_format == 0);
-	buf[2] = (bitrate << 4) | (buf[2] & 0x0d);
-    }
+    bitrate = XING_BITRATE1_INDEX;
+    if (gfc->VBR != cbr && gfc->version != 1)
+	bitrate = XING_BITRATE2_INDEX;
+
+    /* Read the header of the first valid frame */
+    totalFrameSize = ((gfc->version+1)*72000*bitrate) / gfc->out_samplerate;
+    fseek(fpStream, id3v2TagSize + totalFrameSize, SEEK_SET);
+    fread(buf, 4, 1, fpStream);
+
     /* note! Xing header specifies that Xing data goes in the
      * ancillary data with NO ERROR PROTECTION.  If error protecton
      * in enabled, the Xing data still starts at the same offset,
@@ -881,15 +853,27 @@ PutVbrTag(lame_t gfc, FILE *fpStream)
 
     /* Put TOC */
     if (gfc->VBR == cbr) {
+	assert(gfc->free_format == 0);
 	memcpy(p, VBRTag2, 4);
 	p += 16;
 	for (i = 0; i < NUMTOCENTRIES; ++i)
-	    *p++ = 255*i/100;
+	    *p++ = 255 * i / NUMTOCENTRIES;
     } else {
 	memcpy(p, VBRTag, 4);
 	p += 16;
-	Xing_seek_table(&gfc->VBR_seek_table, p);
-	p += NUMTOCENTRIES;
+	assert(gfc->seekTable.pos > 0);
+	buf[2] = (bitrate << 4) | (buf[2] & 0x0d);
+
+	*p++ = 0;
+	for (i = 1; i < NUMTOCENTRIES; ++i) {
+	    idx = (int)floor(i / (float)NUMTOCENTRIES * gfc->seekTable.pos);
+	    if (idx > gfc->seekTable.pos-1)
+		idx = gfc->seekTable.pos-1;
+	    idx = (int)(256. * gfc->seekTable.bag[idx] / gfc->seekTable.sum);
+	    if (idx > 255)
+		idx = 255;
+	    *p++ = idx;
+	}
     }
 
     /* error_protection: add crc16 information to header !? */
@@ -900,18 +884,7 @@ PutVbrTag(lame_t gfc, FILE *fpStream)
     PutLameVBR(gfc, lFileSize - id3v2TagSize, p, buf);
 
     fseek(fpStream, id3v2TagSize, SEEK_SET);
-    if (fwrite(buf, gfc->TotalFrameSize, 1, fpStream) != 1)
+    if (fwrite(buf, totalFrameSize, 1, fpStream) != 1)
 	return LAME_WRITEERROR;
     return 0;
-}
-
-/*****************************************************************/
-/* write VBR Xing header, and ID3 version 1 tag, if asked for    */
-/*****************************************************************/
-void
-lame_mp3_tags_fid(lame_t gfc, FILE * fpStream)
-{
-    /* Write Xing header again */
-    if (gfc->bWriteVbrTag && fpStream && !fseek(fpStream, 0, SEEK_SET))
-	PutVbrTag(gfc, fpStream);
 }
