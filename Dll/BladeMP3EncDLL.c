@@ -26,8 +26,8 @@
 // This DLL should be a wrapper around libmp3lame, and thus only need to 
 // include 'lame.h'.  However, the DLL provides better version information
 // that is currently available via libmp3lame and thus needs version.h
-#include "version.h"  
 #include "lame.h"
+#include "version.h"
 //#include "util.h"
 //#include "VbrTag.h"
 
