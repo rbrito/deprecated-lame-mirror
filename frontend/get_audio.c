@@ -391,8 +391,8 @@ int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip)
     }
     
     fprintf(stderr,  ")\noutput: %s%s(16 bit, Microsoft WAVE)\n",
-           strcmp (gfp->outPath, "-")  ?  gfp->outPath  :  "<stdout>",
-	   strlen (gfp->outPath) > 45  ? "\n\t" : "  " );
+           strcmp (outPath, "-")  ?  outPath  :  "<stdout>",
+	   strlen (outPath) > 45  ? "\n\t" : "  " );
 	   
     if ( skip > 0 )
     	fprintf(stderr, "skipping initial %i samples (encoder+decoder delay)\n", skip );

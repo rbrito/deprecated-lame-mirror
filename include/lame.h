@@ -133,12 +133,6 @@ typedef struct  {
   int highpasswidth;              /* freq width of filter, in Hz (default=15%)*/
 
 
-  /* Note: outPath must be set if you want Xing VBR or ID3 version 1 tags written */
-#define         MAX_NAME_SIZE           1000
-  char outPath[MAX_NAME_SIZE];
-
-
-
   /* optional ID3 tags  */
   int id3v1_enabled;
   struct id3tag_spec tag_spec;

@@ -62,6 +62,7 @@
 
 
 /* I/O - not used if calling program does the i/o */
+char outPath[MAX_NAME_SIZE];
 char inPath[MAX_NAME_SIZE];
 FILE * musicin;             /* file pointer to input file */
 sound_file_format input_format;   
@@ -121,8 +122,8 @@ int main(int argc, char **argv)
      This test is very easy and buggy and don't recognize different names
      assigning the same file
    */
-  if ( 0 != strcmp ( "-"      , gf.outPath )  && 
-       0 == strcmp ( inPath, gf.outPath ) ) {
+  if ( 0 != strcmp ( "-"   , outPath )  && 
+       0 == strcmp ( inPath, outPath ) ) {
       fprintf(stderr,"Input file and Output file are the same. Abort.\n" );
       exit(-1);
   }
@@ -139,6 +140,14 @@ int main(int argc, char **argv)
   /* Now that all the options are set, lame needs to analyze them and
    * set some more internal options and check for problems
    */
+  if (outPath!=NULL && outPath[0]=='-' ) {
+    gf.bWriteVbrTag=0; /* turn off VBR tag */
+  }
+
+  if (outPath==NULL || outPath[0]=='-' ) {
+    gf.id3v1_enabled=0;       /* turn off ID3 version 1 tagging */
+  }
+
   i = lame_init_params(&gf);
 
   if (gf.analysis) 
@@ -198,8 +207,8 @@ int main(int argc, char **argv)
   }
   else {
     fprintf(stderr,"Encoding %s to %s\n",
-	    (strcmp(inPath, "-")? inPath : "<stdin>"),
-	    (strcmp(gf.outPath, "-")? gf.outPath : "<stdout>"));
+	    (strcmp(inPath, "-")? inPath  : "<stdin>"),
+	    (strcmp(outPath,"-")? outPath : "<stdout>"));
     if (gf.ogg) {
       fprintf(stderr,"Encoding as %.1f kHz VBR Ogg Vorbis \n",
 	      gf.out_samplerate/1000.0);
@@ -232,7 +241,7 @@ int main(int argc, char **argv)
 
   if (!gf.analysis) {
     /* open the output file */
-    if (!strcmp(gf.outPath, "-")) {
+    if (!strcmp(outPath, "-")) {
 #ifdef __EMX__
       _fsetmode(stdout,"b");
 #elif (defined  __BORLANDC__)
@@ -244,23 +253,23 @@ int main(int argc, char **argv)
 #endif
       outf = stdout;
     } else {
-      if ((outf = fopen(gf.outPath, "wb+")) == NULL) {
-	fprintf(stderr,"Could not create \"%s\".\n", gf.outPath);
+      if ((outf = fopen(outPath, "wb+")) == NULL) {
+	fprintf(stderr,"Could not create \"%s\".\n", outPath);
 	exit(-1);
       }
     }
 #ifdef __riscos__
     /* Assign correct file type */
-    for (i = 0; gf.outPath[i]; i++) {
-      if (gf.outPath[i] == '.')
-        gf.outPath[i] = '/';
-      else if (gf.outPath[i] == '/')
-        gf.outPath[i] = '.';
+    for (i = 0; outPath[i]; i++) {
+      if (outPath[i] == '.')
+        outPath[i] = '/';
+      else if (outPath[i] == '/')
+        outPath[i] = '.';
     }
     if (gf.decode_only)
-      SetFiletype(gf.outPath, 0xfb1); /* Wave */
+      SetFiletype(outPath, 0xfb1); /* Wave */
     else
-      SetFiletype(gf.outPath, 0x1ad); /* AMPEG */
+      SetFiletype(outPath, 0x1ad); /* AMPEG */
 #endif
   }
 

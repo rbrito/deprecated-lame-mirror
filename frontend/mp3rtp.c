@@ -114,7 +114,7 @@ int main(int argc, char **argv)
   lame_parse_args(&gf,argc-1, argv); 
 
   /* open the output file.  Filename parsed into gf.inPath */
-  if (!strcmp(gf.outPath, "-")) {
+  if (!strcmp(outPath, "-")) {
 #ifdef __EMX__
     _fsetmode(stdout,"b");
 #elif (defined  __BORLANDC__)
@@ -126,8 +126,8 @@ int main(int argc, char **argv)
 #endif
     outf = stdout;
   } else {
-    if ((outf = fopen(gf.outPath, "wb+")) == NULL) {
-      fprintf(stderr,"Could not create \"%s\".\n", gf.outPath);
+    if ((outf = fopen(outPath, "wb+")) == NULL) {
+      fprintf(stderr,"Could not create \"%s\".\n", outPath);
       exit(1);
     }
   }
@@ -145,8 +145,47 @@ int main(int argc, char **argv)
   /* Now that all the options are set, lame needs to analyze them and
    * set some more options 
    */
-  lame_init_params(&gf);
+  if (outPath!=NULL && outPath[0]=='-' ) {
+    gf.bWriteVbrTag=0; /* turn off VBR tag */
+  }
+
+  if (outPath==NULL || outPath[0]=='-' ) {
+    gf.id3v1_enabled=0;       /* turn off ID3 version 1 tagging */
+  }
+
+  i = lame_init_params(&gf);
+  if (i<0)  {
+    if (i == -1) {
+      display_bitrates(stderr);
+    }
+    fprintf(stderr,"fatal error during initialization\n");
+    exit(-1);
+  }
+
   lame_print_config(&gf);   /* print usefull information about options being used */
+
+  if (gf.analysis) 
+    silent=1;
+
+  if ( update_interval < 0. )
+       update_interval = 2.;
+
+  /* estimate total frames.  must be done after setting sampling rate so
+   * we know the framesize.  */
+  {
+    double resample_ratio=1;
+    if (gf.out_samplerate != gf.in_samplerate) 
+      resample_ratio = (double)gf.in_samplerate / (double)gf.out_samplerate;
+
+    totalframes=0;
+    if(input_format == sf_mp1 && gf.decode_only)
+      totalframes = (gf.num_samples+383)/384;
+    else
+      if(input_format == sf_mp2 && gf.decode_only)
+	totalframes = (gf.num_samples+1151)/1152;
+      else
+	totalframes = 2+ gf.num_samples/(resample_ratio * gf.framesize);
+  }
 
   lame_id3v2_tag(&gf,outf); /* add ID3 version 2 tag to mp3 file */
 
@@ -157,6 +196,7 @@ int main(int argc, char **argv)
     /* encode the frame */
     imp3=lame_encode_buffer(&gf,Buffer[0],Buffer[1],iread,
 			    mp3buffer,sizeof(mp3buffer));
+    frameNum++;
     fwrite(mp3buffer,1,imp3,outf);       /* write the MP3 output to file  */
     rtp_output(mp3buffer,imp3);          /* write MP3 output to RTP port */    
   } while (iread);

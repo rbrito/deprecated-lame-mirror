@@ -610,7 +610,7 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv )
     const char* ProgramName  = argv[0]; 
 
     inPath [0] = '\0';   
-    gfp -> outPath[0] = '\0';
+    outPath[0] = '\0';
     /* turn on display options. user settings may turn them off below */
     silent   = 0;
     brhist   = 1;
@@ -634,8 +634,8 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv )
 	        if (inPath [0] == '\0')
 		    strncpy (inPath, argv[i],MAX_NAME_SIZE);
 	        else 
-		if (gfp -> outPath[0] == '\0') 
-		    strncpy (gfp->outPath, argv[i],MAX_NAME_SIZE);
+		if (outPath[0] == '\0') 
+		    strncpy (outPath, argv[i],MAX_NAME_SIZE);
             } 
 	    if (*token == '-') { /* GNU style */
 		token++;
@@ -1039,8 +1039,8 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv )
 	    if (inPath [0] == '\0')       
 	        strncpy(inPath , argv[i], MAX_NAME_SIZE);
 	    else 
-	    if (gfp->outPath[0] == '\0') 
-	        strncpy(gfp->outPath, argv[i], MAX_NAME_SIZE);
+	    if (outPath[0] == '\0') 
+	        strncpy(outPath, argv[i], MAX_NAME_SIZE);
 	    else {
 		fprintf(stderr,"%s: excess arg %s\n", ProgramName, argv[i]);
 		err = 1;
@@ -1054,23 +1054,23 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv )
     if ( inPath[0] == '-' ) 
         silent = 1;  /* turn off status - it's broken for stdin */
 	
-    if ( gfp->outPath[0] == '\0' ) {
+    if ( outPath[0] == '\0' ) {
 	if ( inPath[0] == '-' ) {
 	    /* if input is stdin, default output is stdout */
-	    strcpy(gfp->outPath,"-");
+	    strcpy(outPath,"-");
 	} else {
-	    strncpy(gfp->outPath, inPath, MAX_NAME_SIZE - 4);
+	    strncpy(outPath, inPath, MAX_NAME_SIZE - 4);
 	    if (gfp->decode_only) {
-	        strncat (gfp->outPath, ".wav", 4 );
+	        strncat (outPath, ".wav", 4 );
 	    } else if (gfp->ogg) {
-		strncat (gfp->outPath, ".ogg", 4 );
+		strncat (outPath, ".ogg", 4 );
 	    } else {
-		strncat (gfp->outPath, ".mp3", 4 );
+		strncat (outPath, ".mp3", 4 );
 	    }
 	}
     }
     /* some file options not allowed with stdout */
-    if (gfp->outPath[0]=='-') {
+    if (outPath[0]=='-') {
 	gfp->bWriteVbrTag=0; /* turn off VBR tag */
 	if (gfp->id3v1_enabled) {
 	    gfp->id3v1_enabled=0;     /* turn off ID3 version 1 tagging */

@@ -502,16 +502,6 @@ int lame_init_params(lame_global_flags *gfp)
 
   /* some file options not allowed if output is: not specified or stdout */
 
-  if (gfp->outPath!=NULL && gfp->outPath[0]=='-' ) {
-    gfp->bWriteVbrTag=0; /* turn off VBR tag */
-  }
-
-  if (gfp->outPath==NULL || gfp->outPath[0]=='-' ) {
-    gfp->id3v1_enabled=0;       /* turn off ID3 version 1 tagging */
-  }
-
-
-
   if (gfc->pinfo != NULL) {
     gfp->bWriteVbrTag=0;  /* disable Xing VBR tag */
   }
@@ -633,7 +623,7 @@ int lame_init_params(lame_global_flags *gfp)
   /* this tag must be before the Xing VBR header */
   /* does id3v2 and Xing header really work??? */
   if (!gfp->ogg) {
-    int ret = id3tag_write_v2(gfp,&gfp->tag_spec);
+    id3tag_write_v2(gfp,&gfp->tag_spec);
   }
 
   /* Write initial VBR Header to bitstream */

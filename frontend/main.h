@@ -33,6 +33,7 @@ typedef enum sound_file_format_e {
 
 
 #define         MAX_NAME_SIZE           1000
+char outPath[MAX_NAME_SIZE];
 char inPath[MAX_NAME_SIZE];
 FILE * musicin;             /* file pointer to input file */
 sound_file_format input_format;   
