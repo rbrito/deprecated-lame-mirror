@@ -147,9 +147,6 @@ int do_layer1(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
         clip += synth_1to1( (real *) fraction[0],0,pcm_sample,&p1);
         clip += synth_1to1( (real *) fraction[1],1,pcm_sample,pcm_point);
     }
-
-//    if(pcm_point >= audiobufsize)
-//      audio_flush(outmode,ai);
   }
 
   return clip;

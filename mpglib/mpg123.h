@@ -27,15 +27,6 @@
 #endif
 
 
-#ifdef _MSC_VER
-# define REAL_IS_FLOAT
-# define NEW_DCT9
-
-# define random rand
-# define srandom srand
-
-#endif
-
 #ifdef REAL_IS_FLOAT
 #  define real float
 #elif defined(REAL_IS_LONG_DOUBLE)
@@ -43,9 +34,6 @@
 #else
 #  define real double
 #endif
-
-/* AUDIOBUFSIZE = n*64 with n=1,2,3 ...  */
-#define		AUDIOBUFSIZE		16384
 
 #define         FALSE                   0
 #define         TRUE                    1
