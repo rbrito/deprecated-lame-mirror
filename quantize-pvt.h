@@ -80,7 +80,7 @@ int loop_break( III_scalefac_t *scalefac, gr_info *cod_info);
 void amp_scalefac_bands(lame_global_flags *gfp, FLOAT8 xrpow[576],
 			gr_info *cod_info,
 			III_scalefac_t *scalefac,
-			FLOAT8 distort[4][SBMAX_l]);
+			FLOAT8 distort[4][SBMAX_l], FLOAT8 dt);
 
 void quantize_xrpow( FLOAT8 xr[576],
                int  ix[576],

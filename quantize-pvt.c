@@ -759,8 +759,8 @@ int calc_noise( lame_global_flags *gfp,
   
   int count=0;
   FLOAT8 noise;
-  FLOAT8 over_noise=0;
-  FLOAT8 tot_noise=0;
+  FLOAT8 over_noise=1;
+  FLOAT8 tot_noise=1;
   FLOAT8 max_noise = -999;
   
   if (cod_info->block_type == SHORT_TYPE) {
@@ -809,11 +809,11 @@ int calc_noise( lame_global_flags *gfp,
 	    xfsf[i+1][sfb] = sum / bw;
 
 	    noise = xfsf[i+1][sfb] / l3_xmin->s[sfb][i];
-	    tot_noise += noise;
+	    tot_noise *= Max(noise, 1E-20);
 
             if (noise > 1) {
 		over++;
-		over_noise += noise;
+		over_noise *= noise;
 	    }
 	    max_noise=Max(max_noise,noise);
             distort[i+1][sfb] = noise;
@@ -867,11 +867,11 @@ int calc_noise( lame_global_flags *gfp,
         xfsf[0][sfb] = sum / bw;
 
 	noise = xfsf[0][sfb] / l3_xmin->l[sfb];
-	tot_noise += noise;
+	tot_noise *= Max(noise, 1E-20);
 
         if (noise>1) {
 	  over++;
-	  over_noise += noise;
+	  over_noise *= noise;
 	}
 	max_noise=Max(max_noise,noise);
         distort[0][sfb] = noise;
@@ -883,11 +883,11 @@ int calc_noise( lame_global_flags *gfp,
 
   /* normalization at this point by "count" is not necessary, since
    * the values are only used to compare with previous values */
-  res->tot_count = count;
+  res->tot_count  = count;
   res->over_count = over;
-  res->tot_noise = 10*log10(Max(.00001,tot_noise));  /* convert to db */
-  res->over_noise = 10*log10(Max(1.0,over_noise)); 
-  res->max_noise = 10*log10(Max(.00001,max_noise));
+  res->tot_noise  = tot_noise;
+  res->over_noise = over_noise; 
+  res->max_noise  = max_noise;
   
   return over;
 }
@@ -1204,14 +1204,14 @@ average seems to be about -147db.
 	gfc->pinfo->LAMEsfb[gr][ch][sfb]-=ifqstep*pretab[sfb];
     }
   }
-  gfc->pinfo->LAMEqss[gr][ch] = cod_info->global_gain;
+  gfc->pinfo->LAMEqss     [gr][ch] = cod_info->global_gain;
   gfc->pinfo->LAMEmainbits[gr][ch] = cod_info->part2_3_length;
-  gfc->pinfo->LAMEsfbits[gr][ch] = cod_info->part2_length;
+  gfc->pinfo->LAMEsfbits  [gr][ch] = cod_info->part2_length;
 
   gfc->pinfo->over      [gr][ch] = noise[0];
-  gfc->pinfo->max_noise [gr][ch] = noise[1];
-  gfc->pinfo->over_noise[gr][ch] = noise[2];
-  gfc->pinfo->tot_noise [gr][ch] = noise[3];
+  gfc->pinfo->max_noise [gr][ch] = 10*log10(Max(1E-20,noise[1]));
+  gfc->pinfo->over_noise[gr][ch] = 10*log10(Max(1.0,  noise[2]));
+  gfc->pinfo->tot_noise [gr][ch] = 10*log10(Max(1E-20,noise[3]));
 }
 
 
