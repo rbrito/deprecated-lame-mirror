@@ -115,16 +115,7 @@ int main(int argc, char **argv)
 
   /* open the output file.  Filename parsed into gf.inPath */
   if (!strcmp(outPath, "-")) {
-#ifdef __EMX__
-    _fsetmode(stdout,"b");
-#elif (defined  __BORLANDC__)
-    setmode(_fileno(stdout), O_BINARY);
-#elif (defined  __CYGWIN__)
-    setmode(fileno(stdout), _O_BINARY);
-#elif (defined _WIN32)
-    _setmode(_fileno(stdout), _O_BINARY);
-#endif
-    outf = stdout;
+      lame_set_stream_binary_mode ( outf = stdout );
   } else {
     if ((outf = fopen(outPath, "wb+")) == NULL) {
       fprintf(stderr,"Could not create \"%s\".\n", outPath);

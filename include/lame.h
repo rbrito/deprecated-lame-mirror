@@ -17,6 +17,7 @@
  * along with this program; see the file COPYING.  If not, write to
  * the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+
 #ifndef LAME_LAME_H
 #define LAME_LAME_H
 #include <stdio.h>
@@ -452,8 +453,6 @@ extern void id3tag_set_track(lame_global_flags *gfp, const char *track);
 extern int id3tag_set_genre(lame_global_flags *gfp, const char *genre);
 
 
-#ifdef KLEMM_02
-
 /*
  *  From the view of design these functions is a front-end function.
  *  But you need this function for every useful coding system handling
@@ -476,8 +475,6 @@ extern int id3tag_set_genre(lame_global_flags *gfp, const char *genre);
 
 extern int    lame_set_stream_binary_mode ( FILE* const fp );
 extern off_t  lame_get_file_size          ( const char* const filename );
-
-#endif
 
 
 /***********************************************************************

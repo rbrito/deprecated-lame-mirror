@@ -27,6 +27,8 @@
 #include "tables.h"
 #include "fft.h"
 
+#define KLEMM_04
+
 #ifdef M_LN10
 #define		LN_TO_LOG10		(M_LN10/10)
 #else

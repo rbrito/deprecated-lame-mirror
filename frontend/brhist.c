@@ -83,7 +83,7 @@ static struct {
     int     vbr_bitrate_max_index;
     int     kbps [BRHIST_WIDTH];
     char    bar_asterisk [512 + 1];	/* buffer filled up with a lot of '*' to print a bar     */
-    char    bar_hash     [512 + 1];	/* buffer filled up with a lot of '#' to print a bar     */
+    char    bar_hash     [512 + 1];	/* buffer filled up with a lot of '%' to print a bar     */
 } brhist;
 
 static size_t  calculate_index ( const int* const array, const size_t len, const int value )
@@ -227,10 +227,11 @@ static void  brhist_disp_line ( const lame_global_flags*  gf, int i, int br_hist
                   barlen_TOT - barlen_LR, brhist.bar_asterisk, 
 		  Console_IO.str_clreoln );
     else
-        fprintf ( Console_IO.Console_fp, "\n%3d%s %.*s%*s ", 
+        fprintf ( Console_IO.Console_fp, "\n%3d%s %.*s%.*s%*s ", 
 	          brhist.kbps [i], brppt, 
+                  barlen_LR, brhist.bar_hash, 
                   barlen_TOT, brhist.bar_asterisk, 
-		  Console_IO.disp_width - BRHIST_RES - barlen_TOT, "" );
+		  Console_IO.disp_width - BRHIST_RES - barlen_TOT - barlen_LR, "" );
 }
 
 

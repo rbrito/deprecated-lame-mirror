@@ -461,17 +461,9 @@ int  open_keyboard    ( keyboard_t* const k )
     signal ( SIGCONT, term_cont   );
 //  atexit ( term_exit );
 
-#if 0
-    k->current_setting.c_lflag     &= ~ECHO;
-    /* Disable canonical mode, and set buffer size to 1 byte */
-    k->current_setting.c_lflag     &= ~ICANON;
-    k->current_setting.c_cc [VTIME] = 0;
-    k->current_setting.c_cc [VMIN]  = 1;
-#elif 1
     /* One or more characters are sufficient to cause a read to return */
     cfmakeraw ( &(k->current_setting) );
     k->current_setting.c_oflag     |= ONLCR | OPOST;  /* enables NL => CRLF on output */
-#endif    
     
     tcsetattr ( 0, TCSANOW, &(k->current_setting) );
     return 0;

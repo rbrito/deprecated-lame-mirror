@@ -19,6 +19,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#define KLEMM_02
+
 #include "util.h"
 #include <ctype.h>
 #include <assert.h>

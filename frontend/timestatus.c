@@ -19,6 +19,7 @@
  * Boston, MA 02111-1307, USA.
  */
  
+#define KLEMM_07
 #ifdef KLEMM_07
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
@@ -106,7 +107,7 @@ void timestatus ( const int samp_rate,
         fprintf ( stderr,
 	    "\r"
 	    "    Frame          |  CPU time/estim | REAL time/estim | play/CPU |    ETA %s\n"
-            "     0/       ( 0%%)|    0:00/     :  |    0:00/     :  |    .    x|     :  %s\r",
+            "     0/       ( 0%%)|    0:00/     :  |    0:00/     :  |      .  %%|     :  %s\r",
 	    Console_IO.str_clreoln, Console_IO.str_clreoln );
 	init = 1;
         return;

@@ -19,6 +19,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#define KLEMM_11
+
 #include <stdlib.h>
 #include <assert.h>
 #include <stdio.h>
@@ -142,7 +144,7 @@ putbits_noheaders(lame_global_flags *gfp, int val, int j)
 
 #ifdef KLEMM_11
 
-static INLINE void drain_into_ancillary ( lame_global_flags* gfp, int remainingBits )
+static INLINE void drain_into_ancillary ( lame_global_flags* const gfp, int remainingBits )
 {
     lame_internal_flags*  gfc = gfp->internal_flags;
     char                  buffer [80];
@@ -157,7 +159,7 @@ static INLINE void drain_into_ancillary ( lame_global_flags* gfp, int remainingB
 
     for (; remainingBits >= 1; remainingBits -= 1 ) {
         putbits ( gfp, gfc->ancillary_flag, 1 );
-        gfc->ancillary_flag = 1 - gfc->ancillary_flag;
+        gfc->ancillary_flag ^= 1;
     }
 
     assert (remainingBits == 0);

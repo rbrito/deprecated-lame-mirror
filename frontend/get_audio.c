@@ -33,16 +33,11 @@
 
 
 #ifdef _WIN32
-/* needed to set stdin to binary on windoze machines */
-  #include <io.h>
-  #include <fcntl.h>
+// /* needed to set stdin to binary on windoze machines */
+//  #include <io.h>
+//  #include <fcntl.h>
 #else
-  #include <unistd.h>
-#endif
-
-#ifdef __riscos__
-#include <kernel.h>
-#include <sys/swis.h>
+//  #include <unistd.h>
 #endif
 
 
@@ -124,16 +119,7 @@ FILE *init_outfile(char *outPath)
   FILE *outf;
   /* open the output file */
   if (!strcmp(outPath, "-")) {
-#ifdef __EMX__
-    _fsetmode(stdout,"b");
-#elif (defined  __BORLANDC__)
-    setmode(_fileno(stdout), O_BINARY);
-#elif (defined  __CYGWIN__)
-    setmode(fileno(stdout), _O_BINARY);
-#elif (defined _WIN32)
-    _setmode(_fileno(stdout), _O_BINARY);
-#endif
-    outf = stdout;
+      lame_set_stream_binary_mode ( outf = stdout );
   } else {
     if ((outf = fopen(outPath, "wb+")) == NULL) {
       fprintf(stderr,"Could not create \"%s\".\n", outPath);
@@ -723,31 +709,18 @@ FILE * OpenSndFile(lame_global_flags *gfp, char *inPath)
   }
 
   if (gfp->num_samples==MAX_U_32_NUM) {
-    struct stat sb;
-#ifdef __riscos__
-    _kernel_swi_regs reg;
-#endif
-
-    /* try to figure out num_samples */
-#ifndef __riscos__
-    if (0==stat(lpszFileName,&sb)) {
-#else /* __riscos__ */
-    reg.r[0]=17;
-    reg.r[1]=(int) lpszFileName;
-    _kernel_swi(OS_File,&reg,&reg);
-    if (reg.r[0] == 1) {
-      sb.st_size=reg.r[4];
-#endif /* __riscos__ */
-
+    long flen = lame_get_file_size (lpszFileName);   /* try to figure out num_samples */
+    
+    if (flen >= 0) {
       /* try file size, assume 2 bytes per sample */
       if (input_format == sf_mp1 ||
           input_format == sf_mp2 ||
           input_format == sf_mp3) {
-	double totalseconds = (sb.st_size*8.0/(1000.0*mp3input_data.bitrate));
+	double totalseconds = (flen*8.0/(1000.0*mp3input_data.bitrate));
 	gfp->num_samples= totalseconds*gfp->in_samplerate;
 	mp3input_data.nsamp = gfp->num_samples;
       }else{
-	gfp->num_samples = sb.st_size/(2*gfp->num_channels);
+	gfp->num_samples = flen/(2*gfp->num_channels);
       }
     }
   }
@@ -1179,24 +1152,13 @@ void CloseSndFile(sound_file_format input,FILE * musicin)
 FILE * OpenSndFile(lame_global_flags *gfp, char *inPath)
 {
   FILE * musicin;
-  struct stat sb;
 
   /* set the defaults from info incase we cannot determine them from file */
   gfp->num_samples=MAX_U_32_NUM;
 
 
   if (!strcmp(inPath, "-")) {
-    /* Read from standard input. */
-#ifdef __EMX__
-    _fsetmode(stdin,"b");
-#elif (defined  __BORLANDC__)
-    setmode(_fileno(stdin), O_BINARY);
-#elif (defined  __CYGWIN__)
-    setmode(fileno(stdin), _O_BINARY);
-#elif (defined _WIN32)
-    _setmode(_fileno(stdin), _O_BINARY);
-#endif
-    musicin = stdin;
+      lame_set_stream_binary_mode ( musicin = stdin );  /* Read from standard input. */
   } else {
     if ((musicin = fopen(inPath, "rb")) == NULL) {
       fprintf(stderr,"Could not find \"%s\".\n", inPath);
@@ -1251,32 +1213,21 @@ FILE * OpenSndFile(lame_global_flags *gfp, char *inPath)
  }
 
   if (gfp->num_samples==MAX_U_32_NUM && musicin != stdin) {
-#ifdef __riscos__
-    _kernel_swi_regs reg;
-#endif
+    long flen = lame_get_file_size (inPath);      /* try to figure out num_samples */
 
-    /* try to figure out num_samples */
-#ifndef __riscos__
-    if (0==stat(inPath,&sb)) {
-#else
-    reg.r[0]=17;
-    reg.r[1]=(int) inPath;
-    _kernel_swi(OS_File,&reg,&reg);
-    if (reg.r[0] == 1) {
-      sb.st_size=reg.r[4];
-#endif
+    if (flen >= 0 ) {
 
       /* try file size, assume 2 bytes per sample */
       if (input_format == sf_mp1 ||
           input_format == sf_mp2 ||
           input_format == sf_mp3) {
 	if (mp3input_data.bitrate>0) {
-	  double totalseconds = (sb.st_size*8.0/(1000.0*mp3input_data.bitrate));
+	  double totalseconds = (flen*8.0/(1000.0*mp3input_data.bitrate));
 	  gfp->num_samples= totalseconds*gfp->in_samplerate;
 	  mp3input_data.nsamp = gfp->num_samples;
 	}
       }else{
-	gfp->num_samples = sb.st_size/(2*gfp->num_channels);
+	gfp->num_samples = flen/(2*gfp->num_channels);
       }
     }
   }
