@@ -15,9 +15,22 @@ mp3x            A GTK based graphical MP3 frame analyzer.  For debugging,
 
 lame_enc.dll    a Windows DLL used by many GUIs which support lame.
                 (Can only be compiled by MSVC???)
+                                 
 
-libmp3lame.a    the *NIX style encoding library
-libmp3lame.so   shared version of libmp3lame.a                (not yet)
+lame_enc.acm    a Windows ACM codec which can be used by 
+                many windows programs, and any directshow program.
+                See MSVC project files in ACM directory
+
+lame_enc.dshow  a Windows direct show filter for lame.  Potentially has
+                more flexability than the ACM codec, but code needs some
+                work.  See MSVC project files in dshow directory
+ 
+
+libmp3lame.a    the static encoding library used by all platforms, required
+                by all the above targets.
+
+libmp3lame.so   shared version of libmp3lame.a for *NIX platforms
+
 
 
 The following compile time options can be used.  For libmp3lame.a
@@ -134,6 +147,7 @@ Building the software on *NIX platforms without configure:
 
 =======================================================================
 Building the software on Windows with MSVC:
+(or MSVC + 3rd party C compiler)
 =======================================================================
 There are MSVC project files, and a Makefile.MSVC included
 with the project.  For production use, be sure to compile
@@ -144,6 +158,20 @@ It is possible to compile the GTK frame analyzer under windows, see
 README.WINGTK
 
 Various build options can be set in configMS.h
+
+Note: project files for building lame.exe seem to be broken or not
+quite compatable with MSVC6.  The most reliable way to build lame and
+lame_enc.dll is to run the .bat script (comes with MSVC6) which sets
+up your VC environment to work from the command line, and then:
+
+copy configMS.h config.h 
+nmake -f Makefile.MSVC  comp=msvc  asm=no
+
+Project files for the dll, ACM codec and directshow filter 
+seem to be in better sahpe.  
+
+
+
 
 
 
