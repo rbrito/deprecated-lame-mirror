@@ -119,6 +119,7 @@ Huf_count1(bit_stream_t *bs, gr_info *gi)
 	}
 	putbits24(bs, huffbits + hcode[p+16], hcode[p]);
     }
+    assert(index == gi->count1);
 }
 
 /* Implements the pseudocode of page 98 of the IS */
@@ -393,8 +394,7 @@ encodeBitStream(lame_global_flags *gfp)
 #ifndef NDEBUG
 	    int data_bits = gfc->bs.bitidx + gi->part2_length;
 #endif
-	    ptr = writeheader(p, gi->part2_3_length+gi->part2_length, 12,
-			      ptr);
+	    ptr = writeheader(p, gi->part2_3_length+gi->part2_length, 12, ptr);
 	    ptr = writeheader(p, gi->big_values / 2,        9, ptr);
 	    ptr = writeheader(p, gi->global_gain,           8, ptr);
 
