@@ -758,8 +758,6 @@ inc_scalefac_scale (
     FLOAT                 xrpow[576] )
 {
     int l, j, sfb;
-    const FLOAT ifqstep34 = 1.29683955465100964055;
-
     j = 0;
     for (sfb = 0; sfb < cod_info->sfbmax; sfb++) {
 	int width = cod_info->width[sfb];
@@ -768,9 +766,9 @@ inc_scalefac_scale (
 	    s += pretab[sfb];
 	j += width;
         if (s & 1) {
-            s++;
+	    s++;
             for (l = -width; l < 0; l++) 
-                xrpow[j+l] *= ifqstep34;
+                xrpow[j+l] *= 1.29683955465100964055; /* 2**(.75*.5)*/
         }
         cod_info->scalefac[sfb] = s >> 1;
     }
