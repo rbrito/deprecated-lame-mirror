@@ -54,7 +54,7 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,0,7,5
+ FILEVERSION 0,0,7,6
  PRODUCTVERSION 0,3,0,92
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
@@ -73,13 +73,13 @@ BEGIN
             VALUE "Comments", "This is currently a test of an ACM driver for Win32 using Lame to encode and mpglib to decode\0"
             VALUE "CompanyName", "http://www.mp3dev.org/\0"
             VALUE "FileDescription", "Lame MP3 codec engine\0"
-            VALUE "FileVersion", "0.7.5\0"
+            VALUE "FileVersion", "0.7.6\0"
             VALUE "InternalName", "lameACM\0"
             VALUE "LegalCopyright", "Copyright © 2002 Steve Lhomme\0"
             VALUE "LegalTrademarks", "LGPL (see gnu.org)\0"
             VALUE "OriginalFilename", "lameACM.acm\0"
             VALUE "ProductName", "Lame MP3 codec\0"
-            VALUE "ProductVersion", "0.7.5\0"
+            VALUE "ProductVersion", "0.7.6\0"
         END
     END
     BLOCK "VarFileInfo"

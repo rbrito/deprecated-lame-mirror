@@ -239,17 +239,4 @@ my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG, "DecodeStream::ConvertBuffer result = %
 
 	return result;
 }
-
-unsigned int DecodeStream::GetOutputSampleRate(int samples_per_sec, int bitrate, int channels)
-{
-	unsigned int OutputFrequency;
-	double compression_ratio = double(samples_per_sec * 16 * channels / (bitrate * 8));
-	if (compression_ratio > 13.)
-		OutputFrequency = map2MP3Frequency( (10. * bitrate * 8) / (16 * channels));
-	else
-		OutputFrequency = map2MP3Frequency( 0.97 * samples_per_sec );
-
-	return OutputFrequency;
-}
-
 #endif // ENABLE_DECODING

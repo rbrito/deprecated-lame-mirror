@@ -52,7 +52,7 @@
 
 char ACM::VersionString[20];
 
-const char ACM_VERSION[] = "0.7.5";
+const char ACM_VERSION[] = "0.7.6";
 
 #ifdef WIN32
 //
@@ -101,12 +101,6 @@ static const int FORMAT_MAX_NB_PCM =
 	2 *                                           // number of PCM channel mode (stereo/mono)
 		(SIZE_FREQ_MPEG1 + // number of MPEG 1 sampling freq
 		SIZE_FREQ_MPEG2); // number of MPEG 2 sampling freq
-
-// number of supported personal formats
-static const int FORMAT_MAX_NB_PERSONAL =
-	SIZE_CHANNEL_MODE *                     // number of channel mode (stereo/mono)
-		(SIZE_FREQ_MPEG1 * SIZE_BITRATE_MPEG1 +  // number of MPEG 1 sampling freq * supported bitrate
-		SIZE_FREQ_MPEG2 * SIZE_BITRATE_MPEG2); // number of MPEG 2 sampling freq * supported bitrate
 
 //////////////////////////////////////////////////////////////////////
 // Configuration Dialog
@@ -210,6 +204,8 @@ ACM::ACM( HMODULE hModule )
   my_hModule(hModule),
   my_EncodingProperties(hModule)
 {
+	my_EncodingProperties.ParamsRestore();
+
 	/// \todo get the debug level from the registry
 	unsigned char DebugFileName[512];
 
@@ -411,7 +407,7 @@ inline DWORD ACM::OnFormatDetails(LPACMFORMATDETAILS a_FormatDetails, const LPAR
 		case ACM_FORMATDETAILSF_INDEX :
 			my_debug.OutPut(DEBUG_LEVEL_FUNC_CODE, "enter ACM_FORMATDETAILSF_INDEX for index 0x%04X:%03d",a_FormatDetails->dwFormatTag,a_FormatDetails->dwFormatIndex);
 			if (a_FormatDetails->dwFormatTag == PERSONAL_FORMAT) {
-				if (a_FormatDetails->dwFormatIndex < FORMAT_MAX_NB_PERSONAL) {
+				if (a_FormatDetails->dwFormatIndex < GetNumberEncodingFormats()) {
 					LPWAVEFORMATEX WaveExt;
 					WaveExt = a_FormatDetails->pwfx;
 
@@ -549,8 +545,8 @@ inline DWORD ACM::OnFormatTagDetails(LPACMFORMATTAGDETAILS a_FormatTagDetails, c
 				a_FormatTagDetails->dwFormatTag      = PERSONAL_FORMAT;
 				a_FormatTagDetails->dwFormatTagIndex = 1;
 				a_FormatTagDetails->cbFormatSize     = SIZE_FORMAT_STRUCT;
-				a_FormatTagDetails->fdwSupport       = ACMDRIVERDETAILS_SUPPORTF_CODEC ;
-				a_FormatTagDetails->cStandardFormats = FORMAT_MAX_NB_PERSONAL;
+				a_FormatTagDetails->fdwSupport       = ACMDRIVERDETAILS_SUPPORTF_CODEC;
+				a_FormatTagDetails->cStandardFormats = GetNumberEncodingFormats();
 				lstrcpyW( a_FormatTagDetails->szFormatTag, L"Lame MP3 encoder (ACM)" );
 				Result = MMSYSERR_NOERROR;
 				break;
@@ -851,8 +847,6 @@ inline DWORD ACM::OnStreamOpen(LPACMDRVSTREAMINSTANCE a_StreamInstance)
 			{
 				unsigned int OutputFrequency;
 
-				my_EncodingProperties.ParamsRestore();
-
 				/// \todo Smart mode
 				if (my_EncodingProperties.GetSmartOutputMode())
 					OutputFrequency = ACMStream::GetOutputSampleRate(a_StreamInstance->pwfxSrc->nSamplesPerSec,a_StreamInstance->pwfxDst->nAvgBytesPerSec,a_StreamInstance->pwfxDst->nChannels);
@@ -1111,53 +1105,80 @@ inline DWORD ACM::OnStreamConvert(LPACMDRVSTREAMINSTANCE a_StreamInstance, LPACM
 }
 
 
-
 void ACM::GetMP3FormatForIndex(const DWORD the_Index, WAVEFORMATEX & the_Format, unsigned short the_String[ACMFORMATDETAILS_FORMAT_CHARS]) const
 {
 	the_Format.wBitsPerSample = 16;
 	the_Format.cbSize = 2; // never know
 
 	/// \todo handle more channel modes (mono, stereo, joint-stereo, dual-channel)
-	the_Format.nChannels = SIZE_CHANNEL_MODE - int(the_Index % SIZE_CHANNEL_MODE);
+//	the_Format.nChannels = SIZE_CHANNEL_MODE - int(the_Index % SIZE_CHANNEL_MODE);
 
-	/// \todo block size is 576 on MPEG2 ?
-//	the_Format.nBlockAlign = FORMAT_BLOCK_ALIGN;
-	// LAME can deal with 1 sample at a time
-//	the_Format.nBlockAlign = the_Format.nChannels * the_Format.wBitsPerSample / 8; // 8 because bits are actually Bytes ! (poor MS)
 	the_Format.nBlockAlign = 1;
 
-	DWORD a_Channel_Independent = the_Index / SIZE_CHANNEL_MODE;
+	DWORD tmpIdx = 0;
+	int channel,bitrate,freq;
 
-	int mpeg_ver;
-	int mpeg_bitrate;
-	int mpeg_freq;
-
-	// first MPEG1 frequencies
-	if (a_Channel_Independent < SIZE_FREQ_MPEG1 * SIZE_BITRATE_MPEG1)
+	// MPEG I
+	for (freq = 0;freq < SIZE_FREQ_MPEG1;freq++)
 	{
-		mpeg_ver = 1;
-		mpeg_freq = a_Channel_Independent / (SIZE_BITRATE_MPEG1);
-		mpeg_bitrate = a_Channel_Independent % (SIZE_BITRATE_MPEG1);
+		for (bitrate = 0;bitrate < SIZE_BITRATE_MPEG1;bitrate++)
+		{
+			for (channel = SIZE_CHANNEL_MODE;channel > 0;channel--)
+			{
+				if (IsSmartOutput(mpeg1_freq[freq], mpeg1_bitrate[bitrate], channel))
+				{
+					tmpIdx++;
+
+					if (tmpIdx == the_Index + 1)
+						break;
+				}
+			}
+			if (tmpIdx == the_Index + 1)
+				break;
+		}
+		if (tmpIdx == the_Index + 1)
+			break;
 	}
-	// then MPEG2 frequencies
+
+	if (tmpIdx == the_Index + 1)
+	{
+
+//my_debug.OutPut(DEBUG_LEVEL_FUNC_DEBUG, "tmpIdx %d == the_Index %d, freq %d/%d, bitrate %d/%d, channels %d, index = %d", tmpIdx, the_Index, mpeg1_freq[freq],freq, mpeg1_bitrate[bitrate],bitrate, channel, tmpIdx);
+
+		the_Format.nSamplesPerSec = mpeg1_freq[freq];
+		the_Format.nAvgBytesPerSec = mpeg1_bitrate[bitrate] * 1000 / 8;
+	}
 	else
 	{
-		mpeg_ver = 2;
-		a_Channel_Independent -= SIZE_FREQ_MPEG1 * SIZE_BITRATE_MPEG1; // skip MPEG1
-		mpeg_freq = a_Channel_Independent / (SIZE_BITRATE_MPEG2);
-		mpeg_bitrate = a_Channel_Independent % (SIZE_BITRATE_MPEG2);
+		// MPEG II / II.5
+		for (freq = 0;freq < SIZE_FREQ_MPEG2;freq++)
+		{
+			for (bitrate = 0;bitrate < SIZE_BITRATE_MPEG2;bitrate++)
+			{
+				for (channel = SIZE_CHANNEL_MODE;channel > 0;channel--)
+				{
+					if (IsSmartOutput(mpeg2_freq[freq], mpeg2_bitrate[bitrate], channel))
+					{
+						tmpIdx++;
+
+						if (tmpIdx == the_Index + 1)
+							break;
+					}
+				}
+				if (tmpIdx == the_Index + 1)
+					break;
+			}
+			if (tmpIdx == the_Index + 1)
+				break;
+		}
+
+//my_debug.OutPut(DEBUG_LEVEL_FUNC_DEBUG, "tmpIdx %d == the_Index %d, freq %d/%d, bitrate %d/%d, channels %d, index = %d", tmpIdx, the_Index, mpeg2_freq[freq],freq, mpeg2_bitrate[bitrate],bitrate, channel, tmpIdx);
+
+		the_Format.nSamplesPerSec = mpeg2_freq[freq];
+		the_Format.nAvgBytesPerSec = mpeg2_bitrate[bitrate] * 1000 / 8;
 	}
 
-	if (mpeg_ver == 1)
-	{
-		the_Format.nSamplesPerSec = mpeg1_freq[mpeg_freq];
-		the_Format.nAvgBytesPerSec = mpeg1_bitrate[mpeg_bitrate] * 1000 / 8;
-	}
-	else
-	{
-		the_Format.nSamplesPerSec = mpeg2_freq[mpeg_freq];
-		the_Format.nAvgBytesPerSec = mpeg2_bitrate[mpeg_bitrate] * 1000 / 8;
-	}
+	the_Format.nChannels = channel;
 
 	/// \todo : generate the string with the appropriate stereo mode
 	wsprintfW( the_String, L"%d kHz, %d kbps CBR, %s", the_Format.nSamplesPerSec, the_Format.nAvgBytesPerSec * 8 / 1000, (the_Format.nChannels == 1)?L"Mono":L"Stereo");
@@ -1186,3 +1207,53 @@ void ACM::GetPCMFormatForIndex(const DWORD the_Index, WAVEFORMATEX & the_Format,
 	the_Format.nAvgBytesPerSec = the_Format.nSamplesPerSec * the_Format.nChannels * the_Format.wBitsPerSample / 8;
 }
 
+DWORD ACM::GetNumberEncodingFormats() const
+{
+	DWORD Result;
+
+my_debug.OutPut(DEBUG_LEVEL_FUNC_DEBUG, "Smart mode = %d", my_EncodingProperties.GetSmartOutputMode());
+
+	if(my_EncodingProperties.GetSmartOutputMode())
+	{
+		Result = 0;
+		int channel,bitrate,freq;
+		for (channel = 0;channel < SIZE_CHANNEL_MODE;channel++)
+		{
+			// MPEG I
+			for (freq = 0;freq < SIZE_FREQ_MPEG1;freq++)
+			{
+				for (bitrate = 0;bitrate < SIZE_BITRATE_MPEG1;bitrate++)
+				{
+					if (IsSmartOutput(mpeg1_freq[freq], mpeg1_bitrate[bitrate], channel+1))
+						Result++;
+				}
+			}
+			// MPEG II / II.5
+			for (freq = 0;freq < SIZE_FREQ_MPEG2;freq++)
+			{
+				for (bitrate = 0;bitrate < SIZE_BITRATE_MPEG2;bitrate++)
+				{
+					if (IsSmartOutput(mpeg2_freq[freq], mpeg2_bitrate[bitrate], channel+1))
+						Result++;
+				}
+			}
+		}
+	}
+	else
+		Result = SIZE_CHANNEL_MODE *                     // number of channel mode (stereo/mono)
+			(SIZE_FREQ_MPEG1 * SIZE_BITRATE_MPEG1 +  // number of MPEG 1 sampling freq * supported bitrate
+			SIZE_FREQ_MPEG2 * SIZE_BITRATE_MPEG2);
+
+	return Result;
+}
+
+bool ACM::IsSmartOutput(const int frequency, const int bitrate, const int channels) const
+{
+	double compression_ratio = double(frequency * 2 * channels) / double(bitrate * 100);
+
+//my_debug.OutPut(DEBUG_LEVEL_FUNC_DEBUG, "compression_ratio %f, freq %d, bitrate %d, channels %d", compression_ratio, frequency, bitrate, channels);
+
+	if(my_EncodingProperties.GetSmartOutputMode())
+		return (compression_ratio <= 15.);
+	else return true;
+}

@@ -69,6 +69,8 @@ protected:
 
 	void GetMP3FormatForIndex(const DWORD the_Index, WAVEFORMATEX & the_Format, unsigned short the_String[ACMFORMATDETAILS_FORMAT_CHARS]) const;
 	void GetPCMFormatForIndex(const DWORD the_Index, WAVEFORMATEX & the_Format, unsigned short the_String[ACMFORMATDETAILS_FORMAT_CHARS]) const;
+	DWORD GetNumberEncodingFormats() const;
+	bool IsSmartOutput(const int frequency, const int bitrate, const int channels) const;
 
 	HMODULE my_hModule;
 	HICON   my_hIcon;

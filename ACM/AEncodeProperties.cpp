@@ -1181,7 +1181,7 @@ void AEncodeProperties::SaveValuesToElement(TiXmlElement * the_element) const
 	tmpElt = the_element->FirstChildElement("Smart");
 	if (tmpElt == NULL)
 	{
-		tmpElt = new TiXmlElement("Copyright");
+		tmpElt = new TiXmlElement("Smart");
 		SetAttributeBool( tmpElt, "use", bSmartOutput);
 		the_element->InsertEndChild(*tmpElt);
 	}
