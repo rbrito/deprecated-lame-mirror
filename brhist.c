@@ -39,10 +39,10 @@ static char stderr_buff[576];
 /* Should this moved to lame_internal_flags? pfk */
 
 
-#ifdef _WIN32  
-COORD Pos;
-HANDLE CH;
-CONSOLE_SCREEN_BUFFER_INFO CSBI;
+#if defined(_WIN32) && !defined(__CYGWIN__) 
+  COORD Pos;
+  HANDLE CH;
+  CONSOLE_SCREEN_BUFFER_INFO CSBI;
 #endif
 
 void brhist_init(lame_global_flags *gfp,int br_min, int br_max)
@@ -107,7 +107,7 @@ void brhist_init(lame_global_flags *gfp,int br_min, int br_max)
 
 #endif /* NOTERMCAP */
 
-#ifdef _WIN32  
+#if defined(_WIN32) && !defined(__CYGWIN__) 
   CH= GetStdHandle(STD_ERROR_HANDLE);
 #endif
 
@@ -155,7 +155,7 @@ void brhist_disp ( lame_global_flags *gfp )
             fprintf ( stderr, "\n%s%s%.*s%*s ", gfp->brhist.kbps [i], brppt, 
                       barlen, gfp->brhist.bar, BRHIST_BARMAX - barlen, "" );
     }
-# ifdef _WIN32  
+#if defined(_WIN32) && !defined(__CYGWIN__) 
   /* fflush is not needed */
   if(GetFileType(CH)!= FILE_TYPE_PIPE)
   {
