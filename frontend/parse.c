@@ -25,10 +25,11 @@
 #include <config.h>
 #endif
 
-#include <stdlib.h>
-#include <ctype.h>
-#include <string.h>
 #include <assert.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "lame.h"
 #include "version.h"
 
@@ -48,7 +49,7 @@
 
 static int  lame_version_print ( FILE* const fp )
 {
-   fprintf ( fp, "LAME version %s    (%s)\n\n", get_lame_version (), get_lame_url () );
+   fprintf ( fp, "LAME version %s (%s)\n\n", get_lame_version (), get_lame_url () );
    return 0;
 }
 
