@@ -311,7 +311,7 @@ static void  optimum_bandwidth (
 	// fflush (stdout);
 	
 	while ( f_low > f_low_sw ) {
-	    double  dATH = ATHformula (f_low*1.e-3, gfp) - ATHformula (f_low_sw*1.e-3, gfp);	// [dB]
+	    double  dATH = ATHformula (f_low, gfp) - ATHformula (f_low_sw, gfp);	// [dB]
 	    double  dNMR = br / f_low - br_sw / f_low_sw;		// bit
 
   	    // printf ("br   =%f  f_low   =%f\n", br   , f_low    );

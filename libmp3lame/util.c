@@ -73,6 +73,7 @@ void  freegfc ( lame_internal_flags* const gfc )   /* bit stream structure */
 FLOAT8 ATHformula_old(FLOAT8 f)
 {
   FLOAT8 ath;
+  f /= 1000;  // convert to khz
   f  = Max(0.01, f);
   f  = Min(18.0,f);
 
@@ -134,7 +135,6 @@ FLOAT8  ATHformula_Frank( FLOAT8 freq )
     FLOAT8    freq_log;
     unsigned  index;
     
-    freq *= 1000.;
     if ( freq <    10. ) freq =    10.;
     if ( freq > 25000. ) freq = 25000.;
     

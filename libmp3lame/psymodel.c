@@ -1644,7 +1644,7 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 	FLOAT8  level;
 	assert( freq <= 24 );              // or only '<'
 	//	freq = Min(.1,freq);       // ATH below 100 Hz constant, not further climbing
-	level  = ATHformula (freq, gfp) - 20;   // scale to FFT units; returned value is in dB
+	level  = ATHformula (freq*1000, gfp) - 20;   // scale to FFT units; returned value is in dB
 	level  = pow ( 10., 0.1*level );   // convert from dB -> energy
 	level *= numlines_l [i];
 	if ( level < gfc->ATH_partitionbands [i] )

@@ -256,7 +256,7 @@ void compute_ath( lame_global_flags *gfp, FLOAT8 ATH_l[], FLOAT8 ATH_s[] )
     lame_internal_flags *gfc = gfp->internal_flags;
     int sfb, i, start, end;
     FLOAT8 ATH_f;
-    FLOAT8 samp_freq = gfp->out_samplerate/1000.0;
+    FLOAT8 samp_freq = gfp->out_samplerate;
 
     for (sfb = 0; sfb < SBMAX_l; sfb++) {
         start = gfc->scalefac_band.l[ sfb ];
@@ -264,19 +264,10 @@ void compute_ath( lame_global_flags *gfp, FLOAT8 ATH_l[], FLOAT8 ATH_s[] )
         ATH_l[sfb]=1e99;
         for (i = start ; i < end; i++) {
             FLOAT8 freq = i*samp_freq/(2*576);
-            assert( freq < 25 );
             ATH_f = ATHmdct( gfp, freq );  /* freq in kHz */
             ATH_l[sfb] = Min( ATH_l[sfb], ATH_f );
         }
 
-        /*
-        DEBUGF("sfb=%2i freq(khz): %5.2f ..%5.2f  ATH=%6.2f %6.2f  %6.2f   \n",
-            sfb, samp_freq*start/(2*576),
-            samp_freq*end/(2*576),
-            10*log10(ATH_l[sfb]),
-            10*log10(ATHmdct(gfp,samp_freq*start/(2*576))),
-            10*log10(ATHmdct(gfp,samp_freq*end/(2*576))));
-        */
     }
 
     for (sfb = 0; sfb < SBMAX_s; sfb++){
@@ -285,7 +276,6 @@ void compute_ath( lame_global_flags *gfp, FLOAT8 ATH_l[], FLOAT8 ATH_s[] )
         ATH_s[sfb] = 1e99;
         for (i = start ; i < end; i++) {
             FLOAT8 freq = i*samp_freq/(2*192);
-            assert( freq < 25 );
             ATH_f = ATHmdct( gfp, freq );    /* freq in kHz */
             ATH_s[sfb] = Min( ATH_s[sfb], ATH_f );
         }
