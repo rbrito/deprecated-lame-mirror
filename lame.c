@@ -59,7 +59,6 @@ char    inPath[MAX_NAME_SIZE];
 char    outPath[MAX_NAME_SIZE];
 int target_bitrate;
 char               *programName;
-unsigned long num_samples;
 static layer info;
 
 #ifdef BRHIST
@@ -73,10 +72,8 @@ extern long brhist_temp[15];
 int disp_brhist = 1;
 #endif
 
-#define DFLT_LAY        3      /* default encoding layer is III */
 #define DFLT_MOD        'j'    /* default mode is stereo */
 #define DFLT_SFQ        44.1   /* default input sampling rate is 44.1 kHz */
-#define DFLT_EMP        'n'    /* default de-emphasis is none */
 #define DFLT_EXT        ".mp3" /* default output file extension */
 
 
@@ -155,6 +152,321 @@ void lame_usage(char *name)  /* print syntax & exit */
 
 
 
+/********************************************************************
+ *   initialize internal params based on data in gf
+ *   (globalflags struct filled in by calling program)
+ *
+ ********************************************************************/
+void lame_init_params(void)
+{
+  layer *info = fr_ps.header;
+  int framesize;
+  FLOAT compression_ratio;
+  
+
+  if (gf.autoconvert==TRUE) {
+    gf.mode = MPG_MD_MONO; 
+  }
+  if (gf.num_channels==1) {
+    gf.autoconvert = FALSE;  /* avoid 78rpm emulation mode from downmixing mono file! */
+    gf.mode = MPG_MD_MONO;
+  }      
+  /* if user specified mono and there are 2 channels, autoconvert */
+  if ((gf.num_channels==2) && (gf.mode == MPG_MD_MONO))
+    gf.autoconvert = TRUE;
+
+  
+  gf.stereo=2;
+  if (gf.mode == MPG_MD_MONO) gf.stereo=1;
+
+
+
+  /* set the output sampling rate, and resample options if necessary 
+     samplerate = input sample rate
+     resamplerate = ouput sample rate
+  */
+  if (gf.resamplerate==0) {
+    /* user did not specify output sample rate */
+    gf.resamplerate=gf.samplerate;   /* default */
+
+
+    /* if resamplerate is not valid, find a valid value */
+    if (gf.resamplerate>=48000) gf.resamplerate=48000;
+    else if (gf.resamplerate>=44100) gf.resamplerate=44100;
+    else if (gf.resamplerate>=32000) gf.resamplerate=32000;
+    else if (gf.resamplerate>=24000) gf.resamplerate=24000;
+    else if (gf.resamplerate>=22050) gf.resamplerate=22050;
+    else gf.resamplerate=16000;
+
+
+    if (gf.brate>0) {
+      /* check if user specified bitrate requires downsampling */
+      compression_ratio = gf.resamplerate*16*gf.stereo/(1000.0*gf.brate);
+      if (!gf.VBR && compression_ratio > 13 ) {
+	/* automatic downsample, if possible */
+	gf.resamplerate = (10*1000.0*gf.brate)/(16*gf.stereo);
+	if (gf.resamplerate<=16000) gf.resamplerate=16000;
+	else if (gf.resamplerate<=22050) gf.resamplerate=22050;
+	else if (gf.resamplerate<=24000) gf.resamplerate=24000;
+	else if (gf.resamplerate<=32000) gf.resamplerate=32000;
+	else if (gf.resamplerate<=44100) gf.resamplerate=44100;
+	else gf.resamplerate=48000;
+      }
+    }
+  }
+
+  gf.mode_gr = (gf.resamplerate <= 24000) ? 1 : 2;  /* mode_gr = 2 */
+
+  if (gf.brate==0) { /* user didn't specify a bitrate, use default */
+    gf.brate=128;
+    if (gf.mode_gr==1) gf.brate=64;
+  }
+  
+
+  gf.resample_ratio=1;
+  if (gf.resamplerate != gf.samplerate) gf.resample_ratio = (FLOAT)gf.samplerate/(FLOAT)gf.resamplerate;
+
+#ifndef _BLADEDLL
+  /* estimate total frames.  must be done after setting sampling rate so
+   * we know the framesize.  */
+  gf.totalframes=0;
+  framesize = gf.mode_gr*576;
+  if (gf.num_samples == MAX_U_32_NUM) { 
+    stat(inPath,&sb);  /* try file size, assume 2 bytes per sample */
+    if (gf.input_format == sf_mp3) {
+      FLOAT totalseconds = (sb.st_size*8.0/(1000.0*GetSndBitrate()));
+      FLOAT framespersecond =  (FLOAT)gf.samplerate/(FLOAT)framesize;
+      gf.totalframes = 1+(totalseconds*framespersecond);
+    }else{
+      gf.totalframes = 2+(sb.st_size/(2*framesize*gf.num_channels));
+    }
+  }else{
+    gf.totalframes = 2+ gf.num_samples/(gf.resample_ratio*framesize);
+  }
+#endif /* _BLADEDLL */
+
+
+
+
+
+
+  /* 44.1kHz at 56kbs/channel: compression factor of 12.6 
+     44.1kHz at 64kbs/channel: compression factor of 11.025 
+     44.1kHz at 80kbs/channel: compression factor of 8.82 
+     22.05kHz at 24kbs:  14.7 
+     22.05kHz at 32kbs:  11.025
+     22.05kHz at 40kbs:  8.82 
+     16kHz at 16kbs:  16.0 
+     16kHz at 24kbs:  10.7 
+    
+     compression_ratio 
+        11                                .70?
+        12                   sox resample .66
+        14.7                 sox resample .45
+                 
+  */
+  if (gf.brate >= 320) gf.VBR=0;  /* dont bother with VBR at 320kbs */
+  compression_ratio = gf.resamplerate*16*gf.stereo/(1000.0*gf.brate);
+
+  /* if the user did not specify a large VBR_min_bitrate (=brate),
+   * compression_ratio not well defined.  take a guess: */
+  if (gf.VBR && compression_ratio>11) {
+    compression_ratio = 11.025;               /* like 44kHz/64kbs per channel */
+    if (gf.VBR_q <= 4) compression_ratio=8.82;   /* like 44kHz/80kbs per channel */
+    if (gf.VBR_q <= 3) compression_ratio=7.35;   /* like 44kHz/96kbs per channel */
+  }
+
+
+  /* At higher quality (lower compression) use STEREO instead of JSTEREO.
+   * (unless the user explicitly specified a mode ) */
+  if ( (!gf.mode_fixed) && (gf.mode !=MPG_MD_MONO)) {
+    if (compression_ratio < 9 ) {
+      gf.mode = MPG_MD_STEREO; 
+    }
+  }
+
+
+  if (gf.lowpassfreq == 0) {
+    /* Should we disable the scalefactor band 21 cutoff? 
+     * FhG does this for bps <= 128kbs, so we will too.  
+     * This amounds to a 16kHz low-pass filter.  If that offends you, you
+     * probably should not be encoding at 128kbs!
+     * There is no ratio[21] or xfsf[21], so when these coefficients are
+     * included they are just quantized as is.  mt 5/99
+     */
+    /* disable sfb21 cutoff for low amounts of compression */
+    if (compression_ratio<9.0) gf.sfb21=0;
+
+
+    /* Should we use some lowpass filters? */    
+    if (!gf.VBR) {
+    if (gf.brate/gf.stereo <= 32  ) {
+      /* high compression, low bitrates, lets use a filter */
+      if (compression_ratio > 15.5) {
+	gf.lowpass1=.35;  /* good for 16kHz 16kbs compression = 16*/
+	gf.lowpass2=.50;
+      }else if (compression_ratio > 14) {
+	gf.lowpass1=.40;  /* good for 22kHz 24kbs compression = 14.7*/
+	gf.lowpass2=.55;
+      }else if (compression_ratio > 10) {
+	gf.lowpass1=.55;  /* good for 16kHz 24kbs compression = 10.7*/
+	gf.lowpass2=.70;
+      }else if (compression_ratio > 8) {
+	gf.lowpass1=.65; 
+	gf.lowpass2=.80;
+      }else {
+	gf.lowpass1=.85;
+	gf.lowpass2=.99;
+      }
+    }
+    }
+    /* 14.5khz = .66  16kHz = .73 */
+    /*
+      lowpass1 = .73-.10;
+      lowpass2 = .73+.05;
+    */
+    
+
+
+    /* apply user driven filters*/
+    if ( gf.highpassfreq > 0 ) {
+      gf.highpass1 = 2.0*gf.highpassfreq/gf.resamplerate; /* will always be >=0 */
+      if ( gf.highpasswidth >= 0 ) {
+	gf.highpass2 = 2.0*(gf.highpassfreq+gf.highpasswidth)/gf.resamplerate;
+      } else {
+	gf.highpass2 = 1.15*2.0*gf.highpassfreq/gf.resamplerate; /* 15% above on default */
+      }
+      if ( gf.highpass1 == gf.highpass2 ) { /* ensure highpass1 < highpass2 */
+	gf.highpass2 += 1E-6;
+      }
+      gf.highpass1 = Min( 1, gf.highpass1 );
+      gf.highpass2 = Min( 1, gf.highpass2 );
+    }
+    if ( gf.lowpassfreq > 0 ) {
+      gf.lowpass2 = 2.0*gf.lowpassfreq/gf.resamplerate; /* will always be >=0 */
+      if ( gf.lowpasswidth >= 0 ) { 
+	gf.lowpass1 = 2.0*(gf.lowpassfreq-gf.lowpasswidth)/gf.resamplerate;
+	if ( gf.lowpass1 < 0 ) { /* has to be >= 0 */
+	  gf.lowpass1 = 0;
+	}
+      } else {
+	gf.lowpass1 = 0.85*2.0*gf.lowpassfreq/gf.resamplerate; /* 15% below on default */
+      }
+      if ( gf.lowpass1 == gf.lowpass2 ) { /* ensure lowpass1 < lowpass2 */
+	gf.lowpass2 += 1E-6;
+      }
+      gf.lowpass1 = Min( 1, gf.lowpass1 );
+      gf.lowpass2 = Min( 1, gf.lowpass2 );
+    }
+   
+  }
+  
+  /* dont use cutoff filter and lowpass filter */
+  if ( gf.lowpass1>0 ) gf.sfb21 = 0;
+
+
+
+  info->emphasis = gf.emphasis;
+  info->copyright = gf.copyright;
+  info->original = gf.original;
+  info->error_protection = gf.error_protection;
+  info->lay = 3;
+  info->mode = gf.mode;
+  info->mode_ext=MPG_MD_LR_LR;
+  fr_ps.actual_mode = info->mode;
+  gf.stereo = (info->mode == MPG_MD_MONO) ? 1 : 2;
+  
+
+  info->sampling_frequency = SmpFrqIndex((long)gf.resamplerate, &info->version);
+  if( info->sampling_frequency < 0) {
+    display_bitrates(2);
+    exit(1);
+  }
+  if( (info->bitrate_index = BitrateIndex(3, gf.brate, info->version,gf.resamplerate)) < 0) {
+    display_bitrates(2);
+    exit(1);
+  }
+  
+
+  /* choose a min/max bitrate for VBR */
+  if (gf.VBR) {
+    /* if the user didn't specify VBR_max_bitrate: */
+    if (0==gf.VBR_max_bitrate_kbps) {
+      /* default max bitrate is 256kbs */
+      /* we do not normally allow 320bps frams with VBR, unless: */
+      if (gf.VBR_min_bitrate_kbps>=256) gf.VBR_max_bitrate=14;  
+      if (gf.VBR_q == 0) gf.VBR_max_bitrate=14;   /* allow 320kbs */
+      if (gf.VBR_q >= 4) gf.VBR_max_bitrate=12;   /* max = 224kbs */
+      if (gf.VBR_q >= 8) gf.VBR_max_bitrate=9;    /* low quality, max = 128kbs */
+      if (gf.voice_mode) gf.VBR_max_bitrate=10;
+    }else{
+      if( (gf.VBR_max_bitrate  = BitrateIndex(3, gf.VBR_max_bitrate_kbps, info->version,gf.resamplerate)) < 0) {
+	display_bitrates(2);
+	exit(1);
+      }
+    }
+    if (0==gf.VBR_min_bitrate_kbps) {
+      gf.VBR_min_bitrate=1;  /* 32 kbps */
+    }else{
+      if( (gf.VBR_min_bitrate  = BitrateIndex(3, gf.VBR_min_bitrate_kbps, info->version,gf.resamplerate)) < 0) {
+	display_bitrates(2);
+	exit(1);
+      }
+    }
+
+  }
+
+
+  if (gf.VBR) gf.highq=1;                    /* always use highq with VBR */
+  /* dont allow forced mid/side stereo for mono output */
+  if (gf.mode == MPG_MD_MONO) force_ms=0;  
+
+  if (gf.gtkflag) {
+    gf.lame_nowrite=1;    /* disable all file output */
+    gf.bWriteVbrTag=0;  /* disable Xing VBR tag */
+  }
+
+  if (gf.mode_gr==1) {
+    gf.bWriteVbrTag=0;      /* no MPEG2 Xing VBR tags yet */
+  }
+
+  /* open the output file */
+  /* if gtkflag, no output.  but set outfile = stdout */
+  open_bit_stream_w(&bs, outPath, BUFFER_SIZE,gf.lame_nowrite);  
+
+
+#ifdef BRHIST
+  if (gf.VBR) {
+    if (disp_brhist)
+      brhist_init(1, 14);
+  } else
+    disp_brhist = 0;
+#endif
+
+
+  if (gf.bWriteVbrTag)
+    {
+      /* Write initial VBR Header to bitstream */
+      InitVbrTag(&bs,info->version-1,gf.mode,info->sampling_frequency);
+      /* flush VBR header frame to mp3 file */
+      if (!gf.lame_nowrite) 
+	  {
+		write_buffer(&bs);
+		empty_buffer(&bs);
+	  }
+      /* note: if lame_nowrite==0, we do not empty the buffer, the VBR header will
+       * remain in the bit buffer and the first mp3 frame will be
+       * appeneded.  this way, lame_encode() will return to the calling
+       * program the VBR header along with the first mp3 frame */
+    }
+  return;
+}
+
+
+
+
+
+
 
 /************************************************************************
 *
@@ -173,50 +485,11 @@ void lame_usage(char *name)  /* print syntax & exit */
 void lame_parse_args(int argc, char **argv)
 {
   FLOAT srate;
-  int   brate,VBR_max_bitrate_kbps=0;
-  layer *info = fr_ps.header;
   int   err = 0, i = 0;
-  int mode_given=0;
-  int num_channels;   /* number of channels of INPUT file */
-  int samplerate,resamplerate=0;
-  int lowpassrate=0, highpassrate=0; /* initialized to use defaults */
-  int lowpasswidth=-1, highpasswidth=-1; /* initialized to use defaults */
-  int framesize;
-  FLOAT compression_ratio;
-  int keep_all_freq = 0;
 
   /* preset defaults */
   programName = argv[0]; 
   inPath[0] = '\0';   outPath[0] = '\0';
-  info->lay = DFLT_LAY;
-  switch(DFLT_MOD) {
-  case 's': info->mode = MPG_MD_STEREO; info->mode_ext = MPG_MD_LR_LR; break;
-  case 'd': info->mode = MPG_MD_DUAL_CHANNEL; info->mode_ext=MPG_MD_LR_LR; break;
-  case 'j': info->mode = MPG_MD_JOINT_STEREO; info->mode_ext=MPG_MD_LR_LR; break;
-  case 'm': info->mode = MPG_MD_MONO; info->mode_ext = MPG_MD_LR_LR; break;
-  default:
-    fprintf(stderr, "%s: Bad mode dflt %c\n", programName, DFLT_MOD);
-    abort();
-  }
-  samplerate = 1000*DFLT_SFQ;
-  if((info->sampling_frequency = SmpFrqIndex((long)samplerate, &info->version)) < 0) {
-    fprintf(stderr, "%s: bad sfrq default %.2f\n", programName, DFLT_SFQ);
-    abort();
-  }
-
-  info->bitrate_index = 9;
-  brate = 0;
-  switch(DFLT_EMP) {
-  case 'n': info->emphasis = 0; break;
-  case '5': info->emphasis = 1; break;
-  case 'c': info->emphasis = 3; break;
-  default: 
-    fprintf(stderr, "%s: Bad emph dflt %c\n", programName, DFLT_EMP);
-    abort();
-  }
-  info->copyright = 0;
-  info->original = 1;
-  info->error_protection = FALSE;
   
 #ifndef _BLADEDLL
   id3_inittag(&id3tag);
@@ -246,9 +519,9 @@ void lame_parse_args(int argc, char **argv)
 	  argUsed=1;
 	  srate = atof( nextArg );
 	  /* samplerate = rint( 1000.0 * srate ); $A  */
-	  resamplerate =  (( 1000.0 * srate ) + 0.5);
+	  gf.resamplerate =  (( 1000.0 * srate ) + 0.5);
 	  if (srate  < 1) {
-	    fprintf(stderr,"Must specify samplerate with --resample\n");
+	    fprintf(stderr,"Must specify a samplerate with --resample\n");
 	    exit(1);
 	  }
 	}
@@ -318,32 +591,32 @@ void lame_parse_args(int argc, char **argv)
 #endif
 	else if (strcmp(token, "lowpass")==0) {
 	  argUsed=1;
-	  lowpassrate =  (( 1000.0 * atof( nextArg ) ) + 0.5);
-	  if (lowpassrate  < 1) {
+	  gf.lowpassfreq =  (( 1000.0 * atof( nextArg ) ) + 0.5);
+	  if (gf.lowpassfreq  < 1) {
 	    fprintf(stderr,"Must specify lowpass with --lowpass freq, freq >= 0.001 kHz\n");
 	    exit(1);
 	  }
 	}
 	else if (strcmp(token, "lowpass-width")==0) {
 	  argUsed=1;
-	  lowpasswidth =  (( 1000.0 * atof( nextArg ) ) + 0.5);
-	  if (lowpasswidth  < 0) {
+	  gf.lowpasswidth =  (( 1000.0 * atof( nextArg ) ) + 0.5);
+	  if (gf.lowpasswidth  < 0) {
 	    fprintf(stderr,"Must specify lowpass width with --lowpass-width freq, freq >= 0 kHz\n");
 	    exit(1);
 	  }
 	}
 	else if (strcmp(token, "highpass")==0) {
 	  argUsed=1;
-	  highpassrate =  (( 1000.0 * atof( nextArg ) ) + 0.5);
-	  if (highpassrate  < 1) {
+	  gf.highpassfreq =  (( 1000.0 * atof( nextArg ) ) + 0.5);
+	  if (gf.highpassfreq  < 1) {
 	    fprintf(stderr,"Must specify highpass with --highpass freq, freq >= 0.001 kHz\n");
 	    exit(1);
 	  }
 	}
 	else if (strcmp(token, "highpass-width")==0) {
 	  argUsed=1;
-	  highpasswidth =  (( 1000.0 * atof( nextArg ) ) + 0.5);
-	  if (highpasswidth  < 0) {
+	  gf.highpasswidth =  (( 1000.0 * atof( nextArg ) ) + 0.5);
+	  if (gf.highpasswidth  < 0) {
 	    fprintf(stderr,"Must specify highpass width with --highpass-width freq, freq >= 0 kHz\n");
 	    exit(1);
 	  }
@@ -368,17 +641,16 @@ void lame_parse_args(int argc, char **argv)
 	else                             arg = nextArg;
 	switch(c) {
 	case 'm':        argUsed = 1;
-	  mode_given=1;
 	  if (*arg == 's')
-	    { info->mode = MPG_MD_STEREO; info->mode_ext = MPG_MD_LR_LR; }
+	    { gf.mode = MPG_MD_STEREO; }
 	  else if (*arg == 'd')
-	    { info->mode = MPG_MD_DUAL_CHANNEL; info->mode_ext=MPG_MD_LR_LR; }
+	    { gf.mode = MPG_MD_DUAL_CHANNEL; }
 	  else if (*arg == 'j')
-	    { info->mode = MPG_MD_JOINT_STEREO; info->mode_ext=MPG_MD_LR_LR; }
+	    { gf.mode = MPG_MD_JOINT_STEREO; }
 	  else if (*arg == 'f')
-	    { info->mode = MPG_MD_JOINT_STEREO; force_ms=1; info->mode_ext=MPG_MD_LR_LR; }
+	    { gf.mode = MPG_MD_JOINT_STEREO; force_ms=1; }
 	  else if (*arg == 'm')
-	    { info->mode = MPG_MD_MONO; info->mode_ext = MPG_MD_LR_LR; }
+	    { gf.mode = MPG_MD_MONO; }
 	  else {
 	    fprintf(stderr,"%s: -m mode must be s/d/j/f/m not %s\n",
 		    programName, arg);
@@ -417,15 +689,16 @@ void lame_parse_args(int argc, char **argv)
 	  argUsed = 1;
 	  srate = atof( arg );
 	  /* samplerate = rint( 1000.0 * srate ); $A  */
-	  samplerate =  (( 1000.0 * srate ) + 0.5);
+	  gf.samplerate =  (( 1000.0 * srate ) + 0.5);
 	  break;
 	case 'b':        
 	  argUsed = 1;
-	  brate = atoi(arg); 
+	  gf.brate = atoi(arg); 
+	  gf.VBR_min_bitrate_kbps=gf.brate;
 	  break;
 	case 'B':        
 	  argUsed = 1;
-	  VBR_max_bitrate_kbps=atoi(arg); 
+	  gf.VBR_max_bitrate_kbps=atoi(arg); 
 	  break;	
 case 't':  /* dont write VBR tag */
 		gf.bWriteVbrTag=0;
@@ -441,7 +714,7 @@ case 't':  /* dont write VBR tag */
 	  gf.swapbytes=TRUE;
 	  break;
 	case 'p': /* (jo) error_protection: add crc16 information to stream */
-	  info->error_protection = 1; 
+	  gf.error_protection = 1; 
 	  break;
 	case 'a': /* autoconvert input file from stereo to mono - for mono mp3 encoding */
 	  gf.autoconvert = TRUE;
@@ -450,7 +723,9 @@ case 't':  /* dont write VBR tag */
 	  gf.highq = TRUE;
 	  break;
 	case 'k': 
-	  keep_all_freq = 1;
+	  gf.sfb21=0;  
+	  gf.lowpassfreq=-1;
+	  gf.highpassfreq=-1;
 	  break;
 	case 'd': 
 	  gf.allow_diff_short = 1;
@@ -477,7 +752,7 @@ case 't':  /* dont write VBR tag */
 	  else if (*arg == '6')
 	    { gf.experimentalX=6; }
 	  else {
-	    fprintf(stderr,"%s: -X n must be 0-6 not %s\n",
+	    fprintf(stderr,"%s: -X n must be 0-6, not %s\n",
 		    programName, arg);
 	    err = 1;
 	  }
@@ -499,17 +774,17 @@ case 't':  /* dont write VBR tag */
 	  break;
 #endif
 	case 'e':        argUsed = 1;
-	  if (*arg == 'n')                    info->emphasis = 0;
-	  else if (*arg == '5')               info->emphasis = 1;
-	  else if (*arg == 'c')               info->emphasis = 3;
+	  if (*arg == 'n')                    gf.emphasis = 0;
+	  else if (*arg == '5')               gf.emphasis = 1;
+	  else if (*arg == 'c')               gf.emphasis = 3;
 	  else {
 	    fprintf(stderr,"%s: -e emp must be n/5/c not %s\n",
 		    programName, arg);
 	    err = 1;
 	  }
 	  break;
-	case 'c':       info->copyright = 1; break;
-	case 'o':       info->original  = 0; break;
+	case 'c':       gf.copyright = 1; break;
+	case 'o':       gf.original  = 0; break;
 	default:        fprintf(stderr,"%s: unrec option %c\n",
 				programName, c);
 	err = 1; break;
@@ -560,319 +835,25 @@ case 't':  /* dont write VBR tag */
       gf.input_format = sf_mp3;
 
   /* default guess for number of channels */
-  if (gf.autoconvert) num_channels=2; 
-  else if (info->mode == MPG_MD_MONO) num_channels=1;
-  else num_channels=2;
+  if (gf.autoconvert) gf.num_channels=2; 
+  else if (gf.mode == MPG_MD_MONO) gf.num_channels=1;
+  else gf.num_channels=2;
   
 #ifdef _BLADEDLL
-  num_samples=0;
+  gf.num_samples=0;
 #else
   /* open the input file */
-  OpenSndFile(inPath,info,samplerate,num_channels);  
+  OpenSndFile(inPath,gf.samplerate,gf.num_channels);  
   /* if GetSndSampleRate is non zero, use it to overwrite the default */
-  if (GetSndSampleRate()) samplerate=GetSndSampleRate();
-  if (GetSndChannels()) num_channels=GetSndChannels();
-  num_samples = GetSndSamples();
+  if (GetSndSampleRate()) gf.samplerate=GetSndSampleRate();
+  if (GetSndChannels()) gf.num_channels=GetSndChannels();
+  gf.num_samples = GetSndSamples();
 #endif
 
-  if (gf.autoconvert==TRUE) {
-    info->mode = MPG_MD_MONO; 
-    info->mode_ext = MPG_MD_LR_LR;
-  }
-  if (num_channels==1) {
-    gf.autoconvert = FALSE;  /* avoid 78rpm emulation mode from downmixing mono file! */
-    info->mode = MPG_MD_MONO;
-    info->mode_ext = MPG_MD_LR_LR;
-  }      
-  /* if user specified mono and there are 2 channels, autoconvert */
-  if ((num_channels==2) && (info->mode == MPG_MD_MONO))
-    gf.autoconvert = TRUE;
-  
-  if ((num_channels==1) && (info->mode!=MPG_MD_MONO)) {
-    fprintf(stderr,"Error: mono input, stereo output not supported. \n");
-    exit(1);
-  }
-  gf.stereo=2;
-  if (info->mode == MPG_MD_MONO) gf.stereo=1;
-
-
-  /* set the output sampling rate, and resample options if necessary 
-     samplerate = input sample rate
-     resamplerate = ouput sample rate
-  */
-  if (resamplerate==0) {
-    /* user did not specify output sample rate */
-    resamplerate=samplerate;   /* default */
-
-    /* if resamplerate is not valid, find a valid value */
-    if (SmpFrqIndex((long)resamplerate, &info->version) < 0) {
-	if (resamplerate>48000) resamplerate=48000;
-	else if (resamplerate>44100) resamplerate=44100;
-	else if (resamplerate>32000) resamplerate=32000;
-	else if (resamplerate>24000) resamplerate=24000;
-	else if (resamplerate>22050) resamplerate=22050;
-	else resamplerate=16000;
-    }
-
-    if (brate>0) {
-      compression_ratio = resamplerate*16*gf.stereo/(1000.0*brate);
-      if (!gf.VBR && compression_ratio > 13 ) {
-	/* automatic downsample, if possible */
-	resamplerate = (10*1000.0*brate)/(16*gf.stereo);
-	if (resamplerate<16000) resamplerate=16000;
-	else if (resamplerate<22050) resamplerate=22050;
-	else if (resamplerate<24000) resamplerate=24000;
-	else if (resamplerate<32000) resamplerate=32000;
-	else if (resamplerate<44100) resamplerate=44100;
-	else resamplerate=48000;
-      }
-    }
-  }
-
-
-  info->sampling_frequency = SmpFrqIndex((long)resamplerate, &info->version);
-  if( info->sampling_frequency < 0) {
-    display_bitrates(2);
-    exit(1);
-  }
-
-
-
-
-
-  if ( brate == 0 ) {
-    info->bitrate_index=9;
-    brate = bitrate[info->version][info->lay-1][info->bitrate_index];
-  } else {
-    if( (info->bitrate_index = BitrateIndex(info->lay, brate, info->version,resamplerate)) < 0) {
-      display_bitrates(2);
-      exit(1);
-    }
-    /* a bit rate was specified.  for VBR, take this to be the minimum */
-    gf.VBR_min_bitrate=info->bitrate_index;
-  }
-  if (info->bitrate_index==14) gf.VBR=0;  /* dont bother with VBR at 320kbs */
-  compression_ratio = resamplerate*16*gf.stereo/(1000.0*brate);
-
-  gf.resample_ratio=1;
-  if (resamplerate != samplerate) gf.resample_ratio = (FLOAT)samplerate/(FLOAT)resamplerate;
-
-
-#ifndef _BLADEDLL
-  /* estimate total frames.  must be done after setting sampling rate so
-   * we know the framesize.  */
-  gf.totalframes=0;
-  framesize = (info->version==0) ? 576 : 1152;
-  if (num_samples == MAX_U_32_NUM) { 
-    stat(inPath,&sb);  /* try file size, assume 2 bytes per sample */
-    if (gf.input_format == sf_mp3) {
-      FLOAT totalseconds = (sb.st_size*8.0/(1000.0*GetSndBitrate()));
-      FLOAT framespersecond =  (FLOAT)samplerate/(FLOAT)framesize;
-      gf.totalframes = 1+(totalseconds*framespersecond);
-    }else{
-      gf.totalframes = 2+(sb.st_size/(2*framesize*num_channels));
-    }
-  }else{
-    gf.totalframes = 2+ num_samples/(gf.resample_ratio*framesize);
-  }
-#endif /* _BLADEDLL */
-
-
-
-
-
-  /* 44.1kHz at 56kbs/channel: compression factor of 12.6 
-     44.1kHz at 64kbs/channel: compression factor of 11.025 
-     44.1kHz at 80kbs/channel: compression factor of 8.82 
-     22.05kHz at 24kbs:  14.7 
-     22.05kHz at 32kbs:  11.025
-     22.05kHz at 40kbs:  8.82 
-     16kHz at 16kbs:  16.0 
-     16kHz at 24kbs:  10.7 
-    
-     compression_ratio 
-        11                                .70?
-        12                   sox resample .66
-        14.7                 sox resample .45
-                 
-  */
-  /* if the user did not specify a large VBR_min_bitrate (=brate),
-   * compression_ratio not well defined.  take a guess: */
-  if (gf.VBR && compression_ratio>11) {
-    compression_ratio = 11.025;               /* like 44kHz/64kbs per channel */
-    if (gf.VBR_q <= 4) compression_ratio=8.82;   /* like 44kHz/80kbs per channel */
-    if (gf.VBR_q <= 3) compression_ratio=7.35;   /* like 44kHz/96kbs per channel */
-  }
-
-
-  /* At higher quality (lower compression) use STEREO instead of JSTEREO.
-   * (unless the user explicitly specified a mode ) */
-  if ( (!mode_given) && (info->mode !=MPG_MD_MONO)) {
-    if (compression_ratio < 9 ) {
-      info->mode = MPG_MD_STEREO; info->mode_ext = MPG_MD_LR_LR;
-    }
-  }
-
-  if (keep_all_freq) {
-    /* disable sfb=21 cutoff and all filters*/
-    gf.sfb21=0;  
-    gf.lowpass1=0;
-    gf.lowpass2=0;
-    gf.highpass1=0;
-    gf.highpass1=0;
-  }else{
-
-    /* Should we disable the scalefactor band 21 cutoff? 
-     * FhG does this for bps <= 128kbs, so we will too.  
-     * This amounds to a 16kHz low-pass filter.  If that offends you, you
-     * probably should not be encoding at 128kbs!
-     * There is no ratio[21] or xfsf[21], so when these coefficients are
-     * included they are just quantized as is.  mt 5/99
-     */
-    /* disable sfb21 cutoff for low amounts of compression */
-    if (compression_ratio<9.0) gf.sfb21=0;
-
-
-    /* Should we use some lowpass filters? */    
-    if (!gf.VBR) {
-    if (brate/gf.stereo <= 32  ) {
-      /* high compression, low bitrates, lets use a filter */
-      gf.sfb21=0; /* not needed */
-      if (compression_ratio > 15.5) {
-	gf.lowpass1=.35;  /* good for 16kHz 16kbs compression = 16*/
-	gf.lowpass2=.50;
-      }else if (compression_ratio > 14) {
-	gf.lowpass1=.40;  /* good for 22kHz 24kbs compression = 14.7*/
-	gf.lowpass2=.55;
-      }else if (compression_ratio > 10) {
-	gf.lowpass1=.55;  /* good for 16kHz 24kbs compression = 10.7*/
-	gf.lowpass2=.70;
-      }else if (compression_ratio > 8) {
-	gf.lowpass1=.65; 
-	gf.lowpass2=.80;
-      }else {
-	gf.lowpass1=.85;
-	gf.lowpass2=.99;
-      }
-    }
-    }
-    
-    /* 14.5khz = .66  16kHz = .73 */
-    /*
-      lowpass1 = .73-.10;
-      lowpass2 = .73+.05;
-    */
-    
-    /* apply user driven filters, may override above calculations 
-     */
-    if ( highpassrate > 0 ) {
-      gf.highpass1 = 2.0*highpassrate/resamplerate; /* will always be >=0 */
-      if ( highpasswidth >= 0 ) {
-	gf.highpass2 = 2.0*(highpassrate+highpasswidth)/resamplerate;
-      } else {
-	gf.highpass2 = 1.15*2.0*highpassrate/resamplerate; /* 15% above on default */
-      }
-      if ( gf.highpass1 == gf.highpass2 ) { /* ensure highpass1 < highpass2 */
-	gf.highpass2 += 1E-6;
-      }
-      gf.highpass1 = Min( 1, gf.highpass1 );
-      gf.highpass2 = Min( 1, gf.highpass2 );
-    }
-    if ( lowpassrate > 0 ) {
-      gf.lowpass2 = 2.0*lowpassrate/resamplerate; /* will always be >=0 */
-      if ( lowpasswidth >= 0 ) { 
-	gf.lowpass1 = 2.0*(lowpassrate-lowpasswidth)/resamplerate;
-	if ( gf.lowpass1 < 0 ) { /* has to be >= 0 */
-	  gf.lowpass1 = 0;
-	}
-      } else {
-	gf.lowpass1 = 0.85*2.0*lowpassrate/resamplerate; /* 15% below on default */
-      }
-      if ( gf.lowpass1 == gf.lowpass2 ) { /* ensure lowpass1 < lowpass2 */
-	gf.lowpass2 += 1E-6;
-      }
-      gf.lowpass1 = Min( 1, gf.lowpass1 );
-      gf.lowpass2 = Min( 1, gf.lowpass2 );
-    }
-   
-    /* dont use cutoff filter and lowpass filter */
-    if ( gf.lowpass1>0 ) gf.sfb21 = 0;
-  }
-  
-  
-  
-  
-
-  /* choose a max bitrate for VBR */
-  if (gf.VBR) {
-    /* if the user didn't specify VBR_max_bitrate: */
-    if (0==VBR_max_bitrate_kbps) {
-      /* default max bitrate is 256kbs */
-      /* we do not normally allow 320bps frams with VBR, unless: */
-      if (info->bitrate_index==13) gf.VBR_max_bitrate=14;  
-      if (gf.VBR_q == 0) gf.VBR_max_bitrate=14;   /* allow 320kbs */
-      if (gf.VBR_q >= 4) gf.VBR_max_bitrate=12;   /* max = 224kbs */
-      if (gf.VBR_q >= 8) gf.VBR_max_bitrate=9;    /* low quality, max = 128kbs */
-      if (gf.voice_mode) gf.VBR_max_bitrate=10;
-    }else{
-      if( (gf.VBR_max_bitrate  = BitrateIndex(info->lay, VBR_max_bitrate_kbps, info->version,resamplerate)) < 0) {
-	display_bitrates(2);
-	exit(1);
-      }
-    }
-  }
-
-
-  if (gf.VBR) gf.highq=1;                    /* always use highq with VBR */
-  /* dont allow forced mid/side stereo for mono output */
-  if (info->mode == MPG_MD_MONO) force_ms=0;  
-
-  if (gf.gtkflag) {
-    gf.lame_nowrite=1;    /* disable all file output */
-    gf.bWriteVbrTag=0;  /* disable Xing VBR tag */
-  }
-
-  if (info->version==0) {
-    gf.bWriteVbrTag=0;      /* no MPEG2 Xing VBR tags yet */
-  }
-
-  gf.mode_gr = (info->version == 1) ? 2 : 1;  /* mode_gr = 2 */
-
-  /* open the output file */
-  /* if gtkflag, no output.  but set outfile = stdout */
-  open_bit_stream_w(&bs, outPath, BUFFER_SIZE,gf.lame_nowrite);  
-
-  /* copy some header information */
-  fr_ps.actual_mode = info->mode;
-  /*  fr_ps.stereo = (info->mode == MPG_MD_MONO) ? 1 : 2;*/
-  gf.stereo = (info->mode == MPG_MD_MONO) ? 1 : 2;
-
-#ifdef BRHIST
-  if (gf.VBR) {
-    if (disp_brhist)
-      brhist_init(1, 14);
-  } else
-    disp_brhist = 0;
-#endif
-
-  if (gf.bWriteVbrTag)
-    {
-      /* Write initial VBR Header to bitstream */
-      InitVbrTag(&bs,info->version-1,info->mode,info->sampling_frequency);
-      /* flush VBR header frame to mp3 file */
-      if (!gf.lame_nowrite) 
-	  {
-		write_buffer(&bs);
-		empty_buffer(&bs);
-	  }
-      /* note: if lame_nowrite==0, we do not empty the buffer, the VBR header will
-       * remain in the bit buffer and the first mp3 frame will be
-       * appeneded.  this way, lame_encode() will return to the calling
-       * program the VBR header along with the first mp3 frame */
-    }
-
-  return;
+  lame_init_params();
 }
+
+
 
 
 
@@ -1431,9 +1412,9 @@ int lame_readframe(short int Buffer[2][1152])
 #endif
   if (gf.resample_ratio!=1) {
     /* input frequency =  output freq*resample_ratio; */
-    iread=get_audio_resample(Buffer,gf.resample_ratio,gf.stereo,fr_ps.header);
+    iread=get_audio_resample(Buffer,gf.resample_ratio,gf.stereo);
   }else{
-    iread = get_audio(Buffer,gf.stereo,fr_ps.header);
+    iread = get_audio(Buffer,gf.stereo);
   }
 
   /* check to see if we overestimated/underestimated totalframes */
@@ -1497,6 +1478,10 @@ void lame_init(int nowrite)
   gf.highq=0;
   gf.input_format=sf_unknown;
   gf.lame_nowrite=nowrite;
+  gf.lowpassfreq=0;
+  gf.highpassfreq=0;
+  gf.lowpasswidth=-1;
+  gf.highpasswidth=-1;
   gf.lowpass1=0;
   gf.lowpass2=0;
   gf.highpass1=0;
@@ -1509,11 +1494,28 @@ void lame_init(int nowrite)
   gf.totalframes=0;
   gf.VBR=0;
   gf.VBR_q=4;
-  gf.VBR_min_bitrate=1;   /* 32kbs */
-  gf.VBR_max_bitrate=13;  /* 256kbs */
+  gf.VBR_min_bitrate_kbps=0;
+  gf.VBR_max_bitrate_kbps=0;
   gf.voice_mode=0;
 
-
+  switch(DFLT_MOD) {
+  case 's': gf.mode = MPG_MD_STEREO; break;
+  case 'd': gf.mode = MPG_MD_DUAL_CHANNEL; break;
+  case 'j': gf.mode = MPG_MD_JOINT_STEREO; break;
+  case 'm': gf.mode = MPG_MD_MONO; break;
+  default:
+    fprintf(stderr, "%s: Bad mode dflt %c\n", programName, DFLT_MOD);
+    abort();
+  }
+  gf.brate=0;
+  gf.copyright=0;
+  gf.original=1;
+  gf.error_protection=0;
+  gf.emphasis=0;
+  gf.samplerate=1000*DFLT_SFQ;
+  gf.resamplerate=0;
+  gf.num_channels=2;
+  gf.num_samples=MAX_U_32_NUM;
 
   /* Clear info structure */
   memset(&info,0,sizeof(info));
@@ -1540,8 +1542,7 @@ void lame_getmp3info(lame_mp3info *mp3info)
   mp3info->totalframes=gf.totalframes;
   mp3info->framesize = (fr_ps.header->version==0) ? 576 : 1152;
   mp3info->output_channels = gf.stereo;
-  mp3info->output_samplerate = (int)
-     1000*s_freq[fr_ps.header->version][fr_ps.header->sampling_frequency];
+  mp3info->output_samplerate = gf.resamplerate;
 }
 
 

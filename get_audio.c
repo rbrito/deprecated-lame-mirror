@@ -29,7 +29,7 @@ int read_samples_mp3(FILE *musicin,short int mpg123pcm[2][1152],int num_chan);
 *
 *
 ************************************************************************/
-int get_audio(short buffer[2][1152],int stereo, layer* info)
+int get_audio(short buffer[2][1152],int stereo)
 {
 
   int		j;
@@ -46,7 +46,7 @@ int get_audio(short buffer[2][1152],int stereo, layer* info)
   }
 
   remaining=num_samples-num_samples_read;
-  framesize = (info->version ==0) ? 576 : 1152;
+  framesize = gf.mode_gr*576;
   samples_to_read = remaining > framesize ? framesize : remaining;
   if (samples_to_read<0) samples_to_read=0;
 
@@ -92,7 +92,7 @@ int get_audio(short buffer[2][1152],int stereo, layer* info)
 *
 *
 ************************************************************************/
-int get_audio_resample(short int Buffer[2][1152],FLOAT resample_ratio,int stereo, layer *info)
+int get_audio_resample(short int Buffer[2][1152],FLOAT resample_ratio,int stereo)
 {
 
   typedef short int sample_buffer[2][1152];
@@ -105,7 +105,7 @@ int get_audio_resample(short int Buffer[2][1152],FLOAT resample_ratio,int stereo
   int rcode,out_framesize,ch,j,k;
   static int in_framesize;
 
-  out_framesize = (info->version ==0) ? 576 : 1152;
+  out_framesize = gf.mode_gr*576;
   rcode=out_framesize;  
   /* if during the last call to resample we got an iread=0, set rcode=0 */
   if (iread==0) rcode=0;
@@ -115,9 +115,9 @@ int get_audio_resample(short int Buffer[2][1152],FLOAT resample_ratio,int stereo
     r0=&bufa[0];
     r1=&bufa[1];
     in_framesize=out_framesize;
-    iread=get_audio(*r0,stereo,info);
+    iread=get_audio(*r0,stereo);
     if (iread>0) in_framesize=iread;
-    iread=get_audio(*r1,stereo,info);
+    iread=get_audio(*r1,stereo);
   }
 
   /* time of j'th element in r0] = itime + j/ifreq; */
@@ -143,7 +143,7 @@ int get_audio_resample(short int Buffer[2][1152],FLOAT resample_ratio,int stereo
 
     if ((1+j)>=in_framesize) {
       swap=r0; r0=r1; r1=swap;
-      iread = get_audio(*r1,stereo,info);
+      iread = get_audio(*r1,stereo);
       itime += in_framesize;
     }
     /*    printf("k=%i numch=%i  buffer = %i %i \n",k,stereo,Buffer[0][k],Buffer[1][k]);*/
@@ -311,7 +311,7 @@ void InitSndFile()
 }
 
 
-void OpenSndFile(const char* lpszFileName, layer *info,int default_samp,
+void OpenSndFile(const char* lpszFileName, int default_samp,
 int default_channels)
 {
   input_bitrate=0;
@@ -369,16 +369,51 @@ int default_channels)
 	printf("pcmbitwidth       :%d\n",gs_wfInfo.pcmbitwidth);
 	printf("format            :");
 
-	if (gs_wfInfo.format&SF_FORMAT_WAV) printf("Microsoft WAV format (big endian)");
-	if (gs_wfInfo.format&SF_FORMAT_AIFF) printf("Apple/SGI AIFF format (little endian).");
-	if (gs_wfInfo.format&SF_FORMAT_AU) printf("Sun/NeXT AU format (big endian).");
-	if (gs_wfInfo.format&SF_FORMAT_AULE) printf("DEC AU format (little endian).");
-	if (gs_wfInfo.format&SF_FORMAT_PCM) printf("PCM data in 8, 16, 24 or 32 bits.");
-	if (gs_wfInfo.format&SF_FORMAT_FLOAT) printf("32 bit Intel x86 floats.");
-	if (gs_wfInfo.format&SF_FORMAT_ULAW) printf("U-Law encoded.");
-	if (gs_wfInfo.format&SF_FORMAT_ALAW) printf("A-Law encoded.");
-	if (gs_wfInfo.format&SF_FORMAT_MS_ADPCM) printf("Microsoft ADPCM.");
-	if (gs_wfInfo.format&SF_FORMAT_IMA_ADPCM) printf("IMA ADPCM.");
+	/* new formats from sbellon@sbellon.de  1/2000 */
+        if ((gs_wfInfo.format&SF_FORMAT_TYPEMASK)==SF_FORMAT_WAV)
+	  printf("Microsoft WAV format (big endian). ");
+	if ((gs_wfInfo.format&SF_FORMAT_TYPEMASK)==SF_FORMAT_AIFF)
+	  printf("Apple/SGI AIFF format (little endian). ");
+	if ((gs_wfInfo.format&SF_FORMAT_TYPEMASK)==SF_FORMAT_AU)
+	  printf("Sun/NeXT AU format (big endian). ");
+	if ((gs_wfInfo.format&SF_FORMAT_TYPEMASK)==SF_FORMAT_AULE)
+	  printf("DEC AU format (little endian). ");
+	if ((gs_wfInfo.format&SF_FORMAT_TYPEMASK)==SF_FORMAT_RAW)
+	  printf("RAW PCM data. ");
+	if ((gs_wfInfo.format&SF_FORMAT_TYPEMASK)==SF_FORMAT_PAF)
+	  printf("Ensoniq PARIS file format. ");
+	if ((gs_wfInfo.format&SF_FORMAT_TYPEMASK)==SF_FORMAT_SVX)
+	  printf("Amiga IFF / SVX8 / SV16 format. ");
+	if ((gs_wfInfo.format&SF_FORMAT_TYPEMASK)==SF_FORMAT_NIST)
+	  printf("Sphere NIST format. ");
+
+	if ((gs_wfInfo.format&SF_FORMAT_SUBMASK)==SF_FORMAT_PCM)
+	  printf("PCM data in 8, 16, 24 or 32 bits.");
+	if ((gs_wfInfo.format&SF_FORMAT_SUBMASK)==SF_FORMAT_FLOAT)
+	  printf("32 bit Intel x86 floats.");
+	if ((gs_wfInfo.format&SF_FORMAT_SUBMASK)==SF_FORMAT_ULAW)
+	  printf("U-Law encoded.");
+	if ((gs_wfInfo.format&SF_FORMAT_SUBMASK)==SF_FORMAT_ALAW)
+	  printf("A-Law encoded.");
+	if ((gs_wfInfo.format&SF_FORMAT_SUBMASK)==SF_FORMAT_IMA_ADPCM)
+	  printf("IMA ADPCM.");
+	if ((gs_wfInfo.format&SF_FORMAT_SUBMASK)==SF_FORMAT_MS_ADPCM)
+	  printf("Microsoft ADPCM.");
+	if ((gs_wfInfo.format&SF_FORMAT_SUBMASK)==SF_FORMAT_PCM_BE)
+	  printf("Big endian PCM data.");
+	if ((gs_wfInfo.format&SF_FORMAT_SUBMASK)==SF_FORMAT_PCM_LE)
+	  printf("Little endian PCM data.");
+	if ((gs_wfInfo.format&SF_FORMAT_SUBMASK)==SF_FORMAT_PCM_S8)
+	  printf("Signed 8 bit PCM.");
+	if ((gs_wfInfo.format&SF_FORMAT_SUBMASK)==SF_FORMAT_PCM_U8)
+	  printf("Unsigned 8 bit PCM.");
+	if ((gs_wfInfo.format&SF_FORMAT_SUBMASK)==SF_FORMAT_SVX_FIB)
+	  printf("SVX Fibonacci Delta encoding.");
+	if ((gs_wfInfo.format&SF_FORMAT_SUBMASK)==SF_FORMAT_SVX_EXP)
+	  printf("SVX Exponential Delta encoding.");
+
+
+
 
 	printf("\n");
 	printf("pcmbitwidth       :%d\n",gs_wfInfo.pcmbitwidth);
@@ -490,7 +525,7 @@ void InitSndFile()
 
 
 
-void OpenSndFile(const char* inPath, layer *info,int default_samp,
+void OpenSndFile(const char* inPath, int default_samp,
 int default_channels)
 {
   void parse_file_header(FILE *sf);

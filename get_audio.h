@@ -34,10 +34,10 @@
 
 
 
-int get_audio_resample(short int Buffer[2][1152],FLOAT resample_ratio,int stereo, layer *info);
+int get_audio_resample(short int Buffer[2][1152],FLOAT resample_ratio,int stereo);
 void InitSndFile(void);
 void CloseSndFile(void);
-void OpenSndFile(const char* lpszFileName,layer *info,int default_samp, int 
+void OpenSndFile(const char* lpszFileName,int default_samp, int 
    default_chan);
 unsigned long GetSndSamples(void);
 int		GetSndSampleRate(void);
@@ -45,7 +45,7 @@ int		GetSndChannels(void);
 int		GetSndBitrate(void);
 
 
-int get_audio(short buffer[2][1152],int stereo,layer* info);
+int get_audio(short buffer[2][1152],int stereo);
 
 
 
@@ -87,7 +87,7 @@ extern int            aiff_read_headers(FILE*, IFF_AIFF*);
 extern int            aiff_seek_to_sound_data(FILE*);
 extern int            aiff_write_headers(FILE*, IFF_AIFF*);
 extern int parse_wavheader(void);
-extern int parse_aiff(const char fn[],layer *info);
+extern int parse_aiff(const char fn[]);
 extern void   aiff_check(const char*, IFF_AIFF*, int*);
 
 
