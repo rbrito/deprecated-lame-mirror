@@ -2,12 +2,16 @@
 
 /* Still under work ..., need a client for test, where can I get one? */
 
-/* 
- *  experimental translation:
+/*
+ * Encode (via LAME) to mp3 with RTP streaming of the output.
  *
- *  gcc -I..\include -I..\libmp3lame -o mp3rtp mp3rtp.c ../libmp3lame/libmp3lame.a get_audio.c timestatus.c parse.c rtp.c -lm
+ * Author: Felix von Leitner <leitner@vim.org>
  *
- *  wavrec -t 14400 -s 44100 -S /proc/self/fd/1 | ./mp3rtp 10.1.1.42 -V2 -b128 -B256 - my_mp3file.mp3
+ *   mp3rtp ip[:port[:ttl]] [lame encoding options] infile outfile
+ *
+ * examples:
+ *   arecord -b 16 -s 22050 -w | ./mp3rtp 224.17.23.42:5004:2 -b 56 - /dev/null
+ *   arecord -b 16 -s 44100 -w | ./mp3rtp 10.1.1.42 -V2 -b128 -B256 - my_mp3file.mp3
  */
 
 #ifdef HAVE_CONFIG_H
@@ -17,11 +21,6 @@
 #ifdef STDC_HEADERS
 # include <stdlib.h>
 # include <string.h>
-#else
-# ifndef HAVE_MEMCPY
-#  define memcpy(d, s, n) bcopy ((s), (d), (n))
-#  define memmove(d, s, n) bcopy ((s), (d), (n))
-# endif
 #endif
 
 #include <time.h>
@@ -42,19 +41,6 @@
 #include <dmalloc.h>
 #endif
 
-/*
- * Encode (via LAME) to mp3 with RTP streaming of the output.
- *
- * Author: Felix von Leitner <leitner@vim.org>
- *
- *   mp3rtp ip[:port[:ttl]] [lame encoding options] infile outfile
- *
- * examples:
- *   arecord -b 16 -s 22050 -w | ./mp3rtp 224.17.23.42:5004:2 -b 56 - /dev/null
- *   arecord -b 16 -s 44100 -w | ./mp3rtp 10.1.1.42 -V2 -b128 -B256 - my_mp3file.mp3
- *
- */
-
 struct rtpheader    RTPheader;
 struct sockaddr_in  rtpsi;
 int                 rtpsocket;
@@ -65,21 +51,6 @@ void  rtp_output ( const char* mp3buffer, const int mp3size )
     RTPheader.timestamp += 5;
     RTPheader.b.sequence++;
 }
-
-#if 0
-struct rtpheader RTPheader;
-SOCKET rtpsocket;
-
-void rtp_output (char *mp3buffer, int mp3size)
-{
-    rtp_send (rtpsocket, &RTPheader,mp3buffer,mp3size) ;
-    RTPheader.timestamp+=5;
-    RTPheader.b.sequence++;
-}
-#endif
-
-
-
 
 unsigned int  maxvalue ( int  Buffer [2] [1152] )
 {
@@ -115,9 +86,6 @@ void levelmessage ( unsigned int maxvalue )
 /************************************************************************
 *
 * main
-*
-* PURPOSE:  MPEG-1,2 Layer III encoder with GPSYCHO 
-* psychoacoustic model.
 *
 ************************************************************************/
 
