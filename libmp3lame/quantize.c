@@ -2,6 +2,7 @@
  * MP3 quantization
  *
  * Copyright (c) 1999 Mark Taylor
+ *               2003 Takehiro Tominaga
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -968,9 +969,9 @@ ABR_iteration_loop(
     III_psy_ratio      ratio        [2][2])
 {
     lame_internal_flags *gfc=gfp->internal_flags;
-    int       targ_bits[2][2];
-    int       mean_bits;
-    int       ch, gr;
+    int targ_bits[2][2];
+    int mean_bits;
+    int gr, ch;
 
     ABR_calc_target_bits (gfp, ratio, ms_ener_ratio, targ_bits);
     for (gr = 0; gr < gfc->mode_gr; gr++) {
@@ -1016,12 +1017,11 @@ iteration_loop(
     III_psy_ratio      ratio        [2][2])
 {
     lame_internal_flags *gfc=gfp->internal_flags;
-    int    targ_bits[2];
-    int    mean_bits;
-    int    gr, ch;
+    int targ_bits[2];
+    int mean_bits;
+    int gr, ch;
 
     ResvFrameBegin (gfp, &mean_bits);
-
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         /*  calculate needed bits */
         on_pe (gfc, ratio[gr], targ_bits, mean_bits);
@@ -1152,18 +1152,14 @@ inline int
 find_scalefac(
     const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, int bw)
 {
-    FLOAT  xfsf;
-    int     i, sf, sf_ok, delsf;
+    int sf, sf_ok, delsf;
 
     /* search will range from sf:  -209 -> 45  */
     /* from the spec, we can use -321 -> 45 */
     sf = 128;
-    delsf = 128;
-
     sf_ok = 10000;
-    for (i = 0; i < 7; ++i) {
-	delsf >>= 1;
-	xfsf = calc_sfb_noise_fast(xr, xr34, bw, sf);
+    for (delsf = 64; delsf != 0; delsf >>= 1) {
+	FLOAT xfsf = calc_sfb_noise_fast(xr, xr34, bw, sf);
 
 	if (xfsf > l3_xmin) {
 	    /* distortion.  try a smaller scalefactor */
@@ -1171,48 +1167,14 @@ find_scalefac(
 	}
 	else {
 	    if (xfsf >= 0)
-                 sf_ok = sf;
+		sf_ok = sf;
 	    sf += delsf;
 	}
     }
 
-    /*  returning a scalefac without distortion, if possible
-     */
-    if (sf_ok > 255)
-	return sf;
-    for (sf = sf_ok; sf < 256; sf++) {
-	xfsf = calc_sfb_noise(xr, xr34, bw, sf);
-	if (xfsf > l3_xmin || xfsf < 0)
-	    return sf + 1;
-    }
+    if (sf_ok <= 255)
+	return sf_ok;
     return sf;
-}
-
-
-
-/***********************************************************************
- *
- *      block_sf()
- *
- *  set the gain of each scalefactor band
- *
- ***********************************************************************/
-static int
-block_sf(const lame_internal_flags * gfc, const FLOAT * l3_xmin,
-	 const FLOAT * xr34, int * vbrsf, gr_info *gi)
-{
-    int sfb, j, vbrmax;
-    sfb = j = 0;
-    vbrmax = -10000;
-    do {
-	int width = gi->width[sfb], gain;
-	gain = find_scalefac(&gi->xr[j], &xr34[j], l3_xmin[sfb], width);
-	j += width;
-	vbrsf[sfb] = gain;
-	if (vbrmax < gain)
-	    vbrmax = gain;
-    } while (++sfb < gi->psymax);
-    return vbrmax;
 }
 
 
@@ -1317,8 +1279,8 @@ long_block_scalefacs(const lame_internal_flags * gfc, gr_info * gi,
     for (sfb = 0; sfb < gi->psymax; ++sfb) {
 	maxov0  = Min(vbrsf[sfb] + 2*max_range_long[sfb], maxov0);
 	maxov1  = Min(vbrsf[sfb] + 4*max_range_long[sfb], maxov1);
-        maxov0p = Min(vbrsf[sfb] + 2*(max_rangep[sfb] + pretab[sfb]), maxov0p);
-        maxov1p = Min(vbrsf[sfb] + 4*(max_rangep[sfb] + pretab[sfb]), maxov1p);
+	maxov0p = Min(vbrsf[sfb] + 2*(max_rangep[sfb] + pretab[sfb]), maxov0p);
+	maxov1p = Min(vbrsf[sfb] + 4*(max_rangep[sfb] + pretab[sfb]), maxov1p);
     }
 
     if (maxov0 == vbrmax) {
@@ -1360,6 +1322,64 @@ long_block_scalefacs(const lame_internal_flags * gfc, gr_info * gi,
 }
 
 
+static int
+VBR_maxnoise(
+    gr_info *gi,
+    FLOAT * xr34,
+    FLOAT * l3_xmin,
+    int sfb2)
+{
+    int sfb, j = 0;
+    for (sfb = 0; sfb < gi->psymax; ++sfb) {
+	int width = gi->width[sfb];
+	if (sfb >= sfb2
+	    && calc_sfb_noise(
+		&gi->xr[j], &xr34[j], width,
+		gi->global_gain
+		- ((gi->scalefac[sfb] + (gi->preflag>0 ? pretab[sfb] : 0))
+		   << (gi->scalefac_scale + 1))
+		- gi->subblock_gain[gi->window[sfb]] * 8) > l3_xmin[sfb])
+	    return sfb;
+	j += width;
+    }
+    return -1;
+}
+
+static void
+VBR_2nd_bitalloc(
+    lame_internal_flags * gfc,
+    gr_info *gi,
+    FLOAT * xr34,
+    FLOAT * l3_xmin)
+{
+    /* note: we cannot use calc_noise() because l3_enc[] is not calculated
+       at this point */
+    gr_info gi_w = *gi;
+    int sfb = 0, endflag = 0;
+    for (;;) {
+	sfb = VBR_maxnoise(&gi_w, xr34, l3_xmin, sfb);
+	if (sfb >= 0) {
+	    if (sfb >= gi->sfbmax) {
+		endflag |= 1;
+		if (endflag == 3 || gi_w.global_gain == 0)
+		    return;
+		gi_w.global_gain--;
+		sfb = 0;
+	    } else {
+		gi_w.scalefac[sfb]++;
+		if (loop_break(&gi_w)
+		    || gfc->scale_bitcounter(&gi_w) > MAX_BITS)
+		    return;
+	    }
+	} else {
+	    *gi = gi_w;
+	    gi_w.global_gain++;
+	    endflag |= 2;
+	    if (endflag == 3 || gi_w.global_gain > 255)
+		return;
+	}
+    }
+}
 
 /************************************************************************
  *
@@ -1373,16 +1393,27 @@ VBR_noise_shaping(
     lame_internal_flags * gfc, FLOAT * xr34,
     FLOAT * l3_xmin, int gr, int ch)
 {
-    int vbrsf[SFBMAX], vbrmax;
+    int vbrsf[SFBMAX], vbrmax, sfb, j;
     gr_info *gi = &gfc->l3_side.tt[gr][ch];
 
-    vbrmax = block_sf(gfc, l3_xmin, xr34, vbrsf, gi);
-    if (gi->block_type == SHORT_TYPE) {
+    sfb = j = 0;
+    vbrmax = -10000;
+    do {
+	int width = gi->width[sfb], gain;
+	gain = find_scalefac(&gi->xr[j], &xr34[j], l3_xmin[sfb], width);
+	j += width;
+	vbrsf[sfb] = gain;
+	if (vbrmax < gain)
+	    vbrmax = gain;
+    } while (++sfb < gi->psymax);
+
+    if (gi->block_type == SHORT_TYPE)
 	short_block_scalefacs(gfc, gi, vbrsf, vbrmax);
-    }
-    else {
+    else
 	long_block_scalefacs(gfc, gi, vbrsf, vbrmax);
-    }
+
+    /* ensure there's no noise */
+    VBR_2nd_bitalloc(gfc, gi, xr34, l3_xmin);
 
     /* encode scalefacs */
     gfc->scale_bitcounter(gi);
