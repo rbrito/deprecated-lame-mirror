@@ -65,7 +65,7 @@ int lame_decode_initfile(const char *fullname, int *stereo, int *samp, int *bitr
 	*stereo  = mstream->dec_channels;
 	*samp    = mstream->dec_frequency;
 	*bitrate = mstream->bitrate;
-        /* *nsamp   = MAX_U_32_NUM; */
+/*	*nsamp   = MAX_U_32_NUM; */
 	*nsamp   = (mstream->ms_duration * mstream->dec_frequency) / 1000;
 
 	return 0;
@@ -79,7 +79,8 @@ int lame_decode_fromfile(FILE *fd, short pcm[][1152])
 	b[0]=&pcm[0][0];
 	b[1]=&pcm[1][0];
 
-	outsize = MPEGA_decode_frame(mstream, b);
+	while (outsize == 0)
+		outsize = MPEGA_decode_frame(mstream, b);
 
 	if (outsize < 0) { return (-1); }
 	else { return outsize; }
