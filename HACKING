@@ -1,32 +1,4 @@
-LAME Sytle guide:
-
-
-
-1. COSMETIC CHANGES 
-
-If you didn't write a routine, dont change the style, indentation,
-tabs, variable names, function names, #ifdef names, capitalization,
-spacing between lines, spacing between commas, spacing between
-operaters, etc etc etc, unless you have a good reason.
-
-
-Here are some examples:
-
-good reasons:
-1. Mac cant handle local arrays > 32kb.  
-2. The variable named 'stereo' is used in a confusing way.
-3. Adding or elaborating on comments
-
-bad reasons:
-1. code does not compile under g++
-2. code not in your prefered style.
-
-
-LAME compiles on all modern OS's, and under dozens of C compilers.
-This fact alone means that LAME is effectively complient C code.  No
-additional "complience" work is needed or wanted.  If you disagree, start a
-discussion in mp3encoder and try to convience other developers.
-
+First, see the file STYLEGUIDE
 
 
 
@@ -56,30 +28,3 @@ lame_encode_frame():
 
 
 ************************************************************************
-Avoid using float or double, and instead use: (defined in machine.h).  
-
-FLOAT    default: 4 byte floating point.  
-FLOAT8   default: 8 byte floating point.
-
-On some machines, FLOAT8 is actually faster than FLOAT. 
-
-On some machines, the math routines require FLOAT8, so using FLOAT
-results in a lot of conversions.  
-
-remark pfk: Document reason of using FLOAT and FLOAT8 (why macros?),
-for instance:
-
-real		fastest floating point type
-float		low precission memory saving type
-double		high precission type
-ldouble		type with highest precission available, maybe (very) slow
-
-
-Types to use:
-
-size_t		Sizes of single memory objects (arrays, buffers, ...)
-ptrdiff_t	Differences between addresses of different memory objects
-off_t		Offsets in files, sizes of files
-sample_t/mono_t	Type to store a PCM sample
-stereo_t	Type to store a pair of samples
-freq_t		Type to store sample frequencies (Hz)

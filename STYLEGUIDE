@@ -40,6 +40,17 @@
 
 * Use the 'const' attribute if you don't intend to change the variable.
 
+* Avoid using float or double, and instead use: (defined in machine.h).  
+
+FLOAT    for variables which require at least 32bits
+FLOAT8   for variables which require at least 64bits
+
+On some machines, 64bit will be faster than 32bit.  Also, some math
+routines require 64bit float, so setting FLOAT=float will result in a
+lot of conversions.
+
+
+
 * Use SI base units. Lame mixes Hz, kHz, kbps, bps. This is mess.
 
   Example:
