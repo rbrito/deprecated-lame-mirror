@@ -5,10 +5,15 @@
 
 #include        <math.h>
 
+#ifndef M_PI
+#define M_PI       3.14159265358979323846
+#endif
+#ifndef M_SQRT2
+#define M_SQRT2    1.41421356237309504880
+#endif
+
 #ifdef _MSC_VER
 
-# define M_PI       3.14159265358979323846
-# define M_SQRT2	1.41421356237309504880
 # define REAL_IS_FLOAT
 # define NEW_DCT9
 
@@ -16,11 +21,6 @@
 # define srandom srand
 
 #endif
-#ifdef __EMX__
-#define M_PI       3.14159265358979323846
-#define M_SQRT2    1.41421356237309504880
-#endif
-
 
 #ifdef REAL_IS_FLOAT
 #  define real float
@@ -28,12 +28,6 @@
 #  define real long double
 #else
 #  define real double
-#endif
-
-#ifdef __GNUC__
-#define INLINE inline
-#else
-#define INLINE
 #endif
 
 /* AUDIOBUFSIZE = n*64 with n=1,2,3 ...  */
