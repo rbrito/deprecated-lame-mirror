@@ -848,12 +848,16 @@ lame_mp3_tags_fid(lame_t gfc, FILE * fpStream)
     /* the default VBR header. 48 kbps layer III, no padding, no crc */
     /* but sampling freq, mode andy copyright/copy protection taken */
     /* from first valid frame */
-    bitrate = XING_BITRATE1_INDEX;
-    if (gfc->VBR != cbr && gfc->version != 1)
-	bitrate = XING_BITRATE2_INDEX;
+    bitrate = gfc->bitrate_index;
+    if (gfc->VBR != cbr) {
+	bitrate = XING_BITRATE1_INDEX;
+	if (gfc->version != 1) {
+	    bitrate = XING_BITRATE2_INDEX;
+	}
+    }
 
     /* Read the header of the first valid frame */
-    totalFrameSize = ((gfc->version+1)*72000*bitrate) / gfc->out_samplerate;
+    totalFrameSize = ((gfc->version+1)*72000*bitrate_table[gfc->version][bitrate]) / gfc->out_samplerate;
     fseek(fpStream, id3v2TagSize + totalFrameSize, SEEK_SET);
     fread(buf, 4, 1, fpStream);
 
