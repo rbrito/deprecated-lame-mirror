@@ -418,6 +418,7 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --nohist        disable VBR histogram display\n"
               "    --silent        don't print anything on screen\n"
               "    --quiet         don't print anything on screen\n"
+              "    --brief         print more useful information\n"
               "    --verbose       print a lot of useful information\n"
               "\n"
               "  Noise shaping & psycho acoustic algorithms:\n"
@@ -1426,8 +1427,11 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF2 ("quiet", "silent")
                     silent = 10;    /* on a scale from 1 to 10 be very silent */
                 
+                T_ELIF ("brief")
+                    silent = -5;     /* print few info on screen */
+                    
                 T_ELIF ("verbose")
-                    silent = -10;    /* print a lot on screen, the default */
+                    silent = -10;    /* print a lot on screen */
                     
                 T_ELIF2 ("version", "license")
                     print_license ( gfp, stdout, ProgramName );

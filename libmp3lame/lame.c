@@ -1922,13 +1922,20 @@ lame_init_bitstream(lame_global_flags * gfp)
 	id3tag_write_v2(gfp);
 
     /* initialize histogram data optionally used by frontend */
-    for ( i = 0; i < 16; i++ ) 
+    for ( i = 0; i < 16; i++ ) {
 	gfc->bitrate_stereoMode_Hist [i] [0] =
 	    gfc->bitrate_stereoMode_Hist [i] [1] =
 	    gfc->bitrate_stereoMode_Hist [i] [2] =
 	    gfc->bitrate_stereoMode_Hist [i] [3] =
 	    gfc->bitrate_stereoMode_Hist [i] [4] = 0;
-
+        gfc->bitrate_blockType_Hist [i] [0] =
+            gfc->bitrate_blockType_Hist [i] [1] =
+            gfc->bitrate_blockType_Hist [i] [2] =
+            gfc->bitrate_blockType_Hist [i] [3] =
+            gfc->bitrate_blockType_Hist [i] [4] =
+            gfc->bitrate_blockType_Hist [i] [5] = 0;
+    }
+    
     /* Write initial VBR Header to bitstream and init VBR data */
     if (gfp->bWriteVbrTag)
         InitVbrTag(gfp);
@@ -2313,10 +2320,7 @@ lame_stereo_mode_hist(const lame_global_flags * const gfp, int stmode_count[4])
         return;
 
     for (i = 0; i < 4; i++) {
-        int     j, sum = 0;
-        for (j = 0; j < 14; j++)
-            sum += gfc->bitrate_stereoMode_Hist[j + 1][i];
-        stmode_count[i] = sum;
+        stmode_count[i] = gfc->bitrate_stereoMode_Hist[15][i];
     }
 }
 
@@ -2341,6 +2345,49 @@ lame_bitrate_stereo_mode_hist(const lame_global_flags * const gfp,
     for (j = 0; j < 14; j++)
         for (i = 0; i < 4; i++)
             bitrate_stmode_count[j][i] = gfc->bitrate_stereoMode_Hist[j + 1][i];
+}
+
+
+
+void
+lame_block_type_hist(const lame_global_flags * const gfp, int btype_count[6])
+{
+    const lame_internal_flags *gfc;
+    int     i;
+
+    if (NULL == btype_count)
+        return;
+    if (NULL == gfp)
+        return;
+    gfc = gfp->internal_flags;
+    if (NULL == gfc)
+        return;
+
+    for (i = 0; i < 6; ++i) {
+        btype_count[i] = gfc->bitrate_blockType_Hist[15][i];
+    }
+}
+
+
+
+void 
+lame_bitrate_block_type_hist(const lame_global_flags * const gfp, 
+                             int bitrate_btype_count[14][6])
+{
+    const lame_internal_flags * gfc;
+    int     i, j;
+    
+    if (NULL == bitrate_btype_count)
+        return;
+    if (NULL == gfp)
+        return;
+    gfc = gfp->internal_flags;
+    if (NULL == gfc)
+        return;
+        
+    for (j = 0; j < 14; ++j)
+    for (i = 0; i <  6; ++i)
+        bitrate_btype_count[j][i] = gfc->bitrate_blockType_Hist[j+1][i];
 }
 
 /* end of lame.c */

@@ -311,12 +311,15 @@ void  brhist_disp_total ( const lame_global_flags* gf )
     int i;
     int br_hist [BRHIST_WIDTH];
     int st_mode [4];
+    int bl_type [6];
     int st_frames = 0;
     int br_frames = 0;
     double sum = 0.;
+    extern int silent;
     
     lame_stereo_mode_hist ( gf, st_mode );
     lame_bitrate_hist     ( gf, br_hist );
+    lame_block_type_hist  ( gf, bl_type );
     
     for (i = 0; i < BRHIST_WIDTH; i++) {
         br_frames += br_hist[i];
@@ -341,6 +344,24 @@ void  brhist_disp_total ( const lame_global_flags* gf )
             fprintf ( Console_IO.Console_fp, "   MS: %d (%#5.4g%%)", st_mode[MS], 100. * st_mode[MS] / st_frames );
     }
     fprintf ( Console_IO.Console_fp, "\n" );
+
+    if (bl_type[5] > 0 && silent <= -5 && silent > -10) {
+        fprintf ( Console_IO.Console_fp, "block type");
+        fprintf ( Console_IO.Console_fp,  " long: %#5.4g%%", 100. * bl_type[0] / bl_type[5] );
+        fprintf ( Console_IO.Console_fp, " start: %#5.4g%%", 100. * bl_type[1] / bl_type[5] );
+        fprintf ( Console_IO.Console_fp, " short: %#5.4g%%", 100. * bl_type[2] / bl_type[5] );
+        fprintf ( Console_IO.Console_fp,  " stop: %#5.4g%%", 100. * bl_type[3] / bl_type[5] );
+        fprintf ( Console_IO.Console_fp, " mixed: %#5.4g%%", 100. * bl_type[4] / bl_type[5] );
+        fprintf ( Console_IO.Console_fp, "\n" );
+    }
+    else if (bl_type[5] > 0 && silent <= -10) {
+        fprintf ( Console_IO.Console_fp, "block types   granules  percent\n" );
+        fprintf ( Console_IO.Console_fp, "      long: % 10d (%#5.4g%%)\n", bl_type[0], 100. * bl_type[0] / bl_type[5] );
+        fprintf ( Console_IO.Console_fp, "     start: % 10d (%#5.4g%%)\n", bl_type[1], 100. * bl_type[1] / bl_type[5] );
+        fprintf ( Console_IO.Console_fp, "     short: % 10d (%#5.4g%%)\n", bl_type[2], 100. * bl_type[2] / bl_type[5] );
+        fprintf ( Console_IO.Console_fp, "      stop: % 10d (%#5.4g%%)\n", bl_type[3], 100. * bl_type[3] / bl_type[5] );
+        fprintf ( Console_IO.Console_fp, "     mixed: % 10d (%#5.4g%%)\n", bl_type[4], 100. * bl_type[4] / bl_type[5] );
+    }
     fflush  ( Console_IO.Console_fp );
 }
 

@@ -535,6 +535,7 @@ struct lame_internal_flags {
   
   /* simple statistics */
   int   bitrate_stereoMode_Hist [16] [4+1];
+  int	bitrate_blockType_Hist  [16] [4+1+1];/*norm/start/short/stop/mixed(short)/sum*/
 
   /* ratios  */
   FLOAT8 pe[4];

@@ -644,15 +644,30 @@ int  has_SIMD2 ( void )
  
 void updateStats( lame_internal_flags * const gfc )
 {
+    int gr, ch;
     assert ( gfc->bitrate_index < 16u );
     assert ( gfc->mode_ext      <  4u );
     
     /* count bitrate indices */
     gfc->bitrate_stereoMode_Hist [gfc->bitrate_index] [4] ++;
+    gfc->bitrate_stereoMode_Hist [15] [4] ++;
     
     /* count 'em for every mode extension in case of 2 channel encoding */
-    if (gfc->channels_out == 2)
+    if (gfc->channels_out == 2) {
         gfc->bitrate_stereoMode_Hist [gfc->bitrate_index] [gfc->mode_ext]++;
+        gfc->bitrate_stereoMode_Hist [15] [gfc->mode_ext]++;
+    }
+    for (gr = 0; gr < gfc->mode_gr; ++gr) {
+        for (ch = 0; ch < gfc->channels_out; ++ch) {
+            int bt = gfc->l3_side.tt[gr][ch].block_type;
+            int mf = gfc->l3_side.tt[gr][ch].mixed_block_flag;
+            if (mf) bt = 4;
+            gfc->bitrate_blockType_Hist [gfc->bitrate_index] [bt] ++;        
+            gfc->bitrate_blockType_Hist [gfc->bitrate_index] [ 5] ++;
+            gfc->bitrate_blockType_Hist [15] [bt] ++;        
+            gfc->bitrate_blockType_Hist [15] [ 5] ++;
+        }
+    }
 }
 
 
