@@ -319,6 +319,7 @@ int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
     a1 = a2 = 0;
     for (; i > 3; i -= 4) {
 	int p;
+	/* hack to check if all values <= 1 */
 	if ((unsigned int)(ix[i-1] | ix[i-2] | ix[i-3] | ix[i-4]) > 1)
 	    break;
 
