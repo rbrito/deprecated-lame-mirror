@@ -290,6 +290,18 @@ gives more information about the usage possibilities for these presets.
 Uses r3mix VBR preset.
 .br
 See http://www.r3mix.net/ for more details. 
+.TP
+.B --noasm " type"
+Disable specific assembly optimizations (
+.B mmx
+/
+.B 3dnow
+/
+.B sse
+).
+Quality will not increase, only speed will be reduced.
+If you have problems running Lame on a Cyrix/Via processor,
+disabling mmx optimizations might solve your problem.
 
 .PP
 Verbosity:

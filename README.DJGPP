@@ -44,7 +44,8 @@ etc)
 
 4) From the dos prompt, run:  
 
-   make -f Makefile.DJGPP.  
+   make -f Makefile.DJGPP config.h
+   make -f Makefile.DJGPP
 
 5) To compile a faster version of LAME.EXE, edit "Makefile.DJGPP"
    and experiment with some of the other settings given for

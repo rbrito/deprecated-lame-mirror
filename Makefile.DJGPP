@@ -110,6 +110,7 @@ lib_sources = \
 	libmp3lame/lame.c \
 	libmp3lame/newmdct.c \
 	libmp3lame/psymodel.c \
+	libmp3lame/presets.c \
 	libmp3lame/quantize.c \
 	libmp3lame/quantize_pvt.c \
         libmp3lame/set_get.c \
@@ -155,7 +156,7 @@ lib_obj += libmp3lame/i386/cpu_feat.o libmp3lame/i386/scalar.o
 
 ## use MMX extension. you need nasm and MMX supported CPU.
 CC_SWITCHES += -DMMX_choose_table
-lib_obj += libmp3lame/i386/choose_table.o
+lib_obj += libmp3lame/i386/choose_table.o libmp3lame/i386/fft3dn.o
 endif
 
 

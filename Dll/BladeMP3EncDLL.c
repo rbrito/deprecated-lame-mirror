@@ -26,7 +26,8 @@
 
 #include "lame.h"
 #include "config.h"
-#include "machine.h" /* for sample_t type */
+// sample_t should not be needed by any libmp3lame wrapper:
+//#include "machine.h" /* for sample_t type */
 
 
 #define         Min(A, B)       ((A) < (B) ? (A) : (B))
@@ -36,33 +37,20 @@
 
 // lame_enc DLL version number
 const int MAJORVERSION = 1;
-const int MINORVERSION = 29;
+const int MINORVERSION = 32;
 
 
 // Local variables
 static DWORD				dwSampleBufferSize=0;
 static HANDLE				gs_hModule=NULL;
 static BOOL					gs_bLogFile=FALSE;
-static lame_global_flags*	gfp = NULL;
+static lame_global_flags*	gfp_save = NULL;
 
 // Local function prototypes
-static void dump_config( );
+static void dump_config( 	lame_global_flags*	gfp );
 static void DebugPrintf( const char* pzFormat, ... );
 static void DispErr( LPSTR strErr );
 static void PresetOptions( lame_global_flags *gfp, LONG myPreset );
-
-
-/*********************************************************************
- * Export UNDOCUMENTED, experimental settings, so they can be 
- * called from the DLL. These routines are not prototyped in lame.h
- * as soon as they become regular functions, remove these protoypes
- *********************************************************************
-*/
-extern int CDECL lame_encode_buffer_sample_t(lame_global_flags * gfp,
-                   sample_t buffer_l[],
-                   sample_t buffer_r[],
-                   int nsamples, unsigned char *mp3buf, const int mp3buf_size);
-
 
 
 static void DebugPrintf(const char* pzFormat, ...)
@@ -72,12 +60,14 @@ static void DebugPrintf(const char* pzFormat, ...)
     va_list ap;
 
 	// Get the full module (DLL) file name
-	GetModuleFileName(gs_hModule,szFileName,sizeof(szFileName));
+	GetModuleFileName(	gs_hModule, 
+						szFileName,
+						sizeof( szFileName ) );
 
 	// change file name extention
-	szFileName[strlen(szFileName)-3]='t';
-	szFileName[strlen(szFileName)-2]='x';
-	szFileName[strlen(szFileName)-1]='t';
+	szFileName[ strlen(szFileName) - 3 ] = 't';
+	szFileName[ strlen(szFileName) - 2 ] = 'x';
+	szFileName[ strlen(szFileName) - 1 ] = 't';
 
 	// start at beginning of the list
 	va_start(ap, pzFormat);
@@ -171,9 +161,11 @@ static void PresetOptions( lame_global_flags *gfp, LONG myPreset )
 			break;
 
 /*11*/		case LQP_ABR:					// --ALT-PRESET ABR
+				// handled in beInitStream
 			break;
 
 /*12*/		case LQP_CBR:					// --ALT-PRESET CBR
+				// handled in beInitStream
 			break;
 
 /*1000*/	case LQP_PHONE:
@@ -301,12 +293,14 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 {
 	int actual_bitrate;
 //2001-12-18
-	int			nDllArgC=0;
-	BE_CONFIG		lameConfig = { 0, };
-	int			nInitReturn = 0;
+	int					nDllArgC = 0;
+	BE_CONFIG			lameConfig = { 0, };
+	int					nInitReturn = 0;
+	lame_global_flags*	gfp = NULL;
 
 	// Init the global flags structure
 	gfp = lame_init();
+	*phbeStream = (HBE_STREAM)gfp;
 
 	// clear out structure
 	memset(&lameConfig,0x00,CURRENT_STRUCT_SIZE);
@@ -352,29 +346,45 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 		memcpy(&lameConfig,pbeConfig,pbeConfig->format.LHV1.dwStructSize);
 	}
 
-
-	// Not used, always assign stream 1
-	*phbeStream=1;
-
-
 	// --------------- Set arguments to LAME encoder -------------------------
 
 	// Set input sample frequency
 	lame_set_in_samplerate( gfp, lameConfig.format.LHV1.dwSampleRate );
 
+        // disable INFO/VBR tag by default.  
+        // if this tag is used, the calling program must call beWriteVBRTag()
+        // after encoding.  But the original DLL documentation does not 
+        // require the 
+        // app to call beWriteVBRTag() unless they have specifically
+        // set LHV1.bWriteVBRHeader=TRUE.  Thus the default setting should
+        // be disabled.  
+	lame_set_bWriteVbrTag( gfp, 0 );
+
 //2001-12-18 Dibrom's ABR preset stuff
 
-	if(lameConfig.format.LHV1.nPreset == 11)		// --ALT-PRESET ABR
+	if(lameConfig.format.LHV1.nPreset == LQP_ABR)		// --ALT-PRESET ABR
 	{
 		actual_bitrate = lameConfig.format.LHV1.dwVbrAbr_bps / 1000;
-        lame_set_preset(gfp, actual_bitrate);
+
+		// limit range
+		if( actual_bitrate > 320)
+		{
+			actual_bitrate = 320;
+		}
+
+		if( actual_bitrate < 8 )
+		{
+			actual_bitrate = 8;
+		}
+
+		lame_set_preset( gfp, actual_bitrate );
 	}    
 
 // end Dibrom's ABR preset 2001-12-18 ****** START OF CBR
 
-	if(lameConfig.format.LHV1.nPreset == 12)		// --ALT-PRESET CBR
+	if(lameConfig.format.LHV1.nPreset == LQP_CBR)		// --ALT-PRESET CBR
 	{
-		actual_bitrate = lameConfig.format.LHV1.dwVbrAbr_bps / 1000;
+		actual_bitrate = lameConfig.format.LHV1.dwBitrate;
         lame_set_preset(gfp, actual_bitrate);
         lame_set_VBR(gfp, vbr_off);
 	}
@@ -412,28 +422,63 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 
 		if ( lameConfig.format.LHV1.bEnableVBR )
 		{
-			lame_set_VBR( gfp, vbr_default );
-
+			/* set VBR quality */
 			lame_set_VBR_q( gfp, lameConfig.format.LHV1.nVBRQuality );
+
+			/* select proper VBR method */
+			switch ( lameConfig.format.LHV1.nVbrMethod)
+			{
+				case VBR_METHOD_NONE:
+					lame_set_VBR( gfp, vbr_off );
+				break;
+
+				case VBR_METHOD_DEFAULT:
+					lame_set_VBR( gfp, vbr_default ); 
+				break;
+
+				case VBR_METHOD_OLD:
+					lame_set_VBR( gfp, vbr_rh ); 
+				break;
+
+				case VBR_METHOD_MTRH:
+				case VBR_METHOD_NEW:
+					/*                                
+					 * the --vbr-mtrh commandline switch is obsolete. 
+					 * now --vbr-mtrh is known as --vbr-new
+					 */
+					lame_set_VBR( gfp, vbr_mtrh ); 
+				break;
+
+				case VBR_METHOD_ABR:
+					lame_set_VBR( gfp, vbr_abr ); 
+				break;
+
+				default:
+					/* unsupported VBR method */
+					assert( FALSE );
+			}
 		}
 		else
 		{
+			/* use CBR encoding method, so turn off VBR */
 			lame_set_VBR( gfp, vbr_off );
 		}
 
-		// Set bitrate.  (CDex users always specify bitrate=Min bitrate when using VBR)
+		/* Set bitrate.  (CDex users always specify bitrate=Min bitrate when using VBR) */
 		lame_set_brate( gfp, lameConfig.format.LHV1.dwBitrate );
 			
-		// Use ABR?
-		if (lameConfig.format.LHV1.dwVbrAbr_bps>0)
+		/* check if we have to use ABR, in order to backwards compatible, this
+		 * condition should still be checked indepedent of the nVbrMethod method
+		 */
+		if (lameConfig.format.LHV1.dwVbrAbr_bps > 0 )
 		{
-			// set VBR to ABR
+			/* set VBR method to ABR */
 			lame_set_VBR( gfp, vbr_abr );
 
-			// calculate to kbps
+			/* calculate to kbps, round to nearest kbps */
 			lame_set_VBR_mean_bitrate_kbps( gfp, ( lameConfig.format.LHV1.dwVbrAbr_bps + 500 ) / 1000 );
 
-			// limit range
+			/* limit range */
 			if( lame_get_VBR_mean_bitrate_kbps( gfp ) > 320)
 			{
 				lame_set_VBR_mean_bitrate_kbps( gfp, 320 );
@@ -445,50 +490,12 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 			}
 		}
 
-		// Use VBR?
-		if ( lameConfig.format.LHV1.bEnableVBR )
-		{
-			switch ( lameConfig.format.LHV1.nVbrMethod)
-			{
-				case VBR_METHOD_NONE:
-					lame_set_VBR( gfp, vbr_off );
-					break;
-
-				case VBR_METHOD_DEFAULT:
-					lame_set_VBR( gfp, vbr_default ); 
-					break;
-
-				case VBR_METHOD_OLD:
-					lame_set_VBR( gfp, vbr_rh ); 
-					break;
-
-				case VBR_METHOD_NEW:
-/*                                
-					lame_set_VBR( gfp, vbr_mt ); 
-					break;
-the --vbr-mtrh commandline switch is obsolete. 
-now --vbr-mtrh is known as --vbr-new
-*/
-				case VBR_METHOD_MTRH:
-					lame_set_VBR( gfp, vbr_mtrh ); 
-					break;
-
-				case VBR_METHOD_ABR:
-					lame_set_VBR( gfp, vbr_abr ); 
-					break;
-
-				default:
-					assert( FALSE );
-
-			}
-		}
-
 	}
 
     // First set all the preset options
     if ( LQP_NOPRESET !=  lameConfig.format.LHV1.nPreset )
     {
-    PresetOptions( gfp, lameConfig.format.LHV1.nPreset );
+		PresetOptions( gfp, lameConfig.format.LHV1.nPreset );
     }
 
 
@@ -504,7 +511,8 @@ now --vbr-mtrh is known as --vbr-new
 		case BE_MP3_MODE_MONO:
 			lame_set_mode( gfp, MONO );
 			lame_set_num_channels( gfp, 1 );
-			break;
+		break;
+
 		default:
             break;
 	}
@@ -569,8 +577,7 @@ now --vbr-mtrh is known as --vbr-new
 	}
 
 	// check if the VBR tag is required
-	if ( ( TRUE == lameConfig.format.LHV1.bWriteVBRHeader) &&
-		 ( vbr_off != lame_get_VBR( gfp ) ) )
+	if ( TRUE == lameConfig.format.LHV1.bWriteVBRHeader) 
 	{
 		lame_set_bWriteVbrTag( gfp, 1 );
 	}
@@ -610,7 +617,7 @@ now --vbr-mtrh is known as --vbr-new
 	*dwBufferSize=(DWORD)( 1.25 * ( *dwSamples / lame_get_num_channels( gfp ) ) + 7200 );
 
 	// For debugging purposes
-	dump_config( );
+	dump_config( gfp );
 
 	// Everything went OK, thus return SUCCESSFUL
 	return BE_ERR_SUCCESSFUL;
@@ -622,6 +629,9 @@ __declspec(dllexport) BE_ERR	beFlushNoGap(HBE_STREAM hbeStream, PBYTE pOutput, P
 {
 	int nOutputSamples = 0;
 
+	lame_global_flags*	gfp = (lame_global_flags*)hbeStream;
+
+	// Init the global flags structure
     nOutputSamples = lame_encode_flush_nogap( gfp, pOutput, LAME_MAXMP3BUFFER );
 
 	if ( nOutputSamples < 0 )
@@ -641,6 +651,8 @@ __declspec(dllexport) BE_ERR	beDeinitStream(HBE_STREAM hbeStream, PBYTE pOutput,
 {
 	int nOutputSamples = 0;
 
+	lame_global_flags*	gfp = (lame_global_flags*)hbeStream;
+
     nOutputSamples = lame_encode_flush( gfp, pOutput, 0 );
 
 	if ( nOutputSamples < 0 )
@@ -652,21 +664,28 @@ __declspec(dllexport) BE_ERR	beDeinitStream(HBE_STREAM hbeStream, PBYTE pOutput,
 	{
 		*pdwOutput = nOutputSamples;
 	}
-
-    
-	// lame will be close in VbrWriteTag function
-	if ( !lame_get_bWriteVbrTag( gfp ) )
-	{
-		// clean up of allocated memory
-		lame_close( gfp );
-	}
-
+  
 	return BE_ERR_SUCCESSFUL;
 }
 
 
 __declspec(dllexport) BE_ERR	beCloseStream(HBE_STREAM hbeStream)
 {
+	lame_global_flags*	gfp = (lame_global_flags*)hbeStream;
+
+	// lame will be close in VbrWriteTag function
+	if ( !lame_get_bWriteVbrTag( gfp ) )
+	{
+		// clean up of allocated memory
+		lame_close( gfp );
+
+		gfp_save = NULL;
+	}
+	else
+	{
+		gfp_save = (lame_global_flags*)hbeStream;
+	}
+
 	// DeInit encoder
 	return BE_ERR_SUCCESSFUL;
 }
@@ -737,10 +756,10 @@ __declspec(dllexport) VOID		beVersion(PBE_VERSION pbeVersion)
 __declspec(dllexport) BE_ERR	beEncodeChunk(HBE_STREAM hbeStream, DWORD nSamples, 
 			 PSHORT pSamples, PBYTE pOutput, PDWORD pdwOutput)
 {
-
 	// Encode it
 	int dwSamples;
 	int	nOutputSamples = 0;
+	lame_global_flags*	gfp = (lame_global_flags*)hbeStream;
 
 	dwSamples = nSamples / lame_get_num_channels( gfp );
 
@@ -783,8 +802,9 @@ __declspec(dllexport) BE_ERR	beEncodeChunkFloatS16NI(HBE_STREAM hbeStream, DWORD
 			PFLOAT buffer_l, PFLOAT buffer_r, PBYTE pOutput, PDWORD pdwOutput)
 {
 	int nOutputSamples;
+	lame_global_flags*	gfp = (lame_global_flags*)hbeStream;
 
-	nOutputSamples = lame_encode_buffer_sample_t(gfp,buffer_l,buffer_r,nSamples,pOutput,0);
+	nOutputSamples = lame_encode_buffer_float(gfp,buffer_l,buffer_r,nSamples,pOutput,0);
 
 	if ( nOutputSamples >= 0 )
 	{
@@ -799,42 +819,54 @@ __declspec(dllexport) BE_ERR	beEncodeChunkFloatS16NI(HBE_STREAM hbeStream, DWORD
 	return BE_ERR_SUCCESSFUL;
 }
 
-
-__declspec(dllexport) BE_ERR beWriteVBRHeader(LPCSTR lpszFileName)
+__declspec(dllexport) BE_ERR beWriteInfoTag( HBE_STREAM hbeStream,
+											 LPCSTR lpszFileName )
 {
-	FILE* fpStream	=NULL;
-	BE_ERR beResult	=BE_ERR_SUCCESSFUL;
+	FILE* fpStream	= NULL;
+	BE_ERR beResult	= BE_ERR_SUCCESSFUL;
 
-	// Do we have to write the VBR tag?
-	if (	( lame_get_bWriteVbrTag( gfp ) ) && 
-			( vbr_off != lame_get_VBR( gfp ) ) )
+	lame_global_flags*	gfp = (lame_global_flags*)hbeStream;
+
+	if ( NULL != gfp )
 	{
-
-		// Try to open the file
-		fpStream=fopen( lpszFileName, "rb+" );
-
-		// Check file open result
-		if ( NULL == fpStream )
+		// Do we have to write the VBR tag?
+		if ( lame_get_bWriteVbrTag( gfp ) )
 		{
-			return BE_ERR_INVALID_FORMAT_PARAMETERS;
+
+			// Try to open the file
+			fpStream=fopen( lpszFileName, "rb+" );
+
+			// Check file open result
+			if ( NULL == fpStream )
+			{
+				beResult = BE_ERR_INVALID_FORMAT_PARAMETERS;
+			}
+			else
+			{
+				// Write Xing header again
+				lame_mp3_tags_fid( gfp, fpStream );
+
+				// Close the file stream
+				fclose( fpStream );
+			}
+
+			// clean up of allocated memory
+			lame_close( gfp );
 		}
-
-		// Write Xing header again
-		lame_mp3_tags_fid( gfp, fpStream );
-
-		// Close the file stream
-		fclose( fpStream );
-
 	}
-
-	if ( lame_get_bWriteVbrTag( gfp ) )
+	else
 	{
-		// clean up of allocated memory
-		lame_close( gfp );
+		beResult = BE_ERR_INVALID_FORMAT_PARAMETERS;
 	}
 
 	// return result
 	return beResult;
+}
+
+// for backwards compatiblity
+__declspec(dllexport) BE_ERR beWriteVBRHeader(LPCSTR lpszFileName)
+{
+	return beWriteInfoTag( (HBE_STREAM)gfp_save, lpszFileName );
 }
 
 
@@ -861,7 +893,7 @@ BOOL APIENTRY DllMain(HANDLE hModule,
 }
 
 
-static void dump_config( )
+static void dump_config( 	lame_global_flags*	gfp )
 {
 	DebugPrintf("\n\nLame_enc configuration options:\n");
 	DebugPrintf("==========================================================\n");

@@ -49,11 +49,17 @@ char   *strchr(), *strrchr();
 # endif
 #endif
 
+
 #define         MAX_U_32_NUM            0xFFFFFFFF
 
 
 #include <math.h>
 #include <sys/stat.h>
+
+#ifdef __sun__
+/* woraround for SunOS 4.x, it has SEEK_* defined here */
+#include <unistd.h>
+#endif
 
 #include "lame.h"
 #include "main.h"

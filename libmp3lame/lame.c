@@ -561,7 +561,7 @@ lame_init_params(lame_global_flags * const gfp)
 
     if (gfp->VBR != vbr_off) {
         gfp->free_format = 0; /* VBR can't be mixed with free format */
-        gfp->padding_type = PAD_NO;    
+	gfp->padding_type = PAD_NO;
     }
 
     if (gfp->VBR == vbr_off && gfp->brate == 0) {
@@ -1650,9 +1650,9 @@ lame_encode_buffer_int(lame_global_flags * gfp,
     /* make a copy of input buffer, changing type to sample_t */
     for (i = 0; i < nsamples; i++) {
                                 /* internal code expects +/- 32768.0 */
-      in_buffer[0][i] = buffer_l[i] * (1.0 / ( 1 << (8 * sizeof(int) - 16)));
+      in_buffer[0][i] = buffer_l[i] * (1.0 / ( 1L << (8 * sizeof(int) - 16)));
       if (gfc->channels_in>1)
-	  in_buffer[1][i] = buffer_r[i] * (1.0 / ( 1 << (8 * sizeof(int) - 16)));
+	  in_buffer[1][i] = buffer_r[i] * (1.0 / ( 1L << (8 * sizeof(int) - 16)));
     }
 
     ret = lame_encode_buffer_sample_t(gfp,in_buffer[0],in_buffer[1],

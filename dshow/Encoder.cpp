@@ -124,6 +124,11 @@ HRESULT CEncoder::SetDefaultOutputType(LPWAVEFORMATEX lpwfex)
 //////////////////////////////////////////////////////////////////////
 // Init - initialized or reiniyialized encoder SDK with given input 
 // and output settings
+//
+// NOTE: these should all be replaced with calls to the API functions
+// lame_set_*().  Applications should not directly access the 'pgf'
+// data structure. 
+//
 //////////////////////////////////////////////////////////////////////
 HRESULT CEncoder::Init()
 {
@@ -154,7 +159,14 @@ HRESULT CEncoder::Init()
 		pgf->error_protection = m_mabsi.bCRCProtect;
 
 		pgf->no_short_blocks = m_mabsi.dwNoShortBlock;
-		pgf->bWriteVbrTag = m_mabsi.dwXingTag;
+
+                // note: directshow filter cannot write INFO
+                // tag since directshow has no mechanism to force
+                // the calling program to rewind the output stream
+                // when encoding is finished and write the necessary
+                // information.
+		pgf->bWriteVbrTag = 0; //m_mabsi.dwXingTag;
+
 		pgf->strict_ISO = m_mabsi.dwStrictISO;
 		pgf->VBR_hard_min = m_mabsi.dwEnforceVBRmin;
 		pgf->force_ms = m_mabsi.dwForceMS;

@@ -294,7 +294,7 @@ int  lame_encode_mp3_frame (				// Output
         
     gfc->frac_SpF = ((gfp->version+1)*72000L*gfp->brate) % gfp->out_samplerate;
     gfc->slot_lag  = gfc->frac_SpF;
-    
+
     switch (gfp->padding_type) {
     default:
     case PAD_NO:
@@ -304,7 +304,7 @@ int  lame_encode_mp3_frame (				// Output
         gfc->padding = TRUE;
         break;
     }
-    
+
     /* check FFT will not use a negative starting offset */
 #if 576 < FFTOFFSET
 # error FFTOFFSET greater than 576: FFT uses a negative offset
@@ -358,24 +358,24 @@ int  lame_encode_mp3_frame (				// Output
 
   /********************** padding *****************************/
   if (gfp->padding_type == PAD_ADJUST) {
-        /* padding method as described in 
-         * "MPEG-Layer3 / Bitstream Syntax and Decoding"
-         * by Martin Sieler, Ralph Sperschneider
-         *
-         * note: there is no padding for the very first frame
-         *
-         * Robert.Hegemann@gmx.de 2000-06-22
-         */
-
-        gfc->slot_lag -= gfc->frac_SpF;
-        if (gfc->slot_lag < 0) {
-            gfc->slot_lag += gfp->out_samplerate;
-            gfc->padding = TRUE;
-        } 
-        else {
-            gfc->padding = FALSE;
-        }
+      /* padding method as described in 
+       * "MPEG-Layer3 / Bitstream Syntax and Decoding"
+       * by Martin Sieler, Ralph Sperschneider
+       *
+       * note: there is no padding for the very first frame
+       *
+       * Robert.Hegemann@gmx.de 2000-06-22
+       */
+      gfc->slot_lag -= gfc->frac_SpF;
+      if (gfc->slot_lag < 0) {
+	gfc->slot_lag += gfp->out_samplerate;
+	gfc->padding = TRUE;
+      }
+      else {
+	  gfc->padding = FALSE;
+      }
   }
+
 
   if (gfc->psymodel) {
     /* psychoacoustic model
@@ -461,6 +461,7 @@ int  lame_encode_mp3_frame (				// Output
        0 = signal is 100% mono
        .5 = L & R uncorrelated
     */
+
     /* [0] and [1] are the results for the two granules in MPEG-1,
      * in MPEG-2 it's only a faked averaging of the same value
      * _prev is the value of the last granule of the previous frame
