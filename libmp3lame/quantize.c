@@ -160,8 +160,6 @@ static FLOAT athAdjust( FLOAT a, FLOAT x, FLOAT athFloor )
   Calculate the allowed distortion for each scalefactor band,
   as determined by the psychoacoustic model.
   xmin(sb) = ratio(sb) * en(sb) / bw(sb)
-
-  returns number of sfb's with energy > ATH
 */
 static void
 calc_xmin(
@@ -1064,23 +1062,21 @@ ABR_iteration_loop(
     int       ch, gr;
 
     ABR_calc_target_bits (gfp, ratio, ms_ener_ratio, targ_bits);
-    /*  encode granules
-     */
     for (gr = 0; gr < gfc->mode_gr; gr++) {
-        for (ch = 0; ch < gfc->channels_out; ch++) {
+	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    gr_info *gi = &gfc->l3_side.tt[gr][ch];
 	    outer_loop(gfp, gi, ch, targ_bits[gr][ch], &ratio[gr][ch]);
 	    iteration_finish_one(gfc, gr, ch);
 	    ResvAdjust(gfc, gi->part2_length + gi->part2_3_length);
-        } /* ch */
-    }  /* gr */
+	}
+    }
 
     /*  find a bitrate which can refill the resevoir to positive size.
      */
     for (gfc->bitrate_index =  gfc->VBR_min_bitrate;
-         gfc->bitrate_index <= gfc->VBR_max_bitrate;
-         gfc->bitrate_index++) {
-        if (ResvFrameBegin (gfp, &mean_bits) >= 0) break;
+	 gfc->bitrate_index <= gfc->VBR_max_bitrate;
+	 gfc->bitrate_index++) {
+	if (ResvFrameBegin (gfp, &mean_bits) >= 0) break;
     }
     assert (gfc->bitrate_index <= gfc->VBR_max_bitrate);
 
