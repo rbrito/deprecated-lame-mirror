@@ -289,12 +289,19 @@ void compute_ath( lame_global_flags *gfp, FLOAT8 ATH_l[], FLOAT8 ATH_s[] )
      *  because VBR modes need it as it is currently the only masking computed
      *  for that band
      */
-    if (gfp->noATH) {
+    
+    if (vbr_mtrh == gfp->VBR) {
+       ATH_l[SBPSY_l] = ATH_s[SBPSY_s] = ATH_f = 5.82E-12;
+    }
+    else
+        ATH_f = 1E-20;
+
+    if (gfp->noATH || vbr_mtrh == gfp->VBR) {
         for (sfb = 0; sfb < SBMAX_l-1; sfb++) {
-            ATH_l[sfb] = 1E-20;
+            ATH_l[sfb] = ATH_f;
         }
         for (sfb = 0; sfb < SBMAX_s-1; sfb++) {
-            ATH_s[sfb] = 1E-20;
+            ATH_s[sfb] = ATH_f;
         }
     }
 }
@@ -426,6 +433,11 @@ void reduce_side(int targ_bits[2],FLOAT8 ms_ener_ratio,int mean_bits,int max_bit
     }
 }
 
+FLOAT8 dreinorm (FLOAT8 a, FLOAT8 b, FLOAT8 c)
+{
+    return pow(pow(a,3.)+pow(b,3.)+pow(c,3.),1./3.);
+}
+
 /*************************************************************************/
 /*            calc_xmin                                                  */
 /*************************************************************************/
@@ -445,7 +457,7 @@ int calc_xmin(
               III_psy_xmin  * const l3_xmin ) 
 {
   lame_internal_flags *gfc=gfp->internal_flags;
-  int sfb,j,start, end, bw,l, b, ath_over=0;
+  int sfb,j,start, end, bw,l, b, ath_over=0, bw_0, bw_1, bw_2, bw_3;
   FLOAT8 en0, xmin, ener;
 
   if (cod_info->block_type==SHORT_TYPE) {
@@ -487,7 +499,21 @@ int calc_xmin(
         l3_xmin->s[sfb][b] *= 0.001;
     }
   }
-
+  if (vbr_mtrh == gfp->VBR) {
+    /*
+     *  fake masking for sfb12, remove it if true maskings available
+     */
+    bw_3 = gfc->scalefac_band.s[ SBMAX_s-3 ] - gfc->scalefac_band.s[ SBPSY_s-3 ];
+    bw_2 = gfc->scalefac_band.s[ SBMAX_s-2 ] - gfc->scalefac_band.s[ SBPSY_s-2 ];
+    bw_1 = gfc->scalefac_band.s[ SBMAX_s-1 ] - gfc->scalefac_band.s[ SBPSY_s-1 ];
+    bw_0 = gfc->scalefac_band.s[ SBMAX_s-0 ] - gfc->scalefac_band.s[ SBPSY_s-0 ];
+    for (b = 0; b < 3; b++) {
+      ener = bw_0 * dreinorm( l3_xmin->s[SBPSY_s-1][b]/bw_1,
+                              l3_xmin->s[SBPSY_s-2][b]/bw_2,
+                              l3_xmin->s[SBPSY_s-3][b]/bw_3 );
+      l3_xmin->s[SBPSY_s][b] = ener;
+    }
+  }
   }else{
     if (gfc->nsPsy.use) {
       for ( sfb = 0; sfb < SBMAX_l; sfb++ ){
@@ -505,7 +531,7 @@ int calc_xmin(
 	  xmin = ratio->en.l[sfb];
 	  if (xmin > 0.0)
 	    xmin = en0 * ratio->thm.l[sfb] * gfc->masking_lower / xmin;
-	  xmin=Max(gfc->ATH_l[sfb], xmin);
+          xmin=Max(gfc->ATH_l[sfb], xmin);
 	}
 	l3_xmin->l[sfb]=xmin;
 
@@ -539,10 +565,23 @@ int calc_xmin(
 	  xmin = ratio->en.l[sfb];
 	  if (xmin > 0.0)
 	    xmin = en0 * ratio->thm.l[sfb] * gfc->masking_lower / xmin;
-	  xmin=Max(gfc->ATH_l[sfb], xmin);
+          xmin=Max(gfc->ATH_l[sfb], xmin);
 	}
 	l3_xmin->l[sfb]=xmin*bw;
 	if (en0 > gfc->ATH_l[sfb]) ath_over++;
+      }
+      if (vbr_mtrh == gfp->VBR) {
+        /*
+         *  fake masking for sfb21, remove it if true maskings available
+         */
+        bw_3 = gfc->scalefac_band.l[ SBMAX_l-3 ] - gfc->scalefac_band.l[ SBPSY_l-3 ];
+        bw_2 = gfc->scalefac_band.l[ SBMAX_l-2 ] - gfc->scalefac_band.l[ SBPSY_l-2 ];
+        bw_1 = gfc->scalefac_band.l[ SBMAX_l-1 ] - gfc->scalefac_band.l[ SBPSY_l-1 ];
+        bw_0 = gfc->scalefac_band.l[ SBMAX_l-0 ] - gfc->scalefac_band.l[ SBPSY_l-0 ];
+        ener = bw_0 * dreinorm( l3_xmin->l[SBPSY_l-1]/bw_1,
+                                l3_xmin->l[SBPSY_l-2]/bw_2,
+                                l3_xmin->l[SBPSY_l-3]/bw_3 );
+        l3_xmin->l[SBPSY_l] = ener;
       }
     }
   }

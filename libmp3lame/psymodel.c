@@ -612,7 +612,10 @@ int L3psycho_anal( lame_global_flags * gfp,
 	/* chn=0,1   L and R channels
 	   chn=2,3   S and M channels.  
 	*/
-	if (gfc->blocktype_old[chn>1 ? chn-2 : chn] == SHORT_TYPE )
+        
+        if (vbr_mtrh == gfp->VBR)
+            thr[b] = Min(ecb, Min(rpelev*gfc->nb_1[chn][b],rpelev2*gfc->nb_2[chn][b]) );
+	else if (gfc->blocktype_old[chn>1 ? chn-2 : chn] == SHORT_TYPE )
 	  thr[b] = ecb; /* Min(ecb, rpelev*gfc->nb_1[chn][b]); */
 	else
 	  thr[b] = Min(ecb, Min(rpelev*gfc->nb_1[chn][b],rpelev2*gfc->nb_2[chn][b]) );

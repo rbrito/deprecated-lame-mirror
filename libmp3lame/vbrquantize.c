@@ -1158,7 +1158,7 @@ VBR_noise_shaping2 (
     
     gfc->use_best_huffman = best_huffman;
 
-    if (ret != 0) /* Houston, we have a problem */
+    if (ret == -1) /* Houston, we have a problem */
         return -1;
 
     if (cod_info->part2_3_length < minbits) {
