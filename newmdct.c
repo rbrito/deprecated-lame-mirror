@@ -491,11 +491,11 @@ void mdct_sub48(lame_global_flags *gfp,
 		idct32(samp);
 		window_subband(wk + 32, samp + 32+16);
 		idct32(samp+32);
+		samp += 64;
+		wk += 64;
 		/*
 		 * Compensate for inversion in the analysis filter
 		 */
-		samp += 64;
-		wk += 64;
 		for (band = 16-32; band < 0; band++)
 		    samp[band] *= -1;
 	    }
@@ -522,7 +522,7 @@ void mdct_sub48(lame_global_flags *gfp,
 	     * + 18 current subband samples
 	     */
 	    for (band = 0; band < 32; band++, mdct_enc += 18) 
-              {
+	    {
 		int type = gi->block_type;
 		int band_swapped;
 		band_swapped = order[band];
@@ -689,11 +689,8 @@ void mdct_init48(lame_global_flags *gfp)
 
     /* type 2(short)*/
     for (i = 0; i < NS / 4; i++) {
-	win[SHORT_TYPE][i] = tan(PI / NS * (i + 0.5));
-    }
-
-    for (i = 0; i < NS / 4; i++) {
 	FLOAT8 w2 = cos(PI / NS * (i + 0.5)) * (4.0/NS) / SCALE;
+	win[SHORT_TYPE][i] = tan(PI / NS * (i + 0.5));
 	tritab_s[i*2  ] = cos((0.5+2-i)*PI/NS) * w2;
 	tritab_s[i*2+1] = sin((0.5+2-i)*PI/NS) * w2;
     }
