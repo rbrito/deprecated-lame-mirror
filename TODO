@@ -1,3 +1,8 @@
+1. bug in resample code:  downsampling from 44101 to 44100 causes
+   a seg fault.  Workaround in place for now:  resampling disabled 
+   if input/output samplerates agree to 4 digits.  
+
+
 1.  New Xing VBR header is incompable with MS Media Player.  but works
 with most other players.  Most likely MS took some shortcuts and
 made some invalid assumptions about VBR header.  Should we
