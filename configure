@@ -25315,7 +25315,7 @@ _ACEOF
 fi
 
 
-if test $ac_cv_header_winsock_h = no; then
+if test $ac_cv_header_winsock2_h = no; then
 
 for ac_func in socket
 do
