@@ -617,7 +617,7 @@ int  calc_noise(
     int sfb, l, over=0;
     FLOAT8 over_noise_db = 0;
     FLOAT8 tot_noise_db  = 0;     /*    0 dB relative to masking */
-    FLOAT8 max_noise  = 1E-20; /* -200 dB relative to masking */
+    FLOAT8 max_noise  = -200; /* -200 dB relative to masking */
     int j = 0;
     const int *ix = cod_info->l3_enc;
     int *scalefac = cod_info->scalefac;
@@ -755,8 +755,8 @@ void set_pinfo (
                 gfc->pinfo->xfsf_s[gr][ch][3*sfb+i] = en1*l3_xmin[sfb2]*xfsf[sfb2]/bw;
 
                 /* there is no scalefactor bands >= SBPSY_s */
-                gfc->pinfo->LAMEsfb_s[gr][ch][3*sfb+i] =
-						-2*cod_info->subblock_gain[i];
+                gfc->pinfo->LAMEsfb_s[gr][ch][3*sfb+i]
+		    = -2.0*cod_info->subblock_gain[i];
                 if (sfb < SBPSY_s) {
                     gfc->pinfo->LAMEsfb_s[gr][ch][3*sfb+i] -=
 						ifqstep*scalefac[sfb2];
