@@ -77,7 +77,7 @@ GTKLIBS = /LIBPATH:../src/gtk+/gtk \
 #
 #	uncomment the following if you want decoding support
 #
-CPP_OPTS = $(CPP_OPTS) /DHAVEMPGLIB /DUSE_LAYER_1 /DUSE_LAYER_2
+CPP_OPTS = $(CPP_OPTS) /DHAVE_MPGLIB /DUSE_LAYER_1 /DUSE_LAYER_2
 #=========================================================== MPG123 DECODING ==
 
 
