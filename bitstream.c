@@ -730,11 +730,13 @@ format_bitstream(lame_global_flags *gfp, int bitsPerFrame,
 	   l3_side->tt[1][0].part2_3_length +
 	   l3_side->tt[1][1].part2_3_length);
 #endif
+    drain_into_ancillary(gfp,l3_side->resvDrain_pre);
+    bits = l3_side->resvDrain_pre;
     encodeSideInfo2(gfp,bitsPerFrame);
-    bits = 8*gfc->sideinfo_len;
+    bits += 8*gfc->sideinfo_len;
     bits+=writeMainData(gfp,l3_enc,scalefac);
-    drain_into_ancillary(gfp,l3_side->resvDrain);
-    bits += l3_side->resvDrain;
+    drain_into_ancillary(gfp,l3_side->resvDrain_post);
+    bits += l3_side->resvDrain_post;
 
     l3_side->main_data_begin += (bitsPerFrame-bits)/8;
 #ifdef DEBUG

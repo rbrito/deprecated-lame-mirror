@@ -192,6 +192,8 @@ int lame_decode1(char *buf,int len,short pcm_l[],short pcm_r[])
 	if (j==0) pcm_l[i] = ((short *) out)[mp.fr.stereo*i+j];
 	else pcm_r[i] = ((short *) out)[mp.fr.stereo*i+j];
   }
+  if (ret==MP3_NEED_MORE) 
+    outsize=0;
   
   /*
   printf("ok, more, err:  %i %i %i  \n",MP3_OK, MP3_NEED_MORE, MP3_ERR);

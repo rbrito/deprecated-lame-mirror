@@ -106,7 +106,7 @@ III_format_bitstream( lame_global_flags *gfp,
 
 
 
-    drain_into_ancillary_data( l3_side->resvDrain );
+    drain_into_ancillary_data( l3_side->resvDrain_post );
     /*
       Put frameData together for the call
       to BitstreamFrame()

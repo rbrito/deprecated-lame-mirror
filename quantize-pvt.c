@@ -129,8 +129,6 @@ iteration_init( lame_global_flags *gfp,III_side_info_t *l3_side, int l3_enc[2][2
   gr_info *cod_info;
   int ch, gr, i;
 
-  l3_side->resvDrain = 0;
-
   if ( gfc->iteration_init_init==0 ) {
     gfc->iteration_init_init=1;
 

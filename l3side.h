@@ -78,7 +78,8 @@ int /*	unsigned */ subblock_gain[3];
 typedef struct {
 	int main_data_begin; /* unsigned -> int */
 	unsigned private_bits;
-	int resvDrain;
+	int resvDrain_pre;
+	int resvDrain_post;
 	unsigned scfsi[2][4];
 	struct {
 		struct gr_info_ss {

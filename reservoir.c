@@ -36,7 +36,7 @@ static int ResvMax  = 0; /* in bits */
 int
 ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, int frameLength )
 {
-  lame_internal_flags *gfc=gfp->internal_flags;
+    lame_internal_flags *gfc=gfp->internal_flags;
     int fullFrameBits;
     int resvLimit;
 
@@ -44,28 +44,15 @@ ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, i
       ResvSize=0;
     }
 
-
-    if ( gfc->version == 1 )
-    {
-	resvLimit = 4088; /* main_data_begin has 9 bits in MPEG 1 */
-    }
-    else
-    {
-	resvLimit = 2040; /* =255*8  main_data_begin has 8 bits in MPEG 2 */
-    }
+    /* main_data_begin has 9 bits in MPEG 1, 8 bits MPEG2 */
+    resvLimit = (gfc->version==1) ? 4088 : 2040 ;
 
     /*
       main_data_begin was set by the formatter to the
       expected value for the next call -- this should
       agree with our reservoir size
     */
-
-#ifdef DEBUG
-    fprintf( stderr, ">>> ResvSize = %d\n", ResvSize );
-#endif
-    /* check expected resvsize */
     assert( (l3_side->main_data_begin * 8) == ResvSize );
-    fullFrameBits = mean_bits * gfc->mode_gr + ResvSize;
 
     /*
       determine maximum size of reservoir:
@@ -77,22 +64,17 @@ ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, i
     else
 	ResvMax = MAXMP3BUF - frameLength;
     if (gfp->disable_reservoir) ResvMax=0;
+    if ( ResvMax > resvLimit ) ResvMax = resvLimit;
 
+    l3_side->resvDrain_pre = 0;
 
-    /*
-      limit max size to resvLimit bits because
-      main_data_begin cannot indicate a
-      larger value
-      */
-    if ( ResvMax > resvLimit )
-	ResvMax = resvLimit;
-
-  if (gfc->pinfo != NULL){
-    plotting_data *pinfo=gfc->pinfo;
-    pinfo->mean_bits=mean_bits/2;  /* expected bits per channel per granule */
-    pinfo->resvsize=ResvSize;
-  }
-
+    if (gfc->pinfo != NULL){
+      plotting_data *pinfo=gfc->pinfo;
+      pinfo->mean_bits=mean_bits/2;  /* expected bits per channel per granule */
+      pinfo->resvsize=ResvSize;
+    }
+    
+    fullFrameBits = mean_bits * gfc->mode_gr + Min(ResvSize,ResvMax);
     return fullFrameBits;
 }
 
@@ -157,8 +139,8 @@ ResvAdjust(lame_global_flags *gfp,gr_info *gi, III_side_info_t *l3_side, int mea
 void
 ResvFrameEnd(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits)
 {
-    int stuffingBits;
-    int over_bits;
+    int stuffingBits=0;
+    int over_bits,mdb_bytes;
     lame_internal_flags *gfc=gfp->internal_flags;
 
 
@@ -166,26 +148,48 @@ ResvFrameEnd(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits)
     if ( gfc->stereo == 2 && mean_bits & 1)
 	ResvSize += 1;
 
+
     over_bits = ResvSize - ResvMax;
     if ( over_bits < 0 )
 	over_bits = 0;
-    
-    ResvSize -= over_bits;
     stuffingBits = over_bits;
 
     /* we must be byte aligned */
-    if ( (over_bits = ResvSize % 8) )
-    {
+    if ( (over_bits = (ResvSize-over_bits) % 8) )
 	stuffingBits += over_bits;
-	ResvSize -= over_bits;
-    }
-    if (gfp->VBR && !gfp->disable_reservoir && stuffingBits>7) {
-      printf("***** reservoir overflow: wasting bits=%i\n",stuffingBits);
+
+    /* drain as many bits as possible into previous frame ancillary data
+     * In particular, in VBR mode ResvMax may have changed, and we have
+     * to make sure main_data_begin does not create a reservoir bigger 
+     * than ResvMax  mt 4/00*/
+    mdb_bytes = Min(l3_side->main_data_begin*8,stuffingBits)/8;
+    l3_side->resvDrain_pre = 8*mdb_bytes;
+    stuffingBits -= 8*mdb_bytes;
+    ResvSize -= 8*mdb_bytes;
+    
+    if (mdb_bytes && !gfp->disable_reservoir) {
+      printf("**** drain_pre: wasting bits=%i\n",8*mdb_bytes);
     }
 
-    l3_side->resvDrain = stuffingBits;
+#if 0
+    /* drain the rest into this frames ancillary data*/
+    l3_side->resvDrain_post = stuffingBits;
+    ResvSize -= stuffingBits;
+#else
+    /* drain enough to be byte aligned.  The remaining bits will
+     * be added to the reservoir, and we will deal with them next frame
+     * If the next frame
+     * is at a lower bitrate, it may have a larger ResvMax, and
+     * we will not have to waste these bits!  mt 4/00 */
+    l3_side->resvDrain_post = (stuffingBits % 8);
+    ResvSize -= stuffingBits % 8;
+#endif
+
+
+    if (stuffingBits>7 && !gfp->disable_reservoir) {
+      printf("**** drain_post: wasting bits=%i\n",stuffingBits);
+    }
     return;
-
 }
 
 

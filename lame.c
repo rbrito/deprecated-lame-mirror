@@ -97,6 +97,7 @@ void lame_init_params(lame_global_flags *gfp)
   }
 #endif
 
+
   /* set the output sampling rate, and resample options if necessary
      samplerate = input sample rate
      resamplerate = ouput sample rate
@@ -393,6 +394,7 @@ void lame_init_params(lame_global_flags *gfp)
 
   /* Do not write VBR tag if VBR flag is not specified */
   if (gfp->VBR==0) gfp->bWriteVbrTag=0;
+  if (gfp->gtkflag) gfp->bWriteVbrTag=0;
 
   /* some file options not allowed if output is: not specified or stdout */
 
