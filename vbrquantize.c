@@ -25,6 +25,7 @@
 #include "quantize-pvt.h"
 #include "gtkanal.h"
 
+#define TAKEHIRO_IEEE754_HACK
 
 #if (defined(__GNUC__) && defined(__i386__))
 #define USE_GNUC_ASM
@@ -66,9 +67,10 @@
 #  define XRPOW_FTOI(src,dest) ((dest) = (int)(src))
 #endif
 
-
-
-
+#ifdef TAKEHIRO_IEEE754_HACK
+#  define QUANTFAC(rx)  adj43asm[rx]
+#  define ROUNDFAC -0.0946
+#endif
 
 
 #define MAXQUANTERRORXXX
