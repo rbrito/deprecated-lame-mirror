@@ -1047,7 +1047,7 @@ int L3psycho_anal( lame_global_flags * gfp,
 
 
 #define I1LIMIT 8   /* as in if(i>8)  */ 
-#define I2LIMIT 24  /* as in if(i>24) */ 
+#define I2LIMIT 23  /* as in if(i>24) -> changed 23 */ 
 #define MLIMIT  15  /* as in if(m<15) */ 
 
 static FLOAT8 ma_max_i1;
@@ -1075,14 +1075,13 @@ inline static FLOAT8 mask_add(FLOAT8 m1,FLOAT8 m2,int k,int b, lame_internal_fla
     3.3246 *3.3246 ,3.23837*3.23837,3.15437*3.15437,3.00412*3.00412,2.86103*2.86103,2.65407*2.65407,2.46209*2.46209,2.284  *2.284  ,
     2.11879*2.11879,1.96552*1.96552,1.82335*1.82335,1.69146*1.69146,1.56911*1.56911,1.46658*1.46658,1.37074*1.37074,1.31036*1.31036,
     1.25264*1.25264,1.20648*1.20648,1.16203*1.16203,1.12765*1.12765,1.09428*1.09428,1.0659 *1.0659 ,1.03826*1.03826,1.01895*1.01895,
-    1,
     1
   };
 
   static const FLOAT8 table2[] = {
     1.33352*1.33352,1.35879*1.35879,1.38454*1.38454,1.39497*1.39497,1.40548*1.40548,1.3537 *1.3537 ,1.30382*1.30382,1.22321*1.22321,
     1.14758*1.14758,
-    1.14758*1.14758
+    1
   };
 
   static const FLOAT8 table3[] = {
@@ -1092,7 +1091,6 @@ inline static FLOAT8 mask_add(FLOAT8 m1,FLOAT8 m2,int k,int b, lame_internal_fla
 
 
   int i;
-  FLOAT8 m;
   FLOAT ratio;
 
   if (m1 == 0) return m2;
