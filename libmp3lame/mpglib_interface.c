@@ -43,21 +43,20 @@ lame_decode_init(lame_t gfc)
 
 
 /* copy mono samples */
-#define COPY_MONO(DST_TYPE, SRC_TYPE)                                                           \
-    DST_TYPE *pcm_l = (DST_TYPE *)pcm_l_raw;                                                    \
-    SRC_TYPE *p_samples = (SRC_TYPE *)p;                                                        \
-    for (i = 0; i < processed_samples; i++)                                                     \
-      *pcm_l++ = (DST_TYPE)*p_samples++; 
+#define COPY_MONO(DST_TYPE, SRC_TYPE)        \
+    DST_TYPE *pcm_l = (DST_TYPE *)pcm_l_raw; \
+    SRC_TYPE *p_samples = (SRC_TYPE *)p;     \
+    for (i = 0; i < processed_samples; i++)  \
+      *pcm_l++ = (DST_TYPE)*p_samples++;
 
 /* copy stereo samples */
-#define COPY_STEREO(DST_TYPE, SRC_TYPE)                                                         \
-    DST_TYPE *pcm_l = (DST_TYPE *)pcm_l_raw, *pcm_r = (DST_TYPE *)pcm_r_raw;                    \
-    SRC_TYPE *p_samples = (SRC_TYPE *)p;                                                        \
-    for (i = 0; i < processed_samples; i++) {                                                   \
-      *pcm_l++ = (DST_TYPE)*p_samples++;                                                        \
-      *pcm_r++ = (DST_TYPE)*p_samples++;                                                        \
-    }   
-
+#define COPY_STEREO(DST_TYPE, SRC_TYPE)                                      \
+    DST_TYPE *pcm_l = (DST_TYPE *)pcm_l_raw, *pcm_r = (DST_TYPE *)pcm_r_raw; \
+    SRC_TYPE *p_samples = (SRC_TYPE *)p;                                     \
+    for (i = 0; i < processed_samples; i++) {                                \
+      *pcm_l++ = (DST_TYPE)*p_samples++;                                     \
+      *pcm_r++ = (DST_TYPE)*p_samples++;                                     \
+    }
 
 
 /*
