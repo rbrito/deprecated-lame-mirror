@@ -1,4 +1,4 @@
-# Makefile.in generated automatically by automake 1.4a from Makefile.am
+# Makefile.in generated automatically by automake 1.4 from Makefile.am
 
 # Copyright (C) 1994, 1995-8, 1999 Free Software Foundation, Inc.
 # This Makefile.in is free software; the Free Software Foundation
@@ -46,10 +46,9 @@ AUTOMAKE = @AUTOMAKE@
 AUTOHEADER = @AUTOHEADER@
 
 INSTALL = @INSTALL@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@ $(AM_INSTALL_PROGRAM_FLAGS)
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
-INSTALL_STRIP_FLAG =
 transform = @program_transform_name@
 
 NORMAL_INSTALL = :
@@ -102,19 +101,19 @@ SUBDIRS = mpglib libmp3lame frontend Dll doc include misc
 CLEANFILES = testcase.new.mp3
 AUTOMAKE_OPTIONS = foreign ansi2knr
 
-EXTRA_DIST =  	API HACKING 	INSTALL.configure 	LICENSE 	Lame.vbs 	Makefile.B32 	Makefile.DJGPP 	Makefile.MSVC 	PRESETS.draft 	README.B32 	README.DJGPP 	STYLEGUIDE 	USAGE 	auenc 	lame.bat 	lame.spec 	lame4dos.bat 	mlame 	mlame_corr.c 	testcase.mp3 	testcase.wav
+EXTRA_DIST =  	API HACKING 	INSTALL.configure 	LICENSE 	Lame.vbs 	Makefile.B32 	Makefile.DJGPP 	Makefile.MSVC 	PRESETS.draft 	README.B32 	README.DJGPP 	STYLEGUIDE 	USAGE 	auenc 	lame.bat 	lame.spec.in 	lame4dos.bat 	mlame 	mlame_corr.c 	testcase.mp3 	testcase.wav
 
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
-CONFIG_CLEAN_FILES = 
+CONFIG_CLEAN_FILES =  lame.spec
 DIST_COMMON =  README COPYING INSTALL Makefile.am Makefile.in TODO \
 acinclude.m4 aclocal.m4 config.guess config.sub configure configure.in \
-install-sh ltconfig ltmain.sh missing mkinstalldirs
+install-sh lame.spec.in ltconfig ltmain.sh missing mkinstalldirs
 
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
-TAR = gtar
+TAR = tar
 GZIP_ENV = --best
 all: all-redirect
 .SUFFIXES:
@@ -132,6 +131,8 @@ config.status: $(srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	$(SHELL) ./config.status --recheck
 $(srcdir)/configure: @MAINTAINER_MODE_TRUE@$(srcdir)/configure.in $(ACLOCAL_M4) $(CONFIGURE_DEPENDENCIES)
 	cd $(srcdir) && $(AUTOCONF)
+lame.spec: $(top_builddir)/config.status lame.spec.in
+	cd $(top_builddir) && CONFIG_FILES=$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
 # This directory's subdirectories are mostly independent; you can cd
 # into them and run `make' without going through this Makefile.
@@ -307,7 +308,7 @@ uninstall: uninstall-recursive
 all-am: Makefile
 all-redirect: all-recursive
 install-strip:
-	$(MAKE) $(AM_MAKEFLAGS) INSTALL_STRIP_FLAG=-s install
+	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
 installdirs: installdirs-recursive
 installdirs-am:
 
@@ -368,7 +369,7 @@ maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 #  should be at most 30.
 #
 testcase.new.mp3: testcase.wav frontend/lame
-	frontend/lame --nores -h testcase.wav testcase.new.mp3
+	time frontend/lame --nores -h testcase.wav testcase.new.mp3
 
 test: testcase.mp3 testcase.new.mp3
 	cmp -l testcase.new.mp3 testcase.mp3 | wc

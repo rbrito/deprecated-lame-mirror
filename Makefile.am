@@ -1,3 +1,5 @@
+## $Id$
+
 SUBDIRS = mpglib libmp3lame frontend Dll doc include misc
 
 CLEANFILES = testcase.new.mp3
@@ -18,7 +20,7 @@ EXTRA_DIST = \
 	USAGE \
 	auenc \
 	lame.bat \
-	lame.spec \
+	lame.spec.in \
 	lame4dos.bat \
 	mlame \
 	mlame_corr.c \
@@ -35,7 +37,7 @@ EXTRA_DIST = \
 #  should be at most 30.
 #
 testcase.new.mp3: testcase.wav frontend/lame
-	frontend/lame --nores -h testcase.wav testcase.new.mp3
+	time frontend/lame --nores -h testcase.wav testcase.new.mp3
 
 test: testcase.mp3 testcase.new.mp3
 	cmp -l testcase.new.mp3 testcase.mp3 | wc
