@@ -8,6 +8,1067 @@
 
 -- 
 
+2001-06-22 08:49  aleidinger
+
+	* Makefile.am:
+
+	regen
+	
+2001-06-22 08:48  aleidinger
+
+	* Makefile.in:
+
+	we have a test subdir in cvs, force the test target to be out of date at every invocation of make
+	
+2001-06-21 20:40  bouvigne
+
+	* libmp3lame/reservoir.c:
+
+	change of the max frame size
+	
+2001-06-19 04:46  markt
+
+	* misc/: Lame.vbs, lameGUI.html:
+
+	updates from "Ralf Kempkens" <Ralf.Kempkens@epost.de>
+	
+2001-06-18 18:51  markt
+
+	* TODO, frontend/get_audio.c, frontend/get_audio.h,
+	frontend/main.c, frontend/main.h, frontend/parse.c, include/lame.h,
+	libmp3lame/bitstream.c, libmp3lame/bitstream.h,
+	libmp3lame/set_get.c, mpglib/interface.c, mpglib/mpglib.h:
+
+	added two new functions to return number of PCM samples buffererd
+	but not encoded, and the number of bytes of mp3 data buffered but
+	not output.  also added some comments to mpglib/interface.c to
+	make it easier to tell it to look for Xing headers in the middle
+	of a bitstream.
+	
+2001-06-16 00:40  robert
+
+	* Makefile.MSVC, Makefile.unix:
+
+	CPU feature detection for fft routines
+	
+2001-06-16 00:39  robert
+
+	* libmp3lame/: fft.c, util.h:
+
+	CPU feature autodetection for fft routines
+	
+2001-06-15 22:23  markt
+
+	* TODO, frontend/main.c, include/lame.h, libmp3lame/lame.c:
+
+	Robert's fix to init histgram data with --nogap.
+	
+	lame_reinit_bitstream() renamed lame_init_bitstream(), and
+	it is called by lame_init_params().  It can also be called
+	after a call to lame_encode_flush_nogap().
+	
+2001-06-15 21:25  markt
+
+	* TODO, frontend/main.c, include/lame.h, libmp3lame/lame.c:
+
+	some fixes for VBR tags with --nogap option.
+	
+2001-06-14 23:09  robert
+
+	* frontend/parse.c:
+
+	fixed stdin
+	
+2001-06-14 00:58  robert
+
+	* libmp3lame/version.h:
+
+	bumped version to alpha 7
+	
+2001-06-14 00:43  robert
+
+	* libmp3lame/: lame.c, psymodel.c:
+
+	added JD's loudness approximation to Naoki's duplicated psy routine
+	as I defaulted JD's adapt stuff I was under the impression that he
+	added his code to both ones, so...
+	
+2001-06-14 00:19  markt
+
+	* frontend/main.c:
+
+	fix for nogap truncation call.  When processing the last
+	of the .wav files, we need to call lame_encode_flush()
+	instead of lame_encode_flush_nogap().
+	
+2001-06-13 22:46  robert
+
+	* frontend/parse.c:
+
+	LFN support for Win32: realized that it would be a good idea to release the search file handle after searching the filename
+	
+2001-06-13 08:44  aleidinger
+
+	* Makefile.DJGPP:
+
+	nasm fix
+	
+2001-06-12 21:58  robert
+
+	* frontend/parse.c:
+
+	long file name support for Win32 systems
+	works under Win95 using Intel compiler 4.5 / MSVC 4.2
+	not tested under NT, and not much tested anyway ;-)
+	
+2001-06-12 21:03  robert
+
+	* Makefile.unix:
+
+	seems to be forgotten by the last committ
+	
+2001-06-12 20:32  markt
+
+	* libmp3lame/bitstream.c:
+
+	old crc code removed from bitstream.c.
+	I had added this in when looking for the xing/crc bug
+	
+2001-06-12 12:47  aleidinger
+
+	* frontend/lametime.c:
+
+	fix cygwin build, sort some includes
+	
+2001-06-12 12:45  aleidinger
+
+	* libmp3lame/: Makefile.in, i386/Makefile.in:
+
+	regen
+	
+2001-06-12 12:45  aleidinger
+
+	* libmp3lame/: Makefile.am, i386/Makefile.am:
+
+	do not use libtool for the asm lib, libtool did not know about nasm
+	
+2001-06-12 12:42  aleidinger
+
+	* configure, frontend/Makefile.in:
+
+	regen
+	
+2001-06-12 12:42  aleidinger
+
+	* configure.in:
+
+	 - enable shared lib
+	 - disable asm routines
+	 - fix build of asm routines in the win32 case
+	
+2001-06-12 12:41  aleidinger
+
+	* frontend/Makefile.am:
+
+	statically link libmp3lame to the frondends
+	
+2001-06-12 05:27  markt
+
+	* libmp3lame/lame.c:
+
+	removed CRC error message
+	
+2001-06-12 05:27  markt
+
+	* libmp3lame/VbrTag.c:
+
+	fix for Xing/CRC problem.
+	
+	Xing toc data must start directly after sideinfo data, assuming
+	no CRC.  If CRC is set, then the Xing toc data must *still* start
+	in the same location (since original Xing demo code does not
+	check for CRC and modify the toc offset).
+	
+2001-06-12 04:51  markt
+
+	* libmp3lame/: bitstream.c, lame.c:
+
+	put old CRC routine back in (but disabled)
+	
+2001-06-12 03:35  markt
+
+	* Dll/BladeMP3EncDLL.c:
+
+	added some comments about the DLL's non-standard use of libmp3lame.a
+	
+2001-06-12 03:31  markt
+
+	* libmp3lame/Makefile.am:
+
+	Robert created lame_global_flags.h,
+	so I'm adding it to Makefile.am, in the "noinst" section.
+	
+2001-06-12 00:48  robert
+
+	* Dll/BladeMP3EncDLL.c, libmp3lame/lame_global_flags.h,
+	libmp3lame/quantize.c, libmp3lame/util.h:
+
+	- fixed Makefile.unix to let mp3rtp compile again (does it still work?)
+	- had to move lame_global_flags structure into a file of its own,
+	  because the Dll compiled but did not link anymore.
+	  Now it works again, tested on Win95 using Makefile.MSVC
+	
+2001-06-11 23:42  markt
+
+	* Dll/BladeMP3EncDLL.c, include/lame.h, libmp3lame/set_get.c,
+	libmp3lame/util.h:
+
+	committed Robert's patch.  lame_global_flags is gone :-)
+	
+2001-06-11 22:07  robert
+
+	* frontend/main.c:
+
+	some more new API things
+	
+2001-06-11 18:49  markt
+
+	* frontend/: gtkanal.c, parse.c:
+
+	converted rest of frontend code over to "new api"
+	
+2001-06-11 16:35  markt
+
+	* frontend/get_audio.c, frontend/get_audio.h, frontend/gtkanal.c,
+	libmp3lame/mpglib_interface.c, mpglib/interface.c:
+
+	Tracked down a bug in lame_decoder. It was not correctly
+	flushing the internal mpglib buffers when it hit EOF.
+	
+	Problem was most severe with low bitrate example.  It the frame size
+	was 32 bytes, only the first 1/3 of the file would be decoded
+	and the reamining 2/3 of the entire file would be buffered
+	inside mpglib.
+	
+2001-06-10 20:35  robert
+
+	* Dll/BladeMP3EncDLL.c, include/lame.h:
+
+	making the old VBR default in preparation for the next release
+	
+2001-06-10 19:19  markt
+
+	* API, USAGE, misc/Lame.vbs, misc/lameGUI.html:
+
+	added new version of Lame.vbs from "Ralf Kempkens" <Ralf.Kempkens@epost.de>
+	including a GUI/HTML interface.
+	
+2001-06-08 21:40  markt
+
+	* frontend/: get_audio.c, gtkanal.c, main.c, main.h:
+
+	updated some comments related to restructering main.c
+	for the --nogap option
+	
+2001-06-08 21:29  markt
+
+	* API, TODO, frontend/get_audio.c, frontend/gtkanal.c,
+	frontend/main.c, frontend/mp3rtp.c, frontend/mp3x.c,
+	frontend/parse.c, frontend/parse.h, frontend/timestatus.c,
+	include/lame.h, libmp3lame/lame.c, libmp3lame/set_get.c:
+
+	preliminary --nogap option added.
+	
+	--nogap file1 file2 file3
+	
+	and it produces file1.mp3 file2.mp3 file3.mp3
+	
+	problems: no id3tags, no vbr tags.
+	
+2001-06-08 18:59  markt
+
+	* test/lametest.py:
+
+	fix so lametest.py doesn't crash if lame does not create an
+	output file.
+	
+2001-06-08 00:00  markt
+
+	* frontend/main.c, libmp3lame/bitstream.c:
+
+	fixed bug with lame_encode_flush_nogap routine
+	
+2001-06-07 22:12  robert
+
+	* DEFINES, TODO:
+
+	[no log message]
+	
+2001-06-07 22:06  robert
+
+	* frontend/parse.c, libmp3lame/encoder.c:
+
+	--ath-adjust 1 (Gaby's original code) was disabled, any reasons for that JD?
+	
+2001-06-07 19:14  markt
+
+	* HACKING, frontend/get_audio.c, frontend/gtkanal.c,
+	frontend/parse.c, frontend/timestatus.c, libmp3lame/lame.c:
+
+	started updating frontend code to use the new API.
+	
+2001-06-07 14:02  aleidinger
+
+	* libmp3lame/fft.c:
+
+	unbreak (at least it compiles), more work needed
+	
+2001-06-07 10:11  jd-
+
+	* libmp3lame/encoder.c:
+
+	Allow ATH auto-adjust code to begin at the minimum value on the leading frame
+	
+2001-06-07 08:40  jd-
+
+	* libmp3lame/encoder.c:
+
+	Restored some ATH auto-adjust indentation and comments (altered since 3.88
+	in a code clean up)
+	
+2001-06-07 06:06  pgubanov
+
+	* libmp3lame/fft.c:
+
+	Choose asm-optimized FHT version if ARCH_X86 defined in fft.c
+	
+2001-06-05 22:13  afaber
+
+	* Dll/: BladeMP3EncDLL.c, BladeMP3EncDLL.h:
+
+	Added R3Mix quality setting
+	
+2001-06-05 19:19  aleidinger
+
+	* doc/html/history.html:
+
+	sync my entry with the one at the webpages
+	
+2001-06-05 00:39  markt
+
+	* INSTALL, TODO:
+
+	added note about mpglib i-stereo bug in TODO list.
+	fixed typo in INSTALL file
+	
+2001-06-04 23:57  markt
+
+	* TODO, libmp3lame/reservoir.c:
+
+	documented some variables in reservoir.c.
+	
+	Current status is:
+	
+	maxframesize = no restrictions
+	
+	if strict_ISO is defined, we use Gaby's less restrictive
+	interpretation of the standard.
+	
+	see TODO version 1.30 for a user who has a hardware player which
+	cannot handle 320kbps frames if the bit reservoir is used.
+	
+	I guess the final verdict is tough luck :-)
+	
+2001-06-04 23:29  markt
+
+	* API, HACKING, frontend/parse.c, libmp3lame/lame.c:
+
+	
+	print error message and fail if user selects error_protection
+	(since this is currently broken)
+	
+	added some comments to HACKING on how to add a new option.
+	
+	updated API to reflect that all lame_set/get functions are now
+	working.
+	
+2001-06-04 23:10  markt
+
+	* include/lame.h, libmp3lame/lame.c:
+
+	updated comments about lame_encode_flush_nogap()
+	
+2001-06-04 23:08  markt
+
+	* include/lame.h, libmp3lame/bitstream.c, libmp3lame/lame.c:
+
+	added lame_encode_flush_nogap().
+	
+	This routine will flush all internal mp3 buffers, and pad the
+	last frame with ancillary data so it is a complete mp3 frame.
+	
+	It will then set ResvSize to 0, so we can continue encoding.
+	
+	after a call to lame_encode_flush_nogap(), if we close
+	the mp3 file and open a new one for the future data,
+	then the two mp3 files should play back 'gapless'
+	if they are first concatenated together.
+	
+2001-06-04 19:59  robert
+
+	* frontend/parse.c, libmp3lame/lame.c, libmp3lame/quantize.c,
+	libmp3lame/version.h:
+
+	tweaks to VBR
+	
+2001-06-04 10:02  afaber
+
+	* Dll/: BladeMP3EncDLL.c, BladeMP3EncDLL.h:
+
+	Extended interface with VBR method selection
+	
+2001-06-04 10:01  afaber
+
+	* mpglib/layer3.c:
+
+	Removed exit call(s) in error conditions, since these errors seems to be good recoverable
+	
+2001-06-04 01:54  robert
+
+	* libmp3lame/: lame.c, psymodel.c, quantize.c, util.h:
+
+	small tweaks to the VBR codes
+	
+2001-06-02 20:22  robert
+
+	* libmp3lame/: lame.c, quantize.c, util.h, version.h:
+
+	started different bit-pressure strategies (VBR)
+	
+2001-06-02 15:26  aleidinger
+
+	* configure:
+
+	regen
+	
+2001-06-02 15:25  aleidinger
+
+	* configure.in:
+
+	force cygwin users to use "CC=gcc ./configure"
+	
+2001-06-01 19:40  glessard
+
+	* frontend/get_audio.c:
+
+	Added support for non-compressed AIFF-C files in parse_aiff_header().
+	
+2001-05-30 01:38  markt
+
+	* configure, configure.in:
+
+	removed -pedantic gcc option.
+	From the gcc man page:  "There is no reason to use this
+	option; it exists only to satisfy pedants".
+	
+	And there is a reason not to use it:  It causes people to
+	send me email asking if all the warning messages about c++ comments are ok.
+	
+2001-05-29 22:14  robert
+
+	* frontend/parse.c, include/lame.h, libmp3lame/encoder.c,
+	libmp3lame/lame.c, libmp3lame/set_get.c:
+
+	quick fix for a typo that turned off auto adjust code by accident, sorry
+	
+2001-05-27 18:58  robert
+
+	* frontend/parse.c, libmp3lame/lame.c, libmp3lame/psymodel.c,
+	libmp3lame/quantize.c, libmp3lame/version.h:
+
+	made JD's ATH adapt stuff default for --vbr-mtrh
+	some typings
+	changed bitpressure strategy for VBR a bit
+	
+2001-05-26 21:31  jd-
+
+	* libmp3lame/util.c:
+
+	use more digestible code in ATHformula_jd for a pre-release compiler bundled
+	with a popular Linux distribution
+	
+2001-05-26 16:17  robert
+
+	* libmp3lame/lame.c:
+
+	let the user select -qx for --vbr-mtrh, just to avoid useless e-mails
+	
+2001-05-24 22:25  robert
+
+	* libmp3lame/: lame.c, quantize_pvt.c:
+
+	just 5 minutes to add some more on the --verbose printing side
+	
+2001-05-21 18:55  bouvigne
+
+	* doc/html/history.html:
+
+	history
+	
+2001-05-21 18:19  bouvigne
+
+	* libmp3lame/lame.c:
+
+	update of the default lowpass value. Will probably break some testcases
+	
+2001-05-20 20:45  robert
+
+	* libmp3lame/: encoder.c, lame.c, util.h:
+
+	some more --verbose output
+	
+2001-05-19 16:16  robert
+
+	* libmp3lame/psymodel.c:
+
+	typo fixed
+	
+2001-05-19 16:13  robert
+
+	* frontend/get_audio.c, frontend/main.c, frontend/parse.c,
+	frontend/timestatus.c, include/lame.h, libmp3lame/lame.c,
+	libmp3lame/psymodel.c, libmp3lame/util.h:
+
+	starting a very verbose print function about all internal
+	settings, aiming more transparency for the experienced users
+	
+2001-05-15 01:24  robert
+
+	* libmp3lame/: psymodel.c, quantize_pvt.c, vbrquantize.c:
+
+	some tunings
+	still problems with fatboy.wav and ns.wav
+	
+2001-05-13 20:59  bouvigne
+
+	* libmp3lame/util.c:
+
+	comments in the ath functions
+	
+2001-05-13 11:33  robert
+
+	* libmp3lame/: lame.c, psymodel.c, util.c, util.h:
+
+	fixing tonality problem for --vbr-mtrh
+	
+2001-05-11 23:33  robert
+
+	* libmp3lame/quantize_pvt.c:
+
+	trying to point out the real difference in l3xmin calculation with nspsytune and without it
+	
+2001-05-11 22:14  robert
+
+	* libmp3lame/lame.c:
+
+	nspsytune & newer vbr
+	
+2001-05-11 01:30  robert
+
+	* frontend/get_audio.c, frontend/main.h, include/lame.h,
+	libmp3lame/quantize.c, libmp3lame/quantize_pvt.c,
+	libmp3lame/version.h, test/VBR.op:
+
+	compile fixes for Intel Compiler, dropped sfb21 early stopping for vbr-old (found differences)
+	
+2001-05-10 19:01  aleidinger
+
+	* include/lame.h, libmp3lame/set_get.c:
+
+	- Make the last few set/get functions functional.
+	  (TODO: use them in the frontend).
+	- Converted padding_type to an enum.
+	- Correct some typos.
+	- Adjust some lines to conform to the style of the majority of the file.
+	
+	TODO:
+	 - Search for XXX and do appropriate actions.
+	 - Search for typos (because of alot of cut&paste programming).
+	
+2001-05-08 15:00  bouvigne
+
+	* frontend/parse.c, libmp3lame/util.c:
+
+	update of --r3mix
+	
+2001-05-06 15:11  robert
+
+	* libmp3lame/: lame.c, quantize.c, vbrquantize.c:
+
+	some desperate values for the fast mtrh VBR mode
+	
+2001-05-04 01:07  jd-
+
+	* libmp3lame/: tools.h, util.c:
+
+	Added "--athtype 5" to better represent higher frequencies (14 - 19 kHz).
+	Included supporting functions for quadratic interpolation.
+	
+2001-05-03 20:13  robert
+
+	* libmp3lame/: lame.c, quantize.c, util.c, util.h, vbrquantize.c:
+
+	some VBR-codeclean-up
+	
+2001-05-02 21:02  robert
+
+	* misc/lame4dos.bat:
+
+	patch by Alexander Stumpf:
+	- now works both with drag & drop (SFN) and from the 4DOS-Commandline (LFN)
+	- Using wildcards when prozessing from mp3 to mp3 caused a loop - fixed
+	- removed the mp3-extention test since LAME recognizes the input file fomat
+	  correctly for several versions now (i.e. no --mp3input neccessary anymore)
+	
+2001-05-01 22:55  robert
+
+	* libmp3lame/version.h:
+
+	bumped version number
+	
+2001-05-01 22:18  robert
+
+	* libmp3lame/: quantize.c, vbrquantize.c:
+
+	new -q2 mode for --vbr-mtrh
+	
+2001-05-01 20:37  bouvigne
+
+	* libmp3lame/reservoir.c:
+
+	change of max frame size
+	
+2001-04-28 15:37  robert
+
+	* libmp3lame/: encoder.c, quantize_pvt.c, util.c, vbrquantize.c:
+
+	--vbr-mtrh uses now -Y by default, some tweaks
+	
+2001-04-27 23:19  robert
+
+	* libmp3lame/: psymodel.c, quantize_pvt.c, util.c, util.h:
+
+	--experimentalY selects a different ATH adjustment
+	- keeps original noise floor
+	- affects high freqs more than low ones
+	
+2001-04-26 23:06  cisc
+
+	* config.guess, config.sub:
+
+	Added MorphOS recognition to configure script.
+	
+2001-04-26 04:38  markt
+
+	* README.B32, TODO:
+
+	removed mmx notes from README.B32
+	
+2001-04-25 16:21  aleidinger
+
+	* configure, libmp3lame/i386/Makefile.in:
+
+	regen
+	
+2001-04-25 16:20  aleidinger
+
+	* configure.in:
+
+	bugfix for gcc version detection
+	
+2001-04-25 16:19  aleidinger
+
+	* libmp3lame/i386/Makefile.am:
+
+	bugfix for non x86 architectures with installed nasm, tested by Karl Pauls <kpauls@eecs.wsu.edu> on Darwin
+	
+2001-04-25 06:59  markt
+
+	* TODO, frontend/get_audio.c, frontend/main.h, frontend/parse.c,
+	include/lame.h, libmp3lame/set_get.c:
+
+	removed 'disable_wave_header' variable from encoding library.
+	It is in the frontend code only.
+	
+2001-04-24 01:38  markt
+
+	* TODO, frontend/get_audio.c:
+
+	added something to the TODO list.
+	
+	changed:
+	
+	"buffer[1]+i"  code to  "&buffer[1][i]"
+	
+	in get_audio.c.  buffer[1]+i is clever, but it confused the
+	maintainer of EAC enough to cause him to submit it as a bug
+	report.
+	
+2001-04-23 19:47  bouvigne
+
+	* libmp3lame/: lame.c, util.c:
+
+	[no log message]
+	
+2001-04-22 22:57  bouvigne
+
+	* libmp3lame/util.c:
+
+	update of the ath functions
+	
+2001-04-22 01:34  jd-
+
+	* frontend/get_audio.c:
+
+	Fixed trailing data bug introduced with the 24 bit input code
+	
+2001-04-21 22:23  jd-
+
+	* frontend/get_audio.c, frontend/get_audio.h, frontend/gtkanal.c,
+	frontend/main.c, frontend/mp3rtp.c, include/lame.h,
+	libmp3lame/lame.c:
+
+	Add 24-bit PCM waveform input capability (with or without libsndfile),
+	and glue code to preserve the functionality of routines that only handle
+	up to 16-bit data.  The changes support both little and big endian
+	architectures.
+	
+2001-04-17 20:04  afaber
+
+	* libmp3lame/libmp3lame.dsp, Dll/BladeMP3EncDLL.c,
+	mpglib/mpglib.dsp, frontend/lame.dsp:
+
+	Added MMX compile option
+	
+2001-04-17 19:22  bouvigne
+
+	* libmp3lame/util.c:
+
+	auto adjusting ath shape for vbr on ath type 4
+	
+2001-04-16 21:26  bouvigne
+
+	* libmp3lame/: encoder.c, lame.c, psymodel.c:
+
+	wrapped a few things inside of ifdef HAVE_GTK
+	
+2001-04-16 11:50  takehiro
+
+	* libmp3lame/: psymodel.c, util.h:
+
+	spread function is now packed into linear array.
+	it reduces memory assumption and improves cache efficienty.
+	
+2001-04-16 08:27  takehiro
+
+	* include/lame.h, libmp3lame/VbrTag.c:
+
+	now try to calculate the CRC of VBR header.
+	
+2001-04-16 07:58  takehiro
+
+	* libmp3lame/: bitstream.c, bitstream.h:
+
+	cleaned and improved CRC calculation method
+	
+2001-04-13 15:13  aleidinger
+
+	* libmp3lame/set_get.c:
+
+	add some comments about converting int->enum
+	
+2001-04-13 15:12  aleidinger
+
+	* frontend/parse.c:
+
+	use some of Marks set-functions, also without error checking (yet)
+	
+2001-04-12 17:40  bouvigne
+
+	* libmp3lame/: encoder.c, lame.c:
+
+	[no log message]
+	
+2001-04-08 07:52  takehiro
+
+	* libmp3lame/: machine.h, quantize_pvt.c:
+
+	portability enchancement(from sourceforge's LAME open discussion forum).
+	
+	quantize_pvt.c: changed 1e99 into FLOAT8_MAX
+	machine.h: defined FLOAT8_MAX
+	
+2001-04-04 21:58  bouvigne
+
+	* libmp3lame/lame.c:
+
+	update of the lowpass values for vbr rh
+	
+2001-04-04 18:11  bouvigne
+
+	* libmp3lame/psymodel.c:
+
+	update of -d for joint stereo
+	
+2001-04-01 03:22  jd-
+
+	* frontend/parse.c, include/lame.h, libmp3lame/encoder.c,
+	libmp3lame/lame.c, libmp3lame/set_get.c, libmp3lame/util.h:
+
+	added an --adapt-thres-level option to allow adding an offset (in dB)
+	to the point below which adaptive ATH level adjustment occurs
+	
+2001-04-01 02:11  jd-
+
+	* include/lame.h:
+
+	added set/get functions to include/lame.h for option --adapt-thres-type
+	
+2001-03-31 23:44  jd-
+
+	* frontend/parse.c, libmp3lame/set_get.c:
+
+	added set/get functions to libmp3lame/set_get.c for option
+	--adapt-thres-type, and used the set function in frontend
+	
+2001-03-30 18:43  markt
+
+	* testcase.mp3, frontend/get_audio.c, test/lametest.py:
+
+	updated testcase.mp3
+	removed some unused code from get_audio.c
+	
+2001-03-30 17:16  markt
+
+	* test/lametest.py:
+
+	delete output mp3 file before running lame.
+	(before, if lame crashes and does not write any output, the
+	script would use the old output mp3 file, and if it hadn't changed,
+	all tests would pass.)
+	
+2001-03-29 18:31  cisc
+
+	* libmp3lame/: version.c, version.h:
+
+	Moved inclusion of lame.h to version.h for lame_version_t in prototype.
+	
+2001-03-27 12:26  jd-
+
+	* libmp3lame/psymodel.c:
+
+	added --adapt-thres-type 2 (auto-level adjustment of the ATH,
+	with a frequency-based loudness approximation).
+	
+2001-03-27 12:04  jd-
+
+	* frontend/parse.c, include/lame.h, libmp3lame/encoder.c,
+	libmp3lame/lame.c, libmp3lame/psymodel.c, libmp3lame/util.h:
+
+	added option, --adapt-thres-type 2 (auto-level adjustment of the ATH
+	with a frequency-based loudness approximation).
+	
+2001-03-27 10:56  aleidinger
+
+	* configure:
+
+	regen (do not enable vorbis by default)
+	
+2001-03-27 10:56  aleidinger
+
+	* configure.in:
+
+	do not enable vorbis by default
+	
+2001-03-26 23:02  markt
+
+	* libmp3lame/set_get.c:
+
+	added code to more of the lame_set/lame_get functions-
+	but without any error checking :-(
+	
+	Only 47 more to go!
+	
+2001-03-26 20:46  markt
+
+	* TODO, libmp3lame/util.c:
+
+	dont scale the input if scale=1.0.
+	
+2001-03-26 18:38  markt
+
+	* TODO:
+
+	updated TODO list with some filtering stuff
+	
+2001-03-26 17:42  markt
+
+	* libmp3lame/encoder.c:
+
+	another MPEG2 bug found by: "Jiri Hajek" <jirik@ucw.cz>
+	
+	This code:
+	
+	> int  sum_pe_MS = pe_MS[0][0] + pe_MS[0][1] + pe_MS[1][0] + pe_MS[1][1];
+	> int  sum_pe_LR = pe   [0][0] + pe   [0][1] + pe   [1][0] + pe   [1][1];
+	
+	does not work for MPEG2.  now fixed.
+	
+2001-03-26 16:05  aleidinger
+
+	* configure:
+
+	regen (version bump)
+	
+2001-03-26 16:04  aleidinger
+
+	* configure.in:
+
+	Welcome to 3.89
+	
+2001-03-26 00:38  markt
+
+	* frontend/brhist.c:
+
+	bug in brhist_disp_total()
+	
+	for --freeformat bmode, br_frames = 0 (why?)
+	so sum / br_frames would segfault.
+	
+	if br_frames == 0 , routine now just returns without printing
+	anything.
+	
+2001-03-26 00:12  markt
+
+	* TODO:
+
+	minor editing of TODO file
+	
+2001-03-25 23:18  markt
+
+	* libmp3lame/version.h:
+
+	updated version to 3.89 alpha 1
+	
+2001-03-25 23:16  markt
+
+	* libmp3lame/version.h:
+
+	updated version to 3.88beta
+	
+2001-03-25 23:14  markt
+
+	* API, README, TODO, libmp3lame/lame.c, libmp3lame/libmp3lame.dsp:
+
+	made ath type 2 the default.
+	updated test cases
+	added set_get.c to libmp3lame.dsp
+	
+2001-03-25 21:37  shibatch
+
+	* libmp3lame/psymodel.c:
+
+	Fixed nspsytune.
+	
+2001-03-25 18:43  afaber
+
+	* Dll/BladeMP3EncDLL.def, Dll/MP3EncDll.dsp,
+	libmp3lame/bitstream.h, libmp3lame/encoder.h,
+	libmp3lame/psymodel.c, libmp3lame/tables.h:
+
+	Removed the last remainings of KLEMM_43 in order to complet the Windows DLL compilation
+	
+2001-03-20 00:42  markt
+
+	* libmp3lame/util.c:
+
+	added a few more minor comments to resampling code
+	
+2001-03-20 00:28  markt
+
+	* libmp3lame/util.c:
+
+	removed some cruft from blackman() filtering routine
+	
+2001-03-19 21:26  markt
+
+	* frontend/get_audio.c, libmp3lame/util.c, test/lametest.py:
+
+	
+	Tested fixed resampling code.  It seemed to work.
+	Added a few comments.
+	
+	Also added documentation for "-w" for the usage function in lametest.py
+	
+2001-03-18 14:31  aleidinger
+
+	* libmp3lame/vorbis_interface.c:
+
+	use the new MSGF API in Vorbis
+	
+2001-03-18 14:25  aleidinger
+
+	* libmp3lame/vorbis_interface.c, frontend/get_audio.c:
+
+	use the new ERRORF API in Vorbis encoding (+fixes for needed API change to lame_decode_ogg_{initfile,fromfile}())
+	
+2001-03-15 19:40  markt
+
+	* libmp3lame/util.c:
+
+	Put in fix for resampling bug in fill_buffer_resample.
+	
+	Code assumed it would be fed at least BLACKSIZE samples.
+	For each input buffer, the code would save the last BLACKSIZE
+	samples for use for the next call to fill_buffer_resample.
+	
+	If the code recieves less than blacksize samples, it will
+	now shift in just as many new samples as are available into
+	the save buffer.
+	
+	Not tested :-(
+	
+2001-03-14 14:38  aleidinger
+
+	* Dll/BladeMP3EncDLL.c, dshow/Encoder.cpp, dshow/Mpegac.cpp,
+	dshow/PropPage_adv.cpp:
+
+	regexp: MPG_MD_(.*) -> $1
+	
+2001-03-14 14:38  aleidinger
+
+	* Makefile.B32, Makefile.DJGPP, Makefile.MSVC, Makefile.unix:
+
+	add set_get.c to the build
+	
+2001-03-14 10:57  aleidinger
+
+	* Makefile.in:
+
+	regen
+	
+2001-03-14 10:56  aleidinger
+
+	* Makefile.am:
+
+	do not forget Makfile.am.global at "make dist"
+	
+2001-03-14 10:49  aleidinger
+
+	* ChangeLog:
+
+	update
+	
 2001-03-14 10:40  aleidinger
 
 	* doc/html/Makefile.in, doc/man/Makefile.in,
