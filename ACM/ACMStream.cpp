@@ -289,18 +289,19 @@ bool bResult = false;
 
 DWORD ACMStream::GetOutputSizeForInput(const DWORD the_SrcLength) const
 {
-	double OutputInputRatio;
+/*	double OutputInputRatio;
 
 	if (my_VBRMode == vbr_off)
 		OutputInputRatio = double(my_AvgBytesPerSec) / double(my_OutBytesPerSec * 2);
 	else // reserve the space for 320 kbps
 		OutputInputRatio = 40000.0 / double(my_OutBytesPerSec * 2);
 
-	OutputInputRatio *= 1.15; // allow 15% more
+	OutputInputRatio *= 1.15; // allow 15% more*/
 
-DWORD Result;
+    DWORD Result;
 
-	Result = DWORD(double(the_SrcLength) * OutputInputRatio);
+//	Result = DWORD(double(the_SrcLength) * OutputInputRatio);
+    Result = DWORD(1.25*the_SrcLength + 7200);
 
 my_debug->OutPut(DEBUG_LEVEL_FUNC_CODE, "Result = %d",Result);
 
