@@ -25,8 +25,8 @@ scfsi, no scalefact_scale, and so on.
 
 
 4.
-Better intensity stereo. Currently LAME4 only supports it when
-MPEG1 Layer3, CBR or ABR (it does not when MPEG2 and VBR mode).
+Better intensity stereo.
+And LAME4 should support it when MPEG2 Layer3 (currently not).
 
 Note: mpg123 (and all derivatives, like xmms and lame/mpglib)
 have bugs in the intensity stereo decoding.  Bugs have been there
@@ -35,8 +35,8 @@ for years since there are very few intensity stereo mp3's out there.
 
 5.
 Threshold calculation on short blocks. LAME4's block switching is
-better than LAME3, but threshold calculation is not. It does not
-support temporal masking, and so on.
+better than LAME3 with nspsy, but threshold calculation is not.
+It does not support temporal masking, and so on.
 
 
 6.
@@ -50,9 +50,14 @@ some kind of music. 1 and 2 are caused by ATH handling problem.
 
 
 7.
-Tuning resorvoir handling (especially for low bitrates).
+Tuning resorvoir handling (especially for low bitrates); CBR/ABR arround
+90kbps (-b 90) is much worse than VBR quality 9 (-V 9). This is probabry
+because of poor resorvoir handling.
+
 Right now the code is tuned with the LAME3's pe calculation and
 psymodel. Now they are all changed and we should re-tune these code.
+
+
 
 
 8.
