@@ -414,8 +414,8 @@ if test "x$GCC" = "xyes"; then
 	OPTIMIZATION_NORM="-fthread-jumps -malign-double -frerun-loop-opt \
 		-fgcse -fexpensive-optimizations"
 
-	OPTIMIZATION_FULL="-fdelayed-branch -fmove-all-movables \
-		-fschedule-insns2 -freduce-all-givs"
+	OPTIMIZATION_FULL="-fmove-all-movables -fschedule-insns2 \
+		-freduce-all-givs"
 
 	case "${CONFIG_EXPOPT}" in
 	no)
@@ -433,18 +433,32 @@ if test "x$GCC" = "xyes"; then
 	esac
 
 	# some hardware dependend options
-#	case ${target} in
-#	*586*-*-*)
-#		OPTIMIZATION="${OPTIMIZATION} -mpentium -march=pentium \
-#			-mfancy-math-387"
-#		;;
-#	*686*-*-*)
-#		OPTIMIZATION="${OPTIMIZATION} -mpentiumpro -march=pentiumpro \
-#			-mfancy-math-387"
-#		;;
-#	*)
-#		;;
-#	esac
+dnl	if test "XXX" = "yes"; then
+dnl		# "new" GCC, use some "new" CPU specific optimizations
+		case ${target} in
+		*486-*-*)
+			OPTIMIZATION="${OPTIMIZATION} -m486 -mfancy-math-387"
+			;;
+dnl		*586-*-*)
+dnl			OPTIMIZATION="${OPTIMIZATION} -mpentium -march=pentium \
+dnl				-mfancy-math-387"
+dnl			;;
+dnl		*686-*-*)
+dnl			OPTIMIZATION="${OPTIMIZATION} -mpentiumpro \
+dnl				-march=pentiumpro -mfancy-math-387"
+dnl			;;
+		*86-*-*)
+			OPTIMIZATION="${OPTIMIZATION} -mfancy-math-387"
+			;;
+		alpha*-*-*)
+			OPTIMIZATION="${OPTIMIZATION} -mfp-regs"
+	# add "-mcpu=21164a -Wa,-m21164a" to optimize for 21164a (ev56) CPU
+			;;
+		*)
+			OPTIMIZATION="${OPTIMIZATION} -fdelayed-branch"
+			;;
+		esac
+dnl	fi
 
 	AC_MSG_RESULT(${CONFIG_EXPOPT})
 else
@@ -492,9 +506,6 @@ fi
 
 dnl ###  system specific options  ###
 
-case $target in
-*-*-linux*)
-
 ##########################################################################
 # LINUX on Digital/Compaq Alpha CPUs
 ##########################################################################
@@ -508,10 +519,6 @@ if test "`which ccc 2>/dev/null | grep -c ccc`" = ".0" ; then
 #   if not, use 'gcc'
 	# double is faster than float on Alpha
 	dnl CONFIG_DEFS="-DFLOAT=double $CONFIG_DEFS"
-
-	OPTIMIZATION="-O3 -fomit-frame-pointer -ffast-math -funroll-loops \
-                -mfp-regs -fschedule-insns -fschedule-insns2"
-	# add "-mcpu=21164a -Wa,-m21164a" to optimize for 21164a (ev56) CPU
 else
 	# Compaq's C Compiler
 	CC=ccc
@@ -545,8 +552,6 @@ else
 fi  #  gcc or ccc?
 ;; # alpha
 
-esac  
-;; #  linux
 
 ##########################################################################
 # SunOS
@@ -700,4 +705,4 @@ AC_SUBST(WITH_MP3RTP)
 AC_SUBST(CPUTYPE)
 
 
-AC_OUTPUT(Makefile libmp3lame/Makefile libmp3lame/i386/Makefile frontend/Makefile mpglib/Makefile doc/Makefile doc/html/Makefile doc/man/Makefile include/Makefile Dll/Makefile misc/Makefile)
+AC_OUTPUT(Makefile libmp3lame/Makefile libmp3lame/i386/Makefile frontend/Makefile mpglib/Makefile doc/Makefile doc/html/Makefile doc/man/Makefile include/Makefile Dll/Makefile misc/Makefile lame.spec)

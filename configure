@@ -3871,8 +3871,8 @@ if test "x$GCC" = "xyes"; then
 	OPTIMIZATION_NORM="-fthread-jumps -malign-double -frerun-loop-opt \
 		-fgcse -fexpensive-optimizations"
 
-	OPTIMIZATION_FULL="-fdelayed-branch -fmove-all-movables \
-		-fschedule-insns2 -freduce-all-givs"
+	OPTIMIZATION_FULL="-fmove-all-movables -fschedule-insns2 \
+		-freduce-all-givs"
 
 	case "${CONFIG_EXPOPT}" in
 	no)
@@ -3890,18 +3890,21 @@ if test "x$GCC" = "xyes"; then
 	esac
 
 	# some hardware dependend options
-#	case ${target} in
-#	*586*-*-*)
-#		OPTIMIZATION="${OPTIMIZATION} -mpentium -march=pentium \
-#			-mfancy-math-387"
-#		;;
-#	*686*-*-*)
-#		OPTIMIZATION="${OPTIMIZATION} -mpentiumpro -march=pentiumpro \
-#			-mfancy-math-387"
-#		;;
-#	*)
-#		;;
-#	esac
+		case ${target} in
+		*486-*-*)
+			OPTIMIZATION="${OPTIMIZATION} -m486 -mfancy-math-387"
+			;;
+		*86-*-*)
+			OPTIMIZATION="${OPTIMIZATION} -mfancy-math-387"
+			;;
+		alpha*-*-*)
+			OPTIMIZATION="${OPTIMIZATION} -mfp-regs"
+	# add "-mcpu=21164a -Wa,-m21164a" to optimize for 21164a (ev56) CPU
+			;;
+		*)
+			OPTIMIZATION="${OPTIMIZATION} -fdelayed-branch"
+			;;
+		esac
 
 	echo "$ac_t""${CONFIG_EXPOPT}" 1>&6
 else
@@ -3913,7 +3916,7 @@ fi
 
 
 echo $ac_n "checking for debug options""... $ac_c" 1>&6
-echo "configure:3917: checking for debug options" >&5
+echo "configure:3920: checking for debug options" >&5
 # Check whether --enable-debug or --disable-debug was given.
 if test "${enable_debug+set}" = set; then
   enableval="$enable_debug"
@@ -3953,9 +3956,6 @@ fi
 
 
 
-case $target in
-*-*-linux*)
-
 ##########################################################################
 # LINUX on Digital/Compaq Alpha CPUs
 ##########################################################################
@@ -3968,11 +3968,7 @@ alpha*-*-linux*)
 if test "`which ccc 2>/dev/null | grep -c ccc`" = ".0" ; then
 #   if not, use 'gcc'
 	# double is faster than float on Alpha
-	
-	OPTIMIZATION="-O3 -fomit-frame-pointer -ffast-math -funroll-loops \
-                -mfp-regs -fschedule-insns -fschedule-insns2"
-	# add "-mcpu=21164a -Wa,-m21164a" to optimize for 21164a (ev56) CPU
-else
+	else
 	# Compaq's C Compiler
 	CC=ccc
 
@@ -4005,8 +4001,6 @@ else
 fi  #  gcc or ccc?
 ;; # alpha
 
-esac  
-;; #  linux
 
 ##########################################################################
 # SunOS
@@ -4272,7 +4266,7 @@ done
 ac_given_srcdir=$srcdir
 ac_given_INSTALL="$INSTALL"
 
-trap 'rm -fr `echo "Makefile libmp3lame/Makefile libmp3lame/i386/Makefile frontend/Makefile mpglib/Makefile doc/Makefile doc/html/Makefile doc/man/Makefile include/Makefile Dll/Makefile misc/Makefile" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
+trap 'rm -fr `echo "Makefile libmp3lame/Makefile libmp3lame/i386/Makefile frontend/Makefile mpglib/Makefile doc/Makefile doc/html/Makefile doc/man/Makefile include/Makefile Dll/Makefile misc/Makefile lame.spec" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
 
@@ -4407,7 +4401,7 @@ EOF
 
 cat >> $CONFIG_STATUS <<EOF
 
-CONFIG_FILES=\${CONFIG_FILES-"Makefile libmp3lame/Makefile libmp3lame/i386/Makefile frontend/Makefile mpglib/Makefile doc/Makefile doc/html/Makefile doc/man/Makefile include/Makefile Dll/Makefile misc/Makefile"}
+CONFIG_FILES=\${CONFIG_FILES-"Makefile libmp3lame/Makefile libmp3lame/i386/Makefile frontend/Makefile mpglib/Makefile doc/Makefile doc/html/Makefile doc/man/Makefile include/Makefile Dll/Makefile misc/Makefile lame.spec"}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
 for ac_file in .. $CONFIG_FILES; do if test "x$ac_file" != x..; then
