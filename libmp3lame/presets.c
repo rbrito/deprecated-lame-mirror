@@ -191,8 +191,8 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
 
     switch (preset) {
     case V9: {
+        lame_set_VBR_q(gfp, 9);
         lame_set_out_samplerate(gfp, 22050);
-        SET_OPTION(lowpassfreq, 10000, 0);
 
         SET_OPTION(short_threshold_lrm, 4.50f, -1);
         SET_OPTION(short_threshold_s, 30.0f, -1);
@@ -211,8 +211,8 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
         return preset;
     }
     case V7: {
+        lame_set_VBR_q(gfp, 7);
         lame_set_out_samplerate(gfp, 32000);
-        SET_OPTION(lowpassfreq, 14900, 0);
 
         SET_OPTION(short_threshold_lrm, 4.50f, -1);
         SET_OPTION(short_threshold_s, 30.0f, -1);
@@ -231,7 +231,7 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
         return preset;
     }
     case V5: {
-        SET_OPTION(lowpassfreq, 17000, 0);
+        lame_set_VBR_q(gfp, 5);
 
         SET_OPTION(short_threshold_lrm, 4.40f, -1);
         SET_OPTION(short_threshold_s, 25.0f, -1);
@@ -250,10 +250,9 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
         return preset;
     }
     case V4: { /*MEDIUM*/
+        lame_set_VBR_q(gfp, 4);
         switch (lame_get_VBR(gfp)) {
         case vbr_rh: {
-            SET_OPTION(lowpassfreq, 18000, 0);
-
             SET_OPTION(short_threshold_lrm, 4.25f, -1);
             SET_OPTION(short_threshold_s, 15.0f, -1);
             SET_OPTION(quant_comp, 3, -1);
@@ -273,8 +272,6 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
         }
         default: {
             SET_OPTION(vbr_smooth, 1, -1);
-
-            SET_OPTION(lowpassfreq, 18000, 0);
 
             SET_OPTION(short_threshold_lrm, 4.25f, -1);
             SET_OPTION(short_threshold_s, 15.0f, -1);
@@ -296,11 +293,10 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
         }
     }
     case V2: { /*STANDARD*/
+        lame_set_VBR_q(gfp, 2);
         switch (lame_get_VBR(gfp)) {
         case vbr_rh: {
             SET_OPTION(VBR_min_bitrate_kbps, 96, 0); /*ideally, we should get rid of this*/
-
-            SET_OPTION(lowpassfreq, 19000, 0);
 
             SET_OPTION(short_threshold_lrm, 3.5f, -1);
             SET_OPTION(short_threshold_s, 15.0f, -1);
@@ -322,8 +318,6 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             SET_OPTION(VBR_min_bitrate_kbps, 96, 0); /*ideally, we should get rid of this*/
             SET_OPTION(vbr_smooth, 2, -1);
 
-            SET_OPTION(lowpassfreq, 19000, 0);
-
             SET_OPTION(short_threshold_lrm, 3.5f, -1);
             SET_OPTION(short_threshold_s, 15.0f, -1);
             SET_OPTION(quant_comp, 0, -1);
@@ -343,11 +337,10 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
         }
     }
     case V0: { /*EXTREME*/
+        lame_set_VBR_q(gfp, 0);
         switch (lame_get_VBR(gfp)) {
         case vbr_rh: {
             SET_OPTION(VBR_min_bitrate_kbps, 128, 0);
-
-            SET_OPTION(lowpassfreq, 19500, 0);
 
             SET_OPTION(short_threshold_lrm, 3.1f, -1);
             SET_OPTION(short_threshold_s, 15.0f, -1);
@@ -368,8 +361,6 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
         default: {
             SET_OPTION(VBR_min_bitrate_kbps, 128, 0);
             SET_OPTION(vbr_smooth, 2, -1);
-
-            SET_OPTION(lowpassfreq, 19500, 0);
 
             SET_OPTION(short_threshold_lrm, 3.1f, -1);
             SET_OPTION(short_threshold_s, 15.0f, -1);

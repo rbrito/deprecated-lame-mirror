@@ -153,22 +153,16 @@ lame_init_params_ppflt(lame_global_flags * gfp)
 static void
 optimum_bandwidth(double *const lowerlimit,
                   double *const upperlimit,
-                  const unsigned bitrate,
-                  const int samplefreq,
-                  const int channels)
+                  const unsigned bitrate)
 {
 /* 
  *  Input:
  *      bitrate     total bitrate in bps
- *      samplefreq  output sampling frequency in Hz
- *      channels    number of channels
  *
  *   Output:
  *      lowerlimit: best lowpass frequency limit for input filter in Hz
  *      upperlimit: best highpass frequency limit for input filter in Hz
  */
-    double  f_low;
-    double  f_high;
     int  br;
     int index;
 
@@ -201,13 +195,7 @@ optimum_bandwidth(double *const lowerlimit,
     br = bitrate/1000;
     index = nearestBitrateFullIndex(br);
 
-    f_low = freq_map[index].lowpass;
-
-    if (channels == 1)
-        f_low *= 1.6;
-
-    f_low = Min(freq_map[16].lowpass, f_low);
-    f_low = Min(samplefreq/2, f_low);
+    *lowerlimit = freq_map[index].lowpass;
 
 
 /*
@@ -227,22 +215,20 @@ optimum_bandwidth(double *const lowerlimit,
  *
  *  These are ad hoc values and these can be optimized if a high pass is available.
  */
-    if (f_low <= 16000)
+/*    if (f_low <= 16000)
         f_high = 16000. * 20. / f_low;
     else if (f_low <= 18000)
         f_high = 180. - 0.01 * f_low;
     else
-        f_high = 0.;
+        f_high = 0.;*/
 
     /*  
      *  When we sometimes have a good highpass filter, we can add the highpass
      *  frequency to the lowpass frequency
      */
 
-    if (lowerlimit != NULL)
-        *lowerlimit = (f_low>0.5 * samplefreq ? 0.5 * samplefreq : f_low); // roel - fixes mono "-b320 -a"
-    if (upperlimit != NULL)
-        *upperlimit = f_high;
+    /*if (upperlimit != NULL)
+        *upperlimit = f_high;*/
 }
 
 
@@ -700,7 +686,7 @@ lame_init_params(lame_global_flags * const gfp)
   /* if a filter has not been enabled, see if we should add one: */
   /****************************************************************/
     if (gfp->lowpassfreq == 0) {
-        double lowpass;
+        double lowpass = 16000;
         double highpass;
         int channels;
 
@@ -713,11 +699,64 @@ lame_init_params(lame_global_flags * const gfp)
             break;
         }
 
-        optimum_bandwidth(&lowpass,
-                          &highpass,
-                          gfp->out_samplerate * 16 * gfc->channels_out /
-                          gfp->compression_ratio, gfp->out_samplerate, channels);
+        if ((gfp->VBR == vbr_off) || (gfp->VBR == vbr_abr)){ 
+            optimum_bandwidth(&lowpass,
+                              &highpass,
+                              gfp->out_samplerate * 16 * gfc->channels_out /
+                              gfp->compression_ratio);
+        } else {
+            switch (gfp->VBR_q) {
+            case 9: {
+                lowpass = 10000;
+                break;
+            }
+            case 8: {
+                lowpass = 10000;
+                break;
+            }
+            case 7: {
+                lowpass = 14900;
+                break;
+            }
+            case 6: {
+                lowpass = 14900;
+                break;
+            }
+            case 5: {
+                lowpass = 17000;
+                break;
+            }
+            case 4: {
+                lowpass = 18000;
+                break;
+            }
+            case 3: {
+                lowpass = 18000;
+                break;
+            }
+            case 2: {
+                lowpass = 19000;
+                break;
+            }
+            case 1: {
+                lowpass = 19000;
+                break;
+            }
+            case 0: {
+                lowpass = 19500;
+                break;
+            }
+            }
+        }
 
+
+        if (gfp->mode == MONO)
+            lowpass *= 1.6;
+
+        lowpass = Min(20500, lowpass);
+        lowpass = Min(gfp->out_samplerate / 2, lowpass);
+
+        
         gfp->lowpassfreq = lowpass;
     }
 
@@ -786,36 +825,6 @@ lame_init_params(lame_global_flags * const gfp)
             if (gfc->bitrate_index < 0)
                 return -1;
         }
-    }
-    else {              /* choose a min/max bitrate for VBR */
-        /* if the user didn't specify VBR_max_bitrate: */
-        gfc->VBR_min_bitrate = 1; /* default: allow   8 kbps (MPEG-2) or  32 kbps (MPEG-1) */
-        gfc->VBR_max_bitrate = 14; /* default: allow 160 kbps (MPEG-2) or 320 kbps (MPEG-1) */
-
-        if (gfp->VBR_min_bitrate_kbps)
-            if (
-                (gfc->VBR_min_bitrate =
-                 BitrateIndex(gfp->VBR_min_bitrate_kbps, gfp->version,
-                              gfp->out_samplerate)) < 0) return -1;
-        if (gfp->VBR_max_bitrate_kbps)
-            if (
-                (gfc->VBR_max_bitrate =
-                 BitrateIndex(gfp->VBR_max_bitrate_kbps, gfp->version,
-                              gfp->out_samplerate)) < 0) return -1;
-
-        gfp->VBR_min_bitrate_kbps =
-            bitrate_table[gfp->version][gfc->VBR_min_bitrate];
-        gfp->VBR_max_bitrate_kbps =
-            bitrate_table[gfp->version][gfc->VBR_max_bitrate];
-
-        gfp->VBR_mean_bitrate_kbps =
-            Min(bitrate_table[gfp->version][gfc->VBR_max_bitrate],
-                gfp->VBR_mean_bitrate_kbps);
-        gfp->VBR_mean_bitrate_kbps =
-            Max(bitrate_table[gfp->version][gfc->VBR_min_bitrate],
-                gfp->VBR_mean_bitrate_kbps);
-
-
     }
 
     /* for CBR, we will write an "info" tag. */
@@ -991,19 +1000,13 @@ lame_init_params(lame_global_flags * const gfp)
     }
     case vbr_rh: {
 
-        if (gfp->VBR == vbr_rh) /* because of above fall thru */
-        {   static const FLOAT8 dbQ[10]={-2.,-1.0,-.66,-.33,0.,0.33,.66,1.0,1.33,1.66};
-            static const FLOAT8 dbQns[10]={- 4,- 3,-2,-1,0,0.7,1.4,2.1,2.8,3.5};
-            /*static const FLOAT8 atQns[10]={-16,-12,-8,-4,0,  1,  2,  3,  4,  5};*/
-            if ( gfp->psymodel == PSY_NSPSYTUNE ) {
-                 gfc->PSY->mask_adjust = gfp->maskingadjust;
-                 gfc->PSY->mask_adjust_short = gfp->maskingadjust_short;
-            } else {
-                gfc->PSY->tonalityPatch = 1;
-                gfc->PSY->mask_adjust = dbQ[gfp->VBR_q]; 
-                gfc->PSY->mask_adjust_short = dbQ[gfp->VBR_q]; 
-            }
-        }
+        apply_preset(gfp, 500 - (gfp->VBR_q*10), 0);
+        
+        gfc->PSY->mask_adjust = gfp->maskingadjust;
+        gfc->PSY->mask_adjust_short = gfp->maskingadjust_short;
+
+        if ( gfp->psymodel == PSY_GPSYCHO )
+            gfc->PSY->tonalityPatch = 1;
         
 
         /*  automatic ATH adjustment on, VBR modes need it
@@ -1069,6 +1072,38 @@ lame_init_params(lame_global_flags * const gfp)
     }
 
     /*initialize default values common for all modes*/
+
+
+    if (lame_get_VBR(gfp) != vbr_off) {              /* choose a min/max bitrate for VBR */
+        /* if the user didn't specify VBR_max_bitrate: */
+        gfc->VBR_min_bitrate = 1; /* default: allow   8 kbps (MPEG-2) or  32 kbps (MPEG-1) */
+        gfc->VBR_max_bitrate = 14; /* default: allow 160 kbps (MPEG-2) or 320 kbps (MPEG-1) */
+
+        if (gfp->VBR_min_bitrate_kbps)
+            if (
+                (gfc->VBR_min_bitrate =
+                 BitrateIndex(gfp->VBR_min_bitrate_kbps, gfp->version,
+                              gfp->out_samplerate)) < 0) return -1;
+        if (gfp->VBR_max_bitrate_kbps)
+            if (
+                (gfc->VBR_max_bitrate =
+                 BitrateIndex(gfp->VBR_max_bitrate_kbps, gfp->version,
+                              gfp->out_samplerate)) < 0) return -1;
+
+        gfp->VBR_min_bitrate_kbps =
+            bitrate_table[gfp->version][gfc->VBR_min_bitrate];
+        gfp->VBR_max_bitrate_kbps =
+            bitrate_table[gfp->version][gfc->VBR_max_bitrate];
+
+        gfp->VBR_mean_bitrate_kbps =
+            Min(bitrate_table[gfp->version][gfc->VBR_max_bitrate],
+                gfp->VBR_mean_bitrate_kbps);
+        gfp->VBR_mean_bitrate_kbps =
+            Max(bitrate_table[gfp->version][gfc->VBR_min_bitrate],
+                gfp->VBR_mean_bitrate_kbps);
+
+
+    }
 
 
     /*  just another daily changing developer switch  */
