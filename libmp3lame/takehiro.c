@@ -253,18 +253,19 @@ choose_table_nonMMX(const int *ix, const int * const end, int * const s)
 
     default:
 	/* try tables with linbits */
-	if (max > IXMAX_VAL) {
-	    *s = LARGE_BITS;
-	    return -1;
-	}
 	for (choice2 = 24; choice2 < 32; choice2++)
 	    if (linmax[choice2-16] > max)
 		break;
 
-	for (choice = choice2 - 8; choice < 24; choice++)
+	if (choice2 == 32) {
+	    *s = LARGE_BITS;
+	    return -1;
+	}
+	choice = choice2 - 8;
+	do {
 	    if (linmax[choice-16] > max)
 		break;
-
+	} while (++choice < 24);
 	return count_bit_ESC(s, ix, end, choice, choice2);
     }
 }
@@ -742,6 +743,7 @@ int
 iteration_finish_one(lame_t gfc, int gr, int ch)
 {
     gr_info *gi = &gfc->l3_side.tt[gr][ch];
+
     /*  try some better scalefac storage  */
     best_scalefac_store (gfc, gr, ch);
 
