@@ -1,10 +1,19 @@
 0.
 
-./configure scripts need work
+./configure scripts need work:
+   library:
+     ability to not compile in mpglib (decoder) probably broken
+     ability to disable layer 1 and layer 2 decoding - is this really needed?
+  
+   frontend:  
+     vbr historgram display broken
 
-Makefile.{B32,MSVC,DJGPP,unix}
+
+Makefile.{B32,MSVC,DJGPP} probably all broken.
 these makefiles should only bother to build the static lib,
+(or compile everything without even using the library)
 and then make lame, mp3x and/or the dll.
+
 
 
 

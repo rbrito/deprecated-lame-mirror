@@ -52,10 +52,9 @@ int count_samples_carefully;
 int pcmbitwidth;
 mp3data_struct mp3input_data;
 unsigned int num_samples_read;             
-enum byte_order NativeByteOrder = order_unknown;
 FILE *musicin;
 int fskip(FILE *sf,long num_bytes,int dummy);
-
+enum byte_order NativeByteOrder = order_unknown;
 
 
 /* read mp3 file until mpglib returns one frame of PCM data */
@@ -564,10 +563,10 @@ FILE * OpenSndFile(lame_global_flags *gfp, char *inPath)
     gs_wfInfo.pcmbitwidth=16;
     gs_wfInfo.channels=gfp->num_channels;
     if (DetermineByteOrder()==order_littleEndian) {
-      if (gfp->swapbytes) gs_wfInfo.format=SF_FORMAT_RAW_BE;
+      if (swapbytes) gs_wfInfo.format=SF_FORMAT_RAW_BE;
       else gs_wfInfo.format=SF_FORMAT_RAW_LE;
     } else {
-      if (gfp->swapbytes) gs_wfInfo.format=SF_FORMAT_RAW_LE;
+      if (swapbytes) gs_wfInfo.format=SF_FORMAT_RAW_LE;
       else gs_wfInfo.format=SF_FORMAT_RAW_BE;
     }
 

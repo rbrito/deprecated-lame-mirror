@@ -16,7 +16,7 @@ MAKEDEP = -M
 BRHIST_SWITCH = 
 LIBTERMCAP = 
 RM = rm -f
-
+MP3LIB = libmp3lame/libmp3lame.lib
 
 
 ##########################################################################
@@ -113,43 +113,49 @@ BRHIST_SWITCH = -DBRHIST -DNOTERMCAP
 
 
 CC_SWITCHES = -DNDEBUG $(CC_OPTS) $(SNDLIB) $(GTK) $(BRHIST_SWITCH) $(VORBIS) 
-c_sources = \
-	brhist.c \
-	bitstream.c \
-	encoder.c \
-	fft.c \
-	get_audio.c \
-	id3tag.c \
-	ieeefloat.c \
-	lame.c \
-	lametime.c \
-	newmdct.c \
-	parse.c \
-	portableio.c \
-	psymodel.c \
-	quantize.c \
-	quantize_pvt.c \
-	vbrquantize.c \
-	reservoir.c \
-	tables.c \
-	takehiro.c \
-	timestatus.c \
-	util.c \
-	vorbis_interface.c \
-	VbrTag.c \
-	version.c \
-	mpglib/common.c \
-	mpglib/dct64_i386.c \
-	mpglib/decode_i386.c \
-	mpglib/layer3.c \
-	mpglib/tabinit.c \
-	mpglib/interface.c \
-	mpglib/main.c 
+frontend_sources = \
+        frontend/brhist.c \
+	frontend/get_audio.c \
+	frontend/ieeefloat.c \
+        frontend/lametime.c \
+        frontend/parse.c \
+	frontend/portableio.c \
+	frontend/timestatus.c 
 
-OBJ = $(c_sources:.c=.obj)
+lib_sources = \
+	libmp3lame/bitstream.c \
+	libmp3lame/encoder.c \
+	libmp3lame/fft.c \
+        libmp3lame/id3tag.c \
+        libmp3lame/lame.c \
+        libmp3lame/newmdct.c \
+	libmp3lame/psymodel.c \
+	libmp3lame/quantize.c \
+	libmp3lame/quantize_pvt.c \
+	libmp3lame/vbrquantize.c \
+	libmp3lame/reservoir.c \
+	libmp3lame/tables.c \
+	libmp3lame/takehiro.c \
+	libmp3lame/util.c \
+	libmp3lame/vorbis_interface.c \
+	libmp3lame/mpglib_interface.c \
+        libmp3lame/VbrTag.c \
+        libmp3lame/version.c \
+        mpglib/common.c \
+        mpglib/dct64_i386.c \
+        mpglib/decode_i386.c \
+        mpglib/layer1.c \
+        mpglib/layer2.c \
+        mpglib/layer3.c \
+        mpglib/tabinit.c \
+        mpglib/interface.c 
 
-gtk_sources = gtkanal.c gpkplotting.c
+
+gtk_sources = analyze/gtkanal.c analyze/gpkplotting.c
+
 gtk_obj = $(gtk_sources:.c=.obj)
+frontend_obj = $(frontend_sources:.c=.obj)
+lib_obj = $(lib_sources:.c=.obj)
 
 
 
@@ -169,21 +175,21 @@ ASFLAGS=-DWIN32 -f obj -i i386/
 
 all: $(PGM)
 
-$(PGM):	main.obj $(gtk_obj) libmp3lame.lib
-	$(CC) -e$@ -WC $(CC_OPTS) main.obj $(gtk_obj) libmp3lame.lib $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
+$(PGM):	main.obj $(frontend_obj) $(MP3LIB)
+	$(CC) -e$@ -WC $(CC_OPTS) frontend/main.obj  $(frontend_obj) $(MP3LIB) $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
 
-mp3x:	mp3x.o $(gtk_obj) libmp3lame.lib
-	$(CC) -emp3x mp3x.obj $(gtk_obj) $(OBJ) $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
+mp3x:	mp3x.o $(frontend_obj) $(gtk_obj) $(MP3LIB)
+	$(CC) -emp3x frontend/mp3x.obj $(frontend_obj) $(gtk_obj) $(gtk_obj) $(MP3LIB) $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
 
-mp3rtp:	rtp.obj mp3rtp.obj libmp3lame.lib
-	$(CC) -emp3rtp mp3rtp.obj rtp.o $(OBJ) $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
+mp3rtp:	frontend/rtp.obj frontend/mp3rtp.obj $(MP3LIB)
+	$(CC) -emp3rtp frontend/mp3rtp.obj frontend/rtp.o $(frontend_obj) $(MP3LIB) $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
 
-libmp3lame.lib: $(OBJ)
+libmp3lame/libmp3lame.lib: $(lib_obj)
 	-del $@
-	tlib /a $@ $(OBJ:/=\)
+	tlib /a $@ $(lib_obj:/=\)
 
-Dll/lame_enc.dll: Dll/BladeMP3EncDLL.obj libmp3lame.lib
-	$(CC) -e$@ $(CC_OPTS) -WD Dll/BladeMP3EncDLL.obj libmp3lame.lib $(LIBS) $(LIBSNDFILE) $(VORBIS_LIB)
+Dll/lame_enc.dll: Dll/BladeMP3EncDLL.obj $(MP3LIB)
+	$(CC) -e$@ $(CC_OPTS) -WD Dll/BladeMP3EncDLL.obj $(MP3LIB) $(LIBS) $(LIBSNDFILE) $(VORBIS_LIB)
 
 clean:
 	-del *.obj

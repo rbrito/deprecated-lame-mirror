@@ -58,6 +58,14 @@ int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip, char *inPath, char 
 
 
 
+enum byte_order { order_unknown, order_bigEndian, order_littleEndian };
+enum byte_order NativeByteOrder;
+enum byte_order DetermineByteOrder(void);
+void SwapBytesInWords( short *loc, int words );
+
+
+
+
 #ifdef LIBSNDFILE
 
 #include "sndfile.h"
@@ -92,11 +100,6 @@ extern int parse_wavheader(void);
 extern int parse_aiff(const char fn[]);
 extern void   aiff_check(const char*, IFF_AIFF*, int*);
 
-enum byte_order { order_unknown, order_bigEndian, order_littleEndian };
-enum byte_order NativeByteOrder;
-
-enum byte_order DetermineByteOrder(void);
-void SwapBytesInWords( short *loc, int words );
 
 
 #endif	/* ifdef LIBSNDFILE */

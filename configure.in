@@ -77,8 +77,7 @@ AC_MSG_CHECKING(use of file io)
 WARNING=
 AC_ARG_WITH(fileio, 
   [  --with-fileio=lame          Use lame's internal file io routines [default]]
-  [             =sndfile       Use Erik de Castro Lopo's libsndfile (no stdin possible currently)]
-  [             =no            Do not use file io routines], 
+  [             =sndfile       Use Erik de Castro Lopo's libsndfile (no stdin possible currently)],
   CONFIG_FILEIO="$withval", CONFIG_FILEIO="lame")
 AC_ARG_WITH(sndfile-prefix,
   [  --with-sndfile-prefix=DIR   Alternate location for libsndfile],
@@ -104,11 +103,9 @@ if test "$CONFIG_FILEIO" = "sndfile" ; then
     CONFIG_FILEIO="lame"
     WARNING="$WARNING Could not find any sndfile lib on system."
   fi
-fi 
-if test "$CONFIG_FILEIO" != "no" && test "$CONFIG_FILEIO" != "sndfile"; then
-  CONFIG_OPTS="-DLAMESNDFILE $CONFIG_OPTS"
+else
   CONFIG_FILEIO=lame
-fi
+fi 
 AC_MSG_RESULT($CONFIG_FILEIO)
 if test ".$WARNING" != "." ; then
   AC_MSG_WARN($WARNING)
