@@ -15,6 +15,8 @@ make clean
 #echo "#define KLEMM_42  1" >> config.h
 make
 
+You can also do this with the "--with-vorbis" options in configure.
+
  */
 
 #ifdef HAVE_CONFIG_H

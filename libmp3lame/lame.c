@@ -297,6 +297,7 @@ optimum_bandwidth(double *const lowerlimit,
  *   256 kbps     22.05 kHz  2.78           0.0 kHz
  */
 
+#if 0
 /* 
  *  Beginning at 128 kbps/jstereo, we can use the following additional
  *  strategy:
@@ -328,6 +329,7 @@ optimum_bandwidth(double *const lowerlimit,
             f_low -= 25.;
         }
     }
+#endif
 
 /*
  *  Now we try to choose a good high pass filtering frequency.
@@ -767,7 +769,6 @@ lame_init_params(lame_global_flags * const gfp)
   /****************************************************************/
     /* if a filter has not been enabled, see if we should add one: */
   /****************************************************************/
-#ifdef KLEMM_42
     if (gfp->lowpassfreq == 0) {
         double  lowpass;
         double  highpass;
@@ -796,14 +797,13 @@ lame_init_params(lame_global_flags * const gfp)
                           gfp);
 
         if (lowpass < 0.5 * gfp->out_samplerate) {
-            fprintf(stderr, "Lowpass @ %7.1f Hz\n", lowpass);
+            //MSGF("Lowpass @ %7.1f Hz\n", lowpass);
             gfc->lowpass1 = gfc->lowpass2 =
                 lowpass / (0.5 * gfp->out_samplerate);
         }
         if (gfp->out_samplerate !=
             optimum_samplefreq(lowpass, gfp->in_samplerate)) {
-            fprintf(stderr,
-                    "I would suggest to use %u Hz instead of %u Hz sample frequency\n",
+            MSGF("I would suggest to use %u Hz instead of %u Hz sample frequency\n",
                     optimum_samplefreq(lowpass, gfp->in_samplerate),
                     gfp->out_samplerate);
         }
@@ -837,77 +837,6 @@ lame_init_params(lame_global_flags * const gfp)
                 (1 - 0.00) * 2. * gfp->lowpassfreq / gfp->out_samplerate;
         }
     }
-
-#else
-    if (gfp->lowpassfreq == 0) {
-        double  band;
-
-        /* 
-         *  If the user has not selected their own filter, add a lowpass 
-         *  filter based on the compression ratio.  Formula based on:
-         *
-         *    44 kHz /160 kbps   4.4x
-         *    44 kHz /128 kbps   5.5x   keep all bands
-         *    44 kHz / 96 kbps   7.3x   keep band 28
-         *    44 kHz / 80 kbps   8.8x   keep band 25
-         *    44 kHz / 64 kbps  11.0x   keep band 21 (22?)
-         *
-         *   16 kHz / 24 kbps  10.7x   keep band 21
-         *   22 kHz / 32 kbps  11.0x   keep band  ?
-         *   22 kHz / 24 kbps  14.7x   keep band 16
-         *    16 kHz / 16 kbps  16.0x   keep band 14
-         */
-
-        /* Should we use some lowpass filters? */
-
-        band = floor(15.5 - 18 * log(gfp->compression_ratio / 16.));
-        if (gfc->resample_ratio != 1) {
-            /* resampling.  if we are resampling, add lowpass at least 90.6% (29/32) */
-            if (band > 29.)
-                band = 29.;
-        }
-        if (band < 31) {
-            gfc->lowpass1 = band / 31.0;
-            gfc->lowpass2 = band / 31.0;
-        }
-    }
-
-  /****************************************************************/
-    /* apply user driven filters */
-  /****************************************************************/
-    if (gfp->highpassfreq > 0) {
-        gfc->highpass1 = 2.0 * gfp->highpassfreq / gfp->out_samplerate; /* will always be >=0 */
-        if (gfp->highpasswidth >= 0) {
-            gfc->highpass2 =
-                2.0 * (gfp->highpassfreq +
-                       gfp->highpasswidth) / gfp->out_samplerate;
-        }
-        else {
-            /* 15% above on default */
-            /* gfc->highpass2 = 1.15*2.0*gfp->highpassfreq/gfp->out_samplerate;  */
-            gfc->highpass2 =
-                1.00 * 2.0 * gfp->highpassfreq / gfp->out_samplerate;
-        }
-    }
-
-    if (gfp->lowpassfreq > 0) {
-        gfc->lowpass2 = 2.0 * gfp->lowpassfreq / gfp->out_samplerate; /* will always be >=0 */
-        if (gfp->lowpasswidth >= 0) {
-            gfc->lowpass1 =
-                2.0 * (gfp->lowpassfreq -
-                       gfp->lowpasswidth) / gfp->out_samplerate;
-            if (gfc->lowpass1 < 0) { /* has to be >= 0 */
-                gfc->lowpass1 = 0;
-            }
-        }
-        else {
-            /* 15% below on default */
-            /* gfc->lowpass1 = 0.85*2.0*gfp->lowpassfreq/gfp->out_samplerate;  */
-            gfc->lowpass1 = 1.00 * 2.0 * gfp->lowpassfreq / gfp->out_samplerate;
-        }
-    }
-
-#endif
 
 
 

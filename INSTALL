@@ -83,6 +83,10 @@ Other usefull configure options:
                                 /usr/local/include/lame.h
 
 
+  --with-vorbis                Enable Ogg Vorbis encoding/decoding support
+  --with-vorbos-prefix = PATH  specify where to find Vorbis libs
+
+
 Some more advanced ways to influence the build procedure
 (experienced users only, use it at your own risk):
 
