@@ -680,20 +680,6 @@ block_type_set(
 
 	blocktype_d[chn] = gfc->blocktype_old[chn];  /* value returned to calling program */
 	gfc->blocktype_old[chn] = blocktype[chn];    /* save for next call to l3psy_anal */
-
-	if (gfc->presetTune.use) {
-	    if (blocktype_d[chn] != NORM_TYPE)
-		gfc->presetTune.quantcomp_current = gfc->presetTune.quantcomp_type_s;
-	    else
-		gfc->presetTune.quantcomp_current = gfp->experimentalX;
-
-	    if (gfc->ATH->adjust >= gfc->presetTune.athadjust_switch_level
-		&& blocktype_d[chn] == NORM_TYPE
-		&& gfc->presetTune.quantcomp_alt_type > -1) {
-		gfc->presetTune.quantcomp_current
-		    = gfc->presetTune.quantcomp_alt_type;
-	    }
-	}
     }
 }
 

@@ -171,14 +171,13 @@ typedef struct {
   int     use;
 
   // short block tuning
-  int     attackthre;
-  int     attackthre_s;
+  FLOAT     attackthre;
+  FLOAT     attackthre_s;
 
   // adjustment to joint stereo
   FLOAT8  ms_maskadjust;
 
   // adjustments to quantization selection
-  int     quantcomp_current;          // current quant_compare mode we are using
   FLOAT8  quantcomp_adjust_rh_tot;    // adjustments for tot_noise with vbr-old
   FLOAT8  quantcomp_adjust_rh_max;    // adjustments for max_noise with vbr-old
   FLOAT8  quantcomp_adjust_mtrh;      // adjustments for calc_scalefac "c" with vbr-mtrh

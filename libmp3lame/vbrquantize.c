@@ -629,12 +629,14 @@ block_sf(const lame_internal_flags * gfc, const FLOAT8 * l3_xmin,
     int     sfb, j;
     int     scalefac_criteria;
 
+    scalefac_criteria = gfc->VBR->quality;
     if (gfc->presetTune.use) {
         /* map experimentalX settings to internal selections */
-        scalefac_criteria = gfc->presetTune.quantcomp_current;
-    }
-    else {
-        scalefac_criteria = gfc->VBR->quality;
+	if (gi->block_type != NORM_TYPE)
+	    scalefac_criteria = gfc->presetTune.quantcomp_type_s;
+	else if (gfc->ATH->adjust >= gfc->presetTune.athadjust_switch_level
+		 && gfc->presetTune.quantcomp_alt_type >= 0)
+	    scalefac_criteria = gfc->presetTune.quantcomp_alt_type;
     }
 
     j = 0;
