@@ -177,18 +177,20 @@ typedef struct  {
                                      program or lame?                     */
 
 
-  /* VBR tags */
+
+  /****************************************************************************/
+  /* more internal variables, which will not exist after lame_encode_finish() */
+  /****************************************************************************/
+  void *internal_flags;
+
+  /* VBR tags.  This data is here because VBR header is writen after
+   * input file is closed and *internal_flags struct is free'd */
   int nZeroStreamSize;
   int TotalFrameSize;
   int* pVbrFrames;
   int nVbrNumFrames;
   int nVbrFrameBufferSize;
 
-
-  /****************************************************************************/
-  /* more internal variables, which will not exist after lame_encode_finish() */
-  /****************************************************************************/
-  void *internal_flags;
 
 } lame_global_flags;
 
@@ -317,6 +319,94 @@ float CDECL lame_get_compression_ratio(lame_global_flags *);
 /********************************************************************
  *  frame params
  ***********************************************************************/
+#if 0
+still need to prototype the following variables:
+
+  int copyright;                  /* mark as copyright. default=0           */
+  int original;                   /* mark as original. default=1            */
+  int error_protection;           /* use 2 bytes per frame for a CRC
+                                     checksum. default=0                    */
+  int padding_type;               /* 0=no padding, 1=always pad,
+                                     2=adjust padding, default=2            */
+  int extension;                  /* the MP3 'private extension' bit.
+                                     Meaningless                            */
+  int strict_ISO;                 /* enforce ISO spec as much as possible   */
+
+  /* quantization/noise shaping */
+  int disable_reservoir;          /* use bit reservoir?                     */
+  int experimentalX;            
+  int experimentalY;
+  int experimentalZ;
+  int exp_nspsytune;
+
+  /* VBR control */
+  vbr_mode VBR;
+  int VBR_q;
+  int VBR_mean_bitrate_kbps;
+  int VBR_min_bitrate_kbps;
+  int VBR_max_bitrate_kbps;
+  int VBR_hard_min;             /* strictly enforce VBR_min_bitrate
+                                   normaly, it will be violated for analog
+                                   silence                                 */
+
+
+  /* resampling and filtering */
+  int lowpassfreq;                /* freq in Hz. 0=lame choses.
+                                     -1=no filter                          */
+  int highpassfreq;               /* freq in Hz. 0=lame choses.
+                                     -1=no filter                          */
+  int lowpasswidth;               /* freq width of filter, in Hz
+                                     (default=15%)                         */
+  int highpasswidth;              /* freq width of filter, in Hz
+                                     (default=15%)                         */
+
+
+
+  /*
+   * psycho acoustics and other arguments which you should not change 
+   * unless you know what you are doing
+   */
+  int ATHonly;                    /* only use ATH                         */
+  int ATHshort;                   /* only use ATH for short blocks        */
+  int noATH;                      /* disable ATH                          */
+  int ATHtype;                    /* select ATH formula                   */
+  float ATHlower;                 /* lower ATH by this many db            */
+  int cwlimit;                    /* predictability limit                 */
+  int allow_diff_short;           /* allow blocktypes to differ between
+                                     channels?                            */
+  int useTemporal;                /* use temporal masking effect          */
+  int no_short_blocks;            /* disable short blocks                 */
+  int emphasis;                   /* Input PCM is emphased PCM (for
+                                     instance from one of the rarely
+                                     emphased CDs), it is STRONGLY not
+                                     recommended to use this, because
+				     psycho does not take it into account,
+				     and last but not least many decoders
+                                     don't care about these bits          */
+
+
+#endif
+
+/************************************************************************/
+/* internal variables, cannot be set...                                 */
+/* provided because they may be of use to calling application           */
+/************************************************************************/
+// version  0=MPEG-2  1=MPEG-1  (2=MPEG-2.5)    
+int CDECL lame_get_version(lame_global_flags *);
+
+// encoder delay
+int CDECL lame_get_encoder_delay(lame_global_flags *);
+
+// size of MPEG frame
+int CDECL lame_get_framesize(lame_global_flags *);
+
+// number of frames encoded so far
+int CDECL lame_get_frameNum(lame_global_flags *);
+
+// lame's estimate of the total number of frames to be encoded
+// only valid if calling program set num_samples 
+int CDECL lame_get_totalframes(lame_global_flags *);
+
 
 
 
