@@ -1224,8 +1224,8 @@ VBR_prepare (
 }
  
  
-inline
-void bitpressure_strategy1(
+static void
+bitpressure_strategy(
     lame_internal_flags * gfc,
     FLOAT8 l3_xmin[2][2][SFBMAX],
     int min_bits[2][2],  
@@ -1234,36 +1234,19 @@ void bitpressure_strategy1(
     int gr, ch, sfb;
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         for (ch = 0; ch < gfc->channels_out; ch++) {
-            if (gfc->l3_side.tt[gr][ch].block_type == SHORT_TYPE) {
-                for (sfb = 0; sfb < SBMAX_s; sfb++) {
-                    l3_xmin[gr][ch][sfb*3+0] *= 1.+.029*sfb*sfb/SBMAX_s/SBMAX_s;
-                    l3_xmin[gr][ch][sfb*3+1] *= 1.+.029*sfb*sfb/SBMAX_s/SBMAX_s;
-                    l3_xmin[gr][ch][sfb*3+2] *= 1.+.029*sfb*sfb/SBMAX_s/SBMAX_s;
-                }
-            }
-            else {
-                for (sfb = 0; sfb < SBMAX_l; sfb++) 
-                    l3_xmin[gr][ch][sfb] *= 1.+.029*sfb*sfb/SBMAX_l/SBMAX_l;
-            }
-            max_bits[gr][ch] = Max(min_bits[gr][ch], 0.9*max_bits[gr][ch]);
-        }
-    }
-}
-
-inline
-void bitpressure_strategy2( 
-    lame_internal_flags * gfc,
-    int bpf, int used, int save_bits[2][2],
-    int min_bits[2][2], int max_bits[2][2] )  
-{
-    int gr, ch;
-    for (gr = 0; gr < gfc->mode_gr; gr++) {
-        for (ch = 0; ch < gfc->channels_out; ch++) {
-            max_bits[gr][ch]  = save_bits[gr][ch];
-            max_bits[gr][ch] *= bpf;
-            max_bits[gr][ch] /= used;
-            max_bits[gr][ch]  = Max(min_bits[gr][ch],max_bits[gr][ch]);
-        }
+	    if (gfc->l3_side.tt[gr][ch].block_type == SHORT_TYPE) {
+		for (sfb = 0; sfb < SBMAX_s; sfb++) {
+		    l3_xmin[gr][ch][sfb*3+0] *= 1.+.029*sfb*sfb/SBMAX_s/SBMAX_s;
+		    l3_xmin[gr][ch][sfb*3+1] *= 1.+.029*sfb*sfb/SBMAX_s/SBMAX_s;
+		    l3_xmin[gr][ch][sfb*3+2] *= 1.+.029*sfb*sfb/SBMAX_s/SBMAX_s;
+		}
+	    }
+	    else {
+		for (sfb = 0; sfb < SBMAX_l; sfb++) 
+		    l3_xmin[gr][ch][sfb] *= 1.+.029*sfb*sfb/SBMAX_l/SBMAX_l;
+	    }
+	    max_bits[gr][ch] = Max(min_bits[gr][ch], 0.9*max_bits[gr][ch]);
+	}
     }
 }
 
@@ -1366,14 +1349,7 @@ VBR_iteration_loop (
     
     if (used_bits <= bits) break;
 
-    switch ( gfc -> VBR -> bitpressure ) {
-    default:
-    case  1:    bitpressure_strategy1( gfc, l3_xmin, min_bits, max_bits );
-                break;
-    case  2:    bitpressure_strategy2( gfc, frameBits[gfc->bitrate_index], 
-                               used_bits2, save_bits, min_bits, max_bits );
-                break;
-    }
+    bitpressure_strategy( gfc, l3_xmin, min_bits, max_bits );
 
     }   /* breaks adjusted */
     /*--------------------------------------*/
