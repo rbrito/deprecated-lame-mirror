@@ -323,16 +323,13 @@ char *mp3buf, int mp3buf_size)
 #endif    
 
         if ( ms_ratio_ave1 < threshold1  &&  ms_ratio_ave2 < threshold2 ) {
-#ifdef RH_VALIDATE_MS
             int  sum_pe_MS = pe_MS[0][0] + pe_MS[0][1] + pe_MS[1][0] + pe_MS[1][1];
             int  sum_pe_LR = pe   [0][0] + pe   [0][1] + pe   [1][0] + pe   [1][1];
             
             /* based on PE: M/S coding would not use much more bits than L/R coding */
             if (sum_pe_MS <= 1.07 * sum_pe_LR)
                 gfc->mode_ext = MPG_MD_MS_LR;
-#else
-            gfc->mode_ext = MPG_MD_MS_LR;
-#endif
+	    //            gfc->mode_ext = MPG_MD_MS_LR;
         }
 
 
