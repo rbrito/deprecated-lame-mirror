@@ -341,61 +341,12 @@ int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
     if (i == 0)
 	return bits;
 
-#if 1
     if (gi->block_type == SHORT_TYPE) {
       a1=3*gfc->scalefac_band.s[3];
       if (a1 > gi->big_values) a1 = gi->big_values;
       a2 = gi->big_values;
 
     }else if (gi->block_type == NORM_TYPE) {
-	int index;
-	int scfb_anz = 0;
-
-	while (gfc->scalefac_band.l[++scfb_anz] < i) 
-	    ;
-	index = subdv_table[scfb_anz].region0_count;
-
-	while (gfc->scalefac_band.l[index + 1] > i && index>=0)
-	    index--;
-	if (index<0) {
-	  /* this is an indication that everything is going to
-	     be encoded as region0:  bigvalues < region0 < region1
-	     so lets set region0, region1 to some value larger
-	     than bigvalues */
-	  index=subdv_table[scfb_anz].region0_count;
-	}
-
-	gi->region0_count = index;
-
-	index = subdv_table[scfb_anz].region1_count;
-	while (gfc->scalefac_band.l[index + gi->region0_count + 2] > i && index>=0)
-	    index--;
-	if (index<0) {
-	  /* see above */
-	  index = subdv_table[scfb_anz].region1_count;
-	}
-
-	gi->region1_count = index;
-
-	a1 = gfc->scalefac_band.l[gi->region0_count + 1];
-	a2 = gfc->scalefac_band.l[index + gi->region0_count + 2];
-	if (a2 < i)
-	  gi->table_select[2] = choose_table(ix + a2, ix + i, &bits);
-
-
-
-    } else {
-	gi->region0_count = 7;
-	/*gi->region1_count = SBPSY_l - 7 - 1;*/
-	gi->region1_count = SBMAX_l -1 - 7 - 1;
-	a1 = gfc->scalefac_band.l[7 + 1];
-	a2 = i;
-	if (a1 > a2) {
-	    a1 = a2;
-	}
-    }
-#else
-    if (gi->block_type == NORM_TYPE) {
 	a1 = gi->region0_count = gfc->bv_scf[i-2];
 	a2 = gi->region1_count = gfc->bv_scf[i-1];
 
@@ -414,7 +365,7 @@ int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
 	    a1 = a2;
 	}
     }
-#endif
+
 
     /* have to allow for the case when bigvalues < region0 < region1 */
     /* (and region0, region1 are ignored) */
@@ -549,6 +500,7 @@ void best_huffman_divide(lame_internal_flags *gfc, int gr, int ch, gr_info *gi, 
     int r0_tbl[7 + 15 + 1];
     int r1_tbl[7 + 15 + 1];
     memcpy(&cod_info2, gi, sizeof(gr_info));
+
 
     /* SHORT BLOCK stuff fails for MPEG2 */ 
     if (gi->block_type == SHORT_TYPE && gfc->mode_gr==1) 
@@ -1050,21 +1002,25 @@ void huffman_init(lame_global_flags *gfp)
 	index = subdv_table[scfb_anz].region0_count;
 	while (gfc->scalefac_band.l[index + 1] > i)
 	    index--;
-#if 0
+
 	if (index < 0) {
-	    index = 0;
+	  /* this is an indication that everything is going to
+	     be encoded as region0:  bigvalues < region0 < region1
+	     so lets set region0, region1 to some value larger
+	     than bigvalues */
+	  index = subdv_table[scfb_anz].region0_count;
 	}
-#endif
+
 	gfc->bv_scf[i-2] = index;
 
 	index = subdv_table[scfb_anz].region1_count;
 	while (gfc->scalefac_band.l[index + gfc->bv_scf[i-2] + 2] > i)
 	    index--;
-#if 0
+
 	if (index < 0) {
-	    index = 0;
+	  index = subdv_table[scfb_anz].region1_count;
 	}
-#endif
+
 	gfc->bv_scf[i-1] = index;
     }
 }
