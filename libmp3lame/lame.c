@@ -1814,7 +1814,6 @@ int
 lame_init_bitstream(lame_global_flags * gfp)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
-    int i;
     gfp->frameNum=0;
 
     if (!gfp->ogg)

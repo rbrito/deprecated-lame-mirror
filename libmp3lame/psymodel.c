@@ -1722,10 +1722,8 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
     for(chn=0;chn<numchn;chn++) {
 	FLOAT8 *ppe;
 	int type;
-	FLOAT8 prePE;
 	III_psy_ratio *mr;
 
-	ppe = percep_entropy;
 	if (chn > 1) {
 	    ppe = percep_MS_entropy - 2;
 	    type = NORM_TYPE;
@@ -1733,6 +1731,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 		type = SHORT_TYPE;
 	    mr = &masking_MS_ratio[gr_out][chn-2];
 	} else {
+	    ppe = percep_entropy;
 	    type = blocktype_d[chn];
 	    mr = &masking_ratio[gr_out][chn];
 	}
