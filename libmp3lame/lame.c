@@ -1048,14 +1048,12 @@ lame_init_params(lame_global_flags * const gfp)
       it is a rare event (1 frame per min. or so) that LAME would use
       uncoupled short blocks, so lets turn them off until we decide
       how to handle this.  No other encoders allow uncoupled short blocks,
-      even though it is in the standard.  
-    if (gfp->short_blocks == short_block_allowed && gfp->mode == JOINT_STEREO) {
+      even though it is in the standard.  */
+    /* rh 20040217: coupling makes no sense for mono and dual-mono streams
+     */
+    if (gfp->short_blocks == short_block_allowed && (gfp->mode == JOINT_STEREO || gfp->mode == STEREO) ) {
         gfp->short_blocks =  short_block_coupled;
     } 
-    */
-    if (gfp->short_blocks == short_block_allowed) {
-        gfp->short_blocks =  short_block_coupled;
-    }    
 
     
     if (lame_get_quant_comp(gfp) < 0 ) lame_set_quant_comp(gfp, 1);
