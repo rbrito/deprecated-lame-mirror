@@ -29,7 +29,7 @@ extern unsigned char *wordpointer;
 extern int bitindex;
 
 
-#if defined( USE_LAYER_1 ) || defined ( USE_LAYER_1 )
+#if defined( USE_LAYER_1 ) || defined ( USE_LAYER_2 )
   extern real muls[27][64];
 #endif
 

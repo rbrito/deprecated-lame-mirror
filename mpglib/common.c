@@ -43,7 +43,7 @@ unsigned char *pcm_sample;
 int pcm_point = 0;
 
 
-#if defined( USE_LAYER_1 ) || defined ( USE_LAYER_1 )
+#if defined( USE_LAYER_1 ) || defined ( USE_LAYER_2 )
   real muls[27][64];
 #endif
 
