@@ -980,9 +980,9 @@ scale_bitcount(gr_info * const gi)
      * one which uses the smallest number of bits.  ISO would stop
      * at first valid index */
     gi->part2_length = LARGE_BITS;
-    for (k = 0; k < 16; k++) {
-	if (gi->part2_length > tab[k]
-	    && ((s1bits[k] - s1) | (s2bits[k] - s2)) >= 0) {
+    for (k = s2; k < 16; k++) {
+	if (((gi->part2_length - tab[k]) | (s1bits[k] - s1) | (s2bits[k] - s2))
+	    >= 0) {
 	    gi->part2_length = tab[k];
 	    gi->scalefac_compress = k;
 	}
