@@ -875,7 +875,7 @@ void outer_loop(
      * (makes a 10% speed increase, the files I tested were
      * binary identical, 2000/05/20 Robert.Hegemann@gmx.de)
      */
-    if (gfp->VBR==1 || iteration>100)
+    if (gfp->VBR==2 || iteration>100)
       {
         if (cod_info->block_type == SHORT_TYPE)
           {

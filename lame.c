@@ -680,7 +680,7 @@ void lame_print_config(lame_global_flags *gfp)
       fprintf(stderr, "Encoding as %.1f kHz VBR Ogg Vorbis \n",
 	      gfp->out_samplerate/1000.0);
     }else
-    if (gfp->VBR==1)
+    if (gfp->VBR==1 || gfp->VBR==2)
       fprintf(stderr, "Encoding as %.1f kHz VBR(q=%i) %s MPEG%i LayerIII (%4.1fx estimated) qval=%i\n",
 	      gfp->out_samplerate/1000.0,
 	      gfp->VBR_q,mode_names[gfp->mode],2-gfp->version,gfp->compression_ratio,gfp->quality);
@@ -1024,19 +1024,18 @@ char *mp3buf, int mp3buf_size)
   }
 
 
-  if (gfp->VBR) {
-  if (gfp->experimentalY)
-    VBR_quantize( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc,
-		  scalefac);
-  else if (gfp->VBR == 3)
-    ABR_iteration_loop( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc,
-			scalefac);
-  else
-    VBR_iteration_loop( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc,
-			scalefac);
-  }else{
-    iteration_loop( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc,
-		    scalefac);
+  switch (gfp->VBR){ 
+  case 1:
+    VBR_quantize( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
+    break;
+  case 2:
+    VBR_iteration_loop( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
+    break;
+  case 3:
+    ABR_iteration_loop( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
+    break;
+  default:
+    iteration_loop( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
   }
 
 
