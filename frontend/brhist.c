@@ -99,7 +99,7 @@ static int calculate_index ( const int* const array, const int len, const int va
     return -1;
 }
 
-int  brhist_init ( const lame_global_flags* gf, const int bitrate_kbps_min, const int bitrate_kbps_max )
+int  brhist_init ( const lame_t gf, const int bitrate_kbps_min, const int bitrate_kbps_max )
 {
 #ifdef HAVE_TERMCAP
     char         term_buff [2048];  /* see 1) */
@@ -207,7 +207,8 @@ static int  digits ( unsigned number )
 }
 
 
-static void  brhist_disp_line ( const lame_global_flags*  gf, int i, int br_hist_TOT, int br_hist_LR, int full, int frames )
+static void
+brhist_disp_line (int i, int br_hist_TOT, int br_hist_LR, int full, int frames)
 {
     char    brppt [14];  /* [%] and max. 10 characters for kbps */
     int     barlen_TOT;
@@ -264,7 +265,7 @@ static void  brhist_disp_line ( const lame_global_flags*  gf, int i, int br_hist
 #define LR  0
 #define MS  2
 
-void  brhist_disp ( const lame_global_flags*  gf )
+void  brhist_disp ( const lame_t  gf )
 {
     int   i;
     int   br_hist [BRHIST_WIDTH];       /* how often a frame size was used */
@@ -285,7 +286,7 @@ void  brhist_disp ( const lame_global_flags*  gf )
 
     for ( i = 0; i < BRHIST_WIDTH; i++ )
         if ( br_hist [i]  ||  (i >= brhist.vbr_bitrate_min_index  &&  i <= brhist.vbr_bitrate_max_index) )
-            brhist_disp_line ( gf, i, br_hist [i], br_sm_hist [i][LR]+br_sm_hist [i][LR+1], most_often, frames );
+            brhist_disp_line (i, br_hist [i], br_sm_hist [i][LR]+br_sm_hist [i][LR+1], most_often, frames );
 
     fputs ( "\r", Console_IO.Console_fp );
     fflush ( Console_IO.Console_fp );   /* fflush is ALSO needed for Windows! */
@@ -310,7 +311,7 @@ void brhist_jump_back( void )
 }
 
 
-void  brhist_disp_total ( const lame_global_flags* gf )
+void  brhist_disp_total ( const lame_t gf )
 {
     int i;
     int br_hist [BRHIST_WIDTH];

@@ -123,7 +123,7 @@ int synth_1to1_mono_unclipped(PMPSTR mp, real *bandPtr, unsigned char *out,int *
   mp->synth_bo = bo;                                     \
                                                          \
   {                                                      \
-    register int j;                                      \
+    int j;                                               \
     real *window = decwin + 16 - bo1;                    \
                                                          \
     for (j=16;j;j--,b0+=0x10,window+=0x20,samples+=step) \

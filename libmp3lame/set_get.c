@@ -1,5 +1,5 @@
 /*
- * set/get functions for lame_global_flags
+ * set/get functions for lame_internal_flags
  *
  * Copyright (c) 2001 Alexander Leidinger
  *
@@ -41,44 +41,44 @@
 /* number of samples */
 /* it's unlikely for this function to return an error */
 int
-lame_set_num_samples( lame_global_flags*  gfp,
-                      unsigned long       num_samples)
+lame_set_num_samples(lame_t  gfc,
+                     unsigned long       num_samples)
 {
     /* default = 2^32-1 */
 
-    gfp->num_samples = num_samples;
+    gfc->num_samples = num_samples;
 
     return 0;
 }
 
 unsigned long
-lame_get_num_samples( const lame_global_flags* gfp )
+lame_get_num_samples( const lame_t  gfc )
 {
-    return gfp->num_samples;
+    return gfc->num_samples;
 }
 
 
 /* input samplerate */
 int
-lame_set_in_samplerate( lame_global_flags*  gfp,
+lame_set_in_samplerate( lame_t   gfc,
                         int                 in_samplerate )
 {
     /* input sample rate in Hz,  default = 44100 Hz */
-    gfp->in_samplerate = in_samplerate;
+    gfc->in_samplerate = in_samplerate;
 
     return 0;
 }
 
 int
-lame_get_in_samplerate( const lame_global_flags*  gfp )
+lame_get_in_samplerate( const lame_t   gfc )
 {
-    return gfp->in_samplerate;
+    return gfc->in_samplerate;
 }
 
 
 /* number of channels in input stream */
 int
-lame_set_num_channels( lame_global_flags*  gfp,
+lame_set_num_channels( lame_t   gfc,
                        int                 num_channels )
 {
     /* default = 2 */
@@ -86,77 +86,77 @@ lame_set_num_channels( lame_global_flags*  gfp,
     if ( 2 < num_channels || 0 == num_channels )
         return -1;    /* we don't support more than 2 channels */
 
-    gfp->num_channels = num_channels;
+    gfc->num_channels = num_channels;
 
     return 0;
 }
 
 int
-lame_get_num_channels( const lame_global_flags*  gfp )
+lame_get_num_channels( const lame_t   gfc )
 {
-    return gfp->num_channels;
+    return gfc->num_channels;
 }
 
 
 /* scale the input by this amount before encoding (not used for decoding) */
 int
-lame_set_scale( lame_global_flags*  gfp,
+lame_set_scale( lame_t   gfc,
                 float               scale )
 {
     /* default = 0 */
-    gfp->scale = scale;
+    gfc->scale = scale;
 
     return 0;
 }
 
 float
-lame_get_scale( const lame_global_flags*  gfp )
+lame_get_scale( const lame_t   gfc )
 {
-    return gfp->scale;
+    return gfc->scale;
 }
 
 
 /* scale the channel 0 (left) input by this amount before 
    encoding (not used for decoding) */
 int
-lame_set_scale_left( lame_global_flags*  gfp,
+lame_set_scale_left( lame_t   gfc,
                      float               scale )
 {
     /* default = 0 */
-    gfp->scale_left = scale;
+    gfc->scale_left = scale;
 
     return 0;
 }
 
 float
-lame_get_scale_left( const lame_global_flags*  gfp )
+lame_get_scale_left( const lame_t   gfc )
 {
-    return gfp->scale_left;
+    return gfc->scale_left;
 }
 
 
 /* scale the channel 1 (right) input by this amount before 
    encoding (not used for decoding) */
 int
-lame_set_scale_right( lame_global_flags*  gfp,
+lame_set_scale_right( lame_t   gfc,
                       float               scale )
 {
     /* default = 0 */
-    gfp->scale_right = scale;
+    gfc->scale_right = scale;
 
     return 0;
 }
 
 float
-lame_get_scale_right( const lame_global_flags*  gfp )
+lame_get_scale_right( const lame_t   gfc )
 {
-    return gfp->scale_right;
+    return gfc->scale_right;
 }
 
 
 /* output sample rate in Hz */
 int
-lame_set_out_samplerate( lame_global_flags*  gfp,
+lame_set_out_samplerate( lame_t   gfc,
                          int                 out_samplerate )
 {
     /*
@@ -169,15 +169,15 @@ lame_set_out_samplerate( lame_global_flags*  gfp,
      *
      * (not used by decoding routines)
      */
-    gfp->out_samplerate = out_samplerate;
+    gfc->out_samplerate = out_samplerate;
 
     return 0;
 }
 
 int
-lame_get_out_samplerate( const lame_global_flags*  gfp )
+lame_get_out_samplerate( const lame_t   gfc )
 {
-    return gfp->out_samplerate;
+    return gfc->out_samplerate;
 }
 
 
@@ -189,7 +189,7 @@ lame_get_out_samplerate( const lame_global_flags*  gfp )
 
 /* write a Xing VBR header frame */
 int
-lame_set_bWriteVbrTag( lame_global_flags*  gfp,
+lame_set_bWriteVbrTag( lame_t   gfc,
                        int bWriteVbrTag )
 {
     /* default = 1 (on) for VBR/ABR modes, 0 (off) for CBR mode */
@@ -200,17 +200,17 @@ lame_set_bWriteVbrTag( lame_global_flags*  gfp,
     if ( 0 > bWriteVbrTag || 1 < bWriteVbrTag )
         return -1;
 
-    gfp->bWriteVbrTag = bWriteVbrTag;
+    gfc->bWriteVbrTag = bWriteVbrTag;
 
     return 0;
 }
 
 int
-lame_get_bWriteVbrTag( const lame_global_flags*  gfp )
+lame_get_bWriteVbrTag( const lame_t   gfc )
 {
-    assert( 0 <= gfp->bWriteVbrTag && 1 >= gfp->bWriteVbrTag );
+    assert( 0 <= gfc->bWriteVbrTag && 1 >= gfc->bWriteVbrTag );
 
-    return gfp->bWriteVbrTag;
+    return gfc->bWriteVbrTag;
 }
 
 
@@ -225,7 +225,7 @@ lame_get_bWriteVbrTag( const lame_global_flags*  gfp )
  *               7     ok quality, really fast
  */
 int
-lame_set_quality( lame_global_flags*  gfp,
+lame_set_quality( lame_t   gfc,
                   int                 quality )
 {
     if (quality < 0)
@@ -233,20 +233,20 @@ lame_set_quality( lame_global_flags*  gfp,
     if (quality > 9)
 	quality = 9;
 
-    gfp->quality = quality;
+    gfc->quality = quality;
     return 0;
 }
 
 int
-lame_get_quality( const lame_global_flags*  gfp )
+lame_get_quality( const lame_t   gfc )
 {
-    return gfp->quality;
+    return gfc->quality;
 }
 
 
 /* mode = STEREO, JOINT_STEREO, DUAL_CHANNEL (not supported), MONO */
 int
-lame_set_mode( lame_global_flags*  gfp,
+lame_set_mode( lame_t   gfc,
                MPEG_mode           mode )
 {
     /* default: lame chooses based on compression ratio and input channels */
@@ -254,17 +254,17 @@ lame_set_mode( lame_global_flags*  gfp,
     if ((unsigned int)mode >= MAX_INDICATOR)
         return -1;  /* Unknown MPEG mode! */
 
-    gfp->mode = mode;
+    gfc->mode = mode;
 
     return 0;
 }
 
 MPEG_mode
-lame_get_mode( const lame_global_flags*  gfp )
+lame_get_mode( const lame_t   gfc )
 {
-    assert((unsigned int)gfp->mode < MAX_INDICATOR);
+    assert((unsigned int)gfc->mode < MAX_INDICATOR);
 
-    return gfp->mode;
+    return gfc->mode;
 }
 
 
@@ -273,7 +273,7 @@ lame_get_mode( const lame_global_flags*  gfp )
  * Requires mode = 1.
  */
 int
-lame_set_force_ms( lame_global_flags*  gfp,
+lame_set_force_ms( lame_t   gfc,
                    int                 force_ms )
 {
     /* default = 0 (disabled) */
@@ -284,23 +284,23 @@ lame_set_force_ms( lame_global_flags*  gfp,
     if ( 0 > force_ms || 1 < force_ms )
         return -1;
 
-    gfp->force_ms = force_ms;
+    gfc->force_ms = force_ms;
 
     return 0;
 }
 
 int
-lame_get_force_ms( const lame_global_flags*  gfp )
+lame_get_force_ms( const lame_t   gfc )
 {
-    assert( 0 <= gfp->force_ms && 1 >= gfp->force_ms );
+    assert( 0 <= gfc->force_ms && 1 >= gfc->force_ms );
 
-    return gfp->force_ms;
+    return gfc->force_ms;
 }
 
 
 /* Use free_format. */
 int
-lame_set_free_format( lame_global_flags*  gfp,
+lame_set_free_format( lame_t   gfc,
                       int                 free_format )
 {
     /* default = 0 (disabled) */
@@ -311,44 +311,44 @@ lame_set_free_format( lame_global_flags*  gfp,
     if ( 0 > free_format || 1 < free_format )
         return -1;
 
-    gfp->free_format = free_format;
+    gfc->free_format = free_format;
 
     return 0;
 }
 
 int
-lame_get_free_format( const lame_global_flags*  gfp )
+lame_get_free_format( const lame_t   gfc )
 {
-    assert( 0 <= gfp->free_format && 1 >= gfp->free_format );
+    assert( 0 <= gfc->free_format && 1 >= gfc->free_format );
 
-    return gfp->free_format;
+    return gfc->free_format;
 }
 
 
 /* message handlers */
 int
-lame_set_errorf( lame_global_flags*  gfp,
+lame_set_errorf( lame_t   gfc,
                  void                (*func)( const char*, va_list ) )
 {
-    gfp->report.errorf = func;
+    gfc->report.errorf = func;
 
     return 0;
 }
 
 int
-lame_set_debugf( lame_global_flags*  gfp,
+lame_set_debugf( lame_t   gfc,
                  void                (*func)( const char*, va_list ) )
 {
-    gfp->report.debugf = func;
+    gfc->report.debugf = func;
 
     return 0;
 }
 
 int
-lame_set_msgf( lame_global_flags*  gfp,
+lame_set_msgf( lame_t   gfc,
                void                (*func)( const char *, va_list ) )
 {
-    gfp->report.msgf = func;
+    gfc->report.msgf = func;
 
     return 0;
 }
@@ -362,32 +362,32 @@ lame_set_msgf( lame_global_flags*  gfp,
  * Default is compression ratio of 11.
  */
 int
-lame_set_brate( lame_global_flags*  gfp,
+lame_set_brate( lame_t   gfc,
                 int                 brate )
 {
-    gfp->mean_bitrate_kbps = brate;
+    gfc->mean_bitrate_kbps = brate;
     return 0;
 }
 
 int
-lame_get_brate( const lame_global_flags*  gfp )
+lame_get_brate( const lame_t   gfc )
 {
-    return gfp->mean_bitrate_kbps;
+    return gfc->mean_bitrate_kbps;
 }
 
 int
-lame_set_compression_ratio( lame_global_flags*  gfp,
+lame_set_compression_ratio( lame_t   gfc,
                             float               compression_ratio )
 {
-    gfp->compression_ratio = compression_ratio;
+    gfc->compression_ratio = compression_ratio;
 
     return 0;
 }
 
 float
-lame_get_compression_ratio( const lame_global_flags*  gfp )
+lame_get_compression_ratio( const lame_t   gfc )
 {
-    return gfp->compression_ratio;
+    return gfc->compression_ratio;
 }
 
 
@@ -399,7 +399,7 @@ lame_get_compression_ratio( const lame_global_flags*  gfp )
 
 /* Mark as copyright protected. */
 int
-lame_set_copyright( lame_global_flags*  gfp,
+lame_set_copyright( lame_t   gfc,
                     int                 copyright )
 {
     /* default = 0 (disabled) */
@@ -410,23 +410,23 @@ lame_set_copyright( lame_global_flags*  gfp,
     if ( 0 > copyright || 1 < copyright )
         return -1;
 
-    gfp->copyright = copyright;
+    gfc->copyright = copyright;
 
     return 0;
 }
 
 int
-lame_get_copyright( const lame_global_flags*  gfp )
+lame_get_copyright( const lame_t   gfc )
 {
-    assert( 0 <= gfp->copyright && 1 >= gfp->copyright );
+    assert( 0 <= gfc->copyright && 1 >= gfc->copyright );
 
-    return gfp->copyright;
+    return gfc->copyright;
 }
 
 
 /* Mark as original. */
 int
-lame_set_original( lame_global_flags*  gfp,
+lame_set_original( lame_t   gfc,
                    int                 original )
 {
     /* default = 1 (enabled) */
@@ -437,17 +437,17 @@ lame_set_original( lame_global_flags*  gfp,
     if ( 0 > original || 1 < original )
         return -1;
 
-    gfp->original = original;
+    gfc->original = original;
 
     return 0;
 }
 
 int
-lame_get_original( const lame_global_flags*  gfp )
+lame_get_original( const lame_t   gfc )
 {
-    assert( 0 <= gfp->original && 1 >= gfp->original );
+    assert( 0 <= gfc->original && 1 >= gfc->original );
 
-    return gfp->original;
+    return gfc->original;
 }
 
 
@@ -456,7 +456,7 @@ lame_get_original( const lame_global_flags*  gfp )
  * Use 2 bytes from each frame for CRC checksum.
  */
 int
-lame_set_error_protection( lame_global_flags*  gfp,
+lame_set_error_protection( lame_t   gfc,
                            int                 error_protection )
 {
     /* default = 0 (disabled) */
@@ -467,23 +467,23 @@ lame_set_error_protection( lame_global_flags*  gfp,
     if ( 0 > error_protection || 1 < error_protection )
         return -1;
 
-    gfp->error_protection = error_protection;
+    gfc->error_protection = error_protection;
 
     return 0;
 }
 
 int
-lame_get_error_protection( const lame_global_flags*  gfp )
+lame_get_error_protection( const lame_t   gfc )
 {
-    assert( 0 <= gfp->error_protection && 1 >= gfp->error_protection );
+    assert( 0 <= gfc->error_protection && 1 >= gfc->error_protection );
 
-    return gfp->error_protection;
+    return gfc->error_protection;
 }
 
 
 /* MP3 'private extension' bit. Meaningless. */
 int
-lame_set_extension( lame_global_flags*  gfp,
+lame_set_extension( lame_t   gfc,
                     int                 extension )
 {
     /* default = 0 (disabled) */
@@ -494,23 +494,23 @@ lame_set_extension( lame_global_flags*  gfp,
     if ( 0 > extension || 1 < extension )
         return -1;
 
-    gfp->extension = extension;
+    gfc->extension = extension;
 
     return 0;
 }
 
 int
-lame_get_extension( const lame_global_flags*  gfp )
+lame_get_extension( const lame_t   gfc )
 {
-    assert( 0 <= gfp->extension && 1 >= gfp->extension );
+    assert( 0 <= gfc->extension && 1 >= gfc->extension );
 
-    return gfp->extension;
+    return gfc->extension;
 }
 
 
 /* Enforce strict ISO compliance. */
 int
-lame_set_strict_ISO( lame_global_flags*  gfp,
+lame_set_strict_ISO( lame_t   gfc,
                      int                 strict_ISO )
 {
     /* default = 0 (disabled) */
@@ -521,17 +521,17 @@ lame_set_strict_ISO( lame_global_flags*  gfp,
     if ( 0 > strict_ISO || 1 < strict_ISO )
         return -1;
 
-    gfp->strict_ISO = strict_ISO;
+    gfc->strict_ISO = strict_ISO;
 
     return 0;
 }
 
 int
-lame_get_strict_ISO( const lame_global_flags*  gfp )
+lame_get_strict_ISO( const lame_t   gfc )
 {
-    assert( 0 <= gfp->strict_ISO && 1 >= gfp->strict_ISO );
+    assert( 0 <= gfc->strict_ISO && 1 >= gfc->strict_ISO );
 
-    return gfp->strict_ISO;
+    return gfc->strict_ISO;
 }
  
 
@@ -543,7 +543,7 @@ lame_get_strict_ISO( const lame_global_flags*  gfp )
 
 /* Disable the bit reservoir. For testing only. */
 int
-lame_set_disable_reservoir( lame_global_flags*  gfp,
+lame_set_disable_reservoir( lame_t   gfc,
                             int                 disable_reservoir )
 {
     /* default = 0 (disabled) */
@@ -554,66 +554,66 @@ lame_set_disable_reservoir( lame_global_flags*  gfp,
     if ( 0 > disable_reservoir || 1 < disable_reservoir )
         return -1;
 
-    gfp->disable_reservoir = disable_reservoir;
+    gfc->disable_reservoir = disable_reservoir;
 
     return 0;
 }
 
 int
-lame_get_disable_reservoir( const lame_global_flags*  gfp )
+lame_get_disable_reservoir( const lame_t   gfc )
 {
-    assert( 0 <= gfp->disable_reservoir && 1 >= gfp->disable_reservoir );
+    assert( 0 <= gfc->disable_reservoir && 1 >= gfc->disable_reservoir );
 
-    return gfp->disable_reservoir;
+    return gfc->disable_reservoir;
 }
 
 
 
 
 int
-lame_set_sfscale( lame_global_flags*  gfp,
+lame_set_sfscale( lame_t   gfc,
 		  int                 method)
 {
-    gfp->internal_flags->use_scalefac_scale = method;
+    gfc->use_scalefac_scale = method;
 
     return 0;
 }
 
 
 int
-lame_set_subblock_gain( lame_global_flags*  gfp,
+lame_set_subblock_gain( lame_t   gfc,
 			int                 method)
 {
-    gfp->internal_flags->use_subblock_gain = method;
+    gfc->use_subblock_gain = method;
 
     return 0;
 }
 
 
 int
-lame_set_narrowenStereo(lame_global_flags *gfp,
+lame_set_narrowenStereo(lame_t gfc,
 			float factor)
 {
     if (factor < 0.0 || factor > 1.0)
 	return -1;
-    gfp->internal_flags->narrowStereo = factor*.5;
+    gfc->narrowStereo = factor*.5;
     return 0;
 }
 
 /* Naoki's psycho acoustic model. */
 int
-lame_set_exp_nspsytune( lame_global_flags*  gfp,
+lame_set_exp_nspsytune( lame_t   gfc,
                         int                 exp_nspsytune )
 {
-    gfp->internal_flags->nsPsy.tune = exp_nspsytune;
+    gfc->nsPsy.tune = exp_nspsytune;
 
     return 0;
 }
 
 int
-lame_get_exp_nspsytune( const lame_global_flags*  gfp )
+lame_get_exp_nspsytune( const lame_t   gfc )
 {
-    return gfp->internal_flags->nsPsy.tune;
+    return gfc->nsPsy.tune;
 }
 
 
@@ -623,22 +623,22 @@ lame_get_exp_nspsytune( const lame_global_flags*  gfp )
 
 /* Types of VBR.  default = CBR */
 int
-lame_set_VBR( lame_global_flags*  gfp,
+lame_set_VBR( lame_t   gfc,
               vbr_mode            VBR )
 {
     if ((unsigned int)VBR >= vbr_max_indicator)
         return -1;  /* Unknown VBR mode! */
 
-    gfp->VBR = VBR;
+    gfc->VBR = VBR;
 
     return 0;
 }
 
 vbr_mode
-lame_get_VBR( const lame_global_flags*  gfp )
+lame_get_VBR( const lame_t   gfc )
 {
-    assert((unsigned int)gfp->VBR < vbr_max_indicator);
-    return gfp->VBR;
+    assert((unsigned int)gfc->VBR < vbr_max_indicator);
+    return gfc->VBR;
 }
 
 
@@ -648,7 +648,7 @@ lame_get_VBR( const lame_global_flags*  gfp )
  *  9 = lowest 
  */
 int
-lame_set_VBR_q( lame_global_flags*  gfp,
+lame_set_VBR_q( lame_t   gfc,
                 int                 VBR_q )
 {
     /* XXX: This should be an enum */
@@ -663,63 +663,63 @@ lame_set_VBR_q( lame_global_flags*  gfp,
     if (VBR_q < 0)
         return -1;  /* Unknown VBR quality level! */
 
-    gfp->VBR_q = VBR_q;
+    gfc->VBR_q = VBR_q;
     return 0;
 }
 
 int
-lame_get_VBR_q( const lame_global_flags*  gfp )
+lame_get_VBR_q( const lame_t   gfc )
 {
-    assert(0 <= gfp->VBR_q);
+    assert(0 <= gfc->VBR_q);
 
-    return gfp->VBR_q;
+    return gfc->VBR_q;
 }
 
 
 /* Ignored except for VBR = abr (ABR mode) */
 int
-lame_set_VBR_mean_bitrate_kbps( lame_global_flags*  gfp,
+lame_set_VBR_mean_bitrate_kbps( lame_t   gfc,
                                 int                 VBR_mean_bitrate_kbps )
 {
-    gfp->mean_bitrate_kbps = VBR_mean_bitrate_kbps;
+    gfc->mean_bitrate_kbps = VBR_mean_bitrate_kbps;
 
     return 0;
 }
 
 int
-lame_get_VBR_mean_bitrate_kbps( const lame_global_flags*  gfp )
+lame_get_VBR_mean_bitrate_kbps( const lame_t   gfc )
 {
-    return gfp->mean_bitrate_kbps;
+    return gfc->mean_bitrate_kbps;
 }
 
 int
-lame_set_VBR_min_bitrate_kbps( lame_global_flags*  gfp,
+lame_set_VBR_min_bitrate_kbps( lame_t   gfc,
                                int                 VBR_min_bitrate_kbps )
 {
-    gfp->VBR_min_bitrate_kbps = VBR_min_bitrate_kbps;
+    gfc->VBR_min_bitrate_kbps = VBR_min_bitrate_kbps;
 
     return 0;
 }
 
 int
-lame_get_VBR_min_bitrate_kbps( const lame_global_flags*  gfp )
+lame_get_VBR_min_bitrate_kbps( const lame_t   gfc )
 {
-    return gfp->VBR_min_bitrate_kbps;
+    return gfc->VBR_min_bitrate_kbps;
 }
 
 int
-lame_set_VBR_max_bitrate_kbps( lame_global_flags*  gfp,
+lame_set_VBR_max_bitrate_kbps( lame_t   gfc,
                                int                 VBR_max_bitrate_kbps )
 {
-    gfp->VBR_max_bitrate_kbps = VBR_max_bitrate_kbps;
+    gfc->VBR_max_bitrate_kbps = VBR_max_bitrate_kbps;
 
     return 0;
 }
 
 int
-lame_get_VBR_max_bitrate_kbps( const lame_global_flags*  gfp )
+lame_get_VBR_max_bitrate_kbps( const lame_t   gfc )
 {
-    return gfp->VBR_max_bitrate_kbps;
+    return gfc->VBR_max_bitrate_kbps;
 }
 
 
@@ -733,18 +733,18 @@ lame_get_VBR_max_bitrate_kbps( const lame_global_flags*  gfp )
  *  -1 = disabled
  */
 int
-lame_set_lowpassfreq( lame_global_flags*  gfp,
+lame_set_lowpassfreq( lame_t   gfc,
                       int                 lowpassfreq )
 {
-    gfp->lowpassfreq = lowpassfreq;
+    gfc->lowpassfreq = lowpassfreq;
 
     return 0;
 }
 
 int
-lame_get_lowpassfreq( const lame_global_flags*  gfp )
+lame_get_lowpassfreq( const lame_t   gfc )
 {
-    return gfp->lowpassfreq;
+    return gfc->lowpassfreq;
 }
 
 
@@ -753,18 +753,18 @@ lame_get_lowpassfreq( const lame_global_flags*  gfp )
  *  default = one polyphase filter band
  */
 int
-lame_set_lowpasswidth( lame_global_flags*  gfp,
+lame_set_lowpasswidth( lame_t   gfc,
                        int                 lowpasswidth )
 {
-    gfp->lowpasswidth = lowpasswidth;
+    gfc->lowpasswidth = lowpasswidth;
 
     return 0;
 }
 
 int
-lame_get_lowpasswidth( const lame_global_flags*  gfp )
+lame_get_lowpasswidth( const lame_t   gfc )
 {
-    return gfp->lowpasswidth;
+    return gfc->lowpasswidth;
 }
 
 
@@ -774,18 +774,18 @@ lame_get_lowpasswidth( const lame_global_flags*  gfp )
  *  -1 = disabled
  */
 int
-lame_set_highpassfreq( lame_global_flags*  gfp,
+lame_set_highpassfreq( lame_t   gfc,
                        int                 highpassfreq )
 {
-    gfp->highpassfreq = highpassfreq;
+    gfc->highpassfreq = highpassfreq;
 
     return 0;
 }
 
 int
-lame_get_highpassfreq( const lame_global_flags*  gfp )
+lame_get_highpassfreq( const lame_t   gfc )
 {
-    return gfp->highpassfreq;
+    return gfc->highpassfreq;
 }
 
 
@@ -794,18 +794,18 @@ lame_get_highpassfreq( const lame_global_flags*  gfp )
  *  default = one polyphase filter band
  */
 int
-lame_set_highpasswidth( lame_global_flags*  gfp,
+lame_set_highpasswidth( lame_t   gfc,
                         int                 highpasswidth )
 {
-    gfp->highpasswidth = highpasswidth;
+    gfc->highpasswidth = highpasswidth;
 
     return 0;
 }
 
 int
-lame_get_highpasswidth( const lame_global_flags*  gfp )
+lame_get_highpasswidth( const lame_t   gfc )
 {
-    return gfp->highpasswidth;
+    return gfc->highpasswidth;
 }
 
 
@@ -818,127 +818,126 @@ lame_get_highpasswidth( const lame_global_flags*  gfp )
 
 /* Adjust masking values. */
 int
-lame_set_maskingadjust( lame_global_flags*  gfp,
+lame_set_maskingadjust( lame_t   gfc,
                    float               adjust )
 {
-    gfp->internal_flags->masking_lower = db2pow(adjust);
+    gfc->masking_lower = db2pow(adjust);
     return 0;
 }
 
 int
-lame_set_maskingadjust_short( lame_global_flags*  gfp,
+lame_set_maskingadjust_short( lame_t   gfc,
                    float               adjust )
 {
-    gfp->internal_flags->masking_lower_short = db2pow(adjust);
+    gfc->masking_lower_short = db2pow(adjust);
     return 0;
 }
 
 /* Only use ATH for masking. */
 int
-lame_set_ATHonly( lame_global_flags*  gfp,
+lame_set_ATHonly( lame_t   gfc,
                   int                 ATHonly )
 {
-    gfp->ATHonly = ATHonly;
+    gfc->ATHonly = ATHonly;
 
     return 0;
 }
 
 int
-lame_get_ATHonly( const lame_global_flags*  gfp )
+lame_get_ATHonly( const lame_t   gfc )
 {
-    return gfp->ATHonly;
+    return gfc->ATHonly;
 }
 
 
 /* Only use ATH for short blocks. */
 int
-lame_set_ATHshort( lame_global_flags*  gfp,
+lame_set_ATHshort( lame_t   gfc,
                    int                 ATHshort )
 {
-    gfp->ATHshort = ATHshort;
+    gfc->ATHshort = ATHshort;
 
     return 0;
 }
 
 int
-lame_get_ATHshort( const lame_global_flags*  gfp )
+lame_get_ATHshort( const lame_t   gfc )
 {
-    return gfp->ATHshort;
+    return gfc->ATHshort;
 }
 
 
 /* Disable ATH. */
 int
-lame_set_noATH( lame_global_flags*  gfp,
+lame_set_noATH( lame_t   gfc,
                 int                 noATH )
 {
-    gfp->noATH = noATH;
+    gfc->noATH = noATH;
 
     return 0;
 }
 
 int
-lame_get_noATH( const lame_global_flags*  gfp )
+lame_get_noATH( const lame_t   gfc )
 {
-    return gfp->noATH;
+    return gfc->noATH;
 }
 
 
 /* Select ATH formula 4 shape. */
 int
-lame_set_ATHcurve( lame_global_flags*  gfp,
+lame_set_ATHcurve( lame_t   gfc,
                    float ATHcurve )
 {
     if (ATHcurve < 0)
 	ATHcurve = 0;
-    gfp->ATHcurve = ATHcurve;
+    gfc->ATHcurve = ATHcurve;
 
     return 0;
 }
 
 int
-lame_get_ATHcurve( const lame_global_flags*  gfp )
+lame_get_ATHcurve( const lame_t   gfc )
 {
-    return gfp->ATHcurve;
+    return gfc->ATHcurve;
 }
 
 
 /* Lower ATH by this many db. */
 int
-lame_set_ATHlower( lame_global_flags*  gfp,
+lame_set_ATHlower( lame_t   gfc,
                    float               ATHlower )
 {
-    gfp->ATHlower = db2pow(-ATHlower);
+    gfc->ATHlower = db2pow(-ATHlower);
     return 0;
 }
 
 float
-lame_get_ATHlower( const lame_global_flags*  gfp )
+lame_get_ATHlower( const lame_t   gfc )
 {
-    return gfp->ATHlower;
+    return gfc->ATHlower;
 }
 
 
 /* Adjust (in dB) the point below which adaptive ATH level adjustment occurs. */
 int
-lame_set_athaa_sensitivity( lame_global_flags*  gfp,
+lame_set_athaa_sensitivity( lame_t   gfc,
                             float               athaa_sensitivity )
 {
-    gfp->internal_flags->ATH.aa_decay = db2pow(athaa_sensitivity);
+    gfc->ATH.aa_decay = db2pow(athaa_sensitivity);
     return 0;
 }
 
 float
-lame_get_athaa_sensitivity( const lame_global_flags*  gfp )
+lame_get_athaa_sensitivity( const lame_t   gfc )
 {
-    return FAST_LOG10(gfp->internal_flags->ATH.aa_decay) * 10.0;
+    return FAST_LOG10(gfc->ATH.aa_decay) * 10.0;
 }
 
 
 int
-lame_set_short_threshold( lame_global_flags*  gfp, float s)
+lame_set_short_threshold( lame_t   gfc, float s)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
     gfc->nsPsy.attackthre   = s;
     return 0;
 }
@@ -946,59 +945,58 @@ lame_set_short_threshold( lame_global_flags*  gfp, float s)
 
 /* Use intensity stereo effect */
 int
-lame_set_istereoRatio( lame_global_flags*  gfp,
+lame_set_istereoRatio( lame_t   gfc,
 		       float               ratio )
 {
     if (! (0 <= ratio && ratio <= 1.0))
         return -1;
 
-    gfp->internal_flags->istereo_ratio = 1.0-ratio;
+    gfc->istereo_ratio = 1.0-ratio;
 
     return 0;
 }
 
 /* Use inter-channel masking effect */
 int
-lame_set_interChRatio( lame_global_flags*  gfp,
+lame_set_interChRatio( lame_t   gfc,
 			float               ratio )
 {
     if (! (0 <= ratio && ratio <= 1.0))
         return -1;
 
-    gfp->internal_flags->interChRatio = ratio;
+    gfc->interChRatio = ratio;
 
     return 0;
 }
 
 /* reduce side channel PE */
 int
-lame_set_reduceSide( lame_global_flags*  gfp,
+lame_set_reduceSide( lame_t   gfc,
 		     float               ratio )
 {
     if (! (0 <= ratio && ratio <= 1.0))
         return -1;
 
-    gfp->internal_flags->reduce_side = 1.0-ratio;
+    gfc->reduce_side = 1.0-ratio;
 
     return 0;
 }
 
 float
-lame_get_interChRatio( const lame_global_flags*  gfp )
+lame_get_interChRatio( const lame_t   gfc )
 {
-    assert( 0 <= gfp->internal_flags->interChRatio
-	    && gfp->internal_flags->interChRatio <= 1.0);
+    assert( 0 <= gfc->interChRatio
+	    && gfc->interChRatio <= 1.0);
 
-    return gfp->internal_flags->interChRatio;
+    return gfc->interChRatio;
 }
 
 
 /* Use pseudo substep shaping method */
 int
-lame_set_substep( lame_global_flags*  gfp,
+lame_set_substep( lame_t   gfc,
 		  int                 method )
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
     /* default = 0.0 (no inter-cahnnel maskin) */
     if (! (0 <= method && method <= 7))
         return -1;
@@ -1008,16 +1006,15 @@ lame_set_substep( lame_global_flags*  gfp,
 }
 
 int
-lame_get_substep(const lame_global_flags*  gfp )
+lame_get_substep(const lame_t   gfc )
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
     assert(0 <= gfc->substep_shaping && gfc->substep_shaping <= 3);
     return gfc->substep_shaping;
 }
 
 /* Use mixed block. */
 int
-lame_set_use_mixed_blocks( lame_global_flags*  gfp,
+lame_set_use_mixed_blocks( lame_t   gfc,
 			   int                 use_mixed_blocks )
 {
     /* 0 ... not use the mixed block
@@ -1027,7 +1024,7 @@ lame_set_use_mixed_blocks( lame_global_flags*  gfp,
     if (!(0 <= use_mixed_blocks && use_mixed_blocks <= 2))
         return -1;
 
-    gfp->mixed_blocks = use_mixed_blocks;
+    gfc->mixed_blocks = use_mixed_blocks;
     return 0;
 }
 
@@ -1040,24 +1037,24 @@ lame_set_use_mixed_blocks( lame_global_flags*  gfp,
  * ignore these bits
  */
 int
-lame_set_emphasis( lame_global_flags*  gfp,
+lame_set_emphasis( lame_t   gfc,
                    int                 emphasis )
 {
     /* XXX: emphasis should be converted to an enum */
     if ( 0 > emphasis || 4 <= emphasis )
         return -1;
 
-    gfp->emphasis = emphasis;
+    gfc->emphasis = emphasis;
 
     return 0;
 }
 
 int
-lame_get_emphasis( const lame_global_flags*  gfp )
+lame_get_emphasis( const lame_t   gfc )
 {
-    assert( 0 <= gfp->emphasis && 4 > gfp->emphasis );
+    assert( 0 <= gfc->emphasis && 4 > gfc->emphasis );
 
-    return gfp->emphasis;
+    return gfc->emphasis;
 }
 
 
@@ -1074,54 +1071,53 @@ lame_get_emphasis( const lame_global_flags*  gfp )
  * (2 = MPEG-2.5)    
  */
 int
-lame_get_version( const lame_global_flags* gfp )
+lame_get_version( const lame_t  gfc )
 {
-    return gfp->version;
+    return gfc->version;
 }
 
 
 /* Encoder delay. */
 int
-lame_get_encoder_delay( const lame_global_flags*  gfp )
+lame_get_encoder_delay( const lame_t   gfc )
 {
-    return gfp->encoder_delay;
+    return gfc->encoder_delay;
 }
 
 /* padding added to the end of the input */
 int
-lame_get_encoder_padding( const lame_global_flags*  gfp )
+lame_get_encoder_padding( const lame_t   gfc )
 {
-    return gfp->encoder_padding;
+    return gfc->encoder_padding;
 }
 
 
 /* Size of MPEG frame. */
 int
-lame_get_framesize( const lame_global_flags*  gfp )
+lame_get_framesize( const lame_t   gfc )
 {
-    return gfp->framesize;
+    return gfc->framesize;
 }
 
 
 /* Number of frames encoded so far. */
 int
-lame_get_frameNum( const lame_global_flags*  gfp )
+lame_get_frameNum( const lame_t   gfc )
 {
-    return gfp->frameNum;
+    return gfc->frameNum;
 }
 
 int
-lame_get_mf_samples_to_encode( const lame_global_flags*  gfp )
+lame_get_mf_samples_to_encode( const lame_t   gfc )
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
     return gfc->mf_samples_to_encode;
 }
 
 
-int CDECL lame_get_size_mp3buffer( const lame_global_flags*  gfp )
+int CDECL lame_get_size_mp3buffer( const lame_t   gfc )
 {
     int size;
-    compute_flushbits(gfp,&size);
+    compute_flushbits(gfc,&size);
     return size;
 }
 
@@ -1132,17 +1128,17 @@ int CDECL lame_get_size_mp3buffer( const lame_global_flags*  gfp )
  * Only valid if calling program set num_samples.
  */
 int
-lame_get_totalframes( const lame_global_flags*  gfp )
+lame_get_totalframes( const lame_t   gfc )
 {
     int totalframes;
     /* estimate based on user set num_samples: */
     totalframes =
-        ((double)gfp->num_samples * gfp->out_samplerate)
-	/ ((double)gfp->in_samplerate * gfp->framesize) + 2;
+        ((double)gfc->num_samples * gfc->out_samplerate)
+	/ ((double)gfc->in_samplerate * gfc->framesize) + 2;
 
     /* check to see if we underestimated totalframes
-       if (totalframes < gfp->frameNum)
-           totalframes = gfp->frameNum;
+       if (totalframes < gfc->frameNum)
+           totalframes = gfc->frameNum;
     */
     return totalframes;
 }
@@ -1150,40 +1146,40 @@ lame_get_totalframes( const lame_global_flags*  gfp )
 
 /* Custom msfix hack */
 void
-lame_set_msfix( lame_global_flags*  gfp, double msfix )
+lame_set_msfix( lame_t   gfc, double msfix )
 {
-    gfp->internal_flags->nsPsy.msfix = msfix;
+    gfc->nsPsy.msfix = msfix;
 }
 
 /* Custom msfix hack */
 void
-lame_set_forbid_diff_blocktype( lame_global_flags*  gfp, int val )
+lame_set_forbid_diff_blocktype( lame_t   gfc, int val )
 {
-    gfp->forbid_diff_type = val;
+    gfc->forbid_diff_type = val;
 }
 
 
 void
-lame_set_analysis(lame_global_flags*  gfp, plotting_data *pinfo)
+lame_set_analysis(lame_t   gfc, plotting_data *pinfo)
 {
-    gfp->internal_flags->pinfo = pinfo;
+    gfc->pinfo = pinfo;
 }
 
 int 
-lame_set_asm_optimizations( lame_global_flags*  gfp, int optim, int mode)
+lame_set_asm_optimizations( lame_t   gfc, int optim, int mode)
 {
     mode = (mode == 1? 1 : 0);
     switch (optim){
         case MMX: {
-            gfp->asm_optimizations.mmx = mode;
+            gfc->asm_optimizations.mmx = mode;
             return optim;
         }
         case AMD_3DNOW: {
-            gfp->asm_optimizations.amd3dnow = mode;
+            gfc->asm_optimizations.amd3dnow = mode;
             return optim;
         }
         case SSE: {
-            gfp->asm_optimizations.sse = mode;
+            gfc->asm_optimizations.sse = mode;
             return optim;
         }
         default: return optim;

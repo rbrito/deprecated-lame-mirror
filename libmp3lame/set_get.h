@@ -38,44 +38,44 @@ extern "C" {
 
 
 /* short blocks switching threshold */
-int CDECL lame_set_short_threshold(lame_global_flags *, float s);
+int CDECL lame_set_short_threshold(lame_t, float s);
 
 /* use mixed blocks */
-int CDECL lame_set_use_mixed_blocks(lame_global_flags *, int);
+int CDECL lame_set_use_mixed_blocks(lame_t, int);
 
-int CDECL lame_set_vbr_smooth( lame_global_flags *, int);
-int CDECL lame_get_vbr_smooth( const lame_global_flags *);
+int CDECL lame_set_vbr_smooth( lame_t, int);
+int CDECL lame_get_vbr_smooth( const lame_t);
 
-int CDECL lame_set_maskingadjust( lame_global_flags *, float);
-float CDECL lame_get_maskingadjust( const lame_global_flags *);
+int CDECL lame_set_maskingadjust( lame_t, float);
+float CDECL lame_get_maskingadjust( const lame_t);
 
-int CDECL lame_set_maskingadjust_short( lame_global_flags *, float);
-float CDECL lame_get_maskingadjust_short( const lame_global_flags *);
+int CDECL lame_set_maskingadjust_short( lame_t, float);
+float CDECL lame_get_maskingadjust_short( const lame_t);
 
 /* select ATH formula shape */
-int CDECL lame_set_ATHcurve(lame_global_flags *, float);
-int CDECL lame_get_ATHcurve(const lame_global_flags *);
+int CDECL lame_set_ATHcurve(lame_t, float);
+int CDECL lame_get_ATHcurve(const lame_t);
 
 /* substep shaping method */
-int CDECL lame_set_substep(lame_global_flags *, int);
-int CDECL lame_get_substep(const lame_global_flags *);
+int CDECL lame_set_substep(lame_t, int);
+int CDECL lame_get_substep(const lame_t);
 
 /* scalefactors scale */
-int CDECL lame_set_sfscale(lame_global_flags *, int);
-int CDECL lame_get_sfscale(const lame_global_flags *);
+int CDECL lame_set_sfscale(lame_t, int);
+int CDECL lame_get_sfscale(const lame_t);
 
 /* subblock gain */
-int CDECL lame_set_subblock_gain(lame_global_flags *, int);
-int CDECL lame_get_subblock_gain(const lame_global_flags *);
+int CDECL lame_set_subblock_gain(lame_t, int);
+int CDECL lame_get_subblock_gain(const lame_t);
 
 /* narrowen the stereo image */
-int lame_set_narrowenStereo(lame_global_flags *, float);
+int lame_set_narrowenStereo(lame_t, float);
 
 /* reduce side channel PE */
-int lame_set_reduceSide(lame_global_flags *, float);
+int lame_set_reduceSide(lame_t, float);
 
 /* for analyzer hook */
-int lame_set_analysis(lame_global_flags *, plotting_data *);
+int lame_set_analysis(lame_t, plotting_data *);
 
 #if defined(__cplusplus)
 }

@@ -61,7 +61,7 @@ public:
 	static unsigned int GetOutputSampleRate(int samples_per_sec, int bitrate, int channels);
 
 protected:
-	lame_global_flags * gfp;
+	lame_t gfp;
 
 	ADbg * my_debug;
 	int my_SamplesPerSec;

@@ -39,10 +39,10 @@ typedef enum sound_file_format_e {
 
 
 FILE *init_outfile ( char *outPath, int decode );
-void init_infile(lame_global_flags *, char *inPath);
+void init_infile(lame_t , char *inPath);
 void close_infile(void);
-int get_audio(lame_global_flags * const gfp, int buffer[2][1152]);
-int get_audio16(lame_global_flags * const gfp, short buffer[2][1152]);
+int get_audio(lame_t  const gfp, int buffer[2][1152]);
+int get_audio16(lame_t  const gfp, short buffer[2][1152]);
 int WriteWaveHeader(FILE * const fp, const int pcmbytes,
 		    const int freq, const int channels, const int bits);
 extern int id3v2taglen;
@@ -57,7 +57,7 @@ extern int id3v2taglen;
  * samples to skip, to (for example) compensate for the encoder delay,
  * only used when decoding mp3 
 */
-int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip, char *inPath, char *outPath);
+int lame_decoder(lame_t gfp,FILE *outf,int skip, char *inPath, char *outPath);
 
 
 

@@ -33,14 +33,9 @@
 
 /* takehiro.c */
 
-int count_bits (const lame_internal_flags * const gfc,
-		gr_info * const cod_info);
-
-int noquant_count_bits (const lame_internal_flags * const gfc,
-			gr_info * const cod_info);
-
-int iteration_finish_one (lame_internal_flags *gfc, int gr, int ch);
-
+int count_bits (const lame_t gfc, gr_info * const cod_info);
+int noquant_count_bits (const lame_t gfc, gr_info * const cod_info);
+int iteration_finish_one (lame_t gfc, int gr, int ch);
 int scale_bitcount (gr_info * const cod_info);
 int scale_bitcount_lsf (gr_info * const cod_info);
 

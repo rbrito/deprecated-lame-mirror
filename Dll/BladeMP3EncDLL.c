@@ -44,13 +44,13 @@ const int MINORVERSION = 32;
 static DWORD				dwSampleBufferSize=0;
 static HANDLE				gs_hModule=NULL;
 static BOOL					gs_bLogFile=FALSE;
-static lame_global_flags*	gfp_save = NULL;
+static lame_t	gfp_save = NULL;
 
 // Local function prototypes
-static void dump_config( 	lame_global_flags*	gfp );
+static void dump_config( 	lame_t	gfp );
 static void DebugPrintf( const char* pzFormat, ... );
 static void DispErr( LPSTR strErr );
-static void PresetOptions( lame_global_flags *gfp, LONG myPreset );
+static void PresetOptions( lame_t gfp, LONG myPreset );
 
 
 static void DebugPrintf(const char* pzFormat, ...)
@@ -102,7 +102,7 @@ static void DebugPrintf(const char* pzFormat, ...)
 }
 
 
-static void PresetOptions( lame_global_flags *gfp, LONG myPreset )
+static void PresetOptions( lame_t gfp, LONG myPreset )
 {
 	switch (myPreset)
 	{
@@ -225,9 +225,9 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 	int					nDllArgC = 0;
 	BE_CONFIG			lameConfig = { 0, };
 	int					nInitReturn = 0;
-	lame_global_flags*	gfp = NULL;
+	lame_t	gfp = NULL;
 
-	// Init the global flags structure
+	// Init the internal flags structure
 	gfp = lame_init();
 	*phbeStream = (HBE_STREAM)gfp;
 
@@ -558,9 +558,9 @@ __declspec(dllexport) BE_ERR	beFlushNoGap(HBE_STREAM hbeStream, PBYTE pOutput, P
 {
 	int nOutputSamples = 0;
 
-	lame_global_flags*	gfp = (lame_global_flags*)hbeStream;
+	lame_t	gfp = (lame_t)hbeStream;
 
-	// Init the global flags structure
+	// Init the internal flags structure
     nOutputSamples = lame_encode_flush_nogap( gfp, pOutput, LAME_MAXMP3BUFFER );
 
 	if ( nOutputSamples < 0 )
@@ -580,7 +580,7 @@ __declspec(dllexport) BE_ERR	beDeinitStream(HBE_STREAM hbeStream, PBYTE pOutput,
 {
 	int nOutputSamples = 0;
 
-	lame_global_flags*	gfp = (lame_global_flags*)hbeStream;
+	lame_t	gfp = (lame_t)hbeStream;
 
     nOutputSamples = lame_encode_flush( gfp, pOutput, 0 );
 
@@ -600,7 +600,7 @@ __declspec(dllexport) BE_ERR	beDeinitStream(HBE_STREAM hbeStream, PBYTE pOutput,
 
 __declspec(dllexport) BE_ERR	beCloseStream(HBE_STREAM hbeStream)
 {
-	lame_global_flags*	gfp = (lame_global_flags*)hbeStream;
+	lame_t	gfp = (lame_t)hbeStream;
 
 	// lame will be close in VbrWriteTag function
 	if ( !lame_get_bWriteVbrTag( gfp ) )
@@ -612,7 +612,7 @@ __declspec(dllexport) BE_ERR	beCloseStream(HBE_STREAM hbeStream)
 	}
 	else
 	{
-		gfp_save = (lame_global_flags*)hbeStream;
+		gfp_save = (lame_t)hbeStream;
 	}
 
 	// DeInit encoder
@@ -688,7 +688,7 @@ __declspec(dllexport) BE_ERR	beEncodeChunk(HBE_STREAM hbeStream, DWORD nSamples,
 	// Encode it
 	int dwSamples;
 	int	nOutputSamples = 0;
-	lame_global_flags*	gfp = (lame_global_flags*)hbeStream;
+	lame_t	gfp = (lame_t)hbeStream;
 
 	dwSamples = nSamples / lame_get_num_channels( gfp );
 
@@ -731,7 +731,7 @@ __declspec(dllexport) BE_ERR	beEncodeChunkFloatS16NI(HBE_STREAM hbeStream, DWORD
 			PFLOAT buffer_l, PFLOAT buffer_r, PBYTE pOutput, PDWORD pdwOutput)
 {
 	int nOutputSamples;
-	lame_global_flags*	gfp = (lame_global_flags*)hbeStream;
+	lame_t	gfp = (lame_t)hbeStream;
 
 	nOutputSamples = lame_encode_buffer_float(gfp,buffer_l,buffer_r,nSamples,pOutput,0);
 
@@ -754,7 +754,7 @@ __declspec(dllexport) BE_ERR beWriteInfoTag( HBE_STREAM hbeStream,
 	FILE* fpStream	= NULL;
 	BE_ERR beResult	= BE_ERR_SUCCESSFUL;
 
-	lame_global_flags*	gfp = (lame_global_flags*)hbeStream;
+	lame_t	gfp = (lame_t)hbeStream;
 
 	if ( NULL != gfp )
 	{
@@ -822,7 +822,7 @@ BOOL APIENTRY DllMain(HANDLE hModule,
 }
 
 
-static void dump_config( 	lame_global_flags*	gfp )
+static void dump_config(lame_t	gfp)
 {
 	DebugPrintf("\n\nLame_enc configuration options:\n");
 	DebugPrintf("==========================================================\n");

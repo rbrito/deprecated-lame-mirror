@@ -367,7 +367,7 @@ static const int rv_tbl[] = {
 #define ms00(i)	(window_s[i] * buffer[i])
 
 static void
-fft_short(lame_internal_flags * const gfc,
+fft_short(lame_t  const gfc,
 	  FLOAT x[BLKSIZE_s], const sample_t *buffer)
 {
     int i, j = (BLKSIZE_s / 8 - 1)*4;
@@ -404,7 +404,7 @@ fft_short(lame_internal_flags * const gfc,
 }
 
 static void
-fft_long(lame_internal_flags * const gfc,
+fft_long(lame_t  const gfc,
 	 FLOAT x[BLKSIZE], const sample_t *buffer )
 {
     int i, j = BLKSIZE / 8 - 1;
@@ -443,7 +443,7 @@ fft_long(lame_internal_flags * const gfc,
  * compute interchannel masking effects
  ***************************************************************/
 static void
-calc_interchannel_masking(lame_internal_flags * gfc, int gr)
+calc_interchannel_masking(lame_t  gfc, int gr)
 {
     FLOAT ratio = gfc->interChRatio, l, r;
     III_psy_ratio *mr = gfc->masking_next[gr];
@@ -495,7 +495,7 @@ calc_interchannel_masking(lame_internal_flags * gfc, int gr)
  ***************************************************************/
 
 static void
-msfix_l(lame_internal_flags *gfc, int gr)
+msfix_l(lame_t gfc, int gr)
 {
     int sb;
     III_psy_ratio *mr = &gfc->masking_next[gr][0];
@@ -534,7 +534,7 @@ msfix_l(lame_internal_flags *gfc, int gr)
 }
 
 static void
-msfix_s(lame_internal_flags *gfc, int gr)
+msfix_s(lame_t gfc, int gr)
 {
     int sb, sblock;
     III_psy_ratio *mr = &gfc->masking_next[gr][0];
@@ -578,7 +578,7 @@ msfix_s(lame_internal_flags *gfc, int gr)
 }
 
 static void
-set_istereo_sfb(lame_internal_flags *gfc, int gr)
+set_istereo_sfb(lame_t gfc, int gr)
 {
     int sb;
     III_psy_ratio *mr = &gfc->masking_next[gr][0];
@@ -648,7 +648,7 @@ set_istereo_sfb(lame_internal_flags *gfc, int gr)
 
 static void
 compute_masking_s(
-    lame_internal_flags *gfc,
+    lame_t gfc,
     FLOAT fft_s[BLKSIZE_s],
     III_psy_ratio *mr,
     int ch,
@@ -754,7 +754,7 @@ static inline int trancate(FLOAT x)
 #endif /* TAKEHIRO_IEEE754_HACK */
 
 void
-init_mask_add_max_values(lame_internal_flags * const gfc)
+init_mask_add_max_values(lame_t  const gfc)
 {
     int i;
     ma_max_i1 = db2pow((I1LIMIT+1)/16.0*10.0);
@@ -941,7 +941,7 @@ pecalc_l(III_psy_ratio *mr, int sb)
 
 static void
 psycho_analysis_short(
-    lame_internal_flags *gfc,
+    lame_t gfc,
     const sample_t *buffer[2],
     FLOAT sbsmpl[2][1152],
     int gr,
@@ -1098,7 +1098,7 @@ mp3x display               <------LONG------>
 /* in some scalefactor band,
    we can use masking threshold value of long block */
 static void
-partially_convert_l2s(lame_internal_flags *gfc, III_psy_ratio *mr, FLOAT *nb_1,
+partially_convert_l2s(lame_t gfc, III_psy_ratio *mr, FLOAT *nb_1,
 		      FLOAT ATHadjust)
 {
     int sfb, b;
@@ -1129,7 +1129,7 @@ partially_convert_l2s(lame_internal_flags *gfc, III_psy_ratio *mr, FLOAT *nb_1,
 
 static void
 L3psycho_anal_ns(
-    lame_internal_flags *gfc,
+    lame_t gfc,
     const sample_t *buffer[2],
     int gr,
     int numchn
@@ -1407,13 +1407,9 @@ L3psycho_anal_ns(
  */
 void
 psycho_analysis(
-    lame_global_flags * gfp,
-    const sample_t *buffer[2],
-    III_psy_ratio masking_d[2][2],
-    FLOAT sbsmpl[2][1152]
-    )
+    lame_t gfc, const sample_t *buffer[2], III_psy_ratio masking_d[2][2],
+    FLOAT sbsmpl[2][1152])
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
     int gr, ch, blocktype_old[MAX_CHANNELS], numchn;
     const sample_t *bufp[MAX_CHANNELS];
 
@@ -1423,7 +1419,7 @@ psycho_analysis(
     blocktype_old[1] = gfc->l3_side.tt[gfc->mode_gr-1][1].block_type;
 
     numchn = gfc->channels_out;
-    if (gfp->mode == JOINT_STEREO)
+    if (gfc->mode == JOINT_STEREO)
 	numchn = 4;
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 	for (ch = 0; ch < gfc->channels_out; ch++) {
@@ -1444,12 +1440,12 @@ psycho_analysis(
 	if (gfc->interChRatio != 0.0)
 	    calc_interchannel_masking(gfc, gr);
 
-	if (gfp->mode == JOINT_STEREO) {
+	if (gfc->mode == JOINT_STEREO) {
 	    if (!gfc->blocktype_next[gr][2])
 		msfix_l(gfc, gr);
 
 	    msfix_s(gfc, gr);
-	    if (gfp->use_istereo) {
+	    if (gfc->use_istereo) {
 		gfc->blocktype_next[gr][0] = gfc->blocktype_next[gr][1]
 		    = gfc->blocktype_next[gr][0] | gfc->blocktype_next[gr][1];
 		set_istereo_sfb(gfc, gr);
@@ -1481,14 +1477,14 @@ psycho_analysis(
 	gfc->masking_next[gr][3].pe *= gfc->reduce_side;
 	gfc->blocktype_next[gr][2]
 	    = gfc->blocktype_next[gr][2] | gfc->blocktype_next[gr][3];
-	if (gfp->forbid_diff_type) {
+	if (gfc->forbid_diff_type) {
 	    int type = gfc->blocktype_next[gr][0] | gfc->blocktype_next[gr][1];
 	    gfc->blocktype_next[gr][0] = gfc->blocktype_next[gr][1] = type;
 	}
     }
 
     /* determine MS/LR in the next frame */
-    if (gfp->mode == JOINT_STEREO) {
+    if (gfc->mode == JOINT_STEREO) {
 	FLOAT diff_pe = 50.0;
 	if (gfc->mode_ext)
 	    diff_pe = -diff_pe;
@@ -1500,7 +1496,7 @@ psycho_analysis(
 	    -  gfc->masking_next[1][0].pe -  gfc->masking_next[1][1].pe;
 
 	/* based on PE: M/S coding would not use much more bits than L/R */
-	if (diff_pe <= 0.0 || gfp->force_ms) {
+	if (diff_pe <= 0.0 || gfc->force_ms) {
 	    gfc->mode_ext_next = MPG_MD_MS_LR;
 	    gfc->blocktype_next[0][0] = gfc->blocktype_next[0][1]
 		= gfc->blocktype_next[0][2];

@@ -36,7 +36,7 @@
 int main(int argc, char **argv)
 {
   char mp3buffer[LAME_MAXMP3BUFFER];
-  lame_global_flags *gf;  
+  lame_t gf;
   char outPath[PATH_MAX + 1];
   char inPath[PATH_MAX + 1];
   int ret;
@@ -45,7 +45,7 @@ int main(int argc, char **argv)
   lame_version_print (stdout);
   gf=lame_init();
   if(argc <=1 ) {
-    usage(gf, stderr, argv[0]);  /* no command-line args  */
+    usage(stderr, argv[0]);  /* no command-line args  */
     return -1;
   }
   ret = parse_args(gf,argc, argv, inPath, outPath,NULL,NULL); 

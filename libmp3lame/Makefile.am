@@ -52,7 +52,6 @@ noinst_HEADERS= \
 	encoder.h \
 	id3tag.h \
 	lame-analysis.h \
-	lame_global_flags.h \
 	machine.h \
 	newmdct.h \
 	psymodel.h \

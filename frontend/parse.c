@@ -145,7 +145,7 @@ BOOL SetPriorityClassMacro(DWORD p)
     return SetPriorityClass(op,p);
 }
 
-static void setWin32Priority( lame_global_flags*  gfp, int Priority )
+static void setWin32Priority( lame_t  gfp, int Priority )
 {
     if (Priority > 3) {
 	SetPriorityClassMacro(HIGH_PRIORITY_CLASS);
@@ -160,7 +160,7 @@ static void setWin32Priority( lame_global_flags*  gfp, int Priority )
 
 #if defined(__OS2__)
 /* OS/2 priority functions */
-static int setOS2Priority( lame_global_flags*  gfp, int Priority )
+static int setOS2Priority( lame_t  gfp, int Priority )
 {
     int rc;
 
@@ -240,8 +240,9 @@ void lame_version_print ( FILE* const fp )
 	fprintf ( fp, "warning: alpha versions should be used for testing only\n\n");
 }
 
+/* print version & license */
 static int
-print_license ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramName )  /* print version & license */
+print_license (const lame_t gfc, FILE* const fp, const char* ProgramName )
 {
     fprintf ( fp, 
               "Can I use LAME in my commercial program?\n"
@@ -290,7 +291,8 @@ print_license ( const lame_global_flags* gfp, FILE* const fp, const char* Progra
 *
 ************************************************************************/
 
-int  usage ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramName )  /* print general syntax */
+int
+usage(FILE* const fp, const char* ProgramName )
 {
     fprintf ( fp,
               "usage: %s [options] <infile> [outfile]\n"
@@ -317,7 +319,7 @@ int  usage ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramNa
 ************************************************************************/
 
 static int
-short_help ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramName )  /* print short syntax help */
+short_help (const lame_t gfp, FILE* const fp, const char* ProgramName )  /* print short syntax help */
 {
     fprintf ( fp,
               "usage: %s [options] <infile> [outfile]\n"
@@ -361,7 +363,7 @@ static void  wait_for ( FILE* const fp, int lessmode )
 }
 
 static int
-long_help ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramName, int lessmode )  /* print long syntax help */
+long_help (const lame_t gfc, FILE* const fp, const char* ProgramName, int lessmode )  /* print long syntax help */
 {
     fprintf ( fp,
               "usage: %s [options] <infile> [outfile]\n"
@@ -452,7 +454,7 @@ long_help ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramNam
 "    -b <bitrate>    specify minimum allowed bitrate, default  32 kbps\n"
 "    -B <bitrate>    specify maximum allowed bitrate, default 320 kbps\n"
 "    -t              disable writing LAME Tag\n"
-              , lame_get_VBR_q(gfp) );
+              , lame_get_VBR_q(gfc) );
 
     wait_for ( fp, lessmode );  
     fprintf ( fp,
@@ -823,8 +825,9 @@ static int resample_rate ( double freq )
 #define T_ELSE             } else {
 #define T_END              }
 
-int  parse_args ( lame_global_flags* gfp, int argc, char** argv, 
-char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
+int  parse_args (lame_t gfp, int argc, char** argv, 
+		 char* const inPath, char* const outPath,
+		 char **nogap_inPath, int *num_nogap)
 {
     int         err;
     int         input_file=0;  /* set to 1 if we parse an input file name */
@@ -847,7 +850,6 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
     mp3_delay = 0;   
     mp3_delay_set=0;
     disable_wav_header=0;
-    id3tag_init (gfp);
 
     /* process args */
     for ( i = 0, err = 0; ++i < argc  &&  !err; ) {
@@ -1486,7 +1488,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
     }  /* loop over args */
     
     if ( err  ||  !input_file ) {
-        usage ( gfp, stderr, ProgramName );
+        usage (stderr, ProgramName );
         return -1;
     }
         

@@ -10,17 +10,18 @@
 #include "common.h"
 #include "interface.h"
 #include "tabinit.h"
-#include "layer3.h"
 #include "VbrTag.h"
 #include "decode_i386.h"
 
 #ifdef USE_LAYER_1
-	#include "layer1.h"
+# include "layer1.h"
 #endif
 
 #ifdef USE_LAYER_2
-	#include "layer2.h"
+# include "layer2.h"
 #endif
+
+# include "layer3.h"
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
@@ -48,7 +49,7 @@ BOOL InitMP3( PMPSTR mp)
 	mp->head = mp->tail = NULL;
 	mp->fr.single = -1;
 	mp->bsnum = 0;
-	wordpointer = mp->bsspace[mp->bsnum] + 512;
+	mp->wordpointer = mp->bsspace[mp->bsnum] + 512;
 	mp->synth_bo = 1;
 	mp->sync_bitstream = 1;
 
@@ -407,14 +408,14 @@ decodeMP3_clipchoice( PMPSTR mp,unsigned char *in,int isize,char *out,
                 mp->sync_bitstream=1;
 		
 		/* skip some bytes, buffer the rest */
-		size = (int) (wordpointer - (mp->bsspace[mp->bsnum]+512));
+		size = (int) (mp->wordpointer - (mp->bsspace[mp->bsnum]+512));
 		
 		if (size > MAXFRAMESIZE) {
 		    /* wordpointer buffer is trashed.  probably cant recover, but try anyway */
 		    fprintf(stderr,"mpglib: wordpointer trashed.  size=%i (%i)  bytes=%i \n",
 			    size,MAXFRAMESIZE,bytes);		  
 		    size=0;
-		    wordpointer = mp->bsspace[mp->bsnum]+512;
+		    mp->wordpointer = mp->bsspace[mp->bsnum]+512;
 		}
 		
 		/* buffer contains 'size' data right now 
@@ -426,7 +427,7 @@ decodeMP3_clipchoice( PMPSTR mp,unsigned char *in,int isize,char *out,
 		    read_buf_byte(mp);
 		}
 		
-		copy_mp(mp,bytes,wordpointer);
+		copy_mp(mp, bytes, mp->wordpointer);
 		mp->fsizeold += bytes;
 	    }
 	    
@@ -444,8 +445,8 @@ decodeMP3_clipchoice( PMPSTR mp,unsigned char *in,int isize,char *out,
 		mp->ssize += 2;
 	    
 	    mp->bsnum = 1-mp->bsnum; /* toggle buffer */
-	    wordpointer = mp->bsspace[mp->bsnum] + 512;
-	    bitindex = 0;
+	    mp->wordpointer = mp->bsspace[mp->bsnum] + 512;
+	    mp->bitindex = 0;
 	    
 	    /* for very first header, never parse rest of data */
 	    if (mp->fsizeold==-1)
@@ -461,11 +462,11 @@ decodeMP3_clipchoice( PMPSTR mp,unsigned char *in,int isize,char *out,
                 if (mp->bsize < mp->ssize) 
 		  return MP3_NEED_MORE;
 
-		copy_mp(mp,mp->ssize,wordpointer);
+		copy_mp(mp, mp->ssize, mp->wordpointer);
 
 		if(mp->fr.error_protection)
-		  getbits(16);
-		bits=do_layer3_sideinfo(&mp->fr);
+		    getbits(mp, 16);
+		bits=do_layer3_sideinfo(mp);
 		/* bits = actual number of bits needed to parse this frame */
 		/* can be negative, if all bits needed are in the reservoir */
 		if (bits<0) bits=0;
@@ -501,7 +502,7 @@ decodeMP3_clipchoice( PMPSTR mp,unsigned char *in,int isize,char *out,
 				return MP3_NEED_MORE;
 		}
 
-		copy_mp(mp,mp->dsize,wordpointer);
+		copy_mp(mp, mp->dsize, mp->wordpointer);
 
 		*done = 0;
 
@@ -510,19 +511,17 @@ decodeMP3_clipchoice( PMPSTR mp,unsigned char *in,int isize,char *out,
 		{
 #ifdef USE_LAYER_1
 			case 1:
-				if(mp->fr.error_protection)
-					getbits(16);
-
-				do_layer1(mp,(unsigned char *) out,done);
-			break;
+			    if(mp->fr.error_protection)
+				getbits(mp, 16);
+			    do_layer1(mp,(unsigned char *) out,done);
+			    break;
 #endif
 #ifdef USE_LAYER_2
 			case 2:
-				if(mp->fr.error_protection)
-					getbits(16);
-
-				do_layer2(mp,(unsigned char *) out,done);
-			break;
+			    if(mp->fr.error_protection)
+				getbits(mp, 16);
+			    do_layer2(mp,(unsigned char *) out,done);
+			    break;
 #endif
 			case 3:
 				do_layer3(mp,(unsigned char *) out,done, synth_1to1_mono_ptr, synth_1to1_ptr);
@@ -531,7 +530,7 @@ decodeMP3_clipchoice( PMPSTR mp,unsigned char *in,int isize,char *out,
 				fprintf(stderr,"invalid layer %d\n",mp->fr.lay);
 		}
 
-		wordpointer = mp->bsspace[mp->bsnum] + 512 + mp->ssize + mp->dsize;
+		mp->wordpointer = mp->bsspace[mp->bsnum] + 512 + mp->ssize + mp->dsize;
 
 		mp->data_parsed=1;
 		iret=MP3_OK;
@@ -566,10 +565,10 @@ decodeMP3_clipchoice( PMPSTR mp,unsigned char *in,int isize,char *out,
 
 	if (bytes>0) {
 	  int size;
-	  copy_mp(mp,bytes,wordpointer);
-	  wordpointer += bytes;
+	  copy_mp(mp,bytes,mp->wordpointer);
+	  mp->wordpointer += bytes;
 
-	  size = (int) (wordpointer - (mp->bsspace[mp->bsnum]+512));
+	  size = (int) (mp->wordpointer - (mp->bsspace[mp->bsnum]+512));
 	  if (size > MAXFRAMESIZE) {
 	    fprintf(stderr,"fatal error.  MAXFRAMESIZE not large enough.\n");
 	  }

@@ -42,7 +42,7 @@
 
 
 static void
-conv_istereo(lame_internal_flags* gfc, gr_info *gi, int sfb, int i)
+conv_istereo(lame_t gfc, gr_info *gi, int sfb, int i)
 {
     for (; i < gi->xrNumMax; sfb++) {
 	FLOAT lsum = 1e-30, rsum = 1e-30;
@@ -104,7 +104,7 @@ may use these stats, even if it's only a Windows DLL
 I'll extend the stats for block types used
 */
 static void
-updateStats( lame_internal_flags * const gfc )
+updateStats(const lame_t gfc)
 {
     int gr, ch;
     assert ( gfc->bitrate_index < 16u );
@@ -128,7 +128,7 @@ updateStats( lame_internal_flags * const gfc )
 
 
 static void
-init_gr_info(lame_internal_flags *gfc, int gr, int ch)
+init_gr_info(lame_t gfc, int gr, int ch)
 {
     int sfb, j;
     gr_info *gi = &gfc->l3_side.tt[gr][ch];
@@ -278,14 +278,13 @@ FFT's                    <---------1024---------->
     FFT starts at 576-224-MDCTDELAY (304)  = 576-FFTOFFSET
 */
 
-int  lame_encode_mp3_frame (				/* Output */
-	lame_global_flags* const  gfp,			/* Context */
-	sample_t*                 inbuf_l,              /* Input */
-	sample_t*                 inbuf_r,              /* Input */
-	unsigned char*            mp3buf, 		/* Output */
-	int                    mp3buf_size )		/* Output */
+int  lame_encode_mp3_frame (		/* Output */
+    const lame_t	gfc,		/* Context */
+    sample_t*           inbuf_l,	/* Input */
+    sample_t*           inbuf_r,	/* Input */
+    unsigned char*      mp3buf, 	/* Output */
+    int                 mp3buf_size)	/* Output */
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
     int mp3count, ch, gr;
     III_psy_ratio masking[2][MAX_CHANNELS];
     const sample_t *inbuf[MAX_CHANNELS];
@@ -303,11 +302,11 @@ int  lame_encode_mp3_frame (				/* Output */
 	/* polyphase filtering / mdct */
 	for ( ch = 0; ch < gfc->channels_out; ch++ ) {
 	    int i;
-	    memset(primebuff, 0, sizeof(FLOAT)*gfp->framesize);
+	    memset(primebuff, 0, sizeof(FLOAT)*gfc->framesize);
 	    for (i = -48; i < 576; i++)
-		primebuff[gfp->framesize + i] = inbuf[ch][i+1152];
+		primebuff[gfc->framesize + i] = inbuf[ch][i+1152];
 
-	    subband(gfc, primebuff-gfp->framesize, sbsmpl[ch]);
+	    subband(gfc, primebuff-gfc->framesize, sbsmpl[ch]);
 	    memset(gfc->sb_sample[ch][0], 0, sizeof(gfc->sb_sample[0][0]));
 	    memcpy(gfc->sb_sample[ch][1], sbsmpl[ch],
 		   sizeof(gfc->sb_sample[0][0])*gfc->mode_gr);
@@ -318,14 +317,14 @@ int  lame_encode_mp3_frame (				/* Output */
 # error FFTOFFSET greater than 576: FFT uses a negative offset
 #endif
 	/* check if we have enough data for FFT */
-	assert(gfc->mf_size>=(BLKSIZE+gfp->framesize*2-FFTOFFSET));
+	assert(gfc->mf_size>=(BLKSIZE+gfc->framesize*2-FFTOFFSET));
 	/* check if we have enough data for polyphase filterbank */
 	/* it needs 1152 samples + 286 samples ignored for one granule */
 	/*          1152+576+286 samples for two granules */
-	assert(gfc->mf_size >= 286+576+gfp->framesize);
+	assert(gfc->mf_size >= 286+576+gfc->framesize);
 
 	if (gfc->psymodel)
-	    psycho_analysis(gfp, inbuf, masking, sbsmpl);
+	    psycho_analysis(gfc, inbuf, masking, sbsmpl);
     }
 
     /********************** padding *****************************/
@@ -339,7 +338,7 @@ int  lame_encode_mp3_frame (				/* Output */
      */
     gfc->padding = FALSE;
     if ((gfc->slot_lag -= gfc->frac_SpF) < 0) {
-	gfc->slot_lag += gfp->out_samplerate;
+	gfc->slot_lag += gfc->out_samplerate;
 	gfc->padding = TRUE;
     }
 
@@ -349,7 +348,7 @@ int  lame_encode_mp3_frame (				/* Output */
 	subband(gfc, inbuf[ch], sbsmpl[ch]);
 
     if (gfc->psymodel)
-	psycho_analysis(gfp, inbuf, masking, sbsmpl);
+	psycho_analysis(gfc, inbuf, masking, sbsmpl);
     else
 	memset(masking, 0, sizeof(masking));
 
@@ -380,7 +379,7 @@ int  lame_encode_mp3_frame (				/* Output */
 	}
     }
 
-    gfc->mode_ext |= gfp->use_istereo;
+    gfc->mode_ext |= gfc->use_istereo;
     if (gfc->mode_ext & MPG_MD_MS_LR) {
 	/* convert from L/R -> Mid/Side */
 	if (gfc->mode_ext == MPG_MD_MS_I) {
@@ -429,28 +428,28 @@ int  lame_encode_mp3_frame (				/* Output */
     }
 
     /* bit and noise allocation */
-    switch (gfp->VBR){ 
+    switch (gfc->VBR){ 
     default:
-    case cbr:	    iteration_loop(gfp, masking); break;
-    case vbr:	VBR_iteration_loop(gfp, masking); break;
-    case abr:	ABR_iteration_loop(gfp, masking); break;
+    case cbr:	    iteration_loop(gfc, masking); break;
+    case vbr:	VBR_iteration_loop(gfc, masking); break;
+    case abr:	ABR_iteration_loop(gfc, masking); break;
     }
 
     /*  write the frame to the bitstream  */
-    format_bitstream(gfp);
+    format_bitstream(gfc);
 
     /* copy mp3 bit buffer into array */
     mp3count = copy_buffer(gfc,mp3buf,mp3buf_size,1);
 
-    if (gfp->bWriteVbrTag) {
-	gfp->nVbrNumFrames++;
-	if (gfp->VBR == vbr)
-	    AddVbrFrame(gfp);
+    if (gfc->bWriteVbrTag) {
+	gfc->nVbrNumFrames++;
+	if (gfc->VBR == vbr)
+	    AddVbrFrame(gfc);
     }
 
 #ifndef NOANALYSIS
     if (gfc->pinfo)
-	set_frame_pinfo(gfp, masking, inbuf);
+	set_frame_pinfo(gfc, masking, inbuf);
 #endif
 
 #ifdef BRHIST

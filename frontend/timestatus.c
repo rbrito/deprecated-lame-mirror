@@ -177,25 +177,25 @@ void timestatus_finish ( void )
     fflush  ( stderr );
 }
 
-void timestatus_klemm ( const lame_global_flags* const gfp )
+void timestatus_klemm (const lame_t gfc )
 {
     static double  last_time = 0.;
 
     if ( silent <= 0 )
-        if ( lame_get_frameNum(gfp) == 0  ||  
-  	     lame_get_frameNum(gfp) == 9  ||
+        if ( lame_get_frameNum(gfc) == 0  ||  
+  	     lame_get_frameNum(gfc) == 9  ||
   	     GetRealTime () - last_time >= update_interval  ||
 	     GetRealTime () - last_time <  0 ) {
 #ifdef BRHIST
             brhist_jump_back();
 #endif
-            timestatus ( lame_get_out_samplerate( gfp ),
-                         lame_get_frameNum(gfp),
-                         lame_get_totalframes(gfp),
-                         lame_get_framesize(gfp) );
+            timestatus ( lame_get_out_samplerate( gfc ),
+                         lame_get_frameNum(gfc),
+                         lame_get_totalframes(gfc),
+                         lame_get_framesize(gfc) );
 #ifdef BRHIST
             if ( brhist ) {
-	        brhist_disp ( gfp );
+	        brhist_disp ( gfc );
 	    }
 #endif
             last_time = GetRealTime ();  /* from now! disp_time seconds */
@@ -204,7 +204,7 @@ void timestatus_klemm ( const lame_global_flags* const gfp )
 
 /* these functions are used in get_audio.c */
 
-void decoder_progress ( const lame_global_flags* const gfp, const mp3data_struct* const mp3data )
+void decoder_progress (const mp3data_struct* const mp3data)
 {
     static int  last;
     fprintf ( stderr, "\rFrame#%6i/%-6i %3i kbps",
@@ -232,7 +232,7 @@ void decoder_progress ( const lame_global_flags* const gfp, const mp3data_struct
       fflush  ( stderr );
 }
 
-void decoder_progress_finish ( const lame_global_flags* const gfp )
+void decoder_progress_finish (void)
 {
     fprintf ( stderr, "\n" );
 }

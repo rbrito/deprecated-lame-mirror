@@ -243,10 +243,6 @@ SOURCE=".\lame-analysis.h"
 # End Source File
 # Begin Source File
 
-SOURCE=.\lame_global_flags.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\lameerror.h
 # End Source File
 # Begin Source File

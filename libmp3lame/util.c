@@ -44,7 +44,8 @@
 ***********************************************************************/
 /*empty and close mallocs in gfc */
 
-void  freegfc ( lame_internal_flags* const gfc )   /* bit stream structure */
+void
+freegfc(const lame_t gfc)   /* bit stream structure */
 {
     int  i;
 
@@ -129,27 +130,26 @@ gcd(int i, int j)
    were used.  n_out = number of samples copied into mfbuf  */
 
 static int fill_buffer_resample(
-       lame_global_flags *gfp,
-       sample_t *outbuf,
-       int desired_len,
-       sample_t *inbuf,
-       int len,
-       int *num_used,
-       int ch) 
+    lame_t gfc,
+    sample_t *outbuf,
+    int desired_len,
+    sample_t *inbuf,
+    int len,
+    int *num_used,
+    int ch) 
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
     int BLACKSIZE;
     FLOAT offset,xvalue;
     int i,j=0,k;
     FLOAT fcn;
     FLOAT *inbuf_old;
-    int bpc = gcd(gfp->out_samplerate, gfp->in_samplerate);
+    int bpc = gcd(gfc->out_samplerate, gfc->in_samplerate);
     int filter_l = 31;
 
-    if (bpc == gfp->out_samplerate || bpc == gfp->in_samplerate)
+    if (bpc == gfc->out_samplerate || bpc == gfc->in_samplerate)
 	filter_l++; /* if the resample ratio is int, it must be even */
 
-    bpc = gfp->out_samplerate/bpc;
+    bpc = gfc->out_samplerate/bpc;
     if (bpc>BPC) bpc = BPC;
 
     fcn = 1.00;
@@ -248,25 +248,24 @@ static int fill_buffer_resample(
 
 
 
-void fill_buffer(lame_global_flags *gfp,
+void fill_buffer(lame_t gfc,
 		 sample_t *mfbuf[2],
 		 sample_t *in_buffer[2],
 		 int nsamples, int *n_in, int *n_out)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
     int ch,i;
 
     /* copy in new samples into mfbuf, with resampling if necessary */
     if (gfc->resample_ratio != 1.0) {
 	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    *n_out =
-		fill_buffer_resample(gfp, &mfbuf[ch][gfc->mf_size],
-				     gfp->framesize, in_buffer[ch],
+		fill_buffer_resample(gfc, &mfbuf[ch][gfc->mf_size],
+				     gfc->framesize, in_buffer[ch],
 				     nsamples, n_in, ch);
 	}
     }
     else {
-	*n_out = Min(gfp->framesize, nsamples);
+	*n_out = Min(gfc->framesize, nsamples);
 	*n_in = *n_out;
 	for (i = 0; i < *n_out; ++i) {
 	    mfbuf[0][gfc->mf_size + i] = in_buffer[0][i];
@@ -283,7 +282,7 @@ void fill_buffer(lame_global_flags *gfp,
 *  Message Output
 *
 ***********************************************************************/
-void  lame_debugf (const lame_internal_flags *gfc, const char* format, ... )
+void  lame_debugf (const lame_t gfc, const char* format, ... )
 {
     va_list  args;
 
@@ -300,7 +299,7 @@ void  lame_debugf (const lame_internal_flags *gfc, const char* format, ... )
 }
 
 
-void  lame_msgf (const lame_internal_flags *gfc, const char* format, ... )
+void  lame_msgf (const lame_t gfc, const char* format, ... )
 {
     va_list  args;
 
@@ -317,7 +316,7 @@ void  lame_msgf (const lame_internal_flags *gfc, const char* format, ... )
 }
 
 
-void  lame_errorf (const lame_internal_flags *gfc, const char* format, ... )
+void  lame_errorf (const lame_t gfc, const char* format, ... )
 {
     va_list  args;
 
@@ -345,7 +344,7 @@ void disable_FPE(void) {
         /* seet floating point mask to the Linux default */
         fp_except_t mask;
         mask = fpgetmask();
-        /* if bit is set, we get SIGFPE on that error! */
+        /* if bit is set, we get SIGFCE on that error! */
         fpsetmask(mask & ~(FP_X_INV | FP_X_DZ));
         /*  DEBUGF("FreeBSD mask is 0x%x\n",mask); */
     }

@@ -71,14 +71,14 @@ void I_step_two(real fraction[2][SBLIMIT],unsigned int balloc[2*SBLIMIT],
   int i,n;
   int smpb[2*SBLIMIT]; /* values: 0-65535 */
   int *sample;
-  register unsigned int *ba;
-  register unsigned int *sca = (unsigned int *) scale_index;
+  unsigned int *ba;
+  unsigned int *sca = (unsigned int *) scale_index;
 
   assert ( fr->stereo == 1 || fr->stereo == 2 );
   if(fr->stereo == 2) {
     int jsbound = fr->jsbound;
-    register real *f0 = fraction[0];
-    register real *f1 = fraction[1];
+    real *f0 = fraction[0];
+    real *f1 = fraction[1];
     ba = balloc;
     for (sample=smpb,i=0;i<jsbound;i++)  {
       if ((n = *ba++))
@@ -114,7 +114,7 @@ void I_step_two(real fraction[2][SBLIMIT],unsigned int balloc[2*SBLIMIT],
       fraction[0][i] = fraction[1][i] = 0.0;
   }
   else {
-    register real *f0 = fraction[0];
+    real *f0 = fraction[0];
     ba = balloc;
     for (sample=smpb,i=0;i<SBLIMIT;i++)
       if ((n = *ba++))

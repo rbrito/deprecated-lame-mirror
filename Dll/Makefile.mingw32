@@ -21,7 +21,7 @@ LIBS = -lmp3lame
 all: $(DLL_NAME).dll example.exe
 
 BladeMP3EncDLL.o: BladeMP3EncDLL.c BladeMP3EncDLL.h ../include/lame.h \
- ../libmp3lame/lame_global_flags.h ../libmp3lame/version.h
+ ../libmp3lame/version.h
 
 $(DLL_NAME).dll : $(OFILES)
 	$(LD) $(LFLAGS) $(OFILES) $(LIBS)

@@ -38,21 +38,20 @@
 /***********************************************************************
  * compute bits-per-frame
  **********************************************************************/
-int getframebytes(const lame_global_flags * gfp)
+int getframebytes(const lame_t gfc)
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
     int  bit_rate;
 
     /* get bitrate in kbps */
     if (gfc->bitrate_index) 
-	bit_rate = bitrate_table[gfp->version][gfc->bitrate_index];
+	bit_rate = bitrate_table[gfc->version][gfc->bitrate_index];
     else
-	bit_rate = gfp->mean_bitrate_kbps;
+	bit_rate = gfc->mean_bitrate_kbps;
     assert ( bit_rate <= 550 );
 
     /* main encoding routine toggles padding on and off */
     /* one Layer3 Slot consists of 8 bits */
-    return gfc->mode_gr*bit_rate*(1000*576/8) / gfp->out_samplerate
+    return gfc->mode_gr*bit_rate*(1000*576/8) / gfc->out_samplerate
 	+ gfc->padding - gfc->l3_side.sideinfo_len;
 }
 
@@ -208,7 +207,7 @@ Huf_bigvalue(bit_stream_t *bs, int tablesel, int start, int end, gr_info *gi)
   information on pages 26 and 27.
   */
 static void
-Huffmancodebits(lame_internal_flags *gfc, gr_info *gi)
+Huffmancodebits(lame_t gfc, gr_info *gi)
 {
 #ifndef NDEBUG
     int data_bits = gfc->bs.bitidx + gi->part2_3_length - gi->count1bits;
@@ -276,7 +275,7 @@ CRC_writeheader(char *header, int len)
 }
 
 static int
-writeTableHeader(lame_internal_flags *gfc, gr_info *gi, int ptr, char *p)
+writeTableHeader(lame_t gfc, gr_info *gi, int ptr, char *p)
 {
     static const int blockConv[] = {1, 3, 2};
     int tsel;
@@ -314,9 +313,8 @@ writeTableHeader(lame_internal_flags *gfc, gr_info *gi, int ptr, char *p)
 }
 
 inline static void
-encodeBitStream(lame_global_flags *gfp)
+encodeBitStream(lame_t gfc)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
     III_side_info_t *l3_side = &gfc->l3_side;
     char *p = gfc->bs.header[gfc->bs.h_ptr].buf;
     int gr, ch, ptr;
@@ -327,19 +325,19 @@ encodeBitStream(lame_global_flags *gfp)
     assert(gfc->bs.h_ptr != gfc->bs.w_ptr);
 
     gfc->bs.header[gfc->bs.h_ptr].write_timing
-	= gfc->bs.header[ptr].write_timing + getframebytes(gfp);
+	= gfc->bs.header[ptr].write_timing + getframebytes(gfc);
 
     p[0] = 0xff;
-    p[1] = 0xf0 - (gfp->out_samplerate < 16000)*16
-	+ gfp->version*8 + (4 - 3)*2 + (!gfp->error_protection);
+    p[1] = 0xf0 - (gfc->out_samplerate < 16000)*16
+	+ gfc->version*8 + (4 - 3)*2 + (!gfc->error_protection);
     p[2] = gfc->bitrate_index*16
-	+ gfc->samplerate_index*4 + gfc->padding*2 + gfp->extension;
-    p[3] = gfp->mode*64 + gfc->mode_ext*16
-	+ gfp->copyright*8 + gfp->original*4 + gfp->emphasis;
+	+ gfc->samplerate_index*4 + gfc->padding*2 + gfc->extension;
+    p[3] = gfc->mode*64 + gfc->mode_ext*16
+	+ gfc->copyright*8 + gfc->original*4 + gfc->emphasis;
 
     memset(p+4, 0, l3_side->sideinfo_len-4);
     ptr = 32;
-    if (gfp->error_protection)
+    if (gfc->error_protection)
 	ptr += 16;
     ptr = writeheader(p, l3_side->main_data_begin, 7+gfc->mode_gr, ptr);
     if (gfc->mode_gr == 2) {
@@ -459,7 +457,7 @@ encodeBitStream(lame_global_flags *gfp)
     } /* for MPEG version */
     assert(ptr == l3_side->sideinfo_len * 8);
 
-    if (gfp->error_protection)
+    if (gfc->error_protection)
 	CRC_writeheader(p, gfc->l3_side.sideinfo_len);
 }
 
@@ -478,9 +476,8 @@ encodeBitStream(lame_global_flags *gfp)
    lame_encode_flush_nogap() was called right now. 
 */
 int
-compute_flushbits(const lame_global_flags * gfp, int *total_bytes_output)
+compute_flushbits(const lame_t gfc, int *total_bytes_output)
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
     bit_stream_t *bs = &gfc->bs;
     int flushbits;
     int bitsPerFrame;
@@ -500,7 +497,7 @@ compute_flushbits(const lame_global_flags * gfp, int *total_bytes_output)
      * these bits are not necessary to decode the last frame, but
      * some decoders will ignore last frame if these bits are missing 
      */
-    bitsPerFrame = getframebytes(gfp)*8;
+    bitsPerFrame = getframebytes(gfc)*8;
     flushbits += bitsPerFrame;
     assert(flushbits >= 0);
     *total_bytes_output
@@ -509,21 +506,19 @@ compute_flushbits(const lame_global_flags * gfp, int *total_bytes_output)
 }
 
 int
-flush_bitstream(
-    lame_global_flags *gfp,unsigned char *buffer,int size,int mp3data)
+flush_bitstream(lame_t gfc, unsigned char *buffer, int size, int mp3data)
 {
-    lame_internal_flags* gfc = gfp->internal_flags;
     int dummy;
 
     /* we have padded out all frames with ancillary data, which is the
        same as filling the bitreservoir with ancillary data, so : */
-    gfc->bs.bitidx += compute_flushbits(gfp, &dummy);
+    gfc->bs.bitidx += compute_flushbits(gfc, &dummy);
     gfc->l3_side.ResvSize = gfc->l3_side.main_data_begin = 0;
     return copy_buffer(gfc, buffer, size, mp3data);
 }
 
 void
-add_dummy_byte(lame_internal_flags* gfc, unsigned char val)
+add_dummy_byte(lame_t gfc, unsigned char val)
 {
     bit_stream_t *bs = &gfc->bs;
     int i;
@@ -541,7 +536,7 @@ add_dummy_byte(lame_internal_flags* gfc, unsigned char val)
   the ancillary data...
 */
 inline static void
-drain_into_ancillary(lame_internal_flags *gfc, int remainingBits)
+drain_into_ancillary(lame_t gfc, int remainingBits)
 {
     bit_stream_t *bs = &gfc->bs;
     int i, pad;
@@ -591,9 +586,8 @@ drain_into_ancillary(lame_internal_flags *gfc, int remainingBits)
   in the IS).
 */
 int
-format_bitstream(lame_global_flags *gfp)
+format_bitstream(lame_t gfc)
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
     III_side_info_t *l3_side = &gfc->l3_side;
     int drainPre, drainbits = l3_side->ResvSize & 7;
 
@@ -611,7 +605,7 @@ format_bitstream(lame_global_flags *gfp)
 	drainPre = l3_side->main_data_begin*8;
     l3_side->main_data_begin -= drainPre/8;
     drain_into_ancillary(gfc, drainPre);
-    encodeBitStream(gfp);
+    encodeBitStream(gfc);
     gfc->bs.bitidx += drainbits - drainPre;
 
     l3_side->main_data_begin = (l3_side->ResvSize -= drainbits) >> 3;
@@ -629,8 +623,7 @@ format_bitstream(lame_global_flags *gfp)
    mp3data=1      data is real mp3 frame data. 
 */
 int
-copy_buffer(
-    lame_internal_flags *gfc, unsigned char *buffer, int size, int mp3data)
+copy_buffer(lame_t gfc, unsigned char *buffer, int size, int mp3data)
 {
     bit_stream_t *bs=&gfc->bs;
     int spec_idx, minimum;

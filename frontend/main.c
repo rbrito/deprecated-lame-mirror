@@ -85,7 +85,7 @@ char   *strchr(), *strrchr();
 
 
 static int
-parse_args_from_string(lame_global_flags * const gfp, const char *p,
+parse_args_from_string(lame_t  const gfp, const char *p,
                        char *inPath, char *outPath)
 {                       /* Quick & very Dirty */
     char   *q;
@@ -121,7 +121,7 @@ parse_args_from_string(lame_global_flags * const gfp, const char *p,
 
 
 static FILE   *
-init_files(lame_global_flags * gf, char *inPath, char *outPath)
+init_files(lame_t  gf, char *inPath, char *outPath)
 {
     FILE   *outf;
     /* Mostly it is not useful to use the same input and output name.
@@ -162,7 +162,7 @@ init_files(lame_global_flags * gf, char *inPath, char *outPath)
  * samples to skip, to (for example) compensate for the encoder delay */
 
 static int
-decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath,
+decoder(lame_t  gfp, FILE * outf, int skip, char *inPath,
 	char *outPath)
 {
     short int Buffer[2][1152];
@@ -257,7 +257,7 @@ decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath,
         wavsize += iread;
 
         if (silent <= 0)
-            decoder_progress(gfp, &mp3input_data);
+            decoder_progress(&mp3input_data);
 
         skip -= (i = skip < iread ? skip : iread); /* 'i' samples are to skip in this frame */
 
@@ -296,7 +296,7 @@ decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath,
                             tmp_num_channels, 16);
     fclose(outf);
 
-    decoder_progress_finish(gfp);
+    decoder_progress_finish();
     return 0;
 }
 
@@ -316,7 +316,7 @@ decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath,
 
 
 static int
-encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath,
+encoder(lame_t  gf, FILE * outf, int nogap, char *inPath,
              char *outPath)
 {
     unsigned char mp3buffer[LAME_MAXMP3BUFFER];
@@ -477,7 +477,7 @@ encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath,
 
 
 static void
-brhist_init_package(lame_global_flags * gf)
+brhist_init_package(lame_t  gf)
 {
 #ifdef BRHIST
     if (brhist) {
@@ -559,7 +559,7 @@ int
 main(int argc, char **argv)
 {
     int     ret;
-    lame_global_flags *gf;
+    lame_t  gf;
     char    outPath[PATH_MAX + 1];
     char    nogapdir[PATH_MAX + 1];
     char    inPath[PATH_MAX + 1];
@@ -597,7 +597,7 @@ main(int argc, char **argv)
         return 1;
     }
     if (argc <= 1) {
-        usage(gf, stderr, argv[0]); /* no command-line args, print usage, exit  */
+        usage(stderr, argv[0]); /* no command-line args, print usage, exit  */
         return 1;
     }
 

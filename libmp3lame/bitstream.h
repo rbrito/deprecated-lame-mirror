@@ -23,17 +23,14 @@
 #define LAME_BITSTREAM_H
 #include "util.h"
 
-int getframebytes(const lame_global_flags *gfp);
-
-int format_bitstream(lame_global_flags *gfp);
-
-int flush_bitstream(lame_global_flags *gfp, unsigned char *, int, int);
-void add_dummy_byte (lame_internal_flags* gfc, unsigned char val);
-
-int  copy_buffer(lame_internal_flags *gfc,unsigned char *buffer,int buffer_size,int update_crc);
-void init_bit_stream_w(lame_global_flags *gfc);
+int getframebytes(const lame_t gfc);
+int format_bitstream(lame_t gfc);
+int flush_bitstream(lame_t gfc, unsigned char *, int, int);
+void add_dummy_byte (lame_t gfc, unsigned char val);
+int  copy_buffer(lame_t gfc, unsigned char *buffer, int buffer_size, int update_crc);
+void init_bit_stream_w(lame_t gfc);
 void CRC_writeheader (char *buffer, int len);
-int compute_flushbits(const lame_global_flags *gfp, int *nbytes);
+int compute_flushbits(const lame_t gfc, int *nbytes);
 
 
 #endif

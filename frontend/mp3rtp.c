@@ -130,7 +130,7 @@ int  main ( int argc, char **argv )
     char       outPath   [PATH_MAX + 1];
     int        Buffer [2] [1152];
 
-    lame_global_flags *gf;
+    lame_t gf;
     
     int        ret;
     int        wavsamples;

@@ -673,7 +673,7 @@ inline static void mdct_long(FLOAT *out, FLOAT *in)
 
 
 void
-mdct_sub48(lame_internal_flags *gfc, int ch)
+mdct_sub48(lame_t gfc, int ch)
 {
     int gr, k;
 
@@ -737,7 +737,7 @@ mdct_sub48(lame_internal_flags *gfc, int ch)
 }
 
 void
-subband(lame_internal_flags *gfc, const sample_t *wk, FLOAT *samp)
+subband(lame_t gfc, const sample_t *wk, FLOAT *samp)
 {
     int k;
     wk += 286+576*gfc->mode_gr;

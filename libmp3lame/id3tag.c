@@ -133,9 +133,8 @@ id3tag_genre_list(void (*handler)(int, const char *, void *), void *cookie)
 #define GENRE_NUM_UNKNOWN 255
 
 void
-id3tag_init(lame_global_flags *gfp)
+id3tag_init(lame_t gfc)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
     memset(&gfc->tag_spec, 0, sizeof gfc->tag_spec);
     gfc->tag_spec.genre = GENRE_NUM_UNKNOWN;
 }
@@ -143,49 +142,43 @@ id3tag_init(lame_global_flags *gfp)
 
 
 void
-id3tag_add_v2(lame_global_flags *gfp)
+id3tag_add_v2(lame_t gfc)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
     gfc->tag_spec.flags &= ~V1_ONLY_FLAG;
     gfc->tag_spec.flags |= ADD_V2_FLAG;
 }
 
 void
-id3tag_v1_only(lame_global_flags *gfp)
+id3tag_v1_only(lame_t gfc)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
     gfc->tag_spec.flags &= ~(ADD_V2_FLAG | V2_ONLY_FLAG);
     gfc->tag_spec.flags |= V1_ONLY_FLAG;
 }
 
 void
-id3tag_v2_only(lame_global_flags *gfp)
+id3tag_v2_only(lame_t gfc)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
     gfc->tag_spec.flags &= ~V1_ONLY_FLAG;
     gfc->tag_spec.flags |= V2_ONLY_FLAG;
 }
 
 void
-id3tag_space_v1(lame_global_flags *gfp)
+id3tag_space_v1(lame_t gfc)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
     gfc->tag_spec.flags &= ~V2_ONLY_FLAG;
     gfc->tag_spec.flags |= SPACE_V1_FLAG;
 }
 
 void
-id3tag_pad_v2(lame_global_flags *gfp)
+id3tag_pad_v2(lame_t gfc)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
     gfc->tag_spec.flags &= ~V1_ONLY_FLAG;
     gfc->tag_spec.flags |= PAD_V2_FLAG;
 }
 
 void
-id3tag_set_title(lame_global_flags *gfp, const char *title)
+id3tag_set_title(lame_t gfc, const char *title)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
     if (title && *title) {
         gfc->tag_spec.title = title;
         gfc->tag_spec.flags |= CHANGED_FLAG;
@@ -193,9 +186,8 @@ id3tag_set_title(lame_global_flags *gfp, const char *title)
 }
 
 void
-id3tag_set_artist(lame_global_flags *gfp, const char *artist)
+id3tag_set_artist(lame_t gfc, const char *artist)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
     if (artist && *artist) {
         gfc->tag_spec.artist = artist;
         gfc->tag_spec.flags |= CHANGED_FLAG;
@@ -203,9 +195,8 @@ id3tag_set_artist(lame_global_flags *gfp, const char *artist)
 }
 
 void
-id3tag_set_album(lame_global_flags *gfp, const char *album)
+id3tag_set_album(lame_t gfc, const char *album)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
     if (album && *album) {
         gfc->tag_spec.album = album;
         gfc->tag_spec.flags |= CHANGED_FLAG;
@@ -213,9 +204,8 @@ id3tag_set_album(lame_global_flags *gfp, const char *album)
 }
 
 void
-id3tag_set_year(lame_global_flags *gfp, const char *year)
+id3tag_set_year(lame_t gfc, const char *year)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
     if (year && *year) {
         int num = atoi(year);
         if (num < 0) {
@@ -233,9 +223,8 @@ id3tag_set_year(lame_global_flags *gfp, const char *year)
 }
 
 void
-id3tag_set_comment(lame_global_flags *gfp, const char *comment)
+id3tag_set_comment(lame_t gfc, const char *comment)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
     if (comment && *comment) {
         gfc->tag_spec.comment = comment;
         gfc->tag_spec.flags |= CHANGED_FLAG;
@@ -243,9 +232,8 @@ id3tag_set_comment(lame_global_flags *gfp, const char *comment)
 }
 
 void
-id3tag_set_track(lame_global_flags *gfp, const char *track)
+id3tag_set_track(lame_t gfc, const char *track)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
     if (track && *track) {
         int num = atoi(track);
         if (num < 0) {
@@ -282,9 +270,8 @@ local_strcasecmp(const char *s1, const char *s2)
 }
 
 int
-id3tag_set_genre(lame_global_flags *gfp, const char *genre)
+id3tag_set_genre(lame_t gfc, const char *genre)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
     if (genre && *genre) {
         char *str;
         int num = strtol(genre, &str, 10);
@@ -367,11 +354,10 @@ set_frame(unsigned char *frame, unsigned long id, const char *text,
 }
 
 int
-id3tag_write_v2(lame_global_flags *gfp)
+id3tag_write_v2(lame_t gfc)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
     if ((gfc->tag_spec.flags & CHANGED_FLAG)
-            && !(gfc->tag_spec.flags & V1_ONLY_FLAG)) {
+	&& !(gfc->tag_spec.flags & V1_ONLY_FLAG)) {
         /* calculate length of four fields which may not fit in verion 1 tag */
         size_t title_length = gfc->tag_spec.title
             ? strlen(gfc->tag_spec.title) : 0;
@@ -510,11 +496,10 @@ set_text_field(unsigned char *field, const char *text, size_t size, int pad)
 }
 
 int
-id3tag_write_v1(lame_global_flags *gfp)
+id3tag_write_v1(lame_t gfc)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
     if ((gfc->tag_spec.flags & CHANGED_FLAG)
-            && !(gfc->tag_spec.flags & V2_ONLY_FLAG)) {
+	&& !(gfc->tag_spec.flags & V2_ONLY_FLAG)) {
         unsigned char tag[128];
         unsigned char *p = tag;
         int pad = (gfc->tag_spec.flags & SPACE_V1_FLAG) ? ' ' : 0;

@@ -135,7 +135,7 @@ protected:
 	MPEG_ENCODER_CONFIG m_mabsi;
 
 	// Compressor private data
-	lame_global_flags *pgf;
+	lame_t pgf;
 
 	// Compressor miscelaneous state
 	BOOL	m_bInpuTypeSet;

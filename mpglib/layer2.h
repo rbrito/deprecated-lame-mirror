@@ -20,20 +20,14 @@
 
 #ifndef LAYER2_H_INCLUDED
 #define LAYER2_H_INCLUDED
-
-
 struct al_table2 
 {
-  short bits;
-  short d;
+    short bits;
+    short d;
 };
 
-
-
 void init_layer2(void);
-void II_step_one(unsigned int *bit_alloc,int *scale,struct frame *fr);
-void II_step_two(unsigned int *bit_alloc,real fraction[2][4][SBLIMIT],int *scale,struct frame *fr,int x1);
-int  do_layer2( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point);
+int  do_layer2(PMPSTR mp,unsigned char *pcm_sample,int *pcm_point);
 
 #endif
 

@@ -728,7 +728,7 @@ static void init_log_table(void)
 
 
 static FLOAT
-ATHformula(lame_global_flags *gfp ,FLOAT f)
+ATHformula(lame_t gfc ,FLOAT f)
 {
     /* from Painter & Spanias
        modified by Gabriel Bouvigne to better fit the reality
@@ -753,19 +753,18 @@ ATHformula(lame_global_flags *gfp ,FLOAT f)
     return db2pow(3.640 * pow(f,-0.8)
 		  - 6.800 * exp(-0.6*pow(f-3.4,2.0))
 		  + 6.000 * exp(-0.15*pow(f-8.7,2.0))
-		  + (0.6+0.04*gfp->ATHcurve)* 0.001 * pow(f,4.0))
-	* gfp->ATHlower;
+		  + (0.6+0.04*gfc->ATHcurve)* 0.001 * pow(f,4.0))
+	* gfc->ATHlower;
 }
 
 static void
-compute_ath(lame_global_flags *gfp)
+compute_ath(lame_t gfc)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
-    FLOAT ATH_f, sfreq = gfp->out_samplerate;
+    FLOAT ATH_f, sfreq = gfc->out_samplerate;
     int sfb, i, start, end;
 
     /*  no-ATH mode: reduce ATH to -370 dB */
-    if (gfp->noATH) {
+    if (gfc->noATH) {
         for (sfb = 0; sfb < SBMAX_l; sfb++) {
             gfc->ATH.l[sfb] = 1E-37;
         }
@@ -780,7 +779,7 @@ compute_ath(lame_global_flags *gfp)
 	end   = gfc->scalefac_band.l[ sfb+1 ];
 	gfc->ATH.l[sfb] = FLOAT_MAX;
 	for (i = start ; i < end; i++) {
-	    ATH_f = ATHformula(gfp, i*sfreq/(2.0*576));
+	    ATH_f = ATHformula(gfc, i*sfreq/(2.0*576));
 	    if (gfc->ATH.l[sfb] > ATH_f)
 		gfc->ATH.l[sfb] = ATH_f;
 	}
@@ -792,7 +791,7 @@ compute_ath(lame_global_flags *gfp)
 	end   = gfc->scalefac_band.s[ sfb+1 ];
 	gfc->ATH.s[sfb] = FLOAT_MAX;
 	for (i = start ; i < end; i++) {
-	    ATH_f = ATHformula(gfp, i*sfreq/(2.0*192));
+	    ATH_f = ATHformula(gfc, i*sfreq/(2.0*192));
 	    if (gfc->ATH.s[sfb] > ATH_f)
 		gfc->ATH.s[sfb] = ATH_f;
 	}
@@ -838,7 +837,7 @@ static const struct
 
 
 static void
-huffman_init(lame_internal_flags * const gfc)
+huffman_init(const lame_t gfc)
 {
     int i;
     extern int choose_table_nonMMX(const int *ix, const int *end, int *s);
@@ -896,9 +895,8 @@ filter_coef(FLOAT x)
 }
 
 static void
-lame_init_params_ppflt(lame_global_flags * gfp)
+lame_init_params_ppflt(const lame_t gfc)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
     /***************************************************************/
     /* compute info needed for polyphase filter (filter type==0, default) */
     /***************************************************************/
@@ -980,9 +978,8 @@ lame_init_params_ppflt(lame_global_flags * gfp)
 
 
 void
-iteration_init( lame_global_flags *gfp)
+iteration_init(const lame_t gfc)
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
     III_side_info_t * const l3_side = &gfc->l3_side;
     int i, j;
 
@@ -993,7 +990,7 @@ iteration_init( lame_global_flags *gfp)
     /**********************************************************************/
     /* compute info needed for polyphase filter (filter type==0, default) */
     /**********************************************************************/
-    lame_init_params_ppflt(gfp);
+    lame_init_params_ppflt(gfc);
 
     /*******************************************************/
     /* compute info needed for FIR filter (filter_type==1) */
@@ -1002,7 +999,7 @@ iteration_init( lame_global_flags *gfp)
 
     /* scalefactor band start/end position */
     j = gfc->samplerate_index
-	+ (3 * gfp->version) + 6 * (gfp->out_samplerate < 16000);
+	+ (3 * gfc->version) + 6 * (gfc->out_samplerate < 16000);
     for (i = 0; i < SBMAX_l + 1; i++)
         gfc->scalefac_band.l[i] = sfBandIndex[j].l[i];
     for (i = 0; i < SBMAX_s + 1; i++)
@@ -1020,19 +1017,19 @@ iteration_init( lame_global_flags *gfp)
     }
     gfc->cutoff_sfb_s = i;
 
-    gfp->use_istereo = 0;
+    gfc->use_istereo = 0;
     gfc->is_start_sfb_l_next[0] = gfc->is_start_sfb_l_next[1]
 	= gfc->is_start_sfb_l[0] = gfc->is_start_sfb_l[1]
 	= gfc->cutoff_sfb_l;
     gfc->is_start_sfb_s_next[0] = gfc->is_start_sfb_s_next[1]
 	= gfc->is_start_sfb_s[0] = gfc->is_start_sfb_s[1]
 	= gfc->cutoff_sfb_s;
-    if (gfp->mode != MONO && gfp->compression_ratio > 12.0
+    if (gfc->mode != MONO && gfc->compression_ratio > 12.0
 	&& gfc->mode_gr == 2 /* currently only MPEG1 */)
-	gfp->use_istereo = 1;
+	gfc->use_istereo = 1;
 
     l3_side->main_data_begin = 0;
-    compute_ath(gfp);
+    compute_ath(gfc);
 #ifdef USE_FAST_LOG
     init_log_table();
 #endif
@@ -1170,7 +1167,7 @@ init_numline_l2s(
 
 static int
 init_s3_values(
-    lame_internal_flags *gfc,
+    const lame_t gfc,
     FLOAT **p,
     int (*s3ind)[2],
     int npart,
@@ -1243,15 +1240,14 @@ init_s3_values(
 }
 
 int
-psymodel_init(lame_global_flags *gfp)
+psymodel_init(const lame_t gfc)
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
     int i,j,sb,k;
     int bm[SBMAX_l];
 
     FLOAT bval[CBANDS];
     FLOAT norm[CBANDS];
-    FLOAT sfreq = gfp->out_samplerate;
+    FLOAT sfreq = gfc->out_samplerate;
     int numlines_s[CBANDS];
 
     for (i=0; i<MAX_CHANNELS*2; ++i) {
@@ -1302,7 +1298,7 @@ psymodel_init(lame_global_flags *gfp)
 	    norm[i] *= 2;
 	gfc->rnumlines_ls[i] = 20.0/(l-1);
 	gfc->rnumlines_l[i] = 1.0 / (gfc->numlines_l[i] * 3);
-	if (gfp->ATHonly)
+	if (gfc->ATHonly)
 	    norm[i] = 1e-37;
     }
     i = init_s3_values(gfc, &gfc->s3_ll, gfc->s3ind, gfc->npart_l, bval, norm);
@@ -1315,12 +1311,12 @@ psymodel_init(lame_global_flags *gfp)
 	/* ATH */
 	FLOAT x = FLOAT_MAX;
 	for (k=0; k < gfc->numlines_l[i]; k++, j++) {
-	    FLOAT level = ATHformula(gfp, sfreq*j/BLKSIZE);
+	    FLOAT level = ATHformula(gfc, sfreq*j/BLKSIZE);
 	    if (x > level)
 		x = level;
 	}
 	gfc->ATH.cb[i] = x * ATHAdjustLimit * gfc->numlines_l[i];
-	gfc->ATH.eql_w[i] = ATHformula(gfp, 3300) / x / FFT2MDCT;
+	gfc->ATH.eql_w[i] = ATHformula(gfc, 3300) / x / FFT2MDCT;
     }
     for (i = 0; i < 8; i++)
 	gfc->ATH.eql_w[i] = gfc->ATH.eql_w[0];
@@ -1350,7 +1346,7 @@ psymodel_init(lame_global_flags *gfp)
 
 	if (i != 0)
 	    gfc->endlines_s[i] += gfc->endlines_s[i-1];
-	if (gfp->ATHonly || gfp->ATHshort)
+	if (gfc->ATHonly || gfc->ATHshort)
 	    norm[i] = 1e-37;
     }
     for (i = 0; i < SBMAX_s; i++)
@@ -1410,21 +1406,20 @@ psymodel_init(lame_global_flags *gfp)
 }
 
 
-void init_bit_stream_w(lame_global_flags *gfp)
+void init_bit_stream_w(const lame_t gfc)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
     gfc->bs.h_ptr = gfc->bs.w_ptr = 0;
     gfc->bs.header[gfc->bs.h_ptr].write_timing = 0;
     gfc->bs.bitidx = gfc->bs.totbyte = 0;
     memset(gfc->bs.buf, 0, sizeof(gfc->bs.buf));
 
     /* determine the mean bitrate for main data */
-    if (gfp->version == 1) /* MPEG 1 */
+    if (gfc->version == 1) /* MPEG 1 */
         gfc->l3_side.sideinfo_len = (gfc->channels_out == 1) ? 4 + 17 : 4 + 32;
     else                /* MPEG 2 */
         gfc->l3_side.sideinfo_len = (gfc->channels_out == 1) ? 4 + 9 : 4 + 17;
 
-    if (gfp->error_protection)
+    if (gfc->error_protection)
         gfc->l3_side.sideinfo_len += 2;
 
     /* padding method as described in 
@@ -1436,26 +1431,26 @@ void init_bit_stream_w(lame_global_flags *gfp)
      * Robert.Hegemann@gmx.de 2000-06-22
      */
     gfc->slot_lag = gfc->frac_SpF = 0;
-    if (gfp->VBR == cbr && !gfp->disable_reservoir)
+    if (gfc->VBR == cbr && !gfc->disable_reservoir)
 	gfc->slot_lag = gfc->frac_SpF
-	    = ((gfp->version+1)*72000L*gfp->mean_bitrate_kbps)
-	    % gfp->out_samplerate;
+	    = ((gfc->version+1)*72000L*gfc->mean_bitrate_kbps)
+	    % gfc->out_samplerate;
 
     gfc->l3_side.maxmp3buf = 0;
     /* we cannot use reservoir over 320kbp or when indicated not to use */
-    if ((gfp->VBR != cbr || gfp->mean_bitrate_kbps < 320)
-	&& !gfp->disable_reservoir) {
+    if ((gfc->VBR != cbr || gfc->mean_bitrate_kbps < 320)
+	&& !gfc->disable_reservoir) {
 	/* all mp3 decoders should have enough buffer to handle 1440byte:
 	 * size of a 320kbps 32kHz frame
 	 * Bouvigne suggests this more lax interpretation of the ISO doc 
 	 * instead of using 8*960.
 	 */
 	gfc->l3_side.maxmp3buf = 1440;
-        if (gfp->strict_ISO) {
+        if (gfc->strict_ISO) {
 	    /* maximum allowed frame size.  dont use more than this number of
 	       bits, even if the frame has the space for them: */
 	    gfc->l3_side.maxmp3buf
-		= (320000*1152 / gfp->out_samplerate + 7) >> 3;
+		= (320000*1152 / gfc->out_samplerate + 7) >> 3;
 	    if (gfc->l3_side.maxmp3buf > MAX_BITS*gfc->mode_gr)
 		gfc->l3_side.maxmp3buf = MAX_BITS*gfc->mode_gr;
 	}

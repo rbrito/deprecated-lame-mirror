@@ -25,8 +25,6 @@
 
 extern const int  tabsel_123[2][3][16];
 extern const long freqs[9];
-extern unsigned char *wordpointer;
-extern int bitindex;
 
 
 #if defined( USE_LAYER_1 ) || defined ( USE_LAYER_2 )
@@ -35,8 +33,8 @@ extern int bitindex;
 
 int  head_check(unsigned long head,int check_layer);
 int  decode_header(struct frame *fr,unsigned long newhead);
-unsigned int getbits(int number_of_bits);
-unsigned int getbits_fast(int number_of_bits);
+unsigned int getbits(PMPSTR pmp, int number_of_bits);
+unsigned int getbits_fast(PMPSTR pmp, int number_of_bits);
 int set_pointer( PMPSTR mp, long backstep);
 
 #endif

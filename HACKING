@@ -43,7 +43,7 @@ lame_encode_frame_mp3():
 ************************************************************************
 ADDING NEW OPTIONS
 
-control variable goes in lame_global_flags sturct.
+control variable goes in lame_internal_flags sturct.
 Assume the variable is called 'new_variable'.
 
 You also need to write (in get_set.c):
@@ -83,17 +83,12 @@ Global Variables:
 There are two types of global variables.  All data in
 both strucs is initialized to zero.
 
-1. lame_global_flags *gfp
+-- lame_internal_flags *gfp = lame_t gfc
 
 These are input paramters which are set by the calling program,
 and some information which the calling program may be interested in.
 
 This struct instantiated by the call to lame_init().  
-
-
-2. lame_internal_flags *gfc
-
-Most global variables go here.
 
 All internal data not set by the user.  All 'static' data from
 old non-reentrant code should be moved here.

@@ -190,9 +190,6 @@ noinst_HEADERS = common.h \
 	huffman.h \
 	interface.h \
 	l2tables.h \
-	layer1.h \
-	layer2.h \
-	layer3.h \
 	mpg123.h \
 	mpglib.h \
 	tabinit.h

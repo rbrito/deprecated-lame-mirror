@@ -44,11 +44,6 @@ const long freqs[9] = { 44100, 48000, 32000,
                         22050, 24000, 16000,
                         11025, 12000,  8000 };
 
-int bitindex; /* XXX NOT REENTRANT */
-unsigned char *wordpointer; /* XXX NOT REENTRANT */
-int pcm_point = 0; /* XXX NOT REENTRANT */
-
-
 #if defined( USE_LAYER_1 ) || defined ( USE_LAYER_2 )
   real muls[27][64];
 #endif
@@ -193,65 +188,59 @@ int decode_header(struct frame *fr,unsigned long newhead)
 }
 
 
-unsigned int getbits(int number_of_bits)
+unsigned int getbits(PMPSTR pmp, int number_of_bits)
 {
-  unsigned long rval;
+    unsigned long rval;
+    if (number_of_bits <= 0 || !pmp->wordpointer)
+	return 0;
 
-  if (number_of_bits <= 0 || !wordpointer)
-    return 0;
-
-  {
-    rval = wordpointer[0];
-    rval <<= 8;
-    rval |= wordpointer[1];
-    rval <<= 8;
-    rval |= wordpointer[2];
-    rval <<= bitindex;
+    rval  = pmp->wordpointer[0]; rval <<= 8;
+    rval |= pmp->wordpointer[1]; rval <<= 8;
+    rval |= pmp->wordpointer[2]; rval <<= pmp->bitindex;
     rval &= 0xffffff;
 
-    bitindex += number_of_bits;
+    pmp->bitindex += number_of_bits;
 
-    rval >>= (24-number_of_bits);
+    rval >>= 24 - number_of_bits;
 
-    wordpointer += (bitindex>>3);
-    bitindex &= 7;
-  }
-  return rval;
+    pmp->wordpointer += pmp->bitindex >> 3;
+    pmp->bitindex &= 7;
+
+    return rval;
 }
 
-unsigned int getbits_fast(int number_of_bits)
+unsigned int getbits_fast(PMPSTR pmp, int number_of_bits)
 {
-  unsigned long rval;
+    unsigned long rval;
 
-  {
-    rval = wordpointer[0];
-    rval <<= 8;	
-    rval |= wordpointer[1];
-    rval <<= bitindex;
+    rval  = pmp->wordpointer[0]; rval <<= 8;	
+    rval |= pmp->wordpointer[1]; rval <<= pmp->bitindex;
+
     rval &= 0xffff;
-    bitindex += number_of_bits;
+    pmp->bitindex += number_of_bits;
+    rval >>= 16 - number_of_bits;
 
-    rval >>= (16-number_of_bits);
+    pmp->wordpointer += pmp->bitindex >> 3;
+    pmp->bitindex &= 7;
 
-    wordpointer += (bitindex>>3);
-    bitindex &= 7;
-  }
-  return rval;
+    return rval;
 }
 
 
 int set_pointer( PMPSTR mp, long backstep)
 {
-  unsigned char *bsbufold;
+    unsigned char *bsbufold;
 
-  if(mp->fsizeold < 0 && backstep > 0) {
-    fprintf(stderr,"Can't step back %ld!\n",backstep);
-    return MP3_ERR; 
-  }
-  bsbufold = mp->bsspace[1-mp->bsnum] + 512;
-  wordpointer -= backstep;
-  if (backstep)
-    memcpy(wordpointer,bsbufold+mp->fsizeold-backstep,(size_t)backstep);
-  bitindex = 0;
-  return MP3_OK;
+    if (mp->fsizeold < 0 && backstep > 0) {
+	fprintf(stderr,"Can't step back %ld!\n",backstep);
+	return MP3_ERR; 
+    }
+
+    bsbufold = mp->bsspace[1-mp->bsnum] + 512;
+    mp->wordpointer -= backstep;
+    if (backstep)
+	memcpy(mp->wordpointer, bsbufold+mp->fsizeold-backstep,
+	       (size_t)backstep);
+    mp->bitindex = 0;
+    return MP3_OK;
 }

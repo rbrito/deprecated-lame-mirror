@@ -49,9 +49,9 @@ extern void calc_noise_sub_3DN(const FLOAT *, const int *, int, int, FLOAT *);
 extern void quantize_ISO_3DN(const FLOAT *, int, int, int *, int);
 extern void quantize_ISO_SSE(const FLOAT *, int, int, int *);
 extern FLOAT
-calc_sfb_noise_fast_3DN(lame_internal_flags *gfc, int j, int bw, int sf);
+calc_sfb_noise_fast_3DN(lame_t gfc, int j, int bw, int sf);
 extern FLOAT
-calc_sfb_noise_3DN(lame_internal_flags *gfc, int j, int bw, int sf);
+calc_sfb_noise_3DN(lame_t gfc, int j, int bw, int sf);
 #endif
 
 static const int max_range_short[SBMAX_s*3] = {
@@ -121,7 +121,7 @@ static const int max_range_long[SBMAX_l] = {
  *      l3_side->ResvSize:  current reservoir size
  */
 static int
-ResvFrameBegin(lame_internal_flags *gfc, int mean_bytes)
+ResvFrameBegin(lame_t gfc, int mean_bytes)
 {
     III_side_info_t     *l3_side = &gfc->l3_side;
     l3_side->ResvMax = (l3_side->maxmp3buf - mean_bytes)*8;
@@ -144,12 +144,12 @@ ResvFrameBegin(lame_internal_flags *gfc, int mean_bytes)
 
 /*  find a bitrate which can refill the resevoir to positive size. */
 static void
-finish_VBR_coding(lame_global_flags *gfp, lame_internal_flags *gfc)
+finish_VBR_coding(lame_t gfc)
 {
     int mean_bytes;
     gfc->bitrate_index = gfc->VBR_min_bitrate;
     do {
-	mean_bytes = getframebytes(gfp);
+	mean_bytes = getframebytes(gfc);
 	if (ResvFrameBegin(gfc, mean_bytes) >= 0)
 	    break;
     } while (++gfc->bitrate_index <= gfc->VBR_max_bitrate);
@@ -166,7 +166,7 @@ finish_VBR_coding(lame_global_flags *gfp, lame_internal_flags *gfc)
  *************************************************************************/
 static void
 calc_xmin(
-    lame_internal_flags *gfc,
+    lame_t gfc,
     const III_psy_ratio * const ratio,
     const gr_info       * const gi,
 	   FLOAT        * xmin
@@ -240,7 +240,7 @@ calc_xmin(
  *************************************************************************/
 static FLOAT
 calc_noise(
-    lame_internal_flags *gfc,
+    lame_t gfc,
     const gr_info * const gi, const FLOAT rxmin[], FLOAT distort[])
 {
     FLOAT max_noise = 1e-20;
@@ -337,7 +337,7 @@ calc_noise(
 
 static FLOAT
 calc_noise_allband(
-    lame_internal_flags *gfc,
+    lame_t gfc,
     const gr_info * const gi,
     const FLOAT * const xmin,
     FLOAT distort[],
@@ -362,7 +362,7 @@ calc_noise_allband(
  ************************************************************************/
 
 static int 
-init_bitalloc(lame_internal_flags *gfc, gr_info *const gi)
+init_bitalloc(lame_t gfc, gr_info *const gi)
 {
     FLOAT tmp, sum = 0.0;
     int i, end = gi->xrNumMax;
@@ -414,7 +414,7 @@ init_bitalloc(lame_internal_flags *gfc, gr_info *const gi)
  * used by CBR_1st_bitalloc to get a quantizer step size to start with
  ************************************************************************/
 static void
-quantize_ISO(lame_internal_flags * const gfc, gr_info *gi)
+quantize_ISO(const lame_t gfc, gr_info *gi)
 {
     /* quantize on xr^(3/4) instead of xr */
     fi_union *fi = (fi_union *)gi->l3_enc;
@@ -479,7 +479,7 @@ quantize_ISO(lame_internal_flags * const gfc, gr_info *gi)
 
 static void
 init_global_gain(
-    lame_internal_flags * const gfc,
+    const lame_t gfc,
     gr_info * const gi,
     int desired_rate,
     int CurrentStep)
@@ -550,7 +550,7 @@ floatcompare(const FLOAT *a, const FLOAT *b)
 
 static void
 trancate_smallspectrums(
-    lame_internal_flags *gfc, gr_info * const gi, const FLOAT * const xmin)
+    lame_t gfc, gr_info * const gi, const FLOAT * const xmin)
 {
     int sfb, j;
     FLOAT distort[SFBMAX], work[576]; /* 576 is too much */
@@ -726,7 +726,7 @@ inc_subblock_gain(gr_info * const gi, FLOAT distort[])
  *************************************************************************/
 static int
 amp_scalefac_bands(
-    lame_internal_flags *gfc,
+    lame_t gfc,
     gr_info  *const gi, 
     FLOAT *distort,
     FLOAT trigger,
@@ -792,7 +792,7 @@ amp_scalefac_bands(
 
 
 inline static FLOAT
-calc_sfb_noise_fast(lame_internal_flags *gfc, int j, int bw, int sf)
+calc_sfb_noise_fast(lame_t gfc, int j, int bw, int sf)
 {
     FLOAT xfsf = 0.0;
     FLOAT sfpow = POW20(sf);  /*pow(2.0,sf/4.0); */
@@ -825,7 +825,7 @@ calc_sfb_noise_fast(lame_internal_flags *gfc, int j, int bw, int sf)
 }
 
 inline static FLOAT
-calc_sfb_noise(lame_internal_flags *gfc, int j, int bw, int sf)
+calc_sfb_noise(lame_t gfc, int j, int bw, int sf)
 {
     FLOAT xfsf, sfpow, sfpow34;
 #ifdef HAVE_NASM
@@ -865,8 +865,7 @@ calc_sfb_noise(lame_internal_flags *gfc, int j, int bw, int sf)
 }
 
 static int
-adjust_global_gain(
-    lame_internal_flags *gfc, gr_info *gi, FLOAT *distort, int huffbits)
+adjust_global_gain(lame_t gfc, gr_info *gi, FLOAT *distort, int huffbits)
 {
     fi_union *fi = (fi_union *)gi->l3_enc;
     int sfb = 0, j = 0, end = gi->xrNumMax;
@@ -927,7 +926,7 @@ adjust_global_gain(
 }
 
 static void
-CBR_2nd_bitalloc(lame_internal_flags * gfc, gr_info *gi, FLOAT distort[])
+CBR_2nd_bitalloc(lame_t gfc, gr_info *gi, FLOAT distort[])
 {
     gr_info gi_w = *gi;
     int sfb, j = 0, flag = 0;
@@ -979,7 +978,7 @@ noise_in_sfb21(gr_info *gi, FLOAT distort[], FLOAT threshold)
  ************************************************************************/
 static void
 CBR_1st_bitalloc (
-    lame_internal_flags *gfc,
+    lame_t gfc,
     gr_info		* const gi,
     const int           ch,
     const int           targ_bits,  /* maximum allowed bits */
@@ -1089,7 +1088,7 @@ CBR_1st_bitalloc (
  ************************************************************************/
 static void
 CBR_bitalloc(
-    lame_internal_flags *gfc,
+    lame_t gfc,
     III_psy_ratio      ratio[2],
     int min_bits,
     int max_bits,
@@ -1147,22 +1146,21 @@ CBR_bitalloc(
  *
  ********************************************************************/
 void 
-ABR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
+ABR_iteration_loop(lame_t gfc, III_psy_ratio ratio[2][2])
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
     int gr, max_bits, min_bits;
     FLOAT factor;
 
     gfc->bitrate_index = 0;
-    factor = (getframebytes(gfp)*8/gfc->mode_gr/gfc->channels_out + 300.0)
+    factor = (getframebytes(gfc)*8/gfc->mode_gr/gfc->channels_out + 300.0)
 	*(1.0/700.0);
     if (gfc->substep_shaping & 1)
 	factor *= 1.1;
 
     gfc->bitrate_index = gfc->VBR_max_bitrate;
-    max_bits = ResvFrameBegin(gfc, getframebytes(gfp)) / gfc->mode_gr;
+    max_bits = ResvFrameBegin(gfc, getframebytes(gfc)) / gfc->mode_gr;
     gfc->bitrate_index = 1;
-    min_bits = ResvFrameBegin(gfc, getframebytes(gfp)) / gfc->mode_gr;
+    min_bits = ResvFrameBegin(gfc, getframebytes(gfc)) / gfc->mode_gr;
     /* check hard limit per granule (by spec) */
     if (max_bits > MAX_BITS)
 	max_bits = MAX_BITS;
@@ -1172,7 +1170,7 @@ ABR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
     for (gr = 0; gr < gfc->mode_gr; gr++)
 	CBR_bitalloc(gfc, ratio[gr], min_bits, max_bits, factor, gr);
 
-    finish_VBR_coding(gfp, gfc);
+    finish_VBR_coding(gfc);
 }
 
 /************************************************************************
@@ -1183,10 +1181,9 @@ ABR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
  *
  ************************************************************************/
 void 
-iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
+iteration_loop(lame_t gfc, III_psy_ratio ratio[2][2])
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
-    int gr, mean_bits = getframebytes(gfp);
+    int gr, mean_bits = getframebytes(gfc);
     FLOAT factor;
 
     ResvFrameBegin(gfc, mean_bits);
@@ -1260,7 +1257,7 @@ bitpressure_strategy(gr_info *gi, FLOAT *xmin)
 /* find_scalefac() calculates a quantization step size which would
  * introduce as much noise as allowed (= as less bits as possible). */
 inline static int
-find_scalefac(lame_internal_flags *gfc, int j, FLOAT xmin, int bw,
+find_scalefac(lame_t gfc, int j, FLOAT xmin, int bw,
 	      int shortflag, int sf)
 {
     int sf_ok = 10000, delsf = 8, sfmin = -7*4, endflag = 0;
@@ -1371,7 +1368,7 @@ short_block_scalefacs(gr_info * gi, int vbrmax)
 
 
 static void
-long_block_scalefacs(const lame_internal_flags *gfc, gr_info * gi, int vbrmax)
+long_block_scalefacs(const lame_t gfc, gr_info * gi, int vbrmax)
 {
     int sfb, maxov0, maxov1, maxov0p, maxov1p;
 
@@ -1441,7 +1438,7 @@ set_scalefactor_values(gr_info *gi)
 
 
 static int
-noisesfb(lame_internal_flags *gfc, gr_info *gi, FLOAT * xmin, int startsfb)
+noisesfb(lame_t gfc, gr_info *gi, FLOAT * xmin, int startsfb)
 {
     int sfb, j = 0;
     for (sfb = 0; sfb < gi->psymax; sfb++) {
@@ -1459,7 +1456,7 @@ noisesfb(lame_internal_flags *gfc, gr_info *gi, FLOAT * xmin, int startsfb)
 }
 
 static void
-VBR_2nd_bitalloc(lame_internal_flags * gfc, gr_info *gi, FLOAT * xmin)
+VBR_2nd_bitalloc(lame_t gfc, gr_info *gi, FLOAT * xmin)
 {
     /* note: we cannot use calc_noise() because l3_enc[] is not calculated
        at this point */
@@ -1491,7 +1488,7 @@ VBR_2nd_bitalloc(lame_internal_flags * gfc, gr_info *gi, FLOAT * xmin)
 }
 
 static int
-VBR_3rd_bitalloc(lame_internal_flags *gfc, gr_info *gi, FLOAT * xmin)
+VBR_3rd_bitalloc(lame_t gfc, gr_info *gi, FLOAT * xmin)
 {
     /* note: we cannot use calc_noise() because l3_enc[] is not calculated
        at this point */
@@ -1532,7 +1529,7 @@ VBR_3rd_bitalloc(lame_internal_flags *gfc, gr_info *gi, FLOAT * xmin)
  *
  ***********************************************************************/
 static int
-VBR_noise_shaping(lame_internal_flags * gfc, gr_info *gi, FLOAT * xmin)
+VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
 {
     int vbrmax, sfb, j;
     sfb = j = 0;
@@ -1585,9 +1582,8 @@ VBR_noise_shaping(lame_internal_flags * gfc, gr_info *gi, FLOAT * xmin)
 
 
 void 
-VBR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
+VBR_iteration_loop(lame_t gfc, III_psy_ratio ratio[2][2])
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
     FLOAT xmin[2][2][SFBMAX];
     int max_frame_bits, used_bits, ch, gr;
 
@@ -1599,7 +1595,7 @@ VBR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
     }
 
     gfc->bitrate_index = gfc->VBR_max_bitrate;
-    max_frame_bits = ResvFrameBegin(gfc, getframebytes(gfp));
+    max_frame_bits = ResvFrameBegin(gfc, getframebytes(gfc));
 
  VBRloop_restart:
     {used_bits = 0;
@@ -1630,7 +1626,7 @@ VBR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
     }
     gfc->l3_side.ResvSize -= used_bits;
 
-    finish_VBR_coding(gfp, gfc);
+    finish_VBR_coding(gfc);
 }
 
 
@@ -1647,7 +1643,7 @@ VBR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
  ************************************************************************/
 static void
 set_pinfo (
-    lame_internal_flags *gfc,
+    lame_t gfc,
          gr_info        * const gi,
     const III_psy_ratio * const ratio, 
     const int           gr,
@@ -1730,10 +1726,8 @@ set_pinfo (
  *
  ************************************************************************/
 void
-set_frame_pinfo(
-    lame_global_flags *gfp, III_psy_ratio ratio[2][2], const sample_t *inbuf[])
+set_frame_pinfo(lame_t gfc, III_psy_ratio ratio[2][2], const sample_t *inbuf[])
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
     int gr, ch;
 
     /* for every granule and channel common data */
@@ -1749,14 +1743,14 @@ set_frame_pinfo(
 	int j;
 	for ( j = 0; j < FFTOFFSET; j++ )
 	    gfc->pinfo->pcmdata[ch][j]
-		= gfc->pinfo->pcmdata[ch][j+gfp->framesize];
+		= gfc->pinfo->pcmdata[ch][j+gfc->framesize];
 	for (j = FFTOFFSET; j < 1600; j++)
 	    gfc->pinfo->pcmdata[ch][j] = inbuf[ch][j-FFTOFFSET];
 	gfc->pinfo->athadjust[ch] = gfc->l3_side.tt[0][ch].ATHadjust;
     }
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
-	if (gfp->mode == JOINT_STEREO) {
+	if (gfc->mode == JOINT_STEREO) {
 	    gfc->pinfo->ms_ratio[gr] = gfc->pinfo->ms_ratio_next[gr];
 	    gfc->pinfo->ms_ratio_next[gr]
 		= gfc->masking_next[gr][2].pe

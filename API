@@ -29,7 +29,7 @@ See lame.h for details.
 3. Initialize the encoder.  sets default for all encoder parameters.
 
    #include "lame.h"
-   lame_global_flags *gfp;
+   lame_t gfp;
    gfp = lame_init();
 
 The default (if you set nothing) is a  J-Stereo, 44.1khz
@@ -68,7 +68,7 @@ not the sum of the number of samples in the L and R channels.
 The return code = number of bytes output in mp3buffer.  This can be 0.
 If it is <0, an error occured.  
 
-   int lame_encode_buffer(lame_global_flags *gfp,
+   int lame_encode_buffer(lame_t gfp,
          short int leftpcm[], short int rightpcm[],
          int num_samples,char *mp3buffer,int  mp3buffer_size);
 
@@ -81,12 +81,12 @@ There are also routines for various types of input
 final few mp3 frames.  mp3buffer should be at least 7200 bytes.
 return code = number of bytes output to mp3buffer.  This can be 0.
 
-int lame_encode_flush(lame_global_flags *,char *mp3buffer, int mp3buffer_size);
+int lame_encode_flush(lame_t, char *mp3buffer, int mp3buffer_size);
 
 
 7.  Write the Xing VBR/INFO tag to mp3 file.  
 
-void lame_mp3_tags_fid(lame_global_flags *,FILE* fid);
+void lame_mp3_tags_fid(lame_t, FILE* fid);
 
 This adds a valid mp3 frame which contains information about the
 bitstream some players may find usefull.  It is used for CBR,ABR and
@@ -102,6 +102,6 @@ will be all 0's.
 
 8. free the internal data structures.
 
-void lame_close(lame_global_flags *); 
+void lame_close(lame_t); 
 
 

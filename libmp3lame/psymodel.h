@@ -34,12 +34,12 @@
 
 #define NS_MSFIX 4.0
 
-void psycho_analysis( lame_global_flags *gfp,
-		      const sample_t *buffer[2],
-		      III_psy_ratio masking[2][2],
-		      FLOAT sbsmpl[2][1152] );
+void psycho_analysis(lame_t gfc,
+		     const sample_t *buffer[2],
+		     III_psy_ratio masking[2][2],
+		     FLOAT sbsmpl[2][1152] );
 
-int psymodel_init(lame_global_flags *gfp);
-void init_mask_add_max_values(lame_internal_flags *gfc);
+int psymodel_init(lame_t gfc);
+void init_mask_add_max_values(lame_t gfc);
 
 #endif /* LAME_PSYMODEL_H */

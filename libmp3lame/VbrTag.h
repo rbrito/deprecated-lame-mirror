@@ -67,10 +67,10 @@ typedef struct
 
 int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf);
 
-int InitVbrTag(lame_global_flags *gfp);
-int PutVbrTag(lame_global_flags *gfp, FILE *fid);
-void AddVbrFrame(lame_global_flags *gfp);
-void ReportLameTagProgress(lame_global_flags *gfp,int nStart);
+int InitVbrTag(lame_t gfp);
+int PutVbrTag(lame_t gfp, FILE *fid);
+void AddVbrFrame(lame_t gfp);
+void ReportLameTagProgress(lame_t gfp,int nStart);
 void UpdateMusicCRC(uint16_t *crc,unsigned char *buffer, int size);
 
 #endif
