@@ -29,7 +29,7 @@ MP3LIB = libmp3lame/libmp3lame.a
 ##########################################################################
 # -DHAVEMPGLIB compiles the mpglib *decoding* library into libmp3lame
 ##########################################################################
-CPP_OPTS += -DHAVEMPGLIB 
+CPP_OPTS += -DHAVE_MPGLIB 
 
 ##########################################################################
 # -DUSE_LAYER_1/2 enables Layer1 or Layer2 *decoding* abilities 
@@ -91,7 +91,7 @@ CC_OPTS = -O2
 # 10/99 added -D__NO_MATH_INLINES to fix a bug in *all* versions of
 # gcc 2.8+ as of 10/99.  
 
-CC_SWITCHES = -DHAVE_CONFIG_MS_H -DNDEBUG -D__NO_MATH_INLINES $(CC_OPTS) $(SNDLIB)  \
+CC_SWITCHES = -DHAVE_CONFIG_H -DNDEBUG -D__NO_MATH_INLINES $(CC_OPTS) $(SNDLIB)  \
 $(VORBIS) 
 frontend_sources = \
         frontend/brhist.c \
@@ -148,7 +148,7 @@ ASFLAGS=-f elf -i i386/
 #CC_SWITCCH += -DMMX_choose_table
 #OBJ += i386/choose_table.o i386/cpu_feat.o i386/scalar.o
 
-%.o: %.c 
+%.o: %.c config.h
 	$(CC) $(CPP_OPTS) $(CC_SWITCHES) -c $< -o $@
 
 #%.d: %.c
@@ -174,6 +174,9 @@ clean:
 	del libmp3lame\*.o	
 	del libmp3lame\*.d	
 	del libmp3lame\*.a	
+
+config.h:
+	copy configMS.h config.h
 
 
 #
