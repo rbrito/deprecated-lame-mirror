@@ -4,8 +4,11 @@ libmp3lame.so*
 config.status
 config.log
 config.cache
+config.h
+stamp-h
 mp3x
 lame
+lame.spec
 *.d
 Debug
 DebugGTK
