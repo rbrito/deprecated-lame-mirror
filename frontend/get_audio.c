@@ -1105,10 +1105,14 @@ read_samples_pcm(FILE * musicin, int sample_buffer[2304], int frame_size,
 
 #define IFF_ID_FORM 0x464f524d /* "FORM" */
 #define IFF_ID_AIFF 0x41494646 /* "AIFF" */
+#define IFF_ID_AIFC 0x41494643 /* "AIFC" */
 #define IFF_ID_COMM 0x434f4d4d /* "COMM" */
 #define IFF_ID_SSND 0x53534e44 /* "SSND" */
 #define IFF_ID_MPEG 0x4d504547 /* "MPEG" */
 
+#define IFF_ID_NONE 0x4e4f4e45 /* "NONE" */ /* AIFF-C data format */
+#define IFF_ID_2CBE 0x74776f73 /* "twos" */ /* AIFF-C data format */
+#define IFF_ID_2CLE 0x736f7774 /* "sowt" */ /* AIFF-C data format */
 
 #define WAV_ID_RIFF 0x52494646 /* "RIFF" */
 #define WAV_ID_WAVE 0x57415645 /* "WAVE" */
@@ -1245,10 +1249,11 @@ aiff_check2(const char *file_name, IFF_AIFF * const pcm_aiff_data)
         fprintf(stderr, "Block size is not 0 bytes in '%s'\n", file_name);
         return 1;
     }
+    /* A bug, since we correctly skip the offset earlier in the code.
     if (pcm_aiff_data->blkAlgn.offset != 0) {
         fprintf(stderr, "Block offset is not 0 bytes in '%s'\n", file_name);
         return 1;
-    }
+    } */
 
     return 0;
 }
@@ -1266,13 +1271,14 @@ static int
 parse_aiff_header(lame_global_flags * gfp, FILE * sf)
 {
     int     is_aiff = 0;
-    long    chunkSize = 0, subSize = 0;
+    long    chunkSize = 0, subSize = 0, typeID = 0, dataType = 0;
     IFF_AIFF aiff_info;
 
     memset(&aiff_info, 0, sizeof(aiff_info));
     chunkSize = Read32BitsHighLow(sf);
 
-    if (Read32BitsHighLow(sf) != IFF_ID_AIFF)
+    typeID = Read32BitsHighLow(sf);
+    if ((typeID != IFF_ID_AIFF)&&(typeID != IFF_ID_AIFC))
         return 0;
 
     while (chunkSize > 0) {
@@ -1296,9 +1302,21 @@ parse_aiff_header(lame_global_flags * gfp, FILE * sf)
             aiff_info.sampleRate = ReadIeeeExtendedHighLow(sf);
             subSize -= 10;
 
+            if (typeID == IFF_ID_AIFC) {
+                dataType = Read32BitsHighLow(sf);
+                subSize -= 4;
+
+                if ((dataType != IFF_ID_2CLE) && 
+                    (dataType != IFF_ID_2CBE) &&
+                    (dataType != IFF_ID_NONE))
+                    return 0;
+                    
+                if (aiff_info.sampleSize == 16)
+                    swapbytes = (!swapbytes == (dataType == IFF_ID_2CLE));
+            }
+            
             if (fskip(sf, (long) subSize, SEEK_CUR) != 0)
                 return 0;
-
         }
         else if (type == IFF_ID_SSND) {
             subSize = Read32BitsHighLow(sf);
