@@ -5,6 +5,10 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.19  2000/01/09 07:51:36  markt
+ * AAC masking function now the default.  This represents less
+ * masking then the old masking function.
+ *
  * Revision 1.18  2000/01/09 07:34:39  markt
  * compute mid/side energy rations in addition to masking ratios.
  * in the future we might use this for side channel bit allocation.
@@ -345,7 +349,7 @@ void L3psycho_anal( short int *buffer[2], int stereo,
     */
     
 
-#define AACS3XX
+#define AACS3
 #define NEWS3XX
     
     /* compute norm_l, norm_s instead of relying on table data */

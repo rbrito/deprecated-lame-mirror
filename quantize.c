@@ -134,11 +134,11 @@ void set_masking_lower( int nbits )
 	fac  = nbits > 1500 ? 0 : 2*(sin(PI*(nbits/1500.0 - 0.5))-1.0);
 	fac *= reduce_sidechannel ? 0.707 : 1;
 #else
-	/* masking_lower varies from -18 to +8 db */
-	masking_lower_db = -10 + 2*VBR_q;
+	/* masking_lower varies from -8 to +10 db */
+	masking_lower_db = -8 + 2*VBR_q;
 	/* adjust by -6(min)..0(max) depending on bitrate */
 	fac = (nbits-125)/(2500.0-125.0);
-	fac = 6*(fac-1);
+	fac = 4*(fac-1);
 #endif
 	
 	masking_lower_db += fac;

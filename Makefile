@@ -288,12 +288,12 @@ ifneq ($(MAKECMDGOALS),clean)
 endif
 
 
-test23: $(PGM)
+test25: $(PGM)
 	./lame  ../test/castanets.wav
-	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref23.mp3 | head
-test23h: $(PGM)
+	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref25.mp3 | head
+test25h: $(PGM)
 	./lame  -h  ../test/castanets.wav
-	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref23h.mp3 | head
+	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref25h.mp3 | head
 test24: $(PGM)
 	./lame  ../test/castanets.wav
 	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref24.mp3 | head
