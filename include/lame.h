@@ -407,7 +407,7 @@ int CDECL lame_get_useTemporal(const lame_global_flags *);
 
 // use temporal masking effect (default = 1)
 int CDECL lame_set_interChRatio(lame_global_flags *, float);
-int CDECL lame_get_interChRatio(const lame_global_flags *);
+float CDECL lame_get_interChRatio(const lame_global_flags *);
 
 // substep shaping method
 int CDECL lame_set_substep(lame_global_flags *, int);

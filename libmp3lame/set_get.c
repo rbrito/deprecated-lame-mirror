@@ -1264,7 +1264,7 @@ lame_set_interChRatio( lame_global_flags*  gfp,
     return 0;
 }
 
-int
+float
 lame_get_interChRatio( const lame_global_flags*  gfp )
 {
     assert( 0 <= gfp->interChRatio && gfp->interChRatio <= 1.0);
