@@ -1065,7 +1065,11 @@ lame_init_params(lame_global_flags * const gfp)
         
         if (gfp->ATHtype == -1) gfp->ATHtype = 4;
         gfp->allow_diff_short = 1;
-        gfp->quality = 1;   // the usual stuff at level 1
+        if (gfp->quality < 0) gfp->quality = 0;     // the usual stuff at level 0
+        if (gfp->quality > 7) {
+            gfp->quality = 7;     // needs psymodel
+            ERRORF( gfc, "VBR needs a psymodel, switching to quality level 7\n");
+        }
         gfp->experimentalY = 1;        
         break;
         
