@@ -515,9 +515,8 @@ void lame_init_params(lame_global_flags *gfp)
   }
 
   if (gfp->quality==4) gfp->quality=2;
-  if (gfp->quality==3) gfp->quality=2;
 
-  if (gfp->quality==2) {
+  if (gfp->quality==3) {
     gfc->filter_type=0;
     gfc->psymodel=1;
     gfc->quantization=1;
@@ -526,11 +525,20 @@ void lame_init_params(lame_global_flags *gfp)
     gfc->use_best_huffman=1;
   }
 
+  if (gfp->quality==2) {
+    gfc->filter_type=0;
+    gfc->psymodel=1;
+    gfc->quantization=1;
+    gfc->noise_shaping=2;
+    gfc->noise_shaping_stop=0;
+    gfc->use_best_huffman=1;
+  }
+
   if (gfp->quality==1) {
     gfc->filter_type=0;
     gfc->psymodel=1;
     gfc->quantization=1;
-    gfc->noise_shaping=1;
+    gfc->noise_shaping=2;
     gfc->noise_shaping_stop=1;
     gfc->use_best_huffman=1;
   }
