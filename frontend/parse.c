@@ -541,9 +541,9 @@ static int  presets_setup ( lame_global_flags* gfp, const char* preset_name, con
 	        gfp -> highpasswidth    = 0;
 	    gfp -> lowpassfreq          = Presets[i].lowpass_freq;
 	    gfp -> lowpasswidth         = Presets[i].lowpass_width;
-	    gfp -> no_short_blocks      = Presets[i].no_short_blocks;
-	    (void) lame_set_quality( gfp, Presets[i].quality );
-	    (void) lame_set_mode   ( gfp, Presets[i].mode    );
+	    (void) lame_set_no_short_blocks( gfp, Presets[i].no_short_blocks );
+	    (void) lame_set_quality        ( gfp, Presets[i].quality         );
+	    (void) lame_set_mode           ( gfp, Presets[i].mode            );
 	    gfp -> brate                = Presets[i].cbr;
 	    gfp -> VBR_q                = Presets[i].vbr_mode;
 	    gfp -> VBR_min_bitrate_kbps = Presets[i].vbr_min;
@@ -704,7 +704,7 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
                     (void) lame_set_quality( gfp, 2 );
                     gfp->lowpassfreq = 19500;
                     (void) lame_set_mode( gfp, JOINT_STEREO );
-		    gfp->ATHtype=3;
+		    (void) lame_set_ATHtype( gfp, 3 );
 		    gfp->VBR_min_bitrate_kbps=64;
 		
 		T_ELIF ("abr")
@@ -765,10 +765,10 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 		        return -1;
                     
 		T_ELIF ("noshort")
-		    gfp->no_short_blocks=1;
+		    (void) lame_set_no_short_blocks( gfp, 1 );
 		
 		T_ELIF ("short")
-		    gfp->no_short_blocks=0;
+		    (void) lame_set_no_short_blocks( gfp, 0 );
 		
 		T_ELIF ("decode")
 		    (void) lame_set_decode_only( gfp, 1 );
@@ -779,7 +779,7 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 		    argUsed=1;
 		
 		T_ELIF ("noath")
-		    gfp->noATH=1;
+		    (void) lame_set_noATH( gfp, 1 );
 		
 		T_ELIF ("nores")
 		    gfp->disable_reservoir=1;
@@ -789,15 +789,15 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 		    gfp->strict_ISO=1;
 		
 		T_ELIF ("athonly")
-		    gfp->ATHonly=1;
+		    (void) lame_set_ATHonly( gfp, 1 );
 		
 		T_ELIF ("athlower")
 		    argUsed=1;
-		    gfp->ATHlower = atof(nextArg);
+		    (void) lame_set_ATHlower( gfp, atof( nextArg ) );
 		
 		T_ELIF ("athtype")
 		    argUsed=1;
-		    gfp->ATHtype = atoi(nextArg);
+		    (void) lame_set_ATHtype( gfp, atoi( nextArg ) );
 
 		T_ELIF ("adapt-thres-type")
 		    argUsed=1;
@@ -815,7 +815,7 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 		    gfp->free_format=1;
 		
 		T_ELIF ("athshort")
-		    gfp->ATHshort=1;
+		    (void) lame_set_ATHshort( gfp, 1 );
 		
 		T_ELIF ("nohist")
 		    brhist = 0;
@@ -911,10 +911,14 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 		    val = atof (nextArg);
 		    argUsed=1;
 		    /* useful are 0.001 kHz...50 kHz, 50 Hz...50000 Hz */
-		    gfp -> cwlimit = val * ( val <= 50. ? 1.e3 : 1.e0 );
-		    if (gfp->cwlimit <= 0 ) {
-			fprintf(stderr,"Must specify cwlimit with --cwlimit freq, freq >= 0.001 kHz\n");
-			return -1;
+		    {
+			int my_cwlimit = val * ( val <= 50. ? 1.e3 : 1.e0 );
+			lame_set_cwlimit( gfp, my_cwlimit );
+			if ( my_cwlimit <= 0 ) {
+			    fprintf( stderr,
+              "Must specify cwlimit with --cwlimit freq, freq >= 0.001 kHz\n" );
+			    return -1;
+			}
 		    }
 		 
 		T_ELIF ("comp")
@@ -926,7 +930,7 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 		    }
 		
 		T_ELIF ("notemp")
-		    gfp->useTemporal =  0;
+		    (void) lame_set_useTemporal( gfp, 0 );
 
 		T_ELIF ("nspsytune")
 		    gfp->exp_nspsytune |= 1;
@@ -1133,7 +1137,7 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 			gfp->highpassfreq=-1;
 			break;
 		    case 'd': 
-			gfp->allow_diff_short = 1;
+			(void) lame_set_allow_diff_short( gfp, 1 );
 			break;
 		    case 'S': 
 			silent = 1;
@@ -1157,9 +1161,9 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 			argUsed = 1;
 			
 			switch (*arg) {
-			case 'n': gfp -> emphasis = 0; break;
-			case '5': gfp -> emphasis = 1; break;
-			case 'c': gfp -> emphasis = 3; break;
+			case 'n': (void) lame_set_emphasis( gfp, 0 ); break;
+			case '5': (void) lame_set_emphasis( gfp, 1 ); break;
+			case 'c': (void) lame_set_emphasis( gfp, 3 ); break;
 			default : fprintf(stderr,"%s: -e emp must be n/5/c not %s\n", ProgramName, arg );
 			    err = 1;
 			    break;
