@@ -1022,7 +1022,7 @@ iteration_init( lame_global_flags *gfp)
 	= gfc->cutoff_sfb_s;
     if (gfp->mode != MONO && gfp->compression_ratio > 12.0
 	&& gfp->internal_flags->mode_gr == 2) {
-	/* currently only MPEG1/CBR or ABR */
+	/* currently only MPEG1 */
 	gfp->use_istereo = 1;
     }
 
