@@ -574,23 +574,7 @@ const int mdctorder[] = {
     2,28,13,19,10,20, 5,27, 6,24, 9,23,14,16, 1,31
 };
 
-/* 
- * 0: MPEG-2 LSF
- * 1: MPEG-1
- * 2: MPEG-2.5 LSF FhG extention                  (1995-07-11 shn)
- */
-
-typedef enum {
-    MPEG_2  = 0,
-    MPEG_1  = 1,
-    MPEG_25 = 2
-} MPEG_t;
- 
-const int  bitrate_table    [3] [16] = {
-    { 0,  8, 16, 24, 32, 40, 48, 56,  64,  80,  96, 112, 128, 144, 160, -1 },
-    { 0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, -1 },
-    { 0,  8, 16, 24, 32, 40, 48, 56,  64,  80,  96, 112, 128, 144, 160, -1 },
-};
+const char* version_string  [3] = { "2", "1", "2.5" };
 
 const int  samplerate_table [3]  [4] = { 
     { 22050, 24000, 16000, -1 },      /* MPEG 2 */
@@ -598,7 +582,11 @@ const int  samplerate_table [3]  [4] = {
     { 11025, 12000,  8000, -1 },      /* MPEG 2.5 */
 };
 
-const char* version_string  [3] = { "2", "1", "2.5" };
+const int  bitrate_table    [3] [16] = {
+    { 0,  8, 16, 24, 32, 40, 48, 56,  64,  80,  96, 112, 128, 144, 160, -1 },
+    { 0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, -1 },
+    { 0,  8, 16, 24, 32, 40, 48, 56,  64,  80,  96, 112, 128, 144, 160, -1 },
+};
 
 /* This is the scfsi_band table from 2.4.2.7 of the IS */
 const int scfsi_band[5] = { 0, 6, 11, 16, 21 };
@@ -866,13 +854,10 @@ lame_init_params_ppflt(lame_global_flags * gfp)
 
     /* make sure highpass filter is within 90% of what the effective
      * highpass frequency will be */
-    if (gfc->highpass2 > 0) {
-        if (gfc->highpass2 < .9 * (.75 / 31.0)) {
-            gfc->highpass1 = 0;
-            gfc->highpass2 = 0;
-            MSGF(gfc, "Warning: highpass filter disabled.  "
-                 "highpass frequency too small\n");
-        }
+    if (gfc->highpass2 > 0 && gfc->highpass2 < .9 * (.75 / 31.0)) {
+	gfc->highpass1 = gfc->highpass2 = 0;
+	MSGF(gfc,
+	     "Warning: highpass filter disabled (the frequency too small)\n");
     }
 
     if (gfc->highpass2 > 0) {
