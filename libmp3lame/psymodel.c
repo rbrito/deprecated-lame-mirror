@@ -914,7 +914,7 @@ pecalc_s(
     };
     int sb, sblock;
 
-    pe_s = 1236.28/4;
+    pe_s = 1900.28/4;
     sb = SBMAX_s - 1;
     if (!gfc->sfb21_extra)
 	sb--;
@@ -1126,9 +1126,6 @@ mp3x display               <------LONG------>
 
     if (!current_is_short)
 	return;
-
-    if (current_is_short & 12)
-	gfc->useshort_next[gr][2] = gfc->useshort_next[gr][3] = SHORT_TYPE;
 
     for (chn=0; chn<numchn; chn++) {
 	/* fft and energy calculation   */
@@ -1748,6 +1745,8 @@ psycho_analysis(
 	    else
 		mr->pe = pecalc_l(gfc, mr);
 	}
+	if (gfc->useshort_next[gr][2] | gfc->useshort_next[gr][3])
+	    gfc->useshort_next[gr][2] = gfc->useshort_next[gr][3] = SHORT_TYPE;
     }
 
     /* determine MS/LR in the next frame */
