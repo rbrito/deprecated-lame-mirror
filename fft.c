@@ -489,9 +489,9 @@ void init_fft(void)
      * calculate HANN window coefficients 
      */
     for (i = 0; i < BLKSIZE / 2; i++)
-	window[i] = 0.5 * (1.0 - cos(2.0 * M_PI * (i + 0.5) / BLKSIZE));
+	window[i] = 0.5 * (1.0 - cos(2.0 * PI * (i + 0.5) / BLKSIZE));
     for (i = 0; i < BLKSIZE_s / 2; i++)
-	window_s[i] = 0.5 * (1.0 - cos(2.0 * M_PI * (i + 0.5) / BLKSIZE_s));
+	window_s[i] = 0.5 * (1.0 - cos(2.0 * PI * (i + 0.5) / BLKSIZE_s));
 }
 
 
