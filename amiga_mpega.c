@@ -85,7 +85,7 @@ int lame_decode_fromfile(FILE *fd, short pcm_l[],short pcm_r[],mp3data_struct *m
 	b[0]=pcm_l;
 	b[1]=pcm_r;
 
-	while (outsize == 0)
+	while ((outsize == 0) || (outsize == MPEGA_ERR_BADFRAME))	/* Skip bad frames */
 		outsize = MPEGA_decode_frame(mstream, b);
 
 	mp3data->stereo     = mstream->dec_channels;
