@@ -149,7 +149,7 @@ void close_infile(void)
   CloseSndFile(input_format, musicin);
 }
 
-#ifdef KLEMM_10
+#if defined(KLEMM_10) && defined(SIZEOF_UNSIGNED_LONG)
 
 void SwapBytesInWords ( short* ptr, size_t short_words )  /* Some speedy code */
 {
