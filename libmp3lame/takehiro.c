@@ -563,12 +563,44 @@ best_huffman_divide(lame_t gfc, gr_info * const gi)
     int r01_info[SBMAX_l];
     int max_info[SBMAX_l];
 
-    if (gi->big_values == 0)
+    if (gi->big_values == 0) {
+	if (gi->count1 && gi->block_type == NORM_TYPE) {
+	    for (i = 0; i < gi->count1 - 2; i += 4)
+		if (gi->l3_enc[i] + gi->l3_enc[i+1]
+		    + gi->l3_enc[i+2] + gi->l3_enc[i+3])
+		    break;
+	    if (!i)
+		return;
+	    gi->big_values = i;
+	    a1 = a2 = 0;
+	    for (; i < gi->count1; i += 4) {
+		int p = ((ix[i] * 2 + ix[i+1]) * 2 + ix[i+2]) * 2 + ix[i+3];
+		a1 += quadcode[0][p];
+		a2 += quadcode[1][p];
+	    }
+	    gi->count1 = i;
+	    gi->table_select[3] = 0;
+	    if (a1 > a2) {
+		a1 = a2;
+		gi->table_select[3] = 1;
+	    }
+	    gi->part2_3_length = gi->count1bits = a1;
+	    gi->table_select[0] = gi->table_select[1] = gi->table_select[2] = 0;
+	}
 	return;
+    }
 
     if (gi->block_type == NORM_TYPE) {
 	recalc_divide_init(gfc, gi, r01_bits, r01_info, max_info);
 	recalc_divide_sub(gfc, gi, r01_bits, r01_info, max_info);
+#if 0
+	if (gi->table_select[2] == 0 && gi->count1bits) {
+	    printf("%d | ", gi->big_values);
+	    for (i = gi->big_values; i < gi->count1; i++)
+		printf("%d ", gi->l3_enc[i]);
+	    printf("\n");
+	}
+#endif
     }
 
     i = gi->big_values;
