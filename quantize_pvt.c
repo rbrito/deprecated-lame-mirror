@@ -547,9 +547,15 @@ int calc_noise( lame_global_flags *gfp,
   
   if (cod_info->block_type == SHORT_TYPE) {
     int max_index = SBPSY_s;
-    if (gfp->VBR==vbr_rh || gfp->VBR==vbr_mt)
+    if ((gfp->VBR==vbr_rh || gfp->VBR==vbr_mt)&&(gfp->out_samplerate >=32000))
       {
         max_index = SBMAX_s;
+      }
+    else
+      {
+        distort[1][SBMAX_s-1] =
+        distort[2][SBMAX_s-1] =
+        distort[3][SBMAX_s-1] = 0;
       }
     for ( j=0, sfb = 0; sfb < max_index; sfb++ ) {
          start = gfc->scalefac_band.s[ sfb ];
@@ -607,9 +613,13 @@ int calc_noise( lame_global_flags *gfp,
   }else{
     int max_index = SBPSY_l;
     
-    if (gfp->VBR==vbr_rh || gfp->VBR==vbr_mt)
+    if ((gfp->VBR==vbr_rh || gfp->VBR==vbr_mt)&&(gfp->out_samplerate >=32000))
       {
         max_index = SBMAX_l;
+      }
+    else
+      {
+        distort[0][SBMAX_l-1] = 0;
       }
     for ( sfb = 0; sfb < max_index; sfb++ ) {
 	FLOAT8 step;

@@ -469,7 +469,7 @@ VBR_iteration_loop (lame_global_flags *gfp, FLOAT8 pe[2][2],
       } else {
         min_pe_bits = (pe[gr][ch]-350) * bands[gr][ch]/22.;
       }
-      min_pe_bits=Min(min_pe_bits,1820);
+      min_pe_bits=Min(min_pe_bits,(1820*gfp->out_samplerate/44100));
 
       if (analog_silence && !gfp->VBR_hard_min) {
         min_bits = analog_mean_bits;

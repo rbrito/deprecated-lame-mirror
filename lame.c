@@ -773,9 +773,33 @@ void lame_id3v2_tag(lame_global_flags *gfp,FILE *outf)
 
 
 
+#ifdef RH_VALIDATE_MS
+/* check if this frame is with a high probability 
+ * a candidate for mid sum coding
+ * (adapted from korr.c by Frank Klemm, RH 2000-08-23)
+ */
 
+int is_probably_MS ( const short *L, const short *R, size_t len )
+{
+  double  x = 0, x2 = 0, y = 0, y2 = 0, xy = 0;
+  double  t1;
+  double  t2;
+  double  r;
+  int i = len;
 
+  for ( ; i--; ) {
+    x  += (t1 = (double)(*L++));
+    x2 += t1*t1;
+    y  += (t2 = (double)(*R++));
+    y2 += t2*t2;
+    xy += t1*t2;
+  }
+  r = (x2*len - x*x) * (y2*len - y*y);
+  r = r > 0 ? (xy*len - x*y) / sqrt (r) :  1.l;
 
+  return r > 0.80;
+}
+#endif
 
 
 
@@ -1027,12 +1051,15 @@ char *mp3buf, int mp3buf_size)
   /* use m/s gfc->stereo? */
   check_ms_stereo =  (gfp->mode == MPG_MD_JOINT_STEREO);
   if (check_ms_stereo) {
+    int gr0 = 0, gr1 = gfc->mode_gr-1;
     /* make sure block type is the same in each channel */
     check_ms_stereo =
-      (gfc->l3_side.gr[0].ch[0].tt.block_type==gfc->l3_side.gr[0].ch[1].tt.block_type) &&
-      (gfc->l3_side.gr[1].ch[0].tt.block_type==gfc->l3_side.gr[1].ch[1].tt.block_type);
+      (gfc->l3_side.gr[gr0].ch[0].tt.block_type==gfc->l3_side.gr[gr0].ch[1].tt.block_type) &&
+      (gfc->l3_side.gr[gr1].ch[0].tt.block_type==gfc->l3_side.gr[gr1].ch[1].tt.block_type);
   }
-  if (check_ms_stereo) {
+  if (gfp->force_ms) 
+    gfc->mode_ext = MPG_MD_MS_LR;
+  else if (check_ms_stereo) {
     /* ms_ratio = is like the ratio of side_energy/total_energy */
     FLOAT8 ms_ratio_ave;
     /*     ms_ratio_ave = .5*(ms_ratio[0] + ms_ratio[1]);*/
@@ -1040,9 +1067,11 @@ char *mp3buf, int mp3buf_size)
     ms_ratio_ave = .25*(gfc->ms_ratio[0] + gfc->ms_ratio[1]+
 			 ms_ratio_prev + ms_ratio_next);
     if ( (ms_ratio_ave <.35) && (.5*(gfc->ms_ratio[0]+gfc->ms_ratio[1])<.45) )
+#ifdef RH_VALIDATE_MS
+      if (is_probably_MS(inbuf_l, inbuf_r, gfp->framesize))
+#endif
          gfc->mode_ext = MPG_MD_MS_LR;
   }
-  if (gfp->force_ms) gfc->mode_ext = MPG_MD_MS_LR;
 
 
 

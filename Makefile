@@ -148,8 +148,8 @@ ifeq ($(UNAME),Linux)
 #   CC_OPTS =  -DDEBUG -UNDEBUG  -O -Wall -g -DABORTFP 
 
 
-#  special noise calculation
-#  CPP_OPTS += -DRH_AMP
+#  some alternate code (work in progress Robert.Hegemann@gmx.de)
+#  CPP_OPTS += -DRH_AMP -DRH_VALIDATE_MS
 # these options for gcc-2.95.2 to produce fast code
 #   CC_OPTS = \
 #	-Wall -O9 -fomit-frame-pointer -march=pentium \
