@@ -336,15 +336,14 @@ static void quantize_xrpow(const FLOAT *xp, int *pi, FLOAT istep, gr_info * cons
         sfbmax = 21;
 
     for (sfb = 0; sfb <= sfbmax; sfb++) {
-	    FLOAT step = -1;
+	    int step;
 
         if (prev_data_use) {
-            int s =
+            step =
 	            cod_info->global_gain
 	            - ((cod_info->scalefac[sfb] + (cod_info->preflag ? pretab[sfb] : 0))
 	               << (cod_info->scalefac_scale + 1))
 	            - cod_info->subblock_gain[cod_info->window[sfb]] * 8;
-	        step = POW20(s);
         }
         assert( cod_info->width[sfb] >= 0 );
         if (prev_data_use && (prev_noise->step[sfb] == step)){

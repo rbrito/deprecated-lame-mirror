@@ -74,7 +74,7 @@ typedef struct calc_noise_result_t {
 * computed noise values
 */
 typedef struct calc_noise_data_t {
-    FLOAT step[39];
+    int step[39];
     FLOAT noise[39];
     FLOAT noise_log[39];
 } calc_noise_data;
