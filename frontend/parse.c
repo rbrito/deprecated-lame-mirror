@@ -700,13 +700,13 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 		    gfp->VBR = vbr_mtrh; 
 
 		T_ELIF ("r3mix")
-		    gfp->VBR = vbr_rh; 
-                    gfp->VBR_q = 1;
-                    (void) lame_set_quality( gfp, 2 );
-                    gfp->lowpassfreq = 19500;
-                    (void) lame_set_mode( gfp, JOINT_STEREO );
-		    (void) lame_set_ATHtype( gfp, 3 );
-		    gfp->VBR_min_bitrate_kbps=64;
+            gfp->VBR = vbr_rh; 
+            gfp->VBR_q = 1;
+            (void) lame_set_quality( gfp, 2 );
+            gfp->lowpassfreq = 19500;
+            (void) lame_set_mode( gfp, JOINT_STEREO );
+            (void) lame_set_ATHtype( gfp, 3 );
+            gfp->VBR_min_bitrate_kbps=112;
 		
 		T_ELIF ("abr")
 		    argUsed=1;

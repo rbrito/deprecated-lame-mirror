@@ -147,23 +147,8 @@ on V9 up to Bouvigne's formula for V0*/
 
 FLOAT8 ATHformula_GBtweak(FLOAT8 f)
 {
-  FLOAT8 ath;
-
-  if (f < -.3)
-      f=3411;
-
-  f /= 1000;  // convert to khz
-  f  = Max(0.01, f);
-  f  = Min(18.0, f);
-
-  /* from Painter & Spanias, 1997 */
-  /* modified by Gabriel Bouvigne to better fit to the reality */
-  ath =    3.640 * pow(f,-0.8)
-         - 6.800 * exp(-0.6*pow(f-3.4,2.0))
-         + 6.000 * exp(-0.15*pow(f-8.7,2.0))
-         + 0.57* 0.001 * pow(f,4.0) //0.57 to maximize HF importance
-         + 6; //std --athlower -6 for
-  return ath;
+    /*modification of GB formula by Roel*/
+    return ATHformula_GB(f, -.75) +6;
 }
 
 
