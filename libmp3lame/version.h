@@ -28,7 +28,7 @@
 
 # define LAME_MAJOR_VERSION      4      /* Major version number */
 # define LAME_MINOR_VERSION      0      /* Minor version number */
-# define LAME_ALPHA_VERSION      10     /* Patch level of alpha version, otherwise zero */
+# define LAME_ALPHA_VERSION      11     /* Patch level of alpha version, otherwise zero */
 # define LAME_BETA_VERSION       0      /* Patch level of beta  version, otherwise zero */
 
 # define PSY_MAJOR_VERSION       0      /* Major version number */
