@@ -474,6 +474,7 @@ void outer_loop_dual(
   
   /* finish up */
   for (ch=0 ; ch < gf.stereo ; ch ++ ) {
+    best_scalefac_store(gr, ch, l3_side, scalefac);
 #ifdef HAVEGTK
     if (gf.gtkflag)
       pinfo->LAMEmainbits[gr][ch]=cod_info[ch]->part2_3_length;
