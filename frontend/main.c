@@ -63,11 +63,6 @@
 #include "get_audio.h"
 #include "timestatus.h"
 
-/* PLL 14/04/2000 */
-#if macintosh
-#include <console.h>
-#endif
-
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
 #endif
