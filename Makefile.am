@@ -65,3 +65,5 @@ frontend/lame$(EXEEXT):
 
 frontend/mp3x$(EXEEXT): frontend/lame$(EXEEXT)
 
+dist-hook:
+	chmod +x debian/rules
