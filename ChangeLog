@@ -11,6 +11,171 @@
 
 -- 
 
+2002-12-01 16:18  aleidinger
+
+	* configure:
+
+	regen
+	
+2002-12-01 16:15  aleidinger
+
+	* configure.in:
+
+	change version to 3.93.1
+	
+2002-12-01 16:12  aleidinger
+
+	* configure:
+
+	regen
+	
+2002-12-01 16:10  aleidinger
+
+	* doc/html/history.html:
+
+	sync with webpages
+	
+2002-12-01 16:06  aleidinger
+
+	* configure.in:
+
+	Check for socket() in libsocket if it isn't in libc so rtp can get compiled
+	on Solaris.
+	
+	Noticed by:	"Niki W. Waibel" <niki.waibel@gmx.net>
+	
+	While I'm here, bail out if some other functions aren't there.
+	
+2002-12-01 15:42  takehiro
+
+	* libmp3lame/lame.c (takehiro-stable-2002_10_15):
+
+	fix -q0 and -q1. This makes -q0 very very slow.
+	
+2002-12-01 15:36  takehiro
+
+	* frontend/parse.c, include/lame.h, libmp3lame/quantize.c,
+	libmp3lame/set_get.c, libmp3lame/vbrquantize.c
+	(takehiro-stable-2002_10_15):
+
+	now you can specify the method how to compare the quantization
+	for long/short block independently by -X option.(-X n,m)
+	
+2002-12-01 13:18  takehiro
+
+	* libmp3lame/set_get.c (takehiro-stable-2002_10_15):
+
+	fix comment
+	
+2002-11-30 18:18  bouvigne
+
+	* libmp3lame/version.h:
+
+	version
+	
+2002-11-29 17:07  bouvigne
+
+	* Dll/BladeMP3EncDLL.def:
+
+	dll exports
+	
+2002-11-28 21:05  bouvigne
+
+	* doc/html/: history.html, index.html:
+
+	docs
+	
+2002-11-28 18:06  bouvigne
+
+	* libmp3lame/version.h:
+
+	go back to 3.93
+	
+2002-11-28 18:04  bouvigne
+
+	* libmp3lame/lame.c:
+
+	revert back q0 to q1 state (due to reports about quality problems)
+	
+2002-11-26 15:45  takehiro
+
+	* libmp3lame/version.h (takehiro-stable-2002_10_15):
+
+	alpha4 solves the fatal error in outer_loop(). it should not select the
+	data whose global_gain is greater than 255.
+	
+2002-11-25 18:00  bouvigne
+
+	* Dll/: BladeMP3EncDLL.c, BladeMP3EncDLL.h:
+
+	sync presets with the executable front-end and libmp3lame
+	
+2002-11-25 01:36  takehiro
+
+	* libmp3lame/: Makefile.am, Makefile.in
+	(takehiro-stable-2002_10_15):
+
+	fix build problem
+	
+2002-11-24 18:37  takehiro
+
+	* libmp3lame/quantize.c (takehiro-stable-2002_10_15):
+
+	Fix not to select the data whose global_gain is greater than 255.
+	and inner_loop() manual inlining.
+	This fix is based on the R.A.F.'s bug report at HA. Thanx R.A.F.
+	
+2002-11-23 18:54  bouvigne
+
+	* libmp3lame/psymodel.c:
+
+	quick fix of nspsytune
+	
+2002-11-17 16:39  takehiro
+
+	* libmp3lame/.indent.pro (takehiro-stable-2002_10_15):
+
+	I forgot to sync this with the head branch.
+	
+2002-11-17 16:34  takehiro
+
+	* Makefile.in, configure, Dll/Makefile.in, libmp3lame/Makefile.in
+	(takehiro-stable-2002_10_15):
+
+	regen (by hand :p)
+	
+2002-11-17 16:33  takehiro
+
+	* ChangeLog, ChangeLog.header, Makefile.am, configure.in,
+	Dll/Makefile.am, libmp3lame/Makefile.am
+	(takehiro-stable-2002_10_15):
+
+	sync with head branch (releasing 3.93 related things).
+	
+2002-11-17 15:59  takehiro
+
+	* doc/html/history.html (takehiro-stable-2002_10_15):
+
+	copy from webpage/history.html
+	
+2002-11-17 11:11  aleidinger
+
+	* configure.in, libmp3lame/version.h:
+
+	We are now at 3.94alpha...
+	
+2002-11-17 10:41  aleidinger
+
+	* doc/html/history.html:
+
+	Copy history from webpage.
+	
+2002-11-17 10:29  aleidinger
+
+	* ChangeLog:
+
+	ChangeLog for 3.93.
+	
 2002-11-17 10:25  aleidinger
 
 	* Dll/Makefile.in, Makefile.in:
