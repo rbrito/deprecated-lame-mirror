@@ -591,6 +591,26 @@ lame_get_error_protection( const lame_global_flags*  gfp )
 }
 
 
+/*
+ * padding_type.
+ *  PAD_NO     = pad no frames
+ *  PAD_ALL    = pad all frames
+ *  PAD_ADJUST = adjust padding
+ */
+int
+lame_set_padding_type( lame_global_flags*  gfp,
+                       Padding_type        padding_type )
+{
+    return 0;
+}
+
+Padding_type
+lame_get_padding_type( const lame_global_flags*  gfp )
+{
+    return PAD_ADJUST;
+}
+
+
 /* MP3 'private extension' bit. Meaningless. */
 int
 lame_set_extension( lame_global_flags*  gfp,
@@ -1154,18 +1174,20 @@ lame_get_athaa_sensitivity( const lame_global_flags*  gfp )
 }
 
 
-/* just for backward compatibility */
+/* Predictability limit (ISO tonality formula) */
 int
 lame_set_cwlimit( lame_global_flags*  gfp,
                   int                 cwlimit )
 {
+    gfp->cwlimit = cwlimit;
+
     return 0;
 }
 
 int
 lame_get_cwlimit( const lame_global_flags*  gfp )
 {
-    return 0;
+    return gfp->cwlimit;
 }
 
 
@@ -1528,7 +1550,7 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
              gfc->presetTune.quantcomp_type_s = 4;
              gfc->presetTune.quantcomp_alt_type = 0;
              gfc->presetTune.athadjust_safe_noiseshaping_thre = 0.0;
-	     gfc->presetTune.athadjust_safe_athaasensitivity = pow(10., -.8);
+	     gfc->presetTune.athadjust_safe_athaasensitivity = 8.0;
           }
           else {
              lame_set_experimentalX(gfp, 3);
@@ -1560,7 +1582,7 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
 	     gfc->presetTune.quantcomp_alt_type = 0;
              (void) lame_set_ATHlower( gfp, -2 );
              gfc->presetTune.athadjust_safe_noiseshaping_thre = 0.0;
-	     gfc->presetTune.athadjust_safe_athaasensitivity = pow(10., -.8);
+	     gfc->presetTune.athadjust_safe_athaasensitivity = 8.0;
           }
           else {
              gfc->presetTune.quantcomp_type_s = 3;

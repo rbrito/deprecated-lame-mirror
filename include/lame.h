@@ -59,6 +59,16 @@ typedef enum MPEG_mode_e {
   MAX_INDICATOR   /* Don't use this! It's used for sanity checks. */ 
 } MPEG_mode;
 
+/* Padding types */
+typedef enum Padding_type_e {
+  PAD_NO = 0,
+  PAD_ALL,
+  PAD_ADJUST,
+  PAD_MAX_INDICATOR   /* Don't use this! It's used for sanity checks. */
+} Padding_type;
+
+
+
 /*presets*/
 typedef enum preset_mode_e {
     /*values from 8 to 320 should be reserved for abr bitrates*/
@@ -181,7 +191,7 @@ int CDECL lame_get_analysis(const lame_global_flags *);
 
 /*
   1 = write a Xing VBR header frame.
-  default = 1 for VBR/ABR modes, 0 for CBR mode
+  default = 1
   this variable must have been added by a Hungarian notation Windows programmer :-)
 */
 int CDECL lame_set_bWriteVbrTag(lame_global_flags *, int);
@@ -280,6 +290,10 @@ int CDECL lame_get_original(const lame_global_flags *);
 /* error_protection.  Use 2 bytes from each frame for CRC checksum. default=0 */
 int CDECL lame_set_error_protection(lame_global_flags *, int);
 int CDECL lame_get_error_protection(const lame_global_flags *);
+
+/* padding_type. 0=pad no frames  1=pad all frames 2=adjust padding(default) */
+int CDECL lame_set_padding_type(lame_global_flags *, Padding_type);
+Padding_type CDECL lame_get_padding_type(const lame_global_flags *);
 
 /* MP3 'private extension' bit  Meaningless.  default=0 */
 int CDECL lame_set_extension(lame_global_flags *, int);
