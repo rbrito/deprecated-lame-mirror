@@ -334,7 +334,8 @@ int count_bits(
 
     if (gfc->noise_shaping_amp==3) {
       int sfb;
-      FLOAT8 roundfac = 0.5946 / IPOW20(gi->global_gain-1);
+      // 0.634521682242439 = 0.5946*2**(.5*0.1875)
+      FLOAT8 roundfac = 0.634521682242439 / IPOW20(gi->global_gain+gi->scalefac_scale);
       i = 0;
       for (sfb = 0; sfb < gi->sfb_lmax; sfb++) {
 	int end;
