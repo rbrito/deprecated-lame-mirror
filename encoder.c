@@ -208,7 +208,7 @@ char *mp3buf, int mp3buf_size)
       if (gfp->frameNum%mod==0) {
 	timestatus(gfp->out_samplerate,gfp->frameNum,gfp->totalframes,gfp->framesize);
 	if (gfp->brhist_disp)
-	  brhist_disp(gfp->totalframes);
+	  brhist_disp(gfp);
       }
     }
   }
@@ -369,7 +369,7 @@ char *mp3buf, int mp3buf_size)
   }
 
   /* update VBR histogram data */
-  brhist_add_count(gfc->bitrate_index);
+  brhist_add_count(gfp,gfc->bitrate_index);
 
   /*  write the frame to the bitstream  */
   getframebits(gfp,&bitsPerFrame,&mean_bits);
