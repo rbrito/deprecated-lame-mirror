@@ -39,14 +39,14 @@
 #include <dmalloc.h>
 #endif
 
+extern void pow075_SSE(float *, float *, int, float*);
+extern void pow075_3DN(float *, float *, int, float*);
+extern void sumofsqr_3DN(const FLOAT *, int, FLOAT *);
+extern void calc_noise_sub_3DN(const FLOAT *, const int *, int, int, FLOAT *);
 extern FLOAT
 calc_sfb_noise_fast_3DN(lame_internal_flags *gfc, int j, int bw, int sf);
 extern FLOAT
 calc_sfb_noise_3DN(lame_internal_flags *gfc, int j, int bw, int sf);
-extern void
-sumofsqr_3DN(const FLOAT *, int, FLOAT *);
-extern void
-calc_noise_sub_3DN(const FLOAT *, const int *, int, int, FLOAT *);
 
 static const int max_range_short[SBMAX_s*3] = {
     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
@@ -154,58 +154,6 @@ ResvFrameBegin(lame_global_flags *gfp, int *mean_bits)
 }
 
 
-/************************************************************************
- * allocate bits among 2 channels based on PE (no multichannel support)
- ************************************************************************/
-static void
-on_pe(
-    lame_internal_flags *gfc,
-    III_psy_ratio      ratio[2],
-    int targ_bits[2],
-    int min_bits,
-    int max_bits,
-    FLOAT factor,
-    const int gr
-    )
-{
-    int bits, ch, adjustBits;
-
-    /* check hard limit per granule (by spec) */
-    if (max_bits > MAX_BITS)
-	max_bits = MAX_BITS;
-    /* allocate minimum bits to encode part2_length (for i-stereo) */
-    bits = 0;
-    for (ch = 0; ch < gfc->channels_out; ch++)
-	bits += gfc->l3_side.tt[gr][ch].part2_length;
-
-    min_bits -= bits; assert(min_bits >= 0);
-    max_bits -= bits;
-
-    /* estimate how many bits we need */
-    adjustBits = 0;
-    for (ch = 0; ch < gfc->channels_out; ch++) {
-	bits = 0;
-	if (ratio[ch].ath_over != 0 && gfc->l3_side.tt[gr][ch].psymax > 0
-	    && ratio[ch].pe > 0.0)
-	    bits = (int)(ratio[ch].pe*factor);
-	adjustBits += (targ_bits[ch] = ++bits); /* avoid zero division */
-    }
-
-    bits = 0;
-    if (adjustBits > max_bits)
-	bits = max_bits - adjustBits; /* reduce */
-    else if (adjustBits < min_bits)
-	bits = min_bits - adjustBits; /* increase */
-
-    if (bits) {
-	int ch0new = targ_bits[0] + (bits * targ_bits[0]) / adjustBits;
-	if (gfc->channels_out == 2)
-	    targ_bits[1] += bits - (ch0new - targ_bits[0]);
-	targ_bits[0] = ch0new;
-    }
-    for (ch = 0; ch < gfc->channels_out; ch++)
-	targ_bits[ch] += gfc->l3_side.tt[gr][ch].part2_length;
-}
 
 
 
@@ -420,13 +368,11 @@ init_bitalloc(lame_internal_flags *gfc, gr_info *const gi)
      *  and calculate xr34(gfc->xrwork[0]) matching our fresh scalefactors */
 #ifdef HAVE_NASM
     if (gfc->CPU_features.SSE) {
-	extern void pow075_SSE(float *, float *, int, float*);
 	if (end) {
 	    end = (end + 7) & (~7);
 	    pow075_SSE(gi->xr, xr34, end, &sum);
 	}
     } else if (gfc->CPU_features.AMD_3DNow) {
-	extern void pow075_3DN(float *, float *, int, float*);
 	if (end) {
 	    end = (end + 3) & (~3);
 	    pow075_3DN(gi->xr, xr34, end, &sum);
@@ -1137,6 +1083,64 @@ CBR_1st_bitalloc (
 
 
 
+/************************************************************************
+ * allocate bits among 2 channels based on PE (no multichannel support)
+ ************************************************************************/
+static void
+CBR_bitalloc(
+    lame_internal_flags *gfc,
+    III_psy_ratio      ratio[2],
+    int min_bits,
+    int max_bits,
+    FLOAT factor,
+    const int gr
+    )
+{
+    int bits, ch, adjustBits, targ_bits[2];
+
+    /* check hard limit per granule (by spec) */
+    if (max_bits > MAX_BITS)
+	max_bits = MAX_BITS;
+
+    /* allocate minimum bits to encode part2_length (for i-stereo) */
+    bits = 0;
+    for (ch = 0; ch < gfc->channels_out; ch++)
+	bits += gfc->l3_side.tt[gr][ch].part2_length;
+
+    min_bits -= bits; assert(min_bits >= 0);
+    max_bits -= bits;
+
+    /* estimate how many bits we need */
+    adjustBits = 0;
+    for (ch = 0; ch < gfc->channels_out; ch++) {
+	bits = 0;
+	if (ratio[ch].ath_over != 0 && gfc->l3_side.tt[gr][ch].psymax > 0
+	    && ratio[ch].pe > 0.0)
+	    bits = (int)(ratio[ch].pe*factor);
+	adjustBits += (targ_bits[ch] = ++bits); /* avoid zero division */
+    }
+
+    bits = 0;
+    if (adjustBits > max_bits)
+	bits = max_bits - adjustBits; /* reduce */
+    else if (adjustBits < min_bits)
+	bits = min_bits - adjustBits; /* increase */
+
+    if (bits) {
+	int ch0new = targ_bits[0] + (bits * targ_bits[0]) / adjustBits;
+	if (gfc->channels_out == 2)
+	    targ_bits[1] += bits - (ch0new - targ_bits[0]);
+	targ_bits[0] = ch0new;
+    }
+    for (ch = 0; ch < gfc->channels_out; ch++) {
+	CBR_1st_bitalloc(gfc, &gfc->l3_side.tt[gr][ch], ch,
+			 targ_bits[ch] + gfc->l3_side.tt[gr][ch].part2_length,
+			 &ratio[ch]);
+	gfc->l3_side.ResvSize -= iteration_finish_one(gfc, gr, ch);
+    }
+}
+
+
 /********************************************************************
  *
  *  ABR_iteration_loop()
@@ -1153,7 +1157,7 @@ ABR_iteration_loop(
     III_psy_ratio      ratio        [2][2])
 {
     lame_internal_flags *gfc=gfp->internal_flags;
-    int targ_bits[2], mean_bits, gr, ch, max_bits, min_bits;
+    int mean_bits, gr, max_bits, min_bits;
     FLOAT factor;
 
     gfc->bitrate_index = 0;
@@ -1168,18 +1172,10 @@ ABR_iteration_loop(
     gfc->bitrate_index = 1;
     min_bits = ResvFrameBegin (gfp, &mean_bits);
 
-    for (gr = 0; gr < gfc->mode_gr; gr++) {
-	on_pe(gfc, ratio[gr], targ_bits, min_bits, max_bits, factor, gr);
-	for (ch = 0; ch < gfc->channels_out; ch++) {
-	    gr_info *gi = &gfc->l3_side.tt[gr][ch];
+    for (gr = 0; gr < gfc->mode_gr; gr++)
+	CBR_bitalloc(gfc, ratio[gr], min_bits, max_bits, factor, gr);
 
-	    CBR_1st_bitalloc(gfc, gi, ch, targ_bits[ch], &ratio[gr][ch]);
-	    gfc->l3_side.ResvSize -= iteration_finish_one(gfc, gr, ch);
-	}
-    }
-
-    /*  find a bitrate which can refill the resevoir to positive size.
-     */
+    /*  find a bitrate which can refill the resevoir to positive size. */
     gfc->bitrate_index = gfc->VBR_min_bitrate;
     for (; gfc->bitrate_index <= gfc->VBR_max_bitrate; gfc->bitrate_index++)
 	if (ResvFrameBegin(gfp, &mean_bits) >= 0)
@@ -1208,7 +1204,7 @@ iteration_loop(
     III_psy_ratio      ratio        [2][2])
 {
     lame_internal_flags *gfc=gfp->internal_flags;
-    int targ_bits[2], mean_bits, gr, ch;
+    int mean_bits, gr;
     FLOAT factor;
 
     ResvFrameBegin (gfp, &mean_bits);
@@ -1234,7 +1230,7 @@ iteration_loop(
 	    /* build up reservoir.  this builds the reservoir a little slower
 	     * than FhG.  It could simple be mean_bits/15, but this was rigged
 	     * to always produce 100 (the old value) at 128kbs */
-	    /*    *targ_bits -= (int) (mean_bits/15.2);*/
+	    /*    min_bits -= (int) (mean_bits/15.2);*/
 	    min_bits -= mean_bits/10;
 	    gfc->substep_shaping &= 0x7f;
 	}
@@ -1245,14 +1241,9 @@ iteration_loop(
 	if (max_bits > mean_bits*2)    /* limit 2*average (need tuning) */
 	    max_bits = mean_bits*2;
 
-	on_pe(gfc, ratio[gr], targ_bits, min_bits, max_bits, factor, gr);
 	gfc->l3_side.ResvSize += mean_bits;
 
-	for (ch=0; ch < gfc->channels_out; ch ++) {
-	    gr_info *gi = &gfc->l3_side.tt[gr][ch];
-	    CBR_1st_bitalloc(gfc, gi, ch, targ_bits[ch], &ratio[gr][ch]);
-	    gfc->l3_side.ResvSize -= iteration_finish_one(gfc, gr, ch);
-	}
+	CBR_bitalloc(gfc, ratio[gr], min_bits, max_bits, factor, gr);
     }
     assert(gfc->l3_side.ResvSize >= 0);
 }
