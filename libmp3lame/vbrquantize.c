@@ -1057,18 +1057,18 @@ VBR_noise_shaping2 (
     if (cod_info->part2_3_length < minbits) {
         huffbits = minbits - cod_info->part2_length;
         bits = bin_search_StepSize (gfc, cod_info, huffbits, 
-                                    gfc->OldValue[ch], l3_enc, xr34);
+                                    gfc->OldValue[ch], xr34, l3_enc);
         gfc->OldValue[ch] = cod_info->global_gain;
         cod_info->part2_3_length  = bits + cod_info->part2_length;
     }
     if (cod_info->part2_3_length > maxbits) {
         huffbits = maxbits - cod_info->part2_length;
         bits = bin_search_StepSize (gfc, cod_info, huffbits, 
-                                    gfc->OldValue[ch], l3_enc, xr34);
+                                    gfc->OldValue[ch], xr34, l3_enc);
         gfc->OldValue[ch] = cod_info->global_gain;
         cod_info->part2_3_length = bits;
         if (bits > huffbits) {
-            bits = inner_loop (gfc, cod_info, xr34, l3_enc, huffbits);
+            bits = inner_loop (gfc, cod_info, huffbits, xr34, l3_enc);
             cod_info->part2_3_length  = bits;
         }
         if (bits >= LARGE_BITS) /* Houston, we have a problem */

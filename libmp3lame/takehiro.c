@@ -381,7 +381,8 @@ int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
 
 
 
-int count_bits(lame_internal_flags *gfc,int *ix, FLOAT8 *xr, gr_info *cod_info)  
+int count_bits(
+    lame_internal_flags *gfc, int *ix, const FLOAT8 *xr, gr_info *cod_info)  
 {
   int bits=0,i;
   /* since quantize_xrpow uses table lookup, we need to check this first: */
