@@ -88,7 +88,9 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
       else memcpy(xr[gr],xr_org[gr],sizeof(FLOAT8)*2*576);   
       
       on_pe(pe,l3_side,targ_bits,mean_bits, gr);
-#ifndef RH_masking
+#ifdef RH_SIDE_CBR
+#warning **** YOU TURNED SIDE CHANNEL REDUCTION OFF (RH_SIDE_CBR) ****
+#else
       if (reduce_sidechannel) 
 	reduce_side(targ_bits,ms_ener_ratio[gr],mean_bits);
 #endif      
@@ -146,7 +148,8 @@ void set_masking_lower( int nbits )
 	/* quality setting */
 	/* Adjust allowed masking based on quality setting */
 	
-#ifdef  RH_masking	
+#if  (RH_QUALITY_CONTROL == 1)	
+#warning **** YOU ARE MODIFYING VBR QUALITY CONTROL (RH_QUALITY_CONTROL =1) ****
 	/* lower masking depending on Quality setting */
 	static FLOAT dbQ[10]={-9,-6,-3,-1.5,-1,-0.5,0,0.5,1,2};
 	/* adjust masking, when less these Bits are used */	
@@ -167,6 +170,18 @@ void set_masking_lower( int nbits )
 	        ? 0 
 		: 2*(sin(PI*(nbits/adB[gf.VBR_q] - 0.5))-1.0);
 	adjust *= reduce_sidechannel ? 0.707 : 1;
+#elif (RH_QUALITY_CONTROL == 2)	
+#warning **** YOU ARE MODIFYING VBR QUALITY CONTROL (RH_QUALITY_CONTROL =2) ****
+	/* lower masking depending on Quality setting
+	 * quality control together with adjusted ATH MDCT scaling
+	 */
+	static FLOAT dbQ[10]={-6,-4,-3,-2,-1,-0.5,0,0.25,0.5,1};
+	
+	assert( gf.VBR_q <= 9 );
+	assert( gf.VBR_q >= 0 );
+	
+	masking_lower_db = dbQ[gf.VBR_q];	
+	adjust = 0;
 #else
 	/* masking_lower varies from -8 to +10 db */
 	masking_lower_db = -6 + 2*gf.VBR_q;
@@ -239,7 +254,9 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   analog_silence=0;
   for (gr = 0; gr < gf.mode_gr; gr++) {
     int num_chan=gf.stereo;
-#ifndef  RH_masking	
+#ifdef  RH_SIDE_VBR
+#warning **** YOU TURNED SIDE CHANNEL REDUCTION OFF (RH_SIDE_VBR) ****
+#else	
     /* determine quality based on mid channel only */
     if (reduce_sidechannel) num_chan=1;  
 #endif
@@ -322,7 +339,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   } /* for gr */
 
 
-#ifndef  RH_masking	
+#ifndef  RH_SIDE_VBR	
   if (reduce_sidechannel) {
     /* number of bits needed was found for MID channel above.  Use formula
      * (fixed bitrate code) to set the side channel bits */
@@ -836,6 +853,9 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
 {
     int start, end, sfb, l, i, over=0;
     FLOAT8 sum,step,bw;
+#if RH_ATH
+    FLOAT8 ath_max;
+#endif
 
     D192_3 *xr_s;
     I192_3 *ix_s;
@@ -856,6 +876,9 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
         end   = scalefac_band_long[ sfb+1 ];
         bw = end - start;
 
+#if RH_ATH
+        ath_max = 0;
+#endif
         for ( sum = 0.0, l = start; l < end; l++ )
         {
             FLOAT8 temp;
@@ -863,6 +886,11 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
 #ifdef MAXNOISE
 	    temp = bw*temp*temp;
 	    sum = Max(sum,temp);
+#elif RH_ATH
+#warning **** YOU ARE USING A DIFFERENT NOISE CALCULATION (RH_ATH) ****
+	    temp = temp*temp;
+            sum += temp;
+	    ath_max = Max( ath_max, temp/ATH_mdct_long[l] );
 #else
             sum += temp * temp;
 #endif
@@ -871,7 +899,11 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
         xfsf[0][sfb] = sum / bw;
 
 	/* max -30db noise below threshold */
+#if RH_ATH
+	noise = 10*log10(Max(.001,Min(ath_max,xfsf[0][sfb]/l3_xmin->l[gr][ch][sfb])));
+#else
 	noise = 10*log10(Max(.001,xfsf[0][sfb] / l3_xmin->l[gr][ch][sfb]));
+#endif
         distort[0][sfb] = noise;
         if (noise>0) {
 	  over++;
@@ -894,6 +926,9 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
             end   = scalefac_band_short[ sfb+1 ];
             bw = end - start;
 
+#if RH_ATH
+            ath_max = 0;
+#endif
             for ( sum = 0.0, l = start; l < end; l++ )
             {
                 FLOAT8 temp;
@@ -901,13 +936,21 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
 #ifdef MAXNOISE
 		temp = bw*temp*temp;
 		sum = Max(sum,temp);
+#elif RH_ATH
+	    temp = temp*temp;
+            sum += temp;
+	    ath_max = Max( ath_max, temp/ATH_mdct_short[l] );
 #else
 		sum += temp * temp;
 #endif
             }       
             xfsf[i+1][sfb] = sum / bw;
 	    /* max -30db noise below threshold */
+#if RH_ATH
+	    noise = 10*log10(Max(.001,Min(ath_max,xfsf[i+1][sfb]/l3_xmin->s[gr][ch][sfb][i])));
+#else
 	    noise = 10*log10(Max(.001,xfsf[i+1][sfb] / l3_xmin->s[gr][ch][sfb][i] ));
+#endif
             distort[i+1][sfb] = noise;
             if (noise > 0) {
 	      over++;

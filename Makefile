@@ -80,8 +80,13 @@ ifeq ($(UNAME),Linux)
 #   CC_OPTS =    -O9 -fomit-frame-pointer -march=pentium \
 #                   -ffast-math -funroll-loops 
 
+# The following features are experimental code, 
+# so don't use them if you don't know exactly what you do! (RH 2000-01-30)
+#   FEATURES  = -DRH_ATH                # max noise instead of average noise
+#   FEATURES += -DRH_QUALITY_CONTROL=2  # tuned VBR quality control
+#   FEATURES += -DRH_SIDE_VBR           # turns side channel reduction off (VBR)
+#   FEATURES += -DRH_SIDE_CBR           # turns side channel reduction off (CBR)
 # these options were suggested with gcc-2.95.2
-#   FEATURES = -DRH_masking 
 #   CC_OPTS = $(FEATURES) -Wall -O9 -fomit-frame-pointer -march=pentium \
 #	-fno-strength-reduce -finline-functions \
 #	-ffast-math -malign-double -mfancy-math-387 \

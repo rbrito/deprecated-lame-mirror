@@ -97,6 +97,8 @@ static FLOAT8 adj43asm[PRECALC_SIZE];
 static FLOAT8 ATH_l[SBPSY_l];
 static FLOAT8 ATH_s[SBPSY_l];
 
+FLOAT8 ATH_mdct_long[576];
+FLOAT8 ATH_mdct_short[192];
 
 
 /************************************************************************/
@@ -240,6 +242,27 @@ void compute_ath(layer *info,FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY_l])
   int sfb,i,start,end;
   FLOAT8 ATH_f;
   FLOAT8 samp_freq = s_freq[info->version][info->sampling_frequency];
+#if RH_ATH
+  FLOAT8 adjust_mdct_scaling = 10; /* maps mdct scaling from -114 to -104 */
+  
+# if (RH_QUALITY_CONTROL == 2)
+  /* purpose of RH_QUALITY_CONTROL =2:
+   * at higher quality lower ATH masking abilities   => needs more bits
+   * at lower quality increase ATH masking abilities => needs less bits
+   * RH 2000-01-30 */
+  switch( gf.VBR_q ) {
+  case  0: /* falling */
+  case  1: /* falling */
+  case  2: adjust_mdct_scaling = pow( 10, (114-104-(3-gf.VBR_q)*4.0)/10.0 );
+           break;
+  case  7: /* falling */
+  case  8: /* falling*/
+  case  9: adjust_mdct_scaling = pow( 10, (114-104-(6-gf.VBR_q)*5.0)/10.0 ); 
+           break;
+  default: /* don't change it */
+  }
+# endif
+#endif
 
   /* last sfb is not used */
   for ( sfb = 0; sfb < SBPSY_l; sfb++ ) {
@@ -249,6 +272,9 @@ void compute_ath(layer *info,FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY_l])
     for (i=start ; i < end; i++) {
       ATH_f = ATHformula(samp_freq*i/(2*576)); /* freq in kHz */
       ATH_l[sfb]=Min(ATH_l[sfb],ATH_f);
+#if RH_ATH
+      ATH_mdct_long[i] = ATH_f*adjust_mdct_scaling;
+#endif
     }
     /*
     printf("sfb=%i %f  ATH=%f %f  %f   \n",sfb,samp_freq*start/(2*576),
@@ -265,6 +291,9 @@ void compute_ath(layer *info,FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY_l])
     for (i=start ; i < end; i++) {
       ATH_f = ATHformula(samp_freq*i/(2*192));     /* freq in kHz */
       ATH_s[sfb]=Min(ATH_s[sfb],ATH_f);
+#if RH_ATH
+      ATH_mdct_short[i] = ATH_f*adjust_mdct_scaling;
+#endif
     }
   }
 }
@@ -667,7 +696,11 @@ int calc_xmin( FLOAT8 xr[2][2][576], III_psy_ratio *ratio,
 	    l3_xmin->s[gr][ch][sfb][b]=masking_lower*
 	      (ratio->thm_s[gr][ch][sfb][b]/ratio->en_s[gr][ch][sfb][b]) *en0;
 
+#if RH_ATH
+	  l3_xmin->s[gr][ch][sfb][b]=Max(1e-20,l3_xmin->s[gr][ch][sfb][b]);
+#else
 	  l3_xmin->s[gr][ch][sfb][b]=Max(ATH_s[sfb],l3_xmin->s[gr][ch][sfb][b]);
+#endif
 	  if (en0 > ATH_s[sfb]) ath_over++;
 	}
       }
@@ -690,7 +723,11 @@ int calc_xmin( FLOAT8 xr[2][2][576], III_psy_ratio *ratio,
 	  l3_xmin->l[gr][ch][sfb] =masking_lower*
 	    (ratio->thm_l[gr][ch][sfb]/ratio->en_l[gr][ch][sfb] )* en0;
 
+#if RH_ATH
+	l3_xmin->l[gr][ch][sfb]=Max(1e-20,l3_xmin->l[gr][ch][sfb]);
+#else
 	l3_xmin->l[gr][ch][sfb]=Max(ATH_l[sfb],l3_xmin->l[gr][ch][sfb]);
+#endif
 	if (en0 > ATH_l[sfb]) ath_over++;
       }
     }
