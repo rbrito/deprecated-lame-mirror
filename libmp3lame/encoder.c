@@ -104,7 +104,8 @@ adjust_ATH( lame_global_flags* const  gfp,
              *  32640  ->  ~0.01 dB
              */
             FLOAT8 
-            x = Max (640, 320*(int)(max_val/320));
+            //x = Max (640, 320*(int)(max_val/320));
+            x = Max (32, 32*(int)(max_val/32));
             x = x/32768;
             gfc->ATH->adjust *= gfc->ATH->decay;
             if (gfc->ATH->adjust < x)       /* but not more than f(x) dB */

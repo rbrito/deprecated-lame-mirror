@@ -285,6 +285,15 @@ void compute_ath( lame_global_flags *gfp, FLOAT8 ATH_l[], FLOAT8 ATH_s[] )
     /*  work in progress, don't rely on it too much
      */
     gfc->ATH-> floor = 10. * log10( ATHmdct( gfp, -1. ) );
+    
+    /*
+    {   FLOAT8 g=10000, t=1e30, x;
+        for ( f = 100; f < 10000; f++ ) {
+            x = ATHmdct( gfp, f );
+            if ( t > x ) t = x, g = f;
+        }
+        printf("min=%g\n", g);
+    }*/
 }
 
 
@@ -425,11 +434,16 @@ FLOAT8 athAdjust( FLOAT8 a, FLOAT8 x, FLOAT8 athFloor )
 {
     /*  work in progress
      */
-    FLOAT8 const en = 1./90.30873362; // 1/(10*log10(2^15-1))
-    FLOAT8 u = 10. * log10(x);    
-    u -= athFloor;  // undo scaling
-    u *= 1. + 10. * log10(a) * en;
-    u += athFloor;  // redo scaling
+    FLOAT8 const o = 90.30873362;
+    FLOAT8 const p = 96.32946608;
+    FLOAT8 u = 10. * log10(x); 
+    FLOAT8 v = a*a;
+    FLOAT8 w = 0.0;   
+    u -= athFloor;                                  // undo scaling
+    if ( v > 1E-20 ) w = 1. + 10. * log10(v) / o;
+    if ( w < 0  )    w = 0.; 
+    u *= w; 
+    u += athFloor + o-p;                            // redo scaling
 
     return pow( 10., 0.1*u );
 }
@@ -460,7 +474,7 @@ int calc_xmin(
   if (cod_info->block_type==SHORT_TYPE) {
 
   for ( j=0, sfb = 0; sfb < SBMAX_s; sfb++ ) {
-    tmpATH = gfp -> experimentalY 
+    tmpATH = gfp->experimentalY || gfp->VBR == vbr_mtrh
       ? athAdjust( gfc->ATH->adjust, gfc->ATH->s[sfb], gfc->ATH->floor )
       : gfc->ATH->adjust * gfc->ATH->s[sfb];
         
@@ -547,7 +561,7 @@ int calc_xmin(
       }
     } else {
       for ( sfb = 0; sfb < SBMAX_l; sfb++ ){
-        tmpATH = gfp -> experimentalY
+        tmpATH = gfp->experimentalY || gfp->VBR == vbr_mtrh
           ? athAdjust( gfc->ATH->adjust, gfc->ATH->l[sfb], gfc->ATH->floor )
           : gfc->ATH->adjust * gfc->ATH->l[sfb];
           

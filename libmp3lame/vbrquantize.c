@@ -789,9 +789,10 @@ short_block_sf (
         }
         
         /*  patch sfb12
-         */
         vbrsf->s[SBPSY_s][b] = Min (vbrsf->s[SBPSY_s][b], vbrmean);
         vbrsf->s[SBPSY_s][b] = Max (vbrsf->s[SBPSY_s][b], vbrmin-(vbrmean-vbrmin));
+        no more necessary?
+         */
         
         /*  cut peaks
          */
@@ -862,9 +863,10 @@ long_block_sf (
     }
     
     /*  patch sfb21
-     */
     vbrsf->l[SBPSY_l] = Min (vbrsf->l[SBPSY_l], vbrmean);
     vbrsf->l[SBPSY_l] = Max (vbrsf->l[SBPSY_l], vbrmin-(vbrmean-vbrmin));
+    no more necessary?
+     */
     
     /*  cut peaks
      */
