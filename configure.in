@@ -30,8 +30,8 @@ LIB_MAJOR_VERSION=1
 # to previous versions
 LIB_MINOR_VERSION=0
 
-dnl use "/usr" as default prefix...
-AC_PREFIX_DEFAULT(/usr/local)
+dnl uncomment to use "/usr" as default prefix...
+dnl AC_PREFIX_DEFAULT(/usr)
 
 dnl check host
 AC_CANONICAL_HOST
@@ -185,7 +185,7 @@ fi
 
 
 LIB_TARGETS="libmp3lame.a"
-INSTALL_TARGETS="install_static_lib"
+LIB_INSTALL_TARGETS="install_static_lib"
 
 
 
@@ -198,7 +198,7 @@ if test "$CONFIG_SHARED" != "no" ; then
 	case $host in
 	*-*-linux*)
 		LIB_TARGETS="$LIB_TARGETS libmp3lame.so"
-		INSTALL_TARGETS="$INSTALL_TARGETS install_shared_lib"
+		LIB_INSTALL_TARGETS="$LIB_INSTALL_TARGETS install_shared_lib"
 		# need position independent code for shared library
 		CONFIG_OPTS="$CONFIG_OPTS -fPIC"
 	esac
@@ -290,7 +290,7 @@ CONFIG_SOURCES="$BRHIST_SOURCE"
 AC_SUBST(CONFIG_SOURCES)
 AC_SUBST(CPP_OPT)
 
-AC_SUBST(INSTALL_TARGETS)
+AC_SUBST(LIB_INSTALL_TARGETS)
 AC_SUBST(LIB_TARGETS)
 
 AC_SUBST(LIB_MAJOR_VERSION)

@@ -26,7 +26,7 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 
 all:  
-	cd libmp3lame; $(MAKE) @LIB_TARGETS@
+	cd libmp3lame; $(MAKE)
 	cd frontend; $(MAKE)
 
 
@@ -46,19 +46,13 @@ mp3x:
 
 
 
-install_header:
-	@mkdir -p $(INCLUDEDIR)
-	$(INSTALL_PROGRAM) include/lame.h $(INCLUDEDIR)
-
-install: install_header
+install:
 	cd libmp3lame; $(MAKE) install
 	cd frontend; $(MAKE) install
 
 uninstall:
-	$(RM_F) $(INCLUDEDIR)/lame.h
 	cd libmp3lame; $(MAKE) uninstall
 	cd frontend; $(MAKE) uninstall
-
 
 clean:
 	cd libmp3lame; $(MAKE) clean; 

@@ -1,5 +1,5 @@
 #
-# Makefile.in for LAME 3.xx
+# Makefile.in for LAME 3.xx lib
 #
 # processed by ./configure to produce Makefile
 #
@@ -347,6 +347,8 @@ ASFLAGS=-f elf -i i386/
 	$(SHELL) -ec '$(CC) $(MAKEDEP)  $(CPP_OPTS) $(CC_SWITCHES)  $< | sed '\''s;$*.o;& $@;g'\'' > $@'
   endif
 
+all: @LIB_TARGETS@
+
 
 libmp3lame.a:  $(lib_obj) Makefile
 	$(AR) cr libmp3lame.a  $(lib_obj)
@@ -360,28 +362,30 @@ libmp3lame.so:  $(LIBS) $(lib_obj) Makefile
 	@$(RM_F) $(SHARED_LIB)
 	$(LN_S) $(SHARED_LIB_MAJOR) $(SHARED_LIB)
 
+install_header:
+	@mkdir -p $(INCLUDEDIR)
+	$(INSTALL_DATA) ../include/lame.h $(INCLUDEDIR)
+
 install_static_lib: libmp3lame.a install_header
 	@mkdir -p $(LIBDIR)
-	$(INSTALL_PROGRAM) libmp3lame/libmp3lame.a $(LIBDIR)
+	$(INSTALL_DATA) libmp3lame.a $(LIBDIR)
 
 install_shared_lib: libmp3lame.so install_header
 	@mkdir -p $(LIBDIR)
-	$(INSTALL_PROGRAM) $(SHARED_LIB_MINOR) $(LIBDIR)
+	$(INSTALL_DATA) $(SHARED_LIB_MINOR) $(LIBDIR)
 	@$(RM_F) $(LIBDIR)/$(SHARED_LIB_MAJOR)
 	(cd $(LIBDIR) && $(LN_S) $(SHARED_LIB_MINOR) $(SHARED_LIB_MAJOR))
 	@$(RM_F) $(LIBDIR)/$(SHARED_LIB)
 	(cd $(LIBDIR) && $(LN_S) $(SHARED_LIB_MAJOR) $(SHARED_LIB))
 
-install: @INSTALL_TARGETS@
+install: @LIB_INSTALL_TARGETS@
 
 uninstall:
+	$(RM_F) $(INCLUDEDIR)/lame.h
 	$(RM_F) $(LIBDIR)/libmp3lame.a
 	$(RM_F) $(LIBDIR)/$(SHARED_LIB)
 	$(RM_F) $(LIBDIR)/$(SHARED_LIB_MAJOR)
 	$(RM_F) $(LIBDIR)/$(SHARED_LIB_MINOR)
-
-
-
 
 
 clean:
