@@ -914,10 +914,10 @@ lame_global_flags * lame_init(void)
 
 
 
-
-
-
-int lame_cleanup(char *mpg123bs)
+/*****************************************************************/
+/* flush internal mp3 buffers,                                   */
+/*****************************************************************/
+int lame_encode_finish(char *mpg123bs)
 {
   int mpg123count;
   gf.frameNum--;
@@ -944,6 +944,16 @@ int lame_cleanup(char *mpg123bs)
 
   desalloc_buffer(&bs);    /* Deallocate all buffers */
   
+  return mpg123count;
+}
+
+
+
+/*****************************************************************/
+/* write VBR Xing header, and ID3 tag, if asked for               */
+/*****************************************************************/
+void lame_mp3_tags(void)
+{
   if (gf.bWriteVbrTag)
     {
       /* Calculate relative quality of VBR stream  
@@ -959,5 +969,4 @@ int lame_cleanup(char *mpg123bs)
     id3_buildtag(&id3tag);
     id3_writetag(gf.outPath, &id3tag);
   }
-  return mpg123count;
 }

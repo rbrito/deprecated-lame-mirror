@@ -32,7 +32,7 @@ int main(int argc, char **argv)
   gtk_init (&argc, &argv);
   gtkcontrol();
 
-  lame_cleanup(mp3buffer);
+  lame_encode_finish(mp3buffer);
   return 0;
 }
 

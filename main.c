@@ -27,12 +27,20 @@ int main(int argc, char **argv)
   lame_global_flags *gf;
   FILE *outf;
 
-  gf=lame_init();
-  if(argc==1) lame_usage(argv[0]);  /* no command-line args  */
 
+
+  gf=lame_init();                  /* initialize libmp3lame */
+  if(argc==1) lame_usage(argv[0]);  /* no command-line args, print usage, exit  */
+
+  /* parse the command line arguments, setting various flags in the
+   * struct pointed to by 'gf'.  If you want to parse your own arguments,
+   * or call libmp3lame from a program which uses a GUI to set arguments,
+   * skip this call and set the values of interest in the gf-> struct.  
+   */
   lame_parse_args(argc, argv);
 
-  /* open the output file */
+
+  /* open the MP3 output file */
   if (!strcmp(gf->outPath, "-")) {
     outf = stdout;
   } else {
@@ -41,9 +49,20 @@ int main(int argc, char **argv)
       exit(1);
     }
   }
+
+  /* open the wav/aiff/raw pcm or mp3 input file.  This call will
+   * open the file with name gf->inFile, try to parse the headers and
+   * set gf->samplerate, gf->num_channels, gf->num_samples.
+   * if you want to do your own file input, skip this call and set
+   * these values yourself.  
+   */
   lame_init_infile();
+
+  /* Now that all the options are set, lame needs to analyze them and
+   * set some more options 
+   */
   lame_init_params();
-  lame_print_config();
+  lame_print_config();   /* print usefull information about options being used */
 
 
 
@@ -58,9 +77,11 @@ int main(int argc, char **argv)
 
       /* encode until we hit eof */
       do {
-	iread=lame_readframe(Buffer);
-	imp3=lame_encode(Buffer,mp3buffer);
-	fwrite(mp3buffer,1,imp3,outf);
+	/* read in gf->framesize samples.  If you are doing your own file input
+	 * replace this by a call to fill Buffer with exactly gf->framesize sampels */
+	iread=lame_readframe(Buffer);  
+	imp3=lame_encode(Buffer,mp3buffer);  /* encode the frame */
+	fwrite(mp3buffer,1,imp3,outf);       /* write the MP3 output  */
 	samples_to_encode += iread - gf->framesize;
       } while (iread);
 
@@ -72,9 +93,10 @@ int main(int argc, char **argv)
       }
     }
   
-  imp3=lame_cleanup(mp3buffer);
-  fwrite(mp3buffer,1,imp3,outf);
+  imp3=lame_encode_finish(mp3buffer);   /* may return one more mp3 frame */
+  fwrite(mp3buffer,1,imp3,outf);  
   fclose(outf);
+  lame_mp3_tags();                /* add id3 or VBR tags to mp3 file */
   return 0;
 }
 

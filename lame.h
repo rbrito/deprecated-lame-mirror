@@ -214,8 +214,16 @@ char *mp3buffer,int  mp3buffer_size);
 /* REQUIRED:  lame_cleanup will flush the buffers and may return a 
  *final mp3 frame 
 */
-int lame_cleanup(char *mp3buf);
+int lame_encode_finish(char *mp3buf);
 
+/* OPTIONAL:  lame_mp3_tags will append id3 and Xing VBR tags to
+the mp3 file with name given by gf->outPath.  These cals open the file,
+write tags, and close the file, so make sure the the encoding is finished
+before calling these routines.  
+Note: if VBR and id3 tags are turned off by the user, or turned off
+by LAME because the output is not a regular file, this call does nothing
+*/
+void lame_mp3_tags(void);
 
 
 
