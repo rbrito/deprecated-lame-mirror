@@ -753,7 +753,7 @@ int  calc_noise(
         if (noise > 0.0) {
             int tmp;
             
-            tmp = max((int)(noise*10 + .5), 1);
+            tmp = Max((int)(noise*10 + .5), 1);
             res->over_SSD += tmp*tmp;
 
 	        over++;
