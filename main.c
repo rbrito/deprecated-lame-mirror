@@ -98,24 +98,22 @@ int main(int argc, char **argv)
   else
 #endif
     {
-      int samples_to_encode = gf->encoder_delay + 288;
 
       /* encode until we hit eof */
       do {
-	/* read in gf->framesize samples.  If you are doing your own file input
-	 * replace this by a call to fill Buffer with exactly gf->framesize sampels */
+	/* read in 'iread' samples */
 	iread=lame_readframe(Buffer);
-	imp3=lame_encode(Buffer,mp3buffer);  /* encode the frame */
-	fwrite(mp3buffer,1,imp3,outf);       /* write the MP3 output  */
-	samples_to_encode += iread - gf->framesize;
-      } while (iread);
 
-      /* encode until we flush internal buffers.  (Buffer=0 at this point */
-      while (samples_to_encode > 0) {
-	imp3=lame_encode(Buffer,mp3buffer);
-	fwrite(mp3buffer,1,imp3,outf);
-	samples_to_encode -= gf->framesize;
-      }
+	/* check to make sure mp3buffer is big enough */
+	if (LAME_MAXMP3BUFFER < 1.25*iread + 7200) 
+	  fprintf(stderr,"mp3 buffer is not big enough. \n");
+
+	/* encode */
+	imp3=lame_encode_buffer(Buffer[0],Buffer[1],iread,
+              mp3buffer,LAME_MAXMP3BUFFER); 
+
+	fwrite(mp3buffer,1,imp3,outf);       /* write the MP3 output  */
+      } while (iread);
     }
 
   imp3=lame_encode_finish(mp3buffer);   /* may return one more mp3 frame */
@@ -128,18 +126,3 @@ int main(int argc, char **argv)
 
 
 
-/* The reason for this line:
- *
- *       int samples_to_encode = gf.encoder_delay + 288;
- *
- * is:
- *
- * amount of buffering in lame_encode = gf.encoder_delay
- *
- * ALSO, because of the 50% overlap, a 576 MDCT granule decodes to
- * 1152 samples.  To synthesize the 576 samples centered under this granule
- * we need the previous granule for the first 288 samples (no problem), and
- * the next granule for the next 288 samples (not possible if this is last
- * granule).  So we need to pad with 288 samples to make sure we can
- * encode the 576 samples we are interested in.
- */

@@ -26,9 +26,6 @@ total:    512+16
    less than 288 will result in lost data in the first 288-ENCDELAY
    samples. 
 
-   If delay < 800, lame_encodeframe() will introduce some additional
-   buffering because of the data needed by the FFT.
-
    suggested: 800
    set to 1160 to sync with FhG.
 */
@@ -40,14 +37,12 @@ total:    512+16
 /* delay of the MDCT used in mdct.c */
 /* original ISO routiens had a delay of 528!  Takehiro's routines: */
 #define MDCTDELAY 48  
-
-
+#define FFTOFFSET (224+MDCTDELAY)
 
 /*
 Most decoders, including the one we use,  have a delay of 528 samples.  
 */
 #define DECDELAY 528
-#define FFTOFFSET (224+MDCTDELAY)
 
 
 /* number of subbands */

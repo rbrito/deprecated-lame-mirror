@@ -160,14 +160,18 @@ The LAME API
  */
 lame_global_flags *lame_init(void);
 
+
+
 /* OPTIONAL: call this to print an error with a brief command line usage guide and quit 
  */
 void lame_usage(char *);
 
 
+
 /* OPTIONAL: call this to print a command line interface usage guide and quit 
  */
 void lame_help(char *);
+
 
 
 /* OPTIONAL: set internal options via command line argument parsing 
@@ -177,10 +181,12 @@ void lame_help(char *);
 void lame_parse_args(int argc, char **argv);
 
 
+
 /* OPTIONAL: open the input file, and parse headers if possible 
  * you can skip this call if you will do your own PCM input 
  */
 void lame_init_infile(void);
+
 
 
 /* REQUIRED:  sets more internal configuration based on data provided
@@ -193,6 +199,7 @@ void lame_init_params(void);
 void lame_print_config(void);
 
 
+
 /* OPTIONAL:  read one frame of PCM data from audio input file opened by 
  * lame_init_infile.  Input file can be wav, aiff, raw pcm, anything
  * supported by libsndfile, or an mp3 file
@@ -200,15 +207,14 @@ void lame_print_config(void);
 int lame_readframe(short int Buffer[2][1152]);
 
 
-/* input 1 pcm frame, output (maybe) 1 mp3 frame. */ 
-/* return code = number of bytes output in mp3buffer.  can be 0 */
-int lame_encode(short int Buffer[2][1152],char *mp3buffer);
 
-
-/* here's a better interface (not yet written).  It will do the 1152 frame
- * buffering for you, as well as downsampling.  User is required to
- * provide the mp3buffer size (is there any good way around this?)
+/* input pcm data, output (maybe) mp3 frames.
+ * This routine handles all buffering, resampling and filtering for you.
+ * The required mp3buffer_size can be computed from num_samples, 
+ * samplerate and encoding rate, but here is a worst case estimate:
  *
+ * mp3buffer_size in bytes = 1.25*num_samples + 7200
+ * 
  * return code = number of bytes output in mp3buffer.  can be 0 
 */
 int lame_encode_buffer(short int leftpcm[], short int rightpcm[],int num_samples,
@@ -216,11 +222,22 @@ char *mp3buffer,int  mp3buffer_size);
 
 
 
+/* input 1 pcm frame, output (maybe) 1 mp3 frame. */ 
+/* return code = number of bytes output in mp3buffer.  can be 0 */
+/* NOTE: this interface is outdated, please use lame_encode_buffer() instead */
+/* declair mp3buffer with:  char mp3buffer[LAME_MAXMP3BUFFER] */
+int lame_encode(short int Buffer[2][1152],char *mp3buffer);
 
-/* REQUIRED:  lame_cleanup will flush the buffers and may return a 
- *final mp3 frame 
-*/
-int lame_encode_finish(char *mp3buf);
+
+
+/* REQUIRED:  lame_encode_finish will flush the buffers and may return a 
+ * final few mp3 frames.  mp3buffer should be at least 7200 bytes.
+ *
+ * return code = number of bytes output to mp3buffer.  can be 0
+ */
+int lame_encode_finish(char *mp3buffer);
+
+
 
 /* OPTIONAL: close the sound input file if lame_init_infile() was used */
 void lame_close_infile(void);
