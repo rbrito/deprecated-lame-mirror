@@ -101,13 +101,6 @@ ifeq ($(UNAME),Linux)
 #   CC_OPTS =  -DDEBUG -UNDEBUG  -O -Wall -g -DABORTFP 
 
 
-# these options for gcc-2.95.2 to produce fast code
-#   CC_OPTS = $(FEATURES)\
-#	-Wall -O9 -fomit-frame-pointer -march=pentium \
-#	-finline-functions -fexpensive-optimizations \
-#	-funroll-loops -funroll-all-loops -pipe -fschedule-insns2 \
-#	-fno-strength-reduce \
-#	-malign-double -mfancy-math-387 -ffast-math 
 
 
 ##########################################################################

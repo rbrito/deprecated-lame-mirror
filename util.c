@@ -240,7 +240,6 @@ void empty_buffer(Bit_stream_struc *bs)
 
 int copy_buffer(char *buffer,int size,Bit_stream_struc *bs)
 {
-  int i,j=0;
   int minimum = bs->buf_byte_idx + 1;
   if (minimum <= 0) return 0;
   if (size!=0 && minimum>size) return -1; /* buffer is too small */

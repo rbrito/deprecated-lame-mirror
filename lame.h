@@ -84,6 +84,7 @@ typedef struct  {
   int error_protection;           /* use 2 bytes per frame for a CRC checksum. default=0*/
   int padding_type;               /* 0=no padding, 1=always pad, 2=adjust padding */
   int extension;                  /* the MP3 'private extension' bit.  meaningless */
+  int strict_ISO;                 /* enforce ISO spec as much as possible */
 
   /* quantization/noise shaping */
   int disable_reservoir;          /* use bit reservoir? */

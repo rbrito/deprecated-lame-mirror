@@ -40,9 +40,11 @@ ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, i
 
 
     /* maximum allowed frame size */
-    maxmp3buf = 7680;
-    if (gfp->experimentalY) 
+    if (gfp->strict_ISO)
+      maxmp3buf = 7680;
+    else
       maxmp3buf = 16380;
+
 
     if ( frameLength > maxmp3buf )
 	gfc->ResvMax = 0;
@@ -60,6 +62,9 @@ ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, i
     }
     
     fullFrameBits = mean_bits * gfc->mode_gr + Min(gfc->ResvSize,gfc->ResvMax);
+    if (gfp->strict_ISO) {
+      if (fullFrameBits>maxmp3buf) fullFrameBits=maxmp3buf;
+    }
     return fullFrameBits;
 }
 
@@ -161,7 +166,7 @@ ResvFrameEnd(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits)
     
     if (gfp->VBR && mdb_bytes && !gfp->disable_reservoir)  {
 	printf("**** %i informative message:  drain_pre: wasting bits=%i\n",
-             gfc->frameNum,8*mdb_bytes);
+             (int)gfc->frameNum,8*mdb_bytes);
       }
 #endif
 
@@ -187,7 +192,7 @@ ResvFrameEnd(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits)
 
     if (gfp->VBR && stuffingBits>7 && !gfp->disable_reservoir) {
       printf("**** %i informative message: drain_post: wasting bits=%i\n",
-	     gfc->frameNum,stuffingBits);
+	     (int)gfc->frameNum,stuffingBits);
     }
     return;
 }

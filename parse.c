@@ -154,6 +154,7 @@ void lame_help(lame_global_flags *gfp,char *name)  /* print syntax & exit */
   fprintf(stdout,"    -p              error protection.  adds 16bit checksum to every frame\n");
   fprintf(stdout,"                    (the checksum is computed correctly)\n");
   fprintf(stdout,"    --nores         disable the bit reservoir\n");
+  fprintf(stdout,"    --strictly-enforce-ISO   comply as much as possible to ISO MPEG spec\n");
   fprintf(stdout,"\n");
   fprintf(stdout,"  Specifying any of the following options will add an ID3 tag:\n");
   fprintf(stdout,"     --tt \"title\"     title of song (max 30 chars)\n");
@@ -297,6 +298,9 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	else if (strcmp(token, "nores")==0) {
 	  gfp->disable_reservoir=1;
 	  gfp->padding_type=0;
+	}
+	else if (strcmp(token, "strictly-enforce-ISO")==0) {
+	  gfp->strict_ISO=1;
 	}
 	else if (strcmp(token, "athonly")==0) {
 	  gfp->ATHonly=1;

@@ -4,7 +4,9 @@
 
 #ifdef OS_AMIGAOS
 #else
+#ifdef BRHIST
 #include <termcap.h>
+#endif
 #endif
 
 

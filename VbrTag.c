@@ -240,7 +240,6 @@ int InitVbrTag(lame_global_flags *gfp)
 {
 	int i,nMode,SampIndex;
 	lame_internal_flags *gfc = gfp->internal_flags;
-	Bit_stream_struc* pBs=&gfc->bs;
 	u_char pbtStreamBuffer[216];   
 	nMode = gfp->mode;
 	SampIndex = gfc->samplerate_index;
