@@ -26,7 +26,8 @@
 
 #include "lame.h"
 #include "config.h"
-#include "machine.h" /* for sample_t type */
+// sample_t should not be needed by any libmp3lame wrapper:
+//#include "machine.h" /* for sample_t type */
 
 
 #define         Min(A, B)       ((A) < (B) ? (A) : (B))
@@ -51,17 +52,6 @@ static void DebugPrintf( const char* pzFormat, ... );
 static void DispErr( LPSTR strErr );
 static void PresetOptions( lame_global_flags *gfp, LONG myPreset );
 
-
-/*********************************************************************
- * Export UNDOCUMENTED, experimental settings, so they can be 
- * called from the DLL. These routines are not prototyped in lame.h
- * as soon as they become regular functions, remove these protoypes
- *********************************************************************
-*/
-extern int CDECL lame_encode_buffer_sample_t(lame_global_flags * gfp,
-                   sample_t buffer_l[],
-                   sample_t buffer_r[],
-                   int nsamples, unsigned char *mp3buf, const int mp3buf_size);
 
 
 
@@ -784,7 +774,7 @@ __declspec(dllexport) BE_ERR	beEncodeChunkFloatS16NI(HBE_STREAM hbeStream, DWORD
 {
 	int nOutputSamples;
 
-	nOutputSamples = lame_encode_buffer_sample_t(gfp,buffer_l,buffer_r,nSamples,pOutput,0);
+	nOutputSamples = lame_encode_buffer_float(gfp,buffer_l,buffer_r,nSamples,pOutput,0);
 
 	if ( nOutputSamples >= 0 )
 	{
