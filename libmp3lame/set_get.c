@@ -27,7 +27,7 @@
 #endif
 
 #include <assert.h>
-#include "lame.h"
+#include "util.h"
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>

@@ -28,6 +28,7 @@
 // include 'lame.h'.  However, the DLL provides better version information
 // that is currently available via libmp3lame and thus needs version.h
 #include "lame.h"
+#include "util.h"
 #include "version.h"
 
 
