@@ -26,7 +26,7 @@ int sendrtp(int fd, struct sockaddr_in *sSockAddr, struct rtpheader *foo, const 
 int makesocket(char *szAddr,unsigned short port,unsigned char TTL,struct sockaddr_in *sSockAddr);
 void rtp_output(const char *mp3buffer,int mp3size);
 
-#ifdef 0
+#if 0
 int rtp_send (
     SOCKET s,
     struct rtpheader *foo,
