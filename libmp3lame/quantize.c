@@ -163,7 +163,8 @@ static FLOAT athAdjust( FLOAT a, FLOAT x, FLOAT athFloor )
 
   returns number of sfb's with energy > ATH
 */
-void calc_xmin( 
+static void
+calc_xmin(
     lame_global_flags *gfp,
     const III_psy_ratio * const ratio,
     const gr_info       * const cod_info, 
@@ -414,7 +415,7 @@ bin_search_StepSize(
  *
  ************************************************************************/
 static int
-floatcompare(FLOAT *a, FLOAT *b)
+floatcompare(const FLOAT *a, const FLOAT *b)
 {
     if (*a > *b) return 1;
     if (*a == *b) return 0;
@@ -787,8 +788,7 @@ inc_subblock_gain (
          * we have to go up to SBMAX_s
          */
         cod_info->subblock_gain[window]++;
-	j = gfc->scalefac_band.l[cod_info->sfb_lmax]
-	    + cod_info->width[cod_info->sfb_lmax] * (window+1);
+	j = gfc->scalefac_band.l[cod_info->sfb_lmax];
 	for (sfb = cod_info->sfb_lmax+window;
 	     sfb < cod_info->sfbmax; sfb += 3) {
 	    FLOAT amp;
@@ -804,13 +804,15 @@ inc_subblock_gain (
 
 	    scalefac[sfb] = 0;
 	    amp = IPOW20(210 + (s << (cod_info->scalefac_scale + 1)));
+	    j += width * (window+1);
 	    for (l = -width; l < 0; l++) {
 		xrpow[j+l] *= amp;
             }
-	    j += width*3;
+	    j += width*(2-window);
         }
 	{
 	    FLOAT8 amp = IPOW20(210 - 8);
+	    j += cod_info->width[sfb] * (window+1);
 	    for (l = -cod_info->width[sfb]; l < 0; l++)
 		xrpow[j+l] *= amp;
         }
