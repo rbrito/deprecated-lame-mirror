@@ -170,9 +170,6 @@ InitVbrTag(lame_t gfc)
     if (!gfc->bWriteVbrTag)
 	return 0;
 
-    /* we shold not count the vbr tag itself, because it breaks some player */
-    gfc->nVbrNumFrames=0;
-
     /*
      * Xing VBR pretends to be a 48kbs layer III frame.  (at 44.1kHz).
      * (at 48kHz they use 56kbs since 48kbs frame not big enough for
@@ -567,7 +564,7 @@ int PutVbrTag(lame_t gfc, FILE *fpStream)
     p += 4;
 
     CreateI4(p, FRAMES_FLAG+BYTES_FLAG+TOC_FLAG+VBR_SCALE_FLAG); p += 4;
-    CreateI4(p, gfc->nVbrNumFrames); p += 4;
+    CreateI4(p, gfc->frameNum); p += 4;
     CreateI4(p, lFileSize); p += 4;
 
     /* Put TOC */

@@ -548,7 +548,6 @@ struct lame_internal_flags {
 
     /* VBR tags. */
     int TotalFrameSize;
-    int nVbrNumFrames;
 
     struct {
 	int mmx;

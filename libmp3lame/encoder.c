@@ -422,11 +422,9 @@ encode_mp3_frame(lame_t gfc, unsigned char* mp3buf, int mp3buf_size)
     /* copy mp3 bit buffer into array */
     mp3count = copy_buffer(gfc,mp3buf,mp3buf_size,1);
 
-    if (gfc->bWriteVbrTag) {
-	gfc->nVbrNumFrames++;
-	if (gfc->VBR == vbr)
-	    AddVbrFrame(gfc);
-    }
+    gfc->frameNum++;
+    if (gfc->bWriteVbrTag && gfc->VBR != cbr)
+	AddVbrFrame(gfc);
 
 #ifndef NOANALYSIS
     if (gfc->pinfo)
@@ -437,7 +435,7 @@ encode_mp3_frame(lame_t gfc, unsigned char* mp3buf, int mp3buf_size)
     updateStats( gfc );
 #endif
 
-  return mp3count;
+    return mp3count;
 }
 
 /* copy in new samples from in_buffer into mfbuf, with resampling
@@ -622,7 +620,6 @@ lame_encode_buffer_sample_t(
 	if (mp3buf_size)
 	    buf_remain -= i;
 	p += i;
-	gfc->frameNum++;
 
 	/* shift out old samples */
 	gfc->mf_size -= gfc->framesize;
