@@ -45,6 +45,8 @@ BRHIST_SWITCH =
 LIBTERMCAP = 
 RM = rm -f
 
+CPP_OPTS += -DHAVE_CONFIG_H -I.
+ 
 ##########################################################################
 # -DHAVEMPGLIB compiles the mpglib *decoding* library into libmp3lame
 ##########################################################################
@@ -498,7 +500,6 @@ lib_obj += libmp3lame/i386/choose_table.o
 endif
 
 
-
 %.o: %.c 
 	$(CC) $(CPP_OPTS) $(CC_SWITCHES) -c $< -o $@
 
@@ -510,6 +511,9 @@ endif
   endif
 
 all: $(PGM)
+
+config.h: configMS.h
+	cp configMS.h config.h
 
 $(PGM):	frontend/main.o $(frontend_obj)  $(MP3LIB)
 	$(CC) $(CC_OPTS) -o frontend/$(PGM)  frontend/main.o $(frontend_obj) \
@@ -524,7 +528,7 @@ mp3rtp:	frontend/rtp.o frontend/mp3rtp.o  $(frontend_obj) $(MP3LIB)
 	$(CC) $(CC_OPTS) -o frontend/mp3rtp mp3rtp.o rtp.o $(frontend_obj) $(MP3LIB) \
         $(LIBS) $(LIBSNDFILE) $(LIBTERMCAP) $(VORBIS_LIB)
 
-libmp3lame/libmp3lame.a:  $(lib_obj)
+libmp3lame/libmp3lame.a:  config.h $(lib_obj)
 	$(AR) cr libmp3lame/libmp3lame.a  $(lib_obj)
 	$(RANLIB) libmp3lame/libmp3lame.a
 
