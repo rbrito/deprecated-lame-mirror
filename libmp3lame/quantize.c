@@ -332,7 +332,8 @@ trancate_smallspectrums(
 
 	width = gi->width[sfb];
 	j += width;
-	if (distort[sfb] >= 1.0)
+	allowedNoise = (1.0 - distort[sfb]) * l3_xmin[sfb];
+	if (allowedNoise == 0.0)
 	    continue;
 
 	qsort(&work[j-width], width,
@@ -341,21 +342,23 @@ trancate_smallspectrums(
 	if (work[j - 1] == 0.0)
 	    continue; /* all zero sfb */
 
-	allowedNoise = distort[sfb] * l3_xmin[sfb];
 	trancateThreshold = 0.0;
 	start = 0;
 	do {
 	    FLOAT8 noise;
 	    for (nsame = 1; start + nsame < width; nsame++)
-		if (work[start + j] != work[start+j+nsame])
+		if (work[start + j-width] != work[start+j+nsame-width])
 		    break;
 
-	    noise = work[start+j] * work[start+j] * nsame;
+	    noise = work[start+j-width] * work[start+j-width] * nsame;
+//	    printf("%d(%d); %e * %d\n", start+j, width+j,
+//		   work[start+j-width], nsame);
 	    if (allowedNoise < noise) {
 		if (start != 0)
-		    trancateThreshold = work[start+j - 1];
+		    trancateThreshold = work[start+j-width - 1];
 		break;
 	    }
+//	    printf("%e -> %e\n", allowedNoise, allowedNoise - noise);
 	    allowedNoise -= noise;
 	    start += nsame;
 	} while (start < width);
@@ -363,10 +366,11 @@ trancate_smallspectrums(
 	    continue;
 
 	do {
-	    if (fabs(gi->xr[j - width]) < trancateThreshold)
+	    if (fabs(gi->xr[j - width]) <= trancateThreshold)
 		gi->l3_enc[j - width] = 0;
 	} while (--width > 0);
     } while (++sfb < gi->psymax);
+
     gi->part2_3_length = noquant_count_bits(gfc, gi);
 }
 
@@ -1442,12 +1446,14 @@ VBR_iteration_loop (
     for( ; gfc->bitrate_index < gfc->VBR_max_bitrate; gfc->bitrate_index++) {
         if (used_bits <= frameBits[gfc->bitrate_index]) break; 
     }
+#if 0
     if ( !analog_silence && !gfp->disable_reservoir ) {
 	int bp = gfc->VBR->maxFill;
 	for( ; bp > 0 && gfc->bitrate_index < gfc->VBR_max_bitrate; gfc->bitrate_index++) {
 	    if (used_bits+bp <= frameBits[gfc->bitrate_index]) break; 
 	}
     }
+#endif
     bits = ResvFrameBegin (gfp, &mean_bits);
 
     if (used_bits <= bits) break;
@@ -1461,7 +1467,7 @@ VBR_iteration_loop (
         for (ch = 0; ch < gfc->channels_out; ch++) {
 	    /*  do the 'substep shaping'
 	     */
-	    if (gfp->VBR && (gfc->substep_shaping & 1)) {
+	    if (gfc->substep_shaping & 1) {
 		trancate_smallspectrums(gfc, &l3_side->tt[gr][ch],
 					l3_xmin[gr][ch], xrpow);
 	    }
