@@ -94,7 +94,7 @@ DebugFileName[0] = '\0';
 ACMStream::~ACMStream()
 {
         // release memory - encoding is finished
-	lame_close( gfp );
+	if (gfp) lame_close( gfp );
 
 	if (my_debug != NULL)
 	{
