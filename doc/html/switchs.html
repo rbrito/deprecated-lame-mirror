@@ -56,7 +56,7 @@
   </tr>
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#Bmax">-B</a></kbd></td>
-    <td align="LEFT" nowrap>max VBR bitrate (8...320)</td>
+    <td align="LEFT" nowrap>max VBR/ABR bitrate (8...320)</td>
   </tr>
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#-bitwidth">--bitwidth</a></kbd></td>
@@ -290,15 +290,10 @@
     use frames of different sizes. The allowed range of n is 8-310, you can use 
     any integer value within that range.<br>
     <br>
-    It can be combined with the -b and -B switches like<br>
+    It can be combined with the -b and -B switches like:<br>
     lame --abr 123 -b 64 -B 192 a.wav a.mp3<br>
     which would limit the allowed frame sizes between 64 and 192 kbits. <br>
     <br>
-    The use of -B is NOT RECOMMENDED. A 128kbs CBR bitstream, because of the bit reservoir, 
-    can actually have frames which use as many bits as a 320kbs frame. VBR modes 
-    minimize the use of the bit reservoir, and thus need to allow 320kbs frames 
-    to get the same flexibility as CBR streams. 
-  <dt><br>
   </dt>
   <hr width="50%" noshade align="center">
   <br>
@@ -399,7 +394,7 @@
     For MPEG2 (sampling frequencies of 16, 22.05 and 24kHz)<br>
     n = 8,16,24,32,40,48,56,64,80,96,112,128,144,160<br>
     <br>
-    Default is 128 kbs for MPEG1 and 80 kbs for MPEG2. <br>
+    Default is 128 kbs for MPEG1 and 64 kbs for MPEG2. <br>
     <br>
     When used with variable bitrate encoding (VBR), -b specifies the minimum bitrate 
     to be used. However, in order to avoid wasted space, the smallest frame size 
@@ -411,7 +406,7 @@
 </dl>
 <dl> 
   <dt><strong>* <kbd>-B n</kbd><a name="Bmax">&nbsp;&nbsp;&nbsp;&nbsp;maximum 
-    VBR bitrate&nbsp;</a></strong> </dt>
+    VBR/ABR bitrate&nbsp;</a></strong> </dt>
 </dl>
 <dl> 
   <dd>For MPEG1 (sampling frequencies of 32, 44.1 and 48kHz)<br>
@@ -420,7 +415,12 @@
     For MPEG2 (sampling frequencies of 16, 22.05 and 24kHz)<br>
     n = 8,16,24,32,40,48,56,64,80,96,112,128,144,160<br>
     <br>
-    Specifies the maximum allowed bitrate when using VBR.<br>
+    Specifies the maximum allowed bitrate when using VBR/ABR <br>
+    <br>
+    The use of -B is NOT RECOMMENDED. A 128kbs CBR bitstream, because of the bit reservoir, 
+    can actually have frames which use as many bits as a 320kbs frame. VBR modes 
+    minimize the use of the bit reservoir, and thus need to allow 320kbs frames 
+    to get the same flexibility as CBR streams.<br>
     <br>
     <i>note: If you own an mp3 hardware player build upon a MAS 3503 chip, you 
     must set maximum bitrate to no more than 224 kpbs.</i> <br>
