@@ -306,7 +306,7 @@ struct lame_internal_flags {
     FLOAT istereo_ratio;       /* intensity stereo threshold */
     FLOAT interChRatio;
 
-    int filter_type;     /* 0=polyphase filter, 1= FIR filter 2=MDCT filter */
+    int filter_type;     /* 0=polyphase filter, 1=MDCT filter 2=FIR filter */
     int use_scalefac_scale;   /* 0 = not use  1 = use */
     int use_subblock_gain;    /* 0 = not use  1 = use */
     int noise_shaping_amp;    /* 0 = ISO model: amplify all distorted bands
