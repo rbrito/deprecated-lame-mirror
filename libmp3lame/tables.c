@@ -57,17 +57,17 @@ const int  nr_of_sfb_block [6*3][4] =
     {18, 18, 0, 0}, /* short */
     {15, 18, 0, 0}  /* mixed */
     ,
-    { 7,  7,  7, 0}, /* long/start/stop */
-    {12, 12, 12, 0}, /* short */
-    { 6, 15, 12, 0}  /* mixed */
+    { 7,  7,  7, 0}, /* long/start/stop, IS or preflag */
+    {12, 12, 12, 0}, /* short, IS or preflag */
+    { 6, 15, 12, 0}  /* mixed, IS or preflag */
     ,
-    { 6,  6, 6, 3}, /* long/start/stop */
-    {12,  9, 9, 6}, /* short */
-    { 6, 12, 9, 6}  /* mixed */
+    { 6,  6, 6, 3}, /* long/start/stop, IS or preflag */
+    {12,  9, 9, 6}, /* short, IS or preflag */
+    { 6, 12, 9, 6}  /* mixed, IS or preflag */
     ,
-    { 8, 8, 5, 0}, /* long/start/stop */
-    {15,12, 9, 0}, /* short */
-    { 6,18, 9, 0}  /* mixed */
+    { 8, 8, 5, 0}, /* long/start/stop, IS or preflag */
+    {15,12, 9, 0}, /* short, IS or preflag */
+    { 6,18, 9, 0}  /* mixed, IS or preflag */
 };
 
 
