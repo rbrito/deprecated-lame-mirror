@@ -556,8 +556,7 @@ static int III_get_scale_factors_1(int *scf,struct gr_info_s *gr_info)
           numbits += num0 * 6;
         }
         else {
-          *scf++ = 0; *scf++ = 0; *scf++ = 0;  /* set to ZERO necessary? */
-          *scf++ = 0; *scf++ = 0; *scf++ = 0;
+          scf += 6;
         }
 
         if(!(scfsi & 0x4)) {
@@ -566,8 +565,7 @@ static int III_get_scale_factors_1(int *scf,struct gr_info_s *gr_info)
           numbits += num0 * 5;
         }
         else {
-          *scf++ = 0; *scf++ = 0; *scf++ = 0;  /* set to ZERO necessary? */
-          *scf++ = 0; *scf++ = 0;
+          scf += 5;
         }
 
         if(!(scfsi & 0x2)) {
@@ -576,8 +574,7 @@ static int III_get_scale_factors_1(int *scf,struct gr_info_s *gr_info)
           numbits += num1 * 5;
         }
         else {
-          *scf++ = 0; *scf++ = 0; *scf++ = 0;  /* set to ZERO necessary? */
-          *scf++ = 0; *scf++ = 0;
+          *scf += 5;
         }
 
         if(!(scfsi & 0x1)) {
@@ -586,8 +583,7 @@ static int III_get_scale_factors_1(int *scf,struct gr_info_s *gr_info)
           numbits += num1 * 5;
         }
         else {
-          *scf++ = 0; *scf++ = 0; *scf++ = 0;  /* set to ZERO necessary? */
-          *scf++ = 0; *scf++ = 0;
+          scf += 5;
         }
       }
 
