@@ -21,7 +21,8 @@ struct framebuf {
 
 typedef struct mpstr_tag {
 	struct buf *head,*tail;
-        int vbr_header;               /* 1 if vbr header detected */
+        int vbr_header;               /* 1 if valid Xing vbr header detected */
+        int num_frames;               /* set if vbr header present */
         int header_parsed;
         int side_parsed;  
         int data_parsed;  
