@@ -5,6 +5,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.23  2000/01/15 14:35:38  takehiro
+ * little bit optimization
+ *
  * Revision 1.22  2000/01/13 16:26:50  takehiro
  * moved info.stereo into gf.stereo
  *
@@ -470,9 +473,9 @@ void L3psycho_anal( short int *buffer[2],
 	b1 = bx_sav[chn][1][j] = bx_sav[chn][0][j];
 	r1 = rx_sav[chn][1][j] = rx_sav[chn][0][j];
 	an = ax_sav[chn][0][j] = wsamp[j];
-	bn = bx_sav[chn][0][j] = j==0 ? wsamp[0] : wsamp[BLKSIZE-j];  // bx[j]; 
+	bn = bx_sav[chn][0][j] = j==0 ? wsamp[0] : wsamp[BLKSIZE-j];  // bx[j];
 	rn = rx_sav[chn][0][j] = sqrt(energy[j]);
-	
+
 	{ /* square (x1,y1) */
 	  if( r1 != 0.0 ) {
 	    numre = (a1*b1);
@@ -713,9 +716,9 @@ void L3psycho_anal( short int *buffer[2],
     
     pe[chn] = 0.0;		/*  calculate percetual entropy */
     for ( b = 0; b < npart_l; b++ ) {
-      FLOAT8 tp = log((thr[b]+1.0) / (eb[b]+1.0) );
-      tp = minimum( 0.0, tp ) ;  /*not log*/
-      pe[chn] -= numlines_l[b] * tp ;
+      if (thr[b] < eb[b]) {
+	pe[chn] -= numlines_l[b] * log((thr[b]+1.0) / (eb[b]+1.0) );
+      }
     }	/* thr[b] -> thr[b]+1.0 : for non sound portition */
     
     
