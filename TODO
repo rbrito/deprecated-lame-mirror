@@ -2,9 +2,11 @@
 
 things to check for:  
 
+   -lncurses
    -llibsndfile      (allow user to enable)
-   -lncurses         
+   -lvorbis          (allow user to disable)
    -lGTK             (allow user to disable)
+   architecture depending optimization(like assembler code)
    make depend option for CC
 
 
@@ -23,6 +25,10 @@ Does stdin work when LAME is compiled to use libsndfile?
 (new version of libsndfile will support this - try this out)
 
 
+
+
+998.
+Merge GOGO's fast assembler routines.
 
 999.
 It would be nice to save some information whilst encoding
