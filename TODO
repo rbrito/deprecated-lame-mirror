@@ -24,3 +24,15 @@ Does stdin work when LAME is compiled to use libsndfile?
 
 
 
+999.
+It would be nice to save some information whilst encoding
+a: wave -> mp3
+	a RIFF/wave can contain LIST chunks with information
+	about author, title, etc. 
+	==> could go into TAG fields of resulting mp3
+b: mp3 -> mp3
+	==> we could copy the TAG directly
+c: mp3 <-> ogg
+	==> copy TAG info into oggs info field and vice versa
+d: mp3 -> wave
+	==> copy TAG into LIST chunk
