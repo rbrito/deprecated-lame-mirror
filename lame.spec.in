@@ -2,7 +2,8 @@
 %define ver @VERSION@
 %define quality alpha
 %define rel 1
-%define prefix /usr
+%define prefix %{_usr}
+%define docdir %{_defaultdocdir}
 
 Summary : LAME Ain't an MP3 Encoder
 Name: %{name}
@@ -13,10 +14,9 @@ Vendor: The LAME Project
 Packager: cefiar <cefiar1@optushome.com.au>
 URL: http://www.sulaco.org/mp3/
 Group: Applications/Multimedia
-Source: http://www.sulaco.org:80/mp3/download/beta/%{name}%{ver}%{quality}.tar.gz
+Source: http://www.sulaco.org:80/mp3/download/beta/%{name}-%{ver}.tar.gz
 BuildRoot: /var/tmp/lame-%{ver}-root
 Prefix: %{prefix}
-Docdir: %{prefix}/doc
 
 %description
 LAME is an educational tool to be used for learning about MP3 encoding.  The
@@ -25,32 +25,42 @@ psycho acoustics, noise shaping and speed of MP3.  Another goal of the LAME
 project is to use these improvements for the basis of a  patent free audio
 compression codec for the GNU project.
 
-%prep
+%prep -q
 
-%setup -n %{name}%{ver}
+%setup -n %{name}-%{ver} -q
 
-%build
-make
+%build -q
+LC_ALL=POSIX
+export LC_ALL
+CFLAGS="$RPM_OPT_FLAGS" ./configure --prefix=%prefix --enable-nasm --enable-mp3x --enable-mp3rtp --quiet
+
+numcpu=`egrep -c "^processor[[:space:]]+:[[:space:]]+[0-9]+" /proc/cpuinfo`
+if [ "$numcpu""x" != "x" ]; then
+	make -j"$numcpu"
+else
+	make
+fi
 
 %install
 rm -fr $RPM_BUILD_ROOT
-mkdir -p $RPM_BUILD_ROOT%{prefix}/bin
-mkdir -p $RPM_BUILD_ROOT%{prefix}/man/man1
-install -s -m 755 lame $RPM_BUILD_ROOT%{prefix}/bin
-install -m 644 doc/man/lame.1 $RPM_BUILD_ROOT%{prefix}/man/man1
+make install prefix=$RPM_BUILD_ROOT%{prefix}
 
 %clean
 rm -rf $RPM_BUILD_ROOT
-rm -rf /usr/src/redhat/BUILD/%{name}%{ver}
+rm -rf /usr/src/redhat/BUILD/%{name}-%{ver}
 
 %files
 %defattr (-,root,root)
-%doc LICENSE USAGE COPYING API TODO README* HACKING
-%doc doc/html/*.html
-%{prefix}/bin/lame
-%{prefix}/man/man1
+%doc LICENSE USAGE COPYING API TODO README* HACKING STYLEGUIDE PRESETS.draft
+%doc %{docdir}/%{name}
+%{prefix}/bin
+%{prefix}/lib
+%{prefix}/man
 
 %changelog
+* Sat Aug 04 2001 Markus Linnala «maage@cs.tut.fi»
+- Build and include docs and libs correctly
+- Build extra programs
 
 * Tue Aug 01 2000 Stuart Young «cefiar1@optushome.com.au»
 - Updated RPM to 3.85beta.
