@@ -41,6 +41,21 @@
 #include <dmalloc.h>
 #endif
 
+
+/* GLOBAL VARIABLES.  set by parse_args() */
+/* we need to clean this up */
+sound_file_format input_format;   
+int swapbytes;              /* force byte swapping   default=0*/
+int silent;
+int brhist;
+float update_interval;      /* to use Frank's time status display */
+int mp3_delay;              /* to adjust the number of samples truncated
+                               during decode */
+int mp3_delay_set;          /* user specified the value of the mp3 encoder 
+                               delay to assume for decoding */
+
+
+
 /************************************************************************
 *
 * license
@@ -613,6 +628,8 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
     /* turn on display options. user settings may turn them off below */
     silent   = 0;
     brhist   = 1;
+    mp3_delay = 0;   
+    mp3_delay_set=0;
     id3tag_init (gfp);
 
     /* process args */

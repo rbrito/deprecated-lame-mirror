@@ -546,26 +546,6 @@ int lame_init_params ( lame_global_flags* const gfp )
 	break;
     }
 
-#ifdef KLEMM_12
-
-  /* At higher quality (lower compression) use STEREO instead of J-STEREO.
-   * (unless the user explicitly specified a mode)
-   *
-   * The threshold to completely switch to STEREO is:
-   *    48 kHz:   244 kbps (used at 256+)
-   *    44.1 kHz: 224 kbps (used at 224+)
-   *    32 kHz:   162 kbps (used at 192+)
-   *
-   * Note, that there is a second mechanism to reduce MS usage at high
-   * compression rates. This code is only to speed up compression for high
-   * data rates, where MS is really never necessary.
-   */
-   
-    if ( !gfp->mode_fixed  &&  gfp->mode != MPG_MD_MONO )
-        if ( gfp->compression_ratio <= 6.3001 )
-            gfp->mode = MPG_MD_STEREO;
-
-#else
 
   /* At higher quality (lower compression) use STEREO instead of J-STEREO.
    * (unless the user explicitly specified a mode)
@@ -580,10 +560,10 @@ int lame_init_params ( lame_global_flags* const gfp )
    *   fs < 32 kHz I have not tested.
    */
    
-  if ( !gfp->mode_fixed  &&  gfp->mode != MPG_MD_MONO  &&  gfp->compression_ratio /* <= 8.82 */ < 9 )
+  if ( !gfp->mode_fixed  &&  gfp->mode != MPG_MD_MONO  &&  
+         gfp->compression_ratio < 8 )
      gfp->mode = MPG_MD_STEREO;
 
-#endif    
 
 
   /****************************************************************/
