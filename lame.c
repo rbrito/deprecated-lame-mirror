@@ -87,21 +87,21 @@ int lame_init_params(lame_global_flags *gfp)
   if (gfp->silent) {
    gfp->brhist_disp=0;  /* turn of VBR historgram */
   }
-  if (!gfp->VBR) {
+  if (gfp->VBR==vbr_off) {
     gfp->brhist_disp=0;  /* turn of VBR historgram */
   }
-  if (gfp->VBR) {
+  if (gfp->VBR!=vbr_off) {
     gfp->free_format=0;  /* VBR cant mix with free format */
   }
 
-  if (!gfp->VBR && gfp->brate==0) {
+  if (gfp->VBR==vbr_off && gfp->brate==0) {
     /* no bitrate or compression ratio specified, use 11 */
     if (gfp->compression_ratio==0) gfp->compression_ratio=11;
   }
 
 
   /* find bitrate if user specify a compression ratio */
-  if (!gfp->VBR && gfp->compression_ratio > 0) {
+  if (gfp->VBR==vbr_off && gfp->compression_ratio > 0) {
     
     if (gfp->out_samplerate==0) 
       gfp->out_samplerate=gfp->in_samplerate;   
@@ -118,7 +118,7 @@ int lame_init_params(lame_global_flags *gfp)
     if (!gfp->free_format)
       gfp->brate = FindNearestBitrate(gfp->brate,gfp->version,gfp->out_samplerate);
   }
-  if (gfp->brate >= 320) gfp->VBR=0;  /* dont bother with VBR at 320kbs */
+  if (gfp->brate >= 320) gfp->VBR=vbr_off;  /* dont bother with VBR at 320kbs */
 
 
 
@@ -140,7 +140,7 @@ int lame_init_params(lame_global_flags *gfp)
     else gfp->out_samplerate=16000;
 
 
-    if (gfp->VBR==0 && gfp->brate>0) {
+    if (gfp->VBR==vbr_off && gfp->brate>0) {
       /* check if user specified bitrate requires downsampling */
       gfp->compression_ratio = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->brate);
       if (gfp->compression_ratio > 13 ) {
@@ -157,7 +157,7 @@ int lame_init_params(lame_global_flags *gfp)
 	else gfp->out_samplerate=48000;
       }
     }
-    if (gfp->VBR==3) {
+    if (gfp->VBR==vbr_abr) {
       /* check if user specified bitrate requires downsampling */
       gfp->compression_ratio = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->VBR_mean_bitrate_kbps);
       if (gfp->compression_ratio > 13 ) {
@@ -219,10 +219,10 @@ int lame_init_params(lame_global_flags *gfp)
      9                14.7             96kbs
      for lower bitrates, downsample with --resample
   */
-  if (gfp->VBR==1 || gfp->VBR==2) {
+  if (gfp->VBR==vbr_mt || gfp->VBR==vbr_rh) {
     gfp->compression_ratio = 5.0 + gfp->VBR_q;
   }else
-  if (gfp->VBR==3) {
+  if (gfp->VBR==vbr_abr) {
     gfp->compression_ratio = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->VBR_mean_bitrate_kbps);
   }else{
     gfp->compression_ratio = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->brate);
@@ -434,7 +434,7 @@ int lame_init_params(lame_global_flags *gfp)
 
 
   /* choose a min/max bitrate for VBR */
-  if (gfp->VBR) {
+  if (gfp->VBR!=vbr_off) {
     /* if the user didn't specify VBR_max_bitrate: */
     if (0==gfp->VBR_max_bitrate_kbps) {
       gfc->VBR_max_bitrate=14;   /* default: allow 320kbs */
@@ -463,13 +463,13 @@ int lame_init_params(lame_global_flags *gfp)
    * you would have to add a -f or -q 5 to reduce the quality
    * down to level 7 or 5
    */
-  if (gfp->VBR) gfp->quality=Min(gfp->quality,7);
+  if (gfp->VBR!=vbr_off) gfp->quality=Min(gfp->quality,7);
   /* dont allow forced mid/side stereo for mono output */
   if (gfp->mode == MPG_MD_MONO) gfp->force_ms=0;
 
 
   /* Do not write VBR tag if VBR flag is not specified */
-  if (gfp->VBR==0) gfp->bWriteVbrTag=0;
+  if (gfp->VBR==vbr_off) gfp->bWriteVbrTag=0;
   if (gfp->ogg) gfp->bWriteVbrTag=0;
   if (gfp->gtkflag) gfp->bWriteVbrTag=0;
 
@@ -544,7 +544,7 @@ int lame_init_params(lame_global_flags *gfp)
     gfc->filter_type=0;
     gfc->psymodel=1;
     gfc->quantization=1;
-    if (gfp->VBR)
+    if (gfp->VBR==vbr_mt || gfp->VBR==vbr_rh)
       /* VBR modes currently have some problems which are aggravated by 
        * scalefac_scale */
       gfc->noise_shaping=1;
@@ -620,7 +620,7 @@ int lame_init_params(lame_global_flags *gfp)
   if (gfp->ogg) {
     lame_encode_ogg_init(gfp);
     gfc->filter_type=-1;   /* vorbis claims not to need filters */
-    gfp->VBR=0;            /* ignore lame's various VBR modes */
+    gfp->VBR=vbr_off;            /* ignore lame's various VBR modes */
   }
 #endif
 
@@ -680,12 +680,12 @@ void lame_print_config(lame_global_flags *gfp)
       MSGF("Encoding as %.1f kHz VBR Ogg Vorbis \n",
 	      gfp->out_samplerate/1000.0);
     }else
-    if (gfp->VBR==1 || gfp->VBR==2)
+    if (gfp->VBR==vbr_mt || gfp->VBR==vbr_rh)
       MSGF("Encoding as %.1f kHz VBR(q=%i) %s MPEG%i LayerIII (%4.1fx estimated) qval=%i\n",
 	      gfp->out_samplerate/1000.0,
 	      gfp->VBR_q,mode_names[gfp->mode],2-gfp->version,gfp->compression_ratio,gfp->quality);
     else
-    if (gfp->VBR==3)
+    if (gfp->VBR==vbr_abr)
       MSGF("Encoding as %.1f kHz average %d kbps %s MPEG%i LayerIII (%4.1fx) qval=%i\n",
 	      gfp->out_samplerate/1000.0,
 	      gfp->VBR_mean_bitrate_kbps,mode_names[gfp->mode],2-gfp->version,gfp->compression_ratio,gfp->quality);
@@ -862,7 +862,7 @@ char *mp3buf, int mp3buf_size)
     break;
   case 2:
   default:
-    if (gfp->VBR) {
+    if (gfp->VBR!=vbr_off) {
       gfc->padding=0;
     } else {
       if (gfp->disable_reservoir) {
@@ -1027,17 +1027,19 @@ char *mp3buf, int mp3buf_size)
 
 
   switch (gfp->VBR){ 
-  case 1:
+  default:
+  case vbr_off:
+    iteration_loop( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
+    break;
+  case vbr_mt:
     VBR_quantize( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
     break;
-  case 2:
+  case vbr_rh:
     VBR_iteration_loop( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
     break;
-  case 3:
+  case vbr_abr:
     ABR_iteration_loop( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
     break;
-  default:
-    iteration_loop( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc, scalefac);
   }
 
 
@@ -1527,7 +1529,7 @@ int lame_init(lame_global_flags *gfp)
   gfp->padding_type=2;
   gfp->swapbytes=0;
   gfp->silent=1;
-  gfp->VBR=0;
+  gfp->VBR=vbr_off;
   gfp->VBR_q=4;
   gfp->VBR_mean_bitrate_kbps=128;
   gfp->VBR_min_bitrate_kbps=0;

@@ -281,16 +281,16 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	  }
 	}
 	else if (strcmp(token, "vbr-old")==0) {
-	  gfp->VBR = 2; 
+	  gfp->VBR = vbr_rh; 
 	  gfp->quality = 2;
 	}
 	else if (strcmp(token, "vbr-new")==0) {
-	  gfp->VBR = 1; 
+	  gfp->VBR = vbr_mt; 
 	  gfp->quality = 2;
 	}
 	else if (strcmp(token, "abr")==0) {
 	  argUsed=1;
-	  gfp->VBR = 3; 
+	  gfp->VBR = vbr_abr; 
 	  gfp->VBR_mean_bitrate_kbps = atoi(nextArg);
 	  gfp->VBR_mean_bitrate_kbps = Min(gfp->VBR_mean_bitrate_kbps,310); 
 	  gfp->VBR_mean_bitrate_kbps = Max(gfp->VBR_mean_bitrate_kbps,4); 
@@ -630,7 +630,8 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	  }
 	  break;
 	case 'V':        argUsed = 1;
-	  gfp->VBR = gfp->VBR == 0 ? 1 : gfp->VBR;  
+          /* to change VBR default look in lame.h */
+	  if (gfp->VBR == vbr_off) gfp->VBR = vbr_default;  
 	  gfp->VBR_q = atoi(arg);
 	  if (gfp->VBR_q <0) gfp->VBR_q=0;
 	  if (gfp->VBR_q >9) gfp->VBR_q=9;
@@ -691,7 +692,8 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	  gfp->allow_diff_short = 1;
 	  break;
 	case 'v': 
-	  gfp->VBR = 1; 
+          /* to change VBR default look in lame.h */
+	  gfp->VBR = vbr_default; 
 	  gfp->quality = 2;
 	  break;
 	case 'S': 

@@ -29,6 +29,17 @@
 typedef enum sound_file_format_e {
   sf_unknown, sf_wave, sf_aiff, sf_mp3, sf_raw, sf_ogg 
 } sound_file_format;
+
+
+typedef enum vbr_mode_e {
+  vbr_off=0,
+  vbr_mt=1,
+  vbr_rh=2,
+  vbr_abr=3,
+  vbr_default=vbr_mt  /* change this to change the default VBR mode of LAME */ 
+} vbr_mode;
+
+
 typedef struct
 {
 	int valid;
@@ -94,7 +105,7 @@ typedef struct  {
   int experimentalZ;
 
   /* VBR control */
-  int VBR;
+  vbr_mode VBR;
   int VBR_q;
   int VBR_mean_bitrate_kbps;
   int VBR_min_bitrate_kbps;
