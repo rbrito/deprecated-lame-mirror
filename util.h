@@ -380,7 +380,17 @@ extern void lame_errorf(const char *, ...);
 #define FLUSH_DEBUG()	fflush(stdout)
 #define FLUSH_ERROR()	fflush(stderr)
 #define FLUSH_MSG()	fflush(stderr)
+
+/* for displaying version, help strings, and bitrates */
+#define PRINTF1		printf
+#define PRINTF2		lame_errorf
+#define DISPLAY_BITRATES1()	display_bitrates(stdout)
+#define DISPLAY_BITRATES2()	display_bitrates(stderr)
+  /* need version.h */
+#define LAME_PRINT_VERSION1()	lame_print_version(stdout)
+#define LAME_PRINT_VERSION2()	lame_print_version(stderr)
 #endif
+
 
 #define LAME_EXIT(n)		exit(n)
 #define LAME_NORMAL_EXIT()	exit(0)
