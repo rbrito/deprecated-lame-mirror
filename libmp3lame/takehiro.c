@@ -153,7 +153,7 @@ static void quantize_xrpow(const FLOAT8 *xp, int *pi, FLOAT8 istep, gr_info * co
 
             remaining = l%2;
             l = l>>1;
-            do {
+            while (l--) {
 	            double x0 = istep * xp[0];
 	            double x1 = istep * xp[1];
 	            double x2 = istep * xp[2];
@@ -175,7 +175,7 @@ static void quantize_xrpow(const FLOAT8 *xp, int *pi, FLOAT8 istep, gr_info * co
 	            fi[3].i -= MAGIC_INT;
 	            fi += 4;
 	            xp += 4;
-            } while (--l > 0);
+            };
             if (remaining) {
 	            double x0 = istep * xp[0];
 	            double x1 = istep * xp[1];
@@ -253,7 +253,7 @@ static void quantize_xrpow_ISO(const FLOAT8 *xp, int *pi, FLOAT8 istep, gr_info 
 
             remaining = l%2;
             l = l>>1;
-            do {
+            while (l--) {
 	            fi[0].f = istep * xp[0] + (ROUNDFAC + MAGIC_FLOAT);
 	            fi[1].f = istep * xp[1] + (ROUNDFAC + MAGIC_FLOAT);
 	            fi[2].f = istep * xp[2] + (ROUNDFAC + MAGIC_FLOAT);
@@ -265,7 +265,7 @@ static void quantize_xrpow_ISO(const FLOAT8 *xp, int *pi, FLOAT8 istep, gr_info 
 	            fi[3].i -= MAGIC_INT;
 	            fi+=4;
 	            xp+=4;
-            } while (--l > 0);
+            };
             if (remaining) {
 	            fi[0].f = istep * xp[0] + (ROUNDFAC + MAGIC_FLOAT);
 	            fi[1].f = istep * xp[1] + (ROUNDFAC + MAGIC_FLOAT);
@@ -356,7 +356,7 @@ static void quantize_xrpow(const FLOAT8 *xr, int *ix, FLOAT8 istep, gr_info * co
 
             remaining = l%2;
             l = l>>1;
-            do {
+            while (l--) {
 	            FLOAT8	x0, x1, x2, x3;
 	            int	rx0, rx1, rx2, rx3;
 
@@ -376,7 +376,7 @@ static void quantize_xrpow(const FLOAT8 *xr, int *ix, FLOAT8 istep, gr_info * co
 	            x3 += QUANTFAC(rx3);
 	            XRPOW_FTOI(x2,*ix++);
 	            XRPOW_FTOI(x3,*ix++);
-            } while (--l > 0);
+            };
             if (remaining) {
 	            FLOAT8	x0, x1;
 	            int	rx0, rx1;
@@ -454,7 +454,7 @@ static void quantize_xrpow_ISO(const FLOAT8 *xr, int *ix, FLOAT8 istep, gr_info 
                 l = usefullsize;
             }
 
-            do {
+            while(l--) {
                 /* depending on architecture, it may be worth calculating a few more
                    compareval's.
 
@@ -481,7 +481,7 @@ static void quantize_xrpow_ISO(const FLOAT8 *xr, int *ix, FLOAT8 istep, gr_info 
 	                /*    *(ix++) = (int)( istep*(*(xr++))  + 0.4054); */
 	                XRPOW_FTOI(  istep*(*(xr++))  + ROUNDFAC , *(ix++) );
 	            }
-            } while (--l > 0);
+            };
         }
         j += cod_info->width[sfb];
     }
