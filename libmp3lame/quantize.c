@@ -519,7 +519,7 @@ trancate_smallspectrums(
     if ((!(gfc->substep_shaping & 4) && gi->block_type == SHORT_TYPE)
 	|| gfc->substep_shaping & 0x80)
 	return;
-    calc_noise (gfc, gi, l3_xmin, distort, &dummy);
+    calc_noise (gfc, gi, l3_xmin, distort, &dummy, 0);
     for (j = 0; j < 576; j++) {
 	FLOAT8 xr = 0.0;
 	if (gi->l3_enc[j] != 0)
@@ -1064,6 +1064,7 @@ outer_loop (
     int better;
     int over;
     int age;
+    calc_noise_data prev_noise;
 
     bin_search_StepSize (gfc, cod_info, targ_bits, ch, xrpow);
 
@@ -1071,9 +1072,12 @@ outer_loop (
 	/* fast mode, no noise shaping, we are ready */
 	return 100; /* default noise_info.over_count */
 
+    memset(&prev_noise, 0, sizeof(calc_noise_data));
+
+
     /* compute the distortion in this quantization */
     /* coefficients and thresholds both l/r (or both mid/side) */
-    over = calc_noise (gfc, cod_info, l3_xmin, distort, &best_noise_info);
+    over = calc_noise (gfc, cod_info, l3_xmin, distort, &best_noise_info, &prev_noise);
     cod_info_w = *cod_info;
     age = 0;
     if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh)
@@ -1131,7 +1135,7 @@ outer_loop (
 	    break;
 
         /* compute the distortion in this quantization */
-	over = calc_noise (gfc, &cod_info_w, l3_xmin, distort, &noise_info);
+	over = calc_noise (gfc, &cod_info_w, l3_xmin, distort, &noise_info, &prev_noise);
 
         /* check if this quantization is better
          * than our saved quantization */

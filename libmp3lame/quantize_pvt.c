@@ -670,7 +670,8 @@ int  calc_noise(
         const gr_info             * const cod_info,
         const FLOAT8              * l3_xmin, 
               FLOAT8              * distort,
-              calc_noise_result   * const res )
+              calc_noise_result   * const res,
+              calc_noise_data * prev_noise)
 {
     int sfb, l, over=0;
     FLOAT8 over_noise_db = 0;
@@ -682,74 +683,58 @@ int  calc_noise(
 
 
     for (sfb = 0; sfb < cod_info->psymax; sfb++) {
-	int s =
-	    cod_info->global_gain
-	    - (((*scalefac++) + (cod_info->preflag ? pretab[sfb] : 0))
-	       << (cod_info->scalefac_scale + 1))
-	    - cod_info->subblock_gain[cod_info->window[sfb]] * 8;
-	FLOAT8 step = POW20(s);
-	FLOAT8 noise = 0.0;
+	    int s =
+	        cod_info->global_gain
+	        - (((*scalefac++) + (cod_info->preflag ? pretab[sfb] : 0))
+	           << (cod_info->scalefac_scale + 1))
+	        - cod_info->subblock_gain[cod_info->window[sfb]] * 8;
+	    FLOAT8 step = POW20(s);
+	    FLOAT8 noise = 0.0;
 
-	l = cod_info->width[sfb] >> 1;
+        if (prev_noise && (prev_noise->step[sfb] == step)){
+            noise = prev_noise->noise[sfb];
+            j += cod_info->width[sfb];            
+        } else {
+            l = cod_info->width[sfb] >> 1;
 
-    if ((j+cod_info->width[sfb])>cod_info->max_nonzero_coeff) {
-        int usefullsize;
-        usefullsize = cod_info->max_nonzero_coeff - j +1;
-        l = usefullsize >> 1;
-    }
+            if ((j+cod_info->width[sfb])>cod_info->max_nonzero_coeff) {
+                int usefullsize;
+                usefullsize = cod_info->max_nonzero_coeff - j +1;
+                l = usefullsize >> 1;
+            }
 
-	do {
-        FLOAT8 temp;
-        temp = fabs(cod_info->xr[j]) - pow43[ix[j]] * step;j++;
-	    noise += temp * temp;
-	    temp = fabs(cod_info->xr[j]) - pow43[ix[j]] * step;j++;
-	    noise += temp * temp;
- 	} while (--l > 0);
-	noise = *distort++ = noise / *l3_xmin++;
+	        do {
+                FLOAT8 temp;
+                temp = fabs(cod_info->xr[j]) - pow43[ix[j]] * step;j++;
+	            noise += temp * temp;
+	            temp = fabs(cod_info->xr[j]) - pow43[ix[j]] * step;j++;
+	            noise += temp * temp;
+ 	        } while (--l > 0);
 
-/*
-note by GB:
-By looking at this loop, I noticed that ix[j] was 60%
-of the time 0 and 20% of the time 1. So I wrote the
-following version in order to take advantage of this.
-However, tests showed that this is slower.
-I still believe that it should be possible to have
-a speedup by taking advantage of frequent ix values,
-but the question is how?
-
-
-    l = cod_info->width[sfb];
-	do {
-        if (! *ix) { 
-    	    noise += *xr * *xr;
-        } else  if (*ix == 1) {
-    	    FLOAT8 temp;
-            temp = fabs(*xr) - step;
-    	    noise += temp * temp;
-        } else  {  
-    	    FLOAT8 temp;
-	        temp = fabs(*xr) - pow43[*ix] * step;
-    	    noise += temp * temp;
+            if (prev_noise) {
+                /* save noise values */
+                prev_noise->step[sfb] = step;
+                prev_noise->noise[sfb] = noise;
+            }
         }
-        ix++;
-        xr++;
-	} while (--l);
-	noise = *distort++ = noise / *l3_xmin++;*/
 
 
+        noise = *distort++ = noise / *l3_xmin++;
 
-	noise = FAST_LOG10(Max(noise,1E-20));
-	/* multiplying here is adding in dB, but can overflow */
-	/*tot_noise *= Max(noise, 1E-20); */
-	tot_noise_db += noise;
+	    /* multiplying here is adding in dB, but can overflow */
+	    noise = FAST_LOG10(Max(noise,1E-20));
 
-    if (noise > 0.0) {
-	    over++;
-	    /* multiplying here is adding in dB -but can overflow */
-	    /*over_noise *= noise; */
-	    over_noise_db += noise;
-	}
-	max_noise=Max(max_noise,noise);
+
+	    /*tot_noise *= Max(noise, 1E-20); */
+	    tot_noise_db += noise;
+
+        if (noise > 0.0) {
+	        over++;
+	        /* multiplying here is adding in dB -but can overflow */
+	        /*over_noise *= noise; */
+	        over_noise_db += noise;
+	    }
+	    max_noise=Max(max_noise,noise);
     }
 
     res->over_count = over;

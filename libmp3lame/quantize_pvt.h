@@ -67,6 +67,17 @@ typedef struct calc_noise_result_t {
     int     over_count;      /* number of quantization noise > masking */
 } calc_noise_result;
 
+
+/**
+* allows re-use of previously
+* computed noise values
+*/
+typedef struct calc_noise_data_t {
+    FLOAT8 step[39];
+    FLOAT8 noise[39];
+} calc_noise_data;
+
+
 int     on_pe (lame_global_flags *gfp, FLOAT8 pe[2][2], III_side_info_t * l3_side,
                int targ_bits[2], int mean_bits, int gr, int cbr);
 
@@ -90,7 +101,8 @@ int     calc_noise (const lame_internal_flags * const gfc,
                     const gr_info * const cod_info,
                     const FLOAT8 * l3_xmin,
                     FLOAT8 * distort,
-		    calc_noise_result * const res);
+		            calc_noise_result * const res,
+                    calc_noise_data * prev_noise);
 
 #if defined(HAVE_GTK)
 void    set_frame_pinfo (lame_global_flags *gfp,
