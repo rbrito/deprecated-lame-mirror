@@ -93,6 +93,14 @@ lame_init_qval(lame_global_flags * gfp)
         break;
 
     case 6:
+        gfc->filter_type = 0;
+        gfc->psymodel = 2;
+        gfc->quantization = 1;
+	gfc->noise_shaping_amp = 1;
+        gfc->noise_shaping_stop = 1;
+        gfc->use_best_huffman = 0;
+        break;
+
     case 5: /* same as the default setting(-q 2) before LAME 3.83 */
 	/* LAME4's new default */
         gfc->filter_type = 0;
