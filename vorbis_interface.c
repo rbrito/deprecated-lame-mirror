@@ -297,7 +297,6 @@ int lame_decode_ogg_fromfile(FILE *fd,short int pcm_l[],short int pcm_r[],mp3dat
 
 int lame_encode_ogg_init(lame_global_flags *gfp)
 {
-  vorbis_info      *vi_ptr; 
   lame_internal_flags *gfc=gfp->internal_flags;
 
   
@@ -305,19 +304,17 @@ int lame_encode_ogg_init(lame_global_flags *gfp)
   
   /* choose an encoding mode */
   /* (mode 0: 44kHz stereo uncoupled, roughly 128kbps VBR) */
-  if (gfc->stereo==2 && gfp->out_samplerate==44100) {
-    vi_ptr=&info_A;
-  }else{
-    fprintf(stderr,"specified mode not yet supported in Vorbis\n");
-    return -1;
-  }
+  memcpy(&vi,&info_A,sizeof(vi));
+  vi.channels = gfc->stereo;
+  vi.rate = gfp->out_samplerate;
+
   
   /* add a comment */
   vorbis_comment_init(&vc);
-  vorbis_comment_add(&vc,"Track encoded by L.A.M.E. libvorbis interface.");
+  vorbis_comment_add(&vc,"Track encoded using L.A.M.E. libvorbis interface.");
   
   /* set up the analysis state and auxiliary encoding storage */
-  vorbis_analysis_init(&vd,vi_ptr);
+  vorbis_analysis_init(&vd,&vi);
   vorbis_block_init(&vd,&vb);
   
   /* set up our packet->stream encoder */
