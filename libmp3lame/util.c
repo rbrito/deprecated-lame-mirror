@@ -88,6 +88,22 @@ FLOAT8 ATHformula_old(FLOAT8 f)
   return ath;
 }
 
+FLOAT8 ATHformula_GB(FLOAT8 f)
+{
+  FLOAT8 ath;
+  f /= 1000;  // convert to khz
+  f  = Max(0.01, f);
+  f  = Min(18.0,f);
+
+  /* from Painter & Spanias, 1997 */
+  /* modified by Gabriel Bouvigne to better fit to the reality */
+  ath =    3.640 * pow(f,-0.8)
+         - 6.800 * exp(-0.6*pow(f-3.4,2.0))
+         + 6.000 * exp(-0.15*pow(f-8.7,2.0))
+         + 0.6* 0.001 * pow(f,4.0);
+  return ath;
+}
+
 /* 
  *  Klemm 1994 and 1997. Experimental data. Sorry, data looks a little bit
  *  dodderly. Data below 30 Hz is extrapolated from other material, above 18
@@ -155,6 +171,8 @@ FLOAT8 ATHformula(FLOAT8 f,lame_global_flags *gfp)
       return ATHformula_old(f);
     case 1:
       return ATHformula_Frank(f);
+    case 2:
+      return ATHformula_GB(f);
     }
 
   return ATHformula_Frank(f);
