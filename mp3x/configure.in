@@ -1,11 +1,11 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl
 dnl include support and option for
-dnl - GTK            done.
+dnl - GTK            done.   <- required.  exit if not found
 dnl - VBR histogram  done.
 dnl - SNDLIB         done.
 dnl - VORBIS         done.
-dnl - decoder        done.
+dnl - decoder        done.   <- required to be in libmp3lame.a
 dnl - disable shared done.
 dnl - shared lib version
 dnl - debugging mode
@@ -13,6 +13,9 @@ dnl - MMX support
 dnl
 dnl todo:
 dnl - move all system-dependent entries from Makefile here
+dnl - For the frame analyzer, the decoder must be built into libmp3lame.a,
+dnl - and either LAME or sndfile I/O needs to be turned on.
+dnl - can we add a check for this that will exit if either fail?
 
 AC_INIT(main.c)
 
@@ -182,6 +185,19 @@ if test ".$GTK_CONFIG" != ".no" \
 else
   FA_DEFAULT=no
 fi
+
+dnl basic check for GTK...actually just for gtk-config...
+if  test "$CONFIG_DECODER" != "no" \
+    && test "$CONFIG_FILEIO" != "no"; then
+        AM_PATH_GTK(1.2.0,
+	   FA_DEFAULT=yes ,
+           echo Cannot find GTK: Is gtk-config in path? 
+           FA_DEFAULT=no)
+else
+  FA_DEFAULT=no
+fi  
+AC_MSG_CHECKING(use of GTK frame analyzer)
+
 
 dnl todo: display actual default value
 AC_ARG_ENABLE(gtkanalyzer, 
