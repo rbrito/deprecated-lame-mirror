@@ -48,9 +48,11 @@ def compare(name1,name2,decode):
         name1 = name1 + ".wav"
         name2 = name2 + ".wav"
 
+    rcode = 0
     diff,size=fdiff(name1,name2)
     if (diff==0):
         print "output identical:  diff=%i  total=%i" % (diff,size)
+        rcode = 1
     elif (diff>0):
 	print "output different: diff=%i  total=%i  %2.0f%%" % \
         (diff,size,100*float(diff)/size)
@@ -59,7 +61,7 @@ def compare(name1,name2,decode):
         print "File 1: " + name1
         print "File 2: " + name2
 
-
+    return rcode
 
 
 
@@ -116,8 +118,7 @@ basename = replace(input_file,".wav","")
 basename = basename + "." + options_file
 
 
-
-
+num_ok=0
 n=0
 foptions=open(options_file)
 line = rstrip(foptions.readline())
@@ -132,7 +133,7 @@ while line:
         print   "input:           ",input_file 
         print   "reference output:",name2
         commands.getoutput(cmd)
-        compare(name1,name2,decode)
+        num_ok = num_ok+compare(name1,name2,decode)
     elif (lame2=='makeref'):
         print "\nexecutable: ",lame1
         print   "options:    ",line
@@ -149,9 +150,10 @@ while line:
         cmd2 = lame2 + " " + line + " " + input_file + " " + name2
         commands.getoutput(cmd1)
         commands.getoutput(cmd2)
-	compare(name1,name2,decode)
+	num_ok = num_ok + compare(name1,name2,decode)
 
     line = rstrip(foptions.readline())
 
 foptions.close()
-
+print "\nNumber of tests which passed: ",num_ok
+print "Number of tests which failed: ",n-num_ok
