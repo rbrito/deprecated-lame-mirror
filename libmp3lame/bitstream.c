@@ -618,9 +618,7 @@ LongHuffmancodebits(lame_internal_flags *gfc, int *ix, gr_info *gi)
 }
 
 inline static int
-writeMainData ( lame_global_flags * const gfp,
-        int              l3_enc   [2] [2] [576],
-        III_scalefac_t   scalefac [2] [2] )
+writeMainData ( lame_global_flags * const gfp)
 {
     int gr, ch, sfb,data_bits,scale_bits,tot_bits=0;
     lame_internal_flags *gfc=gfp->internal_flags;
@@ -644,16 +642,16 @@ writeMainData ( lame_global_flags * const gfp,
 		    for (sfb = 0; sfb < SBPSY_s; sfb++) {
 			int slen = sfb < 6 ? slen1 : slen2;
 
-			assert(scalefac[gr][ch].s[sfb][0]>=0);
-			assert(scalefac[gr][ch].s[sfb][1]>=0);
-			assert(scalefac[gr][ch].s[sfb][2]>=0);
+			assert(gi->scalefac.s[sfb][0]>=0);
+			assert(gi->scalefac.s[sfb][1]>=0);
+			assert(gi->scalefac.s[sfb][2]>=0);
 
-			putbits2(gfc, scalefac[gr][ch].s[sfb][0], slen);
-			putbits2(gfc, scalefac[gr][ch].s[sfb][1], slen);
-			putbits2(gfc, scalefac[gr][ch].s[sfb][2], slen);
+			putbits2(gfc, gi->scalefac.s[sfb][0], slen);
+			putbits2(gfc, gi->scalefac.s[sfb][1], slen);
+			putbits2(gfc, gi->scalefac.s[sfb][2], slen);
 			scale_bits += 3*slen;
 		    }
-		    data_bits += ShortHuffmancodebits(gfc, l3_enc[gr][ch], gi);
+		    data_bits += ShortHuffmancodebits(gfc, gi->l3_enc, gi);
 		} else {
 		    int i;
 		    for (i = 0; i < sizeof(scfsi_band) / sizeof(int) - 1;
@@ -664,15 +662,15 @@ writeMainData ( lame_global_flags * const gfp,
 			for (sfb = scfsi_band[i]; sfb < scfsi_band[i + 1];
 			     sfb++) {
 
-			    assert(scalefac[gr][ch].l[sfb]>=0);
-			    putbits2(gfc, scalefac[gr][ch].l[sfb],
+			    assert(gi->scalefac.l[sfb]>=0);
+			    putbits2(gfc, gi->scalefac.l[sfb],
 				    sfb < 11 ? slen1 : slen2);
 			    scale_bits += sfb < 11 ? slen1 : slen2;
 			}
 		    }
-		    data_bits +=LongHuffmancodebits(gfc, l3_enc[gr][ch], gi);
+		    data_bits +=LongHuffmancodebits(gfc, gi->l3_enc, gi);
 		}
-		data_bits +=huffman_coder_count1(gfc, l3_enc[gr][ch], gi);
+		data_bits +=huffman_coder_count1(gfc, gi->l3_enc, gi);
 #ifdef DEBUG
 		DEBUGF(gfc,"<%ld> ", gfc->bs.totbit-hogege);
 #endif
@@ -700,25 +698,25 @@ writeMainData ( lame_global_flags * const gfp,
 		    int sfbs = gi->sfb_partition_table[sfb_partition] / 3;
 		    int slen = gi->slen[sfb_partition];
 		    for (i = 0; i < sfbs; i++, sfb++) {
-			putbits2(gfc, Max(scalefac[gr][ch].s[sfb][0], 0U), slen);
-			putbits2(gfc, Max(scalefac[gr][ch].s[sfb][1], 0U), slen);
-			putbits2(gfc, Max(scalefac[gr][ch].s[sfb][2], 0U), slen);
+			putbits2(gfc, Max(gi->scalefac.s[sfb][0], 0U), slen);
+			putbits2(gfc, Max(gi->scalefac.s[sfb][1], 0U), slen);
+			putbits2(gfc, Max(gi->scalefac.s[sfb][2], 0U), slen);
 			scale_bits += 3*slen;
 		    }
 		}
-		data_bits += ShortHuffmancodebits(gfc, l3_enc[gr][ch], gi);
+		data_bits += ShortHuffmancodebits(gfc, gi->l3_enc, gi);
 	    } else {
 		for (; sfb_partition < 4; sfb_partition++) {
 		    int sfbs = gi->sfb_partition_table[sfb_partition];
 		    int slen = gi->slen[sfb_partition];
 		    for (i = 0; i < sfbs; i++, sfb++) {
-			putbits2(gfc, Max(scalefac[gr][ch].l[sfb], 0U), slen);
+			putbits2(gfc, Max(gi->scalefac.l[sfb], 0U), slen);
 			scale_bits += slen;
 		    }
 		}
-		data_bits +=LongHuffmancodebits(gfc, l3_enc[gr][ch], gi);
+		data_bits +=LongHuffmancodebits(gfc, gi->l3_enc, gi);
 	    }
-	    data_bits +=huffman_coder_count1(gfc, l3_enc[gr][ch], gi);
+	    data_bits +=huffman_coder_count1(gfc, gi->l3_enc, gi);
 
 	    /* does bitcount in quantize.c agree with actual bit count?*/
 	    assert(data_bits==gi->part2_3_length-gi->part2_length);
@@ -861,9 +859,7 @@ void  add_dummy_byte ( lame_global_flags* const gfp, unsigned char val )
   in the IS).
   */
 int
-format_bitstream(lame_global_flags *gfp, int bitsPerFrame,
-	int              l3_enc[2][2][576],
-	III_scalefac_t   scalefac[2][2] )
+format_bitstream(lame_global_flags *gfp, int bitsPerFrame)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     int bits,nbytes;
@@ -874,7 +870,7 @@ format_bitstream(lame_global_flags *gfp, int bitsPerFrame,
 
     encodeSideInfo2(gfp,bitsPerFrame);
     bits = 8*gfc->sideinfo_len;
-    bits+=writeMainData(gfp,l3_enc,scalefac);
+    bits+=writeMainData(gfp);
     drain_into_ancillary(gfc, l3_side->resvDrain_post);
     bits += l3_side->resvDrain_post;
 

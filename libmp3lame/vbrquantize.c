@@ -649,7 +649,7 @@ VBR_quantize_granule(
 
 
     if (gfc->use_best_huffman == 1) {
-        best_huffman_divide(gfc, cod_info, l3_enc);
+        best_huffman_divide(gfc, cod_info);
     }
     return 0;
 }
@@ -1495,10 +1495,8 @@ VBR_noise_shaping (
 
 void
 VBR_quantize(lame_global_flags *gfp,
-                FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
-                FLOAT8 xr[2][2][576], III_psy_ratio ratio[2][2],
-                int l3_enc[2][2][576],
-                III_scalefac_t scalefac[2][2])
+	     FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
+	     III_psy_ratio ratio[2][2])
 {
   lame_internal_flags *gfc=gfp->internal_flags;
   III_psy_xmin l3_xmin[2][2];
@@ -1527,7 +1525,7 @@ VBR_quantize(lame_global_flags *gfp,
   for (gr = 0; gr < gfc->mode_gr; ++gr) {
     /* copy data to be quantized into xr */
     if (gfc->mode_ext==MPG_MD_MS_LR) {
-      ms_convert(xr[gr],xr[gr]);
+	ms_convert (&gfc->l3_side, gr);
     }
     for (ch = 0; ch < gfc->channels_out; ++ch) {
       /* if in the following sections the quality would not be adjusted
@@ -1559,7 +1557,7 @@ VBR_quantize(lame_global_flags *gfp,
       gfc->masking_lower = pow(10.0,masking_lower_db/10);
       
       /* masking thresholds */
-      over_ath = calc_xmin(gfp,xr[gr][ch],&ratio[gr][ch],cod_info,&l3_xmin[gr][ch]);
+      over_ath = calc_xmin(gfp, &ratio[gr][ch], cod_info, &l3_xmin[gr][ch]);
       
       /* if there are bands with more energy than the ATH 
        * then we say the frame is not analog silent */
@@ -1572,9 +1570,9 @@ VBR_quantize(lame_global_flags *gfp,
        * plus calculation of xr34 */
       digital_silence[gr][ch] = 1;
       for(i=0;i<576;++i) {
-        FLOAT8 temp=fabs(xr[gr][ch][i]);
-        xr34[gr][ch][i]=sqrt(sqrt(temp)*temp);
-        digital_silence[gr][ch] &= temp < 1E-20;
+	  FLOAT8 temp=fabs(cod_info->xr[i]);
+	  xr34[gr][ch][i]=sqrt(sqrt(temp)*temp);
+	  digital_silence[gr][ch] &= temp < 1E-20;
       }
     } /* ch */
   }  /* gr */
@@ -1671,18 +1669,18 @@ VBR_quantize(lame_global_flags *gfp,
             if (pe[gr][ch]>750)
               masking_lower_db -= Min(10,4*(pe[gr][ch]-750.)/750.);
             gfc->masking_lower = pow(10.0,masking_lower_db/10);
-            calc_xmin( gfp, xr[gr][ch], ratio[gr]+ch, cod_info, l3_xmin[gr]+ch);
+            calc_xmin( gfp, ratio[gr]+ch, cod_info, l3_xmin[gr]+ch);
           }
           
           /* digital silent granules do not need the full round trip,
            * but this can be optimized later on
            */
-          adjusted = VBR_noise_shaping (gfp,xr[gr][ch],xr34[gr][ch],
-                                        l3_enc[gr][ch],
+          adjusted = VBR_noise_shaping (gfp, cod_info->xr, xr34[gr][ch],
+                                        cod_info->l3_enc,
                                         digital_silence[gr][ch],
                                         minbits_lr[ch],
-                                        maxbits,scalefac[gr]+ch,
-                                        l3_xmin[gr]+ch,gr,ch);
+                                        maxbits, &cod_info->scalefac,
+                                        &l3_xmin[gr][ch], gr, ch);
           if (adjusted>10) {
             /* global_gain was changed by a large amount to get bits < maxbits */
             /* quality is set to high.  we could set bits = LARGE_BITS
@@ -1719,8 +1717,8 @@ VBR_quantize(lame_global_flags *gfp,
   totbits=0;
   for (gr = 0; gr < gfc->mode_gr; ++gr) {
     for (ch = 0; ch < gfc->channels_out; ++ch) {
-      best_scalefac_store(gfc, gr, ch, l3_enc, l3_side, scalefac);
-      totbits += l3_side->tt[gr][ch].part2_3_length;
+	best_scalefac_store(gfc, gr, ch, l3_side);
+	totbits += l3_side->tt[gr][ch].part2_3_length;
     }
   }
 
@@ -1756,7 +1754,7 @@ VBR_quantize(lame_global_flags *gfp,
        * set the sign of l3_enc from the sign of xr
        *******************************************************************/
       for ( i = 0; i < 576; ++i) {
-        if (xr[gr][ch][i] < 0) l3_enc[gr][ch][i] *= -1;
+	  if (cod_info->xr[i] < 0) cod_info->l3_enc[i] *= -1;
       }
     }
   }

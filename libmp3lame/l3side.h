@@ -44,32 +44,46 @@ typedef struct {
     III_psy_xmin en;
 } III_psy_ratio;
 
-typedef struct {
-	int part2_3_length;
-	int big_values;
-	int count1;
- 	int global_gain;
-	int scalefac_compress;
-	int window_switching_flag;
-	int block_type;
-	int mixed_block_flag;
-	int table_select[3];
-	 int subblock_gain[3];
-	 int region0_count;
-	 int region1_count;
-	 int preflag;
-	 int scalefac_scale;
-	 int count1table_select;
+/* Layer III scale factors. */
+/* note: there are only SBPSY_l=(SBMAX_l-1) and SBPSY_s=(SBMAX_s-1) scalefactors.
+ * for the faster address calculation, use SBMAX_l/SBMAX_s instead of them.
+ * (it will be the same calculation of III_psy_ratio, etc */
 
-	 int part2_length;
-	 int sfb_lmax;
-	 int sfb_smin;
-	 int psy_lmax;
-	 int psy_smax;
-	 int count1bits;
-	/* added for LSF */
-	 const int *sfb_partition_table;
-	 int slen[4];
+typedef struct {
+	int l[SBMAX_l];            /* [cb] */
+	int s[SBMAX_s][3];         /* [window][cb] */
+} III_scalefac_t;  /* [gr][ch] */
+
+typedef struct {
+    FLOAT8 xr[576];
+    int l3_enc[576];
+    III_scalefac_t scalefac;
+
+    int part2_3_length;
+    int big_values;
+    int count1;
+    int global_gain;
+    int scalefac_compress;
+    int window_switching_flag;
+    int block_type;
+    int mixed_block_flag;
+    int table_select[3];
+    int subblock_gain[3];
+    int region0_count;
+    int region1_count;
+    int preflag;
+    int scalefac_scale;
+    int count1table_select;
+
+    int part2_length;
+    int sfb_lmax;
+    int sfb_smin;
+    int psy_lmax;
+    int psy_smax;
+    int count1bits;
+    /* added for LSF */
+    const int *sfb_partition_table;
+    int slen[4];
 } gr_info;
 
 typedef struct {
@@ -80,13 +94,5 @@ typedef struct {
 	int scfsi[2][4];
 	gr_info tt[2][2];
 } III_side_info_t;
-
-/* Layer III scale factors. */
-/* note: there are only SBPSY_l=(SBMAX_l-1) and SBPSY_s=(SBMAX_s-1) scalefactors.
- * Dont know why these would be dimensioned SBMAX_l and SBMAX-s */
-typedef struct {
-	int l[SBMAX_l];            /* [cb] */
-	int s[SBMAX_s][3];         /* [window][cb] */
-} III_scalefac_t;  /* [gr][ch] */
 
 #endif

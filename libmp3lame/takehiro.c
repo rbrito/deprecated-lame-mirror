@@ -536,11 +536,11 @@ recalc_divide_sub(
 
 void best_huffman_divide(
     const lame_internal_flags * const gfc,
-          gr_info * const gi,
-          int     * const ix )
+    gr_info * const gi)
 {
     int i, a1, a2;
     gr_info cod_info2;
+    int * const ix = gi->l3_enc;
 
     int r01_bits[7 + 15 + 1];
     int r01_div[7 + 15 + 1];
@@ -614,12 +614,12 @@ static const int slen2_n[16] = { 1, 2, 4, 8, 1, 2, 4, 8, 2, 4, 8, 2, 4, 8, 4, 8 
 
 void
 scfsi_calc(int ch,
-	   III_side_info_t *l3_side,
-	   III_scalefac_t scalefac[2][2])
+	   III_side_info_t *l3_side)
 {
     int i, s1, s2, c1, c2;
     int sfb;
     gr_info *gi = &l3_side->tt[1][ch];
+    gr_info *g0 = &l3_side->tt[0][ch];
 
     static const int scfsi_band[5] = { 0, 6, 11, 16, 21 };
 #if 0
@@ -632,12 +632,12 @@ scfsi_calc(int ch,
 
     for (i = 0; i < (sizeof(scfsi_band) / sizeof(int)) - 1; i++) {
 	for (sfb = scfsi_band[i]; sfb < scfsi_band[i + 1]; sfb++) {
-	    if (scalefac[0][ch].l[sfb] != scalefac[1][ch].l[sfb])
+	    if (g0->scalefac.l[sfb] != gi->scalefac.l[sfb])
 		break;
 	}
 	if (sfb == scfsi_band[i + 1]) {
 	    for (sfb = scfsi_band[i]; sfb < scfsi_band[i + 1]; sfb++) {
-		scalefac[1][ch].l[sfb] = -1;
+		gi->scalefac.l[sfb] = -1;
 	    }
 	    l3_side->scfsi[ch][i] = 1;
 	}
@@ -645,20 +645,20 @@ scfsi_calc(int ch,
 
     s1 = c1 = 0;
     for (sfb = 0; sfb < 11; sfb++) {
-	if (scalefac[1][ch].l[sfb] < 0)
+	if (gi->scalefac.l[sfb] < 0)
 	    continue;
 	c1++;
-	if (s1 < scalefac[1][ch].l[sfb])
-	    s1 = scalefac[1][ch].l[sfb];
+	if (s1 < gi->scalefac.l[sfb])
+	    s1 = gi->scalefac.l[sfb];
     }
 
     s2 = c2 = 0;
     for (; sfb < SBPSY_l; sfb++) {
-	if (scalefac[1][ch].l[sfb] < 0)
+	if (gi->scalefac.l[sfb] < 0)
 	    continue;
 	c2++;
-	if (s2 < scalefac[1][ch].l[sfb])
-	    s2 = scalefac[1][ch].l[sfb];
+	if (s2 < gi->scalefac.l[sfb])
+	    s2 = gi->scalefac.l[sfb];
     }
 
     for (i = 0; i < 16; i++) {
@@ -681,9 +681,7 @@ void best_scalefac_store(
     const lame_internal_flags *gfc,
     const int             gr,
     const int             ch,
-          int             l3_enc[2][2][576],
-          III_side_info_t * const l3_side,
-          III_scalefac_t          scalefac[2][2] )
+          III_side_info_t * const l3_side)
 {
 
     /* use scalefac_scale if we can */
@@ -697,21 +695,21 @@ void best_scalefac_store(
     for ( sfb = 0; sfb < gi->sfb_lmax; sfb++ ) {
 	int width = gfc->scalefac_band.l[sfb+1] - gfc->scalefac_band.l[sfb];
 	j += width;
-	if (scalefac[gr][ch].l[sfb] == 0)
+	if (gi->scalefac.l[sfb] == 0)
 	    continue;
 
-	for (l = -width; l < 0; l++) if (l3_enc[gr][ch][l+j]!=0) break;
-	if (l==0) scalefac[gr][ch].l[sfb]=0;
+	for (l = -width; l < 0; l++) if (gi->l3_enc[l+j]!=0) break;
+	if (l==0) gi->scalefac.l[sfb]=0;
     }
     for (sfb = gi->sfb_smin; sfb < SBPSY_s; sfb++ ) {
 	int width = gfc->scalefac_band.s[sfb+1] - gfc->scalefac_band.s[sfb];
 	for ( i = 0; i < 3; i++ ) {
 	    j += width;
-	    if (scalefac[gr][ch].s[sfb][i] == 0)
+	    if (gi->scalefac.s[sfb][i] == 0)
 		continue;
 
-	    for (l = -width; l < 0; l++) if (l3_enc[gr][ch][l+j]!=0) break;
-	    if (l==0) scalefac[gr][ch].s[sfb][i]=0;
+	    for (l = -width; l < 0; l++) if (gi->l3_enc[l+j]!=0) break;
+	    if (l==0) gi->scalefac.s[sfb][i]=0;
 	}
     }
 
@@ -719,31 +717,31 @@ void best_scalefac_store(
     if (!gi->scalefac_scale && !gi->preflag) {
 	int b, s = 0;
 	for (sfb = 0; sfb < gi->sfb_lmax; sfb++) {
-	    s |= scalefac[gr][ch].l[sfb];
+	    s |= gi->scalefac.l[sfb];
 	}
 
 	for (sfb = gi->sfb_smin; sfb < SBPSY_s; sfb++) {
 	    for (b = 0; b < 3; b++) {
-		s |= scalefac[gr][ch].s[sfb][b];
+		s |= gi->scalefac.s[sfb][b];
 	    }
 	}
 
 	if (!(s & 1) && s != 0) {
 	    for (sfb = 0; sfb < gi->sfb_lmax; sfb++) {
-		scalefac[gr][ch].l[sfb] /= 2;
+		gi->scalefac.l[sfb] /= 2;
 	    }
 	    for (sfb = gi->sfb_smin; sfb < SBPSY_s; sfb++) {
 		for (b = 0; b < 3; b++) {
-		    scalefac[gr][ch].s[sfb][b] /= 2;
+		    gi->scalefac.s[sfb][b] /= 2;
 		}
 	    }
 
 	    gi->scalefac_scale = 1;
 	    gi->part2_length = 99999999;
 	    if (gfc->mode_gr == 2) {
-	        scale_bitcount(&scalefac[gr][ch], gi);
+	        scale_bitcount(&gi->scalefac, gi);
 	    } else {
-		scale_bitcount_lsf(gfc,&scalefac[gr][ch], gi);
+		scale_bitcount_lsf(gfc,&gi->scalefac, gi);
 	    }
 	}
     }
@@ -755,7 +753,7 @@ void best_scalefac_store(
     if (gfc->mode_gr==2 && gr == 1
 	&& l3_side->tt[0][ch].block_type != SHORT_TYPE
 	&& l3_side->tt[1][ch].block_type != SHORT_TYPE) {
-      	scfsi_calc(ch, l3_side, scalefac);
+      	scfsi_calc(ch, l3_side);
     }
     gi->part2_3_length += gi->part2_length;
 }

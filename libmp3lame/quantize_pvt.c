@@ -304,16 +304,15 @@ void compute_ath( lame_global_flags *gfp, FLOAT8 ATH_l[], FLOAT8 ATH_s[] )
 
 
 /* convert from L/R <-> Mid/Side, src == dst allowed */
-void ms_convert(FLOAT8 dst[2][576], FLOAT8 src[2][576])
+void ms_convert(III_side_info_t *l3_side, int gr)
 {
-    FLOAT8 l;
-    FLOAT8 r;
     int i;
     for (i = 0; i < 576; ++i) {
-        l = src[0][i];
-        r = src[1][i];
-        dst[0][i] = (l+r) * (FLOAT8)(SQRT2*0.5);
-        dst[1][i] = (l-r) * (FLOAT8)(SQRT2*0.5);
+	FLOAT8 l, r;
+        l = l3_side->tt[gr][0].xr[i];
+        r = l3_side->tt[gr][1].xr[i];
+        l3_side->tt[gr][0].xr[i] = (l+r) * (FLOAT8)(SQRT2*0.5);
+        l3_side->tt[gr][1].xr[i] = (l-r) * (FLOAT8)(SQRT2*0.5);
     }
 }
 
@@ -475,7 +474,6 @@ FLOAT8 athAdjust( FLOAT8 a, FLOAT8 x, FLOAT8 athFloor )
 */
 int calc_xmin( 
         lame_global_flags *gfp,
-        const FLOAT8                xr [576],
         const III_psy_ratio * const ratio,
 	const gr_info       * const cod_info, 
               III_psy_xmin  * const l3_xmin ) 
@@ -484,7 +482,7 @@ int calc_xmin(
     int sfb, j=0, ath_over=0;
     FLOAT8 xmin, tmpATH;
     ATH_t * ATH = gfc->ATH;
-    int max_index = 0;
+    const FLOAT8 *xr = cod_info->xr;
 
     for (sfb = 0; sfb < cod_info->sfb_lmax; sfb++) {
 	FLOAT en0 = 0.0;
@@ -609,7 +607,6 @@ double penalties ( double noise )
 
 int  calc_noise( 
         const lame_internal_flags           * const gfc,
-        const FLOAT8                    xr [576],
         const int                       ix [576],
         const gr_info           * const cod_info,
         const III_psy_xmin      * const l3_xmin, 
@@ -617,13 +614,12 @@ int  calc_noise(
               III_psy_xmin      * xfsf,
               calc_noise_result * const res )
 {
-    int sfb,start, end, l, i, over=0;
+    int sfb, l, i, over=0;
     FLOAT8 over_noise_db = 0;
     FLOAT8 tot_noise_db  = 0;     /*    0 dB relative to masking */
     FLOAT8 max_noise  = 1E-20; /* -200 dB relative to masking */
     double klemm_noise = 1E-37;
     int j = 0;
-    int max_index = 0;
 
     for (sfb = 0; sfb < cod_info->sfb_lmax; sfb++) {
 	int s =
@@ -635,7 +631,7 @@ int  calc_noise(
 
 	l = gfc->scalefac_band.l[sfb+1] - gfc->scalefac_band.l[sfb];
 	do {
-	    FLOAT8 temp = fabs(xr[j]) - pow43[ix[j]] * step;
+	    FLOAT8 temp = fabs(cod_info->xr[j]) - pow43[ix[j]] * step;
 	    noise += temp * temp;
 	    j++;
 	} while (--l > 0);
@@ -668,7 +664,7 @@ int  calc_noise(
 	    l = width;
 	    do {
 		FLOAT8 temp;
-		temp = pow43[ix[j]] * step - fabs(xr[j]);
+		temp = pow43[ix[j]] * step - fabs(cod_info->xr[j]);
 		noise += temp * temp;
 		j++;
 	    } while (--l > 0);
@@ -719,18 +715,16 @@ int  calc_noise(
  *
  *  Mark Taylor 2000-??-??                
  *
- *  Robert Hegemann: moved noise/distortion calc into it                          
+ *  Robert Hegemann: moved noise/distortion calc into it
  *
  ************************************************************************/
 
 static
 void set_pinfo (
         lame_global_flags *gfp,
-        const gr_info        * const cod_info,
+              gr_info        * const cod_info,
         const III_psy_ratio  * const ratio, 
         const III_scalefac_t * const scalefac,
-        const FLOAT8                 xr[576],
-        const int                    l3_enc[576],        
         const int                    gr,
         const int                    ch )
 {
@@ -745,9 +739,22 @@ void set_pinfo (
     calc_noise_result noise;
     III_psy_xmin xfsf;
 
-    calc_xmin (gfp,xr, ratio, cod_info, &l3_xmin);
+    calc_xmin (gfp, ratio, cod_info, &l3_xmin);
 
-    calc_noise (gfc, xr, l3_enc, cod_info, &l3_xmin, scalefac, &xfsf, &noise);
+    /* revert back the sign of l3enc */
+    for ( i = 0; i < 576; i++) {
+	if (cod_info->xr[i] < 0) 
+	    cod_info->l3_enc[i] = -cod_info->l3_enc[i];
+    }
+
+    calc_noise (gfc, cod_info->l3_enc, cod_info,
+		&l3_xmin, scalefac, &xfsf, &noise);
+
+    /* revert back the sign of l3enc */
+    for ( i = 0; i < 576; i++) {
+	if (cod_info->xr[i] < 0) 
+	    cod_info->l3_enc[i] = -cod_info->l3_enc[i];
+    }
 
     if (cod_info->block_type == SHORT_TYPE) {
         for (j=0, sfb = 0; sfb < SBMAX_s; sfb++ )  {
@@ -756,7 +763,7 @@ void set_pinfo (
             bw = end - start;
             for ( i = 0; i < 3; i++ ) {
                 for ( en0 = 0.0, l = start; l < end; l++ ) {
-                    en0 += xr[j] * xr[j];
+                    en0 += cod_info->xr[j] * cod_info->xr[j];
                     ++j;
                 }
                 en0=Max(en0/bw,1e-20);
@@ -829,7 +836,7 @@ void set_pinfo (
             end   = gfc->scalefac_band.l[ sfb+1 ];
             bw = end - start;
             for ( en0 = 0.0, l = start; l < end; l++ ) 
-                en0 += xr[l] * xr[l];
+                en0 += cod_info->xr[l] * cod_info->xr[l];
             en0/=bw;
       /*
     DEBUGF("diff  = %f \n",10*log10(Max(ratio[gr][ch].en.l[sfb],1e-20))
@@ -919,15 +926,12 @@ void set_pinfo (
 
 void set_frame_pinfo( 
         lame_global_flags *gfp,
-        FLOAT8          xr       [2][2][576],
-        III_psy_ratio   ratio    [2][2],  
-        int             l3_enc   [2][2][576],
-        III_scalefac_t  scalefac [2][2] )
+        III_psy_ratio   ratio    [2][2])
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     unsigned int          sfb;
-	int                   ch;
-	int                   gr;
+    int                   ch;
+    int                   gr;
     int                   act_l3enc[576];
     III_scalefac_t        act_scalefac [2];
     int scsfi[2] = {0,0};
@@ -939,11 +943,12 @@ void set_frame_pinfo(
      */
     for (ch = 0; ch < gfc->channels_out; ch ++) {
         for (sfb = 0; sfb < SBMAX_l; sfb ++) {
-            if (scalefac[1][ch].l[sfb] == -1) {/* scfsi */
-                act_scalefac[ch].l[sfb] = scalefac[0][ch].l[sfb];
+            gr_info *cod_info = &gfc->l3_side.tt[0][ch];
+            if (gfc->l3_side.tt[1][ch].scalefac.l[sfb] == -1) {/* scfsi */
+                act_scalefac[ch].l[sfb] = cod_info->scalefac.l[sfb];
                 scsfi[ch] = 1;
             } else {
-                act_scalefac[ch].l[sfb] = scalefac[1][ch].l[sfb];
+                act_scalefac[ch].l[sfb] = gfc->l3_side.tt[1][ch].scalefac.l[sfb];
             }
         }
     }
@@ -955,19 +960,12 @@ void set_frame_pinfo(
             int i;
             gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
             
-            /* revert back the sign of l3enc */
-            for ( i = 0; i < 576; i++) {
-                if (xr[gr][ch][i] < 0) 
-                    act_l3enc[i] = -l3_enc[gr][ch][i];
-                else
-                    act_l3enc[i] = +l3_enc[gr][ch][i];
-            }
             if (gr == 1 && scsfi[ch]) 
                 set_pinfo (gfp, cod_info, &ratio[gr][ch], &act_scalefac[ch],
-                        xr[gr][ch], act_l3enc, gr, ch);                    
+			   gr, ch);
             else
-                set_pinfo (gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch],
-                        xr[gr][ch], act_l3enc, gr, ch);                    
+                set_pinfo (gfp, cod_info, &ratio[gr][ch], &cod_info->scalefac,
+			   gr, ch);
         } /* for ch */
     }    /* for gr */
 }

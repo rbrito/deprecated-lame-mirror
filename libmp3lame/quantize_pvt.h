@@ -59,7 +59,7 @@ typedef struct calc_noise_result_t {
 void    compute_ath (lame_global_flags * gfp, FLOAT8 ATH_l[SBPSY_l],
                      FLOAT8 ATH_s[SBPSY_l]);
 
-void    ms_convert (FLOAT8 xr[2][576], FLOAT8 xr_org[2][576]);
+void    ms_convert (III_side_info_t *l3_side, int gr);
 
 int     on_pe (lame_global_flags *gfp, FLOAT8 pe[2][2], III_side_info_t * l3_side,
                int targ_bits[2], int mean_bits, int gr);
@@ -78,19 +78,18 @@ int     inner_loop (lame_internal_flags * const gfc, gr_info * const cod_info, c
 void    iteration_init (lame_global_flags *gfp);
 
 
-int     calc_xmin (lame_global_flags *gfp, const FLOAT8 xr[576],
+int     calc_xmin (lame_global_flags *gfp,
                    const III_psy_ratio * const ratio, const gr_info * const cod_info,
                    III_psy_xmin * const l3_xmin);
 
-int     calc_noise (const lame_internal_flags * const gfc, const FLOAT8 xr[576],
+int     calc_noise (const lame_internal_flags * const gfc,
                     const int ix[576], const gr_info * const cod_info,
                     const III_psy_xmin * const l3_xmin,
                     const III_scalefac_t * const scalefac,
                     III_psy_xmin * distort, calc_noise_result * const res);
 
-void    set_frame_pinfo (lame_global_flags *gfp, FLOAT8 xr[2][2][576],
-                         III_psy_ratio ratio[2][2], int l3_enc[2][2][576],
-                         III_scalefac_t scalefac[2][2]);
+void    set_frame_pinfo (lame_global_flags *gfp,
+                         III_psy_ratio ratio[2][2]);
 
 
 void    quantize_xrpow (const FLOAT8 *xr, int *ix, FLOAT8 istep);
@@ -106,11 +105,10 @@ int     count_bits (lame_internal_flags * const gfc, int * const ix, const FLOAT
 
 
 void    best_huffman_divide (const lame_internal_flags * const gfc, 
-                             gr_info * const cod_info, int * const ix);
+                             gr_info * const cod_info);
 
 void    best_scalefac_store (const lame_internal_flags * gfc, const int gr, const int ch,
-                             int l3_enc[2][2][576], III_side_info_t * const l3_side,
-                             III_scalefac_t scalefac[2][2]);
+                             III_side_info_t * const l3_side);
 
 int     scale_bitcount (III_scalefac_t * const scalefac, gr_info * const cod_info);
 

@@ -255,22 +255,14 @@ int  lame_encode_mp3_frame (				// Output
 	unsigned char*            mp3buf, 		// Output
 	int                    mp3buf_size )		// Output
 {
-#ifdef macintosh /* PLL 14/04/2000 */
-  static FLOAT8 xr[2][2][576];
-  static int l3_enc[2][2][576];
-#else
-  FLOAT8 xr[2][2][576];
-  int l3_enc[2][2][576];
-#endif
   int mp3count;
   III_psy_ratio masking_LR[2][2];    /*LR masking & energy */
   III_psy_ratio masking_MS[2][2]; /*MS masking & energy */
   III_psy_ratio (*masking)[2][2];  /*pointer to selected maskings*/
-  III_scalefac_t scalefac[2][2];
   const sample_t *inbuf[2];
   lame_internal_flags *gfc=gfp->internal_flags;
 
-  FLOAT8 tot_ener[2][4];   
+  FLOAT8 tot_ener[2][4];
   FLOAT8 ms_ener_ratio[2]={.5,.5};
   chgrdata pe,pe_MS;
   chgrdata *pe_use;
@@ -285,7 +277,6 @@ int  lame_encode_mp3_frame (				// Output
 
   memset((char *) masking_LR, 0, sizeof(masking_LR));
   memset((char *) masking_MS, 0, sizeof(masking_MS));
-  memset((char *) scalefac, 0, sizeof(scalefac));
   inbuf[0]=inbuf_l;
   inbuf[1]=inbuf_r;
 
@@ -341,7 +332,7 @@ int  lame_encode_mp3_frame (				// Output
 	  gfc->l3_side.tt[gr][ch].block_type=SHORT_TYPE;
 	}
       }
-      mdct_sub48(gfc, primebuff0, primebuff1, xr);
+      mdct_sub48(gfc, primebuff0, primebuff1);
     }
     
     iteration_init(gfp);
@@ -463,13 +454,13 @@ int  lame_encode_mp3_frame (				// Output
 
 
   /* polyphase filtering / mdct */
-  mdct_sub48(gfc, inbuf[0], inbuf[1], xr);
+  mdct_sub48(gfc, inbuf[0], inbuf[1]);
   /* re-order the short blocks, for more efficient encoding below */
   for (gr = 0; gr < gfc->mode_gr; gr++) {
     for (ch = 0; ch < gfc->channels_out; ch++) {
       gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
       if (cod_info->block_type==SHORT_TYPE) {
-	freorder(gfc->scalefac_band.s,xr[gr][ch]);
+	freorder(gfc->scalefac_band.s, cod_info->xr);
       }
     }
   }
@@ -553,9 +544,9 @@ int  lame_encode_mp3_frame (				// Output
       for ( ch = 0; ch < gfc->channels_out; ch++ ) {
 	gfc->pinfo->ms_ratio[gr]=gfc->ms_ratio[gr];
 	gfc->pinfo->ms_ener_ratio[gr]=ms_ener_ratio[gr];
-	gfc->pinfo->blocktype[gr][ch]=
-	  gfc->l3_side.tt[gr][ch].block_type;
-	memcpy(gfc->pinfo->xr[gr][ch],xr[gr][ch],sizeof(xr[gr][ch]));
+	gfc->pinfo->blocktype[gr][ch]=gfc->l3_side.tt[gr][ch].block_type;
+	memcpy(gfc->pinfo->xr[gr][ch], &gfc->l3_side.tt[gr][ch].xr,
+	       sizeof(FLOAT8)*476);
 	/* in psymodel, LR and MS data was stored in pinfo.  
 	   switch to MS data: */
 	if (gfc->mode_ext==MPG_MD_MS_LR) {
@@ -618,24 +609,24 @@ int  lame_encode_mp3_frame (				// Output
   switch (gfp->VBR){ 
   default:
   case vbr_off:
-    iteration_loop( gfp,*pe_use,ms_ener_ratio, xr, *masking, l3_enc, scalefac);
+    iteration_loop( gfp,*pe_use,ms_ener_ratio, *masking);
     break;
   case vbr_mt:
-    VBR_quantize( gfp,*pe_use,ms_ener_ratio, xr, *masking, l3_enc, scalefac);
+    VBR_quantize( gfp, *pe_use, ms_ener_ratio, *masking);
     break;
   case vbr_rh:
   case vbr_mtrh:
-    VBR_iteration_loop( gfp,*pe_use,ms_ener_ratio, xr, *masking, l3_enc, scalefac);
+    VBR_iteration_loop( gfp,*pe_use,ms_ener_ratio, *masking);
     break;
   case vbr_abr:
-    ABR_iteration_loop( gfp,*pe_use,ms_ener_ratio, xr, *masking, l3_enc, scalefac);
+    ABR_iteration_loop( gfp,*pe_use,ms_ener_ratio, *masking);
     break;
   }
 
   /*  write the frame to the bitstream  */
   getframebits(gfp, &bitsPerFrame, &mean_bits);
 
-  format_bitstream( gfp, bitsPerFrame, l3_enc, scalefac);
+  format_bitstream( gfp, bitsPerFrame);
 
   /* copy mp3 bit buffer into array */
   mp3count = copy_buffer(gfc,mp3buf,mp3buf_size,1);
@@ -657,7 +648,7 @@ int  lame_encode_mp3_frame (				// Output
 	gfc->pinfo->pcmdata[ch][j] = inbuf[ch][j-FFTOFFSET];
       }
     }
-    set_frame_pinfo (gfp, xr, *masking, l3_enc, scalefac);
+    set_frame_pinfo (gfp, *masking);
   }
 #endif
   

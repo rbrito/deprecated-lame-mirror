@@ -26,10 +26,7 @@ void VBR_quantize(
                     lame_global_flags      *gfp,
 		    FLOAT8         pe[2][2], 
                     FLOAT8         ms_ener_ratio[2],
-		    FLOAT8         xr[2][2][576], 
-                    III_psy_ratio  ratio[2][2],
-		    int            l3_enc[2][2][576],
-		    III_scalefac_t scalefac[2][2]);
+                    III_psy_ratio  ratio[2][2]);
 
 
 int VBR_noise_shaping2(

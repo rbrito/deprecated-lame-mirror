@@ -55,8 +55,6 @@ static int
 init_outer_loop(
     lame_internal_flags *gfc,
     gr_info *const cod_info, 
-    III_scalefac_t *const scalefac, 
-    const FLOAT8 xr[576], 
     FLOAT8 xrpow[576] )
 {
     FLOAT8 tmp, sum = 0;
@@ -111,14 +109,14 @@ init_outer_loop(
 
     /*  fresh scalefactors are all zero
      */
-    memset(scalefac, 0, sizeof(III_scalefac_t));
+    memset(&cod_info->scalefac, 0, sizeof(III_scalefac_t));
     memset(&gfc->pseudohalf, 0, sizeof(gfc->pseudohalf));
 
     /*  check if there is some energy we have to quantize
      *  and calculate xrpow matching our fresh scalefactors
      */
     for (i = 0; i < 576; ++i) {
-        tmp = fabs (xr[i]);
+        tmp = fabs (cod_info->xr[i]);
 	sum += tmp;
         xrpow[i] = sqrt (tmp * sqrt(tmp));
     }
@@ -416,7 +414,7 @@ amp_scalefac_bands(
     FLOAT8 xrpow[576] )
 {
   lame_internal_flags *gfc=gfp->internal_flags;
-  int l, j, sfb;
+  int j, sfb;
   FLOAT8 ifqstep34, trigger;
 
   if (cod_info->scalefac_scale == 0) {
@@ -805,7 +803,7 @@ outer_loop (
         /* compute the distortion in this quantization */
         if (gfc->noise_shaping) 
             /* coefficients and thresholds both l/r (or both mid/side) */
-            over = calc_noise (gfc, xr, l3_enc_w, cod_info, l3_xmin, 
+            over = calc_noise (gfc, l3_enc_w, cod_info, l3_xmin, 
                                scalefac, &distort, &noise_info);
         else {
             /* fast mode, no noise shaping, we are ready */
@@ -920,9 +918,6 @@ outer_loop (
 static void 
 iteration_finish (
     lame_internal_flags *gfc,
-    FLOAT8          xr      [2][2][576],
-    int             l3_enc  [2][2][576],
-    III_scalefac_t  scalefac[2][2],
     const int       mean_bits )
 {
     III_side_info_t *l3_side = &gfc->l3_side;
@@ -934,12 +929,12 @@ iteration_finish (
 
             /*  try some better scalefac storage
              */
-            best_scalefac_store (gfc, gr, ch, l3_enc, l3_side, scalefac);
+            best_scalefac_store (gfc, gr, ch, l3_side);
             
             /*  best huffman_divide may save some bits too
              */
             if (gfc->use_best_huffman == 1) 
-                best_huffman_divide (gfc, cod_info, l3_enc[gr][ch]);
+                best_huffman_divide (gfc, cod_info);
             
             /*  update reservoir status after FINAL quantization/bitrate
              */
@@ -948,7 +943,7 @@ iteration_finish (
             /*  set the sign of l3_enc from the sign of xr
              */
             for (i = 0; i < 576; i++) {
-                if (xr[gr][ch][i] < 0) l3_enc[gr][ch][i] *= -1; 
+                if (cod_info->xr[i] < 0) cod_info->l3_enc[i] *= -1; 
             }
         } /* for ch */
     }    /* for gr */
@@ -1206,7 +1201,6 @@ VBR_prepare (
           lame_global_flags *gfp,
           FLOAT8          pe            [2][2],
           FLOAT8          ms_ener_ratio [2], 
-          FLOAT8          xr            [2][2][576],
           III_psy_ratio   ratio         [2][2], 
           III_psy_xmin    l3_xmin       [2][2],
           int             frameBits     [16],
@@ -1233,7 +1227,7 @@ VBR_prepare (
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         mxb = on_pe (gfp, pe, &gfc->l3_side, max_bits[gr], avg, gr);
         if (gfc->mode_ext == MPG_MD_MS_LR) {
-            ms_convert (xr[gr], xr[gr]); 
+            ms_convert (&gfc->l3_side, gr);
             reduce_side (max_bits[gr], ms_ener_ratio[gr], avg, mxb);
         }
         for (ch = 0; ch < gfc->channels_out; ++ch) {
@@ -1248,7 +1242,7 @@ VBR_prepare (
             masking_lower_db   = gfc->VBR->mask_adjust - adjust; 
             gfc->masking_lower = pow (10.0, masking_lower_db * 0.1);
       
-            bands[gr][ch] = calc_xmin (gfp, xr[gr][ch], ratio[gr]+ch, 
+            bands[gr][ch] = calc_xmin (gfp, &ratio[gr][ch], 
                                        cod_info, l3_xmin[gr]+ch);
             if (bands[gr][ch]) 
                 analog_silence = 0;
@@ -1338,11 +1332,8 @@ void
 VBR_iteration_loop (
     lame_global_flags *gfp,
     FLOAT8             pe           [2][2],
-    FLOAT8             ms_ener_ratio[2], 
-    FLOAT8             xr           [2][2][576],
-    III_psy_ratio      ratio        [2][2], 
-    int                l3_enc       [2][2][576],
-    III_scalefac_t     scalefac     [2][2] )
+    FLOAT8             ms_ener_ratio[2],
+    III_psy_ratio ratio[2][2])
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     III_psy_xmin l3_xmin[2][2];
@@ -1361,7 +1352,7 @@ VBR_iteration_loop (
     gr_info             *cod_info;
     III_side_info_t     *l3_side  = &gfc->l3_side;
 
-    analog_silence = VBR_prepare (gfp, pe, ms_ener_ratio, xr, ratio, 
+    analog_silence = VBR_prepare (gfp, pe, ms_ener_ratio, ratio, 
                                   l3_xmin, frameBits, &analog_mean_bits,
                                   &min_mean_bits, min_bits, max_bits, bands);
 
@@ -1381,28 +1372,29 @@ VBR_iteration_loop (
       
             /*  init_outer_loop sets up cod_info, scalefac and xrpow 
              */
-            ret = init_outer_loop(gfc, cod_info, &scalefac[gr][ch],
-				  xr[gr][ch], xrpow);
+            ret = init_outer_loop(gfc, cod_info, xrpow);
             if (ret == 0 || max_bits[gr][ch] == 0) {
                 /*  xr contains no energy 
                  *  l3_enc, our encoding data, will be quantized to zero
                  */
-                memset(l3_enc[gr][ch], 0, sizeof(int)*576);
+                memset(&cod_info->l3_enc, 0, sizeof(int)*576);
                 save_bits[gr][ch] = 0;
                 continue; /* with next channel */
             }
       
             if (gfp->VBR == vbr_mtrh) {
-                ret = VBR_noise_shaping2 (gfp, xr[gr][ch], xrpow, l3_enc[gr][ch],  
-                                        min_bits[gr][ch], max_bits[gr][ch], 
-                                        &scalefac[gr][ch],
-                                        &l3_xmin[gr][ch], gr, ch );
+                ret = VBR_noise_shaping2 (gfp, cod_info->xr, xrpow,
+					  cod_info->l3_enc,
+					  min_bits[gr][ch], max_bits[gr][ch], 
+					  &cod_info->scalefac,
+					  &l3_xmin[gr][ch], gr, ch );
                 if (ret < 0)
                     cod_info->part2_3_length = 100000;
             } 
             else
-                VBR_encode_granule (gfp, cod_info, xr[gr][ch], &l3_xmin[gr][ch],
-                                    &scalefac[gr][ch], xrpow, l3_enc[gr][ch],
+                VBR_encode_granule (gfp, cod_info, cod_info->xr, &l3_xmin[gr][ch],
+                                    &cod_info->scalefac, xrpow,
+				    cod_info->l3_enc,
                                     ch, min_bits[gr][ch], max_bits[gr][ch] );
 
             used_bits += cod_info->part2_3_length;
@@ -1442,7 +1434,7 @@ VBR_iteration_loop (
     }   /* breaks adjusted */
     /*--------------------------------------*/
     
-    iteration_finish (gfc, xr, l3_enc, scalefac, mean_bits);
+    iteration_finish (gfc, mean_bits);
 }
 
 
@@ -1588,10 +1580,7 @@ ABR_iteration_loop(
     lame_global_flags *gfp,
     FLOAT8             pe           [2][2],
     FLOAT8             ms_ener_ratio[2], 
-    FLOAT8             xr           [2][2][576],
-    III_psy_ratio      ratio        [2][2], 
-    int                l3_enc       [2][2][576],
-    III_scalefac_t     scalefac     [2][2] )
+    III_psy_ratio      ratio        [2][2])
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     III_psy_xmin l3_xmin;
@@ -1612,33 +1601,32 @@ ABR_iteration_loop(
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 
         if (gfc->mode_ext == MPG_MD_MS_LR) 
-            ms_convert (xr[gr], xr[gr]);
+            ms_convert (&gfc->l3_side, gr);
 
         for (ch = 0; ch < gfc->channels_out; ch++) {
             cod_info = &l3_side->tt[gr][ch];
 
             /*  cod_info, scalefac and xrpow get initialized in init_outer_loop
              */
-            ret = init_outer_loop(gfc, cod_info, &scalefac[gr][ch],
-				  xr[gr][ch], xrpow);
+            ret = init_outer_loop(gfc, cod_info, xrpow);
             if (ret == 0) {
                 /*  xr contains no energy 
                  *  l3_enc, our encoding data, will be quantized to zero
                  */
-                memset(l3_enc[gr][ch], 0, sizeof(int)*576);
+                memset(cod_info->l3_enc, 0, sizeof(int)*576);
             } 
             else {
                 /*  xr contains energy we will have to encode 
                  *  calculate the masking abilities
                  *  find some good quantization in outer_loop 
                  */
-                ath_over = calc_xmin (gfp, xr[gr][ch], &ratio[gr][ch],
+                ath_over = calc_xmin (gfp, &ratio[gr][ch],
                                       cod_info, &l3_xmin);
                 if (0 == ath_over) /* analog silence */
                     targ_bits[gr][ch] = analog_silence_bits;
 
-                outer_loop (gfp, cod_info, xr[gr][ch], &l3_xmin,
-                            &scalefac[gr][ch], xrpow, l3_enc[gr][ch],
+                outer_loop (gfp, cod_info, cod_info->xr, &l3_xmin,
+                            &cod_info->scalefac, xrpow, cod_info->l3_enc,
                             ch, targ_bits[gr][ch]);
             }
 
@@ -1657,7 +1645,7 @@ ABR_iteration_loop(
     }
     assert (gfc->bitrate_index <= gfc->VBR_max_bitrate);
 
-    iteration_finish (gfc, xr, l3_enc, scalefac, mean_bits);
+    iteration_finish (gfc, mean_bits);
 }
 
 
@@ -1680,10 +1668,7 @@ iteration_loop(
     lame_global_flags *gfp, 
     FLOAT8             pe           [2][2],
     FLOAT8             ms_ener_ratio[2],  
-    FLOAT8             xr           [2][2][576],
-    III_psy_ratio      ratio        [2][2],  
-    int                l3_enc       [2][2][576],
-    III_scalefac_t     scalefac     [2][2] )
+    III_psy_ratio      ratio        [2][2])
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     III_psy_xmin l3_xmin;
@@ -1706,7 +1691,7 @@ iteration_loop(
         max_bits = on_pe (gfp, pe, l3_side, targ_bits, mean_bits, gr);
         
         if (gfc->mode_ext == MPG_MD_MS_LR) {
-            ms_convert (xr[gr], xr[gr]);
+            ms_convert (&gfc->l3_side, gr);
             reduce_side (targ_bits, ms_ener_ratio[gr], mean_bits, max_bits);
         }
         
@@ -1715,34 +1700,33 @@ iteration_loop(
 
             /*  init_outer_loop sets up cod_info, scalefac and xrpow 
              */
-            i = init_outer_loop(gfc, cod_info, &scalefac[gr][ch],
-				xr[gr][ch], xrpow);
+            i = init_outer_loop(gfc, cod_info, xrpow);
             if (i == 0) {
                 /*  xr contains no energy, l3_enc will be quantized to zero
                  */
-                memset(l3_enc[gr][ch], 0, sizeof(int)*576);
+                memset(cod_info->l3_enc, 0, sizeof(int)*576);
             }
             else {
                 /*  xr contains energy we will have to encode 
                  *  calculate the masking abilities
                  *  find some good quantization in outer_loop 
                  */
-                calc_xmin (gfp, xr[gr][ch], &ratio[gr][ch], cod_info, 
+                calc_xmin (gfp, &ratio[gr][ch], cod_info, 
                            &l3_xmin);
-                outer_loop (gfp, cod_info, xr[gr][ch], &l3_xmin, 
-                            &scalefac[gr][ch], xrpow, l3_enc[gr][ch],
+                outer_loop (gfp, cod_info, cod_info->xr, &l3_xmin, 
+                            &cod_info->scalefac, xrpow, cod_info->l3_enc,
                             ch, targ_bits[ch]);
             }
             assert (cod_info->part2_3_length <= MAX_BITS);
 
             /*  try some better scalefac storage
              */
-            best_scalefac_store (gfc, gr, ch, l3_enc, l3_side, scalefac);
+            best_scalefac_store (gfc, gr, ch, l3_side);
             
             /*  best huffman_divide may save some bits too
              */
             if (gfc->use_best_huffman == 1) 
-                best_huffman_divide (gfc, cod_info, l3_enc[gr][ch]);
+                best_huffman_divide (gfc, cod_info);
             
             /*  update reservoir status after FINAL quantization/bitrate
              */
@@ -1753,7 +1737,7 @@ iteration_loop(
             /*  set the sign of l3_enc from the sign of xr
              */
             for (i = 0; i < 576; i++) {
-                if (xr[gr][ch][i] < 0) l3_enc[gr][ch][i] *= -1; 
+                if (cod_info->xr[i] < 0) cod_info->l3_enc[i] *= -1; 
             }
         } /* for ch */
     }    /* for gr */

@@ -23,9 +23,7 @@
 #define LAME_BITSTREAM_H
 #include "util.h"
 
-int format_bitstream(lame_global_flags *gfp, int i,
-		     int              l3_enc[2][2][576],
-		     III_scalefac_t   scalefac[2][2] );
+int format_bitstream(lame_global_flags *gfp, int bitsPerFrame);
 
 void flush_bitstream(lame_global_flags *gfp);
 void add_dummy_byte ( lame_global_flags* const gfp, unsigned char val );
