@@ -338,28 +338,27 @@ int count_bits(
       FLOAT8 roundfac = 0.634521682242439 / IPOW20(gi->global_gain+gi->scalefac_scale);
       i = 0;
       for (sfb = 0; sfb < gi->sfb_lmax; sfb++) {
-	int end;
-	if (!gfc->pseudohalf.l[sfb])
-	  continue;
+	  int width = gfc->scalefac_band.l[sfb+1] - gfc->scalefac_band.l[sfb];
+	  int l;
+	  if (!gfc->pseudohalf.l[sfb])
+	      continue;
 
-	end   = gfc->scalefac_band.l[sfb+1];
-	for (; i < end; i++)
-	  if (xr[i] < roundfac)
-	    ix[i] = 0;
+	  for (l = -width; l < 0; l++)
+	      if (xr[i+l] < roundfac)
+		  ix[i+l] = 0;
       }
 
       for (sfb = gi->sfb_smin; sfb < SBPSY_s; sfb++) {
-	int start, end, win;
-	start = gfc->scalefac_band.s[sfb];
-	end   = gfc->scalefac_band.s[sfb+1];
-	for (win = 0; win < 3; win++) {
-	  int j;
-	  if (!gfc->pseudohalf.s[sfb][win])
-	    continue;
-	  for (j = start; j < end; j++, i++)
-	    if (xr[i] < roundfac)
-	      ix[i] = 0;
-	}
+	  int b;
+	  int width = gfc->scalefac_band.s[sfb+1] - gfc->scalefac_band.s[sfb];
+	  for (b = 0; b < 3; b++) {
+	      int l;
+	      if (!gfc->pseudohalf.s[sfb][b])
+		  continue;
+	      for (l = -width; l < 0; l++)
+		  if (xr[i+l] < roundfac)
+		      ix[i+l] = 0;
+	  }
       }
     }
 
@@ -687,33 +686,32 @@ void best_scalefac_store(
 
     /* use scalefac_scale if we can */
     gr_info *gi = &l3_side->gr[gr].ch[ch].tt;
-    int sfb,i,j,j2,l,start,end;
+    int sfb,i,j,j2,l;
 
     /* remove scalefacs from bands with ix=0.  This idea comes
      * from the AAC ISO docs.  added mt 3/00 */
     /* check if l3_enc=0 */
+    j = 0;
     for ( sfb = 0; sfb < gi->sfb_lmax; sfb++ ) {
-      if (scalefac[gr][ch].l[sfb]>0) { 
-	start = gfc->scalefac_band.l[ sfb ];
-	end   = gfc->scalefac_band.l[ sfb+1 ];
-	for ( l = start; l < end; l++ ) if (l3_enc[gr][ch][l]!=0) break;
-	if (l==end) scalefac[gr][ch].l[sfb]=0;
-      }
+	int width = gfc->scalefac_band.l[sfb+1] - gfc->scalefac_band.l[sfb];
+	j += width;
+	if (scalefac[gr][ch].l[sfb] == 0)
+	    continue;
+
+	for (l = -width; l < 0; l++) if (l3_enc[gr][ch][l+j]!=0) break;
+	if (l==0) scalefac[gr][ch].l[sfb]=0;
     }
-    for ( j=0, sfb = gi->sfb_smin; sfb < SBPSY_s; sfb++ ) {
-	start = gfc->scalefac_band.s[ sfb ];
-	end   = gfc->scalefac_band.s[ sfb+1 ];
+    for (sfb = gi->sfb_smin; sfb < SBPSY_s; sfb++ ) {
+	int width = gfc->scalefac_band.s[sfb+1] - gfc->scalefac_band.s[sfb];
 	for ( i = 0; i < 3; i++ ) {
-	  if (scalefac[gr][ch].s[sfb][i]>0) {
-	    j2 = j;
-	    for ( l = start; l < end; l++ ) 
-	      if (l3_enc[gr][ch][j2++ /*3*l+i*/]!=0) break;
-	    if (l==end) scalefac[gr][ch].s[sfb][i]=0;
-	  }
-	  j += end-start;
+	    j += width;
+	    if (scalefac[gr][ch].s[sfb][i] == 0)
+		continue;
+
+	    for (l = -width; l < 0; l++) if (l3_enc[gr][ch][l+j]!=0) break;
+	    if (l==0) scalefac[gr][ch].s[sfb][i]=0;
 	}
     }
-
 
     gi->part2_3_length -= gi->part2_length;
     if (!gi->scalefac_scale && !gi->preflag) {
