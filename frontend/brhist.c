@@ -92,7 +92,7 @@ static size_t  calculate_index ( const int* const array, const size_t len, const
     return -1;
 }
 
-int  brhist_init ( const lame_global_flags* const gf, const int bitrate_kbps_min, const int bitrate_kbps_max )
+int  brhist_init ( const lame_global_flags* gf, const int bitrate_kbps_min, const int bitrate_kbps_max )
 {
 #ifdef TERMCAP_AVAILABLE
     char         term_buff [2048];  // see 1)
@@ -176,7 +176,7 @@ int  brhist_init ( const lame_global_flags* const gf, const int bitrate_kbps_min
 }
 
 
-static void  brhist_disp_line ( const lame_global_flags* const gf, int i, int br_hist, int full, int frames )
+static void  brhist_disp_line ( const lame_global_flags*  gf, int i, int br_hist, int full, int frames )
 {
     char    brppt [16];
     int     barlen;
@@ -205,7 +205,7 @@ static void  brhist_disp_line ( const lame_global_flags* const gf, int i, int br
                   barlen, brhist.bar, Console_IO.disp_width - 30 - barlen, "" );
 }
 
-void  brhist_disp ( const lame_global_flags* const gf, const int jump_back )
+void  brhist_disp ( const lame_global_flags*  gf, const int jump_back )
 {
     int   i;
     int   br_hist [BRHIST_WIDTH];   /* how often a frame size was used */
@@ -269,7 +269,7 @@ void  brhist_disp ( const lame_global_flags* const gf, const int jump_back )
 }
 
 
-void  brhist_disp_total ( const lame_global_flags* const gf )
+void  brhist_disp_total ( const lame_global_flags* gf )
 {
     int i;
     int br_hist [BRHIST_WIDTH];
