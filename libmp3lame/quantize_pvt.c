@@ -612,8 +612,15 @@ int  calc_noise(
 	    cod_info->global_gain
 	    - ((scalefac->l[sfb] + (cod_info->preflag ? pretab[sfb] : 0))
 	       << (cod_info->scalefac_scale + 1));
-	FLOAT8 step = POW20(s);
+	FLOAT8 step;
 	FLOAT8 noise = 0.0;
+
+        if (s<0) {
+            step = pow(2.0, (double)(s - 210) * 0.25);
+        }else{
+            /* use table lookup.  allegedly faster */
+            step = POW20(s);
+        }
 
 	l = gfc->scalefac_band.l[sfb+1] - gfc->scalefac_band.l[sfb];
 	do {
