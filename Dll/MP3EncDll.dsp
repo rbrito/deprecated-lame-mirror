@@ -44,8 +44,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /Zp2 /MT /W3 /GX /Ox /Ot /Og /Ob2 /I "..\\" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_BLADEDLL" /D "FLOAT8_is_float" /YX /FD -Qmem -Qip /c
-# SUBTRACT CPP /Oa /Ow /Oi /Os
+# ADD CPP /nologo /Zp2 /MT /W3 /GX /Ox /Ot /Og /Ob2 /I "..\\" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_BLADEDLL" /D "FLOAT8_is_float" /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o NUL /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o NUL /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
@@ -180,6 +179,10 @@ SOURCE=..\lame.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\lametime.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\newmdct.c
 # End Source File
 # Begin Source File
@@ -204,19 +207,19 @@ SOURCE=..\psymodel.h
 # End Source File
 # Begin Source File
 
-SOURCE="..\quantize_pvt.c"
-# End Source File
-# Begin Source File
-
-SOURCE="..\quantize_pvt.h"
-# End Source File
-# Begin Source File
-
 SOURCE=..\quantize.c
 # End Source File
 # Begin Source File
 
 SOURCE=..\quantize.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\quantize_pvt.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\quantize_pvt.h
 # End Source File
 # Begin Source File
 
