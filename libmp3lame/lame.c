@@ -234,7 +234,7 @@ static void  optimum_bandwidth (
     if (channels >= 2. )
         br /= 1.75 + 0.25 * (channels-2.);    // MS needs 1.75x mono, LR needs 2.00x mono (experimental data of a lot of albums)
         
-    br *= 0.5;                                // the sinus and cosine term must share the bitrate
+    br *= 0.5;                                // the sine and cosine term must share the bitrate
 
 /* 
  *  So, now we have the bitrate for every spectral line.
@@ -267,7 +267,7 @@ static void  optimum_bandwidth (
  *   What I propose?
  *       A slightly with the bitrate increasing bits/line function. It is
  *       better to decrease NMR for low bitrates to get a little bit more
- *       bandwidth. So we have a better trade of between twickling and
+ *       bandwidth. So we have a better trade off between twickling and
  *       muffled sound.
  */    
 
@@ -368,8 +368,7 @@ static int  optimum_samplefreq ( int lowpassfreq, int input_samplefreq )
 /*
  * Rules:
  *
- *  - input sample frequency should be decreased 
- *    by more than 3% if lowpass allows this
+ *  - output sample frequency should NOT be decreased by more than 3% if lowpass allows this
  *  - if possible, sfb21 should NOT be used
  *
  *  Problem: Switches to 32 kHz at 112 kbps
@@ -1025,7 +1024,7 @@ program.
 */
 int lame_encode_frame(lame_global_flags *gfp,
 sample_t inbuf_l[],sample_t inbuf_r[],
-char *mp3buf, int mp3buf_size)
+unsigned char *mp3buf, int mp3buf_size)
 {
   int ret;
   if (gfp->ogg) {
@@ -1076,7 +1075,7 @@ int    lame_encode_buffer (
         const short int     buffer_l [],
         const short int     buffer_r [],
         int                 nsamples,
-        char*               mp3buf,
+        unsigned char*      mp3buf,
         const int           mp3buf_size )
 {
   lame_internal_flags *gfc = gfp->internal_flags;
@@ -1192,7 +1191,7 @@ int    lame_encode_buffer_interleaved (
                 lame_global_flags* gfp,
                 short int          buffer [],
                 int                nsamples,
-                char*              mp3buf,
+                unsigned char*     mp3buf,
                 int                mp3buf_size )
 {
   int mp3size = 0, ret, i, ch, mf_needed;
@@ -1268,7 +1267,7 @@ int    lame_encode_buffer_interleaved (
       /* encode the frame */
       ret = lame_encode_frame(gfp,mfbuf[0],mfbuf[1],mp3buf,mp3buf_size);
       if (ret < 0) {
-	/* fatel error: mp3buffer was too small */
+	/* fatal error: mp3buffer was too small */
 	return ret;
       }
       mp3buf += ret;
@@ -1296,7 +1295,7 @@ int    lame_encode_buffer_interleaved (
 int lame_encode (
         lame_global_flags* const  gfp,
         const short int           in_buffer [2] [1152],
-        char* const               mp3buf,
+        unsigned char* const      mp3buf,
         const int                 size )
 {
     lame_internal_flags*  gfc = gfp->internal_flags;
@@ -1315,7 +1314,7 @@ int lame_encode (
 
 int    lame_encode_flush (
                 lame_global_flags* gfp,
-                char*              mp3buffer,
+                unsigned char*     mp3buffer,
                 int                mp3buffer_size )
 {
     short int buffer[2][1152];
@@ -1412,7 +1411,7 @@ int  lame_close (lame_global_flags *gfp)
 
 int    lame_encode_finish (
                 lame_global_flags* gfp,
-                char*              mp3buffer,
+                unsigned char*     mp3buffer,
                 int                mp3buffer_size )
 {
     int ret = lame_encode_flush( gfp, mp3buffer, mp3buffer_size );

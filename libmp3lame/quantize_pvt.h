@@ -54,6 +54,8 @@ typedef struct calc_noise_result_t {
     FLOAT8  tot_noise;       /* sum of all quantization noise */
     FLOAT8  max_noise;       /* max quantization noise */
     float   klemm_noise;
+    FLOAT8  dist_l[SBMAX_l];
+    FLOAT8  dist_s[3][SBMAX_s];
 } calc_noise_result;
 
 void    compute_ath (lame_global_flags * gfp, FLOAT8 ATH_l[SBPSY_l],

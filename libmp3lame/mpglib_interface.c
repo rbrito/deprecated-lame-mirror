@@ -18,13 +18,11 @@
 
 MPSTR           mp;
 plotting_data*  mpg123_pinfo = NULL;
-// static char     buf [16384];
 
 
 int lame_decode_init( void )
 {
     InitMP3 ( &mp );
-//  memset ( buf, 0, sizeof(buf) );
     return 0;
 }
 
@@ -57,11 +55,6 @@ int lame_decode1_headers(
     mp3data->header_parsed = 0;
   
     ret = decodeMP3 ( &mp, buffer, len, (char*)p, sizeof(out), &processed_bytes );
-    //                                  ^^^^^^^^^^^^^^^^^^^^^
-    //  this argument is the size of the output buffer in bytes.
-    //  Even though decodeMP3 returns short ints!
-    //
-    // Then sizeof(out) is really right, as expected. Changed.
   
     if ( mp.header_parsed ) {
         mp3data->header_parsed = 1;
@@ -94,6 +87,7 @@ int lame_decode1_headers(
 	    }
 	    break;
 	default:
+            processed_samples = -1;
 	    assert (0);
 	    break;
         }    

@@ -67,7 +67,7 @@ void ExitMP3( PMPSTR mp)
 	}
 }
 
-static struct buf *addbuf( PMPSTR mp,char *buf,int size)
+static struct buf *addbuf( PMPSTR mp, unsigned char *buf,int size)
 {
 	struct buf *nbuf;
 
@@ -290,7 +290,7 @@ int sync_buffer(PMPSTR mp,int free_match)
 
 
 
-int decodeMP3( PMPSTR mp,char *in,int isize,char *out,
+int decodeMP3( PMPSTR mp,unsigned char *in,int isize,char *out,
 		int osize,int *done)
 {
 	int i,iret,bits,bytes;

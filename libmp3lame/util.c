@@ -212,16 +212,14 @@ int bRate,        /* legal rates from 32 to 448 */
 int version,      /* MPEG-1 or MPEG-2 LSF */
 int samplerate)   /* convert bitrate in kbps to index */
 {
-  int     index = 0;
-  int     bitrate = 10000;
+    int  bitrate = 0;
+    int  i;
   
-  while( index<15)   {
-    if( ABS( bitrate_table[version][index] - bRate) < ABS(bitrate-bRate) ) {
-      bitrate = bitrate_table[version][index];
-    }
-    ++index;
-  }
-  return bitrate;
+    for ( i = 1; i <= 14; i++ )
+        if ( ABS (bitrate_table[version][i] - bRate) < ABS (bitrate - bRate) )
+            bitrate = bitrate_table [version] [i];
+	    
+    return bitrate;
 }
 
 
@@ -244,26 +242,19 @@ int map2MP3Frequency(int freq)
 }
 
 int BitrateIndex(
-int bRate,        /* legal rates from 32 to 448 */
-int version,      /* MPEG-1 or MPEG-2 LSF */
+int bRate,        /* legal rates from 32 to 448 kbps */
+int version,      /* MPEG-1 or MPEG-2/2.5 LSF */
 int samplerate)   /* convert bitrate in kbps to index */
 {
-int     index = 0;
-int     found = 0;
+    int  i;
 
-    while(!found && index<15)   {
-        if(bitrate_table[version][index] == bRate)
-            found = 1;
-        else
-            ++index;
-    }
-    if(found)
-        return(index);
-    else {
-        ERRORF("Bitrate %d kbps not legal for %i Hz output sampling frequency.\n",
-                bRate, samplerate);
-        return(-1);     /* Error! */
-    }
+    for ( i = 1; i <= 14; i++)
+        if ( bitrate_table [version] [i] == bRate )
+            return i;
+	    
+    ERRORF ( "Bitrate %d kbps not legal for %i Hz output sampling frequency.\n", 
+             bRate, samplerate );
+    return -1;
 }
 
 /* convert samp freq in Hz to index */
@@ -537,6 +528,15 @@ int  has_SIMD ( void )
 #endif
 }    
 
+int  has_SIMD2 ( void )
+{
+#ifdef HAVE_NASM 
+    extern int has_SIMD2_nasm ( void );
+    return has_SIMD2_nasm ();
+#else
+    return 0;   /* don't know, assume not */
+#endif
+}    
 
 /***********************************************************************
  *
@@ -562,7 +562,7 @@ void updateStats( lame_internal_flags * const gfc )
     /* count bitrate indices */
     gfc->bitrate_stereoMode_Hist [gfc->bitrate_index] [4] ++;
     
-    /* count 'em for every mode extension in case of stereo encoding */
+    /* count 'em for every mode extension in case of 2 channel encoding */
     if (gfc->channels_out == 2)
         gfc->bitrate_stereoMode_Hist [gfc->bitrate_index] [gfc->mode_ext]++;
 }

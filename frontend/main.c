@@ -111,7 +111,7 @@ int main(int argc, char **argv)
         { "stereo", "force-ms", "dual-ch", "single-ch" }
     };
     int  ret;
-  char mp3buffer[LAME_MAXMP3BUFFER];
+    unsigned char  mp3buffer [LAME_MAXMP3BUFFER];
   short int Buffer[2][1152];
   int iread,imp3;
   lame_global_flags gf;

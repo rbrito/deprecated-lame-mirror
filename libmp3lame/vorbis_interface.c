@@ -488,25 +488,27 @@ int lame_encode_ogg_finish(lame_global_flags *gfp,
 
 
 
-int lame_encode_ogg_frame(lame_global_flags *gfp,
-			  short int inbuf_l[],short int inbuf_r[],
-			  char *mp3buf, int mp3buf_size)
+int  lame_encode_ogg_frame (
+	lame_global_flags*  gfp,
+	const sample_t*     inbuf_l, 
+	const sample_t*     inbuf_r,
+	unsigned char*      mp3buf, 
+	size_t              mp3buf_size )
 {
-
-  lame_internal_flags *gfc=gfp->internal_flags;
-  long i;
-  int eos=0;
-  int bytes=0;
+    lame_internal_flags *gfc = gfp->internal_flags;
+    int  i;
+    int  eos   = 0;
+    int  bytes = 0;
   
-  /* expose the buffer to submit data */
-  double **buffer=vorbis_analysis_buffer(&vd2,gfp->framesize);
+    /* expose the buffer to submit data */
+    double **buffer = vorbis_analysis_buffer(&vd2,gfp->framesize);
   
-  /* uninterleave samples */
-  for(i=0;i<gfp->framesize;i++){
-    buffer[0][i]=(double)inbuf_l[i]/32768.0;
-    if (gfc->channels_out==2)
-      buffer[1][i]=(double)inbuf_r[i]/32768.0;
-  }
+    /* change level of input by -90 dB (no de-interleaving!) */
+    for ( i = 0; i < gfp->framesize; i++ )
+        buffer [0] [i] = (1/32768.) * inbuf_l [i];
+    if ( gfc->channels_out == 2 )
+        for ( i = 0; i < gfp->framesize; i++ )
+            buffer [1] [i] = (1/32768.) * inbuf_r [i];
   
   /* tell the library how much we actually submitted */
   vorbis_analysis_wrote(&vd2,i);
