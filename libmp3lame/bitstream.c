@@ -43,7 +43,7 @@
 /***********************************************************************
  * compute bitsperframe and mean_bits for a layer III frame 
  **********************************************************************/
-int getframebits(const lame_global_flags * gfp)
+int getframebytes(const lame_global_flags * gfp)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     int  bit_rate;
@@ -57,15 +57,14 @@ int getframebits(const lame_global_flags * gfp)
 
     /* main encoding routine toggles padding on and off */
     /* one Layer3 Slot consists of 8 bits */
-    return 8 * (gfc->mode_gr*(576/8)*1000*bit_rate / gfp->out_samplerate
-		+ gfc->padding);
+    return gfc->mode_gr*(576/8)*1000*bit_rate / gfp->out_samplerate
+	+ gfc->padding - gfc->l3_side.sideinfo_len;
 }
 
 /*write j bits into the bit stream */
 inline static void
-putbits24(lame_internal_flags *gfc, int val, int j)
+putbits24(Bit_stream_struc *bs, int val, int j)
 {
-    Bit_stream_struc *bs = &gfc->bs;
     char *p = &bs->buf[bs->bitidx >> 3];
 
     val <<= (32 - j - (bs->bitidx & 7));
@@ -78,16 +77,15 @@ putbits24(lame_internal_flags *gfc, int val, int j)
 }
 
 inline static void
-putbits(lame_internal_flags *gfc, int val, int j)
+putbits(Bit_stream_struc *bs, int val, int j)
 {
     if (j > 25) {
-	putbits24(gfc, val>>16, j-16);
+	putbits24(bs, val>>16, j-16);
 	val &= 0xffff;
 	j = 16;
     }
-    putbits24(gfc, val, j);
+    putbits24(bs, val, j);
 }
-
 
 /*
   Some combinations of bitrate, Fs, and stereo make it impossible to stuff
@@ -97,62 +95,57 @@ putbits(lame_internal_flags *gfc, int val, int j)
 */
 
 inline static void
-drain_into_ancillary(lame_global_flags *gfp, int remainingBits)
+drain_into_ancillary(lame_internal_flags *gfc, int remainingBits)
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
+    Bit_stream_struc *bs = &gfc->bs;
     int i, pad;
     assert(remainingBits >= 0);
 
     if (remainingBits >= 8) {
-	putbits24(gfc,0x4c,8);
+	putbits24(bs,0x4c,8);
 	remainingBits -= 8;
     }
     if (remainingBits >= 8) {
-	putbits24(gfc,0x41,8);
+	putbits24(bs,0x41,8);
 	remainingBits -= 8;
     }
     if (remainingBits >= 8) {
-	putbits24(gfc,0x4d,8);
+	putbits24(bs,0x4d,8);
 	remainingBits -= 8;
     }
     if (remainingBits >= 8) {
-	putbits24(gfc,0x45,8);
+	putbits24(bs,0x45,8);
 	remainingBits -= 8;
     }
 
     pad = 0xaa;
-    if (gfp->disable_reservoir)
-	pad = 0;
     if (remainingBits >= 8) {
 	const char *version = get_lame_short_version ();
 	for (i=0; remainingBits >=8 ; ++i) {
 	    if (i < strlen(version))
-		putbits24(gfc,version[i],8);
+		putbits24(bs,version[i],8);
 	    else
-		putbits24(gfc,pad,8);
+		putbits24(bs,pad,8);
 	    remainingBits -= 8;
 	}
     }
 
     if (remainingBits)
-	putbits24(gfc, pad >> (8 - remainingBits), remainingBits);
+	putbits24(bs, pad >> (8 - remainingBits), remainingBits);
 }
 
 /*write N bits into the header */
 inline static int
 writeheader(lame_internal_flags *gfc,int val, int j, int ptr)
 {
-    while (j > 0) {
-	int k = Min(j, 8 - (ptr & 7));
-	j -= k;
-        assert (j < MAX_LENGTH); /* >> 32  too large for 32 bit machines */
-	gfc->bs.header[gfc->bs.h_ptr].buf[ptr >> 3]
-	    |= ((val >> j)) << (8 - (ptr & 7) - k);
-	ptr += k;
-    }
-    return ptr;
+    char *p = &gfc->bs.header[gfc->bs.h_ptr].buf[ptr >> 3];
+    assert(0 < j && j <= 16);
+    val <<= (24 - j - (ptr&7));
+    p[0] |= val >> 16;
+    p[1]  = val >> 8;
+    p[2]  = val;
+    return ptr + j;
 }
-
 
 static int
 CRC_update(int value, int crc)
@@ -225,9 +218,157 @@ CRC_writeheader(lame_internal_flags *gfc, char *header)
 }
 
 inline static void
-encodeSideInfo2(lame_global_flags *gfp, int bitsPerFrame)
+Huf_count1(Bit_stream_struc *bs, gr_info *gi)
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
+    int index;
+    const unsigned char * const hcode = quadcode[gi->count1table_select];
+
+    assert(gi->count1table_select < 2u);
+    for (index = gi->big_values; index < gi->count1; index += 4) {
+	int huffbits = 0, p = 0;
+
+	if (gi->l3_enc[index  ]) {
+	    p = 8;
+	    huffbits = huffbits + (gi->xr[index  ] < 0);
+	}
+
+	if (gi->l3_enc[index+1]) {
+	    p += 4;
+	    huffbits = huffbits*2 + (gi->xr[index+1] < 0);
+	}
+
+	if (gi->l3_enc[index+2]) {
+	    p += 2;
+	    huffbits = huffbits*2 + (gi->xr[index+2] < 0);
+	}
+
+	if (gi->l3_enc[index+3]) {
+	    p++;
+	    huffbits = huffbits*2 + (gi->xr[index+3] < 0);
+	}
+	putbits24(bs, huffbits + hcode[p+16], hcode[p]);
+    }
+}
+
+
+
+/*
+  Implements the pseudocode of page 98 of the IS
+  */
+static void
+Huffmancode_esc(Bit_stream_struc *bs, const struct huffcodetab* h,
+		int index, int end, gr_info *gi)
+{
+    do {
+	int cbits   = 0;
+	int xbits   = 0;
+	int ext = 0;
+	int x1 = gi->l3_enc[index];
+	int x2 = gi->l3_enc[index+1];
+
+	if (x1 != 0) {
+	    /* use ESC-words */
+	    if (x1 > 14) {
+		assert ( x1 <= h->linmax+15 );
+		ext    = (x1-15) << 1;
+		xbits  = h->xlen;
+		x1     = 15;
+	    }
+	    ext += (gi->xr[index] < 0);
+	    cbits--;
+	    x1 *= 16;
+	}
+
+	if (x2 != 0) {
+	    if (x2 > 14) {
+		assert ( x2 <= h->linmax+15 );
+		ext  <<= h->xlen;
+		ext   |= x2-15;
+		xbits += h->xlen;
+		x2     = 15;
+	    }
+	    ext = ext*2 + (gi->xr[index+1] < 0);
+	    cbits--;
+	    x1 += x2;
+	}
+
+	xbits -= cbits;
+	cbits += h->hlen  [x1];
+
+	putbits24(bs, h->table [x1], cbits);
+	if (xbits)
+	    putbits(bs, ext, xbits);
+    } while ((index += 2) < end);
+}
+
+static void
+Huffmancode(Bit_stream_struc *bs, const struct huffcodetab* h,
+	    int index, int end, gr_info *gi)
+{
+    do {
+	int code, clen;
+	int x1 = gi->l3_enc[index];
+	int x2 = gi->l3_enc[index+1];
+	assert ( (x1|x2) < 16u );
+
+	code = x1*h->xlen + x2;
+	clen = h->hlen[code];
+	code = h->table[code];
+
+	if (x1) code = code*2 + (gi->xr[index  ] < 0);
+	if (x2) code = code*2 + (gi->xr[index+1] < 0);
+
+	putbits24(bs, code, clen);
+    } while ((index += 2) < end);
+}
+
+inline static void
+Huf_bigvalue(Bit_stream_struc *bs, int tablesel,
+	     int start, int end, gr_info *gi)
+{
+    if (tablesel == 0 || start >= end)
+	return;
+
+    if (tablesel > 15)
+	Huffmancode_esc(bs, &ht[tablesel], start, end, gi);
+    else
+	Huffmancode(bs, &ht[tablesel], start, end, gi);
+}
+
+/*
+  Note the discussion of huffmancodebits() on pages 28
+  and 29 of the IS, as well as the definitions of the side
+  information on pages 26 and 27.
+  */
+static void
+Huffmancodebits(lame_internal_flags *gfc, gr_info *gi)
+{
+#ifndef NDEBUG
+    int data_bits = gfc->bs.bitidx + gi->part2_3_length - gi->count1bits;
+#endif
+    int r1, r2;
+
+    r1 = gfc->scalefac_band.l[gi->region0_count + 1];
+    if (r1 > gi->big_values)
+	r1 = gi->big_values;
+    Huf_bigvalue(&gfc->bs, gi->table_select[0], 0, r1, gi);
+
+    r2 = gfc->scalefac_band.l[gi->region0_count + gi->region1_count + 2];
+    if (r2 > gi->big_values)
+	r2 = gi->big_values;
+    Huf_bigvalue(&gfc->bs, gi->table_select[1], r1, r2, gi);
+
+    Huf_bigvalue(&gfc->bs, gi->table_select[2], r2, gi->big_values, gi);
+    assert(gfc->bs.bitidx == data_bits);
+
+    Huf_count1(&gfc->bs, gi);
+    assert(gfc->bs.bitidx == data_bits + gi->count1bits);
+}
+
+inline static void
+encodeBitStream(lame_global_flags *gfp)
+{
+    lame_internal_flags *gfc = gfp->internal_flags;
     III_side_info_t *l3_side = &gfc->l3_side;
     int gr, ch, ptr = 0;
     assert(l3_side->main_data_begin >= 0);
@@ -335,194 +476,28 @@ encodeSideInfo2(lame_global_flags *gfp, int bitsPerFrame)
 	    ptr = writeheader(gfc, gi->count1table_select, 1, ptr);
 	}
     }
+    assert(ptr == l3_side->sideinfo_len * 8);
 
     if (gfp->error_protection) {
 	/* (jo) error_protection: add crc16 information to header */
 	CRC_writeheader(gfc, gfc->bs.header[gfc->bs.h_ptr].buf);
     }
 
-    {
-	int old = gfc->bs.h_ptr;
-	assert(ptr == l3_side->sideinfo_len * 8);
+    ptr = gfc->bs.h_ptr;
+    gfc->bs.h_ptr = (ptr + 1) & (MAX_HEADER_BUF-1);
+    assert(gfc->bs.h_ptr != gfc->bs.w_ptr);
 
-	gfc->bs.h_ptr = (old + 1) & (MAX_HEADER_BUF-1);
-	gfc->bs.header[gfc->bs.h_ptr].write_timing
-	    = gfc->bs.header[old].write_timing + bitsPerFrame/8
-	    - l3_side->sideinfo_len;
+    gfc->bs.header[gfc->bs.h_ptr].write_timing
+	= gfc->bs.header[ptr].write_timing + getframebytes(gfp);
 
-	assert(gfc->bs.h_ptr != gfc->bs.w_ptr);
-    }
-}
-
-
-inline static void
-Huf_count1(lame_internal_flags *gfc, gr_info *gi)
-{
-    int index;
-    const unsigned char * const hcode = quadcode[gi->count1table_select];
-
-    assert(gi->count1table_select < 2u);
-    for (index = gi->big_values; index < gi->count1; index += 4) {
-	int huffbits = 0, p = 0;
-
-	if (gi->l3_enc[index  ]) {
-	    p = 8;
-	    huffbits = huffbits + (gi->xr[index  ] < 0);
-	}
-
-	if (gi->l3_enc[index+1]) {
-	    p += 4;
-	    huffbits = huffbits*2 + (gi->xr[index+1] < 0);
-	}
-
-	if (gi->l3_enc[index+2]) {
-	    p += 2;
-	    huffbits = huffbits*2 + (gi->xr[index+2] < 0);
-	}
-
-	if (gi->l3_enc[index+3]) {
-	    p++;
-	    huffbits = huffbits*2 + (gi->xr[index+3] < 0);
-	}
-	putbits24(gfc, huffbits + hcode[p+16], hcode[p]);
-    }
-}
-
-
-
-/*
-  Implements the pseudocode of page 98 of the IS
-  */
-static void
-Huffmancode_esc( lame_internal_flags* const gfc, const struct huffcodetab* h,
-		 int index, int end, gr_info *gi)
-{
-    do {
-	int cbits   = 0;
-	int xbits   = 0;
-	int ext = 0;
-	int x1 = gi->l3_enc[index];
-	int x2 = gi->l3_enc[index+1];
-
-	if (x1 != 0) {
-	    /* use ESC-words */
-	    if (x1 > 14) {
-		assert ( x1 <= h->linmax+15 );
-		ext    = (x1-15) << 1;
-		xbits  = h->xlen;
-		x1     = 15;
-	    }
-	    ext += (gi->xr[index] < 0);
-	    cbits--;
-	    x1 *= 16;
-	}
-
-	if (x2 != 0) {
-	    if (x2 > 14) {
-		assert ( x2 <= h->linmax+15 );
-		ext  <<= h->xlen;
-		ext   |= x2-15;
-		xbits += h->xlen;
-		x2     = 15;
-	    }
-	    ext = ext*2 + (gi->xr[index+1] < 0);
-	    cbits--;
-	    x1 += x2;
-	}
-
-	xbits -= cbits;
-	cbits += h->hlen  [x1];
-
-	putbits24(gfc, h->table [x1], cbits);
-	if (xbits)
-	    putbits(gfc, ext, xbits);
-    } while ((index += 2) < end);
-}
-
-static void
-Huffmancode( lame_internal_flags* const gfc, const struct huffcodetab* h,
-	     int index, int end, gr_info *gi)
-{
-    do {
-	int code, clen;
-	int x1 = gi->l3_enc[index];
-	int x2 = gi->l3_enc[index+1];
-	assert ( (x1|x2) < 16u );
-
-	code = x1*h->xlen + x2;
-	clen = h->hlen[code];
-	code = h->table[code];
-
-	if (x1) code = code*2 + (gi->xr[index  ] < 0);
-	if (x2) code = code*2 + (gi->xr[index+1] < 0);
-
-	putbits24(gfc, code, clen);
-    } while ((index += 2) < end);
-}
-
-inline static void
-Huf_bigvalue(lame_internal_flags* const gfc, int tablesel,
-	     int start, int end, gr_info *gi)
-{
-    if (tablesel == 0 || start >= end)
-	return;
-
-    if (tablesel > 15)
-	Huffmancode_esc(gfc, &ht[tablesel], start, end, gi);
-    else
-	Huffmancode(gfc, &ht[tablesel], start, end, gi);
-}
-
-/*
-  Note the discussion of huffmancodebits() on pages 28
-  and 29 of the IS, as well as the definitions of the side
-  information on pages 26 and 27.
-  */
-static void
-Huffmancodebits(lame_internal_flags *gfc, gr_info *gi)
-{
-#ifndef NDEBUG
-    int data_bits = gfc->bs.bitidx;
-#endif
-    int r1, r2;
-
-    r1 = gfc->scalefac_band.l[gi->region0_count + 1];
-    if (r1 > gi->big_values)
-	r1 = gi->big_values;
-    Huf_bigvalue(gfc, gi->table_select[0], 0, r1, gi);
-
-    r2 = gfc->scalefac_band.l[gi->region0_count + gi->region1_count + 2];
-    if (r2 > gi->big_values)
-	r2 = gi->big_values;
-    Huf_bigvalue(gfc, gi->table_select[1], r1, r2, gi);
-
-    Huf_bigvalue(gfc, gi->table_select[2], r2, gi->big_values, gi);
-
-#ifndef NDEBUG
-    data_bits += gi->part2_3_length - gi->count1bits;
-    assert(gfc->bs.bitidx == data_bits);
-#endif
-
-    Huf_count1(gfc, gi);
-
-#ifndef NDEBUG
-    data_bits += gi->count1bits;
-    assert(gfc->bs.bitidx == data_bits);
-#endif
-}
-
-inline static void
-writeMainData (lame_internal_flags *gfc)
-{
-    int gr, ch, sfb;
     if (gfc->mode_gr == 2) {
 	/* MPEG 1 */
 	for (gr = 0; gr < 2; gr++) {
 	    for (ch = 0; ch < gfc->channels_out; ch++) {
 		gr_info *gi = &gfc->l3_side.tt[gr][ch];
-		int slen = s1bits[gi->scalefac_compress];
+		int slen = s1bits[gi->scalefac_compress], sfb;
 #ifndef NDEBUG
-		int data_bits = gfc->bs.bitidx;
+		int data_bits = gfc->bs.bitidx + gi->part2_length;
 #endif
 		if (slen)
 		    for (sfb = 0; sfb < gi->sfbdivide; sfb++) {
@@ -530,7 +505,7 @@ writeMainData (lame_internal_flags *gfc)
 			    continue; /* scfsi is used */
 			if (gi->scalefac[sfb] == -2)
 			    gi->scalefac[sfb] = 0;
-			putbits24(gfc, gi->scalefac[sfb], slen);
+			putbits24(&gfc->bs, gi->scalefac[sfb], slen);
 		    }
 		slen = s2bits[gi->scalefac_compress];
 		if (slen)
@@ -539,38 +514,30 @@ writeMainData (lame_internal_flags *gfc)
 			    continue; /* scfsi is used */
 			if (gi->scalefac[sfb] == -2)
 			    gi->scalefac[sfb] = 0;
-			putbits24(gfc, gi->scalefac[sfb], slen);
+			putbits24(&gfc->bs, gi->scalefac[sfb], slen);
 		    }
-#ifndef NDEBUG
-		data_bits += gi->part2_length;
 		assert(data_bits == gfc->bs.bitidx);
-#endif
 		Huffmancodebits(gfc, gi);
 	    } /* for ch */
 	} /* for gr */
     } else {
 	/* MPEG 2 */
 	for (ch = 0; ch < gfc->channels_out; ch++) {
-#ifndef NDEBUG
-	    int data_bits = gfc->bs.bitidx;
-#endif
 	    gr_info *gi = &gfc->l3_side.tt[0][ch];
-	    int partition;
-
-	    sfb = 0;
+	    int partition, sfb = 0;
+#ifndef NDEBUG
+	    int data_bits = gfc->bs.bitidx + gi->part2_length;
+#endif
 	    for (partition = 0; partition < 4; partition++) {
 		int sfbend
 		    = sfb + nr_of_sfb_block[gi->scalefac_compress][partition];
 		int slen = gi->slen[partition];
 		if (slen)
 		    for (; sfb < sfbend; sfb++)
-			putbits24(gfc, Max(gi->scalefac[sfb], 0U), slen);
+			putbits24(&gfc->bs, Max(gi->scalefac[sfb], 0U), slen);
 		sfb = sfbend;
 	    }
-#ifndef NDEBUG
-	    data_bits += gi->part2_length;
 	    assert(data_bits == gfc->bs.bitidx);
-#endif
 	    Huffmancodebits(gfc, gi);
 	} /* for ch */
     } /* for MPEG version */
@@ -617,15 +584,13 @@ compute_flushbits( const lame_global_flags * gfp, int *total_bytes_output )
      * these bits are not necessary to decode the last frame, but
      * some decoders will ignore last frame if these bits are missing 
      */
-    bitsPerFrame = getframebits(gfp) - gfc->l3_side.sideinfo_len*8;
+    bitsPerFrame = getframebytes(gfp)*8;
     flushbits += bitsPerFrame;
     assert(flushbits >= 0);
     *total_bytes_output
 	= (*total_bytes_output + bitsPerFrame + bs->bitidx + 7) / 8;
     return flushbits;
 }
-
-
 
 int
 flush_bitstream(
@@ -635,7 +600,7 @@ flush_bitstream(
     int dummy, flushbits;
 
     if ((flushbits = compute_flushbits(gfp,&dummy)) >= 0) {
-	drain_into_ancillary(gfp, flushbits);
+	drain_into_ancillary(gfp->internal_flags, flushbits);
 	/* we have padded out all frames with ancillary data, which is the
 	   same as filling the bitreservoir with ancillary data, so : */
 	l3_side->ResvSize=l3_side->main_data_begin = 0;
@@ -643,9 +608,6 @@ flush_bitstream(
 
     return copy_buffer(gfp->internal_flags, buffer, size, mp3data);
 }
-
-
-
 
 void  add_dummy_byte (lame_internal_flags* gfc, unsigned char val )
 {
@@ -688,10 +650,9 @@ format_bitstream(lame_global_flags *gfp)
     if (drainPre > l3_side->main_data_begin*8)
 	drainPre = l3_side->main_data_begin*8;
 
-    drain_into_ancillary(gfp, drainPre);
-    encodeSideInfo2(gfp, getframebits(gfp));
-    writeMainData(gfc);
-    drain_into_ancillary(gfp, drainbits - drainPre);
+    drain_into_ancillary(gfc, drainPre);
+    encodeBitStream(gfp);
+    drain_into_ancillary(gfc, drainbits - drainPre);
 
     l3_side->main_data_begin
 	= (l3_side->ResvSize = l3_side->ResvSize - drainbits) / 8;

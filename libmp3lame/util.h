@@ -225,10 +225,10 @@ typedef struct {
 /* Layer III side information. */
 typedef struct {
     gr_info tt[2][2];
-    int main_data_begin; 
+    int main_data_begin;  /* in bytes */
     int ResvSize; /* in bits */
     int ResvMax;  /* in bits */
-    int maxmp3buf; /* in bits */
+    int maxmp3buf; /* in bytes */
     int sideinfo_len;
     int scfsi[2][4];
 } III_side_info_t;
