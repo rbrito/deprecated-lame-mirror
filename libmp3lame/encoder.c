@@ -86,7 +86,10 @@ ms_sparsing(lame_internal_flags* gfc, int gr)
 static void
 conv_istereo(lame_internal_flags* gfc, gr_info *gi, int sfb, int i)
 {
-    for (; i < 576;) {
+    if (i == 576)
+	return;
+
+    for (;;) {
 	FLOAT lsum = 1e-30, rsum = 1e-30;
 	int end = i + gi->width[sfb];
 	do {
@@ -97,8 +100,10 @@ conv_istereo(lame_internal_flags* gfc, gr_info *gi, int sfb, int i)
 	    lsum += fabs(l);
 	    rsum += fabs(r);
 	} while (++i < end);
-	lsum = lsum / (lsum+rsum);
+	if (i == 576)
+	    break;
 
+	lsum = lsum / (lsum+rsum);
 	gi[1].scalefac[sfb] = 3;
 	gi[1].preflag = -1;
 	if (lsum < 0.5) {
@@ -176,65 +181,68 @@ updateStats( lame_internal_flags * const gfc )
 
 
 static void
-init_gr_info(lame_internal_flags *gfc, gr_info *const cod_info)
+init_gr_info(lame_internal_flags *gfc, int gr, int ch)
 {
     int sfb, j;
-    /*  initialize fresh cod_info
-     */
-    cod_info->part2_3_length      = 0;
-    cod_info->big_values          = 0;
-    cod_info->count1              = 0;
-    cod_info->global_gain         = 210;
-    cod_info->scalefac_compress   = 0;
+    gr_info *gi = &gfc->l3_side.tt[gr][ch];
+
+    gi->part2_3_length      = 0;
+    gi->big_values          = 0;
+    gi->count1              = 0;
+    gi->global_gain         = 210;
+    gi->scalefac_compress   = 0;
     /* mixed_block_flag, block_type was set in psymodel.c */
-    cod_info->table_select [0]    = 0;
-    cod_info->table_select [1]    = 0;
-    cod_info->table_select [2]    = 0;
-    cod_info->subblock_gain[0]    = 0;
-    cod_info->subblock_gain[1]    = 0;
-    cod_info->subblock_gain[2]    = 0;
-    cod_info->subblock_gain[3]    = 0;    /* this one is always 0 */
-    cod_info->region0_count       = 0;
-    cod_info->region1_count       = 0;
-    cod_info->preflag             = 0;
-    cod_info->scalefac_scale      = 0;
-    cod_info->count1table_select  = 0;
-    cod_info->part2_length        = 0;
-    cod_info->psymax = cod_info->psy_lmax = gfc->cutoff_sfb_l;
-    cod_info->sfbmax = cod_info->sfb_lmax = SBPSY_l;
-    cod_info->sfb_smin                    = SBPSY_s;
-    cod_info->sfbdivide       = 11;
+    gi->table_select [0]    = 0;
+    gi->table_select [1]    = 0;
+    gi->table_select [2]    = 0;
+    gi->subblock_gain[0]    = 0;
+    gi->subblock_gain[1]    = 0;
+    gi->subblock_gain[2]    = 0;
+    gi->subblock_gain[3]    = 0;    /* this one is always 0 */
+    gi->region0_count       = 0;
+    gi->region1_count       = 0;
+    gi->preflag             = 0;
+    gi->scalefac_scale      = 0;
+    gi->count1table_select  = 0;
+    gi->part2_length        = 0;
+    gi->sfbdivide           = 11;
+    j = gfc->cutoff_sfb_l;
+    if (ch & 1)
+	j = gfc->is_start_sfb_l_next[gr];
+    gi->psymax = gi->psy_lmax = j;
+    gi->sfbmax = gi->sfb_lmax = SBPSY_l;
+    gi->sfb_smin              = SBPSY_s;
     for (sfb = 0; sfb < SBMAX_l; sfb++) {
-	cod_info->width[sfb]
+	gi->width[sfb]
 	    = gfc->scalefac_band.l[sfb+1] - gfc->scalefac_band.l[sfb];
-	cod_info->window[sfb] = 3; /* which is always 0. */
+	gi->window[sfb] = 3; /* which is always 0. */
     }
 
-    if (cod_info->block_type != NORM_TYPE) {
-	cod_info->region0_count = 7;
-	if (cod_info->block_type == SHORT_TYPE) {
+    if (gi->block_type != NORM_TYPE) {
+	gi->region0_count = 7;
+	if (gi->block_type == SHORT_TYPE) {
 	    FLOAT ixwork[576];
 	    FLOAT *ix;
 
 	    if (gfc->mode_gr == 1)
-		cod_info->region0_count = 5;
-	    cod_info->sfb_smin        = 0;
-	    cod_info->sfb_lmax        = 0;
-	    if (cod_info->mixed_block_flag) {
+		gi->region0_count = 5;
+	    gi->sfb_smin        = 0;
+	    gi->sfb_lmax        = 0;
+	    if (gi->mixed_block_flag) {
 		/*
 		 *  MPEG-1:      sfbs 0-7 long block, 3-12 short blocks 
 		 *  MPEG-2(.5):  sfbs 0-5 long block, 3-12 short blocks
 		 */ 
-		cod_info->sfb_smin    = 3;
-		cod_info->sfb_lmax    = gfc->mode_gr*2 + 4;
+		gi->sfb_smin    = 3;
+		gi->sfb_lmax    = gfc->mode_gr*2 + 4;
 	    }
-	    cod_info->psymax
-		= cod_info->sfb_lmax
-		+ 3*(gfc->cutoff_sfb_s - cod_info->sfb_smin);
-	    cod_info->sfbmax
-		= cod_info->sfb_lmax + 3*(SBPSY_s - cod_info->sfb_smin);
-	    cod_info->sfbdivide   = cod_info->sfbmax - 18;
-	    cod_info->psy_lmax    = cod_info->sfb_lmax;
+	    j = gfc->cutoff_sfb_s;
+	    if (ch & 1)
+		j = gfc->is_start_sfb_s_next[gr];
+	    gi->psymax = gi->sfb_lmax + 3*(j - gi->sfb_smin);
+	    gi->sfbmax = gi->sfb_lmax + 3*(SBPSY_s - gi->sfb_smin);
+	    gi->sfbdivide   = gi->sfbmax - 18;
+	    gi->psy_lmax    = gi->sfb_lmax;
 	    /* re-order the short blocks, for more efficient encoding below */
 	    /* By Takehiro TOMINAGA */
 	    /*
@@ -243,45 +251,42 @@ init_gr_info(lame_internal_flags *gfc, gr_info *const cod_info)
 	      Within each window, the quantized values are then arranged in
 	      order of increasing frequency...
 	    */
-	    j = cod_info->sfb_lmax;
-	    ix = &cod_info->xr[gfc->scalefac_band.l[j]];
-	    memcpy(ixwork, cod_info->xr, sizeof(ixwork));
-	    for (sfb = cod_info->sfb_smin; sfb < SBMAX_s; sfb++) {
+	    j = gi->sfb_lmax;
+	    ix = &gi->xr[gfc->scalefac_band.l[j]];
+	    memcpy(ixwork, gi->xr, sizeof(ixwork));
+	    for (sfb = gi->sfb_smin; sfb < SBMAX_s; sfb++) {
 		int start = gfc->scalefac_band.s[sfb];
 		int end   = gfc->scalefac_band.s[sfb + 1];
 		int window, l;
 		for (window = 0; window < 3; window++) {
 		    for (l = start; l < end; l++)
 			*ix++ = ixwork[3*l+window];
-		    cod_info->width [j] = end - start;
-		    cod_info->window[j] = window;
+		    gi->width [j] = end - start;
+		    gi->window[j] = window;
 		    j++;
 		}
 	    }
 	}
-	cod_info->region1_count = SBMAX_l - 2 - cod_info->region0_count;
+	gi->region1_count = SBMAX_l - 2 - gi->region0_count;
     } else {
 	/* analog silence detection in pseudo sfb 22 */
 	if (gfc->scalefac_band.l[SBMAX_l-1] < 576-100) {
 	    int j0 = (576+gfc->scalefac_band.l[SBMAX_l-1])/2, j;
 	    FLOAT power = 0.0;
 	    for (j = j0; j < 576; j++)
-		power += cod_info->xr[j] * cod_info->xr[j];
+		power += gi->xr[j] * gi->xr[j];
 	    if (power < gfc->ATH.adjust * gfc->ATH.l[SBMAX_l-1]) {
 		for (j = j0; j < 576; j++)
-		    cod_info->xr[j] = 0;
+		    gi->xr[j] = 0;
 	    }
 	}
     }
-    cod_info->count1bits          = 0;  
-    cod_info->slen[0]             = 0;
-    cod_info->slen[1]             = 0;
-    cod_info->slen[2]             = 0;
-    cod_info->slen[3]             = 0;
-
-    /*  fresh scalefactors are all zero
-     */
-    memset(cod_info->scalefac, 0, sizeof(cod_info->scalefac));
+    gi->count1bits          = 0;
+    gi->slen[0]             = 0;
+    gi->slen[1]             = 0;
+    gi->slen[2]             = 0;
+    gi->slen[3]             = 0;
+    memset(gi->scalefac, 0, sizeof(gi->scalefac));
 }
 
 
@@ -437,20 +442,19 @@ int  lame_encode_mp3_frame (				/* Output */
 	       sizeof(gfc->sb_sample[ch][0])*gfc->mode_gr);
 
 	for (gr = 0; gr < gfc->mode_gr; gr++)
-	    init_gr_info(gfc, &gfc->l3_side.tt[gr][ch]);
+	    init_gr_info(gfc, gr, ch);
     }
 
     /* channel conversion */
     if (gfc->narrowStereo) {
 	/* narrown_stereo */
-	int i;
 	for (gr = 0; gr < gfc->mode_gr; gr++) {
 	    gr_info *gi = &gfc->l3_side.tt[gr][0];
+	    int i;
 	    for (i = 0; i < 576; i++) {
-		FLOAT l = gi[0].xr[i];
-		FLOAT r = gi[1].xr[i];
-		gi[0].xr[i] = l-(l-r)*gfc->narrowStereo;
-		gi[1].xr[i] = r+(l-r)*gfc->narrowStereo;
+		FLOAT d = (gi[0].xr[i]-gi[1].xr[i]) * gfc->narrowStereo;
+		gi[0].xr[i] -= d;
+		gi[1].xr[i] += d;
 	    }
 	}
     }
