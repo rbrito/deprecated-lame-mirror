@@ -1050,7 +1050,7 @@ char *mp3buf, size_t mp3buf_size)
       time_t         curr_time = time (NULL);
       
       /* Update display once per 2 seconds */
-      if ( difftime ( curr_time, gfc->last_time ) >= gfp->display_update_interval  ||  gfp->frameNum == 0  ||  gfp->frameNum == 9 ) {
+      if ( difftime ( curr_time, (time_t)gfc->last_time ) >= gfp->display_update_interval  ||  gfp->frameNum == 0  ||  gfp->frameNum == 9 ) {
 	timestatus(gfp->out_samplerate,gfp->frameNum,gfp->totalframes,gfp->framesize);
 	
 	if (gfp->brhist_disp)
@@ -1424,8 +1424,8 @@ int   lame_encode_buffer_interleaved (
     /* copy in new samples */
     n_out = Min(gfp->framesize,nsamples);
     for (i=0; i<n_out; ++i) {
-      mfbuf[0][gfc->mf_size+i]=buffer[2*i];
-      mfbuf[1][gfc->mf_size+i]=buffer[2*i+1];
+      mfbuf[0][gfc->mf_size+i]=buffer[i][0];
+      mfbuf[1][gfc->mf_size+i]=buffer[i][1];
     }
     buffer += 2*n_out;
 

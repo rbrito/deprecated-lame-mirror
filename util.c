@@ -144,24 +144,24 @@ void   display_bitrates ( FILE* fp )
 /* convert bitrate in kbps to index */
 
 int FindNearestBitrateIndex ( 
-		unsigned       bRate,        /* legal rates from 32 to 448 */
-		unsigned       version,      /* MPEG-1 or MPEG-2 LSF */
+                unsigned int   bRate,        /* legal rates from 32 to 448 */
+                unsigned int   version,      /* MPEG-1 or MPEG-2 LSF */
                 unsigned long  samplerate )  /* unused */  
 {
     assert (version < 2);
-    return bitrate_to_index [version] [ bRate <= 320 ? bRate >> 2 : 80 ];
+    return (int)bitrate_to_index [version] [ bRate <= 320 ? bRate >> 2 : 80 ];
 }
 
 /* round bitrate in kbps to nearest valid value for non freeformat */
 
-unsigned FindNearestBitrate ( 
-		unsigned       bRate,        /* legal rates from 32 to 448 */
-		unsigned       version,      /* MPEG-1 or MPEG-2 LSF */
+unsigned int FindNearestBitrate ( 
+                unsigned int   bRate,        /* legal rates from 32 to 448 */
+                unsigned int   version,      /* MPEG-1 or MPEG-2 LSF */
                 unsigned long  samplerate )  /* unused */  
 {
     assert (version < 2);
-    return index_to_bitrate [version] 
-                            [bitrate_to_index [version] [ bRate <= 320 ? bRate >> 2 : 80 ]];
+    return (unsigned int)index_to_bitrate [version] 
+                        [bitrate_to_index [version] [ bRate <= 320 ? bRate >> 2 : 80 ]];
 }
 
 
@@ -197,8 +197,8 @@ long RoundSampleRateUp ( long samplerate )         /* This functions rounds up s
 }
 
 int BitrateIndex (
-		unsigned       bRate,        /* legal rates from 32 to 448 */
-		unsigned       version,      /* MPEG-1 or MPEG-2 LSF */
+		unsigned int   bRate,        /* legal rates from 32 to 448 */
+		unsigned int   version,      /* MPEG-1 or MPEG-2 LSF */
 		unsigned long  samplerate)   /* convert bitrate in kbps to index */
 {
     int* t = index_to_bitrate [version];
