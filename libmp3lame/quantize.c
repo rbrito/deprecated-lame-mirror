@@ -113,8 +113,8 @@ on_pe(
  *  this adjusts the ATH, keeping the original noise floor
  *  affects the higher frequencies more than the lower ones
  */
-
-static FLOAT athAdjust( FLOAT a, FLOAT x, FLOAT athFloor )
+static FLOAT
+athAdjust( FLOAT a, FLOAT x, FLOAT athFloor )
 {
     /*  work in progress
      */
@@ -497,15 +497,13 @@ trancate_smallspectrums(
  *************************************************************************/
 
 inline static int
-loop_break(
-    const gr_info * const gi
-    )
+loop_break(const gr_info * const gi)
 {
-    int sfb;
-    for (sfb = 0; sfb < gi->sfbmax; sfb++)
+    int sfb = 0;
+    do {
         if (gi->scalefac[sfb] + gi->subblock_gain[gi->window[sfb]] == 0)
             return 0;
-
+    } while (++sfb < gi->sfbmax);
     return sfb;
 }
 
@@ -569,17 +567,15 @@ better_quant(
  *************************************************************************/
  
 static void
-inc_scalefac_scale (
-    gr_info        * const gi
-    )
+inc_scalefac_scale (gr_info * const gi)
 {
-    int sfb;
-    for (sfb = 0; sfb < gi->sfbmax; sfb++) {
+    int sfb = 0;
+    do {
 	int s = gi->scalefac[sfb];
 	if (gi->preflag > 0)
 	    s += pretab[sfb];
 	gi->scalefac[sfb] = (s + 1) >> 1;
-    }
+    } while (++sfb < gi->sfbmax);
     gi->preflag = 0;
     gi->scalefac_scale = 1;
 }
@@ -597,9 +593,7 @@ inc_scalefac_scale (
  *************************************************************************/
 
 static int 
-inc_subblock_gain (
-          gr_info        * const gi
-    )
+inc_subblock_gain(gr_info * const gi)
 {
     int sfb, window;
     const int *tab = max_range_short;
@@ -1044,12 +1038,8 @@ iteration_loop(
  * based on Mark and Robert's code and suggestions
  *
  ************************************************************************/
-
 static void
-bitpressure_strategy(
-    gr_info *gi,
-    FLOAT *pxmin
-    )
+bitpressure_strategy(gr_info *gi, FLOAT *pxmin)
 {
     int sfb;
     for (sfb = 0; sfb < gi->psy_lmax; sfb++) 
@@ -1063,7 +1053,7 @@ bitpressure_strategy(
     }
 }
 
-inline static  FLOAT
+inline static FLOAT
 calc_sfb_noise_fast(const FLOAT * xr, const FLOAT * xr34, int bw, int sf)
 {
     FLOAT xfsf = 0.0;
@@ -1098,7 +1088,7 @@ calc_sfb_noise_fast(const FLOAT * xr, const FLOAT * xr34, int bw, int sf)
     return xfsf;
 }
 
-inline static  FLOAT
+inline static FLOAT
 calc_sfb_noise(const FLOAT * xr, const FLOAT * xr34, int bw, int sf)
 {
     FLOAT xfsf = 0.0;
@@ -1112,7 +1102,6 @@ calc_sfb_noise(const FLOAT * xr, const FLOAT * xr34, int bw, int sf)
 #ifdef TAKEHIRO_IEEE754_HACK
 	fi0.f = (t0 = sfpow34 * xr34[0] + (ROUNDFAC + MAGIC_FLOAT));
 	fi1.f = (t1 = sfpow34 * xr34[1] + (ROUNDFAC + MAGIC_FLOAT));
-
 	if (fi0.i > MAGIC_INT + IXMAX_VAL) return -1.0;
 	if (fi1.i > MAGIC_INT + IXMAX_VAL) return -1.0;
 	fi0.f = t0 + (adj43asm - MAGIC_INT)[fi0.i];
@@ -1145,9 +1134,8 @@ calc_sfb_noise(const FLOAT * xr, const FLOAT * xr34, int bw, int sf)
  * differences in quantization step sizes
  * per band (shaping the noise).
  */
-inline int
-find_scalefac(
-    const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, int bw)
+inline static int
+find_scalefac(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, int bw)
 {
     int sf, sf_ok, delsf;
 
@@ -1185,8 +1173,7 @@ find_scalefac(
 static void
 short_block_scalefacs(const lame_internal_flags *gfc, gr_info * gi, int vbrmax)
 {
-    int sfb, b, newmax0, newmax1;
-    int maxov0[3], maxov1[3];
+    int sfb, b, newmax0, newmax1, maxov0[3], maxov1[3];
 
     maxov0[0] = maxov0[1] = maxov0[2] = maxov1[0] = maxov1[1] = maxov1[2]
 	= newmax0 = newmax1 = vbrmax;
@@ -1377,13 +1364,17 @@ VBR_3rd_bitalloc(gr_info *gi, FLOAT * xr34, FLOAT * l3_xmin)
 	       << (gi->scalefac_scale + 1))
 	    - gi->subblock_gain[gi->window[sfb]] * 8) < 0) {
 
-	    r = 1;
-	    l3_xmin[sfb] *= 1.0029;
+	    if (gi->scalefac[sfb] == 0 || r < 0)
+		r = -2;
+	    else {
+		r = -1;
+		l3_xmin[sfb] *= 1.0029;
+	    }
 	}
 	j += gi->width[sfb];
     }
     if (r)
-	return -1;
+	return r;
 
     for (j = sfb = 0; sfb < gi->psymax; sfb++) {
 	while (gi->scalefac[sfb] > 0
@@ -1437,8 +1428,9 @@ VBR_noise_shaping(
     VBR_2nd_bitalloc(gfc, gi, xr34, l3_xmin);
 
     /* reduce bitrate if possible */
-    if (VBR_3rd_bitalloc(gi, xr34, l3_xmin) < 0)
-	return -1;
+    j = VBR_3rd_bitalloc(gi, xr34, l3_xmin);
+    if (j)
+	return j;
 
     /* encode scalefacs */
     gfc->scale_bitcounter(gi);
@@ -1467,10 +1459,7 @@ VBR_noise_shaping(
 
 
 void 
-VBR_iteration_loop (
-    lame_global_flags *gfp,
-    III_psy_ratio ratio[2][2]
-    )
+VBR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     FLOAT l3_xmin[2][2][SFBMAX];
@@ -1557,9 +1546,8 @@ VBR_iteration_loop (
  *  Robert Hegemann: moved noise/distortion calc into it
  *
  ************************************************************************/
-
-static
-void set_pinfo (
+static void
+set_pinfo (
         lame_global_flags *gfp,
               gr_info        * const gi,
         const III_psy_ratio  * const ratio, 
@@ -1664,13 +1652,11 @@ void set_pinfo (
  *
  ************************************************************************/
 
-void set_frame_pinfo( 
-        lame_global_flags *gfp,
-        III_psy_ratio   ratio    [2][2])
+void
+set_frame_pinfo(lame_global_flags *gfp, III_psy_ratio   ratio    [2][2])
 {
     lame_internal_flags *gfc=gfp->internal_flags;
-    int                   ch;
-    int                   gr;
+    int gr, ch;
 
     /* for every granule and channel patch l3_enc and set info
      */
