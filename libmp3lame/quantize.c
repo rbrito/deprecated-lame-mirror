@@ -1123,7 +1123,7 @@ outer_loop (
     int best_part2_3_length = 9999999;
     int bEndOfSearch = 0;
     int bRefine = 0;
-    int best_ggain_pass1;
+    int best_ggain_pass1 = 0;
 
     bin_search_StepSize (gfc, cod_info, targ_bits, ch, xrpow);
 

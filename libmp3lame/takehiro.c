@@ -318,7 +318,7 @@ static void quantize_xrpow(const FLOAT *xp, int *pi, FLOAT istep, gr_info * cons
     int *iData;
     int accumulate=0;
     int *acc_iData;
-    FLOAT *acc_xp;
+    const FLOAT *acc_xp;
 
     iData = pi;
     acc_xp = xp;
@@ -1098,6 +1098,7 @@ void best_scalefac_store(
 }
 
 
+#ifndef NDEBUG
 static int all_scalefactors_not_negative( int const* scalefac, int n )
 {
     int i;
@@ -1106,7 +1107,8 @@ static int all_scalefactors_not_negative( int const* scalefac, int n )
     }
     return 1;
 }
- 
+#endif 
+
 
 /* number of bits used to encode scalefacs */
 

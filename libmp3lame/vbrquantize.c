@@ -170,10 +170,10 @@ static DOUBLEX const ROUNDFAC_plus_MAGIC_FLOAT = ROUNDFAC_def + MAGIC_FLOAT_def;
 static void
 k_34_4(DOUBLEX x[4], int l3[4])
 {
-    assert(x[0] <= IXMAX_VAL && x[1] <= IXMAX_VAL && x[2] <= IXMAX_VAL && x[3] <= IXMAX_VAL);
 #ifdef TAKEHIRO_IEEE754_HACK
     fi_union fi[4];
 
+    assert(x[0] <= IXMAX_VAL && x[1] <= IXMAX_VAL && x[2] <= IXMAX_VAL && x[3] <= IXMAX_VAL);
     x[0] += MAGIC_FLOAT;
     fi[0].f = x[0];
     x[1] += MAGIC_FLOAT;
@@ -191,6 +191,7 @@ k_34_4(DOUBLEX x[4], int l3[4])
     l3[2] = fi[2].i - MAGIC_INT;
     l3[3] = fi[3].i - MAGIC_INT;
 #else
+    assert(x[0] <= IXMAX_VAL && x[1] <= IXMAX_VAL && x[2] <= IXMAX_VAL && x[3] <= IXMAX_VAL);
     XRPOW_FTOI(x[0], l3[0]);
     XRPOW_FTOI(x[1], l3[1]);
     XRPOW_FTOI(x[2], l3[2]);
@@ -209,10 +210,10 @@ k_34_4(DOUBLEX x[4], int l3[4])
 static void
 k_34_2(DOUBLEX x[2], int l3[2])
 {
-    assert(x[0] <= IXMAX_VAL && x[1] <= IXMAX_VAL);
 #ifdef TAKEHIRO_IEEE754_HACK
     fi_union fi[2];
 
+    assert(x[0] <= IXMAX_VAL && x[1] <= IXMAX_VAL);
     x[0] += MAGIC_FLOAT;
     fi[0].f = x[0];
     x[1] += MAGIC_FLOAT;
@@ -222,6 +223,7 @@ k_34_2(DOUBLEX x[2], int l3[2])
     l3[0] = fi[0].i - MAGIC_INT;
     l3[1] = fi[1].i - MAGIC_INT;
 #else
+    assert(x[0] <= IXMAX_VAL && x[1] <= IXMAX_VAL);
     XRPOW_FTOI(x[0], l3[0]);
     XRPOW_FTOI(x[1], l3[1]);
     x[0] += QUANTFAC(l3[0]);
@@ -234,10 +236,10 @@ k_34_2(DOUBLEX x[2], int l3[2])
 static void
 k_iso_4(DOUBLEX x[4], int l3[4])
 {
-    assert(x[0] <= IXMAX_VAL && x[1] <= IXMAX_VAL && x[2] <= IXMAX_VAL && x[3] <= IXMAX_VAL);
 #ifdef TAKEHIRO_IEEE754_HACK
     fi_union fi[4];
 
+    assert(x[0] <= IXMAX_VAL && x[1] <= IXMAX_VAL && x[2] <= IXMAX_VAL && x[3] <= IXMAX_VAL);
     x[0] += ROUNDFAC_plus_MAGIC_FLOAT;
     fi[0].f = x[0];
     x[1] += ROUNDFAC_plus_MAGIC_FLOAT;
@@ -261,10 +263,10 @@ k_iso_4(DOUBLEX x[4], int l3[4])
 static void
 k_iso_2(DOUBLEX x[2], int l3[2])
 {
-    assert(x[0] <= IXMAX_VAL && x[1] <= IXMAX_VAL);
 #ifdef TAKEHIRO_IEEE754_HACK
     fi_union fi[2];
 
+    assert(x[0] <= IXMAX_VAL && x[1] <= IXMAX_VAL);
     x[0] += ROUNDFAC_plus_MAGIC_FLOAT;
     fi[0].f = x[0];
     x[1] += ROUNDFAC_plus_MAGIC_FLOAT;
@@ -1068,6 +1070,7 @@ searchScalefacColorMax(const algo_t * that, int sfwork[SFBMAX],
     }
 }
 
+#if 0
 static void
 searchScalefacColorMin(const algo_t * that, int sfwork[SFBMAX],
                        const int sfcalc[SFBMAX], const int vbrsfmin[SFBMAX], int bits)
@@ -1103,7 +1106,7 @@ searchScalefacColorMin(const algo_t * that, int sfwork[SFBMAX],
         nbits = tryScalefacColor(that, sfwork, sfcalc, vbrsfmin, ok, M, target);
     }
 }
-
+#endif
 
 static int
 tryGlobalStepsize(const algo_t * that, const int sfwork[SFBMAX],
@@ -1168,6 +1171,7 @@ searchGlobalStepsizeMax(const algo_t * that, const int sfwork[SFBMAX],
     }
 }
 
+#if 0
 static void
 searchGlobalStepsizeMin(const algo_t * that, const int sfwork[SFBMAX],
                         const int vbrsfmin[SFBMAX], int target)
@@ -1206,7 +1210,7 @@ searchGlobalStepsizeMin(const algo_t * that, const int sfwork[SFBMAX],
         nbits = tryGlobalStepsize(that, sfwork, vbrsfmin, curr - gain);
     }
 }
-
+#endif
 
 
 /************************************************************************
