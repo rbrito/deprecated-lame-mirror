@@ -1226,9 +1226,8 @@ VBR_prepare (
   
     gfc->bitrate_index = gfc->VBR_max_bitrate;
     getframebits (gfp, &bpf, &avg);
-    bpf = ResvFrameBegin (gfp, &gfc->l3_side, avg, bpf );
-    avg = (bpf - 8*gfc->sideinfo_len) / gfc->mode_gr;
-
+    avg = ResvFrameBegin (gfp, &gfc->l3_side, avg, bpf ) / gfc->mode_gr;
+    
     get_framebits (gfp, analog_mean_bits, min_mean_bits, frameBits);
     
     for (gr = 0; gr < gfc->mode_gr; gr++) {
