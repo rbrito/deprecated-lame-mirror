@@ -338,6 +338,7 @@ lame_get_mode( const lame_global_flags*  gfp )
 
 
 /* Us a M/S mode with a switching threshold based on compression ratio */
+/* DEPRECATED */
 int
 lame_set_mode_automs( lame_global_flags*  gfp,
                       int                 mode_automs )
@@ -350,7 +351,7 @@ lame_set_mode_automs( lame_global_flags*  gfp,
     if ( 0 > mode_automs || 1 < mode_automs )
         return -1;
 
-    gfp->mode_automs = mode_automs;
+    lame_set_mode( gfp, JOINT_STEREO );
 
     return 0;
 }
@@ -358,9 +359,7 @@ lame_set_mode_automs( lame_global_flags*  gfp,
 int
 lame_get_mode_automs( const lame_global_flags*  gfp )
 {
-    assert( 0 <= gfp->mode_automs && 1 >= gfp->mode_automs );
-
-    return gfp->mode_automs;
+    return 1;
 }
 
 

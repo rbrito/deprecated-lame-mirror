@@ -777,12 +777,6 @@ lame_init_params(lame_global_flags * const gfp)
         gfp->mode = JOINT_STEREO;
     }
 
-    /* KLEMM's jstereo with ms threshold adjusted via compression ratio */
-    if (gfp->mode_automs) {
-        if (gfp->mode != MONO && gfp->compression_ratio < 6.6)
-            gfp->mode = STEREO;
-    }
-
 
     /* apply user driven high pass filter */
     if (gfp->highpassfreq > 0) {

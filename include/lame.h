@@ -258,7 +258,7 @@ MPEG_mode CDECL lame_get_mode(const lame_global_flags *);
 /*
   mode_automs.  Use a M/S mode with a switching threshold based on
   compression ratio
-  default = 0 (disabled)
+  DEPRECATED
 */
 int CDECL lame_set_mode_automs(lame_global_flags *, int);
 int CDECL lame_get_mode_automs(const lame_global_flags *);

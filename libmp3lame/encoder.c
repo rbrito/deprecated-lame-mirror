@@ -484,14 +484,6 @@ int  lame_encode_mp3_frame (				/* Output */
 	  ms_ratio_ave2 = 0.50 * ( gfc->ms_ratio[0] + gfc->ms_ratio[1] );
       }
       
-      if (gfp->mode_automs && gfp->compression_ratio < 11.025 )
-	{
-	  /* 11.025 => 1, 6.3 => 0 */
-	  double thr = (gfp->compression_ratio - 6.3) / (11.025 - 6.3);
-	  if (thr<0) thr=0;
-	  threshold1   *= thr;
-	  threshold2   *= thr;
-	}
 
       if (ms_ratio_ave1 >= threshold1 || ms_ratio_ave2 >= threshold2)
 	check_ms_stereo = 0;

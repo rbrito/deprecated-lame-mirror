@@ -46,8 +46,6 @@ struct lame_global_struct {
   MPEG_mode mode;             /* see enum in lame.h
                                  default = LAME picks best value             */
   int mode_fixed;             /* ignored                                     */
-  int mode_automs;            /* use a m/s threshold based on compression
-                                 ratio                                       */
   int force_ms;               /* force M/S mode.  requires mode=1            */
   int free_format;            /* use free format? default=0                  */
   int ReplayGain_input;       /* perform analysis on input data? default=0   */
