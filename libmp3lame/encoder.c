@@ -455,16 +455,6 @@ int  lame_encode_mp3_frame (				// Output
 
   /* polyphase filtering / mdct */
   mdct_sub48(gfc, inbuf[0], inbuf[1]);
-  /* re-order the short blocks, for more efficient encoding below */
-  for (gr = 0; gr < gfc->mode_gr; gr++) {
-    for (ch = 0; ch < gfc->channels_out; ch++) {
-      gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
-      if (cod_info->block_type==SHORT_TYPE) {
-	freorder(gfc->scalefac_band.s, cod_info->xr);
-      }
-    }
-  }
-  
 
   /* use m/s gfc->channels_out? */
   if (check_ms_stereo) {
