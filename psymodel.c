@@ -83,8 +83,10 @@ void L3psycho_anal( short int *buffer[2],
   FLOAT cwlimit;
   FLOAT8 ms_ratio_l=0,ms_ratio_s=0;
   FLOAT8 estot[4][3];
-  FLOAT wsamp[BLKSIZE];
-  FLOAT wsamp_s[3][BLKSIZE_s];
+  static FLOAT wsamp_L[2][BLKSIZE];
+  static FLOAT wsamp_S[2][3][BLKSIZE_s];
+  FLOAT (*wsamp_l)[BLKSIZE];
+  FLOAT (*wsamp_s)[3][BLKSIZE_s];
 
 
   FLOAT/*FLOAT8*/   thr[CBANDS];
@@ -307,9 +309,18 @@ void L3psycho_anal( short int *buffer[2],
   numchn = gf.stereo;
   if (gf.ms_masking && (info->mode == MPG_MD_JOINT_STEREO)) numchn=4;
   for (chn=0; chn<numchn; chn++) {
+  
+    wsamp_s = wsamp_S+(chn & 1);
+    wsamp_l = wsamp_L+(chn & 1);
 
 
     if (chn<2) {    
+      /**********************************************************************
+       *  compute FFTs
+       **********************************************************************/
+      fft_long ( *wsamp_l, energy,   chn, buffer);
+      fft_short( *wsamp_s, energy_s, chn, buffer); 
+      
       /* LR maskings  */
       percep_entropy[chn] = pe[chn]; 
       masking_ratio[gr_out][chn].thm = thm[chn];
@@ -319,13 +330,30 @@ void L3psycho_anal( short int *buffer[2],
       percep_MS_entropy[chn-2] = pe[chn]; 
       masking_MS_ratio[gr_out][chn-2].en = en[chn];
       masking_MS_ratio[gr_out][chn-2].thm = thm[chn];
+      
+      if (chn == 2)
+      {
+        for (j = BLKSIZE-1; j >=0 ; --j)
+	{
+	  FLOAT l = wsamp_L[0][j];
+	  FLOAT r = wsamp_L[1][j];
+	  wsamp_L[0][j] = (l+r)*(SQRT2*0.5);
+	  wsamp_L[1][j] = (l-r)*(SQRT2*0.5);
+	}
+	for (b = 2; b >= 0; --b)
+	{
+          for (j = BLKSIZE_s-1; j >= 0 ; --j)
+	  {
+	    FLOAT l = wsamp_S[0][b][j];
+	    FLOAT r = wsamp_S[1][b][j];
+	    wsamp_S[0][b][j] = (l+r)*(SQRT2*0.5);
+	    wsamp_S[1][b][j] = (l-r)*(SQRT2*0.5);
+	  }
+	}
+      }
     }
 
 
-    /**********************************************************************
-     *  compute FFTs
-     **********************************************************************/
-    fft_long( wsamp, energy, chn, buffer);
 
     if (check_ms_stereo) {
       /* used for MS stereo criterion */
@@ -360,8 +388,8 @@ void L3psycho_anal( short int *buffer[2],
 	a1 = ax_sav[chn][1][j] = ax_sav[chn][0][j];
 	b1 = bx_sav[chn][1][j] = bx_sav[chn][0][j];
 	r1 = rx_sav[chn][1][j] = rx_sav[chn][0][j];
-	an = ax_sav[chn][0][j] = wsamp[j];
-	bn = bx_sav[chn][0][j] = j==0 ? wsamp[0] : wsamp[BLKSIZE-j];  
+	an = ax_sav[chn][0][j] = (*wsamp_l)[j];
+	bn = bx_sav[chn][0][j] = j==0 ? (*wsamp_l)[0] : (*wsamp_l)[BLKSIZE-j];  
 	rn = rx_sav[chn][0][j] = sqrt(energy[j]);
 
 	{ /* square (x1,y1) */
@@ -403,7 +431,6 @@ void L3psycho_anal( short int *buffer[2],
       }
 
 
-    fft_short( wsamp_s, energy_s, chn, buffer); 
 
     /**********************************************************************
      *     compute unpredicatibility of next 200 spectral lines            *
@@ -418,8 +445,8 @@ void L3psycho_anal( short int *buffer[2],
 	{ /* square (x1,y1) */
 	  r1 = energy_s[0][k];
 	  if( r1 != 0.0 ) {
-	    FLOAT8 a1 = wsamp_s[0][k]; 
-	    FLOAT8 b1 = wsamp_s[0][BLKSIZE_s-k]; /* k is never 0 */
+	    FLOAT a1 = (*wsamp_s)[0][k]; 
+	    FLOAT b1 = (*wsamp_s)[0][BLKSIZE_s-k]; /* k is never 0 */
 	    numre = (a1*b1);
 	    numim = (a1*a1-b1*b1)*0.5;
 	    den = r1;
@@ -435,8 +462,8 @@ void L3psycho_anal( short int *buffer[2],
 	{ /* multiply by (x2,-y2) */
 	  r2 = energy_s[2][k];
 	  if( r2 != 0.0 ) {
-	    FLOAT8 a2 = wsamp_s[2][k]; 
-	    FLOAT8 b2 = wsamp_s[2][BLKSIZE_s-k];
+	    FLOAT8 a2 = (*wsamp_s)[2][k]; 
+	    FLOAT8 b2 = (*wsamp_s)[2][BLKSIZE_s-k];
 	    
 	    
 	    FLOAT8 tmp2 = (numim+numre)*(a2+b2)*0.5;
@@ -459,8 +486,8 @@ void L3psycho_anal( short int *buffer[2],
 	
 	rn = sqrt((FLOAT8)energy_s[1][k]);
 	if( (den=rn+fabs(2.0*r1-r2)) != 0.0 ) {
-	  FLOAT8 an = wsamp_s[1][k]; 
-	  FLOAT8 bn = wsamp_s[1][BLKSIZE_s-k];
+	  FLOAT8 an = (*wsamp_s)[1][k]; 
+	  FLOAT8 bn = (*wsamp_s)[1][BLKSIZE_s-k];
 	  numre = (an+bn)*0.5-numre;
 	  numim = (an-bn)*0.5-numim;
 	  den = sqrt(numre*numre+numim*numim)/den;

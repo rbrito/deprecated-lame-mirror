@@ -175,12 +175,12 @@ static const int rv_tbl[] = {
 
 
 void fft_short(
-    FLOAT *x_real, FLOAT energy[3][HBLKSIZE_s], int chn, short *buffer[2])
+    FLOAT x_real[3][BLKSIZE_s], FLOAT energy[3][HBLKSIZE_s], int chn, short *buffer[2])
 {
     int i, j, b;
 
     for (b = 0; b < 3; b++) {
-	FLOAT *x = &x_real[BLKSIZE_s * b + BLKSIZE_s / 2];
+	FLOAT *x = &x_real[b][BLKSIZE_s / 2];
 	int k = (576 / 3) * (b + 1);
 	j = BLKSIZE_s / 8 - 1;
 	if (chn < 2) {
@@ -270,7 +270,7 @@ void fft_short(
 }
 
 void fft_long(
-    FLOAT *x, FLOAT energy[HBLKSIZE], int chn, short *buffer[2])
+    FLOAT x[BLKSIZE], FLOAT energy[HBLKSIZE], int chn, short *buffer[2])
 {
     int i, j, jj = BLKSIZE / 8 - 1;
     x += BLKSIZE / 2;
