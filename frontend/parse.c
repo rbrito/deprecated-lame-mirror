@@ -1224,6 +1224,11 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 	    return -1;
 	}
     }
+
+    if (gfp->VBR !=0 && gfp->VBR !=vbr_abr) {
+	fprintf(stderr,"\n**** Warning ****  VBR modes are under heavy development!\n");
+	fprintf(stderr,"In many cases, CBR and ABR will produce better results.\n\n");
+    }
     return 0;
 }
 
