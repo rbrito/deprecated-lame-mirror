@@ -1,7 +1,7 @@
---silent --vbr-old   
---silent --vbr-new 
---silent --vbr-mtrh
---silent --vbr-old  -k --resample 11
---silent --vbr-new  -k --resample 11
---silent --vbr-mtrh -k --resample 11
---silent --vbr-old  -k --nspsytune
+--vbr-old   
+--vbr-new 
+--vbr-mtrh
+--vbr-old  -k --resample 11
+--vbr-new  -k --resample 11
+--vbr-mtrh -k --resample 11
+--vbr-old  -k --nspsytune
