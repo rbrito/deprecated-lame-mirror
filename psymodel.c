@@ -5,6 +5,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.12  1999/12/22 07:39:05  markt
+ * added AAC spreading function (disabled by default)
+ *
  * Revision 1.11  1999/12/21 08:18:51  markt
  * Bug fix in Mid/Side masking thresholds
  *
@@ -298,7 +301,8 @@ void L3psycho_anal( short int *buffer[2], int stereo,
       #include "debugscalefac.c"
     */
     
-    
+
+#define AACS3XX
 #define NEWS3XX
 #ifdef NEWS3     
     
@@ -987,6 +991,8 @@ int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s)
    * Now compute the spreading function, s[j][i], the value of the spread-*
    * ing function, centered at band j, for band i, store for later use    *
    ************************************************************************/
+  /* i.e.: sum over j to spread into signal barkval=i  
+     NOTE: i and j are used opposite as in the ISO docs */
   part_max = cbmax ;
   for(i=0;i<part_max;i++)
     {
@@ -996,9 +1002,11 @@ int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s)
 	  /*tempx = (bval_l[i] - bval_l[j])*1.05;*/
 	  if (j>=i) tempx = (bval_l[i] - bval_l[j])*3.0;
 	  else    tempx = (bval_l[i] - bval_l[j])*1.5;
-	  /*             if (j>=i) tempx = (bval_l[j] - bval_l[i])*3.0;
-			 else    tempx = (bval_l[j] - bval_l[i])*1.5; */
 
+#ifdef AACS3	
+          if (i>=j) tempx = (bval_l[i] - bval_l[j])*3.0;
+	  else    tempx = (bval_l[i] - bval_l[j])*1.5; 
+#endif
 
 	  if(tempx>=0.5 && tempx<=2.5)
 	    {
@@ -1019,6 +1027,7 @@ int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s)
 	    printf("bark=%f   x+tempy = %f  \n",bval_l[j] - bval_l[i],x+tempy);
 	  }
 	  */
+
 	  if (tempy <= -60.0) s3_l[i][j] = 0.0;
 	  else                s3_l[i][j] = exp( (x + tempy)*LN_TO_LOG10 ); 
 	}
@@ -1084,6 +1093,10 @@ int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s)
 	  /* tempx = (bval_s[i] - bval_s[j])*1.05;*/
 	  if (j>=i) tempx = (bval_s[i] - bval_s[j])*3.0;
 	  else    tempx = (bval_s[i] - bval_s[j])*1.5;
+#ifdef AACS3
+          if (i>=j) tempx = (bval_l[i] - bval_l[j])*3.0;
+	  else    tempx = (bval_l[i] - bval_l[j])*1.5; 
+#endif
 	  if(tempx>=0.5 && tempx<=2.5)
 	    {
 	      temp = tempx - 0.5;
