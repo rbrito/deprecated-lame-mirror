@@ -1223,6 +1223,7 @@ L3psycho_anal_ns(
 		   sizeof(fftenergy));
 	}
 #endif
+	/* tonality estimation. use ratio of  avg vs. max as tonality */
 	{
 	    FLOAT m,a;
 	    a = avg[0] + avg[1];
