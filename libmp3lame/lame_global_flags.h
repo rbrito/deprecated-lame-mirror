@@ -178,6 +178,13 @@ struct lame_global_struct {
     float real[16];
     void *pointer[16];
   } exp_nspsytune2;
+
+  struct {
+      int mmx;
+      int amd3dnow;
+      int sse;
+
+  } asm_optimizations;
 } ;
 
 #endif /* LAME_GLOBAL_FLAGS_H */

@@ -1500,6 +1500,15 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     argUsed=1;
                     (void) lame_set_scale( gfp, atof(nextArg) );
 
+                T_ELIF ("noasm")
+                    argUsed=1;
+                    if (!strcmp(nextArg, "mmx")) 
+                        (void) lame_set_asm_optimizations( gfp, MMX, 0 );
+                    if (!strcmp(nextArg, "3dnow")) 
+                        (void) lame_set_asm_optimizations( gfp, AMD_3DNOW, 0 );
+                    if (!strcmp(nextArg, "sse")) 
+                        (void) lame_set_asm_optimizations( gfp, SSE, 0 );
+
 		T_ELIF ("scale-l")
                     argUsed=1;
                     (void) lame_set_scale_left( gfp, atof(nextArg) );
