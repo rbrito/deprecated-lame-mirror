@@ -677,10 +677,10 @@ void outer_loop(
 		status = scale_bitcount_lsf(&scalefac_w, cod_info);
 	    }
 	    if (status) {
-		if (gfp->noise_shaping > 1 && !cod_info->scalefac_scale) {
+		if (gfc->noise_shaping > 1 && !cod_info->scalefac_scale) {
 		    inc_scalefac_scale(gfp, &scalefac_w, cod_info, xrpow);
 		    status = 0;
-		} else if (cod_info->block_type == SHORT_TYPE && gfp->experimentalZ && gfp->noise_shaping > 1) {
+		} else if (cod_info->block_type == SHORT_TYPE && gfp->experimentalZ && gfc->noise_shaping > 1) {
 		    inc_subblock_gain(gfp, &scalefac_w, cod_info, xrpow);
 		    status = loop_break(&scalefac_w, cod_info);
 		}
