@@ -34,7 +34,7 @@ void lame_print_version(FILE *ofile) {
   */
 #ifdef LIBSNDFILE
   sf_get_lib_version(lpszVersion,sizeof(lpszVersion));
-  fprintf(ofile,"Input handled by libsndfile %s (www.zip.com.au/~erikd/libsndfile)\n",lpszVersion);
+  fprintf(ofile,"Input handled by %s (www.zip.com.au/~erikd/libsndfile)\n",lpszVersion);
 #endif
 }
 
