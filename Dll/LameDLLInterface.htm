@@ -96,8 +96,12 @@ stream. </p>
 <p>5. Close the stream using <a href="#beCloseStream()">beCloseStream()
 </a></p>
 
-<p>6. And optionally call the <a href="#beWriteVBRHeader()">beWriteVBRHeader()</a>
-functions, to insert a Xing MP3 Header</p>
+<p>6. Finally, call the <a href="#beWriteVBRHeader()">beWriteVBRHeader()</a>
+functions, to insert the INFO tag MP3 Header.  This is an extension
+of the Xing VBR tag which is also used for CBR encodings.  
+This call can only
+be omitted if the INFO tag was explicilty disabled in the 
+BE_CONFIG Structure.</p>
 
 <p>A handy feature is the available <a
 href="#Lame_enc.dll debug option">Lame_enc.dll debug option</a>,

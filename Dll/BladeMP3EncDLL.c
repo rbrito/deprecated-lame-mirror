@@ -352,6 +352,15 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 	// Set input sample frequency
 	lame_set_in_samplerate( gfp, lameConfig.format.LHV1.dwSampleRate );
 
+        // disable INFO/VBR tag by default.  
+        // if this tag is used, the calling program must call beWriteVBRTag()
+        // after encoding.  But the original DLL documentation does not 
+        // require the 
+        // app to call beWriteVBRTag() unless they have specifically
+        // set LHV1.bWriteVBRHeader=TRUE.  Thus the default setting should
+        // be disabled.  
+	lame_set_bWriteVbrTag( gfp, 0 );
+
 //2001-12-18 Dibrom's ABR preset stuff
 
 	if(lameConfig.format.LHV1.nPreset == 11)		// --ALT-PRESET ABR
@@ -559,8 +568,7 @@ now --vbr-mtrh is known as --vbr-new
 	}
 
 	// check if the VBR tag is required
-	if ( ( TRUE == lameConfig.format.LHV1.bWriteVBRHeader) &&
-		 ( vbr_off != lame_get_VBR( gfp ) ) )
+	if ( TRUE == lameConfig.format.LHV1.bWriteVBRHeader) 
 	{
 		lame_set_bWriteVbrTag( gfp, 1 );
 	}
@@ -796,8 +804,7 @@ __declspec(dllexport) BE_ERR beWriteVBRHeader(LPCSTR lpszFileName)
 	BE_ERR beResult	=BE_ERR_SUCCESSFUL;
 
 	// Do we have to write the VBR tag?
-	if (	( lame_get_bWriteVbrTag( gfp ) ) && 
-			( vbr_off != lame_get_VBR( gfp ) ) )
+	if (	 lame_get_bWriteVbrTag( gfp )
 	{
 
 		// Try to open the file

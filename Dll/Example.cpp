@@ -284,7 +284,7 @@ int main(int argc, char *argv[])
 	// Close output file
 	fclose( pFileOut );
 
-	// Write the VBR Tag
+	// Write the INFO Tag
 	beWriteVBRHeader( strFileOut );
 
 	// Were done, return OK result
