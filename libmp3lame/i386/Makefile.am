@@ -36,6 +36,6 @@ EXTRA_DIST = \
 	ffttbl.nas
 
 NASM = @NASM@
-NASMFLAGS=-f elf -i $(top_srcdir)/libmp3lame/@CPUTYPE@/
+NASMFLAGS=@NASM_FORMAT@ -i $(top_srcdir)/libmp3lame/@CPUTYPE@/
 .nas.o:
 	$(NASM) $(NASMFLAGS) $< -o $@ -l $<.lst
