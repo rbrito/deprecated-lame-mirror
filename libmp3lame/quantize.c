@@ -95,10 +95,14 @@ on_pe(
 	bits += targ_bits[ch];
     }
     if (bits > max_bits) {
-        for (ch = 0; ch < gfc->channels_out; ++ch ) {
+	for (ch = 0; ch < gfc->channels_out; ++ch) {
 	    targ_bits[ch]
 		= tbits + extra_bits * (targ_bits[ch] - tbits) / bits;
 	}
+    } else if (bits < tbits) {
+	tbits = tbits - bits / gfc->channels_out;
+	for (ch = 0; ch < gfc->channels_out; ++ch )
+	    targ_bits[ch] += tbits;
     }
 }
 
