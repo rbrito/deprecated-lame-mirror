@@ -135,6 +135,11 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
 {
     /*translate legacy presets*/
     switch (preset) {
+    case R3MIX: {
+        preset = V3;
+        lame_set_VBR(gfp, vbr_mtrh);
+        break;
+    }
     case MEDIUM: {
         preset = V4;
         lame_set_VBR(gfp, vbr_rh);
@@ -601,19 +606,6 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
             return preset;
         }
         }
-    }
-    case R3MIX: {
-        lame_set_psy_model(gfp, PSY_NSPSYTUNE);
-	    (void) lame_set_scale( gfp, 0.98 ); /* --scale 0.98*/
-
-	    lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (8 << 20));
-
-	    lame_set_VBR(gfp,vbr_mtrh); 
-	    lame_set_VBR_q(gfp,1);
-	    lame_set_lowpassfreq(gfp,19500);
-	    lame_set_ATHtype( gfp, 3 );
-	    lame_set_VBR_min_bitrate_kbps(gfp,96);
-	    return preset;
     }
     default:
 	break;
