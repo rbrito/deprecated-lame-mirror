@@ -26,9 +26,11 @@
 #endif
 
 
-#include <string.h>
-#include "version.h"    // macros of version numbers
+#include <stdio.h>
+#include "version.h"    /* macros of version numbers */
 
+#define STR(x)  #x
+#define XSTR(x) STR(x)
 
 #if defined(MMX_choose_table)
 # define V1 "MMX "
@@ -61,6 +63,7 @@ static void  thread_safe__strcpy ( char* dst, const char* src )
 }
 
 
+#if 0
 // This is an example of such a non rewritable version.
 // This may make sense on future computers and is also
 // full ISO conform. ISO don't say anything about threads
@@ -73,89 +76,120 @@ static void  no_thread_safe__strcpy ( char* dst, const char* src )
     memset ( dst, 0, len+1 );   // Write Cache pre-heating
     memcpy ( dst, src, len );   // Data Copy
 }
+#endif
 
 
-// This is the only way to make such a function 100% thread safe.
-// There are a lot more if the OS supports semaphores (critical sectioning)
-
-const char*  get_lame_version ( void )          // primary to write screen reports
+/* primary to write screen reports */
+const char*  get_lame_version ( void )
 {
-    static char ret [48];
-    char        str [48];
-
     /* Here we can also add informations about compile time configurations */
-    
-    if (LAME_ALPHA_VERSION > 0)
-        snprintf ( str, sizeof (str), "%u.%02d " V "(alpha %u, %6.6s %5.5s)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION, LAME_ALPHA_VERSION, __DATE__, __TIME__ );
-    else if (LAME_BETA_VERSION > 0)
-        snprintf ( str, sizeof (str), "%u.%02d " V "(beta %u, %s)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION, LAME_BETA_VERSION, __DATE__ );
-    else
-        snprintf ( str, sizeof (str), "%u.%02d " V, LAME_MAJOR_VERSION, LAME_MINOR_VERSION );
-        
-    thread_safe__strcpy ( ret, str );
-    return ret;
+
+    /*@-observertrans@*/
+#if LAME_ALPHA_VERSION > 0
+    static const char *const str =
+        XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) " " V
+        "(alpha " XSTR(LAME_ALPHA_VERSION) ", " __DATE__ " " __TIME__ ")";
+#else
+# if LAME_BETA_VERSION > 0
+    static const char *const str =
+        XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) " " V
+        "(beta " XSTR(LAME_BETA_VERSION) ", " __DATE__ ")";
+# else
+    static const char *const str =
+        XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) " " V;
+# endif
+#endif
+
+    /*@-statictrans@*/
+    return str;
+    /*@=statictrans =observertrans@*/
 }
 
 
-const char*  get_lame_short_version ( void )  // primary to write into MP3 files
+/* primary to write into MP3 files */
+const char*  get_lame_short_version ( void )
 {
-    static char ret [32];
-    char        str [32];
-    
-    /* adding date and time to version string makes it harder for output validation */
+    /* adding date and time to version string makes it harder for output
+       validation */
 
-    if (LAME_ALPHA_VERSION > 0)
-        snprintf ( str, sizeof (str), "%u.%02d (alpha)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION );
-    else if (LAME_BETA_VERSION > 0)
-        snprintf ( str, sizeof (str), "%u.%02d (beta)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION );
-    else
-        snprintf ( str, sizeof (str), "%u.%02d", LAME_MAJOR_VERSION, LAME_MINOR_VERSION );
-	
-    thread_safe__strcpy ( ret, str );
-    return ret;
+    /*@-observertrans@*/
+#if LAME_ALPHA_VERSION > 0
+    static const char *const str =
+        XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) " (alpha)";
+#else
+# if LAME_BETA_VERSION > 0
+    static const char *const str =
+        XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) " (beta)";
+# else
+    static const char *const str =
+        XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION)
+# endif
+#endif
+
+    /*@-statictrans@*/
+    return str;
+    /*@=statictrans =observertrans@*/
 }
 
 
 const char*  get_psy_version ( void )
 {
-    static char ret [48];
-    char        str [48];
-    
-    if (PSY_ALPHA_VERSION > 0)
-        snprintf ( str, sizeof (str), "%u.%02d (alpha %u, %6.6s %5.5s)", PSY_MAJOR_VERSION, PSY_MINOR_VERSION, PSY_ALPHA_VERSION, __DATE__, __TIME__ );
-    else if (PSY_BETA_VERSION > 0)
-        snprintf ( str, sizeof (str), "%u.%02d (beta %u, %s)", PSY_MAJOR_VERSION, PSY_MINOR_VERSION, PSY_BETA_VERSION, __DATE__ );
-    else
-        snprintf ( str, sizeof (str), "%u.%02d", PSY_MAJOR_VERSION, PSY_MINOR_VERSION );
-        
-    thread_safe__strcpy ( ret, str );
-    return ret;
+    /*@-observertrans@*/
+#if PSY_ALPHA_VERSION > 0
+    static const char *const str =
+        XSTR(PSY_MAJOR_VERSION) "." XSTR(PSY_MINOR_VERSION)
+        " (alpha " XSTR(PSY_ALPHA_VERSION) ", " __DATE__ " " __TIME__ ")";
+#else
+# if PSY_BETA_VERSION > 0
+    static const char *const str =
+        XSTR(PSY_MAJOR_VERSION) "." XSTR(PSY_MINOR_VERSION)
+        " (beta " XSTR(PSY_BETA_VERSION) ", " __DATE__ ")";
+# else
+    static const char *const str =
+        XSTR(PSY_MAJOR_VERSION) "." XSTR(PSY_MINOR_VERSION);
+# endif
+#endif
+
+    /*@-statictrans@*/
+    return str;
+    /*@=statictrans =observertrans@*/
 }
 
 
 const char*  get_mp3x_version ( void )
 {
-    static char ret [48];
-    char        str [48];
-    
-    if (MP3X_ALPHA_VERSION > 0)
-        snprintf ( str, sizeof (str), "%u:%02u (alpha %u, %6.6s %5.5s)", MP3X_MAJOR_VERSION, MP3X_MINOR_VERSION, MP3X_ALPHA_VERSION, __DATE__, __TIME__ );
-    else if (MP3X_BETA_VERSION > 0)
-        snprintf ( str, sizeof (str), "%u:%02u (beta %u, %s)", MP3X_MAJOR_VERSION, MP3X_MINOR_VERSION, MP3X_BETA_VERSION, __DATE__ );
-    else
-        snprintf ( str, sizeof (str), "%u:%02u", MP3X_MAJOR_VERSION, MP3X_MINOR_VERSION );
-                
-    thread_safe__strcpy ( ret, str );
-    return ret;
+    /*@-observertrans@*/
+#if MP3X_ALPHA_VERSION > 0
+    static const char *const str =
+        XSTR(MP3X_MAJOR_VERSION) "." XSTR(MP3X_MINOR_VERSION)
+        " (alpha " XSTR(MP3X_ALPHA_VERSION) ", " __DATE__ " " __TIME__ ")";
+#else
+# if MP3X_BETA_VERSION > 0
+    static const char *const str =
+        XSTR(MP3X_MAJOR_VERSION) "." XSTR(MP3X_MINOR_VERSION)
+        " (beta " XSTR(MP3X_BETA_VERSION) ", " __DATE__ ")";
+# else
+    static const char *const str =
+        XSTR(MP3X_MAJOR_VERSION) "." XSTR(MP3X_MINOR_VERSION);
+# endif
+#endif
+
+    /*@-statictrans@*/
+    return str;
+    /*@=statictrans =observertrans@*/
 }
 
 
 const char*  get_lame_url ( void )
 {
-    return LAME_URL;
+    /*@-observertrans@*/
+    static const char *const str = LAME_URL;
+    /*@-statictrans@*/
+    return str;
+    /*@=statictrans =observertrans@*/
 }    
 
-
+#if 0
 // mt? pro, cons? about get_lame_about()?
 
 const char*  get_lame_about ( void )   // all information for a Windows/KDE "About" dialog, '\n' separated, '\0' terminated
@@ -176,22 +210,30 @@ const char*  get_lame_about ( void )   // all information for a Windows/KDE "Abo
     thread_safe__strcpy ( ret, str );
     return ret;
 }
+#endif
 
-#undef V
-#undef V1
-#undef V2
-#undef V3
+#if 0
+void get_lame_version_numerical ( lame_version_t *const lvp )
+{
+    /*@-observertrans@*/
+    static const char *const features = V;
+    /*@=observertrans@*/
 
-/*
- *  Still remaining is the problem that malicious programs can temporary
- *  destroy this data. May be we should really change the interface to avoid
- *  this, if there is no better solution, but before changing the API we
- *  should at least discuss the problem. And the solution should not be a
- *  "Eierlegende Wollmilchsau", but the simpliest function doing this job,
- *  and not a function doing a lot of string manipulation and spell
- *  checking.
- */
+    /* generic version */
+    lvp->major = LAME_MAJOR_VERSION;
+    lvp->minor = LAME_MINOR_VERSION;
+    lvp->alpha = LAME_ALPHA_VERSION;
+    lvp->beta  = LAME_BETA_VERSION;
 
-/* And a last remark: for beta and release version also this proplem can be solved */
+    /* psy version */
+    lvp->psy_major = PSY_MAJOR_VERSION;
+    lvp->psy_minor = PSY_MINOR_VERSION;
+    lvp->psy_alpha = PSY_ALPHA_VERSION;
+    lvp->psy_beta  = PSY_BETA_VERSION;
 
-/* End of version.c */
+    /* compile time features */
+    /*@-observertrans -mustfree -statictrans@*/
+    lvp->features = features;
+    /*@=statictrans =mustfree =observertrans@*/
+}
+#endif
