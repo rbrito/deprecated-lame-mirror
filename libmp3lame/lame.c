@@ -280,6 +280,15 @@ optimum_bandwidth(double *const lowerlimit,
  */
 
     f_low = br / log10(br * 4.425e-3); // Tests with 8, 16, 32, 64, 112 and 160 kbps
+ 
+/*
+GB 04/04/01
+sfb21 is a huge bitrate consumer in vbr with the new ath.
+Need to reduce the lowpass to more reasonable values. This extra lowpass
+won't reduce quality over 3.87 as the previous ath was doing this lowpass
+*/
+    if (f_low>18400 && gfp->VBR==vbr_rh)
+	    f_low = 18400+(f_low-18400)/4;
 
 /*
  *  What we get now?
@@ -725,7 +734,7 @@ lame_init_params(lame_global_flags * const gfp)
     case vbr_rh:
     case vbr_mtrh:
         {
-            FLOAT8  cmp[] = { 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+            FLOAT8  cmp[] = { 5.7, 6.5, 7.3, 8.2, 9.1, 10, 11, 12, 13, 14 };
             gfp->compression_ratio = cmp[gfp->VBR_q];
         }
         break;
