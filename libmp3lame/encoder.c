@@ -318,12 +318,15 @@ int  lame_encode_mp3_frame (				// Output
 	}
 	/* polyphase filtering / mdct */
 	for ( ch = 0; ch < gfc->channels_out; ch++ ) {
+	    inbuf[ch] = primebuff[ch] - gfp->framesize;
 	    for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
 		gfc->l3_side.tt[gr][ch].block_type = NORM_TYPE;
 	    }
-	    subband(gfc, primebuff[ch]-1152, sbsmpl[ch]);
+	    subband(gfc, inbuf[ch], sbsmpl[ch]);
 	    memcpy(gfc->sb_sample[ch][1], sbsmpl,
 		   sizeof(gfc->sb_sample[ch][0])*gfc->mode_gr);
+	    memset(gfc->sb_sample[ch][0], 0, sizeof(gfc->sb_sample[ch][0]));
+	    mdct_sub48(gfc, ch);
 	}
 
 	/* check FFT will not use a negative starting offset */
@@ -338,8 +341,6 @@ int  lame_encode_mp3_frame (				// Output
 	assert(gfc->mf_size>=(286+576*(1+gfc->mode_gr)));
 
 	if (gfc->psymodel) {
-	    inbuf[0]=primebuff[0] - gfp->framesize;
-	    inbuf[1]=primebuff[1] - gfp->framesize;
 	    psycho_analysis(gfp, inbuf, ms_ener_ratio, masking, sbsmpl);
 	}
     }
