@@ -1,7 +1,7 @@
 /*
- * Blade DLL Interface for LAME.
+ * Blade Type of DLL Interface for MP2Enc.
  *
- * Copyright (c) 1999 A.L. Faber
+ * Copyright (c) 1999-2002 A.L. Faber
  * Based on bladedll.h version 1.0 written by Jukka Poikolainen
  *
  * This library is free software; you can redistribute it and/or
@@ -166,9 +166,11 @@ typedef struct	{
 			INT				nVBRQuality;		// VBR QUALITY 0..9
 			DWORD			dwVbrAbr_bps;		// Use ABR in stead of nVBRQuality
 			VBRMETHOD		nVbrMethod;
-			BOOL			bNoRes;				// Disable Bit resorvoir
+			BOOL			bNoRes;				// Disable Bit resorvoir (TRUE/FALSE)
 
-			BYTE			btReserved[255-3*sizeof(DWORD)];	// FUTURE USE, SET TO 0
+			BOOL			bStrictIso;			// Use strict ISO encoding rules (TRUE/FALSE)
+				
+			BYTE			btReserved[255-4*sizeof(DWORD)];	// FUTURE USE, SET TO 0
 
 			} LHV1;					// LAME header version 1
 
@@ -229,13 +231,14 @@ typedef BE_ERR	(*BECLOSESTREAM)			(HBE_STREAM);
 typedef VOID	(*BEVERSION)				(PBE_VERSION);
 typedef VOID	(*BEWRITEVBRHEADER)			(LPCSTR);
 
-#define	TEXT_BEINITSTREAM		"beInitStream"
-#define	TEXT_BEENCODECHUNK		"beEncodeChunk"
+#define	TEXT_BEINITSTREAM				"beInitStream"
+#define	TEXT_BEENCODECHUNK				"beEncodeChunk"
 #define	TEXT_BEENCODECHUNKFLOATS16NI	"beEncodeChunkFloatS16NI"
-#define	TEXT_BEDEINITSTREAM		"beDeinitStream"
-#define	TEXT_BECLOSESTREAM		"beCloseStream"
-#define	TEXT_BEVERSION			"beVersion"
-#define	TEXT_BEWRITEVBRHEADER	"beWriteVBRHeader"
+#define	TEXT_BEDEINITSTREAM				"beDeinitStream"
+#define	TEXT_BECLOSESTREAM				"beCloseStream"
+#define	TEXT_BEVERSION					"beVersion"
+#define	TEXT_BEWRITEVBRHEADER			"beWriteVBRHeader"
+#define	TEXT_BEFLUSHNOGAP				"beFlushNoGap"
 
 #else
 
@@ -248,6 +251,7 @@ __declspec(dllexport) BE_ERR	beDeinitStream(HBE_STREAM hbeStream, PBYTE pOutput,
 __declspec(dllexport) BE_ERR	beCloseStream(HBE_STREAM hbeStream);
 __declspec(dllexport) VOID		beVersion(PBE_VERSION pbeVersion);
 __declspec(dllexport) BE_ERR	beWriteVBRHeader(LPCSTR lpszFileName);
+__declspec(dllexport) BE_ERR	beFlushNoGap(HBE_STREAM hbeStream, PBYTE pOutput, PDWORD pdwOutput);
 
 #endif
 

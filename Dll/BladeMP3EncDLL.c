@@ -1,7 +1,7 @@
 /*
  *	Blade DLL Interface for LAME.
  *
- *	Copyright (c) 1999 - 2001 A.L. Faber
+ *	Copyright (c) 1999 - 2002 A.L. Faber
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,8 +25,6 @@
 #include <assert.h>
 
 #include "lame.h"
-
-//#define HAVE_MEMCPY (1)
 #include "config.h"
 #include "machine.h" /* for sample_t type */
 
@@ -38,14 +36,14 @@
 
 // lame_enc DLL version number
 const int MAJORVERSION = 1;
-const int MINORVERSION = 27;
+const int MINORVERSION = 28;
 
 
 // Local variables
 static DWORD				dwSampleBufferSize=0;
 static HANDLE				gs_hModule=NULL;
-static BOOL				gs_bLogFile=FALSE;
-static lame_global_flags*		gfp = NULL;
+static BOOL					gs_bLogFile=FALSE;
+static lame_global_flags*	gfp = NULL;
 
 // Local function prototypes
 static void dump_config( );
@@ -109,7 +107,7 @@ static void DebugPrintf(const char* pzFormat, ...)
     }
 
 #if defined _DEBUG || defined _RELEASEDEBUG
-    OutputDebugString(szBuffer);
+    OutputDebugString( szBuffer );
 #endif
 
 	va_end(ap);
@@ -124,26 +122,26 @@ static void PresetOptions( lame_global_flags *gfp, LONG myPreset )
 			break;
 
 /*0*/		case LQP_NORMAL_QUALITY:
-			lame_set_quality( gfp, 5 );
+				lame_set_quality( gfp, 5 );
 			break;
 
 /*1*/		case LQP_LOW_QUALITY:
-			lame_set_quality( gfp, 9 );
+				lame_set_quality( gfp, 9 );
 			break;
 
 /*2*/		case LQP_HIGH_QUALITY:
-			lame_set_quality( gfp, 2 );
+				lame_set_quality( gfp, 2 );
 			break;
 
 /*3*/		case LQP_VOICE_QUALITY:				// --voice flag for experimental voice mode
-			lame_set_lowpassfreq( gfp, 12000 );
-            		lame_set_VBR( gfp,vbr_mtrh ); 
-//            		lame_set_VBR_q( gfp, 5 );
-            		lame_set_quality( gfp, 2 );
-            		lame_set_mode( gfp, JOINT_STEREO );
-			lame_set_no_short_blocks( gfp, 1 );
-			lame_set_VBR_min_bitrate_kbps( gfp, 32 );
-			lame_set_VBR_max_bitrate_kbps( gfp, 160 );
+				lame_set_lowpassfreq( gfp, 12000 );
+            	lame_set_VBR( gfp,vbr_mtrh ); 
+//            	lame_set_VBR_q( gfp, 5 );
+            	lame_set_quality( gfp, 2 );
+            	lame_set_mode( gfp, JOINT_STEREO );
+				lame_set_no_short_blocks( gfp, 1 );
+				lame_set_VBR_min_bitrate_kbps( gfp, 32 );
+				lame_set_VBR_max_bitrate_kbps( gfp, 160 );
 			break;
 
 /*4*/		case LQP_R3MIX:					// --R3MIX
@@ -151,7 +149,7 @@ static void PresetOptions( lame_global_flags *gfp, LONG myPreset )
 			break;
 
 /*5*/		case LQP_VERYHIGH_QUALITY:
-			lame_set_quality( gfp, 0 );
+				lame_set_quality( gfp, 0 );
 			break;
 
 /*6*/		case LQP_STANDARD:				// --ALT-PRESET STANDARD
@@ -243,58 +241,58 @@ static void PresetOptions( lame_global_flags *gfp, LONG myPreset )
 			break;
 
 /*6000*/	case LQP_RADIO:
-			lame_set_lowpassfreq( gfp, 15000 );
-			lame_set_lowpasswidth( gfp, 0 );
-			lame_set_quality( gfp, 5 );
-			lame_set_mode( gfp, JOINT_STEREO );
-			lame_set_brate( gfp, 112 );
-			lame_set_VBR_q( gfp, 4 );
-			lame_set_VBR_min_bitrate_kbps( gfp, 64 );
-			lame_set_VBR_max_bitrate_kbps( gfp, 256 );
+				lame_set_lowpassfreq( gfp, 15000 );
+				lame_set_lowpasswidth( gfp, 0 );
+				lame_set_quality( gfp, 5 );
+				lame_set_mode( gfp, JOINT_STEREO );
+				lame_set_brate( gfp, 112 );
+				lame_set_VBR_q( gfp, 4 );
+				lame_set_VBR_min_bitrate_kbps( gfp, 64 );
+				lame_set_VBR_max_bitrate_kbps( gfp, 256 );
 			break;
 
 /*7000*/	case LQP_TAPE:
-			lame_set_lowpassfreq( gfp, 18500 );
-			lame_set_lowpasswidth( gfp, 2000 );
-			lame_set_quality( gfp, 5 );
-			lame_set_mode( gfp, JOINT_STEREO );
-			lame_set_brate( gfp, 128 );
-			lame_set_VBR_q( gfp, 4 );
-			lame_set_VBR_min_bitrate_kbps( gfp, 96 );
-			lame_set_VBR_max_bitrate_kbps( gfp, 320 );
+				lame_set_lowpassfreq( gfp, 18500 );
+				lame_set_lowpasswidth( gfp, 2000 );
+				lame_set_quality( gfp, 5 );
+				lame_set_mode( gfp, JOINT_STEREO );
+				lame_set_brate( gfp, 128 );
+				lame_set_VBR_q( gfp, 4 );
+				lame_set_VBR_min_bitrate_kbps( gfp, 96 );
+				lame_set_VBR_max_bitrate_kbps( gfp, 320 );
 			break;
 
 /*8000*/	case LQP_HIFI:
-			lame_set_lowpassfreq( gfp, 20240 );
-			lame_set_lowpasswidth( gfp, 2200 );
-			lame_set_quality( gfp, 2 );
-			lame_set_mode( gfp, JOINT_STEREO );
-			lame_set_brate( gfp, 160 );
-			lame_set_VBR_q( gfp, 3 );
-			lame_set_VBR_min_bitrate_kbps( gfp, 112 );
-			lame_set_VBR_max_bitrate_kbps( gfp, 320 );
+				lame_set_lowpassfreq( gfp, 20240 );
+				lame_set_lowpasswidth( gfp, 2200 );
+				lame_set_quality( gfp, 2 );
+				lame_set_mode( gfp, JOINT_STEREO );
+				lame_set_brate( gfp, 160 );
+				lame_set_VBR_q( gfp, 3 );
+				lame_set_VBR_min_bitrate_kbps( gfp, 112 );
+				lame_set_VBR_max_bitrate_kbps( gfp, 320 );
 			break;
 
 /*9000*/	case LQP_CD:
-			lame_set_lowpassfreq( gfp, -1 );
-			lame_set_highpassfreq( gfp, -1 );
-			lame_set_quality( gfp, 2 );
-			lame_set_mode( gfp, STEREO );
-			lame_set_brate( gfp, 192 );
-			lame_set_VBR_q( gfp, 2 );
-			lame_set_VBR_min_bitrate_kbps( gfp, 128 );
-			lame_set_VBR_max_bitrate_kbps( gfp, 320 );
+				lame_set_lowpassfreq( gfp, -1 );
+				lame_set_highpassfreq( gfp, -1 );
+				lame_set_quality( gfp, 2 );
+				lame_set_mode( gfp, STEREO );
+				lame_set_brate( gfp, 192 );
+				lame_set_VBR_q( gfp, 2 );
+				lame_set_VBR_min_bitrate_kbps( gfp, 128 );
+				lame_set_VBR_max_bitrate_kbps( gfp, 320 );
 			break;
 
 /*10000*/	case LQP_STUDIO:
-			lame_set_lowpassfreq( gfp, -1 );
-			lame_set_highpassfreq( gfp, -1 );
-			lame_set_quality( gfp, 2 );
-			lame_set_mode( gfp, STEREO );
-			lame_set_brate( gfp, 256 );
-			lame_set_VBR_q( gfp, 0 );
-			lame_set_VBR_min_bitrate_kbps( gfp, 160 );
-			lame_set_VBR_max_bitrate_kbps( gfp, 320 );
+				lame_set_lowpassfreq( gfp, -1 );
+				lame_set_highpassfreq( gfp, -1 );
+				lame_set_quality( gfp, 2 );
+				lame_set_mode( gfp, STEREO );
+				lame_set_brate( gfp, 256 );
+				lame_set_VBR_q( gfp, 0 );
+				lame_set_VBR_min_bitrate_kbps( gfp, 160 );
+				lame_set_VBR_max_bitrate_kbps( gfp, 320 );
 			break;
 
 	}
@@ -303,10 +301,10 @@ static void PresetOptions( lame_global_flags *gfp, LONG myPreset )
 
 __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples, PDWORD dwBufferSize, PHBE_STREAM phbeStream)
 {
-// Dibrom's ABR preset 2001-12-18
 	int k; 
 
-	typedef struct {
+	typedef struct
+	{
 		int    abr_kbps;
 		int    expZ;
 		int    expX;
@@ -464,20 +462,19 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
             	if (abr_switch_map[r].nsmsfix > 0)
 					lame_set_msfix( gfp, abr_switch_map[r].nsmsfix );
 
-		// ns-bass tweaks
+				// ns-bass tweaks
             	if (abr_switch_map[r].nsbass != 0) {
                 	k = (int)(abr_switch_map[r].nsbass * 4);
                 	if (k < 0) k += 64;
                 		lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 2));
             	}
 
-		// ABR seems to have big problems with clipping, especially at low bitrates
-		// so we compensate for that here by using a scale value depending on bitrate
+				// ABR seems to have big problems with clipping, especially at low bitrates
+				// so we compensate for that here by using a scale value depending on bitrate
             	if (abr_switch_map[r].scale != 1)
                 	(void) lame_set_scale( gfp, (float)abr_switch_map[r].scale );
 
-            	lame_set_ATHtype(gfp, 2);
-
+           	lame_set_ATHtype(gfp, 2);
 
 	}    
 
@@ -500,7 +497,6 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 		}
 
 		lame_set_brate(gfp, actual_bitrate);
-//		lame_set_preset_expopts(gfp, 5);
 
 		lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
 		lame_set_experimentalZ(gfp, abr_switch_map[r].expZ);
@@ -648,7 +644,11 @@ now --vbr-mtrh is known as --vbr-new
 
 			}
 		}
+
 	}
+
+	// Use strict ISO encoding?
+	lame_set_strict_ISO( gfp, ( lameConfig.format.LHV1.bStrictIso == TRUE ) ? 1 : 0 );
 	
 	// Set copyright flag?
 	if ( lameConfig.format.LHV1.bCopyright )
@@ -705,7 +705,7 @@ now --vbr-mtrh is known as --vbr-new
 		PresetOptions( gfp, lameConfig.format.LHV1.nPreset );
 	}
 
-	if (lameConfig.format.LHV1.bNoRes)
+	if ( lameConfig.format.LHV1.bNoRes )
 	{
 		lame_set_disable_reservoir( gfp,1 );
 		lame_set_padding_type( gfp, PAD_NO );
@@ -741,6 +741,26 @@ now --vbr-mtrh is known as --vbr-new
 	return BE_ERR_SUCCESSFUL;
 }
 
+
+
+__declspec(dllexport) BE_ERR	beFlushNoGap(HBE_STREAM hbeStream, PBYTE pOutput, PDWORD pdwOutput)
+{
+	int nOutputSamples = 0;
+
+    nOutputSamples = lame_encode_flush_nogap( gfp, pOutput, LAME_MAXMP3BUFFER );
+
+	if ( nOutputSamples < 0 )
+	{
+		*pdwOutput = 0;
+		return BE_ERR_BUFFER_TOO_SMALL;
+	}
+	else
+	{
+		*pdwOutput = nOutputSamples;
+	}
+
+	return BE_ERR_SUCCESSFUL;
+}
 
 __declspec(dllexport) BE_ERR	beDeinitStream(HBE_STREAM hbeStream, PBYTE pOutput, PDWORD pdwOutput)
 {
@@ -984,7 +1004,9 @@ static void dump_config( )
 		default:           DebugPrintf( "Error (unknown)\n" ); break;
 	}
 
-	DebugPrintf("sampling frequency     =%.1f kHz\n", lame_get_in_samplerate( gfp ) /1000.0 );
+	DebugPrintf("Input sample rate      =%.1f kHz\n", lame_get_in_samplerate( gfp ) /1000.0 );
+	DebugPrintf("Output sample rate     =%.1f kHz\n", lame_get_out_samplerate( gfp ) /1000.0 );
+
 	DebugPrintf("bitrate                =%d kbps\n", lame_get_brate( gfp ) );
 	DebugPrintf("Vbr Min bitrate        =%d kbps\n", lame_get_VBR_min_bitrate_kbps( gfp ) );
 	DebugPrintf("Vbr Max bitrate        =%d kbps\n", lame_get_VBR_max_bitrate_kbps( gfp ) );
@@ -1027,6 +1049,7 @@ static void dump_config( )
 	}
 
 	DebugPrintf("Write VBR Header       =%s\n", ( lame_get_bWriteVbrTag( gfp ) ) ?"Yes":"No");
+	DebugPrintf("Strict ISO Encoding    =%s\n", ( lame_get_strict_ISO( gfp ) ) ?"Yes":"No");
 }
 
 

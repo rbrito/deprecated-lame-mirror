@@ -1,13 +1,14 @@
 LIBRARY  lame_enc.DLL
 EXPORTS
 
-beInitStream		@1
-beEncodeChunk		@2
-beDeinitStream		@3
-beCloseStream		@4
-beVersion			@5
-beWriteVBRHeader	@6
+beInitStream			@1
+beEncodeChunk			@2
+beDeinitStream			@3
+beCloseStream			@4
+beVersion				@5
+beWriteVBRHeader		@6
 beEncodeChunkFloatS16NI	@7
+beFlushNoGap			@8
 
 lame_init						@100
 lame_close						@101
