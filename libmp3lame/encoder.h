@@ -99,6 +99,15 @@ Most decoders, including the one we use,  have a delay of 528 samples.
 #define SHORT_TYPE      2
 #define STOP_TYPE       3
 
+
+/* Mode Extention */
+#define         MPG_MD_LR_LR             0
+#define         MPG_MD_LR_I              1
+#define         MPG_MD_MS_LR             2
+#define         MPG_MD_MS_I              3
+
+
+
 #include "machine.h"
 #include "lame.h"
 
