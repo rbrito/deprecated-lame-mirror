@@ -215,13 +215,13 @@ WriteMainDataBits( u_int val,
 		   BF_FrameResults *results )
 {
     assert( nbits <= 32 );
+    if ( nbits == 0 )
+	return;
     if ( BitCount == ThisFrameSize )
     {
 	BitCount = write_side_info();
 	BitsRemaining = ThisFrameSize - BitCount;
     }
-    if ( nbits == 0 )
-	return;
     if ( nbits > (u_int)BitsRemaining )
     {
 	unsigned extra = val >> (nbits - BitsRemaining);
