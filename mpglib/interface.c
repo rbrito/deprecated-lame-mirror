@@ -231,6 +231,10 @@ GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
     int	i, head_flags, h_bitrate,h_id, h_mode, h_sr_index;
     int enc_delay, enc_padding; 
 
+    /* Xing VBR Header is only suuported Layer 3 */
+    if ((buf[1] & 0x06) != 0x01*2)
+	return 0;
+
     /* get selected MPEG header data */
     h_id       = (buf[1] >> 3) & 1;
     h_sr_index = (buf[2] >> 2) & 3;
@@ -469,7 +473,7 @@ decodeMP3_clipchoice( PMPSTR mp,unsigned char *in,int isize,char *out,
 	        bytes=sync_buffer(mp,0); 
 
 	        /* now look for Xing VBR header */
-		if (mp->bsize >= bytes+XING_HEADER_SIZE ) {
+		if (mp->bsize >= bytes+XING_HEADER_SIZE) {
 		    /* vbrbytes = number of bytes in entire vbr header */
 		    vbrbytes=check_vbr_header(mp,bytes);
 		} else {
