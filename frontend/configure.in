@@ -175,7 +175,7 @@ fi
 dnl basic check for GTK...actually just for gtk-config...
 AC_PATH_PROG(GTK_CONFIG, gtk-config, no)
 AC_MSG_CHECKING(use of GTK frame analyzer)
-if test ".$GTK_CONFIG" != "." \
+if test ".$GTK_CONFIG" != ".no" \
     && test "$CONFIG_DECODER" != "no" \
     && test "$CONFIG_FILEIO" != "no"; then
   FA_DEFAULT=yes

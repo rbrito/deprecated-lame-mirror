@@ -1455,7 +1455,7 @@ fi
 
 echo $ac_n "checking use of GTK frame analyzer""... $ac_c" 1>&6
 echo "configure:1458: checking use of GTK frame analyzer" >&5
-if test ".$GTK_CONFIG" != "." \
+if test ".$GTK_CONFIG" != ".no" \
     && test "$CONFIG_DECODER" != "no" \
     && test "$CONFIG_FILEIO" != "no"; then
   FA_DEFAULT=yes
