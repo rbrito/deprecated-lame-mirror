@@ -253,25 +253,25 @@ calc_xmin(
     int sfb, gsfb, j=0;
     for (gsfb = 0; gsfb < gi->psy_lmax; gsfb++) {
 	FLOAT threshold = gfc->ATH.adjust * gfc->ATH.l[gsfb];
-	FLOAT en0, x;
+	FLOAT x = ratio->en.l[gsfb];
 	int l = gi->width[gsfb];
-#ifdef HAVE_NASM
-	if (gfc->CPU_features.AMD_3DNow) {
-	    sumofsqr_3DN(&gi->xr[j], l, &en0);
-	    j += l;
-	} else
-#endif
-	{
-	    en0 = 0.0;
-	    l >>= 1;
-	    do {
-		en0 += gi->xr[j] * gi->xr[j]; j++;
-		en0 += gi->xr[j] * gi->xr[j]; j++;
-	    } while (--l > 0);
-	}
-	x = ratio->en.l[gsfb];
+	j += l;
 	if (x > 0.0) {
-	    x = en0 * ratio->thm.l[gsfb] / x;
+	    x = ratio->thm.l[gsfb] / x;
+#ifdef HAVE_NASM
+	    if (gfc->CPU_features.AMD_3DNow)
+		sumofsqr_3DN(&gi->xr[j-l], l, &x);
+	    else
+#endif
+	    {
+		FLOAT en0 = 0.0;
+		l = -l;
+		do {
+		    en0 += absxr[j+l  ] * absxr[j+l  ];
+		    en0 += absxr[j+l+1] * absxr[j+l+1];
+		} while ((l+=2) < 0);
+		x *= en0;
+	    }
 	    if (threshold < x)
 		threshold = x;
 	}
@@ -282,25 +282,24 @@ calc_xmin(
 	FLOAT tmpATH = gfc->ATH.adjust * gfc->ATH.s[sfb];
 	int b;
 	for (b = 0; b < 3; b++) {
-	    FLOAT en0, threshold = tmpATH, x;
+	    FLOAT threshold = tmpATH, x = ratio->en.s[sfb][b];
 	    int l = gi->width[gsfb];
-#ifdef HAVE_NASM
-	    if (gfc->CPU_features.AMD_3DNow) {
-		sumofsqr_3DN(&gi->xr[j], l, &en0);
-		j += l;
-	    } else
-#endif
-	    {
-		en0 = 0.0;
-		l >>= 1;
-		do {
-		    en0 += gi->xr[j] * gi->xr[j]; j++;
-		    en0 += gi->xr[j] * gi->xr[j]; j++;
-		} while (--l > 0);
-	    }
-	    x = ratio->en.s[sfb][b];
+	    j += l;
 	    if (x > 0.0) {
-		x = en0 * ratio->thm.s[sfb][b] / x;
+		x = ratio->thm.s[sfb][b] / x;
+#ifdef HAVE_NASM
+		if (gfc->CPU_features.AMD_3DNow)
+		    sumofsqr_3DN(&gi->xr[j-l], l, &x);
+		else
+#endif
+		{
+		    FLOAT en0 = 0.0;
+		    do {
+			en0 += absxr[j+l  ] * absxr[j+l  ];
+			en0 += absxr[j+l+1] * absxr[j+l+1];
+		    } while ((l+=2) > 0);
+		    x *= en0;
+		}
 		if (threshold < x)
 		    threshold = x;
 	    }
@@ -373,6 +372,7 @@ calc_noise(
 	if (noise < 0.0) {
 #ifdef HAVE_NASM
 	    if (gfc->CPU_features.AMD_3DNow) {
+		noise = *rxmin;
 		sumofsqr_3DN(&absxr[j+l], -l, &noise);
 	    } else
 #endif
@@ -382,8 +382,9 @@ calc_noise(
 		    FLOAT t0 = absxr[j+l], t1 = absxr[j+l+1];
 		    noise += t0*t0 + t1*t1;
 		} while ((l += 2) < 0);
+		noise *= *rxmin;
 	    }
-	    *distort = (noise *= *rxmin);
+	    *distort = noise;
 	}
 	max_noise=Max(max_noise,noise);
     }
@@ -444,7 +445,7 @@ init_bitalloc(lame_internal_flags *gfc, gr_info *const gi)
     } else if (gfc->CPU_features.AMD_3DNow) {
 	extern void pow075_3DN(float *, float *, int, float*);
 	if (end) {
-	    end = (end + 7) & (~7);
+	    end = (end + 3) & (~3);
 	    pow075_3DN(gi->xr, xr34, end, &sum);
 	}
     } else

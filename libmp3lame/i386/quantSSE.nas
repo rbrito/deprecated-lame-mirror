@@ -8,7 +8,7 @@
 
 ;void pow075(
 ;	float xr[576],
-;	float xr34[576],
+;	float xr34[576*2],
 ;	int end,
 ;	float *psum);
 
@@ -20,68 +20,77 @@ Q_ABS		dd	0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF
 
 	segment_text
 proc	pow075_3DN
-	femms
-	mov	ecx, [esp+12]	; ecx = end
-	mov	edx, [esp+8]	; edx = xr34
 	mov	eax, [esp+4]	; eax = xr
-	shl	ecx, 2
-	add	eax, ecx
-	add	edx, ecx
+	mov	edx, [esp+8]	; edx = xr34
+	mov	ecx, [esp+12]	; ecx = end
+	pxor	mm7, mm7	; srpow_sum
+	lea	eax, [eax + ecx*4]
+	lea	edx, [edx + ecx*4]
 	neg	ecx
-	pxor	mm7, mm7
-	jmp		.lp
+	movq	mm6, [Q_ABS]	; D_ABS
 
-	align 16
+	loopalign	16
 .lp:
-%assign i 0
-%rep 4
-	movq		mm0, [eax+ecx+fsizen(i)]
-	pand		mm0, [Q_ABS]	; = D_ABS
-	movq		mm4, mm0
-	pfadd		mm7, mm0
-	movq		[edx+ecx+576*4+fsizen(i)], mm0
-	punpckhdq	mm4,mm4
-	pfrsqrt		mm1, mm0
-	pfrsqrt		mm5, mm4
-	movq		mm2, mm1
-	movq		mm6, mm5
-	pfmul		mm1, mm1
+	movq		mm4, [eax+ecx*4+ 0]
+	movq		mm5, [eax+ecx*4+ 8]
+	pand		mm4, mm6
+	pand		mm5, mm6
+	movq		[edx+ecx*4+ 0+576*4], mm4 ; absxr
+	movq		[edx+ecx*4+ 8+576*4], mm5 ; absxr
+	movq		mm0, mm4
+	pfadd		mm7, mm4
+	movq		mm1, mm5
+	pfadd		mm7, mm5
+	punpckhdq	mm0, mm0
+	punpckhdq	mm1, mm1
+
+	pfrsqrt		mm4, mm4
+	pfrsqrt		mm0, mm0
+	pfrsqrt		mm5, mm5
+	pfrsqrt		mm1, mm1
+	pfrsqrt		mm4, mm4
+	pfrsqrt		mm0, mm0
+	pfrsqrt		mm5, mm5
+	pfrsqrt		mm1, mm1
+	pfrcp		mm4, mm4
+	pfrcp		mm0, mm0
+	pfrcp		mm5, mm5
+	pfrcp		mm1, mm1
+	punpckldq	mm4, mm0	; y = approx. x^-0.25
+	punpckldq	mm5, mm1	; y = approx. x^-0.25
+	movq		mm0, mm4
+	movq		mm1, mm5
+	movq		mm2, [Q_fm0p25]	; = D_fm0p25
+	movq		mm3, [Q_f1p25]	; = D_f1p25
+	pfmul		mm4, mm4
 	pfmul		mm5, mm5
-	pfrsqit1	mm1, mm0
-	pfrsqit1	mm5, mm4
-	pfrcpit2	mm1, mm2
-	pfrcpit2	mm5, mm6
-	pfrsqrt		mm3, mm1
+	pfmul		mm4, mm4
+	pfmul		mm5, mm5
 
-	pfrsqrt		mm0, mm5
-	movq		mm2, mm3
-	movq		mm6, mm0
-	pfmul		mm3, mm3
-	pfmul		mm0, mm0
-	pfrsqit1	mm3, mm1
-	pfrsqit1	mm0, mm5
-	pfrcpit2	mm3, mm2
-	pfrcpit2	mm0, mm6
-	punpckldq	mm3,mm0
-	movq		mm0, mm3
-	pfmul		mm3, mm3
-	pfmul		mm3, mm0
-	movq		[edx+ecx+fsizen(i)], mm3
-
-%assign i i+2
-%endrep
-	add	ecx, 32
+	pfmul		mm4, [edx+ecx*4+ 0+576*4]
+	pfmul		mm0, [edx+ecx*4+ 0+576*4]
+	pfmul		mm5, [edx+ecx*4+ 8+576*4]
+	pfmul		mm1, [edx+ecx*4+ 8+576*4]
+	pfmul		mm4, mm2 		; - 1/4 * x (y^4)
+	pfmul		mm5, mm2		; - 1/4 * x (y^4)
+	pfadd		mm4, mm3		; 5/4 - 1/4 * x (y^4)
+	pfadd		mm5, mm3		; 5/4 - 1/4 * x (y^4)
+	pxor		mm2, mm2
+	pfmul		mm4, mm0
+	pfmul		mm5, mm1
+	pfmax		mm4, mm2
+	pfmax		mm5, mm2
+	movq		[edx+ecx*4+ 0], mm4		; xr34
+	movq		[edx+ecx*4+ 8], mm5		; xr34
+	add	ecx, 4
 	jnz	near .lp
 
-	movq	mm1, mm7
-	punpckhdq	mm1,mm1
-	pfadd	mm7, mm1
-	movd	eax, mm7
-
+	mov		eax, [esp+16]	; psum
+	pfacc		mm7, mm7
+	movd		[eax], mm7
 	femms
-	mov	edx, [esp+16]	; psum
-	mov	[edx], eax
 	ret
+
 
 
 proc	pow075_SSE
@@ -96,8 +105,7 @@ proc	pow075_SSE
 	add	edx, ecx
 	neg	ecx
 	movaps	xm7, [Q_fm0p25]
-	jmp	.lp
-	align 16
+	loopalign 16
 .lp:
 	movaps	xm0, [eax+ecx+ 0]
 	movaps	xm1, [eax+ecx+16]
@@ -152,7 +160,6 @@ proc	pow075_SSE
 	shufps	xm4, xm4, PACK(1,1,1,1)	;* * * 1
 	addps	xm4, xm2		;* * * 0
 	movss	[eax], xm4
-.exit:
 	ret
 
 ;*psum = sum_{i=0}^{i=n} x_i^2,
@@ -183,8 +190,7 @@ proc	sumofsqr_3DN
 	shl	ecx, 2
 	add	eax, ecx
 	neg	ecx
-	jmp	.lp
-	align 16
+	loopalign 16
 .lp:
 	movq	mm2, [eax+ecx+ 0]
 	movq	mm3, [eax+ecx+ 8]
@@ -195,11 +201,10 @@ proc	sumofsqr_3DN
 	pfadd	mm1, mm3
 	jnz near	.lp
 
+	movd	mm2, [edx]
 	pfadd	mm0, mm1
-	movq	mm1, mm0
-	punpckhdq	mm1,mm1
-	pfadd	mm0, mm1
-	movd	eax, mm0
+	pfacc	mm0, mm0
+	pfmul	mm0, mm2
+	movd	[edx], mm0
 	femms
-	mov	[edx], eax
 	ret
