@@ -745,6 +745,7 @@ int calc_xmin( FLOAT8 xr[576], III_psy_ratio *ratio,
 	start = scalefac_band.l[ sfb ];
 	end   = scalefac_band.l[ sfb+1 ];
 	bw = end - start;
+
         for (en0 = 0.0, l = start; l < end; l++ ) {
 	  ener = xr[l] * xr[l];
 	  en0 += ener;

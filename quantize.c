@@ -51,7 +51,7 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 		III_side_info_t *l3_side, int l3_enc[2][2][576],
 		III_scalefac_t scalefac[2][2], frame_params *fr_ps)
 {
-  III_psy_xmin l3_xmin[2][2];
+  III_psy_xmin l3_xmin[2];
   gr_info *cod_info;
   layer *info;
   int over[2];
@@ -60,7 +60,7 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   int bitsPerFrame;
   int mean_bits;
   int ch, gr, i, bit_rate;
-  FLOAT8 xr[2][2][576];
+  FLOAT8 xr[2][576];
 
 
   iteration_init(xr_org,l3_side,l3_enc,fr_ps);
@@ -80,15 +80,27 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
       /* dual channel version can quantize Mid/Side channels with L/R
        * maskings (by constantly reconstructing L/R data).  Used before we
        * we had proper mid/side maskings. */
-      outer_loop_dual( xr, xr_org, mean_bits, bit_rate, over,
-		       l3_xmin, l3_enc, fr_ps, 
-		       scalefac,gr, l3_side, ratio, pe, ms_ener_ratio);
+      outer_loop_dual( xr, xr_org[gr], mean_bits, bit_rate, over,
+		       l3_xmin, l3_enc[gr], fr_ps, scalefac[gr],
+		       gr, l3_side, ratio[gr], pe, ms_ener_ratio);
+
+      /* finish up */
+      for (ch=0 ; ch < gf.stereo ; ch ++ ) {
+	cod_info = &l3_side->gr[gr].ch[ch].tt;
+	best_scalefac_store(gr, ch, l3_side, scalefac);
+#ifdef HAVEGTK
+	if (gf.gtkflag)
+	  pinfo->LAMEmainbits[gr][ch]=cod_info->part2_3_length;
+#endif
+	ResvAdjust(cod_info, l3_side, mean_bits );
+	assert(cod_info->global_gain < 256 );
+      }
     } else {
       int targ_bits[2];
       /* copy data to be quantized into xr */
-      if (convert_mdct) ms_convert(xr[gr],xr_org[gr]);
-      else memcpy(xr[gr],xr_org[gr],sizeof(FLOAT8)*2*576);   
-      
+      if (convert_mdct) ms_convert(xr, xr_org[gr]);
+      else memcpy(xr, xr_org[gr],sizeof(FLOAT8)*2*576);   
+
       on_pe(pe,l3_side,targ_bits,mean_bits, gr);
 #ifdef RH_SIDE_CBR
 #warning **** YOU TURNED SIDE CHANNEL REDUCTION OFF (RH_SIDE_CBR) ****
@@ -98,11 +110,12 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 #endif      
 
       for (ch=0 ; ch < gf.stereo ; ch ++) {
-	outer_loop( xr[gr][ch], targ_bits[ch], noise, targ_noise, 0,
-		    &l3_xmin[gr][ch], l3_enc[gr][ch], fr_ps,
-		    &scalefac[gr][ch],
-		    gr, l3_side, &ratio[gr][ch], ms_ener_ratio[gr],ch);
 	cod_info = &l3_side->gr[gr].ch[ch].tt;
+	outer_loop( xr[ch], targ_bits[ch], noise, targ_noise, 0,
+		    &l3_xmin[ch], l3_enc[gr][ch], fr_ps,
+		    &scalefac[gr][ch], cod_info,
+		    l3_side, &ratio[gr][ch], ms_ener_ratio[gr],gr,ch);
+
 
 	best_scalefac_store(gr, ch, l3_side, scalefac);
 	if (gf.use_best_huffman==1 && cod_info->block_type == NORM_TYPE) {
@@ -112,8 +125,21 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 	if (gf.gtkflag)
 	  pinfo->LAMEmainbits[gr][ch]=cod_info->part2_3_length;
 #endif
-	ResvAdjust(cod_info, l3_side, mean_bits );
+	//	printf("%i %i %i bits=%i  %e %e %e %e \n",
+	//          gf.frameNum,gr,ch,cod_info->part2_3_length,
+	//          noise[0],noise[1],noise[2],noise[3] );
 
+	//	printf("%i %i  sf=%i %i \n",gf.frameNum,l3_enc[gr][ch][0],
+	//           scalefac[gr][ch].l[0],cod_info->global_gain);
+
+	ResvAdjust(cod_info, l3_side, mean_bits );
+      }
+    }
+    /* set the sign of l3_enc */
+    for ( ch =  0; ch < gf.stereo; ch++ ) {
+      for ( i = 0; i < 576; i++) {
+	if (xr[ch][i] < 0)
+	  l3_enc[gr][ch][i] *= -1;
       }
     }
   } /* loop over gr */
@@ -132,15 +158,6 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 
 
 
-  /* set the sign of l3_enc */
-  for ( gr = 0; gr < gf.mode_gr; gr++ ) {
-    for ( ch =  0; ch < gf.stereo; ch++ ) {
-      for ( i = 0; i < 576; i++) {
-	if (xr[gr][ch][i] < 0)
-	  l3_enc[gr][ch][i] *= -1;
-      }
-    }
-  }
   ResvFrameEnd(l3_side, mean_bits );
 }
 
@@ -220,11 +237,11 @@ void set_masking_lower( int nbits )
  ************************************************************************/
 void
 VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
-                FLOAT8 xr_org[2][2][576], III_psy_ratio ratio[2][2],
+                FLOAT8 xr[2][2][576], III_psy_ratio ratio[2][2],
                 III_side_info_t * l3_side, int l3_enc[2][2][576],
                 III_scalefac_t scalefac[2][2], frame_params * fr_ps)
 {
-  III_psy_xmin l3_xmin[2][2];
+  III_psy_xmin l3_xmin;
   gr_info  *cod_info = NULL;
   layer    *info;
   int       save_bits[2][2];
@@ -238,10 +255,8 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   int       bits;
   int       mean_bits;
   int       i,ch, gr, analog_silence;
-  FLOAT8    xr[2][2][576];
-  FLOAT8 xr_save[576];
 
-  iteration_init(xr_org,l3_side,l3_enc,fr_ps);
+  iteration_init(xr,l3_side,l3_enc,fr_ps);
   info = fr_ps->header;
 
 
@@ -278,8 +293,8 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 #endif
 
     /* copy data to be quantized into xr */
-    if (convert_mdct) ms_convert(xr[gr],xr_org[gr]);
-    else memcpy(xr[gr],xr_org[gr],sizeof(FLOAT8)*2*576);   
+    if (convert_mdct)
+	ms_convert(xr[gr],xr[gr]);
 
     for (ch = 0; ch < num_chan; ch++) { 
       int real_bits;
@@ -287,21 +302,19 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
       /******************************************************************
        * find smallest number of bits for an allowable quantization
        ******************************************************************/
-      memcpy(xr_save,xr[gr][ch],sizeof(FLOAT8)*576);   
       cod_info = &l3_side->gr[gr].ch[ch].tt;
       min_bits = Max(125,min_mean_bits);
 
       /* check for analolg silence */
       /* if energy < ATH, set min_bits = 125 */
-      if (0==calc_xmin(xr[gr][ch], &ratio[gr][ch], cod_info,
-		       &l3_xmin[gr][ch])) {
-	analog_silence=1;
-      	min_bits=125;
+      if (0==calc_xmin(xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin)) {
+	  analog_silence=1;
+	  min_bits=125;
       }
 
       if (cod_info->block_type==SHORT_TYPE) {
-	min_bits += Max(1100,pe[gr][ch]);
-	min_bits=Min(min_bits,1800);
+	  min_bits += Max(1100,pe[gr][ch]);
+	  min_bits=Min(min_bits,1800);
       }
 
       max_bits = 1200 + frameBits[gf.VBR_max_bitrate]/(gf.stereo*gf.mode_gr);
@@ -314,52 +327,52 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
       save_bits[gr][ch] = max_bits;
 
       dbits = (max_bits-min_bits)/4;
-      this_bits = (max_bits+min_bits)/2;  
+      this_bits = (max_bits+min_bits)/2;
       real_bits = max_bits;
-      
+
       /* bin search to within +/- 10 bits of optimal */
       do {
-	int better;
-	assert(this_bits>=min_bits);
-	assert(this_bits<=max_bits);
+	  int better;
+	  assert(this_bits>=min_bits);
+	  assert(this_bits<=max_bits);
+
+	  if( this_bits >= real_bits ){
+	      save_bits[gr][ch] = this_bits;
+	      this_bits -= dbits;
+	      dbits /= 2;
+	      continue; /* skips the rest of this do-while loop */
+	  }
+
+	  /* quality setting */
+	  set_masking_lower( this_bits );
+
+	  /* VBR will look for a quantization which has better values
+	   * then those specified below.*/
+	  targ_noise[0]=0;          /* over */
+	  targ_noise[1]=0;          /* max_noise */
+	  targ_noise[2]=0;          /* over_noise */
+	  targ_noise[3]=0;          /* tot_noise */
 	
-	if( this_bits >= real_bits ){
-	  save_bits[gr][ch] = this_bits;
-	  this_bits -= dbits;
+	  targ_noise[0]=Max(0,targ_noise[0]);
+	  targ_noise[2]=Max(0,targ_noise[2]);
+
+	  outer_loop( xr[gr][ch], this_bits, noise, targ_noise, 1,
+		      &l3_xmin, l3_enc[gr][ch], fr_ps,
+		      &scalefac[gr][ch],
+		      &l3_side->gr[gr].ch[ch].tt,
+		      l3_side, &ratio[gr][ch], ms_ener_ratio[gr], gr, ch);
+
+	  /* is quantization as good as we are looking for ? */
+	  better=VBR_compare((int)targ_noise[0],targ_noise[3],targ_noise[2],
+			     targ_noise[1],(int)noise[0],noise[3],noise[2],
+			     noise[1]);
+	  if (better) {
+	      save_bits[gr][ch] = this_bits;
+	      this_bits -= dbits;
+	  } else {
+	      this_bits += dbits;
+	  }
 	  dbits /= 2;
-	  continue; /* skips the rest of this do-while loop */
-	}
-	
-	/* quality setting */
-	set_masking_lower( this_bits );
-
-	/* VBR will look for a quantization which has better values
-	 * then those specified below.*/
-	targ_noise[0]=0;          /* over */
-	targ_noise[1]=0;          /* max_noise */
-	targ_noise[2]=0;          /* over_noise */
-	targ_noise[3]=0;          /* tot_noise */
-	
-	targ_noise[0]=Max(0,targ_noise[0]);
-	targ_noise[2]=Max(0,targ_noise[2]);
-
-	/* restore xr */
-	memcpy(xr[gr][ch], xr_save, sizeof(FLOAT8)*576);
-	outer_loop( xr[gr][ch], this_bits, noise, targ_noise, 1,
-		    &l3_xmin[gr][ch], l3_enc[gr][ch], fr_ps,
-		    &scalefac[gr][ch],
-		    gr, l3_side, &ratio[gr][ch], ms_ener_ratio[gr], ch);
-
-	/* is quantization as good as we are looking for ? */
-	better=VBR_compare((int)targ_noise[0],targ_noise[3],targ_noise[2],
-            targ_noise[1],(int)noise[0],noise[3],noise[2],noise[1]);
-       if (better) {
-	  save_bits[gr][ch] = this_bits;
-          this_bits -= dbits;
-        } else {
-          this_bits += dbits;
-        }
-        dbits /= 2;
       } while (dbits>10) ;
       used_bits += save_bits[gr][ch];
       
@@ -411,17 +424,15 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   assert(used_bits <= bits);
 
   for(gr = 0; gr < gf.mode_gr; gr++) {
-    /* copy data to be quantized into xr */
-    if (convert_mdct) ms_convert(xr[gr],xr_org[gr]);
-    else memcpy(xr[gr],xr_org[gr],sizeof(FLOAT8)*2*576);   
     for(ch = 0; ch < gf.stereo; ch++) {
       /* quality setting */
       set_masking_lower( save_bits[gr][ch] );
       
       outer_loop( xr[gr][ch], save_bits[gr][ch], noise,targ_noise,0,
-		  &l3_xmin[gr][ch], l3_enc[gr][ch], fr_ps, 
+		  &l3_xmin, l3_enc[gr][ch], fr_ps, 
 		  &scalefac[gr][ch],
-		  gr, l3_side, &ratio[gr][ch], ms_ener_ratio[gr], ch);
+		  &l3_side->gr[gr].ch[ch].tt,
+		  l3_side, &ratio[gr][ch], ms_ener_ratio[gr], gr,ch);
     }
   }
 
@@ -468,17 +479,11 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 /************************************************************************/
 void init_outer_loop(
     FLOAT8 xr[576],        /*  could be L/R OR MID/SIDE */
-    III_psy_xmin *l3_xmin,   /* the allowed distortion of the scalefactor */
     III_scalefac_t *scalefac, /* scalefactors */
-    int gr, III_side_info_t *l3_side,
-    III_psy_ratio *ratio, int ch)
+    gr_info *cod_info,
+    III_side_info_t *l3_side)
 {
-  int sfb,i;
-  gr_info *cod_info;  
-  cod_info = &l3_side->gr[gr].ch[ch].tt;
-
-  /* compute max allowed distortion */
-  calc_xmin(xr, ratio, cod_info, l3_xmin);
+  int i;
 
   /* reset of iteration variables */
   memset(scalefac, 0, sizeof(III_scalefac_t));
@@ -531,12 +536,6 @@ void init_outer_loop(
 	  cod_info->subblock_gain[b]=2;
 	if (cod_info->subblock_gain[b] < 0) 
 	  cod_info->subblock_gain[b]=0;
-	for (i = b; i < 576; i += 3) {
-	  xr[i] *= 1 << (cod_info->subblock_gain[b] * 2);
-	}
-	for (sfb = 0; sfb < SBPSY_s; sfb++) {
-	  l3_xmin->s[sfb][b] *= 1 << (cod_info->subblock_gain[b] * 4);
-	}
       }
     }
   }
@@ -560,20 +559,20 @@ void init_outer_loop(
  *  added VBR support mt 5/99
  ************************************************************************/
 void outer_loop(
-    FLOAT8 xr[576],        /*  could be L/R OR MID/SIDE */
+    FLOAT8 xr[576],        
     int targ_bits,
     FLOAT8 best_noise[4],
     FLOAT8 targ_noise[4],
     int sloppy,
     III_psy_xmin *l3_xmin,   /* the allowed distortion of the scalefactor */
-    int l3_enc[576],    /* vector of quantized values ix(0..575) */
+    int l3_enc[576],         /* vector of quantized values ix(0..575) */
     frame_params *fr_ps,
     III_scalefac_t *scalefac, /* scalefactors */
-    int gr, III_side_info_t *l3_side,
+    gr_info *cod_info,
+    III_side_info_t *l3_side,
     III_psy_ratio *ratio, FLOAT8 ms_ener_ratio,
-    int ch)
+    int gr,int ch)
 {
-
   int i, iteration;
   int status,count=0,bits_found=0;
   III_scalefac_t scalefac_w;
@@ -590,29 +589,25 @@ void outer_loop(
   FLOAT8 best_over_noise=0;
   FLOAT8 best_tot_noise=0;
   gr_info save_cod_info;
-  gr_info *cod_info;  
-  FLOAT8 xr_save[576];
   FLOAT8 xfsf[4][SBPSY_l];
   FLOAT8 distort[4][SBPSY_l];
 
   int compute_stepsize=1;
   int notdone=1;
 
-  if (gf.experimentalY && (sloppy || !gf.VBR)) {
-    memcpy(xr_save, xr, sizeof(FLOAT8)*576);
-  }
+  /* compute max allowed distortion */
+  calc_xmin(xr, ratio, cod_info, l3_xmin);
 
-  cod_info = &l3_side->gr[gr].ch[ch].tt;
-  init_outer_loop(xr,l3_xmin, &scalefac_w,gr,l3_side,ratio,ch);  
+  init_outer_loop(xr, &scalefac_w, cod_info,l3_side);
+  best_over = 100;
   count=0;
   for (i=0; i<576; i++) {
     if ( fabs(xr[i]) > 0 ) count++; 
   }
   if (count==0) {
-    /* set cod_info  (done in init_outer_loop above) */
-    memset(scalefac, 0, sizeof(III_scalefac_t));
-    memset(l3_enc, 0, sizeof(int)*576);
-    
+    /* cod_info was set in init_outer_loop above */
+    memset(scalefac,0,sizeof(III_scalefac_t));
+    memset(l3_enc,0,576*sizeof(int));
     best_noise[0]=0;
     best_noise[1]=0;
     best_noise[2]=0;
@@ -632,7 +627,7 @@ void outer_loop(
     if (compute_stepsize) {
       /* init and compute initial quantization step */
       compute_stepsize=0;
-      for(i=0;i<576;i++) 	    {
+      for (i=0;i<576;i++) {
 	temp=fabs(xr[i]);
 	xrpow[i]=sqrt(sqrt(temp)*temp);
       }
@@ -672,10 +667,13 @@ void outer_loop(
       }else{
 	/* coefficients and thresholds both l/r (or both mid/side) */
 	over=calc_noise1( xr, l3_enc_w, cod_info, 
-			  xfsf,distort, l3_xmin, &over_noise, 
+			  xfsf,distort, l3_xmin, &scalefac_w, &over_noise, 
 			  &tot_noise, &max_noise);
 
       }
+
+
+
       /* check if this quantization is better the our saved quantization */
       if (iteration == 1) better=1;
       else 
@@ -683,7 +681,6 @@ void outer_loop(
 	     best_over,best_tot_noise,best_over_noise,best_max_noise,
                   over,     tot_noise,     over_noise,     max_noise);
 
-      
       /* save data so we can restore this quantization later */    
       if (better) {
 	best_over=over;
@@ -694,6 +691,7 @@ void outer_loop(
 	memcpy(scalefac, &scalefac_w, sizeof(III_scalefac_t));
 	memcpy(l3_enc,l3_enc_w,sizeof(int)*576);
 	memcpy(&save_cod_info,cod_info,sizeof(save_cod_info));
+
 #ifdef HAVEGTK
 	if (gf.gtkflag) {
 	  int sfb;
@@ -773,40 +771,39 @@ void outer_loop(
 
 
     if (notdone) {
-      notdone = amp_scalefac_bands( xr, xrpow, l3_xmin,
-				    cod_info, &scalefac_w, distort);
-    }
-      
-      
-    if (notdone) {            
-      /* check to make sure we have not amplified too much */
-      /* loop_break returns 0 if there is an unamplified scalefac */
-      /* scale_bitcount returns 0 if no scalefactors are too large */
-      if ( (status = loop_break(&scalefac_w, cod_info)) == 0 ) {
-	if ( fr_ps->header->version == 1 ) {
-	  status = scale_bitcount(&scalefac_w, cod_info);
-	}else{
-	  status = scale_bitcount_lsf(&scalefac_w, cod_info);
+	amp_scalefac_bands( xrpow, cod_info, &scalefac_w, distort);
+	/* check to make sure we have not amplified too much */
+	/* loop_break returns 0 if there is an unamplified scalefac */
+	/* scale_bitcount returns 0 if no scalefactors are too large */
+	if ( (status = loop_break(&scalefac_w, cod_info)) == 0 ) {
+	    if ( fr_ps->header->version == 1 ) {
+		status = scale_bitcount(&scalefac_w, cod_info);
+	    }else{
+		status = scale_bitcount_lsf(&scalefac_w, cod_info);
+	    }
+	    if (status && (cod_info->scalefac_scale==0)) try_scale=1; 
 	}
-	if (status && (cod_info->scalefac_scale==0)) try_scale=1; 
-      }
-      notdone = !status;
-    }    
+	notdone = !status;
+    }
 
 
 
     if (try_scale && gf.experimentalY && (sloppy || !gf.VBR)) {
-      memcpy(xr,xr_save,sizeof(FLOAT8)*576);
-      init_outer_loop(xr,l3_xmin, &scalefac_w,gr,l3_side,ratio,ch);  
+      init_outer_loop(xr, &scalefac_w, cod_info,l3_side);
       compute_stepsize=1;  /* compute a new global gain */
       notdone=1;
       cod_info->scalefac_scale=1;
     }
   }    /* done with main iteration */
 
-  memcpy(cod_info,&save_cod_info,sizeof(save_cod_info));
-  cod_info->part2_3_length += cod_info->part2_length;
-
+  /* in sloppy mode we don´t need to restore the quantization, 
+   * cos we didn´t saved it and we don´t need it, as we only want
+   * to know if we can do better
+   */
+  if (count) {
+    memcpy(cod_info,&save_cod_info,sizeof(save_cod_info));
+    cod_info->part2_3_length += cod_info->part2_length;
+  }
   /* finish up */
   assert( cod_info->global_gain < 256 );
 
@@ -837,7 +834,8 @@ void outer_loop(
 /*  mt 5/99:  Function: Improved calc_noise for a single channel   */
 int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
 		 FLOAT8 xfsf[4][SBPSY_l], FLOAT8 distort[4][SBPSY_l],
-		 III_psy_xmin *l3_xmin, FLOAT8 *over_noise,
+		 III_psy_xmin *l3_xmin, III_scalefac_t *scalefac,
+		 FLOAT8 *over_noise,
 		 FLOAT8 *tot_noise, FLOAT8 *max_noise)
 {
     int start, end, sfb, l, i, over=0;
@@ -852,10 +850,16 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
     *tot_noise=0;
     *max_noise=-999;
 
-    step = POW20(cod_info->global_gain);
+    for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
+	FLOAT8 step;
+	int s = scalefac->l[sfb];
 
-    for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ )
-    {
+	if (cod_info->preflag)
+	    s += pretab[sfb];
+
+	s = cod_info->global_gain - (s << (cod_info->scalefac_scale + 1));
+	step = POW20(s);
+
 	start = scalefac_band.l[ sfb ];
         end   = scalefac_band.l[ sfb+1 ];
         bw = end - start;
@@ -901,8 +905,14 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
 
 
     for ( i = 0; i < 3; i++ ) {
-	step = POW20(cod_info->global_gain);
         for ( sfb = cod_info->sfb_smax; sfb < SBPSY_s; sfb++ ) {
+	    int s;
+
+	    s = (scalefac->s[sfb][i] << (cod_info->scalefac_scale + 1))
+		+ cod_info->subblock_gain[i] * 8;
+	    s = cod_info->global_gain - s;
+
+	    step = POW20(s);
 	    start = scalefac_band.s[ sfb ];
 	    end   = scalefac_band.s[ sfb+1 ];
             bw = end - start;
@@ -932,8 +942,8 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
 #endif
             distort[i+1][sfb] = noise;
             if (noise > 0) {
-	      over++;
-	      *over_noise += noise;
+		over++;
+		*over_noise += noise;
 	    }
 	    *tot_noise += noise;
 	    *max_noise=Max(*max_noise,noise);
@@ -961,77 +971,59 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
   Amplify the scalefactor bands that violate the masking threshold.
   See ISO 11172-3 Section C.1.5.4.3.5
 */
-int amp_scalefac_bands( FLOAT8 xr[576], FLOAT8 xrpow[576], 
-			III_psy_xmin *l3_xmin, gr_info *cod_info,
+void amp_scalefac_bands(FLOAT8 xrpow[576], 
+			gr_info *cod_info,
 			III_scalefac_t *scalefac,
 			FLOAT8 distort[4][SBPSY_l])
 {
-    int start, end, l, sfb, i, over = 0;
-    FLOAT8 ifqstep, ifqstep2, ifqstep34;
+    int start, end, l, sfb, i;
+    FLOAT8 ifqstep34;
     FLOAT8 distort_thresh;
-    D192_3 *xr_s;
-    D192_3 *xrpow_s;
-
-    xr_s = (D192_3 *) xr;
-    xrpow_s = (D192_3 *) xrpow;
 
     if ( cod_info->scalefac_scale == 0 )
-	ifqstep = SQRT2;
+	ifqstep34 = 1.29683955465100964055;
     else
-	ifqstep = 2.0;
-
-
-    ifqstep2 = ifqstep * ifqstep;
-    ifqstep34=sqrt(sqrt(ifqstep)*ifqstep);
+	ifqstep34 = 1.68179283050742922612;
 
     /* distort_thresh = 0, unless all bands have distortion 
      * less than masking.  In that case, just amplify bands with distortion
      * within 95% of largest distortion/masking ratio */
     distort_thresh = -900;
-    for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ )
-      distort_thresh = Max(distort[0][sfb],distort_thresh);
-    distort_thresh=Min(distort_thresh * 1.05,0.0);
+    for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
+	distort_thresh = Max(distort[0][sfb],distort_thresh);
+    }
+
+    for ( sfb = cod_info->sfb_smax; sfb < 12; sfb++ ) {
+	for ( i = 0; i < 3; i++ ) {
+	    distort_thresh = Max(distort[i+1][sfb],distort_thresh);
+	}
+    }
+    distort_thresh=Min(distort_thresh * 1.05, 0.0);
 
 
-    for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ )
-    {
-	if ( distort[0][sfb]>distort_thresh  ) 
-	{
-	    over++;
+
+    for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
+	if ( distort[0][sfb]>distort_thresh  ) {
 	    scalefac->l[sfb]++;
 	    start = scalefac_band.l[sfb];
 	    end   = scalefac_band.l[sfb+1];
-	    for ( l = start; l < end; l++ ) xr[l] *= ifqstep;
-	    for ( l = start; l < end; l++ ) xrpow[l] *= ifqstep34;
-	    l3_xmin->l[sfb] *= ifqstep2;
-
+	    for ( l = start; l < end; l++ )
+		xrpow[l] *= ifqstep34;
 	}
     }
 
 
-
-    distort_thresh = -900;
-    for ( i = 0; i < 3; i++ )
-      for ( sfb = cod_info->sfb_smax; sfb < 12; sfb++ ) {
-	  distort_thresh = Max(distort[i+1][sfb],distort_thresh);
-      }
-    distort_thresh=Min(distort_thresh * 1.05, 0.0);
-
-
-    for ( i = 0; i < 3; i++ )
-      for ( sfb = cod_info->sfb_smax; sfb < 12; sfb++ ) {
-            if ( distort[i+1][sfb]>distort_thresh)
-            {
-                over++;
+    for ( i = 0; i < 3; i++ ) {
+	for ( sfb = cod_info->sfb_smax; sfb < 12; sfb++ ) {
+            if ( distort[i+1][sfb]>distort_thresh) {
                 scalefac->s[sfb][i]++;
                 start = scalefac_band.s[sfb];
                 end   = scalefac_band.s[sfb+1];
-                for ( l = start; l < end; l++ ) (*xr_s)[l][i] *= ifqstep;
-		for ( l = start; l < end; l++ ) (*xrpow_s)[l][i] *= ifqstep34;
-                l3_xmin->s[sfb][i] *= ifqstep2;
+		for (l = start; l < end; l++)
+		    xrpow[l * 3 + i] *= ifqstep34;
             }
-      }
-    return over;
+	}
+    }
 }
 
 
@@ -1052,7 +1044,8 @@ int over,FLOAT8 tot_noise, FLOAT8 over_noise, FLOAT8 max_noise)
 
   if (gf.experimentalX==0) {
     better = ((over < best_over) ||
-	    ((over==best_over) && (over_noise<best_over_noise)) ) ;
+	      ((over==best_over) && (over_noise<=best_over_noise)) ) ;
+	      //	    ((over==best_over) && (over_noise<best_over_noise)) ) ;
   }
 
   if (gf.experimentalX==1) 

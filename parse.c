@@ -3,6 +3,8 @@
 #include "id3tag.h"
 #include "get_audio.h"
 #include "brhist.h"
+#include "version.h"
+
 
 
 #define         MAX_NAME_SIZE           300
