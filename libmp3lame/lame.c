@@ -1975,6 +1975,7 @@ lame_init_old(lame_global_flags * gfp)
 
     gfp->VBR = vbr_off;
     gfp->VBR_q = 4;
+    gfp->ATHcurve = 4;
     gfp->VBR_mean_bitrate_kbps = 128;
     gfp->VBR_min_bitrate_kbps = 0;
     gfp->VBR_max_bitrate_kbps = 0;
