@@ -319,12 +319,12 @@ calc_noise(
     lame_internal_flags *gfc,
     const gr_info * const gi, const FLOAT rxmin[], FLOAT distort[])
 {
-    FLOAT max_noise = 0.0;
+    FLOAT max_noise = 1e-20;
     int sfb = 0, j = 0, l;
 
     do {
 	FLOAT noise;
-	if (j > gi->count1)
+	if (j > gi->big_values)
 	    break;
 	noise = *distort;
 	l = -gi->width[sfb];
@@ -339,10 +339,32 @@ calc_noise(
 		temp = absxr[j+l] - pow43[gi->l3_enc[j+l]] * step; l++;
 		noise += temp * temp;
 	    } while (l < 0);
-	    *distort = noise = noise * *rxmin;
+	    *distort = (noise *= *rxmin);
 	}
 	max_noise=Max(max_noise,noise);
     } while (rxmin++, distort++, ++sfb < gi->psymax);
+
+    for (;sfb < gi->psymax; rxmin++, distort++, sfb++) {
+	FLOAT noise;
+	if (j > gi->count1)
+	    break;
+	noise = *distort;
+	l = -gi->width[sfb];
+	j -= l;
+	if (noise < 0.0) {
+	    FLOAT step = POW20(scalefactor(gi, sfb)) * pow43[1];
+	    noise = 0.0;
+	    do {
+		FLOAT t0 = absxr[j+l], t1 = absxr[j+l+1];
+		if (gi->l3_enc[j+l  ]) t0 -= step;
+		noise += t0*t0;
+		if (gi->l3_enc[j+l+1]) t1 -= step;
+		noise += t1*t1;
+	    } while ((l+=2) < 0);
+	    *distort = (noise *= *rxmin);
+	}
+	max_noise=Max(max_noise,noise);
+    }
 
     for (;sfb < gi->psymax; rxmin++, distort++, sfb++) {
 	FLOAT noise = *distort;
@@ -361,7 +383,7 @@ calc_noise(
 		    noise += t0*t0 + t1*t1;
 		} while ((l += 2) < 0);
 	    }
-	    *distort = noise = noise * *rxmin;
+	    *distort = (noise *= *rxmin);
 	}
 	max_noise=Max(max_noise,noise);
     }
@@ -375,7 +397,7 @@ calc_noise(
 		max_noise = noise;
 	}
     }
-    return Max(max_noise, 1e-20);
+    return max_noise;
 }
 
 static FLOAT
