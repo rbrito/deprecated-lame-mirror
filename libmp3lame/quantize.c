@@ -1480,7 +1480,7 @@ calc_target_bits (
     getframebits (gfp, &bitsPerFrame, &mean_bits);
     *analog_silence_bits = mean_bits / gfc->channels_out;
 
-    mean_bits  = gfp->VBR_mean_bitrate_kbps * gfp->framesize * 1000;
+    mean_bits  = gfp->VBR_mean_bitrate_kbps * gfp->framesize * 1000 * 1.04; /*increase target abr bitrate by 4%*/
     mean_bits /= gfp->out_samplerate;
     mean_bits -= gfc->sideinfo_len*8;
     mean_bits /= gfc->mode_gr;
