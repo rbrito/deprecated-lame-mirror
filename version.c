@@ -21,6 +21,7 @@
 
 
 #include "version.h"
+#include "lame.h"
 #include <stdio.h>
 
 static char lpszVersion[80];

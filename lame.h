@@ -54,7 +54,7 @@ typedef struct  {
   int bWriteVbrTag;           /* Xing VBR tag?         */
   int quality;                /* quality setting 0=best,  9=worst  */
   int silent;                 /* disable some status output */
-  int mode;                       /* mono, stereo, jstereo */
+  int mode;                       /* 0,1,2,3 stereo,jstereo,dual channel,mono */
   int mode_fixed;                 /* use specified mode, not lame's opinion of the best mode */
   int force_ms;                   /* force M/S mode */
   int brate;                      /* bitrate */
@@ -183,8 +183,9 @@ void lame_usage(char *);
 /* OPTIONAL: call this to print a command line interface usage guide and quit   */
 void lame_help(char *);
 
-
-
+/* OPTIONAL: get the version number, in a string. of the form:  "3.63 (beta)" or 
+   just "3.63".  Max allows length is 20 characters  */
+void lame_version(char *);
 
 
 /* OPTIONAL: set internal options via command line argument parsing 

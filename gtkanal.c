@@ -75,6 +75,10 @@ int gtkmakeframe(void)
   char mp3buffer[LAME_MAXMP3BUFFER];
   
 
+#ifndef HAVEMPGLIB
+  fprintf(stderr,"Error: GTK frame analyzer requires MPGLIB\n");
+  exit(1);
+#else
   /* even if iread=0, get_audio hit EOF and returned Buffer=all 0's.  encode
    * and decode to flush any previous buffers from the decoder */
 
@@ -130,6 +134,7 @@ int gtkmakeframe(void)
       pinfo->frameNum123=-1;  /* no frame output */
     }
   }
+#endif
   return iread;
 }
 

@@ -25,6 +25,7 @@ RM = rm -f
 CPP_OPTS = -DHAVEMPGLIB -DLAMEPARSE
 
 
+
 ##########################################################################
 # To remove support for mp3 *decoding*, 
 # remove -DHAVEMPGLIB to CPP_OPTS

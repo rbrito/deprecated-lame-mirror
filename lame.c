@@ -1290,8 +1290,7 @@ void lame_mp3_tags(void)
 }
 
 
-#if (!defined  HAVEMPGLIB && !defined AMIGA_MPEGA)
-/* dummy routines if you dont have a mp3 decoder library */
-int lame_decode(char *buf,int len,short pcm[][1152]) { return 0;}
-int lame_decode_init(void) {return 0;}
-#endif
+void lame_version(char *ostring) {
+  strncpy(ostring,get_lame_version(),20);
+}
+
