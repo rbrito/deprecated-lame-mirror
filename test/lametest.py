@@ -177,6 +177,8 @@ while line:
     print      # empty line
 
     if (lame2=='ref'):
+        cmd = "rm -f "+name1
+        os.system(cmd)
         cmd = lame1 + " --quiet " + line + " " + input_file + " " + name1
         print "executable:      ",lame1
         print "options:         ",line
@@ -185,6 +187,8 @@ while line:
         os.system(cmd)
         num_ok = num_ok+compare(name1,name2,decode)
     elif (lame2=='makeref'):
+        cmd = "rm -f "+name2
+        os.system(cmd)
         print "executable: ",lame1
         print "options:    ",line
         print "input:      ",input_file 
@@ -192,6 +196,10 @@ while line:
         cmd = lame1 + " --quiet " + line + " " + input_file + " " + name2
         os.system(cmd)
     else:
+        cmd = "rm -f "+name1
+        os.system(cmd)
+        cmd = "rm -f "+name2
+        os.system(cmd)
         print "executable:  ",lame1
         print "executable2: ",lame2
         print "options:     ",line
