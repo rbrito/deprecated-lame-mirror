@@ -72,6 +72,35 @@ float update_interval;      /* to use Frank's time status display */
 *
 ************************************************************************/
 
+int  parse_args_from_string ( lame_global_flags* const gfp, const char* p, char* inPath, char* outPath )
+{   /* Quick & very Dirty */
+    char*  q;
+    char*  f;
+    char*  r [128];
+    int    c = 0;
+    int    ret;
+    
+    if ( p == NULL || *p == '\0' )
+        return 0;
+	
+    f = q = malloc ( strlen(p) + 1 );
+    strcpy ( q, p );
+    
+    r[c++] = "lhama";
+    while (1) {
+        r [c++] = q;
+	while (*q != ' ' && *q != '\0') q++;
+	if (*q == '\0') break;
+	*q++='\0';
+    }
+    r[c] = NULL;
+    
+    ret = parse_args ( gfp, c, r, inPath, outPath );
+    free (f);
+    return ret;
+}
+
+
 
 int main(int argc, char **argv)
 {
@@ -110,6 +139,7 @@ int main(int argc, char **argv)
    * skip this call and set the values of interest in the gf struct.
    * (see lame.h for documentation about these parameters)
    */
+    parse_args_from_string ( &gf, getenv("LAMEOPT"), inPath, outPath );
     ret = parse_args ( &gf, argc, argv, inPath, outPath );
     if ( ret < 0 )
         return ret == -2 ? 0 : 1;
@@ -133,8 +163,11 @@ int main(int argc, char **argv)
    * if you want to do your own file input, skip this call and set
    * samplerate, num_channels and num_samples yourself.
    */
-  init_infile(&gf,inPath);
-  outf=init_outfile(outPath);
+  init_infile ( &gf, inPath );
+  if ((outf = init_outfile (outPath, gf.decode_only)) == NULL ) {
+      fprintf (stderr, "Can't init outfile '%s'\n", outPath);
+      return -42;
+  }
 
   /* Now that all the options are set, lame needs to analyze them and
    * set some more internal options and check for problems

@@ -168,6 +168,18 @@ int  brhist_init ( const lame_global_flags* gf, const int bitrate_kbps_min, cons
     return 0;
 }
 
+static int  digits ( unsigned number )
+{
+    int  ret = 1;
+    
+    if ( number >= 100000000 ) { ret += 8; number /= 100000000; }
+    if ( number >=     10000 ) { ret += 4; number /=     10000; }
+    if ( number >=       100 ) { ret += 2; number /=       100; }
+    if ( number >=        10 ) { ret += 1;                      }
+    
+    return ret;
+}
+
 
 static void  brhist_disp_line ( const lame_global_flags*  gf, int i, int br_hist_TOT, int br_hist_LR, int full, int frames )
 {
@@ -202,10 +214,7 @@ static void  brhist_disp_line ( const lame_global_flags*  gf, int i, int br_hist
     else
         sprintf ( brppt, "[%3u%%]", (ppt+5)/10 );
 #else
-    sprintf( brppt, " [%3i]",br_hist_TOT);
-    if (frames>999) sprintf( brppt, " [%4i]",br_hist_TOT);
-    if (frames>9999) sprintf( brppt, " [%5i]",br_hist_TOT);
-    if (frames>99999) sprintf( brppt, " [%6i]",br_hist_TOT);
+    sprintf ( brppt, " [%*i]", digits(frames), br_hist_TOT );
 #endif
           
     if ( Console_IO.str_clreoln [0] ) /* ClearEndOfLine available */

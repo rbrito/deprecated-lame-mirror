@@ -79,16 +79,6 @@ FILE * OpenSndFile(lame_global_flags *gfp,char *);
 
 /* Replacement for forward fseek(,,SEEK_CUR), because fseek() fails on pipes */
 
-/*///
- *  Changes:
- *    - optimized to use the advised PIPE_BUF as buffer size
- *    - don't hang if fread can't read any further data
- *    - works exactly in the way of fseek (and KLEMM_06 enables the usage of fseek, if available, may be a other seekable test is better???)
- *    - error handling for wrong cases returning a -1
- *    - now at the top of the file, so you don't need to prototype it
- *    - static (all function not defined in the *.h file should be static)
- */
-
 
 static int  fskip ( FILE* fp, long offset, int whence )
 {
@@ -120,32 +110,28 @@ static int  fskip ( FILE* fp, long offset, int whence )
 }
 
 
-FILE *init_outfile(char *outPath)
+FILE*  init_outfile ( char* outPath, int decode ) /* Fixed, the code was broken for __riscos__: missing i and missing gf.decode_only */
 {
-  FILE *outf;
-  /* open the output file */
-  if (!strcmp(outPath, "-")) {
-      lame_set_stream_binary_mode ( outf = stdout );
-  } else {
-    if ((outf = fopen(outPath, "wb+")) == NULL) {
-      fprintf(stderr,"Could not create \"%s\".\n", outPath);
-      exit(-1);
-    }
+    FILE*  outf;
+    char*  p;
+  
+    /* open the output file */
+    if ( 0 == strcmp (outPath, "-") ) {
+        lame_set_stream_binary_mode ( outf = stdout );
+    } else {
+        if ( (outf = fopen (outPath, "wb+")) == NULL )
+            return NULL;
 #ifdef __riscos__
-    /* Assign correct file type */
-    for (i = 0; outPath[i]; i++) {
-      if (outPath[i] == '.')
-        outPath[i] = '/';
-      else if (outPath[i] == '/')
-        outPath[i] = '.';
-    }
-    if (gf.decode_only)
-      SetFiletype(outPath, 0xfb1); /* Wave */
-    else
-      SetFiletype(outPath, 0x1ad); /* AMPEG */
+        /* Assign correct file type */
+        for ( p = outPath; *p; p++ )    /* ugly, ugly to modify a string */
+            switch ( *p ) {
+            case '.' : *p = '/'; break;
+            case '/' : *p = '.'; break;
+	    }
+        SetFiletype ( outPath, decode  ?  0xFB1 /*WAV*/  :  0x1AD /*AMPEG*/ );
 #endif
-  }
-  return outf;
+    }
+    return outf;
 }
 
 
