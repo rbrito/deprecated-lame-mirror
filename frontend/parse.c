@@ -699,7 +699,6 @@ static void  presets_longinfo_dm ( FILE* msgfp )
 
 
 extern void lame_set_msfix( lame_t gfp, double msfix );
-extern int lame_set_preset_expopts( lame_t gfp, int preset_expopts );
 
 
 
