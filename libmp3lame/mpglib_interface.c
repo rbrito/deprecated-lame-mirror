@@ -143,7 +143,7 @@ lame_decode1_headersB_clipchoice(unsigned char *buffer, int len,
               COPY_MONO(short,short)
             }
             else {
-              COPY_MONO(sample_t,FLOAT8)                
+              COPY_MONO(sample_t,FLOAT)                
             }
             break;
         case 2: 
@@ -152,7 +152,7 @@ lame_decode1_headersB_clipchoice(unsigned char *buffer, int len,
               COPY_STEREO(short,short)
             }
             else {
-              COPY_STEREO(sample_t,FLOAT8)
+              COPY_STEREO(sample_t,FLOAT)
             }
             break;
         default:
@@ -195,7 +195,7 @@ lame_decode1_headersB(unsigned char *buffer,
 
 
 /* we forbid input with more than 1152 samples per channel for output in the unclipped mode */
-#define OUTSIZE_UNCLIPPED 1152*2*sizeof(FLOAT8)
+#define OUTSIZE_UNCLIPPED 1152*2*sizeof(FLOAT)
 
 int 
 lame_decode1_unclipped(unsigned char *buffer, int len, sample_t pcm_l[], sample_t pcm_r[])
@@ -204,7 +204,7 @@ lame_decode1_unclipped(unsigned char *buffer, int len, sample_t pcm_l[], sample_
   mp3data_struct mp3data;
   int enc_delay,enc_padding;
 
-  return lame_decode1_headersB_clipchoice(buffer, len, (char *)pcm_l, (char *)pcm_r, &mp3data, &enc_delay, &enc_padding, out, OUTSIZE_UNCLIPPED, sizeof(FLOAT8), decodeMP3_unclipped  );
+  return lame_decode1_headersB_clipchoice(buffer, len, (char *)pcm_l, (char *)pcm_r, &mp3data, &enc_delay, &enc_padding, out, OUTSIZE_UNCLIPPED, sizeof(FLOAT), decodeMP3_unclipped  );
 }
 
 

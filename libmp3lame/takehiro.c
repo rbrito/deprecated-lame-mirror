@@ -98,7 +98,7 @@ typedef union {
 #define MAGIC_INT 0x4b000000
 
 
-void quantize_lines_xrpow(int l, FLOAT8 istep, const FLOAT8* xp, int* pi)
+void quantize_lines_xrpow(int l, FLOAT istep, const FLOAT* xp, int* pi)
 {
     fi_union *fi;
     int remaining;
@@ -151,7 +151,7 @@ void quantize_lines_xrpow(int l, FLOAT8 istep, const FLOAT8* xp, int* pi)
 
 
 #  define ROUNDFAC -0.0946
-void quantize_lines_xrpow_ISO(int l, FLOAT8 istep, const FLOAT8* xp, int* pi)
+void quantize_lines_xrpow_ISO(int l, FLOAT istep, const FLOAT* xp, int* pi)
 {
     fi_union *fi;
     int remaining;
@@ -210,7 +210,7 @@ void quantize_lines_xrpow_ISO(int l, FLOAT8 istep, const FLOAT8* xp, int* pi)
 #define ROUNDFAC 0.4054
 
 
-void quantize_lines_xrpow(int l, FLOAT8 istep, const FLOAT8* xr, int* ix)
+void quantize_lines_xrpow(int l, FLOAT istep, const FLOAT* xr, int* ix)
 {
     int remaining;
 
@@ -220,7 +220,7 @@ void quantize_lines_xrpow(int l, FLOAT8 istep, const FLOAT8* xr, int* ix)
     remaining = l%2;
     l = l>>1;
     while (l--) {
-	    FLOAT8	x0, x1, x2, x3;
+	    FLOAT	x0, x1, x2, x3;
 	    int	rx0, rx1, rx2, rx3;
 
         x0 = *xr++ * istep;
@@ -241,7 +241,7 @@ void quantize_lines_xrpow(int l, FLOAT8 istep, const FLOAT8* xr, int* ix)
 	    XRPOW_FTOI(x3,*ix++);
     };
     if (remaining) {
-	    FLOAT8	x0, x1;
+	    FLOAT	x0, x1;
 	    int	rx0, rx1;
 
         x0 = *xr++ * istep;
@@ -258,11 +258,11 @@ void quantize_lines_xrpow(int l, FLOAT8 istep, const FLOAT8* xr, int* ix)
 
 
 
-void quantize_lines_xrpow_ISO(int l, FLOAT8 istep, const FLOAT8* xr, int* ix)
+void quantize_lines_xrpow_ISO(int l, FLOAT istep, const FLOAT* xr, int* ix)
 {
 
-    const FLOAT8 compareval0 = (1.0 - 0.4054)/istep;
-    const FLOAT8 compareval1 = (2.0 - 0.4054)/istep;
+    const FLOAT compareval0 = (1.0 - 0.4054)/istep;
+    const FLOAT compareval1 = (2.0 - 0.4054)/istep;
 
     assert (l>0);
 
@@ -308,7 +308,7 @@ void quantize_lines_xrpow_ISO(int l, FLOAT8 istep, const FLOAT8* xr, int* ix)
  * proper quantization function
  *********************************************************************/
 
-static void quantize_xrpow(const FLOAT8 *xp, int *pi, FLOAT8 istep, gr_info * const cod_info, calc_noise_data* prev_noise, lame_internal_flags * const gfc)
+static void quantize_xrpow(const FLOAT *xp, int *pi, FLOAT istep, gr_info * const cod_info, calc_noise_data* prev_noise, lame_internal_flags * const gfc)
 {
     /* quantize on xr^(3/4) instead of xr */
     int sfb;
@@ -318,7 +318,7 @@ static void quantize_xrpow(const FLOAT8 *xp, int *pi, FLOAT8 istep, gr_info * co
     int *iData;
     int accumulate=0;
     int *acc_iData;
-    FLOAT8 *acc_xp;
+    FLOAT *acc_xp;
 
     iData = pi;
 
@@ -336,7 +336,7 @@ static void quantize_xrpow(const FLOAT8 *xp, int *pi, FLOAT8 istep, gr_info * co
         sfbmax = 21;
 
     for (sfb = 0; sfb <= sfbmax; sfb++) {
-	    FLOAT8 step = -1;
+	    FLOAT step = -1;
 
         if (prev_data_use) {
             int s =
@@ -751,7 +751,7 @@ int noquant_count_bits(
 
 int count_bits(
           lame_internal_flags * const gfc, 
-    const FLOAT8  * const xr,
+    const FLOAT  * const xr,
           gr_info * const gi,
           calc_noise_data* prev_noise
 	  )
@@ -759,7 +759,7 @@ int count_bits(
     int *const ix = gi->l3_enc;
 
     /* since quantize_xrpow uses table lookup, we need to check this first: */
-    FLOAT8 w = (IXMAX_VAL) / IPOW20(gi->global_gain);
+    FLOAT w = (IXMAX_VAL) / IPOW20(gi->global_gain);
 
     if (gi->xrpow_max > w)
         return LARGE_BITS;    
@@ -769,7 +769,7 @@ int count_bits(
     if (gfc->substep_shaping & 2) {
 	int sfb, j = 0;
 	/* 0.634521682242439 = 0.5946*2**(.5*0.1875) */
-	const FLOAT8 roundfac =
+	const FLOAT roundfac =
 	    0.634521682242439 / IPOW20(gi->global_gain+gi->scalefac_scale);
 	for (sfb = 0; sfb < gi->sfbmax; sfb++) {
 	    int width = gi->width[sfb];

@@ -468,10 +468,10 @@ int  lame_encode_mp3_frame (				/* Output */
      * _next is the value of the first granule of the next frame
      */
     if (gfp->psymodel == PSY_GPSYCHO) {
-      FLOAT8  ms_ratio_ave1;
-      FLOAT8  ms_ratio_ave2;
-      FLOAT8  threshold1    = 0.35;
-      FLOAT8  threshold2    = 0.45;
+      FLOAT  ms_ratio_ave1;
+      FLOAT  ms_ratio_ave2;
+      FLOAT  threshold1    = 0.35;
+      FLOAT  threshold2    = 0.45;
 
       /* take an average */
       if (gfc->mode_gr==1) {
@@ -488,8 +488,8 @@ int  lame_encode_mp3_frame (				/* Output */
 	check_ms_stereo = 0;
     }
     if (check_ms_stereo) {
-      FLOAT8 sum_pe_MS = 0;
-      FLOAT8 sum_pe_LR = 0;
+      FLOAT sum_pe_MS = 0;
+      FLOAT sum_pe_LR = 0;
       for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
 	for ( ch = 0; ch < gfc->channels_out; ch++ ) {
 	  sum_pe_MS += pe_MS[gr][ch];
@@ -534,7 +534,7 @@ change the following to
 	gfc->pinfo->blocktype[gr][ch]=gfc->l3_side.tt[gr][ch].block_type;
 	gfc->pinfo->pe[gr][ch]=(*pe_use)[gr][ch];
 	memcpy(gfc->pinfo->xr[gr][ch], &gfc->l3_side.tt[gr][ch].xr,
-	       sizeof(FLOAT8)*576);
+	       sizeof(FLOAT)*576);
 	/* in psymodel, LR and MS data was stored in pinfo.  
 	   switch to MS data: */
 	if (gfc->mode_ext==MPG_MD_MS_LR) {

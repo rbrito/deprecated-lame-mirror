@@ -384,12 +384,12 @@ struct lame_internal_flags {
 #define BPC 320
   sample_t *inbuf_old [2];
   sample_t *blackfilt [2*BPC+1];
-  FLOAT8 itime[2];
+  FLOAT itime[2];
   int sideinfo_len;
 
   /* variables for newmdct.c */
-  FLOAT8 sb_sample[2][2][18][SBLIMIT];
-  FLOAT8 amp_filter[32];
+  FLOAT sb_sample[2][2][18][SBLIMIT];
+  FLOAT amp_filter[32];
 
   /* variables for bitstream.c */
   /* mpeg1: buffer=511 bytes  smallest frame: 96-38(sideinfo)=58
@@ -422,9 +422,9 @@ struct lame_internal_flags {
 /* to be remembered for the unpredictability measure.  For "r" and        */
 /* "phi_sav", the first index from the left is the channel select and     */
 /* the second index is the "age" of the data.                             */
-  FLOAT8	minval[CBANDS];
-  FLOAT8	nb_1[4][CBANDS], nb_2[4][CBANDS];
-  FLOAT8	nb_s1[4][CBANDS], nb_s2[4][CBANDS];
+  FLOAT	minval[CBANDS];
+  FLOAT	nb_1[4][CBANDS], nb_2[4][CBANDS];
+  FLOAT	nb_s1[4][CBANDS], nb_s2[4][CBANDS];
   FLOAT     *s3_ss;
   FLOAT     *s3_ll;
   FLOAT decay;
@@ -450,7 +450,7 @@ struct lame_internal_flags {
 
 
   /* Scale Factor Bands    */
-  FLOAT8 mld_l[SBMAX_l],mld_s[SBMAX_s];
+  FLOAT mld_l[SBMAX_l],mld_s[SBMAX_s];
   int	bm_l[SBMAX_l],bo_l[SBMAX_l] ;
   int	bm_s[SBMAX_s],bo_s[SBMAX_s] ;
   int	npart_l,npart_s;
@@ -482,7 +482,7 @@ struct lame_internal_flags {
   /* functions to replace with CPU feature optimized versions in takehiro.c */
   int (*choose_table)(const int *ix, const int * const end, int * const s);  
   void (*fft_fht)(FLOAT *, int);
-  void (*quantize_lines_xrpow)(int l, FLOAT8 istep, const FLOAT8* xp, int* pi);
+  void (*quantize_lines_xrpow)(int l, FLOAT istep, const FLOAT* xp, int* pi);
 
 
 
@@ -518,7 +518,7 @@ struct lame_internal_flags {
   /* used by the frame analyzer */
   plotting_data *pinfo;
   FLOAT energy_save[4][HBLKSIZE];
-  FLOAT8 ers_save[4];
+  FLOAT ers_save[4];
 #endif
 };
 
@@ -538,8 +538,8 @@ extern int            map2MP3Frequency(int freq);
 extern int            SmpFrqIndex(int, int* const);
 extern int            nearestBitrateFullIndex(const int brate);
 extern FLOAT          ATHformula(FLOAT freq,lame_global_flags *gfp);
-extern FLOAT8         freq2bark(FLOAT8 freq);
-extern FLOAT8         freq2cbw(FLOAT8 freq);
+extern FLOAT         freq2bark(FLOAT freq);
+extern FLOAT         freq2cbw(FLOAT freq);
 void disable_FPE(void);
 
 /* log/log10 approximations */

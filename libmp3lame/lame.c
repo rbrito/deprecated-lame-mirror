@@ -60,8 +60,8 @@
 
 #define LAME_DEFAULT_QUALITY 3
 
-static FLOAT8
-filter_coef(FLOAT8 x)
+static FLOAT
+filter_coef(FLOAT x)
 {
     if (x > 1.0) return 0.0;
     if (x <= 0.0) return 1.0;
@@ -1424,7 +1424,7 @@ lame_encode_buffer_sample_t(lame_global_flags * gfp,
 	if (gfp->num_channels == 2 && gfc->channels_out == 1) {
 		for (i=0; i<nsamples; ++i) {
 			in_buffer[0][i] =
-				0.5 * ((FLOAT8) in_buffer[0][i] + in_buffer[1][i]);
+				0.5 * ((FLOAT) in_buffer[0][i] + in_buffer[1][i]);
 			in_buffer[1][i] = 0.0;
 		}
 	}

@@ -168,7 +168,7 @@ FLOAT ATHformula(FLOAT f,lame_global_flags *gfp)
 }
 
 /* see for example "Zwicker: Psychoakustik, 1982; ISBN 3-540-11401-7 */
-FLOAT8 freq2bark(FLOAT8 freq)
+FLOAT freq2bark(FLOAT freq)
 {
   /* input: freq in hz  output: barks */
     if (freq<0) freq=0;
@@ -177,7 +177,7 @@ FLOAT8 freq2bark(FLOAT8 freq)
 }
 
 /* see for example "Zwicker: Psychoakustik, 1982; ISBN 3-540-11401-7 */
-FLOAT8 freq2cbw(FLOAT8 freq)
+FLOAT freq2cbw(FLOAT freq)
 {
   /* input: freq in hz  output: critical band width */
     freq = freq * 0.001;
@@ -340,14 +340,14 @@ int SmpFrqIndex ( int sample_freq, int* const version )
 
 
 /* resampling via FIR filter, blackman window */
-inline static FLOAT8 blackman(FLOAT8 x,FLOAT8 fcn,int l)
+inline static FLOAT blackman(FLOAT x,FLOAT fcn,int l)
 {
   /* This algorithm from:
 SIGNAL PROCESSING ALGORITHMS IN FORTRAN AND C
 S.D. Stearns and R.A. David, Prentice-Hall, 1992
   */
-  FLOAT8 bkwn,x2;
-  FLOAT8 wcn = (PI * fcn);
+  FLOAT bkwn,x2;
+  FLOAT wcn = (PI * fcn);
   
   x /= l;
   if (x<0) x=0;
@@ -421,10 +421,10 @@ int fill_buffer_resample(
   
   lame_internal_flags *gfc=gfp->internal_flags;
   int BLACKSIZE;
-  FLOAT8 offset,xvalue;
+  FLOAT offset,xvalue;
   int i,j=0,k;
   int filter_l;
-  FLOAT8 fcn,intratio;
+  FLOAT fcn,intratio;
   FLOAT *inbuf_old;
   int bpc;   /* number of convolution functions to pre-compute */
   bpc = gfp->out_samplerate/gcd(gfp->out_samplerate,gfp->in_samplerate);
@@ -452,7 +452,7 @@ int fill_buffer_resample(
 
     /* precompute blackman filter coefficients */
     for ( j = 0; j <= 2*bpc; j++ ) {
-        FLOAT8 sum = 0.; 
+        FLOAT sum = 0.; 
         offset = (j-bpc) / (2.*bpc);
         for ( i = 0; i <= filter_l; i++ ) 
             sum += 
@@ -468,7 +468,7 @@ int fill_buffer_resample(
   /* time of j'th element in inbuf = itime + j/ifreq; */
   /* time of k'th element in outbuf   =  j/ofreq */
   for (k=0;k<desired_len;k++) {
-    FLOAT8 time0;
+    FLOAT time0;
     int joff;
 
     time0 = k*gfc->resample_ratio;       /* time of k'th output sample */

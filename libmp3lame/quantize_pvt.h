@@ -38,11 +38,11 @@ extern const int slen2_tab[16];
 
 extern const scalefac_struct sfBandIndex[9];
 
-extern FLOAT8 pow43[PRECALC_SIZE];
+extern FLOAT pow43[PRECALC_SIZE];
 #ifdef TAKEHIRO_IEEE754_HACK
-extern FLOAT8 adj43asm[PRECALC_SIZE];
+extern FLOAT adj43asm[PRECALC_SIZE];
 #else
-extern FLOAT8 adj43[PRECALC_SIZE];
+extern FLOAT adj43[PRECALC_SIZE];
 #endif
 
 #define Q_MAX (256+1)
@@ -56,16 +56,16 @@ extern FLOAT8 adj43[PRECALC_SIZE];
 		      for short block, 0+(15<<2)+7*8 = 15*4+56 = 116
 		   */
 
-extern FLOAT8 pow20[Q_MAX+Q_MAX2];
-extern FLOAT8 ipow20[Q_MAX];
-extern FLOAT8 iipow20[Q_MAX2];
+extern FLOAT pow20[Q_MAX+Q_MAX2];
+extern FLOAT ipow20[Q_MAX];
+extern FLOAT iipow20[Q_MAX2];
 
 typedef struct calc_noise_result_t {
-    FLOAT8  over_noise;      /* sum of quantization noise > masking */
-    FLOAT8  tot_noise;       /* sum of all quantization noise */
-    FLOAT8  max_noise;       /* max quantization noise */
+    FLOAT  over_noise;      /* sum of quantization noise > masking */
+    FLOAT  tot_noise;       /* sum of all quantization noise */
+    FLOAT  max_noise;       /* max quantization noise */
     int     over_count;      /* number of quantization noise > masking */
-    FLOAT8  var_noise;       /* variance of noise*/
+    FLOAT  var_noise;       /* variance of noise*/
 } calc_noise_result;
 
 
@@ -74,22 +74,22 @@ typedef struct calc_noise_result_t {
 * computed noise values
 */
 typedef struct calc_noise_data_t {
-    FLOAT8 step[39];
-    FLOAT8 noise[39];
-    FLOAT8 noise_log[39];
+    FLOAT step[39];
+    FLOAT noise[39];
+    FLOAT noise_log[39];
 } calc_noise_data;
 
 
 int     on_pe (lame_global_flags *gfp, FLOAT pe[2][2], III_side_info_t * l3_side,
                int targ_bits[2], int mean_bits, int gr, int cbr);
 
-void    reduce_side (int targ_bits[2], FLOAT8 ms_ener_ratio, int mean_bits,
+void    reduce_side (int targ_bits[2], FLOAT ms_ener_ratio, int mean_bits,
                      int max_bits);
 
 
 int     bin_search_StepSize (lame_internal_flags * const gfc, gr_info * const cod_info,
                              int desired_rate, const int ch,
-                             const FLOAT8 xrpow[576]);
+                             const FLOAT xrpow[576]);
 
 void    iteration_init (lame_global_flags *gfp);
 
@@ -97,12 +97,12 @@ void    iteration_init (lame_global_flags *gfp);
 int     calc_xmin (lame_global_flags *gfp,
                     const III_psy_ratio * const ratio,
                     gr_info * const cod_info,
-                    FLOAT8 * l3_xmin);
+                    FLOAT * l3_xmin);
 
 int     calc_noise (const lame_internal_flags * const gfc,
                     const gr_info * const cod_info,
-                    const FLOAT8 * l3_xmin,
-                    FLOAT8 * distort,
+                    const FLOAT * l3_xmin,
+                    FLOAT * distort,
 		            calc_noise_result * const res,
                     calc_noise_data * prev_noise);
 
@@ -116,7 +116,7 @@ void    set_frame_pinfo (lame_global_flags *gfp,
 
 /* takehiro.c */
 
-int     count_bits (lame_internal_flags * const gfc, const FLOAT8 * const xr,
+int     count_bits (lame_internal_flags * const gfc, const FLOAT * const xr,
 		    gr_info * const cod_info, calc_noise_data* prev_noise);
 int     noquant_count_bits (lame_internal_flags * const gfc,
 			    gr_info * const cod_info);

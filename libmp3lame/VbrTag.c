@@ -615,7 +615,7 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 
         /* peak sample */	
         if(gfc->findPeakSample)
-          nPeakSignalAmplitude = abs((int)((((FLOAT8)gfc->PeakSample) / 32767.0 ) * pow(2,23) +.5));
+          nPeakSignalAmplitude = abs((int)((((FLOAT)gfc->PeakSample) / 32767.0 ) * pow(2,23) +.5));
 
 	/*nogap */
 	if (nNoGapCount != -1)

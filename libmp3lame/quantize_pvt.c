@@ -139,15 +139,15 @@ const scalefac_struct sfBandIndex[9] =
 
 
 
-FLOAT8 pow20[Q_MAX+Q_MAX2];
-FLOAT8 ipow20[Q_MAX];
-FLOAT8 iipow20[Q_MAX2];
-FLOAT8 pow43[PRECALC_SIZE];
+FLOAT pow20[Q_MAX+Q_MAX2];
+FLOAT ipow20[Q_MAX];
+FLOAT iipow20[Q_MAX2];
+FLOAT pow43[PRECALC_SIZE];
 /* initialized in first call to iteration_init */
 #ifdef TAKEHIRO_IEEE754_HACK
-FLOAT8 adj43asm[PRECALC_SIZE];
+FLOAT adj43asm[PRECALC_SIZE];
 #else
-FLOAT8 adj43[PRECALC_SIZE];
+FLOAT adj43[PRECALC_SIZE];
 #endif
 
 /* 
@@ -284,7 +284,7 @@ static void compute_ath( lame_global_flags *gfp )
     gfc->ATH-> floor = 10. * log10( ATHmdct( gfp, -1. ) );
     
     /*
-    {   FLOAT8 g=10000, t=1e30, x;
+    {   FLOAT g=10000, t=1e30, x;
         for ( f = 100; f < 10000; f++ ) {
             x = ATHmdct( gfp, f );
             if ( t > x ) t = x, g = f;
@@ -312,7 +312,7 @@ iteration_init( lame_global_flags *gfp)
 
     pow43[0] = 0.0;
     for(i=1;i<PRECALC_SIZE;i++)
-        pow43[i] = pow((FLOAT8)i, 4.0/3.0);
+        pow43[i] = pow((FLOAT)i, 4.0/3.0);
 
 #ifdef TAKEHIRO_IEEE754_HACK
     adj43asm[0] = 0.0;
@@ -334,7 +334,7 @@ iteration_init( lame_global_flags *gfp)
     quantize_init(gfc);
 
     if (gfp->psymodel == PSY_NSPSYTUNE) {
-	    FLOAT8 bass, alto, treble, sfb21;
+	    FLOAT bass, alto, treble, sfb21;
 
         i = (gfp->exp_nspsytune >> 2) & 63;
         if (i >= 32)
@@ -359,7 +359,7 @@ iteration_init( lame_global_flags *gfp)
         sfb21 = treble * pow(10, i / 4.0 / 10.0);
 
 	for (i = 0; i < SBMAX_l; i++) {
-	    FLOAT8 f;
+	    FLOAT f;
 	    if      (i <=  6) f = bass;
 	    else if (i <= 13) f = alto;
 	    else if (i <= 20) f = treble;
@@ -370,7 +370,7 @@ iteration_init( lame_global_flags *gfp)
 	    gfc->nsPsy.longfact[i] = f;
 	}
 	for (i = 0; i < SBMAX_s; i++) {
-	    FLOAT8 f;
+	    FLOAT f;
 	    if      (i <=  5) f = bass;
 	    else if (i <= 10) f = alto;
 	    else              f = treble;
@@ -463,7 +463,7 @@ int on_pe( lame_global_flags *gfp, FLOAT pe[][2], III_side_info_t *l3_side,
 
 
 
-void reduce_side(int targ_bits[2],FLOAT8 ms_ener_ratio,int mean_bits,int max_bits)
+void reduce_side(int targ_bits[2],FLOAT ms_ener_ratio,int mean_bits,int max_bits)
 {
   int move_bits;
   FLOAT fac;
@@ -552,17 +552,17 @@ int calc_xmin(
         lame_global_flags *gfp,
         const III_psy_ratio * const ratio,
 	    gr_info       *  const cod_info, 
-	    FLOAT8 * pxmin
+	    FLOAT * pxmin
     )
 {
     lame_internal_flags *gfc = gfp->internal_flags;
     int sfb, gsfb, j=0, ath_over=0, k;
     ATH_t * ATH = gfc->ATH;
-    const FLOAT8 *xr = cod_info->xr;
+    const FLOAT *xr = cod_info->xr;
     int max_nonzero;
 
     for (gsfb = 0; gsfb < cod_info->psy_lmax; gsfb++) {
-	FLOAT8 en0, xmin;
+	FLOAT en0, xmin;
 	int width, l;
 	if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh)
 	    xmin = athAdjust(ATH->adjust, ATH->l[gsfb], ATH->floor);
@@ -579,7 +579,7 @@ int calc_xmin(
 	if (en0 > xmin) ath_over++;
 
 	if (!gfp->ATHonly) {
-	    FLOAT8 x = ratio->en.l[gsfb];
+	    FLOAT x = ratio->en.l[gsfb];
 	    if (x > 0.0) {
 		x = en0 * ratio->thm.l[gsfb] * gfc->masking_lower / x;
 		if (xmin < x)
@@ -606,7 +606,7 @@ int calc_xmin(
 
     for (sfb = cod_info->sfb_smin; gsfb < cod_info->psymax; sfb++, gsfb += 3) {
 	int width, b;
-	FLOAT8 tmpATH;
+	FLOAT tmpATH;
 	if ( gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh )
 	    tmpATH = athAdjust( ATH->adjust, ATH->s[sfb], ATH->floor );
 	else
@@ -614,7 +614,7 @@ int calc_xmin(
 
 	width = cod_info->width[gsfb];
 	for ( b = 0; b < 3; b++ ) {
-	    FLOAT8 en0 = 0.0, xmin;
+	    FLOAT en0 = 0.0, xmin;
 	    int l = width >> 1;
 	    do {
 		en0 += xr[j] * xr[j]; j++;
@@ -624,7 +624,7 @@ int calc_xmin(
 
 	    xmin = tmpATH;
 	    if (!gfp->ATHonly && !gfp->ATHshort) {
-		FLOAT8 x = ratio->en.s[sfb][b];
+		FLOAT x = ratio->en.s[sfb][b];
 		if (x > 0.0)
 		    x = en0 * ratio->thm.s[sfb][b] * gfc->masking_lower / x;
 		if (xmin < x) 
@@ -668,22 +668,22 @@ int calc_xmin(
 int  calc_noise( 
         const lame_internal_flags * const gfc,
         const gr_info             * const cod_info,
-        const FLOAT8              * l3_xmin, 
-              FLOAT8              * distort,
+        const FLOAT              * l3_xmin, 
+              FLOAT              * distort,
               calc_noise_result   * const res,
               calc_noise_data * prev_noise)
 {
     int sfb, l, over=0;
-    FLOAT8 over_noise_db = 0;
-    FLOAT8 tot_noise_db  = 0; /*    0 dB relative to masking */
-    FLOAT8 max_noise = -20.0; /* -200 dB relative to masking */
+    FLOAT over_noise_db = 0;
+    FLOAT tot_noise_db  = 0; /*    0 dB relative to masking */
+    FLOAT max_noise = -20.0; /* -200 dB relative to masking */
     int j = 0;
     int i;
     const int *ix = cod_info->l3_enc;
     const int *scalefac = cod_info->scalefac;
-    FLOAT8 sfb_noise[39];
-    FLOAT8 mean_noise;
-    FLOAT8 var_noise = 0;
+    FLOAT sfb_noise[39];
+    FLOAT mean_noise;
+    FLOAT var_noise = 0;
 
 
     for (sfb = 0; sfb < cod_info->psymax; sfb++) {
@@ -692,8 +692,8 @@ int  calc_noise(
 	        - (((*scalefac++) + (cod_info->preflag ? pretab[sfb] : 0))
 	           << (cod_info->scalefac_scale + 1))
 	        - cod_info->subblock_gain[cod_info->window[sfb]] * 8;
-	    FLOAT8 step = POW20(s);
-	    FLOAT8 noise = 0.0;
+	    FLOAT step = POW20(s);
+	    FLOAT noise = 0.0;
 
         if (prev_noise && (prev_noise->step[sfb] == step)){
 
@@ -719,7 +719,7 @@ int  calc_noise(
 
 
 	        while (l--) {
-                FLOAT8 temp;
+                FLOAT temp;
                 temp = fabs(cod_info->xr[j]) - pow43[ix[j]] * step;j++;
 	            noise += temp * temp;
 	            temp = fabs(cod_info->xr[j]) - pow43[ix[j]] * step;j++;
@@ -769,7 +769,7 @@ int  calc_noise(
 
     mean_noise = tot_noise_db / cod_info->psymax;
     for (i = 0; i<cod_info->psymax; i++) {
-        FLOAT8 val;
+        FLOAT val;
         val = sfb_noise[i] - mean_noise;
         var_noise += val*val;
     }
@@ -816,11 +816,11 @@ void set_pinfo (
     lame_internal_flags *gfc=gfp->internal_flags;
     int sfb, sfb2;
     int j,i,l,start,end,bw;
-    FLOAT8 en0,en1;
+    FLOAT en0,en1;
     FLOAT ifqstep = ( cod_info->scalefac_scale == 0 ) ? .5 : 1.0;
     int* scalefac = cod_info->scalefac;
 
-    FLOAT8 l3_xmin[SFBMAX], xfsf[SFBMAX];
+    FLOAT l3_xmin[SFBMAX], xfsf[SFBMAX];
     calc_noise_result noise;
 
     calc_xmin (gfp, ratio, cod_info, l3_xmin);
