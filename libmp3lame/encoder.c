@@ -532,7 +532,7 @@ int  lame_encode_mp3_frame (				// Output
 	gfc->pinfo->ms_ener_ratio[gr]=ms_ener_ratio[gr];
 	gfc->pinfo->blocktype[gr][ch]=gfc->l3_side.tt[gr][ch].block_type;
 	memcpy(gfc->pinfo->xr[gr][ch], &gfc->l3_side.tt[gr][ch].xr,
-	       sizeof(FLOAT8)*476);
+	       sizeof(FLOAT8)*576);
 	/* in psymodel, LR and MS data was stored in pinfo.  
 	   switch to MS data: */
 	if (gfc->mode_ext==MPG_MD_MS_LR) {
