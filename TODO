@@ -27,6 +27,29 @@ possible clipping during decoding.  Suggest using --scale .98
 or something.  
 
 
+5.
+lowpass filter: for M/S stereo, use more filtering for the side
+channel, less filtering for mid channel.  We need to first replace
+the polyphase filter with an FIR lowpass filter with finer frequency
+resolution before implementing this. 
+
+6. 
+LAME has a 31 point FIR filter used for resampling, which
+can also be used as a lowpass.  When resampling is done, 
+use that filter to also lowpass instead of the polyphase filter.
+
+7.
+Even when resampling is not needed, should we use an FIR filter
+for the lowpass?  If it is not too much slower, yes.  If it
+is slower, then it should be an option since it will produce
+higher quality.  
+
+
+
+
+
+
+
 997..
 ACM wrapper for LAME.
 
