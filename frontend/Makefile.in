@@ -106,14 +106,15 @@ install_sh = @install_sh@
 
 INCLUDES = -I$(top_srcdir)/libmp3lame -I$(top_srcdir)/include -I$(top_builddir)
 
-LDADD = @LDADD@ @FRONTEND_LDADD@ \
-	$(top_builddir)/libmp3lame/libmp3lame.la
+LDADD = @LDADD@ \
+	$(top_builddir)/libmp3lame/libmp3lame.la \
+	@FRONTEND_LDADD@
 
 
 AUTOMAKE_OPTIONS = 1.5 foreign $(top_srcdir)/ansi2knr
 
 bin_PROGRAMS = @WITH_FRONTEND@ @WITH_MP3RTP@ @WITH_MP3X@
-EXTRA_PROGRAMS = lame mp3rtp mp3x
+EXTRA_PROGRAMS = lame$(EXEEXT) mp3rtp$(EXEEXT) mp3x$(EXEEXT)
 
 brhist_sources = brhist.c brhist.h
 
@@ -148,23 +149,25 @@ noinst_HEADERS = get_audio.h \
 	timestatus.h
 
 
-EXTRA_lame_SOURCES = $(brhist_sources)
-EXTRA_mp3rtp_SOURCES = $(brhist_sources)
-EXTRA_mp3x_SOURCES = $(brhist_sources)
+EXTRA_lame__EXEEXT__SOURCES = $(brhist_sources)
+EXTRA_mp3rtp__EXEEXT__SOURCES = $(brhist_sources)
+EXTRA_mp3x__EXEEXT__SOURCES = $(brhist_sources)
 
-@WITH_BRHIST_TRUE@lame_SOURCES = main.c $(common_sources) $(brhist_sources)
-@WITH_BRHIST_FALSE@lame_SOURCES = main.c $(common_sources)
-@WITH_BRHIST_TRUE@mp3rtp_SOURCES = mp3rtp.c rtp.c rtp.h $(common_sources) $(brhist_sources)
-@WITH_BRHIST_FALSE@mp3rtp_SOURCES = mp3rtp.c rtp.c rtp.h $(common_sources)
-@WITH_BRHIST_TRUE@mp3x_SOURCES = mp3x.c gtkanal.c gpkplotting.c \
+@WITH_BRHIST_TRUE@lame__EXEEXT__SOURCES = main.c $(common_sources) $(brhist_sources)
+@WITH_BRHIST_FALSE@lame__EXEEXT__SOURCES = main.c $(common_sources)
+@WITH_BRHIST_TRUE@mp3rtp__EXEEXT__SOURCES = mp3rtp.c rtp.c rtp.h $(common_sources) \
+@WITH_BRHIST_TRUE@	$(brhist_sources)
+
+@WITH_BRHIST_FALSE@mp3rtp__EXEEXT__SOURCES = mp3rtp.c rtp.c rtp.h $(common_sources)
+@WITH_BRHIST_TRUE@mp3x__EXEEXT__SOURCES = mp3x.c gtkanal.c gpkplotting.c \
 @WITH_BRHIST_TRUE@	$(common_sources) $(brhist_sources)
 
-@WITH_BRHIST_FALSE@mp3x_SOURCES = mp3x.c gtkanal.c gpkplotting.c $(common_sources)
+@WITH_BRHIST_FALSE@mp3x__EXEEXT__SOURCES = mp3x.c gtkanal.c gpkplotting.c $(common_sources)
 
 CFLAGS = @CFLAGS@ @GTK_CFLAGS@ @FRONTEND_CFLAGS@
 LDFLAGS = @LDFLAGS@ @FRONTEND_LDFLAGS@ -static
 
-mp3x_LDADD = $(LDADD) @GTK_LIBS@
+mp3x__EXEEXT__LDADD = $(LDADD) @GTK_LIBS@
 
 CLEANFILES = lclint.txt $(EXTRA_PROGRAMS)
 
@@ -186,44 +189,45 @@ EXTRA_PROGRAMS = lame$(EXEEXT) mp3rtp$(EXEEXT) mp3x$(EXEEXT)
 bin_PROGRAMS = @WITH_FRONTEND@ @WITH_MP3RTP@ @WITH_MP3X@
 PROGRAMS = $(bin_PROGRAMS)
 
-@WITH_BRHIST_TRUE@am_lame_OBJECTS = main$U.$(OBJEXT) \
+@WITH_BRHIST_TRUE@am_lame__EXEEXT__OBJECTS = main$U.$(OBJEXT) \
 @WITH_BRHIST_TRUE@	get_audio$U.$(OBJEXT) lametime$U.$(OBJEXT) \
 @WITH_BRHIST_TRUE@	parse$U.$(OBJEXT) portableio$U.$(OBJEXT) \
 @WITH_BRHIST_TRUE@	timestatus$U.$(OBJEXT) brhist$U.$(OBJEXT)
-@WITH_BRHIST_FALSE@am_lame_OBJECTS = main$U.$(OBJEXT) \
+@WITH_BRHIST_FALSE@am_lame__EXEEXT__OBJECTS = main$U.$(OBJEXT) \
 @WITH_BRHIST_FALSE@	get_audio$U.$(OBJEXT) lametime$U.$(OBJEXT) \
 @WITH_BRHIST_FALSE@	parse$U.$(OBJEXT) portableio$U.$(OBJEXT) \
 @WITH_BRHIST_FALSE@	timestatus$U.$(OBJEXT)
-lame_OBJECTS = $(am_lame_OBJECTS)
-lame_LDADD = $(LDADD)
-lame_DEPENDENCIES = $(top_builddir)/libmp3lame/libmp3lame.la
-lame_LDFLAGS =
-@WITH_BRHIST_TRUE@am_mp3rtp_OBJECTS = mp3rtp$U.$(OBJEXT) rtp$U.$(OBJEXT) \
-@WITH_BRHIST_TRUE@	get_audio$U.$(OBJEXT) lametime$U.$(OBJEXT) \
-@WITH_BRHIST_TRUE@	parse$U.$(OBJEXT) portableio$U.$(OBJEXT) \
-@WITH_BRHIST_TRUE@	timestatus$U.$(OBJEXT) brhist$U.$(OBJEXT)
-@WITH_BRHIST_FALSE@am_mp3rtp_OBJECTS = mp3rtp$U.$(OBJEXT) \
+lame__EXEEXT__OBJECTS = $(am_lame__EXEEXT__OBJECTS)
+lame__EXEEXT__LDADD = $(LDADD)
+lame__EXEEXT__DEPENDENCIES = $(top_builddir)/libmp3lame/libmp3lame.la
+lame__EXEEXT__LDFLAGS =
+@WITH_BRHIST_TRUE@am_mp3rtp__EXEEXT__OBJECTS = mp3rtp$U.$(OBJEXT) \
+@WITH_BRHIST_TRUE@	rtp$U.$(OBJEXT) get_audio$U.$(OBJEXT) \
+@WITH_BRHIST_TRUE@	lametime$U.$(OBJEXT) parse$U.$(OBJEXT) \
+@WITH_BRHIST_TRUE@	portableio$U.$(OBJEXT) timestatus$U.$(OBJEXT) \
+@WITH_BRHIST_TRUE@	brhist$U.$(OBJEXT)
+@WITH_BRHIST_FALSE@am_mp3rtp__EXEEXT__OBJECTS = mp3rtp$U.$(OBJEXT) \
 @WITH_BRHIST_FALSE@	rtp$U.$(OBJEXT) get_audio$U.$(OBJEXT) \
 @WITH_BRHIST_FALSE@	lametime$U.$(OBJEXT) parse$U.$(OBJEXT) \
 @WITH_BRHIST_FALSE@	portableio$U.$(OBJEXT) \
 @WITH_BRHIST_FALSE@	timestatus$U.$(OBJEXT)
-mp3rtp_OBJECTS = $(am_mp3rtp_OBJECTS)
-mp3rtp_LDADD = $(LDADD)
-mp3rtp_DEPENDENCIES = $(top_builddir)/libmp3lame/libmp3lame.la
-mp3rtp_LDFLAGS =
-@WITH_BRHIST_TRUE@am_mp3x_OBJECTS = mp3x$U.$(OBJEXT) gtkanal$U.$(OBJEXT) \
-@WITH_BRHIST_TRUE@	gpkplotting$U.$(OBJEXT) get_audio$U.$(OBJEXT) \
-@WITH_BRHIST_TRUE@	lametime$U.$(OBJEXT) parse$U.$(OBJEXT) \
-@WITH_BRHIST_TRUE@	portableio$U.$(OBJEXT) timestatus$U.$(OBJEXT) \
-@WITH_BRHIST_TRUE@	brhist$U.$(OBJEXT)
-@WITH_BRHIST_FALSE@am_mp3x_OBJECTS = mp3x$U.$(OBJEXT) \
+mp3rtp__EXEEXT__OBJECTS = $(am_mp3rtp__EXEEXT__OBJECTS)
+mp3rtp__EXEEXT__LDADD = $(LDADD)
+mp3rtp__EXEEXT__DEPENDENCIES = $(top_builddir)/libmp3lame/libmp3lame.la
+mp3rtp__EXEEXT__LDFLAGS =
+@WITH_BRHIST_TRUE@am_mp3x__EXEEXT__OBJECTS = mp3x$U.$(OBJEXT) \
+@WITH_BRHIST_TRUE@	gtkanal$U.$(OBJEXT) gpkplotting$U.$(OBJEXT) \
+@WITH_BRHIST_TRUE@	get_audio$U.$(OBJEXT) lametime$U.$(OBJEXT) \
+@WITH_BRHIST_TRUE@	parse$U.$(OBJEXT) portableio$U.$(OBJEXT) \
+@WITH_BRHIST_TRUE@	timestatus$U.$(OBJEXT) brhist$U.$(OBJEXT)
+@WITH_BRHIST_FALSE@am_mp3x__EXEEXT__OBJECTS = mp3x$U.$(OBJEXT) \
 @WITH_BRHIST_FALSE@	gtkanal$U.$(OBJEXT) gpkplotting$U.$(OBJEXT) \
 @WITH_BRHIST_FALSE@	get_audio$U.$(OBJEXT) lametime$U.$(OBJEXT) \
 @WITH_BRHIST_FALSE@	parse$U.$(OBJEXT) portableio$U.$(OBJEXT) \
 @WITH_BRHIST_FALSE@	timestatus$U.$(OBJEXT)
-mp3x_OBJECTS = $(am_mp3x_OBJECTS)
-mp3x_DEPENDENCIES = $(top_builddir)/libmp3lame/libmp3lame.la
-mp3x_LDFLAGS =
+mp3x__EXEEXT__OBJECTS = $(am_mp3x__EXEEXT__OBJECTS)
+mp3x__EXEEXT__DEPENDENCIES = $(top_builddir)/libmp3lame/libmp3lame.la
+mp3x__EXEEXT__LDFLAGS =
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
 CPPFLAGS = @CPPFLAGS@
 LIBS = @LIBS@
@@ -241,12 +245,13 @@ LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-DIST_SOURCES = $(lame_SOURCES) $(EXTRA_lame_SOURCES) $(mp3rtp_SOURCES) \
-	$(EXTRA_mp3rtp_SOURCES) $(mp3x_SOURCES) $(EXTRA_mp3x_SOURCES)
+DIST_SOURCES = $(lame__EXEEXT__SOURCES) $(EXTRA_lame__EXEEXT__SOURCES) \
+	$(mp3rtp__EXEEXT__SOURCES) $(EXTRA_mp3rtp__EXEEXT__SOURCES) \
+	$(mp3x__EXEEXT__SOURCES) $(EXTRA_mp3x__EXEEXT__SOURCES)
 HEADERS = $(noinst_HEADERS)
 
 DIST_COMMON = $(noinst_HEADERS) Makefile.am Makefile.in depcomp
-SOURCES = $(lame_SOURCES) $(EXTRA_lame_SOURCES) $(mp3rtp_SOURCES) $(EXTRA_mp3rtp_SOURCES) $(mp3x_SOURCES) $(EXTRA_mp3x_SOURCES)
+SOURCES = $(lame__EXEEXT__SOURCES) $(EXTRA_lame__EXEEXT__SOURCES) $(mp3rtp__EXEEXT__SOURCES) $(EXTRA_mp3rtp__EXEEXT__SOURCES) $(mp3x__EXEEXT__SOURCES) $(EXTRA_mp3x__EXEEXT__SOURCES)
 
 all: all-am
 
@@ -292,15 +297,15 @@ uninstall-binPROGRAMS:
 
 clean-binPROGRAMS:
 	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
-lame$(EXEEXT): $(lame_OBJECTS) $(lame_DEPENDENCIES) 
+lame$(EXEEXT): $(lame__EXEEXT__OBJECTS) $(lame__EXEEXT__DEPENDENCIES) 
 	@rm -f lame$(EXEEXT)
-	$(LINK) $(lame_LDFLAGS) $(lame_OBJECTS) $(lame_LDADD) $(LIBS)
-mp3rtp$(EXEEXT): $(mp3rtp_OBJECTS) $(mp3rtp_DEPENDENCIES) 
+	$(LINK) $(lame__EXEEXT__LDFLAGS) $(lame__EXEEXT__OBJECTS) $(lame__EXEEXT__LDADD) $(LIBS)
+mp3rtp$(EXEEXT): $(mp3rtp__EXEEXT__OBJECTS) $(mp3rtp__EXEEXT__DEPENDENCIES) 
 	@rm -f mp3rtp$(EXEEXT)
-	$(LINK) $(mp3rtp_LDFLAGS) $(mp3rtp_OBJECTS) $(mp3rtp_LDADD) $(LIBS)
-mp3x$(EXEEXT): $(mp3x_OBJECTS) $(mp3x_DEPENDENCIES) 
+	$(LINK) $(mp3rtp__EXEEXT__LDFLAGS) $(mp3rtp__EXEEXT__OBJECTS) $(mp3rtp__EXEEXT__LDADD) $(LIBS)
+mp3x$(EXEEXT): $(mp3x__EXEEXT__OBJECTS) $(mp3x__EXEEXT__DEPENDENCIES) 
 	@rm -f mp3x$(EXEEXT)
-	$(LINK) $(mp3x_LDFLAGS) $(mp3x_OBJECTS) $(mp3x_LDADD) $(LIBS)
+	$(LINK) $(mp3x__EXEEXT__LDFLAGS) $(mp3x__EXEEXT__OBJECTS) $(mp3x__EXEEXT__LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT) core *.core

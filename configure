@@ -4630,7 +4630,7 @@ else
     fi
   done
   IFS="$ac_save_ifs"
-  test -z "$ac_cv_path_GTK_CONFIG" && ac_cv_path_GTK_CONFIG="gtk12-config"
+  test -z "$ac_cv_path_GTK_CONFIG" && ac_cv_path_GTK_CONFIG="gtk-config"
   ;;
 esac
 fi
@@ -5203,7 +5203,7 @@ else
 fi
 
 if test "x${WITH_FRONTEND}" = "xyes"; then
-	WITH_FRONTEND=lame
+	WITH_FRONTEND=lame${ac_exeext}
 	echo "$ac_t""yes" 1>&6
 else
 	WITH_FRONTEND=
@@ -5223,7 +5223,7 @@ else
 fi
 
 if test "x${WITH_MP3X}" = "xyes"; then
-	WITH_MP3X=mp3x
+	WITH_MP3X=mp3x${ac_exeext}
 	echo "$ac_t""yes" 1>&6
 else
 	WITH_MP3X=
@@ -5252,7 +5252,7 @@ else
 fi
 
 if test "x${WITH_MP3RTP}" = "xyes"; then
-	WITH_MP3RTP=mp3rtp
+	WITH_MP3RTP=mp3rtp${ac_exeext}
 	echo "$ac_t""yes" 1>&6
 else
 	WITH_MP3RTP=
@@ -5830,8 +5830,8 @@ fi
 
 
 CFLAGS="${OPTIMIZATION} ${CFLAGS}"
-LDADD="${CONFIG_MATH_LIB} ${LDADD}"
-
+LDADD="${LDADD}"
+FRONTEND_LDADD="${FRONTEND_LDADD} ${CONFIG_MATH_LIB}"
 
 
 
