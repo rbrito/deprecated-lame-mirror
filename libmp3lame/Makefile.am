@@ -42,7 +42,6 @@ libmp3lame_la_SOURCES = \
         id3tag.c \
         lame.c \
         newmdct.c \
-	pcm.c \
 	presets.c \
 	psymodel.c \
 	quantize.c \
@@ -69,7 +68,6 @@ noinst_HEADERS= \
 	lameerror.h \
 	machine.h \
 	newmdct.h \
-	pcm.h \
 	psymodel.h \
 	quantize.h  \
 	quantize_pvt.h \

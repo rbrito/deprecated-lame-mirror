@@ -275,10 +275,6 @@ SOURCE=.\newmdct.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\pcm.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\psymodel.h
 # End Source File
 # Begin Source File
