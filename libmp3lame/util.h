@@ -310,29 +310,6 @@ struct lame_internal_flags {
    *     of this element will be otherwise misinterpreted as an init.
    */
   
-  #define  LAME_ID   0xFFF88E3B
-  unsigned long Class_ID;
-
-  struct {
-    void (*msgf)  (const char *format, va_list ap);
-    void (*debugf)(const char *format, va_list ap);
-    void (*errorf)(const char *format, va_list ap);
-  } report;
-  
-  int lame_encode_frame_init;     
-  int iteration_init_init;
-  int fill_buffer_resample_init;
-
-  int padding;                  /* padding for the current frame? */
-  int mode_gr;                    /* granules per frame */
-  int          channels_in;	/* number of channels in the input data stream (PCM or decoded PCM) */
-  int          channels_out;  /* number of channels in the output data stream (not used for decoding) */
-  resample_t*  resample_in;   /* context for coding (PCM=>MP3) resampling */
-  resample_t*  resample_out;	/* context for decoding (MP3=>PCM) resampling */
-  FLOAT8  samplefreq_in;
-  FLOAT8  samplefreq_out;
-  uint16_t nMusicCRC;
-
 #ifndef  MFSIZE
 # define MFSIZE  ( 3*1152 + ENCDELAY - MDCTDELAY )
 #endif
@@ -341,6 +318,30 @@ struct lame_internal_flags {
 #else
   sample_t     mfbuf [2] [MFSIZE];
 #endif
+
+#  define  LAME_ID   0xFFF88E3B
+  unsigned long Class_ID;
+
+  struct {
+    void (*msgf)  (const char *format, va_list ap);
+    void (*debugf)(const char *format, va_list ap);
+    void (*errorf)(const char *format, va_list ap);
+  } report;
+  
+  int lame_encode_frame_init;
+  int iteration_init_init;
+  int fill_buffer_resample_init;
+
+  int padding;          /* padding for the current frame? */
+  int mode_gr;          /* granules per frame */
+  int channels_in;	/* number of channels in the input data stream (PCM or decoded PCM) */
+  int channels_out;     /* number of channels in the output data stream (not used for decoding) */
+  resample_t*  resample_in;   /* context for coding (PCM=>MP3) resampling */
+  resample_t*  resample_out;	/* context for decoding (MP3=>PCM) resampling */
+  FLOAT8  samplefreq_in;
+  FLOAT8  samplefreq_out;
+  FLOAT resample_ratio;           /* input_samp_rate/output_samp_rate */
+
   size_t       frame_size;    /* size of one frame in samples per channel */
   lame_global_flags* gfp;     /* needed as long as the frame encoding functions must access gfp (all needed information can be added to gfc) */
   coding_t     coding;        /* MPEG Layer 1/2/3, Ogg Vorbis, MPEG AAC, ... */
@@ -351,24 +352,14 @@ struct lame_internal_flags {
   FLOAT8       last_ampl;	  /* amplification at the end of the last chunk    (1. = 0 dB) */
   int VBR_min_bitrate;            /* min bitrate index */
   int VBR_max_bitrate;            /* max bitrate index */
-  FLOAT resample_ratio;           /* input_samp_rate/output_samp_rate */
   int bitrate_index;
   int samplerate_index;
   int mode_ext;
 
 
   /* lowpass and highpass filter control */
-  FLOAT8 lowpass1,lowpass2;        /* normalized frequency bounds of passband */
-  FLOAT8 highpass1,highpass2;      /* normalized frequency bounds of passband */
-                                  
-  /* polyphase filter (filter_type=0)  */
-  int lowpass_band;          /* zero bands >= lowpass_band in the polyphase filterbank */
-  int highpass_band;         /* zero bands <= highpass_band */
-  int lowpass_start_band;    /* amplify bands between start */
-  int lowpass_end_band;      /* and end for lowpass */
-  int highpass_start_band;   /* amplify bands between start */
-  int highpass_end_band;     /* and end for highpass */
-
+  FLOAT8 lowpass1,lowpass2;   /* normalized frequency bounds of passband */
+  FLOAT8 highpass1,highpass2; /* normalized frequency bounds of passband */
 
   int filter_type;          /* 0=polyphase filter, 1= FIR filter 2=MDCT filter(bad)*/
   int quantization;         /* 0 = ISO formual,  1=best amplitude */
@@ -413,6 +404,7 @@ struct lame_internal_flags {
 
   /* optional ID3 tags, used in id3tag.c  */
   struct id3tag_spec tag_spec;
+  uint16_t nMusicCRC;
 
 
   /* variables used by quantize.c */
@@ -421,10 +413,9 @@ struct lame_internal_flags {
 
   FLOAT8 masking_lower;
   char bv_scf[576];
-  
+  int pseudohalf[SFBMAX];
+
   int sfb21_extra; /* will be set in lame_init_params */
-  
-  int is_mpeg1; /* 1 for MPEG-1, 0 for MPEG-2(.5) */
 
 #ifndef KLEMM_44
   /* variables used by util.c */
@@ -438,8 +429,7 @@ struct lame_internal_flags {
 
   /* variables for newmdct.c */
   FLOAT8 sb_sample[2][2][18][SBLIMIT];
-  FLOAT8 amp_lowpass[32];
-  FLOAT8 amp_highpass[32];
+  FLOAT8 amp_filter[32];
 
   /* variables for bitstream.c */
   /* mpeg1: buffer=511 bytes  smallest frame: 96-38(sideinfo)=58
@@ -460,13 +450,11 @@ struct lame_internal_flags {
   int h_ptr;
   int w_ptr;
   int ancillary_flag;
-  
 
   /* variables for reservoir.c */
   int ResvSize; /* in bits */
   int ResvMax;  /* in bits */
 
-  
   scalefac_struct scalefac_band;
 
   /* DATA FROM PSYMODEL.C */
@@ -487,7 +475,6 @@ struct lame_internal_flags {
   /* unpredictability calculation
    */
   int cw_upper_index;
-  int cw_lower_index;
   FLOAT ax_sav[4][2][HBLKSIZE];
   FLOAT bx_sav[4][2][HBLKSIZE];
   FLOAT rx_sav[4][2][HBLKSIZE];
@@ -509,7 +496,6 @@ struct lame_internal_flags {
   FLOAT window[BLKSIZE], window_s[BLKSIZE_s/2];
 
   /* Scale Factor Bands    */
-  int pseudohalf[SFBMAX];
   FLOAT8 mld_l[SBMAX_l],mld_s[SBMAX_s];
   int	bm_l[SBMAX_l],bo_l[SBMAX_l] ;
   int	bm_s[SBMAX_s],bo_s[SBMAX_s] ;
@@ -522,11 +508,6 @@ struct lame_internal_flags {
   int	numlines_l[CBANDS];
   
   
-  /* frame analyzer    */
-  FLOAT energy_save[4][HBLKSIZE];
-  FLOAT8 pe_save[4];
-  FLOAT8 ers_save[4];
-  
   /* simple statistics */
   int   bitrate_stereoMode_Hist [16] [4+1];
 
@@ -537,9 +518,6 @@ struct lame_internal_flags {
 
   /* block type */
   int	blocktype_old[2];
-
-  /* used by the frame analyzer */
-  plotting_data *pinfo;
 
   /* CPU features */
   struct {
@@ -569,6 +547,12 @@ struct lame_internal_flags {
 
   int nogap_total;
   int nogap_current;  
+
+  /* used by the frame analyzer */
+  plotting_data *pinfo;
+  FLOAT energy_save[4][HBLKSIZE];
+  FLOAT8 pe_save[4];
+  FLOAT8 ers_save[4];
 };
 
 
