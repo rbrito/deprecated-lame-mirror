@@ -830,17 +830,17 @@ fi
 ###########################################################################
 if test "$UNAME" = "AmigaOS" ; then
 	CC="gcc -noixemul"
-	OPTIMIZATION=$OPTIMIZATION -m68020-60 -m68881
+	OPTIMIZATION="$OPTIMIZATION -m68020-60 -m68881"
 	MAKEDEP="-MM"
 	if test "$ARCH" = "WOS"; then
 		CC="ppc-amigaos-gcc -warpup"
-		OPTIMIZATION=$OPTIMIZATION -mmultiple -mcpu=603e"
+		OPTIMIZATION="$OPTIMIZATION -mmultiple -mcpu=603e"
 		AR="ppc-amigaos-ar"
 		RANLIB="ppc-amigaos-ranlib"
 	fi
 	if test "$ARCH",PPC; then
 		CC="ppc-amigaos-gcc"
-		OPTIMIZATION=$OPTIMIZATION -mmultiple -mcpu=603e"
+		OPTIMIZATION="$OPTIMIZATION -mmultiple -mcpu=603e"
 		AR="ppc-amigaos-ar"
 		RANLIB="ppc-amigaos-ranlib"
 	fi
