@@ -175,7 +175,7 @@ void brhist_disp ( lame_global_flags *gfp )
 
 void brhist_disp_total(lame_global_flags *gfp)
 {
-  unsigned int i;
+  int i;
   FLOAT ave;
   /*  lame_internal_flags *gfc=gfp->internal_flags;*/
 

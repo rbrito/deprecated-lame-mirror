@@ -71,12 +71,12 @@ struct id3tag_spec
 
 typedef struct BRHST_TAG
 {
-  unsigned long count[15];
-  unsigned long count_max;
-  unsigned int  vbrmin;
-  unsigned int  vbrmax;
-  char          kbps[15][4];
-  char          bar[BRHIST_BARMAX + 1];
+  long count[15];
+  long count_max;
+  int  vbrmin;
+  int  vbrmax;
+  char kbps[15][4];
+  char bar[BRHIST_BARMAX + 1];
 } BRHST, *PBRHST;
 
 
