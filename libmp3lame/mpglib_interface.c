@@ -23,8 +23,9 @@ plotting_data *mpg123_pinfo = NULL;
 int
 lame_decode_exit(lame_t gfc)
 {
-    ExitMP3(gfc->pmp);
-    gfc->pmp = NULL;
+    if (gfc->pmp)		ExitMP3(gfc->pmp);
+    if (gfc->pmp_replaygain)	ExitMP3(gfc->pmp_replaygain);
+    gfc->pmp = gfc->pmp_replaygain = NULL;
     return 0;
 }
 
