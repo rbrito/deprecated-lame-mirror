@@ -24,7 +24,7 @@
 #include "l3side.h"
 #include "tables.h"
 #include "quantize.h"
-
+#include "globalflags.h"
 
 extern int *scalefac_band_long; 
 extern int *scalefac_band_short;
@@ -534,12 +534,20 @@ static int count_bits_long(int ix[576], gr_info *gi)
 
 
 
-int count_bits(int *ix,gr_info *cod_info)  
+int count_bits(int *ix, FLOAT8 *xr, gr_info *cod_info)  
 {
   int bits=0,i;
-  for ( i = 0; i < 576; i++ )  {
-     if ( ix[i] > 8191 + 14) return 100000;/* report unsuitable quantizer */
+  {
+    FLOAT8 w = (8191 + 15) * pow(2.0, cod_info->quantizerStepSize * 0.1875);
+    for ( i = 0; i < 576; i++ )  {
+      if (xr[i] > w)
+	return 100000;
+    }
   }
+  if (highq)
+    quantize_xrpow(xr, ix, cod_info);
+  else
+    quantize_xrpow_ISO(xr, ix, cod_info);
 
 
   if (cod_info->block_type==SHORT_TYPE) {

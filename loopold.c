@@ -117,6 +117,12 @@ void init_outer_loop_dual(
 	if (cod_info->subblock_gain[b] < 0) 
 	  cod_info->subblock_gain[b]=0;
       }
+      for (i = b; i < 576; i += 3) {
+	xr[gr][ch][i] *= 1 << (cod_info->subblock_gain[b] * 2);
+      }
+      for (sfb = 0; sfb < SBPSY_s; sfb++) {
+	l3_xmin->s[gr][ch][sfb][b] *= 1 << (cod_info->subblock_gain[b] * 4);
+      }
     }
   }
 }
@@ -526,7 +532,7 @@ void calc_noise2( FLOAT8 xr[2][576], int ix[2][576], gr_info *cod_info[2],
             FLOAT8 over_noise[2], FLOAT8 tot_noise[2], FLOAT8 max_noise[2])
 {
     int start, end, sfb, l, i;
-    FLOAT8 sum[2],step_s[3][2],step[2],bw;
+    FLOAT8 sum[2],step_0,step_1,step[2],bw;
 
     D192_3 *xr_s[2];
     I192_3 *ix_s[2];
@@ -609,19 +615,14 @@ void calc_noise2( FLOAT8 xr[2][576], int ix[2][576], gr_info *cod_info[2],
     /* calc_noise2: we can assume block types of both channels must be the same
 */
     if (cod_info[0]->block_type == 2) {
-    for (ch=0 ; ch < stereo ; ch ++ ) {
+      step_0 = pow( 2.0, (cod_info[0]->quantizerStepSize) * 0.25 );
+      step_1 = pow( 2.0, (cod_info[1]->quantizerStepSize) * 0.25 );
 
-      for (i=0;i<3;i++){
-        step_s[i][ch] = pow( 2.0, (cod_info[ch]->quantizerStepSize) * 0.25 );
-/* subblock_gain ? */
-        if (cod_info[ch]->subblock_gain[i] )
-          step_s[i][ch] *= pow(2.0,-2.0*cod_info[ch]->subblock_gain[i]);
+      for (ch=0 ; ch < stereo ; ch ++ ) {
+	over[ch] = 0;
+	xr_s[ch] = (D192_3 *) xr[ch];
+	ix_s[ch] = (I192_3 *) ix[ch];
       }
-
-      over[ch] = 0;
-      xr_s[ch] = (D192_3 *) xr[ch];
-      ix_s[ch] = (I192_3 *) ix[ch];
-    }
 
     for ( sfb = 0 ; sfb < SBPSY_s; sfb++ ) {
       start = scalefac_band_short[ sfb ];
@@ -635,9 +636,9 @@ void calc_noise2( FLOAT8 xr[2][576], int ix[2][576], gr_info *cod_info[2],
               diff[0] = (*xr_s[0])[l][i];
             else {
               if ((*xr_s[0])[l][i] < 0) {
-                diff[0] = (*xr_s[0])[l][i] + pow43[index] * step_s[i][0]; 
+                diff[0] = (*xr_s[0])[l][i] + pow43[index] * step_0; 
               } else {
-                diff[0] = (*xr_s[0])[l][i] - pow43[index] * step_s[i][0]; 
+                diff[0] = (*xr_s[0])[l][i] - pow43[index] * step_0; 
               }
             }
             index=(*ix_s[1])[l][i];
@@ -645,9 +646,9 @@ void calc_noise2( FLOAT8 xr[2][576], int ix[2][576], gr_info *cod_info[2],
               diff[1] = (*xr_s[1])[l][i];
             else {
               if ((*xr_s[1])[l][i] < 0) {
-                diff[1] = (*xr_s[1])[l][i] + pow43[index] * step_s[i][1]; 
+                diff[1] = (*xr_s[1])[l][i] + pow43[index] * step_1; 
               } else {
-                diff[1] = (*xr_s[1])[l][i] - pow43[index] * step_s[i][1]; 
+                diff[1] = (*xr_s[1])[l][i] - pow43[index] * step_1; 
               }
             }     
           sum[0] += (diff[0]+diff[1])*(diff[0]+diff[1])/(2.0);

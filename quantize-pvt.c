@@ -378,11 +378,7 @@ inner_loop( FLOAT8 xr[2][2][576], FLOAT8 xrpow[576],
     do
     {
       cod_info->quantizerStepSize += 1.0;
-      if (highq) 
-	quantize_xrpow( xrpow, l3_enc[gr][ch], cod_info );
-      else
-	quantize_xrpow_ISO( xrpow, l3_enc[gr][ch], cod_info );
-      bits = count_bits(l3_enc[gr][ch],cod_info);  
+      bits = count_bits(l3_enc[gr][ch], xrpow, cod_info);  
     }
     while ( bits > max_bits );
     return bits;
@@ -754,30 +750,27 @@ void quantize_xrpow( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
   register int j;
   int rx;
   FLOAT8 x,quantizerStepSize;
-  FLOAT8 istep_l,istep0,istep1,istep2;
+  FLOAT8 istep;
 
   quantizerStepSize = cod_info->quantizerStepSize;
   
-  istep_l = pow ( 2.0, quantizerStepSize * -0.1875 );
+  istep = pow ( 2.0, quantizerStepSize * -0.1875 );
   
   if ((cod_info->block_type==SHORT_TYPE))
     {
-      istep0 = istep_l * pow(2.0,1.5* (FLOAT8) cod_info->subblock_gain[0]);
-      istep1 = istep_l * pow(2.0,1.5* (FLOAT8) cod_info->subblock_gain[1]);
-      istep2 = istep_l * pow(2.0,1.5* (FLOAT8) cod_info->subblock_gain[2]);
       for (j=192;j>0;j--) 
         {
-	  x = istep0 * *xr++;
+	  x = istep * *xr++;
           /* *(ix++) = (int)( x  + adj43[(int)x]); */
 	  XRPOW_FTOI(x-.5, rx);
 	  XRPOW_FTOI(x + QUANTFAC(rx), *(ix++));
 
-	  x = istep1 * *xr++;
+	  x = istep * *xr++;
           /* *(ix++) = (int)( x  + adj43[(int)x]); */
 	  XRPOW_FTOI(x-.5, rx);
 	  XRPOW_FTOI(x + QUANTFAC(rx), *(ix++));
 
-	  x = istep2 * *xr++;
+	  x = istep * *xr++;
 	  /*          *(ix++) = (int)( x  + adj43[(int)x]); */
 	  XRPOW_FTOI(x-.5, rx);
 	  XRPOW_FTOI(x + QUANTFAC(rx), *(ix++));
@@ -786,7 +779,7 @@ void quantize_xrpow( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
   else
     {
       for (j=576;j>0;j--) {
-	x = istep_l * *xr++;
+	x = istep * *xr++;
 	/*	*(ix++) = (int)( x  +  adj43[(int)x]); */
 	XRPOW_FTOI(x-.5, rx);
 	XRPOW_FTOI(x + QUANTFAC(rx), *(ix++));
@@ -817,7 +810,7 @@ void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
   /* quantize on xr^(3/4) instead of xr */
   register int j;
   FLOAT8 quantizerStepSize;
-  FLOAT8 istep_l,istep0,istep1,istep2;
+  FLOAT8 istep;
 #if defined(__GNUC__) && defined(__i386__) 
 #elif defined(MSVC_XRPOW_ASM)
 #else
@@ -826,27 +819,24 @@ void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
 
   quantizerStepSize = cod_info->quantizerStepSize;
   
-  istep_l = pow ( 2.0, quantizerStepSize * -0.1875 );
+  istep = pow ( 2.0, quantizerStepSize * -0.1875 );
   
   if ((cod_info->block_type==SHORT_TYPE))
     {
-      istep0 = istep_l * pow(2.0,1.5* (FLOAT8) cod_info->subblock_gain[0]);
-      istep1 = istep_l * pow(2.0,1.5* (FLOAT8) cod_info->subblock_gain[1]);
-      istep2 = istep_l * pow(2.0,1.5* (FLOAT8) cod_info->subblock_gain[2]);
       for (j=192;j>0;j--) 
         {
 #if defined(__GNUC__) && defined(__i386__)
-          asm ("fistpl %0 ": "=m"(*(ix++)): "t"(istep0*(*(xr++)) - 0.0946): "st");
-          asm ("fistpl %0 ": "=m"(*(ix++)): "t"(istep1*(*(xr++)) - 0.0946): "st");
-          asm ("fistpl %0 ": "=m"(*(ix++)): "t"(istep2*(*(xr++)) - 0.0946): "st");
+          asm ("fistpl %0 ": "=m"(*(ix++)): "t"(istep*(*(xr++)) - 0.0946): "st");
+          asm ("fistpl %0 ": "=m"(*(ix++)): "t"(istep*(*(xr++)) - 0.0946): "st");
+          asm ("fistpl %0 ": "=m"(*(ix++)): "t"(istep*(*(xr++)) - 0.0946): "st");
 #elif defined(MSVC_XRPOW_ASM)
-          MSVC_FTOL((istep0*(*(xr++)) - 0.0946), *(ix++));
-          MSVC_FTOL((istep1*(*(xr++)) - 0.0946), *(ix++));
-          MSVC_FTOL((istep2*(*(xr++)) - 0.0946), *(ix++));
+          MSVC_FTOL((istep*(*(xr++)) - 0.0946), *(ix++));
+          MSVC_FTOL((istep*(*(xr++)) - 0.0946), *(ix++));
+          MSVC_FTOL((istep*(*(xr++)) - 0.0946), *(ix++));
 #else
-          *(ix++) = (int)( istep0*(*(xr++))  + 0.4054);
-          *(ix++) = (int)( istep1*(*(xr++))  + 0.4054);
-          *(ix++) = (int)( istep2*(*(xr++))  + 0.4054);
+          *(ix++) = (int)( istep*(*(xr++))  + 0.4054);
+          *(ix++) = (int)( istep*(*(xr++))  + 0.4054);
+          *(ix++) = (int)( istep*(*(xr++))  + 0.4054);
 #endif
         }
     }
@@ -854,14 +844,14 @@ void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
     {
 #if defined(__GNUC__) && defined(__i386__) 
       for (j=576;j>0;j--) 
-          asm ("fistpl %0 ": "=m"(*(ix++)): "t"(istep_l*(*(xr++)) - 0.0946): "st");
+          asm ("fistpl %0 ": "=m"(*(ix++)): "t"(istep*(*(xr++)) - 0.0946): "st");
 #elif defined(MSVC_XRPOW_ASM)
       /* asm from Acy Stapp <AStapp@origin.ea.com> */
       FLOAT8 temp0 = 0.0946;
       _asm {
           mov ecx, 576/4;
           fld qword ptr [temp0];
-          fld qword ptr [istep_l];
+          fld qword ptr [istep];
           mov eax, dword ptr [xr];
           mov ebx, dword ptr [ix];
       } loop0: _asm {
@@ -892,20 +882,20 @@ void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
       }
       /*
       for (j=576;j>0;j--) {
-        MSVC_FTOL((istep_l*(*(xr++)) - 0.0946), *(ix++));
+        MSVC_FTOL((istep*(*(xr++)) - 0.0946), *(ix++));
       }
       */
 #else
-      compareval0 = (1.0 - 0.4054)/istep_l;
+      compareval0 = (1.0 - 0.4054)/istep;
       /* depending on architecture, it may be worth calculating a few more compareval's.
-         eg.  compareval1 = (2.0 - 0.4054/istep_l); 
+         eg.  compareval1 = (2.0 - 0.4054/istep); 
               .. and then after the first compare do this ...
               if compareval1>*xr then ix = 1;
          On a pentium166, it's only worth doing the one compare (as done here), as the second
          compare becomes more expensive than just calculating the value. Architectures with 
          slow FP operations may want to add some more comparevals. try it and send your diffs 
          statistically speaking
-         73% of all xr*istep_l values give ix=0
+         73% of all xr*istep values give ix=0
          16% will give 1
          4%  will give 2
       */
@@ -915,7 +905,7 @@ void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
             *(ix++) = 0;
             xr++;
           } else
-            *(ix++) = (int)( istep_l*(*(xr++))  + 0.4054);
+            *(ix++) = (int)( istep*(*(xr++))  + 0.4054);
         }
 #endif
     }
@@ -958,12 +948,7 @@ bin_search_StepSize2(int      desired_rate,
     do
     {
 	cod_info->quantizerStepSize = StepSize;
-	if (highq)
-	  quantize_xrpow(xrspow, ix, cod_info);
-	else
-	  quantize_xrpow_ISO(xrspow, ix, cod_info);
-
-	nBits = count_bits(ix,cod_info);  
+	nBits = count_bits(ix, xrspow, cod_info);  
 
 	if (CurrentStep == 1 )
         {

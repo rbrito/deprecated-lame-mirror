@@ -140,7 +140,7 @@ new_choose_table( int ix[576],
 /* New SS 20-12-96 */
 int bin_search_StepSize2(int desired_rate, FLOAT8 start, int bot, int ix[576],
            FLOAT8 xrs[576], FLOAT8 xrspow[576], gr_info * cod_info);
-int count_bits(int  *ix,gr_info *cod_info);
+int count_bits(int  *ix, FLOAT8 xr[576], gr_info *cod_info);
 
 
 int quant_compare(

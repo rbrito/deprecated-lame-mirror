@@ -435,6 +435,12 @@ void init_outer_loop(
 	  cod_info->subblock_gain[b]=2;
 	if (cod_info->subblock_gain[b] < 0) 
 	  cod_info->subblock_gain[b]=0;
+	for (i = b; i < 576; i += 3) {
+	  xr[gr][ch][i] *= 1 << (cod_info->subblock_gain[b] * 2);
+	}
+	for (sfb = 0; sfb < SBPSY_s; sfb++) {
+	  l3_xmin->s[gr][ch][sfb][b] *= 1 << (cod_info->subblock_gain[b] * 4);
+	}
       }
     }
   }
@@ -629,8 +635,8 @@ void outer_loop(
 		pinfo->thr_s[gr][ch][3*sfb+i] =  
 		  pinfo->en_s[gr][ch][3*sfb+i]*l3_xmin->s[gr][ch][sfb][i]/en0;
 
-	      pinfo->LAMEsfb_s[gr][ch][3*sfb+i]=-2*cod_info->subblock_gain[i];
-	      pinfo->LAMEsfb_s[gr][ch][3*sfb+i]-=ifqstep*scalefac->s[gr][ch][sfb][i];
+	      pinfo->LAMEsfb_s[gr][ch][3*sfb+i]=
+		-2*cod_info->subblock_gain[i]-ifqstep*scalefac->s[gr][ch][sfb][i];
 	    }
 	  }
 	  }else{
@@ -846,9 +852,6 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
     for ( i = 0; i < 3; i++ )
     {
         step = pow( 2.0, (cod_info->quantizerStepSize) * 0.25 ); 
-        if (cod_info->subblock_gain[i] )
-          step *= pow(2.0,-2.0*cod_info->subblock_gain[i]);
-
         for ( sfb = cod_info->sfb_smax; sfb < SBPSY_s; sfb++ )
         {
             start = scalefac_band_short[ sfb ];
