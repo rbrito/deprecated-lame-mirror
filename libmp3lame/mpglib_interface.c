@@ -26,8 +26,6 @@ int
 lame_decode_exit(lame_t gfc)
 {
     ExitMP3(gfc->pmp);
-    if (gfc->pmp)
-	free(gfc->pmp);
     return 0;
 }
 
@@ -35,9 +33,10 @@ lame_decode_exit(lame_t gfc)
 int
 lame_decode_init(lame_t gfc)
 {
-    gfc->pmp = malloc(sizeof(MPSTR));
-    InitMP3(gfc->pmp);
-    return 0;
+    gfc->pmp = InitMP3();
+    if (gfc->pmp)
+	return 0;
+    return 1;
 }
 
 

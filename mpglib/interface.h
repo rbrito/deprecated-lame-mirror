@@ -25,7 +25,7 @@ extern "C" {
 
 #include "common.h"
 
-BOOL InitMP3(PMPSTR mp);
+PMPSTR InitMP3(void);
 int decodeMP3(PMPSTR mp,unsigned char *inmemory,int inmemsize,char *outmemory,int outmemsize,int *done);
 void ExitMP3(PMPSTR mp);
 

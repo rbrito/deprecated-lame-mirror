@@ -28,53 +28,59 @@
 #endif
 
 
-BOOL InitMP3( PMPSTR mp) 
+PMPSTR InitMP3(void)
 {
-	memset(mp,0,sizeof(MPSTR));
+    PMPSTR mp = calloc(1, sizeof(MPSTR));
+    if (!mp)
+	return mp;
 
-	mp->framesize = 0;
-        mp->num_frames = 0;
-        mp->enc_delay = -1;
-        mp->enc_padding = -1;
-        mp->vbr_header=0;
-	mp->header_parsed=0;
-	mp->side_parsed=0;
-	mp->data_parsed=0;
-	mp->free_format=0;
-	mp->old_free_format=0;
-	mp->ssize = 0;
-	mp->dsize=0;
-	mp->fsizeold = -1;
-	mp->bsize = 0;
-	mp->head = mp->tail = NULL;
-	mp->fr.single = -1;
-	mp->bsnum = 0;
-	mp->wordpointer = mp->bsspace[mp->bsnum] + 512;
-	mp->synth_bo = 1;
-	mp->sync_bitstream = 1;
+    mp->framesize = 0;
+    mp->num_frames = 0;
+    mp->enc_delay = -1;
+    mp->enc_padding = -1;
+    mp->vbr_header=0;
+    mp->header_parsed=0;
+    mp->side_parsed=0;
+    mp->data_parsed=0;
+    mp->free_format=0;
+    mp->old_free_format=0;
+    mp->ssize = 0;
+    mp->dsize=0;
+    mp->fsizeold = -1;
+    mp->bsize = 0;
+    mp->head = mp->tail = NULL;
+    mp->fr.single = -1;
+    mp->bsnum = 0;
+    mp->wordpointer = mp->bsspace[mp->bsnum] + 512;
+    mp->synth_bo = 1;
+    mp->sync_bitstream = 1;
 
-	make_decode_tables(32767);
+    make_decode_tables(32767);
 
-	init_layer3(SBLIMIT);
+    init_layer3(SBLIMIT);
 
 #ifdef USE_LAYER_2
-	init_layer2();
+    init_layer2();
 #endif
 
-	return !0;
+    return mp;
 }
 
-void ExitMP3( PMPSTR mp)
+void ExitMP3(PMPSTR mp)
 {
-	struct buf *b,*bn;
-	
-	b = mp->tail;
-	while(b) {
-		free(b->pnt);
-		bn = b->next;
-		free(b);
-		b = bn;
-	}
+    struct buf *b,*bn;
+
+    if (!mp)
+	return;
+
+    b = mp->tail;
+    while (b) {
+	free(b->pnt);
+	bn = b->next;
+	free(b);
+	b = bn;
+    }
+    free(mp);
 }
 
 static struct buf *addbuf( PMPSTR mp, unsigned char *buf,int size)
