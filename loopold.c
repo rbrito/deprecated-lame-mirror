@@ -527,7 +527,11 @@ void calc_noise2( FLOAT8 xr[2][576], int ix[2][576], gr_info *cod_info[2],
       over_noise[ch]=0;
       tot_noise[ch]=0;
       max_noise[ch]=-999;
+#ifdef NOPOW
+      step[ch] = exp( ((cod_info[ch]->quantizerStepSize) * 0.25) * LOG2 );
+#else
       step[ch] = pow( 2.0, (cod_info[ch]->quantizerStepSize) * 0.25 );
+#endif
     }
     for ( sfb = 0; sfb < SBPSY_l; sfb++ ) {
       start = scalefac_band_long[ sfb ];
@@ -582,8 +586,13 @@ void calc_noise2( FLOAT8 xr[2][576], int ix[2][576], gr_info *cod_info[2],
     /* calc_noise2: we can assume block types of both channels must be the same
 */
     if (cod_info[0]->block_type == 2) {
+#ifdef NOPOW
+      step_0 = exp( ((cod_info[0]->quantizerStepSize) * 0.25) * LOG2 );
+      step_1 = exp( ((cod_info[1]->quantizerStepSize) * 0.25) * LOG2 );
+#else
       step_0 = pow( 2.0, (cod_info[0]->quantizerStepSize) * 0.25 );
       step_1 = pow( 2.0, (cod_info[1]->quantizerStepSize) * 0.25 );
+#endif
 
       for (ch=0 ; ch < gf.stereo ; ch ++ ) {
 	over[ch] = 0;

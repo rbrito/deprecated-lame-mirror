@@ -549,7 +549,11 @@ int count_bits(int *ix, FLOAT8 *xr, gr_info *cod_info)
 {
   int bits=0,i;
   if (gf.highq) {
+#ifdef NOPOW
+    FLOAT8 w = (IXMAX_VAL) * exp((cod_info->quantizerStepSize * 0.1875) * LOG2);
+#else
     FLOAT8 w = (IXMAX_VAL) * pow(2.0, cod_info->quantizerStepSize * 0.1875);
+#endif
     for ( i = 0; i < 576; i++ )  {
       if (xr[i] > w)
 	return 100000;

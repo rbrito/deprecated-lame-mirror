@@ -216,9 +216,13 @@ FLOAT8 ATHformula(FLOAT8 f)
   /* from Painter & Spanias, 1997 */
   /* minimum: (i=77) 3.3kHz = -5db */
   ath=(3.640 * pow(f,-0.8)
+#ifdef NOPOW
+       -  6.500 * exp(-0.6*((f-3.3)*(f-3.3)))
+       +  0.001 * (f*f*f*f));
+#else
        -  6.500 * exp(-0.6*pow(f-3.3,2.0))
        +  0.001 * pow(f,4.0));
-  
+#endif  
   /* convert to energy */
   if (gf.noATH)
     ath -= 200; /* disables ATH */
@@ -226,7 +230,11 @@ FLOAT8 ATHformula(FLOAT8 f)
     ath -= 114;    /* MDCT scaling.  From tests by macik and MUS420 code */
     /* ath -= 109; */
   }
+#ifdef NOPOW
+  ath = exp( (ath/10.0) * LOG10 );
+#else
   ath = pow( 10.0, ath/10.0 );
+#endif
   return ath;
 }
  
@@ -754,8 +762,11 @@ int loop_break( III_scalefac_t *scalefac, gr_info *cod_info,
 void quantize_xrpow(FLOAT8 xr[576], int ix[576], gr_info *cod_info) {
   /* quantize on xr^(3/4) instead of xr */
   const FLOAT8 quantizerStepSize = cod_info->quantizerStepSize;
+#ifdef NOPOW
+  const FLOAT8 istep = exp((quantizerStepSize * -0.1875) * LOG2);
+#else
   const FLOAT8 istep = pow(2.0, quantizerStepSize * -0.1875);
-  
+#endif  
 #ifndef _MSC_VER
   {
       FLOAT8 x;
@@ -863,7 +874,11 @@ void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
 
   quantizerStepSize = cod_info->quantizerStepSize;
   
+#ifdef NOPOW
+  istep = exp( (quantizerStepSize * -0.1875) * LOG2 );
+#else
   istep = pow ( 2.0, quantizerStepSize * -0.1875 );
+#endif
   
 #if defined(_MSC_VER)
       /* asm from Acy Stapp <AStapp@austin.rr.com> */

@@ -41,6 +41,13 @@
  #define        LOG2                    0.69314718055994530942
 #endif
 
+#ifdef M_LN10
+ #define        LOG10                   M_LN10
+#else
+ #define        LOG10                   2.30258509299404568402
+#endif
+
+
 #ifdef M_SQRT2
  #define        SQRT2                   M_SQRT2
 #else
