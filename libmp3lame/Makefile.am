@@ -23,6 +23,8 @@ libmp3lame_la_LDFLAGS = -version-info @LIB_MAJOR_VERSION@:@LIB_MINOR_VERSION@
 
 INCLUDES = @INCLUDES@ -I$(top_srcdir)/mpglib/ -I$(top_srcdir)
 
+DEFS = @DEFS@ @CONFIG_DEFS@
+
 EXTRA_DIST = \
 	debugscalefac.c \
 	libmp3lame.dsp
@@ -67,7 +69,7 @@ noinst_HEADERS= \
 
 CLEANFILES = lclint.txt
 
-LCLINTFLAGS= +posixlib +showsummary +showalluses +whichlib +forcehints
+LCLINTFLAGS= +posixlib +showsummary +showalluses +whichlib +forcehints -Dlint
 
 lclint.txt: ${libmp3lame_la_SOURCES} ${noinst_HEADERS}
 	@lclint ${LCLINTFLAGS} ${INCLUDES} ${DEFS} ${libmp3lame_la_SOURCES} 2>&1 >lclint.txt || true

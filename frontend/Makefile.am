@@ -9,6 +9,8 @@ brhist_sources = brhist.c brhist.h
 
 EXTRA_DIST = $(brhist_sources) README.Win32 mp3x.dsp mp3x.dsw amiga_mpega.c
 
+DEFS = @DEFS@ @CONFIG_DEFS@
+
 common_sources = \
 	get_audio.c \
 	ieeefloat.c \
@@ -54,7 +56,7 @@ mp3x_LDADD = $(LDADD) @GTK_LIBS@
 
 CLEANFILES = lclint.txt
 
-LCLINTFLAGS= +posixlib +showsummary +showalluses +whichlib +forcehints
+LCLINTFLAGS= +posixlib +showsummary +showalluses +whichlib +forcehints -Dlint
 
 lclint.txt: ${lame_SOURCES} ${noinst_HEADERS}
 	@lclint ${LCLINTFLAGS} ${INCLUDES} ${DEFS} ${lame_SOURCES} 2>&1 >lclint.txt || true
