@@ -841,6 +841,7 @@ case 't':  /* dont write VBR tag */
     gf.bWriteVbrTag=0;      /* no MPEG2 Xing VBR tags yet */
   }
 
+  gf.mode_gr = (info->version == 1) ? 2 : 1;  /* mode_gr = 2 */
 
   /* open the output file */
   /* if gtkflag, no output.  but set outfile = stdout */
@@ -1078,7 +1079,6 @@ int lame_encode(short int Buffer[2][1152],char *mpg123bs)
   static unsigned long bitsPerSlot;
   static FLOAT8 frac_SpF;
   static FLOAT8 slot_lag;
-  static int mode_gr;
   static unsigned long sentBits = 0;
   static int samplesPerFrame;
 #if (ENCDELAY < 800) 
@@ -1140,7 +1140,6 @@ int lame_encode(short int Buffer[2][1152],char *mpg123bs)
     slot_lag  = -frac_SpF;
     info->padding = 1;
     if (fabs(frac_SpF) < 1e-9) info->padding = 0;
-    mode_gr = (info->version == 1) ? 2 : 1;  /* mode_gr = 2 */
 
     assert(MFSIZE>=samplesPerFrame+EXTRADELAY);  
     /* check enougy space to store data needed by FFT */
@@ -1249,8 +1248,8 @@ FFT's                    <---------1024---------->
     short int *bufp[2];  /* address of beginning of left & right granule */
     int blocktype[2];
 
-    ms_ratio_prev=ms_ratio[mode_gr-1];
-    for (gr=0; gr < mode_gr ; gr++) {
+    ms_ratio_prev=ms_ratio[gf.mode_gr-1];
+    for (gr=0; gr < gf.mode_gr ; gr++) {
 
       for ( ch = 0; ch < stereo; ch++ )
 	bufp[ch] = &mfbuf[ch][576 + gr*576-FFTOFFSET];
@@ -1266,7 +1265,7 @@ FFT's                    <---------1024---------->
 
     }
   }else{
-    for (gr=0; gr < mode_gr ; gr++) 
+    for (gr=0; gr < gf.mode_gr ; gr++) 
       for ( ch = 0; ch < stereo; ch++ ) {
 	l3_side.gr[gr].ch[ch].tt.block_type=NORM_TYPE;
 	pe[gr][ch]=700;
@@ -1275,7 +1274,7 @@ FFT's                    <---------1024---------->
 
 
   /* block type flags */
-  for( gr = 0; gr < mode_gr; gr++ ) {
+  for( gr = 0; gr < gf.mode_gr; gr++ ) {
     for ( ch = 0; ch < stereo; ch++ ) {
       gr_info *cod_info = &l3_side.gr[gr].ch[ch].tt;
       cod_info->mixed_block_flag = 0;     /* never used by this model */
@@ -1287,7 +1286,7 @@ FFT's                    <---------1024---------->
   }
 
   /* polyphase filtering / mdct */
-  mdct_sub48(mfbuf[0], mfbuf[1], xr, stereo, &l3_side, mode_gr);
+  mdct_sub48(mfbuf[0], mfbuf[1], xr, stereo, &l3_side);
 
   /* lowpass MDCT filtering */
   if (sfb21 || voice_mode || lowpass1>0 || highpass2>0) 
@@ -1314,7 +1313,7 @@ FFT's                    <---------1024---------->
 #ifdef HAVEGTK
   if (gf.gtkflag) { 
     int j;
-    for ( gr = 0; gr < mode_gr; gr++ ) {
+    for ( gr = 0; gr < gf.mode_gr; gr++ ) {
       for ( ch = 0; ch < stereo; ch++ ) {
 	pinfo->ms_ratio[gr]=ms_ratio[gr];
 	pinfo->ms_ener_ratio[gr]=ms_ener_ratio[gr];
@@ -1407,13 +1406,14 @@ FFT's                    <---------1024---------->
 #ifndef _BLADEDLL
 int lame_readframe(short int Buffer[2][1152])
 {
-  int iread,ofreq;
+  int iread;
 
   /* note: if input is stereo and output is mono, get_audio() 
    * will  .5*(L+R) in channel 0,  and nothing in channel 1. */
   /* DOWNSAMPLE, ETC */
 #ifdef HAVEGTK
   if (gf.gtkflag) {
+    int ofreq;
     ofreq=1000*s_freq[info.version][info.sampling_frequency];  /* output */
     pinfo->frameNum = gf.frameNum;
     pinfo->sampfreq=ofreq;

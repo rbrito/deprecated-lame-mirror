@@ -158,13 +158,12 @@ VBR_iteration_loop_new (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   FLOAT8    masking_lower_db;
   FLOAT8    ifqstep,ol_sf,vbr_sf;
   int       stereo = fr_ps->stereo;
-  int       start,end,bw,sfb, i,ch, gr, mode_gr, over;
+  int       start,end,bw,sfb, i,ch, gr, over;
 
   /*
   iteration_init(xr_org,l3_side,l3_enc,fr_ps,&l3_xmin);
   */
   info = fr_ps->header;
-  mode_gr = (info->version == 1) ? 2 : 1;
 
 
   /* Adjust allowed masking based on quality setting */
@@ -176,12 +175,12 @@ VBR_iteration_loop_new (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 
 
   /* copy data to be quantized into xr */
-  for(gr = 0; gr < mode_gr; gr++) {
+  for(gr = 0; gr < gf.mode_gr; gr++) {
     if (convert_mdct) ms_convert(xr[gr],xr_org[gr]);
     else memcpy(xr[gr],xr_org[gr],sizeof(FLOAT8)*2*576);   
   }
 
-  for (gr = 0; gr < mode_gr; gr++) {
+  for (gr = 0; gr < gf.mode_gr; gr++) {
     for (ch = 0; ch < stereo; ch++) { 
       FLOAT8 xr34[576];
       gr_info *cod_info = &l3_side->gr[gr].ch[ch].tt;

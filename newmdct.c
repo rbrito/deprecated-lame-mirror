@@ -328,8 +328,7 @@ static void mdct_long(FLOAT8 *out, FLOAT8 *in)
 void mdct_sub48(
     short *w0, short *w1,
     FLOAT8 mdct_freq[2][2][576], int stereo,
-    III_side_info_t *l3_side,
-    int mode_gr)
+    III_side_info_t *l3_side)
 {
     int gr, k, ch;
     short *wk;
@@ -344,7 +343,7 @@ void mdct_sub48(
     wk = w0;
     /* thinking cache performance, ch->gr loop is better than gr->ch loop */
     for (ch = 0; ch < stereo; ch++) {
-	for (gr = 0; gr < mode_gr; gr++) {
+	for (gr = 0; gr < gf.mode_gr; gr++) {
 	    int	band;
 	    FLOAT8 *mdct_enc = mdct_freq[gr][ch];
 	    gr_info *gi = &(l3_side->gr[gr].ch[ch].tt);
@@ -425,7 +424,7 @@ void mdct_sub48(
 	    }
 	}
 	wk = w1;
-	if (mode_gr == 1) {
+	if (gf.mode_gr == 1) {
 	    memcpy(sb_sample[ch][0], sb_sample[ch][1], 576 * sizeof(FLOAT8));
 	}
     }

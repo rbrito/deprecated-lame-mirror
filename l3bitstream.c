@@ -5,6 +5,10 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.7  2000/01/12 14:30:54  takehiro
+ * more simple & fast scalefac_scale use
+ * and mode_gr is moved into gf structure.
+ *
  * Revision 1.6  2000/01/09 10:54:56  takehiro
  * All Huffman code search algorithm is implemented.
  * (-h option to enable this)
@@ -48,6 +52,7 @@
 #include "tables.h"
 #include <assert.h>
 #include "l3bitstream-pvt.h"
+#include "globalflags.h"
 
 static int stereo = 1;
 static frame_params *fr_ps  = NULL;
@@ -92,11 +97,10 @@ III_format_bitstream( int              bitsPerFrame,
 		      III_scalefac_t   *scalefac,
 		      Bit_stream_struc *in_bs)
 {
-    int gr, ch,  mode_gr;
+    int gr, ch;
     fr_ps = in_fr_ps;
     bs = in_bs;
     stereo = fr_ps->stereo;
-    mode_gr = (fr_ps->header->version == 1) ? 2 : 1;
 
     if ( frameData == NULL )
     {
@@ -140,7 +144,7 @@ III_format_bitstream( int              bitsPerFrame,
       to BitstreamFrame()
     */
     frameData->frameLength = bitsPerFrame;
-    frameData->nGranules   = mode_gr;
+    frameData->nGranules   = gf.mode_gr;
     frameData->nChannels   = stereo;
     frameData->header      = headerPH->part;
     frameData->frameSI     = frameSIPH->part;
@@ -148,7 +152,7 @@ III_format_bitstream( int              bitsPerFrame,
     for ( ch = 0; ch < stereo; ch++ )
 	frameData->channelSI[ch] = channelSIPH[ch]->part;
 
-    for ( gr = 0; gr < mode_gr; gr++ )
+    for ( gr = 0; gr < gf.mode_gr; gr++ )
 	for ( ch = 0; ch < stereo; ch++ )
 	{
 	    frameData->spectrumSI[gr][ch]   = spectrumSIPH[gr][ch]->part;
@@ -180,22 +184,17 @@ encodeMainData( int              l3_enc[2][2][576],
 		III_side_info_t  *si,
 		III_scalefac_t   *scalefac )
 {
-    int i, gr, ch, sfb, window, mode_gr;
+    int i, gr, ch, sfb, window;
     layer *info = fr_ps->header;
 
 
 
 
-    if ( info->version == 1 )
-	mode_gr = 2;
-    else
-	mode_gr = 1;
-
-    for ( gr = 0; gr < mode_gr; gr++ )
+    for ( gr = 0; gr < gf.mode_gr; gr++ )
 	for ( ch = 0; ch < stereo; ch++ )
 	    scaleFactorsPH[gr][ch]->part->nrEntries = 0;
 
-    for ( gr = 0; gr < mode_gr; gr++ )
+    for ( gr = 0; gr < gf.mode_gr; gr++ )
 	for ( ch = 0; ch < stereo; ch++ )
 	    codedDataPH[gr][ch]->part->nrEntries = 0;
 
@@ -340,11 +339,9 @@ static BF_PartHolder *CRC_BF_addEntry( BF_PartHolder *thePH, uint32 value, uint1
 
 static int encodeSideInfo( III_side_info_t  *si )
 {
-    int gr, ch, scfsi_band, region, window, bits_sent, mode_gr;
+    int gr, ch, scfsi_band, region, window, bits_sent;
     layer *info = fr_ps->header;
     
-    mode_gr =  (info->version == 1) ? 2 : 1;
-   
     crc = 0xffff; /* (jo) init crc16 for error_protection */
 
     headerPH->part->nrEntries = 0;
@@ -372,7 +369,7 @@ static int encodeSideInfo( III_side_info_t  *si )
     for (ch = 0; ch < stereo; ch++ )
 	channelSIPH[ch]->part->nrEntries = 0;
 
-    for ( gr = 0; gr < mode_gr; gr++ )
+    for ( gr = 0; gr < gf.mode_gr; gr++ )
 	for ( ch = 0; ch < stereo; ch++ )
 	    spectrumSIPH[gr][ch]->part->nrEntries = 0;
 

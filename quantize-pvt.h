@@ -154,4 +154,8 @@ int over,FLOAT8 tot_noise, FLOAT8 over_noise,FLOAT8 max_noise);
 
 void best_huffman_divide(int gr, int ch, gr_info *cod_info, int *ix);
 
+void best_scalefac_store(int gr, int ch,
+			 III_side_info_t *l3_side,
+			 III_scalefac_t *scalefac);
+
 #endif

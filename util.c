@@ -40,13 +40,11 @@ void getframebits(layer *info, int stereo, int *bitsPerFrame, int *mean_bits) {
   FLOAT8 bit_rate,samp;
   int samplesPerFrame,bitsPerSlot;
   int sideinfo_len;
-  int mode_gr;
   
   samp =      s_freq[info->version][info->sampling_frequency];
   bit_rate = bitrate[info->version][info->lay-1][info->bitrate_index];
   samplesPerFrame = info->version == 1 ? 1152 : 576;
   bitsPerSlot = 8;
-  mode_gr = (info->version == 1) ? 2 : 1;  /* mode_gr = 2 */
   
   /* determine the mean bitrate for main data */
   sideinfo_len = 32;
@@ -70,7 +68,7 @@ void getframebits(layer *info, int stereo, int *bitsPerFrame, int *mean_bits) {
   
   whole_SpF =  (samplesPerFrame /samp)*(bit_rate /  (FLOAT8)bitsPerSlot);
   *bitsPerFrame = 8 * whole_SpF + (info->padding * 8);
-  *mean_bits = (*bitsPerFrame - sideinfo_len) / mode_gr;
+  *mean_bits = (*bitsPerFrame - sideinfo_len) / gf.mode_gr;
 }
 
 

@@ -111,10 +111,9 @@ iteration_init( FLOAT8 xr_org[2][2][576],
   gr_info *cod_info;
   layer *info  = fr_ps->header;
   int stereo = fr_ps->stereo;
-  int ch, gr, i, mode_gr;
+  int ch, gr, i;
 
   l3_side->resvDrain = 0;
-  mode_gr = (info->version == 1) ? 2 : 1;
 
   if ( gf.frameNum==0 ) {
     scalefac_band_long  = &sfBandIndex[info->sampling_frequency + (info->version * 3)].l[0];
@@ -156,7 +155,7 @@ iteration_init( FLOAT8 xr_org[2][2][576],
   if (convert_psy) memset(l3_enc,0,sizeof(int)*2*2*576);
   
   /* some intializations. */
-  for ( gr = 0; gr < mode_gr; gr++ ){
+  for ( gr = 0; gr < gf.mode_gr; gr++ ){
     for ( ch = 0; ch < stereo; ch++ ){
       cod_info = (gr_info *) &(l3_side->gr[gr].ch[ch]);
 

@@ -5,6 +5,10 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.5  2000/01/12 14:30:54  takehiro
+ * more simple & fast scalefac_scale use
+ * and mode_gr is moved into gf structure.
+ *
  * Revision 1.4  2000/01/09 23:10:24  markt
  * moved more globalflags into the gf. struct
  *
@@ -63,7 +67,7 @@ int
 ResvFrameBegin( frame_params *fr_ps, III_side_info_t *l3_side, int mean_bits, int frameLength )
 {
     layer *info;
-    int fullFrameBits, mode_gr;
+    int fullFrameBits;
     int expectedResvSize, resvLimit;
 
     if (gf.frameNum==0) {
@@ -74,12 +78,10 @@ ResvFrameBegin( frame_params *fr_ps, III_side_info_t *l3_side, int mean_bits, in
     info = fr_ps->header;
     if ( info->version == 1 )
     {
-	mode_gr = 2;
 	resvLimit = 4088; /* main_data_begin has 9 bits in MPEG 1 */
     }
     else
     {
-	mode_gr = 1;
 	resvLimit = 2040; /* main_data_begin has 8 bits in MPEG 2 */
     }
 
@@ -94,7 +96,7 @@ ResvFrameBegin( frame_params *fr_ps, III_side_info_t *l3_side, int mean_bits, in
     fprintf( stderr, ">>> ResvSize = %d\n", ResvSize );
 #endif
     assert( expectedResvSize == ResvSize );
-    fullFrameBits = mean_bits * mode_gr + ResvSize;
+    fullFrameBits = mean_bits * gf.mode_gr + ResvSize;
 
     /*
       determine maximum size of reservoir:

@@ -29,7 +29,8 @@ typedef struct  {
   long int frameNum;
   int gtkflag;
   int bWriteVbrTag;
-
+  int mode_gr;
+  int stereo;
 } global_flags;
 
 
