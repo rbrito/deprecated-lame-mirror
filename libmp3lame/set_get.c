@@ -1349,7 +1349,7 @@ get_lame_url ( void )
 /*! Get the numerical representation of the version. */
 /*!
   Writes the numerical representation of the version of LAME and
-  GPSYCHO into lvp.
+  its psycho-model into lvp.
 
   \param lvp    
 */
