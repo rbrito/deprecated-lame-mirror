@@ -72,6 +72,8 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 	int			nDllArgC=0;
 	BE_CONFIG	lameConfig;
 
+	InitParams();
+
 	// clear out structure
 	memset(&lameConfig,0x00,CURRENT_STRUCT_SIZE);
 
