@@ -34,7 +34,8 @@
 #endif
 
 
-void L3para_read( FLOAT8 sfreq, int numlines[CBANDS],int numlines_s[CBANDS], 
+void L3para_read( lame_global_flags *gfp,
+		  FLOAT8 sfreq, int numlines[CBANDS],int numlines_s[CBANDS], 
 		  FLOAT8 minval[CBANDS], 
 		  FLOAT8 s3_l[CBANDS][CBANDS],
 		  FLOAT8 s3_s[CBANDS][CBANDS],
@@ -176,7 +177,7 @@ void L3psycho_anal( lame_global_flags *gfp,
     }
     
 
-    L3para_read( (FLOAT8) samplerate,gfc->numlines_l,gfc->numlines_s,
+    L3para_read( gfp,(FLOAT8) samplerate,gfc->numlines_l,gfc->numlines_s,
           gfc->minval,gfc->s3_l,gfc->s3_s,SNR_s,gfc->bu_l,
           gfc->bo_l,gfc->w1_l,gfc->w2_l, gfc->bu_s,gfc->bo_s,
           gfc->w1_s,gfc->w2_s,&gfc->npart_l_orig,&gfc->npart_l,
@@ -939,7 +940,7 @@ void L3psycho_anal( lame_global_flags *gfp,
 
 
 
-void L3para_read(FLOAT8 sfreq, int *numlines_l,int *numlines_s, 
+void L3para_read(lame_global_flags *gfp, FLOAT8 sfreq, int *numlines_l,int *numlines_s, 
 FLOAT8 *minval,
 FLOAT8 s3_l[CBANDS][CBANDS], FLOAT8 s3_s[CBANDS][CBANDS],
 FLOAT8 *SNR, 
@@ -947,6 +948,7 @@ int *bu_l, int *bo_l, FLOAT8 *w1_l, FLOAT8 *w2_l,
 int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s,
 int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 {
+  lame_internal_flags *gfc=gfp->internal_flags;
   FLOAT8 freq_tp;
   FLOAT8 bval_l[CBANDS], bval_s[CBANDS];
   int   cbmax=0, cbmax_tp;
@@ -954,10 +956,11 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
   int  sbmax ;
   int  i,j,k2,loop;
   int freq_scale=1;
+  int partition[HBLKSIZE];
 
-
+  /******************************************************************/
   /* Read long block data */
-
+  /******************************************************************/
   for(loop=0;loop<6;loop++)
     {
       freq_tp = *p++;
@@ -988,103 +991,6 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 
   *npart_l_orig = cbmax;
 
-
-  /* compute bark values of each critical band */
-  j=0;
-  for(i=0;i<*npart_l_orig;i++)
-    {
-      FLOAT8 ji, freq, bark;
-
-      ji = j;
-      freq = sfreq*ji/1024000.0;
-      bark = 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5));
-
-      ji = j + (numlines_l[i]-1);
-      freq = sfreq*ji/1024000.0;
-      bark = .5*(bark + 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5)));
-      /*
-      printf("freq=%f bark=%f  del_bark=%f %f \n",freq,bark,bark-bval_l[i-1],24.5/cbmax );
-      */
-      bval_l[i]=bark;
-      j += numlines_l[i];
-    }
-
-#if 0
-  /* compute bark values of each critical band */
-  bval_l[0]=0;
-  numlines_l[0]=1;
-  j=1;
-  for(i=1;i<CBANDS;i++)
-    {
-      FLOAT8 ji, freq, bark, delbark=.35;
-      int j2;
-
-      j2 = j + (numlines_l[i-1]-1);
-      j2 = Min(j2,BLKSIZE/2);
-
-      do {
-	/* find smallest j2 >= j so that  (bark - bark_l[i-1]) < delbark */
-	ji = j;
-	freq = sfreq*ji/(1000.0*BLKSIZE);
-	bark = 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5));
-	
-	ji = j2;
-	freq = sfreq*ji/(1000.0*BLKSIZE);
-	bark = .5*(bark + 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5)));
-	++j2;
-      } while ((bark - bval_l[i-1]) < delbark  && (j2-1)<=BLKSIZE/2);
-
-
-      printf("%i %f old numlines:  %i   new=%i \n",i,freq,numlines_l[i],j2-j);
-
-      *npart_l_orig = i+1;
-      bval_l[i]=bark;
-      numlines_l[i]=(j2-j);
-      j = j2;
-      if (j > BLKSIZE/2) break;
-    }
-#endif
-
-
-  /************************************************************************
-   * Now compute the spreading function, s[j][i], the value of the spread-*
-   * ing function, centered at band j, for band i, store for later use    *
-   ************************************************************************/
-  /* i.e.: sum over j to spread into signal barkval=i  
-     NOTE: i and j are used opposite as in the ISO docs */
-  for(i=0;i<*npart_l_orig;i++)
-    {
-      FLOAT8 tempx,x,tempy,temp;
-      for(j=0;j<*npart_l_orig;j++)
-	{
-          if (i>=j) tempx = (bval_l[i] - bval_l[j])*3.0;
-	  else    tempx = (bval_l[i] - bval_l[j])*1.5; 
-
-	  if(tempx>=0.5 && tempx<=2.5)
-	    {
-	      temp = tempx - 0.5;
-	      x = 8.0 * (temp*temp - 2.0 * temp);
-	    }
-	  else x = 0.0;
-	  tempx += 0.474;
-	  tempy = 15.811389 + 7.5*tempx - 17.5*sqrt(1.0+tempx*tempx);
-
-#ifdef NEWS3
-	  if (j>=i) tempy = (bval_l[j] - bval_l[i])*(-15);
-	  else    tempy = (bval_l[j] - bval_l[i])*25;
-	  x=0; 
-#endif
-	  /*
-	  if ((i==cbmax/2)  && (fabs(bval_l[j] - bval_l[i])) < 3) {
-	    printf("bark=%f   x+tempy = %f  \n",bval_l[j] - bval_l[i],x+tempy);
-	  }
-	  */
-
-	  if (tempy <= -60.0) s3_l[i][j] = 0.0;
-	  else                s3_l[i][j] = exp( (x + tempy)*LN_TO_LOG10 ); 
-	}
-    }
-
   /* Read short block data */
   for(loop=0;loop<6;loop++)
     {
@@ -1113,96 +1019,10 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 	p += cbmax_tp * 6;
     }
   *npart_s_orig = cbmax;
-	  
-
-  /* compute bark values of each critical band */
-  j = 0;
-  for(i=0;i<*npart_s_orig;i++)
-    {
-      FLOAT8 ji, freq, bark;
-      ji = j;
-      freq = sfreq*ji/256000.0;
-      bark = 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5));
-
-      ji = j + numlines_s[i] -1;
-      freq = sfreq*ji/256000.0;
-      bark = .5*(bark + 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5)));
-      /*
-      printf("%i %i bval_s = %f  %f  numlines=%i  formula=%f \n",i,j,bval_s[i],freq,numlines_s[i],bark);
-      */
-      bval_s[i]=bark;
-      j += numlines_s[i];
-    }
-#if 0
-  /* compute bark values of each critical band */
-  bval_s[0]=0;
-  numlines_s[0]=1;
-  j=1;
-  for(i=1;i<CBANDS;i++)
-    {
-      FLOAT8 ji, freq, bark, delbark=.35;
-      int j2;
-
-      j2 = j + (numlines_s[i-1]-1);
-      j2 = Min(j2,BLKSIZE_s/2);
-
-      do {
-	/* find smallest j2 >= j so that  (bark - bark_s[i-1]) < delbark */
-	ji = j;
-	freq = sfreq*ji/(1000.0*BLKSIZE_s);
-	bark = 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5));
-	
-	ji = j2;
-	freq = sfreq*ji/(1000.0*BLKSIZE_s);
-	bark = .5*(bark + 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5)));
-	++j2;
-      } while ((bark - bval_s[i-1]) < delbark  && (j2-1)<=BLKSIZE_s/2);
-
-
-      printf("%i %f old numlines:  %i   new=%i \n",i,freq,numlines_s[i],j2-j);
-
-      *npart_s_orig = i+1;
-      bval_s[i]=bark;
-      numlines_s[i]=(j2-j);
-      j = j2;
-      if (j > BLKSIZE_s/2) break;
-    }
-#endif
 
 
 
 
-
-
-  /************************************************************************
-   * Now compute the spreading function, s[j][i], the value of the spread-*
-   * ing function, centered at band j, for band i, store for later use    *
-   ************************************************************************/
-  for(i=0;i<*npart_s_orig;i++)
-    {
-      FLOAT8 tempx,x,tempy,temp;
-      for(j=0;j<*npart_s_orig;j++)
-	{
-          if (i>=j) tempx = (bval_s[i] - bval_s[j])*3.0;
-	  else    tempx = (bval_s[i] - bval_s[j])*1.5; 
-
-	  if(tempx>=0.5 && tempx<=2.5)
-	    {
-	      temp = tempx - 0.5;
-	      x = 8.0 * (temp*temp - 2.0 * temp);
-	    }
-	  else x = 0.0;
-	  tempx += 0.474;
-	  tempy = 15.811389 + 7.5*tempx - 17.5*sqrt(1.0+tempx*tempx);
-#ifdef NEWS3
-	  if (j>=i) tempy = (bval_s[j] - bval_s[i])*(-15);
-	  else    tempy = (bval_s[j] - bval_s[i])*25;
-	  x=0; 
-#endif
-	  if (tempy <= -60.0) s3_s[i][j] = 0.0;
-	  else                s3_s[i][j] = exp( (x + tempy)*LN_TO_LOG10 );
-	}
-    }
   /* Read long block data for converting threshold calculation 
      partitions to scale factor bands */
 
@@ -1277,6 +1097,263 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 	p += sbmax * 6;
     }
 
+  /******************************************************************/
+  /* done reading table data */
+  /******************************************************************/
+
+
+
+
+#undef NOTABLES
+#ifdef NOTABLES
+  /* compute numlines */
+  j=0;
+  for(i=0;i<CBANDS;i++)
+    {
+      FLOAT8 ji, freq, bark1,bark2,delbark=.34;
+      int k,j2;
+
+      j2 = j;
+      j2 = Min(j2,BLKSIZE/2);
+      
+      do {
+	/* find smallest j2 >= j so that  (bark - bark_l[i-1]) < delbark */
+	ji = j;
+	freq = sfreq*ji/(1000.0*BLKSIZE);
+	bark1 = 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5));
+	
+	++j2;
+	ji = j2;
+	freq = sfreq*ji/(1000.0*BLKSIZE);
+	bark2  = 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5));
+      } while ((bark2 - bark1) < delbark  && j2<=BLKSIZE/2);
+
+      /*
+      printf("%i old n=%i  %f old numlines:  %i   new=%i (%i,%i) (%f,%f) \n",
+i,*npart_l_orig,freq,numlines_l[i],j2-j,j,j2-1,bark1,bark2);
+      */
+
+      for (k=j; k<j2; ++k)
+	partition[k]=i;
+      numlines_l[i]=(j2-j);
+      j = j2;
+      if (j > BLKSIZE/2) break;
+    }
+  *npart_l_orig = i;
+
+  /* compute which partition bands are in which scalefactor bands */
+  { int i1,i2,sfb,start,end;
+    FLOAT8 freq1,freq2;
+    for ( sfb = 0; sfb < SBMAX_l; sfb++ ) {
+      start = gfc->scalefac_band.l[ sfb ];
+      end   = gfc->scalefac_band.l[ sfb+1 ];
+      freq1 = sfreq*(start-.5)/(2*576);
+      freq2 = sfreq*(end-1+.5)/(2*576);
+		     
+      i1 = floor(.5 + BLKSIZE*freq1/sfreq);
+      if (i1<0) i1=0;
+      i2 = floor(.5 + BLKSIZE*freq2/sfreq);
+      if (i2>BLKSIZE/2) i2=BLKSIZE/2;
+
+      printf("old: (%i,%i)  new: (%i,%i) %i %i \n",bu_l[sfb],bo_l[sfb],
+	     partition[i1],partition[i2],i1,i2);
+
+      w1_l[sfb]=.5;
+      w2_l[sfb]=.5;
+      bu_l[sfb]=partition[i1];
+      bo_l[sfb]=partition[i2];
+
+    }
+  }
+
+#endif
+
+
+  /* compute bark values of each critical band */
+  j=0;
+  for(i=0;i<*npart_l_orig;i++)
+    {
+      FLOAT8 ji, freq, bark;
+
+      ji = j;
+      freq = sfreq*ji/1024000.0;
+      bark = 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5));
+
+      ji = j + (numlines_l[i]-1);
+      freq = sfreq*ji/1024000.0;
+      bark = .5*(bark + 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5)));
+      /*
+      printf("freq=%f bark=%f  del_bark=%f %f \n",freq,bark,bark-bval_l[i-1],24.5/cbmax );
+      */
+      bval_l[i]=bark;
+      j += numlines_l[i];
+    }
+
+
+
+  /************************************************************************
+   * Now compute the spreading function, s[j][i], the value of the spread-*
+   * ing function, centered at band j, for band i, store for later use    *
+   ************************************************************************/
+  /* i.e.: sum over j to spread into signal barkval=i  
+     NOTE: i and j are used opposite as in the ISO docs */
+  for(i=0;i<*npart_l_orig;i++)
+    {
+      FLOAT8 tempx,x,tempy,temp;
+      for(j=0;j<*npart_l_orig;j++)
+	{
+          if (i>=j) tempx = (bval_l[i] - bval_l[j])*3.0;
+	  else    tempx = (bval_l[i] - bval_l[j])*1.5; 
+
+	  if(tempx>=0.5 && tempx<=2.5)
+	    {
+	      temp = tempx - 0.5;
+	      x = 8.0 * (temp*temp - 2.0 * temp);
+	    }
+	  else x = 0.0;
+	  tempx += 0.474;
+	  tempy = 15.811389 + 7.5*tempx - 17.5*sqrt(1.0+tempx*tempx);
+
+#ifdef NEWS3
+	  if (j>=i) tempy = (bval_l[j] - bval_l[i])*(-15);
+	  else    tempy = (bval_l[j] - bval_l[i])*25;
+	  x=0; 
+#endif
+	  /*
+	  if ((i==cbmax/2)  && (fabs(bval_l[j] - bval_l[i])) < 3) {
+	    printf("bark=%f   x+tempy = %f  \n",bval_l[j] - bval_l[i],x+tempy);
+	  }
+	  */
+
+	  if (tempy <= -60.0) s3_l[i][j] = 0.0;
+	  else                s3_l[i][j] = exp( (x + tempy)*LN_TO_LOG10 ); 
+	}
+    }
+
+
+  /************************************************************************/
+  /* SHORT BLOCKS */
+  /************************************************************************/
+
+#ifdef NOTABLES
+  /* compute numlines */
+  j=0;
+  for(i=0;i<CBANDS;i++)
+    {
+      FLOAT8 ji, freq, bark1,bark2,delbark=.34;
+      int k,j2;
+
+      j2 = j;
+      j2 = Min(j2,BLKSIZE_s/2);
+      
+      do {
+	/* find smallest j2 >= j so that  (bark - bark_s[i-1]) < delbark */
+	ji = j;
+	freq = sfreq*ji/(1000.0*BLKSIZE_s);
+	bark1 = 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5));
+	
+	++j2;
+	ji = j2;
+	freq = sfreq*ji/(1000.0*BLKSIZE_s);
+	bark2  = 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5));
+      } while ((bark2 - bark1) < delbark  && j2<=BLKSIZE_s/2);
+
+      /*
+      printf("%i old n=%i  %f old numlines:  %i   new=%i (%i,%i) (%f,%f) \n",
+i,*npart_s_orig,freq,numlines_s[i],j2-j,j,j2-1,bark1,bark2);
+      */
+      for (k=j; k<j2; ++k)
+	partition[k]=i;
+      numlines_s[i]=(j2-j);
+      j = j2;
+      if (j > BLKSIZE_s/2) break;
+    }
+  *npart_s_orig = i;
+
+  /* compute which partition bands are in which scalefactor bands */
+  { int i1,i2,sfb,start,end;
+    FLOAT8 freq1,freq2;
+    for ( sfb = 0; sfb < SBMAX_s; sfb++ ) {
+      start = gfc->scalefac_band.s[ sfb ];
+      end   = gfc->scalefac_band.s[ sfb+1 ];
+      freq1 = sfreq*(start-.5)/(2*192);
+      freq2 = sfreq*(end-1+.5)/(2*192);
+		     
+      i1 = floor(.5 + BLKSIZE_s*freq1/sfreq);
+      if (i1<0) i1=0;
+      i2 = floor(.5 + BLKSIZE_s*freq2/sfreq);
+      if (i2>BLKSIZE_s/2) i2=BLKSIZE_s/2;
+
+      printf("old: (%i,%i)  new: (%i,%i) %i %i \n",bu_s[sfb],bo_s[sfb],
+	     partition[i1],partition[i2],i1,i2);
+
+      w1_s[sfb]=.5;
+      w2_s[sfb]=.5;
+      bu_s[sfb]=partition[i1];
+      bo_s[sfb]=partition[i2];
+
+    }
+  }
+
+#endif
+
+
+
+  /* compute bark values of each critical band */
+  j = 0;
+  for(i=0;i<*npart_s_orig;i++)
+    {
+      FLOAT8 ji, freq, bark;
+      ji = j;
+      freq = sfreq*ji/256000.0;
+      bark = 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5));
+
+      ji = j + numlines_s[i] -1;
+      freq = sfreq*ji/256000.0;
+      bark = .5*(bark + 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5)));
+      /*
+      printf("%i %i bval_s = %f  %f  numlines=%i  formula=%f \n",i,j,bval_s[i],freq,numlines_s[i],bark);
+      */
+      bval_s[i]=bark;
+      j += numlines_s[i];
+    }
+
+
+
+
+
+
+  /************************************************************************
+   * Now compute the spreading function, s[j][i], the value of the spread-*
+   * ing function, centered at band j, for band i, store for later use    *
+   ************************************************************************/
+  for(i=0;i<*npart_s_orig;i++)
+    {
+      FLOAT8 tempx,x,tempy,temp;
+      for(j=0;j<*npart_s_orig;j++)
+	{
+          if (i>=j) tempx = (bval_s[i] - bval_s[j])*3.0;
+	  else    tempx = (bval_s[i] - bval_s[j])*1.5; 
+
+	  if(tempx>=0.5 && tempx<=2.5)
+	    {
+	      temp = tempx - 0.5;
+	      x = 8.0 * (temp*temp - 2.0 * temp);
+	    }
+	  else x = 0.0;
+	  tempx += 0.474;
+	  tempy = 15.811389 + 7.5*tempx - 17.5*sqrt(1.0+tempx*tempx);
+#ifdef NEWS3
+	  if (j>=i) tempy = (bval_s[j] - bval_s[i])*(-15);
+	  else    tempy = (bval_s[j] - bval_s[i])*25;
+	  x=0; 
+#endif
+	  if (tempy <= -60.0) s3_s[i][j] = 0.0;
+	  else                s3_s[i][j] = exp( (x + tempy)*LN_TO_LOG10 );
+	}
+    }
+
+
 
 
   /* compute: */
@@ -1290,6 +1367,10 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
   *npart_l=bo_l[SBPSY_l-1]+1;
   *npart_s=bo_s[SBPSY_s-1]+1;
   
+  /* if npart_l = npart_l_orig + 1, we can fix that below.  else: */
+  assert(*npart_l <= *npart_l_orig+1);
+  assert(*npart_s <= *npart_s_orig+1);
+
 
   /* MPEG2 tables are screwed up 
    * the mapping from paritition bands to scalefactor bands will use

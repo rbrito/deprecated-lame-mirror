@@ -296,11 +296,11 @@ typedef struct  {
 
   
   /* Scale Factor Bands    */
-  FLOAT8	w1_l[SBPSY_l], w2_l[SBPSY_l];
-  FLOAT8	w1_s[SBPSY_s], w2_s[SBPSY_s];
-  FLOAT8 mld_l[SBPSY_l],mld_s[SBPSY_s];
-  int	bu_l[SBPSY_l],bo_l[SBPSY_l] ;
-  int	bu_s[SBPSY_s],bo_s[SBPSY_s] ;
+  FLOAT8	w1_l[SBMAX_l], w2_l[SBMAX_l];
+  FLOAT8	w1_s[SBMAX_s], w2_s[SBMAX_s];
+  FLOAT8 mld_l[SBMAX_l],mld_s[SBMAX_s];
+  int	bu_l[SBMAX_l],bo_l[SBMAX_l] ;
+  int	bu_s[SBMAX_s],bo_s[SBMAX_s] ;
   int	npart_l,npart_s;
   int	npart_l_orig,npart_s_orig;
   
