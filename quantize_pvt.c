@@ -305,7 +305,7 @@ void compute_ath( lame_global_flags *gfp, FLOAT8 ATH_l[], FLOAT8 ATH_s[] )
             ATH_f = ATHmdct( gfp, freq );    /* freq in kHz */
             ATH_s[sfb] = Min( ATH_s[sfb], ATH_f );
         }
-    } 
+    }
 
 
     /*  kludge for sfb21:

@@ -374,7 +374,6 @@ void freegfc(lame_internal_flags *gfc)   /* bit stream structure */
    free(gfc);
 }
 
-int putmask[9]={0x0, 0x1, 0x3, 0x7, 0xf, 0x1f, 0x3f, 0x7f, 0xff};
 
 
 
@@ -393,34 +392,6 @@ int putmask[9]={0x0, 0x1, 0x3, 0x7, 0xf, 0x1f, 0x3f, 0x7f, 0xff};
   Within each window, the quantized values are then arranged in
   order of increasing frequency...
 */
-void ireorder(int scalefac_band[],int ix_orig[576]) {
-  int i,sfb, window, j=0;
-  int ix[576];
-  for (sfb = 0; sfb < SBMAX_s; sfb++) {
-    int start = scalefac_band[sfb];
-    int end   = scalefac_band[sfb + 1];
-    for (window = 0; window < 3; window++) {
-      for (i = start; i < end; ++i) {
-	ix[j++] = ix_orig[3*i+window];
-      }
-    }
-  }
-  memcpy(ix_orig,ix,576*sizeof(int));
-}
-void iun_reorder(int scalefac_band[],int ix_orig[576]) {
-  int i,sfb, window, j=0;
-  int ix[576];
-  for (sfb = 0; sfb < SBMAX_s; sfb++) {
-    int start = scalefac_band[sfb];
-    int end   = scalefac_band[sfb + 1];
-    for (window = 0; window < 3; window++) {
-      for (i = start; i < end; ++i) {
-	ix[3*i+window] = ix_orig[j++];
-      }
-    }
-  }
-  memcpy(ix_orig,ix,576*sizeof(int));
-}
 void freorder(int scalefac_band[],FLOAT8 ix_orig[576]) {
   int i,sfb, window, j=0;
   FLOAT8 ix[576];
@@ -430,20 +401,6 @@ void freorder(int scalefac_band[],FLOAT8 ix_orig[576]) {
     for (window = 0; window < 3; window++) {
       for (i = start; i < end; ++i) {
 	ix[j++] = ix_orig[3*i+window];
-      }
-    }
-  }
-  memcpy(ix_orig,ix,576*sizeof(FLOAT8));
-}
-void fun_reorder(int scalefac_band[],FLOAT8 ix_orig[576]) {
-  int i,sfb, window, j=0;
-  FLOAT8 ix[576];
-  for (sfb = 0; sfb < SBMAX_s; sfb++) {
-    int start = scalefac_band[sfb];
-    int end   = scalefac_band[sfb + 1];
-    for (window = 0; window < 3; window++) {
-      for (i = start; i < end; ++i) {
-	ix[3*i+window] = ix_orig[j++];
       }
     }
   }
