@@ -978,18 +978,8 @@ lame_init_params(lame_global_flags * const gfp)
     if (gfp->error_protection)
         gfc->sideinfo_len += 2;
 
+    lame_init_bitstream(gfp);
 
-    /* 
-     *  Write id3v2 tag into the bitstream.
-     *  This tag must be before the Xing VBR header.
-     */
-    if (!gfp->ogg)
-        id3tag_write_v2(gfp);
-
-
-    /* Write initial VBR Header to bitstream */
-    if (gfp->bWriteVbrTag)
-        InitVbrTag(gfp);
 
     if (gfp->version == 1) /* 0 indicates use lower sample freqs algorithm */
         gfc->is_mpeg1 = 1; /* yes */
@@ -1761,19 +1751,32 @@ lame_encode_flush_nogap(lame_global_flags * gfp,
     return copy_buffer(mp3buffer, mp3buffer_size,  &gfc->bs);
 }
 
-/* call this after flush_nogap if you want to write new id3v2
-   and Xing VBR tags into the bitstream */
-int
-lame_reinit_bitstream(lame_global_flags * gfp)
-{
-    //    lame_internal_flags *gfc = gfp->internal_flags;
-    gfp->frameNum=0;
-    id3tag_write_v2(gfp);
 
-    /* Write initial VBR Header to bitstream, and reinit VBR data */
+/* called by lame_init_params.  You can also call this after flush_nogap 
+   if you want to write new id3v2 and Xing VBR tags into the bitstream */
+int
+lame_init_bitstream(lame_global_flags * gfp)
+{
+    lame_internal_flags *gfc = gfp->internal_flags;
+    int i;
+    gfp->frameNum=0;
+
+    if (!gfp->ogg)
+	id3tag_write_v2(gfp);
+
+    /* initialize histogram data optionally used by frontend */
+    for ( i = 0; i < 16; i++ ) 
+	gfc->bitrate_stereoMode_Hist [i] [0] =
+	    gfc->bitrate_stereoMode_Hist [i] [1] =
+	    gfc->bitrate_stereoMode_Hist [i] [2] =
+	    gfc->bitrate_stereoMode_Hist [i] [3] =
+	    gfc->bitrate_stereoMode_Hist [i] [4] = 0;
+
+    /* Write initial VBR Header to bitstream and init VBR data */
     if (gfp->bWriteVbrTag)
         InitVbrTag(gfp);
 
+    
     return 0;
 }
 
