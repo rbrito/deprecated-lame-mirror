@@ -3,6 +3,7 @@
 - see why we output a bunch of 0x00 at the beginning
 - see desync problems in VirtualDub (1152 bytes -> 1 byte ?)
 - check and try to fill the MPEGLAYER3WAVEFORMAT the same way as the FhG codec (encoding)
+- or try to remove the structure (size = 0)
 - add the preset modes (and alt-preset too) in the config
 - allow decompression the same way as in the command-line
 - allow VBR/ABR mode
