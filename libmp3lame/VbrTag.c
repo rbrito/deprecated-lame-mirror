@@ -441,17 +441,17 @@ int PutLameVBR(lame_global_flags *gfp, u_char *pbtStreamBuffer, uint16_t crc)
 
 	uint8_t nLowpass		= gfp->lowpassfreq / 100;
 
-	float32_t fPeakSignalAmplitude	= 0;				//TODO...
+	FLOAT fPeakSignalAmplitude	= 0;				//TODO...
 	uint16_t nRadioReplayGain		= 0;				//TODO...
 	uint16_t nAudioPhileReplayGain  = 0;				//TODO...
 
  
 	//psy model type: Gpsycho or NsPsytune
-	BOOL     bExpNPsyTune	= gfp->exp_nspsytune & 1;
-	BOOL	 bSafeJoint		= (gfp->exp_nspsytune & 2)!=0;
+	unsigned char    bExpNPsyTune	= gfp->exp_nspsytune & 1;
+	unsigned char	 bSafeJoint		= (gfp->exp_nspsytune & 2)!=0;
 
-	BOOL	 bNoGapMore		= FALSE;
-	BOOL	 bNoGapPrevious	= FALSE;
+	unsigned char	 bNoGapMore		= 0;
+	unsigned char	 bNoGapPrevious	= 0;
 
 	int		 nNoGapCount	= gfp->internal_flags->nogap_total;
 	int		 nNoGapCurr		= gfp->internal_flags->nogap_current;
@@ -481,10 +481,10 @@ int PutLameVBR(lame_global_flags *gfp, u_char *pbtStreamBuffer, uint16_t crc)
 	if (nNoGapCount != -1)
 	{
 		if (nNoGapCurr > 0)
-			bNoGapPrevious = TRUE;
+			bNoGapPrevious = 1;
 
 		if (nNoGapCurr < nNoGapCount-1)
-			bNoGapMore = TRUE;
+			bNoGapMore = 1;
 	}
 
 	//flags
@@ -507,7 +507,7 @@ int PutLameVBR(lame_global_flags *gfp, u_char *pbtStreamBuffer, uint16_t crc)
 	pbtStreamBuffer[nBytesWritten] = nLowpass;
 	nBytesWritten++;
 
-	*(float32_t *)(&pbtStreamBuffer[nBytesWritten]) = fPeakSignalAmplitude;
+	*(FLOAT *)(&pbtStreamBuffer[nBytesWritten]) = fPeakSignalAmplitude;
 	nBytesWritten+=4;
 
 	*(uint16_t *)(&pbtStreamBuffer[nBytesWritten]) = nRadioReplayGain;

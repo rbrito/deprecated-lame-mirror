@@ -505,6 +505,9 @@ struct lame_internal_flags {
   ATH_t *ATH;   // all ATH related stuff
   VBR_t *VBR;
   PSY_t *PSY;
+
+  int nogap_total;
+  int nogap_current;  
 };
 
 
