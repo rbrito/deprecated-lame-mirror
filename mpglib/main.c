@@ -5,8 +5,12 @@
 
 #ifdef OS_AMIGAOS
 #include "/lame.h"
+<<<<<<< main.c
+#include "/util.h"
+=======
 #include "/util.h"
 #include "/VbrTag.h"
+>>>>>>> 1.5
 #else
 #include "../lame.h"
 #include "../util.h"
