@@ -61,5 +61,6 @@ typedef struct {
 
 int gtkcontrol(lame_global_flags *gfp);
 extern plotting_data *pinfo;
+extern int gtkflag;
 
 #endif

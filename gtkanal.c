@@ -11,6 +11,7 @@
 #include "quantize-pvt.h"
 #include <assert.h>
 
+int gtkflag;
 
 extern int makeframe(void);
 
@@ -83,28 +84,28 @@ int gtkmakeframe(void)
   /* even if iread=0, get_audio hit EOF and returned Buffer=all 0's.  encode
    * and decode to flush any previous buffers from the decoder */
 
-  pinfo->frameNum = gf.frameNum;
-  pinfo->sampfreq=gf.out_samplerate;
-  pinfo->framesize=576*gf.mode_gr;
-  pinfo->stereo = gf.stereo;
+  pinfo->frameNum = gfp->frameNum;
+  pinfo->sampfreq=gfp->out_samplerate;
+  pinfo->framesize=576*gfp->mode_gr;
+  pinfo->stereo = gfp->stereo;
 
-  if (gf.input_format == sf_mp3) {
+  if (gfp->input_format == sf_mp3) {
     iread=lame_readframe(gfp,Buffer);
-    gf.frameNum++;
+    gfp->frameNum++;
   }else {
-    while (gf.frameNum == pinfo->frameNum) {
-      if (gf.frameNum==0 && !init) {
+    while (gfp->frameNum == pinfo->frameNum) {
+      if (gfp->frameNum==0 && !init) {
 	mpglag=1;
 	lame_decode_init();
       }
-      if (gf.frameNum==1) init=0; /* reset for next time frameNum==0 */
+      if (gfp->frameNum==1) init=0; /* reset for next time frameNum==0 */
       iread=lame_readframe(gfp,Buffer);
       
       
       mp3count=lame_encode(gfp,Buffer,mp3buffer,sizeof(mp3buffer)); /* encode frame */
-      assert( !(mp3count > 0 && gf.frameNum == pinfo->frameNum));
+      assert( !(mp3count > 0 && gfp->frameNum == pinfo->frameNum));
       /* not possible to produce mp3 data without encoding at least 
-       * one frame of data which would increment gf.frameNum */
+       * one frame of data which would increment gfp->frameNum */
     }
     mp3out=lame_decode(mp3buffer,mp3count,mpg123pcm[0],mpg123pcm[1]); /* re-synthesis to pcm */
     /* mp3out = 0:  need more data to decode */
@@ -672,7 +673,7 @@ void plot_frame(void)
 static void update_progress(void)
 {    
   char label[80];
-  int tf=gf.totalframes;
+  int tf=gfp->totalframes;
   if (gtkinfo.totalframes>0) tf=gtkinfo.totalframes;
 
   sprintf(label,"Frame:%4i/%4i  %6.2fs",
@@ -1188,11 +1189,11 @@ int gtkcontrol(lame_global_flags *gfp2)
     gfp=gfp2;
 
     /* set some global defaults/variables */
-    gtkinfo.filetype = (gf.input_format == sf_mp3);
+    gtkinfo.filetype = (gfp->input_format == sf_mp3);
     gtkinfo.msflag=0;
     gtkinfo.chflag=0;
     gtkinfo.kbflag=0;
-    gtkinfo.flag123 = (gf.input_format == sf_mp3); /* MP3 file=use mpg123 output */
+    gtkinfo.flag123 = (gfp->input_format == sf_mp3); /* MP3 file=use mpg123 output */
     gtkinfo.pupdate=0;
     gtkinfo.avebits = 0;
     gtkinfo.maxbits = 0;
@@ -1209,7 +1210,7 @@ int gtkcontrol(lame_global_flags *gfp2)
     pplot = &Pinfo[READ_AHEAD];
 
     strcpy(frameinfo,"MP3x: ");
-    strncat(frameinfo,gf.inPath,70);
+    strncat(frameinfo,gfp->inPath,70);
 
     window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title (GTK_WINDOW (window), frameinfo);
@@ -1264,7 +1265,7 @@ int gtkcontrol(lame_global_flags *gfp2)
     gtk_widget_show(framecounter);
     gtk_box_pack_start(GTK_BOX (box2),framecounter, FALSE, TRUE, 0);
 
-    adj = (GtkAdjustment *) gtk_adjustment_new (0, 0,(gint) gf.totalframes-1, 0, 0, 0);
+    adj = (GtkAdjustment *) gtk_adjustment_new (0, 0,(gint) gfp->totalframes-1, 0, 0, 0);
     frameprogress = gtk_progress_bar_new_with_adjustment (adj);
     /* Set the format of the string that can be displayed in the
      * trough of the progress bar:

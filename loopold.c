@@ -66,7 +66,7 @@ int over[2],FLOAT8 tot_noise[2], FLOAT8 over_noise[2], FLOAT8 max_noise[2])
 /************************************************************************/
 /*  init_outer_loop  mt 6/99                                            */
 /************************************************************************/
-void init_outer_loop_dual(
+void init_outer_loop_dual(lame_global_flags *gfp,
     FLOAT8 xr[576],        /*  could be L/R OR MID/SIDE */
     III_scalefac_t *scalefac, /* scalefactors */
     gr_info *cod_info,
@@ -101,7 +101,7 @@ void init_outer_loop_dual(
   cod_info->count1bits        = 0;
   
   
-  if (gf.experimentalZ) {
+  if (gfp->experimentalZ) {
     /* compute subblock gains */
     int j,b;  FLOAT8 en[3],mx;
     if ((cod_info->block_type==SHORT_TYPE) ) {
@@ -146,7 +146,7 @@ void init_outer_loop_dual(
  *  no distortion free quantization can be found.  
  *  
  ************************************************************************/
-void outer_loop_dual(
+void outer_loop_dual(lame_global_flags *gfp,
     FLOAT8 xr[2][576],        /*  could be L/R OR MID/SIDE */
     FLOAT8 xr_org[2][576],
     int mean_bits,
@@ -188,7 +188,7 @@ void outer_loop_dual(
    * allocate bits for each channel 
    ******************************************************************/
   /* allocate targ_bits for granule */
-  ResvMaxBits2( mean_bits, &tbits, &extra_bits, gr);
+  ResvMaxBits( mean_bits, &tbits, &extra_bits, gr);
 
   for (ch=0 ; ch < 2 ; ch ++ )
     targ_bits[ch]=tbits/2;
@@ -248,9 +248,9 @@ void outer_loop_dual(
   for (ch=0; ch<2; ch++) {
     static int OldValue[2] = {180, 180};
     /* compute max allowed distortion */
-    calc_xmin(xr_org[ch], &ratio[ch], cod_info[ch], &l3_xmin[ch]);
+    calc_xmin(gfp,xr_org[ch], &ratio[ch], cod_info[ch], &l3_xmin[ch]);
 
-    init_outer_loop_dual(xr[ch], &scalefac_w[ch], cod_info[ch], l3_side);
+    init_outer_loop_dual(gfp,xr[ch], &scalefac_w[ch], cod_info[ch], l3_side);
 
     count[ch] = 0;
     for (i=0; i<576; i++) {
@@ -267,7 +267,7 @@ void outer_loop_dual(
     if (count[ch]!=0) {
       best_over[ch] = 100;
       bits_found[ch]=
-	bin_search_StepSize2(targ_bits[ch],OldValue[ch],
+	bin_search_StepSize2(gfp,targ_bits[ch],OldValue[ch],
 			     l3_enc_w[ch],xrpow[ch],cod_info[ch]); 
       OldValue[ch] = cod_info[ch]->global_gain;
     }
@@ -298,10 +298,10 @@ void outer_loop_dual(
 	  if (iteration==1) {
 	    if(bits_found[ch]>huff_bits) {
 	      cod_info[ch]->global_gain++;
-	      real_bits = inner_loop(xrpow[ch], l3_enc_w[ch], huff_bits, cod_info[ch]);
+	      real_bits = inner_loop(gfp,xrpow[ch], l3_enc_w[ch], huff_bits, cod_info[ch]);
 	    } else real_bits=bits_found[ch];
 	  } else
-	    real_bits=inner_loop(xrpow[ch], l3_enc_w[ch], huff_bits, cod_info[ch]);
+	    real_bits=inner_loop(gfp,xrpow[ch], l3_enc_w[ch], huff_bits, cod_info[ch]);
 
 	  cod_info[ch]->part2_3_length = real_bits;
 	}
@@ -310,7 +310,7 @@ void outer_loop_dual(
 
 
     /* compute the distortion in this quantization */
-    if (gf.noise_shaping==0) {
+    if (gfp->noise_shaping==0) {
       for (ch=0; ch<2; ch++)
 	over[ch]=0;
     }else{
@@ -342,7 +342,7 @@ void outer_loop_dual(
 	  memcpy(&save_cod_info[ch],cod_info[ch],sizeof(save_cod_info[ch]));
 
 #ifdef HAVEGTK
-	  if (gf.gtkflag) {
+	  if (gfp->gtkflag) {
 	    int sfb;
 	    for ( i = 0; i < 3; i++ ) {
 	      for ( sfb = cod_info[ch]->sfb_smax; sfb < 12; sfb++ )  {
@@ -384,7 +384,7 @@ void outer_loop_dual(
 
 	/* check to make sure we have not amplified too much */
 	if ( (status[ch] = loop_break(&scalefac_w[ch], cod_info[ch])) == 0 ) {
-	  if ( gf.version == 1 ) {
+	  if ( gfp->version == 1 ) {
 	    status[ch] = scale_bitcount(&scalefac_w[ch], cod_info[ch]);
 	  }else{
 	    status[ch] = scale_bitcount_lsf(&scalefac_w[ch], cod_info[ch]);

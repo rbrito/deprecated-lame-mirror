@@ -36,17 +36,17 @@ static int ResvMax  = 0; /* in bits */
   was set properly by the formatter
 */
 int
-ResvFrameBegin( III_side_info_t *l3_side, int mean_bits, int frameLength )
+ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, int frameLength )
 {
     int fullFrameBits;
     int resvLimit;
 
-    if (gf.frameNum==0) {
+    if (gfp->frameNum==0) {
       ResvSize=0;
     }
 
 
-    if ( gf.version == 1 )
+    if ( gfp->version == 1 )
     {
 	resvLimit = 4088; /* main_data_begin has 9 bits in MPEG 1 */
     }
@@ -66,7 +66,7 @@ ResvFrameBegin( III_side_info_t *l3_side, int mean_bits, int frameLength )
 #endif
     /* check expected resvsize */
     assert( (l3_side->main_data_begin * 8) == ResvSize );
-    fullFrameBits = mean_bits * gf.mode_gr + ResvSize;
+    fullFrameBits = mean_bits * gfp->mode_gr + ResvSize;
 
     /*
       determine maximum size of reservoir:
@@ -76,7 +76,7 @@ ResvFrameBegin( III_side_info_t *l3_side, int mean_bits, int frameLength )
 	ResvMax = 0;
     else
 	ResvMax = 7680 - frameLength;
-    if (gf.disable_reservoir) ResvMax=0;
+    if (gfp->disable_reservoir) ResvMax=0;
 
 
     /*
@@ -88,7 +88,7 @@ ResvFrameBegin( III_side_info_t *l3_side, int mean_bits, int frameLength )
 	ResvMax = resvLimit;
 
 #ifdef HAVEGTK
-  if (gf.gtkflag){
+  if (gfp->gtkflag){
     pinfo->mean_bits=mean_bits/2;  /* expected bits per channel per granule */
     pinfo->resvsize=ResvSize;
   }
@@ -103,7 +103,7 @@ ResvFrameBegin( III_side_info_t *l3_side, int mean_bits, int frameLength )
   As above, but now it *really* is bits per granule (both channels).  
   Mark Taylor 4/99
 */
-void ResvMaxBits2(int mean_bits, int *targ_bits, int *extra_bits, int gr)
+void ResvMaxBits(int mean_bits, int *targ_bits, int *extra_bits, int gr)
 {
   int add_bits;
   *targ_bits = mean_bits ;
@@ -136,9 +136,9 @@ void ResvMaxBits2(int mean_bits, int *targ_bits, int *extra_bits, int gr)
   the reservoir to reflect the granule's usage.
 */
 void
-ResvAdjust(gr_info *gi, III_side_info_t *l3_side, int mean_bits )
+ResvAdjust(lame_global_flags *gfp,gr_info *gi, III_side_info_t *l3_side, int mean_bits )
 {
-    ResvSize += (mean_bits / gf.stereo) - gi->part2_3_length;
+    ResvSize += (mean_bits / gfp->stereo) - gi->part2_3_length;
 }
 
 
@@ -151,13 +151,13 @@ ResvAdjust(gr_info *gi, III_side_info_t *l3_side, int mean_bits )
   appropriate stuffing bits to the bitstream.
 */
 void
-ResvFrameEnd(III_side_info_t *l3_side, int mean_bits)
+ResvFrameEnd(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits)
 {
     int stuffingBits;
     int over_bits;
 
     /* just in case mean_bits is odd, this is necessary... */
-    if ( gf.stereo == 2 && mean_bits & 1)
+    if ( gfp->stereo == 2 && mean_bits & 1)
 	ResvSize += 1;
 
     over_bits = ResvSize - ResvMax;

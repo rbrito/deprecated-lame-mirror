@@ -134,25 +134,25 @@ FLOAT8 ATH_mdct_short[192];
 /*  initialization for iteration_loop */
 /************************************************************************/
 void
-iteration_init( III_side_info_t *l3_side, int l3_enc[2][2][576])
+iteration_init( lame_global_flags *gfp,III_side_info_t *l3_side, int l3_enc[2][2][576])
 {
   gr_info *cod_info;
   int ch, gr, i;
 
   l3_side->resvDrain = 0;
 
-  if ( gf.frameNum==0 ) {
+  if ( gfp->frameNum==0 ) {
     for (i = 0; i < SBMAX_l + 1; i++) {
       scalefac_band.l[i] =
-	sfBandIndex[gf.samplerate_index + (gf.version * 3)].l[i];
+	sfBandIndex[gfp->samplerate_index + (gfp->version * 3)].l[i];
     }
     for (i = 0; i < SBMAX_s + 1; i++) {
       scalefac_band.s[i] =
-	sfBandIndex[gf.samplerate_index + (gf.version * 3)].s[i];
+	sfBandIndex[gfp->samplerate_index + (gfp->version * 3)].s[i];
     }
 
     l3_side->main_data_begin = 0;
-    compute_ath(ATH_l,ATH_s);
+    compute_ath(gfp,ATH_l,ATH_s);
 
     for(i=0;i<PRECALC_SIZE;i++)
         pow43[i] = pow((FLOAT8)i, 4.0/3.0);
@@ -176,8 +176,8 @@ iteration_init( III_side_info_t *l3_side, int l3_enc[2][2][576])
   convert_mdct=0;
   convert_psy=0;
   reduce_sidechannel=0;
-  if (gf.mode_ext==MPG_MD_MS_LR) {
-    if (gf.ms_masking) {
+  if (gfp->mode_ext==MPG_MD_MS_LR) {
+    if (gfp->ms_masking) {
       convert_mdct = 1;
       convert_psy = 0;
       reduce_sidechannel=1;
@@ -190,8 +190,8 @@ iteration_init( III_side_info_t *l3_side, int l3_enc[2][2][576])
   if (convert_psy) memset(l3_enc,0,sizeof(int)*2*2*576);
   
   /* some intializations. */
-  for ( gr = 0; gr < gf.mode_gr; gr++ ){
-    for ( ch = 0; ch < gf.stereo; ch++ ){
+  for ( gr = 0; gr < gfp->mode_gr; gr++ ){
+    for ( ch = 0; ch < gfp->stereo; ch++ ){
       cod_info = (gr_info *) &(l3_side->gr[gr].ch[ch]);
 
       if ( cod_info->window_switching_flag != 0 && cod_info->block_type == SHORT_TYPE )
@@ -211,7 +211,7 @@ iteration_init( III_side_info_t *l3_side, int l3_enc[2][2][576])
 
 
   /* dont bother with scfsi. */
-  for ( ch = 0; ch < gf.stereo; ch++ )
+  for ( ch = 0; ch < gfp->stereo; ch++ )
     for ( i = 0; i < 4; i++ )
       l3_side->scfsi[ch][i] = 0;
 }
@@ -248,7 +248,7 @@ ATH = ATH_formula  - 103  (db)
 ATH = ATH * 2.5e-10      (ener)
 
 */
-FLOAT8 ATHformula(FLOAT8 f)
+FLOAT8 ATHformula(lame_global_flags *gfp,FLOAT8 f)
 {
   FLOAT8 ath;
   f  = Max(0.02, f);
@@ -258,7 +258,7 @@ FLOAT8 ATHformula(FLOAT8 f)
        -  6.500 * exp(-0.6*pow(f-3.3,2.0))
        +  0.001 * pow(f,4.0));
   /* convert to energy */
-  if (gf.noATH)
+  if (gfp->noATH)
     ath -= 200; /* disables ATH */
   else {
     ath -= 114;    /* MDCT scaling.  From tests by macik and MUS420 code */
@@ -271,18 +271,18 @@ FLOAT8 ATHformula(FLOAT8 f)
    * works together with adjusted masking lowering of GPSYCHO thresholds
    * (Robert.Hegemann@gmx.de 2000-01-30)
    */
-  ath -= (4-gf.VBR_q)*4.0; 
+  ath -= (4-gfp->VBR_q)*4.0; 
 #endif
   ath = pow( 10.0, ath/10.0 );
   return ath;
 }
  
 
-void compute_ath(FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY_l])
+void compute_ath(lame_global_flags *gfp,FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY_l])
 {
   int sfb,i,start,end;
   FLOAT8 ATH_f;
-  FLOAT8 samp_freq = gf.out_samplerate/1000.0;
+  FLOAT8 samp_freq = gfp->out_samplerate/1000.0;
 #ifdef RH_ATH
   /* going from average to peak level ATH masking
    */
@@ -296,7 +296,7 @@ void compute_ath(FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY_l])
     end   = scalefac_band.l[ sfb+1 ];
     ATH_l[sfb]=1e99;
     for (i=start ; i < end; i++) {
-      ATH_f = ATHformula(samp_freq*i/(2*576)); /* freq in kHz */
+      ATH_f = ATHformula(gfp,samp_freq*i/(2*576)); /* freq in kHz */
       ATH_l[sfb]=Min(ATH_l[sfb],ATH_f);
 #ifdef RH_ATH
       ATH_mdct_long[i] = ATH_f*adjust_mdct_scaling;
@@ -315,7 +315,7 @@ void compute_ath(FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY_l])
     end   = scalefac_band.s[ sfb+1 ];
     ATH_s[sfb]=1e99;
     for (i=start ; i < end; i++) {
-      ATH_f = ATHformula(samp_freq*i/(2*192));     /* freq in kHz */
+      ATH_f = ATHformula(gfp,samp_freq*i/(2*192));     /* freq in kHz */
       ATH_s[sfb]=Min(ATH_s[sfb],ATH_f);
 #ifdef RH_ATH
       ATH_mdct_short[i] = ATH_f*adjust_mdct_scaling;
@@ -346,7 +346,7 @@ void ms_convert(FLOAT8 xr[2][576],FLOAT8 xr_org[2][576])
  * allocate bits among 2 channels based on PE
  * mt 6/99
  ************************************************************************/
-void on_pe(FLOAT8 pe[2][2],III_side_info_t *l3_side,
+void on_pe(lame_global_flags *gfp,FLOAT8 pe[2][2],III_side_info_t *l3_side,
 int targ_bits[2],int mean_bits, int gr)
 {
   gr_info *cod_info;
@@ -355,16 +355,16 @@ int targ_bits[2],int mean_bits, int gr)
   int ch;
 
   /* allocate targ_bits for granule */
-  ResvMaxBits2( mean_bits, &tbits, &extra_bits, gr);
+  ResvMaxBits( mean_bits, &tbits, &extra_bits, gr);
     
 
-  for (ch=0 ; ch < gf.stereo ; ch ++) {
+  for (ch=0 ; ch < gfp->stereo ; ch ++) {
     /******************************************************************
      * allocate bits for each channel 
      ******************************************************************/
     cod_info = &l3_side->gr[gr].ch[ch].tt;
     
-    targ_bits[ch]=tbits/gf.stereo;
+    targ_bits[ch]=tbits/gfp->stereo;
     
     /* allocate extra bits from reservoir based on PE */
     bits=0;
@@ -426,7 +426,7 @@ int numchn=2;
  * The code selects the best global gain for a particular set of scalefacs */
  
 int
-inner_loop( FLOAT8 xrpow[576],
+inner_loop( lame_global_flags *gfp,FLOAT8 xrpow[576],
 	    int l3_enc[576], int max_bits,
 	    gr_info *cod_info)
 {
@@ -436,7 +436,7 @@ inner_loop( FLOAT8 xrpow[576],
     do
     {
       cod_info->global_gain++;
-      bits = count_bits(l3_enc, xrpow, cod_info);
+      bits = count_bits(gfp,l3_enc, xrpow, cod_info);
     }
     while ( bits > max_bits );
     return bits;
@@ -688,14 +688,14 @@ int scale_bitcount_lsf(III_scalefac_t *scalefac, gr_info *cod_info)
 
   returns number of sfb's with energy > ATH
 */
-int calc_xmin( FLOAT8 xr[576], III_psy_ratio *ratio,
+int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576], III_psy_ratio *ratio,
 	       gr_info *cod_info, III_psy_xmin *l3_xmin)
 {
     int start, end, bw,l, b, ath_over=0;
 	u_int	sfb;
     FLOAT8 en0, xmin, ener;
 
-    if (gf.ATHonly) {    
+    if (gfp->ATHonly) {    
       for ( sfb = cod_info->sfb_smax; sfb < SBPSY_s; sfb++ )
 	  for ( b = 0; b < 3; b++ )
 	      l3_xmin->s[sfb][b]=ATH_s[sfb];
@@ -1231,7 +1231,7 @@ typedef enum {
 
 /*-------------------------------------------------------------------------*/
 int 
-bin_search_StepSize2 (int desired_rate, int start, int *ix, 
+bin_search_StepSize2 (lame_global_flags *gfp,int desired_rate, int start, int *ix, 
                       FLOAT8 xrspow[576], gr_info *cod_info)
 /*-------------------------------------------------------------------------*/
 {
@@ -1244,7 +1244,7 @@ bin_search_StepSize2 (int desired_rate, int start, int *ix,
     do
     {
 	cod_info->global_gain = StepSize;
-	nBits = count_bits(ix, xrspow, cod_info);  
+	nBits = count_bits(gfp,ix, xrspow, cod_info);  
 
 	if (CurrentStep == 1 )
         {

@@ -30,39 +30,39 @@ enum byte_order NativeByteOrder = order_unknown;
 /***********************************************************************
  * compute bitsperframe and mean_bits for a layer III frame 
  **********************************************************************/
-void getframebits(int *bitsPerFrame, int *mean_bits) {
+void getframebits(lame_global_flags *gfp,int *bitsPerFrame, int *mean_bits) {
   int whole_SpF;
   FLOAT8 bit_rate,samp;
   int bitsPerSlot;
   int sideinfo_len;
   
-  samp =      gf.out_samplerate/1000.0;
-  bit_rate = bitrate_table[gf.version][gf.bitrate_index];
+  samp =      gfp->out_samplerate/1000.0;
+  bit_rate = bitrate_table[gfp->version][gfp->bitrate_index];
   bitsPerSlot = 8;
 
   /* determine the mean bitrate for main data */
   sideinfo_len = 32;
-  if ( gf.version == 1 )
+  if ( gfp->version == 1 )
     {   /* MPEG 1 */
-      if ( gf.stereo == 1 )
+      if ( gfp->stereo == 1 )
 	sideinfo_len += 136;
       else
 	sideinfo_len += 256;
     }
   else
     {   /* MPEG 2 */
-      if ( gf.stereo == 1 )
+      if ( gfp->stereo == 1 )
 	sideinfo_len += 72;
       else
 	sideinfo_len += 136;
     }
   
-  if (gf.error_protection) sideinfo_len += 16;
+  if (gfp->error_protection) sideinfo_len += 16;
   
   
-  whole_SpF =  (gf.framesize /samp)*(bit_rate /  (FLOAT8)bitsPerSlot);
-  *bitsPerFrame = 8 * whole_SpF + (gf.padding * 8);
-  *mean_bits = (*bitsPerFrame - sideinfo_len) / gf.mode_gr;
+  whole_SpF =  (gfp->framesize /samp)*(bit_rate /  (FLOAT8)bitsPerSlot);
+  *bitsPerFrame = 8 * whole_SpF + (gfp->padding * 8);
+  *mean_bits = (*bitsPerFrame - sideinfo_len) / gfp->mode_gr;
 }
 
 

@@ -122,7 +122,8 @@ set_pinfo (
 /*  iteration_loop()                                                    */
 /************************************************************************/
 void
-iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
+iteration_loop( lame_global_flags *gfp,
+                FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 		FLOAT8 xr_org[2][2][576], III_psy_ratio ratio[2][2],
 		III_side_info_t *l3_side, int l3_enc[2][2][576],
 		III_scalefac_t scalefac[2][2])
@@ -138,39 +139,39 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   int ch, gr, i, bit_rate;
 
 
-  iteration_init(l3_side,l3_enc);
-  bit_rate = bitrate_table[gf.version][gf.bitrate_index];
+  iteration_init(gfp,l3_side,l3_enc);
+  bit_rate = bitrate_table[gfp->version][gfp->bitrate_index];
 
 
-  getframebits(&bitsPerFrame, &mean_bits);
-  ResvFrameBegin( l3_side, mean_bits, bitsPerFrame );
+  getframebits(gfp,&bitsPerFrame, &mean_bits);
+  ResvFrameBegin(gfp, l3_side, mean_bits, bitsPerFrame );
 
   /* quantize! */
 
 
 
-  for ( gr = 0; gr < gf.mode_gr; gr++ ) {
+  for ( gr = 0; gr < gfp->mode_gr; gr++ ) {
     if (convert_psy) {
       /* dual channel version can quantize Mid/Side channels with L/R
        * maskings (by constantly reconstructing L/R data).  Used before we
        * we had proper mid/side maskings. */
-      outer_loop_dual( xr, xr_org[gr], mean_bits, bit_rate, over,
+      outer_loop_dual( gfp,xr, xr_org[gr], mean_bits, bit_rate, over,
 		       l3_xmin, l3_enc[gr], scalefac[gr],
 		       gr, l3_side, ratio[gr], pe, ms_ener_ratio);
 
       /* finish up */
-      for (ch=0 ; ch < gf.stereo ; ch ++ ) {
+      for (ch=0 ; ch < gfp->stereo ; ch ++ ) {
 	cod_info = &l3_side->gr[gr].ch[ch].tt;
-	best_scalefac_store(gr, ch, l3_side, scalefac);
+	best_scalefac_store(gfp,gr, ch, l3_side, scalefac);
 #ifdef HAVEGTK
-	if (gf.gtkflag)
+	if (gfp->gtkflag)
 	  pinfo->LAMEmainbits[gr][ch]=cod_info->part2_3_length;
 #endif
-	ResvAdjust(cod_info, l3_side, mean_bits );
+	ResvAdjust(gfp,cod_info, l3_side, mean_bits );
 	assert(cod_info->global_gain < 256 );
       }
       /* set the sign of l3_enc */
-      for ( ch =  0; ch < gf.stereo; ch++ ) {
+      for ( ch =  0; ch < gfp->stereo; ch++ ) {
         for ( i = 0; i < 576; i++) {
           if (xr[ch][i] < 0)
             l3_enc[gr][ch][i] *= -1;
@@ -182,16 +183,16 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
       if (convert_mdct) 
         ms_convert(xr_org[gr], xr_org[gr]);
 
-      on_pe(pe,l3_side,targ_bits,mean_bits, gr);
+      on_pe(gfp,pe,l3_side,targ_bits,mean_bits, gr);
 #ifdef RH_SIDE_CBR
 #else
       if (reduce_sidechannel) 
 	reduce_side(targ_bits,ms_ener_ratio[gr],mean_bits);
 #endif      
 
-      for (ch=0 ; ch < gf.stereo ; ch ++) {
+      for (ch=0 ; ch < gfp->stereo ; ch ++) {
 	cod_info = &l3_side->gr[gr].ch[ch].tt;	
-        if (!init_outer_loop(xr_org[gr][ch], cod_info))
+        if (!init_outer_loop(gfp,xr_org[gr][ch], cod_info))
         {
           /* xr contains no energy 
            * cod_info was set in init_outer_loop above
@@ -202,20 +203,20 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
         }
 	else
 	{
-          calc_xmin(xr_org[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin[ch]);
-	  outer_loop( xr_org[gr][ch], targ_bits[ch], noise,
+          calc_xmin(gfp,xr_org[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin[ch]);
+	  outer_loop( gfp,xr_org[gr][ch], targ_bits[ch], noise,
 		      &l3_xmin[ch], l3_enc[gr][ch], 
 		      &scalefac[gr][ch], cod_info, xfsf, ch);
         }
-	best_scalefac_store(gr, ch, l3_side, scalefac);
-	if (gf.use_best_huffman==1 && cod_info->block_type == NORM_TYPE) {
+	best_scalefac_store(gfp,gr, ch, l3_side, scalefac);
+	if (gfp->use_best_huffman==1 && cod_info->block_type == NORM_TYPE) {
 	  best_huffman_divide(gr, ch, cod_info, l3_enc[gr][ch]);
 	}
 #ifdef HAVEGTK
-	if (gf.gtkflag)
+	if (gfp->gtkflag)
 	  set_pinfo (cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr_org[gr][ch], xfsf, noise, gr, ch);
 #endif
-	ResvAdjust(cod_info, l3_side, mean_bits );
+	ResvAdjust(gfp,cod_info, l3_side, mean_bits );
         /* set the sign of l3_enc */
         for ( i = 0; i < 576; i++) {
 	  if (xr_org[gr][ch][i] < 0)
@@ -232,19 +233,19 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   for ( gr = 0; gr < mode_gr; gr++ ) {
     for ( ch =  0; ch < stereo; ch++ ) {
 	cod_info = &l3_side->gr[gr].ch[ch].tt;
-	ResvAdjust( cod_info, l3_side, mean_bits );
+	ResvAdjust(gfp, cod_info, l3_side, mean_bits );
     }
   }
 #endif
 
 
 
-  ResvFrameEnd(l3_side, mean_bits );
+  ResvFrameEnd(gfp,l3_side, mean_bits );
 }
 
 
 void 
-set_masking_lower (int nbits)
+set_masking_lower (int VBR_q,int nbits)
 {
 	FLOAT masking_lower_db, adjust;
 	
@@ -262,14 +263,14 @@ set_masking_lower (int nbits)
 	 */
 	static FLOAT dbQ[10]={-6.0,-4.5,-3.0,-1.5,0,0.3,0.6,1.0,1.5,2.0};
 	
-	assert( gf.VBR_q <= 9 );
-	assert( gf.VBR_q >= 0 );
+	assert( VBR_q <= 9 );
+	assert( VBR_q >= 0 );
 	
-	masking_lower_db = dbQ[gf.VBR_q];	
+	masking_lower_db = dbQ[VBR_q];	
 	adjust = 0;
 #else
 	/* masking_lower varies from -8 to +10 db */
-	masking_lower_db = -6 + 2*gf.VBR_q;
+	masking_lower_db = -6 + 2*VBR_q;
 	/* adjust by -6(min)..0(max) depending on bitrate */
 	adjust = (nbits-125)/(2500.0-125.0);
 	adjust = 4*(adjust-1);
@@ -288,7 +289,8 @@ set_masking_lower (int nbits)
  *
  ************************************************************************/
 void
-VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
+VBR_iteration_loop (lame_global_flags *gfp,
+                FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
                 FLOAT8 xr[2][2][576], III_psy_ratio ratio[2][2],
                 III_side_info_t * l3_side, int l3_enc[2][2][576],
                 III_scalefac_t scalefac[2][2])
@@ -316,38 +318,38 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   int       i,ch, gr, analog_silence;
   int	    reparted = 0;
 
-  iteration_init(l3_side,l3_enc);
+  iteration_init(gfp,l3_side,l3_enc);
 
 #ifdef RH_QUALITY_CONTROL
   /* with RH_QUALITY_CONTROL we have to set masking_lower only once */
-  set_masking_lower( 0 );
+  set_masking_lower(gfp->VBR_q, 0 );
 #endif      
 
   /*******************************************************************
    * how many bits are available for each bitrate?
    *******************************************************************/
-  for( gf.bitrate_index = 1;
-       gf.bitrate_index <= gf.VBR_max_bitrate;
-       gf.bitrate_index++    ) {
-    getframebits (&bitsPerFrame, &mean_bits);
-    if (gf.bitrate_index == gf.VBR_min_bitrate) {
+  for( gfp->bitrate_index = 1;
+       gfp->bitrate_index <= gfp->VBR_max_bitrate;
+       gfp->bitrate_index++    ) {
+    getframebits (gfp,&bitsPerFrame, &mean_bits);
+    if (gfp->bitrate_index == gfp->VBR_min_bitrate) {
       /* always use at least this many bits per granule per channel */
       /* unless we detect analog silence, see below */
-      min_mean_bits=mean_bits/gf.stereo;
+      min_mean_bits=mean_bits/gfp->stereo;
     }
-    frameBits[gf.bitrate_index]=
-      ResvFrameBegin (l3_side, mean_bits, bitsPerFrame);
+    frameBits[gfp->bitrate_index]=
+      ResvFrameBegin (gfp,l3_side, mean_bits, bitsPerFrame);
   }
 
-  gf.bitrate_index=gf.VBR_max_bitrate;
+  gfp->bitrate_index=gfp->VBR_max_bitrate;
 
   
   /*******************************************************************
    * how many bits would we use of it?
    *******************************************************************/
   analog_silence=0;
-  for (gr = 0; gr < gf.mode_gr; gr++) {
-    int num_chan=gf.stereo;
+  for (gr = 0; gr < gfp->mode_gr; gr++) {
+    int num_chan=gfp->stereo;
 #ifdef  RH_SIDE_VBR
     /* my experiences are, that side channel reduction  
      * does more harm than good when VBR encoding
@@ -371,7 +373,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
       cod_info = &l3_side->gr[gr].ch[ch].tt;
       min_bits = Max(125,min_mean_bits);
 
-      if (!init_outer_loop(xr[gr][ch], cod_info))
+      if (!init_outer_loop(gfp,xr[gr][ch], cod_info))
       {
         /* xr contains no energy 
          * cod_info was set in init_outer_loop above
@@ -380,7 +382,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
         memset(l3_enc[gr][ch],0,576*sizeof(int));
         save_bits[gr][ch] = 0;
 #ifdef HAVEGTK
-	if (gf.gtkflag)
+	if (gfp->gtkflag)
 	  set_pinfo(cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
 #endif
 	analog_silence=1;
@@ -397,11 +399,11 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
       /*
        * has to be set before calculating l3_xmin
        */
-      set_masking_lower( 2500 );
+      set_masking_lower( gfp->VBR_q,2500 );
 #endif      
       /* check for analolg silence */
       /* if energy < ATH, set min_bits = 125 */
-      if (0==calc_xmin(xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin)) {
+      if (0==calc_xmin(gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin)) {
 	  analog_silence=1;
 	  min_bits=125;
       }
@@ -411,7 +413,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 	  min_bits=Min(min_bits,1800);
       }
 
-      max_bits = 1200 + frameBits[gf.VBR_max_bitrate]/(gf.stereo*gf.mode_gr);
+      max_bits = 1200 + frameBits[gfp->VBR_max_bitrate]/(gfp->stereo*gfp->mode_gr);
       max_bits=Min(max_bits,2500);
       max_bits=Max(max_bits,min_bits);
 
@@ -460,13 +462,13 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 	   */
 #else
 	  /* quality setting */
-	  set_masking_lower( this_bits );
+	  set_masking_lower( gfp->VBR_q,this_bits );
           /* 
 	   * compute max allowed distortion, masking lower has changed
 	   */
-          calc_xmin(xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin);
+          calc_xmin(gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin);
 #endif
-	  outer_loop( xr[gr][ch], this_bits, noise, 
+	  outer_loop( gfp,xr[gr][ch], this_bits, noise, 
 		      &l3_xmin, l3_enc[gr][ch],
 		      &scalefac[gr][ch], cod_info, xfsf,
 		      ch);
@@ -476,7 +478,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 			     targ_noise[1],(int)noise[0],noise[3],noise[2],
 			     noise[1]);
 #ifdef HAVEGTK
-	  if (gf.gtkflag)
+	  if (gfp->gtkflag)
 	    set_pinfo(cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
 #endif
 	  if (better) {
@@ -492,7 +494,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
               memcpy(  bst_l3_enc,    l3_enc  [gr][ch], sizeof(int)*576         );
               memcpy( &bst_cod_info,  cod_info,         sizeof(gr_info)         );
 #ifdef HAVEGTK
-              if (gf.gtkflag) 
+              if (gfp->gtkflag) 
                 memcpy( &bst_pinfo, pinfo, sizeof(plotting_data) );
 #endif
 	      /*
@@ -515,7 +517,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
         memcpy( &scalefac[gr][ch], &bst_scalefac, sizeof(III_scalefac_t) );
         memcpy(  l3_enc  [gr][ch],  bst_l3_enc,   sizeof(int)*576        );
 #ifdef HAVEGTK
-        if (gf.gtkflag) 
+        if (gfp->gtkflag) 
           memcpy( pinfo, &bst_pinfo, sizeof(plotting_data) );
 #endif
       }
@@ -536,7 +538,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   if (reduce_sidechannel) {
     /* number of bits needed was found for MID channel above.  Use formula
      * (fixed bitrate code) to set the side channel bits */
-    for (gr = 0; gr < gf.mode_gr; gr++) {
+    for (gr = 0; gr < gfp->mode_gr; gr++) {
       FLOAT8 fac = .33*(.5-ms_ener_ratio[gr])/.5;
       save_bits[gr][1]=((1-fac)/(1+fac))*save_bits[gr][0];
       save_bits[gr][1]=Max(125,save_bits[gr][1]);
@@ -548,36 +550,36 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   /******************************************************************
    * find lowest bitrate able to hold used bits
    ******************************************************************/
-  for( gf.bitrate_index =   (analog_silence ? 1 : gf.VBR_min_bitrate );
-       gf.bitrate_index < gf.VBR_max_bitrate;
-       gf.bitrate_index++    )
-    if( used_bits <= frameBits[gf.bitrate_index] ) break;
+  for( gfp->bitrate_index =   (analog_silence ? 1 : gfp->VBR_min_bitrate );
+       gfp->bitrate_index < gfp->VBR_max_bitrate;
+       gfp->bitrate_index++    )
+    if( used_bits <= frameBits[gfp->bitrate_index] ) break;
 
   /*******************************************************************
    * calculate quantization for this bitrate
    *******************************************************************/  
-  getframebits (&bitsPerFrame, &mean_bits);
-  bits=ResvFrameBegin (l3_side, mean_bits, bitsPerFrame);
+  getframebits (gfp,&bitsPerFrame, &mean_bits);
+  bits=ResvFrameBegin (gfp,l3_side, mean_bits, bitsPerFrame);
 
   /* repartion available bits in same proportion */
   if (used_bits > bits ) {
     reparted = 1;
-    for( gr = 0; gr < gf.mode_gr; gr++) {
-      for(ch = 0; ch < gf.stereo; ch++) {
-	save_bits[gr][ch]=(save_bits[gr][ch]*frameBits[gf.bitrate_index])/used_bits;
+    for( gr = 0; gr < gfp->mode_gr; gr++) {
+      for(ch = 0; ch < gfp->stereo; ch++) {
+	save_bits[gr][ch]=(save_bits[gr][ch]*frameBits[gfp->bitrate_index])/used_bits;
       }
     }
     used_bits=0;
-    for( gr = 0; gr < gf.mode_gr; gr++) {
-      for(ch = 0; ch < gf.stereo; ch++) {
+    for( gr = 0; gr < gfp->mode_gr; gr++) {
+      for(ch = 0; ch < gfp->stereo; ch++) {
 	used_bits += save_bits[gr][ch];
       }
     }
   }
   assert(used_bits <= bits);
 
-  for(gr = 0; gr < gf.mode_gr; gr++) {
-    for(ch = 0; ch < gf.stereo; ch++) {
+  for(gr = 0; gr < gfp->mode_gr; gr++) {
+    for(ch = 0; ch < gfp->stereo; ch++) {
 #ifdef RH_SIDE_VBR
       if (reparted)
 #else
@@ -586,7 +588,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
       {
         cod_info = &l3_side->gr[gr].ch[ch].tt;
 	       
-	if (!init_outer_loop(xr[gr][ch], cod_info))
+	if (!init_outer_loop(gfp,xr[gr][ch], cod_info))
         {
           /* xr contains no energy 
            * cod_info was set in init_outer_loop above
@@ -603,16 +605,16 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
            */
 #else
           /* quality setting */
-          set_masking_lower( save_bits[gr][ch] );
+          set_masking_lower( gfp->VBR_q,save_bits[gr][ch] );
 #endif
-          calc_xmin(xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin);
+          calc_xmin(gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin);
 	
-          outer_loop( xr[gr][ch], save_bits[gr][ch], noise,
+          outer_loop( gfp,xr[gr][ch], save_bits[gr][ch], noise,
 	 	      &l3_xmin, l3_enc[gr][ch], 
 		      &scalefac[gr][ch], cod_info, xfsf, ch);
 	}
 #ifdef HAVEGTK
-	if (gf.gtkflag)
+	if (gfp->gtkflag)
 	  set_pinfo(cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
 #endif
       }
@@ -622,25 +624,25 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   /*******************************************************************
    * update reservoir status after FINAL quantization/bitrate 
    *******************************************************************/
-  for (gr = 0; gr < gf.mode_gr; gr++)
-    for (ch = 0; ch < gf.stereo; ch++) {
+  for (gr = 0; gr < gfp->mode_gr; gr++)
+    for (ch = 0; ch < gfp->stereo; ch++) {
       cod_info = &l3_side->gr[gr].ch[ch].tt;
-      best_scalefac_store(gr, ch, l3_side, scalefac);
+      best_scalefac_store(gfp,gr, ch, l3_side, scalefac);
       if (cod_info->block_type == NORM_TYPE) {
 	best_huffman_divide(gr, ch, cod_info, l3_enc[gr][ch]);
       }
 #ifdef HAVEGTK
-      if (gf.gtkflag)
+      if (gfp->gtkflag)
 	pinfo->LAMEmainbits[gr][ch]=cod_info->part2_3_length;
 #endif
-      ResvAdjust (cod_info, l3_side, mean_bits);
+      ResvAdjust (gfp,cod_info, l3_side, mean_bits);
     }
 
   /*******************************************************************
    * set the sign of l3_enc 
    *******************************************************************/
-  for (gr = 0; gr < gf.mode_gr; gr++)
-    for (ch = 0; ch < gf.stereo; ch++) {
+  for (gr = 0; gr < gfp->mode_gr; gr++)
+    for (ch = 0; ch < gfp->stereo; ch++) {
 /*
  * is the following code correct?
  *
@@ -660,7 +662,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
       }
     }
 
-  ResvFrameEnd (l3_side, mean_bits);
+  ResvFrameEnd (gfp,l3_side, mean_bits);
 }
 
 
@@ -670,7 +672,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 /*  init_outer_loop  mt 6/99                                            */
 /*  returns 0 if all energies in xr are zero, else 1                    */
 /************************************************************************/
-int init_outer_loop(
+int init_outer_loop(lame_global_flags *gfp,
     FLOAT8 xr[576],        /*  could be L/R OR MID/SIDE */
     gr_info *cod_info)
 {
@@ -701,7 +703,7 @@ int init_outer_loop(
   cod_info->count1bits        = 0;
   
   
-  if (gf.experimentalZ) {
+  if (gfp->experimentalZ) {
     /* compute subblock gains */
     int j,b;  FLOAT8 en[3],mx;
     if ((cod_info->block_type==SHORT_TYPE) ) {
@@ -765,6 +767,7 @@ int init_outer_loop(
  *  added VBR support mt 5/99
  ************************************************************************/
 void outer_loop(
+    lame_global_flags *gfp,
     FLOAT8 xr[576],        
     int targ_bits,
     FLOAT8 best_noise[4],
@@ -813,7 +816,7 @@ void outer_loop(
 	temp=fabs(xr[i]);
 	xrpow[i]=sqrt(sqrt(temp)*temp);
       }
-      bits_found=bin_search_StepSize2(targ_bits,OldValue[ch],
+      bits_found=bin_search_StepSize2(gfp,targ_bits,OldValue[ch],
 				      l3_enc_w,xrpow,cod_info);
       OldValue[ch] = cod_info->global_gain;
     }
@@ -836,15 +839,15 @@ void outer_loop(
       if (iteration==1) {
 	if(bits_found>huff_bits) {
 	  cod_info->global_gain++;
-	  real_bits = inner_loop(xrpow, l3_enc_w, huff_bits, cod_info);
+	  real_bits = inner_loop(gfp,xrpow, l3_enc_w, huff_bits, cod_info);
 	} else real_bits=bits_found;
       }
       else 
-	real_bits=inner_loop(xrpow, l3_enc_w, huff_bits, cod_info);
+	real_bits=inner_loop(gfp,xrpow, l3_enc_w, huff_bits, cod_info);
       cod_info->part2_3_length = real_bits;
 
       /* compute the distortion in this quantization */
-      if (gf.noise_shaping==0) {
+      if (gfp->noise_shaping==0) {
       	over=0;
       }else{
 	/* coefficients and thresholds both l/r (or both mid/side) */
@@ -857,7 +860,7 @@ void outer_loop(
       /* check if this quantization is better the our saved quantization */
       if (iteration == 1) better=1;
       else 
-	better=quant_compare(
+	better=quant_compare(gfp->experimentalX,
 	     best_over,best_tot_noise,best_over_noise,best_max_noise,
                   over,     tot_noise,     over_noise,     max_noise);
 
@@ -873,7 +876,7 @@ void outer_loop(
 	memcpy(&save_cod_info,cod_info,sizeof(save_cod_info));
 
 #ifdef HAVEGTK
-	if (gf.gtkflag) {
+	if (gfp->gtkflag) {
 	  memcpy(xfsf, xfsf_w, sizeof(xfsf_w));
 	}
 #endif
@@ -881,7 +884,7 @@ void outer_loop(
     }
     
     /* if no bands with distortion, we are done */
-    if (gf.noise_shaping_stop==0)
+    if (gfp->noise_shaping_stop==0)
       if (over==0) notdone=0;
 
     if (notdone) {
@@ -890,7 +893,7 @@ void outer_loop(
 	/* loop_break returns 0 if there is an unamplified scalefac */
 	/* scale_bitcount returns 0 if no scalefactors are too large */
 	if ( (status = loop_break(&scalefac_w, cod_info)) == 0 ) {
-	    if ( gf.version == 1 ) {
+	    if ( gfp->version == 1 ) {
 		status = scale_bitcount(&scalefac_w, cod_info);
 	    }else{
 		status = scale_bitcount_lsf(&scalefac_w, cod_info);
@@ -900,8 +903,8 @@ void outer_loop(
 	notdone = !status;
     }
 
-    if (try_scale && gf.experimentalY) {
-      init_outer_loop(xr, cod_info);
+    if (try_scale && gfp->experimentalY) {
+      init_outer_loop(gfp,xr, cod_info);
       compute_stepsize=1;  /* compute a new global gain */
       notdone=1;
       cod_info->scalefac_scale=1;
@@ -1140,7 +1143,7 @@ void amp_scalefac_bands(FLOAT8 xrpow[576],
 
 
 
-int quant_compare(
+int quant_compare(int experimentalX,
 int best_over,FLOAT8 best_tot_noise,FLOAT8 best_over_noise,FLOAT8 best_max_noise,
 int over,FLOAT8 tot_noise, FLOAT8 over_noise, FLOAT8 max_noise)
 {
@@ -1154,33 +1157,33 @@ int over,FLOAT8 tot_noise, FLOAT8 over_noise, FLOAT8 max_noise)
    */
   int better=0;
 
-  if (gf.experimentalX==0) {
+  if (experimentalX==0) {
     better = ((over < best_over) ||
 	      ((over==best_over) && (over_noise<=best_over_noise)) ) ;
   }
 
-  if (gf.experimentalX==1) 
+  if (experimentalX==1) 
     better = max_noise < best_max_noise;
 
-  if (gf.experimentalX==2) {
+  if (experimentalX==2) {
     better = tot_noise < best_tot_noise;
   }
-  if (gf.experimentalX==3) {
+  if (experimentalX==3) {
     better = (tot_noise < best_tot_noise) &&
       (max_noise < best_max_noise + 2);
   }
-  if (gf.experimentalX==4) {
+  if (experimentalX==4) {
     better = ( ( (0>=max_noise) && (best_max_noise>2)) ||
      ( (0>=max_noise) && (best_max_noise<0) && ((best_max_noise+2)>max_noise) && (tot_noise<best_tot_noise) ) ||
      ( (0>=max_noise) && (best_max_noise>0) && ((best_max_noise+2)>max_noise) && (tot_noise<(best_tot_noise+best_over_noise)) ) ||
      ( (0<max_noise) && (best_max_noise>-0.5) && ((best_max_noise+1)>max_noise) && ((tot_noise+over_noise)<(best_tot_noise+best_over_noise)) ) ||
      ( (0<max_noise) && (best_max_noise>-1) && ((best_max_noise+1.5)>max_noise) && ((tot_noise+over_noise+over_noise)<(best_tot_noise+best_over_noise+best_over_noise)) ) );
   }
-  if (gf.experimentalX==5) {
+  if (experimentalX==5) {
     better =   (over_noise <  best_over_noise)
       || ((over_noise == best_over_noise)&&(tot_noise < best_tot_noise));
   }
-  if (gf.experimentalX==6) {
+  if (experimentalX==6) {
     better = (over_noise < best_over_noise)
            ||( (over_noise == best_over_noise)
              &&( (max_noise < best_max_noise)

@@ -142,7 +142,8 @@ FLOAT8 find_scalefac(FLOAT8 *xr,FLOAT8 *xr34,int stride,int sfb,
  *
  ************************************************************************/
 void
-VBR_iteration_loop_new (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
+VBR_iteration_loop_new (lame_global_flags *gfp,
+                FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
                 FLOAT8 xr_org[2][2][576], III_psy_ratio ratio[2][2],
                 III_side_info_t * l3_side, int l3_enc[2][2][576],
                 III_scalefac_t scalefac[2][2])
@@ -160,20 +161,20 @@ VBR_iteration_loop_new (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 
   /* Adjust allowed masking based on quality setting */
   /* db_lower varies from -10 to +8 db */
-  masking_lower_db = -10 + 2*gf.VBR_q;
+  masking_lower_db = -10 + 2*gfp->VBR_q;
   /* adjust by -6(min)..0(max) depending on bitrate */
   masking_lower = pow(10.0,masking_lower_db/10);
   masking_lower = 1;
 
 
   /* copy data to be quantized into xr */
-  for(gr = 0; gr < gf.mode_gr; gr++) {
+  for(gr = 0; gr < gfp->mode_gr; gr++) {
     if (convert_mdct) ms_convert(xr[gr],xr_org[gr]);
     else memcpy(xr[gr],xr_org[gr],sizeof(FLOAT8)*2*576);   
   }
 
-  for (gr = 0; gr < gf.mode_gr; gr++) {
-    for (ch = 0; ch < gf.stereo; ch++) { 
+  for (gr = 0; gr < gfp->mode_gr; gr++) {
+    for (ch = 0; ch < gfp->stereo; ch++) { 
       FLOAT8 xr34[576];
       gr_info *cod_info = &l3_side->gr[gr].ch[ch].tt;
       int shortblock;
@@ -187,7 +188,7 @@ VBR_iteration_loop_new (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
       }
 
       /*init_outer_loop(xr,&l3_xmin,scalefac,gr,stereo,l3_side,ratio,ch);  */
-      calc_xmin( xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin[gr][ch]);
+      calc_xmin( gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin[gr][ch]);
 
       if (shortblock) {
 	for ( sfb = 0; sfb < SBPSY_s; sfb++ )  {
@@ -236,7 +237,7 @@ VBR_iteration_loop_new (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 	  
 	}
       } /* compute scalefactors */
-      /*    printf("%i %i %i new vbr over=%i  \n",gf.frameNum,gr,ch,over);*/
+      /*    printf("%i %i %i new vbr over=%i  \n",gfp->frameNum,gr,ch,over);*/
     } /* ch */
   } /* gr */
 }

@@ -153,6 +153,6 @@ extern enum byte_order DetermineByteOrder(void);
 extern void SwapBytesInWords( short *loc, int words );
 
 extern void 
-getframebits(int *bitsPerFrame, int *mean_bits);
+getframebits(lame_global_flags *gfp,int *bitsPerFrame, int *mean_bits);
 
 #endif

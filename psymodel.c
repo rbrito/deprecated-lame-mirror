@@ -48,8 +48,9 @@ void L3para_read( FLOAT8 sfreq, int numlines[CBANDS],int numlines_s[CBANDS], int
 
  
 
-void L3psycho_anal( short int *buffer[2],int gr_out , 
-		    FLOAT8 sfreq, int check_ms_stereo, 
+void L3psycho_anal( lame_global_flags *gfp,
+                    short int *buffer[2],int gr_out , 
+		    int check_ms_stereo, 
                     FLOAT8 *ms_ratio,
                     FLOAT8 *ms_ratio_next,
 		    FLOAT8 *ms_ener_ratio,
@@ -148,12 +149,12 @@ void L3psycho_anal( short int *buffer[2],int gr_out ,
 
   /* initialization of static variables
    */
-  if((gf.frameNum==0) && (gr_out==0)){
+  if((gfp->frameNum==0) && (gr_out==0)){
     FLOAT8	SNR_s[CBANDS];
     
     blocktype_old[0]=STOP_TYPE;
     blocktype_old[1]=STOP_TYPE;
-    i = sfreq + 0.5;
+    i = gfp->out_samplerate;
     switch(i){
     case 32000: break;
     case 44100: break;
@@ -173,13 +174,13 @@ void L3psycho_anal( short int *buffer[2],int gr_out ,
     memset (thm,0, sizeof(thm));
     
 
-    /*  gf.cwlimit = sfreq*j/1024.0;  */
+    /*  gfp->cwlimit = sfreq*j/1024.0;  */
     cw_lower_index=6;
-    if (gf.cwlimit>0) 
-      cwlimit=gf.cwlimit;
+    if (gfp->cwlimit>0) 
+      cwlimit=gfp->cwlimit;
     else
       cwlimit=8.8717;
-    cw_upper_index = cwlimit*1000.0*1024.0/sfreq;
+    cw_upper_index = cwlimit*1000.0*1024.0/((FLOAT8) gfp->out_samplerate);
     cw_upper_index=Min(HBLKSIZE-4,cw_upper_index);      /* j+3 < HBLKSIZE-1 */
     cw_upper_index=Max(6,cw_upper_index);
 
@@ -199,7 +200,7 @@ void L3psycho_anal( short int *buffer[2],int gr_out ,
     
     for (i=0;i<HBLKSIZE;i++) partition_l[i]=-1;
 
-    L3para_read( sfreq,numlines_l,numlines_s,partition_l,minval,qthr_l,s3_l,s3_s,
+    L3para_read( (FLOAT8) gfp->out_samplerate,numlines_l,numlines_s,partition_l,minval,qthr_l,s3_l,s3_s,
 		 qthr_s,SNR_s,
 		 bu_l,bo_l,w1_l,w2_l, bu_s,bo_s,w1_s,w2_s );
     
@@ -300,7 +301,7 @@ void L3psycho_anal( short int *buffer[2],int gr_out ,
     }
 
     /* MPEG1 SNR_s data is given in db, convert to energy */
-    if (gf.version == 1) {
+    if (gfp->version == 1) {
       for ( b = 0;b < npart_s; b++ ) {
 	SNR_s[b]=exp( (FLOAT8) SNR_s[b] * LN_TO_LOG10 );
       }
@@ -325,8 +326,8 @@ void L3psycho_anal( short int *buffer[2],int gr_out ,
 
   
   
-  numchn = gf.stereo;
-  if (gf.ms_masking && (gf.mode == MPG_MD_JOINT_STEREO)) numchn=4;
+  numchn = gfp->stereo;
+  if (gfp->ms_masking && (gfp->mode == MPG_MD_JOINT_STEREO)) numchn=4;
   for (chn=0; chn<numchn; chn++) {
   
     wsamp_s = wsamp_S+(chn & 1);
@@ -405,7 +406,7 @@ void L3psycho_anal( short int *buffer[2],int gr_out ,
 
 
 #ifdef HAVEGTK
-  if(gf.gtkflag) {
+  if(gfp->gtkflag) {
     for (j=0; j<HBLKSIZE ; j++) {
       pinfo->energy[gr_out][chn][j]=energy_save[chn][j];
       energy_save[chn][j]=energy[j];
@@ -684,7 +685,7 @@ void L3psycho_anal( short int *buffer[2],int gr_out ,
 
 
 #ifdef HAVEGTK
-    if (gf.gtkflag) {
+    if (gfp->gtkflag) {
       FLOAT mn,mx,ma=0,mb=0,mc=0;
 
       for ( j = HBLKSIZE_s/2; j < HBLKSIZE_s; j ++)
@@ -710,7 +711,7 @@ void L3psycho_anal( short int *buffer[2],int gr_out ,
      * 
      ***************************************************************/
     if (chn<2) {
-      if (gf.no_short_blocks){
+      if (gfp->no_short_blocks){
 	uselongblock[chn]=1;
       } else {
 	/* tuned for t1.wav.  doesnt effect most other samples */
@@ -886,13 +887,13 @@ void L3psycho_anal( short int *buffer[2],int gr_out ,
    * determin final block type
    ***************************************************************/
 
-  for (chn=0; chn<gf.stereo; chn++) {
+  for (chn=0; chn<gfp->stereo; chn++) {
     blocktype[chn] = NORM_TYPE;
   }
 
 
-  if (gf.stereo==2) {
-    if (!gf.allow_diff_short || gf.mode==MPG_MD_JOINT_STEREO) {
+  if (gfp->stereo==2) {
+    if (!gfp->allow_diff_short || gfp->mode==MPG_MD_JOINT_STEREO) {
       /* force both channels to use the same block type */
       /* this is necessary if the frame is to be encoded in ms_stereo.  */
       /* But even without ms_stereo, FhG  does this */
@@ -908,7 +909,7 @@ void L3psycho_anal( short int *buffer[2],int gr_out ,
   
   /* update the blocktype of the previous granule, since it depends on what
    * happend in this granule */
-  for (chn=0; chn<gf.stereo; chn++) {
+  for (chn=0; chn<gfp->stereo; chn++) {
     if ( uselongblock[chn])
       {				/* no attack : use long blocks */
 	switch( blocktype_old[chn] ) 
@@ -958,7 +959,7 @@ void L3psycho_anal( short int *buffer[2],int gr_out ,
   /* 0 = no energy in side channel */
   /* .5 = half of total energy in side channel */
   /*********************************************************************/
-  if (gf.ms_masking) 
+  if (gfp->ms_masking) 
     *ms_ener_ratio = ms_ener_ratio_old;
   else
     /* we didn't compute ms_ener_ratios, use the masking ratios instead */

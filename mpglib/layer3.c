@@ -14,7 +14,6 @@
 #include "../gtkanal.h"
 #endif
 
-
 extern struct mpstr *gmp;
 
 #define MPEG1
@@ -347,7 +346,7 @@ static void III_get_side_info_1(struct III_sideinfo *si,int stereo,
 	 unsigned int qss = getbits_fast(8);
 	 gr_info->pow2gain = gainpow2+256 - qss + powdiff;
 #ifdef HAVEGTK
-	 if (gf.gtkflag) 
+	 if (gtkflag) 
 	   pinfo->qss[gr][ch]=qss;
 #endif
        }
@@ -373,7 +372,7 @@ static void III_get_side_info_1(struct III_sideinfo *si,int stereo,
 	   unsigned int sbg = (getbits_fast(3)<<3);
            gr_info->full_gain[i] = gr_info->pow2gain + sbg;
 #ifdef HAVEGTK
-	   if (gf.gtkflag)
+	   if (gtkflag)
 	     pinfo->sub_gain[gr][ch][i]=sbg/8;
 #endif
 	 }
@@ -403,7 +402,7 @@ static void III_get_side_info_1(struct III_sideinfo *si,int stereo,
        gr_info->scalefac_scale = get1bit();
        gr_info->count1table_select = get1bit();
 #ifdef HAVEGTK
-       if (gf.gtkflag)
+       if (gtkflag)
 	 pinfo->scalefac_scale[gr][ch]=gr_info->scalefac_scale;
 #endif
      }
@@ -440,7 +439,7 @@ static void III_get_side_info_2(struct III_sideinfo *si,int stereo,
        qss=getbits_fast(8);
        gr_info->pow2gain = gainpow2+256 - qss + powdiff;
 #ifdef HAVEGTK
-	 if (gf.gtkflag) 
+	 if (gtkflag) 
 	   pinfo->qss[0][ch]=qss;
 #endif
 
@@ -464,7 +463,7 @@ static void III_get_side_info_2(struct III_sideinfo *si,int stereo,
 	   unsigned int sbg = (getbits_fast(3)<<3);
            gr_info->full_gain[i] = gr_info->pow2gain + sbg;
 #ifdef HAVEGTK
-	   if (gf.gtkflag)
+	   if (gtkflag)
 	     pinfo->sub_gain[0][ch][i]=sbg/8;
 #endif
 	 }
@@ -499,7 +498,7 @@ static void III_get_side_info_2(struct III_sideinfo *si,int stereo,
        gr_info->scalefac_scale = get1bit();
        gr_info->count1table_select = get1bit();
 #ifdef HAVEGTK
-       if (gf.gtkflag)
+       if (gtkflag)
 	 pinfo->scalefac_scale[0][ch]=gr_info->scalefac_scale;
 #endif
    }
@@ -1572,7 +1571,7 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
 #endif
       }
 #ifdef HAVEGTK
-      if (gf.gtkflag) {
+      if (gtkflag) {
 	int i;
 	for (i=0; i<39; i++) 
 	  pinfo->sfb_s[gr][0][i]=scalefacs[0][i];
@@ -1594,7 +1593,7 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
 #endif
       }
 #ifdef HAVEGTK
-      if (gf.gtkflag) {
+      if (gtkflag) {
 	int i;
 	for (i=0; i<39; i++) 
 	  pinfo->sfb_s[gr][1][i]=scalefacs[1][i];
@@ -1646,7 +1645,7 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
     }
 
 #ifdef HAVEGTK
-    if (gf.gtkflag) {
+    if (gtkflag) {
     extern int tabsel_123[2][3][16];
     extern int pretab[21];
     int i,j,sb;
