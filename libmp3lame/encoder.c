@@ -86,10 +86,7 @@ ms_sparsing(lame_internal_flags* gfc, int gr)
 static void
 conv_istereo(lame_internal_flags* gfc, gr_info *gi, int sfb, int i)
 {
-    if (i == 576)
-	return;
-
-    for (;;) {
+    for (; i != 576; sfb++) {
 	FLOAT lsum = 1e-30, rsum = 1e-30;
 	int j = i + gi->width[sfb];
 	do {
@@ -100,9 +97,9 @@ conv_istereo(lame_internal_flags* gfc, gr_info *gi, int sfb, int i)
 	    lsum += fabs(l);
 	    rsum += fabs(r);
 	} while (++i < j);
-	if (i == 576)
-	    break;
 
+	if (sfb > gi[0].psymax)
+	    continue;
 	lsum = lsum / (lsum+rsum);
 	j = 3;
 	if (lsum < 0.5) {
@@ -120,9 +117,8 @@ conv_istereo(lame_internal_flags* gfc, gr_info *gi, int sfb, int i)
 	    else if (lsum > 1.0-(0.5 + 0.366025404) * 0.5)
 		j = 4;
 	}
-	gi[1].scalefac[sfb++] = j;
+	gi[1].scalefac[sfb] = j;
     }
-    gi[1].preflag = -1;
     gfc->scale_bitcounter(&gi[1]);
 }
 
@@ -215,7 +211,7 @@ init_gr_info(lame_internal_flags *gfc, int gr, int ch)
     for (sfb = 0; sfb < SBMAX_l; sfb++) {
 	gi->width[sfb]
 	    = gfc->scalefac_band.l[sfb+1] - gfc->scalefac_band.l[sfb];
-	gi->window[sfb] = 3; /* which is always 0. */
+	gi->window[sfb] = 3; /* subblockgain[3] is always 0. */
     }
 
     if (gi->block_type != NORM_TYPE) {

@@ -704,24 +704,21 @@ best_scalefac_store(
     int sfb,j,l,recalc=0;
 
     memset(l3_side->scfsi[ch], 0, sizeof(l3_side->scfsi[ch]));
-    if (gi->preflag >= 0) {
-	/* It is not the sub channel of intensity stereo */
 
-	/* remove scalefacs from bands with all ix=0.
-	 * This idea comes from the AAC ISO docs.  added mt 3/00 */
-	j = 0;
-	for (sfb = 0; sfb < gi->sfbmax; sfb++) {
-	    int width = gi->width[sfb];
-	    j += width;
-	    for (l = -width; l < 0; l++)
-		if (gi->l3_enc[l+j]!=0)
-		    break;
-	    if (l==0)
-		gi->scalefac[sfb] = recalc = -2; /* anything goes. */
-	}
+    /* remove scalefacs from bands with all ix=0.
+     * This idea comes from the AAC ISO docs.  added mt 3/00 */
+    j = 0;
+    for (sfb = 0; sfb < gi->psymax; sfb++) {
+	int width = gi->width[sfb];
+	j += width;
+	for (l = -width; l < 0; l++)
+	    if (gi->l3_enc[l+j]!=0)
+		break;
+	if (l==0)
+	    gi->scalefac[sfb] = recalc = -2; /* anything goes. */
     }
 
-    if (!gi->scalefac_scale && gi->preflag <= 0) {
+    if (!gi->scalefac_scale && !gi->preflag) {
 	int s = 0;
 	for (sfb = 0; sfb < gi->psymax; sfb++)
 	    if (gi->scalefac[sfb] > 0)
@@ -736,7 +733,7 @@ best_scalefac_store(
 	}
     }
 
-    if (gfc->mode_gr == 2 && gi->preflag <= 0 && gi->block_type != SHORT_TYPE) {
+    if (gfc->mode_gr == 2 && !gi->preflag && gi->block_type != SHORT_TYPE) {
 	for (sfb = 11; sfb < gi->psymax; sfb++)
 	    if (gi->scalefac[sfb] < pretab[sfb] && gi->scalefac[sfb] != -2)
 		break;
@@ -814,14 +811,14 @@ scale_bitcount(gr_info * const gi)
 	    tab = scale_mixed;
     } else {
 	tab = scale_long;
-	if (gi->preflag == 0) {
-	    for ( sfb = 11; sfb < SBPSY_l; sfb++ )
+	if (!gi->preflag) {
+	    for (sfb = 11; sfb < gi->psymax; sfb++)
 		if (gi->scalefac[sfb] < pretab[sfb])
 		    break;
 
-	    if (sfb == SBPSY_l) {
+	    if (sfb == gi->psymax) {
 		gi->preflag = 1;
-		for ( sfb = 11; sfb < SBPSY_l; sfb++ )
+		for (sfb = 11; sfb < gi->psymax; sfb++)
 		    gi->scalefac[sfb] -= pretab[sfb];
 	    }
 	}
@@ -872,7 +869,7 @@ int
 scale_bitcount_lsf(gr_info * const gi)
 {
     int part, i, sfb;
-    int table_type = (gi->preflag >= 0) ? 2 : 0;
+    int table_type = (gi->preflag) ? 2 : 0;
     int tableID = table_type * 3;
 
     if (gi->block_type == SHORT_TYPE) {

@@ -123,8 +123,7 @@ calc_xmin(
     for (gsfb = 0; gsfb < gi->psy_lmax; gsfb++) {
 	FLOAT xmin = gfc->ATH.adjust * gfc->ATH.l[gsfb];
 	FLOAT en0 = 0.0, x;
-	int width = gi->width[gsfb], l;
-	l = width >> 1;
+	int l = gi->width[gsfb] >> 1;
 	do {
 	    en0 += gi->xr[j] * gi->xr[j]; j++;
 	    en0 += gi->xr[j] * gi->xr[j]; j++;
@@ -543,7 +542,7 @@ inc_scalefac_scale (gr_info * const gi)
     int sfb = 0;
     do {
 	int s = gi->scalefac[sfb];
-	if (gi->preflag > 0)
+	if (gi->preflag)
 	    s += pretab[sfb];
 	gi->scalefac[sfb] = (s + 1) >> 1;
     } while (++sfb < gi->psymax);
@@ -1239,19 +1238,19 @@ long_block_scalefacs(const lame_internal_flags *gfc, gr_info * gi, int vbrmax)
     if (maxov0 == vbrmax) {
         gi->scalefac_scale = 0;
     }
-    else if (maxov0p == vbrmax && gi->preflag == 0) {
+    else if (maxov0p == vbrmax) {
 	gi->scalefac_scale = 0;
 	gi->preflag = 1;
     }
     else if (maxov1 == vbrmax) {
 	gi->scalefac_scale = 1;
     }
-    else if (maxov1p == vbrmax && gi->preflag == 0) {
+    else if (maxov1p == vbrmax) {
 	gi->scalefac_scale = 1;
 	gi->preflag = 1;
     } else {
 	gi->scalefac_scale = 1;
-	if (maxov1 > maxov1p && gi->preflag == 0) {
+	if (maxov1 > maxov1p) {
 	    gi->preflag = 1;
 	    vbrmax = maxov1p;
 	} else {
@@ -1293,7 +1292,7 @@ set_scalefactor_values(gr_info *gi)
 	int s = (gi->global_gain - gi->scalefac[sfb]
 		 - gi->subblock_gain[gi->window[sfb]]*8
 		 + ifqstep - 1) >> (1 + gi->scalefac_scale);
-	if (gi->preflag > 0)
+	if (gi->preflag)
 	    s -= pretab[sfb];
 	if (s < 0)
 	    s = 0;
@@ -1561,7 +1560,7 @@ set_pinfo (
 	tot_noise += distort[sfb2];
 
 	gfc->pinfo->LAMEsfb[gr][ch][sfb2] = 0;
-	if (gi->preflag>0 && sfb2>=11)
+	if (gi->preflag && sfb2>=11)
 	    gfc->pinfo->LAMEsfb[gr][ch][sfb2] = -ifqstep*pretab[sfb2];
 	gfc->pinfo->LAMEsfb[gr][ch][sfb2] -= ifqstep*gi->scalefac[sfb2];
 	assert(gi->scalefac[sfb2]>=0); /* should be decoded by the caller*/
