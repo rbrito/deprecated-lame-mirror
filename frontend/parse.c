@@ -392,6 +392,8 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    -t              disable writing wav header when using --decode\n"
               "    --comp  <arg>   choose bitrate to achive a compression ratio of <arg>\n"
               "    --scale <arg>   scale input (multiply PCM data) by <arg>\n"
+	      "    --scale-l <arg> scale channel 0 (left) input (multiply PCM data) by <arg>\n"
+              "    --scale-r <arg> scale channel 1 (right) input (multiply PCM data) by <arg>\n"
               "    --voice         experimental voice mode\n"
               "    --preset type   type must be phone, voice, fm, tape, hifi, cd or studio\n"
               "                    \"--preset help\" gives some more infos on these\n" 
@@ -454,7 +456,10 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --noshort       do not use short blocks\n"
               "    --allshort      use only short blocks\n"
               "    --cwlimit <freq>  compute tonality up to freq (in kHz) default 8.8717\n"
+#if 0
+/* this is redundant, we already have --notemp */
               "    --temporal-masking n  use temporal masking effect n=0:no n=1:yes\n"
+#endif
               "    --notemp        disable temporal masking effect\n"
               "    --nspsytune     experimental PSY tunings by Naoki Shibata\n"
               "    --nssafejoint   M/S switching criterion\n"
@@ -471,7 +476,7 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "  experimental switches:\n"
               "    -X n            selects between different noise measurements\n"
               "    -Y              lets LAME ignore noise in sfb21, like in CBR\n"
-              "    -Z              toggles the scalefac feature on/off\n"
+              "    -Z              toggles the scalefac feature on\n"
             );
 
     wait_for ( fp, lessmode );  
@@ -1159,6 +1164,14 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF ("scale")
                     argUsed=1;
                     (void) lame_set_scale( gfp, atof(nextArg) );
+
+		T_ELIF ("scale-l")
+                    argUsed=1;
+                    (void) lame_set_scale_left( gfp, atof(nextArg) );
+
+                T_ELIF ("scale-r")
+                    argUsed=1;
+                    (void) lame_set_scale_right( gfp, atof(nextArg) );
                 
                 T_ELIF ("freeformat")
                     lame_set_free_format(gfp,1);

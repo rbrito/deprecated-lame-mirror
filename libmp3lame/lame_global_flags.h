@@ -33,6 +33,10 @@ struct lame_global_struct {
                                    Remember 44.1 kHz MP3s and AC97           */
   float scale;                /* scale input by this amount before encoding
                                  at least not used for MP3 decoding          */
+  float scale_left;           /* scale input of channel 0 (left) by this
+			         amount before encoding                      */
+  float scale_right;          /* scale input of channel 1 (right) by this
+			         amount before encoding                      */
 
   /* general control params */
   int analysis;               /* collect data for a MP3 frame analyzer?      */

@@ -120,6 +120,18 @@ int CDECL lame_get_num_channels(const lame_global_flags *);
 // (not used by decoding routines)
 int CDECL lame_set_scale(lame_global_flags *, float);
 float CDECL lame_get_scale(const lame_global_flags *);
+    
+// scale the channel 0 (left) input by this amount before encoding.
+//   default=0 (disabled)
+// (not used by decoding routines)
+int CDECL lame_set_scale_left(lame_global_flags *, float);
+float CDECL lame_get_scale_left(const lame_global_flags *);
+
+// scale the channel 1 (right) input by this amount before encoding.
+//   default=0 (disabled)
+// (not used by decoding routines)
+int CDECL lame_set_scale_right(lame_global_flags *, float);
+float CDECL lame_get_scale_right(const lame_global_flags *);
 
 // output sample rate in Hz.  default = 0, which means LAME picks best value 
 // based on the amount of compression.  MPEG only allows:

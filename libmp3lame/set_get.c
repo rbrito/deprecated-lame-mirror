@@ -117,6 +117,44 @@ lame_get_scale( const lame_global_flags*  gfp )
 }
 
 
+/* scale the channel 0 (left) input by this amount before 
+   encoding (not used for decoding) */
+int
+lame_set_scale_left( lame_global_flags*  gfp,
+                     float               scale )
+{
+    /* default = 0 */
+    gfp->scale_left = scale;
+
+    return 0;
+}
+
+float
+lame_get_scale_left( const lame_global_flags*  gfp )
+{
+    return gfp->scale_left;
+}
+
+
+/* scale the channel 1 (right) input by this amount before 
+   encoding (not used for decoding) */
+int
+lame_set_scale_right( lame_global_flags*  gfp,
+                      float               scale )
+{
+    /* default = 0 */
+    gfp->scale_right = scale;
+
+    return 0;
+}
+
+float
+lame_get_scale_right( const lame_global_flags*  gfp )
+{
+    return gfp->scale_right;
+}
+
+
 /* output sample rate in Hz */
 int
 lame_set_out_samplerate( lame_global_flags*  gfp,
