@@ -1100,7 +1100,10 @@ calc_min_bits (
     lame_internal_flags *gfc=gfp->internal_flags;
     int min_bits, min_pe_bits;
     
-    if (gfc->nsPsy.use) return 1;
+    if (gfc->nsPsy.use) return 125;
+                    /*  changed minimum from 1 to 125 bits
+                     *  the iteration loops require a minimum of bits
+                     *  for each granule to start with; robert 2001-07-02 */
 
     /*  base amount of minimum bits
      */
