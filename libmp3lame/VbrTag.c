@@ -26,21 +26,12 @@
 #endif
 
 #include "machine.h"
-#if defined(__riscos__) && defined(FPA10)
-#include	"ymath.h"
-#else 
-#include	<math.h>
-#endif
-
-
 #include "bitstream.h"
 #include "lame.h"
 #include "VbrTag.h"
 #include "version.h"
 
 #include	<assert.h>
-#include 	<stdlib.h>
-#include 	<string.h>
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
