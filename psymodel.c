@@ -644,7 +644,7 @@ void L3psycho_anal( lame_global_flags *gfp,
      * determine the block type (window type) based on L & R channels
      * 
      ***************************************************************/
-    if (1 || chn<2) {
+    {  /* compute PE for all 4 channels */
       FLOAT mn,mx,ma=0,mb=0,mc=0;
       
       for ( j = HBLKSIZE_s/2; j < HBLKSIZE_s; j ++)
@@ -663,7 +663,8 @@ void L3psycho_anal( lame_global_flags *gfp,
 	FLOAT8 tmp = 400*log(mx/(1e-12+mn));
 	if (tmp>gfc->pe[chn]) gfc->pe[chn]=tmp;
       }
-      
+
+      /* block type is based just on L or R channel */      
       if (chn<2) {
 	uselongblock[chn] = 1;
 	

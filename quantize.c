@@ -670,13 +670,18 @@ void outer_loop(
 	/* check to make sure we have not amplified too much */
 	/* loop_break returns 0 if there is an unamplified scalefac */
 	/* scale_bitcount returns 0 if no scalefactors are too large */
+
 	if ( (status = loop_break(&scalefac_w, cod_info)) == 0 ) {
+            /* not all scalefactors have been amplified.  so these 
+             * scalefacs are possibly valid.  encode them: */
 	    if ( gfp->version == 1 ) {
 		status = scale_bitcount(&scalefac_w, cod_info);
 	    }else{
 		status = scale_bitcount_lsf(&scalefac_w, cod_info);
 	    }
 	    if (status) {
+                 /*  some scalefactors are too large.  lets try setting
+		  * scalefac_scale=1 */
 		if (gfc->noise_shaping > 1 && !cod_info->scalefac_scale) {
 		    inc_scalefac_scale(gfp, &scalefac_w, cod_info, xrpow);
 		    status = 0;
@@ -692,6 +697,7 @@ void outer_loop(
 		    }
 		}
 	    }
+
 	}
 	notdone = !status;
     }

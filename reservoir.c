@@ -32,7 +32,6 @@ ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, i
     else
       maxmp3buf = 16380;
 
-
     if ( frameLength > maxmp3buf )
 	gfc->ResvMax = 0;
     else

@@ -729,10 +729,11 @@ VBR_quantize(lame_global_flags *gfp,
   gr_info *cod_info;  
   int ath_over[2][2];
   FLOAT8 masking_lower_db;
-  //  static const FLOAT8 dbQ[10]={-6.0,-4.5,-3.0,-1.5,0,0.3,0.6,1.0,1.5,2.0};
-  //                             0    1    2    3     4    5      6   7   8    9 
-  static const FLOAT8 dbQ[10]={-6.0,-5.0,-4.0,-3.0, -2.0, -1.0, -.25, .5, 1.25, 2.0};
+  // static const FLOAT8 dbQ[10]={-6.0,-5.0,-4.0,-3.0, -2.0, -1.0, -.25, .5, 1.25, 2.0};
+  /* from quantize.c VBR algorithm */
+  static const FLOAT8 dbQ[10]={-5.0,-3.75,-2.5,-1.25,  0,  0.4,  0.8, 1.2, 1.6,2.0};
 
+  qadjust=-1;   /* start with -1 db quality improvement over quantize.c VBR */
 
 
   l3_side = &gfc->l3_side;
@@ -774,7 +775,6 @@ VBR_quantize(lame_global_flags *gfp,
 
 
 
-  qadjust=0;
   /* 
    * loop over all ch,gr, encoding anything with bits > .5*(max_frame_bits/4)
    *

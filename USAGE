@@ -297,7 +297,17 @@ LAME will produce a fixed bitrate, free format bitstream.
 User must specify the desired bitrate in kbs, which can
 be any integer between 8 and 320.
 
-Not supported by many decoders.  
+Not supported by most decoders.  Decoders only required to support
+up to 320kbs.  
+
+Decoders which can handle free format:
+                     supports up to
+"lame --decode"          560kbs  
+Freeamp:                 440kbs
+l3dec:                   310kbs
+
+
+
 
 
 =======================================================================

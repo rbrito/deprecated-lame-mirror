@@ -357,9 +357,11 @@ int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
 	    if (bytes<0) return iret;
 	    mp->framesize = bytes + mp->ssize+mp->dsize;
 	    mp->fsizeold_nopadding= mp->framesize - mp->fr.padding;
+	    /*
 	    fprintf(stderr,"freeformat bitstream:  estimated bitrate=%ikbs  \n",
 	        8*(4+mp->framesize)*freqs[mp->fr.sampling_frequency]/
 		    (1000*576*(2-mp->fr.lsf)));
+	    */
 	  }
 	}
 
