@@ -58,8 +58,10 @@ adjust_ATH( lame_global_flags* const  gfp,
     FLOAT8 max_val;
     FLOAT max_val_n;
 
-    if (gfc->ATH->use_adjust == 0) return;
-    
+    if (gfc->ATH->use_adjust == 0) {
+        gfc->ATH->adjust = 1.0;	/* no adjustment */
+        return;
+    }
     
     switch( gfp->adapt_thres_type ) {
     case 1:
@@ -330,8 +332,8 @@ int  lame_encode_mp3_frame (				// Output
      */ {
         FLOAT8 frame_duration = 576. * gfc->mode_gr / gfp->out_samplerate;
         gfc->ATH->decay = pow(10., -12./10. * frame_duration);
-        gfc->ATH->adjust = 1.0;
-        gfc->ATH->adjust_limit = 0.01;
+        gfc->ATH->adjust = 0.01; /* minimum, for leading low loudness */
+        gfc->ATH->adjust_limit = 1.0; /* on lead, allow adjust up to maximum */
     }
   }
 
