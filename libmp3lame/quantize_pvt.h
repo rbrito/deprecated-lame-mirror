@@ -140,8 +140,6 @@ void    quantize_init (lame_internal_flags * const gfc);
 
 void    init_xrpow_core_init (lame_internal_flags * const gfc);
 
-void    calc_noise_core_init (lame_internal_flags * const gfc);
-
 FLOAT athAdjust( FLOAT a, FLOAT x, FLOAT athFloor );
 
 #define LARGE_BITS 100000
