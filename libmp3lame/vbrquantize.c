@@ -1159,6 +1159,7 @@ VBR_noise_shaping(lame_internal_flags * gfc, FLOAT8 * xr34orig, int minbits, int
 
     M = (vbrmax - vbrmin) / 2;
     if ( M > 16 ) M = 16;
+    if ( M <  1 ) M = 1;
     count = M;
 
     do {
