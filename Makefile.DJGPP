@@ -149,8 +149,8 @@ ASFLAGS=-f elf -i i386/
 
 all: $(PGM)
 
-$(PGM):	main.o libmp3lame.a 
-	$(CC) $(CC_OPTS) -o $(PGM)  main.o  -L. -lmp3lame $(LIBS) $(LIBSNDFILE) $(VORBIS_LIB)
+$(PGM):	main.o $(OBJ)
+	$(CC) $(CC_OPTS) -o $(PGM)  main.o  $(OBJ) $(LIBS) $(LIBSNDFILE) $(VORBIS_LIB)
 
 libmp3lame.a:  $(OBJ) Makefile
 #	cd libmp3lame

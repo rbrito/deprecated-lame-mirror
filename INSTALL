@@ -46,8 +46,11 @@ Note that MSVC "professional" claims to produce faster executables
 then MSVC "standard".  It is possible to compile the GTK frame
 analyzer under windows, see README.WINGTK
 
-LAME can be compiled with various Windows MSDOS ports (all free!)
-of GCC (DJGPP, Mingw32).  See README.DJGPP
+LAME can be compiled with various Windows MSDOS ports (all free)
+of GCC (DJGPP, Mingw32).  See README.DJGPP.  For Mingw32, you
+should now be able to use the Unix Makefile that comes with LAME.
+Try:  "make NOUNIXCMD=YES UNAME=MSDOS"
+
 
 The Windows Borland C compiler is now free!  Borland will also
 compile LAME, although a new makefile is needed.  If you get
