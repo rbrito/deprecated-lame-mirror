@@ -34,12 +34,6 @@
 #include "lame-analysis.h"
 
 
-/* if your machine is IEEE754 compatible, this may make faster binary */
-#if (defined(__i386__))
-#define TAKEHIRO_IEEE754_HACK
-#endif
-
-
 typedef union {
     float f;
     int   i;
@@ -280,7 +274,9 @@ find_scalefac(const FLOAT8 *xr, const FLOAT8 *xr34, const int sfb,
     }
   } 
   assert(sf_ok!=10000);
-  //  assert(delsf==1);  /* when for loop goes up to 7 */
+#if 0
+  assert(delsf==1);  /* when for loop goes up to 7 */
+#endif
 
   return sf;
 }
