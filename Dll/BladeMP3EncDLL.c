@@ -227,7 +227,7 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 	
 	lame_init_params(&gf);	
 
-	//LAME encoding call will accept any number of samples.  Lets use 1152
+	//LAME encoding call will accept any number of samples.  
 	*dwSamples=1152*gf.num_channels;
 
 	// Set the input sample buffer size, so we know what we can expect
@@ -318,12 +318,21 @@ __declspec(dllexport) VOID		beVersion(PBE_VERSION pbeVersion)
 }
 
 __declspec(dllexport) BE_ERR	beEncodeChunk(HBE_STREAM hbeStream, DWORD nSamples, 
-											  PSHORT pSamples, PBYTE pOutput, PDWORD pdwOutput)
+			 PSHORT pSamples, PBYTE pOutput, PDWORD pdwOutput)
 {
 
 	// Encode it
-	*pdwOutput=lame_encode_buffer_interleaved(&gf,pSamples,
-		  nSamples/gf.num_channels,pOutput,0);
+        int dwSamples;
+	dwSamples=nSamples/gf.num_channels;
+
+	// old versions of lame_enc.dll required exactly 1152 samples
+	// and worked even if nSamples accidently set to 2304
+	// simulate this behavoir:
+	if (gf.num_channels==1 && nSamples == 2304)
+	  dwSamples/=2;
+
+	*pdwOutput=lame_encode_buffer_interleaved(&gf,pSamples,dwSamples,pOutput,0);
+
 
 	if (*pdwOutput<0) {
 		*pdwOutput=0;
