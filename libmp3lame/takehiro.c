@@ -51,7 +51,7 @@
 
 
 #ifdef TAKEHIRO_IEEE754_HACK
-static void quantize_xrpow(const FLOAT *xp, int *pi, FLOAT istep)
+static int quantize_xrpow(const FLOAT *xp, int *pi, FLOAT istep)
 {
     /* quantize on xr^(3/4) instead of xr */
     fi_union *fi = (fi_union *)pi;
@@ -69,9 +69,13 @@ static void quantize_xrpow(const FLOAT *xp, int *pi, FLOAT istep)
 	fi[2].f = x2;
 	fi[3].f = x3;
 
+	if (fi[0].i >= MAGIC_INT + PRECALC_SIZE) return LARGE_BITS;
 	fi[0].f = x0 + (adj43asm - MAGIC_INT)[fi[0].i];
+	if (fi[1].i >= MAGIC_INT + PRECALC_SIZE) return LARGE_BITS;
 	fi[1].f = x1 + (adj43asm - MAGIC_INT)[fi[1].i];
+	if (fi[2].i >= MAGIC_INT + PRECALC_SIZE) return LARGE_BITS;
 	fi[2].f = x2 + (adj43asm - MAGIC_INT)[fi[2].i];
+	if (fi[3].i >= MAGIC_INT + PRECALC_SIZE) return LARGE_BITS;
 	fi[3].f = x3 + (adj43asm - MAGIC_INT)[fi[3].i];
 	fi[0].i -= MAGIC_INT;
 	fi[1].i -= MAGIC_INT;
@@ -79,6 +83,7 @@ static void quantize_xrpow(const FLOAT *xp, int *pi, FLOAT istep)
 	fi[3].i -= MAGIC_INT;
 	fi += 4;
     } while (xp < xe);
+    return 0;
 }
 
 static void quantize_xrpow_ISO(const FLOAT *xp, int *pi, FLOAT istep)
@@ -105,7 +110,7 @@ static void quantize_xrpow_ISO(const FLOAT *xp, int *pi, FLOAT istep)
 
 #else
 
-static void quantize_xrpow(const FLOAT *xr, int *ix, FLOAT istep) {
+static int quantize_xrpow(const FLOAT *xr, int *ix, FLOAT istep) {
     /* quantize on xr^(3/4) instead of xr */
     /* from Wilfried.Behne@t-online.de.  Reported to be 2x faster than 
        the above code (when not using ASM) on PowerPC */
@@ -129,24 +134,34 @@ static void quantize_xrpow(const FLOAT *xr, int *ix, FLOAT istep) {
 	XRPOW_FTOI(x6, rx6);
 	x8 = *xr++ * istep;
 	XRPOW_FTOI(x7, rx7);
-	x1 += QUANTFAC(rx1);
+
+	if (rx1 >= PRECALC_SIZE) return LARGE_BITS;
+	if (rx2 >= PRECALC_SIZE) return LARGE_BITS;
+	if (rx3 >= PRECALC_SIZE) return LARGE_BITS;
+	if (rx4 >= PRECALC_SIZE) return LARGE_BITS;
+	if (rx5 >= PRECALC_SIZE) return LARGE_BITS;
+	if (rx6 >= PRECALC_SIZE) return LARGE_BITS;
+	if (rx7 >= PRECALC_SIZE) return LARGE_BITS;
+	if (rx8 >= PRECALC_SIZE) return LARGE_BITS;
+	x1 += adj43[rx1];
 	XRPOW_FTOI(x8, rx8);
-	x2 += QUANTFAC(rx2);
+	x2 += adj43[rx2];
 	XRPOW_FTOI(x1,*ix++);
-	x3 += QUANTFAC(rx3);
+	x3 += adj43[rx3];
 	XRPOW_FTOI(x2,*ix++);
-	x4 += QUANTFAC(rx4);
+	x4 += adj43[rx4];
 	XRPOW_FTOI(x3,*ix++);
-	x5 += QUANTFAC(rx5);
+	x5 += adj43[rx5];
 	XRPOW_FTOI(x4,*ix++);
-	x6 += QUANTFAC(rx6);
+	x6 += adj43[rx6];
 	XRPOW_FTOI(x5,*ix++);
-	x7 += QUANTFAC(rx7);
+	x7 += adj43[rx7];
 	XRPOW_FTOI(x6,*ix++);
-	x8 += QUANTFAC(rx8);
+	x8 += adj43[rx8];
 	XRPOW_FTOI(x7,*ix++);
 	XRPOW_FTOI(x8,*ix++);
     }
+    return 0;
 }
 
 
@@ -515,16 +530,12 @@ int count_bits(
 {
     int i;
     int *const ix = gi->l3_enc;
-    /* since quantize_xrpow uses table lookup, we need to check this first: */
-    FLOAT w = (IXMAX_VAL) / IPOW20(gi->global_gain);
-    for ( i = 0; i < 576; i++ )  {
-	if (xr[i] > w)
-	    return LARGE_BITS;
-    }
 
-    if (gfc->quantization) 
-	quantize_xrpow(xr, ix, IPOW20(gi->global_gain));
-    else
+    if (gfc->quantization) {
+	i = quantize_xrpow(xr, ix, IPOW20(gi->global_gain));
+	if (i)
+	    return i;
+    } else
 	quantize_xrpow_ISO(xr, ix, IPOW20(gi->global_gain));
 
     if (gfc->substep_shaping & 2) {
@@ -540,7 +551,7 @@ int count_bits(
 		continue;
 	    for (l = -width; l < 0; l++)
 		if (xr[j+l] < roundfac)
-		    ix[j+l] = 0.0;
+		    ix[j+l] = 0;
 	}
     }
     return noquant_count_bits(gfc, gi);

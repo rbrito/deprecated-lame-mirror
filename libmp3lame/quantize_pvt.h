@@ -67,7 +67,6 @@ typedef union {
 # define MAGIC_INT 0x4b000000
 # define ROUNDFAC -0.0946
 #else
-# define QUANTFAC(rx)  adj43[rx]
 # define XRPOW_FTOI(src,dest) ((dest) = (int)(src))
 # define ROUNDFAC 0.4054
 #endif
