@@ -1,5 +1,27 @@
-#ifndef LOOP_PVT_H
-#define LOOP_PVT_H
+/*
+ *	quantize_pvt include file
+ *
+ *	Copyright (c) 1999 Takehiro TOMINAGA
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+#ifndef QUANTIZE_PVT_H_INCLUDED
+#define QUANTIZE_PVT_H_INCLUDED
+
 #include "l3side.h"
 #define IXMAX_VAL 8206 /* ix always <= 8191+15.    see count_bits() */
 #define PRECALC_SIZE (IXMAX_VAL+2)
@@ -103,5 +125,5 @@ void huffman_init (lame_internal_flags *gfp );
 
 #define LARGE_BITS 100000
 
-#endif
+#endif /* QUANTIZE_PVT_H_INCLUDED */
 
