@@ -149,10 +149,6 @@ SOURCE=.\quantize_pvt.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\reservoir.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\tables.c
 # ADD CPP /W1
 # End Source File
@@ -248,10 +244,6 @@ SOURCE=.\quantize.h
 # Begin Source File
 
 SOURCE=.\quantize_pvt.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\reservoir.h
 # End Source File
 # Begin Source File
 
