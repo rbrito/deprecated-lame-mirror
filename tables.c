@@ -1,8 +1,6 @@
 #include "util.h"
 #include "tables.h"
 
-unsigned int hs = sizeof(HUFFBITS)*8;
-
 static HUFFBITS      t1HB[]   = {
   1, 1, 
   1, 0};

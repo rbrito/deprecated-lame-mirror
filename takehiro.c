@@ -279,7 +279,7 @@ static int choose_table(int *ix, int *end, int *s)
     max = ix_max(ix, end);
 
     if (max > IXMAX_VAL) {
-        *s = 100000;
+        *s = LARGE_BITS;
         return -1;
     }
 
@@ -362,7 +362,7 @@ static int choose_table_short(int *ix, int *end, int * s)
     max = ix_max(ix, end);
 
     if (max > IXMAX_VAL) {
-        *s = 100000;
+        *s = LARGE_BITS;
         return -1;
     }
 
@@ -517,7 +517,7 @@ int count_bits(lame_global_flags *gfp,int *ix, FLOAT8 *xr, gr_info *cod_info)
   FLOAT8 w = (IXMAX_VAL) / IPOW20(cod_info->global_gain);
   for ( i = 0; i < 576; i++ )  {
     if (xr[i] > w)
-      return 100000;
+      return LARGE_BITS;
   }
   if (gfp->quantization) 
     quantize_xrpow(xr, ix, cod_info);
@@ -531,62 +531,139 @@ int count_bits(lame_global_flags *gfp,int *ix, FLOAT8 *xr, gr_info *cod_info)
     cod_info->table_select[1] = choose_table_short(ix + 36, ix + 576, &bits);
   }else{
     bits=count_bits_long(ix, cod_info);
-    cod_info->count1 = (cod_info->count1 - cod_info->big_values) / 4;
-    cod_info->big_values /= 2;
   }
   return bits;
 
 }
 
-void best_huffman_divide(int gr, int ch, gr_info *gi, int *ix)
+/***********************************************************************
+  re-calculate the best scalefac_compress using scfsi
+  the saved bits are kept in the bit reservoir.
+ **********************************************************************/
+
+static int r01_bits[7 + 15 + 1];
+static int r01_div[7 + 15 + 1];
+static int r0_tbl[7 + 15 + 1];
+static int r1_tbl[7 + 15 + 1];
+static gr_info cod_info;
+
+inline static void
+recalc_divide_init(int gr, int ch, int *ix)
 {
-    int *bits, r0, r1, a1, a2, bigv;
-    int r1_bits;
-    int r3_bits[7 + 15 + 2 + 1];
-    int r3_tbl[7 + 15 + 2 + 1];
-    gr_info cod_info;
+    int r0, r1, bigv, r0t, r1t, bits;
 
-    memcpy(&cod_info, gi, sizeof(gr_info));
-    bigv = cod_info.big_values * 2;
-    bits = (int *) &cod_info.part2_3_length;
+    bigv = cod_info.big_values;
 
-    for (r0 = 2; r0 < SBMAX_l + 1; r0++) {
-	a2 = scalefac_band.l[r0];
-	if (a2 > bigv)
-	    break;
-
-	r3_bits[r0] = cod_info.count1bits + cod_info.part2_length;
-	r3_tbl[r0] = choose_table(ix + a2, ix + bigv, &r3_bits[r0]);
-    }
-    for (; r0 <= 7 + 15 + 2; r0++) {
-	r3_bits[r0] = 100000;
+    for (r0 = 0; r0 <= 7 + 15; r0++) {
+	r01_bits[r0] = LARGE_BITS;
     }
 
     for (r0 = 0; r0 < 16; r0++) {
-	a1 = scalefac_band.l[r0 + 1];
-	if (a1 > bigv)
+	int a1 = scalefac_band.l[r0 + 1], r0bits;
+	if (a1 >= bigv)
 	    break;
-	cod_info.region0_count = r0;
-	r1_bits = 0;
-	cod_info.table_select[0] = choose_table(ix, ix + a1, &r1_bits);
-	if ((int)gi->part2_3_length < r1_bits)
-	    break;
+	r0bits = cod_info.part2_length;
+	r0t = choose_table(ix, ix + a1, &r0bits);
 
 	for (r1 = 0; r1 < 8; r1++) {
-	    *bits = r1_bits + r3_bits[r0 + r1 + 2];
-	    if ((int)gi->part2_3_length < *bits)
-		continue;
+	    int a2 = scalefac_band.l[r0 + r1 + 2];
+	    if (a2 >= bigv)
+		break;
 
-	    a2 = scalefac_band.l[r0 + r1 + 2];
-
-	    cod_info.table_select[1] = choose_table(ix + a1, ix + a2, bits);
-	    if ((int)gi->part2_3_length < *bits)
-		continue;
-
-	    cod_info.region1_count = r1;
-	    cod_info.table_select[2] = r3_tbl[r0 + r1 + 2];
-	    memcpy(gi, &cod_info, sizeof(gr_info));
+	    bits = r0bits;
+	    r1t = choose_table(ix + a1, ix + a2, &bits);
+	    if (r01_bits[r0 + r1] > bits) {
+		r01_bits[r0 + r1] = bits;
+		r01_div[r0 + r1] = r0;
+		r0_tbl[r0 + r1] = r0t;
+		r1_tbl[r0 + r1] = r1t;
+	    }
 	}
+    }
+}
+
+inline static void
+recalc_divide_sub(int gr, int ch, gr_info *gi, int *ix)
+{
+    int bits, r2, a2, bigv, r2t;
+
+    bigv = cod_info.big_values;
+
+    for (r2 = 2; r2 < SBMAX_l + 1; r2++) {
+	a2 = scalefac_band.l[r2];
+	if (a2 >= bigv) 
+	    break;
+
+	bits = r01_bits[r2 - 2] + cod_info.count1bits;
+	if (gi->part2_3_length <= bits)
+	    break;
+
+	r2t = choose_table(ix + a2, ix + bigv, &bits);
+	if (gi->part2_3_length <= bits)
+	    continue;
+
+	memcpy(gi, &cod_info, sizeof(gr_info));
+	gi->part2_3_length = bits;
+	gi->region0_count = r01_div[r2 - 2];
+	gi->region1_count = r2 - 2 - r01_div[r2 - 2];
+	gi->table_select[0] = r0_tbl[r2 - 2];
+	gi->table_select[1] = r1_tbl[r2 - 2];
+	gi->table_select[2] = r2t;
+    }
+}
+
+void best_huffman_divide(int gr, int ch, gr_info *gi, int *ix)
+{
+    int i, a1, a2;
+
+    memcpy(&cod_info, gi, sizeof(gr_info));
+
+    if (gi->block_type == NORM_TYPE) {
+	recalc_divide_init(gr, ch, ix);
+	recalc_divide_sub(gr, ch, gi, ix);
+    }
+
+    i = cod_info.big_values;
+    if ((unsigned int)(ix[i-2] | ix[i-1]) > 1)
+	return;
+
+    memcpy(&cod_info, gi, sizeof(gr_info));
+
+    /* Determines the number of bits to encode the quadruples. */
+    i = (cod_info.count1 += 2);
+    a1 = a2 = 0;
+    for (; i > cod_info.big_values; i -= 4) {
+	int p;
+	p = ((ix[i-4] * 2 + ix[i-3]) * 2 + ix[i-2]) * 2 + ix[i-1];
+	a1 += ht[32].hlen[p];
+	a2 += ht[33].hlen[p];
+    }
+    cod_info.big_values = i;
+
+    cod_info.count1table_select = 0;
+    if (a1 > a2) {
+	a1 = a2;
+	cod_info.count1table_select = 1;
+    }
+
+    cod_info.count1bits = a1;
+    cod_info.part2_3_length = a1 + cod_info.part2_length;
+
+    if (cod_info.block_type == NORM_TYPE)
+	recalc_divide_sub(gr, ch, gi, ix);
+    else {
+	/* Count the number of bits necessary to code the bigvalues region. */
+	a1 = scalefac_band.l[7 + 1];
+	a2 = i;
+	if (a1 > i) {
+	    a1 = i;
+	}
+	cod_info.table_select[0] =
+	    choose_table(ix, ix + a1, &cod_info.part2_3_length);
+	cod_info.table_select[1] =
+	    choose_table(ix + a1, ix + a2, &cod_info.part2_3_length);
+	if (gi->part2_3_length > cod_info.part2_3_length)
+	    memcpy(gi, &cod_info, sizeof(gr_info));
     }
 }
 

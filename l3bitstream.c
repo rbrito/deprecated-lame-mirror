@@ -236,7 +236,7 @@ encodeMainData( lame_global_flags *gfp,
 	    int sfb_partition;
 	    assert( gi->sfb_partition_table );
 
-	    if ( (gi->window_switching_flag == 1) && (gi->block_type == SHORT_TYPE) )
+	    if (gi->block_type == SHORT_TYPE)
 	    {
 #ifdef ALLOW_MIXED
 		if ( gi->mixed_block_flag )
@@ -361,7 +361,7 @@ static int encodeSideInfo( lame_global_flags *gfp,III_side_info_t  *si )
 		BF_PartHolder **pph = &spectrumSIPH[gr][ch];
 		gr_info *gi = &(si->gr[gr].ch[ch].tt);
 		*pph = CRC_BF_addEntry( *pph, gi->part2_3_length,        12 );
-		*pph = CRC_BF_addEntry( *pph, gi->big_values,            9 );
+		*pph = CRC_BF_addEntry( *pph, gi->big_values / 2,        9 );
 		*pph = CRC_BF_addEntry( *pph, gi->global_gain,           8 );
 		*pph = CRC_BF_addEntry( *pph, gi->scalefac_compress,     4 );
 		*pph = CRC_BF_addEntry( *pph, gi->window_switching_flag, 1 );
@@ -411,7 +411,7 @@ static int encodeSideInfo( lame_global_flags *gfp,III_side_info_t  *si )
 	    BF_PartHolder **pph = &spectrumSIPH[gr][ch];
 	    gr_info *gi = &(si->gr[gr].ch[ch].tt);
 	    *pph = CRC_BF_addEntry( *pph, gi->part2_3_length,        12 );
-	    *pph = CRC_BF_addEntry( *pph, gi->big_values,            9 );
+	    *pph = CRC_BF_addEntry( *pph, gi->big_values / 2,        9 );
 	    *pph = CRC_BF_addEntry( *pph, gi->global_gain,           8 );
 	    *pph = CRC_BF_addEntry( *pph, gi->scalefac_compress,     9 );
 	    *pph = CRC_BF_addEntry( *pph, gi->window_switching_flag, 1 );
@@ -501,10 +501,10 @@ Huffmancodebits( BF_PartHolder **pph, int *ix, gr_info *gi )
 
     
     /* 1: Write the bigvalues */
-    bigvalues = gi->big_values * 2;
+    bigvalues = gi->big_values;
     if ( bigvalues )
     {
-	if ( !(gi->mixed_block_flag) && gi->window_switching_flag && (gi->block_type == SHORT_TYPE) )
+	if ( !(gi->mixed_block_flag) && (gi->block_type == SHORT_TYPE) )
 	{ /* Three short blocks */
 	    /*
 	      Within each scalefactor band, data is given for successive
@@ -647,7 +647,7 @@ Huffmancodebits( BF_PartHolder **pph, int *ix, gr_info *gi )
 
     /* 2: Write count1 area */
     assert( (gi->count1table_select < 2) );
-    count1End = bigvalues + (gi->count1 * 4);
+    count1End = gi->count1;
     assert( count1End <= 576 );
     for ( i = bigvalues; i < count1End; i += 4 )
     {

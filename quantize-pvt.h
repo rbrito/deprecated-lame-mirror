@@ -118,4 +118,7 @@ int init_outer_loop(
     FLOAT8 xr[576],        /*  could be L/R OR MID/SIDE */
     gr_info *cod_info);
 
+#define LARGE_BITS 100000
+
 #endif
+

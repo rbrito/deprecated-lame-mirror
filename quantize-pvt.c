@@ -192,7 +192,7 @@ iteration_init( lame_global_flags *gfp,III_side_info_t *l3_side, int l3_enc[2][2
     for ( ch = 0; ch < gfp->stereo; ch++ ){
       cod_info = (gr_info *) &(l3_side->gr[gr].ch[ch]);
 
-      if ( cod_info->window_switching_flag != 0 && cod_info->block_type == SHORT_TYPE )
+      if (cod_info->block_type == SHORT_TYPE)
         {
 	  cod_info->sfb_lmax = 0; /* No sb*/
 	  cod_info->sfb_smax = 0;
@@ -509,7 +509,7 @@ int scale_bitcount( III_scalefac_t *scalefac, gr_info *cod_info)
      * loop over *all* posible values of scalefac_compress to find the
      * one which uses the smallest number of bits.  ISO would stop
      * at first valid index */
-    cod_info->part2_length=10000;
+    cod_info->part2_length = LARGE_BITS;
     for ( k = 0; k < 16; k++ )
     {
         if ( (max_slen1 < slen1[k]) && (max_slen2 < slen2[k]) &&
@@ -583,7 +583,7 @@ int scale_bitcount_lsf(III_scalefac_t *scalefac, gr_info *cod_info)
     for ( i = 0; i < 4; i++ )
 	max_sfac[i] = 0;
 
-    if ( cod_info->window_switching_flag != 0 && cod_info->block_type == SHORT_TYPE )
+    if ( cod_info->block_type == SHORT_TYPE )
     {
 	    row_in_table = 1;
 	    partition_table = &nr_of_sfb_block[table_number][row_in_table][0];

@@ -180,7 +180,7 @@ iteration_loop( lame_global_flags *gfp,
 		      &scalefac[gr][ch], cod_info, xfsf, ch);
         }
       best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
-      if (gfp->use_best_huffman==1 && cod_info->block_type == NORM_TYPE) {
+      if (gfp->use_best_huffman==1 && cod_info->block_type != SHORT_TYPE) {
 	best_huffman_divide(gr, ch, cod_info, l3_enc[gr][ch]);
       }
 #ifdef HAVEGTK
