@@ -46,6 +46,9 @@
 #include <dmalloc.h>
 #endif
 
+#include "lametime.h"
+
+
 double GetCPUTime ( void )
 {
     clock_t  t;
