@@ -1380,6 +1380,14 @@ is_syncword_mp123(const void *const headerptr)
         return 0;       /* no MPEG-1, -2 or -2.5 */
     if ((p[1] & 0x06) == 0x00)
         return 0;       /* no Layer I, II and III */
+#ifndef USE_LAYER_1
+    if ((p[1] & 0x06) == 0x03)
+	return 0; /* layer1 is not supported */
+#endif
+#ifndef USE_LAYER_2
+    if ((p[1] & 0x06) == 0x02)
+	return 0; /* layer1 is not supported */
+#endif
     if ((p[2] & 0xF0) == 0xF0)
         return 0;       /* bad bitrate */
     if ((p[2] & 0x0C) == 0x0C)
@@ -1387,31 +1395,10 @@ is_syncword_mp123(const void *const headerptr)
     if ((p[1] & 0x06) == 0x04) /* illegal Layer II bitrate/Channel Mode comb */
         if (abl2[p[2] >> 4] & (1 << (p[3] >> 6)))
             return 0;
-    if ((p[7] & 3) == 2)
+    if ((p[3] & 3) == 2)
 	return 0;       /* reserved enphasis mode */
     return 1;
 }
-#if 0
-static int
-is_syncword_mp3(const void *const headerptr)
-{
-    const unsigned char *const p = headerptr;
-
-    if ((p[0] & 0xFF) != 0xFF)
-        return 0;       /* first 8 bits must be '1' */
-    if ((p[1] & 0xE0) != 0xE0)
-        return 0;       /* next 3 bits are also */
-    if ((p[1] & 0x18) == 0x08)
-        return 0;       /* no MPEG-1, -2 or -2.5 */
-    if ((p[1] & 0x06) != 0x02)
-        return 0;       /* no Layer III (can be merged with 'next 3 bits are also' test, but don't do this, this decreases readability) */
-    if ((p[2] & 0xF0) == 0xF0)
-        return 0;       /* bad bitrate */
-    if ((p[2] & 0x0C) == 0x0C)
-        return 0;       /* no sample frequency with (32,44.1,48)/(1,2,4)     */
-    return 1;
-}
-#endif
 
 int
 lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
