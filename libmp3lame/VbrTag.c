@@ -278,8 +278,8 @@ int InitVbrTag(lame_global_flags *gfp)
     lame_internal_flags *gfc = gfp->internal_flags;
     int i, header_bitrate, tot;
 
-    /* we shold also count the vbr tag itself */
-    gfp->nVbrNumFrames=1;
+    /* we shold not count the vbr tag itself, because it breaks some player */
+    gfp->nVbrNumFrames=0;
 
     /*
      * Xing VBR pretends to be a 48kbs layer III frame.  (at 44.1kHz).
@@ -322,9 +322,8 @@ int InitVbrTag(lame_global_flags *gfp)
 	add_dummy_byte(gfc, 0);
 
 
-    /* TOC should also take into account the size of the VBR header
-       itself.  so initial value of .sum should be the kbps of the header */
-    gfc->VBR_seek_table.sum  = header_bitrate;
+    /*TOC shouldn't take into account the size of the VBR header itself, too*/
+    gfc->VBR_seek_table.sum  = 0;
     gfc->VBR_seek_table.seen = 0;
     gfc->VBR_seek_table.want = 1;
     gfc->VBR_seek_table.pos  = 0;
