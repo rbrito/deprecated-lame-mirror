@@ -1354,13 +1354,13 @@ lame_set_msfix( lame_global_flags*  gfp, double msfix )
     gfp->internal_flags->nsPsy.msfix = msfix;
 }
 
-int
+static int
 lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
 {
     lame_internal_flags *gfc = gfp->internal_flags;
 
-    gfc->nsPsy.attackthre   =  1.8;
-    gfc->nsPsy.attackthre_s = 10.0;
+    gfc->nsPsy.attackthre   = 1.8;
+    gfc->nsPsy.attackthre_s = 1.8;
 
     switch (preset_expopts)
     {
