@@ -405,23 +405,20 @@ lame_init_params(lame_global_flags * const gfp)
     gfc->report.errorf = gfp->report.errorf;
 
 #ifdef HAVE_NASM
-    if (gfp->asm_optimizations.amd3dnow ) {
-        gfc->CPU_features.AMD_3DNow = has_3DNow();
-        gfc->CPU_features.AMD_E3DNow = has_E3DNow();
-    } else
-        gfc->CPU_features.AMD_3DNow = gfc->CPU_features.AMD_E3DNow = 0;
+    gfc->CPU_features.MMX
+	= gfc->CPU_features.SSE = gfc->CPU_features.SSE2
+	= gfc->CPU_features.AMD_3DNow = gfc->CPU_features.AMD_E3DNow = 0;
 
-    if (gfp->asm_optimizations.mmx )
+    if (gfp->asm_optimizations.mmx)
         gfc->CPU_features.MMX = has_MMX();
-    else 
-        gfc->CPU_features.MMX = 0;
 
-    if (gfp->asm_optimizations.sse ) {
-        gfc->CPU_features.SSE = has_SSE();
-        gfc->CPU_features.SSE2 = has_SSE2();
-    } else {
-        gfc->CPU_features.SSE = 0;
-        gfc->CPU_features.SSE2 = 0;
+    if (gfp->asm_optimizations.amd3dnow ) {
+	gfc->CPU_features.AMD_3DNow = has_3DNow();
+	gfc->CPU_features.AMD_E3DNow = has_E3DNow();
+    }
+    if (gfp->asm_optimizations.sse) {
+	gfc->CPU_features.SSE = has_SSE();
+	gfc->CPU_features.SSE2 = has_SSE2();
     }
 #endif
 
@@ -431,7 +428,7 @@ lame_init_params(lame_global_flags * const gfp)
     gfc->channels_out = (gfp->mode == MONO) ? 1 : 2;
     gfc->mode_ext_next = gfc->mode_ext = MPG_MD_LR_LR;
     if (gfp->mode == MONO)
-        gfp->force_ms = 0; /* cannot use force MS stereo for mono output */
+	gfp->force_ms = 0; /* cannot use force MS stereo for mono output */
     if (gfp->VBR != cbr) {
 	gfp->free_format = 0; /* VBR can't be mixed with free format */
 	/* at 160 kbps (MPEG-2/2.5)/ 320 kbps (MPEG-1) only
@@ -453,8 +450,6 @@ lame_init_params(lame_global_flags * const gfp)
 	gfp->mean_bitrate_kbps = get_bitrate(gfp);
     }
     set_compression_ratio(gfp);
-
-    /* if a filter has not been enabled, see if we should add one */
     apply_preset(gfp, get_bitrate(gfp), gfp->VBR);
 
     /* output sampling rate is determined by the lowpass value */
