@@ -59,19 +59,128 @@ printf(" syncword:  %2X   %2X   \n ",s0, s1);
 }
 
 
+int lame_decode_init(void)
+{
+  InitMP3(&mp);
+  memset(buf, 0, sizeof(buf));
+  return 0;
+}
+
+
+
+
+/*
+For lame_decode:  return code
+  -1     error
+   0     ok, but need more data before outputing any samples
+   n     number of samples output.  either 576 or 1152 depending on MP3 file.
+*/
+int lame_decode1_headers(char *buffer,int len,
+                         short pcm_l[],short pcm_r[],
+                         mp3data_struct *mp3data)
+{
+  int size;
+  int outsize=0,j,i,ret;
+
+  mp3data->header_parsed=0;
+  ret = decodeMP3(&mp,buffer,len,out,FSIZE,&size);
+  if (mp.header_parsed) {
+    mp3data->header_parsed=1;
+    mp3data->stereo = mp.fr.stereo;
+    mp3data->samplerate = freqs[mp.fr.sampling_frequency];
+    if (mp.fsizeold > 0)
+      /* works for free format and fixed */
+      mp3data->bitrate = .5 + 8*(4+mp.fsizeold)*freqs[mp.fr.sampling_frequency]/
+	(1000.0*smpls[mp.fr.lsf][mp.fr.lay]);
+    else
+      mp3data->bitrate = tabsel_123[mp.fr.lsf][mp.fr.lay-1][mp.fr.bitrate_index];
+    
+    mp3data->mode=mp.fr.mode;
+    mp3data->mode_ext=mp.fr.mode_ext;
+  }
+    
+  if (ret==MP3_ERR) return -1;
+  
+  if (ret==MP3_OK) {
+    outsize = size/(2*mp.fr.stereo);
+    
+    for (j=0; j<mp.fr.stereo; j++)
+      for (i=0; i<outsize; i++) 
+	if (j==0) pcm_l[i] = ((short *) out)[mp.fr.stereo*i+j];
+	else pcm_r[i] = ((short *) out)[mp.fr.stereo*i+j];
+  }
+  if (ret==MP3_NEED_MORE) 
+    outsize=0;
+  
+  /*
+  printf("ok, more, err:  %i %i %i  \n",MP3_OK, MP3_NEED_MORE, MP3_ERR);
+  printf("ret = %i out=%i \n",ret,totsize);
+  */
+  return outsize;
+}
+
+
+/*
+For lame_decode:  return code
+  -1     error
+   0     ok, but need more data before outputing any samples
+   n     number of samples output.  Will be at most one frame of
+         MPEG data.  
+*/
+int lame_decode1(char *buffer,int len,short pcm_l[],short pcm_r[])
+{
+  mp3data_struct mp3data;
+  return lame_decode1_headers(buffer,len,pcm_l,pcm_r,&mp3data);
+}
+
+
+
+
+/*
+For lame_decode:  return code
+  -1     error
+   0     ok, but need more data before outputing any samples
+   n     number of samples output.  a multiple of 576 or 1152 depending on MP3 file.
+*/
+int lame_decode_headers(char *buffer,int len,short pcm_l[],short pcm_r[],
+                         mp3data_struct *mp3data)
+{
+  int ret,totsize=0;
+
+  do {
+    ret = lame_decode1_headers(buffer,len,&pcm_l[totsize],&pcm_r[totsize],mp3data);
+    if (-1==ret) return -1;
+    totsize += ret;
+    len=0;  /* future calls to decodeMP3 are just to flush buffers */
+  } while (ret>0);
+  /*
+  printf("ok, more, err:  %i %i %i  \n",MP3_OK, MP3_NEED_MORE, MP3_ERR);
+  printf("ret = %i out=%i \n",ret,totsize);
+  */
+  return totsize;
+}
+
+
+
+int lame_decode(char *buffer,int len,short pcm_l[],short pcm_r[])
+{
+  mp3data_struct mp3data;
+  return lame_decode_headers(buffer,len,pcm_l,pcm_r,&mp3data);
+}
+
+
+
+
+
 int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
 {
   VBRTAGDATA pTagData;
   int ret,size,framesize;
   unsigned long num_frames=0;
   int len,len2,xing_header,aid_header;
+  short int pcm_l[1152],pcm_r[1152];
 
-
-  InitMP3(&mp);
-
-
-  memset(buf, 0, sizeof(buf));
-
+  lame_decode_init();
 
   len=4;
   if (fread(&buf,1,len,fd) == 0) return -1;  /* failed */
@@ -135,48 +244,26 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
     }
   }
 
-  /*
-  {
-printf(" syncword:  %2X %2X %2X %2X   \n ",
-(unsigned char)buf[0],
-(unsigned char)buf[1],
-(unsigned char)buf[2],
-(unsigned char)buf[3]);
-  }
-*/
 
-
-  /* parse the buffer that was read looking for Xing header above */  
+  /* now parse the current buffer looking for MP3 headers */
   size=0;
-  ret = decodeMP3(&mp,buf,(int)len,out,FSIZE,&size);
-  if (ret==MP3_ERR) 
-    return -1;
-  if (ret==MP3_OK && size>0 && !xing_header) 
+  ret = lame_decode1_headers(buf,len,pcm_l,pcm_r,mp3data);
+  if (-1==ret) return -1;
+  if (ret>0 && !xing_header) 
     fprintf(stderr,"Oops: first frame of mpglib output will be lost \n"); 
 
-
-
   /* repeat until we decode a valid mp3 header */
-
   while (!mp.header_parsed) {
     len = fread(buf,1,2,fd);
     if (len ==0 ) return -1;
-    ret = decodeMP3(&mp,buf,len,out,FSIZE,&size);
-    if (ret==MP3_ERR) 
-      return -1;
-    if (ret==MP3_OK && !mp.header_parsed)
-      fprintf(stderr,"Oops: strange error in lame_decode_initfile \n");
+    ret = lame_decode1_headers(buf,len,pcm_l,pcm_r,mp3data);
+    if (-1==ret) return -1;
+
+    if (ret>0 && !xing_header)
+      fprintf(stderr,"Oops: first frame of mpglib output will be lost \n"); 
   }
 
-
-
-  mp3data->stereo = mp.fr.stereo;
-  mp3data->samplerate = freqs[mp.fr.sampling_frequency];
-  mp3data->bitrate = tabsel_123[mp.fr.lsf][mp.fr.lay-1][mp.fr.bitrate_index];
   mp3data->nsamp=MAX_U_32_NUM;
-  mp3data->mode=mp.fr.mode;
-  mp3data->mode_ext=mp.fr.mode_ext;
-
   framesize = smpls[mp.fr.lsf][mp.fr.lay];
   if (xing_header && num_frames) {
     mp3data->nsamp=framesize * num_frames;
@@ -188,7 +275,9 @@ printf(" syncword:  %2X %2X %2X %2X   \n ",
   fprintf(stderr,"stereo = %i \n",mp.fr.stereo);
   fprintf(stderr,"samp = %i  \n",freqs[mp.fr.sampling_frequency]);
   fprintf(stderr,"framesize = %i  \n",framesize);
-  fprintf(stderr,"num frames = %i  \n",(int)num_frames);
+  fprintf(stderr,"bitrate = %i  \n",mp3data->bitrate);
+  fprintf(stderr,"num frames = %ui  \n",num_frames);
+  fprintf(stderr,"num samp = %ui  \n",mp3data->nsamp);
   fprintf(stderr,"mode     = %i  \n",mp.fr.mode);
   */
 
@@ -196,12 +285,6 @@ printf(" syncword:  %2X %2X %2X %2X   \n ",
 }
 
 
-int lame_decode_init(void)
-{
-  InitMP3(&mp);
-  memset(buf, 0, sizeof(buf));
-  return 0;
-}
 
 
 /*
@@ -212,130 +295,21 @@ For lame_decode_fromfile:  return code
 */
 int lame_decode_fromfile(FILE *fd, short pcm_l[], short pcm_r[],mp3data_struct *mp3data)
 {
-  int size,stereo;
-  int outsize=0,j,i,ret;
-  size_t len;
+  int ret=0,len;
 
-  size=0;
-  len = fread(buf,1,64,fd);
-
-  /* check for possible EOF */
-  if (len ==0 ) 
-	  return -1;
-
-  ret = decodeMP3(&mp,buf,(int)len,out,FSIZE,&size);
-
-  /* read more until we get a valid output frame */
-  while((ret == MP3_NEED_MORE) || !size) {
+  /* read until we get a valid output frame */
+  while(0==ret) {
     len = fread(buf,1,100,fd);
     if (len ==0 ) return -1;
-    ret = decodeMP3(&mp,buf,(int)len,out,FSIZE,&size);
-    /* if (ret ==MP3_ERR) return -1;  lets ignore errors and keep reading... */
-    /*
-    printf("ret = %i size= %i  %i   %i  %i \n",ret,size,
-	   MP3_NEED_MORE,MP3_ERR,MP3_OK); 
-    */
+    ret = lame_decode1_headers(buf,len,pcm_l,pcm_r,mp3data);
+    if (ret == -1) return -1;
   }
-
-  stereo=mp.fr.stereo;
-
-  if (ret == MP3_OK) 
-  {
-    mp3data->mode=mp.fr.mode;
-    mp3data->mode_ext=mp.fr.mode_ext;
-    mp3data->stereo = mp.fr.stereo;
-    mp3data->samplerate = freqs[mp.fr.sampling_frequency];
-    /* bitrate formula works for free bitrate also */
-    mp3data->bitrate = .5 + 8*(4+mp.fsizeold)*freqs[mp.fr.sampling_frequency]/
-                       (1000.0*smpls[mp.fr.lsf][mp.fr.lay]);
-    /*    write(1,out,size); */
-    outsize = size/(2*(stereo));
-    if (outsize!=smpls[mp.fr.lsf][mp.fr.lay]) {
-      fprintf(stderr,"Oops: mpg123 returned more than one frame!  Cant handle this... \n");
-     }
-
-    for (j=0; j<stereo; j++)
-      for (i=0; i<outsize; i++) 
-	if (j==0) pcm_l[i] = ((short *) out)[mp.fr.stereo*i+j];
-	else pcm_r[i] = ((short *) out)[mp.fr.stereo*i+j];
-
-  }
-  if (ret==MP3_ERR) return -1;
-  else return outsize;
+  return ret;
 }
 
 
 
 
-/*
-For lame_decode:  return code
-  -1     error
-   0     ok, but need more data before outputing any samples
-   n     number of samples output.  either 576 or 1152 depending on MP3 file.
-*/
-int lame_decode1(char *buffer,int len,short pcm_l[],short pcm_r[])
-{
-  int size;
-  int outsize=0,j,i,ret;
-
-
-  ret = decodeMP3(&mp,buffer,len,out,FSIZE,&size);
-  if (ret==MP3_ERR) return -1;
-  
-  if (ret==MP3_OK) {
-    outsize = size/(2*mp.fr.stereo);
-    
-    for (j=0; j<mp.fr.stereo; j++)
-      for (i=0; i<outsize; i++) 
-	if (j==0) pcm_l[i] = ((short *) out)[mp.fr.stereo*i+j];
-	else pcm_r[i] = ((short *) out)[mp.fr.stereo*i+j];
-  }
-  if (ret==MP3_NEED_MORE) 
-    outsize=0;
-  
-  /*
-  printf("ok, more, err:  %i %i %i  \n",MP3_OK, MP3_NEED_MORE, MP3_ERR);
-  printf("ret = %i out=%i \n",ret,totsize);
-  */
-  return outsize;
-}
-
-
-
-
-/*
-For lame_decode:  return code
-  -1     error
-   0     ok, but need more data before outputing any samples
-   n     number of samples output.  a multiple of 576 or 1152 depending on MP3 file.
-*/
-int lame_decode(char *buffer,int len,short pcm_l[],short pcm_r[])
-{
-  int size,totsize=0;
-  int outsize=0,j,i,ret;
-
-  do {
-    ret = decodeMP3(&mp,buffer,len,out,FSIZE,&size);
-    if (ret==MP3_ERR) return -1;
-
-    if (ret==MP3_OK) {
-      outsize = size/(2*mp.fr.stereo);
-      
-      for (j=0; j<mp.fr.stereo; j++)
-	for (i=0; i<outsize; i++) 
-	  if (j==0) pcm_l[totsize + i] = ((short *) out)[mp.fr.stereo*i+j];
-	  else pcm_r[totsize + i] = ((short *) out)[mp.fr.stereo*i+j];
-
-      totsize += outsize;
-    }
-    len=0;  /* future calls to decodeMP3 are just to flush buffers */
-  } while (ret!=MP3_NEED_MORE);
-  /*
-  printf("ok, more, err:  %i %i %i  \n",MP3_OK, MP3_NEED_MORE, MP3_ERR);
-  printf("ret = %i out=%i \n",ret,totsize);
-  */
-  return totsize;
-}
 
 #endif /* HAVEMPGLIB */
 

@@ -380,28 +380,42 @@ void lame_close_infile(lame_global_flags *);
 
 
 
-
 /*********************************************************************
  * a simple interface to mpglib, part of mpg123, is also included if
  * libmp3lame is compiled with HAVEMPGLIB
- * input 1 mp3 frame, output (maybe) pcm data.  
- * lame_decode return code:  -1: error.  0: need more data.  n>0: size of pcm output
  *********************************************************************/
 typedef struct {
+  int header_parsed;   /* 1 if header was parsed and following data was computed: */
   int stereo;      /* number of channels */
   int samplerate;  /* sample rate */
   int bitrate;     /* bitrate */
-  unsigned long nsamp;    /* number of samples in mp3 file, estimated */
   int mode;               /* mp3 frame type */
   int mode_ext;           /* mp3 frame type */
+  unsigned long nsamp;    /* number of samples in mp3 file.  */
 } mp3data_struct;
 
 
+/* required call to initialize decoder */
 int lame_decode_init(void);
+
+/*********************************************************************
+ * input 1 mp3 frame, output (maybe) pcm data.  
+ * lame_decode return code:  -1: error.  0: need more data.  n>0: size of pcm output
+ *********************************************************************/
 int lame_decode(char *mp3buf,int len,short pcm_l[],short pcm_r[]);
+
+/* same as lame_decode, but returns mp3 header data */
+int lame_decode_headers(char *mp3buf,int len,short pcm_l[],short pcm_r[],
+mp3data_struct *mp3data);
 
 /* same as lame_decode, but returns at most one frame */
 int lame_decode1(char *mp3buf,int len,short pcm_l[],short pcm_r[]);
+
+/* same as lame_decode1, but returns at most one frame and mp3 header data */
+int lame_decode1_headers(char *mp3buf,int len,short pcm_l[],short pcm_r[],
+mp3data_struct *mp3data);
+
+
 
 
 /* read mp3 file until mpglib returns one frame of PCM data */
