@@ -123,12 +123,16 @@ Huf_count1(bit_stream_t *bs, gr_info *gi)
 
 /* Implements the pseudocode of page 98 of the IS */
 static void
-Huffmancode_esc(bit_stream_t *bs, const struct huffcodetab* h,
-		int i, int end, gr_info *gi)
+Huffmancode_esc(bit_stream_t *bs, int tablesel, int i, int end, gr_info *gi)
 {
+    int xlen = htESC_xlen[tablesel];
+#ifndef NDEBUG
+    int linmax = (1 << xlen) + 15;
+#endif
+    tablesel = (tablesel & 8) * 32;
     do {
-	int cbits   = 0;
-	int xbits   = 0;
+	int cbits = 0;
+	int xbits = 0;
 	int ext = 0;
 	int x1 = gi->l3_enc[i];
 	int x2 = gi->l3_enc[i+1];
@@ -136,9 +140,9 @@ Huffmancode_esc(bit_stream_t *bs, const struct huffcodetab* h,
 	if (x1 != 0) {
 	    if (x1 > 14) {
 		/* use ESC-words */
-		assert (x1 <= h->linmax);
+		assert (x1 < linmax);
 		ext    = (x1-15) << 1;
-		xbits  = h->xlen;
+		xbits  = xlen;
 		x1     = 15;
 	    }
 	    ext += (gi->xr[i] < 0);
@@ -148,21 +152,21 @@ Huffmancode_esc(bit_stream_t *bs, const struct huffcodetab* h,
 
 	if (x2 != 0) {
 	    if (x2 > 14) {
-		assert (x2 <= h->linmax);
-		ext  <<= h->xlen;
+		assert (x2 < linmax);
+		ext  <<= xlen;
 		ext   |= x2-15;
-		xbits += h->xlen;
+		xbits += xlen;
 		x2     = 15;
 	    }
 	    ext = ext*2 + (gi->xr[i+1] < 0);
 	    cbits--;
 	    x1 += x2;
 	}
-
+	x1 += tablesel;
 	xbits -= cbits;
-	cbits += h->hlen  [x1];
+	cbits += escLen[x1];
 
-	putbits24(bs, h->table [x1], cbits);
+	putbits24(bs, escHB[x1], cbits);
 	if (xbits)
 	    putbits(bs, ext, xbits);
     } while ((i += 2) < end);
@@ -196,7 +200,7 @@ Huf_bigvalue(bit_stream_t *bs, int tablesel, int start, int end, gr_info *gi)
 	return;
 
     if (tablesel > 15)
-	Huffmancode_esc(bs, &ht[tablesel-1], start, end, gi);
+	Huffmancode_esc(bs, tablesel-16, start, end, gi);
     else
 	Huffmancode(bs, &ht[tablesel-1], start, end, gi);
 }
