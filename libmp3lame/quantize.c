@@ -86,7 +86,7 @@ on_pe(
     tbits /= gfc->channels_out;
     mean_bits /= gfc->channels_out;
 
-    for ( bits = 0, ch = 0; ch < gfc->channels_out; ++ch ) {
+    for (bits = 0, ch = 0; ch < gfc->channels_out; ++ch ) {
 	if (ratio[ch].ath_over == 0) {
 	    targ_bits[ch] = 126;
 	} else {
@@ -100,7 +100,7 @@ on_pe(
 	bits += targ_bits[ch];
     }
     if (bits > max_bits) {
-        for ( ch = 0; ch < gfc->channels_out; ++ch ) {
+        for (ch = 0; ch < gfc->channels_out; ++ch ) {
 	    targ_bits[ch]
 		= tbits + extra_bits * (targ_bits[ch] - tbits) / bits;
 	}
@@ -195,7 +195,7 @@ calc_xmin(
 	    = athAdjust(gfc->ATH.adjust, gfc->ATH.s[sfb], gfc->ATH.floor);
 
 	width = gi->width[gsfb];
-	for ( b = 0; b < 3; b++ ) {
+	for (b = 0; b < 3; b++) {
 	    FLOAT en0 = 0.0, xmin;
 	    int l = width >> 1;
 	    do {
@@ -1548,9 +1548,9 @@ set_pinfo (
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     int sfb, sfb2;
-    int j,i,l,start,end,bw;
+    int j,i,end,bw;
     FLOAT en0,en1;
-    FLOAT ifqstep = ( gi->scalefac_scale == 0 ) ? .5 : 1.0;
+    FLOAT ifqstep = 0.5 * (1+gi->scalefac_scale);
 
     FLOAT l3_xmin[SFBMAX], xfsf[SFBMAX];
     calc_noise_result noise;
@@ -1561,14 +1561,13 @@ set_pinfo (
     j = 0;
     sfb2 = gi->sfb_lmax;
     if (gi->block_type != SHORT_TYPE)
-	sfb2 = 22;
+	sfb2 = SBMAX_l;
     for (sfb = 0; sfb < sfb2; sfb++) {
-	start = gfc->scalefac_band.l[ sfb ];
-	end   = gfc->scalefac_band.l[ sfb+1 ];
-	bw = end - start;
-	for ( en0 = 0.0; j < end; j++ ) 
+	bw = gi->width[sfb];
+	end   = j + bw;
+	for (en0 = 0.0; j < end; j++) 
 	    en0 += gi->xr[j] * gi->xr[j];
-	en0/=bw;
+	en0=Max(en0/bw,1e-20);
 	/* convert to MDCT units */
 	en1=1e15;  /* scaling so it shows up on FFT plot */
 	gfc->pinfo->  en[gr][ch][sfb] = en1*en0;
@@ -1592,30 +1591,25 @@ set_pinfo (
 
     if (gi->block_type == SHORT_TYPE) {
 	sfb2 = sfb;
-        for (sfb = gi->sfb_smin; sfb < SBMAX_s; sfb++ )  {
-            start = gfc->scalefac_band.s[ sfb ];
-            end   = gfc->scalefac_band.s[ sfb + 1 ];
-            bw = end - start;
-            for ( i = 0; i < 3; i++ ) {
-                for ( en0 = 0.0, l = start; l < end; l++ ) {
-                    en0 += gi->xr[j] * gi->xr[j];
-                    j++;
-                }
+	for (sfb = gi->sfb_smin; sfb < SBMAX_s; sfb++) {
+	    for (i = 0; i < 3; i++) {
+		bw = gi->width[sfb2];
+		end = j + bw;
+		for (en0 = 0.0; j < end; j++)
+		    en0 += gi->xr[j] * gi->xr[j];
+
                 en0=Max(en0/bw,1e-20);
                 /* convert to MDCT units */
                 en1=1e15;  /* scaling so it shows up on FFT plot */
-
-                gfc->pinfo->  en_s[gr][ch][3*sfb+i] = en1*en0;
-                gfc->pinfo->xfsf_s[gr][ch][3*sfb+i] = en1*l3_xmin[sfb2]*xfsf[sfb2]/bw;
-                if (ratio->en.s[sfb][i]>0)
-                    en0 = en0/ratio->en.s[sfb][i];
+		gfc->pinfo->  en_s[gr][ch][3*sfb+i] = en1*en0;
+		gfc->pinfo->xfsf_s[gr][ch][3*sfb+i] = en1*l3_xmin[sfb2]*xfsf[sfb2]/bw;
+		if (ratio->en.s[sfb][i]>0 && !(gfp->ATHonly || gfp->ATHshort))
+		    en0 = en0/ratio->en.s[sfb][i];
                 else
                     en0=0.0;
-                if (gfp->ATHonly || gfp->ATHshort)
-                    en0=0;
 
-                gfc->pinfo->thr_s[gr][ch][3*sfb+i] = 
-                        en1*Max(en0*ratio->thm.s[sfb][i],gfc->ATH.s[sfb]);
+		gfc->pinfo->thr_s[gr][ch][3*sfb+i]
+		    = en1*Max(en0*ratio->thm.s[sfb][i],gfc->ATH.s[sfb]);
 
                 gfc->pinfo->LAMEsfb_s[gr][ch][3*sfb+i]
 		    = -2.0*gi->subblock_gain[i] - ifqstep*gi->scalefac[sfb2];
