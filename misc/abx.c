@@ -17,6 +17,7 @@
  *	    Nur 16 bit Stereo, 44.1 kHz
  *          Use a, b, x, ^a, ^b, Q
  *          Nur 1200 tests möglich
+ *          Nicht mehr als 2 Dateien vergleichbar
  *          
  */
 
@@ -46,7 +47,7 @@
 #elif defined(HAVE_LINUX_SOUNDCARD_H)
 # include <linux/soundcard.h>
 #else
-# error no soundcard include
+# include <linux/soundcard.h>
 #endif
 
 #define BF   4410
@@ -217,10 +218,17 @@ void setup ( int fdd, int samples )
 void testing ( const stereo_t* A, const stereo_t* B, size_t len )
 {
     int  c;
-    int  fd    = open ("/dev/dsp", O_RDWR);
+    int  fd;
     int  rnd   = random_number ();
     int  state = rnd;
     int  index = 0;
+
+    fd = open ("/dev/dsp", O_WRONLY);
+
+    if ( -1 == fd ) {
+        perror ("opening of /dev/dsp failed");
+        return;
+    }
 
     setup ( fd, len );
     
@@ -346,6 +354,14 @@ void testing ( const stereo_t* A, const stereo_t* B, size_t len )
     }
 }
 
+int  has_ext ( const char* name, const char* ext )
+{
+    if ( strlen (name) < strlen (ext) )
+        return 0;
+    name += strlen (name) - strlen (ext);
+    return strcasecmp (name, ext)  ?  0  :  1;
+}
+
 void readwave ( stereo_t* buff, size_t maxlen, const char* name, size_t* len )
 {
     char*           command = malloc (strlen(name) + 128);
@@ -353,10 +369,44 @@ void readwave ( stereo_t* buff, size_t maxlen, const char* name, size_t* len )
     FILE*           fp;
 
     fprintf (stderr, "Reading %s", name );
-    sprintf ( command, "/usr/local/bin/lame --decode '%s' - 2> /dev/null", name );    
+    // MPEG Layer I, II, III: www.iis.fhg.de, www.lame.org, www.toolame.org
+    if ( has_ext (name, ".mp1")  ||  has_ext (name, ".mp2")  ||  has_ext (name, ".mp3") )
+        sprintf ( command, "/usr/local/bin/mpg123 -w - '%s' 2> /dev/null", name );
+    // MPEGplus: www.stud.uni-hannover.de/user/73884/
+    else if ( has_ext (name, ".mpp")  ||  has_ext (name, ".mp+") )
+        sprintf ( command, "/usr/local/bin/mppdec '%s' - 2> /dev/null", name );
+    // Advanced Audio Coding: www.psytel.com
+    else if ( has_ext (name, ".aac") )
+        sprintf ( command, "/usr/local/bin/faad '%s' - 2> /dev/null", name );
+    // Ogg Vorbis: www.ogg.org
+    else if ( has_ext (name, ".ogg") )
+        sprintf ( command, "echo '%s'  - 2> /dev/null", name );
+    // Real Audio: www.real.com
+    else if ( has_ext (name, ".ra") )
+        sprintf ( command, "echo '%s'  - 2> /dev/null", name );
+    // ePAC: www.audioveda.com
+    else if ( has_ext (name, ".epac") )
+        sprintf ( command, "echo '%s'  - 2> /dev/null", name );
+    // QDesign Music 2: www.qdesign.com
+    else if ( has_ext (name, ".qdm") )
+        sprintf ( command, "echo '%s'  - 2> /dev/null", name );
+    // TwinVQ: www.yamaha-xg.com
+    else if ( has_ext (name, ".vqf") )
+        sprintf ( command, "echo '%s'", name );
+    // Microsoft Media Audio: www.windowsmedia.com
+    else if ( has_ext (name, ".wma") )
+        sprintf ( command, "echo '%s'", name );
+    // Monkey's Audio Codec: www.monkeysaudio.com
+    else if ( has_ext (name, ".mac") )
+        sprintf ( command, "echo '%s'", name );
+    // Lossless predictive Audio Compression: www-ft.ee.tu-berlin.de/~liebchen/lpac.html
+    else if ( has_ext (name, ".lpac") )
+        sprintf ( command, "echo '%s'", name );
+    // Rest, may be possible with sox
+    else 
+        sprintf ( command, "sox '%s' -t wav - 2> /dev/null", name );
     
-    fp = popen (command, "r");
-    if ( fp == NULL ) {
+    if ( (fp = popen (command, "r")) == NULL ) {
         fprintf (stderr, "Can't exec:\n%s\n", command );
         exit (1);
     }
@@ -370,6 +420,12 @@ void readwave ( stereo_t* buff, size_t maxlen, const char* name, size_t* len )
 }
 
 
+void print_usage(void)
+{
+    puts("Usage: abx <original_file> <test_file>");
+}
+
+
 int main ( int argc, char** argv )
 {
     static stereo_t  A [180 * 44100];
@@ -377,6 +433,11 @@ int main ( int argc, char** argv )
     size_t           len_A;
     size_t           len_B;
     
+    if (argc != 3) {
+        print_usage();
+        exit(1);
+    }
+
     readwave ( A, sizeof(A)/sizeof(*A), argv[1], &len_A );
     readwave ( B, sizeof(B)/sizeof(*B), argv[2], &len_B );
 
@@ -386,159 +447,3 @@ int main ( int argc, char** argv )
     
     return 0;
 }
-
-
-
-
-#if 0 /******************************************************************************************************/
-
-static struct termios current,	/* new terminal settings             */
-                      initial;	/* initial state for restoring later */
-
-/* Restore term-settings to those saved when term_init was called */
-
-void  term_restore (void)  
-  {
-    tcsetattr(0, TCSANOW, &initial);
-  }  /* term_restore */
-
-/* Clean up terminal; called on exit */
-
-void  term_exit ()  
-  {
-    term_restore();
-  }  /* term_exit */
-
-/* Will be called when ctrl-Z is pressed, this correctly handles the terminal */
-
-void  term_ctrl_z ()  
-  {
-    signal(SIGTSTP, term_ctrl_z);
-    term_restore();
-    kill(getpid(), SIGSTOP);
-  }  /* term_ctrlz */
-
-/* Will be called when application is continued after having been stopped */
-
-void  term_cont ()  
-  {
-    signal(SIGCONT, term_cont);
-    tcsetattr(0, TCSANOW, &current);
-  }  /* term_cont */
-
-/* Needs to be called to initialize the terminal */
-
-void  term_init (void)
-  /* if stdin isn't a terminal this fails. But then so does tcsetattr so it doesn't matter. */
-  {
-    tcgetattr(0, &initial);
-    current = initial;			/* Save a copy to work with later  */
-    signal(SIGINT,  term_exit);		/* We _must_ clean up when we exit */
-    signal(SIGQUIT, term_exit);
-    signal(SIGTSTP, term_ctrl_z);	/* Ctrl-Z must also be handled     */
-    signal(SIGCONT, term_cont);
-    atexit(term_exit);
-  }  /* term_init */
-
-/* Set character-by-character input mode */
-
-void  term_character (void)  
-  {
-  /* One or more characters are sufficient to cause a read to return */
-    current.c_cc[VMIN]   = 1;
-    current.c_cc[VTIME]  = 0;  			/* No timeout; read forever until ready */
-    current.c_iflag     &= ~(INLCR|ICRNL|ISTRIP|IGNCR|IUCLC|ISIG|IXON); 
-    						/* Disables any translations, I hope */
-    current.c_iflag     |=  (IGNBRK);
-    current.c_lflag     &= ~(ICANON|ECHO);	/* Line-by-line mode off, echo off */
-    
-    tcsetattr(0, TCSANOW, &current);
-  }  /* term_character */
-
-
-/* Set character-by-character input mode, version of pfk */
-
-void  term_character_2 (void)  
-  {
-  /* One or more characters are sufficient to cause a read to return */
-    cfmakeraw(&current);			/* Vielleicht geht das */
-
-    current.c_oflag     |= ONLCR|OPOST;		/* enables NL => CRLF on output */
-    
-    tcsetattr(0, TCSANOW, &current);
-  }  /* term_character */
-
-/*
-  Note:
-       cfmakeraw sets the terminal attributes as follows:
-                   termios_p->c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP
-                                          |INLCR|IGNCR|ICRNL|IXON);
-                   termios_p->c_oflag &= ~OPOST;
-                   termios_p->c_lflag &= ~(ECHO|ECHONL|ICANON|ISIG|IEXTEN);
-                   termios_p->c_cflag &= ~(CSIZE|PARENB);
-                   termios_p->c_cflag |= CS8;
-*/
-
-/* Return to line-by-line input mode */
-
-void  term_line (void)
-  {
-    current.c_cc[VEOF]  = 4;
-    current.c_lflag    |= ICANON;
-    tcsetattr(0, TCSANOW, &current);
-  }  /* term_line */
-
-/* Key pressed ? */
-
-int  kbhit  (void)  {
-  struct timeval tv;
-  fd_set         read_fd;
-
-  /* Do not wait at all, not even a microsecond */
-  tv.tv_sec  = 0;
-  tv.tv_usec = 0;
-
-  /* Must be done first to initialize read_fd */
-  FD_ZERO(&read_fd);
-
-  /* Makes select() ask if input is ready;  0 is file descriptor for stdin */
-  FD_SET(0, &read_fd);
-
-  /* The first parameter is the number of the largest fd to check + 1 */
-  if (select(1, &read_fd,
-                NULL,		/* No writes        */
-                NULL,		/* No exceptions    */
-                &tv)  == -1)
-     return 0;			/* an error occured */
-
-  /* read_fd now holds a bit map of files that are readable. */
-  /* We test the entry for the standard input (file 0).      */
-  return(FD_ISSET(0, &read_fd)  ?  1  :  0);
-}  /* kbhit */
-
-/* Small testing program */
-
-int  main (void)
-  {
-    register c;
-
-    term_init();
-    term_character_2();
-    printf("Press a key, ^D to exit ...\n");
-
-    while ((c = getchar()) != 0x04)
-      if (c  <  ' ' || c == 0x7F)
-        printf("non-pritable character $%02X = ^%c\n", c, c==0x7F ? '?' : c+'@');
-      else if (c >= 0x80 && c < 0xA0)
-        printf("non-pritable character $%02X\n", c);
-      else
-        printf("printable    character '%c'\n",  c);
-      
-    printf("\n^D pressed. Now press any key to continue ...");
-    getchar();
-    printf("\b\b\b\b. Done.\nEnd of program.\n");
-    return 0;
-  }
-
-#endif
-
