@@ -1019,10 +1019,13 @@ CBR_1st_bitalloc (
 		&& ((gi->block_type != SHORT_TYPE
 		     && gfc->scalefac_band.l[gi->psymax-1] > gi->count1)
 		    || gfc->scalefac_band.s[gi->psymax/3]*3
-		    - gi->width[gi->psymax-1] > gi->count1))
+		    - gi->width[gi->psymax-1] > gi->count1)) {
 		/* some scalefac band which we do not want to be i-stereo is
-		   all zero (treat as i-stereo). we do never use it */
-		gi_w.global_gain = 256;
+		   all zero (treat as i-stereo). */
+		calc_noise(gfc, &gi_w, rxmin, distort);
+		distort[gi->psymax-1] = 20.0; /* some large value */
+		continue;
+	    }
 
 	    /* store this scalefactor combination if it is better */
 	    if (gi_w.global_gain != 256
