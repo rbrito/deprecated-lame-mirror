@@ -421,7 +421,6 @@ struct lame_internal_flags {
      *  please plugg it here into the ATH_t struct
      */
     struct {
-	int use_adjust;     // method for the auto adjustment 
 	FLOAT l[SBMAX_l];     // ATH for sfbs in long blocks
 	FLOAT s[SBMAX_s];     // ATH for sfbs in short blocks
 	FLOAT cb[CBANDS];     // ATH for convolution bands
@@ -429,8 +428,6 @@ struct lame_internal_flags {
 	FLOAT s_avg[SBMAX_s];
 	FLOAT adjust;     // lowering based on peak volume, 1 = no lowering
 	FLOAT adjust_limit;   // limit for dynamic ATH adjust
-	FLOAT decay;          // determined to lower x dB each second
-	FLOAT floor;          // lowest ATH value
 	FLOAT eql_w[BLKSIZE/2];/* equal loudness weights (based on ATH) */
 	/* factor for tuning the (sample power) point below which adaptive
 	 * threshold of hearing adjustment occurs 

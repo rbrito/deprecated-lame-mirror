@@ -789,10 +789,6 @@ static void compute_ath( lame_global_flags *gfp )
             gfc->ATH.s[sfb] = 1E-37;
         }
     }
-
-    /*  work in progress, don't rely on it too much
-     */
-    gfc->ATH.floor = 10. * log10( ATHmdct( gfp, -1. ) );
 }
 
 
@@ -1444,7 +1440,6 @@ int psymodel_init(lame_global_flags *gfp)
      *  we want to decrease the ATH by 12 dB per second
      */
 #define frame_duration (576. * gfc->mode_gr / sfreq)
-    gfc->ATH.decay = db2pow(-12.0 * frame_duration);
     gfc->ATH.adjust = 0.01; /* minimum, for leading low loudness */
     gfc->ATH.adjust_limit = 1.0; /* on lead, allow adjust up to maximum */
 
