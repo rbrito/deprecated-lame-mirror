@@ -410,7 +410,14 @@ void lame_init_params(lame_global_flags *gfp)
     gfp->bWriteVbrTag=0;  /* disable Xing VBR tag */
   }
 
-  init_bit_stream_w(&gfc->bs);
+#define NEWFMT
+#ifdef NEWFMT  
+  gfc->bs.bstype=1;
+#else
+  gfc->bs.bstype=0;
+#endif
+  init_bit_stream_w(gfc);
+
 
 
 
@@ -519,7 +526,7 @@ void lame_init_params(lame_global_flags *gfp)
   if (gfp->bWriteVbrTag)
     {
       /* Write initial VBR Header to bitstream */
-      InitVbrTag(&gfc->bs,1-gfc->version,gfp->mode,gfc->samplerate_index);
+      InitVbrTag(gfp,1-gfc->version,gfp->mode,gfc->samplerate_index);
     }
 
 #ifdef HAVEGTK
@@ -872,7 +879,6 @@ char *mp3buf, int mp3buf_size)
 
   /*  write the frame to the bitstream  */
   getframebits(gfp,&bitsPerFrame,&mean_bits);
-#define NEWFMTXX
 #ifdef NEWFMT
   format_bitstream( gfp, bitsPerFrame, l3_enc, scalefac);
 #else

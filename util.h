@@ -146,7 +146,6 @@ typedef struct  {
   int fill_buffer_downsample_init;
   int fill_buffer_upsample_init;
   int mdct_sub48_init;
-  int format_bitstream_init;
 
 
   long int frameNum;              /* frame counter */
@@ -249,10 +248,11 @@ extern void           display_bitrates(FILE *out_fh);
 extern int            BitrateIndex(int, int,int);
 extern int            SmpFrqIndex(long, int*);
 extern int            copy_buffer(char *buffer,int buffer_size,Bit_stream_struc *bs);
-extern void           init_bit_stream_w(Bit_stream_struc*);
+extern void           init_bit_stream_w(lame_internal_flags *gfc);
 extern void           alloc_buffer(Bit_stream_struc*, int);
 extern void           desalloc_buffer(Bit_stream_struc*);
-extern void           putbits(Bit_stream_struc*, unsigned int, int);
+extern void           putbits(Bit_stream_struc *bs,unsigned int val,int N);
+
 
 extern enum byte_order DetermineByteOrder(void);
 extern void SwapBytesInWords( short *loc, int words );

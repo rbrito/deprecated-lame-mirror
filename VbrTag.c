@@ -23,6 +23,7 @@
 #include <math.h>
 #include "VbrTag.h"
 #include "version.h"
+#include "bitstream.h"
 
 #ifdef _DEBUG
 /*  #define DEBUG_VBRTAG */
@@ -240,9 +241,11 @@ int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
  *				nMode	: Channel Mode: 0=STEREO 1=JS 2=DS 3=MONO
  ****************************************************************************
 */
-int InitVbrTag(Bit_stream_struc* pBs,int nVersion, int nMode, int SampIndex)
+int InitVbrTag(lame_global_flags *gfp,int nVersion, int nMode, int SampIndex)
 {
 	int i;
+	lame_internal_flags *gfc = gfp->internal_flags;
+	Bit_stream_struc* pBs=&gfc->bs;
 
 	/* Clear Frame position array variables */
 	pVbrFrames=NULL;
@@ -306,14 +309,17 @@ int InitVbrTag(Bit_stream_struc* pBs,int nVersion, int nMode, int SampIndex)
 	}
 	}
 
-
-	/* Put empty bytes into the bitstream */
-	for (i=0;i<TotalFrameSize;i++)
-	{
-                /* Write a byte to the bitstream */
-		putbits(pBs,0,8);
+	if (pBs->bstype){
+	  add_dummy_vbrframe(gfp,8*TotalFrameSize);
+	}else{
+	  /* Put empty bytes into the bitstream */
+	  for (i=0;i<TotalFrameSize;i++)
+	    {
+	      /* Write a byte to the bitstream */
+	      putbits(pBs,0,8);
+	    }
 	}
-
+	  
 	/* Success */
 	return 0;
 }

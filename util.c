@@ -259,12 +259,24 @@ int copy_buffer(char *buffer,int size,Bit_stream_struc *bs)
 
 
 
-void init_bit_stream_w(Bit_stream_struc* bs)
+void init_bit_stream_w(lame_internal_flags *gfc)
 {
+  Bit_stream_struc* bs = &gfc->bs;
    alloc_buffer(bs, BUFFER_SIZE);
-   bs->buf_byte_idx = BUFFER_SIZE-1;
-   bs->buf_bit_idx=8;
-   bs->totbit=0;
+   if (bs->bstype==1) {
+     /* takehiro style */
+     gfc->h_ptr = gfc->w_ptr = 0;
+     gfc->header[gfc->h_ptr].write_timing = 0;
+     gfc->bs.bstype = 1;
+     gfc->bs.buf_byte_idx = -1;
+     gfc->bs.buf_bit_idx = 0;
+     gfc->bs.totbit = 0;
+   }else{  
+     /* ISO style */
+     bs->buf_byte_idx = BUFFER_SIZE-1;
+     bs->buf_bit_idx=8;
+     bs->totbit=0;
+   }
 }
 
 
