@@ -505,23 +505,7 @@ void parse_nogap_filenames(int nogapout, char *inPath, char *outPath, char *outd
     strcpy(outPath,outdir);
     if (!nogapout) 	{
         strncpy(outPath, inPath, PATH_MAX + 1 - 4);
-        n=strlen(outPath);
-        /* nuke old extension, if one  */
-        if (outPath[n-3] == 'w' 
-            && outPath[n-2] == 'a'
-            && outPath[n-1] == 'v'
-            && outPath[n-4] == '.') {
-            outPath[n-3] = 'm';
-            outPath[n-2] = 'p';
-            outPath[n-1] = '3';
-        } else {
-            outPath[n+0] = '.';
-            outPath[n+1] = 'm';
-            outPath[n+2] = 'p';
-            outPath[n+3] = '3';
-            outPath[n+4] = 0;
-        }
-    } else 	{
+    } else {
         slasher = inPath;
         slasher += PATH_MAX + 1 - 4;
         
@@ -535,17 +519,13 @@ void parse_nogap_filenames(int nogapout, char *inPath, char *outPath, char *outd
         /* skip one foward if needed */
         if (slasher != inPath 
             && (outPath[strlen(outPath)-1] == '/'
-                ||
-                outPath[strlen(outPath)-1] == '\\'
-                ||
-                outPath[strlen(outPath)-1] == ':')) 
+                || outPath[strlen(outPath)-1] == '\\'
+                || outPath[strlen(outPath)-1] == ':'))
 	    slasher++;
         else if (slasher == inPath
                  && (outPath[strlen(outPath)-1] != '/'
-                     &&
-                     outPath[strlen(outPath)-1] != '\\'
-                     && 
-                     outPath[strlen(outPath)-1] != ':'))
+                     && outPath[strlen(outPath)-1] != '\\'
+                     && outPath[strlen(outPath)-1] != ':'))
 #ifdef _WIN32
 	    strcat(outPath, "\\");
 #elif __OS2__
@@ -553,25 +533,19 @@ void parse_nogap_filenames(int nogapout, char *inPath, char *outPath, char *outd
 #else
         strcat(outPath, "/");
 #endif
-        
-        strncat(outPath, slasher, PATH_MAX + 1 - 4);
-        n=strlen(outPath);
-        /* nuke old extension  */
-        if (outPath[n-3] == 'w' 
-            && outPath[n-2] == 'a'
-            && outPath[n-1] == 'v'
-            && outPath[n-4] == '.') 	  {
-	    outPath[n-3] = 'm';
-	    outPath[n-2] = 'p';
-	    outPath[n-1] = '3';
-        } else {
-	    outPath[n+0] = '.';
-	    outPath[n+1] = 'm';
-	    outPath[n+2] = 'p';
-	    outPath[n+3] = '3';
-	    outPath[n+4] = 0;
-        }
+	strncat(outPath, slasher, PATH_MAX + 1 - 4);
     }
+    n=strlen(outPath);
+    /* nuke old extension  */
+    if (n > 4
+	&& (!strcmp(&outPath[n-4], ".wav") || strcmp(&outPath[n-4], ".raw")))
+	n -= 4;
+
+    outPath[n+0] = '.';
+    outPath[n+1] = 'm';
+    outPath[n+2] = 'p';
+    outPath[n+3] = '3';
+    outPath[n+4] = 0;
 }
 
 
