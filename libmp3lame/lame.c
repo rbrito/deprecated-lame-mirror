@@ -332,7 +332,7 @@ static int apply_preset(lame_global_flags*  gfp, int bitrate, vbr_mode mode)
     if (gfp->internal_flags->narrowStereo < 0.0) {
 	if (bitrate >= 100)
 	    lame_set_narrowenStereo(gfp, 0.0);
-	if (bitrate >= 80)
+	else if (bitrate >= 80)
 	    lame_set_narrowenStereo(gfp, 0.25);
 	else if (bitrate > 60)
 	    lame_set_narrowenStereo(gfp, .4);
