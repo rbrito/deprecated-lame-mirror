@@ -860,20 +860,16 @@ scale_bitcount(gr_info * const gi)
 
 
 
-/*************************************************************************/
-/*            scale_bitcount_lsf                                         */
-/*************************************************************************/
-
-/* counts the number of bits to encode the scalefacs but for MPEG 2 and 2.5
+/*************************************************************************
+ *            scale_bitcount_lsf
+ *
+ * counts the number of bits to encode the scalefacs for MPEG 2 and 2.5
  * Lower sampling frequencies  (lower than 24kHz.)
  *
  * This is reverse-engineered from section 2.4.3.2 of the MPEG2 IS,
  * "Audio Decoding Layer III"
- */
-
-/*
-  table of largest scalefactor values for MPEG2
-*/
+ ************************************************************************/
+/* table of largest scalefactor values for MPEG2 */
 static const int max_range_sfac_tab[6][4] = {
     { 15, 15, 7,  7},
     { 15, 15, 7,  0},
@@ -883,68 +879,54 @@ static const int max_range_sfac_tab[6][4] = {
     { 3,  3,  0,  0}
 };
 
-static const int log2tab[] = {0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4};
-
 int
 scale_bitcount_lsf(gr_info * const gi)
 {
-    int table_number, row_in_table, partition, nr_sfb, i, sfb;
+    int table_number, row_in_table, partition, i, sfb;
     const int *partition_table;
 
-    /*
-      Set partition table. Note that should try to use table one,
-      but do not yet...
-    */
     table_number = gi->preflag * 2;
     row_in_table = 0;
-    if ( gi->block_type == SHORT_TYPE )
-	row_in_table = 1;
-
-    partition_table = &nr_of_sfb_block[table_number][row_in_table][0];
-    for ( sfb = 0, partition = 0; partition < 4; partition++ ) {
-	int m = 0;
-	nr_sfb = partition_table[ partition ];
-	for (i = 0; i < nr_sfb; i++, sfb++)
-	    if (m < gi->scalefac[sfb])
-		m = gi->scalefac[sfb];
-	gi->slen[partition] = m;
+    if (gi->block_type == SHORT_TYPE) {
+	row_in_table++;
+	if (gi->mixed_block_flag)
+	    row_in_table++;
     }
 
     gi->part2_length = LARGE_BITS;
-    for (partition = 0; partition < 4; partition++ ) {
-	if (gi->slen[partition] > max_range_sfac_tab[table_number][partition])
+    i = 0;
+    partition_table = nr_of_sfb_block[table_number][row_in_table];
+    for ( sfb = 0, partition = 0; partition < 4; partition++ ) {
+	int m = 0, sfbend = sfb + partition_table[partition];
+	for (; sfb < sfbend; sfb++)
+	    if (m < gi->scalefac[sfb])
+		m = gi->scalefac[sfb];
+	gi->slen[partition] = m;
+
+	if (m > max_range_sfac_tab[table_number][partition])
 	    return gi->part2_length; /* fail */
-	gi->slen[partition] = log2tab[gi->slen[partition]];
+	i += log2tab[m] * partition_table[partition];
     }
+    gi->part2_length = i;
 
-    gi->sfb_partition_table = nr_of_sfb_block[table_number][row_in_table];
-    /* set scalefac_compress */
-    switch ( table_number ) {
-    case 0:
-	gi->scalefac_compress
-	    = gi->slen[0]*80 + gi->slen[1]*16 + gi->slen[2]*4 + gi->slen[3];
-	break;
-
-    case 2:
-	gi->scalefac_compress = 500 + gi->slen[0]*3 + gi->slen[1];
-	break;
-/*
-    case 1:
-	gi->scalefac_compress
-	    = 400 + gi->slen[0]*20 + gi->slen[1]*4 + gi->slen[2];
-	break;
-*/
-    default:
-	/* ERRORF(gfc, "intensity stereo not implemented yet\n" ); */
-	assert(0);
-	break;
+    if (table_number == 0) {
+	/* try to use table 1 */
+	i = 0;
+	for (partition = 0; partition < 4; partition++ ) {
+	    if (gi->slen[partition] > max_range_sfac_tab[1][partition]) {
+		i = LARGE_BITS;
+		break;
+	    }
+	    i += log2tab[gi->slen[partition]]
+		* nr_of_sfb_block[1][row_in_table][partition];
+	}
+	if (gi->part2_length > i) {
+	    gi->part2_length = i;
+	    table_number = 1;
+	    partition_table = nr_of_sfb_block[1][row_in_table];
+	}
     }
-
-    assert( gi->sfb_partition_table );
-    gi->part2_length = 0;
-    for ( partition = 0; partition < 4; partition++ )
-	gi->part2_length
-	    += gi->slen[partition] * gi->sfb_partition_table[partition];
-
+    gi->scalefac_compress = table_number;
+    gi->sfb_partition_table = partition_table;
     return gi->part2_length;
 }

@@ -351,9 +351,30 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 
 	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    gr_info *gi = &l3_side->tt[0][ch];
+	    int part;
 	    writeheader(gfc,gi->part2_3_length+gi->part2_length, 12);
 	    writeheader(gfc,gi->big_values / 2,        9);
 	    writeheader(gfc,gi->global_gain,           8);
+
+	    /* set scalefac_compress */
+	    for (part = 0; part < 4; part++)
+		gi->slen[part] = log2tab[gi->slen[part]];
+	    switch (gi->scalefac_compress) {
+	    case 0:
+		gi->scalefac_compress
+		    = gi->slen[0]*80 + gi->slen[1]*16 + gi->slen[2]*4 + gi->slen[3];
+		break;
+	    case 1:
+		gi->scalefac_compress
+		    = 400 + gi->slen[0]*20 + gi->slen[1]*4 + gi->slen[2];
+		break;
+	    case 2:
+		gi->scalefac_compress = 500 + gi->slen[0]*3 + gi->slen[1];
+		break;
+	    default:
+		ERRORF(gfc, "intensity stereo not implemented yet\n" );
+		break;
+	    }
 	    writeheader(gfc,gi->scalefac_compress,     9);
 
 	    if (gi->block_type != NORM_TYPE) {
