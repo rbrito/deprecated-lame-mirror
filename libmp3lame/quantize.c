@@ -1176,23 +1176,6 @@ find_scalefac(
 
 
 
-static void
-set_scalefactor_values(gr_info *gi, int const max_range[], int vbrmax)
-{
-    int ifqstep = 1 << (1 + gi->scalefac_scale), sfb = 0;
-    do {
-	int s = (vbrmax - gi->scalefac[sfb]
-		 - gi->subblock_gain[gi->window[sfb]]*8
-		 + ifqstep - 1) >> (1 + gi->scalefac_scale);
-	if (gi->preflag > 0)
-	    s -= pretab[sfb];
-	if (s < 0)
-	    s = 0;
-	gi->scalefac[sfb] = s;
-	assert(s <= max_range[sfb]);
-    } while (++sfb < gi->psymax);
-}
-
 /******************************************************************
  *
  *  short block scalefacs
@@ -1205,10 +1188,8 @@ short_block_scalefacs(const lame_internal_flags *gfc, gr_info * gi, int vbrmax)
     int sfb, b, newmax0, newmax1;
     int maxov0[3], maxov1[3];
 
-    maxov0[0] = maxov0[1] = maxov0[2]
-	= maxov1[0] = maxov1[1] = maxov1[2]
-	= newmax0 = newmax1
-	= vbrmax;
+    maxov0[0] = maxov0[1] = maxov0[2] = maxov1[0] = maxov1[1] = maxov1[2]
+	= newmax0 = newmax1 = vbrmax;
 
     for (sfb = 0; sfb < gi->psymax; ) {
 	for (b = 0; b < 3; b++) {
@@ -1248,7 +1229,6 @@ short_block_scalefacs(const lame_internal_flags *gfc, gr_info * gi, int vbrmax)
 	assert(sbg <= 7);
 	gi->subblock_gain[b] = sbg;
     }
-    set_scalefactor_values(gi, max_range_short, vbrmax);
 }
 
 /******************************************************************
@@ -1264,8 +1244,7 @@ long_block_scalefacs(const lame_internal_flags *gfc, gr_info * gi, int vbrmax)
     const int *max_rangep
 	= gfc->mode_gr == 2 ? max_range_long : max_range_long_lsf_pretab;
 
-    /* we can use 4 strategies.
-       [scalefac_scale = (0,1), pretab = (0,1)] */
+    /* we can use 4 strategies. [scalefac_scale = (0,1), pretab = (0,1)] */
     maxov0  = maxov1 = maxov0p = maxov1p = vbrmax;
 
     /* find out the distance from most important scalefactor band
@@ -1305,26 +1284,16 @@ long_block_scalefacs(const lame_internal_flags *gfc, gr_info * gi, int vbrmax)
 	    vbrmax = maxov1p;
 	}
     }
-
     if (vbrmax < 0)
         vbrmax = 0;
     if (vbrmax > 255)
         vbrmax = 255;
     gi->global_gain = vbrmax;
-
-    if (!gi->preflag)
-	max_rangep = max_range_long;
-
-    set_scalefactor_values(gi, max_rangep, vbrmax);
 }
 
 
 static int
-VBR_maxnoise(
-    gr_info *gi,
-    FLOAT * xr34,
-    FLOAT * l3_xmin,
-    int sfb2)
+VBR_maxnoise(gr_info *gi, FLOAT * xr34, FLOAT * l3_xmin, int sfb2)
 {
     int sfb, j = 0;
     for (sfb = 0; sfb < gi->psymax; sfb++) {
@@ -1340,6 +1309,22 @@ VBR_maxnoise(
 	j += width;
     }
     return -1;
+}
+
+static void
+set_scalefactor_values(gr_info *gi)
+{
+    int ifqstep = 1 << (1 + gi->scalefac_scale), sfb = 0;
+    do {
+	int s = (gi->global_gain - gi->scalefac[sfb]
+		 - gi->subblock_gain[gi->window[sfb]]*8
+		 + ifqstep - 1) >> (1 + gi->scalefac_scale);
+	if (gi->preflag > 0)
+	    s -= pretab[sfb];
+	if (s < 0)
+	    s = 0;
+	gi->scalefac[sfb] = s;
+    } while (++sfb < gi->psymax);
 }
 
 static void
@@ -1379,10 +1364,7 @@ VBR_2nd_bitalloc(
 }
 
 static int
-VBR_3rd_bitalloc(
-    gr_info *gi,
-    FLOAT * xr34,
-    FLOAT * l3_xmin)
+VBR_3rd_bitalloc(gr_info *gi, FLOAT * xr34, FLOAT * l3_xmin)
 {
     /* note: we cannot use calc_noise() because l3_enc[] is not calculated
        at this point */
@@ -1427,11 +1409,12 @@ VBR_3rd_bitalloc(
  ***********************************************************************/
 static int
 VBR_noise_shaping(
-    lame_internal_flags * gfc, FLOAT * xr34,
-    FLOAT * l3_xmin, int gr, int ch)
+    lame_internal_flags * gfc,
+    gr_info *gi,
+    FLOAT * xr34,
+    FLOAT * l3_xmin)
 {
     int vbrmax, sfb, j;
-    gr_info *gi = &gfc->l3_side.tt[gr][ch];
 
     sfb = j = 0;
     vbrmax = -10000;
@@ -1448,6 +1431,7 @@ VBR_noise_shaping(
 	short_block_scalefacs(gfc, gi, vbrmax);
     else
 	long_block_scalefacs(gfc, gi, vbrmax);
+    set_scalefactor_values(gi);
 
     /* ensure there's no noise */
     VBR_2nd_bitalloc(gfc, gi, xr34, l3_xmin);
@@ -1516,8 +1500,8 @@ VBR_iteration_loop (
 		    continue; /* digital silence */
 
 		for (;;) {
-		    int ret = VBR_noise_shaping(gfc, xrpow,
-						l3_xmin[gr][ch], gr, ch);
+		    int ret
+			= VBR_noise_shaping(gfc, gi, xrpow, l3_xmin[gr][ch]);
 		    if (ret == 0)
 			break;
 		    if (ret == -2)
