@@ -22,8 +22,7 @@ AC_INIT
 AC_CONFIG_SRCDIR([libmp3lame/lame.c])
 
 dnl check system
-AC_CANONICAL_TARGET([])
-
+AC_CANONICAL_HOST
 
 dnl automake
 AM_INIT_AUTOMAKE(lame,3.93)
@@ -52,8 +51,6 @@ case $host_os in
          * ) CYGWIN=no;;
 esac
 
-AC_EXEEXT
-
 dnl # work around for a bug, don't know where it is exactly
 if test "${ac_cv_cygwin}" = "yes"; then
 	if test "${CC}" != "gcc"; then
@@ -71,7 +68,7 @@ dnl more automake stuff
 AM_C_PROTOTYPES
 
 AC_CHECK_HEADER(dmalloc.h)
-if test "$ac_cv_header_dmalloc_h" = "yes"; then
+if test "${ac_cv_header_dmalloc_h}" = "yes"; then
 	AM_WITH_DMALLOC
 fi
 
@@ -81,6 +78,7 @@ AC_CHECK_HEADERS( \
 		 errno.h \
 		 fcntl.h \
 		 limits.h \
+		 stdint.h \
 		 string.h \
 		 sys/soundcard.h \
 		 sys/time.h \
@@ -96,62 +94,157 @@ fi
 
 if test "${GCC}" = "yes"; then
 	AC_MSG_CHECKING(version of GCC)
-	GCC_version=`${CC} --version`
+	GCC_version=`${CC} --version | sed -n '1s/^[[^ ]]* (.*) //;s/ .*$//;1p'`
 	AC_MSG_RESULT(${GCC_version})
 fi
 
-AC_CHECK_SIZEOF(short, 2)
-AC_CHECK_SIZEOF(unsigned short, 2)
-AC_CHECK_SIZEOF(int, 4)
-AC_CHECK_SIZEOF(unsigned int, 4)
-AC_CHECK_SIZEOF(long, 4)
-AC_CHECK_SIZEOF(unsigned long, 4)
-AC_CHECK_SIZEOF(long long, 8)
-AC_CHECK_SIZEOF(unsigned long long, 8)
-AC_CHECK_SIZEOF(float, 4)
-AC_CHECK_SIZEOF(double, 8)
+AC_CHECK_SIZEOF(short)
+AC_CHECK_SIZEOF(unsigned short)
+AC_CHECK_SIZEOF(int)
+AC_CHECK_SIZEOF(unsigned int)
+AC_CHECK_SIZEOF(long)
+AC_CHECK_SIZEOF(unsigned long)
+AC_CHECK_SIZEOF(long long)
+AC_CHECK_SIZEOF(unsigned long long)
+AC_CHECK_SIZEOF(float)
+AC_CHECK_SIZEOF(double)
 
-if test ${cross_compiling} = "no"; then
-	AC_C_LONG_DOUBLE
-fi
+AC_C_LONG_DOUBLE
 if test "${ac_cv_c_have_long_double}" = "yes" ; then
-	AC_CHECK_SIZEOF(long double, 12)
+	AC_CHECK_SIZEOF(long double)
 fi
 
-AC_CHECK_TYPE(uint8_t, unsigned char)
-AC_CHECK_TYPE(int8_t, char)
-AC_CHECK_TYPE(uint16_t, unsigned short)
-AC_CHECK_TYPE(int16_t, short)
-if test "${ac_cv_sizeof_int}" = "4" ; then
-	AC_CHECK_TYPE(uint32_t, unsigned int)
-	AC_CHECK_TYPE(int32_t, int)
-elif test "${ac_cv_sizeof_long}" = "4" ; then
-	AC_CHECK_TYPE(uint32_t, unsigned long)
-	AC_CHECK_TYPE(int32_t, long)
+AC_CHECK_TYPES([uint8_t, int8_t, uint16_t, int16_t, uint32_t, int32_t, uint64_t, int64_t])
+
+AH_VERBATIM([HAVE_UINT8_T],
+[/* add uint8_t type */
+#undef HAVE_UINT8_T
+#ifndef HAVE_UINT8_T
+	typedef unsigned char uint8_t;
+#endif])
+
+AH_VERBATIM([HAVE_INT8_T],
+[/* add int8_t type */
+#undef HAVE_INT8_T
+#ifndef HAVE_INT8_T
+	typedef char int8_t;
+#endif])
+
+AH_VERBATIM([HAVE_UINT16_T],
+[/* add uint16_t type */
+#undef HAVE_UINT16_T
+#ifndef HAVE_UINT16_T
+	typedef unsigned short uint16_t;
+#endif])
+
+AH_VERBATIM([HAVE_INT16_T],
+[/* add int16_t type */
+#undef HAVE_INT16_T
+#ifndef HAVE_INT16_T
+	typedef short int16_t;
+#endif])
+
+if test "${ac_cv_sizeof_unsigned_int}" = "4"; then
+	AH_VERBATIM([HAVE_UINT32_T],
+[/* add uint32_t type */
+#undef HAVE_UINT32_T
+#ifndef HAVE_UINT32_T
+	typedef unsigned int uint32_t;
+#endif])
+elif test "${ac_cv_sizeof_unsigned_long}" = "4"; then
+	AH_VERBATIM([HAVE_UINT32_T],
+[/* add uint32_t type */
+#undef HAVE_UINT32_T
+#ifndef HAVE_UINT32_T
+	typedef unsigned long uint32_t;
+#endif])
 else
-	# can't determine default value in case the type isn't present
-	AC_MSG_ERROR(CHECK_TYPE_int32_t - please report to lame-dev@lists.sourceforge.net)
+	AC_MSG_ERROR([CHECK_TYPE_uint32_t - please report to lame-dev@lists.sourceforge.net])
 fi
-if test "${ac_cv_sizeof_long}" = "8" ; then
-	AC_CHECK_TYPE(uint64_t, unsigned long)
-	AC_CHECK_TYPE(int64_t, long)
-elif test "${ac_cv_sizeof_long_long}" = "8" ; then
-	AC_CHECK_TYPE(uint64_t, unsigned long long)
-	AC_CHECK_TYPE(int64_t, long long)
+
+if test "${ac_cv_sizeof_int}" = "4"; then
+	AH_VERBATIM([HAVE_INT32_T],
+[/* add int32_t type */
+#undef HAVE_INT32_T
+#ifndef HAVE_INT32_T
+	typedef int int32_t;
+#endif])
+elif test "${ac_cv_sizeof_long}" = "4"; then
+	AH_VERBATIM([HAVE_INT32_T],
+[/* add int32_t type */
+#undef HAVE_INT32_T
+#ifndef HAVE_INT32_T
+	typedef long int32_t;
+#endif])
 else
-	# can't determine default value in case the type isn't present
-	AC_MSG_ERROR(CHECK_TYPE_int64_t - please report to lame-dev@lists.sourceforge.net)
+	AC_MSG_ERROR([CHECK_TYPE_int32_t - please report to lame-dev@lists.sourceforge.net])
+fi
+
+if test "${ac_cv_sizeof_unsigned_long}" = "8"; then
+	AH_VERBATIM([HAVE_UINT64_T],
+[/* add uint64_t type */
+#undef HAVE_UINT64_T
+#ifndef HAVE_UINT64_T
+	typedef unsigned long uint64_t;
+#endif])
+elif test "${ac_cv_sizeof_unsigned_long_long}" = "8"; then
+AH_VERBATIM([HAVE_UINT64_T],
+[/* add uint64_t type */
+#undef HAVE_UINT64_T
+#ifndef HAVE_UINT64_T
+	typedef unsigned long long uint64_t;
+#endif])
+else
+	AC_MSG_ERROR([CHECK_TYPE_uint64_t - please report to lame-dev@lists.sourceforge.net])
+fi
+
+if test "${ac_cv_sizeof_long}" = "8"; then
+	AH_VERBATIM([HAVE_INT64_T],
+[/* add int64_t type */
+#undef HAVE_INT64_T
+#ifndef HAVE_INT64_T
+	typedef long int64_t;
+#endif])
+elif test "${ac_cv_sizeof_long_long}" = "8"; then
+	AH_VERBATIM([HAVE_INT64_T],
+[/* add int64_t type */
+#undef HAVE_INT64_T
+#ifndef HAVE_INT64_T
+	typedef long long int64_t;
+#endif])
+else
+	AC_MSG_ERROR([CHECK_TYPE_int64_t - please report to lame-dev@lists.sourceforge.net])
 fi
 
 alex_IEEE854_FLOAT80
 if test "${alex_cv_ieee854_float80}" = "yes" ; then
 	if test "${ac_cv_c_long_double}" = "yes" ; then
-		AC_CHECK_TYPE(ieee854_float80_t, long double)
+		AC_CHECK_TYPES(ieee854_float80_t, long double)
+		AH_VERBATIM([HAVE_IEEE854_FLOAT80_T],
+[/* add ieee854_float80_t type */
+#undef HAVE_IEEE854_FLOAT80_T
+#ifndef HAVE_IEEE854_FLOAT80_T
+	typedef long double ieee854_float80_t;
+#endif])
+
 		AC_DEFINE(HAVE_IEEE854_FLOAT80, 1, [system has 80 bit floats])
 	fi
 fi
-AC_CHECK_TYPE(ieee754_float64_t, double)
-AC_CHECK_TYPE(ieee754_float32_t, float)
+AC_CHECK_TYPES([ieee754_float64_t, ieee754_float32_t])
+
+AH_VERBATIM([HAVE_IEEE754_FLOAT64_T],
+[/* add ieee754_float64_t type */
+#undef HAVE_IEEE754_FLOAT64_T
+#ifndef HAVE_IEEE754_FLOAT64_T
+	typedef double ieee754_float64_t;
+#endif])
+
+AH_VERBATIM([HAVE_IEEE754_FLOAT32_T],
+[/* add ieee754_float32_t type */
+#undef HAVE_IEEE754_FLOAT32_T
+#ifndef HAVE_IEEE754_FLOAT32_T
+	typedef float ieee754_float32_t;
+#endif])
 
 AC_DEFINE(LAME_LIBRARY_BUILD, 1, [requested by Frank, seems to be temporary needed for a smooth transition])
 
@@ -172,7 +265,7 @@ if test ${cross_compiling} = "yes"; then
   [*       - float                                                          *]
   [*       - double                                                         *]
   [*       - long double                                                    *]
-  [*     + the endianess of the target system                               *]
+  [*     + the endianess of the system                                      *]
   [*   - You have to provide appropriate defines for them in config.h, e.g. *]
   [*     + define SIZEOF_SHORT to 2 if the size of a short is 2             *]
   [*     + define WORDS_BIGENDIAN if your system is a big endian system     *]
@@ -442,7 +535,7 @@ fi
 # this is from vorbis
 #
 dnl check GLIBC
-case $target in 
+case $host in 
 *86-*-linux*)
 	# glibc < 2.1.3 has a serious FP bug in the math inline header
 	# that will cripple Vorbis.  Look to see if the magic FP stack
@@ -517,7 +610,7 @@ AM_CONDITIONAL(WITH_BRHIST, test "${CONFIG_BRHIST}" != "no")
 
 
 dnl ### processor specific options ###
-case $target_cpu in
+case $host_cpu in
 *86)
 	CPUTYPE="i386"
 
@@ -631,8 +724,8 @@ if test "x$GCC" = "xyes"; then
 			-fforce-mem"
 
 
-	# generic target CPU specific options
-	case ${target_cpu} in
+	# generic CPU specific options
+	case ${host_cpu} in
 	sparc)
 		case "${GCC_version}" in
 		3.1*)
@@ -663,7 +756,7 @@ if test "x$GCC" = "xyes"; then
 		case "${GCC_version}" in
 		2.9*|3.*)
 			# "new" GCC, use some "new" CPU specific optimizations
-			case ${target_cpu} in
+			case ${host_cpu} in
 			*486)
 				OPTIMIZATION="${OPTIMIZATION} -m486 \
 					-mfancy-math-387"
@@ -690,12 +783,17 @@ if test "x$GCC" = "xyes"; then
 				OPTIMIZATION="${OPTIMIZATION} -fdelayed-branch"
 				;;
 			esac
+			;;
+		*)
+			# no special optimization for other versions
+			AC_MSG_WARN(LAME doesn't know about your version of gcc, please report it to lame-dev@lists.sourceforge.net. Please make sure you try the latest LAME version first!)
+			;;
+		esac
 		;;
 	*)
 		AC_MSG_ERROR(bad value »${CONFIG_EXPOPT}« for expopt option)
 		;;
 	esac
-esac
 
 	AC_MSG_RESULT(${CONFIG_EXPOPT})
 else
@@ -755,7 +853,7 @@ dnl ###  system specific options  ###
 ##########################################################################
 # LINUX on Digital/Compaq Alpha CPUs
 ##########################################################################
-case $target in
+case $host in
 alpha*-*-linux*)
 
 ################################################################
@@ -832,7 +930,7 @@ alpha*-dec-osf*)
 ##########################################################################
 *-*-beos*) # todo:is this the right string ?
 	if test CC = "\$(BE_C_COMPILER)"; then
-		case $target in
+		case $host in
 		bepc*-*-*)
 		 # todo: is this right architecture ? was: if ($(ARCH),BePC)
 	   		OPTIMIZATION="-O9 -fomit-frame-pointer -march=pentium \
