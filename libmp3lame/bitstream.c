@@ -68,11 +68,11 @@ static void
 putheader_bits(lame_internal_flags *gfc,int w_ptr)
 {
     Bit_stream_struc *bs = &gfc->bs;
-    memcpy(&bs->buf[bs->buf_byte_idx], gfc->header[gfc->w_ptr].buf,
-	   gfc->sideinfo_len);
-    bs->buf_byte_idx += gfc->sideinfo_len;
-    bs->totbit += gfc->sideinfo_len * 8;
-    gfc->w_ptr = (gfc->w_ptr + 1) & (MAX_HEADER_BUF - 1);
+    memcpy(&bs->buf[bs->buf_byte_idx], bs->header[bs->w_ptr].buf,
+	   gfc->l3_side.sideinfo_len);
+    bs->buf_byte_idx += gfc->l3_side.sideinfo_len;
+    bs->totbit += gfc->l3_side.sideinfo_len * 8;
+    bs->w_ptr = (bs->w_ptr + 1) & (MAX_HEADER_BUF - 1);
 }
 
 
@@ -92,10 +92,10 @@ putbits2(lame_internal_flags *gfc, int val, int j)
 	    bs->buf_bit_idx = 8;
 	    bs->buf_byte_idx++;
 	    assert(bs->buf_byte_idx < BUFFER_SIZE);
-	    assert(gfc->header[gfc->w_ptr].write_timing >= bs->totbit
-		||(gfc->header[gfc->w_ptr].write_timing ^ bs->totbit) < 0);
-	    if (gfc->header[gfc->w_ptr].write_timing == bs->totbit)
-		putheader_bits(gfc,gfc->w_ptr);
+	    assert(bs->header[bs->w_ptr].write_timing >= bs->totbit
+		||(bs->header[bs->w_ptr].write_timing ^ bs->totbit) < 0);
+	    if (bs->header[bs->w_ptr].write_timing == bs->totbit)
+		putheader_bits(gfc,bs->w_ptr);
 	    bs->buf[bs->buf_byte_idx] = 0;
 	}
 
@@ -195,17 +195,17 @@ drain_into_ancillary(lame_global_flags *gfp, int remainingBits)
 inline static void
 writeheader(lame_internal_flags *gfc,int val, int j)
 {
-    int ptr = gfc->header[gfc->h_ptr].ptr;
+    int ptr = gfc->bs.header[gfc->bs.h_ptr].ptr;
 
     while (j > 0) {
 	int k = Min(j, 8 - (ptr & 7));
 	j -= k;
         assert (j < MAX_LENGTH); /* >> 32  too large for 32 bit machines */
-	gfc->header[gfc->h_ptr].buf[ptr >> 3]
+	gfc->bs.header[gfc->bs.h_ptr].buf[ptr >> 3]
 	    |= ((val >> j)) << (8 - (ptr & 7) - k);
 	ptr += k;
     }
-    gfc->header[gfc->h_ptr].ptr = ptr;
+    gfc->bs.header[gfc->bs.h_ptr].ptr = ptr;
 }
 
 
@@ -233,7 +233,7 @@ CRC_writeheader(lame_internal_flags *gfc, char *header)
 
     crc = CRC_update(((unsigned char*)header)[2], crc);
     crc = CRC_update(((unsigned char*)header)[3], crc);
-    for (i = 6; i < gfc->sideinfo_len; i++) {
+    for (i = 6; i < gfc->l3_side.sideinfo_len; i++) {
 	crc = CRC_update(((unsigned char*)header)[i], crc);
     }
 
@@ -245,12 +245,11 @@ inline static void
 encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
-    III_side_info_t *l3_side;
+    III_side_info_t *l3_side = &gfc->l3_side;
     int gr, ch;
-    
-    l3_side = &gfc->l3_side;
-    gfc->header[gfc->h_ptr].ptr = 0;
-    memset(gfc->header[gfc->h_ptr].buf, 0, gfc->sideinfo_len);
+
+    gfc->bs.header[gfc->bs.h_ptr].ptr = 0;
+    memset(gfc->bs.header[gfc->bs.h_ptr].buf, 0, l3_side->sideinfo_len);
     if (gfp->out_samplerate < 16000) 
 	writeheader(gfc,0xffe,                12);
     else
@@ -405,18 +404,18 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 
     if (gfp->error_protection) {
 	/* (jo) error_protection: add crc16 information to header */
-	CRC_writeheader(gfc, gfc->header[gfc->h_ptr].buf);
+	CRC_writeheader(gfc, gfc->bs.header[gfc->bs.h_ptr].buf);
     }
 
     {
-	int old = gfc->h_ptr;
-	assert(gfc->header[old].ptr == gfc->sideinfo_len * 8);
+	int old = gfc->bs.h_ptr;
+	assert(gfc->bs.header[old].ptr == l3_side->sideinfo_len * 8);
 
-	gfc->h_ptr = (old + 1) & (MAX_HEADER_BUF - 1);
-	gfc->header[gfc->h_ptr].write_timing =
-	    gfc->header[old].write_timing + bitsPerFrame;
+	gfc->bs.h_ptr = (old + 1) & (MAX_HEADER_BUF - 1);
+	gfc->bs.header[gfc->bs.h_ptr].write_timing =
+	    gfc->bs.header[old].write_timing + bitsPerFrame;
 
-	if (gfc->h_ptr == gfc->w_ptr) {
+	if (gfc->bs.h_ptr == gfc->bs.w_ptr) {
 	  /* yikes! we are out of header buffer space */
 	  ERRORF(gfc,"Error: MAX_HEADER_BUF too small in bitstream.c \n");
 	}
@@ -653,59 +652,56 @@ writeMainData (lame_internal_flags *gfc)
 int
 compute_flushbits( const lame_global_flags * gfp, int *total_bytes_output )
 {
-  lame_internal_flags *gfc=gfp->internal_flags;
-  int flushbits,remaining_headers;
-  int bitsPerFrame;
-  int last_ptr,first_ptr;
-  first_ptr=gfc->w_ptr;           /* first header to add to bitstream */
-  last_ptr = gfc->h_ptr - 1;   /* last header to add to bitstream */
-  if (last_ptr==-1) last_ptr=MAX_HEADER_BUF-1;   
+    lame_internal_flags *gfc=gfp->internal_flags;
+    Bit_stream_struc *bs = &gfc->bs;
+    int flushbits,remaining_headers;
+    int bitsPerFrame;
+    int first_ptr = bs->w_ptr;           /* first header to add to bitstream */
+    int last_ptr = (bs->h_ptr - 1) & (MAX_HEADER_BUF-1);
 
-  /* add this many bits to bitstream so we can flush all headers */
-  flushbits = gfc->header[last_ptr].write_timing - gfc->bs.totbit;
-  *total_bytes_output=flushbits;
+    /* add this many bits to bitstream so we can flush all headers */
+    flushbits = bs->header[last_ptr].write_timing - bs->totbit;
+    *total_bytes_output=flushbits;
 
-  if (flushbits >= 0) {
-    /* if flushbits >= 0, some headers have not yet been written */
-    /* reduce flushbits by the size of the headers */
-    remaining_headers= 1+last_ptr - first_ptr;
-    if (last_ptr < first_ptr) 
-      remaining_headers= 1+last_ptr - first_ptr + MAX_HEADER_BUF;
-    flushbits -= remaining_headers*8*gfc->sideinfo_len;
-  }
+    if (flushbits >= 0) {
+	/* if flushbits >= 0, some headers have not yet been written */
+	/* reduce flushbits by the size of the headers */
+	remaining_headers= 1+last_ptr - first_ptr;
+	if (last_ptr < first_ptr) 
+	    remaining_headers= 1+last_ptr - first_ptr + MAX_HEADER_BUF;
+	flushbits -= remaining_headers*8*gfc->l3_side.sideinfo_len;
+    }
 
-
-  /* finally, add some bits so that the last frame is complete
-   * these bits are not necessary to decode the last frame, but
-   * some decoders will ignore last frame if these bits are missing 
-   */
-  bitsPerFrame = getframebits(gfp);
-  flushbits += bitsPerFrame;
-  *total_bytes_output += bitsPerFrame;
-  /* round up: */
-  if (*total_bytes_output % 8) 
-      *total_bytes_output = 1 + (*total_bytes_output/8);
-  else
-      *total_bytes_output = (*total_bytes_output/8);
-  *total_bytes_output +=  gfc->bs.buf_byte_idx + 1;
-
-
-  if (flushbits<0) {
-#if 0
-    /* if flushbits < 0, this would mean that the buffer looks like:
-     * (data...)  last_header  (data...)  (extra data that should not be here...)
+    /* finally, add some bits so that the last frame is complete
+     * these bits are not necessary to decode the last frame, but
+     * some decoders will ignore last frame if these bits are missing 
      */
-    DEBUGF(gfc,"last header write_timing = %i \n",gfc->header[last_ptr].write_timing);
-    DEBUGF(gfc,"first header write_timing = %i \n",gfc->header[first_ptr].write_timing);
-    DEBUGF(gfc,"bs.totbit:                 %i \n",gfc->bs.totbit);
-    DEBUGF(gfc,"first_ptr, last_ptr        %i %i \n",first_ptr,last_ptr);
-    DEBUGF(gfc,"remaining_headers =        %i \n",remaining_headers);
-    DEBUGF(gfc,"bitsperframe:              %i \n",bitsPerFrame);
-    DEBUGF(gfc,"sidelen:                   %i \n",gfc->sideinfo_len);
+    bitsPerFrame = getframebits(gfp);
+    flushbits += bitsPerFrame;
+    *total_bytes_output += bitsPerFrame;
+    /* round up: */
+    if (*total_bytes_output % 8) 
+	*total_bytes_output = 1 + (*total_bytes_output/8);
+    else
+	*total_bytes_output = (*total_bytes_output/8);
+    *total_bytes_output +=  bs->buf_byte_idx + 1;
+
+    if (flushbits<0) {
+#if 0
+	/* if flushbits < 0, this would mean that the buffer looks like:
+	 * (data...)  last_header  (data...)  (extra data that should not be here...)
+	 */
+	DEBUGF(gfc,"last header write_timing = %i \n", bs->header[last_ptr].write_timing);
+	DEBUGF(gfc,"first header write_timing = %i \n", bs->header[first_ptr].write_timing);
+	DEBUGF(gfc,"bs.totbit:                 %i \n", bs->totbit);
+	DEBUGF(gfc,"first_ptr, last_ptr        %i %i \n",first_ptr,last_ptr);
+	DEBUGF(gfc,"remaining_headers =        %i \n",remaining_headers);
+	DEBUGF(gfc,"bitsperframe:              %i \n",bitsPerFrame);
+	DEBUGF(gfc,"sidelen:                   %i \n",gfc->l3_side.sideinfo_len);
 #endif
-    ERRORF(gfc,"strange error flushing buffer ... \n");
-  }
-  return flushbits;
+	ERRORF(gfc,"strange error flushing buffer ... \n");
+    }
+    return flushbits;
 }
 
 
@@ -713,29 +709,22 @@ compute_flushbits( const lame_global_flags * gfp, int *total_bytes_output )
 void
 flush_bitstream(lame_global_flags *gfp)
 {
-  lame_internal_flags *gfc=gfp->internal_flags;
-  III_side_info_t *l3_side;
-  int nbytes;
-  int flushbits;
-  int last_ptr,first_ptr;
-  first_ptr=gfc->w_ptr;           /* first header to add to bitstream */
-  last_ptr = gfc->h_ptr - 1;   /* last header to add to bitstream */
-  if (last_ptr==-1) last_ptr=MAX_HEADER_BUF-1;   
-  l3_side = &gfc->l3_side;
+    III_side_info_t *l3_side = &gfp->internal_flags->l3_side;
+    Bit_stream_struc *bs = &gfp->internal_flags->bs;
+    int nbytes, flushbits;
+    int last_ptr = (bs->h_ptr - 1) & (MAX_HEADER_BUF-1);
 
+    if ((flushbits = compute_flushbits(gfp,&nbytes)) < 0)
+	return;  
+    drain_into_ancillary(gfp, flushbits);
 
-  if ((flushbits = compute_flushbits(gfp,&nbytes)) < 0) return;  
-  drain_into_ancillary(gfp, flushbits);
+    /* check that the 100% of the last frame has been written to bitstream */
+    assert(bs->header[last_ptr].write_timing + getframebits(gfp) == bs->totbit);
 
-  /* check that the 100% of the last frame has been written to bitstream */
-  assert (gfc->header[last_ptr].write_timing + getframebits(gfp)
-	  == gfc->bs.totbit);
-
-  /* we have padded out all frames with ancillary data, which is the
-     same as filling the bitreservoir with ancillary data, so : */
-  gfc->ResvSize=0;
-  l3_side->main_data_begin = 0;
-
+    /* we have padded out all frames with ancillary data, which is the
+       same as filling the bitreservoir with ancillary data, so : */
+    l3_side->ResvSize=0;
+    l3_side->main_data_begin = 0;
 }
 
 
@@ -743,13 +732,11 @@ flush_bitstream(lame_global_flags *gfp)
 
 void  add_dummy_byte ( lame_global_flags* const gfp, unsigned char val )
 {
-  lame_internal_flags *gfc = gfp->internal_flags;
-  int i;
-
-  putbits_noheaders(gfc, val, 8);   
-
-  for (i=0 ; i< MAX_HEADER_BUF ; ++i) 
-    gfc->header[i].write_timing += 8;
+    lame_internal_flags *gfc = gfp->internal_flags;
+    int i;
+    putbits_noheaders(gfc, val, 8);   
+    for (i=0 ; i< MAX_HEADER_BUF ; ++i) 
+	gfc->bs.header[i].write_timing += 8;
 }
 
 
@@ -767,16 +754,14 @@ int
 format_bitstream(lame_global_flags *gfp)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
-    int bits,nbytes;
-    III_side_info_t *l3_side;
-    int bitsPerFrame;
-    l3_side = &gfc->l3_side;
+    int bits, nbytes, bitsPerFrame;
+    III_side_info_t *l3_side = &gfc->l3_side;
 
     bitsPerFrame = getframebits(gfp);
     drain_into_ancillary(gfp, l3_side->resvDrain_pre);
 
     encodeSideInfo2(gfp,bitsPerFrame);
-    bits = 8*gfc->sideinfo_len;
+    bits = 8*l3_side->sideinfo_len;
     bits+=writeMainData(gfc);
     drain_into_ancillary(gfp, l3_side->resvDrain_post);
     bits += l3_side->resvDrain_post;
@@ -785,39 +770,39 @@ format_bitstream(lame_global_flags *gfp)
 
     /* compare number of bits needed to clear all buffered mp3 frames
      * with what we think the resvsize is: */
-    if (compute_flushbits(gfp,&nbytes) != gfc->ResvSize)
+    if (compute_flushbits(gfp,&nbytes) != l3_side->ResvSize)
 	ERRORF(gfc,"Internal buffer inconsistency. flushbits <> ResvSize");
 
     /* compare main_data_begin for the next frame with what we
      * think the resvsize is: */
-    if ((l3_side->main_data_begin * 8) != gfc->ResvSize ) {
-      ERRORF(gfc,"bit reservoir error: \n"
-             "l3_side->main_data_begin: %i \n"
-             "Resvoir size:             %i \n"
-             "resv drain (post)         %i \n"
-             "resv drain (pre)          %i \n"
-             "header and sideinfo:      %i \n"
-             "data bits:                %i \n"
-             "total bits:               %i (remainder: %i) \n"
-             "bitsperframe:             %i \n",
+    if ((l3_side->main_data_begin * 8) != l3_side->ResvSize ) {
+	ERRORF(gfc,"bit reservoir error: \n"
+	       "l3_side->main_data_begin: %i \n"
+	       "Resvoir size:             %i \n"
+	       "resv drain (post)         %i \n"
+	       "resv drain (pre)          %i \n"
+	       "header and sideinfo:      %i \n"
+	       "data bits:                %i \n"
+	       "total bits:               %i (remainder: %i) \n"
+	       "bitsperframe:             %i \n",
 
-             8*l3_side->main_data_begin,
-             gfc->ResvSize,
-             l3_side->resvDrain_post,
-             l3_side->resvDrain_pre,
-             8*gfc->sideinfo_len,
-             bits-l3_side->resvDrain_post-8*gfc->sideinfo_len,
-             bits, bits % 8,
-             bitsPerFrame
-      );
+	       8*l3_side->main_data_begin,
+	       l3_side->ResvSize,
+	       l3_side->resvDrain_post,
+	       l3_side->resvDrain_pre,
+	       8*l3_side->sideinfo_len,
+	       bits-l3_side->resvDrain_post-8*l3_side->sideinfo_len,
+	       bits, bits % 8,
+	       bitsPerFrame
+	    );
 
-      ERRORF(gfc,
-	     "This is a fatal error.  It has several possible causes:\n"
-	     "90%%  LAME compiled with buggy version of gcc using advanced optimizations\n"
-	     " 9%%  Your system is overclocked\n"
-	     " 1%%  bug in LAME encoding library");
+	ERRORF(gfc,
+	       "This is a fatal error.  It has several possible causes:\n"
+	       "90%%  LAME compiled with buggy version of gcc using advanced optimizations\n"
+	       " 9%%  Your system is overclocked\n"
+	       " 1%%  bug in LAME encoding library");
 
-      gfc->ResvSize = l3_side->main_data_begin*8;
+	l3_side->ResvSize = l3_side->main_data_begin*8;
     };
     assert(gfc->bs.totbit % 8 == 0);
     return 0;
@@ -846,7 +831,7 @@ int copy_buffer(lame_internal_flags *gfc,unsigned char *buffer,int size,int mp3d
     bs->buf_bit_idx = 0;
 
     if (mp3data) {
-        UpdateMusicCRC(&gfc->nMusicCRC,buffer,minimum);
+	UpdateMusicCRC(&gfc->nMusicCRC,buffer,minimum);
 #ifdef DECODE_ON_THE_FLY
 	/* this is untested code;
 	   if, for somereason, we would like to decode the frame: */

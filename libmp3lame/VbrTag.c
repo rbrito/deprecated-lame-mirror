@@ -436,7 +436,7 @@ int InitVbrTag(lame_global_flags *gfp)
     gfp->TotalFrameSize
 	= ((gfp->version+1)*72000*header_bitrate) / gfp->out_samplerate;
 
-    tot = (gfc->sideinfo_len+LAMEHEADERSIZE);
+    tot = (gfc->l3_side.sideinfo_len+LAMEHEADERSIZE);
     if (!(tot <= gfp->TotalFrameSize && gfp->TotalFrameSize <= MAXFRAMESIZE)) {
 	/* disable tag, it wont fit */
 	gfp->bWriteVbrTag = 0;
@@ -843,7 +843,7 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
         /* print_seeking (btToc); */
 
 	/* Start writing the tag after the zero frame */
-	nStreamIndex=gfc->sideinfo_len;
+	nStreamIndex=gfc->l3_side.sideinfo_len;
 	/* note! Xing header specifies that Xing data goes in the
 	 * ancillary data with NO ERROR PROTECTION.  If error protecton
 	 * in enabled, the Xing data still starts at the same offset,

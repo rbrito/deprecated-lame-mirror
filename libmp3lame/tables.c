@@ -1486,20 +1486,20 @@ int psymodel_init(lame_global_flags *gfp)
 void init_bit_stream_w(lame_global_flags *gfp)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
-    gfc->h_ptr = gfc->w_ptr = 0;
-    gfc->header[gfc->h_ptr].write_timing = 0;
+    gfc->bs.h_ptr = gfc->bs.w_ptr = 0;
+    gfc->bs.header[gfc->bs.h_ptr].write_timing = 0;
     gfc->bs.buf_byte_idx = -1;
     gfc->bs.buf_bit_idx = 0;
     gfc->bs.totbit = 0;
 
     /* determine the mean bitrate for main data */
     if (gfp->version == 1) /* MPEG 1 */
-        gfc->sideinfo_len = (gfc->channels_out == 1) ? 4 + 17 : 4 + 32;
+        gfc->l3_side.sideinfo_len = (gfc->channels_out == 1) ? 4 + 17 : 4 + 32;
     else                /* MPEG 2 */
-        gfc->sideinfo_len = (gfc->channels_out == 1) ? 4 + 9 : 4 + 17;
+        gfc->l3_side.sideinfo_len = (gfc->channels_out == 1) ? 4 + 9 : 4 + 17;
 
     if (gfp->error_protection)
-        gfc->sideinfo_len += 2;
+        gfc->l3_side.sideinfo_len += 2;
 
     /* padding method as described in 
      * "MPEG-Layer3 / Bitstream Syntax and Decoding"

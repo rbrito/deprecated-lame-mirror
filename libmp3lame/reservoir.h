@@ -31,6 +31,6 @@ void ResvFrameEnd(lame_internal_flags *gfc, int mean_bits );
   Called after a granule's bit allocation. Readjusts the size of
   the reservoir to reflect the granule's usage.
 */
-#define ResvAdjust(gfc, bits) gfc->ResvSize -= bits
+#define ResvAdjust(gfc, bits) gfc->l3_side.ResvSize -= bits
 
 #endif /* LAME_RESERVOIR_H */

@@ -86,7 +86,7 @@ ResvFrameBegin(lame_global_flags *gfp, int *mean_bits)
     int frameLength;
 
     frameLength = getframebits(gfp);
-    *mean_bits = (frameLength - gfc->sideinfo_len * 8) / gfc->mode_gr;
+    *mean_bits = (frameLength - l3_side->sideinfo_len * 8) / gfc->mode_gr;
 
 /*
  *  Meaning of the variables:
@@ -110,9 +110,9 @@ ResvFrameBegin(lame_global_flags *gfp, int *mean_bits)
  *
  *      frameLength:
  *
- *      gfc->ResvMax:   maximum allowed reservoir 
+ *      l3_side->ResvMax:   maximum allowed reservoir 
  *
- *      gfc->ResvSize:  current reservoir size
+ *      l3_side->ResvSize:  current reservoir size
  *
  *      l3_side->resvDrain_pre:
  *         ancillary data to be added to previous frame:
@@ -142,17 +142,17 @@ ResvFrameBegin(lame_global_flags *gfp, int *mean_bits)
 	    maxmp3buf = ((int)(320000*1152 / gfp->out_samplerate + 4)) & (~7);
     }
 
-    gfc->ResvMax = maxmp3buf - frameLength;
+    l3_side->ResvMax = maxmp3buf - frameLength;
     /* main_data_begin has 9 bits in MPEG-1, 8 bits MPEG-2 */
     resvLimit = (8*256)*gfc->mode_gr-8;
-    if (gfc->ResvMax > resvLimit)
-	gfc->ResvMax = resvLimit;
-    if (gfc->ResvMax < 0 ||  gfp->disable_reservoir)
-	gfc->ResvMax = 0;
-    assert ( 0 == gfc->ResvMax % 8 );
+    if (l3_side->ResvMax > resvLimit)
+	l3_side->ResvMax = resvLimit;
+    if (l3_side->ResvMax < 0 ||  gfp->disable_reservoir)
+	l3_side->ResvMax = 0;
+    assert ( 0 == l3_side->ResvMax % 8 );
 
     fullFrameBits
-	= *mean_bits * gfc->mode_gr + Min ( gfc->ResvSize, gfc->ResvMax );
+	= *mean_bits * gfc->mode_gr + Min(l3_side->ResvSize, l3_side->ResvMax);
 
     if (fullFrameBits > maxmp3buf)
         fullFrameBits = maxmp3buf;
@@ -161,7 +161,7 @@ ResvFrameBegin(lame_global_flags *gfp, int *mean_bits)
 #ifdef HAVE_GTK
     if (gfc->pinfo) {
         gfc->pinfo->mean_bits = *mean_bits / 2;  /* expected bits per channel per granule [is this also right for mono/stereo, MPEG-1/2 ?] */
-        gfc->pinfo->resvsize  = gfc->ResvSize;
+        gfc->pinfo->resvsize  = l3_side->ResvSize;
     }
 #endif
 
@@ -177,7 +177,7 @@ ResvFrameBegin(lame_global_flags *gfp, int *mean_bits)
 */
 void ResvMaxBits(lame_internal_flags *gfc, int mean_bits, int *targ_bits, int *extra_bits)
 {
-    int ResvSize = gfc->ResvSize, ResvMax = gfc->ResvMax;
+    int ResvSize = gfc->l3_side.ResvSize, ResvMax = gfc->l3_side.ResvMax;
     if (ResvSize*10 >= ResvMax*6) {
 	int add_bits = 0;
 	if (ResvSize*10 >= ResvMax*9) {
@@ -218,13 +218,13 @@ ResvFrameEnd(lame_internal_flags *gfc, int mean_bits)
     int over_bits;
     III_side_info_t     *l3_side = &gfc->l3_side;
 
-    gfc->ResvSize += mean_bits * gfc->mode_gr;
+    l3_side->ResvSize += mean_bits * gfc->mode_gr;
     l3_side->resvDrain_post = 0;
     l3_side->resvDrain_pre = 0;
 
     /* we must be byte aligned */
-    stuffingBits = gfc->ResvSize % 8;
-    over_bits = (gfc->ResvSize - stuffingBits) - gfc->ResvMax;
+    stuffingBits = l3_side->ResvSize % 8;
+    over_bits = (l3_side->ResvSize - stuffingBits) - l3_side->ResvMax;
     if (over_bits > 0) /* reservoir is overflowed */
 	stuffingBits += over_bits;
 
@@ -238,7 +238,7 @@ ResvFrameEnd(lame_internal_flags *gfc, int mean_bits)
     int mdb_bytes = Min(l3_side->main_data_begin*8,stuffingBits)/8;
     l3_side->resvDrain_pre += 8*mdb_bytes;
     stuffingBits -= 8*mdb_bytes;
-    gfc->ResvSize -= 8*mdb_bytes;
+    l3_side->ResvSize -= 8*mdb_bytes;
     l3_side->main_data_begin -= mdb_bytes;
 
 
@@ -248,12 +248,12 @@ ResvFrameEnd(lame_internal_flags *gfc, int mean_bits)
      * and we will not have to waste these bits!  mt 4/00 */
     assert ( stuffingBits >= 0 );
     l3_side->resvDrain_post += (stuffingBits % 8);
-    gfc->ResvSize -= stuffingBits % 8;
+    l3_side->ResvSize -= stuffingBits % 8;
   }
 #else
     /* drain the rest into this frames ancillary data*/
     l3_side->resvDrain_post += stuffingBits;
-    gfc->ResvSize -= stuffingBits;
+    l3_side->ResvSize -= stuffingBits;
 #endif
 
     return;

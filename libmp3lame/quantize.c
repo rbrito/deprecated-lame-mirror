@@ -928,11 +928,11 @@ ABR_calc_target_bits (
     max_frame_bits = ResvFrameBegin (gfp, &mean_bits);
 
     gfc->bitrate_index = 1;
-    mean_bits = getframebits(gfp) - gfc->sideinfo_len * 8;
+    mean_bits = getframebits(gfp) - gfc->l3_side.sideinfo_len * 8;
     analog_silence_bits = mean_bits / (gfc->mode_gr * gfc->channels_out);
 
     gfc->bitrate_index = 0;
-    mean_bits = getframebits(gfp) - gfc->sideinfo_len * 8;
+    mean_bits = getframebits(gfp) - gfc->l3_side.sideinfo_len * 8;
     if (gfc->substep_shaping & 1)
 	mean_bits *= 1.1;
     mean_bits /= (gfc->mode_gr * gfc->channels_out);

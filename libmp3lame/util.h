@@ -143,11 +143,27 @@ static inline ieee754_float32_t fast_log2(ieee754_float32_t xx)
 *
 ***********************************************************************/
 /* bitstream handling structure */
-typedef struct  bit_stream_struc {
+typedef struct {
     int totbit;         /* bit counter of bit stream */
     int buf_byte_idx;   /* pointer to top byte in buffer */
     int buf_bit_idx;    /* pointer to top bit of top byte in buffer */
     unsigned char buf[BUFFER_SIZE];         /* bit stream buffer */
+    /* mpeg1: buffer=511 bytes  smallest frame: 96-38(sideinfo)=58
+     * max number of frames in reservoir:  8 
+     * mpeg2: buffer=255 bytes.  smallest frame: 24-23bytes=1
+     * with VBR, if you are encoding all silence, it is possible to
+     * have 8kbs/24khz frames with 1byte of data each, which means we need
+     * to buffer up to 255 headers! */
+    /* also, max_header_buf has to be a power of two */
+#define MAX_HEADER_BUF 256
+#define MAX_HEADER_LEN 40 /* max size of header is 38 */
+    struct {
+	int write_timing;
+	int ptr;
+	char buf[MAX_HEADER_LEN];
+    } header[MAX_HEADER_BUF];
+    int h_ptr;
+    int w_ptr;
 } Bit_stream_struc;
 
 /* max scalefactor band, max(SBMAX_l, SBMAX_s*3, (SBMAX_s-3)*3+8) */
@@ -214,6 +230,9 @@ typedef struct {
     int private_bits;
     int resvDrain_pre;
     int resvDrain_post;
+    int ResvSize; /* in bits */
+    int ResvMax;  /* in bits */
+    int sideinfo_len;
     int scfsi[2][4];
 } III_side_info_t;
 
@@ -359,11 +378,6 @@ struct lame_internal_flags {
   int frac_SpF;
   int slot_lag;
 
-  /* variables for reservoir */
-  int sideinfo_len;
-  int ResvSize; /* in bits */
-  int ResvMax;  /* in bits */
-
   /* variables for subband filter and MDCT */
   FLOAT sb_sample[2][3][18][SBLIMIT];
   FLOAT amp_filter[SBLIMIT];
@@ -448,24 +462,7 @@ struct lame_internal_flags {
     int cutoff_sfb_s;
 
     /* variables for bitstream.c */
-    /* mpeg1: buffer=511 bytes  smallest frame: 96-38(sideinfo)=58
-     * max number of frames in reservoir:  8 
-     * mpeg2: buffer=255 bytes.  smallest frame: 24-23bytes=1
-     * with VBR, if you are encoding all silence, it is possible to
-     * have 8kbs/24khz frames with 1byte of data each, which means we need
-     * to buffer up to 255 headers! */
-    /* also, max_header_buf has to be a power of two */
-#define MAX_HEADER_BUF 256
-#define MAX_HEADER_LEN 40 /* max size of header is 38 */
     Bit_stream_struc   bs;
-    struct {
-	int write_timing;
-	int ptr;
-	char buf[MAX_HEADER_LEN];
-    } header[MAX_HEADER_BUF];
-
-    int h_ptr;
-    int w_ptr;
     int ancillary_flag;
 
     /* optional ID3 tags, used in id3tag.c  */
