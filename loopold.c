@@ -109,9 +109,9 @@ void init_outer_loop_dual(
       for (b=0; b<3; b++) mx=Max(mx,en[b]);
       for (b=0; b<3; b++) en[b] = Max(en[b],1e-12)/mx;
       /* pick gain so that 2^(2gain)*en[0] = 1  */
-      /* gain = .5* log( 1/en[0] )/log(2) = -.5*log(en[])/log(2) */
+      /* gain = .5* log( 1/en[0] )/LOG2 = -.5*log(en[])/LOG2 */
       for (b=0; b<3; b++) {
-	cod_info->subblock_gain[b] = (int) (-.5*log(en[b])/log(2.0) + 0.5);
+	cod_info->subblock_gain[b] = (int) (-.5*log(en[b])/LOG2 + 0.5);
 	if (cod_info->subblock_gain[b] > 2) 
 	  cod_info->subblock_gain[b]=2;
 	if (cod_info->subblock_gain[b] < 0) 

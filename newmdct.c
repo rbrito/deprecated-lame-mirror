@@ -455,14 +455,14 @@ void mdct_init48(void)
 
     /* type 0*/
     for (i = 0; i < 36; i++)
-	win[0][i] = sin(PI/36 * (i + 0.5));
+	win[0][i] = sin(PI36 * (i + 0.5));
     /* type 1*/
     for (i = 0; i < 18; i++) 
 	win[1][i] = win[0][i];
     for (; i < 24; i++)
 	win[1][i] = 1.0;
     for (; i < 30; i++)
-	win[1][i] = cos(PI/12 * (i + 0.5));
+	win[1][i] = cos(PI12 * (i + 0.5));
     for (; i < 36; i++)
 	win[1][i] = 0.0;
     /* type 3*/
@@ -588,8 +588,8 @@ void mdct_init48(void)
     /* type 2(short)*/
     sq = 4.0 / NS;
     for (i = 0; i < NS / 4; i++) {
-	FLOAT8 w2 = cos(PI/12 * (i + 0.5)) * max / SCALE * sq;
-	win[SHORT_TYPE][i] = tan(PI/12 * (i + 0.5));
+	FLOAT8 w2 = cos(PI12 * (i + 0.5)) * max / SCALE * sq;
+	win[SHORT_TYPE][i] = tan(PI12 * (i + 0.5));
 
 	for (m = 0; m < NS / 2; m++) {
 	    cos_s[m][i] = w2 *
