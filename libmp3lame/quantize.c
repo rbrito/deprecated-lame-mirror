@@ -687,25 +687,18 @@ amp_scalefac_bands(
 	if (trigger <= 1.0)
 	    trigger *= 0.95;
 	else if (method == 0)
-	    trigger =  1.0;
+	    trigger = 1.0;
 	else
-	    trigger =  sqrt(trigger);
+	    trigger = sqrt(trigger);
     }
 
     for (sfb = 0; sfb < cod_info->sfbmax; sfb++) {
 	if (distort[sfb] < trigger)
 	    continue;
 
-	if (gfc->substep_shaping & 2) {
-	    gfc->pseudohalf[sfb] = !gfc->pseudohalf[sfb];
-	    if (!gfc->pseudohalf[sfb]) {
-		if (gfc->noise_shaping_amp==2)
-		    return;
-		else
-		    continue;
-	    }
-	}
-	cod_info->scalefac[sfb]++;
+	if (!(gfc->substep_shaping & 2)
+	    || (gfc->pseudohalf[sfb] ^= 1))
+	    cod_info->scalefac[sfb]++;
 	if (gfc->noise_shaping_amp==2)
 	    return;
     }
@@ -731,8 +724,7 @@ inc_scalefac_scale (
 	int s = cod_info->scalefac[sfb];
 	if (cod_info->preflag)
 	    s += pretab[sfb];
-	if (s & 1)
-	    s++;
+	s += (s & 1);
 	cod_info->scalefac[sfb] = s >> 1;
     }
     cod_info->preflag = 0;
