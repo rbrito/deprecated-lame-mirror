@@ -395,7 +395,7 @@ inner_loop(
     /*  increase quantizer stepsize until needed bits are below maximum
      */
     while ((bits=count_bits(gfc, xrpow, cod_info)) > max_bits
-	   && cod_info->global_gain != 255)
+	   && cod_info->global_gain < 255u)
         cod_info->global_gain++;
 
     cod_info->part2_3_length = bits;
@@ -919,12 +919,10 @@ outer_loop (
          * quantization step.  Too small is ok, but inner_loop will take longer
          */
         huff_bits = targ_bits - cod_info_w.part2_length;
-        if (huff_bits < 0)
+        if (huff_bits <= 0)
             break;
 
 	inner_loop (gfc, &cod_info_w, huff_bits, xrpow);
-        if (cod_info_w.global_gain > 255u)
-	    break;
 
         /* compute the distortion in this quantization */
 	over = calc_noise (gfc, &cod_info_w, l3_xmin, distort, &noise_info);
@@ -957,7 +955,7 @@ outer_loop (
 		break;
 	}
     }
-    while (1); /* main iteration loop, breaks adjusted */
+    while (cod_info_w.global_gain < 255u);
 
     /*  finish up
      */
