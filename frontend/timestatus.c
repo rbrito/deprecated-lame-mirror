@@ -31,6 +31,14 @@
    #include <unistd.h>
 #endif
 
+#ifdef _WIN32
+/* needed to set stdin to binary on windoze machines */
+  #include <io.h>
+  #include <fcntl.h>
+  #include <windows.h>
+#endif
+
+
 #include "timestatus.h"
 #include "lametime.h"
 #include "main.h"

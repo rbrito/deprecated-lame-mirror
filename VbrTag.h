@@ -58,7 +58,7 @@ typedef struct
   int		frames;			/* total bit stream frames from Vbr header data */
   int		bytes;			/* total bit stream bytes from Vbr header data*/
   int		vbr_scale;		/* encoded vbr scale from Vbr header data*/
-  u_char	toc[NUMTOCENTRIES];	/* may be NULL if toc not desired*/
+  unsigned char	toc[NUMTOCENTRIES];	/* may be NULL if toc not desired*/
   int           headersize;             /* size of VBR header, in bytes */
 }   VBRTAGDATA;
 

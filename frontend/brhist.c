@@ -54,6 +54,7 @@ static struct
 
 
 #if defined(_WIN32) && !defined(__CYGWIN__) 
+  #include <windows.h>
   COORD Pos;
   HANDLE CH;
   CONSOLE_SCREEN_BUFFER_INFO CSBI;

@@ -21,7 +21,6 @@
 
 #include <stdio.h>
 #include <sys/stat.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
@@ -36,7 +35,10 @@
 
 #ifdef _WIN32
 /* needed to set stdin to binary on windoze machines */
-#include <io.h>
+  #include <io.h>
+  #include <fcntl.h>
+#else
+  #include <unistd.h>
 #endif
 
 #ifdef __riscos__
@@ -1212,10 +1214,10 @@ int is_syncword(char *header)
   return (mpeg1 || mpeg25);
 }
 
+#include "VbrTag.h"
 
 int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
 {
-#include "VbrTag.h"
   VBRTAGDATA pTagData;
   char buf[1000];
   int ret;
