@@ -337,8 +337,7 @@ optimum_samplefreq(int lowpassfreq, int input_samplefreq)
 }
 
 /********************************************************************
- *   initialize internal params based on data in gf
- *   (globalflags struct filled in by calling program)
+ *   initialize internal params based on data in gfc
  *
  *  OUTLINE:
  *
