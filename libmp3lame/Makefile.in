@@ -146,6 +146,7 @@ libmp3lame_la_SOURCES = \
 	quantize.c \
 	quantize_pvt.c \
 	reservoir.c \
+	set_get.c \
 	tables.c \
 	takehiro.c \
 	util.c \
@@ -207,7 +208,7 @@ ANSI2KNR = $(top_srcdir)/ansi2knr
 @HAVE_NASM_TRUE@@LIB_WITH_DECODER_TRUE@$(top_builddir)/mpglib/libmpgdecoder.la
 am_libmp3lame_la_OBJECTS =  VbrTag$U.lo bitstream$U.lo encoder$U.lo \
 fft$U.lo id3tag$U.lo lame$U.lo newmdct$U.lo pcm$U.lo psymodel$U.lo \
-quantize$U.lo quantize_pvt$U.lo reservoir$U.lo tables$U.lo \
+quantize$U.lo quantize_pvt$U.lo reservoir$U.lo set_get$U.lo tables$U.lo \
 takehiro$U.lo util$U.lo vbrquantize$U.lo version$U.lo \
 mpglib_interface$U.lo vorbis_interface$U.lo
 libmp3lame_la_OBJECTS =  $(am_libmp3lame_la_OBJECTS)
@@ -226,10 +227,10 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 @AMDEP@$(DEPDIR)/mpglib_interface$U.Plo $(DEPDIR)/newmdct$U.Plo \
 @AMDEP@$(DEPDIR)/pcm$U.Plo $(DEPDIR)/psymodel$U.Plo \
 @AMDEP@$(DEPDIR)/quantize$U.Plo $(DEPDIR)/quantize_pvt$U.Plo \
-@AMDEP@$(DEPDIR)/reservoir$U.Plo $(DEPDIR)/tables$U.Plo \
-@AMDEP@$(DEPDIR)/takehiro$U.Plo $(DEPDIR)/util$U.Plo \
-@AMDEP@$(DEPDIR)/vbrquantize$U.Plo $(DEPDIR)/version$U.Plo \
-@AMDEP@$(DEPDIR)/vorbis_interface$U.Plo
+@AMDEP@$(DEPDIR)/reservoir$U.Plo $(DEPDIR)/set_get$U.Plo \
+@AMDEP@$(DEPDIR)/tables$U.Plo $(DEPDIR)/takehiro$U.Plo \
+@AMDEP@$(DEPDIR)/util$U.Plo $(DEPDIR)/vbrquantize$U.Plo \
+@AMDEP@$(DEPDIR)/version$U.Plo $(DEPDIR)/vorbis_interface$U.Plo
 DIST_COMMON =  $(noinst_HEADERS) Makefile.am Makefile.in depcomp
 
 
@@ -329,6 +330,8 @@ quantize_pvt_.c: quantize_pvt.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/quantize_pvt.c; then echo $(srcdir)/quantize_pvt.c; else echo quantize_pvt.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > quantize_pvt_.c
 reservoir_.c: reservoir.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/reservoir.c; then echo $(srcdir)/reservoir.c; else echo reservoir.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > reservoir_.c
+set_get_.c: set_get.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/set_get.c; then echo $(srcdir)/set_get.c; else echo set_get.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > set_get_.c
 tables_.c: tables.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/tables.c; then echo $(srcdir)/tables.c; else echo tables.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > tables_.c
 takehiro_.c: takehiro.c $(ANSI2KNR)
@@ -345,10 +348,10 @@ VbrTag_.o VbrTag_.lo bitstream_.o bitstream_.lo encoder_.o encoder_.lo \
 fft_.o fft_.lo id3tag_.o id3tag_.lo lame_.o lame_.lo \
 mpglib_interface_.o mpglib_interface_.lo newmdct_.o newmdct_.lo pcm_.o \
 pcm_.lo psymodel_.o psymodel_.lo quantize_.o quantize_.lo \
-quantize_pvt_.o quantize_pvt_.lo reservoir_.o reservoir_.lo tables_.o \
-tables_.lo takehiro_.o takehiro_.lo util_.o util_.lo vbrquantize_.o \
-vbrquantize_.lo version_.o version_.lo vorbis_interface_.o \
-vorbis_interface_.lo : $(ANSI2KNR)
+quantize_pvt_.o quantize_pvt_.lo reservoir_.o reservoir_.lo set_get_.o \
+set_get_.lo tables_.o tables_.lo takehiro_.o takehiro_.lo util_.o \
+util_.lo vbrquantize_.o vbrquantize_.lo version_.o version_.lo \
+vorbis_interface_.o vorbis_interface_.lo : $(ANSI2KNR)
 
 # This directory's subdirectories are mostly independent; you can cd
 # into them and run `make' without going through this Makefile.
@@ -457,6 +460,7 @@ distclean-tags:
 @AMDEP@@_am_include@ $(DEPDIR)/quantize$U.Plo
 @AMDEP@@_am_include@ $(DEPDIR)/quantize_pvt$U.Plo
 @AMDEP@@_am_include@ $(DEPDIR)/reservoir$U.Plo
+@AMDEP@@_am_include@ $(DEPDIR)/set_get$U.Plo
 @AMDEP@@_am_include@ $(DEPDIR)/tables$U.Plo
 @AMDEP@@_am_include@ $(DEPDIR)/takehiro$U.Plo
 @AMDEP@@_am_include@ $(DEPDIR)/util$U.Plo
