@@ -139,7 +139,7 @@ int lame_init_params(lame_global_flags *gfp)
       gfp->compression_ratio = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->brate);
       if (gfp->compression_ratio > 13 ) {
 	/* automatic downsample, if possible */
-	gfp->out_samplerate = validSamplerate((10*1000.0*gfp->brate)/(16*gfc->stereo));
+	gfp->out_samplerate = validSamplerate((long)((10*1000.0*gfp->brate)/(16*gfc->stereo)));
       }
     }
     if (gfp->VBR==vbr_abr) {
@@ -147,7 +147,7 @@ int lame_init_params(lame_global_flags *gfp)
       gfp->compression_ratio = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->VBR_mean_bitrate_kbps);
       if (gfp->compression_ratio > 13 ) {
 	/* automatic downsample, if possible */
-	gfp->out_samplerate = validSamplerate((10*1000.0*gfp->VBR_mean_bitrate_kbps)/(16*gfc->stereo));
+	gfp->out_samplerate = validSamplerate((long)((10*1000.0*gfp->VBR_mean_bitrate_kbps)/(16*gfc->stereo)));
       }
     }
   }

@@ -67,6 +67,10 @@ int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576],
                gr_info *cod_info,
                III_psy_xmin *l3_xmin);
 
+int rcalc_xmin( lame_global_flags *gfp,FLOAT8 xr[576],
+                III_psy_ratio *ratio,
+	            gr_info *cod_info,
+                III_psy_xmin *l3_xmin);
 
 int scale_bitcount( III_scalefac_t *scalefac, gr_info *cod_info);
 int scale_bitcount_lsf( III_scalefac_t *scalefac, gr_info *cod_info);
@@ -103,7 +107,7 @@ int bin_search_StepSize2(lame_global_flags *gfp,int desired_rate, int start, int
 int count_bits(lame_global_flags *gfp,int  *ix, FLOAT8 xr[576], gr_info *cod_info);
 
 
-INLINE int quant_compare(int type, calc_noise_result *best_noise, calc_noise_result *noise);
+int quant_compare(int type, calc_noise_result *best_noise, calc_noise_result *noise);
 
 void best_huffman_divide(lame_internal_flags *gfc, int gr, int ch, gr_info *cod_info, int *ix);
 

@@ -347,6 +347,10 @@ extern void           init_bit_stream_w(lame_internal_flags *gfc);
 extern void           alloc_buffer(Bit_stream_struc*, unsigned int);
 extern void           freegfc(lame_internal_flags *gfc);
 
+extern void ireorder(int scalefac_band[],int ix_orig[576]);
+extern void iun_reorder(int scalefac_band[],int ix_orig[576]);
+extern void freorder(int scalefac_band[],FLOAT8 ix_orig[576]);
+extern void fun_reorder(int scalefac_band[],FLOAT8 ix_orig[576]);
 
 extern enum byte_order DetermineByteOrder(void);
 extern void SwapBytesInWords( short *loc, int words );
