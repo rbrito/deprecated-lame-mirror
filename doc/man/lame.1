@@ -1,4 +1,4 @@
-.TH lame 1 "November 8, 1999" " " "LAME audio compressor MP3 "
+.TH lame 1 "October 13, 2001" " " "LAME audio compressor MP3 "
 .SH NAME
 lame \- create mp3 audio files
 .SH SYNOPSIS
@@ -11,62 +11,9 @@ Lame is a program which can be used to create compressed audio files.
 (Lame aint MP3 encoder).   These audio files can be played back by popular 
 mp3 players such as mpg123.  To read from stdin, use "-" for <infile>.
 To write to stdout, use a "-" for <outfile>.
-
 .SH OPTIONS
-.TP
-.BI -m  " mode"
- (s)tereo, (j)oint, (f)orce or (m)ono  (default j)
-force = force mid/side stereo on all frames. 
-.TP
-.BI -b  " bitrate"
-set the bitrate, default 128kbps
-.TP
-.BI -s " sample-freq"
-frequency of input file (khz) - default 44.1
-.TP
-.BI --resample " sfreq"
-sampling frequency of output file(kHz)- default=input sfreq
-.TP
-.BI --mp3input
-input file is a MP3 file
-.TP
-.BI --voice
-experimental voice mode
-.TP
-.BI -v
-use variable bitrate (VBR)
-.TP
-.BI -V " n"
-quality setting for VBR. Default n=4, 0=high quality,bigger files.
-9=smaller files
-.TP
-.BI -b " <bitrate>"
-specify minimum allowed bitrate for VBR, default 32kbs
-.TP
-.BI -B " <bitrate>"
-specify maximum allowed bitrate for VBR, default 256kbs
-.TP
-.BI -t
-disable Xing VBR informational tag
-.TP
-.BI --nohist
-disable VBR histogram display
-
-.TP
-.BI -h
-slower, but (maybe) higher quality
-.TP
-.BI -f
-fast mode (low quality)
-.TP
-.BI -k
-disable sfb=21 cutoff
-.TP
-.BI -d
-allow channels to have different blocktypes
-.TP
-.BI --athonly
-only use the ATH for masking
+.PP
+Input options:
 .TP
 .BI -r
 input is raw pcm
@@ -74,30 +21,321 @@ input is raw pcm
 .BI -x
 force byte-swapping of input
 .TP
+.BI -s " sfreq"
+sampling frequency of input file (kHz) \- default 44.1 kHz
+.TP
+.BI --bitwidth " w"
+input bit width is w (default 16)
+.TP
+.BI --mp1input
+input file is a MPEG Layer I   file
+.TP
+.BI --mp2input
+input file is a MPEG Layer II  file
+.TP
+.BI --mp3input
+input file is a MPEG Layer III file
+.TP
+.BI --nogap " file1 file2 ..."
+gapless encoding for a set of contiguous files
+.TP
+.BI --nogapout " dir"
+output dir for gapless encoding (must precede --nogap)
+
+.PP
+Operational options:
+.TP
+.BI -m  " mode"
+(s)tereo, (j)oint, (f)orce, (m)ono  or (a)auto
+default is (s) or (j) depending on bitrate
+
+force = force mid/side stereo on all frames
+
+auto = (j)oint with variable mid/side threshold
+.TP
 .BI -a
-autoconvert from stereo to mono file for mono encoding
+downmix from stereo to mono file for mono encoding
+.TP
+.BI -d
+allow channels to have different blocktypes
+.TP
+.BI --freeformat
+produce a free format bitstream
+.TP
+.BI --decode
+input=mp3, output=wav
+.TP
+.BI -t
+disable the writing of the wav header when using --decode,
+disable the writing of the VBR/INFO tags for mp3s
+.TP
+.BI --comp " arg"
+choose bitrate to achive a compression ratio of <arg>
+.TP
+.BI --scale " arg"
+scale input (multiply PCM data) by <arg>
+.TP
+.BI --scale-l " arg"
+scale channel 0 (left) input (multiply PCM data) by <arg>
+.TP
+.BI --scale-r " arg"
+scale channel 1 (right) input (multiply PCM data) by <arg>
+.TP
+.BI --voice
+experimental voice mode
+.TP
+.BI --preset " type"
+type must be phone, phon+, lw, mw-eu, mw-us, sw, fm, voice, radio, tape,
+hifi, cd or studio
+
+"--preset help" gives more infos about the the used options in these presets
+.TP
+.BI --r3mix
+use high-quality VBR preset
+
+.PP
+Verbosity:
+.TP
+.BI --disptime " secs"
+print progress report every <secs> seconds
+.TP
+.BI -S
+don't print progress report or VBR histograms
+.TP
+.BI --nohist
+disable VBR histogram display
+.TP
+.BI --silent
+don't print anything on screen
+.TP
+.BI --quiet
+don't print anything on screen
+.TP
+.BI --verbose
+print a lot of information
+
+.PP
+Noise shaping & psycho acoustic algorithms:
+.TP
+.BI -q " qual"
+0 <= qual <= 9, default = 5
+
+0 = highest quality but very slow,
+9 = poor quality but fast
+.TP
+.BI -h
+same as -q 2, recommended
+.TP
+.BI -f
+same as -q 7, fast with not so bad quality
+
+.PP
+CBR (constant bitrate) options:
+.TP
+.BI -b  " bitrate"
+set the bitrate in kilo bit per seconds (kbps), default 128 kbps
+
+.PP
+ABP (average bitrate) options:
+.TP
+.BI --abr " bitrate"
+specify desired average bitrate (instead of quality)
+
+.PP
+VBR (variable bitrate) options:
+.TP
+.BI -v
+use variable bitrate (--vbr-old)
+.TP
+.BI --vbr-old
+use old variable bitrate routine
+.TP
+.BI --vbr-new
+use new variable bitrate routine
+.TP
+.BI -V " n"
+quality setting for VBR. Default n = 4; 0 = high quality, bigger files;
+9 = lower quality, smaller files
+.TP
+.BI -b " bitrate"
+specify minimum allowed bitrate for VBR, default  32 kbs
+.TP
+.BI -B " bitrate"
+specify maximum allowed bitrate for VBR, default 320 kbs
+.TP
+.BI -F
+strictly enforce the -b option, for use with players that
+do not support low bitrate mp3 (e.g. Apex AD600-A DVD/mp3 player)
+
+.PP
+ATH related:
+.TP
+.BI --noath
+turns ATH down to a flat noise floor
+.TP
+.BI --athshort
+ignore GPSYCHO for short blocks, use ATH only
+.TP
+.BI --athonly
+ignore GPSYCHO completely, use ATH only
+.TP
+.BI --athtype " n"
+selects between different ATH types [0-5]
+.TP
+.BI --athlower " x"
+lowers ATH by x dB
+.TP
+.BI --ath-adjust " n"
+ATH auto adjust types 1-3, else no adjustment
+.TP
+.BI --adapt-thres-type " n"
+n = 1 total energy or n = 2 approximated loudness
+.TP
+.BI --adapt-thres-level " x"
+???
+
+.PP
+PSY related:
+.TP
+.BI --short
+use short blocks when appropriate
+.TP
+.BI --noshort
+do not use short blocks
+.TP
+.BI --allshort
+use only short blocks
+.TP
+.BI --cwlimit " freq"
+compute tonality up to freq (in kHz) default 8.8717
+.TP
+.BI --notemp
+disable temporal masking effect
+.TP
+.BI --nspsytune
+experimental PSY tunings by Naoki Shibata
+.TP
+.BI --nssafejoint
+M/S switching criterion
+.TP
+.BI --nsmsfix " arg"
+M/S switching tuning [effective 0-3.5]
+.TP
+.BI --ns-bass " x"
+adjust masking for sfbs  0 -  6 (long)  0 -  5 (short)
+.TP
+.BI --ns-alto " x"
+adjust masking for sfbs  7 - 13 (long)  6 - 10 (short)
+.TP
+.BI --ns-treble " x"
+adjust masking for sfbs 14 - 21 (long) 11 - 12 (short)
+.TP
+.BI --ns-sfb21 " x"
+change ns-treble by x dB for sfb21
+
+.PP
+Experimantal options:
+.TP
+.BI -X " n"
+selects between different noise measurements
+.TP
+.BI -Y
+lets LAME ignore noise in sfb21, like in CBR
+.TP
+.BI -Z
+toggles the scalefac feature on
+
+.PP
+MP3 header/stream options:
 .TP
 .BI -e " emp"
-de-emphasis n/5/c  (default: n)
-.TP
-.BI -p
-add CRC error protection (adds additional 16bits per frame to stream)
+de-emphasis n/5/c  (obsolete)
 .TP
 .BI -c
 mark as copyright
 .TP
 .BI -o
-mark as non-original (i.e. do not set the original bit)
+mark as non-original
 .TP
-.BI -S
-don't print progress report, VBR histograms
+.BI -p
+error protection, adds 16 bit checksum to every frame
+.TP
+.BI --nores
+disable the bit reservoir
+.TP
+.BI --strictly-enforce-ISO
+comply as much as possible to the ISO MPEG spec
+
+.PP
+Filter options:
+.TP
+.BI -k
+keep ALL frequencies (disables all filters), can cause ringing and twinkling
+.TP
+.BI --lowpass " freq"
+lowpass filter cutoff above freq (kHz)
+.TP
+.BI --lowpass-width " freq"
+default 15% of lowpass freq
+.TP
+.BI --highpass " freq"
+highpass filter cutoff below freq (kHz)
+.TP
+.BI --highpass-width " freq"
+default 15% of highpass freq
+.TP
+.BI --resample " sfreq"
+sampling frequency of output file (kHz) \- default = automatic
+
+.PP
+ID3 tag options:
+.TP
+.BI --tt " title"
+audio/song title (max 30 chars for version 1 tag)
+.TP
+.BI --ta " artist"
+audio/song artist (max 30 chars for version 1 tag)
+.TP
+.BI --tl " album"
+audio/song album (max 30 chars for version 1 tag)
+.TP
+.BI --ty " year"
+audio/song year of issue (1 to 9999)
+.TP
+.BI --tc " comment"
+user-defined text (max 30 chars for v1 tag, 28 for v1.1)
+.TP
+.BI --tn " track"
+audio/song track number (1 to 255, creates v1.1 tag)
+.TP
+.BI --tg " genre"
+audio/song genre (name or number in list)
+.TP
+.BI --add-id3v2
+force addition of version 2 tag
+.TP
+.BI --id3v1-only
+add only a version 1 tag
+.TP
+.BI --id3v2-only
+add only a version 2 tag
+.TP
+.BI --space-id3v1
+pad version 1 tag with spaces instead of nulls
+.TP
+.BI --pad-id3v2
+pad version 2 tag with extra 128 bytes
+.TP
+.BI --genre-list
+print alphabetically sorted ID3 genre list and exit
+
+.PP
+Analysis options:
 .TP
 .BI -g
 run graphical analysis on <infile>.  <infile> can also be a .mp3 file.
 (This feature is a compile time option. Your binary may for speed reasons be
 compiled without this.)
-
-
 
 .SH EXAMPLES
 .LP
@@ -134,12 +372,9 @@ at 16kHz.  (you may or may not need the -x option):
 cat inputfile | lame -a -x -r -m m -s 44.1 --resample 16 -b 24  - - > output
 .IP
 
-
-
 .SH BUGS
 .PP
-Quality is much better than encoders based on the ISO routines,
-but still not as good as the FhG encoder.
+Probably there are some.
 .SH SEE ALSO
 .BR mpg123 (1) ,
 .BR cdparanoia (1) ,
@@ -151,13 +386,5 @@ LAME originally developed by Mike Cheng and now maintained by
 Mark Taylor.  GPSYCHO psycho-acoustic model by Mark Taylor.
 (http://www.sulaco.org/mp3).
 mpglib by Michael Hipp
-Manual page by William Schelter, Nils Faerber
+Manual page by William Schelter, Nils Faerber, Alexander Leidinger
 .f
-
-
-
-
-
-
-
-
