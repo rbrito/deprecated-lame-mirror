@@ -1289,12 +1289,13 @@ bitpressure_strategy(
 {
     int sfb;
     for (sfb = 0; sfb < gi->psy_lmax; sfb++) 
-	*pxmin++ *= 1.+(.029/(SBMAX_l*SBMAX_l))*sfb*sfb;
+	*pxmin++ *= 1.+(.029/(SBMAX_l*SBMAX_l))*(sfb*sfb);
 
     for (sfb = gi->sfb_smin; sfb < gi->psymax; sfb+=3) {
-	*pxmin++ *= 1.+(.029/(SBMAX_s*SBMAX_s*9))*sfb*sfb;
-	*pxmin++ *= 1.+(.029/(SBMAX_s*SBMAX_s*9))*sfb*sfb;
-	*pxmin++ *= 1.+(.029/(SBMAX_s*SBMAX_s*9))*sfb*sfb;
+	FLOAT x = 1.+(.029/(SBMAX_s*SBMAX_s*9))*(sfb*sfb);
+	*pxmin++ *= x;
+	*pxmin++ *= x;
+	*pxmin++ *= x;
     }
 }
 
