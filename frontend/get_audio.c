@@ -70,7 +70,9 @@
 /* global data for get_audio.c. */
 static unsigned int num_samples_read;
 static int count_samples_carefully;
+#ifndef LIBSNDFILE
 static int pcmbitwidth;
+#endif
 static int pcmswapbytes = 0;
 FILE   *musicin;
 int id3v2taglen = 0;
@@ -84,7 +86,7 @@ static int     decode_fromfile(lame_t gfp,
 			       mp3data_struct * mp3data);
 #endif
 
-static int read_samples_pcm(FILE * musicin, int sample_buffer[2304],
+static int read_samples_pcm(FILE * const musicin, int sample_buffer[1152*2],
                             int samples_to_read);
 static int read_samples_mp3(lame_t gfp, FILE * const musicin,
                             short int mpg123pcm[2][1152]);
@@ -155,7 +157,9 @@ init_infile(lame_t gfp, char *inPath)
     /* open the input file */
     count_samples_carefully = 0;
     num_samples_read=0;
-    pcmbitwidth=in_bitwidth;
+#ifndef LIBSNDFILE
+	pcmbitwidth=in_bitwidth;
+#endif
     pcmswapbytes=swapbytes;
     musicin = OpenSndFile(gfp, inPath);
 }
@@ -341,7 +345,8 @@ WriteWaveHeader(FILE * const fp, const int pcmbytes,
 void
 close_infile(void)
 {
-    if (input == sf_mp1 || input == sf_mp2 || input == sf_mp3) {
+    if (input_format == sf_mp1 || input_format == sf_mp2
+	|| input_format == sf_mp3) {
         if (fclose(musicin) != 0) {
             fprintf(stderr, "Could not close audio input file\n");
             exit(2);
@@ -397,14 +402,13 @@ OpenSndFile(lame_t gfp, char *inPath)
         /* set some defaults incase input is raw PCM */
         gs_wfInfo.seekable = (input_format != sf_raw); /* if user specified -r, set to not seekable */
         gs_wfInfo.samplerate = lame_get_in_samplerate(gfp);
-        gs_wfInfo.pcmbitwidth = in_bitwidth;
         gs_wfInfo.channels = lame_get_num_channels(gfp);
 
 	if (in_bitwidth == 8) {
 	    if (in_signed)
-		gs_wfInfo.format = SF_FORMAT_RAW_S8;
+		gs_wfInfo.format = SF_FORMAT_PCM_S8;
 	    else
-		gs_wfInfo.format = SF_FORMAT_RAW_U8;
+		gs_wfInfo.format = SF_FORMAT_PCM_U8;
 
 	} else {
 	    if (!in_signed) {
@@ -413,27 +417,27 @@ OpenSndFile(lame_t gfp, char *inPath)
 	    }
 	    if (in_endian != order_unknown) {
 		if (in_endian == order_littleEndian)
-		    gs_wfInfo.format = SF_FORMAT_RAW_LE;
+		    gs_wfInfo.format = SF_ENDIAN_LITTLE;
 		else
-		    gs_wfInfo.format = SF_FORMAT_RAW_BE;
+		    gs_wfInfo.format = SF_ENDIAN_BIG;
 	    } else {
 #ifndef WORDS_BIGENDIAN
 		/* little endian */
 		if (swapbytes)
-		    gs_wfInfo.format = SF_FORMAT_RAW_BE;
+		    gs_wfInfo.format = SF_ENDIAN_BIG;
 		else
-		    gs_wfInfo.format = SF_FORMAT_RAW_LE;
+		    gs_wfInfo.format = SF_ENDIAN_LITTLE;
 #else
 		if (swapbytes)
-		    gs_wfInfo.format = SF_FORMAT_RAW_LE;
+		    gs_wfInfo.format = SF_ENDIAN_LITTLE;
 		else
-		    gs_wfInfo.format = SF_FORMAT_RAW_BE;
+		    gs_wfInfo.format = SF_ENDIAN_BIG;
 #endif
 	    }
 	}
 
-        gs_pSndFileIn = sf_open_read(lpszFileName, &gs_wfInfo);
-        musicin = (SNDFILE *) gs_pSndFileIn;
+        gs_pSndFileIn = sf_open(lpszFileName, SFM_READ, &gs_wfInfo); 
+        musicin = (FILE *) gs_pSndFileIn;
 
         /* Check result */
         if (gs_pSndFileIn == NULL) {
@@ -443,18 +447,17 @@ OpenSndFile(lame_t gfp, char *inPath)
             exit(1);
         }
 
-        if ((gs_wfInfo.format == SF_FORMAT_RAW_LE) ||
-            (gs_wfInfo.format == SF_FORMAT_RAW_BE) ||
-	    (gs_wfInfo.format == SF_FORMAT_RAW_S8) ||
-	    (gs_wfInfo.format == SF_FORMAT_RAW_U8))
+        if ((gs_wfInfo.format == SF_ENDIAN_LITTLE) ||
+            (gs_wfInfo.format == SF_ENDIAN_BIG) ||
+	    (gs_wfInfo.format == SF_FORMAT_PCM_S8) ||
+	    (gs_wfInfo.format == SF_FORMAT_PCM_U8))
 	    input_format = sf_raw;
 
 #ifdef _DEBUG_SND_FILE
         DEBUGF("\n\nSF_INFO structure\n");
         DEBUGF("samplerate        :%d\n", gs_wfInfo.samplerate);
-        DEBUGF("samples           :%d\n", gs_wfInfo.samples);
+        DEBUGF("samples           :%d\n", gs_wfInfo.frames);
         DEBUGF("channels          :%d\n", gs_wfInfo.channels);
-        DEBUGF("pcmbitwidth       :%d\n", gs_wfInfo.pcmbitwidth);
         DEBUGF("format            :");
 
         /* new formats from sbellon@sbellon.de  1/2000 */
@@ -468,9 +471,6 @@ OpenSndFile(lame_t gfp, char *inPath)
             break;
         case SF_FORMAT_AU:
             DEBUGF("Sun/NeXT AU format (big endian). ");
-            break;
-        case SF_FORMAT_AULE:
-            DEBUGF("DEC AU format (little endian). ");
             break;
         case SF_FORMAT_RAW:
             DEBUGF("RAW PCM data. ");
@@ -490,11 +490,20 @@ OpenSndFile(lame_t gfp, char *inPath)
         }
 
         switch (gs_wfInfo.format & SF_FORMAT_SUBMASK) {
-        case SF_FORMAT_PCM:
-            DEBUGF("PCM data in 8, 16, 24 or 32 bits.");
+        case SF_FORMAT_RAW_16:
+            DEBUGF("PCM data in 16 bits.");
+            break;
+        case SF_FORMAT_RAW_24:
+            DEBUGF("PCM data in 24 bits.");
+            break;
+        case SF_FORMAT_RAW_32:
+            DEBUGF("PCM data in 32 bits.");
             break;
         case SF_FORMAT_FLOAT:
-            DEBUGF("32 bit Intel x86 floats.");
+            DEBUGF("32 bit float data.");
+            break;
+		case SF_FORMAT_DOUBLE:
+            DEBUGF("64 bit double data.");
             break;
         case SF_FORMAT_ULAW:
             DEBUGF("U-Law encoded.");
@@ -508,36 +517,35 @@ OpenSndFile(lame_t gfp, char *inPath)
         case SF_FORMAT_MS_ADPCM:
             DEBUGF("Microsoft ADPCM.");
             break;
-        case SF_FORMAT_PCM_BE:
-            DEBUGF("Big endian PCM data.");
-            break;
-        case SF_FORMAT_PCM_LE:
-            DEBUGF("Little endian PCM data.");
-            break;
         case SF_FORMAT_PCM_S8:
             DEBUGF("Signed 8 bit PCM.");
             break;
         case SF_FORMAT_PCM_U8:
             DEBUGF("Unsigned 8 bit PCM.");
             break;
-        case SF_FORMAT_SVX_FIB:
-            DEBUGF("SVX Fibonacci Delta encoding.");
-            break;
-        case SF_FORMAT_SVX_EXP:
-            DEBUGF("SVX Exponential Delta encoding.");
-            break;
         default:
             assert(0);
             break;
         }
 
+	switch (gs_wfInfo.format & SF_FORMAT_ENDMASK) {
+	case SF_ENDIAN_BIG:
+	    DEBUGF("Big endian PCM data.");
+	    break;
+	case SF_ENDIAN_LITTLE:
+	    DEBUGF("Little endian PCM data.");
+	    break;
+	default:
+	    assert(0);
+	    break;
+	}
+
         DEBUGF("\n");
-        DEBUGF("pcmbitwidth       :%d\n", gs_wfInfo.pcmbitwidth);
         DEBUGF("sections          :%d\n", gs_wfInfo.sections);
         DEBUGF("seekable          :\n", gs_wfInfo.seekable);
 #endif
 
-        lame_set_num_samples(gfp, gs_wfInfo.samples );
+        lame_set_num_samples(gfp, gs_wfInfo.frames);
         if( -1 == lame_set_num_channels(gfp, gs_wfInfo.channels ) ) {
             fprintf( stderr,
                      "Unsupported number of channels: %ud\n",
@@ -545,7 +553,6 @@ OpenSndFile(lame_t gfp, char *inPath)
             exit( 1 );
         }
         lame_set_in_samplerate(gfp, gs_wfInfo.samplerate );
-        pcmbitwidth = gs_wfInfo.pcmbitwidth;
     }
 
     if (lame_get_num_samples(gfp) == MAX_U_32_NUM) {
@@ -568,7 +575,7 @@ OpenSndFile(lame_t gfp, char *inPath)
             }
 	    else {
 		lame_set_num_samples(
-		    gfp, flen/(pcmbitwidth/8 * lame_get_num_channels(gfp)));
+		    gfp, flen/(2 * lame_get_num_channels(gfp)));
             }
         }
     }
@@ -576,10 +583,9 @@ OpenSndFile(lame_t gfp, char *inPath)
     return musicin;
 }
 
-
 /************************************************************************
 *
-* read_samples()
+* read_samples_pcm()
 *
 * PURPOSE:  reads the PCM samples from a file to the buffer
 *
@@ -590,36 +596,10 @@ OpenSndFile(lame_t gfp, char *inPath)
 ************************************************************************/
 
 static int
-read_samples_pcm(FILE * const musicin, int sample_buffer[2304],
+read_samples_pcm(FILE * const musicin, int sample_buffer[1152*2],
                  int samples_to_read)
 {
-    int     i;
-    int     samples_read;
-
-    samples_read =
-        sf_read_int((SNDFILE *) musicin, sample_buffer, samples_to_read);
-
-    switch (pcmbitwidth) {
-    case 8:
-        for (i = 0; i < samples_read; i++)
-            sample_buffer[i] <<= (8 * sizeof(int) - 8);
-        break;
-    case 16:
-        for (i = 0; i < samples_read; i++)
-            sample_buffer[i] <<= (8 * sizeof(int) - 16);
-        break;
-    case 24:
-        for (i = 0; i < samples_read; i++)
-            sample_buffer[i] <<= (8 * sizeof(int) - 24);
-	break;
-    case 32:
-	break;
-    default:
-        fprintf(stderr, "Only 8, 16, 24 and 32 bit input files supported \n");
-        exit(1);
-    }
-
-    return samples_read;
+    return sf_read_int((SNDFILE *) musicin, sample_buffer, samples_to_read);
 }
 
 
@@ -699,7 +679,7 @@ unpack_read_samples( const int samples_to_read, const int bytes_per_sample,
 
 /************************************************************************
 *
-* read_samples()
+* read_samples_pcm()
 *
 * PURPOSE:  reads the PCM samples from a file to the buffer
 *
@@ -710,24 +690,23 @@ unpack_read_samples( const int samples_to_read, const int bytes_per_sample,
 ************************************************************************/
 
 static int
-read_samples_pcm(FILE * musicin, int sample_buffer[2304],
+read_samples_pcm(FILE * const musicin, int sample_buffer[1152*2],
                  int samples_to_read)
 {
     int     samples_read;
     int     iswav = (input_format == sf_wave);
-    int     hi_lo_order = 0;
+    int     swapflag = 0;
 
     if( (32 == pcmbitwidth) || (24 == pcmbitwidth) || (16 == pcmbitwidth) ) {
 	/* assume only recognized wav files are */
 	/*  in little endian byte order */
-	hi_lo_order = (!iswav == !pcmswapbytes);
-    } else if( 8 != pcmbitwidth ) {
-	fprintf(stderr, "Only 8, 16, 24 and 32 bit input files supported \n");
-	exit(1);
+	swapflag = (!iswav == !pcmswapbytes);
+    } else {
+	assert(pcmbitwidth == 8);
     }
 
     samples_read = unpack_read_samples(samples_to_read, pcmbitwidth/8,
-				       hi_lo_order, sample_buffer, musicin);
+				       swapflag, sample_buffer, musicin);
 
     if (ferror(musicin)) {
         fprintf(stderr, "Error reading input file\n");

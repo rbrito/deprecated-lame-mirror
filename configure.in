@@ -302,7 +302,7 @@ dnl Compaq fast math library.
 AC_CHECK_LIB(cpml, cos, USE_LIBM="-lcpml")
 CONFIG_MATH_LIB="${USE_LIBM}"
 
-AC_CHECK_LIB(sndfile, sf_open_read, HAVE_SNDFILE="yes")
+AC_CHECK_LIB(sndfile, sf_open, HAVE_SNDFILE="yes")
 
 
 dnl configure use of features
