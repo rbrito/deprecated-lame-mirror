@@ -770,9 +770,9 @@ void set_pinfo (
     gfc->pinfo->LAMEsfbits  [gr][ch] = cod_info->part2_length;
 
     gfc->pinfo->over      [gr][ch] = noise.over_count;
-    gfc->pinfo->max_noise [gr][ch] = noise.max_noise;
-    gfc->pinfo->over_noise[gr][ch] = noise.over_noise;
-    gfc->pinfo->tot_noise [gr][ch] = noise.tot_noise;
+    gfc->pinfo->max_noise [gr][ch] = noise.max_noise * 10.0;
+    gfc->pinfo->over_noise[gr][ch] = noise.over_noise * 10.0;
+    gfc->pinfo->tot_noise [gr][ch] = noise.tot_noise * 10.0;
 }
 
 
