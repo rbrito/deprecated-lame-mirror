@@ -921,15 +921,7 @@ lame_init_params(lame_global_flags * const gfp)
             gfc->sfb21_extra = 0;
         else 
             gfc->sfb21_extra = (gfp->out_samplerate > 44000);
-
-        
-        if ( gfp->athaa_type < 0 )
-            gfc->ATH->use_adjust = 3;
-        else
-            gfc->ATH->use_adjust = gfp->athaa_type;
-        
-        break;
-        
+      
     }
     case vbr_rh: {
 
@@ -941,13 +933,6 @@ lame_init_params(lame_global_flags * const gfp)
         if ( gfp->psymodel == PSY_GPSYCHO )
             gfc->PSY->tonalityPatch = 1;
         
-
-        /*  automatic ATH adjustment on, VBR modes need it
-         */
-        if ( gfp->athaa_type < 0 )
-            gfc->ATH->use_adjust = 3;
-        else
-            gfc->ATH->use_adjust = gfp->athaa_type;
 
         /*  sfb21 extra only with MPEG-1 at higher sampling rates
          */
@@ -973,15 +958,6 @@ lame_init_params(lame_global_flags * const gfp)
 
     default: /* cbr/abr */{
         vbr_mode vbrmode;
-
-        /*  automatic ATH adjustment off by default
-         *  not so important for CBR code?
-         */
-        if ( gfp->athaa_type < 0 )
-            gfc->ATH->use_adjust = 0;
-        else
-            gfc->ATH->use_adjust = gfp->athaa_type;
-
 
         /*  no sfb21 extra with CBR code
          */
@@ -1042,6 +1018,13 @@ lame_init_params(lame_global_flags * const gfp)
 
     /* initialize internal qval settings */
     lame_init_qval(gfp);
+
+
+    /*  automatic ATH adjustment */
+    if ( gfp->athaa_type < 0 )
+        gfc->ATH->use_adjust = 3;
+    else
+        gfc->ATH->use_adjust = gfp->athaa_type;
 
 
     /* initialize internal adaptive ATH settings  -jd */
