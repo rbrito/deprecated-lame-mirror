@@ -386,9 +386,8 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
  	      "    --nogap <file1> <file2> <...>\n"
  	      "                    gapless encoding for a set of contiguous files\n"
  	      "    --nogapout <dir>\n"
- 	      "                    output dir for gapless encoding (must precede --nogap)"
- 	      "    --nogaptags\n"
- 	      "                    allow the use of VBR tags in gapless encoding"
+ 	      "                    output dir for gapless encoding (must precede --nogap)\n"
+ 	      "    --nogaptags     allow the use of VBR tags in gapless encoding"
               , ProgramName );
 
     wait_for ( fp, lessmode );
