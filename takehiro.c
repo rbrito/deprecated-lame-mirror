@@ -379,7 +379,6 @@ int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
 	}
     }
 #else
-
     if (gi->block_type == NORM_TYPE) {
 	a1 = gi->region0_count = gfc->bv_scf[i-2];
 	a2 = gi->region1_count = gfc->bv_scf[i-1];
@@ -530,8 +529,10 @@ void best_huffman_divide(lame_internal_flags *gfc, int gr, int ch, gr_info *gi, 
     int r1_tbl[7 + 15 + 1];
     memcpy(&cod_info2, gi, sizeof(gr_info));
 
-    if (gi->block_type == SHORT_TYPE) 
-      return;
+    /* SHORT BLOCK stuff fails for MPEG2 */ 
+    if (gi->block_type == SHORT_TYPE && gfc->mode_gr==1) 
+          return;
+
 
     if (gi->block_type == NORM_TYPE) {
 	recalc_divide_init(gfc, cod_info2, ix, r01_bits,r01_div,r0_tbl,r1_tbl);
@@ -601,10 +602,10 @@ scfsi_calc(int ch,
     gr_info *gi = &l3_side->gr[1].ch[ch].tt;
 
     static const int scfsi_band[5] = { 0, 6, 11, 16, 21 };
-
+#if 0
     static const int slen1_n[16] = { 0, 1, 1, 1, 8, 2, 2, 2, 4, 4, 4, 8, 8, 8,16,16 };
     static const int slen2_n[16] = { 0, 2, 4, 8, 1, 2, 4, 8, 2, 4, 8, 2, 4, 8, 4, 8 };
-
+#endif
 
     for (i = 0; i < 4; i++) 
 	l3_side->scfsi[ch][i] = 0;
