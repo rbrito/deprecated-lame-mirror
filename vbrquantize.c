@@ -947,7 +947,7 @@ VBR_quantize(lame_global_flags *gfp,
   
 
 
-  if (gfp->gtkflag) {
+  if (gfp->analysis) {
     for (gr = 0; gr < gfc->mode_gr; gr++) {
       for (ch = 0; ch < gfc->stereo; ch++) {
         cod_info = &l3_side->gr[gr].ch[ch].tt;

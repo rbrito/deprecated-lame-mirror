@@ -957,7 +957,7 @@ void iteration_finish
              *  - best_huffman_divide
              *  but we should solve the real problem!
              */
-            if (gfp->gtkflag) 
+            if (gfp->analysis) 
                 set_pinfo (gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch],
                            xr[gr][ch], l3_enc[gr][ch], gr, ch);
             
@@ -1767,7 +1767,7 @@ void iteration_loop
              *  - best_huffman_divide
              *  but we should solve the real problem!
              */
-            if (gfp->gtkflag) 
+            if (gfp->analysis) 
                 set_pinfo (gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch],
                            xr[gr][ch], l3_enc[gr][ch], gr, ch);
             

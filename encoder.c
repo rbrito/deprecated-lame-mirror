@@ -315,7 +315,7 @@ char *mp3buf, int mp3buf_size)
 
 
 
-  if (gfp->gtkflag && gfc->pinfo != NULL) {
+  if (gfp->analysis && gfc->pinfo != NULL) {
     for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
       for ( ch = 0; ch < gfc->stereo; ch++ ) {
 	gfc->pinfo->ms_ratio[gr]=gfc->ms_ratio[gr];
@@ -375,7 +375,7 @@ char *mp3buf, int mp3buf_size)
   if (gfp->bWriteVbrTag) AddVbrFrame(gfp);
 
 
-  if (gfp->gtkflag && gfc->pinfo != NULL) {
+  if (gfp->analysis && gfc->pinfo != NULL) {
     int j;
     for ( ch = 0; ch < gfc->stereo; ch++ ) {
       for ( j = 0; j < FFTOFFSET; j++ )

@@ -405,7 +405,7 @@ int L3psycho_anal( lame_global_flags *gfp,
     }
 
 
-  if(gfp->gtkflag) {
+  if (gfp->analysis) {
     for (j=0; j<HBLKSIZE ; j++) {
       gfc->pinfo->energy[gr_out][chn][j]=gfc->energy_save[chn][j];
       gfc->energy_save[chn][j]=gfc->energy[j];
@@ -868,7 +868,7 @@ int L3psycho_anal( lame_global_flags *gfp,
     }
 
 
-    if (gfp->gtkflag) {
+    if (gfp->analysis) {
       FLOAT mn,mx,ma=0,mb=0,mc=0;
 
       for ( j = HBLKSIZE_s/2; j < HBLKSIZE_s; j ++)

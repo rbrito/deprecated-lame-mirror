@@ -998,7 +998,7 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv )
 			gfp->quality= 7;
 			break;
 		    case 'g': /* turn on gtk analysis */
-			gfp->gtkflag = TRUE;
+			gfp->analysis = TRUE;
 			break;
 			
 		    case 'e':        

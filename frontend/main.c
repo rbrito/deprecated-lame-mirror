@@ -187,7 +187,7 @@ int main(int argc, char **argv)
   }
 #endif
 
-  if (gf.gtkflag) {
+  if (gf.analysis) {
     fprintf(stderr,"Analyzing %s \n",inPath);
   }
   else {
@@ -224,7 +224,7 @@ int main(int argc, char **argv)
     lame_print_config(&gf);   /* print usefull information about options being used */
 
 
-  if (!gf.gtkflag) {
+  if (!gf.analysis) {
     /* open the output file */
     if (!strcmp(gf.outPath, "-")) {
 #ifdef __EMX__
@@ -259,7 +259,7 @@ int main(int argc, char **argv)
   }
 
 
-  if (gf.gtkflag) {
+  if (gf.analysis) {
 
 #ifdef HAVEGTK
     gtk_init (&argc, &argv);

@@ -23,7 +23,7 @@ int main(int argc, char **argv)
   if(argc==1)  lame_usage(&gf,argv[0]);  /* no command-line args  */
 
   lame_parse_args(&gf,argc, argv); 
-  gf.gtkflag=1;
+  gf.analysis=1;
 
   init_infile(&gf);
   lame_init_params(&gf);
