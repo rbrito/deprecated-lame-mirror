@@ -11,7 +11,7 @@ dnl
 dnl todo:
 dnl - move all system-dependent entries from Makefile here
 
-AC_INIT(main.c)
+AC_INIT(interface.c)
 
 dnl use "/usr" as default prefix...
 AC_PREFIX_DEFAULT(/usr)

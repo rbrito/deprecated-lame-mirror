@@ -38,7 +38,7 @@ SHARED_LIB_MINOR = $(SHARED_LIB_MAJOR).@LIB_MINOR_VERSION@
 
 # generic defaults. OS specific options go in versious sections below
 PGM ?= ./frontend/lame
-CPP_OPTS = @CPP_OPT@ -I ./include -I .
+CPP_OPTS = @CPP_OPT@ -I./include -I. -I./mpglib
 CC_OPTS = -O
 AR = ar
 RANLIB = @RANLIB@
@@ -388,6 +388,8 @@ lib_sources = \
 	takehiro.c \
 	util.c \
         VbrTag.c \
+	vorbis_interface.c \
+	mpglib_interface.c \
         version.c
 
 lib_obj = $(lib_sources:.c=.o)

@@ -364,7 +364,6 @@ c_sources = @CONFIG_SOURCES@ \
 	timestatus.c \
 	portableio.c \
 	ieeefloat.c \
-	vorbis_interface.c \
 	parse.c \
 	get_audio.c
 

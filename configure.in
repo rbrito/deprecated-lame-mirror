@@ -15,6 +15,7 @@ dnl todo:
 dnl - move all system-dependent entries from Makefile here
 
 AC_INIT(lame.c)
+AM_INIT_AUTOMAKE(lamelib,3.88,notdef)
 
 # increase this when the shared lib becomes totally incompatible
 LIB_MAJOR_VERSION=1
@@ -24,16 +25,16 @@ LIB_MAJOR_VERSION=1
 LIB_MINOR_VERSION=0
 
 dnl use "/usr" as default prefix...
-AC_PREFIX_DEFAULT(/usr)
+AC_PREFIX_DEFAULT(/usr/local)
 
 dnl check host
 AC_CANONICAL_HOST
 
 dnl Checks for programs.
-cflags_save="$CFLAGS"
+#cflags_save="$CFLAGS"
 AC_PROG_CC
 # because AC_PROG_CC likes to set -g
-CFLAGS="$cflags_save"
+#CFLAGS="$cflags_save"
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 AC_PROG_LN_S
@@ -192,7 +193,6 @@ AC_MSG_RESULT($CONFIG_BRHIST)
 
 
 AC_CONFIG_SUBDIRS(frontend)
-
 #AC_CONFIG_SUBDIRS(libmp3lame)
 
 
@@ -228,4 +228,4 @@ AC_TYPE_SIGNAL
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS(gettimeofday socket strtol)
 
-AC_OUTPUT(Makefile)
+AC_OUTPUT([Makefile])

@@ -78,7 +78,7 @@ int lame_decode_ogg_fromfile(FILE *fd,short int pcm_l[],short int pcm_r[],mp3dat
 
 /* the simple lame decoder (interface to above routines) */
 /* After calling lame_init(), lame_init_params() and
- * lame_init_infile(), call this routine to read the input MP3 file 
+ * init_infile(), call this routine to read the input MP3 file 
  * and output .wav data to the specified file pointer*/
 /* lame_decoder will ignore the first 528 samples, since these samples
  * represent the mpglib delay (and are all 0).  skip = number of additional
@@ -331,7 +331,7 @@ void WriteWav(FILE *f,long bytes,int srate,int ch){
 
 /* the simple lame decoder */
 /* After calling lame_init(), lame_init_params() and
- * lame_init_infile(), call this routine to read the input MP3 file
+ * init_infile(), call this routine to read the input MP3 file
  * and output .wav data to the specified file pointer*/
 /* lame_decoder will ignore the first 528 samples, since these samples
  * represent the mpglib delay (and are all 0).  skip = number of additional

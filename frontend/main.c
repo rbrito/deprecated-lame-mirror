@@ -130,7 +130,6 @@ int main(int argc, char **argv)
    * if you want to do your own file input, skip this call and set
    * samplerate, num_channels and num_samples yourself.
    */
-  
   init_infile(&gf);
 
   /* Now that all the options are set, lame needs to analyze them and

@@ -293,8 +293,7 @@ c_sources = \
  layer2.c \
  layer3.c \
  tabinit.c \
- interface.c \
- main.c 
+ interface.c
 
 OBJ = $(c_sources:.c=.o)
 DEP = $(c_sources:.c=.d)
