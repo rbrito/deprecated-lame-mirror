@@ -7,6 +7,7 @@ the following extra features:
 #define HAVEMPGLIB   to use mpglib's mp3 *decoding* capibility
 #define AMIGA_MPEGA  to use mpega.library (Amiga), don't use with HAVEMPGLIB
 #define BRHIST       to allow the display of the VBR historgram
+#define NOTERMCAP    to try and emulate termcap/ncurses directly (ANSI)
 #define LIBSNDFILE   to use Erik de Castro Lopo's libsndfile
 #define LAMESNDFILE  to use LAME's minimial internal sndfile I/O
 #define LAMEPARSE    to use LAME's command line parsing/option setting routines

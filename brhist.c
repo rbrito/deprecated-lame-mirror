@@ -2,11 +2,8 @@
 #include "brhist.h"
 #include "util.h"
 
-#ifdef OS_AMIGAOS
-#else
-#ifdef BRHIST
+#if (defined(BRHIST) && !defined(NOTERMCAP))
 #include <termcap.h>
-#endif
 #endif
 
 
@@ -23,7 +20,7 @@ char brhist_spc[BRHIST_BARMAX+1];
 char stderr_buff[BUFSIZ];
 
 
-#ifdef OS_AMIGAOS
+#ifdef NOTERMCAP
 /* tgetstr */
 char *
 tgetstr(char id[2], char **area)
@@ -36,16 +33,7 @@ tgetstr(char id[2], char **area)
       *area = result;
       return result;
 }
-
-int
-tgetent(char *buff, char *name)
-{
-      return 1;
-}
-#endif /* OS_AMIGAOS */
-
-
-
+#endif /* NOTERMCAP */
 
 
 void brhist_init(lame_global_flags *gfp,int br_min, int br_max)
@@ -75,6 +63,7 @@ void brhist_init(lame_global_flags *gfp,int br_min, int br_max)
   brhist_spc[BRHIST_BARMAX] = '\0';
   brhist_backcur[0] = '\0';
 
+#ifndef NOTERMCAP
   if ((termname = getenv("TERM")) == NULL)
     {
       fprintf(stderr, "can't get TERM environment string.\n");
@@ -88,6 +77,7 @@ void brhist_init(lame_global_flags *gfp,int br_min, int br_max)
       gfp->brhist_disp = 0;
       return;
     }
+#endif /* !NOTERMCAP */
 
   tc[0] = '\0';
   tp = &tc[0];
