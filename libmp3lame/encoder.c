@@ -55,8 +55,8 @@ adjust_ATH( lame_global_flags* const  gfp,
 {
     lame_internal_flags* const  gfc = gfp->internal_flags;
     int gr, channel;
+    FLOAT max_pow;
     FLOAT8 max_val;
-    FLOAT max_val_n;
 
     if (gfc->ATH->use_adjust == 0) {
         gfc->ATH->adjust = 1.0;	/* no adjustment */
@@ -65,49 +65,53 @@ adjust_ATH( lame_global_flags* const  gfp,
     
     switch( gfp->adapt_thres_type ) {
     case 1:
-			    /* previous code: energy for loudness, but */
-			    /* energy ~ (loudness pow 2). To preserve old*/
-			    /* behavior, not corrected.  -jd 2001 mar 27 */
-        max_val = 0;
+                                /* flat approximation for loudness (squared) */
+        max_pow = 0;
         for ( gr = 0; gr < gfc->mode_gr; ++gr ) 
             for ( channel = 0; channel < gfc->channels_out; ++channel ) 
-                max_val = Max( max_val, tot_ener[gr][channel] );
-        /* scale to 0..1, and then rescale to 0..32767 */
-        max_val *= 32767/1e13;
-
-        max_val_n = max_val * (1.0/32768 * 0.5);/* scale for previous tuning */
+                max_pow = Max( max_pow, tot_ener[gr][channel] );
+        max_pow *= 0.25/ 5.6e13; /* scale to 0..1 (5.6e13), and tune (0.25) */
         break;
     
-    case 2:
-			    /* jd - 2001 mar 12, 27 */
-			    /* compute maximum combined channel loudness */
-        max_val_n = gfc->loudness_sq[0][0];
+    case 2:                     /* jd - 2001 mar 12, 27, jun 30 */
+    {				/* loudness based on equal loudness curve; */
+                                /* use granule with maximum combined loudness*/
+	FLOAT gr2_max;
+        max_pow = gfc->loudness_sq[0][0];
         if( gfc->channels_out == 2 ) {
-            max_val_n += gfc->loudness_sq[0][1];
-            if( gfc->mode_gr == 2 ) {
-                FLOAT8 mtmp;
-                mtmp = gfc->loudness_sq[1][0] + gfc->loudness_sq[1][1];
-                max_val_n = Max( max_val_n, mtmp );
-            }
-            max_val_n /= 2;
-        } else if( gfc->mode_gr == 2 ) {
-            max_val_n = Max( max_val_n, gfc->loudness_sq[1][0] );
-        }
-        max_val_n = sqrt( max_val_n ); /* loudness approximation */
-        max_val = 32768 * Max( max_val_n, 1.0 ); /* adapt for vbr_mtrh */
-        break;
-    
-    default:			/* jd - 2001 mar 27, 31 */
-        max_val = 32768;	/* no adaptive threshold */
-        max_val_n = 1.0 / gfc->adapt_thres_level_v;
+            max_pow += gfc->loudness_sq[0][1];
+	    gr2_max = gfc->loudness_sq[1][0] + gfc->loudness_sq[1][1];
+	} else {
+	    gr2_max = gfc->loudness_sq[1][0];
+	    max_pow += max_pow;
+	    gr2_max += gr2_max;
+	}
+	if( gfc->mode_gr == 2 ) {
+	    max_pow = Max( max_pow, gr2_max );
+	}
+	max_pow *= 0.5;		/* max_pow approaches 1.0 for full band noise*/
         break;
     }
+
+    default:                    /* jd - 2001 mar 27, 31, jun 30 */
+                                /* no adaptive threshold */
+        max_pow = 1.0 / gfc->adapt_thres_level_p;
+        break;
+    }
+
+                                /* jd - 2001 mar 31, jun 30 */
+                                /* user tuning of ATH adjustment region */
+    max_pow *= gfc->adapt_thres_level_p;
 
     /*  adjust ATH depending on range of maximum value
      */
     switch ( gfc->ATH->use_adjust ) {
 
-    case  1:    /* by Gabriel Bouvigne */
+    case  1:
+        max_val = sqrt( max_pow ); /* GB's original code requires a maximum */
+        max_val *= 32768;          /*  sample or loudness value up to 32768 */
+
+                                /* by Gabriel Bouvigne */
         if      (0.5 < max_val / 32768) {       /* value above 50 % */
                 gfc->ATH->adjust = 1.0;         /* do not reduce ATH */
         }
@@ -123,8 +127,10 @@ adjust_ATH( lame_global_flags* const  gfp,
         }
         break;
 
-    case  2:    /* by Robert Hegemann */
-      {
+    case  2:   
+        max_val = Min( max_pow, 1.0 ) * 32768; /* adapt for RH's adjust */
+
+      {                         /* by Robert Hegemann */
         /*  this code reduces slowly the ATH (speed of 12 dB per second)
          */
         FLOAT8 
@@ -137,22 +143,18 @@ adjust_ATH( lame_global_flags* const  gfp,
       }
         break;
 
-    case  3:    /* by jd */
-      {
-                                /* jd - 2001 feb 27, mar 12, 20 */
+    case  3:
+      {                         /* jd - 2001 feb 27, mar 12, 20, jun 30 */
                                 /* continuous curves based on approximation */
-                                /* to GB's original values */
+                                /* to GB's original values. */
         FLOAT8 adj_lim_new;
-                                /* jd - 2001 mar 31 */
-                                /* allow tuning the region of ATH reduction */
-        max_val_n *= gfc->adapt_thres_level_v;
-
                                 /* For an increase in approximate loudness, */
                                 /* set ATH adjust to adjust_limit immediately*/
                                 /* after a delay of one frame. */
                                 /* For a loudness decrease, reduce ATH adjust*/
                                 /* towards adjust_limit gradually. */
-        if( max_val_n > 0.125){ /* sqrt((1 - 0.01)/ 63.36) from curve below*/
+                                /* max_pow is a loudness squared or a power. */
+        if( max_pow > 0.03125) { /* ((1 - 0.01)/ 31.68) from curve below */
             if( gfc->ATH->adjust >= 1.0) {
                 gfc->ATH->adjust = 1.0;
             } else {
@@ -164,9 +166,9 @@ adjust_ATH( lame_global_flags* const  gfp,
                 }
             }
             gfc->ATH->adjust_limit = 1.0;
-        } else {                /* adjustment curve (parabolic) */
+        } else {                /* adjustment curve */
                                 /* 20 dB maximum adjust (0.01) */
-            adj_lim_new = 63.36 * (max_val_n * max_val_n) + 0.01;
+            adj_lim_new = 31.68 * max_pow + 0.01;
             if( gfc->ATH->adjust >= adj_lim_new) { /* descend gradually */
                 gfc->ATH->adjust *= adj_lim_new * 0.075 + 0.925;
                 if( gfc->ATH->adjust < adj_lim_new) { /* stop descent */

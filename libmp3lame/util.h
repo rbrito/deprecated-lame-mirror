@@ -435,12 +435,12 @@ struct lame_internal_flags {
   FLOAT loudness_sq[2][2];  /* loudness^2 approx. per granule and channel */
   FLOAT loudness_sq_save[2];/* account for granule delay of L3psycho_anal */
 
-  /* sample (or loudness) factor for tuning the point below which adaptive
-     threshold of hearing adjustment occurs
+  /* factor for tuning the (sample power) point below which adaptive threshold
+     of hearing adjustment occurs 
    */
-  FLOAT adapt_thres_level_v;
+  FLOAT adapt_thres_level_p;
 
-  
+ 
   /* fft.c    */
   FLOAT window[BLKSIZE], window_s[BLKSIZE_s/2];
   

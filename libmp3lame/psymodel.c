@@ -2357,7 +2357,7 @@ in:  energy   - BLKSIZE/2 elements of frequency magnitudes ^ 2
 returns: loudness^2 approximation, a positive value roughly tuned for a value
          of 1.0 for signals near clipping.
 notes:   When calibrated, feeding this function binary white noise at sample
-         values +32767 or -32768 should return values that approach 2.
+         values +32767 or -32768 should return values that approach 3.
          ATHformula is used to approximate an equal loudness curve.
 future:  Data indicates that the shape of the equal loudness curve varies
          with intensity.  This function might be improved by using an equal
@@ -2372,7 +2372,7 @@ psycho_loudness_approx( FLOAT *energy, lame_global_flags *gfp )
   int i;
   static int eql_type = -1;
   static FLOAT eql_w[BLKSIZE/2];/* equal loudness weights (based on ATH) */
-  const FLOAT vo_scale= 1./( 18085 ); /* tuned for output level */
+  const FLOAT vo_scale= 1./( 14752 ); /* tuned for output level */
 				      /* (sensitive to energy scale) */
   FLOAT loudness_power;
 
