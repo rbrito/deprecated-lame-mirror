@@ -173,8 +173,7 @@ filterYule (const Float_t* input, Float_t* output, size_t nSamples, const Float_
 
 static void
 filterButter (const Float_t* input, Float_t* output, size_t nSamples, const Float_t* kernel)
-{   /*register double  y;*/
-
+{
     while (nSamples--) {
         *output =  input [0]  * kernel[0]
          - output[-1] * kernel[1]
@@ -183,7 +182,6 @@ filterButter (const Float_t* input, Float_t* output, size_t nSamples, const Floa
          + input [-2] * kernel[4];
         ++output;
         ++input;
-        /* *output++ = (Float_t)y; */
     }
 }
 
@@ -191,7 +189,8 @@ filterButter (const Float_t* input, Float_t* output, size_t nSamples, const Floa
 /* returns a INIT_GAIN_ANALYSIS_OK if successful, INIT_GAIN_ANALYSIS_ERROR if not */
 
 int
-ResetSampleFrequency (replaygain_t* rgData, long samplefreq ) {
+ResetSampleFrequency (replaygain_t* rgData, long samplefreq )
+{
     int  i;
 
     /* zero out initial values */
@@ -386,7 +385,7 @@ analyzeResult ( uint32_t* Array, size_t len )
             break;
     }
 
-    return (Float_t) ((Float_t)PINK_REF - (Float_t)i / (Float_t)STEPS_per_dB);
+    return (Float_t)PINK_REF - (Float_t)i / (Float_t)STEPS_per_dB;
 }
 
 

@@ -125,6 +125,7 @@
 ***********************************************************************/
 #include "machine.h"
 #include "lame-analysis.h"
+#include "gain_analysis.h"
 
 /*
  * internal data structure definition.
@@ -241,6 +242,18 @@ struct lame_internal_flags {
     int scfsi[MAX_CHANNELS][4];
     int mode_gr;        /* granules per frame */
     int channels_out;   /* number of channels in the output data stream (not used for decoding) */
+
+    int decode_on_the_fly;
+    int RadioGain;
+    int AudiophileGain;
+
+    replaygain_t *rgdata;
+
+    int findReplayGain;         /* find the RG value? default=0		     */
+    int findPeakSample;
+    sample_t PeakSample;
+    int noclipGainChange;  /* gain change required for preventing clipping */
+    FLOAT noclipScale;     /* user-specified scale factor required for preventing clipping */
 
     FLOAT amp_filter[SBLIMIT];
     int xrNumMax_longblock;

@@ -313,31 +313,63 @@ copy_buffer(lame_t gfc, unsigned char *buffer, int size)
     minimum = pbuf - buffer;
 
     gfc->nMusicCRC = calculateCRC(buffer, minimum, gfc->nMusicCRC);
-#ifdef DECODE_ON_THE_FLY
-    /* this is untested code;
-       if, for somereason, we would like to decode the frame: */
-    for (;;) {
-	/* re-synthesis to pcm.  Repeat until we get a mp3out=0 */
-	short int pcm_out[2][1152];
-	int mp3out = lame_decode1(buffer,minimum,pcm_out[0],pcm_out[1]);
-	/* mp3out = 0:  need more data to decode */
-	/* mp3out = -1:  error.  Lets assume 0 pcm output */
-	/* mp3out = number of samples output */
-	if (mp3out==-1) {
-	    /* error decoding.  Not fatal, but might screw up are
-	     * ReplayVolume Info tag.  
-	     * what should we do?  ignore for now */
-	    mp3out=0;
-	}
-	if (mp3out>1152) {
-	    /* this should not be possible, and indicates we have
-	     * overflowed the pcm_out buffer.  Fatal error. */
-	    return LAME_INTERNALERROR;
-	}
-	if (mp3out <= 0)
-	    break;
-    }
+#define DECODE_ON_THE_FLY 
+#ifdef DECODE_ON_THE_FLY 
+    if (gfc->decode_on_the_fly) {  /* decode the frame */
+	sample_t pcm_buf[2][1152];
+	int mp3_in = minimum;
+	int samples_out = -1;
+	int i;
+
+	/* re-synthesis to pcm.  Repeat until we get a samples_out=0 */
+	while (samples_out != 0) {
+	    samples_out = decode1_unclipped(gfc, buffer, mp3_in,pcm_buf[0],pcm_buf[1]); 
+	    /* samples_out = 0:  need more data to decode 
+             * samples_out = -1:  error.  Lets assume 0 pcm output 
+             * samples_out = number of samples output */
+
+	    /* set the lenght of the mp3 input buffer to zero, so that in the 
+	     * next iteration of the loop we will be querying mpglib about 
+	     * buffered data */
+	    mp3_in = 0;
+
+	    if (samples_out==-1) {
+                /* error decoding. Not fatal, but might screw up 
+                 * the ReplayGain tag. What should we do? Ignore for now */
+                samples_out=0;
+            }
+            if (samples_out>0) {  
+		/* process the PCM data */
+
+		/* this should not be possible, and indicates we have 
+		 * overflown the pcm_buf buffer */
+		assert(samples_out <= 1152);
+
+		if (gfc->findPeakSample) {
+		    for (i=0; i<samples_out; i++) {   
+			if (pcm_buf[0][i] > gfc->PeakSample)
+			    gfc->PeakSample = pcm_buf[0][i];
+			else if (-pcm_buf[0][i] > gfc->PeakSample)
+			    gfc->PeakSample = -pcm_buf[0][i]; 
+		    }
+		    if (gfc->channels_out > 1)
+			for (i=0; i<samples_out; i++) {
+			    if (pcm_buf[1][i] > gfc->PeakSample)
+				gfc->PeakSample = pcm_buf[1][i];
+			    else if (-pcm_buf[1][i] > gfc->PeakSample)
+				gfc->PeakSample = -pcm_buf[1][i];
+			}
+		}
+		
+		if (gfc->findReplayGain)
+		    if (AnalyzeSamples(gfc->rgdata, pcm_buf[0], pcm_buf[1], samples_out, gfc->channels_out) == GAIN_ANALYSIS_ERROR)
+			return -6;
+		
+            } /* if (samples_out>0) */
+	} /* while (samples_out!=0) */
+    } /* if (gfc->decode_on_the_fly) */ 
 #endif
+
     return minimum;
 }
 /***********************************************************************
