@@ -1,3 +1,13 @@
+diff -r1.83.2.13 configure.in
+341c341
+<               AC_MSG_RESULT("${CONFIG_EFENCE}")
+---
+>               AC_MSG_RESULT(${CONFIG_EFENCE})
+345c345
+<       AC_MSG_RESULT("${CONFIG_EFENCE}")
+---
+>       AC_MSG_RESULT(${CONFIG_EFENCE})
+
 dnl $Id$
 dnl
 dnl
@@ -338,11 +348,11 @@ yes)
 	else
 		LDADD="${LDADD} ${HAVE_EFENCE}"
 		AC_DEFINE(HAVE_EFENCE, 1, we link against libefence)
-		AC_MSG_RESULT("${CONFIG_EFENCE}")
+		AC_MSG_RESULT(${CONFIG_EFENCE})
 	fi
 	;;
 no)
-	AC_MSG_RESULT("${CONFIG_EFENCE}")
+	AC_MSG_RESULT(${CONFIG_EFENCE})
 	;;
 *)
 	AC_MSG_ERROR(bad value »${CONFIG_EFENCE}« for efence option)
