@@ -26,7 +26,7 @@ minus1		dd	-1.0
 magicfloat	dd	8388608.0
 maskpattern	dd	0xFFFFFF
 
-	segment_text
+	segment_code
 proc	pow075_3DN
 	mov	eax, [esp+4]	; eax = xr
 	mov	edx, [esp+8]	; edx = xr34
