@@ -596,7 +596,7 @@ FILE * OpenSndFile(lame_global_flags *gfp)
 *
 ************************************************************************/
 
-int read_samples_pcm(lame_global_flags *gfp,sample_t sample_buffer[2*1152],int frame_size,int samples_to_read)
+int read_samples_pcm(lame_global_flags *gfp, sample_t sample_buffer[2*1152], int frame_size, size_t samples_to_read)
 {
     int 		samples_read;
     int			rcode;
