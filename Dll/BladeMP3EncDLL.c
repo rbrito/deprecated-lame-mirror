@@ -50,19 +50,15 @@ static DWORD	dwSampleBufferSize=0;
 
 
 #ifdef _DEBUGDLL
-void dump_config( frame_params *fr_ps, int *psy, char *inPath, char *outPath);
+void dump_config( char *inPath, char *outPath);
 #endif
 
-// Taken from main.c
-#define MAX_NAME_SIZE 300
-static char			original_file_name[MAX_NAME_SIZE];
-static char			encoded_file_name[MAX_NAME_SIZE];
 lame_global_flags *gfp;
-
+/*
 extern Bit_stream_struc   bs;
 extern III_side_info_t l3_side;
 extern frame_params fr_ps;
-extern FLOAT resample_ratio;
+*/
 
 static void InitParams()
 {
@@ -70,8 +66,8 @@ static void InitParams()
     memset(InputBuffer, 0,sizeof(InputBuffer));
     bFirstFrame=TRUE;
     // Initialize output buffer
-    bs.pbtOutBuf=NULL;
-    bs.nOutBufPos=0;
+    //    bs.pbtOutBuf=NULL;
+    //    bs.nOutBufPos=0;
     gfp=lame_init();
 
 }
@@ -92,7 +88,7 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 	char*		argv[MAX_ARGV];
 	int			i;
 	BE_CONFIG	lameConfig;
-	layer*		pInfo = NULL;
+	//	layer*		pInfo = NULL;
 
 
 	// clear out structure
@@ -109,7 +105,6 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 		lameConfig.format.LHV1.dwReSampleRate=pbeConfig->format.mp3.dwSampleRate;
 		lameConfig.format.LHV1.nMode		=(pbeConfig->format.mp3.byMode&0x0F);
 		lameConfig.format.LHV1.dwBitrate	=pbeConfig->format.mp3.wBitrate;
-		lameConfig.format.LHV1.bPrivate		=pbeConfig->format.mp3.bPrivate;
 		lameConfig.format.LHV1.bPrivate		=pbeConfig->format.mp3.bPrivate;
 		lameConfig.format.LHV1.bOriginal	=pbeConfig->format.mp3.bOriginal;
 		lameConfig.format.LHV1.bCRC			=nCRC&0x01;
@@ -250,6 +245,7 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 	gfp->silent=1;  /* disable status ouput */
 	lame_init_params();
 
+	/*
 	// Set pointer to fr_ps header
 	pInfo = fr_ps.header;
 
@@ -262,10 +258,9 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 	{
 		pInfo->extension = 1;
 	}
+	*/
 
-
-	//hdr_to_frps(&fr_ps);  /* now called in parse_args */
-
+	/*
     if (pInfo->lay != 3)
 	{
 		char lpszError[255];
@@ -273,9 +268,10 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 		OutputDebugString(lpszError);
 		return BE_ERR_INVALID_FORMAT_PARAMETERS;
     }
+	*/
 
 	// Set number of input samples depending on the number of samples
-	*dwSamples=(pInfo->version==MPEG2)?1152:2304;
+	*dwSamples=(gfp->mode_gr)*1152;
 
 	*dwSamples=(DWORD)(gfp->resample_ratio* *dwSamples);
 	if ((lameConfig.format.LHV1.nMode)== BE_MP3_MODE_MONO)
@@ -288,7 +284,7 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 	dwSampleBufferSize=*dwSamples;
 
 #ifdef _DEBUGDLL
-	dump_config(&fr_ps,&nPsychoModel,original_file_name,encoded_file_name);
+	dump_config(gfp->inPath,gfp->outPath);
 #endif
 
 	// Everything went OK, thus return SUCCESSFUL
@@ -299,29 +295,9 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 
 __declspec(dllexport) BE_ERR	beDeinitStream(HBE_STREAM hbeStream, PBYTE pOutput, PDWORD pdwOutput)
 {
-	// Set output buffer
-	bs.pbtOutBuf=pOutput;
-	bs.nOutBufPos=0;
 
-	// Crank out the last part of the buffer
-	if (fr_ps.header->lay == 3 )
-		III_FlushBitstream();
+        *pdwOutput =   lame_encode_finish(pOutput);
 
-	// close the stream
-	//close_bit_stream_w( &bs );  /* routine removed */
-
-	// Flush last bytes
-	//write_buffer(&bs, 1+bs.buf_byte_idx);  /* ouput to mp3 file */
-	*pdwOutput = copy_buffer((char*)&bs.pbtOutBuf[bs.nOutBufPos],&bs);
-	empty_buffer(&bs);  /* empty buffer */
-
-	// Number of bytes in output buffer
-	bs.nOutBufPos= *pdwOutput;
-
-	// Deallocate all buffers
-	desalloc_buffer(&bs);
-
-	// Everything went OK, thus return SUCCESSFUL
 	return BE_ERR_SUCCESSFUL;
 }
 
@@ -387,8 +363,8 @@ __declspec(dllexport) BE_ERR	beEncodeChunk(HBE_STREAM hbeStream, DWORD nSamples,
 	int iSampleIndex;
 
 	// Set output buffer
-	bs.pbtOutBuf=pOutput;
-	bs.nOutBufPos=0;
+	//	bs.pbtOutBuf=pOutput;
+	//	bs.nOutBufPos=0;
 
 	// Is this the last (incomplete) frame
 	if (nSamples<dwSampleBufferSize)
@@ -421,10 +397,10 @@ __declspec(dllexport) BE_ERR	beEncodeChunk(HBE_STREAM hbeStream, DWORD nSamples,
 
 
 	// Encode it
-	*pdwOutput=lame_encode(InputBuffer,(char*)&bs.pbtOutBuf[bs.nOutBufPos]);
+	*pdwOutput=lame_encode(InputBuffer,pOutput);
 
 	// Set number of output bytes
-	bs.nOutBufPos=*pdwOutput;
+	//	bs.nOutBufPos=*pdwOutput;
 
 	return BE_ERR_SUCCESSFUL;
 }
@@ -477,9 +453,9 @@ BOOL APIENTRY DllMain(HANDLE hModule,
 
 
 #ifdef _DEBUGDLL
-void dump_config( frame_params *fr_ps, int *psy, char *inPath, char *outPath)
+void dump_config( char *inPath, char *outPath)
 {
-	layer *info = fr_ps->header;
+  //	layer *info = fr_ps->header;
 	char strTmp[255];
 
 	OutputDebugString("Encoding configuration:\n");
@@ -487,24 +463,19 @@ void dump_config( frame_params *fr_ps, int *psy, char *inPath, char *outPath)
 
 	sprintf(strTmp,"Write VBR Header=%s\n",(gfp->bWriteVbrTag)?"Yes":"No");
 	OutputDebugString(strTmp);
-	sprintf(strTmp,"info->version=%d\n",info->version);
+
+//	sprintf(strTmp,"info->version=%d\n",info->version);
+//	OutputDebugString(strTmp);
+
+
+	sprintf(strTmp,"Layer=3   mode=%d  \n",gfp->mode);
 	OutputDebugString(strTmp);
 
-	if(info->mode != MPG_MD_JOINT_STEREO)
-	{
-		sprintf(strTmp,"Layer=%d   mode=%d   extn=%d   psy model=%d\n",info->lay,info->mode,info->mode_ext, *psy);
-		OutputDebugString(strTmp);
-	}
-	else
-	{
-		sprintf(strTmp,"Layer=%d   mode=%d   extn=data dependent   psy model=%d\n",info->lay, info->mode, *psy);
-		OutputDebugString(strTmp);
-	}
 
-	sprintf(strTmp,"samp frq=%.1f kHz   total bitrate=%d kbps\n",s_freq[info->version][info->sampling_frequency],bitrate[info->version][info->lay-1][info->bitrate_index]);
+	sprintf(strTmp,"samp frq=%.1f kHz   total bitrate=%d kbps\n",gfp->in_samplerate/1000.0);
 	OutputDebugString(strTmp);
 
-	sprintf(strTmp,"de-emph=%d   c/right=%d   orig=%d   errprot=%s\n",info->emphasis, info->copyright, info->original,((info->error_protection) ? "on" : "off"));
+	sprintf(strTmp,"de-emph=%d   c/right=%d   orig=%d   errprot=%s\n",gfp->emphasis, gfp->copyright, gfp->original,((gfp->error_protection) ? "on" : "off"));
 	OutputDebugString(strTmp);
 
 //	sprintf(strTmp,"16 Khz cut off is %s\n",(0)?"enabled":"disabled");
@@ -528,7 +499,7 @@ void dump_config( frame_params *fr_ps, int *psy, char *inPath, char *outPath)
 //	sprintf(strTmp,"Voice mode %s\n",(voice_mode)?"enabled":"disabled");
 //	OutputDebugString(strTmp);
 
-	sprintf(strTmp,"Encoding as %.1f kHz %d kbps %d MPEG-%d LayerIII file\n",s_freq[info->version][info->sampling_frequency],bitrate[info->version][info->lay-1][info->bitrate_index],info->mode,2-info->version);
+	sprintf(strTmp,"Encoding as %.1f kHz %d kbps %d MPEG-%d LayerIII file\n",gfp->out_samplerate/1000.0,gfp->brate,gfp->mode,3 - gfp->mode_gr);
 	OutputDebugString(strTmp);
 }
 
