@@ -135,21 +135,6 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
 {
     /*translate legacy presets*/
     switch (preset) {
-    case STREAMING: {
-        preset = V9;
-        lame_set_VBR(gfp, vbr_rh);
-        break;
-    }
-    case RADIO: {
-        preset = V7;
-        lame_set_VBR(gfp, vbr_rh);
-        break;
-    }
-    case PORTABLE: {
-        preset = V5;
-        lame_set_VBR(gfp, vbr_rh);
-        break;
-    }
     case MEDIUM: {
         preset = V4;
         lame_set_VBR(gfp, vbr_rh);

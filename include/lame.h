@@ -112,11 +112,7 @@ typedef enum preset_mode_e {
     STANDARD_FAST = 1004,
     EXTREME_FAST = 1005,
     MEDIUM = 1006,
-    MEDIUM_FAST = 1007,
-
-    PORTABLE = 1010,
-    RADIO = 1015,
-    STREAMING = 1016
+    MEDIUM_FAST = 1007
 } preset_mode;
 
 
