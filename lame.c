@@ -797,7 +797,7 @@ int is_probably_MS ( const short *L, const short *R, size_t len )
   r = (x2*len - x*x) * (y2*len - y*y);
   r = r > 0 ? (xy*len - x*y) / sqrt (r) :  1.l;
 
-  return r > 0.80;
+  return r > 0.33;
 }
 #endif
 
@@ -1068,7 +1068,9 @@ char *mp3buf, int mp3buf_size)
 			 ms_ratio_prev + ms_ratio_next);
     if ( (ms_ratio_ave <.35) && (.5*(gfc->ms_ratio[0]+gfc->ms_ratio[1])<.45) )
 #ifdef RH_VALIDATE_MS
-      if (is_probably_MS(inbuf_l, inbuf_r, gfp->framesize))
+      if (is_probably_MS(inbuf_l, inbuf_r, gfp->framesize)
+        && (pe_MS[0][0]+pe_MS[0][1]+pe_MS[1][0]+pe_MS[1][1])
+           < 1.07*(pe[0][0]+pe[0][1]+pe[1][0]+pe[1][1])      )
 #endif
          gfc->mode_ext = MPG_MD_MS_LR;
   }
