@@ -625,7 +625,7 @@ void best_huffman_divide(int gr, int ch, gr_info *gi, int *ix)
     }
 
     i = cod_info.big_values;
-    if (i == 0 || (unsigned int)(ix[i-2] | ix[i-1]) > 1)
+    if (i == 0 || i == 576 || (unsigned int)(ix[i-2] | ix[i-1]) > 1)
 	return;
 
     memcpy(&cod_info, gi, sizeof(gr_info));
@@ -794,7 +794,7 @@ void best_scalefac_store(lame_global_flags *gfp,int gr, int ch,
 	}
     }
 
-    if (gfp->mode_gr == 2 && gr == 1
+    if (gfp->use_scfsi && gr == 1
 	&& l3_side->gr[0].ch[ch].tt.block_type != SHORT_TYPE
 	&& l3_side->gr[1].ch[ch].tt.block_type != SHORT_TYPE
 	&& l3_side->gr[0].ch[ch].tt.scalefac_scale
