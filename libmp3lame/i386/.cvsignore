@@ -2,3 +2,4 @@
 .libs
 liblameasmroutines.la
 Makefile
+*.lst
