@@ -52,7 +52,7 @@
 
 char ACM::VersionString[20];
 
-const char ACM_VERSION[] = "0.7.7";
+const char ACM_VERSION[] = "0.8.0";
 
 #ifdef WIN32
 //
@@ -75,8 +75,8 @@ const char ACM_VERSION[] = "0.7.7";
 #endif
 
 #define PERSONAL_FORMAT WAVE_FORMAT_MPEGLAYER3
-//#define SIZE_FORMAT_STRUCT sizeof(MPEGLAYER3WAVEFORMAT)
-#define SIZE_FORMAT_STRUCT 0
+#define SIZE_FORMAT_STRUCT sizeof(MPEGLAYER3WAVEFORMAT)
+//#define SIZE_FORMAT_STRUCT 0
 
 //static const char channel_mode[][13] = {"mono","stereo","joint stereo","dual channel"};
 static const char channel_mode[][13] = {"mono","stereo"};
@@ -1105,9 +1105,8 @@ inline DWORD ACM::OnStreamConvert(LPACMDRVSTREAMINSTANCE a_StreamInstance, LPACM
 
 void ACM::GetMP3FormatForIndex(const DWORD the_Index, WAVEFORMATEX & the_Format, unsigned short the_String[ACMFORMATDETAILS_FORMAT_CHARS]) const
 {
-	the_Format.wBitsPerSample = 16;
-//	the_Format.cbSize = 2; // never know
-	the_Format.cbSize = 0; // not used
+//	the_Format.wBitsPerSample = 16;
+	the_Format.wBitsPerSample = 0;
 
 	/// \todo handle more channel modes (mono, stereo, joint-stereo, dual-channel)
 //	the_Format.nChannels = SIZE_CHANNEL_MODE - int(the_Index % SIZE_CHANNEL_MODE);
@@ -1115,6 +1114,7 @@ void ACM::GetMP3FormatForIndex(const DWORD the_Index, WAVEFORMATEX & the_Format,
 	the_Format.nBlockAlign = 1;
 
 	DWORD tmpIdx = 0;
+	int Block_size;
 	int channel,bitrate,freq;
 
 	// MPEG I
@@ -1146,6 +1146,7 @@ void ACM::GetMP3FormatForIndex(const DWORD the_Index, WAVEFORMATEX & the_Format,
 
 		the_Format.nSamplesPerSec = mpeg1_freq[freq];
 		the_Format.nAvgBytesPerSec = mpeg1_bitrate[bitrate] * 1000 / 8;
+		Block_size = 1152;
 	}
 	else
 	{
@@ -1175,9 +1176,18 @@ void ACM::GetMP3FormatForIndex(const DWORD the_Index, WAVEFORMATEX & the_Format,
 
 		the_Format.nSamplesPerSec = mpeg2_freq[freq];
 		the_Format.nAvgBytesPerSec = mpeg2_bitrate[bitrate] * 1000 / 8;
+		Block_size = 576;
 	}
 
 	the_Format.nChannels = channel;
+
+	the_Format.cbSize = sizeof(MPEGLAYER3WAVEFORMAT) - sizeof(WAVEFORMATEX);
+	MPEGLAYER3WAVEFORMAT * tmpFormat = (MPEGLAYER3WAVEFORMAT *) &the_Format;
+	tmpFormat->wID             = 1;
+	tmpFormat->fdwFlags        = 2;
+	tmpFormat->nBlockSize      = Block_size * the_Format.nAvgBytesPerSec / the_Format.nSamplesPerSec;
+	tmpFormat->nFramesPerBlock = 1;
+	tmpFormat->nCodecDelay     = 0; // 0x0571 on FHG
 
 	/// \todo : generate the string with the appropriate stereo mode
 	wsprintfW( the_String, L"%d kHz, %d kbps CBR, %s", the_Format.nSamplesPerSec, the_Format.nAvgBytesPerSec * 8 / 1000, (the_Format.nChannels == 1)?L"Mono":L"Stereo");
