@@ -540,7 +540,7 @@ AC_ARG_ENABLE(debug,
     CONFIG_DEBUG="${enableval}", CONFIG_DEBUG="no")
 
 if test "x$GCC" = "xyes"; then
-	DEBUG_NORM_OPT="-O -ggdb -W -Wall -Wbad-function-cast -Wcast-align \
+	DEBUG_NORM_OPT="-O -g -W -Wall -Wbad-function-cast -Wcast-align \
 		-Wcast-qual -Wchar-subscripts -Wconversion \
 		-Wmissing-prototypes -Wnested-externs -Wpointer-arith \
 		-Wredundant-decls -Wshadow -Wstrict-prototypes \
