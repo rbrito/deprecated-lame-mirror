@@ -40,6 +40,19 @@ typedef enum vbr_mode_e {
 } vbr_mode;
 
 
+struct id3tag_spec
+{
+    /* private data members */
+    int flags;
+    const char *title;
+    const char *artist;
+    const char *album;
+    int year;
+    const char *comment;
+    int track;
+    int genre;
+};
+
 /* MPEG Header Definitions - Mode Values */
 
 #define         MPG_MD_STEREO           0

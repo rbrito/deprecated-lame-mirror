@@ -131,11 +131,11 @@ int main(int argc, char **argv)
   if (outPath!=NULL && outPath[0]=='-' ) {
     gf.bWriteVbrTag=0; /* turn off VBR tag */
   }
-
+#if 0
   if (outPath==NULL || outPath[0]=='-' ) {
     gf.id3v1_enabled=0;       /* turn off ID3 version 1 tagging */
   }
-
+#endif
   i = lame_init_params(&gf);
 
   if (gf.analysis) 
