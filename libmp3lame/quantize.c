@@ -531,20 +531,24 @@ init_global_gain(
  *
  *  Takehiro TOMINAGA 2002-07-21
  *
- *  trancate smaller nubmers into 0 as long as the noise threshold is allowed.
+ *  trancate smal nubmers into 0 as long as the noise threshold is allowed.
  *
  ************************************************************************/
 static int
-floatcompare(const FLOAT *a, const FLOAT *b)
+floatcompare(const void *v1, const void *v2)
 {
+#if ALLDOUBLE
+    const FLOAT *a = v1, *b = v2;
     if (*a > *b) return 1;
     if (*a == *b) return 0;
     return -1;
+#else
+    return *(int *)v1 - *(int *)v2;
+#endif
 }
 
 static void
-trancate_smallspectrums(
-    lame_t gfc, gr_info * const gi, const FLOAT * const xmin)
+trancate_smallspectrums(lame_t gfc, gr_info* const gi, const FLOAT* const xmin)
 {
     int sfb, j;
     FLOAT distort[SFBMAX], work[576]; /* 576 is too much */
@@ -626,7 +630,7 @@ loop_break(const gr_info * const gi)
  *
  *************************************************************************/
 static void
-inc_scalefac_scale (gr_info * const gi, FLOAT distort[])
+inc_scalefac_scale(gr_info * const gi, FLOAT distort[])
 {
     int sfb = 0;
     do {
@@ -719,14 +723,8 @@ inc_subblock_gain(gr_info * const gi, FLOAT distort[])
  *  returns how many bits are available to store the quantized spectrum.
  *************************************************************************/
 static int
-amp_scalefac_bands(
-    lame_t gfc,
-    gr_info  *const gi, 
-    FLOAT *distort,
-    FLOAT trigger,
-    int method,
-    int target_bits
-    )
+amp_scalefac_bands(lame_t gfc, gr_info *const gi, FLOAT *distort,
+		   FLOAT trigger, int method, int target_bits)
 {
     int bits, sfb, sfbmax = gi->sfbmax;
     if (sfbmax > gi->psymax)
