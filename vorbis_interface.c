@@ -189,7 +189,7 @@ int lame_decode_ogg_fromfile(FILE *fd,short int pcm_l[],short int pcm_r[],mp3dat
     /* unpack the buffer, if it has at least 1024 samples */
     convsize=1024;
     samples=vorbis_synthesis_pcmout(&vd,&pcm);
-    if (samples >= convsize || eos ) {
+    if (samples >= convsize || eos || eof) {
       /* read 1024 samples, or if eos, read what ever is in buffer */
       int clipflag=0;
       bout=(samples<convsize?samples:convsize);
@@ -214,8 +214,10 @@ int lame_decode_ogg_fromfile(FILE *fd,short int pcm_l[],short int pcm_r[],mp3dat
 	}
       }
       
+      /*
       if(clipflag)
 	fprintf(stderr,"Clipping in frame %ld\n",vd.sequence);
+      */
       
       /* tell libvorbis how many samples we actually consumed */
       vorbis_synthesis_read(&vd,bout); 
