@@ -360,6 +360,21 @@ esac
 
 
 
+AC_MSG_CHECKING(for FLOAT8 as float)
+AC_ARG_ENABLE(all-float,
+  [  --enable-all-float         Whether to make all floting point variables as float, not double]
+  [                           [default: no]],   
+    CONFIG_ALLFLOAT="${enableval}", CONFIG_ALLFLOAT="no")
+if test "${CONFIG_ALLFLOAT}" != "no" ; then
+	CFLAGS="-DFLOAT8=float ${CFLAGS}"
+	AC_MSG_RESULT(${CONFIG_ALLFLOAT})
+else
+	AC_MSG_RESULT(no)
+fi
+
+
+
+
 AC_PATH_PROG(NASM, nasm, no)
 case "${NASM}" in
 no)
@@ -435,6 +450,10 @@ if test "x$GCC" = "xyes"; then
 else
 	AC_MSG_RESULT(no)
 fi
+
+
+
+
 
 AC_MSG_CHECKING(for debug options)
 AC_ARG_ENABLE(debug,

@@ -88,7 +88,9 @@
 #	define WIN32_LEAN_AND_MEAN
 #	include <windows.h>
 #else
+#ifndef FLOAT
 	typedef float FLOAT;
+#endif
 #endif
 
 /*
@@ -103,8 +105,9 @@ lot of conversions.
 */
 
 /* NOTE: RH: 7/00:  if FLOAT8=float, it breaks resampling and VBR code */
+#ifndef FLOAT8
 typedef double FLOAT8;
-
+#endif
 
 
 /*
