@@ -260,19 +260,19 @@ int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip)
     /* mp3 decoder has a 528 sample delay, plus user supplied "skip" */
     skip+=528 + 1;
     MSGF("input:    %s %.1fkHz MPEG%i %i channel LayerIII\n",
-	  (strcmp(gfp->inPath, "-")? gfp->inPath : "stdin"),
-	  gfp->in_samplerate/1000.0,2-gfp->version,gfp->num_channels);
+      (strcmp(gfp->inPath, "-")? gfp->inPath : "stdin"),
+      gfp->in_samplerate/1000.0,2-gfp->version,gfp->num_channels);
 
   }else{
     /* other formats have no delay */
     skip=0;
     MSGF("input:    %s %.1fkHz %i channel\n",
-	  (strcmp(gfp->inPath, "-")? gfp->inPath : "stdin"),
-	  gfp->in_samplerate/1000.0,gfp->num_channels);
+      (strcmp(gfp->inPath, "-")? gfp->inPath : "stdin"),
+      gfp->in_samplerate/1000.0,gfp->num_channels);
   }
 
   MSGF("output:   %s (wav format)\n",
-	  (strcmp(gfp->outPath, "-")? gfp->outPath : "stdout"));
+    (strcmp(gfp->outPath, "-")? gfp->outPath : "stdout"));
   if (skip>0)
     MSGF("skipping initial %i samples (encoder + decoder delay)\n",skip);
   if (!gfp->disable_waveheader)
@@ -287,11 +287,23 @@ int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip)
       decoder_progress(gfp);
     for (i=0; i<iread; ++i) {
       if (skip) {
-	--skip;
-      }else{
-	Write16BitsLowHigh(outf,Buffer[0][i]);
-	if (gfp->num_channels==2)
-	  Write16BitsLowHigh(outf,Buffer[1][i]);
+        --skip;
+      } else {
+        if (gfp->disable_waveheader) {
+          if (gfp->swapbytes) {
+            WriteBytesSwapped(outf,Buffer[0][i],sizeof(short));
+            if (gfp->num_channels==2)
+              WriteBytesSwapped(outf,Buffer[1][i],sizeof(short));
+          } else {
+            WriteBytes(outf,Buffer[0][i],sizeof(short));
+            if (gfp->num_channels==2)
+              WriteBytes(outf,Buffer[1][i],sizeof(short));
+          }
+        } else {
+          Write16BitsLowHigh(outf,Buffer[0][i]);
+          if (gfp->num_channels==2)
+            Write16BitsLowHigh(outf,Buffer[1][i]);
+        }
       }
     }
   } while (iread);
