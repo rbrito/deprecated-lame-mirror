@@ -192,6 +192,7 @@ void timestatus_klemm ( const lame_global_flags* const gfp )
 
 void decoder_progress ( const lame_global_flags* const gfp, const mp3data_struct* const mp3data )
 {
+    static int  last;
     fprintf ( stderr, "\rFrame#%6i/%-6i %3i kbps",
               mp3data->framenum, mp3data->totalframes, mp3data->bitrate );
               
@@ -203,7 +204,6 @@ void decoder_progress ( const lame_global_flags* const gfp, const mp3data_struct
     // is this really intensity_stereo or is it MS stereo?
     
     if ( mp3data->mode == MPG_MD_JOINT_STEREO ) {
-        static int  last;
         int         curr = mp3data->mode_ext;
         fprintf ( stderr, "  %s  %c" , 
                   curr&2  ?  last&2 ? " MS " : "LMSR"  :  last&2 ? "LMSR" : "L  R",
@@ -211,7 +211,7 @@ void decoder_progress ( const lame_global_flags* const gfp, const mp3data_struct
         last = curr;
     } else {
         fprintf ( stderr, "         " );
-	//        last = 0;
+	last = 0;
     }
 //    fprintf ( stderr, "%s", Console_IO.str_clreoln );
       fprintf ( stderr, "        \b\b\b\b\b\b\b\b" );

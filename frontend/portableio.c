@@ -244,11 +244,11 @@ Read24BitsHighLow(FILE *fp)
 
 int  Read32Bits ( FILE* fp )
 {
-    int  low  = ReadByte         (fp);
+    int  low  = ReadByteUnsigned (fp);
     int  medl = ReadByteUnsigned (fp);
     int  medh = ReadByteUnsigned (fp);
-    int  high = ReadByteUnsigned (fp);
-    
+    int  high = ReadByte         (fp);
+
     return (high << 24) | (medh << 16) | (medl << 8) | low;
 }
 
