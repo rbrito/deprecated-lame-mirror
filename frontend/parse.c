@@ -715,19 +715,57 @@ static int  presets_info ( const lame_global_flags* gfp, FILE* const fp, const c
     
     fprintf ( fp, "\n\n"
               "VBR presets highly tuned for quality can be activated via:\n"
-              "--dm-preset standard\n"
-              "--dm-preset xtreme\n"
-              "--dm-preset insane\n"
+              "--preset dm-standard\n"
+              "--preset dm-xtreme\n"
+              "--preset dm-insane\n"
               "\n"
               "ABR preset optimized for lower file size and good quality can be activated via:\n"
-              "--dm-preset metal\n"
+              "--preset dm-metal\n"
               "\n"
-              "or simply:\n"
-              "--r3mix\n"
+              "VBR preset for quality with little excess:\n"
+              "--preset r3mix\n"
               "\n"
               );
  
     return 0;
+}
+
+
+/* preset alias translation
+ */
+static const char* presets_alias( const char* preset_name )
+{
+    int i;
+    unsigned char p0;
+                                /* original presets to be aliased */
+    const char* dm_standard = "dm-standard";
+    const char* dm_xtreme   = "dm-xtreme";
+    const char* dm_insane   = "dm-insane";
+    const char* dm_metal    = "dm-metal";
+
+    struct ps_alias {
+        const unsigned char *in;
+        const char *out;
+    } ps_xlat[] = {             /* alphabetically ordered alias table  */
+        {"insane", dm_insane},
+        {"metal", dm_metal},
+        {"standard", dm_standard}, 
+        {"xtreme", dm_xtreme},
+        {"\xff", NULL}
+    };
+
+    p0 = preset_name[0];
+    if( p0 < 0xff ) {
+        for ( i = 0; ps_xlat[i].in[0] < p0; ++i )
+            ;
+        for ( ; ps_xlat[i].in[0] == p0; ++i ) {
+            if( strcmp( preset_name, ps_xlat[i].in ) == 0 ) {
+                return( ps_xlat[i].out );
+            }
+        }
+    }
+
+    return( preset_name );
 }
 
 
@@ -764,43 +802,43 @@ static int  presets_setup ( lame_global_flags* gfp, const char* preset_name, con
 static int  r3mix_presets( lame_t gfp, const char* preset_subname )
 {
     if (preset_subname[0] == '\0') {
-	lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1); /*nspsytune*/
-	/*  lame_set_experimentalX(gfp,1); (test CVS) */
+        lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1); /*nspsytune*/
+        /*  lame_set_experimentalX(gfp,1); (test CVS) */
 
-	(void) lame_set_scale( gfp, 0.98 ); /* --scale 0.98*/
+        (void) lame_set_scale( gfp, 0.98 ); /* --scale 0.98*/
 
-	lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (8 << 20));
+        lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (8 << 20));
 
-	lame_set_VBR(gfp,vbr_mtrh); 
-	lame_set_VBR_q(gfp,1);
-	lame_set_quality( gfp, 2 );
-	lame_set_lowpassfreq(gfp,19500);
-	lame_set_mode( gfp, JOINT_STEREO );
-	lame_set_ATHtype( gfp, 3 );
-	lame_set_VBR_min_bitrate_kbps(gfp,96);
+        lame_set_VBR(gfp,vbr_mtrh); 
+        lame_set_VBR_q(gfp,1);
+        lame_set_quality( gfp, 2 );
+        lame_set_lowpassfreq(gfp,19500);
+        lame_set_mode( gfp, JOINT_STEREO );
+        lame_set_ATHtype( gfp, 3 );
+        lame_set_VBR_min_bitrate_kbps(gfp,96);
     
-	return 0;
+        return 0;
     }
 /*  else if( strcmp(preset_subname, "-...") == 0 ) {
-	;
-	return 0;
+        ;
+        return 0;
     }
 */
     fprintf( stderr, "Unknown --preset profile: r3mix%s\n"
-	     "Available r3mix presets:\n  r3mix\n", preset_subname );
+             "Available r3mix presets:\n  r3mix\n", preset_subname );
     return -1;
 }
 
 
 /*  some presets thanks to Dibrom
  */
-static int  dm_presets( lame_t gfp, const char* preset_name )
+static int  dm_presets( lame_t gfp, const char* preset_subname )
 {
     double  d;
     int     k;
         	
     // Standard Preset == --nspsytune -V2 -mj -h --lowpass 19.5 -b112 --nssafejoint --athtype 4 --ns-sfb21 3" 
-    if (strcmp(preset_name, "standard") == 0) {
+    if (strcmp(preset_subname, "standard") == 0) {
         /* nspsytune stuff */
         lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
         lame_set_experimentalZ(gfp,1);
@@ -827,7 +865,7 @@ static int  dm_presets( lame_t gfp, const char* preset_name )
     }
     
     // Xtreme Preset == --nspsytune -V2 -mj -h --lowpass 19.5 -b112 --nssafejoint --athtype 2 --ns-sfb21 3"
-    else if (strcmp(preset_name, "xtreme") == 0){
+    else if (strcmp(preset_subname, "xtreme") == 0){
         /* nspsytune stuff */
         lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
         lame_set_experimentalZ(gfp,1);
@@ -854,7 +892,7 @@ static int  dm_presets( lame_t gfp, const char* preset_name )
     }
     					
     // Insane Preset == --nspsytune -V0 -mj -h --lowpass 19.5 -b128 --nssafejoint --athtype 2 -Z"
-    else if (strcmp(preset_name, "insane") == 0){
+    else if (strcmp(preset_subname, "insane") == 0){
         /* nspsytune stuff */
         lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
         lame_set_experimentalX(gfp,1);
@@ -873,7 +911,7 @@ static int  dm_presets( lame_t gfp, const char* preset_name )
     }	
 
     // Metal Preset == "--nspsytune --abr 192 -h -mj -b128 --lowpass 19.5 --nssafejoint --athtype 2"
-    else if (strcmp(preset_name, "metal") == 0){
+    else if (strcmp(preset_subname, "metal") == 0){
         /* nspsytune stuff */
         lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
         lame_set_experimentalZ(gfp,1);
@@ -894,7 +932,10 @@ static int  dm_presets( lame_t gfp, const char* preset_name )
         return 0;
     }
 
-    fprintf(stderr,"ERROR: You must specify a profile with --dm-preset\n\nAvailable profiles are:\n\nstandard\nxtreme\ninsane\nmetal\n");
+    fprintf( stderr, "Unknown --preset profile: dm-%s\n"
+             "Available dm- presets:\n"
+             " dm-standard\n dm-xtreme\n dm-insane\n dm-metal\n",
+             preset_subname );
     return -1;
 }
 
@@ -1435,22 +1476,24 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 #endif              
                     return -2;
                 
-                T_ELIF ("preset")
+                T_ELIF ("preset") {
+                    const char *xlatArg;
                     argUsed = 1;
-		    if (strncmp( nextArg, "r3mix", 5 ) == 0 ) {
-			if( r3mix_presets( gfp, nextArg + 5 ) < 0 )
-			    return -1;
-		    }
-		    else {
-			if (presets_setup ( gfp, nextArg, ProgramName ) < 0)
-			    return -1;
-		    }
-
-                T_ELIF ("dm-preset")
-                    argUsed = 1;
-                    if (dm_presets ( gfp, nextArg ) < 0)
-                        return -1;
+                    xlatArg = presets_alias( nextArg );
                     
+                    if (strncmp( xlatArg, "dm-", 3 ) == 0 ) {
+                        if( dm_presets( gfp, xlatArg + 3 ) < 0 )
+                            return -1;
+                    } 
+                    else if (strncmp( xlatArg, "r3mix", 5 ) == 0 ) {
+                        if( r3mix_presets( gfp, xlatArg + 5 ) < 0 )
+                            return -1;
+                    }
+                    else {
+                        if( presets_setup( gfp, xlatArg, ProgramName ) < 0 )
+                            return -1;
+                    }
+                }
                 T_ELIF ("disptime")
                     argUsed = 1;
                     update_interval = atof (nextArg);
