@@ -47,8 +47,6 @@ char *strchr (), *strrchr ();
 #include <dmalloc.h>
 #endif
 
-#define MAX_NAME_SIZE   2048  /* current value of Linux */
-
 /*
  * Encode (via LAME) to mp3 with RTP streaming of the output.
  *
@@ -88,9 +86,9 @@ void rtp_output (char *mp3buffer, int mp3size)
 
 
 
-unsigned  maxvalue ( short int  Buffer [2] [1152] )
+unsigned int  maxvalue ( int  Buffer [2] [1152] )
 {
-    int  max = 0;
+    unsigned int  max = 0;
     int  i;
     
     for ( i = 0; i < 1152; i++ ) {
@@ -101,7 +99,7 @@ unsigned  maxvalue ( short int  Buffer [2] [1152] )
     return max;
 }
 
-void levelmessage ( unsigned maxvalue )
+void levelmessage ( unsigned int maxvalue )
 {
     char        buff [] = "|  .  |  .  |  .  |  .  |  .  |  .  |  .  |  .  |  .  |  .  |  \r";
     static int  max = 0;
@@ -128,8 +126,8 @@ void levelmessage ( unsigned maxvalue )
 int  main ( int argc, char **argv )
 {
     unsigned char       mp3buffer [LAME_MAXMP3BUFFER];
-    char       inPath    [MAX_NAME_SIZE];
-    char       outPath   [MAX_NAME_SIZE];
+    char       inPath    [MAXPATHLEN];
+    char       outPath   [MAXPATHLEN];
     int        Buffer [2] [1152];
 
     lame_global_flags *gf;

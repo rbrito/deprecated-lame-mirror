@@ -504,7 +504,7 @@ void parse_nogap_filenames(int nogapout, char *inPath, char *outPath, char *outd
 
     strcpy(outPath,outdir);
     if (!nogapout) 	{
-        strncpy(outPath, inPath, MAX_NAME_SIZE - 4);
+        strncpy(outPath, inPath, MAXPATHLEN - 4);
         n=strlen(outPath);
         /* nuke old extension, if one  */
         if (outPath[n-3] == 'w' 
@@ -523,7 +523,7 @@ void parse_nogap_filenames(int nogapout, char *inPath, char *outPath, char *outd
         }
     } else 	{
         slasher = inPath;
-        slasher += MAX_NAME_SIZE-4;
+        slasher += MAXPATHLEN-4;
         
         /* backseek to last dir delemiter */
         while (*slasher != '/' && *slasher != '\\' && slasher != inPath
@@ -554,7 +554,7 @@ void parse_nogap_filenames(int nogapout, char *inPath, char *outPath, char *outd
         strcat(outPath, "/");
 #endif
         
-        strncat(outPath, slasher, MAX_NAME_SIZE-4);
+        strncat(outPath, slasher, MAXPATHLEN-4);
         n=strlen(outPath);
         /* nuke old extension  */
         if (outPath[n-3] == 'w' 
@@ -585,9 +585,9 @@ main(int argc, char **argv)
 {
     int     ret;
     lame_global_flags *gf;
-    char    outPath[MAX_NAME_SIZE];
-    char    nogapdir[MAX_NAME_SIZE];
-    char    inPath[MAX_NAME_SIZE];
+    char    outPath[MAXPATHLEN];
+    char    nogapdir[MAXPATHLEN];
+    char    inPath[MAXPATHLEN];
 
     /* support for "nogap" encoding of up to 200 .wav files */
 #define MAX_NOGAP 200
@@ -623,7 +623,7 @@ main(int argc, char **argv)
 #endif
 
     for (i = 0; i < max_nogap; ++i) {
-        nogap_inPath[i] = malloc(MAX_NAME_SIZE);
+        nogap_inPath[i] = malloc(MAXPATHLEN);
     }
 
     memset(inPath, 0, sizeof(inPath));
@@ -654,7 +654,7 @@ main(int argc, char **argv)
         update_interval = 2.;
 
     if (outPath[0] != '\0' && max_nogap>0) {
-        strncpy(nogapdir,outPath,MAX_NAME_SIZE);  
+        strncpy(nogapdir,outPath,MAXPATHLEN);  
         nogapout = 1;
     }
     
