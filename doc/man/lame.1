@@ -270,6 +270,54 @@ since most MP3 decoders will truncate data which decodes to values
 greater than 32768.
 .PD
 .TP
+.B --replaygain-accurate
+Compute ReplayGain more accurately and find the peak sample.
+
+More precisely: enable decoding on the fly, compute "Radio" ReplayGain on the decoded data stream, find the peak sample of the decoded data stream and store it in the file.
+ 
+Please note: ReplayGain analysis does not affect the content of a compressed data stream itself, it is a value stored in the header of a sound file. Information on the purpose of ReplayGain and the algorithms used is available at: http://www.replaygain.org/
+ 
+By default, LAME performs ReplayGain analysis on the input data (more precisely: data only after the user-specified volume scaling). This behaviour might give slightly inaccurate results, because the data on the output of a lossy compression/decompression sequence differs from the initial input data. When
+.B --replaygain-accurate
+is specified then decoding on the fly is performed and the analysis is performed on the decoded data stream, that is on the output of decoding (playbacking) a compressed sound file. Although theoretically this method gives more accurate results, it has several disadvantages:
+.RS 8
+.IP "*" 4
+tests have shown that the difference between the ReplayGain values computed on the input data and decoded data is usually no greater than 0.5dB, although the minimum volume difference the human ear can perceive is about 1.0dB
+.IP "*" 4
+decoding on the fly significantly slows down the encoding process
+.RE
+.RS 7
+
+The apparent advantage is that:
+.RE
+.RS 8
+.IP "*" 4
+with
+.B --replaygain-accurate
+the peak sample is determined and stored in the file. The knowledge of the peak sample can be useful to decoders (players) to prevent a negative effect called 'clipping' that introduces distortion into sound.
+.RE
+.RS 7
+ 
+Only the "RadioGain" Replaygain value is computed. It is stored in the LAME tag. The analysis is performed with the reference volume equal to 89dB. Note: the reference volume has been changed from 83dB on transition from version 3.95 to 3.95.1.
+ 
+This option requires LAME to be compiled with DECODE_ON_THE_FLY. (Note: if LAME is compiled without DECODE_ON_THE_FLY, ReplayGain analysis is performed on the input data after user-specified volume scaling).
+ 
+See also:
+.B --clipdetect
+.RE
+.TP
+.B --clipdetect
+Clipping detection.
+
+Enable
+.B --replaygain-accurate
+and print a message whether clipping occurs and how far in dB the waveform is from full scale.
+  
+Requires LAME to be compiled with DECODE_ON_THE_FLY.
+
+See also:
+.B --replaygain-accurate
+.TP
 .B --preset " [fast] type | [cbr] kbps"
 Use one of the built-in presets.
 

@@ -208,7 +208,7 @@
   </tr>
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#-replaygain">--replaygain-accurate</a></kbd></td>
-    <td align="LEFT" nowrap>more accurate ReplayGain analysis</td>
+    <td align="LEFT" nowrap>compute ReplayGain more accurately and find the peak sample</td>
   </tr>
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#-resample">--resample</a></kbd></td>
@@ -452,8 +452,13 @@
   </dt>
 </dl>
 <dl> 
-  <dd>Determine whether clipping occurs and display an appropriate message.
-  Store the MP3 peak sample in LAME Tag. 
+  <dd>
+    Enable --replaygain-accurate and print a message whether clipping 
+    occurs and how far in dB the waveform is from full scale.<br>
+    <br>
+    Requires LAME to be compiled with DECODE_ON_THE_FLY.<br>
+    <br>
+    See also: <a href="#-replaygain">--replaygain-accurate</a>
   <dt><br>
     <br>
     <hr width="50%" noshade align="center">
@@ -990,12 +995,59 @@
   <hr width="50%" noshade align="center">
   <br>
   <dl> </dl>
-  <dt><strong>* <kbd>--replaygain-accurate</kbd><a name="-replaygain">&nbsp;&nbsp;&nbsp;&nbsp;more
-   accurate ReplayGain analysis</a></strong></dt>
+  <dt><strong>* <kbd>--replaygain-accurate</kbd><a name="-replaygain">&nbsp;&nbsp;&nbsp;&nbsp;compute
+   ReplayGain more accurately and find the peak sample</a></strong></dt>
 </dl>
 <dl> 
-  <dd>Use a slightly more accurate and much slower ReplayGain analysis. This one
-   is performing an on the the fly decoding of the mp3 data for analysis.
+  <dd>
+    Enable decoding on the fly. Compute "Radio" ReplayGain on the decoded 
+    data stream. Find the peak sample of the decoded data stream and store 
+    it in the file.<br>
+    <br>    
+    Please note: ReplayGain analysis does not affect the content of a 
+    compressed data stream itself, it is a value stored in the header 
+    of a sound file. Information on the purpose of ReplayGain and the
+    algorithms used is available at: 
+    <a href="http://www.replaygain.org/">http://www.replaygain.org/</a><br>
+    <br>
+    By default, LAME performs ReplayGain analysis on the input data (more 
+    precisely: data only after the user-specified volume scaling). This
+    behaviour might give slightly inaccurate results, because the data on 
+    the output of a lossy compression/decompression sequence differs from 
+    the initial input data. When --replaygain-accurate is specified then 
+    decoding on the fly is performed and the analysis is performed on the
+    decoded data stream, that is on the output of decoding (playbacking) 
+    a compressed sound file. Although theoretically this method gives more 
+    accurate results, it has several disadvantages:
+    <ul>
+      <li> tests have shown that the difference between the ReplayGain values 
+        computed on the input data and decoded data is usually no greater 
+        than 0.5dB, although the minimum volume difference the human ear 
+        can perceive is about 1.0dB
+      </li>
+      <li> decoding on the fly significantly slows down the encoding process
+      </li>
+    </ul>
+    The apparent advantage is that:
+    <ul>
+      <li> with --replaygain-accurate the peak sample is determined and 
+        stored in the file. The knowledge of the peak sample can be useful
+        to decoders (players) to prevent a negative effect called 'clipping'
+        that introduces distortion into sound.
+      </li>
+    </ul>    
+    <br>
+    Only the "RadioGain" Replaygain value is computed. It is stored in the LAME tag.
+    The analysis is  performed with the reference volume equal to 89dB.
+    Note: the reference volume has been changed from 83dB on transition
+    from version 3.95 to 3.95.1.<br>
+    <br>
+    This option requires LAME to be compiled with DECODE_ON_THE_FLY.
+    (Note: if LAME is compiled without DECODE_ON_THE_FLY, ReplayGain 
+    analysis is performed on the input data after user-specified
+    volume scaling).<br>
+    <br>
+    See also: <a href="#-clipdetect">--clipdetect</a>
   <dt><br>
   </dt>
 </dl>

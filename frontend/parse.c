@@ -447,7 +447,7 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --scale-r <arg> scale channel 1 (right) input (multiply PCM data) by <arg>\n"
 #ifdef DECODE_ON_THE_FLY
               "    --replaygain-accurate   compute RG more accurately and find the peak sample\n"
-              "    --clipdetect    enable --replaygain-accurate and display a message whether\n"
+              "    --clipdetect    enable --replaygain-accurate and print a message whether\n"
               "                    clipping occurs and how far the waveform is from full scale\n"
 #endif
               "    --preset type   type must be \"medium\", \"standard\", \"extreme\", \"insane\",\n"

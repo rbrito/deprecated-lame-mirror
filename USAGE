@@ -147,8 +147,8 @@ Operational:
 -o              mark the encoded file as a copy
 -S              don't print progress report, VBR histogram
 --strictly-enforce-ISO   comply as much as possible to ISO MPEG spec
---replaygain-accurate   compute RG more accurately and find the peak sample
---clipdetect    enable --replaygain-accurate and display a message whether
+--replaygain-accurate   compute RG more accurately and find the peak sample	
+--clipdetect    enable --replaygain-accurate and print a message whether
                 clipping occurs and how far the waveform is from full scale
 
 --decode        assume input file is an mp3 file, and decode to wav.
@@ -300,12 +300,12 @@ clipping detection
 =======================================================================
 --clipdetect
 
-Enables --replaygain-accurate and displays a message whether clipping 
+Enable --replaygain-accurate and print a message whether clipping 
 occurs and how far in dB the waveform is from full scale.
 
-See also: --replaygain-accurate
-
 Requires LAME to be compiled with DECODE_ON_THE_FLY.
+
+See also: --replaygain-accurate
 
 
 
@@ -578,9 +578,9 @@ slightly more accurate ReplayGain analysis and finding the peak sample
 =======================================================================
 --replaygain-accurate
 
-Enables decoding on the fly. Computes ReplayGain on the decoded data 
-stream. Finds the peak sample of the decoded data stream and stores it 
-in the file.
+Enable decoding on the fly. Compute "Radio" ReplayGain on the decoded 
+data stream. Find the peak sample of the decoded data stream and store 
+it in the file.
 
 
 Please note: ReplayGain analysis does not affect the content of a 
@@ -609,13 +609,13 @@ The apparent advantage is that:
     that introduces distortion into sound.
     
 
-The ReplayGain values are stored in the LAME tag. The analysis is 
-performed with the reference volume equal to 89dB. 
+Only the "Radio" ReplayGain value is computed. It is stored in the LAME tag. 
+The analysis is performed with the reference volume equal to 89dB. 
 Note: the reference volume has been changed from 83dB on transition
 from version 3.95 to 3.95.1.
 
 This option requires LAME to be compiled with DECODE_ON_THE_FLY.
-(note: if LAME is compiled without DECODE_ON_THE_FLY, ReplayGain 
+(Note: if LAME is compiled without DECODE_ON_THE_FLY, ReplayGain 
 analysis is performed on the input data after user-specified
 volume scaling)
 
