@@ -386,10 +386,8 @@ int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
 
 
 
-int count_bits(lame_global_flags *gfp,int *ix, FLOAT8 *xr, gr_info *cod_info)  
+int count_bits(lame_internal_flags *gfc, gr_info *cod_info, FLOAT8 *xr,int *ix)  
 {
-  lame_internal_flags *gfc=gfp->internal_flags;
-
   int bits=0,i;
   /* since quantize_xrpow uses table lookup, we need to check this first: */
   FLOAT8 w = (IXMAX_VAL) / IPOW20(cod_info->global_gain);
@@ -631,13 +629,11 @@ Find the optimal way to store the scalefactors.
 Only call this routine after final scalefactors have been
 chosen and the channel/granule will not be re-encoded.
  */
-void best_scalefac_store(lame_global_flags *gfp,int gr, int ch,
+void best_scalefac_store(lame_internal_flags *gfc,int gr, int ch,
 			 int l3_enc[2][2][576],
 			 III_side_info_t *l3_side,
 			 III_scalefac_t scalefac[2][2])
 {
-  lame_internal_flags *gfc=gfp->internal_flags;
-
     /* use scalefac_scale if we can */
     gr_info *gi = &l3_side->gr[gr].ch[ch].tt;
     u_int sfb,i,j,j2,l,start,end;
@@ -923,9 +919,8 @@ int scale_bitcount_lsf(III_scalefac_t *scalefac, gr_info *cod_info)
 
 
 
-void huffman_init(lame_global_flags *gfp)
+void huffman_init(lame_internal_flags *gfc)
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
     int i;
 
     for (i = 0; i < 16*16; i++) {

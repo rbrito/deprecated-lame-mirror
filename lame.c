@@ -733,11 +733,9 @@ void lame_print_config(lame_global_flags *gfp)
   } else {
     MSGF("polyphase filters disabled\n");
   }
-#ifdef RH_AMP
   if (gfp->experimentalY) {
     MSGF("careful noise shaping, only maximum distorted band at once\n");
   }
-#endif
   if (gfp->gtkflag) {
     MSGF("Analyzing %s \n",gfp->inPath);
   }

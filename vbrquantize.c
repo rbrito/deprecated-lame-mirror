@@ -375,7 +375,7 @@ VBR_quantize_granule(lame_global_flags *gfp,
   }
   
   /* quantize xr34 */
-  cod_info->part2_3_length = count_bits(gfp,l3_enc,xr34,cod_info);
+  cod_info->part2_3_length = count_bits (gfc,cod_info,xr34,l3_enc);
   if (cod_info->part2_3_length >= LARGE_BITS) return;
   cod_info->part2_3_length += cod_info->part2_length;
 
@@ -940,7 +940,7 @@ VBR_quantize(lame_global_flags *gfp,
   totbits=0;
   for (gr = 0; gr < gfc->mode_gr; gr++) {
     for (ch = 0; ch < gfc->channels; ch++) {
-      best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
+      best_scalefac_store(gfc,gr, ch, l3_enc, l3_side, scalefac);
       totbits += l3_side->gr[gr].ch[ch].tt.part2_3_length;
     }
   }

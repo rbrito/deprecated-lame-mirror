@@ -125,18 +125,17 @@ typedef enum {
 } binsearchDirection_t;
 
 int bin_search_StepSize (
-    lame_global_flags *gfp,
-    gr_info           *cod_info,
-    int                desired_rate, 
-    int                start, 
-    int               *ix, 
-    FLOAT8             xrspow[576]) 
+    lame_internal_flags *gfc,
+    gr_info             *cod_info,
+    int                  desired_rate, 
+    int                  start, 
+    int                 *ix, 
+    FLOAT8               xrspow[576]) 
 {
     int nBits;
     int CurrentStep;
     int flag_GoneOver = 0;
     int StepSize      = start;
-    lame_internal_flags *gfc = (lame_internal_flags *)gfp->internal_flags;
 
     binsearchDirection_t Direction = BINSEARCH_NONE;
     assert(gfc->CurrentStep);
@@ -144,7 +143,7 @@ int bin_search_StepSize (
 
     do {
         cod_info->global_gain = StepSize;
-        nBits = count_bits (gfp, ix, xrspow, cod_info);  
+        nBits = count_bits (gfc, cod_info, xrspow, ix);  
 
         if (CurrentStep == 1 ) break; /* nothing to adjust anymore */
     
@@ -197,11 +196,11 @@ int bin_search_StepSize (
  ***************************************************************************/ 
  
 int inner_loop (
-    lame_global_flags *gfp,
-    gr_info           *cod_info,
-    FLOAT8             xrpow[576],
-    int                l3_enc[576], 
-    int                max_bits )
+    lame_internal_flags *gfc,
+    gr_info             *cod_info,
+    FLOAT8               xrpow[576],
+    int                  l3_enc[576], 
+    int                  max_bits )
 {
     int bits;
     assert( max_bits >= 0 );
@@ -209,7 +208,7 @@ int inner_loop (
 
     do {
         cod_info->global_gain++;
-        bits = count_bits (gfp, l3_enc, xrpow, cod_info);
+        bits = count_bits (gfc, cod_info, xrpow, l3_enc);
     }
     while ( bits > max_bits );
 
@@ -340,80 +339,15 @@ int quant_compare (
 
 
 
-/*************************************************************************/
-/*            amp_scalefac_bands                                         */
-/*************************************************************************/
+/*************************************************************************
+ *
+ *            amp_scalefac_bands() 
+ *        
+ *  Amplify the scalefactor bands that violate the masking threshold.
+ *  See ISO 11172-3 Section C.1.5.4.3.5
+ *
+ *************************************************************************/
 
-/* 
-  Amplify the scalefactor bands that violate the masking threshold.
-  See ISO 11172-3 Section C.1.5.4.3.5
-*/
-#ifndef RH_AMP
-void amp_scalefac_bands(
-    lame_global_flags *gfp, 
-    gr_info           *cod_info, 
-    III_scalefac_t    *scalefac,
-    FLOAT8             xrpow[576], 
-    FLOAT8             distort[4][SBMAX_l] )
-{
-  int start, end, l,i,j;
-  u_int sfb;
-  FLOAT8 ifqstep34,distort_thresh;
-  lame_internal_flags *gfc = (lame_internal_flags *)gfp->internal_flags;
-
-  if ( cod_info->scalefac_scale == 0 ) {
-    ifqstep34 = 1.29683955465100964055; /* 2**(.75*.5)*/
-  } else {
-    ifqstep34 = 1.68179283050742922612;  /* 2**(.75*1) */
-  }
-  /* distort[] = noise/masking.  Comput distort_thresh so that:
-   * distort_thresh = 1, unless all bands have distort < 1
-   * In that case, just amplify bands with distortion
-   * within 95% of largest distortion/masking ratio */
-  distort_thresh = -900;
-  for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
-    distort_thresh = Max(distort[0][sfb],distort_thresh);
-  }
-
-  for ( sfb = cod_info->sfb_smax; sfb < 12; sfb++ ) {
-    for ( i = 0; i < 3; i++ ) {
-      distort_thresh = Max(distort[i+1][sfb],distort_thresh);
-    }
-  }
-  if (distort_thresh>1.0)
-    distort_thresh=1.0;
-  else
-    distort_thresh *= .95;
-
-
-  for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
-    if ( distort[0][sfb]>distort_thresh  ) {
-      scalefac->l[sfb]++;
-      start = gfc->scalefac_band.l[sfb];
-      end   = gfc->scalefac_band.l[sfb+1];
-      for ( l = start; l < end; l++ ) {
-        xrpow[l] *= ifqstep34;
-      }
-    }
-  }
-    
-
-  for ( j=0,sfb = cod_info->sfb_smax; sfb < 12; sfb++ ) {
-    start = gfc->scalefac_band.s[sfb];
-    end   = gfc->scalefac_band.s[sfb+1];
-    for ( i = 0; i < 3; i++ ) {
-      int j2 = j;
-      if ( distort[i+1][sfb]>distort_thresh) {
-        scalefac->s[sfb][i]++;
-        for (l = start; l < end; l++) {
-          xrpow[j2++] *= ifqstep34;
-        }
-      }
-      j += end-start;
-    }
-  }
-}
-#else
 void amp_scalefac_bands(
     lame_global_flags *gfp, 
     gr_info           *cod_info, 
@@ -490,7 +424,6 @@ void amp_scalefac_bands(
     }
   }
 }
-#endif
 
 
 
@@ -655,7 +588,7 @@ void outer_loop(
   best_noise_info = noise_info;
 
 
-  bits_found = bin_search_StepSize (gfp, cod_info, targ_bits, gfc->OldValue[ch],
+  bits_found = bin_search_StepSize (gfc, cod_info, targ_bits, gfc->OldValue[ch],
                                     l3_enc_w, xrpow);
   gfc->OldValue[ch] = cod_info->global_gain;
 
@@ -684,12 +617,12 @@ void outer_loop(
       if (iteration==1) {
         if(bits_found>huff_bits) {
           cod_info->global_gain++;
-          real_bits = inner_loop(gfp, cod_info, xrpow, l3_enc_w, huff_bits);
+          real_bits = inner_loop(gfc, cod_info, xrpow, l3_enc_w, huff_bits);
         } else {
           real_bits=bits_found;
         }
       } else {
-        real_bits=inner_loop(gfp, cod_info, xrpow, l3_enc_w, huff_bits);
+        real_bits=inner_loop(gfc, cod_info, xrpow, l3_enc_w, huff_bits);
       }
 
 
@@ -1014,9 +947,9 @@ void iteration_loop (
                     &scalefac[gr][ch], xrpow, l3_enc[gr][ch], noise );
       }
 
-      best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
+      best_scalefac_store(gfc,gr, ch, l3_enc, l3_side, scalefac);
       if (gfc->use_best_huffman==1) {
- best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
+        best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
       }
       assert((int)cod_info->part2_3_length < 4096);
 
@@ -1208,7 +1141,7 @@ void ABR_iteration_loop (
     for (ch = 0; ch < gfc->channels; ch++) {
       cod_info = &l3_side->gr[gr].ch[ch].tt;
 
-      best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
+      best_scalefac_store(gfc, gr, ch, l3_enc, l3_side, scalefac);
       if (gfc->use_best_huffman==1 ) {
         best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
       }
@@ -1562,7 +1495,7 @@ void VBR_iteration_loop (
       }
       /*  try some better scalefac storage
        */
-      best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
+      best_scalefac_store(gfc, gr, ch, l3_enc, l3_side, scalefac);
       
       /*  best huffman_divide may save some bits too
        */

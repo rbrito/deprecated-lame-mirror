@@ -181,7 +181,7 @@ iteration_init( lame_global_flags *gfp,III_side_info_t *l3_side, int l3_enc[2][2
     }
   }
 
-  huffman_init(gfp);
+  huffman_init(gfc);
 }
 
 
