@@ -450,13 +450,13 @@ libmp3lame.so:  $(LIBS) $(lib_obj) Makefile
 	$(LN_S) $(SHARED_LIB_MAJOR) $(SHARED_LIB)
 
 $(PGM): lib
-	cd frontend; make
+	cd frontend; $(MAKE)
 
 mp3x/mp3x:
-	cd mp3x; make
+	cd mp3x; $(MAKE)
 
 frontend/mp3rtp:
-	cd frontend; make
+	cd frontend; $(MAKE)
 
 mpglib/mpglib.a:
 	cd mpglib; $(MAKE)
@@ -500,8 +500,8 @@ clean:
 	-$(RM_F) $(gtk_obj) $(OBJ) $(DEP) \
          libmp3lame.a $(lib_obj) \
          $(SHARED_LIB) $(SHARED_LIB_MAJOR) $(SHARED_LIB_MINOR)
-	cd mpglib; make clean
-	cd frontend; make clean
+	cd mpglib; $(MAKE) clean
+	cd frontend; $(MAKE) clean
   endif
 
 bla:
