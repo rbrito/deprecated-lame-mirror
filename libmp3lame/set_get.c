@@ -1612,6 +1612,7 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
 
 	break;
     default:
+	gfc->presetTune.use = 0;
 	gfc->presetTune.quantcomp_type_s = 9;
     }
     return 0;
