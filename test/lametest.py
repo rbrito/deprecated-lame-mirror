@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 from string import *
 import os, commands, getopt, sys
 
@@ -21,7 +21,7 @@ def Usage(mesg):
 # number of bytes in larger file 
 ##################################################################
 def fdiff(name1,name2):
-    cmd = "cmp -l "+name1 + " " + name2 + " | wc --lines"
+    cmd = "cmp -l "+name1 + " " + name2 + " | wc -l"
     out = commands.getoutput(cmd)
     out = split(out,"\n")
     out=out[-1]
@@ -110,7 +110,7 @@ if 0 != status:
     Usage("Executable "+lame1+" does not exist")
 
 if not (lame2=="ref" or lame2=="makeref"):
-    status,output=commands.getstatusoutput("which "+lame1)
+    status,output=commands.getstatusoutput("which "+lame2)
     if 0 != status:
         Usage("Executable "+lame2+" does not exist")
 
