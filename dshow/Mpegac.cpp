@@ -816,6 +816,8 @@ STDMETHODIMP CMpegAudEnc::set_VariableQ(DWORD dwVBRq)
 
 STDMETHODIMP CMpegAudEnc::get_SourceSampleRate(DWORD *dwSampleRate)
 {
+	*dwSampleRate = 0;
+
 	WAVEFORMATEX wf;
 	if(FAILED(m_VEncoder.GetInputType(&wf)))
 		return E_FAIL;

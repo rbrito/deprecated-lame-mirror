@@ -25,7 +25,7 @@ CFG=LAME DShow - Win32 Release
 # PROP AllowPerConfigDependencies 0
 # PROP Scc_ProjName ""
 # PROP Scc_LocalPath "."
-CPP=xicl6.exe
+CPP=cl.exe
 MTL=midl.exe
 RSC=rc.exe
 
@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /c
-# ADD CPP /nologo /Gz /MD /W3 /GX /O2 /I "../" /I "Vitec" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "INC_OLE2" /D "STRICT" /D WINVER=0x0400 /D _X86_=1 /FR /FD /c
+# ADD CPP /nologo /Gz /MD /W3 /GX /O2 /I "./" /I "../include" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "INC_OLE2" /D "STRICT" /D WINVER=0x0400 /D _X86_=1 /FR /FD /c
 # SUBTRACT CPP /YX
 # ADD BASE MTL /nologo /D "NDEBUG" /win32
 # ADD MTL /D "NDEBUG" /mktyplib203 /win32
@@ -53,9 +53,9 @@ RSC=rc.exe
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # SUBTRACT BSC32 /nologo
-LINK32=xilink6.exe
+LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /machine:I386
-# ADD LINK32 strmbase.lib msvcrt.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib Comdlg32.lib user32.lib gdi32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib quartz.lib measure.lib /base:"0x1c400000" /version:0.3 /entry:"DllEntryPoint@12" /subsystem:windows /dll /pdb:none /machine:I386 /nodefaultlib /out:"..\lame_dshow.ax"
+# ADD LINK32 strmbase.lib msvcrt.lib libcmt.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib Comdlg32.lib user32.lib gdi32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib quartz.lib measure.lib /base:"0x1c400000" /version:0.3 /entry:"DllEntryPoint@12" /subsystem:windows /dll /pdb:none /machine:I386 /nodefaultlib /out:".\lame_dshow.ax"
 # SUBTRACT LINK32 /nologo
 
 !ELSEIF  "$(CFG)" == "LAME DShow - Win32 Debug"
@@ -72,7 +72,7 @@ LINK32=xilink6.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /c
-# ADD CPP /nologo /Gz /MDd /W3 /GX /ZI /Od /I "../" /I "Vitec" /D "WIN32" /D "DEBUG" /D "_WINDOWS" /D "INC_OLE2" /D WINVER=0x0400 /D _X86_=1 /D "STRICT" /FR /YX /FD /c
+# ADD CPP /nologo /Gz /MDd /W3 /GX /ZI /Od /I "./" /I "../include" /D "WIN32" /D "DEBUG" /D "_WINDOWS" /D "INC_OLE2" /D WINVER=0x0400 /D _X86_=1 /D "STRICT" /FR /YX /FD /c
 # ADD BASE MTL /nologo /D "_DEBUG" /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x419 /d "_DEBUG"
@@ -80,9 +80,9 @@ LINK32=xilink6.exe
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=xilink6.exe
+LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386
-# ADD LINK32 strmbasD.lib msvcrt.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib Comdlg32.lib user32.lib gdi32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib quartz.lib measure.lib /nologo /base:"0x1c400000" /entry:"DllEntryPoint@12" /subsystem:windows /dll /incremental:no /debug /machine:I386 /nodefaultlib /out:"..\lame_dshow.ax"
+# ADD LINK32 strmbasD.lib msvcrtd.lib libcmt.lib vfw32.lib winmm.lib kernel32.lib advapi32.lib version.lib largeint.lib Comdlg32.lib user32.lib gdi32.lib comctl32.lib ole32.lib oleaut32.lib uuid.lib quartz.lib measure.lib /nologo /base:"0x1c400000" /entry:"DllEntryPoint@12" /subsystem:windows /dll /incremental:no /debug /machine:I386 /nodefaultlib /out:".\lame_dshow.ax"
 # SUBTRACT LINK32 /pdb:none
 
 !ENDIF 
@@ -136,6 +136,10 @@ SOURCE=.\iaudioprops.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\include\lame.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Mpegac.h
 # End Source File
 # Begin Source File
@@ -145,6 +149,10 @@ SOURCE=.\PropPage.h
 # Begin Source File
 
 SOURCE=.\PropPage_adv.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\reg.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"

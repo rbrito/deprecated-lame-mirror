@@ -4,7 +4,7 @@
  *	Copyright (c) 2000 Marie Orlova, Peter Gubanov, Elecard Ltd.
  *
  * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
+ * modify it under the terms of the GNU Library General Public 
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
  *
@@ -21,18 +21,14 @@
 
 // A custom interface to allow the user to modify audio
 // encoder properties
-
 #ifndef __IAUDIOPROPERTIES__
 #define __IAUDIOPROPERTIES__
-
 #ifdef __cplusplus
 extern "C" {
 #endif
-
     // {ca7e9ef0-1cbe-11d3-8d29-00a0c94bbfee}
     DEFINE_GUID(IID_IAudioEncoderProperties, 
     0xca7e9ef0, 0x1cbe, 0x11d3, 0x8d, 0x29, 0x00, 0xa0, 0xc9, 0x4b, 0xbf, 0xee);
-
 	//
 	// Configuring MPEG audio encoder parameters with unspecified
 	// input stream type may lead to misbehaviour and confusing
@@ -52,7 +48,6 @@ extern "C" {
         STDMETHOD(set_PESOutputEnabled) (THIS_
             DWORD dwEnabled
         ) PURE;
-
 		// Get target compression bitrate in Kbits/s
         STDMETHOD(get_Bitrate) (THIS_
             DWORD *dwBitrate
@@ -62,8 +57,7 @@ extern "C" {
         STDMETHOD(set_Bitrate) (THIS_
             DWORD dwBitrate
         ) PURE;
-
-         	// Get variable bitrate flag
+        // Get variable bitrate flag
         STDMETHOD(get_Variable) (THIS_
             DWORD *dwVariable
         ) PURE;
@@ -71,8 +65,7 @@ extern "C" {
         STDMETHOD(set_Variable) (THIS_
             DWORD dwVariable
         ) PURE;
-
-         	// Get variable bitrate in Kbits/s
+        // Get variable bitrate in Kbits/s
         STDMETHOD(get_VariableMin) (THIS_
             DWORD *dwmin
         ) PURE;
@@ -81,8 +74,7 @@ extern "C" {
         STDMETHOD(set_VariableMin) (THIS_
             DWORD dwmin
         ) PURE;
-
-         	// Get variable bitrate in Kbits/s
+        // Get variable bitrate in Kbits/s
         STDMETHOD(get_VariableMax) (THIS_
             DWORD *dwmax
         ) PURE;
@@ -91,8 +83,7 @@ extern "C" {
         STDMETHOD(set_VariableMax) (THIS_
             DWORD dwmax
         ) PURE;
-
-         	// Get compression quality
+        // Get compression quality
         STDMETHOD(get_Quality) (THIS_
             DWORD *dwQuality
         ) PURE;
@@ -101,8 +92,7 @@ extern "C" {
         STDMETHOD(set_Quality) (THIS_
             DWORD dwQuality
         ) PURE;
-
-		 	// Get VBR quality
+		// Get VBR quality
         STDMETHOD(get_VariableQ) (THIS_
             DWORD *dwVBRq
         ) PURE;
@@ -111,20 +101,16 @@ extern "C" {
         STDMETHOD(set_VariableQ) (THIS_
             DWORD dwVBRq
         ) PURE;
-
-
 		// Get source sample rate. Return E_FAIL if input pin
 		// in not connected.
 		STDMETHOD(get_SourceSampleRate) (THIS_
             DWORD *dwSampleRate
         ) PURE;
-
 		// Get source number of channels. Return E_FAIL if
 		// input pin is not connected.
 		STDMETHOD(get_SourceChannels) (THIS_
             DWORD *dwChannels
         ) PURE;
-
 		// Get sample rate for compressed audio bitstream
         STDMETHOD(get_SampleRate) (THIS_
             DWORD *dwSampleRate
@@ -133,7 +119,6 @@ extern "C" {
         STDMETHOD(set_SampleRate) (THIS_
             DWORD dwSampleRate
         ) PURE;
-
 		// Get channel mode. See genaudio.h for details
         STDMETHOD(get_ChannelMode) (THIS_
             DWORD *dwChannelMode
@@ -142,7 +127,6 @@ extern "C" {
         STDMETHOD(set_ChannelMode) (THIS_
             DWORD dwChannelMode
         ) PURE;
-
 		// Is CRC enabled?
         STDMETHOD(get_CRCFlag) (THIS_
             DWORD *dwFlag
@@ -151,15 +135,13 @@ extern "C" {
         STDMETHOD(set_CRCFlag) (THIS_
             DWORD dwFlag
         ) PURE;
-
 		// Control 'original' flag
         STDMETHOD(get_OriginalFlag) (THIS_
             DWORD *dwFlag
         ) PURE;
         STDMETHOD(set_OriginalFlag) (THIS_
             DWORD dwFlag
-        ) PURE;
-
+			) PURE;
 		// Control 'copyright' flag
         STDMETHOD(get_CopyrightFlag) (THIS_
             DWORD *dwFlag
@@ -167,7 +149,6 @@ extern "C" {
         STDMETHOD(set_CopyrightFlag) (THIS_
             DWORD dwFlag
         ) PURE;
-
 		// Control 'Enforce VBR Minimum bitrate' flag
         STDMETHOD(get_EnforceVBRmin) (THIS_
             DWORD *dwFlag
@@ -175,7 +156,6 @@ extern "C" {
         STDMETHOD(set_EnforceVBRmin) (THIS_
             DWORD dwFlag
         ) PURE;
-
 		// Control 'Voice' flag
         STDMETHOD(get_VoiceMode) (THIS_
             DWORD *dwFlag
@@ -183,7 +163,6 @@ extern "C" {
         STDMETHOD(set_VoiceMode) (THIS_
             DWORD dwFlag
         ) PURE;
-
 		// Control 'Keep All Frequencies' flag
         STDMETHOD(get_KeepAllFreq) (THIS_
             DWORD *dwFlag
@@ -191,7 +170,6 @@ extern "C" {
         STDMETHOD(set_KeepAllFreq) (THIS_
             DWORD dwFlag
         ) PURE;
-
 		// Control 'Strict ISO complience' flag
         STDMETHOD(get_StrictISO) (THIS_
             DWORD *dwFlag
@@ -199,7 +177,6 @@ extern "C" {
         STDMETHOD(set_StrictISO) (THIS_
             DWORD dwFlag
         ) PURE;
-
 		// Control 'Disable short block' flag
         STDMETHOD(get_NoShortBlock) (THIS_
             DWORD *dwDisable
@@ -207,7 +184,6 @@ extern "C" {
         STDMETHOD(set_NoShortBlock) (THIS_
             DWORD dwDisable
         ) PURE;
-
 		// Control 'Xing VBR Tag' flag
         STDMETHOD(get_XingTag) (THIS_
             DWORD *dwXingTag
@@ -215,7 +191,6 @@ extern "C" {
         STDMETHOD(set_XingTag) (THIS_
             DWORD dwXingTag
         ) PURE;
-
 		// Control 'Forced mid/ side stereo' flag
         STDMETHOD(get_ForceMS) (THIS_
             DWORD *dwFlag
@@ -223,7 +198,6 @@ extern "C" {
         STDMETHOD(set_ForceMS) (THIS_
             DWORD dwFlag
         ) PURE;
-
 		// Control 'ModeFixed' flag
         STDMETHOD(get_ModeFixed) (THIS_
             DWORD *dwFlag
@@ -231,7 +205,6 @@ extern "C" {
         STDMETHOD(set_ModeFixed) (THIS_
             DWORD dwFlag
         ) PURE;
-
 
 		//Receive the block of encoder 
 		//configuration parametres
@@ -242,12 +215,10 @@ extern "C" {
         STDMETHOD(set_ParameterBlockSize) (THIS_
             BYTE *pcBlock, DWORD dwSize
         ) PURE;
-
 		// Set default audio encoder parameters depending
 		// on current input stream type
         STDMETHOD(DefaultAudioEncoderProperties) (THIS_
         ) PURE;
-
 		// By default the modified properties are not saved to
 		// registry immediately, so the filter needs to be
 		// forced to do this. Omitting this steps may lead to
@@ -256,7 +227,6 @@ extern "C" {
         ) PURE;
         STDMETHOD(SaveAudioEncoderPropertiesToRegistry) (THIS_
         ) PURE;
-
 		// Determine, whether the filter can be configured. If this
 		// functions returs E_FAIL, input format hasn't been
 		// specified and filter behavior unpredicated. If S_OK,
@@ -264,10 +234,10 @@ extern "C" {
 		STDMETHOD(InputTypeDefined) (THIS_
 		) PURE;
     };
-
 #ifdef __cplusplus
 }
 #endif
-
 #endif // __IAUDIOPROPERTIES__
+
+
 
