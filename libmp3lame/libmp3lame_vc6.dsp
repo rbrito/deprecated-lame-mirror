@@ -129,6 +129,10 @@ SOURCE=.\fft.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\gain_analysis.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\id3tag.c
 # End Source File
 # Begin Source File
@@ -244,6 +248,10 @@ SOURCE=.\encoder.h
 # Begin Source File
 
 SOURCE=.\fft.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\gain_analysis.h
 # End Source File
 # Begin Source File
 
