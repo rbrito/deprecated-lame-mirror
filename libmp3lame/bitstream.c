@@ -296,7 +296,7 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
     if (gfp->version == 1) {
 	/* MPEG1 */
 	assert(l3_side->main_data_begin >= 0);
-	writeheader(gfc,(l3_side->main_data_begin), 9);
+	writeheader(gfc, l3_side->main_data_begin, 9);
 
 	if (gfc->channels_out == 2)
 	    writeheader(gfc,l3_side->private_bits, 3);
@@ -358,8 +358,8 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
     } else {
 	/* MPEG2 */
 	assert(l3_side->main_data_begin >= 0);
-	writeheader(gfc,(l3_side->main_data_begin), 8);
-	writeheader(gfc,l3_side->private_bits, gfc->channels_out);
+	writeheader(gfc, l3_side->main_data_begin, 8);
+	writeheader(gfc, l3_side->private_bits, gfc->channels_out);
 
 	gr = 0;
 	for (ch = 0; ch < gfc->channels_out; ch++) {
