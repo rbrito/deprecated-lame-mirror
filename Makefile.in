@@ -13,8 +13,8 @@
 SHELL = @SHELL@
 @SET_MAKE@
 
-UNAME ?= $(shell uname)
-ARCH ?= $(shell uname -m)
+UNAME = $(shell uname)
+ARCH = $(shell uname -m)
 
 
 prefix = @prefix@
