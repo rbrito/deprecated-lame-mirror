@@ -811,7 +811,10 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
 		if (gfp->VBR==cbr)
 		    bitrate = gfp->mean_bitrate_kbps;
 
-		bbyte = 16*BitrateIndex(bitrate,gfp->version,gfp->out_samplerate);
+		if (gfp->free_format)
+		    bbyte = 0x00;
+		else
+		    bbyte = 16*BitrateIndex(bitrate,gfp->version,gfp->out_samplerate);
 	}
 
 	/* Use as much of the info from the real frames in the
