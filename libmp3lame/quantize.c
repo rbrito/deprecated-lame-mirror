@@ -1554,16 +1554,13 @@ VBR_noise_shaping(lame_internal_flags * gfc, gr_info *gi, FLOAT * xmin)
     gfc->scale_bitcounter(gi);
     assert(gi->part2_length < LARGE_BITS);
 
-    if (gi->part2_3_length > MAX_BITS
+    if (gi->part2_3_length + gi->part2_length > MAX_BITS
 	|| (gi->block_type == SHORT_TYPE && (gfc->substep_shaping & 2))
-	|| (gi->block_type != SHORT_TYPE && (gfc->substep_shaping & 1)))
+	|| (gi->block_type != SHORT_TYPE && (gfc->substep_shaping & 1))) {
 	trancate_smallspectrums(gfc, gi, xmin);
-
-    if (gfc->use_best_huffman == 2)
-	best_huffman_divide(gfc, gi);
-
-    if (gi->part2_3_length + gi->part2_length > MAX_BITS)
-	return -2;
+	if (gi->part2_3_length + gi->part2_length > MAX_BITS)
+	    return -2;
+    }
 
     assert(gi->global_gain < 256u);
 

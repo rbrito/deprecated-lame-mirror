@@ -291,6 +291,148 @@ int choose_table_nonMMX(
 
 
 
+/***********************************************************************
+  best huffman table selection for scalefactor band
+  the saved bits are kept in the bit reservoir.
+ **********************************************************************/
+inline static void
+recalc_divide_init(
+    const lame_internal_flags * const gfc,
+          gr_info         *gi,
+          int             r01_bits[],
+          int             r01_div [],
+          int             r0_tbl  [],
+          int             r1_tbl  [] )
+{
+    int r0;
+    for (r0 = 0; r0 <= 7 + 15; r0++)
+	r01_bits[r0] = LARGE_BITS;
+
+    for (r0 = 0; r0 < 16; r0++) {
+	int a1, r0bits, r1, r0t, r1t, bits;
+	if (gfc->scalefac_band.l[r0 + 2] >= gi->big_values)
+	    break;
+	r0bits = 0;
+	a1 = gfc->scalefac_band.l[r0 + 1];
+	r0t = choosetable(gi->l3_enc, &gi->l3_enc[a1], &r0bits);
+
+	for (r1 = 0; r1 < 8; r1++) {
+	    int a2 = gfc->scalefac_band.l[r0 + r1 + 2];
+	    if (a2 >= gi->big_values)
+		break;
+
+	    bits = r0bits;
+	    r1t = choosetable(&gi->l3_enc[a1], &gi->l3_enc[a2], &bits);
+	    if (r01_bits[r0 + r1] > bits) {
+		r01_bits[r0 + r1] = bits;
+		r01_div[r0 + r1] = r0;
+		r0_tbl[r0 + r1] = r0t;
+		r1_tbl[r0 + r1] = r1t;
+	    }
+	}
+    }
+}
+
+inline static int
+recalc_divide_sub(
+    const lame_internal_flags * const gfc,
+          gr_info         *gi,
+    const int             r01_bits[],
+    const int             r01_div [],
+    const int             r0_tbl  [],
+    const int             r1_tbl  [] )
+{
+    int bits, r2, r2t, old = gi->part2_3_length;
+    for (r2 = 0; r2 < SBMAX_l - 1; r2++) {
+	int a2 = gfc->scalefac_band.l[r2+2];
+	if (a2 >= gi->big_values)
+	    break;
+	bits = r01_bits[r2] + gi->count1bits;
+	if (gi->part2_3_length <= bits + (gi->big_values - a2)/2)
+	    continue;
+
+	r2t = choosetable(&gi->l3_enc[a2], &gi->l3_enc[gi->big_values], &bits);
+	if (gi->part2_3_length <= bits)
+	    continue;
+
+	gi->part2_3_length = bits;
+	gi->region0_count = r01_div[r2];
+	gi->region1_count = r2 - r01_div[r2];
+	gi->table_select[0] = r0_tbl[r2];
+	gi->table_select[1] = r1_tbl[r2];
+	gi->table_select[2] = r2t;
+    }
+    return gi->part2_3_length - old;
+}
+
+static void
+best_huffman_divide(const lame_internal_flags * const gfc, gr_info * const gi)
+{
+    int i, a1, a2;
+    gr_info gi_w;
+    int * const ix = gi->l3_enc;
+
+    int r01_bits[7 + 15 + 1];
+    int r01_div[7 + 15 + 1];
+    int r0_tbl[7 + 15 + 1];
+    int r1_tbl[7 + 15 + 1];
+
+    if (gi->big_values == 0)
+	return;
+
+    if (gi->block_type == NORM_TYPE) {
+	recalc_divide_init(gfc, gi, r01_bits,r01_div,r0_tbl,r1_tbl);
+	recalc_divide_sub(gfc, gi, r01_bits,r01_div,r0_tbl,r1_tbl);
+    }
+
+    i = gi->big_values;
+    if ((unsigned int)(ix[i-2] | ix[i-1]) > 1)
+	return;
+
+    i = gi->count1 + 2;
+    if (i > 576)
+	return;
+
+    gi_w = *gi;
+    gi_w.count1 = i;
+    gi_w.big_values -= 2;
+
+    a1 = a2 = 0;
+    for (; i > gi_w.big_values; i -= 4) {
+	int p = ((ix[i-4] * 2 + ix[i-3]) * 2 + ix[i-2]) * 2 + ix[i-1];
+	a1 += quadcode[0][p];
+	a2 += quadcode[1][p];
+    }
+
+    gi_w.count1table_select = 0;
+    if (a1 > a2) {
+	a1 = a2;
+	gi_w.count1table_select = 1;
+    }
+
+    gi_w.count1bits = a1;
+
+    if (gi_w.block_type == NORM_TYPE) {
+	if (recalc_divide_sub(gfc, &gi_w, r01_bits,r01_div,r0_tbl,r1_tbl))
+	    *gi = gi_w;
+    } else {
+	/* Count the number of bits necessary to code the bigvalues region. */
+	gi_w.part2_3_length = a1;
+	a1 = gfc->scalefac_band.l[gi->region0_count+1];
+	if (a1 > i)
+	    a1 = i;
+
+	if (a1 > 0)
+	    gi_w.table_select[0] =
+		choosetable(ix, ix + a1, &gi_w.part2_3_length);
+	if (i > a1)
+	    gi_w.table_select[1] =
+		choosetable(ix + a1, ix + i, &gi_w.part2_3_length);
+	if (gi->part2_3_length > gi_w.part2_3_length)
+	    *gi = gi_w;
+    }
+}
+
 int
 noquant_count_bits(const lame_internal_flags * const gfc, gr_info * const gi)
 {
@@ -437,148 +579,6 @@ count_bits(const lame_internal_flags * const gfc, gr_info * const gi)
 	}
     }
     return noquant_count_bits(gfc, gi);
-}
-
-/***********************************************************************
-  best huffman table selection for scalefactor band
-  the saved bits are kept in the bit reservoir.
- **********************************************************************/
-inline static void
-recalc_divide_init(
-    const lame_internal_flags * const gfc,
-          gr_info         *gi,
-          int             r01_bits[],
-          int             r01_div [],
-          int             r0_tbl  [],
-          int             r1_tbl  [] )
-{
-    int r0;
-    for (r0 = 0; r0 <= 7 + 15; r0++)
-	r01_bits[r0] = LARGE_BITS;
-
-    for (r0 = 0; r0 < 16; r0++) {
-	int a1, r0bits, r1, r0t, r1t, bits;
-	if (gfc->scalefac_band.l[r0 + 2] >= gi->big_values)
-	    break;
-	r0bits = 0;
-	a1 = gfc->scalefac_band.l[r0 + 1];
-	r0t = choosetable(gi->l3_enc, &gi->l3_enc[a1], &r0bits);
-
-	for (r1 = 0; r1 < 8; r1++) {
-	    int a2 = gfc->scalefac_band.l[r0 + r1 + 2];
-	    if (a2 >= gi->big_values)
-		break;
-
-	    bits = r0bits;
-	    r1t = choosetable(&gi->l3_enc[a1], &gi->l3_enc[a2], &bits);
-	    if (r01_bits[r0 + r1] > bits) {
-		r01_bits[r0 + r1] = bits;
-		r01_div[r0 + r1] = r0;
-		r0_tbl[r0 + r1] = r0t;
-		r1_tbl[r0 + r1] = r1t;
-	    }
-	}
-    }
-}
-
-inline static int
-recalc_divide_sub(
-    const lame_internal_flags * const gfc,
-          gr_info         *gi,
-    const int             r01_bits[],
-    const int             r01_div [],
-    const int             r0_tbl  [],
-    const int             r1_tbl  [] )
-{
-    int bits, r2, a2, r2t, old = gi->part2_3_length;
-    for (r2 = 0; r2 < SBMAX_l - 1; r2++) {
-	bits = r01_bits[r2] + gi->count1bits;
-	if (gi->part2_3_length <= bits)
-	    break;
-	a2 = gfc->scalefac_band.l[r2+2];
-	if (a2 >= gi->big_values)
-	    break;
-
-	r2t = choosetable(&gi->l3_enc[a2], &gi->l3_enc[gi->big_values], &bits);
-	if (gi->part2_3_length <= bits)
-	    continue;
-
-	gi->part2_3_length = bits;
-	gi->region0_count = r01_div[r2];
-	gi->region1_count = r2 - r01_div[r2];
-	gi->table_select[0] = r0_tbl[r2];
-	gi->table_select[1] = r1_tbl[r2];
-	gi->table_select[2] = r2t;
-    }
-    return gi->part2_3_length - old;
-}
-
-void
-best_huffman_divide(const lame_internal_flags * const gfc, gr_info * const gi)
-{
-    int i, a1, a2;
-    gr_info gi_w;
-    int * const ix = gi->l3_enc;
-
-    int r01_bits[7 + 15 + 1];
-    int r01_div[7 + 15 + 1];
-    int r0_tbl[7 + 15 + 1];
-    int r1_tbl[7 + 15 + 1];
-
-    if (gi->big_values == 0)
-	return;
-
-    if (gi->block_type == NORM_TYPE) {
-	recalc_divide_init(gfc, gi, r01_bits,r01_div,r0_tbl,r1_tbl);
-	recalc_divide_sub(gfc, gi, r01_bits,r01_div,r0_tbl,r1_tbl);
-    }
-
-    i = gi->big_values;
-    if ((unsigned int)(ix[i-2] | ix[i-1]) > 1)
-	return;
-
-    i = gi->count1 + 2;
-    if (i > 576)
-	return;
-
-    gi_w = *gi;
-    gi_w.count1 = i;
-    gi_w.big_values -= 2;
-
-    a1 = a2 = 0;
-    for (; i > gi_w.big_values; i -= 4) {
-	int p = ((ix[i-4] * 2 + ix[i-3]) * 2 + ix[i-2]) * 2 + ix[i-1];
-	a1 += quadcode[0][p];
-	a2 += quadcode[1][p];
-    }
-
-    gi_w.count1table_select = 0;
-    if (a1 > a2) {
-	a1 = a2;
-	gi_w.count1table_select = 1;
-    }
-
-    gi_w.count1bits = a1;
-
-    if (gi_w.block_type == NORM_TYPE) {
-	if (recalc_divide_sub(gfc, &gi_w, r01_bits,r01_div,r0_tbl,r1_tbl))
-	    *gi = gi_w;
-    } else {
-	/* Count the number of bits necessary to code the bigvalues region. */
-	gi_w.part2_3_length = a1;
-	a1 = gfc->scalefac_band.l[gi->region0_count+1];
-	if (a1 > i)
-	    a1 = i;
-
-	if (a1 > 0)
-	    gi_w.table_select[0] =
-		choosetable(ix, ix + a1, &gi_w.part2_3_length);
-	if (i > a1)
-	    gi_w.table_select[1] =
-		choosetable(ix + a1, ix + i, &gi_w.part2_3_length);
-	if (gi->part2_3_length > gi_w.part2_3_length)
-	    *gi = gi_w;
-    }
 }
 
 /***********************************************************************
