@@ -166,6 +166,9 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
+	$(MAKE) $(AM_MAKEFLAGS) \
+	  top_distdir="${top_distdir}" distdir="$(distdir)" \
+	  dist-hook
 check-am: all-am
 check: check-am
 all-am: Makefile
@@ -242,6 +245,9 @@ uninstall-am: uninstall-info-am
 
 
 # end global section
+
+dist-hook:
+	chmod +x $(distdir)/rules
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
