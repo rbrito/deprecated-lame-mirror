@@ -15,3 +15,10 @@ http://www.winehq.com/
 
 Define ENABLE_DECODING if you want to use the decoding (alpha state, doesn't decode at the
  moment, so use it only if you plan to develop)
+
+---------------
+
+To release this codec you will need :
+- lameACM.acm (result of the build process)
+- lameACM.inf
+- lame_acm.xml (where the initial configuration is stored)
