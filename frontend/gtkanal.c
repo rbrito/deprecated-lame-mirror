@@ -76,7 +76,7 @@ static int subblock_draw[3] = { 1, 1, 1 };
 static guint callbackid = 0;
 
 /* main window */
-GtkWidget *window;
+static GtkWidget *window;
 /* Backing pixmap for drawing areas */
 static GtkWidget *pcmbox;       /* PCM data plotted here */
 static GtkWidget *winbox;       /* mpg123 synthesis data plotted here */
