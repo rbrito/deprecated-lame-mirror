@@ -321,11 +321,11 @@ proc	calc_sfb_noise_fast_3DN
 	pfmul		mm4, mm4
 	jmp	.lp4
 .ixover
-	fld		dword [minus1]
-	pop		eax
+	femms
 	pop		ebp
 	pop		edi
 	pop		ebx
+	fld		dword [minus1]
 	ret
 
 	loopalignK7	16
@@ -372,8 +372,8 @@ proc	calc_sfb_noise_fast_3DN
 	pfadd		mm4, mm5
 	pfacc		mm4, mm4
 	movd		eax, mm4
-	femms
 	push		eax
+	femms
 	fld		dword [esp]
 
 	pop		eax
