@@ -1037,7 +1037,6 @@ set_pinfo (lame_global_flags *gfp,
   int sfb;
   int j,i,l,start,end,bw;
   FLOAT8 en0,en1;
-  D192_3 *xr_s = (D192_3 *)xr;
   FLOAT ifqstep = ( cod_info->scalefac_scale == 0 ) ? .5 : 1.0;
 
 
