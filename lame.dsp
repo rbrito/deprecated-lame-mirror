@@ -278,6 +278,14 @@ SOURCE=".\quantize_pvt.h"
 # End Source File
 # Begin Source File
 
+SOURCE=.\Readme
+# End Source File
+# Begin Source File
+
+SOURCE=.\Readme.wingtk
+# End Source File
+# Begin Source File
+
 SOURCE=.\reservoir.c
 # End Source File
 # Begin Source File
@@ -331,10 +339,6 @@ SOURCE=.\version.c
 # Begin Source File
 
 SOURCE=.\version.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\WinGTK.txt
 # End Source File
 # End Target
 # End Project

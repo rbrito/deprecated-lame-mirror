@@ -1,6 +1,8 @@
 /*
-** Copyright (C) 1999 Albert L. Faber
-**  
+ *	MPEG layer 3 tables include file
+ *
+ *	Copyright (c) 1999 Albert L Faber
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -19,6 +21,7 @@
 
 #ifndef TABLES_H_INCLUDED
 #define TABLES_H_INCLUDED
+
 #include "machine.h"
 extern const FLOAT8 psy_data [];
 
@@ -40,4 +43,4 @@ extern const struct huffcodetab ht [HTN];
 extern const char t32l [];
 extern const char t33l [];
 
-#endif
+#endif /* TABLES_H_INCLUDED */
