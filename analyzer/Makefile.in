@@ -290,6 +290,8 @@ endif
 
 CC_SWITCHES = -DNDEBUG $(CC_OPTS) $(CFLAGS)
 
+brhist_sources = ../frontend/brhist.c
+
 c_sources = @CONFIG_SOURCES@ \
         ../frontend/lametime.c \
 	../frontend/timestatus.c \
@@ -316,8 +318,9 @@ DEP = $(c_sources:.c=.d)
 
 all: $(PGM)
 
-$(PGM):	mp3x.o ../libmp3lame.a $(LIBS) $(OBJ)
-	$(CC) -o mp3x mp3x.o -L.. $(OBJ) $(LIBS) $(LDFLAGS) -L.. -lmp3lame
+$(PGM):	mp3x.o ../libmp3lame/libmp3lame.a $(LIBS) $(OBJ)
+	$(CC) -o mp3x mp3x.o -L.. $(OBJ) $(LIBS) $(LDFLAGS) ../libmp3lame/libmp3lame.a
+
 
 
 

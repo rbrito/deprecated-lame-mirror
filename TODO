@@ -10,10 +10,10 @@
 
 library:  call backs for error messages and display messages.
 
-lame.h:  bitrate and samplerate tables should not be in here
+frontend: a bunch of static variables (input_format, swapbytes,
+silent, brhist, update_inteval) are set in parse_args and used in
+get_audio.  should be cleaned up.
 
-frontend:  a bunch of static variables are set in parse_args
-and used in get_audio.  should be cleaned up.
 
 
 

@@ -26,26 +26,6 @@ extern "C" {
 
 
 
-/***********************************************************************
-*
-*  these should be moved somewhere else 
-*
-***********************************************************************/
-extern const int      bitrate_table[2][16];
-extern const int      samplerate_table[2][3];
-
-
-
-
-
-
-
-
-/* maximum size of mp3buffer needed if you encode at most 1152 samples for
-   each call to lame_encode_buffer.  see lame_encode_buffer() below  
-   (LAME_MAXMP3BUFFER is now obsolete)  */
-#define LAME_MAXMP3BUFFER 16384
-
 
 typedef enum vbr_mode_e {
   vbr_off=0,
@@ -57,20 +37,6 @@ typedef enum vbr_mode_e {
 } vbr_mode;
 
 
-
-/* MPEG Header Definitions - Mode Values */
-
-#define         MPG_MD_STEREO           0
-#define         MPG_MD_JOINT_STEREO     1
-#define         MPG_MD_DUAL_CHANNEL     2
-#define         MPG_MD_MONO             3
-
-/* Mode Extention */
-
-#define         MPG_MD_LR_LR             0
-#define         MPG_MD_LR_I              1
-#define         MPG_MD_MS_LR             2
-#define         MPG_MD_MS_I              3
 
 
 
@@ -102,7 +68,7 @@ typedef struct  {
   int ogg;                    /* encode to Vorbis .ogg file */
 
   int quality;                /* quality setting 0=best,  9=worst  default=5 */
-  int mode;                   /* 0,1,2,3 stereo,jstereo,dual channel,mono   */
+  int mode;                   /* 0,1,2,3 = stereo,jstereo,dual channel,mono   */
   int mode_fixed;             /* user specified the mode, do not use lame's opinion of the best mode */
   int force_ms;               /* force M/S mode.  requires mode=1 */
   int free_format;            /* use free format? default=0*/
@@ -193,11 +159,11 @@ typedef struct  {
 
 
 
-/*
-
-The LAME API
-
- */
+/***********************************************************************
+ *
+ *  The LAME API
+ *
+ ***********************************************************************/
 
 
 /* REQUIRED: initialize the encoder.  sets default for all encoder paramters,
@@ -298,8 +264,12 @@ void lame_mp3_tags_fid(lame_global_flags *,FILE* fid);
 
 
 /*********************************************************************
+ *
+ * decoding 
+ *
  * a simple interface to mpglib, part of mpg123, is also included if
  * libmp3lame is compiled with HAVEMPGLIB
+ *
  *********************************************************************/
 typedef struct {
   int header_parsed;   /* 1 if header was parsed and following data was computed: */
@@ -339,8 +309,6 @@ mp3data_struct *mp3data);
 
 /* Also usefull for decoding is the ability to parse Xing VBR headers: */
 #define NUMTOCENTRIES 100
-/*structure to receive extracted header */
-/* toc may be NULL*/
 typedef struct
 {
   int		h_id;			/* from MPEG header, 0=MPEG2, 1=MPEG1 */
@@ -362,6 +330,11 @@ int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf);
 
 
 
+/*********************************************************************
+ *
+ * id3tag stuff
+ *
+ *********************************************************************/
 
 /*
  * id3tag.h -- Interface to write ID3 version 1 and 2 tags.
@@ -415,9 +388,35 @@ extern int id3tag_set_genre(lame_global_flags *gfp, const char *genre);
 
 
 
+
+/***********************************************************************
+*
+*  list of valid bitrates & samplerates.
+*  first index: 0:  mpeg2 values  (samplerates < 32khz) 
+*               1:  mpeg1 values  (samplerates >= 32khz)
+***********************************************************************/
+extern const int      bitrate_table[2][16];
+extern const int      samplerate_table[2][3];
+
+
+
+/* maximum size of mp3buffer needed if you encode at most 1152 samples for
+   each call to lame_encode_buffer.  see lame_encode_buffer() below  
+   (LAME_MAXMP3BUFFER is now obsolete)  */
+#define LAME_MAXMP3BUFFER 16384
+
+
+/* MPEG modes */
+#define         MPG_MD_STEREO           0
+#define         MPG_MD_JOINT_STEREO     1
+#define         MPG_MD_DUAL_CHANNEL     2   /* not supported by LAME */
+#define         MPG_MD_MONO             3
+
+
+
+
+
 #if defined(__cplusplus)
 }
 #endif
-
-
 #endif

@@ -19,7 +19,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifdef HAVEGTK
+
 #include "gpkplotting.h"
 #include "string.h"
 
@@ -300,4 +300,3 @@ GtkWidget *gpk_plot_new(int width, int height)
 }
 
 
-#endif

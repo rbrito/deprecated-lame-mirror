@@ -19,7 +19,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifdef HAVEGTK
 #include <math.h>
 #include <gtk/gtk.h>
 #include "gpkplotting.h"
@@ -145,14 +144,14 @@ int gtkmakeframe(void)
 	lame_decode_init();
       }
       
-      iread = readframe(gfp,Buffer);
+      iread = get_audio(gfp,Buffer);
       if (iread > gfp->framesize) {
 	/* NOTE: frame analyzer requires that we encode one frame 
 	 * for each pass through this loop.  If lame_encode_buffer()
 	 * is feed data too quickly, it will sometimes encode multiple frames
 	 * breaking this loop.
 	 */
-	MSGF("Warning: readframe is returning too much data.\n");
+	MSGF("Warning: get_audio is returning too much data.\n");
       }
       if (0==iread) break; /* eof */
 
@@ -771,7 +770,7 @@ static void update_progress(void)
 {    
   char label[80];
 
-  int tf = totalframes;
+  int tf = gfp->totalframes;
   if (gtkinfo.totalframes>0) tf=gtkinfo.totalframes;
 
   sprintf(label,"Frame:%4i/%4i  %6.2fs",
@@ -1295,7 +1294,7 @@ static void get_main_menu(GtkWidget *windows, GtkWidget ** menubar) {
 
 
 
-int gtkcontrol(lame_global_flags *gfp2)
+int gtkcontrol(lame_global_flags *gfp2,char *inPath)
 {
     /* GtkWidget is the storage type for widgets */
     GtkWidget *button;
@@ -1398,7 +1397,7 @@ int gtkcontrol(lame_global_flags *gfp2)
     gtk_widget_show(framecounter);
     gtk_box_pack_start(GTK_BOX (box2),framecounter, FALSE, TRUE, 0);
 
-    adj = (GtkAdjustment *) gtk_adjustment_new (0, 0,(gint) totalframes-1, 0, 0, 0);
+    adj = (GtkAdjustment *) gtk_adjustment_new (0, 0,(gint) gfp->totalframes-1, 0, 0, 0);
     frameprogress = gtk_progress_bar_new_with_adjustment (adj);
     /* Set the format of the string that can be displayed in the
      * trough of the progress bar:
@@ -1518,4 +1517,3 @@ int gtkcontrol(lame_global_flags *gfp2)
     return(0);
 }
 
-#endif

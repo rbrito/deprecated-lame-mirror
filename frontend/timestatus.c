@@ -318,7 +318,7 @@ void decoder_progress ( lame_global_flags* gfp, mp3data_struct *mp3data )
      mp3data->totalframes, mp3data->bitrate );
   if (mp3data->mode==MPG_MD_JOINT_STEREO)
     fprintf ( stderr, ".... %s ...." ,
-       MPG_MD_MS_LR==mp3data->mode_ext ? "M " : " S" );
+       2==mp3data->mode_ext ? "M " : " S" );
 
 }
 

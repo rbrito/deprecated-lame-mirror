@@ -7,6 +7,16 @@
 #include "get_audio.h"
 
 
+#include "main.h"
+/* GLOBAL VARIABLES.  set by parse_args() */
+/* we need to clean this up */
+sound_file_format input_format;   
+int swapbytes;              /* force byte swapping   default=0*/
+int silent;
+int brhist;
+float update_interval;      /* to use Frank's time status display */
+
+
 
 
 /************************************************************************
@@ -31,16 +41,16 @@ int main(int argc, char **argv)
   parse_args(&gf,argc, argv, inPath, outPath); 
   gf.analysis=1;
 
-  init_infile(&gf);
+  init_infile(&gf,inPath);
   lame_init_params(&gf);
   lame_print_config(&gf);
 
 
   gtk_init (&argc, &argv);
-  gtkcontrol(&gf);
+  gtkcontrol(&gf,inPath);
 
   lame_encode_finish(&gf,mp3buffer,sizeof(mp3buffer));
-  close_infile(&gf);
+  close_infile();
   return 0;
 }
 
