@@ -249,13 +249,15 @@ void  brhist_disp ( const lame_global_flags*  gf, const int jump_back )
 #endif	
     
 #if defined(_WIN32)  &&  !defined(__CYGWIN__) 
-    /* fflush is not needed for Windows, no Console O buffering */
+    /* fflush is needed for Windows ! */
+	fflush ( Console_IO.Console_fp );
+
     if ( GetFileType (Console_IO.Console_Handle) != FILE_TYPE_PIPE ) {
         COORD                       Pos;
         CONSOLE_SCREEN_BUFFER_INFO  CSBI;
 	
 	GetConsoleScreenBufferInfo ( Console_IO.Console_Handle, &CSBI );
-	Pos.Y = CSBI.dwCursorPosition.Y - printed_lines - 1;  /* $$$ */
+	Pos.Y = CSBI.dwCursorPosition.Y - printed_lines ;  /* $$$ */
 	Pos.X = 0;
 	SetConsoleCursorPosition ( Console_IO.Console_Handle, Pos );
     }
