@@ -134,6 +134,10 @@ struct lame_global_struct {
   float tune_value_a;       /* used to pass values for debugging and stuff */
 
   
+  int   sparsing;
+  FLOAT sparse_low;
+  FLOAT sparse_high;
+  
   struct {
     void (*msgf)  (const char *format, va_list ap);
     void (*debugf)(const char *format, va_list ap);

@@ -34,6 +34,7 @@
 #define DELBARK .34
 #define CW_LOWER_INDEX 6
 
+#define vo_scale (1./( 14752 ))
 
 #if 1
     /* AAC values, results in more masking over MP3 values */
@@ -44,6 +45,10 @@
 # define TMN 29
 # define NMT 6
 #endif
+
+#define NS_PREECHO_ATT0 0.8
+#define NS_PREECHO_ATT1 0.6
+#define NS_PREECHO_ATT2 0.3
 
 int L3psycho_anal_ns( lame_global_flags *gfc,
 		      const sample_t *buffer[2], int gr, 

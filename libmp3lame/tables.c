@@ -1063,11 +1063,13 @@ int psymodel_init(lame_global_flags *gfp)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     int i,j,b,sb,k;
+    int bm[SBMAX_l];
 
     FLOAT8 bval[CBANDS];
     FLOAT8 bval_width[CBANDS];
     FLOAT8 norm[CBANDS];
     FLOAT8 sfreq = gfp->out_samplerate;
+    int numlines_s[CBANDS];
 
     gfc->ms_ener_ratio_old=.25;
     gfc->blocktype_old[0] = gfc->blocktype_old[1] = SHORT_TYPE;
@@ -1089,8 +1091,8 @@ int psymodel_init(lame_global_flags *gfp)
 	    }
 	    gfc->nsPsy.last_attacks[i] = 0;
 	}
-	for(j=0;j<9;j++)
-	    gfc->nsPsy.last_en_subshort[i][j] = 10.;
+	for (j=0;j<9;j++)
+	    gfc->nsPsy.last_en_subshort[i][j] = 1.0;
     }
 
 
@@ -1106,15 +1108,23 @@ int psymodel_init(lame_global_flags *gfp)
      ************************************************************************/
     /* compute numlines, bo, bm, bval, bval_width, mld */
     gfc->npart_l
-	= init_numline(gfc->numlines_l, gfc->bo_l, gfc->bm_l,
+	= init_numline(gfc->numlines_l, gfc->bo_l, bm,
 		       bval, bval_width, gfc->mld_l,
 		       sfreq, BLKSIZE, 
 		       gfc->scalefac_band.l, BLKSIZE/(2.0*576), SBMAX_l);
     assert(gfc->npart_l <= CBANDS);
     /* compute the spreading function */
-    for(i=0;i<gfc->npart_l;i++) {
-	norm[i]=1.0;
-	gfc->rnumlines_l[i] = 1.0 / gfc->numlines_l[i];
+    for (i=0;i<gfc->npart_l;i++) {
+	int l;
+	l = gfc->numlines_l[i];
+	if (i != 0)
+	    l += gfc->numlines_l[i-1];
+	if (i != gfc->npart_l-1)
+	    l += gfc->numlines_l[i+1];
+
+	gfc->rnumlines_ls[i] = 20.0/(l-1);
+	norm[i] = 0.11749;
+	gfc->rnumlines_l[i] = 1.0 / (gfc->numlines_l[i] * 3);
     }
     i = init_s3_values(gfc, &gfc->s3_ll, gfc->s3ind,
 		       gfc->npart_l, bval, bval_width, norm);
@@ -1124,10 +1134,8 @@ int psymodel_init(lame_global_flags *gfp)
     /* compute long block specific values, ATH */
     j = 0;
     for ( i = 0; i < gfc->npart_l; i++ ) {
-	double x;
-
 	/* ATH */
-	x = FLOAT_MAX;
+	FLOAT8 x = FLOAT8_MAX;
 	for (k=0; k < gfc->numlines_l[i]; k++, j++) {
 	    FLOAT8  freq = sfreq*j/(1000.0*BLKSIZE);
 	    FLOAT8  level;
@@ -1141,27 +1149,34 @@ int psymodel_init(lame_global_flags *gfp)
 	}
 	gfc->ATH.cb[i] = x;
     }
-
+    for (i = 0; i < SBMAX_l; i++)
+	gfc->ATH.l_avg[i] = gfc->ATH.cb[bm[i]] * pow(10.0, gfp->ATHlower);
 
     /************************************************************************
      * do the same things for short blocks
      ************************************************************************/
     gfc->npart_s
-	= init_numline(gfc->numlines_s, gfc->bo_s, gfc->bm_s,
+	= init_numline(numlines_s, gfc->bo_s, bm,
 		       bval, bval_width, gfc->mld_s,
 		       sfreq, BLKSIZE_s,
 		       gfc->scalefac_band.s, BLKSIZE_s/(2.0*192), SBMAX_s);
     assert(gfc->npart_s <= CBANDS);
 
     /* SNR formula. short block is normalized by SNR. is it still right ? */
-    for(i=0;i<gfc->npart_s;i++) {
+    for (i=0;i<gfc->npart_s;i++) {
 	double snr=-8.25;
 	if (bval[i]>=13)
 	    snr = -4.5 * (bval[i]-13)/(24.0-13.0)
 		-8.25*(bval[i]-24)/(13.0-24.0);
 
-	norm[i]=pow(10.0,snr/10.0);
+	norm[i] = pow(10.0, snr/10.0) * NS_PREECHO_ATT0;
+	gfc->endlines_s[i] = numlines_s[i];
+	if (i != 0)
+	    gfc->endlines_s[i] += gfc->endlines_s[i-1];
     }
+    for (i = 0; i < SBMAX_s; i++)
+	gfc->ATH.s_avg[i] = gfc->ATH.cb[bm[i]] * pow(10.0, gfp->ATHlower);
+    
     i = init_s3_values(gfc, &gfc->s3_ss, gfc->s3ind_s,
 		       gfc->npart_s, bval, bval_width, norm);
     if (i)
@@ -1183,7 +1198,8 @@ int psymodel_init(lame_global_flags *gfp)
 	}
 	eql_balance = 1.0 / eql_balance;
 	for( i = BLKSIZE/2; --i >= 0; ) { /* scale weights */
-	    gfc->ATH.eql_w[i] *= eql_balance;
+	    gfc->ATH.eql_w[i]
+		*= eql_balance * (vo_scale * vo_scale / (BLKSIZE/2));
 	}
     }
 
@@ -1207,6 +1223,10 @@ int psymodel_init(lame_global_flags *gfp)
 	gfp->msfix = msfix;
 	if (!gfc->presetTune.use || gfc->nsPsy.athadjust_msfix <= 0.0)
 	    gfc->nsPsy.athadjust_msfix = gfp->msfix;
+
+	gfp->msfix *= 2.0;
+	gfc->nsPsy.athadjust_msfix *= 2.0;
+	gfc->presetTune.ms_maskadjust *= 2.0;
 
 	if (!gfc->presetTune.use) {
 	    gfc->nsPsy.attackthre   = NSATTACKTHRE;
@@ -1239,8 +1259,8 @@ int psymodel_init(lame_global_flags *gfp)
     // in the interest of merging nspsytune stuff - switch to blackman window
     for (i = 0; i < BLKSIZE ; i++)
       /* blackman window */
-      window[i] = 0.42-0.5*cos(2*PI*(i+.5)/BLKSIZE)+
-	0.08*cos(4*PI*(i+.5)/BLKSIZE);
+      window[i] =
+	  0.42-0.5*cos(2*PI*(i+.5)/BLKSIZE) + 0.08*cos(4*PI*(i+.5)/BLKSIZE);
 
     for (i = 0; i < BLKSIZE_s/2 ; i++)
 	window_s[i] = 0.5 * (1.0 - cos(2.0 * PI * (i + 0.5) / BLKSIZE_s));

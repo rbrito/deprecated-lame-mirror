@@ -683,53 +683,51 @@ inline static void mdct_long(FLOAT8 *out, FLOAT8 *in)
 
 
 void mdct_sub48(
-    lame_internal_flags *gfc, const sample_t *w0, const sample_t *w1
+    lame_internal_flags *gfc, const sample_t *wk, int ch
     )
 {
-    int gr, k, ch;
-    const sample_t *wk;
+    int gr, k;
 
-    wk = w0 + 286;
+    wk += 286;
     /* thinking cache performance, ch->gr loop is better than gr->ch loop */
-    for (ch = 0; ch < gfc->channels_out; ch++) {
-	for (gr = 0; gr < gfc->mode_gr; gr++) {
-	    int	band;
-	    gr_info *gi = &(gfc->l3_side.tt[gr][ch]);
-	    FLOAT8 *mdct_enc = gi->xr;
-	    FLOAT8 *samp = gfc->sb_sample[ch][1 - gr][0];
+    for (gr = 0; gr < gfc->mode_gr; gr++) {
+	int	band;
+	gr_info *gi = &(gfc->l3_side.tt[gr][ch]);
+	FLOAT8 *mdct_enc = gi->xr;
+	FLOAT8 *samp = gfc->sb_sample[ch][1 - gr][0];
 
-	    for (k = 0; k < 18 / 2; k++) {
-		window_subband(wk, samp);
-		window_subband(wk + 32, samp + 32);
-		samp += 64;
-		wk += 64;
-		/*
-		 * Compensate for inversion in the analysis filter
-		 */
-		for (band = 1; band < 32; band+=2) {
-		    samp[band-32] *= -1;
-		}
-	    }
-
+	for (k = 0; k < 18 / 2; k++) {
+	    window_subband(wk, samp);
+	    window_subband(wk + 32, samp + 32);
+	    samp += 64;
+	    wk += 64;
 	    /*
-	     * Perform imdct of 18 previous subband samples
-	     * + 18 current subband samples
+	     * Compensate for inversion in the analysis filter
 	     */
-	    for (band = 0; band < 32; band++, mdct_enc += 18) {
-		int type = gi->block_type;
-		FLOAT8 *band0, *band1;
-		band0 = gfc->sb_sample[ch][  gr][0] + order[band];
-		band1 = gfc->sb_sample[ch][1-gr][0] + order[band];
-		if (gi->mixed_block_flag && band < 2)
-		    type = 0;
-		if (gfc->amp_filter[band] == 0.0) {
-		    memset(mdct_enc, 0, 18*sizeof(FLOAT8));
-		} else {
-		  if (gfc->amp_filter[band] != 1.0) {
-		      for (k=0; k<18; k++)
-			  band1[k*32] *= gfc->amp_filter[band];
-		  }
-		  if (type == SHORT_TYPE) {
+	    for (band = 1; band < 32; band+=2) {
+		samp[band-32] *= -1;
+	    }
+	}
+
+	/*
+	 * Perform imdct of 18 previous subband samples
+	 * + 18 current subband samples
+	 */
+	for (band = 0; band < 32; band++, mdct_enc += 18) {
+	    int type = gi->block_type;
+	    FLOAT8 *band0, *band1;
+	    band0 = gfc->sb_sample[ch][  gr][0] + order[band];
+	    band1 = gfc->sb_sample[ch][1-gr][0] + order[band];
+	    if (gi->mixed_block_flag && band < 2)
+		type = 0;
+	    if (gfc->amp_filter[band] == 0.0) {
+		memset(mdct_enc, 0, 18*sizeof(FLOAT8));
+	    } else {
+		if (gfc->amp_filter[band] != 1.0) {
+		    for (k=0; k<18; k++)
+			band1[k*32] *= gfc->amp_filter[band];
+		}
+		if (type == SHORT_TYPE) {
 		    for (k = -NS/4; k < 0; k++) {
 			FLOAT8 w = win[SHORT_TYPE][k+3];
 			mdct_enc[k*3+ 9] = band0[( 9+k)*32] * w - band0[( 8-k)*32];
@@ -740,7 +738,7 @@ void mdct_sub48(
 			mdct_enc[k*3+20] = band1[( 8-k)*32] * w + band1[( 9+k)*32];
 		    }
 		    mdct_short(mdct_enc);
-		  } else {
+		} else {
 		    FLOAT8 work[18];
 		    for (k = -NL/4; k < 0; k++) {
 			FLOAT8 a, b;
@@ -753,26 +751,24 @@ void mdct_sub48(
 		    }
 
 		    mdct_long(mdct_enc, work);
-		  }
 		}
-		/*
-		 * Perform aliasing reduction butterfly
-		 */
-		if (type != SHORT_TYPE && band != 0) {
-		  for (k = 7; k >= 0; --k) {
+	    }
+	    /*
+	     * Perform aliasing reduction butterfly
+	     */
+	    if (type != SHORT_TYPE && band != 0) {
+		for (k = 7; k >= 0; --k) {
 		    FLOAT8 bu,bd;
 		    bu = mdct_enc[k] * ca[k] + mdct_enc[-1-k] * cs[k];
 		    bd = mdct_enc[k] * cs[k] - mdct_enc[-1-k] * ca[k];
 		    
 		    mdct_enc[-1-k] = bu;
 		    mdct_enc[k]    = bd;
-		  }
 		}
-	      }
+	    }
 	}
-	wk = w1 + 286;
-	if (gfc->mode_gr == 1) {
-	    memcpy(gfc->sb_sample[ch][0], gfc->sb_sample[ch][1], 576 * sizeof(FLOAT8));
-	}
+    }
+    if (gfc->mode_gr == 1) {
+	memcpy(gfc->sb_sample[ch][0], gfc->sb_sample[ch][1], 576 * sizeof(FLOAT8));
     }
 }

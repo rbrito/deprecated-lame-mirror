@@ -113,9 +113,13 @@ extern "C" {
 #ifdef USE_FAST_LOG
 #define         FAST_LOG10(x)       (fast_log2(x)*(LOG2/LOG10))
 #define         FAST_LOG(x)         (fast_log2(x)*LOG2)
+#define         FAST_LOG10_X(x,y)   (fast_log2(x)*(LOG2/LOG10*(y)))
+#define         FAST_LOG_X(x,y)     (fast_log2(x)*(LOG2*(y)))
 #else
 #define         FAST_LOG10(x)       log10(x)
 #define         FAST_LOG(x)         log(x)
+#define         FAST_LOG10_X(x,y)   (log10(x)*(y))
+#define         FAST_LOG_X(x,y)     (log(x)*(y))
 #endif
 
 
@@ -342,9 +346,6 @@ struct lame_internal_flags {
 
   int use_best_huffman;     /* 0 = no.  1=outside loop  2=inside loop(slow) */
 
-
-
-
   /* variables used by lame.c */
   Bit_stream_struc   bs;
   III_side_info_t l3_side;
@@ -368,6 +369,10 @@ struct lame_internal_flags {
   int pseudohalf[SFBMAX];
 
   int sfb21_extra; /* will be set in lame_init_params */
+
+  int   sparsing;
+  FLOAT sparseA;
+  FLOAT sparseB;
 
 #ifndef KLEMM_44
   /* variables used by util.c */
@@ -432,16 +437,16 @@ struct lame_internal_flags {
 
   /* Scale Factor Bands    */
   FLOAT8 mld_l[SBMAX_l],mld_s[SBMAX_s];
-  int	bm_l[SBMAX_l],bo_l[SBMAX_l] ;
-  int	bm_s[SBMAX_s],bo_s[SBMAX_s] ;
+  int	bo_l[SBMAX_l], bo_s[SBMAX_s] ;
   int	npart_l,npart_s;
-  
+
   int	s3ind[CBANDS][2];
   int	s3ind_s[CBANDS][2];
 
-  int	numlines_s[CBANDS];
+  int	endlines_s[CBANDS];
   int	numlines_l[CBANDS];
   FLOAT rnumlines_l[CBANDS];
+  FLOAT rnumlines_ls[CBANDS];
 
   /* ratios  */
   FLOAT8 pe[4];
@@ -479,13 +484,15 @@ struct lame_internal_flags {
      */
     struct {
 	int use_adjust;     // method for the auto adjustment 
-	FLOAT8  adjust;     // lowering based on peak volume, 1 = no lowering
-	FLOAT8  adjust_limit;   // limit for dynamic ATH adjust
-	FLOAT8  decay;          // determined to lower x dB each second
-	FLOAT8  floor;          // lowest ATH value
-	FLOAT8  l[SBMAX_l];     // ATH for sfbs in long blocks
-	FLOAT8  s[SBMAX_s];     // ATH for sfbs in short blocks
-	FLOAT8  cb[CBANDS];     // ATH for convolution bands
+	FLOAT l[SBMAX_l];     // ATH for sfbs in long blocks
+	FLOAT s[SBMAX_s];     // ATH for sfbs in short blocks
+	FLOAT cb[CBANDS];     // ATH for convolution bands
+	FLOAT l_avg[SBMAX_l];
+	FLOAT s_avg[SBMAX_s];
+	FLOAT adjust;     // lowering based on peak volume, 1 = no lowering
+	FLOAT adjust_limit;   // limit for dynamic ATH adjust
+	FLOAT decay;          // determined to lower x dB each second
+	FLOAT floor;          // lowest ATH value
 	FLOAT eql_w[BLKSIZE/2];/* equal loudness weights (based on ATH) */
 	/* factor for tuning the (sample power) point below which adaptive
 	 * threshold of hearing adjustment occurs 
@@ -508,6 +515,7 @@ struct lame_internal_flags {
 #ifdef BRHIST
   /* simple statistics */
   int   bitrate_stereoMode_Hist [16] [4+1];
+  int	bitrate_blockType_Hist  [16] [4+1+1];/*norm/start/short/stop/mixed(short)/sum*/
 #endif
 #ifdef HAVE_GTK
   /* used by the frame analyzer */

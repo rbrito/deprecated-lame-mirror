@@ -42,7 +42,6 @@
 #include <dmalloc.h>
 #endif
 
-
 /************************************************************************
  * allocate bits among 2 channels based on PE
  * mt 6/99
@@ -164,11 +163,11 @@ static FLOAT8 athAdjust( FLOAT8 a, FLOAT8 x, FLOAT8 athFloor )
      */
     FLOAT8 const o = 90.30873362;
     FLOAT8 const p = 94.82444863;
-    FLOAT8 u = 10. * FAST_LOG10(x); 
+    FLOAT8 u = FAST_LOG10_X(x, 10.0); 
     FLOAT8 v = a*a;
-    FLOAT8 w = 0.0;   
+    FLOAT8 w = 0.0;
     u -= athFloor;                                  // undo scaling
-    if ( v > 1E-20 ) w = 1. + 10. * FAST_LOG10(v) / o;
+    if ( v > 1E-20 ) w = 1. + FAST_LOG10_X(v, 10.0 / o);
     if ( w < 0  )    w = 0.; 
     u *= w; 
     u += athFloor + o-p;                            // redo scaling
@@ -219,7 +218,7 @@ int calc_xmin(
 	if (!gfp->ATHonly) {
 	    FLOAT8 x = ratio->en.l[gsfb];
 	    if (x > 0.0) {
-		x = en0 * ratio->thm.l[gsfb] * gfc->masking_lower / x;
+		x = en0 * ratio->thm.l[gsfb] / x;
 		if (xmin < x)
 		    xmin = x;
 	    }
@@ -249,7 +248,7 @@ int calc_xmin(
 	    if (!gfp->ATHonly && !gfp->ATHshort) {
 		FLOAT8 x = ratio->en.s[sfb][b];
 		if (x > 0.0)
-		    x = en0 * ratio->thm.s[sfb][b] * gfc->masking_lower / x;
+		    x = en0 * ratio->thm.s[sfb][b] / x;
 		if (xmin < x) 
 		    xmin = x;
 	    }
@@ -358,26 +357,12 @@ int  calc_noise(
 
 
 
-/* convert from L/R <-> Mid/Side */
-static void
-ms_convert(III_side_info_t *l3_side, int gr)
-{
-    int i;
-    for (i = 0; i < 576; ++i) {
-	FLOAT8 l, r;
-        l = l3_side->tt[gr][0].xr[i];
-        r = l3_side->tt[gr][1].xr[i];
-        l3_side->tt[gr][0].xr[i] = (l+r) * (FLOAT8)(SQRT2*0.5);
-        l3_side->tt[gr][1].xr[i] = (l-r) * (FLOAT8)(SQRT2*0.5);
-    }
-}
-
 /************************************************************************
  *
- *      init_outer_loop()
+ *      init_xrpow()
  *  mt 6/99                                    
  *
- *  initializes cod_info, scalefac and xrpow
+ *  initializes xrpow
  *
  *  returns 0 if all energies in xr are zero, else 1                    
  *
@@ -418,111 +403,6 @@ init_xrpow(
     memset(&cod_info->l3_enc, 0, sizeof(int)*576);
     return 0;
 }
-
-static void
-init_outer_loop(
-    lame_internal_flags *gfc,
-    gr_info *const cod_info)
-{
-    int sfb, j;
-    /*  initialize fresh cod_info
-     */
-    cod_info->part2_3_length      = 0;
-    cod_info->big_values          = 0;
-    cod_info->count1              = 0;
-    cod_info->global_gain         = 210;
-    cod_info->scalefac_compress   = 0;
-    /* mixed_block_flag, block_type was set in psymodel.c */
-    cod_info->table_select [0]    = 0;
-    cod_info->table_select [1]    = 0;
-    cod_info->table_select [2]    = 0;
-    cod_info->subblock_gain[0]    = 0;
-    cod_info->subblock_gain[1]    = 0;
-    cod_info->subblock_gain[2]    = 0;
-    cod_info->subblock_gain[3]    = 0;    // this one is always 0
-    cod_info->region0_count       = 0;
-    cod_info->region1_count       = 0;
-    cod_info->preflag             = 0;
-    cod_info->scalefac_scale      = 0;
-    cod_info->count1table_select  = 0;
-    cod_info->part2_length        = 0;
-    cod_info->sfb_lmax        = SBPSY_l;
-    cod_info->sfb_smin        = SBPSY_s;
-    cod_info->psy_lmax        = gfc->sfb21_extra ? SBMAX_l : SBPSY_l;
-    cod_info->psymax          = cod_info->psy_lmax;
-    cod_info->sfbmax          = cod_info->sfb_lmax;
-    cod_info->sfbdivide       = 11;
-    for (sfb = 0; sfb < SBMAX_l; sfb++) {
-	cod_info->width[sfb]
-	    = gfc->scalefac_band.l[sfb+1] - gfc->scalefac_band.l[sfb];
-	cod_info->window[sfb] = 3; // which is always 0.
-    }
-    if (cod_info->block_type == SHORT_TYPE) {
-	FLOAT8 ixwork[576];
-	FLOAT8 *ix;
-
-        cod_info->sfb_smin        = 0;
-        cod_info->sfb_lmax        = 0;
-	if (cod_info->mixed_block_flag) {
-            /*
-             *  MPEG-1:      sfbs 0-7 long block, 3-12 short blocks 
-             *  MPEG-2(.5):  sfbs 0-5 long block, 3-12 short blocks
-             */ 
-	    cod_info->sfb_smin    = 3;
-            cod_info->sfb_lmax    = gfc->mode_gr*2 + 4;
-	}
-	cod_info->psymax
-	    = cod_info->sfb_lmax
-	    + 3*((gfc->sfb21_extra ? SBMAX_s : SBPSY_s) - cod_info->sfb_smin);
-	cod_info->sfbmax
-	    = cod_info->sfb_lmax + 3*(SBPSY_s - cod_info->sfb_smin);
-	cod_info->sfbdivide   = cod_info->sfbmax - 18;
-	cod_info->psy_lmax    = cod_info->sfb_lmax;
-	/* re-order the short blocks, for more efficient encoding below */
-	/* By Takehiro TOMINAGA */
-	/*
-	  Within each scalefactor band, data is given for successive
-	  time windows, beginning with window 0 and ending with window 2.
-	  Within each window, the quantized values are then arranged in
-	  order of increasing frequency...
-	*/
-	ix = &cod_info->xr[gfc->scalefac_band.l[cod_info->sfb_lmax]];
-	memcpy(ixwork, cod_info->xr, 576*sizeof(FLOAT8));
-	for (sfb = cod_info->sfb_smin; sfb < SBMAX_s; sfb++) {
-	    int start = gfc->scalefac_band.s[sfb];
-	    int end   = gfc->scalefac_band.s[sfb + 1];
-	    int window, l;
-	    for (window = 0; window < 3; window++) {
-		for (l = start; l < end; l++) {
-		    *ix++ = ixwork[3*l+window];
-		}
-	    }
-	}
-
-	j = cod_info->sfb_lmax;
-	for (sfb = cod_info->sfb_smin; sfb < SBMAX_s; sfb++) {
-	    cod_info->width[j] = cod_info->width[j+1] = cod_info->width[j + 2]
-		= gfc->scalefac_band.s[sfb+1] - gfc->scalefac_band.s[sfb];
-	    cod_info->window[j  ] = 0;
-	    cod_info->window[j+1] = 1;
-	    cod_info->window[j+2] = 2;
-	    j += 3;
-	}
-    }
-
-    cod_info->count1bits          = 0;  
-    cod_info->sfb_partition_table = nr_of_sfb_block[0][0];
-    cod_info->slen[0]             = 0;
-    cod_info->slen[1]             = 0;
-    cod_info->slen[2]             = 0;
-    cod_info->slen[3]             = 0;
-
-    /*  fresh scalefactors are all zero
-     */
-    memset(cod_info->scalefac, 0, sizeof(cod_info->scalefac));
-}
-
-
 
 /************************************************************************
  *
@@ -644,7 +524,10 @@ trancate_smallspectrums(
 	work[j] = xr;
     }
 
-    sfb = j = 0;
+    j = 0;
+    sfb = 8;
+    if (gi->block_type == SHORT_TYPE)
+	sfb = 6;
     do {
 	FLOAT8 allowedNoise, trancateThreshold;
 	int nsame, start;
@@ -1530,10 +1413,9 @@ VBR_prepare (
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         mxb = on_pe (gfp, pe, &gfc->l3_side, max_bits[gr], avg, gr, 0);
-        if (gfc->mode_ext == MPG_MD_MS_LR) {
-            ms_convert (&gfc->l3_side, gr);
+        if (gfc->mode_ext == MPG_MD_MS_LR)
             reduce_side (max_bits[gr], ms_ener_ratio[gr], avg, mxb);
-        }
+
         for (ch = 0; ch < gfc->channels_out; ++ch) {
             gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
       
@@ -1546,7 +1428,6 @@ VBR_prepare (
             masking_lower_db   = gfc->VBR.mask_adjust - adjust; 
             gfc->masking_lower = pow (10.0, masking_lower_db * 0.1);
       
-            init_outer_loop(gfc, cod_info);
 	    bands[gr][ch] = calc_xmin (gfp, &ratio[gr][ch], 
                                        cod_info, l3_xmin[gr][ch]);
             if (bands[gr][ch]) 
@@ -1653,7 +1534,7 @@ VBR_iteration_loop (
             int ret; 
 	    gr_info *cod_info = &l3_side->tt[gr][ch];
       
-            /*  init_outer_loop sets up cod_info, scalefac and xrpow 
+            /*  init_xrpow sets up xrpow
              */
             ret = init_xrpow(gfc, cod_info, xrpow);
             if (ret == 0 || max_bits[gr][ch] == 0) {
@@ -1881,16 +1762,11 @@ ABR_iteration_loop(
     /*  encode granules
      */
     for (gr = 0; gr < gfc->mode_gr; gr++) {
-
-        if (gfc->mode_ext == MPG_MD_MS_LR) 
-            ms_convert (&gfc->l3_side, gr);
-
         for (ch = 0; ch < gfc->channels_out; ch++) {
             cod_info = &l3_side->tt[gr][ch];
 
-            /*  cod_info, scalefac and xrpow get initialized in init_outer_loop
+            /*  init_xrpow sets up xrpow
              */
-            init_outer_loop(gfc, cod_info);
             if (init_xrpow(gfc, cod_info, xrpow)) {
                 /*  xr contains energy we will have to encode 
                  *  calculate the masking abilities
@@ -1960,16 +1836,14 @@ iteration_loop(
         max_bits = on_pe (gfp, pe, l3_side, targ_bits, mean_bits, gr, gr);
 
         if (gfc->mode_ext == MPG_MD_MS_LR) {
-            ms_convert (&gfc->l3_side, gr);
             reduce_side (targ_bits, ms_ener_ratio[gr], mean_bits, max_bits);
         }
         
         for (ch=0 ; ch < gfc->channels_out ; ch ++) {
             cod_info = &l3_side->tt[gr][ch]; 
 
-            /*  init_outer_loop sets up cod_info, scalefac and xrpow 
+            /*  init_xrpow sets up xrpow
              */
-            init_outer_loop(gfc, cod_info);
             if (init_xrpow(gfc, cod_info, xrpow)) {
                 /*  xr contains energy we will have to encode 
                  *  calculate the masking abilities
