@@ -32,31 +32,11 @@ being too aggressive for simple frames:
 LOW BITRATES
 =======================================================================
 At lower bitrates, (like 24kbs per channel), it is recommended that
-you use a 16kHz sampling rate.  Some commercial encoders (FhG, Xing)
-will do this automatically.  With LAME, you can use Sox, but you have
-to be careful to get good results.
-
-The following information is from John Hayward-Warburton
-(john@billabong-media.com, http://billabong-media.com)
-
-There seem to be two very important points:
-
-1)  make sure you have the very latest sox: the `resample' routine
-    was broken in all previous versions before 12.16, and was really 
-    quite awful. (latest version: http://home.sprynet.com/~cbagwell/sox.html)
-
-2)  use the resample options.  The defaults are not good for encoding
-    music or speech.  
-
-Here are some options which work well, but more experimentation is
-needed.  When available, I'll update this with recommended settings
-for speech and music.
-
-
-% sox input.wav  -c 1 -r 16000 output.wav  resample 0.66
-
-% sox INFILE.wav -c 1 -r 22050 OUTFILE.wav polyphase -cutoff 0.45
-
+you use a 16kHz sampling rate combined with lowpass filtering.  LAME,
+as well as commercial encoders (FhG, Xing) will do this automatically.
+However, if you feel there is too much (or not enough) lowpass
+filtering, you may need to try different values of the lowpass cutoff
+and passband width (--lowpass and --lowpass-width options).
 
 
 
