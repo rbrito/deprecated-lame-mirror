@@ -1694,7 +1694,6 @@ int do_layer3( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point)
 
 #ifndef NOANALYSIS
     if (mpg123_pinfo!=NULL) {
-    extern int pretab[21];
     int i,sb;
     float ifqstep;
 
@@ -1742,7 +1741,7 @@ int do_layer3( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point)
 	for (sb=0; sb<21; sb++) {
 	  /* scalefac was copied into mpg123_pinfo->sfb[] above */
 	  mpg123_pinfo->sfb[gr][ch][sb] = mpg123_pinfo->sfb_s[gr][ch][sb];
-	  if (gr_infos->preflag) mpg123_pinfo->sfb[gr][ch][sb] += pretab[sb];
+	  if (gr_infos->preflag) mpg123_pinfo->sfb[gr][ch][sb] += pretab1[sb];
 	  mpg123_pinfo->sfb[gr][ch][sb] *= -ifqstep;
 	}
 	mpg123_pinfo->sfb[gr][ch][21]=0;

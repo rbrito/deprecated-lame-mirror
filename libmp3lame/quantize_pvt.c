@@ -882,13 +882,13 @@ void set_pinfo (
                     gfc->pinfo->LAMEsfb[gr][ch][sfb] =
                                             gfc->pinfo->LAMEsfb[0][ch][sfb];
                 else
-                    gfc->pinfo->LAMEsfb[gr][ch][sfb]=-ifqstep*scalefac->l[sfb];
+                    gfc->pinfo->LAMEsfb[gr][ch][sfb] = -ifqstep*scalefac->l[sfb];
             }else{
-                gfc->pinfo->LAMEsfb[gr][ch][sfb]=0;
+                gfc->pinfo->LAMEsfb[gr][ch][sfb] = 0;
             }
 
             if (cod_info->preflag && sfb>=11) 
-                gfc->pinfo->LAMEsfb[gr][ch][sfb]-=ifqstep*pretab[sfb];
+                gfc->pinfo->LAMEsfb[gr][ch][sfb] -= ifqstep*pretab[sfb];
         } /* for sfb */
     } /* block type long */
     gfc->pinfo->LAMEqss     [gr][ch] = cod_info->global_gain;
