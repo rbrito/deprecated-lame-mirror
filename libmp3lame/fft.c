@@ -289,7 +289,7 @@ void init_fft(lame_internal_flags * const gfc)
     for (i = 0; i < BLKSIZE_s/2 ; i++)
 	window_s[i] = 0.5 * (1.0 - cos(2.0 * PI * (i + 0.5) / BLKSIZE_s));
 
-#ifdef USE_FFT3DN
+#ifdef HAVE_NASM
     if (gfc->CPU_features.AMD_3DNow) {
         extern void fht_3DN(FLOAT *fz, int n);
         gfc->fft_fht = fht_3DN;
