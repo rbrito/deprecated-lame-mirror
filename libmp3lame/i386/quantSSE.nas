@@ -237,7 +237,7 @@ proc	calc_noise_sub_3DN
 	mov		ebp, [ecx+ 0+ edx*4]
 	mov		esi, [ecx+ 4+ edx*4]
 	movd		mm4, [pow43+ebp*4]
-	punpckldq	mm4, dword [pow43+esi*4]
+	punpckldq	mm4, qword [pow43+esi*4]
 	pfmul		mm4, mm6
 	pfsubr		mm4, [eax+ 0+ edx*4]
 	add		edx, byte 2
@@ -251,8 +251,8 @@ proc	calc_noise_sub_3DN
 	mov		ebx, [ecx+12+ edx*4]
 	movd		mm0, [pow43+ebp*4]
 	movd		mm1, [pow43+edi*4]
-	punpckldq	mm0, dword [pow43+esi*4]
-	punpckldq	mm1, dword [pow43+ebx*4]
+	punpckldq	mm0, qword [pow43+esi*4]
+	punpckldq	mm1, qword [pow43+ebx*4]
 	pfmul		mm0, mm6
 	pfmul		mm1, mm6
 	pfsubr		mm0, [eax+ 0+ edx*4]
@@ -314,7 +314,7 @@ proc	calc_sfb_noise_fast_3DN
 	ja	.ixover
 
 	movd		mm4, [pow43+ebp*4]
-	punpckldq	mm4, dword [pow43+ecx*4]
+	punpckldq	mm4, qword [pow43+ecx*4]
 	pfmul		mm4, mm7
 	pfsubr		mm4, [eax+ 0+ edx*4 + 576*4]
 	add		edx, byte 2
@@ -356,8 +356,8 @@ proc	calc_sfb_noise_fast_3DN
 
 	movd		mm0, [pow43+ebp*4]
 	movd		mm1, [pow43+edi*4]
-	punpckldq	mm0, dword [pow43+ecx*4]
-	punpckldq	mm1, dword [pow43+ebx*4]
+	punpckldq	mm0, qword [pow43+ecx*4]
+	punpckldq	mm1, qword [pow43+ebx*4]
 	pfmul		mm0, mm7
 	pfmul		mm1, mm7
 	pfsubr		mm0, [eax+ 0+ edx*4 + 576*4]
@@ -420,14 +420,14 @@ proc	calc_sfb_noise_3DN
 	punpckhdq	mm2, mm2
 	movd		ecx, mm2
 	movd		mm2, [esi+ebp*4+8208*4]
-	punpckldq	mm2, dword [esi+ecx*4+8208*4]	; mm2=adj43 value
+	punpckldq	mm2, qword [esi+ecx*4+8208*4]	; mm2=adj43 value
 	pfadd		mm2, mm4
 	pf2id		mm2, mm2
 	movd		ebp, mm2
 	punpckhdq	mm2, mm2
 	movd		ecx, mm2
 	movd		mm4, [esi+ebp*4]
-	punpckldq	mm4, dword [esi+ecx*4]
+	punpckldq	mm4, qword [esi+ecx*4]
 	pfmul		mm4, mm7
 	pfsubr		mm4, [eax+ 0+ edx*4 + 576*4]
 	add		edx, byte 2
@@ -453,8 +453,8 @@ proc	calc_sfb_noise_3DN
 	movd		ebx, mm3
 	movd		mm2, [esi+ebp*4+8208*4]
 	movd		mm3, [esi+edi*4+8208*4]
-	punpckldq	mm2, dword [esi+ecx*4+8208*4]	; mm2=adj43asm value
-	punpckldq	mm3, dword [esi+ebx*4+8208*4]	; mm3=adj43asm value
+	punpckldq	mm2, qword [esi+ecx*4+8208*4]	; mm2=adj43asm value
+	punpckldq	mm3, qword [esi+ebx*4+8208*4]	; mm3=adj43asm value
 	pfadd		mm0, mm2
 	pfadd		mm1, mm3
 	pf2id		mm0, mm0
@@ -468,8 +468,8 @@ proc	calc_sfb_noise_3DN
 
 	movd		mm0, [esi+ebp*4]
 	movd		mm1, [esi+edi*4]
-	punpckldq	mm0, dword [esi+ecx*4]
-	punpckldq	mm1, dword [esi+ebx*4]
+	punpckldq	mm0, qword [esi+ecx*4]
+	punpckldq	mm1, qword [esi+ebx*4]
 	pfmul		mm0, mm7
 	pfmul		mm1, mm7
 	pfsubr		mm0, [eax+ 0+ edx*4 + 576*4]
