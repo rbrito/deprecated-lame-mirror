@@ -247,10 +247,17 @@ int  lame_encode_mp3_frame (				// Output
       for ( ch = 0; ch < gfc->channels_out; ch++ )
 	bufp[ch] = &inbuf[ch][576 + gr*576-FFTOFFSET];
 
-      ret=L3psycho_anal( gfp, bufp, gr, 
-		     &gfc->ms_ratio[gr],&ms_ratio_next,&gfc->ms_ener_ratio[gr],
-		     masking_ratio, masking_MS_ratio,
-		     pe[gr],pe_MS[gr],blocktype);
+      if (gfc->nsPsy.use) {
+	ret=L3psycho_anal_ns( gfp, bufp, gr, 
+			      &gfc->ms_ratio[gr],&ms_ratio_next,&gfc->ms_ener_ratio[gr],
+			      masking_ratio, masking_MS_ratio,
+			      pe[gr],pe_MS[gr],blocktype);
+      } else {
+	ret=L3psycho_anal( gfp, bufp, gr, 
+			   &gfc->ms_ratio[gr],&ms_ratio_next,&gfc->ms_ener_ratio[gr],
+			   masking_ratio, masking_MS_ratio,
+			   pe[gr],pe_MS[gr],blocktype);
+      }
       if (ret!=0) return -4;
 
       for ( ch = 0; ch < gfc->channels_out; ch++ )

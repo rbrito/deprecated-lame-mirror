@@ -34,4 +34,14 @@ int L3psycho_anal( lame_global_flags *gfc,
 		    FLOAT8 pe[2], FLOAT8 pe_MS[2], 
                     int blocktype_d[2]); 
 
+int L3psycho_anal_ns( lame_global_flags *gfc,
+		      const sample_t *buffer[2], int gr, 
+		      FLOAT8 *ms_ratio, 
+		      FLOAT8 *ms_ratio_next, 
+		      FLOAT8 *ms_ener_ratio, 
+		      III_psy_ratio ratio[2][2],
+		      III_psy_ratio MS_ratio[2][2],
+		      FLOAT8 pe[2], FLOAT8 pe_MS[2], 
+		      int blocktype_d[2]); 
+
 #endif /* LAME_PSYMODEL_H */
