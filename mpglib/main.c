@@ -61,7 +61,7 @@ printf(" syncword:  %2X   %2X   \n ",s0, s1);
 
 int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
 {
-  extern int tabsel_123[2][3][16];
+  extern const int tabsel_123 [2] [3] [16];
   VBRTAGDATA pTagData;
   int ret,size,framesize;
   unsigned long num_frames=0;

@@ -30,10 +30,10 @@
  */
  
 #ifndef  LAMETYPE_H_DEFINED
-# define LAMETYPE_H_DEFINED
+#define LAMETYPE_H_DEFINED
 
-# include <stdio.h> 
-# include <limits.h>
+#include <stdio.h> 
+#include <limits.h>
 
 
 /*********************************************************************************
@@ -51,18 +51,18 @@
 //
 // note: untyped data (void*) is not possible for RPC
 
-# define IN                     /* Object is transfered from RPC system, no data is taken from the origin */
-# define OUT    const           /* Object is transfered only to the RPC system and therefore never changed */
-# define INOUT                  /* before remote execution data is transfered to remote host and after the */
-                                /* operation the (maybe) modified data is transfered back */
-# define STRING                 /* data points to a zero terminated variable length string */
-# define SIZE_IS(len)           /* size of the data object, 1D array */
-# define SIZE2_IS(len1,len2)    /* size of the data object, 2D array */
-# define LENGTH_IS(len)
-# define FIRST_IS(len)
-# define LAST_IS(len)  
-# define MAX_IS(len)
-# define CALLBACK(fn)
+#define IN                     /* Object is transfered from RPC system, no data is taken from the origin */
+#define OUT    const           /* Object is transfered only to the RPC system and therefore never changed */
+#define INOUT                  /* before remote execution data is transfered to remote host and after the */
+                               /* operation the (maybe) modified data is transfered back */
+#define STRING                 /* data points to a zero terminated variable length string */
+#define SIZE_IS(len)           /* size of the data object, 1D array */
+#define SIZE2_IS(len1,len2)    /* size of the data object, 2D array */
+#define LENGTH_IS(len)
+#define FIRST_IS(len)
+#define LAST_IS(len)  
+#define MAX_IS(len)
+#define CALLBACK(fn)
 
 
 /*********************************************************************************
@@ -322,7 +322,7 @@ typedef struct {
  *  140 bytes
 */
 
-#define VBRHEADERSIZE (NUMTOCENTRIES + 4 + 4 + 4 + 4 + 4)           //  ????????????????????
+#define VBRHEADERSIZE  (NUMTOCENTRIES + 4 + 4 + 4 + 4 + 4)           //  ????????????????????
 
 struct id3tag_spec {  /* private data members */
     int          flags;
@@ -346,7 +346,7 @@ struct huffcodetab {
 };
 
 
-# include "l3side.h"
+#include "l3side.h"
 
 
 

@@ -8,6 +8,7 @@
 #include "util.h"
 
 int16_t convbuffer[4096]; /* take 8k out of the data segment, not the stack */
+/*^^^^ not portable, at least on MSVC */
 int convsize;
 
 ogg_sync_state   oy; /* sync and verify incoming physical bitstream */

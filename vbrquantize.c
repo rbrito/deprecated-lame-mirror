@@ -292,9 +292,9 @@ int scalefac[SBPSY_s][3],unsigned int sbg[3])
 
 
 
-int max_range_short[SBPSY_s]=
+const int max_range_short[SBPSY_s]=
 {15, 15, 15, 15, 15, 15 ,  7,    7,    7,    7,   7,     7 };
-int max_range_long[SBPSY_l]=
+const int max_range_long[SBPSY_l]=
 {15,   15,  15,  15,  15,  15,  15,  15,  15,  15,  15,   7,   7,   7,   7,   7,   7,   7,    7,    7,    7};
 
 
@@ -740,6 +740,7 @@ VBR_quantize(lame_global_flags *gfp,
   /* from quantize.c VBR algorithm */
   /*static const FLOAT8 dbQ[10]=
    {-5.5,-4.25,-3.0,-2.50, -1.75, -.75, -.5, -.25, .25, .75};*/
+  /* a third dbQ table ?!? */
   static const FLOAT8 dbQ[10]=
   {-6.06,-4.4,-2.9,-1.57, -0.4, 0.61, 1.45, 2.13, 2.65, 3.0};
   

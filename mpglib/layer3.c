@@ -43,7 +43,7 @@ struct bandInfoStruct {
 int longLimit[9][23];
 int shortLimit[9][14];
 
-struct bandInfoStruct bandInfo[9] = { 
+const struct bandInfoStruct bandInfo[9] = { 
 
 /* MPEG 1.0 */
  { {0,4,8,12,16,20,24,30,36,44,52,62,74, 90,110,134,162,196,238,288,342,418,576},
@@ -503,7 +503,7 @@ static void III_get_side_info_2(struct III_sideinfo *si,int stereo,
 #ifdef MPEG1
 static int III_get_scale_factors_1(int *scf,struct gr_info_s *gr_infos)
 {
-   static unsigned char slen[2][16] = {
+   static const unsigned char slen[2][16] = {
      {0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4},
      {0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3}
    };
@@ -594,7 +594,7 @@ static int III_get_scale_factors_2(int *scf,struct gr_info_s *gr_infos,int i_ste
   int n = 0;
   int numbits = 0;
 
-  static unsigned char stab[3][6][4] = {
+  static const unsigned char stab[3][6][4] = {
    { { 6, 5, 5,5 } , { 6, 5, 7,3 } , { 11,10,0,0} ,
      { 7, 7, 7,0 } , { 6, 6, 6,3 } , {  8, 8,5,0} } ,
    { { 9, 9, 9,9 } , { 9, 9,12,6 } , { 18,18,0,0} ,
@@ -639,8 +639,8 @@ static int III_get_scale_factors_2(int *scf,struct gr_info_s *gr_infos,int i_ste
   return numbits;
 }
 
-static int pretab1[22] = {0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,2,2,3,3,3,2,0};
-static int pretab2[22] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+static const int pretab1 [22] = {0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,2,2,3,3,3,2,0}; /* char enough ? */
+static const int pretab2 [22] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
 /*
  * don't forget to apply the same changes to III_dequantize_sample_ms() !!! 
@@ -1689,7 +1689,7 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
     }
 
     if (mpg123_pinfo!=NULL) {
-    extern int tabsel_123[2][3][16];
+    extern const int tabsel_123[2][3][16];
     extern int pretab[21];
     int i,sb;
     float ifqstep;

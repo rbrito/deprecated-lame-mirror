@@ -25,10 +25,10 @@
 #include "tables.h"
 #include "quantize_pvt.h"
 
-struct
+const struct
 {
-    unsigned region0_count;
-    unsigned region1_count;
+    const unsigned region0_count;
+    const unsigned region1_count;
 } subdv_table[ 23 ] =
 {
 {0, 0}, /* 0 bands */
@@ -248,7 +248,7 @@ static int choose_table(int *ix, int *end, int *s)
     unsigned int max;
     int choice, choice2;
     static const int huf_tbl_noESC[] = {
-	1, 2, 5, 7, 7,10,10,13,13,13,13,13,13,13,13
+	1, 2, 5, 7, 7,10,10,13,13,13,13,13,13,13,13 /* char not enough ? */
     };
 
     max = ix_max(ix, end);

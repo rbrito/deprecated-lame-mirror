@@ -71,7 +71,7 @@ static const char *genre_names[] =
 
 #define GENRE_NAME_COUNT ((int)(sizeof genre_names / sizeof (const char *)))
 
-static const int genre_alpha_map[] = {
+static const unsigned char genre_alpha_map [] = {
     123, 34, 74, 73, 99, 20, 40, 26, 145, 90, 116, 41, 135, 85, 96, 138, 89, 0,
     107, 132, 65, 88, 104, 102, 97, 136, 61, 141, 32, 1, 112, 128, 57, 140, 2,
     139, 58, 3, 125, 50, 22, 4, 55, 127, 122, 120, 98, 52, 48, 54, 124, 25, 84,
@@ -275,10 +275,10 @@ set_4_byte_value(unsigned char *bytes, unsigned long value)
 }
 
 #define FRAME_ID(a, b, c, d) \
-    (((unsigned long)(a) << 24) \
+    ( ((unsigned long)(a) << 24) \
     | ((unsigned long)(b) << 16) \
-    | ((unsigned long)(c) << 8) \
-    | (unsigned long)(d))
+    | ((unsigned long)(c) <<  8) \
+    | ((unsigned long)(d) <<  0) )
 #define TITLE_FRAME_ID FRAME_ID('T', 'I', 'T', '2')
 #define ARTIST_FRAME_ID FRAME_ID('T', 'P', 'E', '1')
 #define ALBUM_FRAME_ID FRAME_ID('T', 'A', 'L', 'B')

@@ -2,6 +2,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <fcntl.h>
 
 #ifdef macintosh
 #include   <types.h>
@@ -10,13 +11,14 @@
 #include  <sys/types.h>
 #include  <sys/stat.h>
 #endif
-#include <fcntl.h>
 
 #include "mpg123.h"
 
-struct parameter param = { 1 , 1 , 0 , 0 };
+// In C++ the array first must be prototyped, why ?
 
-int tabsel_123[2][3][16] = {
+extern const int tabsel_123 [2] [3] [16];
+
+const int tabsel_123 [2] [3] [16] = {
    { {0,32,64,96,128,160,192,224,256,288,320,352,384,416,448,},
      {0,32,48,56, 64, 80, 96,112,128,160,192,224,256,320,384,},
      {0,32,40,48, 56, 64, 80, 96,112,128,160,192,224,256,320,} },
@@ -26,9 +28,11 @@ int tabsel_123[2][3][16] = {
      {0,8,16,24,32,40,48,56,64,80,96,112,128,144,160,} }
 };
 
-long freqs[9] = { 44100, 48000, 32000,
-                  22050, 24000, 16000 ,
-                  11025 , 12000 , 8000 };
+const struct parameter param = { 1 , 1 , 0 , 0 };
+
+const long freqs[9] = { 44100, 48000, 32000,
+                        22050, 24000, 16000,
+                        11025, 12000,  8000 };
 
 int bitindex;
 unsigned char *wordpointer;
@@ -39,7 +43,7 @@ int pcm_point = 0;
 #if 0
 static void get_II_stuff(struct frame *fr)
 {
-  static int translate[3][2][16] = 
+  static const int translate [3] [2] [16] =   /* char ? */
    { { { 0,2,2,2,2,2,2,0,0,0,1,1,1,1,1,0 } ,
        { 0,2,2,0,0,0,1,1,1,1,1,1,1,1,1,0 } } ,
      { { 0,2,2,2,2,2,2,0,0,0,0,0,0,0,0,0 } ,
@@ -201,8 +205,8 @@ int decode_header(struct frame *fr,unsigned long newhead)
 #if 1
 void print_header(struct frame *fr)
 {
-	static char *modes[4] = { "Stereo", "Joint-Stereo", "Dual-Channel", "Single-Channel" };
-	static char *layers[4] = { "Unknown" , "I", "II", "III" };
+	static const char *modes[4] = { "Stereo", "Joint-Stereo", "Dual-Channel", "Single-Channel" };
+	static const char *layers[4] = { "Unknown" , "I", "II", "III" };
 
 	fprintf(stderr,"MPEG %s, Layer: %s, Freq: %ld, mode: %s, modext: %d, BPF : %d\n", 
 		fr->mpeg25 ? "2.5" : (fr->lsf ? "2.0" : "1.0"),
@@ -218,8 +222,8 @@ void print_header(struct frame *fr)
 
 void print_header_compact(struct frame *fr)
 {
-	static char *modes[4] = { "stereo", "joint-stereo", "dual-channel", "mono" };
-	static char *layers[4] = { "Unknown" , "I", "II", "III" };
+	static const char *modes[4] = { "stereo", "joint-stereo", "dual-channel", "mono" };
+	static const char *layers[4] = { "Unknown" , "I", "II", "III" };
  
 	fprintf(stderr,"MPEG %s layer %s, %d kbit/s, %ld Hz %s\n",
 		fr->mpeg25 ? "2.5" : (fr->lsf ? "2.0" : "1.0"),

@@ -120,15 +120,13 @@ typedef enum {
     BINSEARCH_DOWN
 } binsearchDirection_t;
 
-int bin_search_StepSize 
-(
+int bin_search_StepSize (         /* Avoid the style with () at line begin. It looks too much like the function {} or a struct def */
     lame_internal_flags *gfc,
     gr_info             *cod_info,
     int                  desired_rate, 
     int                  start, 
     int                 *ix, 
-    FLOAT8               xrspow[576]
-) 
+    FLOAT8               xrspow[576] )
 {
     int nBits;
     int CurrentStep;
@@ -987,6 +985,12 @@ int VBR_prepare
     int                  bands         [2][2]
 )
 {
+    // there is a table with the same name in lame.c
+    // Some setup in lame.c, other here? If possible, also move
+    // to lame.c, so all VBR bitrate adjustments (dbQ, ath, what else?) are
+    // done in lame_init ()
+    // pfk
+    
     static const FLOAT8 dbQ[10] = {-4.,-3.,-2.,-1.,0,.5,1.,1.5,2.,2.5};
     
     FLOAT8   masking_lower_db, adjust;

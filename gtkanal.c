@@ -70,11 +70,11 @@ int gtkmakeframe(void)
   int iread = 0;
   static int init=0;
   static int mpglag;
-  static short int Buffer[2][1152];
+    static sample_t  Buffer    [2] [1152];
+    sample_t         mpg123pcm [2] [1152];
   int ch,j;
   int mp3count = 0;
   int mp3out = 0;
-  short mpg123pcm[2][1152];
   char mp3buffer[LAME_MAXMP3BUFFER];
   extern plotting_data *mpg123_pinfo;  
 
@@ -936,6 +936,7 @@ static void spec_option (GtkWidget *widget, gpointer data)
 
 static gint key_press_event (GtkWidget *widget, GdkEventKey *event)
 {
+    // is a switch() statement in lame forbidden?
   if (event->keyval == '1') {
     subblock_draw[0] = 1;
     subblock_draw[1] = 0;
@@ -999,6 +1000,7 @@ static void text_window (GtkWidget *widget, gpointer data)
     gtk_window_set_title (GTK_WINDOW (textwindow), "Documentation");
     gtk_widget_set_usize(box,450,500); 
     gtk_text_set_word_wrap(GTK_TEXT(box),TRUE);
+    // text should be moved outside this function, may be in a separate file
     gtk_text_insert(GTK_TEXT(box),NULL,NULL,NULL,
 		"Frame header information: "\
 		"First the bitrate, sampling frequency and mono, stereo or jstereo "\

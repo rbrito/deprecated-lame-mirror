@@ -990,7 +990,7 @@ void quantize_xrpow_ISO(FLOAT8 xp[576], int pi[576], gr_info *cod_info)
 #  define QUANTFAC(rx)  adj43asm[rx]
 #  define ROUNDFAC -0.0946
 #  define XRPOW_FTOI(src, dest) \
-     asm ("fistpl %0 " : "=m"(dest) : "t"(src) : "st")
+     __asm__ ("fistpl %0 " : "=m"(dest) : "t"(src) : "st")
 #elif defined (USE_MSC_ASM)
 #  define QUANTFAC(rx)  adj43asm[rx]
 #  define ROUNDFAC -0.0946

@@ -471,6 +471,8 @@ int lame_init_params(lame_global_flags *gfp)
      */
     if (gfp->VBR == vbr_abr)
     {
+      /* A third dbQ table */
+      /* Can all dbQ setup can be done here using a switch statement? */
       static const FLOAT8 dbQ[10]={-5.0,-3.75,-2.5,-1.25,0,0.4,0.8,1.2,1.6,2.0};
       FLOAT8 masking_lower_db;
       assert( gfp->VBR_q <= 9 );
@@ -483,9 +485,24 @@ int lame_init_params(lame_global_flags *gfp)
     if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh)
     {
       gfc->ATH_vbrlower = (4-gfp->VBR_q)*4.0;     
-    }
-
-
+    } 
+    
+    // At low levels VBR currently switches to 32 kbps.
+    // instead of filling this minimum data rate with useful data, it often
+    // happens that LAME thinks all is below ATH and don't use this minimum
+    // data rate to have at least a bad quality at this level instead of
+    // heavy switch muting. Such switching is very conspicuous.
+    
+    // The absolute threshold of hearing is so a sharp border so it is
+    // senseful to use a SWITCH ON/OFF muting. See delta script, they have a width
+    // of 5...7 dB
+    // Delta scripts are SPL/freq plots. Frequency slowly increases (1 Terz/minute).
+    // SPL raises slowly. The listener have to report the arise of the tone.
+    // 0...10 seconds after this report the SPL falls. The listener have the disapperance
+    // to report. The SPL still falls for a random 0...10 seconds, then the SPL raises ...
+    
+    if ( gfp -> VBR_q < 2 )
+       gfp -> noATH = 1;
 
   }
 

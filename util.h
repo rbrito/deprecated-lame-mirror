@@ -95,7 +95,7 @@
 *
 ***********************************************************************/
 
-extern int      bitrate_table[2][15];
+extern const int      bitrate_table [2] [16];
 
 
 

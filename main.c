@@ -45,7 +45,7 @@ int main(int argc, char **argv)
 {
 
   char mp3buffer[LAME_MAXMP3BUFFER];
-  short int Buffer[2][1152];
+    sample_t Buffer [2] [1152];
   int iread,imp3;
   lame_global_flags gf;
   FILE *outf;

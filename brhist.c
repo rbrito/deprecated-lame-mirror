@@ -11,6 +11,8 @@
 # define  BRHIST_BARMAX 50
 #endif
 
+/* Should this moved to lame_internal_flags? pfk */
+
 unsigned long  brhist_count   [15];
 unsigned long  brhist_count_max;
 unsigned       brhist_vbrmin;
@@ -113,6 +115,8 @@ void brhist_disp ( long totalframes )
       
         if ( brhist_count [i] == 0 )
             sprintf ( brppt,  " [   ]" );
+        else if ( ppt < brhist_count[i]/10000 )
+            sprintf ( brppt," [%%..]" );
         else if ( ppt < 10 )
             sprintf ( brppt," [%%.%1u]", ppt%10 );
         else if ( ppt < 995 )
