@@ -575,7 +575,7 @@ Huffmancodebits(lame_t gfc, gr_info *gi)
     assert(gfc->bs.bitidx == data_bits - gi->count1bits);
 
     Huf_count1(&gfc->bs, gi);
-    assert(gfc->bs.bitidx <= data_bits);
+    assert(gfc->bs.bitidx == data_bits);
 }
 
 /*write N bits into the header */
