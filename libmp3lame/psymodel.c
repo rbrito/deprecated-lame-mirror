@@ -1066,7 +1066,7 @@ mp3x display               <------LONG------>
 
     for (ch = 0; ch < numchn; ch++) {
 	III_psy_ratio *mr = &gfc->masking_next[gr][ch];
-	if (ch < 2 && (current_is_short & (12+(1<<ch)))) {
+	if (ch < 2 && (current_is_short & (12+1+ch))) {
 	    for (sb = 0; sb < 3; sb++)
 		fft_short(gfc, wsamp_S[ch][sb], &buffer[ch][(576/3) * (sb+1)]);
 	}
@@ -1208,13 +1208,15 @@ L3psycho_anal_ns(
 	    for (b = 0; b < gfc->npart_l; b++)
 		loudness += eb[b] * gfc->ATH.eql_w[b];
 
-	    loudness_old = gfc->ATH.adjust[ch] * gfc->ATH.aa_decay;
-	    if (loudness < loudness_old)
-		loudness = loudness_old;
 	    if (loudness > 1.0)
 		loudness = 1.0;
-	    if (loudness < ATHAdjustLimit)
-		loudness = ATHAdjustLimit;
+	    else {
+		loudness_old = gfc->ATH.adjust[ch] * gfc->ATH.aa_decay;
+		if (loudness < loudness_old)
+		    loudness = loudness_old;
+		if (loudness < ATHAdjustLimit)
+		    loudness = ATHAdjustLimit;
+	    }
 	    gfc->ATH.adjust[ch] = loudness;
 	    for (i = 0; i < gfc->npart_l; i++)
 		adjATH[i] = gfc->ATH.cb[i] * loudness;
