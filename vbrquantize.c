@@ -349,7 +349,7 @@ VBR_noise_shapping (lame_global_flags *gfp,
 
   bits = 0; 
   for (gr = 0; gr < gfc->mode_gr; gr++) {
-    if (convert_mdct)
+    if (gfc->mode_ext==MPG_MD_MS_LR) 
       ms_convert(xr[gr],xr[gr]);
     for (ch = 0; ch < gfc->stereo; ch++) { 
       FLOAT8 xr34[576];

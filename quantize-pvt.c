@@ -5,33 +5,7 @@
 #include "quantize-pvt.h"
 
 FLOAT masking_lower=1;
-int convert_mdct, reduce_sidechannel;
-/*
-mt 5/99.  These global flags denote 4 possibilities:
-                                                                mode    l3_xmin
-1   MDCT input L/R, quantize L/R,   psy-model thresholds: L/R   -m s     either
-2   MDCT input L/R, quantize M/S,   psy-model thresholds: L/R   -m j     orig
-3   MDCT input M/S, quantize M/S,   psy-model thresholds: M/S   -m f     either
-4   MDCT input L/R, quantize M/S,   psy-model thresholds: M/S   -m j -h  m/s
-
-1:  convert_mdct = 0, convert_psy=0,  reduce_sidechannel=0          
-2:  convert_mdct = 1, convert_psy=1,  reduce_sidechannel=1
-3:  convert_mdct = 0, convert_psy=0,  reduce_sidechannel=1   (this mode no longer used)
-4:  convert_mdct = 1, convert_psy=0,  reduce_sidechannel=1
-
-if (convert_mdct), then iteration_loop will quantize M/S data from
-the L/R input MDCT coefficients.
-
-if (convert_psy), then calc_noise will compute the noise for the L/R
-channels from M/S MDCT data and L/R psy-model threshold information.
-Distortion in ether L or R channel will be marked as distortion in
-both Mid and Side channels.  
-NOTE: 3/00: this mode has been removed.  
-
-if (reduce_sidechannel) then outer_loop will allocate less bits
-to the side channel and more bits to the mid channel based on relative 
-energies.
-*/
+int reduce_sidechannel;
 
 
 const int slen1_tab[16] = { 0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4 };
@@ -184,10 +158,8 @@ iteration_init( lame_global_flags *gfp,III_side_info_t *l3_side, int l3_enc[2][2
   }
 
 
-  convert_mdct=0;
   reduce_sidechannel=0;
   if (gfc->mode_ext==MPG_MD_MS_LR) {
-    convert_mdct = 1;
     reduce_sidechannel=1;
   }
   

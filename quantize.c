@@ -71,7 +71,7 @@ iteration_loop( lame_global_flags *gfp,
   for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
     int targ_bits[2];
 
-    if (convert_mdct) 
+    if (gfc->mode_ext==MPG_MD_MS_LR) 
       ms_convert(xr[gr], xr[gr]);
     
     max_bits=on_pe(gfp,pe,l3_side,targ_bits,mean_bits, gr);
@@ -260,7 +260,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
 #endif
 
     /* copy data to be quantized into xr */
-    if (convert_mdct)
+    if (gfc->mode_ext==MPG_MD_MS_LR) 
 	ms_convert(xr[gr],xr[gr]);
 
     for (ch = 0; ch < num_chan; ch++) { 
