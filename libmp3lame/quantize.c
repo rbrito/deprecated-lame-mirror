@@ -50,7 +50,7 @@ extern float calc_sfb_noise_3DN(lame_t gfc, int j, int bw, int sf);
 extern float xrmax_MMX(float *start, float *end);
 #endif
 
-static const int max_range_short[SBMAX_s*3] = {
+static const char max_range_short[SBMAX_s*3] = {
     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
     7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
     0, 0, 0
@@ -630,7 +630,7 @@ static int
 inc_subblock_gain(gr_info * const gi, FLOAT distort[])
 {
     int sfb, subwin;
-    const int *tab = max_range_short;
+    const char *tab = max_range_short;
     if (gi->sfb_lmax) {	/* mixed_block. */
 	/* subbloc_gain can't do anything in the long block region */
 	for (sfb = 0; sfb < gi->sfb_lmax; sfb++)
