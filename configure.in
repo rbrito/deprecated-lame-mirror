@@ -401,10 +401,10 @@ AC_MSG_CHECKING(use of mpg123 decoder)
 AC_ARG_ENABLE(decoder, 
   [  --disable-decoder          Exclude mpg123 decoder],
   CONFIG_DECODER="${enableval}", CONFIG_DECODER="yes")
-AC_ARG_ENABLE(decode-layer1, 
+AC_ARG_ENABLE(decoder-layer1, 
   [  --disable-decoder-layer1   Exclude layer1 decoding],
   CONFIG_DECODER_L1="${enableval}", CONFIG_DECODER_L1="no")
-AC_ARG_ENABLE(decode-layer2, 
+AC_ARG_ENABLE(decoder-layer2, 
   [  --disable-decoder-layer2   Exclude layer2 decoding],
   CONFIG_DECODER_L2="${enableval}", CONFIG_DECODER_L2="yes")
 
