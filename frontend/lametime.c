@@ -48,6 +48,10 @@
 
 #include "lametime.h"
 
+#ifndef CLOCKS_PER_SEC
+# warning "Your system does not define CLOCKS_PER_SEC, guessing one..."
+# define CLOCKS_PER_SEC 1000000
+#endif
 
 double GetCPUTime ( void )
 {
