@@ -117,7 +117,7 @@ void lame_usage(char *name)  /* print syntax & exit */
   fprintf(stderr,"\n");
   fprintf(stderr,"    -h              use (maybe) quality improvements\n");
   fprintf(stderr,"    -f              fast mode (low quality)\n");
-  fprintf(stderr,"    -k              disable sfb=21 cutoff\n");
+  fprintf(stderr,"    -k              keep ALL frequencies (disables all filters)\n");
   fprintf(stderr,"    -d              allow channels to have different blocktypes\n");
   fprintf(stderr,"  --athonly         only use the ATH for masking\n");
   fprintf(stderr,"  --noath           disable the ATH for masking\n");

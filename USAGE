@@ -97,7 +97,7 @@ Quality related:
 
 -m m/s/j/f     mode selection
 -f             disable psycho-acoustics.  Encoding much faster but lower quality
--k             disable scalefactor band 21 cutoff
+-k             disable all filtering
 -d             allow block types to differ between channels
 -h             higher quality but slower
 -b  n          set bitrate (8,16,24,...,320)
@@ -310,12 +310,13 @@ sfb=21 cutoff
 =======================================================================
 -k   
 
-At 128kbs and less, LAME will remove data in scalefactor band 21.
-This amounts to a low pass 16kHz filter.  -k will disable this
-feature.  However, these coefficients can take up a lot of bits that
-would be better used for lower, more important frequencies.
-Furthermore, the MPEG standard does not allow scalefactors or
-use psycho-acoustic information for this band.
+keep all frequencies.  (Disable all filters)
+
+Without -k, LAME will automatically apply various types of lowpass
+filters.  This is because the high frequency coefficients can take up
+a lot of bits that would be better used for lower, more important
+frequencies.
+
 
 
 
