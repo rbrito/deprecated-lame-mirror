@@ -53,16 +53,17 @@
 static int quantize_xrpow(const FLOAT *xp, gr_info *gi)
 {
     /* quantize on xr^(3/4) instead of xr */
-    int sfb;
+    int sfb = 0;
     fi_union *fi = (fi_union *)gi->l3_enc;
 
-    for (sfb = 0; sfb < gi->psymax; sfb++) {
+    do {
 	const FLOAT *xe = xp + gi->width[sfb];
 	FLOAT istep
 	    = IPOW20(gi->global_gain
 		     - ((gi->scalefac[sfb] + (gi->preflag ? pretab[sfb] : 0))
 			<< (gi->scalefac_scale + 1))
 		     - gi->subblock_gain[gi->window[sfb]] * 8);
+	sfb++;
 	do {
 #ifdef TAKEHIRO_IEEE754_HACK
 	    double x0 = istep * xp[0] + MAGIC_FLOAT;
@@ -92,7 +93,7 @@ static int quantize_xrpow(const FLOAT *xp, gr_info *gi)
 	    (fi++)->i = (int)(x2 + adj43[rx2]);
 #endif
 	} while (xp < xe);
-    }
+    } while (fi < (fi_union *)&gi->l3_enc[576]);
     return 0;
 }
 
