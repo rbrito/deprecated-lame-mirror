@@ -18,5 +18,6 @@ EXTRA_DIST =
 	REG.H \
 	UIDS.H \
 	dshow.dsp \
+	dshow.dsw \
 	iaudioprops.h \
 	resource.h 
