@@ -471,7 +471,7 @@ int  lame_encode_mp3_frame (				// Output
 	iteration_loop( gfp, ms_ener_ratio, masking);
 	break;
     case vbr:
-	VBR_iteration_loop( gfp, ms_ener_ratio, masking);
+	VBR_iteration_loop( gfp, masking);
 	break;
     case abr:
 	ABR_iteration_loop( gfp, ms_ener_ratio, masking);

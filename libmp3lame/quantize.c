@@ -1655,7 +1655,6 @@ VBR_noise_shaping(
 void 
 VBR_iteration_loop (
     lame_global_flags *gfp,
-    FLOAT             ms_ener_ratio[2],
     III_psy_ratio ratio[2][2]
     )
 {
