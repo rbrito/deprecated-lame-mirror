@@ -722,6 +722,25 @@ void outer_loop(
 	}
 	notdone = !status;
     }
+    /* check to see if the last scalefactor band is distorted
+     * in VBR mode we can't get rid of the distortion, we
+     * don't have a scalefactor to color it
+     * (makes a 10% speed increase, the files I tested were
+     * binary identical, 2000/05/20 Robert.Hegemann@gmx.de)
+     */
+    if (gfp->VBR)
+      {
+        if (cod_info->block_type == SHORT_TYPE)
+          {
+            if ((distort[1][SBMAX_s-1] > 0)
+	      ||(distort[2][SBMAX_s-1] > 0)
+	      ||(distort[3][SBMAX_s-1] > 0)) notdone=0;
+          }
+        else
+          {
+            if (distort[0][SBMAX_l-1] > 0) notdone=0;
+          }
+      }
   }    /* done with main iteration */
 
   memcpy(cod_info,&save_cod_info,sizeof(save_cod_info));
