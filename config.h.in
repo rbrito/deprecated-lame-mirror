@@ -180,9 +180,6 @@
 /* build with libsndfile support */
 #undef LIBSNDFILE
 
-/* use MMX version of choose_table */
-#undef MMX_choose_table
-
 /* no debug build */
 #undef NDEBUG
 

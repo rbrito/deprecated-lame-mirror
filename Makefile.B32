@@ -98,13 +98,12 @@ frontend_obj = $(frontend_sources:.c=.obj)
 lib_obj = $(lib_sources:.c=.obj)
 
 !ifdef NASM
-CC_SWITCHES = $(CC_SWITCHES) -DHAVE_NASM -DMMX_choose_table
+CC_SWITCHES = $(CC_SWITCHES) -DHAVE_NASM
 
 lib_obj = $(lib_obj) libmp3lame/i386/cpu_feat.obj \
 	libmp3lame/i386/choose_table.obj \
 	libmp3lame/i386/fft3dn.obj \
-#	libmp3lame/i386/fftsse.obj \
-#	libmp3lame/i386/fftfpu.obj 
+	libmp3lame/i386/quantSSE.obj
 
 !endif
 

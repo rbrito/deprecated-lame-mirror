@@ -425,9 +425,9 @@ DLL_OBJ = $(dll_sources:.c=.obj)
                                 
 CC_SWITCHES = $(CC_SWITCHES) /DHAVE_NASM
 ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/cpu_feat.obj
-
-
 ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/fft3dn.obj
+ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/quantSSE.obj
+ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/choose_table.obj
 
 #	not yet coded
 #CC_SWITCHES = $(CC_SWITCHES) /DUSE_FFTSSE
@@ -439,20 +439,6 @@ ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/fft3dn.obj
 #______________________________________________________________________ NASM __
 
 
-
-#__ MMX _______________________________________________________________________
-#
-#	you need NASM but *not necessarily* a processor with MMX
-#	The above CPU feature detection code allows to run the same
-#	binary on a CPU without MMX too!
-#
-!	IF "$(ASM)" == "YES"
-!	IF "$(MMX)" == "YES"
-CC_SWITCHES = $(CC_SWITCHES) /DMMX_choose_table
-ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/choose_table.obj
-!	ENDIF
-!	ENDIF
-#_______________________________________________________________________ MMX __
 
 !	MESSAGE
 

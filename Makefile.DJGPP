@@ -136,10 +136,7 @@ ASFLAGS=-f win32 -DWIN32 -i libmp3lame/i386/
 ifeq ($(HAVE_NASM),YES)
 ## have NASM
 CC_SWITCHES += -DHAVE_NASM
-lib_obj += libmp3lame/i386/cpu_feat.o
-
-## use MMX extension. you need nasm and MMX supported CPU.
-CC_SWITCHES += -DMMX_choose_table
+lib_obj += libmp3lame/i386/cpu_feat.o libmp3lame/i386/quantSSE.o
 lib_obj += libmp3lame/i386/choose_table.o libmp3lame/i386/fft3dn.o
 endif
 

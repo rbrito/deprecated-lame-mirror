@@ -508,21 +508,9 @@ ifeq ($(HAVE_NASM),YES)
 ## have NASM
 CC_SWITCHES += -DHAVE_NASM
 lib_obj += libmp3lame/i386/cpu_feat.o
-
-## use MMX extension. you need nasm and MMX supported CPU.
-CC_SWITCHES += -DMMX_choose_table
 lib_obj += libmp3lame/i386/choose_table.o
-
-## use 3DNow! extension. you need nasm and 3DNow! supported CPU.
 lib_obj += libmp3lame/i386/fft3dn.o
-
-## not yet coded
-#CC_SWITCHES += -DUSE_FFTSSE
-#lib_obj += libmp3lame/i386/fftsse.o
-
-## not yet coded
-#CC_SWITCHES += -DUSE_FFTFPU
-#lib_obj += libmp3lame/i386/fftfpu.o
+lib_obj += libmp3lame/i386/quantSSE.o
 endif
 
 

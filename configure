@@ -27124,10 +27124,6 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
 
-cat >>confdefs.h <<\_ACEOF
-#define MMX_choose_table 1
-_ACEOF
-
 	else
 		include_asm_routines="no"
 		NASM="no"
