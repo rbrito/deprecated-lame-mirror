@@ -529,6 +529,8 @@ int count_bits(lame_global_flags *gfp,int *ix, FLOAT8 *xr, gr_info *cod_info)
   if (cod_info->block_type==SHORT_TYPE) {
     cod_info->table_select[0] = choose_table_short(ix, ix + 36, &bits);
     cod_info->table_select[1] = choose_table_short(ix + 36, ix + 576, &bits);
+    cod_info->big_values=576;
+    cod_info->count1=576;
   }else{
     bits=count_bits_long(ix, cod_info);
   }
@@ -680,13 +682,13 @@ scfsi_calc(int ch,
     int sfb;
     gr_info *gi = &l3_side->gr[1].ch[ch].tt;
 
-    const int scfsi_band[5] = { 0, 6, 11, 16, 21 };
+    static const int scfsi_band[5] = { 0, 6, 11, 16, 21 };
 
-    const int slen1_n[16] = { 0, 1, 1, 1, 8, 2, 2, 2, 4, 4, 4, 8, 8, 8,16,16 };
-    const int slen2_n[16] = { 0, 2, 4, 8, 1, 2, 4, 8, 2, 4, 8, 2, 4, 8, 4, 8 };
+    static const int slen1_n[16] = { 0, 1, 1, 1, 8, 2, 2, 2, 4, 4, 4, 8, 8, 8,16,16 };
+    static const int slen2_n[16] = { 0, 2, 4, 8, 1, 2, 4, 8, 2, 4, 8, 2, 4, 8, 4, 8 };
 
-    const int slen1_tab[16] = { 0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4 };
-    const int slen2_tab[16] = { 0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3 };
+    static const int slen1_tab[16] = { 0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4 };
+    static const int slen2_tab[16] = { 0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3 };
 
     for (i = 0; i < 4; i++) 
 	l3_side->scfsi[ch][i] = 0;

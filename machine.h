@@ -23,10 +23,6 @@
 #ifndef MACHINE_H_INCLUDED
 #define MACHINE_H_INCLUDED
 
-#if	defined hpux
-#define	_POSIX_SOURCE
-#endif
-
 #include        <stdio.h>
 #include        <string.h>
 #include        <math.h>

@@ -152,7 +152,6 @@ encodeMainData( lame_global_flags *gfp,
 {
     int i, gr, ch, sfb, window;
 
-
     for ( gr = 0; gr < gfp->mode_gr; gr++ )
 	for ( ch = 0; ch < gfp->stereo; ch++ )
 	    scaleFactorsPH[gr][ch]->part->nrEntries = 0;
@@ -648,12 +647,14 @@ Huffmancodebits( BF_PartHolder **pph, int *ix, gr_info *gi )
     assert( (gi->count1table_select < 2) );
     count1End = gi->count1;
     assert( count1End <= 576 );
+
     for ( i = bigvalues; i < count1End; i += 4 )
     {
 	v = ix[i];
 	w = ix[i+1];
 	x = ix[i+2];
 	y = ix[i+3];
+
 	bitsWritten += L3_huffman_coder_count1( pph, &ht[gi->count1table_select + 32], v, w, x, y );
     }
 #ifdef DEBUG
@@ -710,18 +711,19 @@ L3_huffman_coder_count1( BF_PartHolder **pph, struct huffcodetab *h, int v, int 
     p = h->table[p];
 
     if ( v )
-	p = p*2 + v;
+	p = p*2 + signv;
 
     if ( w )
-	p = p*2 + w;
+	p = p*2 + signw;
 
     if ( x )
-	p = p*2 + x;
+	p = p*2 + signx;
 
     if ( y )
-	p = p*2 + y;
+	p = p*2 + signy;
 
     *pph = BF_addEntry(*pph, p, len);
+
     return len;
 }
 

@@ -289,8 +289,8 @@ int InitVbrTag(Bit_stream_struc* pBs,int nVersion, int nMode, int SampIndex)
 	*/
 	{
 	int tot;
-	int framesize[3]={208,192,288};  /* 64kbs MPEG1 or MPEG2  framesize */
-	/* int framesize[3]={156,144,216}; */ /* 48kbs framesize */
+	static const int framesize[3]={208,192,288};  /* 64kbs MPEG1 or MPEG2  framesize */
+	/* static int framesize[3]={156,144,216}; */ /* 48kbs framesize */
 	
 	if (SampIndex>2) {
 	  fprintf(stderr,"illegal sampling frequency index\n");

@@ -312,9 +312,9 @@ VBR_iteration_loop_new (lame_global_flags *gfp,
 	    vbrsf.s[sfb][i] -= vbrmax;
 	  }
 	}
-	cod_info->scalefac_scale == 0;
+	cod_info->scalefac_scale = 0;
 	if (compute_scalefacs_short(vbrsf.s,cod_info,scalefac[gr][ch].s) > 0) {
-	  cod_info->scalefac_scale == 1;
+	  cod_info->scalefac_scale = 1;
 	  if (compute_scalefacs_short(vbrsf.s,cod_info,scalefac[gr][ch].s) >0) {
 	    /* what do we do now? */
 	    exit(32);
@@ -325,9 +325,9 @@ VBR_iteration_loop_new (lame_global_flags *gfp,
 	  vbrsf.l[sfb] -= vbrmax;
 
 	/* can we get away with scalefac_scale=0? */
-	cod_info->scalefac_scale == 0;
+	cod_info->scalefac_scale = 0;
 	if (compute_scalefacs_long(vbrsf.l,cod_info,scalefac[gr][ch].l) > 0) {
-	  cod_info->scalefac_scale == 1;
+	  cod_info->scalefac_scale = 1;
 	  if (compute_scalefacs_long(vbrsf.l,cod_info,scalefac[gr][ch].l) >0) {
 	    /* what do we do now? */
 	    exit(32);

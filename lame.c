@@ -498,7 +498,7 @@ void lame_init_params(lame_global_flags *gfp)
  ************************************************************************/
 void lame_print_config(lame_global_flags *gfp)
 {
-  char *mode_names[4] = { "stereo", "j-stereo", "dual-ch", "single-ch" };
+  static const char *mode_names[4] = { "stereo", "j-stereo", "dual-ch", "single-ch" };
   FLOAT out_samplerate=gfp->out_samplerate/1000.0;
   FLOAT in_samplerate = gfp->resample_ratio*out_samplerate;
   FLOAT compression=
@@ -613,7 +613,7 @@ int mf_size,char *mp3buf, int mp3buf_size)
   static FLOAT8 ms_ratio[2]={0,0};
   FLOAT8 ms_ratio_next=0;
   FLOAT8 ms_ratio_prev=0;
-  FLOAT8 ms_ener_ratio[2]={0,0};
+  static FLOAT8 ms_ener_ratio[2]={0,0};
 
   memset((char *) masking_ratio, 0, sizeof(masking_ratio));
   memset((char *) masking_MS_ratio, 0, sizeof(masking_MS_ratio));
