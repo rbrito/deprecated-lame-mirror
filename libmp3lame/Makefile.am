@@ -64,3 +64,14 @@ noinst_HEADERS= \
 	tables.h \
 	util.h \
 	version.h
+
+CLEANFILES = lclint.txt
+
+LCLINTFLAGS= +posixlib +showsummary +showalluses +whichlib +forcehints
+
+lclint.txt: ${libmp3lame_la_SOURCES} ${noinst_HEADERS}
+	@lclint ${LCLINTFLAGS} ${INCLUDES} ${DEFS} ${libmp3lame_la_SOURCES} 2>&1 >lclint.txt || true
+
+lclint: lclint.txt
+	more lclint.txt
+
