@@ -86,13 +86,12 @@ protected:
 	DWORD GetNumberEncodingFormats() const;
 	bool IsSmartOutput(const int frequency, const int bitrate, const int channels) const;
 	void BuildBitrateTable();
-	void FlushBitrateTable();
 
 	HMODULE my_hModule;
 	HICON   my_hIcon;
 	ADbg    my_debug;
 	AEncodeProperties my_EncodingProperties;
-	std::vector<bitrate_item *> bitrate_table;
+	std::vector<bitrate_item> bitrate_table;
 
 	static char VersionString[20];
 };

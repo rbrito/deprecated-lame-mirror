@@ -102,7 +102,7 @@ ACMStream::~ACMStream()
 	}
 }
 
-bool ACMStream::init(const int nSamplesPerSec, const int nOutputSamplesPerSec, const int nChannels, const int nAvgBytesPerSec)
+bool ACMStream::init(const int nSamplesPerSec, const int nOutputSamplesPerSec, const int nChannels, const int nAvgBytesPerSec, const vbr_mode mode)
 {
 	bool bResult = false;
 
@@ -110,6 +110,7 @@ bool ACMStream::init(const int nSamplesPerSec, const int nOutputSamplesPerSec, c
 	my_OutBytesPerSec = nOutputSamplesPerSec;
 	my_Channels       = nChannels;
 	my_AvgBytesPerSec = nAvgBytesPerSec;
+	my_VBRMode = mode;
 
 	bResult = true;
 
@@ -137,7 +138,30 @@ bool ACMStream::open(const AEncodeProperties & the_Properties)
 	else
 		lame_set_mode( gfp, (MPEG_mode_e)the_Properties.GetChannelModeValue()) ; /// \todo Get the mode from the default configuration
 
-	lame_set_VBR( gfp, vbr_off ); /// \note VBR not supported for the moment
+//	lame_set_VBR( gfp, vbr_off ); /// \note VBR not supported for the moment
+	lame_set_VBR( gfp, my_VBRMode ); /// \note VBR not supported for the moment
+	
+	if (my_VBRMode == vbr_abr)
+	{
+		lame_set_VBR_q( gfp, 1 );
+
+		lame_set_VBR_mean_bitrate_kbps( gfp, (my_AvgBytesPerSec * 8 + 500) / 1000 );
+
+		if (24000 > lame_get_in_samplerate( gfp ))
+		{
+			// For MPEG-II
+			lame_set_VBR_min_bitrate_kbps( gfp, 8);
+
+			lame_set_VBR_max_bitrate_kbps( gfp, 160);
+		}
+		else
+		{
+			// For MPEG-I
+			lame_set_VBR_min_bitrate_kbps( gfp, 32);
+
+			lame_set_VBR_max_bitrate_kbps( gfp, 320);
+		}
+	}
 
 	// Set bitrate
 	lame_set_brate( gfp, my_AvgBytesPerSec * 8 / 1000 );
@@ -267,7 +291,12 @@ lame_close( gfp );
 
 DWORD ACMStream::GetOutputSizeForInput(const DWORD the_SrcLength) const
 {
-	double OutputInputRatio = double(my_AvgBytesPerSec) / double(my_OutBytesPerSec * 2);
+	double OutputInputRatio;
+
+	if (my_VBRMode == vbr_off)
+		OutputInputRatio = double(my_AvgBytesPerSec) / double(my_OutBytesPerSec * 2);
+	else // reserve the space for 320 kbps
+		OutputInputRatio = 40000.0 / double(my_OutBytesPerSec * 2);
 
 	OutputInputRatio *= 1.15; // allow 15% more
 
@@ -311,7 +340,7 @@ int dwSamples;
 
 	result = a_StreamHeader->cbDstLengthUsed <= a_StreamHeader->cbDstLength;
 
-	my_debug->OutPut(DEBUG_LEVEL_FUNC_CODE, "UsedSize = %d / EncodedSize = %d, result = %d", InSize, OutSize, result);
+	my_debug->OutPut(DEBUG_LEVEL_FUNC_CODE, "UsedSize = %d / EncodedSize = %d, result = %d (%d <= %d)", InSize, OutSize, result, a_StreamHeader->cbDstLengthUsed, a_StreamHeader->cbDstLength);
 
 if (my_debug != NULL)
 {

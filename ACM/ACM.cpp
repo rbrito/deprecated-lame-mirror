@@ -103,15 +103,15 @@ static const int FORMAT_MAX_NB_PCM =
 		SIZE_FREQ_MPEG2); // number of MPEG 2 sampling freq
 
 //////////////////////////////////////////////////////////////////////
-// 
+//
 //////////////////////////////////////////////////////////////////////
 bool bitrate_item::operator<(const bitrate_item & other_bitrate) const
 {
 	return (other_bitrate.frequency < frequency ||
-				 (other_bitrate.frequency == frequency &&
-					(other_bitrate.bitrate < bitrate || 
-					(other_bitrate.bitrate == bitrate &&
-	         (other_bitrate.channels < channels)))));
+		    (other_bitrate.frequency == frequency &&
+			 (other_bitrate.bitrate < bitrate ||
+			  (other_bitrate.bitrate == bitrate &&
+			   (other_bitrate.channels < channels)))));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -254,7 +254,7 @@ ACM::~ACM()
 // not used, it's done automatically when closing the driver	if (my_hIcon != NULL)
 //		CloseHandle(my_hIcon);
 
-	FlushBitrateTable();
+	bitrate_table.clear();
 
 	my_debug.OutPut(DEBUG_LEVEL_FUNC_START, "ACM Deleted (0x%08X)",this);
 }
@@ -891,10 +891,13 @@ inline DWORD ACM::OnStreamOpen(LPACMDRVSTREAMINSTANCE a_StreamInstance)
 
 						if (the_stream != NULL)
 						{
+							MPEGLAYER3WAVEFORMAT * casted = (MPEGLAYER3WAVEFORMAT *) a_StreamInstance->pwfxDst;
+							vbr_mode a_mode = (casted->fdwFlags-2 == 0)?vbr_abr:vbr_off;
 							if (the_stream->init(a_StreamInstance->pwfxDst->nSamplesPerSec,
 												 OutputFrequency,
 												 a_StreamInstance->pwfxDst->nChannels,
-												 a_StreamInstance->pwfxDst->nAvgBytesPerSec ))
+												 a_StreamInstance->pwfxDst->nAvgBytesPerSec,
+												 a_mode))
 								Result = MMSYSERR_NOERROR;
 							else
 								ACMStream::Erase( the_stream );
@@ -1138,25 +1141,26 @@ void ACM::GetMP3FormatForIndex(const DWORD the_Index, WAVEFORMATEX & the_Format,
 	
 		the_Format.nBlockAlign = 1;
 
-		the_Format.nSamplesPerSec = bitrate_table[the_Index]->frequency;
-		the_Format.nAvgBytesPerSec = bitrate_table[the_Index]->bitrate * 1000 / 8;
-		if (bitrate_table[the_Index]->frequency >= mpeg1_freq[SIZE_FREQ_MPEG1-1])
+		the_Format.nSamplesPerSec = bitrate_table[the_Index].frequency;
+		the_Format.nAvgBytesPerSec = bitrate_table[the_Index].bitrate * 1000 / 8;
+		if (bitrate_table[the_Index].frequency >= mpeg1_freq[SIZE_FREQ_MPEG1-1])
 			Block_size = 1152;
 		else
 			Block_size = 576;
 	
-		the_Format.nChannels = bitrate_table[the_Index]->channels;
+		the_Format.nChannels = bitrate_table[the_Index].channels;
 
 		the_Format.cbSize = sizeof(MPEGLAYER3WAVEFORMAT) - sizeof(WAVEFORMATEX);
 		MPEGLAYER3WAVEFORMAT * tmpFormat = (MPEGLAYER3WAVEFORMAT *) &the_Format;
 		tmpFormat->wID             = 1;
-		tmpFormat->fdwFlags        = 2;
+		// this is the only way I found to know if we do CBR or ABR
+		tmpFormat->fdwFlags        = 2 + ((bitrate_table[the_Index].mode == vbr_abr)?0:2);
 		tmpFormat->nBlockSize      = Block_size * the_Format.nAvgBytesPerSec / the_Format.nSamplesPerSec;
 		tmpFormat->nFramesPerBlock = 1;
 		tmpFormat->nCodecDelay     = 0; // 0x0571 on FHG
 	
 		/// \todo : generate the string with the appropriate stereo mode
-		if (bitrate_table[the_Index]->mode == vbr_abr)
+		if (bitrate_table[the_Index].mode == vbr_abr)
 			wsprintfW( the_String, L"%d Hz, %d kbps ABR, %s", the_Format.nSamplesPerSec, the_Format.nAvgBytesPerSec * 8 / 1000, (the_Format.nChannels == 1)?L"Mono":L"Stereo");
 		else
 			wsprintfW( the_String, L"%d Hz, %d kbps CBR, %s", the_Format.nSamplesPerSec, the_Format.nAvgBytesPerSec * 8 / 1000, (the_Format.nChannels == 1)?L"Mono":L"Stereo");
@@ -1209,7 +1213,7 @@ void ACM::BuildBitrateTable()
 	// fill the table
 	unsigned int channel,bitrate,freq;
 	
-	FlushBitrateTable();
+	bitrate_table.clear();
 
 	// CBR bitrates
 	for (channel = 0;channel < SIZE_CHANNEL_MODE;channel++)
@@ -1230,7 +1234,7 @@ void ACM::BuildBitrateTable()
 					bitrate_table_tmp->bitrate = mpeg1_bitrate[bitrate];
 					bitrate_table_tmp->channels = channel+1;
 					bitrate_table_tmp->mode = vbr_off;
-					bitrate_table.push_back(bitrate_table_tmp);
+					bitrate_table.push_back(*bitrate_table_tmp);
 				}
 			}
 		}
@@ -1249,17 +1253,15 @@ void ACM::BuildBitrateTable()
 					bitrate_table_tmp->bitrate = mpeg2_bitrate[bitrate];
 					bitrate_table_tmp->channels = channel+1;
 					bitrate_table_tmp->mode = vbr_abr;
-					bitrate_table.push_back(bitrate_table_tmp);
+					bitrate_table.push_back(*bitrate_table_tmp);
 				}
 			}
 		}
 	}
 
-	// ABR bitrates
 	if (my_EncodingProperties.GetAbrOutputMode())
+	// ABR bitrates
 	{
-		unsigned int channel,bitrate,freq;
-		
 		for (channel = 0;channel < SIZE_CHANNEL_MODE;channel++)
 		{
 			// MPEG I
@@ -1279,7 +1281,7 @@ void ACM::BuildBitrateTable()
 						bitrate_table_tmp->bitrate = bitrate;
 						bitrate_table_tmp->channels = channel+1;
 						bitrate_table_tmp->mode = vbr_abr;
-						bitrate_table.push_back(bitrate_table_tmp);
+						bitrate_table.push_back(*bitrate_table_tmp);
 					}
 				}
 			}
@@ -1300,7 +1302,7 @@ void ACM::BuildBitrateTable()
 						bitrate_table_tmp->bitrate = bitrate;
 						bitrate_table_tmp->channels = channel+1;
 						bitrate_table_tmp->mode = vbr_abr;
-						bitrate_table.push_back(bitrate_table_tmp);
+						bitrate_table.push_back(*bitrate_table_tmp);
 					}
 				}
 			}
@@ -1310,16 +1312,17 @@ void ACM::BuildBitrateTable()
 	// sorting by frequency/bitrate/channel
 	std::sort(bitrate_table.begin(), bitrate_table.end());
 
+/*	{
+		// display test
+		int i=0;
+		for (i=0; i<bitrate_table.size();i++)
+		{
+			my_debug.OutPut("bitrate_table[%d].frequency = %d",i,bitrate_table[i].frequency);
+			my_debug.OutPut("bitrate_table[%d].bitrate = %d",i,bitrate_table[i].bitrate);
+			my_debug.OutPut("bitrate_table[%d].channel = %d",i,bitrate_table[i].channels);
+			my_debug.OutPut("bitrate_table[%d].ABR = %s\n",i,(bitrate_table[i].mode == vbr_abr)?"ABR":"CBR");
+		}
+	}*/
+
 	my_debug.OutPut("leaving BuildBitrateTable");
 }
-
-void ACM::FlushBitrateTable()
-{
-	while (bitrate_table.size() != 0)
-	{
-		bitrate_item * tmp_elt = bitrate_table.back();
-		delete tmp_elt;
-		bitrate_table.pop_back();
-	}
-}
-
