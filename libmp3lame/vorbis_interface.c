@@ -51,10 +51,12 @@ vorbis_block      vb;  // local working space for packet->PCM decode
 
 
 
-int lame_decode_ogg_initfile(FILE *fd,mp3data_struct *mp3data)
+int lame_decode_ogg_initfile( lame_global_flags*  gfp,
+                              FILE*               fd,
+                              mp3data_struct*     mp3data )
 {
 
-  
+  lame_internal_flags *gfc = gfp->internal_flags;
   char *buffer;
   int  bytes;
   int i;
@@ -78,7 +80,7 @@ int lame_decode_ogg_initfile(FILE *fd,mp3data_struct *mp3data)
   /* Get the first page. */
   if(ogg_sync_pageout(&oy,&og)!=1){
     /* error case.  Must not be Vorbis data */
-    ERRORF("Error initializing Ogg bitstream data.\n");
+    ERRORF( gfc, "Error initializing Ogg bitstream data.\n" );
     return -1;
   }
   
@@ -98,19 +100,19 @@ int lame_decode_ogg_initfile(FILE *fd,mp3data_struct *mp3data)
   vorbis_comment_init(&vc);
   if(ogg_stream_pagein(&os,&og)<0){ 
     /* error; stream version mismatch perhaps */
-    ERRORF("Error reading first page of Ogg bitstream data.\n");
+    ERRORF( gfc, "Error reading first page of Ogg bitstream data.\n" );
     return -1;
   }
   
   if(ogg_stream_packetout(&os,&op)!=1){ 
     /* no page? must not be vorbis */
-    ERRORF("Error reading initial header packet.\n");
+    ERRORF( gfc, "Error reading initial header packet.\n" );
     return -1;
   }
   
   if(vorbis_synthesis_headerin(&vi,&vc,&op)<0){ 
     /* error case; not a vorbis header */
-    ERRORF("This Ogg bitstream does not contain Vorbis "
+    ERRORF( gfc, "This Ogg bitstream does not contain Vorbis "
 	    "audio data.\n");
     return -1;
   }
@@ -142,7 +144,7 @@ int lame_decode_ogg_initfile(FILE *fd,mp3data_struct *mp3data)
 	  if(result==-1){
 	    /* Uh oh; data at some point was corrupted or missing!
 	       We can't tolerate that in a header.  Die. */
-	    ERRORF("Corrupt secondary header.  Exiting.\n");
+	    ERRORF( gfc, "Corrupt secondary header.  Exiting.\n" );
 	    return -1;
 	  }
 	  vorbis_synthesis_headerin(&vi,&vc,&op);
@@ -154,7 +156,7 @@ int lame_decode_ogg_initfile(FILE *fd,mp3data_struct *mp3data)
     buffer=ogg_sync_buffer(&oy,4096);
     bytes=fread(buffer,1,4096,fd);
     if(bytes==0 && i<2){
-      ERRORF("End of file before finding all Vorbis headers!\n");
+      ERRORF( gfc, "End of file before finding all Vorbis headers!\n" );
       return -1;
     }
     ogg_sync_wrote(&oy,bytes);
@@ -200,8 +202,13 @@ int lame_decode_ogg_initfile(FILE *fd,mp3data_struct *mp3data)
   0     ok, but need more data before outputing any samples
   n     number of samples output.  
 */
-int lame_decode_ogg_fromfile(FILE *fd,short int pcm_l[],short int pcm_r[],mp3data_struct *mp3data)
+int lame_decode_ogg_fromfile( lame_global_flags*  gfp,
+                              FILE*               fd,
+                              short int           pcm_l[],
+                              short int           pcm_r[],
+                              mp3data_struct*     mp3data )
 {
+  lame_internal_flags *gfc = gfp->internal_flags;
   int samples,result,i,j,eof=0,eos=0,bout=0;
   double **pcm;
 
@@ -256,7 +263,7 @@ int lame_decode_ogg_fromfile(FILE *fd,short int pcm_l[],short int pcm_r[],mp3dat
     if(result==0) {
       /* need more data */
     }else if (result==-1){ /* missing or corrupt data at this page position */
-      ERRORF("Corrupt or missing data in bitstream; "
+      ERRORF( gfc, "Corrupt or missing data in bitstream; "
 	      "continuing...\n");
     }else{
       /* decode this page */

@@ -84,9 +84,14 @@ int     lame_decode_fromfile(FILE * fd, short int pcm_l[], short int pcm_r[],
                              mp3data_struct * mp3data);
 
 /* and for Vorbis: */
-int     lame_decode_ogg_initfile(FILE * fd, mp3data_struct * mp3data);
-int     lame_decode_ogg_fromfile(FILE * fd, short int pcm_l[],
-                                 short int pcm_r[], mp3data_struct * mp3data);
+int     lame_decode_ogg_initfile( lame_global_flags*  gfp,
+                                  FILE*               fd,
+                                  mp3data_struct*     mp3data );
+int     lame_decode_ogg_fromfile( lame_global_flags*  gfc,
+                                  FILE*               fd,
+                                  short int           pcm_l[],
+                                  short int           pcm_r[],
+                                  mp3data_struct*     mp3data );
 
 
 static int read_samples_pcm(FILE * musicin, short sample_buffer[2304],
@@ -344,7 +349,11 @@ read_samples_ogg(lame_global_flags * const gfp,
     static const char type_name[] = "Ogg Vorbis file";
 
     out =
-        lame_decode_ogg_fromfile(musicin, oggpcm[0], oggpcm[1], &mp3input_data);
+        lame_decode_ogg_fromfile( gfp,
+                                  musicin,
+                                  oggpcm[0],
+                                  oggpcm[1],
+                                  &mp3input_data );
     /*
      * out < 0:  error, probably EOF
      * out = 0:  not possible with lame_decode_fromfile() ???
@@ -689,7 +698,9 @@ OpenSndFile(lame_global_flags * gfp, char *inPath)
             fprintf(stderr, "Could not find \"%s\".\n", lpszFileName);
             exit(1);
         }
-        if (-1 == lame_decode_ogg_initfile(musicin, &mp3input_data)) {
+        if ( -1 == lame_decode_ogg_initfile( gfp,
+                                             musicin,
+                                             &mp3input_data ) ) {
             fprintf(stderr, "Error reading headers in mp3 input file %s.\n",
                     lpszFileName);
             exit(1);
@@ -1347,7 +1358,9 @@ OpenSndFile(lame_global_flags * gfp, char *inPath)
     }
     else if (input_format == sf_ogg) {
 #ifdef HAVE_VORBIS
-        if (-1 == lame_decode_ogg_initfile(musicin, &mp3input_data)) {
+        if ( -1 == lame_decode_ogg_initfile( gfp,
+                                             musicin,
+                                             &mp3input_data ) ) {
             fprintf(stderr, "Error reading headers in ogg input file %s.\n",
                     inPath);
             exit(1);
