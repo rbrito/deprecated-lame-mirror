@@ -998,33 +998,24 @@ static FLOAT freq2bark(FLOAT freq)
 /* 
  *   The spreading function.  Values returned in units of energy
  */
-static FLOAT s3_func(FLOAT bark) {
-    FLOAT tempx,x,tempy,temp;
-    tempx = bark;
-    if (tempx>=0) tempx *= 3;
-    else tempx *=1.5;
+static FLOAT
+s3_func(FLOAT bark)
+{
+    FLOAT x, tempy;
+    bark *= 1.5;
+    if (bark >= 0.0)
+	bark += bark;
 
     x = 0.0;
-    if (0.5 <= tempx && tempx <= 2.5) {
-	temp = tempx - 0.5;
-	x = 8.0 * (temp*temp - 2.0 * temp);
-    }
-    tempx += 0.474;
-    tempy = 15.811389 + 7.5*tempx - 17.5*sqrt(1.0+tempx*tempx);
+    if (0.5 <= bark && bark <= 2.5)
+	x = 8.0 * ((bark-1.5)*(bark-1.5) - 1.0);
 
-    if (tempy <= -60.0) return  0.0;
+    bark += 0.474;
+    tempy = 15.811389 + 7.5*bark - 17.5*sqrt(1.0 + bark*bark) + x;
 
-    tempx = db2pow((x + tempy)); 
+    if (tempy <= -60.0) return 0.0;
 
-    /* Normalization.  The spreading function should be normalized so that:
-         +inf
-           /
-           |  s3 [ bark ]  d(bark)   =  1
-           /
-         -inf
-    */
-    tempx /= .6609193;
-    return tempx;
+    return db2pow(tempy);
 }
 
 static int
@@ -1157,7 +1148,7 @@ init_s3_values(
      */
     for (i = 0; i < npart; i++)
 	for (j = 0; j < npart; j++) 
-	    s3[i][j] = s3_func(bval[i] - bval[j]) * bval_width[j] * norm[i];
+	    s3[i][j] = s3_func(bval[i] - bval[j]) * norm[i] * 0.3;
 
     for (i = 0; i < npart; i++) {
 	for (j = 0; j < npart; j++) {
