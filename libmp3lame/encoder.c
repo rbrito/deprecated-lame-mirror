@@ -227,6 +227,18 @@ init_gr_info(
 	    }
 	}
 	cod_info->region1_count = SBMAX_l - 2 - cod_info->region0_count;
+    } else {
+	/* analog silence detection in pseudo sfb 22 */
+	if (gfc->scalefac_band.l[SBMAX_l-1] < 576-100) {
+	    int j0 = (576+gfc->scalefac_band.l[SBMAX_l-1])/2, j;
+	    FLOAT power = 0.0;
+	    for (j = j0; j < 576; j++)
+		power += cod_info->xr[j] * cod_info->xr[j];
+	    if (power < gfc->ATH.adjust * gfc->ATH.l[SBMAX_l-1]) {
+		for (j = j0; j < 576; j++)
+		    cod_info->xr[j] = 0;
+	    }
+	}
     }
     cod_info->count1bits          = 0;  
     cod_info->slen[0]             = 0;
