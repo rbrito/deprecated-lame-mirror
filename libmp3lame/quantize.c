@@ -1686,19 +1686,17 @@ VBR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    gr_info *gi = &gfc->l3_side.tt[gr][ch];
-	    if (!init_bitalloc(gfc, gi))
-		continue; /* digital silence */
-
-	    gi->global_gain = gfc->OldValue[ch];
-	    for (;;) {
-		int ret = VBR_noise_shaping(gfc, gi, xmin[gr][ch]);
-		if (ret == 0)
-		    break;
-		if (ret == -2)
-		    bitpressure_strategy(gi, xmin[gr][ch]);
+	    if (init_bitalloc(gfc, gi)) {
+		gi->global_gain = gfc->OldValue[ch];
+		for (;;) {
+		    int ret = VBR_noise_shaping(gfc, gi, xmin[gr][ch]);
+		    if (ret == 0)
+			break;
+		    if (ret == -2)
+			bitpressure_strategy(gi, xmin[gr][ch]);
+		}
+		gfc->OldValue[ch] = gi->global_gain;
 	    }
-
-	    gfc->OldValue[ch] = gi->global_gain;
 	    iteration_finish_one(gfc, gr, ch);
 	    used_bits += gi->part2_3_length + gi->part2_length;
 	    if (used_bits > max_frame_bits) {
