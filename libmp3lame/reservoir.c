@@ -36,7 +36,7 @@
   was set properly by the formatter
 */
 int
-ResvFrameBegin(context *gfc,III_side_info_t *l3_side, int mean_bits, int frameLength )
+ResvFrameBegin(lame_internal_flags *gfc,III_side_info_t *l3_side, int mean_bits, int frameLength )
 {
     int fullFrameBits;
     int resvLimit;
@@ -82,7 +82,7 @@ ResvFrameBegin(context *gfc,III_side_info_t *l3_side, int mean_bits, int frameLe
          extra_bits:  amount extra available from reservoir
   Mark Taylor 4/99
 */
-void ResvMaxBits(context *gfc, int mean_bits, int *targ_bits, int *extra_bits)
+void ResvMaxBits(lame_internal_flags *gfc, int mean_bits, int *targ_bits, int *extra_bits)
 {
   int add_bits,full_fac;
   *targ_bits = mean_bits ;
@@ -120,7 +120,7 @@ void ResvMaxBits(context *gfc, int mean_bits, int *targ_bits, int *extra_bits)
   the reservoir to reflect the granule's usage.
 */
 void
-ResvAdjust(context *gfc,gr_info *gi, III_side_info_t *l3_side, int mean_bits )
+ResvAdjust(lame_internal_flags *gfc,gr_info *gi, III_side_info_t *l3_side, int mean_bits )
 {
   gfc->ResvSize += (mean_bits / gfc->stereo) - gi->part2_3_length;
 #if 0
@@ -138,7 +138,7 @@ mean_bits/gfc->stereo-gi->part2_3_length,gfc->ResvSize);
   bits.
 */
 void
-ResvFrameEnd(context *gfc, III_side_info_t *l3_side, int mean_bits)
+ResvFrameEnd(lame_internal_flags *gfc, III_side_info_t *l3_side, int mean_bits)
 {
     int stuffingBits;
     int over_bits;

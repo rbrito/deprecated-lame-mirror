@@ -49,7 +49,7 @@
  ************************************************************************/
 
 static int 
-init_outer_loop (
+init_outer_loop(
           gr_info        * const cod_info, 
           III_scalefac_t * const scalefac, 
     const FLOAT8                 xr   [576], 
@@ -99,7 +99,7 @@ init_outer_loop (
 
     /*  fresh scalefactors are all zero
      */
-    memset (scalefac, 0, sizeof(III_scalefac_t));
+    memset(scalefac,0,sizeof(III_scalefac_t));
   
     /*  check if there is some energy we have to quantize
      *  and calculate xrpow matching our fresh scalefactors
@@ -134,8 +134,8 @@ typedef enum {
 } binsearchDirection_t;
 
 int 
-bin_search_StepSize (
-          context * const gfc,
+bin_search_StepSize(
+          lame_internal_flags * const gfc,
           gr_info * const cod_info,
     const int             desired_rate, 
     const int             start, 
@@ -153,7 +153,7 @@ bin_search_StepSize (
 
     do {
         cod_info->global_gain = StepSize;
-        nBits = count_bits (gfc, l3enc, xrpow, cod_info);  
+        nBits = count_bits(gfc,l3enc,xrpow,cod_info);  
 
         if (CurrentStep == 1) break; /* nothing to adjust anymore */
     
@@ -203,8 +203,8 @@ bin_search_StepSize (
  ***************************************************************************/ 
 
 int 
-inner_loop (
-          context * const gfc,
+inner_loop(
+          lame_internal_flags * const gfc,
           gr_info * const cod_info,
     const int             max_bits,
     const FLOAT8          xrpow [576],
@@ -212,11 +212,11 @@ inner_loop (
 {
     int bits;
     
-    assert (max_bits >= 0);
+    assert(max_bits >= 0);
 
     /*  scalefactors may have changed, so count bits
      */
-    bits = count_bits (gfc, l3enc, xrpow, cod_info);
+    bits=count_bits(gfc,l3enc,xrpow,cod_info);
 
     /*  increase quantizer stepsize until needed bits are below maximum
      */
@@ -243,7 +243,7 @@ inner_loop (
 
 INLINE 
 static int
-loop_break ( 
+loop_break( 
     const gr_info        * const cod_info,
     const III_scalefac_t * const scalefac ) 
 {
@@ -276,7 +276,7 @@ loop_break (
 
 INLINE 
 static int 
-quant_compare (
+quant_compare(
     const int                       experimentalX,
     const calc_noise_result * const best,
     const calc_noise_result * const calc )
@@ -365,8 +365,8 @@ quant_compare (
  *************************************************************************/
 
 static void 
-amp_scalefac_bands (
-    const context        * const gfc, 
+amp_scalefac_bands(
+    const lame_internal_flags        * const gfc, 
     const gr_info        * const cod_info, 
           III_scalefac_t * const scalefac,
           FLOAT8                 distort [4][SBMAX_l], 
@@ -376,7 +376,7 @@ amp_scalefac_bands (
   int start, end, l,i,j,sfb;
   FLOAT8 ifqstep34,distort_thresh;
 
-  if ( cod_info->scalefac_scale == 0 ) {
+  if (cod_info->scalefac_scale == 0) {
     ifqstep34 = 1.29683955465100964055; /* 2**(.75*.5)*/
   } else {
     ifqstep34 = 1.68179283050742922612;  /* 2**(.75*1) */
@@ -386,12 +386,12 @@ amp_scalefac_bands (
    * In that case, just amplify bands with distortion
    * within 95% of largest distortion/masking ratio */
   distort_thresh = -900;
-  for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
+  for (sfb = 0; sfb < cod_info->sfb_lmax; sfb++) {
     distort_thresh = Max(distort[0][sfb],distort_thresh);
   }
 
-  for ( sfb = cod_info->sfb_smin; sfb < 12; sfb++ ) {
-    for ( i = 0; i < 3; i++ ) {
+  for (sfb = cod_info->sfb_smin; sfb < 12; sfb++) {
+    for (i = 0; i < 3; i++ ) {
       distort_thresh = Max(distort[i+1][sfb],distort_thresh);
     }
   }
@@ -404,11 +404,11 @@ amp_scalefac_bands (
     int asfb = -1,ablk=0,astart=0,aend=0;
     FLOAT8 max_dist = 0;
 
-    for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
+    for (sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
       start = gfc->scalefac_band.l[sfb];
       end   = gfc->scalefac_band.l[sfb+1];
     
-      if ( distort[0][sfb]>distort_thresh  ) {
+      if (distort[0][sfb]>distort_thresh  ) {
         if (distort[0][sfb]-distort_thresh > max_dist) {
           max_dist = distort[0][sfb]-distort_thresh;
           asfb = sfb;
@@ -426,10 +426,10 @@ amp_scalefac_bands (
 
     max_dist = 0;
     asfb = -1;
-    for ( j=0,sfb = cod_info->sfb_smin; sfb < 12; sfb++ ) {
+    for (j=0,sfb = cod_info->sfb_smin; sfb < 12; sfb++ ) {
       start = gfc->scalefac_band.s[sfb];
       end   = gfc->scalefac_band.s[sfb+1];
-      for ( i = 0; i < 3; i++ ) {
+      for (i = 0; i < 3; i++ ) {
 	if ( distort[i+1][sfb]>distort_thresh) {
 	  if (distort[i+1][sfb]>max_dist) {
 	    max_dist = distort[i+1][sfb];
@@ -581,7 +581,7 @@ amp_scalefac_bands (
  
 static void
 inc_scalefac_scale (
-    const context        * const gfc, 
+    const lame_internal_flags        * const gfc, 
           gr_info        * const cod_info, 
           III_scalefac_t * const scalefac,
           FLOAT8                 xrpow[576] )
@@ -634,7 +634,7 @@ inc_scalefac_scale (
  
 static int 
 inc_subblock_gain (
-    const context        * const gfc,
+    const lame_internal_flags        * const gfc,
           gr_info        * const cod_info,
           III_scalefac_t * const scalefac,
           FLOAT8                 xrpow[576] )
@@ -712,7 +712,7 @@ inc_subblock_gain (
 INLINE
 static int 
 balance_noise (
-    const context        * const gfc,
+    const lame_internal_flags        * const gfc,
           gr_info        * const cod_info,
           III_scalefac_t * const scalefac, 
           FLOAT8                 distort[4][SBMAX_l],
@@ -792,7 +792,7 @@ balance_noise (
 
 static int 
 outer_loop (
-          context        * const gfc,
+          lame_internal_flags        * const gfc,
           gr_info        * const cod_info,
     const FLOAT8                 xr[576],   /* magnitudes of spectral values */
     const III_psy_xmin   * const l3_xmin,   /* allowed distortion of the scalefactor */
@@ -1000,7 +1000,7 @@ outer_loop (
 
 static void 
 iteration_finish (
-    context * const gfc,
+    lame_internal_flags * const gfc,
     FLOAT8          xr      [2][2][576],
     int             l3_enc  [2][2][576],
     III_psy_ratio   ratio   [2][2],  
@@ -1063,7 +1063,7 @@ iteration_finish (
  
 static int 
 VBR_prepare (
-          context * const gfc,
+          lame_internal_flags * const gfc,
           FLOAT8          pe            [2][2],
           FLOAT8          ms_ener_ratio [2], 
           FLOAT8          xr            [2][2][576],
@@ -1118,7 +1118,7 @@ VBR_prepare (
  
 static void
 VBR_encode_granule (
-          context        * const gfc,
+          lame_internal_flags        * const gfc,
           gr_info        * const cod_info,
           FLOAT8                 xr[576],     /* magnitudes of spectral values */
     const III_psy_xmin   * const l3_xmin,     /* allowed distortion of the scalefactor */
@@ -1219,7 +1219,7 @@ VBR_encode_granule (
 
 static void 
 get_framebits (
-    context * const gfc,
+    lame_internal_flags * const gfc,
     int     * const analog_mean_bits,
     int     * const min_mean_bits,
     int             frameBits[15] )
@@ -1261,7 +1261,7 @@ get_framebits (
 INLINE
 static int 
 calc_min_bits (
-    const context * const gfc,
+    const lame_internal_flags * const gfc,
     const gr_info * const cod_info,
     const int             pe,
     const FLOAT8          ms_ener_ratio, 
@@ -1324,7 +1324,7 @@ calc_min_bits (
 INLINE
 static int 
 calc_max_bits (
-    const context * const gfc,
+    const lame_internal_flags * const gfc,
     const int             frameBits[15],
     const int             min_bits )
 {
@@ -1357,7 +1357,7 @@ calc_max_bits (
 
 void 
 VBR_iteration_loop (
-    context * const    gfc, 
+    lame_internal_flags * const    gfc, 
     FLOAT8             pe           [2][2],
     FLOAT8             ms_ener_ratio[2], 
     FLOAT8             xr           [2][2][576],
@@ -1542,7 +1542,7 @@ VBR_iteration_loop (
 
 static void 
 calc_target_bits (
-    context * const gfc,
+    lame_internal_flags * const gfc,
     FLOAT8               pe            [2][2],
     FLOAT8               ms_ener_ratio [2],
     int                  targ_bits     [2][2],
@@ -1644,7 +1644,7 @@ calc_target_bits (
 
 void ABR_iteration_loop 
 (
-    context * const    gfc, 
+    lame_internal_flags * const    gfc, 
     FLOAT8             pe           [2][2],
     FLOAT8             ms_ener_ratio[2], 
     FLOAT8             xr           [2][2][576],
@@ -1735,7 +1735,7 @@ void ABR_iteration_loop
 
 void iteration_loop 
 (
-    context * const    gfc, 
+    lame_internal_flags * const    gfc, 
     FLOAT8             pe           [2][2],
     FLOAT8             ms_ener_ratio[2],  
     FLOAT8             xr           [2][2][576],

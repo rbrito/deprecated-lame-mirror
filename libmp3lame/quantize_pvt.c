@@ -156,7 +156,7 @@ FLOAT8 adj43[PRECALC_SIZE];
 /*  initialization for iteration_loop */
 /************************************************************************/
 void
-iteration_init( context * const gfc )
+iteration_init( lame_internal_flags * const gfc )
 {
   III_side_info_t * const l3_side = &gfc->l3_side;
   int i;
@@ -342,7 +342,7 @@ void ms_convert(FLOAT8 xr[2][576],FLOAT8 xr_org[2][576])
  * allocate bits among 2 channels based on PE
  * mt 6/99
  ************************************************************************/
-int on_pe(context *gfc,FLOAT8 pe[2][2],III_side_info_t *l3_side,
+int on_pe(lame_internal_flags *gfc,FLOAT8 pe[2][2],III_side_info_t *l3_side,
 int targ_bits[2],int mean_bits, int gr)
 {
   gr_info *cod_info;
@@ -452,7 +452,7 @@ void reduce_side(int targ_bits[2],FLOAT8 ms_ener_ratio,int mean_bits,int max_bit
   returns number of sfb's with energy > ATH
 */
 int calc_xmin( 
-        const context       * const gfc,
+        const lame_internal_flags       * const gfc,
         const FLOAT8                xr [576],
         const III_psy_ratio * const ratio,
 	const gr_info       * const cod_info, 
@@ -552,7 +552,7 @@ int calc_xmin(
 /*************************************************************************/
 /*  mt 5/99:  Function: Improved calc_noise for a single channel   */
 int calc_noise( 
-        const context           * const gfc,
+        const lame_internal_flags           * const gfc,
         const FLOAT8                    xr [576],
         const int                       ix [576],
         const gr_info           * const cod_info,
@@ -719,7 +719,7 @@ int calc_noise(
 
 static
 void set_pinfo (
-        const context        * const gfc,
+        const lame_internal_flags        * const gfc,
         const gr_info        * const cod_info,
         const III_psy_ratio  * const ratio, 
         const III_scalefac_t * const scalefac,
@@ -911,7 +911,7 @@ void set_pinfo (
  ************************************************************************/
 
 void set_frame_pinfo( 
-        context * const gfc,
+        lame_internal_flags * const gfc,
         FLOAT8          xr       [2][2][576],
         III_psy_ratio   ratio    [2][2],  
         int             l3_enc   [2][2][576],

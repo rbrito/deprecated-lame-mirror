@@ -536,7 +536,7 @@ compute_scalefacs_long(int sf[SBPSY_l],gr_info *cod_info,int scalefac[SBPSY_l])
 
 static int
 VBR_quantize_granule( 
-          context        * const gfc,
+          lame_internal_flags        * const gfc,
           FLOAT8                 xr34[576], 
           int                    l3_enc[576],
     const III_psy_ratio  * const ratio,  
@@ -588,7 +588,7 @@ static const int MAX_SF_DELTA = 4;
 
 static int 
 short_block_vbr_sf (
-    const context        * const gfc,
+    const lame_internal_flags        * const gfc,
     const III_psy_xmin   * const l3_xmin,
     const FLOAT8                 xr34_orig[576],
     const FLOAT8                 xr34     [576],
@@ -627,7 +627,7 @@ short_block_vbr_sf (
 
 static int 
 long_block_vbr_sf (
-    const context        * const gfc,
+    const lame_internal_flags        * const gfc,
     const III_psy_xmin   * const l3_xmin,
     const FLOAT8                 xr34_orig[576],
     const FLOAT8                 xr34     [576],
@@ -667,7 +667,7 @@ long_block_vbr_sf (
 
 static void 
 short_block_scalefacs (
-    const context        * const gfc,
+    const lame_internal_flags        * const gfc,
           gr_info        * const cod_info,
           III_scalefac_t * const scalefac,
           III_scalefac_t * const vbrsf,
@@ -758,7 +758,7 @@ short_block_scalefacs (
 
 static void 
 long_block_scalefacs (
-    const context        * const gfc,
+    const lame_internal_flags        * const gfc,
           gr_info        * const cod_info,
           III_scalefac_t * const scalefac,
           III_scalefac_t * const vbrsf,
@@ -788,17 +788,10 @@ long_block_scalefacs (
             maxover0 = v0;
         if (maxover1 < v1)
             maxover1 = v1;
-#if 1 /* I think this was intended, RH */ 
         if (maxover0p < v0p)
             maxover0p = v0p;
         if (maxover1p < v1p)
             maxover1p = v1p;
-#else /* but keep compatible for now */
-        if (maxover0 < v0p)
-            maxover0p = v0p; else maxover0p = maxover0;
-        if (maxover1 < v1p)
-            maxover1p = v1p; else maxover1p = maxover1;
-#endif
     }
 
     mover = Min (maxover0, maxover0p);
@@ -886,7 +879,7 @@ static FLOAT8 calc_fac ( const int ifac )
 
 static void
 short_block_xr34 ( 
-    const context        * const gfc,
+    const lame_internal_flags        * const gfc,
     const gr_info        * const cod_info,
     const III_scalefac_t * const scalefac, 
     const FLOAT8                 xr34_orig[576],
@@ -918,7 +911,7 @@ short_block_xr34 (
 
 static void 
 long_block_xr34 ( 
-    const context        * const gfc,
+    const lame_internal_flags        * const gfc,
     const gr_info        * const cod_info,
     const III_scalefac_t * const scalefac, 
     const FLOAT8                 xr34_orig[576],
@@ -974,7 +967,7 @@ long_block_xr34 (
  ************************************************************************/
 static int
 VBR_noise_shaping (
-    context * const    gfc,
+    lame_internal_flags * const    gfc,
     FLOAT8             xr       [576], 
     FLOAT8             xr34orig [576],
     III_psy_ratio     *ratio,
@@ -1065,7 +1058,7 @@ VBR_noise_shaping (
  
 int
 VBR_noise_shaping2 (
-    context        * const gfc,
+    lame_internal_flags        * const gfc,
     FLOAT8                 xr       [576], 
     FLOAT8                 xr34orig [576],
     III_psy_ratio  * const ratio,
@@ -1145,7 +1138,7 @@ VBR_noise_shaping2 (
 
 
 void
-VBR_quantize(context * const gfc,
+VBR_quantize(lame_internal_flags * const gfc,
                 FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
                 FLOAT8 xr[2][2][576], III_psy_ratio ratio[2][2],
                 int l3_enc[2][2][576],

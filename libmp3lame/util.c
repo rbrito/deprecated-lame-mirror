@@ -41,7 +41,7 @@
 *
 ***********************************************************************/
 /*empty and close mallocs in gfc */
-void freegfc(context *gfc)   /* bit stream structure */
+void freegfc(lame_internal_flags *gfc)   /* bit stream structure */
 {
    int i;
    for (i=0 ; i<2*BPC+1 ; ++i)
@@ -157,7 +157,7 @@ FLOAT8 freq2cbw(FLOAT8 freq)
 /***********************************************************************
  * compute bitsperframe and mean_bits for a layer III frame 
  **********************************************************************/
-void getframebits(context *const gfc, int *bitsPerFrame, int *mean_bits) 
+void getframebits(lame_internal_flags *const gfc, int *bitsPerFrame, int *mean_bits) 
 {
   int  whole_SpF;  /* integral number of Slots per Frame without padding */
   int  bit_rate;
@@ -338,7 +338,7 @@ int gcd ( int i, int j )
 
 
 int  fill_buffer_resample (
-        context * const  gfc,
+        lame_internal_flags * const  gfc,
         sample_t* const  outbuf,
         const int        desired_len,
         const sample_t*  inbuf,
@@ -563,7 +563,7 @@ int has_SIMD (void)
  *
  ***********************************************************************/
  
-void updateStats( context * const gfc )
+void updateStats( lame_internal_flags * const gfc )
 {
     assert ( gfc->bitrate_index < 16u );
     assert ( gfc->mode_ext      <  4u );
@@ -646,7 +646,7 @@ scalar_t   scalar20;
 scalar_t   scalar64;
 scalarn_t  scalar;
 
-void init_scalar_functions ( const context * const  gfc )
+void init_scalar_functions ( lame_internal_flags *gfc )
 {
     scalar4  = std_scalar4;
     scalar8  = std_scalar8;

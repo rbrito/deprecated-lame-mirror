@@ -313,7 +313,7 @@ static int choose_table_nonMMX(
 */
 
 
-int count_bits_long(context * const gfc, const int ix[576], gr_info * const gi)
+int count_bits_long(lame_internal_flags * const gfc, const int ix[576], gr_info * const gi)
 {
     int i, a1, a2;
     int bits = 0;
@@ -399,7 +399,7 @@ int count_bits_long(context * const gfc, const int ix[576], gr_info * const gi)
 
 
 int count_bits(
-          context * const gfc, 
+          lame_internal_flags * const gfc, 
           int     * const ix,
     const FLOAT8  * const xr,
           gr_info * const cod_info)  
@@ -430,7 +430,7 @@ int count_bits(
 
 INLINE void
 recalc_divide_init(
-    const context * const gfc,
+    const lame_internal_flags * const gfc,
           gr_info         cod_info,
           int     * const ix,
           int             r01_bits[],
@@ -472,7 +472,7 @@ recalc_divide_init(
 
 INLINE void
 recalc_divide_sub(
-    const context * const gfc,
+    const lame_internal_flags * const gfc,
     const gr_info         cod_info2,
           gr_info * const gi,
     const int     * const ix,
@@ -512,7 +512,7 @@ recalc_divide_sub(
 
 
 void best_huffman_divide(
-    const context * const gfc,
+    const lame_internal_flags * const gfc,
     const int             gr, 
     const int             ch,
           gr_info * const gi,
@@ -657,7 +657,7 @@ Only call this routine after final scalefactors have been
 chosen and the channel/granule will not be re-encoded.
  */
 void best_scalefac_store(
-    const context * const gfc,
+    const lame_internal_flags * const gfc,
     const int             gr,
     const int             ch,
           int             l3_enc[2][2][576],
@@ -966,7 +966,7 @@ int scale_bitcount_lsf(
 
 
 
-void huffman_init(context * const gfc)
+void huffman_init(lame_internal_flags * const gfc)
 {
     int i;
 

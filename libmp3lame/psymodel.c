@@ -41,7 +41,7 @@
 
 #define NSFIRLEN 21
 
-int L3para_read( context * const gfc,
+int L3para_read( lame_internal_flags * const gfc,
 		  FLOAT8 sfreq, int numlines[CBANDS],int numlines_s[CBANDS], 
 		  FLOAT8 minval[CBANDS], 
 		  FLOAT8 s3_l[CBANDS][CBANDS],
@@ -54,7 +54,7 @@ int L3para_read( context * const gfc,
 		  int *, int *, int *, int *);
 
 /* addition of simultaneous masking   Naoki Shibata 2000/7 */
-INLINE FLOAT8 mask_add(FLOAT8 m1,FLOAT8 m2,int k,int b, context * const gfc)
+INLINE FLOAT8 mask_add(FLOAT8 m1,FLOAT8 m2,int k,int b, lame_internal_flags * const gfc)
 {
   static const FLOAT8 table1[] = {
     3.3246 *3.3246 ,3.23837*3.23837,3.15437*3.15437,3.00412*3.00412,2.86103*2.86103,2.65407*2.65407,2.46209*2.46209,2.284  *2.284  ,
@@ -107,7 +107,7 @@ INLINE FLOAT8 mask_add(FLOAT8 m1,FLOAT8 m2,int k,int b, context * const gfc)
   return (m1+m2)*table1[i];
 }
 
-int L3psycho_anal( context * const gfc,
+int L3psycho_anal( lame_internal_flags * const gfc,
                     sample_t *buffer[2],int gr_out , 
                     FLOAT8 *ms_ratio,
                     FLOAT8 *ms_ratio_next,
@@ -1285,7 +1285,7 @@ int L3psycho_anal( context * const gfc,
 
 
 
-int L3para_read(context * const gfc, FLOAT8 sfreq, int *numlines_l,int *numlines_s, 
+int L3para_read(lame_internal_flags * const gfc, FLOAT8 sfreq, int *numlines_l,int *numlines_s, 
 FLOAT8 *minval,
 FLOAT8 s3_l[CBANDS][CBANDS], FLOAT8 s3_s[CBANDS][CBANDS],
 FLOAT8 *SNR, 

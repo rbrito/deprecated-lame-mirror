@@ -710,8 +710,7 @@ INLINE static void mdct_long(FLOAT8 *out, FLOAT8 *in)
 }
 
 
-
-void mdct_sub48( context *gfc, sample_t *w0, sample_t *w1, 
+void mdct_sub48( lame_internal_flags *gfc, sample_t *w0, sample_t *w1, 
                  FLOAT8 mdct_freq[2][2][576] )
 {
     int gr, k, ch;
