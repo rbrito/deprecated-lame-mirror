@@ -149,8 +149,9 @@ typedef struct	{
 			BOOL			bWriteVBRHeader;	// WRITE XING VBR HEADER (TRUE/FALSE)
 			BOOL			bEnableVBR;			// USE VBR ENCODING (TRUE/FALSE)
 			INT				nVBRQuality;		// VBR QUALITY 0..9
+			DWORD			dwVbrAbr_bps;		// Use ABR in stead of nVBRQuality
 
-			BYTE			btReserved[255];	// FUTURE USE, SET TO 0
+			BYTE			btReserved[255-sizeof(DWORD)];	// FUTURE USE, SET TO 0
 
 			} LHV1;					// LAME header version 1
 

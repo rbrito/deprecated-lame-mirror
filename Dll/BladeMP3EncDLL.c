@@ -26,26 +26,70 @@
 #include "lame.h"
 #include "util.h"
 
-#ifdef _DEBUG
-	#define _DEBUGDLL 1
-#endif
-
+#define _RELEASEDEBUG 0
 
 const int MAJORVERSION=1;
-const int MINORVERSION=12;
+const int MINORVERSION=14;
 
 
 // Local variables
 static int		nPsychoModel=2;
 static BOOL		bFirstFrame=TRUE;
 static DWORD	dwSampleBufferSize=0;
+static HANDLE	gs_hModule=NULL;
+static BOOL gs_bLogFile=FALSE;
 
-
-#ifdef _DEBUGDLL
 void dump_config( char *inPath, char *outPath);
-#endif
 
 lame_global_flags gf;
+
+
+void DebugPrintf(const char* pzFormat, ...)
+{
+    char	szBuffer[1024]={'\0',};
+	char	szFileName[MAX_PATH+1]={'\0',};
+    va_list ap;
+
+	// Get the full module file name
+	GetModuleFileName(gs_hModule,szFileName,sizeof(szFileName));
+
+	// change file name extention
+	szFileName[strlen(szFileName)-3]='t';
+	szFileName[strlen(szFileName)-2]='x';
+	szFileName[strlen(szFileName)-1]='t';
+
+	// start at beginning of the list
+	va_start(ap, pzFormat);
+
+	// copy it to the string buffer
+	_vsnprintf(szBuffer, sizeof(szBuffer), pzFormat, ap);
+
+	// log it to the file?
+	if (gs_bLogFile) 
+	{	
+        FILE* fp = NULL;
+		
+		// try to open the log file
+		fp=fopen(szFileName, "a+");
+
+		// check file open result
+        if (fp)
+		{
+			// write string to the file
+            fputs(szBuffer,fp);
+
+			// close the file
+            fclose(fp);
+        }
+    }
+
+#if defined _DEBUG || defined _RELEASEDEBUG
+    OutputDebugString(szBuffer);
+#endif
+
+	va_end(ap);
+}
+
 
 static void InitParams()
 {
@@ -286,9 +330,7 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 			break;
 			default:
 			{
-				char lpszError[255];
-				sprintf(lpszError,"Invalid lameConfig.format.LHV1.nMode, value is %d\n",lameConfig.format.LHV1.nMode);
-				OutputDebugString(lpszError);
+				DebugPrintf("Invalid lameConfig.format.LHV1.nMode, value is %d\n",lameConfig.format.LHV1.nMode);
 				return BE_ERR_INVALID_FORMAT_PARAMETERS;
 			}
 		}
@@ -321,6 +363,20 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 		// Set Maxbitrate, if specified
 		if (lameConfig.format.LHV1.dwMaxBitrate>0)
 			gf.VBR_max_bitrate_kbps=lameConfig.format.LHV1.dwMaxBitrate;
+
+		// Use ABR?
+		if (lameConfig.format.LHV1.dwVbrAbr_bps>0)
+		{
+			// set VBR to ABR
+			gf.VBR = vbr_abr; 
+
+			// calculate to kbps
+			gf.VBR_mean_bitrate_kbps = ( lameConfig.format.LHV1.dwVbrAbr_bps + 500 ) / 1000;
+			// limit range
+			gf.VBR_mean_bitrate_kbps = Min(gf.VBR_mean_bitrate_kbps,320); 
+			gf.VBR_mean_bitrate_kbps = Max(gf.VBR_mean_bitrate_kbps,8); 
+		}
+
 	}
 	
 	// Set copyright flag?
@@ -376,9 +432,8 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 	*dwBufferSize=1.25*(*dwSamples/gf.num_channels) + 7200;
 
 
-#ifdef _DEBUGDLL
+	// For debugging purposes
 	dump_config(gf.inPath,gf.outPath);
-#endif
 
 	// Everything went OK, thus return SUCCESSFUL
 	return BE_ERR_SUCCESSFUL;
@@ -501,89 +556,81 @@ BOOL APIENTRY DllMain(HANDLE hModule,
                       DWORD  ul_reason_for_call, 
                       LPVOID lpReserved)
 {
+	gs_hModule=hModule;
+
     switch( ul_reason_for_call )
 	{
 		case DLL_PROCESS_ATTACH:
-#ifdef _DEBUGDLL
-			OutputDebugString("Attach Process \n");
-#endif
+			// Enable debug/logging?
+			gs_bLogFile=GetPrivateProfileInt("Debug","WriteLogFile",gs_bLogFile,"lame_enc.ini");
+//			DebugPrintf("Attach Process \n");
 		break;
 		case DLL_THREAD_ATTACH:
-#ifdef _DEBUGDLL
-			OutputDebugString("Attach Thread \n");
-#endif
+//			DebugPrintf("Attach Thread \n");
 		break;
 		case DLL_THREAD_DETACH:
-#ifdef _DEBUGDLL
-			OutputDebugString("Detach Thread \n");
-#endif
+//			DebugPrintf("Detach Thread \n");
 		break;
 		case DLL_PROCESS_DETACH:
-#ifdef _DEBUGDLL
-			OutputDebugString("Detach Process \n");
-#endif
+//			DebugPrintf("Detach Process \n");
 		break;
     }
     return TRUE;
 }
 
 
-#ifdef _DEBUGDLL
 void dump_config( char *inPath, char *outPath)
 {
-  	char strTmp[255];
+	DebugPrintf("\n\nLame_enc configuration options:\n");
+	DebugPrintf("==========================================================\n");
 
-	OutputDebugString("Encoding configuration:\n");
+	DebugPrintf("version                =%d\n",gf.version);
+	DebugPrintf("Layer                  =3\n");
+	DebugPrintf("mode                   =");
+	switch (gf.mode)
+	{
+		case 0:DebugPrintf("Stereo\n");break;
+		case 1:DebugPrintf("Joint-Stereo\n");break;
+		case 2:DebugPrintf("Dual-Channel\n");break;
+		case 3:DebugPrintf("Mono\n");break;
+		default:DebugPrintf("Error (unknown)\n");break;
+	}
 
-
-	sprintf(strTmp,"Write VBR Header=%s\n",(gf.bWriteVbrTag)?"Yes":"No");
-	OutputDebugString(strTmp);
-
-	sprintf(strTmp,"version=%d\n",gf.version);
-	OutputDebugString(strTmp);
-
-
-	sprintf(strTmp,"Layer=3   mode=%d  \n",gf.mode);
-	OutputDebugString(strTmp);
-
-
-	sprintf(strTmp,"samp frq=%.1f kHz   total bitrate=%d kbps\n",gf.in_samplerate/1000.0);
-	OutputDebugString(strTmp);
-
-	sprintf(strTmp,"de-emph=%d   c/right=%d   orig=%d   errprot=%s\n",gf.emphasis, gf.copyright, gf.original,((gf.error_protection) ? "on" : "off"));
-	OutputDebugString(strTmp);
-
-//	sprintf(strTmp,"16 Khz cut off is %s\n",(0)?"enabled":"disabled");
-//	OutputDebugString(strTmp);
-
-	sprintf(strTmp,"Fast mode is %s\n",(gf.quality==9)?"enabled":"disabled");
-	OutputDebugString(strTmp);
-
-	sprintf(strTmp,"Force ms %s\n",(gf.force_ms)?"enabled":"disabled");
-	OutputDebugString(strTmp);
-
-//	sprintf(strTmp,"GPsycho acoustic model is %s\n",(gpsycho)?"enabled":"disabled");
-//	OutputDebugString(strTmp);
-
-	sprintf(strTmp,"VBR is %s, VBR_q value is  %d, VBR method is:",(gf.VBR!=vbr_off)?"enabled":"disabled",gf.VBR_q);
-	OutputDebugString(strTmp);
+	DebugPrintf("sampling frequency     =%.1f kHz\n",gf.in_samplerate/1000.0);
+	DebugPrintf("bitrate                =%d kbps\n",gf.brate);
+	DebugPrintf("Vbr Min bitrate        =%d kbps\n",gf.VBR_min_bitrate_kbps);
+	DebugPrintf("Vbr Max bitrate        =%d kbps\n",gf.VBR_max_bitrate_kbps);
+	DebugPrintf("Quality Setting        =%d\n",gf.quality);
+	DebugPrintf("Low pass frequency     =%d\n",gf.lowpassfreq);
+	DebugPrintf("High pass frequency    =%d\n",gf.highpassfreq);
+	DebugPrintf("No Short Blocks        =%s\n",(gf.no_short_blocks)?"yes":"no");
+	DebugPrintf("de-emphasis            =%d\n",gf.emphasis);
+	DebugPrintf("copyright flag         =%d\n",gf.copyright);
+	DebugPrintf("original flag          =%d\n",gf.original);
+	DebugPrintf("CRC                    =%s\n",(gf.error_protection) ? "on" : "off");
+//	DebugPrintf("16 Khz cut off is %s\n",(0)?"enabled":"disabled");
+	DebugPrintf("Fast mode              =%s\n",(gf.quality==9)?"enabled":"disabled");
+	DebugPrintf("Force mid/side stereo  =%s\n",(gf.force_ms)?"enabled":"disabled");
+//	DebugPrintf("GPsycho acoustic model =%s\n",(gpsycho)?"enabled":"disabled");
+	DebugPrintf("VBR                    =%s, VBR_q =%d, VBR method =",(gf.VBR!=vbr_off)?"enabled":"disabled",gf.VBR_q);
 
 	switch (gf.VBR)
 	{
-		case vbr_off: OutputDebugString("vbr_off\n");	break;
-		case vbr_mt : OutputDebugString("vbr_mt \n");	break;
-		case vbr_rh : OutputDebugString("vbr_rh \n");	break;
-		case vbr_abr: OutputDebugString("vbr_abr\n");	break;
+		case vbr_off: DebugPrintf("vbr_off\n");	break;
+		case vbr_mt : DebugPrintf("vbr_mt \n");	break;
+		case vbr_rh : DebugPrintf("vbr_rh \n");	break;
+		case vbr_abr: 
+			DebugPrintf(" vbr_abr (average bitrate %d kbps)\n",gf.VBR_mean_bitrate_kbps);
+		break;
+		default:
+			DebugPrintf("error, unknown VBR setting\n");
+		break;
 	}
 
-	sprintf(strTmp,"input file: '%s'   output file: '%s'\n", inPath, outPath);
-	OutputDebugString(strTmp);
-
-//	sprintf(strTmp,"Voice mode %s\n",(voice_mode)?"enabled":"disabled");
-//	OutputDebugString(strTmp);
-
-	sprintf(strTmp,"Encoding as %.1f kHz %d kbps MPEG-%d LayerIII file\n",gf.out_samplerate/1000.0,gf.brate,gf.mode,3 - gf.version);
-	OutputDebugString(strTmp);
+	DebugPrintf("Write VBR Header       =%s\n",(gf.bWriteVbrTag)?"Yes":"No");
+//	DebugPrintf("input file: '%s'   output file: '%s'\n", inPath, outPath);
+//	DebugPrintf("Voice mode %s\n",(voice_mode)?"enabled":"disabled");
+//	DebugPrintf("Encoding as %.1f kHz %d kbps MPEG-%d LayerIII file\n",gf.out_samplerate/1000.0,gf.brate,gf.mode,3 - gf.version);
 }
 
 
@@ -592,4 +639,3 @@ void DispErr(LPSTR strErr)
 	MessageBox(NULL,strErr,"",MB_OK);
 }
 
-#endif
