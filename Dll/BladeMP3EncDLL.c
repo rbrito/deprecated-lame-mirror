@@ -19,15 +19,17 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "machine.h"
 #include "BladeMP3EncDLL.h"
 #include <assert.h>
-#include "util.h"
-#include "version.h"
-#include "VbrTag.h"
+#include "version.h"  
+#include "VbrTag.h"   
 #include "lame.h"
+/*
 #include "get_audio.h"
 #include "globalflags.h"
+#include "machine.h"
+#include "util.h"
+*/
 
 #ifdef _DEBUG
 	#define _DEBUGDLL 1
@@ -54,11 +56,6 @@ void dump_config( char *inPath, char *outPath);
 #endif
 
 lame_global_flags *gfp;
-/*
-extern Bit_stream_struc   bs;
-extern III_side_info_t l3_side;
-extern frame_params fr_ps;
-*/
 
 static void InitParams()
 {
