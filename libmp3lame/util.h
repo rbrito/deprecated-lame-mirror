@@ -118,6 +118,16 @@ typedef struct  bit_stream_struc {
 #include "l3side.h"
 
 
+/* variables used for --nspsytune */
+typedef struct {
+  int   use; /* indicates the use of exp_nspsytune */
+  FLOAT last_en_subshort[4][9];
+  FLOAT last_attack_intensity[4][9];
+  FLOAT	last_thm[4][SBMAX_s][3];
+  int   last_attacks[4][3];
+} nsPsy_t;
+
+
 typedef struct  {
   /********************************************************************/
   /* internal variables NOT set by calling program, and should not be */
@@ -323,19 +333,18 @@ typedef struct  {
   /* functions to replace with CPU feature optimized versions in takehiro.c */
   int (*choose_table)(int *ix, int *end, int *s);
   
-  /* copied from lame_global_flags */
-  
-  /* variables used for --nspsytune */
-  int exp_nspsytune;
+
+  nsPsy_t nsPsy;  /* variables used for --nspsytune */
   
   unsigned crcvalue;
-
-  FLOAT ns_last_en_subshort[4][9];
-  FLOAT ns_last_attack_intensity[4][9];
-  FLOAT	ns_last_thm[4][SBMAX_s][3];
-  int ns_last_attacks[4][3];
+  
+  lame_global_flags *gfp;
+  
 } lame_internal_flags;
 
+typedef lame_internal_flags context;
+
+ 
 
 /***********************************************************************
 *

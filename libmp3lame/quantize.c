@@ -405,7 +405,7 @@ void amp_scalefac_bands
   else
     distort_thresh *= .95;
 
-  if (gfp->exp_nspsytune && (gfp->VBR == vbr_off || gfp->VBR == vbr_abr)) {
+  if (gfc->nsPsy.use && (gfp->VBR == vbr_off || gfp->VBR == vbr_abr)) {
     int asfb = -1,ablk=0,astart=0,aend=0;
     FLOAT8 max_dist = 0;
 

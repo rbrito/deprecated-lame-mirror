@@ -214,6 +214,8 @@ int lame_init_params ( lame_global_flags* const gfp )
     int                  j;
     lame_internal_flags* gfc = gfp -> internal_flags;
 
+    gfc -> gfp = gfp;
+    
     gfc -> lame_init_params_init = 0;
   
     gfc -> CPU_features_3DNow = has_3DNow ();
@@ -704,9 +706,7 @@ int lame_init_params ( lame_global_flags* const gfp )
   gfc->sfb21_extra = (gfp->VBR==vbr_rh || gfp->VBR==vbr_mtrh || gfp->VBR==vbr_mt)
                    &&(gfp->out_samplerate >= 32000);
   
-    gfc->exp_nspsytune = gfp->exp_nspsytune;
-    //^                    ^
-    // like swimmer and swimner
+    gfc->nsPsy.use = gfp->exp_nspsytune;
 
     /* estimate total frames.  */
     gfp->totalframes           = 2 + gfp->num_samples/(gfc->resample_ratio * gfp->framesize);

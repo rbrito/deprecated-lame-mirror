@@ -255,7 +255,7 @@ void init_fft(lame_internal_flags *gfc)
     FLOAT *window_s = &gfc->window_s[0];
     int i;
 
-    if (gfc->exp_nspsytune) {
+    if (gfc->nsPsy.use) {
       for (i = 0; i < BLKSIZE ; i++)
 	/* blackman window */
 	window[i] = 0.42-0.5*cos(2*PI*i/(BLKSIZE-1))+0.08*cos(4*PI*i/(BLKSIZE-1));

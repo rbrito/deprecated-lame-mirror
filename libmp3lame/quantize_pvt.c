@@ -231,7 +231,7 @@ FLOAT8 ATHmdct( lame_global_flags *gfp, FLOAT8 f )
     ath = ATHformula( f );
 	  
     /* convert to energy */
-    if (gfc->exp_nspsytune) {
+    if (gfc->nsPsy.use) {
         ath -= NSATHSCALE;
     } else {
 #ifdef KLEMM_01
@@ -493,12 +493,12 @@ int calc_xmin(
       }
       
       if (en0 > gfc->ATH_s[sfb]) ath_over++;
-      if (gfp->exp_nspsytune && gfp->VBR == vbr_off && gfp->quality <= 1) l3_xmin->s[sfb][b] *= 0.001;
+      if (gfc->nsPsy.use && gfp->VBR == vbr_off && gfp->quality <= 1) l3_xmin->s[sfb][b] *= 0.001;
     }
   }
 
   }else{
-    if (gfc->exp_nspsytune) {
+    if (gfc->nsPsy.use) {
       for ( sfb = 0; sfb < SBMAX_l; sfb++ ){
 	start = gfc->scalefac_band.l[ sfb ];
 	end   = gfc->scalefac_band.l[ sfb+1 ];
@@ -641,7 +641,7 @@ int calc_noise(
         end   = gfc->scalefac_band.l[ sfb+1 ];
         bw = end - start;
 
-	if (gfc->exp_nspsytune) {
+	if (gfc->nsPsy.use) {
 	  for ( sum = 0.0, l = start; l < end; l++ )
 	    {
 	      FLOAT8 temp;
@@ -831,7 +831,7 @@ void set_pinfo (
             bw = end - start;
             for ( en0 = 0.0, l = start; l < end; l++ ) 
                 en0 += xr[l] * xr[l];
-            if (!gfc->exp_nspsytune) en0/=bw;
+            if (!gfc->nsPsy.use) en0/=bw;
       /*
     DEBUGF("diff  = %f \n",10*log10(Max(ratio[gr][ch].en.l[sfb],1e-20))
                             -(10*log10(en0)+150));
