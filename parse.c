@@ -190,7 +190,6 @@ void lame_help ( lame_global_flags* gfp, const char* ProgramName )  /* print syn
   PRINTF1("                    do not support low bitrate mp3 (Apex AD600-A DVD/mp3 player)\n");
   PRINTF1("    -t              disable writing Xing VBR informational tag\n");
   PRINTF1("    --nohist        disable VBR histogram display\n");
-  PRINTF1("    --disptime<sec> time between display updates\n");
   PRINTF1("\n");
   PRINTF1("  MP3 header/stream options:\n");
   PRINTF1("    -e <emp>        de-emphasis n/5/c  (obsolete)\n");
@@ -530,7 +529,6 @@ void lame_parse_args ( lame_global_flags* gfp, int argc, char** argv )
     gfp -> silent        = 0;
     gfp -> brhist_disp   = 1;
     gfp -> id3v1_enabled = 1;
-    gfp -> display_update_interval = 2.0;
     id3tag_init (&gfp->tag_spec);
 
     /* process args */
@@ -640,12 +638,6 @@ void lame_parse_args ( lame_global_flags* gfp, int argc, char** argv )
 		
 		T_ELIF ("athonly")
 		    gfp->ATHonly=1;
-		
-		T_ELIF ("disptime")
-		    argUsed = 1;
-		    gfp->display_update_interval = atof (nextArg);
-		    if (gfp->display_update_interval <= 0.0)
-			gfp->display_update_interval = 10.;
 		
 		T_ELIF ("athlower")
 		    argUsed=1;
