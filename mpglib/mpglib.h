@@ -42,7 +42,7 @@ typedef struct mpstr_tag {
 	int bsnum;
 	real synth_buffs[2][2][0x110];
         int  synth_bo;
-        int  look_for_xing;
+        int  sync_bitstream;
 	
 } MPSTR, *PMPSTR;
 

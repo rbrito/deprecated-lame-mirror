@@ -47,7 +47,7 @@ BOOL InitMP3( PMPSTR mp)
 	mp->bsnum = 0;
 	wordpointer = mp->bsspace[mp->bsnum] + 512;
 	mp->synth_bo = 1;
-	mp->look_for_xing = 0;
+	mp->sync_bitstream = 1;
 
 	make_decode_tables(32767);
 
@@ -347,8 +347,9 @@ int decodeMP3( PMPSTR mp,unsigned char *in,int isize,char *out,
 	/* First decode header */
 	if(!mp->header_parsed) {
 
-	    if (mp->fsizeold==-1 || mp->look_for_xing) {
+	    if (mp->fsizeold==-1 || mp->sync_bitstream) {
 	        int vbrbytes;
+		mp->sync_bitstream=0;
 
 	        /* This is the very first call.   sync with anything */
 		/* bytes= number of bytes before header */
@@ -391,6 +392,7 @@ int decodeMP3( PMPSTR mp,unsigned char *in,int isize,char *out,
 		int size;
 		fprintf(stderr,"bitstream problem: resyncing...\n");
 		mp->old_free_format=0;
+                mp->sync_bitstream=1;
 		
 		/* skip some bytes, buffer the rest */
 		size = (int) (wordpointer - (mp->bsspace[mp->bsnum]+512));
