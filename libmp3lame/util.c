@@ -39,7 +39,68 @@ void freegfc(lame_internal_flags *gfc)   /* bit stream structure */
    free(gfc);
 }
 
+#ifdef KLEMM_01
 
+/* 
+ *  Klemm 1994 and 1997. Experimental data. Sorry, data looks a little bit
+ *  dodderly. Data below 30 Hz is extrapolated from other material, above 18
+ *  kHz the ATH is limited due to the original purpose (too much noise at
+ *  ATH is not good even if it's theoretically inaudible).
+ */
+
+double  ATHformula ( double freq )
+{
+    /* short [MilliBel] is also sufficient */
+    static float tab [] = {
+        /*    10.0 */  96.69, 96.69, 96.26, 95.12,
+        /*    12.6 */  93.53, 91.13, 88.82, 86.76,
+        /*    15.8 */  84.69, 82.43, 79.97, 77.48,
+        /*    20.0 */  74.92, 72.39, 70.00, 67.62,
+        /*    25.1 */  65.29, 63.02, 60.84, 59.00,
+        /*    31.6 */  57.17, 55.34, 53.51, 51.67,
+        /*    39.8 */  50.04, 48.12, 46.38, 44.66,
+        /*    50.1 */  43.10, 41.73, 40.50, 39.22,
+        /*    63.1 */  37.23, 35.77, 34.51, 32.81,
+        /*    79.4 */  31.32, 30.36, 29.02, 27.60,
+        /*   100.0 */  26.58, 25.91, 24.41, 23.01,
+        /*   125.9 */  22.12, 21.25, 20.18, 19.00,
+        /*   158.5 */  17.70, 16.82, 15.94, 15.12,
+        /*   199.5 */  14.30, 13.41, 12.60, 11.98,
+        /*   251.2 */  11.36, 10.57,  9.98,  9.43,
+        /*   316.2 */   8.87,  8.46,  7.44,  7.12,
+        /*   398.1 */   6.93,  6.68,  6.37,  6.06,
+        /*   501.2 */   5.80,  5.55,  5.29,  5.02,
+        /*   631.0 */   4.75,  4.48,  4.22,  3.98,
+        /*   794.3 */   3.75,  3.51,  3.27,  3.22,
+        /*  1000.0 */   3.12,  3.01,  2.91,  2.68,
+        /*  1258.9 */   2.46,  2.15,  1.82,  1.46,
+        /*  1584.9 */   1.07,  0.61,  0.13, -0.35,
+        /*  1995.3 */  -0.96, -1.56, -1.79, -2.35,
+        /*  2511.9 */  -2.95, -3.50, -4.01, -4.21,
+        /*  3162.3 */  -4.46, -4.99, -5.32, -5.35,
+        /*  3981.1 */  -5.13, -4.76, -4.31, -3.13,
+        /*  5011.9 */  -1.79,  0.08,  2.03,  4.03,
+        /*  6309.6 */   5.80,  7.36,  8.81, 10.22,
+        /*  7943.3 */  11.54, 12.51, 13.48, 14.21,
+        /* 10000.0 */  14.79, 13.99, 12.85, 11.93,
+        /* 12589.3 */  12.87, 15.19, 19.14, 23.69,
+        /* 15848.9 */  33.52, 48.65, 59.42, 61.77,
+        /* 19952.6 */  63.85, 66.04, 68.33, 70.09,
+        /* 25118.9 */  70.66, 71.27, 71.91, 72.60,
+    };
+    double    freq_log;
+    unsigned  index;
+    
+    if ( freq <    10. ) freq =    10.;
+    if ( freq > 25000. ) freq = 25000.;
+    
+    freq_log = 40. * log10 (0.1 * freq);   /* 4 steps per third, starting at 10 Hz */
+    index    = (unsigned) freq_log;
+    assert ( index < sizeof(tab)/sizeof(*tab) );
+    return tab [index] * (1 + index - freq_log) + tab [index+1] * (freq_log - index);
+}
+
+#else
 
 FLOAT8 ATHformula(FLOAT8 f)
 {
@@ -55,6 +116,7 @@ FLOAT8 ATHformula(FLOAT8 f)
   return ath;
 }
 
+#endif
 
 /* see for example "Zwicker: Psychoakustik, 1982; ISBN 3-540-11401-7 */
 FLOAT8 freq2bark(FLOAT8 freq)
