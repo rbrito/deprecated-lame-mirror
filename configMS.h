@@ -109,15 +109,11 @@ void acm_Free( void * mem);
 
 #ifdef HAVE_NASM
     #if (defined(__ICL) && (__ICL >= 450))
-        #define HAVE_INTRINSICS_SSE
+        #define HAVE_XMMINTRIN_H
     #elif defined(_MSC_VER)
         #include <malloc.h>
         #ifdef _mm_malloc
-            #define HAVE_INTRINSICS_SSE
+            #define HAVE_XMMINTRIN_H
         #endif
     #endif
-#endif
-
-#ifdef HAVE_INTRINSICS_SSE
-#define LAME_ALIGN(x) __declspec( align( x ) )
 #endif
