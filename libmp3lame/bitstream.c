@@ -660,11 +660,7 @@ encodeBitStream(lame_t gfc)
 	/* MPEG1 */
 	ptr += 7 - gfc->channels_out*2; /* private_bits */
 	for (ch = 0; ch < gfc->channels_out; ch++)
-	    ptr = writeheader(p,
-			      gfc->scfsi[ch][0]*8
-			      + gfc->scfsi[ch][1]*4
-			      + gfc->scfsi[ch][2]*2
-			      + gfc->scfsi[ch][3], 4, ptr);
+	    ptr = writeheader(p, gfc->scfsi[ch], 4, ptr);
 
 	for (gr = 0; gr < 2; gr++) {
 	    for (ch = 0; ch < gfc->channels_out; ch++) {

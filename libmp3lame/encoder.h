@@ -239,7 +239,7 @@ struct lame_internal_flags {
     /* side information */
     gr_info tt[MAX_GRANULES][MAX_CHANNELS];
     FLOAT maxXR[SFBMAX];
-    char scfsi[MAX_CHANNELS][4];
+    char scfsi[MAX_CHANNELS];
 
     /* precalculated width information */
     winfo_t w_long[SBMAX_l];

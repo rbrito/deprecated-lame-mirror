@@ -757,11 +757,12 @@ scfsi_calc(lame_t gfc, int ch)
 	    for (sfb = scfsi_band[i]; sfb < scfsi_band[i + 1]; sfb++) {
 		gi->scalefac[sfb] = SCALEFAC_SCFSI_FLAG;
 	    }
-	    s1 = gfc->scfsi[ch][i] = 1;
+	    s1 |= 8 >> i;
 	}
     }
 
     if (!s1) return;
+    gfc->scfsi[ch] = s1;
     s1 = c1 = 0;
     for (sfb = 0; sfb < 11; sfb++) {
 	if (gi->scalefac[sfb] == SCALEFAC_SCFSI_FLAG)
@@ -805,7 +806,7 @@ best_scalefac_store(lame_t gfc, int gr, int ch)
     gr_info *gi = &gfc->tt[gr][ch];
     int sfb, recalc = 0, j = 0;
 
-    memset(gfc->scfsi[ch], 0, sizeof(gfc->scfsi[ch]));
+    gfc->scfsi[ch] = 0;
     for (sfb = 0; sfb < gi->psymax; sfb++) {
 	int l = gi->wi[sfb].width;
 	int even = 0;
