@@ -43,7 +43,9 @@ int ix_max(const int *ix, const int *end);
 void quantize_sfb_3DN(const FLOAT *, int, int, int *);
 #endif
 
-#define LARGE_BITS	100000
+#define LARGE_BITS	(100000)
+#define SCALEFAC_SCFSI_FLAG    (-1)
+#define SCALEFAC_ANYTHING_GOES (-2)
 
 /*********************************************************************
  * XRPOW_FTOI is a macro to convert floats to ints.

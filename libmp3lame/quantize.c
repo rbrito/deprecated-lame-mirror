@@ -1197,7 +1197,7 @@ inline static int
 find_scalefac(lame_t gfc, int j, FLOAT xmin, int bw, FLOAT maxXR,
 	      int sfmin, int sf)
 {
-    int sf_ok = 10000, delsf = 8, endflag = 0;
+    int sf_ok = sfmin, delsf = 8, endflag = 0;
 
     assert(sf >= sfmin);
     do {
@@ -1238,9 +1238,7 @@ find_scalefac(lame_t gfc, int j, FLOAT xmin, int bw, FLOAT maxXR,
 	}
     } while (delsf != 0);
 
-    if (sfmin <= sf_ok && sf_ok < 256)
-	sf = sf_ok;
-    return sf;
+    return sf_ok;
 }
 
 
@@ -1361,16 +1359,17 @@ set_scalefactor_values(gr_info *gi)
     int ifqstep = 1 + 2*gi->scalefac_scale, sfb = 0;
     do {
 	int s = gi->scalefac[sfb];
-	if (s != LARGE_BITS) {
-	    s = (gi->global_gain - s
-		 - gi->subblock_gain[gi->wi[sfb].window]*8 + ifqstep)
-		     >> (1 + gi->scalefac_scale);
-	    if (gi->preflag > 0)
-		s -= pretab[sfb];
-	    if (s < 0)
-		s = 0;
-	    gi->scalefac[sfb] = s;
-	}
+	if (s == LARGE_BITS)
+	    continue;
+
+	s = (gi->global_gain - s
+	     - gi->subblock_gain[gi->wi[sfb].window]*8 + ifqstep)
+		 >> (1 + gi->scalefac_scale);
+	if (gi->preflag > 0)
+	    s -= pretab[sfb];
+	if (s < 0)
+	    s = 0;
+	gi->scalefac[sfb] = s;
     } while (++sfb < gi->psymax);
 }
 
@@ -1400,15 +1399,13 @@ VBR_2nd_bitalloc(lame_t gfc, gr_info *gi, FLOAT * xmin)
     /* note: we cannot use calc_noise() because l3_enc[] is not calculated
        at this point */
     gr_info gi_w;
-    int sfb = 0, endflag = 0, j;
-    for (j = sfb = 0; sfb < gi->psymax; sfb++) {
-	int width = gi->wi[sfb].width;
-	j -= width;
+    int sfb = 0, endflag = 0;
+    for (sfb = 0; sfb < gi->psymax; sfb++) {
 	if (gi->scalefac[sfb] == LARGE_BITS) {
-	    gi->scalefac[sfb] = 0;
-	    memset(&xr34[j+width], 0, -sizeof(float)*width);
+	    gi->scalefac[sfb] = SCALEFAC_ANYTHING_GOES;
 	    continue;
 	}
+
 	while (IPOW20(scalefactor(gi, sfb)) > gfc->maxXR[sfb]) {
 	    if (gi->scalefac[sfb] == 0)
 		return -2;
@@ -1513,7 +1510,8 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
 		gfc->maxXR[sfb] = maxXR;
 		if (vbrmax < gain)
 		    vbrmax = gain;
-	    }
+	    } else
+		gain = 255;
 	}
     } while (++sfb < gi->psymax);
     if (vbrmax == -10000)

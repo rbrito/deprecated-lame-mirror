@@ -39,9 +39,6 @@
 # define ixmax(a,b) ix_max(a,b)
 #endif
 
-#define SCALEFAC_SCFSI_FLAG    (-1)
-#define SCALEFAC_ANYTHING_GOES (-2)
-
 /* log2(x). the last element is for the case when sfb is over valid range.*/
 static const char log2tab[] = {
     0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 5};
@@ -962,16 +959,19 @@ scale_bitcount(gr_info * const gi)
 	    if (sfb == gi->psymax) {
 		gi->preflag = 1;
 		for (sfb = 11; sfb < gi->psymax; sfb++)
-		    gi->scalefac[sfb] -= pretab[sfb];
+		    if (gi->scalefac[sfb] != LARGE_BITS)
+			gi->scalefac[sfb] -= pretab[sfb];
 	    }
 	}
     }
 
     s1 = s2 = 0;
     for (sfb = 0; sfb < gi->sfbdivide; sfb++)
+	if (gi->scalefac[sfb] != LARGE_BITS)
 	if (s1 < gi->scalefac[sfb])
 	    s1 = gi->scalefac[sfb];
     for (; sfb < gi->sfbmax; sfb++)
+	if (gi->scalefac[sfb] != LARGE_BITS)
 	if (s2 < gi->scalefac[sfb])
 	    s2 = gi->scalefac[sfb];
     s1 = log2tab[s1];
