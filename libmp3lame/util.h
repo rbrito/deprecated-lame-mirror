@@ -259,7 +259,7 @@ struct lame_internal_flags {
   int fill_buffer_resample_init;
   int psymodel_init;
 
-  Padding_type padding;            /* padding for the current frame? */
+  int padding;                  /* padding for the current frame? */
   int mode_gr;                    /* granules per frame */
   int          channels_in;	/* number of channels in the input data stream (PCM or decoded PCM) */
   int          channels_out;  /* number of channels in the output data stream (not used for decoding) */
