@@ -15,6 +15,25 @@
 
 /************************************************************************
 *
+* license
+*
+* PURPOSE:  Writes version and license to the file specified by #stdout#
+*
+************************************************************************/
+
+void lame_print_license(lame_global_flags *gfp,char *name)  /* print version,license & exit */
+{
+  lame_print_version(stdout);
+  fprintf(stdout,"\n");
+  fprintf(stdout,"Read the file \"LICENSE\"\n");
+  fprintf(stdout,"\n");
+  exit(0);
+}
+
+
+
+/************************************************************************
+*
 * usage
 *
 * PURPOSE:  Writes command line syntax to the file specified by #stderr#
@@ -28,11 +47,46 @@ void lame_usage(lame_global_flags *gfp,char *name)  /* print syntax & exit */
   fprintf(stderr,"USAGE   :  %s [options] <infile> [outfile]\n",name);
   fprintf(stderr,"\n<infile> and/or <outfile> can be \"-\", which means stdin/stdout.\n");
   fprintf(stderr,"\n");
-  fprintf(stderr,"Try \"%s --help\" for more information\n",name);
+  fprintf(stderr,"Try \"%s --help\"     for more information\n",name);
+  fprintf(stderr," or \"%s --longhelp\" for a complete options list\n",name);
   exit(1);
 }
 
 
+
+/************************************************************************
+*
+* usage
+*
+* PURPOSE:  Writes command line syntax to the file specified by #stdout#
+*           but only the most important ones, to fit on a vt100 terminal
+*
+************************************************************************/
+
+void lame_short_help(lame_global_flags *gfp,char *name)  /* print syntax & exit */
+{
+  lame_print_version(stdout); /* prints two lines */
+  fprintf(stdout,"\n");
+  fprintf(stdout,"USAGE   :  %s [options] <infile> [outfile]\n",name);
+  fprintf(stdout,"\n<infile> and/or <outfile> can be \"-\", which means stdin/stdout.\n");
+  fprintf(stdout,"\n");
+  fprintf(stdout,"OPTIONS :\n");
+  fprintf(stdout,"    -b bitrate      set the bitrate, default 128kbps\n");
+  fprintf(stdout,"    -f              fast mode (very low quality)\n");
+  fprintf(stdout,"    -h              higher quality, but a little slower.  Recommended.\n");
+  fprintf(stdout,"    -k              keep ALL frequencies (disables all filters)\n");
+  fprintf(stdout,"    -m mode         (s)tereo, (j)oint, (f)orce or (m)ono  (default j)\n");
+  fprintf(stdout,"                    force = force ms_stereo on all frames. Faster\n");
+  fprintf(stdout,"    -V n            quality setting for VBR.  default n=%i\n",gfp->VBR_q);
+  fprintf(stdout,"\n");
+  fprintf(stdout,"    --preset type   type must be phone, voice, fm, tape, hifi, cd or studio\n");
+  fprintf(stdout,"                    \"--preset help\" gives some more infos on these\n");
+  fprintf(stdout,"\n");
+  fprintf(stderr,"    --longhelp      full list of options\n");
+  fprintf(stdout,"\n");
+ 
+  exit(0);
+}
 
 /************************************************************************
 *
@@ -76,7 +130,7 @@ void lame_help(lame_global_flags *gfp,char *name)  /* print syntax & exit */
   fprintf(stdout,"    --noshort       do not use short blocks\n");
   fprintf(stdout,"    --voice         experimental voice mode\n");
   fprintf(stdout,"    --preset type   type must be phone, voice, fm, tape, hifi, cd or studio\n");
-  fprintf(stdout,"                    help gives some more infos on these\n");
+  fprintf(stdout,"                    \"--preset help\" gives some more infos on these\n");
   fprintf(stdout,"\n");
   fprintf(stdout,"  CBR (constant bitrate, the default) options:\n");
   fprintf(stdout,"    -h              higher quality, but a little slower.  Recommended.\n");
@@ -136,10 +190,10 @@ void lame_presets_info(lame_global_flags *gfp,char *name)  /* print syntax & exi
   fprintf(stdout,"They can be combined with -v if you want VBR MP3s.\n");
   fprintf(stdout,"\n");
   fprintf(stdout,"  --preset phone    =>  --resample      16\n");
-  fprintf(stdout,"                        --highpass       0.260\n");
+  fprintf(stdout,"                        --highpass       0.200\n");
   fprintf(stdout,"                        --highpasswidth  0.040\n");
-  fprintf(stdout,"                        --lowpass        3.700\n");
-  fprintf(stdout,"                        --lowpasswidth   0.300\n");
+  fprintf(stdout,"                        --lowpass        3.500\n");
+  fprintf(stdout,"                        --lowpasswidth   0.700\n");
   fprintf(stdout,"                        --noshort\n");
   fprintf(stdout,"                        -m   m\n");
   fprintf(stdout,"                        -b  16\n");
@@ -147,10 +201,11 @@ void lame_presets_info(lame_global_flags *gfp,char *name)  /* print syntax & exi
   fprintf(stdout,"                        -B  56   > in combination with -v\n");
   fprintf(stdout,"                        -V   5  /\n");
   fprintf(stdout,"\n");
-  fprintf(stdout,"  --preset voice:   =>  --resample      24\n");
-  fprintf(stdout,"                        --highpass       0.100\n");
-  fprintf(stdout,"                        --highpasswidth  0.020\n");
-  fprintf(stdout,"                        --lowpass       11\n");
+  fprintf(stdout,"  --preset voice:   =>  --resample      22.05\n");
+/*  fprintf(stdout,"                        --highpass       0.100\n");
+ *  fprintf(stdout,"                        --highpasswidth  0.020\n");
+*/
+  fprintf(stdout,"                        --lowpass       10\n");
   fprintf(stdout,"                        --lowpasswidth   2\n");
   fprintf(stdout,"                        --noshort\n");
   fprintf(stdout,"                        -m   m\n");
@@ -160,9 +215,10 @@ void lame_presets_info(lame_global_flags *gfp,char *name)  /* print syntax & exi
   fprintf(stdout,"                        -V   4  /\n");
   fprintf(stdout,"\n");
   fprintf(stdout,"  --preset fm:      =>  --resample      32\n");
-  fprintf(stdout,"                        --highpass       0.030\n");
-  fprintf(stdout,"                        --highpasswidth  0\n");
-  fprintf(stdout,"                        --lowpass       11.4\n");
+/*  fprintf(stdout,"                        --highpass       0.030\n");
+ *  fprintf(stdout,"                        --highpasswidth  0\n");
+ */
+  fprintf(stdout,"                        --lowpass       15.0\n");
   fprintf(stdout,"                        --lowpasswidth   0\n");
   fprintf(stdout,"                        -m   j\n");
   fprintf(stdout,"                        -b  96\n");
@@ -170,10 +226,11 @@ void lame_presets_info(lame_global_flags *gfp,char *name)  /* print syntax & exi
   fprintf(stdout,"                        -B 192   > in combination with -v\n");
   fprintf(stdout,"                        -V   4  /\n");
   fprintf(stdout,"\n");
-  fprintf(stdout,"  --preset tape:    =>  --lowpass       17\n");
+  fprintf(stdout,"  --preset tape:    =>  --lowpass       17.5\n");
   fprintf(stdout,"                        --lowpasswidth   2\n");
-  fprintf(stdout,"                        --highpass       0.015\n");
-  fprintf(stdout,"                        --highpasswidth  0.015\n");
+/*  fprintf(stdout,"                        --highpass       0.015\n");
+ *  fprintf(stdout,"                        --highpasswidth  0.015\n");
+ */
   fprintf(stdout,"                        -m   j\n");
   fprintf(stdout,"                        -b 128\n");
   fprintf(stdout,"                  plus  -b  32  \\\n");
@@ -182,8 +239,9 @@ void lame_presets_info(lame_global_flags *gfp,char *name)  /* print syntax & exi
   fprintf(stdout,"\n");
   fprintf(stdout,"  --preset hifi:    =>  --lowpass       20\n");
   fprintf(stdout,"                        --lowpasswidth   3\n");
-  fprintf(stdout,"                        --highpass       0.015\n");
-  fprintf(stdout,"                        --highpasswidth  0.015\n");
+/*  fprintf(stdout,"                        --highpass       0.015\n");
+ *  fprintf(stdout,"                        --highpasswidth  0.015\n");
+ */
   fprintf(stdout,"                        -h\n");
   fprintf(stdout,"                        -m   j\n");
   fprintf(stdout,"                        -b 160\n");
@@ -394,8 +452,15 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	   * i/input file  => specifies input filename
 	   * I             => stdin
 	   */
+	else if (strcmp(token, "version") ==0
+	       ||strcmp(token, "license")==0){
+	  lame_print_license(gfp,programName);  /* doesn't return */
+	}
 	else if (strcmp(token, "help") ==0
 	       ||strcmp(token, "usage")==0){
+	  lame_short_help(gfp,programName);  /* doesn't return */
+	}
+	else if (strcmp(token, "longhelp") ==0){
 	  lame_help(gfp,programName);  /* doesn't return */
 	}
 	else if (strcmp(token, "preset")==0) {
@@ -403,10 +468,10 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	  if (strcmp(nextArg,"phone")==0)
 	  { /* when making changes, please update help text too */
 	    gfp->brate = 16; 
-	    gfp->highpassfreq=260;
+	    gfp->highpassfreq=200;
             gfp->highpasswidth=40; 
-	    gfp->lowpassfreq=3700;
-	    gfp->lowpasswidth=300;
+	    gfp->lowpassfreq=3500;
+	    gfp->lowpasswidth=700;
 	    gfp->VBR_q=5;
 	    gfp->VBR_min_bitrate_kbps=8;
 	    gfp->VBR_max_bitrate_kbps=56;
@@ -419,25 +484,25 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	  else if (strcmp(nextArg,"voice")==0)
 	  { /* when making changes, please update help text too */
 	    gfp->brate = 56; 
-	    gfp->highpassfreq=100;  
-	    gfp->highpasswidth=20;
-	    gfp->lowpasswidth=2000;
-	    gfp->lowpassfreq=11000;
+/*	    gfp->highpassfreq=100;  
+ *	    gfp->highpasswidth=20;
+ */	    gfp->lowpasswidth=2000;
+	    gfp->lowpassfreq=10000;
 	    gfp->VBR_q=4;
 	    gfp->VBR_min_bitrate_kbps=8;
 	    gfp->VBR_max_bitrate_kbps=96;
 	    gfp->no_short_blocks=1;
 	    gfp->mode = MPG_MD_MONO; 
 	    gfp->mode_fixed = 1; 
-	    gfp->out_samplerate =  24000; 
+	    gfp->out_samplerate =  22050; 
 	    gfp->quality = 5;
 	  }
 	  else if (strcmp(nextArg,"fm")==0)
 	  { /* when making changes, please update help text too */
 	    gfp->brate = 96; 
-            gfp->highpassfreq=30;
-            gfp->highpasswidth=0;
-            gfp->lowpassfreq=15000;
+/*          gfp->highpassfreq=30;
+ *          gfp->highpasswidth=0;
+ */         gfp->lowpassfreq=15000;
             gfp->lowpasswidth=0;
 	    gfp->VBR_q=4;
 	    gfp->VBR_min_bitrate_kbps=32;
@@ -450,9 +515,9 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	  else if (strcmp(nextArg,"tape")==0)
 	  { /* when making changes, please update help text too */
 	    gfp->brate = 128; 
-            gfp->highpassfreq=15;
-            gfp->highpasswidth=15;
-            gfp->lowpassfreq=17000;
+/*          gfp->highpassfreq=15;
+ *          gfp->highpasswidth=15;
+ */         gfp->lowpassfreq=17500;
             gfp->lowpasswidth=2000;
 	    gfp->VBR_q=4;
 	    gfp->VBR_min_bitrate_kbps=32;
@@ -464,9 +529,9 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	  else if (strcmp(nextArg,"hifi")==0)
 	  { /* when making changes, please update help text too */
 	    gfp->brate = 160;            
-	    gfp->highpassfreq=15;
-            gfp->highpasswidth=15;
-            gfp->lowpassfreq=20000;
+/*	    gfp->highpassfreq=15;
+ *          gfp->highpasswidth=15;
+ */         gfp->lowpassfreq=20000;
             gfp->lowpasswidth=3000;
 	    gfp->VBR_q=3;
 	    gfp->VBR_min_bitrate_kbps=32;
@@ -497,7 +562,7 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	    gfp->VBR_max_bitrate_kbps=320;
 	    gfp->mode = MPG_MD_STEREO; 
 	    gfp->mode_fixed = 1; 
-	    gfp->quality = 2; /* should be 0, but does not work now */
+	    gfp->quality = 2; 
 	  }
 	  else if (strcmp(nextArg,"help")==0)
 	  {
@@ -542,6 +607,7 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	  gfp->VBR_q = atoi(arg);
 	  if (gfp->VBR_q <0) gfp->VBR_q=0;
 	  if (gfp->VBR_q >9) gfp->VBR_q=9;
+	  gfp->quality = 2;
 	  break;
 	case 'q':        argUsed = 1; 
 	  user_quality = atoi(arg);
@@ -596,6 +662,7 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	  break;
 	case 'v': 
 	  gfp->VBR = 1; 
+	  gfp->quality = 2;
 	  break;
 	case 'S': 
 	  gfp->silent = TRUE;
