@@ -422,13 +422,13 @@ const preset_t Presets [] = {
     { "mw-eu" , 11025,  -1,  4000,    0,  0,  5, MPG_MD_MONO        ,  24,  3,  16,  56 },  // MW in europe
     { "mw-us" , 16000,  -1,  7500,    0,  0,  5, MPG_MD_MONO        ,  40,  3,  24, 112 },  // MW in U.S.A.
     { "sw"    , 11025,  -1,  4000,    0,  0,  5, MPG_MD_MONO        ,  24,  3,  16,  56 },  // SW
-    { "fm"    , 32000,  -1, 15000,    0,  0,  5, MPG_MD_JOINT_STEREO, 112,  3,  80, 256 },
+    { "fm"    , 32000,  -1, 15000,    0,  0,  3, MPG_MD_JOINT_STEREO, 112,  3,  80, 256 },
     { "voice" , 24000,  -1, 12000,    0,  1,  5, MPG_MD_MONO        ,  56,  4,  40, 112 },
-    { "radio" ,    -1,  -1, 15000,    0,  0,  5, MPG_MD_JOINT_STEREO, 128,  3,  96, 256 },
-    { "tape"  ,    -1,  -1, 18000,  900,  0,  5, MPG_MD_JOINT_STEREO, 128,  3,  96, 256 },
-    { "hifi"  ,    -1,  -1, 18000,  900,  0,  2, MPG_MD_JOINT_STEREO, 160,  2, 112, 320 },
-    { "cd"    ,    -1,  -1,    -1,   -1,  0,  2, MPG_MD_STEREO      , 192,  1, 128, 320 },
-    { "studio",    -1,  -1,    -1,   -1,  0,  2, MPG_MD_STEREO      , 256,  0, 160, 320 },
+    { "radio" ,    -1,  -1, 15000,    0,  0,  3, MPG_MD_JOINT_STEREO, 128,  3,  96, 256 },
+    { "tape"  ,    -1,  -1, 18000,  900,  0,  3, MPG_MD_JOINT_STEREO, 128,  3,  96, 256 },
+    { "hifi"  ,    -1,  -1, 18000,  900,  0, -1, MPG_MD_JOINT_STEREO, 160,  2, 112, 320 },
+    { "cd"    ,    -1,  -1,    -1,   -1,  0, -1, MPG_MD_STEREO      , 192,  1, 128, 320 },
+    { "studio",    -1,  -1,    -1,   -1,  0, -1, MPG_MD_STEREO      , 256,  0, 160, 320 },
 };
 
 
@@ -492,8 +492,10 @@ static int  presets_info ( const lame_global_flags* gfp, FILE* const fp, const c
     fprintf ( fp, "\n                ");
     for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
         switch ( Presets[i].quality ) {
+        case -1: fprintf ( fp, "      "); break;
 	case  2: fprintf ( fp, "    -h"); break;
-	case  5: fprintf ( fp, "      "); break;
+	case  3: fprintf ( fp, "   -q3"); break;
+        case  5: fprintf ( fp, "      "); break;
 	case  7: fprintf ( fp, "    -f"); break;
 	default: assert (0);              break;
     }
@@ -648,7 +650,6 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
     int         err;
     int         i;
     int         autoconvert  = 0;
-    int         user_quality = -1;
     double      val;
     const char* ProgramName  = argv[0]; 
 
@@ -690,27 +691,22 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 		
 		T_ELIF ("vbr-old")
 		    gfp->VBR = vbr_rh; 
-		    gfp->quality = 2;
 		
 		T_ELIF ("vbr-new")
 		    gfp->VBR = vbr_mt; 
-		    gfp->quality = 2;
 		
 		T_ELIF ("vbr-mtrh")
 		    gfp->VBR = vbr_mtrh; 
-		    gfp->quality = 2;
-                    user_quality = 1;
 
 		T_ELIF ("r3mix")
 		    gfp->VBR = vbr_rh; 
                     gfp->VBR_q = 1;
-		    gfp->quality = 2;
+                    gfp->quality = 2;
                     gfp->lowpassfreq = 19000;
                     gfp->mode=MPG_MD_JOINT_STEREO;
                     gfp->mode_fixed=1;
 		    gfp->ATHtype=3;
 		    gfp->VBR_min_bitrate_kbps=64;
-		    /* gfp->ATH_auto_adjust = 1; */
 		
 		T_ELIF ("abr")
 		    argUsed=1;
@@ -1050,13 +1046,25 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 			gfp->VBR_q = atoi(arg);
 			if (gfp->VBR_q <0) gfp->VBR_q=0;
 			if (gfp->VBR_q >9) gfp->VBR_q=9;
-			gfp->quality = 2;
 			break;
+		    case 'v': 
+			/* to change VBR default look in lame.h */
+			if (gfp->VBR == vbr_off)
+                            gfp->VBR = vbr_default; 
+			break;
+
 		    case 'q':        argUsed = 1; 
-			user_quality = atoi(arg);
-			if (user_quality<0) user_quality=0;
-			if (user_quality>9) user_quality=9;
+			gfp->quality = atoi(arg);
+			if (gfp->quality<0) gfp->quality=0;
+			if (gfp->quality>9) gfp->quality=9;
 			break;
+		    case 'f': 
+			gfp->quality= 7;
+			break;
+		    case 'h': 
+                        gfp->quality = 2;
+                        break;
+
 		    case 's':
 			argUsed = 1;
 			val = atof( arg );
@@ -1096,20 +1104,12 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 			gfp->mode=MPG_MD_MONO;
 			gfp->mode_fixed=1;
 			break;
-		    case 'h': 
-			gfp->quality = 2;
-			break;
 		    case 'k': 
 			gfp->lowpassfreq=-1;
 			gfp->highpassfreq=-1;
 			break;
 		    case 'd': 
 			gfp->allow_diff_short = 1;
-			break;
-		    case 'v': 
-			/* to change VBR default look in lame.h */
-			gfp->VBR = vbr_default; 
-			gfp->quality = 2;
 			break;
 		    case 'S': 
 			silent = 1;
@@ -1123,9 +1123,6 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 			break;
 		    case 'Z': 
 			gfp->experimentalZ = 1;
-			break;
-		    case 'f': 
-			gfp->quality= 7;
 			break;
 #if defined(HAVE_GTK)
 		    case 'g': /* turn on gtk analysis */
@@ -1234,10 +1231,6 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
         gfp -> num_channels = 1;
     else 
         gfp -> num_channels = 2;
-    
-    /* user specified a quality value.  override any defaults set above */
-    if (user_quality >= 0)   
-        gfp -> quality = user_quality;
     
     if ( gfp->free_format ) {
 	if ( gfp -> brate < 8  ||  gfp -> brate > 640 ) {

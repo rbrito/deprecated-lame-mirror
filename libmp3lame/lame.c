@@ -1015,8 +1015,17 @@ lame_init_params(lame_global_flags * const gfp)
 
     switch (gfp->VBR) {
 
-    case vbr_mt:
     case vbr_mtrh:
+        
+        /*  default quality for --vbr-mtrh is 1
+         */
+        if (gfp->quality < 0)
+            gfp->quality = 1;
+        
+        /*  fall through
+         */
+             
+    case vbr_mt:
 
         /*  use Gaby's ATH for vbr-mtrh by default
          */
@@ -1048,7 +1057,14 @@ lame_init_params(lame_global_flags * const gfp)
          *  you would have to add a -q 5 to reduce the quality
          *  down to level 5
          */
-        gfp->quality = Min(gfp->quality, 5);
+        if (gfp->quality > 5)
+            gfp->quality = 5;
+
+
+        /*  default quality setting is 2
+         */
+        if (gfp->quality < 0)
+            gfp->quality = 2;
 
         /*  allow left and right channels to have different block types
          */
@@ -1070,6 +1086,11 @@ lame_init_params(lame_global_flags * const gfp)
         /*  no sfb21 extra with CBR code
          */
         gfc->sfb21_extra = 0;
+        
+        /*  default quality setting for CBR/ABR is 5
+         */
+        if (gfp->quality < 0)
+            gfp->quality = 5;
 
         break;
     }
@@ -1664,7 +1685,7 @@ lame_init_old(lame_global_flags * gfp)
     gfp->num_samples = MAX_U_32_NUM;
 
     gfp->bWriteVbrTag = 1;
-    gfp->quality = 5;
+    gfp->quality = -1;  // -1 means, to be replaced by a default value in lame_init_params
 
     gfp->lowpassfreq = 0;
     gfp->highpassfreq = 0;
