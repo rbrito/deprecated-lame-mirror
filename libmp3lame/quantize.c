@@ -1749,6 +1749,7 @@ set_pinfo (
     FLOAT ifqstep = 0.5 * (1+gi->scalefac_scale);
     FLOAT xmin[SFBMAX], distort[SFBMAX], dummy[SFBMAX];
 
+    init_bitalloc(gfc, gi);
     calc_xmin (gfc, ratio, gi, xmin);
     max_noise = calc_noise_allband(gfc, gi, xmin, distort, dummy);
 
