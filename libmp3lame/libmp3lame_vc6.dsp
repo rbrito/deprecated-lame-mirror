@@ -164,10 +164,6 @@ SOURCE=.\takehiro.c
 
 SOURCE=.\util.c
 # End Source File
-# Begin Source File
-
-SOURCE=.\version.c
-# End Source File
 # End Group
 # Begin Group "Include"
 
