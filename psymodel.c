@@ -5,6 +5,10 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.16  2000/01/08 17:57:54  robert
+ * define AAC_TMN_NMT at compile time to activate AAC tone masking noise
+ * and noise masking tone values
+ *
  * Revision 1.15  2000/01/07 06:13:05  markt
  * Robert's cw_lower_limit, upper_limit code back in.  Default is compute
  * cw[] up to 8.9Khz.  set with --cwlimit <freq>
@@ -237,6 +241,8 @@ void L3psycho_anal( short int *buffer[2], int stereo,
     cw_upper_index=minimum(HBLKSIZE-4,cw_upper_index);      /* j+3 < HBLKSIZE-1 */
     cw_upper_index=maximum(6,cw_upper_index);
 
+    for ( j = 0; j < HBLKSIZE; j++ )
+      cw[j] = 0.4;
     
     /* setup stereo demasking thresholds */
     /* formula reverse enginerred from plot in paper */
@@ -550,15 +556,15 @@ void L3psycho_anal( short int *buffer[2], int stereo,
 	
 	cw[j+1] = cw[j+2] = cw[j+3] = cw[j];
       }
-    
+#if 0    
     /**********************************************************************
      *    Set unpredicatiblility of remaining spectral lines to 0.4  206..513 *
      **********************************************************************/
     /*   for ( j = 206; j < HBLKSIZE; j++ )*/
     for ( ; j < HBLKSIZE; j++ )
       cw[j] = 0.4;
-    
-    
+   
+#endif  /* moved to the initialization section */   
     
 #if 0
     for ( j = 14; j < HBLKSIZE-4; j += 4 )
@@ -625,15 +631,15 @@ void L3psycho_anal( short int *buffer[2], int stereo,
     /* calculate the tonality of each threshold calculation partition */
     /* calculate the SNR in each threshhold calculation partition */
     
+#ifndef AAC_TMN_NMT
     /* MP3 values */
-#define TMN 29
-#define NMT 6
-
+# define TMN 29
+# define NMT 6
+#else
     /* AAC values */
-    /*
-#define TMN 18
-#define NMT 6
-    */
+# define TMN 18
+# define NMT 6
+#endif
 
     for ( b = 0; b < npart_l; b++ )
       {
