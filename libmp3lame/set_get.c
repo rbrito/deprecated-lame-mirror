@@ -711,6 +711,14 @@ lame_set_subblock_gain( lame_global_flags*  gfp,
 }
 
 
+int
+lame_set_narrowenStereo(lame_global_flags *gfp,
+			float factor)
+{
+    gfp->internal_flags->narrowStereo = factor;
+    return 0;
+}
+
 /* Naoki's psycho acoustic model. */
 int
 lame_set_exp_nspsytune( lame_global_flags*  gfp,

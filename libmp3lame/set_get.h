@@ -76,9 +76,8 @@ int CDECL lame_set_subblock_gain(lame_global_flags *, int);
 int CDECL lame_get_subblock_gain(const lame_global_flags *);
 
 
-
-
-
+/* narrowen the stereo image */
+int lame_set_narrowenStereo(lame_global_flags *, float);
 
 #if defined(__cplusplus)
 }

@@ -443,17 +443,16 @@ int  lame_encode_mp3_frame (				/* Output */
     }
 
     /* channel conversion */
-    if (gfp->experimentalX) {
+    if (gfc->narrowStereo) {
 	/* narrown_stereo */
-	FLOAT mix_ratio = gfp->experimentalX/128.0;
 	int i;
 	for (gr = 0; gr < gfc->mode_gr; gr++) {
 	    gr_info *gi = &gfc->l3_side.tt[gr][0];
 	    for (i = 0; i < 576; i++) {
 		FLOAT l = gi[0].xr[i];
 		FLOAT r = gi[1].xr[i];
-		gi[0].xr[i] = l-(l-r)*mix_ratio;
-		gi[1].xr[i] = r+(l-r)*mix_ratio;
+		gi[0].xr[i] = l-(l-r)*gfc->narrowStereo;
+		gi[1].xr[i] = r+(l-r)*gfc->narrowStereo;
 	    }
 	}
     }

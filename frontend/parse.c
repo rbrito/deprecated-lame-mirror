@@ -481,12 +481,13 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --notemp        disable temporal masking effect\n"
               "    --nssafejoint   M/S switching criterion\n"
               "    --nsmsfix <arg> M/S switching tuning\n"
-              "    --interch x     adjust inter-channel masking ratio\n"
-              "    --is-ratio x    adjust intensity stereo usage ratio\n"
               "    --ns-bass x     adjust masking for  0 -  6 bark\n"
               "    --ns-alto x     adjust masking for  6 - 12 bark\n"
               "    --ns-treble x   adjust masking for 12 - 18 bark\n"
               "    --ns-sfb21 x    change ns-treble by x dB for 18- bark\n"
+              "    --interch x     adjust inter-channel masking ratio\n"
+              "    --is-ratio x    adjust intensity stereo usage ratio\n"
+	      "    --narrowen-stereo x    narrowen the stereo image\n"
 #if 0
 /* this is redundant, we already have --notemp */
               "    --temporal-masking n  use temporal masking effect n=0:no n=1:yes\n"
@@ -1205,6 +1206,10 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 			argUsed=1;
                     (void) lame_set_subblock_gain( gfp, i);
 		}
+
+                T_ELIF ("narrowen-stereo")
+                    argUsed = 1;
+                    (void) lame_set_narrowenStereo(gfp, atof(nextArg));
 
                 T_ELIF ("temporal-masking")
                     argUsed = 1;
