@@ -322,10 +322,10 @@ copy_buffer(lame_t gfc, unsigned char *buffer, int size)
 #ifdef HAVE_MPGLIB
     if (gfc->decode_on_the_fly) {  /* decode the frame */
 	/* re-synthesis to pcm.  Repeat until we get a samples_out=0 */
+	sample_t pcm_buf[2][1152];
+	int mp3_in = minimum, i, samples_out;
 	for (;;) {
-	    sample_t pcm_buf[2][1152];
-	    int mp3_in = minimum, i;
-	    int samples_out = decode1_unclipped(gfc->pmp_replaygain, buffer, mp3_in, pcm_buf[0], pcm_buf[1]);
+	    samples_out = decode1_unclipped(gfc->pmp_replaygain, buffer, mp3_in, pcm_buf[0], pcm_buf[1]);
 	    /* samples_out = 0:  need more data to decode 
              * samples_out = -1:  error.  Lets assume 0 pcm output 
              * samples_out = number of samples output */
