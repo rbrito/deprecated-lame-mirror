@@ -120,9 +120,9 @@ static const FLOAT8 enwindow[] =
 #define NL 36
 
 static FLOAT8 ca[8], cs[8];
-static FLOAT8 cos_s[NS / 2][NS / 2];
 static FLOAT8 win[4][36];
-static FLOAT tantab_l[NL/4];
+static FLOAT8 tantab_l[NL/4];
+static FLOAT8 tritab_s[NS/4*2];
 
 /************************************************************************
 *
@@ -355,42 +355,54 @@ INLINE static void window_subband(short *x1, FLOAT8 a[SBLIMIT])
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
-static void mdct_short(FLOAT8 *out, FLOAT8 *in)
+INLINE static void mdct_short(FLOAT8 *out, FLOAT8 *in)
 {
-    int m;
-    for (m = NS / 2 - 1; m >= 0; --m) {
-	int l;
-	FLOAT8 a0, a1, a2, a3, a4, a5;
-	a0 = cos_s[m][0];
-	a1 = cos_s[m][1];
-	a2 = cos_s[m][2];
-	a3 = cos_s[m][3];
-	a4 = cos_s[m][4];
-	a5 = cos_s[m][5];
-	for (l = 2; l >= 0; l--) {
-	    out[3 * m + l] =
-		a0 * in[6 * l    ] +
-		a1 * in[6 * l + 1] +
-		a2 * in[6 * l + 2] +
-		a3 * in[6 * l + 3] +
-		a4 * in[6 * l + 4] +
-		a5 * in[6 * l + 5];
-	}
+    int l;
+    for ( l = 0; l < 3; l++ ) {
+	FLOAT tc0,tc1,tc2,ts0,ts1,ts2;
+
+	ts0 = in[5];
+	tc0 = in[3];
+	tc1 = ts0 + tc0;
+	tc2 = ts0 - tc0;
+
+	ts0 = in[2];
+	tc0 = in[0];
+	ts1 = ts0 + tc0;
+	ts2 =-ts0 + tc0;
+
+	tc0 = in[4];
+	ts0 = in[1];
+
+	out[3*0] = tc1 + tc0;
+	out[3*5] =-ts1 + ts0;
+
+	tc2 = tc2 * 0.86602540378443870761;
+	ts1 = ts1 * 0.5 + ts0;
+	out[3*1] = tc2-ts1;
+	out[3*2] = tc2+ts1;
+
+	tc1 = tc1 * 0.5 - tc0;
+	ts2 = ts2 * 0.86602540378443870761;
+	out[3*3] = tc1+ts2;
+	out[3*4] = tc1-ts2;
+
+	in += 6; out++;
     }
 }
 
-INLINE static void mdct_long(FLOAT *out, FLOAT *in)
+INLINE static void mdct_long(FLOAT8 *out, FLOAT8 *in)
 {
 #define inc(x) in[17-(x)]
 #define ins(x) -in[8-(x)]
 
-    const FLOAT c0=0.98480775301220802032, c1=0.64278760968653936292, c2=0.34202014332566882393;
-    const FLOAT c3=0.93969262078590842791, c4=-0.17364817766693030343, c5=-0.76604444311897790243;
-    FLOAT tc1 = inc(0)-inc(8),tc2 = (inc(1)-inc(7))*0.86602540378443870761, tc3 = inc(2)-inc(6), tc4 = inc(3)-inc(5);
-    FLOAT tc5 = inc(0)+inc(8),tc6 = (inc(1)+inc(7))*0.5,                    tc7 = inc(2)+inc(6), tc8 = inc(3)+inc(5);
-    FLOAT ts1 = ins(0)-ins(8),ts2 = (ins(1)-ins(7))*0.86602540378443870761, ts3 = ins(2)-ins(6), ts4 = ins(3)-ins(5);
-    FLOAT ts5 = ins(0)+ins(8),ts6 = (ins(1)+ins(7))*0.5,                    ts7 = ins(2)+ins(6), ts8 = ins(3)+ins(5);
-    FLOAT ct,st;
+    const FLOAT8 c0=0.98480775301220802032, c1=0.64278760968653936292, c2=0.34202014332566882393;
+    const FLOAT8 c3=0.93969262078590842791, c4=-0.17364817766693030343, c5=-0.76604444311897790243;
+    FLOAT8 tc1 = inc(0)-inc(8),tc2 = (inc(1)-inc(7))*0.86602540378443870761, tc3 = inc(2)-inc(6), tc4 = inc(3)-inc(5);
+    FLOAT8 tc5 = inc(0)+inc(8),tc6 = (inc(1)+inc(7))*0.5,                    tc7 = inc(2)+inc(6), tc8 = inc(3)+inc(5);
+    FLOAT8 ts1 = ins(0)-ins(8),ts2 = (ins(1)-ins(7))*0.86602540378443870761, ts3 = ins(2)-ins(6), ts4 = ins(3)-ins(5);
+    FLOAT8 ts5 = ins(0)+ins(8),ts6 = (ins(1)+ins(7))*0.5,                    ts7 = ins(2)+ins(6), ts8 = ins(3)+ins(5);
+    FLOAT8 ct,st;
 
     ct = tc5+tc7+tc8+inc(1)+inc(4)+inc(7);
     out[0] = ct;
@@ -537,32 +549,40 @@ void mdct_sub48(lame_global_flags *gfp,
 		}else {
 		  if (type == SHORT_TYPE) {
 		    for (k = 2; k >= 0; --k) {
-		      FLOAT8 w1 = win[SHORT_TYPE][k];
-		      work[k] =
-			gfc->sb_sample[ch][gr][k+6][band_swapped] * w1 -
-			gfc->sb_sample[ch][gr][11-k][band_swapped];
-		      work[k+3] =
-			gfc->sb_sample[ch][gr][k+12][band_swapped] +
-			gfc->sb_sample[ch][gr][17-k][band_swapped] * w1;
-		      
-		      work[k+6] =
-			gfc->sb_sample[ch][gr][k+12][band_swapped] * w1 -
-			gfc->sb_sample[ch][gr][17-k][band_swapped];
-		      work[k+9] =
-			gfc->sb_sample[ch][1-gr][k][band_swapped] +
-			gfc->sb_sample[ch][1-gr][5-k][band_swapped] * w1;
-		      
-		      work[k+12] =
-			gfc->sb_sample[ch][1-gr][k][band_swapped] * w1 -
-			gfc->sb_sample[ch][1-gr][5-k][band_swapped];
-		      work[k+15] =
-			gfc->sb_sample[ch][1-gr][k+6][band_swapped] +
-			gfc->sb_sample[ch][1-gr][11-k][band_swapped] * w1;
+			FLOAT8 w1 = win[SHORT_TYPE][k];
+			FLOAT8 a, b;
+
+			a = gfc->sb_sample[ch][gr][k+6][band_swapped] * w1 -
+			    gfc->sb_sample[ch][gr][11-k][band_swapped];
+
+			b = gfc->sb_sample[ch][gr][k+12][band_swapped] +
+			    gfc->sb_sample[ch][gr][17-k][band_swapped] * w1;
+
+			work[k+3] = -b*tritab_s[k*2  ] + a * tritab_s[k*2+1];
+			work[k  ] =  b*tritab_s[k*2+1] + a * tritab_s[k*2  ];
+
+			a = gfc->sb_sample[ch][gr][k+12][band_swapped] * w1 -
+			    gfc->sb_sample[ch][gr][17-k][band_swapped];
+
+			b = gfc->sb_sample[ch][1-gr][k][band_swapped] +
+			    gfc->sb_sample[ch][1-gr][5-k][band_swapped] * w1;
+
+			work[k+9] = -b*tritab_s[k*2  ] + a * tritab_s[k*2+1];
+			work[k+6] =  b*tritab_s[k*2+1] + a * tritab_s[k*2  ];
+
+			a = gfc->sb_sample[ch][1-gr][k][band_swapped] * w1 -
+			    gfc->sb_sample[ch][1-gr][5-k][band_swapped];
+
+			b = gfc->sb_sample[ch][1-gr][k+6][band_swapped] +
+			    gfc->sb_sample[ch][1-gr][11-k][band_swapped] * w1;
+
+			work[k+15] = -b*tritab_s[k*2  ] + a * tritab_s[k*2+1];
+			work[k+12] =  b*tritab_s[k*2+1] + a * tritab_s[k*2  ];
 		    }
 		    mdct_short(mdct_enc, work);
 		  } else {
 		    for (k = -NL/4; k < 0; k++) {
-			FLOAT a, b;
+			FLOAT8 a, b;
 			a = win[type][k+27] * gfc->sb_sample[ch][1-gr][k+9][band_swapped]
 			  + win[type][k+36] * gfc->sb_sample[ch][1-gr][8-k][band_swapped];
 			b = win[type][k+ 9] * gfc->sb_sample[ch][gr][k+9][band_swapped]
@@ -604,7 +624,7 @@ void mdct_sub48(lame_global_flags *gfp,
 
 void mdct_init48(lame_global_flags *gfp)
 {
-    int i, k, m;
+    int i, k;
     FLOAT8 sq;
 
     /* prepare the aliasing reduction butterflies */
@@ -676,16 +696,13 @@ void mdct_init48(lame_global_flags *gfp)
 	tantab_l[i] = tan((NL/4+0.5+i)*M_PI/NL);
 
     /* type 2(short)*/
-    sq = 4.0 / NS;
     for (i = 0; i < NS / 4; i++) {
-	FLOAT8 w2 = cos(PI/12 * (i + 0.5)) / SCALE * sq;
-	win[SHORT_TYPE][i] = tan(PI/12 * (i + 0.5));
+	win[SHORT_TYPE][i] = tan(M_PI / NS * (i + 0.5));
+    }
 
-	for (m = 0; m < NS / 2; m++) {
-	    cos_s[m][i] = w2 *
-		cos((PI / (4 * NS)) * (2 * m + 1) * (4 * i + 2 + NS));
-	    cos_s[m][i + NS / 4] = w2 *
-		cos((PI / (4 * NS)) * (2 * m + 1) * (4 * i + 2 + NS * 3));
-	}
+    for (i = 0; i < NS / 4; i++) {
+	FLOAT8 w2 = cos(M_PI / NS * (i + 0.5)) * (4.0/NS) / SCALE;
+	tritab_s[i*2  ] = cos((0.5+2-i)*M_PI/NS) * w2;
+	tritab_s[i*2+1] = sin((0.5+2-i)*M_PI/NS) * w2;
     }
 }
