@@ -158,9 +158,9 @@ typedef struct {
 #define MAX_HEADER_LEN 40 /* max size of header is 38 */
     struct {
 	int write_timing;
-	int ptr;
 	char buf[MAX_HEADER_LEN];
     } header[MAX_HEADER_BUF];
+    int ptr;
     int h_ptr;
     int w_ptr;
 } Bit_stream_struc;

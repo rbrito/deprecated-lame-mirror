@@ -192,7 +192,7 @@ drain_into_ancillary(lame_global_flags *gfp, int remainingBits)
 inline static void
 writeheader(lame_internal_flags *gfc,int val, int j)
 {
-    int ptr = gfc->bs.header[gfc->bs.h_ptr].ptr;
+    int ptr = gfc->bs.ptr;
 
     while (j > 0) {
 	int k = Min(j, 8 - (ptr & 7));
@@ -202,7 +202,7 @@ writeheader(lame_internal_flags *gfc,int val, int j)
 	    |= ((val >> j)) << (8 - (ptr & 7) - k);
 	ptr += k;
     }
-    gfc->bs.header[gfc->bs.h_ptr].ptr = ptr;
+    gfc->bs.ptr = ptr;
 }
 
 
@@ -247,7 +247,7 @@ encodeSideInfo2(lame_global_flags *gfp, int bitsPerFrame)
     III_side_info_t *l3_side = &gfc->l3_side;
     int gr, ch;
 
-    gfc->bs.header[gfc->bs.h_ptr].ptr = 0;
+    gfc->bs.ptr = 0;
     memset(gfc->bs.header[gfc->bs.h_ptr].buf, 0, l3_side->sideinfo_len);
     if (gfp->out_samplerate < 16000) 
 	writeheader(gfc,0xffe,                12);
@@ -429,7 +429,7 @@ encodeSideInfo2(lame_global_flags *gfp, int bitsPerFrame)
 
     {
 	int old = gfc->bs.h_ptr;
-	assert(gfc->bs.header[old].ptr == l3_side->sideinfo_len * 8);
+	assert(gfc->bs.ptr == l3_side->sideinfo_len * 8);
 
 	gfc->bs.h_ptr = (old + 1) & (MAX_HEADER_BUF-1);
 	gfc->bs.header[gfc->bs.h_ptr].write_timing
