@@ -126,7 +126,7 @@ typedef union {
 
 /*  caution: a[] will be resorted!!
  */
-FLOAT8
+static FLOAT8
 select_kth(FLOAT8 a[], int N, int k)
 {
     int     i, j, l, r;
