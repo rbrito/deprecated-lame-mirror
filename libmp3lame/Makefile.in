@@ -212,6 +212,7 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 @AMDEP_TRUE@DEP_FILES = $(DEPDIR)/VbrTag$U.Plo $(DEPDIR)/bitstream$U.Plo \
 @AMDEP_TRUE@	$(DEPDIR)/id3tag$U.Plo $(DEPDIR)/lame$U.Plo \
 @AMDEP_TRUE@	$(DEPDIR)/mpglib_interface$U.Plo \
+@AMDEP_TRUE@	$(DEPDIR)/encoder$U.Plo \
 @AMDEP_TRUE@	$(DEPDIR)/newmdct$U.Plo $(DEPDIR)/presets$U.Plo \
 @AMDEP_TRUE@	$(DEPDIR)/psymodel$U.Plo $(DEPDIR)/quantize$U.Plo \
 @AMDEP_TRUE@	$(DEPDIR)/quantize_pvt$U.Plo \
