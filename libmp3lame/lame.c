@@ -674,9 +674,10 @@ lame_init_params(lame_global_flags * const gfp)
         return -6;
     }
 
+#ifdef DECODE_ON_THE_FLY
     if (gfc->decode_on_the_fly && !gfp->decode_only)
       lame_decode_init();  /* initialize the decoder  */
-
+#endif
 
     gfc->mode_gr = gfp->out_samplerate <= 24000 ? 1 : 2; /* Number of granules per frame */
     gfp->framesize = 576 * gfc->mode_gr;
