@@ -172,15 +172,17 @@ calc_noise(
 	FLOAT             * distort
     )
 {
-    FLOAT max_noise   = -100.0;
+    FLOAT max_noise = -100.0;
     int sfb = 0, j = 0;
 
     do {
-	FLOAT step = POW20(scalefactor(gi, sfb));
-	FLOAT noise = 0.0;
-	int l = gi->width[sfb] >> 1;
+	FLOAT step, noise;
+	int l;
 	if (j > gi->count1)
 	    break;
+	step = POW20(scalefactor(gi, sfb));
+	noise = 0.0;
+	l = gi->width[sfb] >> 1;
 	do {
 	    FLOAT temp;
 	    temp = fabs(gi->xr[j]) - pow43[gi->l3_enc[j]] * step; j++;
@@ -210,26 +212,14 @@ calc_noise(
 
     if (max_noise > 0.0 && gi->block_type == SHORT_TYPE) {
 	distort -= sfb;
-	max_noise = -20.0;
+	max_noise = -100.0;
 	for (sfb = gi->sfb_smin; sfb < gi->psymax; sfb += 3) {
-	    FLOAT noise = 0.0, nsum = 0.0, subnoise;
-	    subnoise = FAST_LOG10(distort[sfb]);
-	    if (distort[sfb] > 1.0)
-		noise += subnoise;
-	    nsum += subnoise;
-
-	    subnoise = FAST_LOG10(distort[sfb+1]);
-	    if (distort[sfb+1] > 1.0)
-		noise += subnoise;
-	    nsum += subnoise;
-
-	    subnoise = FAST_LOG10(distort[sfb+2]);
-	    if (distort[sfb+2] > 1.0)
-		noise += subnoise;
-	    nsum += subnoise;
-
-	    if (max_noise < nsum)
-		max_noise = nsum;
+	    FLOAT noise
+		= FAST_LOG10(distort[sfb])
+		+ FAST_LOG10(distort[sfb+1])
+		+ FAST_LOG10(distort[sfb+2]);
+	    if (max_noise < noise)
+		max_noise = noise;
 	}
     }
     return max_noise;
