@@ -1,5 +1,6 @@
 #include "util.h"
 #include "get_audio.h"
+#include "portableio.h"
 #include "gtkanal.h"
 
 #if (defined LIBSNDFILE || defined LAMESNDFILE)
