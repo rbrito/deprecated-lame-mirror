@@ -29,8 +29,8 @@ void I_step_one(unsigned int balloc[], unsigned int scale_index[2][SBLIMIT],stru
   unsigned int *ba=balloc;
   unsigned int *sca = (unsigned int *) scale_index;
 
-  assert ( fr->stereo == 0 || fr->stereo == 1 );
-  if(fr->stereo) {
+  assert ( fr->stereo == 1 || fr->stereo == 2 );
+  if(fr->stereo==2) {
     int i;
     int jsbound = fr->jsbound;
     for (i=0;i<jsbound;i++) { 
@@ -74,8 +74,8 @@ void I_step_two(real fraction[2][SBLIMIT],unsigned int balloc[2*SBLIMIT],
   register unsigned int *ba;
   register unsigned int *sca = (unsigned int *) scale_index;
 
-  assert ( fr->stereo == 0 || fr->stereo == 1 );
-  if(fr->stereo) {
+  assert ( fr->stereo == 1 || fr->stereo == 2 );
+  if(fr->stereo == 2) {
     int jsbound = fr->jsbound;
     register real *f0 = fraction[0];
     register real *f1 = fraction[1];
@@ -144,7 +144,7 @@ int do_layer1(PMPSTR mp, unsigned char *pcm_sample,int *pcm_point)
 
   fr->jsbound = (fr->mode == MPG_MD_JOINT_STEREO) ? (fr->mode_ext<<2)+4 : 32;
 
-  if(stereo == 1 || single == 3)
+  if(stereo == 2 || single == 3)
     single = 0;
 
   I_step_one(balloc,scale_index,fr);
