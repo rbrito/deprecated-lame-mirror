@@ -310,10 +310,13 @@ int default_channels)
     gs_wfInfo.samplerate=default_samp;
     gs_wfInfo.pcmbitwidth=16;
     gs_wfInfo.channels=default_channels;
-    if (DetermineByteOrder()==order_littleEndian)
-      gs_wfInfo.format=SF_FORMAT_RAW_LE;
-    else
-      gs_wfInfo.format=SF_FORMAT_RAW_BE;
+    if (DetermineByteOrder()==order_littleEndian) {
+      if (gfp->swapbytes) gs_wfInfo.format=SF_FORMAT_RAW_BE;
+      else gs_wfInfo.format=SF_FORMAT_RAW_LE;
+    } else {
+      if (gfp->swapbytes) gs_wfInfo.format=SF_FORMAT_RAW_LE;
+      else gs_wfInfo.format=SF_FORMAT_RAW_BE;
+    }
 
     gs_pSndFileIn=sf_open_read(lpszFileName,&gs_wfInfo);
 
