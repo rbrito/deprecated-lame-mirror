@@ -496,6 +496,7 @@ ASFLAGS=-f elf -i libmp3lame/i386/
 
 # for people with nasmw
 ifeq ($(UNAME),MSDOS) 
+ NASM = nasmw
  ASFLAGS=-f win32 -DWIN32 -i libmp3lame/i386/
 endif
 
