@@ -1,3 +1,18 @@
+lame (3.94-0.1) unstable; urgency=low
+
+  * Update packaging for lame 3.94 alpha 14;
+  * Made progress to make the package as lintian-clean as possible:
+  * debian/copyright: removed the traces of the skeleton file;
+  * debian/rules: avoid using --host, as per warning of ./configure;
+  * debian/rules: use trick to avoind generating a library with rpath;
+  * debian/lame.docs: avoid generating duplicate html documentation;
+  * debian/control: added dependency on debhelper >= 3;
+  * still more work left, but progressing anyway (i.e., changes listed in
+    /usr/share/doc/debian-policy/upgrading-checklist.txt.gz should be
+    applied).
+
+ -- Rogério Brito <rbrito@users.sf.net>  Tue, 15 Jul 2003 19:30:42 -0300
+
 lame (3.93-0.1) unstable; urgency=low
 
   * Prevent lame 3.93 shipping and still building a 3.92 debian package;
