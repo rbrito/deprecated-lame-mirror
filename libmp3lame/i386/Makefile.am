@@ -4,7 +4,16 @@ AUTOMAKE_OPTIONS = foreign $(top_srcdir)/ansi2knr
 
 DEFS = @DEFS@ @CONFIG_DEFS@
 
+nasm_sources = \
+	choose_table.nas \
+	cpu_feat.nas \
+	fft3dn.nas \
+	scalar.nas
+
+if HAVE_NASM
 noinst_LTLIBRARIES = liblameasmroutines.la
+liblameasmroutines_la_SOURCES = $(nasm_sources)
+endif
 
 noinst_HEADERS = nasm.h
 
@@ -14,21 +23,11 @@ SUFFIXES = .nas
 
 EXTRA_liblameasmroutines_la_SOURCES = $(nasm_sources)
 
-nasm_sources = \
-	choose_table.nas \
-	cpu_feat.nas \
-	fft3dn.nas \
-	scalar.nas
-
 CLEANFILES = \
 	choose_table.lst \
 	cpu_feat.lst \
 	fft3dn.lst \
 	scalar.lst
-
-if HAVE_NASM
-liblameasmroutines_la_SOURCES = $(nasm_sources)
-endif
 
 EXTRA_DIST = \
 	fft.nas \
