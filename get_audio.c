@@ -13,9 +13,7 @@ static unsigned long num_samples;
 static int samp_freq;
 static int input_bitrate;
 static int num_channels;
-#ifdef _DEBUG_SND_FILE
 static int bitwidth;
-#endif
 
 int read_samples_pcm( short sample_buffer[2304],int frame_size, int samples_to_read);
 int read_samples_mp3(FILE *musicin,short int mpg123pcm[2][1152],int num_chan);
