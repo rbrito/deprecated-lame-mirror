@@ -286,8 +286,10 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --mp1input      input file is a MPEG Layer I   file\n"
               "    --mp2input      input file is a MPEG Layer II  file\n"
               "    --mp3input      input file is a MPEG Layer III file\n"
-              "    --ogginput      input file is a Ogg Vorbis file",
-              ProgramName );
+#if defined(HAVE_VORBIS)
+              "    --ogginput      input file is a Ogg Vorbis file"
+#endif
+              , ProgramName );
 
     wait_for ( fp, lessmode );
     fprintf ( fp,
@@ -298,28 +300,25 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "                    auto = jstereo, with varialbe mid/side threshold\n"
               "    -a              downmix from stereo to mono file for mono encoding\n"
               "    -d              allow channels to have different blocktypes\n"
-              "    --disptime <arg>print progress report every arg seconds\n"
+#if defined(HAVE_VORBIS)
               "    --ogg           encode to Ogg Vorbis instead of MP3\n"
+#endif
               "    --freeformat    produce a free format bitstream\n"
               "    --decode        input=mp3 file, output=wav\n"
               "    -t              disable writing wav header when using --decode\n"
               "    --comp  <arg>   choose bitrate to achive a compression ratio of <arg>\n"
               "    --scale <arg>   scale input (multiply PCM data) by <arg>\n"
-              "    --athonly       only use the ATH for masking\n"
-              "    --noath         disable the ATH for masking\n"
-              "    --athlower x    lower the ATH x dB\n"
-              "    --notemp        disable temporal masking effect\n"
-              "    --short         use short blocks\n"
-              "    --allshort      use always short blocks\n"
-              "    --noshort       do not use short blocks\n"
               "    --voice         experimental voice mode\n"
               "    --preset type   type must be phone, voice, fm, tape, hifi, cd or studio\n"
-              "                    \"--preset help\" gives some more infos on these" );
+              "                    \"--preset help\" gives some more infos on these" 
+              );
 
     wait_for ( fp, lessmode );
     fprintf ( fp,
               "  Verbosity:\n"
+              "    --disptime <arg>print progress report every arg seconds\n"
               "    -S              don't print progress report, VBR histograms\n"
+              "    --nohist        disable VBR histogram display\n"
               "    --silent        don't print anything on screen\n"
               "    --quiet         don't print anything on screen\n"
               "    --verbose       print a lot of useful information\n"
@@ -329,7 +328,8 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "                    -q 0:  Highest quality, very slow \n"
               "                    -q 9:  Poor quality, but fast \n"
               "    -h              Same as -q 2.   Recommended.\n"
-              "    -f              Same as -q 7.   Fast, ok quality\n" );
+              "    -f              Same as -q 7.   Fast, ok quality\n" 
+              );
 
     wait_for ( fp, lessmode );
     fprintf ( fp,
@@ -351,10 +351,46 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    -F              strictly enforce the -b option, for use with players that\n"
               "                    do not support low bitrate mp3 (Apex AD600-A DVD/mp3 player)\n"
               "    -t              disable writing Xing VBR informational tag\n"
-              "    --nohist        disable VBR histogram display", 
-                                                     lame_get_VBR_q(gfp) );
+              , lame_get_VBR_q(gfp) );
   
     wait_for ( fp, lessmode );  
+    fprintf ( fp,
+              "  ATH related:\n"
+              "    --noath         turns ATH down to a flat noise floor\n"
+              "    --athshort      ignore GPSYCHO for short blocks, use ATH only\n"
+              "    --athonly       ignore GPSYCHO completely, use ATH only\n"
+              "    --athtype n     selects between different ATH types [0-5]\n"
+              "    --athlower x    lowers ATH by x dB\n"
+              "    --ath-adjust n  ATH auto adjust types 1-3, else no adjustment\n"
+              "    --adapt-thres-type n  n=1 total energy or n=2 approximated loudness\n"
+              "    --adapt-thres-level x ??\n"
+              "\n"
+              "  PSY related:\n"
+              "    --short         use short blocks when appropriate\n"
+              "    --noshort       do not use short blocks\n"
+              "    --allshort      use only short blocks\n"
+              "    --cwlimit <freq>  compute tonality up to freq (in kHz) default 8.8717\n"
+              "    --temporal-masking n  use temporal masking effect n=0:no n=1:yes\n"
+              "    --notemp        disable temporal masking effect\n"
+              "    --nspsytune     experimental PSY tunings by Naoki Shibata\n"
+              "    --nssafejoint   M/S switching criterion\n"
+              "    --ns-bass x     adjust masking for sfbs  0 -  6 (long)  0 -  5 (short)\n"
+              "    --ns-alto x     adjust masking for sfbs  7 - 13 (long)  6 - 10 (short)\n"         
+              "    --ns-treble x   adjust masking for sfbs 14 - 21 (long) 11 - 12 (short)\n"
+              "    --ns-sfb21 x    change ns-treble by x dB for sfb21\n"
+            );
+
+    wait_for ( fp, lessmode );  
+
+    fprintf ( fp,
+              "  experimental switches:\n"
+              "    -X n            selects between different noise measurements\n"
+              "    -Y              lets LAME ignore noise in sfb21, like in CBR\n"
+              "    -Z              toggles the scalefac feature on/off\n"
+            );
+
+    wait_for ( fp, lessmode );  
+
     fprintf ( fp,
               "  MP3 header/stream options:\n"
               "    -e <emp>        de-emphasis n/5/c  (obsolete)\n"
@@ -373,7 +409,7 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "  --highpass <freq>       frequency(kHz), highpass filter cutoff below freq\n"
               "  --highpass-width <freq> frequency(kHz) - default 15%% of highpass freq\n"
               "  --resample <sfreq>  sampling frequency of output file(kHz)- default=automatic\n"
-              "  --cwlimit <freq>    compute tonality up to freq (in kHz) default 8.8717" );
+               );
   
     wait_for ( fp, lessmode );
     fprintf ( fp,
@@ -409,44 +445,6 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
 
     wait_for ( fp, lessmode );  
     display_bitrates ( fp );
-
-    return 0;
-}
-
-int  extra_help ( const lame_global_flags* gfp, FILE* const fp, const char* ProgramName, int lessmode )  /* print long syntax help */
-{
-    lame_version_print ( fp );
-    fprintf ( fp,
-              "Expert options (if you really know what you are doing)\n"
-              "\nATH related:\n"
-              "--noath               turns ATH down to a flat noise floor\n"
-              "--athshort            ignore GPSYCHO for short blocks, use ATH only\n"
-              "--athonly             ignore GPSYCHO completely, use ATH only\n"
-              "--athtype n           selects between different ATH types [0-5]\n"
-              "--athlower x          lowers ATH by x dB\n"
-              "--ath-adjust n        ATH auto adjust types 1-3, else no adjustment\n"
-              "--adapt-thres-type n  n=1 total energy or n=2 approximated loudness\n"
-              "--adapt-thres-level x ??\n"
-              "-Y                    different ATH adjust method\n"
-              "\nPSY related:\n"
-              "--temporal-masking n  use temporal masking effect n=0:no n=1:yes\n"
-              "--notemp              disable temporal masking effect\n"
-              "--nspsytune           experimental PSY tunings by Naoki Shibata\n"
-              "--nssafejoint         M/S switching criterion\n"
-              "--ns-bass x           adjust masking for sfbs  0 -  6 (long)  0 -  5 (short)\n"
-              "--ns-alto x           adjust masking for sfbs  7 - 13 (long)  6 - 10 (short)\n"         
-              "--ns-treble x         adjust masking for sfbs 14 - 21 (long) 11 - 12 (short)\n"
-              "--ns-sfb21 x          change ns-treble by x dB for sfb21\n"
-            );
-
-    wait_for ( fp, lessmode );  
-
-    fprintf ( fp,
-              "\nmisc:\n"
-              "--nores               disables the use of the bitreservoir\n" 
-            );
-
-    wait_for ( fp, lessmode );  
 
     return 0;
 }
@@ -622,7 +620,11 @@ static int  presets_info ( const lame_global_flags* gfp, FILE* const fp, const c
               "\n"
               "ABR preset optimized for lower file size and good quality can be activated via:\n"
               "--dm-preset metal\n"
-              "\n");
+              "\n"
+              "or simply:\n"
+              "--r3mix\n"
+              "\n"
+              );
  
     return 0;
 }
@@ -816,7 +818,9 @@ static int filename_to_type ( const char* FileName )
     if ( 0 == local_strcasecmp ( FileName, ".mp1" ) ) return sf_mp1;
     if ( 0 == local_strcasecmp ( FileName, ".mp2" ) ) return sf_mp2;
     if ( 0 == local_strcasecmp ( FileName, ".mp3" ) ) return sf_mp3;
+#if defined(HAVE_VORBIS)
     if ( 0 == local_strcasecmp ( FileName, ".ogg" ) ) return sf_ogg;
+#endif
     if ( 0 == local_strcasecmp ( FileName, ".wav" ) ) return sf_wave;
     if ( 0 == local_strcasecmp ( FileName, ".aif" ) ) return sf_aiff;
     if ( 0 == local_strcasecmp ( FileName, ".raw" ) ) return sf_raw;
@@ -913,8 +917,6 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF ("r3mix")
                     lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1); /*nspsytune*/
                     lame_set_experimentalX(gfp,1);
-                    lame_set_experimentalZ(gfp,1);
-                    lame_set_experimentalZ(gfp,1);
 
                     (void) lame_set_scale( gfp, 0.98 ); /* --scale 0.98*/
 
@@ -1286,10 +1288,6 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 
                 T_ELIF ("longhelp")
                     long_help ( gfp, stdout, ProgramName, 0 /* lessmode=NO */ );
-                    return -2;
-                    
-                T_ELIF ("extrahelp")
-                    extra_help ( gfp, stdout, ProgramName, 0 /* lessmode=NO */ );
                     return -2;
                     
                 T_ELIF ("?")
