@@ -32,9 +32,9 @@ CPP_OPTS += -DHAVEMPGLIB
 
 ##########################################################################
 # -DFLOAT8_is_float will FLOAT8 as float
-# -DFLOAT_is_float will FLOAT8 as float
+# -DFLOAT8_is_double  will FLOAT8 as double (default)
 ##########################################################################
-CPP_OPTS += -DFLOAT8_is_float
+CPP_OPTS += -DFLOAT8_is_double
 
 
 
