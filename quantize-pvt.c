@@ -132,9 +132,6 @@ static FLOAT8 adj43asm[PRECALC_SIZE];
 static FLOAT8 ATH_l[SBPSY_l];
 static FLOAT8 ATH_s[SBPSY_l];
 
-FLOAT8 ATH_mdct_long[576];
-FLOAT8 ATH_mdct_short[192];
-
 
 /************************************************************************/
 /*  initialization for iteration_loop */
@@ -280,12 +277,6 @@ void compute_ath(lame_global_flags *gfp,FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY
   int sfb,i,start,end;
   FLOAT8 ATH_f;
   FLOAT8 samp_freq = gfp->out_samplerate/1000.0;
-#ifdef RH_ATH
-  /* going from average to peak level ATH masking
-   */
-  FLOAT8 adjust_mdct_scaling = 10.0; 
-#endif
-  
 
   /* last sfb is not used */
   for ( sfb = 0; sfb < SBPSY_l; sfb++ ) {
@@ -295,9 +286,6 @@ void compute_ath(lame_global_flags *gfp,FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY
     for (i=start ; i < end; i++) {
       ATH_f = ATHformula(gfp,samp_freq*i/(2*576)); /* freq in kHz */
       ATH_l[sfb]=Min(ATH_l[sfb],ATH_f);
-#ifdef RH_ATH
-      ATH_mdct_long[i] = ATH_f*adjust_mdct_scaling;
-#endif
     }
     /*
     printf("sfb=%i %f  ATH=%f %f  %f   \n",sfb,samp_freq*start/(2*576),
@@ -314,9 +302,6 @@ void compute_ath(lame_global_flags *gfp,FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY
     for (i=start ; i < end; i++) {
       ATH_f = ATHformula(gfp,samp_freq*i/(2*192));     /* freq in kHz */
       ATH_s[sfb]=Min(ATH_s[sfb],ATH_f);
-#ifdef RH_ATH
-      ATH_mdct_short[i] = ATH_f*adjust_mdct_scaling;
-#endif
     }
   }
 }
@@ -717,13 +702,8 @@ int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576], III_psy_ratio *ratio,
 	  if (xmin > 0.0)
 	    xmin = en0 * ratio->thm.s[sfb][b] * masking_lower / xmin;
 
-#ifdef RH_ATH
-          /* do not mix up ATH masking with GPSYCHO thresholds
-	   */
-	  l3_xmin->s[sfb][b] = Max(1e-20, xmin);
-#else
 	  l3_xmin->s[sfb][b] = Max(ATH_s[sfb], xmin);
-#endif
+
 	  if (en0 > ATH_s[sfb]) ath_over++;
 	}
       }
@@ -743,14 +723,8 @@ int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576], III_psy_ratio *ratio,
 	if (xmin > 0.0)
 	  xmin = en0 * ratio->thm.l[sfb] * masking_lower / xmin;
 
-
-#ifdef RH_ATH
-        /* do not mix up ATH masking with GPSYCHO thresholds
-	 */
-	l3_xmin->l[sfb]=Max(1e-20, xmin);
-#else
 	l3_xmin->l[sfb]=Max(ATH_l[sfb], xmin);
-#endif
+
 	if (en0 > ATH_l[sfb]) ath_over++;
       }
     }

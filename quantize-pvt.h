@@ -25,10 +25,6 @@ extern FLOAT8 pow43[PRECALC_SIZE];
 extern FLOAT8 pow20[Q_MAX];
 extern FLOAT8 ipow20[Q_MAX];
 
-#ifdef RH_ATH
-extern FLOAT8 ATH_mdct_long[576], ATH_mdct_short[192];
-#endif
-
 FLOAT8 ATHformula(lame_global_flags *gfp,FLOAT8 f);
 void compute_ath(lame_global_flags *gfp,FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY_l]);
 void ms_convert(FLOAT8 xr[2][576],FLOAT8 xr_org[2][576]);
