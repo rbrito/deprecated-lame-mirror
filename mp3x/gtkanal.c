@@ -126,7 +126,7 @@ int gtkmakeframe(void)
       for ( j = 0; j < gfp->framesize-DECDELAY; j++ )
 	gfc->pinfo->pcmdata2[ch][j] = gfc->pinfo->pcmdata2[ch][j+gfp->framesize];
       for ( j = 0; j < gfp->framesize; j++ )
-	gfc->pinfo->pcmdata2[ch][j+gfp->framesize-DECDELAY] = mpg123pcm[ch][j];
+	gfc->pinfo->pcmdata2[ch][j+gfp->framesize-DECDELAY] = Buffer[ch][j];
     }
 
     gfc->pinfo->frameNum123 = frameNum-1;

@@ -24,6 +24,10 @@
 
 #include "l3side.h"
 #define IXMAX_VAL 8206 /* ix always <= 8191+15.    see count_bits() */
+
+/* buggy Winamp decoder cannot handle values > 8191 */
+/* #define IXMAX_VAL 8191 */
+
 #define PRECALC_SIZE (IXMAX_VAL+2)
 
 
