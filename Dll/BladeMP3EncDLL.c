@@ -24,11 +24,13 @@
 #include "version.h"  
 #include "lame.h"
 #include "util.h"
+#include "VbrTag.h"
+
 
 #define _RELEASEDEBUG 0
 
 const int MAJORVERSION=1;
-const int MINORVERSION=17;
+const int MINORVERSION=18;
 
 
 // Local variables
@@ -486,6 +488,16 @@ __declspec(dllexport) VOID		beVersion(PBE_VERSION pbeVersion)
 	// Set Engine version number (Same as Lame version)
 	pbeVersion->byMajorVersion=LAME_MAJOR_VERSION;
 	pbeVersion->byMinorVersion=LAME_MINOR_VERSION;
+	pbeVersion->bAlphaLevel=LAME_ALPHA_VERSION;
+	pbeVersion->bBetaLevel=LAME_BETA_VERSION;
+
+#ifdef MMX_choose_table
+	pbeVersion->bMMXEnabled=1;
+#else
+	pbeVersion->bMMXEnabled=0;
+#endif
+
+	memset(pbeVersion->btReserved,0, sizeof(pbeVersion->btReserved));
 
 	// Get compilation date
 	strcpy(lpszDate,__DATE__);

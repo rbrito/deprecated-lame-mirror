@@ -166,11 +166,11 @@ void brhist_disp(int frames)
     }
 #if defined(_WIN32) && !defined(__CYGWIN__) 
     /* fflush is not needed */
-    if (GetFileType(CH)!= FILE_TYPE_PIPE) {
-	GetConsoleScreenBufferInfo(CH, &CSBI);
-	Pos.Y= CSBI.dwCursorPosition.Y-(brhist.vbrmax - brhist.vbrmin)- 1;
-	Pos.X= 0;
-	SetConsoleCursorPosition(CH, Pos);
+    if (GetFileType(CH)!= FILE_TYPE_PIPE){
+	  GetConsoleScreenBufferInfo(CH, &CSBI);
+	  Pos.Y= CSBI.dwCursorPosition.Y-(BRHIST_WIDTH)- 1;
+	  Pos.X= 0;
+	  SetConsoleCursorPosition(CH, Pos);
     }
 #else
     fputc  ( '\r', stderr );

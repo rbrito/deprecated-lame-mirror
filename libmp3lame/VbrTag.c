@@ -28,6 +28,7 @@
 #include "VbrTag.h"
 #include "version.h"
 #include "bitstream.h"
+#include "VbrTag.h"
 #include	<assert.h>
 
 

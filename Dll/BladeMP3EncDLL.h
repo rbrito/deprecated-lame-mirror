@@ -48,7 +48,7 @@ typedef		unsigned long			BE_ERR;
 
 /* other constants */
 
-#define		BE_MAX_HOMEPAGE			256
+#define		BE_MAX_HOMEPAGE			128
 
 /* format specific variables */
 
@@ -191,6 +191,13 @@ typedef struct	{
 	// BladeEnc	Homepage URL
 
 	CHAR	zHomepage[BE_MAX_HOMEPAGE + 1];	
+
+	BYTE	bAlphaLevel;
+	BYTE	bBetaLevel;
+	BYTE	bMMXEnabled;
+
+	BYTE	btReserved[125];
+
 
 } BE_VERSION, *PBE_VERSION;			
 
