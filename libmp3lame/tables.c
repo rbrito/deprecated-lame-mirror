@@ -1295,7 +1295,7 @@ psymodel_init(lame_global_flags *gfp)
     init_mask_add_max_values(gfc);
 
     /* setup temporal masking */
-    gfc->decay = db2pow(-(576.0/3)/(TEMPORALMASK_SUSTAIN_SEC*sfreq)*20);
+    gfc->nsPsy.decay = db2pow(-(576.0/3)/(TEMPORALMASK_SUSTAIN_SEC*sfreq)*20);
 
     /* long/short switching, use subbandded sample in f > 2kHz */
     i = (int) (4000.0 / (sfreq / 2.0 / 32.0) + 0.5);

@@ -194,6 +194,7 @@ calc_xmin(
 		} while ((l+=2) < 0);
 		x *= en0;
 	    }
+	    x *= gfc->masking_lower;
 	    if (threshold < x)
 		threshold = x;
 	}
@@ -223,6 +224,7 @@ calc_xmin(
 		    } while ((l+=2) < 0);
 		    x *= en0;
 		}
+		x *= gfc->masking_lower;
 		if (threshold < x)
 		    threshold = x;
 	    }

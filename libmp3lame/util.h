@@ -347,7 +347,6 @@ struct lame_internal_flags {
     /* psymodel */
     FLOAT *s3_ss;
     FLOAT *s3_ll;
-    FLOAT decay;
 
     FLOAT mld_l[SBMAX_l],mld_s[SBMAX_s];
     int	bo_l[SBMAX_l], bo_s[SBMAX_s], bo_l2s[SBMAX_s];
@@ -367,15 +366,16 @@ struct lame_internal_flags {
     III_psy_ratio masking_next[2][MAX_CHANNELS*2];
     int blocktype_next[2][MAX_CHANNELS*2]; /* for block type */
     int mode_ext_next;
-    int is_start_sfb_l[2];
-    int is_start_sfb_s[2];
     int is_start_sfb_l_next[2];
     int is_start_sfb_s_next[2];
+    int is_start_sfb_l[2];
+    int is_start_sfb_s[2];
 
     struct {
 	/* short block tuning */
 	FLOAT	subbk_ene[MAX_CHANNELS*2][12];
 	FLOAT	attackthre;
+	FLOAT	decay;
 	int	switching_band;
 
 	/* adjustment of Mid/Side maskings from LR maskings */
@@ -460,8 +460,8 @@ struct lame_internal_flags {
     struct {
 	unsigned int  MMX       : 1; /* Pentium MMX, Pentium II...IV, K6, K6-2,
 					K6-III, Athlon */
-	unsigned int  AMD_3DNow : 1; /* K6-2, K6-III, Athlon, Opteron */
-	unsigned int  AMD_E3DNow: 1; /* Athlon, Opteron          */
+	unsigned int  AMD_3DNow : 1; /* K6-2, K6-III, Athlon, K8 */
+	unsigned int  AMD_E3DNow: 1; /* Athlon, K8               */
 	unsigned int  SSE      : 1; /* Pentium III, Pentium 4    */
 	unsigned int  SSE2     : 1; /* Pentium 4, K8             */
     } CPU_features;

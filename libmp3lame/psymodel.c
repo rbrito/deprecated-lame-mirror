@@ -584,10 +584,8 @@ set_istereo_sfb(lame_internal_flags *gfc, int gr)
 {
     int sb;
     III_psy_ratio *mr = &gfc->masking_next[gr][0];
+
     gfc->is_start_sfb_l[gr] = gfc->is_start_sfb_l_next[gr];
-    gfc->is_start_sfb_s[gr] = gfc->is_start_sfb_s_next[gr];
-    gfc->is_start_sfb_l_next[gr] = gfc->cutoff_sfb_l;
-    gfc->is_start_sfb_s_next[gr] = gfc->cutoff_sfb_s;
     sb = gfc->cutoff_sfb_l - 1;
     if (!gfc->blocktype_next[gr][0] && !gfc->blocktype_next[gr][1]) {
 	do {
@@ -603,7 +601,8 @@ set_istereo_sfb(lame_internal_flags *gfc, int gr)
 	    x1 = mr[0].en.l[sb] * mr[1].thm.l[sb];
 	    x2 = mr[1].en.l[sb] * mr[0].thm.l[sb];
 
-	    if (x1*gfc->istereo_ratio > x2 || x2*gfc->istereo_ratio > x1)
+	    if (x1*gfc->istereo_ratio > x2*gfc->mld_l[sb]
+		|| x2*gfc->istereo_ratio > x1*gfc->mld_l[sb])
 		break;
 	} while (--sb >= 0);
     }
@@ -613,7 +612,8 @@ set_istereo_sfb(lame_internal_flags *gfc, int gr)
 	mr[0].thm.l[sb] = mr[2].thm.l[sb];
     }
 
-    sb = gfc->cutoff_sfb_s - 1;
+    gfc->is_start_sfb_s[gr] = gfc->is_start_sfb_s_next[gr];
+    sb = gfc->cutoff_sfb_s-1;
     do {
 	int sblock;
 	for (sblock = 0; sblock < 3; sblock++) {
@@ -629,14 +629,15 @@ set_istereo_sfb(lame_internal_flags *gfc, int gr)
 	    x1 = mr[0].en.s[sb][sblock] * mr[1].thm.s[sb][sblock];
 	    x2 = mr[1].en.s[sb][sblock] * mr[0].thm.s[sb][sblock];
 
-	    if (x1*gfc->istereo_ratio > x2 || x2*gfc->istereo_ratio > x1)
+	    if (x1*gfc->istereo_ratio > x2*gfc->mld_s[sb]
+		|| x2*gfc->istereo_ratio > x1*gfc->mld_s[sb])
 		break;
 	}
 	if (sblock != 3)
 	    break;
     } while (--sb >= 0);
     gfc->is_start_sfb_s_next[gr] = ++sb; assert(sb >= 0);
-	   
+
     for (; sb < gfc->cutoff_sfb_s; sb++) {
 	mr[0].en .s[sb][0] = mr[2].en .s[sb][0];
 	mr[0].thm.s[sb][0] = mr[2].thm.s[sb][0];
@@ -685,16 +686,15 @@ compute_masking_s(
 	if (b != gfc->bo_s[sb])
 	    continue;
 
-	enn  -= eb[b] * 0.5;
-	thmm -= ecb * 0.5;
+	enn  -= .5*eb[b];
+	thmm -= .5*ecb;
 	if (thmm < gfc->ATH.s_avg[sb] * gfc->ATH.adjust[ch]) {
 	    thmm = gfc->ATH.s_avg[sb] * gfc->ATH.adjust[ch];
 	    enn  = -enn;
 	}
-	mr->en .s[sb][sblock] = enn;
-	mr->thm.s[sb][sblock] = thmm * gfc->masking_lower;
-	enn  = eb[b] * 0.5;
-	thmm = ecb * 0.5;
+	mr->en.s[sb][sblock] = enn; mr->thm.s[sb][sblock] = thmm;
+	enn  = .5*eb[b];
+	thmm = .5*ecb;
 	sb++;
 	if (sb == SBMAX_s)
 	    break;
@@ -703,8 +703,7 @@ compute_masking_s(
 		thmm = gfc->ATH.s_avg[sb] * gfc->ATH.adjust[ch];
 		enn  = -enn;
 	    }
-	    mr->en .s[sb][sblock] = enn;
-	    mr->thm.s[sb][sblock] = thmm;
+	    mr->en.s[sb][sblock] = enn; mr->thm.s[sb][sblock] = thmm;
 	    break;
 	}
     }
@@ -1040,7 +1039,7 @@ mp3x display               <------LONG------>
 	    FLOAT adjust
 		= (Max(gfc->nsPsy.subbk_ene[ch][sb],
 		      gfc->nsPsy.subbk_ene[ch][sb-1])
-		   + gfc->decay * gfc->nsPsy.subbk_ene[ch][sb-2])
+		   + gfc->nsPsy.decay * gfc->nsPsy.subbk_ene[ch][sb-2])
 		* gfc->nsPsy.attackthre;
 	    if (gfc->nsPsy.subbk_ene[ch][sb+1] < adjust)
 		continue;
@@ -1339,9 +1338,7 @@ L3psycho_anal_ns(
 		thmm = gfc->ATH.l_avg[j] * gfc->ATH.adjust[ch];
 		enn  = -enn;
 	    }
-
-	    mr->en .l[j] = enn;
-	    mr->thm.l[j] = thmm * gfc->masking_lower;
+	    mr->en.l[j] = enn; mr->thm.l[j] = thmm;
 
 	    enn  = .5*eb[b];
 	    thmm = .5*ecb;
@@ -1354,9 +1351,7 @@ L3psycho_anal_ns(
 	    thmm = gfc->ATH.l_avg[SBMAX_l-1] * gfc->ATH.adjust[ch];
 	    enn  = -enn;
 	}
-
-	mr->en .l[SBMAX_l-1] = enn;
-	mr->thm.l[SBMAX_l-1] = thmm * gfc->masking_lower;
+	mr->en.l[SBMAX_l-1] = enn; mr->thm.l[SBMAX_l-1] = thmm;
 
 	/* short block may be needed but not calculated */
 	/* calculate it from converting from long */
@@ -1386,13 +1381,12 @@ L3psycho_anal_ns(
 		enn  = -enn;
 	    }
 
-	    thmm *= gfc->masking_lower;
 	    if (i & 1) {mr->thm.s[j][0] = thmm; mr->en.s[j][0] = enn;}
 	    if (i & 2) {mr->thm.s[j][1] = thmm; mr->en.s[j][1] = enn;}
 	    if (i & 4) {mr->thm.s[j][2] = thmm; mr->en.s[j][2] = enn;}
 
-	    enn  =  eb[b] * 0.5;
-	    thmm = tmp * 0.5;
+	    enn  = .5*eb[b];
+	    thmm = .5*tmp;
 	    j++;
 	    if (b == gfc->bo_l2s[j])
 		break;
@@ -1405,7 +1399,6 @@ L3psycho_anal_ns(
 	    enn  = -enn;
 	}
 
-	thmm *= gfc->masking_lower;
 	if (i & 1) {mr->thm.s[j][0] = thmm; mr->en.s[j][0] = enn;}
 	if (i & 2) {mr->thm.s[j][1] = thmm; mr->en.s[j][1] = enn;}
 	if (i & 4) {mr->thm.s[j][2] = thmm; mr->en.s[j][2] = enn;}
@@ -1549,6 +1542,7 @@ psycho_analysis(
 				  gfc->blocktype_next[0][ch]);
 	}
     }
+
     assert(!gfc->mode_ext
 	   || (gfc->l3_side.tt[0][0].block_type
 	       == gfc->l3_side.tt[0][1].block_type
