@@ -73,10 +73,10 @@ void init_layer2(void)
 static void
 II_step_one(PMPSTR mp, unsigned int *bit_alloc,int *scale,struct frame *fr)
 {
-    int channels = fr->channels-1;
+    int stereo = fr->channels-1;
     int sblimit = fr->II_sblimit;
     int jsbound = fr->jsbound;
-    int sblimit2 = fr->II_sblimit<<channels;
+    int sblimit2 = fr->II_sblimit<<stereo;
     struct al_table2 *alloc1 = fr->alloc;
     int i;
     static unsigned int scfsi_buf[64];
@@ -84,7 +84,7 @@ II_step_one(PMPSTR mp, unsigned int *bit_alloc,int *scale,struct frame *fr)
     int sc,step;
 
     bita = bit_alloc;
-    if(channels)
+    if(stereo)
     {
       for (i=jsbound;i;i--,alloc1+=(1<<step))
       {
@@ -231,9 +231,8 @@ II_step_two(PMPSTR mp, unsigned int *bit_alloc,
 -> changed .. now we use the scalefac values of channel one !! 
 */
     }
-
-/*  if(sblimit > (fr->down_sample_sblimit) ) */
-/*    sblimit = fr->down_sample_sblimit; */
+  if (sblimit > fr->down_sample_sblimit)
+      sblimit = fr->down_sample_sblimit;
 
   for(i=sblimit;i<SBLIMIT;i++)
     for (j=0;j<channels;j++)
@@ -256,7 +255,7 @@ static void II_select_table(struct frame *fr)
        { alloc_0, alloc_1, alloc_2, alloc_3 , alloc_4 };
   static const int sblims[5] = { 27 , 30 , 8, 12 , 30 };
 
-  if(fr->lsf)
+  if(fr->sampling_frequency >= 3)
     table = 4;
   else
     table = translate[fr->sampling_frequency][2-fr->channels][fr->bitrate_index];
@@ -268,7 +267,6 @@ static void II_select_table(struct frame *fr)
 
 
 int do_layer2( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point)
-/*int do_layer2(struct frame *fr,int outmode,struct audio_info_struct *ai) */
 {
   int clip=0;
   int i,j;
@@ -282,6 +280,11 @@ int do_layer2( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point)
   II_select_table(fr);
   fr->jsbound = (fr->mode == MPG_MD_JOINT_STEREO) ?
      (fr->mode_ext<<2)+4 : fr->II_sblimit;
+
+  if (fr->jsbound > fr->II_sblimit) {
+      fr->jsbound = fr->II_sblimit;
+/*    fprintf(stderr, "Truncating stereo boundary to sideband limit.\n");*/
+  }
 
   if(channels == 1 || single == 3)
     single = 0;

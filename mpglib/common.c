@@ -99,8 +99,6 @@ int head_check(unsigned long head,int check_layer)
  */
 int decode_header(struct frame *fr,unsigned long newhead)
 {
-
-
     if( newhead & (1<<20) ) {
       fr->lsf = (newhead & (1<<19)) ? 0x0 : 0x1;
       fr->mpeg25 = 0;
@@ -171,7 +169,10 @@ int decode_header(struct frame *fr,unsigned long newhead)
         fprintf(stderr,"Sorry, layer %d not supported\n",fr->lay); 
         return (0);
     }
-
+    if (fr->framesize > MAXFRAMESIZE) {
+      fprintf(stderr,"Frame size too big: %d\n", fr->framesize+4-fr->padding);
+      return (0);
+    }
     return 1;
 }
 

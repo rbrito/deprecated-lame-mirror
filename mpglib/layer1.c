@@ -133,7 +133,6 @@ I_step_two(PMPSTR mp, real fraction[2][SBLIMIT],unsigned int balloc[2*SBLIMIT],
   }
 }
 
-/*int do_layer1(struct frame *fr,int outmode,struct audio_info_struct *ai) */
 int do_layer1(PMPSTR mp, unsigned char *pcm_sample,int *pcm_point)
 {
   int clip=0;
