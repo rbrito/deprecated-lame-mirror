@@ -1,3 +1,9 @@
+/* $Id$ */
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdlib.h>
 #include "tabinit.h"
 #include "mpg123.h"

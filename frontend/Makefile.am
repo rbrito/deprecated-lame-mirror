@@ -5,8 +5,6 @@ AUTOMAKE_OPTIONS = foreign $(top_srcdir)/ansi2knr
 bin_PROGRAMS = lame @WITH_MP3RTP@ @WITH_MP3X@
 EXTRA_PROGRAMS = mp3rtp mp3x
 
-DEFS = @DEFS@ @CONFIG_DEFS@
-
 brhist_sources = brhist.c brhist.h
 
 EXTRA_DIST = $(brhist_sources) README.Win32 mp3x.dsp mp3x.dsw
@@ -46,7 +44,7 @@ endif
 CFLAGS = @CFLAGS@ @GTK_CFLAGS@ @FRONTEND_CFLAGS@
 LDFLAGS = @LDFLAGS@ @FRONTEND_LDFLAGS@
 
-INCLUDES = -I$(top_srcdir)/libmp3lame -I$(top_srcdir)/include
+INCLUDES = -I$(top_srcdir)/libmp3lame -I$(top_srcdir)/include -I$(top_srcdir)
 
 LDADD = @LDADD@ @FRONTEND_LDADD@ \
 	$(top_srcdir)/libmp3lame/libmp3lame.la

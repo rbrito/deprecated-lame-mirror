@@ -1,3 +1,9 @@
+/* $Id$ */
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 /* LAME interface to libvorbis */
 
 #ifdef HAVEVORBIS

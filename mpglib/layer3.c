@@ -5,6 +5,12 @@
  * All rights reserved. See also 'README'
  */ 
 
+/* $Id$ */
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdlib.h>
 #include "common.h"
 #include "huffman.h"

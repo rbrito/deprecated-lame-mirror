@@ -5,6 +5,12 @@
  *
  */
 
+/* $Id$ */
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #ifdef AMIGA_MPEGA
 
 #define __USE_SYSBASE

@@ -19,6 +19,12 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/* $Id$ */
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include "machine.h"
 #if defined(__riscos__) && defined(FPA10)
 #include	"ymath.h"

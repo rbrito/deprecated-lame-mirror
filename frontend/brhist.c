@@ -19,6 +19,12 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/* $Id$ */
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 /* basic #define's */
 
 #ifdef NOTERMCAP            /* work around to change the !NOTERMCAP to TERMCAP_AVAILABLE */

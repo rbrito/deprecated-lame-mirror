@@ -31,6 +31,12 @@
 **           Takehiro  - some dirty hack for speed up
 */
 
+/* $Id$ */
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <math.h>
 #include "util.h"
 #include "fft.h"

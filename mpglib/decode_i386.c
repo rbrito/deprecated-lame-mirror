@@ -10,6 +10,12 @@
  * even for Intel processors.
  */
 
+/* $Id$ */
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdlib.h>
 #if defined(__riscos__) && defined(FPA10)
 #include	"ymath.h"

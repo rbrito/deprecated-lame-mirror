@@ -2,8 +2,6 @@
 
 AUTOMAKE_OPTIONS = foreign $(top_srcdir)/ansi2knr
 
-DEFS = @DEFS@ @CONFIG_DEFS@ @ENCODER_DEFS@
-
 SUBDIRS = i386
 
 lib_LTLIBRARIES = libmp3lame.la
@@ -23,7 +21,7 @@ endif
 libmp3lame_la_LIBADD = $(nasm_ldadd) $(decoder_ldadd)
 libmp3lame_la_LDFLAGS = -version-info @LIB_MAJOR_VERSION@:@LIB_MINOR_VERSION@
 
-INCLUDES = @INCLUDES@ -I$(top_srcdir)/mpglib/
+INCLUDES = @INCLUDES@ -I$(top_srcdir)/mpglib/ -I$(top_srcdir)
 
 EXTRA_DIST = amiga_mpega.c \
 	debugscalefac.c \

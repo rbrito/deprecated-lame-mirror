@@ -8,6 +8,12 @@
  *
  */
 
+/* $Id$ */
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #ifdef USE_LAYER_1
 
 #include "common.h"

@@ -1,7 +1,6 @@
 ## $Id$
 
 INCLUDES = @INCLUDES@ -I$(top_srcdir)/libmp3lame
-DEFS = @DEFS@ @CONFIG_DEFS@
 
 noinst_LTLIBRARIES = libmpgdecoder.la
 
