@@ -424,8 +424,8 @@ int noquant_count_bits(
 	assert(a1+a2+2 < SBPSY_l);
         a2 = gfc->scalefac_band.l[a1 + a2 + 2];
 	if (a2 < i)
-	    gi->table_select[2] = gfc->choose_table(ix + a2, ix + i,
-						    &gi->part2_3_length);
+	    gi->table_select[2] = choosetable(ix + a2, ix + i,
+					      &gi->part2_3_length);
 	else
 	    a2 = i;
     } else {
@@ -440,13 +440,13 @@ int noquant_count_bits(
     assert( a2 > 0 );
 
     if (a1 >= a2) {
-	gi->table_select[0] = gfc->choose_table(ix, ix + a2,
-						&gi->part2_3_length);
+	gi->table_select[0] = choosetable(ix, ix + a2,
+					  &gi->part2_3_length);
     } else {
-	gi->table_select[0] = gfc->choose_table(ix, ix + a1,
-						&gi->part2_3_length);
-	gi->table_select[1] = gfc->choose_table(ix + a1, ix + a2,
-						&gi->part2_3_length);
+	gi->table_select[0] = choosetable(ix, ix + a1,
+					  &gi->part2_3_length);
+	gi->table_select[1] = choosetable(ix + a1, ix + a2,
+					  &gi->part2_3_length);
     }
     if (gfc->use_best_huffman == 2)
 	best_huffman_divide (gfc, gi);
@@ -522,7 +522,7 @@ recalc_divide_init(
 	if (a1 >= bigv)
 	    break;
 	r0bits = 0;
-	r0t = gfc->choose_table(ix, ix + a1, &r0bits);
+	r0t = choosetable(ix, ix + a1, &r0bits);
 
 	for (r1 = 0; r1 < 8; r1++) {
 	    int a2 = gfc->scalefac_band.l[r0 + r1 + 2];
@@ -530,7 +530,7 @@ recalc_divide_init(
 		break;
 
 	    bits = r0bits;
-	    r1t = gfc->choose_table(ix + a1, ix + a2, &bits);
+	    r1t = choosetable(ix + a1, ix + a2, &bits);
 	    if (r01_bits[r0 + r1] > bits) {
 		r01_bits[r0 + r1] = bits;
 		r01_div[r0 + r1] = r0;
@@ -564,7 +564,7 @@ recalc_divide_sub(
 	if (gi->part2_3_length <= bits)
 	    break;
 
-	r2t = gfc->choose_table(ix + a2, ix + bigv, &bits);
+	r2t = choosetable(ix + a2, ix + bigv, &bits);
 	if (gi->part2_3_length <= bits)
 	    continue;
 
@@ -642,10 +642,10 @@ void best_huffman_divide(
 	}
 	if (a1 > 0)
 	    cod_info2.table_select[0] =
-		gfc->choose_table(ix, ix + a1, &cod_info2.part2_3_length);
+		choosetable(ix, ix + a1, &cod_info2.part2_3_length);
 	if (i > a1)
 	    cod_info2.table_select[1] =
-		gfc->choose_table(ix + a1, ix + i, &cod_info2.part2_3_length);
+		choosetable(ix + a1, ix + i, &cod_info2.part2_3_length);
 	if (gi->part2_3_length > cod_info2.part2_3_length)
 	    *gi = cod_info2;
     }

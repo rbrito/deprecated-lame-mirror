@@ -854,9 +854,8 @@ huffman_init(lame_internal_flags * const gfc)
     int i;
     extern int choose_table_nonMMX(const int *ix, const int *end, int *s);
 
+#if HAVE_NASM
     gfc->choose_table = choose_table_nonMMX;
-
-#ifdef MMX_choose_table
     if (gfc->CPU_features.MMX) {
         extern int choose_table_MMX(const int *ix, const int *end, int *s);
         gfc->choose_table = choose_table_MMX;

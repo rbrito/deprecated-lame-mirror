@@ -48,11 +48,7 @@
 //! Stringify \a x, perform macro expansion.
 #define XSTR(x)  STR(x)
 
-#if defined(MMX_choose_table)
-# define V1  "MMX "
-#else
-# define V1  ""
-#endif
+#define V1  "MMX, 3DNow!"
 
 //! Compile time features.
 #define V   V1
