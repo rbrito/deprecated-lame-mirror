@@ -86,7 +86,6 @@ extern "C" {
 #endif
 
 
-#define         HAN_SIZE                512
 #define         CRC16_POLYNOMIAL        0x8005
 #define MAX_BITS 4095
 
@@ -137,15 +136,11 @@ static inline ieee754_float32_t fast_log2(ieee754_float32_t x)
 *  Global Type Definitions
 *
 ***********************************************************************/
-
-
-
-/* "bit_stream.h" Type Definitions */
-
+/* bitstream handling structure */
 typedef struct  bit_stream_struc {
-    int         totbit;         /* bit counter of bit stream */
-    int         buf_byte_idx;   /* pointer to top byte in buffer */
-    int         buf_bit_idx;    /* pointer to top bit of top byte in buffer */
+    int totbit;         /* bit counter of bit stream */
+    int buf_byte_idx;   /* pointer to top byte in buffer */
+    int buf_bit_idx;    /* pointer to top bit of top byte in buffer */
     unsigned char buf[BUFFER_SIZE];         /* bit stream buffer */
 } Bit_stream_struc;
 
@@ -216,9 +211,6 @@ typedef struct {
     int scfsi[2][4];
 } III_side_info_t;
 
-
-
-
 typedef struct 
 {
     int sum;    // what we have seen so far
@@ -254,7 +246,6 @@ typedef struct {
                                        fir, */
     unsigned char* src_step;
     sample_t*      in_old       [MAX_CHANNELS];
-    //    uint64_t       sample_count [MAX_CHANNELS];
     unsigned       fir_stepper  [MAX_CHANNELS];
     int            inp_stepper  [MAX_CHANNELS];
 
@@ -359,46 +350,46 @@ struct lame_internal_flags {
   int frac_SpF;
   int slot_lag;
 
-  /* variables for reservoir.c */
+  /* variables for reservoir */
   int sideinfo_len;
   int ResvSize; /* in bits */
   int ResvMax;  /* in bits */
 
-  /* variables for newmdct.c */
+  /* variables for subband filter and MDCT */
   FLOAT sb_sample[2][3][18][SBLIMIT];
   FLOAT amp_filter[SBLIMIT];
 
+  /* side channel sparsing */
   int   sparsing;
   FLOAT sparseA;
   FLOAT sparseB;
 
-  /* DATA FROM PSYMODEL.C */
-  FLOAT	nb_1[4][CBANDS], nb_2[4][CBANDS];
-  FLOAT *s3_ss;
-  FLOAT *s3_ll;
-  FLOAT decay;
+    /* psymodel */
+    FLOAT nb_1[4][CBANDS], nb_2[4][CBANDS];
+    FLOAT *s3_ss;
+    FLOAT *s3_ll;
+    FLOAT decay;
 
-  FLOAT mld_l[SBMAX_l],mld_s[SBMAX_s];
-  int	bo_l[SBMAX_l], bo_s[SBMAX_s], bo_l2s[SBMAX_s];
-  int	npart_l,npart_s;
+    FLOAT mld_l[SBMAX_l],mld_s[SBMAX_s];
+    int	bo_l[SBMAX_l], bo_s[SBMAX_s], bo_l2s[SBMAX_s];
+    int	npart_l,npart_s;
 
-  int	s3ind[CBANDS][2];
-  int	s3ind_s[CBANDS][2];
+    int	s3ind[CBANDS][2];
+    int	s3ind_s[CBANDS][2];
 
-  int	endlines_s[CBANDS];
-  int	numlines_l[CBANDS];
-  FLOAT rnumlines_l[CBANDS];
-  FLOAT rnumlines_ls[CBANDS];
+    int	endlines_s[CBANDS];
+    int	numlines_l[CBANDS];
+    FLOAT rnumlines_l[CBANDS];
+    FLOAT rnumlines_ls[CBANDS];
+    FLOAT masking_lower;
 
+    /* for next frame data */
+    III_psy_ratio masking_next[2][MAX_CHANNELS*2];
+    FLOAT tot_ener_next[2][MAX_CHANNELS*2];
+    FLOAT loudness_next[2][MAX_CHANNELS];  /* loudness^2 approx. per granule and channel */
+    int useshort_next[2][MAX_CHANNELS*2]; /* for block type */
+    int mode_ext_next;
 
-  /* for next frame data */
-  III_psy_ratio masking_next[2][MAX_CHANNELS*2];
-  FLOAT tot_ener_next[2][MAX_CHANNELS*2];
-  FLOAT loudness_next[2][MAX_CHANNELS];  /* loudness^2 approx. per granule and channel */
-  int	useshort_next[2][MAX_CHANNELS*2]; /* for block type */
-  int   mode_ext_next;
-
-    /* variables used for psymodel */
     struct {
 	/* short block tuning */
 	FLOAT	attackthre;
@@ -435,12 +426,11 @@ struct lame_internal_flags {
 	FLOAT aa_sensitivity_p;
     } ATH;
 
-    /* variables used by quantize.c */
+    /* quantization */
     int OldValue[2];
     int CurrentStep[2];
     scalefac_struct scalefac_band;
 
-    FLOAT masking_lower;
     char bv_scf[576];
     int pseudohalf[SFBMAX];
 
