@@ -623,6 +623,8 @@ set_istereo_sfb(lame_internal_flags *gfc, int gr)
 {
     int sb;
     III_psy_ratio *mr = &gfc->masking_next[gr][0];
+    gfc->l3_side.is_start_sfb_l[gr] = gfc->is_start_sfb_l_next[gr];
+    gfc->l3_side.is_start_sfb_s[gr] = gfc->is_start_sfb_s_next[gr];
     if (!gfc->useshort_next[gr][0] && !gfc->useshort_next[gr][1]) {
 	for (sb = SBMAX_l-2; sb >= 11; --sb) {
 	    FLOAT x1, x2;
@@ -1737,10 +1739,6 @@ psycho_analysis(
 	    = gfc->l3_side.tt[gfc->mode_gr-1][ch].block_type;
     }
     /* next frame data -> current frame data (aging) */
-    gfc->l3_side.is_start_sfb_l[0] = gfc->is_start_sfb_l_next[0];
-    gfc->l3_side.is_start_sfb_l[1] = gfc->is_start_sfb_l_next[1];
-    gfc->l3_side.is_start_sfb_s[0] = gfc->is_start_sfb_s_next[0];
-    gfc->l3_side.is_start_sfb_s[1] = gfc->is_start_sfb_s_next[1];
 
     adjust_ATH(gfp);
     gfc->mode_ext = gfc->mode_ext_next;
@@ -1830,8 +1828,6 @@ psycho_analysis(
     }
     /* determine MS/LR in the next frame */
     gfc->mode_ext_next = MPG_MD_LR_LR;
-    if (gfp->use_istereo)
-	gfc->mode_ext_next = MPG_MD_LR_I;
     if (gfp->mode == JOINT_STEREO) {
 	FLOAT diff_pe = 50.0;
 	if (gfc->mode_ext & MPG_MD_MS_LR)
@@ -1868,8 +1864,11 @@ psycho_analysis(
 		    = gfc->l3_side.tt[gfc->mode_gr-1][1].block_type
 		    = SHORT_TYPE;
 	} else if (gfc->mode_ext_next != gfc->mode_ext
-		   && (gfc->useshort_next[0][0] | gfc->useshort_next[0][1]))
+		   && (gfc->useshort_next[0][0] | gfc->useshort_next[0][1])) {
 	    gfc->useshort_next[0][0] = gfc->useshort_next[0][1] = SHORT_TYPE;
+	    if (gfp->use_istereo)
+		gfc->mode_ext_next = MPG_MD_LR_I;
+	}
     }
 
     /* determine current frame block type (long/start/short/stop) */
