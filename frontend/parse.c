@@ -535,7 +535,7 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    Note: A version 2 tag will NOT be added unless one of the input fields\n"
               "    won't fit in a version 1 tag (e.g. the title string is longer than 30\n"
               "    characters), or the '--add-id3v2' or '--id3v2-only' options are used,\n"
-              "    or output is redirected to stdout."
+              "    or output is redirected to stdout.\n"
 #if defined(HAVE_VORBIS_ENCODER)
               "\n\n"
               "    Note: All '--t*' options (except those for track and genre) work for Ogg\n"
@@ -554,8 +554,15 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
 
               );
 
-
+#if defined(HAVE_NASM)
     wait_for ( fp, lessmode );  
+    fprintf ( fp,
+              "  Platform specific:\n"
+              "    --noasm <instructions> disable assembly optimizations for mmx/3dnow/sse\n"
+                );
+    wait_for ( fp, lessmode );  
+#endif
+
     display_bitrates ( fp );
 
     return 0;

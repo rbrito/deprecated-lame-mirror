@@ -67,6 +67,10 @@
     <td align="LEFT" nowrap>copyright</td>
   </tr>
   <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd><a href="#-cbr">--cbr</a></kbd></td>
+    <td align="LEFT" nowrap>enforce use of constant bitrate</td>
+  </tr>
+  <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#-comp">--comp</a></kbd></td>
     <td align="LEFT" nowrap>choose compression ratio</td>
   </tr>
@@ -149,6 +153,10 @@
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#-noath">--noath</a></kbd></td>
     <td align="LEFT" nowrap>disable ATH</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd><a href="#-noasm">--noasm</a></kbd></td>
+    <td align="LEFT" nowrap>disable assembly optimizations (mmx/3dnow/sse)</td>
   </tr>
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#-nohist">--nohist</a></kbd></td>
@@ -445,6 +453,16 @@
 </dl>
 <dl> 
   <dd>Mark the encoded file as being copyrighted. 
+  <dt><br>
+    <br>
+    <hr width="50%" noshade align="center">
+    <br>
+  <dt><strong>* <kbd>--cbr</kbd><a name="-cbr">
+    &nbsp;&nbsp;&nbsp;&nbsp;enforce use of constant bitrate</a></strong> 
+  </dt>
+</dl>
+<dl> 
+  <dd>This switch enforces the use of constant bitrate encoding. 
   <dt><br>
     <br>
     <hr width="50%" noshade align="center">
@@ -767,6 +785,20 @@
 <dl> 
   <dd> Disable any use of the ATH (absolute threshold of hearing) for masking. 
     Normally, humans are unable to hear any sound below this threshold. 
+  <dt><br>
+  </dt>
+</dl>
+<dl> 
+  <hr width="50%" noshade align="center">
+  <br>
+  <dl> </dl>
+  <dt><strong>* <kbd>--noasm mmx/3dnow/sse</kbd><a name="-noasm">
+   &nbsp;&nbsp;&nbsp;&nbsp;disable assembly optimisations</a></strong> </dt>
+</dl>
+<dl> 
+  <dd>Disable specific assembly optimizations. Quality will not increase, only
+      speed will be reduced. If you have problems running Lame on a Cyrix/Via
+      processor, disabling mmx optimizations might solve your problem.
   <dt><br>
   </dt>
 </dl>
