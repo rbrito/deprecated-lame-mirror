@@ -185,18 +185,18 @@ be masked by strong maskers in the L or R channels.
    the last granule (computed during the last call) before it is
    overwritten with the new data.  It looks like this:
   
-   0. psymodel_data declaired static
+   0. static psymodel_data 
    1. calling_program_data = psymodel_data
-   2. compute new psymodel_data
+   2. compute psymodel_data
     
    For data which needs to know the blocktype, the copying must be
-   done at the end of this loop, and the old values must be saved
+   done at the end of this loop, and the old values must be saved:
    
-   0. psymodel_data_old declaried static
+   0. static psymodel_data_old 
    1. compute psymodel_data
    2. compute possible block type of this granule
    3. compute final block type of previous granule based on #2.
-   4. calling_pgraom_data = psymodel_data_old
+   4. calling_program_data = psymodel_data_old
    5. psymodel_data_old = psymodel_data
 */
 int L3psycho_anal( lame_global_flags * gfp,
@@ -234,10 +234,9 @@ int L3psycho_anal( lame_global_flags * gfp,
   int blocktype[2],uselongblock[2];
   
   /* usual variables like loop indices, etc..    */
-  int numchn, chn, samplerate;
+  int numchn, chn;
   int   b, i, j, k;
   int	sb,sblock;
-  FLOAT cwlimit;
 
 
   if(gfc->psymodel_init==0) {
@@ -1009,7 +1008,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
   int blocktype[2],uselongblock[2];
   
   /* usual variables like loop indices, etc..    */
-  int numchn, chn, samplerate;
+  int numchn, chn;
   int   b, i, j, k;
   int	sb,sblock;
 
