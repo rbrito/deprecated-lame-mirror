@@ -9,9 +9,6 @@ KLEMM_14: (missing)
 KLEMM_36:
  - portability fixes in the IO code
 
-KLEMM_42:
- - new bandwith calculation
-
 KLEMM_43:
  - cleaned up tables in tables.c
 
