@@ -388,7 +388,7 @@ int PutVbrTag(lame_global_flags *gfp,char* lpszFileName,int nVbrScale)
 	/* but sampling freq, mode andy copyright/copy protection taken */
 	/* from first valid frame */
 	pbtStreamBuffer[0]=(u_char) 0xff;
-	abyte = (pbtStreamBuffer[1] & (char) 0xf0);
+	abyte = (pbtStreamBuffer[1] & (char) 0xf1);
 	if (gfp->version==1) {
           /* changed behaviour as suggested by Mathew Hendry:
            * as the extra Xing VBR header is no valid mpeg frame anyway,
