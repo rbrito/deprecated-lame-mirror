@@ -51,7 +51,7 @@ mp3x_SOURCES = mp3x.c gtkanal.c gpkplotting.c $(common_sources)
 endif
 
 CFLAGS = @CFLAGS@ @GTK_CFLAGS@ @FRONTEND_CFLAGS@
-LDFLAGS = @LDFLAGS@ @FRONTEND_LDFLAGS@
+LDFLAGS = @LDFLAGS@ @FRONTEND_LDFLAGS@ -static
 
 INCLUDES = -I$(top_srcdir)/libmp3lame -I$(top_srcdir)/include -I$(top_builddir)
 
