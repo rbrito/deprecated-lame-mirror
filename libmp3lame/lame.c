@@ -566,6 +566,11 @@ lame_init_params(lame_t gfc)
     iteration_init(gfc);
     psymodel_init(gfc);
 
+    if (gfc->VBR == abr) {
+	gfc->masking_lower *= 2.0;
+	gfc->masking_lower_short *= 2.0;
+    }
+
     /* scaling */
     if (gfc->scale == 0.0)
 	gfc->scale = 1.0;
