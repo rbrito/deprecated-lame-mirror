@@ -1559,7 +1559,6 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
              gfc->presetTune.quantcomp_adjust_mtrh = 9;
              gfc->presetTune.quantcomp_type_s = 4;
              gfc->presetTune.quantcomp_alt_type = 0;
-             gfc->presetTune.athadjust_safe_noiseshaping_thre = 0.0;
 	     gfc->presetTune.athadjust_safe_athaasensitivity = pow(10., -.8);
           }
           else {
@@ -1591,7 +1590,6 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
              gfc->presetTune.quantcomp_adjust_mtrh = 9;
 	     gfc->presetTune.quantcomp_alt_type = 0;
              (void) lame_set_ATHlower( gfp, -2 );
-             gfc->presetTune.athadjust_safe_noiseshaping_thre = 0.0;
 	     gfc->presetTune.athadjust_safe_athaasensitivity = pow(10., -.8);
           }
           else {

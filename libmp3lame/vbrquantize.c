@@ -914,15 +914,7 @@ short_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
 	if (maxover1 < v1)
 	    maxover1 = v1;
     }
-
-    if (gfc->use_scalefac_scale && gfc->presetTune.use
-	&& !gfc->presetTune.athadjust_safe_noiseshaping
-	&& gfc->ATH.adjust >= 1.0)
-        /* allow scalefac_scale=1 */
-        mover = Min(maxover0, maxover1);
-    else
-        mover = maxover0;
-
+    mover = maxover0;
     vbrmax -= mover;
     maxover0 -= mover;
     maxover1 -= mover;
@@ -1012,14 +1004,6 @@ long_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
     }
 
     mover = Min(maxover0, maxover0p);
-    if (gfc->use_scalefac_scale && gfc->presetTune.use
-	&& !gfc->presetTune.athadjust_safe_noiseshaping
-	&& gfc->ATH.adjust >= 1.0) {
-        /* allow scalefac_scale=1 */
-        mover = Min(mover, maxover1);
-        mover = Min(mover, maxover1p);
-    }
-
     vbrmax -= mover;
     maxover0 -= mover;
     maxover0p -= mover;
