@@ -893,7 +893,7 @@ scale_bitcount_lsf(gr_info * const gi)
 		int m = 0, sfbend = sfb + nr_of_sfb_block[6+tableID][part];
 		for (; sfb < sfbend; sfb++) {
 		    if (gi->scalefac[sfb] < pretab[sfb])
-			m = LARGE_BITS;
+			m = 16;
 		    if (m < gi->scalefac[sfb]-pretab[sfb])
 			m = gi->scalefac[sfb]-pretab[sfb];
 		}
