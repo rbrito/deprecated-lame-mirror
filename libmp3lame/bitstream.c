@@ -57,7 +57,7 @@ int getframebytes(const lame_global_flags * gfp)
 
     /* main encoding routine toggles padding on and off */
     /* one Layer3 Slot consists of 8 bits */
-    return gfc->mode_gr*(576/8)*1000*bit_rate / gfp->out_samplerate
+    return gfc->mode_gr*bit_rate*(1000*576/8) / gfp->out_samplerate
 	+ gfc->padding - gfc->l3_side.sideinfo_len;
 }
 
@@ -136,9 +136,9 @@ drain_into_ancillary(lame_internal_flags *gfc, int remainingBits)
 
 /*write N bits into the header */
 inline static int
-writeheader(lame_internal_flags *gfc,int val, int j, int ptr)
+writeheader(char *p, int val, int j, int ptr)
 {
-    char *p = &gfc->bs.header[gfc->bs.h_ptr].buf[ptr >> 3];
+    p += ptr >> 3;
     assert(0 < j && j <= 16);
     val <<= (24 - j - (ptr&7));
     p[0] |= val >> 16;
@@ -166,37 +166,38 @@ static int
 writeTableHeader(lame_internal_flags *gfc, gr_info *gi, int ptr)
 {
     static const int blockConv[] = {1, 3, 2};
+    char *p = gfc->bs.header[gfc->bs.h_ptr].buf;
     if (gi->block_type != NORM_TYPE) {
-	ptr = writeheader(gfc, 1, 1, ptr); /* window_switching_flag */
-	ptr = writeheader(gfc, blockConv[gi->block_type-1], 2, ptr);
-	ptr = writeheader(gfc, gi->mixed_block_flag, 1, ptr);
+	ptr = writeheader(p, 1, 1, ptr); /* window_switching_flag */
+	ptr = writeheader(p, blockConv[gi->block_type-1], 2, ptr);
+	ptr = writeheader(p, gi->mixed_block_flag, 1, ptr);
 
 	if (gi->table_select[0] == 14)
 	    gi->table_select[0] = 16;
-	ptr = writeheader(gfc, gi->table_select[0],  5, ptr);
+	ptr = writeheader(p, gi->table_select[0],  5, ptr);
 	if (gi->table_select[1] == 14)
 	    gi->table_select[1] = 16;
-	ptr = writeheader(gfc, gi->table_select[1],  5, ptr);
+	ptr = writeheader(p, gi->table_select[1],  5, ptr);
 
-	ptr = writeheader(gfc, gi->subblock_gain[0], 3, ptr);
-	ptr = writeheader(gfc, gi->subblock_gain[1], 3, ptr);
-	ptr = writeheader(gfc, gi->subblock_gain[2], 3, ptr);
+	ptr = writeheader(p, gi->subblock_gain[0], 3, ptr);
+	ptr = writeheader(p, gi->subblock_gain[1], 3, ptr);
+	ptr = writeheader(p, gi->subblock_gain[2], 3, ptr);
     } else {
 	ptr++; /* window_switching_flag */
 	if (gi->table_select[0] == 14)
 	    gi->table_select[0] = 16;
-	ptr = writeheader(gfc, gi->table_select[0], 5, ptr);
+	ptr = writeheader(p, gi->table_select[0], 5, ptr);
 	if (gi->table_select[1] == 14)
 	    gi->table_select[1] = 16;
-	ptr = writeheader(gfc, gi->table_select[1], 5, ptr);
+	ptr = writeheader(p, gi->table_select[1], 5, ptr);
 	if (gi->table_select[2] == 14)
 	    gi->table_select[2] = 16;
-	ptr = writeheader(gfc, gi->table_select[2], 5, ptr);
+	ptr = writeheader(p, gi->table_select[2], 5, ptr);
 
 	assert(gi->region0_count < 16U);
 	assert(gi->region1_count < 8U);
-	ptr = writeheader(gfc, gi->region0_count, 4, ptr);
-	ptr = writeheader(gfc, gi->region1_count, 3, ptr);
+	ptr = writeheader(p, gi->region0_count, 4, ptr);
+	ptr = writeheader(p, gi->region1_count, 3, ptr);
     }
     return ptr;
 }
@@ -370,32 +371,33 @@ encodeBitStream(lame_global_flags *gfp)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
     III_side_info_t *l3_side = &gfc->l3_side;
+    char *p = gfc->bs.header[gfc->bs.h_ptr].buf;
     int gr, ch, ptr = 0;
     assert(l3_side->main_data_begin >= 0);
 
-    memset(gfc->bs.header[gfc->bs.h_ptr].buf, 0, l3_side->sideinfo_len);
-    ptr = writeheader(gfc, 0xfff - (gfp->out_samplerate < 16000), 12, ptr);
-    ptr = writeheader(gfc, gfp->version,            1, ptr);
-    ptr = writeheader(gfc, 4 - 3,                   2, ptr);
-    ptr = writeheader(gfc, !gfp->error_protection,  1, ptr);
-    ptr = writeheader(gfc, gfc->bitrate_index,      4, ptr);
-    ptr = writeheader(gfc, gfc->samplerate_index,   2, ptr);
-    ptr = writeheader(gfc, gfc->padding,            1, ptr);
-    ptr = writeheader(gfc, gfp->extension,          1, ptr);
-    ptr = writeheader(gfc, gfp->mode,               2, ptr);
-    ptr = writeheader(gfc, gfc->mode_ext,           2, ptr);
-    ptr = writeheader(gfc, gfp->copyright,          1, ptr);
-    ptr = writeheader(gfc, gfp->original,           1, ptr);
-    ptr = writeheader(gfc, gfp->emphasis,           2, ptr);
+    memset(p, 0, l3_side->sideinfo_len);
+    ptr = writeheader(p, 0xfff - (gfp->out_samplerate < 16000), 12, ptr);
+    ptr = writeheader(p, gfp->version,            1, ptr);
+    ptr = writeheader(p, 4 - 3,                   2, ptr);
+    ptr = writeheader(p, !gfp->error_protection,  1, ptr);
+    ptr = writeheader(p, gfc->bitrate_index,      4, ptr);
+    ptr = writeheader(p, gfc->samplerate_index,   2, ptr);
+    ptr = writeheader(p, gfc->padding,            1, ptr);
+    ptr = writeheader(p, gfp->extension,          1, ptr);
+    ptr = writeheader(p, gfp->mode,               2, ptr);
+    ptr = writeheader(p, gfc->mode_ext,           2, ptr);
+    ptr = writeheader(p, gfp->copyright,          1, ptr);
+    ptr = writeheader(p, gfp->original,           1, ptr);
+    ptr = writeheader(p, gfp->emphasis,           2, ptr);
     if (gfp->error_protection)
 	ptr += 16;
 
-    ptr = writeheader(gfc, l3_side->main_data_begin, 7+gfc->mode_gr, ptr);
+    ptr = writeheader(p, l3_side->main_data_begin, 7+gfc->mode_gr, ptr);
     if (gfp->version == 1) {
 	/* MPEG1 */
 	ptr += 7 - gfc->channels_out*2; /* private_bits */
 	for (ch = 0; ch < gfc->channels_out; ch++)
-	    ptr = writeheader(gfc,
+	    ptr = writeheader(p,
 			      l3_side->scfsi[ch][0]*8
 			      + l3_side->scfsi[ch][1]*4
 			      + l3_side->scfsi[ch][2]*2
@@ -404,13 +406,13 @@ encodeBitStream(lame_global_flags *gfp)
 	for (gr = 0; gr < 2; gr++) {
 	    for (ch = 0; ch < gfc->channels_out; ch++) {
 		gr_info *gi = &l3_side->tt[gr][ch];
-		ptr = writeheader(gfc, gi->part2_3_length+gi->part2_length,
+		ptr = writeheader(p, gi->part2_3_length+gi->part2_length,
 				  12, ptr);
-		ptr = writeheader(gfc, gi->big_values / 2,        9, ptr);
-		ptr = writeheader(gfc, gi->global_gain,           8, ptr);
-		ptr = writeheader(gfc, gi->scalefac_compress,     4, ptr);
+		ptr = writeheader(p, gi->big_values / 2,        9, ptr);
+		ptr = writeheader(p, gi->global_gain,           8, ptr);
+		ptr = writeheader(p, gi->scalefac_compress,     4, ptr);
 		ptr = writeTableHeader(gfc, gi, ptr);
-		ptr = writeheader(gfc,
+		ptr = writeheader(p,
 				  (gi->preflag > 0)*4 + gi->scalefac_scale*2
 				  + gi->count1table_select, 3, ptr);
 	    }
@@ -421,10 +423,10 @@ encodeBitStream(lame_global_flags *gfp)
 	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    gr_info *gi = &l3_side->tt[0][ch];
 	    int part;
-	    ptr = writeheader(gfc, gi->part2_3_length+gi->part2_length, 12,
+	    ptr = writeheader(p, gi->part2_3_length+gi->part2_length, 12,
 			      ptr);
-	    ptr = writeheader(gfc, gi->big_values / 2,        9, ptr);
-	    ptr = writeheader(gfc, gi->global_gain,           8, ptr);
+	    ptr = writeheader(p, gi->big_values / 2,        9, ptr);
+	    ptr = writeheader(p, gi->global_gain,           8, ptr);
 
 	    /* set scalefac_compress */
 	    switch (gi->scalefac_compress) {
@@ -470,10 +472,10 @@ encodeBitStream(lame_global_flags *gfp)
 		part = 0;
 		assert(0);
 	    }
-	    ptr = writeheader(gfc, part, 9, ptr);
+	    ptr = writeheader(p, part, 9, ptr);
 	    ptr = writeTableHeader(gfc, gi, ptr);
-	    ptr = writeheader(gfc, gi->scalefac_scale,     1, ptr);
-	    ptr = writeheader(gfc, gi->count1table_select, 1, ptr);
+	    ptr = writeheader(p, gi->scalefac_scale,     1, ptr);
+	    ptr = writeheader(p, gi->count1table_select, 1, ptr);
 	}
     }
     assert(ptr == l3_side->sideinfo_len * 8);
@@ -654,8 +656,7 @@ format_bitstream(lame_global_flags *gfp)
     encodeBitStream(gfp);
     drain_into_ancillary(gfc, drainbits - drainPre);
 
-    l3_side->main_data_begin
-	= (l3_side->ResvSize = l3_side->ResvSize - drainbits) / 8;
+    l3_side->main_data_begin = (l3_side->ResvSize -= drainbits) / 8;
 
     assert(gfc->bs.bitidx % 8 == 0);
     assert(l3_side->ResvSize % 8 == 0);
