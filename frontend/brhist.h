@@ -32,22 +32,4 @@ void  brhist_disp       ( lame_t );
 void  brhist_disp_total ( lame_t );
 void  brhist_jump_back  ( void );
 
-typedef struct {
-    FILE*   Console_fp;			/* filepointer to stream reporting information */
-    FILE*   Error_fp;                   /* filepointer to stream fatal error reporting information */
-    FILE*   Report_fp;                  /* filepointer to stream reports (normally a text file or /dev/null) */
-#if defined(_WIN32)  &&  !defined(__CYGWIN__) 
-    HANDLE  Console_Handle;
-#endif
-    int     disp_width;
-    int     disp_height;
-    char    str_up         [10];
-    char    str_clreoln    [10];
-    char    str_emph       [10];
-    char    str_norm       [10];
-    char    Console_buff [1024];
-} Console_IO_t;
-
-extern Console_IO_t  Console_IO;
-
 #endif /* LAME_BRHIST_H */
