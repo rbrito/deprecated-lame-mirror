@@ -65,6 +65,18 @@ LPCSTR szVBRqDesc[10] = {
 	"8 - ~1:12",
 	"9 - ~1:14"
 };
+struct SSampleRate {
+	DWORD dwSampleRate;
+	LPCSTR lpSampleRate;
+};
+SSampleRate srRates[6] = {
+	{48000, "48 kHz"},
+	{44100, "44.1 kHz"},
+	{32000, "32 kHz"},
+	{24000, "24 kHz"},
+	{22050, "22.05 kHz"},
+	{16000, "16 kHz"}
+};
 
 ////////////////////////////////////////////////////////////////
 // CreateInstance
@@ -286,15 +298,16 @@ BOOL CMpegAudEncPropertyPage::OnReceiveMessage(HWND hwnd,UINT uMsg,WPARAM wParam
 			if (HIWORD(wParam) == CBN_SELCHANGE)
 			{
 				int nSampleRate = SendDlgItemMessage(hwnd, IDC_COMBO_SAMPLE_RATE, CB_GETCURSEL, 0, 0L);
-				DWORD dwSourceSampleRate;
-				m_pAEProps->get_SourceSampleRate(&dwSourceSampleRate);
+				//DWORD dwSourceSampleRate;
+				//m_pAEProps->get_SourceSampleRate(&dwSourceSampleRate);
 
 				DWORD dwSampleRate;
-				dwSampleRate = dwSourceSampleRate / (1+nSampleRate);
+			
+				if ((nSampleRate >= 0) && (nSampleRate < 6)){
+				dwSampleRate = srRates[nSampleRate].dwSampleRate;
+				}
 				m_pAEProps->set_SampleRate(dwSampleRate);
-
 				InitPropertiesDialog(hwnd);
-
 				SetDirty();
 			}
 			break;
@@ -420,9 +433,7 @@ void CMpegAudEncPropertyPage::InitPropertiesDialog(HWND hwndParent)
 	//
 	DWORD dwSourceSampleRate;
 	m_pAEProps->get_SourceSampleRate(&dwSourceSampleRate);
-
-	SendDlgItemMessage(hwndParent, IDC_COMBO_SAMPLE_RATE, CB_RESETCONTENT, 0, 0L);
-	switch (dwSourceSampleRate) 
+	/*	switch (dwSourceSampleRate) 
 	{
 		case 48000: 
 		{	
@@ -458,15 +469,26 @@ void CMpegAudEncPropertyPage::InitPropertiesDialog(HWND hwndParent)
 			SendDlgItemMessage(hwndParent, IDC_COMBO_SAMPLE_RATE, CB_ADDSTRING, 0, (LPARAM)(LPCTSTR)"16 kHz");
 			break; 
 		}
-	}
+	}*/
 
+
+	SendDlgItemMessage(hwndParent, IDC_COMBO_SAMPLE_RATE, CB_RESETCONTENT, 0, 0L);
+	for (int i = 0; i<6; i++)
+		SendDlgItemMessage(hwndParent, IDC_COMBO_SAMPLE_RATE, CB_ADDSTRING, 0, (LPARAM)(LPCTSTR)srRates[i].lpSampleRate);
 	DWORD dwSampleRate;
 	m_pAEProps->get_SampleRate(&dwSampleRate);
+	m_pAEProps->set_SampleRate(dwSampleRate);
+	
+	//int nSF = (dwSourceSampleRate/dwSampleRate - 1);
+	//if (nSF < 0)
+	//	nSF = 0;
+	
+	int nSR = 0;
+	while (dwSampleRate != srRates[nSR].dwSampleRate && nSR<6){
+		nSR++;
+	}
+	SendDlgItemMessage(hwndParent, IDC_COMBO_SAMPLE_RATE, CB_SETCURSEL, nSR, 0);
 
-	int nSF = (dwSourceSampleRate/dwSampleRate - 1);
-	if (nSF < 0)
-		nSF = 0;
-	SendDlgItemMessage(hwndParent, IDC_COMBO_SAMPLE_RATE, CB_SETCURSEL, nSF, 0);
 
 	DWORD dwChannels;
 	m_pAEProps->get_SourceChannels(&dwChannels);
@@ -474,13 +496,12 @@ void CMpegAudEncPropertyPage::InitPropertiesDialog(HWND hwndParent)
 	/*
 	SendDlgItemMessage(hwndParent, IDC_COMBO_CHMOD, CB_RESETCONTENT, 0, 0L);
 	if(dwChannels == 2)
-	{
-		for(int i = 0; i < 4; i++)
+	{	for(int i = 0; i < 4; i++)
 			SendDlgItemMessage(hwndParent, IDC_COMBO_CHMOD, CB_ADDSTRING, 0, (LPARAM)(LPCTSTR)chChMode[i]);
 	}
 	else
 		SendDlgItemMessage(hwndParent, IDC_COMBO_CHMOD, CB_ADDSTRING, 0, (LPARAM)(LPCTSTR)chChMode[0]);
-*/
+	*/
 //
 //initialize VBRq combo box
 //
@@ -500,7 +521,7 @@ void CMpegAudEncPropertyPage::InitPropertiesDialog(HWND hwndParent)
 //////////////////////////////////////
 	// initialize CBR selection
 //////////////////////////////////////
-	int i, nSt;
+	int nSt;
 
 	SendDlgItemMessage(hwndParent, IDC_COMBO_CBR, CB_RESETCONTENT, 0, 0);
 	if (dwSampleRate >= 32000)
@@ -508,14 +529,14 @@ void CMpegAudEncPropertyPage::InitPropertiesDialog(HWND hwndParent)
 		// If target sampling rate is less than 32000, consider
 		// MPEG 1 audio
 		nSt = 0;
-		for (i=0; i<14 ;i++)
+		for (int i=0; i<14 ;i++)
 			SendDlgItemMessage(hwndParent, IDC_COMBO_CBR, CB_ADDSTRING, 0, (LPARAM)(LPCTSTR)szBitRateString[0][i]);
 	}
 	else
 	{	
 		// Consider MPEG 2 audio
 		nSt = 1;
-		for (i=0; i<14 ;i++)
+		for (int i=0; i<14 ;i++)
 			SendDlgItemMessage(hwndParent, IDC_COMBO_CBR, CB_ADDSTRING, 0, (LPARAM)(LPCTSTR)szBitRateString[1][i]);
 	}
 

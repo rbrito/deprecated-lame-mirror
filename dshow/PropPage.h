@@ -39,12 +39,12 @@ private:
     void    SetDirty(void);
 
 	DWORD	m_dwPES;
-	DWORD	m_dwBitrate;
-    DWORD	m_dwVariable;
-	DWORD	m_dwMin;
-	DWORD	m_dwMax;
-	DWORD	m_dwQuality;
-	DWORD   m_dwVBRq;
+	DWORD	m_dwBitrate;				//constant bit rate
+    DWORD	m_dwVariable;				//flag - whether the variable bit rate set 
+	DWORD	m_dwMin;					//specify a minimum allowed bitrate
+	DWORD	m_dwMax;					//specify a maximum allowed bitrate
+	DWORD	m_dwQuality;				//encoding quality
+	DWORD   m_dwVBRq;					//VBR quality setting (0=highest quality, 9=lowest) 
 	DWORD	m_dwSampleRate;
 	DWORD	m_dwChannelMode;
 	DWORD	m_dwCRC;
