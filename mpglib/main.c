@@ -8,7 +8,7 @@
 static char buf[16384];
 #define FSIZE 8192  
 static char out[FSIZE];
-struct mpstr mp;
+MPSTR mp;
 plotting_data *mpg123_pinfo=NULL;
 
 static const int smpls[2][4]={

@@ -11,6 +11,7 @@
 #ifdef USE_LAYER_1
 
 #include "common.h"
+#include "decode_i386.h"
 
 void I_step_one(unsigned int balloc[], unsigned int scale_index[2][SBLIMIT],struct frame *fr)
 {
@@ -118,13 +119,14 @@ void I_step_two(real fraction[2][SBLIMIT],unsigned int balloc[2*SBLIMIT],
 }
 
 //int do_layer1(struct frame *fr,int outmode,struct audio_info_struct *ai)
-int do_layer1(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
+int do_layer1(PMPSTR mp, unsigned char *pcm_sample,int *pcm_point)
 {
   int clip=0;
-  int i,stereo = fr->stereo;
   unsigned int balloc[2*SBLIMIT];
   unsigned int scale_index[2][SBLIMIT];
   real fraction[2][SBLIMIT];
+  struct frame *fr=&(mp->fr);
+  int i,stereo = fr->stereo;
   int single = fr->single;
 
   fr->jsbound = (fr->mode == MPG_MD_JOINT_STEREO) ? (fr->mode_ext<<2)+4 : 32;
@@ -140,12 +142,12 @@ int do_layer1(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
 
     if(single >= 0)
     {
-      clip += synth_1to1_mono( (real *) fraction[single],pcm_sample,pcm_point);
+      clip += synth_1to1_mono( mp, (real *) fraction[single],pcm_sample,pcm_point);
     }
     else {
         int p1 = *pcm_point;
-        clip += synth_1to1( (real *) fraction[0],0,pcm_sample,&p1);
-        clip += synth_1to1( (real *) fraction[1],1,pcm_sample,pcm_point);
+        clip += synth_1to1( mp, (real *) fraction[0],0,pcm_sample,&p1);
+        clip += synth_1to1( mp, (real *) fraction[1],1,pcm_sample,pcm_point);
     }
   }
 

@@ -15,9 +15,9 @@
 #endif
 
 
-BOOL InitMP3(struct mpstr *mp) 
+BOOL InitMP3( PMPSTR mp) 
 {
-	memset(mp,0,sizeof(struct mpstr));
+	memset(mp,0,sizeof(MPSTR));
 
 	mp->framesize = 0;
 	mp->header_parsed=0;
@@ -46,7 +46,7 @@ BOOL InitMP3(struct mpstr *mp)
 	return !0;
 }
 
-void ExitMP3(struct mpstr *mp)
+void ExitMP3( PMPSTR mp)
 {
 	struct buf *b,*bn;
 	
@@ -59,7 +59,7 @@ void ExitMP3(struct mpstr *mp)
 	}
 }
 
-static struct buf *addbuf(struct mpstr *mp,char *buf,int size)
+static struct buf *addbuf( PMPSTR mp,char *buf,int size)
 {
 	struct buf *nbuf;
 
@@ -92,7 +92,7 @@ static struct buf *addbuf(struct mpstr *mp,char *buf,int size)
 	return nbuf;
 }
 
-void remove_buf(struct mpstr *mp)
+void remove_buf(PMPSTR mp)
 {
   struct buf *buf = mp->tail;
   
@@ -108,7 +108,7 @@ void remove_buf(struct mpstr *mp)
 
 }
 
-static int read_buf_byte(struct mpstr *mp)
+static int read_buf_byte(PMPSTR mp)
 {
 	unsigned int b;
 
@@ -135,7 +135,7 @@ static int read_buf_byte(struct mpstr *mp)
 
 
 
-static void read_head(struct mpstr *mp)
+static void read_head(PMPSTR mp)
 {
 	unsigned long head;
 
@@ -155,7 +155,7 @@ static void read_head(struct mpstr *mp)
 
 
 
-void copy_mp(struct mpstr *mp,int size,unsigned char *ptr) 
+void copy_mp(PMPSTR mp,int size,unsigned char *ptr) 
 {
   int len = 0;
 
@@ -180,7 +180,7 @@ void copy_mp(struct mpstr *mp,int size,unsigned char *ptr)
 
 
 
-int sync_buffer(struct mpstr *mp,int free_match) 
+int sync_buffer(PMPSTR mp,int free_match) 
 {
   /* traverse mp structure without modifing pointers, looking
    * for a frame valid header.
@@ -258,11 +258,10 @@ int sync_buffer(struct mpstr *mp,int free_match)
 
 
 
-int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
+int decodeMP3( PMPSTR mp,char *in,int isize,char *out,
 		int osize,int *done)
 {
 	int i,iret,bits,bytes;
-	gmp = mp;
 
 	if(osize < 4608) {
 		fprintf(stderr,"To less out space\n");
@@ -399,7 +398,7 @@ int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
 				if(mp->fr.error_protection)
 					getbits(16);
 
-				do_layer1(&mp->fr,(unsigned char *) out,done);
+				do_layer1(mp,(unsigned char *) out,done);
 			break;
 #endif
 #ifdef USE_LAYER_2
@@ -407,11 +406,11 @@ int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
 				if(mp->fr.error_protection)
 					getbits(16);
 
-				do_layer2(&mp->fr,(unsigned char *) out,done);
+				do_layer2(mp,(unsigned char *) out,done);
 			break;
 #endif
 			case 3:
-				do_layer3(&mp->fr,(unsigned char *) out,done);
+				do_layer3(mp,(unsigned char *) out,done);
 			break;
 			default:
 				fprintf(stderr,"invalid layer %d\n",mp->fr.lay);

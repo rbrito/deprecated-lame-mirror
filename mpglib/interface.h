@@ -21,11 +21,11 @@
 
 #include "common.h"
 
-BOOL InitMP3(struct mpstr *mp);
-int	 decodeMP3(struct mpstr *mp,char *inmemory,int inmemsize,char *outmemory,int outmemsize,int *done);
-void ExitMP3(struct mpstr *mp);
+BOOL InitMP3(PMPSTR mp);
+int	 decodeMP3(PMPSTR mp,char *inmemory,int inmemsize,char *outmemory,int outmemsize,int *done);
+void ExitMP3(PMPSTR mp);
 
 /* added remove_buf to support mpglib seeking */
-void remove_buf(struct mpstr *mp);
+void remove_buf(PMPSTR mp);
 
 #endif

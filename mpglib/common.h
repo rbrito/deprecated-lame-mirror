@@ -29,9 +29,6 @@ extern unsigned char *wordpointer;
 extern int bitindex;
 
 
-extern struct mpstr *gmp;
-
-
 #if defined( USE_LAYER_1 ) || defined ( USE_LAYER_1 )
   extern real muls[27][64];
 #endif
@@ -42,6 +39,6 @@ void print_header(struct frame *fr);
 void print_header_compact(struct frame *fr);
 unsigned int getbits(int number_of_bits);
 unsigned int getbits_fast(int number_of_bits);
-int  set_pointer(long);
+int set_pointer( PMPSTR mp, long backstep);
 
 #endif

@@ -11,6 +11,7 @@
 #include "common.h"
 #include "layer2.h"
 #include "l2tables.h"
+#include "decode_i386.h"
 
 static int grp_3tab[32 * 3] = { 0, };   /* used: 27 */
 static int grp_5tab[128 * 3] = { 0, };  /* used: 125 */
@@ -253,15 +254,16 @@ static void II_select_table(struct frame *fr)
 }
 
 
-int do_layer2(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
+int do_layer2( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point)
 //int do_layer2(struct frame *fr,int outmode,struct audio_info_struct *ai)
 {
   int clip=0;
   int i,j;
-  int stereo = fr->stereo;
   real fraction[2][4][SBLIMIT]; /* pick_table clears unused subbands */
   unsigned int bit_alloc[64];
   int scale[192];
+  struct frame *fr=&(mp->fr);
+  int stereo = fr->stereo;
   int single = fr->single;
 
   II_select_table(fr);
@@ -280,12 +282,12 @@ int do_layer2(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
     {
       if(single >= 0)
       {
-        clip += synth_1to1_mono(fraction[single][j],pcm_sample,pcm_point);
+        clip += synth_1to1_mono(mp, fraction[single][j],pcm_sample,pcm_point);
       }
       else {
           int p1 = *pcm_point;
-          clip += synth_1to1(fraction[0][j],0,pcm_sample,&p1);
-          clip += synth_1to1(fraction[1][j],1,pcm_sample,pcm_point);
+          clip += synth_1to1(mp, fraction[0][j],0,pcm_sample,&p1);
+          clip += synth_1to1(mp, fraction[1][j],1,pcm_sample,pcm_point);
       }
     }
   }

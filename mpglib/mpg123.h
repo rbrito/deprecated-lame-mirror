@@ -116,9 +116,5 @@ struct III_sideinfo
   } ch[2];
 };
 
-extern int synth_1to1 (real *,int,unsigned char *,int *);
-extern int synth_1to1_mono (real *,unsigned char *,int *);
-
-extern void dct64(real *,real *,real *);
 
 #endif

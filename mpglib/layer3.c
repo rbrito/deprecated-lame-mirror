@@ -9,7 +9,7 @@
 #include "common.h"
 #include "huffman.h"
 #include "lame-analysis.h"
-
+#include "decode_i386.h"
 
 #define MPEG1
 
@@ -1457,12 +1457,12 @@ static void dct12(real *in,real *rawout1,real *rawout2,register real *wi,registe
 /*
  * III_hybrid
  */
-static void III_hybrid(real fsIn[SBLIMIT][SSLIMIT],real tsOut[SSLIMIT][SBLIMIT],
+static void III_hybrid( PMPSTR mp, real fsIn[SBLIMIT][SSLIMIT],real tsOut[SSLIMIT][SBLIMIT],
    int ch,struct gr_info_s *gr_infos)
 {
    real *tspnt = (real *) tsOut;
-   real (*block)[2][SBLIMIT*SSLIMIT] = gmp->hybrid_block;
-   int *blc = gmp->hybrid_blc;
+   real (*block)[2][SBLIMIT*SSLIMIT] = mp->hybrid_block;
+   int *blc = mp->hybrid_blc;
    real *rawout1,*rawout2;
    int bt;
    int sb = 0;
@@ -1556,18 +1556,19 @@ int do_layer3_sideinfo(struct frame *fr)
 
 
 
-int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
+int do_layer3( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point)
 {
   int gr, ch, ss,clip=0;
   int scalefacs[2][39]; /* max 39 for short[13][3] mode, mixed: 38, long: 22 */
   //  struct III_sideinfo sideinfo;
+  struct frame *fr=&(mp->fr);
   int stereo = fr->stereo;
   int single = fr->single;
   int ms_stereo,i_stereo;
   int sfreq = fr->sampling_frequency;
   int stereo1,granules;
 
-  if(set_pointer((int)sideinfo.main_data_begin) == MP3_ERR)
+  if(set_pointer(mp, (int)sideinfo.main_data_begin) == MP3_ERR)
     return 0;
 
   if(stereo == 1) { /* stream is mono */
@@ -1763,17 +1764,17 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
     for(ch=0;ch<stereo1;ch++) {
       struct gr_info_s *gr_infos = &(sideinfo.ch[ch].gr[gr]);
       III_antialias(hybridIn[ch],gr_infos);
-      III_hybrid(hybridIn[ch], hybridOut[ch], ch,gr_infos);
+      III_hybrid(mp, hybridIn[ch], hybridOut[ch], ch,gr_infos);
     }
 
     for(ss=0;ss<SSLIMIT;ss++) {
       if(single >= 0) {
-        clip += synth_1to1_mono(hybridOut[0][ss],pcm_sample,pcm_point);
+        clip += synth_1to1_mono(mp, hybridOut[0][ss],pcm_sample,pcm_point);
       }
       else {
         int p1 = *pcm_point;
-        clip += synth_1to1(hybridOut[0][ss],0,pcm_sample,&p1);
-        clip += synth_1to1(hybridOut[1][ss],1,pcm_sample,pcm_point);
+        clip += synth_1to1(mp, hybridOut[0][ss],0,pcm_sample,&p1);
+        clip += synth_1to1(mp, hybridOut[1][ss],1,pcm_sample,pcm_point);
       }
     }
   }

@@ -20,8 +20,8 @@
 #define LAYER3_H_INCLUDED
 
 void init_layer3(int);
-int  do_layer3(struct frame *fr,unsigned char *,int *);
 int  do_layer3_sideinfo(struct frame *fr);
+int  do_layer3( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point);
 
 #endif
 

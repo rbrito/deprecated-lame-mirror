@@ -148,6 +148,14 @@ SOURCE=.\common.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\dct64_i386.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\decode_i386.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\huffman.h
 # End Source File
 # Begin Source File

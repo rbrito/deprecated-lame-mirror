@@ -19,7 +19,7 @@ struct framebuf {
 	struct frame *prev;
 };
 
-struct mpstr {
+typedef struct mpstr_tag {
 	struct buf *head,*tail;
         int header_parsed;
         int side_parsed;  
@@ -41,7 +41,7 @@ struct mpstr {
 	real synth_buffs[2][2][0x110];
         int  synth_bo;
 	
-};
+} MPSTR, *PMPSTR;
 
 
 #if ( defined(_MSC_VER) || defined(__BORLANDC__) )
