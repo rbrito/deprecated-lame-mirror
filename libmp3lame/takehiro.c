@@ -815,7 +815,7 @@ best_scalefac_store(lame_t gfc, int gr, int ch)
 	do {
 	    even |= gi->l3_enc[l+j  ];
 	    even |= gi->l3_enc[l+j+1];
-	} while ((l+=2) < 0);
+	} while ((l+=2) < 0 && (even & 7) == 0);
 	/* remove scalefacs from bands with all ix=0.
 	 * This idea comes from the AAC ISO docs.  added mt 3/00 */
 	if (even == 0) {
