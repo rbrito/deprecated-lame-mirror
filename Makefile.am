@@ -34,7 +34,7 @@ EXTRA_DIST = \
 #  number of bytes which are different may not be zero, but
 #  should be at most 30.
 #
-testcase.new.mp3: testcase.wav
+testcase.new.mp3: testcase.wav frontend/lame
 	frontend/lame --nores -h testcase.wav testcase.new.mp3
 
 test: frontend/lame testcase.mp3 testcase.new.mp3

@@ -103,7 +103,7 @@ lot of conversions.
 */
 
 /* NOTE: RH: 7/00:  if FLOAT8=float, it breaks resampling and VBR code */
-typedef double FLOAT8;
+typedef float FLOAT8;
 
 
 

@@ -1,5 +1,5 @@
 %define name lame
-%define ver 3.87
+%define ver 3.88
 %define quality alpha
 %define rel 1
 %define prefix /usr
