@@ -56,6 +56,7 @@
 #define HAVE_MEMCPY
 
 #if defined(_MSC_VER)
+#pragma warning( disable : 4305 )
 	typedef __int8  int8_t;
 	typedef __int16 int16_t;
 	typedef __int32 int32_t;
@@ -80,6 +81,5 @@ typedef double      ieee754_float64_t;
 typedef float       ieee754_float32_t;
 
 
-#pragma warning( disable : 4305 )
 
 #define LAME_LIBRARY_BUILD
