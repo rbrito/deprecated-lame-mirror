@@ -936,22 +936,21 @@ static int  dm_presets( lame_t gfp, int fast, int cbr, const char* preset_name, 
         double nsmsfix;
         double nsbass;
         double scale;
-        int    kbps_compensate;
     } dm_abr_presets_t;
 
 
     // Switch mappings for ABR mode
     const dm_abr_presets_t abr_switch_map [] = {
-        // kbps Z  X  lowpass safejoint nsmsfix ns-bass scale  kbps_compensate
-        {  80,  1, 1, 13500,  0,        0   ,   -3,      0.85, 8    }, //  80
-        {  96,  1, 1, 15300,  0,        0   ,   -4,      0.85, 9    }, //  96
-        { 112,  1, 1, 16000,  0,        0   ,   -5,      0.87, 8    }, // 112
-        { 128,  1, 1, 17500,  0,        0   ,   -6,      0.93, 9    }, // 128
-        { 160,  1, 1, 18000,  0,        0   ,   -4,      0.95, 7    }, // 160
-        { 192,  1, 1, 19500,  1,        1.7 ,   -2,      0.97, 6    }, // 192
-        { 224,  1, 1, 20000,  1,        1.25,    0,      0.98, 3    }, // 224
-        { 256,  0, 3, 20500,  1,        0   ,    0,      1.00, 4    }, // 256
-        { 320,  0, 3, 21000,  1,        0   ,    0,      1.00, 4    }  // 320
+        // kbps Z  X  lowpass safejoint nsmsfix ns-bass scale
+        {  80,  1, 1, 13500,  0,        0   ,   -3,      0.85 }, //  80
+        {  96,  1, 1, 15300,  0,        0   ,   -4,      0.85 }, //  96
+        { 112,  1, 1, 16000,  0,        0   ,   -5,      0.87 }, // 112
+        { 128,  1, 1, 17500,  0,        0   ,   -6,      0.93 }, // 128
+        { 160,  1, 1, 18000,  0,        0   ,   -4,      0.95 }, // 160
+        { 192,  1, 1, 19500,  1,        1.7 ,   -2,      0.97 }, // 192
+        { 224,  1, 1, 20000,  1,        1.25,    0,      0.98 }, // 224
+        { 256,  0, 3, 20500,  1,        0   ,    0,      1.00 }, // 256
+        { 320,  0, 3, 21000,  1,        0   ,    0,      1.00 }  // 320
                                        };
 
     // Variables for the ABR stuff
@@ -1144,7 +1143,7 @@ static int  dm_presets( lame_t gfp, int fast, int cbr, const char* preset_name, 
             else {
                 lame_set_VBR(gfp, vbr_abr); 
 //                lame_set_preset_expopts(gfp, 4);
-                lame_set_VBR_mean_bitrate_kbps(gfp, (actual_bitrate + abr_switch_map[r].kbps_compensate));
+                lame_set_VBR_mean_bitrate_kbps(gfp, (actual_bitrate));
                 lame_set_VBR_mean_bitrate_kbps(gfp, Min(lame_get_VBR_mean_bitrate_kbps(gfp), 320)); 
                 lame_set_VBR_mean_bitrate_kbps(gfp, Max(lame_get_VBR_mean_bitrate_kbps(gfp), 8)); 
             }
