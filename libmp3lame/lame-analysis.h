@@ -89,8 +89,4 @@ typedef struct {
 
 extern plotting_data *pinfo;
 
-#ifndef HAVE_GTK
-# define NOANALYSIS
-#endif
-
 #endif
