@@ -636,7 +636,7 @@ iteration_init(lame_t gfc)
     adj43[i] = 0.5;
 #ifdef USE_IEEE754_HACK
     for (i = 0; i < PRECALC_SIZE; i++)
-	adj43asm[i] = (int)(adj43[i] * 512) - MAGIC_INT2;
+	adj43asm[i] = (int)(adj43[i] * (1 << FIXEDPOINT)) - MAGIC_INT2;
 #endif
 
     for (i = 0; i < Q_MAX+Q_MAX2; i++) {

@@ -717,12 +717,12 @@ count_bits(lame_t gfc, gr_info * const gi)
 		xp += 2;
 		i0 = fi[0].i;
 		i1 = fi[1].i;
-		if (i0 > MAGIC_INT2 + (IXMAX_VAL << 9))
-		    i0 = MAGIC_INT2 + (IXMAX_VAL << 9);
-		if (i1 > MAGIC_INT2 + (IXMAX_VAL << 9))
-		    i1 = MAGIC_INT2 + (IXMAX_VAL << 9);
-		fi[0].i = (i0 + (adj43asm - (MAGIC_INT2 >> 9))[i0 >> 9]) >> 9;
-		fi[1].i = (i1 + (adj43asm - (MAGIC_INT2 >> 9))[i1 >> 9]) >> 9;
+		if (i0 > MAGIC_INT2 + (IXMAX_VAL << FIXEDPOINT))
+		    i0 = MAGIC_INT2 + (IXMAX_VAL << FIXEDPOINT);
+		if (i1 > MAGIC_INT2 + (IXMAX_VAL << FIXEDPOINT))
+		    i1 = MAGIC_INT2 + (IXMAX_VAL << FIXEDPOINT);
+		fi[0].i = (i0 + (adj43asm - (MAGIC_INT2 >> FIXEDPOINT))[i0 >> FIXEDPOINT]) >> FIXEDPOINT;
+		fi[1].i = (i1 + (adj43asm - (MAGIC_INT2 >> FIXEDPOINT))[i1 >> FIXEDPOINT]) >> FIXEDPOINT;
 		fi += 2;
 #else
 		FLOAT x0 = *xp++ * istep;

@@ -856,10 +856,10 @@ calc_sfb_noise(lame_t gfc, int j, int bw, int sf)
 	i1 = fi1.i;
 	assert(((i0 - (MAGIC_INT2 + (IXMAX_VAL<<9) + 1))
 		& (i1 - (MAGIC_INT2 + (IXMAX_VAL<<9) + 1))) < 0);
-	i0 += adj43asm[(i0 >> 9) - (MAGIC_INT2 >> 9)];
-	i1 += adj43asm[(i1 >> 9) - (MAGIC_INT2 >> 9)];
-	t0 = absxr[j+bw  ] - pow43[i0>>9] * sfpow;
-	t1 = absxr[j+bw+1] - pow43[i1>>9] * sfpow;
+	i0 += adj43asm[(i0 >> FIXEDPOINT) - (MAGIC_INT2 >> FIXEDPOINT)];
+	i1 += adj43asm[(i1 >> FIXEDPOINT) - (MAGIC_INT2 >> FIXEDPOINT)];
+	t0 = absxr[j+bw  ] - pow43[i0 >> FIXEDPOINT] * sfpow;
+	t1 = absxr[j+bw+1] - pow43[i1 >> FIXEDPOINT] * sfpow;
 #else
 	i0 = (int) (t0 = sfpow34 * xr34[j+bw  ]);
 	i1 = (int) (t1 = sfpow34 * xr34[j+bw+1]);
@@ -904,10 +904,10 @@ adjust_global_gain(lame_t gfc, gr_info *gi, FLOAT *distort, int huffbits)
 		i1 = fi[j+bw+1].i;
 		if (i0 > MAGIC_INT2 + IXMAX_VAL) i0 = MAGIC_INT2 + IXMAX_VAL;
 		if (i1 > MAGIC_INT2 + IXMAX_VAL) i1 = MAGIC_INT2 + IXMAX_VAL;
-		fi[j+bw  ].i = (i0 + adj43asm[(i0 >> 9) - (MAGIC_INT2 >> 9)])
-						  >> 9;
-		fi[j+bw+1].i = (i1 + adj43asm[(i1 >> 9) - (MAGIC_INT2 >> 9)])
-						  >> 9;
+		fi[j+bw  ].i = (i0 + adj43asm[(i0 >> FIXEDPOINT) - (MAGIC_INT2 >> FIXEDPOINT)])
+						  >> FIXEDPOINT;
+		fi[j+bw+1].i = (i1 + adj43asm[(i1 >> FIXEDPOINT) - (MAGIC_INT2 >> FIXEDPOINT)])
+						  >> FIXEDPOINT;
 #else
 		FLOAT x0 = istep * xr34[j+bw  ];
 		FLOAT x1 = istep * xr34[j+bw+1];

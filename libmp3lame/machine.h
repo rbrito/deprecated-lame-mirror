@@ -110,6 +110,7 @@ typedef FLOAT     sample_t;
 # define MAGIC_INT 0x4b000000
 # define MAGIC_FLOAT2 ((double)65536/4)
 # define MAGIC_INT2 0x46800000
+# define FIXEDPOINT 9
 # define ROUNDFAC_NEAR (ROUNDFAC-0.5)
 # define signbits(x) (*((unsigned int*)&x) >> 31)
 #else
