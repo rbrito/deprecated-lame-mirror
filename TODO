@@ -182,7 +182,12 @@ raw file format and options.
 Code is a complete mess. But it has so many debugged features it will
 be a lot of work to re-write.
 
-999.
+3.
+MP3<->MP3 Transcoding quality. The intermidiate decoding result should be
+floating point, not 16bit-integer.
+
+10.
+Tag transcoding.
 It would be nice to save some information whilst encoding when
 wave <-> mp3
 	a RIFF/wave can contain LIST chunks with information
@@ -191,7 +196,9 @@ wave <-> mp3
 
 	auto converting each of them may be good.
 
-
+mp3 <-> mp3
+	preserve ID3 tags between them.
+	The code is written, but not tested.
 
 Build environment
 1. MSVC .net solution files.
