@@ -1371,7 +1371,7 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
 	break;
 
     case 2: /* EXTREME */
-	lame_set_quantcomp_method(gfp, 4*16 + 2);
+	(void) lame_set_ATHlower( gfp, 2.0 );
 	lame_set_athaa_sensitivity(
 	    gfp, db2pow(-8.0) * lame_get_athaa_sensitivity(gfp));
 
@@ -1388,9 +1388,8 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
 	lame_set_athaa_sensitivity(
 	    gfp, db2pow(-8.0) * lame_get_athaa_sensitivity(gfp));
 
-	lame_set_use_largescalefac(gfp, 1);
-	lame_set_quantcomp_method(gfp, 0*16 + 0);
-	lame_set_VBR_q(gfp, 2);
+	lame_set_VBR_q(gfp, 3);
+	lame_set_ATHcurve(gfp, 2);
 	// modify sfb21 by 3.75 dB plus ns-treble=0
 	lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (15 << 20));
 	break;
@@ -1406,42 +1405,40 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
 
 static int apply_abr_preset(lame_global_flags*  gfp, int preset)
 {
-    int k; 
-
     typedef struct {
         int    abr_kbps;
         int    large_scalefac;
         int    method;
         int    lowpass;
         double nsmsfix;
-        double nsbass;
         double scale;
 	int ath_curve;
+	int ath_lower;
 	double interch;
     } dm_abr_presets_t;
 
 
     // Switch mappings for ABR mode
     const dm_abr_presets_t abr_switch_map [] = {
-        //  scalefac_s   lowpass   ns-bass   athcurve
-        // kbps    qantcomp   nsmsfix    scale    inter-ch
-        {   8,  1,    3,  2000,  0,  -3,  0.93, 11, 0.0012 }, // impossible to use in stereo
-        {  16,  1,    3,  3700,  0,  -3,  0.93, 11, 0.0010 },
-        {  24,  1,    3,  3900,  0,  -3,  0.93, 11, 0.0010 },
-        {  32,  1,    3,  5500,  0,  -3,  0.93, 11, 0.0010 },
-        {  40,  1,    3,  7000,  0,  -3,  0.93, 11, 0.0009 },
-        {  48,  1,    3,  7500,  0,  -3,  0.93, 11, 0.0009 },
-        {  56,  1,    3, 10000,  0,  -3,  0.93, 11, 0.0008 },
-        {  64,  1,    3, 11000,  0,  -3,  0.93, 11, 0.0008 },
-        {  80,  1,    3, 13500,  0,  -3,  0.93, 10, 0.0007 },
-        {  96,  1,    1, 15300,  0,  -4,  0.93,  8, 0.0006 },
-        { 112,  1,    1, 16000,  0,  -5,  0.93,  7, 0.0005 },
-        { 128,  1,    1, 17500,  0,  -6,  0.93,  5, 0.0002 },
-        { 160,  1,    1, 18000,  0,  -4,  0.95,  4, 0.0 },
-        { 192,  1,    1, 19500,1.7,  -2,  0.97,  3, 0.0 },
-        { 224,  1,    1, 20000,1.25,  0,  0.98,  2, 0.0 },
-        { 256,  0,    3, 20500,  0,   0,  1.00,  1, 0.0 },
-        { 320,  0,    3, 21000,  0,   0,  1.00,  0, 0.0 }
+        //  scalefac_s   lowpass     scale     athlower
+        // kbps    qantcomp   nsmsfix     athcurve  inter-ch
+        {   8,  1,    3,  2000,  0,   0.93, 11,  -4, 0.0012 }, // impossible to use in stereo
+        {  16,  1,    3,  3700,  0,   0.93, 11,  -4, 0.0010 },
+        {  24,  1,    3,  3900,  0,   0.93, 11,  -4, 0.0010 },
+        {  32,  1,    3,  5500,  0,   0.93, 11,  -4, 0.0010 },
+        {  40,  1,    3,  7000,  0,   0.93, 11,  -3, 0.0009 },
+        {  48,  1,    3,  7500,  0,   0.93, 11,  -3, 0.0009 },
+        {  56,  1,    3, 10000,  0,   0.93, 11,  -3, 0.0008 },
+        {  64,  1,    3, 11000,  0,   0.93, 11,  -3, 0.0008 },
+        {  80,  1,    3, 13500,  0,   0.93, 10,  -2, 0.0007 },
+        {  96,  1,    1, 15300,  0,   0.93,  8,  -2, 0.0006 },
+        { 112,  1,    1, 16000,  0,   0.93,  7,  -2, 0.0005 },
+        { 128,  1,    1, 17500,  0,   0.93,  5,  -2, 0.0002 },
+        { 160,  1,    1, 18000,  0,   0.95,  4,  -2, 0.0 },
+        { 192,  1,    1, 19500,1.7,   0.97,  3,  -1, 0.0 },
+        { 224,  1,    1, 20000,1.25,  0.98,  2,  -1, 0.0 },
+        { 256,  0,    3, 20500,  0,   1.00,  1,   0, 0.0 },
+        { 320,  0,    3, 21000,  0,   1.00,  0,   0, 0.0 }
     };
 
     // Variables for the ABR stuff
@@ -1449,7 +1446,7 @@ static int apply_abr_preset(lame_global_flags*  gfp, int preset)
 
     int lower_range = 0, lower_range_kbps = 0,
         upper_range = 0, upper_range_kbps = 0;
-    
+
     int r; // r = resolved range
     int b;
 
@@ -1484,6 +1481,7 @@ static int apply_abr_preset(lame_global_flags*  gfp, int preset)
     lame_set_brate(gfp, lame_get_VBR_mean_bitrate_kbps(gfp));
 
     lame_set_use_largescalefac(gfp, abr_switch_map[r].large_scalefac);
+    lame_set_use_subblock_gain(gfp, abr_switch_map[r].large_scalefac);
     lame_set_quantcomp_method(gfp, abr_switch_map[r].method);
 
     lame_set_quality(gfp, 5);
@@ -1493,13 +1491,6 @@ static int apply_abr_preset(lame_global_flags*  gfp, int preset)
     if (abr_switch_map[r].nsmsfix > 0)
 	(void) lame_set_msfix( gfp, abr_switch_map[r].nsmsfix );
 
-    // ns-bass tweaks
-    if (abr_switch_map[r].nsbass != 0) {
-        k = (int)(abr_switch_map[r].nsbass * 4);
-        if (k < 0) k += 64;
-        lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 2));
-    }
-
     // ABR seems to have big problems with clipping, especially at low bitrates
     // so we compensate for that here by using a scale value depending on bitrate
     if (abr_switch_map[r].scale != 1)
@@ -1507,6 +1498,7 @@ static int apply_abr_preset(lame_global_flags*  gfp, int preset)
 
     lame_set_interChRatio(gfp, abr_switch_map[r].interch);
     lame_set_ATHcurve(gfp, abr_switch_map[r].ath_curve);
+    lame_set_ATHlower(gfp, (double)abr_switch_map[r].ath_lower);
 
     if (actual_bitrate >= 128)
 	lame_set_short_threshold(gfp, 1.8, 10.0);

@@ -1137,12 +1137,7 @@ ABR_calc_target_bits (
 
             targ_bits[gr][ch] = res_factor * mean_bits;
 	    if (ratio[gr][ch].pe > 600.0) {
-                int add_bits = (ratio[gr][ch].pe - 600.0) / 1000;
-
-                /* short blocks use a little extra, no matter what the pe */
-                if (gfc->l3_side.tt[gr][ch].block_type == SHORT_TYPE
-                    && add_bits < mean_bits/2)
-		    add_bits = mean_bits/2;
+		int add_bits = (ratio[gr][ch].pe - 600.0);
 
                 /* at most increase bits by 1.5*average */
                 if (add_bits > mean_bits*3/2)
