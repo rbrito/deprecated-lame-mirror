@@ -379,7 +379,8 @@ get_audio_common( lame_global_flags * const gfp,
 	}
     }
 
-    if( (input_format == sf_mp3) || (input_format == sf_ogg) ) {
+    if( input_format == sf_mp1 || input_format == sf_mp2 || 
+        input_format == sf_mp3 || input_format == sf_ogg ) {
 				/* LAME mp3 and ogg input routines currently */
 				/*  only accept up to 16 bit samples */
 	if( buffer != NULL ) {
