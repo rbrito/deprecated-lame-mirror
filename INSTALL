@@ -34,10 +34,9 @@ If it doesn't work, figure out why and send me the fix!
 If you are using a newer version of EGCS, check the Makefile.
 There are some flags which may improve performance.
 
-LAME has built in support for 16bit raw pcm, aiff and simple wav
-formats.  Some complex .wav headers will confuse LAME. If you have
-trouble with this, or want to encode from other sound formats, you can
-now compile LAME to use Erik de Castro Lopo's libsndfile.  To use
+LAME has built in support for 16bit raw pcm, aiff and wav
+formats.  If you want to encode from other sound formats, you can
+compile LAME to use Erik de Castro Lopo's libsndfile.  To use
 libsndfile in LAME:
 
   1. install libsndfile (see http://www.zip.com.au/~erikd/libsndfile/).  

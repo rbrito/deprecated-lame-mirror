@@ -125,12 +125,7 @@ int get_audio(lame_global_flags *gfp,short buffer[2][1152],int stereo)
 }
 
 
-
-
-
-
-
-
+  
 
 
 
@@ -218,12 +213,23 @@ int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip)
 {
   short int Buffer[2][1152];
   int iread;
-
   long wavsize=2147483647L;  /* max for a signed long */
-  skip+=528;
-  fprintf(stderr, "input:    %s %.1fkHz MPEG%i %i channel LayerIII\n",
+
+  if (gfp->input_format==sf_mp3) {
+    /* mp3 decoder has a 528 sample delay, plus user supplied "skip" */
+    skip+=528;
+    fprintf(stderr, "input:    %s %.1fkHz MPEG%i %i channel LayerIII\n",
 	  (strcmp(gfp->inPath, "-")? gfp->inPath : "stdin"),
 	  gfp->in_samplerate/1000.0,2-gfp->version,gfp->num_channels);
+
+  }else{
+    /* other formats have no delay */
+    skip=0;
+    fprintf(stderr, "input:    %s %.1fkHz  channel\n",
+	  (strcmp(gfp->inPath, "-")? gfp->inPath : "stdin"),
+	  gfp->in_samplerate/1000.0,gfp->num_channels);
+  }
+
   fprintf(stderr, "output:   %s (wav format)\n",
 	  (strcmp(gfp->outPath, "-")? gfp->outPath : "stdout"));
   fprintf(stderr, "skipping initial %i samples (encoder + decoder delay)\n",skip);

@@ -27,7 +27,7 @@
 
 
 typedef enum sound_file_format_e {
-	sf_unknown, sf_wave, sf_aiff, sf_mp3, sf_raw
+  sf_unknown, sf_wave, sf_aiff, sf_mp3, sf_raw, sf_ogg 
 } sound_file_format;
 typedef struct
 {
@@ -357,7 +357,8 @@ int lame_decode_fromfile(FILE *fd,short int pcm_l[],short int pcm_r[],mp3data_st
  * and output .wav data to the specified file pointer*/
 /* lame_decoder will ignore the first 528 samples, since these samples
  * represent the mpglib delay (and are all 0).  skip = number of additional
- * samples to skip, to (for example) compensate for the encoder delay */
+ * samples to skip, to (for example) compensate for the encoder delay,
+ * only used when decoding mp3 */
 int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip);
 
 
