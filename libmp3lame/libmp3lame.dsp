@@ -19,14 +19,15 @@ CFG=libmp3lame - Win32 Debug
 !MESSAGE 
 !MESSAGE "libmp3lame - Win32 Release" (based on "Win32 (x86) Static Library")
 !MESSAGE "libmp3lame - Win32 Debug" (based on "Win32 (x86) Static Library")
-!MESSAGE "libmp3lame - Win32 Release NASM" (based on\
- "Win32 (x86) Static Library")
+!MESSAGE "libmp3lame - Win32 Release NASM" (based on "Win32 (x86) Static Library")
 !MESSAGE 
 
 # Begin Project
+# PROP AllowPerConfigDependencies 0
 # PROP Scc_ProjName ""
 # PROP Scc_LocalPath ""
-CPP=xicl.exe
+CPP=cl.exe
+RSC=rc.exe
 
 !IF  "$(CFG)" == "libmp3lame - Win32 Release"
 
@@ -40,12 +41,11 @@ CPP=xicl.exe
 # PROP Output_Dir "Release"
 # PROP Intermediate_Dir "Release"
 # PROP Target_Dir ""
-RSC=rc.exe
-# ADD BASE RSC /l 0x409
-# ADD RSC /l 0x409
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "HAVE_CONFIG_H" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
 # ADD CPP /nologo /W3 /O2 /I "../" /I "../mpglib" /I "../include" /I ".." /D "NDEBUG" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "WIN32" /D "HAVE_CONFIG_H" /FD /c
 # SUBTRACT CPP /YX
+# ADD BASE RSC /l 0x409
+# ADD RSC /l 0x409
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
@@ -65,11 +65,10 @@ LIB32=link.exe -lib
 # PROP Output_Dir "Debug"
 # PROP Intermediate_Dir "Debug"
 # PROP Target_Dir ""
-RSC=rc.exe
-# ADD BASE RSC /l 0x409
-# ADD RSC /l 0x409
 # ADD BASE CPP /nologo /W3 /GX /Z7 /Od /D "WIN32" /D "HAVE_CONFIG_H" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
 # ADD CPP /nologo /W3 /GX /Z7 /Od /I "../" /I "../mpglib" /I "../include" /I ".." /D "_DEBUG" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "WIN32" /D "HAVE_CONFIG_H" /YX /FD /c
+# ADD BASE RSC /l 0x409
+# ADD RSC /l 0x409
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
@@ -89,13 +88,12 @@ LIB32=link.exe -lib
 # PROP Output_Dir "Release_NASM"
 # PROP Intermediate_Dir "Release_NASM"
 # PROP Target_Dir ""
-RSC=rc.exe
-# ADD BASE RSC /l 0x409
-# ADD RSC /l 0x409
 # ADD BASE CPP /nologo /W3 /O2 /I "../" /I "../mpglib" /I "../include" /I ".." /D "NDEBUG" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "WIN32" /D "HAVE_CONFIG_H" /FD /c
 # SUBTRACT BASE CPP /YX
 # ADD CPP /nologo /W3 /O2 /I "../" /I "../mpglib" /I "../include" /I ".." /D "NDEBUG" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "WIN32" /D "HAVE_CONFIG_H" /D "HAVE_NASM" /D "MMX_choose_table" /FD /c
 # SUBTRACT CPP /YX
+# ADD BASE RSC /l 0x409
+# ADD RSC /l 0x409
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
@@ -193,6 +191,39 @@ SOURCE=.\bitstream.h
 # Begin Source File
 
 SOURCE=..\configMS.h
+
+!IF  "$(CFG)" == "libmp3lame - Win32 Release"
+
+# Begin Custom Build
+InputPath=..\configMS.h
+
+"..\config.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy ..\configMS.h ..\config.h
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "libmp3lame - Win32 Debug"
+
+# Begin Custom Build
+InputPath=..\configMS.h
+
+"..\config.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy ..\configMS.h ..\config.h
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "libmp3lame - Win32 Release NASM"
+
+# Begin Custom Build
+InputPath=..\configMS.h
+
+"..\config.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy ..\configMS.h ..\config.h
+
+# End Custom Build
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
@@ -275,8 +306,7 @@ InputPath=.\i386\choose_table.nas
 InputName=choose_table
 
 "$(OutDir)/$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o\
-  $(OutDir)/$(InputName).obj
+	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o   $(OutDir)/$(InputName).obj
 
 # End Custom Build
 
@@ -300,8 +330,7 @@ InputPath=.\i386\cpu_feat.nas
 InputName=cpu_feat
 
 "$(OutDir)/$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o\
-  $(OutDir)/$(InputName).obj
+	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o   $(OutDir)/$(InputName).obj
 
 # End Custom Build
 
@@ -400,8 +429,7 @@ InputPath=.\i386\scalar.nas
 InputName=scalar
 
 "$(OutDir)/$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o\
-  $(OutDir)/$(InputName).obj
+	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o   $(OutDir)/$(InputName).obj
 
 # End Custom Build
 
