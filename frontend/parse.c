@@ -1039,7 +1039,20 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF ("tune")
                     argUsed=1;
                     {extern void lame_set_tune(lame_t gfp, float val);
-                    lame_set_tune(gfp,atof(nextArg));}    
+                    lame_set_tune(gfp,atof(nextArg));} 
+                T_ELIF ("ms-sparsing")
+                    argUsed=1;
+                    {extern void lame_set_ms_sparsing(lame_t gfp, int val);
+                    lame_set_ms_sparsing(gfp,atoi(nextArg));}                    
+                T_ELIF ("ms-sparse-low")
+                    argUsed=1;
+                    {extern void lame_set_ms_sparse_low(lame_t gfp, float val);
+                    lame_set_ms_sparse_low(gfp,atof(nextArg));}
+                T_ELIF ("ms-sparse-high")
+                    argUsed=1;
+                    {extern void lame_set_ms_sparse_high(lame_t gfp, float val);
+                    lame_set_ms_sparse_high(gfp,atof(nextArg));}
+                       
                     
                 T_ELIF ("abr")
                     argUsed=1;

@@ -413,6 +413,10 @@ struct lame_internal_flags {
 
   int sfb21_extra; /* will be set in lame_init_params */
 
+  int   sparsing;
+  FLOAT sparseA;
+  FLOAT sparseB;
+
 #ifndef KLEMM_44
   /* variables used by util.c */
   /* BPC = maximum number of filter convolution windows to precompute */
