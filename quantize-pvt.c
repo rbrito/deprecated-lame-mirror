@@ -706,8 +706,8 @@ int scale_bitcount_lsf( III_scalefac_t scalefac[2][2], gr_info *cod_info,
 int calc_xmin( FLOAT8 xr[576], III_psy_ratio *ratio,
 	       gr_info *cod_info, III_psy_xmin *l3_xmin)
 {
-    int start, end, sfb, l, b, ath_over=0;
-    FLOAT8 en0, bw, ener;
+    int start, end, bw, sfb, l, b, ath_over=0;
+    FLOAT8 en0, xmin, ener;
 
     if (gf.ATHonly) {    
       for ( sfb = cod_info->sfb_smax; sfb < SBPSY_s; sfb++ )
@@ -727,15 +727,16 @@ int calc_xmin( FLOAT8 xr[576], III_psy_ratio *ratio,
 	    ener = ener * ener;
 	    en0 += ener;
 	  }
+	  en0 /= bw;
 
-	  bw *= ratio->en.s[sfb][b];
-	  if (bw != 0.0)
-	    bw = en0 * ratio->thm.s[sfb][b] * masking_lower / bw;
+	  xmin = ratio->en.s[sfb][b];
+	  if (xmin != 0.0)
+	    xmin = en0 * ratio->thm.s[sfb][b] * masking_lower / xmin;
 
 #if RH_ATH
-	  l3_xmin->s[sfb][b] = Max(1e-20, bw);
+	  l3_xmin->s[sfb][b] = Max(1e-20, xmin);
 #else
-	  l3_xmin->s[sfb][b] = Max(ATH_s[sfb], bw);
+	  l3_xmin->s[sfb][b] = Max(ATH_s[sfb], xmin);
 #endif
 	  if (en0 > ATH_s[sfb]) ath_over++;
 	}
@@ -751,15 +752,16 @@ int calc_xmin( FLOAT8 xr[576], III_psy_ratio *ratio,
 	  ener = xr[l] * xr[l];
 	  en0 += ener;
 	}
+	en0 /= bw;
 
-	bw *= ratio->en.l[sfb];
-	if (bw != 0.0)
-	  bw = en0 * ratio->thm.l[sfb] * masking_lower / bw;
+	xmin = ratio->en.l[sfb];
+	if (xmin != 0.0)
+	  xmin = en0 * ratio->thm.l[sfb] * masking_lower / xmin;
 
 #if RH_ATH
-	l3_xmin->l[sfb]=Max(1e-20, bw);
+	l3_xmin->l[sfb]=Max(1e-20, xmin);
 #else
-	l3_xmin->l[sfb]=Max(ATH_l[sfb], bw);
+	l3_xmin->l[sfb]=Max(ATH_l[sfb], xmin);
 #endif
 	if (en0 > ATH_l[sfb]) ath_over++;
       }

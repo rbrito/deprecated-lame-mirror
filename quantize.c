@@ -73,6 +73,8 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 
   /* quantize! */
 
+
+
   for ( gr = 0; gr < gf.mode_gr; gr++ ) {
     if (convert_psy) {
       /* dual channel version can quantize Mid/Side channels with L/R
@@ -94,7 +96,7 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
       if (reduce_sidechannel) 
 	reduce_side(targ_bits,ms_ener_ratio[gr],mean_bits);
 #endif      
-      
+
       for (ch=0 ; ch < gf.stereo ; ch ++) {
 	outer_loop( xr, targ_bits[ch], noise, targ_noise, 0, l3_xmin,l3_enc, 
 		    fr_ps, scalefac,gr, l3_side, ratio, ms_ener_ratio[gr],ch);
@@ -663,6 +665,7 @@ void outer_loop(
 	over=calc_noise1( xr[gr][ch], l3_enc[gr][ch], cod_info, 
 			  xfsf,distort, l3_xmin,gr,ch, &over_noise, 
 			  &tot_noise, &max_noise);
+
       }
       /* check if this quantization is better the our saved quantization */
       if (iteration == 1) better=1;
@@ -942,6 +945,7 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
 
     if (count>1) *tot_noise /= count;
     if (over>1) *over_noise /= over;
+
     return over;
 }
 

@@ -64,7 +64,11 @@ void filterMDCT( FLOAT8 xr_org[2][2][576], III_side_info_t *l3_side)
     }
   }
 
+
+  /* will will soon replace gf.sfb21 with filters */
   if (gf.sfb21) {
+
+
     for ( gr = 0; gr < gf.mode_gr; gr++ ) {
       for (ch =0 ; ch < gf.stereo ; ch++) {
 	int shortblock = (l3_side->gr[gr].ch[ch].tt.block_type==SHORT_TYPE);
