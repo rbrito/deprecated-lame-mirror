@@ -109,6 +109,9 @@ EXTRA_liblameasmroutines_la_SOURCES = $(nasm_sources)
 nasm_sources =  	choose_table.nas 	cpu_feat.nas 	scalar.nas
 
 
+CLEANFILES =  	choose_table.lst 	cpu_feat.lst 	scalar.lst
+
+
 @HAVE_NASM_TRUE@liblameasmroutines_la_SOURCES = $(nasm_sources)
 
 EXTRA_DIST =  	fft.nas 	fft3dn.nas 	fftfpu.nas 	fftsse.nas 	ffttbl.nas
@@ -327,6 +330,7 @@ installdirs:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-rm -f Makefile $(CONFIG_CLEAN_FILES)
