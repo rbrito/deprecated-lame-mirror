@@ -4,7 +4,7 @@
 
 # TARGTYPE "Win32 (x86) Static Library" 0x0104
 
-CFG=libmp3lame - Win32 Debug
+CFG=libmp3lame - Win32 Debug GTK
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
@@ -13,13 +13,15 @@ CFG=libmp3lame - Win32 Debug
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "libmp3lame_vc6.mak" CFG="libmp3lame - Win32 Debug"
+!MESSAGE NMAKE /f "libmp3lame_vc6.mak" CFG="libmp3lame - Win32 Debug GTK"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
 !MESSAGE "libmp3lame - Win32 Release" (based on "Win32 (x86) Static Library")
 !MESSAGE "libmp3lame - Win32 Debug" (based on "Win32 (x86) Static Library")
 !MESSAGE "libmp3lame - Win32 Release NASM" (based on "Win32 (x86) Static Library")
+!MESSAGE "libmp3lame - Win32 Debug GTK" (based on "Win32 (x86) Static Library")
+!MESSAGE "libmp3lame - Win32 Release GTK" (based on "Win32 (x86) Static Library")
 !MESSAGE 
 
 # Begin Project
@@ -105,6 +107,58 @@ LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
 # ADD LIB32 /nologo /out:"Release_NASM\libmp3lame.lib"
 
+!ELSEIF  "$(CFG)" == "libmp3lame - Win32 Debug GTK"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 1
+# PROP BASE Output_Dir "libmp3lame___Win32_Debug_GTK"
+# PROP BASE Intermediate_Dir "libmp3lame___Win32_Debug_GTK"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 1
+# PROP Output_Dir "libmp3lame___Win32_Debug_GTK"
+# PROP Intermediate_Dir "libmp3lame___Win32_Debug_GTK"
+# PROP Target_Dir ""
+LINK32=link.exe
+# ADD BASE CPP /nologo /W3 /ZI /Od /I "../" /I "../mpglib" /I "../include" /I ".." /D "_DEBUG" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "WIN32" /D "HAVE_CONFIG_H" /FD /c
+# SUBTRACT BASE CPP /YX
+# ADD CPP /nologo /W3 /ZI /Od /I "../" /I "../mpglib" /I "../include" /I ".." /D "_DEBUG" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "WIN32" /D "HAVE_CONFIG_H" /D "HAVE_GTK" /FD /c
+# SUBTRACT CPP /YX
+# ADD BASE RSC /l 0x409
+# ADD RSC /l 0x409
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LIB32=link.exe -lib
+# ADD BASE LIB32 /nologo /out:"Debug\libmp3lame.lib"
+# ADD LIB32 /nologo /out:"Debug\libmp3lame.lib"
+
+!ELSEIF  "$(CFG)" == "libmp3lame - Win32 Release GTK"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "libmp3lame___Win32_Release_GTK"
+# PROP BASE Intermediate_Dir "libmp3lame___Win32_Release_GTK"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "libmp3lame___Win32_Release_GTK"
+# PROP Intermediate_Dir "libmp3lame___Win32_Release_GTK"
+# PROP Target_Dir ""
+LINK32=link.exe
+# ADD BASE CPP /nologo /W3 /O2 /Ob2 /I "../" /I "../mpglib" /I "../include" /I ".." /D "NDEBUG" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "WIN32" /D "HAVE_CONFIG_H" /Gs1024 /FD /GAy /QIfdiv /QI0f /c
+# SUBTRACT BASE CPP /YX
+# ADD CPP /nologo /W3 /O2 /Ob2 /I "../" /I "../mpglib" /I "../include" /I ".." /D "NDEBUG" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "WIN32" /D "HAVE_CONFIG_H" /D "HAVE_GTK" /Gs1024 /FD /GAy /QIfdiv /QI0f /c
+# SUBTRACT CPP /YX
+# ADD BASE RSC /l 0x409
+# ADD RSC /l 0x409
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LIB32=link.exe -lib
+# ADD BASE LIB32 /nologo /out:"Release\libmp3lame.lib"
+# ADD LIB32 /nologo /out:"Release\libmp3lame.lib"
+
 !ENDIF 
 
 # Begin Target
@@ -112,6 +166,8 @@ LIB32=link.exe -lib
 # Name "libmp3lame - Win32 Release"
 # Name "libmp3lame - Win32 Debug"
 # Name "libmp3lame - Win32 Release NASM"
+# Name "libmp3lame - Win32 Debug GTK"
+# Name "libmp3lame - Win32 Release GTK"
 # Begin Group "Source"
 
 # PROP Default_Filter "c"
@@ -238,6 +294,26 @@ InputPath=..\configMS.h
 
 # End Custom Build
 
+!ELSEIF  "$(CFG)" == "libmp3lame - Win32 Debug GTK"
+
+# Begin Custom Build - Performing Custom Build Step on $(InputName)
+InputPath=..\configMS.h
+
+"..\config.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy ..\configMS.h ..\config.h
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "libmp3lame - Win32 Release GTK"
+
+# Begin Custom Build - Performing Custom Build Step on $(InputName)
+InputPath=..\configMS.h
+
+"..\config.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy ..\configMS.h ..\config.h
+
+# End Custom Build
+
 !ENDIF 
 
 # End Source File
@@ -346,6 +422,10 @@ InputName=choose_table
 
 # End Custom Build
 
+!ELSEIF  "$(CFG)" == "libmp3lame - Win32 Debug GTK"
+
+!ELSEIF  "$(CFG)" == "libmp3lame - Win32 Release GTK"
+
 !ENDIF 
 
 # End Source File
@@ -370,6 +450,10 @@ InputName=cpu_feat
 
 # End Custom Build
 
+!ELSEIF  "$(CFG)" == "libmp3lame - Win32 Debug GTK"
+
+!ELSEIF  "$(CFG)" == "libmp3lame - Win32 Release GTK"
+
 !ENDIF 
 
 # End Source File
@@ -384,6 +468,10 @@ SOURCE=.\i386\fft.nas
 !ELSEIF  "$(CFG)" == "libmp3lame - Win32 Release NASM"
 
 # PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "libmp3lame - Win32 Debug GTK"
+
+!ELSEIF  "$(CFG)" == "libmp3lame - Win32 Release GTK"
 
 !ENDIF 
 
@@ -409,6 +497,10 @@ InputName=fft3dn
 
 # End Custom Build
 
+!ELSEIF  "$(CFG)" == "libmp3lame - Win32 Debug GTK"
+
+!ELSEIF  "$(CFG)" == "libmp3lame - Win32 Release GTK"
+
 !ENDIF 
 
 # End Source File
@@ -423,6 +515,10 @@ SOURCE=.\i386\fftfpu.nas
 !ELSEIF  "$(CFG)" == "libmp3lame - Win32 Release NASM"
 
 # PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "libmp3lame - Win32 Debug GTK"
+
+!ELSEIF  "$(CFG)" == "libmp3lame - Win32 Release GTK"
 
 !ENDIF 
 
@@ -439,6 +535,10 @@ SOURCE=.\i386\fftsse.nas
 
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "libmp3lame - Win32 Debug GTK"
+
+!ELSEIF  "$(CFG)" == "libmp3lame - Win32 Release GTK"
+
 !ENDIF 
 
 # End Source File
@@ -454,6 +554,10 @@ SOURCE=.\i386\ffttbl.nas
 
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "libmp3lame - Win32 Debug GTK"
+
+!ELSEIF  "$(CFG)" == "libmp3lame - Win32 Release GTK"
+
 !ENDIF 
 
 # End Source File
@@ -468,6 +572,10 @@ SOURCE=.\i386\scalar.nas
 !ELSEIF  "$(CFG)" == "libmp3lame - Win32 Release NASM"
 
 # PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "libmp3lame - Win32 Debug GTK"
+
+!ELSEIF  "$(CFG)" == "libmp3lame - Win32 Release GTK"
 
 !ENDIF 
 

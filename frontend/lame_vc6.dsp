@@ -4,7 +4,7 @@
 
 # TARGTYPE "Win32 (x86) Console Application" 0x0103
 
-CFG=lame - Win32 Debug
+CFG=LAME - WIN32 DEBUG
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
@@ -13,7 +13,7 @@ CFG=lame - Win32 Debug
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "lame_vc6.mak" CFG="lame - Win32 Debug"
+!MESSAGE NMAKE /f "lame_vc6.mak" CFG="LAME - WIN32 DEBUG"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX- /O2 /Ob2 /I ".." /I "../mpglib" /I "../libmp3lame" /I "../include" /I "../" /D "NDEBUG" /D "WIN32" /D "_WIN32" /D "_CONSOLE" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "HAVE_CONFIG_H" /YX /FD /c
+# ADD CPP /nologo /W3 /O2 /Ob2 /I ".." /I "../mpglib" /I "../libmp3lame" /I "../include" /I "../" /D "NDEBUG" /D "WIN32" /D "_WIN32" /D "_CONSOLE" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "HAVE_CONFIG_H" /YX /FD /c
 # ADD BASE RSC /l 0x40c /d "NDEBUG"
 # ADD RSC /l 0x40c /d "NDEBUG"
 BSC32=bscmake.exe
@@ -67,7 +67,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GX- /ZI /Od /I "../" /I "../mpglib" /I "../libmp3lame" /I "../include" /D "_DEBUG" /D "WIN32" /D "_WIN32" /D "_CONSOLE" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "HAVE_CONFIG_H" /YX /FD /GZ /c
+# ADD CPP /nologo /W3 /Gm /ZI /Od /I "../" /I "../mpglib" /I "../libmp3lame" /I "../include" /D "_DEBUG" /D "WIN32" /D "_WIN32" /D "_CONSOLE" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "HAVE_CONFIG_H" /YX /FD /GZ /c
 # ADD BASE RSC /l 0x40c /d "_DEBUG"
 # ADD RSC /l 0x40c /d "_DEBUG"
 BSC32=bscmake.exe
@@ -91,8 +91,8 @@ LINK32=link.exe
 # PROP Intermediate_Dir "Release_NASM"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /W3 /GX- /O2 /Ob2 /I ".." /I "../mpglib" /I "../libmp3lame" /I "../include" /I "../" /D "NDEBUG" /D "WIN32" /D "_WIN32" /D "_CONSOLE" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "HAVE_CONFIG_H" /YX /FD /c
-# ADD CPP /nologo /W3 /GX- /O2 /Ob2 /I ".." /I "../mpglib" /I "../libmp3lame" /I "../include" /I "../" /D "NDEBUG" /D "WIN32" /D "_WIN32" /D "_CONSOLE" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "HAVE_CONFIG_H" /D "HAVE_NASM" /D "MMX_choose_table" /YX /FD /c
+# ADD BASE CPP /nologo /W3 /O2 /Ob2 /I ".." /I "../mpglib" /I "../libmp3lame" /I "../include" /I "../" /D "NDEBUG" /D "WIN32" /D "_WIN32" /D "_CONSOLE" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "HAVE_CONFIG_H" /YX /FD /c
+# ADD CPP /nologo /W3 /O2 /Ob2 /I ".." /I "../mpglib" /I "../libmp3lame" /I "../include" /I "../" /D "NDEBUG" /D "WIN32" /D "_WIN32" /D "_CONSOLE" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "HAVE_CONFIG_H" /D "HAVE_NASM" /D "MMX_choose_table" /YX /FD /c
 # ADD BASE RSC /l 0x40c /d "NDEBUG"
 # ADD RSC /l 0x40c /d "NDEBUG"
 BSC32=bscmake.exe
