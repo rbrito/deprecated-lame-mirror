@@ -46,8 +46,12 @@
 //  140 bytes
 */
 #define VBRHEADERSIZE (NUMTOCENTRIES+4+4+4+4+4)
-/* the size of the Xing header in kbps */
-#define XING_BITRATE 128
+
+/* the size of the Xing header (MPEG1 and MPEG2) in kbps */
+#define XING_BITRATE1 128
+#define XING_BITRATE2  64
+#define XING_BITRATE25 32
+
 
 
 const static char	VBRTag[]={"Xing"};
@@ -307,21 +311,26 @@ int InitVbrTag(lame_global_flags *gfp)
         // are each reduced by a factor of 2.
 	*/
 	{
-	int tot;
-	/* static const int framesize[3]={208,192,288};*/  /* 64kbs MPEG1 or MPEG2  framesize */
-	/* static int framesize[3]={156,144,216}; */ /* 48kbs framesize */
-
+	int bitrate,tot;
+	if (1==gfp->version) {
+	  bitrate = XING_BITRATE1;
+	} else {
+	  if (gfp->out_samplerate < 32000 )
+	    bitrate = XING_BITRATE25;
+	  else
+	    bitrate = XING_BITRATE2;
+	}
 	gfp->TotalFrameSize= 
-	  ((gfp->version+1)*72000*XING_BITRATE) / gfp->out_samplerate;
+	  ((gfp->version+1)*72000*bitrate) / gfp->out_samplerate;
 	tot = (gfp->nZeroStreamSize+VBRHEADERSIZE);
 	tot += 20;  /* extra 20 bytes for LAME & version string */
 
 	if (gfp->TotalFrameSize < tot ) {
-	  ERRORF("Xing VBR header problem...use -t\n");
+	  ERRORF("Xing VBR header problem 1...use -t\n");
 	  LAME_ERROR_EXIT();
 	}
 	if (gfp->TotalFrameSize > MAXFRAMESIZE ) {
-	  ERRORF("Xing VBR header problem...use -t\n");
+	  ERRORF("Xing VBR header problem 2...use -t\n");
 	  LAME_ERROR_EXIT();
 	}
 	}
@@ -405,18 +414,28 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
 	/* from first valid frame */
 	pbtStreamBuffer[0]=(u_char) 0xff;
 	abyte = (pbtStreamBuffer[1] & (char) 0xf1);
-	bbyte = 16*BitrateIndex(XING_BITRATE,gfp->version,gfp->out_samplerate);
+	{ int bitrate;
+	if (1==gfp->version) {
+	  bitrate = XING_BITRATE1;
+	} else {
+	  if (gfp->out_samplerate < 32000 )
+	    bitrate = XING_BITRATE25;
+	  else
+	    bitrate = XING_BITRATE2;
+	}
+	  bbyte = 16*BitrateIndex(bitrate,gfp->version,gfp->out_samplerate);
+	}
+
+	/* Use as much of the info from the real frames in the
+	 * Xing header:  samplerate, channels, crc, etc...
+	 */ 
 	if (gfp->version==1) {
-          /* changed behaviour as suggested by Mathew Hendry:
-           * The Xing VBR header is a valid mpeg.  But because some
-	   * decoders require CRC on for all frames, or off for all frames,
-           * keep crc from the first valid frame without calculating it
-           * for this additional Xing frame
-           */ 
+	  /* MPEG1 */
 	  pbtStreamBuffer[1]=abyte | (char) 0x0a;     /* was 0x0b; */
 	  abyte = pbtStreamBuffer[2] & (char) 0x0d;   /* AF keep also private bit */
 	  pbtStreamBuffer[2]=(char) bbyte | abyte;     /* 64kbs MPEG1 frame */
 	}else{
+	  /* MPEG2 */
 	  pbtStreamBuffer[1]=abyte | (char) 0x02;     /* was 0x03; */
 	  abyte = pbtStreamBuffer[2] & (char) 0x0d;   /* AF keep also private bit */
 	  pbtStreamBuffer[2]=(char) bbyte | abyte;     /* 64kbs MPEG2 frame */
