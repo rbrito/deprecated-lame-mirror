@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /c
-# ADD CPP /nologo /Gz /MD /W3 /GX /O2 /I "./" /I "../include" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "INC_OLE2" /D "STRICT" /D WINVER=0x0400 /D _X86_=1 /FR /FD /c
+# ADD CPP /nologo /Gz /MD /W3 /GX /O2 /I "./" /I "../include" /D "NDEBUG" /D "INC_OLE2" /D "STRICT" /D WINVER=0x0400 /D _X86_=1 /D "_WINDOWS" /D "WIN32" /D "STDC_HEADERS" /FR /FD /c
 # SUBTRACT CPP /YX
 # ADD BASE MTL /nologo /D "NDEBUG" /win32
 # ADD MTL /D "NDEBUG" /mktyplib203 /win32
@@ -72,7 +72,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /c
-# ADD CPP /nologo /Gz /MDd /W3 /GX /ZI /Od /I "./" /I "../include" /D "WIN32" /D "DEBUG" /D "_WINDOWS" /D "INC_OLE2" /D WINVER=0x0400 /D _X86_=1 /D "STRICT" /FR /YX /FD /c
+# ADD CPP /nologo /Gz /MDd /W3 /GX /ZI /Od /I "./" /I "../include" /D "DEBUG" /D "INC_OLE2" /D WINVER=0x0400 /D _X86_=1 /D "STRICT" /D "_WINDOWS" /D "WIN32" /D "STDC_HEADERS" /FR /YX /FD /c
 # ADD BASE MTL /nologo /D "_DEBUG" /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x419 /d "_DEBUG"
