@@ -583,7 +583,6 @@ lame_init_params(lame_global_flags * const gfp)
     gfc->mode_gr = gfp->out_samplerate <= 24000 ? 1 : 2; /* Number of granules per frame */
     gfp->framesize = 576 * gfc->mode_gr;
     gfp->encoder_delay = ENCDELAY;
-    gfc->coding = coding_MPEG_Layer_3;
     gfc->frame_size = gfp->framesize;
 
     gfc->resample_ratio = (double) gfp->in_samplerate / gfp->out_samplerate;

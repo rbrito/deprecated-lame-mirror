@@ -245,16 +245,6 @@ typedef struct
 } PSY_t; 
 
 
-/* Guest structure, only temporarly here */
-
-typedef enum {
-    coding_MPEG_Layer_1 = 1,
-    coding_MPEG_Layer_2 = 2,
-    coding_MPEG_Layer_3 = 3,
-    coding_MPEG_AAC     = 4,
-    coding_Ogg_Vorbis   = 5,
-    coding_MPEG_plus    = 6
-} coding_t;
 
 #define MAX_CHANNELS  2
 
@@ -340,7 +330,6 @@ struct lame_internal_flags {
 
   size_t       frame_size;    /* size of one frame in samples per channel */
   lame_global_flags* gfp;     /* needed as long as the frame encoding functions must access gfp (all needed information can be added to gfc) */
-  coding_t     coding;        /* MPEG Layer 1/2/3, Ogg Vorbis, MPEG AAC, ... */
   unsigned long frame_count;  /* Number of frames coded, 2^32 > 3 years */
   int          mf_samples_to_encode;
   int          mf_size;
