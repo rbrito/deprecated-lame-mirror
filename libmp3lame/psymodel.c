@@ -37,6 +37,10 @@
 #include <dmalloc.h>
 #endif
 
+
+#undef NOTABLES
+
+
 #ifdef M_LN10
 #define		LN_TO_LOG10		(M_LN10/10)
 #else
@@ -179,6 +183,7 @@ int L3psycho_anal( lame_global_flags * gfp,
 
 
     samplerate = gfp->out_samplerate;
+#ifndef NOTABLES
     switch(gfp->out_samplerate){
     case 32000: break;
     case 44100: break;
@@ -192,6 +197,7 @@ int L3psycho_anal( lame_global_flags * gfp,
     default:    ERRORF("error, invalid sampling frequency: %d Hz\a\n",
 			gfp->out_samplerate);
     return -1;
+#endif
     }
 
     gfc->ms_ener_ratio_old=.25;
@@ -227,7 +233,7 @@ int L3psycho_anal( lame_global_flags * gfp,
       cwlimit=gfp->cwlimit;
     else
       cwlimit=(FLOAT)8871.7;
-    gfc->cw_upper_index = cwlimit*1024.0/((FLOAT8)samplerate);
+    gfc->cw_upper_index = cwlimit*1024.0/gfp->out_samplerate;
     gfc->cw_upper_index=Min(HBLKSIZE-4,gfc->cw_upper_index);      /* j+3 < HBLKSIZE-1 */
     gfc->cw_upper_index=Max(6,gfc->cw_upper_index);
 
@@ -1521,6 +1527,7 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
   int  sbmax ;
   int  i,j;
   int freq_scale=1;
+  int partition[HBLKSIZE]; 
   int loop, k2;
 
   /******************************************************************/
@@ -1676,7 +1683,7 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 
 #endif  /* KLEMM_43 */
 
-#undef NOTABLES
+
 #ifdef NOTABLES
   /* compute numlines */
   j=0;
@@ -1698,10 +1705,6 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 	bark2  = freq2bark(sfreq*ji/BLKSIZE);
       } while ((bark2 - bark1) < delbark  && j2<=BLKSIZE/2);
 
-      /*
-      DEBUGF("%i old n=%i  %f old numlines:  %i   new=%i (%i,%i) (%f,%f) \n",
-i,*npart_l_orig,freq,numlines_l[i],j2-j,j,j2-1,bark1,bark2);
-      */
       for (k=j; k<j2; ++k)
 	partition[k]=i;
       numlines_l[i]=(j2-j);
@@ -1724,7 +1727,7 @@ i,*npart_l_orig,freq,numlines_l[i],j2-j,j,j2-1,bark1,bark2);
       i2 = floor(.5 + BLKSIZE*freq2/sfreq);
       if (i2>BLKSIZE/2) i2=BLKSIZE/2;
 
-      DEBUGF("old: (%i,%i)  new: (%i,%i) %i %i \n",bu_l[sfb],bo_l[sfb],
+      DEBUGF("longblock:  old: (%i,%i)  new: (%i,%i) %i %i \n",bu_l[sfb],bo_l[sfb],
 	     partition[i1],partition[i2],i1,i2);
 
       w1_l[sfb]=.5;
@@ -1767,20 +1770,24 @@ i,*npart_l_orig,freq,numlines_l[i],j2-j,j,j2-1,bark1,bark2);
       }
 
 
-      /*  minval formula needs work
-      ji = j;
-      freq = sfreq*ji/BLKSIZE;
-      mval = Max(27.0 - freq/50.0, 0.0);
-      //      mval = exp(-mval * LN_TO_LOG10);
-
-      DEBUGF("%2i old minval=%f  new = %f  ",
-	     i,-log(minval[i])/LN_TO_LOG10,mval);
-      if (mval < minval[i]) 
-      DEBUGF("less masking than ISO tables \n");
-      else
-      DEBUGF("more masking than ISO tables \n");
-      */
     }
+
+#ifdef NOTABLES
+  for(i=0;i<*npart_l_orig;i++){
+    double x = (-20+bval_l[i]*20.0/10.0);
+    if (bval_l[i]>10) x = 0;
+#if 0
+    fprintf(stderr,"bval=%f  orig=%f   new=%f    ",
+	    bval_l[i],10*log10(minval[i]),x);    
+
+    if (fabs(x) < fabs(10*log10(minval[i])))
+      fprintf(stderr,"(more masking) \n");
+    else
+      fprintf(stderr,"(less masking) \n");
+#endif
+  }
+#endif
+
 
 
 
@@ -1876,7 +1883,7 @@ i,*npart_s_orig,freq,numlines_s[i],j2-j,j,j2-1,bark1,bark2);
       i2 = floor(.5 + BLKSIZE_s*freq2/sfreq);
       if (i2>BLKSIZE_s/2) i2=BLKSIZE_s/2;
 
-      DEBUGF("old: (%i,%i)  new: (%i,%i) %i %i \n",bu_s[sfb],bo_s[sfb],
+      DEBUGF("shortblock: old: (%i,%i)  new: (%i,%i) %i %i \n",bu_s[sfb],bo_s[sfb],
 	     partition[i1],partition[i2],i1,i2);
 
       w1_s[sfb]=.5;
@@ -1896,24 +1903,25 @@ i,*npart_s_orig,freq,numlines_s[i],j2-j,j,j2-1,bark1,bark2);
   for(i=0;i<*npart_s_orig;i++)
     {
       int     k;
-      FLOAT8  bark;
-	  /* FLOAT8 freq, snr;*/
+      FLOAT8  bark,snr;
       k    = numlines_s[i] - 1;
       bark = 0.5 * (freq2bark (sfreq*(j+0)/BLKSIZE_s) +
                     freq2bark (sfreq*(j+k)/BLKSIZE_s) );
-      /*
-      DEBUGF("%i %i bval_s = %f  %f  numlines=%i  formula=%f \n",i,j,bval_s[i],freq,numlines_s[i],bark);
-      */
       bval_s[i] = bark;
       j        += k+1;
 
-      /* SNR formula needs work 
-      ji = j;
-      freq = sfreq*ji/BLKSIZE;
-      snr  = .14 + freq/80000;
-      DEBUGF("%2i old SNR=%f  new = %f \n ",
-	     i,SNR[i],snr);
-      */
+      /* SNR formula */
+      if (bval_s[i]<13)
+          snr=-8.25;
+      else 
+         snr  = -4.5 * (bval_s[i]-13)/(24.0-13.0)  + 
+                -8.25*(bval_s[i]-24)/(13.0-24.0);
+#ifdef NOTABLES
+      SNR[i]=pow(10.0,snr/10.0);
+      //fprintf(stderr,"%2i old SNR=%f(%f)  new = %f(%f) \n ",i,10*log10(SNR[i]),SNR[i],snr,pow(10.0,snr/10.0));
+#endif
+
+
     }
 
 
@@ -1965,6 +1973,10 @@ i,*npart_s_orig,freq,numlines_s[i],j2-j,j,j2-1,bark1,bark2);
   *npart_l=bo_l[SBPSY_l-1]+1;
   *npart_s=bo_s[SBPSY_s-1]+1;
   
+#ifdef NOTABLES
+  assert(*npart_l <= *npart_l_orig);
+  assert(*npart_s <= *npart_s_orig);
+#else
   /* if npart_l = npart_l_orig + 1, we can fix that below.  else: */
   assert(*npart_l <= *npart_l_orig+1);
   assert(*npart_s <= *npart_s_orig+1);
@@ -1986,6 +1998,7 @@ i,*npart_s_orig,freq,numlines_s[i],j2-j,j,j2-1,bark1,bark2);
     bo_s[SBPSY_s-1]=(*npart_s)-1;
     w2_s[SBPSY_s-1]=1.0;
   }
+#endif
 
 
     /* setup stereo demasking thresholds */

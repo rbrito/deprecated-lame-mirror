@@ -427,15 +427,6 @@ int lame_init_params ( lame_global_flags* const gfp )
     gfc->mode_ext     = MPG_MD_LR_LR;
     if ( gfp->mode == MPG_MD_MONO ) gfp->force_ms = 0;	// don't allow forced mid/side stereo for mono output
 
-    /* Here are some hidden flaws, the first step to show them is to reformat this
-     * code. The next steps are little code morphings to ease the readability of
-     * this code and to show some strange (may be wanted???) misbehaves.
-     * The reason of this flaws are extending of the automation without understanding
-     * the rest of the automation code.
-     * 
-     * Another point are changes in the documentation. Some adds, some removes
-     * of old (for the current code wrong) remarks, etc.
-     */
 
    if ( gfp->VBR != vbr_off) {
       gfp->free_format = 0;  /* VBR can't be mixed with free format */
@@ -447,8 +438,13 @@ int lame_init_params ( lame_global_flags* const gfp )
    }
 
 
-   /* find bitrate if user specified a compression ratio */
-   if ( gfp->VBR == vbr_off  &&  gfp->compression_ratio > 0 ) {
+  if (gfp->VBR==vbr_off && gfp->brate==0) {
+    /* no bitrate or compression ratio specified, use 11.025 */
+    if (gfp->compression_ratio==0) gfp->compression_ratio=11.025;   /* rate to compress a CD down to exactly 128000 bps */
+  }
+
+  /* find bitrate if user specify a compression ratio */
+  if (gfp->VBR==vbr_off && gfp->compression_ratio > 0) {
     
       if ( gfp->out_samplerate == 0 ) 
 	 gfp->out_samplerate = map2MP3Frequency (0.97 * gfp->in_samplerate); /* round up with a margin of 3% */
@@ -593,7 +589,7 @@ int lame_init_params ( lame_global_flags* const gfp )
   /****************************************************************/
   /* if a filter has not been enabled, see if we should add one: */
   /****************************************************************/
-
+#define KLEMM_42
 #ifdef KLEMM_42
     if ( gfp->lowpassfreq == 0 ) {
         double  lowpass;

@@ -48,8 +48,7 @@
 
 #define FRAMES_AND_BYTES (FRAMES_FLAG | BYTES_FLAG)
 
-#if 0
-This stuff was moved into lame.h:
+
  
 /*structure to receive extracted header */
 /* toc may be NULL*/
@@ -67,7 +66,6 @@ typedef struct
 
 int CheckVbrTag(unsigned char *buf);
 int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf);
-#endif
 
 int SeekPoint(unsigned char TOC[NUMTOCENTRIES], int file_bytes, float percent);
 int InitVbrTag(lame_global_flags *gfp);

@@ -57,7 +57,7 @@ int lame_decode1_headers(
     mp3data->header_parsed = 0;
   
     ret = decodeMP3 ( &mp, buffer, len, (char*)p, sizeof(out), &processed_bytes );
-  
+
     if ( mp.header_parsed ) {
         mp3data->header_parsed = 1;
         mp3data->stereo        = mp.fr.stereo;
@@ -71,6 +71,12 @@ int lame_decode1_headers(
 	                         ( 1.e3 * mp3data->framesize ) + 0.5;
         else
             mp3data->bitrate   = tabsel_123 [mp.fr.lsf] [mp.fr.lay-1] [mp.fr.bitrate_index];
+
+        if (mp.num_frames>0) {
+	  /* Xing VBR header found and num_frames was set */
+	  mp3data->totalframes = mp.num_frames;
+          mp3data->nsamp=mp3data->framesize * mp.num_frames;  
+	}
     }
 
     switch ( ret ) {
