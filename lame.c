@@ -162,14 +162,14 @@ void lame_init_params(void)
   int framesize;
   FLOAT compression_ratio;
 
-
+  gf.frameNum=0;
+  force_ms=FALSE;
+  InitFormatBitStream();
   if (gf.num_channels==1) {
     gf.mode = MPG_MD_MONO;
   }      
-  
   gf.stereo=2;
   if (gf.mode == MPG_MD_MONO) gf.stereo=1;
-
 
 
   /* set the output sampling rate, and resample options if necessary 
@@ -1466,7 +1466,7 @@ lame_global_flags * lame_init(int nowrite, int noread)
   memset(&fr_ps, 0, sizeof(frame_params));
   memset(&l3_side,0x00,sizeof(III_side_info_t));
 
-  force_ms=FALSE;
+
   
   fr_ps.header = &info;
   fr_ps.tab_num = -1;             /* no table loaded */
@@ -1474,7 +1474,6 @@ lame_global_flags * lame_init(int nowrite, int noread)
   info.version = MPEG_AUDIO_ID;   /* =1   Default: MPEG-1 */
   info.extension = 0;       
 
-  InitFormatBitStream();
 
   return &gf;
 }
