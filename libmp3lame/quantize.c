@@ -699,7 +699,7 @@ amp_scalefac_bands(
 	if (!(gfc->substep_shaping & 2)
 	    || (gfc->pseudohalf[sfb] ^= 1))
 	    cod_info->scalefac[sfb]++;
-	if (gfc->noise_shaping_amp==2)
+	if (method==2)
 	    return;
     }
 }
