@@ -19,6 +19,46 @@
 #endif
 
 
+static void PutNum(long num,FILE *f,int endianness,int bytes){
+  int i;
+  unsigned char c;
+
+  if(!endianness)
+    i=0;
+  else
+    i=bytes-1;
+  while(bytes--){
+    c=(num>>(i<<3))&0xff;
+    if(fwrite(&c,1,1,f)==-1){
+      perror("Could not write to output.");
+      exit(1);
+    }
+    if(endianness)
+      i--;
+    else
+      i++;
+  }
+}
+
+void WriteWav(FILE *f,unsigned long bytes,int srate,int ch){
+  /* quick and dirty */
+
+  fwrite("RIFF",1,4,f);               /*  0-3 */
+  PutNum(bytes+44-8,f,0,4);        /*  4-7 */
+  fwrite("WAVEfmt ",1,8,f);           /*  8-15 */
+  PutNum(16,f,0,4);                /* 16-19 */
+  PutNum(1,f,0,2);                 /* 20-21 */
+  PutNum(2,f,0,2);                 /* 22-23 */
+  PutNum(srate,f,0,4);             /* 24-27 */
+  PutNum(srate*ch*2,f,0,4);         /* 28-31 */
+  PutNum(4,f,0,2);                 /* 32-33 */
+  PutNum(16,f,0,2);                /* 34-35 */
+  fwrite("data",1,4,f);               /* 36-39 */
+  PutNum(bytes,f,0,4);             /* 40-43 */
+}
+
+
+
 
 
 /************************************************************************
@@ -111,18 +151,25 @@ int main(int argc, char **argv)
 #endif
 
   } else if (gf.decode_only) {
-    /* decode an mp3 file to raw pcm */
+    /* decode an mp3 file to a .wav */
+    fprintf(stderr, "input:    %s %.1fkHz MPEG%i LayerIII\n",
+	    (strcmp(gf.inPath, "-")? gf.inPath : "stdin"),
+	    gf.in_samplerate/1000.0,2-gf.version);
+    fprintf(stderr, "output:   %s (wav format)\n",
+	    (strcmp(gf.outPath, "-")? gf.outPath : "stdout"));
+    WriteWav(outf,(unsigned long) 0xFFFFFFFF,gf.in_samplerate,gf.num_channels);
     do {
       int i;
       /* read in 'iread' samples */
       iread=lame_readframe(&gf,Buffer);
       if (!gf.silent)
-	fprintf(stderr,"\rFrame# %i [ %i]",gf.frameNum,gf.totalframes-1);
+	fprintf(stderr,"\rFrame# %lu [ %lu]",gf.frameNum,gf.totalframes-1);
       for (i=0; i<iread; ++i) {
 	fwrite(&Buffer[0][i],2,1,outf);
 	if (gf.num_channels==2) fwrite(&Buffer[1][i],2,1,outf);
       }
     } while (iread);
+    fprintf(stderr,"\n");
     fclose(outf);
 
   } else {

@@ -750,7 +750,7 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
     }else {
       strncpy(gfp->outPath, gfp->inPath, MAX_NAME_SIZE - 4);
       if (gfp->decode_only)
-	strncat(gfp->outPath, ".pcm", 4 );
+	strncat(gfp->outPath, ".wav", 4 );
       else
 	strncat(gfp->outPath, ".mp3", 4 );
     }
