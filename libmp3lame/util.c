@@ -383,18 +383,19 @@ void freorder(int scalefac_band[],FLOAT8 ix_orig[576]) {
 
 
 /* resampling via FIR filter, blackman window */
-inline static FLOAT8 blackman(int i,FLOAT8 offset,FLOAT8 fcn,int l)
+inline static FLOAT8 blackman(FLOAT8 x,FLOAT8 fcn,int l)
 {
   /* This algorithm from:
 SIGNAL PROCESSING ALGORITHMS IN FORTRAN AND C
 S.D. Stearns and R.A. David, Prentice-Hall, 1992
   */
-  FLOAT8 bkwn;
+  FLOAT8 bkwn,x2;
   FLOAT8 wcn = (PI * fcn);
-  FLOAT8 x = (i-offset)/l;
-  FLOAT8 x2 = x - .5;
+  
+  x /= l;
   if (x<0) x=0;
   if (x>1) x=1;
+  x2 = x - .5;
 
   bkwn = 0.42 - 0.5*cos(2*x*PI)  + 0.08*cos(4*x*PI);
   if (fabs(x2)<1e-9) return wcn/PI;
@@ -508,7 +509,7 @@ int fill_buffer_resample(
         offset = (j-bpc) / (2.*bpc);
         for ( i = 0; i <= filter_l; i++ ) 
             sum += 
-	    gfc->blackfilt[j][i]  = blackman (i,offset,fcn,filter_l);
+	    gfc->blackfilt[j][i]  = blackman(i-offset,fcn,filter_l);
 	for ( i = 0; i <= filter_l; i++ ) 
 	  gfc->blackfilt[j][i] /= sum;
     }
@@ -533,6 +534,8 @@ int fill_buffer_resample(
     /* but we want a window centered at time0.   */
     offset = ( time0 -gfc->itime[ch] - (j + .5*(filter_l%2)));
     assert(fabs(offset)<=.500001);
+
+    /* find the closest precomputed window for this offset: */
     joff = floor((offset*2*bpc) + bpc +.5);
 
     xvalue = 0.;
@@ -546,7 +549,7 @@ int fill_buffer_resample(
 #ifdef PRECOMPUTE
       xvalue += y*gfc->blackfilt[joff][i];
 #else
-      xvalue += y*blackman(i,offset,fcn,filter_l);  /* very slow! */
+      xvalue += y*blackman(i-offset,fcn,filter_l);  /* very slow! */
 #endif
     }
     outbuf[k]=xvalue;
