@@ -96,13 +96,16 @@ unsigned int  maxvalue ( int  Buffer [2] [1152] )
 
 void levelmessage ( unsigned int maxvalue )
 {
-    char        buff [] = "|  .  |  .  |  .  |  .  |  .  |  .  |  .  |  .  |  .  |  .  |  \r";
+    char buff[] = "|  .  |  .  |  .  |  .  |  .  |  .  |  .  |  .  |  .  |  .  |  \r";
     static int  max = 0;
-    static int  tmp;
-    
+    static int  tmp = 0;
+
     buff [tmp] = '+';
     tmp = (maxvalue*61 + 16384) / (32767 + 16384/61);
-    if (tmp > max) max = tmp;
+    if (tmp > sizeof(buff)-2)
+	tmp = sizeof(buff)-2;
+    if (max < tmp)
+	max = tmp;
     buff [max] = 'x';
     buff [tmp] = '#';
     fwrite ( buff, 1, sizeof(buff)-1, stderr );
