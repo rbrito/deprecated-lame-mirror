@@ -20,9 +20,9 @@ int main(int argc, char **argv)
   lame_global_flags gf;  
 
   lame_init(&gf);
-  if(argc==1)  lame_usage(&gf,argv[0]);  /* no command-line args  */
+  if(argc==1)  usage(&gf,argv[0]);  /* no command-line args  */
 
-  lame_parse_args(&gf,argc, argv); 
+  parse_args(&gf,argc, argv); 
   gf.analysis=1;
 
   init_infile(&gf);

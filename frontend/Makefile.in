@@ -397,10 +397,10 @@ $(PGM):	main.o @GTK_OBJ@ ../libmp3lame.a $(LIBS) $(OBJ)
 	$(CC) -o $(PGM)  main.o  $(OBJ) $(LIBS) $(LDFLAGS) -L.. -lmp3lame
 
 mp3x:	mp3x.o @GTK_OBJ@ ../libmp3lame.a $(LIBS) $(OBJ)
-	$(CC) -o mp3x mp3x.o -L.. $(OBJ) $(LIBS) $(LDFLAGS) $(OBJ)
+	$(CC) -o mp3x mp3x.o -L.. $(OBJ) $(LIBS) $(LDFLAGS) -L.. -lmp3lame
 
 mp3rtp:	rtp.o mp3rtp.o ../libmp3lame.a $(LIBS) $(OBJ)
-	$(CC) -o mp3rtp mp3rtp.o rtp.o -L..   $(OBJ) $(LIBS) $(LDFLAGS) $(OBJ)
+	$(CC) -o mp3rtp mp3rtp.o rtp.o -L..   $(OBJ) $(LIBS) $(LDFLAGS) -L.. -lmp3lame
 
 
 
