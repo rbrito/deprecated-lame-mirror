@@ -1231,7 +1231,11 @@ lame_print_config(const lame_global_flags * gfp)
             MSGF(gfc, ", MMX");
 #endif
         if (gfc->CPU_features.AMD_3DNow)
+#ifdef HAVE_NASM
+            MSGF(gfc, ", 3DNow! (ASM used)");
+#else
             MSGF(gfc, ", 3DNow!");
+#endif
         if (gfc->CPU_features.SIMD)
             MSGF(gfc, ", SIMD");
         if (gfc->CPU_features.SIMD2)
