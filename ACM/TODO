@@ -1,3 +1,7 @@
+ACM is still in wide use, although MSFT has moved on to 
+DirectShow filters, or the lighter weight "DMO".  
+We do have a beta directshow filter.
+
 - known bug : when recording, converting, and recording a lame_close() call fail
 - add the preset modes (and alt-preset too) in the config
 - allow decompression the same way as in the command-line
@@ -7,4 +11,4 @@
 - use global pointers for string
 - use the bitrate/freq tables from LAME
 
-/ add the decoding engine
+/ add the decoding engine.
