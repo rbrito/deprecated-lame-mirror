@@ -658,8 +658,6 @@ scfsi_calc(int ch,
 	}
     }
 
-    printf("%d -> ", gi->part2_length);
-    gi->part2_3_length -= gi->part2_length;
     s1 = c1 = 0;
     for (sfb = 0; sfb < 11; sfb++) {
 	if (scalefac->l[1][ch][sfb] < 0)
@@ -686,8 +684,6 @@ scfsi_calc(int ch,
 	    }
 	}
     }
-    gi->part2_3_length += gi->part2_length;
-    printf("%d\n", gi->part2_length);
 }
 
 void best_scalefac_store(int gr, int ch,
@@ -697,6 +693,7 @@ void best_scalefac_store(int gr, int ch,
     /* use scalefac_scale if we can */
     gr_info *gi = &l3_side->gr[gr].ch[ch].tt;
 
+    gi->part2_3_length -= gi->part2_length;
     if (!gi->scalefac_scale && !gi->preflag) {
 	int sfb;
 	int b, s = 0;
@@ -721,14 +718,12 @@ void best_scalefac_store(int gr, int ch,
 	    }
 
 	    gi->scalefac_scale = 1;
-	    gi->part2_3_length -= gi->part2_length;
 	    gi->part2_length = 99999999;
 	    if (gf.mode_gr == 2) {
 	        scale_bitcount( scalefac, gi, gr, ch );
 	    } else {
 		scale_bitcount_lsf( scalefac, gi, gr, ch );
 	    }
-	    gi->part2_3_length += gi->part2_length;
 	}
     }
 
@@ -742,4 +737,5 @@ void best_scalefac_store(int gr, int ch,
 
 	scfsi_calc(ch, l3_side, scalefac);
     }
+    gi->part2_3_length += gi->part2_length;
 }
