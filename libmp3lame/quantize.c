@@ -278,21 +278,30 @@ calc_noise(
 	max_noise=Max(max_noise,noise);
     }
 
-    if (cod_info->block_type == SHORT_TYPE) {
+    if (over && cod_info->block_type == SHORT_TYPE) {
 	distort -= sfb;
 	over = 0;
 	max_noise = -20.0;
 	over_noise_db = 0.0;
 	for (sfb = cod_info->sfb_smin; sfb < cod_info->psymax; sfb += 3) {
-	    FLOAT noise = 0.0;
+	    FLOAT noise = 0.0, nsum = 0.0, subnoise;
+	    subnoise = FAST_LOG10(distort[sfb]);
 	    if (distort[sfb] > 1.0)
-		noise += FAST_LOG10(distort[sfb]);
+		noise += subnoise;
+	    nsum += subnoise;
+
+	    subnoise = FAST_LOG10(distort[sfb+1]);
 	    if (distort[sfb+1] > 1.0)
-		noise += FAST_LOG10(distort[sfb+1]);
+		noise += subnoise;
+	    nsum += subnoise;
+
+	    subnoise = FAST_LOG10(distort[sfb+2]);
 	    if (distort[sfb+2] > 1.0)
-		noise += FAST_LOG10(distort[sfb+2]);
-	    if (max_noise < noise)
-		max_noise = noise;
+		noise += subnoise;
+	    nsum += subnoise;
+
+	    if (max_noise < nsum)
+		max_noise = nsum;
 	    if (noise > 0) {
 		over++;
 		over_noise_db += noise;
@@ -580,7 +589,7 @@ better_quant(
      */
 
     calc_noise (gi, l3_xmin, distort, &calc);
-    switch (gi->block_type != NORM_TYPE
+    switch (gi->block_type == SHORT_TYPE
 	    ? gfc->quantcomp_method_s : gfc->quantcomp_method) {
         default:
         case 0:
