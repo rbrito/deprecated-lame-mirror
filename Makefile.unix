@@ -153,12 +153,25 @@ ifeq ($(CFG),RH)
 #  some alternate code (work in progress Robert.Hegemann@gmx.de)
 #  CPP_OPTS += /DRH_???
 # these options for gcc-2.95.2 to produce fast code
+#   CC_OPTS = \
+#	-Wall -O9 -fomit-frame-pointer -march=pentiumpro \
+#	-finline-functions -fexpensive-optimizations \
+#	-funroll-loops -funroll-all-loops -pipe -fschedule-insns2 \
+#	-fstrength-reduce \
+#	-malign-double -mfancy-math-387 -ffast-math 
+CC = /opt/experimental/bin/gcc
+   # these options for gcc-3.0.4
    CC_OPTS = \
-	-Wall -O9 -fomit-frame-pointer -march=pentiumpro \
-	-finline-functions -fexpensive-optimizations \
-	-funroll-loops -funroll-all-loops -pipe -fschedule-insns2 \
+	-Wall -ansic99 \
+	-pipe -O9 -mcpu=athlon  \
+	-fschedule-insns2 \
+	-finline-functions \
 	-fstrength-reduce \
-	-malign-double -mfancy-math-387 -ffast-math 
+	-fexpensive-optimizations \
+	-mfancy-math-387 -ffast-math \
+	#-funroll-all-loops # this switch breaks "takehiro.c" somehow, compiler or lame bug ? \
+	#-malign-double \
+	#-funroll-loops \
         
    HAVE_NEWER_GLIBC = YES
    HAVE_NASM = YES
