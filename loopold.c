@@ -346,7 +346,7 @@ void outer_loop_dual(
 
 
     /* compute the distortion in this quantization */
-    if (gf.fast_mode) {
+    if (gf.noise_shaping==0) {
       for (ch=0; ch<gf.stereo; ch++)
 	over[ch]=0;
     }else{

@@ -101,7 +101,7 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 	cod_info = &l3_side->gr[gr].ch[ch].tt;
 
 	best_scalefac_store(gr, ch, l3_side, scalefac);
-	if (gf.highq && cod_info->block_type == NORM_TYPE) {
+	if (gf.use_best_huffman==1 && cod_info->block_type == NORM_TYPE) {
 	  best_huffman_divide(gr, ch, cod_info, l3_enc[gr][ch]);
 	}
 #ifdef HAVEGTK
@@ -647,7 +647,7 @@ void outer_loop(
     
     if (notdone) {
       /* compute the distortion in this quantization */
-      if (gf.fast_mode) {
+      if (gf.noise_shaping==0) {
       	over=0;
       }else{
 	/* coefficients and thresholds both l/r (or both mid/side) */
@@ -749,7 +749,7 @@ void outer_loop(
     }
 
     /* if no bands with distortion, we are done */
-    if (gf.experimentalX==0)
+    if (gf.noise_shaping_stop==0)
       if (over==0) notdone=0;
 
     /* in sloppy mode, as soon as we know we can do better than targ_noise,

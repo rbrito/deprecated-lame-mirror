@@ -296,7 +296,7 @@ void L3psycho_anal( short int *buffer[2],
   
   
   numchn = gf.stereo;
-  if (gf.highq && (info->mode == MPG_MD_JOINT_STEREO)) numchn=4;
+  if (gf.ms_masking && (info->mode == MPG_MD_JOINT_STEREO)) numchn=4;
   for (chn=0; chn<numchn; chn++) {
 
 
@@ -863,7 +863,7 @@ void L3psycho_anal( short int *buffer[2],
   /* 0 = no energy in side channel */
   /* .5 = half of total energy in side channel */
   /*********************************************************************/
-  if (gf.highq) 
+  if (gf.ms_masking) 
     *ms_ener_ratio = ms_ener_ratio_old;
   else
     /* we didn't compute ms_ener_ratios, use the masking ratios instead */

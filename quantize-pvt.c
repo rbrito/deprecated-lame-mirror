@@ -145,7 +145,7 @@ iteration_init( FLOAT8 xr_org[2][2][576],
   convert_psy=0;
   reduce_sidechannel=0;
   if (info->mode_ext==MPG_MD_MS_LR) {
-    if (gf.highq) {
+    if (gf.ms_masking) {
       convert_mdct = 1;
       convert_psy = 0;
       reduce_sidechannel=1;
@@ -502,6 +502,7 @@ int scale_bitcount( III_scalefac_t *scalefac, gr_info *cod_info,
 /*
   table of largest scalefactors (number of bits) for MPEG2
 */
+/*
 static unsigned max_sfac_tab[6][4] =
 {
     {4, 4, 3, 3},
@@ -511,6 +512,7 @@ static unsigned max_sfac_tab[6][4] =
     {3, 3, 3, 0},
     {2, 2, 0, 0}
 };
+*/
 /*
   table of largest scalefactor values for MPEG2
 */

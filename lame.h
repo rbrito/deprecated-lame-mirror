@@ -50,8 +50,7 @@ typedef struct  {
   /* general control params */
   int gtkflag;                /* frame analyzer?       */
   int bWriteVbrTag;           /* Xing VBR tag?         */
-  int fast_mode;              /* fast, very low quaity */
-  int highq;                  /* use best possible quality  */
+  int highq;                  /* quality setting 0=best,  9=worst  */
   int allow_diff_short;       /* allow blocktypes to differ between channels ? */
   int no_short_blocks;        /* disable short blocks       */
   int silent;                 /* disable some status output */
@@ -93,60 +92,6 @@ typedef struct  {
   int noATH;                      /* disable ATH */
   float cwlimit;                  /* predictability limit */
 
-  /* not yet coded: */
-  int filter_type;          /* 0=MDCT filter, 1= (expensive) filters */
-  int quantization;         /* 0 = ISO formual,  1=best amplitude */
-  int noise_shaping;        /* 0 = none 
-                               1 = ISO model
-                               2 = allow multiple scalefacs to hit maximum
-                               3 = allow scalefac_select=1  
-                             */
-
-  int noise_shaping_stop;   /* 0 = stop at over=0. 
-                               1=stop when all scalefacs amplified  
-			    */
-
-  int psymodel;             /* 0 = none   1=gpsycho */
-  int ms_masking;           /* 0 = no,  1 = use mid/side maskings */
-  int use_best_huffman;     /* 0 = no.  1=outside loop  2=inside loop(slow) */
-
-
-  /* 
-map commandline options to quality settings:
-
---qual=9 (worst)
- -f          filter_type=0
-             noise_shaping=0
-             psymodel=0
-
---qual=?
-default      filter_type=0
-             quantization=0
-             noise_shaping=1
-	     noise_shaping_stop=0
-             psymodel=1
-             ms_masking=0
-             use_best_huffman=0
-
---qual=?
--h           filter_type=0
-             quantization=1
-             noise_shaping=2
-	     noise_shaping_stop=0
-             psymodel=1
-             ms_masking=1
-             use_best_huffman=1
-
---qual=0 (best, very slow)
-             filter_type=1
-             quantization=1
-             noise_shaping=3
-	     noise_shaping_stop=1
-             psymodel=1
-             ms_masking=1
-             use_best_huffman=2
-
-  */
               
 
   /* input file reading - not used if calling program does the i/o */
@@ -174,6 +119,26 @@ default      filter_type=0
   float resample_ratio;           /* input_samp_rate/output_samp_rate */
   float lowpass1,lowpass2;
   float highpass1,highpass2;
+
+  int filter_type;          /* 0=MDCT filter, 1= (expensive) filters */
+  int quantization;         /* 0 = ISO formual,  1=best amplitude */
+  int noise_shaping;        /* 0 = none 
+                               1 = ISO model
+                               2 = allow multiple scalefacs to hit maximum
+                               3 = allow scalefac_select=1  
+                             */
+
+  int noise_shaping_stop;   /* 0 = stop at over=0, all scalefacs amplified or
+                                   a scalefac has reached max value
+                               1 = stop when all scalefacs amplified or        
+                                   a scalefac has reached max value
+			    */
+
+  int psymodel;             /* 0 = none   1=gpsycho */
+  int ms_masking;           /* 0 = no,  1 = use mid/side maskings */
+  int use_best_huffman;     /* 0 = no.  1=outside loop  2=inside loop(slow) */
+
+
 
 } lame_global_flags;
 
