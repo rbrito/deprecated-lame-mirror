@@ -119,6 +119,24 @@ FLOAT8 ATHformula_GB(FLOAT8 f)
   return ath;
 }
 
+FLOAT8 ATHformula_GBauto(FLOAT8 f, float value)
+{
+/*this curve is designed for VBR:
+it adjusts from something close to Painter & Spanias
+on V9 up to Bouvigne's formula for V0*/
+
+  FLOAT8 ath;
+  f /= 1000;  // convert to khz
+  f  = Max(0.01, f);
+  f  = Min(18.0, f);
+
+  ath =    3.640 * pow(f,-0.8)
+         - 6.800 * exp(-0.6*pow(f-3.4,2.0))
+         + 6.000 * exp(-0.15*pow(f-8.7,2.0))
+         + (0.6+0.04*value)* 0.001 * pow(f,4.0);
+  return ath;
+}
+
 FLOAT8 ATHformula_GBtweak(FLOAT8 f)
 {
   FLOAT8 ath;
@@ -214,6 +232,8 @@ FLOAT8 ATHformula(FLOAT8 f,lame_global_flags *gfp)
       return ATHformula_GB(f);
     case 3:
       return ATHformula_GBtweak(f);
+    case 4:
+      return ATHformula_GBauto(f,gfp->VBR_q);
     }
 
   return ATHformula_Frank(f);
