@@ -32,8 +32,7 @@ typedef enum sound_file_format_e {
   sf_aiff, 
   sf_mp1,  /* MPEG Layer 1, aka mpg */
   sf_mp2,  /* MPEG Layer 2 */
-  sf_mp3,  /* MPEG Layer 3 */
-  sf_ogg 
+  sf_mp3   /* MPEG Layer 3 */
 } sound_file_format;
 
 

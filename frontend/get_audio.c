@@ -1438,14 +1438,12 @@ is_syncword_mp123(const void *const headerptr)
         return 0;       /* no MPEG-1, -2 or -2.5 */
     if ((p[1] & 0x06) == 0x00)
 	return 0;       /* no Layer I, II and III */
-#ifndef USE_LAYER_1
-    if ((p[1] & 0x06) == 0x03)
+    if ((p[1] & 0x06) == 0x03 && input_format != sf_mp1)
 	return 0; /* layer1 is not supported */
-#endif
-#ifndef USE_LAYER_2
-    if ((p[1] & 0x06) == 0x02)
-	return 0; /* layer1 is not supported */
-#endif
+    if ((p[1] & 0x06) == 0x02 && input_format != sf_mp2)
+	return 0; /* layer2 is not supported */
+    if ((p[1] & 0x06) == 0x01 && input_format != sf_mp3)
+	return 0; /* layer3 is not supported */
     if ((p[2] & 0xF0) == 0xF0)
         return 0;       /* bad bitrate */
     if ((p[2] & 0x0C) == 0x0C)
