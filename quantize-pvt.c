@@ -738,18 +738,66 @@ int calc_noise1( lame_global_flags *gfp,
 		 FLOAT8 *over_noise,
 		 FLOAT8 *tot_noise, FLOAT8 *max_noise)
 {
-    int start, end, l, i, over=0;
-    u_int sfb;
-    FLOAT8 sum,step,bw;
-    lame_internal_flags *gfc=gfp->internal_flags;
+  int start, end, l, i, over=0;
+  u_int sfb;
+  FLOAT8 sum,step,bw;
+  lame_internal_flags *gfc=gfp->internal_flags;
+  
+  int count=0;
+  FLOAT8 noise;
+  *over_noise=0;
+  *tot_noise=0;
+  *max_noise = -999;
+  
+  if (cod_info->block_type == SHORT_TYPE) {
+    int max_index = SBPSY_s;
+    if (gfp->gtkflag) max_index = SBMAX_s;
 
-    int count=0;
-    FLOAT8 noise;
-    *over_noise=0;
-    *tot_noise=0;
-    *max_noise = -999;
+    for ( i = 0; i < 3; i++ ) {
+        for ( sfb = 0; sfb < max_index; sfb++ ) {
+	    int s;
 
-    for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
+	    s = (scalefac->s[sfb][i] << (cod_info->scalefac_scale + 1))
+		+ cod_info->subblock_gain[i] * 8;
+	    s = cod_info->global_gain - s;
+
+	    assert(s<Q_MAX);
+	    assert(s>=0);
+	    step = POW20(s);
+	    start = gfc->scalefac_band.s[ sfb ];
+	    end   = gfc->scalefac_band.s[ sfb+1 ];
+            bw = end - start;
+
+	    for ( sum = 0.0, l = start; l < end; l++ ) {
+		FLOAT8 temp;
+		temp = fabs(xr[l * 3 + i]) - pow43[ix[l * 3 + i]] * step;
+#ifdef MAXNOISE
+		temp = bw*temp*temp;
+		sum = Max(sum,temp);
+#else
+		sum += temp * temp;
+#endif
+            }       
+	    xfsf[i+1][sfb] = sum / bw;
+
+	    /* max -30db noise below threshold */
+	    noise = 10*log10(Max(.001,xfsf[i+1][sfb] / l3_xmin->s[sfb][i] ));
+
+            distort[i+1][sfb] = noise;
+            if (noise > 0) {
+		over++;
+		*over_noise += noise;
+	    }
+	    *tot_noise += noise;
+	    *max_noise=Max(*max_noise,noise);
+	    count++;	    
+        }
+    }
+  }else{
+    int max_index = SBPSY_l;
+    if (gfp->gtkflag) max_index = SBMAX_l;
+
+    for ( sfb = 0; sfb < max_index; sfb++ ) {
 	FLOAT8 step;
 	int s = scalefac->l[sfb];
 
@@ -793,52 +841,12 @@ int calc_noise1( lame_global_flags *gfp,
 
     }
 
+  }
 
-    for ( i = 0; i < 3; i++ ) {
-        for ( sfb = cod_info->sfb_smax; sfb < SBPSY_s; sfb++ ) {
-	    int s;
-
-	    s = (scalefac->s[sfb][i] << (cod_info->scalefac_scale + 1))
-		+ cod_info->subblock_gain[i] * 8;
-	    s = cod_info->global_gain - s;
-
-	    assert(s<Q_MAX);
-	    assert(s>=0);
-	    step = POW20(s);
-	    start = gfc->scalefac_band.s[ sfb ];
-	    end   = gfc->scalefac_band.s[ sfb+1 ];
-            bw = end - start;
-
-	    for ( sum = 0.0, l = start; l < end; l++ ) {
-		FLOAT8 temp;
-		temp = fabs(xr[l * 3 + i]) - pow43[ix[l * 3 + i]] * step;
-#ifdef MAXNOISE
-		temp = bw*temp*temp;
-		sum = Max(sum,temp);
-#else
-		sum += temp * temp;
-#endif
-            }       
-	    xfsf[i+1][sfb] = sum / bw;
-
-	    /* max -30db noise below threshold */
-	    noise = 10*log10(Max(.001,xfsf[i+1][sfb] / l3_xmin->s[sfb][i] ));
-
-            distort[i+1][sfb] = noise;
-            if (noise > 0) {
-		over++;
-		*over_noise += noise;
-	    }
-	    *tot_noise += noise;
-	    *max_noise=Max(*max_noise,noise);
-	    count++;	    
-        }
-    }
-
-    if (count>1) *tot_noise /= count;
-    if (over>1) *over_noise /= over;
-
-    return over;
+  if (count>1) *tot_noise /= count;
+  if (over>1) *over_noise /= over;
+  
+  return over;
 }
 
 

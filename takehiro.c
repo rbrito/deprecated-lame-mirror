@@ -229,7 +229,7 @@ count_bit_noESC_from3(int *ix, int *end, int t1, int *s)
   with any arbitrary tables.
 */
 
-int choose_table(int *ix, int *end, int *s)
+int choose_table(int *ix, int *end, unsigned *s)
 {
     unsigned int max;
     int choice, choice2;
