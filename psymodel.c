@@ -47,51 +47,49 @@ int L3para_read( lame_global_flags *gfp,
 		  int *, int *, int *, int *);
 
 /* addition of simultaneous masking   Naoki Shibata 2000/7 */
-INLINE FLOAT8 mask_add(double m1,double m2,int b)
+INLINE FLOAT8 mask_add(double m1,double m2,int k,int b,lame_internal_flags *gfc)
 {
   static double table1[] = {
-    3.3246,3.23837,3.15437,3.00412,2.86103,2.65407,2.46209,2.284,
-    2.11879,1.96552,1.82335,1.69146,1.56911,1.46658,1.37074,1.31036,
-    1.25264,1.20648,1.16203,1.12765,1.09428,1.0659,1.03826,1.01895,
+    3.3246 *3.3246 ,3.23837*3.23837,3.15437*3.15437,3.00412*3.00412,2.86103*2.86103,2.65407*2.65407,2.46209*2.46209,2.284  *2.284  ,
+    2.11879*2.11879,1.96552*1.96552,1.82335*1.82335,1.69146*1.69146,1.56911*1.56911,1.46658*1.46658,1.37074*1.37074,1.31036*1.31036,
+    1.25264*1.25264,1.20648*1.20648,1.16203*1.16203,1.12765*1.12765,1.09428*1.09428,1.0659 *1.0659 ,1.03826*1.03826,1.01895*1.01895,
     1
   };
 
   static double table2[] = {
-    1.33352,1.35879,1.38454,1.39497,1.40548,1.3537,1.30382,1.22321,
-    1.14758
+    1.33352*1.33352,1.35879*1.35879,1.38454*1.38454,1.39497*1.39497,1.40548*1.40548,1.3537 *1.3537 ,1.30382*1.30382,1.22321*1.22321,
+    1.14758*1.14758
   };
 
   static double table3[] = {
-    2.35364,2.29259,2.23313,2.12675,2.02545,1.87894,1.74303,1.61695,
-    1.49999,1.39148,1.29083,1.19746,1.11084,1.03826
+    2.35364*2.35364,2.29259*2.29259,2.23313*2.23313,2.12675*2.12675,2.02545*2.02545,1.87894*1.87894,1.74303*1.74303,1.61695*1.61695,
+    1.49999*1.49999,1.39148*1.39148,1.29083*1.29083,1.19746*1.19746,1.11084*1.11084,1.03826*1.03826
   };
 
 
   int i;
+  double m;
 
   if (m1 == 0) return m2;
 
   if (b < 0) b = -b;
 
-  i = 20*log10(m2 / m1)/20*16;
+  i = 10*log10(m2 / m1)/10*16;
+  m = 10*log10((m1+m2)/(gfc->ATH_partitionbands[k]/2.43e+06));
+
   if (i < 0) i = -i;
 
-  if (b <= 3) {
+  if (b <= 3) {  /* approximately, 1 bark = 3 partitions */
     if (i > 8) return m1+m2;
-    if (m1+m2 < 200) {
-      double r;
-      r = (m1+m2)/200;
-      return (m1+m2)*(table2[i]*r+1*(1-r));
-    }
     return (m1+m2)*table2[i];
   }
 
-  if (m1+m2 < 200) {
-    if (m1+m2 > 150) {
+  if (m<15) {
+    if (m > 0) {
       double f=1.0,r;
       if (i > 24) return m1+m2;
       if (i > 13) f = 1; else f = table3[i];
-      r = (m1+m2-150)/50;
+      r = (m-0)/15;
       return (m1+m2)*(table1[i]*r+f*(1-r));
     }
     if (i > 13) return m1+m2;
@@ -283,7 +281,7 @@ int L3psycho_anal( lame_global_flags *gfp,
       }
       if (gfp->exp_nspsytune) {
 	for ( k = gfc->s3ind[b][0]; k <= gfc->s3ind[b][1]; k++ ) {
-	  gfc->s3_l[b][k] *= 0.7;
+	  gfc->s3_l[b][k] *= 0.5;
 	}
       } else {
 	for ( k = gfc->s3ind[b][0]; k <= gfc->s3ind[b][1]; k++ ) {
@@ -299,9 +297,9 @@ int L3psycho_anal( lame_global_flags *gfp,
       for ( k = gfc->s3ind_s[b][0]; k <= gfc->s3ind_s[b][1]; k++ ) {
 	norm += gfc->s3_s[b][k];
       }
-      if (gfp->exp_nspsytune) {
+      if (0 /*gfp->exp_nspsytune*/) {
 	for ( k = gfc->s3ind_s[b][0]; k <= gfc->s3ind_s[b][1]; k++ ) {
-	  gfc->s3_s[b][k] *= 0.7;
+	  gfc->s3_s[b][k] *= 0.5;
 	}
       } else {
 	for ( k = gfc->s3ind_s[b][0]; k <= gfc->s3ind_s[b][1]; k++ ) {
@@ -581,7 +579,8 @@ int L3psycho_anal( lame_global_flags *gfp,
 	    }
 	  eb[b] = ebb;
 	  cb[b] = cbb;
-	  max[b] = m; avg[b] = a;
+	  max[b] = m;
+	  avg[b] = a / gfc->numlines_l[b];
 	  b++;
         }
   
@@ -600,9 +599,9 @@ int L3psycho_anal( lame_global_flags *gfp,
 	      m = m < el ? el : m;
 	    }
 	  eb[b] = ebb;
+	  max[b] = m;
 	  cb[b] = ebb * 0.4;
- 
-	  max[b] = m; avg[b] = a;
+	  avg[b] = a / gfc->numlines_l[b];
         }
   
       j = 0;
@@ -613,7 +612,7 @@ int L3psycho_anal( lame_global_flags *gfp,
 	  tonality2[b] = 0;
 	  c1 = c2 = 0;
 	  m = a = 0;
-	  for(k=b;k<=b;k++)
+	  for(k=b-1;k<=b+1;k++)
 	    {
 	      if (k >= 0 && k < gfc->npart_l_orig) {
 		c1++;
@@ -623,19 +622,30 @@ int L3psycho_anal( lame_global_flags *gfp,
 	      }
 	    }
  
-	  tonality2[b] = a == 0 ? 0 : (m / a)*c1;
+	  a /= c1;
+	  tonality2[b] = a == 0 ? 0 : (m / a - 1)/(c2-1);
  	}
  
       for (b=0; b < gfc->npart_l_orig; b++ )
 	{
-	  FLOAT8 f=1;
-	  eb2[b] = eb[b];
-
-	  if (tonality2[b]*b > 19) {
-	    if (tonality2[b]*b > 21) f = 0.3;
-	    else f = 1-(tonality2[b]*b-19)/2*0.7;
+	  /* This table is tuned for fs=44.1KHz. */
+	  static FLOAT8 tab[7][20] = {
+	    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1},
+	    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+	    { 0, 0, 0, 0, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5},
+	    { 0, 0, 0, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5},
+	    { 0, 0, 0, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5}
+	  };
+	  //eb2[b] = eb[b] * (pow(10,-tab[b/10][(int)(20*tonality2[b])]/10.0));
+	  if (tab[0][0] == 0) {
+	    int i,j;
+	    for(i=0;i<7;i++)
+	      for(j=0;j<20;j++)
+		tab[i][j] = pow(10,-tab[i][j]/10.0);
 	  }
-	  eb2[b] *= f;
+	  eb2[b] = eb[b] * tab[b/10][(int)(20*tonality2[b])];
 	}
     } else {
       b = 0;
@@ -687,7 +697,7 @@ int L3psycho_anal( lame_global_flags *gfp,
 	if (gfp->exp_nspsytune) {
 	  for ( k = gfc->s3ind[b][0]; k <= gfc->s3ind[b][1]; k++ )
 	    {
-	      ecb = mask_add(ecb,gfc->s3_l[b][k] * eb2[k],k-b);
+	      ecb = mask_add(ecb,gfc->s3_l[b][k] * eb2[k],k,k-b,gfc);
 	      ctb += gfc->s3_l[b][k] * cb[k];
 	    }
 	} else {
@@ -744,9 +754,9 @@ int L3psycho_anal( lame_global_flags *gfp,
 	 */
 
 	if (gfp->exp_nspsytune) {
-	  tbb = exp(-LN_TO_LOG10 * NMT);
-	  ecb *= tbb;
-	  ecb *= 1.58489319246111;   /* pow(10.0,4/20.0) tuned by hearing tests */
+	  static FLOAT8 att=0;
+	  if (att==0) att = pow(10.0,-8.5/10);
+	  ecb *= att;
 	} else {
 #ifdef RH_AMP
 	  tbb *= gfc->minval[b]; /* always below Min(gfc->minval[b],tbb) */
@@ -891,26 +901,25 @@ int L3psycho_anal( lame_global_flags *gfp,
     for ( sb = 0; sb < SBPSY_l; sb++ )
       {
 	FLOAT8 enn,thmm;
-	if (!gfp->exp_nspsytune) {
-	  /* additive masking */
-	  enn = gfc->w1_l[sb] * eb[gfc->bu_l[sb]] + gfc->w2_l[sb] * eb[gfc->bo_l[sb]];
-	  thmm = gfc->w1_l[sb] *thr[gfc->bu_l[sb]] + gfc->w2_l[sb] * thr[gfc->bo_l[sb]];
-	  for ( b = gfc->bu_l[sb]+1; b < gfc->bo_l[sb]; b++ )
-	    {
-	      enn  += eb[b];
-	      thmm += thr[b];
-	    }
-	} else {
-	  enn = gfc->w1_l[sb] * eb[gfc->bu_l[sb]] + gfc->w2_l[sb] * eb[gfc->bo_l[sb]];
-	  thmm = Min(thr[gfc->bu_l[sb]],thr[gfc->bo_l[sb]]);
-	  for ( b = gfc->bu_l[sb]+1; b < gfc->bo_l[sb]; b++ )
-	    {
-	      enn  += eb[b];
-	      thmm = Min(thr[b],thmm);
-	    }
-	  thmm*=(1+gfc->bo_l[sb]-gfc->bu_l[sb]);
-	}
-
+#if 1
+	/* additive masking */
+	enn = gfc->w1_l[sb] * eb[gfc->bu_l[sb]] + gfc->w2_l[sb] * eb[gfc->bo_l[sb]];
+	thmm = gfc->w1_l[sb] *thr[gfc->bu_l[sb]] + gfc->w2_l[sb] * thr[gfc->bo_l[sb]];
+	for ( b = gfc->bu_l[sb]+1; b < gfc->bo_l[sb]; b++ )
+	  {
+	    enn  += eb[b];
+	    thmm += thr[b];
+	  }
+#else
+	enn = gfc->w1_l[sb] * eb[gfc->bu_l[sb]] + gfc->w2_l[sb] * eb[gfc->bo_l[sb]];
+	thmm = Min(thr[gfc->bu_l[sb]],thr[gfc->bo_l[sb]]);
+	for ( b = gfc->bu_l[sb]+1; b < gfc->bo_l[sb]; b++ )
+	  {
+	    enn  += eb[b];
+	    thmm = Min(thr[b],thmm);
+	  }
+	thmm*=(1+gfc->bo_l[sb]-gfc->bu_l[sb]);
+#endif
 	gfc->en[chn].l[sb] = enn;
 	gfc->thm[chn].l[sb] = thmm;
       }

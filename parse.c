@@ -504,6 +504,7 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	else if (strcmp(token, "nspsytune")==0) {
 	  gfp->exp_nspsytune = TRUE;
 	  gfp->experimentalZ = TRUE;
+	  gfp->experimentalX = 6;
 	}
 	/* some more GNU-ish options could be added
 	   * version       => complete name, version and license info (normal exit)  

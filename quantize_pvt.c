@@ -10,7 +10,7 @@
 #undef TAKEHIRO_IEEE754_HACK
 #endif
 
-#define NSTHRE 4  /* tuned by hearing tests */
+#define NSATHSCALE 103 // Assuming dynamic range=96dB, this value should be 92
 
 const int slen1_tab[16] = { 0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4 };
 const int slen2_tab[16] = { 0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3 };
@@ -225,7 +225,11 @@ FLOAT8 ATHmdct(lame_global_flags *gfp,FLOAT8 f)
   ath = ATHformula(f);
 	  
   /* convert to energy */
-  ath -= 114;    /* MDCT scaling.  From tests by macik and MUS420 code */
+  if (gfp->exp_nspsytune) {
+    ath -= NSATHSCALE;
+  } else {
+    ath -= 114;    /* MDCT scaling.  From tests by macik and MUS420 code */
+  }
   ath -= gfp->ATHlower;
 
   /* purpose of RH_QUALITY_CONTROL:
@@ -237,7 +241,7 @@ FLOAT8 ATHmdct(lame_global_flags *gfp,FLOAT8 f)
   if (gfp->VBR!=vbr_off) 
     {
       ath -= gfc->ATH_vbrlower;
-      ath = Min(gfp->VBR_q-62,ath);
+      if (!gfp->exp_nspsytune) ath = Min(gfp->VBR_q-62,ath);
     }
     
   ath = pow( 10.0, ath/10.0 );
@@ -491,28 +495,50 @@ int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576], III_psy_ratio *ratio,
   }
 
   }else{
-  
-  for ( sfb = 0; sfb < SBMAX_l; sfb++ ){
-    start = gfc->scalefac_band.l[ sfb ];
-    end   = gfc->scalefac_band.l[ sfb+1 ];
-    bw = end - start;
+    if (gfp->exp_nspsytune) {
+      for ( sfb = 0; sfb < SBMAX_l; sfb++ ){
+	start = gfc->scalefac_band.l[ sfb ];
+	end   = gfc->scalefac_band.l[ sfb+1 ];
+	bw = end - start;
     
-    for (en0 = 0.0, l = start; l < end; l++ ) {
-      ener = xr[l] * xr[l];
-      en0 += ener;
-    }
-    en0 /= bw;
+	for (en0 = 0.0, l = start; l < end; l++ ) {
+	  ener = xr[l] * xr[l];
+	  en0 += ener;
+	}
     
-    if (gfp->ATHonly) {
-      l3_xmin->l[sfb]=gfc->ATH_l[sfb];
+	if (gfp->ATHonly) {
+	  l3_xmin->l[sfb]=gfc->ATH_l[sfb];
+	} else {
+	  xmin = ratio->en.l[sfb];
+	  if (xmin > 0.0)
+	    xmin = en0 * ratio->thm.l[sfb] * gfc->masking_lower / xmin;
+	  l3_xmin->l[sfb]=Max(gfc->ATH_l[sfb], xmin);
+	}
+	if (en0 > gfc->ATH_l[sfb]) ath_over++;
+      }
     } else {
-      xmin = ratio->en.l[sfb];
-      if (xmin > 0.0)
-        xmin = en0 * ratio->thm.l[sfb] * gfc->masking_lower / xmin;
-      l3_xmin->l[sfb]=Max(gfc->ATH_l[sfb], xmin);
+      for ( sfb = 0; sfb < SBMAX_l; sfb++ ){
+	start = gfc->scalefac_band.l[ sfb ];
+	end   = gfc->scalefac_band.l[ sfb+1 ];
+	bw = end - start;
+    
+	for (en0 = 0.0, l = start; l < end; l++ ) {
+	  ener = xr[l] * xr[l];
+	  en0 += ener;
+	}
+	en0 /= bw;
+    
+	if (gfp->ATHonly) {
+	  l3_xmin->l[sfb]=gfc->ATH_l[sfb];
+	} else {
+	  xmin = ratio->en.l[sfb];
+	  if (xmin > 0.0)
+	    xmin = en0 * ratio->thm.l[sfb] * gfc->masking_lower / xmin;
+	  l3_xmin->l[sfb]=Max(gfc->ATH_l[sfb], xmin);
+	}
+	if (en0 > gfc->ATH_l[sfb]) ath_over++;
+      }
     }
-    if (en0 > gfc->ATH_l[sfb]) ath_over++;
-  }
   }
   return ath_over;
 }
@@ -573,26 +599,12 @@ int calc_noise( lame_global_flags *gfp,
 	    assert(s>=0);
 	    step = POW20(s);
 
-	    if (gfp->exp_nspsytune) {
-	      for ( osum = sum = 0.0, l = start; l < end; l++ ) {
-		FLOAT8 temp;
-		temp = fabs(xr[j]) - pow43[ix[j]] * step;
-		++j;
-
-		temp = temp*temp;
-		osum = Max(osum,bw*temp);
-		sum += temp;
-	      }       
-
-	      if (osum > sum*NSTHRE) sum = osum;
-	    } else {
-	      for ( sum = 0.0, l = start; l < end; l++ ) {
-		FLOAT8 temp;
-		temp = fabs(xr[j]) - pow43[ix[j]] * step;
-		++j;
-		sum += temp * temp;
-	      }   
-	    }    
+	    for ( sum = 0.0, l = start; l < end; l++ ) {
+	      FLOAT8 temp;
+	      temp = fabs(xr[j]) - pow43[ix[j]] * step;
+	      ++j;
+	      sum += temp * temp;
+	    }   
 
 	    xfsf[i+1][sfb] = sum / bw;
 	    noise = xfsf[i+1][sfb] / l3_xmin->s[sfb][i];
@@ -637,42 +649,41 @@ int calc_noise( lame_global_flags *gfp,
         end   = gfc->scalefac_band.l[ sfb+1 ];
         bw = end - start;
 
-	if (gfp->exp_nspsytune) {
-	  for ( osum = sum = 0.0, l = start; l < end; l++ )
-	    {
-	      FLOAT8 temp;
-	      temp = fabs(xr[l]) - pow43[ix[l]] * step;
-	      temp = temp*temp;
-	      osum = Max(osum,bw*temp);
-	      sum += temp;
-	    }
+	for ( sum = 0.0, l = start; l < end; l++ )
+	  {
+	    FLOAT8 temp;
+	    temp = fabs(xr[l]) - pow43[ix[l]] * step;
+	    sum += temp * temp;
+	  }
 
-	  if (osum > sum*NSTHRE) sum = osum;
+	if (gfp->exp_nspsytune) {
+	  xfsf[0][sfb] = sum;
 	} else {
-	  for ( sum = 0.0, l = start; l < end; l++ )
-	    {
-	      FLOAT8 temp;
-	      temp = fabs(xr[l]) - pow43[ix[l]] * step;
-	      sum += temp * temp;
-	    }
+	  xfsf[0][sfb] = sum / bw;
 	}
 
-        xfsf[0][sfb] = sum / bw;
-
-	noise = xfsf[0][sfb] / l3_xmin->l[sfb];
-	/* multiplying here is adding in dB */
-        tot_noise *= Max(noise, 1E-20);
-        if (noise>1) {
-	  over++;
+	if (gfp->exp_nspsytune && gfp->VBR == vbr_off) {
+	  noise = xfsf[0][sfb] - l3_xmin->l[sfb];
+	  noise = noise > 0 ? noise : 0;
+	  tot_noise += noise;
+	  if (noise > 0) {
+	    over++;
+	    over_noise += noise;
+	  }
+	} else {
+	  noise = xfsf[0][sfb] / l3_xmin->l[sfb];
 	  /* multiplying here is adding in dB */
-	  over_noise *= noise;
+	  tot_noise *= Max(noise, 1E-20);
+	  if (noise>1) {
+	    over++;
+	    /* multiplying here is adding in dB */
+	    over_noise *= noise;
+	  }
 	}
 	max_noise=Max(max_noise,noise);
         distort[0][sfb] = noise;
 	count++;
-
     }
-
   }
 
   /* normalization at this point by "count" is not necessary, since
