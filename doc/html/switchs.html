@@ -161,6 +161,10 @@
       cd, studio)</td>
   </tr>
   <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd><a href="#-priority">--priority</a></kbd></td>
+    <td align="LEFT" nowrap>OS/2 process priority control</td>
+  </tr>
+  <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#q">-q</a></kbd></td>
     <td align="LEFT" nowrap>algorithm quality selection</td>
   </tr>
@@ -912,6 +916,47 @@
     * less distorted scalefactor bands<br>
     or<br>
     * the sum of noise over the thresholds is lower 
+</dl>
+  <hr width="50%" noshade align="center">
+  <br>
+  <dl> </dl>
+  <dt><strong>* <kbd>--priority</kbd><a name="-priority">&nbsp;&nbsp;&nbsp;&nbsp;OS/2 process 
+    priority control</a></strong> </dt>
+<dl> 
+  <dd> With this option, LAME will run with a different process priority under IBM OS/2.<br> 
+    This will greatly improve system responsiveness, since OS/2 will have more free time to
+    properly update the screen and poll the keyboard/mouse. It should make quite a difference
+    overall, especially on slower machines. LAME's performance impact should be minimal.<br>
+     <br>
+     <dd><b>0  (Low priority)</b><br>
+        Priority 0 assumes "IDLE" class, with delta 0.<br>
+        LAME will have the lowest priority possible, and the encoding may be suspended very frequently
+        by user interaction.<br><br>
+        
+     <dd><b>1  (Medium priority)</b><br>
+         Priority 1 assumes "IDLE" class, with delta +31.<br>
+         LAME won't interfere at all with what you're doing.<br>
+         Recommended if you have a slower machine.
+         <br><br>
+         
+      <dd><b>2 (Regular priority)</b><br>
+         Priority 2 assumes "REGULAR" class, with delta -31.<br>
+         LAME won't interfere with your activity. It'll run just like a regular process, but will spare
+         just a bit of idle time for the system. Recommended for most users.
+         <br><br>
+         
+      <dd><b>3 (High priority)</b><br>
+         Priority 3 assumes "REGULAR" class, with delta 0.<br>          
+         LAME will run with a priority a bit higher than a normal process. <br>
+         Good if you're just running LAME by itself or with moderate user interaction.<br>
+         <br>
+         
+      <dd><b>4 (Maximum priority)</b><br>
+         Priority 4 assumes "REGULAR" class, with delta +31.<br>
+         LAME will run with a very high priority, and may interfere with the machine response.<br>
+         Recommended if you only intend to run LAME by itself, or if you have a fast processor. <br>
+         <br><br>
+    Priority 1 or 2 is recommended for most users.
 </dl>
 </BODY>
 </HTML>

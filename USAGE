@@ -174,6 +174,8 @@ won't fit in a version 1 tag (e.g. the title string is longer than 30
 characters), or the '--add-id3v2' or '--id3v2-only' options are used,
 or output is redirected to stdout.
 
+OS/2-specific options:
+    --priority <type>     sets the process priority
 
 
 options not yet described:
@@ -750,3 +752,31 @@ swapbytes
 swap bytes in the input file (and output file when using --decode).
 For sorting out little endian/big endian type problems.  If your
 encodings sound like static, try this first.
+
+=======================================================================
+OS/2 process priority control   
+=======================================================================
+--priority <type>
+
+(OS/2 only)
+
+Sets the process priority for LAME while running under IBM OS/2.
+This can be very useful to avoid the system becoming slow and/or
+unresponsive. By setting LAME to run in a lower priority, you leave
+more time for the system to update basic processing (drawing windows,
+polling keyboard/mouse, etc). The impact in LAME's performance is 
+minimal if you use priority 0 to 2.
+
+The valid parameters are:
+
+     0 = Low priority (IDLE, delta = 0)
+     1 = Medium priority (IDLE, delta = +31)
+     2 = Regular priority (REGULAR, delta = -31)
+     3 = High priority (REGULAR, delta = 0)
+     4 = Maximum priority (REGULAR, delta = +31) 
+
+Note that if you call '--priority' without a parameter, then 
+priority 0 will be assumed.
+ 
+
+  

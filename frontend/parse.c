@@ -43,6 +43,14 @@ char *strchr (), *strrchr ();
 # endif
 #endif
 
+#ifdef __OS2__
+#include <os2.h>
+#define PRTYC_IDLE 1
+#define PRTYC_REGULAR 2
+#define PRTYD_MINIMUM -31 
+#define PRTYD_MAXIMUM 31 
+#endif
+
 #include "lame.h"
 
 #include "brhist.h"
@@ -106,6 +114,69 @@ dosToLongFileName( char *fn )
     }
 }
 #endif
+
+#if defined(__OS2__)
+/* OS/2 priority functions */
+static int setOS2Priority( lame_global_flags*  gfp, int Priority )
+{
+    int rc;
+
+    switch(Priority) {
+ 
+    case 0:
+        rc = DosSetPriority(
+             0,                      /* Scope: only one process */
+             PRTYC_IDLE,             /* select priority class (idle, regular, etc) */
+             0,                      /* set delta */
+             0);                     /* Assume current process */
+        printf("==> Priority set to 0 (Low priority).\n");
+        break;
+
+    case 1:
+        rc = DosSetPriority(
+             0,                      /* Scope: only one process */
+             PRTYC_IDLE,             /* select priority class (idle, regular, etc) */
+             PRTYD_MAXIMUM,          /* set delta */
+             0);                     /* Assume current process */
+        printf("==> Priority set to 1 (Medium priority).\n");
+        break;
+
+    case 2:
+        rc = DosSetPriority(
+             0,                      /* Scope: only one process */
+             PRTYC_REGULAR,          /* select priority class (idle, regular, etc) */
+             PRTYD_MINIMUM,          /* set delta */
+             0);                     /* Assume current process */
+        printf("==> Priority set to 2 (Regular priority).\n");
+        break;
+        
+    case 3:
+        rc = DosSetPriority(
+             0,                      /* Scope: only one process */
+             PRTYC_REGULAR,          /* select priority class (idle, regular, etc) */
+             0,                      /* set delta */
+             0);                     /* Assume current process */
+        printf("==> Priority set to 3 (High priority).\n");
+        break;
+
+    case 4:
+        rc = DosSetPriority(
+             0,                      /* Scope: only one process */
+             PRTYC_REGULAR,          /* select priority class (idle, regular, etc) */
+             PRTYD_MAXIMUM,          /* set delta */
+             0);                     /* Assume current process */
+        printf("==> Priority set to 4 (Maximum priority). I hope you enjoy it :)\n");
+        break;
+     
+    default:
+        printf("==> Invalid priority specified! Assuming idle priority.\n");
+    }
+   
+
+    return 0;
+}
+#endif
+
 
 /************************************************************************
 *
@@ -234,6 +305,15 @@ int  short_help ( const lame_global_flags* gfp, FILE* const fp, const char* Prog
               "    --preset type   type must be phone, voice, fm, tape, hifi, cd or studio\n"
               "                    \"--preset help\" gives some more infos on these\n"
               "\n"
+#if defined(__OS2__)
+              "    --priority type  sets the process priority (OS/2 only):\n"
+              "                     0 = Low priority\n"
+              "                     1 = Medium priority\n"
+              "                     2 = Regular priority\n"
+              "                     3 = High priority\n"
+              "                     4 = Maximum priority\n"
+              "\n"
+#endif
               "    --longhelp      full list of options\n"
               "\n",
               ProgramName, lame_get_VBR_q(gfp) );
@@ -440,7 +520,19 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "\n\n"
               "    -g              run graphical analysis on <infile>"
 #endif
+#if defined(__OS2__)
+              "\n\nOS/2-specific options:\n"
+              "    --priority <type>     sets the process priority:\n"
+              "                               0 = Low priority (IDLE, delta = 0)\n"
+              "                               1 = Medium priority (IDLE, delta = +31)\n"
+              "                               2 = Regular priority (REGULAR, delta = -31)\n"
+              "                               3 = High priority (REGULAR, delta = 0)\n"
+              "                               4 = Maximum priority (REGULAR, delta = +31)\n"
+              "    Note: Calling '--priority' without a parameter will select priority 0.\n"
+#endif
+
               );
+
 
     wait_for ( fp, lessmode );  
     display_bitrates ( fp );
@@ -1083,6 +1175,12 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF ("nohist")
                     brhist = 0;
                 
+#if defined(__OS2__)
+      		T_ELIF ("priority")
+      		    argUsed=1;
+      		    setOS2Priority(gfp, atoi(nextArg));
+#endif
+
                 /* options for ID3 tag */
                 T_ELIF ("tt")
                     argUsed=1;
