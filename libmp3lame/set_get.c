@@ -1053,6 +1053,23 @@ lame_get_ATHlower( const lame_global_flags*  gfp )
 }
 
 
+/* Select adaptive ATH scheme. */
+int
+lame_set_adjust_type( lame_global_flags*  gfp,
+                      int                 adjust_type )
+{
+    gfp->adjust_type = adjust_type;
+
+    return 0;
+}
+
+int
+lame_get_adjust_type( const lame_global_flags*  gfp )
+{
+    return gfp->adjust_type;
+}
+
+
 /* Select adaptive ATH level adjustment scheme. */
 int
 lame_set_adapt_thres_type( lame_global_flags*  gfp,

@@ -800,6 +800,10 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 		    argUsed=1;
 		    (void) lame_set_ATHtype( gfp, atoi( nextArg ) );
 
+		T_ELIF ("ath-adjust")
+		    argUsed=1;
+		    lame_set_adjust_type( gfp, atoi(nextArg) );
+
 		T_ELIF ("adapt-thres-type")
 		    argUsed=1;
 		    lame_set_adapt_thres_type( gfp, atoi(nextArg) );

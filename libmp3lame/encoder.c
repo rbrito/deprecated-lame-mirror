@@ -74,6 +74,7 @@ adjust_ATH( lame_global_flags* const  gfp,
         max_val *= 32767/1e13;
 
         max_val_n = max_val * (1.0/32768 * 0.5);/* scale for previous tuning */
+        break;
     
     case 2:
 			    /* jd - 2001 mar 12, 27 */
@@ -92,10 +93,12 @@ adjust_ATH( lame_global_flags* const  gfp,
         }
         max_val_n = sqrt( max_val_n ); /* loudness approximation */
         max_val = 32768 * Max( max_val_n, 1.0 ); /* adapt for vbr_mtrh */
+        break;
     
     default:			/* jd - 2001 mar 27, 31 */
         max_val = 32768;	/* no adaptive threshold */
         max_val_n = 1.0 / gfc->adapt_thres_level_v;
+        break;
     }
 
     /*  adjust ATH depending on range of maximum value

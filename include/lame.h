@@ -164,6 +164,7 @@ typedef struct  {
   int noATH;                      /* disable ATH                          */
   int ATHtype;                    /* select ATH formula                   */
   float ATHlower;                 /* lower ATH by this many db            */
+  int adjust_type;                /* select ATH adjust scheme             */
   int adapt_thres_type;           /* select ATH auto-level adjust formula */
   float adapt_thres_level;        /* dB, tune active region of auto-level */
   int cwlimit;                    /* predictability limit                 */
@@ -477,6 +478,10 @@ int CDECL lame_get_ATHtype(const lame_global_flags *);
 // lower ATH by this many db
 int CDECL lame_set_ATHlower(lame_global_flags *, float);
 float CDECL lame_get_ATHlower(const lame_global_flags *);
+
+// select adaptive ATH type
+int CDECL lame_set_adjust_type( lame_global_flags *, int);
+int CDECL lame_get_adjust_type( const lame_global_flags *);
 
 // select adaptive ATH level adjustment scheme
 int CDECL lame_set_adapt_thres_type( lame_global_flags *, int);

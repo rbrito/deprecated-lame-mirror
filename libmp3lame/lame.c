@@ -1061,7 +1061,10 @@ lame_init_params(lame_global_flags * const gfp)
         }    
         gfc->sfb21_extra = (gfp->out_samplerate > 44000);
         
-        gfc->ATH->use_adjust = 3;
+        if ( gfp->adjust_type < 0 )
+            gfc->ATH->use_adjust = 3;
+        else
+            gfc->ATH->use_adjust = gfp->adjust_type;
         
         if (gfp->ATHtype == -1) gfp->ATHtype = 4;
         gfp->allow_diff_short = 1;
@@ -1950,6 +1953,7 @@ lame_init_old(lame_global_flags * gfp)
     gfc->CurrentStep = 4;
     gfc->masking_lower = 1;
 
+    gfp->adjust_type = -1;
     gfp->ATHtype = -1;  /* default = -1 = set in lame_init_params */
     gfp->adapt_thres_type = -1;	/* 1 = adaptive threshold, with flat */
 				/*     approximation for loudness.   */
