@@ -936,10 +936,11 @@ CBR_2nd_bitalloc(lame_t gfc, gr_info *gi, FLOAT distort[])
 	    }
 	}
     }
-    if (!flag || adjust_global_gain(gfc, &gi_w, distort, gi_w.part2_3_length))
+    if (!flag)
 	return;
-
     gfc->scale_bitcounter(&gi_w);
+    if (adjust_global_gain(gfc, &gi_w, distort, gi_w.part2_3_length))
+	return;
     assert(gi_w.part2_length + gi_w.part2_3_length
 	   <= gi->part2_length + gi->part2_3_length);
     *gi = gi_w;
@@ -1275,8 +1276,8 @@ find_scalefac(lame_t gfc, int j, FLOAT xmin, int bw, FLOAT maxXR,
 		endflag = 3;
 	    }
 	} else {
-	    if (xfsf >= 0.0)
-		sf_ok = sf;
+	    assert(xfsf >= 0.0);
+	    sf_ok = sf;
 	illegal_sf:
 	    endflag |= 2;
 	    if (endflag == 3)
@@ -1446,8 +1447,7 @@ noisesfb(lame_t gfc, gr_info *gi, FLOAT * xmin, int startsfb)
 	    noise = calc_sfb_noise(gfc, j, -width, s);
 	    if (noise > xmin[sfb])
 		return sfb;
-	    if (noise < 0.0)
-		return -1;
+	    assert(noise >= 0.0);
 	}
     }
     return -1;
