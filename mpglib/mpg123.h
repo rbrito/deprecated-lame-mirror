@@ -40,6 +40,7 @@ char *strchr (), *strrchr ();
 #define         TRUE                    1
 #endif
 
+#define REAL_IS_FLOAT
 
 #ifdef REAL_IS_FLOAT
 #  define real float
