@@ -264,7 +264,7 @@ CC_OPTS = $(CC_OPTS) /W2 /Wport
 !	ENDIF
 
 CC_OPTS = /nologo /DNDEBUG /YX /GA /O2 /Gs1024 \
-          /Qunroll /Qsox- /QIfist /QIfdiv /QI0f /QaxiMK $(CC_OPTS)
+          /Qunroll /Qsox- /QIfist /QIfdiv /QI0f /QaxiMK $(CC_OPTS) /DFLOAT8=float
 
 LN_OPTS = $(CC_OPTS)
 LN_DLL = /LD
