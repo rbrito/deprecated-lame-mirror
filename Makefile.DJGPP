@@ -140,7 +140,7 @@ lib_obj = $(lib_sources:.c=.o)
 
 
 NASM = nasm
-ASFLAGS=-f elf -i libmp3lame/i386/
+ASFLAGS=-f win32 -DWIN32 -i libmp3lame/i386/
 %.o: %.nas
 	$(NASM) $(ASFLAGS) $< -o $@
 %.o: %.s
