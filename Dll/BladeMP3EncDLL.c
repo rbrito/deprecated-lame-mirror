@@ -124,7 +124,7 @@ static void PresetOptions(lame_global_flags *gfp,LONG myPreset)
 			gfp->lowpasswidth=1000;
 			gfp->no_short_blocks=1;
 			gfp->quality = 5;
-			gfp->mode = MPG_MD_MONO; 
+			gfp->mode = MONO; 
 			gfp->brate = 16; 
 			gfp->VBR_q=6;
 			gfp->VBR_min_bitrate_kbps=8;
@@ -136,7 +136,7 @@ static void PresetOptions(lame_global_flags *gfp,LONG myPreset)
 			gfp->lowpassfreq=4800;
 			gfp->lowpasswidth=500;
 			gfp->quality = 5;
-			gfp->mode = MPG_MD_MONO; 
+			gfp->mode = MONO; 
 			gfp->brate = 24; 
 			gfp->VBR_q=5;
 			gfp->VBR_min_bitrate_kbps=8;
@@ -147,7 +147,7 @@ static void PresetOptions(lame_global_flags *gfp,LONG myPreset)
 			gfp->lowpassfreq=7200;
 			gfp->lowpasswidth=500;
 			gfp->quality = 5;
-			gfp->mode = MPG_MD_MONO; 
+			gfp->mode = MONO; 
 			gfp->brate = 32; 
 			gfp->VBR_q=5;
 			gfp->VBR_min_bitrate_kbps=16;
@@ -158,7 +158,7 @@ static void PresetOptions(lame_global_flags *gfp,LONG myPreset)
 			gfp->lowpassfreq=9950;
 			gfp->lowpasswidth=880;
 			gfp->quality = 5;
-			gfp->mode = MPG_MD_JOINT_STEREO; 
+			gfp->mode = JOINT_STEREO; 
 			gfp->brate = 64; 
 			gfp->VBR_q=5;
 			gfp->VBR_min_bitrate_kbps=24;
@@ -170,7 +170,7 @@ static void PresetOptions(lame_global_flags *gfp,LONG myPreset)
 			gfp->lowpasswidth=2000;
 			gfp->no_short_blocks=1;
 			gfp->quality = 5;
-			gfp->mode = MPG_MD_MONO; 
+			gfp->mode = MONO; 
 			gfp->brate = 56; 
 			gfp->VBR_q=4;
 			gfp->VBR_min_bitrate_kbps=32;
@@ -180,7 +180,7 @@ static void PresetOptions(lame_global_flags *gfp,LONG myPreset)
 			gfp->lowpassfreq=15000;
 			gfp->lowpasswidth=0;
 			gfp->quality = 5;
-			gfp->mode = MPG_MD_JOINT_STEREO; 
+			gfp->mode = JOINT_STEREO; 
 			gfp->brate = 112; 
 			gfp->VBR_q=4;
 			gfp->VBR_min_bitrate_kbps=64;
@@ -190,7 +190,7 @@ static void PresetOptions(lame_global_flags *gfp,LONG myPreset)
 			gfp->lowpassfreq=18500;
 			gfp->lowpasswidth=2000;
 			gfp->quality = 5;
-			gfp->mode = MPG_MD_JOINT_STEREO; 
+			gfp->mode = JOINT_STEREO; 
 			gfp->brate = 128; 
 			gfp->VBR_q=4;
 			gfp->VBR_min_bitrate_kbps=96;
@@ -200,7 +200,7 @@ static void PresetOptions(lame_global_flags *gfp,LONG myPreset)
 			gfp->lowpassfreq=20240;
 			gfp->lowpasswidth=2200;
 			gfp->quality = 2;
-			gfp->mode = MPG_MD_JOINT_STEREO; 
+			gfp->mode = JOINT_STEREO; 
 			gfp->brate = 160;            
 			gfp->VBR_q=3;
 			gfp->VBR_min_bitrate_kbps=112;
@@ -210,7 +210,7 @@ static void PresetOptions(lame_global_flags *gfp,LONG myPreset)
 			gfp->lowpassfreq=-1;
 			gfp->highpassfreq=-1;
 			gfp->quality = 2;
-			gfp->mode = MPG_MD_STEREO; 
+			gfp->mode = STEREO; 
 			gfp->brate = 192;  
 			gfp->VBR_q=2;
 			gfp->VBR_min_bitrate_kbps=128;
@@ -220,7 +220,7 @@ static void PresetOptions(lame_global_flags *gfp,LONG myPreset)
 			gfp->lowpassfreq=-1;
 			gfp->highpassfreq=-1;
 			gfp->quality = 2; 
-			gfp->mode = MPG_MD_STEREO; 
+			gfp->mode = STEREO; 
 			gfp->brate = 256; 
 			gfp->VBR_q=0;
 			gfp->VBR_min_bitrate_kbps=160;

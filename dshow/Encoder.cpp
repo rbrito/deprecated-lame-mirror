@@ -113,7 +113,7 @@ HRESULT CEncoder::SetDefaultOutputType(LPWAVEFORMATEX lpwfex)
 	CAutoLock l(this);
 
 	if(lpwfex->nChannels == 1)
-		m_mabsi.dwChMode = MPG_MD_MONO;
+		m_mabsi.dwChMode = MONO;
 
 	if((lpwfex->nSamplesPerSec < m_mabsi.dwSampleRate) || (lpwfex->nSamplesPerSec % m_mabsi.dwSampleRate != 0))
 		m_mabsi.dwSampleRate = lpwfex->nSamplesPerSec;

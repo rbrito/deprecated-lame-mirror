@@ -41,7 +41,7 @@
 
 // default parameters
 #define         DEFAULT_LAYER				3
-#define         DEFAULT_STEREO_MODE			MPG_MD_JOINT_STEREO
+#define         DEFAULT_STEREO_MODE			JOINT_STEREO
 #define			DEFAULT_FORCE_MS			0
 #define			DEFAULT_MODE_FIXED			0
 #define			DEFAULT_ENFORCE_MIN			0
@@ -454,16 +454,16 @@ void CMpegAudEnc::SetOutMediaType()
 		bDirty = TRUE;
 	}
 
-	if (wf.nChannels == 1 && mec.dwChMode != MPG_MD_MONO)
+	if (wf.nChannels == 1 && mec.dwChMode != MONO)
 	{
-		mec.dwChMode = MPG_MD_MONO;
+		mec.dwChMode = MONO;
 		m_VEncoder.SetOutputType(mec);
 		bDirty = TRUE;
 	}
 
-	if (wf.nChannels == 2 && mec.dwChMode == MPG_MD_MONO)
+	if (wf.nChannels == 2 && mec.dwChMode == MONO)
 	{
-		mec.dwChMode = MPG_MD_STEREO;
+		mec.dwChMode = STEREO;
 		m_VEncoder.SetOutputType(mec);
 		bDirty = TRUE;
 	}
@@ -481,7 +481,7 @@ void CMpegAudEnc::SetOutMediaType()
 	m_mwf.wfx.wFormatTag		= WAVE_FORMAT_MPEG;
 	m_mwf.wfx.cbSize			= sizeof(MPEG1WAVEFORMAT) - sizeof(WAVEFORMATEX);		
 
-	if(mec.dwChMode == MPG_MD_MONO)
+	if(mec.dwChMode == MONO)
 		m_mwf.wfx.nChannels	= 1;
 	else
 		m_mwf.wfx.nChannels	= 2;
@@ -497,13 +497,13 @@ void CMpegAudEnc::SetOutMediaType()
 
 
 
-	if (mec.dwChMode == MPG_MD_MONO)
+	if (mec.dwChMode == MONO)
 		m_mwf.fwHeadMode		= ACM_MPEG_SINGLECHANNEL;
-	else  if(mec.dwChMode == MPG_MD_STEREO)
+	else  if(mec.dwChMode == STEREO)
 		m_mwf.fwHeadMode		= ACM_MPEG_STEREO;
-	else  if(mec.dwChMode == MPG_MD_JOINT_STEREO)
+	else  if(mec.dwChMode == JOINT_STEREO)
 		m_mwf.fwHeadMode		= ACM_MPEG_JOINTSTEREO;
-	else  if(mec.dwChMode == MPG_MD_DUAL_CHANNEL)
+	else  if(mec.dwChMode == DUAL_CHANNEL)
 		m_mwf.fwHeadMode		= ACM_MPEG_DUALCHANNEL;
 	m_mwf.fwHeadModeExt		= 0;
 	m_mwf.wHeadEmphasis		= 0;

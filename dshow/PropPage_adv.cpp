@@ -171,7 +171,7 @@ BOOL CMpegAudEncPropertyPageAdv::OnReceiveMessage(HWND hwnd,UINT uMsg,WPARAM wPa
 				CheckRadioButton(hwnd,IDC_RADIO_STEREO,IDC_RADIO_MONO,
 					LOWORD(wParam));
 
-				if (dwChannelMode == MPG_MD_JOINT_STEREO)
+				if (dwChannelMode == JOINT_STEREO)
 					EnableWindow(GetDlgItem(hwnd,IDC_CHECK_FORCE_MS),TRUE);
 				else
 					EnableWindow(GetDlgItem(hwnd,IDC_CHECK_FORCE_MS),FALSE);
@@ -300,7 +300,7 @@ void CMpegAudEncPropertyPageAdv::InitPropertiesDialog(HWND hwndParent)
 		IDC_RADIO_STEREO+dwChannelMode);
 
 
-	if (dwChannelMode == MPG_MD_JOINT_STEREO)
+	if (dwChannelMode == JOINT_STEREO)
 		EnableWindow(GetDlgItem(hwndParent,IDC_CHECK_FORCE_MS),TRUE);
 	else
 		EnableWindow(GetDlgItem(hwndParent,IDC_CHECK_FORCE_MS),FALSE);
