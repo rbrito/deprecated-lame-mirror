@@ -73,7 +73,6 @@ int VBR_q;
 int VBR_min_bitrate;   /* 32kbs */
 int VBR_max_bitrate;  /* 256kbs */
 int voice_mode;
-int psyModel;	/* 0=patched Model 2, other=Model2 */
 
 
 
@@ -368,14 +367,6 @@ void lame_parse_args(int argc, char **argv)
 	  highpasswidth =  (( 1000.0 * atof( nextArg ) ) + 0.5);
 	  if (highpasswidth  < 0) {
 	    fprintf(stderr,"Must specify highpass width with --highpass-width freq, freq >= 0 kHz\n");
-	    exit(1);
-	  }
-	}
-	else if (strcmp(token, "psy-model")==0) {
-	  argUsed=1;
-	  psyModel =  atoi( nextArg );
-	  if (psyModel < 0 || psyModel > 2) {
-	    fprintf(stderr,"Must specify psychoacoustic model with --psy-model n, n=0,1,2\n");
 	    exit(1);
 	  }
 	}
@@ -1509,7 +1500,6 @@ void lame_init(int nowrite)
   VBR_min_bitrate=1;   /* 32kbs */
   VBR_max_bitrate=13;  /* 256kbs */
   voice_mode=0;
-  psyModel=2; /* GPSYCHO is Model2 */
 
 
   /* Clear info structure */

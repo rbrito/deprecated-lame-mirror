@@ -41,5 +41,4 @@ extern int VBR_q;
 extern int VBR_min_bitrate;
 extern int VBR_max_bitrate;
 extern int voice_mode;
-extern int psyModel;
 #endif
