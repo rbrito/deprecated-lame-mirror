@@ -183,8 +183,8 @@ int lame_init_old(lame_global_flags *);
 /* note: these routines not yet written: */
 
 /* set one of these.  default is compression ratio of 11.  */
-lame_set_brate(lame_global_flags *, int);
-lame_set_compression_ratio(lame_global_flags *, int);
+int lame_set_brate(lame_global_flags *, int);
+int lame_set_compression_ratio(lame_global_flags *, int);
 
 
 

@@ -272,7 +272,7 @@ int InitVbrTag(lame_global_flags *gfp)
 	int nMode,SampIndex;
 	lame_internal_flags *gfc = gfp->internal_flags;
 #define MAXFRAMESIZE 576
-	u_char pbtStreamBuffer[MAXFRAMESIZE];
+	//	u_char pbtStreamBuffer[MAXFRAMESIZE];
 	nMode = gfp->mode;
 	SampIndex = gfc->samplerate_index;
 
@@ -284,7 +284,7 @@ int InitVbrTag(lame_global_flags *gfp)
 
 
 	/* Clear stream buffer */
-	memset(pbtStreamBuffer,0x00,sizeof(pbtStreamBuffer));
+	//	memset(pbtStreamBuffer,0x00,sizeof(pbtStreamBuffer));
 
 
 
@@ -354,7 +354,7 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
 	int nStreamIndex;
 	char abyte,bbyte;
 	u_char		btToc[NUMTOCENTRIES];
-        u_char pbtStreamBuffer[MAXFRAMESIZE];
+	u_char pbtStreamBuffer[MAXFRAMESIZE];
 	char str1[80];
         unsigned char id3v2Header[10];
         size_t id3v2TagSize;
