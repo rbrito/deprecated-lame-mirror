@@ -75,19 +75,32 @@ unsigned long *num_samples)
   xing_header = GetVbrTag(&pTagData,(unsigned char*)buf);
   if (xing_header) {
     num_frames=pTagData.frames;
-  }
-  
-  /* rewind file.  we would like to only send 4 bytes to decodeMP3 */
-  if (fseek(fd, -44, SEEK_CUR) != 0) {
-    /* backwards fseek failed.  input is probably a pipe */
+
+    /* look for next sync word in buffer*/
+    buf[1]=0;
+    while (!is_syncword(buf)) {
+      buf[0]=buf[1]; 
+      if (fread(&buf[1],1,1,fd) == 0) return -1;  /* fread failed */
+    }
+    /* read the rest of header */
+    len = fread(&buf[2],1,2,fd);
+    if (len ==0 ) return -1;
+    len +=2;
+    
+
   } else {
-    len=4;
+    /* rewind file.  we would like to only send 4 bytes to decodeMP3 */
+    if (fseek(fd, -44, SEEK_CUR) != 0) {
+      /* backwards fseek failed.  input is probably a pipe */
+    } else {
+      len=4;
+    }
   }
   
   size=0;
   ret = decodeMP3(&mp,buf,len,out,FSIZE,&size);
   if (ret==MP3_OK && size>0 && !xing_header) {
-    fprintf(stderr,"Opps: first frame of mpglib output will be lost \n");
+    fprintf(stderr,"Oops: first frame of mpglib output will be lost \n");
   }
   
   if (ret==MP3_ERR) 
@@ -162,7 +175,7 @@ int lame_decode_fromfile(FILE *fd, short pcm_l[], short pcm_r[])
     /*    write(1,out,size); */
     outsize = size/(2*(stereo));
     if ((outsize!=576) && (outsize!=1152)) {
-      fprintf(stderr,"Opps: mpg123 returned more than one frame!  Cant handle this... \n");
+      fprintf(stderr,"Oops: mpg123 returned more than one frame!  Cant handle this... \n");
       exit(-50);
     }
 

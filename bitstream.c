@@ -680,7 +680,7 @@ flush_bitstream(lame_global_flags *gfp)
   flushbits = gfc->header[last_ptr].write_timing - gfc->bs.totbit;
 
   if (flushbits >= 0) {
-    /* if flushbits >= 0, some headers have not yet be written */
+    /* if flushbits >= 0, some headers have not yet been written */
     /* reduce flushbits by the size of the headers */
     remaining_headers= 1+last_ptr - first_ptr;
     if (last_ptr < first_ptr) 

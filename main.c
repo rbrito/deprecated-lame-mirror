@@ -159,7 +159,7 @@ int main(int argc, char **argv)
 	    gf.in_samplerate/1000.0,2-gf.version);
     fprintf(stderr, "output:   %s (wav format)\n",
 	    (strcmp(gf.outPath, "-")? gf.outPath : "stdout"));
-    fprintf(stderr, "skipping initial %i samples \n",skip);
+    fprintf(stderr, "skipping initial %i samples (encoder + decoder delay)\n",skip);
     WriteWav(outf,wavsize,gf.in_samplerate,gf.num_channels);
     wavsize=-skip;
     do {
