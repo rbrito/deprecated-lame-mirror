@@ -161,30 +161,73 @@ typedef struct  bit_stream_struc {
     /* format of file in rd mode (BINARY/ASCII) */
 } Bit_stream_struc;
 
-#include "l3side.h"
+/* max scalefactor band, max(SBMAX_l, SBMAX_s*3, (SBMAX_s-3)*3+8) */
+#define SFBMAX (SBMAX_s*3)
+
+/* Layer III side information. */
+typedef struct 
+{
+    int l[1+SBMAX_l];
+    int s[1+SBMAX_s];
+} scalefac_struct;
 
 
-
-/* variables used for --alt-preset */
 typedef struct {
-  // indicates the use of alt-preset
-  int     use;
+    FLOAT	l[SBMAX_l];
+    FLOAT	s[SBMAX_s][3];
+} III_psy_xmin;
 
-  // adjustment to joint stereo
-  FLOAT  ms_maskadjust;
+typedef struct {
+    III_psy_xmin thm;
+    III_psy_xmin en;
+} III_psy_ratio;
 
-  // adjustments to quantization selection
-  FLOAT  quantcomp_adjust_rh_tot;    // adjustments for tot_noise with vbr-old
-  FLOAT  quantcomp_adjust_rh_max;    // adjustments for max_noise with vbr-old
-  FLOAT  quantcomp_adjust_mtrh;      // adjustments for calc_scalefac "c" with vbr-mtrh
-  int     quantcomp_type_s;           // quantization comparison to switch to on non-normal blocks
-  int     quantcomp_alt_type;          // third quantization comparison to use for special cases
-                                       // such as high athadjust values, or long blocks, etc
+typedef struct {
+    FLOAT xr[576];
+    int l3_enc[576];
+    int scalefac[SFBMAX];
 
-  // tunings reliant upon athadjust
-  FLOAT  athadjust_switch_level;      // level of athadjust at which to apply tunings at
-                                       // x <= 0 == never switch, x >= 1 == always switch
-} presetTune_t;
+    int part2_3_length;
+    int big_values;
+    int count1;
+    int global_gain;
+    int scalefac_compress;
+    int block_type;
+    int mixed_block_flag;
+    int table_select[3];
+    int subblock_gain[3+1];
+    int region0_count;
+    int region1_count;
+    int preflag;
+    int scalefac_scale;
+    int count1table_select;
+
+    int part2_length;
+    int sfb_lmax;
+    int sfb_smin;
+    int psy_lmax;
+    int sfbmax;
+    int psymax;
+    int sfbdivide;
+    int width[SFBMAX];
+    int window[SFBMAX];
+    int count1bits;
+    /* added for LSF */
+    const int *sfb_partition_table;
+    int slen[4];
+} gr_info;
+
+typedef struct {
+	gr_info tt[2][2];
+	int main_data_begin; 
+	int private_bits;
+	int resvDrain_pre;
+	int resvDrain_post;
+	int scfsi[2][4];
+} III_side_info_t;
+
+
+
 
 typedef struct 
 {
@@ -257,7 +300,7 @@ struct lame_internal_flags {
    *     should be "if (flag == 1)" and NOT "if (flag)". Unintended modification
    *     of this element will be otherwise misinterpreted as an init.
    */
-  
+
 #ifndef  MFSIZE
 # define MFSIZE  ( 3*1152 + ENCDELAY - MDCTDELAY )
 #endif
@@ -270,12 +313,6 @@ struct lame_internal_flags {
 #  define  LAME_ID   0xFFF88E3B
   unsigned long Class_ID;
 
-  struct {
-    void (*msgf)  (const char *format, va_list ap);
-    void (*debugf)(const char *format, va_list ap);
-    void (*errorf)(const char *format, va_list ap);
-  } report;
-  
   int lame_encode_frame_init;
   int iteration_init_init;
   int fill_buffer_resample_init;
@@ -339,71 +376,24 @@ struct lame_internal_flags {
   int use_best_huffman;     /* 0 = no.  1=outside loop  2=inside loop(slow) */
 
   /* variables used by lame.c */
-  Bit_stream_struc   bs;
   III_side_info_t l3_side;
+
   /* used for padding */
   int frac_SpF;
   int slot_lag;
 
-
-  /* optional ID3 tags, used in id3tag.c  */
-  struct id3tag_spec tag_spec;
-  uint16_t nMusicCRC;
-
-
-  /* variables used by quantize.c */
-  int OldValue[2];
-  int CurrentStep[2];
-
-  FLOAT masking_lower;
-  char bv_scf[576];
-  int pseudohalf[SFBMAX];
-
-  int sfb21_extra; /* will be set in lame_init_params */
-
-  int   sparsing;
-  FLOAT sparseA;
-  FLOAT sparseB;
-
-#ifndef KLEMM_44
-  /* variables used by util.c */
-  /* BPC = maximum number of filter convolution windows to precompute */
-#define BPC 320
-  sample_t *inbuf_old [2];
-  sample_t *blackfilt [2*BPC+1];
-  FLOAT itime[2];
-#endif
+  /* variables for reservoir.c */
   int sideinfo_len;
+  int ResvSize; /* in bits */
+  int ResvMax;  /* in bits */
 
   /* variables for newmdct.c */
   FLOAT sb_sample[2][2][18][SBLIMIT];
   FLOAT amp_filter[32];
 
-  /* variables for bitstream.c */
-  /* mpeg1: buffer=511 bytes  smallest frame: 96-38(sideinfo)=58
-   * max number of frames in reservoir:  8 
-   * mpeg2: buffer=255 bytes.  smallest frame: 24-23bytes=1
-   * with VBR, if you are encoding all silence, it is possible to
-   * have 8kbs/24khz frames with 1byte of data each, which means we need
-   * to buffer up to 255 headers! */
-  /* also, max_header_buf has to be a power of two */
-#define MAX_HEADER_BUF 256
-#define MAX_HEADER_LEN 40 /* max size of header is 38 */
-  struct {
-    int write_timing;
-    int ptr;
-    char buf[MAX_HEADER_LEN];
-  } header[MAX_HEADER_BUF];
-
-  int h_ptr;
-  int w_ptr;
-  int ancillary_flag;
-
-  /* variables for reservoir.c */
-  int ResvSize; /* in bits */
-  int ResvMax;  /* in bits */
-
-  scalefac_struct scalefac_band;
+  int   sparsing;
+  FLOAT sparseA;
+  FLOAT sparseB;
 
   /* DATA FROM PSYMODEL.C */
   FLOAT	nb_1[4][CBANDS], nb_2[4][CBANDS];
@@ -412,17 +402,6 @@ struct lame_internal_flags {
   FLOAT *s3_ll;
   FLOAT decay;
 
-  III_psy_xmin thm[4];
-  III_psy_xmin en[4];
-  
-  /* fft and energy calculation    */
-  FLOAT tot_ener[4];
-
-  /* loudness calculation (for adaptive threshold of hearing) */
-  FLOAT loudness_sq[2][2];  /* loudness^2 approx. per granule and channel */
-  FLOAT loudness_sq_save[2];/* account for granule delay of L3psycho_anal */
-
-  /* Scale Factor Bands    */
   FLOAT mld_l[SBMAX_l],mld_s[SBMAX_s];
   int	bo_l[SBMAX_l], bo_s[SBMAX_s] ;
   int	npart_l,npart_s;
@@ -435,23 +414,14 @@ struct lame_internal_flags {
   FLOAT rnumlines_l[CBANDS];
   FLOAT rnumlines_ls[CBANDS];
 
-  /* block type */
-  int	blocktype_old[2];
 
-  /* CPU features */
-  struct {
-    unsigned int  i387      : 1; /* FPU is a normal Intel CPU */
-    unsigned int  MMX       : 1; /* Pentium MMX, Pentium II...IV, K6, K6-2,
-                                    K6-III, Athlon */
-    unsigned int  AMD_3DNow : 1; /* K6-2, K6-III, Athlon      */
-    unsigned int  SIMD      : 1; /* Pentium III, Pentium 4    */
-    unsigned int  SIMD2     : 1; /* Pentium 4, K8             */
-  } CPU_features;
-   
-  /* functions to replace with CPU feature optimized versions in takehiro.c */
-  int (*choose_table)(const int *ix, const int *end, int *s);
-  
-  void (*fft_fht)(FLOAT *, int);
+  /* for next frame data */
+  III_psy_ratio masking_next[2][MAX_CHANNELS*2];
+  FLOAT tot_ener_next[2][MAX_CHANNELS*2];
+  FLOAT percep_entropy_next[2][MAX_CHANNELS*2];
+  FLOAT loudness_next[2][MAX_CHANNELS];  /* loudness^2 approx. per granule and channel */
+  int	useshort_next[2][MAX_CHANNELS*2]; /* for block type */
+  int   mode_ext_next;
 
     /* variables used for psymodel */
     struct {
@@ -470,11 +440,38 @@ struct lame_internal_flags {
 	FILE *pass1fp;
     } nsPsy;
 
-  presetTune_t presetTune;  /* variables used for --alt-preset */
-  
-  unsigned int crcvalue;
-  
-  VBR_seek_info_t VBR_seek_table; // used for Xing VBR header
+    /* variables used for --preset, --alt-preset */
+    struct {
+	// indicates the use of alt-preset
+	int use;
+
+	// adjustment to joint stereo
+	FLOAT ms_maskadjust;
+
+	// adjustments to quantization selection
+
+	// adjustments for tot_noise with vbr-old
+	FLOAT  quantcomp_adjust_rh_tot;
+
+	// adjustments for max_noise with vbr-old
+	FLOAT  quantcomp_adjust_rh_max;
+
+	// adjustments for calc_scalefac "c" with vbr-mtrh
+	FLOAT  quantcomp_adjust_mtrh;
+
+	// quantization comparison to switch to on non-normal blocks
+	int     quantcomp_type_s;
+
+	// third quantization comparison to use for special cases
+	// such as high athadjust values, or long blocks, etc
+	int     quantcomp_alt_type;
+
+	// tunings reliant upon athadjust
+
+	// level of athadjust at which to apply tunings at
+	// x <= 0: never switch, x > 1: always switch
+	FLOAT  athadjust_switch_level;
+    } presetTune;
   
     /**
      *  ATH related stuff, if something new ATH related has to be added,
@@ -507,8 +504,77 @@ struct lame_internal_flags {
 	int     smooth;         // 0=no, 1=peaks, 2=+-4
     } VBR;
 
+  /* variables used by quantize.c */
+  int OldValue[2];
+  int CurrentStep[2];
+  scalefac_struct scalefac_band;
+
+  FLOAT masking_lower;
+  char bv_scf[576];
+  int pseudohalf[SFBMAX];
+
+  int sfb21_extra; /* will be set in lame_init_params */
+
+  /* variables for bitstream.c */
+  /* mpeg1: buffer=511 bytes  smallest frame: 96-38(sideinfo)=58
+   * max number of frames in reservoir:  8 
+   * mpeg2: buffer=255 bytes.  smallest frame: 24-23bytes=1
+   * with VBR, if you are encoding all silence, it is possible to
+   * have 8kbs/24khz frames with 1byte of data each, which means we need
+   * to buffer up to 255 headers! */
+  /* also, max_header_buf has to be a power of two */
+#define MAX_HEADER_BUF 256
+#define MAX_HEADER_LEN 40 /* max size of header is 38 */
+  Bit_stream_struc   bs;
+  struct {
+    int write_timing;
+    int ptr;
+    char buf[MAX_HEADER_LEN];
+  } header[MAX_HEADER_BUF];
+
+  int h_ptr;
+  int w_ptr;
+  int ancillary_flag;
+
+  /* optional ID3 tags, used in id3tag.c  */
+  struct id3tag_spec tag_spec;
+  uint16_t nMusicCRC;
+
+  unsigned int crcvalue;
+  VBR_seek_info_t VBR_seek_table; // used for Xing VBR header
+  
   int nogap_total;
   int nogap_current;  
+
+  /* CPU features */
+  struct {
+    unsigned int  i387      : 1; /* FPU is a normal Intel CPU */
+    unsigned int  MMX       : 1; /* Pentium MMX, Pentium II...IV, K6, K6-2,
+                                    K6-III, Athlon */
+    unsigned int  AMD_3DNow : 1; /* K6-2, K6-III, Athlon      */
+    unsigned int  SIMD      : 1; /* Pentium III, Pentium 4    */
+    unsigned int  SIMD2     : 1; /* Pentium 4, K8             */
+  } CPU_features;
+   
+  struct {
+    void (*msgf)  (const char *format, va_list ap);
+    void (*debugf)(const char *format, va_list ap);
+    void (*errorf)(const char *format, va_list ap);
+  } report;
+  
+  /* functions to replace with CPU feature optimized versions in takehiro.c */
+  int (*choose_table)(const int *ix, const int *end, int *s);
+  
+  void (*fft_fht)(FLOAT *, int);
+
+#ifndef KLEMM_44
+  /* variables used by util.c */
+  /* BPC = maximum number of filter convolution windows to precompute */
+#define BPC 320
+  sample_t *inbuf_old [2];
+  sample_t *blackfilt [2*BPC+1];
+  FLOAT itime[2];
+#endif
 
 #ifdef BRHIST
   /* simple statistics */
@@ -518,8 +584,8 @@ struct lame_internal_flags {
 #ifdef HAVE_GTK
   /* used by the frame analyzer */
   plotting_data *pinfo;
-  FLOAT energy_save[4][HBLKSIZE];
-  FLOAT ers_save[4];
+  FLOAT energy_save[2][MAX_CHANNELS*2][HBLKSIZE];
+  FLOAT ers_save[2][MAX_CHANNELS*2];
 #endif
 };
 

@@ -27,7 +27,6 @@
 
 #include <assert.h>
 #include "util.h"
-#include "l3side.h"
 #include "tables.h"
 #include "quantize_pvt.h"
 

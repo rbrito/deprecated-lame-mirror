@@ -29,11 +29,9 @@
 #include <assert.h>
 #include <stdlib.h>
 #include "bitstream.h"
-#include "l3side.h"
 #include "quantize.h"
 #include "reservoir.h"
 #include "quantize_pvt.h"
-#include "lame-analysis.h"
 #include "vbrquantize.h"
 #include "machine.h"
 #include "tables.h"
@@ -996,10 +994,7 @@ balance_noise (
      * loop_break returns 0 if there is an unamplified scalefac
      * scale_bitcount returns 0 if no scalefactors are too large
      */
-    
-    status = loop_break (cod_info);
-    
-    if (status) 
+    if (loop_break (cod_info)) 
         return 0; /* all bands amplified */
     
     /* not all scalefactors have been amplified.  so these 
@@ -1074,7 +1069,6 @@ outer_loop (
     FLOAT distort[SFBMAX];
     calc_noise_result best_noise_info;
     int huff_bits;
-    int better;
     int age;
 
     bin_search_StepSize (gfc, cod_info, targ_bits, ch, xrpow);
@@ -1419,7 +1413,7 @@ VBR_prepare (
 		else 
 		    adjust = 2.56/(1+exp(3.5-pe[gr][ch]/300.))-0.14;
             }
-            masking_lower_db   = gfc->VBR.mask_adjust - adjust; 
+            masking_lower_db   = gfc->VBR.mask_adjust - adjust;
             gfc->masking_lower = pow (10.0, masking_lower_db * 0.1);
       
 	    bands[gr][ch] = calc_xmin (gfp, &ratio[gr][ch], 
@@ -1779,9 +1773,9 @@ ABR_iteration_loop(
 
     /*  find a bitrate which can refill the resevoir to positive size.
      */
-    for (gfc->bitrate_index =  gfc->VBR_min_bitrate ;
+    for (gfc->bitrate_index =  gfc->VBR_min_bitrate;
          gfc->bitrate_index <= gfc->VBR_max_bitrate;
-         gfc->bitrate_index++    ) {
+         gfc->bitrate_index++) {
         if (ResvFrameBegin (gfp, &mean_bits) >= 0) break; 
     }
     assert (gfc->bitrate_index <= gfc->VBR_max_bitrate);

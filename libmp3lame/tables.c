@@ -1118,8 +1118,6 @@ int psymodel_init(lame_global_flags *gfp)
     FLOAT sfreq = gfp->out_samplerate;
     int numlines_s[CBANDS];
 
-    gfc->blocktype_old[0] = gfc->blocktype_old[1] = SHORT_TYPE;
-
     for (i=0; i<4; ++i) {
 	for (j=0; j<CBANDS; ++j) {
 	    gfc->nb_1[i][j]=1e20;
@@ -1127,27 +1125,30 @@ int psymodel_init(lame_global_flags *gfp)
 	    gfc->nb_s1[i][j] = gfc->nb_s2[i][j] = 1.0;
 	}
 	for ( sb = 0; sb < SBMAX_l; sb++ ) {
-	    gfc->en[i].l[sb] = 1e20;
-	    gfc->thm[i].l[sb] = 1e20;
+	    gfc->masking_next[0][i].en.l[sb] = 1e20;
+	    gfc->masking_next[1][i].en.l[sb] = 1e20;
+	    gfc->masking_next[0][i].thm.l[sb] = 1e20;
+	    gfc->masking_next[1][i].thm.l[sb] = 1e20;
 	}
 	for (j=0; j<3; ++j) {
 	    for ( sb = 0; sb < SBMAX_s; sb++ ) {
-		gfc->en[i].s[sb][j] = 1e20;
-		gfc->thm[i].s[sb][j] = 1e20;
+		gfc->masking_next[0][i].en.s[sb][j] = 1e20;
+		gfc->masking_next[1][i].en.s[sb][j] = 1e20;
+		gfc->masking_next[0][i].thm.s[sb][j] = 1e20;
+		gfc->masking_next[1][i].thm.s[sb][j] = 1e20;
 	    }
 	    gfc->nsPsy.last_attacks[i] = 0;
 	}
 	for (j=0;j<9;j++)
 	    gfc->nsPsy.last_en_subshort[i][j] = 1.0;
+	gfc->useshort_next[0][i] = NORM_TYPE;
+	gfc->useshort_next[1][i] = NORM_TYPE;
     }
 
-
-
     /* init. for loudness approx. -jd 2001 mar 27*/
-    gfc->loudness_sq_save[0] = gfc->loudness_sq_save[1] = 0.0;
-
-
-
+    gfc->loudness_next[0][0] = gfc->loudness_next[0][1]
+	= gfc->loudness_next[1][0] = gfc->loudness_next[1][1]
+	= 0.0;
 
     /*************************************************************************
      * now compute the psychoacoustic model specific constants
@@ -1254,7 +1255,7 @@ int psymodel_init(lame_global_flags *gfp)
 	FLOAT msfix;
 
 #define NS_MSFIX 3.5
-#define NSATTACKTHRE 15
+#define NSATTACKTHRE 3.5
 #define NSATTACKTHRE_S 30
 
 	msfix = NS_MSFIX;
@@ -1263,6 +1264,9 @@ int psymodel_init(lame_global_flags *gfp)
 	gfp->msfix = msfix;
 	if (!gfc->presetTune.use || gfc->nsPsy.athadjust_msfix <= 0.0)
 	    gfc->nsPsy.athadjust_msfix = gfp->msfix;
+
+	if (gfc->presetTune.ms_maskadjust <= 0.0)
+	    gfc->presetTune.ms_maskadjust = gfp->msfix;
 
 	gfp->msfix *= 2.0;
 	gfc->nsPsy.athadjust_msfix *= 2.0;

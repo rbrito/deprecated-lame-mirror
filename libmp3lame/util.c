@@ -98,7 +98,7 @@ void  freegfc ( lame_internal_flags* const gfc )   /* bit stream structure */
 /*those ATH formulas are returning
 their minimum value for input = -1*/
 
-FLOAT ATHformula_GB(FLOAT f, FLOAT value)
+static FLOAT ATHformula_GB(FLOAT f, FLOAT value)
 {
   /* from Painter & Spanias
     modified by Gabriel Bouvigne to better fit the reality

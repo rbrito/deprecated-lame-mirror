@@ -1,4 +1,3 @@
-/* -*- mode: C; mode: fold -*- */
 /*
  * set/get functions for lame_global_flags
  *
@@ -1180,9 +1179,7 @@ int
 lame_set_allow_diff_short( lame_global_flags*  gfp,
                            int                 allow_diff_short )
 {
-    gfp->short_blocks = 
-        allow_diff_short ? short_block_allowed : short_block_coupled;
-
+    gfp->short_blocks = 1;
     return 0;
 }
 
@@ -1309,7 +1306,6 @@ lame_get_no_short_blocks( const lame_global_flags*  gfp )
     case short_block_not_set:   return -1;
     case short_block_dispensed: return 1;
     case short_block_allowed:
-    case short_block_coupled:
     case short_block_forced:    return 0;
     }
 }
@@ -1340,8 +1336,7 @@ lame_get_force_short_blocks( const lame_global_flags*  gfp )
     default:
     case short_block_not_set:   return -1;
     case short_block_dispensed: 
-    case short_block_allowed:
-    case short_block_coupled:   return 0;
+    case short_block_allowed:   return 0;
     case short_block_forced:    return 1;
     }
 }
@@ -1598,7 +1593,6 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
 	    (void) lame_set_ATHlower( gfp, -1 );
 	}
 
-	lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
 	lame_set_experimentalZ(gfp, 1);
 	lame_set_experimentalX(gfp, 1);
 	lame_set_VBR_q(gfp, 2);

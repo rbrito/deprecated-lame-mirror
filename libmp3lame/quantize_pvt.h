@@ -22,8 +22,6 @@
 #ifndef LAME_QUANTIZE_PVT_H
 #define LAME_QUANTIZE_PVT_H
 
-#include "l3side.h"
-
 extern const int nr_of_sfb_block[6][3][4];
 extern const int pretab[SBMAX_l];
 extern const int slen1_tab[16];

@@ -384,11 +384,11 @@ lame_init_qval(lame_global_flags * gfp)
         gfc->noise_shaping_amp = 1;
         gfc->noise_shaping_stop = 1;
         gfc->use_best_huffman = 2; /* inner loop, PAINFULLY SLOW */
-        gfc->substep_shaping = 7; /* use substep shaping inner/outer loop */
+        gfc->substep_shaping = 7;
         break;
 
     case 1:	/* some "dangerous" setting */
-        gfc->filter_type = 0; /* 1 not yet coded */
+        gfc->filter_type = 0;
         gfc->psymodel = 2;
         gfc->quantization = 1;
         gfc->use_scalefac_scale = 0;
@@ -403,8 +403,8 @@ lame_init_qval(lame_global_flags * gfp)
         gfc->psymodel = 2;
         gfc->quantization = 1;
         gfc->use_scalefac_scale = 1;
-        gfc->noise_shaping_amp = 3; /* this may loose quality */
-        gfc->noise_shaping_stop = 1;
+        gfc->noise_shaping_amp = 2;
+        gfc->noise_shaping_stop = 2; /* this may loose quality */
         gfc->use_best_huffman = 2;
         gfc->substep_shaping = 7;
         break;
@@ -1043,9 +1043,6 @@ lame_init_params(lame_global_flags * const gfp)
     if (gfp->short_blocks == short_block_not_set) {
         gfp->short_blocks =  short_block_allowed;
     }
-    if (gfp->short_blocks == short_block_allowed && gfp->mode == JOINT_STEREO) {
-        gfp->short_blocks =  short_block_coupled;
-    }
 
     if ( gfp->athaa_loudapprox < 0 ) gfp->athaa_loudapprox = 2;
     
@@ -1253,7 +1250,6 @@ lame_print_internals( const lame_global_flags * gfp )
     default:
     case short_block_not_set:   pc = "?";               break;
     case short_block_allowed:   pc = "allowed";         break;
-    case short_block_coupled:   pc = "channel coupled"; break;
     case short_block_dispensed: pc = "dispensed";       break;
     case short_block_forced:    pc = "forced";          break;
     }
@@ -1337,15 +1333,19 @@ lame_encode_frame(lame_global_flags * gfp,
  *                         lame_encode_buffer_float()
  *                         lame_encode_buffer_int()
  * etc... depending on what type of data they are working with.  
-*/
+ */
 int
-lame_encode_buffer_sample_t(lame_global_flags * gfp,
-                   sample_t buffer_l[],
-                   sample_t buffer_r[],
-                   int nsamples, unsigned char *mp3buf, const int mp3buf_size)
+lame_encode_buffer_sample_t(
+    lame_global_flags * gfp,
+    sample_t buffer_l[],
+    sample_t buffer_r[],
+    int nsamples,
+    unsigned char *mp3buf,
+    const int mp3buf_size
+    )
 {
     lame_internal_flags *gfc = gfp->internal_flags;
-    int     mp3size = 0, ret, i, ch, mf_needed;
+    int mp3size = 0, ret, i, ch, mf_needed;
     int mp3out;
     sample_t *mfbuf[2];
     sample_t *in_buffer[2];
@@ -1386,20 +1386,20 @@ lame_encode_buffer_sample_t(lame_global_flags * gfp,
     }
 
     /* user selected scaling of the channel 1 (right) samples */
-	if (gfp->scale_right != 0 && gfp->scale_right != 1.0) {
-	    for (i=0 ; i<nsamples; ++i) {
-		in_buffer[1][i] *= gfp->scale_right;
-	    }
+    if (gfp->scale_right != 0 && gfp->scale_right != 1.0) {
+	for (i=0 ; i<nsamples; ++i) {
+	    in_buffer[1][i] *= gfp->scale_right;
 	}
+    }
 
     /* Downsample to Mono if 2 channels in and 1 channel out */
-	if (gfp->num_channels == 2 && gfc->channels_out == 1) {
-	    for (i=0; i<nsamples; ++i) {
-		in_buffer[0][i] =
-		    0.5f * ((FLOAT) in_buffer[0][i] + in_buffer[1][i]);
+    if (gfp->num_channels == 2 && gfc->channels_out == 1) {
+	for (i=0; i<nsamples; ++i) {
+	    in_buffer[0][i] =
+		0.5f * ((FLOAT) in_buffer[0][i] + in_buffer[1][i]);
 		in_buffer[1][i] = 0.0;
-	    }
 	}
+    }
 
 
 
@@ -1411,7 +1411,7 @@ lame_encode_buffer_sample_t(lame_global_flags * gfp,
 # error FFTOFFSET is greater than BLKSIZE, see encoder.h
 #endif
 
-    mf_needed = BLKSIZE + gfp->framesize - FFTOFFSET; /* amount needed for FFT */
+    mf_needed = BLKSIZE + gfp->framesize - FFTOFFSET + 1152; /* amount needed for FFT */
     mf_needed = Max(mf_needed, 286 + 576 * (1 + gfc->mode_gr)); /* amount needed for MDCT/filterbank */
     assert(MFSIZE >= mf_needed);
 

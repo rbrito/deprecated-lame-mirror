@@ -36,40 +36,40 @@ typedef struct {
   int frameNum;           /* current frame number */
   int frameNum123;
   int num_samples;        /* number of pcm samples read for this frame */
-  double frametime;       /* starting time of frame, in seconds */
-  double pcmdata[2][1600];
-  double pcmdata2[2][1152+1152-DECDELAY];
-  double xr[2][2][576];
-  double mpg123xr[2][2][576];
-  double ms_ratio[2];
-  double ms_ener_ratio[2];
+  float frametime;       /* starting time of frame, in seconds */
+  float pcmdata[2][1600];
+  float pcmdata2[2][1152+1152-DECDELAY];
+  float xr[2][2][576];
+  float mpg123xr[2][2][576];
+  float ms_ratio[2];
+  float ms_ener_ratio[2];
 
   /* L,R, M and S values */
-  double energy[2][4][BLKSIZE];
-  double pe[2][4];
-  double thr[2][4][SBMAX_l];
-  double en[2][4][SBMAX_l];
-  double thr_s[2][4][3*SBMAX_s];
-  double en_s[2][4][3*SBMAX_s];
-  double ers[2][4];
+  float energy[2][4][BLKSIZE];
+  float pe[2][4];
+  float thr[2][4][SBMAX_l];
+  float en[2][4][SBMAX_l];
+  float thr_s[2][4][3*SBMAX_s];
+  float en_s[2][4][3*SBMAX_s];
+  float ers[2][4];
 
-  double sfb[2][2][SBMAX_l];
-  double sfb_s[2][2][3*SBMAX_s];
-  double LAMEsfb[2][2][SBMAX_l];
-  double LAMEsfb_s[2][2][3*SBMAX_s];
+  float sfb[2][2][SBMAX_l];
+  float sfb_s[2][2][3*SBMAX_s];
+  float LAMEsfb[2][2][SBMAX_l];
+  float LAMEsfb_s[2][2][3*SBMAX_s];
 
   int LAMEqss[2][2];
   int qss[2][2];
   int big_values[2][2];
   int sub_gain[2][2][3];
 
-  double xfsf[2][2][SBMAX_l];
-  double xfsf_s[2][2][3*SBMAX_s];
+  float xfsf[2][2][SBMAX_l];
+  float xfsf_s[2][2][3*SBMAX_s];
 
   int over[2][2];
-  double tot_noise[2][2];
-  double max_noise[2][2];
-  double over_noise[2][2];
+  float tot_noise[2][2];
+  float max_noise[2][2];
+  float over_noise[2][2];
   int blocktype[2][2];
   int scalefac_scale[2][2];
   int preflag[2][2];

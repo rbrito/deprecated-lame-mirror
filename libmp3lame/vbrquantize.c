@@ -27,7 +27,6 @@
 
 #include <assert.h>
 #include "util.h"
-#include "l3side.h"
 #include "reservoir.h"
 #include "quantize_pvt.h"
 #include "vbrquantize.h"

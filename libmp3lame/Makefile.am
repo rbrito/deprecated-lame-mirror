@@ -56,7 +56,6 @@ noinst_HEADERS= \
 	bitstream.h \
 	encoder.h \
 	id3tag.h \
-	l3side.h \
 	lame-analysis.h \
 	lame_global_flags.h \
 	machine.h \

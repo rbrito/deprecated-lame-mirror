@@ -31,7 +31,6 @@
 #endif
 
 #include "util.h"
-#include "l3side.h"
 #include "newmdct.h"
 
 #ifdef WITH_DMALLOC
