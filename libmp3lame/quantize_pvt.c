@@ -456,7 +456,7 @@ int calc_xmin(
       en0 /= bw;
       
       if (gfp->ATHonly || gfp->ATHshort) {
-        xmin = gfc->ATH_s[sfb];
+        xmin = gfc->adjust_ath*gfc->ATH_s[sfb];
       } else {
         xmin = ratio->en.s[sfb][b];
         if (xmin > 0.0)
@@ -504,7 +504,7 @@ int calc_xmin(
 	}
     
 	if (gfp->ATHonly) {
-	  xmin=gfc->ATH_l[sfb];
+	  xmin=gfc->adjust_ath*gfc->ATH_l[sfb];
 	} else {
 	  xmin = ratio->en.l[sfb];
 	  if (xmin > 0.0)
@@ -538,7 +538,7 @@ int calc_xmin(
 	en0 /= bw;
     
 	if (gfp->ATHonly) {
-	  xmin=gfc->ATH_l[sfb];
+	  xmin=gfc->adjust_ath*gfc->ATH_l[sfb];
 	} else {
 	  xmin = ratio->en.l[sfb];
 	  if (xmin > 0.0)
