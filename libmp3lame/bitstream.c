@@ -71,7 +71,7 @@ void putheader_bits(lame_internal_flags *gfc,int w_ptr)
 
 
 /*write j bits into the bit stream */
-INLINE void
+inline static void
 putbits2(lame_global_flags *gfp, int val, int j)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
@@ -107,7 +107,7 @@ putbits2(lame_global_flags *gfp, int val, int j)
 }
 
 /*write j bits into the bit stream, ignoring frame headers */
-INLINE void
+inline static void
 putbits_noheaders(lame_global_flags *gfp, int val, int j)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
@@ -147,7 +147,7 @@ putbits_noheaders(lame_global_flags *gfp, int val, int j)
  * the ancillary data...
  */
 
-INLINE void drain_into_ancillary ( lame_global_flags* const gfp, int remainingBits )
+inline static void drain_into_ancillary ( lame_global_flags* const gfp, int remainingBits )
 {
     lame_internal_flags*  gfc = gfp->internal_flags;
     char                  buffer [80];
@@ -208,7 +208,7 @@ static void  writedummy (
 }
 
 
-INLINE void encodeSideInfo2 ( lame_global_flags* const gfp, int bitsPerFrame )
+inline static void encodeSideInfo2 ( lame_global_flags* const gfp, int bitsPerFrame )
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     III_side_info_t *l3_side;
@@ -389,7 +389,7 @@ static unsigned char klemm_table [3*3*3*3] = {
  *  which is always [0], the part 1 can contain all values from [-8191,+8191]
  */
 
-INLINE int  huffman_coder_count1 ( lame_global_flags* const gfp, const int* ix, gr_info* gi )
+inline static int  huffman_coder_count1 ( lame_global_flags* const gfp, const int* ix, gr_info* gi )
 {
 #ifdef DEBUG
     lame_internal_flags*  gfc    = gfp->internal_flags;
@@ -425,7 +425,7 @@ INLINE int  huffman_coder_count1 ( lame_global_flags* const gfp, const int* ix, 
   the ancillary data...
 */
 
-INLINE void
+inline static void
 drain_into_ancillary(lame_global_flags *gfp,int remainingBits)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
@@ -475,7 +475,7 @@ drain_into_ancillary(lame_global_flags *gfp,int remainingBits)
 }
 
 /*write N bits into the header */
-INLINE void
+inline static void
 writeheader(lame_internal_flags *gfc,int val, int j)
 {
     int ptr = gfc->header[gfc->h_ptr].ptr;
@@ -568,7 +568,7 @@ void main_CRC_init ( void )
 
 #endif
 
-INLINE void
+inline static void
 encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
@@ -737,7 +737,7 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 }
 
 
-INLINE int
+inline static int
 huffman_coder_count1(lame_global_flags *gfp,int *ix, gr_info *gi)
 {
 #ifdef DEBUG
@@ -810,7 +810,7 @@ huffman_coder_count1(lame_global_flags *gfp,int *ix, gr_info *gi)
   Implements the pseudocode of page 98 of the IS
   */
 
-INLINE int
+inline static int
 HuffmanCode ( lame_global_flags* const gfp, const int table_select, int x1, int x2 )
 {
     const struct huffcodetab* h = ht + table_select;
@@ -954,7 +954,7 @@ LongHuffmancodebits(lame_global_flags *gfp,int *ix, gr_info *gi)
     return bits;
 }
 
-INLINE int
+inline static int
 writeMainData ( lame_global_flags * const gfp,
         int              l3_enc   [2] [2] [576],
         III_scalefac_t   scalefac [2] [2] )

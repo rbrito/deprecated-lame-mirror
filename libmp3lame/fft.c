@@ -50,7 +50,7 @@ static const FLOAT costab[TRI_SIZE*2] = {
   9.999811752826011e-01, 6.135884649154475e-03
 };
 
-static INLINE void fht(FLOAT *fz, int n)
+inline static void fht(FLOAT *fz, int n)
 {
     const FLOAT *tri = costab;
     int           k4;

@@ -368,7 +368,7 @@ static const int order[] = {
 
 
 /* returns sum_j=0^31 a[j]*cos(PI*j*(k+1/2)/32), 0<=k<32 */
-INLINE static void window_subband(sample_t *x1, FLOAT8 a[SBLIMIT])
+inline static void window_subband(sample_t *x1, FLOAT8 a[SBLIMIT])
 {
     int i;
     FLOAT8 const *wp = enwindow+10;
@@ -600,7 +600,7 @@ INLINE static void window_subband(sample_t *x1, FLOAT8 a[SBLIMIT])
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
-INLINE static void mdct_short(FLOAT8 *inout)
+inline static void mdct_short(FLOAT8 *inout)
 {
     int l;
     for ( l = 0; l < 3; l++ ) {
@@ -636,7 +636,7 @@ INLINE static void mdct_short(FLOAT8 *inout)
     }
 }
 
-INLINE static void mdct_long(FLOAT8 *out, FLOAT8 *in)
+inline static void mdct_long(FLOAT8 *out, FLOAT8 *in)
 {
     FLOAT8 ct,st;
   {

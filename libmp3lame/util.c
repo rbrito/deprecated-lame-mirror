@@ -321,7 +321,7 @@ void freorder(int scalefac_band[],FLOAT8 ix_orig[576]) {
 
 
 /* resampling via FIR filter, blackman window */
-INLINE double blackman(int i,double offset,double fcn,int l)
+inline static double blackman(int i,double offset,double fcn,int l)
 {
   /* This algorithm from:
 SIGNAL PROCESSING ALGORITHMS IN FORTRAN AND C

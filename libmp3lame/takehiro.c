@@ -143,7 +143,7 @@ count_bit_ESC(
 }
 
 
-INLINE static int
+inline static int
 count_bit_noESC(const int * ix, const int * const end, int * const s)
 {
     /* No ESC-words */
@@ -162,7 +162,7 @@ count_bit_noESC(const int * ix, const int * const end, int * const s)
 
 
 
-INLINE static int
+inline static int
 count_bit_noESC_from2(
     const int *       ix, 
     const int * const end,
@@ -197,7 +197,7 @@ count_bit_noESC_from2(
 }
 
 
-INLINE static int
+inline static int
 count_bit_noESC_from3(
     const int *       ix, 
     const int * const end,
@@ -428,7 +428,7 @@ int count_bits(
  **********************************************************************/
 
 
-INLINE void
+inline static void
 recalc_divide_init(
     const lame_internal_flags * const gfc,
           gr_info         cod_info,
@@ -470,7 +470,7 @@ recalc_divide_init(
     }
 }
 
-INLINE void
+inline static void
 recalc_divide_sub(
     const lame_internal_flags * const gfc,
     const gr_info         cod_info2,

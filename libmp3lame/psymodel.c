@@ -54,7 +54,7 @@ int L3para_read( lame_global_flags *gfp,
 		  int *, int *, int *, int *);
 
 /* addition of simultaneous masking   Naoki Shibata 2000/7 */
-INLINE FLOAT8 mask_add(FLOAT8 m1,FLOAT8 m2,int k,int b, lame_internal_flags * const gfc)
+inline static FLOAT8 mask_add(FLOAT8 m1,FLOAT8 m2,int k,int b, lame_internal_flags * const gfc)
 {
   static const FLOAT8 table1[] = {
     3.3246 *3.3246 ,3.23837*3.23837,3.15437*3.15437,3.00412*3.00412,2.86103*2.86103,2.65407*2.65407,2.46209*2.46209,2.284  *2.284  ,

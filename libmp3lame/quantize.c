@@ -247,7 +247,7 @@ inner_loop(
  *
  *************************************************************************/
 
-INLINE 
+inline 
 static int
 loop_break( 
     const gr_info        * const cod_info,
@@ -280,7 +280,7 @@ loop_break(
  *
  *************************************************************************/
 
-INLINE 
+inline 
 static int 
 quant_compare(
     const int                       experimentalX,
@@ -722,7 +722,7 @@ inc_subblock_gain (
  *          try on short blocks to increase subblock gain
  *
  ********************************************************************/
-INLINE
+inline
 static int 
 balance_noise (
     lame_global_flags  *gfp,
@@ -1279,7 +1279,7 @@ get_framebits (
  *  determine minimal bit skeleton
  *
  ************************************************************************/
-INLINE
+inline
 static int 
 calc_min_bits (
     lame_global_flags *gfp,
@@ -1343,7 +1343,7 @@ calc_min_bits (
  *  determine maximal bit skeleton
  *
  ************************************************************************/
-INLINE
+inline
 static int 
 calc_max_bits (
     const lame_internal_flags * const gfc,
