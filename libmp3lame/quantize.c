@@ -153,41 +153,17 @@ on_pe(
     lame_internal_flags *gfc,
     III_psy_ratio      ratio[2],
     int targ_bits[2],
-    int mean_bits,
+    int min_bits,
+    int max_bits,
+    FLOAT factor,
     const int gr
     )
 {
-    int min_bits = mean_bits, bits, ch, adjustBits;
-    int max_bits = gfc->l3_side.ResvSize, ResvMax = gfc->l3_side.ResvMax;
-    FLOAT factor = (mean_bits+600)*(1.0/3000.0);
-    if (max_bits*10 >= ResvMax*6) {
-	int add_bits = 0;
-	if (max_bits*10 >= ResvMax*9) {
-	    /* reservoir is filled over 90% -> forced to use excessed bits */
-	    add_bits = max_bits - (ResvMax * 9) / 10;
-	    min_bits += add_bits;
-	    gfc->substep_shaping |= 0x80;
-	}
-	/* max amount from the reservoir we are allowed to use. ISO says 60% */
-	max_bits = (ResvMax*6)/10 - add_bits;
-	if (max_bits < 0) max_bits = 0;
-    } else {
-	/* build up reservoir.  this builds the reservoir a little slower
-	 * than FhG.  It could simple be mean_bits/15, but this was rigged
-	 * to always produce 100 (the old value) at 128kbs */
-	/*    *targ_bits -= (int) (mean_bits/15.2);*/
-	min_bits -= mean_bits/10;
-	gfc->substep_shaping &= 0x7f;
-    }
+    int bits, ch, adjustBits;
 
-    /* max available bits per granule */
-    max_bits += mean_bits;
-    if (max_bits > MAX_BITS) /* hard limit per granule */
+    /* check hard limit per granule (by spec) */
+    if (max_bits > MAX_BITS)
 	max_bits = MAX_BITS;
-
-    if (max_bits > mean_bits*2)    /* limit 2*average (need tuning) */
-	max_bits = mean_bits*2;
-
     /* allocate minimum bits to encode part2_length (for i-stereo) */
     bits = 0;
     for (ch = 0; ch < gfc->channels_out; ch++)
@@ -1142,111 +1118,6 @@ CBR_1st_bitalloc (
 
 /********************************************************************
  *
- *  ABR_calc_target_bits()
- *
- *  calculates target bits for ABR encoding
- *
- *  mt 2000/05/31
- *
- ********************************************************************/
-
-static void 
-ABR_calc_target_bits (
-    lame_global_flags * gfp,
-    III_psy_ratio     ratio        [2][2],
-    int               targ_bits    [2][2]
-    )
-{
-    lame_internal_flags *gfc=gfp->internal_flags;
-    FLOAT res_factor;
-    int gr, ch, totbits, mean_bits;
-    int analog_silence_bits, max_frame_bits;
-    
-    gfc->bitrate_index = gfc->VBR_max_bitrate;
-    max_frame_bits = ResvFrameBegin (gfp, &mean_bits);
-
-    gfc->bitrate_index = 1;
-    mean_bits = getframebits(gfp) - gfc->l3_side.sideinfo_len * 8;
-    analog_silence_bits = mean_bits / (gfc->mode_gr * gfc->channels_out);
-
-    gfc->bitrate_index = 0;
-    mean_bits = getframebits(gfp) - gfc->l3_side.sideinfo_len * 8;
-    if (gfc->substep_shaping & 1)
-	mean_bits *= 1.1;
-    mean_bits /= (gfc->mode_gr * gfc->channels_out);
-
-    /*
-        res_factor is the percentage of the target bitrate that should
-        be used on average.  the remaining bits are added to the
-        bitreservoir and used for difficult to encode frames.  
-
-        Since we are tracking the average bitrate, we should adjust
-        res_factor "on the fly", increasing it if the average bitrate
-        is greater than the requested bitrate, and decreasing it
-        otherwise.  Reasonable ranges are from .9 to 1.0
-        
-        Until we get the above suggestion working, we use the following
-        tuning:
-        compression ratio    res_factor
-          5.5  (256kbps)         1.0      no need for bitreservoir 
-          11   (128kbps)         .93      7% held for reservoir
-   
-        with linear interpolation for other values.
-     */
-    res_factor = .93 + .07 * (11.0 - gfp->compression_ratio) / (11.0 - 5.5);
-    if (res_factor <  .90)
-	res_factor =  .90; 
-    if (res_factor > 1.00) 
-	res_factor = 1.00;
-
-    for (gr = 0; gr < gfc->mode_gr; gr++) {
-	for (ch = 0; ch < gfc->channels_out; ch++) {
-	    if (ratio[gr][ch].ath_over == 0) {
-		targ_bits[gr][ch] = analog_silence_bits;
-		continue;
-	    }
-
-	    targ_bits[gr][ch] = res_factor * mean_bits;
-	    if (ratio[gr][ch].pe > 600.0) {
-		int add_bits = (ratio[gr][ch].pe - 600.0);
-
-		/* at most increase bits by 1.5*average */
-		if (add_bits > mean_bits*3/2)
-		    add_bits = mean_bits*3/2;
-		assert(add_bits >= 0);
-		targ_bits[gr][ch] += add_bits;
-	    }
-	}
-    }
-
-    /* sum of target bits */
-    totbits=0;
-    for (gr = 0; gr < gfc->mode_gr; gr++) {
-	for (ch = 0; ch < gfc->channels_out; ch++) {
-	    if (targ_bits[gr][ch] > MAX_BITS) 
-		targ_bits[gr][ch] = MAX_BITS;
-	    totbits += targ_bits[gr][ch];
-	}
-    }
-
-    /* repartion target bits if needed */
-    if (totbits > max_frame_bits) {
-	for (gr = 0; gr < gfc->mode_gr; gr++) {
-	    for (ch = 0; ch < gfc->channels_out; ch++) {
-		targ_bits[gr][ch] *= max_frame_bits; 
-		targ_bits[gr][ch] /= totbits; 
-	    }
-	}
-    }
-}
-
-
-
-
-
-
-/********************************************************************
- *
  *  ABR_iteration_loop()
  *
  *  encode a frame with a disired average bitrate
@@ -1261,13 +1132,27 @@ ABR_iteration_loop(
     III_psy_ratio      ratio        [2][2])
 {
     lame_internal_flags *gfc=gfp->internal_flags;
-    int targ_bits[2][2], mean_bits, gr, ch;
+    int targ_bits[2], mean_bits, gr, ch, max_bits, min_bits;
+    FLOAT factor;
 
-    ABR_calc_target_bits (gfp, ratio, targ_bits);
+    gfc->bitrate_index = 0;
+    mean_bits = getframebits(gfp) - gfc->l3_side.sideinfo_len * 8;
+    mean_bits /= gfc->mode_gr;
+    if (gfc->substep_shaping & 1)
+	mean_bits *= 1.1;
+    factor = (mean_bits+600)*(1.0/2600.0);
+
+    gfc->bitrate_index = gfc->VBR_max_bitrate;
+    max_bits = ResvFrameBegin (gfp, &mean_bits);
+    gfc->bitrate_index = 1;
+    min_bits = ResvFrameBegin (gfp, &mean_bits);
+
     for (gr = 0; gr < gfc->mode_gr; gr++) {
+	on_pe(gfc, ratio[gr], targ_bits, min_bits, max_bits, factor, gr);
 	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    gr_info *gi = &gfc->l3_side.tt[gr][ch];
-	    CBR_1st_bitalloc(gfc, gi, ch, targ_bits[gr][ch], &ratio[gr][ch]);
+
+	    CBR_1st_bitalloc(gfc, gi, ch, targ_bits[ch], &ratio[gr][ch]);
 	    gfc->l3_side.ResvSize -= iteration_finish_one(gfc, gr, ch);
 	}
     }
@@ -1303,13 +1188,43 @@ iteration_loop(
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     int targ_bits[2], mean_bits, gr, ch;
+    FLOAT factor;
 
     ResvFrameBegin (gfp, &mean_bits);
     mean_bits /= gfc->mode_gr;
+    factor = (mean_bits+600)*(1.0/3000.0);
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 	/*  calculate needed bits */
-	on_pe(gfc, ratio[gr], targ_bits, mean_bits, gr);
+	int min_bits = mean_bits, max_bits = gfc->l3_side.ResvSize;
+	if (max_bits*10 >= gfc->l3_side.ResvMax*6) {
+	    int add_bits = 0;
+	    if (max_bits*10 >= gfc->l3_side.ResvMax*9) {
+		/* reservoir is filled over 90% -> forced to use reservoir */
+		add_bits = max_bits - (gfc->l3_side.ResvMax * 9) / 10;
+		min_bits += add_bits;
+		gfc->substep_shaping |= 0x80;
+	    }
+	    /* max amount from the reservoir we are allowed to use. */
+	    /* ISO says 60%, but we can tune it */
+	    max_bits = (gfc->l3_side.ResvMax*6)/10 - add_bits;
+	    if (max_bits < 0) max_bits = 0;
+	} else {
+	    /* build up reservoir.  this builds the reservoir a little slower
+	     * than FhG.  It could simple be mean_bits/15, but this was rigged
+	     * to always produce 100 (the old value) at 128kbs */
+	    /*    *targ_bits -= (int) (mean_bits/15.2);*/
+	    min_bits -= mean_bits/10;
+	    gfc->substep_shaping &= 0x7f;
+	}
+
+	/* max available bits per granule */
+	max_bits += mean_bits;
+
+	if (max_bits > mean_bits*2)    /* limit 2*average (need tuning) */
+	    max_bits = mean_bits*2;
+
+	on_pe(gfc, ratio[gr], targ_bits, min_bits, max_bits, factor, gr);
 	gfc->l3_side.ResvSize += mean_bits;
 
 	for (ch=0; ch < gfc->channels_out; ch ++) {
