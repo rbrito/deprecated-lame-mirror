@@ -33,7 +33,6 @@ void ExitMP3(PMPSTR mp);
    of the floating-point numbers is defined in mpg123.h as #define real. It is 64-bit double by default. 
    No more than 1152 samples per channel are allowed. */
 int	 decodeMP3_unclipped(PMPSTR mp,unsigned char *inmemory,int inmemsize,char *outmemory,int outmemsize,int *done);
-int decode_init_for_replaygain(lame_t gfc);
 
 #ifdef __cplusplus
 }

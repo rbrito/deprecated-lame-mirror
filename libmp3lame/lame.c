@@ -1239,9 +1239,12 @@ lame_init_bitstream(lame_t gfc)
 	   sizeof(gfc->bitrate_blockType_Hist));
 #endif
     gfc->frameNum=0;
-    if (gfc->decode_on_the_fly && !gfc->pmp_replaygain)
+#ifdef HAVE_MPGLIB
+    if (gfc->decode_on_the_fly && !gfc->pmp_replaygain) {
+	extern int decode_init_for_replaygain(lame_t gfc);
 	return decode_init_for_replaygain(gfc);
-
+    }
+#endif
     return 0;
 }
 

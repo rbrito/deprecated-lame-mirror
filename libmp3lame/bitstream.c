@@ -319,7 +319,7 @@ copy_buffer(lame_t gfc, unsigned char *buffer, int size)
     minimum = pbuf - buffer;
 
     gfc->nMusicCRC = calculateCRC(buffer, minimum, gfc->nMusicCRC);
-
+#ifdef HAVE_MPGLIB
     if (gfc->decode_on_the_fly) {  /* decode the frame */
 	sample_t pcm_buf[2][1152];
 	int mp3_in = minimum;
@@ -369,10 +369,10 @@ copy_buffer(lame_t gfc, unsigned char *buffer, int size)
 		if (gfc->findReplayGain)
 		    if (AnalyzeSamples(gfc->rgdata, pcm_buf[0], pcm_buf[1], samples_out, gfc->channels_out) == GAIN_ANALYSIS_ERROR)
 			return -6;
-		
             } /* if (samples_out>0) */
 	} /* while (samples_out!=0) */
     } /* if (gfc->decode_on_the_fly) */ 
+#endif
 
     return minimum;
 }
