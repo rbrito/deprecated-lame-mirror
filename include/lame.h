@@ -319,26 +319,57 @@ float CDECL lame_get_compression_ratio(lame_global_flags *);
 /********************************************************************
  *  frame params
  ***********************************************************************/
+// mark as copyright.  default=0
+int CDECL lame_set_copyrigth(lame_global_flags *, int);
+int CDECL lame_get_copyright(lame_global_flags *);
+
+// mark as original.  default=1
+int CDECL lame_set_original(lame_global_flags *, int);
+int CDECL lame_get_original(lame_global_flags *);
+
+// error_protection.  Use 2 bytes from each fraome for CRC checksum. default=0
+int CDECL lame_set_error_protection(lame_global_flags *, int);
+int CDECL lame_get_error_protection(lame_global_flags *);
+
+// padding_type.  0=pad no frames  1=pad all frames 2=adjust padding(default)
+int CDECL lame_set_padding_type(lame_global_flags *, int);
+int CDECL lame_get_padding_type(lame_global_flags *);
+
+// MP3 'private extension' bit  Meaningless
+int CDECL lame_set_extension(lame_global_flags *, int);
+int CDECL lame_get_extension(lame_global_flags *);
+
+// enforce strict ISO complience.  default=0
+int CDECL lame_set_strict_ISO(lame_global_flags *, int);
+int CDECL lame_get_strict_ISO(lame_global_flags *);
+ 
+
+/********************************************************************
+ * quantization/noise shaping 
+ ***********************************************************************/
+
+// disable the bit reservoir. For testing only. default=0
+int CDECL lame_set_disable_reservoir(lame_global_flags *, int);
+int CDECL lame_get_disable_reservoir(lame_global_flags *);
+
+// select a different "best quantization" function. default=0 
+int CDECL lame_set_experimentalX(lame_global_flags *, int);
+int CDECL lame_get_experimentalX(lame_global_flags *);
+
+// another experimental option.  for testing only
+int CDECL lame_set_experimentalY(lame_global_flags *, int);
+int CDECL lame_get_experimentalY(lame_global_flags *);
+
+// another experimental option.  for testing only
+int CDECL lame_set_experimentalZ(lame_global_flags *, int);
+int CDECL lame_get_experimentalZ(lame_global_flags *);
+
+// Naoki's psycho acoustic model.  default=0
+int CDECL lame_set_exp_nspsytune(lame_global_flags *, int);
+int CDECL lame_get_exp_nspsytune(lame_global_flags *);
+
+
 #if 0
-still need to prototype the following variables:
-
-  int copyright;                  /* mark as copyright. default=0           */
-  int original;                   /* mark as original. default=1            */
-  int error_protection;           /* use 2 bytes per frame for a CRC
-                                     checksum. default=0                    */
-  int padding_type;               /* 0=no padding, 1=always pad,
-                                     2=adjust padding, default=2            */
-  int extension;                  /* the MP3 'private extension' bit.
-                                     Meaningless                            */
-  int strict_ISO;                 /* enforce ISO spec as much as possible   */
-
-  /* quantization/noise shaping */
-  int disable_reservoir;          /* use bit reservoir?                     */
-  int experimentalX;            
-  int experimentalY;
-  int experimentalZ;
-  int exp_nspsytune;
-
   /* VBR control */
   vbr_mode VBR;
   int VBR_q;
