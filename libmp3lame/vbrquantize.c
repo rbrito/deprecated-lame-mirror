@@ -748,10 +748,10 @@ short_block_sf(const lame_internal_flags * gfc, const FLOAT8 * l3_xmin,
 	    i = 0;
             for (sfb = b + gi->sfb_lmax; sfb < gi->sfbmax; sfb += 3) {
                 sf_cache[i++] = vbrsf[sfb];
-                if (vbrmn > sf_cache[sfb])
-                    vbrmn = sf_cache[sfb];
-                if (vbrmx < sf_cache[sfb])
-                    vbrmx = sf_cache[sfb];
+                if (vbrmn > vbrsf[sfb])
+                    vbrmn = vbrsf[sfb];
+                if (vbrmx < vbrsf[sfb])
+                    vbrmx = vbrsf[sfb];
             }
             if (*vbrmin > vbrmn)
                 *vbrmin = vbrmn;
