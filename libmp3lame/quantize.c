@@ -105,40 +105,12 @@ on_pe(
 
 
 
-/*************************************************************************/
-/*            calc_xmin                                                  */
-/*************************************************************************/
-
-/**
- *  Robert Hegemann 2001-04-27:
- *  this adjusts the ATH, keeping the original noise floor
- *  affects the higher frequencies more than the lower ones
- */
-static FLOAT
-athAdjust( FLOAT a, FLOAT x, FLOAT athFloor )
-{
-    /*  work in progress
-     */
-#define o 90.30873362
-#define p 94.82444863
-    FLOAT u = FAST_LOG10_X(x, 10.0); 
-    FLOAT v = a*a;
-    FLOAT w = 0.0;
-    u -= athFloor;                                  /* undo scaling */
-    if ( v > 1E-20 ) w = 1. + FAST_LOG10_X(v, 10.0 / o);
-    if ( w < 0  )    w = 0.; 
-    u *= w; 
-    u += athFloor + o-p;                            /* redo scaling */
-#undef o
-#undef p
-    return db2pow(u);
-}
-
-/*
-  Calculate the allowed distortion for each scalefactor band,
-  as determined by the psychoacoustic model.
-  xmin(sb) = ratio(sb) * en(sb) / bw(sb)
-*/
+/*************************************************************************
+ * calc_xmin
+ * Calculate the allowed distortion for each scalefactor band,
+ * as determined by the psychoacoustic model.
+ * xmin(sb) = ratio(sb) * en(sb) / bw(sb)
+ *************************************************************************/
 static void
 calc_xmin(
     lame_internal_flags *gfc,
@@ -149,8 +121,7 @@ calc_xmin(
 {
     int sfb, gsfb, j=0;
     for (gsfb = 0; gsfb < gi->psy_lmax; gsfb++) {
-	FLOAT xmin
-	    = athAdjust(gfc->ATH.adjust, gfc->ATH.l[gsfb], gfc->ATH.floor);
+	FLOAT xmin = gfc->ATH.adjust * gfc->ATH.l[gsfb];
 	FLOAT en0 = 0.0, x;
 	int width = gi->width[gsfb], l;
 	l = width >> 1;
@@ -169,8 +140,7 @@ calc_xmin(
     }   /* end of long block loop */
 
     for (sfb = gi->sfb_smin; gsfb < gi->psymax; sfb++, gsfb += 3) {
-	FLOAT tmpATH
-	    = athAdjust(gfc->ATH.adjust, gfc->ATH.s[sfb], gfc->ATH.floor);
+	FLOAT tmpATH = gfc->ATH.adjust * gfc->ATH.s[sfb];
 	int width = gi->width[gsfb], b;
 
 	for (b = 0; b < 3; b++) {
