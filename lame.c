@@ -405,13 +405,6 @@ void lame_init_params(lame_global_flags *gfp)
   init_bit_stream_w(&bs);
 
 
-#ifdef BRHIST
-  if (gfp->VBR) {
-    if (disp_brhist)
-      brhist_init(1, 14);
-  } else
-    disp_brhist = 0;
-#endif
 
   /* set internal feature flags.  USER should not access these since
    * some combinations will produce strange results */
@@ -482,6 +475,13 @@ void lame_init_params(lame_global_flags *gfp)
   /* instead of gf. */
   memcpy(&gf,gfp,sizeof(lame_global_flags));
 
+#ifdef BRHIST
+  if (gfp->VBR) {
+    if (disp_brhist)
+      brhist_init(1, 14);
+  } else
+    disp_brhist = 0;
+#endif
   return;
 }
 
