@@ -569,8 +569,6 @@ case $host_cpu in
 	AC_DEFINE(USE_IEEE754_HACK, 1, IEEE754 compatible machine)
 	;;
 x86_64)
-dns do not set CPUTYPE="i386" because nasm does not support elf64 currently
-
 	# use internal knowledge of the IEEE 754 layout
 	AC_DEFINE(USE_IEEE754_HACK, 1, IEEE754 compatible machine)
 	;;
@@ -603,6 +601,11 @@ AC_MSG_RESULT(${CONFIG_ALLDOUBLE})
 
 
 AC_PATH_PROG(NASM, nasm, no)
+case "${NASM}" in
+no)
+	AC_PATH_PROG(NASM, yasm, no)
+	;;
+esac
 case "${NASM}" in
 no)
 	;;
