@@ -1244,7 +1244,7 @@ int psymodel_init(lame_global_flags *gfp)
     }
 
 
-    init_mask_add_max_values();
+    init_mask_add_max_values(gfc);
 
     /* setup temporal masking */
 #define temporalmask_sustain_sec 0.01

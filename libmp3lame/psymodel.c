@@ -674,11 +674,19 @@ static inline int trancate(FLOAT x)
 # define trancate(x) (int)x
 #endif /* TAKEHIRO_IEEE754_HACK */
 
-void init_mask_add_max_values(void)
+void
+init_mask_add_max_values(
+    lame_internal_flags * const gfc
+    )
 {
+    int i;
     ma_max_i1 = db2pow((I1LIMIT+1)/16.0*10.0);
     ma_max_i2 = db2pow((I2LIMIT+1)/16.0*10.0);
     ma_max_m  = db2pow(MLIMIT);
+    for (i = 0; i < gfc->npart_l; i++)
+	gfc->ATH.cb[i] *= ma_max_m;
+
+    ma_max_m = 1.0 / ma_max_m;
 }
 
 
@@ -687,79 +695,97 @@ void init_mask_add_max_values(void)
 
 
 /* addition of simultaneous masking   Naoki Shibata 2000/7 */
+
+static const FLOAT table1[] = {
+    3.3246 *3.3246 ,3.23837*3.23837,3.15437*3.15437,3.00412*3.00412,2.86103*2.86103,2.65407*2.65407,2.46209*2.46209,2.284  *2.284  ,
+    2.11879*2.11879,1.96552*1.96552,1.82335*1.82335,1.69146*1.69146,1.56911*1.56911,1.46658*1.46658,1.37074*1.37074,1.31036*1.31036,
+    1.25264*1.25264,1.20648*1.20648,1.16203*1.16203,1.12765*1.12765,1.09428*1.09428,1.0659 *1.0659 ,1.03826*1.03826,1.01895*1.01895,
+    1.0
+};
+
+static const FLOAT table2[] = {
+    1.33352*1.33352,1.35879*1.35879,1.38454*1.38454,1.39497*1.39497,1.40548*1.40548,1.3537 *1.3537 ,1.30382*1.30382,1.22321*1.22321,
+    1.14758*1.14758,
+    1.0
+};
+
+static const FLOAT table3[] = {
+    2.35364*2.35364,2.29259*2.29259,2.23313*2.23313,2.12675*2.12675,2.02545*2.02545,1.87894*1.87894,1.74303*1.74303,1.61695*1.61695,
+    1.49999*1.49999,1.39148*1.39148,1.29083*1.29083,1.19746*1.19746,1.11084*1.11084,1.03826*1.03826
+};
+
 inline static FLOAT
-mask_add(FLOAT m1,FLOAT m2,int k,int b, lame_internal_flags * const gfc)
+mask_add_samebark(FLOAT m1, FLOAT m2, lame_internal_flags * const gfc)
 {
-    static const FLOAT table1[] = {
-	3.3246 *3.3246 ,3.23837*3.23837,3.15437*3.15437,3.00412*3.00412,2.86103*2.86103,2.65407*2.65407,2.46209*2.46209,2.284  *2.284  ,
-	2.11879*2.11879,1.96552*1.96552,1.82335*1.82335,1.69146*1.69146,1.56911*1.56911,1.46658*1.46658,1.37074*1.37074,1.31036*1.31036,
-	1.25264*1.25264,1.20648*1.20648,1.16203*1.16203,1.12765*1.12765,1.09428*1.09428,1.0659 *1.0659 ,1.03826*1.03826,1.01895*1.01895,
-	1.0
-    };
+    int i;
+    FLOAT m = m1 + m2;
 
-    static const FLOAT table2[] = {
-	1.33352*1.33352,1.35879*1.35879,1.38454*1.38454,1.39497*1.39497,1.40548*1.40548,1.3537 *1.3537 ,1.30382*1.30382,1.22321*1.22321,
-	1.14758*1.14758,
-	1.0
-    };
+    /* Should always be true, just checking */
+    assert(m1>0.0);
+    assert(m2>0.0);
 
-    static const FLOAT table3[] = {
-	2.35364*2.35364,2.29259*2.29259,2.23313*2.23313,2.12675*2.12675,2.02545*2.02545,1.87894*1.87894,1.74303*1.74303,1.61695*1.61695,
-	1.49999*1.49999,1.39148*1.39148,1.29083*1.29083,1.19746*1.19746,1.11084*1.11084,1.03826*1.03826
-    };
+    if (m2 > m1) {
+	if (m2 >= m1*ma_max_i1)
+	    return m; /* 43% of the total */
+	m1 = m2/m1;
+    } else {
+	if (m1 >= m2*ma_max_i1)
+	    return m; /* 43% of the total */
+	m1 = m1/m2;
+    }
 
+    /* 22% of the total */
+    return m * table2[trancate(FAST_LOG10_X(m1, 16.0))];
+}
+
+inline static FLOAT
+mask_add(FLOAT m1, FLOAT m2, int k, int b, lame_internal_flags * const gfc)
+{
     int i;
     FLOAT ratio;
 
+    if ((unsigned int)(k-b+3) <= 3+3)
+	return mask_add_samebark(m1, m2, gfc);
+
     if (m2 > m1) {
-	if (m1 == 0.0) return m2;
+	if (m2 >= m1*ma_max_i2)
+	    return m1+m2;
 	ratio = m2/m1;
     } else {
+	if (m1 >= m2*ma_max_i2)
+	    return m1+m2;
 	ratio = m1/m2;
     }
 
     /* Should always be true, just checking */
-    assert(m1>=0);
-    assert(m2>0);
-    assert(gfc->ATH.cb[k]>=0);
+    assert(m1>0.0);
+    assert(m2>0.0);
+    assert(gfc->ATH.cb[k]>0.0);
 
 
     m1 += m2;
-    if ((unsigned int)(k-b+3) <= 3+3) {
-	/* spectrums in the same bark (approximately, 1 bark = 3 partitions) */
-	/* 65% of the cases */
-	if (ratio >= ma_max_i1)
-	    return m1; /* 43% of the total */
-
-	/* 22% of the total */
-	return m1*table2[trancate(FAST_LOG10_X(ratio,16.0))];
-    }
-
-    if (ratio >= ma_max_i2)
-	return m1;
-
     i = trancate(FAST_LOG10_X(ratio, 16.0));
     m2 = gfc->ATH.cb[k] * gfc->ATH.adjust;
-//	m2 = gfc->ATH.cb[k];
-    if (m1 < ma_max_m * m2) {
-	/* 3% of the total */
-	/* Originally if (m > 0) { */
-	if (m1 > m2) {
-	    FLOAT f, r;
-
-	    f = 1.0;
-	    if (i <= 13) f = table3[i];
-	    r = FAST_LOG10_X(m1 / m2, 10.0/15.0);
-	    return m1 * ((table1[i]-f)*r+f);
-	}
-
-	if (i > 13) return m1;
-
-	return m1*table3[i];
-    }
 
     /* 10% of total */
-    return m1*table1[i];
+    if (m1 >= m2)
+	return m1*table1[i];
+
+    /* 3% of the total */
+    /* Originally if (m > 0) { */
+    m2 *= ma_max_m;
+    if (m1 > m2) {
+	FLOAT f, r;
+
+	f = 1.0;
+	if (i <= 13) f = table3[i];
+	r = FAST_LOG10_X(m1 / m2, 10.0/15.0);
+	return m1 * ((table1[i]-f)*r+f);
+    }
+
+    /* very rare case */
+    if (i > 13) return m1;
+    return m1*table3[i];
 }
 
 
@@ -898,49 +924,45 @@ psycho_analysis_short(
     FLOAT pcfact;
     FLOAT ns_hpfsmpl[MAX_CHANNELS][576];
 
-    int ns_attacks[MAX_CHANNELS*2][4] = {{0}};
+    int ns_attacks[MAX_CHANNELS*2][4];
+    numchn = gfc->channels_out;
+    if (gfp->mode == JOINT_STEREO) numchn=4;
 
-    /**********************************************************************
-     *  Apply HPF of fs/4 to the input signal.
-     *  This is used for attack detection / handling.
-     **********************************************************************/
-    for (chn = 0; chn < gfc->channels_out; chn++) {
+    /*************************************************************** 
+     * determine the block type (window type)
+     ***************************************************************/
+    for (chn=0; chn<numchn; chn++) {
+	FLOAT en_subshort[12];
+	FLOAT attack_intensity[12];
+	FLOAT attackThreshold;
+	/***************************************************************
+	 *  Apply HPF of fs/4 to the input signal to detect the attack.
+	 *  This is used for attack detection / handling.
+	 ***************************************************************/
 	static const FLOAT fircoef[] = {
 	    -8.65163e-18*2, -0.00851586*2, -6.74764e-18*2, 0.0209036*2,
 	    -3.36639e-17*2, -0.0438162 *2, -1.54175e-17*2, 0.0931738*2,
 	    -5.52212e-17*2, -0.313819  *2
 	};
 
-	/* apply high pass filter of fs/4 */
-	const sample_t * const firbuf = &buffer[chn][576-350-NSFIRLEN+192];
-	for (i=0;i<576;i++) {
-	    ns_hpfsmpl[chn][i]
-		= firbuf[i + 10]
-		+  fircoef[0] * (firbuf[i+0]+firbuf[i+NSFIRLEN-0])
-		+  fircoef[1] * (firbuf[i+1]+firbuf[i+NSFIRLEN-1])
-		+  fircoef[2] * (firbuf[i+2]+firbuf[i+NSFIRLEN-2])
-		+  fircoef[3] * (firbuf[i+3]+firbuf[i+NSFIRLEN-3])
-		+  fircoef[4] * (firbuf[i+4]+firbuf[i+NSFIRLEN-4])
-		+  fircoef[5] * (firbuf[i+5]+firbuf[i+NSFIRLEN-5])
-		+  fircoef[6] * (firbuf[i+6]+firbuf[i+NSFIRLEN-6])
-		+  fircoef[7] * (firbuf[i+7]+firbuf[i+NSFIRLEN-7])
-		+  fircoef[8] * (firbuf[i+8]+firbuf[i+NSFIRLEN-8])
-		+  fircoef[9] * (firbuf[i+9]+firbuf[i+NSFIRLEN-9]);
-
-	}
-    }
-
-    numchn = gfc->channels_out;
-    if (gfp->mode == JOINT_STEREO) numchn=4;
-
-    for (chn=0; chn<numchn; chn++) {
-	FLOAT en_subshort[12];
-	FLOAT attack_intensity[12];
-	FLOAT attackThreshold;
-	/*************************************************************** 
-	 * determine the block type (window type)
-	 ***************************************************************/
-	if (chn == 2) {
+	if (chn < 2) {
+	    /* apply high pass filter of fs/4 */
+	    const sample_t * const firbuf = &buffer[chn][576-350-NSFIRLEN+192];
+	    for (i=0;i<576;i++) {
+		ns_hpfsmpl[chn][i]
+		    = fircoef[0] * (firbuf[i+0]+firbuf[i+NSFIRLEN-0])
+		    + fircoef[1] * (firbuf[i+1]+firbuf[i+NSFIRLEN-1])
+		    + fircoef[2] * (firbuf[i+2]+firbuf[i+NSFIRLEN-2])
+		    + fircoef[3] * (firbuf[i+3]+firbuf[i+NSFIRLEN-3])
+		    + fircoef[4] * (firbuf[i+4]+firbuf[i+NSFIRLEN-4])
+		    + fircoef[5] * (firbuf[i+5]+firbuf[i+NSFIRLEN-5])
+		    + fircoef[6] * (firbuf[i+6]+firbuf[i+NSFIRLEN-6])
+		    + fircoef[7] * (firbuf[i+7]+firbuf[i+NSFIRLEN-7])
+		    + fircoef[8] * (firbuf[i+8]+firbuf[i+NSFIRLEN-8])
+		    + fircoef[9] * (firbuf[i+9]+firbuf[i+NSFIRLEN-9])
+		    + firbuf[i + 10];
+	    }
+	} else if (chn == 2) {
 	    for (i=0;i<576;i++) {
 		FLOAT l, r;
 		l = ns_hpfsmpl[0][i];
@@ -958,16 +980,31 @@ psycho_analysis_short(
 	}
 
 	{
+#ifndef TAKEHIRO_IEEE754_HACK
 	    FLOAT *pf = ns_hpfsmpl[chn & 1];
 	    for (i=0;i<9;i++) {
 		FLOAT *pfe = pf + 576/9, p = 1.0;
 		for (; pf < pfe; pf++)
 		    if (p < fabs(*pf))
 			p = fabs(*pf);
-
 		gfc->nsPsy.last_en_subshort[chn][i] = en_subshort[i+3] = p;
 		attack_intensity[i+3] = p / en_subshort[i+3-2];
 	    }
+#else
+	    int *pi = (int *)ns_hpfsmpl[chn & 1];
+	    for (i=0;i<9;i++) {
+		int j, p = 0x3f800000;
+		for (j = 0; j < 576/9; j++) {
+		    int q = pi[j] & 0x7fffffff;
+		    if (p < q)
+			p = q;
+		}
+		pi += j;
+		((int *)gfc->nsPsy.last_en_subshort[chn])[i]
+		    = ((int *)en_subshort)[i+3] = p;
+		attack_intensity[i+3] = en_subshort[i+3] / en_subshort[i+3-2];
+	    }
+#endif
 	}
 #if defined(HAVE_GTK)
 	if (gfc->pinfo) {
@@ -982,10 +1019,15 @@ psycho_analysis_short(
 	/* compare energies between sub-shortblocks */
 	attackThreshold = (chn == 3)
 	    ? gfc->nsPsy.attackthre_s : gfc->nsPsy.attackthre;
-	for (i=0;i<12;i++) 
-	    if (!ns_attacks[chn][i/3] && attack_intensity[i] > attackThreshold)
-		ns_attacks[chn][i/3] = (i % 3)+1;
 
+	for (i=0;i<4;i++) {
+	    int j = 0;
+	    ns_attacks[chn][i] = 0;
+	    if (attack_intensity[i*3 + (j++)] > attackThreshold
+		|| attack_intensity[i*3 + (j++)] > attackThreshold
+		|| attack_intensity[i*3 + (j++)] > attackThreshold)
+		ns_attacks[chn][i] = j;
+	}
 	if (ns_attacks[chn][0] && gfc->nsPsy.last_attacks[chn])
 	    ns_attacks[chn][0] = 0;
 
@@ -1080,7 +1122,8 @@ L3psycho_anal_ns(
 	    1.0    /0.11749, 0.79433/0.11749, 0.63096/0.11749, 0.63096/0.11749,
 	    0.63096/0.11749, 0.63096/0.11749, 0.63096/0.11749, 0.25119/0.11749
 	};
-	int b, i, j, k;
+	int b, i, j;
+	FLOAT *spread;
 
 	if (chn < 2)
 	    fft_long ( gfc, wsamp_L[chn], buffer[chn]);
@@ -1187,18 +1230,26 @@ L3psycho_anal_ns(
 	 *      convolve the partitioned energy and unpredictability
 	 *      with the spreading function, s3_l[b][k]
 	 ******************************************************************* */
-	b = j = k = 0;
+	b = j = 0;
+	spread = gfc->s3_ll;
 	enn = thmm = 0.0;
 	for (;; b++ ) {
 	    /* convolve the partitioned energy with the spreading function */
 	    FLOAT ecb, tmp;
 	    int kk = gfc->s3ind[b][0];
-	    ecb = gfc->s3_ll[k++] * eb2[kk];
+	    spread -= kk;
+	    do {
+		ecb = spread[kk] * eb2[kk];
+		if (ecb != 0.0)
+		    break;
+	    } while (++kk <= gfc->s3ind[b][1]);
+
 	    while (++kk <= gfc->s3ind[b][1]) {
 		if (eb2[kk] != 0.0)
-		    ecb = mask_add(ecb, gfc->s3_ll[k] * eb2[kk], kk, b, gfc);
-		k++;
+		    ecb = mask_add(ecb, spread[kk] * eb2[kk], kk, b, gfc);
 	    }
+
+	    spread += kk;
 
 	    /****   long block pre-echo control   ****/
 	    /* dont use long block pre-echo control if previous granule was 
@@ -1461,11 +1512,10 @@ psycho_analysis(
 	for (ch = 0; ch < gfc->channels_out; ch++)
 	    bufp[ch] = &buffer[ch][576*(gr + gfc->mode_gr) - FFTOFFSET];
 
+	need_short = psycho_analysis_short(gfp, bufp, gr, need_short);
 	if (gr == 0) {
-	    need_short = psycho_analysis_short(gfp, bufp, gr, need_short);
 	    L3psycho_anal_ns(gfp, bufp, blocktype_old, gr);
 	} else {
-	    need_short = psycho_analysis_short(gfp, bufp, gr, need_short);
 	    L3psycho_anal_ns(gfp, bufp, gfc->useshort_next[0], gr);
 	}
 
