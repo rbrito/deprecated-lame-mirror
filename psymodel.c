@@ -585,29 +585,26 @@ void L3psycho_anal( lame_global_flags *gfp,
 	/* note: all surges in PE are because of this pre-echo formula
 	 * for thr[b].  If it this is not used, PE is always around 600
 	 */
-	thr[b] = Min(ecb, Min(rpelev*gfc->nb_1[chn][b],rpelev2*gfc->nb_2[chn][b]) );
-
-	if (thr[b] < eb[b])
-	  {
-	    if (thr[b]<1e-6) thr[b]=1e-6;
-	    gfc->pe[chn] -= gfc->numlines_l[b] * log(thr[b] / eb[b]);
-	  }
-
 	/* dont use long block pre-echo control if previous granule was 
-	 * a short block
-	 * avoid the situation:   
-	 * frame0:  silence(very low masking)  
+	 * a short block.  This is to avoid the situation:   
+	 * frame0:  quite (very low masking)  
 	 * frame1:  surge  (triggers short blocks)
 	 * frame2:  regular frame.  looks like pre-echo when compared to 
 	 *          frame0, but all pre-echo in that case is in frame1.
 	 */
 	if (gfc->blocktype_old[chn] == SHORT_TYPE )
 	  thr[b] = Min(ecb, rpelev*gfc->nb_1[chn][b]);
+	else
+	  thr[b] = Min(ecb, Min(rpelev*gfc->nb_1[chn][b],rpelev2*gfc->nb_2[chn][b]) );
 
 	gfc->nb_2[chn][b] = gfc->nb_1[chn][b];
 	gfc->nb_1[chn][b] = ecb;
 
-
+	if (thr[b] < eb[b])
+	  {
+	    if (thr[b]<1e-6) thr[b]=1e-6;
+	    gfc->pe[chn] -= gfc->numlines_l[b] * log(thr[b] / eb[b]);
+	  }
       }
 
 
