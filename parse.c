@@ -68,7 +68,7 @@ void lame_short_help(lame_global_flags *gfp,char *name)  /* print syntax & exit 
   PRINTF1("lame -h input.mp3 output.wav\n");
   PRINTF1("\n");
   PRINTF1("OPTIONS :\n");
-  PRINTF1("    -b bitrate      set the bitrate, default 128kbps\n");
+  PRINTF1("    -b bitrate      set the bitrate, default 128 kbps\n");
   PRINTF1("    -f              fast mode (lower quality)\n");
   PRINTF1("    -h              higher quality, but a little slower.  Recommended.\n");
   PRINTF1("    -k              keep ALL frequencies (disables all filters)\n");
@@ -135,7 +135,7 @@ void lame_help(lame_global_flags *gfp,char *name)  /* print syntax & exit */
   PRINTF1("  CBR (constant bitrate, the default) options:\n");
   PRINTF1("    -h              higher quality, but a little slower.  Recommended.\n");
   PRINTF1("    -f              fast mode (lower quality)\n");
-  PRINTF1("    -b <bitrate>    set the bitrate in kbs, default 128kbps\n");
+  PRINTF1("    -b <bitrate>    set the bitrate in kbps, default 128 kbps\n");
   PRINTF1("\n");
   PRINTF1("  ABR options:\n");
   PRINTF1("    --abr <bitrate> specify average bitrate desired (instead of quality)\n");
@@ -146,8 +146,8 @@ void lame_help(lame_global_flags *gfp,char *name)  /* print syntax & exit */
   PRINTF1("    --vbr-new       use new variable bitrate (VBR) routine\n");
   PRINTF1("    -V n            quality setting for VBR.  default n=%i\n",gfp->VBR_q);
   PRINTF1("                    0=high quality,bigger files. 9=smaller files\n");
-  PRINTF1("    -b <bitrate>    specify minimum allowed bitrate, default 32kbs\n");
-  PRINTF1("    -B <bitrate>    specify maximum allowed bitrate, default 320kbs\n");
+  PRINTF1("    -b <bitrate>    specify minimum allowed bitrate, default  32 kbps\n");
+  PRINTF1("    -B <bitrate>    specify maximum allowed bitrate, default 320 kbps\n");
   PRINTF1("    -F              strictly enforce the -b option, for use with players that\n");
   PRINTF1("                    do not support low bitrate mp3 (Apex AD600-A DVD/mp3 player)\n");
   PRINTF1("    -t              disable writing Xing VBR informational tag\n");
@@ -881,7 +881,7 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 
   if (gfp->free_format) {
     if (gfp->brate<8) {
-      ERRORF("For free format, specify a bitrate between 8 and 320kbs\n");
+      ERRORF("For free format, specify a bitrate between 8 and 320 kbps\n");
       LAME_ERROR_EXIT();
     }
   }
