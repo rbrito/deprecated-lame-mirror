@@ -271,11 +271,11 @@ void lame_init_params(void)
 
   info->sampling_frequency = SmpFrqIndex((long)gf.resamplerate, &info->version);
   if( info->sampling_frequency < 0) {
-    display_bitrates(2);
+    display_bitrates(stderr);
     exit(1);
   }
   if( (info->bitrate_index = BitrateIndex(3, gf.brate, info->version,gf.resamplerate)) < 0) {
-    display_bitrates(2);
+    display_bitrates(stderr);
     exit(1);
   }
   
@@ -292,7 +292,7 @@ void lame_init_params(void)
       if (gf.VBR_q >= 8) gf.VBR_max_bitrate=9;    /* low quality, max = 128kbs */
     }else{
       if( (gf.VBR_max_bitrate  = BitrateIndex(3, gf.VBR_max_bitrate_kbps, info->version,gf.resamplerate)) < 0) {
-	display_bitrates(2);
+	display_bitrates(stderr);
 	exit(1);
       }
     }
@@ -300,7 +300,7 @@ void lame_init_params(void)
       gf.VBR_min_bitrate=1;  /* 32 kbps */
     }else{
       if( (gf.VBR_min_bitrate  = BitrateIndex(3, gf.VBR_min_bitrate_kbps, info->version,gf.resamplerate)) < 0) {
-	display_bitrates(2);
+	display_bitrates(stderr);
 	exit(1);
       }
     }

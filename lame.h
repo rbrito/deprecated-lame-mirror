@@ -160,9 +160,14 @@ The LAME API
  */
 lame_global_flags *lame_init(void);
 
-/* OPTIONAL: call this to print a command line interface usage guide and quit 
+/* OPTIONAL: call this to print an error with a brief command line usage guide and quit 
  */
 void lame_usage(char *);
+
+
+/* OPTIONAL: call this to print a command line interface usage guide and quit 
+ */
+void lame_help(char *);
 
 
 /* OPTIONAL: set internal options via command line argument parsing 

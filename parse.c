@@ -24,68 +24,82 @@ void lame_usage(char *name)  /* print syntax & exit */
   fprintf(stderr,"USAGE   :  %s [options] <infile> [outfile]\n",name);
   fprintf(stderr,"\n<infile> and/or <outfile> can be \"-\", which means stdin/stdout.\n");
   fprintf(stderr,"\n");
-  fprintf(stderr,"OPTIONS :\n");
-  fprintf(stderr,"    -m mode         (s)tereo, (j)oint, (f)orce or (m)ono  (default j)\n");
-  fprintf(stderr,"                    force = force ms_stereo on all frames. Faster\n");
-  fprintf(stderr,"    -b bitrate      set the bitrate, default 128kbps\n");
-  fprintf(stderr,"    -s sfreq        sampling frequency of input file(kHz) - default 44.1kHz\n");
-  fprintf(stderr,"  --resample sfreq  sampling frequency of output file(kHz)- default=input sfreq\n");
-  fprintf(stderr,"  --mp3input        input file is a MP3 file\n");
-  fprintf(stderr,"  --voice           experimental voice mode\n");
-  fprintf(stderr,"  --preset type     type must be phone, voice, fm, tape, hifi, cd or studio\n");
-  fprintf(stderr,"\n");
-  fprintf(stderr,"  --lowpass freq         frequency(kHz), lowpass filter cutoff above freq\n");
-  fprintf(stderr,"  --lowpass-width freq   frequency(kHz) - default 15%% of lowpass freq\n");
-  fprintf(stderr,"  --highpass freq        frequency(kHz), highpass filter cutoff below freq\n");
-  fprintf(stderr,"  --highpass-width freq  frequency(kHz) - default 15%% of highpass freq\n");
-  fprintf(stderr,"\n");
-  fprintf(stderr,"    -v              use variable bitrate (VBR)\n");
-  fprintf(stderr,"    -V n            quality setting for VBR.  default n=%i\n",gf.VBR_q);
-  fprintf(stderr,"                    0=high quality,bigger files. 9=smaller files\n");
-  fprintf(stderr,"    -b bitrate      specify minimum allowed bitrate, default 32kbs\n");
-  fprintf(stderr,"    -B bitrate      specify maximum allowed bitrate, default 256kbs\n");
-  fprintf(stderr,"    -t              disable Xing VBR informational tag\n");
-  fprintf(stderr,"    --nohist        disable VBR histogram display\n");
-  fprintf(stderr,"\n");
-  fprintf(stderr,"    -h              higher quality, but a little slower\n");
-  fprintf(stderr,"    -f              fast mode (very low quality)\n");
-  fprintf(stderr,"    -k              keep ALL frequencies (disables all filters)\n");
-  fprintf(stderr,"    -d              allow channels to have different blocktypes\n");
-  fprintf(stderr,"  --athonly         only use the ATH for masking\n");
-  fprintf(stderr,"  --noath           disable the ATH for masking\n");
-  fprintf(stderr,"  --noshort         do not use short blocks\n");
-  fprintf(stderr,"  --nores           disable the bit reservoir\n");
-  fprintf(stderr,"  --cwlimit freq    compute tonality up to freq (in kHz)\n");
-  fprintf(stderr,"\n");
-  fprintf(stderr,"    -r              input is raw pcm\n");
-  fprintf(stderr,"    -x              force byte-swapping of input\n");
-  fprintf(stderr,"    -a              downmix from stereo to mono file for mono encoding\n");
-  fprintf(stderr,"    -e emp          de-emphasis n/5/c  (obsolete)\n");
-  fprintf(stderr,"    -p              error protection.  adds 16bit checksum to every frame\n");
-  fprintf(stderr,"                    (the checksum is computed correctly)\n");
-  fprintf(stderr,"    -c              mark as copyright\n");
-  fprintf(stderr,"    -o              mark as non-original\n");
-  fprintf(stderr,"    -S              don't print progress report, VBR histograms\n");
-  fprintf(stderr,"\n");
-  fprintf(stderr,"  Specifying any of the following options will add an ID3 tag:\n");
-  fprintf(stderr,"     --tt \"title\"     title of song (max 30 chars)\n");
-  fprintf(stderr,"     --ta \"artist\"    artist who did the song (max 30 chars)\n");
-  fprintf(stderr,"     --tl \"album\"     album where it came from (max 30 chars)\n");
-  fprintf(stderr,"     --ty \"year\"      year in which the song/album was made (max 4 chars)\n");
-  fprintf(stderr,"     --tc \"comment\"   additional info (max 30 chars)\n");
-  fprintf(stderr,"     --tg \"genre\"     genre of song (name or number)\n");
-  fprintf(stderr,"\n");
-#ifdef HAVEGTK
-  fprintf(stderr,"    -g              run graphical analysis on <infile>\n");
-#endif
-  display_bitrates(2);
-  if( stderr != stdout )
-  {
-    fprintf(stderr,"\n");
-    fprintf(stderr,"*** USE \"%s --help | more\" TO SCROLL THROUGH THE USAGE PAGE ***\n",name);
-    fprintf(stderr,"\n");
-  }
+  fprintf(stderr,"Try \"%s --help\" for more information\n",name);
   exit(1);
+}
+
+
+
+/************************************************************************
+*
+* usage
+*
+* PURPOSE:  Writes command line syntax to the file specified by #stdout#
+*
+************************************************************************/
+
+void lame_help(char *name)  /* print syntax & exit */
+{
+  fprintf(stdout,"\n");
+  fprintf(stdout,"USAGE   :  %s [options] <infile> [outfile]\n",name);
+  fprintf(stdout,"\n<infile> and/or <outfile> can be \"-\", which means stdin/stdout.\n");
+  fprintf(stdout,"\n");
+  fprintf(stdout,"OPTIONS :\n");
+  fprintf(stdout,"    -m mode         (s)tereo, (j)oint, (f)orce or (m)ono  (default j)\n");
+  fprintf(stdout,"                    force = force ms_stereo on all frames. Faster\n");
+  fprintf(stdout,"    -b bitrate      set the bitrate, default 128kbps\n");
+  fprintf(stdout,"    -s sfreq        sampling frequency of input file(kHz) - default 44.1kHz\n");
+  fprintf(stdout,"  --resample sfreq  sampling frequency of output file(kHz)- default=input sfreq\n");
+  fprintf(stdout,"  --mp3input        input file is a MP3 file\n");
+  fprintf(stdout,"  --voice           experimental voice mode\n");
+  fprintf(stdout,"  --preset type     type must be phone, voice, fm, tape, hifi, cd or studio\n");
+  fprintf(stdout,"\n");
+  fprintf(stdout,"  --lowpass freq         frequency(kHz), lowpass filter cutoff above freq\n");
+  fprintf(stdout,"  --lowpass-width freq   frequency(kHz) - default 15%% of lowpass freq\n");
+  fprintf(stdout,"  --highpass freq        frequency(kHz), highpass filter cutoff below freq\n");
+  fprintf(stdout,"  --highpass-width freq  frequency(kHz) - default 15%% of highpass freq\n");
+  fprintf(stdout,"\n");
+  fprintf(stdout,"    -v              use variable bitrate (VBR)\n");
+  fprintf(stdout,"    -V n            quality setting for VBR.  default n=%i\n",gf.VBR_q);
+  fprintf(stdout,"                    0=high quality,bigger files. 9=smaller files\n");
+  fprintf(stdout,"    -b bitrate      specify minimum allowed bitrate, default 32kbs\n");
+  fprintf(stdout,"    -B bitrate      specify maximum allowed bitrate, default 256kbs\n");
+  fprintf(stdout,"    -t              disable Xing VBR informational tag\n");
+  fprintf(stdout,"    --nohist        disable VBR histogram display\n");
+  fprintf(stdout,"\n");
+  fprintf(stdout,"    -h              higher quality, but a little slower\n");
+  fprintf(stdout,"    -f              fast mode (very low quality)\n");
+  fprintf(stdout,"    -k              keep ALL frequencies (disables all filters)\n");
+  fprintf(stdout,"    -d              allow channels to have different blocktypes\n");
+  fprintf(stdout,"  --athonly         only use the ATH for masking\n");
+  fprintf(stdout,"  --noath           disable the ATH for masking\n");
+  fprintf(stdout,"  --noshort         do not use short blocks\n");
+  fprintf(stdout,"  --nores           disable the bit reservoir\n");
+  fprintf(stdout,"  --cwlimit freq    compute tonality up to freq (in kHz)\n");
+  fprintf(stdout,"\n");
+  fprintf(stdout,"    -r              input is raw pcm\n");
+  fprintf(stdout,"    -x              force byte-swapping of input\n");
+  fprintf(stdout,"    -a              downmix from stereo to mono file for mono encoding\n");
+  fprintf(stdout,"    -e emp          de-emphasis n/5/c  (obsolete)\n");
+  fprintf(stdout,"    -p              error protection.  adds 16bit checksum to every frame\n");
+  fprintf(stdout,"                    (the checksum is computed correctly)\n");
+  fprintf(stdout,"    -c              mark as copyright\n");
+  fprintf(stdout,"    -o              mark as non-original\n");
+  fprintf(stdout,"    -S              don't print progress report, VBR histograms\n");
+  fprintf(stdout,"\n");
+  fprintf(stdout,"  Specifying any of the following options will add an ID3 tag:\n");
+  fprintf(stdout,"     --tt \"title\"     title of song (max 30 chars)\n");
+  fprintf(stdout,"     --ta \"artist\"    artist who did the song (max 30 chars)\n");
+  fprintf(stdout,"     --tl \"album\"     album where it came from (max 30 chars)\n");
+  fprintf(stdout,"     --ty \"year\"      year in which the song/album was made (max 4 chars)\n");
+  fprintf(stdout,"     --tc \"comment\"   additional info (max 30 chars)\n");
+  fprintf(stdout,"     --tg \"genre\"     genre of song (name or number)\n");
+  fprintf(stdout,"\n");
+#ifdef HAVEGTK
+  fprintf(stdout,"    -g              run graphical analysis on <infile>\n");
+#endif
+  display_bitrates(stdout);
+  exit(0);
 }
 
 
@@ -253,9 +267,7 @@ void lame_parse_args(int argc, char **argv)
 	  }
 	}
 	else if (strcmp(token, "help")==0) {
-	  fclose(stderr);
-	  //	  stderr = stdout;          /* let DOS users scroll thru the usage page */
-	  lame_usage(programName);  /* doesn't return */
+	  lame_help(programName);  /* doesn't return */
 	}
 	else if (strcmp(token, "preset")==0) {
 	  argUsed=1;

@@ -74,29 +74,29 @@ void getframebits(layer *info, int *bitsPerFrame, int *mean_bits) {
 
 
 
-void display_bitrates(int layr)
+void display_bitrates(FILE *out_fh)
 {
   int index,version;
 
   version = MPEG_AUDIO_ID;
-  fprintf(stderr,"\n");
-  fprintf(stderr,"MPEG1 samplerates(kHz): 32 44.1 48 \n");
+  fprintf(out_fh,"\n");
+  fprintf(out_fh,"MPEG1 samplerates(kHz): 32 44.1 48 \n");
 
-  fprintf(stderr,"bitrates(kbs): ");
+  fprintf(out_fh,"bitrates(kbs): ");
   for (index=1;index<15;index++) {
-    fprintf(stderr,"%i ",bitrate[version][2][index]);
+    fprintf(out_fh,"%i ",bitrate[version][2][index]);
   }
-  fprintf(stderr,"\n");
+  fprintf(out_fh,"\n");
   
   
   version = MPEG_PHASE2_LSF; 
-  fprintf(stderr,"\n");
-  fprintf(stderr,"MPEG2 samplerates(kHz): 16 22.05 24 \n");
-  fprintf(stderr,"bitrates(kbs): ");
+  fprintf(out_fh,"\n");
+  fprintf(out_fh,"MPEG2 samplerates(kHz): 16 22.05 24 \n");
+  fprintf(out_fh,"bitrates(kbs): ");
   for (index=1;index<15;index++) {
-    fprintf(stderr,"%i ",bitrate[version][2][index]);
+    fprintf(out_fh,"%i ",bitrate[version][2][index]);
   }
-  fprintf(stderr,"\n");
+  fprintf(out_fh,"\n");
 }
 
 

@@ -167,7 +167,7 @@ extern int      bitrate[2][3][15];
 *
 ***********************************************************************/
 
-extern void           display_bitrates(int layr);
+extern void           display_bitrates(FILE *out_fh);
 extern int            BitrateIndex(int, int, int,int);
 extern int            SmpFrqIndex(long, int*);
 extern void           *mem_alloc(unsigned long, char*);
