@@ -37,13 +37,6 @@
 #include "VbrTag.h"
 #include "id3tag.h"
 
-#if defined(__FreeBSD__) && !defined(__alpha__)
-#include <floatingpoint.h>
-#endif
-#ifdef __riscos__
-#include "asmstuff.h"
-#endif
-
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
 #endif

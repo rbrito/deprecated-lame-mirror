@@ -30,7 +30,10 @@
 #include <stdarg.h>
 
 #if defined(__FreeBSD__) && !defined(__alpha__)
-# include <machine/floatingpoint.h>
+#include <floatingpoint.h>
+#endif
+#ifdef __riscos__
+#include "asmstuff.h"
 #endif
 
 #ifdef WITH_DMALLOC
