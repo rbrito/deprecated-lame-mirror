@@ -6,23 +6,7 @@
 #include <gtk/gtk.h>
 #endif
 
-/* dummy file i/o routines if file i/o support is not compiled into lame */
-#if !(defined LIBSNDFILE || defined LAMESNDFILE)
-void lame_init_infile(lame_global_flags *gfp) 
-{
-  fprintf(stderr,"Error: libmp3lame was not compiled with I/O support \n");
-  exit(1);
-}
-void lame_close_infile(lame_global_flags *gfp) {
-  fprintf(stderr,"Error: libmp3lame was not compiled with I/O support \n");
-  exit(1);
-}
-int lame_readframe(lame_global_flags *gfp,short int Buffer[2][1152]) {
-  fprintf(stderr,"Error: libmp3lame was not compiled with I/O support \n");
-  exit(1);
-}
-
-#else
+#if (defined LIBSNDFILE || defined LAMESNDFILE)
 
 static FILE *musicin=NULL;  /* input file pointer */
 static unsigned long num_samples;
@@ -33,17 +17,6 @@ static int count_samples_carefully;
 
 int read_samples_pcm(lame_global_flags *gfp,short sample_buffer[2304],int frame_size, int samples_to_read);
 int read_samples_mp3(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2][1152],int num_chan);
-
-/* read mp3 file until mpglib returns one frame of PCM data */
-#ifdef AMIGA_MPEGA
-int lame_decode_initfile(const char *fullname,int *stereo,int *samp,int *bitrate, unsigned long *nsamp);
-int lame_decode_fromfile(FILE *fd,short int mpg123pcm[2][1152]);
-#endif
-#ifdef HAVEMPGLIB
-int lame_decode_initfile(FILE *fd,int *stereo,int *samp,int *bitrate, unsigned long *nsamp);
-int lame_decode_fromfile(FILE *fd,short int mpg123pcm[2][1152]);
-#endif
-
 
 
 

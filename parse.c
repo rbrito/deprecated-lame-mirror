@@ -1,11 +1,4 @@
-#ifndef LAMEPARSE
-
-void lame_usage(lame_global_flags *gfp,char *name) {return;}
-void lame_help(lame_global_flags *gfp,char *name) {return;}
-void lame_parse_args(lame_global_flags *gfp,int argc, char **argv) {return;}
-
-#else
-
+#ifdef LAMEPARSE
 
 #include "globalflags.h"
 #include "util.h"
