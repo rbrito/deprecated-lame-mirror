@@ -1,10 +1,10 @@
-' lame.vbs WindowsScript wrapper v0.4, 06/2001
+' lame.vbs WindowsScript wrapper v0.5, 06/15/2001
 ' $id$
 '
 ' *Purpose*
 ' Use this WindowsScript to encode WAVs using drag&drop:
-' 0.  make sure you have windows script host v2.0 on your system
-'     (enter 'cscript' in a DOS-Box, you should have version >=5.0)
+' 0.  make sure you have windows script host v5.1 on your system
+'     (enter 'cscript' in a DOS-Box and compare version number)
 ' 1.  adjust the path settings below to fit your needs
 ' 2a. put this file somewhere on the desktop
 ' 3a. drag one or more wav-files on the icon and watch them being lamed.
@@ -21,6 +21,8 @@
 '
 '
 ' *History*
+' V0.5 * lame.vbs will automatically decode if the file has a .mp3 extension
+'      * now explicitly refuses to accept folders
 ' V0.4 * creates single .mp3 extensions, now ID3 options in HTML interface
 ' V0.3 * fixed bug that prevented lame.exe to be located in a path that 
 '        contained a space
@@ -29,16 +31,16 @@
 ' V0.1 initial release
 
 ' *** change path to your needs ***
-    path = "D:\Audio\Lame\"
+    path = "D:\Audio\Lame\Lame386\"   '!!! must end with a backslash !!!
     lame = "lame.exe"
 
 ' *** change default options to your needs ***
-    opts = "--preset cd"
+    opts = "--preset hifi"
 
 ' *** HTML GUI (experimental) ***
     useGUI = False
 ' it set to True, opens file lameGUI.html residing in the same path as lame.exe
-' to choose options. Please look at the HTML-file for further information.
+' to choose options. Please look at the example HTML-file for further information.
 
 ' no changes needed below this line
 ' ##########################################################################
@@ -49,14 +51,15 @@ title="LAME Script"
 Set wsh = WScript.CreateObject("WScript.Shell")
 Set args = WScript.Arguments
 If args.Count = 0 Then
-  MsgBox "Please use drag & drop to specify input files.", vbInformation, title
+  MsgBox "LAME mp3 encoder/decoder frontend script." & vbCR & _ 
+	"Please use drag & drop to specify input files.", vbInformation, title
   WScript.Quit
 End If
 
 ' check path
-Set fs = CreateObject("Scripting.FileSystemObject")
-If Not fs.FileExists(path & lame) Then
-  wsh.Popup "Could not find LAME!" & vbCR & "(looked for '" & lame & "')", ,title, 16
+Set fso = CreateObject("Scripting.FileSystemObject")
+If Not fso.FileExists(path & lame) Then
+  MsgBox "Could not find LAME!" & vbCR & "(looked for '" & path & lame & "')", vbCritical, title
   WScript.Quit
 End If
 
@@ -88,23 +91,34 @@ end if
 For i = 0 To args.Count-1
   infile = args(i)
   ' check input file
-  If Not fs.FileExists(infile) Then
-    wsh.Popup "Error opening input-file" & vbCR & "'" & infile & "'", ,title, 16
+  If fso.FolderExists(infile) Then
+    MsgBox "'" & infile & "' is a folder!" & vbCR & _
+	title & " only handles proper files.", vbInformation, title
   Else
+   If Not fso.FileExists(infile) Then
+      MsgBox "Error opening input-file" & vbCR & "'" & infile & "'", vbCritical , title
+    Else
     ' run lame
-    ret = wsh.Run(CHR(34) & path & lame & CHR(34) & Chr(32) & opts & Chr(32) & _
+    If(LCase(getExtension(infile))="mp3") Then 'decode
+      ret = wsh.Run(Chr(34) & path & lame & CHR(34) & " --decode " & _
+          Chr(34) & infile & Chr(34) & Chr(32) & Chr(34) & _
+          getBasename(infile) & ".wav" & Chr(34), 1, True)
+    Else ' encode
+      ret = wsh.Run(Chr(34) & path & lame & CHR(34) & Chr(32) & opts & Chr(32) & _
           Chr(34) & infile & Chr(34) & Chr(32) & Chr(34) & _
           getBasename(infile) & ".mp3" & Chr(34), 1, True)
-
+    End If
     ' diagnostics
     Select Case ret
+    Case (0) 'okeydokey
     Case (-1)
       MsgBox "LAME aborted by user!", vbExclamation, title
     Case (1)
       MsgBox "Error returned by LAME!" & vbCR & "(Check LAME options and input file formats.)" & vbCR & "Used Options: " & opts, vbCritical, title
     Case Else
-      Rem ignore
+      MsgBox "Received unknown LAME return-code: " & ret, vbCritical, title
     End Select
+   End If
   End If
 Next
 
@@ -118,6 +132,14 @@ Function getBasename(filespec)
   Set f = fso.GetFile(filespec)
   
   getBasename = f.ParentFolder & "\" & fso.GetBaseName(filespec)
+End Function
+
+Function getExtension(filespec)
+  Dim fso
+  Set fso = CreateObject("Scripting.FileSystemObject")
+  Set f = fso.GetFile(filespec)
+  
+  getExtension = fso.GetExtensionName(filespec) 
 End Function
 
 ' *******************************************************************
