@@ -877,6 +877,7 @@ static int outer_loop
             /* compute the distortion in this quantization */
             if (gfc->noise_shaping == 0) {
                 over = 0;
+                notdone = 0;
             } else {
                 /* coefficients and thresholds both l/r (or both mid/side) */
                 over = calc_noise (gfp, xr, l3_enc_w, cod_info, l3_xmin, 
