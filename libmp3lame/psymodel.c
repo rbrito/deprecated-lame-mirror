@@ -1080,9 +1080,10 @@ inline static FLOAT mask_add(FLOAT m1,FLOAT m2,int k,int b, lame_internal_flags 
 
 
   if (m2 > m1) {
-      if (m2 >= (m1*ma_max_i2))
-          return (m1+m2);
-      ratio = m2/m1;
+      if (m2 < (m1*ma_max_i2))
+        ratio = m2/m1;
+      else
+        return (m1+m2);
   } else {
       if (m1 >= (m2*ma_max_i2))
           return (m1+m2);
