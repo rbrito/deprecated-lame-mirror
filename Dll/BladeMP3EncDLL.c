@@ -561,7 +561,7 @@ now --vbr-mtrh is known as --vbr-new
 	{
 		lame_set_VBR_max_bitrate_kbps( gfp, lameConfig.format.LHV1.dwMaxBitrate );
 	}
-
+	// Set bit resovoir option
 	if ( lameConfig.format.LHV1.bNoRes )
 	{
 		lame_set_disable_reservoir( gfp,1 );
@@ -579,6 +579,13 @@ now --vbr-mtrh is known as --vbr-new
 		lame_set_bWriteVbrTag( gfp, 0 );
 	}
 
+	// Override Quality setting, use HIGHBYTE = NOT LOWBYTE to be backwards compatible
+	if (	( lameConfig.format.LHV1.nQuality & 0xFF ) ==
+			~( lameConfig.format.LHV1.nQuality >> 8 ) )
+	{
+		lame_set_quality( gfp, lameConfig.format.LHV1.nQuality & 0xFF );
+	}
+	
 	if ( 0 != ( nInitReturn = lame_init_params( gfp ) ) )
 	{
 		return nInitReturn;

@@ -168,9 +168,12 @@ typedef struct	{
 			VBRMETHOD		nVbrMethod;
 			BOOL			bNoRes;				// Disable Bit resorvoir (TRUE/FALSE)
 
+			// MISC SETTINGS
 			BOOL			bStrictIso;			// Use strict ISO encoding rules (TRUE/FALSE)
-				
-			BYTE			btReserved[255-4*sizeof(DWORD)];	// FUTURE USE, SET TO 0
+			WORD			nQuality;			// Quality Setting, HIGH BYTE should be NOT LOW byte, otherwhise quality=5
+
+			// FUTURE USE, SET TO 0, align strucutre to 331 bytes
+			BYTE			btReserved[255-4*sizeof(DWORD) - sizeof( WORD )];
 
 			} LHV1;					// LAME header version 1
 
