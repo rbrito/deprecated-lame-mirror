@@ -313,7 +313,7 @@ int  lame_encode_mp3_frame (				// Output
 	}
 	/* polyphase filtering / mdct */
 	for ( ch = 0; ch < gfc->channels_out; ch++ ) {
-	    inbuf[ch] = primebuff[ch] - gfp->framesize;
+	    inbuf[ch] = primebuff[ch] - gfp->framesize + 286;
 	    for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
 		gfc->l3_side.tt[gr][ch].block_type = NORM_TYPE;
 	    }
