@@ -34,6 +34,7 @@ typedef struct
     int l[1+SBMAX_l];
     int s[1+SBMAX_s];
     int psfb21[1+PSFB21];
+    int psfb12[1+PSFB12];
 } scalefac_struct;
 
 

@@ -103,6 +103,7 @@
 #define SBMAX_l       22
 #define SBMAX_s       13
 #define PSFB21         6
+#define PSFB12         6
 
 
 

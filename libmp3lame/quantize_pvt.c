@@ -202,6 +202,7 @@ static void compute_ath( lame_global_flags *gfp )
     FLOAT8 *ATH_l = gfp->internal_flags->ATH->l;
     FLOAT8 *ATH_psfb21 = gfp->internal_flags->ATH->psfb21;
     FLOAT8 *ATH_s = gfp->internal_flags->ATH->s;
+    FLOAT8 *ATH_psfb12 = gfp->internal_flags->ATH->psfb12;
     lame_internal_flags *gfc = gfp->internal_flags;
     int sfb, i, start, end;
     FLOAT8 ATH_f;
@@ -216,9 +217,9 @@ static void compute_ath( lame_global_flags *gfp )
             ATH_f = ATHmdct( gfp, freq );  /* freq in kHz */
             ATH_l[sfb] = Min( ATH_l[sfb], ATH_f );
         }
-	if (!gfc->nsPsy.use)
-	    ATH_l[sfb] *=
-		(gfc->scalefac_band.l[sfb+1] - gfc->scalefac_band.l[sfb]);
+	    if (!gfc->nsPsy.use)
+	        ATH_l[sfb] *=
+		        (gfc->scalefac_band.l[sfb+1] - gfc->scalefac_band.l[sfb]);
     }
 
     for (sfb = 0; sfb < PSFB21; sfb++) {
@@ -241,9 +242,24 @@ static void compute_ath( lame_global_flags *gfp )
             ATH_f = ATHmdct( gfp, freq );    /* freq in kHz */
             ATH_s[sfb] = Min( ATH_s[sfb], ATH_f );
         }
-	ATH_s[sfb] *=
-	    (gfc->scalefac_band.s[sfb+1] - gfc->scalefac_band.s[sfb]);
+    	ATH_s[sfb] *=
+	        (gfc->scalefac_band.s[sfb+1] - gfc->scalefac_band.s[sfb]);
     }
+
+    for (sfb = 0; sfb < PSFB12; sfb++) {
+        start = gfc->scalefac_band.psfb12[ sfb ];
+        end = gfc->scalefac_band.psfb12[ sfb+1 ];
+        ATH_psfb12[sfb]=FLOAT8_MAX;
+        for (i = start ; i < end; i++) {
+            FLOAT8 freq = i*samp_freq/(2*192);
+            ATH_f = ATHmdct( gfp, freq );  /* freq in kHz */
+            ATH_psfb12[sfb] = Min( ATH_psfb12[sfb], ATH_f );
+        }
+        /*not sure about the following*/
+        ATH_psfb12[sfb] *=
+	        (gfc->scalefac_band.s[13] - gfc->scalefac_band.s[12]);
+    }
+
 
     /*  no-ATH mode:
      *  reduce ATH to -200 dB
@@ -258,6 +274,9 @@ static void compute_ath( lame_global_flags *gfp )
         }
         for (sfb = 0; sfb < SBMAX_s; sfb++) {
             ATH_s[sfb] = 1E-37;
+        }
+        for (sfb = 0; sfb < PSFB12; sfb++) {
+            ATH_psfb12[sfb] = 1E-37;
         }
     }
     

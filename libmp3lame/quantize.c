@@ -217,16 +217,19 @@ extern FLOAT8 athAdjust( FLOAT8 a, FLOAT8 x, FLOAT8 athFloor );
 
 
 /*
-GB feb 2003
-Analog silence detection in partitionned sfb21.
+Gabriel Bouvigne feb/apr 2003
+Analog silence detection in partitionned sfb21
+or sfb12 for short blocks
 
-From top to bottom of sfb21, changes to 0
+From top to bottom of sfb, changes to 0
 coeffs which are below ath. It stops on the first
 coeff higher than ath.
 
 It should help reducing bitrate,
-but real gain is only about 2kbps at max,
+but real gain is only about 2kbps at max
+for long blocks and 5kbps for short ones
 and sometimes it even increases bitrate.
+(some extreme cases like spahm.wav are 20kbps lower)
 */
 void psfb21_analogsilence(
         lame_global_flags *gfp,
@@ -234,11 +237,11 @@ void psfb21_analogsilence(
 	    gr_info *const cod_info
     )
 {
-    int gsfb, j=0;
     ATH_t * ATH = gfc->ATH;
     FLOAT8 *xr = cod_info->xr;
 
     if (cod_info->block_type == NORM_TYPE) {
+        int gsfb;
         int stop=0;
         for (gsfb = PSFB21-1; gsfb>=0 && !stop; gsfb--) {
             int start = gfc->scalefac_band.psfb21[ gsfb ];
@@ -259,7 +262,38 @@ void psfb21_analogsilence(
                 }
             }
         }
+    } else if (cod_info->block_type == SHORT_TYPE) {
+        /*note: short blocks coeffs are reordered*/
+        int block;
+        int sfb12_size = gfc->scalefac_band.s[13] - gfc->scalefac_band.s[12];
+        int sfb12_start = gfc->scalefac_band.s[12]*3;
+ 
+        for (block = 0; block<3; block++) {
+
+            int gsfb;
+            int stop=0;
+            for (gsfb = PSFB12-1; gsfb>=0 && !stop; gsfb--) {
+                int start = 192*block + gfc->scalefac_band.psfb12[ gsfb ];
+                int end = 192*block + gfc->scalefac_band.psfb12[ gsfb+1 ];
+                int j;
+                FLOAT8 ath12;
+                if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh)
+                    ath12 = athAdjust(ATH->adjust, ATH->psfb12[gsfb], ATH->floor);
+                else
+                    ath12 = ATH->adjust * ATH->psfb12[gsfb];
+
+                for (j = end-1; j>=start; j--) {
+                    if ( fabs(xr[j]) < ath12)
+                        xr[j] = 0;
+                    else {
+                        stop = 1;
+                        break;
+                    }
+                }
+            }
+        }
     }
+
 }
                          
 
