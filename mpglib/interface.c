@@ -11,7 +11,6 @@
 #include "interface.h"
 #include "tabinit.h"
 #include "encoder.h"
-#include "VbrTag.h"
 #include "decode_i386.h"
 
 #ifdef USE_LAYER_1
