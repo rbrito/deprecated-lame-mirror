@@ -39,6 +39,15 @@
 #include <dmalloc.h>
 #endif
 
+extern FLOAT
+calc_sfb_noise_fast_3DN(lame_internal_flags *gfc, int j, int bw, int sf);
+extern FLOAT
+calc_sfb_noise_3DN(lame_internal_flags *gfc, int j, int bw, int sf);
+extern void
+sumofsqr_3DN(const FLOAT *, int, FLOAT *);
+extern void
+calc_noise_sub_3DN(const FLOAT *, const int *, int, int, FLOAT *);
+
 static const int max_range_short[SBMAX_s*3] = {
     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
     7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
@@ -827,10 +836,6 @@ amp_scalefac_bands(
 
 
 
-extern FLOAT
-calc_sfb_noise_fast_3DN(lame_internal_flags *gfc, int j, int bw, int sf);
-extern FLOAT
-calc_sfb_noise_3DN(lame_internal_flags *gfc, int j, int bw, int sf);
 
 inline static FLOAT
 calc_sfb_noise_fast(lame_internal_flags *gfc, int j, int bw, int sf)
