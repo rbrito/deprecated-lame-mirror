@@ -358,59 +358,35 @@ VBR_quantize_granule(lame_global_flags *gfp,
                 III_scalefac_t scalefac[2][2],int gr, int ch)
 {
   lame_internal_flags *gfc=gfp->internal_flags;
-  int i;
+  int status;
   gr_info *cod_info;  
   III_side_info_t * l3_side;
   l3_side = &gfc->l3_side;
   cod_info = &l3_side->gr[gr].ch[ch].tt;
 
-  /*
-  for ( i = 0; i < 4; i++ )
-    cod_info->slen[i] = 0;
-  cod_info->sfb_partition_table = &nr_of_sfb_block[0][0][0];
-  */
-
-  //  cod_info->big_values        = 0;
-  /*
-  cod_info->part2_3_length    = 0;
-  cod_info->count1            = 0;
-  cod_info->scalefac_compress = 0;
-  cod_info->table_select[0]   = 0;
-  cod_info->table_select[1]   = 0;
-  cod_info->table_select[2]   = 0;
-  cod_info->region0_count     = 0;
-  cod_info->region1_count     = 0;
-  cod_info->part2_length      = 0;
-  cod_info->count1table_select= 0;
-  cod_info->count1bits        = 0;
-  */
-
 
   /* encode scalefacs */
   if ( gfp->version == 1 ) 
-    scale_bitcount(&scalefac[gr][ch], cod_info);
+    status=scale_bitcount(&scalefac[gr][ch], cod_info);
   else
-    scale_bitcount_lsf(&scalefac[gr][ch], cod_info);
+    status=scale_bitcount_lsf(&scalefac[gr][ch], cod_info);
 
-    if (gfp->frameNum==29 && ch==0 && gr==0) {
-      printf(" initial bigv = %i \n",cod_info->big_values);
-    }
-
+  if (status!=0) {
+    cod_info->part2_3_length = LARGE_BITS;
+    return;
+  }
+  
   /* quantize xr34 */
   cod_info->part2_3_length = count_bits(gfp,l3_enc[gr][ch],xr34,cod_info);
+  if (cod_info->part2_3_length >= LARGE_BITS) return;
+
   cod_info->part2_3_length += cod_info->part2_length;
 
-    if (gfp->frameNum==29 && ch==0 && gr==0) {
-      printf(" before bigv = %i \n",cod_info->big_values);
-    }
   
   if (gfc->use_best_huffman==1 && cod_info->block_type != SHORT_TYPE) {
-    //    best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
+    best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
   }
-    if (gfp->frameNum==29 && ch==0 && gr==0) {
-      printf(" after bigv = %i \n",cod_info->big_values);
-    }
-
+  
 
   return;
 }
@@ -512,6 +488,7 @@ VBR_noise_shaping
 
   /* save a copy of vbrsf, incase we have to recomptue scalefacs */
   memcpy(&save_sf,&vbrsf,sizeof(III_scalefac_t));
+
 
 #undef SCALEFAC_SCALE
 
@@ -685,22 +662,24 @@ VBR_noise_shaping
 
 
 
-
   if (cod_info->part2_3_length < minbits) {
     /* decrease global gain, recompute scale factors */
     if (*ath_over==0) break;  
     if (cod_info->part2_3_length-cod_info->part2_length== 0) break;
     if (vbrmax+210 ==0 ) break;
     
+
+
+#if 0
     if (gfp->frameNum==29 && ch==0 && gr==0) {
             printf("not enough bits, decreasing vbrmax. g_gainv=%i\n",cod_info->global_gain);
             printf("%i %i %i  minbits=%i   part2_3_length=%i  part2=%i\n",
         	   gfp->frameNum,gr,ch,minbits,cod_info->part2_3_length,cod_info->part2_length);
 
 	    printf("xr[1] = %e  %e  \n",xr34[1],xr[1]);
+	    if (cod_info->global_gain < 130) exit(-1);
     }
-
-
+#endif
 
     --vbrmax;
     --global_gain_adjust;
@@ -777,7 +756,7 @@ VBR_quantize(lame_global_flags *gfp,
   mean_bits = (bitsPerFrame - 8*gfc->sideinfo_len) / gfc->mode_gr;
   }
 
-  minbits=Max(minbits,.66*(mean_bits/gfc->stereo));
+  //  minbits=Max(minbits,.66*(mean_bits/gfc->stereo));
   maxbits=Min(maxbits,2.5*(mean_bits/gfc->stereo));
 
 
