@@ -690,14 +690,12 @@ VBR_quantize_granule(lame_internal_flags * gfc, gr_info * cod_info, FLOAT8 * xr3
  ***********************************************************************/
 static const int MAX_SF_DELTA = 4;
 
+/* a variation for vbr-mtrh */
 static void
-short_block_sf(const lame_internal_flags * gfc, const FLOAT8 * l3_xmin,
-               const FLOAT8 * xr34_orig, const FLOAT8 * xr34, int * vbrsf,
-	       int *vbrmin, int *vbrmax)
+block_sf(const lame_internal_flags * gfc, const FLOAT8 * l3_xmin,
+	 const FLOAT8 * xr34_orig, int * vbrsf, gr_info *gi)
 {
-    int     j, sfb, b;
-    int     vbrmean, vbrmn;
-    int     sf_cache[SBMAX_s];
+    int     sfb, j;
     int     scalefac_criteria;
 
     if (gfc->presetTune.use) {
@@ -709,57 +707,61 @@ short_block_sf(const lame_internal_flags * gfc, const FLOAT8 * l3_xmin,
         scalefac_criteria = gfc->VBR->quality;
     }
 
-    for (j = 0, sfb = 0; sfb < SBMAX_s; ++sfb) {
-        for (b = 0; b < 3; ++b) {
-            const int start = gfc->scalefac_band.s[sfb];
-            const int end = gfc->scalefac_band.s[sfb + 1];
-            const int width = end - start;
-
-            switch (scalefac_criteria) {
-            default:
-                /*  the fastest
-                 */
-                vbrsf[sfb*3+b] =
-                    calc_scalefac(l3_xmin[sfb*3+b], width, gfc->presetTune.quantcomp_adjust_mtrh);
-                break;
-            case 5:
-            case 4:
-            case 3:
-                /*  the faster and sloppier mode to use at lower quality
-                 */
-                vbrsf[sfb*3+b] =
-                    find_scalefac(&xr34[j], &xr34_orig[j], l3_xmin[sfb*3+b], width);
-                break;
-            case 2:
-                /*  the slower and better mode to use at higher quality
-                 */
-                vbrsf[sfb*3+b] =
-                    find_scalefac_ave(&xr34[j], &xr34_orig[j], l3_xmin[sfb*3+b], width);
-                break;
-            case 1:
-                /*  maxnoise mode to use at higher quality
-                 */
-                vbrsf[sfb*3+b] =
-                    find_scalefac_mq(&xr34[j], &xr34_orig[j], l3_xmin[sfb*3+b], width, 1,
-                                     gfc->VBR->scratch);
-                break;
-            case 0:
-                /*  maxnoise mode to use at higher quality
-                 */
-                vbrsf[sfb*3+b] =
-                    find_scalefac_mq(&xr34[j], &xr34_orig[j], l3_xmin[sfb*3+b], width, 0,
-                                     gfc->VBR->scratch);
-                break;
-            }
-            j += width;
+    j = 0;
+    for (sfb = 0; sfb < gi->psymax; sfb++) {
+        const int width = gi->width[sfb];
+        switch (scalefac_criteria) {
+        default:
+            /*  the fastest
+             */
+            vbrsf[sfb] =
+                calc_scalefac(l3_xmin[sfb], width, gfc->presetTune.quantcomp_adjust_mtrh);
+            break;
+        case 5:
+        case 4:
+        case 3:
+            /*  the faster and sloppier mode to use at lower quality
+             */
+            vbrsf[sfb] = find_scalefac(&gi->xr[j], &xr34_orig[j], l3_xmin[sfb], width);
+            break;
+        case 2:
+            /*  the slower and better mode to use at higher quality
+             */
+            vbrsf[sfb] =
+                find_scalefac_ave(&gi->xr[j], &xr34_orig[j], l3_xmin[sfb], width);
+            break;
+        case 1:
+            /*  maxnoise mode to use at higher quality
+             */
+            vbrsf[sfb] =
+                find_scalefac_mq(&gi->xr[j], &xr34_orig[j], l3_xmin[sfb], width, 1,
+                                 gfc->VBR->scratch);
+            break;
+        case 0:
+            /*  maxnoise mode to use at higher quality
+             */
+            vbrsf[sfb] =
+                find_scalefac_mq(&gi->xr[j], &xr34_orig[j], l3_xmin[sfb], width, 0,
+                                 gfc->VBR->scratch);
+            break;
         }
+	j += width;
     }
+}
+
+
+static void
+short_block_sf(const lame_internal_flags * gfc, const FLOAT8 * l3_xmin,
+               int * vbrsf, int *vbrmin, int *vbrmax, gr_info *gi)
+{
+    int     sfb, b;
+    int     vbrmean, vbrmn;
+    int     sf_cache[SBMAX_s];
 
     *vbrmax = -10000;
     *vbrmin = +10000;
 
     for (b = 0; b < 3; ++b) {
-
         /*  smoothing
          */
         switch (gfc->VBR->smooth) {
@@ -812,67 +814,13 @@ short_block_sf(const lame_internal_flags * gfc, const FLOAT8 * l3_xmin,
 }
 
 
-    /* a variation for vbr-mtrh */
 static void
 long_block_sf(const lame_internal_flags * gfc, const FLOAT8 * l3_xmin,
-              const FLOAT8 * xr34_orig, const FLOAT8 * xr34, int * vbrsf,
-	      int *vbrmin, int *vbrmax)
+              int * vbrsf, int *vbrmin, int *vbrmax, gr_info *gi)
 {
     int     sfb;
     int     vbrmean, vbrmn;
     int     sf_cache[SBMAX_l];
-    int     scalefac_criteria;
-
-    if (gfc->presetTune.use) {
-        /* map experimentalX settings to internal selections */
-        static char const map[] = { 2, 1, 0, 3, 6 };
-        scalefac_criteria = map[gfc->presetTune.quantcomp_current];
-    }
-    else {
-        scalefac_criteria = gfc->VBR->quality;
-    }
-
-    for (sfb = 0; sfb < SBMAX_l; ++sfb) {
-        const int start = gfc->scalefac_band.l[sfb];
-        const int end = gfc->scalefac_band.l[sfb + 1];
-        const int width = end - start;
-
-        switch (scalefac_criteria) {
-        default:
-            /*  the fastest
-             */
-            vbrsf[sfb] =
-                calc_scalefac(l3_xmin[sfb], width, gfc->presetTune.quantcomp_adjust_mtrh);
-            break;
-        case 5:
-        case 4:
-        case 3:
-            /*  the faster and sloppier mode to use at lower quality
-             */
-            vbrsf[sfb] = find_scalefac(&xr34[start], &xr34_orig[start], l3_xmin[sfb], width);
-            break;
-        case 2:
-            /*  the slower and better mode to use at higher quality
-             */
-            vbrsf[sfb] =
-                find_scalefac_ave(&xr34[start], &xr34_orig[start], l3_xmin[sfb], width);
-            break;
-        case 1:
-            /*  maxnoise mode to use at higher quality
-             */
-            vbrsf[sfb] =
-                find_scalefac_mq(&xr34[start], &xr34_orig[start], l3_xmin[sfb], width, 1,
-                                 gfc->VBR->scratch);
-            break;
-        case 0:
-            /*  maxnoise mode to use at higher quality
-             */
-            vbrsf[sfb] =
-                find_scalefac_mq(&xr34[start], &xr34_orig[start], l3_xmin[sfb], width, 0,
-                                 gfc->VBR->scratch);
-            break;
-        }
-    }
 
     switch (gfc->VBR->smooth) {
     default:
@@ -1179,14 +1127,19 @@ VBR_noise_shaping(lame_internal_flags * gfc, FLOAT8 * xr34orig, int minbits, int
     int     M = 6;
     int     count = M;
 
+    if (gfc->substep_shaping)
+	gfc->substep_shaping = 1;
+
     cod_info = &gfc->l3_side.tt[gr][ch];
     shortblock = (cod_info->block_type == SHORT_TYPE);
 
+    block_sf(gfc, l3_xmin, xr34orig, vbrsf2, cod_info);
+
     if (shortblock) {
-        short_block_sf(gfc, l3_xmin, xr34orig, cod_info->xr, vbrsf2, &vbrmin2, &vbrmax2);
+        short_block_sf(gfc, l3_xmin, vbrsf2, &vbrmin2, &vbrmax2, cod_info);
     }
     else {
-        long_block_sf(gfc, l3_xmin, xr34orig, cod_info->xr, vbrsf2, &vbrmin2, &vbrmax2);
+        long_block_sf(gfc, l3_xmin, vbrsf2, &vbrmin2, &vbrmax2, cod_info);
     }
     memcpy(vbrsf, vbrsf2, sizeof(vbrsf));
     vbrmin = vbrmin2;
@@ -1266,7 +1219,7 @@ VBR_noise_shaping(lame_internal_flags * gfc, FLOAT8 * xr34orig, int minbits, int
         }
         else
             break;
-    } while (1 && ret != -1);
+    } while (ret != -1);
 
     if (ret == -1)      /* Houston, we have a problem */
         return -1;
