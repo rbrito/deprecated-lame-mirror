@@ -658,7 +658,7 @@ void lame_print_config(lame_global_flags *gfp)
     fprintf(stderr,"Resampling:  input=%.1fkHz  output=%.1fkHz\n",
 	    in_samplerate,out_samplerate);
   }
-  if (gfc->filter_type=0) {
+  if (gfc->filter_type==0) {
   if (gfc->highpass2>0.0)
     fprintf(stderr, "Using polyphase highpass filter, transition band: %.0f Hz -  %.0f Hz\n",
 	    gfc->highpass1*out_samplerate*500,
