@@ -53,12 +53,12 @@ for years since there are very few intensity stereo mp3's out there.
 
 
 9.
-We should rewrite all the documentation, such as PRESET, INSTALL, README*,...
+We should rewrite all the documentation, such as INSTALL, README*,...
 
 
 11.
-Tuning reservoir handling (especially for low bitrates); CBR/ABR arround
-90kbps (-b 90) is worse than VBR quality 9 (-V 9). This is probabry
+Tuning reservoir handling (especially for low bitrates); CBR arround
+90kbps (-b 90) is worse than VBR quality 7 (-V 7). This is probabry
 because of poor resorvoir handling.
 
 Right now the code is tuned with the LAME3's pe calculation and
@@ -70,6 +70,10 @@ we should improve the 1-pass encoding.
 And about ABR, it should be removed and new "VBR but some constant bitrate"
 algorithm, IMHO.
 
+
+
+10.
+over 2^31 byte cleaness (especially header handling).
 
 
 15. 
@@ -99,7 +103,7 @@ So we should use both of ssrc/old resample code...
 
 
 25.
-mp3x does not work at all when the input is .wav file.
+mp3x does not work at all when the input is too short.
 
 
 
@@ -123,12 +127,6 @@ Use mixed blocks.
 
 998.
 Merge GOGO's fast assembler routines.
-
-
-
-
-1500.
-Integrate plusV extensions
 
 
 
