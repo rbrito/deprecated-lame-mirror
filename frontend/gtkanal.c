@@ -331,7 +331,7 @@ void plot_frame(void)
     sprintf(title2," mdb=%i %i/NA",pplot1->maindata,pplot1->totbits);
   else
     sprintf(title2," mdb=%i   %i/%i",
-	  pplot1->maindata,pplot1->totbits,pplot->resvsize);
+	  pplot1->maindata,pplot1->totbits,pplot1->totbits+pplot->resvsize);
   gtk_text_insert (GTK_TEXT(headerbox), NULL, &oncolor, NULL,title2, -1);
   gtk_text_thaw (GTK_TEXT(headerbox));
 
