@@ -1142,17 +1142,13 @@ static void
 L3psycho_anal_ns(
     lame_internal_flags *gfc,
     const sample_t *buffer[2],
+    FLOAT adjATH[],
     int gr,
     int numchn
     )
 {
     FLOAT wsamp_L[2][BLKSIZE];    /* fft and energy calculation   */
     int ch;
-    FLOAT adjATH[CBANDS];
-    {int i;
-    for (i = 0; i < gfc->npart_l; i++)
-	adjATH[i] = gfc->ATH.cb[i] * gfc->ATH.adjust;
-    }
 
     /*********************************************************************
      * compute the long block masking ratio
@@ -1481,28 +1477,32 @@ psycho_analysis(
     lame_internal_flags *gfc=gfp->internal_flags;
     int gr, ch, blocktype_old[MAX_CHANNELS];
     const sample_t *bufp[MAX_CHANNELS];
+    FLOAT adjATH[CBANDS];
+    int numchn;
 
     /* next frame data -> current frame data (aging) */
     gfc->mode_ext = gfc->mode_ext_next;
-    for (ch = 0; ch < 2; ch++)
-	blocktype_old[ch] = gfc->l3_side.tt[gfc->mode_gr-1][ch].block_type;
+    blocktype_old[0] = gfc->l3_side.tt[gfc->mode_gr-1][0].block_type;
+    blocktype_old[1] = gfc->l3_side.tt[gfc->mode_gr-1][1].block_type;
 
     /* calculate next frame data */
     adjust_ATH(gfc);
+    {int i;
+    for (i = 0; i < gfc->npart_l; i++)
+	adjATH[i] = gfc->ATH.cb[i] * gfc->ATH.adjust;
+    }
+    numchn = gfc->channels_out;
+    if (gfp->mode == JOINT_STEREO)
+	numchn = 4;
     for (gr=0; gr < gfc->mode_gr ; gr++) {
-	int numchn;
 	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    masking_d[gr][ch] = gfc->masking_next[gr][ch + gfc->mode_ext];
 	    gfc->l3_side.tt[gr][ch].block_type = gfc->blocktype_next[gr][ch];
 	    bufp[ch] = buffer[ch] + 576*(gr + gfc->mode_gr) - FFTOFFSET;
 	}
 
-	numchn = gfc->channels_out;
-	if (gfp->mode == JOINT_STEREO)
-	    numchn = 4;
-
 	psycho_analysis_short(gfc, bufp, sbsmpl, gr, numchn);
-	L3psycho_anal_ns(gfc, bufp, gr, numchn);
+	L3psycho_anal_ns(gfc, bufp, adjATH, gr, numchn);
 
 	/*********************************************************************
 	 * other masking effect
@@ -1545,7 +1545,7 @@ psycho_analysis(
 	    mr->pe = pe;
 	}
 	gfc->masking_next[gr][3].pe *= gfc->reduce_side;
-	gfc->blocktype_next[gr][2] = gfc->blocktype_next[gr][3]
+	gfc->blocktype_next[gr][2]
 	    = gfc->blocktype_next[gr][2] | gfc->blocktype_next[gr][3];
     }
 
@@ -1566,7 +1566,6 @@ psycho_analysis(
 	if (diff_pe <= 0.0 || gfp->force_ms) {
 	    gfc->mode_ext_next = MPG_MD_MS_LR;
 	    for (gr = 0; gr < gfc->mode_gr; gr++) {
-		assert(gfc->blocktype_next[gr][2] == gfc->blocktype_next[gr][3]);
 		gfc->blocktype_next[gr][0] = gfc->blocktype_next[gr][1]
 		    = gfc->blocktype_next[gr][2];
 	    }
