@@ -39,8 +39,9 @@
 
 #define _RELEASEDEBUG 0
 
-const int MAJORVERSION=1;
-const int MINORVERSION=22;
+// DLL version numbering
+const int MAJORVERSION = 1;
+const int MINORVERSION = 25;
 
 
 // Local variables
@@ -62,7 +63,7 @@ static void DebugPrintf(const char* pzFormat, ...)
 	char	szFileName[MAX_PATH+1]={'\0',};
     va_list ap;
 
-	// Get the full module file name
+	// Get the full module (DLL) file name
 	GetModuleFileName(gs_hModule,szFileName,sizeof(szFileName));
 
 	// change file name extention
@@ -77,12 +78,12 @@ static void DebugPrintf(const char* pzFormat, ...)
 	_vsnprintf(szBuffer, sizeof(szBuffer), pzFormat, ap);
 
 	// log it to the file?
-	if (gs_bLogFile) 
+	if ( gs_bLogFile ) 
 	{	
         FILE* fp = NULL;
 		
 		// try to open the log file
-		fp=fopen(szFileName, "a+");
+		fp=fopen( szFileName, "a+" );
 
 		// check file open result
         if (fp)
@@ -112,24 +113,27 @@ static void PresetOptions( lame_global_flags *gfp, LONG myPreset )
 			break;
 		break;
 		case LQP_LOW_QUALITY:
-			gf.quality=9;
+			gfp->quality=9;
 			break;
 		case LQP_HIGH_QUALITY:
-			gf.quality=2;
+			gfp->quality=2;
+			break;
+		case LQP_VERYHIGH_QUALITY:
+			gfp->quality=0;
 			break;
 		case LQP_VOICE_QUALITY:		// --voice flag for experimental voice mode
-			gf.lowpassfreq=12000;
-			gf.VBR_max_bitrate_kbps=160;
-			gf.short_blocks=short_block_dispensed;
+			gfp->lowpassfreq = 12000;
+			gfp->VBR_max_bitrate_kbps = 160;
+			gfp->short_blocks = short_block_dispensed;
 		break;
 		case LQP_R3MIX_QUALITY:
-			gf.VBR = vbr_rh; 
-			gf.VBR_q = 1;
-			gf.quality = 2;
-			gf.lowpassfreq = 19500;
-			gf.mode = JOINT_STEREO;
-			gf.ATHtype = 3 ;
-			gf.VBR_min_bitrate_kbps=112;
+			gfp->VBR = vbr_rh; 
+			gfp->VBR_q = 1;
+			gfp->quality = 2;
+			gfp->lowpassfreq = 19500;
+			gfp->mode = JOINT_STEREO;
+			gfp->ATHtype = 3 ;
+			gfp->VBR_min_bitrate_kbps=112;
 		break;
 
 
@@ -280,7 +284,7 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 		lameConfig.format.LHV1.dwStructVersion=CURRENT_STRUCT_VERSION;
 
 		// Get VBR setting from fourth nibble
-		if (nVBR>0)
+		if ( nVBR>0 )
 		{
 			lameConfig.format.LHV1.bWriteVBRHeader = TRUE;
 			lameConfig.format.LHV1.bEnableVBR = TRUE;
@@ -357,18 +361,14 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 		}
 
 		// Set frequency resampling rate, if specified
-		if (lameConfig.format.LHV1.dwReSampleRate>0)
+		if ( lameConfig.format.LHV1.dwReSampleRate > 0 )
+		{
 			gf.out_samplerate=lameConfig.format.LHV1.dwReSampleRate;
+		}
 		
-	
 		// Set bitrate.  (CDex users always specify bitrate=Min bitrate when using VBR)
 		gf.brate=lameConfig.format.LHV1.dwBitrate;
-		gf.VBR_min_bitrate_kbps=gf.brate;
 			
-		// Set Maxbitrate, if specified
-		if (lameConfig.format.LHV1.dwMaxBitrate>0)
-			gf.VBR_max_bitrate_kbps=lameConfig.format.LHV1.dwMaxBitrate;
-
 		// Use ABR?
 		if (lameConfig.format.LHV1.dwVbrAbr_bps>0)
 		{
@@ -420,11 +420,13 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 	}
 	
 	// Set copyright flag?
-	if (lameConfig.format.LHV1.bCopyright)
+	if ( lameConfig.format.LHV1.bCopyright )
+	{
 		gf.copyright=1;
+	}
 
 	// Do we have to tag  it as non original 
-	if (!lameConfig.format.LHV1.bOriginal)
+	if ( !lameConfig.format.LHV1.bOriginal )
 	{
 		gf.original=0;
 	}
@@ -434,19 +436,19 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 	}
 
 	// Add CRC?
-	if (lameConfig.format.LHV1.bCRC)
+	if ( lameConfig.format.LHV1.bCRC )
 	{
-		gf.error_protection=1;
+		gf.error_protection = 1;
 	}
 	else
 	{
-		gf.error_protection=0;
+		gf.error_protection = 0;
 	}
 
 //	gf.silent=1;  /* disable status ouput */
 
 	// Set private bit?
-	if (lameConfig.format.LHV1.bPrivate)
+	if ( lameConfig.format.LHV1.bPrivate )
 	{
 		gf.extension = 1;
 	}
@@ -457,8 +459,20 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 	
 
 	// First set all the preset options
-	if ((int)lameConfig.format.LHV1.nPreset)
+	if ( LQP_NOPRESET !=  lameConfig.format.LHV1.nPreset )
 		PresetOptions( &gf, lameConfig.format.LHV1.nPreset );
+
+	// Set VBR min bitrate, if specified
+	if ( lameConfig.format.LHV1.dwBitrate > 0 )
+	{
+		gf.VBR_min_bitrate_kbps = lameConfig.format.LHV1.dwBitrate;
+	}
+
+	// Set Maxbitrate, if specified
+	if ( lameConfig.format.LHV1.dwMaxBitrate > 0 )
+	{
+		gf.VBR_max_bitrate_kbps=lameConfig.format.LHV1.dwMaxBitrate;
+	}
 
 	if (lameConfig.format.LHV1.bNoRes)
 	{
@@ -698,23 +712,23 @@ static void dump_config( )
 		default:DebugPrintf("Error (unknown)\n");break;
 	}
 
-	DebugPrintf("sampling frequency     =%.1f kHz\n",gf.in_samplerate/1000.0);
-	DebugPrintf("bitrate                =%d kbps\n",gf.brate);
-	DebugPrintf("Vbr Min bitrate        =%d kbps\n",gf.VBR_min_bitrate_kbps);
-	DebugPrintf("Vbr Max bitrate        =%d kbps\n",gf.VBR_max_bitrate_kbps);
-	DebugPrintf("Quality Setting        =%d\n",gf.quality);
-	DebugPrintf("Low pass frequency     =%d\n",gf.lowpassfreq);
-	DebugPrintf("High pass frequency    =%d\n",gf.highpassfreq);
-	DebugPrintf("No Short Blocks        =%d\n",gf.short_blocks);
-	DebugPrintf("de-emphasis            =%d\n",gf.emphasis);
-	DebugPrintf("private flag           =%d\n",gf.extension);
-	DebugPrintf("copyright flag         =%d\n",gf.copyright);
-	DebugPrintf("original flag          =%d\n",gf.original);
-	DebugPrintf("CRC                    =%s\n",(gf.error_protection) ? "on" : "off");
-	DebugPrintf("Fast mode              =%s\n",(gf.quality==9)?"enabled":"disabled");
-	DebugPrintf("Force mid/side stereo  =%s\n",(gf.force_ms)?"enabled":"disabled");
-	DebugPrintf("Padding Type           =%d\n",gf.padding_type);
-	DebugPrintf("Disable Resorvoir      =%d\n",gf.disable_reservoir);
+	DebugPrintf("sampling frequency     =%.1f kHz\n", gf.in_samplerate/1000.0);
+	DebugPrintf("bitrate                =%d kbps\n", gf.brate);
+	DebugPrintf("Vbr Min bitrate        =%d kbps\n", gf.VBR_min_bitrate_kbps);
+	DebugPrintf("Vbr Max bitrate        =%d kbps\n", gf.VBR_max_bitrate_kbps);
+	DebugPrintf("Quality Setting        =%d\n", gf.quality);
+	DebugPrintf("Low pass frequency     =%d\n", gf.lowpassfreq);
+	DebugPrintf("High pass frequency    =%d\n", gf.highpassfreq);
+	DebugPrintf("No Short Blocks        =%d\n", gf.short_blocks );
+	DebugPrintf("de-emphasis            =%d\n", gf.emphasis);
+	DebugPrintf("private flag           =%d\n", gf.extension);
+	DebugPrintf("copyright flag         =%d\n", gf.copyright);
+	DebugPrintf("original flag          =%d\n", gf.original);
+	DebugPrintf("CRC                    =%s\n", (gf.error_protection) ? "on" : "off");
+	DebugPrintf("Fast mode              =%s\n", (gf.quality==9)?"enabled":"disabled");
+	DebugPrintf("Force mid/side stereo  =%s\n", (gf.force_ms)?"enabled":"disabled");
+	DebugPrintf("Padding Type           =%d\n", gf.padding_type);
+	DebugPrintf("Disable Resorvoir      =%d\n", gf.disable_reservoir);
 	DebugPrintf("VBR                    =%s, VBR_q =%d, VBR method =",(gf.VBR!=vbr_off)?"enabled":"disabled",gf.VBR_q);
 
 	switch (gf.VBR)

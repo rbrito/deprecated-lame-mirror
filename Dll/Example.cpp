@@ -75,21 +75,26 @@ int main(int argc, char *argv[])
 	// Load lame_enc.dll library (Make sure though that you set the 
 	// project/settings/debug Working Directory correctly, otherwhise the DLL can't be loaded
 
-	hDLL=LoadLibrary(".\\Debug\\lame_enc.dll");
+	hDLL = LoadLibrary(".\\Debug\\lame_enc.dll");
 
 #ifdef _DEBUG
-	hDLL=LoadLibrary(".\\Debug\\lame_enc.dll");
+	hDLL = LoadLibrary(".\\Debug\\lame_enc.dll");
 #else
-	hDLL=LoadLibrary(".\\Release\\lame_enc.dll");
+	hDLL = LoadLibrary(".\\Release\\lame_enc.dll");
+
+	if ( NULL == hDLL )
+	{
+		hDLL = LoadLibrary(".\\Release_NASM\\lame_enc.dll");
+	}
 #endif
 
-	if(hDLL==NULL)
+	if( NULL == hDLL )
 	{
 		fprintf(stderr,"Error loading lame_enc.DLL");
 		return -1;
 	}
 
-	// Get Interface functions
+	// Get Interface functions from the DLL
 	beInitStream	= (BEINITSTREAM) GetProcAddress(hDLL, TEXT_BEINITSTREAM);
 	beEncodeChunk	= (BEENCODECHUNK) GetProcAddress(hDLL, TEXT_BEENCODECHUNK);
 	beDeinitStream	= (BEDEINITSTREAM) GetProcAddress(hDLL, TEXT_BEDEINITSTREAM);
@@ -100,13 +105,12 @@ int main(int argc, char *argv[])
 	// Check if all interfaces are present
 	if(!beInitStream || !beEncodeChunk || !beDeinitStream || !beCloseStream || !beVersion || !beWriteVBRHeader)
 	{
-
 		printf("Unable to get LAME interfaces");
 		return -1;
 	}
 
 	// Get the version number
-	beVersion(&Version);
+	beVersion( &Version );
 
 	printf(
 			"lame_enc.dll version %u.%02u (%u/%u/%u)\n"
@@ -118,7 +122,7 @@ int main(int argc, char *argv[])
 			Version.zHomepage);
 
 	// Try to open the WAV file, be sure to open it as a binary file!	
-	pFileIn = fopen(strFileIn,"rb");
+	pFileIn = fopen( strFileIn, "rb" );
 
 	// Check file open result
 	if(pFileIn == NULL)
@@ -249,7 +253,7 @@ int main(int argc, char *argv[])
 	// If so, write them to disk
 	if(dwWrite)
 	{
-		if(fwrite(pMP3Buffer,1,dwWrite,pFileOut) != dwWrite)
+		if( fwrite( pMP3Buffer, 1, dwWrite, pFileOut ) != dwWrite )
 		{
 			fprintf(stderr,"Output file write error");
 			return -1;
@@ -257,7 +261,7 @@ int main(int argc, char *argv[])
 	}
 
 	// close the MP3 Stream
-	beCloseStream(hbeStream);
+	beCloseStream( hbeStream );
 
 	// Delete WAV buffer
 	delete [] pWAVBuffer;
@@ -266,13 +270,13 @@ int main(int argc, char *argv[])
 	delete [] pMP3Buffer;
 
 	// Close input file
-	fclose(pFileIn);
+	fclose( pFileIn );
 
 	// Close output file
-	fclose(pFileOut);
+	fclose( pFileOut );
 
 	// Write the VBR Tag
-	beWriteVBRHeader(strFileOut);
+	beWriteVBRHeader( strFileOut );
 
 	// Were done, return OK result
 	return 0;
