@@ -38,11 +38,6 @@
 # include <stdlib.h>
 # include <string.h>
 #else
-# ifndef HAVE_STRCHR
-#  define strchr index
-#  define strrchr rindex
-# endif
-char   *strchr(), *strrchr();
 # ifndef HAVE_MEMCPY
 #  define memcpy(d, s, n) bcopy ((s), (d), (n))
 #  define memmove(d, s, n) bcopy ((s), (d), (n))
@@ -362,7 +357,7 @@ read_samples_mp3(const lame_t gfc,
         return 0;
     }
 
-    if ( lame_get_num_channels( gfc ) != mp3input_data.stereo )
+    if ( lame_get_num_channels( gfc ) != mp3input_data.channels)
         fprintf(stderr,
                 "Error: number of channels has changed in %s - not supported\n",
                 type_name);
@@ -496,10 +491,10 @@ OpenSndFile(lame_t  gfc, char *inPath)
         }
 #endif
 
-        if( -1 == lame_set_num_channels( gfc, mp3input_data.stereo ) ) {
+        if( -1 == lame_set_num_channels( gfc, mp3input_data.channels) ) {
             fprintf( stderr,
                      "Unsupported number of channels: %ud\n",
-                     mp3input_data.stereo );
+                     mp3input_data.channels);
             exit( 1 );
         }
         (void) lame_set_in_samplerate( gfc, mp3input_data.samplerate );
@@ -1298,10 +1293,10 @@ OpenSndFile(lame_t gfc, char *inPath)
             exit(1);
         }
 #endif
-        if( -1 == lame_set_num_channels( gfc, mp3input_data.stereo ) ) {
+        if( -1 == lame_set_num_channels( gfc, mp3input_data.channels) ) {
             fprintf( stderr,
                      "Unsupported number of channels: %ud\n",
-                     mp3input_data.stereo );
+                     mp3input_data.channels);
             exit( 1 );
         }
         (void) lame_set_in_samplerate( gfc, mp3input_data.samplerate );
@@ -1495,7 +1490,7 @@ decode_initfile(lame_t gfc, FILE * fd, mp3data_struct * mp3data)
 
     /*
        fprintf(stderr,"ret = %i NEED_MORE=%i \n",ret,MP3_NEED_MORE);
-       fprintf(stderr,"stereo = %i \n",mp.fr.stereo);
+       fprintf(stderr,"channels = %i \n",mp.fr.channels);
        fprintf(stderr,"samp = %i  \n",freqs[mp.fr.sampling_frequency]);
        fprintf(stderr,"framesize = %i  \n",framesize);
        fprintf(stderr,"bitrate = %i  \n",mp3data->bitrate);

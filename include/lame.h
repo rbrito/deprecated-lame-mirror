@@ -711,7 +711,7 @@ int CDECL lame_encode_finish(
 typedef struct {
   int header_parsed;   /* 1 if header was parsed and following data was
                           computed                                       */
-  int stereo;          /* number of channels                             */
+  int channels;        /* number of channels                             */
   int samplerate;      /* sample rate                                    */
   int bitrate;         /* bitrate                                        */
   int mode;            /* mp3 frame type                                 */

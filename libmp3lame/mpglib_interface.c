@@ -109,7 +109,7 @@ lame_decode1_headersB_clipchoice(
      */
     if (pmp->header_parsed || pmp->fsizeold > 0 || pmp->framesize > 0) {
 	mp3data->header_parsed = 1;
-        mp3data->stereo = pmp->fr.stereo;
+        mp3data->channels = pmp->fr.channels;
         mp3data->samplerate = freqs[pmp->fr.sampling_frequency];
         mp3data->mode = pmp->fr.mode;
         mp3data->mode_ext = pmp->fr.mode_ext;
@@ -140,7 +140,7 @@ lame_decode1_headersB_clipchoice(
 
     switch (ret) {
     case MP3_OK:
-        switch (pmp->fr.stereo) {
+        switch (pmp->fr.channels) {
         case 1: 
             processed_samples = processed_bytes / decoded_sample_size;
             if (decoded_sample_size == sizeof(short)) {

@@ -133,7 +133,7 @@ gtkmakeframe(void)
   pinfo->frameNum = frameNum;
   pinfo->sampfreq = lame_get_out_samplerate (global_gfc);
   pinfo->framesize= framesize;
-  pinfo->stereo = channels_out;
+  pinfo->channels = channels_out;
 
   /* If the analsys code is enabled, lame will writes data into global_gfc->pinfo,
    * and mpg123 will write data into mpg123_pinfo.  Set these so
@@ -202,7 +202,7 @@ gtkmakeframe(void)
        * add a delay of framesize-DECDELAY, which will make the total delay
        * exactly one frame */
       pinfo->frameNum123=pinfo->frameNum-mpglag;
-      for ( ch = 0; ch < pinfo->stereo; ch++ ) {
+      for ( ch = 0; ch < pinfo->channels; ch++ ) {
 	for ( j = 0; j < pinfo->framesize-DECDELAY; j++ )
 	  pinfo->pcmdata2[ch][j] = pinfo->pcmdata2[ch][j+pinfo->framesize];
 	for ( j = 0; j < pinfo->framesize; j++ ) {
@@ -297,7 +297,7 @@ plot_frame(void)
 
   ch = gtkinfo.chflag;
   
-  headbits = 32 + ((pplot1->stereo==2) ? 256 : 136);
+  headbits = 32 + ((pplot1->channels==2) ? 256 : 136);
   gtkinfo.approxbits = (pplot1->bitrate*1000*1152.0/samp) - headbits;
   sprintf(title2,"%3.1fkHz %ikbs ",samp/1000,pplot1->bitrate);
   gtk_text_freeze (GTK_TEXT(headerbox));
@@ -306,7 +306,7 @@ plot_frame(void)
   gtk_text_set_point(GTK_TEXT(headerbox),0);
   gtk_text_insert(GTK_TEXT(headerbox),NULL,&oncolor,NULL,title2, -1);
   title = " mono ";
-  if (2==pplot1->stereo) title = pplot1->js ? " js " : " s ";
+  if (2==pplot1->channels) title = pplot1->js ? " js " : " s ";
   gtk_text_insert (GTK_TEXT(headerbox), NULL, &oncolor, NULL,title, -1);
   color = pplot1->ms_stereo ? &oncolor : &offcolor ; 
   gtk_text_insert (GTK_TEXT(headerbox), NULL, color, NULL,"ms ", -1);

@@ -136,7 +136,7 @@ int decode_header(struct frame *fr,unsigned long newhead)
     fr->original  = ((newhead>>2)&0x1);
     fr->emphasis  = newhead & 0x3;
 
-    fr->stereo    = (fr->mode == MPG_MD_MONO) ? 1 : 2;
+    fr->channels  = (fr->mode == MPG_MD_MONO) ? 1 : 2;
 
     switch(fr->lay)
     {
@@ -159,18 +159,6 @@ int decode_header(struct frame *fr,unsigned long newhead)
         break;
 #endif
       case 3:
-#if 0
-        fr->do_layer = do_layer3;
-        if(fr->lsf)
-          ssize = (fr->stereo == 1) ? 9 : 17;
-        else
-          ssize = (fr->stereo == 1) ? 17 : 32;
-#endif
-
-#if 0
-        if(fr->error_protection)
-          ssize += 2;
-#endif
 	if (fr->bitrate_index==0)
 	  fr->framesize=0;
 	else{
