@@ -976,12 +976,6 @@ int L3psycho_anal( lame_global_flags * gfp,
 	  gfc->nsPsy.last_attack_intensity[chn][i] = attack_intensity[i];
 	}
 
-      for(i=0;i<9;i++)
-	{
-	  gfc->nsPsy.last_en_subshort[chn][i] = en_subshort[i];
-	  gfc->nsPsy.last_attack_intensity[chn][i] = attack_intensity[i];
-	}
-
       if (gfp->no_short_blocks) {
 	uselongblock[chn] = 1;
       } else {
@@ -1075,7 +1069,7 @@ int L3psycho_anal( lame_global_flags * gfp,
 		/* short block pre-echo control. */
 
 #define NS_PREECHO_ATT0 0.8
-#define NS_PREECHO_ATT1 0.5
+#define NS_PREECHO_ATT1 0.6
 #define NS_PREECHO_ATT2 0.3
 #define NS_INTERP(x,y,r) (pow((x),(r))*pow((y),1-(r)))
 
