@@ -655,12 +655,12 @@ best_scalefac_store(lame_t gfc, int gr, int ch)
 	}
 	/* if all the ix[] is even number, we can losslessly reduce the
 	   scalefactor value and ix[]. */
-	while (!(even & 1) && gi->scalefac[sfb] >= (2 >> gi->scalefac_scale)) {
+	while (!(even & 1) && gi->scalefac[sfb] >= (4 >> gi->scalefac_scale)) {
 	    l = -gi->width[sfb];
 	    do {
 		gi->l3_enc[l+j] >>= 1;
 	    } while (++l < 0);
-	    gi->scalefac[sfb] -= (2 >> gi->scalefac_scale);
+	    gi->scalefac[sfb] -= (4 >> gi->scalefac_scale);
 	    even >>= 1;
 	    recalc = even;
 	}
