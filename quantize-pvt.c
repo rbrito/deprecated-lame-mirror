@@ -810,7 +810,7 @@ int loop_break( III_scalefac_t *scalefac, gr_info *cod_info)
 #define USE_GNUC_ASM
 #endif
 #ifdef _MSC_VER
-#define USE_MSC_AMS
+#define USE_MSC_ASM
 #endif
 
 
