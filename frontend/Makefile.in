@@ -1,7 +1,6 @@
-# Makefile.in generated automatically by automake 1.4d from Makefile.am
+# Makefile.in generated automatically by automake 1.4-p5 from Makefile.am
 
-# Copyright 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001
-# Free Software Foundation, Inc.
+# Copyright (C) 1994, 1995-8, 1999, 2001 Free Software Foundation, Inc.
 # This Makefile.in is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
 # with or without modifications, as long as this notice is preserved.
@@ -10,6 +9,10 @@
 # but WITHOUT ANY WARRANTY, to the extent permitted by law; without
 # even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE.
+
+
+# global section for every Makefile.am
+
 
 SHELL = @SHELL@
 
@@ -32,6 +35,8 @@ mandir = @mandir@
 includedir = @includedir@
 oldincludedir = /usr/include
 
+DESTDIR =
+
 pkgdatadir = $(datadir)/@PACKAGE@
 pkglibdir = $(libdir)/@PACKAGE@
 pkgincludedir = $(includedir)/@PACKAGE@
@@ -44,11 +49,9 @@ AUTOMAKE = @AUTOMAKE@
 AUTOHEADER = @AUTOHEADER@
 
 INSTALL = @INSTALL@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@ $(AM_INSTALL_PROGRAM_FLAGS)
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
-INSTALL_STRIP_FLAG =
-INSTALL_HEADER = $(INSTALL_DATA)
 transform = @program_transform_name@
 
 NORMAL_INSTALL = :
@@ -57,23 +60,17 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-
-@SET_MAKE@
 build_alias = @build_alias@
 build_triplet = @build@
 host_alias = @host_alias@
 host_triplet = @host@
 target_alias = @target_alias@
 target_triplet = @target@
-AMDEP = @AMDEP@
-AMTAR = @AMTAR@
 AS = @AS@
-AWK = @AWK@
 CC = @CC@
 CONFIG_DEFS = @CONFIG_DEFS@
 CPP = @CPP@
 CPUTYPE = @CPUTYPE@
-DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
 EXEEXT = @EXEEXT@
 FRONTEND_CFLAGS = @FRONTEND_CFLAGS@
@@ -101,154 +98,110 @@ VERSION = @VERSION@
 WITH_MP3RTP = @WITH_MP3RTP@
 WITH_MP3X = @WITH_MP3X@
 _am_include = @_am_include@
-install_sh = @install_sh@
 
-
-# global section for every Makefile.am
-
-
-AUTOMAKE_OPTIONS = 1.4d foreign $(top_srcdir)/ansi2knr
+AUTOMAKE_OPTIONS = 1.4-p5 foreign $(top_srcdir)/ansi2knr
 
 bin_PROGRAMS = lame @WITH_MP3RTP@ @WITH_MP3X@
 EXTRA_PROGRAMS = mp3rtp mp3x
 
 brhist_sources = brhist.c brhist.h
 
-EXTRA_DIST = \
-	$(brhist_sources) \
-	console.c \
-	console.h \
-	lame.dsp \
-	lame.dsw \
-	mp3x.dsp \
-	mp3x.dsw \
-	amiga_mpega.c
+EXTRA_DIST =  	$(brhist_sources) 	console.c 	console.h 	lame.dsp 	lame.dsw 	mp3x.dsp 	mp3x.dsw 	amiga_mpega.c
 
 
 DEFS = @DEFS@ @CONFIG_DEFS@
 
-common_sources = \
-	get_audio.c \
-	lametime.c \
-	parse.c \
-	portableio.c \
-	timestatus.c
+common_sources =  	get_audio.c 	lametime.c 	parse.c 	portableio.c 	timestatus.c
 
 
-noinst_HEADERS = get_audio.h \
-	gtkanal.h \
-	gpkplotting.h \
-	lametime.h \
-	main.h \
-	parse.h \
-	portableio.h \
-	timestatus.h
+noinst_HEADERS = get_audio.h 	gtkanal.h 	gpkplotting.h 	lametime.h 	main.h 	parse.h 	portableio.h 	timestatus.h
 
 
 EXTRA_lame_SOURCES = $(brhist_sources)
 EXTRA_mp3rtp_SOURCES = $(brhist_sources)
 EXTRA_mp3x_SOURCES = $(brhist_sources)
-@WITH_BRHIST_TRUE@lame_SOURCES = @WITH_BRHIST_TRUE@main.c $(common_sources) $(brhist_sources)
-@WITH_BRHIST_FALSE@lame_SOURCES = @WITH_BRHIST_FALSE@main.c $(common_sources)
-@WITH_BRHIST_TRUE@mp3rtp_SOURCES = @WITH_BRHIST_TRUE@mp3rtp.c rtp.c rtp.h $(common_sources) $(brhist_sources)
-@WITH_BRHIST_FALSE@mp3rtp_SOURCES = @WITH_BRHIST_FALSE@mp3rtp.c rtp.c rtp.h $(common_sources)
-@WITH_BRHIST_TRUE@mp3x_SOURCES = @WITH_BRHIST_TRUE@mp3x.c gtkanal.c gpkplotting.c \
-@WITH_BRHIST_TRUE@	$(common_sources) $(brhist_sources)
-@WITH_BRHIST_FALSE@mp3x_SOURCES = @WITH_BRHIST_FALSE@mp3x.c gtkanal.c gpkplotting.c $(common_sources)
+@WITH_BRHIST_TRUE@lame_SOURCES = main.c $(common_sources) $(brhist_sources)
+@WITH_BRHIST_FALSE@lame_SOURCES = main.c $(common_sources)
+@WITH_BRHIST_TRUE@mp3rtp_SOURCES = mp3rtp.c rtp.c rtp.h $(common_sources) $(brhist_sources)
+@WITH_BRHIST_FALSE@mp3rtp_SOURCES = mp3rtp.c rtp.c rtp.h $(common_sources)
+@WITH_BRHIST_TRUE@mp3x_SOURCES = mp3x.c gtkanal.c gpkplotting.c 	$(common_sources) $(brhist_sources)
+@WITH_BRHIST_FALSE@mp3x_SOURCES = mp3x.c gtkanal.c gpkplotting.c $(common_sources)
 
 CFLAGS = @CFLAGS@ @GTK_CFLAGS@ @FRONTEND_CFLAGS@
 LDFLAGS = @LDFLAGS@ @FRONTEND_LDFLAGS@ -static
 
 INCLUDES = -I$(top_srcdir)/libmp3lame -I$(top_srcdir)/include -I$(top_builddir)
 
-LDADD = @LDADD@ @FRONTEND_LDADD@ \
-	$(top_builddir)/libmp3lame/libmp3lame.la
+LDADD = @LDADD@ @FRONTEND_LDADD@ 	$(top_builddir)/libmp3lame/libmp3lame.la
 
 
 mp3x_LDADD = $(LDADD) @GTK_LIBS@
 
 CLEANFILES = lclint.txt $(EXTRA_PROGRAMS)
 
-LCLINTFLAGS = \
-	+posixlib \
-	+showsummary \
-	+showalluses \
-	+whichlib \
-	+forcehints \
-	-fixedformalarray \
-	+matchanyintegral \
-	-Dlint
+LCLINTFLAGS =  	+posixlib 	+showsummary 	+showalluses 	+whichlib 	+forcehints 	-fixedformalarray 	+matchanyintegral 	-Dlint
 
-subdir = frontend
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../config.h
 CONFIG_CLEAN_FILES = 
-EXTRA_PROGRAMS =  mp3rtp$(EXEEXT) mp3x$(EXEEXT)
 bin_PROGRAMS =  lame$(EXEEXT) @WITH_MP3RTP@ @WITH_MP3X@
 PROGRAMS =  $(bin_PROGRAMS)
 
 CPPFLAGS = @CPPFLAGS@
 LIBS = @LIBS@
 ANSI2KNR = $(top_srcdir)/ansi2knr
-@WITH_BRHIST_FALSE@am_lame_OBJECTS =  main$U.o get_audio$U.o \
+@WITH_BRHIST_FALSE@mp3rtp_OBJECTS =  mp3rtp$U.o rtp$U.o get_audio$U.o \
 @WITH_BRHIST_FALSE@lametime$U.o parse$U.o portableio$U.o timestatus$U.o
-@WITH_BRHIST_TRUE@am_lame_OBJECTS =  main$U.o get_audio$U.o lametime$U.o \
-@WITH_BRHIST_TRUE@parse$U.o portableio$U.o timestatus$U.o brhist$U.o
-lame_OBJECTS =  $(am_lame_OBJECTS)
-lame_LDADD = $(LDADD)
-lame_DEPENDENCIES =  $(top_builddir)/libmp3lame/libmp3lame.la
-lame_LDFLAGS = 
-@WITH_BRHIST_FALSE@am_mp3rtp_OBJECTS =  mp3rtp$U.o rtp$U.o get_audio$U.o \
-@WITH_BRHIST_FALSE@lametime$U.o parse$U.o portableio$U.o timestatus$U.o
-@WITH_BRHIST_TRUE@am_mp3rtp_OBJECTS =  mp3rtp$U.o rtp$U.o get_audio$U.o \
+@WITH_BRHIST_TRUE@mp3rtp_OBJECTS =  mp3rtp$U.o rtp$U.o get_audio$U.o \
 @WITH_BRHIST_TRUE@lametime$U.o parse$U.o portableio$U.o timestatus$U.o \
 @WITH_BRHIST_TRUE@brhist$U.o
-mp3rtp_OBJECTS =  $(am_mp3rtp_OBJECTS)
 mp3rtp_LDADD = $(LDADD)
 mp3rtp_DEPENDENCIES =  $(top_builddir)/libmp3lame/libmp3lame.la
 mp3rtp_LDFLAGS = 
-@WITH_BRHIST_FALSE@am_mp3x_OBJECTS =  mp3x$U.o gtkanal$U.o \
-@WITH_BRHIST_FALSE@gpkplotting$U.o get_audio$U.o lametime$U.o parse$U.o \
-@WITH_BRHIST_FALSE@portableio$U.o timestatus$U.o
-@WITH_BRHIST_TRUE@am_mp3x_OBJECTS =  mp3x$U.o gtkanal$U.o \
-@WITH_BRHIST_TRUE@gpkplotting$U.o get_audio$U.o lametime$U.o parse$U.o \
-@WITH_BRHIST_TRUE@portableio$U.o timestatus$U.o brhist$U.o
-mp3x_OBJECTS =  $(am_mp3x_OBJECTS)
+@WITH_BRHIST_FALSE@mp3x_OBJECTS =  mp3x$U.o gtkanal$U.o gpkplotting$U.o \
+@WITH_BRHIST_FALSE@get_audio$U.o lametime$U.o parse$U.o portableio$U.o \
+@WITH_BRHIST_FALSE@timestatus$U.o
+@WITH_BRHIST_TRUE@mp3x_OBJECTS =  mp3x$U.o gtkanal$U.o gpkplotting$U.o \
+@WITH_BRHIST_TRUE@get_audio$U.o lametime$U.o parse$U.o portableio$U.o \
+@WITH_BRHIST_TRUE@timestatus$U.o brhist$U.o
 mp3x_DEPENDENCIES =  $(top_builddir)/libmp3lame/libmp3lame.la
 mp3x_LDFLAGS = 
+@WITH_BRHIST_FALSE@lame_OBJECTS =  main$U.o get_audio$U.o lametime$U.o \
+@WITH_BRHIST_FALSE@parse$U.o portableio$U.o timestatus$U.o
+@WITH_BRHIST_TRUE@lame_OBJECTS =  main$U.o get_audio$U.o lametime$U.o \
+@WITH_BRHIST_TRUE@parse$U.o portableio$U.o timestatus$U.o brhist$U.o
+lame_LDADD = $(LDADD)
+lame_DEPENDENCIES =  $(top_builddir)/libmp3lame/libmp3lame.la
+lame_LDFLAGS = 
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
-LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-DIST_SOURCES =  $(lame_SOURCES) $(EXTRA_lame_SOURCES) $(mp3rtp_SOURCES) \
-$(EXTRA_mp3rtp_SOURCES) $(mp3x_SOURCES) $(EXTRA_mp3x_SOURCES)
+LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
 HEADERS =  $(noinst_HEADERS)
 
-depcomp = $(SHELL) $(top_srcdir)/depcomp
-@AMDEP@DEP_FILES =  $(DEPDIR)/brhist$U.Po $(DEPDIR)/get_audio$U.Po \
-@AMDEP@$(DEPDIR)/gpkplotting$U.Po $(DEPDIR)/gtkanal$U.Po \
-@AMDEP@$(DEPDIR)/lametime$U.Po $(DEPDIR)/main$U.Po \
-@AMDEP@$(DEPDIR)/mp3rtp$U.Po $(DEPDIR)/mp3x$U.Po $(DEPDIR)/parse$U.Po \
-@AMDEP@$(DEPDIR)/portableio$U.Po $(DEPDIR)/rtp$U.Po \
-@AMDEP@$(DEPDIR)/timestatus$U.Po
-DIST_COMMON =  $(noinst_HEADERS) Makefile.am Makefile.in depcomp
+DIST_COMMON =  Makefile.am Makefile.in
 
 
-DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
+DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
+TAR = tar
 GZIP_ENV = --best
-SOURCES = $(lame_SOURCES) $(EXTRA_lame_SOURCES) $(mp3rtp_SOURCES) $(EXTRA_mp3rtp_SOURCES) $(mp3x_SOURCES) $(EXTRA_mp3x_SOURCES)
-OBJECTS = $(am_lame_OBJECTS) $(am_mp3rtp_OBJECTS) $(am_mp3x_OBJECTS)
+DEP_FILES =  .deps/brhist.P .deps/get_audio.P .deps/gpkplotting.P \
+.deps/gtkanal.P .deps/lametime.P .deps/main.P .deps/mp3rtp.P \
+.deps/mp3x.P .deps/parse.P .deps/portableio.P .deps/rtp.P \
+.deps/timestatus.P
+SOURCES = $(mp3rtp_SOURCES) $(EXTRA_mp3rtp_SOURCES) $(mp3x_SOURCES) $(EXTRA_mp3x_SOURCES) $(lame_SOURCES) $(EXTRA_lame_SOURCES)
+OBJECTS = $(mp3rtp_OBJECTS) $(mp3x_OBJECTS) $(lame_OBJECTS)
 
-all: all-am
+all: all-redirect
 .SUFFIXES:
-.SUFFIXES: .c .h .lo .o
+.SUFFIXES: .S .c .lo .o .s
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) $(top_srcdir)/Makefile.am.global
 	cd $(top_srcdir) && $(AUTOMAKE) --foreign frontend/Makefile
 
-Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
+Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status $(BUILT_SOURCES)
 	cd $(top_builddir) \
-	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= CONFIG_LINKS= $(SHELL) ./config.status
+	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
 
 mostlyclean-binPROGRAMS:
@@ -265,25 +218,38 @@ install-binPROGRAMS: $(bin_PROGRAMS)
 	$(mkinstalldirs) $(DESTDIR)$(bindir)
 	@list='$(bin_PROGRAMS)'; for p in $$list; do \
 	  if test -f $$p; then \
-	    f="`echo $$p|sed -e 's/$(EXEEXT)$$//' -e '$(transform)' -e 's/$$/$(EXEEXT)/'`"; \
-	    echo " $(LIBTOOL)  --mode=install $(INSTALL_PROGRAM) $(INSTALL_STRIP_FLAG) $$p $(DESTDIR)$(bindir)/$$f"; \
-	    $(LIBTOOL)  --mode=install $(INSTALL_PROGRAM) $(INSTALL_STRIP_FLAG) $$p $(DESTDIR)$(bindir)/$$f; \
+	    echo " $(LIBTOOL)  --mode=install $(INSTALL_PROGRAM) $$p $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`"; \
+	    $(LIBTOOL)  --mode=install $(INSTALL_PROGRAM) $$p $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
 	  else :; fi; \
 	done
 
 uninstall-binPROGRAMS:
 	@$(NORMAL_UNINSTALL)
-	@list='$(bin_PROGRAMS)'; for p in $$list; do \
-	  f="`echo $$p|sed -e 's/$(EXEEXT)$$//' -e '$(transform)' -e 's/$$/$(EXEEXT)/'`"; \
-	  echo " rm -f $(DESTDIR)$(bindir)/$$f"; \
-	  rm -f $(DESTDIR)$(bindir)/$$f; \
+	list='$(bin_PROGRAMS)'; for p in $$list; do \
+	  rm -f $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
 	done
+
+.s.o:
+	$(COMPILE) -c $<
+
+.S.o:
+	$(COMPILE) -c $<
 
 mostlyclean-compile:
 	-rm -f *.o core *.core
 
+clean-compile:
+
 distclean-compile:
 	-rm -f *.tab.c
+
+maintainer-clean-compile:
+
+.s.lo:
+	$(LIBTOOL) --mode=compile $(COMPILE) -c $<
+
+.S.lo:
+	$(LIBTOOL) --mode=compile $(COMPILE) -c $<
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -292,7 +258,8 @@ clean-libtool:
 	-rm -rf .libs _libs
 
 distclean-libtool:
-	-rm -f libtool
+
+maintainer-clean-libtool:
 $(top_srcdir)/ansi2knr: $(top_srcdir)/ansi2knr.o
 	cd $(top_srcdir) && $(MAKE) $(AM_MAKEFLAGS) ansi2knr
 
@@ -303,9 +270,11 @@ $(top_srcdir)/ansi2knr.o:
 mostlyclean-kr:
 	-rm -f *_.c
 
-lame$(EXEEXT): $(lame_OBJECTS) $(lame_DEPENDENCIES)
-	@rm -f lame$(EXEEXT)
-	$(LINK) $(lame_LDFLAGS) $(lame_OBJECTS) $(lame_LDADD) $(LIBS)
+clean-kr:
+
+distclean-kr:
+
+maintainer-clean-kr:
 
 mp3rtp$(EXEEXT): $(mp3rtp_OBJECTS) $(mp3rtp_DEPENDENCIES)
 	@rm -f mp3rtp$(EXEEXT)
@@ -314,6 +283,10 @@ mp3rtp$(EXEEXT): $(mp3rtp_OBJECTS) $(mp3rtp_DEPENDENCIES)
 mp3x$(EXEEXT): $(mp3x_OBJECTS) $(mp3x_DEPENDENCIES)
 	@rm -f mp3x$(EXEEXT)
 	$(LINK) $(mp3x_LDFLAGS) $(mp3x_OBJECTS) $(mp3x_LDADD) $(LIBS)
+
+lame$(EXEEXT): $(lame_OBJECTS) $(lame_DEPENDENCIES)
+	@rm -f lame$(EXEEXT)
+	$(LINK) $(lame_LDFLAGS) $(lame_OBJECTS) $(lame_LDADD) $(LIBS)
 brhist_.c: brhist.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/brhist.c; then echo $(srcdir)/brhist.c; else echo brhist.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > brhist_.c
 get_audio_.c: get_audio.c $(ANSI2KNR)
@@ -346,82 +319,85 @@ timestatus_.lo : $(ANSI2KNR)
 
 tags: TAGS
 
-ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
-	list='$(SOURCES) $(HEADERS) $(TAGS_FILES)'; \
-	unique=`for i in $$list; do \
-	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
-	  done | \
-	  $(AWK) '    { files[$$0] = 1; } \
+ID: $(HEADERS) $(SOURCES) $(LISP)
+	list='$(SOURCES) $(HEADERS)'; \
+	unique=`for i in $$list; do echo $$i; done | \
+	  awk '    { files[$$0] = 1; } \
 	       END { for (i in files) print i; }'`; \
-	mkid -fID $$unique $(LISP)
+	here=`pwd` && cd $(srcdir) \
+	  && mkid -f$$here/ID $$unique $(LISP)
 
-TAGS: $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
-		$(TAGS_FILES) $(LISP)
+TAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) $(LISP)
 	tags=; \
 	here=`pwd`; \
-	list='$(SOURCES) $(HEADERS) $(TAGS_FILES)'; \
-	unique=`for i in $$list; do \
-	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
-	  done | \
-	  $(AWK) '    { files[$$0] = 1; } \
+	list='$(SOURCES) $(HEADERS)'; \
+	unique=`for i in $$list; do echo $$i; done | \
+	  awk '    { files[$$0] = 1; } \
 	       END { for (i in files) print i; }'`; \
 	test -z "$(ETAGS_ARGS)$$unique$(LISP)$$tags" \
-	  || etags $(ETAGS_ARGS) $$tags  $$unique $(LISP)
+	  || (cd $(srcdir) && etags $(ETAGS_ARGS) $$tags  $$unique $(LISP) -o $$here/TAGS)
 
-GTAGS:
-	here=`CDPATH=: && cd $(top_builddir) && pwd` \
-	  && cd $(top_srcdir) \
-	  && gtags -i $$here
+mostlyclean-tags:
+
+clean-tags:
 
 distclean-tags:
 	-rm -f TAGS ID
 
-@AMDEP@@_am_include@ $(DEPDIR)/brhist$U.Po
-@AMDEP@@_am_include@ $(DEPDIR)/get_audio$U.Po
-@AMDEP@@_am_include@ $(DEPDIR)/gpkplotting$U.Po
-@AMDEP@@_am_include@ $(DEPDIR)/gtkanal$U.Po
-@AMDEP@@_am_include@ $(DEPDIR)/lametime$U.Po
-@AMDEP@@_am_include@ $(DEPDIR)/main$U.Po
-@AMDEP@@_am_include@ $(DEPDIR)/mp3rtp$U.Po
-@AMDEP@@_am_include@ $(DEPDIR)/mp3x$U.Po
-@AMDEP@@_am_include@ $(DEPDIR)/parse$U.Po
-@AMDEP@@_am_include@ $(DEPDIR)/portableio$U.Po
-@AMDEP@@_am_include@ $(DEPDIR)/rtp$U.Po
-@AMDEP@@_am_include@ $(DEPDIR)/timestatus$U.Po
-
-distclean-depend:
-	-rm -rf $(DEPDIR)
-
-@AMDEP@CCDEPMODE = @CCDEPMODE@
-
-.c.o:
-@AMDEP@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
-@AMDEP@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
-@AMDEP@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-	$(COMPILE) -c -o $@ `test -f $< || echo '$(srcdir)/'`$<
-
-.c.lo:
-@AMDEP@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
-@AMDEP@	depfile='$(DEPDIR)/$*.Plo' tmpdepfile='$(DEPDIR)/$*.TPlo' @AMDEPBACKSLASH@
-@AMDEP@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-	$(LTCOMPILE) -c -o $@ `test -f $< || echo '$(srcdir)/'`$<
-
+maintainer-clean-tags:
 
 distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)/$(subdir)
 
+subdir = frontend
 
 distdir: $(DISTFILES)
+	here=`cd $(top_builddir) && pwd`; \
+	top_distdir=`cd $(top_distdir) && pwd`; \
+	distdir=`cd $(distdir) && pwd`; \
+	cd $(top_srcdir) \
+	  && $(AUTOMAKE) --include-deps --build-dir=$$here --srcdir-name=$(top_srcdir) --output-dir=$$top_distdir --foreign frontend/Makefile
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
-	    cp -pR $$d/$$file $(distdir) \
-	    || exit 1; \
+	    cp -pr $$d/$$file $(distdir)/$$file; \
 	  else \
 	    test -f $(distdir)/$$file \
-	    || cp -p $$d/$$file $(distdir)/$$file \
-	    || exit 1; \
+	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \
+	    || cp -p $$d/$$file $(distdir)/$$file || :; \
 	  fi; \
 	done
+
+DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
+
+-include $(DEP_FILES)
+
+mostlyclean-depend:
+
+clean-depend:
+
+distclean-depend:
+	-rm -rf .deps
+
+maintainer-clean-depend:
+
+%.o: %.c
+	@echo '$(COMPILE) -c $<'; \
+	$(COMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-cp .deps/$(*F).pp .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm .deps/$(*F).pp
+
+%.lo: %.c
+	@echo '$(LTCOMPILE) -c $<'; \
+	$(LTCOMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-sed -e 's/^\([^:]*\)\.o[ 	]*:/\1.lo \1.o :/' \
+	  < .deps/$(*F).pp > .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm -f .deps/$(*F).pp
 info-am:
 info: info-am
 dvi-am:
@@ -442,8 +418,9 @@ install: install-am
 uninstall-am: uninstall-binPROGRAMS
 uninstall: uninstall-am
 all-am: Makefile $(PROGRAMS) $(HEADERS)
+all-redirect: all-am
 install-strip:
-	$(MAKE) $(AM_MAKEFLAGS) INSTALL_STRIP_FLAG=-s install
+	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
 installdirs:
 	$(mkinstalldirs)  $(DESTDIR)$(bindir)
 
@@ -458,40 +435,47 @@ distclean-generic:
 	-rm -f config.cache config.log stamp-h stamp-h[0-9]*
 
 maintainer-clean-generic:
-	@echo "This command is intended for maintainers to use"
-	@echo "it deletes files that may require special tools to rebuild."
-	-rm -f Makefile.in
-clean: clean-am
-
-clean-am: clean-binPROGRAMS clean-generic clean-libtool mostlyclean-am
-
-distclean: distclean-am
-
-distclean-am: clean-am distclean-binPROGRAMS distclean-compile \
-	distclean-depend distclean-generic distclean-libtool \
-	distclean-tags
-
-maintainer-clean: maintainer-clean-am
-
-maintainer-clean-am: distclean-am maintainer-clean-binPROGRAMS \
-	maintainer-clean-generic
+mostlyclean-am:  mostlyclean-binPROGRAMS mostlyclean-compile \
+		mostlyclean-libtool mostlyclean-kr mostlyclean-tags \
+		mostlyclean-depend mostlyclean-generic
 
 mostlyclean: mostlyclean-am
 
-mostlyclean-am: mostlyclean-binPROGRAMS mostlyclean-compile \
-	mostlyclean-generic mostlyclean-kr mostlyclean-libtool
+clean-am:  clean-binPROGRAMS clean-compile clean-libtool clean-kr \
+		clean-tags clean-depend clean-generic mostlyclean-am
 
-.PHONY: check check-am clean clean-binPROGRAMS clean-generic \
-	clean-libtool distclean distclean-binPROGRAMS distclean-compile \
-	distclean-depend distclean-generic distclean-libtool \
-	distclean-tags distdir dvi dvi-am info info-am install \
-	install-am install-binPROGRAMS install-data install-data-am \
-	install-exec install-exec-am install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
-	maintainer-clean-binPROGRAMS maintainer-clean-generic \
-	mostlyclean mostlyclean-binPROGRAMS mostlyclean-compile \
-	mostlyclean-generic mostlyclean-kr mostlyclean-libtool tags \
-	uninstall uninstall-am uninstall-binPROGRAMS
+clean: clean-am
+
+distclean-am:  distclean-binPROGRAMS distclean-compile distclean-libtool \
+		distclean-kr distclean-tags distclean-depend \
+		distclean-generic clean-am
+	-rm -f libtool
+
+distclean: distclean-am
+
+maintainer-clean-am:  maintainer-clean-binPROGRAMS \
+		maintainer-clean-compile maintainer-clean-libtool \
+		maintainer-clean-kr maintainer-clean-tags \
+		maintainer-clean-depend maintainer-clean-generic \
+		distclean-am
+	@echo "This command is intended for maintainers to use;"
+	@echo "it deletes files that may require special tools to rebuild."
+
+maintainer-clean: maintainer-clean-am
+
+.PHONY: mostlyclean-binPROGRAMS distclean-binPROGRAMS clean-binPROGRAMS \
+maintainer-clean-binPROGRAMS uninstall-binPROGRAMS install-binPROGRAMS \
+mostlyclean-compile distclean-compile clean-compile \
+maintainer-clean-compile mostlyclean-libtool distclean-libtool \
+clean-libtool maintainer-clean-libtool mostlyclean-kr distclean-kr \
+clean-kr maintainer-clean-kr tags mostlyclean-tags distclean-tags \
+clean-tags maintainer-clean-tags distdir mostlyclean-depend \
+distclean-depend clean-depend maintainer-clean-depend info-am info \
+dvi-am dvi check check-am installcheck-am installcheck install-exec-am \
+install-exec install-data-am install-data install-am install \
+uninstall-am uninstall all-redirect all-am all installdirs \
+mostlyclean-generic distclean-generic clean-generic \
+maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 
 
 # end global section
