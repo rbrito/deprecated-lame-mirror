@@ -1,5 +1,7 @@
-LAME 3.xx    January 2001  Mark Taylor (http://www.mp3dev.org)
+LAME 4.xx    September 2003 Takehiro TOMINAGA
+LAME 3.xx    January 2001  Mark Taylor
 
+http://www.mp3dev.org
 
 =======================================================================
 Compile time options
@@ -41,11 +43,6 @@ On unix systems, they are set via ./configure.
 
 
 #define HAVE_MPGLIB   compile in mpglib's mp3 *decoding* capibility
-#define HAVE_VORBIS   compile in Vorbis decoding capibility
-                      (you need libvorbis already built)
-#define NOANALYSIS   do not compile in hooks used by the 
-                     MP3 frame analyzer.
-
 
 Options for the command line encoder:
 #define LIBSNDFILE   to use Erik de Castro Lopo's libsndfile
@@ -71,8 +68,7 @@ For the encoding library:
   --enable-mp3x               Build the mp3 frame analyzer, 'mp3x'
 
   --enable-mp3rtp             Build the encode-to-RTP program, 'mp3rtp'
-                              (broken as of August 2001)
- 
+
 
 For the LAME front end encoder:
 
@@ -102,9 +98,6 @@ Other usefull configure options:
                                 /usr/local/lib/libmp3lame.so
                                 /usr/local/include/lame.h
 
-
-  --with-vorbis                Enable Ogg Vorbis decoding support
-  --with-vorbis-prefix = PATH  specify where to find Vorbis libs
 
 
 Some more advanced ways to influence the build procedure
