@@ -889,7 +889,7 @@ format_bitstream(lame_global_flags *gfp, int bitsPerFrame,
     };
     assert(gfc->bs.totbit % 8 == 0);
 
-    if (gfc->bs.totbit > 1000000000UL ) {
+    if (gfc->bs.totbit > 1000000000  ) {
       /* to avoid totbit overflow, (at 8h encoding at 128kbs) lets reset bit counter*/
       int i;
       for (i=0 ; i< MAX_HEADER_BUF ; ++i) 

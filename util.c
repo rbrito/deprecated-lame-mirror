@@ -322,16 +322,6 @@ void SwapBytesInWords( short *loc, int words )
   functions are available.
 ********************************************************************/
 
-/*alloc_buffer();      open and initialize the buffer;                    */
-/*desalloc_buffer();   empty and close the buffer                         */
-/*back_track_buffer();     goes back N bits in the buffer                 */
-/*unsigned int get1bit();  read 1 bit from the bit stream                 */
-/*unsigned long look_ahead(); grep the next N bits in the bit stream without*/
-/*                            changing the buffer pointer                   */
-/*putbits(); write N bits from the bit stream */
-/*int seek_sync(); return 1 if a sync word was found in the bit stream      */
-/*                 otherwise returns 0                                      */
-
 
 
 void empty_buffer(Bit_stream_struc *bs)
@@ -348,10 +338,10 @@ void empty_buffer(Bit_stream_struc *bs)
 
 int copy_buffer(char *buffer,int size,Bit_stream_struc *bs)
 {
-  int minimum = bs->buf_byte_idx + 1;
+  size_t minimum = bs->buf_byte_idx + 1;
   if (minimum <= 0) return 0;
   if (size!=0 && minimum>size) return -1; /* buffer is too small */
-  memcpy(buffer,bs->buf,(unsigned int)minimum);
+  memcpy(buffer,bs->buf,minimum);
   bs->buf_byte_idx = -1;
   bs->buf_bit_idx = 0;
   return minimum;
@@ -363,8 +353,9 @@ int copy_buffer(char *buffer,int size,Bit_stream_struc *bs)
 
 void init_bit_stream_w(lame_internal_flags *gfc)
 {
-  Bit_stream_struc* bs = &gfc->bs;
-   alloc_buffer(bs, BUFFER_SIZE);
+   gfc->bs.buf = (unsigned char *)       malloc(BUFFER_SIZE);
+   gfc->bs.buf_size = BUFFER_SIZE;
+
    gfc->h_ptr = gfc->w_ptr = 0;
    gfc->header[gfc->h_ptr].write_timing = 0;
    gfc->bs.buf_byte_idx = -1;
@@ -372,15 +363,6 @@ void init_bit_stream_w(lame_internal_flags *gfc)
    gfc->bs.totbit = 0;
 }
 
-
-/*open and initialize the buffer; */
-void alloc_buffer(
-Bit_stream_struc *bs,   /* bit stream structure */
-unsigned int size)
-{
-   bs->buf = (unsigned char *)       malloc(size);
-   bs->buf_size = size;
-}
 
 /*empty and close mallocs in gfc */
 void freegfc(lame_internal_flags *gfc)   /* bit stream structure */

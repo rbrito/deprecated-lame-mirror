@@ -109,6 +109,7 @@
 	#endif
 #endif
 
+/* sample_t must be floating point, at least 32 bits */
 typedef FLOAT sample_t;
 typedef sample_t          stereo_t [2];
 

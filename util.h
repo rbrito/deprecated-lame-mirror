@@ -120,18 +120,6 @@ extern const int      bitrate_table [2] [16];
 *
 ***********************************************************************/
 
-/* Structure for Reading Layer II Allocation Tables from File */
-
-typedef struct {
-    unsigned int    steps;
-    unsigned int    bits;
-    unsigned int    group;
-    unsigned int    quant;
-} sb_alloc, *alloc_ptr;
-
-typedef sb_alloc        al_table[SBLIMIT][16]; 
-
-
 
 
 enum byte_order { order_unknown, order_bigEndian, order_littleEndian };
@@ -142,7 +130,7 @@ extern enum byte_order NativeByteOrder;
 typedef struct  bit_stream_struc {
     unsigned char *buf;         /* bit stream buffer */
     int         buf_size;       /* size of buffer (in number of bytes) */
-    unsigned long        totbit;         /* bit counter of bit stream */
+    int         totbit;         /* bit counter of bit stream */
     int         buf_byte_idx;   /* pointer to top byte in buffer */
     int         buf_bit_idx;    /* pointer to top bit of top byte in buffer */
     
@@ -245,7 +233,7 @@ typedef struct  {
   short int inbuf_old[2][BLACKSIZE];
   FLOAT blackfilt[2*BPC+1][BLACKSIZE];
   FLOAT8 itime[2];
-  unsigned int sideinfo_len;
+  int sideinfo_len;
 
   /* variables for newmdct.c */
   FLOAT8 sb_sample[2][2][18][SBLIMIT];
@@ -263,14 +251,14 @@ typedef struct  {
 #define MAX_HEADER_BUF 256
 #define MAX_HEADER_LEN 40 /* max size of header is 38 */
   struct {
-    unsigned long write_timing;
+    int write_timing;
     int ptr;
     char buf[MAX_HEADER_LEN];
   } header[MAX_HEADER_BUF];
 
   int h_ptr;
   int w_ptr;
-  unsigned int ancillary_flag;
+  int ancillary_flag;
   
 
   /* variables for reservoir.c */
@@ -361,7 +349,6 @@ extern long           validSamplerate(long samplerate);
 extern int            SmpFrqIndex(long, int*);
 extern int            copy_buffer(char *buffer,int buffer_size,Bit_stream_struc *bs);
 extern void           init_bit_stream_w(lame_internal_flags *gfc);
-extern void           alloc_buffer(Bit_stream_struc*, unsigned int);
 extern void           freegfc(lame_internal_flags *gfc);
 extern FLOAT8         ATHformula(FLOAT8 f);
 extern FLOAT8         freq2bark(FLOAT8 freq);
