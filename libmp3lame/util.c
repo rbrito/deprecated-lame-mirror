@@ -790,12 +790,15 @@ void init_log_table(void)
 
 ieee754_float32_t fast_log2(ieee754_float32_t x)
 {
-  int i = *(int*)&x;
-  ieee754_float32_t log2val;
-  int mantisse = i & 0x7FFFFF;
-  ieee754_float32_t partial;
-
-  log2val = ((i>>23) & 0xFF)-0x7f;
+  ieee754_float32_t log2val, partial;
+  union {
+    ieee754_float32_t f;
+    int     i;
+  } fi;
+  int mantisse;
+  fi.f = x;
+  mantisse = fi.i & 0x7fffff;
+  log2val = ((fi.i>>23) & 0xFF)-0x7f;
   partial = (mantisse & ((1<<(23-LOG2_SIZE_L2))-1));
   partial *= 1.0f/((1<<(23-LOG2_SIZE_L2)));
 
