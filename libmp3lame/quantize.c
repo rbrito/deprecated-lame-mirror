@@ -349,7 +349,7 @@ quant_compare(
                  ||  ( calc->over_noise == best->over_noise  &&
                      ( calc->max_noise   < best->max_noise  
 		     ||  ( calc->max_noise  == best->max_noise  &&
-                           calc->tot_noise  <= best->tot_noise )
+                           calc->tot_noise   < best->tot_noise )
 		      )); 
 	    break;
         case 7: 
