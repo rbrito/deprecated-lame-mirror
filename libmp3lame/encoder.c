@@ -103,8 +103,8 @@ static void
 updateStats(lame_t gfc)
 {
     int gr, ch;
-    assert ( gfc->bitrate_index < 16u );
-    assert ( gfc->mode_ext      <  4u );
+    assert((unsigned int)gfc->bitrate_index < 16u);
+    assert((unsigned int)gfc->mode_ext      <  4u);
     
     /* count 'em for every mode extension in case of 2 channel encoding */
     if (gfc->channels_out == 2)

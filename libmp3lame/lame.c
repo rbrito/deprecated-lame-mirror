@@ -228,7 +228,7 @@ apply_preset(lame_t gfc, int bitrate, vbr_mode mode)
     int lower_range, lower_range_kbps, upper_range, upper_range_kbps;
     int r, b;
 
-    for (b = 1; b < sizeof(switch_map)/sizeof(switch_map[0])-1
+    for (b = 1; b < (int) (sizeof(switch_map)/sizeof(switch_map[0])-1)
 	     && bitrate > switch_map[b].kbps; b++)
 	;
 
@@ -304,7 +304,6 @@ optimum_samplefreq(int lowpassfreq, int input_samplefreq)
 /*
  * Rules:
  *  - if possible, sfb21 should NOT be used
- *
  */
     int suggested_samplefreq = 48000;
     if (lowpassfreq <= 15960)
@@ -441,13 +440,10 @@ lame_init_params(lame_t gfc)
 
     /* output sampling rate is determined by the lowpass value */
     if (gfc->out_samplerate == 0) {
-	if (gfc->lowpassfreq < 0)
-	    gfc->out_samplerate
-		= optimum_samplefreq(gfc->in_samplerate/2.0,
-				     gfc->in_samplerate);
-	else
-	    gfc->out_samplerate
-		= optimum_samplefreq(gfc->lowpassfreq, gfc->in_samplerate);
+	int cutoff = gfc->lowpassfreq;
+	if (cutoff < 0)
+	    cutoff = gfc->in_samplerate/2;
+	gfc->out_samplerate = optimum_samplefreq(cutoff, gfc->in_samplerate);
     }
     gfc->samplerate_index = SmpFrqIndex(gfc->out_samplerate);
     if (gfc->samplerate_index < 0)
@@ -455,12 +451,12 @@ lame_init_params(lame_t gfc)
 
     /* apply user driven high pass filter */
     if (gfc->highpassfreq > 0) {
-        gfc->highpass1 = 2. * gfc->highpassfreq;
+	gfc->highpass1 = 2. * gfc->highpassfreq;
 
-        if (gfc->highpasswidth >= 0)
-            gfc->highpass2 = 2. * (gfc->highpassfreq + gfc->highpasswidth);
-        else            /* 0% above on default */
-            gfc->highpass2 = (1 + 0.00) * 2. * gfc->highpassfreq;
+	if (gfc->highpasswidth >= 0)
+	    gfc->highpass2 = 2. * (gfc->highpassfreq + gfc->highpasswidth);
+	else            /* 0% above on default */
+	    gfc->highpass2 = (1 + 0.00) * 2. * gfc->highpassfreq;
 
 	gfc->highpass1 /= gfc->out_samplerate;
 	gfc->highpass2 /= gfc->out_samplerate;
@@ -469,12 +465,12 @@ lame_init_params(lame_t gfc)
     /* apply user driven low pass filter */
     if (gfc->lowpassfreq > 0) {
 	gfc->lowpass2 = 2. * gfc->lowpassfreq;
-        if (gfc->lowpasswidth >= 0) {
-            gfc->lowpass1 = 2. * (gfc->lowpassfreq - gfc->lowpasswidth);
-            if (gfc->lowpass1 < 0)
-                gfc->lowpass1 = 0;
-        }
-        else          /* 0% below on default */
+	if (gfc->lowpasswidth >= 0) {
+	    gfc->lowpass1 = 2. * (gfc->lowpassfreq - gfc->lowpasswidth);
+	    if (gfc->lowpass1 < 0)
+		gfc->lowpass1 = 0;
+	}
+	else          /* 0% below on default */
 	    gfc->lowpass1 = (1 - 0.00) * 2. * gfc->lowpassfreq;
 
 	gfc->lowpass1 /= gfc->out_samplerate;

@@ -22,15 +22,11 @@
 #ifndef LAME_TABLES_H
 #define LAME_TABLES_H
 
-/* array of all huffcodtable headers, Huffman code table 0..31 */
+/* table of huffman coding */
 extern const char htESC_xlen[];
-extern const short escHB[];
-extern const char escLen[];
-
 extern const unsigned char quadcode[2][16*2];
-
-extern const unsigned int   largetbl    [16*16];
-extern const unsigned int   table13       [2*2];
+extern const unsigned int largetbl[16*16];
+extern const unsigned int table13[2*2];
 extern const uint64_t table7B89[];
 extern const uint64_t table7B89[];
 extern const uint64_t table5967[];

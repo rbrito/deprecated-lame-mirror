@@ -577,7 +577,7 @@ scfsi_calc(int ch, III_side_info_t *l3_side)
     gr_info *gi = &l3_side->tt[1][ch];
     gr_info *g0 = &l3_side->tt[0][ch];
 
-    for (i = 0; i < (sizeof(scfsi_band) / sizeof(int)) - 1; i++) {
+    for (i = 0; i < (int)(sizeof(scfsi_band) / sizeof(int)) - 1; i++) {
 	for (sfb = scfsi_band[i]; sfb < scfsi_band[i + 1]; sfb++) {
 	    if (g0->scalefac[sfb] != gi->scalefac[sfb]
 		&& gi->scalefac[sfb] >= 0)

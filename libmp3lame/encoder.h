@@ -402,7 +402,7 @@ struct lame_internal_flags {
     bit_stream_t bs;
 
     /* optional ID3 tags, used in id3tag.c  */
-    struct id3tag_spec {
+    struct {
 	/* private data members */
 	int flags;
 	const char *title;

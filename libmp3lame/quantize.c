@@ -1,6 +1,5 @@
 /*
  * MP3 quantization
- *
  * Copyright (c) 1999 Mark Taylor
  *               2003 Takehiro Tominaga
  *
@@ -18,9 +17,9 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
+ *
+ * $Id$
  */
-
-/* $Id$ */
 
 #ifdef HAVE_CONFIG_H
 # include <config.h>
@@ -1058,7 +1057,7 @@ CBR_1st_bitalloc (
 	age = current_method*3+2;
 	newNoise = bestNoise;
     }
-    assert (gi->global_gain < 256);
+    assert((unsigned int)gi->global_gain < 256u);
 
     if (gfc->noise_shaping_amp >= 4)
 	CBR_2nd_bitalloc(gfc, gi, distort);
@@ -1076,7 +1075,7 @@ CBR_1st_bitalloc (
 static void
 CBR_bitalloc(
     lame_t gfc,
-    III_psy_ratio      ratio[MAX_CHANNELS],
+    III_psy_ratio ratio[MAX_CHANNELS],
     int min_bits,
     int max_bits,
     FLOAT factor,
@@ -1588,7 +1587,7 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
 	    return -2;
     }
 
-    assert(gi->global_gain < 256u);
+    assert((unsigned int)gi->global_gain < 256u);
 
     return 0;
 }
