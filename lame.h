@@ -162,8 +162,6 @@ typedef struct  {
   int id3v1_enabled;
   struct id3tag_spec tag_spec;
 
-  BRHST brhist;					  /* histogramming data */
-
   /* psycho acoustics and other aguments which you should not change 
    * unless you know what you are doing  */
   int ATHonly;                    /* only use ATH */
@@ -182,6 +180,8 @@ typedef struct  {
   /************************************************************************/
   /* internal variables, do not set... */
   /************************************************************************/
+  BRHST brhist;					  /* histogramming data */
+
   int version;                    /* 0=MPEG2  1=MPEG1 */
   long int frameNum;              /* frame counter */
   long totalframes;               /* frames: 0..totalframes-1 (estimate)*/

@@ -3,8 +3,8 @@
 
 * Dont take it upon yourself to go through LAME with the sole purpose
   of updating everything to match this guide.  Especially important:
-  Dont change the spacing, indentation, curly braces, etc, 
-  in a routine you did not write.
+  dont change the spacing, indentation, curly braces, etc, 
+  in routines you did not write.
 
 * Respect the indentation of the author of the original function.
   If the indentation is not consistent, use 3.
@@ -18,8 +18,9 @@
 
 * check important assumptions with an assert()
 
-* use int for all integer quantities.  LAME requires 32 bit ints,
-  so you can assume int is at least 32 bits.  
+* use int for all integer quantities if possible.  
+  LAME requires 32 bit ints,
+  so you can assume int is at least 32 bits.  Dont use 'long'.
   Only used 'unsigned' attribute unless absolutely necessary.
   If 64 bits is required, use int64.
 
@@ -31,14 +32,7 @@
              short i;
              for ( i = 0; i < 1024; i++ )
                 bla [i] = i;  
-
-* To store PCM samples, use the type 'sample_t' defined in "lame.h". 
-  Currently this is a 'signed short int' and I planed to move this to
-  'float'.
-
-* Use the 'size_t' to store sizes of memory objects. 
-
-* Use the 'const' attribute if you don't intend to change the variable.
+ (note: this is done in fft.c - does this make it faster?)
 
 * Avoid using float or double, and instead use: (defined in machine.h).  
 
@@ -50,6 +44,12 @@ routines require 64bit float, so setting FLOAT=float will result in a
 lot of conversions.
 
 
+* The internal representation of PCM samples in type 'sample_t',
+  currently this is a FLOAT.  
+
+* Use the 'size_t' to store sizes of memory objects. 
+
+* Use the 'const' attribute if you don't intend to change the variable.
 
 * Use SI base units. Lame mixes Hz, kHz, kbps, bps. This is mess.
 
@@ -63,6 +63,7 @@ lot of conversions.
   function.
 
 ----------------------------------------------------------------------------------
+Edited version of the Linux Kernel Style Guide:
 ----------------------------------------------------------------------------------
 
                 Chapter 1: Indentation

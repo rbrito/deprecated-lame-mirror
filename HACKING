@@ -28,3 +28,16 @@ lame_encode_frame():
 
 
 ************************************************************************
+
+THREADSAFE:
+
+Lame is supposed to be threadsafe.  But it is not yet.
+
+Some static variables in takehiro.c need to be moved
+into lame_internal_flags (in util.h).  
+
+There are a lot of static variables in timestatus.c,
+but these variables are only used by the output display.
+These routines should eventually be moved out of the library
+and into the front end.  So dont try to make this
+data thread safe!
