@@ -51,8 +51,13 @@ FLOAT ts_process_time(long frame) {
         
     /* GetProcessTimes() always fails under Win9x */
     if (GetProcessTimes(hProcess, &Ignored1, &Ignored2, &KernelTime, &UserTime)) {
-      LARGE_INTEGER Kernel = { KernelTime.dwLowDateTime, KernelTime.dwHighDateTime };
-      LARGE_INTEGER User = { UserTime.dwLowDateTime, UserTime.dwHighDateTime };
+      LARGE_INTEGER Kernel;
+      LARGE_INTEGER User;
+
+      Kernel.LowPart  = KernelTime.dwLowDateTime;
+      Kernel.HighPart = KernelTime.dwHighDateTime;
+      User.LowPart    = UserTime.dwLowDateTime;
+      User.HighPart   = UserTime.dwHighDateTime;
 
       current_time = (clock_t)((FLOAT)(Kernel.QuadPart + User.QuadPart) * TS_CLOCKS_PER_SEC / 10000000);
     } else {

@@ -119,9 +119,7 @@ FLOAT8 pow20[Q_MAX];
 FLOAT8 ipow20[Q_MAX];
 FLOAT8 pow43[PRECALC_SIZE];
 /* initialized in first call to iteration_init */
-#ifndef TAKEHIRO_IEEE754_HACK
 FLOAT8 adj43[PRECALC_SIZE];
-#endif
 FLOAT8 adj43asm[PRECALC_SIZE];
 
 
@@ -144,11 +142,9 @@ iteration_init( lame_global_flags *gfp,III_side_info_t *l3_side, int l3_enc[2][2
     for(i=0;i<PRECALC_SIZE;i++)
         pow43[i] = pow((FLOAT8)i, 4.0/3.0);
 
-#ifndef TAKEHIRO_IEEE754_HACK
     for (i = 0; i < PRECALC_SIZE-1; i++)
 	adj43[i] = (i + 1) - pow(0.5 * (pow43[i] + pow43[i + 1]), 0.75);
     adj43[i] = 0.5;
-#endif
 
     adj43asm[0] = 0.0;
     for (i = 1; i < PRECALC_SIZE; i++)
