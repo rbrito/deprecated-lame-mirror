@@ -88,12 +88,16 @@
  *  Optimization/clarity suggestions are welcome.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
 
+#include "machine.h"
 #include "gain_analysis.h"
 
 /* for each filter: */
@@ -211,7 +215,7 @@ ResetSampleFrequency (replaygain_t* rgData, long samplefreq ) {
         default:    return INIT_GAIN_ANALYSIS_ERROR;
     }
 
-    rgData->sampleWindow = (int) ceil (samplefreq * RMS_WINDOW_TIME);
+    rgData->sampleWindow = (samplefreq * RMS_WINDOW_TIME_NUMERATOR + RMS_WINDOW_TIME_DENOMINATOR-1) / RMS_WINDOW_TIME_DENOMINATOR;
 
     rgData->lsum         = 0.;
     rgData->rsum         = 0.;
@@ -364,10 +368,10 @@ AnalyzeSamples (replaygain_t* rgData, const Float_t* left_samples, const Float_t
 
 
 static Float_t
-analyzeResult ( Uint32_t* Array, size_t len )
+analyzeResult ( uint32_t* Array, size_t len )
 {
-    Uint32_t  elems;
-    Int32_t   upper;
+    uint32_t  elems;
+    int32_t   upper;
     size_t    i;
 
     elems = 0;
@@ -376,7 +380,7 @@ analyzeResult ( Uint32_t* Array, size_t len )
     if ( elems == 0 )
         return GAIN_NOT_ENOUGH_SAMPLES;
 
-    upper = (Int32_t) ceil (elems * (1. - RMS_PERCENTILE));
+    upper = (int32_t) ceil (elems * (1. - RMS_PERCENTILE));
     for ( i = len; i-- > 0; ) {
         if ( (upper -= Array[i]) <= 0 )
             break;

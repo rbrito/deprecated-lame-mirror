@@ -28,18 +28,20 @@
 #ifndef GAIN_ANALYSIS_H
 #define GAIN_ANALYSIS_H
 
+#if HAVE_INTTYPES_H
+# include <inttypes.h>
+#else
+# if HAVE_STDINT_H
+#  include <stdint.h>
+# endif
+#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 
-typedef float Float_t;         /* Type used for filtering */
-
-typedef unsigned int        Uint32_t;
-typedef int         Int32_t; 
-
-
+typedef sample_t Float_t;         /* Type used for filtering */
 
 #define GAIN_NOT_ENOUGH_SAMPLES  -24601
 #define GAIN_ANALYSIS_ERROR           0
@@ -56,13 +58,14 @@ typedef int         Int32_t;
 #define YULE_FILTER     filterYule
 #define BUTTER_FILTER   filterButter
 #define RMS_PERCENTILE      0.95        /* percentile which is louder than the proposed level */
-#define MAX_SAMP_FREQ   48000.          /* maximum allowed sample frequency [Hz] */
-#define RMS_WINDOW_TIME     0.050       /* Time slice size [s] */
+#define MAX_SAMP_FREQ   48000L          /* maximum allowed sample frequency [Hz] */
+#define RMS_WINDOW_TIME_NUMERATOR    1L  
+#define RMS_WINDOW_TIME_DENOMINATOR 20L /* numerator / denominator = time slice size [s] */
 #define STEPS_per_dB      100.          /* Table entries per dB */
 #define MAX_dB            120.          /* Table entries for 0...MAX_dB (normal max. values are 70...80 dB) */
 
 #define MAX_ORDER               (BUTTER_ORDER > YULE_ORDER ? BUTTER_ORDER : YULE_ORDER)
-#define MAX_SAMPLES_PER_WINDOW  (size_t) (MAX_SAMP_FREQ * RMS_WINDOW_TIME +1)      /* max. Samples per Time slice */
+#define MAX_SAMPLES_PER_WINDOW  (size_t) ((MAX_SAMP_FREQ * RMS_WINDOW_TIME_NUMERATOR) / RMS_WINDOW_TIME_DENOMINATOR + 1)      /* max. Samples per Time slice */
 
 
 
@@ -87,8 +90,8 @@ typedef struct
     double           rsum;
     int              freqindex;
     int              first;
-    Uint32_t  A [(size_t)(STEPS_per_dB * MAX_dB)];
-    Uint32_t  B [(size_t)(STEPS_per_dB * MAX_dB)];
+    uint32_t  A [(size_t)(STEPS_per_dB * MAX_dB)];
+    uint32_t  B [(size_t)(STEPS_per_dB * MAX_dB)];
 
 } replaygain_t;
 
