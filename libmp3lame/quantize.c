@@ -764,8 +764,9 @@ outer_loop (
     
     best_noise_info.over_count = 100;
 
-    bits_found = bin_search_StepSize (gfc, cod_info, targ_bits, 
-                                      gfc->OldValue[ch], xrpow, l3_enc_w);
+    real_bits = bits_found =
+      bin_search_StepSize (gfc, cod_info, targ_bits, 
+			   gfc->OldValue[ch], xrpow, l3_enc_w);
     gfc->OldValue[ch] = cod_info->global_gain;
 
     /* BEGIN MAIN LOOP */
@@ -793,8 +794,6 @@ outer_loop (
                 cod_info->global_gain++;
                 real_bits = inner_loop (gfc, cod_info, huff_bits, xrpow, 
                                         l3_enc_w);
-            } else {
-                real_bits = bits_found;
             }
         } else {
             real_bits = inner_loop (gfc, cod_info, huff_bits, xrpow,
