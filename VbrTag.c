@@ -361,11 +361,11 @@ int PutVbrTag(lame_global_flags *gfp,char* lpszFileName,int nVbrScale)
 	abyte = (pbtStreamBuffer[1] & (char) 0xf0);
 	if (gfp->version==1) {
 	  pbtStreamBuffer[1]=abyte | (char) 0x0b;    
-	  abyte = pbtStreamBuffer[2] & (char) 0x0c;   
+	  abyte = pbtStreamBuffer[2] & (char) 0x0d;   /* AF keep also private bit */
 	  pbtStreamBuffer[2]=(char) 0x50 | abyte;     /* 64kbs MPEG1 frame */
 	}else{
 	  pbtStreamBuffer[1]=abyte | (char) 0x03;    
-	  abyte = pbtStreamBuffer[2] & (char) 0x0c;   
+	  abyte = pbtStreamBuffer[2] & (char) 0x0d;   /* AF keep also private bit */   
 	  pbtStreamBuffer[2]=(char) 0x80 | abyte;     /* 64kbs MPEG2 frame */
 	}
 
