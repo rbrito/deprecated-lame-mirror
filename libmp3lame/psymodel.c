@@ -2036,11 +2036,10 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	for(sblock=0;sblock<3;sblock++) {
 	    for ( sb = 0; sb < NBPSY_s; sb++ ) {
 		if (gfc->en[chn].s[sb][sblock]
-		    <= gfc->thm[chn].s[sb][sblock] * gfc->masking_lower)
+		    <= gfc->thm[chn].s[sb][sblock] * gfc->masking_lower
+		    || gfc->thm[chn].s[sb][sblock] == 0.0)
 		    continue;
 
-		/* when thm[] == 0.0, en[] should be 0.0 */
-		assert(gfc->thm[chn].s[sb][sblock] != 0.0);
 		msum += regcoef[sb+1] *
 		    log(gfc->en[chn].s[sb][sblock] / (gfc->thm[chn].s[sb][sblock] * gfc->masking_lower));
 	    }
