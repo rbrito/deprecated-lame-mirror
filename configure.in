@@ -580,8 +580,7 @@ if test "x$GCC" = "xyes"; then
 
 
 
-	#OPTIMIZATION_NORM="-malign-double -fschedule-insns2"
-        OPTIMIZATION_NORM="-fschedule-insns2"
+	OPTIMIZATION_NORM="-fschedule-insns2"
 
 	OPTIMIZATION_FULL="-fmove-all-movables -freduce-all-givs \
 			-fsched-interblock -fbranch-count-reg -fforce-addr"
