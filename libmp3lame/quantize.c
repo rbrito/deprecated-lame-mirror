@@ -232,7 +232,7 @@ bin_search_StepSize(
 
     if (nBits > desired_rate) {
 	cod_info->global_gain++;
-	nBits = count_bits(gfc, xrpow, cod_info);  
+	nBits = count_bits(gfc, xrpow, cod_info);
     }
     cod_info->part2_3_length = nBits;
     return nBits;
@@ -780,7 +780,8 @@ outer_loop (
 
     int age;
 
-    bin_search_StepSize (gfc, cod_info, targ_bits, gfc->OldValue[ch], xrpow);
+    bin_search_StepSize (gfc, cod_info, targ_bits - cod_info->part2_length,
+			 gfc->OldValue[ch], xrpow);
     gfc->OldValue[ch] = cod_info->global_gain;
 
     if (!gfc->noise_shaping) 
