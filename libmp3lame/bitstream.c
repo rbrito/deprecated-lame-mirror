@@ -1074,7 +1074,7 @@ flush_bitstream(lame_global_flags *gfp)
 
 
 
-void add_dummy_byte(lame_global_flags *gfp,int val)
+void  add_dummy_byte ( lame_global_flags* const gfp, unsigned char val )
 {
   lame_internal_flags *gfc = gfp->internal_flags;
   int i;
