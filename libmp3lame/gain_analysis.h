@@ -34,7 +34,18 @@
 
 
 #include <stddef.h>
-#include "util.h"
+#include "machine.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+typedef sample_t Float_t;         /* Type used for filtering */
+
+typedef uint32_t        Uint32_t;
+typedef int32_t         Int32_t; 
+
 
 
 #define GAIN_NOT_ENOUGH_SAMPLES  -24601
@@ -44,12 +55,53 @@
 #define INIT_GAIN_ANALYSIS_ERROR      0
 #define INIT_GAIN_ANALYSIS_OK         1
 
-#define PINK_REF                64.82       /* 298640883795 */         /* calibration value */
+#define PINK_REF                64.82       /* 298640883795 */         /* calibration value for 89dB*/
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#define YULE_ORDER         10
+#define BUTTER_ORDER        2
+#define YULE_FILTER     filterYule
+#define BUTTER_FILTER   filterButter
+#define RMS_PERCENTILE      0.95        /* percentile which is louder than the proposed level */
+#define MAX_SAMP_FREQ   48000.          /* maximum allowed sample frequency [Hz] */
+#define RMS_WINDOW_TIME     0.050       /* Time slice size [s] */
+#define STEPS_per_dB      100.          /* Table entries per dB */
+#define MAX_dB            120.          /* Table entries for 0...MAX_dB (normal max. values are 70...80 dB) */
+
+#define MAX_ORDER               (BUTTER_ORDER > YULE_ORDER ? BUTTER_ORDER : YULE_ORDER)
+#define MAX_SAMPLES_PER_WINDOW  (size_t) (MAX_SAMP_FREQ * RMS_WINDOW_TIME +1)      /* max. Samples per Time slice */
+
+
+
+
+typedef struct
+{
+    Float_t          linprebuf [MAX_ORDER * 2];
+    Float_t*         linpre;                                          /* left input samples, with pre-buffer */
+    Float_t          lstepbuf  [MAX_SAMPLES_PER_WINDOW + MAX_ORDER];
+    Float_t*         lstep;                                           /* left "first step" (i.e. post first filter) samples */
+    Float_t          loutbuf   [MAX_SAMPLES_PER_WINDOW + MAX_ORDER];
+    Float_t*         lout;                                            /* left "out" (i.e. post second filter) samples */
+    Float_t          rinprebuf [MAX_ORDER * 2];
+    Float_t*         rinpre;                                          /* right input samples ... */
+    Float_t          rstepbuf  [MAX_SAMPLES_PER_WINDOW + MAX_ORDER];
+    Float_t*         rstep;
+    Float_t          routbuf   [MAX_SAMPLES_PER_WINDOW + MAX_ORDER];
+    Float_t*         rout;
+    long             sampleWindow;                                    /* number of samples required to reach number of milliseconds required for RMS window */
+    long             totsamp;
+    double           lsum;
+    double           rsum;
+    int              freqindex;
+    int              first;
+    Uint32_t  A [(size_t)(STEPS_per_dB * MAX_dB)];
+    Uint32_t  B [(size_t)(STEPS_per_dB * MAX_dB)];
+
+} replaygain_t;
+
+
+
+
 
 
 int     InitGainAnalysis (replaygain_t* rgData, long samplefreq );

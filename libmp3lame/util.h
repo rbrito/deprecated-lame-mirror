@@ -33,6 +33,7 @@
 #include "lame_global_flags.h"
 #include "lame-analysis.h"
 #include "id3tag.h"
+#include "gain_analysis.h"
 
 #if HAVE_INTTYPES_H
 # include <inttypes.h>
@@ -246,60 +247,6 @@ typedef struct {
     int            inp_stepper  [MAX_CHANNELS];
 
 } resample_t;
-
-
-
-
-/*****ReplayGain data*******/
-
-typedef sample_t Float_t;         /* Type used for filtering */
-
-typedef uint16_t        Uint16_t;
-typedef int16_t         Int16_t;
-typedef uint32_t        Uint32_t;
-typedef int32_t         Int32_t; 
-
-#define YULE_ORDER         10
-#define BUTTER_ORDER        2
-#define YULE_FILTER     filterYule
-#define BUTTER_FILTER   filterButter
-#define RMS_PERCENTILE      0.95        /* percentile which is louder than the proposed level */
-#define MAX_SAMP_FREQ   48000.          /* maximum allowed sample frequency [Hz] */
-#define RMS_WINDOW_TIME     0.050       /* Time slice size [s] */
-#define STEPS_per_dB      100.          /* Table entries per dB */
-#define MAX_dB            120.          /* Table entries for 0...MAX_dB (normal max. values are 70...80 dB) */
-
-#define MAX_ORDER               (BUTTER_ORDER > YULE_ORDER ? BUTTER_ORDER : YULE_ORDER)
-#define MAX_SAMPLES_PER_WINDOW  (size_t) (MAX_SAMP_FREQ * RMS_WINDOW_TIME +1)      /* max. Samples per Time slice */
-
-
-
-
-typedef struct
-{
-    Float_t          linprebuf [MAX_ORDER * 2];
-    Float_t*         linpre;                                          /* left input samples, with pre-buffer */
-    Float_t          lstepbuf  [MAX_SAMPLES_PER_WINDOW + MAX_ORDER];
-    Float_t*         lstep;                                           /* left "first step" (i.e. post first filter) samples */
-    Float_t          loutbuf   [MAX_SAMPLES_PER_WINDOW + MAX_ORDER];
-    Float_t*         lout;                                            /* left "out" (i.e. post second filter) samples */
-    Float_t          rinprebuf [MAX_ORDER * 2];
-    Float_t*         rinpre;                                          /* right input samples ... */
-    Float_t          rstepbuf  [MAX_SAMPLES_PER_WINDOW + MAX_ORDER];
-    Float_t*         rstep;
-    Float_t          routbuf   [MAX_SAMPLES_PER_WINDOW + MAX_ORDER];
-    Float_t*         rout;
-    long             sampleWindow;                                    /* number of samples required to reach number of milliseconds required for RMS window */
-    long             totsamp;
-    double           lsum;
-    double           rsum;
-    int              freqindex;
-    int              first;
-    Uint32_t  A [(size_t)(STEPS_per_dB * MAX_dB)];
-    Uint32_t  B [(size_t)(STEPS_per_dB * MAX_dB)];
-
-} replaygain_t;
-
 
 
 
