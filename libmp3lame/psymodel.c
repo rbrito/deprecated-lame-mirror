@@ -372,8 +372,7 @@ compute_ffts(
 
 	gfc->pinfo->ers[gr_out][chn]=gfc->ers_save[chn];
 	gfc->ers_save[chn]=(mx/(1e-12+mn));
-	gfc->pinfo->pe[gr_out][chn]=gfc->pe_save[chn];
-	gfc->pe_save[chn]=gfc->pe[chn];
+ 	gfc->pinfo->pe[gr_out][chn]=gfc->pe[chn];
     }
 #endif
     /*********************************************************************

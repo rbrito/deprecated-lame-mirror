@@ -551,7 +551,6 @@ struct lame_internal_flags {
   /* used by the frame analyzer */
   plotting_data *pinfo;
   FLOAT energy_save[4][HBLKSIZE];
-  FLOAT8 pe_save[4];
   FLOAT8 ers_save[4];
 };
 
