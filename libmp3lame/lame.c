@@ -46,11 +46,10 @@
 #include "asmstuff.h"
 #endif
 
-/* static void   lame_init_params_ppflt_lowpass (FLOAT8 amp_lowpass[32], float lowpass1, float lowpass2, int *lowpass_band, int *minband, int *maxband)           *//*{{{*/
 
 static void
-lame_init_params_ppflt_lowpass(FLOAT8 amp_lowpass[32], float lowpass1,
-			       float lowpass2, int *lowpass_band,
+lame_init_params_ppflt_lowpass(FLOAT8 amp_lowpass[32], FLOAT lowpass1,
+			       FLOAT lowpass2, int *lowpass_band,
 			       int *minband, int *maxband)
 {
 	int band;
@@ -1521,16 +1520,16 @@ int lame_init_old(lame_global_flags *gfp)
 #  define _FPU_GETCW(cw) __asm__ ("fnstcw %0" : "=m" (*&cw))
 #  define _FPU_SETCW(cw) __asm__ ("fldcw %0" : : "m" (*&cw))
 
-#  define _EM_INEXACT     0x00000001 /* inexact (precision) */
-#  define _EM_UNDERFLOW   0x00000002 /* underflow */
-#  define _EM_OVERFLOW    0x00000004 /* overflow */
-#  define _EM_ZERODIVIDE  0x00000008 /* zero divide */
-#  define _EM_INVALID     0x00000010 /* invalid */
+#  define _EM_INEXACT     0x00000020 /* inexact (precision) */
+#  define _EM_UNDERFLOW   0x00000010 /* underflow */
+#  define _EM_OVERFLOW    0x00000008 /* overflow */
+#  define _EM_ZERODIVIDE  0x00000004 /* zero divide */
+#  define _EM_INVALID     0x00000001 /* invalid */
   {
     unsigned int mask;
     _FPU_GETCW(mask);
     /* Set the FPU control word to abort on most FPEs */
-    mask &= ~(_EM_UNDERFLOW | _EM_OVERFLOW | _EM_ZERODIVIDE | _EM_INVALID);
+    mask &= ~(_EM_OVERFLOW | _EM_ZERODIVIDE | _EM_INVALID);
     _FPU_SETCW(mask);
   }
 # elif defined(__linux__)
