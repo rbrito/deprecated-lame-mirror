@@ -215,6 +215,7 @@ typedef struct {
     int sfbmax;
     int psymax;
     int sfbdivide;
+    int xrNumMax;
     int width[SFBMAX];
     int window[SFBMAX];
     int count1bits;

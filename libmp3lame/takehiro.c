@@ -65,11 +65,14 @@ static int quantize_xrpow(const FLOAT *xp, gr_info *gi)
     /* quantize on xr^(3/4) instead of xr */
     int sfb = 0;
     fi_union *fi = (fi_union *)gi->l3_enc;
+    const FLOAT *xend = &xp[gi->count1];
 
     do {
 	const FLOAT *xe = xp + gi->width[sfb];
 	FLOAT istep = IPOW20(scalefactor(gi, sfb));
 	sfb++;
+	if (xe > xend)
+	    xe = xend;
 	do {
 #ifdef TAKEHIRO_IEEE754_HACK
 	    FLOAT x0 = istep * xp[0] + MAGIC_FLOAT;
@@ -97,7 +100,7 @@ static int quantize_xrpow(const FLOAT *xp, gr_info *gi)
 	    (fi++)->i = (int)(x2 + adj43[rx2]);
 #endif
 	} while (xp < xe);
-    } while (fi < (fi_union *)&gi->l3_enc[576]);
+    } while (xp < xend);
     return 0;
 }
 
@@ -107,10 +110,14 @@ static void quantize_xrpow_ISO(const FLOAT *xp, gr_info *gi)
     /* quantize on xr^(3/4) instead of xr */
     int sfb = 0;
     fi_union *fi = (fi_union *)gi->l3_enc;
+    const FLOAT *xend = &xp[gi->count1];
+
     do {
 	const FLOAT *xe = xp + gi->width[sfb];
 	FLOAT istep = IPOW20(scalefactor(gi, sfb));
 	sfb++;
+	if (xe > xend)
+	    xe = xend;
 	do {
 #ifdef TAKEHIRO_IEEE754_HACK
 	    fi[0].f = istep * xp[0] + (ROUNDFAC + MAGIC_FLOAT);
@@ -124,7 +131,7 @@ static void quantize_xrpow_ISO(const FLOAT *xp, gr_info *gi)
 	    (fi++)->i = (int)(*xp++ * istep + ROUNDFAC);
 #endif
 	} while (xp < xe);
-    } while (fi < (fi_union *)&gi->l3_enc[576]);
+    } while (xp < xend);
 }
 
 /*************************************************************************/
@@ -382,7 +389,7 @@ noquant_count_bits(
     int *const ix = gi->l3_enc;
 
     /* Determine count1 region */
-    for (i = 576; i > 1; i -= 2)
+    for (i = gi->count1; i > 1; i -= 2)
 	if (ix[i - 1] | ix[i - 2])
 	    break;
     gi->count1 = i;

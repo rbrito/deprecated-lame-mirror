@@ -378,11 +378,7 @@ init_bitalloc(
     FLOAT xrpow[576] )
 {
     FLOAT tmp, sum = 0.0;
-    int i, end;
-    if (gi->block_type == SHORT_TYPE)
-	end = gfc->scalefac_band.s[gi->psymax/3]*3;
-    else
-	end = gfc->scalefac_band.l[gi->psymax];
+    int i, end = gi->xrNumMax;
 
     /*  check if there is some energy we have to quantize
      *  and calculate xrpow matching our fresh scalefactors */
@@ -391,8 +387,6 @@ init_bitalloc(
 	sum += tmp;
 	xrpow[i] = sqrt (tmp * sqrt(tmp));
     }
-    for (; i < 576; i++)
-	xrpow[i] = 0.0;
 
     /*  return 1 if we have something to quantize, else 0 */
     if (sum > (FLOAT)1E-20) {
@@ -428,7 +422,10 @@ bin_search_StepSize(
 {
     int nBits, flag_GoneOver = 0;
     assert(CurrentStep);
+    gi->count1 = gi->xrNumMax;
     do {
+	if (flag_GoneOver & 2)
+	    gi->count1 = gi->xrNumMax;
 	nBits = count_bits(gfc, xrpow, gi);
 
         if (CurrentStep == 1 || nBits == desired_rate)
@@ -454,6 +451,7 @@ bin_search_StepSize(
 	nBits = count_bits(gfc, xrpow, gi);
     } else if (gi->global_gain > 255) {
 	gi->global_gain = 255;
+	gi->count1 = gi->xrNumMax;
 	nBits = count_bits(gfc, xrpow, gi);
     } else if (nBits > desired_rate) {
 	gi->global_gain++;
@@ -498,7 +496,7 @@ trancate_smallspectrums(
 	return;
 
     calc_noise(gi, l3_xmin, distort);
-    for (j = 0; j < 576; j++) {
+    for (j = 0; j < gi->xrNumMax; j++) {
 	FLOAT xr = 0.0;
 	if (gi->l3_enc[j] != 0)
 	    xr = fabs(gi->xr[j]);
@@ -861,13 +859,11 @@ CBR_1st_bitalloc (
     bin_search_StepSize (gfc, gi, targ_bits - gi->part2_length,
 			 gfc->CurrentStep[ch], xrpow);
 
-    gfc->CurrentStep[ch]
-	= (gfc->OldValue[ch] - gi->global_gain) >= 4 ? 4 : 2;
+    gfc->CurrentStep[ch] = (gfc->OldValue[ch] - gi->global_gain) >= 4 ? 4 : 2;
     gfc->OldValue[ch] = gi->global_gain;
 
     if (gfc->psymodel < 2) 
-	/* fast mode, no noise shaping, we are ready */
-	return;
+	return; /* fast mode, no noise shaping, we are ready */
 
     /* compute the distortion in this quantization */
     /* coefficients and thresholds of ch0(L or Mid) or ch1(R or Side) */
@@ -885,13 +881,15 @@ CBR_1st_bitalloc (
     /* BEGIN MAIN LOOP */
     gi_w = *gi;
     for (;;) {
+	FLOAT newNoise;
 	/* try the new scalefactor conbination on gi_w */
 	int huff_bits = amp_scalefac_bands(gfc, &gi_w, distort,
 					   current_method, targ_bits);
-	FLOAT newNoise;
 
 	if (huff_bits > 0) {
 	    /* adjust global_gain to fit the available bits */
+	    
+	    gi_w.count1 = gi->xrNumMax;
 	    while (count_bits(gfc, xrpow, &gi_w) > huff_bits
 		   && ++gi_w.global_gain < 256u)
 		;
@@ -1467,6 +1465,7 @@ VBR_noise_shaping(
 	return j;
 
     /* quantize xr34 */
+    gi->count1 = gi->xrNumMax;
     gi->part2_3_length = count_bits(gfc, xr34, gi);
     if (gi->part2_3_length >= LARGE_BITS)
 	return -2;

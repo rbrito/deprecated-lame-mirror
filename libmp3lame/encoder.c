@@ -281,6 +281,11 @@ init_gr_info(lame_internal_flags *gfc, int gr, int ch)
     gi->slen[1]             = 0;
     gi->slen[2]             = 0;
     gi->slen[3]             = 0;
+    if (gi->block_type == SHORT_TYPE)
+	gi->xrNumMax = gfc->scalefac_band.s[gi->psymax/3]*3;
+    else
+	gi->xrNumMax = gfc->scalefac_band.l[gi->psymax]; /* XXX should be more precise */
+
     memset(gi->scalefac, 0, sizeof(gi->scalefac));
 }
 
@@ -415,7 +420,7 @@ int  lame_encode_mp3_frame (				/* Output */
 	for (gr = 0; gr < gfc->mode_gr; gr++) {
 	    gr_info *gi = &gfc->l3_side.tt[gr][0];
 	    int i;
-	    for (i = 0; i < 576; i++) {
+	    for (i = 0; i < gi->xrNumMax; i++) {
 		FLOAT d = (gi[0].xr[i]-gi[1].xr[i]) * gfc->narrowStereo;
 		gi[0].xr[i] -= d;
 		gi[1].xr[i] += d;
