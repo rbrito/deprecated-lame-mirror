@@ -18,10 +18,12 @@ Variable Bitrate Examples:
 =======================================================================
 LAME has two types of variable bitrate: ABR and CBR.
 
-ABR is the type of variable bitrate encoding usually found
-in other encoders and in AAC.  It bases the number of bits based on
-the perceptual entropy.  ABR is still in beta, but it should always
-give results equal or better than CBR:
+ABR is the type of variable bitrate encoding usually found in other
+MP3 encoders, Vorbis and AAC.  The number of bits is determined by
+some metric (like perceptual entropy, or just the number of bits
+needed for a certain set of encoding tables), and it is not based on
+computing the actual encoding/quantization error.  ABR is still in
+beta, but it should always give results equal or better than CBR:
 
 ABR:   (--abr <x> means encode with an average bitrate of around x kbps)
 lame -h --abr 128  sample.wav sample.mp3
@@ -562,8 +564,9 @@ Output sampling frequency.  Resample the input if necessary.
 If not specified, LAME may sometimes resample automatically 
 when faced with extreme compression conditions (like encoding
 a 44.1 kHz input file at 32 kbps).  To disable this automatic
-resampling, you have to specify a resample rate equal to the
-input sample rate.
+resampling, you have to use --resamle to set the output samplerate
+equal to the inptu samplerate.  In that case, LAME will not
+perform any extra computations.
 
 
 
