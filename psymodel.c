@@ -45,8 +45,62 @@ int L3para_read( lame_global_flags *gfp,
 		  int bu_s[SBPSY_s], int bo_s[SBPSY_s],
 		  FLOAT8 w1_s[SBPSY_s], FLOAT8 w2_s[SBPSY_s],
 		  int *, int *, int *, int *);
-									
 
+/* addition of simultaneous masking   Naoki Shibata 2000/7 */
+INLINE FLOAT8 mask_add(double m1,double m2,int b)
+{
+  static double table1[] = {
+    3.3246,3.23837,3.15437,3.00412,2.86103,2.65407,2.46209,2.284,
+    2.11879,1.96552,1.82335,1.69146,1.56911,1.46658,1.37074,1.31036,
+    1.25264,1.20648,1.16203,1.12765,1.09428,1.0659,1.03826,1.01895,
+    1
+  };
+
+  static double table2[] = {
+    1.33352,1.35879,1.38454,1.39497,1.40548,1.3537,1.30382,1.22321,
+    1.14758
+  };
+
+  static double table3[] = {
+    2.35364,2.29259,2.23313,2.12675,2.02545,1.87894,1.74303,1.61695,
+    1.49999,1.39148,1.29083,1.19746,1.11084,1.03826
+  };
+
+
+  int i;
+
+  if (m1 == 0) return m2;
+
+  if (b < 0) b = -b;
+
+  i = 20*log10(m2 / m1)/20*16;
+  if (i < 0) i = -i;
+
+  if (b <= 3) {
+    if (i > 8) return m1+m2;
+    if (m1+m2 < 200) {
+      double r;
+      r = (m1+m2)/200;
+      return (m1+m2)*(table2[i]*r+1*(1-r));
+    }
+    return (m1+m2)*table2[i];
+  }
+
+  if (m1+m2 < 200) {
+    if (m1+m2 > 150) {
+      double f=1.0,r;
+      if (i > 24) return m1+m2;
+      if (i > 13) f = 1; else f = table3[i];
+      r = (m1+m2-150)/50;
+      return (m1+m2)*(table1[i]*r+f*(1-r));
+    }
+    if (i > 13) return m1+m2;
+    return (m1+m2)*table3[i];
+  }
+
+  if (i > 24) return m1+m2;
+  return (m1+m2)*table1[i];
+}
 
 int L3psycho_anal( lame_global_flags *gfp,
                     short int *buffer[2],int gr_out , 
@@ -73,10 +127,12 @@ int L3psycho_anal( lame_global_flags *gfp,
   FLOAT tot_ener[4];
 
   /* convolution   */
-  FLOAT8 eb[CBANDS];
+  FLOAT8 eb[CBANDS],eb2[CBANDS];
   FLOAT8 cb[CBANDS];
   FLOAT8 thr[CBANDS];
   
+  FLOAT8 max[CBANDS],avg[CBANDS],tonality2[CBANDS];
+
   /* ratios    */
   FLOAT8 ms_ratio_l=0,ms_ratio_s=0;
 
@@ -225,8 +281,14 @@ int L3psycho_anal( lame_global_flags *gfp,
       for ( k = gfc->s3ind[b][0]; k <= gfc->s3ind[b][1]; k++ ) {
 	norm += gfc->s3_l[b][k];
       }
-      for ( k = gfc->s3ind[b][0]; k <= gfc->s3ind[b][1]; k++ ) {
-	gfc->s3_l[b][k] /=  norm;
+      if (gfp->exp_nspsytune) {
+	for ( k = gfc->s3ind[b][0]; k <= gfc->s3ind[b][1]; k++ ) {
+	  gfc->s3_l[b][k] *= 0.7;
+	}
+      } else {
+	for ( k = gfc->s3ind[b][0]; k <= gfc->s3ind[b][1]; k++ ) {
+	  gfc->s3_l[b][k] /=  norm;
+	}
       }
       /*DEBUGF("%i  norm=%f  norm_l=%f \n",b,1/norm,norm_l[b]);*/
     }
@@ -237,13 +299,19 @@ int L3psycho_anal( lame_global_flags *gfp,
       for ( k = gfc->s3ind_s[b][0]; k <= gfc->s3ind_s[b][1]; k++ ) {
 	norm += gfc->s3_s[b][k];
       }
-      for ( k = gfc->s3ind_s[b][0]; k <= gfc->s3ind_s[b][1]; k++ ) {
-	gfc->s3_s[b][k] *= SNR_s[b] / norm;
+      if (gfp->exp_nspsytune) {
+	for ( k = gfc->s3ind_s[b][0]; k <= gfc->s3ind_s[b][1]; k++ ) {
+	  gfc->s3_s[b][k] *= 0.7;
+	}
+      } else {
+	for ( k = gfc->s3ind_s[b][0]; k <= gfc->s3ind_s[b][1]; k++ ) {
+	  gfc->s3_s[b][k] *= SNR_s[b] / norm;
+	}
       }
       /*DEBUGF("%i  norm=%f  norm_s=%f \n",b,1/norm,norm_l[b]);*/
     }
     
-    init_fft();
+    init_fft(gfp);
   }
   /************************* End of Initialization *****************************/
   
@@ -278,8 +346,8 @@ int L3psycho_anal( lame_global_flags *gfp,
     wsamp_s = gfc->wsamp_S+(chn & 1);
     wsamp_l = gfc->wsamp_L+(chn & 1);
     if (chn<2) {    
-      fft_long ( *wsamp_l, chn, buffer);
-      fft_short( *wsamp_s, chn, buffer);
+      fft_long ( gfp, *wsamp_l, chn, buffer);
+      fft_short( gfp, *wsamp_s, chn, buffer);
     } 
     /* FFT data for mid and side channel is derived from L & R */
     if (chn == 2)
@@ -486,50 +554,123 @@ int L3psycho_anal( lame_global_flags *gfp,
       }
 #endif
     
-    
-    
-    
-    
-    
-    
-    
     /**********************************************************************
      *    Calculate the energy and the unpredictability in the threshold   *
      *    calculation partitions                                           *
      **********************************************************************/
-    b = 0;
-    for (j = 0; j < gfc->cw_upper_index && gfc->numlines_l[b] && b<gfc->npart_l_orig; )
-      {
-	FLOAT8 ebb, cbb;
 
-	ebb = gfc->energy[j];
-	cbb = gfc->energy[j] * gfc->cw[j];
-	j++;
+    if (gfp->exp_nspsytune) {
+      b = 0;
+      for (j = 0; j < gfc->cw_upper_index && gfc->numlines_l[b] && b<gfc->npart_l_orig; )
+        {
+	  FLOAT8 ebb, cbb,m,a;
+  
+	  ebb = gfc->energy[j];
+	  m = a = gfc->energy[j];
+	  cbb = gfc->energy[j] * gfc->cw[j];
+	  j++;
+  
+	  for (i = gfc->numlines_l[b] - 1; i > 0; i--)
+	    {
+	      FLOAT8 el = gfc->energy[j];
+	      ebb += gfc->energy[j];
+	      cbb += gfc->energy[j] * gfc->cw[j];
+	      a += el;
+	      m = m < el ? el : m;
+	      j++;
+	    }
+	  eb[b] = ebb;
+	  cb[b] = cbb;
+	  max[b] = m; avg[b] = a;
+	  b++;
+        }
+  
+      for (; b < gfc->npart_l_orig; b++ )
+        {
+	  FLOAT8 el = gfc->energy[j];
+	  FLOAT8 m,a;
+	  FLOAT8 ebb = gfc->energy[j++];
+	  m = a = el;
+	  assert(gfc->numlines_l[b]);
+	  for (i = gfc->numlines_l[b] - 1; i > 0; i--)
+	    {
+	      el = gfc->energy[j];
+	      ebb += gfc->energy[j++];
+	      a += el;
+	      m = m < el ? el : m;
+	    }
+	  eb[b] = ebb;
+	  cb[b] = ebb * 0.4;
+ 
+	  max[b] = m; avg[b] = a;
+        }
+  
+      j = 0;
+      for (b=0; b < gfc->npart_l_orig; b++ )
+	{
+	  int c1,c2;
+	  FLOAT8 m,a;
+	  tonality2[b] = 0;
+	  c1 = c2 = 0;
+	  m = a = 0;
+	  for(k=b;k<=b;k++)
+	    {
+	      if (k >= 0 && k < gfc->npart_l_orig) {
+		c1++;
+		c2 += gfc->numlines_l[k];
+		a += avg[k];
+		m = m < max[k] ? max[k] : m;
+	      }
+	    }
+ 
+	  tonality2[b] = a == 0 ? 0 : (m / a)*c1;
+ 	}
+ 
+      for (b=0; b < gfc->npart_l_orig; b++ )
+	{
+	  FLOAT8 f=1;
+	  eb2[b] = eb[b];
 
-
-	for (i = gfc->numlines_l[b] - 1; i > 0; i--)
-	  {
-	    ebb += gfc->energy[j];
-	    cbb += gfc->energy[j] * gfc->cw[j];
-	    j++;
+	  if (tonality2[b]*b > 19) {
+	    if (tonality2[b]*b > 21) f = 0.3;
+	    else f = 1-(tonality2[b]*b-19)/2*0.7;
 	  }
-	eb[b] = ebb;
-	cb[b] = cbb;
-	b++;
-      }
+	  eb2[b] *= f;
+	}
+    } else {
+      b = 0;
+      for (j = 0; j < gfc->cw_upper_index && gfc->numlines_l[b] && b<gfc->npart_l_orig; )
+	{
+	  FLOAT8 ebb, cbb;
 
-    for (; b < gfc->npart_l_orig; b++ )
-      {
-	FLOAT8 ebb = gfc->energy[j++];
-	assert(gfc->numlines_l[b]);
-	for (i = gfc->numlines_l[b] - 1; i > 0; i--)
-	  {
-	    ebb += gfc->energy[j++];
-	  }
-	eb[b] = ebb;
-	cb[b] = ebb * 0.4;
-      }
+	  ebb = gfc->energy[j];
+	  cbb = gfc->energy[j] * gfc->cw[j];
+	  j++;
 
+
+	  for (i = gfc->numlines_l[b] - 1; i > 0; i--)
+	    {
+	      ebb += gfc->energy[j];
+	      cbb += gfc->energy[j] * gfc->cw[j];
+	      j++;
+	    }
+	  eb[b] = ebb;
+	  cb[b] = cbb;
+	  b++;
+	}
+
+      for (; b < gfc->npart_l_orig; b++ )
+	{
+	  FLOAT8 ebb = gfc->energy[j++];
+	  assert(gfc->numlines_l[b]);
+	  for (i = gfc->numlines_l[b] - 1; i > 0; i--)
+	    {
+	      ebb += gfc->energy[j++];
+	    }
+	  eb[b] = ebb;
+	  cb[b] = ebb * 0.4;
+	}
+    }
 
     /**********************************************************************
      *      convolve the partitioned energy and unpredictability           *
@@ -542,11 +683,20 @@ int L3psycho_anal( lame_global_flags *gfp,
 
 	ecb = 0;
 	ctb = 0;
-	for ( k = gfc->s3ind[b][0]; k <= gfc->s3ind[b][1]; k++ )
-	  {
-	    ecb += gfc->s3_l[b][k] * eb[k];	/* sprdngf for Layer III */
-	    ctb += gfc->s3_l[b][k] * cb[k];
-	  }
+
+	if (gfp->exp_nspsytune) {
+	  for ( k = gfc->s3ind[b][0]; k <= gfc->s3ind[b][1]; k++ )
+	    {
+	      ecb = mask_add(ecb,gfc->s3_l[b][k] * eb2[k],k-b);
+	      ctb += gfc->s3_l[b][k] * cb[k];
+	    }
+	} else {
+	  for ( k = gfc->s3ind[b][0]; k <= gfc->s3ind[b][1]; k++ )
+	    {
+	      ecb += gfc->s3_l[b][k] * eb[k];	/* sprdngf for Layer III */
+	      ctb += gfc->s3_l[b][k] * cb[k];
+	    }
+	}
 
 	/* calculate the tonality of each threshold calculation partition 
 	 * calculate the SNR in each threshhold calculation partition 
@@ -586,10 +736,15 @@ int L3psycho_anal( lame_global_flags *gfp,
 	 * minval[]= .01 (-20db)  says reduce spreading function by 
 	 *                        at least 20db.  
 	 */
-	tbb = Min(gfc->minval[b], tbb);
-	ecb *= tbb;
 
-
+	if (gfp->exp_nspsytune) {
+	  tbb = exp(-LN_TO_LOG10 * NMT);
+	  ecb *= tbb;
+	  ecb *= pow(10,4/20);   /* tuned by hearing tests */
+	} else {
+	  tbb = Min(gfc->minval[b], tbb);
+	  ecb *= tbb;
+	}
 
 	/* long block pre-echo control.   */
 	/* rpelev=2.0, rpelev2=16.0 */
@@ -621,9 +776,34 @@ int L3psycho_anal( lame_global_flags *gfp,
 	  if (thrpe < eb[b])
 	    gfc->pe[chn] -= gfc->numlines_l[b] * log(thrpe / eb[b]);
 	}
+
+#undef PRINTMASKING
+#ifdef PRINTMASKING
+ 	if (b != 0)
+	  {
+	    int i,t,e,a;
+ 
+	    t = tonality2[b]*b*50-950;
+	    if (t<0) t = 0;
+	    if (t>99) t = 99;
+	    PRINTF1("%2d ",t);
+ 
+	    t = -82+20*log10(ecb); // -82+20*log10(thr[b]);
+	    e = -82+20*log10(eb[b]);
+	    a = -82+20*log10(gfc->ATH_partitionbands[b])+120;
+	    for(i=0;i<a;i++) PRINTF1("a");
+	    for(;i<t;i++) {
+	      if (i >= e) PRINTF1("O");
+	      else PRINTF1("@");
+	    }
+	    for(;i<e;i++) PRINTF1("-");
+	    PRINTF1("\n");
+	  }
+#endif
       }
-
-
+#ifdef PRINTMASKING
+    PRINTF1("\n");
+#endif
     
     /*************************************************************** 
      * determine the block type (window type) based on L & R channels
@@ -700,24 +880,27 @@ int L3psycho_anal( lame_global_flags *gfp,
     /* longblock threshold calculation (part 2) */
     for ( sb = 0; sb < SBPSY_l; sb++ )
       {
-#if 1  /* additive masking */
-	FLOAT8 enn = gfc->w1_l[sb] * eb[gfc->bu_l[sb]] + gfc->w2_l[sb] * eb[gfc->bo_l[sb]];
-	FLOAT8 thmm = gfc->w1_l[sb] *thr[gfc->bu_l[sb]] + gfc->w2_l[sb] * thr[gfc->bo_l[sb]];
-	for ( b = gfc->bu_l[sb]+1; b < gfc->bo_l[sb]; b++ )
-	  {
-	    enn  += eb[b];
-	    thmm += thr[b];
-	  }
-#else
-	FLOAT8 enn = gfc->w1_l[sb] * eb[gfc->bu_l[sb]] + gfc->w2_l[sb] * eb[gfc->bo_l[sb]];
-	FLOAT8 thmm = Min(thr[gfc->bu_l[sb]],thr[gfc->bo_l[sb]]);
-	for ( b = gfc->bu_l[sb]+1; b < gfc->bo_l[sb]; b++ )
-	  {
-	    enn  += eb[b];
-	    thmm = Min(thr[b],thmm);
-	  }
-	thmm*=(1+gfc->bo_l[sb]-gfc->bu_l[sb]);
-#endif
+	FLOAT8 enn,thmm;
+	if (!gfp->exp_nspsytune) {
+	  /* additive masking */
+	  enn = gfc->w1_l[sb] * eb[gfc->bu_l[sb]] + gfc->w2_l[sb] * eb[gfc->bo_l[sb]];
+	  thmm = gfc->w1_l[sb] *thr[gfc->bu_l[sb]] + gfc->w2_l[sb] * thr[gfc->bo_l[sb]];
+	  for ( b = gfc->bu_l[sb]+1; b < gfc->bo_l[sb]; b++ )
+	    {
+	      enn  += eb[b];
+	      thmm += thr[b];
+	    }
+	} else {
+	  enn = gfc->w1_l[sb] * eb[gfc->bu_l[sb]] + gfc->w2_l[sb] * eb[gfc->bo_l[sb]];
+	  thmm = Min(thr[gfc->bu_l[sb]],thr[gfc->bo_l[sb]]);
+	  for ( b = gfc->bu_l[sb]+1; b < gfc->bo_l[sb]; b++ )
+	    {
+	      enn  += eb[b];
+	      thmm = Min(thr[b],thmm);
+	    }
+	  thmm*=(1+gfc->bo_l[sb]-gfc->bu_l[sb]);
+	}
+
 	gfc->en[chn].l[sb] = enn;
 	gfc->thm[chn].l[sb] = thmm;
       }

@@ -10,6 +10,8 @@
 #undef TAKEHIRO_IEEE754_HACK
 #endif
 
+#define NSTHRE 4  /* tuned by hearing tests */
+
 const int slen1_tab[16] = { 0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4 };
 const int slen2_tab[16] = { 0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3 };
 
@@ -752,7 +754,7 @@ int calc_noise( lame_global_flags *gfp,
 {
   int start, end, j,l, i, over=0;
   u_int sfb;
-  FLOAT8 sum, bw;
+  FLOAT8 sum, osum, bw;
   lame_internal_flags *gfc=gfp->internal_flags;
   
   int count=0;
@@ -783,7 +785,20 @@ int calc_noise( lame_global_flags *gfp,
 	    assert(s>=0);
 	    step = POW20(s);
 
-	    for ( sum = 0.0, l = start; l < end; l++ ) {
+	    if (gfp->exp_nspsytune) {
+	      for ( osum = sum = 0.0, l = start; l < end; l++ ) {
+		FLOAT8 temp;
+		temp = fabs(xr[j]) - pow43[ix[j]] * step;
+		++j;
+
+		temp = temp*temp;
+		osum = Max(osum,bw*temp);
+		sum += temp;
+	      }       
+
+	      if (osum > sum*NSTHRE) sum = osum;
+	    } else {
+	      for ( sum = 0.0, l = start; l < end; l++ ) {
 		FLOAT8 temp;
 		temp = fabs(xr[j]) - pow43[ix[j]] * step;
 		++j;
@@ -793,7 +808,9 @@ int calc_noise( lame_global_flags *gfp,
 #else
 		sum += temp * temp;
 #endif
-            }       
+	      }   
+	    }    
+
 	    xfsf[i+1][sfb] = sum / bw;
 
 	    /* max -30db noise below threshold */
@@ -832,18 +849,31 @@ int calc_noise( lame_global_flags *gfp,
         end   = gfc->scalefac_band.l[ sfb+1 ];
         bw = end - start;
 
-        for ( sum = 0.0, l = start; l < end; l++ )
-        {
-            FLOAT8 temp;
-            temp = fabs(xr[l]) - pow43[ix[l]] * step;
+	if (gfp->exp_nspsytune) {
+	  for ( osum = sum = 0.0, l = start; l < end; l++ )
+	    {
+	      FLOAT8 temp;
+	      temp = fabs(xr[l]) - pow43[ix[l]] * step;
+	      temp = temp*temp;
+	      osum = Max(osum,bw*temp);
+	      sum += temp;
+	    }
+
+	  if (osum > sum*NSTHRE) sum = osum;
+	} else {
+	  for ( sum = 0.0, l = start; l < end; l++ )
+	    {
+	      FLOAT8 temp;
+	      temp = fabs(xr[l]) - pow43[ix[l]] * step;
 #ifdef MAXNOISE
-	    temp = bw*temp*temp;
-	    sum = Max(sum,temp);
+	      temp = bw*temp*temp;
+	      sum = Max(sum,temp);
 #else
-            sum += temp * temp;
+	      sum += temp * temp;
 #endif
-	    
-        }
+	    }
+	}
+
         xfsf[0][sfb] = sum / bw;
 
 	/* max -30db noise below threshold */

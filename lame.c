@@ -1565,6 +1565,7 @@ int lame_init(lame_global_flags *gfp)
   gfp->experimentalX = 0;
   gfp->experimentalY = 0;
   gfp->experimentalZ = 0;
+  gfp->exp_nspsytune = 0;
   gfp->gtkflag=0;
   gfp->quality=5;
   gfp->input_format=sf_unknown;

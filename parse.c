@@ -467,7 +467,12 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	    ERRORF("Must specify compression ratio >= 1.0\n");
 	    LAME_ERROR_EXIT();
 	  }
-	} /* some more GNU-ish options could be added
+	}
+	else if (strcmp(token, "nspsytune")==0) {
+	  gfp->exp_nspsytune = TRUE;
+	  gfp->experimentalZ = TRUE;
+	}
+	/* some more GNU-ish options could be added
 	   * version       => complete name, version and license info (normal exit)  
 	   * quiet/silent  => no messages on screen
 	   * brief         => few messages on screen (name, status report)
