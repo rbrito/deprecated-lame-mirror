@@ -209,6 +209,10 @@ SOURCE=..\libmp3lame\newmdct.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\libmp3lame\presets.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\libmp3lame\psymodel.c
 # End Source File
 # Begin Source File
