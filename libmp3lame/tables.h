@@ -37,8 +37,11 @@ extern const struct huffcodetab ht[];
 extern const unsigned char quadcode[2][16*2];
 
 extern const unsigned int   largetbl    [16*16];
-extern const unsigned int   table56       [4*4];
 extern const unsigned int   table13       [2*2];
+extern const unsigned long long table7B89[];
+extern const unsigned long long table7B89[];
+extern const unsigned long long table5967[];
+extern const unsigned long long tableDxEF[];
 
 extern const int scfsi_band[5];
 

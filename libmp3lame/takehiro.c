@@ -124,29 +124,23 @@ inline static int
 count_bit_noESC_from2(
     const int *       ix, 
     const int * const end,
-          int         t1,
           int * const s)
 {
     /* No ESC-words */
     unsigned int sum = 0, sum2;
-    const int xlen = ht[t1-1].xlen;
     const unsigned int *hlen = table13;
-    if (t1 == 5)
-	hlen = table56;
+    int t1;
     do {
-	int x = ix[0] * xlen + ix[1];
-	ix += 2;
-	sum += hlen[x];
-    } while (ix < end);
+	sum += hlen[ix[0] * 2 + ix[1]];
+    } while ((ix += 2) < end);
 
     sum2 = sum & 0xffff;
     sum >>= 16;
 
+    t1 = 1;
     if (sum > sum2) {
 	sum = sum2;
-	if (t1 == 1)
-	    t1++;
-	t1++;
+	t1+=2;
     }
 
     *s += sum;
@@ -155,38 +149,43 @@ count_bit_noESC_from2(
 
 
 inline static int
-count_bit_noESC_from3(
-    const int *       ix, 
+count_bit_noESC_from4(
+    const int *       ix,
     const int * const end,
+          int         xlen,
           int         t1,
+    const unsigned long long * const table,
           int * const s)
 {
     /* No ESC-words */
-    int	sum1 = 0;
-    int	sum2 = 0;
-    int	sum3 = 0;
-    const int xlen = ht[t1-1].xlen;
-    const char *hlen1 = ht[t1-1].hlen;
-    const char *hlen2 = ht[t1].hlen;
-    const char *hlen3 = ht[t1+1].hlen;
+    unsigned long long sum = 0;
+    int	sum1, sum2;
     int t;
-
     do {
-	int x = ix[0] * xlen + ix[1];
-	ix += 2;
-	sum1 += hlen1[x];
-	sum2 += hlen2[x];
-	sum3 += hlen3[x];
-    } while (ix < end);
+	sum += table[ix[0] * xlen + ix[1]];
+    } while ((ix += 2) < end);
 
     t = t1;
+    sum1 = sum & 0xffff;
+    sum2 = (sum>>16) & 0xffff;
     if (sum1 > sum2) {
 	sum1 = sum2;
-	t++;
+	if (t1 == 10)
+	    t = 15;
+	if (t1 == 2)
+	    t = 8;
+	if (t1 == 5 || t1 == 7)
+	    t += 4;
     }
-    if (sum1 > sum3) {
-	sum1 = sum3;
+    sum2 = (sum>>32) & 0xffff;
+    if (sum1 > sum2) {
+	sum1 = sum2;
 	t = t1+2;
+    }
+    sum2 = sum>>48;
+    if (sum1 > sum2) {
+	sum1 = sum2;
+	t = t1+1;
     }
     *s += sum1;
 
@@ -229,27 +228,29 @@ int choose_table_nonMMX(
     const int * const end,
           int * const s)
 {
-    int max, choice, choice2;
-    static const int huf_tbl_noESC[] = {
-	1, 2, 5, 7, 7,10,10,13,13,13,13,13,13,13,13
-    };
-
-    max = ix_max(ix, end);
+    int choice, choice2, max = ix_max(ix, end);
 
     switch (max) {
     case 0:
 	return max;
 
     case 1:
-    case 3:
-	return count_bit_noESC_from2(ix, end, huf_tbl_noESC[max - 1], s);
+	return count_bit_noESC_from2(ix, end, s);
 
     case 2:
-    case 4: case 5: case 6:
-    case 7: case 8: case 9:
-    case 10: case 11: case 12:
-    case 13: case 14: case 15:
-	return count_bit_noESC_from3(ix, end, huf_tbl_noESC[max - 1], s);
+	return count_bit_noESC_from4(ix, end, 16,  2, table7B89+96, s);
+
+    case 3:
+	return count_bit_noESC_from4(ix, end,  4,  5, table5967, s);
+
+    case 4: case 5:
+	return count_bit_noESC_from4(ix, end, 16,  7, table7B89, s);
+
+    case 6: case 7:
+	return count_bit_noESC_from4(ix, end, 16, 10, table7B89+8, s);
+
+    case 8: case 9: case 10: case 11: case 12: case 13: case 14: case 15:
+	return count_bit_noESC_from4(ix, end, 16, 13, tableDxEF, s);
 
     default:
 	/* try tables with linbits */
