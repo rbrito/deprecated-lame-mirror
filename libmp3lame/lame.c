@@ -597,9 +597,9 @@ lame_init_params(lame_global_flags * const gfp)
     if (gfp->quality < 0)
 	gfp->quality = LAME_DEFAULT_QUALITY;
 
-    if (gfp->VBR == vbr && gfp->quality > 7) {
-	gfp->quality = 7;     // needs psymodel
-	ERRORF(gfc, "VBR needs a psymodel, switching to quality level 7\n");
+    if (gfp->VBR == vbr && gfp->quality != 5) {
+	gfp->quality = 5;
+	ERRORF(gfc, "VBR mode with -q setting is meaningless.\n");
     }
 
     if (gfc->noise_shaping_amp > 2)
