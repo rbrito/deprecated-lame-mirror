@@ -38,7 +38,8 @@
 #endif
 #include <stdio.h>
 
-#include "version.h"    /* macros of version numbers */
+#include "lame.h"
+#include "version.h"
 
 /*! Stringify \a x. */
 #define STR(x)   #x
@@ -56,7 +57,8 @@
   \param void
   \return a pointer to a string which describes the version of LAME.
 */
-const char*  get_lame_version ( void )		/* primary to write screen reports */
+const char*
+get_lame_version ( void )		/* primary to write screen reports */
 {
     /* Here we can also add informations about compile time configurations */
 
@@ -84,7 +86,8 @@ const char*  get_lame_version ( void )		/* primary to write screen reports */
   \param void   
   \return a pointer to the short version of the LAME version string.
 */
-const char*  get_lame_short_version ( void )
+const char*
+get_lame_short_version ( void )
 {
     /* adding date and time to version string makes it harder for output
        validation */
@@ -110,7 +113,8 @@ const char*  get_lame_short_version ( void )
   \param void   
   \return a pointer to the short version of the LAME version string.
 */
-const char*  get_lame_very_short_version ( void )
+const char*
+get_lame_very_short_version ( void )
 {
     /* adding date and time to version string makes it harder for output
        validation */
@@ -134,7 +138,8 @@ const char*  get_lame_very_short_version ( void )
   \param void
   \return a pointer to a string which describes the version of GPSYCHO.
 */
-const char*  get_psy_version ( void )
+const char*
+get_psy_version ( void )
 {
 #if   PSY_ALPHA_VERSION > 0
     static /*@observer@*/ const char *const str =
@@ -158,7 +163,8 @@ const char*  get_psy_version ( void )
   \param void
   \return a pointer to a string which is a URL for the LAME website.
 */
-const char*  get_lame_url ( void )
+const char*
+get_lame_url ( void )
 {
     static /*@observer@*/ const char *const str = LAME_URL;
 
@@ -173,7 +179,8 @@ const char*  get_lame_url ( void )
 
   \param lvp    
 */
-void get_lame_version_numerical ( lame_version_t *const lvp )
+void
+get_lame_version_numerical ( lame_version_t *const lvp )
 {
     static /*@observer@*/ const char *const features = V;
 

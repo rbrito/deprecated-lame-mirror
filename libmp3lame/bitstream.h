@@ -21,16 +21,15 @@
 
 #ifndef LAME_BITSTREAM_H
 #define LAME_BITSTREAM_H
-#include "encoder.h"
 
 #define         CRC16_POLYNOMIAL        0x8005
 
 int getframebytes(const lame_t gfc);
 int format_bitstream(lame_t gfc);
 int flush_bitstream(lame_t gfc, unsigned char *, int, int);
-void add_dummy_byte (lame_t gfc, unsigned char val);
+void add_dummy_byte(lame_t gfc, unsigned char val);
 int  copy_buffer(lame_t gfc, unsigned char *buffer, int buffer_size, int update_crc);
-void CRC_writeheader (char *buffer, int len);
+void CRC_writeheader(char *buffer, int len);
 int compute_flushbits(const lame_t gfc, int *nbytes);
 
 #endif

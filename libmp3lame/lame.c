@@ -37,7 +37,6 @@
 #include "util.h"
 #include "set_get.h"
 #include "bitstream.h"
-#include "version.h"
 #include "tables.h"
 #include "quantize.h"
 #include "psymodel.h"
@@ -1144,11 +1143,12 @@ lame_close(lame_t gfc)
     gfc->Class_ID = 0;
 
     /* free all malloc'd data in gfc, and then free gfc: */
-    for ( i = 0 ; i <= 2*BPC; i++ )
-        if (gfc->resample.blackfilt[i]) {
-            free(gfc->resample.blackfilt[i]);
+    for (i = 0 ; i <= 2*BPC; i++) {
+	if (gfc->resample.blackfilt[i]) {
+	    free(gfc->resample.blackfilt[i]);
 	    gfc->resample.blackfilt[i] = NULL;
 	}
+    }
     for (i = 0; i < MAX_CHANNELS; i++) {
 	if (gfc->resample.inbuf_old[i]) { 
 	    free(gfc->resample.inbuf_old[i]);
@@ -1156,17 +1156,14 @@ lame_close(lame_t gfc)
 	}
     }
 
-    if ( gfc->VBR_seek_table.bag ) {
-        free ( gfc->VBR_seek_table.bag );
-        gfc->VBR_seek_table.bag=NULL;
-        gfc->VBR_seek_table.size=0;
+    if (gfc->VBR_seek_table.bag) {
+	free(gfc->VBR_seek_table.bag);
+	gfc->VBR_seek_table.bag=NULL;
+	gfc->VBR_seek_table.size=0;
     }
-    if ( gfc->s3_ll ) {
-        free ( gfc->s3_ll );
-    }
-    if ( gfc->s3_ss ) {
-        free ( gfc->s3_ss );
-    }
+
+    if (gfc->s3_ll) free(gfc->s3_ll);
+    if (gfc->s3_ss) free(gfc->s3_ss);
 
     free((unsigned char*)gfc - gfc->alignment);
 
@@ -1180,7 +1177,7 @@ int
 lame_encode_finish(lame_t gfc,
 		   unsigned char *mp3buffer, int mp3buffer_size)
 {
-    int     ret = lame_encode_flush(gfc, mp3buffer, mp3buffer_size);
+    int ret = lame_encode_flush(gfc, mp3buffer, mp3buffer_size);
 
     lame_close(gfc);
 

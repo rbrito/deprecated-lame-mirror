@@ -29,8 +29,8 @@
 #endif
 #include <assert.h>
 
+#include "encoder.h"
 #include "bitstream.h"
-#include "version.h"
 #include "VbrTag.h"
 #include "tables.h"
 

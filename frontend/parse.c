@@ -231,7 +231,8 @@ static int setOS2Priority(int Priority)
 *
 ************************************************************************/
 
-void lame_version_print ( FILE* const fp )
+void
+lame_version_print(FILE* const fp)
 {
     fprintf(fp, "LAME version %s (%s)\n\n",
 	    get_lame_version (), get_lame_url ());
@@ -242,7 +243,7 @@ void lame_version_print ( FILE* const fp )
 
 /* print version & license */
 static int
-print_license (FILE* const fp, const char* ProgramName )
+print_license (FILE* const fp)
 {
     fprintf ( fp, 
               "Can I use LAME in my commercial program?\n"
@@ -625,7 +626,7 @@ static void  presets_longinfo_dm ( FILE* msgfp )
 
 /*  some presets thanks to Dibrom
  */
-static int  presets_set( lame_t gfp, int fast, int cbr, const char* preset_name, const char* ProgramName )
+static int  presets_set( lame_t gfp, int cbr, const char* preset_name, const char* ProgramName )
 {
     int mono = 0, rate;
 
@@ -735,6 +736,7 @@ static int  presets_set( lame_t gfp, int fast, int cbr, const char* preset_name,
 
 static void genre_list_handler (int num,const char *name,void *cookie)
 {
+    (void)cookie;
     printf ("%3d %s\n", num, name);
 }
 
@@ -1249,7 +1251,7 @@ int  parse_args (lame_t gfp, int argc, char** argv,
                     ignore_tag_errors = 1;
                     
                 T_ELIF2 ("version", "license")
-                    print_license (stdout, ProgramName );
+                    print_license (stdout);
                     return -2;
                 
                 T_ELIF2 ("help", "usage")
@@ -1290,8 +1292,8 @@ int  parse_args (lame_t gfp, int argc, char** argv,
                         nextArg = i+argUsed < argc  ?  argv[i+argUsed]  :  "";
                     }
 
-                    if (presets_set ( gfp, fast, cbr, nextArg, ProgramName ) < 0)
-                    return -1;
+                    if (presets_set (gfp, cbr, nextArg, ProgramName ) < 0)
+			return -1;
                 }
 
                 T_ELIF ("disptime")
@@ -1414,15 +1416,15 @@ int  parse_args (lame_t gfp, int argc, char** argv,
                     case 'X':        
                         argUsed = 1;   
 			experimentalX = atoi(arg);
-                        break;
-                    case 'Y': 
-                        experimentalY = 1;
-                        break;
-                    case 'Z': 
-                        experimentalZ = 1;
-                        break;
-                    case 'e':        
-                        argUsed = 1;
+			break;
+		    case 'Y': 
+			experimentalY = 1;
+			break;
+		    case 'Z': 
+			experimentalZ = 1;
+			break;
+		    case 'e':
+			argUsed = 1;
                         
                         switch (*arg) {
                         case 'n': lame_set_emphasis( gfp, 0 ); break;

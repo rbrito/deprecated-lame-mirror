@@ -33,10 +33,10 @@
 #endif
 #include <assert.h>
 
+#include "encoder.h"
 #include "util.h"
 #include "bitstream.h"
 #include "VbrTag.h"
-#include "version.h"
 #include "id3tag.h"
 
 /*
