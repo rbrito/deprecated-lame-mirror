@@ -381,7 +381,7 @@ __declspec(dllexport) VOID		beVersion(PBE_VERSION pbeVersion)
 
 	memset(pbeVersion->zHomepage,0x00,BE_MAX_HOMEPAGE);
 
-	strcpy(pbeVersion->zHomepage,"http://www.surf.to/cdex");
+	strcpy(pbeVersion->zHomepage,"http://www.sulaco.org/mp3/");
 }
 
 
