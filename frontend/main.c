@@ -174,7 +174,7 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath,
 
 
 
-    fprintf(stderr, "\rinput:  %s%s(%g kHz, %i channel%s, ",
+    if (silent < 10) fprintf(stderr, "\rinput:  %s%s(%g kHz, %i channel%s, ",
             strcmp(inPath, "-") ? inPath : "<stdin>",
             strlen(inPath) > 26 ? "\n\t" : "  ",
             lame_get_in_samplerate( gfp ) / 1.e3,
@@ -183,43 +183,43 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath,
     switch (input_format) {
     case sf_mp3:
         skip += 528 + 1; /* mp3 decoder has a 528 sample delay, plus user supplied "skip" */
-        fprintf(stderr, "MPEG-%u%s Layer %s", 2 - lame_get_version(gfp),
+        if (silent < 10) fprintf(stderr, "MPEG-%u%s Layer %s", 2 - lame_get_version(gfp),
                 lame_get_out_samplerate( gfp ) < 16000 ? ".5" : "", "III");
         break;
     case sf_mp2:
         skip += 240 + 1;
-        fprintf(stderr, "MPEG-%u%s Layer %s", 2 - lame_get_version(gfp),
+        if (silent < 10) fprintf(stderr, "MPEG-%u%s Layer %s", 2 - lame_get_version(gfp),
                 lame_get_out_samplerate( gfp ) < 16000 ? ".5" : "", "II");
         break;
     case sf_mp1:
         skip += 240 + 1;
-        fprintf(stderr, "MPEG-%u%s Layer %s", 2 - lame_get_version(gfp),
+        if (silent < 10) fprintf(stderr, "MPEG-%u%s Layer %s", 2 - lame_get_version(gfp),
                 lame_get_out_samplerate( gfp ) < 16000 ? ".5" : "", "I");
         break;
     case sf_ogg:
-        fprintf(stderr, "Ogg Vorbis");
+        if (silent < 10) fprintf(stderr, "Ogg Vorbis");
         skip = 0;       /* other formats have no delay *//* is += 0 not better ??? */
         break;
     case sf_raw:
-        fprintf(stderr, "raw PCM data");
+        if (silent < 10) fprintf(stderr, "raw PCM data");
         mp3input_data.nsamp = lame_get_num_samples( gfp );
         mp3input_data.framesize = 1152;
         skip = 0;       /* other formats have no delay *//* is += 0 not better ??? */
         break;
     case sf_wave:
-        fprintf(stderr, "Microsoft WAVE");
+        if (silent < 10) fprintf(stderr, "Microsoft WAVE");
         mp3input_data.nsamp = lame_get_num_samples( gfp );
         mp3input_data.framesize = 1152;
         skip = 0;       /* other formats have no delay *//* is += 0 not better ??? */
         break;
     case sf_aiff:
-        fprintf(stderr, "SGI/Apple AIFF");
+        if (silent < 10) fprintf(stderr, "SGI/Apple AIFF");
         mp3input_data.nsamp = lame_get_num_samples( gfp );
         mp3input_data.framesize = 1152;
         skip = 0;       /* other formats have no delay *//* is += 0 not better ??? */
         break;
     default:
-        fprintf(stderr, "unknown");
+        if (silent < 10) fprintf(stderr, "unknown");
         mp3input_data.nsamp = lame_get_num_samples( gfp );
         mp3input_data.framesize = 1152;
         skip = 0;       /* other formats have no delay *//* is += 0 not better ??? */
@@ -227,12 +227,12 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath,
         break;
     }
 
-    fprintf(stderr, ")\noutput: %s%s(16 bit, Microsoft WAVE)\n",
+    if (silent < 10) fprintf(stderr, ")\noutput: %s%s(16 bit, Microsoft WAVE)\n",
             strcmp(outPath, "-") ? outPath : "<stdout>",
             strlen(outPath) > 45 ? "\n\t" : "  ");
 
     if (skip > 0)
-        fprintf(stderr, "skipping initial %i samples (encoder+decoder delay)\n",
+        if (silent < 10) fprintf(stderr, "skipping initial %i samples (encoder+decoder delay)\n",
                 skip);
 
     if ( 0 == disable_wav_header )
@@ -274,11 +274,11 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath,
     i = (16 / 8) * tmp_num_channels;
     assert(i > 0);
     if (wavsize <= 0) {
-        fprintf(stderr, "WAVE file contains 0 PCM samples\n");
+        if (silent < 10) fprintf(stderr, "WAVE file contains 0 PCM samples\n");
         wavsize = 0;
     }
     else if (wavsize > 0xFFFFFFD0 / i) {
-        fprintf(stderr,
+        if (silent < 10) fprintf(stderr,
                 "Very huge WAVE file, can't set filesize accordingly\n");
         wavsize = 0xFFFFFFD0;
     }
