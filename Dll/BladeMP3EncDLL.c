@@ -405,9 +405,12 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 				break;
 
 				case VBR_METHOD_NEW:
+/*                                
 		            lame_set_VBR( gfp, vbr_mt ); 
 				break;
-
+the --vbr-mtrh commandline switch is obsolete. 
+now --vbr-mtrh is known as --vbr-new
+*/
 				case VBR_METHOD_MTRH:
 		            lame_set_VBR( gfp, vbr_mtrh ); 
 				break;
