@@ -472,12 +472,12 @@ int count_bits(
 	    j += gi->width[sfb];
 	    if (!gfc->pseudohalf[sfb])
 		continue;
-	    roundfac = 1.0
+	    roundfac = 0.634521682242439
 		/ IPOW20(gi->global_gain
 			 - ((gi->scalefac[sfb] + (gi->preflag ? pretab[sfb]:0))
 			    << (gi->scalefac_scale + 1))
 			 - gi->subblock_gain[gi->window[sfb]] * 8
-			 + gi->scalefac_scale + 1);
+			 + gi->scalefac_scale);
 	    for (l = -width; l < 0; l++)
 		if (xrpow[j+l] < roundfac)
 		    gi->l3_enc[j+l] = 0;
