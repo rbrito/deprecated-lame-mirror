@@ -319,11 +319,45 @@ __declspec(dllexport) BE_ERR	beEncodeChunk(HBE_STREAM hbeStream, DWORD nSamples,
 											  PSHORT pSamples, PBYTE pOutput, PDWORD pdwOutput)
 {
 	int iSampleIndex;
+	int n=nSamples/gf.stereo;
+	PSHORT LBuffer,RBuffer;
+	LBuffer=malloc(sizeof(short)*n);
+	RBuffer=malloc(sizeof(short)*n);
+	
+		
 
+	if (gf.num_channels==2)
+	{
+		for (iSampleIndex=0;iSampleIndex<n;iSampleIndex++)
+		{
+			// Copy new sample data into InputBuffer
+			LBuffer[iSampleIndex]=*pSamples++;
+			RBuffer[iSampleIndex]=*pSamples++;
+		}
+	}
+	else
+	{
+		// Mono, only put it data into buffer[0] (=left channel)
+		for (iSampleIndex=0;iSampleIndex<n;iSampleIndex++)
+		{
+			// Copy new sample data into InputBuffer
+			LBuffer[iSampleIndex]=*pSamples++;
+		}
+	}
+
+
+	// Encode it
+	*pdwOutput=lame_encode_buffer(&gf,LBuffer,RBuffer,n,pOutput,0);
+
+	free(LBuffer);
+	free(RBuffer);
+
+
+#if 0
 	// Encode it
 	*pdwOutput=lame_encode_buffer_interleaved(&gf,pSamples,
 		  nSamples/gf.num_channels,pOutput,0);
-
+#endif
 
 	if (*pdwOutput<0) {
 		*pdwOutput=0;
