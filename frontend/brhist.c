@@ -336,16 +336,15 @@ void  brhist_disp_total ( const lame_global_flags* gf )
 
     if (0==br_frames) return;
 
-    fprintf ( Console_IO.Console_fp, "\naverage: %5.1f kbps", sum / br_frames);
+    fprintf ( Console_IO.Console_fp, "\naverage: %5.1f kbps\n", sum / br_frames);
 
     /* I'm very unhappy because this is only printed out in VBR modes */
     if (st_frames > 0) {
-        if ( st_mode[LR] > 0 )
-            fprintf ( Console_IO.Console_fp, "   LR: %d (%#5.4g%%)", st_mode[LR], 100. * st_mode[LR] / st_frames );
-        else
-            fprintf ( Console_IO.Console_fp, "                 " );
-        if ( st_mode[MS] > 0 )
-            fprintf ( Console_IO.Console_fp, "   MS: %d (%#5.4g%%)", st_mode[MS], 100. * st_mode[MS] / st_frames );
+	fprintf ( Console_IO.Console_fp, "   LR: %d (%#5.4g%%)", st_mode[LR], 100. * st_mode[LR] / st_frames );
+	fprintf ( Console_IO.Console_fp, "   MS: %d (%#5.4g%%)", st_mode[MS], 100. * st_mode[MS] / st_frames );
+
+	fprintf ( Console_IO.Console_fp, "\n LR+i: %d (%#5.4g%%)", st_mode[LR+1], 100. * st_mode[LR+1] / st_frames );
+	fprintf ( Console_IO.Console_fp, " MS+i: %d (%#5.4g%%)", st_mode[MS+1], 100. * st_mode[MS+1] / st_frames );
     }
     fprintf ( Console_IO.Console_fp, "\n" );
 
