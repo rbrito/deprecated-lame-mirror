@@ -37,11 +37,17 @@ black = usability, portability, other
       <li><font color="#ff0000">made psychoacoustic model aware of ATH adjustements</font></li>
       <li><font color="#ff0000">use ATH value as short block masking lower limit</font></li>
       <li><font color="#ff0000">several fixes in psychoacoustic model</font></li>
+      <li>more robust decoding</li>
     </ul>
   <li>Mark Taylor / Gabriel Bouvigne: fixed issues in VBR header</li>
-  <li>Mark Taylor:</li>
+  <li>Mark Taylor: workaround against some hardware decoder defficiencies</li>
+  <li>Aleksander Korzynski: ability to compute ReplayGain and detect clipping 
+    on the fly. ReplayGain value is stored into the Lame tag.</li>
+  <li>Gabriel Bouvigne:</li>
   <ul>
-    <li>fixed issue with VBR header when using nogap</li>
+    <li><font color="#ff0000">work on presets</font></li>
+    <li><font color="#ff0000">analog silence detection in partitionned sfb21</font></li>
+    <li><font color="#3366ff">do not compute noise in upper 0 part of the spectrum</font></li>
   </ul>
   <li>Guillaume Lessard:</li>
   <ul>
@@ -120,8 +126,7 @@ black = usability, portability, other
   <li><font color="#ff0000">Alexander Leidinger:&nbsp; add non linear psymodel 
     (compile time option, disabled by default)</font>, workaround a bug in gcc 
     3.0.3 (compiler options, based upon suggestions from various people, see archives 
-    and changelog for more)<br>
-  </li>
+    and changelog for more)</li>
   <li>Steve Lhomme:&nbsp; ACM wrapper (MS-Windows codec)</li>
   <li><font color="#3366ff">Steve Lhomme:&nbsp; less memory copying on stereo 
     (interleaved) input</font></li>
@@ -136,14 +141,12 @@ black = usability, portability, other
 <ul>
   <li><font color="#ff0000">Darin Morrison:&nbsp; Bugfix for --alt-preset (for 
     content with low volume, clean vocals), only important for the "fast standard" 
-    preset</font><br>
+    preset</font>
   </li>
-  <li>Alexander Leidinger:&nbsp;<br>
+  <li>Alexander Leidinger:
     <ul>
-      <li>add some missing files to the distribution<br>
-      </li>
-      <li>add --alt-preset to the man page<br>
-      </li>
+      <li>add some missing files to the distribution</li>
+      <li>add --alt-preset to the man page</li>
     </ul>
   </li>
 </ul>
@@ -206,30 +209,21 @@ black = usability, portability, other
       <li> Use --alt-preset help for more information.</li>
     </ul>
   </li>
-  <li>Roel VdB:&nbsp; more tuning on the <font color="#007f00">--r3mix</font> 
-    preset </li>
-  <li>Jon Dee, Roel VdB:&nbsp; INFO tag<br>
-  </li>
+  <li>Roel VdB: more tuning on the --r3mix preset </li>
+  <li>Jon Dee, Roel VdB:&nbsp; INFO tag</li>
   <li>Alexander Leidinger, mp3gain@hotmail.com:&nbsp; added --scale-l and --scale-r 
-    to scale stereo channels independantly<br>
-  </li>
-  <li>Takehiro Tominaga:&nbsp; new noise shaping mode, offering more "cutting 
-    edge" shaping according to masking, enabled via -q0<br>
-  </li>
-  <li>Mark Taylor:&nbsp; More work on --nogap<br>
-  </li>
+    to scale stereo channels independantly </li>
+  <li>Takehiro Tominaga:&nbsp; <font color="#ff0000">new noise shaping mode, offering 
+    more "cutting edge" shaping according to masking, enabled via -q0</font> </li>
+  <li>Mark Taylor:&nbsp; More work on --nogap </li>
   <li>Gabriel Bouvigne:&nbsp; Small changes to abr code for more accurate final 
-    bitrate<br>
-  </li>
+    bitrate </li>
   <li>Gabriel Bouvigne, mp3gain@hotmail.com:&nbsp; Preliminary <a
  href="http://www.replaygain.org"> ReplayGain</a> analysis code added (not functional 
-    yet)<br>
-  </li>
-  <li>Gabriel Bouvigne, Alexander Leidinger:&nbsp; Documentation updates<br>
-  </li>
+    yet) </li>
+  <li>Gabriel Bouvigne, Alexander Leidinger:&nbsp; Documentation updates </li>
   <li>John Dahlstrom, DSPguru@math.com:&nbsp; floating point interface function 
-    in the Windows DLL<br>
-  </li>
+    in the Windows DLL</li>
 </ul>
 <br>
 <h3>LAME 3.89beta&nbsp; &nbsp;July 5 2001</h3>
@@ -1074,7 +1068,7 @@ But to try them, set MDCTDELAY=48 in encoder.h, instead of MDCTDELAY=528.:</font
   <li> <font color="#ff0000">Bug in VBR bit allocation based on "over" value fixed.</font></li>
 </ul>
 <h3> LAME 3.11&nbsp; June 3 1999</h3>
-<blockquote> 
+<ul>
   <li> Almost all warnings (-Wall) now fixed!&nbsp; (Thanks to Jan Peman)</li>
   <li> More coding improvements from Gabriel Bouvigne and Warren Toomey.</li>
   <li> <font color="#ff0000">VBR&nbsp; (variable bit rate).&nbsp;&nbsp; Increases 
@@ -1082,7 +1076,8 @@ But to try them, set MDCTDELAY=48 in encoder.h, instead of MDCTDELAY=528.:</font
     audible distortion is greater than a given value.&nbsp; Much tuning needs 
     to be done.</font></li>
   <li> Patch to remove all atan() calls from James Droppo.</li>
-</blockquote>
+
+</ul>
 <h3> LAME 3.10 May 30 1999</h3>
 <ul>
   <li> <font color="#3366ff">Fast mode (-f)&nbsp; disables psycho-acoustic model 
@@ -1117,10 +1112,9 @@ But to try them, set MDCTDELAY=48 in encoder.h, instead of MDCTDELAY=528.:</font
   <li> Linux now segfaults on floating point exceptions.&nbsp; Should prevent 
     me from releasing binaries that crash on other operating systems.</li>
 </ul>
-<h4> May 22 1999</h4>
+<h3> LAME 3.04 May 22 1999</h3>
 <ul>
-  <li> Version 3.04 released.</li>
-  <li> Preliminary documentation from Gabriel Bouvigne.</li>
+  <li>Preliminary documentation from Gabriel Bouvigne.</li>
   <li> <font color="#3366ff">I wouldn't have thought it was possible, but now 
     there are even more speed improvements from Chris Matrakidis!&nbsp; Removed 
     one FFT when using joint stereo, and many improvements in loop.c.</font></li>
@@ -1138,9 +1132,8 @@ But to try them, set MDCTDELAY=48 in encoder.h, instead of MDCTDELAY=528.:</font
   <li> highq (-h) option added.&nbsp; This turns on things (just one so far) that 
     should sound better but slow down LAME.</li>
 </ul>
-<b>May 18 1999</b> 
+<h3>LAME 3.03 May 18 1999 </h3>
 <ul>
-  <li> Version 3.03 released.</li>
   <li> <font color="#3366ff">Faster (20%) &amp; cleaner FFT (Thanks to Chris Matrakidis&nbsp; 
     http://www.geocities.com/ResearchTriangle/8869/fft_summary.html)</font></li>
   <li> mods so it works with VC++ (Thanks to Gabriel Bouvigne, www.mp3tech.org)</li>
@@ -1158,9 +1151,8 @@ But to try them, set MDCTDELAY=48 in encoder.h, instead of MDCTDELAY=528.:</font
   <li> Bug fixed in MP3x display of audible distortion.</li>
   <li> improved status display (Thanks to Lauri Ahonen).</li>
 </ul>
-<h4> May 12 1999</h4>
+<h3> LAME 3.02 May 12 1999</h3>
 <ul>
-  <li> Version 3.02 released.</li>
   <li> <font color="#ff0000">encoder could use ms_stereo even if channel 0 and 
     1 block types were different.&nbsp; (Thanks to Jan Rafaj)</font></li>
   <li> <font color="#ff0000">added -k option to disable the 16 kHz cutoff at 128kbs.&nbsp; 
@@ -1170,9 +1162,8 @@ But to try them, set MDCTDELAY=48 in encoder.h, instead of MDCTDELAY=528.:</font
   <li> fixed l3_xmin initialization problem which showed up under FreeBSD.&nbsp; 
     (Thanks to Warren Toomey)</li>
 </ul>
-<b>May 11 1999</b> 
+<h3><b>LAME 3.01 May 11 1999</b> </h3>
 <ul>
-  <li> Version 3.01 released</li>
   <li> max_name_size increased to 300&nbsp; (Thanks to Mike Oliphant)</li>
   <li> patch to allow seeks on input file (Thanks to Scott Manley)</li>
   <li> fixes for mono modes (Thanks to everyone who pointed this out)</li>
@@ -1180,11 +1171,10 @@ But to try them, set MDCTDELAY=48 in encoder.h, instead of MDCTDELAY=528.:</font
   <li> bit reservoir overflow when encoding lots of frames with all zeros&nbsp; 
     (Thanks to Jani Frilander)</li>
 </ul>
-<p><br>
-  <b>May 10 1999</b> </p>
+<h3><br>
+  <b>LAME 3.0 May 10 1999</b> </h3>
 <ul>
-  <li> Version 3.0 released</li>
-  <li> <font color="#ff0000">added GPSYCHO (developed by Mark Taylor)</font></li>
+  <li><font color="#ff0000">added GPSYCHO (developed by Mark Taylor)</font></li>
   <li> <font color="#000000">added MP3x (developed by Mark Taylor)</font></li>
   <li> LAME now maintained by Mark Taylor</li>
 </ul>
