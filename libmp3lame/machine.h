@@ -73,7 +73,7 @@ char *strchr (), *strrchr ();
 //#define POW20(x)  pow(2.0,((double)(x)-210)*.25)
 //#define POW20(x)  exp( ((double)(x)-210)*(.25*LOG2) )
 
-#define IPOW20(x)  ipow20[x]
+#define IPOW20(x)  (assert(0 <= x && x < Q_MAX), ipow20[x])
 //#define IPOW20(x)  exp( -((double)(x)-210)*.1875*LOG2 )
 //#define IPOW20(x)  pow(2.0,-((double)(x)-210)*.1875)
 

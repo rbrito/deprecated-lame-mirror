@@ -304,7 +304,7 @@ inner_loop(
 
     /*  increase quantizer stepsize until needed bits are below maximum
      */
-    while (bits > max_bits) {
+    while (bits > max_bits && cod_info->global_gain != 255) {
         cod_info->global_gain++;
 	bits = count_bits (gfc, xrpow, cod_info);
     }
@@ -834,6 +834,8 @@ outer_loop (
             break;
 
 	inner_loop (gfc, &cod_info_w, huff_bits, xrpow);
+        if (cod_info_w.global_gain > 255u)
+	    break;
 
         /* compute the distortion in this quantization */
 	over = calc_noise (gfc, &cod_info_w, l3_xmin, distort, &noise_info);
@@ -1245,8 +1247,8 @@ bitpressure_strategy(
 		for (sfb = 0; sfb < SBMAX_l; sfb++) 
 		    l3_xmin[gr][ch][sfb] *= 1.+.029*sfb*sfb/SBMAX_l/SBMAX_l;
 	    }
-	    max_bits[gr][ch] = Max(min_bits[gr][ch], 0.9*max_bits[gr][ch]);
-	}
+            max_bits[gr][ch] = Max(min_bits[gr][ch], 0.9*max_bits[gr][ch]);
+        }
     }
 }
 
