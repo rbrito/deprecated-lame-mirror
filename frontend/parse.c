@@ -100,13 +100,15 @@ dosToLongFileName( char *fn )
     HANDLE h = FindFirstFileA( fn, &lpFindFileData );
     if ( h != INVALID_HANDLE_VALUE ) {
         int   a;
-        char *q;
+        char *q, *p;
         FindClose( h );
         for ( a = 0; a < MSIZE; a++ ) {
             if ( '\0' == lpFindFileData.cFileName[a] ) break;
         }
         if ( a >= MSIZE || a == 0 ) return;
         q = strrchr( fn, '\\' );
+        p = strrchr( fn, '/' );
+        if ( p-q > 0 ) q = p;
         if ( q == NULL ) q = strrchr(fn,':');
         if ( q == NULL ) strncpy( fn, lpFindFileData.cFileName, a );
         else {

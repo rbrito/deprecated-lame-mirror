@@ -1,4 +1,4 @@
-#	Makefile.MSVC: MSVC Makefile for LAME 3.88
+#	Makefile.MSVC: MSVC Makefile for LAME 3.92
 #
 #	2000-11-21 Robert Hegemann  e-mail: Robert.Hegemann@gmx.de
 #	dedicated to the LAME project http://www.mp3dev.org
@@ -264,7 +264,7 @@ CC_OPTS = $(CC_OPTS) /W2 /Wport
 !	ENDIF
 
 CC_OPTS = /nologo /DNDEBUG /YX /GA /O2 /Gs1024 \
-          /Qunroll /Qsox- /QIfist /QIfdiv /QI0f $(CC_OPTS) /DFLOAT8=float
+          /Qunroll /Qsox- /QIfist /QIfdiv /QI0f $(CC_OPTS) 
 
 LN_OPTS = $(CC_OPTS)
 LN_DLL = /LD
