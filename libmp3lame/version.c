@@ -48,26 +48,7 @@
 /*! Stringify \a x, perform macro expansion. */
 #define XSTR(x)  STR(x)
 
-#if defined(MMX_choose_table)
-# define V1  "MMX "
-#else
-# define V1  ""
-#endif
 
-#if defined(KLEMM)
-# define V2  "KLM "
-#else
-# define V2  ""
-#endif
-
-#if defined(RH)
-# define V3  "RH "
-#else
-# define V3  ""
-#endif
-
-/*! Compile time features. */
-#define V   V1 V2 V3
 
 /*! Get the LAME version string. */
 /*!
@@ -78,17 +59,20 @@ const char*  get_lame_version ( void )		/* primary to write screen reports */
 {
     /* Here we can also add informations about compile time configurations */
 
-#if   LAME_ALPHA_VERSION > 0
+#if   LAME_ALPHA_VERSION
     static /*@observer@*/ const char *const str =
-        XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) " " V
-        "(alpha " XSTR(LAME_ALPHA_VERSION) ", " __DATE__ " " __TIME__ ")";
-#elif LAME_BETA_VERSION > 0
+        XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) " "
+        "(alpha " XSTR(LAME_PATCH_VERSION) ", " __DATE__ " " __TIME__ ")";
+#elif LAME_BETA_VERSION
     static /*@observer@*/ const char *const str =
-        XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) " " V
-        "(beta " XSTR(LAME_BETA_VERSION) ", " __DATE__ ")";
+        XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) " "
+        "(beta " XSTR(LAME_PATCH_VERSION) ", " __DATE__ ")";
+#elif LAME_RELEASE_VERSION && (LAME_PATCH_VERSION > 0)
+    static /*@observer@*/ const char *const str =
+        XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) "." XSTR(LAME_PATCH_VERSION);
 #else
     static /*@observer@*/ const char *const str =
-        XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) " " V;
+        XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION);
 #endif
 
     return str;
@@ -107,12 +91,15 @@ const char*  get_lame_short_version ( void )
     /* adding date and time to version string makes it harder for output
        validation */
 
-#if   LAME_ALPHA_VERSION > 0
+#if   LAME_ALPHA_VERSION
     static /*@observer@*/ const char *const str =
         XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) " (alpha)";
-#elif LAME_BETA_VERSION > 0
+#elif LAME_BETA_VERSION
     static /*@observer@*/ const char *const str =
         XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) " (beta)";
+#elif LAME_RELEASE_VERSION && (LAME_PATCH_VERSION > 0)
+    static /*@observer@*/ const char *const str =
+        XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) "." XSTR(LAME_PATCH_VERSION);
 #else
     static /*@observer@*/ const char *const str =
         XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION);
@@ -133,12 +120,15 @@ const char*  get_lame_very_short_version ( void )
     /* adding date and time to version string makes it harder for output
        validation */
 
-#if   LAME_ALPHA_VERSION > 0
+#if   LAME_ALPHA_VERSION
     static /*@observer@*/ const char *const str =
        "LAME" XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) "a";
-#elif LAME_BETA_VERSION > 0
+#elif LAME_BETA_VERSION
     static /*@observer@*/ const char *const str =
        "LAME" XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) "b";
+#elif LAME_RELEASE_VERSION && (LAME_PATCH_VERSION > 0)
+    static /*@observer@*/ const char *const str =
+       "LAME" XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) "r";
 #else
     static /*@observer@*/ const char *const str =
        "LAME" XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) " ";
@@ -193,13 +183,21 @@ const char*  get_lame_url ( void )
 */
 void get_lame_version_numerical ( lame_version_t *const lvp )
 {
-    static /*@observer@*/ const char *const features = V;
+    static /*@observer@*/ const char *const features = "";  /* obsolete */
 
     /* generic version */
     lvp->major = LAME_MAJOR_VERSION;
     lvp->minor = LAME_MINOR_VERSION;
-    lvp->alpha = LAME_ALPHA_VERSION;
-    lvp->beta  = LAME_BETA_VERSION;
+#if LAME_ALPHA_VERSION
+    lvp->alpha = LAME_PATCH_VERSION;
+    lvp->beta  = 0;
+#elif LAME_BETA_VERSION
+    lvp->alpha = 0;
+    lvp->beta  = LAME_PATCH_VERSION;
+#else
+    lvp->alpha = 0;
+    lvp->beta  = 0;
+#endif
 
     /* psy version */
     lvp->psy_major = PSY_MAJOR_VERSION;
