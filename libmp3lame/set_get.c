@@ -1461,15 +1461,14 @@ static int apply_abr_preset(lame_global_flags*  gfp, int preset)
  
     // Determine which significant bitrates the value specified falls between,
     // if loop ends without breaking then we were correct above that the value was 320
-    for (b = 1; b < 17; b++) {
-        if ((Max(actual_bitrate, abr_switch_map[b].abr_kbps)) != actual_bitrate) {
-              upper_range_kbps = abr_switch_map[b].abr_kbps;
-              upper_range = b;
-              lower_range_kbps = abr_switch_map[b-1].abr_kbps;
-              lower_range = (b-1);
-              break; // We found upper range 
-        }
-    }
+    for (b = 1; b < sizeof(abr_switch_map)/sizeof(abr_switch_map[0])-1
+	     && actual_bitrate > abr_switch_map[b].abr_kbps; b++)
+	;
+
+    upper_range_kbps = abr_switch_map[b].abr_kbps;
+    upper_range = b;
+    lower_range_kbps = abr_switch_map[b-1].abr_kbps;
+    lower_range = (b-1);
 
     // Determine which range the value specified is closer to
     if ((upper_range_kbps - actual_bitrate) > (actual_bitrate - lower_range_kbps))
@@ -1509,7 +1508,7 @@ static int apply_abr_preset(lame_global_flags*  gfp, int preset)
     lame_set_interChRatio(gfp, abr_switch_map[r].interch);
     lame_set_ATHcurve(gfp, abr_switch_map[r].ath_curve);
 
-    if (actual_bitrate > 160)
+    if (actual_bitrate >= 128)
 	lame_set_short_threshold(gfp, 1.8, 10.0);
     else if (actual_bitrate > 90)
 	lame_set_short_threshold(gfp, 2.5, 15.0);
