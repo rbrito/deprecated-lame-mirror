@@ -9,8 +9,6 @@ brhist_sources = brhist.c brhist.h
 
 EXTRA_DIST = \
 	$(brhist_sources) \
-	console.c \
-	console.h \
 	lame_vc6.dsp \
 	mp3x_vc6.dsp
 
