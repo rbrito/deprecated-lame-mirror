@@ -219,6 +219,44 @@ CRC_update(int value, int crc)
     return crc;
 }
 
+static int
+writeTableHeader(lame_internal_flags *gfc, gr_info *gi, int ptr)
+{
+    static const int blockConv[] = {0, 1, 3, 2};
+    if (gi->block_type != NORM_TYPE) {
+	ptr = writeheader(gfc, 1, 1, ptr); /* window_switching_flag */
+	ptr = writeheader(gfc, blockConv[gi->block_type], 2, ptr);
+	ptr = writeheader(gfc, gi->mixed_block_flag, 1, ptr);
+
+	if (gi->table_select[0] == 14)
+	    gi->table_select[0] = 16;
+	ptr = writeheader(gfc, gi->table_select[0],  5, ptr);
+	if (gi->table_select[1] == 14)
+	    gi->table_select[1] = 16;
+	ptr = writeheader(gfc, gi->table_select[1],  5, ptr);
+
+	ptr = writeheader(gfc, gi->subblock_gain[0], 3, ptr);
+	ptr = writeheader(gfc, gi->subblock_gain[1], 3, ptr);
+	ptr = writeheader(gfc, gi->subblock_gain[2], 3, ptr);
+    } else {
+	ptr++; /* window_switching_flag */
+	if (gi->table_select[0] == 14)
+	    gi->table_select[0] = 16;
+	ptr = writeheader(gfc, gi->table_select[0], 5, ptr);
+	if (gi->table_select[1] == 14)
+	    gi->table_select[1] = 16;
+	ptr = writeheader(gfc, gi->table_select[1], 5, ptr);
+	if (gi->table_select[2] == 14)
+	    gi->table_select[2] = 16;
+	ptr = writeheader(gfc, gi->table_select[2], 5, ptr);
+
+	assert(gi->region0_count < 16U);
+	assert(gi->region1_count < 8U);
+	ptr = writeheader(gfc, gi->region0_count, 4, ptr);
+	ptr = writeheader(gfc, gi->region1_count, 3, ptr);
+    }
+    return ptr;
+}
 
 void
 CRC_writeheader(lame_internal_flags *gfc, char *header)
@@ -236,20 +274,16 @@ CRC_writeheader(lame_internal_flags *gfc, char *header)
     header[5] = crc & 255;
 }
 
-static int blockConv[] = {0, 1, 3, 2};
-
 inline static void
 encodeSideInfo2(lame_global_flags *gfp, int bitsPerFrame)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     III_side_info_t *l3_side = &gfc->l3_side;
     int gr, ch, ptr = 0;
+    assert(l3_side->main_data_begin >= 0);
 
     memset(gfc->bs.header[gfc->bs.h_ptr].buf, 0, l3_side->sideinfo_len);
-    if (gfp->out_samplerate < 16000) 
-	ptr = writeheader(gfc,0xffe,                12, ptr);
-    else
-	ptr = writeheader(gfc,0xfff,                12, ptr);
+    ptr = writeheader(gfc,0xfff - (gfp->out_samplerate < 16000), 12, ptr);
     ptr = writeheader(gfc,(gfp->version),            1, ptr);
     ptr = writeheader(gfc,4 - 3,                     2, ptr);
     ptr = writeheader(gfc,(!gfp->error_protection),  1, ptr);
@@ -265,7 +299,6 @@ encodeSideInfo2(lame_global_flags *gfp, int bitsPerFrame)
     if (gfp->error_protection)
 	ptr += 16;
 
-    assert(l3_side->main_data_begin >= 0);
     ptr = writeheader(gfc, l3_side->main_data_begin, 7+gfc->mode_gr, ptr);
     if (gfp->version == 1) {
 	/* MPEG1 */
@@ -280,44 +313,12 @@ encodeSideInfo2(lame_global_flags *gfp, int bitsPerFrame)
 	for (gr = 0; gr < 2; gr++) {
 	    for (ch = 0; ch < gfc->channels_out; ch++) {
 		gr_info *gi = &l3_side->tt[gr][ch];
-		ptr = writeheader(gfc, gi->part2_3_length+gi->part2_length, 12,
-				  ptr);
+		ptr = writeheader(gfc, gi->part2_3_length+gi->part2_length,
+				  12, ptr);
 		ptr = writeheader(gfc, gi->big_values / 2,        9, ptr);
 		ptr = writeheader(gfc, gi->global_gain,           8, ptr);
 		ptr = writeheader(gfc, gi->scalefac_compress,     4, ptr);
-
-		if (gi->block_type != NORM_TYPE) {
-		    ptr = writeheader(gfc, 1, 1, ptr); /* window_switching_flag */
-		    ptr = writeheader(gfc, blockConv[gi->block_type], 2, ptr);
-		    ptr = writeheader(gfc, gi->mixed_block_flag, 1, ptr);
-
-		    if (gi->table_select[0] == 14)
-			gi->table_select[0] = 16;
-		    ptr = writeheader(gfc, gi->table_select[0],  5, ptr);
-		    if (gi->table_select[1] == 14)
-			gi->table_select[1] = 16;
-		    ptr = writeheader(gfc, gi->table_select[1],  5, ptr);
-
-		    ptr = writeheader(gfc, gi->subblock_gain[0], 3, ptr);
-		    ptr = writeheader(gfc, gi->subblock_gain[1], 3, ptr);
-		    ptr = writeheader(gfc, gi->subblock_gain[2], 3, ptr);
-		} else {
-		    ptr = writeheader(gfc, 0, 1, ptr); /* window_switching_flag */
-		    if (gi->table_select[0] == 14)
-			gi->table_select[0] = 16;
-		    ptr = writeheader(gfc, gi->table_select[0], 5, ptr);
-		    if (gi->table_select[1] == 14)
-			gi->table_select[1] = 16;
-		    ptr = writeheader(gfc, gi->table_select[1], 5, ptr);
-		    if (gi->table_select[2] == 14)
-			gi->table_select[2] = 16;
-		    ptr = writeheader(gfc, gi->table_select[2], 5, ptr);
-
-		    assert(gi->region0_count < 16U);
-		    assert(gi->region1_count < 8U);
-		    ptr = writeheader(gfc, gi->region0_count, 4, ptr);
-		    ptr = writeheader(gfc, gi->region1_count, 3, ptr);
-		}
+		ptr = writeTableHeader(gfc, gi, ptr);
 		ptr = writeheader(gfc,
 				  (gi->preflag > 0)*4 + gi->scalefac_scale*2
 				  + gi->count1table_select, 3, ptr);
@@ -379,40 +380,7 @@ encodeSideInfo2(lame_global_flags *gfp, int bitsPerFrame)
 		assert(0);
 	    }
 	    ptr = writeheader(gfc, part, 9, ptr);
-
-	    if (gi->block_type != NORM_TYPE) {
-		ptr = writeheader(gfc, 1, 1, ptr); /* window_switching_flag */
-		ptr = writeheader(gfc, blockConv[gi->block_type], 2, ptr);
-		ptr = writeheader(gfc, gi->mixed_block_flag, 1, ptr);
-
-		if (gi->table_select[0] == 14)
-		    gi->table_select[0] = 16;
-		ptr = writeheader(gfc, gi->table_select[0],  5, ptr);
-		if (gi->table_select[1] == 14)
-		    gi->table_select[1] = 16;
-		ptr = writeheader(gfc, gi->table_select[1],  5, ptr);
-
-		ptr = writeheader(gfc, gi->subblock_gain[0], 3, ptr);
-		ptr = writeheader(gfc, gi->subblock_gain[1], 3, ptr);
-		ptr = writeheader(gfc, gi->subblock_gain[2], 3, ptr);
-	    } else {
-		ptr = writeheader(gfc, 0, 1, ptr); /* window_switching_flag */
-		if (gi->table_select[0] == 14)
-		    gi->table_select[0] = 16;
-		ptr = writeheader(gfc, gi->table_select[0], 5, ptr);
-		if (gi->table_select[1] == 14)
-		    gi->table_select[1] = 16;
-		ptr = writeheader(gfc, gi->table_select[1], 5, ptr);
-		if (gi->table_select[2] == 14)
-		    gi->table_select[2] = 16;
-		ptr = writeheader(gfc, gi->table_select[2], 5, ptr);
-
-		assert(gi->region0_count < 16U);
-		assert(gi->region1_count < 8U);
-		ptr = writeheader(gfc, gi->region0_count, 4, ptr);
-		ptr = writeheader(gfc, gi->region1_count, 3, ptr);
-	    }
-
+	    ptr = writeTableHeader(gfc, gi, ptr);
 	    ptr = writeheader(gfc, gi->scalefac_scale,     1, ptr);
 	    ptr = writeheader(gfc, gi->count1table_select, 1, ptr);
 	}
