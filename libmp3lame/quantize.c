@@ -533,6 +533,7 @@ trancate_smallspectrums(
 {
     int sfb, j;
     FLOAT distort[SFBMAX], work[576]; /* 576 is too much */
+    assert(gi->psymax != 0);
 
     for (sfb = 0; sfb < gi->psymax; sfb++) {
 	work[sfb] = 1.0;
@@ -571,10 +572,11 @@ trancate_smallspectrums(
 	assert(start <= width2);
 
 	threshold = work[start-1];
+	width = -width;
 	do {
-	    if (absxr[j - width] <= threshold)
-		gi->l3_enc[j - width] = 0.0;
-	} while (--width > 0);
+	    if (absxr[j + width] <= threshold)
+		gi->l3_enc[j + width] = 0.0;
+	} while (++width > 0);
     } while (++sfb < gi->psymax);
 
     noquant_count_bits(gfc, gi);
@@ -1043,9 +1045,8 @@ CBR_1st_bitalloc (
 
     CBR_2nd_bitalloc(gfc, gi, distort);
  quit_quantization:
-    if (gi->psymax != 0
-	&& !(gi->block_type != SHORT_TYPE && !(gfc->substep_shaping & 1))
-	&& !(gi->block_type == SHORT_TYPE && !(gfc->substep_shaping & 2)))
+    if ((gi->block_type == SHORT_TYPE && (gfc->substep_shaping & 2))
+     || (gi->block_type != SHORT_TYPE && (gfc->substep_shaping & 1)))
 	trancate_smallspectrums(gfc, gi, xmin);
 }
 
