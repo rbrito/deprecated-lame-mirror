@@ -86,7 +86,7 @@ void ts_calc_times(ts_times *time, int samp_rate, long frame, long frames,int fr
   if (frame > 0) {
     time->estimated = time->so_far * frames / frame;
     if (samp_rate * time->estimated > 0) {
-      time->speed = frames * framesize / (1000.0 * samp_rate * time->estimated);
+      time->speed = frames * framesize / (samp_rate * time->estimated);
     } else {
       time->speed = 0;
     }
