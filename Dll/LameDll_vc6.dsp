@@ -97,7 +97,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /O2 /I "../include" /I "../" /I "../libmp3lame" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LAMEMP3ENCDLL_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /W3 /O2 /I "../include" /I "../" /I "../libmp3lame" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LAMEMP3ENCDLL_EXPORTS" /YX /FD /c
+# ADD CPP /nologo /W3 /O2 /I "../include" /I "../" /I "../libmp3lame" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LAMEMP3ENCDLL_EXPORTS" /D "HAVE_NASM" /D "MMX_choose_table" /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x40c /d "NDEBUG"
