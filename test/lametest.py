@@ -40,7 +40,12 @@ def fdiff(name1,name2):
     out=out[-1]
     if (-1==find(out,"No")):
         diff = atof(out)
-        size1 = os.path.getsize(name1)
+
+	status = os.access(name1, os.R_OK)
+	if 1 != status:
+	    size1=0
+	else:
+            size1 = os.path.getsize(name1)
         size2 = os.path.getsize(name2)
         diff = diff + abs(size1-size2)
         size = max(size1,size2) 
