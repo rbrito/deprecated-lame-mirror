@@ -260,6 +260,10 @@ mp3x:	mp3x.o $(OBJ) Makefile
 mp3rtp:	rtp.o mp3rtp.o $(OBJ) Makefile 
 	$(CC) -o mp3rtp mp3rtp.o rtp.o   $(OBJ) $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP)
 
+# compile mp3rtp using the mp3lame library:
+#mp3rtp:	rtp.o mp3rtp.o libmp3lame.a Makefile 
+#	$(CC) -o mp3rtp mp3rtp.o rtp.o  -L. -lmp3lame $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP)
+
 libmp3lame.a:  $(OBJ) Makefile
 	ar cr libmp3lame.a  $(OBJ) 
 

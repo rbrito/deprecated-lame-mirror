@@ -1,4 +1,12 @@
 ************************************************************************
+LAME is supposed to become more modular.  It can be used as a standalone
+library now, although the interface is not great.  See the
+mp3rtp.c for an example of how the interface is used.  See the makefile
+entry for mp3rtp for examples of compiling mp3rtp and linking with
+libmp3lame.a  
+
+
+************************************************************************
 LAME API
 
 General outline of the code (see main.c)
@@ -68,9 +76,8 @@ Global flags
 For better or worse, there are many global flags in lame.  
 The rules for adding a global flag are:
 
-1. declaired external in globalflags.h
-2. substantiated at the top of lame.c
-3. default values must be set in lame_init()
+1. declair in struct gf in globalflags.h
+2. default values must be set in lame_init()
 
 
 
