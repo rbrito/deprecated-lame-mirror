@@ -1358,7 +1358,7 @@ long_block_scalefacs(lame_t gfc, gr_info * gi, int vbrmax)
 static void
 set_scalefactor_values(gr_info *gi)
 {
-    int ifqstep = (1 << (1 + gi->scalefac_scale)) - 1, sfb = 0;
+    int ifqstep = 1 + 2*gi->scalefac_scale, sfb = 0;
     do {
 	int s = gi->scalefac[sfb];
 	if (s != LARGE_BITS) {
@@ -1369,8 +1369,8 @@ set_scalefactor_values(gr_info *gi)
 		s -= pretab[sfb];
 	    if (s < 0)
 		s = 0;
+	    gi->scalefac[sfb] = s;
 	}
-	gi->scalefac[sfb] = s;
     } while (++sfb < gi->psymax);
 }
 
@@ -1406,7 +1406,7 @@ VBR_2nd_bitalloc(lame_t gfc, gr_info *gi, FLOAT * xmin)
 	j -= width;
 	if (gi->scalefac[sfb] == LARGE_BITS) {
 	    gi->scalefac[sfb] = 0;
-	    memset(&xr34[j], 0, -sizeof(float)*width);
+	    memset(&xr34[j+width], 0, -sizeof(float)*width);
 	    continue;
 	}
 	while (IPOW20(scalefactor(gi, sfb)) > gfc->maxXR[sfb]) {
