@@ -161,7 +161,7 @@ int read_samples_mp3(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2]
   int autoconvert=0;
   if (gfp->num_channels==2  && gfp->stereo==1) autoconvert=1;
 
-  out=lame_decode_fromfile(musicin,mpg123pcm);
+  out=lame_decode_fromfile(musicin,mpg123pcm[0],mpg123pcm[1]);
   /* out = -1:  error, probably EOF */
   /* out = 0:   not possible with lame_decode_fromfile() */
   /* out = number of output samples */
