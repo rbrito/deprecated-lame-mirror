@@ -996,7 +996,6 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 
   /* convolution   */
   FLOAT8 eb[CBANDS],eb2[CBANDS];
-  FLOAT8 cb[CBANDS];
   FLOAT8 thr[CBANDS];
   
   FLOAT8 max[CBANDS],avg[CBANDS],tonality2[CBANDS];
@@ -1011,14 +1010,15 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
   int numchn, chn, samplerate;
   int   b, i, j, k;
   int	sb,sblock;
-  FLOAT cwlimit;
 
   /* variables used for --nspsytune */
   int ns_attacks[4];
   FLOAT ns_hpfsmpl[4][576+576/3+NSFIRLEN];
+  FLOAT pe_l[4],pe_s[4];
 
-#define TMN 18
-#define NMT 6
+
+
+  /************************* Beginning of initialization *****************************/
 
   if(gfc->psymodel_init==0) {
     FLOAT8	SNR_s[CBANDS];
@@ -1066,19 +1066,6 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
       }
     }
 
-    /*  gfp->cwlimit = sfreq*j/1024.0;  */
-    gfc->cw_lower_index=6;
-    if (gfp->cwlimit>0) 
-      cwlimit=gfp->cwlimit;
-    else
-      cwlimit=(FLOAT)8871.7;
-    gfc->cw_upper_index = cwlimit*1024.0/gfp->out_samplerate;
-    gfc->cw_upper_index=Min(HBLKSIZE-4,gfc->cw_upper_index);      /* j+3 < HBLKSIZE-1 */
-    gfc->cw_upper_index=Max(6,gfc->cw_upper_index);
-
-    for ( j = 0; j < HBLKSIZE; j++ )
-      gfc->cw[j] = 0.4f;
-    
     i=L3para_read( gfp,(FLOAT8) samplerate,gfc->numlines_l,gfc->numlines_s,
           gfc->minval,gfc->s3_l,gfc->s3_s,SNR_s,gfc->bu_l,
           gfc->bo_l,gfc->w1_l,gfc->w2_l, gfc->bu_s,gfc->bo_s,
@@ -1089,6 +1076,8 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
     /* npart_l_orig   = number of partition bands before convolution */
     /* npart_l  = number of partition bands after convolution */
     
+
+
     for (i=0; i<gfc->npart_l; i++) {
       for (j = 0; j < gfc->npart_l_orig; j++) {
 	if (gfc->s3_l[i][j] != 0.0)
@@ -1117,13 +1106,6 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
       gfc->s3ind_s[i][1] = j;
     }
     
-    /*  
-      #include "debugscalefac.c"
-    */
-
-#define rpelev 2
-#define rpelev2 16
-
     /* compute norm_l, norm_s instead of relying on table data */
     for ( b = 0;b < gfc->npart_l; b++ ) {
       FLOAT8 norm=0;
@@ -1161,9 +1143,11 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	gfc->nsPsy.last_en_subshort[i][j] = 100;
       for(j=0;j<3;j++)
 	gfc->nsPsy.last_attacks[i][j] = 0;
+      gfc->nsPsy.pe_l[i] = gfc->nsPsy.pe_s[i] = 0;
     }
   }
-  /************************* End of Initialization *****************************/
+
+  /************************* End of initialization *****************************/
   
 
 
@@ -1174,7 +1158,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 
 
   /**********************************************************************
-   *  Put the input signal through HPF of fs/4.
+   *  Apply HPF of fs/4 to the input signal.
    *  This is used for attack detection / handling.
    **********************************************************************/
 
@@ -1219,20 +1203,26 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
   
   for (chn=0; chn<numchn; chn++) {
     /* there is a one granule delay.  Copy maskings computed last call
-         * into masking_ratio to return to calling program.
-         */
+     * into masking_ratio to return to calling program.
+     */
+
+    pe_l[chn] = gfc->nsPsy.pe_l[chn];
+    pe_s[chn] = gfc->nsPsy.pe_s[chn];
 
     if (chn < 2) {    
       /* LR maskings  */
-      percep_entropy            [chn]       = gfc -> pe  [chn]; 
+      //percep_entropy            [chn]       = gfc -> pe  [chn]; 
       masking_ratio    [gr_out] [chn]  .en  = gfc -> en  [chn];
       masking_ratio    [gr_out] [chn]  .thm = gfc -> thm [chn];
     } else {
       /* MS maskings  */
-      percep_MS_entropy         [chn-2]     = gfc -> pe  [chn]; 
+      //percep_MS_entropy         [chn-2]     = gfc -> pe  [chn]; 
       masking_MS_ratio [gr_out] [chn-2].en  = gfc -> en  [chn];
       masking_MS_ratio [gr_out] [chn-2].thm = gfc -> thm [chn];
     }
+  }
+
+  for (chn=0; chn<numchn; chn++) {
 
     /**********************************************************************
      *  compute FFTs
@@ -1396,10 +1386,9 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
      *      with the spreading function, s3_l[b][k]
      ******************************************************************** */
 
-    gfc->pe[chn] = 0;		/*  calculate percetual entropy */
     for ( b = 0;b < gfc->npart_l; b++ )
       {
-	FLOAT8 tbb,ecb;
+	FLOAT8 ecb;
 
 	/****   convolve the partitioned energy with the spreading function   ****/
 
@@ -1427,6 +1416,10 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	/* chn=0,1   L and R channels
 	   chn=2,3   S and M channels.  
 	*/
+
+#define rpelev 2
+#define rpelev2 16
+
 	if (gfc->blocktype_old[chn>1 ? chn-2 : chn] == SHORT_TYPE )
 	  thr[b] = ecb; /* Min(ecb, rpelev*gfc->nb_1[chn][b]); */
 	else
@@ -1434,13 +1427,6 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 
 	gfc->nb_2[chn][b] = gfc->nb_1[chn][b];
 	gfc->nb_1[chn][b] = ecb;
-
-	{
-	  FLOAT8 thrpe;
-	  thrpe = Max(thr[b],gfc->ATH_partitionbands[b]);
-	  if (thrpe < eb[b])
-	    gfc->pe[chn] -= gfc->numlines_l[b] * log(thrpe / eb[b]);
-	}
       }
 
 
@@ -1770,7 +1756,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 
   for(chn=0;chn<numchn;chn++)
     {
-      if ((chn < 2 && uselongblock[chn]) || (chn >= 2 && uselongblock[0] && uselongblock[1])) {
+      {
 	static FLOAT8 regcoef[] = {
 	  1124.23,10.0583,10.7484,7.29006,16.2714,6.2345,4.09743,3.05468,3.33196,2.54688,
 	  3.68168,5.83109,2.93817,-8.03277,-10.8458,8.48777,9.13182,2.05212,8.6674,50.3937,73.267,97.5664,
@@ -1791,8 +1777,10 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	    msum += regcoef[sb+1] * t;
 	  }
 
-	gfc->pe[chn] = msum;
-      } else {
+	gfc->nsPsy.pe_l[chn] = msum;
+      }
+
+      {
 	static FLOAT8 regcoef[] = {
 	  1236.28,0,0,0,0.434542,25.0738,0,0,0,19.5442,19.7486,60,100
 	};
@@ -1815,15 +1803,10 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	      }
 	  }
 
-	gfc->pe[chn] = msum;
+	gfc->nsPsy.pe_s[chn] = msum;
       }
 
       //gfc->pe[chn] -= 150;
-
-      if (gfp->analysis) {
-	gfc->pinfo->pe[gr_out][chn]=gfc->pe_save[chn];
-	gfc->pe_save[chn]=gfc->pe[chn];
-      }
     }
 
   /*************************************************************** 
@@ -1878,6 +1861,24 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
     gfc->blocktype_old[chn] = blocktype[chn];    /* save for next call to l3psy_anal */
   }
   
+  for(chn=0;chn<numchn;chn++)
+    {
+      if (chn < 2) {
+	if (blocktype_d[chn] == SHORT_TYPE) {
+	  percep_entropy[chn] = pe_s[chn];
+	} else {
+	  percep_entropy[chn] = pe_l[chn];
+	}
+	if (gfp->analysis) gfc->pinfo->pe[gr_out][chn] = percep_entropy[chn];
+      } else {
+	if (blocktype_d[0] == SHORT_TYPE) {
+	  percep_MS_entropy[chn-2] = pe_s[chn];
+	} else {
+	  percep_MS_entropy[chn-2] = pe_l[chn];
+	}
+	if (gfp->analysis) gfc->pinfo->pe[gr_out][chn] = percep_MS_entropy[chn-2];
+      }
+    }
 
   /*********************************************************************
    * compute side_energy / (side+mid)_energy
