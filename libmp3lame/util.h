@@ -164,23 +164,6 @@ typedef struct  bit_stream_struc {
 #include "l3side.h"
 
 
-/* variables used for --nspsytune */
-typedef struct {
-    /* variables for nspsytune */
-    FLOAT last_en_subshort[4][9];
-    int   last_attacks[4];
-    FLOAT pefirbuf[19];
-    FLOAT longfact[SBMAX_l];
-    FLOAT shortfact[SBMAX_s];
-    FLOAT athadjust_msfix;  /* msfix adjustment based on athadjust */
-
-    /* short block tuning */
-    FLOAT     attackthre;
-    FLOAT     attackthre_s;
-
-    /* variables for nspsytune2 */
-    FILE *pass1fp;
-} nsPsy_t;
 
 /* variables used for --alt-preset */
 typedef struct {
@@ -313,8 +296,6 @@ struct lame_internal_flags {
   unsigned long frame_count;  /* Number of frames coded, 2^32 > 3 years */
   int          mf_samples_to_encode;
   int          mf_size;
-  FLOAT       ampl;	  /* amplification at the end of the current chunk (1. = 0 dB) */
-  FLOAT       last_ampl;	  /* amplification at the end of the last chunk    (1. = 0 dB) */
   int VBR_min_bitrate;            /* min bitrate index */
   int VBR_max_bitrate;            /* max bitrate index */
   int bitrate_index;
@@ -472,7 +453,23 @@ struct lame_internal_flags {
   
   void (*fft_fht)(FLOAT *, int);
 
-  nsPsy_t nsPsy;  /* variables used for --nspsytune */
+    /* variables used for psymodel */
+    struct {
+	FLOAT last_en_subshort[4][9];
+	int   last_attacks[4];
+	FLOAT pefirbuf[19];
+	FLOAT longfact[SBMAX_l];
+	FLOAT shortfact[SBMAX_s];
+	FLOAT athadjust_msfix;  /* msfix adjustment based on athadjust */
+
+	/* short block tuning */
+	FLOAT     attackthre;
+	FLOAT     attackthre_s;
+
+	/* variables for nspsytune2 */
+	FILE *pass1fp;
+    } nsPsy;
+
   presetTune_t presetTune;  /* variables used for --alt-preset */
   
   unsigned int crcvalue;
