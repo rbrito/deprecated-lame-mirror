@@ -1,0 +1,179 @@
+* The LAME API is frozen.  Poorly designed as it is, dont change it, 
+  and add to it sparingly.
+
+* Dont take it upon yourself to go through LAME with the sole purpose
+  of updating everything to match this guide.  Especially important:
+  Dont change the spacing, indentation, curly braces, etc, 
+  in a routine you did not write.
+
+* Respect the indentation of the author of the original function.
+  If the indentation is not consistent, use 3.
+
+* Don't use tabulators (the character with the value '\t') in source code,
+  especially these with a width of unequal 8. Lame sources are using
+  different sizes for tabulators.
+
+* Don't set the macro NDEBUG in alpha versons.
+  NDEBUG should be set for beta versions.
+
+* check important assumptions with an assert()
+
+* use int for all integer quantities.  LAME requires 32 bit ints,
+  so you can assume int is at least 32 bits.  
+  Only used 'unsigned' attribute unless absolutely necessary.
+  If 64 bits is required, use int64.
+
+* Don't use single 'short' variables to save storage.
+  Short variables are especially on Pentium Class Computer much slower than
+  int's. DEC alpha also hates short variables.
+
+  Example:   float bla [1024];
+             short i;
+             for ( i = 0; i < 1024; i++ )
+                bla [i] = i;  
+
+* To store PCM samples, use the type 'sample_t' defined in "lame.h". 
+  Currently this is a 'signed short int' and I planed to move this to
+  'float'.
+
+* Use the 'size_t' to store sizes of memory objects. 
+
+* Use the 'const' attribute if you don't intend to change the variable.
+
+* Use SI base units. Lame mixes Hz, kHz, kbps, bps. This is mess.
+
+  Example:
+        float     wavelength_green = 555.e-9;
+        unsigned  data_rate        = 128000;
+        float     lowpass_freq     = 12500.;
+  
+  Converting between user input and internal representation should be done
+  near the user interface, not in the most inner loop of an utility
+  function.
+
+----------------------------------------------------------------------------------
+----------------------------------------------------------------------------------
+
+                Chapter 1: Indentation
+
+Respect the indentation of the author of the original function.
+If the indentation is not consistent, dont change it.  If
+you are so anal-retentive about these things and you cant
+bare to even look at code with poor indentation, change it to 3.
+
+
+
+                Chapter 2: Placing Braces
+
+The other issue that always comes up in C styling is the placement of
+braces.  Unlike the indent size, there are few technical reasons to
+choose one placement strategy over the other, but the preferred way, as
+shown to us by the prophets Kernighan and Ritchie, is to put the opening
+brace last on the line, and put the closing brace first, thusly:
+
+        if (x is true) {
+                we do y
+        }
+
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus:
+
+        int function(int x)
+        {
+                body of function
+        }
+
+Heretic people all over the world have claimed that this inconsistency
+is ...  well ...  inconsistent, but all right-thinking people know that
+(a) K&R are _right_ and (b) K&R are right.  Besides, functions are
+special anyway (you can't nest them in C). 
+
+Note that the closing brace is empty on a line of its own, _except_ in
+the cases where it is followed by a continuation of the same statement,
+ie a "while" in a do-statement or an "else" in an if-statement, like
+this:
+
+        do {
+                body of do-loop
+        } while (condition);
+
+and
+
+        if (x == y) {
+                ..
+        } else if (x > y) {
+                ...
+        } else {
+                ....
+        }
+                        
+Rationale: K&R. 
+
+Also, note that this brace-placement also minimizes the number of empty
+(or almost empty) lines, without any loss of readability.  Thus, as the
+supply of new-lines on your screen is not a renewable resource (think
+25-line terminal screens here), you have more empty lines to put
+comments on. 
+
+
+                Chapter 3: Naming
+
+C is a Spartan language, and so should your naming be.  Unlike Modula-2
+and Pascal programmers, C programmers do not use cute names like
+ThisVariableIsATemporaryCounter.  A C programmer would call that
+variable "tmp", which is much easier to write, and not the least more
+difficult to understand. 
+
+HOWEVER, while mixed-case names are frowned upon, descriptive names for
+global variables are a must.  To call a global function "foo" is a
+shooting offense. 
+
+GLOBAL variables (to be used only if you _really_ need them) need to
+have descriptive names, as do global functions.  If you have a function
+that counts the number of active users, you should call that
+"count_active_users()" or similar, you should _not_ call it "cntusr()". 
+
+Encoding the type of a function into the name (so-called Hungarian
+notation) is brain damaged - the compiler knows the types anyway and can
+check those, and it only confuses the programmer.  No wonder MicroSoft
+makes buggy programs. 
+
+LOCAL variable names should be short, and to the point.  If you have
+some random integer loop counter, it should probably be called "i". 
+Calling it "loop_counter" is non-productive, if there is no chance of it
+being mis-understood.  Similarly, "tmp" can be just about any type of
+variable that is used to hold a temporary value. 
+
+If you are afraid to mix up your local variable names, you have another
+problem, which is called the function-growth-hormone-imbalance syndrome. 
+See next chapter. 
+
+                
+                Chapter 4: Functions
+
+Document functions.  
+
+Keep functions as modular as possible.  But dont adhere to artificial
+line number limitations.  For example, lame_encode_frame() encodes a
+single MP3 frame and is a long sequence of function calls.  It makes
+no sense to break this into two or more routines.
+
+
+
+                Chapter 5: Commenting
+
+Comments are good, but there is also a danger of over-commenting.  NEVER
+try to explain HOW your code works in a comment: it's much better to
+write the code so that the _working_ is obvious, and it's a waste of
+time to explain badly written code. 
+
+Generally, you want your comments to tell WHAT your code does, not HOW. 
+Also, try to avoid putting comments inside a function body: if the
+function is so complex that you need to separately comment parts of it,
+you should probably go back to chapter 4 for a while.  You can make
+small comments to note or warn about something particularly clever (or
+ugly), but try to avoid excess.  Instead, put the comments at the head
+of the function, telling people what it does, and possibly WHY it does
+it. 
+
+
