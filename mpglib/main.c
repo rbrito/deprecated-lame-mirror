@@ -107,11 +107,12 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
   len +=len2;
 
 
-  /* check for Xing header */
+  /* check first 48 bytes for Xing header */
   xing_header = GetVbrTag(&pTagData,(unsigned char*)buf);
-  if (xing_header) {
+  if (xing_header && pTagData.headersize >= 48) {
     num_frames=pTagData.frames;
-
+    
+    fskip(fd,pTagData.headersize-48 ,1);
     /* look for next sync word in buffer*/
     len=2;
     buf[0]=buf[1]=0;
@@ -134,6 +135,17 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
     }
   }
 
+  /*
+  {
+printf(" syncword:  %2X %2X %2X %2X   \n ",
+(unsigned char)buf[0],
+(unsigned char)buf[1],
+(unsigned char)buf[2],
+(unsigned char)buf[3]);
+  }
+*/
+
+
   /* parse the buffer that was read looking for Xing header above */  
   size=0;
   ret = decodeMP3(&mp,buf,(int)len,out,FSIZE,&size);
@@ -142,13 +154,14 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
   if (ret==MP3_OK && size>0 && !xing_header) 
     fprintf(stderr,"Oops: first frame of mpglib output will be lost \n"); 
 
-  
+
 
   /* repeat until we decode a valid mp3 header */
+
   while (!mp.header_parsed) {
     len = fread(buf,1,2,fd);
     if (len ==0 ) return -1;
-    ret = decodeMP3(&mp,buf,(int)len,out,FSIZE,&size);
+    ret = decodeMP3(&mp,buf,len,out,FSIZE,&size);
     if (ret==MP3_ERR) 
       return -1;
     if (ret==MP3_OK && !mp.header_parsed)
@@ -160,7 +173,7 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
   mp3data->stereo = mp.fr.stereo;
   mp3data->samplerate = freqs[mp.fr.sampling_frequency];
   mp3data->bitrate = tabsel_123[mp.fr.lsf][mp.fr.lay-1][mp.fr.bitrate_index];
-  mp3data->nsamp=ULONG_MAX;
+  mp3data->nsamp=MAX_U_32_NUM;
   mp3data->mode=mp.fr.mode;
   mp3data->mode_ext=mp.fr.mode_ext;
 
@@ -168,6 +181,7 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
   if (xing_header && num_frames) {
     mp3data->nsamp=framesize * num_frames;
   }
+
 
   /*
   fprintf(stderr,"ret = %i NEED_MORE=%i \n",ret,MP3_NEED_MORE);
@@ -177,6 +191,7 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
   fprintf(stderr,"num frames = %i  \n",(int)num_frames);
   fprintf(stderr,"mode     = %i  \n",mp.fr.mode);
   */
+
   return 0;
 }
 
