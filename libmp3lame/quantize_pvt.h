@@ -133,7 +133,7 @@ void best_scalefac_store(
         const context         *gfc,
         const int              gr,
         const int              ch,
-        const int              l3_enc[2][2][576],
+              int              l3_enc[2][2][576],
               III_side_info_t *l3_side,
               III_scalefac_t   scalefac[2][2]);
 

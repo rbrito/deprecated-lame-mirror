@@ -234,7 +234,7 @@ char *mp3buf, int mp3buf_size)
       for ( ch = 0; ch < gfc->stereo; ch++ )
 	bufp[ch] = &inbuf[ch][576 + gr*576-FFTOFFSET];
 
-      ret=L3psycho_anal( gfp,bufp, gr, 
+      ret=L3psycho_anal( gfc, bufp, gr, 
 		     &gfc->ms_ratio[gr],&ms_ratio_next,&gfc->ms_ener_ratio[gr],
 		     masking_ratio, masking_MS_ratio,
 		     pe[gr],pe_MS[gr],blocktype);

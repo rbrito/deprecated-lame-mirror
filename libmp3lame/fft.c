@@ -176,7 +176,7 @@ static const unsigned char rv_tbl[] = {
 #define ms31(f)	(window_s[0x3e - i] * f(i + k + 0xc1))
 
 
-void fft_short( lame_internal_flags *gfc, 
+void fft_short( context * const gfc, 
                 FLOAT x_real[3][BLKSIZE_s], int chn, sample_t *buffer[2])
 {
     const FLOAT*  window_s = (const FLOAT *)&gfc->window_s[0];
@@ -215,7 +215,7 @@ void fft_short( lame_internal_flags *gfc,
     }
 }
 
-void fft_long( lame_internal_flags *gfc,
+void fft_long( context * const gfc,
                FLOAT x[BLKSIZE], int chn, sample_t *buffer[2] )
 {
     const FLOAT*  window = (const FLOAT *)&gfc->window[0];
@@ -249,7 +249,7 @@ void fft_long( lame_internal_flags *gfc,
 }
 
 
-void init_fft(lame_internal_flags *gfc)
+void init_fft(context * const gfc)
 {
     FLOAT *window   = &gfc->window[0];
     FLOAT *window_s = &gfc->window_s[0];

@@ -24,9 +24,13 @@
 
 #include "encoder.h"
 
-void fft_long(lame_internal_flags* gfc, FLOAT x_real[BLKSIZE], int, sample_t *data[2] );
-void fft_short(lame_internal_flags* gfc, FLOAT x_real[3][BLKSIZE_s], int, sample_t *data[2] );
-void init_fft (lame_internal_flags* gfc );
+void fft_long (context* gfc, FLOAT x_real[BLKSIZE], 
+               int chn, sample_t *data[2] );
+
+void fft_short(context* gfc, FLOAT x_real[3][BLKSIZE_s], 
+               int chn, sample_t *data[2] );
+
+void init_fft (context* gfc );
 
 #endif
 
