@@ -254,6 +254,7 @@ extern void           init_bit_stream_w(lame_internal_flags *gfc);
 extern void           alloc_buffer(Bit_stream_struc*, int);
 extern void           desalloc_buffer(Bit_stream_struc*);
 extern void           putbits(Bit_stream_struc *bs,unsigned int val,int N);
+extern void           reorder(int * bands, int ix[576], int ix_org[576]);
 
 
 extern enum byte_order DetermineByteOrder(void);

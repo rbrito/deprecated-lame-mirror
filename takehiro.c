@@ -81,6 +81,12 @@ struct
 }
 
 
+
+
+
+
+
+
 /*************************************************************************/
 /*	      count_bit							 */
 /*************************************************************************/
@@ -178,81 +184,6 @@ count_bit_noESC2(unsigned int table)
 }
 
 
-
- static int
-count_bit_short_ESC(int *ix, int *end, int t1, int t2, int *s)
-{
-    /* ESC-table is used */
-    int linbits1 = ht[t1].xlen;
-    int linbits2 = ht[t2].xlen;
-    int	sum1 = 0;
-    int	sum2 = 0;
-
-    do {
-	int i;
-	for (i = 0; i < 3; i++) {
-	    int y = *(ix + 3);
-	    int x = *ix++;
-
-	    if (x != 0) {
-		if (x > 14) {
-		    x = 15;
-		    sum1 += linbits1;
-		    sum2 += linbits2;
-		}
-		x *= 16;
-	    }
-
-	    if (y != 0) {
-		if (y > 14) {
-		    y = 15;
-		    sum1 += linbits1;
-		    sum2 += linbits2;
-		}
-		x += y;
-	    }
-
-	    sum1 += ht[16].hlen[x];
-	    sum2 += ht[24].hlen[x];
-	}
-	ix += 3;
-    } while (ix < end);
-
-    if (sum1 > sum2)  {
-	sum1 = sum2;
-	t1 = t2;
-    }
-
-    *s += sum1;
-    return t1;
-}
-
-
-
- static int
-count_bit_short_noESC(int *ix, int *end, unsigned int table) 
-{
-    /* No ESC-words */
-    int	sum = 0;
-    const unsigned char *hlen = ht[table].hlen;
-    const unsigned int xlen = ht[table].xlen;
-    unsigned int *p = cb_esc_buf;
-
-    do {
-	int i;
-	for (i = 0; i < 3; i++) {
-	    int y = *(ix + 3);
-	    int x = *ix++;
-	    x = x * xlen + y;
-	    *p++ = x;
-	    sum += hlen[x];
-	}
-	ix += 3;
-    } while (ix < end);
-
-    cb_esc_end = p;
-    return sum;
-}
 
 
 
@@ -352,86 +283,7 @@ static int choose_table(int *ix, int *end, int *s)
     return choice0;
 }
 
-static int choose_table_short(int *ix, int *end, int * s)
-{
-    int max;
-    int choice0, sum0;
-    int choice1, sum1;
 
-    max = ix_max(ix, end);
-
-    if (max > IXMAX_VAL) {
-        *s = LARGE_BITS;
-        return -1;
-    }
-
-    if (max <= 15)  {
-	if (max == 0) {
-	    return 0;
-	}
-	/* try tables with no linbits */
-	choice0 = huf_tbl_noESC[max - 1];
-	sum0 = count_bit_short_noESC(ix, end, choice0);
-	choice1 = choice0;
-
-	switch (choice0) {
-	case 7:
-	case 10:
-	    choice1++;
-	    sum1 = count_bit_noESC2(choice1);
-	    if (sum0 > sum1) {
-		sum0 = sum1;
-		choice0 = choice1;
-	    }
-	    /*fall*/
-	case 2:
-	case 5:
-	    choice1++;
-	    sum1 = count_bit_noESC2(choice1);
-	    if (sum0 > sum1) {
-		sum0 = sum1;
-		choice0 = choice1;
-	    }
-	    break;
-
-	case 13:
-	    sum1 = count_bit_noESC2(14);
-	    if (sum0 > sum1) {
-		sum0 = sum1;
-		choice0 = 16;
-	    }
-
-	    choice1 = 15;
-	    sum1 = count_bit_noESC2(choice1);
-	    if (sum0 > sum1) {
-		sum0 = sum1;
-		choice0 = choice1;
-	    }
-	    break;
-
-	default:
-	    break;
-	}
-	*s += sum0;
-    } else {
-	/* try tables with linbits */
-	max -= 15;
-	for (choice1 = 24; choice1 < 32; choice1++) {
-	    if ((int)ht[choice1].linmax >= max) {
-		break;
-	    }
-	}
-
-	for (choice0 = choice1 - 8; choice0 < 24; choice0++) {
-	    if ((int)ht[choice0].linmax >= max) {
-		break;
-	}
-	}
-	choice0 = count_bit_short_ESC(ix, end, choice0, choice1, s);
-    }
-
-    return choice0;
-}
 
 
 
@@ -441,12 +293,14 @@ static int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
     int bits = 0;
 
     i=576;
+    /* Determine count1 region */
     for (; i > 1; i -= 2) 
 	if (ix[i - 1] | ix[i - 2])
 	    break;
+    gi->count1 = i;
+
 
     /* Determines the number of bits to encode the quadruples. */
-    gi->count1 = i;
     a1 = a2 = 0;
     for (; i > 3; i -= 4) {
 	int p;
@@ -467,10 +321,15 @@ static int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
 
     gi->count1bits = bits;
     gi->big_values = i;
-    if (i == 0)
+    if (i == 0 )
 	return bits;
 
-    if (gi->block_type == NORM_TYPE) {
+    if (gi->block_type == SHORT_TYPE) {
+      a1=3*gfc->scalefac_band.s[3];
+      if (a1 > gi->big_values) a1 = gi->big_values;
+      a2 = gi->big_values;
+
+    }else if (gi->block_type == NORM_TYPE) {
 	int index;
 	int scfb_anz = 0;
 
@@ -511,69 +370,6 @@ static int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
 
 
 
-static int count_quad_short(lame_internal_flags *gfc, int ix[576], gr_info *gi)
-{
-    int start,i, a1, a2,sfb;
-    int bits = 0;
-
-    i=576;
-    for (; i > 1; i -= 2) 
-	if (ix[i - 1] | ix[i - 2])
-	    break;
-    gi->count1 = i;
-
-
-    /* Determines where quadruples could start */
-    for (; i > 3; i -= 4) {
-	if ((unsigned int)(ix[i-1] | ix[i-2] | ix[i-3] | ix[i-4]) > 1)
-	    break;
-    }
-    /* find the value of 'start' which is >= i */
-
-    for ( sfb = 0; sfb < 13; ++sfb )      {
-      start = gfc->scalefac_band.s[ sfb ];
-      start *= 3;
-      if (start>=i) break;
-    }
-    gi->big_values=Min(start,576);
-    gi->big_values += (gi->big_values % 2);
-    if (gi->big_values > gi->count1) gi->count1=gi->big_values;
-
-    a1 = gi->count1 - gi->big_values;
-    a1 += 4 - (a1 % 4);
-    gi->count1 = gi->big_values + a1;
-
-
-    /* Determines the number of bits to encode the quadruples. */
-    a1 = a2 = 0;
-    for (i=gi->big_values; i < gi->count1; i += 4) {
-	int p;
-	assert(	(unsigned int)(ix[i] | ix[i+1] | ix[i+2] | ix[i+3]) <=1);
-	p = ((ix[i] * 2 + ix[i+1]) * 2 + ix[i+2]) * 2 + ix[i+3];
-	a1 += ht[32].hlen[p];
-	a2 += ht[33].hlen[p];
-    }
-
-    bits = a1;
-    gi->count1table_select = 0;
-    if (a1 > a2) {
-	bits = a2;
-	gi->count1table_select = 1;
-    }
-
-    gi->count1bits = bits;
-    return bits;
-}
-
-
-
-
-
-
-
-
-
-
 int count_bits(lame_global_flags *gfp,int *ix, FLOAT8 *xr, gr_info *cod_info)  
 {
   lame_internal_flags *gfc=gfp->internal_flags;
@@ -593,26 +389,9 @@ int count_bits(lame_global_flags *gfp,int *ix, FLOAT8 *xr, gr_info *cod_info)
 
 
   if (cod_info->block_type==SHORT_TYPE) {
-    int r1=3*gfc->scalefac_band.s[3],r2;
-#if 1
-    cod_info->big_values=576;
-    cod_info->count1=576;
-    if (r1 > cod_info->big_values) r1 = cod_info->big_values;
-    /* short blocks do not have a region2 */
-    r2 = cod_info->big_values;
-    cod_info->table_select[0] = choose_table_short(ix, ix + r1, &bits);
-    cod_info->table_select[1] = choose_table_short(ix + r1, ix + r2, &bits);
-#else
-    int ixp[576];
-    reorder(ixp,ix);
-    bits = count_quad_short(gfc, ixp, cod_info);
-    if (r1 > cod_info->big_values) r1 = cod_info->big_values;
-    /* short blocks do not have a region2 */
-    r2 = cod_info->big_values;
-    printf("big=%i  count1=%i \n",cod_info->big_values,cod_info->count1);
-    cod_info->table_select[0] = choose_table_short(ixp, ixp + r1, &bits);
-    cod_info->table_select[1] = choose_table_short(ixp + r1, ixp + r2, &bits);
-#endif
+    int ix_reorder[576];
+    reorder(gfc->scalefac_band.s,ix_reorder,ix);
+    bits=count_bits_long(gfc, ix_reorder, cod_info);
   }else{
     bits=count_bits_long(gfc, ix, cod_info);
   }

@@ -621,24 +621,10 @@ VBR_iteration_loop (lame_global_flags *gfp,
     }
 
   /*******************************************************************
-   * set the sign of l3_enc 
+   * set the sign of l3_enc from the sign of xr
    *******************************************************************/
   for (gr = 0; gr < gfc->mode_gr; gr++)
     for (ch = 0; ch < gfc->stereo; ch++) {
-/*
- * is the following code correct?
- *
-      int      *pi = &l3_enc[gr][ch][0];
-
-      for (i = 0; i < 576; i++) {
-        FLOAT8    pr = xr[gr][ch][i];
-
-        if ((pr < 0) && (pi[i] > 0))
-          pi[i] *= -1;
-      }
- *
- * or is the code used for CBR correct?
- */
       for ( i = 0; i < 576; i++) {
         if (xr[gr][ch][i] < 0) l3_enc[gr][ch][i] *= -1;
       }

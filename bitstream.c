@@ -468,37 +468,16 @@ static int
 ShortHuffmancodebits(lame_global_flags *gfp,int *ix, gr_info *gi)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
-    int sfb,i,block,start,end,bits=0;
+    int bits=0;
     int region1Start, region2Start;
-
-    region1Start=gfc->scalefac_band.s[3];
-    if (region1Start > gi->big_values/3)
-	region1Start = gi->big_values/3;
+    
+    region1Start=3*gfc->scalefac_band.s[3];
+    if (region1Start > gi->big_values) 	region1Start = gi->big_values;
 
     /* short blocks do not have a region2 */
-    region2Start=gi->big_values/3;
-    
-
-    for ( sfb = 0; sfb < 13; sfb++ )      {
-      unsigned tableindex = 100;
-      start = gfc->scalefac_band.s[ sfb ];
-      end   = gfc->scalefac_band.s[ sfb+1 ];
-
-      if (start>=region2Start) break;
-      
-      if ( start < region1Start )
-	tableindex = gi->table_select[ 0 ];
-      else
-	tableindex = gi->table_select[ 1 ];
-      assert( tableindex < 32 );
-      if (tableindex>0) {
-	for (block=0 ; block<3; ++block) {
-	  for (i = start; i < end; i += 2) {
-	    bits +=HuffmanCode(gfp,tableindex, ix[3*i+block], ix[3*(i+1)+block]);
-	  }
-	}
-      }
-    }
+    region2Start=gi->big_values;
+    bits +=Huffmancodebits(gfp,gi->table_select[0], 0, region1Start, ix);
+    bits +=Huffmancodebits(gfp,gi->table_select[1], region1Start, region2Start, ix);
     return bits;
 }
 
@@ -539,9 +518,9 @@ writeMainData(lame_global_flags *gfp,
     int i, gr, ch, sfb,data_bits,tot_bits=0;
     lame_internal_flags *gfc=gfp->internal_flags;
     III_side_info_t *l3_side;
+    int ix_w[576];
+
     l3_side = &gfc->l3_side;
-
-
     if (gfc->version == 1) {
 	/* MPEG 1 */
 	for (gr = 0; gr < 2; gr++) {
@@ -555,6 +534,8 @@ writeMainData(lame_global_flags *gfp,
 		hogege = gfc->bs.totbit;
 #endif
 		if (gi->block_type == SHORT_TYPE) {
+                    memcpy(ix_w,l3_enc[gr][ch],sizeof(ix_w));
+		    reorder(gfc->scalefac_band.s,l3_enc[gr][ch],ix_w);
 		    for (sfb = 0; sfb < SBPSY_s; sfb++) {
 			int slen = sfb < 6 ? slen1 : slen2;
 			putbits2(gfp,Max(scalefac[gr][ch].s[sfb][0], 0), slen);
@@ -601,6 +582,8 @@ writeMainData(lame_global_flags *gfp,
 	    sfb = 0;
 	    sfb_partition = 0;
 	    if (gi->block_type == SHORT_TYPE) {
+	      memcpy(ix_w,l3_enc[gr][ch],sizeof(ix_w));
+	      reorder(gfc->scalefac_band.s,l3_enc[gr][ch],ix_w);
 		for (; sfb_partition < 4; sfb_partition++) {
 		    int sfbs = gi->sfb_partition_table[sfb_partition] / 3;
 		    int slen = gi->slen[sfb_partition];
