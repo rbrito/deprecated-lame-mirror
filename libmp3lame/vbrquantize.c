@@ -742,8 +742,8 @@ short_block_sf (
           III_scalefac_t * const vbrsf )
 {
     unsigned int j, sfb, b;
-    int vbrmax = -10000; /* initialize for maximum search */
-    int vbrdist = 0, vbrmean, vbrmin = 10000; /* initialize for minimum search */
+    int vbrmean, vbrmin, vbrmax;
+    int sf_cache[SBPSY_s];
   
     for (j = 0, sfb = 0; sfb < SBMAX_s; sfb++) {
         for (b = 0; b < 3; b++) {
@@ -767,35 +767,43 @@ short_block_sf (
         }
     }
     
+    vbrmax = -10000;
+    
     for (b = 0; b < 3; b++) { 
-        int a[SBPSY_s];
+
+        /*  make working copy, select_kth_int will reorder!
+         */
         for (sfb = 0; sfb < SBPSY_s; sfb++) 
-            a[sfb] = vbrsf->s[sfb][b];
+            sf_cache[sfb] = vbrsf->s[sfb][b];
         
-        vbrmean = select_kth_int (a, SBPSY_s, SBMAX_s/2);
+        /*  find median value, take it as mean 
+         */
+        vbrmean = select_kth_int (sf_cache, SBPSY_s, SBMAX_s/2);
+        
+        /*  get min and max values
+         */
         vbrmin = 10000;
         for (sfb = 0; sfb < SBMAX_s; sfb++) { 
             if (vbrmin > vbrsf->s[sfb][b])
                 vbrmin = vbrsf->s[sfb][b];
-        }
-        vbrsf->s[SBPSY_s][b] = Min(vbrmean, vbrsf->s[SBPSY_s][b]);
-        vbrdist = Max (vbrdist, vbrmean-vbrmin);
-    }
-    
-    for (sfb = 0; sfb < SBMAX_s; sfb++) {
-        for (b = 0; b < 3; b++) {
-	    if (sfb > 0) 
-	        if (vbrsf->s[sfb][b] > vbrsf->s[sfb-1][b]+MAX_SF_DELTA)
-                    vbrsf->s[sfb][b] = vbrsf->s[sfb-1][b]+MAX_SF_DELTA;
-	    if (sfb < SBMAX_s-2) 
-	        if (vbrsf->s[sfb][b] > vbrsf->s[sfb+1][b]+MAX_SF_DELTA)
-                    vbrsf->s[sfb][b] = vbrsf->s[sfb+1][b]+MAX_SF_DELTA;
             if (vbrmax < vbrsf->s[sfb][b])
                 vbrmax = vbrsf->s[sfb][b];
         }
+        
+        /*  patch sfb12
+         */
+        vbrsf->s[SBPSY_s][b] = Min (vbrsf->s[SBPSY_s][b], vbrmean);
+        vbrsf->s[SBPSY_s][b] = Max (vbrsf->s[SBPSY_s][b], vbrmin-(vbrmean-vbrmin));
+        
+        /*  cut peaks
+         */
+        for (sfb = 0; sfb < SBMAX_s; sfb++) {
+            if (vbrsf->s[sfb][b] > vbrmean+(vbrmean-vbrmin))
+                vbrsf->s[sfb][b] = vbrmean+(vbrmean-vbrmin);
+        }
     }
-
-    return vbrmax+vbrdist;
+    
+    return vbrmax;
 }
 
 
@@ -809,8 +817,8 @@ long_block_sf (
           III_scalefac_t * const vbrsf )
 {
     unsigned int sfb;
-    int vbrmax = -10000; /* initialize for maximum search */
-    int vbrmean, vbrmin = 10000; /* initialize for minimum search */
+    int vbrmean, vbrmin, vbrmax;
+    int sf_cache[SBPSY_l];
     
     for (sfb = 0; sfb < SBMAX_l; sfb++) {
         const unsigned int start = gfc->scalefac_band.l[ sfb ];
@@ -831,32 +839,39 @@ long_block_sf (
         }
     }
     
-    {
-    int a[SBPSY_l];
+    /*  make working copy, select_kth_int will reorder!
+     */
     for (sfb = 0; sfb < SBPSY_l; sfb++)
-        a[sfb] = vbrsf->l[sfb];
+        sf_cache[sfb] = vbrsf->l[sfb];
     
-    vbrmean = select_kth_int (a, SBPSY_l, SBMAX_l/2);
-    vbrmin = 10000;
+    /*  find median value, take it as mean 
+     */
+    vbrmean = select_kth_int (sf_cache, SBPSY_l, SBMAX_l/2);
+
+    /*  get min and max values
+     */
+    vbrmin = +10000;
+    vbrmax = -10000;
     for (sfb = 0; sfb < SBMAX_l; sfb++) {
         if (vbrmin > vbrsf->l[sfb])
             vbrmin = vbrsf->l[sfb];
-    }
-    vbrsf->l[SBPSY_l] = Min (vbrmean, vbrsf->l[SBPSY_l]);
-    }
-    
-    for (sfb = 0; sfb < SBMAX_l; sfb++) {
-        if (sfb > 0) 
-	    if (vbrsf->l[sfb] > vbrsf->l[sfb-1]+MAX_SF_DELTA)
-                vbrsf->l[sfb] = vbrsf->l[sfb-1]+MAX_SF_DELTA;
-        if (sfb < SBMAX_l-2) 
-	    if (vbrsf->l[sfb] > vbrsf->l[sfb+1]+MAX_SF_DELTA)
-                vbrsf->l[sfb] = vbrsf->l[sfb+1]+MAX_SF_DELTA;
         if (vbrmax < vbrsf->l[sfb]) 
             vbrmax = vbrsf->l[sfb];
     }
+    
+    /*  patch sfb21
+     */
+    vbrsf->l[SBPSY_l] = Min (vbrsf->l[SBPSY_l], vbrmean);
+    vbrsf->l[SBPSY_l] = Max (vbrsf->l[SBPSY_l], vbrmin-(vbrmean-vbrmin));
+    
+    /*  cut peaks
+     */
+    for (sfb = 0; sfb < SBMAX_l; sfb++) {
+        if (vbrsf->l[sfb] > vbrmean+(vbrmean-vbrmin))
+            vbrsf->l[sfb] = vbrmean+(vbrmean-vbrmin);
+    }
         
-    return vbrmax+(vbrmean-vbrmin);
+    return vbrmax;
 }
 
 
@@ -897,19 +912,6 @@ short_block_scalefacs (
                 maxover1 = v1;
         }
     }
-
-    if (vbr_mtrh == gfp->VBR)
-        /*  RH 2001-02-02:
-         *  shouldn't the following be considered too?? 
-         */
-        for (b = 0; b < 3; b++) {
-            int x = Min(vbrmax - vbrsf->s[SBPSY_s][b], 15);
-            if (maxover0 < x)
-                maxover0 = x;
-            x = Min(vbrmax - vbrsf->s[SBPSY_s][b], 30);
-            if (maxover1 < x)
-                maxover1 = x;
-        }
 
     if (gfc->noise_shaping == 2)
         /* allow scalefac_scale=1 */
@@ -1010,22 +1012,6 @@ long_block_scalefacs (
             maxover0p = v0p;
         if (maxover1p < v1p)
             maxover1p = v1p;
-    }
-
-    if (vbr_mtrh == gfp->VBR) {
-        /*  RH 2001-02-02:
-         *  shouldn't the following be considered too?? 
-         */
-        int x = Min(vbrmax - vbrsf->l[SBPSY_l], 15);
-        if (maxover0 < x)
-            maxover0 = x;
-        if (maxover0p < x)
-            maxover0p = x;
-        x = Min(vbrmax - vbrsf->l[SBPSY_l], 30);
-        if (maxover1 < x)
-            maxover1 = x;
-        if (maxover1p < x)
-            maxover1p = x;
     }
 
     mover = Min (maxover0, maxover0p);
