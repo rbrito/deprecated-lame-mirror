@@ -1235,6 +1235,66 @@ long_block_xr34 (
 
 
 
+typedef enum {
+    BINSEARCH_NONE,
+    BINSEARCH_UP, 
+    BINSEARCH_DOWN
+} binsearchDirection_t;
+
+static int 
+bin_search_StepSize(
+          lame_internal_flags * const gfc,
+          gr_info * const cod_info,
+    const int             desired_rate, 
+    const int             start, 
+    const FLOAT8          xrpow [576] ) 
+{
+    int nBits;
+    int CurrentStep;
+    int flag_GoneOver = 0;
+    int StepSize      = start;
+
+    binsearchDirection_t Direction = BINSEARCH_NONE;
+    assert(gfc->CurrentStep);
+    CurrentStep = gfc->CurrentStep;
+
+    do {
+        cod_info->global_gain = StepSize;
+        nBits = count_bits(gfc,cod_info->l3_enc,xrpow,cod_info);  
+
+        if (CurrentStep == 1) break; /* nothing to adjust anymore */
+    
+        if (flag_GoneOver) CurrentStep /= 2;
+ 
+        if (nBits > desired_rate) {  
+            /* increase Quantize_StepSize */
+            if (Direction == BINSEARCH_DOWN && !flag_GoneOver) {
+                flag_GoneOver = 1;
+                CurrentStep  /= 2; /* late adjust */
+            }
+            Direction = BINSEARCH_UP;
+            StepSize += CurrentStep;
+            if (StepSize > 255) break;
+        }
+        else if (nBits < desired_rate) {
+            /* decrease Quantize_StepSize */
+            if (Direction == BINSEARCH_UP && !flag_GoneOver) {
+                flag_GoneOver = 1;
+                CurrentStep  /= 2; /* late adjust */
+            }
+            Direction = BINSEARCH_DOWN;
+            StepSize -= CurrentStep;
+            if (StepSize < 0) break;
+        }
+        else break; /* nBits == desired_rate;; most unlikely to happen.*/
+    } while (1); /* For-ever, break is adjusted. */
+
+    CurrentStep = start - StepSize;
+    
+    gfc->CurrentStep = CurrentStep/4 != 0 ? 4 : 2;
+
+    return nBits;
+}
 
 
 
@@ -1349,7 +1409,7 @@ do {
     if (cod_info->part2_3_length < minbits) {
         huffbits = minbits - cod_info->part2_length;
         bits = bin_search_StepSize (gfc, cod_info, huffbits, 
-                                    gfc->OldValue[ch], xr34, cod_info->l3_enc);
+                                    gfc->OldValue[ch], xr34);
         gfc->OldValue[ch] = cod_info->global_gain;
         cod_info->part2_3_length  = bits + cod_info->part2_length;
     }
@@ -1357,13 +1417,13 @@ do {
         huffbits = maxbits - cod_info->part2_length;
         if (huffbits < 0) huffbits = 0;
         bits = bin_search_StepSize (gfc, cod_info, huffbits, 
-                                    gfc->OldValue[ch], xr34, cod_info->l3_enc);
+                                    gfc->OldValue[ch], xr34);
         gfc->OldValue[ch] = cod_info->global_gain;
+        while (bits > huffbits) {
+            cod_info->global_gain++;
+            bits = count_bits (gfc, cod_info->l3_enc, xr34, cod_info);
+        } 
         cod_info->part2_3_length = bits;
-        if (bits > huffbits) {
-            bits = inner_loop (gfc, cod_info, huffbits, xr34, cod_info->l3_enc);
-            cod_info->part2_3_length  = bits;
-        }
         if (bits >= LARGE_BITS) /* Houston, we have a problem */
             return -2;
         cod_info->part2_3_length += cod_info->part2_length;

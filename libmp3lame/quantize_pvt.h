@@ -68,16 +68,6 @@ void    reduce_side (int targ_bits[2], FLOAT8 ms_ener_ratio, int mean_bits,
                      int max_bits);
 
 
-int     bin_search_StepSize (lame_internal_flags * const gfc, gr_info * const cod_info,
-                             const int desired_rate, const int start,
-                             const FLOAT8 xrpow[576], int l3enc[576]);
-
-int     inner_loop (lame_internal_flags * const gfc, gr_info * const cod_info, const int max_bits,
-                    const FLOAT8 xrpow[576], int l3enc[576]);
-
-void    iteration_init (lame_global_flags *gfp);
-
-
 int     calc_xmin (lame_global_flags *gfp,
                    const III_psy_ratio * const ratio, const gr_info * const cod_info,
                    III_psy_xmin * const l3_xmin);

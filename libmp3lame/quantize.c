@@ -178,7 +178,8 @@ typedef enum {
     BINSEARCH_DOWN
 } binsearchDirection_t;
 
-int 
+inline
+static int 
 bin_search_StepSize(
           lame_internal_flags * const gfc,
           gr_info * const cod_info,
@@ -247,7 +248,8 @@ bin_search_StepSize(
  *
  ***************************************************************************/ 
 
-int 
+inline
+static int 
 inner_loop(
           lame_internal_flags * const gfc,
           gr_info * const cod_info,
