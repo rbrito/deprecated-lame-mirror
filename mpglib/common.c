@@ -179,7 +179,7 @@ int decode_header(struct frame *fr,unsigned long newhead)
 
     switch(fr->lay)
     {
-#if USE_LAYER_1
+#ifdef USE_LAYER_1
       case 1:
 		fr->framesize  = (long) tabsel_123[fr->lsf][0][fr->bitrate_index] * 12000;
 		fr->framesize /= freqs[fr->sampling_frequency];
@@ -188,7 +188,7 @@ int decode_header(struct frame *fr,unsigned long newhead)
 		fr->down_sample_sblimit = SBLIMIT>>(fr->down_sample);
         break;
 #endif
-#if USE_LAYER_2
+#ifdef USE_LAYER_2
       case 2:
 		fr->framesize = (long) tabsel_123[fr->lsf][1][fr->bitrate_index] * 144000;
 		fr->framesize /= freqs[fr->sampling_frequency];

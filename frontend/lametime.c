@@ -93,9 +93,9 @@ double GetRealTime ( void )			/* conforming:  SVr4, BSD 4.3 */
 
 double GetRealTime ( void )			/* conforming:  Win 95, Win NT */
 {
-    struct _timeb  t;
+    struct timeb  t;
     
-    _ftime ( &t );
+    ftime ( &t );
     return t.time + 1.e-3 * t.millitm;
 }
 

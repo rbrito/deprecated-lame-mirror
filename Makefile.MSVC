@@ -18,7 +18,7 @@
 #		-> no compiler warnings
 #
 #	passing arguments, one can modify the default behaviour:
-#	COMP=<anything but INTEL>  ->  use MS compiler
+#	COMP=<not INTEL or BCC>    ->  use MS compiler
 #	WARN=<anything but OFF>    ->  give verbose compiler warnings
 #	OPT=<NORMAL,EXTRA,ULTRA>   ->  different Intel optimizations
 #	ASM=<anything but YES>     ->  no NASM nor MMX
@@ -40,7 +40,7 @@ T_LDLL = lame_enc.dll
 T_MP3X = mp3x.exe
 
 #	default targets
-PGM = $(T_LAME) $(T_LDLL)
+PGM = $(T_LDLL) $(T_LAME)
 
 #	some default settings
 
@@ -72,6 +72,9 @@ OPT = NORMAL
 WARN = OFF
 !	ENDIF
 
+
+
+OFF = win32
 
 !	MESSAGE ----------------------------------------------------------------------
 !	MESSAGE building LAME featuring $(CFG)
@@ -111,6 +114,7 @@ WARN = OFF
 
 
 !	IF "$(COMP)" != "INTEL"
+!	IF "$(COMP)" != "BCC"
 
 #__ Microsoft C options _______________________________________________________
 #
@@ -166,6 +170,45 @@ CC_OUT = /Fo
 CC = cl
 LN = cl
 #_______________________________________________________ Microsoft C options __
+
+
+!	ELSE
+
+#__ Borland BCC options _______________________________________________________
+#
+#	first draft, DLL not working, generates very slow code!
+BCCINST = C:/Borland/BCC55
+
+CC_OPTS = -pc -q -ff -fp -jb -j1 -tWC -tWM -O2 -OS -I$(BCCINST)/include -DNDEBUG -DWIN32
+# dll >> -tWD
+LN_OPTS = -lGn -lGi -lap -lx -L$(BCCINST)/lib
+# dll >> -Tpd
+!	IF "$(CPU)" == "P1"
+CC_OPTS = $(CC_OPTS) -5
+!	ELSE
+CC_OPTS = $(CC_OPTS) -6
+!	ENDIF
+
+!	IF "$(WARN)" == "OFF"
+CC_OPTS = $(CC_OPTS) -w-
+!	ELSE
+CC_OPTS = $(CC_OPTS) 
+!	ENDIF
+
+LN_DLL = 
+#$(CCINST)/lib/cw32R.lib
+LN_OUT = -e
+CC_OUT = -o
+
+CC = bcc32
+LN = bcc32
+
+OFF = obj
+PGM = $(T_LAME)
+
+!	ENDIF
+#_______________________________________________________ Borland BCC options __
+
 
 !	ELSE
 
@@ -380,62 +423,33 @@ LAME_OBJ = $(lame_sources:.c=.obj)
 MPX_OBJ = $(mpx_sources:.c=.obj)
 DLL_OBJ = $(dll_sources:.c=.obj)
 
-
-all :	$(PGM)
-	@echo.
-	@echo --=*  $(PGM) uptodate  *=--
-	@echo.
+.c.obj: 
+	@$(CC) $(CPP_OPTS) $(CC_SWITCHES) -Iinclude -Ilibmp3lame -Impglib \
+	       $(CC_OUT)$@  -c $<
 
 #__ NASM ______________________________________________________________________
 #
 #	NASM: Netwide Assembler
 #
 !	IF "$(ASM)" == "YES"
-libmp3lame/i386/cpu_feat.obj: libmp3lame/i386/cpu_feat.nas
-	@echo assemble CPU-feature detection, using NASM the Netwide Assembler
-	@nasmw -f win32 -i libmp3lame/i386/ -DWIN32 \
-		libmp3lame/i386/cpu_feat.nas \
-		-o libmp3lame/i386/cpu_feat.obj
-
-libmp3lame/i386/scalar.obj: libmp3lame/i386/scalar.nas
-	@echo assemble scalar multiplication routines, using NASM the Netwide Assembler
-	@nasmw -f win32 -i libmp3lame/i386/ -DWIN32 \
-		libmp3lame/i386/scalar.nas \
-		-o libmp3lame/i386/scalar.obj
+.SUFFIXES : .nas
+.nas.obj:
+	@echo $< 
+	@nasmw -f $(OFF) -i libmp3lame/i386/ -DWIN32 $< -o $@
                                 
 CC_SWITCHES = $(CC_SWITCHES) /DHAVE_NASM
 ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/cpu_feat.obj libmp3lame/i386/scalar.obj
 
 
-libmp3lame/i386/fft3dn.obj: libmp3lame/i386/fft3dn.nas
-	@echo assemble 3DNow! FFT routines, using NASM the Netwide Assembler
-	@nasmw -f win32 -i libmp3lame/i386/ -DWIN32 \
-		libmp3lame/i386/fft3dn.nas \
-		-o libmp3lame/i386/fft3dn.obj
-                                
 CC_SWITCHES = $(CC_SWITCHES) /DUSE_FFT3DN
 ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/fft3dn.obj
 
 #	not yet coded
-#
-#libmp3lame/i386/fftsse.obj: libmp3lame/i386/fftsse.nas
-#	@echo assemble SIMD FFT routines, using NASM the Netwide Assembler
-#	@nasmw -f win32 -i libmp3lame/i386/ -DWIN32 \
-#		libmp3lame/i386/fftsse.nas \
-#		-o libmp3lame/i386/fftsse.obj
-#                                
 #CC_SWITCHES = $(CC_SWITCHES) /DUSE_FFTSSE
 #ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/fftsse.obj
 
-#libmp3lame/i386/fftfpu.obj: libmp3lame/i386/fftfpu.nas
-#	@echo assemble i387 FPU FFT routines, using NASM the Netwide Assembler
-#	@nasmw -f win32 -i libmp3lame/i386/ -DWIN32 \
-#		libmp3lame/i386/fftfpu.nas \
-#		-o libmp3lame/i386/fftfpu.obj
-#                                
 #CC_SWITCHES = $(CC_SWITCHES) /DUSE_FFTFPU
 #ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/fftfpu.obj
-
 !	ENDIF
 #______________________________________________________________________ NASM __
 
@@ -449,12 +463,6 @@ ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/fft3dn.obj
 #
 !	IF "$(ASM)" == "YES"
 !	IF "$(MMX)" == "YES"
-libmp3lame/i386/choose_table.obj: libmp3lame/i386/choose_table.nas
-	@echo assemble MMX choose table, using NASM the Netwide Assembler
-	@nasmw -f win32 -i libmp3lame/i386/ -DWIN32 \
-		libmp3lame/i386/choose_table.nas \
-		-o libmp3lame/i386/choose_table.obj
-
 CC_SWITCHES = $(CC_SWITCHES) /DMMX_choose_table
 ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/choose_table.obj
 !	ENDIF
@@ -465,65 +473,51 @@ ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/choose_table.obj
 
 
 
-config.h : configMS.h
-	@-copy configMS.h config.h
-
-.c.obj: 
-	@$(CC) $(CPP_OPTS) $(CC_SWITCHES) -Iinclude -Ilibmp3lame \
-	       /c $< $(CC_OUT)$@
-
-$(MPX_OBJ) : $(mpx_sources)
-	@$(CC) $(CPP_OPTS) $(CC_SWITCHES) $(GTK_OPTS) \
-	       -Iinclude -Impglib -Ilibmp3lame /c $** $(CC_OUT)frontend/
+all :	$(PGM)
 	@echo.
-	@echo --- FRAME ANALYZER STUFF READY ---
+	@echo --=*  $(PGM) uptodate  *=--
 	@echo.
 
-$(CMMN_OBJ): $(common_sources) 
-	@$(CC) $(CPP_OPTS) $(CC_SWITCHES) -Iinclude /c $** $(CC_OUT)frontend/
+common:	$(CMMN_OBJ)
 	@echo.
 	@echo --- COMMON FRONTEND STUFF UPTODATE ---
 	@echo.
 
-$(LIB_OBJ) : $(lamelib_sources)
-	@$(CC) $(CPP_OPTS) $(CC_SWITCHES) \
-	       -Iinclude -Impglib /c $** $(CC_OUT)libmp3lame/
+libA:	$(LIB_OBJ)
 	@echo.
 	@echo --- LAME MP3 ENCODING LIBRARY UPTODATE ---
 	@echo.
 
-$(MPG_OBJ) : $(mpglib_sources)
-	@$(CC) $(CPP_OPTS) $(CC_SWITCHES) \
-	       -Iinclude -Ilibmp3lame /c $** $(CC_OUT)mpglib/
+libB:	$(MPG_OBJ)
 	@echo.
 	@echo --- MPG123 DECODING LIBRARY UPTODATE ---
 	@echo.
 
-lib: $(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ)
+lib: $(ASM_OBJ) libA libB
 
-$(T_LAME) : config.h lib $(CMMN_OBJ) $(LAME_OBJ)
-	@$(LN) $(LN_SWITCHES) $(LIBSNDFILE) $(VORBISLIB) \
-	       $(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ) $(CMMN_OBJ) $(LAME_OBJ) \
-		   $(LN_OUT)$@
+$(T_LAME) : config.h lib common $(LAME_OBJ)
+	@$(LN) $(LN_OUT)$@ $(LN_SWITCHES) $(LIBSNDFILE) $(VORBISLIB) \
+	       $(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ) $(CMMN_OBJ) $(LAME_OBJ)
 	@echo.
 	@echo --=*  $@ ready  *=--
 	@echo.
 
-$(T_LDLL) : config.h lib $(CMMN_OBJ) $(DLL_OBJ)
-	@$(LN) $(LN_SWITCHES) $(LIBSNDFILE) $(VORBISLIB) \
-	       $(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ) $(DLL_OBJ) \
-		   $(LN_DLL) $(LN_OUT)$@
+$(T_MP3X) : config.h lib common $(MPX_OBJ)
+	@$(LN) $(LN_OUT)$@ $(LN_SWITCHES) $(GTK_LIBS) $(LIBSNDFILE) $(VORBISLIB) \
+	       $(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ) $(CMMN_OBJ) $(MPX_OBJ)
 	@echo.
 	@echo --=*  $@ ready  *=--
 	@echo.
 
-$(T_MP3X) : config.h lib $(CMMN_OBJ) $(MPX_OBJ)
-	@$(LN) $(LN_SWITCHES) $(GTK_LIBS) $(LIBSNDFILE) $(VORBISLIB) \
-	       $(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ) $(CMMN_OBJ) $(MPX_OBJ) \
-		   $(LN_OUT)$@
+$(T_LDLL) : config.h lib $(DLL_OBJ)
+	@$(LN) $(LN_OUT)$@ $(LN_SWITCHES) $(LN_DLL) $(LIBSNDFILE) $(VORBISLIB) \
+	       $(ASM_OBJ) $(LIB_OBJ) $(MPG_OBJ) $(DLL_OBJ)
 	@echo.
 	@echo --=*  $@ ready  *=--
 	@echo.
+
+config.h : configMS.h
+	@-copy configMS.h config.h
 
 clean:
 	@-del *.exe

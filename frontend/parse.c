@@ -1339,28 +1339,29 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 	
     if ( inPath[0] == '-' ) 
         silent = 1;  /* turn off status - it's broken for stdin */
-	
-    if ( outPath[0] == '\0' ) {
-	if ( inPath[0] == '-' ) {
-	    /* if input is stdin, default output is stdout */
-	    strcpy(outPath,"-");
-	} else {
 #ifdef WIN32
-            dosToLongFileName( inPath );
+    else
+        dosToLongFileName( inPath );
 #endif
+    
+    if ( outPath[0] == '\0' ) {
+        if ( inPath[0] == '-' ) {
+            /* if input is stdin, default output is stdout */
+            strcpy(outPath,"-");
+        } else {
             strncpy(outPath, inPath, MAX_NAME_SIZE - 4);
-	    if ( lame_get_decode_only( gfp ) ) {
-	        strncat (outPath, ".wav", 4 );
-	    } else if( lame_get_ogg( gfp ) ) {
-		strncat (outPath, ".ogg", 4 );
-	    } else {
-		strncat (outPath, ".mp3", 4 );
-	    }
-	}
+            if ( lame_get_decode_only( gfp ) ) {
+                strncat (outPath, ".wav", 4 );
+            } else if( lame_get_ogg( gfp ) ) {
+                strncat (outPath, ".ogg", 4 );
+            } else {
+                strncat (outPath, ".mp3", 4 );
+            }
+        }
     }
     /* some file options not allowed with stdout */
     if (outPath[0]=='-') {
-	(void) lame_set_bWriteVbrTag( gfp, 0 ); /* turn off VBR tag */
+        (void) lame_set_bWriteVbrTag( gfp, 0 ); /* turn off VBR tag */
     }
     
     /* if user did not explicitly specify input is mp3, check file name */
