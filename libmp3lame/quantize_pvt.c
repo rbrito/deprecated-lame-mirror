@@ -685,7 +685,7 @@ int  calc_noise(
     FLOAT mean_noise;
     FLOAT var_noise = 0;
    
-    res->over_cost = 0;
+    res->over_SSD = 0;
 
 
     for (sfb = 0; sfb < cod_info->psymax; sfb++) {
@@ -754,7 +754,7 @@ int  calc_noise(
             int tmp;
             
             tmp = max((int)(noise*10 + .5), 1);
-            res->over_cost += tmp*tmp;
+            res->over_SSD += tmp*tmp;
 
 	        over++;
 	        /* multiplying here is adding in dB -but can overflow */
@@ -915,6 +915,7 @@ void set_pinfo (
     gfc->pinfo->over_noise[gr][ch] = noise.over_noise * 10.0;
     gfc->pinfo->tot_noise [gr][ch] = noise.tot_noise * 10.0;
     gfc->pinfo->var_noise [gr][ch] = noise.var_noise * 10.0;
+    gfc->pinfo->over_SSD [gr][ch] = noise.over_SSD;
 }
 
 
