@@ -59,6 +59,8 @@
 
 #if ( defined(_MSC_VER) && !defined(INLINE))
 	#define INLINE _inline
+#elif defined(__SASC)
+	#define INLINE __inline
 #else
 	#define INLINE inline
 #endif
