@@ -214,7 +214,7 @@ HRESULT CEncoder::Encode(LPVOID pSrc, DWORD dwSrcSize, LPVOID pDst, LPDWORD lpdw
 
 	int nsamples = dwSrcSize/(m_wfex.wBitsPerSample*m_wfex.nChannels/8);
 
-	lData = lame_encode_buffer_interleaved(pgf,(short*)pSrc,nsamples,(char*)pData,lData);
+	lData = lame_encode_buffer_interleaved(pgf,(short*)pSrc,nsamples,pData,lData);
 
 	if(m_mabsi.dwPES && lData > 0)
 	{
@@ -251,7 +251,7 @@ HRESULT CEncoder::Finish(LPVOID pDst, LPDWORD lpdwDstSize)
 
 #pragma message (REMIND("Finish encoding right!"))
 	if (pgf) {
-		lData = lame_encode_flush(pgf,(char*)pData,lData);
+		lData = lame_encode_flush(pgf,pData,lData);
 
 		if(m_mabsi.dwPES && lData > 0)
 		{
