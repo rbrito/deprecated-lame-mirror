@@ -81,20 +81,20 @@ typedef struct ts_times {
 /*********************************************************/
 /* ts_calc_times: calculate time info (eta, speed, etc.) */
 /*********************************************************/
-void ts_calc_times(ts_times *time, int samp_rate, long frame, long frames,int framesize)
+void ts_calc_times(ts_times *tstime, int samp_rate, long frame, long frames,int framesize)
 {
   if (frame > 0) {
-    time->estimated = time->so_far * frames / frame;
-    if (samp_rate * time->estimated > 0) {
-      time->speed = frames * framesize / (samp_rate * time->estimated);
+    tstime->estimated = tstime->so_far * frames / frame;
+    if (samp_rate * tstime->estimated > 0) {
+      tstime->speed = frames * framesize / (samp_rate * tstime->estimated);
     } else {
-      time->speed = 0;
+      tstime->speed = 0;
     }
-    time->eta = time->estimated - time->so_far;
+    tstime->eta = tstime->estimated - tstime->so_far;
   } else {
-    time->estimated = 0;
-	time->speed = 0;
-	time->eta = 0;
+    tstime->estimated = 0;
+    tstime->speed = 0;
+    tstime->eta = 0;
   }
 }
 

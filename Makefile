@@ -103,6 +103,10 @@ ifeq ($(UNAME),Linux)
 
 #  for lots of debugging:
 #   CC_OPTS =  -DDEBUG -UNDEBUG  -O -Wall -g -DABORTFP 
+#    -Wconversion \
+#    -Wcast-align -Wcast-qual \
+#    -Wredundant-decls \
+#    -Wshadow
 
 
 

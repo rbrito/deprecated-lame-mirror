@@ -458,154 +458,6 @@ static const int order[] = {
     3,  19, 11, 27,  7,  23,  15,  31
 };
 
-void mdct_sub48(lame_global_flags *gfp,
-    short *w0, short *w1,
-    FLOAT8 mdct_freq[2][2][576],
-    III_side_info_t *l3_side)
-{
-    int gr, k, ch;
-    short *wk;
-    static int init = 0;
-    lame_internal_flags *gfc=gfp->internal_flags;
-
-    FLOAT8 work[18];
-
-    if ( gfc->mdct_sub48_init == 0 ) {
-        void mdct_init48(lame_global_flags *gfp);
-        gfc->mdct_sub48_init=1;
-	mdct_init48(gfp);
-	init++;
-    }
-
-    wk = w0 + 286;
-    /* thinking cache performance, ch->gr loop is better than gr->ch loop */
-    for (ch = 0; ch < gfc->stereo; ch++) {
-	for (gr = 0; gr < gfc->mode_gr; gr++) {
-	    int	band;
-	    FLOAT8 *mdct_enc = &mdct_freq[gr][ch][0];
-	    gr_info *gi = &(l3_side->gr[gr].ch[ch].tt);
-	    FLOAT8 *samp = gfc->sb_sample[ch][1 - gr][0];
-
-	    for (k = 0; k < 18 / 2; k++) {
-		window_subband(wk, samp + 16);
-		idct32(samp);
-		window_subband(wk + 32, samp + 32+16);
-		idct32(samp+32);
-		samp += 64;
-		wk += 64;
-		/*
-		 * Compensate for inversion in the analysis filter
-		 */
-		for (band = 16-32; band < 0; band++)
-		    samp[band] *= -1;
-	    }
-
-
-	    /* apply filters on the polyphase filterbank outputs */
-	    /* bands <= gfc->highpass_band will be zeroed out below */
-	    /* bands >= gfc->lowpass_band  will be zeroed out below */
-	    if (gfc->filter_type==0) {
-              for (band=gfc->highpass_start_band;  band <= gfc->highpass_end_band; band++) { 
-		  for (k=0; k<18; k++) 
-		    gfc->sb_sample[ch][1-gr][k][order[band]]*=gfc->amp_highpass[band];
-	      }
-              for (band=gfc->lowpass_start_band;  band <= gfc->lowpass_end_band; band++) { 
-		  for (k=0; k<18; k++) 
-		    gfc->sb_sample[ch][1-gr][k][order[band]]*=gfc->amp_lowpass[band];
-	      }
-	    }
-	    
-
-
-	    /*
-	     * Perform imdct of 18 previous subband samples
-	     * + 18 current subband samples
-	     */
-	    for (band = 0; band < 32; band++, mdct_enc += 18) 
-	    {
-		int type = gi->block_type;
-		int band_swapped;
-		band_swapped = order[band];
-#ifdef ALLOW_MIXED
-		if (gi->mixed_block_flag && band < 2)
-		    type = 0;
-#endif
-		if (band >= gfc->lowpass_band || band <= gfc->highpass_band) {
-		    memset((char *)mdct_enc,0,18*sizeof(FLOAT8));
-		}else {
-		  if (type == SHORT_TYPE) {
-		    for (k = 2; k >= 0; --k) {
-			FLOAT8 w1 = win[SHORT_TYPE][k];
-			FLOAT8 a, b;
-
-			a = gfc->sb_sample[ch][gr][k+6][band_swapped] * w1 -
-			    gfc->sb_sample[ch][gr][11-k][band_swapped];
-
-			b = gfc->sb_sample[ch][gr][k+12][band_swapped] +
-			    gfc->sb_sample[ch][gr][17-k][band_swapped] * w1;
-
-			work[k+3] = -b*tritab_s[k*2  ] + a * tritab_s[k*2+1];
-			work[k  ] =  b*tritab_s[k*2+1] + a * tritab_s[k*2  ];
-
-			a = gfc->sb_sample[ch][gr][k+12][band_swapped] * w1 -
-			    gfc->sb_sample[ch][gr][17-k][band_swapped];
-
-			b = gfc->sb_sample[ch][1-gr][k][band_swapped] +
-			    gfc->sb_sample[ch][1-gr][5-k][band_swapped] * w1;
-
-			work[k+9] = -b*tritab_s[k*2  ] + a * tritab_s[k*2+1];
-			work[k+6] =  b*tritab_s[k*2+1] + a * tritab_s[k*2  ];
-
-			a = gfc->sb_sample[ch][1-gr][k][band_swapped] * w1 -
-			    gfc->sb_sample[ch][1-gr][5-k][band_swapped];
-
-			b = gfc->sb_sample[ch][1-gr][k+6][band_swapped] +
-			    gfc->sb_sample[ch][1-gr][11-k][band_swapped] * w1;
-
-			work[k+15] = -b*tritab_s[k*2  ] + a * tritab_s[k*2+1];
-			work[k+12] =  b*tritab_s[k*2+1] + a * tritab_s[k*2  ];
-		    }
-		    mdct_short(mdct_enc, work);
-		  } else {
-		    for (k = -NL/4; k < 0; k++) {
-			FLOAT8 a, b;
-			a = win[type][k+27] * gfc->sb_sample[ch][1-gr][k+9][band_swapped]
-			  + win[type][k+36] * gfc->sb_sample[ch][1-gr][8-k][band_swapped];
-			b = win[type][k+ 9] * gfc->sb_sample[ch][gr][k+9][band_swapped]
-			  - win[type][k+18] * gfc->sb_sample[ch][gr][8-k][band_swapped];
-			work[k+ 9] = a - b*tantab_l[k+9];
-			work[k+18] = a*tantab_l[k+9] + b;
-		    }
-
-		    mdct_long(mdct_enc, work);
-		  }
-		}
-		
-		
-		/*
-		  Perform aliasing reduction butterfly
-		*/
-		if (type != SHORT_TYPE) {
-		  if (band == 0)
-		    continue;
-		  for (k = 7; k >= 0; --k) {
-		    FLOAT8 bu,bd;
-		    bu = mdct_enc[k] * ca[k] + mdct_enc[-1-k] * cs[k];
-		    bd = mdct_enc[k] * cs[k] - mdct_enc[-1-k] * ca[k];
-		    
-		    mdct_enc[-1-k] = bu;
-		    mdct_enc[k]    = bd;
-		  }
-		}
-	      }
-	}
-	wk = w1 + 286;
-	if (gfc->mode_gr == 1) {
-	    memcpy(gfc->sb_sample[ch][0], gfc->sb_sample[ch][1], 576 * sizeof(FLOAT8));
-	}
-    }
-}
-
 
 
 void mdct_init48(lame_global_flags *gfp)
@@ -693,5 +545,152 @@ void mdct_init48(lame_global_flags *gfp)
 	win[SHORT_TYPE][i] = tan(PI / NS * (i + 0.5));
 	tritab_s[i*2  ] = cos((0.5+2-i)*PI/NS) * w2;
 	tritab_s[i*2+1] = sin((0.5+2-i)*PI/NS) * w2;
+    }
+}
+
+void mdct_sub48(lame_global_flags *gfp,
+    short *w0, short *w1,
+    FLOAT8 mdct_freq[2][2][576],
+    III_side_info_t *l3_side)
+{
+    int gr, k, ch;
+    short *wk;
+    static int init = 0;
+    lame_internal_flags *gfc=gfp->internal_flags;
+
+    FLOAT8 work[18];
+
+    if ( gfc->mdct_sub48_init == 0 ) {
+        gfc->mdct_sub48_init=1;
+	mdct_init48(gfp);
+	init++;
+    }
+
+    wk = w0 + 286;
+    /* thinking cache performance, ch->gr loop is better than gr->ch loop */
+    for (ch = 0; ch < gfc->stereo; ch++) {
+	for (gr = 0; gr < gfc->mode_gr; gr++) {
+	    int	band;
+	    FLOAT8 *mdct_enc = &mdct_freq[gr][ch][0];
+	    gr_info *gi = &(l3_side->gr[gr].ch[ch].tt);
+	    FLOAT8 *samp = gfc->sb_sample[ch][1 - gr][0];
+
+	    for (k = 0; k < 18 / 2; k++) {
+		window_subband(wk, samp + 16);
+		idct32(samp);
+		window_subband(wk + 32, samp + 32+16);
+		idct32(samp+32);
+		samp += 64;
+		wk += 64;
+		/*
+		 * Compensate for inversion in the analysis filter
+		 */
+		for (band = 16-32; band < 0; band++)
+		    samp[band] *= -1;
+	    }
+
+
+	    /* apply filters on the polyphase filterbank outputs */
+	    /* bands <= gfc->highpass_band will be zeroed out below */
+	    /* bands >= gfc->lowpass_band  will be zeroed out below */
+	    if (gfc->filter_type==0) {
+              for (band=gfc->highpass_start_band;  band <= gfc->highpass_end_band; band++) { 
+		  for (k=0; k<18; k++) 
+		    gfc->sb_sample[ch][1-gr][k][order[band]]*=gfc->amp_highpass[band];
+	      }
+              for (band=gfc->lowpass_start_band;  band <= gfc->lowpass_end_band; band++) { 
+		  for (k=0; k<18; k++) 
+		    gfc->sb_sample[ch][1-gr][k][order[band]]*=gfc->amp_lowpass[band];
+	      }
+	    }
+	    
+
+
+	    /*
+	     * Perform imdct of 18 previous subband samples
+	     * + 18 current subband samples
+	     */
+	    for (band = 0; band < 32; band++, mdct_enc += 18) 
+	    {
+		int type = gi->block_type;
+		int band_swapped;
+		band_swapped = order[band];
+#ifdef ALLOW_MIXED
+		if (gi->mixed_block_flag && band < 2)
+		    type = 0;
+#endif
+		if (band >= gfc->lowpass_band || band <= gfc->highpass_band) {
+		    memset((char *)mdct_enc,0,18*sizeof(FLOAT8));
+		}else {
+		  if (type == SHORT_TYPE) {
+		    for (k = 2; k >= 0; --k) {
+			FLOAT8 win1 = win[SHORT_TYPE][k];
+			FLOAT8 a, b;
+
+			a = gfc->sb_sample[ch][gr][k+6][band_swapped] * win1 -
+			    gfc->sb_sample[ch][gr][11-k][band_swapped];
+
+			b = gfc->sb_sample[ch][gr][k+12][band_swapped] +
+			    gfc->sb_sample[ch][gr][17-k][band_swapped] * win1;
+
+			work[k+3] = -b*tritab_s[k*2  ] + a * tritab_s[k*2+1];
+			work[k  ] =  b*tritab_s[k*2+1] + a * tritab_s[k*2  ];
+
+			a = gfc->sb_sample[ch][gr][k+12][band_swapped] * win1 -
+			    gfc->sb_sample[ch][gr][17-k][band_swapped];
+
+			b = gfc->sb_sample[ch][1-gr][k][band_swapped] +
+			    gfc->sb_sample[ch][1-gr][5-k][band_swapped] * win1;
+
+			work[k+9] = -b*tritab_s[k*2  ] + a * tritab_s[k*2+1];
+			work[k+6] =  b*tritab_s[k*2+1] + a * tritab_s[k*2  ];
+
+			a = gfc->sb_sample[ch][1-gr][k][band_swapped] * win1 -
+			    gfc->sb_sample[ch][1-gr][5-k][band_swapped];
+
+			b = gfc->sb_sample[ch][1-gr][k+6][band_swapped] +
+			    gfc->sb_sample[ch][1-gr][11-k][band_swapped] * win1;
+
+			work[k+15] = -b*tritab_s[k*2  ] + a * tritab_s[k*2+1];
+			work[k+12] =  b*tritab_s[k*2+1] + a * tritab_s[k*2  ];
+		    }
+		    mdct_short(mdct_enc, work);
+		  } else {
+		    for (k = -NL/4; k < 0; k++) {
+			FLOAT8 a, b;
+			a = win[type][k+27] * gfc->sb_sample[ch][1-gr][k+9][band_swapped]
+			  + win[type][k+36] * gfc->sb_sample[ch][1-gr][8-k][band_swapped];
+			b = win[type][k+ 9] * gfc->sb_sample[ch][gr][k+9][band_swapped]
+			  - win[type][k+18] * gfc->sb_sample[ch][gr][8-k][band_swapped];
+			work[k+ 9] = a - b*tantab_l[k+9];
+			work[k+18] = a*tantab_l[k+9] + b;
+		    }
+
+		    mdct_long(mdct_enc, work);
+		  }
+		}
+		
+		
+		/*
+		  Perform aliasing reduction butterfly
+		*/
+		if (type != SHORT_TYPE) {
+		  if (band == 0)
+		    continue;
+		  for (k = 7; k >= 0; --k) {
+		    FLOAT8 bu,bd;
+		    bu = mdct_enc[k] * ca[k] + mdct_enc[-1-k] * cs[k];
+		    bd = mdct_enc[k] * cs[k] - mdct_enc[-1-k] * ca[k];
+		    
+		    mdct_enc[-1-k] = bu;
+		    mdct_enc[k]    = bd;
+		  }
+		}
+	      }
+	}
+	wk = w1 + 286;
+	if (gfc->mode_gr == 1) {
+	    memcpy(gfc->sb_sample[ch][0], gfc->sb_sample[ch][1], 576 * sizeof(FLOAT8));
+	}
     }
 }

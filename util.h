@@ -341,7 +341,7 @@ extern int            BitrateIndex(int, int,int);
 extern int            SmpFrqIndex(long, int*);
 extern int            copy_buffer(char *buffer,int buffer_size,Bit_stream_struc *bs);
 extern void           init_bit_stream_w(lame_internal_flags *gfc);
-extern void           alloc_buffer(Bit_stream_struc*, int);
+extern void           alloc_buffer(Bit_stream_struc*, unsigned int);
 extern void           freegfc(lame_internal_flags *gfc);
 extern void           reorder(int * bands, int ix[576], int ix_org[576]);
 

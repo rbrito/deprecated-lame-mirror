@@ -243,7 +243,7 @@ int copy_buffer(char *buffer,int size,Bit_stream_struc *bs)
   int minimum = bs->buf_byte_idx + 1;
   if (minimum <= 0) return 0;
   if (size!=0 && minimum>size) return -1; /* buffer is too small */
-  memcpy(buffer,bs->buf,minimum);
+  memcpy(buffer,bs->buf,(unsigned)minimum);
   bs->buf_byte_idx = -1;
   bs->buf_bit_idx = 0;
   return minimum;
@@ -268,7 +268,7 @@ void init_bit_stream_w(lame_internal_flags *gfc)
 /*open and initialize the buffer; */
 void alloc_buffer(
 Bit_stream_struc *bs,   /* bit stream structure */
-int size)
+unsigned int size)
 {
    bs->buf = (unsigned char *)       malloc(size);
    bs->buf_size = size;

@@ -663,7 +663,7 @@ void best_scalefac_store(lame_global_flags *gfp,int gr, int ch,
 
     /* use scalefac_scale if we can */
     gr_info *gi = &l3_side->gr[gr].ch[ch].tt;
-    int sfb,i,l,start,end;
+    u_int sfb,i,l,start,end;
 
     /* remove scalefacs from bands with ix=0.  This idea comes
      * from the AAC ISO docs.  added mt 3/00 */
@@ -691,7 +691,6 @@ void best_scalefac_store(lame_global_flags *gfp,int gr, int ch,
 
     gi->part2_3_length -= gi->part2_length;
     if (!gi->scalefac_scale && !gi->preflag) {
-	u_int sfb;
 	int b, s = 0;
 	for (sfb = 0; sfb < gi->sfb_lmax; sfb++) {
 	    s |= scalefac[gr][ch].l[sfb];

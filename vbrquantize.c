@@ -412,8 +412,7 @@ VBR_quantize_granule(lame_global_flags *gfp,
   
 
   if (gfc->pinfo != NULL) {
-    plotting_data *pinfo=gfc->pinfo;
-    pinfo->LAMEmainbits[gr][ch]=cod_info->part2_3_length;
+    gfc->pinfo->LAMEmainbits[gr][ch]=cod_info->part2_3_length;
   }
 
   return;

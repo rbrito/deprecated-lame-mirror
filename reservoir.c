@@ -43,9 +43,8 @@ ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, i
     l3_side->resvDrain_pre = 0;
 
     if (gfc->pinfo != NULL){
-      plotting_data *pinfo=gfc->pinfo;
-      pinfo->mean_bits=mean_bits/2;  /* expected bits per channel per granule */
-      pinfo->resvsize=gfc->ResvSize;
+      gfc->pinfo->mean_bits=mean_bits/2;  /* expected bits per channel per granule */
+      gfc->pinfo->resvsize=gfc->ResvSize;
     }
     
     fullFrameBits = mean_bits * gfc->mode_gr + Min(gfc->ResvSize,gfc->ResvMax);
@@ -122,7 +121,7 @@ void
 ResvFrameEnd(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits)
 {
     int stuffingBits;
-    int over_bits,mdb_bytes;
+    int over_bits;
     lame_internal_flags *gfc=gfp->internal_flags;
 
 
@@ -152,7 +151,8 @@ ResvFrameEnd(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits)
      * In particular, in VBR mode ResvMax may have changed, and we have
      * to make sure main_data_begin does not create a reservoir bigger 
      * than ResvMax  mt 4/00*/
-    mdb_bytes = Min(l3_side->main_data_begin*8,stuffingBits)/8;
+  {
+    int mdb_bytes = Min(l3_side->main_data_begin*8,stuffingBits)/8;
     l3_side->resvDrain_pre += 8*mdb_bytes;
     stuffingBits -= 8*mdb_bytes;
     gfc->ResvSize -= 8*mdb_bytes;
@@ -165,6 +165,7 @@ ResvFrameEnd(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits)
      * and we will not have to waste these bits!  mt 4/00 */
     l3_side->resvDrain_post += (stuffingBits % 8);
     gfc->ResvSize -= stuffingBits % 8;
+  }
 #else
     /* drain the rest into this frames ancillary data*/
     l3_side->resvDrain_post += stuffingBits;

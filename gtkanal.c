@@ -1171,8 +1171,8 @@ static GtkItemFactoryEntry menu_items[] = {
 };
 
 
-static void get_main_menu(GtkWidget *window, GtkWidget ** menubar) {
-  int nmenu_items = sizeof(menu_items) / sizeof(menu_items[0]);
+static void get_main_menu(GtkWidget *windows, GtkWidget ** menubar) {
+  unsigned int nmenu_items = sizeof(menu_items) / sizeof(menu_items[0]);
   GtkItemFactory *item_factory;
   GtkAccelGroup *accel_group;
 
@@ -1195,7 +1195,7 @@ static void get_main_menu(GtkWidget *window, GtkWidget ** menubar) {
   gtk_item_factory_create_items(item_factory, nmenu_items, menu_items, NULL);
 
   /* Attach the new accelerator group to the window. */
-  gtk_accel_group_attach (accel_group, GTK_OBJECT (window));
+  gtk_accel_group_attach (accel_group, GTK_OBJECT (windows));
 
   if (menubar)
     /* Finally, return the actual menu bar created by the item factory. */ 
@@ -1324,8 +1324,7 @@ int gtkcontrol(lame_global_flags *gfp2)
      * %v - value
      * %l - lower range value
      * %u - upper range value */
-    gtk_progress_set_format_string (GTK_PROGRESS (frameprogress),
-	                            "%p%%");
+    gtk_progress_set_format_string (GTK_PROGRESS (frameprogress), "%p%%");
     gtk_progress_set_value (GTK_PROGRESS (frameprogress), (gdouble) 0);
     gtk_progress_set_show_text (GTK_PROGRESS (frameprogress),TRUE);
     gtk_widget_show (frameprogress);

@@ -751,7 +751,7 @@ int calc_noise1( lame_global_flags *gfp,
 {
   int start, end, l, i, over=0;
   u_int sfb;
-  FLOAT8 sum,step,bw;
+  FLOAT8 sum, bw;
   lame_internal_flags *gfc=gfp->internal_flags;
   
   int count=0;
@@ -766,6 +766,7 @@ int calc_noise1( lame_global_flags *gfp,
 
     for ( i = 0; i < 3; i++ ) {
         for ( sfb = 0; sfb < max_index; sfb++ ) {
+	    FLOAT8 step;
 	    int s;
 
 	    s = (scalefac->s[sfb][i] << (cod_info->scalefac_scale + 1))
@@ -1018,13 +1019,11 @@ set_pinfo (lame_global_flags *gfp,
 )
 {
   lame_internal_flags *gfc=gfp->internal_flags;
-  plotting_data *pinfo;
   int sfb;
   FLOAT ifqstep;
   int i,l,start,end,bw;
   FLOAT8 en0,en1;
   D192_3 *xr_s = (D192_3 *)xr;
-  pinfo=gfc->pinfo;
   ifqstep = ( cod_info->scalefac_scale == 0 ) ? .5 : 1.0;
 
   if (cod_info->block_type == SHORT_TYPE) {
@@ -1040,14 +1039,14 @@ set_pinfo (lame_global_flags *gfp,
 #if 0
 	/* conversion to FFT units */
 	en0 = ratio->en.s[sfb][i]/en0;
-	pinfo->xfsf_s[gr][ch][3*sfb+i] =  xfsf[i+1][sfb]*en0;
-	pinfo->thr_s[gr][ch][3*sfb+i] = Max(ratio->thm.s[sfb][i],en0*gfc->ATH_s[sfb]);
-	pinfo->en_s[gr][ch][3*sfb+i] = ratio->en.s[sfb][i]; 
+	gfc->pinfo->xfsf_s[gr][ch][3*sfb+i] =  xfsf[i+1][sfb]*en0;
+	gfc->pinfo->thr_s[gr][ch][3*sfb+i] = Max(ratio->thm.s[sfb][i],en0*gfc->ATH_s[sfb]);
+	gfc->pinfo->en_s[gr][ch][3*sfb+i] = ratio->en.s[sfb][i]; 
 #else
 	/* convert to MDCT units */
 	en1=1e15;  /* scaling so it shows up on FFT plot */
-	pinfo->xfsf_s[gr][ch][3*sfb+i] =  en1*xfsf[i+1][sfb];
-	pinfo->en_s[gr][ch][3*sfb+i] = en1*en0;
+	gfc->pinfo->xfsf_s[gr][ch][3*sfb+i] =  en1*xfsf[i+1][sfb];
+	gfc->pinfo->en_s[gr][ch][3*sfb+i] = en1*en0;
 	
 	if (ratio->en.s[sfb][i]>0)
 	  en0 = en0/ratio->thm.s[sfb][i];
@@ -1056,17 +1055,17 @@ set_pinfo (lame_global_flags *gfp,
 	if (gfp->ATHonly || gfp->ATHshort)
 	  en0=0;
 
-	pinfo->thr_s[gr][ch][3*sfb+i] = en1*Max(en0*ratio->thm.s[sfb][i],gfc->ATH_s[sfb]);
+	gfc->pinfo->thr_s[gr][ch][3*sfb+i] = en1*Max(en0*ratio->thm.s[sfb][i],gfc->ATH_s[sfb]);
 #endif
 	
 	/* there is no scalefactor bands >= SBPSY_s */
 	if (sfb < SBPSY_s) {
-	  pinfo->LAMEsfb_s[gr][ch][3*sfb+i]=
+	  gfc->pinfo->LAMEsfb_s[gr][ch][3*sfb+i]=
 	    -ifqstep*scalefac->s[sfb][i];
 	} else {
-	  pinfo->LAMEsfb_s[gr][ch][3*sfb+i]=0;
+	  gfc->pinfo->LAMEsfb_s[gr][ch][3*sfb+i]=0;
 	}
-	pinfo->LAMEsfb_s[gr][ch][3*sfb+i] -= 2*cod_info->subblock_gain[i];
+	gfc->pinfo->LAMEsfb_s[gr][ch][3*sfb+i] -= 2*cod_info->subblock_gain[i];
       }
     }
   }else{
@@ -1085,51 +1084,51 @@ set_pinfo (lame_global_flags *gfp,
 #if 0      
       /* convert to FFT units */
       en0 =   ratio->en.l[sfb]/Max(en0,1e-20);
-      pinfo->xfsf[gr][ch][sfb] =  xfsf[0][sfb]*en0;
-      pinfo->thr[gr][ch][sfb] = Max(ratio->thm.l[sfb],en0*gfc->ATH_l[sfb]);
-      pinfo->en[gr][ch][sfb] = ratio->en.l[sfb];
+      gfc->pinfo->xfsf[gr][ch][sfb] =  xfsf[0][sfb]*en0;
+      gfc->pinfo->thr[gr][ch][sfb] = Max(ratio->thm.l[sfb],en0*gfc->ATH_l[sfb]);
+      gfc->pinfo->en[gr][ch][sfb] = ratio->en.l[sfb];
 #else
       /* convert to MDCT units */
       en1=1e15;  /* scaling so it shows up on FFT plot */
-      pinfo->xfsf[gr][ch][sfb] =  en1*xfsf[0][sfb];
-      pinfo->en[gr][ch][sfb] = en1*en0;
+      gfc->pinfo->xfsf[gr][ch][sfb] =  en1*xfsf[0][sfb];
+      gfc->pinfo->en[gr][ch][sfb] = en1*en0;
       if (ratio->en.l[sfb]>0)
 	en0 = en0/ratio->en.l[sfb];
       else
 	en0=0;
       if (gfp->ATHonly)
 	en0=0;
-      pinfo->thr[gr][ch][sfb] = en1*Max(en0*ratio->thm.l[sfb],gfc->ATH_l[sfb]);
+      gfc->pinfo->thr[gr][ch][sfb] = en1*Max(en0*ratio->thm.l[sfb],gfc->ATH_l[sfb]);
 #endif
 #if 0
-      printf("%i %i sfb=%i %e %e %e xfsf>thr? %i\n",gr,ch,sfb,pinfo->en[gr][ch][sfb],
-	     pinfo->thr[gr][ch][sfb],pinfo->xfsf[gr][ch][sfb],
-	     pinfo->thr[gr][ch][sfb]<pinfo->xfsf[gr][ch][sfb]
+      printf("%i %i sfb=%i %e %e %e xfsf>thr? %i\n",gr,ch,sfb,gfc->pinfo->en[gr][ch][sfb],
+	     gfc->pinfo->thr[gr][ch][sfb],gfc->pinfo->xfsf[gr][ch][sfb],
+	     gfc->pinfo->thr[gr][ch][sfb]<gfc->pinfo->xfsf[gr][ch][sfb]
 	     );
 #endif
 
       /* there is no scalefactor bands >= SBPSY_l */
       if (sfb<SBPSY_l) {
 	if (scalefac->l[sfb]<0)  /* scfsi! */
-	  pinfo->LAMEsfb[gr][ch][sfb]=pinfo->LAMEsfb[0][ch][sfb];
+	  gfc->pinfo->LAMEsfb[gr][ch][sfb]=gfc->pinfo->LAMEsfb[0][ch][sfb];
 	else
-	  pinfo->LAMEsfb[gr][ch][sfb]=-ifqstep*scalefac->l[sfb];
+	  gfc->pinfo->LAMEsfb[gr][ch][sfb]=-ifqstep*scalefac->l[sfb];
       }else{
-	pinfo->LAMEsfb[gr][ch][sfb]=0;
+	gfc->pinfo->LAMEsfb[gr][ch][sfb]=0;
       }
 
       if (cod_info->preflag && sfb>=11) 
-	pinfo->LAMEsfb[gr][ch][sfb]-=ifqstep*pretab[sfb];
+	gfc->pinfo->LAMEsfb[gr][ch][sfb]-=ifqstep*pretab[sfb];
     }
   }
-  pinfo->LAMEqss[gr][ch] = cod_info->global_gain;
-  pinfo->LAMEmainbits[gr][ch] = cod_info->part2_3_length;
-  pinfo->LAMEsfbits[gr][ch] = cod_info->part2_length;
+  gfc->pinfo->LAMEqss[gr][ch] = cod_info->global_gain;
+  gfc->pinfo->LAMEmainbits[gr][ch] = cod_info->part2_3_length;
+  gfc->pinfo->LAMEsfbits[gr][ch] = cod_info->part2_length;
 
-  pinfo->over      [gr][ch] = noise[0];
-  pinfo->max_noise [gr][ch] = noise[1];
-  pinfo->over_noise[gr][ch] = noise[2];
-  pinfo->tot_noise [gr][ch] = noise[3];
+  gfc->pinfo->over      [gr][ch] = noise[0];
+  gfc->pinfo->max_noise [gr][ch] = noise[1];
+  gfc->pinfo->over_noise[gr][ch] = noise[2];
+  gfc->pinfo->tot_noise [gr][ch] = noise[3];
 }
 
 

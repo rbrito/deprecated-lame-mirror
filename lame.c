@@ -914,21 +914,19 @@ char *mp3buf, int mp3buf_size)
 
 
   if (gfp->gtkflag && gfc->pinfo != NULL) {
-    int j;
-    plotting_data *pinfo=gfc->pinfo;
     for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
       for ( ch = 0; ch < gfc->stereo; ch++ ) {
-	pinfo->ms_ratio[gr]=gfc->ms_ratio[gr];
-	pinfo->ms_ener_ratio[gr]=gfc->ms_ener_ratio[gr];
-	pinfo->blocktype[gr][ch]=
+	gfc->pinfo->ms_ratio[gr]=gfc->ms_ratio[gr];
+	gfc->pinfo->ms_ener_ratio[gr]=gfc->ms_ener_ratio[gr];
+	gfc->pinfo->blocktype[gr][ch]=
 	  gfc->l3_side.gr[gr].ch[ch].tt.block_type;
-	for ( j = 0; j < 576; j++ ) pinfo->xr[gr][ch][j]=xr[gr][ch][j];
+	memcpy(gfc->pinfo->xr[gr][ch],xr[gr][ch],sizeof(xr[gr][ch]));
 	/* if MS stereo, switch to MS psy data */
 	if (gfc->mode_ext==MPG_MD_MS_LR) {
-	  pinfo->pe[gr][ch]=pinfo->pe[gr][ch+2];
-	  pinfo->ers[gr][ch]=pinfo->ers[gr][ch+2];
-	  memcpy(pinfo->energy[gr][ch],pinfo->energy[gr][ch+2],
-		 sizeof(pinfo->energy[gr][ch]));
+	  gfc->pinfo->pe[gr][ch]=gfc->pinfo->pe[gr][ch+2];
+	  gfc->pinfo->ers[gr][ch]=gfc->pinfo->ers[gr][ch+2];
+	  memcpy(gfc->pinfo->energy[gr][ch],gfc->pinfo->energy[gr][ch+2],
+		 sizeof(gfc->pinfo->energy[gr][ch]));
 	}
       }
     }
@@ -975,12 +973,11 @@ char *mp3buf, int mp3buf_size)
 
   if (gfp->gtkflag && gfc->pinfo != NULL) {
     int j;
-    plotting_data *pinfo=gfc->pinfo;
     for ( ch = 0; ch < gfc->stereo; ch++ ) {
       for ( j = 0; j < FFTOFFSET; j++ )
-	pinfo->pcmdata[ch][j] = pinfo->pcmdata[ch][j+gfp->framesize];
+	gfc->pinfo->pcmdata[ch][j] = gfc->pinfo->pcmdata[ch][j+gfp->framesize];
       for ( j = FFTOFFSET; j < 1600; j++ ) {
-	pinfo->pcmdata[ch][j] = inbuf[ch][j-FFTOFFSET];
+	gfc->pinfo->pcmdata[ch][j] = inbuf[ch][j-FFTOFFSET];
       }
     }
   }

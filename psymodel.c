@@ -24,7 +24,6 @@
 #include "psymodel.h"
 #include "l3side.h"
 #include <assert.h>
-#include "gtkanal.h"
 #include "tables.h"
 #include "fft.h"
 
@@ -371,9 +370,8 @@ void L3psycho_anal( lame_global_flags *gfp,
 
 
   if(gfp->gtkflag) {
-    plotting_data *pinfo=gfc->pinfo;
     for (j=0; j<HBLKSIZE ; j++) {
-      pinfo->energy[gr_out][chn][j]=gfc->energy_save[chn][j];
+      gfc->pinfo->energy[gr_out][chn][j]=gfc->energy_save[chn][j];
       gfc->energy_save[chn][j]=gfc->energy[j];
     }
   }
@@ -535,7 +533,6 @@ void L3psycho_anal( lame_global_flags *gfp,
     for (j = 0; j < gfc->cw_upper_index && gfc->numlines_l[b] && b<gfc->npart_l_orig; )
       {
 	FLOAT8 ebb, cbb;
-	int i;
 
 	ebb = gfc->energy[j];
 	cbb = gfc->energy[j] * gfc->cw[j];
@@ -555,7 +552,6 @@ void L3psycho_anal( lame_global_flags *gfp,
 
     for (; b < gfc->npart_l_orig; b++ )
       {
-	int i;
 	FLOAT8 ebb = gfc->energy[j++];
 	assert(gfc->numlines_l[b]);
 	for (i = gfc->numlines_l[b] - 1; i > 0; i--)
@@ -690,7 +686,6 @@ void L3psycho_anal( lame_global_flags *gfp,
 
 
     if (gfp->gtkflag) {
-      plotting_data *pinfo=gfc->pinfo;
       FLOAT mn,mx,ma=0,mb=0,mc=0;
 
       for ( j = HBLKSIZE_s/2; j < HBLKSIZE_s; j ++)
@@ -704,9 +699,9 @@ void L3psycho_anal( lame_global_flags *gfp,
       mx = Max(ma,mb);
       mx = Max(mx,mc);
 
-      pinfo->ers[gr_out][chn]=gfc->ers_save[chn];
+      gfc->pinfo->ers[gr_out][chn]=gfc->ers_save[chn];
       gfc->ers_save[chn]=(mx/(1e-12+mn));
-      pinfo->pe[gr_out][chn]=gfc->pe_save[chn];
+      gfc->pinfo->pe[gr_out][chn]=gfc->pe_save[chn];
       gfc->pe_save[chn]=gfc->pe[chn];
     }
 
@@ -735,7 +730,6 @@ void L3psycho_anal( lame_global_flags *gfp,
 	j = 0;
 	for ( b = 0; b < gfc->npart_s_orig; b++ )
 	  {
-	    int i;
 	    FLOAT ecb = gfc->energy_s[sblock][j++];
 	    for (i = gfc->numlines_s[b]; i > 0; i--)
 	      {
