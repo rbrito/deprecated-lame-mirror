@@ -1567,9 +1567,9 @@ VBR_iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
     used_bits = 0;
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 	for (ch = 0; ch < gfc->channels_out; ch++) {
-	    int retry = 0;
 	    gr_info *gi = &gfc->tt[gr][ch];
 	    if (init_bitalloc(gfc, gi)) {
+		int retry = 0;
 		calc_xmin(gfc, &ratio[gr][ch], gi, xmin[gr][ch]);
 		gi->global_gain = gfc->OldValue[ch];
 		while (VBR_noise_shaping(gfc, gi, xmin[gr][ch])) {
