@@ -53,7 +53,7 @@ const char*  get_lame_short_version ( void );
 const char*  get_psy_version        ( void );
 const char*  get_mp3x_version       ( void );
 const char*  get_lame_url           ( void );
-const char*  get_lame_about         ( void );
+void         get_lame_version_numerical ( lame_version_t *const lvp );
 
 #endif  /* LAME_VERSION_H */
 
