@@ -589,7 +589,7 @@ int calc_xmin(
 
 static double penalties ( double noise )
 {
-    return log ( 0.368 + 0.632 * noise * noise * noise );
+    return FAST_LOG10( 0.368 + 0.632 * noise * noise * noise );
 }
 
 double get_klemm_noise(
@@ -616,8 +616,8 @@ int  calc_noise(
 {
     int sfb, l, over=0;
     FLOAT8 over_noise_db = 0;
-    FLOAT8 tot_noise_db  = 0;     /*    0 dB relative to masking */
-    FLOAT8 max_noise  = -200; /* -200 dB relative to masking */
+    FLOAT8 tot_noise_db  = 0; /*    0 dB relative to masking */
+    FLOAT8 max_noise = -20.0; /* -200 dB relative to masking */
     int j = 0;
     const int *ix = cod_info->l3_enc;
     int *scalefac = cod_info->scalefac;
@@ -711,7 +711,10 @@ void set_pinfo (
     calc_noise (gfc, cod_info, l3_xmin, xfsf, &noise);
 
     j = 0;
-    for (sfb = 0; sfb < cod_info->sfb_lmax; sfb++) {
+    sfb2 = cod_info->sfb_lmax;
+    if (cod_info->block_type != SHORT_TYPE && !cod_info->mixed_block_flag)
+	sfb2 = 22;
+    for (sfb = 0; sfb < sfb2; sfb++) {
 	start = gfc->scalefac_band.l[ sfb ];
 	end   = gfc->scalefac_band.l[ sfb+1 ];
 	bw = end - start;
@@ -721,8 +724,15 @@ void set_pinfo (
 	/* convert to MDCT units */
 	en1=1e15;  /* scaling so it shows up on FFT plot */
 	gfc->pinfo->  en[gr][ch][sfb] = en1*en0;
-	gfc->pinfo-> thr[gr][ch][sfb] = en1*l3_xmin[sfb];
 	gfc->pinfo->xfsf[gr][ch][sfb] = en1*l3_xmin[sfb]*xfsf[sfb]/bw;
+
+	if (ratio->en.l[sfb]>0 && !gfp->ATHonly)
+	    en0 = en0/ratio->en.l[sfb];
+	else
+	    en0=0.0;
+
+	gfc->pinfo->thr[gr][ch][sfb] =
+	    en1*Max(en0*ratio->thm.l[sfb],gfc->ATH->l[sfb]);
 
 	/* there is no scalefactor bands >= SBPSY_l */
 	gfc->pinfo->LAMEsfb[gr][ch][sfb] = 0;
@@ -751,8 +761,16 @@ void set_pinfo (
                 en1=1e15;  /* scaling so it shows up on FFT plot */
 
                 gfc->pinfo->  en_s[gr][ch][3*sfb+i] = en1*en0;
-                gfc->pinfo-> thr_s[gr][ch][3*sfb+i] = en1*l3_xmin[sfb2];
                 gfc->pinfo->xfsf_s[gr][ch][3*sfb+i] = en1*l3_xmin[sfb2]*xfsf[sfb2]/bw;
+                if (ratio->en.s[sfb][i]>0)
+                    en0 = en0/ratio->en.s[sfb][i];
+                else
+                    en0=0.0;
+                if (gfp->ATHonly || gfp->ATHshort)
+                    en0=0;
+
+                gfc->pinfo->thr_s[gr][ch][3*sfb+i] = 
+                        en1*Max(en0*ratio->thm.s[sfb][i],gfc->ATH->s[sfb]);
 
                 /* there is no scalefactor bands >= SBPSY_s */
                 gfc->pinfo->LAMEsfb_s[gr][ch][3*sfb+i]
