@@ -22,14 +22,7 @@
 #ifndef LAME_VBRQUANTIZE_H
 #define LAME_VBRQUANTIZE_H
 
-void VBR_quantize( 
-                    lame_global_flags      *gfp,
-		    FLOAT8         pe[2][2], 
-                    FLOAT8         ms_ener_ratio[2],
-                    III_psy_ratio  ratio[2][2]);
-
-
-int VBR_noise_shaping2(
+int VBR_noise_shaping(
                     lame_global_flags * gfp,
                     FLOAT8            * xr, 
                     FLOAT8            * xr34orig, 

@@ -51,7 +51,7 @@
  *
  ************************************************************************/
 
-int 
+static int 
 init_xrpow(
     lame_internal_flags *gfc,
     gr_info *const cod_info, 
@@ -79,7 +79,7 @@ init_xrpow(
     return 0;
 }
 
-void
+static void
 init_outer_loop(
     lame_internal_flags *gfc,
     gr_info *const cod_info)
@@ -1401,11 +1401,11 @@ VBR_iteration_loop (
             }
       
             if (gfp->VBR == vbr_mtrh) {
-                ret = VBR_noise_shaping2 (gfp, cod_info->xr, xrpow,
-					  cod_info->l3_enc,
-					  min_bits[gr][ch], max_bits[gr][ch], 
-					  &cod_info->scalefac,
-					  &l3_xmin[gr][ch], gr, ch );
+                ret = VBR_noise_shaping (gfp, cod_info->xr, xrpow,
+					 cod_info->l3_enc,
+					 min_bits[gr][ch], max_bits[gr][ch], 
+					 &cod_info->scalefac,
+					 &l3_xmin[gr][ch], gr, ch );
                 if (ret < 0)
                     cod_info->part2_3_length = 100000;
             } 

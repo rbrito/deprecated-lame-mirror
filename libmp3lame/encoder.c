@@ -598,8 +598,6 @@ int  lame_encode_mp3_frame (				// Output
     iteration_loop( gfp,*pe_use,ms_ener_ratio, *masking);
     break;
   case vbr_mt:
-    VBR_quantize( gfp, *pe_use, ms_ener_ratio, *masking);
-    break;
   case vbr_rh:
   case vbr_mtrh:
     VBR_iteration_loop( gfp,*pe_use,ms_ener_ratio, *masking);
