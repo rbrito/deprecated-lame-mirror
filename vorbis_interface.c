@@ -323,9 +323,12 @@ vorbis_block     vb2; /* local working space for packet->PCM decode */
 
 
 
+#define MAX_COMMENT_LENGTH 255
+
 int lame_encode_ogg_init(lame_global_flags *gfp)
 {
   lame_internal_flags *gfc=gfp->internal_flags;
+  char comment[MAX_COMMENT_LENGTH+1];
 
   
   /********** Encode setup ************/
@@ -340,7 +343,37 @@ int lame_encode_ogg_init(lame_global_flags *gfp)
   /* add a comment */
   vorbis_comment_init(&vc2);
   vorbis_comment_add(&vc2,"Track encoded using L.A.M.E. libvorbis interface.");
-  
+
+  /* Add ID3-style comments to the output using (for the time being) the
+     "private data members" in the "id3tag_spec" data structure. This was
+     from a patch by Ralph Giles <giles@a3a32260.sympatico.bconnected.net> */
+  if(gfp->tag_spec.title) {
+    strcpy(comment,"TITLE=");
+    strncat(comment,gfp->tag_spec.title,MAX_COMMENT_LENGTH-strlen(comment));
+    vorbis_comment_add(&vc2,comment);
+  }
+  if(gfp->tag_spec.artist) {
+    strcpy(comment,"ARTIST=");
+    strncat(comment,gfp->tag_spec.artist,MAX_COMMENT_LENGTH-strlen(comment));
+    vorbis_comment_add(&vc2,comment);
+  }
+  if(gfp->tag_spec.album) {
+    strcpy(comment,"ALBUM=");
+    strncat(comment,gfp->tag_spec.album,MAX_COMMENT_LENGTH-strlen(comment));
+    vorbis_comment_add(&vc2,comment);
+  }
+  /* pretend that the ID3 fields are equivalent to the Vorbis fields */
+  if(gfp->tag_spec.year) {
+    sprintf(comment, "DATE=%d", gfp->tag_spec.year);
+    vorbis_comment_add(&vc2,comment);
+  }
+  if(gfp->tag_spec.comment) {
+    strcpy(comment,"DESCRIPTION=");
+    strncat(comment,gfp->tag_spec.comment,MAX_COMMENT_LENGTH-strlen(comment));
+    vorbis_comment_add(&vc2,comment);
+  }
+  /* TODO -- support for track and genre */
+
   /* set up the analysis state and auxiliary encoding storage */
   vorbis_analysis_init(&vd2,&vi2);
   vorbis_block_init(&vd2,&vb2);
