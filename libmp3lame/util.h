@@ -319,6 +319,7 @@ struct lame_internal_flags {
   FLOAT highpass1,highpass2; /* normalized frequency bounds of passband */
 
   FLOAT narrowStereo;        /* stereo image narrowen factor */
+  FLOAT reduce_side;         /* side channel PE reduce factor */
 
   int filter_type;          /* 0=polyphase filter, 1= FIR filter 2=MDCT filter(bad)*/
   int quantization;         /* 0 = ISO formual,  1=best amplitude */

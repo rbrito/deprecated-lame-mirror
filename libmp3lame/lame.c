@@ -321,23 +321,33 @@ static int apply_preset(lame_global_flags*  gfp, int bitrate, vbr_mode mode)
 
     if (gfp->internal_flags->istereo_ratio < 0.0) {
 	if (bitrate >= 128)
-	    lame_set_istereoRatio(gfp, 1.0);
+	    lame_set_istereoRatio(gfp, 0.0);
 	else if (bitrate > 90)
-	    lame_set_istereoRatio(gfp, 0.8);
+	    lame_set_istereoRatio(gfp, 0.2);
 	else if (bitrate > 56)
 	    lame_set_istereoRatio(gfp, 0.5);
 	else
-	    lame_set_istereoRatio(gfp, 0.3);
+	    lame_set_istereoRatio(gfp, 0.7);
     }
     if (gfp->internal_flags->narrowStereo < 0.0) {
 	if (bitrate >= 100)
 	    lame_set_narrowenStereo(gfp, 0.0);
 	if (bitrate >= 80)
-	    lame_set_narrowenStereo(gfp, 0.125);
+	    lame_set_narrowenStereo(gfp, 0.25);
 	else if (bitrate > 60)
-	    lame_set_narrowenStereo(gfp, .2);
+	    lame_set_narrowenStereo(gfp, .4);
 	else
-	    lame_set_narrowenStereo(gfp, .3);
+	    lame_set_narrowenStereo(gfp, .6);
+    }
+    if (gfp->internal_flags->reduce_side < 0.0) {
+	if (bitrate >= 128)
+	    lame_set_reduceSide(gfp, 0.0);
+	else if (bitrate > 90)
+	    lame_set_reduceSide(gfp, 0.2);
+	else if (bitrate > 56)
+	    lame_set_reduceSide(gfp, 0.4);
+	else
+	    lame_set_reduceSide(gfp, 0.7);
     }
     return bitrate;
 }
@@ -1568,6 +1578,7 @@ lame_init_old(lame_global_flags * gfp)
     gfc->nsPsy.attackthre = gfc->nsPsy.attackthre_s = -1.0;
     gfc->istereo_ratio = -1.0;
     gfc->narrowStereo = -1.0;
+    gfc->reduce_side = -1.0;
     gfc->nsPsy.msfix = NS_MSFIX*SQRT2;
 
     gfp->ATHcurve = 4;

@@ -1729,6 +1729,7 @@ psycho_analysis(
 		mr->pe = pecalc_l(gfc, mr, sb);
 	    }
 	}
+	gfc->masking_next[gr][3].pe *= gfc->reduce_side;
 	if (gfc->useshort_next[gr][2] | gfc->useshort_next[gr][3])
 	    gfc->useshort_next[gr][2] = gfc->useshort_next[gr][3] = SHORT_TYPE;
 	if (gfp->use_istereo

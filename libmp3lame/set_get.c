@@ -715,7 +715,9 @@ int
 lame_set_narrowenStereo(lame_global_flags *gfp,
 			float factor)
 {
-    gfp->internal_flags->narrowStereo = factor;
+    if (factor < 0.0 || factor > 1.0)
+	return -1;
+    gfp->internal_flags->narrowStereo = factor*.5;
     return 0;
 }
 
@@ -1112,11 +1114,10 @@ int
 lame_set_istereoRatio( lame_global_flags*  gfp,
 		       float               ratio )
 {
-    /* default = 0.0 (no inter-cahnnel maskin) */
     if (! (0 <= ratio && ratio <= 1.0))
         return -1;
 
-    gfp->internal_flags->istereo_ratio = ratio;
+    gfp->internal_flags->istereo_ratio = 1.0-ratio;
 
     return 0;
 }
@@ -1126,11 +1127,23 @@ int
 lame_set_interChRatio( lame_global_flags*  gfp,
 			float               ratio )
 {
-    /* default = 0.0 (no inter-cahnnel maskin) */
     if (! (0 <= ratio && ratio <= 1.0))
         return -1;
 
     gfp->interChRatio = ratio;
+
+    return 0;
+}
+
+/* reduce side channel PE */
+int
+lame_set_reduceSide( lame_global_flags*  gfp,
+		     float               ratio )
+{
+    if (! (0 <= ratio && ratio <= 1.0))
+        return -1;
+
+    gfp->internal_flags->reduce_side = 1.0-ratio;
 
     return 0;
 }
