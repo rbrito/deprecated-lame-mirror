@@ -295,10 +295,6 @@ SOURCE=.\tables.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\tools.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\util.h
 # End Source File
 # Begin Source File
