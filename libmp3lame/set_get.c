@@ -561,21 +561,33 @@ lame_set_narrowenStereo(lame_t gfc, float factor)
     return 0;
 }
 
-/* Naoki's psycho acoustic model. */
 int
-lame_set_exp_nspsytune(lame_t gfc, int exp_nspsytune)
+lame_set_tune_bass(lame_t gfc, int factor)
 {
-    gfc->nsPsy.tune = exp_nspsytune;
-
+    gfc->nsPsy.tuneBass = factor;
     return 0;
 }
 
 int
-lame_get_exp_nspsytune(lame_t gfc)
+lame_set_tune_alto(lame_t gfc, int factor)
 {
-    return gfc->nsPsy.tune;
+    gfc->nsPsy.tuneAlto = factor;
+    return 0;
 }
 
+int
+lame_set_tune_treble(lame_t gfc, int factor)
+{
+    gfc->nsPsy.tuneTreble = factor;
+    return 0;
+}
+
+int
+lame_set_tune_sfb21(lame_t gfc, int factor)
+{
+    gfc->nsPsy.tuneSFB21 = factor;
+    return 0;
+}
 
 /********************************************************************
  * VBR control

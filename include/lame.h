@@ -252,9 +252,10 @@ void CDECL lame_set_forbid_diff_blocktype(lame_t, int val);
 int CDECL lame_set_disable_reservoir(lame_t, int);
 int CDECL lame_get_disable_reservoir(lame_t);
 
-/* Naoki's psycho acoustic model.  default=0 */
-int CDECL lame_set_exp_nspsytune(lame_t, int);
-int CDECL lame_get_exp_nspsytune(lame_t);
+int CDECL lame_set_tune_bass(lame_t, int);
+int CDECL lame_set_tune_alto(lame_t, int);
+int CDECL lame_set_tune_treble(lame_t, int);
+int CDECL lame_set_tune_sfb21(lame_t, int);
 
 void CDECL lame_set_msfix(lame_t, float);
 

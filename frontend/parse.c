@@ -470,12 +470,11 @@ long_help (lame_t gfc, FILE* const fp, const char* ProgramName, int lessmode )  
               "   --shortthreshold x,y  short block switching threshold\n"
 	      "                         x for L/R/M channel, y for S channel\n"
               "   --mixedblock    use mixed blocks(experimental)\n"
-              "   --nssafejoint   M/S switching criterion\n"
               "   --nsmsfix <arg> M/S switching tuning\n"
-              "   --ns-bass x     adjust masking for  0 -  6 bark\n"
-              "   --ns-alto x     adjust masking for  6 - 12 bark\n"
-              "   --ns-treble x   adjust masking for 12 - 18 bark\n"
-              "   --ns-sfb21 x    change ns-treble by x dB for 18- bark\n"
+              "   --tune-bass x   adjust masking for  0 -  6 bark\n"
+              "   --tune-alto x   adjust masking for  6 - 12 bark\n"
+              "   --tune-treble x adjust masking for 12 - 18 bark\n"
+              "   --tune-sfb21 x  adjust masking for 18 -    bark\n"
               "   --interch x     adjust inter-channel masking ratio\n"
               "   --is-ratio x    adjust intensity stereo usage ratio\n"
 	      "   --reduce-side x   narrowen the stereo image(0.0<x<1.0)\n"
@@ -1170,67 +1169,26 @@ int  parse_args (lame_t gfp, int argc, char** argv,
                 T_ELIF ("nspsytune")
 		    fprintf(stderr, "note: nspsytune is defaulted and no need to specify the option.\n");
 
-		T_ELIF ("nssafejoint")
-                    lame_set_exp_nspsytune(gfp,lame_get_exp_nspsytune(gfp) | 2);
-
                 T_ELIF ("nsmsfix")
                     argUsed=1;
                     (void) lame_set_msfix( gfp, atof(nextArg) );
                 
-                T_ELIF ("ns-bass")
+                T_ELIF ("tune-bass")
                     argUsed=1;
-                    {
-                      double d;
-                      int k;
-                      d = atof( nextArg );
-                      k = (int)(d * 4);
-                      if (k < -32) k = -32;
-                      if (k >  31) k =  31;
-                      if (k < 0) k += 64;
-                      lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 2));
-                    }
-                
-                T_ELIF ("ns-alto")
-                    argUsed=1;
-                    {
-                      double d;
-                      int k;
-                      d = atof( nextArg );
-                      k = (int)(d * 4);
-                      if (k < -32) k = -32;
-                      if (k >  31) k =  31;
-                      if (k < 0) k += 64;
-                      lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 8));
-                    }
-                
-                T_ELIF ("ns-treble")
-                    argUsed=1;
-                    {
-                      double d;
-                      int k;
-                      d = atof( nextArg );
-                      k = (int)(d * 4);
-                      if (k < -32) k = -32;
-                      if (k >  31) k =  31;
-                      if (k < 0) k += 64;
-                      lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 14));
-                    }
-                
-                T_ELIF ("ns-sfb21")
-                    /*  to be compatible with Naoki's original code, 
-                     *  ns-sfb21 specifies how to change ns-treble for sfb21 */
-                    argUsed=1;
-                    {
-                      double d;
-                      int k;
-                      d = atof( nextArg );
-                      k = (int)(d * 4);
-                      if (k < -32) k = -32;
-                      if (k >  31) k =  31;
-                      if (k < 0) k += 64;
-                      lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (k << 20));
-                    }
-                
+		    lame_set_tune_bass(gfp, (int)(atof( nextArg ) * 4.0));
+
+                T_ELIF ("tune-alto")
+		    argUsed=1;
+		    lame_set_tune_alto(gfp, (int)(atof( nextArg ) * 4.0));
+
+                T_ELIF ("tune-treble")
+		    argUsed=1;
+		    lame_set_tune_treble(gfp, (int)(atof( nextArg ) * 4.0));
+
+		T_ELIF ("tune-sfb21")
+		    argUsed=1;
+		    lame_set_tune_sfb21(gfp, (int)(atof( nextArg ) * 4.0));
+
                 /* some more GNU-ish options could be added
                  * brief         => few messages on screen (name, status report)
                  * o/output file => specifies output filename

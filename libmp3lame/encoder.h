@@ -365,7 +365,10 @@ struct lame_internal_flags {
 
 	/* adjustment of Mid/Side maskings from LR maskings */
 	FLOAT msfix;
-	int tune;
+	int tuneBass;
+	int tuneAlto;
+	int tuneTreble;
+	int tuneSFB21;
     } nsPsy;
 
     /**

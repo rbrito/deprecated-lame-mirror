@@ -935,30 +935,18 @@ init_s3_values(lame_t gfc, FLOAT **p, int (*s3ind)[2],
     k = 0;
     for (i = 0; i < npart; i++) {
 	FLOAT fact;
-	int f = gfc->nsPsy.tune;
+	int f;
 	if (bval[i] < 6.0) {
-	    f = (f >> 2) & 63;
-	    if (f >= 32)
-		f -= 64;
+	    f = gfc->nsPsy.tuneBass;
 	}
 	else if (bval[i] < 12.0) {
-	    f = (f >> 8) & 63;
-	    if (f >= 32)
-		f -= 64;
+	    f = gfc->nsPsy.tuneAlto;
 	}
 	else if (bval[i] < 18.0) {
-	    f = (f >> 14) & 63;
-	    if (f >= 32)
-		f -= 64;
+	    f = gfc->nsPsy.tuneTreble;
 	}
 	else {
-	    int g = (f >> 14) & 63;
-	    f = (f >> 20) & 63;
-	    if (f >= 32)
-		f -= 64;
-	    if (g >= 32)
-		g -= 64;
-	    f += g;
+	    f = gfc->nsPsy.tuneSFB21;
 	}
 	fact = db2pow(f*0.25);
 	for (j = s3ind[i][0]; j <= s3ind[i][1]; j++)

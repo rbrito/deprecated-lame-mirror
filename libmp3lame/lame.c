@@ -683,7 +683,6 @@ lame_print_internals(lame_t gfc)
 {
     const char * pc = "";
     FLOAT bass, alto, treble, sfb21;
-    int i;
 
     /*  compiler/processor optimizations, operational, etc.
      */
@@ -747,27 +746,10 @@ lame_print_internals(lame_t gfc)
     MSGF( gfc, "\t ^ adaptive adjustment decay (dB): %f\n",
 	  FAST_LOG10(gfc->ATH.aa_decay) * 10.0);
 
-    i = (gfc->nsPsy.tune >> 2) & 63;
-    if (i >= 32)
-	i -= 64;
-    bass = i*0.25;
-
-    i = (gfc->nsPsy.tune >> 8) & 63;
-    if (i >= 32)
-	i -= 64;
-    alto = i*0.25;
-
-    i = (gfc->nsPsy.tune >> 14) & 63;
-    if (i >= 32)
-	i -= 64;
-    treble = i*0.25;
-
-    /*  to be compatible with Naoki's original code, the next 6 bits
-     *  define only the amount of changing treble for sfb21 */
-    i = (gfc->nsPsy.tune >> 20) & 63;
-    if (i >= 32)
-	i -= 64;
-    sfb21 = treble + i*0.25;
+    bass = gfc->nsPsy.tuneBass*0.25;
+    alto = gfc->nsPsy.tuneAlto*0.25;
+    treble = gfc->nsPsy.tuneTreble*0.25;
+    sfb21 = gfc->nsPsy.tuneSFB21*0.25;
 
     MSGF(gfc, "\tadjust masking: %f dB\n", gfc->VBR_q-4.0 );
     MSGF(gfc, "\t ^ bass=%g dB, alto=%g dB, treble=%g dB, sfb21=%g dB\n",
