@@ -1302,7 +1302,7 @@ int psymodel_init(lame_global_flags *gfp)
 
     /* SNR formula is removed. but we should tune s3_s more */
     for (i=0;i<gfc->npart_s;i++) {
-	norm[i] = db2pow(-0.25) * NS_PREECHO_ATT0 * 0.8*0.1;
+	norm[i] = db2pow(-0.25) * NS_PREECHO_ATT0 * 0.8;
 	if (i < 4)
 	    norm[i] *= 0.01;
 	else if (i < 8)
@@ -1316,7 +1316,8 @@ int psymodel_init(lame_global_flags *gfp)
 	    norm[i] = 1e-37;
     }
     for (i = 0; i < SBMAX_s; i++)
-	gfc->ATH.s_avg[i] = gfc->ATH.cb[bm[i]] * BLKSIZE_s / BLKSIZE;
+	gfc->ATH.s_avg[i] = gfc->ATH.cb[bm[i]]
+	    * (BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE);
 
     i = init_s3_values(gfc, &gfc->s3_ss, gfc->s3ind_s,
 		       gfc->npart_s, bval, norm);
