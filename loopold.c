@@ -295,7 +295,6 @@ void outer_loop_dual(
 
   while ( (notdone[0] || notdone[1])  ) {
     static FLOAT8 OldValue[2] = {-30, -30};
-    int pre_just_turned_on[2]={0,0};
     iteration ++;
 
     if (compute_stepsize) {
@@ -433,20 +432,10 @@ void outer_loop_dual(
 
 
 
-    /* see if we should apply preemphasis */
-    /*
-    for (ch=0 ; ch < stereo ; ch ++ ) {
-      pre_just_turned_on[ch]=0;
-      if (notdone[ch] && (iteration==1)) pre_just_turned_on[ch]=
-	 preemphasis( xr[gr][ch], xrpow[gr][ch], l3_xmin, 
-	       gr, ch, l3_side,	distort[ch]);
-    }
-    */
-
     /* if we didn't just apply pre-emph, let us see if we should 
      * amplify some scale factor bands */
     for (ch=0 ; ch < stereo ; ch ++ ) 
-      if (notdone[ch] && (!pre_just_turned_on[ch]) ) {
+      if (notdone[ch]) {
 	  amp_scalefac_bands( xr[gr][ch], xrpow[gr][ch], l3_xmin,
 		l3_side, scalefac, gr, ch, iteration,distort[ch]);
       }

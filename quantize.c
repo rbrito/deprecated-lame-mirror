@@ -743,24 +743,15 @@ void outer_loop(
     
     
     if (notdone) {
-      /* see if we should apply preemphasis */
-      int pre_just_turned_on=0;
-      /*
-        pre_just_turned_on =
-      	  preemphasis(xr[gr][ch],xrpow,l3_xmin,gr,ch,l3_side,distort);
-      */
-
-      /* if we didn't just apply pre-emph, let us see if we should 
-       * amplify some scale factor bands */
-      if (!pre_just_turned_on) {
-	notdone = amp_scalefac_bands( xr[gr][ch], xrpow, l3_xmin,
+      notdone = amp_scalefac_bands( xr[gr][ch], xrpow, l3_xmin,
 			     l3_side, scalefac, gr, ch, iteration,distort);
-      }
     }
       
       
     if (notdone) {            
       /* check to make sure we have not amplified too much */
+      /* loop_break returns 0 if there is an unamplified scalefac */
+      /* scale_bitcount returns 0 if no scalefactors are too large */
       if ( (status = loop_break(scalefac, cod_info, gr, ch)) == 0 ) {
 	if ( fr_ps->header->version == 1 ) {
 	  status = scale_bitcount( scalefac, cod_info, gr, ch );
@@ -937,7 +928,7 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
 
 
 
-
+#if 0
 /*************************************************************************/
 /*            preemphasis                                                */
 /*************************************************************************/
@@ -984,7 +975,7 @@ int preemphasis( FLOAT8 xr[576], FLOAT8 xrpow[576],
     }
     return (over == 4);
 }
-
+#endif
 
 
 
