@@ -29,6 +29,11 @@
 #define STRICT
 #endif // STRICT
 
+#if __GNUC__ >= 3
+#include <new>
+using namespace std;
+#endif
+
 #include <windows.h>
 
 /// The ACM is considered as a driver and run in Kernel-Mode
