@@ -28,10 +28,6 @@
 #include <assert.h>
 #include <ctype.h>
 
-#ifdef HAVE_ERRNO_H
-# include <errno.h>
-#endif
-
 #ifdef STDC_HEADERS
 # include <stdlib.h>
 # include <string.h>
