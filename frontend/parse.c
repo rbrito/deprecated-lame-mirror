@@ -1368,9 +1368,9 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF ("nspsytune2")
 		    {
 		      FILE *fp = fopen( nextArg, "r" );
-		      if (fp == NULL) {
-			fprintf(stderr,"nspsytune2 : error opening %s\n",nextArg);
-			abort();
+		      if (!fp) {
+			  perror("nspsytune2 : error opening 1st pass output\n");
+			  abort();
 		      }
 		      lame_set_exp_nspsytune2_pointer(gfp,0,fp);
 		    }
