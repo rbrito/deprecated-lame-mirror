@@ -1227,7 +1227,6 @@ void quantize_xrpow(FLOAT8 xp[576], int pi[576], gr_info *cod_info)
     /* quantize on xr^(3/4) instead of xr */
     const FLOAT8 istep = IPOW20(cod_info->global_gain);
 
-    /* generic code if you write ASM for XRPOW_FTOI() */
     int j;
     for (j = 576 / 4; j > 0; --j) {
 	double x0 = istep * xp[0] + MAGIC_FLOAT;
@@ -1283,40 +1282,47 @@ void quantize_xrpow(FLOAT8 xr[576], int ix[576], gr_info *cod_info) {
 
 #if defined (USE_GNUC_ASM) 
   {
+      int rx[4];
       __asm__ __volatile__(
         "\n\nloop1:\n\t"
 
         "fld" F8type " 0*" F8size "(%1)\n\t"
-        "fmul %%st(1)\n\t"
         "fld" F8type " 1*" F8size "(%1)\n\t"
-        "fmul %%st(2)\n\t"
         "fld" F8type " 2*" F8size "(%1)\n\t"
-        "fmul %%st(3)\n\t"
         "fld" F8type " 3*" F8size "(%1)\n\t"
-        "fmul %%st(4)\n\t"
 
-        "fxch %%st(2)\n\t"
-        "fistl (%3)\n\t"
-        "fxch %%st(1)\n\t"
-        "fistl 4(%3)\n\t"
         "fxch %%st(3)\n\t"
-        "fistl 8(%3)\n\t"
+        "fmul %%st(4)\n\t"
         "fxch %%st(2)\n\t"
-        "fistl 12(%3)\n\t"
+        "fmul %%st(4)\n\t"
+        "fxch %%st(1)\n\t"
+        "fmul %%st(4)\n\t"
+        "fxch %%st(3)\n\t"
+        "fmul %%st(4)\n\t"
 
         "addl $4*" F8size ", %1\n\t"
         "addl $16, %3\n\t"
+
+        "fxch %%st(2)\n\t"
+        "fistl %5\n\t"
+        "fxch %%st(1)\n\t"
+        "fistl 4+%5\n\t"
+        "fxch %%st(3)\n\t"
+        "fistl 8+%5\n\t"
+        "fxch %%st(2)\n\t"
+        "fistl 12+%5\n\t"
+
         "dec %4\n\t"
 
-        "movl -16(%3), %%eax\n\t"
-        "movl -12(%3), %%ebx\n\t"
+        "movl %5, %%eax\n\t"
+        "movl 4+%5, %%ebx\n\t"
         "fxch %%st(1)\n\t"
         "fadd" F8type " (%2,%%eax," F8size ")\n\t"
         "fxch %%st(3)\n\t"
         "fadd" F8type " (%2,%%ebx," F8size ")\n\t"
 
-        "movl -8(%3), %%eax\n\t"
-        "movl -4(%3), %%ebx\n\t"
+        "movl 8+%5, %%eax\n\t"
+        "movl 12+%5, %%ebx\n\t"
         "fxch %%st(2)\n\t"
         "fadd" F8type " (%2,%%eax," F8size ")\n\t"
         "fxch %%st(1)\n\t"
@@ -1331,7 +1337,7 @@ void quantize_xrpow(FLOAT8 xr[576], int ix[576], gr_info *cod_info) {
 
         "jnz loop1\n\n"
         : /* no outputs */
-        : "t" (istep), "r" (xr), "r" (adj43asm), "r" (ix), "r" (576 / 4)
+        : "t" (istep), "r" (xr), "r" (adj43asm), "r" (ix), "r" (576 / 4), "m" (rx)
         : "%eax", "%ebx", "memory", "cc"
       );
   }
@@ -1480,30 +1486,44 @@ void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
   const FLOAT8 istep = IPOW20(cod_info->global_gain);
   
 #if defined(USE_GNUC_ASM)
+
    {
       __asm__ __volatile__ (
         "\n\nloop0:\n\t"
 
-        "fld" F8type " 3*" F8size "(%3)\n\t"
-        "fmul %%st(1)\n\t"
-        "fld" F8type " 2*" F8size "(%3)\n\t"
-        "fmul %%st(2)\n\t"
+        "fld" F8type " 0*" F8size "(%3)\n\t"
         "fld" F8type " 1*" F8size "(%3)\n\t"
-        "fmul %%st(3)\n\t"
-        "fld" F8type " (%3)\n\t"
-        "fmul %%st(4)\n\t"
+        "fld" F8type " 2*" F8size "(%3)\n\t"
+        "fld" F8type " 3*" F8size "(%3)\n\t"
 
         "addl $4*" F8size ", %3\n\t"
-
-        "fadd %%st(5)\n\t"
-        "fistpl (%4)\n\t"
         "addl $16, %4\n\t"
+
+        "fxch %%st(3)\n\t"
+        "fmul %%st(4)\n\t"
+        "fxch %%st(2)\n\t"
+        "fmul %%st(4)\n\t"
+        "fxch %%st(1)\n\t"
+        "fmul %%st(4)\n\t"
+        "fxch %%st(3)\n\t"
+        "fmul %%st(4)\n\t"
+
         "dec %0\n\t"
-        "fadd %%st(4)\n\t"
+
+        "fxch %%st(2)\n\t"
+        "fadd %%st(5)\n\t"
+        "fxch %%st(1)\n\t"
+        "fadd %%st(5)\n\t"
+        "fxch %%st(3)\n\t"
+        "fadd %%st(5)\n\t"
+        "fxch %%st(2)\n\t"
+        "fadd %%st(5)\n\t"
+
+        "fxch %%st(1)\n\t"
+        "fistpl -16(%4)\n\t"
+        "fxch %%st(2)\n\t"
         "fistpl -12(%4)\n\t"
-        "fadd %%st(3)\n\t"
         "fistpl -8(%4)\n\t"
-        "fadd %%st(2)\n\t"
         "fistpl -4(%4)\n\t"
 
         "jnz loop0\n\n"
