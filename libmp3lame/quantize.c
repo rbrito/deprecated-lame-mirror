@@ -336,9 +336,9 @@ init_outer_loop(
      *  and calculate xrpow matching our fresh scalefactors
      */
     for (i = 0; i < 576; ++i) {
-        tmp = fabs (gi->xr[i]);
+	tmp = fabs (gi->xr[i]);
 	sum += tmp;
-        xrpow[i] = sqrt (tmp * sqrt(tmp));
+	xrpow[i] = sqrt (tmp * sqrt(tmp));
     }
     /*  return 1 if we have something to quantize, else 0
      */
@@ -768,8 +768,7 @@ amp_scalefac_bands(
 	if (distort[sfb] < trigger)
 	    continue;
 
-	if (!((gfc->substep_shaping & 2) && (method == 3))
-	    || (gfc->pseudohalf[sfb] ^= 1))
+	if (method < 3 || (gfc->pseudohalf[sfb] ^= 1))
 	    gi->scalefac[sfb]++;
 	if (method >= 2)
 	    break;
