@@ -196,23 +196,22 @@ on_pe(
     int mean_bits
     )
 {
-    int     extra_bits, tbits, bits;
-    int     max_bits;  /* maximum allowed bits for this granule */
-    int     ch;
+    int extra_bits, tbits, bits, ch;
+    int max_bits;  /* maximum allowed bits for this granule */
 
     /* allocate targ_bits for granule */
     tbits = ResvMaxBits( gfc, mean_bits, &extra_bits);
 
     max_bits = tbits + extra_bits;
     if (max_bits > MAX_BITS) /* hard limit per granule */
-        max_bits = MAX_BITS;
+	max_bits = MAX_BITS;
 
     /* at most increase bits by 1.5*average */
     mean_bits = tbits+mean_bits*3/2;
     tbits /= gfc->channels_out;
     mean_bits /= gfc->channels_out;
 
-    for (bits = 0, ch = 0; ch < gfc->channels_out; ++ch ) {
+    for (bits = 0, ch = 0; ch < gfc->channels_out; ch++) {
 	if (ratio[ch].ath_over == 0) {
 	    targ_bits[ch] = 126;
 	} else {
@@ -226,13 +225,13 @@ on_pe(
 	bits += targ_bits[ch];
     }
     if (bits > max_bits) {
-	for (ch = 0; ch < gfc->channels_out; ++ch) {
+	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    targ_bits[ch]
 		= tbits + extra_bits * (targ_bits[ch] - tbits) / bits;
 	}
     } else if (bits < tbits) {
 	tbits = tbits - bits / gfc->channels_out;
-	for (ch = 0; ch < gfc->channels_out; ++ch )
+	for (ch = 0; ch < gfc->channels_out; ch++)
 	    targ_bits[ch] += tbits;
     }
 }
@@ -301,56 +300,46 @@ calc_xmin(
 /*************************************************************************/
 /*  mt 5/99:  Function: Improved calc_noise for a single channel   */
 static FLOAT
-calc_noise( 
-  const gr_info           * const gi,
-  const FLOAT             * l3_xmin,
-	FLOAT             * distort
-    )
+calc_noise(const gr_info  * const gi, const FLOAT * l3_xmin, FLOAT * distort)
 {
     FLOAT max_noise = -100.0;
-    int sfb = 0, j = 0;
+    int sfb = 0, j = 0, l;
 
     do {
 	FLOAT noise;
 	if (j > gi->count1)
 	    break;
-	if (*distort >= 0.0) {
-	    noise = *distort++;
-	    l3_xmin++;
-	    j += gi->width[sfb];
-	} else {
-	    int l = gi->width[sfb] >> 1;
+	noise = *distort;
+	l = -gi->width[sfb];
+	j -= l;
+	if (noise < 0.0) {
 	    FLOAT step = POW20(scalefactor(gi, sfb));
 	    noise = 0.0;
 	    do {
 		FLOAT temp;
-		temp = fabs(gi->xr[j]) - pow43[gi->l3_enc[j]] * step; j++;
+		temp = fabs(gi->xr[j+l]) - pow43[gi->l3_enc[j+l]] * step; l++;
 		noise += temp * temp;
-		temp = fabs(gi->xr[j]) - pow43[gi->l3_enc[j]] * step; j++;
+		temp = fabs(gi->xr[j+l]) - pow43[gi->l3_enc[j+l]] * step; l++;
 		noise += temp * temp;
-	    } while (--l > 0);
-	    noise = *distort++ = noise / *l3_xmin++;
+	    } while (l < 0);
+	    noise = *distort = noise / *l3_xmin;
 	}
 
 	noise = FAST_LOG10(Max(noise,1E-20));
 	max_noise=Max(max_noise,noise);
-    } while (++sfb < gi->psymax);
+    } while (l3_xmin++, distort++, ++sfb < gi->psymax);
 
-    for (;sfb < gi->psymax; sfb++) {
-	FLOAT noise;
-	if (*distort >= 0.0) {
-	    noise = *distort++;
-	    l3_xmin++;
-	    j += gi->width[sfb];
-	} else {
-	    int l = gi->width[sfb] >> 1;
+    for (;sfb < gi->psymax; l3_xmin++, distort++, sfb++) {
+	FLOAT noise = *distort;
+	l = -gi->width[sfb];
+	j -= l;
+	if (noise < 0.0) {
 	    noise = 0.0;
 	    do {
-		FLOAT t0 = gi->xr[j], t1 = gi->xr[j+1];
+		FLOAT t0 = gi->xr[j+l], t1 = gi->xr[j+l+1];
 		noise += t0*t0 + t1*t1;
-		j += 2;
-	    } while (--l > 0);
-	    noise = *distort++ = noise / *l3_xmin++;
+	    } while ((l += 2) < 0);
+	    noise = *distort = noise / *l3_xmin;
 	}
 	noise = FAST_LOG10(Max(noise,1E-20));
 	max_noise=Max(max_noise,noise);
@@ -361,9 +350,7 @@ calc_noise(
 	max_noise = -100.0;
 	for (sfb = gi->sfb_smin; sfb < gi->psymax; sfb += 3) {
 	    FLOAT noise
-		= FAST_LOG10(distort[sfb]
-			     * distort[sfb+1]
-			     * distort[sfb+2]);
+		= FAST_LOG10(distort[sfb] * distort[sfb+1] * distort[sfb+2]);
 	    if (max_noise < noise)
 		max_noise = noise;
 	}
@@ -373,9 +360,9 @@ calc_noise(
 
 static FLOAT
 calc_noise_allband(
-  const gr_info           * const gi,
-  const FLOAT             * l3_xmin,
-	FLOAT             * distort
+    const gr_info * const gi,
+    const FLOAT * const l3_xmin,
+    FLOAT * distort
     )
 {
     int sfb;
@@ -386,12 +373,11 @@ calc_noise_allband(
 
 /************************************************************************
  *
- *      init_bitalloc()
- *  mt 6/99                                    
+ *	init_bitalloc()
+ *  mt 6/99
  *
  *  initializes xrpow
  *  and returns 0 if all energies in xr are zero, else non-zero.
- *
  ************************************************************************/
 
 static int 
@@ -447,11 +433,11 @@ init_bitalloc(
  ************************************************************************/
 static int 
 bin_search_StepSize(
-          lame_internal_flags * const gfc,
-          gr_info * const gi,
-	  int desired_rate,
-	  int CurrentStep,
-    const FLOAT          xrpow [576] )
+    lame_internal_flags * const gfc,
+    gr_info * const gi,
+    int desired_rate,
+    int CurrentStep,
+    const FLOAT xrpow [576])
 {
     int nBits, flag_GoneOver = 0;
     assert(CurrentStep);
@@ -461,22 +447,22 @@ bin_search_StepSize(
 	    gi->big_values = gi->count1 = gi->xrNumMax;
 	nBits = count_bits(gfc, xrpow, gi);
 
-        if (CurrentStep == 1 || nBits == desired_rate)
+	if (CurrentStep == 1 || nBits == desired_rate)
 	    break; /* nothing to adjust anymore */
 
-        if (nBits > desired_rate) {  
+	if (nBits > desired_rate) {  
 	    /* increase Quantize_StepSize */
 	    flag_GoneOver |= 1;
 
 	    if (flag_GoneOver==3) CurrentStep >>= 1;
 	    gi->global_gain += CurrentStep;
-        } else {
-            /* decrease Quantize_StepSize */
+	} else {
+	    /* decrease Quantize_StepSize */
 	    flag_GoneOver |= 2;
 
 	    if (flag_GoneOver==3) CurrentStep >>= 1;
 	    gi->global_gain -= CurrentStep;
-        }
+	}
     } while (gi->global_gain < 256u);
 
     if (gi->global_gain < 0) {
@@ -580,7 +566,7 @@ trancate_smallspectrums(
 
 /*************************************************************************
  *
- *      loop_break()                                               
+ *      loop_break()
  *
  *  Returns zero if there is a scalefac which has not been amplified.
  *  Otherwise it returns non-zero.
@@ -654,7 +640,7 @@ inc_subblock_gain(gr_info * const gi)
 	if (sfb >= gi->psymax)
 	    continue;
 
-        if (gi->subblock_gain[window] >= 7)
+	if (gi->subblock_gain[window] >= 7)
 	    return 1;
 
 	gi->subblock_gain[window]++;
@@ -663,7 +649,7 @@ inc_subblock_gain(gr_info * const gi)
 	    if (s < 0)
 		s = 0;
 	    gi->scalefac[sfb] = s;
-        }
+	}
     }
     return 0;
 }
@@ -674,7 +660,7 @@ inc_subblock_gain(gr_info * const gi)
  *
  *          amp_scalefac_bands() 
  *
- *  Change the scalefactor value of the band where the noise is not masked.
+ *  Change the scalefactor value of the band where its noise is not masked.
  *  See ISO 11172-3 Section C.1.5.4.3.5
  * 
  *  We select "the band" if the distort[] is larger than "trigger",
@@ -830,7 +816,7 @@ calc_sfb_noise(const FLOAT * xr, const FLOAT * xr34, int bw, int sf)
 #else
 	FLOAT t0, t1;
 	fi0.i = (int) (t0 = sfpow34 * xr34[0]);
-        fi1.i = (int) (t1 = sfpow34 * xr34[1]);
+	fi1.i = (int) (t1 = sfpow34 * xr34[1]);
 	if (fi0.i > IXMAX_VAL) return -1.0;
 	if (fi1.i > IXMAX_VAL) return -1.0;
 
@@ -933,7 +919,7 @@ adjust_global_gain(
 
 /************************************************************************
  *
- *  CBR_1st_bitalloc ()                                                       
+ *  CBR_1st_bitalloc ()
  *
  *  find the best scalefactor and global gain combination
  *  as long as it satisfy the bitrate condition.
@@ -949,7 +935,7 @@ CBR_1st_bitalloc (
     )
 {
     gr_info gi_w;
-    FLOAT distort[SFBMAX], l3_xmin[SFBMAX], bestNoise;
+    FLOAT distort[SFBMAX], l3_xmin[SFBMAX], bestNoise, newNoise;
     align16 FLOAT xrpow[576];
     int current_method, age;
 
@@ -970,7 +956,7 @@ CBR_1st_bitalloc (
     /* coefficients and thresholds of ch0(L or Mid) or ch1(R or Side) */
     calc_xmin (gfc, ratio, gi, l3_xmin);
 
-    bestNoise = calc_noise_allband(gi, l3_xmin, distort);
+    newNoise = bestNoise = calc_noise_allband(gi, l3_xmin, distort);
     current_method = 0;
     age = 3;
     if (bestNoise < 0.0) {
@@ -983,7 +969,6 @@ CBR_1st_bitalloc (
     /* BEGIN MAIN LOOP */
     gi_w = *gi;
     for (;;) {
-	FLOAT newNoise;
 	/* try the new scalefactor conbination on gi_w */
 	int huff_bits = amp_scalefac_bands(gfc, &gi_w, distort,
 					   current_method, targ_bits);
@@ -1098,50 +1083,48 @@ ABR_calc_target_bits (
      */
     res_factor = .93 + .07 * (11.0 - gfp->compression_ratio) / (11.0 - 5.5);
     if (res_factor <  .90)
-        res_factor =  .90; 
+	res_factor =  .90; 
     if (res_factor > 1.00) 
-        res_factor = 1.00;
+	res_factor = 1.00;
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
-        for (ch = 0; ch < gfc->channels_out; ch++) {
+	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    if (ratio[gr][ch].ath_over == 0) {
 		targ_bits[gr][ch] = analog_silence_bits;
 		continue;
 	    }
 
-            targ_bits[gr][ch] = res_factor * mean_bits;
+	    targ_bits[gr][ch] = res_factor * mean_bits;
 	    if (ratio[gr][ch].pe > 600.0) {
 		int add_bits = (ratio[gr][ch].pe - 600.0);
 
-                /* at most increase bits by 1.5*average */
-                if (add_bits > mean_bits*3/2)
-                    add_bits = mean_bits*3/2;
-                assert(add_bits >= 0);
-                targ_bits[gr][ch] += add_bits;
-            }
-        }
+		/* at most increase bits by 1.5*average */
+		if (add_bits > mean_bits*3/2)
+		    add_bits = mean_bits*3/2;
+		assert(add_bits >= 0);
+		targ_bits[gr][ch] += add_bits;
+	    }
+	}
     }
 
-    /*  sum target bits
-     */
+    /* sum of target bits */
     totbits=0;
     for (gr = 0; gr < gfc->mode_gr; gr++) {
-        for (ch = 0; ch < gfc->channels_out; ch++) {
-            if (targ_bits[gr][ch] > MAX_BITS) 
-                targ_bits[gr][ch] = MAX_BITS;
-            totbits += targ_bits[gr][ch];
-        }
+	for (ch = 0; ch < gfc->channels_out; ch++) {
+	    if (targ_bits[gr][ch] > MAX_BITS) 
+		targ_bits[gr][ch] = MAX_BITS;
+	    totbits += targ_bits[gr][ch];
+	}
     }
 
-    /*  repartion target bits if needed
-     */
+    /* repartion target bits if needed */
     if (totbits > max_frame_bits) {
-        for (gr = 0; gr < gfc->mode_gr; gr++) {
-            for (ch = 0; ch < gfc->channels_out; ch++) {
-                targ_bits[gr][ch] *= max_frame_bits; 
-                targ_bits[gr][ch] /= totbits; 
-            }
-        }
+	for (gr = 0; gr < gfc->mode_gr; gr++) {
+	    for (ch = 0; ch < gfc->channels_out; ch++) {
+		targ_bits[gr][ch] *= max_frame_bits; 
+		targ_bits[gr][ch] /= totbits; 
+	    }
+	}
     }
 }
 
@@ -1196,9 +1179,7 @@ ABR_iteration_loop(
 
 /************************************************************************
  *
- *      iteration_loop()                                                    
- *
- *  author/date??
+ *      iteration_loop()
  *
  *  encodes one frame of MP3 data with constant bitrate
  *
@@ -1216,16 +1197,16 @@ iteration_loop(
     mean_bits /= gfc->mode_gr;
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
-        /*  calculate needed bits */
-        on_pe (gfc, ratio[gr], targ_bits, mean_bits);
+	/*  calculate needed bits */
+	on_pe (gfc, ratio[gr], targ_bits, mean_bits);
 
-        for (ch=0 ; ch < gfc->channels_out ; ch ++) {
+	for (ch=0 ; ch < gfc->channels_out ; ch ++) {
 	    gr_info *gi = &gfc->l3_side.tt[gr][ch];
 	    CBR_1st_bitalloc(gfc, gi, ch, targ_bits[ch], &ratio[gr][ch]);
 	    iteration_finish_one(gfc, gr, ch);
 	    gfc->l3_side.ResvSize += mean_bits / gfc->channels_out
 		- gi->part2_length - gi->part2_3_length;
-        }
+	}
     }
 }
 
@@ -1366,7 +1347,7 @@ short_block_scalefacs(gr_info * gi, int vbrmax)
 static void
 long_block_scalefacs(const lame_internal_flags *gfc, gr_info * gi, int vbrmax)
 {
-    int     sfb, maxov0, maxov1, maxov0p, maxov1p;
+    int sfb, maxov0, maxov1, maxov0p, maxov1p;
 
     /* we can use 4 strategies. [scalefac_scale = (0,1), pretab = (0,1)] */
     maxov0  = maxov1 = maxov0p = maxov1p = vbrmax;
@@ -1602,11 +1583,11 @@ VBR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
     int ch, gr, ath_over = 0;
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
-        for (ch = 0; ch < gfc->channels_out; ch++) {
-      	    calc_xmin (gfc, &ratio[gr][ch],
+	for (ch = 0; ch < gfc->channels_out; ch++) {
+     	    calc_xmin (gfc, &ratio[gr][ch],
 		       &gfc->l3_side.tt[gr][ch], l3_xmin[gr][ch]);
 	    ath_over += ratio[gr][ch].ath_over;
-        }
+	}
     }
 
     gfc->bitrate_index = gfc->VBR_max_bitrate;
@@ -1677,7 +1658,7 @@ VBR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
  *
  *  updates plotting data    
  *
- *  Mark Taylor 2000-??-??                
+ *  Mark Taylor 2000-??-??
  *
  *  Robert Hegemann: moved noise/distortion calc into it
  *
@@ -1766,7 +1747,7 @@ set_pinfo (
  *
  *  updates plotting data for a whole frame  
  *
- *  Robert Hegemann 2000-10-21                          
+ *  Robert Hegemann 2000-10-21
  *
  ************************************************************************/
 
@@ -1775,8 +1756,7 @@ set_frame_pinfo(lame_internal_flags *gfc, III_psy_ratio   ratio    [2][2])
 {
     int gr, ch;
 
-    /* for every granule and channel patch l3_enc and set info
-     */
+    /* for every granule and channel common data */
     memset(gfc->pinfo->  en_s, 0, sizeof(gfc->pinfo->  en_s));
     memset(gfc->pinfo-> thr_s, 0, sizeof(gfc->pinfo-> thr_s));
     memset(gfc->pinfo->xfsf_s, 0, sizeof(gfc->pinfo->xfsf_s));
@@ -1790,8 +1770,7 @@ set_frame_pinfo(lame_internal_flags *gfc, III_psy_ratio   ratio    [2][2])
 	    int scalefac_sav[SFBMAX];
 	    memcpy(scalefac_sav, gi->scalefac, sizeof(scalefac_sav));
 
-	    /* reconstruct the scalefactors in case SCFSI was used 
-	     */
+	    /* reconstruct the scalefactors in case SCFSI was used */
 	    if (gr == 1) {
 		int sfb;
 		for (sfb = 0; sfb < gi->sfb_lmax; sfb++) {
