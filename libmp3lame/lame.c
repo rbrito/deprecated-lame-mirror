@@ -314,13 +314,13 @@ static int apply_preset(lame_global_flags*  gfp, int bitrate, vbr_mode mode)
 
     if (gfp->internal_flags->nsPsy.attackthre < 0.0) {
 	if (bitrate >= 160)
-	    lame_set_short_threshold(gfp, 1.8, 10.0);
+	    lame_set_short_threshold(gfp, 1.8, 1.8);
 	else if (bitrate > 90)
-	    lame_set_short_threshold(gfp, 2.5, 15.0);
+	    lame_set_short_threshold(gfp, 2.5, 2.5);
 	else if (bitrate > 56)
-	    lame_set_short_threshold(gfp, 2.5, 20.0);
+	    lame_set_short_threshold(gfp, 5.0, 5.0);
 	else if (bitrate > 16)
-	    lame_set_short_threshold(gfp, 10.0, 20.0);
+	    lame_set_short_threshold(gfp, 20.0, 20.0);
 	else
 	    lame_set_short_threshold(gfp, 100.0, 100.0); /* no short blocks */
     }
