@@ -6,6 +6,7 @@
 
 ;単精度浮動小数点演算
 
+%define F_PTR	dword
 %idefine float dword
 %idefine fsize 4
 %idefine fsizen(a) (fsize*(a))
