@@ -374,6 +374,10 @@ int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
         enc_delay += buf[1] >> 4;
         enc_padding= (buf[1] & 0x0F)<<8;
         enc_padding += buf[2];
+        // check for reasonable values (this may be an old Xing header,
+        // not a INFO tag)
+        if (enc_delay<0 || enc_delay > 3000) enc_delay=-1;
+        if (enc_padding<0 || enc_padding > 3000) enc_padding=-1;
 
         pTagData->enc_delay=enc_delay;
         pTagData->enc_padding=enc_padding;
