@@ -239,7 +239,7 @@ void init_fft(lame_global_flags *gfp)
 {
     int i;
 
-    FLOAT r = PI*0.125;
+    FLOAT r = (FLOAT)(PI*0.125);
     for (i = 0; i < TRI_SIZE; i++) {
 	costab[i*2  ] = cos(r);
 	costab[i*2+1] = sin(r);

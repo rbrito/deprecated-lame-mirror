@@ -83,7 +83,7 @@ typedef sample_t          stereo_t [2];
 
 #if ( defined(_MSC_VER))
 #	pragma warning( disable : 4244 )
-#	pragma warning( disable : 4305 )
+//#	pragma warning( disable : 4305 )
 #endif
 
 #if ( defined(_MSC_VER) || defined(__BORLANDC__) || defined(__MINGW32__) )
