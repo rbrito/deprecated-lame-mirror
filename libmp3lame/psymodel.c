@@ -956,6 +956,7 @@ psycho_analysis_short(
     int numchn
     )
 {
+    FLOAT wsamp_S[2][3][BLKSIZE_s];
     FLOAT attack_adjust[4];
     int current_is_short = 0, first_attack_position[4];
     int ch, i, j, sblock;
@@ -1051,8 +1052,9 @@ mp3x display               <------LONG------>
 
 	for (i=0;i<3;i++) {
 	    /* calculate energies of each sub-shortblocks */
-	    if (gfc->nsPsy.subbk_ene[ch][i+2]
-		<= gfc->nsPsy.attackthre * gfc->nsPsy.subbk_ene[ch][i+1])
+	    FLOAT pre = gfc->nsPsy.subbk_ene[ch][i+1]
+		+ gfc->decay * gfc->nsPsy.subbk_ene[ch][i];
+	    if (gfc->nsPsy.subbk_ene[ch][i+2] <= gfc->nsPsy.attackthre * pre)
 		continue;
 
 	    gfc->blocktype_next[gr][ch] = SHORT_TYPE;
@@ -1068,15 +1070,11 @@ mp3x display               <------LONG------>
 	return;
 
     for (ch = 0; ch < numchn; ch++) {
-	/* fft and energy calculation   */
-	FLOAT wsamp_S[2][3][BLKSIZE_s];
+	if (ch == 2) {
+	    if (!(current_is_short & 12))
+		break;
 
-	/* compute masking thresholds for short blocks */
-	for (sblock = 0; sblock < 3; sblock++) {
-	    if (ch < 2)
-		fft_short(gfc, wsamp_S[ch][sblock],
-			  &buffer[ch][(576/3) * (sblock+1)]);
-	    else if (ch == 2 && (current_is_short & 12)) {
+	    for (sblock = 0; sblock < 3; sblock++) {
 		for (j = 0; j < BLKSIZE_s; j++) {
 		    FLOAT l = wsamp_S[0][sblock][j];
 		    FLOAT r = wsamp_S[1][sblock][j];
@@ -1084,7 +1082,14 @@ mp3x display               <------LONG------>
 		    wsamp_S[1][sblock][j] = (l-r)*(SQRT2*0.5);
 		}
 	    }
+	}
 
+	/* compute masking thresholds for short blocks */
+	for (sblock = 0; sblock < 3; sblock++) {
+	    /* fft and energy calculation   */
+	    if (ch < 2)
+		fft_short(gfc, wsamp_S[ch][sblock],
+			  &buffer[ch][(576/3) * (sblock+1)]);
 	    if (!gfc->blocktype_next[gr][ch])
 		continue;
 
@@ -1129,7 +1134,7 @@ partially_convert_l2s(lame_internal_flags *gfc, III_psy_ratio *mr, FLOAT *nb_1)
 	}
 	x += .5 * nb_1[b];
 
-	x *= ((double)BLKSIZE_s / BLKSIZE);
+	x *= ((double)BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE);
 	if (x < gfc->ATH.s_avg[sfb] * gfc->ATH.adjust)
 	    continue;
 	x *= gfc->masking_lower;
@@ -1185,7 +1190,6 @@ L3psycho_anal_ns(
 	enn = p[0] * p[0];
 	eb[0] = enn;
 
-	enn += enn;
 	max[0] = fftenergy[0] = enn;
 	avg[0] = enn * gfc->rnumlines_l[0];
 
@@ -1370,8 +1374,8 @@ L3psycho_anal_ns(
 
 	    enn  -= .5*eb[b];
 	    thmm -= .5*tmp;
-	    thmm *= ((double)BLKSIZE_s / BLKSIZE);
-	    enn  *= ((double)BLKSIZE_s / BLKSIZE);
+	    thmm *= ((double)BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE);
+	    enn  *= ((double)BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE);
 	    if (thmm < gfc->ATH.s_avg[j] * gfc->ATH.adjust) {
 		thmm = gfc->ATH.s_avg[j] * gfc->ATH.adjust;
 		enn  = -enn;
@@ -1388,8 +1392,8 @@ L3psycho_anal_ns(
 		break;
 	}
 
-	thmm *= ((double)BLKSIZE_s / BLKSIZE);
-	enn  *= ((double)BLKSIZE_s / BLKSIZE);
+	thmm *= ((double)BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE);
+	enn  *= ((double)BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE);
 	if (thmm < gfc->ATH.s_avg[SBMAX_s-1] * gfc->ATH.adjust) {
 	    thmm = gfc->ATH.s_avg[SBMAX_s-1] * gfc->ATH.adjust;
 	    enn  = -enn;
