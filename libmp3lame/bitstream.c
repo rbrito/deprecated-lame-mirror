@@ -408,11 +408,25 @@ putbits24main(bit_stream_t *bs, unsigned int val, int j)
     p[3]  = val;
 }
 
+/*write j bits into the bit stream */
+inline static void
+putbits16(bit_stream_t *bs, unsigned int val, int j)
+{
+    char *p = &bs->buf[bs->bitidx >> 3];
+
+    val <<= (24 - j - (bs->bitidx & 7));
+    bs->bitidx += j;
+
+    p[0] |= val >> 16;
+    p[1]  = val >> 8;
+    p[2]  = val;
+}
+
 inline static void
 putbits(bit_stream_t *bs, unsigned int val, int j)
 {
     if (j > 25) {
-	putbits24(bs, val>>16, j-16);
+	putbits16(bs, val>>16, j-16);
 	val &= 0xffff;
 	j = 16;
     }
@@ -450,7 +464,8 @@ Huf_count1(bit_stream_t *bs, gr_info *gi)
 	    p++;
 	    huffbits = huffbits*2 + signbits(gi->xr[i+3]);
 	}
-	putbits24(bs, huffbits + hcode[p+16], hcode[p]);
+	/* 0 < hcode[] <= 10 */
+	putbits16(bs, huffbits + hcode[p+16], hcode[p]);
     }
     assert(i == gi->count1);
 }
@@ -459,7 +474,7 @@ Huf_count1(bit_stream_t *bs, gr_info *gi)
 static void
 Huffmancode_esc(bit_stream_t *bs, int tablesel, int i, int end, gr_info *gi)
 {
-    int xlen = htESC_xlen[tablesel];
+    int xlen = htESC_xlen[tablesel]; /* 1 <= xlen <= 13 */
 #ifndef NDEBUG
     int linmax = (1 << xlen) + 15;
 #endif
@@ -496,7 +511,8 @@ Huffmancode_esc(bit_stream_t *bs, int tablesel, int i, int end, gr_info *gi)
 	    x1 += x2;
 	}
 	x1 += tablesel;
-	putbits24(bs, escHB[x1], escLen[x1]);
+	/* 0 < escLen[] <= 17 */
+	putbits16(bs, escHB[x1], escLen[x1]);
 	if (xbits)      /* 0 <= xbits <= 28 */
 	    putbits(bs, ext, xbits);
     } while ((i += 2) < end);
