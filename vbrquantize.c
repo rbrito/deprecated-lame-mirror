@@ -266,7 +266,7 @@ int scalefac[SBPSY_s][3],unsigned int sbg[3])
     maxsf1 = Max(maxsf1-maxrange1*ifqstep,maxsf2-maxrange2*ifqstep);
     sbg[i]=0;
     if (minsf >0 ) sbg[i] = floor(.125*minsf + .001);
-    if (maxsf1 > 0)  sbg[i]  = Max(sbg[i],maxsf1/8 + (maxsf1 % 8 != 0));
+    if (maxsf1 > 0)  sbg[i] = Max(sbg[i],(u_int)(maxsf1/8 + (maxsf1 % 8 != 0)));
     if (sbg[i] > 7) sbg[i]=7;
 
 

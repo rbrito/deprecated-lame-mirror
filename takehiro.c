@@ -642,7 +642,7 @@ void best_scalefac_store(lame_internal_flags *gfc,int gr, int ch,
     /* remove scalefacs from bands with ix=0.  This idea comes
      * from the AAC ISO docs.  added mt 3/00 */
     /* check if l3_enc=0 */
-    for ( sfb = 0; sfb < gi->sfb_lmax; sfb++ ) {
+    for ( sfb = 0; sfb < (u_int)gi->sfb_lmax; sfb++ ) {
       if (scalefac[gr][ch].l[sfb]>0) { 
 	start = gfc->scalefac_band.l[ sfb ];
 	end   = gfc->scalefac_band.l[ sfb+1 ];
@@ -668,7 +668,7 @@ void best_scalefac_store(lame_internal_flags *gfc,int gr, int ch,
     gi->part2_3_length -= gi->part2_length;
     if (!gi->scalefac_scale && !gi->preflag) {
 	int b, s = 0;
-	for (sfb = 0; sfb < gi->sfb_lmax; sfb++) {
+	for (sfb = 0; sfb < (u_int)gi->sfb_lmax; sfb++) {
 	    s |= scalefac[gr][ch].l[sfb];
 	}
 
@@ -679,7 +679,7 @@ void best_scalefac_store(lame_internal_flags *gfc,int gr, int ch,
 	}
 
 	if (!(s & 1) && s != 0) {
-	    for (sfb = 0; sfb < gi->sfb_lmax; sfb++) {
+	    for (sfb = 0; sfb < (u_int)gi->sfb_lmax; sfb++) {
 		scalefac[gr][ch].l[sfb] /= 2;
 	    }
 	    for (sfb = gi->sfb_smax; sfb < SBPSY_s; sfb++) {
@@ -871,7 +871,7 @@ int scale_bitcount_lsf(III_scalefac_t *scalefac, gr_info *cod_info)
 
 	int slen1, slen2, slen3, slen4;
 
-        cod_info->sfb_partition_table = &nr_of_sfb_block[table_number][row_in_table][0];
+        cod_info->sfb_partition_table = (int*)(&nr_of_sfb_block[table_number][row_in_table][0]);
 	for ( partition = 0; partition < 4; partition++ )
 	    cod_info->slen[partition] = log2tab[max_sfac[partition]];
 

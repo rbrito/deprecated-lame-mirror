@@ -77,7 +77,7 @@ int init_outer_loop
     /* sfb_lmax              was set by iteration_init */
     /* sfb_smax              was set by iteration_init */
     cod_info->count1bits          = 0;  
-    cod_info->sfb_partition_table = &nr_of_sfb_block[0][0][0];
+    cod_info->sfb_partition_table = (int*)&nr_of_sfb_block[0][0][0];
     cod_info->slen[0]             = 0;
     cod_info->slen[1]             = 0;
     cod_info->slen[2]             = 0;
@@ -238,7 +238,7 @@ int loop_break
     int i;
     u_int sfb;
 
-    for (sfb = 0; sfb < cod_info->sfb_lmax; sfb++)
+    for (sfb = 0; sfb < (u_int)cod_info->sfb_lmax; sfb++)
         if (scalefac->l[sfb] == 0)
             return 0;
 
@@ -379,7 +379,7 @@ void amp_scalefac_bands
    * In that case, just amplify bands with distortion
    * within 95% of largest distortion/masking ratio */
   distort_thresh = -900;
-  for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
+  for ( sfb = 0; sfb < (u_int)cod_info->sfb_lmax; sfb++ ) {
     distort_thresh = Max(distort[0][sfb],distort_thresh);
   }
 
@@ -394,7 +394,7 @@ void amp_scalefac_bands
     distort_thresh *= .95;
 
 
-  for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
+  for ( sfb = 0; sfb < (u_int)cod_info->sfb_lmax; sfb++ ) {
     if ( distort[0][sfb]>distort_thresh  ) {
       scalefac->l[sfb]++;
       start = gfc->scalefac_band.l[sfb];
@@ -1351,7 +1351,7 @@ void VBR_iteration_loop
                 continue; /* with next channel */
             }
       
-            min_bits = calc_min_bits (gfp, gfc, cod_info, pe[gr][ch],
+            min_bits = calc_min_bits (gfp, gfc, cod_info, (int)pe[gr][ch],
                                       ms_ener_ratio[gr], bands[gr][ch],
                                       save_bits[gr][0], analog_mean_bits, 
                                       min_mean_bits, analog_silence, ch);

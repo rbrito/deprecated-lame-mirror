@@ -204,7 +204,7 @@ void init_layer3(int down_sample_sblimit)
 
   for(j=0;j<9;j++)
   {
-   struct bandInfoStruct *bi = &bandInfo[j];
+   struct bandInfoStruct *bi = (struct bandInfoStruct *)&bandInfo[j];
    int *mp;
    int cb,lwin;
    short *bdf;
@@ -615,7 +615,7 @@ static int III_get_scale_factors_2(int *scf,struct gr_info_s *gr_infos,int i_ste
       n++;
   }
 
-  pnt = stab[n][(slen>>12)&0x7];
+  pnt = (unsigned char *)stab[n][(slen>>12)&0x7];
 
   for(i=0;i<4;i++) {
     int num = slen & 0x7;
@@ -713,7 +713,7 @@ static int III_dequantize_sample(real xr[SBLIMIT][SSLIMIT],int *scf,
     mc = 0;
     for(i=0;i<2;i++) {
       int lp = l[i];
-      struct newhuff *h = ht+gr_infos->table_select[i];
+      struct newhuff *h = (struct newhuff *)(ht+gr_infos->table_select[i]);
       for(;lp;lp--,mc--) {
         register int x,y;
         if( (!mc) ) {
@@ -731,7 +731,7 @@ static int III_dequantize_sample(real xr[SBLIMIT][SSLIMIT],int *scf,
           }
         }
         {
-          register short *val = h->table;
+          register short *val = (short *)h->table;
           while((y=*val++)<0) {
             if (get1bit())
               val -= y;
@@ -783,8 +783,8 @@ static int III_dequantize_sample(real xr[SBLIMIT][SSLIMIT],int *scf,
       }
     }
     for(;l3 && (part2remain > 0);l3--) {
-      struct newhuff *h = htc+gr_infos->count1table_select;
-      register short *val = h->table,a;
+      struct newhuff *h = (struct newhuff *)(htc+gr_infos->count1table_select);
+      register short *val = (short *)h->table,a;
 
       while((a=*val++)<0) {
         part2remain--;
@@ -870,7 +870,7 @@ static int III_dequantize_sample(real xr[SBLIMIT][SSLIMIT],int *scf,
 	/*
      * decoding with 'long' BandIndex table (block_type != 2)
      */
-    int *pretab = gr_infos->preflag ? pretab1 : pretab2;
+    int *pretab = (int *)(gr_infos->preflag ? pretab1 : pretab2);
     int i,max = -1;
     int cb = 0;
     register int *m = map[sfreq][2];
@@ -885,7 +885,7 @@ static int III_dequantize_sample(real xr[SBLIMIT][SSLIMIT],int *scf,
      */
     for(i=0;i<3;i++) {
       int lp = l[i];
-      struct newhuff *h = ht+gr_infos->table_select[i];
+      struct newhuff *h = (struct newhuff *)(ht+gr_infos->table_select[i]);
 
       for(;lp;lp--,mc--) {
         int x,y;
@@ -896,7 +896,7 @@ static int III_dequantize_sample(real xr[SBLIMIT][SSLIMIT],int *scf,
           cb = *m++;
         }
         {
-          register short *val = h->table;
+          register short *val = (short *)h->table;
           while((y=*val++)<0) {
             if (get1bit())
               val -= y;
@@ -951,8 +951,8 @@ static int III_dequantize_sample(real xr[SBLIMIT][SSLIMIT],int *scf,
      * short (count1table) values
      */
     for(;l3 && (part2remain > 0);l3--) {
-      struct newhuff *h = htc+gr_infos->count1table_select;
-      register short *val = h->table,a;
+      struct newhuff *h = (struct newhuff *)(htc+gr_infos->count1table_select);
+      register short *val = (short *)h->table,a;
 
       while((a=*val++)<0) {
         part2remain--;
@@ -1023,7 +1023,7 @@ static void III_i_stereo(real xr_buf[2][SBLIMIT][SSLIMIT],int *scalefac,
    struct gr_info_s *gr_infos,int sfreq,int ms_stereo,int lsf)
 {
       real (*xr)[SBLIMIT*SSLIMIT] = (real (*)[SBLIMIT*SSLIMIT] ) xr_buf;
-      struct bandInfoStruct *bi = &bandInfo[sfreq];
+      struct bandInfoStruct *bi = (struct bandInfoStruct *)&bandInfo[sfreq];
       real *tabl1,*tabl2;
 
       if(lsf) {
@@ -1485,13 +1485,13 @@ static void III_hybrid(real fsIn[SBLIMIT][SSLIMIT],real tsOut[SSLIMIT][SBLIMIT],
  
    bt = gr_infos->block_type;
    if(bt == 2) {
-     for (; sb<gr_infos->maxb; sb+=2,tspnt+=2,rawout1+=36,rawout2+=36) {
+     for (; sb<(int)gr_infos->maxb; sb+=2,tspnt+=2,rawout1+=36,rawout2+=36) {
        dct12(fsIn[sb],rawout1,rawout2,win[2],tspnt);
        dct12(fsIn[sb+1],rawout1+18,rawout2+18,win1[2],tspnt+1);
      }
    }
    else {
-     for (; sb<gr_infos->maxb; sb+=2,tspnt+=2,rawout1+=36,rawout2+=36) {
+     for (; sb<(int)gr_infos->maxb; sb+=2,tspnt+=2,rawout1+=36,rawout2+=36) {
        dct36(fsIn[sb],rawout1,rawout2,win[bt],tspnt);
        dct36(fsIn[sb+1],rawout1+18,rawout2+18,win1[bt],tspnt+1);
      }
@@ -1672,7 +1672,7 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
           {
             register int i;
             register real *in0 = (real *) hybridIn[0],*in1 = (real *) hybridIn[1];
-            for(i=0;i<SSLIMIT*gr_infos->maxb;i++,in0++)
+            for(i=0;i<(int)(SSLIMIT*gr_infos->maxb);i++,in0++)
               *in0 = (*in0 + *in1++); /* *0.5 done by pow-scale */ 
           }
           break;
@@ -1680,7 +1680,7 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
           {
             register int i;
             register real *in0 = (real *) hybridIn[0],*in1 = (real *) hybridIn[1];
-            for(i=0;i<SSLIMIT*gr_infos->maxb;i++)
+            for(i=0;i<(int)(SSLIMIT*gr_infos->maxb);i++)
               *in0++ = *in1++;
           }
           break;

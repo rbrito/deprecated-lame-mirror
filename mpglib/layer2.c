@@ -250,7 +250,7 @@ static void II_select_table(struct frame *fr)
     table = translate[fr->sampling_frequency][2-fr->stereo][fr->bitrate_index];
   sblim = sblims[table];
 
-  fr->alloc      = tables[table];
+  fr->alloc      = (struct al_table2*)tables[table];
   fr->II_sblimit = sblim;
 }
 

@@ -181,7 +181,7 @@ int main(int argc, char **argv)
 	}
 
 	/* imp3 is not negative, but fwrite needs an unsigned here */
-	if (fwrite(mp3buffer,1,(unsigned int)imp3,outf) != imp3) {
+	if (fwrite(mp3buffer,1,(unsigned int)imp3,outf) != (size_t)imp3) {
 	  fprintf(stderr,"Error writing mp3 output \n");
 	  exit(-1);
 	}

@@ -1229,7 +1229,7 @@ static void get_main_menu(GtkWidget *windows, GtkWidget ** menubar) {
   /* This function generates the menu items. Pass the item factory,
      the number of items in the array, the array itself, and any
      callback data for the the menu items. */
-  gtk_item_factory_create_items(item_factory, nmenu_items, menu_items, NULL);
+  gtk_item_factory_create_items(item_factory, nmenu_items, (GtkItemFactoryEntry*)menu_items, NULL);
 
   /* Attach the new accelerator group to the window. */
   gtk_accel_group_attach (accel_group, GTK_OBJECT (windows));

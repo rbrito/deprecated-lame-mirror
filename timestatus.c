@@ -2,6 +2,7 @@
 #include "timestatus.h"
 #include "lametime.h"
 #include "util.h"
+#include "brhist.h"
 #include <assert.h>
 #include <time.h>
 
@@ -106,7 +107,7 @@ FLOAT ts_process_time(long frame) {
     initial_tictime -= ((previous_time / TS_CLOCKS_PER_TIC)
 			+ (current_time - previous_time) / TS_CLOCKS_PER_TIC);
     if( current_time < 0 ) {	/* adjust if clock_t is signed */
-      initial_tictime -= -(((clock_t) 1 << (sizeof(clock_t) * 8 - 1))
+      initial_tictime -= -(((clock_t) 1 << ((int)sizeof(clock_t) * 8 - 1))
 			   / TS_CLOCKS_PER_TIC);
     }
   }
@@ -233,7 +234,7 @@ void timestatus_klemm(lame_global_flags *gfp)
                          gfp -> framesize );
 
             if ( gfp -> brhist_disp )
-	        brhist_disp ( gfp, 1 );
+	        brhist_disp ( gfp->totalframes );
 	        
 	    gfc -> last_time = GetRealTime ();  /* from now! disp_time seconds */
         }
