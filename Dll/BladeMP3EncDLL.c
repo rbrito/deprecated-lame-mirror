@@ -178,7 +178,7 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 	if (lameConfig.format.LHV1.bEnableVBR)
 	{
 		// 0=no vbr 1..10 is VBR quality setting -1
-		gf.VBR=1;
+		gf.VBR=vbr_default;
 		gf.VBR_q=lameConfig.format.LHV1.nVBRQuality;
 
 		if (lameConfig.format.LHV1.bWriteVBRHeader==TRUE)
