@@ -363,6 +363,14 @@ trancate_smallspectrums(
 	if (trancateThreshold == 0.0)
 	    continue;
 
+//	printf("%e %e %e\n",
+//	       trancateThreshold/l3_xmin[sfb],
+//	       trancateThreshold/(l3_xmin[sfb]*start),
+//	       trancateThreshold/(l3_xmin[sfb]*(start+width))
+//	    );
+//	if (trancateThreshold > 1000*l3_xmin[sfb]*start)
+//	    trancateThreshold = 1000*l3_xmin[sfb]*start;
+
 	do {
 	    if (fabs(gi->xr[j - width]) <= trancateThreshold)
 		gi->l3_enc[j - width] = 0;
@@ -1421,6 +1429,13 @@ VBR_iteration_loop (
 	        VBR_encode_granule (gfp, cod_info, l3_xmin[gr][ch], xrpow,
                                     ch, min_bits[gr][ch], max_bits[gr][ch] );
 
+	    /*  do the 'substep shaping'
+	     */
+	    if (gfc->substep_shaping & 1) {
+		trancate_smallspectrums(gfc, &l3_side->tt[gr][ch],
+					l3_xmin[gr][ch], xrpow);
+	    }
+
             ret = cod_info->part2_3_length + cod_info->part2_length;
             used_bits += ret;
             save_bits[gr][ch] = Min(MAX_BITS, ret);
@@ -1452,13 +1467,6 @@ VBR_iteration_loop (
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         for (ch = 0; ch < gfc->channels_out; ch++) {
-	    /*  do the 'substep shaping'
-	     */
-	    if (gfc->substep_shaping & 1) {
-		trancate_smallspectrums(gfc, &l3_side->tt[gr][ch],
-					l3_xmin[gr][ch], xrpow);
-	    }
-
 	    iteration_finish_one(gfc, gr, ch);
 	} /* for ch */
     }    /* for gr */
