@@ -1687,7 +1687,9 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
     }
         
     if ( inPath[0] == '-' ) 
-        silent = 1;  /* turn off status - it's broken for stdin */
+        /* turn off status - it's broken for stdin */
+        silent = (silent <= 1 ? 1 : silent);
+
 #ifdef WIN32
     else
         dosToLongFileName( inPath );
