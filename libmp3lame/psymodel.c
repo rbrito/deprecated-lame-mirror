@@ -502,10 +502,12 @@ compute_masking_s(
     FLOAT8 *eb,
     FLOAT8 *thr,
     int chn,
-    int sblock
+    int sblock,
+    FLOAT8 athlower
     )
 {
     int j, b;
+    athlower *= (BLKSIZE_s / BLKSIZE);
     for (j = b = 0; b < gfc->npart_s; b++) {
 	FLOAT ecb = fftenergy_s[sblock][j++];
 	int kk = gfc->numlines_s[b];
@@ -523,7 +525,7 @@ compute_masking_s(
 	if (gfc->blocktype_old[chn & 1] == SHORT_TYPE ) {
 	    thr[b] = Min(thr[b], rpelev2_s * gfc->nb_s2[chn][b]);
 	}
-	thr[b] = Max( thr[b], 1e-37 );
+	thr[b] = Max( thr[b], gfc->ATH->cb[gfc->bm_s[b]] * athlower );
 	gfc->nb_s2[chn][b] = gfc->nb_s1[chn][b];
 	gfc->nb_s1[chn][b] = ecb;
     }
@@ -910,7 +912,8 @@ int L3psycho_anal( lame_global_flags * gfp,
 	/* compute masking thresholds for short blocks */
 	for (sblock = 0; sblock < 3; sblock++) {
 	    FLOAT8 enn, thmm;
-	    compute_masking_s(gfc, fftenergy_s, eb, thr, chn, sblock);
+	    compute_masking_s(gfc, fftenergy_s, eb, thr, chn,
+			      sblock,gfp->ATHlower*gfc->ATH->adjust);
 	    b = -1;
 	    enn = thmm = 0.0;
 	    for (sb = 0; sb < SBMAX_s; sb++) {
@@ -1411,7 +1414,8 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	/* compute masking thresholds for short blocks */
 	for (sblock = 0; sblock < 3; sblock++) {
 	    FLOAT8 enn, thmm;
-	    compute_masking_s(gfc, fftenergy_s, eb, thr, chn, sblock);
+	    compute_masking_s(gfc, fftenergy_s, eb, thr, chn, sblock,
+			      gfp->ATHlower*gfc->ATH->adjust);
 	    b = -1;
 	    for (sb = 0; sb < SBMAX_s; sb++) {
 		enn = thmm = 0.0;
