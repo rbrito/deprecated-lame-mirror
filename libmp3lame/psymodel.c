@@ -1095,7 +1095,7 @@ mp3x display               <------LONG------>
    we can use masking threshold value of long block */
 static void
 partially_convert_l2s(lame_internal_flags *gfc, III_psy_ratio *mr, FLOAT *nb_1,
-		      int ch)
+		      FLOAT ATHadjust)
 {
     int sfb, b;
     for (sfb = 0; sfb < SBMAX_s; sfb++) {
@@ -1117,7 +1117,7 @@ partially_convert_l2s(lame_internal_flags *gfc, III_psy_ratio *mr, FLOAT *nb_1,
 	}
 	x += .5 * nb_1[b];
 	x *= ((double)BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE);
-	if (x < gfc->ATH.s_avg[sfb] * gfc->ATH.adjust[ch])
+	if (x < gfc->ATH.s_avg[sfb] * ATHadjust)
 	    continue;
 	mr->thm.s[sfb][0] = mr->thm.s[sfb][1] = mr->thm.s[sfb][2] = x;
     }
@@ -1394,7 +1394,7 @@ L3psycho_anal_ns(
 	if (i & 1) {mr->thm.s[j][0] = thmm; mr->en.s[j][0] = enn;}
 	if (i & 2) {mr->thm.s[j][1] = thmm; mr->en.s[j][1] = enn;}
 	if (i & 4) {mr->thm.s[j][2] = thmm; mr->en.s[j][2] = enn;}
-	partially_convert_l2s(gfc, mr, nb_1, ch);
+	partially_convert_l2s(gfc, mr, nb_1, gfc->ATH.adjust[ch]);
     }
 }
 
@@ -1487,7 +1487,7 @@ psycho_analysis(
 
 	diff_pe
 	    += gfc->masking_next[0][2].pe +  gfc->masking_next[0][3].pe
-	    -  gfc->masking_next[0][0].pe -  gfc->masking_next[0][1].pe;
+	    -  gfc->masking_next[0][0].pe -  gfc->masking_next[0][1].pe
 	    +  gfc->masking_next[1][2].pe +  gfc->masking_next[1][3].pe
 	    -  gfc->masking_next[1][0].pe -  gfc->masking_next[1][1].pe;
 
