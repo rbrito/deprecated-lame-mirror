@@ -1527,6 +1527,8 @@ void lame_init(int nowrite)
 void lame_getmp3info(lame_mp3info *mp3info)
 {
   mp3info->encoder_delay = ENCDELAY;
+  mp3info->currentframe=gf.frameNum;
+  mp3info->totalframes=gf.totalframes;
   mp3info->framesize = (fr_ps.header->version==0) ? 576 : 1152;
   mp3info->output_channels = gf.stereo;
   mp3info->output_samplerate = (int)

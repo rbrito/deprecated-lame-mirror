@@ -25,6 +25,8 @@
 typedef struct  {
   int encoder_delay;
   int framesize;
+  int currentframe;
+  int totalframes;
   int output_channels;
   int output_samplerate;      /* in Hz */
 } lame_mp3info;
