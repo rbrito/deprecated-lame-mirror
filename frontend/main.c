@@ -497,14 +497,14 @@ parse_nogap_filenames(int nogapout, char *inPath, char *outPath, char *outdir)
     } else {
         slasher = inPath;
         slasher += PATH_MAX + 1 - 4;
-        
+
         /* backseek to last dir delemiter */
-        while (*slasher != '/' && *slasher != '\\' && slasher != inPath
-               && *slasher != ':')
-            {
-                slasher--;
-            }
-        
+        while (*slasher != '/' && *slasher != '\\'
+	       && slasher != inPath && *slasher != ':')
+	{
+	    slasher--;
+	}
+
         /* skip one foward if needed */
         if (slasher != inPath 
             && (outPath[strlen(outPath)-1] == '/'
@@ -565,8 +565,6 @@ main(int argc, char **argv)
     argc = ccommand(&argv);
 #endif
 
-    print_version (stdout);
-
 #ifdef __EMX__
     /* This gives wildcard expansion on Non-POSIX shells with OS/2 */
     _wildcard(&argc, &argv);
@@ -595,6 +593,9 @@ main(int argc, char **argv)
      */
     parse_args_from_string(gfp, getenv("LAMEOPT"), inPath, outPath);
     ret = parse_args(gfp, argc, argv, inPath, outPath, nogap_inPath, &max_nogap);
+    if (silent <= 0)
+	print_version (stdout);
+
     if (ret < 0)
         return ret == -2 ? 0 : 1;
 
