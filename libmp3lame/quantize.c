@@ -86,7 +86,7 @@ on_pe(
 	} else {
 	    targ_bits[ch] = tbits;
 	    if (ratio[ch].pe*(2.0/3) > tbits) {
-		targ_bits[ch] = tbits * (ratio[ch].pe*(2.0/3)-tbits);
+		targ_bits[ch] = ratio[ch].pe*tbits/700;
 		if (targ_bits[ch] > mean_bits) 
 		    targ_bits[ch] = mean_bits;
 	    }
@@ -196,10 +196,10 @@ calc_xmin(
 /*  mt 5/99:  Function: Improved calc_noise for a single channel   */
 static void
 calc_noise( 
-        const gr_info             * const gi,
-        const FLOAT              * l3_xmin, 
-              FLOAT              * distort,
-              calc_noise_result   * const res )
+        const gr_info           * const gi,
+        const FLOAT             * l3_xmin,
+              FLOAT             * distort,
+              calc_noise_result * const res )
 {
     FLOAT over_noise_db = 0.0;
     FLOAT max_noise   = -20.0; /* -200 dB relative to masking */
