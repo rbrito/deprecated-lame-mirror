@@ -25,7 +25,9 @@
 #include "quantize-pvt.h"
 #include "gtkanal.h"
 
+#if (defined(__GNUC__) && defined(__i386__))
 #define TAKEHIRO_IEEE754_HACK
+#endif
 
 #if (defined(__GNUC__) && defined(__i386__))
 #define USE_GNUC_ASM
