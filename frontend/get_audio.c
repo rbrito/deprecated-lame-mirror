@@ -927,9 +927,132 @@ read_samples_pcm(FILE * musicin, int sample_buffer[2304], int frame_size,
 #define WAV_ID_WAVE 0x57415645 /* "WAVE" */
 #define WAV_ID_FMT  0x666d7420 /* "fmt " */
 #define WAV_ID_DATA 0x64617461 /* "data" */
+#define WAV_ID_LIST 0x4c495354 /* "LIST" */
+#define WAV_ID_INFO 0x494e464f /* "INFO" */
+#define WAV_ID_INAM 0x494e414d /* "INAM" */
+#define WAV_ID_IART 0x49415254 /* "IART" */
+#define WAV_ID_IGNR 0x49474e52 /* "IGNR" */
+#define WAV_ID_IPRD 0x49505244 /* "IPRD" */
+#define WAV_ID_ITRK 0x6974726b /* "itrk" */
 
+#define INFO_SIZE 256
 
+/**********************************************
+ * Pull RIFF LIST INFO headers out of WAV files
+ * and set their matching id3 tags
+ * INFO headers are used by Turtle Beach's Audiotron 
+ * itrk is their extension for Track Number
+ * 
+ * refer to 
+ * http://www.saettler.com/RIFFMCI/riffmci.html
+ * http://www.turtlebeach.com/site/kb_ftp/1166005.asp
+ *********************************************/
 
+void SetIDTagsFromRiffTags(lame_global_flags * gfp, FILE * sf)
+{
+	int subSize =Read32BitsLowHigh(sf);
+	while (0 != subSize )
+	{
+		int type = Read32BitsHighLow(sf);
+		subSize -= 4;
+		if (WAV_ID_INFO == type)
+		{
+		}
+		else if (WAV_ID_INAM == type)
+		{
+			// Track Name
+			char buf[INFO_SIZE]={0};
+			unsigned int length=Read32BitsLowHigh(sf);
+			subSize -= 4;
+
+			ReadBytes(sf,&buf[0],length);
+			id3tag_set_title(gfp,strdup(&buf[0]));
+
+			subSize -= length;
+			if (length & 0x00000001 )  
+			{
+				// resolve word padding
+				ReadByte(sf);
+				subSize--;
+			}
+		}
+		else if (WAV_ID_IART == type)
+		{
+			// Artist Name
+			unsigned int length=Read32BitsLowHigh(sf);
+			char buf[INFO_SIZE]={0};
+			subSize -= 4;
+
+			ReadBytes(sf,&buf[0],length);
+			id3tag_set_artist(gfp, strdup(&buf[0]));
+
+			subSize -= length;
+			if (length & 0x00000001 )  // resolve word padding
+			{
+				// resolve word padding
+				ReadByte(sf);
+				subSize--;
+			}
+		}
+		else if (WAV_ID_IGNR == type)
+		{
+			// Genre Name
+			char buf[INFO_SIZE]={0};
+			unsigned int length=Read32BitsLowHigh(sf);
+			subSize -= 4;
+
+			ReadBytes(sf,&buf[0],length);
+			if (id3tag_set_genre(gfp,strdup(&buf[0]))) 
+			{
+				fprintf(stderr,"Unknown genre: %s.  Specify genre name or number\n", buf);
+			}
+
+			subSize -= length;
+			if (length & 0x00000001 )  // resolve word padding
+			{
+				// resolve word padding
+				ReadByte(sf);
+				subSize--;
+			}
+		}
+		else if (WAV_ID_IPRD == type)
+		{
+			// Title
+			char buf[INFO_SIZE]={0};
+			unsigned int length=Read32BitsLowHigh(sf);
+			subSize -= 4;
+
+			ReadBytes(sf,&buf[0],length);
+			id3tag_set_album(gfp, strdup(&buf[0]));
+
+			subSize -= length;
+			if (length & 0x00000001 )  // resolve word padding
+			{
+				// resolve word padding
+				ReadByte(sf);
+				subSize--;
+			}
+		}
+		else if (WAV_ID_ITRK == type)
+		{
+			// Track Number
+			char buf[INFO_SIZE]={0};
+			unsigned int length=Read32BitsLowHigh(sf);
+			subSize -= 4;
+
+			ReadBytes(sf,&buf[0],length);
+			id3tag_set_track(gfp, strdup(&buf[0]));
+
+			subSize -= length;
+			if (length & 0x00000001 )  // resolve word padding
+			{
+				// resolve word padding
+				ReadByte(sf);
+				subSize--;
+			}
+		}
+	}
+}
 
 /*****************************************************************************
  *
@@ -940,6 +1063,7 @@ read_samples_pcm(FILE * musicin, int sample_buffer[2304], int frame_size,
  *
  *****************************************************************************/
 
+
 static int
 parse_wave_header(lame_global_flags * gfp, FILE * sf)
 {
@@ -949,27 +1073,34 @@ parse_wave_header(lame_global_flags * gfp, FILE * sf)
     int     bits_per_sample = 0;
     int     samples_per_sec = 0;
     int     avg_bytes_per_sec = 0;
-
+	int		data_offset=0;
 
     int     is_wav = 0;
     long    data_length = 0, file_length, subSize = 0;
     int     loop_sanity = 0;
 
     file_length = Read32BitsHighLow(sf);
+	data_offset +=4;
 
     if (Read32BitsHighLow(sf) != WAV_ID_WAVE)
         return 0;
+	data_offset +=4;
 
     for (loop_sanity = 0; loop_sanity < 20; ++loop_sanity) {
         int     type = Read32BitsHighLow(sf);
+		data_offset+=4;
 
         if (type == WAV_ID_FMT) {
             subSize = Read32BitsLowHigh(sf);
+			data_offset += 4;
+
             if (subSize < 16) {
                 /*DEBUGF(
                    "'fmt' chunk too short (only %ld bytes)!", subSize);  */
                 return 0;
             }
+
+			data_offset += subSize;
 
             format_tag = Read16BitsLowHigh(sf);
             subSize -= 2;
@@ -994,11 +1125,20 @@ parse_wave_header(lame_global_flags * gfp, FILE * sf)
         }
         else if (type == WAV_ID_DATA) {
             subSize = Read32BitsLowHigh(sf);
+			data_offset += 4;
+
             data_length = subSize;
             is_wav = 1;
-            /* We've found the audio data. Read no further! */
-            break;
 
+			if (fskip(sf, (long) subSize, SEEK_CUR) != 0)
+                return 0;
+        }
+        else if (type == WAV_ID_LIST) {
+			SetIDTagsFromRiffTags(gfp, sf);
+			// Position read ptr back to data chunk
+            if (fskip(sf, (long) data_offset, SEEK_SET) != 0)
+                return 0;
+			break;
         }
         else {
             subSize = Read32BitsLowHigh(sf);
