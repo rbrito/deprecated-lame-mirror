@@ -30,19 +30,19 @@
 
 /* takehiro.c */
 
-int     count_bits (const lame_internal_flags * const gfc, const FLOAT * const xr,
-		    gr_info * const cod_info);
-int     noquant_count_bits (const lame_internal_flags * const gfc,
-			    gr_info * const cod_info);
+int count_bits (const lame_internal_flags * const gfc, const FLOAT * const xr,
+		gr_info * const cod_info);
 
+int noquant_count_bits (const lame_internal_flags * const gfc,
+			gr_info * const cod_info);
 
-void    best_huffman_divide (const lame_internal_flags * const gfc, 
-                             gr_info * const cod_info);
+void best_huffman_divide (const lame_internal_flags * const gfc, 
+			  gr_info * const cod_info);
 
-void	iteration_finish_one (lame_internal_flags *gfc, int gr, int ch);
+void iteration_finish_one (lame_internal_flags *gfc, int gr, int ch);
 
-int     scale_bitcount (gr_info * const cod_info);
-int     scale_bitcount_lsf (gr_info * const cod_info);
+int scale_bitcount (gr_info * const cod_info);
+int scale_bitcount_lsf (gr_info * const cod_info);
 
 #define LARGE_BITS 100000
 
@@ -52,19 +52,18 @@ typedef union {
 } fi_union;
 
 /*********************************************************************
- * XRPOW_FTOI is a macro to convert floats to ints.  
- * if XRPOW_FTOI(x) = nearest_int(x), then QUANTFAC(x)=adj43asm[x]
- *                                         ROUNDFAC= -0.0946
+ * XRPOW_FTOI is a macro to convert floats to ints.
+ * when converting float->int by nearest_int(x)
+ *      round offset = ROUNDFAC_NEAR = -0.0946, QUANTFAC(x)=adj43asm[x]
  *
- * if XRPOW_FTOI(x) = floor(x), then QUANTFAC(x)=asj43[x]   
- *                                   ROUNDFAC=0.4054
+ * when converting float->int by floor(x)
+ *      round offset = ROUNDFAC =  0.4054, QUANTFAC(x)=asj43[x]
  *********************************************************************/
 #ifdef TAKEHIRO_IEEE754_HACK
 # define MAGIC_FLOAT (65536*128)
 # define MAGIC_INT 0x4b000000
-# define ROUNDFAC -0.0946
+# define ROUNDFAC_NEAR -0.0946
 #else
-# define XRPOW_FTOI(src,dest) ((dest) = (int)(src))
 # define ROUNDFAC 0.4054
 #endif
 

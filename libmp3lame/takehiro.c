@@ -144,15 +144,15 @@ static void quantize_xrpow_ISO(const FLOAT *xp, gr_info *gi)
 	    quantize_xrpow_01(xp, gi, fi, sfb, xend);
 	    return;
 	}
-	    
+
 	xe = xp + gi->width[sfb];
 	if (xe > xend)
 	    xe = xend;
 	sfb++;
 	do {
 #ifdef TAKEHIRO_IEEE754_HACK
-	    fi[0].f = istep * xp[0] + (ROUNDFAC + MAGIC_FLOAT);
-	    fi[1].f = istep * xp[1] + (ROUNDFAC + MAGIC_FLOAT);
+	    fi[0].f = istep * xp[0] + (ROUNDFAC_NEAR + MAGIC_FLOAT);
+	    fi[1].f = istep * xp[1] + (ROUNDFAC_NEAR + MAGIC_FLOAT);
 	    xp += 2;
 	    fi[0].i -= MAGIC_INT;
 	    fi[1].i -= MAGIC_INT;
@@ -201,7 +201,7 @@ count_bit_ESC(
     const int * const end, 
           int         t1,
     const int         t2,
-          int * const s )
+          int * const s)
 {
     /* ESC-table is used */
     int linbits = ht[t1].xlen * 65536 + ht[t2].xlen;
@@ -267,7 +267,7 @@ count_bit_noESC_from2(
     const int *       ix, 
     const int * const end,
           int         t1,
-          int * const s )
+          int * const s)
 {
     /* No ESC-words */
     unsigned int sum = 0, sum2;
@@ -302,7 +302,7 @@ count_bit_noESC_from3(
     const int *       ix, 
     const int * const end,
           int         t1,
-          int * const s )
+          int * const s)
 {
     /* No ESC-words */
     int	sum1 = 0;
@@ -356,7 +356,7 @@ static
 int choose_table_nonMMX(
     const int *       ix, 
     const int * const end,
-          int * const s )
+          int * const s)
 {
     int max;
     int choice, choice2;
@@ -411,10 +411,7 @@ int choose_table_nonMMX(
 /*	      count_bit							 */
 /*************************************************************************/
 int
-noquant_count_bits(
-    const lame_internal_flags * const gfc, 
-    gr_info * const gi
-    )
+noquant_count_bits(const lame_internal_flags * const gfc, gr_info * const gi)
 {
     int i, a1, a2;
     int *const ix = gi->l3_enc;
@@ -860,7 +857,7 @@ scale_bitcount(gr_info * const gi)
     const int *tab;
 
     /* maximum values */
-    if ( gi->block_type == SHORT_TYPE ) {
+    if (gi->block_type == SHORT_TYPE) {
 	tab = scale_short;
 	if (gi->mixed_block_flag)
 	    tab = scale_mixed;
