@@ -301,10 +301,11 @@ int lame_init_params(lame_global_flags *gfp)
 
 
   /***************************************************************/
-  /* compute info needed for polyphase filter                    */
+  /* compute info needed for polyphase filter (filter type==0, default)   */
   /***************************************************************/
-  if (gfc->filter_type==0) {
+  {
     int band,maxband,minband;
+
     FLOAT8 freq;
     if (gfc->lowpass1 > 0) {
       minband=999;
@@ -407,10 +408,8 @@ int lame_init_params(lame_global_flags *gfp)
 
 
   /***************************************************************/
-  /* compute info needed for FIR filter */
+  /* compute info needed for FIR filter (filter_type==1) */
   /***************************************************************/
-  if (gfc->filter_type==1) {
-  }
 
 
 
@@ -618,8 +617,11 @@ int lame_init_params(lame_global_flags *gfp)
     brhist_init(gfp,1,14);
 
 #ifdef HAVEVORBIS
-  if (gfp->ogg) 
+  if (gfp->ogg) {
     lame_encode_ogg_init(gfp);
+    gfc->filter_type=-1;   /* vorbis claims not to need filters */
+    gfp->VBR=0;            /* ignore lame's various VBR modes */
+  }
 #endif
 
   return 0;

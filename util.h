@@ -307,9 +307,8 @@ typedef struct  {
   int	s3ind[CBANDS][2];
   int	s3ind_s[CBANDS][2];
 
-  /* dimension 1 extra because the end is marked with a -1 */
-  int	numlines_s[CBANDS+1];
-  int	numlines_l[CBANDS+1];
+  int	numlines_s[CBANDS];
+  int	numlines_l[CBANDS];
   
   /* frame analyzer    */
   FLOAT energy_save[4][HBLKSIZE];
