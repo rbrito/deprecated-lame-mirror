@@ -42,6 +42,7 @@ int main(int argc, char **argv)
   int i;
 #endif
 
+
   lame_init(&gf);                  /* initialize libmp3lame */
   if(argc==1) lame_usage(&gf,argv[0]);  /* no command-line args, print usage, exit  */
 
