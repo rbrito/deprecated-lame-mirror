@@ -39,6 +39,7 @@
 #include "VbrTag.h"
 #include "id3tag.h"
 #include "get_audio.h"
+#include "tables.h"
 
 
 
@@ -897,7 +898,7 @@ void lame_print_config(void)
     fprintf(stderr, "Autoconverting from stereo to mono. Setting encoding to mono mode.\n");
   }
   if (gf.resample_ratio!=1) {
-    fprintf(stderr,"Resampling:  input=%iHz  output=%iHz\n",
+    fprintf(stderr,"Resampling:  input=%ikHz  output=%ikHz\n",
 	    (int)samplerate,(int)resamplerate);
   }
   if (gf.highpass2>0.0)
@@ -908,7 +909,11 @@ void lame_print_config(void)
     fprintf(stderr, "Lowpass filter: cutoff above %g Hz, decreasing from %g Hz\n",
 	    gf.lowpass2*resamplerate*500, 
 	    gf.lowpass1*resamplerate*500);
-
+  if (gf.sfb21) {
+    int *scalefac_band_long = &sfBandIndex[info->sampling_frequency + (info->version * 3)].l[0];
+    fprintf(stderr, "sfb21 filter: sharp cutoff above %g Hz\n",
+            scalefac_band_long[SBPSY_l]/576.0*resamplerate*500);
+  }
 
   if (gf.gtkflag) {
     fprintf(stderr, "Analyzing %s \n",inPath);
