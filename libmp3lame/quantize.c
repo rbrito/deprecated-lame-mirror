@@ -1509,7 +1509,7 @@ calc_target_bits (
     mean_bits  = gfp->VBR_mean_bitrate_kbps * gfp->framesize * 1000;
     mean_bits /= gfp->out_samplerate;
     mean_bits -= gfc->sideinfo_len*8;
-    mean_bits /= gfc->mode_gr;
+    mean_bits /= (gfc->mode_gr*gfc->channels_out);
 
     /*
         res_factor is the percentage of the target bitrate that should
@@ -1538,22 +1538,22 @@ calc_target_bits (
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         for (ch = 0; ch < gfc->channels_out; ch++) {
-            targ_bits[gr][ch] = res_factor * (mean_bits / gfc->channels_out);
+            targ_bits[gr][ch] = res_factor * mean_bits;
             
             if (pe[gr][ch] > 700) {
                 int add_bits = (pe[gr][ch] - 700) / 1.4;
   
                 gr_info *cod_info = &l3_side->tt[gr][ch];
-                targ_bits[gr][ch] = res_factor * (mean_bits / gfc->channels_out);
+                targ_bits[gr][ch] = res_factor * mean_bits;
  
                 /* short blocks use a little extra, no matter what the pe */
                 if (cod_info->block_type == SHORT_TYPE) {
-                    if (add_bits < mean_bits/4) 
-                        add_bits = mean_bits/4; 
+                    if (add_bits < mean_bits/2)
+                        add_bits = mean_bits/2;
                 }
                 /* at most increase bits by 1.5*average */
-                if (add_bits > mean_bits*3/4)
-                    add_bits = mean_bits*3/4;
+                if (add_bits > mean_bits*3/2)
+                    add_bits = mean_bits*3/2;
                 else
                 if (add_bits < 0) 
                     add_bits = 0;
@@ -1565,7 +1565,7 @@ calc_target_bits (
     
     if (gfc->mode_ext == MPG_MD_MS_LR) 
         for (gr = 0; gr < gfc->mode_gr; gr++) {
-            reduce_side (targ_bits[gr], ms_ener_ratio[gr], mean_bits,
+            reduce_side (targ_bits[gr], ms_ener_ratio[gr], mean_bits*gfc->channels_out,
 			 MAX_BITS);
         }
 
