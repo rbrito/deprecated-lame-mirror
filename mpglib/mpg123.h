@@ -1,7 +1,12 @@
 #include        <stdio.h>
 #include        <string.h>
 #include        <signal.h>
+
+#ifdef PARENT_IS_SLASH
+#include "/util.h"
+#else
 #include "../util.h"
+#endif
 
 #if defined(__riscos__) && defined(FPA10)
 #include	"ymath.h"
