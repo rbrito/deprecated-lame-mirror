@@ -1,5 +1,9 @@
+
 #include "util.h"
-#include <assert.h>
+
+#ifdef LAME_STD_PRINT
+#include <stdarg.h>
+#endif
 
 /***********************************************************************
 *
@@ -125,7 +129,7 @@ int     found = 0;
     if(found)
         return(index);
     else {
-        fprintf(stderr,"Bitrate %dkbs not legal for %iHz output sampling.\n",
+        ERRORF("Bitrate %dkbs not legal for %iHz output sampling.\n",
                 bRate, samplerate);
         return(-1);     /* Error! */
     }
@@ -166,7 +170,7 @@ int  *version)
         *version = 0; return(2);
     }
     else {
-        fprintf(stderr, "SmpFrqIndex: %ldHz is not a legal sample rate\n", sRate);
+        ERRORF("SmpFrqIndex: %ldHz is not a legal sample rate\n", sRate);
         return(-1);     /* Error! */
     }
 }
@@ -374,7 +378,7 @@ int fill_buffer_downsample(lame_global_flags *gfp,short int *outbuf,int desired_
   filter_l=19;  /* must be odd */
   /* if resample_ratio = int, filter_l should be even */
   filter_l += intratio;
-  assert(filter_l +5 < BLACKSIZE);
+  LAME_ASSERT(filter_l +5 < BLACKSIZE);
   
   if (!gfc->fill_buffer_downsample_init) {
     gfc->fill_buffer_downsample_init=1;
@@ -405,7 +409,7 @@ int fill_buffer_downsample(lame_global_flags *gfp,short int *outbuf,int desired_
     /* blackmon filter.  by default, window centered at j+.5(filter_l%2) */
     /* but we want a window centered at time0.   */
     offset = ( time0 -gfc->itime[ch] - (j + .5*(filter_l%2)));
-    assert(fabs(offset)<=.500001);
+    LAME_ASSERT(fabs(offset)<=.500001);
     joff = floor((offset*2*BPC) + BPC +.5);
 
     xvalue=0;
@@ -514,4 +518,23 @@ int fill_buffer_upsample(lame_global_flags *gfp,short int *outbuf,int desired_le
   return k;
 }
 
+
+/***********************************************************************
+*
+*  Message Output
+*
+***********************************************************************/
+
+#ifdef LAME_STD_PRINT
+
+void
+lame_errorf(const char * s, ...)
+{
+  va_list args;
+  va_start(args, s);
+  vfprintf(stderr, s, args);
+  va_end(args);
+}
+
+#endif
 
