@@ -126,8 +126,6 @@ ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, i
 
     /* maximum allowed frame size.  dont use more than this number of
        bits, even if the frame has the space for them: */
-    maxmp3buf = (gfp->strict_ISO) ? 8*960 : 8*2047;
-
     /* Bouvigne suggests this more lax interpretation of the ISO doc 
        instead of using 8*960. */
     if (gfp->strict_ISO) {
@@ -135,14 +133,9 @@ ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, i
             maxmp3buf=8*((int)(320000/(gfp->out_samplerate / (FLOAT8)1152)/8 +.5));
         else
             maxmp3buf=8*((int)(160000/(gfp->out_samplerate / (FLOAT8)576)/8 +.5));
-    }
-
-
-
-
-
-
-
+    } else
+        /*all mp3 decoders should have enough buffer to handle this value: size of a 320kbps 32kHz frame*/
+        maxmp3buf = 8*1440;
 
 
     if ( frameLength > maxmp3buf ||  gfp->disable_reservoir ) {
