@@ -1238,12 +1238,12 @@ VBR_noise_shaping2 (
             cod_info->part2_3_length  = bits;
         }
         if (bits >= LARGE_BITS) /* Houston, we have a problem */
-            return -1;
+            return -2;
         cod_info->part2_3_length += cod_info->part2_length;
     }
 
     if (cod_info->part2_length >= LARGE_BITS) /* Houston, we have a problem */
-        return -1;
+        return -2;
         
     assert (cod_info->global_gain < 256);
     
