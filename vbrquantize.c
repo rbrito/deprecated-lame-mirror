@@ -366,22 +366,22 @@ VBR_quantize_granule(lame_global_flags *gfp,
 
   /* encode scalefacs */
   if ( gfp->version == 1 ) 
-    status=scale_bitcount(scalefac, cod_info);
+    status=scale_bitcount(cod_info, scalefac);
   else
-    status=scale_bitcount_lsf(scalefac, cod_info);
+    status=scale_bitcount_lsf(cod_info, scalefac);
 
   if (status!=0) {
     return;
   }
   
   /* quantize xr34 */
-  cod_info->part2_3_length = count_bits (gfc,cod_info,xr34,l3_enc);
+  cod_info->part2_3_length = count_bits (gfc, cod_info, xr34,l3_enc);
   if (cod_info->part2_3_length >= LARGE_BITS) return;
   cod_info->part2_3_length += cod_info->part2_length;
 
 
   if (gfc->use_best_huffman==1) {
-    best_huffman_divide(gfc, gr, ch, cod_info, l3_enc);
+    best_huffman_divide(gfc, cod_info, l3_enc, gr, ch);
   }
   return;
 }
@@ -940,7 +940,7 @@ VBR_quantize(lame_global_flags *gfp,
   totbits=0;
   for (gr = 0; gr < gfc->mode_gr; gr++) {
     for (ch = 0; ch < gfc->channels; ch++) {
-      best_scalefac_store(gfc,gr, ch, l3_enc, l3_side, scalefac);
+      best_scalefac_store(gfc, l3_side, scalefac, l3_enc, gr, ch);
       totbits += l3_side->gr[gr].ch[ch].tt.part2_3_length;
     }
   }

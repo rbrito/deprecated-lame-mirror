@@ -228,8 +228,8 @@ int inner_loop (
 
 INLINE 
 int loop_break ( 
-    III_scalefac_t *scalefac, 
-    gr_info        *cod_info )
+    gr_info        *cod_info,
+    III_scalefac_t *scalefac ) 
 {
     int i;
     u_int sfb;
@@ -688,33 +688,33 @@ void outer_loop(
       /* check to make sure we have not amplified too much */
       /* loop_break returns 0 if there is an unamplified scalefac */
       /* scale_bitcount returns 0 if no scalefactors are too large */
-      status = loop_break(scalefac, cod_info);
+      status = loop_break (cod_info, scalefac);
       if ( status == 0 ) {
         /* not all scalefactors have been amplified.  so these 
          * scalefacs are possibly valid.  encode them: */
         if ( gfp->version == 1 ) {
-          status = scale_bitcount(scalefac, cod_info);
+          status = scale_bitcount (cod_info, scalefac);
         } else {
-          status = scale_bitcount_lsf(scalefac, cod_info);
+          status = scale_bitcount_lsf (cod_info, scalefac);
         }
         if (status) {
           /*  some scalefactors are too large.  lets try setting
            * scalefac_scale=1 */
           if (gfc->noise_shaping > 1 && !cod_info->scalefac_scale) {
-            inc_scalefac_scale(gfc, cod_info, scalefac, xrpow);
+            inc_scalefac_scale (gfc, cod_info, scalefac, xrpow);
             status = 0;
           } else {
             if (cod_info->block_type == SHORT_TYPE
                && gfp->experimentalZ && gfc->noise_shaping > 1) {
-                inc_subblock_gain(gfc, cod_info, scalefac, xrpow);
-                status = loop_break(scalefac, cod_info);
+                inc_subblock_gain (gfc, cod_info, scalefac, xrpow);
+                status = loop_break (cod_info, scalefac);
             }
           }
           if (!status) {
             if ( gfp->version == 1 ) {
-              status = scale_bitcount(scalefac, cod_info);
+              status = scale_bitcount (cod_info, scalefac);
             } else {
-              status = scale_bitcount_lsf(scalefac, cod_info);
+              status = scale_bitcount_lsf (cod_info, scalefac);
             }
           }
         } /* status != 0 */
@@ -741,11 +741,11 @@ void outer_loop(
     }
 
   }    /* done with main iteration */
-  memcpy(scalefac, &save_scalefac, sizeof(III_scalefac_t));
-  memcpy(cod_info,&save_cod_info,sizeof(save_cod_info));
+  memcpy (cod_info, &save_cod_info, sizeof(save_cod_info) );
+  memcpy (scalefac, &save_scalefac, sizeof(III_scalefac_t));
   if (gfp->VBR==vbr_rh) {
     /* restore for reuse on next try */
-    memcpy(xrpow, save_xrpow, sizeof(save_xrpow));
+    memcpy (xrpow, save_xrpow, sizeof(save_xrpow));
   }
   cod_info->part2_3_length += cod_info->part2_length;
 
@@ -753,10 +753,10 @@ void outer_loop(
   /* finish up */
   assert( cod_info->global_gain < 256 );
 
-  best_noise[0]=best_noise_info.over_count;
-  best_noise[1]=best_noise_info.max_noise;
-  best_noise[2]=best_noise_info.over_noise;
-  best_noise[3]=best_noise_info.tot_noise;
+  best_noise[0] = best_noise_info.over_count;
+  best_noise[1] = best_noise_info.max_noise;
+  best_noise[2] = best_noise_info.over_noise;
+  best_noise[3] = best_noise_info.tot_noise;
 }
 
 
@@ -947,9 +947,9 @@ void iteration_loop (
                     &scalefac[gr][ch], xrpow, l3_enc[gr][ch], noise );
       }
 
-      best_scalefac_store(gfc,gr, ch, l3_enc, l3_side, scalefac);
+      best_scalefac_store(gfc, l3_side, scalefac, l3_enc,gr, ch);
       if (gfc->use_best_huffman==1) {
-        best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
+        best_huffman_divide(gfc, cod_info, l3_enc[gr][ch], gr, ch);
       }
       assert((int)cod_info->part2_3_length < 4096);
 
@@ -1141,15 +1141,15 @@ void ABR_iteration_loop (
     for (ch = 0; ch < gfc->channels; ch++) {
       cod_info = &l3_side->gr[gr].ch[ch].tt;
 
-      best_scalefac_store(gfc, gr, ch, l3_enc, l3_side, scalefac);
+      best_scalefac_store(gfc, l3_side, scalefac, l3_enc, gr, ch);
       if (gfc->use_best_huffman==1 ) {
-        best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
+        best_huffman_divide(gfc, cod_info, l3_enc[gr][ch], gr, ch);
       }
       if (gfp->gtkflag) {
         set_pinfo(gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch],
                   xr[gr][ch], l3_enc[gr][ch], gr, ch);
       }
-      ResvAdjust (gfp,cod_info, l3_side, mean_bits);
+      ResvAdjust (gfp, cod_info, l3_side, mean_bits);
       /* set the sign of l3_enc from the sign of xr */
       for ( i = 0; i < 576; i++) {
         if (xr[gr][ch][i] < 0) { l3_enc[gr][ch][i] *= -1; }
@@ -1495,12 +1495,12 @@ void VBR_iteration_loop (
       }
       /*  try some better scalefac storage
        */
-      best_scalefac_store(gfc, gr, ch, l3_enc, l3_side, scalefac);
+      best_scalefac_store(gfc, l3_side, scalefac, l3_enc, gr, ch);
       
       /*  best huffman_divide may save some bits too
        */
       if (gfc->use_best_huffman==1) {
-        best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
+        best_huffman_divide(gfc, cod_info, l3_enc[gr][ch], gr, ch);
       }      
       /*  update reservoir status after FINAL quantization/bitrate
        */

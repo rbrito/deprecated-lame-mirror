@@ -302,7 +302,10 @@ static int choose_table(int *ix, int *end, int *s)
 */
 
 
-int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
+int count_bits_long (
+    lame_internal_flags *gfc, 
+    gr_info             *gi,
+    int                  ix[576] )
 {
     int i, a1, a2;
     int bits = 0;
@@ -386,7 +389,11 @@ int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
 
 
 
-int count_bits(lame_internal_flags *gfc, gr_info *cod_info, FLOAT8 *xr,int *ix)  
+int count_bits (
+    lame_internal_flags *gfc,
+    gr_info             *cod_info,
+    FLOAT8              *xr, 
+    int                 *ix ) 
 {
   int bits=0,i;
   /* since quantize_xrpow uses table lookup, we need to check this first: */
@@ -408,7 +415,7 @@ int count_bits(lame_internal_flags *gfc, gr_info *cod_info, FLOAT8 *xr,int *ix)
     quantize_xrpow_ISO(xr, ix, cod_info);
 #endif
 
-  bits=count_bits_long(gfc, ix, cod_info);
+  bits=count_bits_long(gfc, cod_info, ix);
 
   return bits;
 }
@@ -489,7 +496,12 @@ int r01_bits[],int r01_div[],int r0_tbl[],int r1_tbl[])
 
 
 
-void best_huffman_divide(lame_internal_flags *gfc, int gr, int ch, gr_info *gi, int *ix)
+void best_huffman_divide (
+    lame_internal_flags *gfc,
+    gr_info             *gi,
+    int                 *ix,
+    int                  gr,
+    int                  ch )
 {
     int i, a1, a2;
     gr_info cod_info2;
@@ -629,10 +641,13 @@ Find the optimal way to store the scalefactors.
 Only call this routine after final scalefactors have been
 chosen and the channel/granule will not be re-encoded.
  */
-void best_scalefac_store(lame_internal_flags *gfc,int gr, int ch,
-			 int l3_enc[2][2][576],
-			 III_side_info_t *l3_side,
-			 III_scalefac_t scalefac[2][2])
+void best_scalefac_store (
+    lame_internal_flags *gfc,
+    III_side_info_t     *l3_side,
+    III_scalefac_t       scalefac[2][2],
+    int                  l3_enc[2][2][576],
+    int                  gr, 
+    int                  ch )
 {
     /* use scalefac_scale if we can */
     gr_info *gi = &l3_side->gr[gr].ch[ch].tt;
@@ -690,9 +705,9 @@ void best_scalefac_store(lame_internal_flags *gfc,int gr, int ch,
 	    gi->scalefac_scale = 1;
 	    gi->part2_length = 99999999;
 	    if (gfc->mode_gr == 2) {
-	        scale_bitcount(&scalefac[gr][ch], gi);
+	        scale_bitcount(gi, &scalefac[gr][ch]);
 	    } else {
-		scale_bitcount_lsf(&scalefac[gr][ch], gi);
+		scale_bitcount_lsf(gi, &scalefac[gr][ch]);
 	    }
 	}
     }
@@ -721,7 +736,9 @@ static int scale_mixed[16];
 
 /* Also calculates the number of bits necessary to code the scalefactors. */
 
-int scale_bitcount( III_scalefac_t *scalefac, gr_info *cod_info)
+int scale_bitcount (
+    gr_info        *cod_info,
+    III_scalefac_t *scalefac )
 {
     int i, k, sfb, max_slen1 = 0, max_slen2 = 0, ep = 2;
 
@@ -811,7 +828,9 @@ static const unsigned int max_range_sfac_tab[6][4] =
 /*  This is reverse-engineered from section 2.4.3.2 of the MPEG2 IS,     */
 /* "Audio Decoding Layer III"                                            */
 
-int scale_bitcount_lsf(III_scalefac_t *scalefac, gr_info *cod_info)
+int scale_bitcount_lsf (
+    gr_info        *cod_info,
+    III_scalefac_t *scalefac )
 {
     int table_number, row_in_table, partition, nr_sfb, window, over;
     int i, sfb, max_sfac[ 4 ];
