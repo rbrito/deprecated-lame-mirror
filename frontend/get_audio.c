@@ -79,6 +79,7 @@ int     pcmbitwidth;
 unsigned int num_samples_read;
 FILE   *musicin;
 
+char id3tag_orig[128];
 
 #ifdef AMIGA_MPEGA
 int     lame_decode_initfile(const char *fullname,
@@ -385,7 +386,7 @@ get_audio_common( lame_global_flags * const gfp,
 	}
     }
 
-    /* LAME mp3 and ogg output 16bit -  convert to int, if necessary */
+    /* LAME mp3 is output 16bit -  convert to int, if necessary */
     if( input_format == sf_mp1 || input_format == sf_mp2 || 
         input_format == sf_mp3 || input_format == sf_ogg ) {
 	if( buffer != NULL ) {
@@ -456,7 +457,7 @@ read_samples_ogg(lame_global_flags * const gfp,
 }
 
 
-int
+static int
 read_samples_mp3(lame_global_flags * const gfp,
                  FILE * const musicin, short int mpg123pcm[2][1152], int stereo)
 {
@@ -464,9 +465,8 @@ read_samples_mp3(lame_global_flags * const gfp,
 #if defined(AMIGA_MPEGA)  ||  defined(HAVE_MPGLIB)
     static const char type_name[] = "MP3 file";
 
-    out =
-        lame_decode_fromfile(musicin, mpg123pcm[0], mpg123pcm[1],
-                             &mp3input_data);
+    out = lame_decode_fromfile(musicin, mpg123pcm[0], mpg123pcm[1],
+			       &mp3input_data);
     /*
      * out < 0:  error, probably EOF
      * out = 0:  not possible with lame_decode_fromfile() ???
