@@ -944,7 +944,7 @@ lame_print_internals( const lame_global_flags * gfp )
     MSGF( gfc, "\tATH: %s\n", pc );
     MSGF( gfc, "\t ^ type: %d\n", gfp->ATHtype );
     if (gfp->ATHtype == 4)
-	MSGF( gfc, "\t ^ shape: %g%s\n", gfp->ATHcurve);
+	MSGF( gfc, "\t ^ shape: %g\n", gfp->ATHcurve);
     MSGF( gfc, "\t ^ adjust type: %d\n", gfc->ATH.use_adjust );
     MSGF( gfc, "\t ^ adjust sensitivity power: %d\n", gfc->ATH.aa_sensitivity_p );
     MSGF( gfc, "\t ^ adapt threshold type: %d\n", gfp->athaa_loudapprox );
