@@ -1125,43 +1125,6 @@ CBR_bitalloc(
 }
 
 
-/********************************************************************
- *
- *  ABR_iteration_loop()
- *
- *  encode a frame with a disired average bitrate
- *
- *  mt 2000/05/31
- *
- ********************************************************************/
-void 
-ABR_iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
-{
-    int gr, max_bits, min_bits;
-    FLOAT factor;
-
-    gfc->bitrate_index = 0;
-    factor = (getframebytes(gfc)*8/gfc->mode_gr/gfc->channels_out + 300.0)
-	*(1.0/700.0);
-    if (gfc->substep_shaping & 1)
-	factor *= 1.1;
-
-    gfc->bitrate_index = gfc->VBR_max_bitrate;
-    max_bits = ResvFrameBegin(gfc, getframebytes(gfc)) / gfc->mode_gr;
-    gfc->bitrate_index = 1;
-    min_bits = ResvFrameBegin(gfc, getframebytes(gfc)) / gfc->mode_gr;
-    /* check hard limit per granule (by spec) */
-    if (max_bits > MAX_BITS)
-	max_bits = MAX_BITS;
-    if (min_bits > MAX_BITS)
-	min_bits = MAX_BITS;
-
-    for (gr = 0; gr < gfc->mode_gr; gr++)
-	CBR_bitalloc(gfc, ratio[gr], min_bits, max_bits, factor, gr);
-
-    finish_VBR_coding(gfc);
-}
-
 /************************************************************************
  *
  *      iteration_loop()
@@ -1644,6 +1607,37 @@ VBR_iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 }
 
 
+
+/********************************************************************
+ *
+ *  ABR_iteration_loop()
+ *
+ *  encode a frame with a desired average bitrate
+ *  (VBR encoding with changing noise threshold. 2004/Nov/21 tt)
+ *
+ ********************************************************************/
+void 
+ABR_iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
+{
+    int bytes, threshold;
+    FLOAT fact;
+    /* encode */
+    VBR_iteration_loop(gfc, ratio);
+
+    /* adjust threshold for the next frame */
+    bytes = gfc->mean_bitrate_kbps
+	- bitrate_table[gfc->version][gfc->bitrate_index];
+    gfc->bytes_diff -= bytes * gfc->mode_gr * (1000*576/8);
+
+    threshold = gfc->mean_bitrate_kbps * gfc->mode_gr * (1000*576/8/10);
+
+    fact = (FLOAT)gfc->bytes_diff / gfc->frameNum;
+    if (fact > threshold) {
+	gfc->masking_lower *= 1.01;
+    } else if (fact < -threshold) {
+	gfc->masking_lower *= 0.99;
+    }
+}
 
 #ifndef NOANALYSIS
 /************************************************************************

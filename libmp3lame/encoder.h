@@ -275,7 +275,8 @@ struct lame_internal_flags {
 
     unsigned long Class_ID;
     int alignment;
-    int frameNum;                   /* number of frames encoded             */
+    int frameNum;                   /* number of frames encoded */
+    int bytes_diff;                 /* for ABR encoding */
 
     sample_t mfbuf[MAX_CHANNELS][MFSIZE];
     int mf_size;
