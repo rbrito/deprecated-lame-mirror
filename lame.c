@@ -530,7 +530,7 @@ int lame_init_params(lame_global_flags *gfp)
     gfc->use_best_huffman=0;
   }
 
-  if (gfp->quality==4) gfp->quality=2;
+  if (gfp->quality==4) gfp->quality=3;
 
   if (gfp->quality==3) {
     gfc->filter_type=0;

@@ -75,7 +75,8 @@ void ResvMaxBits(lame_global_flags *gfp, int mean_bits, int *targ_bits, int *ext
      * than FhG.  It could simple be mean_bits/15, but this was rigged
      * to always produce 100 (the old value) at 128kbs */
     /*    *targ_bits -= (int) (mean_bits/15.2);*/
-    *targ_bits -= .1*mean_bits;
+    if (!gfp->disable_reservoir) 
+      *targ_bits -= .1*mean_bits;
   }
 
 

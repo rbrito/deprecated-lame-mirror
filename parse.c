@@ -261,7 +261,7 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
   FLOAT srate;
   int   err = 0, i = 0;
   int autoconvert=0;
-  int user_quality=0;
+  int user_quality=-1;
   char *programName = argv[0]; 
 
   gfp->inPath[0] = '\0';   
@@ -832,7 +832,7 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
   else gfp->num_channels=2;
 
   /* user specified a quality value.  override any defaults set above */
-  if (user_quality)   gfp->quality=user_quality;
+  if (user_quality>=0)   gfp->quality=user_quality;
 
   if (gfp->free_format) {
     if (gfp->brate<8) {
