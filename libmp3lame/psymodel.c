@@ -439,35 +439,6 @@ fft_long(lame_internal_flags * const gfc,
 }
 
 
-/* psycho_loudness_approx
-   jd - 2001 mar 12
-in:  energy   - BLKSIZE/2 elements of frequency magnitudes ^ 2
-     gfp      - for precalculated equal loudness curve, ATH.eql_w 
-returns: loudness^2 approximation, a positive value roughly tuned for a value
-         of 1.0 for signals near clipping.
-notes:   When calibrated, feeding this function binary white noise at sample
-         values +32767 or -32768 should return values that approach 3.
-         ATHformula is used to approximate an equal loudness curve.
-future:  Data indicates that the shape of the equal loudness curve varies
-         with intensity.  This function might be improved by using an equal
-         loudness curve shaped for typical playback levels (instead of the
-         ATH, that is shaped for the threshold).  A flexible realization might
-         simply bend the existing ATH curve to achieve the desired shape.
-         However, the potential gain may not be enough to justify an effort.
-*/
-static FLOAT
-psycho_loudness_approx( FLOAT *energy, lame_internal_flags *gfc )
-{
-    int i;
-    FLOAT loudness_power = 0.0;
-
-    /* apply weights to power in freq. bands*/
-    for (i = 0; i < BLKSIZE/2; i++)
-	loudness_power += energy[i] * gfc->ATH.eql_w[i];
-
-    return loudness_power;
-}
-
 /*************************************************************** 
  * compute interchannel masking effects
  ***************************************************************/
@@ -1239,9 +1210,14 @@ L3psycho_anal_ns(
 	/*********************************************************************
 	 * compute loudness approximation (used for ATH auto-level adjustment) 
 	 *********************************************************************/
-	if (ch < 2) /*no loudness for mid/side ch*/
-	    gfc->loudness_next[gr][ch]
-		= psycho_loudness_approx(fftenergy, gfc);
+	if (ch < 2) { /*no loudness for mid/side ch*/
+	    int i;
+	    FLOAT loudness = gfc->loudness_next[gr];
+	    /* apply weights to power in freq. bands*/
+	    for (i = 0; i < BLKSIZE/2; i++)
+		loudness += fftenergy[i] * gfc->ATH.eql_w[i];
+	    gfc->loudness_next[gr] = loudness;
+	}
 
 #ifndef NOANALYSIS
 	if (gfc->pinfo) {
@@ -1444,16 +1420,10 @@ L3psycho_anal_ns(
 static void
 adjust_ATH(lame_internal_flags* const  gfc)
 {
-    FLOAT max_pow
-	= gfc->loudness_next[0][0]
-	+ gfc->loudness_next[0][gfc->channels_out-1];
-
-    if( gfc->mode_gr == 2 ) {
-	FLOAT gr2_max
-	    = gfc->loudness_next[1][0]
-	    + gfc->loudness_next[1][gfc->channels_out-1];
-	max_pow = Max( max_pow, gr2_max );
-    }
+    FLOAT max_pow = gfc->loudness_next[0];
+    if (gfc->mode_gr == 2 && max_pow < gfc->loudness_next[1])
+	max_pow = gfc->loudness_next[1];
+    gfc->loudness_next[0] = gfc->loudness_next[1] = 0.0;
 
     /* jd - 2001 mar 31, jun 30 */
     /* user tuning of ATH adjustment region */

@@ -1371,11 +1371,18 @@ int psymodel_init(lame_global_flags *gfp)
     gfc->ATH.adjust = 0.01; /* minimum, for leading low loudness */
     gfc->ATH.adjust_limit = 1.0; /* on lead, allow adjust up to maximum */
 
-    /* init. for loudness approx. -jd 2001 mar 27*/
-    gfc->loudness_next[0][0] = gfc->loudness_next[0][1]
-	= gfc->loudness_next[1][0] = gfc->loudness_next[1][1]
-	= 0.0;
-    /* compute equal loudness weights */
+    /* compute equal loudness weights jd - 2001 mar 12
+       notes:
+         ATHformula is used to approximate an equal loudness curve.
+       future:
+         Data indicates that the shape of the equal loudness curve varies
+	 with intensity.  This function might be improved by using an equal
+	 loudness curve shaped for typical playback levels (instead of the
+	 ATH, that is shaped for the threshold).  A flexible realization might
+	 simply bend the existing ATH curve to achieve the desired shape.
+	 However, the potential gain may not be enough to justify an effort.
+    */
+    gfc->loudness_next[0] = gfc->loudness_next[1] = 0.0;
     eql_balance = 0.0;
     for( i = 0; i < BLKSIZE/2; ++i ) {
 	FLOAT freq = gfp->out_samplerate * i / BLKSIZE;
