@@ -274,7 +274,6 @@ void timestatus_klemm(lame_global_flags *gfp)
 
 void decoder_progress ( lame_global_flags* gfp, mp3data_struct *mp3data )
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
 #if 0
     static int  last_total = -1;
     static int  last_kbps  = -1;
