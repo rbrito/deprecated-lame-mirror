@@ -506,7 +506,7 @@ lame_init_qval(lame_global_flags * gfp)
     /* modifications to the above rules: */
 
     /* -Z option enables scalefactor_scale: */
-    if (gfp->experimentalZ) {
+    if (gfp->experimentalZ > 0) {
         gfc->noise_shaping = 2;
     }
 
@@ -1071,14 +1071,19 @@ lame_init_params(lame_global_flags * const gfp)
         else
             gfc->ATH->use_adjust = gfp->adjust_type;
         
-        if (gfp->ATHtype == -1) gfp->ATHtype = 4;
+        if (gfp->ATHtype < 0) gfp->ATHtype = 4;
         gfp->allow_diff_short = 1;
         if (gfp->quality < 0) gfp->quality = 0;     // the usual stuff at level 0
         if (gfp->quality > 7) {
             gfp->quality = 7;     // needs psymodel
             ERRORF( gfc, "VBR needs a psymodel, switching to quality level 7\n");
         }
-        gfp->experimentalY = gfp->experimentalY ? 0 : 1; // here -Y turns -Y off, so on by default       
+
+        // on/off switches different from usual defaults
+        if (gfp->useTemporal   < 0 ) gfp->useTemporal   = 0;  // off by default
+        if (gfp->experimentalY < 1 ) gfp->experimentalY = 1;  // on by default
+        else                         gfp->experimentalY = 0;  // turned off if given
+          
         break;
         
     case vbr_mt:
@@ -1184,6 +1189,7 @@ lame_init_params(lame_global_flags * const gfp)
     
     if ( gfp->adapt_thres_type < 0 ) gfp->adapt_thres_type = 2;
     
+    if (gfp->useTemporal < 0 ) gfp->useTemporal = 1;  // on by default
     return 0;
 }
 
@@ -1370,8 +1376,8 @@ lame_print_internals( const lame_global_flags * gfp )
     
     if ( gfc->nsPsy.use )
     MSGF( gfc, "\texperimental psy tunings by Naoki Shibata\n" ); 
-    if ( gfp->useTemporal )
-    MSGF( gfc, "\tusing temporal masking effect\n" );
+    pc = gfp->useTemporal ? "yes" : "no";
+    MSGF( gfc, "\tusing temporal masking effect: %s\n", pc );
     MSGF( gfc, "\t...\n" );
     
     /*  that's all ?
@@ -1967,7 +1973,7 @@ lame_init_old(lame_global_flags * gfp)
     gfp->adapt_thres_type = -1;	/* 1 = adaptive threshold, with flat */
 				/*     approximation for loudness.   */
     gfp->adapt_thres_level = 0.0; /* no offset */
-    gfp->useTemporal = 1;
+    gfp->useTemporal = -1;
 
     /* The reason for
      *       int mf_samples_to_encode = ENCDELAY + 288;

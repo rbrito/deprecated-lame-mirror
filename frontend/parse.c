@@ -708,6 +708,15 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
             (void) lame_set_ATHtype( gfp, 3 );
             gfp->VBR_min_bitrate_kbps=112;
 		
+		T_ELIF ("remix")
+            gfp->VBR = vbr_mtrh; 
+            gfp->VBR_q = 3;
+            (void) lame_set_quality( gfp, 2 );
+            gfp->lowpassfreq = 19500;
+            (void) lame_set_mode( gfp, JOINT_STEREO );
+            (void) lame_set_ATHtype( gfp, 3 );
+            gfp->VBR_min_bitrate_kbps=112;
+		
 		T_ELIF ("abr")
 		    argUsed=1;
 		    gfp->VBR = vbr_abr; 
@@ -936,6 +945,10 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 		
 		T_ELIF ("notemp")
 		    (void) lame_set_useTemporal( gfp, 0 );
+
+		T_ELIF ("temporal-masking")
+                    argUsed = 1;
+		    (void) lame_set_useTemporal( gfp, atoi(nextArg)?1:0 );
 
 		T_ELIF ("nspsytune")
 		    gfp->exp_nspsytune |= 1;
