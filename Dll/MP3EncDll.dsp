@@ -187,6 +187,10 @@ SOURCE=..\lame.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\loopold.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\newmdct.c
 # End Source File
 # Begin Source File
@@ -208,6 +212,10 @@ SOURCE=..\psymodel.c
 # Begin Source File
 
 SOURCE=..\psymodel.h
+# End Source File
+# Begin Source File
+
+SOURCE="..\quantize-pvt.c"
 # End Source File
 # Begin Source File
 

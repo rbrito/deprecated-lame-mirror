@@ -246,10 +246,6 @@ SOURCE=.\main.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\mp3x.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\newmdct.c
 # End Source File
 # Begin Source File

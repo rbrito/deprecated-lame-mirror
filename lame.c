@@ -285,6 +285,7 @@ void lame_parse_args(int argc, char **argv)
 	  disp_brhist = 0;
 #endif
 	}
+#ifndef _BLADEDLL
 	/* options for ID3 tag */
  	else if (strcmp(token, "tt")==0) {
  		id3tag.used=1;      argUsed = 1;
@@ -323,6 +324,7 @@ void lame_parse_args(int argc, char **argv)
  		id3tag.used=1; argUsed = 1;
   		strncpy(id3tag.genre, &c, 1);
 	       }
+#endif
 	else
 	  {
 	    fprintf(stderr,"%s: unrec option --%s\n",
