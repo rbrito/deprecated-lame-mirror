@@ -485,7 +485,7 @@ static const int order[] = {
 
 
 
-void mdct_init48(lame_global_flags *gfp)
+void mdct_init48()
 {
     int i, k;
     FLOAT8 sq;
@@ -573,7 +573,7 @@ void mdct_init48(lame_global_flags *gfp)
     }
 }
 
-void mdct_sub48(lame_global_flags *gfp,
+void mdct_sub48(lame_internal_flags *gfc,
     sample_t *w0, sample_t *w1,
     FLOAT8 mdct_freq[2][2][576],
     III_side_info_t *l3_side)
@@ -581,13 +581,12 @@ void mdct_sub48(lame_global_flags *gfp,
     int gr, k, ch;
     sample_t *wk;
     static int init = 0;
-    lame_internal_flags *gfc=gfp->internal_flags;
 
     FLOAT8 work[18];
 
     if ( gfc->mdct_sub48_init == 0 ) {
         gfc->mdct_sub48_init=1;
-	mdct_init48(gfp);
+	mdct_init48();
 	init++;
     }
 
