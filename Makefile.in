@@ -383,7 +383,6 @@ lib_sources = \
 	fft.c \
         id3tag.c \
         lame.c \
-        lametime.c \
         newmdct.c \
         parse.c \
 	psymodel.c \
@@ -398,6 +397,7 @@ lib_sources = \
         version.c
 
 c_sources = @CONFIG_SOURCES@ \
+        lametime.c \
 	timestatus.c \
 	portableio.c \
 	ieeefloat.c \
@@ -407,7 +407,7 @@ c_sources = @CONFIG_SOURCES@ \
 lib_obj = $(lib_sources:.c=.o)
 
 OBJ = $(c_sources:.c=.o)
-DEP = $(c_sources:.c=.d)
+DEP = $(c_sources:.c=.d) $(lib_sources:.c=.d)
 
 
 
@@ -500,7 +500,7 @@ clean:
 	-del $(PGM)
   else
 	-$(RM_F) $(gtk_obj) $(OBJ) $(DEP) $(PGM) main.o rtp.o mp3rtp mp3rtp.o \
-         mp3x.o mp3x libmp3lame.a $(lib_obj) \
+         mp3x.o mp3x libmp3lame.a $(lib_obj) main.d rtp.d mp3rtp.d \
          $(SHARED_LIB) $(SHARED_LIB_MAJOR) $(SHARED_LIB_MINOR)
   endif
 

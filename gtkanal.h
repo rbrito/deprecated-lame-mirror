@@ -22,6 +22,7 @@
 #ifndef LAME_GTKANAL_H
 #define LAME_GTKANAL_H
 
+#ifndef NO_ANALYSIS
 #include "lame.h"
 #include "encoder.h"
 #include "l3side.h"
@@ -91,4 +92,5 @@ int gtkcontrol(lame_global_flags *gfp);
 extern plotting_data *pinfo;
 extern int gtkflag;
 
+#endif
 #endif
