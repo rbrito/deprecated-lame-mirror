@@ -589,7 +589,6 @@ int lame_init_params ( lame_global_flags* const gfp )
   /****************************************************************/
   /* if a filter has not been enabled, see if we should add one: */
   /****************************************************************/
-#define KLEMM_42
 #ifdef KLEMM_42
     if ( gfp->lowpassfreq == 0 ) {
         double  lowpass;

@@ -350,15 +350,6 @@ int L3psycho_anal( lame_global_flags * gfp,
   if (gfp->mode == MPG_MD_JOINT_STEREO) numchn=4;
 
   if (gfc->nsPsy.use) {
-#ifdef KLEMM_04
-    static const sample_t fircoef[] = {
-      0,-0.00851586, 0  , 0.0209036,
-      0,-0.0438162 , 0  , 0.0931738,
-      0,-0.313819  , 0.5,-0.313819,
-      0, 0.0931738 , 0  ,-0.0438162,
-      0, 0.0209036 , 0  ,-0.00851586,
-    };
-#else    
     static const FLOAT fircoef[] = {
       -8.65163e-18,-0.00851586,-6.74764e-18, 0.0209036,
       -3.36639e-17,-0.0438162 ,-1.54175e-17, 0.0931738,
@@ -367,15 +358,10 @@ int L3psycho_anal( lame_global_flags * gfp,
       -3.36639e-17, 0.0209036 ,-6.74764e-18,-0.00851586,
       -8.65163e-18,
     };
-#endif
 
     for(chn=0;chn<gfc->channels_out;chn++)
       {
-#ifdef KLEMM_04
-	sample_t firbuf [576 + 576/3 + NSFIRLEN];
-#else      
 	FLOAT firbuf[576+576/3+NSFIRLEN];
-#endif	
 
 	/* apply high pass filter of fs/4 */
 	
@@ -383,17 +369,12 @@ int L3psycho_anal( lame_global_flags * gfp,
 	  firbuf[i+NSFIRLEN] = buffer[chn][576-350+(i)];
 
 	for(i=0;i<576+576/3-NSFIRLEN;i++)
-#ifdef KLEMM_04
-	    ns_hpfsmpl [chn] [i] = scalar20 ( fircoef, firbuf+i );
-#else
           {
 	    FLOAT sum = 0;
 	    for(j=0;j<NSFIRLEN;j++)
 	      sum += fircoef[j] * firbuf[i+j];
 	    ns_hpfsmpl[chn][i] = sum;
 	  }
-#endif	    
-
 	for(;i<576+576/3;i++)
 	  ns_hpfsmpl[chn][i] = 0;
       }
@@ -1422,103 +1403,6 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 {
   lame_internal_flags *gfc=gfp->internal_flags;
 
-#ifdef KLEMM_43
-
-    FLOAT8          bval_l [CBANDS];
-    FLOAT8          bval_s [CBANDS];
-    int             cbmax;
-    int             i;
-    int             j;
-    int             index = sfreq==16000 ? 0 : sfreq==22050 ? 1 : sfreq==24000 ? 2 : sfreq==32000 ? 3 : sfreq==44100 ? 4 : sfreq==48000 ? 5 : -1;
-    const type5_t*  ti    = table5 + index;
-
-    /******************************************************************/
-    /* Read long block data (part 1)                                  */
-    /******************************************************************/
-
-    *npart_l_orig = cbmax = ti->len1;
-
-    for ( i = 0; i < cbmax; i++ ) {
-        if ( i != ti->tab1[i].no ) {
-            ERRORF ("psy_data(%u): idx=%d  table idx=%f\a\n", 1, i, ti->tab1[i].no );
-            return -1;
-        }
-        numlines_l  [i] = ti->tab1[i].width;
-        minval      [i] = exp ( -LN_TO_LOG10 * ti->tab1[i].minval_2 / 2. );
-        // qthr_l [i] = ti->tab1[i].quiet_thr;
-        // norm_l [i] = ti->tab1[i].norm;
-        // bval_l [i] = ti->tab1[i].bark;
-    }
-
-    /******************************************************************/
-    /* Read short block data (part 2)                                 */
-    /******************************************************************/
-
-    *npart_s_orig = cbmax = ti->len2;
-
-    for ( i = 0; i < cbmax; i++ ) {
-        if ( i != ti->tab2[i].no ) {
-            ERRORF ("psy_data(%u): idx=%d  table idx=%f\a\n", 2, i, ti->tab2[i].no );
-            return -1;
-        }
-        numlines_s [i]  = ti->tab2[i].width;
-        // qthr_s [i] = ti->tab2[i].quiet_thr;
-        // norm_s [i] = ti->tab2[i].norm;
-        SNR [i]         = ti->tab2[i].SNR;
-        // bval_s [i] = ti->tab2[i].bark;
-        if ( SNR[i] <= 0 ) {
-            ERRORF ("psy_data(%u): idx=%d  bad SNR: %f\a\n", 2, i, SNR[i] );
-            return -1;
-        }
-    }
-
-    /******************************************************************/
-    /* Read long block data for converting threshold                  */
-    /* calculation partitions to scale factor bands (part 3)          */
-    /******************************************************************/
-
-    cbmax = ti->len3;
-    assert (cbmax == 21);
-    for ( i = 0; i < cbmax; i++ ) {
-        if ( i != ti->tab3[i].no ) {
-            ERRORF ("psy_data(%u): idx=%d  table idx=%f\a\n", 3, i, ti->tab3[i].no );
-            return -1;
-        }
-        bu_l [i] = ti->tab3[i].bu;
-        bo_l [i] = ti->tab3[i].bo;
-        w1_l [i] = ti->tab3[i].w1_576 / 576.;
-        w2_l [i] = ti->tab3[i].w2_576 / 576.;
-        
-        if ( i != 0  &&  fabs (1.-w1_l[i]-w2_l[i-1] > 1.e-6 ) ) {
-            ERRORF ("psy_data(%u): idx=%d  sum error: w1=%f w2=%f\a\n", 3, i, w1_l [i], w2_l [i-1] );
-            return -1;
-        }
-    }
-    
-    /******************************************************************/
-    /* Read short block data for converting threshold                 */
-    /* calculation partitions to scale factor bands (part 4)          */
-    /******************************************************************/
-
-    cbmax = ti->len4;
-    assert (cbmax == 12);
-    for ( i = 0; i < cbmax; i++ ) {
-        if ( i != ti->tab4[i].no ) {
-            ERRORF ("psy_data(%u): idx=%d  table idx=%f\a\n", 4, i, ti->tab4[i].no );
-            return -1;
-        }
-        bu_s [i] = ti->tab4[i].bu;
-        bo_s [i] = ti->tab4[i].bo;
-        w1_s [i] = ti->tab4[i].w1_576 / 576.;
-        w2_s [i] = ti->tab4[i].w2_576 / 576.;
-        
-        if ( i != 0  &&  fabs (1.-w1_s[i]-w2_s[i-1] > 1.e-6 ) ) {
-            ERRORF ("psy_data(%u): idx=%d  sum error: w1=%f w2=%f\a\n", 3, i, w1_s [i], w2_s [i-1] );
-            return -1;
-        }
-    }
-
-#else /* KLEMM_43 */
 
   FLOAT8 freq_tp;
   FLOAT8 bval_l[CBANDS], bval_s[CBANDS];
@@ -1680,8 +1564,6 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
   /* done reading table data */
   /******************************************************************/
 
-
-#endif  /* KLEMM_43 */
 
 
 #ifdef NOTABLES

@@ -371,10 +371,12 @@ typedef struct {
   int mode_ext;           /* mp3 frame type */
   int framesize;          /* number of samples per mp3 frame */
 
-  /* this data is not currently computed by the mpglib routines: */
+  /* this data is only computed if mpglib detects a Xing VBR header */
   unsigned long nsamp;    /* number of samples in mp3 file.  */
-  int framenum;           /* frames decoded counter */
   int totalframes;        /* total number of frames in mp3 file */
+
+  /* this data is not currently computed by the mpglib routines: */
+  int framenum;           /* frames decoded counter */
 } mp3data_struct;
 
 
@@ -398,6 +400,7 @@ int CDECL lame_decode1(unsigned char *mp3buf,int len,short pcm_l[],short pcm_r[]
 int CDECL lame_decode1_headers(unsigned char *mp3buf,int len,short pcm_l[],short pcm_r[],
 mp3data_struct *mp3data);
 
+#if 0
 /* Also useful for decoding is the ability to parse Xing VBR headers: */
 #define NUMTOCENTRIES 100
 typedef struct
@@ -413,7 +416,7 @@ typedef struct
 }   VBRTAGDATA;
 
 int CDECL GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf);
-
+#endif
 
 
 
