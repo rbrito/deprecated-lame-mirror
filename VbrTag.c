@@ -391,10 +391,10 @@ int PutVbrTag(char* lpszFileName,int nVbrScale)
         for (i=1;i<NUMTOCENTRIES;i++) /* Don't touch zero point... */
         {
                 /* Calculate frame from given percentage */
-                int frameNum=floor(0.01*i*nVbrNumFrames);
+                int frameNum=(int)(floor(0.01*i*nVbrNumFrames));
 
                 /*  Calculate relative file postion, normalized to 0..256!(?) */
-                float fRelStreamPos=256.0*(float)pVbrFrames[frameNum]/(float)lFileSize;
+                float fRelStreamPos=256.0f*(float)pVbrFrames[frameNum]/(float)lFileSize;
 
                 /* Just to be safe */
                 if (fRelStreamPos>255) fRelStreamPos=255;

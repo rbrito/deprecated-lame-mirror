@@ -10,3 +10,5 @@ WinGTK
 *.plg
 *.opt
 *.dll
+*.new.mp3
+*.wav.mp3
