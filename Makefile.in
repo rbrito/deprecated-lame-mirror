@@ -32,15 +32,22 @@ INSTALL_PROGRAM=@INSTALL_PROGRAM@
 INSTALL_DATA=@INSTALL_DATA@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
+SHARED_LIB = libmp3lame/libmp3lame.so
+SHARED_LIB_MAJOR = $(SHARED_LIB).@LIB_MAJOR_VERSION@
+SHARED_LIB_MINOR = $(SHARED_LIB_MAJOR).@LIB_MINOR_VERSION@
+
 # generic defaults. OS specific options go in versious sections below
-PGM ?= lame
-CPP_OPTS = @CPP_OPT@ -I ../include -I ./ -I ../
+PGM ?= ./frontend/lame
+CPP_OPTS = @CPP_OPT@ -I./include -I. -I./mpglib
 CC_OPTS = -O
 AR = ar
 RANLIB = @RANLIB@
 MAKEDEP = -M
 RM_F = rm -f
 LN_S = @LN_S@
+
+
+
 
 
 ##########################################################################
@@ -221,12 +228,17 @@ ifeq ($(UNAME),OS/2)
    SHELL=sh	
    CC = gcc
    CC_OPTS = -O3
-   PGM ?= lame.exe
+   PGM ?= frontend/lame.exe
 
 # I use the following for slightly better performance on my Pentium-II
 # using pgcc-2.91.66:
 #   CC_OPTS = -O6 -ffast-math -funroll-loops -mpentiumpro -march=pentiumpro
 
+# Uncomment & inspect the 2 GTK lines to use MP3x GTK frame analyzer.
+# Properly installed XFree86/devlibs & GTK+ is a prerequisite.
+# The following works for me using Xfree86/OS2 3.3.5 and GTK+ 1.2.3:
+#   LDFLAGS += -DHAVEGTK -IC:/XFree86/include/gtk12 -Zmt -D__ST_MT_ERRNO__ -IC:/XFree86/include/glib12 -IC:/XFree86/include
+#   CFLAGS += -LC:/XFree86/lib -Zmtd -Zsysv-signals -Zbin-files -lgtk12 -lgdk12 -lgmodule -lglib12 -lXext -lX11 -lshm -lbsd -lsocket -lm
 endif
 
 ###########################################################################
@@ -234,7 +246,7 @@ endif
 ###########################################################################
 ifeq ($(UNAME),MSDOS)
   RM_F =
-  PGM ?= lame.exe
+  PGM ?= frontend/lame.exe
 endif
 
 ###########################################################################
@@ -283,18 +295,42 @@ endif
 
 CC_SWITCHES = -DNDEBUG $(CC_OPTS) $(CFLAGS)
 
-brhist_sources = brhist.c
+lib_sources = \
+	bitstream.c \
+	encoder.c \
+	fft.c \
+        id3tag.c \
+        lame.c \
+        newmdct.c \
+	psymodel.c \
+	quantize.c \
+	quantize_pvt.c \
+	vbrquantize.c \
+	reservoir.c \
+	tables.c \
+	takehiro.c \
+	util.c \
+        VbrTag.c \
+	vorbis_interface.c \
+	mpglib_interface.c \
+        version.c
 
-c_sources = @CONFIG_SOURCES@ \
-        lametime.c \
-	timestatus.c \
-	portableio.c \
-	ieeefloat.c \
-	parse.c \
-	get_audio.c
+lib_obj = $(lib_sources:.c=.o) 
+
+mpglib_sources = mpglib/common.c \
+        mpglib/dct64_i386.c \
+        mpglib/decode_i386.c \
+        mpglib/layer1.c \
+        mpglib/layer2.c \
+        mpglib/layer3.c \
+        mpglib/tabinit.c \
+        mpglib/interface.c 
+mpglib_obj = $(mpglib_sources:.c=.o) 
+
+lib_obj += $(mpglib_obj)
 
 OBJ = $(c_sources:.c=.o)
-DEP = $(c_sources:.c=.d)
+DEP = $(c_sources:.c=.d) $(lib_sources:.c=.d)
 
 
 
@@ -306,6 +342,10 @@ ASFLAGS=-f elf -i i386/
 %.o: %.s
 	gcc -c $< -o $@
 
+## use MMX extension. you need nasm and MMX supported CPU.
+#CC_SWITCHES += -DMMX_choose_table
+#lib_obj += i386/choose_table.o
+
 %.o: %.c 
 	$(CC) $(CPP_OPTS) $(CC_SWITCHES) -c $< -o $@
 
@@ -316,50 +356,67 @@ ASFLAGS=-f elf -i i386/
 	$(SHELL) -ec '$(CC) $(MAKEDEP)  $(CPP_OPTS) $(CC_SWITCHES)  $< | sed '\''s;$*.o;& $@;g'\'' > $@'
   endif
 
-all: $(PGM)
+all: lib $(LIBS) $(PGM)
 
-# these applications are to be statically linked for now:
-# i.e dont use -L -lmp3lame, since the default will pick up the shared lib
-$(PGM):	main.o ../libmp3lame/libmp3lame.a $(LIBS) $(OBJ)
-	$(CC) -o $(PGM)  main.o  $(OBJ) $(LIBS) $(LDFLAGS) ../libmp3lame/libmp3lame.a
+lib:  @LIB_TARGETS@
 
-mp3rtp:	rtp.o mp3rtp.o ../libmp3lame/libmp3lame.a $(LIBS) $(OBJ)
-	$(CC) -o mp3rtp mp3rtp.o rtp.o -L..   $(OBJ) $(LIBS) $(LDFLAGS) ../libmp3lame/libmp3lame.a
+#shared library, probably GNU specific?
+libmp3lame/libmp3lame.so:  
+	cd libmp3lame; $(MAKE) libmp3lame.so
 
+libmp3lame/libmp3lame.a:  
+	cd libmp3lame; $(MAKE) libmp3lame.a
 
+$(PGM): lib
+	cd frontend; $(MAKE)
 
+mp3x/mp3x:
+	cd mp3x; $(MAKE)
 
+frontend/mp3rtp:
+	cd frontend; $(MAKE)
 
+mpglib/mpglib.a:
+	cd mpglib; $(MAKE)
 
+install_header:
+	@mkdir -p $(INCLUDEDIR)
+	$(INSTALL_PROGRAM) include/lame.h $(INCLUDEDIR)
 
+install_static_lib: libmp3lame.a install_header
+	@mkdir -p $(LIBDIR)
+	$(INSTALL_PROGRAM) libmp3lame/libmp3lame.a $(LIBDIR)
 
-
-install_program: $(PGM)
-	$(INSTALL_PROGRAM) $(PGM) ${BINDIR}
+install_shared_lib: libmp3lame/libmp3lame.so install_header
+	@mkdir -p $(LIBDIR)
+	$(INSTALL_PROGRAM) $(SHARED_LIB_MINOR) $(LIBDIR)
+	@$(RM_F) $(LIBDIR)/$(SHARED_LIB_MAJOR)
+	(cd $(LIBDIR) && $(LN_S) $(SHARED_LIB_MINOR) $(SHARED_LIB_MAJOR))
+	@$(RM_F) $(LIBDIR)/$(SHARED_LIB)
+	(cd $(LIBDIR) && $(LN_S) $(SHARED_LIB_MAJOR) $(SHARED_LIB))
 
 install: @INSTALL_TARGETS@
 
 uninstall:
-	$(RM_F) $(BINDIR)/$(PGM)
+	$(RM_F) $(INCLUDEDIR)/lame.h
+	$(RM_F) $(LIBDIR)/libmp3lame.a
+	$(RM_F) $(LIBDIR)/$(SHARED_LIB)
+	$(RM_F) $(LIBDIR)/$(SHARED_LIB_MAJOR)
+	$(RM_F) $(LIBDIR)/$(SHARED_LIB_MINOR)
 
 clean:
-  ifeq ($(UNAME),MSDOS)
-	-del *.o
-	-del *.d
-	-del *.a
-	-del $(PGM)
-  else
-	-$(RM_F) $(OBJ) $(DEP) $(PGM) main.o rtp.o mp3rtp mp3rtp.o \
-         mp3x.o mp3x main.d rtp.d mp3rtp.d
-  endif
+	cd libmp3lame; $(MAKE) clean; 
+	cd mpglib; $(MAKE) clean; 
+	cd frontend; $(MAKE) clean; 
+
 
 bla:
 	echo "LIB=$(SHARED_LIB) MAJOR=$(SHARED_LIB_MAJOR) MINOR=$(SHARED_LIB_MINOR)"
 
 tags: TAGS
 
-TAGS: ${c_sources}
-	etags -T ${c_sources}
+TAGS: @CONFIG_SOURCES@ $(lib_sources) ${gtk_sources}
+	etags -T @CONFIG_SOURCES@ $(lib_sources) ${gtk_sources}
 
 ifneq ($(MAKECMDGOALS),clean)
   -include $(DEP)
@@ -376,8 +433,8 @@ endif
 #  should be at most 30.
 #
 test: $(PGM)
-	./$(PGM)  --nores -h ../testcase.wav ../testcase.new.mp3
-	cmp -l ../testcase.new.mp3 ../testcase.mp3 | wc
+	frontend/$(PGM)  --nores -h testcase.wav testcase.new.mp3
+	cmp -l testcase.new.mp3 testcase.mp3 | wc
 
 testg: $(PGM)
-	./$(PGM) -g -h ../../test/castanets.wav
+	frontend/$(PGM) -g -h ../test/castanets.wav
