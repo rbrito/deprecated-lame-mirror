@@ -388,7 +388,8 @@ id3tag_write_v2(lame_t gfc)
                 tag_size += 11 + album_length;
             }
             if (gfc->tag_spec.year) {
-                year_length = sprintf(year, "%d", gfc->tag_spec.year);
+                year_length = snprintf(year, sizeof(year),
+				       "%d", gfc->tag_spec.year);
                 tag_size += 11 + year_length;
             } else {
                 year_length = 0;
@@ -490,35 +491,32 @@ set_text_field(unsigned char *field, const char *text, size_t size, int pad)
 int
 id3tag_write_v1(lame_t gfc)
 {
+    unsigned int index = 0;
     if ((gfc->tag_spec.flags & CHANGED_FLAG)
 	&& !(gfc->tag_spec.flags & V2_ONLY_FLAG)) {
         unsigned char tag[128];
         unsigned char *p = tag;
         int pad = (gfc->tag_spec.flags & SPACE_V1_FLAG) ? ' ' : 0;
         char year[5];
-        unsigned int index;
         /* set tag identifier */
         *p++ = 'T'; *p++ = 'A'; *p++ = 'G';
         /* set each field in tag */
         p = set_text_field(p, gfc->tag_spec.title, 30, pad);
         p = set_text_field(p, gfc->tag_spec.artist, 30, pad);
         p = set_text_field(p, gfc->tag_spec.album, 30, pad);
-        sprintf(year, "%d", gfc->tag_spec.year);
-        p = set_text_field(p, gfc->tag_spec.year ? year : NULL, 4, pad);
-        /* limit comment field to 28 bytes if a track is specified */
-        p = set_text_field(p, gfc->tag_spec.comment, gfc->tag_spec.track
-                ? 28 : 30, pad);
+	sprintf(year, "%d", gfc->tag_spec.year);
+	p = set_text_field(p, gfc->tag_spec.year ? year : NULL, 4, pad);
+        p = set_text_field(p, gfc->tag_spec.comment, 30, pad);
+	/* limit comment field to 28 bytes if a track is specified */
+	/* clear the last 2 bytes to indicate a version 1.1 tag */
         if (gfc->tag_spec.track) {
-            /* clear the next byte to indicate a version 1.1 tag */
-            *p++ = 0;
-            *p++ = gfc->tag_spec.track;
+	    p[-2] = 0;
+            p[-1] = gfc->tag_spec.track;
         }
         *p++ = gfc->tag_spec.genre;
         /* write tag directly into bitstream at current position */
-        for (index = 0; index < 128; ++index)
+	for (; index < 128; ++index)
 	    add_dummy_byte(gfc, tag[index]);
-
-        return 128;
     }
-    return 0;
+    return index;
 }
