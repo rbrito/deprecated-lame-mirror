@@ -212,7 +212,7 @@ int sync_buffer(struct mpstr *mp,int free_match)
 	if (h && free_match) {
 	  /* just to be even more thorough, match the sample rate */
 	  struct frame *fr = &mp->fr;
-	  int sampling_frequency,mpeg25,lsf;
+	  int mode,stereo,sampling_frequency,mpeg25,lsf;
 
 	  if( head & (1<<20) ) {
 	    lsf = (head & (1<<19)) ? 0x0 : 0x1;
@@ -223,11 +223,14 @@ int sync_buffer(struct mpstr *mp,int free_match)
 	    mpeg25 = 1;
 	  }
 
+	  mode      = ((head>>6)&0x3);
+	  stereo    = (mode == MPG_MD_MONO) ? 1 : 2;
+
 	  if(mpeg25) 
 	    sampling_frequency = 6 + ((head>>10)&0x3);
 	  else
 	    sampling_frequency = ((head>>10)&0x3) + (lsf*3);
-	  h = ((lsf==fr->lsf) && (mpeg25==fr->mpeg25) && 
+	  h = ((stereo==fr->stereo) && (lsf==fr->lsf) && (mpeg25==fr->mpeg25) && 
                  (sampling_frequency == fr->sampling_frequency));
 	}
 
@@ -264,7 +267,13 @@ int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
 	/* First decode header */
 	if(!mp->header_parsed) {
 
-	        bytes=sync_buffer(mp,0);
+	  if (mp->fsizeold==-1) 
+	    /* first call.   sync with anything */
+	    bytes=sync_buffer(mp,0);
+	  else
+	    /* match channels, samplerate, etc, when syncing */
+	    bytes=sync_buffer(mp,1);
+
 		if (bytes<0) return MP3_NEED_MORE;
 		if (bytes>0) {
 		  /* bitstream problem, but we are now resynced 
