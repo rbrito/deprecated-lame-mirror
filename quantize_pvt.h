@@ -32,10 +32,6 @@ typedef struct calc_noise_result_t {
 
 void compute_ath(lame_global_flags *gfp,FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY_l]);
 void ms_convert(FLOAT8 xr[2][576],FLOAT8 xr_org[2][576]);
-int on_pe(lame_global_flags *gfp,FLOAT8 pe[2][2],III_side_info_t *l3_side,
-int targ_bits[2],int mean_bits, int gr);
-void reduce_side(int targ_bits[2],FLOAT8 ms_ener_ratio,int mean_bits,int max_bits);
-
 
 void outer_loop( 
     lame_global_flags *gfp,
@@ -54,19 +50,14 @@ void outer_loop(
 void iteration_init( lame_global_flags *gfp,III_side_info_t *l3_side, int l3_enc[2][2][576]);
 
 void huffman_init( lame_global_flags *gfp );
-
-int inner_loop( lame_global_flags *gfp,FLOAT8 xrpow[576],
-                int l3_enc[576],
-                int max_bits,
-                gr_info *cod_info);
+int scale_bitcount( III_scalefac_t *scalefac, gr_info *cod_info);
+int scale_bitcount_lsf( III_scalefac_t *scalefac, gr_info *cod_info);
 
 int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576],
                 III_psy_ratio *ratio,
 	            gr_info *cod_info,
                 III_psy_xmin *l3_xmin);
 
-int scale_bitcount( III_scalefac_t *scalefac, gr_info *cod_info);
-int scale_bitcount_lsf( III_scalefac_t *scalefac, gr_info *cod_info);
 int calc_noise( lame_global_flags *gfp, FLOAT8 xr[576],
                  int ix[576],
                  gr_info *cod_info,
@@ -76,14 +67,6 @@ int calc_noise( lame_global_flags *gfp, FLOAT8 xr[576],
 		 III_scalefac_t *,
                  calc_noise_result *);
 
-int loop_break( III_scalefac_t *scalefac, gr_info *cod_info);
-
-void amp_scalefac_bands(
-    lame_global_flags *gfp, 
-    gr_info           *cod_info,
-    III_scalefac_t    *scalefac,
-    FLOAT8             xrpow[576],
-    FLOAT8             distort[4][SBMAX_l] );
 
 #ifdef ASM_QUANTIZE
 void quantize_xrpow_ASM( FLOAT8 xr[576],
@@ -108,12 +91,7 @@ new_choose_table( int ix[576],
 		  unsigned int begin,
 		  unsigned int end, int * s );
 
-int bin_search_StepSize2(lame_global_flags *gfp,int desired_rate, int start, int ix[576],
-                         FLOAT8 xrspow[576], gr_info * cod_info);
 int count_bits(lame_global_flags *gfp,int  *ix, FLOAT8 xr[576], gr_info *cod_info);
-
-
-int quant_compare(int type, calc_noise_result *best_noise, calc_noise_result *noise);
 
 void best_huffman_divide(lame_internal_flags *gfc, int gr, int ch, gr_info *cod_info, int *ix);
 
@@ -122,26 +100,7 @@ void best_scalefac_store(lame_global_flags *gfp,int gr, int ch,
 			 III_side_info_t *l3_side,
 			 III_scalefac_t scalefac[2][2]);
 
-void inc_scalefac_scale(
-    lame_internal_flags *gfp,
-    gr_info             *cod_info,
-    III_scalefac_t      *scalefac,
-    FLOAT8               xrpow[576] );
-
-void inc_subblock_gain(
-    lame_internal_flags *gfp,
-    gr_info             *cod_info,
-    III_scalefac_t      *scalefac,
-    FLOAT8               xrpow[576] );
-
-
-int init_outer_loop(
-    gr_info        *cod_info,
-    III_scalefac_t *scalefac,
-    FLOAT8          xr[576],
-    FLOAT8          xrpow[576]); 
-
-#define LARGE_BITS 100000
+static const long LARGE_BITS = 100000;
 
 #endif
 

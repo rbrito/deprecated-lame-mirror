@@ -319,135 +319,6 @@ void ms_convert(FLOAT8 xr[2][576],FLOAT8 xr_org[2][576])
 
 
 
-/************************************************************************
- * allocate bits among 2 channels based on PE
- * mt 6/99
- ************************************************************************/
-int on_pe(lame_global_flags *gfp,FLOAT8 pe[2][2],III_side_info_t *l3_side,
-int targ_bits[2],int mean_bits, int gr)
-{
-  lame_internal_flags *gfc=gfp->internal_flags;
-  gr_info *cod_info;
-  int extra_bits,tbits,bits;
-  int add_bits[2]; 
-  int ch;
-  int max_bits;  /* maximum allowed bits for this granule */
-
-  /* allocate targ_bits for granule */
-  ResvMaxBits(gfp, mean_bits, &tbits, &extra_bits);
-  max_bits=tbits+extra_bits;
-
-  bits=0;
-
-  for (ch=0 ; ch < gfc->channels ; ch ++) {
-    /******************************************************************
-     * allocate bits for each channel 
-     ******************************************************************/
-    cod_info = &l3_side->gr[gr].ch[ch].tt;
-    
-    targ_bits[ch]=Min(4095,tbits/gfc->channels);
-    
-    add_bits[ch]=(pe[gr][ch]-750)/1.4;
-    /* short blocks us a little extra, no matter what the pe */
-    if (cod_info->block_type==SHORT_TYPE) {
-      if (add_bits[ch]<mean_bits/4) add_bits[ch]=mean_bits/4;
-    }
-
-    /* at most increase bits by 1.5*average */
-    if (add_bits[ch] > .75*mean_bits) add_bits[ch]=mean_bits*.75;
-    if (add_bits[ch] < 0) add_bits[ch]=0;
-
-    if ((targ_bits[ch]+add_bits[ch]) > 4095) 
-      add_bits[ch]=Max(0,4095-targ_bits[ch]);
-
-    bits += add_bits[ch];
-  }
-  if (bits > extra_bits)
-    for (ch=0 ; ch < gfc->channels ; ch ++) {
-      add_bits[ch] = (extra_bits*add_bits[ch])/bits;
-    }
-
-  for (ch=0 ; ch < gfc->channels ; ch ++) {
-    targ_bits[ch] = targ_bits[ch] + add_bits[ch];
-    extra_bits -= add_bits[ch];
-  }
-  return max_bits;
-}
-
-
-
-
-void reduce_side(int targ_bits[2],FLOAT8 ms_ener_ratio,int mean_bits,int max_bits)
-{
-  int move_bits;
-  FLOAT fac;
-
-
-  /*  ms_ener_ratio = 0:  allocate 66/33  mid/side  fac=.33  
-   *  ms_ener_ratio =.5:  allocate 50/50 mid/side   fac= 0 */
-  /* 75/25 split is fac=.5 */
-  /* float fac = .50*(.5-ms_ener_ratio[gr])/.5;*/
-  fac = .33*(.5-ms_ener_ratio)/.5;
-  if (fac<0) fac=0;
-  if (fac>.5) fac=.5;
-  
-    /* number of bits to move from side channel to mid channel */
-    /*    move_bits = fac*targ_bits[1];  */
-    move_bits = fac*.5*(targ_bits[0]+targ_bits[1]);  
-
-    if ((move_bits + targ_bits[0]) > 4095) {
-      move_bits = 4095 - targ_bits[0];
-    }
-    if (move_bits<0) move_bits=0;
-    
-    if (targ_bits[1] >= 125) {
-      /* dont reduce side channel below 125 bits */
-      if (targ_bits[1]-move_bits > 125) {
-
-	/* if mid channel already has 2x more than average, dont bother */
-	/* mean_bits = bits per granule (for both channels) */
-	if (targ_bits[0] < mean_bits)
-	  targ_bits[0] += move_bits;
-	targ_bits[1] -= move_bits;
-      } else {
-	targ_bits[0] += targ_bits[1] - 125;
-	targ_bits[1] = 125;
-      }
-    }
-    
-    move_bits=targ_bits[0]+targ_bits[1];
-    if (move_bits > max_bits) {
-      targ_bits[0]=(max_bits*targ_bits[0])/move_bits;
-      targ_bits[1]=(max_bits*targ_bits[1])/move_bits;
-    }
-}
-
-/*************************************************************************** 
- *         inner_loop                                                      * 
- *************************************************************************** 
- * The code selects the best global gain for a particular set of scalefacs */
- 
-int
-inner_loop( lame_global_flags *gfp,FLOAT8 xrpow[576],
-	    int l3_enc[576], int max_bits,
-	    gr_info *cod_info)
-{
-    int bits;
-    assert( max_bits >= 0 );
-    cod_info->global_gain--;
-
-    do
-    {
-      cod_info->global_gain++;
-      bits = count_bits(gfp,l3_enc, xrpow, cod_info);
-    }
-    while ( bits > max_bits );
-
-    return bits;
-}
-
-
-
 /*************************************************************************/
 /*            calc_xmin                                                  */
 /*************************************************************************/
@@ -720,30 +591,6 @@ int calc_noise( lame_global_flags *gfp,
 
 
 
-/*************************************************************************/
-/*            loop_break                                                 */
-/*************************************************************************/
-
-/*  Function: Returns zero if there is a scalefac which has not been
-    amplified. Otherwise it returns one. 
-*/
-
-int loop_break( III_scalefac_t *scalefac, gr_info *cod_info)
-{
-    int i;
-	u_int sfb;
-
-    for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ )
-        if ( scalefac->l[sfb] == 0 )
-	    return 0;
-
-    for ( sfb = cod_info->sfb_smax; sfb < SBPSY_s; sfb++ )
-      for ( i = 0; i < 3; i++ ) 
-            if ( scalefac->s[sfb][i]+cod_info->subblock_gain[i] == 0 )
-		return 0;
-
-    return 1;
-}
 
 
 
@@ -751,101 +598,6 @@ int loop_break( III_scalefac_t *scalefac, gr_info *cod_info)
 
 
 
-
-
-
-
-
-
-/*
- ----------------------------------------------------------------------
-  if someone wants to try to find a faster step search function,
-  here is some code which gives a lower bound for the step size:
-  
-  for (max_xrspow = 0, i = 0; i < 576; ++i)
-  {
-    max_xrspow = Max(max_xrspow, xrspow[i]);
-  }
-  lowerbound = 210+log10(max_xrspow/IXMAX_VAL)/(0.1875*LOG2);
- 
- 
-                                                 Robert.Hegemann@gmx.de
- ----------------------------------------------------------------------
-*/
-
-
-typedef enum {
-    BINSEARCH_NONE,
-    BINSEARCH_UP, 
-    BINSEARCH_DOWN
-} binsearchDirection_t;
-
-/*-------------------------------------------------------------------------*/
-int 
-bin_search_StepSize2 (lame_global_flags *gfp,int desired_rate, int start, int *ix, 
-                      FLOAT8 xrspow[576], gr_info *cod_info)
-/*-------------------------------------------------------------------------*/
-{
-    int nBits;
-    int flag_GoneOver = 0;
-    int StepSize = start;
-    int CurrentStep;
-    lame_internal_flags *gfc=gfp->internal_flags;
-
-    binsearchDirection_t Direction = BINSEARCH_NONE;
-    assert(gfc->CurrentStep);
-    CurrentStep = gfc->CurrentStep;
-
-    do
-    {
-	cod_info->global_gain = StepSize;
-	nBits = count_bits(gfp,ix, xrspow, cod_info);  
-
-	if (CurrentStep == 1 )
-        {
-	    break; /* nothing to adjust anymore */
-	}
-	if (flag_GoneOver)
-	{
-	    CurrentStep /= 2;
-	}
-	if (nBits > desired_rate)  /* increase Quantize_StepSize */
-	{
-	    if (Direction == BINSEARCH_DOWN && !flag_GoneOver)
-	    {
-		flag_GoneOver = 1;
-		CurrentStep /= 2; /* late adjust */
-	    }
-	    Direction = BINSEARCH_UP;
-	    StepSize += CurrentStep;
-	    if (StepSize > 255) break;
-	}
-	else if (nBits < desired_rate)
-	{
-	    if (Direction == BINSEARCH_UP && !flag_GoneOver)
-	    {
-		flag_GoneOver = 1;
-		CurrentStep /= 2; /* late adjust */
-	    }
-	    Direction = BINSEARCH_DOWN;
-	    StepSize -= CurrentStep;
-	    if (StepSize < 0) break;
-	}
-	else break; /* nBits == desired_rate;; most unlikely to happen.*/
-    } while (1); /* For-ever, break is adjusted. */
-
-    CurrentStep = abs(start - StepSize);
-    
-    if (CurrentStep >= 4) {
-	CurrentStep = 4;
-    } else {
-	CurrentStep = 2;
-    }
-
-    gfc->CurrentStep = CurrentStep;
-
-    return nBits;
-}
 
 
 
@@ -873,7 +625,6 @@ set_pinfo (lame_global_flags *gfp,
 
   III_psy_xmin l3_xmin;
   calc_noise_result noise_info;
-  FLOAT8 noise[4];
   FLOAT8 xfsf[4][SBMAX_l];
   FLOAT8 distort[4][SBMAX_l];
 
