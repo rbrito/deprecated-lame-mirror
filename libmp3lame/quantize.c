@@ -338,7 +338,7 @@ quant_compare(
     const int                   experimentalX,
           lame_internal_flags	* const gfc,
     const calc_noise_result	* const best,
-    const calc_noise_result	* calc,
+          calc_noise_result	* const calc,
     const gr_info		* const gi,
     const III_psy_xmin		* distort
     )

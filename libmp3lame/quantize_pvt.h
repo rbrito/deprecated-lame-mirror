@@ -78,8 +78,8 @@ int     calc_noise (const lame_internal_flags * const gfc,
                     const III_psy_xmin * const l3_xmin,
                     III_psy_xmin * distort, calc_noise_result * const res);
 
-double get_klemm_noise(const III_psy_xmin  *distort,
-		       gr_info		*gi);
+double get_klemm_noise(const III_psy_xmin	* const distort,
+		       const gr_info		* const gi);
 
 void    set_frame_pinfo (lame_global_flags *gfp,
                          III_psy_ratio ratio[2][2]);
