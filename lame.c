@@ -1,4 +1,3 @@
-/* -*- mode: C; mode: fold -*- */
 /*
  *	LAME MP3 encoding engine
  *
@@ -735,13 +734,6 @@ char *mp3buf, int mp3buf_size)
 
 
 
-
-
-
-
-
-
-
 /*
  * THE MAIN LAME ENCODING INTERFACE
  * mt 3/00
@@ -996,7 +988,7 @@ int    lame_encode_finish (
   /* if user specifed buffer size = 0, dont check size */
   if (mp3buffer_size == 0) mp3buffer_size_remaining=0;  
   if (gfp->ogg) {
-#ifdef HAVEVORBIS    
+#ifdef HAVEVORBIS
     /* ogg related stuff */
     imp3 = lame_encode_ogg_finish(gfp,mp3buffer,mp3buffer_size_remaining);
 #endif
@@ -1007,17 +999,14 @@ int    lame_encode_finish (
     id3tag_write_v1(gfp,&gfp->tag_spec);
     imp3= copy_buffer(mp3buffer,mp3buffer_size_remaining,&gfc->bs);
   }
+  freegfc(gfc);
+
   if (imp3 < 0) {
-    freegfc(gfc);    
     return imp3;
   }
-  mp3buffer += imp3;
+  //  mp3buffer += imp3;
   mp3count += imp3;
-  mp3buffer_size_remaining = mp3buffer_size - mp3count;
-
-
-
-  freegfc(gfc);    
+  //  mp3buffer_size_remaining = mp3buffer_size - mp3count;
   return mp3count;
 }
 
@@ -1214,6 +1203,8 @@ int lame_init(lame_global_flags *gfp)
    */
   gfc->mf_samples_to_encode = ENCDELAY+288;
   gfc->mf_size=ENCDELAY-MDCTDELAY;  /* we pad input with this many 0's */
+
+  main_CRC_init ();  /* ulgy, it's C, not Ada, C++ or Modula */
 
   return 0;
 }
