@@ -455,10 +455,10 @@ bin_search_StepSize(
 {
     int nBits, flag_GoneOver = 0;
     assert(CurrentStep);
-    gi->count1 = gi->xrNumMax;
+    gi->big_values = gi->count1 = gi->xrNumMax;
     do {
 	if (flag_GoneOver & 2)
-	    gi->count1 = gi->xrNumMax;
+	    gi->big_values = gi->count1 = gi->xrNumMax;
 	nBits = count_bits(gfc, xrpow, gi);
 
         if (CurrentStep == 1 || nBits == desired_rate)
@@ -484,7 +484,7 @@ bin_search_StepSize(
 	nBits = count_bits(gfc, xrpow, gi);
     } else if (gi->global_gain > 255) {
 	gi->global_gain = 255;
-	gi->count1 = gi->xrNumMax;
+	gi->big_values = gi->count1 = gi->xrNumMax;
 	nBits = count_bits(gfc, xrpow, gi);
     } else if (nBits > desired_rate) {
 	gi->global_gain++;
@@ -878,7 +878,7 @@ adjust_global_gain(
     gr_info *gi, FLOAT *distort, int huffbits)
 {
     fi_union *fi = (fi_union *)gi->l3_enc;
-    FLOAT *xend = &xp[gi->count1];
+    FLOAT *xend = &xp[gi->big_values = gi->count1 = gi->xrNumMax];
     int sfb = 0;
 
     do {
@@ -990,7 +990,6 @@ CBR_1st_bitalloc (
 
 	if (huff_bits > 0) {
 	    /* adjust global_gain to fit the available bits */
-	    gi_w.count1 = gi->xrNumMax;
 	    if (adjust_global_gain(gfc, xrpow, &gi_w, distort, huff_bits)) {
 		int sfb;
 		while (count_bits(gfc, xrpow, &gi_w) > huff_bits
@@ -1567,7 +1566,7 @@ VBR_noise_shaping(
 	return j;
 
     /* quantize xr34 */
-    gi->count1 = gi->xrNumMax;
+    gi->big_values = gi->count1 = gi->xrNumMax;
     gi->part2_3_length = count_bits(gfc, xr34, gi);
     if (gi->part2_3_length >= LARGE_BITS)
 	return -2;

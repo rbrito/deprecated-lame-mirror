@@ -59,6 +59,22 @@ static const int log2tab[] = {
  * the ASM code, check CVS circa Aug 2000.  
  *********************************************************************/
 
+static void
+quantize_xrpow_01(const FLOAT *xp, gr_info *gi, fi_union *fi, int sfb,
+		  const FLOAT *xend)
+{
+    do {
+	const FLOAT *xe = xp + gi->width[sfb];
+	FLOAT istep = (1.0 - 0.4054) / IPOW20(scalefactor(gi, sfb));
+	sfb++;
+	if (xe > xend)
+	    xe = xend;
+	do {
+	    (fi++)->i = *xp++ > istep ? 1:0;
+	    (fi++)->i = *xp++ > istep ? 1:0;
+	} while (xp < xe);
+    } while (xp < xend);
+}
 
 static int quantize_xrpow(const FLOAT *xp, gr_info *gi)
 {
@@ -66,13 +82,21 @@ static int quantize_xrpow(const FLOAT *xp, gr_info *gi)
     int sfb = 0;
     fi_union *fi = (fi_union *)gi->l3_enc;
     const FLOAT *xend = &xp[gi->count1];
+    const FLOAT *xe01 = &xp[gi->big_values];
 
     do {
-	const FLOAT *xe = xp + gi->width[sfb];
+	const FLOAT *xe;
 	FLOAT istep = IPOW20(scalefactor(gi, sfb));
-	sfb++;
+	if (xp > xe01) {
+	    quantize_xrpow_01(xp, gi, fi, sfb, xend);
+	    return 0;
+	}
+
+	xe = xp + gi->width[sfb];
 	if (xe > xend)
 	    xe = xend;
+
+	sfb++;
 	do {
 #ifdef TAKEHIRO_IEEE754_HACK
 	    double x0 = istep * xp[0] + MAGIC_FLOAT;
@@ -111,13 +135,20 @@ static void quantize_xrpow_ISO(const FLOAT *xp, gr_info *gi)
     int sfb = 0;
     fi_union *fi = (fi_union *)gi->l3_enc;
     const FLOAT *xend = &xp[gi->count1];
+    const FLOAT *xe01 = &xp[gi->big_values];
 
     do {
-	const FLOAT *xe = xp + gi->width[sfb];
+	const FLOAT *xe;
 	FLOAT istep = IPOW20(scalefactor(gi, sfb));
-	sfb++;
+	if (xp > xe01) {
+	    quantize_xrpow_01(xp, gi, fi, sfb, xend);
+	    return;
+	}
+	    
+	xe = xp + gi->width[sfb];
 	if (xe > xend)
 	    xe = xend;
+	sfb++;
 	do {
 #ifdef TAKEHIRO_IEEE754_HACK
 	    fi[0].f = istep * xp[0] + (ROUNDFAC + MAGIC_FLOAT);
