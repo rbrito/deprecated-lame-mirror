@@ -22,3 +22,4 @@ WinGTK
 *.new.mp3
 *.wav.mp3
 lclint.txt
+*.il
