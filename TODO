@@ -1,30 +1,44 @@
 0.
 
-./configure scripts need work:
-   library:
+./configure scripts;
+
+   library options:
      ability to not compile in mpglib (decoder) probably broken
      ability to disable layer 1 and layer 2 decoding - is this really needed?
   
    frontend:  
      vbr historgram display broken
+     
+   Makefile.in (all directories):  OS specific options determined
+   by configure
+ 
 
+code:
 library:  call backs for error messages and display messages.
 
+          bitrate_table[][] and samplerate_table[][] are in
+          lame.h.  Right now, if the user selects an invalid
+          bitrate, libmp3lame.a returns an error, and the
+          calling program looks at the tables and prints a list
+          of valid bitrates. 
+
+ 
+
 frontend: a bunch of static variables (input_format, swapbytes,
-silent, brhist, update_inteval) are set in parse_args and used in
-get_audio.  should be cleaned up.
+          silent, brhist, update_inteval) are set in parse_args and used in
+          get_audio.  should be cleaned up.
 
 
+Makefile.{B32,MSVC,DJGPP} all broken.
 
-
-Makefile.{B32,MSVC,DJGPP} probably all broken.
-these makefiles should only bother to build the static lib,
+These makefiles should only bother to build the static lib,
 (or compile everything without even using the library)
-and then make lame, mp3x and/or the dll.
+and then make lame, mp3x and/or the dll.  Any system interested in
+the shared library should be able to use ./configure. 
 
 
 
-
+1. add 'mmx' to version string if compiled for mmx cpu
 
 
 1.
