@@ -1002,7 +1002,7 @@ lame_init_params(lame_global_flags * const gfp)
         for (i = 0; i < 19; i++)
             gfc->nsPsy.pefirbuf[i] = 700;
 
-        if (gfp->VBR == vbr_mtrh || gfp->VBR == vbr_mt) {
+        if (gfp->VBR == vbr_mt) {
             ERRORF(gfc, "\n**** nspsytune was tuned for --vbr-old **** \n\n");
             //gfp->VBR = vbr_rh;
         }
