@@ -140,7 +140,7 @@ filterYule (const Float_t* input, Float_t* output, size_t nSamples, const Float_
     /*register double  y;*/
 
     while (nSamples--) {
-        *output++ =  input [0]  * kernel[0]
+        *output =  input [0]  * kernel[0]
          - output[-1] * kernel[1]
          + input [-1] * kernel[2]
          - output[-2] * kernel[3]
@@ -161,6 +161,7 @@ filterYule (const Float_t* input, Float_t* output, size_t nSamples, const Float_
          + input [-9] * kernel[18]
          - output[-10]* kernel[19]
          + input [-10]* kernel[20];
+        ++output;
         ++input;
         /* *output++ = (Float_t)y; */
     }
@@ -171,11 +172,12 @@ filterButter (const Float_t* input, Float_t* output, size_t nSamples, const Floa
 {   /*register double  y;*/
 
     while (nSamples--) {
-        *output++ =  input [0]  * kernel[0]
+        *output =  input [0]  * kernel[0]
          - output[-1] * kernel[1]
          + input [-1] * kernel[2]
          - output[-2] * kernel[3]
          + input [-2] * kernel[4];
+        ++output;
         ++input;
         /* *output++ = (Float_t)y; */
     }
