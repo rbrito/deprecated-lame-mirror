@@ -409,6 +409,7 @@ const char*  CDECL get_lame_very_short_version ( void );
 const char*  CDECL get_psy_version        ( void );
 const char*  CDECL get_lame_url           ( void );
 
+
 /*
  * OPTIONAL:
  * get the version numbers in numerical form.
@@ -429,6 +430,7 @@ typedef struct {
     /* compile time features */
     const char *features;    /* Don't make assumptions about the contents! */
 } lame_version_t;
+
 void CDECL get_lame_version_numerical ( lame_version_t *const );
 
 

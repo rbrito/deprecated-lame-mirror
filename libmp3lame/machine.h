@@ -206,30 +206,30 @@ inline static ieee754_float32_t fast_log2(ieee754_float32_t xx)
 
 #ifndef PI
 # ifdef M_PI
-#  define       PI                      M_PI
+#  define       PI                      (FLOAT)M_PI
 # else
-#  define       PI                      3.14159265358979323846
+#  define       PI                      (FLOAT)3.14159265358979323846
 # endif
 #endif
 
 
 #ifdef M_LN2
-# define        LOG2                    M_LN2
+# define        LOG2                    (FLOAT)M_LN2
 #else
-# define        LOG2                    0.69314718055994530942
+# define        LOG2                    (FLOAT)0.69314718055994530942
 #endif
 
 #ifdef M_LN10
-# define        LOG10                   M_LN10
+# define        LOG10                   (FLOAT)M_LN10
 #else
-# define        LOG10                   2.30258509299404568402
+# define        LOG10                   (FLOAT)2.30258509299404568402
 #endif
 
 
 #ifdef M_SQRT2
-# define        SQRT2                   M_SQRT2
+# define        SQRT2                   (FLOAT)M_SQRT2
 #else
-# define        SQRT2                   1.41421356237309504880
+# define        SQRT2                   (FLOAT)1.41421356237309504880
 #endif
 
 #define         Min(A, B)       ((A) < (B) ? (A) : (B))

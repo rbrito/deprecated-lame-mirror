@@ -27,7 +27,6 @@ lame_decode_exit(lame_t gfc)
     return 0;
 }
 
-
 int
 lame_decode_init(lame_t gfc)
 {
@@ -36,8 +35,6 @@ lame_decode_init(lame_t gfc)
 	return 0;
     return 1;
 }
-
-
 
 
 /* copy mono samples */
@@ -63,7 +60,6 @@ lame_decode_init(lame_t gfc)
  *  0     ok, but need more data before outputing any samples
  *  n     number of samples output.  either 576 or 1152 depending on MP3 file.
  */
-
 static int
 lame_decode1_headersB_clipchoice(
     PMPSTR pmp, unsigned char *buffer, int len,
@@ -260,7 +256,7 @@ lame_decode_headers(lame_t gfc, unsigned char *buffer, int len,
             return totsize;
         default:
             totsize += ret;
-            len = 0;    /* future calls to decodeMP3 are just to flush buffers */
+            len = 0; /* future calls to decodeMP3 are just to flush buffers */
             break;
         }
     }

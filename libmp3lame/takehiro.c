@@ -121,11 +121,7 @@ count_bit_ESC(
 
 
 inline static int
-count_bit_noESC_from2(
-          int * const s,
-    const int *       ix, 
-    const int * const end
-    )
+count_bit_noESC_from2(int * const s, const int *ix, const int * const end)
 {
     /* No ESC-words */
     unsigned int sum = 0, sum2;
@@ -225,10 +221,8 @@ ix_max(const int *ix, const int *end)
 #if !HAVE_NASM
 static
 #endif
-int choose_table_nonMMX(
-    const int *       ix, 
-    const int * const end,
-          int * const s)
+int
+choose_table_nonMMX(const int *ix, const int * const end, int * const s)
 {
     int choice, choice2, max = ix_max(ix, end);
 
@@ -763,6 +757,7 @@ static const int scale_mixed[16] = {
 /* 11*s1bits[i] + 10*s2bits[i] */
 static const int scale_long[16] = {
     0, 10, 20, 30, 33, 21, 31, 41, 32, 42, 52, 43, 53, 63, 64, 74 };
+
 int
 scale_bitcount(gr_info * const gi)
 {

@@ -104,7 +104,8 @@ static unsigned int crc16_lookup[256] =
 /***********************************************************************
  *  Robert Hegemann 2001-01-17
  ***********************************************************************/
-static void Xing_seek_table(VBR_seek_info_t * v, unsigned char *t)
+static void
+Xing_seek_table(VBR_seek_info_t * v, unsigned char *t)
 {
     int i, index, seek_point;
     if (v->pos <= 0)
@@ -130,7 +131,8 @@ static void Xing_seek_table(VBR_seek_info_t * v, unsigned char *t)
  *	nStreamPos: how many bytes did we write to the bitstream so far
  *				(in Bytes NOT Bits)
  ****************************************************************************/
-void AddVbrFrame(lame_t gfc)
+void
+AddVbrFrame(lame_t gfc)
 {
     int i, bitrate = bitrate_table[gfc->version][gfc->bitrate_index];
     assert(gfc->VBR_seek_table.bag);
@@ -169,7 +171,6 @@ InitVbrTag(lame_t gfc)
 
     if (!gfc->bWriteVbrTag)
 	return 0;
-
     /*
      * Xing VBR pretends to be a 48kbs layer III frame.  (at 44.1kHz).
      * (at 48kHz they use 56kbs since 48kbs frame not big enough for
@@ -217,7 +218,6 @@ InitVbrTag(lame_t gfc)
     for (i=0; i<gfc->TotalFrameSize; ++i)
 	add_dummy_byte(gfc, 0);
 
-
     /*TOC shouldn't take into account the size of the VBR header itself, too*/
     gfc->VBR_seek_table.sum  = 0;
     gfc->VBR_seek_table.seen = 0;
@@ -227,18 +227,17 @@ InitVbrTag(lame_t gfc)
     return 0;
 }
 
-
-
 /* fast CRC-16 computation - uses table crc16_lookup 8*/
-static int CRC_update_lookup(int value, int crc)
+static int
+CRC_update_lookup(int value, int crc)
 {
-    int tmp;
-    tmp=crc^value;
+    int tmp=crc^value;
     crc=(crc>>8)^crc16_lookup[tmp & 0xff];
     return crc;
 }
 
-void UpdateMusicCRC(uint16_t *crc,unsigned char *buffer, int size)
+void
+UpdateMusicCRC(uint16_t *crc,unsigned char *buffer, int size)
 {
     int i;
     for (i=0; i<size; ++i) 
@@ -259,7 +258,8 @@ void UpdateMusicCRC(uint16_t *crc,unsigned char *buffer, int size)
  *			  (starting at frame sync)
  *				
  ***************************************************************************/
-static void CreateI4(unsigned char *buf, int nValue)
+static void
+CreateI4(unsigned char *buf, int nValue)
 {
     /* big endian create */
     buf[0] = nValue >> 24;
@@ -268,7 +268,8 @@ static void CreateI4(unsigned char *buf, int nValue)
     buf[3] = nValue;
 }
 
-static void CreateI2(unsigned char *buf, int nValue)
+static void
+CreateI2(unsigned char *buf, int nValue)
 {
     /* big endian create */
     buf[0] = nValue >> 8;
@@ -280,51 +281,42 @@ static int
 PutLameVBR(lame_t gfc, FILE *fpStream,
 	   uint8_t *pbtStreamBuffer, uint32_t id3v2size,  uint16_t crc)
 {
-    int nBytesWritten = 0;
-    int nFilesize	  = 0;		/*size of fpStream. Will be equal to size after process finishes. */
-    int i;
+#define nRevision 0
+#define bExpNPsyTune 1
+#define bSafeJoint 0
 
-    int enc_delay=lame_get_encoder_delay(gfc);       /* encoder delay */
-    int enc_padding=lame_get_encoder_padding(gfc);   /* encoder padding  */
+    int nBytesWritten = 0, i;
+
+    int enc_delay = lame_get_encoder_delay(gfc);       /* encoder delay */
+    int enc_padding = lame_get_encoder_padding(gfc);   /* encoder padding  */
 
     /*recall:	gfc->VBR_q is for example set by the switch -V */
     /*			gfc->quality by -q, -h, -f, etc */
     int nQuality		= (100 - 10 * gfc->VBR_q - gfc->quality);
 
-    const char *szVersion	= get_lame_very_short_version();
     uint8_t nVBR;
-    uint8_t nRevision = 0x00;
     uint8_t nRevMethod;
     uint8_t vbr_type_translator[] = {1,5,3};		/*numbering different in vbr_mode vs. Lame tag */
 
-    uint8_t nLowpass		= ( ((gfc->lowpassfreq / 100.0)+.5) > 255 ? 255 : (gfc->lowpassfreq / 100.0)+.5);
+    uint8_t nLowpass = (int) ((gfc->lowpassfreq / 100.0)+.5) > 255 ? 255 : (gfc->lowpassfreq / 100.0)+.5;
 
-    ieee754_float32_t fPeakSignalAmplitude	= 0;				/*TODO... */
-    uint16_t nRadioReplayGain		= 0;				/*TODO... */
-    uint16_t nAudioPhileReplayGain  = 0;				/*TODO... */
+    ieee754_float32_t fPeakSignalAmplitude = 0.0;	/*TODO... */
+    uint16_t nRadioReplayGain = 0;			/*TODO... */
+    uint16_t nAudioPhileReplayGain  = 0;		/*TODO... */
 
-    uint8_t nNoiseShaping	= gfc->noise_shaping_amp >= 0;
-    uint8_t nStereoMode				= 0;
     int		bNonOptimal				= 0;
-    uint8_t nSourceFreq				= 0;
-    uint8_t nMisc					= 0;
-    uint32_t nMusicLength			= 0;
-    uint16_t nMusicCRC				= 0;
+    uint8_t nStereoMode;
+    uint8_t nSourceFreq;
+    uint8_t nMisc;
+    uint8_t nFlags;
 
-    /*psy model type:*/
-    unsigned char bExpNPsyTune = 1;
-    unsigned char bSafeJoint   = 0;
+    size_t nFilesize, nMusicLength;
 
     unsigned char bNoGapMore		= 0;
     unsigned char bNoGapPrevious	= 0;
 
     int nNoGapCount = 0;// gfc->nogap_total;
     int nNoGapCurr  = 0;// gfc->nogap_current;
-
-    uint8_t  nFlags			= 0;
-
-    /* if ABR, {store bitrate <=255} else { store "-b"} */
-    int nABRBitrate	= gfc->mean_bitrate_kbps;
 
     /*revision and vbr method */
     nVBR = 0x00;		/*unknown. */
@@ -397,11 +389,10 @@ PutLameVBR(lame_t gfc, FILE *fpStream,
 	|| gfc->in_samplerate <= 32000)
 	bNonOptimal = 1;
 
-    nMisc
-	=	nNoiseShaping
-	+	(nStereoMode << 2)
-	+	(bNonOptimal << 5)
-	+	(nSourceFreq << 6);
+    nMisc = (gfc->noise_shaping_amp >= 0)
+	+ (nStereoMode << 2)
+	+ (bNonOptimal << 5)
+	+ (nSourceFreq << 6);
 
     /*get filesize */
     fseek(fpStream, 0, SEEK_END);
@@ -411,13 +402,12 @@ PutLameVBR(lame_t gfc, FILE *fpStream,
     if ((gfc->tag_spec.flags & CHANGED_FLAG)
 	&& !(gfc->tag_spec.flags & V2_ONLY_FLAG))
 	nMusicLength-=128;                     /*id3v1 present. */
-    nMusicCRC = gfc->nMusicCRC;
 
     /*Write all this information into the stream*/
     CreateI4(&pbtStreamBuffer[nBytesWritten], nQuality);
     nBytesWritten+=4;
 
-    strncpy(&pbtStreamBuffer[nBytesWritten], szVersion, 9);
+    strncpy(&pbtStreamBuffer[nBytesWritten], get_lame_very_short_version(), 9);
     nBytesWritten+=9;
 
     pbtStreamBuffer[nBytesWritten++] = nRevMethod ;
@@ -433,10 +423,11 @@ PutLameVBR(lame_t gfc, FILE *fpStream,
 
     pbtStreamBuffer[nBytesWritten++] = nFlags;
 
-    if (nABRBitrate >= 255)
+    /* if ABR, {store bitrate <=255} else { store "-b"} */
+    if (gfc->mean_bitrate_kbps >= 255)
 	pbtStreamBuffer[nBytesWritten++] = 0xFF;
     else
-	pbtStreamBuffer[nBytesWritten++] = nABRBitrate;
+	pbtStreamBuffer[nBytesWritten++] = gfc->mean_bitrate_kbps;
 
     pbtStreamBuffer[nBytesWritten++] = enc_delay >> 4;
     pbtStreamBuffer[nBytesWritten++] = (enc_delay << 4) + (enc_padding >> 8);
@@ -452,7 +443,7 @@ PutLameVBR(lame_t gfc, FILE *fpStream,
     CreateI4(&pbtStreamBuffer[nBytesWritten], nMusicLength);
     nBytesWritten+=4;
 
-    CreateI2(&pbtStreamBuffer[nBytesWritten], nMusicCRC);
+    CreateI2(&pbtStreamBuffer[nBytesWritten], gfc->nMusicCRC);
     nBytesWritten+=2;
 
     /*Calculate tag CRC.... must be done here, since it includes
@@ -472,16 +463,13 @@ PutLameVBR(lame_t gfc, FILE *fpStream,
  * Paramters:
  *	lpszFileName: filename of MP3 bit stream
  ***********************************************************************/
-int PutVbrTag(lame_t gfc, FILE *fpStream)
+int
+PutVbrTag(lame_t gfc, FILE *fpStream)
 {
-    long lFileSize;
-    char abyte;
-    uint8_t pbtStreamBuffer[MAXFRAMESIZE] = {0}, *p;
-    int i;
-    uint16_t crc = 0x00;
-    unsigned char id3v2Header[10];
-    size_t id3v2TagSize;
-    int bitrate;
+    uint8_t pbtStreamBuffer[MAXFRAMESIZE] = {0}, *p, abyte, id3v2Header[10];
+    uint16_t crc = 0;
+    size_t id3v2TagSize, lFileSize;
+    int i, bitrate;
 
     if (gfc->VBR_seek_table.pos <= 0 && gfc->VBR != cbr)
 	return -1;

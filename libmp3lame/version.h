@@ -24,13 +24,6 @@
 
 # include <lame.h>
 
-/* 
- * To make a string from a token, use the # operator:
- *
- * #define __STR(x)  #x
- * #define STR(x)    __STR(x)
- */
-
 # define LAME_URL              "http://www.mp3dev.org/"
 
 # define LAME_MAJOR_VERSION      4      /* Major version number */
@@ -42,13 +35,6 @@
 # define PSY_MINOR_VERSION      91      /* Minor version number */
 # define PSY_ALPHA_VERSION       3      /* Set number if this is an alpha version, otherwise zero */
 # define PSY_BETA_VERSION        0      /* Set number if this is a beta version, otherwise zero */
-
-
-const char*  get_lame_version       ( void );
-const char*  get_lame_short_version ( void );
-const char*  get_psy_version        ( void );
-const char*  get_lame_url           ( void );
-void         get_lame_version_numerical ( lame_version_t *const lvp );
 
 #endif  /* LAME_VERSION_H */
 

@@ -561,7 +561,8 @@ window_subband(FLOAT coef[SBLIMIT], const sample_t *x1, FLOAT a[SBLIMIT])
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
-inline static void mdct_short(FLOAT *inout)
+inline static void
+mdct_short(FLOAT *inout)
 {
     int l;
     for ( l = 0; l < 3; l++ ) {
@@ -597,7 +598,8 @@ inline static void mdct_short(FLOAT *inout)
     }
 }
 
-inline static void mdct_long(FLOAT *out, FLOAT *in)
+inline static void
+mdct_long(FLOAT *out, FLOAT *in)
 {
     FLOAT ct,st;
   {

@@ -28,8 +28,6 @@
 #define NUMBACK 6                 /* number of frames we can back up */
 #define NUMPINFO (NUMBACK+READ_AHEAD+1)
 
-
-
 typedef struct {
   int frameNum;           /* current frame number */
   int frameNum123;

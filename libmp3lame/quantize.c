@@ -1662,12 +1662,7 @@ VBR_iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
  *
  ************************************************************************/
 static void
-set_pinfo (
-    lame_t gfc,
-          gr_info       * const gi,
-    const III_psy_ratio * const ratio, 
-    const int           gr,
-    const int           ch )
+set_pinfo(lame_t gfc, gr_info *gi, const III_psy_ratio *ratio, int gr, int ch)
 {
     int i, j, end, sfb, sfb2, over;
     FLOAT en0, en1, tot_noise=0.0, over_noise=0.0, max_noise;

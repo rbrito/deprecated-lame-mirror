@@ -304,7 +304,7 @@ set_4_byte_value(unsigned char *bytes, unsigned long value)
 
 static unsigned char *
 set_frame(unsigned char *frame, unsigned long id, const char *text,
-    size_t length)
+	  size_t length)
 {
     if (length) {
         frame = set_4_byte_value(frame, id);

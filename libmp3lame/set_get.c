@@ -1053,7 +1053,7 @@ lame_get_mf_samples_to_encode(lame_t gfc)
 int CDECL lame_get_size_mp3buffer(lame_t gfc)
 {
     int size;
-    compute_flushbits(gfc,&size);
+    compute_flushbits(gfc, &size);
     return size;
 }
 
