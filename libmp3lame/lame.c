@@ -201,7 +201,7 @@ int lame_init_params(lame_global_flags *gfp)
     /* A third dbQ table */
     /* Can all dbQ setup can be done here using a switch statement? */
     static const FLOAT8 dbQ [] = { -5.0, -3.75, -2.5, -1.25, 0, +0.4, +0.8, +1.2, +1.6, +2.0 };
-    static const int    atQ [] = { -16,  -12,   -8,   -4,    0, +4,   +8,   +12,  +16,  +20  };
+    static const int    atQ [] = { +16,  +12,   +8,   +4,    0, -4,   -8,   -12,  -16,  -20  };
     int i;
     lame_internal_flags *gfc=gfp->internal_flags;
 
@@ -485,7 +485,7 @@ int lame_init_params(lame_global_flags *gfp)
 
       masking_lower_db = dbQ [gfp->VBR_q];
       gfc->masking_lower = pow(10.0,masking_lower_db/10);
-	gfc->ATH_vbrlower = atQ [gfp->VBR_q];
+      gfc->ATH_vbrlower  = atQ [gfp->VBR_q];
     }
     
     if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh)
@@ -1283,8 +1283,6 @@ int lame_init_old(lame_global_flags *gfp)
   gfp->lowpasswidth = -1;
   gfp->highpasswidth = -1;
   
-  gfp->raiseSMR = 0;
-
   gfp->padding_type=2;
   gfp->VBR=vbr_off;
   gfp->VBR_q=4;

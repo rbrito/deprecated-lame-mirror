@@ -212,7 +212,6 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --athonly       only use the ATH for masking\n"
               "    --noath         disable the ATH for masking\n"
               "    --athlower x    lower the ATH x dB\n"
-              "    --raise-smr x   0 <= x <= 1, 0 default, 1 maximum SMR\n"
               "    --short         use short blocks\n"
               "    --noshort       do not use short blocks\n"
               "    --voice         experimental voice mode\n"
@@ -712,12 +711,6 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv, char *inPath, c
 		    argUsed=1;
 		    gfp->ATHlower = atoi(nextArg);
 		
-		T_ELIF ("raise-smr")
-		    argUsed=1;
-		    gfp->raiseSMR = atof(nextArg);
-                    if (gfp->raiseSMR < 0.0) gfp->raiseSMR = 0.0;
-                    if (gfp->raiseSMR > 1.0) gfp->raiseSMR = 1.0;
-
 		T_ELIF ("scale")
 		    argUsed=1;
 		    gfp->scale = atof(nextArg);
