@@ -25,7 +25,7 @@ dnl check system
 AC_CANONICAL_HOST
 
 dnl automake
-AM_INIT_AUTOMAKE(lame,3.93)
+AM_INIT_AUTOMAKE(lame,3.94)
 AM_CONFIG_HEADER(config.h)
 AM_MAINTAINER_MODE
 AM_MAKE_INCLUDE
@@ -712,6 +712,7 @@ if test "x$GCC" = "xyes"; then
 			-fforce-mem"
         	;;
 	3.0*)
+		# -funroll-loops seems to produce buggy code with gcc 3.0.3
 		OPTIMIZATION="-O -fomit-frame-pointer -ffast-math"
 		OPTIMIZATION_FULL="-fmove-all-movables -freduce-all-givs \
 			-fbranch-count-reg -fforce-addr -fforce-mem"
