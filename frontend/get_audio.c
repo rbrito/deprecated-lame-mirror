@@ -1300,29 +1300,29 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
   lame_decode_init();
 
   len=4;
-  if (fread(&buf,1,len,fd) == 0) return -1;  /* failed */
+  if (fread(&buf,1,len,fd) != len) return -1;  /* failed */
   aid_header = check_aid(buf);
   if (aid_header) {
-    if (fread(&buf,1,2,fd) == 0) return -1;  /* failed */
+    if (fread(&buf,1,2,fd) != 2) return -1;  /* failed */
     aid_header = (unsigned char) buf[0] + 256*(unsigned char)buf[1];
     fprintf(stderr,"Album ID found.  length=%i \n",aid_header);
     /* skip rest of AID, except for 6 bytes we have already read */
     fskip ( fd, aid_header-6, SEEK_CUR );
 
     /* read 2 more bytes to set up buffer for MP3 header check */
-    if (fread(&buf,1,4,fd) == 0) return -1;  /* failed */
+    if (fread(&buf,1,4,fd) != 4) return -1;  /* failed */
     len =4;
   }
 
 
 
   /* look for sync word  FFF */
-  if (len<4) return -1;                /* is_sync_word no checks the next 4 byte, call for fix this line */
+  if (len<4) return -1;                /* is_sync_word now checks the next 4 byte, call for fix this line */
   while (!is_syncword_mp123(buf)) {
     int i;
     for (i=0; i<len-1; i++)
       buf[i]=buf[i+1]; 
-    if (fread(&buf[len-1],1,1,fd) == 0) return -1;  /* failed */
+    if (fread(buf+len-1,1,1,fd) != 1) return -1;  /* failed */
   }
 
 
@@ -1385,7 +1385,7 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
   /* repeat until we decode a valid mp3 header */
   while (!mp3data->header_parsed) {
     len = fread(buf,1,2,fd);
-    if (len ==0 ) return -1;
+    if (len != 2 ) return -1;
     ret = lame_decode1_headers(buf,len,pcm_l,pcm_r,mp3data);
     if (-1==ret) return -1;
 
@@ -1426,7 +1426,7 @@ int lame_decode_fromfile(FILE *fd, short pcm_l[], short pcm_r[],mp3data_struct *
   /* read until we get a valid output frame */
   while(0==ret) {
     len = fread(buf,1,100,fd);
-    if (len ==0 ) return -1;
+    if (len != 100 ) return -1;
     ret = lame_decode1_headers(buf,len,pcm_l,pcm_r,mp3data);
     if (ret == -1) return -1;
   }

@@ -171,7 +171,7 @@
   </tr>
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#-resample">--resample</a></kbd></td>
-    <td align="LEFT" nowrap>output sampling frequency in kHz</td>
+    <td align="LEFT" nowrap>output sampling frequency in kHz (only encode, not decode)</td>
   </tr>
   <TR VALIGN="TOP"> 
     <TD ALIGN="LEFT" nowrap><kbd><a href="#s">-s</a></kbd></TD>
@@ -741,10 +741,10 @@
   <br>
   <dl> </dl>
   <dt><strong>* <kbd>--resample 8/11.025/12/16/22.05/24/32/44.1/48</kbd><a name="-resample">&nbsp;&nbsp;&nbsp;&nbsp;output 
-    sampling frequency in kHz</a></strong></dt>
+    sampling frequency in kHz (only encode/not decode)</a></strong></dt>
 </dl>
 <dl> 
-  <dd> Select ouptut sampling frequency. <br>
+  <dd> Select output sampling frequency. <br>
     If not specified, LAME will automatically resample the input when using high 
     compression ratios. 
   <dt><br>
