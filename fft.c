@@ -35,14 +35,13 @@
 #include "util.h"
 #include "psymodel.h"
 #include "globalflags.h"
+#include "lame.h"
 
 #define TRI_SIZE (5-1) /* 1024 =  4**5 */
 static FLOAT costab[TRI_SIZE*2];
 static FLOAT window[BLKSIZE / 2], window_s[BLKSIZE_s / 2], scalefac;
 
-/* This is a simplified version for n an even power of 2 */
-
-inline static void fht(FLOAT *fz, int n)
+INLINE static void fht(FLOAT *fz, int n)
 {
     int i,k1,k2,k3,k4;
     FLOAT *fi, *fn, *gi;

@@ -82,4 +82,6 @@ For lame_decode_*:  return code
    n     number of samples output.  either 576 or 1152 depending on MP3 file.
 */
 
+extern int force_ms;
+
 #endif

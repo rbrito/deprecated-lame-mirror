@@ -36,6 +36,12 @@
 #include		<errno.h>
 
 
+#if ( defined(_MSC_VER) && !defined(INLINE))
+	#define INLINE _inline
+#else
+	#define INLINE inline
+#endif
+
 
 #if ( defined(_MSC_VER) || defined(__BORLANDC__) )
 	#define WIN32_LEAN_AND_MEAN

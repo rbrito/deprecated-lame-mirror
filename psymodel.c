@@ -5,6 +5,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.4  1999/12/06 20:38:32  afaber
+ * Fixed compiler errors
+ *
  * Revision 1.3  1999/12/03 10:13:05  takehiro
  * maybe faster FFT coding
  *
@@ -125,6 +128,11 @@ void L3psycho_anal( short int *buffer[2], int stereo,
   
 
   FLOAT wsamp_r[1024+1];
+
+ #ifdef HAVEGTK
+   static FLOAT energy_save[4][HBLKSIZE];
+ #endif
+
 
 /* The static variables "r", "phi_sav", "new", "old" and "oldest" have    */
 /* to be remembered for the unpredictability measure.  For "r" and        */
@@ -346,7 +354,7 @@ void L3psycho_anal( short int *buffer[2], int stereo,
 #ifdef HAVEGTK
 	if (gtkflag) {
 	    for (j = 0; j < HBLKSIZE; j++) {
-		pinfo->energy[gr][chn][j] = energy_save[chn][j];
+		pinfo->energy[gr_out][chn][j] = energy_save[chn][j];
 		energy_save[chn][j] = energy[j];
 	    }
 	}
