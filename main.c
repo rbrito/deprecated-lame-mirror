@@ -1,4 +1,5 @@
 #include "lame.h"
+#include "machine.h"
 
 #ifdef HAVEGTK
 #include "gtkanal.h"
