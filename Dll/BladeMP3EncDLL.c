@@ -288,6 +288,8 @@ __declspec(dllexport) VOID		beVersion(PBE_VERSION pbeVersion)
 
 	// Get the first three character, which is the month
 	strncpy(lpszTemp,lpszDate,3);
+	lpszTemp[3]='\0';
+	pbeVersion->byMonth=1;
 
 	// Set month
 	if (strcmp(lpszTemp,"Jan")==0)	pbeVersion->byMonth=1;
