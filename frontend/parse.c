@@ -230,6 +230,9 @@ print_version (FILE* const fp)
 {
     fprintf(fp, "LAME version %s (%s)\n\n",
 	    get_lame_version (), get_lame_url ());
+#ifdef LIBSNDFILE
+    fprintf (fp, "frontend built with libsndfile\n");
+#endif
 
     if (LAME_ALPHA_VERSION)
 	fprintf (fp, "warning: alpha versions should be used for testing only\n\n");
@@ -1341,7 +1344,7 @@ int  parse_args (lame_t gfp, int argc, char** argv,
                         disable_wav_header=0;
                         break;
                     case 'r':  /* force raw pcm input file */
-#if defined(LIBSNDFILE)
+#ifdef LIBSNDFILE
                         fprintf(stderr,"WARNING: libsndfile may ignore -r and perform fseek's on the input.\n"
                                "Compile without libsndfile if this is a problem.\n");
 #endif
