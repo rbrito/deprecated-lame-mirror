@@ -75,18 +75,27 @@ int main(int argc, char *argv[])
 	// Load lame_enc.dll library (Make sure though that you set the 
 	// project/settings/debug Working Directory correctly, otherwhise the DLL can't be loaded
 
+#ifdef _MSC_VER
 	hDLL = LoadLibrary(".\\Debug\\lame_enc.dll");
 
-#ifdef _DEBUG
-	hDLL = LoadLibrary(".\\Debug\\lame_enc.dll");
+  #ifdef _DEBUG
+  	hDLL = LoadLibrary(".\\Debug\\lame_enc.dll");
+  #else
+  	hDLL = LoadLibrary(".\\Release\\lame_enc.dll");
+
+  	if ( NULL == hDLL )
+  	{
+  		hDLL = LoadLibrary(".\\Release_NASM\\lame_enc.dll");
+  	}
+  #endif /* _DEBUG */
 #else
-	hDLL = LoadLibrary(".\\Release\\lame_enc.dll");
-
-	if ( NULL == hDLL )
-	{
-		hDLL = LoadLibrary(".\\Release_NASM\\lame_enc.dll");
-	}
-#endif
+        /*
+          Don't worry about dll location.
+          MSVC is the only compiler that creates
+          .\Release\ or .\Debug\ directories.
+        */
+	hDLL = LoadLibrary("lame_enc.dll");
+#endif /* _MSC_VER */
 
 	if( NULL == hDLL )
 	{

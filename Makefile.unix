@@ -377,6 +377,7 @@ ifeq ($(UNAME),MSDOS)
        -Wall -pipe -O3 -fomit-frame-pointer -ffast-math -funroll-loops \
        -fschedule-insns2 -fmove-all-movables -freduce-all-givs         \
        -mcpu=pentium -march=pentium -mfancy-math-387
+  CC_OPTS += -D_cdecl=__cdecl
   PGM = lame.exe
 endif
 
@@ -543,7 +544,11 @@ all: $(PGM)
 $(lib_sources) $(frontend_sources) $(gtk_sources) : config.h
 
 config.h: configMS.h
+  ifeq ($(NOUNIXCMD),YES)
+	copy configMS.h config.h
+  else
 	cp configMS.h config.h
+  endif
 
 $(PGM):	frontend/main.o $(frontend_obj)  $(MP3LIB)
 	$(CC) $(CC_OPTS) -o frontend/$(PGM)  frontend/main.o $(frontend_obj) \

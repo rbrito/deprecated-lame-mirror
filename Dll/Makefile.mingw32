@@ -6,6 +6,8 @@
 #                                  Vladislav Naumov, <vnaum@inbox.ru>
 #
 # PS: to 'make clean' you need rm. MS's del is unusable.
+# PPS: quick build:
+#      make -fMakefile.mingw32
 
 DLL_NAME = lame_enc
 LAME_SRC_ROOT = ..
