@@ -55,7 +55,7 @@ void display_bitrates(FILE *out_fh)
 
   version = 1;
   fprintf(out_fh,"\n");
-  fprintf(out_fh,"MPEG1 samplerates(kHz): 32 44.1 48 \n");
+  fprintf(out_fh,"MPEG1 layer III samplerates(kHz): 32 44.1 48 \n");
 
   fprintf(out_fh,"bitrates(kbs): ");
   for (index=1;index<15;index++) {
@@ -66,7 +66,7 @@ void display_bitrates(FILE *out_fh)
   
   version = 0;
   fprintf(out_fh,"\n");
-  fprintf(out_fh,"MPEG2 samplerates(kHz): 16 22.05 24 \n");
+  fprintf(out_fh,"MPEG2 layer III samplerates(kHz): 16 22.05 24 \n");
   fprintf(out_fh,"bitrates(kbs): ");
   for (index=1;index<15;index++) {
     fprintf(out_fh,"%i ",bitrate_table[version][index]);
@@ -75,7 +75,7 @@ void display_bitrates(FILE *out_fh)
 
   version = 0;
   fprintf(out_fh,"\n");
-  fprintf(out_fh,"MPEG2.5 samplerates(kHz): 8 11.025 12 \n");
+  fprintf(out_fh,"MPEG2.5 layer III samplerates(kHz): 8 11.025 12 \n");
   fprintf(out_fh,"bitrates(kbs): ");
   for (index=1;index<15;index++) {
     fprintf(out_fh,"%i ",bitrate_table[version][index]);
@@ -400,24 +400,23 @@ int fill_buffer_downsample(lame_global_flags *gfp,short int *outbuf,int desired_
     gfc->itime[0]=0;
     gfc->itime[1]=0;
     memset((char *) gfc->inbuf_old, 0, sizeof(short int)*2*BLACKSIZE);
-
-    if (intratio) {
-      /* precompute blackman filter coefficients */
-      offset=0;
+    /* precompute blackman filter coefficients */
+    for (j= 0; j<= 2*BPC; ++j) {
+      offset=(j-BPC)/(2*BPC);
       for (i=0; i<=filter_l; ++i) {
-	gfc->blackfilt[i]=blackman(i,offset,fcn,filter_l);
+	gfc->blackfilt[j][i]=blackman(i,offset,fcn,filter_l);
       }
-      
     }
+
   }
   inbuf_old=gfc->inbuf_old[ch];
 
-  
   /* time of j'th element in inbuf = itime + j/ifreq; */
   /* time of k'th element in outbuf   =  j/ofreq */
   for (k=0;k<desired_len;k++) {
     FLOAT8 time0;
-    
+    int joff;
+
     time0 = k*gfc->resample_ratio;       /* time of k'th output sample */
     j = floor( time0 -gfc->itime[ch]  );
     if ((j+filter_l/2) >= len) break;
@@ -425,34 +424,28 @@ int fill_buffer_downsample(lame_global_flags *gfp,short int *outbuf,int desired_
     /* blackmon filter.  by default, window centered at j+.5(filter_l%2) */
     /* but we want a window centered at time0.   */
     offset = ( time0 -gfc->itime[ch] - (j + .5*(filter_l%2)));
-    assert(offset<=.500001);
+    assert(fabs(offset)<=.500001);
+    joff = floor((offset*2*BPC) + BPC +.5);
 
     xvalue=0;
-#ifdef DEBUG
-    printf("fcn = %f   offset = %f  l=%i \n",fcn,offset,filter_l);
-    printf("time0=%f   j=%f \n",time0,j+.5*(filter_l%2));
-#endif
     for (i=0 ; i<=filter_l ; ++i) {
       int j2 = i+j-filter_l/2;
       int y;
       y = (j2<0) ? inbuf_old[BLACKSIZE+j2] : inbuf[j2];
-      if (intratio) {
-	xvalue += y*gfc->blackfilt[i];
-      }else{
-	xvalue += y*blackman(i,offset,fcn,filter_l);
-      }
-#ifdef DEBUG
-      printf("i=%i  filter=%10.5f  y=%i \n",i,blackman(i,offset,fcn,filter_l),
-               y);
+#define PRECOMPUTE
+#ifdef PRECOMPUTE
+      xvalue += y*gfc->blackfilt[joff][i];
+#else
+      if (intratio) 
+	xvalue += y*gfc->blackfilt[joff][i];
+      else
+	xvalue += y*blackman(i,offset,fcn,filter_l);  /* very slow! */
 #endif
     }
     value = floor(.5+xvalue);
     if (value > 32767) outbuf[k]=32767;
     else if (value < -32767) outbuf[k]=-32767;
     else outbuf[k]=value;
-#ifdef DEBUG
-    printf("final value:  outbuf=%i  \n\n",outbuf[k]);
-#endif
   }
 
   

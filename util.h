@@ -210,8 +210,9 @@ typedef struct  {
 
   /* variables used by util.c */
 #define BLACKSIZE 30
+#define BPC 8   
   short int inbuf_old[2][BLACKSIZE];
-  FLOAT8 blackfilt[BLACKSIZE];
+  FLOAT8 blackfilt[2*BPC+1][BLACKSIZE];
   FLOAT8 itime[2];
 #define OLDBUFSIZE 5
   FLOAT8 upsample_itime[2];

@@ -858,10 +858,9 @@ char *mp3buf, int mp3buf_size)
 
 
   /*
-  VBR_iteration_loop_new( gfp,*pe_use, ms_ener_ratio, xr, masking, l3_enc,
-  	  &scalefac);
+  VBR_noise_shapping( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc,
+  	  scalefac);
   */
-
   if (gfp->VBR) {
     VBR_iteration_loop( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc,
 			scalefac);
