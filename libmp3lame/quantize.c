@@ -280,21 +280,30 @@ calc_xmin(
 
     for (sfb = gi->sfb_smin; gsfb < gi->psymax; sfb++, gsfb += 3) {
 	FLOAT tmpATH = gfc->ATH.adjust * gfc->ATH.s[sfb];
-	int width = gi->width[gsfb], b;
-
+	int b;
 	for (b = 0; b < 3; b++) {
-	    FLOAT en0 = 0.0, threshold;
-	    int l = width >> 1;
-	    do {
-		en0 += gi->xr[j] * gi->xr[j]; j++;
-		en0 += gi->xr[j] * gi->xr[j]; j++;
-	    } while (--l > 0);
-
-	    threshold = ratio->en.s[sfb][b];
-	    if (threshold > 0.0)
-		threshold = en0 * ratio->thm.s[sfb][b] / threshold;
-	    if (threshold < tmpATH)
-		threshold = tmpATH;
+	    FLOAT en0, threshold = tmpATH, x;
+	    int l = gi->width[gsfb];
+#ifdef HAVE_NASM
+	    if (gfc->CPU_features.AMD_3DNow) {
+		sumofsqr_3DN(&gi->xr[j], l, &en0);
+		j += l;
+	    } else
+#endif
+	    {
+		en0 = 0.0;
+		l >>= 1;
+		do {
+		    en0 += gi->xr[j] * gi->xr[j]; j++;
+		    en0 += gi->xr[j] * gi->xr[j]; j++;
+		} while (--l > 0);
+	    }
+	    x = ratio->en.s[sfb][b];
+	    if (x > 0.0) {
+		x = en0 * ratio->thm.s[sfb][b] / x;
+		if (threshold < x)
+		    threshold = x;
+	    }
 	    *xmin++ = threshold;
 	}   /* b */
     }   /* end of short block sfb loop */
