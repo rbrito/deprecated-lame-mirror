@@ -55,10 +55,7 @@
  * suggested: 576
  * set to 1160 to sync with FhG.
  */
- 
 #define ENCDELAY      (576*2)
-
-
 
 /*
  * make sure there is at least one complete frame after the
@@ -73,28 +70,22 @@
 /*#define POSTDELAY   288*/
 #define POSTDELAY   1152
 
-
-
 /* 
  * delay of the MDCT used in mdct.c
- * original ISO routines had a delay of 528!  
- * Takehiro's routines: 
+ * original ISO routines had a delay of 528!
  */
-
 #define MDCTDELAY     48  
 #define FFTOFFSET     (224+MDCTDELAY)
 
 /*
  * Most decoders, including the one we use, have a delay of 528 samples.  
  */
- 
 #define DECDELAY      528
-
 
 /* number of subbands */
 #define SBLIMIT       32
 
-/* parition bands bands */
+/* max of parition bands bands */
 #define CBANDS        64
 
 /* number of critical bands/scale factor bands where masking is computed*/
@@ -104,8 +95,6 @@
 /* total number of scalefactor bands encoded */
 #define SBMAX_l       22
 #define SBMAX_s       13
-
-
 
 /* FFT sizes */
 #define BLKSIZE       1024
@@ -127,6 +116,13 @@
 #define MPG_MD_MS_LR  2
 #define MPG_MD_MS_I   3
 
+#define MAX_CHANNELS  2
+
+/* max scalefactor band, max(SBMAX_l, SBMAX_s*3, (SBMAX_s-3)*3+8) */
+#define SFBMAX (SBMAX_s*3)
+
+#define MFSIZE  ( 3*1152 + ENCDELAY - MDCTDELAY )
+
 /***********************************************************************
 *
 *  Global Include Files
@@ -135,11 +131,9 @@
 #include "machine.h"
 #include "lame-analysis.h"
 
-/***********************************************************************
-*
-*  Global Type Definitions
-*
-***********************************************************************/
+/*
+ * internal data structure definition.
+ */
 /* bitstream handling structure */
 typedef struct {
     int totbyte;        /* byte counter of bit stream */
@@ -162,9 +156,6 @@ typedef struct {
     int w_ptr;
 } bit_stream_t;
 
-/* max scalefactor band, max(SBMAX_l, SBMAX_s*3, (SBMAX_s-3)*3+8) */
-#define SFBMAX (SBMAX_s*3)
-
 /* scalefactor band start/end positions */
 typedef struct 
 {
@@ -172,7 +163,7 @@ typedef struct
     int s[1+SBMAX_s];
 } scalefac_struct;
 
-
+/* structures for psymodel */
 typedef struct {
     FLOAT	l[SBMAX_l];
     FLOAT	s[SBMAX_s][3];
@@ -243,18 +234,13 @@ typedef struct
     int *bag;   /* pointer to our bag */
 } VBR_seek_info_t;
 
-
-/* Guest structure, only temporarly here */
-
-#define MAX_CHANNELS  2
 #ifdef HAVE_MPGLIB
 #include "../mpglib/interface.h"
 #endif
 
-/********************************************************************
- * internal variables NOT set by calling program, and should not be *
- * modified by the calling program                                  *
- ********************************************************************/
+/*
+ * encoder instance.
+ */
 struct lame_internal_flags {
     /* most used variables */
     FLOAT xrwork[2][576];  /* xr^(3/4) and fabs(xr) */
@@ -266,7 +252,6 @@ struct lame_internal_flags {
     FLOAT sb_sample[2][3][18][SBLIMIT];
     FLOAT amp_filter[SBLIMIT];
     int xrNumMax_longblock;
-
 /*  
  * Some remarks to the Class_ID field:
  * The Class ID is an Identifier for a pointer to this struct.
@@ -280,16 +265,12 @@ struct lame_internal_flags {
  *   should be "if (flag == 1)" and NOT "if (flag)". Unintended modification
  *   of this element will be otherwise misinterpreted as an init.
  */
+#define LAME_ID 0xFFF88E3B
 
-#ifndef  MFSIZE
-# define MFSIZE  ( 3*1152 + ENCDELAY - MDCTDELAY )
-#endif
-    sample_t     mfbuf [2] [MFSIZE];
-
-#  define  LAME_ID   0xFFF88E3B
     unsigned long Class_ID;
-    int alignment;
 
+    sample_t     mfbuf [2] [MFSIZE];
+    int alignment;
     int lame_encode_frame_init;
     int iteration_init_init;
 
@@ -308,7 +289,6 @@ struct lame_internal_flags {
     int samplerate_index;
     int mode_ext;
 
-
     /* lowpass and highpass filter control */
     FLOAT lowpass1,lowpass2;   /* normalized frequency bounds of passband */
     FLOAT highpass1,highpass2; /* normalized frequency bounds of passband */
@@ -316,7 +296,7 @@ struct lame_internal_flags {
     FLOAT narrowStereo;        /* stereo image narrowen factor */
     FLOAT reduce_side;         /* side channel PE reduce factor */
 
-    int filter_type;          /* 0=polyphase filter, 1= FIR filter 2=MDCT filter(bad)*/
+    int filter_type; /* 0=polyphase filter, 1= FIR filter 2=MDCT filter(bad)*/
     int use_scalefac_scale;   /* 0 = not use  1 = use */
     int use_subblock_gain;    /* 0 = not use  1 = use */
     int noise_shaping_amp;    /* 0 = ISO model: amplify all distorted bands
@@ -492,11 +472,11 @@ struct lame_internal_flags {
 				  default: LAME picks best value 
 				  at least not used for MP3 decoding:
 				  Remember 44.1 kHz MP3s and AC97 */
-    float scale;               /* scale input by this amount before encoding
+    FLOAT scale;               /* scale input by this amount before encoding
 				  at least not used for MP3 decoding */
-    float scale_left;          /* scale input of channel 0 (left) by this
+    FLOAT scale_left;          /* scale input of channel 0 (left) by this
 				  amount before encoding */
-    float scale_right;         /* scale input of channel 1 (right) by this
+    FLOAT scale_right;         /* scale input of channel 1 (right) by this
 				  amount before encoding */
 
     /* general control params */
@@ -515,7 +495,7 @@ struct lame_internal_flags {
      * Default is compression_ratio = 11.025
      */
     int mean_bitrate_kbps;      /* bitrate */
-    float compression_ratio;    /* sizeof(wav file)/sizeof(mp3 file) */
+    FLOAT compression_ratio;    /* sizeof(wav file)/sizeof(mp3 file) */
 
     /* frame params */
     int copyright;              /* mark as copyright. default=0           */
@@ -537,14 +517,10 @@ struct lame_internal_flags {
     int VBR_max_bitrate_kbps;
 
     /* resampling and filtering */
-    int lowpassfreq;                /* freq in Hz. 0=lame choses.
-				       -1=no filter                          */
-    int highpassfreq;               /* freq in Hz. 0=lame choses.
-				       -1=no filter                          */
-    int lowpasswidth;               /* freq width of filter, in Hz
-				       (default=15%)                         */
-    int highpasswidth;              /* freq width of filter, in Hz
-				       (default=15%)                         */
+    int lowpassfreq;   /* freq in Hz. 0=lame choses, -1=no filter */
+    int highpassfreq;  /* freq in Hz. 0=lame choses. -1=no filter */
+    int lowpasswidth;  /* freq width of filter, in Hz (default=15%) */
+    int highpasswidth; /* freq width of filter, in Hz (default=15%) */
     /*
      * psycho acoustics and other arguments which you should not change 
      * unless you know what you are doing
@@ -552,8 +528,8 @@ struct lame_internal_flags {
     int ATHonly;                    /* only use ATH                         */
     int ATHshort;                   /* only use ATH for short blocks        */
     int noATH;                      /* disable ATH                          */
-    float ATHcurve;                 /* change ATH formula 4 shape           */
-    float ATHlower;                 /* lower ATH by this many db            */
+    FLOAT ATHcurve;                 /* change ATH formula 4 shape           */
+    FLOAT ATHlower;                 /* lower ATH by this many db            */
     int mixed_blocks;
     int emphasis;                   /* Input PCM is emphased PCM (for
 				       instance from one of the rarely
@@ -563,15 +539,10 @@ struct lame_internal_flags {
 				       and last but not least many decoders
 				       don't care about these bits          */
 
-    /************************************************************************/
-    /* internal variables, do not set...                                    */
-    /* provided because they may be of use to calling application           */
-    /************************************************************************/
-
     int version;                    /* 0=MPEG-2/2.5  1=MPEG-1               */
     int encoder_delay;
     int encoder_padding;  /* number of samples of padding appended to input */
-    int framesize;                  
+    int framesize;
     int frameNum;                   /* number of frames encoded             */
 
     /* VBR tags. */
@@ -588,6 +559,7 @@ struct lame_internal_flags {
     PMPSTR pmp_replaygain;
 #endif
 };
+
 
 int	lame_encode_buffer_sample_t(
     lame_t gfc,
