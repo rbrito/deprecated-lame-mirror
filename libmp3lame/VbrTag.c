@@ -530,7 +530,7 @@ void ReportLameTagProgress(lame_global_flags *gfp,int nStart)
 int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer, uint32_t id3v2size,  uint16_t crc)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
-	FLOAT fVersion = LAME_MAJOR_VERSION + 0.01 * LAME_MINOR_VERSION;
+//	FLOAT fVersion = LAME_MAJOR_VERSION + 0.01 * LAME_MINOR_VERSION;
 
 	int nBytesWritten = 0;
 	int nFilesize	  = 0;		//size of fpStream. Will be equal to size after process finishes.
