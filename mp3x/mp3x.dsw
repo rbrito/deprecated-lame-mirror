@@ -3,7 +3,7 @@ Microsoft Developer Studio Workspace File, Format Version 5.00
 
 ###############################################################################
 
-Project: "lame"=.\lame.dsp - Package Owner=<4>
+Project: "MP3x"=.\MP3x.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -13,6 +13,9 @@ Package=<4>
 {{{
     Begin Project Dependency
     Project_Dep_Name mpglib
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name lamelib
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name libmp3lame

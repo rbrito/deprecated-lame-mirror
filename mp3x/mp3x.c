@@ -2,6 +2,9 @@
 
 #include "lame-analysis.h"
 #include <gtk/gtk.h>
+#include "main.h"
+#include "parse.h"
+#include "get_audio.h"
 
 
 
