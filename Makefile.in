@@ -392,7 +392,19 @@ lib_sources = \
 	mpglib_interface.c \
         version.c
 
-lib_obj = $(lib_sources:.c=.o) mpglib/mpglib.a
+lib_obj = $(lib_sources:.c=.o) 
+
+mpglib_sources = mpglib/common.c \
+        mpglib/dct64_i386.c \
+        mpglib/decode_i386.c \
+        mpglib/layer1.c \
+        mpglib/layer2.c \
+        mpglib/layer3.c \
+        mpglib/tabinit.c \
+        mpglib/interface.c 
+mpglib_obj = $(mpglib_sources:.c=.o) 
+
+lib_obj += $(mpglib_obj)
 
 OBJ = $(c_sources:.c=.o)
 DEP = $(c_sources:.c=.d) $(lib_sources:.c=.d)
