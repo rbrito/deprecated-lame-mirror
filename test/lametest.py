@@ -4,13 +4,17 @@ import os, commands, getopt, sys
 
 
 def Usage(mesg):
-    print mesg
-    print "\nUsage: "
-    print "\nMode 1. Compare output of 'lame1' and 'lame2':"
-    print "./lametest.py  options_file  input.wav lame1 lame2"
-    print "\nMode 2. Compare output of lame1 with reference solutions:"
-    print "./lametest.py options_file input.wav lame1"
-    print "\nMode 3. Generate reference solutions using lame1:"
+    print mesg + os.linesep
+
+    print "Usage: " + os.linesep
+
+    print "Mode 1. Compare output of 'lame1' and 'lame2':"
+    print "./lametest.py  options_file  input.wav lame1 lame2" + os.linesep
+
+    print "Mode 2. Compare output of lame1 with reference solutions:"
+    print "./lametest.py options_file input.wav lame1" + os.linesep
+
+    print "Mode 3. Generate reference solutions using lame1:"
     print "./lametest.py -m options_file input.wav lame1"
     sys.exit(0)
 
@@ -22,6 +26,11 @@ def Usage(mesg):
 ##################################################################
 def fdiff(name1,name2):
     cmd = "cmp -l "+name1 + " " + name2 + " | wc -l"
+    # XXX either
+    #    use a combination of os.popen + read
+    # or
+    #    write owen cmp+wc function
+    # to replace commands.getoutput
     out = commands.getoutput(cmd)
     out = split(out,"\n")
     out=out[-1]
@@ -43,8 +52,9 @@ def fdiff(name1,name2):
 def compare(name1,name2,decode):
     if (decode):
         print "converting mp3 to wav for comparison..."
-        commands.getoutput("lame --mp3input --decode " + name1)
-        commands.getoutput("lame --mp3input --decode " + name2)
+        # XXX shouldn't we use lame1 instead of a hardcoded lame?
+        os.system("lame --mp3input --decode " + name1)
+        os.system("lame --mp3input --decode " + name2)
         name1 = name1 + ".wav"
         name2 = name2 + ".wav"
 
@@ -83,7 +93,7 @@ for opt in optlist:
         decode=1
     elif opt[0] == '-m':
         lame2="makeref"
-        print "\nGenerating reference output"
+        print os.linesep + "Generating reference output"
 
 
 if len(args) < 3:
@@ -98,21 +108,52 @@ else:
     if len(args) ==3:	
         lame2="ref"
 
+# populate variables from args and normalize & expand path
 if len(args) >=3:
-    options_file = args[0]
-    input_file = args[1]
-    lame1 = args[2]
+    options_file = os.path.normpath(os.path.expanduser(args[0]))
+    input_file = os.path.normpath(os.path.expanduser(args[1]))
+    lame1 = os.path.normpath(os.path.expanduser(args[2]))
 if len(args) >=4:
-    lame2 = args[3]
+    lame2 = os.path.normpath(os.path.expanduser(args[3]))
 
-status,output=commands.getstatusoutput("which "+lame1)
-if 0 != status:
-    Usage("Executable "+lame1+" does not exist")
+
+# check readability of options_file
+status = os.access(options_file, os.R_OK)
+if 1 != status:
+    Usage(options_file + " not readable")
+
+# check readability of input_file
+status = os.access(input_file, os.R_OK)
+if 1 != status:
+    Usage(input_file + " not readable")
+
+
+# generate searchlist of directories
+path = split(os.environ['PATH'], os.pathsep)
+path.append(os.curdir)
+
+# init indicator vars
+lame1_ok = 0
+lame2_ok = 0
+
+# check for executable lame1
+for x in path:
+    status = os.access(os.path.join(x, lame1), os.X_OK)
+    if 1 == status:
+        lame1_ok = 1
+        break
+if 1 != lame1_ok:
+    Usage(lame1 + " is not executable")
 
 if not (lame2=="ref" or lame2=="makeref"):
-    status,output=commands.getstatusoutput("which "+lame2)
-    if 0 != status:
-        Usage("Executable "+lame2+" does not exist")
+    # check for executable lame2
+    for x in path:
+        status = os.access(os.path.join(x, lame2), os.X_OK)
+        if 1 == status:
+            lame2_ok = 1 
+            break
+    if 1 != lame2_ok:
+        Usage(lame2 + " is not executable")
 
 basename = replace(input_file,".wav","")
 basename = basename + "." + options_file
@@ -124,32 +165,35 @@ foptions=open(options_file)
 line = rstrip(foptions.readline())
 while line:
     n = n+1
-    name1 = basename + "." + str(n) + ".mp3"  
-    name2 = basename + "." + str(n) + "ref.mp3"  
+    name1 = basename + "." + str(n) + ".mp3"
+    name2 = basename + "." + str(n) + "ref.mp3"
+
+    print      # empty line
+
     if (lame2=='ref'):
-        cmd = lame1 + " " + line + " " + input_file + " " + name1
-        print "\nexecutable:      ",lame1
-        print   "options:         ",line
-        print   "input:           ",input_file 
-        print   "reference output:",name2
-        commands.getoutput(cmd)
+        cmd = lame1 + " --quiet " + line + " " + input_file + " " + name1
+        print "executable:      ",lame1
+        print "options:         ",line
+        print "input:           ",input_file 
+        print "reference output:",name2
+        os.system(cmd)
         num_ok = num_ok+compare(name1,name2,decode)
     elif (lame2=='makeref'):
-        print "\nexecutable: ",lame1
-        print   "options:    ",line
-        print   "input:      ",input_file 
-        print   "output:     ",name2
-        cmd = lame1 + " " + line + " " + input_file + " " + name2
-        commands.getoutput(cmd)
+        print "executable: ",lame1
+        print "options:    ",line
+        print "input:      ",input_file 
+        print "output:     ",name2
+        cmd = lame1 + " --quiet " + line + " " + input_file + " " + name2
+        os.system(cmd)
     else:
-        print "\nexecutable:  ",lame1
-        print   "executable2: ",lame2
-        print   "options:     ",line
-        print   "input:       ",input_file
-        cmd1 = lame1 + " " + line + " " + input_file + " " + name1
-        cmd2 = lame2 + " " + line + " " + input_file + " " + name2
-        commands.getoutput(cmd1)
-        commands.getoutput(cmd2)
+        print "executable:  ",lame1
+        print "executable2: ",lame2
+        print "options:     ",line
+        print "input:       ",input_file
+        cmd1 = lame1 + " --quiet " + line + " " + input_file + " " + name1
+        cmd2 = lame2 + " --quiet " + line + " " + input_file + " " + name2
+        os.system(cmd1)
+        os.system(cmd2)
 	num_ok = num_ok + compare(name1,name2,decode)
 
     line = rstrip(foptions.readline())
