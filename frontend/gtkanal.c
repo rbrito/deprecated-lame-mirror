@@ -115,113 +115,108 @@ static lame_t global_gfp;
 static int
 gtkmakeframe(void)
 {
-  int iread = 0;
-  static int init=0;
-  static int mpglag;
-  static short int  Buffer[2][1152];
-  short int  mpg123pcm[2][1152];
-  int ch,j;
-  int mp3count = 0;
-  int mp3out = 0;
-  int channels_out;
-  char mp3buffer[LAME_MAXMP3BUFFER];
-  extern plotting_data *mpg123_pinfo;
-  static int frameNum=0;
-  int framesize = lame_get_framesize(global_gfp);
+    int iread = 0;
+    static int init=0;
+    static int mpglag;
+    static short int  Buffer[2][1152];
+    short int  mpg123pcm[2][1152];
+    int ch,j;
+    int mp3count = 0;
+    int mp3out = 0;
+    int channels_out;
+    char mp3buffer[LAME_MAXMP3BUFFER];
+    extern plotting_data *mpg123_pinfo;
+    static int frameNum=0;
+    int framesize = lame_get_framesize(global_gfp);
 
-  channels_out = (lame_get_mode(global_gfp)==MONO) ? 1 : 2;
+    pinfo->frameNum = frameNum;
+    pinfo->sampfreq = lame_get_out_samplerate (global_gfp);
+    pinfo->channels = channels_out = (lame_get_mode(global_gfp)==MONO) ? 1 : 2;
 
-  pinfo->frameNum = frameNum;
-  pinfo->sampfreq = lame_get_out_samplerate (global_gfp);
-  pinfo->framesize= framesize;
-  pinfo->channels = channels_out;
+    /* If the analsys code is enabled, lame will writes data into
+     * global_gfp->pinfo, and mpg123 will write data into mpg123_pinfo.
+     * Set these so the libraries put this data in the right place
+     */
+    mpg123_pinfo = global_gfp->pinfo = pinfo;
 
-  /* If the analsys code is enabled, lame will writes data into global_gfp->pinfo,
-   * and mpg123 will write data into mpg123_pinfo.  Set these so
-   * the libraries put this data in the right place: */
-  global_gfp->pinfo = pinfo;
-  mpg123_pinfo = pinfo;
-
-  if (input_format == sf_mp1 ||
-      input_format == sf_mp2 ||
-      input_format == sf_mp3) {
-    iread = get_audio16(global_gfp, Buffer);
-
-
-    /* add a delay of framesize-DECDELAY, which will make the total delay
-     * exactly one frame, so we can sync MP3 output with WAV input */
-    for ( ch = 0; ch < channels_out; ch++ ) {
-      for ( j = 0; j < framesize-DECDELAY; j++ )
-	pinfo->pcmdata2[ch][j] = pinfo->pcmdata2[ch][j+framesize];
-      for ( j = 0; j < framesize; j++ ) /*rescale from int to short int */
-	pinfo->pcmdata2[ch][j+framesize-DECDELAY] = Buffer[ch][j];
-    }
-
-    pinfo->frameNum123 = frameNum-1;
-    ++frameNum;
-
-  }else {
-
-    /* feed data to encoder until encoder produces some output */
-    while (lame_get_frameNum(global_gfp) == pinfo->frameNum) {
-      
-      if (!init) {
-	init=1;
-	mpglag=1;
-	lame_decode_init(global_gfp);
-      }
-      
-      iread = get_audio16(global_gfp, Buffer);
-      if (iread > framesize) {
-	/* NOTE: frame analyzer requires that we encode one frame 
-	 * for each pass through this loop.  If lame_encode_buffer()
-	 * is feed data too quickly, it will sometimes encode multiple frames
-	 * breaking this loop.
-	 */
-	fprintf(stderr,"Warning: get_audio is returning too much data.\n");
-      }
-      if (0==iread) break; /* eof */
-
-      mp3count=lame_encode_buffer(global_gfp,Buffer[0],Buffer[1],iread,
-				  mp3buffer,(int)sizeof(mp3buffer));
-
-      assert( !(mp3count > 0 && lame_get_frameNum(global_gfp) == pinfo->frameNum));
-      /* not possible to produce mp3 data without encoding at least 
-       * one frame of data which would increment frameNum */
-    }
-    frameNum = lame_get_frameNum(global_gfp);  /* use the internal MP3 frame counter */
-
-    
-    /* decode one frame of output */
-    mp3out=lame_decode1(global_gfp, mp3buffer,mp3count,mpg123pcm[0],mpg123pcm[1]); /* re-synthesis to pcm */
-    /* mp3out = 0:  need more data to decode */
-    /* mp3out = -1:  error.  Lets assume 0 pcm output */
-    /* mp3out = number of samples output */
-    if (mp3out>0) assert(mp3out==pinfo->framesize);
-    if (mp3out!=0) {
-      /* decoded output is for frame pinfo->frameNum123 
-       * add a delay of framesize-DECDELAY, which will make the total delay
-       * exactly one frame */
-      pinfo->frameNum123=pinfo->frameNum-mpglag;
-      for ( ch = 0; ch < pinfo->channels; ch++ ) {
-	for ( j = 0; j < pinfo->framesize-DECDELAY; j++ )
-	  pinfo->pcmdata2[ch][j] = pinfo->pcmdata2[ch][j+pinfo->framesize];
-	for ( j = 0; j < pinfo->framesize; j++ ) {
-	  pinfo->pcmdata2[ch][j+pinfo->framesize-DECDELAY] = 
-	    (mp3out==-1) ? 0 : mpg123pcm[ch][j];
+    if (input_format == sf_mp1
+	|| input_format == sf_mp2
+	|| input_format == sf_mp3) {
+	iread = get_audio16(global_gfp, Buffer);
+	/* add a delay of framesize-DECDELAY, which will make the total delay
+	 * exactly one frame, so we can sync MP3 output with WAV input */
+	pinfo->frameNum123 = frameNum-1;
+	frameNum++;
+	for (ch = 0; ch < channels_out; ch++) {
+	    for (j = 0; j < framesize-DECDELAY; j++)
+		pinfo->pcmdata2[ch][j] = pinfo->pcmdata2[ch][j+framesize];
+	    for (j = 0; j < framesize; j++) /* rescale from int to short int */
+		pinfo->pcmdata2[ch][j+framesize-DECDELAY] = Buffer[ch][j];
 	}
-      }
-    }else{
-      if (mpglag == MAXMPGLAG) {
-	fprintf(stderr,"READ_AHEAD set too low - not enough frame buffering.\n"
-	       "MP3x display of input and output PCM data out of sync.\n");
-	fflush(stderr);
-      }
-      else mpglag++; 
-      pinfo->frameNum123=-1;  /* no frame output */
+    } else {
+	/* feed data to encoder until encoder produces some output */
+	while (lame_get_frameNum(global_gfp) == pinfo->frameNum) {
+	    if (!init) {
+		init=1;
+		mpglag=1;
+		lame_decode_init(global_gfp);
+	    }
+
+	    iread = get_audio16(global_gfp, Buffer);
+	    if (feof(musicin))
+		break;
+
+	    /* NOTE: frame analyzer requires that we encode one frame 
+	     * for each pass through this loop. If lame_encode_buffer()
+	     * is feed data too quickly, it will sometimes encode
+	     * multiple frames breaking this loop.
+	     */
+	    assert(iread <= framesize);
+	    mp3count=lame_encode_buffer(global_gfp,Buffer[0],Buffer[1],iread,
+					mp3buffer,(int)sizeof(mp3buffer));
+
+	    assert(mp3count <= 0
+		   || lame_get_frameNum(global_gfp) != pinfo->frameNum);
+	    /* not possible to produce mp3 data without encoding at least
+	     * one frame of data which would increment frameNum */
+	}
+	/* use the internal MP3 frame counter */
+	frameNum = lame_get_frameNum(global_gfp);
+
+	/* decode one frame of output */
+	mp3out = lame_decode1(global_gfp,
+			      mp3buffer,mp3count,mpg123pcm[0],mpg123pcm[1]);
+	/* re-synthesis to pcm */
+	/* mp3out = 0:  need more data to decode */
+	/* mp3out = -1:  error.  Lets assume 0 pcm output */
+	/* mp3out = number of samples output */
+	assert(mp3out<=0 || mp3out==framesize);
+	if (mp3out==0) {
+	    if (mpglag == MAXMPGLAG) {
+		fprintf(stderr,
+			"READ_AHEAD set too low - not enough frame buffering.\n"
+			"MP3x display of input and output PCM data out of sync.\n");
+		fflush(stderr);
+	    }
+	    else
+		mpglag++;
+	    pinfo->frameNum123=-1;  /* no frame output */
+	} else {
+	    /* decoded output is for frame pinfo->frameNum123
+	     * add a delay of framesize-DECDELAY, which will make
+	     * the total delay exactly one frame */
+	    pinfo->frameNum123=pinfo->frameNum-mpglag;
+	    for (ch = 0; ch < pinfo->channels; ch++) {
+		for (j = 0; j < framesize-DECDELAY; j++)
+		    pinfo->pcmdata2[ch][j] = pinfo->pcmdata2[ch][j+framesize];
+		for (j = 0; j < framesize; j++) {
+		    pinfo->pcmdata2[ch][j+framesize-DECDELAY] = 
+			(mp3out==-1) ? 0 : mpg123pcm[ch][j];
+		}
+	    }
+	}
     }
-  }
-  return iread;
+    return iread;
 }
 
 
