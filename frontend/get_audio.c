@@ -759,7 +759,7 @@ static int  read_samples_pcm ( FILE* const musicin, short sample_buffer [2304], 
         break;
     }
 
-    return sample_read;
+    return samples_read;
 }
 
 

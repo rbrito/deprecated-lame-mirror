@@ -318,7 +318,7 @@ int  lame_encode_mp3_frame (				// Output
         /* [0] and [1] are the results for the two granules in MPEG-1,
          * in MPEG-2 it's only a faked averaging of the same value
          * _prev is the value of the last granule of the previous frame
-         * _next ????
+         * _next is the value of the first granule of the next frame
          */
         FLOAT8  ms_ratio_ave1 = 0.25 * ( gfc->ms_ratio[0] + gfc->ms_ratio[1] + ms_ratio_prev + ms_ratio_next );
         FLOAT8  ms_ratio_ave2 = 0.50 * ( gfc->ms_ratio[0] + gfc->ms_ratio[1] );
