@@ -5,6 +5,11 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.18  2000/01/09 07:34:39  markt
+ * compute mid/side energy rations in addition to masking ratios.
+ * in the future we might use this for side channel bit allocation.
+ * it is not used at all right now.
+ *
  * Revision 1.17  2000/01/09 04:11:14  markt
  * someone mistakenly uncommented the call to preemphasis().
  * this routine should *not* be used.  preemph is now taken care of
@@ -139,6 +144,7 @@ void L3psycho_anal( short int *buffer[2], int stereo,
 		    FLOAT8 sfreq, int check_ms_stereo, 
                     FLOAT8 *ms_ratio,
                     FLOAT8 *ms_ratio_next,
+		    FLOAT8 *ms_ener_ratio,
 		    III_psy_ratio *masking_ratio,
 		    III_psy_ratio *masking_MS_ratio,
 		    FLOAT8 percep_entropy[2],FLOAT8 percep_MS_entropy[2], 
@@ -146,6 +152,8 @@ void L3psycho_anal( short int *buffer[2], int stereo,
 {
   static FLOAT8 pe[4]={0,0,0,0};
   static FLOAT8 ms_ratio_s_old=0,ms_ratio_l_old=0;
+  static FLOAT8 ms_ener_ratio_old=.25;
+  FLOAT8 tot_ener[4];
   
 #ifdef HAVEGTK
   static FLOAT energy_save[4][HBLKSIZE];
@@ -414,6 +422,14 @@ void L3psycho_anal( short int *buffer[2], int stereo,
      **********************************************************************/
     fft_long2( wsamp, energy, chn, buffer); /* old version */
     //fft_long( wsamp, energy, chn, buffer);
+
+    if (check_ms_stereo) {
+      /* used for MS stereo criterion */
+      tot_ener[chn]=0;
+      for (j=0; j<HBLKSIZE ; j++) {
+	tot_ener[chn] += energy[j];
+      }
+    }
   
 #ifdef HAVEGTK
   if(gtkflag) {
@@ -636,13 +652,13 @@ void L3psycho_anal( short int *buffer[2], int stereo,
     /* calculate the tonality of each threshold calculation partition */
     /* calculate the SNR in each threshhold calculation partition */
     
-#ifndef AAC_TMN_NMT
-    /* MP3 values */
-# define TMN 29
+#ifdef AACS3
+    /* AAC values, results in more masking over MP3 values */
+# define TMN 18
 # define NMT 6
 #else
-    /* AAC values */
-# define TMN 18
+    /* MP3 values */
+# define TMN 29
 # define NMT 6
 #endif
 
@@ -947,6 +963,26 @@ void L3psycho_anal( short int *buffer[2], int stereo,
 
   /* we dont know the block type of this frame yet - assume long */
   *ms_ratio_next = ms_ratio_l;
+
+
+
+  /*********************************************************************/
+  /* compute side_energy / (side+mid)_energy */
+  /* 0 = no energy in side channel */
+  /* .5 = half of total energy in side channel */
+  /*********************************************************************/
+  if (highq) 
+    *ms_ener_ratio = ms_ener_ratio_old;
+  else
+    /* we didn't compute ms_ener_ratios, use the masking ratios instead */
+    *ms_ener_ratio = *ms_ratio;
+
+  {
+    FLOAT8 tmp = tot_ener[3]+tot_ener[2];
+    ms_ener_ratio_old=0;
+    if (tmp>0) ms_ener_ratio_old=tot_ener[3]/tmp;
+  }
+
 
   
 }

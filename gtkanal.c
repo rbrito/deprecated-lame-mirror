@@ -304,8 +304,9 @@ void plot_frame(void)
   /*******************************************************************/
   n = 1152;
 
-  sprintf(title2,"Re-synthesis  ms_ratio=%3.2f  %3.2f",
-	  pplot->ms_ratio[0],pplot->ms_ratio[1]);
+  sprintf(title2,"Re-synthesis  mask_ratio=%3.2f  %3.2f  ener_ratio=%3.2f  %3.2f",
+	  pplot->ms_ratio[0],pplot->ms_ratio[1],
+	  pplot->ms_ener_ratio[0],pplot->ms_ener_ratio[1]);
   title=title2;
 
 

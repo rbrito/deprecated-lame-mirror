@@ -1118,6 +1118,7 @@ int lame_encode(short int Buffer[2][1152],char *mpg123bs)
   static FLOAT8 ms_ratio[2]={0,0};
   FLOAT8 ms_ratio_next=0;
   FLOAT8 ms_ratio_prev=0;
+  FLOAT8 ms_ener_ratio[2];
   static int init=0;
 
   if (init==0) {
@@ -1263,7 +1264,7 @@ FFT's                    <---------1024---------->
 
       L3psycho_anal( bufp, stereo, gr, info,
          s_freq[info->version][info->sampling_frequency] * 1000.0,
-	 check_ms_stereo,&ms_ratio[gr],&ms_ratio_next,
+	 check_ms_stereo,&ms_ratio[gr],&ms_ratio_next,&ms_ener_ratio[gr],
          &masking_ratio, &masking_MS_ratio,
          pe[gr],pe_MS[gr],blocktype);
 
@@ -1312,9 +1313,9 @@ FFT's                    <---------1024---------->
     /*     ms_ratio_ave = .5*(ms_ratio[0] + ms_ratio[1]);*/
     ms_ratio_ave = .25*(ms_ratio[0] + ms_ratio[1]+ 
 			 ms_ratio_prev + ms_ratio_next);
-    if (( ms_ratio_ave <.35) || force_ms )
-           info->mode_ext = MPG_MD_MS_LR;
+    if ( ms_ratio_ave <.35) info->mode_ext = MPG_MD_MS_LR;
   }
+  if (force_ms) info->mode_ext = MPG_MD_MS_LR;
 
 
 #ifdef HAVEGTK
@@ -1323,6 +1324,7 @@ FFT's                    <---------1024---------->
     for ( gr = 0; gr < mode_gr; gr++ ) {
       for ( ch = 0; ch < stereo; ch++ ) {
 	pinfo->ms_ratio[gr]=ms_ratio[gr];
+	pinfo->ms_ener_ratio[gr]=ms_ener_ratio[gr];
 	pinfo->blocktype[gr][ch]=
 	  l3_side.gr[gr].ch[ch].tt.block_type;
 	for ( j = 0; j < 576; j++ ) pinfo->xr[gr][ch][j]=xr[gr][ch][j];

@@ -20,6 +20,7 @@ typedef struct {
   double xr[2][2][576];
   double mpg123xr[2][2][576];
   double ms_ratio[2];
+  double ms_ener_ratio[2];
 
   /* L,R, M and S values */
   double energy[2][4][BLKSIZE];

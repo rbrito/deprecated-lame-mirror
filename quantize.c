@@ -126,8 +126,6 @@ void set_masking_lower( int nbits )
 	/* Adjust allowed masking based on quality setting */
 	
 #ifdef  RH_masking	
-	/* masking_lower varies from -14 to +2.9 db */
-	
 	/* masking_lower_db varies from -10 to +2.9 db */
 	masking_lower_db = 10 * ( VBR_q/7.0 - 1 );
 	
