@@ -173,13 +173,20 @@ average bitrate encoding (aka Safe VBR)
 --abr n
 
 turns on encoding with a targeted average bitrate of n kbits, allowing
-to use frames of different sizes.
-The allowed range of n is 4-310, you can use any integer value
-within that range.
+to use frames of different sizes.  The allowed range of n is 4-310,
+you can use any integer value within that range.
 
 It can be combined with the -b and -B switches like
 lame --abr 123 -b 64 -B 192 a.wav a.mp3
 which would limit the allowed frame sizes between 64 and 192 kbits.
+
+Using -B is NOT RECOMMENDED.  A 128kbs CBR bitstream, because of the
+bit reservoir, can actually have frames which use as many bits as a
+320kbs frame.  VBR modes minimize the use of the bit reservoir, and
+thus need to allow 320kbs frames to get the same flexability as CBR
+streams.
+
+
 
 
 =======================================================================
