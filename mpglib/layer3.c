@@ -9,9 +9,7 @@
 #include "mpg123.h"
 #include "mpglib.h"
 #include "huffman.h"
-#ifdef OS_AMIGAOS
-#include "/gtkanal.h"
-#else
+#ifdef HAVEGTK
 #include "../gtkanal.h"
 #endif
 
