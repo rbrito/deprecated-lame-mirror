@@ -85,7 +85,8 @@ Constant Bit Rate (CBR)
 
 Variable Bit Rate (VBR)
 -v             VBR
---vbr-old      use old variable bitrate (VBR) routine
+--vbr-old      use old variable bitrate (VBR) routine (default)
+--vbr-new      use new variable bitrate (VBR) routine
 -V n           VBR quality setting  (0=highest quality, 9=lowest)
 -b  n          specify a minimum allowed bitrate (8,16,24,...,320)
 -B  n          specify a maximum allowed bitrate (8,16,24,...,320)
@@ -281,7 +282,7 @@ mpglib decode capability
 
 This just uses LAME's mpg123/mpglib interface to decode an MP3 file to
 a wav file.  The input file can be any input type supported by
-encoding, including .mp3  and .ogg.  
+encoding, including .mp3 (layers 1,2 and 3) and .ogg.  
 
 If -t is used (disable wav header), LAME will output
 raw pcm in native endian format (use -x to swap bytes).
@@ -356,7 +357,7 @@ graphical frame analyzer
 run MP3x, the graphical frame analyzer analysis on the inputfile.  The
 inputfile can be either an .mp3 file or uncompressed audio file.  MP3x
 support must be compiled into LAME, and requires GTK 1.2.
-Documentation is under the About pull down menu.
+Documentation (outdated) is under the About pull down menu.
 
 
 
@@ -477,6 +478,17 @@ Ogg Vorbis encoding
 
 Encode using the Ogg Vobis codec (using libvorbis) instead of
 LAME's internal mp3 codec.
+
+Most options related to the internal workings of the MP3 format
+are ignored when using "--ogg".  But downsampling and stereo/mono
+options work.  
+
+Currently (8/00) Ogg Vorbis only supports 5 modes, which range
+from approximately 128kbs to 320kbs.   Based on the bitrate
+specified (or the -V n option), LAME will take its best guess
+as to which of the 5 Vorbis modes will give about close to the
+desired bitrate.
+
 
 
 
@@ -607,13 +619,6 @@ lame -v -V n input.wav output.mp3         (to very quality/filesize)
 
 
 
-
-=======================================================================
-old variable bit rate  (VBR)
-=======================================================================
---vbr-old
-
-same as -v but turns on the old VBR routine
 
 
 
