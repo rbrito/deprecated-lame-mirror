@@ -616,74 +616,122 @@ lame_get_highpasswidth( const lame_global_flags*  gfp );
 // only use ATH for masking
 int
 lame_set_ATHonly( lame_global_flags*  gfp,
-                  int                 ATHonly );
+                  int                 ATHonly ){
+    gfp->ATHonly=ATHonly;
+    return 0;
+}
+
 int
-lame_get_ATHonly( const lame_global_flags*  gfp );
+lame_get_ATHonly( const lame_global_flags*  gfp ){
+    return gfp->ATHonly;
+}
 
 
 // only use ATH for short blocks
 int
 lame_set_ATHshort( lame_global_flags*  gfp,
-                   int                 ATHshort );
+                   int                 ATHshort ){
+    gfp->ATHshort = ATHshort;
+    return 0;
+}
 int
-lame_get_ATHshort( const lame_global_flags*  gfp );
+lame_get_ATHshort( const lame_global_flags*  gfp ){
+    return gfp->ATHshort;
+}
 
 
 // disable ATH
 int
 lame_set_noATH( lame_global_flags*  gfp,
-                int                 noATH );
+                int                 noATH ){
+    gfp->noATH=noATH;
+    return 0;
+}
 int
-lame_get_noATH( const lame_global_flags*  gfp );
+lame_get_noATH( const lame_global_flags*  gfp ){
+    return gfp->noATH;
+}
 
 
 // select ATH formula
 int
 lame_set_ATHtype( lame_global_flags*  gfp,
-                  int                 ATHtype );
+                  int                 ATHtype ){
+    gfp->ATHtype=ATHtype;
+    return 0;
+}
 int
-lame_get_ATHtype( const lame_global_flags*  gfp );
+lame_get_ATHtype( const lame_global_flags*  gfp ){
+    return gfp->ATHtype;
+}
 
 
 // lower ATH by this many db
 int
 lame_set_ATHlower( lame_global_flags*  gfp,
-                   float               ATHlower );
+                   float               ATHlower ){
+    gfp->ATHlower = ATHlower;
+    return 0;
+}
+
 float
-lame_get_ATHlower( const lame_global_flags*  gfp );
+lame_get_ATHlower( const lame_global_flags*  gfp ){
+    return gfp->ATHlower;
+}
 
 
 // predictability limit (ISO tonality formula)
 int
 lame_set_cwlimit( lame_global_flags*  gfp,
-                  int                 cwlimit );
+                  int                 cwlimit ){
+    gfp->cwlimit=cwlimit;
+    return 0;
+}
 int
-lame_get_cwlimit( const lame_global_flags*  gfp );
+lame_get_cwlimit( const lame_global_flags*  gfp ){
+    return gfp->cwlimit;
+}
+
 
 
 // allow blocktypes to differ between channels?
 // default: 0 for jstereo, 1 for stereo
 int
 lame_set_allow_diff_short( lame_global_flags*  gfp,
-                           int                 allow_diff_short );
+                           int                 allow_diff_short ){
+    gfp->allow_diff_short=allow_diff_short;
+    return 0;
+}
 int
-lame_get_allow_diff_short( const lame_global_flags*  gfp );
+lame_get_allow_diff_short( const lame_global_flags*  gfp ){
+    return gfp->allow_diff_short;
+}
 
 
 // use temporal masking effect (default = 1)
 int
 lame_set_useTemporal( lame_global_flags*  gfp,
-                      int                 useTemporal );
+                      int                 useTemporal ){
+    gfp->useTemporal=useTemporal;
+    return 0;
+}
 int
-lame_get_useTemporal( const lame_global_flags*  gfp );
+lame_get_useTemporal( const lame_global_flags*  gfp ){
+    return gfp->useTemporal;
+}
 
 
 // disable short blocks
 int
 lame_set_no_short_blocks( lame_global_flags*  gfp,
-                          int                 no_short_blocks );
+                          int                 no_short_blocks ){
+    gfp->no_short_blocks=no_short_blocks;
+    return 0;
+}
 int
-lame_get_no_short_blocks( const lame_global_flags*  gfp );
+lame_get_no_short_blocks( const lame_global_flags*  gfp ){
+    return gfp->no_short_blocks;
+}
 
 
 /* Input PCM is emphased PCM (for instance from one of the rarely
@@ -692,9 +740,17 @@ lame_get_no_short_blocks( const lame_global_flags*  gfp );
    ignore these bits */
 int
 lame_set_emphasis( lame_global_flags*  gfp,
-                   int                 emphasis );
+                   int                 emphasis )
+{
+    if (emphasis<0 || emphasis>3) return -1;
+    gfp->emphasis = emphasis;
+    return 0;
+}
+
 int
-lame_get_emphasis( const lame_global_flags*  gfp );
+lame_get_emphasis( const lame_global_flags*  gfp ){
+    return gfp->emphasis;
+}
 
 
 
@@ -706,25 +762,35 @@ lame_get_emphasis( const lame_global_flags*  gfp );
 
 // version  0=MPEG-2  1=MPEG-1  (2=MPEG-2.5)    
 int
-lame_get_version( const lame_global_flags* gfp );
+lame_get_version( const lame_global_flags* gfp ){
+    return gfp->version;
+}
 
 
 // encoder delay
 int
-lame_get_encoder_delay( const lame_global_flags*  gfp );
+lame_get_encoder_delay( const lame_global_flags*  gfp ){
+    return gfp->encoder_delay;
+}
 
 
 // size of MPEG frame
 int
-lame_get_framesize( const lame_global_flags*  gfp );
+lame_get_framesize( const lame_global_flags*  gfp ){
+    return gfp->framesize;
+}
 
 
 // number of frames encoded so far
 int
-lame_get_frameNum( const lame_global_flags*  gfp );
+lame_get_frameNum( const lame_global_flags*  gfp ){
+    return gfp->frameNum;
+}
 
 
 // lame's estimate of the total number of frames to be encoded
 // only valid if calling program set num_samples 
 int
-lame_get_totalframes( const lame_global_flags*  gfp );
+lame_get_totalframes( const lame_global_flags*  gfp ){
+    return gfp->totalframes;
+}
