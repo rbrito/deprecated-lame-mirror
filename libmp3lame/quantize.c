@@ -1303,7 +1303,7 @@ void bitpressure_strategy1(
 inline
 void bitpressure_strategy2( 
     lame_internal_flags * gfc,
-    int bpf, int used, int const save_bits[2][2],
+    int bpf, int used, int save_bits[2][2],
     int min_bits[2][2], int max_bits[2][2] )  
 {
     int gr, ch;
