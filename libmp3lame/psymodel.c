@@ -640,15 +640,8 @@ set_istereo_sfb(lame_internal_flags *gfc, int gr)
 	    x1 = mr[0].en.l[sb] * mr[1].thm.l[sb];
 	    x2 = mr[1].en.l[sb] * mr[0].thm.l[sb];
 
-	    if (x1*gfc->istereo_ratio <= x2 && x2*gfc->istereo_ratio <= x1)
-		continue;
-#if 0
-	    if (x1>x2)
-		printf("%d %e %e %e\n", sb, (x1+1e-10)/(x2+1e-10), x1, x2);
-	    else
-		printf("%d %e %e %e\n", sb, (x2+1e-10)/(x1+1e-10), x1, x2);
-#endif
-	    break;
+	    if (x1*gfc->istereo_ratio > x2 || x2*gfc->istereo_ratio > x1)
+		break;
 	} while (--sb >= 0);
 	gfc->is_start_sfb_l_next[gr] = ++sb;
 	for (; sb < SBMAX_l; sb++) {
@@ -673,15 +666,8 @@ set_istereo_sfb(lame_internal_flags *gfc, int gr)
 	    x1 = mr[0].en.s[sb][sblock] * mr[1].thm.s[sb][sblock];
 	    x2 = mr[1].en.s[sb][sblock] * mr[0].thm.s[sb][sblock];
 
-	    if (x1*gfc->istereo_ratio <= x2 && x2*gfc->istereo_ratio <= x1)
-		continue;
-#if 0
-	    if (x1>x2)
-		printf("%d %e %e %e\n", sb, (x1+1e-10)/(x2+1e-10), x1, x2);
-	    else
-		printf("%d %e %e %e\n", sb, (x2+1e-10)/(x1+1e-10), x1, x2);
-#endif
-	    break;
+	    if (x1*gfc->istereo_ratio > x2 || x2*gfc->istereo_ratio > x1)
+		break;
 	}
 	if (sblock != 3)
 	    break;
@@ -1772,12 +1758,14 @@ psycho_analysis(
 		gfc->l3_side.tt[gfc->mode_gr-1][0].block_type
 		    = gfc->l3_side.tt[gfc->mode_gr-1][1].block_type
 		    = SHORT_TYPE;
-	} else if (gfc->mode_ext_next != gfc->mode_ext
-		   && (gfc->useshort_next[0][0] | gfc->useshort_next[0][1])) {
-	    gfc->useshort_next[0][0] = gfc->useshort_next[0][1] = SHORT_TYPE;
-	    if (gfp->use_istereo
-//		&& (check_istereo_LR(gfc, 0)
-//		    + check_istereo_LR(gfc, gfc->mode_gr-1))
+	} else {
+	    if (gfc->mode_ext_next != gfc->mode_ext
+		&& (gfc->useshort_next[0][0] | gfc->useshort_next[0][1]))
+		gfc->useshort_next[0][0] = gfc->useshort_next[0][1]
+		    = SHORT_TYPE;
+	    else if (gfp->use_istereo
+		&& (check_istereo_LR(gfc, 0)
+		    + check_istereo_LR(gfc, gfc->mode_gr-1))
 		)
 		gfc->mode_ext_next = MPG_MD_LR_I;
 	}
