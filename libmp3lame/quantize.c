@@ -1167,35 +1167,33 @@ find_scalefac(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, int bw)
 static void
 short_block_scalefacs(const lame_internal_flags *gfc, gr_info * gi, int vbrmax)
 {
-    int sfb, b, newmax0, newmax1, maxov0[3], maxov1[3];
+    int sfb, b, newmax1, maxov[2][3];
 
-    maxov0[0] = maxov0[1] = maxov0[2] = maxov1[0] = maxov1[1] = maxov1[2]
-	= newmax0 = newmax1 = vbrmax;
+    maxov[0][0] = maxov[0][1] = maxov[0][2]
+	= maxov[1][0] = maxov[1][1] = maxov[1][2]
+	= newmax1 = vbrmax;
 
     for (sfb = 0; sfb < gi->psymax; ) {
 	for (b = 0; b < 3; b++) {
-	    maxov0[b] = Min(gi->scalefac[sfb] + 2*max_range_short[sfb],
-			    maxov0[b]);
-	    maxov1[b] = Min(gi->scalefac[sfb] + 4*max_range_short[sfb],
-			    maxov1[b]);
+	    maxov[0][b] = Min(gi->scalefac[sfb] + 2*max_range_short[sfb],
+			      maxov[0][b]);
+	    maxov[1][b] = Min(gi->scalefac[sfb] + 4*max_range_short[sfb],
+			      maxov[1][b]);
 	    sfb++;
 	}
     }
 
     /* should we use subblcok_gain ? */
     for (b = 0; b < 3; b++) {
-	if (newmax0 > maxov0[b] + 7*8)
-	    newmax0 = maxov0[b] + 7*8;
-	if (newmax1 > maxov1[b] + 7*8)
-	    newmax1 = maxov1[b] + 7*8;
+	if (vbrmax > maxov[0][b] + 7*8)
+	    vbrmax = maxov[0][b] + 7*8;
+	if (newmax1 > maxov[1][b] + 7*8)
+	    newmax1 = maxov[1][b] + 7*8;
     }
-    if (newmax0 <= newmax1) {
-	vbrmax = newmax0;
-	gi->scalefac_scale = 0;
-    } else {
+    gi->scalefac_scale = 0;
+    if (vbrmax > newmax1) {
 	vbrmax = newmax1;
 	gi->scalefac_scale = 1;
-	memcpy(maxov0, maxov1, sizeof(maxov0));
     }
     if (vbrmax < 0)
 	vbrmax = 0;
@@ -1204,7 +1202,7 @@ short_block_scalefacs(const lame_internal_flags *gfc, gr_info * gi, int vbrmax)
     gi->global_gain = vbrmax;
 
     for (b = 0; b < 3; b++) {
-	int sbg = (vbrmax - maxov0[b] + 7) / 8;
+	int sbg = (vbrmax - maxov[gi->scalefac_scale][b] + 7) / 8;
 	if (sbg < 0)
 	    sbg = 0;
 	assert(sbg <= 7);
@@ -1423,18 +1421,19 @@ VBR_noise_shaping(
     /* quantize xr34 */
     gi->part2_3_length = count_bits(gfc, xr34, gi);
 
+    if (gi->part2_3_length + gi->part2_length >= LARGE_BITS)
+	return -2;
+
     if (gfc->substep_shaping & 2) {
 	FLOAT xrtmp[576];
-	if (gi->part2_3_length + gi->part2_length >= LARGE_BITS)
-	    return -2;
 	trancate_smallspectrums(gfc, gi, l3_xmin, xrtmp);
     }
 
-    if (gi->part2_3_length + gi->part2_length >= MAX_BITS)
-	return -2;
-
     if (gfc->use_best_huffman == 2)
 	best_huffman_divide(gfc, gi);
+
+    if (gi->part2_3_length + gi->part2_length >= MAX_BITS)
+	return -2;
 
     assert(gi->global_gain < 256u);
     assert(gi->part2_3_length + gi->part2_length < MAX_BITS);
