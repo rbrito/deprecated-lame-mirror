@@ -119,7 +119,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /I "../WinGTK/gtk-plus" /I "../WinGTK/glib-1.2" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVEGTK" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /O2 /I "./WinGTK/gtk-plus" /I "./WinGTK/glib-1.2" /D "NDEBUG" /D "LAMESNDFILE" /D "HAVEMPGLIB" /D "HAVEGTK" /D "LAMEPARSE" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /FR /YX /FD /c
+# ADD CPP /nologo /W3 /GX /O2 /D "NDEBUG" /D "LAMESNDFILE" /D "HAVEMPGLIB" /D "HAVEGTK" /D "LAMEPARSE" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /FR /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
