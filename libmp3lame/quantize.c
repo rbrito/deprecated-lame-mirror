@@ -710,6 +710,9 @@ amp_scalefac_bands(
     /* some scalefactors are increased too much
      *      -> try to use scalefac_scale or subblock_gain.
      */
+    if (gi->preflag < 0)
+	return 0;
+
     if (gfc->use_subblock_gain && gi->block_type == SHORT_TYPE) {
 	if (inc_subblock_gain(gi) || loop_break(gi))
 	    return 0; /* failed */
