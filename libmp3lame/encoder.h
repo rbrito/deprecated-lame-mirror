@@ -125,15 +125,4 @@
 #define MPG_MD_MS_LR  2
 #define MPG_MD_MS_I   3
 
-
-#include "machine.h"
-#include "lame.h"
-
-int  lame_encode_mp3_frame (
-    lame_t const gfp,
-    sample_t*           inbuf_l,
-    sample_t*           inbuf_r,
-    unsigned char*      mp3buf, 
-    int                 mp3buf_size );
-
 #endif /* LAME_ENCODER_H */

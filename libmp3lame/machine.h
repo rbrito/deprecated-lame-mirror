@@ -137,6 +137,100 @@ typedef float   FLOAT;
 /* sample_t must be floating point, at least 32 bits */
 typedef FLOAT     sample_t;
 
+/* log/log10 approximations */
+#ifdef TAKEHIRO_IEEE754_HACK
+#define USE_FAST_LOG
+#endif
+
+#ifdef USE_FAST_LOG
+# define LOG2_SIZE       (256)
+# define LOG2_SIZE_L2    (8)
+# define         FAST_LOG10(x)       (fast_log2(x)*(LOG2/LOG10))
+# define         FAST_LOG(x)         (fast_log2(x)*LOG2)
+# define         FAST_LOG10_X(x,y)   (fast_log2(x)*(LOG2/LOG10*(y)))
+# define         FAST_LOG_X(x,y)     (fast_log2(x)*(LOG2*(y)))
+
+extern ieee754_float32_t log_table[LOG2_SIZE*2];
+inline static ieee754_float32_t fast_log2(ieee754_float32_t xx)
+{
+    ieee754_float32_t log2val;
+    int mantisse, i;
+    union {
+	ieee754_float32_t f;
+	int i;
+    } x;
+
+    x.f = xx;
+    mantisse = x.i & 0x7FFFFF;
+/*  assert(i > 0); */
+    log2val = x.i >> 23;
+    i = mantisse >> (23-LOG2_SIZE_L2);
+    return log2val + log_table[i*2] + log_table[i*2+1]*mantisse;
+}
+#else
+# define         FAST_LOG10(x)       log10(x)
+# define         FAST_LOG(x)         log(x)
+# define         FAST_LOG10_X(x,y)   (log10(x)*(y))
+# define         FAST_LOG_X(x,y)     (log(x)*(y))
+#endif
+
+/***********************************************************************
+*
+*  Global Definitions
+*
+***********************************************************************/
+
+#ifndef FALSE
+#define         FALSE                   0
+#endif
+
+#ifndef TRUE
+#define         TRUE                    (!FALSE)
+#endif
+
+#ifdef UINT_MAX
+# define         MAX_U_32_NUM            UINT_MAX
+#else
+# define         MAX_U_32_NUM            0xFFFFFFFF
+#endif
+
+#ifndef PI
+# ifdef M_PI
+#  define       PI                      M_PI
+# else
+#  define       PI                      3.14159265358979323846
+# endif
+#endif
+
+
+#ifdef M_LN2
+# define        LOG2                    M_LN2
+#else
+# define        LOG2                    0.69314718055994530942
+#endif
+
+#ifdef M_LN10
+# define        LOG10                   M_LN10
+#else
+# define        LOG10                   2.30258509299404568402
+#endif
+
+
+#ifdef M_SQRT2
+# define        SQRT2                   M_SQRT2
+#else
+# define        SQRT2                   1.41421356237309504880
+#endif
+
+
+#define         CRC16_POLYNOMIAL        0x8005
+#define		MAX_BITS		4095
+
+#define         BUFFER_SIZE     LAME_MAXMP3BUFFER 
+
+#define         Min(A, B)       ((A) < (B) ? (A) : (B))
+#define         Max(A, B)       ((A) > (B) ? (A) : (B))
+
 #endif
 
 /* end of machine.h */

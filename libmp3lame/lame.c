@@ -820,21 +820,6 @@ lame_print_internals( const lame_t gfc )
 
 
 
-/* routine to feed exactly one frame (gfc->framesize) worth of data to the 
-encoding engine.  All buffering, resampling, etc, handled by calling
-program.  
-*/
-int
-lame_encode_frame(lame_t gfc,
-                  sample_t inbuf_l[], sample_t inbuf_r[],
-                  unsigned char *mp3buf, int mp3buf_size)
-{
-    int     ret;
-    ret = lame_encode_mp3_frame(gfc, inbuf_l, inbuf_r, mp3buf, mp3buf_size);
-    gfc->frameNum++;
-    return ret;
-}
-
 /*
  * THE MAIN LAME ENCODING INTERFACE
  * mt 3/00
@@ -953,7 +938,9 @@ lame_encode_buffer_sample_t(
             int buf_size=mp3buf_size - mp3size;
             if (mp3buf_size==0) buf_size=0;
 
-            ret = lame_encode_frame(gfc, mfbuf[0], mfbuf[1], mp3buf,buf_size);
+	    ret = lame_encode_mp3_frame(gfc, mfbuf[0], mfbuf[1], mp3buf,
+					buf_size);
+	    gfc->frameNum++;
 
             if (ret < 0) return ret;
             mp3buf += ret;
@@ -1193,7 +1180,7 @@ lame_encode_buffer_interleaved(lame_t gfc,
 
 }
 
-int
+static int
 lame_encode(const lame_t gfc,
             const short int in_buffer[2][1152],
             unsigned char *const mp3buf, const int size)
