@@ -501,7 +501,6 @@ int lame_encode(short int Buffer[2][1152],char *mpg123bs)
   static FLOAT8 frac_SpF;
   static FLOAT8 slot_lag;
   static unsigned long sentBits = 0;
-  static int samplesPerFrame;
 #if (ENCDELAY < 800) 
 #define EXTRADELAY (1152+ENCDELAY-MDCTDELAY)
 #else
@@ -512,6 +511,7 @@ int lame_encode(short int Buffer[2][1152],char *mpg123bs)
   FLOAT8 xr[2][2][576];
   int l3_enc[2][2][576];
   int mpg123count;
+  int samplesPerFrame;
   III_psy_ratio masking_ratio[2][2];    /*LR ratios */
   III_psy_ratio masking_MS_ratio[2][2]; /*MS ratios */
   III_psy_ratio (*masking)[2][2];  /*LR ratios and MS ratios*/
@@ -544,20 +544,18 @@ int lame_encode(short int Buffer[2][1152],char *mpg123bs)
     memset((char *) mfbuf, 0, sizeof(mfbuf));
     init++;
   }
-
+  samplesPerFrame=gf.mode_gr*576;
   info = fr_ps.header;
   info->mode_ext = MPG_MD_LR_LR; 
 
+
   if (gf.frameNum==0 )  {    
+    /* Figure average number of 'slots' per frame. */
     FLOAT8 avg_slots_per_frame;
     FLOAT8 sampfreq =   s_freq[info->version][info->sampling_frequency];
     int bit_rate = bitrate[info->version][info->lay-1][info->bitrate_index];
-
     sentBits = 0;
-    /* Figure average number of 'slots' per frame. */
-    /* Bitrate means TOTAL for both channels, not per side. */
     bitsPerSlot = 8;
-    samplesPerFrame = info->version == 1 ? 1152 : 576;
     avg_slots_per_frame = (bit_rate*samplesPerFrame) /
            (sampfreq* bitsPerSlot);
     frac_SpF  = avg_slots_per_frame - (int) avg_slots_per_frame;
@@ -619,6 +617,8 @@ int lame_encode(short int Buffer[2][1152],char *mpg123bs)
       }
     }
   }
+
+
   /********************** status display  *****************************/
   if (!gf.gtkflag && !gf.silent) {
     int mod = info->version == 0 ? 100 : 20;
