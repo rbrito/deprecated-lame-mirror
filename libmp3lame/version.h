@@ -34,7 +34,7 @@
 # define LAME_URL              "http://www.mp3dev.org/"
 
 # define LAME_MAJOR_VERSION      3      /* Major version number */
-# define LAME_MINOR_VERSION     91      /* Minor version number */
+# define LAME_MINOR_VERSION     92      /* Minor version number */
 # define LAME_ALPHA_VERSION      1      /* Patch level of alpha version, otherwise zero */
 # define LAME_BETA_VERSION       0      /* Patch level of beta  version, otherwise zero */
 
