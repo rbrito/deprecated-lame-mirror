@@ -500,9 +500,6 @@ struct lame_internal_flags {
 int	BitrateIndex(int, int);
 void	disable_FPE(void);
 
-void fill_buffer(lame_t, sample_t *mfbuf[2], sample_t *in_buffer[2],
-		 int nsamples, int *n_in, int *n_out);
-
 int  lame_encode_mp3_frame (		/* Output */
     lame_t	gfc,		/* Context */
     sample_t*           inbuf_l,	/* Input */
