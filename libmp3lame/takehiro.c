@@ -891,7 +891,7 @@ void best_scalefac_store(
 	}
     }
 
-    if (!gi->preflag && gi->block_type != SHORT_TYPE) {
+    if (!gi->preflag && gi->block_type != SHORT_TYPE && gfc->mode_gr==2) {
 	for (sfb = 11; sfb < SBPSY_l; sfb++)
 	    if (gi->scalefac[sfb] < pretab[sfb] && gi->scalefac[sfb] != -2)
 		break;
