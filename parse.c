@@ -180,6 +180,11 @@ void lame_help(lame_global_flags *gfp,char *name)  /* print syntax & exit */
   PRINTF1("    characters), or the `--add-id3v2' or `--id3v2-only' options are used,\n");
   PRINTF1("    or output is redirected to stdout.\n");
   PRINTF1("\n");
+#ifdef HAVEVORBIS
+  PRINTF1("    Note: All `--t*' options (except those for track and genre) work for Ogg\n");
+  PRINTF1("    Vorbis output, but other ID3-specific options are ignored.\n");
+  PRINTF1("\n");
+#endif
 #ifdef HAVEGTK
   PRINTF1("    -g              run graphical analysis on <infile>\n");
 #endif
