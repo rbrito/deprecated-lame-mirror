@@ -694,7 +694,7 @@ static void  presets_longinfo_dm ( FILE* msgfp )
         "phone => 16kbps/mono        phon+/lw/mw-eu/sw => 24kbps/mono\n"
         "mw-us => 40kbps/mono        voice => 56kbps/mono\n"
         "fm/radio/tape => 112kbps    hifi => 160kbps\n"
-        "cd => 192kbps               studio => 256kbps");
+        "cd => 192kbps               studio => 256kbps\n");
 }
 
 
