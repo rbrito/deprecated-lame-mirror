@@ -81,7 +81,7 @@ ifeq ($(UNAME),Linux)
 #                   -ffast-math -funroll-loops 
 
 # these options were suggested with gcc-2.95.2
-#   FEATURES = -DAACS3 -DAAC_TMN_NMT -DRH_masking 
+#   FEATURES = -DRH_masking 
 #   CC_OPTS = $(FEATURES) -Wall -O9 -fomit-frame-pointer -march=pentium \
 #	-fno-strength-reduce -finline-functions \
 #	-ffast-math -malign-double -mfancy-math-387 \

@@ -140,28 +140,41 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 
 void set_masking_lower( int nbits )
 {
-	FLOAT8 masking_lower_db, fac;
+	FLOAT masking_lower_db, adjust;
 	
 	/* quality setting */
 	/* Adjust allowed masking based on quality setting */
 	
 #ifdef  RH_masking	
-	/* masking_lower_db varies from -10 to +2.9 db */
-	masking_lower_db = 10 * ( gf.VBR_q/7.0 - 1 );
+	/* lower masking depending on Quality setting */
+	static FLOAT dbQ[10]={-9,-6,-3,-1.5,-1,-0.5,0,0.5,1,2};
+	/* adjust masking, when less these Bits are used */	
+	static FLOAT adB[10]={2250,2000,1750,1500,1250,1000,750,500,250,0};	
 	
-	/* adjust by -4(min)..0(max) depending on bitrate */
-	/* above 1500 bits we will trust the PSY model */
-	fac  = nbits > 1500 ? 0 : 2*(sin(PI*(nbits/1500.0 - 0.5))-1.0);
-	fac *= reduce_sidechannel ? 0.707 : 1;
+	assert( gf.VBR_q <= 9 );
+	assert( gf.VBR_q >= 0 );
+	
+	/* masking_lower_db varies from -9 to +2 db,
+	 * based on quality setting
+	 */
+	masking_lower_db = dbQ[gf.VBR_q];
+	
+	/* adjust allowed masking by -4(min)..0(max) 
+	 * depending on bitrate and quality setting
+	 */
+	adjust  = nbits > adB[gf.VBR_q] 
+	        ? 0 
+		: 2*(sin(PI*(nbits/adB[gf.VBR_q] - 0.5))-1.0);
+	adjust *= reduce_sidechannel ? 0.707 : 1;
 #else
 	/* masking_lower varies from -8 to +10 db */
 	masking_lower_db = -8 + 2*gf.VBR_q;
 	/* adjust by -6(min)..0(max) depending on bitrate */
-	fac = (nbits-125)/(2500.0-125.0);
-	fac = 4*(fac-1);
+	adjust = (nbits-125)/(2500.0-125.0);
+	adjust = 4*(adjust-1);
 #endif
 	
-	masking_lower_db += fac;
+	masking_lower_db += adjust;
 
 	masking_lower = pow(10.0,masking_lower_db/10);
 }
