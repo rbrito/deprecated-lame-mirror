@@ -51,14 +51,7 @@ static const int log2tab[] = {
  * as close as possible to x^4/3.  (taking the nearest int would mean
  * ix is as close as possible to xr, which is different.)
  * From Segher Boessenkool <segher@eastsite.nl>  11/1999
- * ASM optimization from 
- *    Mathew Hendry <scampi@dial.pipex.com> 11/1999
- *    Acy Stapp <AStapp@austin.rr.com> 11/1999
- *    Takehiro Tominaga <tominaga@isoternet.org> 11/1999
- * 9/00: ASM code removed in favor of IEEE754 hack.  If you need
- * the ASM code, check CVS circa Aug 2000.  
  *********************************************************************/
-
 static void
 quantize_xrpow_01(const FLOAT *xp, gr_info *gi, fi_union *fi, int sfb,
 		  const FLOAT *xend)
@@ -76,7 +69,8 @@ quantize_xrpow_01(const FLOAT *xp, gr_info *gi, fi_union *fi, int sfb,
     } while (xp < xend);
 }
 
-static int quantize_xrpow(const FLOAT *xp, gr_info *gi)
+static int
+quantize_xrpow(const FLOAT *xp, gr_info *gi)
 {
     /* quantize on xr^(3/4) instead of xr */
     int sfb = 0;
@@ -129,7 +123,8 @@ static int quantize_xrpow(const FLOAT *xp, gr_info *gi)
 }
 
 
-static void quantize_xrpow_ISO(const FLOAT *xp, gr_info *gi)
+static void
+quantize_xrpow_ISO(const FLOAT *xp, gr_info *gi)
 {
     /* quantize on xr^(3/4) instead of xr */
     int sfb = 0;
@@ -165,36 +160,9 @@ static void quantize_xrpow_ISO(const FLOAT *xp, gr_info *gi)
     } while (xp < xend);
 }
 
-/*************************************************************************/
-/*	      ix_max							 */
-/*************************************************************************/
-
-static int 
-ix_max(const int *ix, const int *end)
-{
-    int max1 = 0, max2 = 0;
-
-    do {
-	int x1 = *ix++;
-	int x2 = *ix++;
-	if (max1 < x1) 
-	    max1 = x1;
-
-	if (max2 < x2) 
-	    max2 = x2;
-    } while (ix < end);
-    if (max1 < max2) 
-	max1 = max2;
-    return max1;
-}
-
-
-
-
-
-
-
-
+/*
+ * count how many bits we need to encode the quantized spectrums
+ */
 static int
 count_bit_ESC( 
     const int *       ix, 
@@ -259,8 +227,6 @@ count_bit_noESC(const int * ix, const int * const end, int * const s)
     *s += sum1;
     return 1;
 }
-
-
 
 inline static int
 count_bit_noESC_from2(
@@ -337,19 +303,33 @@ count_bit_noESC_from3(
 }
 
 
-/*************************************************************************/
-/*	      choose table						 */
-/*************************************************************************/
+static int 
+ix_max(const int *ix, const int *end)
+{
+    int max1 = 0, max2 = 0;
 
-/*
-  Choose the Huffman table that will encode ix[begin..end] with
-  the fewest bits.
+    do {
+	int x1 = *ix++;
+	int x2 = *ix++;
+	if (max1 < x1) 
+	    max1 = x1;
 
-  Note: This code contains knowledge about the sizes and characteristics
-  of the Huffman tables as defined in the IS (Table B.7), and will not work
-  with any arbitrary tables.
-*/
+	if (max2 < x2) 
+	    max2 = x2;
+    } while (ix < end);
+    if (max1 < max2) 
+	max1 = max2;
+    return max1;
+}
 
+/*************************************************************************
+ *	choose table()
+ *  Choose the Huffman table that will encode ix[begin..end] with
+ *  the fewest bits.
+ *  Note: This code contains knowledge about the sizes and characteristics
+ *  of the Huffman tables as defined in the IS (Table B.7), and will not work
+ *  with any arbitrary tables.
+ *************************************************************************/
 #if !HAVE_NASM
 static
 #endif
@@ -358,8 +338,7 @@ int choose_table_nonMMX(
     const int * const end,
           int * const s)
 {
-    int max;
-    int choice, choice2;
+    int max, choice, choice2;
     static const int huf_tbl_noESC[] = {
 	1, 2, 5, 7, 7,10,10,13,13,13,13,13,13,13,13
     };
@@ -407,9 +386,6 @@ int choose_table_nonMMX(
 
 
 
-/*************************************************************************/
-/*	      count_bit							 */
-/*************************************************************************/
 int
 noquant_count_bits(const lame_internal_flags * const gfc, gr_info * const gi)
 {
@@ -588,9 +564,6 @@ recalc_divide_sub(
     }
     return gi->part2_3_length - old;
 }
-
-
-
 
 void
 best_huffman_divide(const lame_internal_flags * const gfc, gr_info * const gi)
@@ -817,8 +790,7 @@ best_scalefac_store(
  *
  ************************************************************************/
 void 
-iteration_finish_one (
-    lame_internal_flags *gfc, int gr, int ch)
+iteration_finish_one(lame_internal_flags *gfc, int gr, int ch)
 {
     /*  try some better scalefac storage  */
     best_scalefac_store (gfc, gr, ch);
@@ -828,13 +800,10 @@ iteration_finish_one (
 	best_huffman_divide (gfc, &gfc->l3_side.tt[gr][ch]);
 }
 
-
-
-/*************************************************************************/
-/*            scale_bitcount                                             */
-/*************************************************************************/
-
-/* number of bits used to encode scalefacs */
+/*************************************************************************
+ *	scale_bitcount()
+ * calculates the number of bits necessary to code the scalefactors.
+ *************************************************************************/
 
 /* 18*s1bits[i] + 18*s2bits[i] */
 static const int scale_short[16] = {
@@ -847,9 +816,6 @@ static const int scale_mixed[16] = {
 /* 11*s1bits[i] + 10*s2bits[i] */
 static const int scale_long[16] = {
     0, 10, 20, 30, 33, 21, 31, 41, 32, 42, 52, 43, 53, 63, 64, 74 };
-
-
-/* calculates the number of bits necessary to code the scalefactors. */
 int
 scale_bitcount(gr_info * const gi)
 {
@@ -900,10 +866,8 @@ scale_bitcount(gr_info * const gi)
     return gi->part2_length;
 }
 
-
-
 /*************************************************************************
- *            scale_bitcount_lsf
+ *	scale_bitcount_lsf()
  *
  * counts the number of bits to encode the scalefacs for MPEG 2 and 2.5
  * Lower sampling frequencies  (lower than 24kHz.)
