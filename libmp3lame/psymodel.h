@@ -47,3 +47,4 @@ int psymodel_init(lame_global_flags *gfp);
 
 
 #endif /* LAME_PSYMODEL_H */
+

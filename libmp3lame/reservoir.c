@@ -26,7 +26,7 @@
 #endif
 
 #include <assert.h>
-#include "util.h"
+#include "bitstream.h"
 #include "reservoir.h"
 
 #ifdef WITH_DMALLOC
@@ -76,12 +76,17 @@
  */
 
 int
-ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, int frameLength )
+ResvFrameBegin(lame_global_flags *gfp, int *mean_bits)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     int fullFrameBits;
     int resvLimit;
     int maxmp3buf;
+    III_side_info_t     *l3_side = &gfc->l3_side;
+    int frameLength;
+
+    frameLength = getframebits(gfp);
+    *mean_bits = (frameLength - gfc->sideinfo_len * 8) / gfc->mode_gr;
 
 /*
  *  Meaning of the variables:
@@ -121,8 +126,7 @@ ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, i
  */
 
     /* main_data_begin has 9 bits in MPEG-1, 8 bits MPEG-2 */
-    resvLimit = (gfp->version==1) ? 8*511 : 8*255 ;
-
+    resvLimit = (8*256)*gfc->mode_gr-8;
 
     if (gfp->brate >= 320) {
         /* in freeformat the buffer is constant*/
@@ -132,39 +136,36 @@ ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, i
            bits, even if the frame has the space for them: */
         /* Bouvigne suggests this more lax interpretation of the ISO doc 
            instead of using 8*960. */
-        if (gfp->strict_ISO) {
-            if (gfp->version==1)
-                maxmp3buf=8*((int)(320000/(gfp->out_samplerate / (FLOAT8)1152)/8 +.5));
-            else
-                maxmp3buf=8*((int)(160000/(gfp->out_samplerate / (FLOAT8)576)/8 +.5));
-        } else
-            /*all mp3 decoders should have enough buffer to handle this value: size of a 320kbps 32kHz frame*/
-            maxmp3buf = 8*1440;
+
+	/*all mp3 decoders should have enough buffer to handle this value: size of a 320kbps 32kHz frame*/
+	maxmp3buf = 8*1440;
+
+        if (gfp->strict_ISO)
+	    maxmp3buf=8*((int)(320000/(gfp->out_samplerate / (FLOAT8)1152)/8 +.5));
     }
 
-
-    if ( frameLength > maxmp3buf ||  gfp->disable_reservoir ) {
+    gfc->ResvMax = maxmp3buf - frameLength;
+    if (gfc->ResvMax > resvLimit)
+	gfc->ResvMax = resvLimit;
+    if (gfc->ResvMax < 0 ||  gfp->disable_reservoir)
 	gfc->ResvMax = 0;
-    } else {
-	gfc->ResvMax = maxmp3buf - frameLength;
-	if ( gfc->ResvMax > resvLimit )
-	  gfc->ResvMax = resvLimit;
-    }
 
-    fullFrameBits = mean_bits * gfc->mode_gr + Min ( gfc->ResvSize, gfc->ResvMax );
-    
-    if ( fullFrameBits > maxmp3buf )
+    fullFrameBits
+	= *mean_bits * gfc->mode_gr + Min ( gfc->ResvSize, gfc->ResvMax );
+
+    if (fullFrameBits > maxmp3buf)
         fullFrameBits = maxmp3buf;
 
     assert ( 0 == gfc->ResvMax % 8 );
     assert ( gfc->ResvMax >= 0 );
 
     l3_side->resvDrain_pre = 0;
-
-    if ( gfc->pinfo != NULL ) {
-        gfc->pinfo->mean_bits = mean_bits / 2;  /* expected bits per channel per granule [is this also right for mono/stereo, MPEG-1/2 ?] */
+#ifdef HAVE_GTK
+    if (gfc->pinfo != NULL) {
+        gfc->pinfo->mean_bits = *mean_bits / 2;  /* expected bits per channel per granule [is this also right for mono/stereo, MPEG-1/2 ?] */
         gfc->pinfo->resvsize  = gfc->ResvSize;
     }
+#endif
 
     return fullFrameBits;
 }
@@ -176,33 +177,41 @@ ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, i
          extra_bits:  amount extra available from reservoir
   Mark Taylor 4/99
 */
-void ResvMaxBits(lame_global_flags *gfp, int mean_bits, int *targ_bits, int *extra_bits)
+void ResvMaxBits(lame_global_flags *gfp, int mean_bits, int *targ_bits, int *extra_bits, int cbr)
 {
   lame_internal_flags *gfc=gfp->internal_flags;
   int add_bits;
-  int full_fac;
-  
+  int ResvSize = gfc->ResvSize, ResvMax = gfc->ResvMax;
+
+  /* conpensate the saved bits used in the 1st granule */
+  if (cbr)
+      ResvSize += mean_bits;
+
+  if (gfc->substep_shaping & 1)
+      ResvMax *= 0.9;
+
   *targ_bits = mean_bits ;
 
   /* extra bits if the reservoir is almost full */
-  full_fac=9;
-  if (gfc->ResvSize > ((gfc->ResvMax * full_fac) / 10)) {
-    add_bits= gfc->ResvSize-((gfc->ResvMax * full_fac) / 10);
+  if (ResvSize*10 > ResvMax*9) {
+    add_bits= ResvSize - (ResvMax * 9) / 10;
     *targ_bits += add_bits;
+    gfc->substep_shaping |= 0x80;
   }else {
     add_bits =0 ;
+    gfc->substep_shaping &= 0x7f;
     /* build up reservoir.  this builds the reservoir a little slower
      * than FhG.  It could simple be mean_bits/15, but this was rigged
      * to always produce 100 (the old value) at 128kbs */
     /*    *targ_bits -= (int) (mean_bits/15.2);*/
-    if (!gfp->disable_reservoir) 
+    if (!gfp->disable_reservoir && !(gfc->substep_shaping & 1))
       *targ_bits -= .1*mean_bits;
   }
 
 
   /* amount from the reservoir we are allowed to use. ISO says 6/10 */
   *extra_bits =
-    (gfc->ResvSize  < (gfc->ResvMax*6)/10  ? gfc->ResvSize : (gfc->ResvMax*6)/10);
+    (ResvSize  < (gfc->ResvMax*6)/10  ? ResvSize : (gfc->ResvMax*6)/10);
   *extra_bits -= add_bits;
 
   if (*extra_bits < 0) *extra_bits=0;
@@ -216,14 +225,9 @@ void ResvMaxBits(lame_global_flags *gfp, int mean_bits, int *targ_bits, int *ext
   the reservoir to reflect the granule's usage.
 */
 void
-ResvAdjust(lame_internal_flags *gfc,gr_info *gi, III_side_info_t *l3_side, int mean_bits )
+ResvAdjust(lame_internal_flags *gfc,gr_info *gi)
 {
-  gfc->ResvSize += (mean_bits / gfc->channels_out) - gi->part2_3_length;
-#if 0
-  printf("part2_3_length:  %i  avg=%i  incres: %i  resvsize=%i\n",gi->part2_3_length,
-	 mean_bits/gfc->channels_out,
-mean_bits/gfc->channels_out-gi->part2_3_length,gfc->ResvSize);
-#endif
+    gfc->ResvSize -= gi->part2_3_length + gi->part2_length;
 }
 
 
@@ -234,16 +238,14 @@ mean_bits/gfc->channels_out-gi->part2_3_length,gfc->ResvSize);
   bits.
 */
 void
-ResvFrameEnd(lame_internal_flags *gfc, III_side_info_t *l3_side, int mean_bits)
+ResvFrameEnd(lame_internal_flags *gfc, int mean_bits)
 {
     int stuffingBits;
     int over_bits;
+    III_side_info_t     *l3_side = &gfc->l3_side;
 
 
-    /* just in case mean_bits is odd, this is necessary... */
-    if ( gfc->channels_out == 2  &&  (mean_bits & 1) )
-	gfc->ResvSize += 1;
-
+    gfc->ResvSize += mean_bits * gfc->mode_gr;
     stuffingBits=0;
     l3_side->resvDrain_post = 0;
     l3_side->resvDrain_pre = 0;
@@ -291,5 +293,6 @@ ResvFrameEnd(lame_internal_flags *gfc, III_side_info_t *l3_side, int mean_bits)
 
     return;
 }
+
 
 

@@ -443,7 +443,7 @@ DLL_OBJ = $(dll_sources:.c=.obj)
 	@nasmw -f $(OFF) -i libmp3lame/i386/ -DWIN32 $< -o $@
                                 
 CC_SWITCHES = $(CC_SWITCHES) /DHAVE_NASM
-ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/cpu_feat.obj libmp3lame/i386/scalar.obj
+ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/cpu_feat.obj
 
 
 ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/fft3dn.obj

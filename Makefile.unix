@@ -161,10 +161,12 @@ ifeq ($(CFG),RH)
 #	-funroll-loops -funroll-all-loops -pipe -fschedule-insns2 \
 #	-fstrength-reduce \
 #	-malign-double -mfancy-math-387 -ffast-math 
-# these options for gcc-3.2
+# these options for gcc-3.2 & AthlonXP
    CC_OPTS = \
 	-Wall -ansic99 -pipe -O9 \
-	-march=athlon-xp -mfancy-math-387 -malign-double \
+	-march=athlon-xp \
+	-mfancy-math-387 \
+	-malign-double \
 	-fomit-frame-pointer \
 	-ffast-math \
 	-finline-functions \
@@ -172,8 +174,7 @@ ifeq ($(CFG),RH)
 	-funroll-loops \
 	-funroll-all-loops \
 	-fexpensive-optimizations \
-#	-fschedule-insns2  \
-	
+	       
    HAVE_NEWER_GLIBC = YES
    HAVE_NASM = YES
 endif
@@ -526,7 +527,7 @@ endif
 ifeq ($(HAVE_NASM),YES)
 ## have NASM
 CC_SWITCHES += -DHAVE_NASM
-lib_obj += libmp3lame/i386/cpu_feat.o libmp3lame/i386/scalar.o
+lib_obj += libmp3lame/i386/cpu_feat.o
 
 ## use MMX extension. you need nasm and MMX supported CPU.
 CC_SWITCHES += -DMMX_choose_table

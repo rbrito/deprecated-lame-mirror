@@ -104,3 +104,4 @@ extern void   aiff_check(const char*, IFF_AIFF*, int*);
 
 #endif	/* ifdef LIBSNDFILE */
 #endif	/* ifndef LAME_GET_AUDIO_H */
+

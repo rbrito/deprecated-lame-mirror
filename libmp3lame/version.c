@@ -43,9 +43,9 @@
 #include <dmalloc.h>
 #endif
 
-//! Stringify \a x.
+/*! Stringify \a x. */
 #define STR(x)   #x
-//! Stringify \a x, perform macro expansion.
+/*! Stringify \a x, perform macro expansion. */
 #define XSTR(x)  STR(x)
 
 #if defined(MMX_choose_table)
@@ -66,10 +66,10 @@
 # define V3  ""
 #endif
 
-//! Compile time features.
+/*! Compile time features. */
 #define V   V1 V2 V3
 
-//! Get the LAME version string.
+/*! Get the LAME version string. */
 /*!
   \param void
   \return a pointer to a string which describes the version of LAME.
@@ -95,7 +95,7 @@ const char*  get_lame_version ( void )		/* primary to write screen reports */
 }
 
 
-//! Get the short LAME version string.
+/*! Get the short LAME version string. */
 /*!
   It's mainly for inclusion into the MP3 stream.
 
@@ -121,7 +121,7 @@ const char*  get_lame_short_version ( void )
     return str;
 }
 
-//! Get the _very_ short LAME version string.
+/*! Get the _very_ short LAME version string. */
 /*!
   It's used in the LAME VBR tag only.
 
@@ -147,7 +147,7 @@ const char*  get_lame_very_short_version ( void )
     return str;
 }
 
-//! Get the version string for GPSYCHO.
+/*! Get the version string for GPSYCHO. */
 /*!
   \param void
   \return a pointer to a string which describes the version of GPSYCHO.
@@ -171,7 +171,7 @@ const char*  get_psy_version ( void )
 }
 
 
-//! Get the URL for the LAME website.
+/*! Get the URL for the LAME website. */
 /*!
   \param void
   \return a pointer to a string which is a URL for the LAME website.
@@ -184,7 +184,7 @@ const char*  get_lame_url ( void )
 }    
 
 
-//! Get the numerical representation of the version.
+/*! Get the numerical representation of the version. */
 /*!
   Writes the numerical representation of the version of LAME and
   GPSYCHO into lvp.
@@ -214,3 +214,4 @@ void get_lame_version_numerical ( lame_version_t *const lvp )
 }
 
 /* end of version.c */
+

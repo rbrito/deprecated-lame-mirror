@@ -25,14 +25,14 @@
 short int  convbuffer [4096];  /* take 8 KByte out of the data segment, not the stack */
 int        convsize;
 
-ogg_sync_state    oy;  // sync and verify incoming physical bitstream
-ogg_stream_state  os;  // take physical pages, weld into a logical stream of packets
-ogg_page          og;  // one Ogg bitstream page. Vorbis packets are inside
-ogg_packet        op;  // one raw packet of data for decode
-vorbis_info       vi;  // struct that stores all the static vorbis bitstream settings
-vorbis_comment    vc;  // struct that stores all the bitstream user comments
-vorbis_dsp_state  vd;  // central working state for the packet->PCM decoder
-vorbis_block      vb;  // local working space for packet->PCM decode
+ogg_sync_state    oy;  /* sync and verify incoming physical bitstream */
+ogg_stream_state  os;  /* take physical pages, weld into a logical stream of packets */
+ogg_page          og;  /* one Ogg bitstream page. Vorbis packets are inside */
+ogg_packet        op;  /* one raw packet of data for decode */
+vorbis_info       vi;  /* struct that stores all the static vorbis bitstream settings */
+vorbis_comment    vc;  /* struct that stores all the bitstream user comments */
+vorbis_dsp_state  vd;  /* central working state for the packet->PCM decoder */
+vorbis_block      vb;  /* local working space for packet->PCM decode */
 
 
 
@@ -173,7 +173,7 @@ int lame_decode_ogg_initfile( lame_global_flags*  gfp,
   
   mp3data->stereo = vi.channels;
   mp3data->samplerate = vi.rate;
-  mp3data->bitrate = 0; //ov_bitrate_instant(&vf);
+  mp3data->bitrate = 0; /*ov_bitrate_instant(&vf); */
   mp3data->nsamp=MAX_U_32_NUM;
   
   return 0;
@@ -283,7 +283,7 @@ int lame_decode_ogg_fromfile( lame_global_flags*  gfp,
 
   mp3data->stereo = vi.channels;
   mp3data->samplerate = vi.rate;
-  mp3data->bitrate = 0; //ov_bitrate_instant(&vf);
+  mp3data->bitrate = 0; /*ov_bitrate_instant(&vf); */
   /*  mp3data->nsamp=MAX_U_32_NUM;*/
 
   
@@ -318,14 +318,14 @@ int lame_decode_ogg_fromfile( lame_global_flags*  gfp,
 #if HAVE_VORBIS_ENCODER
 
 
-ogg_stream_state  os2;  // take physical pages, weld into a logical stream of packets
-ogg_page          og2;  // one Ogg bitstream page. Vorbis packets are inside
-ogg_packet        op2;  // one raw packet of data for decode
+ogg_stream_state  os2;  /* take physical pages, weld into a logical stream of packets */
+ogg_page          og2;  /* one Ogg bitstream page. Vorbis packets are inside */
+ogg_packet        op2;  /* one raw packet of data for decode */
 
-vorbis_info       vi2;  // struct that stores all the static vorbis bitstream settings
-vorbis_comment    vc2;  // struct that stores all the bitstream user comments
-vorbis_dsp_state  vd2;  // central working state for the packet->PCM decoder
-vorbis_block      vb2;  // local working space for packet->PCM decode
+vorbis_info       vi2;  /* struct that stores all the static vorbis bitstream settings */
+vorbis_comment    vc2;  /* struct that stores all the bitstream user comments */
+vorbis_dsp_state  vd2;  /* central working state for the packet->PCM decoder */
+vorbis_block      vb2;  /* local working space for packet->PCM decode */
 
 
 
@@ -589,4 +589,5 @@ int  lame_encode_ogg_frame (
 #endif
 
 /* end of vorbis_interface.c */
+
 

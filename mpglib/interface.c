@@ -194,19 +194,19 @@ void copy_mp(PMPSTR mp,int size,unsigned char *ptr)
   }
 }
 
-// number of bytes needed by GetVbrTag to parse header
+/* number of bytes needed by GetVbrTag to parse header */
 #define XING_HEADER_SIZE 194
 
-// traverse mp data structure without changing it
-// (just like sync_buffer)
-// pull out Xing bytes
-// call vbr header check code from LAME
-// if we find a header, parse it and also compute the VBR header size
-// if no header, do nothing.
-//
-// bytes = number of bytes before MPEG header.  skip this many bytes
-// before starting to read
-// return value: number of bytes in VBR header, including syncword
+/* traverse mp data structure without changing it */
+/* (just like sync_buffer) */
+/* pull out Xing bytes */
+/* call vbr header check code from LAME */
+/* if we find a header, parse it and also compute the VBR header size */
+/* if no header, do nothing. */
+/* */
+/* bytes = number of bytes before MPEG header.  skip this many bytes */
+/* before starting to read */
+/* return value: number of bytes in VBR header, including syncword */
 int check_vbr_header(PMPSTR mp,int bytes)
 {
   int i,pos;
@@ -215,7 +215,7 @@ int check_vbr_header(PMPSTR mp,int bytes)
   VBRTAGDATA pTagData;
 
   pos = buf->pos;
-  // skip to valid header
+  /* skip to valid header */
   for (i=0; i<bytes; ++i) {
     while(pos >= buf->size) {
       buf  = buf->next;
@@ -224,7 +224,7 @@ int check_vbr_header(PMPSTR mp,int bytes)
     }
     ++pos;
   }
-  // now read header
+  /* now read header */
   for (i=0; i<XING_HEADER_SIZE; ++i) {
     while(pos >= buf->size) {
       buf  = buf->next;
@@ -242,8 +242,8 @@ int check_vbr_header(PMPSTR mp,int bytes)
     mp->enc_delay=pTagData.enc_delay;
     mp->enc_padding=pTagData.enc_padding;
 
-    //fprintf(stderr,"\rmpglib: delays: %i %i \n",mp->enc_delay,mp->enc_padding);
-    // fprintf(stderr,"\rmpglib: Xing VBR header dectected.  MP3 file has %i frames\n", pTagData.frames);
+    /*fprintf(stderr,"\rmpglib: delays: %i %i \n",mp->enc_delay,mp->enc_padding); */
+    /* fprintf(stderr,"\rmpglib: Xing VBR header dectected.  MP3 file has %i frames\n", pTagData.frames); */
     return pTagData.headersize;
   }
   return 0;
@@ -500,7 +500,7 @@ int decodeMP3( PMPSTR mp,unsigned char *in,int isize,char *out,
 
 		*done = 0;
 
-		//do_layer3(&mp->fr,(unsigned char *) out,done);
+		/*do_layer3(&mp->fr,(unsigned char *) out,done); */
 		switch (mp->fr.lay)
 		{
 #ifdef USE_LAYER_1
@@ -583,4 +583,5 @@ int decodeMP3( PMPSTR mp,unsigned char *in,int isize,char *out,
 }
 
 	
+
 

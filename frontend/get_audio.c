@@ -500,18 +500,18 @@ WriteWaveHeader(FILE * const fp, const int pcmbytes,
     int     bytes = (bits + 7) / 8;
 
     /* quick and dirty, but documented */
-    fwrite("RIFF", 1, 4, fp); // label
-    Write32BitsLowHigh(fp, pcmbytes + 44 - 8); // length in bytes without header
-    fwrite("WAVEfmt ", 2, 4, fp); // 2 labels
-    Write32BitsLowHigh(fp, 2 + 2 + 4 + 4 + 2 + 2); // length of PCM format declaration area
-    Write16BitsLowHigh(fp, 1); // is PCM?
-    Write16BitsLowHigh(fp, channels); // number of channels
-    Write32BitsLowHigh(fp, freq); // sample frequency in [Hz]
-    Write32BitsLowHigh(fp, freq * channels * bytes); // bytes per second
-    Write16BitsLowHigh(fp, channels * bytes); // bytes per sample time
-    Write16BitsLowHigh(fp, bits); // bits per sample
-    fwrite("data", 1, 4, fp); // label
-    Write32BitsLowHigh(fp, pcmbytes); // length in bytes of raw PCM data
+    fwrite("RIFF", 1, 4, fp); /* label */
+    Write32BitsLowHigh(fp, pcmbytes + 44 - 8); /* length in bytes without header */
+    fwrite("WAVEfmt ", 2, 4, fp); /* 2 labels */
+    Write32BitsLowHigh(fp, 2 + 2 + 4 + 4 + 2 + 2); /* length of PCM format declaration area */
+    Write16BitsLowHigh(fp, 1); /* is PCM? */
+    Write16BitsLowHigh(fp, channels); /* number of channels */
+    Write32BitsLowHigh(fp, freq); /* sample frequency in [Hz] */
+    Write32BitsLowHigh(fp, freq * channels * bytes); /* bytes per second */
+    Write16BitsLowHigh(fp, channels * bytes); /* bytes per sample time */
+    Write16BitsLowHigh(fp, bits); /* bits per sample */
+    fwrite("data", 1, 4, fp); /* label */
+    Write32BitsLowHigh(fp, pcmbytes); /* length in bytes of raw PCM data */
 
     return ferror(fp) ? -1 : 0;
 }
@@ -522,7 +522,7 @@ WriteWaveHeader(FILE * const fp, const int pcmbytes,
 #if defined(LIBSNDFILE)
 
 #if 0                   /* currently disabled */
-# include "sndfile.h"   // prototype for sf_get_lib_version()
+# include "sndfile.h"   /* prototype for sf_get_lib_version() */
 void
 print_sndlib_version(FILE * fp)
 {
@@ -1445,7 +1445,7 @@ OpenSndFile(lame_global_flags * gfp, char *inPath)
 static int
 check_aid(const unsigned char *header)
 {
-    return 0 == strncmp(header, "AiD\1", 4);
+    return 0 == memcmp(header, "AiD\1", 4);
 }
 
 /*
@@ -1462,49 +1462,49 @@ is_syncword_mp123(const void *const headerptr)
         { 0, 7, 7, 7, 0, 7, 0, 0, 0, 0, 0, 8, 8, 8, 8, 8 };
 
     if ((p[0] & 0xFF) != 0xFF)
-        return 0;       // first 8 bits must be '1'
+        return 0;       /* first 8 bits must be '1' */
     if ((p[1] & 0xE0) != 0xE0)
-        return 0;       // next 3 bits are also
+        return 0;       /* next 3 bits are also */
     if ((p[1] & 0x18) == 0x08)
-        return 0;       // no MPEG-1, -2 or -2.5
+        return 0;       /* no MPEG-1, -2 or -2.5 */
     if ((p[1] & 0x06) == 0x00)
-        return 0;       // no Layer I, II and III
+        return 0;       /* no Layer I, II and III */
     if ((p[2] & 0xF0) == 0xF0)
-        return 0;       // bad bitrate
+        return 0;       /* bad bitrate */
     if ((p[2] & 0x0C) == 0x0C)
-        return 0;       // no sample frequency with (32,44.1,48)/(1,2,4)    
-    if ((p[1] & 0x06) == 0x04) // illegal Layer II bitrate/Channel Mode comb
+        return 0;       /* no sample frequency with (32,44.1,48)/(1,2,4)     */
+    if ((p[1] & 0x06) == 0x04) /* illegal Layer II bitrate/Channel Mode comb */
         if (abl2[p[2] >> 4] & (1 << (p[3] >> 6)))
             return 0;
     return 1;
 }
-
+#if 0
 static int
 is_syncword_mp3(const void *const headerptr)
 {
     const unsigned char *const p = headerptr;
 
     if ((p[0] & 0xFF) != 0xFF)
-        return 0;       // first 8 bits must be '1'
+        return 0;       /* first 8 bits must be '1' */
     if ((p[1] & 0xE0) != 0xE0)
-        return 0;       // next 3 bits are also
+        return 0;       /* next 3 bits are also */
     if ((p[1] & 0x18) == 0x08)
-        return 0;       // no MPEG-1, -2 or -2.5
+        return 0;       /* no MPEG-1, -2 or -2.5 */
     if ((p[1] & 0x06) != 0x02)
-        return 0;       // no Layer III (can be merged with 'next 3 bits are also' test, but don't do this, this decreases readability)
+        return 0;       /* no Layer III (can be merged with 'next 3 bits are also' test, but don't do this, this decreases readability) */
     if ((p[2] & 0xF0) == 0xF0)
-        return 0;       // bad bitrate
+        return 0;       /* bad bitrate */
     if ((p[2] & 0x0C) == 0x0C)
-        return 0;       // no sample frequency with (32,44.1,48)/(1,2,4)    
+        return 0;       /* no sample frequency with (32,44.1,48)/(1,2,4)     */
     return 1;
 }
-
+#endif
 
 int
 lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
 {
-    //  VBRTAGDATA pTagData;
-    // int xing_header,len2,num_frames;
+    /*  VBRTAGDATA pTagData; */
+    /* int xing_header,len2,num_frames; */
     unsigned char buf[100];
     int     ret;
     int     len, aid_header;
@@ -1543,13 +1543,13 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
     }
 
 
-    // now parse the current buffer looking for MP3 headers.   
-    // (as of 11/00: mpglib modified so that for the first frame where 
-    // headers are parsed, no data will be decoded.  
-    // However, for freeformat, we need to decode an entire frame,
-    // so mp3data->bitrate will be 0 until we have decoded the first
-    // frame.  Cannot decode first frame here because we are not
-    // yet prepared to handle the output.
+    /* now parse the current buffer looking for MP3 headers.    */
+    /* (as of 11/00: mpglib modified so that for the first frame where  */
+    /* headers are parsed, no data will be decoded.   */
+    /* However, for freeformat, we need to decode an entire frame, */
+    /* so mp3data->bitrate will be 0 until we have decoded the first */
+    /* frame.  Cannot decode first frame here because we are not */
+    /* yet prepared to handle the output. */
     ret = lame_decode1_headersB(buf, len, pcm_l, pcm_r, mp3data,&enc_delay,&enc_padding);
     if (-1 == ret)
         return -1;
@@ -1622,15 +1622,15 @@ lame_decode_fromfile(FILE * fd, short pcm_l[], short pcm_r[],
 	    /* we are done reading the file, but check for buffered data */
 	    ret = lame_decode1_headers(buf, len, pcm_l, pcm_r, mp3data);
 	    if (ret<=0) {
-                lame_decode_exit(); // release mp3decoder memory
-                return -1;  // done with file
+                lame_decode_exit(); /* release mp3decoder memory */
+                return -1;  /* done with file */
             }
 	    break;
 	}
 
         ret = lame_decode1_headers(buf, len, pcm_l, pcm_r, mp3data);
         if (ret == -1) {
-            lame_decode_exit();  // release mp3decoder memory
+            lame_decode_exit();  /* release mp3decoder memory */
             return -1;
         }
 	if (ret >0) break;
@@ -1640,3 +1640,4 @@ lame_decode_fromfile(FILE * fd, short pcm_l[], short pcm_r[],
 #endif /* defined(HAVE_MPGLIB) */
 
 /* end of get_audio.c */
+

@@ -51,3 +51,4 @@ typedef struct {
 extern Console_IO_t  Console_IO;
 
 #endif /* LAME_BRHIST_H */
+

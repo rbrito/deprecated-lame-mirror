@@ -50,7 +50,7 @@
  *   gfp->internal_flags->ATH
  *   (gfc->ATH)
  */
-void
+static void
 adjust_ATH( lame_global_flags* const  gfp,
             FLOAT8              tot_ener[2][4] )
 {
@@ -59,7 +59,7 @@ adjust_ATH( lame_global_flags* const  gfp,
     FLOAT max_pow, max_pow_alt;
     FLOAT8 max_val;
 
-    if (gfc->ATH->use_adjust == 0) {
+    if (gfc->ATH->use_adjust == 0 || gfp->athaa_loudapprox == 0) {
         gfc->ATH->adjust = 1.0;	/* no adjustment */
         return;
     }
@@ -75,28 +75,27 @@ adjust_ATH( lame_global_flags* const  gfp,
         break;
     
     case 2:                     /* jd - 2001 mar 12, 27, jun 30 */
-    {				            /* loudness based on equal loudness curve; */
+    {				/* loudness based on equal loudness curve; */
                                 /* use granule with maximum combined loudness*/
-	    FLOAT gr2_max;
+	FLOAT gr2_max = gfc->loudness_sq[1][0];
         max_pow = gfc->loudness_sq[0][0];
-	    gr2_max = gfc->loudness_sq[1][0];
         if( gfc->channels_out == 2 ) {
             max_pow += gfc->loudness_sq[0][1];
-	        gr2_max += gfc->loudness_sq[1][1];
-	    } else {
-	        max_pow += max_pow;
-	        gr2_max += gr2_max;
-	    }
-	    if( gfc->mode_gr == 2 ) {
-	        max_pow = Max( max_pow, gr2_max );
-	    }
-	    max_pow *= 0.5;		    /* max_pow approaches 1.0 for full band noise*/
+	    gr2_max += gfc->loudness_sq[1][1];
+	} else {
+	    max_pow += max_pow;
+	    gr2_max += gr2_max;
+	}
+	if( gfc->mode_gr == 2 ) {
+	    max_pow = Max( max_pow, gr2_max );
+	}
+	max_pow *= 0.5;		/* max_pow approaches 1.0 for full band noise*/
         break;
     }
 
     default:
-        gfc->ATH->adjust = 1.0;	/* no adjustment */
-        return;
+        max_pow = 0;
+        assert(0);
     }
 
                                 /* jd - 2001 mar 31, jun 30 */
@@ -107,18 +106,18 @@ adjust_ATH( lame_global_flags* const  gfp,
         max_pow_alt *= pow( 10.0, gfc->presetTune.athadjust_safe_athaasensitivity / -10.0 );
 
     /*  adjust ATH depending on range of maximum value
-        The first mode was just implemented for rough
-        experimentation. Third mode is recommended
      */
     switch ( gfc->ATH->use_adjust ) {
 
-    case  1:                                    /* by Gabriel Bouvigne */
-        max_val = sqrt( max_pow );              /* max_val should be between 0 and 1 */
-                                                
-        if      (max_val > 0.5) {               /* value above 50 % */
+    case  1:
+        max_val = sqrt( max_pow ); /* GB's original code requires a maximum */
+        max_val *= 32768;          /*  sample or loudness value up to 32768 */
+
+                                /* by Gabriel Bouvigne */
+        if      (0.5 < max_val / 32768) {       /* value above 50 % */
                 gfc->ATH->adjust = 1.0;         /* do not reduce ATH */
         }
-        else if (max_val > 0.3) {               /* value above 30 % */
+        else if (0.3 < max_val / 32768) {       /* value above 30 % */
                 gfc->ATH->adjust *= 0.955;      /* reduce by ~0.2 dB */
                 if (gfc->ATH->adjust < 0.3)     /* but ~5 dB in maximum */
                     gfc->ATH->adjust = 0.3;            
@@ -137,7 +136,7 @@ adjust_ATH( lame_global_flags* const  gfp,
         /*  this code reduces slowly the ATH (speed of 12 dB per second)
          */
         FLOAT8 
-        //x = Max (640, 320*(int)(max_val/320));
+        /*x = Max (640, 320*(int)(max_val/320)); */
         x = Max (32, 32*(int)(max_val/32));
         x = x/32768;
         gfc->ATH->adjust *= gfc->ATH->decay;
@@ -160,19 +159,25 @@ adjust_ATH( lame_global_flags* const  gfp,
         if( max_pow > 0.03125) { /* ((1 - 0.000625)/ 31.98) from curve below */
             if( gfc->ATH->adjust >= 1.0) {
                 gfc->ATH->adjust = 1.0;
+                if (gfc->presetTune.use) {
+		        if (max_pow_alt > gfc->presetTune.athadjust_safe_noiseshaping_thre)
+			      gfc->presetTune.athadjust_safe_noiseshaping = 1;
+		        else
+			      gfc->presetTune.athadjust_safe_noiseshaping = 0;
+                }
             } else {
                                 /* preceding frame has lower ATH adjust; */
                                 /* ascend only to the preceding adjust_limit */
                                 /* in case there is leading low volume */
                 if( gfc->ATH->adjust < gfc->ATH->adjust_limit) {
                     gfc->ATH->adjust = gfc->ATH->adjust_limit;
+                    if (gfc->presetTune.use) {
+                        if (max_pow_alt > gfc->presetTune.athadjust_safe_noiseshaping_thre)
+                            gfc->presetTune.athadjust_safe_noiseshaping = 1;
+                        else
+                            gfc->presetTune.athadjust_safe_noiseshaping = 0;
+                    }
                 }
-            }
-            if (gfc->presetTune.use) {
-		        if (max_pow_alt > gfc->presetTune.athadjust_safe_noiseshaping_thre)
-			      gfc->presetTune.athadjust_safe_noiseshaping = 1;
-		        else
-			      gfc->presetTune.athadjust_safe_noiseshaping = 0;
             }
             gfc->ATH->adjust_limit = 1.0;
         } else {                /* adjustment curve */
@@ -199,10 +204,63 @@ adjust_ATH( lame_global_flags* const  gfp,
         break;
         
     default:
-        gfc->ATH->adjust = 1.0;	/* no adjustment */
+        assert(0);
         break;
     }   /* switch */
 }
+
+/***********************************************************************
+ *
+ *  some simple statistics
+ *
+ *  bitrate index 0: free bitrate -> not allowed in VBR mode
+ *  : bitrates, kbps depending on MPEG version
+ *  bitrate index 15: forbidden
+ *
+ *  mode_ext:
+ *  0:  LR
+ *  1:  LR-i
+ *  2:  MS
+ *  3:  MS-i
+ *
+ ***********************************************************************/
+
+#ifdef BRHIST
+/*2DO rh 20021015
+I thought BRHIST was only for the frontend, so that clients
+may use these stats, even if it's only a Windows DLL
+I'll extend the stats for block types used
+*/
+static void
+updateStats( lame_internal_flags * const gfc )
+{
+    int gr, ch;
+    assert ( gfc->bitrate_index < 16u );
+    assert ( gfc->mode_ext      <  4u );
+    
+    /* count bitrate indices */
+    gfc->bitrate_stereoMode_Hist [gfc->bitrate_index] [4] ++;
+    gfc->bitrate_stereoMode_Hist [15] [4] ++;
+    
+    /* count 'em for every mode extension in case of 2 channel encoding */
+    if (gfc->channels_out == 2) {
+        gfc->bitrate_stereoMode_Hist [gfc->bitrate_index] [gfc->mode_ext]++;
+        gfc->bitrate_stereoMode_Hist [15] [gfc->mode_ext]++;
+    }
+    for (gr = 0; gr < gfc->mode_gr; ++gr) {
+        for (ch = 0; ch < gfc->channels_out; ++ch) {
+            int bt = gfc->l3_side.tt[gr][ch].block_type;
+            int mf = gfc->l3_side.tt[gr][ch].mixed_block_flag;
+            if (mf) bt = 4;
+            gfc->bitrate_blockType_Hist [gfc->bitrate_index] [bt] ++;
+	    gfc->bitrate_blockType_Hist [gfc->bitrate_index] [ 5] ++;
+            gfc->bitrate_blockType_Hist [15] [bt] ++;
+	    gfc->bitrate_blockType_Hist [15] [ 5] ++;
+        }
+    }
+}
+#endif
+
 
 /************************************************************************
 *
@@ -241,12 +299,12 @@ FFT's                    <---------1024---------->
 
 typedef FLOAT8 chgrdata[2][2];
 
-int  lame_encode_mp3_frame (				// Output
-	lame_global_flags* const  gfp,			// Context
-	sample_t*                 inbuf_l,              // Input
-	sample_t*                 inbuf_r,              // Input
-	unsigned char*            mp3buf, 		// Output
-	int                    mp3buf_size )		// Output
+int  lame_encode_mp3_frame (				/* Output */
+	lame_global_flags* const  gfp,			/* Context */
+	sample_t*                 inbuf_l,              /* Input */
+	sample_t*                 inbuf_r,              /* Input */
+	unsigned char*            mp3buf, 		/* Output */
+	int                    mp3buf_size )		/* Output */
 {
   int mp3count;
   III_psy_ratio masking_LR[2][2];    /*LR masking & energy */
@@ -260,116 +318,67 @@ int  lame_encode_mp3_frame (				// Output
   chgrdata pe,pe_MS;
   chgrdata *pe_use;
 
-  int ch,gr,mean_bits;
-  int bitsPerFrame;
+  int ch,gr;
 
-  int check_ms_stereo;
   FLOAT8 ms_ratio_next = 0.;
   FLOAT8 ms_ratio_prev = 0.;
 
 
-  memset((char *) masking_LR, 0, sizeof(masking_LR));
-  memset((char *) masking_MS, 0, sizeof(masking_MS));
   inbuf[0]=inbuf_l;
   inbuf[1]=inbuf_r;
 
-  check_ms_stereo =  (gfp->mode == JOINT_STEREO);
-  gfc->mode_ext = MPG_MD_LR_LR;
-
-  if (gfc->lame_encode_frame_init==0 )  {
-    gfc->lame_encode_frame_init=1;
-    
-    /* padding method as described in 
-     * "MPEG-Layer3 / Bitstream Syntax and Decoding"
-     * by Martin Sieler, Ralph Sperschneider
-     *
-     * note: there is no padding for the very first frame
-     *
-     * Robert.Hegemann@gmx.de 2000-06-22
-     */
-        
-    gfc->frac_SpF = ((gfp->version+1)*72000L*gfp->brate) % gfp->out_samplerate;
-    gfc->slot_lag  = gfc->frac_SpF;
-    
-    switch (gfp->padding_type) {
-    default:
-    case PAD_NO:
-        gfc->padding = FALSE;
-        break;
-    case PAD_ALL:
-        gfc->padding = TRUE;
-        break;
-    }
-    
-    /* check FFT will not use a negative starting offset */
-#if 576 < FFTOFFSET
-# error FFTOFFSET greater than 576: FFT uses a negative offset
-#endif
-    /* check if we have enough data for FFT */
-    assert(gfc->mf_size>=(BLKSIZE+gfp->framesize-FFTOFFSET));
-    /* check if we have enough data for polyphase filterbank */
-    /* it needs 1152 samples + 286 samples ignored for one granule */
-    /*          1152+576+286 samples for two granules */
-    assert(gfc->mf_size>=(286+576*(1+gfc->mode_gr)));
-
-    /* prime the MDCT/polyphase filterbank with a short block */
-    { 
+  if (gfc->lame_encode_frame_init==0 ) {
+      /* prime the MDCT/polyphase filterbank with a short block */
       int i,j;
       sample_t primebuff0[286+1152+576];
       sample_t primebuff1[286+1152+576];
+      gfc->lame_encode_frame_init=1;
       for (i=0, j=0; i<286+576*(1+gfc->mode_gr); ++i) {
-	if (i<576*gfc->mode_gr) {
-	  primebuff0[i]=0;
-	  if (gfc->channels_out==2) 
-	    primebuff1[i]=0;
-	}else{
-	  primebuff0[i]=inbuf[0][j];
-	  if (gfc->channels_out==2) 
-	    primebuff1[i]=inbuf[1][j];
-	  ++j;
-	}
+	  if (i<576*gfc->mode_gr) {
+	      primebuff0[i]=0;
+	      if (gfc->channels_out==2) 
+		  primebuff1[i]=0;
+	  }else{
+	      primebuff0[i]=inbuf[0][j];
+	      if (gfc->channels_out==2) 
+		  primebuff1[i]=inbuf[1][j];
+	      ++j;
+	  }
       }
       /* polyphase filtering / mdct */
       for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
-	for ( ch = 0; ch < gfc->channels_out; ch++ ) {
-	  gfc->l3_side.tt[gr][ch].block_type=SHORT_TYPE;
-	}
+	  for ( ch = 0; ch < gfc->channels_out; ch++ ) {
+	      gfc->l3_side.tt[gr][ch].block_type=SHORT_TYPE;
+	  }
       }
       mdct_sub48(gfc, primebuff0, primebuff1);
-    }
-    
-    iteration_init(gfp);
-    
-    /*  prepare for ATH auto adjustment:
-     *  we want to decrease the ATH by 12 dB per second
-     */ {
-        FLOAT8 frame_duration = 576. * gfc->mode_gr / gfp->out_samplerate;
-        gfc->ATH->decay = pow(10., -12./10. * frame_duration);
-        gfc->ATH->adjust = 0.01; /* minimum, for leading low loudness */
-        gfc->ATH->adjust_limit = 1.0; /* on lead, allow adjust up to maximum */
-    }
+
+      /* check FFT will not use a negative starting offset */
+#if 576 < FFTOFFSET
+# error FFTOFFSET greater than 576: FFT uses a negative offset
+#endif
+      /* check if we have enough data for FFT */
+      assert(gfc->mf_size>=(BLKSIZE+gfp->framesize-FFTOFFSET));
+      /* check if we have enough data for polyphase filterbank */
+      /* it needs 1152 samples + 286 samples ignored for one granule */
+      /*          1152+576+286 samples for two granules */
+      assert(gfc->mf_size>=(286+576*(1+gfc->mode_gr)));
   }
 
 
   /********************** padding *****************************/
-  if (gfp->padding_type == PAD_ADJUST) {
-        /* padding method as described in 
-         * "MPEG-Layer3 / Bitstream Syntax and Decoding"
-         * by Martin Sieler, Ralph Sperschneider
-         *
-         * note: there is no padding for the very first frame
-         *
-         * Robert.Hegemann@gmx.de 2000-06-22
-         */
-
-        gfc->slot_lag -= gfc->frac_SpF;
-        if (gfc->slot_lag < 0) {
-            gfc->slot_lag += gfp->out_samplerate;
-            gfc->padding = TRUE;
-        } 
-        else {
-            gfc->padding = FALSE;
-        }
+  /* padding method as described in 
+   * "MPEG-Layer3 / Bitstream Syntax and Decoding"
+   * by Martin Sieler, Ralph Sperschneider
+   *
+   * note: there is no padding for the very first frame
+   *
+   * Robert.Hegemann@gmx.de 2000-06-22
+   */
+  gfc->padding = FALSE;
+  if ((gfc->slot_lag -= gfc->frac_SpF) < 0) {
+      gfc->slot_lag += gfp->out_samplerate;
+      gfc->padding = TRUE;
   }
 
 
@@ -401,20 +410,26 @@ int  lame_encode_mp3_frame (				// Output
       }
       if (ret!=0) return -4;
 
-      for ( ch = 0; ch < gfc->channels_out; ch++ )
-	gfc->l3_side.tt[gr][ch].block_type=blocktype[ch];
-
-      if (check_ms_stereo) {
+      if (gfp->mode == JOINT_STEREO) {
 	  ms_ener_ratio[gr] = tot_ener[gr][2]+tot_ener[gr][3];
 	  if (ms_ener_ratio[gr]>0)
 	      ms_ener_ratio[gr] = tot_ener[gr][3]/ms_ener_ratio[gr];
       }
 
+      /* block type flags */
+      for ( ch = 0; ch < gfc->channels_out; ch++ ) {
+	  gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
+	  cod_info->block_type=blocktype[ch];
+	  cod_info->mixed_block_flag = 0;
+      }
     }
   }else{
+    memset((char *) masking_LR, 0, sizeof(masking_LR));
+    memset((char *) masking_MS, 0, sizeof(masking_MS));
     for (gr=0; gr < gfc->mode_gr ; gr++)
       for ( ch = 0; ch < gfc->channels_out; ch++ ) {
 	gfc->l3_side.tt[gr][ch].block_type=NORM_TYPE;
+	gfc->l3_side.tt[gr][ch].mixed_block_flag=0;
 	pe_MS[gr][ch]=pe[gr][ch]=700;
       }
   }
@@ -426,46 +441,28 @@ int  lame_encode_mp3_frame (				// Output
 
 
 
-  /* block type flags */
-  for( gr = 0; gr < gfc->mode_gr; gr++ ) {
-    for ( ch = 0; ch < gfc->channels_out; ch++ ) {
-      gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
-      cod_info->mixed_block_flag = 0;     /* never used by this model */
-    }
-  }
-
-
   /* polyphase filtering / mdct */
   mdct_sub48(gfc, inbuf[0], inbuf[1]);
 
-  /* use m/s gfc->channels_out? */
-  if (check_ms_stereo) {
-    int gr0 = 0, gr1 = gfc->mode_gr-1;
-    /* make sure block type is the same in each channel */
-    check_ms_stereo =
-      (gfc->l3_side.tt[gr0][0].block_type==gfc->l3_side.tt[gr0][1].block_type) &&
-      (gfc->l3_side.tt[gr1][0].block_type==gfc->l3_side.tt[gr1][1].block_type);
-  }
-  
   /* Here will be selected MS or LR coding of the 2 stereo channels */
-
-  assert (  gfc->mode_ext == MPG_MD_LR_LR );
   gfc->mode_ext = MPG_MD_LR_LR;
   
   if (gfp->force_ms) {
     gfc->mode_ext = MPG_MD_MS_LR;
-  } else if (check_ms_stereo) {
-      /* ms_ratio = is scaled, for historical reasons, to look like
-	 a ratio of side_channel / total.  
-         0 = signal is 100% mono
-         .5 = L & R uncorrelated
-      */
-      
-      /* [0] and [1] are the results for the two granules in MPEG-1,
-       * in MPEG-2 it's only a faked averaging of the same value
-       * _prev is the value of the last granule of the previous frame
-       * _next is the value of the first granule of the next frame
-       */
+  } else if (gfp->mode == JOINT_STEREO) {
+    int check_ms_stereo = 1;
+    /* ms_ratio = is scaled, for historical reasons, to look like
+       a ratio of side_channel / total.
+       0 = signal is 100% mono
+       .5 = L & R uncorrelated
+    */
+
+    /* [0] and [1] are the results for the two granules in MPEG-1,
+     * in MPEG-2 it's only a faked averaging of the same value
+     * _prev is the value of the last granule of the previous frame
+     * _next is the value of the first granule of the next frame
+     */
+    if (!gfc->nsPsy.use) {
       FLOAT8  ms_ratio_ave1;
       FLOAT8  ms_ratio_ave2;
       FLOAT8  threshold1    = 0.35;
@@ -481,31 +478,51 @@ int  lame_encode_mp3_frame (				// Output
 	  ms_ratio_ave2 = 0.50 * ( gfc->ms_ratio[0] + gfc->ms_ratio[1] );
       }
       
-      if (gfp->mode_automs) {
-	  if ( gfp->compression_ratio < 11.025 ) {
-	      /* 11.025 => 1, 6.3 => 0 */
-	      double thr = (gfp->compression_ratio - 6.3) / (11.025 - 6.3);
-	      if (thr<0) thr=0;
-	      threshold1   *= thr;
-	      threshold2   *= thr;
-	  }
+      if (gfp->mode_automs && gfp->compression_ratio < 11.025 )
+	{
+	  /* 11.025 => 1, 6.3 => 0 */
+	  double thr = (gfp->compression_ratio - 6.3) / (11.025 - 6.3);
+	  if (thr<0) thr=0;
+	  threshold1   *= thr;
+	  threshold2   *= thr;
+	}
+
+      if (ms_ratio_ave1 >= threshold1 || ms_ratio_ave2 >= threshold2)
+	check_ms_stereo = 0;
+    }
+    if (check_ms_stereo) {
+      FLOAT8 sum_pe_MS = 0;
+      FLOAT8 sum_pe_LR = 0;
+      for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
+	for ( ch = 0; ch < gfc->channels_out; ch++ ) {
+	  sum_pe_MS += pe_MS[gr][ch];
+	  sum_pe_LR += pe[gr][ch];
+	}
       }
-      
-      if ((ms_ratio_ave1 < threshold1  &&  ms_ratio_ave2 < threshold2) || gfc->nsPsy.use) {
-	  int  sum_pe_MS = 0;
-	  int  sum_pe_LR = 0;
-	  for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
-	      for ( ch = 0; ch < gfc->channels_out; ch++ ) {
-		  sum_pe_MS += pe_MS[gr][ch];
-		  sum_pe_LR += pe[gr][ch];
-	      }
-	  }
-	  
-	  /* based on PE: M/S coding would not use much more bits than L/R coding */
-	  
-	  if (sum_pe_MS <= 1.07 * sum_pe_LR && !gfc->nsPsy.use) gfc->mode_ext = MPG_MD_MS_LR;
-	  if (sum_pe_MS <= 1.00 * sum_pe_LR &&  gfc->nsPsy.use) gfc->mode_ext = MPG_MD_MS_LR;
+/*2DO rh 20021015 
+change the following to
+      if (sum_pe_MS <= sum_pe_LR)
+	gfc->mode_ext = MPG_MD_MS_LR;
+*/
+      /* based on PE: M/S coding would not use much more bits than L/R */
+      if ((!gfc->nsPsy.use && sum_pe_MS <= 1.07 * sum_pe_LR)
+	  || (gfc->nsPsy.use && sum_pe_MS <= 1.00 * sum_pe_LR)) {
+	  gr_info *gi0 = &gfc->l3_side.tt[0][0];
+	  gr_info *gi1 = &gfc->l3_side.tt[gfc->mode_gr-1][0];
+	  if (gi0[0].block_type == gi0[1].block_type
+	      && gi1[0].block_type == gi1[1].block_type)
+	      gfc->mode_ext = MPG_MD_MS_LR;
       }
+    }
+  }
+
+  /* bit and noise allocation */
+  if (gfc->mode_ext == MPG_MD_MS_LR) {
+      masking = &masking_MS;    /* use MS masking */
+      pe_use = &pe_MS;
+  } else {
+      masking = &masking_LR;    /* use LR masking */
+      pe_use = &pe;
   }
 
 
@@ -517,12 +534,12 @@ int  lame_encode_mp3_frame (				// Output
 	gfc->pinfo->ms_ratio[gr]=gfc->ms_ratio[gr];
 	gfc->pinfo->ms_ener_ratio[gr]=ms_ener_ratio[gr];
 	gfc->pinfo->blocktype[gr][ch]=gfc->l3_side.tt[gr][ch].block_type;
+	gfc->pinfo->pe[gr][ch]=(*pe_use)[gr][ch];
 	memcpy(gfc->pinfo->xr[gr][ch], &gfc->l3_side.tt[gr][ch].xr,
 	       sizeof(FLOAT8)*576);
 	/* in psymodel, LR and MS data was stored in pinfo.  
 	   switch to MS data: */
 	if (gfc->mode_ext==MPG_MD_MS_LR) {
-	  gfc->pinfo->pe[gr][ch]=gfc->pinfo->pe[gr][ch+2];
 	  gfc->pinfo->ers[gr][ch]=gfc->pinfo->ers[gr][ch+2];
 	  memcpy(gfc->pinfo->energy[gr][ch],gfc->pinfo->energy[gr][ch+2],
 		 sizeof(gfc->pinfo->energy[gr][ch]));
@@ -532,48 +549,32 @@ int  lame_encode_mp3_frame (				// Output
   }
 #endif
 
-
-
-
-  /* bit and noise allocation */
-  if (MPG_MD_MS_LR == gfc->mode_ext) {
-    masking = &masking_MS;    /* use MS masking */
-    pe_use = &pe_MS;
-  } else {
-    masking = &masking_LR;    /* use LR masking */
-    pe_use = &pe;
-  }
-
-
   if (gfc->nsPsy.use && (gfp->VBR == vbr_off || gfp->VBR == vbr_abr)) {
-    static FLOAT fircoef[19] = {
-      -0.0207887,-0.0378413,-0.0432472,-0.031183,
-      7.79609e-18,0.0467745,0.10091,0.151365,
-      0.187098,0.2,0.187098,0.151365,
-      0.10091,0.0467745,7.79609e-18,-0.031183,
-      -0.0432472,-0.0378413,-0.0207887,
+    static FLOAT fircoef[9] = {
+	-0.0207887 *5,	-0.0378413*5,	-0.0432472*5,	-0.031183*5,
+	7.79609e-18*5,	 0.0467745*5,	 0.10091*5,	0.151365*5,
+	0.187098*5
     };
+
     int i;
     FLOAT8 f;
 
     for(i=0;i<18;i++) gfc->nsPsy.pefirbuf[i] = gfc->nsPsy.pefirbuf[i+1];
 
-    i=0;
-    gfc->nsPsy.pefirbuf[18] = 0;
+    f = 0.0;
+    for ( gr = 0; gr < gfc->mode_gr; gr++ )
+      for ( ch = 0; ch < gfc->channels_out; ch++ )
+	  f += (*pe_use)[gr][ch];
+    gfc->nsPsy.pefirbuf[18] = f;
+
+    f = gfc->nsPsy.pefirbuf[9];
+    for (i=0;i<9;i++)
+	f += (gfc->nsPsy.pefirbuf[i]+gfc->nsPsy.pefirbuf[18-i]) * fircoef[i];
+
+    f = (670*5*gfc->mode_gr*gfc->channels_out)/f;
     for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
       for ( ch = 0; ch < gfc->channels_out; ch++ ) {
-	gfc->nsPsy.pefirbuf[18] += (*pe_use)[gr][ch];
-	i++;
-      }
-    }
-
-    gfc->nsPsy.pefirbuf[18] = gfc->nsPsy.pefirbuf[18] / i;
-    f = 0;
-    for(i=0;i<19;i++) f += gfc->nsPsy.pefirbuf[i] * fircoef[i];
-
-    for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
-      for ( ch = 0; ch < gfc->channels_out; ch++ ) {
-	(*pe_use)[gr][ch] *= 670 / f;
+	(*pe_use)[gr][ch] *= f;
       }
     }
   }
@@ -594,9 +595,7 @@ int  lame_encode_mp3_frame (				// Output
   }
 
   /*  write the frame to the bitstream  */
-  getframebits(gfp, &bitsPerFrame, &mean_bits);
-
-  format_bitstream( gfp, bitsPerFrame);
+  format_bitstream(gfp);
 
   /* copy mp3 bit buffer into array */
   mp3count = copy_buffer(gfc,mp3buf,mp3buf_size,1);
@@ -608,10 +607,9 @@ int  lame_encode_mp3_frame (				// Output
 
 
 #if defined(HAVE_GTK)
-  /* copy data for MP3 frame analyzer */
   if (gfp->analysis && gfc->pinfo != NULL) {
-    int j;
     for ( ch = 0; ch < gfc->channels_out; ch++ ) {
+      int j;
       for ( j = 0; j < FFTOFFSET; j++ )
 	gfc->pinfo->pcmdata[ch][j] = gfc->pinfo->pcmdata[ch][j+gfp->framesize];
       for ( j = FFTOFFSET; j < 1600; j++ ) {
@@ -622,7 +620,10 @@ int  lame_encode_mp3_frame (				// Output
   }
 #endif
   
+#ifdef BRHIST
   updateStats( gfc );
+#endif
 
   return mp3count;
 }
+

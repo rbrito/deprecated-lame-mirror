@@ -35,3 +35,4 @@ void init_fft(lame_internal_flags* const gfc );
 #endif
 
 /* End of fft.h */
+

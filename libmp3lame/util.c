@@ -28,7 +28,6 @@
 #define PRECOMPUTE
 
 #include "util.h"
-#include "tools.h"
 #include <ctype.h>
 #include <assert.h>
 #include <stdarg.h>
@@ -137,7 +136,7 @@ bitrate is more balanced according to the -V value.*/
   if (f < -.3)
       f=3410;
 
-  f /= 1000;  // convert to khz
+  f /= 1000;  /* convert to khz */
   f  = Max(0.01, f);
   f  = Min(18.0, f);
 
@@ -192,39 +191,6 @@ FLOAT8 freq2cbw(FLOAT8 freq)
 
 
 
-/***********************************************************************
- * compute bitsperframe and mean_bits for a layer III frame 
- **********************************************************************/
-void getframebits(const lame_global_flags * gfp, int *bitsPerFrame, int *mean_bits) 
-{
-  lame_internal_flags *gfc=gfp->internal_flags;
-  int  whole_SpF;  /* integral number of Slots per Frame without padding */
-  int  bit_rate;
-  
-  /* get bitrate in kbps [?] */
-  if (gfc->bitrate_index) 
-    bit_rate = bitrate_table[gfp->version][gfc->bitrate_index];
-  else
-    bit_rate = gfp->brate;
-  assert ( bit_rate <= 550 );
-  
-  // bytes_per_frame = bitrate * 1000 / ( gfp->out_samplerate / (gfp->version == 1  ?  1152  :  576 )) / 8;
-  // bytes_per_frame = bitrate * 1000 / gfp->out_samplerate * (gfp->version == 1  ?  1152  :  576 ) / 8;
-  // bytes_per_frame = bitrate * ( gfp->version == 1  ?  1152/8*1000  :  576/8*1000 ) / gfp->out_samplerate;
-  
-  whole_SpF = (gfp->version+1)*72000*bit_rate / gfp->out_samplerate;
-  
-  /* main encoding routine toggles padding on and off */
-  /* one Layer3 Slot consists of 8 bits */
-  *bitsPerFrame = 8 * (whole_SpF + gfc->padding);
-  
-  // sideinfo_len
-  *mean_bits = (*bitsPerFrame - 8*gfc->sideinfo_len) / gfc->mode_gr;
-}
-
-
-
-
 #define ABS(A) (((A)>0) ? (A) : -(A))
 
 int FindNearestBitrate(
@@ -243,37 +209,6 @@ int samplerate)   /* convert bitrate in kbps to index */
 }
 
 
-/* map frequency to a valid MP3 sample frequency
- *
- * Robert.Hegemann@gmx.de 2000-07-01
- */
-int map2MP3Frequency(int freq)
-{
-    if (freq <=  8000) return  8000;
-    if (freq <= 11025) return 11025;
-    if (freq <= 12000) return 12000;
-    if (freq <= 16000) return 16000;
-    if (freq <= 22050) return 22050;
-    if (freq <= 24000) return 24000;
-    if (freq <= 32000) return 32000;
-    if (freq <= 44100) return 44100;
-    
-    return 48000;
-}
-
-int BitrateIndex(
-int bRate,        /* legal rates from 32 to 448 kbps */
-int version,      /* MPEG-1 or MPEG-2/2.5 LSF */
-int samplerate)   /* convert bitrate in kbps to index */
-{
-    int  i;
-
-    for ( i = 0; i <= 14; i++)
-        if ( bitrate_table [version] [i] == bRate )
-            return i;
-	    
-    return -1;
-}
 
 
 
@@ -339,6 +274,39 @@ int nearestBitrateFullIndex(const int bitrate)
 
 
 
+
+/* map frequency to a valid MP3 sample frequency
+ *
+ * Robert.Hegemann@gmx.de 2000-07-01
+ */
+int map2MP3Frequency(int freq)
+{
+    if (freq <=  8000) return  8000;
+    if (freq <= 11025) return 11025;
+    if (freq <= 12000) return 12000;
+    if (freq <= 16000) return 16000;
+    if (freq <= 22050) return 22050;
+    if (freq <= 24000) return 24000;
+    if (freq <= 32000) return 32000;
+    if (freq <= 44100) return 44100;
+    
+    return 48000;
+}
+
+int BitrateIndex(
+int bRate,        /* legal rates from 32 to 448 kbps */
+int version,      /* MPEG-1 or MPEG-2/2.5 LSF */
+int samplerate)   /* convert bitrate in kbps to index */
+{
+    int  i;
+
+    for ( i = 0; i <= 14; i++)
+        if ( bitrate_table [version] [i] == bRate )
+            return i;
+	    
+    return -1;
+}
+
 /* convert samp freq in Hz to index */
 
 int SmpFrqIndex ( int sample_freq, int* const version )
@@ -402,7 +370,7 @@ S.D. Stearns and R.A. David, Prentice-Hall, 1992
 
 int gcd ( int i, int j )
 {
-//    assert ( i > 0  &&  j > 0 );
+/*    assert ( i > 0  &&  j > 0 ); */
     return j ? gcd(j, i % j) : i;
 }
 
@@ -438,8 +406,9 @@ void fill_buffer(lame_global_flags *gfp,
 		mfbuf[1][gfc->mf_size + i] = in_buffer[1][i];
 	}
     }
-
 }
+    
+
 
 
 int fill_buffer_resample(
@@ -690,88 +659,6 @@ int  has_SIMD2 ( void )
 #endif
 }    
 
-/***********************************************************************
- *
- *  some simple statistics
- *
- *  bitrate index 0: free bitrate -> not allowed in VBR mode
- *  : bitrates, kbps depending on MPEG version
- *  bitrate index 15: forbidden
- *
- *  mode_ext:
- *  0:  LR
- *  1:  LR-i
- *  2:  MS
- *  3:  MS-i
- *
- ***********************************************************************/
- 
-void updateStats( lame_internal_flags * const gfc )
-{
-    int gr, ch;
-    assert ( gfc->bitrate_index < 16u );
-    assert ( gfc->mode_ext      <  4u );
-    
-    /* count bitrate indices */
-    gfc->bitrate_stereoMode_Hist [gfc->bitrate_index] [4] ++;
-    gfc->bitrate_stereoMode_Hist [15] [4] ++;
-    
-    /* count 'em for every mode extension in case of 2 channel encoding */
-    if (gfc->channels_out == 2) {
-        gfc->bitrate_stereoMode_Hist [gfc->bitrate_index] [gfc->mode_ext]++;
-        gfc->bitrate_stereoMode_Hist [15] [gfc->mode_ext]++;
-    }
-    for (gr = 0; gr < gfc->mode_gr; ++gr) {
-        for (ch = 0; ch < gfc->channels_out; ++ch) {
-            int bt = gfc->l3_side.tt[gr][ch].block_type;
-            int mf = gfc->l3_side.tt[gr][ch].mixed_block_flag;
-            if (mf) bt = 4;
-            gfc->bitrate_blockType_Hist [gfc->bitrate_index] [bt] ++;        
-            gfc->bitrate_blockType_Hist [gfc->bitrate_index] [ 5] ++;
-            gfc->bitrate_blockType_Hist [15] [bt] ++;        
-            gfc->bitrate_blockType_Hist [15] [ 5] ++;
-        }
-    }
-}
-
-
-
-/*  caution: a[] will be resorted!!
- */
-int select_kth_int(int a[], int N, int k)
-{
-    int i, j, l, r, v, w;
-    
-    l = 0;
-    r = N-1;
-    while (r > l) {
-        v = a[r];
-        i = l-1;
-        j = r;
-        for (;;) {
-            while (a[++i] < v) /*empty*/;
-            while (a[--j] > v) /*empty*/;
-            if (i >= j) 
-                break;
-            /* swap i and j */
-            w = a[i];
-            a[i] = a[j];
-            a[j] = w;
-        }
-        /* swap i and r */
-        w = a[i];
-        a[i] = a[r];
-        a[r] = w;
-        if (i >= k) 
-            r = i-1;
-        if (i <= k) 
-            l = i+1;
-    }
-    return a[k];
-}
-
-
-
 void disable_FPE(void) {
 /* extremly system dependent stuff, move to a lib to make the code readable */
 /*==========================================================================*/
@@ -918,15 +805,18 @@ ieee754_float32_t fast_log2(ieee754_float32_t x)
   int i = *(int*)&x;
   ieee754_float32_t log2val;
   int mantisse = i & 0x7FFFFF;
-  int exponent = i & 0x7F800000;
-  ieee754_float32_t partial = (mantisse & ((1<<(23-LOG2_SIZE_L2))-1)) * (1.0f/((1<<(23-LOG2_SIZE_L2))));
+  ieee754_float32_t partial;
+
+  log2val = ((i>>23) & 0xFF)-0x7f;
+  partial = (mantisse & ((1<<(23-LOG2_SIZE_L2))-1));
+  partial *= 1.0f/((1<<(23-LOG2_SIZE_L2)));
 
 
   mantisse >>= (23-LOG2_SIZE_L2);
-  log2val = (exponent>>23)-0x7f;
 
   /* log2val += log_table[mantisse];  without interpolation the results are not good */
   log2val += log_table[mantisse] * (1.0f-partial) + log_table[mantisse+1]*partial;
+
   return log2val;
 }
 
@@ -941,3 +831,4 @@ void init_log_table(void)
 #endif
 
 /* end of util.c */
+

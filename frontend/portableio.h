@@ -47,33 +47,6 @@
  * NaN's, and denormalized numbers.
  *
  * $Id$
- *
- * $Log$
- * Revision 1.2  2000/11/18 04:24:06  markt
- * Removed ieeefloat.*
- *
- * Revision 1.1  2000/09/28 16:36:53  takehiro
- * moved frontend staffs into frontend/
- * Need to debug vorbis/mpglib/analyzer/bitrate histgram.
- * still long way to go...
- *
- * HAVEGTK is changed ANALYSIS(library side) and HAVEGTK(frontend side)
- *
- * BRHIST is deleted from library. all the bitrate histogram works are
- * now in frontend(but not works properly, yet).
- *
- * timestatus things are also moved to frontend.
- *
- * parse.c is now out of library.
- *
- * Revision 1.2  2000/09/17 04:19:09  cisc
- * conformed all this-is-included-defines to match 'project_file_name' style
- *
- * Revision 1.1.1.1  1999/11/24 08:43:37  markt
- * initial checkin of LAME
- * Starting with LAME 3.57beta with some modifications
- *
- * Revision 2.6  91/04/30  17:06:02  malcolm
  */
 
 #include	<stdio.h>
@@ -116,3 +89,4 @@ extern CLINK void WriteIeeeExtendedHighLow(FILE *fp, double num);
 #define	Read32BitsLowHigh(f)	Read32Bits(f)
 #define WriteString(f,s)	fwrite(s,strlen(s),sizeof(char),f)
 #endif
+

@@ -23,3 +23,4 @@
 int gtkcontrol(lame_global_flags *gfp2,char *inPath);
 
 #endif
+

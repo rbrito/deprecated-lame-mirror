@@ -144,11 +144,11 @@ makesocket (char *szAddr, unsigned short port, unsigned char TTL,
 
 
 #if 0
-//
-// code contributed by Anonymous source.  Supposed to be much better
-// then original code, but only seems to run on windows with MSVC.  
-// and I cannot test it
-//
+/* */
+/* code contributed by Anonymous source.  Supposed to be much better */
+/* then original code, but only seems to run on windows with MSVC.   */
+/* and I cannot test it */
+/* */
 #include <stdlib.h>
 #include <string.h>
 #include <netinet/in.h>
@@ -217,7 +217,7 @@ rtp_send
     outcast[2]=htonl(cast[2]);
     outcast[3]=htonl(cast[3]);
     memmove (buffer+sizeof(struct rtpheader),data,len);
-//    return sendto (fd,buf,len+sizeof(*foo),0,(struct sockaddr *)sSockAddr,sizeof(*sSockAddr));
+/*    return sendto (fd,buf,len+sizeof(*foo),0,(struct sockaddr *)sSockAddr,sizeof(*sSockAddr)); */
 /*  return write(fd,buf,len+sizeof(*foo))==len+sizeof(*foo); */
     size = len + sizeof (*foo) ;
     count = send (s, buffer, size, 0) ;
@@ -236,12 +236,12 @@ rtp_socket
     int TTL
 )
 {
-//    int iRet ;
+/*    int iRet ; */
     int iLoop = 1 ;
-//    struct  sockaddr_in sin ;
+/*    struct  sockaddr_in sin ; */
     char    cTTL = (char)TTL ;
     char    cLoop=0 ;
-//    unsigned int tempaddr ;
+/*    unsigned int tempaddr ; */
     BOOL True = TRUE ;
     INT error ;
     char *c = "" ;
@@ -272,7 +272,7 @@ sizeof(int));
 
     if ((ntohl(tempaddr) >> 28) == 0xe)
     {
-        // only set multicast parameters for multicast destination IPs
+        /* only set multicast parameters for multicast destination IPs */
         iRet = setsockopt(s, IPPROTO_IP, IP_MULTICAST_TTL, &cTTL, 
 sizeof(char));
         if (iRet < 0) {
@@ -281,7 +281,7 @@ in kernel?\n");
             exit(1);
         }
 
-        cLoop = 1;	// !?
+        cLoop = 1;	/* !? */
         iRet = setsockopt(s, IPPROTO_IP, IP_MULTICAST_LOOP,
 		            &cLoop, sizeof(char));
         if (iRet < 0)
@@ -371,7 +371,7 @@ sizeof (BOOL)) ;
     {
         printf ("multicast %s:%u %s\r\n", inet_ntoa (dest.sin_addr), ntohs (dest.sin_port), c) ;
 
-//        error = setsockopt (s, IPPROTO_IP, IP_MULTICAST_TTL, (const char *) &TTL, sizeof (int)) ;
+/*        error = setsockopt (s, IPPROTO_IP, IP_MULTICAST_TTL, (const char *) &TTL, sizeof (int)) ; */
         error = setsockopt (s, IPPROTO_IP, 3, (const char *) &TTL, sizeof (int)) ;
 
         if (error == SOCKET_ERROR)
@@ -400,3 +400,4 @@ sizeof (BOOL)) ;
 
 
 #endif
+

@@ -69,22 +69,20 @@ char *strchr (), *strrchr ();
  *   - exp()   on some machines this is claimed to be faster than pow()
  */
 
-#define POW20(x) (assert(0 <= x && x < Q_MAX), pow20[x])
-//#define POW20(x)  pow(2.0,((double)(x)-210)*.25)
-//#define POW20(x)  exp( ((double)(x)-210)*(.25*LOG2) )
+#define POW20(x) (assert(-Q_MAX2 <= x && x < Q_MAX), pow20[x+Q_MAX2])
+/*#define POW20(x)  pow(2.0,((double)(x)-210)*.25) */
+/*#define POW20(x)  exp( ((double)(x)-210)*(.25*LOG2) ) */
 
-#define IPOW20(x)  ipow20[x]
-//#define IPOW20(x)  exp( -((double)(x)-210)*.1875*LOG2 )
-//#define IPOW20(x)  pow(2.0,-((double)(x)-210)*.1875)
+#define IPOW20(x)  (assert(0 <= x && x < Q_MAX), ipow20[x])
+/*#define IPOW20(x)  exp( -((double)(x)-210)*.1875*LOG2 ) */
+/*#define IPOW20(x)  pow(2.0,-((double)(x)-210)*.1875) */
 
-#define IIPOW20_(x) iipow20_[x]
+#define IIPOW20(x) (assert(0 <= x && x < Q_MAX2), iipow20[x])
 
 /* in case this is used without configure */
 #ifndef inline
 # define inline
 #endif
-/* compatibility */
-#define INLINE inline
 
 #if defined(_MSC_VER)
 # undef inline
@@ -97,7 +95,7 @@ char *strchr (), *strrchr ();
 
 #if    defined(_MSC_VER)
 # pragma warning( disable : 4244 )
-//# pragma warning( disable : 4305 )
+/*# pragma warning( disable : 4305 ) */
 #endif
 
 /*
@@ -112,13 +110,15 @@ char *strchr (), *strrchr ();
 #if ( defined(_MSC_VER) || defined(__BORLANDC__) || defined(__MINGW32__) )
 # define WIN32_LEAN_AND_MEAN
 # include <windows.h>
+# include <float.h>
+# define FLOAT_MAX FLT_MAX
 #else
 # ifndef FLOAT
 typedef float   FLOAT;
 #  ifdef FLT_MAX
 #   define FLOAT_MAX FLT_MAX
 #  else
-#   define FLOAT_MAX 1e99 /* approx */
+#   define FLOAT_MAX 1e37 /* approx */
 #  endif
 # endif
 #endif
@@ -143,15 +143,15 @@ typedef double  FLOAT8;
 #if   defined _WIN32 && !defined __CYGWIN__
 typedef unsigned char	u_char;
 #elif defined __DECALPHA__
-// do nothing
+/* do nothing */
 #elif defined OS_AMIGAOS
-// do nothing
+/* do nothing */
 #elif defined __DJGPP__
 typedef unsigned char	u_char;
 #elif !defined __GNUC__  ||  defined __STRICT_ANSI__
 typedef unsigned char	u_char;
 #else
-// do nothing
+/* do nothing */
 #endif
 
 /* sample_t must be floating point, at least 32 bits */
@@ -161,3 +161,4 @@ typedef sample_t  stereo_t [2];
 #endif
 
 /* end of machine.h */
+

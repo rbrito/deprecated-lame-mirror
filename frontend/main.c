@@ -191,7 +191,7 @@ lame_decoder(lame_global_flags * gfp, FILE * outf, int skip, char *inPath,
             if (enc_delay>-1) skip = enc_delay + 528+1;
             else skip=lame_get_encoder_delay(gfp)+528+1;
         }else{
-            // user specified a value of skip. just add for decoder
+            /* user specified a value of skip. just add for decoder */
             skip += 528+1; /* mp3 decoder has a 528 sample delay, plus user supplied "skip" */
         }
 
@@ -489,7 +489,7 @@ brhist_init_package(lame_global_flags * gf)
         }
     }
     else {
-        brhist_init(gf, 128, 128); // Dirty hack
+        brhist_init(gf, 128, 128); /* Dirty hack */
     }
 #endif
 }
@@ -756,3 +756,4 @@ main(int argc, char **argv)
     }
     return ret;
 }
+

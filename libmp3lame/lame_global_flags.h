@@ -67,24 +67,21 @@ struct lame_global_struct {
   int original;                   /* mark as original. default=1            */
   int error_protection;           /* use 2 bytes per frame for a CRC
                                      checksum. default=0                    */
-  Padding_type padding_type;      /* PAD_NO = no padding,
-                                     PAD_ALL = always pad,
-                                     PAD_ADJUST = adjust padding,
-                                     default=2                              */
   int extension;                  /* the MP3 'private extension' bit.
                                      Meaningless                            */
   int strict_ISO;                 /* enforce ISO spec as much as possible   */
 
-  /* quantization/noise shaping */
   int disable_reservoir;          /* use bit reservoir?                     */
-  int experimentalX;            
+
+  /* quantization/noise shaping */
+  int quant_comp;
+  int quant_comp_short;
   int experimentalY;
   int experimentalZ;
   int exp_nspsytune;
 
   double newmsfix;
   int preset_expopts;
-
   int preset;
 
   /* VBR control */
@@ -141,6 +138,9 @@ struct lame_global_struct {
   int   tune;               /* 0 off, 1 on */
   float tune_value_a;       /* used to pass values for debugging and stuff */
 
+  int   sparsing;
+  FLOAT sparse_low;
+  FLOAT sparse_high;
   
   struct {
     void (*msgf)  (const char *format, va_list ap);
@@ -171,7 +171,7 @@ struct lame_global_struct {
   /* VBR tags.  This data is here because VBR header is writen after
    * input file is closed and *internal_flags struct is free'd */
   int TotalFrameSize;
-  //int* pVbrFrames;
+  /*int* pVbrFrames; */
   int nVbrNumFrames;
   int nVbrFrameBufferSize;
 
@@ -190,3 +190,4 @@ struct lame_global_struct {
 } ;
 
 #endif /* LAME_GLOBAL_FLAGS_H */
+

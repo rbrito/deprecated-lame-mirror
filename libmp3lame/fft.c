@@ -50,6 +50,9 @@
 
 #define TRI_SIZE (5-1) /* 1024 =  4**5 */
 
+/* fft.c    */
+static FLOAT window[BLKSIZE], window_s[BLKSIZE_s/2];
+
 static const FLOAT costab[TRI_SIZE*2] = {
   9.238795325112867e-01, 3.826834323650898e-01,
   9.951847266721969e-01, 9.801714032956060e-02,
@@ -187,7 +190,6 @@ static const unsigned char rv_tbl[] = {
 void fft_short(lame_internal_flags * const gfc, 
                 FLOAT x_real[3][BLKSIZE_s], int chn, const sample_t *buffer[2])
 {
-    const FLOAT*  window_s = (const FLOAT *)&gfc->window_s[0];
     int           i;
     int           j;
     int           b;
@@ -227,7 +229,6 @@ void fft_short(lame_internal_flags * const gfc,
 void fft_long(lame_internal_flags * const gfc,
                FLOAT x[BLKSIZE], int chn, const sample_t *buffer[2] )
 {
-    const FLOAT*  window = (const FLOAT *)&gfc->window[0];
     int           i;
     int           jj = BLKSIZE / 8 - 1;
     x += BLKSIZE / 2;
@@ -261,26 +262,10 @@ void fft_long(lame_internal_flags * const gfc,
 
 void init_fft(lame_internal_flags * const gfc)
 {
-    FLOAT *window   = &gfc->window[0];
-    FLOAT *window_s = &gfc->window_s[0];
     int i;
 
-#if 0
-    if (gfc->nsPsy.use) {
-      for (i = 0; i < BLKSIZE ; i++)
-	/* blackman window */
-	window[i] = 0.42-0.5*cos(2*PI*i/(BLKSIZE-1))+0.08*cos(4*PI*i/(BLKSIZE-1));
-    } else {
-      /*
-       * calculate HANN window coefficients 
-       */
-      for (i = 0; i < BLKSIZE ; i++)
-	window[i] = 0.5 * (1.0 - cos(2.0 * PI * (i + 0.5) / BLKSIZE));
-    }
-#endif
-
-    // The type of window used here will make no real difference, but
-    // in the interest of merging nspsytune stuff - switch to blackman window
+    /* The type of window used here will make no real difference, but */
+    /* in the interest of merging nspsytune stuff - switch to blackman window */
     for (i = 0; i < BLKSIZE ; i++)
       /* blackman window */
       window[i] = 0.42-0.5*cos(2*PI*(i+.5)/BLKSIZE)+
@@ -309,3 +294,4 @@ void init_fft(lame_internal_flags * const gfc)
 #endif
         gfc->fft_fht = fht;
 }
+

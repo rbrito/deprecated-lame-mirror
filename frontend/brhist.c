@@ -25,6 +25,8 @@
 #include <config.h>
 #endif
 
+#ifdef BRHIST
+
 /* basic #define's */
 
 #ifndef BRHIST_WIDTH
@@ -58,8 +60,8 @@ char *strchr (), *strrchr ();
 #elif defined(HAVE_TERMCAP_H)
 # include <termcap.h>
 #elif defined(HAVE_TERMCAP)
-#include <curses.h>
-#include <term.h>
+# include <curses.h>
+# include <term.h>
 #endif
 
 #include "brhist.h"
@@ -98,7 +100,7 @@ static int calculate_index ( const int* const array, const int len, const int va
 int  brhist_init ( const lame_global_flags* gf, const int bitrate_kbps_min, const int bitrate_kbps_max )
 {
 #ifdef HAVE_TERMCAP
-    char         term_buff [2048];  // see 1)
+    char         term_buff [2048];  /* see 1) */
     const char*  term_name;
     char*        tp;
     char         tc [10];
@@ -114,7 +116,7 @@ int  brhist_init ( const lame_global_flags* gf, const int bitrate_kbps_min, cons
     Console_IO.Report_fp   = stderr;
 
     setvbuf ( Console_IO.Console_fp, Console_IO.Console_buff, _IOFBF, sizeof (Console_IO.Console_buff) );
-//  setvbuf ( Console_IO.Error_fp  , NULL                   , _IONBF, 0                                );
+/*  setvbuf ( Console_IO.Error_fp  , NULL                   , _IONBF, 0                                ); */
 
 #if defined(_WIN32)  &&  !defined(__CYGWIN__) 
     Console_IO.Console_Handle = GetStdHandle (STD_ERROR_HANDLE);
@@ -211,7 +213,7 @@ static void  brhist_disp_line ( const lame_global_flags*  gf, int i, int br_hist
     int     ppt  = 0;
 
     if ( full != 0 ) {
-        // some problems when br_hist_TOT \approx br_hist_LR: You can't see that there are still MS frames
+        /* some problems when br_hist_TOT \approx br_hist_LR: You can't see that there are still MS frames */
         barlen_TOT = (br_hist_TOT * (Console_IO.disp_width-BRHIST_RES) + full-1 ) / full;  /* round up */
         barlen_LR  = (br_hist_LR  * (Console_IO.disp_width-BRHIST_RES) + full-1 ) / full;  /* round up */
     } else {
@@ -221,9 +223,9 @@ static void  brhist_disp_line ( const lame_global_flags*  gf, int i, int br_hist
     if (frames > 0)
         ppt = (1000 * br_hist_TOT + frames/2) / frames;                                  /* round nearest */
 
-    // bar graph gives a visual indication of percentages.
-    // so lets not print perswitched back 
-    // mt 11/00
+    /* bar graph gives a visual indication of percentages. */
+    /* so lets not print perswitched back  */
+    /* mt 11/00 */
 #if 0
     if ( br_hist_TOT == 0 )
         sprintf ( brppt,  " [   ]" );
@@ -334,7 +336,7 @@ void  brhist_disp_total ( const lame_global_flags* gf )
 
     fprintf ( Console_IO.Console_fp, "\naverage: %5.1f kbps", sum / br_frames);
 
-    // I'm very unhappy because this is only printed out in VBR modes
+    /* I'm very unhappy because this is only printed out in VBR modes */
     if (st_frames > 0) {
         if ( st_mode[LR] > 0 )
             fprintf ( Console_IO.Console_fp, "   LR: %d (%#5.4g%%)", st_mode[LR], 100. * st_mode[LR] / st_frames );
@@ -377,4 +379,5 @@ void  brhist_disp_total ( const lame_global_flags* gf )
  * But one day, for one kind of terminal, that was not enough.)
  */
 
-/* end of brhist.c */
+#endif /* ifdef BRHIST */
+

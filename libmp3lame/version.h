@@ -34,8 +34,8 @@
 # define LAME_URL              "http://www.mp3dev.org/"
 
 # define LAME_MAJOR_VERSION      3      /* Major version number */
-# define LAME_MINOR_VERSION     93      /* Minor version number */
-# define LAME_ALPHA_VERSION      0      /* Patch level of alpha version, otherwise zero */
+# define LAME_MINOR_VERSION     94      /* Minor version number */
+# define LAME_ALPHA_VERSION      5      /* Patch level of alpha version, otherwise zero */
 # define LAME_BETA_VERSION       0      /* Patch level of beta  version, otherwise zero */
 
 # define PSY_MAJOR_VERSION       0      /* Major version number */
@@ -53,3 +53,4 @@ void         get_lame_version_numerical ( lame_version_t *const lvp );
 #endif  /* LAME_VERSION_H */
 
 /* End of version.h */
+

@@ -372,7 +372,7 @@ static const int order[] = {
 
 
 /* returns sum_j=0^31 a[j]*cos(PI*j*(k+1/2)/32), 0<=k<32 */
-INLINE static void
+inline static void
 window_subband(const sample_t *x1, FLOAT8 a[SBLIMIT])
 {
     int i;
@@ -431,10 +431,10 @@ window_subband(const sample_t *x1, FLOAT8 a[SBLIMIT])
 	t = a[14];
 	s = a[15] - t;
 
-	a[31] = v + t;   // A0
-	a[30] = u + s;   // A1
-	a[15] = u - s;   // A2
-	a[14] = v - t;   // A3
+	a[31] = v + t;   /* A0 */
+	a[30] = u + s;   /* A1 */
+	a[15] = u - s;   /* A2 */
+	a[14] = v - t;   /* A3 */
     }
 {
     FLOAT8 xr;
@@ -613,7 +613,7 @@ inline static void mdct_long(FLOAT8 *out, FLOAT8 *in)
     FLOAT8 ct,st;
   {
     FLOAT8 tc1, tc2, tc3, tc4, ts5, ts6, ts7, ts8;
-    // 1,2, 5,6, 9,10, 13,14, 17
+    /* 1,2, 5,6, 9,10, 13,14, 17 */
     tc1 = in[17]-in[ 9];
     tc3 = in[15]-in[11];
     tc4 = in[14]-in[12];
@@ -711,23 +711,6 @@ void mdct_sub48(
 		}
 	    }
 
-
-	    /* apply filters on the polyphase filterbank outputs */
-	    /* bands <= gfc->highpass_band will be zeroed out below */
-	    /* bands >= gfc->lowpass_band  will be zeroed out below */
-	    if (gfc->filter_type==0) {
-              for (band=gfc->highpass_start_band;  band <= gfc->highpass_end_band; band++) { 
-		  for (k=0; k<18; k++) 
-		    gfc->sb_sample[ch][1-gr][k][order[band]]*=gfc->amp_highpass[band];
-	      }
-              for (band=gfc->lowpass_start_band;  band <= gfc->lowpass_end_band; band++) { 
-		  for (k=0; k<18; k++) 
-		    gfc->sb_sample[ch][1-gr][k][order[band]]*=gfc->amp_lowpass[band];
-	      }
-	    }
-	    
-
-
 	    /*
 	     * Perform imdct of 18 previous subband samples
 	     * + 18 current subband samples
@@ -739,9 +722,13 @@ void mdct_sub48(
 		band1 = gfc->sb_sample[ch][1-gr][0] + order[band];
 		if (gi->mixed_block_flag && band < 2)
 		    type = 0;
-		if (band >= gfc->lowpass_band || band <= gfc->highpass_band) {
-		    memset((char *)mdct_enc,0,18*sizeof(FLOAT8));
+		if (gfc->amp_filter[band] == 0.0) {
+		    memset(mdct_enc, 0, 18*sizeof(FLOAT8));
 		} else {
+		  if (gfc->amp_filter[band] != 1.0) {
+		      for (k=0; k<18; k++)
+			  band1[k*32] *= gfc->amp_filter[band];
+		  }
 		  if (type == SHORT_TYPE) {
 		    for (k = -NS/4; k < 0; k++) {
 			FLOAT8 w = win[SHORT_TYPE][k+3];
@@ -771,9 +758,7 @@ void mdct_sub48(
 		/*
 		 * Perform aliasing reduction butterfly
 		 */
-		if (type != SHORT_TYPE) {
-		  if (band == 0)
-		    continue;
+		if (type != SHORT_TYPE && band != 0) {
 		  for (k = 7; k >= 0; --k) {
 		    FLOAT8 bu,bd;
 		    bu = mdct_enc[k] * ca[k] + mdct_enc[-1-k] * cs[k];
@@ -791,3 +776,4 @@ void mdct_sub48(
 	}
     }
 }
+

@@ -26,21 +26,12 @@
 #endif
 
 #include "machine.h"
-#if defined(__riscos__) && defined(FPA10)
-#include	"ymath.h"
-#else 
-#include	<math.h>
-#endif
-
-
 #include "bitstream.h"
 #include "lame.h"
 #include "VbrTag.h"
 #include "version.h"
 
 #include	<assert.h>
-#include 	<stdlib.h>
-#include 	<string.h>
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
@@ -57,15 +48,15 @@
 #endif
 
 /*
-//    4 bytes for Header Tag
-//    4 bytes for Header Flags
-//  100 bytes for entry (NUMTOCENTRIES)
-//    4 bytes for FRAME SIZE
-//    4 bytes for STREAM_SIZE
-//    4 bytes for VBR SCALE. a VBR quality indicator: 0=best 100=worst
-//   20 bytes for LAME tag.  for example, "LAME3.12 (beta 6)"
-// ___________
-//  140 bytes
+ *    4 bytes for Header Tag 
+ *    4 bytes for Header Flags 
+ *  100 bytes for entry (NUMTOCENTRIES) 
+ *    4 bytes for FRAME SIZE 
+ *    4 bytes for STREAM_SIZE 
+ *    4 bytes for VBR SCALE. a VBR quality indicator: 0=best 100=worst 
+ *   20 bytes for LAME tag.  for example, "LAME3.12 (beta 6)" 
+ * ___________ 
+ *  140 bytes 
 */
 #define VBRHEADERSIZE (NUMTOCENTRIES+4+4+4+4+4)
 
@@ -316,8 +307,8 @@ int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
             pTagData->samprate = samplerate_table[2][h_sr_index];
         else
             pTagData->samprate = samplerate_table[h_id][h_sr_index];
-        //	if( h_id == 0 )
-        //		pTagData->samprate >>= 1;
+        /*	if( h_id == 0 ) */
+        /*		pTagData->samprate >>= 1; */
 
 
 
@@ -381,8 +372,8 @@ int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
         enc_delay += buf[1] >> 4;
         enc_padding= (buf[1] & 0x0F)<<8;
         enc_padding += buf[2];
-        // check for reasonable values (this may be an old Xing header,
-        // not a INFO tag)
+        /* check for reasonable values (this may be an old Xing header, */
+        /* not a INFO tag) */
         if (enc_delay<0 || enc_delay > 3000) enc_delay=-1;
         if (enc_padding<0 || enc_padding > 3000) enc_padding=-1;
 
@@ -424,36 +415,36 @@ int InitVbrTag(lame_global_flags *gfp)
 {
 	int nMode,SampIndex;
 	lame_internal_flags *gfc = gfp->internal_flags;
-#define MAXFRAMESIZE 2880 // or 0xB40, the max freeformat 640 32kHz framesize
-	//	uint8_t pbtStreamBuffer[MAXFRAMESIZE];
+#define MAXFRAMESIZE 2880 /* or 0xB40, the max freeformat 640 32kHz framesize */
+	/*	uint8_t pbtStreamBuffer[MAXFRAMESIZE]; */
 	nMode = gfp->mode;
 	SampIndex = gfc->samplerate_index;
 
 
 	/* Clear Frame position array variables */
-	//gfp->pVbrFrames=NULL;
+	/*gfp->pVbrFrames=NULL; */
 	gfp->nVbrNumFrames=0;
 	gfp->nVbrFrameBufferSize=0;
 
 
 	/* Clear stream buffer */
-	//	memset(pbtStreamBuffer,0x00,sizeof(pbtStreamBuffer));
+	/*	memset(pbtStreamBuffer,0x00,sizeof(pbtStreamBuffer)); */
 
 
 
 	/*
-	// Xing VBR pretends to be a 48kbs layer III frame.  (at 44.1kHz).
-        // (at 48kHz they use 56kbs since 48kbs frame not big enough for
-        // table of contents)
-	// let's always embed Xing header inside a 64kbs layer III frame.
-	// this gives us enough room for a LAME version string too.
-	// size determined by sampling frequency (MPEG1)
-	// 32kHz:    216 bytes@48kbs    288bytes@ 64kbs
-	// 44.1kHz:  156 bytes          208bytes@64kbs     (+1 if padding = 1)
-	// 48kHz:    144 bytes          192
-	//
-	// MPEG 2 values are the same since the framesize and samplerate
-        // are each reduced by a factor of 2.
+	 * Xing VBR pretends to be a 48kbs layer III frame.  (at 44.1kHz). 
+         * (at 48kHz they use 56kbs since 48kbs frame not big enough for 
+         * table of contents) 
+	 * let's always embed Xing header inside a 64kbs layer III frame. 
+	 * this gives us enough room for a LAME version string too. 
+	 * size determined by sampling frequency (MPEG1) 
+	 * 32kHz:    216 bytes@48kbs    288bytes@ 64kbs 
+	 * 44.1kHz:  156 bytes          208bytes@64kbs     (+1 if padding = 1) 
+	 * 48kHz:    144 bytes          192 
+	 * 
+	 * MPEG 2 values are the same since the framesize and samplerate 
+         * are each reduced by a factor of 2. 
 	*/
 	{
 	int i,bitrate,tot;
@@ -476,7 +467,7 @@ int InitVbrTag(lame_global_flags *gfp)
 
 	if (gfp->TotalFrameSize < tot || 
             gfp->TotalFrameSize > MAXFRAMESIZE ) {
-            // disable tag, it wont fit
+            /* disable tag, it wont fit */
             gfp->bWriteVbrTag = 0;
             return 0;
         }
@@ -536,17 +527,17 @@ void ReportLameTagProgress(lame_global_flags *gfp,int nStart)
 int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer, uint32_t id3v2size,  uint16_t crc)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
-//	FLOAT fVersion = LAME_MAJOR_VERSION + 0.01 * LAME_MINOR_VERSION;
+/*	FLOAT fVersion = LAME_MAJOR_VERSION + 0.01 * LAME_MINOR_VERSION; */
 
 	int nBytesWritten = 0;
-	int nFilesize	  = 0;		//size of fpStream. Will be equal to size after process finishes.
+	int nFilesize	  = 0;		/*size of fpStream. Will be equal to size after process finishes. */
 	int i;
 
-    int enc_delay=lame_get_encoder_delay(gfp);       // encoder delay
-    int enc_padding=lame_get_encoder_padding(gfp);   // encoder padding 
+    int enc_delay=lame_get_encoder_delay(gfp);       /* encoder delay */
+    int enc_padding=lame_get_encoder_padding(gfp);   /* encoder padding  */
 
-	//recall:	gfp->VBR_q is for example set by the switch -V 
-	//			gfp->quality by -q, -h, -f, etc
+	/*recall:	gfp->VBR_q is for example set by the switch -V  */
+	/*			gfp->quality by -q, -h, -f, etc */
 	
 	int nQuality		= (100 - 10 * gfp->VBR_q - gfp->quality);
 	
@@ -555,13 +546,13 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 	uint8_t nVBR;
 	uint8_t nRevision = 0x00;
 	uint8_t nRevMethod;
-	uint8_t vbr_type_translator[] = {1,5,3,2,4,0,3};		//numbering different in vbr_mode vs. Lame tag
+	uint8_t vbr_type_translator[] = {1,5,3,2,4,0,3};		/*numbering different in vbr_mode vs. Lame tag */
 
 	uint8_t nLowpass		= ( ((gfp->lowpassfreq / 100.0)+.5) > 255 ? 255 : (gfp->lowpassfreq / 100.0)+.5 );
 
-	ieee754_float32_t fPeakSignalAmplitude	= 0;				//TODO...
-	uint16_t nRadioReplayGain		= 0;				//TODO...
-	uint16_t nAudioPhileReplayGain  = 0;				//TODO...
+	ieee754_float32_t fPeakSignalAmplitude	= 0;				/*TODO... */
+	uint16_t nRadioReplayGain		= 0;				/*TODO... */
+	uint16_t nAudioPhileReplayGain  = 0;				/*TODO... */
 
 
 
@@ -571,13 +562,12 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 	int		bNonOptimal				= 0;
 	uint8_t nSourceFreq				= 0;
 	uint8_t nMisc					= 0;
-	uint16_t nPresetValue			= 0;
 	uint32_t nMusicLength			= 0;
 	int		bId3v1Present			= ((gfp->internal_flags->tag_spec.flags & CHANGED_FLAG)
 		&& !(gfp->internal_flags->tag_spec.flags & V2_ONLY_FLAG));
 	uint16_t nMusicCRC				= 0;
 
-	//psy model type: Gpsycho or NsPsytune
+	/*psy model type: Gpsycho or NsPsytune */
 	unsigned char    bExpNPsyTune	= gfp->exp_nspsytune & 1;
 	unsigned char	 bSafeJoint		= (gfp->exp_nspsytune & 2)!=0;
 
@@ -588,22 +578,22 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 	int		 nNoGapCurr		= gfp->internal_flags->nogap_current;
 
 
-	uint8_t  nAthType		= gfp->ATHtype;	//4 bits.
+	uint8_t  nAthType		= gfp->ATHtype;	/*4 bits. */
 	
 	uint8_t  nFlags			= 0;
 
-	// if ABR, {store bitrate <=255} else { store "-b"}
+	/* if ABR, {store bitrate <=255} else { store "-b"} */
 	int nABRBitrate	= (gfp->VBR==vbr_abr)?gfp->VBR_mean_bitrate_kbps:gfp->brate;
 
-	//revision and vbr method
+	/*revision and vbr method */
 	if (gfp->VBR>=0 && gfp->VBR < sizeof(vbr_type_translator))
 		nVBR = vbr_type_translator[gfp->VBR];
 	else
-		nVBR = 0x00;		//unknown.
+		nVBR = 0x00;		/*unknown. */
 
 	nRevMethod = 0x10 * nRevision + nVBR; 
 	
-	//nogap
+	/*nogap */
 	if (nNoGapCount != -1)
 	{
 		if (nNoGapCurr > 0)
@@ -613,7 +603,7 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 			bNoGapMore = 1;
 	}
 
-	//flags
+	/*flags */
 
 	nFlags	= nAthType	+ (bExpNPsyTune		<< 4)
 						+ (bSafeJoint		<< 5)
@@ -662,14 +652,14 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 	else if (gfp->in_samplerate > 48000)
 		nSourceFreq = 0x03;
 	else
-		nSourceFreq = 0x01;  //default is 44100Hz.
+		nSourceFreq = 0x01;  /*default is 44100Hz. */
 
 
-	//Check if the user overrided the default LAME behaviour with some nasty options
+	/*Check if the user overrided the default LAME behaviour with some nasty options */
 
 	if (gfp->short_blocks == short_block_forced 			||
 		gfp->short_blocks == short_block_dispensed 		||
-		((gfp->lowpassfreq == -1) && (gfp->highpassfreq == -1))	|| // "-k"
+		((gfp->lowpassfreq == -1) && (gfp->highpassfreq == -1))	|| /* "-k" */
 		(gfp->scale_left != gfp->scale_right)			||
 		gfp->disable_reservoir		||
 		gfp->noATH			||
@@ -685,15 +675,14 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 
 
 	
-	//get filesize
+	/*get filesize */
 	fseek(fpStream, 0, SEEK_END);
 	nFilesize = ftell(fpStream);
 
-    nPresetValue = gfp->preset;
 	
-	nMusicLength = nFilesize - id3v2size;		//omit current frame
+	nMusicLength = nFilesize - id3v2size;		/*omit current frame */
 	if (bId3v1Present)
-		nMusicLength-=128;                     //id3v1 present.
+		nMusicLength-=128;                     /*id3v1 present. */
         nMusicCRC = gfc->nMusicCRC;
 
 
@@ -728,7 +717,7 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 		pbtStreamBuffer[nBytesWritten] = nABRBitrate;
 	nBytesWritten++;
 
-        pbtStreamBuffer[nBytesWritten   ] = enc_delay >> 4; // works for win32, does it for unix?
+        pbtStreamBuffer[nBytesWritten   ] = enc_delay >> 4; /* works for win32, does it for unix? */
         pbtStreamBuffer[nBytesWritten +1] = (enc_delay << 4) + (enc_padding >> 8);
         pbtStreamBuffer[nBytesWritten +2] = enc_padding;
 
@@ -738,10 +727,9 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 	nBytesWritten++;
 
 
-	memset(pbtStreamBuffer+nBytesWritten,0, 1);		//unused in rev1
-	nBytesWritten+=1;
+	pbtStreamBuffer[nBytesWritten++] = 0;	/*unused in rev1 */
 
-	CreateI2(&pbtStreamBuffer[nBytesWritten], nPresetValue);
+	CreateI2(&pbtStreamBuffer[nBytesWritten], gfp->preset);
 	nBytesWritten+=2;
 
 	CreateI4(&pbtStreamBuffer[nBytesWritten], nMusicLength);
@@ -926,7 +914,7 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
 
 
 
-	//work out CRC so far: initially crc = 0
+	/*work out CRC so far: initially crc = 0 */
 	for (i = 0;i< nStreamIndex ;i++)
 		crc = CRC_update_lookup(pbtStreamBuffer[i], crc);
 
@@ -949,9 +937,10 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
 		return -1;
 	}
 	/* Save to delete the frame buffer */
-	//free(gfp->pVbrFrames);  see HACKING for instructions on how
-	//gfp->pVbrFrames=NULL;   memory in 'gfp' is allocated/free'd
+	/*free(gfp->pVbrFrames);  see HACKING for instructions on how */
+	/*gfp->pVbrFrames=NULL;   memory in 'gfp' is allocated/free'd */
 
 	return 0;       /* success */
 }
+
 

@@ -33,3 +33,4 @@ void decoder_progress(const lame_global_flags * const gfp,const mp3data_struct *
 void decoder_progress_finish(const lame_global_flags * const gfp);
 
 #endif /* LAME_TIMESTATUS_H */
+

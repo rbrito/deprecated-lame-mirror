@@ -95,7 +95,7 @@ int in_bitwidth=16;
 static void  
 dosToLongFileName( char *fn )
 {
-    const int MSIZE = PATH_MAX + 1 - 4;  //  we wanna add ".mp3" later
+    const int MSIZE = PATH_MAX + 1 - 4;  /*  we wanna add ".mp3" later */
     WIN32_FIND_DATAA lpFindFileData;
     HANDLE h = FindFirstFileA( fn, &lpFindFileData );
     if ( h != INVALID_HANDLE_VALUE ) {
@@ -477,20 +477,23 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --nssafejoint   M/S switching criterion\n"
               "    --nsmsfix <arg> M/S switching tuning [effective 0-3.5]\n"
               "    --interch x     adjust inter-channel masking ratio\n"
-              "    --substep n     use pseudo substep noise shaping method types 0-2\n"
               "    --ns-bass x     adjust masking for sfbs  0 -  6 (long)  0 -  5 (short)\n"
               "    --ns-alto x     adjust masking for sfbs  7 - 13 (long)  6 - 10 (short)\n"         
               "    --ns-treble x   adjust masking for sfbs 14 - 21 (long) 11 - 12 (short)\n"
               "    --ns-sfb21 x    change ns-treble by x dB for sfb21\n"
+              "  Noise Shaping related:\n"
+              "    --substep n     use pseudo substep noise shaping method types 0-2\n"
             );
 
     wait_for ( fp, lessmode );  
 
     fprintf ( fp,
               "  experimental switches:\n"
-              "    -X n            selects between different noise measurements\n"
+              "    -X n[,m]        selects between different noise measurements\n"
+	      "                    n for long block, m for short. if m is omitted, m = n\n"
               "    -Y              lets LAME ignore noise in sfb21, like in CBR\n"
-              "    -Z              toggles the scalefac feature on\n"
+              "    -Z [n]          toggles the scalefac-scale and subblock gain feature on\n"
+	      "                    if n is set and minus, only scalefac-scale is enabled \n"
             );
 
     wait_for ( fp, lessmode );  
@@ -576,7 +579,7 @@ static void  display_bitrate ( FILE* const fp, const char* const version, const 
               "\nMPEG-%-3s layer III sample frequencies (kHz):  %2d  %2d  %g\n"
               "bitrates (kbps):", 
               version, 32/div, 48/div, 44.1/div );
-    for (i = 1; i <= 14; i++ )          // 14 numbers are printed, not 15, and it was a bug of me
+    for (i = 1; i <= 14; i++ )          /* 14 numbers are printed, not 15, and it was a bug of me */
         fprintf ( fp, " %2i", bitrate_table [index] [i] );
     fprintf ( fp, "\n" );
 }
@@ -596,8 +599,7 @@ int  display_bitrates ( FILE* const fp )
     suggestion:  lame --preset <file-name> ...
             or:  lame --preset my-setting  ... and my-setting is defined in lame.ini
  */
-
-
+ 
 /*
 Note from GB on 08/25/2002:
 I am merging --presets and --alt-presets. Old presets are now aliases for
@@ -615,7 +617,6 @@ presets instead of the old unmaintained ones.
 * PURPOSE:  Writes presetting info to #stdout#
 *
 ************************************************************************/
-
 
 
 static void  presets_longinfo_dm ( FILE* msgfp )
@@ -675,8 +676,6 @@ static void  presets_longinfo_dm ( FILE* msgfp )
         "            disadvantage to the speed switch is that often times the\n"
         "            bitrate will be slightly higher than with the normal mode\n"
         "            and quality may be slightly lower also.\n"
-	"   Warning: with the current version fast presets might result in too\n"
-	"            high bitrate compared to regular presets.\n"
         "\n"
         "   \"cbr\"  - If you use the ABR mode (read above) with a significant\n"
         "            bitrate such as 80, 96, 112, 128, 160, 192, 224, 256, 320,\n"
@@ -701,26 +700,8 @@ static void  presets_longinfo_dm ( FILE* msgfp )
 }
 
 
-static void  presets_info_dm ( FILE* msgfp )
-{
-    fprintf( msgfp, "\n"
-             "presets highly tuned for utmost quality via blind listening tests:\n"
-             "  VBR presets for steady quality\n"
-             "    --preset standard\n"
-             "    --preset extreme\n"
-             "    --preset insane\n"
-             "  ABR presets for best quality at a given average bitrate:\n"
-             "    --preset <bitrate value>\n"
-        );
-}
-
-
-static void  presets_info_r3mix ( FILE* msgfp )
-{
-    fprintf( msgfp, "\n"
-             "r3mix- VBR preset for steady quality with little excess:\n"
-             "    --preset r3mix\n" );
-}
+extern void lame_set_msfix( lame_t gfp, double msfix );
+extern int lame_set_preset_expopts( lame_t gfp, int preset_expopts );
 
 
 
@@ -739,7 +720,7 @@ static int  presets_set( lame_t gfp, int fast, int cbr, const char* preset_name,
 
 
 
-    //aliases for compatibility with old presets
+    /*aliases for compatibility with old presets */
 
     if (strcmp(preset_name, "phone") == 0) {
         preset_name = "16";
@@ -777,18 +758,41 @@ static int  presets_set( lame_t gfp, int fast, int cbr, const char* preset_name,
         preset_name = "256";
     }
 
+    if (strcmp(preset_name, "dm-radio") == 0) {
+	/*if (fast > 0) */
+	/*      lame_set_preset(gfp, DM_RADIO_FAST); */
+	/*else */
+	lame_set_preset(gfp, DM_RADIO);
+	return 0;
+    }
 
+    if (strcmp(preset_name, "portable") == 0) {
+	/*if (fast > 0) */
+	/*      lame_set_preset(gfp, PORTABLE_FAST); */
+	/*else */
+	lame_set_preset(gfp, PORTABLE);
+
+	return 0;
+    }
+
+    if (strcmp(preset_name, "dm-medium") == 0) {
+	/*if (fast > 0) */
+	/*    lame_set_preset(gfp, DM_MEDIUM_FAST); */
+	/*else */
+	lame_set_preset(gfp, DM_MEDIUM);
+
+	return 0;
+    }
 
     if (strcmp(preset_name, "medium") == 0) {
-
-        if (fast > 0)
-           lame_set_preset(gfp, MEDIUM_FAST);
+	if (fast > 0)
+	    lame_set_preset(gfp, MEDIUM_FAST);
         else
-           lame_set_preset(gfp, MEDIUM);
+	    lame_set_preset(gfp, MEDIUM);
 
-        return 0;
+	return 0;
     }
-    
+
     if (strcmp(preset_name, "standard") == 0) {
 
         if (fast > 0)
@@ -817,7 +821,7 @@ static int  presets_set( lame_t gfp, int fast, int cbr, const char* preset_name,
         return 0;
     }
 
-    // Generic ABR Preset
+    /* Generic ABR Preset */
     if (((atoi(preset_name)) > 0) &&  (fast < 1)) {
         if ((atoi(preset_name)) >= 8 && (atoi(preset_name)) <= 320){
             lame_set_preset(gfp, atoi(preset_name));
@@ -825,9 +829,9 @@ static int  presets_set( lame_t gfp, int fast, int cbr, const char* preset_name,
             if (cbr == 1 )
                 lame_set_VBR(gfp, vbr_off);
 
-            if (mono == 1 ) {
-                lame_set_mode(gfp, MONO);
-            }
+	    if (mono == 1 ) {
+		lame_set_mode(gfp, MONO);
+	    }
 
             return 0;
 
@@ -845,8 +849,6 @@ static int  presets_set( lame_t gfp, int fast, int cbr, const char* preset_name,
             return -1;
         }
     }
-
-
 
     lame_version_print ( stderr );
     fprintf(stderr,"Error: You did not enter a valid profile and/or options with --preset\n"
@@ -915,9 +917,9 @@ static int local_strcasecmp ( const char* s1, const char* s2 )
 }
 
 
-// LAME is a simple frontend which just uses the file extension
-// to determine the file type.  Trying to analyze the file
-// contents is well beyond the scope of LAME and should not be added.
+/* LAME is a simple frontend which just uses the file extension */
+/* to determine the file type.  Trying to analyze the file */
+/* contents is well beyond the scope of LAME and should not be added. */
 static int filename_to_type ( const char* FileName )
 {
     int len = strlen (FileName);
@@ -969,7 +971,7 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv,
 char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 {
     int         err;
-    int         input_file=0;  // set to 1 if we parse an input file name 
+    int         input_file=0;  /* set to 1 if we parse an input file name  */
     int         i;
     int         autoconvert  = 0;
     double      val;
@@ -1031,7 +1033,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     lame_set_VBR(gfp,vbr_off); 
 
                 T_ELIF ("r3mix")
-                    lame_set_preset(gfp, R3MIX);
+		    lame_set_preset(gfp, R3MIX);
                                     
                 /**
                  *  please, do *not* DOCUMENT this one
@@ -1040,7 +1042,20 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF ("tune")
                     argUsed=1;
                     {extern void lame_set_tune(lame_t gfp, float val);
-                    lame_set_tune(gfp,atof(nextArg));}    
+                    lame_set_tune(gfp,atof(nextArg));} 
+                T_ELIF ("ms-sparsing")
+                    argUsed=1;
+                    {extern void lame_set_ms_sparsing(lame_t gfp, int val);
+                    lame_set_ms_sparsing(gfp,atoi(nextArg));}                    
+                T_ELIF ("ms-sparse-low")
+                    argUsed=1;
+                    {extern void lame_set_ms_sparse_low(lame_t gfp, float val);
+                    lame_set_ms_sparse_low(gfp,atof(nextArg));}
+                T_ELIF ("ms-sparse-high")
+                    argUsed=1;
+                    {extern void lame_set_ms_sparse_high(lame_t gfp, float val);
+                    lame_set_ms_sparse_high(gfp,atof(nextArg));}
+                       
                     
                 T_ELIF ("abr")
                     argUsed=1;
@@ -1144,7 +1159,6 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 
                 T_ELIF ("nores")
                     lame_set_disable_reservoir(gfp,1);
-                    lame_set_padding_type(gfp, PAD_NO);
                 
                 T_ELIF ("strictly-enforce-ISO")
                     lame_set_strict_ISO(gfp,1);
@@ -1160,8 +1174,8 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     argUsed=1;
                     (void) lame_set_ATHtype( gfp, atoi( nextArg ) );
 
-                T_ELIF ("athaa-type")   //  switch for developing, no DOCU
-                    argUsed=1;          //  1:Gaby, 2:Robert, 3:Jon, else:off
+                T_ELIF ("athaa-type")   /*  switch for developing, no DOCU */
+                    argUsed=1;          /*  1:Gaby, 2:Robert, 3:Jon, else:off */
                     lame_set_athaa_type( gfp, atoi(nextArg) );
 
                 T_ELIF ("athaa-loudapprox")
@@ -1341,7 +1355,8 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF ("nspsytune")
                     lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
                     lame_set_experimentalZ(gfp,1);
-                    lame_set_experimentalX(gfp,1);
+                    lame_set_quant_comp(gfp,1);
+                    lame_set_quant_comp_short(gfp,1);
                 
                 T_ELIF ("nssafejoint")
                     lame_set_exp_nspsytune(gfp,lame_get_exp_nspsytune(gfp) | 2);
@@ -1609,16 +1624,27 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     case 'S': 
                         silent = 1;
                         break;
-                    case 'X':        
-                        argUsed = 1;   
-                        lame_set_experimentalX(gfp,atoi(arg)); 
+                    case 'X':
+		    {
+			int n, m, i;
+                        argUsed = 1;
+			i = sscanf(arg, "%d,%d", &n, &m);
+			if (i == 1)
+			    m = n;
+			lame_set_quant_comp(gfp, n);
+			lame_set_quant_comp_short(gfp, m);
                         break;
+		    }
                     case 'Y': 
                         lame_set_experimentalY(gfp,1);
                         break;
                     case 'Z': 
-                        lame_set_experimentalZ(gfp,1);
+		    {
+			int n = 1;
+                        argUsed = sscanf(arg, "%d", &n);
+                        lame_set_experimentalZ(gfp, n);
                         break;
+		    }
                     case 'e':        
                         argUsed = 1;
                         
@@ -1689,9 +1715,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
     }
         
     if ( inPath[0] == '-' ) 
-        /* turn off status - it's broken for stdin */
-        silent = (silent <= 1 ? 1 : silent);
-
+	silent = (silent <= 1 ? 1 : silent);
 #ifdef WIN32
     else
         dosToLongFileName( inPath );
@@ -1757,4 +1781,5 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 }
 
 /* end of parse.c */
+
 

@@ -87,4 +87,8 @@ extern const char t33l [];
 extern const unsigned int   largetbl    [16*16];
 extern const unsigned int   table23       [3*3];
 extern const unsigned int   table56       [4*4];
+
+extern const int scfsi_band[5];
+
 #endif /* LAME_TABLES_H */
+

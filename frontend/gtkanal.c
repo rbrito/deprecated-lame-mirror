@@ -44,9 +44,9 @@
 #endif
 
 
-//! Stringify \a x.
+/*! Stringify \a x. */
 #define STR(x)   #x
-//! Stringify \a x, perform macro expansion.
+/*! Stringify \a x, perform macro expansion. */
 #define XSTR(x)  STR(x)
 
 #define MP3X_MAJOR_VERSION      0      /* Major version number */
@@ -331,7 +331,7 @@ void plot_frame(void)
     sprintf(title2," mdb=%i %i/NA",pplot1->maindata,pplot1->totbits);
   else
     sprintf(title2," mdb=%i   %i/%i",
-	  pplot1->maindata,pplot1->totbits,pplot->resvsize);
+	  pplot1->maindata,pplot1->totbits,pplot1->totbits+pplot->resvsize);
   gtk_text_insert (GTK_TEXT(headerbox), NULL, &oncolor, NULL,title2, -1);
   gtk_text_thaw (GTK_TEXT(headerbox));
 
@@ -1002,7 +1002,7 @@ static void spec_option (GtkWidget *widget, gpointer data)
 
 static gint key_press_event (GtkWidget *widget, GdkEventKey *event)
 {
-    // is a switch() statement in lame forbidden?
+    /* is a switch() statement in lame forbidden? */
   if (event->keyval == '1') {
     subblock_draw[0] = 1;
     subblock_draw[1] = 0;
@@ -1032,7 +1032,7 @@ static gint key_press_event (GtkWidget *widget, GdkEventKey *event)
 }
 
 
-//! Get the mp3x version string.
+/*! Get the mp3x version string. */
 /*!
   \param void
   \return a pointer to a string which describes the version of mp3x.
@@ -1089,7 +1089,7 @@ static void text_window (GtkWidget *widget, gpointer data)
     gtk_window_set_title (GTK_WINDOW (textwindow), "Documentation");
     gtk_widget_set_usize(box,450,500); 
     gtk_text_set_word_wrap(GTK_TEXT(box),TRUE);
-    // text should be moved outside this function, may be in a separate file
+    /* text should be moved outside this function, may be in a separate file */
     gtk_text_insert(GTK_TEXT(box),NULL,NULL,NULL,
 		"Frame header information: "\
 		"First the bitrate, sampling frequency and mono, stereo or jstereo "\
@@ -1567,4 +1567,5 @@ int gtkcontrol(lame_global_flags *gfp2,char *inPath)
     assert(mp3done);
     return(0);
 }
+
 

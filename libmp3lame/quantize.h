@@ -40,3 +40,4 @@ void ABR_iteration_loop( lame_global_flags *gfp,
 			 III_psy_ratio ratio[2][2]);
 
 #endif /* LAME_QUANTIZE_H */
+

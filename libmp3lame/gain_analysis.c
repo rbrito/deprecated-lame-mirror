@@ -693,3 +693,4 @@ double GetAudiophileGain() {
 	prevsort = rmscount;
 	return PINKREF - rms[(long)(RMSPERCENT*rmscount) - 1];
 };
+

@@ -67,7 +67,7 @@ lame_decode1_headersB(unsigned char *buffer,
     static char out[8192];
     signed short int *p = (signed short int *) out;
     int     processed_bytes;
-    int     processed_samples; // processed samples per channel
+    int     processed_samples; /* processed samples per channel */
     int     ret;
     int     i;
 
@@ -157,8 +157,8 @@ lame_decode1_headersB(unsigned char *buffer,
 
     }
 
-    //fprintf(stderr,"ok, more, err:  %i %i %i\n", MP3_OK, MP3_NEED_MORE, MP3_ERR );
-    //fprintf(stderr,"ret = %i out=%i\n", ret, processed_samples );
+    /*fprintf(stderr,"ok, more, err:  %i %i %i\n", MP3_OK, MP3_NEED_MORE, MP3_ERR ); */
+    /*fprintf(stderr,"ret = %i out=%i\n", ret, processed_samples ); */
     return processed_samples;
 }
 
@@ -193,7 +193,7 @@ lame_decode_headers(unsigned char *buffer,
                     short pcm_l[], short pcm_r[], mp3data_struct * mp3data)
 {
     int     ret;
-    int     totsize = 0;     // number of decoded samples per channel
+    int     totsize = 0;     /* number of decoded samples per channel */
 
     while (1) {
         switch (ret =
@@ -224,3 +224,4 @@ lame_decode(unsigned char *buffer, int len, short pcm_l[], short pcm_r[])
 #endif
 
 /* end of mpglib_interface.c */
+

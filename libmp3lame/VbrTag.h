@@ -88,3 +88,4 @@ void ReportLameTagProgress(lame_global_flags *gfp,int nStart);
 void UpdateMusicCRC(uint16_t *crc,unsigned char *buffer, int size);
 
 #endif
+

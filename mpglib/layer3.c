@@ -1572,7 +1572,7 @@ int do_layer3( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point)
 {
   int gr, ch, ss,clip=0;
   int scalefacs[2][39]; /* max 39 for short[13][3] mode, mixed: 38, long: 22 */
-  //  struct III_sideinfo sideinfo;
+  /*  struct III_sideinfo sideinfo; */
   struct frame *fr=&(mp->fr);
   int stereo = fr->stereo;
   int single = fr->single;
@@ -1792,4 +1792,5 @@ int do_layer3( PMPSTR mp,unsigned char *pcm_sample,int *pcm_point)
   
   return clip;
 }
+
 

@@ -33,3 +33,4 @@ extern off_t   lame_get_file_size          ( const char* const filename );
 
 #endif /* LAME_LAMETIME_H */
                               
+

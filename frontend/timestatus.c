@@ -55,10 +55,10 @@
 #endif
 
 typedef struct {
-    double  last_time;			  // result of last call to clock
-    double  elapsed_time;		  // total time
-    double  estimated_time;		  // estimated total duration time [s]
-    double  speed_index;		  // speed relative to realtime coding [100%]
+    double  last_time;			  /* result of last call to clock */
+    double  elapsed_time;		  /* total time */
+    double  estimated_time;		  /* estimated total duration time [s] */
+    double  speed_index;		  /* speed relative to realtime coding [100%] */
 } timestatus_t;
 
 /* 
@@ -68,11 +68,11 @@ typedef struct {
  */
 
 static void  ts_calc_times (
-    timestatus_t* const  tstime,           // tstime->elapsed_time: elapsed time
-    const int            sample_freq,      // sample frequency [Hz/kHz] 
-    const int            frameNum,         // Number of the current Frame
-    const int            totalframes,      // total umber of Frames
-    const int            framesize )       // Size of a frame [bps/kbps]
+    timestatus_t* const  tstime,           /* tstime->elapsed_time: elapsed time */
+    const int            sample_freq,      /* sample frequency [Hz/kHz]  */
+    const int            frameNum,         /* Number of the current Frame */
+    const int            totalframes,      /* total umber of Frames */
+    const int            framesize )       /* Size of a frame [bps/kbps] */
 {
     assert ( sample_freq >= 8000  &&  sample_freq <= 48000 );
     
@@ -122,17 +122,17 @@ void timestatus ( const int samp_rate,
         proc_time.elapsed_time = 0;
     }
 
-    // we need rollover protection for GetCPUTime, and maybe GetRealTime():
+    /* we need rollover protection for GetCPUTime, and maybe GetRealTime(): */
     tmx=GetRealTime();
     delta=tmx-real_time.last_time;
-    if (delta<0) delta=0;  // ignore, clock has rolled over
+    if (delta<0) delta=0;  /* ignore, clock has rolled over */
     real_time.elapsed_time += delta;
     real_time.last_time     = tmx;
 
 
     tmx=GetCPUTime();
     delta=tmx-proc_time.last_time;
-    if (delta<0) delta=0;  // ignore, clock has rolled over
+    if (delta<0) delta=0;  /* ignore, clock has rolled over */
     proc_time.elapsed_time += delta;
     proc_time.last_time     = tmx;
 
@@ -210,12 +210,12 @@ void decoder_progress ( const lame_global_flags* const gfp, const mp3data_struct
     fprintf ( stderr, "\rFrame#%6i/%-6i %3i kbps",
               mp3data->framenum, mp3data->totalframes, mp3data->bitrate );
               
-    // Programmed with a single frame hold delay
-    // Attention: static data
+    /* Programmed with a single frame hold delay */
+    /* Attention: static data */
     
-    // MP2 Playback is still buggy.
-    // "'00' subbands 4-31 in intensity_stereo, bound==4"
-    // is this really intensity_stereo or is it MS stereo?
+    /* MP2 Playback is still buggy. */
+    /* "'00' subbands 4-31 in intensity_stereo, bound==4" */
+    /* is this really intensity_stereo or is it MS stereo? */
     
     if ( mp3data->mode == JOINT_STEREO ) {
         int         curr = mp3data->mode_ext;
@@ -227,7 +227,7 @@ void decoder_progress ( const lame_global_flags* const gfp, const mp3data_struct
         fprintf ( stderr, "         " );
 	last = 0;
     }
-//    fprintf ( stderr, "%s", Console_IO.str_clreoln );
+/*    fprintf ( stderr, "%s", Console_IO.str_clreoln ); */
       fprintf ( stderr, "        \b\b\b\b\b\b\b\b" );
       fflush  ( stderr );
 }
@@ -236,4 +236,5 @@ void decoder_progress_finish ( const lame_global_flags* const gfp )
 {
     fprintf ( stderr, "\n" );
 }
+
 
