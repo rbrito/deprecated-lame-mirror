@@ -134,7 +134,7 @@ iteration_loop( lame_global_flags *gfp,
 }
 
 #undef SAFE_VBR
-#if SAFE_VBR
+#ifdef SAFE_VBR
 void
 VBR_iteration_loop (lame_global_flags *gfp,
                 FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
@@ -177,20 +177,24 @@ VBR_iteration_loop (lame_global_flags *gfp,
   for(gr = 0; gr < gfc->mode_gr; gr++) {
 
     for(ch = 0; ch < gfc->stereo; ch++) {
-      int add_bits=(pe[gr][ch]-750)/1.4;
-
-      cod_info = &l3_side->gr[gr].ch[ch].tt;
-      targ_bits[gr][ch]=mean_bits/gfc->stereo;
-      
-      /* short blocks us a little extra, no matter what the pe */
-      if (cod_info->block_type==SHORT_TYPE) {
-	if (add_bits<mean_bits/4) add_bits=mean_bits/4;
+      if (pe[gr][ch]<750) {
+	targ_bits[gr][ch]=(mean_bits/gfc->stereo)*Max(.5,(pe[gr][ch])/750.0);
+      }else{
+	int add_bits=(pe[gr][ch]-750)/1.4;
+	
+	cod_info = &l3_side->gr[gr].ch[ch].tt;
+	targ_bits[gr][ch]=(mean_bits/gfc->stereo);
+	
+	/* short blocks us a little extra, no matter what the pe */
+	if (cod_info->block_type==SHORT_TYPE) {
+	  if (add_bits<mean_bits/4) add_bits=mean_bits/4;
+	}
+	/* at most increase bits by 1.5*average */
+	if (add_bits > .75*mean_bits) add_bits=mean_bits*.75;
+	if (add_bits < 0) add_bits=0;
+	
+	targ_bits[gr][ch] += add_bits;
       }
-      /* at most increase bits by 1.5*average */
-      if (add_bits > .75*mean_bits) add_bits=mean_bits*.75;
-      if (add_bits < 0) add_bits=0;
-      
-      targ_bits[gr][ch] += add_bits;
     }
   }
   if (gfc->mode_ext==MPG_MD_MS_LR) 
@@ -209,7 +213,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
   if (totbits > max_frame_bits) {
     for(gr = 0; gr < gfc->mode_gr; gr++) 
       for(ch = 0; ch < gfc->stereo; ch++) 
-	targ_bits[gr][ch] *= (max_frame_bits/totbits); 
+	targ_bits[gr][ch] *= ((float)max_frame_bits/(float)totbits); 
   }
 
 
@@ -255,7 +259,6 @@ VBR_iteration_loop (lame_global_flags *gfp,
        gfc->bitrate_index++    ) {
     getframebits (gfp,&bitsPerFrame, &mean_bits);
     max_frame_bits=ResvFrameBegin (gfp,l3_side, mean_bits, bitsPerFrame);
-
     if( totbits <= max_frame_bits) break;
   }
   assert (gfc->bitrate_index <= gfc->VBR_max_bitrate);
