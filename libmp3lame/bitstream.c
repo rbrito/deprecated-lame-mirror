@@ -451,7 +451,7 @@ encodeBitStream(lame_global_flags *gfp)
 		int slen = gi->slen[partition];
 		if (slen)
 		    for (; sfb < sfbend; sfb++)
-			putbits24(&gfc->bs, Max(gi->scalefac[sfb], 0U), slen);
+			putbits24(&gfc->bs, Max(gi->scalefac[sfb], 0), slen);
 		sfb = sfbend;
 	    }
 	    assert(data_bits == gfc->bs.bitidx);
