@@ -22,8 +22,11 @@
 
 
 #include "get_audio.h"        
+#include <sys/param.h>
 
-#define         MAX_NAME_SIZE           1000
+#ifndef MAXPATHLEN
+#define MAXPATHLEN 1024
+#endif
 
 
 /* GLOBAL VARIABLES used by parse.c and main.c.  

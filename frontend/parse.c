@@ -95,7 +95,7 @@ int in_bitwidth=16;
 static void  
 dosToLongFileName( char *fn )
 {
-    const int MSIZE = MAX_NAME_SIZE-4;  //  we wanna add ".mp3" later
+    const int MSIZE = MAXPATHLEN-4;  //  we wanna add ".mp3" later
     WIN32_FIND_DATAA lpFindFileData;
     HANDLE h = FindFirstFileA( fn, &lpFindFileData );
     if ( h != INVALID_HANDLE_VALUE ) {
@@ -1063,10 +1063,10 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
             if (! *token) { /* The user wants to use stdin and/or stdout. */
                 input_file = 1;
                 if (inPath [0] == '\0')
-                    strncpy (inPath, argv[i],MAX_NAME_SIZE);
+                    strncpy (inPath, argv[i],MAXPATHLEN);
                 else 
                 if (outPath[0] == '\0') 
-                    strncpy (outPath, argv[i],MAX_NAME_SIZE);
+                    strncpy (outPath, argv[i],MAXPATHLEN);
             } 
             if (*token == '-') { /* GNU style */
                 token++;
@@ -1712,7 +1712,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
         } else {
             if (nogap) {
                 if ((num_nogap != NULL) && (count_nogap < *num_nogap)) {
-                    strncpy(nogap_inPath[count_nogap++],argv[i],MAX_NAME_SIZE);
+                    strncpy(nogap_inPath[count_nogap++],argv[i],MAXPATHLEN);
                     input_file=1;
                 } else {
                     /* sorry, calling program did not allocate enough space */
@@ -1724,11 +1724,11 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 /* normal options:   inputfile  [outputfile], and
                    either one can be a '-' for stdin/stdout */
                 if (inPath [0] == '\0') {     
-                    strncpy(inPath , argv[i], MAX_NAME_SIZE);
+                    strncpy(inPath , argv[i], MAXPATHLEN);
                     input_file=1;
                 } else {
                     if (outPath[0] == '\0') 
-                        strncpy(outPath, argv[i], MAX_NAME_SIZE);
+                        strncpy(outPath, argv[i], MAXPATHLEN);
                     else {
                         fprintf(stderr,"%s: excess arg %s\n", ProgramName, argv[i]);
                         err = 1;
@@ -1755,7 +1755,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
             /* if input is stdin, default output is stdout */
             strcpy(outPath,"-");
         } else {
-            strncpy(outPath, inPath, MAX_NAME_SIZE - 4);
+            strncpy(outPath, inPath, MAXPATHLEN - 4);
             if ( lame_get_decode_only( gfp ) ) {
                 strncat (outPath, ".wav", 4 );
             } else if( lame_get_ogg( gfp ) ) {
