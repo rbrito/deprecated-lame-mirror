@@ -180,6 +180,7 @@ init_xrpow(
 {
     FLOAT8 tmp, sum = 0;
     int i;
+    int upper = cod_info->max_nonzero_coeff;
 
     assert( xrpow != NULL );
     cod_info->xrpow_max = 0;
@@ -187,7 +188,8 @@ init_xrpow(
     /*  check if there is some energy we have to quantize
      *  and calculate xrpow matching our fresh scalefactors
      */
-    for (i = 0; i < 576; ++i) {
+    memset(&(xrpow[upper]), 0, (575-upper)*sizeof(xrpow[upper]));
+    for (i = 0; i <= upper; ++i) {
         tmp = fabs (cod_info->xr[i]);
         sum += tmp;
         xrpow[i] = sqrt (tmp * sqrt(tmp));
