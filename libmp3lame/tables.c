@@ -27,13 +27,13 @@
 
 #include "util.h"
 #include "tables.h"
+#include "psymodel.h"
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
 #endif
 
 #include <assert.h>
-#include <psymodel.h>
 
 /*
   The following table is used to implement the scalefactor
