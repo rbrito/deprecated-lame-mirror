@@ -561,7 +561,9 @@ Output sampling frequency.  Resample the input if necessary.
 
 If not specified, LAME may sometimes resample automatically 
 when faced with extreme compression conditions (like encoding
-a 44.1 kHz input file at 32 kbps).
+a 44.1 kHz input file at 32 kbps).  To disable this automatic
+resampling, you have to specify a resample rate equal to the
+input sample rate.
 
 
 

@@ -162,6 +162,8 @@ typedef struct  {
 /***********************************************************************
  *
  *  The LAME API
+ *  These functions should be called, in this order, for each
+ *  MP3 file to be encoded 
  *
  ***********************************************************************/
 
@@ -245,14 +247,11 @@ int num_samples, char *mp3buffer,int  mp3buffer_size);
  *
  * return code = number of bytes output to mp3buffer.  can be 0
  */
-int lame_encode_finish(lame_global_flags *,char *mp3buffer, int size);
-
-/* alternative: lame_encode_flush does the same as above, but will not
- * freeing internal buffers. Will require to call a final lame_close.
- * use the following if you want some final statistics. 
- */
 int lame_encode_flush(lame_global_flags *,char *mp3buffer, int size);
-void lame_close(lame_global_flags *);
+
+
+
+
 
 
 /* OPTIONAL:    some simple statistics
@@ -280,11 +279,26 @@ void lame_stereo_mode_hist(
 
 /* OPTIONAL:  lame_mp3_tags_fid will append a Xing VBR tag to
 the mp3 file with file pointer fid.  These calls perform forward and
-backwards seeks, so make sure fid is a real file.
+backwards seeks, so make sure fid is a real file.  Make sure
+lame_encode_flush has been called, and all mp3 data has been written
+to the file before calling this function.
 Note: if VBR  tags are turned off by the user, or turned off
 by LAME because the output is not a regular file, this call does nothing
 */
 void lame_mp3_tags_fid(lame_global_flags *,FILE* fid);
+
+
+/* OBSOLETE:  lame_encode_finish combines lame_encode_flush
+ * and lame_close in one call.  However, once this call is made,
+ * the statistics routines will no longer function since there 
+ * data will have been cleared */
+int lame_encode_finish(lame_global_flags *,char *mp3buffer, int size);
+
+/* REQUIRED:  final call to free all remaining buffers */
+void lame_close(lame_global_flags *);
+
+
+
 
 
 
@@ -324,7 +338,7 @@ int lame_decode_init(void);
  *********************************************************************/
 int lame_decode(char *mp3buf,int len,short pcm_l[],short pcm_r[]);
 
-/* same as lame_decode, but returns mp3 header data */
+/* same as lame_decode, and also returns mp3 header data */
 int lame_decode_headers(char *mp3buf,int len,short pcm_l[],short pcm_r[],
 mp3data_struct *mp3data);
 

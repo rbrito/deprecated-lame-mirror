@@ -1015,12 +1015,11 @@ int    lame_encode_flush (
         mp3buffer += imp3;
         mp3count += imp3;
     }
+
     mp3buffer_size_remaining = mp3buffer_size - mp3count;
-
-
     /* if user specifed buffer size = 0, dont check size */
-    if (mp3buffer_size == 0) 
-        mp3buffer_size_remaining = 0;  
+    if (mp3buffer_size == 0) mp3buffer_size_remaining = 0;  
+
     if (gfp->ogg) {
 #ifdef HAVEVORBIS
         /* ogg related stuff */
@@ -1037,10 +1036,7 @@ int    lame_encode_flush (
     if (imp3 < 0) {
         return imp3;
     }
-    //  mp3buffer += imp3;
     mp3count += imp3;
-    //  mp3buffer_size_remaining = mp3buffer_size - mp3count;
-    
     return mp3count;
 }
 
@@ -1084,7 +1080,7 @@ int    lame_encode_finish (
 /*****************************************************************/
 void lame_mp3_tags_fid(lame_global_flags *gfp,FILE *fpStream)
 {
-  if (gfp->bWriteVbrTag)
+  if (gfp->bWriteVbrTag && (gf.VBR!=vbr_off))
     {
       /* Calculate relative quality of VBR stream
        * 0=best, 100=worst */
