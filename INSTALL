@@ -22,65 +22,52 @@ these options must be set in Makefile or in the IDE.
 On unix systems, they are set via ./configure.  
 
 
-#define HAVEMPGLIB   compile in mpglib's mp3 *decoding* capibility
-#define HAVEVORBIS   compile in Vorbis decoding and encoding capibility
+#define HAVE_MPGLIB   compile in mpglib's mp3 *decoding* capibility
+#define HAVE_VORBIS   compile in Vorbis decoding capibility
                      (you need libvorbis already built)
-#define NOANALYSIS   do not compile in code to collect information
-                     used for the MP3 frame analyzer.
+#define NOANALYSIS   do not compile in hooks used by the 
+                     MP3 frame analyzer.
 
 
 Options for the command line encoder:
 #define LIBSNDFILE   to use Erik de Castro Lopo's libsndfile
-                     (no stdin support yet)
-#define LAMESNDFILE  to use LAME's internal sound file support 
-                     (16 bit wav and raw pcm only, files or stdin )
-
-#define BRHIST       to allow the optional display of the VBR historgram
-#define NOTERMCAP    to try and emulate termcap/ncurses directly (ANSI)
-                     only needed if BRHIST is used.  Works under Amiga
-                     and Win32.  (but not dos)
-
+                     for input.
+#define BRHIST       to allow the optional display of the VBR histogram
 
 
 
 =======================================================================
-Building the software on *NIX platforms:
+Building the software on *NIX platforms using configure:
 =======================================================================
-./configure support was recently added to LAME. (9/18/00)
-If ./configure has problems, you can use the old makefile
-via % make -f Makefile.unix
+Run the following commands:
 
 % ./configure
 % make 
 % make install
 
-And the folloing options can be used with ./configure:
+For a complete list of options, try "./configure --help"
+Some of the more usefull options:
 
-For libmp3lame:
+For the encoding library:
 
-  --with-vorbis               Use vorbis library for ogg files 
-                              [default:yes, if installed]"
-  --with-vorbis-prefix=DIR    Alternate location for vorbis
+  --enable-mp3x               Build the mp3 frame analyzer, 'mp3x'
 
-  --enable-decoder=yes,no     Include mpg123/mpglib decoder [default:yes]"
+  --enable-mp3rtp             Build the encode-to-RTP program, 'mp3rtp'
+ 
+  --enable-debug              Build a debug version
 
-  --enable-analyzer=yes,no    Whether to include support in the library
-                              for an MP3 frame analyzer.
-                              (default yes if possible)
 
 For the LAME front end encoder:
 (how do we pass these options to frontend/configure?)
 
   --with-fileio=lame          Use lame's internal file io routines [default]
                =sndfile       Use Erik de Castro Lopo's libsndfile (no stdin possible currently)
-               =no            Do not use file io routines
 
   --with-sndfile-prefix=DIR   Alternate location for libsndfile
                               (if --with-fileio=sndfile)
 
   --enable-brhist             Include the VBR bitrate histogram feature 
                               (default:yes if any ncurses/termcap available)"
-
 
 
 Other usefull configure options:
@@ -94,6 +81,10 @@ Other usefull configure options:
 
                         
 
+=======================================================================
+Building the software on *NIX platforms without configure:
+=======================================================================
+% make -f Makefile.unix
 
 
 
@@ -107,6 +98,8 @@ option, and #define NDEBUG.
 
 It is possible to compile the GTK frame analyzer under windows, see
 README.WINGTK
+
+Various build options can be set in configMS.h
 
 
 
@@ -131,18 +124,8 @@ Borland can also compile the lame_enc.dll, but this is untested.
 
 Can DJGPP or Mingw32 produce lame_enc.dll?
 
+Various build options can be set in configMS.h
 
-=======================================================================
-To encode:
-=======================================================================
-see the file "USAGE" for some usage guidlines.
-
-
-
-=======================================================================
-Portability
-=======================================================================
-LAME 3.x has been run on every modern OS.  see the Makefile.
 
 
 

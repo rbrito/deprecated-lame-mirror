@@ -23,7 +23,8 @@ This code is distributed under the GNU LESSER PUBLIC LICENSE
 see the file "INSTALL" for installation (compiling) instructions.  
 see the file "USAGE" for the most up-to-date guide to the command line options.
 see the file "LICENSE" for details on how to use LAME in non-GPL programs.
-see the file "HACKING" for some general codeing guidelines
+see the file "HACKING" if you are interested in working on LAME
+see the file "API" for details of the LAME encoding library API
 
 There is HTML documentation and a man page in the doc directory.
 The HTML docs were contributed by Gabriel Bouvigne (www.mp3tech.org).

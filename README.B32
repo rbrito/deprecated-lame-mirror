@@ -49,12 +49,6 @@ makefile. You may need to tweak a few things to get it working.
 Makefile notes
 --------------
 
-* Having a "-" in a file name is a bad idea. tlib takes that as something 
-should be removed from the library. Having a "/" in a path - used as 
-argument to tlib - is also a bad idea, since that is interpreted as the 
-start of an argument - even if it isn't preceeded by whitespace. Because of 
-this, rename quantize-pvt.c to quantize_pvt.c, if needed.
-
 * If compilation targets include folders (e.g., "foo/bar.obj"), make sure "-
 o" is the first argument to bcc32, or the object file goes to the wrong 
 folder.
