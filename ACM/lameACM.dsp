@@ -47,7 +47,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /Zp2 /MT /W3 /GX /Ox /Ot /Og /Ob2 /I "../libmp3lame" /I "../include" /I ".." /I "../.." /I "../mpglib" /D "NDEBUG" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_CONFIG_H" /D "HAVE_MPGLIB" /D "_WINDOWS" /D "WIN32" /D "NOANALYSIS" /YX /FD /c
+# ADD CPP /nologo /Zp2 /MT /W3 /GX /Ox /Ot /Og /Ob2 /I "../libmp3lame" /I "../include" /I ".." /I "../.." /I "../mpglib" /D "NDEBUG" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_CONFIG_H" /D "HAVE_MPGLIB" /D "_WINDOWS" /D "WIN32" /D "NOANALYSIS" /D "LAME_ACM" /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o /win32 "NUL"
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o /win32 "NUL"
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
@@ -73,7 +73,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /Zp2 /MTd /W3 /GX /Od /I "../libmp3lame" /I "../include" /I ".." /I "../.." /I "../mpglib" /D "_DEBUG" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_CONFIG_H" /D "HAVE_MPGLIB" /D "_WINDOWS" /D "WIN32" /D "NOANALYSIS" /YX /FD /ZI /c
+# ADD CPP /nologo /Zp2 /MTd /W3 /GX /Od /I "../libmp3lame" /I "../include" /I ".." /I "../.." /I "../mpglib" /D "_DEBUG" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_CONFIG_H" /D "HAVE_MPGLIB" /D "_WINDOWS" /D "WIN32" /D "NOANALYSIS" /D "LAME_ACM" /YX /FD /ZI /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o /win32 "NUL"
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o /win32 "NUL"
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
@@ -104,7 +104,7 @@ PostBuild_Cmds=copy Debug\lameACM.acm e:\winnt\system32\lameACM.acm
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /Zp2 /MTd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /Zp2 /MTd /W3 /GX /ZI /Od /I "../libmp3lame" /I "../include" /I ".." /I "../.." /I "../mpglib" /D "_DEBUG" /D "HAVE_NASM" /D "MMX_choose_table" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_CONFIG_H" /D "HAVE_MPGLIB" /D "_WINDOWS" /D "WIN32" /D "NOANALYSIS" /YX /FD /c
+# ADD CPP /nologo /Zp2 /MTd /W3 /GX /ZI /Od /I "../libmp3lame" /I "../include" /I ".." /I "../.." /I "../mpglib" /D "_DEBUG" /D "HAVE_NASM" /D "MMX_choose_table" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_CONFIG_H" /D "HAVE_MPGLIB" /D "_WINDOWS" /D "WIN32" /D "NOANALYSIS" /D "LAME_ACM" /YX /FD /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o /win32 "NUL"
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o /win32 "NUL"
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
@@ -136,7 +136,7 @@ PostBuild_Cmds=copy Debug_NASM\lameACM.acm d:\winnt\system32\lameACM.acm
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /Zp2 /MT /W3 /GX /Ox /Ot /Og /Ob2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /Zp2 /MT /W3 /GX /Ox /Ot /Og /Ob2 /I "../libmp3lame" /I "../include" /I ".." /I "../.." /I "../mpglib" /D "NDEBUG" /D "HAVE_NASM" /D "MMX_choose_table" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_CONFIG_H" /D "HAVE_MPGLIB" /D "_WINDOWS" /D "WIN32" /D "NOANALYSIS" /YX /FD /c
+# ADD CPP /nologo /Zp2 /MT /W3 /GX /Ox /Ot /Og /Ob2 /I "../libmp3lame" /I "../include" /I ".." /I "../.." /I "../mpglib" /D "NDEBUG" /D "HAVE_NASM" /D "MMX_choose_table" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_CONFIG_H" /D "HAVE_MPGLIB" /D "_WINDOWS" /D "WIN32" /D "NOANALYSIS" /D "LAME_ACM" /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o /win32 "NUL"
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o /win32 "NUL"
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
