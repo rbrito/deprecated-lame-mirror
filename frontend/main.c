@@ -644,10 +644,10 @@ main(int argc, char **argv)
                 ret = encoder(gfp, outf, use_flush_nogap, nogap_inPath[i],
 			      outPath);	
                 
-                if (silent<=0 && lame_get_bWriteVbrTag)
+		if (silent<=0 && lame_get_bWriteVbrTag(gfp))
 		    printf("Writing LAME Tag...");
 		lame_mp3_tags_fid(gfp, outf); /* add VBR tags to mp3 file */
-                if (silent<=0 && lame_get_bWriteVbrTag)
+		if (silent<=0 && lame_get_bWriteVbrTag(gfp))
 		    printf("done\n");
                 
                 fclose(outf); /* close the output file */
@@ -666,10 +666,10 @@ main(int argc, char **argv)
             brhist_init_package(gfp);
             ret = encoder(gfp, outf, 0, inPath, outPath);
             
-	    if (silent<=0 && lame_get_bWriteVbrTag)
+	    if (silent<=0 && lame_get_bWriteVbrTag(gfp))
 		printf("Writing LAME Tag...");
             lame_mp3_tags_fid(gfp, outf); /* add VBR tags to mp3 file */
-	    if (silent<=0 && lame_get_bWriteVbrTag)
+	    if (silent<=0 && lame_get_bWriteVbrTag(gfp))
 		printf("done\n");
             
             fclose(outf); /* close the output file */
