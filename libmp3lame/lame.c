@@ -1130,7 +1130,10 @@ lame_init_params(lame_global_flags * const gfp)
 
         /*  automatic ATH adjustment on, VBR modes need it
          */
-        gfc->ATH->use_adjust = 3;
+        if ( gfp->adjust_type < 0 )
+            gfc->ATH->use_adjust = 3;
+        else
+            gfc->ATH->use_adjust = gfp->adjust_type;
 
         /*  sfb21 extra only with MPEG-1 at higher sampling rates
          */
