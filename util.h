@@ -226,14 +226,11 @@ typedef struct  {
   char bv_scf[576];
 
   /* variables used by util.c */
-#define BLACKSIZE 30
+#define BLACKSIZE 25
 #define BPC 16
   short int inbuf_old[2][BLACKSIZE];
   FLOAT blackfilt[2*BPC+1][BLACKSIZE];
   FLOAT8 itime[2];
-#define OLDBUFSIZE 5
-  FLOAT8 upsample_itime[2];
-  short int upsample_inbuf_old[2][OLDBUFSIZE];
   unsigned int sideinfo_len;
 
   /* variables for newmdct.c */

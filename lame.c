@@ -1230,11 +1230,8 @@ int lame_encode_buffer(lame_global_flags *gfp,
     /* copy in new samples into mfbuf, with filtering */
 
     for (ch=0; ch<gfc->stereo; ch++) {
-      if (gfc->resample_ratio>1)  {
+      if (gfc->resample_ratio!=1)  {
 	n_out=fill_buffer_downsample(gfp,&mfbuf[ch][gfc->mf_size],gfp->framesize,
-					  in_buffer[ch],nsamples,&n_in,ch);
-      } else if (gfc->resample_ratio<1) {
-	n_out=fill_buffer_upsample(gfp,&mfbuf[ch][gfc->mf_size],gfp->framesize,
 					  in_buffer[ch],nsamples,&n_in,ch);
       } else {
 	n_out=Min(gfp->framesize,nsamples);
