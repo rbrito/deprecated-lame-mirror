@@ -76,13 +76,16 @@
  */
 
 int
-ResvFrameBegin(lame_global_flags *gfp, int mean_bits, int frameLength )
+ResvFrameBegin(lame_global_flags *gfp, int *mean_bits)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     int fullFrameBits;
     int resvLimit;
     int maxmp3buf;
     III_side_info_t     *l3_side = &gfc->l3_side;
+    int frameLength;
+
+    getframebits(gfp, &frameLength, mean_bits);
 
 /*
  *  Meaning of the variables:
@@ -147,7 +150,7 @@ ResvFrameBegin(lame_global_flags *gfp, int mean_bits, int frameLength )
 	  gfc->ResvMax = resvLimit;
     }
 
-    fullFrameBits = mean_bits * gfc->mode_gr + Min ( gfc->ResvSize, gfc->ResvMax );
+    fullFrameBits = *mean_bits * gfc->mode_gr + Min ( gfc->ResvSize, gfc->ResvMax );
     
     if ( fullFrameBits > maxmp3buf )
         fullFrameBits = maxmp3buf;
@@ -158,7 +161,7 @@ ResvFrameBegin(lame_global_flags *gfp, int mean_bits, int frameLength )
     l3_side->resvDrain_pre = 0;
 
     if ( gfc->pinfo != NULL ) {
-        gfc->pinfo->mean_bits = mean_bits / 2;  /* expected bits per channel per granule [is this also right for mono/stereo, MPEG-1/2 ?] */
+        gfc->pinfo->mean_bits = *mean_bits / 2;  /* expected bits per channel per granule [is this also right for mono/stereo, MPEG-1/2 ?] */
         gfc->pinfo->resvsize  = gfc->ResvSize;
     }
 
