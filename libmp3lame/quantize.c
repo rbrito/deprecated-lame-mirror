@@ -270,7 +270,7 @@ loop_break(
 
     for (sfb = cod_info->sfb_smin; sfb < SBPSY_s; sfb++)
         for (i = 0; i < 3; i++) 
-            if (scalefac->s[sfb][i] == 0 && cod_info->subblock_gain[i] == 0)
+            if (scalefac->s[sfb][i] + cod_info->subblock_gain[i] == 0)
                 return 0;
 
     return 1;
@@ -418,7 +418,7 @@ amp_scalefac_bands(
     FLOAT8 xrpow[576] )
 {
   lame_internal_flags *gfc=gfp->internal_flags;
-  int start, end, l,i,j,sfb;
+  int l, j, sfb;
   FLOAT8 ifqstep34, trigger;
 
   if (cod_info->scalefac_scale == 0) {
@@ -434,10 +434,11 @@ amp_scalefac_bands(
         trigger = distort->l[sfb];
   }
   for (sfb = cod_info->sfb_smin; sfb < SBPSY_s; sfb++) {
-    for (i = 0; i < 3; i++ ) {
-      if (trigger < distort->s[sfb][i])
-          trigger = distort->s[sfb][i];
-    }
+      int b;
+      for (b = 0; b < 3; b++ ) {
+	  if (trigger < distort->s[sfb][b])
+	      trigger = distort->s[sfb][b];
+      }
   }
 
   switch (gfc->noise_shaping_amp) {
@@ -466,49 +467,47 @@ amp_scalefac_bands(
     break;
   }
 
+  j = 0;
   for (sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
-    start = gfc->scalefac_band.l[sfb];
-    end   = gfc->scalefac_band.l[sfb+1];
-    if (distort->l[sfb]>=trigger  ) {
+      int width = gfc->scalefac_band.l[sfb+1] - gfc->scalefac_band.l[sfb];
+      int l;
+      j += width;
+      if (distort->l[sfb] < trigger)
+	  continue;
+
       if (gfc->noise_shaping_amp==3) {
-	if (gfc->pseudohalf.l[sfb]) {
-	  gfc->pseudohalf.l[sfb] = 0;
-	  goto done;
-	}
-	gfc->pseudohalf.l[sfb] = 1;
+	  gfc->pseudohalf.l[sfb] = !gfc->pseudohalf.l[sfb];
+	  if (!gfc->pseudohalf.l[sfb])
+	      return;
       }
       scalefac->l[sfb]++;
-      for ( l = start; l < end; l++ )
-	xrpow[l] *= ifqstep34;
-      if (gfc->noise_shaping_amp==2
-	  ||gfc->noise_shaping_amp==3) goto done;
-    }
+      for (l = -width; l < 0; l++)
+	  xrpow[j+l] *= ifqstep34;
+      if (gfc->noise_shaping_amp==2||gfc->noise_shaping_amp==3)
+	  return;
   }
-  
-  for ( j=0,sfb = cod_info->sfb_smin; sfb < SBPSY_s; sfb++ ) {
-    start = gfc->scalefac_band.s[sfb];
-    end   = gfc->scalefac_band.s[sfb+1];
-    for ( i = 0; i < 3; i++ ) {
-      int j2 = j;
-      if ( distort->s[sfb][i]>=trigger) {
-	if (gfc->noise_shaping_amp==3) {
-	  if (gfc->pseudohalf.s[sfb][i]) {
-	    gfc->pseudohalf.s[sfb][i] = 0;
-	    goto done;
+
+  for (sfb = cod_info->sfb_smin; sfb < SBPSY_s; sfb++ ) {
+      int width = gfc->scalefac_band.s[sfb+1] - gfc->scalefac_band.s[sfb];
+      int b;
+      for (b = 0; b < 3; b++) {
+	  int l;
+	  j += width;
+	  if (distort->s[sfb][b] < trigger)
+	      continue;
+
+	  if (gfc->noise_shaping_amp==3) {
+	      gfc->pseudohalf.s[sfb][b] = !gfc->pseudohalf.s[sfb][b];
+	      if (!gfc->pseudohalf.s[sfb][b])
+		  return;
 	  }
-	  gfc->pseudohalf.s[sfb][i] = 1;
-	}
-	scalefac->s[sfb][i]++;
-	for (l = start; l < end; l++) 
-	  xrpow[j2++] *= ifqstep34;
-	if (gfc->noise_shaping_amp==2
-	    ||gfc->noise_shaping_amp==3) goto done;
+	  scalefac->s[sfb][b]++;
+	  for (l = -width; l < 0; l++) 
+	      xrpow[j+l] *= ifqstep34;
+	  if (gfc->noise_shaping_amp==2||gfc->noise_shaping_amp==3)
+	      return;
       }
-      j += end-start;
-    }
   }
- done:
- return;
 }
 
 /*************************************************************************
@@ -528,36 +527,36 @@ inc_scalefac_scale (
           III_scalefac_t * const scalefac,
           FLOAT8                 xrpow[576] )
 {
-    int start, end, l,i,j;
-    int sfb;
+    int l, j, sfb;
     const FLOAT8 ifqstep34 = 1.29683955465100964055;
 
+    j = 0;
     for (sfb = 0; sfb < cod_info->sfb_lmax; sfb++) {
+	int width = gfc->scalefac_band.l[sfb+1] - gfc->scalefac_band.l[sfb];
         int s = scalefac->l[sfb] + (cod_info->preflag ? pretab[sfb] : 0);
+	j += width;
         if (s & 1) {
             s++;
-            start = gfc->scalefac_band.l[sfb];
-            end   = gfc->scalefac_band.l[sfb+1];
-            for (l = start; l < end; l++) 
-                xrpow[l] *= ifqstep34;
+            for (l = -width; l < 0; l++) 
+                xrpow[j+l] *= ifqstep34;
         }
         scalefac->l[sfb]  = s >> 1;
         cod_info->preflag = 0;
     }
 
-    for (j = 0, sfb = cod_info->sfb_smin; sfb < SBPSY_s; sfb++) {
-    start = gfc->scalefac_band.s[sfb];
-    end   = gfc->scalefac_band.s[sfb+1];
-    for (i = 0; i < 3; i++) {
-        int j2 = j;
-        if (scalefac->s[sfb][i] & 1) {
-        scalefac->s[sfb][i]++;
-        for (l = start; l < end; l++) 
-            xrpow[j2++] *= ifqstep34;
-        }
-        scalefac->s[sfb][i] >>= 1;
-        j += end-start;
-    }
+    for (sfb = cod_info->sfb_smin; sfb < SBPSY_s; sfb++) {
+	int width = gfc->scalefac_band.s[sfb+1] - gfc->scalefac_band.s[sfb];
+	int b;
+	for (b = 0; b < 3; b++) {
+	    int s = scalefac->s[sfb][b];
+	    j += width;
+	    if (s & 1) {
+		s++;
+		for (l = -width; l < 0; l++) 
+		    xrpow[j+l] *= ifqstep34;
+	    }
+	    scalefac->s[sfb][b] = s >> 1;
+	}
     }
     cod_info->scalefac_scale = 1;
 }
