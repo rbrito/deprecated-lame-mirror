@@ -28,10 +28,8 @@ void CloseSndFile(sound_file_format input, FILE *musicin);
 FILE * OpenSndFile(lame_global_flags *gfp);
 
 int get_audio(lame_global_flags *gfp,short buffer[2][1152]);
-
-#ifdef HAVEMPGLIB
 int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip);
-#endif
+
 
 #ifdef LIBSNDFILE
 

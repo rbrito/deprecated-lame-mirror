@@ -1194,6 +1194,7 @@ int check_aid(char *header) {
      && header[3]== (char) 1);
   return aid_header;
 }
+
 int is_syncword(char *header)
 {
   int mpeg1=((int) ( header[0] == (char) 0xFF)) &&
@@ -1316,22 +1317,6 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
 
   return 0;
 }
-#endif
-
-
-/* currently disabled */
-#if 0
-#ifdef LIBSNDFILE
-# include "sndfile.h"   // prototype for sf_get_lib_version()
-void print_sndlib_version(FILE *fp)
-{
-    char  tmp [80];
-    sf_get_lib_version ( tmp, sizeof (tmp) );
-    fprintf ( fp, "Input handled by %s  (http://www.zip.com.au/~erikd/libsndfile/)\n", tmp );
-}
-#endif
-#endif
-
 
 /*
 For lame_decode_fromfile:  return code
@@ -1352,6 +1337,22 @@ int lame_decode_fromfile(FILE *fd, short pcm_l[], short pcm_r[],mp3data_struct *
   }
   return ret;
 }
+#endif
+
+
+/* currently disabled */
+#if 0
+#ifdef LIBSNDFILE
+# include "sndfile.h"   // prototype for sf_get_lib_version()
+void print_sndlib_version(FILE *fp)
+{
+    char  tmp [80];
+    sf_get_lib_version ( tmp, sizeof (tmp) );
+    fprintf ( fp, "Input handled by %s  (http://www.zip.com.au/~erikd/libsndfile/)\n", tmp );
+}
+#endif
+#endif
+
 
 /* Replacement for forward fseek(,,SEEK_CUR), because fseek() fails on pipes */
 int fskip(FILE *sf,long num_bytes,int dummy)
