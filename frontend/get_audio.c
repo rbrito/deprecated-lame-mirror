@@ -182,7 +182,7 @@ get_file_size(const char* const filename)
  *    in: gfp
  *        buffer    output to the int buffer or 16-bit buffer
  * returns: samples read
- */
+ ***********************************************************************/
 int
 get_audio(lame_t gfp, int buffer[2][1152])
 {
@@ -262,9 +262,12 @@ static int
 read_samples_mp3(lame_t gfp, FILE * const musicin,
 		 short int mpg123pcm[2][1152])
 {
-    int     out;
-#if defined(HAVE_MPGLIB)
+#if !defined(HAVE_MPGLIB)
+    return -1;
+#endif
+
     static const char type_name[] = "MP3 file";
+    int     out;
 
     out = decode_fromfile(gfp, musicin, mpg123pcm[0], mpg123pcm[1], &mp3input_data);
     /*
@@ -285,10 +288,6 @@ read_samples_mp3(lame_t gfp, FILE * const musicin,
         fprintf(stderr,
                 "Error: sample frequency has changed in %s - not supported\n",
                 type_name);
-
-#else
-    out = -1;
-#endif
     return out;
 }
 
@@ -343,7 +342,6 @@ WriteWaveHeader(FILE * const fp, const int pcmbytes,
 void
 close_infile(void)
 {
-    SNDFILE *gs_pSndFileIn = (SNDFILE *) musicin;
     if (input == sf_mp1 || input == sf_mp2 || input == sf_mp3) {
         if (fclose(musicin) != 0) {
             fprintf(stderr, "Could not close audio input file\n");
@@ -351,6 +349,7 @@ close_infile(void)
         }
     }
     else {
+	SNDFILE *gs_pSndFileIn = (SNDFILE *) musicin;
         if (gs_pSndFileIn) {
             if (sf_close(gs_pSndFileIn) != 0) {
                 fprintf(stderr, "Could not close sound file \n");
