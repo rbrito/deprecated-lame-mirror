@@ -40,10 +40,6 @@
 #include <dmalloc.h>
 #endif
 
-/* This is the scfsi_band table from 2.4.2.7 of the IS */
-const int scfsi_band[5] = { 0, 6, 11, 16, 21 };
-
-
 /* unsigned int is at least this large:  */
 /* we work with ints, so when doing bit manipulation, we limit
  * ourselves to MAX_LENGTH-2 just to be on the safe side */
