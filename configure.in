@@ -51,6 +51,9 @@ CONFIG_LIBS=
 CONFIG_OPTS=
 CONFIG_LDFLAGS=
 CPP_OPT=
+GTK_LDFLAGS=
+GTK_OPTS=
+
 
 dnl Checks for libraries.
 
@@ -134,14 +137,25 @@ if test "$CONFIG_DECODER" != "no" ; then
 fi
 
 
-dnl analyzer interface
-AC_ARG_ENABLE(analyzer, 
-    [  --enable-analyzer=yes,no    Whether to include the analyzer interface[default yes]]
-    CONFIG_ANALYZER="$enableval", CONFIG_ANALYZER="yes")
+#AC_MSG_CHECKING(use of GTK frame analyzer)
+#AC_PATH_PROG(GTK_CONFIG, gtk-config, no)
+#if test ".$GTK_CONFIG" != ".no" ; then
+#else
+#  FA_DEFAULT=no
 
-if test "$CONFIG_ANALYZER" != "no" ; then
-	CPP_OPT="-DANALYSIS $CPP_OPT"
+AM_PATH_GTK(1.2.0,FA_DEFAULT=yes ,FA_DEFAULT=no)
+
+if test "$FA_DEFAULT" != "no" ; then
+  GTK_LDFLAGS="`$GTK_CONFIG --libs` "
+  GTK_OPTS=" `$GTK_CONFIG --cflags` "
+else
+  CONFIG_FA=no
+  echo Cannot find GTK: Is gtk-config in path? 
 fi
+
+
+
+
 
 
 dnl vorbis
@@ -289,6 +303,8 @@ AC_SUBST(CONFIG_LDFLAGS)
 CONFIG_SOURCES="$BRHIST_SOURCE"
 AC_SUBST(CONFIG_SOURCES)
 AC_SUBST(CPP_OPT)
+AC_SUBST(GTK_LDFLAGS)
+AC_SUBST(GTK_OPTS)
 
 AC_SUBST(LIB_INSTALL_TARGETS)
 AC_SUBST(LIB_TARGETS)
@@ -313,5 +329,5 @@ AC_FUNC_VPRINTF
 AC_CHECK_FUNCS(gettimeofday socket strtol)
 
 
-AC_OUTPUT(Makefile libmp3lame/Makefile frontend/Makefile mp3x/Makefile )
+AC_OUTPUT(Makefile libmp3lame/Makefile frontend/Makefile analyzer/Makefile )
 

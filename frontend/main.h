@@ -24,8 +24,6 @@
 #include "get_audio.h"        
 
 #define         MAX_NAME_SIZE           1000
-extern char outPath[MAX_NAME_SIZE];
-extern char inPath[MAX_NAME_SIZE];
 extern sound_file_format input_format;   
 extern int swapbytes;              /* force byte swapping   default=0*/
 extern int silent;

@@ -42,7 +42,7 @@ lame:
 mp3rtp:
 	cd frontend; $(MAKE)
 mp3x:
-	cd mp3x; $(MAKE)
+	cd analyzer; $(MAKE)
 
 
 
@@ -57,7 +57,7 @@ uninstall:
 clean:
 	cd libmp3lame; $(MAKE) clean; 
 	cd mpglib; $(MAKE) clean; 
-	cd mp3x; $(MAKE) clean; 
+	cd analyzer; $(MAKE) clean; 
 	cd frontend; $(MAKE) clean; 
 
 

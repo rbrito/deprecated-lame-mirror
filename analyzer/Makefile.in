@@ -1,5 +1,5 @@
 #
-# Makefile.in for LAME 3.xx frontend
+# Makefile.in for LAME 3.xx
 #
 # processed by ./configure to produce Makefile
 #
@@ -26,21 +26,23 @@ INCLUDEDIR = $(prefix)/include
 CC     = @CC@
 CFLAGS = @CONFIG_OPTS@
 LIBS   = @CONFIG_LIBS@
-LDFLAGS= @CONFIG_LDFLAGS@
+LDFLAGS= @CONFIG_LDFLAGS@ @GTK_LDFLAGS@
 INSTALL= @INSTALL@
 INSTALL_PROGRAM=@INSTALL_PROGRAM@
 INSTALL_DATA=@INSTALL_DATA@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 # generic defaults. OS specific options go in versious sections below
-PGM ?= lame
-CPP_OPTS = @CPP_OPT@ -I ../include -I ./ 
+PGM ?= mp3x
+CPP_OPTS = -I./ -I../frontend -I../include -I../libmp3lame   @CPP_OPT@ @GTK_OPTS@ 
 CC_OPTS = -O
 AR = ar
 RANLIB = @RANLIB@
 MAKEDEP = -M
 RM_F = rm -f
 LN_S = @LN_S@
+
+
 
 
 ##########################################################################
@@ -221,12 +223,17 @@ ifeq ($(UNAME),OS/2)
    SHELL=sh	
    CC = gcc
    CC_OPTS = -O3
-   PGM ?= lame.exe
+   PGM ?= mp3x.exe
 
 # I use the following for slightly better performance on my Pentium-II
 # using pgcc-2.91.66:
 #   CC_OPTS = -O6 -ffast-math -funroll-loops -mpentiumpro -march=pentiumpro
 
+# Uncomment & inspect the 2 GTK lines to use MP3x GTK frame analyzer.
+# Properly installed XFree86/devlibs & GTK+ is a prerequisite.
+# The following works for me using Xfree86/OS2 3.3.5 and GTK+ 1.2.3:
+#   LDFLAGS += -DHAVEGTK -IC:/XFree86/include/gtk12 -Zmt -D__ST_MT_ERRNO__ -IC:/XFree86/include/glib12 -IC:/XFree86/include
+#   CFLAGS += -LC:/XFree86/lib -Zmtd -Zsysv-signals -Zbin-files -lgtk12 -lgdk12 -lgmodule -lglib12 -lXext -lX11 -lshm -lbsd -lsocket -lm
 endif
 
 ###########################################################################
@@ -234,7 +241,7 @@ endif
 ###########################################################################
 ifeq ($(UNAME),MSDOS)
   RM_F =
-  PGM ?= lame.exe
+  PGM ?= mp3x.exe
 endif
 
 ###########################################################################
@@ -283,26 +290,20 @@ endif
 
 CC_SWITCHES = -DNDEBUG $(CC_OPTS) $(CFLAGS)
 
-brhist_sources = brhist.c
-
 c_sources = @CONFIG_SOURCES@ \
-        lametime.c \
-	timestatus.c \
-	portableio.c \
-	ieeefloat.c \
-	parse.c \
-	get_audio.c
+        ../frontend/lametime.c \
+	../frontend/timestatus.c \
+	../frontend/portableio.c \
+	../frontend/ieeefloat.c \
+	../frontend/parse.c \
+	../frontend/get_audio.c \
+        gtkanal.c gpkplotting.c
 
 OBJ = $(c_sources:.c=.o)
 DEP = $(c_sources:.c=.d)
 
 
 
-
-NASM = nasm
-ASFLAGS=-f elf -i i386/
-%.o: %.nas
-	$(NASM) $(ASFLAGS) $< -o $@
 %.o: %.s
 	gcc -c $< -o $@
 
@@ -310,41 +311,26 @@ ASFLAGS=-f elf -i i386/
 	$(CC) $(CPP_OPTS) $(CC_SWITCHES) -c $< -o $@
 
 %.d: %.c
-  ifeq ($(NOUNIXCMD),YES)
-	$(CC) $(MAKEDEP)  $(CPP_OPTS) $(CC_SWITCHES)  $< > $@
-  else
 	$(SHELL) -ec '$(CC) $(MAKEDEP)  $(CPP_OPTS) $(CC_SWITCHES)  $< | sed '\''s;$*.o;& $@;g'\'' > $@'
-  endif
+
 
 all: $(PGM)
 
-# these applications are to be statically linked for now:
-# i.e dont use -L -lmp3lame, since the default will pick up the shared lib
-$(PGM):	main.o ../libmp3lame/libmp3lame.a $(LIBS) $(OBJ)
-	$(CC) -o $(PGM)  main.o  $(OBJ) $(LIBS) $(LDFLAGS) ../libmp3lame/libmp3lame.a
-
-mp3rtp:	rtp.o mp3rtp.o ../libmp3lame/libmp3lame.a $(LIBS) $(OBJ)
-	$(CC) -o mp3rtp mp3rtp.o rtp.o -L..   $(OBJ) $(LIBS) $(LDFLAGS) ../libmp3lame/libmp3lame.a
+$(PGM):	mp3x.o ../libmp3lame.a $(LIBS) $(OBJ)
+	$(CC) -o mp3x mp3x.o -L.. $(OBJ) $(LIBS) $(LDFLAGS) -L.. -lmp3lame
 
 
 
-
-install: $(PGM)
+install_program: $(PGM)
 	$(INSTALL_PROGRAM) $(PGM) ${BINDIR}
+
+install: @INSTALL_TARGETS@
 
 uninstall:
 	$(RM_F) $(BINDIR)/$(PGM)
 
 clean:
-  ifeq ($(UNAME),MSDOS)
-	-del *.o
-	-del *.d
-	-del *.a
-	-del $(PGM)
-  else
-	-$(RM_F) $(OBJ) $(DEP) $(PGM) main.o rtp.o mp3rtp mp3rtp.o \
-         mp3x.o mp3x main.d rtp.d mp3rtp.d
-  endif
+	-$(RM_F) $(OBJ) $(DEP) $(PGM) mp3x.o mp3x 
 
 bla:
 	echo "LIB=$(SHARED_LIB) MAJOR=$(SHARED_LIB_MAJOR) MINOR=$(SHARED_LIB_MINOR)"
@@ -359,18 +345,3 @@ ifneq ($(MAKECMDGOALS),clean)
 endif
 
 
-#
-#  testcase.mp3 is a 2926 byte file.  The first number output by
-#  wc is the number of bytes which differ between new output
-#  and 'official' results.  
-#
-#  Because of compiler options and effects of roundoff, the 
-#  number of bytes which are different may not be zero, but
-#  should be at most 30.
-#
-test: $(PGM)
-	./$(PGM)  --nores -h ../testcase.wav ../testcase.new.mp3
-	cmp -l ../testcase.new.mp3 ../testcase.mp3 | wc
-
-testg: $(PGM)
-	./$(PGM) -g -h ../../test/castanets.wav

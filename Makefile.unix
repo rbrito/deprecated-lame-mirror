@@ -27,7 +27,7 @@ endif
 PGM = lame
 CC = gcc
 CC_OPTS =  -O
-CPP_OPTS = -Iinclude -Impglib -Ifrontend -Ilibmp3lame
+CPP_OPTS = -Ianalyzer -Iinclude -Impglib -Ifrontend -Ilibmp3lame
 AR = ar
 RANLIB = ranlib
 GTK = 
@@ -439,7 +439,7 @@ lib_obj = $(lib_sources:.c=.o)
 
 DEP = $(frontend_sources:.c=.d) $(lib_sources:.c=.d )
 
-gtk_sources = mp3x/gtkanal.c mp3x/gpkplotting.c
+gtk_sources = analyzer/gtkanal.c analyzer/gpkplotting.c
 gtk_obj = $(gtk_sources:.c=.o)
 gtk_dep = $(gtk_sources:.c=.d)
 
@@ -469,16 +469,16 @@ ASFLAGS=-f elf -i i386/
 all: $(PGM)
 
 $(PGM):	frontend/main.o $(frontend_obj)  $(MP3LIB)
-	$(CC) $(CC_OPTS) -o $(PGM)  frontend/main.o $(frontend_obj) \
+	$(CC) $(CC_OPTS) -o frontend/$(PGM)  frontend/main.o $(frontend_obj) \
         $(MP3LIB) $(LIBS) $(LIBSNDFILE) $(LIBTERMCAP) \
         $(VORBIS_LIB)
 
-lamex:  mp3x/mp3x.o $(frontend_obj) $(gtk_obj) $(MP3LIB)
-	$(CC) -o lamex mp3x/mp3x.o $(frontend_obj) $(gtk_obj) $(MP3LIB) \
+mp3x:   analyzer/mp3x.o $(frontend_obj) $(gtk_obj) $(MP3LIB)
+	$(CC) $(CC_OPTS) -o analyzer/mp3x analyzer/mp3x.o $(frontend_obj) $(gtk_obj) $(MP3LIB) \
         $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
 
 mp3rtp:	frontend/rtp.o frontend/mp3rtp.o  $(frontend_obj) $(MP3LIB)
-	$(CC) -o mp3rtp mp3rtp.o rtp.o $(frontend_obj) $(MP3LIB) \
+	$(CC) $(CC_OPTS) -o frontend/mp3rtp mp3rtp.o rtp.o $(frontend_obj) $(MP3LIB) \
         $(LIBS) $(LIBSNDFILE) $(LIBTERMCAP) $(VORBIS_LIB)
 
 libmp3lame/libmp3lame.a:  $(lib_obj)
@@ -487,7 +487,6 @@ libmp3lame/libmp3lame.a:  $(lib_obj)
 
 #shared library.  GNU specific?
 libmp3lame/libmp3lame.so:  $(lib_obj)
-	cd libmp3lame
 	gcc -shared -Wl,-soname,libmp3lame/libmp3lame.so -o libmp3lame/libmp3lame.so $(lib_obj)
 
 install:  $(PGM) #libmp3lame.a
@@ -529,8 +528,8 @@ endif
 #  should be at most 30.
 #
 test: $(PGM)
-	./lame  --nores -h testcase.wav testcase.new.mp3
+	frontend/lame  --nores -h testcase.wav testcase.new.mp3
 	cmp -l testcase.new.mp3 testcase.mp3 | wc
 
 testg: $(PGM)
-	./lame -g -h ../test/castanets.wav
+	frontend/lame -g -h ../test/castanets.wav
