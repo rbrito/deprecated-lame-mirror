@@ -24,7 +24,13 @@
 
 int ResvFrameBegin(lame_global_flags *gfp, int *mean_bits);
 void ResvMaxBits(lame_internal_flags *gfc, int mean_bits, int *targ_bits, int *max_bits);
-void ResvAdjust(lame_internal_flags *gfc, int bits);
 void ResvFrameEnd(lame_internal_flags *gfc, int mean_bits );
+
+/*
+  ResvAdjust:
+  Called after a granule's bit allocation. Readjusts the size of
+  the reservoir to reflect the granule's usage.
+*/
+#define ResvAdjust(gfc, bits) gfc->ResvSize -= bits
 
 #endif /* LAME_RESERVOIR_H */

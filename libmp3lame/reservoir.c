@@ -203,16 +203,6 @@ void ResvMaxBits(lame_internal_flags *gfc, int mean_bits, int *targ_bits, int *e
     *extra_bits = ResvSize;
 }
 
-/*
-  ResvAdjust:
-  Called after a granule's bit allocation. Readjusts the size of
-  the reservoir to reflect the granule's usage.
-*/
-void
-ResvAdjust(lame_internal_flags *gfc, int adjbits)
-{
-    gfc->ResvSize -= adjbits;
-}
 
 
 /*
