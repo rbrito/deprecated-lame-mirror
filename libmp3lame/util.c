@@ -84,8 +84,8 @@ void  freegfc ( lame_internal_flags* const gfc )   /* bit stream structure */
 int
 BitrateIndex(
     int bRate,        /* legal rates from 32 to 448 kbps */
-    int version,      /* MPEG-1 or MPEG-2/2.5 LSF */
-    int samplerate)   /* convert bitrate in kbps to index */
+    int version       /* MPEG-1 or MPEG-2/2.5 LSF */
+    )
 {
     int  i;
 

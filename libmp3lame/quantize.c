@@ -1171,7 +1171,7 @@ find_scalefac(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, int bw,
  ******************************************************************/
 
 static void
-short_block_scalefacs(const lame_internal_flags *gfc, gr_info * gi, int vbrmax)
+short_block_scalefacs(gr_info * gi, int vbrmax)
 {
     int sfb, b, newmax1, maxov[2][3];
 
@@ -1409,7 +1409,7 @@ VBR_noise_shaping(
     } while (++sfb < gi->psymax);
 
     if (gi->block_type == SHORT_TYPE)
-	short_block_scalefacs(gfc, gi, vbrmax);
+	short_block_scalefacs(gi, vbrmax);
     else
 	long_block_scalefacs(gfc, gi, vbrmax);
     set_scalefactor_values(gi);

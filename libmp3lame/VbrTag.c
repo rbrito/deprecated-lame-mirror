@@ -70,8 +70,8 @@
 
 
 
-const static char	VBRTag[]={"Xing"};
-const static char	VBRTag2[]={"Info"};
+static const char	VBRTag[]={"Xing"};
+static const char	VBRTag2[]={"Info"};
 
 
 
@@ -532,7 +532,7 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
     uint8_t nVBR;
     uint8_t nRevision = 0x00;
     uint8_t nRevMethod;
-    uint8_t vbr_type_translator[] = {1,5,3,2,4,0,3};		/*numbering different in vbr_mode vs. Lame tag */
+    uint8_t vbr_type_translator[] = {1,5,3};		/*numbering different in vbr_mode vs. Lame tag */
 
     uint8_t nLowpass		= ( ((gfp->lowpassfreq / 100.0)+.5) > 255 ? 255 : (gfp->lowpassfreq / 100.0)+.5 );
 
@@ -567,31 +567,26 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
     int nABRBitrate	= gfp->mean_bitrate_kbps;
 
     /*revision and vbr method */
-    if (gfp->VBR>=0 && gfp->VBR < sizeof(vbr_type_translator))
+    nVBR = 0x00;		/*unknown. */
+    if (gfp->VBR < sizeof(vbr_type_translator))
 	nVBR = vbr_type_translator[gfp->VBR];
-    else
-	nVBR = 0x00;		/*unknown. */
-
     nRevMethod = 0x10 * nRevision + nVBR; 
 
     /*nogap */
-    if (nNoGapCount != -1)
-    {
+    if (nNoGapCount != -1) {
 	if (nNoGapCurr > 0)
 	    bNoGapPrevious = 1;
-	
+
 	if (nNoGapCurr < nNoGapCount-1)
 	    bNoGapMore = 1;
     }
 
     /*flags */
-
     nFlags = (((int)gfp->ATHcurve) & 15 ) /*nAthType*/
 	+ (bExpNPsyTune		<< 4)
 	+ (bSafeJoint		<< 5)
 	+ (bNoGapMore		<< 6)
 	+ (bNoGapPrevious	<< 7);
-
 
     if (nQuality < 0)
 	nQuality = 0;
@@ -724,10 +719,9 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
  * PutVbrTag: Write final VBR tag to the file
  * Paramters:
  *				lpszFileName: filename of MP3 bit stream
- *				nVbrScale	: encoder quality indicator (0..100)
  ****************************************************************************
 */
-int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
+int PutVbrTag(lame_global_flags *gfp, FILE *fpStream)
 {
     lame_internal_flags * gfc = gfp->internal_flags;
 
@@ -812,7 +806,7 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
 		if (gfp->free_format)
 		    bbyte = 0x00;
 		else
-		    bbyte = 16*BitrateIndex(bitrate,gfp->version,gfp->out_samplerate);
+		    bbyte = 16*BitrateIndex(bitrate, gfp->version);
 	}
 
 	/* Use as much of the info from the real frames in the

@@ -898,10 +898,10 @@ mask_add(FLOAT m1, FLOAT m2, int k, int b, lame_internal_flags * const gfc)
 
 
 static FLOAT
-pecalc_s(lame_internal_flags *gfc, III_psy_ratio *mr, int sb)
+pecalc_s(III_psy_ratio *mr, int sb)
 {
     FLOAT pe_s = 0;
-    const static FLOAT regcoef_s[] = {
+    static const FLOAT regcoef_s[] = {
 	11.8, /* this value is tuned only for 44.1kHz... */
 	13.6,
 	17.2,
@@ -938,10 +938,10 @@ pecalc_s(lame_internal_flags *gfc, III_psy_ratio *mr, int sb)
 }
 
 static FLOAT
-pecalc_l(lame_internal_flags *gfc, III_psy_ratio *mr, int sb)
+pecalc_l(III_psy_ratio *mr, int sb)
 {
     FLOAT pe_l = 20.0;
-    const static FLOAT regcoef_l[] = {
+    static const FLOAT regcoef_l[] = {
 	6.8, /* this value is tuned only for 44.1kHz... */
 	5.8,
 	5.8,
@@ -1151,7 +1151,6 @@ mp3x display               <------LONG------>
 static void
 partially_convert_l2s(
     lame_internal_flags *gfc,
-    FLOAT *eb,
     int gr,
     int chn
     )
@@ -1392,7 +1391,7 @@ L3psycho_anal_ns(
 	mr->thm.l[SBMAX_l-1] = thmm * gfc->masking_lower;
 
 	if (mr->en.s[0][0] >= 0.0) {
-	    partially_convert_l2s(gfc, eb, gr, chn);
+	    partially_convert_l2s(gfc, gr, chn);
 	    continue;
 	}
 
@@ -1580,12 +1579,12 @@ psycho_analysis(
 		int sb = gfc->cutoff_sfb_s;
 		if (ch & 1)
 		    sb = gfc->is_start_sfb_s_next[gr];
-		mr->pe = pecalc_s(gfc, mr, sb);
+		mr->pe = pecalc_s(mr, sb);
 	    } else {
 		int sb = gfc->cutoff_sfb_l;
 		if (ch & 1)
 		    sb = gfc->is_start_sfb_l_next[gr];
-		mr->pe = pecalc_l(gfc, mr, sb);
+		mr->pe = pecalc_l(mr, sb);
 	    }
 	}
 	gfc->masking_next[gr][3].pe *= gfc->reduce_side;

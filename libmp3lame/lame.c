@@ -168,9 +168,9 @@ lame_init_qval(lame_global_flags * gfp)
 
 static int
 FindNearestBitrate(
-    int bRate,        /* legal rates from 32 to 448 */
-    int version,      /* MPEG-1 or MPEG-2 LSF */
-    int samplerate)   /* convert bitrate in kbps to index */
+    int bRate,       /* legal rates from 32 to 448 */
+    int version      /* MPEG-1 or MPEG-2 LSF */
+    )
 {
     int  bitrate = 0;
     int  i;
@@ -553,10 +553,10 @@ lame_init_params(lame_global_flags * const gfp)
     /* for non Free Format find the nearest allowed bitrate */
     gfc->bitrate_index = 0;
     if (gfp->VBR == cbr && !gfp->free_format) {
-	gfp->mean_bitrate_kbps = FindNearestBitrate(
-	    gfp->mean_bitrate_kbps, gfp->version, gfp->out_samplerate);
-	gfc->bitrate_index = BitrateIndex(
-	    gfp->mean_bitrate_kbps, gfp->version, gfp->out_samplerate);
+	gfp->mean_bitrate_kbps
+	    = FindNearestBitrate(gfp->mean_bitrate_kbps, gfp->version);
+	gfc->bitrate_index
+	    = BitrateIndex(gfp->mean_bitrate_kbps, gfp->version);
 	if (gfc->bitrate_index < 0)
 	    return -1;
     }
@@ -570,8 +570,9 @@ lame_init_params(lame_global_flags * const gfp)
 
         if (gfp->VBR_min_bitrate_kbps) {
 	    if ((gfc->VBR_min_bitrate =
-		 BitrateIndex(gfp->VBR_min_bitrate_kbps, gfp->version,
-			      gfp->out_samplerate)) < 0) return -1;
+		 BitrateIndex(gfp->VBR_min_bitrate_kbps, gfp->version)) < 0)
+		return -1;
+			      
 	}
 	gfp->VBR_min_bitrate_kbps =
 	    bitrate_table[gfp->version][gfc->VBR_min_bitrate];
@@ -580,8 +581,8 @@ lame_init_params(lame_global_flags * const gfp)
 
         if (gfp->VBR_max_bitrate_kbps) {
 	    if ((gfc->VBR_max_bitrate =
-		 BitrateIndex(gfp->VBR_max_bitrate_kbps, gfp->version,
-			      gfp->out_samplerate)) < 0) return -1;
+		 BitrateIndex(gfp->VBR_max_bitrate_kbps, gfp->version)) < 0)
+		return -1;
 	}
 	gfp->VBR_max_bitrate_kbps =
 	    bitrate_table[gfp->version][gfc->VBR_max_bitrate];
@@ -1468,16 +1469,9 @@ lame_encode_finish(lame_global_flags * gfp,
 void
 lame_mp3_tags_fid(lame_global_flags * gfp, FILE * fpStream)
 {
-    if (gfp->bWriteVbrTag) {
-        /* Map VBR_q to Xing quality value: 0=worst, 100=best */
-        int     nQuality = ((9-gfp->VBR_q) * 100) / 9;
-
-        /* Write Xing header again */
-        if (fpStream && !fseek(fpStream, 0, SEEK_SET))
-            PutVbrTag(gfp, fpStream, nQuality);
-    }
-
-
+    /* Write Xing header again */
+    if (gfp->bWriteVbrTag && fpStream && !fseek(fpStream, 0, SEEK_SET))
+	PutVbrTag(gfp, fpStream);
 }
 
 lame_global_flags *

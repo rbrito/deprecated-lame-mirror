@@ -536,7 +536,7 @@ struct lame_internal_flags {
 *
 ***********************************************************************/
 void	freegfc(lame_internal_flags * const gfc);
-int	BitrateIndex(int, int,int);
+int	BitrateIndex(int, int);
 void	disable_FPE(void);
 
 void fill_buffer(lame_global_flags *gfp,

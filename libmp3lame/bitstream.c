@@ -65,7 +65,7 @@ int getframebits(const lame_global_flags * gfp)
 
 
 static void
-putheader_bits(lame_internal_flags *gfc,int w_ptr)
+putheader_bits(lame_internal_flags *gfc)
 {
     Bit_stream_struc *bs = &gfc->bs;
     memcpy(&bs->buf[bs->buf_byte_idx], bs->header[bs->w_ptr].buf,
@@ -95,7 +95,7 @@ putbits2(lame_internal_flags *gfc, int val, int j)
 	    assert(bs->header[bs->w_ptr].write_timing >= bs->totbit
 		||(bs->header[bs->w_ptr].write_timing ^ bs->totbit) < 0);
 	    if (bs->header[bs->w_ptr].write_timing == bs->totbit)
-		putheader_bits(gfc,bs->w_ptr);
+		putheader_bits(gfc);
 	    bs->buf[bs->buf_byte_idx] = 0;
 	}
 
