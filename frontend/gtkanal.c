@@ -579,16 +579,6 @@ void plot_frame(void)
       ycord[i]=coeff*coeff*1e10;
       ycord[i] = log10( MAX( ycord[i],(float) 1)); 
 
-#if 0
-      if (ch==0) 
-	if (i==26) 
-	  if (data[i]!=0)
-	    printf("%i %i i=%i  mdct: (db) %f  %f \n",pplot->frameNum,gr,i,
-10*log10(data[i]*data[i]),
-10*log10(.33*(data[i-1]*data[i-1] + data[i]*data[i] + data[i+1]*data[i+1]))  
-);
-#endif
-
       ymx=(ycord[i] > ymx) ? ycord[i] : ymx;
       ymn=(ycord[i] < ymn) ? ycord[i] : ymn;
     }
@@ -634,7 +624,7 @@ void plot_frame(void)
 	ymx=(ycord[i] > ymx) ? ycord[i] : ymx;
 	ymn=(ycord[i] < ymn) ? ycord[i] : ymn;
       }
-      for (en=0 , j=0; j<BLKSIZE ; j++) 
+      for (en=0 , j=0; j<HBLKSIZE ; j++) 
 	en += pplot->energy[gr][ch][j];
 
       sprintf(title2,"FFT%1i  pe=%5.2fK  en=%5.2e ",gr,
