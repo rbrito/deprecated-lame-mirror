@@ -558,8 +558,7 @@ int calc_noise(
         const gr_info           * const cod_info,
         const III_psy_xmin      * const l3_xmin, 
         const III_scalefac_t    * const scalefac,
-              FLOAT8                    xfsf    [4][SBMAX_l], 
-              FLOAT8                    distort [4][SBMAX_l],
+              FLOAT8                    xfsf [4][SBMAX_l], 
               calc_noise_result *       res )
 {
   int sfb,start, end, j,l, i, over=0;
@@ -599,9 +598,12 @@ int calc_noise(
 	      sum += temp * temp;
 	    }   
 
-	    xfsf[i+1][sfb] = sum / bw;
-	    noise = xfsf[i+1][sfb] / l3_xmin->s[sfb][i];
-	    /* multiplying here is adding in dB */
+	    xfsf[i+1][sfb]  = sum / bw;
+            xfsf[i+1][sfb] /= l3_xmin->s[sfb][i];
+            
+            noise = xfsf[i+1][sfb];
+	    
+            /* multiplying here is adding in dB */
 	    tot_noise *= Max(noise, 1E-20);
 
             if (noise > 1) {
@@ -610,7 +612,6 @@ int calc_noise(
 		over_noise *= noise;
 	    }
 	    max_noise=Max(max_noise,noise);
-            distort[i+1][sfb] = noise;
 
 	    count++;	    
         }
@@ -656,7 +657,8 @@ int calc_noise(
 	  xfsf[0][sfb] = sum / bw;
 	}
 
-	noise = xfsf[0][sfb] / l3_xmin->l[sfb];
+        xfsf[0][sfb] /= l3_xmin->l[sfb];
+	noise = xfsf[0][sfb];
 	/* multiplying here is adding in dB */
 	tot_noise *= Max(noise, 1E-20);
 	if (noise>1) {
@@ -666,7 +668,6 @@ int calc_noise(
 	}
 
 	max_noise=Max(max_noise,noise);
-        distort[0][sfb] = noise;
 	count++;
     }
   }
@@ -736,14 +737,12 @@ void set_pinfo (
 
 
     III_psy_xmin l3_xmin;
-    calc_noise_result noise_info;
+    calc_noise_result noise;
     FLOAT8 xfsf[4][SBMAX_l];
-    FLOAT8 distort[4][SBMAX_l];
 
     calc_xmin (gfp,xr, ratio, cod_info, &l3_xmin);
 
-    calc_noise (gfp, xr, l3_enc, cod_info, &l3_xmin, scalefac, 
-                xfsf, distort, &noise_info);
+    calc_noise (gfp, xr, l3_enc, cod_info, &l3_xmin, scalefac, xfsf, &noise);
 
     if (cod_info->block_type == SHORT_TYPE) {
         for (j=0, sfb = 0; sfb < SBMAX_s; sfb++ )  {
@@ -793,7 +792,8 @@ void set_pinfo (
 
                 /* convert to MDCT units */
                 en1=1e15;  /* scaling so it shows up on FFT plot */
-                gfc->pinfo->xfsf_s[gr][ch][3*sfb+i] =  en1*xfsf[i+1][sfb];
+                gfc->pinfo->xfsf_s[gr][ch][3*sfb+i] 
+                    = en1*xfsf[i+1][sfb]*l3_xmin.s[sfb][i];
                 gfc->pinfo->en_s[gr][ch][3*sfb+i] = en1*en0;
 
                 if (ratio->en.s[sfb][i]>0)
@@ -865,7 +865,7 @@ void set_pinfo (
 
             /* convert to MDCT units */
             en1=1e15;  /* scaling so it shows up on FFT plot */
-            gfc->pinfo->xfsf[gr][ch][sfb] =  en1*xfsf[0][sfb];
+            gfc->pinfo->xfsf[gr][ch][sfb] =  en1*xfsf[0][sfb]*l3_xmin.l[sfb];
             gfc->pinfo->en[gr][ch][sfb] = en1*en0;
             if (ratio->en.l[sfb]>0)
                 en0 = en0/ratio->en.l[sfb];
@@ -895,10 +895,10 @@ void set_pinfo (
     gfc->pinfo->LAMEmainbits[gr][ch] = cod_info->part2_3_length;
     gfc->pinfo->LAMEsfbits  [gr][ch] = cod_info->part2_length;
 
-    gfc->pinfo->over      [gr][ch] = noise_info.over_count;
-    gfc->pinfo->max_noise [gr][ch] = noise_info.max_noise;
-    gfc->pinfo->over_noise[gr][ch] = noise_info.over_noise;
-    gfc->pinfo->tot_noise [gr][ch] = noise_info.tot_noise;
+    gfc->pinfo->over      [gr][ch] = noise.over_count;
+    gfc->pinfo->max_noise [gr][ch] = noise.max_noise;
+    gfc->pinfo->over_noise[gr][ch] = noise.over_noise;
+    gfc->pinfo->tot_noise [gr][ch] = noise.tot_noise;
 }
 
 

@@ -793,7 +793,7 @@ int balance_noise
  *  some code shuffle rh 9/00
  ************************************************************************/
 
-void outer_loop
+static int outer_loop
 (
     lame_global_flags *gfp,
     gr_info           *cod_info,
@@ -803,14 +803,12 @@ void outer_loop
     FLOAT8             xrpow[576],  /* coloured magnitudes of spectral values */
     int                l3_enc[576], /* vector of quantized values ix(0..575) */
     int                ch, 
-    int                targ_bits,   /* maximum allowed bits */
-    FLOAT8             best_noise[4] 
+    int                targ_bits   /* maximum allowed bits */
 )
 {
     III_scalefac_t save_scalefac;
     gr_info save_cod_info;
     FLOAT8 save_xrpow[576];
-    FLOAT8 xfsf_w[4][SBMAX_l];
     FLOAT8 distort[4][SBMAX_l];
     calc_noise_result noise_info;
     calc_noise_result best_noise_info;
@@ -882,7 +880,7 @@ void outer_loop
             } else {
                 /* coefficients and thresholds both l/r (or both mid/side) */
                 over = calc_noise (gfp, xr, l3_enc_w, cod_info, l3_xmin, 
-                                   scalefac, xfsf_w, distort, &noise_info);
+                                   scalefac, distort, &noise_info);
             }
 
 
@@ -944,7 +942,7 @@ void outer_loop
              * if our best quantization so far had no distorted bands this
              * gives us more possibilities for different quant_compare modes
              */
-            if (iteration > 7 && best_noise_info.over_count == 0) {
+            if (iteration > 7 && best_noise->over_count == 0) {
                 notdone = 0;
             }
         }
@@ -981,14 +979,11 @@ void outer_loop
     if (gfp->VBR == vbr_rh) /* restore for reuse on next try */
         memcpy (xrpow, save_xrpow, sizeof(save_xrpow));
 
-    best_noise[0] = best_noise_info.over_count;
-    best_noise[1] = best_noise_info.max_noise;
-    best_noise[2] = best_noise_info.over_noise;
-    best_noise[3] = best_noise_info.tot_noise;
-
     cod_info->part2_3_length += cod_info->part2_length;
     
     assert (cod_info->global_gain < 256);
+    
+    return best_noise_info.over_count;
 }
 
 
@@ -1147,11 +1142,10 @@ void VBR_encode_granule
     III_scalefac_t  bst_scalefac;
     FLOAT8          bst_xrpow [576]; 
     int             bst_l3_enc[576];
-    FLOAT8          noise[4];       /* over,max_noise,over_noise,tot_noise; */
     int Max_bits  = max_bits;
     int real_bits = max_bits+1;
     int this_bits = min_bits+(max_bits-min_bits)/2;
-    int dbits;
+    int dbits, over;
       
     assert(Max_bits < 4096);
   
@@ -1165,13 +1159,13 @@ void VBR_encode_granule
         assert(this_bits >= min_bits);
         assert(this_bits <= max_bits);
 
-        outer_loop ( gfp, cod_info, xr, l3_xmin, scalefac,
-                     xrpow, l3_enc, ch, this_bits, noise );
+        over = outer_loop ( gfp, cod_info, xr, l3_xmin, scalefac,
+                            xrpow, l3_enc, ch, this_bits );
 
         /*  is quantization as good as we are looking for ?
          *  in this case: is no scalefactor band distorted?
          */
-        if (noise[0] <= 0) {
+        if (over <= 0) {
             /*  now we know it can be done with "real_bits"
              *  and maybe we can skip some iterations
              */
@@ -1389,7 +1383,6 @@ void VBR_iteration_loop
     III_psy_xmin l3_xmin[2][2];
   
     FLOAT8    xrpow[576];
-    FLOAT8    noise[4];          /* over,max_noise,over_noise,tot_noise; */
     int       bands[2][2];
     int       frameBits[15];
     int       bitsPerFrame;
@@ -1532,7 +1525,7 @@ void VBR_iteration_loop
                  */
                 outer_loop (gfp, cod_info, xr[gr][ch], &l3_xmin[gr][ch],
                             &scalefac[gr][ch], xrpow, l3_enc[gr][ch], ch,
-                            save_bits[gr][ch], noise);
+                            save_bits[gr][ch]);
             }
         } /* ch */
     }  /* gr */
@@ -1672,7 +1665,6 @@ void ABR_iteration_loop
 {
     III_psy_xmin l3_xmin;
     FLOAT8    xrpow[576];
-    FLOAT8    noise[4];
     int       targ_bits[2][2];
     int       bitsPerFrame, mean_bits, totbits, max_frame_bits;
     int       ch, gr, ath_over;
@@ -1716,7 +1708,7 @@ void ABR_iteration_loop
 
                 outer_loop (gfp, cod_info, xr[gr][ch], &l3_xmin,
                             &scalefac[gr][ch], xrpow, l3_enc[gr][ch],
-                            ch, targ_bits[gr][ch], noise);
+                            ch, targ_bits[gr][ch]);
             }
 
             totbits += cod_info->part2_3_length;
@@ -1765,7 +1757,6 @@ void iteration_loop
 {
     III_psy_xmin l3_xmin[2];
     FLOAT8 xrpow[576];
-    FLOAT8 noise[4]; /* over,max_noise,over_noise,tot_noise; */
     int    targ_bits[2];
     int    bitsPerFrame;
     int    mean_bits, max_bits, bit_rate;
@@ -1810,7 +1801,7 @@ void iteration_loop
                            &l3_xmin[ch]);
                 outer_loop (gfp, cod_info, xr[gr][ch], &l3_xmin[ch], 
                             &scalefac[gr][ch], xrpow, l3_enc[gr][ch],
-                            ch, targ_bits[ch], noise);
+                            ch, targ_bits[ch]);
             }
             assert (cod_info->part2_3_length < 4096);
 

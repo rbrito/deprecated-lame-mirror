@@ -79,7 +79,6 @@ int calc_noise(
         const gr_info           * const cod_info,
         const III_psy_xmin      * const l3_xmin, 
         const III_scalefac_t    * const scalefac,
-              FLOAT8                    xfsf    [4][SBMAX_l], 
               FLOAT8                    distort [4][SBMAX_l],
               calc_noise_result *       res );
               
