@@ -46,7 +46,7 @@ typedef enum vbr_mode_e {
 
     vbr_default=vbr,  /* change this to change the default VBR mode of LAME */
     vbr_abr=abr,
-    vbr_off=cbr,
+    vbr_off=cbr
 } vbr_mode;
 
 
@@ -923,7 +923,7 @@ typedef enum {
 
     LAME_SEEKERROR    = -80,
     LAME_WRITEERROR   = -81,
-    LAME_FILETOOLARGE = -82,
+    LAME_FILETOOLARGE = -82
 } lame_errorcodes_t;
 
 #if defined(__cplusplus)
