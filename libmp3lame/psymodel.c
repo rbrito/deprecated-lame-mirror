@@ -1102,7 +1102,8 @@ partially_convert_l2s(lame_t gfc, III_psy_ratio *mr, FLOAT *nb_1,
         for (; b < gfc->bo_l2s[sfb]; b++) {
 	    x += nb_1[b];
 	}
-	x += .5 * nb_1[b];
+	if (sfb != SBMAX_s-1)
+	    x += .5 * nb_1[b];
 	x *= ((double)BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE);
 	if (x < gfc->ATH.s_avg[sfb] * ATHadjust)
 	    continue;
