@@ -20,7 +20,7 @@
 
 #include "portableio.h"
 
-int read_samples_pcm (lame_global_flags* gfp, sample_t sample_buffer [2*1152], int frame_size, int samples_to_read );
+int read_samples_pcm (lame_global_flags* gfp, sample_t sample_buffer [2*1152], int frame_size, size_t samples_to_read );
 int read_samples_mp3 (lame_global_flags* gfp, FILE*    musicin, sample_t mpg123pcm [2] [1152],int num_chan );
 int read_samples_ogg (lame_global_flags* gfp, FILE*    musicin, sample_t mpg123pcm [2] [1152],int num_chan );
 
@@ -648,26 +648,31 @@ int read_samples_pcm(lame_global_flags *gfp,sample_t sample_buffer[2*1152],int f
 *
 ************************************************************************/
 
-int read_samples_pcm(lame_global_flags *gfp, sample_t sample_buffer [2*1152], int frame_size,int samples_to_read)
+int read_samples_pcm(lame_global_flags *gfp, sample_t sample_buffer [2*1152], int frame_size, size_t samples_to_read)
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
-    int samples_read;
-    int iswav=(gfp->input_format==sf_wave);
+    lame_internal_flags*  gfc=gfp->internal_flags;
+    int                   samples_read;
+    int                   iswav =  gfp->input_format==sf_wave;
 
-    if (16==gfc->pcmbitwidth) {
-      samples_read = fread(sample_buffer, 2, (unsigned int)samples_to_read, gfp->musicin);
-    }else if (8==gfc->pcmbitwidth) {
-      unsigned char temp[2304];
-      int i;
-      samples_read = fread(temp, 1, (unsigned int)samples_to_read, gfp->musicin);
-      for (i=0 ; i<samples_read; ++i) {
-	/* note: 8bit .wav samples are unsigned */
-	sample_buffer[i]=((sample_t)temp[i]-127)*256;
-      }
-    }else{
-      ERRORF("Only 8 and 16 bit input files supported \n");
-      LAME_ERROR_EXIT();
+    switch ( gfc -> pcmbitwidth ) {
+    case  8: 
+        {
+        unsigned char  temp [2*1152];
+        int            i;
+	assert ( samples_to_read <= sizeof (temp) );
+        samples_read = fread (temp, 1, samples_to_read, gfp->musicin );
+        for ( i = 0 ; i < samples_read; i++ ) 	/* note: 8bit .wav samples are unsigned */
+	    sample_buffer [i] = ( temp [i] - 128 ) << 8;
+        }
+        break;
+    case 16: 
+        samples_read = fread(sample_buffer, 2, samples_to_read, gfp->musicin );
+	break;
+    default:
+        ERRORF ("Only 8 and 16 bit input files supported.\n");
+        LAME_ERROR_EXIT ();
     }
+    
     if (ferror(gfp->musicin)) {
       ERRORF("Error reading input file\n");
       LAME_ERROR_EXIT();
