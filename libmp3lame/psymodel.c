@@ -494,27 +494,21 @@ block_type_set(
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     int chn;
-    for (chn=0; chn<gfc->channels_out; chn++) {
-	blocktype[chn] = NORM_TYPE;
-    }
 
-    if (gfp->short_blocks == short_block_coupled) {
+    if (gfp->short_blocks == short_block_coupled
 	/* force both channels to use the same block type */
 	/* this is necessary if the frame is to be encoded in ms_stereo.  */
 	/* But even without ms_stereo, FhG  does this */
-	int bothlong= (uselongblock[0] && uselongblock[1]);
-	if (!bothlong) {
-	    uselongblock[0] = uselongblock[1] = 0;
-	}
-    }
+	&& !(uselongblock[0] && uselongblock[1]))
+        uselongblock[0] = uselongblock[1] = 0;
 
     /* update the blocktype of the previous granule, since it depends on what
      * happend in this granule */
     for (chn=0; chn<gfc->channels_out; chn++) {
+	blocktype[chn] = NORM_TYPE;
 	if (uselongblock[chn]) {
 	    /* no attack : use long blocks */
 	    assert( gfc->blocktype_old[chn] != START_TYPE );
-	    blocktype[chn] = NORM_TYPE;
 	    if (gfc->blocktype_old[chn] == SHORT_TYPE)
 		blocktype[chn] = STOP_TYPE;
 	} else {
@@ -677,10 +671,9 @@ int L3psycho_anal( lame_global_flags * gfp,
 	if (gfp->analysis) {
 	    FLOAT mn,mx,ma=0,mb=0,mc=0;
 	    for (j=0; j<HBLKSIZE ; j++) {
-		gfc->pinfo->energy[gr_out][chn][j]=fftenergy_save[chn][j];
-		fftenergy_save[chn][j]=fftenergy[j];
+		gfc->pinfo->energy[gr_out][chn][j]=gfc->energy_save[chn][j];
+		gfc->energy_save[chn][j]=fftenergy[j];
 	    }
-
 	    for ( j = HBLKSIZE_s/2; j < HBLKSIZE_s; j ++) {
 		ma += fftenergy_s[0][j];
 		mb += fftenergy_s[1][j];
@@ -723,8 +716,8 @@ int L3psycho_anal( lame_global_flags * gfp,
 	    a1 = gfc-> ax_sav[chn][1][j] = gfc-> ax_sav[chn][0][j];
 	    b1 = gfc-> bx_sav[chn][1][j] = gfc-> bx_sav[chn][0][j];
 	    r1 = gfc-> rx_sav[chn][1][j] = gfc-> rx_sav[chn][0][j];
-	    an = gfc-> ax_sav[chn][0][j] = wsamp_L[chn&1][j];
-	    bn = gfc-> bx_sav[chn][0][j] = j==0 ? wsamp_l[chn&1][0] : wsamp_l[chn&1][BLKSIZE-j];  
+	    an = gfc-> ax_sav[chn][0][j] = wsamp_l[0][j];
+	    bn = gfc-> bx_sav[chn][0][j] = j==0 ? wsamp_l[0][0] : wsamp_l[0][BLKSIZE-j];  
 	    rn = gfc-> rx_sav[chn][0][j] = sqrt(fftenergy[j]);
 
 	    /* square (x1,y1) */
@@ -1489,10 +1482,9 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	if (gfp->analysis) {
 	    FLOAT mn,mx,ma=0,mb=0,mc=0;
 	    for (j=0; j<HBLKSIZE ; j++) {
-		gfc->pinfo->energy[gr_out][chn][j]=fftenergy_save[chn][j];
-		fftenergy_save[chn][j]=fftenergy[j];
+		gfc->pinfo->energy[gr_out][chn][j]=gfc->energy_save[chn][j];
+		gfc->energy_save[chn][j]=fftenergy[j];
 	    }
-
 	    for ( j = HBLKSIZE_s/2; j < HBLKSIZE_s; j ++) {
 		ma += fftenergy_s[0][j];
 		mb += fftenergy_s[1][j];

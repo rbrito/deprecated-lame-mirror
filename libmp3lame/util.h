@@ -495,12 +495,7 @@ struct lame_internal_flags {
   FLOAT cw[HBLKSIZE];
 
   /* fft and energy calculation    */
-  FLOAT wsamp_L[2][BLKSIZE];
-  FLOAT energy[HBLKSIZE];
-  FLOAT wsamp_S[2][3][BLKSIZE_s];
-  FLOAT energy_s[3][HBLKSIZE_s];
   FLOAT tot_ener[4];
-
 
   /* loudness calculation (for adaptive threshold of hearing) */
   FLOAT loudness_sq[2][2];  /* loudness^2 approx. per granule and channel */
@@ -511,11 +506,9 @@ struct lame_internal_flags {
    */
   FLOAT athaa_sensitivity_p;
 
- 
   /* fft.c    */
   FLOAT window[BLKSIZE], window_s[BLKSIZE_s/2];
-  
-  
+
   /* Scale Factor Bands    */
   int pseudohalf[SFBMAX];
   FLOAT8	w1_l[SBMAX_l], w2_l[SBMAX_l];
