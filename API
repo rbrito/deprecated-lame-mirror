@@ -30,7 +30,8 @@ Then override various default settings as necessary, for example:
    lame_set_mode(gfp,1);
    lame_set_quality(gfp,2);   /* 2=high  5 = medium  7=low */ 
 		
-
+(the above functions are not yet written!  Right now you 
+have to set options in the lame_global_flags struct explicitly)
 see lame.h for the complete list of options. 
 
 
