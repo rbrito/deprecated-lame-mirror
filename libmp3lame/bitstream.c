@@ -210,6 +210,22 @@ writeheader(lame_internal_flags *gfc,int val, int j)
 }
 
 
+/* (jo) this wrapper function for BF_addEntry() updates also the crc */
+#ifdef 0
+static int
+CRC_update(int value,int crc)
+{
+   int bit = 1 << 8;
+
+   while((bit >>= 1)){
+      *crc <<= 1;
+      if (!(*crc & 0x10000) ^ !(value & bit))
+	*crc ^= CRC16_POLYNOMIAL;
+   }
+   *crc &= 0xffff;
+   return crc;
+}
+#else
 static int
 CRC_update(int value, int crc)
 {
@@ -224,6 +240,7 @@ CRC_update(int value, int crc)
     }
     return crc;
 }
+#endif
 
 void
 CRC_writeheader(lame_internal_flags *gfc, char *header)
