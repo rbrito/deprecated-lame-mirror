@@ -14,12 +14,11 @@ configure-stamp:
 	# Add here commands to configure the package.
 	./configure --prefix=/usr \
 		--with-fileio=lame \
-		--disable-mp3x \
-		--disable-mp3rtp \
-		--disable-analyzer-hooks \
-		--without-vorbis \
+		--enable-mp3x \
+		--enable-mp3rtp \
 		--enable-nasm \
-		--enable-expopt
+		--with-pic \
+		--enable-expopt=full
 
    # Patch the generated libtool to avoid passing -rpath when linking,
    # and to explicitly link libraries against the libraries they depend
