@@ -397,7 +397,7 @@ int  lame_encode_mp3_frame (				// Output
 	/* aging subband filetr output */
 	memcpy(gfc->sb_sample[ch][0], gfc->sb_sample[ch][gfc->mode_gr],
 	       sizeof(gfc->sb_sample[ch][0]));
-	memcpy(gfc->sb_sample[ch][1], sbsmpl,
+	memcpy(gfc->sb_sample[ch][1], sbsmpl[ch],
 	       sizeof(gfc->sb_sample[ch][0])*gfc->mode_gr);
 
 	for (gr = 0; gr < gfc->mode_gr; gr++)
