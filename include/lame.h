@@ -666,20 +666,6 @@ void CDECL lame_mp3_tags_fid(lame_t, FILE* fid);
  */
 int  CDECL lame_close (lame_t);
 
-/*
- * OBSOLETE:
- * lame_encode_finish combines lame_encode_flush() and lame_close() in
- * one call.  However, once this call is made, the statistics routines
- * will no longer work because the data will have been cleared, and 
- * lame_mp3_tags_fid() cannot be called to add data to the VBR header 
- */ 
-int CDECL lame_encode_finish(lame_t, unsigned char *mp3buf, int size);
-
-
-
-
-
-
 
 /*********************************************************************
  *
@@ -863,7 +849,7 @@ extern int id3tag_set_genre   (lame_t, const char* genre);
 /***********************************************************************
 *
 *  list of valid bitrates [kbps] & sample frequencies [Hz].
-*  first index: 0: MPEG-2   values  (sample frequencies 16...24 kHz) 
+*  first index: 0: MPEG-2   values  (sample frequencies 16...24 kHz)
 *               1: MPEG-1   values  (sample frequencies 32...48 kHz)
 *               2: MPEG-2.5 values  (sample frequencies  8...12 kHz)
 ***********************************************************************/
@@ -895,7 +881,6 @@ typedef enum {
     FRONTEND_READERROR    = -80,
     FRONTEND_WRITEERROR   = -81,
     FRONTEND_FILETOOLARGE = -82,
-    
 } lame_errorcodes_t;
 
 #if defined(__cplusplus)

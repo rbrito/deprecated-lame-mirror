@@ -62,7 +62,8 @@ int main(int argc, char **argv)
   gtk_init (&argc, &argv);
   gtkcontrol(gf,inPath);
 
-  lame_encode_finish(gf,mp3buffer,sizeof(mp3buffer));
+  lame_encode_flush(gf, mp3buffer, sizeof(mp3buffer));
+  lame_close(gf);
   close_infile();
   return 0;
 }

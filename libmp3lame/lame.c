@@ -591,8 +591,10 @@ lame_init_params(lame_t gfc)
 
     for (gr = 0; gr < gfc->mode_gr ; gr++) {
 	for (ch = 0; ch < gfc->channels_out; ch++) {
-	    gfc->l3_side.tt[gr][ch].block_type = NORM_TYPE;
-	    gfc->l3_side.tt[gr][ch].mixed_block_flag = 0;
+	    gr_info *gi = &gfc->l3_side.tt[gr][ch];
+	    gi->block_type = NORM_TYPE;
+	    gi->mixed_block_flag = gi->subblock_gain[3] = 0;
+	    gi->global_gain = 210;
 	}
     }
 
@@ -1168,20 +1170,6 @@ lame_close(lame_t gfc)
     free((unsigned char*)gfc - gfc->alignment);
 
     return 0;
-}
-
-/*****************************************************************/
-/* flush internal mp3 buffers, and free internal buffers         */
-/*****************************************************************/
-int
-lame_encode_finish(lame_t gfc,
-		   unsigned char *mp3buffer, int mp3buffer_size)
-{
-    int ret = lame_encode_flush(gfc, mp3buffer, mp3buffer_size);
-
-    lame_close(gfc);
-
-    return ret;
 }
 
 /*****************************************************************/
