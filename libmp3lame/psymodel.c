@@ -1152,10 +1152,9 @@ L3psycho_anal_ns(
      *********************************************************************/
     for (ch = 0; ch < numchn; ch++) {
 	/* convolution   */
-	FLOAT fftenergy[HBLKSIZE], eb[CBANDS], max[CBANDS], avg[CBANDS];
+	FLOAT eb2[CBANDS], eb[CBANDS], max[CBANDS], avg[CBANDS];
 	FLOAT enn, thmm, *p;
 	III_psy_ratio *mr = &gfc->masking_next[gr][ch];
-#define eb2 fftenergy
 	static const FLOAT tab[] = {
 	    5.00/0.11749, 4.00/0.11749, 3.15/0.11749, 3.15/0.11749,
 	    3.15/0.11749, 3.15/0.11749, 3.15/0.11749, 1.25/0.11749,
@@ -1182,15 +1181,15 @@ L3psycho_anal_ns(
 	enn = p[0] * p[0];
 	eb[0] = enn;
 
-	max[0] = fftenergy[0] = enn;
+	max[0] = enn;
 	avg[0] = enn * gfc->rnumlines_l[0];
 
 	for (b = j = 1; b<gfc->npart_l; b++) {
-	    fftenergy[j] = thmm = enn = p[j]*p[j] + p[BLKSIZE-j]*p[BLKSIZE-j];
+	    thmm = enn = p[j]*p[j] + p[BLKSIZE-j]*p[BLKSIZE-j];
 	    j++;
 	    for (i = gfc->numlines_l[b] - 1; i > 0; --i) {
 		FLOAT el;
-		fftenergy[j] = el = p[j]*p[j] + p[BLKSIZE-j]*p[BLKSIZE-j];
+		el = p[j]*p[j] + p[BLKSIZE-j]*p[BLKSIZE-j];
 		j++;
 		enn += el;
 		if (thmm < el)
@@ -1200,6 +1199,16 @@ L3psycho_anal_ns(
 	    max[b] = thmm;
 	    avg[b] = enn * gfc->rnumlines_l[b];
 	}
+#ifndef NOANALYSIS
+	if (gfc->pinfo) {
+	    memcpy(gfc->pinfo->energy[gr][ch], gfc->pinfo->energy_save[gr][ch],
+		   sizeof(gfc->pinfo->energy_save[gr][ch]));
+	    gfc->pinfo->energy_save[gr][ch][0] = p[0]*p[0];
+	    for (j = 1; j < HBLKSIZE; j++)
+		gfc->pinfo->energy_save[gr][ch][0]
+		    = (p[j]*p[j] + p[BLKSIZE-j]*p[BLKSIZE-j]) * 0.5;
+	}
+#endif
 	/*********************************************************************
 	 * compute loudness approximation (used for ATH auto-level adjustment) 
 	 *********************************************************************/
@@ -1225,14 +1234,6 @@ L3psycho_anal_ns(
 	       same value of main(ch=2) is used for it. */
 	    gfc->ATH.adjust[ch] = gfc->ATH.adjust[ch-1];
 
-#ifndef NOANALYSIS
-	if (gfc->pinfo) {
-	    memcpy(gfc->pinfo->energy[gr][ch], gfc->pinfo->energy_save[gr][ch],
-		   sizeof(fftenergy));
-	    memcpy(gfc->pinfo->energy_save[gr][ch], fftenergy,
-		   sizeof(fftenergy));
-	}
-#endif
 	/* tonality estimation. use ratio of  avg vs. max as tonality */
 	{
 	    FLOAT m,a;
@@ -1495,20 +1496,19 @@ psycho_analysis(
 	if (gfc->mode_ext)
 	    diff_pe = -diff_pe;
 
-	for (gr = 0; gr < gfc->mode_gr; gr++)
-	    diff_pe
-		+= gfc->masking_next[gr][2].pe
-		+  gfc->masking_next[gr][3].pe
-		-  gfc->masking_next[gr][0].pe
-		-  gfc->masking_next[gr][1].pe;
+	diff_pe
+	    += gfc->masking_next[0][2].pe +  gfc->masking_next[0][3].pe
+	    -  gfc->masking_next[0][0].pe -  gfc->masking_next[0][1].pe;
+	    +  gfc->masking_next[1][2].pe +  gfc->masking_next[1][3].pe
+	    -  gfc->masking_next[1][0].pe -  gfc->masking_next[1][1].pe;
 
 	/* based on PE: M/S coding would not use much more bits than L/R */
 	if (diff_pe <= 0.0 || gfp->force_ms) {
 	    gfc->mode_ext_next = MPG_MD_MS_LR;
-	    for (gr = 0; gr < gfc->mode_gr; gr++) {
-		gfc->blocktype_next[gr][0] = gfc->blocktype_next[gr][1]
-		    = gfc->blocktype_next[gr][2];
-	    }
+	    gfc->blocktype_next[0][0] = gfc->blocktype_next[0][1]
+		= gfc->blocktype_next[0][2];
+	    gfc->blocktype_next[1][0] = gfc->blocktype_next[1][1]
+		= gfc->blocktype_next[1][2];
 	    /* LR -> MS case */
 	    if (gfc->mode_ext_next != gfc->mode_ext) {
 		gr_info *gi = &gfc->l3_side.tt[gfc->mode_gr-1][0];
