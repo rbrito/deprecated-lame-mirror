@@ -1,4 +1,5 @@
-' lame.vbs WindowsScript wrapper v0.3, 10/2000
+' lame.vbs WindowsScript wrapper v0.4, 06/2001
+' $id$
 '
 ' *Purpose*
 ' Use this WindowsScript to encode WAVs using drag&drop:
@@ -9,15 +10,18 @@
 ' 3a. drag one or more wav-files on the icon and watch them being lamed.
 '
 ' 2b. start->execute, enter "sendto", drag the script or a link to it in
-'     sendto window
-' 3b. select wave-file(s) and send it via the send-to menu to lame!
+'     sendto window (adjust names and icon as you like)
+' 3b. select wave-file(s) and send it via the send-to menu to LAME!
 '
-' feel free to extend this with a better user-interface ;-)
+' You may wish to create copies of this file with different options set.
+'
+' If you would like a GUI: try to enable the HTML UI (see below)
 '
 ' Ralf Kempkens, ralf.kempkens@epost.de
 '
 '
 ' *History*
+' V0.4 * creates single .mp3 extensions, now ID3 options in HTML interface
 ' V0.3 * fixed bug that prevented lame.exe to be located in a path that 
 '        contained a space
 '      * experimental HTML UI support (disabled by default)
@@ -36,20 +40,23 @@
 ' it set to True, opens file lameGUI.html residing in the same path as lame.exe
 ' to choose options. Please look at the HTML-file for further information.
 
+' no changes needed below this line
+' ##########################################################################
 Dim wsh, args, infile, fs
+title="LAME Script"
 
 ' get input files
 Set wsh = WScript.CreateObject("WScript.Shell")
 Set args = WScript.Arguments
 If args.Count = 0 Then
-  MsgBox "Please use drag & drop to specify input files."
+  MsgBox "Please use drag & drop to specify input files.", vbInformation, title
   WScript.Quit
 End If
 
 ' check path
 Set fs = CreateObject("Scripting.FileSystemObject")
 If Not fs.FileExists(path & lame) Then
-  wsh.Popup "Could not find LAME!" & vbCR & "(looked for '" & lame & "')", , "Error", 16
+  wsh.Popup "Could not find LAME!" & vbCR & "(looked for '" & lame & "')", ,title, 16
   WScript.Quit
 End If
 
@@ -61,8 +68,8 @@ if useGUI Then
     WScript.Sleep 100 
   loop until ie.ReadyState=4 'wait for GUI
 
-  ie.Width=500
-  ie.Height=450
+  ie.Width=640
+  ie.Height=600
   ie.Toolbar=false
   ie.Statusbar=false
   ie.visible=true
@@ -82,17 +89,19 @@ For i = 0 To args.Count-1
   infile = args(i)
   ' check input file
   If Not fs.FileExists(infile) Then
-    wsh.Popup "Error opening input-file" & vbCR & "'" & infile & "'", , "Error", 16
+    wsh.Popup "Error opening input-file" & vbCR & "'" & infile & "'", ,title, 16
   Else
     ' run lame
-    ret = wsh.Run(CHR(34) & path & lame & CHR(34) & Chr(32) & opts & Chr(32) & Chr(34) & infile & Chr(34), 1, True)
+    ret = wsh.Run(CHR(34) & path & lame & CHR(34) & Chr(32) & opts & Chr(32) & _
+          Chr(34) & infile & Chr(34) & Chr(32) & Chr(34) & _
+          getBasename(infile) & ".mp3" & Chr(34), 1, True)
 
     ' diagnostics
     Select Case ret
     Case (-1)
-      MsgBox "LAME aborted by user!"
+      MsgBox "LAME aborted by user!", vbExclamation, title
     Case (1)
-      MsgBox "Error returned by LAME!" & Chr(13) & "(Check LAME options and input file formats.)"
+      MsgBox "Error returned by LAME!" & vbCR & "(Check LAME options and input file formats.)" & vbCR & "Used Options: " & opts, vbCritical, title
     Case Else
       Rem ignore
     End Select
@@ -100,6 +109,16 @@ For i = 0 To args.Count-1
 Next
 
 WScript.Quit
+' *******************************************************************
+' utility functions
+
+Function getBasename(filespec)
+  Dim fso
+  Set fso = CreateObject("Scripting.FileSystemObject")
+  Set f = fso.GetFile(filespec)
+  
+  getBasename = f.ParentFolder & "\" & fso.GetBaseName(filespec)
+End Function
 
 ' *******************************************************************
 ' manage link to IE HTML-interface
@@ -108,7 +127,7 @@ sub okbutton
   'process inputs
   opts=document.all.lameoptions.Value
   ie.Quit
-  MsgBox "LAME options:" & vbCR & opts
+  MsgBox "LAME options:" & vbCR & opts, vbInformation, title
 end sub
 
 sub ie_onQuit
