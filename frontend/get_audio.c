@@ -49,6 +49,9 @@ char   *strchr(), *strrchr();
 # endif
 #endif
 
+#define         MAX_U_32_NUM            0xFFFFFFFF
+
+
 #include <math.h>
 #include <sys/stat.h>
 

@@ -151,7 +151,7 @@ FILE * init_files(lame_global_flags *gf, char *inPath, char *outPath)
 
 
 int
-Encode(lame_global_flags * gf, FILE *outf, int nogap, char *inPath, char *outPath)
+lame_encoder(lame_global_flags * gf, FILE *outf, int nogap, char *inPath, char *outPath)
 {
     unsigned char mp3buffer[LAME_MAXMP3BUFFER];
     int     Buffer[2][1152];
@@ -365,14 +365,17 @@ main(int argc, char **argv)
 
     if (update_interval < 0.) update_interval = 2.;
 
-    /* initialize input file.  This also sets samplerate and other
-     * parameters, and is needed before the call to lame_init_params() */
+    /* initialize input file.  This also sets samplerate and as much
+       other data on the input file as available in the headers */
     if (max_nogap > 0) {
 	strncpy(outPath, nogap_inPath[0], MAX_NAME_SIZE - 4);
         strncat(outPath, ".mp3", 4);
 	outf = init_files(gf,nogap_inPath[0],outPath);
     }else{
 	outf = init_files(gf,inPath,outPath);
+    }
+    if (outf==NULL) {
+	return -1;
     }
 
     /* Now that all the options are set, lame needs to analyze them and
@@ -418,7 +421,7 @@ main(int argc, char **argv)
 		    outf = init_files(gf,nogap_inPath[i],outPath);
 		}
 		brhist_init_package(gf);
-		ret = Encode(gf, outf, 1,nogap_inPath[i],outPath);
+		ret = lame_encoder(gf, outf, 1,nogap_inPath[i],outPath);
 		fclose(outf);   /* close the output file */
 		close_infile(); /* close the input file */
 	    }
@@ -427,7 +430,7 @@ main(int argc, char **argv)
 	}
 	else {
 	    brhist_init_package(gf);
-	    ret = Encode(gf, outf, 0,inPath,outPath);
+	    ret = lame_encoder(gf, outf, 0,inPath,outPath);
 	    fclose(outf);   /* close the output file */
 	    close_infile(); /* close the input file */
 	    lame_close(gf);

@@ -27,17 +27,17 @@
 
 #include <math.h>
 #include <gtk/gtk.h>
-#include "gpkplotting.h"
-#include "util.h"
-#include "lame-analysis.h"
-#include "version.h"
-#include "lame.h"
-#include "tables.h"
-#include "quantize_pvt.h"
 #include <assert.h>
 #include "main.h"
 #include "get_audio.h"
 #include "gtkanal.h"
+#include "gpkplotting.h"
+#include "lame.h"
+#include "lame-analysis.h"
+
+/* this file should be removed. The few data items accessed in 'gfc'
+   should be made accessable by writing a lame_set_variable() function */
+#include "util.h"
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>

@@ -41,5 +41,3 @@ extern int disable_wav_header;     /* for decoder only */
 #define         Min(A, B)       ((A) < (B) ? (A) : (B))
 #define         Max(A, B)       ((A) > (B) ? (A) : (B))
 
-#define         MAX_U_32_NUM            0xFFFFFFFF
-
