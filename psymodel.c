@@ -896,8 +896,7 @@ void L3psycho_anal( short int *buffer[2],
     blocktype[chn] = NORM_TYPE;
   }
   
-  if (!gf.allow_diff_short)
-    if (info->mode==MPG_MD_JOINT_STEREO) {
+  if (!gf.allow_diff_short || info->mode==MPG_MD_JOINT_STEREO) {
       /* force both channels to use the same block type */
       /* this is necessary if the frame is to be encoded in ms_stereo.  */
       /* But even without ms_stereo, FhG  does this */
