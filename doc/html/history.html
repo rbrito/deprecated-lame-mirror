@@ -3,7 +3,7 @@
 <head>
    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
    <meta name="GENERATOR" content="Mozilla/4.7 [en] (X11; I; Linux 2.2.12-20 i686) [Netscape]">
-   <title> LAME Changelog</title>
+   <title>LAME Changelog</title>
 </head>
 <body text="#000000" bgcolor="#FFFFFF" link="#888888" vlink="#555555" alink="#BBBBBB">
 
@@ -19,20 +19,104 @@ Starting with LAME 3.0:
 <hr></h3>
 
 <h3>
-LAME 3.80beta&nbsp; (CVS)</h3>
+LAME 3.81beta&nbsp; (CVS)</h3>
+
+<ul>
+<li>
+all ISO&nbsp;code removed!</li>
+
+<li>
+</li>
+</ul>
+
+<h3>
+LAME 3.80beta&nbsp; March 6 2000</h3>
 
 <ul>
 <li>
 <font color="#FF0000">Takehiro Tominaga:&nbsp; more efficient and faster
 huffman encoding!</font></li>
+
+<li>
+<font color="#FF0000">Takehiro Tominaga and Mark Taylor:&nbsp; much improved
+short block compression!</font></li>
+
+<li>
+<font color="#000000">Tomasz Motylewski and Mark Taylor:&nbsp; MPEG2.5
+now supported!</font></li>
+
+<li>
+<font color="#000000">Mark Taylor: incorporated Takehiro's bitstream.c!&nbsp;
+bitstream.c used by default, but old ISO&nbsp;bitstream code can also be
+used.</font></li>
+
+<li>
+<font color="#FF0000">Scott&nbsp; Manley and Mark Taylor:&nbsp; good resampling
+routine finaly in LAME.&nbsp; uses a 19 point FIR filter with Blackman
+window.&nbsp; Very slow for non integer resampling ratios.</font></li>
+
+<li>
+<font color="#000000">Iwasa Kazmi:&nbsp; fixed SIGBUS error:&nbsp; VBR
+and id3 tags were using data after it was free()'d.</font></li>
+
+<li>
+<font color="#FF0000">Robert Hegemann:&nbsp; Improved VBR tuning.&nbsp;
+#define RH_QUALITY_CONTROL and #RH_SIDE_VBR now the defaults.</font></li>
+
+<li>
+<font color="#000000">Robert Hegemann:&nbsp;&nbsp; LAME version string
+now added to ancillary data.</font></li>
+
+<li>
+Kimmo Mustonen:&nbsp; VBR histogram support for Amiga.</li>
+
+<li>
+Casper Gripenberg:&nbsp; VBR stats (but not histogram) for DOS verson.</li>
+
+<li>
+Robert Hegemann:&nbsp; rare VBR&nbsp;overflow bug fixed.</li>
+
+<li>
+Zack:&nbsp; -F&nbsp;option strictly enforces the VBR&nbsp;min bitrate.&nbsp;
+Without -F, LAME&nbsp;will ignore the minimum bitrate when encoding analog
+silence.</li>
+
+<li>
+Shawn Riley:&nbsp; User can now specify a compression ratio (--comp &lt;arg>)
+instead of a bit rate.&nbsp; Default settings based on a compression ratio
+of 11.0</li>
 </ul>
 
 <h3>
-LAME 3.70&nbsp; (CVS, under branch "lame3_70")</h3>
+LAME 3.70&nbsp;&nbsp; April 6 2000</h3>
 
 <ul>
 <li>
-LAME 3.67beta becomes LAME 3.70 "stable"?</li>
+"LAME 3.69beta becomes LAME 3.70 "stable"</li>
+</ul>
+
+<h3>
+LAME 3.69beta&nbsp;&nbsp; April 6 2000</h3>
+
+<ul>
+<li>
+"spahm":&nbsp; default mode selection bug fixed.&nbsp; In some cases, lame
+was defaulting to regular stereo instead of jstereo when the user did not
+specify a mode.</li>
+</ul>
+
+<h3>
+LAME 3.68beta&nbsp; April 4 2000</h3>
+
+<ul>
+<li>
+Mark Taylor: mono encoding bug in DLL fixed.</li>
+
+<li>
+Ingo Saitz: bug in --cwlimit argument parsing fixed.</li>
+
+<li>
+<font color="#FF0000">Scott Manly: bug in 4-point resample code fixed.</font></li>
 </ul>
 
 <h3>
@@ -1454,7 +1538,7 @@ this routine. Individual malloc()s where they are needed instead</li>
 <li>
 Put Jan Peman's quality switch back in. This reduces quality via the '-q&nbsp;<int>'
 switch. Fun speedup which is mostly harmless if you're not concerned with
-quality.</li>
+quality.</></li>
 
 <li>
 Compiling with amiga-gcc works fine</li>
