@@ -612,7 +612,7 @@ int fill_buffer_resample(
   /* time of j'th element in inbuf = itime + j/ifreq; */
   /* time of k'th element in outbuf   =  j/ofreq */
   for (k=0;k<desired_len;k++) {
-    FLOAT time0;
+    FLOAT8 time0;
     int joff;
 
     time0 = k*gfc->resample_ratio;       /* time of k'th output sample */
@@ -624,7 +624,7 @@ int fill_buffer_resample(
     /* blackman filter.  by default, window centered at j+.5(filter_l%2) */
     /* but we want a window centered at time0.   */
     offset = ( time0 -gfc->itime[ch] - (j + .5*(filter_l%2)));
-    assert(fabs(offset)<=.50001);
+    assert(fabs(offset)<=.501);
 
     /* find the closest precomputed window for this offset: */
     joff = floor((offset*2*bpc) + bpc +.5);

@@ -504,19 +504,27 @@ uint16_t GetMusicCRC(lame_global_flags *gfp, FILE *fpStream, int filesize, int i
 	uint16_t crc = 0;
 	int count;
 	int nFilePos = ftell(fpStream);
-	unsigned char buffer[1000000];		//load in about 1MB at a time.
+#define BSIZE 1000000
+	//unsigned char buffer[1000000];		//load in about 1MB at a time.
+
+        // often, when lame is used in a second thread, it has limited stack
+        // size (128K!).  so we need this ugly hack to move things off
+        // the stack and on to the heap.
+        unsigned char *buffer;
+
 	int nNumToGo = filesize - id3v2size - gfp->TotalFrameSize;
 	if (bId3v1)
 		nNumToGo-=128;
 	
 
-	memset(buffer, 0, sizeof(buffer));
+        buffer=malloc(BSIZE); 
+	memset(buffer, 0, BSIZE);
 	fseek(fpStream, id3v2size + gfp->TotalFrameSize, SEEK_SET);		//first frame of music
 	
 	while (nNumToGo)
 	{
-		fread(buffer, 1, sizeof(buffer),fpStream);
-		for (count = 0;count < sizeof(buffer);count++)
+		fread(buffer, 1, BSIZE,fpStream);
+		for (count = 0;count < BSIZE;count++)
 		{
 			crc = CRC_update_lookup(buffer[count],crc);
 			nNumToGo--;
@@ -527,6 +535,7 @@ uint16_t GetMusicCRC(lame_global_flags *gfp, FILE *fpStream, int filesize, int i
 	}
 
 	fseek(fpStream, nFilePos, SEEK_SET);
+        free(buffer);
 	return crc;
 }
 
