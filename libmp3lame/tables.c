@@ -953,7 +953,7 @@ psymodel_init(lame_t gfc)
 	}
 	gfc->ATH.cb[i] = x * gfc->numlines_l[i] * 0.01;
 	gfc->ATH.eql_w[i]
-	    = ATHformula(gfc, 3300, 1) / (x * FFT2MDCT * 4 * gfc->numlines_l[i]);
+	    = ATHformula(gfc, 3300, 1) / (x * FFT2MDCT * gfc->numlines_l[i]);
     }
     for (i = 0; i < 8; i++)
 	gfc->ATH.eql_w[i] = gfc->ATH.eql_w[0];
