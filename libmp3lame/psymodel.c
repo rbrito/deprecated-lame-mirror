@@ -209,6 +209,9 @@ static const FLOAT costab[TRI_SIZE*2] = {
   9.999811752826011e-01, 6.135884649154475e-03
 };
 
+#if !HAVE_NASM
+static
+#endif
 void fht(FLOAT *fz, int n)
 {
     const FLOAT *tri = costab;

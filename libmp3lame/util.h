@@ -484,10 +484,6 @@ struct lame_internal_flags {
 	void (*debugf)(const char *format, va_list ap);
 	void (*errorf)(const char *format, va_list ap);
     } report;
-  
-    /* functions to replace with CPU feature optimized one in takehiro.c */
-    int (*choose_table)(const int *ix, const int *end, int *s);
-    void (*fft_fht)(FLOAT *, int);
 
   /* variables used by util.c */
   /* BPC = maximum number of filter convolution windows to precompute */
@@ -496,7 +492,11 @@ struct lame_internal_flags {
   sample_t *blackfilt [2*BPC+1];
   FLOAT itime[2];
 
-#ifdef HAVE_NASM
+#if HAVE_NASM
+    /* functions to replace with CPU feature optimized one in takehiro.c */
+    int (*choose_table)(const int *ix, const int *end, int *s);
+    void (*fft_fht)(FLOAT *, int);
+
     /* CPU features */
     struct {
 	unsigned int  i387      : 1; /* FPU is a normal Intel CPU */

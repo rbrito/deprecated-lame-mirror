@@ -614,8 +614,6 @@ const int  samplerate_table [3]  [4] = {
 
 const char* version_string  [3] = { "2", "1", "2.5" };
 
-const unsigned  header_word [3] = { 0xFFF00000, 0xFFF80000, 0xFFE00000 };
-
 /* This is the scfsi_band table from 2.4.2.7 of the IS */
 const int scfsi_band[5] = { 0, 6, 11, 16, 21 };
 
@@ -1452,27 +1450,27 @@ int psymodel_init(lame_global_flags *gfp)
     for (i = 0; i < BLKSIZE_s; i++)
 	window_s[i] = 0.5 * (1.0 - cos(2.0 * PI * (i + 0.5) / BLKSIZE_s));
 
+#ifdef HAVE_NASM
     {
         extern void fht(FLOAT *fz, int n);
         gfc->fft_fht = fht;
     }
-#ifdef HAVE_NASM
     if (gfc->CPU_features.AMD_3DNow) {
         extern void fht_3DN(FLOAT *fz, int n);
         gfc->fft_fht = fht_3DN;
     }
-#endif
-#ifdef USE_FFTSSE
+# ifdef USE_FFTSSE
     else  if (gfc->CPU_features.SIMD) {
         extern void fht_SSE(FLOAT *fz, int n);
         gfc->fft_fht = fht_SSE;
     }
-#endif
-#ifdef USE_FFTFPU
+# endif
+# ifdef USE_FFTFPU
     else  if (gfc->CPU_features.i387) {
         extern void fht_FPU(FLOAT *fz, int n);
         gfc->fft_fht = fht_FPU;
     }
+# endif
 #endif
 
     return 0;

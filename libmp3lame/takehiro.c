@@ -34,6 +34,12 @@
 #include <dmalloc.h>
 #endif
 
+#if HAVE_NASM
+# define choosetable(a,b,c) gfc->choose_table(a,b,c)
+#else
+# define choosetable(a,b,c) choose_table_nonMMX(a,b,c)
+#endif
+
 /*********************************************************************
  * nonlinear quantization of xr 
  * More accurate formula than the ISO formula.  Takes into account
@@ -312,6 +318,9 @@ count_bit_noESC_from3(
   with any arbitrary tables.
 */
 
+#if !HAVE_NASM
+static
+#endif
 int choose_table_nonMMX(
     const int *       ix, 
     const int * const end,
