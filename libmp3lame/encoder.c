@@ -459,8 +459,14 @@ int  lame_encode_mp3_frame (				// Output
       }
       
       if ((ms_ratio_ave1 < threshold1  &&  ms_ratio_ave2 < threshold2) || gfc->nsPsy.use) {
-	  int  sum_pe_MS = pe_MS[0][0] + pe_MS[0][1] + pe_MS[1][0] + pe_MS[1][1];
-	  int  sum_pe_LR = pe   [0][0] + pe   [0][1] + pe   [1][0] + pe   [1][1];
+	  int  sum_pe_MS = 0;
+	  int  sum_pe_LR = 0;
+	  for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
+	      for ( ch = 0; ch < gfc->channels_out; ch++ ) {
+		  sum_pe_MS += pe_MS[gr][ch];
+		  sum_pe_LR += pe[gr][ch];
+	      }
+	  }
 	  
 	  /* based on PE: M/S coding would not use much more bits than L/R coding */
 	  
