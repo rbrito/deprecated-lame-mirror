@@ -835,7 +835,13 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
 	/* Clear all TOC entries */
 	memset(btToc,0,sizeof(btToc));
 
-        Xing_seek_table (&gfc->VBR_seek_table, btToc);
+	if (gfp->free_format) {
+	    int i;
+	    for (i = 1; i < NUMTOCENTRIES; ++i)
+		btToc[i] = 255*i/100;
+	} else {
+	    Xing_seek_table(&gfc->VBR_seek_table, btToc);
+	}
         /* print_seeking (btToc); */
 
 	/* Start writing the tag after the zero frame */
