@@ -55,7 +55,7 @@ static const char max_range_short[SBMAX_s*3] = {
     0, 0, 0
 };
 static const char max_range_long[SBMAX_l] = {
-    15*2, 15*2, 15*2, 15*2, 15*2, 15*2, 15*2, 15*2, 15*2, 15*2, 15*2, 7*2, 7*2, 7*2, 7*2, 7*2, 7*2, 7*2, 7*2, 7*2, 7*2, 0
+    15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 0
 };
 
 /*
@@ -1376,11 +1376,11 @@ long_block_scalefacs(lame_t gfc, gr_info * gi, int vbrmax)
     for (sfb = 0; sfb < gi->psymax; ++sfb) {
 	if (gi->scalefac[sfb] > MAX_GLOBAL_GAIN)
 	    continue;
-	maxov0  = Min(gi->scalefac[sfb] + max_range_long[sfb], maxov0);
-	maxov1  = Min(gi->scalefac[sfb] + 2*max_range_long[sfb], maxov1);
-	maxov0p = Min(gi->scalefac[sfb] + max_range_long[sfb] + 2*pretab[sfb],
+	maxov0  = Min(gi->scalefac[sfb] + 2*max_range_long[sfb], maxov0);
+	maxov1  = Min(gi->scalefac[sfb] + 4*max_range_long[sfb], maxov1);
+	maxov0p = Min(gi->scalefac[sfb] + 2*max_range_long[sfb] + 2*pretab[sfb],
 		      maxov0p);
-	maxov1p = Min(gi->scalefac[sfb] + 2*max_range_long[sfb]+4*pretab[sfb],
+	maxov1p = Min(gi->scalefac[sfb] + 4*max_range_long[sfb]+4*pretab[sfb],
 		      maxov1p);
     }
 
@@ -1457,6 +1457,7 @@ VBR_2nd_bitalloc(lame_t gfc, gr_info *gi, FLOAT * xmin)
        at this point */
     gr_info gi_w;
     int sfb, endflag, j = 0;
+    const char *tab;
     for (sfb = 0; sfb < gi->psymax; sfb++) {
 	int width = gi->wi[sfb].width;
 	j -= width;
@@ -1474,6 +1475,12 @@ VBR_2nd_bitalloc(lame_t gfc, gr_info *gi, FLOAT * xmin)
     }
     gi_w = *gi;
     endflag = sfb = 0;
+    tab = max_range_long;
+    if (gi->block_type == SHORT_TYPE) {
+	tab = max_range_short;
+	if (gi->mixed_block_flag)
+	    tab++;
+    }
     for (;;) {
 	sfb = noisesfb(gfc, &gi_w, xmin, sfb);
 	if (sfb >= 0) {
@@ -1491,8 +1498,8 @@ VBR_2nd_bitalloc(lame_t gfc, gr_info *gi, FLOAT * xmin)
 	    } else {
 		gi_w.scalefac[sfb]++;
 		if (IPOW20(scalefactor(&gi_w, sfb)) > gfc->maxXR[sfb]
-		    || loop_break(&gi_w)
-		    || gfc->scale_bitcounter(&gi_w) > MAX_BITS)
+		    || gi_w.scalefac[sfb] > tab[sfb]
+		    || loop_break(&gi_w))
 		    return 0;
 	    }
 	} else {
@@ -1503,6 +1510,7 @@ VBR_2nd_bitalloc(lame_t gfc, gr_info *gi, FLOAT * xmin)
 	    endflag |= 2;
 	}
     }
+    gfc->scale_bitcounter(gi);
 }
 
 static void
