@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
 
 	if( NULL == hDLL )
 	{
-		fprintf(stderr,"Error loading lame_enc.DLL");
+		fprintf(stderr,"Error loading lame_enc.DLL\n");
 		return -1;
 	}
 

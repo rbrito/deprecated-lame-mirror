@@ -25,10 +25,6 @@
 #include <assert.h>
 
 #include "lame.h"
-#include "config.h"
-// sample_t should not be needed by any libmp3lame wrapper:
-//#include "machine.h" /* for sample_t type */
-
 
 #define         Min(A, B)       ((A) < (B) ? (A) : (B))
 #define         Max(A, B)       ((A) > (B) ? (A) : (B))
@@ -123,35 +119,26 @@ static void PresetOptions( lame_t gfp, LONG myPreset )
 
 /*3*/		case LQP_VOICE_QUALITY:				// --voice flag for experimental voice mode
 			lame_set_mode( gfp, MONO );
-			lame_set_preset( gfp, 56);
-			break;
-
-/*4*/		case LQP_R3MIX:					// --R3MIX
-		       lame_set_preset( gfp, R3MIX);
+			lame_set_brate(gfp, 56);
 			break;
 
 /*5*/		case LQP_VERYHIGH_QUALITY:
 				lame_set_quality( gfp, 0 );
 			break;
 
+/*4*/		case LQP_R3MIX:					// --R3MIX
 /*6*/		case LQP_STANDARD:				// --PRESET STANDARD
-		        lame_set_preset( gfp, STANDARD);
-			break;
-
 /*7*/		case LQP_FAST_STANDARD:				// --PRESET FAST STANDARD
-		        lame_set_preset( gfp, STANDARD_FAST);
+			lame_set_VBR_q(gfp, 4);
 			break;
 
 /*8*/		case LQP_EXTREME:				// --PRESET EXTREME
-		        lame_set_preset( gfp, EXTREME);
-			break;
-
 /*9*/		case LQP_FAST_EXTREME:				// --PRESET FAST EXTREME:
-		        lame_set_preset( gfp, EXTREME_FAST);
+			lame_set_VBR_q(gfp, 2);
 			break;
 
 /*10*/		case LQP_INSANE:				// --PRESET INSANE
-		        lame_set_preset( gfp, INSANE);
+		        lame_set_brate(gfp, 320);
 			break;
 
 /*11*/		case LQP_ABR:					// --PRESET ABR
@@ -163,57 +150,50 @@ static void PresetOptions( lame_t gfp, LONG myPreset )
 			break;
 
 /*13*/		case LQP_MEDIUM:					// --PRESET MEDIUM
-		        lame_set_preset( gfp, MEDIUM);
-			break;
-
 /*14*/		case LQP_FAST_MEDIUM:					// --PRESET FAST MEDIUM
-		        lame_set_preset( gfp, MEDIUM_FAST);
+		        lame_set_VBR_q(gfp, 6);
 			break;
 
 /*1000*/	case LQP_PHONE:
-				lame_set_mode( gfp, MONO );
-		        lame_set_preset( gfp, 16);
+			lame_set_mode( gfp, MONO );
+		        lame_set_brate(gfp, 16);
 			break;
 
 /*2000*/	case LQP_SW:
-				lame_set_mode( gfp, MONO );
-		        lame_set_preset( gfp, 24);
+			lame_set_mode( gfp, MONO );
+		        lame_set_brate(gfp, 24);
 			break;
 
 /*3000*/	case LQP_AM:
-				lame_set_mode( gfp, MONO );
-		        lame_set_preset( gfp, 40);
+			lame_set_mode( gfp, MONO );
+		        lame_set_brate(gfp, 40);
 			break;
 
 /*4000*/	case LQP_FM:
-		        lame_set_preset( gfp, 112);
+		        lame_set_brate(gfp, 112);
 			break;
 
 /*5000*/	case LQP_VOICE:
-				lame_set_mode( gfp, MONO );
-		        lame_set_preset( gfp, 56);
+			lame_set_mode( gfp, MONO );
+		        lame_set_brate(gfp, 56);
 			break;
 
 /*6000*/	case LQP_RADIO:
-		        lame_set_preset( gfp, 112);
-			break;
-
 /*7000*/	case LQP_TAPE:
-		        lame_set_preset( gfp, 112);
+		        lame_set_brate(gfp, 112);
 			break;
 
 /*8000*/	case LQP_HIFI:
-		        lame_set_preset( gfp, 160);
+		        lame_set_brate(gfp, 160);
 			break;
 
 /*9000*/	case LQP_CD:
-		        lame_set_preset( gfp, 192);
+		        lame_set_brate(gfp, 192);
 			break;
 
 /*10000*/	case LQP_STUDIO:
-		        lame_set_preset( gfp, 256);
+		        lame_set_brate(gfp, 256);
 			break;
-
 	}
 }
 
@@ -362,20 +342,10 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 				break;
 
 				case VBR_METHOD_DEFAULT:
-					lame_set_VBR( gfp, vbr_default ); 
-				break;
-
 				case VBR_METHOD_OLD:
-					lame_set_VBR( gfp, vbr_rh ); 
-				break;
-
 				case VBR_METHOD_MTRH:
 				case VBR_METHOD_NEW:
-					/*                                
-					 * the --vbr-mtrh commandline switch is obsolete. 
-					 * now --vbr-mtrh is known as --vbr-new
-					 */
-					lame_set_VBR( gfp, vbr_mtrh ); 
+					lame_set_VBR( gfp, vbr ); 
 				break;
 
 				case VBR_METHOD_ABR:
@@ -502,7 +472,6 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 	if ( lameConfig.format.LHV1.bNoRes )
 	{
 		lame_set_disable_reservoir( gfp,1 );
-		lame_set_padding_type( gfp, PAD_NO );
 	}
 
 	// check if the VBR tag is required
@@ -877,9 +846,7 @@ static void dump_config(lame_t	gfp)
 	switch ( lame_get_VBR( gfp ) )
 	{
 		case vbr_off:	DebugPrintf( "vbr_off\n" );	break;
-		case vbr_mt :	DebugPrintf( "vbr_mt \n" );	break;
-		case vbr_rh :	DebugPrintf( "vbr_rh \n" );	break;
-		case vbr_mtrh:	DebugPrintf( "vbr_mtrh \n" );	break;
+		case vbr:	DebugPrintf( "vbr \n" );	break;
 		case vbr_abr: 
 			DebugPrintf( "vbr_abr (average bitrate %d kbps)\n", lame_get_VBR_mean_bitrate_kbps( gfp ) );
 		break;
@@ -904,9 +871,6 @@ static void dump_config(lame_t	gfp)
 	DebugPrintf("ATH aa  sensitivity    =%f\n", lame_get_athaa_sensitivity( gfp ) );
 
 	DebugPrintf("Experimental nspsytune =%d\n", lame_get_exp_nspsytune( gfp ) );
-	DebugPrintf("Experimental X         =%d\n", lame_get_experimentalX( gfp ) );
-	DebugPrintf("Experimental Y         =%d\n", lame_get_experimentalY( gfp ) );
-	DebugPrintf("Experimental Z         =%d\n", lame_get_experimentalZ( gfp ) );
 }
 
 
