@@ -1163,7 +1163,7 @@ int psymodel_init(lame_global_flags *gfp)
 	    l += gfc->numlines_l[i+1];
 
 	gfc->rnumlines_ls[i] = 20.0/(l-1);
-	norm[i] = 0.11749;
+	norm[i] = 0.11749 * 0.7;
 	gfc->rnumlines_l[i] = 1.0 / (gfc->numlines_l[i] * 3);
     }
     i = init_s3_values(gfc, &gfc->s3_ll, gfc->s3ind,
