@@ -141,7 +141,10 @@ HRESULT CEncoder::Init()
 			return E_UNEXPECTED;
 
 		// Init Lame library
-		lame_init(&gf);
+		// note: newer, safer interface which doesn't 
+		// allow or require direct access to 'gf' struct is being written
+		// see the file 'API' included with LAME.
+		lame_init_old(&gf);
 
 		gf.num_channels = m_wfex.nChannels;
 		gf.in_samplerate = m_wfex.nSamplesPerSec;
