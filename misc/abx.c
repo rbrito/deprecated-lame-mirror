@@ -1,23 +1,38 @@
 /* $Id$ */
+
 /*
- * Usage: abx original_file test_file
- * Ask you as long as the probability is below the given percentage
- * that you recognize differences
+ *  Usage: abx original_file test_file
  *
- * Example: abx music.wav music.mp3
+ *  Ask you as long as the probability is below the given percentage that
+ *  you recognize differences
  *
- * Note:    lame must be within the current path
+ *  Example: abx music.wav music.mp3
  *
- * Fehler:  Keine Crosskorrelationsanalyse (um Versätze zu erkennen und ...)
- *          kein DC canceling (Bewirkt starke Umschaltgeräusche)
- *          kein Normalisieren
- *          kein ordentliches WAV-header lesen
- *          keine Mausbedienbarkeit
- *          Konsole richtig setzen
- *	    Nur 16 bit Stereo, 44.1 kHz
- *          Use a, b, x, ^a, ^b, Q
- *          Nur 1200 tests möglich
- *          Nicht mehr als 2 Dateien vergleichbar
+ *  Handling: use a, b, x, ^a, ^b, Q
+ *
+ *  Note: several 'decoding' utilites must be on the 'right' place
+ *
+ *  Bugs: 
+ *          fix path of decoding utilities
+ *          very slow cross correlation analysis (should be FFT based)
+ *          cross correlation not stable (fatboy, who else)
+ *          no subsample cross correlation
+ *          no level analysis, no normalizing if both files are low amplitude
+ *          only stereo, 16 bit support
+ *          only support of the sample sample frequency
+ *          no DC canceling (DC increases switching noise)
+ *          no exact WAV file header analysis
+ *          no mouse or joystick support
+ *          don't uses functionality from ath.c
+ *          only 1200 tests possible
+ *          only 2 files are comparable
+ *          no AB repeat mode (like CD players)
+ *          mpeg system stream support is missing
+ *          worse user interface
+ *          quick & dirty hack
+ *          wastes memory
+ *          compile time warnings
+ *          buffer overruns possible
  */
 
 #ifdef HAVE_CONFIG_H
@@ -46,10 +61,11 @@
 #elif defined(HAVE_LINUX_SOUNDCARD_H)
 # include <linux/soundcard.h>
 #else
-# include <linux/soundcard.h>
+# include <linux/soundcard.h>         /* stand alone compilable for my tests */
 #endif
 
-#define BF   4410
+#define  BF           4410
+#define  MAX_LEN      (180*44100)
 
 static struct termios stored_settings;
 
@@ -401,6 +417,9 @@ int  readwave ( stereo_t* buff, size_t maxlen, const char* name, size_t* len )
     // Lossless predictive Audio Compression: www-ft.ee.tu-berlin.de/~liebchen/lpac.html
     else if ( has_ext (name, ".lpac") )
         sprintf ( command, "echo '%s'", name );
+    // Lossless predictive Audio Compression: www-ft.ee.tu-berlin.de/~liebchen/lpac.html
+    else if ( has_ext (name, ".ac3") )
+        sprintf ( command, "/usr/local/bin/ac3dec '%s' 2> /dev/null", name );
     // Rest, may be possible with sox
     else 
         sprintf ( command, "sox '%s' -t wav - 2> /dev/null", name );
@@ -426,31 +445,125 @@ void print_usage(void)
 }
 
 
+int cross ( const stereo_t* p1, const stereo_t *p2, size_t len, int max, int step, int rep )
+{
+    int     i;
+    size_t  j;
+    double  sumxx;
+    double  sumxyp;
+    double  sumyyp;
+    double  sumxym;
+    double  sumyym;
+    double  x;
+    double  yp;
+    double  ym;
+    double  valp;
+    double  valm;
+    int     ret    = 0;
+    double  valmax = 0;
+    
+    for ( i = 0; i <= max; i+= step ) {
+	sumxx  = 0.;
+        sumxyp = 0.;
+	sumyyp = 0.;
+        sumxym = 0.;
+	sumyym = 0.;
+	for ( j = 0; j < len; j++ ) {
+	    x  = p1 [j]  [0]  - p1 [j+1]  [0];
+	    yp = p2 [j+i][0]  - p2 [j+i+1][0];
+	    ym = p2 [j-i][0]  - p2 [j-i+1][0];
+	    sumxx  += x*x;
+	    sumxyp += x*yp;
+	    sumyyp += yp*yp;
+	    sumxym += x*ym;
+	    sumyym += ym*ym;
+	    x  = p1 [j]  [1]  - p1 [j+1]  [1];
+	    yp = p2 [j+i][1]  - p2 [j+i+1][1];
+	    ym = p2 [j-i][1]  - p2 [j-i+1][1];
+	    sumxx  += x*x;
+	    sumxyp += x*yp;
+	    sumyyp += yp*yp;
+	    sumxym += x*ym;
+	    sumyym += ym*ym;
+	}
+	valp = sumxyp / sqrt (sumxx * sumyyp);
+	valm = sumxym / sqrt (sumxx * sumyym);
+	if (valp > valmax) {
+	    valmax = valp;
+	    ret    = +i;
+	}
+	if (valm > valmax) {
+	    valmax = valm;
+	    ret    = -i;
+	}
+	// fprintf ( stderr, "%+6d %+8.3f   %+6d %+8.3f%s", +i, 100. * valp, -i, 100. * valm, i&1  ?  "\n" : "   " );
+    }
+    fprintf ( stderr, "C(%5d)=%+9.4f%% ", ret+rep, 100.*valmax );
+    return ret;
+}
+
+
+int  cross_analyze ( const stereo_t* p1, const stereo_t *p2, size_t len )
+{
+    int  esti = 0;
+    
+    if ( len < 3*65536 ) 
+        return 0;
+        
+    esti += cross (p1+len/2- 1024,  p2+len/2- 1024+esti ,  2048, 16384, 16, esti );
+    esti += cross (p1+len/2- 2048,  p2+len/2- 2048+esti ,  4096,  4096,  8, esti  );
+    esti += cross (p1+len/2- 4096,  p2+len/2- 4096+esti ,  8192,  1280,  4, esti  );
+    esti += cross (p1+len/2- 8192,  p2+len/2- 8192+esti , 16384,   256,  2, esti  );
+    esti += cross (p1+len/2-16384,  p2+len/2-16384+esti , 32768,    64,  1, esti  );
+    esti += cross (p1+len/2-32768,  p2+len/2-32768+esti , 65536,    16,  1, esti  );
+    esti += cross (p1+len/2-65536,  p2+len/2-65536+esti ,131072,     4,  1, esti  );
+    fprintf (stderr, "\n");
+    return esti;
+}
+
+
 int main ( int argc, char** argv )
 {
-    static stereo_t  A [180 * 44100];
-    static stereo_t  B [180 * 44100];
-    size_t           len_A;
-    size_t           len_B;
-    long             freq1;
-    long             freq2;
+    stereo_t*  _A = calloc ( sizeof(stereo_t), MAX_LEN );
+    stereo_t*  _B = calloc ( sizeof(stereo_t), MAX_LEN );
+    stereo_t*  A  = _A;
+    stereo_t*  B  = _B;
+    size_t     len_A;
+    size_t     len_B;
+    long       freq1;
+    long       freq2;
+    int        shift;
 
     if (argc != 3) {
         print_usage();
         exit(1);
     }
 
-    freq1 = readwave ( A, sizeof(A)/sizeof(*A), argv[1], &len_A );
-    freq2 = readwave ( B, sizeof(B)/sizeof(*B), argv[2], &len_B );
+    freq1 = readwave ( A, MAX_LEN, argv[1], &len_A );
+    freq2 = readwave ( B, MAX_LEN, argv[2], &len_B );
 
     if ( freq1 != freq2 ) {
         fprintf ( stderr, "Different sample frequencies currently not supported\n");
         return 2;
     }
 
+    shift = cross_analyze ( A, B, len_A < len_B  ?  len_A  :  len_B );
+    if (shift > 0) {
+        printf ("Delaying A by %d samples\n", +shift);
+        B     += shift;
+        len_B -= shift;
+    }
+    if (shift < 0) {
+        printf ("Delaying B by %d samples\n", -shift);
+        A     -= shift;
+        len_A += shift;
+    }
+
     set ();
     testing ( A, B, len_A < len_B  ?  len_A  :  len_B, freq1 );
     reset ();
-    
+
+    free (_A);
+    free (_B);
     return 0;
 }
