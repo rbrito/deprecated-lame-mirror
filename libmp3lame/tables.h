@@ -51,6 +51,13 @@ extern const int scfsi_band[5];
 extern FLOAT window[];
 extern FLOAT window_s[];
 
+extern const int nr_of_sfb_block[6][3][4];
+extern const int pretab[SBMAX_l];
+extern const int slen1_tab[16];
+extern const int slen2_tab[16];
+
+extern const scalefac_struct sfBandIndex[9];
+
 #define IXMAX_VAL 8206  /* ix always <= 8191+15.    see count_bits() */
 
 /* buggy Winamp decoder cannot handle values > 8191 */

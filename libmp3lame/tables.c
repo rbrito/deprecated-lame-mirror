@@ -703,18 +703,81 @@ static void init_log_table(void)
 
 #define NSATHSCALE 100 // Assuming dynamic range=96dB, this value should be 92
 
+/*those ATH formulas are returning
+their minimum value for input = -1*/
+
+static FLOAT ATHformula_GB(FLOAT f, FLOAT value)
+{
+  /* from Painter & Spanias
+    modified by Gabriel Bouvigne to better fit the reality
+  ath =    3.640 * pow(f,-0.8)
+         - 6.800 * exp(-0.6*pow(f-3.4,2.0))
+         + 6.000 * exp(-0.15*pow(f-8.7,2.0))
+         + 0.6* 0.001 * pow(f,4.0);
+
+
+  In the past LAME was using the Painter &Spanias formula.
+  But we had some recurrent problems with HF content.
+  We measured real ATH values, and found the older formula
+  to be inacurate in the higher part. So we made this new
+  formula and this solved most of HF problematic testcases.
+  The tradeoff is that in VBR mode it increases a lot the
+  bitrate.*/
+
+
+/*this curve can be udjusted according to the VBR scale:
+it adjusts from something close to Painter & Spanias
+on V9 up to Bouvigne's formula for V0. This way the VBR
+bitrate is more balanced according to the -V value.*/
+
+  FLOAT ath;
+
+  if (f < -.3)
+      f=3410;
+
+  f /= 1000;  // convert to khz
+  f  = Max(0.01, f);
+  f  = Min(18.0, f);
+
+  ath =    3.640 * pow(f,-0.8)
+         - 6.800 * exp(-0.6*pow(f-3.4,2.0))
+         + 6.000 * exp(-0.15*pow(f-8.7,2.0))
+         + (0.6+0.04*value)* 0.001 * pow(f,4.0);
+  return ath;
+}
+
+
+
+static FLOAT ATHformula(FLOAT f,lame_global_flags *gfp)
+{
+    switch(gfp->ATHtype)
+    {
+    case 0:
+	return ATHformula_GB(f, 9);
+    case 1:
+        return ATHformula_GB(f, -1); /*over sensitive, should probably be removed*/
+    case 2:
+      return ATHformula_GB(f, 0);
+    case 3:
+      return ATHformula_GB(f, 1) +6;     /*modification of GB formula by Roel*/
+    case 4:
+      if (!(gfp->VBR == vbr_off || gfp->VBR == vbr_abr)) /*this case should be used with true vbr only*/
+        return ATHformula_GB(f,gfp->VBR_q);
+    }
+
+    return ATHformula_GB(f, 0);
+}
+
 static FLOAT ATHmdct( lame_global_flags *gfp, FLOAT f )
 {
     FLOAT ath = ATHformula( f , gfp ) - NSATHSCALE;
 
     /* modify the MDCT scaling for the ATH and convert to energy */
-    return db2pow((ath+gfp->ATHlower*10.0));
+    return db2pow(ath - gfp->ATHlower + gfp->VBR_q - 4);
 }
 
 static void compute_ath( lame_global_flags *gfp )
 {
-    FLOAT *ATH_l = gfp->internal_flags->ATH.l;
-    FLOAT *ATH_s = gfp->internal_flags->ATH.s;
     lame_internal_flags *gfc = gfp->internal_flags;
     int sfb, i, start, end;
     FLOAT ATH_f;
@@ -723,25 +786,25 @@ static void compute_ath( lame_global_flags *gfp )
     for (sfb = 0; sfb < SBMAX_l; sfb++) {
         start = gfc->scalefac_band.l[ sfb ];
         end   = gfc->scalefac_band.l[ sfb+1 ];
-        ATH_l[sfb]=FLOAT_MAX;
+        gfc->ATH.l[sfb] = FLOAT_MAX;
         for (i = start ; i < end; i++) {
-            FLOAT freq = i*samp_freq/(2*576);
+            FLOAT freq = i*samp_freq/(2.0*576);
             ATH_f = ATHmdct( gfp, freq );  /* freq in kHz */
-            ATH_l[sfb] = Min( ATH_l[sfb], ATH_f );
+            if (gfc->ATH.l[sfb] > ATH_f)
+		gfc->ATH.l[sfb] = ATH_f;
         }
     }
 
     for (sfb = 0; sfb < SBMAX_s; sfb++){
         start = gfc->scalefac_band.s[ sfb ];
         end   = gfc->scalefac_band.s[ sfb+1 ];
-        ATH_s[sfb] = FLOAT_MAX;
+        gfc->ATH.s[sfb] = FLOAT_MAX;
         for (i = start ; i < end; i++) {
             FLOAT freq = i*samp_freq/(2*192);
             ATH_f = ATHmdct( gfp, freq );    /* freq in kHz */
-            ATH_s[sfb] = Min( ATH_s[sfb], ATH_f );
+	    if (gfc->ATH.s[sfb] > ATH_f)
+		gfc->ATH.s[sfb] = ATH_f;
         }
-	ATH_s[sfb] *=
-	    (gfc->scalefac_band.s[sfb+1] - gfc->scalefac_band.s[sfb]);
     }
 
     /*  no-ATH mode:
@@ -750,25 +813,16 @@ static void compute_ath( lame_global_flags *gfp )
     
     if (gfp->noATH) {
         for (sfb = 0; sfb < SBMAX_l; sfb++) {
-            ATH_l[sfb] = 1E-37;
+            gfc->ATH.l[sfb] = 1E-37;
         }
         for (sfb = 0; sfb < SBMAX_s; sfb++) {
-            ATH_s[sfb] = 1E-37;
+            gfc->ATH.s[sfb] = 1E-37;
         }
     }
     
     /*  work in progress, don't rely on it too much
      */
     gfc->ATH.floor = 10. * log10( ATHmdct( gfp, -1. ) );
-    
-    /*
-    {   FLOAT g=10000, t=1e30, x;
-        for ( f = 100; f < 10000; f++ ) {
-            x = ATHmdct( gfp, f );
-            if ( t > x ) t = x, g = f;
-        }
-        printf("min=%g\n", g);
-    }*/
 }
 
 
@@ -854,6 +908,97 @@ huffman_init(lame_internal_flags * const gfc)
     }
 }
 
+static FLOAT
+filter_coef(FLOAT x)
+{
+    if (x > 1.0) return 0.0;
+    if (x <= 0.0) return 1.0;
+
+    return cos(PI/2 * x);
+}
+
+static void
+lame_init_params_ppflt(lame_global_flags * gfp)
+{
+    lame_internal_flags *gfc = gfp->internal_flags;
+    /***************************************************************/
+    /* compute info needed for polyphase filter (filter type==0, default) */
+    /***************************************************************/
+
+    int band, maxband, minband;
+    int lowpass_band = 32;
+    int highpass_band = -1;
+    FLOAT   freq;
+
+    if (gfc->lowpass1 > 0) {
+	minband = 999;
+	for (band = 0; band <= 31; band++) {
+	    freq = band / 31.0;
+	    /* this band and above will be zeroed: */
+	    if (freq >= gfc->lowpass2) {
+		lowpass_band = Min(lowpass_band, band);
+	    }
+	    if (gfc->lowpass1 < freq && freq < gfc->lowpass2) {
+		minband = Min(minband, band);
+	    }
+	}
+
+        /* compute the *actual* transition band implemented by
+         * the polyphase filter */
+        if (minband == 999) {
+            gfc->lowpass1 = (lowpass_band - .75) / 31.0;
+        }
+        else {
+            gfc->lowpass1 = (minband - .75) / 31.0;
+        }
+        gfc->lowpass2 = lowpass_band / 31.0;
+    }
+
+    /* make sure highpass filter is within 90% of what the effective
+     * highpass frequency will be */
+    if (gfc->highpass2 > 0) {
+        if (gfc->highpass2 < .9 * (.75 / 31.0)) {
+            gfc->highpass1 = 0;
+            gfc->highpass2 = 0;
+            MSGF(gfc, "Warning: highpass filter disabled.  "
+                 "highpass frequency too small\n");
+        }
+    }
+
+    if (gfc->highpass2 > 0) {
+        maxband = -1;
+        for (band = 0; band <= 31; band++) {
+            freq = band / 31.0;
+            /* this band and below will be zereod */
+            if (freq <= gfc->highpass1) {
+                highpass_band = Max(highpass_band, band);
+            }
+            if (gfc->highpass1 < freq && freq < gfc->highpass2) {
+                maxband = Max(maxband, band);
+            }
+        }
+        /* compute the *actual* transition band implemented by
+         * the polyphase filter */
+        gfc->highpass1 = highpass_band / 31.0;
+        if (maxband == -1) {
+            gfc->highpass2 = (highpass_band + .75) / 31.0;
+        }
+        else {
+            gfc->highpass2 = (maxband + .75) / 31.0;
+        }
+    }
+
+    for (band = 0; band < 32; band++) {
+	freq = band / 31.0;
+	gfc->amp_filter[band]
+	    = filter_coef((gfc->highpass2 - freq)
+			  / (gfc->highpass2 - gfc->highpass1 + 1e-37))
+	    * filter_coef((freq - gfc->lowpass1)
+			  / (gfc->lowpass2 - gfc->lowpass1 - 1e-37));
+    }
+}
+
+
 void
 iteration_init( lame_global_flags *gfp)
 {
@@ -861,6 +1006,19 @@ iteration_init( lame_global_flags *gfp)
     III_side_info_t * const l3_side = &gfc->l3_side;
     int i;
     FLOAT bass, alto, treble, sfb21;
+
+  /**********************************************************************/
+  /* compute info needed for polyphase filter (filter type==0, default) */
+  /**********************************************************************/
+    lame_init_params_ppflt(gfp);
+
+
+  /*******************************************************/
+  /* compute info needed for FIR filter (filter_type==1) */
+  /*******************************************************/
+   /* not yet coded */
+
+
 
     if (gfc->iteration_init_init)
 	return;
@@ -943,6 +1101,16 @@ iteration_init( lame_global_flags *gfp)
 
 
 
+
+/* Mapping from frequency to barks */
+/* see for example "Zwicker: Psychoakustik, 1982; ISBN 3-540-11401-7 */
+static FLOAT freq2bark(FLOAT freq)
+{
+  /* input: freq in hz  output: barks */
+    if (freq<0) freq=0;
+    freq = freq * 0.001;
+    return 13.0*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5));
+}
 
 /* 
  *   The spreading function.  Values returned in units of energy
@@ -1221,7 +1389,7 @@ int psymodel_init(lame_global_flags *gfp)
 	    assert( freq <= 24 );              // or only '<'
 	    //	freq = Min(.1,freq);       // ATH below 100 Hz constant, not further climbing
 	    level  = ATHformula (freq*1000, gfp) - 20;   // scale to FFT units; returned value is in dB
-	    level  = pow ( 10., 0.1*level );   // convert from dB -> energy
+	    level  = db2pow(level);   // convert from dB -> energy
 	    level *= gfc->numlines_l [i];
 	    if (x > level)
 		x = level;
@@ -1229,7 +1397,8 @@ int psymodel_init(lame_global_flags *gfp)
 	gfc->ATH.cb[i] = x;
     }
     for (i = 0; i < SBMAX_l; i++)
-	gfc->ATH.l_avg[i] = gfc->ATH.cb[bm[i]] * db2pow(gfp->ATHlower*10.0);
+	gfc->ATH.l_avg[i] = gfc->ATH.cb[bm[i]]
+	    * db2pow(-gfp->ATHlower + gfp->VBR_q - 4);
 
     /* table for long block threshold -> short block threshold conversion */
     init_numline_l2s(gfc->bo_l2s,
@@ -1253,13 +1422,14 @@ int psymodel_init(lame_global_flags *gfp)
 	    snr = -4.5 * (bval[i]-13)/(24.0-13.0)
 		-8.25*(bval[i]-24)/(13.0-24.0);
 
-	norm[i] = db2pow(snr) * NS_PREECHO_ATT0 * 0.8 * 6.31; // pow(10,0.8)
+	norm[i] = db2pow(snr-8) * NS_PREECHO_ATT0 * 0.8;
 	gfc->endlines_s[i] = numlines_s[i];
 	if (i != 0)
 	    gfc->endlines_s[i] += gfc->endlines_s[i-1];
     }
     for (i = 0; i < SBMAX_s; i++)
-	gfc->ATH.s_avg[i] = gfc->ATH.cb[bm[i]] * db2pow(gfp->ATHlower*10.0)
+	gfc->ATH.s_avg[i] = gfc->ATH.cb[bm[i]]
+	    * db2pow(-gfp->ATHlower + gfp->VBR_q - 4)
 	    * BLKSIZE_s / BLKSIZE;
     
     i = init_s3_values(gfc, &gfc->s3_ss, gfc->s3ind_s,
@@ -1286,46 +1456,17 @@ int psymodel_init(lame_global_flags *gfp)
     init_mask_add_max_values(gfc);
 
     /* setup temporal masking */
-#define temporalmask_sustain_sec 0.01
-    gfc->decay = db2pow(-(576.0/3)/(temporalmask_sustain_sec*sfreq));
+    gfc->decay = db2pow(-(576.0/3)/(TEMPORALMASK_SUSTAIN_SEC*sfreq));
 
-    {
-	FLOAT msfix;
-
-#define NS_MSFIX 3.5
-#define NSATTACKTHRE 3.5
-#define NSATTACKTHRE_S 30
-
-	msfix = NS_MSFIX;
-	if (gfp->exp_nspsytune & 2) msfix = 1.0;
-	if (gfp->msfix != 0.0) msfix = gfp->msfix;
-	gfp->msfix = msfix;
-	if (gfc->presetTune.ms_maskadjust <= 0.0)
-	    gfc->presetTune.ms_maskadjust = gfp->msfix;
-
-	gfp->msfix *= 2.0;
-	gfc->presetTune.ms_maskadjust *= 2.0;
-    }
-
-    gfc->masking_lower = db2pow(gfc->VBR.mask_adjust)/0.158489319246111;// pow(10, -0.8)
+    gfc->masking_lower = db2pow(gfp->VBR_q - 8 - 4);
       
-    if (!gfc->presetTune.use) {
-	gfc->quantcomp_type_s = gfp->experimentalX;
-	gfc->presetTune.ms_maskadjust = gfp->msfix;
-
-	gfc->nsPsy.attackthre   = NSATTACKTHRE;
-	gfc->nsPsy.attackthre_s = NSATTACKTHRE_S;
-    }
-
     /*  prepare for ATH auto adjustment:
      *  we want to decrease the ATH by 12 dB per second
      */
-    {
-        FLOAT frame_duration = 576. * gfc->mode_gr / sfreq;
-        gfc->ATH.decay = db2pow(-12.0 * frame_duration);
-        gfc->ATH.adjust = 0.01; /* minimum, for leading low loudness */
-        gfc->ATH.adjust_limit = 1.0; /* on lead, allow adjust up to maximum */
-    }
+#define frame_duration (576. * gfc->mode_gr / sfreq)
+    gfc->ATH.decay = db2pow(-12.0 * frame_duration);
+    gfc->ATH.adjust = 0.01; /* minimum, for leading low loudness */
+    gfc->ATH.adjust_limit = 1.0; /* on lead, allow adjust up to maximum */
 
     gfc->bo_s[SBMAX_s-1]--;
     assert(gfc->bo_l[SBMAX_l-1] <= gfc->npart_l);

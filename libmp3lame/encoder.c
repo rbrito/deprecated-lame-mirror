@@ -32,10 +32,10 @@
 #include "newmdct.h"
 #include "psymodel.h"
 #include "quantize.h"
-#include "quantize_pvt.h"
+#include "tables.h"
 #include "bitstream.h"
 #include "VbrTag.h"
-#include "vbrquantize.h"
+#include "quantize_pvt.h"
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>

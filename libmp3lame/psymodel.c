@@ -47,8 +47,7 @@ measures are used to determine mid/side or regular stereo.
 /*
 Notation:
 
-barks:  a non-linear frequency scale.  Mapping from frequency to
-        barks is given by freq2bark()
+barks:  a non-linear frequency scale.
 
 scalefactor bands: The spectrum (frequencies) are broken into 
                    SBMAX "scalefactor bands".  Thes bands
@@ -567,17 +566,16 @@ msfix1(
  * where alpha is a constant, between 1/sqrt(2) and 1/2
  * And with same way,
  *      alpha (thM+thS) < thR
+ * Therefore,
+ *      alpha (thM+thS) < min(thR, thL)
  ***************************************************************/
 static void
 ns_msfix(
-    lame_internal_flags *gfc,
     FLOAT msfix,
     III_psy_ratio *mr
     )
 {
     int sb, sblock;
-    FLOAT msfix2 = gfc->presetTune.ms_maskadjust;
-
     for ( sb = 0; sb < SBMAX_l; sb++ ) {
 	FLOAT thmLR, thmM, thmS, x;
 	thmLR = Min(mr[0].thm.l[sb], mr[1].thm.l[sb]);
@@ -586,7 +584,7 @@ ns_msfix(
 	x = thmM + thmS;
 
 	if (thmLR*msfix < x) {
-	    x = thmLR * msfix2 / x;
+	    x = thmLR / x;
 	    thmM *= x;
 	    thmS *= x;
 	    if (mr[2].thm.l[sb] > thmM)
@@ -605,7 +603,7 @@ ns_msfix(
 	    x = thmM + thmS;
 
 	    if (thmLR*msfix < x) {
-		x = thmLR * msfix / x;
+		x = thmLR / x;
 		mr[2].thm.s[sb][sblock] = thmM*x;
 		mr[3].thm.s[sb][sblock] = thmS*x;
 	    }
@@ -901,10 +899,12 @@ pecalc_s(
     int sb, sblock;
 
     pe_s = 1236.28/4;
-    for (sblock=0;sblock<3;sblock++) {
-	for ( sb = 0; sb < SBMAX_s; sb++ ) {
+    for ( sb = 0; sb < SBMAX_s; sb++ ) {
+	if (regcoef_s[sb] == 0.0)
+	    continue;
+	for (sblock=0;sblock<3;sblock++) {
 	    FLOAT x = mr->thm.s[sb][sblock];
-	    if (regcoef_s[sb] == 0.0 || mr->en.s[sb][sblock] <= x)
+	    if (mr->en.s[sb][sblock] <= x)
 		continue;
 
 	    if (mr->en.s[sb][sblock] > x*1e10)
@@ -924,9 +924,9 @@ pecalc_l(
 {
     FLOAT pe_l;
     const static FLOAT regcoef_l[] = {
-	10.0583,10.7484,7.29006,16.2714,6.2345,4.09743,3.05468,3.33196,
-	2.54688, 3.68168,5.83109,2.93817,-8.03277,-10.8458,8.48777,
-	9.13182,2.05212,8.6674,50.3937,73.267,97.5664,0
+	10.0583,10.7484 ,7.29006,16.2714 , 6.2345 ,  4.09743,3.05468,3.33196,
+	2.54688, 3.68168,5.83109, 2.93817,-8.03277,-10.8458 ,8.48777,
+	9.13182, 2.05212,8.6674 ,50.3937 ,73.267  , 97.5664 ,0.0
     };
     int sb;
 
@@ -962,7 +962,6 @@ psycho_analysis_short(
     int numchn, chn;
     int i, j, sblock;
 
-    FLOAT pcfact;
     FLOAT ns_hpfsmpl[MAX_CHANNELS][576];
 
     int ns_attacks[MAX_CHANNELS*2][4];
@@ -1092,12 +1091,6 @@ psycho_analysis_short(
 	return;
     }
 
-    if (gfp->VBR==vbr_off) pcfact = gfc->ResvMax == 0 ? 0 : ((FLOAT)gfc->ResvSize)/gfc->ResvMax*0.5;
-    else if (gfp->VBR == vbr_rh  ||  gfp->VBR == vbr_mtrh  ||  gfp->VBR == vbr_mt) {
-	static const FLOAT pcQns[10]={1.0,1.0,1.0,0.8,0.6,0.5,0.4,0.3,0.2,0.1};
-	pcfact = pcQns[gfp->VBR_q];
-    } else pcfact = 1.0;
-
     for (chn=0; chn<numchn; chn++) {
 	/* fft and energy calculation   */
 	FLOAT wsamp_S[2][3][BLKSIZE_s];
@@ -1131,6 +1124,51 @@ psycho_analysis_short(
     if (gfc->useshort_next[gr][2] || gfc->useshort_next[gr][3])
 	gfc->useshort_next[gr][2] = gfc->useshort_next[gr][3] = SHORT_TYPE;
     return;
+}
+
+/* in some scalefactor band, 
+   we can use masking threshold value of long block */
+static void
+partially_convert_l2s(
+    lame_internal_flags *gfc,
+    FLOAT *eb,
+    int gr,
+    int chn
+    )
+{
+    III_psy_ratio *mr = &gfc->masking_next[gr][chn];
+    int sfb, b;
+    for (sfb = 0; sfb < SBMAX_s; sfb++) {
+	FLOAT x = (mr->en.s[sfb][0] + mr->en.s[sfb][1] + mr->en.s[sfb][2])
+	    * (1.0/4.5);
+	if (x > mr->en.s[sfb][0]
+	    || x > mr->en.s[sfb][1]
+	    || x > mr->en.s[sfb][2])
+	    continue;
+
+//	printf("ch %d, sf %d\n", chn, sfb);
+	if (sfb == 0) {
+	    b = 0;
+	    x = 0.0;
+	} else {
+	    b = gfc->bo_l2s[sfb-1];
+	    x = gfc->nb_1[chn][b++] * 0.5;
+	}
+	for (; b < gfc->bo_l2s[sfb]; b++) {
+	    x += gfc->nb_1[chn][b];
+	}
+	x += .5*gfc->nb_1[chn][b];
+
+	x *= gfc->masking_lower * ((double)BLKSIZE_s / BLKSIZE);
+//	printf("%e %e %e -> %e",
+//	       mr->thm.s[sfb][0], mr->thm.s[sfb][1], mr->thm.s[sfb][2], x);
+	if (x < gfc->ATH.s_avg[sfb] * gfc->ATH.adjust)
+	    x = gfc->ATH.s_avg[sfb] * gfc->ATH.adjust;
+//	printf("(%e)\n", gfc->ATH.s_avg[sfb] * gfc->ATH.adjust);
+//	printf("%e %e %e\n",
+//	       mr->en.s[sfb][0], mr->en.s[sfb][1], mr->en.s[sfb][2]);
+	mr->thm.s[sfb][0] = mr->thm.s[sfb][1] = mr->thm.s[sfb][2] = x;
+    }
 }
 
 static void
@@ -1355,10 +1393,12 @@ L3psycho_anal_ns(
 	    thmm = gfc->ATH.l_avg[SBMAX_l-1] * gfc->ATH.adjust;
 	gfc->masking_next[gr][chn].en .l[SBMAX_l-1] = enn;
 	gfc->masking_next[gr][chn].thm.l[SBMAX_l-1] = thmm;
-
-	if (gfc->masking_next[gr][chn].en.s[0][0] >= 0.0)
+#if 1
+	if (gfc->masking_next[gr][chn].en.s[0][0] >= 0.0) {
+	    partially_convert_l2s(gfc, eb, gr, chn);
 	    continue;
-
+	}
+#endif
 	/* short block may be needed but not calculated */
 	/* calculate it from converting from long */
 	b = j = 0;
@@ -1636,7 +1676,7 @@ psycho_analysis(
 
 	if (gfp->mode == JOINT_STEREO) {
 	    msfix1(gfc, gr);
-	    ns_msfix(gfc, gfp->msfix, &gfc->masking_next[gr][0]);
+	    ns_msfix(gfc->nsPsy.msfix, &gfc->masking_next[gr][0]);
 
 	    numchn = 4;
 	}
@@ -1655,12 +1695,12 @@ psycho_analysis(
     /* determine MS/LR in the next frame */
     gfc->mode_ext_next = MPG_MD_LR_LR;
     if (gfp->mode == JOINT_STEREO) {
-	FLOAT diff_pe = 0;
+	FLOAT diff_pe = 0.0;
 	for (gr = 0; gr < gfc->mode_gr; gr++)
 	    diff_pe
 		+= gfc->masking_next[gr][2].pe
-		-  gfc->masking_next[gr][0].pe
 		+  gfc->masking_next[gr][3].pe
+		-  gfc->masking_next[gr][0].pe
 		-  gfc->masking_next[gr][1].pe;
 
 	/* based on PE: M/S coding would not use much more bits than L/R */
@@ -1676,11 +1716,9 @@ psycho_analysis(
 		gfc->l3_side.tt[gfc->mode_gr-1][0].block_type
 		    = gfc->l3_side.tt[gfc->mode_gr-1][1].block_type
 		    = SHORT_TYPE;
-	} else if (gfc->mode_ext_next != gfc->mode_ext) {
-	    /* MS -> LR case */
-	    if (gfc->useshort_next[0][0] || gfc->useshort_next[0][1])
-		gfc->useshort_next[0][0] = gfc->useshort_next[0][1] = SHORT_TYPE;
-	}
+	} else if (gfc->mode_ext_next != gfc->mode_ext
+		   && (gfc->useshort_next[0][0] || gfc->useshort_next[0][1]))
+	    gfc->useshort_next[0][0] = gfc->useshort_next[0][1] = SHORT_TYPE;
     }
 
     /* determine current frame block type (long/start/short/stop) */

@@ -29,12 +29,10 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <stdio.h>
-#include "tables.h"
 #include "bitstream.h"
-#include "quantize.h"
-#include "quantize_pvt.h"
 #include "version.h"
 #include "VbrTag.h"
+#include "tables.h"
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>

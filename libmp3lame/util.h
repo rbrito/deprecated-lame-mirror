@@ -156,7 +156,7 @@ typedef struct  bit_stream_struc {
 /* max scalefactor band, max(SBMAX_l, SBMAX_s*3, (SBMAX_s-3)*3+8) */
 #define SFBMAX (SBMAX_s*3)
 
-/* Layer III side information. */
+/* scalefactor band start/end positions */
 typedef struct 
 {
     int l[1+SBMAX_l];
@@ -173,6 +173,7 @@ typedef struct {
     III_psy_xmin thm;
     III_psy_xmin en;
     FLOAT	pe;
+    int	ath_over;
 } III_psy_ratio;
 
 typedef struct {
@@ -210,13 +211,14 @@ typedef struct {
     int slen[4];
 } gr_info;
 
+/* Layer III side information. */
 typedef struct {
-	gr_info tt[2][2];
-	int main_data_begin; 
-	int private_bits;
-	int resvDrain_pre;
-	int resvDrain_post;
-	int scfsi[2][4];
+    gr_info tt[2][2];
+    int main_data_begin; 
+    int private_bits;
+    int resvDrain_pre;
+    int resvDrain_post;
+    int scfsi[2][4];
 } III_side_info_t;
 
 
@@ -239,7 +241,7 @@ typedef enum {
     coding_MPEG_Layer_1 = 1,
     coding_MPEG_Layer_2 = 2,
     coding_MPEG_Layer_3 = 3,
-    coding_MPEG_AAC     = 4,
+    coding_MPEG_AAC     = 4, /* not supported */
     coding_Ogg_Vorbis   = 5, /* not supported */
     coding_MPEG_plus    = 6  /* not supported */
 } coding_t;
@@ -256,7 +258,7 @@ typedef struct {
     int            scale_in;        /* the resampling is actually done by
                                        scale_out: */
     int            scale_out;       /* frequency is
-                                         samplefreq_in * scale_out / scal */
+				       samplefreq_in * scale_out / scal */
     int            taps;            /* number of taps for every FIR resample
                                        filter */
 
@@ -297,11 +299,7 @@ struct lame_internal_flags {
 #ifndef  MFSIZE
 # define MFSIZE  ( 3*1152 + ENCDELAY - MDCTDELAY )
 #endif
-#ifdef  KLEMM_44
-  sample_t*    mfbuf [MAX_CHANNELS];
-#else
   sample_t     mfbuf [2] [MFSIZE];
-#endif
 
 #  define  LAME_ID   0xFFF88E3B
   unsigned long Class_ID;
@@ -342,7 +340,7 @@ struct lame_internal_flags {
 
   int use_scalefac_scale;   /* 0 = not use  1 = use */
   int quantcomp_method;     /* how to compare the scalefactor combination */
-  int quantcomp_type_s;     /* and for short block */
+  int quantcomp_method_s;   /* and for short block */
   int noise_shaping_amp;    /*  0 = ISO model: amplify all distorted bands
                                 1 = amplify within 50% of max (on db scale)
                                 2 = amplify only most distorted band
@@ -427,29 +425,13 @@ struct lame_internal_flags {
 	FLOAT     attackthre;
 	FLOAT     attackthre_s;
 
+	/* adjustment of Mid/Side maskings from LR maskings */
+	FLOAT msfix;
+
 	/* variables for nspsytune2 */
 	FILE *pass1fp;
     } nsPsy;
 
-    /* variables used for --preset, --alt-preset */
-    struct {
-	// indicates the use of alt-preset
-	int use;
-
-	// adjustment to joint stereo
-	FLOAT ms_maskadjust;
-
-	// adjustments for tot_noise with vbr-old
-	FLOAT  quantcomp_adjust_rh_tot;
-
-	// adjustments for max_noise with vbr-old
-	FLOAT  quantcomp_adjust_rh_max;
-
-	// adjustments for calc_scalefac "c" with vbr-mtrh
-	FLOAT  quantcomp_adjust_mtrh;
-
-    } presetTune;
-  
     /**
      *  ATH related stuff, if something new ATH related has to be added,
      *  please plugg it here into the ATH_t struct
@@ -472,86 +454,74 @@ struct lame_internal_flags {
 	FLOAT aa_sensitivity_p;
     } ATH;
 
-    /**
-     *  VBR related stuff
-     */
-    struct {
-	FLOAT   mask_adjust;    // the dbQ stuff
-	int     quality;
-	int     smooth;         // 0=no, 1=peaks, 2=+-4
-    } VBR;
+    /* variables used by quantize.c */
+    int OldValue[2];
+    int CurrentStep[2];
+    scalefac_struct scalefac_band;
 
-  /* variables used by quantize.c */
-  int OldValue[2];
-  int CurrentStep[2];
-  scalefac_struct scalefac_band;
+    FLOAT masking_lower;
+    char bv_scf[576];
+    int pseudohalf[SFBMAX];
 
-  FLOAT masking_lower;
-  char bv_scf[576];
-  int pseudohalf[SFBMAX];
+    int sfb21_extra; /* will be set in lame_init_params */
 
-  int sfb21_extra; /* will be set in lame_init_params */
-
-  /* variables for bitstream.c */
-  /* mpeg1: buffer=511 bytes  smallest frame: 96-38(sideinfo)=58
-   * max number of frames in reservoir:  8 
-   * mpeg2: buffer=255 bytes.  smallest frame: 24-23bytes=1
-   * with VBR, if you are encoding all silence, it is possible to
-   * have 8kbs/24khz frames with 1byte of data each, which means we need
-   * to buffer up to 255 headers! */
-  /* also, max_header_buf has to be a power of two */
+    /* variables for bitstream.c */
+    /* mpeg1: buffer=511 bytes  smallest frame: 96-38(sideinfo)=58
+     * max number of frames in reservoir:  8 
+     * mpeg2: buffer=255 bytes.  smallest frame: 24-23bytes=1
+     * with VBR, if you are encoding all silence, it is possible to
+     * have 8kbs/24khz frames with 1byte of data each, which means we need
+     * to buffer up to 255 headers! */
+    /* also, max_header_buf has to be a power of two */
 #define MAX_HEADER_BUF 256
 #define MAX_HEADER_LEN 40 /* max size of header is 38 */
-  Bit_stream_struc   bs;
-  struct {
-    int write_timing;
-    int ptr;
-    char buf[MAX_HEADER_LEN];
-  } header[MAX_HEADER_BUF];
+    Bit_stream_struc   bs;
+    struct {
+	int write_timing;
+	int ptr;
+	char buf[MAX_HEADER_LEN];
+    } header[MAX_HEADER_BUF];
 
-  int h_ptr;
-  int w_ptr;
-  int ancillary_flag;
+    int h_ptr;
+    int w_ptr;
+    int ancillary_flag;
 
-  /* optional ID3 tags, used in id3tag.c  */
-  struct id3tag_spec tag_spec;
-  uint16_t nMusicCRC;
+    /* optional ID3 tags, used in id3tag.c  */
+    struct id3tag_spec tag_spec;
+    uint16_t nMusicCRC;
 
-  unsigned int crcvalue;
-  VBR_seek_info_t VBR_seek_table; // used for Xing VBR header
+    unsigned int crcvalue;
+    VBR_seek_info_t VBR_seek_table; // used for Xing VBR header
   
-  int nogap_total;
-  int nogap_current;  
+    int nogap_total;
+    int nogap_current;  
 
-  /* CPU features */
-  struct {
-    unsigned int  i387      : 1; /* FPU is a normal Intel CPU */
-    unsigned int  MMX       : 1; /* Pentium MMX, Pentium II...IV, K6, K6-2,
+    /* CPU features */
+    struct {
+	unsigned int  i387      : 1; /* FPU is a normal Intel CPU */
+	unsigned int  MMX       : 1; /* Pentium MMX, Pentium II...IV, K6, K6-2,
                                     K6-III, Athlon */
-    unsigned int  AMD_3DNow : 1; /* K6-2, K6-III, Athlon      */
-    unsigned int  SIMD      : 1; /* Pentium III, Pentium 4    */
-    unsigned int  SIMD2     : 1; /* Pentium 4, K8             */
-  } CPU_features;
+	unsigned int  AMD_3DNow : 1; /* K6-2, K6-III, Athlon      */
+	unsigned int  SIMD      : 1; /* Pentium III, Pentium 4    */
+	unsigned int  SIMD2     : 1; /* Pentium 4, K8             */
+    } CPU_features;
    
-  struct {
-    void (*msgf)  (const char *format, va_list ap);
-    void (*debugf)(const char *format, va_list ap);
-    void (*errorf)(const char *format, va_list ap);
-  } report;
+    struct {
+	void (*msgf)  (const char *format, va_list ap);
+	void (*debugf)(const char *format, va_list ap);
+	void (*errorf)(const char *format, va_list ap);
+    } report;
   
-  /* functions to replace with CPU feature optimized versions in takehiro.c */
-  int (*choose_table)(const int *ix, const int *end, int *s);
-  
-  void (*fft_fht)(FLOAT *, int);
+    /* functions to replace with CPU feature optimized one in takehiro.c */
+    int (*choose_table)(const int *ix, const int *end, int *s);
+    void (*fft_fht)(FLOAT *, int);
 
-#ifndef KLEMM_44
   /* variables used by util.c */
   /* BPC = maximum number of filter convolution windows to precompute */
 #define BPC 320
   sample_t *inbuf_old [2];
   sample_t *blackfilt [2*BPC+1];
   FLOAT itime[2];
-#endif
 
 #ifdef BRHIST
   /* simple statistics */
@@ -580,9 +550,6 @@ extern int            BitrateIndex(int, int,int);
 extern int            FindNearestBitrate(int,int,int);
 extern int            map2MP3Frequency(int freq);
 extern int            SmpFrqIndex(int, int* const);
-extern FLOAT          ATHformula(FLOAT f,lame_global_flags *gfp);
-extern FLOAT          freq2bark(FLOAT freq);
-extern FLOAT          freq2cbw(FLOAT freq);
 void disable_FPE(void);
 
 void fill_buffer(lame_global_flags *gfp,

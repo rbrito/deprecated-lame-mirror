@@ -1,17 +1,9 @@
-
 #ifndef LAME_GLOBAL_FLAGS_H
 #define LAME_GLOBAL_FLAGS_H
 
 struct lame_internal_flags;
 typedef struct lame_internal_flags lame_internal_flags;
 
-
-typedef enum short_block_e {
-    short_block_not_set = -1,   /* allow LAME to decide */
-    short_block_allowed = 0,    /* LAME may use them, even different block types for L/R */
-    short_block_dispensed,      /* LAME will not use short blocks, long blocks only */
-    short_block_forced          /* LAME will not use long blocks, short blocks only */
-} short_block_t;
 
 /***********************************************************************
 *
@@ -114,7 +106,6 @@ struct lame_global_struct {
   int athaa_type;                 /* select ATH auto-adjust scheme        */
   int athaa_loudapprox;           /* select ATH auto-adjust loudness calc */
   float athaa_sensitivity;        /* dB, tune active region of auto-level */
-  short_block_t short_blocks;
   int mixed_blocks;
   int useTemporal;                /* use temporal masking effect          */
   float interChRatio;
@@ -125,7 +116,6 @@ struct lame_global_struct {
 				     psycho does not take it into account,
 				     and last but not least many decoders
                                      don't care about these bits          */
-  float msfix;              /* Naoki's adjustment of Mid/Side maskings */
 
   int   tune;               /* 0 off, 1 on */
   float tune_value_a;       /* used to pass values for debugging and stuff */

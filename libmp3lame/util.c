@@ -51,15 +51,6 @@ void  freegfc ( lame_internal_flags* const gfc )   /* bit stream structure */
 {
     int  i;
 
-#ifdef KLEMM_44
-    if (gfc->resample_in != NULL) {
-        resample_close(gfc->resample_in);
-        gfc->resample_in = NULL;
-    }
-    free(gfc->mfbuf[0]);
-    free(gfc->mfbuf[1]);
-#endif
-
     for ( i = 0 ; i <= 2*BPC; i++ )
         if ( gfc->blackfilt[i] != NULL ) {
             free ( gfc->blackfilt[i] );
@@ -92,93 +83,6 @@ void  freegfc ( lame_internal_flags* const gfc )   /* bit stream structure */
     }
     free ( gfc );
 }
-
-
-
-/*those ATH formulas are returning
-their minimum value for input = -1*/
-
-static FLOAT ATHformula_GB(FLOAT f, FLOAT value)
-{
-  /* from Painter & Spanias
-    modified by Gabriel Bouvigne to better fit the reality
-  ath =    3.640 * pow(f,-0.8)
-         - 6.800 * exp(-0.6*pow(f-3.4,2.0))
-         + 6.000 * exp(-0.15*pow(f-8.7,2.0))
-         + 0.6* 0.001 * pow(f,4.0);
-
-
-  In the past LAME was using the Painter &Spanias formula.
-  But we had some recurrent problems with HF content.
-  We measured real ATH values, and found the older formula
-  to be inacurate in the higher part. So we made this new
-  formula and this solved most of HF problematic testcases.
-  The tradeoff is that in VBR mode it increases a lot the
-  bitrate.*/
-
-
-/*this curve can be udjusted according to the VBR scale:
-it adjusts from something close to Painter & Spanias
-on V9 up to Bouvigne's formula for V0. This way the VBR
-bitrate is more balanced according to the -V value.*/
-
-  FLOAT ath;
-
-  if (f < -.3)
-      f=3410;
-
-  f /= 1000;  // convert to khz
-  f  = Max(0.01, f);
-  f  = Min(18.0, f);
-
-  ath =    3.640 * pow(f,-0.8)
-         - 6.800 * exp(-0.6*pow(f-3.4,2.0))
-         + 6.000 * exp(-0.15*pow(f-8.7,2.0))
-         + (0.6+0.04*value)* 0.001 * pow(f,4.0);
-  return ath;
-}
-
-
-
-FLOAT ATHformula(FLOAT f,lame_global_flags *gfp)
-{
-  switch(gfp->ATHtype)
-    {
-    case 0:
-      return ATHformula_GB(f, 9);
-    case 1:
-        return ATHformula_GB(f, -1); /*over sensitive, should probably be removed*/
-    case 2:
-      return ATHformula_GB(f, 0);
-    case 3:
-      return ATHformula_GB(f, 1) +6;     /*modification of GB formula by Roel*/
-    case 4:
-      if (!(gfp->VBR == vbr_off || gfp->VBR == vbr_abr)) /*this case should be used with true vbr only*/
-        return ATHformula_GB(f,gfp->VBR_q);
-    }
-
-  return ATHformula_GB(f, 0);
-}
-
-/* see for example "Zwicker: Psychoakustik, 1982; ISBN 3-540-11401-7 */
-FLOAT freq2bark(FLOAT freq)
-{
-  /* input: freq in hz  output: barks */
-    if (freq<0) freq=0;
-    freq = freq * 0.001;
-    return 13.0*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5));
-}
-
-/* see for example "Zwicker: Psychoakustik, 1982; ISBN 3-540-11401-7 */
-FLOAT freq2cbw(FLOAT freq)
-{
-  /* input: freq in hz  output: critical band width */
-    freq = freq * 0.001;
-    return 25+75*pow(1+1.4*(freq*freq),0.69);
-}
-
-
-
 
 
 
@@ -262,9 +166,6 @@ int SmpFrqIndex ( int sample_freq, int* const version )
 
 
 
-
-
-#ifndef KLEMM_44
 
 
 /* resampling via FIR filter, blackman window */
@@ -465,7 +366,6 @@ int fill_buffer_resample(
 }
 
 
-#endif /* ndef KLEMM_44 */
 
 
 

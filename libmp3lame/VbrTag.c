@@ -568,7 +568,7 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 	uint16_t nMusicCRC				= 0;
 
 	//psy model type: Gpsycho or NsPsytune
-	unsigned char    bExpNPsyTune	= gfp->exp_nspsytune & 1;
+	unsigned char    bExpNPsyTune	= 1;
 	unsigned char	 bSafeJoint		= (gfp->exp_nspsytune & 2)!=0;
 
 	unsigned char	 bNoGapMore		= 0;
@@ -657,9 +657,7 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 
 	//Check if the user overrided the default LAME behaviour with some nasty options
 
-	if (gfp->short_blocks == short_block_forced 			||
-		gfp->short_blocks == short_block_dispensed 		||
-		((gfp->lowpassfreq == -1) && (gfp->highpassfreq == -1))	|| // "-k"
+	if (((gfp->lowpassfreq == -1) && (gfp->highpassfreq == -1))	|| // "-k"
 		(gfp->scale_left != gfp->scale_right)			||
 		gfp->disable_reservoir		||
 		gfp->noATH			||

@@ -1,4 +1,3 @@
-/* -*- mode: C; mode: fold -*- */
 /*
  *	LAME MP3 encoding engine
  *
@@ -54,98 +53,7 @@
 #endif
 
 
-#define DEFAULT_QUALITY 5
-
-static FLOAT
-filter_coef(FLOAT x)
-{
-    if (x > 1.0) return 0.0;
-    if (x <= 0.0) return 1.0;
-
-    return cos(PI/2 * x);
-}
-
-static void
-lame_init_params_ppflt(lame_global_flags * gfp)
-{
-    lame_internal_flags *gfc = gfp->internal_flags;
-    /***************************************************************/
-    /* compute info needed for polyphase filter (filter type==0, default) */
-    /***************************************************************/
-
-    int band, maxband, minband;
-    int lowpass_band = 32;
-    int highpass_band = -1;
-    FLOAT   freq;
-
-    if (gfc->lowpass1 > 0) {
-	minband = 999;
-	for (band = 0; band <= 31; band++) {
-	    freq = band / 31.0;
-	    /* this band and above will be zeroed: */
-	    if (freq >= gfc->lowpass2) {
-		lowpass_band = Min(lowpass_band, band);
-	    }
-	    if (gfc->lowpass1 < freq && freq < gfc->lowpass2) {
-		minband = Min(minband, band);
-	    }
-	}
-
-        /* compute the *actual* transition band implemented by
-         * the polyphase filter */
-        if (minband == 999) {
-            gfc->lowpass1 = (lowpass_band - .75) / 31.0;
-        }
-        else {
-            gfc->lowpass1 = (minband - .75) / 31.0;
-        }
-        gfc->lowpass2 = lowpass_band / 31.0;
-    }
-
-    /* make sure highpass filter is within 90% of what the effective
-     * highpass frequency will be */
-    if (gfc->highpass2 > 0) {
-        if (gfc->highpass2 < .9 * (.75 / 31.0)) {
-            gfc->highpass1 = 0;
-            gfc->highpass2 = 0;
-            MSGF(gfc, "Warning: highpass filter disabled.  "
-                 "highpass frequency too small\n");
-        }
-    }
-
-    if (gfc->highpass2 > 0) {
-        maxband = -1;
-        for (band = 0; band <= 31; band++) {
-            freq = band / 31.0;
-            /* this band and below will be zereod */
-            if (freq <= gfc->highpass1) {
-                highpass_band = Max(highpass_band, band);
-            }
-            if (gfc->highpass1 < freq && freq < gfc->highpass2) {
-                maxband = Max(maxband, band);
-            }
-        }
-        /* compute the *actual* transition band implemented by
-         * the polyphase filter */
-        gfc->highpass1 = highpass_band / 31.0;
-        if (maxband == -1) {
-            gfc->highpass2 = (highpass_band + .75) / 31.0;
-        }
-        else {
-            gfc->highpass2 = (maxband + .75) / 31.0;
-        }
-    }
-
-    for (band = 0; band < 32; band++) {
-	freq = band / 31.0;
-	gfc->amp_filter[band]
-	    = filter_coef((gfc->highpass2 - freq)
-			  / (gfc->highpass2 - gfc->highpass1 + 1e-37))
-	    * filter_coef((freq - gfc->lowpass1)
-			  / (gfc->lowpass2 - gfc->lowpass1 - 1e-37));
-    }
-}
-
+#define LAME_DEFAULT_QUALITY 5
 
 static void
 optimum_bandwidth(double *const lowerlimit,
@@ -311,33 +219,30 @@ lame_init_qval(lame_global_flags * gfp)
         gfc->filter_type = 0;
         gfc->psymodel = 0;
         gfc->quantization = 0;
-        gfc->use_scalefac_scale = 0;
         gfc->noise_shaping_amp = 0;
         gfc->noise_shaping_stop = 0;
         gfc->use_best_huffman = 0;
-        gfc->substep_shaping = 0;
+//        gfc->substep_shaping = 0;
         break;
 
     case 8:            /* use psymodel (for short block and m/s switching), but no noise shapping */
         gfc->filter_type = 0;
         gfc->psymodel = 1;
         gfc->quantization = 0;
-        gfc->use_scalefac_scale = 0;
         gfc->noise_shaping_amp = 0;
         gfc->noise_shaping_stop = 0;
         gfc->use_best_huffman = 0;
-        gfc->substep_shaping = 0;
+//        gfc->substep_shaping = 0;
         break;
 
     case 7:	/* same as the default setting(-q 5) before LAME 3.70 */
         gfc->filter_type = 0;
         gfc->psymodel = 2;
         gfc->quantization = 0;
-        gfc->use_scalefac_scale = 0;
 	gfc->noise_shaping_amp = 0;
         gfc->noise_shaping_stop = 0;
         gfc->use_best_huffman = 0;
-        gfc->substep_shaping = 0;
+//        gfc->substep_shaping = 0;
         break;
 
     case 6:
@@ -346,74 +251,61 @@ lame_init_qval(lame_global_flags * gfp)
         gfc->filter_type = 0;
         gfc->psymodel = 2;
         gfc->quantization = 1;
-        gfc->use_scalefac_scale = 0;
         gfc->noise_shaping_amp = 1;
         gfc->noise_shaping_stop = 1;
         gfc->use_best_huffman = 1;
-        gfc->substep_shaping = 0;
+//        gfc->substep_shaping = 0;
         break;
 
     case 4:
         gfc->filter_type = 0;
         gfc->psymodel = 2;
         gfc->quantization = 1;
-        gfc->use_scalefac_scale = 0;
         gfc->noise_shaping_amp = 1;
         gfc->noise_shaping_stop = 1;
         gfc->use_best_huffman = 1;
-        gfc->substep_shaping = 5; /* use substep shaping in outer loop */
+//        gfc->substep_shaping = 5; /* use substep shaping in outer loop */
         break;
 
     case 3:	/* aliased -h */
         gfc->filter_type = 0;
         gfc->psymodel = 2;
         gfc->quantization = 1;
-        gfc->use_scalefac_scale = 0;
         gfc->noise_shaping_amp = 1;
         gfc->noise_shaping_stop = 1;
         gfc->use_best_huffman = 1;
-        gfc->substep_shaping = 7; /* use substep shaping inner/outer loop */
+//        gfc->substep_shaping = 7; /* use substep shaping inner/outer loop */
         break;
 
     case 2:
         gfc->filter_type = 0;
         gfc->psymodel = 2;
         gfc->quantization = 1;
-        gfc->use_scalefac_scale = 0;
         gfc->noise_shaping_amp = 1;
         gfc->noise_shaping_stop = 1;
         gfc->use_best_huffman = 2; /* inner loop, PAINFULLY SLOW */
-        gfc->substep_shaping = 7;
+//        gfc->substep_shaping = 7;
         break;
 
     case 1:	/* some "dangerous" setting */
         gfc->filter_type = 0;
         gfc->psymodel = 2;
         gfc->quantization = 1;
-        gfc->use_scalefac_scale = 0;
         gfc->noise_shaping_amp = 2; /* this may loose quality */
         gfc->noise_shaping_stop = 1;
         gfc->use_best_huffman = 2;
-        gfc->substep_shaping = 7;
+//        gfc->substep_shaping = 7;
         break;
 
     case 0:	/* some "dangerous" setting */
         gfc->filter_type = 0; /* 1 not yet coded */
         gfc->psymodel = 2;
         gfc->quantization = 1;
-        gfc->use_scalefac_scale = 1;
         gfc->noise_shaping_amp = 2;
         gfc->noise_shaping_stop = 2; /* this may loose quality */
         gfc->use_best_huffman = 2;
-        gfc->substep_shaping = 7;
+//        gfc->substep_shaping = 7;
         break;
-    }
-
-    /* modifications to the above rules: */
-
-    /* -Z option toggles scalefactor_scale: */
-    if ( (gfp->experimentalZ & 1) > 0) {
-        gfc->use_scalefac_scale ^= 1;
     }
 }
 
@@ -509,11 +401,6 @@ lame_init_params(lame_global_flags * const gfp)
         gfc->CPU_features.SIMD2 = 0;
     }
 
-
-#ifdef KLEMM_44
-    /* Select the fastest functions for this CPU */
-    init_scalar_functions(gfc);
-#endif
 
     gfc->channels_in = gfp->num_channels;
     if (gfc->channels_in == 1)
@@ -753,19 +640,6 @@ lame_init_params(lame_global_flags * const gfp)
 
 
 
-  /**********************************************************************/
-  /* compute info needed for polyphase filter (filter type==0, default) */
-  /**********************************************************************/
-    lame_init_params_ppflt(gfp);
-
-
-  /*******************************************************/
-  /* compute info needed for FIR filter (filter_type==1) */
-  /*******************************************************/
-   /* not yet coded */
-
-
-
   /*******************************************************
    * samplerate and bitrate index
    *******************************************************/
@@ -848,146 +722,39 @@ lame_init_params(lame_global_flags * const gfp)
 
     gfc->Class_ID = LAME_ID;
 
-    {
-	/* always use nspsytune */
-	int     i;
+    for (i = 0; i < 19; i++)
+	gfc->nsPsy.pefirbuf[i] = 700*gfc->mode_gr*gfc->channels_out;
 
-        for (i = 0; i < 19; i++)
-            gfc->nsPsy.pefirbuf[i] = 700*gfc->mode_gr*gfc->channels_out;
+    if (gfp->ATHtype < 0)
+	gfp->ATHtype = 4;
 
-        if (gfp->ATHtype == -1)
-            gfp->ATHtype = 4;
-
-	if (gfp->exp_nspsytune2.pointer[0])
-	    gfc->nsPsy.pass1fp = gfp->exp_nspsytune2.pointer[0];
-	else
-	    gfc->nsPsy.pass1fp = NULL;
-    }
+    if (gfp->exp_nspsytune2.pointer[0])
+	gfc->nsPsy.pass1fp = gfp->exp_nspsytune2.pointer[0];
+    else
+	gfc->nsPsy.pass1fp = NULL;
 
     assert( gfp->VBR_q <= 9 );
     assert( gfp->VBR_q >= 0 );
-    
-    switch (gfp->VBR) {
 
-    case vbr_mt:
-        gfp->VBR = vbr_mtrh;
-        
-    case vbr_mtrh:
+    if (gfp->quality < 0)
+	gfp->quality = LAME_DEFAULT_QUALITY;
 
-        if (gfp->ATHtype < 0) gfp->ATHtype = 4;
-        if (gfp->quality < 0) gfp->quality = DEFAULT_QUALITY;
+    if (gfp->VBR) {
         if (gfp->quality > 7) {
             gfp->quality = 7;     // needs psymodel
-            ERRORF( gfc, "VBR needs a psymodel, switching to quality level 7\n");
+            ERRORF(gfc, "VBR needs a psymodel, switching to quality level 7\n");
         }
 
-        switch ( gfp->experimentalX ) {
-        default:
-        case 0: {
-                static const float dbQ[10]={-2.,-1.0,-.66,-.33,0.,0.33,.66,1.0,1.33,1.66};
-                gfc->VBR.mask_adjust = dbQ[gfp->VBR_q];
-                gfc->VBR.smooth = 1;
-            } 
-            break;        
-        case 1: {
-                static float const dbQ[10] = { -2., -1.4, -.7, 0, .7, 1.5, 2.3, 3.1, 4., 5 };
-                gfc->VBR.mask_adjust = dbQ[gfp->VBR_q];
-                gfc->VBR.smooth = 0;    
-            } 
-            break;        
-        case 2: {
-                static float const dbQ[10] = { -1., -.6, -.3, 0, 1, 2, 3, 4, 5, 6};
-                gfc->VBR.mask_adjust = dbQ[gfp->VBR_q];
-                gfc->VBR.smooth = 0;    
-            } 
-            break;        
-        case 3: {
-                static const float dbQ[10]={-2.,-1.0,-.66,-.33,0.,0.33,.66,1.0,1.33,1.66};
-                gfc->VBR.mask_adjust = dbQ[gfp->VBR_q];
-                gfc->VBR.smooth = 1;
-            } 
-            break;        
-        case 4: {
-                static float const dbQ[10] = { -6,-4.75,-3.5,-2.25,-1,.25,1.5,2.75,4,5.25 };
-                gfc->VBR.mask_adjust = dbQ[gfp->VBR_q];
-                gfc->VBR.smooth = 1;   // not finally
-            }
-            break;        
-        case 5: {
-                static const float dbQ[10]={-2.,-1.0,-.66,-.33,0.,0.33,.66,1.0,1.33,1.66};
-                gfp->experimentalX = 0;
-                gfc->VBR.mask_adjust = dbQ[gfp->VBR_q];
-                gfc->VBR.smooth = 2;
-            } 
-            break;        
-        case 9: {
-                static float const dbQ[10] = { -6,-4.75,-3.5,-2.25,-1,.25,1.5,2.75,4,5.25 };
-                gfp->experimentalX = 4;
-                gfc->VBR.mask_adjust = dbQ[gfp->VBR_q];
-                gfc->VBR.smooth = 0;   // not finally
-            }
-            break;        
-        }
-        
         if (gfp->experimentalY)
             gfc->sfb21_extra = 0;
         else
             gfc->sfb21_extra = (gfp->out_samplerate > 36000);
-        
+
         if ( gfp->athaa_type < 0 )
             gfc->ATH.use_adjust = 3;
         else
             gfc->ATH.use_adjust = gfp->athaa_type;
-        
-        break;
-        
-
-    case vbr_rh:
-
-        if (gfp->VBR == vbr_rh) /* because of above fall thru */
-        {
-            static const FLOAT dbQns[10]={- 4,- 3,-2,-1,0,0.7,1.4,2.1,2.8,3.5};
-            /*static const FLOAT atQns[10]={-16,-12,-8,-4,0,  1,  2,  3,  4,  5};*/
-	    gfc->VBR.mask_adjust = dbQns[gfp->VBR_q];
-        }
-        
-        /*  use Gabriel's adaptative ATH shape for VBR by default
-         */
-        if (gfp->ATHtype == -1)
-            gfp->ATHtype = 4;
-
-        /*  automatic ATH adjustment on, VBR modes need it
-         */
-        if ( gfp->athaa_type < 0 )
-            gfc->ATH.use_adjust = 3;
-        else
-            gfc->ATH.use_adjust = gfp->athaa_type;
-
-        /*  sfb21 extra only with MPEG-1 at higher sampling rates
-         */
-        if ( gfp->experimentalY )
-            gfc->sfb21_extra = 0;
-        else 
-            gfc->sfb21_extra = (gfp->out_samplerate > 44000);
-
-        /*  VBR needs at least the output of psychomodel,
-         *  so we have to garantee that by setting a minimum 
-         *  quality level, actually level 5 does it.
-         *  the -v and -V x settings switch the quality to level 3
-         *  you would have to add a -q 5 to reduce the quality
-         *  down to level 5
-         */
-        if (gfp->quality > 5)
-            gfp->quality = 5;
-
-
-        if (gfp->quality < 0)
-            gfp->quality = DEFAULT_QUALITY;
-
-        break;
-
-    default:
-
+    } else {
         if (gfp->ATHtype == -1)
             gfp->ATHtype = 2;
 
@@ -1003,45 +770,18 @@ lame_init_params(lame_global_flags * const gfp)
         /*  no sfb21 extra with CBR code
          */
         gfc->sfb21_extra = 0;
-
-        if (gfp->quality < 0)
-            gfp->quality = DEFAULT_QUALITY;
-
-        break;
     }
-    /*  just another daily changing developer switch  */
-    if ( gfp->tune ) gfc->VBR.mask_adjust = gfp->tune_value_a;
 
     /* initialize internal qval settings */
     lame_init_qval(gfp);
-
-#ifdef KLEMM_44
-    gfc->mfbuf[0] = (sample_t *) calloc(sizeof(sample_t), MFSIZE);
-    gfc->mfbuf[1] = (sample_t *) calloc(sizeof(sample_t), MFSIZE);
-    gfc->sampfreq_in = unround_samplefrequency(gfp->in_samplerate);
-    gfc->sampfreq_out = gfp->out_samplerate;
-    gfc->resample_in = resample_open(gfc->sampfreq_in,
-                                     gfc->sampfreq_out, -1.0 /* Auto */, 32);
-#endif
 
     /* initialize internal adaptive ATH settings  -jd */
     gfc->ATH.aa_sensitivity_p = pow( 10.0, gfp->athaa_sensitivity / -10.0 );
 
 
-    if (gfp->short_blocks == short_block_not_set) {
-        gfp->short_blocks =  short_block_allowed;
-    }
-
     if ( gfp->athaa_loudapprox < 0 ) gfp->athaa_loudapprox = 2;
-    
+
     if (gfp->useTemporal < 0 ) gfp->useTemporal = 1;  // on by default
-
-
-    if ( gfp->preset_expopts && gfc->presetTune.use < 1 )
-        MSGF(gfc,"\n*** WARNING ***\n\n"
-	     "Specialized tunings for the preset you are using have been deactivated.\n"
-	     "This is *NOT* recommended and will lead to a decrease in quality!\n"
-	     "\n*** WARNING ***\n\n");
 
     /* padding method as described in 
      * "MPEG-Layer3 / Bitstream Syntax and Decoding"
@@ -1186,7 +926,12 @@ lame_print_internals( const lame_global_flags * gfp )
     case  2: pc = "best (inside loop, slow)"; break;
     } 
     MSGF( gfc, "\thuffman search: %s\n", pc ); 
-    MSGF( gfc, "\texperimental X=%d Y=%d Z=%d\n", gfp->experimentalX, gfp->experimentalY, gfp->experimentalZ );
+    MSGF( gfc, "\tquantcomp_long/short=%d,%d\n",
+	  gfc->quantcomp_method, gfc->quantcomp_method_s);
+    MSGF( gfc, "\tallow large scalefactor range=%s\n",
+	  gfc->use_scalefac_scale ? "yes" : "no");
+    MSGF( gfc, "\texperimental X=%d Y=%d Z=%d\n",
+	  gfp->experimentalX, gfp->experimentalY, gfp->experimentalZ );
     MSGF( gfc, "\t...\n" );
 
     /*  everything controlling the stream format 
@@ -1233,16 +978,9 @@ lame_print_internals( const lame_global_flags * gfp )
     /*  everything controlling psychoacoustic settings, like ATH, etc.
      */
     MSGF( gfc, "\npsychoacoustic:\n\n" );
-    
-    switch ( gfp->short_blocks ) {
-    default:
-    case short_block_not_set:   pc = "?";               break;
-    case short_block_allowed:   pc = "allowed";         break;
-    case short_block_dispensed: pc = "dispensed";       break;
-    case short_block_forced:    pc = "forced";          break;
-    }
-    MSGF( gfc, "\tusing short blocks: %s\n", pc );    
-    MSGF( gfc, "\tadjust masking: %f dB\n", gfc->VBR.mask_adjust );
+    MSGF( gfc, "\tshort block switching threshold: %f %f\n",
+	  gfc->nsPsy.attackthre, gfc->nsPsy.attackthre_s );
+    MSGF( gfc, "\tadjust masking: %f dB\n", gfp->VBR_q-4 );
     MSGF( gfc, "\tpsymodel: %s\n", gfc->psymodel ? "used" : "not used");
     MSGF( gfc, "\tnoise shaping: %s\n", gfc->psymodel > 1 ? "used" : "not used");
     MSGF( gfc, "\t ^ amplification: %d\n", gfc->noise_shaping_amp );
@@ -1953,7 +1691,6 @@ lame_init_old(lame_global_flags * gfp)
 
     gfp->bWriteVbrTag = 1;
     gfp->quality = -1;
-    gfp->short_blocks = short_block_not_set;
 
     gfp->lowpassfreq = 0;
     gfp->highpassfreq = 0;
@@ -1976,7 +1713,11 @@ lame_init_old(lame_global_flags * gfp)
     gfc->OldValue[1] = 180;
     gfc->CurrentStep[0] = 4;
     gfc->CurrentStep[1] = 4;
-    gfc->masking_lower = 1;
+    gfc->masking_lower = 1.0;
+
+    gfc->nsPsy.attackthre   = NSATTACKTHRE;
+    gfc->nsPsy.attackthre_s = NSATTACKTHRE_S;
+    gfc->nsPsy.msfix = NS_MSFIX*M_SQRT2;
 
     gfp->athaa_type = -1;
     gfp->ATHtype = -1;  /* default = -1 = set in lame_init_params */

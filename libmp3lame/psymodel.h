@@ -25,14 +25,14 @@
 #define NSFIRLEN 21
 #define rpelev 2
 #define rpelev2 16
-#define rpelev_s 2
-#define rpelev2_s 16
 
 /* size of each partition band, in barks: */
 #define DELBARK .34
 #define CW_LOWER_INDEX 6
 
 #define vo_scale (1./( 14752 ))
+
+#define TEMPORALMASK_SUSTAIN_SEC 0.01
 
 #if 1
     /* AAC values, results in more masking over MP3 values */
@@ -47,6 +47,10 @@
 #define NS_PREECHO_ATT0 1.0 /* 0.8 */
 #define NS_PREECHO_ATT1 0.6
 #define NS_PREECHO_ATT2 0.3
+
+#define NS_MSFIX 5.0
+#define NSATTACKTHRE 3.5
+#define NSATTACKTHRE_S 30
 
 void psycho_analysis( lame_global_flags *gfp,
 		      const sample_t *buffer[2],
