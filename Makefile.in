@@ -445,6 +445,8 @@ mostlyclean-am: mostlyclean-generic
 
 # end global section
 
+.PHONY: test
+
 #
 #  testcase.mp3 is a 2926 byte file.  The first number output by
 #  wc is the number of bytes which differ between new output
