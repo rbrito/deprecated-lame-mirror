@@ -3,9 +3,6 @@ $Id$
 USE_FFT3DN:
  - enable 3DNow code for the FFT
 
-KLEMM_14: (missing)
- - some optimizations and code simplifications (unrolled code)
-
 KLEMM_36:
  - portability fixes in the IO code
 
@@ -13,7 +10,10 @@ KLEMM_43:
  - cleaned up tables in tables.c
 
 KLEMM_44:
- - enable code in pcm.c (new API)
+ - enable code in pcm.c
+
+OLD_ATH_AUTO_ADJUST:
+ - use Gabriels ATH auto adjust instead of JDs continous one
 
 
 USE_GOGO_SUBBAND:
