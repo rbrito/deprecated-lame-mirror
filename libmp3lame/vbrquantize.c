@@ -917,7 +917,6 @@ short_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
         cod_info->scalefac_scale = 1;
 
     cod_info->global_gain = vbrmax;
-    assert(cod_info->global_gain < 256);
 
     if (cod_info->global_gain < 0) {
         cod_info->global_gain = 0;
@@ -930,6 +929,7 @@ short_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
             vbrsf[sfb*3+b] -= vbrmax;
         }
     }
+    assert(cod_info->global_gain < 256);
     maxover =
         compute_scalefacs_short(vbrsf, cod_info, cod_info->scalefac, cod_info->subblock_gain);
 
@@ -1167,54 +1167,24 @@ VBR_noise_shaping(lame_internal_flags * gfc, FLOAT8 * xr34orig, int minbits, int
             int     i;
             vbrmax = vbrmin2 + (vbrmax2 - vbrmin2) * count / M;
             vbrmin = vbrmin2;
-            if (shortblock) {
-                for (i = 0; i < SBMAX_s; ++i) {
+	    for (i = 0; i < cod_info->psymax; ++i) {
 #ifdef XXL
-                    vbrsf[i*3+0] = vbrmin2 + (vbrsf2[i*3+0] - vbrmin2) * count / M;
-                    vbrsf[i*3+1] = vbrmin2 + (vbrsf2[i*3+1] - vbrmin2) * count / M;
-                    vbrsf[i*3+2] = vbrmin2 + (vbrsf2[i*3+2] - vbrmin2) * count / M;
+		vbrsf[i] = vbrmin2 + (vbrsf2[i] - vbrmin2) * count / M;
 #else
-                    vbrsf[i*3+0] = Min(vbrsf2[i*3+0], vbrmax);
-                    vbrsf[i*3+1] = Min(vbrsf2[i*3+1], vbrmax);
-                    vbrsf[i*3+2] = Min(vbrsf2[i*3+2], vbrmax);
+		vbrsf[i] = Min(vbrsf2[i], vbrmax);
 #endif
-                }
-            }
-            else {
-                for (i = 0; i < SBMAX_l; ++i) {
-#ifdef XXL
-                    vbrsf[i] = vbrmin2 + (vbrsf2[i] - vbrmin2) * count / M;
-#else
-                    vbrsf[i] = Min(vbrsf2[i], vbrmax);
-#endif
-                }
             }
         }
         else if (cod_info->part2_3_length > maxbits) {
             int     i;
             vbrmax = vbrmax2;
             vbrmin = vbrmax2 + (vbrmin2 - vbrmax2) * count / M;
-            if (shortblock) {
-                for (i = 0; i < SBMAX_s; ++i) {
+	    for (i = 0; i < cod_info->psymax; ++i) {
 #ifdef XXL
-                    vbrsf[i*3+0] = vbrmax2 + (vbrsf2[i*3+0] - vbrmax2) * count / M;
-                    vbrsf[i*3+1] = vbrmax2 + (vbrsf2[i*3+1] - vbrmax2) * count / M;
-                    vbrsf[i*3+2] = vbrmax2 + (vbrsf2[i*3+2] - vbrmax2) * count / M;
+		vbrsf[i] = vbrmax2 + (vbrsf2[i] - vbrmax2) * count / M;
 #else
-                    vbrsf[i*3+0] = Max(vbrsf2[i*3+0], vbrmin);
-                    vbrsf[i*3+1] = Max(vbrsf2[i*3+1], vbrmin);
-                    vbrsf[i*3+2] = Max(vbrsf2[i*3+2], vbrmin);
+		vbrsf[i] = Max(vbrsf2[i], vbrmin);
 #endif
-                }
-            }
-            else {
-                for (i = 0; i < SBMAX_l; ++i) {
-#ifdef XXL
-                    vbrsf[i] = vbrmax2 + (vbrsf2[i] - vbrmax2) * count / M;
-#else
-                    vbrsf[i] = Max(vbrsf2[i], vbrmin);
-#endif
-                }
             }
         }
         else
