@@ -734,15 +734,15 @@ if test "x$GCC" = "xyes"; then
 	*86)
 		case "${GCC_version}" in
 		3.4*)
-			if test -x /bin/uname; then
-				/bin/uname -a | grep i686 > /dev/null 2>&1 && \
+			if test -x /bin/uname${ac_exeext}; then
+				/bin/uname${ac_exeext} -a | grep i686 > /dev/null 2>&1 && \
 				OPTIMIZATION="${OPTIMIZATION} \
 						-mtune=pentiumpro"
 			fi
 			;;
 		3.*)
-			if test -x /bin/uname; then
-				/bin/uname -a | grep i686 > /dev/null 2>&1 && \
+			if test -x /bin/uname${ac_exeext}; then
+				/bin/uname${ac_exeext} -a | grep i686 > /dev/null 2>&1 && \
 				OPTIMIZATION="${OPTIMIZATION} \
 						-mcpu=pentiumpro"
 			fi
