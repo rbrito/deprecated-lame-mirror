@@ -1087,8 +1087,8 @@ int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s)
 	  if (j>=i) tempx = (bval_s[i] - bval_s[j])*3.0;
 	  else    tempx = (bval_s[i] - bval_s[j])*1.5;
 #ifdef AACS3
-          if (i>=j) tempx = (bval_l[i] - bval_l[j])*3.0;
-	  else    tempx = (bval_l[i] - bval_l[j])*1.5; 
+          if (i>=j) tempx = (bval_s[i] - bval_s[j])*3.0;
+	  else    tempx = (bval_s[i] - bval_s[j])*1.5; 
 #endif
 	  if(tempx>=0.5 && tempx<=2.5)
 	    {
