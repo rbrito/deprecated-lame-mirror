@@ -85,7 +85,7 @@ ms_sparsing(lame_internal_flags* gfc, int gr)
 static void
 conv_istereo(lame_internal_flags* gfc, gr_info *gi, int sfb, int i)
 {
-    for (; i != 576; sfb++) {
+    for (; i < gi->xrNumMax; sfb++) {
 	FLOAT lsum = 1e-30, rsum = 1e-30;
 	int j = i + gi->width[sfb];
 	do {

@@ -405,8 +405,10 @@ init_bitalloc(
 #ifdef HAVE_NASM
     if (gfc->CPU_features.SIMD) {
 	extern void pow075_SSE(float *, float *, int, float*);
-	end = (end + 7) & (~7);
-	pow075_SSE(gi->xr, xrpow, end, &sum);
+	if (end) {
+	    end = (end + 7) & (~7);
+	    pow075_SSE(gi->xr, xrpow, end, &sum);
+	}
     } else
 #endif
     {
@@ -706,12 +708,13 @@ amp_scalefac_bands(
     int target_bits
     )
 {
-    int bits, sfb;
-    FLOAT trigger;
+    FLOAT trigger = distort[0];
+    int bits, sfb, sfbmax = gi->sfbmax;
+    if (sfbmax > gi->psymax)
+	sfbmax = gi->psymax;
 
     /* compute maximum value of distort[]  */
-    trigger = distort[0];
-    for (sfb = 1; sfb < gi->sfbmax; sfb++) {
+    for (sfb = 1; sfb < sfbmax; sfb++) {
 	if (trigger < distort[sfb])
 	    trigger = distort[sfb];
     }
@@ -730,7 +733,7 @@ amp_scalefac_bands(
 	    trigger = sqrt(trigger);
     }
 
-    for (sfb = 0; sfb < gi->sfbmax; sfb++) {
+    for (sfb = 0; sfb < sfbmax; sfb++) {
 	if (distort[sfb] < trigger)
 	    continue;
 
