@@ -27,7 +27,7 @@
 
 #include <math.h>
 #include <assert.h>
-#include "bitstream.h"
+#include "util.h"
 #include "l3side.h"
 #include "quantize.h"
 #include "reservoir.h"
@@ -184,7 +184,8 @@ bin_search_StepSize(
           gr_info * const cod_info,
     const int             desired_rate, 
     const int             start, 
-    const FLOAT8          xrpow [576] ) 
+    const FLOAT8          xrpow [576],
+          int             l3enc [576] ) 
 {
     int nBits;
     int CurrentStep;
@@ -197,7 +198,7 @@ bin_search_StepSize(
 
     do {
         cod_info->global_gain = StepSize;
-        nBits = count_bits(gfc, xrpow, cod_info);  
+        nBits = count_bits(gfc,l3enc,xrpow,cod_info);  
 
         if (CurrentStep == 1) break; /* nothing to adjust anymore */
     
@@ -230,11 +231,6 @@ bin_search_StepSize(
     
     gfc->CurrentStep = CurrentStep/4 != 0 ? 4 : 2;
 
-    if (nBits > desired_rate) {
-	cod_info->global_gain++;
-	nBits = count_bits(gfc, xrpow, cod_info);
-    }
-    cod_info->part2_3_length = nBits;
     return nBits;
 }
 
@@ -251,12 +247,13 @@ bin_search_StepSize(
  *
  ***************************************************************************/ 
 
-static void
+int 
 inner_loop(
           lame_internal_flags * const gfc,
           gr_info * const cod_info,
     const int             max_bits,
-    const FLOAT8          xrpow [576])
+    const FLOAT8          xrpow [576],
+          int             l3enc [576] )
 {
     int bits;
     
@@ -264,16 +261,16 @@ inner_loop(
 
     /*  scalefactors may have changed, so count bits
      */
-    bits=count_bits(gfc, xrpow, cod_info);
+    bits=count_bits(gfc,l3enc,xrpow,cod_info);
 
     /*  increase quantizer stepsize until needed bits are below maximum
      */
     while (bits > max_bits) {
         cod_info->global_gain++;
-        bits = count_bits (gfc, xrpow, cod_info);
-    }
+        bits = count_bits (gfc, l3enc, xrpow, cod_info);
+    } 
 
-    cod_info->part2_3_length = bits;
+    return bits;
 }
 
 
@@ -292,17 +289,18 @@ inner_loop(
 inline 
 static int
 loop_break( 
-    const gr_info        * const cod_info)
+    const gr_info        * const cod_info,
+    const III_scalefac_t * const scalefac ) 
 {
     int i, sfb;
 
     for (sfb = 0; sfb < cod_info->sfb_lmax; sfb++)
-        if (cod_info->scalefac.l[sfb] == 0)
+        if (scalefac->l[sfb] == 0)
             return 0;
 
     for (sfb = cod_info->sfb_smin; sfb < SBPSY_s; sfb++)
         for (i = 0; i < 3; i++) 
-            if (cod_info->scalefac.s[sfb][i] + cod_info->subblock_gain[i] == 0)
+            if (scalefac->s[sfb][i] + cod_info->subblock_gain[i] == 0)
                 return 0;
 
     return 1;
@@ -445,7 +443,8 @@ quant_compare(
 static void 
 amp_scalefac_bands(
     lame_global_flags *gfp,
-    gr_info  *const cod_info, 
+    const gr_info  *const cod_info, 
+    III_scalefac_t *const scalefac,
     III_psy_xmin *distort,
     FLOAT8 xrpow[576] )
 {
@@ -510,7 +509,7 @@ amp_scalefac_bands(
 	  if (!gfc->pseudohalf.l[sfb] && gfc->noise_shaping_amp==2)
 	      return;
       }
-      cod_info->scalefac.l[sfb]++;
+      scalefac->l[sfb]++;
       for (l = -width; l < 0; l++)
 	  xrpow[j+l] *= ifqstep34;
       if (gfc->noise_shaping_amp==2)
@@ -531,7 +530,7 @@ amp_scalefac_bands(
 	      if (!gfc->pseudohalf.s[sfb][b] && gfc->noise_shaping_amp==2)
 		  return;
 	  }
-	  cod_info->scalefac.s[sfb][b]++;
+	  scalefac->s[sfb][b]++;
 	  for (l = -width; l < 0; l++) 
 	      xrpow[j+l] *= ifqstep34;
 	  if (gfc->noise_shaping_amp==2)
@@ -554,11 +553,11 @@ static void
 inc_scalefac_scale (
     const lame_internal_flags        * const gfc, 
           gr_info        * const cod_info, 
+          III_scalefac_t * const scalefac,
           FLOAT8                 xrpow[576] )
 {
     int l, j, sfb;
     const FLOAT8 ifqstep34 = 1.29683955465100964055;
-    III_scalefac_t * const scalefac = &cod_info->scalefac;
 
     j = 0;
     for (sfb = 0; sfb < cod_info->sfb_lmax; sfb++) {
@@ -607,10 +606,10 @@ static int
 inc_subblock_gain (
     const lame_internal_flags        * const gfc,
           gr_info        * const cod_info,
+          III_scalefac_t * const scalefac,
           FLOAT8                 xrpow[576] )
 {
     int window;
-    III_scalefac_t * const scalefac = &cod_info->scalefac;
 
     for (window = 0; window < 3; window++) {
         int s1, s2, l;
@@ -684,20 +683,21 @@ static int
 balance_noise (
     lame_global_flags  *const gfp,
     gr_info        * const cod_info,
+    III_scalefac_t * const scalefac, 
     III_psy_xmin           *distort,
     FLOAT8                 xrpow[576] )
 {
     lame_internal_flags *const gfc = (lame_internal_flags *)gfp->internal_flags;
     int status;
     
-    amp_scalefac_bands ( gfp, cod_info, distort, xrpow);
+    amp_scalefac_bands ( gfp, cod_info, scalefac, distort, xrpow);
     
     /* check to make sure we have not amplified too much 
      * loop_break returns 0 if there is an unamplified scalefac
      * scale_bitcount returns 0 if no scalefactors are too large
      */
     
-    status = loop_break (cod_info);
+    status = loop_break (cod_info, scalefac);
     
     if (status) 
         return 0; /* all bands amplified */
@@ -706,9 +706,9 @@ balance_noise (
      * scalefacs are possibly valid.  encode them: 
      */
     if (gfc->is_mpeg1)
-        status = scale_bitcount (&cod_info->scalefac, cod_info);
+        status = scale_bitcount (scalefac, cod_info);
     else 
-        status = scale_bitcount_lsf (gfc, &cod_info->scalefac, cod_info);
+        status = scale_bitcount_lsf (gfc, scalefac, cod_info);
     
     if (!status) 
         return 1; /* amplified some bands not exceeding limits */
@@ -720,21 +720,21 @@ balance_noise (
                                       gfc->ATH->adjust < gfc->presetTune.athadjust_switch_level))) {
 	memset(&gfc->pseudohalf, 0, sizeof(gfc->pseudohalf));
 	if (!cod_info->scalefac_scale) {
-	    inc_scalefac_scale (gfc, cod_info, xrpow);
+	    inc_scalefac_scale (gfc, cod_info, scalefac, xrpow);
 	    status = 0;
 	} else {
 	    if (cod_info->block_type == SHORT_TYPE ) {
-		status = inc_subblock_gain (gfc, cod_info, xrpow)
-		    || loop_break (cod_info);
+		status = inc_subblock_gain (gfc, cod_info, scalefac, xrpow)
+		    || loop_break (cod_info, scalefac);
 	    }
 	}
     }
 
     if (!status) {
         if (gfc->is_mpeg1 == 1) 
-            status = scale_bitcount (&cod_info->scalefac, cod_info);
+            status = scale_bitcount (scalefac, cod_info);
         else 
-            status = scale_bitcount_lsf (gfc, &cod_info->scalefac, cod_info);
+            status = scale_bitcount_lsf (gfc, scalefac, cod_info);
     }
     return !status;
 }
@@ -769,117 +769,165 @@ outer_loop (
     const int                    targ_bits )  /* maximum allowed bits */
 {
     lame_internal_flags *gfc=gfp->internal_flags;
-    gr_info cod_info_w;
+    III_scalefac_t save_scalefac;
+    gr_info save_cod_info;
     FLOAT8 save_xrpow[576];
     III_psy_xmin   distort;
+    calc_noise_result noise_info;
     calc_noise_result best_noise_info;
+    int l3_enc_w[576]; 
+    int iteration = 0;
+    int bits_found;
     int huff_bits;
+    int real_bits;
     int better;
     int over;
+    III_scalefac_t * const scalefac = &cod_info->scalefac;
 
-    int age;
+    int copy = 0;
+    int age = 0;
 
-    bin_search_StepSize (gfc, cod_info, targ_bits - cod_info->part2_length,
-			 gfc->OldValue[ch], xrpow);
+    noise_info.over_count = 100;
+    noise_info.max_noise  = 0;
+    noise_info.tot_noise  = 0;
+    noise_info.over_noise = 0;
+    
+    best_noise_info.over_count = 100;
+
+    real_bits = bits_found =
+      bin_search_StepSize (gfc, cod_info, targ_bits, 
+			   gfc->OldValue[ch], xrpow, l3_enc_w);
     gfc->OldValue[ch] = cod_info->global_gain;
-
-    if (!gfc->noise_shaping) 
-	/* fast mode, no noise shaping, we are ready */
-	return 100; /* default noise_info.over_count */
-
-    /* compute the distortion in this quantization */
-    /* coefficients and thresholds both l/r (or both mid/side) */
-    over = calc_noise (gfc, cod_info, l3_xmin, &distort, &best_noise_info);
-    cod_info_w = *cod_info;
-    age = 0;
-    if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh)
-	memcpy(save_xrpow, xrpow, sizeof(FLOAT8)*576);
 
     /* BEGIN MAIN LOOP */
     do {
-	calc_noise_result noise_info;
-	/******************************************************************/
-	/* stopping criterion */
-	/******************************************************************/
-	/* if no bands with distortion and -X0, we are done */
-	if (0==gfc->noise_shaping_stop && 
-	    0==gfp->experimentalX &&
-	    (over == 0 || best_noise_info.over_count == 0) )
-	    break;
-
-	/* Check if the last scalefactor band is distorted.
-	 * in VBR mode we can't get rid of the distortion, so quit now
-	 * and VBR mode will try again with more bits.  
-	 * (makes a 10% speed increase, the files I tested were
-	 * binary identical, 2000/05/20 Robert.Hegemann@gmx.de)
-	 * distort[] > 1 means noise > allowed noise
-	 */
-	if (gfc->sfb21_extra) {
-	    if (cod_info_w.block_type == SHORT_TYPE) {
-		if (distort.s[SBMAX_s-1][0] > 1 ||
-		    distort.s[SBMAX_s-1][1] > 1 ||
-		    distort.s[SBMAX_s-1][2] > 1) break;
-	    } else {
-		if (distort.l[SBMAX_l-1] > 1) break;
-	    }
-	}
-
-	/* try the new scalefactor conbination on cod_info_w */
-	if (balance_noise (gfp, &cod_info_w, &distort, xrpow) == 0)
-	    break;
+        iteration ++;
 
         /* inner_loop starts with the initial quantization step computed above
          * and slowly increases until the bits < huff_bits.
          * Thus it is important not to start with too large of an inital
-         * quantization step.  Too small is ok, but inner_loop will take longer
+         * quantization step.  Too small is ok, but inner_loop will take longer 
          */
-        huff_bits = targ_bits - cod_info_w.part2_length;
-        if (huff_bits < 0)
+        huff_bits = targ_bits - cod_info->part2_length;
+        if (huff_bits < 0) {
+            assert(iteration != 1);
+            /*  scale factors too large, not enough bits. 
+             *  use previous quantizaton */
             break;
+        }
+        /*  if this is the first iteration, 
+         *  see if we can reuse the quantization computed in 
+         *  bin_search_StepSize above */
 
-	inner_loop (gfc, &cod_info_w, huff_bits, xrpow);
+        if (iteration == 1) {
+            if (bits_found > huff_bits) {
+                cod_info->global_gain++;
+                real_bits = inner_loop (gfc, cod_info, huff_bits, xrpow, 
+                                        l3_enc_w);
+            }
+        } else {
+            real_bits = inner_loop (gfc, cod_info, huff_bits, xrpow,
+                                    l3_enc_w);
+        }
+
+        cod_info->part2_3_length = real_bits;
 
         /* compute the distortion in this quantization */
-	over = calc_noise (gfc, &cod_info_w, l3_xmin, &distort, &noise_info);
+        if (gfc->noise_shaping) 
+            /* coefficients and thresholds both l/r (or both mid/side) */
+            over = calc_noise (gfc, l3_enc_w, cod_info, l3_xmin, 
+                               scalefac, &distort, &noise_info);
+        else {
+            /* fast mode, no noise shaping, we are ready */
+            best_noise_info = noise_info;
+            copy = 0;
+            memcpy(cod_info->l3_enc, l3_enc_w, sizeof(int)*576);
+            break;
+        }
+
 
         /* check if this quantization is better
          * than our saved quantization */
-	better = quant_compare ((gfc->presetTune.use ? gfc->presetTune.quantcomp_current
-				 : gfp->experimentalX), 
-				gfc, &best_noise_info, &noise_info, cod_info_w.block_type);
-
-        /* save data so we can restore this quantization later */
-	if (better) {
-	    best_noise_info = noise_info;
-	    *cod_info = cod_info_w;
-	    age = 0;
-	    /* save data so we can restore this quantization later */
-	    if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh) {
-		/* store for later reuse */
-		memcpy(save_xrpow, xrpow, sizeof(FLOAT8)*576);
-	    }
+        if (iteration == 1) /* the first iteration is always better */
+            better = 1;
+        else
+            better = quant_compare ((gfc->presetTune.use ? gfc->presetTune.quantcomp_current
+                                                         : gfp->experimentalX), 
+                                     gfc, &best_noise_info, &noise_info, cod_info->block_type);
+        
+        /* save data so we can restore this quantization later */    
+        if (better) {
+            copy = 0;
+            best_noise_info = noise_info;
+            memcpy(cod_info->l3_enc, l3_enc_w, sizeof(int)*576);
+            age = 0;
         }
-        else {
-	    /* allow up to 3 unsuccesful tries in serial, then stop 
-	     * if our best quantization so far had no distorted bands. This
-	     * gives us more possibilities for different quant_compare modes.
-	     * Much more than 3 makes not a big difference, it is only slower.
-	     */
-	    if (++age > 3 && best_noise_info.over_count == 0)
-		break;    
-	}
+        else
+            age ++;
+
+
+        /******************************************************************/
+        /* stopping criterion */
+        /******************************************************************/
+        /* if no bands with distortion and -X0, we are done */
+        if (0==gfc->noise_shaping_stop && 
+            0==gfp->experimentalX &&
+	    (over == 0 || best_noise_info.over_count == 0) )
+            break;
+        /* Otherwise, allow up to 3 unsuccesful tries in serial, then stop 
+         * if our best quantization so far had no distorted bands. This
+         * gives us more possibilities for different quant_compare modes.
+         * Much more than 3 makes not a big difference, it is only slower.
+         */
+        if (age > 3 && best_noise_info.over_count == 0) 
+            break;    
+    
+        /* Check if the last scalefactor band is distorted.
+         * in VBR mode we can't get rid of the distortion, so quit now
+         * and VBR mode will try again with more bits.  
+         * (makes a 10% speed increase, the files I tested were
+         * binary identical, 2000/05/20 Robert.Hegemann@gmx.de)
+         * distort[] > 1 means noise > allowed noise
+         */
+        if (gfc->sfb21_extra) {
+            if (cod_info->block_type == SHORT_TYPE) {
+                if (distort.s[SBMAX_s-1][0] > 1 ||
+                    distort.s[SBMAX_s-1][1] > 1 ||
+                    distort.s[SBMAX_s-1][2] > 1) break;
+            } else {
+                if (distort.l[SBMAX_l-1] > 1) break;
+            }
+        }
+
+        /* save data so we can restore this quantization later */    
+        if (better) {
+            copy = 1;
+            save_scalefac = *scalefac;
+            save_cod_info = *cod_info;
+            if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh) {
+                /* store for later reuse */
+                memcpy(save_xrpow, xrpow, sizeof(FLOAT8)*576);
+            }
+        }
+            
+        if (balance_noise (gfp, cod_info, scalefac, &distort, xrpow) == 0) 
+            break;
     }
     while (1); /* main iteration loop, breaks adjusted */
-
+    
     /*  finish up
      */
-    if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh)
-	/* restore for reuse on next try */
-	memcpy(xrpow, save_xrpow, sizeof(FLOAT8)*576);
-
+    if (copy) {
+        *cod_info = save_cod_info;
+        *scalefac = save_scalefac;
+        if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh)
+            /* restore for reuse on next try */
+            memcpy(xrpow, save_xrpow, sizeof(FLOAT8)*576);
+    }
     cod_info->part2_3_length += cod_info->part2_length;
-
+    
     assert (cod_info->global_gain < 256);
+    
     return best_noise_info.over_count;
 }
 
@@ -888,34 +936,45 @@ outer_loop (
 
 /************************************************************************
  *
- *      iteration_finish_one()
+ *      iteration_finish()                                                    
  *
  *  Robert Hegemann 2000-09-06
  *
  *  update reservoir status after FINAL quantization/bitrate 
  *
+ *  rh 2000-09-06: it will not work with CBR due to the bitstream formatter
+ *            you will get "Error: MAX_HEADER_BUF too small in bitstream.c"
+ *
  ************************************************************************/
 
 static void 
-iteration_finish_one (
+iteration_finish (
     lame_internal_flags *gfc,
-    int gr, int ch)
+    const int       mean_bits )
 {
     III_side_info_t *l3_side = &gfc->l3_side;
-    gr_info *cod_info = &l3_side->tt[gr][ch];
+    int gr, ch;
+    
+    for (gr = 0; gr < gfc->mode_gr; gr++) {
+        for (ch = 0; ch < gfc->channels_out; ch++) {
+            gr_info *cod_info = &l3_side->tt[gr][ch];
 
-    /*  try some better scalefac storage
-     */
-    best_scalefac_store (gfc, gr, ch, l3_side);
+            /*  try some better scalefac storage
+             */
+            best_scalefac_store (gfc, gr, ch, l3_side);
             
-    /*  best huffman_divide may save some bits too
-     */
-    if (gfc->use_best_huffman == 1) 
-	best_huffman_divide (gfc, cod_info);
+            /*  best huffman_divide may save some bits too
+             */
+            if (gfc->use_best_huffman == 1) 
+                best_huffman_divide (gfc, cod_info);
             
-    /*  update reservoir status after FINAL quantization/bitrate
-     */
-    ResvAdjust (gfc, cod_info);
+            /*  update reservoir status after FINAL quantization/bitrate
+             */
+            ResvAdjust (gfc, cod_info, l3_side, mean_bits);
+	} /* for ch */
+    }    /* for gr */
+    
+    ResvFrameEnd (gfc, l3_side, mean_bits);
 }
 
 
@@ -1038,24 +1097,26 @@ get_framebits (
     int             frameBits[15] )
 {
     lame_internal_flags *gfc=gfp->internal_flags;
-    int bitsPerFrame, i;
+    int bitsPerFrame, mean_bits, i;
+    III_side_info_t *l3_side = &gfc->l3_side;
     
     /*  always use at least this many bits per granule per channel 
      *  unless we detect analog silence, see below 
      */
     gfc->bitrate_index = gfc->VBR_min_bitrate;
-    bitsPerFrame = getframebits(gfp);
-    *min_mean_bits = (bitsPerFrame - gfc->sideinfo_len * 8) / (gfc->mode_gr*gfc->channels_out);
+    getframebits (gfp, &bitsPerFrame, &mean_bits);
+    *min_mean_bits = mean_bits / gfc->channels_out;
 
     /*  bits for analog silence 
      */
     gfc->bitrate_index = 1;
-    bitsPerFrame = getframebits(gfp);
-    *analog_mean_bits = (bitsPerFrame - gfc->sideinfo_len * 8) / (gfc->mode_gr*gfc->channels_out);
+    getframebits (gfp, &bitsPerFrame, &mean_bits);
+    *analog_mean_bits = mean_bits / gfc->channels_out;
 
     for (i = 1; i <= gfc->VBR_max_bitrate; i++) {
         gfc->bitrate_index = i;
-        frameBits[i] = ResvFrameBegin (gfp, &bitsPerFrame);
+        getframebits (gfp, &bitsPerFrame, &mean_bits);
+        frameBits[i] = ResvFrameBegin (gfp, l3_side, mean_bits, bitsPerFrame);
     }
 }
 
@@ -1173,10 +1234,11 @@ VBR_prepare (
     FLOAT8  masking_lower_db, adjust = 0.0;
     int     gr, ch;
     int     analog_silence = 1;
-    int     avg, mxb, bits = 0;
+    int     bpf, avg, mxb, bits = 0;
   
     gfc->bitrate_index = gfc->VBR_max_bitrate;
-    avg = ResvFrameBegin (gfp, &avg) / gfc->mode_gr;
+    getframebits (gfp, &bpf, &avg);
+    avg = ResvFrameBegin (gfp, &gfc->l3_side, avg, bpf ) / gfc->mode_gr;
     
     get_framebits (gfp, analog_mean_bits, min_mean_bits, frameBits);
     
@@ -1298,6 +1360,7 @@ VBR_iteration_loop (
     FLOAT8    xrpow[576];
     int       bands[2][2];
     int       frameBits[15];
+    int       bitsPerFrame;
     int       save_bits[2][2];
     int       used_bits, used_bits2;
     int       bits;
@@ -1356,19 +1419,20 @@ VBR_iteration_loop (
 
     /*  find lowest bitrate able to hold used bits
      */
-     if (analog_silence && !gfp->VBR_hard_min) 
-	 /*  we detected analog silence and the user did not specify 
-	  *  any hard framesize limit, so start with smallest possible frame
-	  */
-	 gfc->bitrate_index = 1;
-     else
-	 gfc->bitrate_index = gfc->VBR_min_bitrate;
-
+    if (analog_silence && !gfp->VBR_hard_min) 
+        /*  we detected analog silence and the user did not specify 
+         *  any hard framesize limit, so start with smallest possible frame
+         */
+        gfc->bitrate_index = 1;
+    else
+        gfc->bitrate_index = gfc->VBR_min_bitrate;
+     
     for( ; gfc->bitrate_index < gfc->VBR_max_bitrate; gfc->bitrate_index++) {
         if (used_bits <= frameBits[gfc->bitrate_index]) break; 
     }
 
-    bits = ResvFrameBegin (gfp, &mean_bits);
+    getframebits (gfp, &bitsPerFrame, &mean_bits);
+    bits = ResvFrameBegin (gfp, l3_side, mean_bits, bitsPerFrame);
     
     if (used_bits <= bits) break;
 
@@ -1384,12 +1448,7 @@ VBR_iteration_loop (
     }   /* breaks adjusted */
     /*--------------------------------------*/
     
-    for (gr = 0; gr < gfc->mode_gr; gr++) {
-        for (ch = 0; ch < gfc->channels_out; ch++) {
-	    iteration_finish_one(gfc, gr, ch);
-	} /* for ch */
-    }    /* for gr */
-    ResvFrameEnd (gfc, mean_bits);
+    iteration_finish (gfc, mean_bits);
 }
 
 
@@ -1419,13 +1478,14 @@ calc_target_bits (
     lame_internal_flags *gfc=gfp->internal_flags;
     III_side_info_t *l3_side = &gfc->l3_side;
     FLOAT8 res_factor;
-    int gr, ch, totbits, mean_bits;
+    int gr, ch, totbits, mean_bits, bitsPerFrame;
     
     gfc->bitrate_index = gfc->VBR_max_bitrate;
-    *max_frame_bits = ResvFrameBegin (gfp, &mean_bits);
+    getframebits (gfp, &bitsPerFrame, &mean_bits);
+    *max_frame_bits = ResvFrameBegin (gfp, l3_side, mean_bits, bitsPerFrame);
 
     gfc->bitrate_index = 1;
-    mean_bits = (getframebits(gfp) - gfc->sideinfo_len * 8) / gfc->mode_gr;
+    getframebits (gfp, &bitsPerFrame, &mean_bits);
     *analog_silence_bits = mean_bits / gfc->channels_out;
 
     mean_bits  = gfp->VBR_mean_bitrate_kbps * gfp->framesize * 1000;
@@ -1540,7 +1600,7 @@ ABR_iteration_loop(
     III_psy_xmin l3_xmin;
     FLOAT8    xrpow[576];
     int       targ_bits[2][2];
-    int       mean_bits, max_frame_bits;
+    int       bitsPerFrame, mean_bits, totbits, max_frame_bits;
     int       ch, gr, ath_over;
     int       analog_silence_bits;
     gr_info             *cod_info;
@@ -1551,6 +1611,7 @@ ABR_iteration_loop(
     
     /*  encode granules
      */
+    totbits=0;
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 
         if (gfc->mode_ext == MPG_MD_MS_LR) 
@@ -1574,20 +1635,23 @@ ABR_iteration_loop(
                 outer_loop (gfp, cod_info, &l3_xmin,
                             xrpow, ch, targ_bits[gr][ch]);
             }
-	    iteration_finish_one(gfc, gr, ch);
+
+            totbits += cod_info->part2_3_length;
         } /* ch */
     }  /* gr */
-
-    /*  find a bitrate which can refill the resevoir to positive size.
+  
+    /*  find a bitrate which can handle totbits 
      */
     for (gfc->bitrate_index =  gfc->VBR_min_bitrate ;
          gfc->bitrate_index <= gfc->VBR_max_bitrate;
          gfc->bitrate_index++    ) {
-        if (ResvFrameBegin (gfp, &mean_bits) >= 0) break; 
+        getframebits (gfp, &bitsPerFrame, &mean_bits);
+        max_frame_bits = ResvFrameBegin (gfp, l3_side, mean_bits, bitsPerFrame);
+        if (totbits <= max_frame_bits) break; 
     }
     assert (gfc->bitrate_index <= gfc->VBR_max_bitrate);
 
-    ResvFrameEnd (gfc, mean_bits);
+    iteration_finish (gfc, mean_bits);
 }
 
 
@@ -1616,12 +1680,14 @@ iteration_loop(
     III_psy_xmin l3_xmin;
     FLOAT8 xrpow[576];
     int    targ_bits[2];
+    int    bitsPerFrame;
     int    mean_bits, max_bits;
     int    gr, ch;
     III_side_info_t     *l3_side = &gfc->l3_side;
     gr_info             *cod_info;
 
-    ResvFrameBegin (gfp, &mean_bits);
+    getframebits (gfp, &bitsPerFrame, &mean_bits);
+    ResvFrameBegin (gfp, l3_side, mean_bits, bitsPerFrame );
 
     /* quantize! */
     for (gr = 0; gr < gfc->mode_gr; gr++) {
@@ -1629,7 +1695,7 @@ iteration_loop(
         /*  calculate needed bits
          */
         max_bits = on_pe (gfp, pe, l3_side, targ_bits, mean_bits, gr);
-
+        
         if (gfc->mode_ext == MPG_MD_MS_LR) {
             ms_convert (&gfc->l3_side, gr);
             reduce_side (targ_bits, ms_ener_ratio[gr], mean_bits, max_bits);
@@ -1651,11 +1717,37 @@ iteration_loop(
             }
             assert (cod_info->part2_3_length <= MAX_BITS);
 
-	    iteration_finish_one(gfc, gr, ch);
+            /*  try some better scalefac storage
+             */
+            best_scalefac_store (gfc, gr, ch, l3_side);
+            
+            /*  best huffman_divide may save some bits too
+             */
+            if (gfc->use_best_huffman == 1) 
+                best_huffman_divide (gfc, cod_info);
+            
+            /*  update reservoir status after FINAL quantization/bitrate
+             */
+#undef  NORES_TEST
+#ifndef NORES_TEST
+            ResvAdjust (gfc, cod_info, l3_side, mean_bits);
+#endif      
         } /* for ch */
     }    /* for gr */
+    
+#ifdef NORES_TEST
+    /* replace ResvAdjust above with this code if you do not want
+       the second granule to use bits saved by the first granule.
+       Requires using the --nores.  This is useful for testing only */
+    for (gr = 0; gr < gfc->mode_gr; gr++) {
+        for (ch =  0; ch < gfc->channels_out; ch++) {
+            cod_info = &l3_side->tt[gr][ch];
+            ResvAdjust (gfc, cod_info, l3_side, mean_bits);
+        }
+    }
+#endif
 
-    ResvFrameEnd (gfc, mean_bits);
+    ResvFrameEnd (gfc, l3_side, mean_bits);
 }
 
 
