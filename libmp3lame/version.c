@@ -115,7 +115,7 @@ const char*  get_lame_short_version ( void )
         XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) " (beta)";
 #else
     static /*@observer@*/ const char *const str =
-        XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION)
+        XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION);
 #endif
 
     return str;
