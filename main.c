@@ -153,7 +153,7 @@ int main(int argc, char **argv)
   } else if (gf.decode_only) {
     /* decode an mp3 file to a .wav */
     int skip=528+gf.encoder_delay;
-    long wavsize=2147483647;  /* max for a signed long */
+    long wavsize=2147483647L;  /* max for a signed long */
     fprintf(stderr, "input:    %s %.1fkHz MPEG%i LayerIII\n",
 	    (strcmp(gf.inPath, "-")? gf.inPath : "stdin"),
 	    gf.in_samplerate/1000.0,2-gf.version);

@@ -89,7 +89,7 @@ unsigned long *num_samples)
     
 
   } else {
-    /* rewind file.  we would like to only send 4 bytes to decodeMP3 */
+    /* rewind file back what we read looking for Xing headers */
     if (fseek(fd, -44, SEEK_CUR) != 0) {
       /* backwards fseek failed.  input is probably a pipe */
     } else {
