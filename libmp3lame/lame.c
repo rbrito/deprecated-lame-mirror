@@ -1143,7 +1143,11 @@ lame_print_config(const lame_global_flags * gfp)
             MSGF(gfc, ", 3DNow!");
 #endif
         if (gfc->CPU_features.SSE)
+#ifdef HAVE_INTRINSICS_SSE
+            MSGF(gfc, ", SSE (ASM used)");
+#else
             MSGF(gfc, ", SSE");
+#endif
         if (gfc->CPU_features.SSE2)
             MSGF(gfc, ", SSE2");
         MSGF(gfc, "\n");

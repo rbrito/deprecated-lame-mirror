@@ -172,13 +172,112 @@ ms_convert(III_side_info_t *l3_side, int gr)
  *
  ************************************************************************/
 
+
+void init_xrpow_core_c(gr_info *const cod_info, 
+                        FLOAT xrpow[576],
+                        int upper,
+                        FLOAT* sum)
+{
+    int i;
+    FLOAT tmp;
+    *sum = 0;
+    for (i = 0; i <= upper; ++i) {
+        tmp = fabs (cod_info->xr[i]);
+        *sum += tmp;
+        xrpow[i] = sqrt (tmp * sqrt(tmp));
+
+        if (xrpow[i] > cod_info->xrpow_max)
+            cod_info->xrpow_max = xrpow[i];
+    }
+}
+
+
+#ifdef HAVE_INTRINSICS_SSE
+
+#include <xmmintrin.h>
+
+typedef union {
+    __m128   _m128;
+    FLOAT     _FLOAT[4];
+} __m128_FLOAT;
+
+
+
+void init_xrpow_core_sse(gr_info *const cod_info, 
+                        FLOAT xrpow[576],
+                        int upper,
+                        FLOAT* sum)
+{
+    int i;
+    FLOAT tmp;
+    int upper4 = (upper/4)*4;
+
+
+    int fabs_mask[4] = {0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF};
+    __m128 fabs_mask_m128 = _mm_loadu_ps((float *) fabs_mask);
+    __m128_FLOAT _m128_xrpow_max;
+
+    _m128_xrpow_max._m128 = _mm_set_ps1(0);
+
+    *sum = 0;
+
+    for (i = 0; i < upper4; i+=4) {
+        __m128_FLOAT tmp128;
+        
+        tmp128._m128 = _mm_loadu_ps(&(cod_info->xr[i])); //load
+        tmp128._m128 = _mm_and_ps(tmp128._m128, fabs_mask_m128); //fabs
+
+        *sum += tmp128._FLOAT[0] + tmp128._FLOAT[1] + tmp128._FLOAT[2] + tmp128._FLOAT[3];
+
+        tmp128._m128 = _mm_sqrt_ps(_mm_mul_ps(tmp128._m128, _mm_sqrt_ps(tmp128._m128)));
+
+        _mm_storeu_ps(&(xrpow[i]), tmp128._m128); //store into xrpow[]
+
+        _m128_xrpow_max._m128 = _mm_max_ps(_m128_xrpow_max._m128, tmp128._m128); //retrieve max
+    }
+
+    cod_info->xrpow_max = Max(_m128_xrpow_max._FLOAT[0],
+                                Max(_m128_xrpow_max._FLOAT[1],
+                                Max(_m128_xrpow_max._FLOAT[2], _m128_xrpow_max._FLOAT[3])));
+
+
+
+    for (i = upper4; i <= upper; ++i) {
+        tmp = fabs (cod_info->xr[i]);
+        *sum += tmp;
+        xrpow[i] = sqrt (tmp * sqrt(tmp));
+
+        if (xrpow[i] > cod_info->xrpow_max)
+            cod_info->xrpow_max = xrpow[i];
+    }
+}
+
+
+#endif
+
+
+
+
+
+void init_xrpow_core_init(lame_internal_flags * const gfc)
+{
+    gfc->init_xrpow_core = init_xrpow_core_c;
+    
+#ifdef HAVE_INTRINSICS_SSE
+    if (gfc->CPU_features.SSE)
+        gfc->init_xrpow_core = init_xrpow_core_sse;
+#endif
+}
+
+
+
 static int 
 init_xrpow(
     lame_internal_flags *gfc,
     gr_info *const cod_info, 
     FLOAT xrpow[576] )
 {
-    FLOAT tmp, sum = 0;
+    FLOAT sum = 0;
     int i;
     int upper = cod_info->max_nonzero_coeff;
 
@@ -189,14 +288,10 @@ init_xrpow(
      *  and calculate xrpow matching our fresh scalefactors
      */
     memset(&(xrpow[upper]), 0, (575-upper)*sizeof(xrpow[upper]));
-    for (i = 0; i <= upper; ++i) {
-        tmp = fabs (cod_info->xr[i]);
-        sum += tmp;
-        xrpow[i] = sqrt (tmp * sqrt(tmp));
 
-        if (xrpow[i] > cod_info->xrpow_max)
-            cod_info->xrpow_max = xrpow[i];
-    }
+
+    gfc->init_xrpow_core(cod_info, xrpow, upper, &sum);
+
     /*  return 1 if we have something to quantize, else 0
      */
     if (sum > (FLOAT)1E-20) {
