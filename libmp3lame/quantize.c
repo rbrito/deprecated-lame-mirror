@@ -84,8 +84,8 @@ on_pe(
 	    targ_bits[ch] = 126;
 	} else {
 	    targ_bits[ch] = tbits;
-	    if (ratio[ch].pe > 500.0) {
-		targ_bits[ch] = tbits * (ratio[ch].pe-500.0) / 1.4;
+	    if (ratio[ch].pe*(2.0/3) > tbits) {
+		targ_bits[ch] = tbits * (ratio[ch].pe*(2.0/3)-tbits);
 		if (targ_bits[ch] > mean_bits) 
 		    targ_bits[ch] = mean_bits;
 	    }
@@ -1025,6 +1025,7 @@ iteration_loop(
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         /*  calculate needed bits */
         on_pe (gfc, ratio[gr], targ_bits, mean_bits);
+
         for (ch=0 ; ch < gfc->channels_out ; ch ++) {
 	    gr_info *gi = &gfc->l3_side.tt[gr][ch]; 
 	    outer_loop(gfp, gi, ch, targ_bits[ch], &ratio[gr][ch]);
