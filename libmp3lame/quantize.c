@@ -1382,17 +1382,22 @@ VBR_iteration_loop (
                     int sfb;
                     cod_info = &l3_side->gr[gr].ch[ch].tt;
                     if (cod_info->block_type == SHORT_TYPE) {
+                    static FLOAT8 const penalty[] = 
+                    {1.03,1.06,1.09,1.12,1.15,1.18,1.21,1.24,1.27,1.30,1.33,1.36};
                         for (sfb = 0; sfb < SBMAX_s; sfb++) {
-                            l3_xmin[gr][ch].s[sfb][0] *= 1.+.029*sfb*sfb/SBMAX_s/SBMAX_s;
-                            l3_xmin[gr][ch].s[sfb][1] *= 1.+.029*sfb*sfb/SBMAX_s/SBMAX_s;
-                            l3_xmin[gr][ch].s[sfb][2] *= 1.+.029*sfb*sfb/SBMAX_s/SBMAX_s;
+                            l3_xmin[gr][ch].s[sfb][0] *= penalty[sfb];
+                            l3_xmin[gr][ch].s[sfb][1] *= penalty[sfb];
+                            l3_xmin[gr][ch].s[sfb][2] *= penalty[sfb];
                         }
                     }
                     else {
+                    static FLOAT8 const penalty[] =
+                    {1.015,1.030,1.045,1.060,1.075,1.090,1.105,1.120,1.135,1.150,1.165,
+                     1.180,1.195,1.210,1.225,1.240,1.255,1.270,1.285,1.300,1.315,1.330};
                         for (sfb = 0; sfb < SBMAX_l; sfb++) 
-                            l3_xmin[gr][ch].l[sfb] *= 1.+.029*sfb*sfb/SBMAX_l/SBMAX_l;
+                            l3_xmin[gr][ch].l[sfb] *= penalty[sfb];
                     }
-                    max_bits[gr][ch] = Max(min_mean_bits, 0.9*max_bits[gr][ch]);
+                    max_bits[gr][ch] = Max(min_mean_bits, 0.975*max_bits[gr][ch]);
                 }
             }
         }

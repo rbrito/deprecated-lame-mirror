@@ -624,7 +624,7 @@ int L3psycho_anal( lame_global_flags * gfp,
             if ( vbr_mtrh == gfp->VBR ) {
                 if ( b > 5 ) 
                 {
-                    FLOAT8 const x = 1.917973986; /* pow(10.,sqrt(8)/10.) */
+                    FLOAT8 const x = 1.8699422;
                     FLOAT8 w = gfc->PSY->prvTonRed[b/2] * x;
                     if (tbb > w) 
                         tbb = w;
@@ -650,15 +650,11 @@ int L3psycho_anal( lame_global_flags * gfp,
 	     chn=2,3   S and M channels.  
 	  */
         
-	  if (vbr_mtrh == gfp->VBR) {
-            //  FLOAT8 tmpATH = athAdjust( gfc->ATH->adjust, gfc->ATH->cb[b] );
-            thr[b] = Min (rpelev*gfc->nb_1[chn][b], rpelev2*gfc->nb_2[chn][b]);
-            //  thr[b] = Max (thr[b], gfc->ATH->adjust * gfc->ATH->cb[b]);
-            //  if ( thr[b] < tmpATH ) thr[b] = tmpATH;
-            thr[b] = Min (thr[b], ecb);
-	  }
-	  else if (gfc->blocktype_old[chn>1 ? chn-2 : chn] == SHORT_TYPE )
-	    thr[b] = ecb; /* Min(ecb, rpelev*gfc->nb_1[chn][b]); */
+	  if (gfc->blocktype_old[chn>1 ? chn-2 : chn] == SHORT_TYPE )
+	    if (vbr_mtrh == gfp->VBR)
+                thr[b] = Min(ecb, rpelev*gfc->nb_1[chn][b]);
+            else
+                thr[b] = ecb; /* Min(ecb, rpelev*gfc->nb_1[chn][b]); */
 	  else
 	    thr[b] = Min(ecb, Min(rpelev*gfc->nb_1[chn][b],rpelev2*gfc->nb_2[chn][b]) );
 

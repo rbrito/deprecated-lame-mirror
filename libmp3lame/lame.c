@@ -1061,7 +1061,7 @@ lame_init_params(lame_global_flags * const gfp)
         }    
         gfc->sfb21_extra = (gfp->out_samplerate > 44000);
         
-        gfc->ATH->use_adjust = 2;
+        gfc->ATH->use_adjust = 3;
         
         if (gfp->ATHtype == -1) gfp->ATHtype = 4;
         gfp->allow_diff_short = 1;
@@ -1169,6 +1169,8 @@ lame_init_params(lame_global_flags * const gfp)
 
     gfc->PSY->cwlimit = gfp->cwlimit <= 0 ? 8871.7f : gfp->cwlimit;
     gfc->PSY->allow_diff_short = gfp->allow_diff_short && !gfp->force_ms;
+    
+    if ( gfp->adapt_thres_type < 0 ) gfp->adapt_thres_type = 2;
     
     return 0;
 }
@@ -1315,7 +1317,8 @@ lame_print_internals( const lame_global_flags * gfp )
     MSGF( gfc, "\tpadding: %s\n", pc );
     
     if ( vbr_default == gfp->VBR )  pc = "(default)";
-    if ( gfp->free_format )         pc = "(free format)";
+    else if ( gfp->free_format )    pc = "(free format)";
+    else pc = "";
     switch ( gfp->VBR ) {
     case vbr_off : MSGF( gfc, "\tconstant bitrate - CBR %s\n",      pc ); break;
     case vbr_abr : MSGF( gfc, "\tvariable bitrate - ABR %s\n",      pc ); break;
@@ -1948,7 +1951,7 @@ lame_init_old(lame_global_flags * gfp)
     gfc->masking_lower = 1;
 
     gfp->ATHtype = -1;  /* default = -1 = set in lame_init_params */
-    gfp->adapt_thres_type = 1;	/* 1 = adaptive threshold, with flat */
+    gfp->adapt_thres_type = -1;	/* 1 = adaptive threshold, with flat */
 				/*     approximation for loudness.   */
     gfp->adapt_thres_level = 0.0; /* no offset */
     gfp->useTemporal = 1;
