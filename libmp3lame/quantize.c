@@ -44,46 +44,38 @@
  * mt 6/99
  * bugfixes rh 8/01: often allocated more than the allowed 4095 bits
  ************************************************************************/
-static int
+static void
 on_pe(
-    lame_global_flags *gfp,
+    lame_internal_flags *gfc,
     III_psy_ratio      ratio[2],
     int targ_bits[2],
-    int mean_bits,
-    int gr,
-    int cbr
+    int mean_bits
     )
 {
-    lame_internal_flags * gfc = gfp->internal_flags;
     int     extra_bits, tbits, bits;
     int     max_bits;  /* maximum allowed bits for this granule */
     int     ch;
 
     /* allocate targ_bits for granule */
-    ResvMaxBits( gfp, mean_bits, &tbits, &extra_bits, cbr);
+    ResvMaxBits( gfc, mean_bits, &tbits, &extra_bits);
 
     max_bits = tbits + extra_bits;
     if (max_bits > MAX_BITS) /* hard limit per granule */
         max_bits = MAX_BITS;
 
     /* at most increase bits by 1.5*average */
-    mean_bits = tbits+ mean_bits*3/4;
-    if (mean_bits > MAX_BITS)
-	mean_bits = MAX_BITS; 
-
+    mean_bits = tbits+mean_bits*3/2;
     tbits /= gfc->channels_out;
-    if (tbits > MAX_BITS)
-	tbits = MAX_BITS;
+    mean_bits /= gfc->channels_out;
 
     for ( bits = 0, ch = 0; ch < gfc->channels_out; ++ch ) {
+	targ_bits[ch] = tbits;
 	if (ratio[ch].pe > 700.0) {
-	    targ_bits[ch] = tbits * (ratio[ch].pe * (1.0/700.0));
+	    targ_bits[ch] += tbits * (ratio[ch].pe - 700.0) * (1.0/700.0);
 	    if (targ_bits[ch] > mean_bits) 
 		targ_bits[ch] = mean_bits;
-	} else
-	    targ_bits[ch] = tbits;
-
-        bits += targ_bits[ch];
+	}
+	bits += targ_bits[ch];
     }
     if (bits > max_bits) {
         for ( ch = 0; ch < gfc->channels_out; ++ch ) {
@@ -91,58 +83,53 @@ on_pe(
 		= tbits + extra_bits * (targ_bits[ch] - tbits) / bits;
         }
     }
-    return max_bits;
 }
 
 
 
 
 static void
-reduce_side(int targ_bits[2],FLOAT ms_ener_ratio,int mean_bits,int max_bits)
+reduce_side(int targ_bits[2],FLOAT ms_ener_ratio,int mean_bits)
 {
     int move_bits;
     FLOAT fac;
 
-    /*  ms_ener_ratio = 0:  allocate 66/33  mid/side  fac=.33  
+    if (targ_bits[1] < 125)
+	return; /* dont reduce side channel below 125 bits */
+
+    /*  ms_ener_ratio = 0:  allocate 66/33  mid/side  fac=.33
      *  ms_ener_ratio =.5:  allocate 50/50 mid/side   fac= 0 */
-    /* 75/25 split is fac=.5 */
+    /* 75/25 split is fac=.25 */
     /* float fac = .50*(.5-ms_ener_ratio[gr])/.5;*/
-    fac = .33*(.5-ms_ener_ratio)/.5;
+    fac = .33*(.5-ms_ener_ratio);
     if (fac<0) fac=0;
-    if (fac>.5) fac=.5;
+    if (fac>.25) fac=.25;
 
     /* number of bits to move from side channel to mid channel */
     /*    move_bits = fac*targ_bits[1];  */
-    move_bits = fac*.5*(targ_bits[0]+targ_bits[1]);
+    move_bits = fac*(targ_bits[0]+targ_bits[1]);
 
     if (move_bits > MAX_BITS - targ_bits[0])
         move_bits = MAX_BITS - targ_bits[0];
-    if (move_bits < 0)
-	move_bits = 0;
 
-    if (targ_bits[1] >= 125) {
-	/* dont reduce side channel below 125 bits */
-	if (targ_bits[1]-move_bits > 125) {
-	    /* if mid channel already has 2x more than average, dont bother */
-	    /* mean_bits = bits per granule (for both channels) */
-	    if (targ_bits[0] < mean_bits)
-		targ_bits[0] += move_bits;
-	    targ_bits[1] -= move_bits;
-	} else {
-	    targ_bits[0] += targ_bits[1] - 125;
-	    targ_bits[1] = 125;
-	}
-    }
-
-    move_bits=targ_bits[0]+targ_bits[1];
-    if (move_bits > max_bits) {
-	targ_bits[0]=(max_bits*targ_bits[0])/move_bits;
-	targ_bits[1]=(max_bits*targ_bits[1])/move_bits;
+    if (targ_bits[1]-move_bits > 125) {
+	targ_bits[1] -= move_bits;
+	/* if mid channel already has 2x more than average, dont bother */
+	/* mean_bits = bits per granule (for both channels) */
+	if (targ_bits[0] < mean_bits)
+	    targ_bits[0] += move_bits;
+    } else {
+	targ_bits[0] += targ_bits[1] - 125;
+	targ_bits[1] = 125;
     }
     assert (targ_bits[0] <= MAX_BITS);
     assert (targ_bits[1] <= MAX_BITS);
 }
 
+
+/*************************************************************************/
+/*            calc_xmin                                                  */
+/*************************************************************************/
 
 /**
  *  Robert Hegemann 2001-04-27:
@@ -168,11 +155,6 @@ static FLOAT athAdjust( FLOAT a, FLOAT x, FLOAT athFloor )
 #undef p
     return db2pow(u);
 }
-
-
-/*************************************************************************/
-/*            calc_xmin                                                  */
-/*************************************************************************/
 
 /*
   Calculate the allowed distortion for each scalefactor band,
@@ -243,17 +225,12 @@ void calc_xmin(
     }   /* end of short block sfb loop */
 }
 
-
-
-
-
-
-
 /*************************************************************************/
 /*            calc_noise                                                 */
 /*************************************************************************/
 /*  mt 5/99:  Function: Improved calc_noise for a single channel   */
-void calc_noise( 
+static void
+calc_noise( 
         const gr_info             * const cod_info,
         const FLOAT              * l3_xmin, 
               FLOAT              * distort,
@@ -305,19 +282,6 @@ void calc_noise(
     res->over_noise  = over_noise_db;
     res->max_noise   = max_noise;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /************************************************************************
  *
@@ -896,33 +860,32 @@ balance_noise (
         status = scale_bitcount (cod_info);
     else 
         status = scale_bitcount_lsf (gfc, cod_info);
-    
-    if (!status) 
+
+    if (!status)
         return 1; /* amplified some bands not exceeding limits */
     
+    if (!gfc->use_scalefac_scale)
+	return 0;
+
     /*  some scalefactors are too large.
      *  lets try setting scalefac_scale=1 
      */
-    if (gfc->use_scalefac_scale) {
-	memset(&gfc->pseudohalf, 0, sizeof(gfc->pseudohalf));
-	if (!cod_info->scalefac_scale) {
-	    inc_scalefac_scale (cod_info, xrpow);
-	    status = 0;
-	} else {
-	    if (cod_info->block_type == SHORT_TYPE ) {
-		status = inc_subblock_gain (gfc, cod_info, xrpow)
-		    || loop_break (cod_info);
-	    }
+    memset(&gfc->pseudohalf, 0, sizeof(gfc->pseudohalf));
+    if (!cod_info->scalefac_scale) {
+	inc_scalefac_scale (cod_info, xrpow);
+    } else {
+	if (cod_info->block_type == SHORT_TYPE ) {
+	    status = inc_subblock_gain (gfc, cod_info, xrpow)
+		|| loop_break (cod_info);
 	}
+	if (status)
+	    return 0;
     }
 
-    if (!status) {
-        if (gfc->mode_gr == 2)
-            status = scale_bitcount (cod_info);
-        else 
-            status = scale_bitcount_lsf (gfc, cod_info);
-    }
-    return !status;
+    if (gfc->mode_gr == 2)
+	return !scale_bitcount (cod_info);
+    else 
+	return !scale_bitcount_lsf (gfc, cod_info);
 }
 
 
@@ -997,14 +960,9 @@ outer_loop (
 	 * binary identical, 2000/05/20 Robert.Hegemann@gmx.de)
 	 * distort[] > 1 means noise > allowed noise
 	 */
-	if (gfc->sfb21_extra) {
-	    if (distort[cod_info_w.sfbmax] > 1.0)
-		break;
-	    if (cod_info_w.block_type == SHORT_TYPE
-		&& (distort[cod_info_w.sfbmax+1] > 1.0
-		    || distort[cod_info_w.sfbmax+2] > 1.0))
-		    break;
-	}
+	if (gfc->sfb21_extra && cod_info_w.block_type != SHORT_TYPE
+	    && distort[SBMAX_l-1] > 1.0)
+	    break;
 
 	/* try the new scalefactor conbination on cod_info_w */
 	if (balance_noise (gfc, &cod_info_w, distort, xrpow) == 0)
@@ -1072,9 +1030,9 @@ outer_loop (
 static void 
 iteration_finish_one (
     lame_internal_flags *gfc,
-    int gr, int ch)
+    int gr, int ch, int adjbits)
 {
-    gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
+    gr_info *gi = &gfc->l3_side.tt[gr][ch];
 
     /*  try some better scalefac storage
      */
@@ -1083,11 +1041,11 @@ iteration_finish_one (
     /*  best huffman_divide may save some bits too
      */
     if (gfc->use_best_huffman == 1) 
-	best_huffman_divide (gfc, cod_info);
+	best_huffman_divide (gfc, gi);
 
     /*  update reservoir status after FINAL quantization/bitrate
      */
-    ResvAdjust (gfc, cod_info);
+    ResvAdjust (gfc, gi->part2_length + gi->part2_3_length - adjbits);
 }
 
 
@@ -1122,11 +1080,10 @@ ABR_calc_target_bits (
     mean_bits = getframebits(gfp) - gfc->sideinfo_len * 8;
     analog_silence_bits = mean_bits / (gfc->mode_gr * gfc->channels_out);
 
-    mean_bits  = gfp->mean_bitrate_kbps * gfp->framesize * 1000;
+    gfc->bitrate_index = 0;
+    mean_bits = getframebits(gfp) - gfc->sideinfo_len * 8;
     if (gfc->substep_shaping & 1)
-	mean_bits *= 1.09;
-    mean_bits /= gfp->out_samplerate;
-    mean_bits -= gfc->sideinfo_len*8;
+	mean_bits *= 1.1;
     mean_bits /= (gfc->mode_gr * gfc->channels_out);
 
     /*
@@ -1156,33 +1113,30 @@ ABR_calc_target_bits (
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         for (ch = 0; ch < gfc->channels_out; ch++) {
-            targ_bits[gr][ch] = res_factor * mean_bits;
-
-	    if (ratio[gr][ch].ath_over == 0)
+	    if (ratio[gr][ch].ath_over == 0) {
 		targ_bits[gr][ch] = analog_silence_bits;
-	    else if (ratio[gr][ch].pe > 700.0) {
-                gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
-                int add_bits = (ratio[gr][ch].pe - 700.0) / 1.4;
+		continue;
+	    }
+
+            targ_bits[gr][ch] = res_factor * mean_bits;
+	    if (ratio[gr][ch].pe > 600.0) {
+                int add_bits = (ratio[gr][ch].pe - 600.0) / 1.4;
 
                 /* short blocks use a little extra, no matter what the pe */
-                if (cod_info->block_type == SHORT_TYPE) {
-                    if (add_bits < mean_bits/2)
-                        add_bits = mean_bits/2;
-                }
+                if (gfc->l3_side.tt[gr][ch].block_type == SHORT_TYPE
+                    && add_bits < mean_bits/2)
+		    add_bits = mean_bits/2;
+
                 /* at most increase bits by 1.5*average */
                 if (add_bits > mean_bits*3/2)
                     add_bits = mean_bits*3/2;
-                if (add_bits < 0) 
-                    add_bits = 0;
-
+                assert(add_bits >= 0);
                 targ_bits[gr][ch] += add_bits;
             }
         }
+	if (gfc->mode_ext & MPG_MD_MS_LR)
+	    reduce_side(targ_bits[gr], ms_ener_ratio[gr], mean_bits * STEREO);
     }
-    if (gfc->mode_ext & MPG_MD_MS_LR)
-	for (gr = 0; gr < gfc->mode_gr; gr++)
-	    reduce_side(targ_bits[gr], ms_ener_ratio[gr],
-			mean_bits * STEREO, MAX_BITS);
 
     /*  sum target bits
      */
@@ -1240,7 +1194,7 @@ ABR_iteration_loop(
         for (ch = 0; ch < gfc->channels_out; ch++) {
 	    gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
 	    outer_loop(gfp, cod_info, ch, targ_bits[gr][ch], &ratio[gr][ch]);
-	    iteration_finish_one(gfc, gr, ch);
+	    iteration_finish_one(gfc, gr, ch, 0);
         } /* ch */
     }  /* gr */
 
@@ -1279,26 +1233,26 @@ iteration_loop(
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     int    targ_bits[2];
-    int    mean_bits, max_bits;
+    int    mean_bits;
     int    gr, ch;
 
     ResvFrameBegin (gfp, &mean_bits);
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         /*  calculate needed bits */
-        max_bits = on_pe (gfp, ratio[gr], targ_bits, mean_bits, gr, gr);
+        on_pe (gfc, ratio[gr], targ_bits, mean_bits);
         if (gfc->mode_ext & MPG_MD_MS_LR)
-            reduce_side (targ_bits, ms_ener_ratio[gr], mean_bits, max_bits);
+            reduce_side (targ_bits, ms_ener_ratio[gr], mean_bits);
 
         for (ch=0 ; ch < gfc->channels_out ; ch ++) {
 	    gr_info *cod_info = &gfc->l3_side.tt[gr][ch]; 
 	    outer_loop (gfp, cod_info, ch, targ_bits[ch], &ratio[gr][ch]);
             assert (cod_info->part2_3_length <= MAX_BITS);
-	    iteration_finish_one(gfc, gr, ch);
+	    iteration_finish_one(gfc, gr, ch, mean_bits / gfc->channels_out);
         } /* for ch */
     }    /* for gr */
 
-    ResvFrameEnd (gfc, mean_bits);
+    ResvFrameEnd (gfc, 0);
 }
 
 
@@ -1330,32 +1284,35 @@ bitpressure_strategy(
 static  FLOAT
 calc_sfb_noise(const FLOAT * xr, const FLOAT * xr34, int bw, int sf)
 {
-    int j;
-    fi_union fi;
-    FLOAT  xfsf = 0.0;
-    FLOAT  sfpow, sfpow34;
+    FLOAT xfsf = 0.0;
+    FLOAT sfpow = POW20(sf);  /*pow(2.0,sf/4.0); */
+    FLOAT sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
 
-    sfpow = POW20(sf);  /*pow(2.0,sf/4.0); */
-    sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
-
-    for (j = 0; j < bw; ++j) {
-        double temp = sfpow34 * xr34[j];
-        if (temp > IXMAX_VAL)
-            return -1;
-
+    bw >>= 1;
+    do {
+	fi_union fi0, fi1;
+	FLOAT t1, t2;
 #ifdef TAKEHIRO_IEEE754_HACK
-        temp += MAGIC_FLOAT;
-        fi.f = temp;
-        fi.f = temp + (adj43asm - MAGIC_INT)[fi.i];
-        fi.i -= MAGIC_INT;
-#else
-        XRPOW_FTOI(temp, fi.i);
-        XRPOW_FTOI(temp + QUANTFAC(fi.i), fi.i);
-#endif
+	fi0.f = sfpow34 * xr34[0] + (ROUNDFAC + MAGIC_FLOAT);
+	fi1.f = sfpow34 * xr34[1] + (ROUNDFAC + MAGIC_FLOAT);
 
-        temp = fabs(xr[j]) - pow43[fi.i] * sfpow;
-        xfsf += temp * temp;
-    }
+	if (fi0.i > MAGIC_INT + IXMAX_VAL) return -1;
+	if (fi1.i > MAGIC_INT + IXMAX_VAL) return -1;
+	t1 = fabs(xr[0]) - (pow43 - MAGIC_INT)[fi0.i] * sfpow;
+	t2 = fabs(xr[1]) - (pow43 - MAGIC_INT)[fi1.i] * sfpow;
+#else
+        XRPOW_FTOI(sfpow34 * xr34[0] + ROUNDFAC, fi0.i);
+        XRPOW_FTOI(sfpow34 * xr34[1] + ROUNDFAC, fi1.i);
+
+	if (fi0.i > IXMAX_VAL) return -1;
+	if (fi1.i > IXMAX_VAL) return -1;
+	t1 = fabs(xr[0]) - pow43[fi0.i] * sfpow;
+	t2 = fabs(xr[1]) - pow43[fi1.i] * sfpow;
+#endif
+        xfsf += t1*t1 + t2*t2;
+	xr34 += 2;
+	xr += 2;
+    } while (--bw > 0);
     return xfsf;
 }
 
@@ -1686,9 +1643,6 @@ VBR_noise_shaping(
     if (gfc->use_best_huffman == 2)
 	best_huffman_divide(gfc, gi);
 
-    if (gi->part2_3_length + gi->part2_length < 126)
-        bin_search_StepSize (gfc, gi, 126, 4, gi->global_gain, xr34);
-
     assert (gi->global_gain < 256u);
     assert(gi->part2_3_length + gi->part2_length < MAX_BITS);
 
@@ -1753,7 +1707,7 @@ VBR_iteration_loop (
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         for (ch = 0; ch < gfc->channels_out; ch++) {
-	    iteration_finish_one(gfc, gr, ch);
+	    iteration_finish_one(gfc, gr, ch, 0);
 	} /* for ch */
     }    /* for gr */
 
@@ -1808,7 +1762,7 @@ void set_pinfo (
 
     j = 0;
     sfb2 = cod_info->sfb_lmax;
-    if (cod_info->block_type != SHORT_TYPE && !cod_info->mixed_block_flag)
+    if (cod_info->block_type != SHORT_TYPE)
 	sfb2 = 22;
     for (sfb = 0; sfb < sfb2; sfb++) {
 	start = gfc->scalefac_band.l[ sfb ];

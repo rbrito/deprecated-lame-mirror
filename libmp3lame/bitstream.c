@@ -70,7 +70,7 @@ int getframebits(const lame_global_flags * gfp)
 
     /* main encoding routine toggles padding on and off */
     /* one Layer3 Slot consists of 8 bits */
-    return 8 * (gfc->mode_gr*72000*bit_rate / gfp->out_samplerate
+    return 8 * (gfc->mode_gr*(576/8)*1000*bit_rate / gfp->out_samplerate
 		+ gfc->padding);
 }
 

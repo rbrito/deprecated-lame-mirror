@@ -127,8 +127,8 @@ ResvFrameBegin(lame_global_flags *gfp, int *mean_bits)
 
     if (gfp->mean_bitrate_kbps >= 320) {
         /* in freeformat the buffer is constant*/
-        maxmp3buf = 8*((int)((gfp->mean_bitrate_kbps*1000)
-			     /(gfp->out_samplerate / 1152.0)/8 +.5));
+        maxmp3buf = 8*((int)((gfp->mean_bitrate_kbps*1000 * 1152/8)
+			     /gfp->out_samplerate +.5));
     } else {
         /* maximum allowed frame size.  dont use more than this number of
            bits, even if the frame has the space for them: */
@@ -175,46 +175,32 @@ ResvFrameBegin(lame_global_flags *gfp, int *mean_bits)
          extra_bits:  amount extra available from reservoir
   Mark Taylor 4/99
 */
-void ResvMaxBits(lame_global_flags *gfp, int mean_bits, int *targ_bits, int *extra_bits, int cbr)
+void ResvMaxBits(lame_internal_flags *gfc, int mean_bits, int *targ_bits, int *extra_bits)
 {
-  lame_internal_flags *gfc=gfp->internal_flags;
-  int add_bits;
-  int ResvSize = gfc->ResvSize, ResvMax = gfc->ResvMax;
+    int ResvSize = gfc->ResvSize, ResvMax = gfc->ResvMax;
+    if (ResvSize*10 >= ResvMax*6) {
+	int add_bits = 0;
+	if (ResvSize*10 >= ResvMax*9) {
+	    /* reservoir is filled over 90% -> forced to use excessed bits */
+	    add_bits = ResvSize - (ResvMax * 9) / 10;
+	    mean_bits += add_bits;
+	    gfc->substep_shaping |= 0x80;
+	}
+	/* max amount from the reservoir we are allowed to use. ISO says 60% */
+	ResvSize = (ResvMax*6)/10 - add_bits;
+	if (ResvSize < 0) ResvSize = 0;
+    } else {
+	/* build up reservoir.  this builds the reservoir a little slower
+	 * than FhG.  It could simple be mean_bits/15, but this was rigged
+	 * to always produce 100 (the old value) at 128kbs */
+	/*    *targ_bits -= (int) (mean_bits/15.2);*/
+	if (!(gfc->substep_shaping & 1))
+	    mean_bits -= mean_bits/10;
+	gfc->substep_shaping &= 0x7f;
+    }
 
-  /* conpensate the saved bits used in the 1st granule */
-  if (cbr)
-      ResvSize += mean_bits;
-
-  if (gfc->substep_shaping & 1)
-      ResvMax *= 0.9;
-
-  *targ_bits = mean_bits ;
-
-  /* extra bits if the reservoir is almost full */
-  if (ResvSize*10 > ResvMax*9) {
-    add_bits= ResvSize - (ResvMax * 9) / 10;
-    *targ_bits += add_bits;
-    gfc->substep_shaping |= 0x80;
-  }else {
-    add_bits =0 ;
-    gfc->substep_shaping &= 0x7f;
-    /* build up reservoir.  this builds the reservoir a little slower
-     * than FhG.  It could simple be mean_bits/15, but this was rigged
-     * to always produce 100 (the old value) at 128kbs */
-    /*    *targ_bits -= (int) (mean_bits/15.2);*/
-    if (!gfp->disable_reservoir && !(gfc->substep_shaping & 1))
-      *targ_bits -= .1*mean_bits;
-  }
-
-
-  /* amount from the reservoir we are allowed to use. ISO says 6/10 */
-  *extra_bits =
-    (ResvSize  < (gfc->ResvMax*6)/10  ? ResvSize : (gfc->ResvMax*6)/10);
-  *extra_bits -= add_bits;
-
-  if (*extra_bits < 0) *extra_bits=0;
-
-
+    *targ_bits = mean_bits;
+    *extra_bits = ResvSize;
 }
 
 /*
@@ -223,9 +209,9 @@ void ResvMaxBits(lame_global_flags *gfp, int mean_bits, int *targ_bits, int *ext
   the reservoir to reflect the granule's usage.
 */
 void
-ResvAdjust(lame_internal_flags *gfc,gr_info *gi)
+ResvAdjust(lame_internal_flags *gfc, int adjbits)
 {
-    gfc->ResvSize -= gi->part2_3_length + gi->part2_length;
+    gfc->ResvSize -= adjbits;
 }
 
 
@@ -241,7 +227,6 @@ ResvFrameEnd(lame_internal_flags *gfc, int mean_bits)
     int stuffingBits;
     int over_bits;
     III_side_info_t     *l3_side = &gfc->l3_side;
-
 
     gfc->ResvSize += mean_bits * gfc->mode_gr;
     l3_side->resvDrain_post = 0;

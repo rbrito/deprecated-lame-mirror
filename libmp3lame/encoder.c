@@ -407,7 +407,6 @@ int  lame_encode_mp3_frame (				// Output
 		ms_sparsing(gfc, gr);
 	}
     }
-
 #if defined(HAVE_GTK)
     /* copy data for MP3 frame analyzer */
     if (gfc->pinfo) {
