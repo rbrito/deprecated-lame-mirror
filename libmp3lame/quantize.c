@@ -670,10 +670,11 @@ amp_scalefac_bands(
     )
 {
     int bits, sfb;
-    FLOAT trigger = 0.0;
+    FLOAT trigger;
 
     /* compute maximum value of distort[]  */
-    for (sfb = 0; sfb < gi->sfbmax; sfb++) {
+    trigger = distort[0];
+    for (sfb = 1; sfb < gi->sfbmax; sfb++) {
 	if (trigger < distort[sfb])
 	    trigger = distort[sfb];
     }
@@ -800,7 +801,7 @@ CBR_2nd_bitalloc(
     gr_info *gi,
     FLOAT * xr34)
 {
-    int sfb = 0, j = 0;
+    int sfb, j = 0;
     for (sfb = 0; sfb < gi->psymax; sfb++) {
 	int width = gi->width[sfb];
 	if (gi->scalefac[sfb] != 0) {
@@ -845,7 +846,7 @@ outer_loop (
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     calc_noise_result best_noise_info;
-    gr_info cod_info_w;
+    gr_info gi_w;
     FLOAT distort[SFBMAX], l3_xmin[SFBMAX], xrpow[576];
     int current_method, age;
 
@@ -871,23 +872,23 @@ outer_loop (
 	goto quit_quantization;
 
     /* BEGIN MAIN LOOP */
-    cod_info_w = *gi;
+    gi_w = *gi;
     current_method = 0;
     age = 3;
     for (;;) {
-	/* try the new scalefactor conbination on cod_info_w */
-	int huff_bits = amp_scalefac_bands(gfc, &cod_info_w, distort,
+	/* try the new scalefactor conbination on gi_w */
+	int huff_bits = amp_scalefac_bands(gfc, &gi_w, distort,
 					   current_method, targ_bits);
 	if (huff_bits > 0) {
 	    /* adjust global_gain to fit the available bits */
-	    while (count_bits(gfc, xrpow, &cod_info_w) > huff_bits
-		   && ++cod_info_w.global_gain < 256u)
+	    while (count_bits(gfc, xrpow, &gi_w) > huff_bits
+		   && ++gi_w.global_gain < 256u)
 		;
 	    /* store this scalefactor combination if it is better */
-	    if (cod_info_w.global_gain != 256
+	    if (gi_w.global_gain != 256
 		&& better_quant(gfc, l3_xmin, distort, &best_noise_info,
-				&cod_info_w)) {
-		*gi = cod_info_w;
+				&gi_w)) {
+		*gi = gi_w;
 		if (best_noise_info.max_noise < 0.0) {
 		    if (gfc->noise_shaping_stop == 0)
 			break;
@@ -901,8 +902,8 @@ outer_loop (
 	    age = 0;
 
 	/* stopping criteria */
-	if (--age > 0 && cod_info_w.global_gain != 256
-	    && (cod_info_w.psy_lmax != SBMAX_l
+	if (--age > 0 && gi_w.global_gain != 256
+	    && (gi_w.psy_lmax != SBMAX_l
 		|| distort[SBMAX_l-1] > best_noise_info.max_noise))
 	    continue;
 
@@ -911,7 +912,7 @@ outer_loop (
 	if (current_method == gfc->noise_shaping_amp)
 	    break;
 	current_method++;
-	cod_info_w = *gi;
+	gi_w = *gi;
 	age = current_method*3+2;
     }
 
@@ -1573,16 +1574,16 @@ set_pinfo (
         const int                    ch )
 {
     lame_internal_flags *gfc=gfp->internal_flags;
-    int sfb, sfb2;
+    int sfb, sfb2, over = 0;
     int j,i,end,bw;
-    FLOAT en0,en1;
+    FLOAT en0,en1,tot_noise=0.0;
     FLOAT ifqstep = 0.5 * (1+gi->scalefac_scale);
 
-    FLOAT l3_xmin[SFBMAX], xfsf[SFBMAX];
+    FLOAT l3_xmin[SFBMAX], distort[SFBMAX];
     calc_noise_result noise;
 
     calc_xmin (gfp, ratio, gi, l3_xmin);
-    calc_noise (gi, l3_xmin, xfsf, &noise);
+    calc_noise (gi, l3_xmin, distort, &noise);
 
     j = 0;
     sfb2 = gi->sfb_lmax;
@@ -1597,7 +1598,7 @@ set_pinfo (
 	/* convert to MDCT units */
 	en1=1e15;  /* scaling so it shows up on FFT plot */
 	gfc->pinfo->  en[gr][ch][sfb] = en1*en0;
-	gfc->pinfo->xfsf[gr][ch][sfb] = en1*l3_xmin[sfb]*xfsf[sfb]/bw;
+	gfc->pinfo->xfsf[gr][ch][sfb] = en1*l3_xmin[sfb]*distort[sfb]/bw;
 
 	if (ratio->en.l[sfb]>0 && !gfp->ATHonly)
 	    en0 = en0/ratio->en.l[sfb];
@@ -1611,6 +1612,9 @@ set_pinfo (
 	if (gi->preflag>0 && sfb>=11)
 	    gfc->pinfo->LAMEsfb[gr][ch][sfb] = -ifqstep*pretab[sfb];
 
+	if (distort[sfb] > 1.0)
+	    over++;
+	tot_noise += distort[sfb];
 	assert(gi->scalefac[sfb]>=0); /*scfsi should be decoded by the caller*/
 	gfc->pinfo->LAMEsfb[gr][ch][sfb] -= ifqstep*gi->scalefac[sfb];
     } /* for sfb */
@@ -1628,7 +1632,7 @@ set_pinfo (
                 /* convert to MDCT units */
                 en1=1e15;  /* scaling so it shows up on FFT plot */
 		gfc->pinfo->  en_s[gr][ch][3*sfb+i] = en1*en0;
-		gfc->pinfo->xfsf_s[gr][ch][3*sfb+i] = en1*l3_xmin[sfb2]*xfsf[sfb2]/bw;
+		gfc->pinfo->xfsf_s[gr][ch][3*sfb+i] = en1*l3_xmin[sfb2]*distort[sfb2]/bw;
 		if (ratio->en.s[sfb][i]>0 && !(gfp->ATHonly || gfp->ATHshort))
 		    en0 = en0/ratio->en.s[sfb][i];
                 else
@@ -1639,6 +1643,10 @@ set_pinfo (
 
                 gfc->pinfo->LAMEsfb_s[gr][ch][3*sfb+i]
 		    = -2.0*gi->subblock_gain[i] - ifqstep*gi->scalefac[sfb2];
+
+		if (distort[sfb2] > 1.0)
+		    over++;
+		tot_noise += distort[sfb2];
 		sfb2++;
             }
         }
@@ -1647,10 +1655,10 @@ set_pinfo (
     gfc->pinfo->LAMEmainbits[gr][ch] = gi->part2_3_length + gi->part2_length;
     gfc->pinfo->LAMEsfbits  [gr][ch] = gi->part2_length;
 
-    gfc->pinfo->over      [gr][ch] = -1;
+    gfc->pinfo->over      [gr][ch] = over;
     gfc->pinfo->max_noise [gr][ch] = noise.max_noise * 10.0;
     gfc->pinfo->over_noise[gr][ch] = noise.over_noise * 10.0;
-    gfc->pinfo->tot_noise [gr][ch] = -1.0;
+    gfc->pinfo->tot_noise [gr][ch] = tot_noise;
 }
 
 
