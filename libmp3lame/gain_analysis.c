@@ -116,7 +116,7 @@ typedef int32_t         Int32_t;
 
 #define MAX_ORDER               (BUTTER_ORDER > YULE_ORDER ? BUTTER_ORDER : YULE_ORDER)
 #define MAX_SAMPLES_PER_WINDOW  (size_t) (MAX_SAMP_FREQ * RMS_WINDOW_TIME)      /* max. Samples per Time slice */
-#define PINK_REF                58.82   /* changed from 64.82 by Olcios in order to use the value of 83dB, not 89dB, as the ReplayGain "reference volume" in LAME */    /* 298640883795 */         /* calibration value */
+#define PINK_REF                64.82       /* 298640883795 */         /* calibration value */
 
 Float_t          linprebuf [MAX_ORDER * 2];
 Float_t*         linpre;                                          /* left input samples, with pre-buffer */
