@@ -875,6 +875,8 @@ char *mp3buf, int mp3buf_size)
 	  if (gfc->slot_lag > (gfc->frac_SpF-1.0) ) {
 	    gfc->slot_lag -= gfc->frac_SpF;
 	    gfc->padding = 0;
+	    printf("%i padding = 0 \n",gfp->frameNum);
+
 	  }
 	  else {
 	    gfc->padding = 1;

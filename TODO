@@ -12,15 +12,7 @@ things to check for:
 
 
 
-1. Modularization:
-
-BladeEnc.dll was written before lame was 'modularized'
-this should be cleaned up to look like main.c:  It should be possible
-to write the BladeEnc/lame dll so that it just uses
-#include "lame.h" and then calls to various lame_*() routines
-
-
-2.
+1.
 Does stdin work when LAME is compiled to use libsndfile? 
 (new version of libsndfile will support this - try this out)
 
