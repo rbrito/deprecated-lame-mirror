@@ -240,7 +240,7 @@ optimum_samplefreq(int lowpassfreq, int input_samplefreq)
  *  - if possible, sfb21 should NOT be used
  *
  */
-    int suggested_samplefreq;
+    int suggested_samplefreq = input_samplefreq;
     if (lowpassfreq <= 15960)
         suggested_samplefreq = 44100;
     if (lowpassfreq <= 15250)
@@ -546,7 +546,28 @@ lame_init_params(lame_global_flags * const gfp)
         gfp->VBR = vbr_off; /* at 160 kbps (MPEG-2/2.5)/ 320 kbps (MPEG-1) only Free format or CBR are possible, no VBR */
 
 
-    if (gfp->out_samplerate == 0) { /* if output sample frequency is not given, find an useful value */
+    if (gfp->VBR == vbr_off) {
+        gfp->compression_ratio =
+            gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 *
+                                                            gfp->brate);
+        if (gfp->compression_ratio > 13.)
+            gfp->out_samplerate =
+                map2MP3Frequency( (int)( (10. * 1.e3 * gfp->brate) /
+                                 (16 * gfc->channels_out)));
+    }
+    if (gfp->VBR == vbr_abr) {
+        gfp->compression_ratio =
+            gfp->out_samplerate * 16 * gfc->channels_out / (1.e3 *
+                                                            gfp->
+                                                            VBR_mean_bitrate_kbps);
+        if (gfp->compression_ratio > 13.)
+            gfp->out_samplerate =
+                map2MP3Frequency((int)((10. * 1.e3 * gfp->VBR_mean_bitrate_kbps) /
+                                 (16 * gfc->channels_out)));
+    }
+
+
+    if (gfp->out_samplerate == 0 && (gfp->VBR == vbr_off || gfp->VBR == vbr_abr)) { /* if output sample frequency is not given, find an useful value */
         gfp->out_samplerate = map2MP3Frequency( (int)( 0.97 * gfp->in_samplerate ) );
 
 
@@ -575,13 +596,98 @@ lame_init_params(lame_global_flags * const gfp)
     }
 
 
+
+
+
+  /****************************************************************/
+  /* if a filter has not been enabled, see if we should add one: */
+  /****************************************************************/
+    if (gfp->lowpassfreq == 0) {
+        double lowpass = 16000;
+        double highpass;
+        int channels;
+
+        switch (gfp->mode) {
+        case MONO:
+            channels = 1;
+            break;
+        default:    
+            channels = 2;
+            break;
+        }
+
+        if ((gfp->VBR == vbr_off) || (gfp->VBR == vbr_abr)){ 
+            optimum_bandwidth(&lowpass,
+                              &highpass,
+                              gfp->out_samplerate * 16 * gfc->channels_out /
+                              gfp->compression_ratio);
+        } else {
+            switch (gfp->VBR_q) {
+            case 9: {
+                lowpass = 10000;
+               break;
+            }
+            case 8: {
+                lowpass = 10000;
+                break;
+            }
+            case 7: {
+                lowpass = 14900;
+                break;
+            }
+            case 6: {
+                 lowpass = 14900;
+                break;
+            }
+            case 5: {
+                lowpass = 17000;
+                break;
+            }
+            case 4: {
+                lowpass = 18000;
+                break;
+            }
+            case 3: {
+                lowpass = 18000;
+                break;
+            }
+            case 2: {
+                lowpass = 19000;
+                break;
+            }
+            case 1: {
+                lowpass = 19000;
+                break;
+            }
+            case 0: {
+                lowpass = 19500;
+                break;
+            }
+            }
+            if (gfp->out_samplerate == 0)
+                gfp->out_samplerate = optimum_samplefreq( (int)lowpass, gfp->in_samplerate);
+        }
+
+
+        if (gfp->mode == MONO)
+            lowpass *= 1.6;
+
+        lowpass = Min(20500, lowpass);
+        lowpass = Min(gfp->out_samplerate / 2, lowpass);
+        
+        gfp->lowpassfreq = lowpass;
+    }
+
+
+
+
     if (gfp->ReplayGain_input)
-      gfc->findReplayGain = 1;
+        gfc->findReplayGain = 1;
 #ifdef DECODE_ON_THE_FLY
     if (gfp->ReplayGain_decode) {
-      gfp->ReplayGain_input = 0;
-      gfc->findReplayGain = 1;
-      gfc->decode_on_the_fly = 1;
+        gfp->ReplayGain_input = 0;
+        gfc->findReplayGain = 1;
+        gfc->decode_on_the_fly = 1;
     }
 #endif
 
@@ -679,86 +785,6 @@ lame_init_params(lame_global_flags * const gfp)
             gfp->mode = STEREO;
     }
 
-
-
-
-  /****************************************************************/
-  /* if a filter has not been enabled, see if we should add one: */
-  /****************************************************************/
-    if (gfp->lowpassfreq == 0) {
-        double lowpass = 16000;
-        double highpass;
-        int channels;
-
-        switch (gfp->mode) {
-        case MONO:
-            channels = 1;
-            break;
-        default:    
-            channels = 2;
-            break;
-        }
-
-        if ((gfp->VBR == vbr_off) || (gfp->VBR == vbr_abr)){ 
-            optimum_bandwidth(&lowpass,
-                              &highpass,
-                              gfp->out_samplerate * 16 * gfc->channels_out /
-                              gfp->compression_ratio);
-        } else {
-            switch (gfp->VBR_q) {
-            case 9: {
-                lowpass = 10000;
-                break;
-            }
-            case 8: {
-                lowpass = 10000;
-                break;
-            }
-            case 7: {
-                lowpass = 14900;
-                break;
-            }
-            case 6: {
-                lowpass = 14900;
-                break;
-            }
-            case 5: {
-                lowpass = 17000;
-                break;
-            }
-            case 4: {
-                lowpass = 18000;
-                break;
-            }
-            case 3: {
-                lowpass = 18000;
-                break;
-            }
-            case 2: {
-                lowpass = 19000;
-                break;
-            }
-            case 1: {
-                lowpass = 19000;
-                break;
-            }
-            case 0: {
-                lowpass = 19500;
-                break;
-            }
-            }
-        }
-
-
-        if (gfp->mode == MONO)
-            lowpass *= 1.6;
-
-        lowpass = Min(20500, lowpass);
-        lowpass = Min(gfp->out_samplerate / 2, lowpass);
-
-        
-        gfp->lowpassfreq = lowpass;
-    }
 
     /* apply user driven high pass filter */
     if (gfp->highpassfreq > 0) {

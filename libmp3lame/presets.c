@@ -192,7 +192,6 @@ int apply_preset(lame_global_flags*  gfp, int preset, int enforce)
     switch (preset) {
     case V9: {
         lame_set_VBR_q(gfp, 9);
-        lame_set_out_samplerate(gfp, 22050);
 
         SET_OPTION(short_threshold_lrm, 4.50f, -1);
         SET_OPTION(short_threshold_s, 30.0f, -1);
