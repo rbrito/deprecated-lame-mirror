@@ -562,19 +562,19 @@ Normally,
 humans are unable to hear any sound below this threshold,
 but for music recorded at very low level this option might be usefull.
 .TP
-.BI --ath-adjust " n"
+.BI --atha-type " n"
 ATH auto adjust types 1 - 3,
 else no adjustment
 .TP
-.BI --adapt-thres-type " n"
+.BI --athaa-sensitivity " n"
 .I n
 = 1 total energy or
 .br
 .I n
 = 2 approximated loudness
 .TP
-.BI --adapt-thres-level " x"
-???
+.BI --athaa-sensitivity " x"
+activation offset in -/+ dB for ATH auto-adjustment
 
 .PP
 PSY related:
@@ -792,7 +792,7 @@ The default value is 15% of the highpass frequency.
 .I sfreq
 = 8, 11.025, 12, 16, 22.05, 24, 32, 44.1, 48
 .br
-Select ouptut sampling frequency.
+Select ouptut sampling frequency (only supported for encoding).
 .br
 If not specified,
 LAME will automatically resample the input when using high compression ratios.
