@@ -445,7 +445,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
       }
 
       max_bits = 1200 + frameBits[gfc->VBR_max_bitrate]/(gfc->stereo*gfc->mode_gr);
-      max_bits=Min(max_bits,2500);
+      max_bits=Min(max_bits,4095-195*(gfc->stereo-1));
       Max_bits=max_bits=Max(max_bits,min_bits);
 
       this_bits = min_bits+(max_bits-min_bits)/2;
