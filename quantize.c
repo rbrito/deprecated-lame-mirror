@@ -489,7 +489,7 @@ void amp_scalefac_bands
     /*  amplify distorted bands in long block
      */
     for (sfb = 0; sfb < cod_info->sfb_lmax; sfb++) {
-        if (distort[0][sfb] > distort_thresh[0]
+        if (distort[0][sfb] >= distort_thresh[0]
          &&(sfb == max_ind[0] || !gfp->experimentalY))
         {
             scalefac->l[sfb]++;
@@ -507,7 +507,7 @@ void amp_scalefac_bands
         end   = gfc->scalefac_band.s[sfb+1];
         for (i = 0; i < 3; i++) {
             int j2 = j;
-            if (distort[i+1][sfb] > distort_thresh[i+1]
+            if (distort[i+1][sfb] >= distort_thresh[i+1]
              &&(sfb == max_ind[i+1] || !gfp->experimentalY))
             {
                 scalefac->s[sfb][i]++;
