@@ -167,20 +167,36 @@ typedef enum {
     coding_MPEG_Layer_2 = 2,
     coding_MPEG_Layer_3 = 3,
     coding_MPEG_AAC     = 4,
-    coding_Ogg_Vorbis   = 5
+    coding_Ogg_Vorbis   = 5,
+    coding_MPEG_plus    = 6
 } coding_t;
 
+#define MAX_CHANNELS  2
 
 typedef struct {
-    unsigned long  Class_ID;
-    long double    sample_freq_in;
-    long double    sample_freq_out;
-    float          lowpass_freq;
-    int            scale_in;
-    int            scale_out;
-    sample_t**     fir;
-    sample_t*      lastsamples [2];
-    // ...
+    unsigned long  Class_ID;        /* Class ID to recognize a resample_t
+                                       object */
+    long double    sample_freq_in;  /* Input sample frequency in Hz */
+    long double    sample_freq_out; /* requested Output sample frequency in Hz */
+    float          lowpass_freq;    /* lowpass frequency, this is the -6 dB
+                                       point */
+    int            scale_in;        /* the resampling is actually done by
+                                       scale_out: */
+    int            scale_out;       /* frequency is
+                                         samplefreq_in * scale_out / scal */
+    int            taps;            /* number of taps for every FIR resample
+                                       filter */
+
+    sample_t**     fir;             /* the FIR resample filters:
+                                         fir [scale_out] [taps */
+    void*          firfree;         /* start address of the alloced memory for
+                                       fir, */
+    unsigned char* src_step;
+    sample_t*      in_old       [MAX_CHANNELS];
+    uint64_t       sample_count [MAX_CHANNELS];
+    unsigned       fir_stepper  [MAX_CHANNELS];
+    int            inp_stepper  [MAX_CHANNELS];
+
 } resample_t;
 
 
@@ -206,7 +222,7 @@ typedef struct  {
    */
   
   #define  LAME_ID   0xFFF88E3B
-  unsigned Class_ID;
+  unsigned long Class_ID;
   
   int lame_encode_frame_init;     
   int iteration_init_init;
@@ -219,12 +235,24 @@ typedef struct  {
   int          channels_out;  /* number of channels in the output data stream (not used for decoding) */
   resample_t*  resample_in;   /* context for coding (PCM=>MP3) resampling */
   resample_t*  resample_out;	/* context for decoding (MP3=>PCM) resampling */
+  long double  samplefreq_in;
+  long double  samplefreq_out;
+#ifndef  MFSIZE
+# define MFSIZE  ( 3*1152 + ENCDELAY - MDCTDELAY )
+#endif
+#ifdef  KLEMM_44
+  sample_t*    mfbuf [MAX_CHANNELS];
+#else
+  sample_t     mfbuf [2] [MFSIZE];
+#endif
   size_t       frame_size;    /* size of one frame in samples per channel */
   lame_global_flags* gfp;     /* needed as long as the frame encoding functions must access gfp (all needed information can be added to gfc) */
   coding_t     coding;        /* MPEG Layer 1/2/3, Ogg Vorbis, MPEG AAC, ... */
   unsigned long frame_count;  /* Number of frames coded, 2^32 > 3 years */
-  float          ampl;	  /* amplification at the end of the current chunk (1. = 0 dB) */
-  float          last_ampl;	  /* amplification at the end of the last chunk    (1. = 0 dB) */
+  int          mf_samples_to_encode;
+  int          mf_size;
+  float        ampl;	  /* amplification at the end of the current chunk (1. = 0 dB) */
+  float        last_ampl;	  /* amplification at the end of the last chunk    (1. = 0 dB) */
   int VBR_min_bitrate;            /* min bitrate index */
   int VBR_max_bitrate;            /* max bitrate index */
   float resample_ratio;           /* input_samp_rate/output_samp_rate */
@@ -275,10 +303,6 @@ typedef struct  {
   /* variables used by lame.c */
   Bit_stream_struc   bs;
   III_side_info_t l3_side;
-#define MFSIZE (3*1152+ENCDELAY-MDCTDELAY)
-  int mf_size;
-  int mf_samples_to_encode;
-  sample_t mfbuf[2][MFSIZE];
   FLOAT8 ms_ener_ratio[2];
   FLOAT8 ms_ratio[2];
   /* used for padding */
@@ -302,12 +326,14 @@ typedef struct  {
   
   int is_mpeg1; /* 1 for MPEG-1, 0 for MPEG-2(.5) */
 
+#ifndef KLEMM_44
   /* variables used by util.c */
   /* BPC = maximum number of filter convolution windows to precompute */
 #define BPC 320
   sample_t *inbuf_old [2];
   sample_t *blackfilt [2*BPC+1];
   FLOAT8 itime[2];
+#endif
   int sideinfo_len;
 
   /* variables for newmdct.c */
@@ -412,11 +438,14 @@ typedef struct  {
   plotting_data *pinfo;
 
   /* CPU features */
-  int CPU_features_i387;            // FPU is a normal Intel CPU
-  int CPU_features_3DNow;           // K6-2, K6-III, Athlon
-  int CPU_features_MMX;		    // Pentium MMX, Pentium II...IV, K6, K6-2, K6-III, Athlon
-  int CPU_features_SIMD;	    // Pentium III, Pentium IV
-  int CPU_features_SIMD2;	    // Pentium IV, K8
+  struct {
+    unsigned int  i387      : 1; /* FPU is a normal Intel CPU */
+    unsigned int  MMX       : 1; /* Pentium MMX, Pentium II...IV, K6, K6-2,
+                                    K6-III, Athlon */
+    unsigned int  AMD_3DNow : 1; /* K6-2, K6-III, Athlon      */
+    unsigned int  SIMD      : 1; /* Pentium III, Pentium 4    */
+    unsigned int  SIMD2     : 1; /* Pentium 4, K8             */
+  } CPU_features;
    
   /* functions to replace with CPU feature optimized versions in takehiro.c */
   int (*choose_table)(const int *ix, const int *end, int *s);
