@@ -30,6 +30,13 @@
 #include <assert.h>
 #include <stdarg.h>
 
+#ifdef HAVE_ERRNO_H
+# include <errno.h>
+#endif
+#ifdef HAVE_FCNTL_H
+# include <fcntl.h>
+#endif
+
 #if defined(__FreeBSD__) && !defined(__alpha__)
 #include <floatingpoint.h>
 #endif

@@ -50,13 +50,6 @@
 
 #include <ctype.h>
 
-#ifdef HAVE_ERRNO_H
-# include <errno.h>
-#endif
-#ifdef HAVE_FCNTL_H
-# include <fcntl.h>
-#endif
-
 #if defined(macintosh)
 # include <types.h>
 # include <stat.h>
@@ -141,10 +134,10 @@ typedef union {
 #ifdef USE_FAST_LOG
 # define LOG2_SIZE       (256)
 # define LOG2_SIZE_L2    (8)
-# define         FAST_LOG10(x)       (fast_log2(x)*(LOG2/LOG10))
-# define         FAST_LOG(x)         (fast_log2(x)*LOG2)
-# define         FAST_LOG10_X(x,y)   (fast_log2(x)*(LOG2/LOG10*(y)))
-# define         FAST_LOG_X(x,y)     (fast_log2(x)*(LOG2*(y)))
+# define FAST_LOG10(x)       (fast_log2(x)*(LOG2/LOG10))
+# define FAST_LOG(x)         (fast_log2(x)*LOG2)
+# define FAST_LOG10_X(x,y)   (fast_log2(x)*(LOG2/LOG10*(y)))
+# define FAST_LOG_X(x,y)     (fast_log2(x)*(LOG2*(y)))
 
 extern ieee754_float32_t log_table[LOG2_SIZE*2];
 inline static ieee754_float32_t fast_log2(ieee754_float32_t xx)
@@ -198,7 +191,6 @@ inline static ieee754_float32_t fast_log2(ieee754_float32_t xx)
 # endif
 #endif
 
-
 #ifdef M_LN2
 # define        LOG2                    (FLOAT)M_LN2
 #else
@@ -210,7 +202,6 @@ inline static ieee754_float32_t fast_log2(ieee754_float32_t xx)
 #else
 # define        LOG10                   (FLOAT)2.30258509299404568402
 #endif
-
 
 #ifdef M_SQRT2
 # define        SQRT2                   (FLOAT)M_SQRT2
