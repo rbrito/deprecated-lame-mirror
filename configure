@@ -28944,11 +28944,18 @@ if test "x$GCC" = "xyes"; then
 		;;
 	*86)
 		case "${GCC_version}" in
-		3.*)
+		3.4*)
 			if test -x /bin/uname; then
 				/bin/uname -a | grep i686 > /dev/null 2>&1 && \
 				OPTIMIZATION="${OPTIMIZATION} \
 						-mtune=pentiumpro"
+			fi
+			;;
+		3.*)
+			if test -x /bin/uname; then
+				/bin/uname -a | grep i686 > /dev/null 2>&1 && \
+				OPTIMIZATION="${OPTIMIZATION} \
+						-mcpu=pentiumpro"
 			fi
 			;;
 		esac
@@ -29043,7 +29050,7 @@ fi;
 
 if test "x$GCC" = "xyes"; then
 	DEBUG_NORM_OPT="-O -g -Wall"
-	DEBUG_ANOYING="-Wbad-function-cast -Wcast-align \
+	DEBUG_ANOYING="-Wbad-function-cast -Wcast-align -W \
 		-Wcast-qual -Wchar-subscripts -Wconversion \
 		-Wmissing-prototypes -Wnested-externs -Wpointer-arith \
 		-Wredundant-decls -Wshadow -Wstrict-prototypes \
