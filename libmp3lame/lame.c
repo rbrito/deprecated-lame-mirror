@@ -244,17 +244,17 @@ struct {
 } switch_map [] = {
     /*  scalefac_s   lowpass       scale     athlower  short-th   narrow-st */
     /* kbps    qantcomp   reduceside   athcurve  inter-ch     is-ratio */
-    {   8,  1,    1,  2000,  0.7,   0.90, 11,  -4, 0.0012, 1e3, 0.3, 0.6},
-    {  16,  1,    1,  3700,  0.7,   0.90, 11,  -4, 0.0010, 1e3, 0.3, 0.6},
-    {  24,  1,    1,  3900,  0.7,   0.90, 11,  -4, 0.0010, 20., 0.3, 0.6},
-    {  32,  1,    1,  5500,  0.7,   0.90, 11,  -4, 0.0010, 20., 0.3, 0.6},
-    {  40,  1,    1,  7000,  0.7,   0.90, 11,  -3, 0.0009, 20., 0.3, 0.6},
-    {  48,  1,    1,  7500,  0.7,   0.90, 11,  -3, 0.0009, 20., 0.3, 0.6},
-    {  56,  1,    1, 10000,  0.7,   0.90, 11,  -3, 0.0008, 5.0, 0.3, 0.5},
-    {  64,  1,    0, 12000,  0.4,   0.90, 10,  -2, 0.0008, 3.0, 0.3, 0.4},
-    {  80,  1,    0, 14500,  0.4,   0.93, 10,  -2, 0.0007, 3.0, 0.2, 0.3},
-    {  96,  1,    0, 15300,  0.2,   0.93,  8,  -2, 0.0006, 2.5, 0.1, 0.2},
-    { 112,  1,    0, 16000,  0.2,   0.93,  7,  -2, 0.0005, 2.5, 0.05, 0.1},
+    {   8,  1,    1,  2000,  0.7,   0.90, 11,  -4, 0.0012, 1e3, 0.5, 0.6},
+    {  16,  1,    1,  3700,  0.7,   0.90, 11,  -4, 0.0010, 1e3, 0.5, 0.6},
+    {  24,  1,    1,  3900,  0.7,   0.90, 11,  -4, 0.0010, 20., 0.5, 0.6},
+    {  32,  1,    1,  5500,  0.7,   0.90, 11,  -4, 0.0010, 20., 0.5, 0.6},
+    {  40,  1,    1,  7000,  0.7,   0.90, 11,  -3, 0.0009, 20., 0.5, 0.6},
+    {  48,  1,    1,  7500,  0.7,   0.90, 11,  -3, 0.0009, 20., 0.5, 0.6},
+    {  56,  1,    1, 10000,  0.7,   0.90, 11,  -3, 0.0008, 5.0, 0.5, 0.5},
+    {  64,  1,    0, 12000,  0.4,   0.90, 10,  -2, 0.0008, 3.0, 0.5, 0.4},
+    {  80,  1,    0, 14500,  0.4,   0.93,  8,  -2, 0.0007, 3.0, 0.4, 0.3},
+    {  96,  1,    0, 15300,  0.2,   0.93,  8,  -2, 0.0006, 2.5, 0.2, 0.2},
+    { 112,  1,    0, 16000,  0.2,   0.93,  7,  -2, 0.0005, 2.5, 0.1, 0.1},
     { 128,  1,    0, 17500,  0.1,   0.93,  5,  -1, 0.0002, 2.5, 0.0, 0.0},
     { 160,  1,    0, 18000,  0.0,   0.95,  4,   0, 0.0000, 1.8, 0.0, 0.0},
     { 192,  1,    0, 19500,  0.0,   0.97,  3,   0, 0.0000, 1.8, 0.0, 0.0},
@@ -289,8 +289,6 @@ static int apply_preset(lame_global_flags*  gfp, int bitrate, vbr_mode mode)
     if (mode != vbr) {
 	lame_set_sfscale(gfp, switch_map[r].large_scalefac);
 	lame_set_subblock_gain(gfp, switch_map[r].large_scalefac);
-	lame_set_ATHcurve(gfp, switch_map[r].ath_curve);
-	lame_set_ATHlower(gfp, (double)switch_map[r].ath_lower);
 	if (gfp->internal_flags->quantcomp_method < 0)
 	    lame_set_quantcomp_method(gfp, switch_map[r].method);
 	/*
@@ -298,9 +296,12 @@ static int apply_preset(lame_global_flags*  gfp, int bitrate, vbr_mode mode)
 	 * low bitrates. so we compensate for that here by using a scale
 	 * value depending on bitrate
 	 */
-	if (switch_map[r].scale != 1)
+	if (gfp->scale != 0.0)
 	    (void) lame_set_scale( gfp, switch_map[r].scale );
     }
+
+    lame_set_ATHcurve(gfp, switch_map[r].ath_curve);
+    lame_set_ATHlower(gfp, (double)switch_map[r].ath_lower);
 
     if (gfp->lowpassfreq == 0)
 	lame_set_lowpassfreq(gfp, switch_map[r].lowpass);

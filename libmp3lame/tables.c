@@ -743,7 +743,7 @@ static FLOAT ATHformula(FLOAT f,lame_global_flags *gfp)
 static FLOAT ATHmdct( lame_global_flags *gfp, FLOAT f )
 {
     /* modify the MDCT scaling for the ATH and convert to energy */
-    return db2pow(ATHformula( f , gfp ) - NSATHSCALE + gfp->VBR_q - 4);
+    return db2pow(ATHformula( f , gfp ) - NSATHSCALE);
 }
 
 static void compute_ath( lame_global_flags *gfp )
