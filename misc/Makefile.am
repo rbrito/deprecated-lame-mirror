@@ -8,6 +8,7 @@ CLEANFILES = $(EXTRA_PROGRAMS)
 
 EXTRA_SCRIPTS = \
 	auenc \
+	lameid3.pl \
 	mugeco.sh \
 	mlame
 
