@@ -232,33 +232,9 @@ int apply_preset(lame_global_flags*  gfp, int preset)
         lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
         lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
         lame_set_msfix( gfp, 1.62 );
-        lame_set_maskingadjust( gfp, .75 );
-        lame_set_ATHlower( gfp, -10 );
-        lame_set_ATHtype(gfp, 4);
-        lame_set_ATHcurve(gfp, 4);
-	    lame_set_athaa_sensitivity(gfp, -8);
-        
-	    lame_set_experimentalY(gfp, 1);
-
-	    return preset;
-
-    }
-    case MEDIUM1: {
-	    lame_set_VBR_min_bitrate_kbps(gfp, 80);
-	    lame_set_VBR(gfp, vbr_rh);
-
-	    lame_set_quality(gfp, 3);
-	    lame_set_lowpassfreq(gfp, 18000);
-	    lame_set_mode(gfp, JOINT_STEREO);
-
-        lame_set_short_threshold(gfp, 4.25f, 15.0f);
-        lame_set_quant_comp(gfp, 1);
-        lame_set_quant_comp_short(gfp, 3);
-        lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
-        lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
-        lame_set_msfix( gfp, 1.62 );
-        lame_set_maskingadjust( gfp, -.9 );
-        lame_set_ATHlower( gfp, -1 );
+        lame_set_maskingadjust( gfp, 1.1 );
+        lame_set_maskingadjust_short( gfp, .7 );
+        lame_set_ATHlower( gfp, -11 );
         lame_set_ATHtype(gfp, 4);
         lame_set_ATHcurve(gfp, 4);
 	    lame_set_athaa_sensitivity(gfp, -8);
@@ -296,8 +272,9 @@ int apply_preset(lame_global_flags*  gfp, int preset)
         lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
         lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
         lame_set_msfix( gfp, 1.38 );
-        lame_set_maskingadjust( gfp, .2 );
-        lame_set_ATHlower( gfp, -1 );
+        lame_set_maskingadjust( gfp, .9 );
+        lame_set_maskingadjust_short( gfp, -1 );
+        lame_set_ATHlower( gfp, -1.5 );
         lame_set_ATHtype(gfp, 4);
         lame_set_ATHcurve(gfp, 2);
         /* modify sfb21 by 3.75 dB plus ns-treble=0                  */
@@ -329,7 +306,8 @@ int apply_preset(lame_global_flags*  gfp, int preset)
         lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
         lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 2); /* safejoint */
         lame_set_msfix( gfp, 0.85);
-        lame_set_maskingadjust( gfp, -1.7 );
+        lame_set_maskingadjust( gfp, -0.8 );
+        lame_set_maskingadjust_short( gfp, -2.9 );
         lame_set_ATHlower( gfp, 2 );
         lame_set_ATHtype(gfp, 4);
         lame_set_ATHcurve(gfp, 1);

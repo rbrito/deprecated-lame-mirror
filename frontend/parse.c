@@ -796,11 +796,6 @@ static int  presets_set( lame_t gfp, int fast, int cbr, const char* preset_name,
 
 	return 0;
     }
-    if (strcmp(preset_name, "medium1") == 0) {
-	    lame_set_preset(gfp, MEDIUM1);
-
-	return 0;
-    }
 
     if (strcmp(preset_name, "standard") == 0) {
 

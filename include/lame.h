@@ -89,7 +89,6 @@ typedef enum preset_mode_e {
     PORTABLE_FAST = 1011,
     DM_RADIO = 1012,
     DM_RADIO_FAST = 1013,
-    MEDIUM1 = 1014
 } preset_mode;
 
 
