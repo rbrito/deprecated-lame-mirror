@@ -45,6 +45,7 @@
 #include <dmalloc.h>
 #endif
 
+#ifndef USE_FFT3DN
 #define TRI_SIZE (5-1) /* 1024 =  4**5 */
 
 static const FLOAT costab[TRI_SIZE*2] = {
@@ -137,6 +138,9 @@ inline static void fht(FLOAT *fz, int n)
 	tri += 2;
     } while (k4<n);
 }
+#else
+#define fht(a,b) fht_3DN(a,b/2)
+#endif /* USE_FFT3DN */
 
 static const unsigned char rv_tbl[] = {
     0x00,    0x80,    0x40,    0xc0,    0x20,    0xa0,    0x60,    0xe0,
