@@ -241,6 +241,9 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
                 III_side_info_t * l3_side, int l3_enc[2][2][576],
                 III_scalefac_t scalefac[2][2], frame_params * fr_ps)
 {
+#ifdef HAVEGTK
+  plotting_data bst_pinfo;
+#endif
   static gr_info        bst_cod_info;
   static III_scalefac_t bst_scalefac;
   static int            bst_l3_enc[576]; 
@@ -379,6 +382,10 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
               memcpy( &bst_scalefac, &scalefac[gr][ch], sizeof(III_scalefac_t) );
               memcpy(    bst_l3_enc,    l3_enc[gr][ch], sizeof(int)*576        );
               memcpy( &bst_cod_info,  cod_info,         sizeof(gr_info)        );
+#ifdef HAVEGTK
+              if (gf.gtkflag) 
+                memcpy( &bst_pinfo, pinfo, sizeof(plotting_data) );
+#endif
 	      /*
 	       * try with fewer bits
 	       */
@@ -398,6 +405,10 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
         memcpy(  cod_info,         &bst_cod_info, sizeof(gr_info)        );
         memcpy( &scalefac[gr][ch], &bst_scalefac, sizeof(III_scalefac_t) );
         memcpy(    l3_enc[gr][ch],    bst_l3_enc, sizeof(int)*576        );
+#ifdef HAVEGTK
+        if (gf.gtkflag) 
+          memcpy( pinfo, &bst_pinfo, sizeof(plotting_data) );
+#endif
       }
       save_bits[gr][ch] = cod_info->part2_3_length;
       used_bits += save_bits[gr][ch];
