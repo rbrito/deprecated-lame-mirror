@@ -396,6 +396,15 @@ lame_init_qval(lame_global_flags * gfp)
         gfc->use_best_huffman = 2;
         break;
     }
+    
+    if ( gfp->VBR == vbr_mt || gfp->VBR == vbr_mtrh ) {
+        /*  rh 20040215: the newer vbr modes don't have
+         *  proper ISO quantization implemented (by now)
+         *  that's why we have to use nonlinear quantization
+         *  at every quality level
+         */
+        gfc->quantization = 1;
+    }
 
 }
 

@@ -140,11 +140,10 @@ static void quantize_xrpow(const FLOAT8 *xp, int *pi, FLOAT8 istep, gr_info * co
         } else {
             int l;
             int remaining;
-
             l = cod_info->width[sfb] >> 1;
 
             if ((j+cod_info->width[sfb])>cod_info->max_nonzero_coeff) {
-                unsigned int usefullsize;
+                int usefullsize;
                 usefullsize = cod_info->max_nonzero_coeff - j +1;
                 memset(&pi[cod_info->max_nonzero_coeff],0,
                     sizeof(int)*(576-cod_info->max_nonzero_coeff));
@@ -153,7 +152,12 @@ static void quantize_xrpow(const FLOAT8 *xp, int *pi, FLOAT8 istep, gr_info * co
                 /* no need to compute higher sfb values */
                 sfb = sfbmax + 1;
             }
-            assert( l >= 0 );
+            if ( l <= 0 ) {
+                /*  rh: 20040215
+                 *  may happen due to "prev_data_use" optimization 
+                 */
+                break;  /* ends for-loop */
+            }
 
             remaining = l%2;
             l = l>>1;
@@ -237,7 +241,7 @@ static void quantize_xrpow_ISO(const FLOAT8 *xp, int *pi, FLOAT8 istep, gr_info 
 	            - cod_info->subblock_gain[cod_info->window[sfb]] * 8;
 	        step = POW20(s);
         }
-        assert( cod_info->width[sfb] );
+        assert( cod_info->width[sfb] >= 0 );
         
         if (prev_data_use && (prev_noise->step[sfb] == step)){
             /* do not recompute this part*/
@@ -256,7 +260,12 @@ static void quantize_xrpow_ISO(const FLOAT8 *xp, int *pi, FLOAT8 istep, gr_info 
                     sizeof(int)*(575-cod_info->max_nonzero_coeff));
                 l = usefullsize >> 1;
             }
-            assert( l >= 0 );
+            if ( l <= 0 ) {
+                /*  rh: 20040215
+                 *  may happen due to "prev_data_use" optimization 
+                 */
+                break;  /* ends for-loop */
+            }
             remaining = l%2;
             l = l>>1;
             while (l--) {
@@ -331,7 +340,7 @@ static void quantize_xrpow(const FLOAT8 *xr, int *ix, FLOAT8 istep, gr_info * co
         sfbmax = 21;
 
     for (sfb = 0; sfb <= sfbmax; sfb++) {
-	    FLOAT8 step;
+	    FLOAT8 step = -1;
 
         if (prev_data_use) {
             int s =
@@ -341,7 +350,7 @@ static void quantize_xrpow(const FLOAT8 *xr, int *ix, FLOAT8 istep, gr_info * co
 	            - cod_info->subblock_gain[cod_info->window[sfb]] * 8;
 	        step = POW20(s);
         }
-        assert( cod_info->width[sfb] );
+        assert( cod_info->width[sfb] >= 0 );
 
         if (prev_data_use && (prev_noise->step[sfb] == step)){
             /* do not recompute this part */
@@ -360,7 +369,12 @@ static void quantize_xrpow(const FLOAT8 *xr, int *ix, FLOAT8 istep, gr_info * co
                     sizeof(int)*(575-cod_info->max_nonzero_coeff));
                 l = usefullsize >> 1;
             }
-            assert( l >= 0 );
+            if ( l <= 0 ) {
+                /*  rh: 20040215
+                 *  may happen due to "prev_data_use" optimization 
+                 */
+                break;  /* ends for-loop */
+            }
             remaining = l%2;
             l = l>>1;
             while (l--) {
@@ -434,7 +448,7 @@ static void quantize_xrpow_ISO(const FLOAT8 *xr, int *ix, FLOAT8 istep, gr_info 
         sfbmax = 21;
 
     for (sfb = 0; sfb <= sfbmax; sfb++) {
-	    FLOAT8 step;
+	    FLOAT8 step = -1;
 
         if (prev_data_use) {
             int s =
@@ -444,7 +458,7 @@ static void quantize_xrpow_ISO(const FLOAT8 *xr, int *ix, FLOAT8 istep, gr_info 
 	            - cod_info->subblock_gain[cod_info->window[sfb]] * 8;
 	        step = POW20(s);
         }
-        assert( cod_info->width[sfb] );
+        assert( cod_info->width[sfb] >= 0 );
         
         if (prev_data_use && (prev_noise->step[sfb] == step)){
             /* do not recompute this part */
@@ -461,7 +475,12 @@ static void quantize_xrpow_ISO(const FLOAT8 *xr, int *ix, FLOAT8 istep, gr_info 
                     sizeof(int)*(575-cod_info->max_nonzero_coeff));
                 l = usefullsize;
             }
-            assert( l >= 0 );
+            if ( l <= 0 ) {
+                /*  rh: 20040215
+                 *  may happen due to "prev_data_use" optimization 
+                 */
+                break;  /* ends for-loop */
+            }
             while(l--) {
                 /* depending on architecture, it may be worth calculating a few more
                    compareval's.
