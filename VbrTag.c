@@ -25,7 +25,6 @@
 #else
 #include	<math.h>
 #endif
-#include "VbrTag.h"
 #include "version.h"
 #include "bitstream.h"
 #include	<assert.h>
