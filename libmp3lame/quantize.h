@@ -39,7 +39,7 @@ void    iteration_init (lame_global_flags *gfp);
 
 #ifndef NOANALYSIS
 void    set_frame_pinfo (lame_global_flags *gfp, III_psy_ratio ratio[2][2],
-			 FLOAT *inbuf[]);
+			 const sample_t *inbuf[]);
 #endif
 
 #endif /* LAME_QUANTIZE_H */

@@ -1707,7 +1707,7 @@ set_pinfo (
  ************************************************************************/
 void
 set_frame_pinfo(
-    lame_global_flags *gfp, III_psy_ratio ratio[2][2], FLOAT *inbuf[])
+    lame_global_flags *gfp, III_psy_ratio ratio[2][2], const sample_t *inbuf[])
 {
     lame_internal_flags *gfc = gfp->internal_flags;
     int gr, ch;
@@ -1721,8 +1721,17 @@ set_frame_pinfo(
     memset(gfc->pinfo->  xfsf, 0, sizeof(gfc->pinfo->  xfsf));
 
     /* copy data for MP3 frame analyzer */
-    if (gfp->mode == JOINT_STEREO) {
-	for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
+    for (ch = 0; ch < gfc->channels_out; ch++) {
+	int j;
+	for ( j = 0; j < FFTOFFSET; j++ )
+	    gfc->pinfo->pcmdata[ch][j]
+		= gfc->pinfo->pcmdata[ch][j+gfp->framesize];
+	for (j = FFTOFFSET; j < 1600; j++)
+	    gfc->pinfo->pcmdata[ch][j] = inbuf[ch][j-FFTOFFSET];
+    }
+
+    for (gr = 0; gr < gfc->mode_gr; gr ++) {
+	if (gfp->mode == JOINT_STEREO) {
 	    gfc->pinfo->ms_ratio[gr] = gfc->pinfo->ms_ratio_next[gr];
 	    gfc->pinfo->ms_ratio_next[gr]
 		= gfc->masking_next[gr][2].pe
@@ -1730,18 +1739,6 @@ set_frame_pinfo(
 		- gfc->masking_next[gr][0].pe
 		- gfc->masking_next[gr][1].pe;
 	}
-    }
-    for ( ch = 0; ch < gfc->channels_out; ch++ ) {
-	int j;
-	for ( j = 0; j < FFTOFFSET; j++ )
-	    gfc->pinfo->pcmdata[ch][j]
-		= gfc->pinfo->pcmdata[ch][j+gfp->framesize];
-	for ( j = FFTOFFSET; j < 1600; j++ ) {
-	    gfc->pinfo->pcmdata[ch][j] = inbuf[ch][j-FFTOFFSET];
-	}
-    }
-
-    for (gr = 0; gr < gfc->mode_gr; gr ++) {
         for (ch = 0; ch < gfc->channels_out; ch ++) {
 	    gr_info *gi = &gfc->l3_side.tt[gr][ch];
 	    int scalefac_sav[SFBMAX];
