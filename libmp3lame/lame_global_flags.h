@@ -167,7 +167,7 @@ struct lame_global_struct {
   /* VBR tags.  This data is here because VBR header is writen after
    * input file is closed and *internal_flags struct is free'd */
   int TotalFrameSize;
-  int* pVbrFrames;
+  //int* pVbrFrames;
   int nVbrNumFrames;
   int nVbrFrameBufferSize;
 

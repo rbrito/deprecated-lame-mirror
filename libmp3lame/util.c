@@ -362,8 +362,6 @@ void getframebits(const lame_global_flags * gfp, int *bitsPerFrame, int *mean_bi
   
   whole_SpF = (gfp->version+1)*72000*bit_rate / gfp->out_samplerate;
   
-  // There must be somewhere code toggling gfc->padding on and off
-  
   /* main encoding routine toggles padding on and off */
   /* one Layer3 Slot consists of 8 bits */
   *bitsPerFrame = 8 * (whole_SpF + gfc->padding);

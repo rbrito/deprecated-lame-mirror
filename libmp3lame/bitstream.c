@@ -469,7 +469,7 @@ huffman_coder_count1(lame_global_flags *gfp,int *ix, gr_info *gi)
 	bits += h->hlen[p];
     }
 #ifdef DEBUG
-    DEBUGF("%ld %d %d %d\n",gfc->bs.totbit -gegebo, gi->count1bits, gi->big_values, gi->count1);
+    DEBUGF(gfc,"%ld %d %d %d\n",gfc->bs.totbit -gegebo, gi->count1bits, gi->big_values, gi->count1);
 #endif
     return bits;
 }
@@ -681,7 +681,7 @@ writeMainData ( lame_global_flags * const gfp,
 		}
 		data_bits +=huffman_coder_count1(gfp,l3_enc[gr][ch], gi);
 #ifdef DEBUG
-		DEBUGF("<%ld> ", gfc->bs.totbit-hogege);
+		DEBUGF(gfc,"<%ld> ", gfc->bs.totbit-hogege);
 #endif
 		/* does bitcount in quantize.c agree with actual bit count?*/
 		assert(data_bits==gi->part2_3_length-gi->part2_length);
@@ -798,13 +798,13 @@ compute_flushbits( const lame_global_flags * gfp, int *total_bytes_output )
     /* if flushbits < 0, this would mean that the buffer looks like:
      * (data...)  last_header  (data...)  (extra data that should not be here...)
      */
-    DEBUGF("last header write_timing = %i \n",gfc->header[last_ptr].write_timing);
-    DEBUGF("first header write_timing = %i \n",gfc->header[first_ptr].write_timing);
-    DEBUGF("bs.totbit:                 %i \n",gfc->bs.totbit);
-    DEBUGF("first_ptr, last_ptr        %i %i \n",first_ptr,last_ptr);
-    DEBUGF("remaining_headers =        %i \n",remaining_headers);
-    DEBUGF("bitsperframe:              %i \n",bitsPerFrame);
-    DEBUGF("sidelen:                   %i \n",gfc->sideinfo_len);
+    DEBUGF(gfc,"last header write_timing = %i \n",gfc->header[last_ptr].write_timing);
+    DEBUGF(gfc,"first header write_timing = %i \n",gfc->header[first_ptr].write_timing);
+    DEBUGF(gfc,"bs.totbit:                 %i \n",gfc->bs.totbit);
+    DEBUGF(gfc,"first_ptr, last_ptr        %i %i \n",first_ptr,last_ptr);
+    DEBUGF(gfc,"remaining_headers =        %i \n",remaining_headers);
+    DEBUGF(gfc,"bitsperframe:              %i \n",bitsPerFrame);
+    DEBUGF(gfc,"sidelen:                   %i \n",gfc->sideinfo_len);
 #endif
     ERRORF(gfc,"strange error flushing buffer ... \n");
   }
