@@ -313,13 +313,13 @@ static int choose_table(int *ix, int *end, int *s)
 	    break;
 
 	case 13:
-	    choice1 += 2;
 	    sum1 = count_bit_noESC2(14);
 	    if (sum0 > sum1) {
 		sum0 = sum1;
 		choice0 = 16;
 	    }
 
+	    choice1 = 15;
 	    sum1 = count_bit_noESC2(choice1);
 	    if (sum0 > sum1) {
 		sum0 = sum1;
@@ -402,10 +402,11 @@ static int choose_table_short(int *ix, int *end, int * s)
 		choice0 = 16;
 	    }
 
-	    sum1 = count_bit_noESC2(15);
+	    choice1 = 15;
+	    sum1 = count_bit_noESC2(choice1);
 	    if (sum0 > sum1) {
 		sum0 = sum1;
-		choice0 = 15;
+		choice0 = choice1;
 	    }
 	    break;
 
@@ -624,7 +625,7 @@ void best_huffman_divide(int gr, int ch, gr_info *gi, int *ix)
     }
 
     i = cod_info.big_values;
-    if ((unsigned int)(ix[i-2] | ix[i-1]) > 1)
+    if (i == 0 || (unsigned int)(ix[i-2] | ix[i-1]) > 1)
 	return;
 
     memcpy(&cod_info, gi, sizeof(gr_info));
@@ -633,8 +634,7 @@ void best_huffman_divide(int gr, int ch, gr_info *gi, int *ix)
     i = (cod_info.count1 += 2);
     a1 = a2 = 0;
     for (; i > cod_info.big_values; i -= 4) {
-	int p;
-	p = ((ix[i-4] * 2 + ix[i-3]) * 2 + ix[i-2]) * 2 + ix[i-1];
+	int p = ((ix[i-4] * 2 + ix[i-3]) * 2 + ix[i-2]) * 2 + ix[i-1];
 	a1 += ht[32].hlen[p];
 	a2 += ht[33].hlen[p];
     }
@@ -654,14 +654,13 @@ void best_huffman_divide(int gr, int ch, gr_info *gi, int *ix)
     else {
 	/* Count the number of bits necessary to code the bigvalues region. */
 	a1 = scalefac_band.l[7 + 1];
-	a2 = i;
 	if (a1 > i) {
 	    a1 = i;
 	}
 	cod_info.table_select[0] =
 	    choose_table(ix, ix + a1, &cod_info.part2_3_length);
 	cod_info.table_select[1] =
-	    choose_table(ix + a1, ix + a2, &cod_info.part2_3_length);
+	    choose_table(ix + a1, ix + i, &cod_info.part2_3_length);
 	if (gi->part2_3_length > cod_info.part2_3_length)
 	    memcpy(gi, &cod_info, sizeof(gr_info));
     }
