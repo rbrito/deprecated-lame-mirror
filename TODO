@@ -1,8 +1,16 @@
-frontend: a bunch of static variables (input_format, swapbytes,
-          silent, brhist, update_inteval) are set in parse_args and used in
-          get_audio.  should be cleaned up.
+1.  New Xing VBR header is incompable with MS Media Player.  but works
+with most other players.  Most likely MS took some shortcuts and
+made some invalid assumptions about VBR header.  Should we
+track this down and see if we can come up with a work around?
+
+2.  high bitrate encodings have trouble on some hardware players.
+Track this down.  Probably caused by --strictly-enforce-ISO and
+IXMAX_VAL.  Try setting IXMAX_VAL back to 8191 and/or
+maxmp3buf=8*960 to see if there is a working combination.
 
 
+3 frontend: code is a complete mess. But it has so many debugged
+  features it will be a lot of work to re-write.
 
 
 NOGAP encoding:
@@ -113,20 +121,24 @@ Use mixed blocks.
 90.
 Use intensity stereo. This is a must-have for low bitrates, but if the
 algorythm is very good it could also be used in every case.
-
-
+Note: mpg123 (and all derivatives, like xmms and lame/mpglib)
+have bugs in the intensity stereo decoding.  Bugs have been there
+for years since there are very few intensity stereo mp3's out there.
 
 
 
 997.
-ACM wrapper for LAME.  Note: ACM is obsolete and was replaced
-with DirectShow and/or a "DMO".  We do have a beta directshow filter.
+ACM wrapper for LAME.  Steve Lhomme has joied thed project
+and is working on an ACM codec!
+
+ACM is still in wide use, although MSFT has moved on to 
+DirectShow filters, or the lighter weight "DMO".  
+We do have a beta directshow filter.
 
 Contact "Florian Bruckner" <h9651030@miraculix.wu-wien.ac.at> for info - 
 he is working on the VorbisACM.
 
-Note to the note: There are still some applications that need an ACM
-filter. Steve Lhomme is working on an ACM lame wrapper.
+
 
 
 
