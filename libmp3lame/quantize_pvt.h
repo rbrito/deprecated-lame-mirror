@@ -83,7 +83,7 @@ void    iteration_init (lame_global_flags *gfp);
 
 int     calc_xmin (lame_global_flags *gfp,
                     const III_psy_ratio * const ratio,
-                    const gr_info * const cod_info,
+                    gr_info * const cod_info,
                     FLOAT8 * l3_xmin);
 
 int     calc_noise (const lame_internal_flags * const gfc,
