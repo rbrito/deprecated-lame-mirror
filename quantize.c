@@ -30,6 +30,26 @@
 
 
 
+//#define RH_VBR_MTRH
+#ifdef RH_VBR_MTRH
+/* using Mark's noise shaping */
+int VBR_noise_shaping (
+        lame_global_flags *gfp,
+        FLOAT8             xr[576], 
+        FLOAT8             xr34orig[576], 
+        III_psy_ratio     *ratio,
+        int                l3_enc[576], 
+        int                digital_silence, 
+        int                minbits, 
+        int                maxbits,
+        III_scalefac_t    *scalefac, 
+        III_psy_xmin      *l3_xmin,
+        int                gr,
+        int                ch );
+
+#endif
+
+
 
 /************************************************************************
  *
@@ -915,6 +935,19 @@ void iteration_finish
         for (ch = 0; ch < gfc->stereo; ch++) {
             gr_info *cod_info = &l3_side->gr[gr].ch[ch].tt;
 
+            /*  update the frame analyzer information
+             *  it looks like scfsi will not be handled correct:
+             *    often there are undistorted bands which show up
+             *    as distorted ones in the frame analyzer!!
+             *  that's why we do it before:
+             *  - best_scalefac_store
+             *  - best_huffman_divide
+             *  but we should solve the real problem!
+             */
+            if (gfp->gtkflag) 
+                set_pinfo (gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch],
+                           xr[gr][ch], l3_enc[gr][ch], gr, ch);
+            
             /*  try some better scalefac storage
              */
             best_scalefac_store (gfc, gr, ch, l3_enc, l3_side, scalefac);
@@ -923,19 +956,6 @@ void iteration_finish
              */
             if (gfc->use_best_huffman == 1) 
                 best_huffman_divide (gfc, gr, ch, cod_info, l3_enc[gr][ch]);
-            
-            /*  update the frame analyzer information
-             *  it looks like scfsi will not be handled correct:
-             *    often there are undistorted bands which show up
-             *    as distorted ones in the frame analyzer!!
-             *  that's why we did it before:
-             *  - best_scalefac_store
-             *  - best_huffman_divide
-             *  but we should solve the real problem!
-             */
-            if (gfp->gtkflag) 
-                set_pinfo (gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch],
-                           xr[gr][ch], l3_enc[gr][ch], gr, ch);
             
             /*  update reservoir status after FINAL quantization/bitrate
              */
