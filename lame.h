@@ -165,7 +165,7 @@ typedef struct  {
   int no_short_blocks;        /* disable short blocks       */
   int emphasis;                   /* obsolete */
 
-
+  float raiseSMR;  /* 0...1 : 0 leave SMR, 1 maximize SMR */
 
 
   /************************************************************************/

@@ -51,6 +51,15 @@ CPP_OPTS += -DHAVEMPGLIB
 ##########################################################################
 CPP_OPTS += -DUSE_LAYER_1 -DUSE_LAYER_2
 
+
+##########################################################################
+# -DTAKEHIRO_IEEE754_HACK 
+# gcc users make sure to set -fno-strict-aliasing at compile time, or
+# do not use this
+##########################################################################
+#CPP_OPTS += -DTAKEHIRO_IEEE754_HACK 
+
+
 ##########################################################################
 # floating point option:
 # -DFLOAT8_is_float         most floating point variables are 4 byte
@@ -152,10 +161,10 @@ ifeq ($(UNAME),Linux)
 #  CPP_OPTS += -DRH_AMP -DRH_VALIDATE_MS
 # these options for gcc-2.95.2 to produce fast code
 #   CC_OPTS = \
-#	-pedantic -Wall -O9 -fomit-frame-pointer -march=pentium \
+#	-Wall -O9 -fomit-frame-pointer -march=pentium \
 #	-finline-functions -fexpensive-optimizations \
 #	-funroll-loops -funroll-all-loops -pipe -fschedule-insns2 \
-#	-fstrength-reduce \
+#	-fstrength-reduce -fno-strict-aliasing \
 #	-malign-double -mfancy-math-387 -ffast-math 
 
 

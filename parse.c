@@ -164,6 +164,8 @@ void lame_help ( lame_global_flags* gfp, const char* ProgramName )  /* print syn
   PRINTF1("    --comp  <arg>   choose bitrate to achive a compression ratio of <arg>\n");
   PRINTF1("    --athonly       only use the ATH for masking\n");
   PRINTF1("    --noath         disable the ATH for masking\n");
+  PRINTF1("    --athlower x    lower the ATH x dB\n");
+  PRINTF1("    --raise-smr x   0 <= x <= 1, 0 default, 1 maximum SMR\n");
   PRINTF1("    --short         use short blocks\n");
   PRINTF1("    --noshort       do not use short blocks\n");
   PRINTF1("    --voice         experimental voice mode\n");
@@ -646,6 +648,12 @@ void lame_parse_args ( lame_global_flags* gfp, int argc, char** argv )
 		T_ELIF ("athlower")
 		    argUsed=1;
 		    gfp->ATHlower = atoi(nextArg);
+		
+		T_ELIF ("raise-smr")
+		    argUsed=1;
+		    gfp->raiseSMR = atof(nextArg);
+                    if (gfp->raiseSMR < 0.0) gfp->raiseSMR = 0.0;
+                    if (gfp->raiseSMR > 1.0) gfp->raiseSMR = 1.0;
 		
 		T_ELIF ("freeformat")
 		    gfp->free_format=1;

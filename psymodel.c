@@ -893,26 +893,55 @@ int L3psycho_anal( lame_global_flags *gfp,
     /* longblock threshold calculation (part 2) */
     for ( sb = 0; sb < SBPSY_l; sb++ )
       {
-	FLOAT8 enn,thmm;
+	FLOAT8 enn = gfc->w1_l[sb] * eb[gfc->bu_l[sb]] + gfc->w2_l[sb] * eb[gfc->bo_l[sb]];
+	FLOAT8 thmm = gfc->w1_l[sb] *thr[gfc->bu_l[sb]] + gfc->w2_l[sb] * thr[gfc->bo_l[sb]];
 
-	if (!gfp->exp_nspsytune) {
-#if 0
-	  /* note by Robert Hegemann 2000-09-11:
-	   * using this code will break psychoacoustics on many pieces
-	   * like VBRtest.wav (see http://www.sulaco.org)
-	   */
-         
+	if (gfp->exp_nspsytune) {
 	  /* additive masking */
-	  enn = gfc->w1_l[sb] * eb[gfc->bu_l[sb]] + gfc->w2_l[sb] * eb[gfc->bo_l[sb]];
-	  thmm = gfc->w1_l[sb] *thr[gfc->bu_l[sb]] + gfc->w2_l[sb] * thr[gfc->bo_l[sb]];
 	  for ( b = gfc->bu_l[sb]+1; b < gfc->bo_l[sb]; b++ )
 	    {
 	      enn  += eb[b];
 	      thmm += thr[b];
 	    }
+	} else {
+#if 1
+          /*  SMR: signal to mask ratio
+           *
+           *  a) for this subband calculate the integral below the signal curve
+           *     and below the masking curve -> enn, thmm
+           *     note: enn < thmm possible!! what would a resulting SMR be?
+           *
+           *  b) look for the peak signal and the lowest masking  -> enM, thmM
+           *     subband coder usually take the distance between enM and thmM
+           *     as the signal to mask ratio, the quantizer should try to get
+           *     a signal to noise ratio larger than SMR.
+           *
+           *  note: enM >= enn  and  thmM <= thmm  so b) gives larger SMRs
+           *
+           *  the user defines with gfp->raiseSMR:
+           *  0  =>  use a)
+           *  :  =>  little bit of both
+           *  1  =>  use b)  
+           *
+           *  Robert Hegemann 2000-09-12
+           */
+	  FLOAT8 enM  = enn;
+          FLOAT8 thmM = thmM;
+          
+          for ( b = gfc->bu_l[sb]+1; b < gfc->bo_l[sb]; b++ )
+	    {
+	      enn  += eb[b];
+	      thmm += thr[b];
+              enM  = Max(enM,eb[b]);
+              thmM = Min(thmM,thr[b]); 
+	    }
+            
+	  enM  *= (1+gfc->bo_l[sb]-gfc->bu_l[sb]);
+	  thmM *= (1+gfc->bo_l[sb]-gfc->bu_l[sb]);
+          
+          enn  = enn  + (enM -enn)  * gfp->raiseSMR;
+          thmm = thmm + (thmM-thmm) * gfp->raiseSMR;
 #else
-	  enn = gfc->w1_l[sb] * eb[gfc->bu_l[sb]] + gfc->w2_l[sb] * eb[gfc->bo_l[sb]];
-	  thmm = Min(thr[gfc->bu_l[sb]],thr[gfc->bo_l[sb]]);
 	  for ( b = gfc->bu_l[sb]+1; b < gfc->bo_l[sb]; b++ )
 	    {
 	      enn  += eb[b];
@@ -920,18 +949,9 @@ int L3psycho_anal( lame_global_flags *gfp,
 	    }
 	  thmm*=(1+gfc->bo_l[sb]-gfc->bu_l[sb]);
 #endif
-	} else {
-	  /* additive masking */
-	  enn = gfc->w1_l[sb] * eb[gfc->bu_l[sb]] + gfc->w2_l[sb] * eb[gfc->bo_l[sb]];
-	  thmm = gfc->w1_l[sb] *thr[gfc->bu_l[sb]] + gfc->w2_l[sb] * thr[gfc->bo_l[sb]];
-	  for ( b = gfc->bu_l[sb]+1; b < gfc->bo_l[sb]; b++ )
-	    {
-	      enn  += eb[b];
-	      thmm += thr[b];
-	    }
 	}
 
-	gfc->en[chn].l[sb] = enn;
+	gfc->en [chn].l[sb] = enn;
 	gfc->thm[chn].l[sb] = thmm;
       }
     
@@ -962,14 +982,32 @@ int L3psycho_anal( lame_global_flags *gfp,
 
 	for ( sb = 0; sb < SBPSY_s; sb++ )
 	  {
-	    FLOAT8 enn  = gfc->w1_s[sb] * eb[gfc->bu_s[sb]] + gfc->w2_s[sb] * eb[gfc->bo_s[sb]];
+            FLOAT8 enn  = gfc->w1_s[sb] * eb[gfc->bu_s[sb]] + gfc->w2_s[sb] * eb[gfc->bo_s[sb]];
 	    FLOAT8 thmm = gfc->w1_s[sb] *thr[gfc->bu_s[sb]] + gfc->w2_s[sb] * thr[gfc->bo_s[sb]];
-	    for ( b = gfc->bu_s[sb]+1; b < gfc->bo_s[sb]; b++ )
-	      {
-		enn  += eb[b];
-		thmm += thr[b];
-	      }
-	    gfc->en[chn].s[sb][sblock] = enn;
+	    
+	    if (gfp->exp_nspsytune) {
+                for ( b = gfc->bu_s[sb]+1; b < gfc->bo_s[sb]; b++ )
+	          {
+		    enn  += eb[b];
+		    thmm += thr[b];
+	          }
+            } else {
+                FLOAT8 enM  = enn;
+                FLOAT8 thmM = thmm;
+                for ( b = gfc->bu_s[sb]+1; b < gfc->bo_s[sb]; b++ )
+                  {
+                    enn  += eb[b];
+                    thmm += thr[b];
+                    enM   = Max(enM,eb[b]);
+                    thmM  = Min(thmM,thr[b]); 
+                  }
+                enM  *= (1+gfc->bo_s[sb]-gfc->bu_s[sb]);
+                thmM *= (1+gfc->bo_s[sb]-gfc->bu_s[sb]);
+
+                enn  = enn  + (enM -enn)  * gfp->raiseSMR;
+                thmm = thmm + (thmM-thmm) * gfp->raiseSMR;
+	    }
+            gfc->en [chn].s[sb][sblock] = enn;
 	    gfc->thm[chn].s[sb][sblock] = thmm;
 	  }
       }

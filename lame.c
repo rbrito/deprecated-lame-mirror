@@ -1644,6 +1644,8 @@ int lame_init(lame_global_flags *gfp)
   gfp->highpassfreq=0;
   gfp->lowpasswidth = -1;
   gfp->highpasswidth = -1;
+  
+  gfp->raiseSMR = 0;
 
   gfp->no_short_blocks=0;
   gfp->padding_type=2;
