@@ -44,10 +44,10 @@
 #ifdef HAVE_NASM
 extern void pow075_SSE(float *, float *, int, float*);
 extern void pow075_3DN(float *, float *, int, float*);
-extern void sumofsqr_3DN(const FLOAT *, int, FLOAT *);
-extern void calc_noise_sub_3DN(const FLOAT *, const int *, int, int, FLOAT *);
-extern void quantize_ISO_3DN(const FLOAT *, int, int, int *, int);
-extern void quantize_ISO_SSE(const FLOAT *, int, int, int *);
+extern void sumofsqr_3DN(const float *, int, float *);
+extern void calc_noise_sub_3DN(const float *, const int *, int, int, float *);
+extern void quantize_ISO_3DN(const float *, int, int, int *, int);
+extern void quantize_ISO_SSE(const float *, int, int, int *);
 extern FLOAT
 calc_sfb_noise_fast_3DN(lame_t gfc, int j, int bw, int sf);
 extern FLOAT
