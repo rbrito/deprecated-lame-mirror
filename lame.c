@@ -295,7 +295,10 @@ int lame_init_params(lame_global_flags *gfp)
    * we know the framesize.  */
   gfp->totalframes=0;
   if(gfp->input_format == sf_mp1 && gfp->decode_only)
-    gfp->totalframes = 2+ gfp->num_samples/(gfc->resample_ratio*gfp->framesize/3);
+    gfp->totalframes = (gfp->num_samples+383)/384;
+  else
+  if(gfp->input_format == sf_mp2 && gfp->decode_only)
+    gfp->totalframes = (gfp->num_samples+1151)/1152;
   else
     gfp->totalframes = 2+ gfp->num_samples/(gfc->resample_ratio*gfp->framesize);
 

@@ -24,7 +24,7 @@ plotting_data *mpg123_pinfo=NULL;
 static const int smpls[2][4]={
 /* Layer x  I   II   III */
         {0,384,1152,1152}, /* MPEG-1     */
-        {0,192, 576, 576}  /* MPEG-2(.5) */
+        {0,384,1152, 576}  /* MPEG-2(.5) */
 };
 
 
