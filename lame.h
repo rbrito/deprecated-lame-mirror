@@ -186,11 +186,11 @@ void lame_init_infile(void);
 /* REQUIRED:  sets more internal configuration based on data provided
  * above
  */
-void lame_init_params();
+void lame_init_params(void);
 
 
 /* OPTONAL:  print internal lame configuration on stderr*/
-void lame_print_config();
+void lame_print_config(void);
 
 
 /* OPTIONAL:  read one frame of PCM data from audio input file opened by 

@@ -35,7 +35,7 @@ int main(int argc, char **argv)
   FILE *outf;
 #ifdef __riscos__
   int i;
-#endif;
+#endif
 
   gf=lame_init();                  /* initialize libmp3lame */
   if(argc==1) lame_usage(argv[0]);  /* no command-line args, print usage, exit  */
