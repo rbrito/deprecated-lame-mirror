@@ -1842,7 +1842,8 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 
 
 
-  /* compute numlines */
+  /* compute numlines, the number of spectral lines in each partition band */
+  /* each partition band should be about DELBARK wide. */
   j=0;
   for(i=0;i<CBANDS;i++)
     {
@@ -1931,17 +1932,11 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 
     }
 
+  /* MINVAL.  For low freq, the strength of the masking is limited by minval
+   * this is an ISO MPEG1 thing, dont know if it is really needed */
   for(i=0;i<*npart_l_orig;i++){
     double x = (-20+bval_l[i]*20.0/10.0);
     if (bval_l[i]>10) x = 0;
-
-#if 0
-    fprintf(stderr,"bval=%f  minval  orig=%f   new=%f    ", bval_l[i],10*log10(minval[i]),x);    
-    if (fabs(x) < fabs(10*log10(minval[i])))
-      fprintf(stderr,"(more masking) \n");
-    else
-      fprintf(stderr,"(less masking) \n");
-#endif
     minval[i]=pow(10.0,x/10);
   }
 
@@ -2072,7 +2067,6 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
   *npart_l=bo_l[NBPSY_l-1]+1;
   *npart_s=bo_s[NBPSY_s-1]+1;
   
-  //  DEBUGF(gfc,"\n npart_l_orig, npart_l: %i %i \n",*npart_l_orig,*npart_l);
   assert(*npart_l <= *npart_l_orig);
   assert(*npart_s <= *npart_s_orig);
 
