@@ -91,7 +91,7 @@
 	ret
 
 ;
-; int xr_max_MMX(float *ix, float *end)
+; int xrmax_MMX(float *ix, float *end)
 ;
 	proc	xrmax_MMX
 	mov	ecx, [esp+4]	;ecx = begin
