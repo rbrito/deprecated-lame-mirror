@@ -1063,10 +1063,18 @@ iteration_init(const lame_t gfc)
 /* see for example "Zwicker: Psychoakustik, 1982; ISBN 3-540-11401-7 */
 static FLOAT freq2bark(FLOAT freq)
 {
+    FLOAT bark;
     /* input: freq in hz  output: barks */
     if (freq<0) freq=0;
     freq = freq * 0.001;
-    return 13.0*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5));
+#define FREQ_BOUND 1.35
+    if (freq < FREQ_BOUND) {
+	bark = 13.0*atan(FREQ_BOUND*.76)
+	    + 3.5*atan(FREQ_BOUND*FREQ_BOUND/(7.5*7.5))
+	    + (freq-FREQ_BOUND)*5;
+    } else
+	bark = 13.0*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5));
+    return bark;
 }
 
 /* 
@@ -1106,12 +1114,15 @@ init_numline(
     for (i = j = 0; i < CBANDS; i++) {
 	FLOAT bark1 = freq2bark(sfreq*j);
 	int j2;
-	for (j2 = j+4;
+	for (j2 = j+2;
 	     freq2bark(sfreq*j2) - bark1 < DELBARK && j2 <= blksize/2;
 	     j2++)
 	    ;
+	if (DELBARK - (freq2bark(sfreq*(j2-1)) - bark1)
+	    < (freq2bark(sfreq*j2) - bark1) - DELBARK)
+	    j2--;
 
-	if (j2 > blksize/2+1)
+	if (j2 > blksize/2+1 || i == CBANDS-1)
 	    j2 = blksize/2+1;
 	bval[i] = freq2bark(sfreq*(j+j2)*0.5);
 	numlines[i] = j2 - j;
@@ -1151,12 +1162,16 @@ init_numline_l2s(
     for (i = j = 0; i < CBANDS; i++) {
 	FLOAT bark1 = freq2bark(sfreq*j);
 	int j2;
-	for (j2 = j+4;
+	for (j2 = j+2;
 	     freq2bark(sfreq*j2) - bark1 < DELBARK && j2 <= blksize/2;
 	     j2++)
 	    ;
 
-	if (j2 > blksize/2+1)
+	if (DELBARK - (freq2bark(sfreq*(j2-1)) - bark1)
+	    < (freq2bark(sfreq*j2) - bark1) - DELBARK)
+	    j2--;
+
+	if (j2 > blksize/2+1 || i == CBANDS-1)
 	    j2 = blksize/2+1;
 	while (j<j2)
 	    partition[j++]=i;
