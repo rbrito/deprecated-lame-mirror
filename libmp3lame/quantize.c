@@ -959,16 +959,12 @@ VBR_encode_granule (
     int             bst_l3_enc[576];
     int Max_bits  = max_bits;
     int real_bits = max_bits+1;
-    int this_bits = (min_bits+max_bits)/2;
+    int this_bits = (max_bits+min_bits)/2;
     int dbits, over, found = 0;
     int sfb21_extra = gfc->sfb21_extra;
-      
+
     assert(Max_bits <= MAX_BITS);
-  
-    bst_cod_info = *cod_info;
-    memset(&bst_scalefac, 0, sizeof(III_scalefac_t));
-    memcpy(&bst_xrpow, xrpow, sizeof(FLOAT8)*576);
-      
+
     /*  search within round about 40 bits of optimal
      */
     do {
@@ -1005,14 +1001,14 @@ VBR_encode_granule (
              */
             max_bits  = real_bits-32;
             dbits     = max_bits-min_bits;
-            this_bits = (min_bits+max_bits)/2;
+            this_bits = (max_bits+min_bits)/2;
         } 
         else {
             /*  try with more bits
              */
             min_bits  = this_bits+32;
             dbits     = max_bits-min_bits;
-            this_bits = (min_bits+max_bits)/2;
+            this_bits = (max_bits+min_bits)/2;
             
             if (found) {
                 found = 2;
@@ -1023,7 +1019,7 @@ VBR_encode_granule (
                 memcpy(xrpow, bst_xrpow, sizeof(FLOAT8)*576);
             }
         }
-    } while (dbits>8);
+    } while (dbits>12);
 
     gfc->sfb21_extra = sfb21_extra;
 
@@ -1035,6 +1031,7 @@ VBR_encode_granule (
         memcpy(l3_enc, bst_l3_enc, sizeof(int)*576);
     }
     assert(cod_info->part2_3_length <= Max_bits);
+
 }
 
 
@@ -1154,34 +1151,6 @@ calc_min_bits (
 
 
 
-/************************************************************************
- *
- *      calc_max_bits()   
- *
- *  Robert Hegemann 2000-09-05
- *
- *  determine maximal bit skeleton
- *
- ************************************************************************/
-inline
-static int 
-calc_max_bits (
-    const lame_internal_flags * const gfc,
-    const int             frameBits[15],
-    const int             min_bits )
-{
-    int max_bits;
-    
-    max_bits  = frameBits[gfc->VBR_max_bitrate];
-    max_bits /= gfc->channels_out * gfc->mode_gr;
-    max_bits  = Min (1200 + max_bits, MAX_BITS - 195 * (gfc->channels_out - 1));
-    max_bits  = Max (max_bits, min_bits);
-    
-    return max_bits;
-}
-
-
-
 /*********************************************************************
  *
  *      VBR_prepare()
@@ -1223,18 +1192,25 @@ VBR_prepare (
     lame_internal_flags *gfc=gfp->internal_flags;
     
     
-    FLOAT8   masking_lower_db, adjust = 0.0;
-    int      gr, ch;
-    int      used_bits = 0, bits;
-    int      analog_silence = 1;
+    FLOAT8  masking_lower_db, adjust = 0.0;
+    int     gr, ch;
+    int     analog_silence = 1;
+    int     bpf, avg, mxb, bits = 0;
   
+    gfc->bitrate_index = gfc->VBR_max_bitrate;
+    getframebits (gfp, &bpf, &avg);
+    bpf = ResvFrameBegin (gfp, &gfc->l3_side, avg, bpf );
+    avg = (bpf - 8*gfc->sideinfo_len) / gfc->mode_gr;
+
     get_framebits (gfp, analog_mean_bits, min_mean_bits, frameBits);
     
     for (gr = 0; gr < gfc->mode_gr; gr++) {
-        if (gfc->mode_ext == MPG_MD_MS_LR) 
+        mxb = on_pe (gfp, pe, &gfc->l3_side, max_bits[gr], avg, gr);
+        if (gfc->mode_ext == MPG_MD_MS_LR) {
             ms_convert (xr[gr], xr[gr]); 
-    
-        for (ch = 0; ch < gfc->channels_out; ch++) {
+            reduce_side (max_bits[gr], ms_ener_ratio[gr], avg, mxb);
+        }
+        for (ch = 0; ch < gfc->channels_out; ++ch) {
             gr_info *cod_info = &gfc->l3_side.gr[gr].ch[ch].tt;
       
             if (gfc->nsPsy.use && gfp->VBR == vbr_rh) {
@@ -1250,37 +1226,29 @@ VBR_prepare (
                                        cod_info, l3_xmin[gr]+ch);
             if (bands[gr][ch]) 
                 analog_silence = 0;
-                
-            
+
             min_bits[gr][ch] = calc_min_bits (gfp, cod_info, (int)pe[gr][ch],
                                       ms_ener_ratio[gr], bands[gr][ch],
                                       0, *analog_mean_bits, 
                                       *min_mean_bits, analog_silence, ch);
       
-            max_bits[gr][ch] = calc_max_bits (gfc, frameBits, min_bits[gr][ch]); 
+            bits += max_bits[gr][ch];
+        }
+    }
+    for (gr = 0; gr < gfc->mode_gr; gr++) {
+        for (ch = 0; ch < gfc->channels_out; ch++) {            
+            if (bits > frameBits[gfc->VBR_max_bitrate]) {
+                max_bits[gr][ch] *= frameBits[gfc->VBR_max_bitrate];
+                max_bits[gr][ch] /= bits;
+            }
+            if (min_bits[gr][ch] > max_bits[gr][ch]) 
+                min_bits[gr][ch] = max_bits[gr][ch];
             
-            used_bits += min_bits[gr][ch];           
-    
         } /* for ch */
     }  /* for gr */
     
-    *min_mean_bits = Max(125, *min_mean_bits);
-    bits = 0.8*frameBits[gfc->VBR_max_bitrate];
-    if (used_bits >= bits) { 
-        for (gr = 0; gr < gfc->mode_gr; gr++) {
-            for (ch = 0; ch < gfc->channels_out; ch++) {
-                min_bits[gr][ch] *= bits;
-                min_bits[gr][ch] /= used_bits;
-                if (min_bits[gr][ch] < *min_mean_bits)
-                    min_bits[gr][ch] = *min_mean_bits;
-                max_bits[gr][ch] *= bits;
-                max_bits[gr][ch] /= used_bits;
-                if (max_bits[gr][ch] < *min_mean_bits)
-                    max_bits[gr][ch] = *min_mean_bits;
-            }
-        }
-    }
-  
+    *min_mean_bits = Max(*min_mean_bits, 125);
+
     return analog_silence;
 }
  
@@ -1309,9 +1277,6 @@ void bitpressure_strategy1(
             max_bits[gr][ch] = Max(min_bits[gr][ch], 0.9*max_bits[gr][ch]);
         }
     }
-/*
-{static int count = 0;printf("count=%i\n",++count);}
-*/
 }
 
 inline
@@ -1373,24 +1338,6 @@ VBR_iteration_loop (
     analog_silence = VBR_prepare (gfp, pe, ms_ener_ratio, xr, ratio, 
                                   l3_xmin, frameBits, &analog_mean_bits,
                                   &min_mean_bits, min_bits, max_bits, bands);
-/* quick'n'dirty HACK */
-{
-int bpf, avg, mxb;
-    gfc->bitrate_index = gfc->VBR_max_bitrate;
-    getframebits (gfp, &bpf, &avg);
-    ResvFrameBegin (gfp, l3_side, avg, bpf );
-
-    for (gr = 0; gr < gfc->mode_gr; gr++) {
-        mxb = on_pe (gfp, pe, l3_side, max_bits[gr], avg, gr);
-        if (gfc->mode_ext == MPG_MD_MS_LR) {
-            reduce_side (max_bits[gr], ms_ener_ratio[gr], avg, mxb);
-        }
-        if (min_bits[gr][0] > max_bits[gr][0]) 
-            min_bits[gr][0] = max_bits[gr][0];
-        if (min_bits[gr][1] > max_bits[gr][1]) 
-            min_bits[gr][1] = max_bits[gr][1];
-    }
-}  
 
     /*---------------------------------*/
     for(;;) {  
@@ -1456,64 +1403,19 @@ int bpf, avg, mxb;
     bits = ResvFrameBegin (gfp, l3_side, mean_bits, bitsPerFrame);
     
     if (used_bits <= bits) break;
-/*
-printf("bits=%i used=%i %i %i %i %i\n",bits,used_bits,save_bits[0][0],save_bits[0][1],save_bits[1][0],save_bits[1][1]);     
-*/
+
     switch ( gfc -> VBR -> bitpressure ) {
     default:
-    case  1:
-        bitpressure_strategy1( gfc, l3_xmin, min_bits, max_bits );
-        break;
-    case  2:
-        bitpressure_strategy2( gfc, frameBits[gfc->bitrate_index], 
+    case  1:    bitpressure_strategy1( gfc, l3_xmin, min_bits, max_bits );
+                break;
+    case  2:    bitpressure_strategy2( gfc, frameBits[gfc->bitrate_index], 
                                used_bits2, save_bits, min_bits, max_bits );
-        break;
+                break;
     }
 
     }   /* breaks adjusted */
     /*--------------------------------------*/
     
-    /*  quantize granules which violate bit constraints again
-     */  
-    for (gr = 0; gr < gfc->mode_gr; gr++) {
-        for (ch = 0; ch < gfc->channels_out; ch++) {
-            int ret;
-            cod_info = &l3_side->gr[gr].ch[ch].tt;
-      
-            if (used_bits <= bits)
-                /*  we have enough bits
-                 *  and have already encoded the side channel 
-                 */
-                continue; /* with next ch */
-            
-            /*  repartion available bits in same proportion
-             */
-            save_bits[gr][ch] *= frameBits[gfc->bitrate_index];
-            save_bits[gr][ch] /= used_bits;
-
-            /*  init_outer_loop sets up cod_info, scalefac and xrpow 
-             */
-            ret = init_outer_loop(cod_info, &scalefac[gr][ch], gfc->is_mpeg1,
-				  xr[gr][ch], xrpow);
-            if (ret == 0) 
-            {
-                /*  xr contains no energy 
-                 *  l3_enc, our encoding data, will be quantized to zero
-                 */
-                memset(l3_enc[gr][ch], 0, sizeof(int)*576);
-            }
-            else {
-                /*  xr contains energy we will have to encode 
-                 *  masking abilities were previously calculated
-                 *  find some good quantization in outer_loop 
-                 */
-                outer_loop (gfp, cod_info, xr[gr][ch], &l3_xmin[gr][ch],
-                            &scalefac[gr][ch], xrpow, l3_enc[gr][ch], ch,
-                            save_bits[gr][ch]);
-            }
-        } /* ch */
-    }  /* gr */
-
     iteration_finish (gfc, xr, l3_enc, scalefac, mean_bits);
 }
 
