@@ -67,17 +67,13 @@ struct lame_global_struct {
   int original;                   /* mark as original. default=1            */
   int error_protection;           /* use 2 bytes per frame for a CRC
                                      checksum. default=0                    */
-  Padding_type padding_type;      /* PAD_NO = no padding,
-                                     PAD_ALL = always pad,
-                                     PAD_ADJUST = adjust padding,
-                                     default=2                              */
   int extension;                  /* the MP3 'private extension' bit.
                                      Meaningless                            */
   int strict_ISO;                 /* enforce ISO spec as much as possible   */
 
   /* quantization/noise shaping */
   int disable_reservoir;          /* use bit reservoir?                     */
-  int experimentalX;            
+  int experimentalX;
   int experimentalY;
   int experimentalZ;
   int exp_nspsytune;

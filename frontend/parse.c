@@ -1201,7 +1201,6 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 
                 T_ELIF ("nores")
                     lame_set_disable_reservoir(gfp,1);
-                    lame_set_padding_type(gfp, PAD_NO);
                 
                 T_ELIF ("strictly-enforce-ISO")
                     lame_set_strict_ISO(gfp,1);

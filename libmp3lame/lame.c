@@ -299,37 +299,6 @@ limited bandwidth is increasing quality
  */
 }
 
-static int
-optimum_samplefreq(int lowpassfreq, int input_samplefreq)
-{
-/*
- * Rules:
- *
- *  - output sample frequency should NOT be decreased by more than 3% if lowpass allows this
- *  - if possible, sfb21 should NOT be used
- *
- *  Problem: Switches to 32 kHz at 112 kbps
- */
-    if (input_samplefreq <= 8000 * 1.03 || lowpassfreq <= 3622)
-        return 8000;
-    if (input_samplefreq <= 11025 * 1.03 || lowpassfreq <= 4991)
-        return 11025;
-    if (input_samplefreq <= 12000 * 1.03 || lowpassfreq <= 5620)
-        return 12000;
-    if (input_samplefreq <= 16000 * 1.03 || lowpassfreq <= 7244)
-        return 16000;
-    if (input_samplefreq <= 22050 * 1.03 || lowpassfreq <= 9982)
-        return 22050;
-    if (input_samplefreq <= 24000 * 1.03 || lowpassfreq <= 11240)
-        return 24000;
-    if (input_samplefreq <= 32000 * 1.03 || lowpassfreq <= 15264)
-        return 32000;
-    if (input_samplefreq <= 44100 * 1.03)
-        return 44100;
-    return 48000;
-}
-
-
 /* set internal feature flags.  USER should not access these since
  * some combinations will produce strange results */
 void
@@ -557,10 +526,8 @@ lame_init_params(lame_global_flags * const gfp)
         gfp->force_ms = 0; // don't allow forced mid/side stereo for mono output
 
 
-    if (gfp->VBR != vbr_off) {
+    if (gfp->VBR != vbr_off)
         gfp->free_format = 0; /* VBR can't be mixed with free format */
-	gfp->padding_type = PAD_NO;
-    }
 
     if (gfp->VBR == vbr_off && gfp->brate == 0) {
         /* no bitrate or compression ratio specified, use a compression ratio of 11.025 */
@@ -1277,11 +1244,10 @@ lame_print_internals( const lame_global_flags * gfp )
     default          : pc = "unknown (error)"; break;
     }
     MSGF( gfc, "\t%d channel - %s\n", gfc->channels_out, pc );
-    switch ( gfp->padding_type ) {
-    case PAD_NO    : pc = "off";    break;
-    case PAD_ALL   : pc = "all";    break;
-    case PAD_ADJUST: pc = "auto";   break;
-    default        : pc = "(error)"; break;
+    
+    switch (gfp->VBR) {
+    case vbr_off   : pc = "off";    break;
+    default        : pc = "all";    break;
     }
     MSGF( gfc, "\tpadding: %s\n", pc );
     
@@ -2052,7 +2018,6 @@ lame_init_old(lame_global_flags * gfp)
     gfp->lowpasswidth = -1;
     gfp->highpasswidth = -1;
 
-    gfp->padding_type = PAD_ADJUST;
     gfp->VBR = vbr_off;
     gfp->VBR_q = 4;
     gfp->VBR_mean_bitrate_kbps = 128;
