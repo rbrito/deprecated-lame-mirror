@@ -28,10 +28,7 @@
 
 /************************************************************************
 *
-* main
-*
-* PURPOSE:  MPEG-1,2 Layer III encoder with GPSYCHO 
-* psychoacoustic model.
+* mp3x main, to display the internal parameters of LAME.
 *
 ************************************************************************/
 int main(int argc, char **argv)

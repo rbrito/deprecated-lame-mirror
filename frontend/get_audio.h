@@ -45,6 +45,6 @@ extern int id3v2taglen;
 extern FILE *musicin;
 
 #ifdef LIBSNDFILE
-# include "sndfile.h"
+# include <sndfile.h>
 #endif /* ifdef LIBSNDFILE */
-#endif	/* ifndef LAME_GET_AUDIO_H */
+#endif /* ifndef LAME_GET_AUDIO_H */

@@ -1160,7 +1160,7 @@ static void text_window (GtkWidget *widget, gpointer data)
     sprintf(text,"LAME version %s \n%s\n\n",get_lame_version(),get_lame_url());
     gtk_text_insert(GTK_TEXT(box),NULL,NULL,NULL,text,-1);
 
-    sprintf(text,"psycho-acoustic model:  GPSYCHO version %s\n",get_psy_version());
+    sprintf(text,"psycho-acoustic model: nspsy, version %s\n",get_psy_version());
     gtk_text_insert(GTK_TEXT(box),NULL,NULL,NULL,text,-1);
     
     sprintf(text,"frame analyzer: MP3x version %s\n\n",get_mp3x_version());
