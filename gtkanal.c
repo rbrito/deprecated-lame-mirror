@@ -454,11 +454,11 @@ void plot_frame(void)
       if (blocktype[gr][ch]==SHORT_TYPE) {
 	nsfb=SBMAX_s;
 	fac=3;
-	scalefac = scalefac_band.s;
+	scalefac = gfc->scalefac_band.s;
       }else{
 	nsfb=SBMAX_l;
 	fac=1;
-	scalefac = scalefac_band.l;
+	scalefac = gfc->scalefac_band.l;
       }
       for (i=nsfb-7 ; i<nsfb; i++) {
 	ycord[0] = .8*ymx;  ycord[1] = ymn;

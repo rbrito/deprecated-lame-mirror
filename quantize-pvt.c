@@ -96,7 +96,8 @@ int  pretab[21] =
            + (fr_ps->header->version * 3)
 */
 
-struct scalefac_struct sfBandIndex[9] =
+
+const struct scalefac_struct sfBandIndex[9] =
 {
   { /* Table B.2.b: 22.05 kHz */
     {0,6,12,18,24,30,36,44,54,66,80,96,116,140,168,200,238,284,336,396,464,522,576},
@@ -136,7 +137,6 @@ struct scalefac_struct sfBandIndex[9] =
   }
 };
 
-struct scalefac_struct scalefac_band;
 
 
 FLOAT8 pow20[Q_MAX];
@@ -163,16 +163,6 @@ iteration_init( lame_global_flags *gfp,III_side_info_t *l3_side, int l3_enc[2][2
 
   if ( gfc->iteration_init_init==0 ) {
     gfc->iteration_init_init=1;
-    for (i = 0; i < SBMAX_l + 1; i++) {
-      scalefac_band.l[i] =
-	sfBandIndex[gfc->samplerate_index + (gfc->version * 3) + 
-              6*(gfp->out_samplerate<16000)].l[i];
-    }
-    for (i = 0; i < SBMAX_s + 1; i++) {
-      scalefac_band.s[i] =
-	sfBandIndex[gfc->samplerate_index + (gfc->version * 3) + 
-             6*(gfp->out_samplerate<16000)].s[i];
-    }
 
     l3_side->main_data_begin = 0;
     compute_ath(gfp,ATH_l,ATH_s);
@@ -294,14 +284,15 @@ FLOAT8 ATHformula(lame_global_flags *gfp,FLOAT8 f)
 
 void compute_ath(lame_global_flags *gfp,FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY_l])
 {
+  lame_internal_flags *gfc=gfp->internal_flags;
   int sfb,i,start,end;
   FLOAT8 ATH_f;
   FLOAT8 samp_freq = gfp->out_samplerate/1000.0;
 
   /* last sfb is not used */
   for ( sfb = 0; sfb < SBPSY_l; sfb++ ) {
-    start = scalefac_band.l[ sfb ];
-    end   = scalefac_band.l[ sfb+1 ];
+    start = gfc->scalefac_band.l[ sfb ];
+    end   = gfc->scalefac_band.l[ sfb+1 ];
     ATH_l[sfb]=1e99;
     for (i=start ; i < end; i++) {
       ATH_f = ATHformula(gfp,samp_freq*i/(2*576)); /* freq in kHz */
@@ -316,8 +307,8 @@ void compute_ath(lame_global_flags *gfp,FLOAT8 ATH_l[SBPSY_l],FLOAT8 ATH_s[SBPSY
   }
 
   for ( sfb = 0; sfb < SBPSY_s; sfb++ ){
-    start = scalefac_band.s[ sfb ];
-    end   = scalefac_band.s[ sfb+1 ];
+    start = gfc->scalefac_band.s[ sfb ];
+    end   = gfc->scalefac_band.s[ sfb+1 ];
     ATH_s[sfb]=1e99;
     for (i=start ; i < end; i++) {
       ATH_f = ATHformula(gfp,samp_freq*i/(2*192));     /* freq in kHz */
@@ -680,9 +671,10 @@ int scale_bitcount_lsf(III_scalefac_t *scalefac, gr_info *cod_info)
 int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576], III_psy_ratio *ratio,
 	       gr_info *cod_info, III_psy_xmin *l3_xmin)
 {
-    int start, end, bw,l, b, ath_over=0;
-	u_int	sfb;
-    FLOAT8 en0, xmin, ener;
+  lame_internal_flags *gfc=gfp->internal_flags;
+  int start, end, bw,l, b, ath_over=0;
+  u_int	sfb;
+  FLOAT8 en0, xmin, ener;
 
     if (gfp->ATHonly) {    
       for ( sfb = cod_info->sfb_smax; sfb < SBPSY_s; sfb++ )
@@ -694,8 +686,8 @@ int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576], III_psy_ratio *ratio,
     }else{
 
       for ( sfb = cod_info->sfb_smax; sfb < SBPSY_s; sfb++ ) {
-	start = scalefac_band.s[ sfb ];
-        end   = scalefac_band.s[ sfb + 1 ];
+	start = gfc->scalefac_band.s[ sfb ];
+        end   = gfc->scalefac_band.s[ sfb + 1 ];
 	bw = end - start;
         for ( b = 0; b < 3; b++ ) {
 	  for (en0 = 0.0, l = start; l < end; l++) {
@@ -716,8 +708,8 @@ int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576], III_psy_ratio *ratio,
       }
 
       for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ){
-	start = scalefac_band.l[ sfb ];
-	end   = scalefac_band.l[ sfb+1 ];
+	start = gfc->scalefac_band.l[ sfb ];
+	end   = gfc->scalefac_band.l[ sfb+1 ];
 	bw = end - start;
 
         for (en0 = 0.0, l = start; l < end; l++ ) {

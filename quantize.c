@@ -40,7 +40,7 @@
 /*  updates plotting data                                               */
 /************************************************************************/
 void 
-set_pinfo (
+set_pinfo (lame_global_flags *gfp,
     gr_info *cod_info,
     III_psy_ratio *ratio, 
     III_scalefac_t *scalefac,
@@ -51,6 +51,7 @@ set_pinfo (
     int ch
 )
 {
+  lame_internal_flags *gfc=gfp->internal_flags;
   int sfb;
   FLOAT ifqstep;
   int i,l,start,end,bw;
@@ -61,8 +62,8 @@ set_pinfo (
   if (cod_info->block_type == SHORT_TYPE) {
     for ( i = 0; i < 3; i++ ) {
       for ( sfb = 0; sfb < SBPSY_s; sfb++ )  {
-	start = scalefac_band.s[ sfb ];
-	end   = scalefac_band.s[ sfb + 1 ];
+	start = gfc->scalefac_band.s[ sfb ];
+	end   = gfc->scalefac_band.s[ sfb + 1 ];
 	bw = end - start;
 	for ( en0 = 0.0, l = start; l < end; l++ ) 
 	  en0 += (*xr_s)[l][i] * (*xr_s)[l][i];
@@ -81,8 +82,8 @@ set_pinfo (
     }
   }else{
     for ( sfb = 0; sfb < SBPSY_l; sfb++ )   {
-      start = scalefac_band.l[ sfb ];
-      end   = scalefac_band.l[ sfb+1 ];
+      start = gfc->scalefac_band.l[ sfb ];
+      end   = gfc->scalefac_band.l[ sfb+1 ];
       bw = end - start;
       for ( en0 = 0.0, l = start; l < end; l++ ) 
 	en0 += xr[l] * xr[l];
@@ -183,12 +184,12 @@ iteration_loop( lame_global_flags *gfp,
 		      &scalefac[gr][ch], cod_info, xfsf, ch);
         }
       best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
-      if (gfc->use_best_huffman==1 && cod_info->block_type == SHORT_TYPE) {
-	best_huffman_divide(gr, ch, cod_info, l3_enc[gr][ch]);
+      if (gfc->use_best_huffman==1 && cod_info->block_type != SHORT_TYPE) {
+	best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
       }
 #ifdef HAVEGTK
       if (gfp->gtkflag)
-	set_pinfo (cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
+	set_pinfo (gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
 #endif
 
 /*#define NORES_TEST */
@@ -364,7 +365,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
 #ifdef HAVEGTK
 	memset(xfsf,0,sizeof(xfsf));
 	if (gfp->gtkflag)
-	  set_pinfo(cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
+	  set_pinfo(gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
 #endif
 	analog_silence=1;
 	continue; /* with next channel */
@@ -460,7 +461,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
 			     noise[1]);
 #ifdef HAVEGTK
 	  if (gfp->gtkflag)
-	    set_pinfo(cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
+	    set_pinfo(gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
 #endif
 	  if (better) {
 	      /* 
@@ -596,7 +597,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
 	}
 #ifdef HAVEGTK
 	if (gfp->gtkflag)
-	  set_pinfo(cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
+	  set_pinfo(gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
 #endif
       }
     }
@@ -609,8 +610,8 @@ VBR_iteration_loop (lame_global_flags *gfp,
     for (ch = 0; ch < gfc->stereo; ch++) {
       cod_info = &l3_side->gr[gr].ch[ch].tt;
       best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
-      if (cod_info->block_type != SHORT_TYPE) {
-	best_huffman_divide(gr, ch, cod_info, l3_enc[gr][ch]);
+      if (gfc->use_best_huffman==1 && cod_info->block_type != SHORT_TYPE) {
+	best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
       }
 #ifdef HAVEGTK
       if (gfp->gtkflag)
@@ -832,7 +833,7 @@ void outer_loop(
       	over=0;
       }else{
 	/* coefficients and thresholds both l/r (or both mid/side) */
-	over=calc_noise1( xr, l3_enc_w, cod_info, 
+	over=calc_noise1( gfp,xr, l3_enc_w, cod_info, 
 			  xfsf_w,distort, l3_xmin, &scalefac_w, &over_noise, 
 			  &tot_noise, &max_noise);
 
@@ -869,7 +870,7 @@ void outer_loop(
       if (over==0) notdone=0;
 
     if (notdone) {
-	amp_scalefac_bands( xrpow, cod_info, &scalefac_w, distort);
+	amp_scalefac_bands( gfp, xrpow, cod_info, &scalefac_w, distort);
 	/* check to make sure we have not amplified too much */
 	/* loop_break returns 0 if there is an unamplified scalefac */
 	/* scale_bitcount returns 0 if no scalefactors are too large */
@@ -923,15 +924,17 @@ void outer_loop(
 /*            calc_noise                                                 */
 /*************************************************************************/
 /*  mt 5/99:  Function: Improved calc_noise for a single channel   */
-int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
+int calc_noise1( lame_global_flags *gfp,
+                 FLOAT8 xr[576], int ix[576], gr_info *cod_info,
 		 FLOAT8 xfsf[4][SBPSY_l], FLOAT8 distort[4][SBPSY_l],
 		 III_psy_xmin *l3_xmin, III_scalefac_t *scalefac,
 		 FLOAT8 *over_noise,
 		 FLOAT8 *tot_noise, FLOAT8 *max_noise)
 {
     int start, end, l, i, over=0;
-	u_int sfb;
+    u_int sfb;
     FLOAT8 sum,step,bw;
+    lame_internal_flags *gfc=gfp->internal_flags;
 
     int count=0;
     FLOAT8 noise;
@@ -951,8 +954,8 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
 	assert(s>=0);
 	step = POW20(s);
 
-	start = scalefac_band.l[ sfb ];
-        end   = scalefac_band.l[ sfb+1 ];
+	start = gfc->scalefac_band.l[ sfb ];
+        end   = gfc->scalefac_band.l[ sfb+1 ];
         bw = end - start;
 
         for ( sum = 0.0, l = start; l < end; l++ )
@@ -995,8 +998,8 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
 	    assert(s<Q_MAX);
 	    assert(s>=0);
 	    step = POW20(s);
-	    start = scalefac_band.s[ sfb ];
-	    end   = scalefac_band.s[ sfb+1 ];
+	    start = gfc->scalefac_band.s[ sfb ];
+	    end   = gfc->scalefac_band.s[ sfb+1 ];
             bw = end - start;
 
 	    for ( sum = 0.0, l = start; l < end; l++ ) {
@@ -1044,7 +1047,8 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
   Amplify the scalefactor bands that violate the masking threshold.
   See ISO 11172-3 Section C.1.5.4.3.5
 */
-void amp_scalefac_bands(FLOAT8 xrpow[576], 
+void amp_scalefac_bands(lame_global_flags *gfp,
+			FLOAT8 xrpow[576], 
 			gr_info *cod_info,
 			III_scalefac_t *scalefac,
 			FLOAT8 distort[4][SBPSY_l])
@@ -1053,6 +1057,7 @@ void amp_scalefac_bands(FLOAT8 xrpow[576],
 	u_int	sfb;
     FLOAT8 ifqstep34;
     FLOAT8 distort_thresh;
+    lame_internal_flags *gfc=gfp->internal_flags;
 
     if ( cod_info->scalefac_scale == 0 )
 	ifqstep34 = 1.29683955465100964055;
@@ -1079,8 +1084,8 @@ void amp_scalefac_bands(FLOAT8 xrpow[576],
     for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
 	if ( distort[0][sfb]>distort_thresh  ) {
 	    scalefac->l[sfb]++;
-	    start = scalefac_band.l[sfb];
-	    end   = scalefac_band.l[sfb+1];
+	    start = gfc->scalefac_band.l[sfb];
+	    end   = gfc->scalefac_band.l[sfb+1];
 	    for ( l = start; l < end; l++ )
 		xrpow[l] *= ifqstep34;
 	}
@@ -1091,8 +1096,8 @@ void amp_scalefac_bands(FLOAT8 xrpow[576],
 	for ( sfb = cod_info->sfb_smax; sfb < 12; sfb++ ) {
             if ( distort[i+1][sfb]>distort_thresh) {
                 scalefac->s[sfb][i]++;
-                start = scalefac_band.s[sfb];
-                end   = scalefac_band.s[sfb+1];
+                start = gfc->scalefac_band.s[sfb];
+                end   = gfc->scalefac_band.s[sfb+1];
 		for (l = start; l < end; l++)
 		    xrpow[l * 3 + i] *= ifqstep34;
             }

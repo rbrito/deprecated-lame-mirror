@@ -232,7 +232,9 @@ struct {
 } header[MAX_HEADER_BUF];
      int h_ptr;
      int w_ptr;
+
   
+     struct scalefac_struct scalefac_band;
 
 
 } lame_internal_flags;

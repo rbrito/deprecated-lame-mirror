@@ -1,8 +1,9 @@
 #ifndef LOOP_PVT_H
 #define LOOP_PVT_H
-
+#include "l3side.h"
 #define IXMAX_VAL 8206 /* ix always <= 8191+15.    see count_bits() */
 #define PRECALC_SIZE (IXMAX_VAL+2)
+
 
 extern FLOAT masking_lower;
 extern int convert_mdct, convert_psy, reduce_sidechannel;
@@ -11,14 +12,7 @@ extern int pretab[21];
 extern const int slen1_tab[16];
 extern const int slen2_tab[16];
 
-struct scalefac_struct
-{
-   int l[1+SBMAX_l];
-   int s[1+SBMAX_s];
-};
-
-extern struct scalefac_struct scalefac_band;
-extern struct scalefac_struct sfBandIndex[9];
+extern const struct scalefac_struct sfBandIndex[9];
 
 extern FLOAT8 pow43[PRECALC_SIZE];
 
@@ -63,7 +57,7 @@ int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576],
 
 int scale_bitcount( III_scalefac_t *scalefac, gr_info *cod_info);
 int scale_bitcount_lsf( III_scalefac_t *scalefac, gr_info *cod_info);
-int calc_noise1( FLOAT8 xr[576],
+int calc_noise1( lame_global_flags *gfp, FLOAT8 xr[576],
                  int ix[576],
                  gr_info *cod_info,
                  FLOAT8 xfsf[4][SBPSY_l], 
@@ -74,7 +68,7 @@ int calc_noise1( FLOAT8 xr[576],
 
 int loop_break( III_scalefac_t *scalefac, gr_info *cod_info);
 
-void amp_scalefac_bands(FLOAT8 xrpow[576],
+void amp_scalefac_bands(lame_global_flags *gfp, FLOAT8 xrpow[576],
 			gr_info *cod_info,
 			III_scalefac_t *scalefac,
 			FLOAT8 distort[4][SBPSY_l]);
@@ -104,7 +98,7 @@ int VBR_compare(
 int best_over,FLOAT8 best_tot_noise,FLOAT8 best_over_noise,FLOAT8 best_max_over,
 int over,FLOAT8 tot_noise, FLOAT8 over_noise,FLOAT8 max_noise);
 
-void best_huffman_divide(int gr, int ch, gr_info *cod_info, int *ix);
+void best_huffman_divide(lame_internal_flags *gfc, int gr, int ch, gr_info *cod_info, int *ix);
 
 void best_scalefac_store(lame_global_flags *gfp,int gr, int ch,
 			 int l3_enc[2][2][576],

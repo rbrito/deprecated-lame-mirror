@@ -205,7 +205,7 @@ encodeMainData( lame_global_flags *gfp,
 			for ( sfb = 16; sfb < 21; sfb++ )
 			    *pph = BF_addEntry( *pph,  scalefac[gr][ch].l[sfb], slen2 );
 		}
-		Huffmancodebits( &codedDataPH[gr][ch], ix, gi );
+		Huffmancodebits(gfp, &codedDataPH[gr][ch], ix, gi );
 	    } /* for ch */
 	} /* for gr */
     }
@@ -246,7 +246,7 @@ encodeMainData( lame_global_flags *gfp,
 
 
 
-	    Huffmancodebits( &codedDataPH[gr][ch], ix, gi );
+	    Huffmancodebits(gfp, &codedDataPH[gr][ch], ix, gi );
 	} /* for ch */
     }
 } /* main_data */
@@ -456,8 +456,9 @@ drain_into_ancillary_data( int lengthInBits )
   information on pages 26 and 27.
   */
 static void
-Huffmancodebits( BF_PartHolder **pph, int *ix, gr_info *gi )
+Huffmancodebits(lame_global_flags *gfp, BF_PartHolder **pph, int *ix, gr_info *gi )
 {
+    lame_internal_flags *gfc=gfp->internal_flags;
     int L3_huffman_coder_count1( BF_PartHolder **pph, struct huffcodetab *h, int v, int w, int x, int y );
 
     int region1Start;
@@ -488,13 +489,13 @@ Huffmancodebits( BF_PartHolder **pph, int *ix, gr_info *gi )
 	    I192_3 *ix_s;
 	    
 	    ix_s = (I192_3 *) ix;
-	    region1Start = 12;
+	    region1Start = gfc->scalefac_band.s[3];
 	    region2Start = 576;
 	    for ( sfb = 0; sfb < 13; sfb++ )
 	    {
 		unsigned tableindex = 100;
-		start = scalefac_band.s[ sfb ];
-		end   = scalefac_band.s[ sfb+1 ];
+		start = gfc->scalefac_band.s[ sfb ];
+		end   = gfc->scalefac_band.s[ sfb+1 ];
 
 		if ( start < region1Start )
 		    tableindex = gi->table_select[ 0 ];
@@ -528,10 +529,10 @@ Huffmancodebits( BF_PartHolder **pph, int *ix, gr_info *gi )
 		{
 		    scalefac_index = gi->region0_count + 1;
 		    assert( scalefac_index < 23 );
-		    region1Start = scalefac_band.l[ scalefac_index ];
+		    region1Start = gfc->scalefac_band.l[ scalefac_index ];
 		    scalefac_index += gi->region1_count + 1;
 		    assert( scalefac_index < 23 );    
-		    region2Start = scalefac_band.l[ scalefac_index ];
+		    region2Start = gfc->scalefac_band.l[ scalefac_index ];
 		}
 
 		for ( i = 0; i < bigvalues; i += 2 )

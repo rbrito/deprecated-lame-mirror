@@ -435,7 +435,7 @@ static int choose_table_short(int *ix, int *end, int * s)
 
 
 
-static int count_bits_long(int ix[576], gr_info *gi)
+static int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
 {
     int i, a1, a2;
     int bits = 0;
@@ -474,27 +474,27 @@ static int count_bits_long(int ix[576], gr_info *gi)
 	int index;
 	int scfb_anz = 0;
 
-	while (scalefac_band.l[++scfb_anz] < i) 
+	while (gfc->scalefac_band.l[++scfb_anz] < i) 
 	    ;
 	index = subdv_table[scfb_anz].region0_count;
-	while (scalefac_band.l[index + 1] > i)
+	while (gfc->scalefac_band.l[index + 1] > i)
 	    index--;
 	gi->region0_count = index;
 
 	index = subdv_table[scfb_anz].region1_count;
-	while (scalefac_band.l[index + gi->region0_count + 2] > i)
+	while (gfc->scalefac_band.l[index + gi->region0_count + 2] > i)
 	    index--;
 	gi->region1_count = index;
 
-	a1 = scalefac_band.l[gi->region0_count + 1];
-	a2 = scalefac_band.l[index + gi->region0_count + 2];
+	a1 = gfc->scalefac_band.l[gi->region0_count + 1];
+	a2 = gfc->scalefac_band.l[index + gi->region0_count + 2];
 	gi->table_select[2] = choose_table(ix + a2, ix + i, &bits);
 
     } else {
 	gi->region0_count = 7;
 	/*gi->region1_count = SBPSY_l - 7 - 1;*/
 	gi->region1_count = SBMAX_l -1 - 7 - 1;
-	a1 = scalefac_band.l[7 + 1];
+	a1 = gfc->scalefac_band.l[7 + 1];
 	a2 = i;
 	if (a1 > a2) {
 	    a1 = a2;
@@ -511,7 +511,7 @@ static int count_bits_long(int ix[576], gr_info *gi)
 
 
 
-static int count_quad_short(int ix[576], gr_info *gi)
+static int count_quad_short(lame_internal_flags *gfc, int ix[576], gr_info *gi)
 {
     int start,i, a1, a2,sfb;
     int bits = 0;
@@ -531,7 +531,7 @@ static int count_quad_short(int ix[576], gr_info *gi)
     /* find the value of 'start' which is >= i */
 
     for ( sfb = 0; sfb < 13; ++sfb )      {
-      start = scalefac_band.s[ sfb ];
+      start = gfc->scalefac_band.s[ sfb ];
       start *= 3;
       if (start>=i) break;
     }
@@ -593,7 +593,7 @@ int count_bits(lame_global_flags *gfp,int *ix, FLOAT8 *xr, gr_info *cod_info)
 
 
   if (cod_info->block_type==SHORT_TYPE) {
-    int r1=3*12,r2;
+    int r1=3*gfc->scalefac_band.s[3],r2;
 #if 1
     cod_info->big_values=576;
     cod_info->count1=576;
@@ -603,16 +603,18 @@ int count_bits(lame_global_flags *gfp,int *ix, FLOAT8 *xr, gr_info *cod_info)
     cod_info->table_select[0] = choose_table_short(ix, ix + r1, &bits);
     cod_info->table_select[1] = choose_table_short(ix + r1, ix + r2, &bits);
 #else
-    bits = count_quad_short(ix, cod_info);
+    int ixp[576];
+    reorder(ixp,ix);
+    bits = count_quad_short(gfc, ixp, cod_info);
     if (r1 > cod_info->big_values) r1 = cod_info->big_values;
     /* short blocks do not have a region2 */
     r2 = cod_info->big_values;
     printf("big=%i  count1=%i \n",cod_info->big_values,cod_info->count1);
-    cod_info->table_select[0] = choose_table_short(ix, ix + r1, &bits);
-    cod_info->table_select[1] = choose_table_short(ix + r1, ix + r2, &bits);
+    cod_info->table_select[0] = choose_table_short(ixp, ixp + r1, &bits);
+    cod_info->table_select[1] = choose_table_short(ixp + r1, ixp + r2, &bits);
 #endif
   }else{
-    bits=count_bits_long(ix, cod_info);
+    bits=count_bits_long(gfc, ix, cod_info);
   }
   return bits;
 
@@ -630,7 +632,7 @@ static int r1_tbl[7 + 15 + 1];
 static gr_info cod_info;
 
 static INLINE void
-recalc_divide_init(int gr, int ch, int *ix)
+recalc_divide_init(lame_internal_flags *gfc, int gr, int ch, int *ix)
 {
     int r0, r1, bigv, r0t, r1t, bits;
 
@@ -641,14 +643,14 @@ recalc_divide_init(int gr, int ch, int *ix)
     }
 
     for (r0 = 0; r0 < 16; r0++) {
-	int a1 = scalefac_band.l[r0 + 1], r0bits;
+	int a1 = gfc->scalefac_band.l[r0 + 1], r0bits;
 	if (a1 >= bigv)
 	    break;
 	r0bits = cod_info.part2_length;
 	r0t = choose_table(ix, ix + a1, &r0bits);
 
 	for (r1 = 0; r1 < 8; r1++) {
-	    int a2 = scalefac_band.l[r0 + r1 + 2];
+	    int a2 = gfc->scalefac_band.l[r0 + r1 + 2];
 	    if (a2 >= bigv)
 		break;
 
@@ -665,14 +667,14 @@ recalc_divide_init(int gr, int ch, int *ix)
 }
 
 static INLINE void
-recalc_divide_sub(int gr, int ch, gr_info *gi, int *ix)
+recalc_divide_sub(lame_internal_flags *gfc, int gr, int ch, gr_info *gi, int *ix)
 {
     int bits, r2, a2, bigv, r2t;
 
     bigv = cod_info.big_values;
 
     for (r2 = 2; r2 < SBMAX_l + 1; r2++) {
-	a2 = scalefac_band.l[r2];
+	a2 = gfc->scalefac_band.l[r2];
 	if (a2 >= bigv) 
 	    break;
 
@@ -694,15 +696,15 @@ recalc_divide_sub(int gr, int ch, gr_info *gi, int *ix)
     }
 }
 
-void best_huffman_divide(int gr, int ch, gr_info *gi, int *ix)
+void best_huffman_divide(lame_internal_flags *gfc, int gr, int ch, gr_info *gi, int *ix)
 {
     int i, a1, a2;
 
     memcpy(&cod_info, gi, sizeof(gr_info));
 
     if (gi->block_type == NORM_TYPE) {
-	recalc_divide_init(gr, ch, ix);
-	recalc_divide_sub(gr, ch, gi, ix);
+	recalc_divide_init(gfc, gr, ch, ix);
+	recalc_divide_sub(gfc,gr, ch, gi, ix);
     }
 
     i = cod_info.big_values;
@@ -737,10 +739,10 @@ void best_huffman_divide(int gr, int ch, gr_info *gi, int *ix)
     cod_info.part2_3_length = a1 + cod_info.part2_length;
 
     if (cod_info.block_type == NORM_TYPE)
-	recalc_divide_sub(gr, ch, gi, ix);
+	recalc_divide_sub(gfc, gr, ch, gi, ix);
     else {
 	/* Count the number of bits necessary to code the bigvalues region. */
-	a1 = scalefac_band.l[7 + 1];
+	a1 = gfc->scalefac_band.l[7 + 1];
 	if (a1 > i) {
 	    a1 = i;
 	}
@@ -827,8 +829,8 @@ void best_scalefac_store(lame_global_flags *gfp,int gr, int ch,
     /* check if l3_enc=0 */
     for ( sfb = 0; sfb < gi->sfb_lmax; sfb++ ) {
       if (scalefac[gr][ch].l[sfb]>0) { 
-	start = scalefac_band.l[ sfb ];
-	end   = scalefac_band.l[ sfb+1 ];
+	start = gfc->scalefac_band.l[ sfb ];
+	end   = gfc->scalefac_band.l[ sfb+1 ];
 	for ( l = start; l < end; l++ ) if (l3_enc[gr][ch][l]!=0) break;
 	if (l==end) scalefac[gr][ch].l[sfb]=0;
       }
@@ -836,8 +838,8 @@ void best_scalefac_store(lame_global_flags *gfp,int gr, int ch,
     for ( i = 0; i < 3; i++ ) {
       for ( sfb = gi->sfb_smax; sfb < SBPSY_s; sfb++ ) {
 	if (scalefac[gr][ch].s[sfb][i]>0) {
-	  start = scalefac_band.s[ sfb ];
-	  end   = scalefac_band.s[ sfb+1 ];
+	  start = gfc->scalefac_band.s[ sfb ];
+	  end   = gfc->scalefac_band.s[ sfb+1 ];
 	  for ( l = start; l < end; l++ ) 
 	    if (l3_enc[gr][ch][3*l+i]!=0) break;
 	  if (l==end) scalefac[gr][ch].s[sfb][i]=0;

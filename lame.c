@@ -492,12 +492,12 @@ void lame_init_params(lame_global_flags *gfp)
 
 
   for (i = 0; i < SBMAX_l + 1; i++) {
-    scalefac_band.l[i] =
+    gfc->scalefac_band.l[i] =
       sfBandIndex[gfc->samplerate_index + (gfc->version * 3) + 
              6*(gfp->out_samplerate<16000)].l[i];
   }
   for (i = 0; i < SBMAX_s + 1; i++) {
-    scalefac_band.s[i] =
+    gfc->scalefac_band.s[i] =
       sfBandIndex[gfc->samplerate_index + (gfc->version * 3) + 
              6*(gfp->out_samplerate<16000)].s[i];
   }
@@ -879,11 +879,11 @@ char *mp3buf, int mp3buf_size)
 
   /*  write the frame to the bitstream  */
   getframebits(gfp,&bitsPerFrame,&mean_bits);
-#ifdef NEWFMT
-  format_bitstream( gfp, bitsPerFrame, l3_enc, scalefac);
-#else
-  III_format_bitstream( gfp,bitsPerFrame, l3_enc, scalefac);
-#endif
+  if (1==gfc->bs.bstype) 
+    format_bitstream( gfp, bitsPerFrame, l3_enc, scalefac);
+  else
+    III_format_bitstream( gfp,bitsPerFrame, l3_enc, scalefac);
+
 
 
 
@@ -1173,11 +1173,12 @@ int lame_encode_finish(lame_global_flags *gfp,char *mp3buffer, int mp3buffer_siz
       fflush(stderr);
   }
 
-#ifdef NEWFMT
-  flush_bitstream(gfp);
-#else
-  III_FlushBitstream();
-#endif
+
+  if (1==gfc->bs.bstype) 
+    flush_bitstream(gfp);
+  else
+    III_FlushBitstream();
+
 
   mp3buffer_size_remaining = mp3buffer_size - mp3count;
   /* if user specifed buffer size = 0, dont check size */

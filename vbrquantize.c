@@ -312,8 +312,8 @@ VBR_iteration_loop_new (lame_global_flags *gfp,
       if (shortblock) {
 	for ( sfb = 0; sfb < SBPSY_s; sfb++ )  {
 	  for ( i = 0; i < 3; i++ ) {
-	    start = scalefac_band.s[ sfb ];
-	    end   = scalefac_band.s[ sfb+1 ];
+	    start = gfc->scalefac_band.s[ sfb ];
+	    end   = gfc->scalefac_band.s[ sfb+1 ];
 	    bw = end - start;
 	    vbrsf.s[sfb][i] = find_scalefac(&xr[gr][ch][3*start+i],&xr34[3*start+i],3,sfb,
 		   masking_lower*l3_xmin[gr][ch].s[sfb][i],bw);
@@ -322,8 +322,8 @@ VBR_iteration_loop_new (lame_global_flags *gfp,
 	}
       }else{
 	for ( sfb = 0; sfb < SBPSY_l; sfb++ )   {
-	  start = scalefac_band.l[ sfb ];
-	  end   = scalefac_band.l[ sfb+1 ];
+	  start = gfc->scalefac_band.l[ sfb ];
+	  end   = gfc->scalefac_band.l[ sfb+1 ];
 	  bw = end - start;
 	  vbrsf.l[sfb] = find_scalefac(&xr[gr][ch][start],&xr34[start],1,sfb,
 	  		 masking_lower*l3_xmin[gr][ch].l[sfb],bw);
