@@ -320,7 +320,11 @@ int default_channels)
       fprintf(stderr, "Could not find \"%s\".\n", lpszFileName);
       exit(1);
     }
+#ifdef AMIGA_MPEGA
+    if (-1==lame_decode_initfile(lpszFileName,&num_channels,&samp_freq,&input_bitrate,&num_samples)) {
+#else
     if (-1==lame_decode_initfile(musicin,&num_channels,&samp_freq,&input_bitrate,&num_samples)) {
+#endif
       fprintf(stderr,"Error reading headers in mp3 input file %s.\n", lpszFileName);
       exit(1);
     }
@@ -524,7 +528,11 @@ int default_channels)
 
   input_bitrate=0;
   if (input_format==sf_mp3) {
+#ifdef AMIGA_MPEGA
+    if (-1==lame_decode_initfile(inPath,&num_channels,&samp_freq,&input_bitrate,&num_samples)) {
+#else
     if (-1==lame_decode_initfile(musicin,&num_channels,&samp_freq,&input_bitrate,&num_samples)) {
+#endif
       fprintf(stderr,"Error reading headers in mp3 input file %s.\n", inPath);
       exit(1);
     }
