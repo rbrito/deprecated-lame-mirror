@@ -5476,7 +5476,17 @@ if test "x$GCC" = "xyes"; then
         # from the gcc man pages:  "there is no reason to use -pedantic"
 	CFLAGS="-Wall -pipe ${CFLAGS}"
 
+
 	OPTIMIZATION="-O3 -fomit-frame-pointer -ffast-math -funroll-loops"
+	case "${GCC_version}" in
+	2.96*)
+           # for buggy version of gcc shipped with RH7.1, back of on some
+           # optimizations
+           OPTIMIZATION="-O1 -fomit-frame-pointer -ffast-math -funroll-loops "
+           ;;
+        esac
+
+
 
 	OPTIMIZATION_NORM="-fthread-jumps -malign-double -frerun-loop-opt \
 		-fgcse -fexpensive-optimizations"
@@ -5544,7 +5554,7 @@ fi
 
 
 echo $ac_n "checking for debug options""... $ac_c" 1>&6
-echo "configure:5548: checking for debug options" >&5
+echo "configure:5558: checking for debug options" >&5
 # Check whether --enable-debug or --disable-debug was given.
 if test "${enable_debug+set}" = set; then
   enableval="$enable_debug"
