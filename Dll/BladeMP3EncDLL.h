@@ -23,8 +23,13 @@
 #ifndef ___BLADEDLL_H_INCLUDED___
 #define ___BLADEDLL_H_INCLUDED___
 
+#ifdef __GNUC__
+#define ATTRIBUTE_PACKED	__attribute__((packed))
+#else
+#define ATTRIBUTE_PACKED
 #pragma pack(push)
 #pragma pack(1)
+#endif
 
 #ifdef	__cplusplus
 extern "C" {
@@ -188,7 +193,7 @@ typedef struct	{
 
 	} format;
 		
-} BE_CONFIG, *PBE_CONFIG;
+} BE_CONFIG, *PBE_CONFIG ATTRIBUTE_PACKED;
 
 
 typedef struct	{
@@ -220,7 +225,7 @@ typedef struct	{
 	BYTE	btReserved[125];
 
 
-} BE_VERSION, *PBE_VERSION;			
+} BE_VERSION, *PBE_VERSION ATTRIBUTE_PACKED;
 
 #ifndef _BLADEDLL
 
@@ -262,7 +267,9 @@ __declspec(dllexport) BE_ERR	beWriteInfoTag( HBE_STREAM hbeStream, LPCSTR lpszFi
 
 #endif
 
+#ifndef __GNUC__
 #pragma pack(pop)
+#endif
 
 #ifdef	__cplusplus
 }
