@@ -372,7 +372,7 @@ static const int order[] = {
 
 /* returns sum_j=0^31 a[j]*cos(PI*j*(k+1/2)/32), 0<=k<32 */
 inline static void
-window_subband(const sample_t *x1, FLOAT a[SBLIMIT])
+window_subband(FLOAT coef[SBLIMIT], const sample_t *x1, FLOAT a[SBLIMIT])
 {
     int i;
     FLOAT8 const *wp = enwindow+10;
@@ -535,22 +535,22 @@ window_subband(const sample_t *x1, FLOAT a[SBLIMIT])
     xr = a[28] - xr;    a[28] = xr;
     xr = a[29] - xr;    a[29] = xr;
 
-    xr = a[ 0]; a[ 0] += a[31]; a[31] -= xr;
-    xr = a[ 1]; a[ 1] += a[30]; a[30] -= xr;
-    xr = a[16]; a[16] += a[15]; a[15] -= xr;
-    xr = a[17]; a[17] += a[14]; a[14] -= xr;
-    xr = a[ 8]; a[ 8] += a[23]; a[23] -= xr;
-    xr = a[ 9]; a[ 9] += a[22]; a[22] -= xr;
-    xr = a[24]; a[24] += a[ 7]; a[ 7] -= xr;
-    xr = a[25]; a[25] += a[ 6]; a[ 6] -= xr;
-    xr = a[ 4]; a[ 4] += a[27]; a[27] -= xr;
-    xr = a[ 5]; a[ 5] += a[26]; a[26] -= xr;
-    xr = a[20]; a[20] += a[11]; a[11] -= xr;
-    xr = a[21]; a[21] += a[10]; a[10] -= xr;
-    xr = a[12]; a[12] += a[19]; a[19] -= xr;
-    xr = a[13]; a[13] += a[18]; a[18] -= xr;
-    xr = a[28]; a[28] += a[ 3]; a[ 3] -= xr;
-    xr = a[29]; a[29] += a[ 2]; a[ 2] -= xr;
+    xr = a[ 0]; a[ 0] = (a[ 0]+a[31])*coef[ 0]; a[31] = (a[31]-xr)*coef[31];
+    xr = a[ 1]; a[ 1] = (a[ 1]+a[30])*coef[ 1]; a[30] = (a[30]-xr)*coef[30];
+    xr = a[16]; a[16] = (a[16]+a[15])*coef[ 2]; a[15] = (a[15]-xr)*coef[29];
+    xr = a[17]; a[17] = (a[17]+a[14])*coef[ 3]; a[14] = (a[14]-xr)*coef[28];
+    xr = a[ 8]; a[ 8] = (a[ 8]+a[23])*coef[ 4]; a[23] = (a[23]-xr)*coef[27];
+    xr = a[ 9]; a[ 9] = (a[ 9]+a[22])*coef[ 5]; a[22] = (a[22]-xr)*coef[26];
+    xr = a[24]; a[24] = (a[24]+a[ 7])*coef[ 6]; a[ 7] = (a[ 7]-xr)*coef[25];
+    xr = a[25]; a[25] = (a[25]+a[ 6])*coef[ 7]; a[ 6] = (a[ 6]-xr)*coef[24];
+    xr = a[ 4]; a[ 4] = (a[ 4]+a[27])*coef[ 8]; a[27] = (a[27]-xr)*coef[23];
+    xr = a[ 5]; a[ 5] = (a[ 5]+a[26])*coef[ 9]; a[26] = (a[26]-xr)*coef[22];
+    xr = a[20]; a[20] = (a[20]+a[11])*coef[10]; a[11] = (a[11]-xr)*coef[21];
+    xr = a[21]; a[21] = (a[21]+a[10])*coef[11]; a[10] = (a[10]-xr)*coef[20];
+    xr = a[12]; a[12] = (a[12]+a[19])*coef[12]; a[19] = (a[19]-xr)*coef[19];
+    xr = a[13]; a[13] = (a[13]+a[18])*coef[13]; a[18] = (a[18]-xr)*coef[18];
+    xr = a[28]; a[28] = (a[28]+a[ 3])*coef[14]; a[ 3] = (a[ 3]-xr)*coef[17];
+    xr = a[29]; a[29] = (a[29]+a[ 2])*coef[15]; a[ 2] = (a[ 2]-xr)*coef[16];
 }
 
 }
@@ -696,14 +696,12 @@ void mdct_sub48(
 	FLOAT *samp = gfc->sb_sample[ch][1 - gr][0];
 
 	for (k = 0; k < 18 / 2; k++) {
-	    window_subband(wk, samp);
-	    window_subband(wk + 32, samp + 32);
+	    window_subband(gfc->amp_filter, wk, samp);
+	    window_subband(gfc->amp_filter, wk + 32, samp + 32);
 	    samp += 64;
 	    wk += 64;
-	    /*
-	     * Compensate for inversion in the analysis filter
-	     */
 	    for (band = 1; band < 32; band+=2) {
+		/* Compensate for inversion in the analysis filter */
 		samp[band-32] *= -1;
 	    }
 	}
@@ -717,53 +715,44 @@ void mdct_sub48(
 	    FLOAT *band0, *band1;
 	    band0 = gfc->sb_sample[ch][  gr][0] + order[band];
 	    band1 = gfc->sb_sample[ch][1-gr][0] + order[band];
-	    if (gi->mixed_block_flag && band < 2)
-		type = 0;
-	    if (gfc->amp_filter[band] == 0.0) {
-		memset(mdct_enc, 0, 18*sizeof(FLOAT));
-	    } else {
-		if (gfc->amp_filter[band] != 1.0) {
-		    for (k=0; k<18; k++)
-			band1[k*32] *= gfc->amp_filter[band];
+	    if (gi->block_type != SHORT_TYPE
+		|| (gi->mixed_block_flag && band < 2)) {
+		FLOAT work[18];
+		for (k = -NL/4; k < 0; k++) {
+		    FLOAT a, b;
+		    a = win[type][k+27] * band1[(k+9)*32]
+		      + win[type][k+36] * band1[(8-k)*32];
+		    b = win[type][k+ 9] * band0[(k+9)*32]
+		      - win[type][k+18] * band0[(8-k)*32];
+		    work[k+ 9] = a - tantab_l[k+9] * b;
+		    work[k+18] = a * tantab_l[k+9] + b;
 		}
-		if (type == SHORT_TYPE) {
-		    for (k = -NS/4; k < 0; k++) {
-			FLOAT w = win[SHORT_TYPE][k+3];
-			mdct_enc[k*3+ 9] = band0[( 9+k)*32] * w - band0[( 8-k)*32];
-			mdct_enc[k*3+18] = band0[(14-k)*32] * w + band0[(15+k)*32];
-			mdct_enc[k*3+10] = band0[(15+k)*32] * w - band0[(14-k)*32];
-			mdct_enc[k*3+19] = band1[( 2-k)*32] * w + band1[( 3+k)*32];
-			mdct_enc[k*3+11] = band1[( 3+k)*32] * w - band1[( 2-k)*32];
-			mdct_enc[k*3+20] = band1[( 8-k)*32] * w + band1[( 9+k)*32];
-		    }
-		    mdct_short(mdct_enc);
-		} else {
-		    FLOAT work[18];
-		    for (k = -NL/4; k < 0; k++) {
-			FLOAT a, b;
-			a = win[type][k+27] * band1[(k+9)*32]
-			  + win[type][k+36] * band1[(8-k)*32];
-			b = win[type][k+ 9] * band0[(k+9)*32]
-			  - win[type][k+18] * band0[(8-k)*32];
-			work[k+ 9] = a - b*tantab_l[k+9];
-			work[k+18] = a*tantab_l[k+9] + b;
-		    }
 
-		    mdct_long(mdct_enc, work);
-		}
-	    }
-	    /*
-	     * Perform aliasing reduction butterfly
-	     */
-	    if (type != SHORT_TYPE && band != 0) {
+		mdct_long(mdct_enc, work);
+		if (band == 0)
+		    continue;
+		/*
+		 * Perform aliasing reduction butterfly
+		 */
 		for (k = 7; k >= 0; --k) {
 		    FLOAT bu,bd;
 		    bu = mdct_enc[k] * ca[k] + mdct_enc[-1-k] * cs[k];
 		    bd = mdct_enc[k] * cs[k] - mdct_enc[-1-k] * ca[k];
-		    
+
 		    mdct_enc[-1-k] = bu;
 		    mdct_enc[k]    = bd;
 		}
+	    } else {
+		for (k = -NS/4; k < 0; k++) {
+		    FLOAT w = win[SHORT_TYPE][k+3];
+		    mdct_enc[k*3+ 9] = band0[( 9+k)*32] * w - band0[( 8-k)*32];
+		    mdct_enc[k*3+18] = band0[(14-k)*32] * w + band0[(15+k)*32];
+		    mdct_enc[k*3+10] = band0[(15+k)*32] * w - band0[(14-k)*32];
+		    mdct_enc[k*3+19] = band1[( 2-k)*32] * w + band1[( 3+k)*32];
+		    mdct_enc[k*3+11] = band1[( 3+k)*32] * w - band1[( 2-k)*32];
+		    mdct_enc[k*3+20] = band1[( 8-k)*32] * w + band1[( 9+k)*32];
+		}
+		mdct_short(mdct_enc);
 	    }
 	}
     }
