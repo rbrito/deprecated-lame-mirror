@@ -356,7 +356,6 @@ int targ_bits[2],int mean_bits, int gr)
 
   /* allocate targ_bits for granule */
   ResvMaxBits( mean_bits, &tbits, &extra_bits, gr);
-    
 
   for (ch=0 ; ch < gfc->stereo ; ch ++) {
     /******************************************************************
@@ -380,8 +379,9 @@ int targ_bits[2],int mean_bits, int gr)
     bits += add_bits[ch];
     
     if (bits > extra_bits) add_bits[ch] = (extra_bits*add_bits[ch])/bits;
-    if ((targ_bits[ch]+add_bits[ch]) > 4095) 
-      add_bits[ch]=4095-targ_bits[ch];
+
+    if ((targ_bits[ch]+add_bits[ch]) > 4094) 
+      add_bits[ch]=4094-targ_bits[ch];
 
     targ_bits[ch] = targ_bits[ch] + add_bits[ch];
     extra_bits -= add_bits[ch];
