@@ -3,8 +3,8 @@
                http://www.sulaco.org/mp3
 	           October 1999
 
-Written by Mike Cheng (www.uq.net.au/~zzmcheng).  Modified
-and maintained by Mark Taylor (www.sulaco.org/mp3).
+Originally developed by Mike Cheng (www.uq.net.au/~zzmcheng).  Now 
+maintained by Mark Taylor (www.sulaco.org/mp3).
 
 This is a patch against the ISO MPEG2 dist10 demonstration source.  The
 modifications are distributed under the GNU LESSER PUBLIC LICENSE
@@ -21,7 +21,7 @@ modifications are distributed under the GNU LESSER PUBLIC LICENSE
 
 ============================================================================
 
-see the file "INSTALL" for installation instructions.  
+see the file "INSTALL" for installation (compiling) instructions.  
 see the file "USAGE" for the most up-to-date guide to the command line options.
 see the file "LICENSE" for details on how to use LAME in non-GPL programs.
 see the file "HACKING" for some general codeing guidelines
