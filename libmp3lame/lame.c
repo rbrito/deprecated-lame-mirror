@@ -385,29 +385,43 @@ lame_init_params(lame_t gfc)
     int gr, ch, sfb;
 
 #ifdef HAVE_NASM
-    extern int  has_MMX   ( void );
-    extern int  has_MMX2  ( void );
-    extern int  has_3DNow ( void );
-    extern int  has_E3DNow( void );
-    extern int  has_SSE   ( void );
-    extern int  has_SSE2  ( void );
+    extern int  haveUNITa ( void );
+    int unit = haveUNITa ();
+
+#define MU_tFPU		(1<<0)
+#define MU_tMMX		(1<<1)
+#define MU_t3DN		(1<<2)
+#define MU_tSSE		(1<<3)
+#define MU_tCMOV	(1<<4)
+#define MU_tE3DN	(1<<5)
+#define MU_tEMMX	(1<<6)
+#define MU_tSSE2	(1<<7)
+#define MU_tINTEL	(1<<8)
+#define MU_tAMD		(1<<9)
+#define MU_tCYRIX	(1<<10)
+#define MU_tIDT		(1<<11)
+#define MU_tUNKNOWN	(1<<15)
+#define MU_tSPC1	(1<<16)
+#define MU_tSPC2	(1<<17)
+#define MU_tCLFLUSH	(1<<18)
+
     gfc->CPU_features.MMX
 	= gfc->CPU_features.SSE = gfc->CPU_features.SSE2
 	= gfc->CPU_features.AMD_3DNow = gfc->CPU_features.AMD_E3DNow = 0;
 
     if (gfc->asm_optimizations.mmx) {
-        gfc->CPU_features.MMX  = has_MMX();
-        gfc->CPU_features.MMX2 = has_MMX2();
+        gfc->CPU_features.MMX  = !!(unit & MU_tMMX);
+        gfc->CPU_features.MMX2 = !!(unit & MU_tEMMX);
     }
 
     if (gfc->asm_optimizations.amd3dnow ) {
-	gfc->CPU_features.AMD_3DNow = has_3DNow();
-	gfc->CPU_features.AMD_E3DNow = has_E3DNow();
+	gfc->CPU_features.AMD_3DNow  = !!(unit & MU_t3DN);
+	gfc->CPU_features.AMD_E3DNow = !!(unit & MU_tE3DN);
     }
 
     if (gfc->asm_optimizations.sse) {
-	gfc->CPU_features.SSE = has_SSE();
-	gfc->CPU_features.SSE2 = has_SSE2();
+	gfc->CPU_features.SSE  = !!(unit & MU_tSSE);
+	gfc->CPU_features.SSE2 = !!(unit & MU_tSSE2);
     }
 #endif
 

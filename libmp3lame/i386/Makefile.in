@@ -53,9 +53,9 @@ CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 liblameasmroutines_la_LIBADD =
-am__liblameasmroutines_la_SOURCES_DIST = choose_table.nas cpu_feat.nas \
+am__liblameasmroutines_la_SOURCES_DIST = choose_table.nas cpua.nas \
 	fft3dn.nas fftsse.nas quantSSE.nas
-am__objects_1 = choose_table.lo cpu_feat.lo fft3dn.lo fftsse.lo \
+am__objects_1 = choose_table.lo cpua.lo fft3dn.lo fftsse.lo \
 	quantSSE.lo
 liblameasmroutines_la_OBJECTS = $(am_liblameasmroutines_la_OBJECTS)
 @HAVE_NASM_TRUE@am_liblameasmroutines_la_rpath =
@@ -198,7 +198,7 @@ target_alias = @target_alias@
 AUTOMAKE_OPTIONS = foreign $(top_srcdir)/ansi2knr
 nasm_sources = \
 	choose_table.nas \
-	cpu_feat.nas \
+	cpua.nas \
 	fft3dn.nas \
 	fftsse.nas \
 	quantSSE.nas
@@ -207,7 +207,7 @@ nasm_sources = \
 @HAVE_NASM_TRUE@liblameasmroutines_la_SOURCES = $(nasm_sources)
 @HAVE_NASM_TRUE@am_liblameasmroutines_la_OBJECTS = \
 @HAVE_NASM_TRUE@	choose_table$U.lo \
-@HAVE_NASM_TRUE@	cpu_feat$U.lo \
+@HAVE_NASM_TRUE@	cpua$U.lo \
 @HAVE_NASM_TRUE@	fft3dn$U.lo \
 @HAVE_NASM_TRUE@	fftsse$U.lo \
 @HAVE_NASM_TRUE@	quantSSE$U.lo
@@ -218,8 +218,8 @@ EXTRA_liblameasmroutines_la_SOURCES = $(nasm_sources)
 CLEANFILES = \
 	choose_table.o.lst \
 	choose_table.lo.lst \
-	cpu_feat.o.lst \
-	cpu_feat.lo.lst \
+	cpua.o.lst \
+	cpua.lo.lst \
 	fft3dn.o.lst \
 	fft3dn.lo.lst \
 	fftsse.o.lst \
