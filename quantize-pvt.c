@@ -736,6 +736,11 @@ int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576], III_psy_ratio *ratio,
       if (xmin > 0.0)
         xmin = en0 * ratio->thm.l[sfb] * gfc->masking_lower / xmin;
 #endif
+#if 0
+      if (sfb >=11 && sfb <=13)
+	xmin *= pow(10.0,-10.0/10.0);
+#endif
+
       l3_xmin->l[sfb]=Max(gfc->ATH_l[sfb], xmin);
     }
     if (en0 > gfc->ATH_l[sfb]) ath_over++;
@@ -1041,9 +1046,7 @@ set_pinfo (lame_global_flags *gfp,
   D192_3 *xr_s = (D192_3 *)xr;
   FLOAT ifqstep = ( cod_info->scalefac_scale == 0 ) ? .5 : 1.0;
 
-double tot1,tot2;
-static double ave[50];
-static int iave=9; 
+
 
 
 
@@ -1061,6 +1064,8 @@ static int iave=9;
 
 
 #if 0
+	{
+double tot1,tot2;
       if (sfb<SBMAX_s-1) {
       if (sfb==0) {
 	tot1=0;
@@ -1087,6 +1092,7 @@ static int iave=9;
 masking: multiplied by en0/fft_energy
 average seems to be about -135db.
        */
+	}
 #endif
 
 
@@ -1132,6 +1138,8 @@ average seems to be about -135db.
       */
 
 #if 0
+	{
+double tot1,tot2;
       if (sfb==0) {
 	tot1=0;
 	tot2=0;
@@ -1151,19 +1159,13 @@ average seems to be about -135db.
 10*log(Max(1e-25,tot1)),
 10*log10(Max(1e-25,tot1)/(Max(1e-25,tot2))));
 
-      iave = (iave+1) % 50;
-      ave[iave]=10*log10(Max(1e-25,tot1)/(Max(1e-25,tot2)));
-
-      for (tot1=0, i=0; i<10; ++i) {
-	tot1 += ave[i]/10;
-      }
-      printf("%i aveareg of last 10:  %f \n",iave,tot1);
       }
       /*
 masking: multiplied by en0/fft_energy
 average seems to be about -147db.
 
        */
+	}
 #endif
 
 

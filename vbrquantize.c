@@ -463,7 +463,7 @@ VBR_noise_shaping
   
   vbrmax=-10000;
   if (shortblock) {
-    for ( sfb = 0; sfb < SBPSY_s; sfb++ )  {
+    for ( sfb = 0; sfb < SBMAX_s; sfb++ )  {
       for ( i = 0; i < 3; i++ ) {
 	start = gfc->scalefac_band.s[ sfb ];
 	end   = gfc->scalefac_band.s[ sfb+1 ];
@@ -474,7 +474,7 @@ VBR_noise_shaping
       }
     }
   }else{
-    for ( sfb = 0; sfb < SBPSY_l; sfb++ )   {
+    for ( sfb = 0; sfb < SBMAX_l; sfb++ )   {
       start = gfc->scalefac_band.l[ sfb ];
       end   = gfc->scalefac_band.l[ sfb+1 ];
       bw = end - start;
@@ -489,8 +489,6 @@ VBR_noise_shaping
   /* save a copy of vbrsf, incase we have to recomptue scalefacs */
   memcpy(&save_sf,&vbrsf,sizeof(III_scalefac_t));
 
-
-#undef SCALEFAC_SCALE
 
   do { 
 
@@ -510,11 +508,12 @@ VBR_noise_shaping
 	maxover1 = Max(maxover1,(vbrmax - vbrsf.s[sfb][i]) - (4*14 + 4*max_range_short[sfb]) );
       }
     }
-#ifdef SCALEFAC_SCALE
-    mover = Min(maxover0,maxover1);
-#else
-    mover = maxover0; 
-#endif
+    if (gfc->noise_shaping==2)
+      /* allow scalefac_scale=1 */
+      mover = Min(maxover0,maxover1);
+    else
+      mover = maxover0; 
+
 
     vbrmax -= mover;
     maxover0 -= mover;
@@ -589,10 +588,11 @@ VBR_noise_shaping
       maxover1p = Max(maxover1,(vbrmax - vbrsf.l[sfb]) - 4*(max_range_long[sfb]+pretab[sfb]));
     }
     mover = Min(maxover0,maxover0p);
-#ifdef SCALEFAC_SCALE
-    mover = Min(mover,maxover1);
-    mover = Min(mover,maxover1p);
-#endif
+    if (gfc->noise_shaping==2) {
+      /* allow scalefac_scale=1 */
+      mover = Min(mover,maxover1);
+      mover = Min(mover,maxover1p);
+    }
 
 
     vbrmax -= mover;

@@ -101,6 +101,8 @@ void L3psycho_anal( lame_global_flags *gfp,
 
 
 
+
+
   if(gfc->psymodel_init==0) {
     FLOAT8	SNR_s[CBANDS];
     int	partition_l[HBLKSIZE];
@@ -260,7 +262,7 @@ void L3psycho_anal( lame_global_flags *gfp,
 	norm += gfc->s3_l[b][k];
       }
       for ( k = gfc->s3ind[b][0]; k <= gfc->s3ind[b][1]; k++ ) {
-	gfc->s3_l[b][k] *= exp(-LN_TO_LOG10 * NMT) / norm;
+	gfc->s3_l[b][k] /=  norm;
       }
       /*printf("%i  norm=%f  norm_l=%f \n",b,1/norm,norm_l[b]);*/
     }
@@ -583,31 +585,45 @@ void L3psycho_anal( lame_global_flags *gfp,
 	    ctb += gfc->s3_l[b][k] * cb[k];
 	  }
 
-	/* calculate the tonality of each threshold calculation partition */
-	/* calculate the SNR in each threshhold calculation partition */
+	/* calculate the tonality of each threshold calculation partition 
+	 * calculate the SNR in each threshhold calculation partition 
+	 * tonality = -0.299 - .43*log(ctb/ecb);
+	 * tonality = 0:           use NMT   (lots of masking)
+	 * tonality = 1:           use TMN   (little masking)
+	 */
+
+/* ISO values */
+#define CONV1 (-.299)
+#define CONV2 (-.43)
 
 	tbb = ecb;
 	if (tbb != 0)
 	  {
 	    tbb = ctb / tbb;
-	    if (tbb <= 0.04875584301)
-	      {
-		tbb = exp(-LN_TO_LOG10 * (TMN - NMT));
+	    if (tbb <= exp((1-CONV1)/CONV2)) 
+	      { /* tonality near 1 */
+		tbb = exp(-LN_TO_LOG10 * TMN);
 	      }
-	    else if (tbb > 0.4989003827)
-	      {
-		tbb = 1;
+	    else if (tbb >= exp((0-CONV1)/CONV2)) 
+	      {/* tonality near 0 */
+		tbb = exp(-LN_TO_LOG10 * NMT);
 	      }
 	    else
 	      {
-		tbb = log(tbb);
-		tbb = exp(((TMN - NMT)*(LN_TO_LOG10*0.299))
-			+ ((TMN - NMT)*(LN_TO_LOG10*0.43 ))*tbb);  /* conv1=-0.299, conv2=-0.43 */
+		/* convert to tonality index */
+		/* tonality small:   tbb=1 */
+		/* tonality large:   tbb=-.299 */
+		tbb = CONV1 + CONV2*log(tbb);
+		tbb = exp(-LN_TO_LOG10 * ( TMN*tbb + (1-tbb)*NMT) );
 	      }
 	  }
-
 	tbb = Min(gfc->minval[b], tbb);
+	/* at this point, tbb represents the amount the spreading function
+	 * will be reduced.  The larger the value (more noiselike
+	 */
 	ecb *= tbb;
+
+
 
 	/* long block pre-echo control.   */
 	/* rpelev=2.0, rpelev2=16.0 */
@@ -715,6 +731,7 @@ void L3psycho_anal( lame_global_flags *gfp,
     /* longblock threshold calculation (part 2) */
     for ( sb = 0; sb < SBPSY_l; sb++ )
       {
+#if 1  /* additive masking */
 	FLOAT8 enn = gfc->w1_l[sb] * eb[gfc->bu_l[sb]] + gfc->w2_l[sb] * eb[gfc->bo_l[sb]];
 	FLOAT8 thmm = gfc->w1_l[sb] *thr[gfc->bu_l[sb]] + gfc->w2_l[sb] * thr[gfc->bo_l[sb]];
 	for ( b = gfc->bu_l[sb]+1; b < gfc->bo_l[sb]; b++ )
@@ -722,6 +739,16 @@ void L3psycho_anal( lame_global_flags *gfp,
 	    enn  += eb[b];
 	    thmm += thr[b];
 	  }
+#else
+	FLOAT8 enn = gfc->w1_l[sb] * eb[gfc->bu_l[sb]] + gfc->w2_l[sb] * eb[gfc->bo_l[sb]];
+	FLOAT8 thmm = thr[gfc->bu_l[sb]];
+	for ( b = gfc->bu_l[sb]+1; b < gfc->bo_l[sb]; b++ )
+	  {
+	    enn  += eb[b];
+	    thmm = Min(thr[b],thmm);
+	  }
+	thmm=(1+gfc->bo_l[sb]-gfc->bu_l[sb])*Min(thr[b],thmm);
+#endif
 	gfc->en[chn].l[sb] = enn;
 	gfc->thm[chn].l[sb] = thmm;
       }
@@ -734,7 +761,7 @@ void L3psycho_anal( lame_global_flags *gfp,
 	for ( b = 0; b < gfc->npart_s_orig; b++ )
 	  {
 	    FLOAT ecb = gfc->energy_s[sblock][j++];
-	    for (i = gfc->numlines_s[b]; i > 0; i--)
+	    for (i = 0 ; i<gfc->numlines_s[b]-1; ++i)
 	      {
 		ecb += gfc->energy_s[sblock][j++];
 	      }
@@ -953,13 +980,6 @@ int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s)
   int freq_scale=1;
 
 
-  /* use MPEG1 tables.  The MPEG2 tables in tables.c appear to be 
-   * junk.  MPEG2 doc claims data for these tables is the same as the
-   * MPEG1 data for 2x sampling frequency */
-  /*  if (sfreq<32000) freq_scale=2; */
-  
-
-
   /* Read long block data */
 
   for(loop=0;loop<6;loop++)
@@ -975,7 +995,7 @@ int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s)
 	    {
 	      j = (int) *p++;
 	      numlines_l[i] = (int) *p++;
-	      minval[i] = exp(-((*p++) - NMT) * LN_TO_LOG10);
+	      minval[i] = exp(-((*p++) ) * LN_TO_LOG10);
 	      /* qthr_l[i] = *p++ */ p++;
 	      /* norm_l[i] = *p++*/ p++;
 	      bval_l[i] = *p++;
@@ -992,7 +1012,7 @@ int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s)
 	p += cbmax_tp * 6;
     }
 
-#define NEWBARKXXX
+#undef NEWBARK
 #ifdef NEWBARK
   /* compute bark values of each critical band */
   j = 0;
@@ -1000,9 +1020,15 @@ int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s)
     {
       FLOAT8 ji, freq, bark;
 
-      ji = j + (numlines_l[i]-1)/2.0;
+      ji = j;
       freq = sfreq*ji/1024000.0;
       bark = 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5));
+
+      ji = j + (numlines_l[i]-1);
+      freq = sfreq*ji/1024000.0;
+      bark = .5*(bark + 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5)));
+
+
 
       printf("%i %i bval_l table=%f  f=%f  formaula=%f \n",i,j,bval_l[i],freq,bark);
       bval_l[i]=bark;
@@ -1073,7 +1099,6 @@ int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s)
 		  fprintf(stderr,"3. please check \"psy_data\"");
 		  exit(-1);
 		}
-	      numlines_s[i]--;
 	    }
 	  numlines_s[i] = -1;
 	}
@@ -1088,12 +1113,18 @@ int *bu_s, int *bo_s, FLOAT8 *w1_s, FLOAT8 *w2_s)
   for(i=0;i<cbmax;i++)
     {
       FLOAT8 ji, freq, bark;
-      ji = (j * 2 + numlines_s[i]) / 2.0;
+      ji = j;
       freq = sfreq*ji/256000.0;
       bark = 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5));
-      printf("%i %i bval_s = %f  %f  %f \n",i,j,bval_s[i],freq,bark);
+
+      ji = j + numlines_s[i] -1;
+      freq = sfreq*ji/256000.0;
+      bark = .5*(bark + 13*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5)));
+
+
+      printf("%i %i bval_s = %f  %f  numlines=%i  formula=%f \n",i,j,bval_s[i],freq,numlines_s[i],bark);
       bval_s[i]=bark;
-      j += numlines_s[i] + 1;
+      j += numlines_s[i];
     }
 #endif
 
