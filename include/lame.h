@@ -446,7 +446,6 @@ const char*  CDECL get_lame_version       ( void );
 const char*  CDECL get_lame_short_version ( void );
 const char*  CDECL get_lame_very_short_version ( void );
 const char*  CDECL get_psy_version        ( void );
-const char*  CDECL get_mp3x_version       ( void );
 const char*  CDECL get_lame_url           ( void );
 
 /*

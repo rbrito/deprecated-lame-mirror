@@ -43,15 +43,10 @@
 # define PSY_ALPHA_VERSION       0      /* Set number if this is an alpha version, otherwise zero */
 # define PSY_BETA_VERSION        0      /* Set number if this is a beta version, otherwise zero */
 
-# define MP3X_MAJOR_VERSION      0      /* Major version number */
-# define MP3X_MINOR_VERSION     82      /* Minor version number */
-# define MP3X_ALPHA_VERSION      0      /* Set number if this is an alpha version, otherwise zero */
-# define MP3X_BETA_VERSION       0      /* Set number if this is a beta version, otherwise zero */
 
 const char*  get_lame_version       ( void );
 const char*  get_lame_short_version ( void );
 const char*  get_psy_version        ( void );
-const char*  get_mp3x_version       ( void );
 const char*  get_lame_url           ( void );
 void         get_lame_version_numerical ( lame_version_t *const lvp );
 

@@ -28,9 +28,6 @@
   \author A.L. Faber
   \version \$Id$
   \ingroup libmp3lame
-
-  \todo The mp3x version should be located in the mp3x source,
-        not in the libmp3lame source.
 */
 
 
@@ -168,30 +165,6 @@ const char*  get_psy_version ( void )
 #else
     static /*@observer@*/ const char *const str =
         XSTR(PSY_MAJOR_VERSION) "." XSTR(PSY_MINOR_VERSION);
-#endif
-
-    return str;
-}
-
-
-//! Get the mp3x version string.
-/*!
-  \param void
-  \return a pointer to a string which describes the version of mp3x.
-*/
-const char*  get_mp3x_version ( void )
-{
-#if   MP3X_ALPHA_VERSION > 0
-    static /*@observer@*/ const char *const str =
-        XSTR(MP3X_MAJOR_VERSION) "." XSTR(MP3X_MINOR_VERSION)
-        " (alpha " XSTR(MP3X_ALPHA_VERSION) ", " __DATE__ " " __TIME__ ")";
-#elif MP3X_BETA_VERSION > 0
-    static /*@observer@*/ const char *const str =
-        XSTR(MP3X_MAJOR_VERSION) "." XSTR(MP3X_MINOR_VERSION)
-        " (beta " XSTR(MP3X_BETA_VERSION) ", " __DATE__ ")";
-#else
-    static /*@observer@*/ const char *const str =
-        XSTR(MP3X_MAJOR_VERSION) "." XSTR(MP3X_MINOR_VERSION);
 #endif
 
     return str;
