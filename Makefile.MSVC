@@ -148,11 +148,11 @@ OFF = win32
 # LN_OPTS = /nologo /debug:full /debugtype:cv /fixed:no /profile
 
 # release options
-CC_OPTS = /nologo /DNDEBUG /O2 /Ob2 /GAy /Gs1024 /YX
+CC_OPTS = /nologo /DNDEBUG /O2 /Ob2 /GAy /Gs1024 /QIfdiv /QI0f /YX
 LN_OPTS = /nologo /DNDEBUG
 
 !	IF "$(CPU)" == "P1"
-CC_OPTS = $(CC_OPTS) /G5 /QIfdiv /QI0f
+CC_OPTS = $(CC_OPTS) /G5
 !	ELSE
 CC_OPTS = $(CC_OPTS) /GX
 !	ENDIF

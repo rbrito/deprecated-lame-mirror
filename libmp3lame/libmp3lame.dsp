@@ -41,8 +41,8 @@ RSC=rc.exe
 # PROP Output_Dir "Release"
 # PROP Intermediate_Dir "Release"
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "HAVE_CONFIG_H" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /W3 /O2 /I "../" /I "../mpglib" /I "../include" /I ".." /D "NDEBUG" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "WIN32" /D "HAVE_CONFIG_H" /FD /c
+# ADD BASE CPP /nologo /W3  /O2 /Ob2 /GAy /Gs1024 /QIfdiv /QI0f /YX /GX /D "WIN32" /D "HAVE_CONFIG_H" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
+# ADD CPP /nologo  /W3  /O2 /Ob2 /GAy /Gs1024 /QIfdiv /QI0f /YX /GX /I "../" /I "../mpglib" /I "../include" /I ".." /D "NDEBUG" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "WIN32" /D "HAVE_CONFIG_H" /FD /c
 # SUBTRACT CPP /YX
 # ADD BASE RSC /l 0x409
 # ADD RSC /l 0x409
@@ -88,9 +88,9 @@ LIB32=link.exe -lib
 # PROP Output_Dir "Release_NASM"
 # PROP Intermediate_Dir "Release_NASM"
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /W3 /O2 /I "../" /I "../mpglib" /I "../include" /I ".." /D "NDEBUG" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "WIN32" /D "HAVE_CONFIG_H" /FD /c
+# ADD BASE CPP /nologo  /W3  /O2 /Ob2 /GAy /Gs1024 /QIfdiv /QI0f /YX /GX /I "../" /I "../mpglib" /I "../include" /I ".." /D "NDEBUG" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "WIN32" /D "HAVE_CONFIG_H" /FD /c
 # SUBTRACT BASE CPP /YX
-# ADD CPP /nologo /W3 /O2 /I "../" /I "../mpglib" /I "../include" /I ".." /D "NDEBUG" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "WIN32" /D "HAVE_CONFIG_H" /D "HAVE_NASM" /D "MMX_choose_table" /FD /c
+# ADD CPP /nologo  /W3  /O2 /Ob2 /GAy /Gs1024 /QIfdiv /QI0f /YX /GX /I "../" /I "../mpglib" /I "../include" /I ".." /D "NDEBUG" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "WIN32" /D "HAVE_CONFIG_H" /D "HAVE_NASM" /D "MMX_choose_table" /FD /c
 # SUBTRACT CPP /YX
 # ADD BASE RSC /l 0x409
 # ADD RSC /l 0x409
