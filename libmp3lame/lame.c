@@ -610,7 +610,7 @@ lame_init_params(lame_global_flags * const gfp)
         }
         }
 
-        if (gfp->mode == MONO)
+        if (gfp->mode == MONO && (gfp->VBR == vbr_off || gfp->VBR == vbr_abr))
             lowpass *= 1.5;
 
         if (gfp->out_samplerate == 0)
