@@ -715,11 +715,17 @@ void lame_id3v2_tag(lame_global_flags *gfp,FILE *outf)
 {
   /*
    * NOTE: "lame_id3v2_tag" is obviously just a wrapper to call the function
-   * below and have a nice "lame_"-prefixed function name in "lame.h".  But
-   * since "lame.h" now includes "id3tag.h", we COULD do this with a macro.
+   * below and have a nice "lame_"-prefixed function name in "lame.h".
    * -- gramps
    */
-  id3tag_write_v2(&gfp->tag_spec,outf);
+#ifdef HAVEVORBIS
+  /* no ID3 version 2 tags in Ogg Vorbis output */
+  if (!gfp->ogg) {
+#endif
+    id3tag_write_v2(&gfp->tag_spec,outf);
+#ifdef HAVEVORBIS
+  }
+#endif
 }
 
 
@@ -1413,7 +1419,12 @@ void lame_mp3_tags(lame_global_flags *gfp)
 
 
   /* write an ID3 version 1 tag  */
-  if(gfp->id3v1_enabled) {
+  if(gfp->id3v1_enabled
+#ifdef HAVEVORBIS
+    /* no ID3 version 1 tags in Ogg Vorbis output */
+    && !gfp->ogg
+#endif
+    ) {
     /*
      * NOTE: The new tagging API only knows about streams and always writes at
      * the current position, so we have to open the file and seek to the end of
