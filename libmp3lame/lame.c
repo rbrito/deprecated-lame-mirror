@@ -1066,6 +1066,8 @@ lame_init_params(lame_global_flags * const gfp)
 
 
         vbrmode = lame_get_VBR(gfp);
+        if (vbrmode == vbr_off)
+            lame_set_VBR_mean_bitrate_kbps(gfp, gfp->brate);
         /* second, set parameters depending on bitrate */
         apply_preset(gfp, gfp->VBR_mean_bitrate_kbps, 0);
         lame_set_VBR(gfp, vbrmode);
