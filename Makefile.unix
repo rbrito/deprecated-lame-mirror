@@ -465,7 +465,7 @@ lib_obj = $(lib_sources:.c=.o)
 
 DEP = $(frontend_sources:.c=.d) $(lib_sources:.c=.d )
 
-gtk_sources = analyzer/gtkanal.c analyzer/gpkplotting.c
+gtk_sources = frontend/gtkanal.c frontend/gpkplotting.c
 gtk_obj = $(gtk_sources:.c=.o)
 gtk_dep = $(gtk_sources:.c=.d)
 
@@ -510,8 +510,8 @@ $(PGM):	frontend/main.o $(frontend_obj)  $(MP3LIB)
         $(MP3LIB) $(LIBS) $(LIBSNDFILE) $(LIBTERMCAP) \
         $(VORBIS_LIB)
 
-mp3x:   analyzer/mp3x.o $(frontend_obj) $(gtk_obj) $(MP3LIB)
-	$(CC) $(CC_OPTS) -o analyzer/mp3x analyzer/mp3x.o $(frontend_obj) $(gtk_obj) $(MP3LIB) \
+mp3x:   frontend/mp3x.o $(frontend_obj) $(gtk_obj) $(MP3LIB)
+	$(CC) $(CC_OPTS) -o frontend/mp3x frontend/mp3x.o $(frontend_obj) $(gtk_obj) $(MP3LIB) \
         $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
 
 mp3rtp:	frontend/rtp.o frontend/mp3rtp.o  $(frontend_obj) $(MP3LIB)
@@ -543,7 +543,7 @@ clean:
   else
 	-$(RM) $(gtk_obj) $(frontend_obj) $(lib_obj) $(DEP) $(PGM) \
           frontend/main.o frontend/lame libmp3lame/libmp3lame.a \
-          analyzer/mp3x.o analyzer/mp3x
+          frontend/mp3x.o frontend/mp3x
   endif
 
 

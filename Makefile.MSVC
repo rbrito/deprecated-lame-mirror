@@ -122,9 +122,9 @@ lame_sources = \
 	frontend/timestatus.c 
 
 mpx_sources = \
-	analyzer/gpkplotting.c \
-	analyzer/gtkanal.c \
-	analyzer/mp3x.c \
+	frontend/gpkplotting.c \
+	frontend/gtkanal.c \
+	frontend/mp3x.c \
 	frontend/get_audio.c \
 	frontend/ieeefloat.c \
 	frontend/lametime.c \
@@ -225,7 +225,6 @@ prg: $(LIB_OBJ) $(MPX_OBJ) Makefile.MSVC
 
 clean:
 	@-del *.obj
-	@-del analyzer\*.obj
 	@-del frontend\*.obj
 	@-del libmp3lame\*.obj
 	@-del libmp3lame\i386\*.obj
