@@ -5340,7 +5340,7 @@ case $target_cpu in
 *86)
 	CPUTYPE="i386"
 
-	# this may make faster binary
+	# this may make a faster binary
 	cat >> confdefs.h <<\EOF
 #define TAKEHIRO_IEEE754_HACK 1
 EOF
@@ -5493,32 +5493,46 @@ if test "x$GCC" = "xyes"; then
 	full)
 		OPTIMIZATION="${OPTIMIZATION} ${OPTIMIZATION_NORM} \
 			${OPTIMIZATION_FULL}"
+
+		# some hardware dependend options
+		case "${GCC_version}" in
+		2.9*|3.*)
+			# "new" GCC, use some "new" CPU specific optimizations
+			case ${target_cpu} in
+			*486)
+				OPTIMIZATION="${OPTIMIZATION} -m486 \
+					-mfancy-math-387"
+				;;
+			*586)
+				OPTIMIZATION="${OPTIMIZATION} -mpentium \
+					-march=pentium -mfancy-math-387"
+				;;
+			*686)
+				OPTIMIZATION="${OPTIMIZATION} -mpentiumpro \
+					-march=pentiumpro -mfancy-math-387"
+				;;
+			*86)
+				OPTIMIZATION="${OPTIMIZATION} -mfancy-math-387"
+				;;
+			alpha*)
+				OPTIMIZATION="${OPTIMIZATION} -mfp-regs"
+				cat >> confdefs.h <<\EOF
+#define FLOAT double
+EOF
+
+				# add "-mcpu=21164a -Wa,-m21164a" to optimize
+				# for 21164a (ev56) CPU
+				;;
+			*)
+				OPTIMIZATION="${OPTIMIZATION} -fdelayed-branch"
+				;;
+			esac
 		;;
 	*)
 		{ echo "configure: error: bad value »${CONFIG_EXPOPT}« for expopt option" 1>&2; exit 1; }
 		;;
 	esac
-
-	# some hardware dependend options
-		case ${target_cpu} in
-		*486)
-			OPTIMIZATION="${OPTIMIZATION} -m486 -mfancy-math-387"
-			;;
-		*86)
-			OPTIMIZATION="${OPTIMIZATION} -mfancy-math-387"
-			;;
-		alpha*)
-			OPTIMIZATION="${OPTIMIZATION} -mfp-regs"
-			cat >> confdefs.h <<\EOF
-#define FLOAT double
-EOF
-
-	# add "-mcpu=21164a -Wa,-m21164a" to optimize for 21164a (ev56) CPU
-			;;
-		*)
-			OPTIMIZATION="${OPTIMIZATION} -fdelayed-branch"
-			;;
-		esac
+esac
 
 	echo "$ac_t""${CONFIG_EXPOPT}" 1>&6
 else
@@ -5530,7 +5544,7 @@ fi
 
 
 echo $ac_n "checking for debug options""... $ac_c" 1>&6
-echo "configure:5534: checking for debug options" >&5
+echo "configure:5548: checking for debug options" >&5
 # Check whether --enable-debug or --disable-debug was given.
 if test "${enable_debug+set}" = set; then
   enableval="$enable_debug"
