@@ -399,27 +399,28 @@ count_bits(const lame_internal_flags * const gfc, gr_info * const gi)
 	    istep = IPOW20(scalefactor(gi, sfb));
 	    do {
 #ifdef TAKEHIRO_IEEE754_HACK
-	    double x0 = istep * xp[0] + MAGIC_FLOAT;
-	    double x1 = istep * xp[1] + MAGIC_FLOAT;
-	    xp += 2;
-	    if (x0 > MAGIC_FLOAT + IXMAX_VAL) x0 = MAGIC_FLOAT + IXMAX_VAL;
-	    if (x1 > MAGIC_FLOAT + IXMAX_VAL) x1 = MAGIC_FLOAT + IXMAX_VAL;
-	    fi[0].f = x0;
-	    fi[1].f = x1;
-	    fi[0].f = x0 + (adj43asm - MAGIC_INT)[fi[0].i];
-	    fi[1].f = x1 + (adj43asm - MAGIC_INT)[fi[1].i];
-	    fi[0].i -= MAGIC_INT;
-	    fi[1].i -= MAGIC_INT;
-	    fi += 2;
+		double x0 = istep * xp[0] + MAGIC_FLOAT;
+		double x1 = istep * xp[1] + MAGIC_FLOAT;
+		xp += 2;
+		if (x0 > MAGIC_FLOAT + IXMAX_VAL) x0 = MAGIC_FLOAT + IXMAX_VAL;
+		if (x1 > MAGIC_FLOAT + IXMAX_VAL) x1 = MAGIC_FLOAT + IXMAX_VAL;
+		fi[0].f = x0;
+		fi[1].f = x1;
+		fi[0].f = x0 + (adj43asm - MAGIC_INT)[fi[0].i];
+		fi[1].f = x1 + (adj43asm - MAGIC_INT)[fi[1].i];
+		fi[0].i -= MAGIC_INT;
+		fi[1].i -= MAGIC_INT;
+		fi += 2;
 #else
-	    FLOAT x0 = *xp++ * istep;
-	    FLOAT x1 = *xp++ * istep;
-	    if (x0 > IXMAX_VAL) x0 = IXMAX_VAL;
-	    if (x1 > IXMAX_VAL) x1 = IXMAX_VAL;
-	    (fi++)->i = (int)(x0 + adj43[(int)x0]);
-	    (fi++)->i = (int)(x1 + adj43[(int)x1]);
+		FLOAT x0 = *xp++ * istep;
+		FLOAT x1 = *xp++ * istep;
+		if (x0 > IXMAX_VAL) x0 = IXMAX_VAL;
+		if (x1 > IXMAX_VAL) x1 = IXMAX_VAL;
+		(fi++)->i = (int)(x0 + adj43[(int)x0]);
+		(fi++)->i = (int)(x1 + adj43[(int)x1]);
 #endif
-	} while (xp < xe);
+	    } while (xp < xe);
+	}
 	sfb++;
     } while (xp < xend);
 
