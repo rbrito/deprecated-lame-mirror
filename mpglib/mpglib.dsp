@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Intermediate_Dir "Release"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /Ox /Ot /Og /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
+# ADD CPP /nologo /W3 /GX /Ox /Ot /Og /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "HAVEMPGLIB" /YX /FD /c
 # ADD BASE RSC /l 0x409
 # ADD RSC /l 0x409
 BSC32=bscmake.exe
@@ -66,7 +66,7 @@ LIB32=link.exe -lib
 # PROP Intermediate_Dir "Debug"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /Z7 /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /Z7 /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
+# ADD CPP /nologo /W3 /GX /Z7 /Od /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "HAVEMPGLIB" /YX /FD /c
 # ADD BASE RSC /l 0x409
 # ADD RSC /l 0x409
 BSC32=bscmake.exe
@@ -89,7 +89,7 @@ LIB32=link.exe -lib
 # PROP Intermediate_Dir "DebugGTK"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /Z7 /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /Z7 /Od /I "../WinGTK/glib-1.2" /I "../WinGTK/gtk-plus" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "HAVEGTK" /D "HAVEMPGLIB" /YX /FD /c
+# ADD CPP /nologo /W3 /GX /Z7 /Od /I "../WinGTK/glib-1.2" /I "../WinGTK/gtk-plus" /D "_DEBUG" /D "HAVEGTK" /D "HAVEMPGLIB" /D "WIN32" /D "_WINDOWS" /YX /FD /c
 # ADD BASE RSC /l 0x409
 # ADD RSC /l 0x409
 # SUBTRACT RSC /x
@@ -113,7 +113,7 @@ LIB32=link.exe -lib
 # PROP Intermediate_Dir "ReleaseGTK"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /O2 /I "../WinGTK/glib-1.2" /I "../WinGTK/gtk-plus" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "HAVEGTK" /YX /FD /c
+# ADD CPP /nologo /W3 /GX /O2 /I "../WinGTK/glib-1.2" /I "../WinGTK/gtk-plus" /D "NDEBUG" /D "HAVEGTK" /D "HAVEMPGLIB" /D "WIN32" /D "_WINDOWS" /YX /FD /c
 # ADD BASE RSC /l 0x409
 # ADD RSC /l 0x409
 BSC32=bscmake.exe
