@@ -462,44 +462,45 @@ static int count_bits_long(int ix[576], gr_info *gi)
     /* Determines the number of bits to encode the quadruples. */
     gi->count1 = i;
     a1 = 0;
-	for (; i > 3; i -= 4) {
-	    int p, v;
-	    if ((unsigned int)(ix[i-1] | ix[i-2] | ix[i-3] | ix[i-4]) > 1)
-		break;
+    for (; i > 3; i -= 4) {
+	int p, v;
+	if ((unsigned int)(ix[i-1] | ix[i-2] | ix[i-3] | ix[i-4]) > 1)
+	    break;
 
-	    v = ix[i-1];
-	    p = v;
-	    bits += v;
+	v = ix[i-1];
+	p = v;
+	bits += v;
 
-	    v = ix[i-2];
-	    if (v != 0) {
-		p += 2;
-		bits++;
-	    }
+	v = ix[i-2];
+	if (v != 0) {
+	    p += 2;
+	    bits++;
+	}
 
-	    v = ix[i-3];
-	    if (v != 0) {
-		p += 4;
-		bits++;
-	    }
+	v = ix[i-3];
+	if (v != 0) {
+	    p += 4;
+	    bits++;
+	}
 
-	    v = ix[i-4];
-	    if (v != 0) {
-		p += 8;
-		bits++;
-	    }
+	v = ix[i-4];
+	if (v != 0) {
+	    p += 8;
+	    bits++;
+	}
 
 	a1 += ht[32].hlen[p];
-	}
+    }
     a2 = gi->count1 - i;
     if (a1 < a2) {
 	bits += a1;
-	    gi->count1table_select = 0;
-	} else {
+	gi->count1table_select = 0;
+    } else {
 	bits += a2;
-	    gi->count1table_select = 1;
-	}
+	gi->count1table_select = 1;
+    }
 
+    gi->count1bits = bits;
     gi->big_values = i;
     if (i == 0)
 	return bits;
@@ -572,3 +573,54 @@ int count_bits(int *ix, FLOAT8 *xr, gr_info *cod_info)
 
 }
 
+void best_huffman_divide(int gr, int ch, gr_info *gi, int *ix)
+{
+    int *bits, r0, r1, a1, a2, bigv;
+    int r1_bits;
+    int r3_bits[7 + 15 + 2 + 1];
+    int r3_tbl[7 + 15 + 2 + 1];
+    gr_info cod_info;
+
+    memcpy(&cod_info, gi, sizeof(gr_info));
+    bigv = cod_info.big_values * 2;
+    bits = &cod_info.part2_3_length;
+
+    for (r0 = 2; r0 < SBMAX_l + 1; r0++) {
+	a2 = scalefac_band_long[r0];
+	if (a2 > bigv)
+	    break;
+
+	r3_bits[r0] = cod_info.count1bits + cod_info.part2_length;
+	r3_tbl[r0] = choose_table(ix + a2, ix + bigv, &r3_bits[r0]);
+    }
+    for (; r0 <= 7 + 15 + 2; r0++) {
+	r3_bits[r0] = 100000;
+    }
+
+    for (r0 = 0; r0 < 16; r0++) {
+	a1 = scalefac_band_long[r0 + 1];
+	if (a1 > bigv)
+	    break;
+	cod_info.region0_count = r0;
+	r1_bits = 0;
+	cod_info.table_select[0] = choose_table(ix, ix + a1, &r1_bits);
+	if (gi->part2_3_length < r1_bits)
+	    break;
+
+	for (r1 = 0; r1 < 8; r1++) {
+	    *bits = r1_bits + r3_bits[r0 + r1 + 2];
+	    if (gi->part2_3_length < *bits)
+		continue;
+
+	    a2 = scalefac_band_long[r0 + r1 + 2];
+
+	    cod_info.table_select[1] = choose_table(ix + a1, ix + a2, bits);
+	    if (gi->part2_3_length < *bits)
+		continue;
+
+	    cod_info.region1_count = r1;
+	    cod_info.table_select[2] = r3_tbl[r0 + r1 + 2];
+	    memcpy(gi, &cod_info, sizeof(gr_info));
+	}
+    }
+}

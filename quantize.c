@@ -99,25 +99,27 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
 	outer_loop( xr, targ_bits[ch], noise, targ_noise, 0, &l3_xmin,l3_enc, 
 	    fr_ps, scalefac,gr,stereo, l3_side, ratio, ms_ener_ratio[gr],ch);
 	cod_info = &l3_side->gr[gr].ch[ch].tt;
+	if (highq && cod_info->block_type == NORM_TYPE) {
+	  best_huffman_divide(gr, ch, cod_info, l3_enc[gr][ch]);
+	}
 	ResvAdjust( fr_ps, cod_info, l3_side, mean_bits );
       }
     }
   }
 
-  
   /* set the sign of l3_enc */
   for ( gr = 0; gr < mode_gr; gr++ ) {
     for ( ch =  0; ch < stereo; ch++ ) {
-      int *pi = &l3_enc[gr][ch][0];
-      for ( i = 0; i < 576; i++) 	    {
-	if ( (xr[gr][ch][i] < 0) && (pi[i] > 0) )   pi[i] *= -1;
+      for ( i = 0; i < 576; i++) {
+	if (xr[gr][ch][i] < 0)
+	  l3_enc[gr][ch][i] *= -1;
       }
     }
   }
   ResvFrameEnd( fr_ps, l3_side, mean_bits );
 }
 
-      
+
 void set_masking_lower( int nbits )
 {
 	FLOAT8 masking_lower_db, fac;
@@ -430,9 +432,7 @@ void init_outer_loop(
   cod_info->scalefac_scale    = 0;
   cod_info->quantizerStepSize = 0.0;
   cod_info->count1table_select= 0;
-  cod_info->address1          = 0;
-  cod_info->address2          = 0;
-  cod_info->address3          = 0;
+  cod_info->count1bits        = 0;
   
   
   if (gf.experimentalZ) {
@@ -738,11 +738,10 @@ void outer_loop(
       if ( (status = loop_break(scalefac, cod_info, gr, ch)) == 0 ) {
 	if ( fr_ps->header->version == 1 ) {
 	  status = scale_bitcount( scalefac, cod_info, gr, ch );
-	  if (status && (cod_info->scalefac_scale==0)) try_scale=1; 
 	}else{
 	  status = scale_bitcount_lsf( scalefac, cod_info, gr, ch );
-	  if (status && (cod_info->scalefac_scale==0)) try_scale=1; 
 	}
+	if (status && (cod_info->scalefac_scale==0)) try_scale=1; 
       }
       notdone = !status;
     }    
@@ -778,7 +777,7 @@ void outer_loop(
     memcpy(l3_enc[gr][ch],save_l3_enc,sizeof(l3_enc[gr][ch]));   
     memcpy(cod_info,&save_cod_info,sizeof(save_cod_info));
     cod_info->part2_3_length += cod_info->part2_length;
-    
+
 #ifdef HAVEGTK
     if (gtkflag)
       pinfo->LAMEmainbits[gr][ch]=cod_info->part2_3_length;

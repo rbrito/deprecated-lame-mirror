@@ -152,5 +152,6 @@ int VBR_compare(
 int best_over,FLOAT8 best_tot_noise,FLOAT8 best_over_noise,FLOAT8 best_max_over,
 int over,FLOAT8 tot_noise, FLOAT8 over_noise,FLOAT8 max_noise);
 
+void best_huffman_divide(int gr, int ch, gr_info *cod_info, int *ix);
 
 #endif

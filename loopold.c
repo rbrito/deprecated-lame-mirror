@@ -88,9 +88,7 @@ void init_outer_loop_dual(
   cod_info->scalefac_scale    = 0;
   cod_info->quantizerStepSize = 0.0;
   cod_info->count1table_select= 0;
-  cod_info->address1          = 0;
-  cod_info->address2          = 0;
-  cod_info->address3          = 0;
+  cod_info->count1bits        = 0;
   
   
   if (gf.experimentalZ) {

@@ -5,6 +5,11 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.6  2000/01/09 10:54:56  takehiro
+ * All Huffman code search algorithm is implemented.
+ * (-h option to enable this)
+ * more slower, but better quality.
+ *
  * Revision 1.5  1999/12/26 14:48:55  takehiro
  * some foolish bug is removed :)
  *
@@ -643,7 +648,6 @@ Huffmancodebits( BF_PartHolder **pph, int *ix, gr_info *gi )
 		    scalefac_index += gi->region1_count + 1;
 		    assert( scalefac_index < 23 );    
 		    region2Start = scalefac[ scalefac_index ];
-		    /*	    assert( region1Start == gi->address1 );*/
 		}
 
 		for ( i = 0; i < bigvalues; i += 2 )
