@@ -132,10 +132,6 @@ SOURCE=..\formatBitstream.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\globalflags.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\gpkplotting.c
 # End Source File
 # Begin Source File

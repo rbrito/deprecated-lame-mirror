@@ -1,77 +1,42 @@
+March 30, 2000
 
-If you got the LAME source from http://www.sulaco.org/mp3, the
-libraries and binaries mentioned below are not included.  You will
-need to get the GLIB and GTK developer libraries, available from:
+Release notes MP3X (the LAME frame analyzer) for WIN32
+
+===========================================================================
+How to compile Lame with MP3x support:
+
+You first need the proper GTK and GLIB include files and lib files. 
+You can get them from the WINGTK project 
 http://user.sgic.fi/~tml/gimp/win32/ 
-(or see http://www.gtk.org, and click on the GTK under win32 link).
+(or see http://www.gtk.org, and click on the WINGTK link).
 
--Mark Taylor 
-May 24,1999
-
-
-*************************************************************************** 
-www.gtk.org, find the WINGTK link
-download glib-dev-VERSION.zip
-         gtk+-dev-VERSION.zip
-         extralibs-dev-VERSION.zip
+Download:  glib-dev-VERSION.zip, gtk+-dev-VERSION.zip, extralibs-dev-VERSION.zip
 where VERSION = something like 20000201
-unzip the files.  this will make a "src" directory.
-(for example, c:\gtk\src)
-in MSVC, under Tools->options->directories, add 
-to the include files and library files settings:
+
+unzip the files.  this will make a "src" directory. (for example, c:\gtk\src)
+Then, in MSVC, under Tools->options->directories, add 
+to the "include files" and "library files" settings:
   c:\gtk\src\glib
   c:\gtk\src\gtk+\glib
   c:\gtk\src\gtk+
 
-to run the lame.exe, you have to install the following DLL's,
-(or put them in the same directory as lame.exe)
+
+===========================================================================
+To run MP3x.exe, or lame.exe with MP3x support, you need
+the GTK DLL files:  Either instal them on your system,
+or put them in the same directory as lame.exe.
+
 glib-1.3.dll
 gdk-1.3.dll
 gtk-1.3.dll
 gmodule-1.3.dll
 gnu-intl.dll
 
+lame -g myfile
+
+myfile can be a mp3 file, or a wav file.
 
 
 
-May 24,1999
 
-Release notes MP3X for WIN2
-
-Installation instructions:
-
-Copy the DLL files: (in GtkWin32Dll.zip)
-
-gdk-1.3.dll
-glib-1.2.dll
-gtk-1.3.dll
-gmodule-1.2.dll
-
-
-either into the current working direcory you are running LAME, or 
-copy them in the windows system directory. 
-
-
-This is basically it, you can run LAME with the Graphic Psyco Analysis as follows:
-
-Lame -g my.wav
-
-(just enter Lame at the dos prompt to get all the options) Of course you can ommit the 
--g optiont to use lame without GPA.
-
-
-
-How to compile Lame with GPA for Windows 32 platforms
-
-In order to compile Lame with the Graphic Psyco Analysis (GPA) with MSVC, you have to have the 
-proper GTK and GLIB include files and lib files. I've put these files together in a 
-zip file (named GtkWin32Lib.zip). Unzip these files into the Lame source directory, make
-sure you unpack it with the directory options. The files are created in the WinGTK subdirecory
-Furthermore, you should have at least Lame version 3.05 beta 2.
-Open the project files in MSVC 5, and just hit the build button. There will be a few warnings,
-but you can ignore them.
-
-
-
-Albert L. Faber
 
