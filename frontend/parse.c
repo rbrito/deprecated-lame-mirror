@@ -758,6 +758,40 @@ static int  presets_setup ( lame_global_flags* gfp, const char* preset_name, con
     return -1;
 }
 
+
+/* presets courtesy of r3mix
+ */
+static int  r3mix_presets( lame_t gfp, const char* preset_subname )
+{
+    if (preset_subname[0] == '\0') {
+	lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1); /*nspsytune*/
+	/*  lame_set_experimentalX(gfp,1); (test CVS) */
+
+	(void) lame_set_scale( gfp, 0.98 ); /* --scale 0.98*/
+
+	lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (8 << 20));
+
+	lame_set_VBR(gfp,vbr_mtrh); 
+	lame_set_VBR_q(gfp,1);
+	lame_set_quality( gfp, 2 );
+	lame_set_lowpassfreq(gfp,19500);
+	lame_set_mode( gfp, JOINT_STEREO );
+	lame_set_ATHtype( gfp, 3 );
+	lame_set_VBR_min_bitrate_kbps(gfp,96);
+    
+	return 0;
+    }
+/*  else if( strcmp(preset_subname, "-...") == 0 ) {
+	;
+	return 0;
+    }
+*/
+    fprintf( stderr, "Unknown --preset profile: r3mix%s\n"
+	     "Available r3mix presets:\n  r3mix\n", preset_subname );
+    return -1;
+}
+
+
 /*  some presets thanks to Dibrom
  */
 static int  dm_presets( lame_t gfp, const char* preset_name )
@@ -1018,20 +1052,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     lame_set_VBR(gfp,vbr_mtrh); 
 
                 T_ELIF ("r3mix")
-                    lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1); /*nspsytune*/
-/*                    lame_set_experimentalX(gfp,1); (test CVS) */
-
-                    (void) lame_set_scale( gfp, 0.98 ); /* --scale 0.98*/
-
-                    lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (8 << 20));
-
-                    lame_set_VBR(gfp,vbr_mtrh); 
-                    lame_set_VBR_q(gfp,1);
-                    lame_set_quality( gfp, 2 );
-                    lame_set_lowpassfreq(gfp,19500);
-                    lame_set_mode( gfp, JOINT_STEREO );
-                    lame_set_ATHtype( gfp, 3 );
-                    lame_set_VBR_min_bitrate_kbps(gfp,96);
+		    r3mix_presets(gfp, "");
                                     
                 /**
                  *  please, do *not* DOCUMENT this one
@@ -1416,9 +1437,15 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 
                 T_ELIF ("preset")
                     argUsed = 1;
-                    if (presets_setup ( gfp, nextArg, ProgramName ) < 0)
-                        return -1;
-                    
+		    if (strncmp( nextArg, "r3mix", 5 ) == 0 ) {
+			if( r3mix_presets( gfp, nextArg + 5 ) < 0 )
+			    return -1;
+		    }
+		    else {
+			if (presets_setup ( gfp, nextArg, ProgramName ) < 0)
+			    return -1;
+		    }
+
                 T_ELIF ("dm-preset")
                     argUsed = 1;
                     if (dm_presets ( gfp, nextArg ) < 0)
