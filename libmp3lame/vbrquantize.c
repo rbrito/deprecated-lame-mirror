@@ -610,7 +610,7 @@ static const FLOAT8 fac34m1 = 1.13878863476; /* .84089 ^ -3/4 */
 static const FLOAT8 fac34p1 = 0.878126080187;
 
 static  FLOAT8
-calc_sfb_noise_ave(const FLOAT8 * xr, const FLOAT8 * xr34, int bw, int sf)
+calc_sfb_noise_ave_x34(const FLOAT8 * xr, const FLOAT8 * xr34, int bw, int sf)
 {
     double  xp;
     double  xe;
@@ -689,27 +689,6 @@ calc_sfb_noise_ave(const FLOAT8 * xr, const FLOAT8 * xr34, int bw, int sf)
 }
 
 static  FLOAT8
-calc_sfb_noise_ave_x34(const FLOAT8 * xr, const FLOAT8 * xr34, int bw, int sf)
-{
-    FLOAT8 xfsf_p;
-    FLOAT8 xfsf_e;
-    FLOAT8 xfsf_m = calc_sfb_noise_x34( xr, xr34, bw, sf-1 );
-    if ( xfsf_m > -0.5 ) {
-        xfsf_e = calc_sfb_noise_x34( xr, xr34, bw, sf );
-        xfsf_p = calc_sfb_noise_x34( xr, xr34, bw, sf+1 );
-        if ( xfsf_e < xfsf_p ) {
-            xfsf_e = xfsf_p;
-        }
-        if ( xfsf_e < xfsf_m ) {
-            return xfsf_m;
-        }
-        return xfsf_e;
-    }
-    return -1;
-}
-
-
-static  FLOAT8
 calc_sfb_noise_ave_ISO(const FLOAT8 * xr, const FLOAT8 * xr34, int bw, int sf)
 {
     FLOAT8 xfsf_p;
@@ -779,13 +758,6 @@ calc_sfb_noise_ave_ISO(const FLOAT8 * xr, const FLOAT8 * xr34, int bw, int sf)
 
 
 static int
-find_scalefac_ave_ISO( 
-    const FLOAT8* xr, const FLOAT8* xr34, FLOAT8 l3_xmin, int bw )
-{
-    FIND_BODY( calc_sfb_noise_ave_ISO(xr, xr34, bw, sf) )
-}
-
-static int
 find_scalefac_x34( 
     const FLOAT8* xr, const FLOAT8* xr34, FLOAT8 l3_xmin, int bw )
 {
@@ -803,14 +775,14 @@ static int
 find_scalefac_ave_x34( 
     const FLOAT8* xr, const FLOAT8* xr34, FLOAT8 l3_xmin, int bw )
 {
-    FIND_BODY( calc_sfb_noise_ave(xr, xr34, bw, sf) )
+    FIND_BODY( calc_sfb_noise_ave_x34(xr, xr34, bw, sf) )
 }
 
 static int
-find_scalefac_mq_ISO( 
-    const FLOAT8* xr, const FLOAT8* xr34, FLOAT8 l3_xmin, int bw, int mq )
+find_scalefac_ave_ISO( 
+    const FLOAT8* xr, const FLOAT8* xr34, FLOAT8 l3_xmin, int bw )
 {
-    FIND_BODY( calc_sfb_noise_mq_ISO(xr, xr34, bw, sf, mq) )
+    FIND_BODY( calc_sfb_noise_ave_ISO(xr, xr34, bw, sf) )
 }
 
 static int
@@ -818,6 +790,13 @@ find_scalefac_mq_x34(
     const FLOAT8* xr, const FLOAT8* xr34, FLOAT8 l3_xmin, int bw, int mq )
 {
     FIND_BODY( calc_sfb_noise_mq_x34(xr, xr34, bw, sf, mq) )
+}
+
+static int
+find_scalefac_mq_ISO( 
+    const FLOAT8* xr, const FLOAT8* xr34, FLOAT8 l3_xmin, int bw, int mq )
+{
+    FIND_BODY( calc_sfb_noise_mq_ISO(xr, xr34, bw, sf, mq) )
 }
 
 
