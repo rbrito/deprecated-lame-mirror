@@ -638,7 +638,7 @@ unpack_read_samples( const int samples_to_read, const int bytes_per_sample,
     GA_URS_IFLOOP(1)
 	*--op = (ip[i] ^ 0x80)<<(B-8) | 0x7f<<(B-16);/* convert from unsigned*/
 
-    if (!littleendian) {
+    if (littleendian) {
 	GA_URS_IFLOOP(2)
 	    *--op = ip[i]<<(B-16) | ip[i+1]<<(B-8);
 	GA_URS_IFLOOP(3)
@@ -680,9 +680,9 @@ read_samples_pcm(int sample_buffer[1152*2], int samples_to_read)
 	littleendian = 1;
     else {
 #ifdef WORDS_BIGENDIAN
-	littleendian = !pcmswapbytes;
-#else
 	littleendian = pcmswapbytes;
+#else
+	littleendian = !pcmswapbytes;
 #endif
     }
     assert((32 == in_bitwidth) || (24 == in_bitwidth) || (16 == in_bitwidth)
@@ -691,7 +691,7 @@ read_samples_pcm(int sample_buffer[1152*2], int samples_to_read)
     samples_read = unpack_read_samples(samples_to_read, in_bitwidth/8,
 				       littleendian, sample_buffer);
 
-    if (ferror(g_inputHandler)) {
+    if (ferror((FILE *)g_inputHandler)) {
         fprintf(stderr, "Error reading input file\n");
         exit(1);
     }
@@ -874,7 +874,7 @@ OpenSndFile(lame_t gfp, char *inPath)
 
 #ifdef HAVE_MPGLIB
     if (IS_MPEG123(input_format)) {
-        if ((fp = fopen(inPath, "rb")) == NULL) {
+        if (!(fp = fopen(inPath, "rb"))) {
             fprintf(stderr, "Could not find \"%s\".\n", inPath);
             exit(1);
         }
