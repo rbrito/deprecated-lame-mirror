@@ -922,7 +922,8 @@ CBR_1st_bitalloc (
     )
 {
     gr_info gi_w;
-    FLOAT distort[SFBMAX], l3_xmin[SFBMAX], xrpow[576], bestNoise;
+    FLOAT distort[SFBMAX], l3_xmin[SFBMAX], bestNoise;
+    align16 FLOAT xrpow[576];
     int current_method, age;
 
     if (!init_bitalloc(gfc, gi, xrpow))
@@ -1565,9 +1566,8 @@ void
 VBR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
 {
     lame_internal_flags *gfc=gfp->internal_flags;
+    align16 FLOAT xrpow[576];
     FLOAT l3_xmin[2][2][SFBMAX];
-
-    FLOAT xrpow[576];
     int mean_bits, max_frame_bits, used_bits;
     int ch, gr, ath_over = 0;
 
