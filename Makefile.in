@@ -463,7 +463,7 @@ lib:  @LIB_TARGETS@
 
 install_header:
 	@mkdir -p $(INCLUDEDIR)
-	$(INSTALL_PROGRAM) lame.h $(INCLUDEDIR)
+	$(INSTALL_PROGRAM) include/lame.h $(INCLUDEDIR)
 
 install_static_lib: libmp3lame.a install_header
 	@mkdir -p $(LIBDIR)
