@@ -317,11 +317,13 @@ calc_noise(
 
     if (max_noise > 1.0 && gi->block_type == SHORT_TYPE) {
 	distort -= sfb;
-	max_noise = 0.0;
+	max_noise = 1.0;
 	for (sfb = gi->sfb_smin; sfb < gi->psymax; sfb += 3) {
-	    FLOAT noise = distort[sfb] * distort[sfb+1] * distort[sfb+2];
-	    if (max_noise < noise)
-		max_noise = noise;
+	    FLOAT noise = 1.0;
+	    if (distort[sfb  ] > 1.0) noise  = distort[sfb  ];
+	    if (distort[sfb+1] > 1.0) noise *= distort[sfb+1];
+	    if (distort[sfb+2] > 1.0) noise *= distort[sfb+2];
+	    max_noise += FAST_LOG10(noise);
 	}
     }
     return max_noise;
