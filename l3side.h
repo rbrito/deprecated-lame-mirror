@@ -25,12 +25,6 @@ typedef struct
    int s[1+SBMAX_s];
 } scalefac_struct;
 
-typedef struct 
-{
-   int l[1+SBMAX_l];
-   int s[1+SBMAX_s][3];
-} scalefac_struct2;
-
 
 typedef struct {
 	FLOAT8	l[SBMAX_l];

@@ -692,6 +692,11 @@ void best_scalefac_store(lame_global_flags *gfp,int gr, int ch,
 	}
     }
 
+
+    /* initialize scfsi to 0 (may be changed below) */
+    for ( i = 0; i < 4; i++ )
+      l3_side->scfsi[ch][i] = 0;
+
     if (gfc->mode_gr==2 && gr == 1
 	&& l3_side->gr[0].ch[ch].tt.block_type != SHORT_TYPE
 	&& l3_side->gr[1].ch[ch].tt.block_type != SHORT_TYPE
@@ -701,5 +706,6 @@ void best_scalefac_store(lame_global_flags *gfp,int gr, int ch,
 	== l3_side->gr[1].ch[ch].tt.preflag) {
       	scfsi_calc(ch, l3_side, scalefac);
     }
+
     gi->part2_3_length += gi->part2_length;
 }

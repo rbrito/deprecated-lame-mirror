@@ -648,8 +648,9 @@ void plot_frame(void)
           ycord[i] = 0;
         else
 	  ycord[i] = -data[i];
-	ymx=(ycord[i] > ymx) ? ycord[i] : ymx;
-	ymn=(ycord[i] < ymn) ? ycord[i] : ymn;
+
+	ymx=(ycord[i] > ymx-2) ? ycord[i]+2 : ymx;
+	ymn=(ycord[i] < ymn) ? ycord[i]-1 : ymn;
       }
 
       if (blocktype[gr][ch]==2) {

@@ -254,7 +254,6 @@ int scalefac[SBPSY_s][3],int sbg[3])
 
   for (i=0; i<3; ++i) {
     int maxsf1=0,maxsf2=0,minsf=1000;
-    sbg[i]=0;
     /* see if we should use subblock gain */
     for ( sfb = 0; sfb < SBPSY_s; sfb++ ) {
       if (sfb < 6) {
@@ -369,11 +368,12 @@ VBR_quantize_granule(lame_global_flags *gfp,
   l3_side = &gfc->l3_side;
   cod_info = &l3_side->gr[gr].ch[ch].tt;
 
+
   /* encode scalefacs */
   if ( gfp->version == 1 ) 
     scale_bitcount(&scalefac[gr][ch], cod_info);
   else
-	scale_bitcount_lsf(&scalefac[gr][ch], cod_info);
+    scale_bitcount_lsf(&scalefac[gr][ch], cod_info);
   
   /* quantize xr34 */
   cod_info->part2_3_length = count_bits(gfp,l3_enc[gr][ch],xr34,cod_info);
@@ -466,7 +466,8 @@ VBR_noise_shapping
 {
   lame_internal_flags *gfc=gfp->internal_flags;
   int       start,end,bw,sfb,l, i, vbrmax;
-  scalefac_struct2 vbrsf;
+  III_scalefac_t vbrsf;
+  III_scalefac_t save_sf;
   int maxover0,maxover1,maxover0p,maxover1p,maxover;
   int ifqstep;
   III_psy_xmin l3_xmin;
@@ -511,7 +512,9 @@ VBR_noise_shapping
     }
     
   } /* compute needed scalefactors */
-  
+  memcpy(&save_sf,&vbrsf,sizeof(III_scalefac_t));
+
+
 
   do { 
 
@@ -615,8 +618,16 @@ VBR_noise_shapping
       cod_info->scalefac_scale = 1;
       cod_info->preflag=1;
     } else {
-      cod_info->scalefac_scale = 1;
-      vbrmax -= maxover1;
+      /* none were sufficient.  we need to boost vbrmax */
+      if (maxover1 < maxover1p) {
+	cod_info->scalefac_scale = 1;
+	cod_info->preflag=0;
+	vbrmax -= maxover1;
+      }else{
+	cod_info->scalefac_scale = 1;
+	cod_info->preflag=1;
+	vbrmax -= maxover1p;
+      }
     }
     
     
@@ -662,21 +673,27 @@ VBR_noise_shapping
     if (cod_info->part2_3_length-cod_info->part2_length== 0) break;
     if (vbrmax+210 ==0 ) break;
     
-    printf("not enough bits, decreasing vbrmax=%i...\n",vbrmax);
-    printf("%i minbits=%i   part2_3_length=%i  part2=%i\n",
-	   gfp->frameNum,minbits,cod_info->part2_3_length,cod_info->part2_length);
+    //    printf("not enough bits, decreasing vbrmax. g_gainv=%i\n",cod_info->global_gain);
+    //    printf("%i minbits=%i   part2_3_length=%i  part2=%i\n",
+    //	   gfp->frameNum,minbits,cod_info->part2_3_length,cod_info->part2_length);
     --vbrmax;
     --global_gain_adjust;
+    memcpy(&vbrsf,&save_sf,sizeof(III_scalefac_t));
+    for(i=0;i<576;i++) {
+      FLOAT8 temp=fabs(xr[i]);
+      xr34[i]=sqrt(sqrt(temp)*temp);
+    }
+
   }
 
   } while ((cod_info->part2_3_length < minbits));
-
 
   while (cod_info->part2_3_length > 4095) {
     /* increase global gain, keep exisiting scale factors */
     ++cod_info->global_gain;
     if (cod_info->global_gain > 255) 
-      fprintf(stderr,"impossible to encode this frame! \n");
+      fprintf(stderr,"%i impossible to encode this frame! bits=%i\n",
+gfp->frameNum,cod_info->part2_3_length);
     VBR_quantize_granule(gfp,xr,xr34,l3_enc,ratio,l3_xmin,scalefac,gr,ch);
     ++global_gain_adjust;
   }
@@ -695,17 +712,19 @@ VBR_quantize(lame_global_flags *gfp,
                 III_scalefac_t scalefac[2][2])
 {
   lame_internal_flags *gfc=gfp->internal_flags;
-  int minbits,maxbits,totbits,bits,gr,ch,i,bits_ok;
+  int minbits,maxbits,max_frame_bits,totbits,bits,gr,ch,i,bits_ok;
   int bitsPerFrame,mean_bits;
   FLOAT8 quality=0;
   III_side_info_t * l3_side;
   gr_info *cod_info;  
   int ath_over[2][2];
   FLOAT8 masking_lower_db;
-  static const FLOAT8 dbQ[10]={-6.0,-4.5,-3.0,-1.5,0,0.3,0.6,1.0,1.5,2.0};
+  //  static const FLOAT8 dbQ[10]={-6.0,-4.5,-3.0,-1.5,0,0.3,0.6,1.0,1.5,2.0};
+  static const FLOAT8 dbQ[10]={-9.0,-7.5,-6.0,-4.5,-3.0,-1.5,-.5,0.3,0.6,1.0};
 
   l3_side = &gfc->l3_side;
-  gfc->ATH_lower = 0;
+  gfc->ATH_lower = (4-gfp->VBR_q)*4.0; 
+  if (gfc->ATH_lower < 0) gfc->ATH_lower=0;
   iteration_init(gfp,l3_side,l3_enc);
 
   gfc->bitrate_index=gfc->VBR_min_bitrate;
@@ -714,9 +733,8 @@ VBR_quantize(lame_global_flags *gfp,
 
   gfc->bitrate_index=gfc->VBR_max_bitrate;
   getframebits(gfp,&bitsPerFrame, &mean_bits);
-  maxbits = ResvFrameBegin(gfp,l3_side, mean_bits, bitsPerFrame);
-  maxbits = maxbits/(gfc->mode_gr*gfc->stereo);
-
+  max_frame_bits = ResvFrameBegin(gfp,l3_side, mean_bits, bitsPerFrame);
+  maxbits=800;
 
   do {
   
@@ -737,7 +755,7 @@ VBR_quantize(lame_global_flags *gfp,
       
       if (pe[gr][ch]>750)
       	masking_lower_db -= 4*(pe[gr][ch]-750.)/750.;
-      if (shortblock) masking_lower_db -=4;
+      //      if (shortblock) masking_lower_db -= 1;
 
       gfc->masking_lower = pow(10.0,masking_lower_db/10);
       VBR_noise_shapping (gfp,xr[gr][ch],&ratio[gr][ch],l3_enc,&ath_over[gr][ch],minbits,scalefac,gr,ch);
@@ -746,9 +764,7 @@ VBR_quantize(lame_global_flags *gfp,
       while (bits > Min(4095,(2+shortblock)*maxbits)) {
 	printf("quality = %f  too large bits:  %i  %i  %i  \n",masking_lower_db,minbits,bits,maxbits);
 
-	masking_lower_db  += .1;
-	if (bits != LARGE_BITS) 
-	  masking_lower_db  += (bits-2*maxbits)/100.0;
+	masking_lower_db  += .25;
 
 	gfc->masking_lower = pow(10.0,masking_lower_db/10);
 	VBR_noise_shapping (gfp,xr[gr][ch],&ratio[gr][ch],l3_enc,&ath_over[gr][ch],minbits,scalefac,gr,ch);
@@ -760,9 +776,9 @@ VBR_quantize(lame_global_flags *gfp,
     }
   }
   bits_ok=1;
-  if (totbits>4*maxbits) {
-    printf("%i Trying again... totbits=%i  maxbits=%i \n",gfp->frameNum,totbits,4*maxbits);
-    quality += .1 + (totbits-4*maxbits)/500.0;
+  if (totbits>max_frame_bits) {
+    printf("%i Trying again... totbits=%i  maxbits=%i \n",gfp->frameNum,totbits,max_frame_bits);
+    quality += Max(.10,(totbits-max_frame_bits)/250.0);
     bits_ok=0;
   }
 
@@ -794,7 +810,7 @@ VBR_quantize(lame_global_flags *gfp,
   //  printf("%i bits=%i maxbits=%i index=%i  \n",gfp->frameNum,totbits,maxbits,gfc->bitrate_index);
   
 
-  for (gr = 0; gr < gfc->mode_gr; gr++)
+  for (gr = 0; gr < gfc->mode_gr; gr++) {
     for (ch = 0; ch < gfc->stereo; ch++) {
       cod_info = &l3_side->gr[gr].ch[ch].tt;
       ResvAdjust (gfp,cod_info, l3_side, mean_bits);
@@ -806,6 +822,7 @@ VBR_quantize(lame_global_flags *gfp,
         if (xr[gr][ch][i] < 0) l3_enc[gr][ch][i] *= -1;
       }
     }
+  }
   ResvFrameEnd (gfp,l3_side, mean_bits);
 }
 

@@ -416,11 +416,10 @@ void lame_init_params(lame_global_flags *gfp)
     /* if the user didn't specify VBR_max_bitrate: */
     if (0==gfp->VBR_max_bitrate_kbps) {
       /* default max bitrate is 256kbs */
-      /* we do not normally allow 320bps frams with VBR, unless: */
-      gfc->VBR_max_bitrate=13;   /* default: allow 256kbs */
+      gfc->VBR_max_bitrate=14;   /* default: allow 320kbs */
       if (gfp->VBR_min_bitrate_kbps>=256) gfc->VBR_max_bitrate=14;
-      if (gfp->VBR_q == 0) gfc->VBR_max_bitrate=14;   /* allow 320kbs */
 #if 0
+      if (gfp->VBR_q == 0) gfc->VBR_max_bitrate=14;   /* allow 320kbs */
       if (gfp->VBR_q >= 4) gfc->VBR_max_bitrate=12;   /* max = 224kbs */
       if (gfp->VBR_q >= 8) gfc->VBR_max_bitrate=9;    /* low quality, max = 128kbs */
 #endif
@@ -1396,6 +1395,7 @@ int lame_init(lame_global_flags *gfp)
   gfc->ms_ener_ratio_old=.25;
   gfc->blocktype_old[0]=STOP_TYPE;
   gfc->blocktype_old[1]=STOP_TYPE;
+
 
   return 0;
 }

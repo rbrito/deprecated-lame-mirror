@@ -776,6 +776,7 @@ format_bitstream(lame_global_flags *gfp, int bitsPerFrame,
 	   l3_side->tt[1][0].part2_3_length +
 	   l3_side->tt[1][1].part2_3_length);
 #endif
+    /* these bits are part of the previous frame */
     drain_into_ancillary(gfp,l3_side->resvDrain_pre);
 
     encodeSideInfo2(gfp,bitsPerFrame);
@@ -785,7 +786,15 @@ format_bitstream(lame_global_flags *gfp, int bitsPerFrame,
     bits += l3_side->resvDrain_post;
 
     l3_side->main_data_begin += (bitsPerFrame-bits)/8;
-    assert( (l3_side->main_data_begin * 8) == gfc->ResvSize );
+    if ((l3_side->main_data_begin * 8) != gfc->ResvSize ) {
+      fprintf(stderr,"bit reservoir error: \n");
+      fprintf(stderr,"l3_side->main_data_begin: %i \n",8*l3_side->main_data_begin);
+      fprintf(stderr,"Resvoir size:             %i \n",gfc->ResvSize);
+      fprintf(stderr,"resv drain (post)         %i \n",l3_side->resvDrain_post);
+      fprintf(stderr,"resv drain (pre)          %i \n",l3_side->resvDrain_pre);
+      fprintf(stderr,"header and sideinfo:      %i \n",8*gfc->sideinfo_len);
+      fprintf(stderr,"data bits:                %i \n",bits-l3_side->resvDrain_post-8*gfc->sideinfo_len);
+    };
 
 
 

@@ -179,10 +179,6 @@ iteration_init( lame_global_flags *gfp,III_side_info_t *l3_side, int l3_enc[2][2
   }
 
 
-  /* dont bother with scfsi. */
-  for ( ch = 0; ch < gfc->stereo; ch++ )
-    for ( i = 0; i < 4; i++ )
-      l3_side->scfsi[ch][i] = 0;
 }
 
 
@@ -1033,30 +1029,27 @@ set_pinfo (lame_global_flags *gfp,
 	pinfo->thr_s[gr][ch][3*sfb+i] = Max(ratio->thm.s[sfb][i],en0*gfc->ATH_s[sfb]);
 	pinfo->en_s[gr][ch][3*sfb+i] = ratio->en.s[sfb][i]; 
 #else
-      /* convert to MDCT units */
-      en1=1e15;  /* scaling so it shows up on FFT plot */
-      pinfo->xfsf_s[gr][ch][3*sfb+i] =  en1*xfsf[i+1][sfb];
-      pinfo->en_s[gr][ch][3*sfb+i] = en1*en0;
-
-      if (ratio->en.s[sfb][i]>0)
-	en0 = en0/ratio->thm.s[sfb][i];
-      else
-	en0=0;
-      pinfo->thr_s[gr][ch][3*sfb+i] = en1*Max(en0*ratio->thm.s[sfb][i],gfc->ATH_s[sfb]);
+	/* convert to MDCT units */
+	en1=1e15;  /* scaling so it shows up on FFT plot */
+	pinfo->xfsf_s[gr][ch][3*sfb+i] =  en1*xfsf[i+1][sfb];
+	pinfo->en_s[gr][ch][3*sfb+i] = en1*en0;
+	
+	if (ratio->en.s[sfb][i]>0)
+	  en0 = en0/ratio->thm.s[sfb][i];
+	else
+	  en0=0;
+	pinfo->thr_s[gr][ch][3*sfb+i] = en1*Max(en0*ratio->thm.s[sfb][i],gfc->ATH_s[sfb]);
 #endif
-
+	
 	/* there is no scalefactor bands >= SBPSY_s */
-	if (sfb < SBPSY_s) 
+	if (sfb < SBPSY_s) {
 	  pinfo->LAMEsfb_s[gr][ch][3*sfb+i]=
 	    -ifqstep*scalefac->s[sfb][i];
-	else
+	} else {
 	  pinfo->LAMEsfb_s[gr][ch][3*sfb+i]=0;
-	
-	pinfo->LAMEsfb_s[gr][ch][3*sfb+i] -=
-	  -2*cod_info->subblock_gain[i];
-
+	}
+	pinfo->LAMEsfb_s[gr][ch][3*sfb+i] -= 2*cod_info->subblock_gain[i];
       }
-      pinfo->LAMEsfb_s[gr][ch][3*sfb+i]=-2*cod_info->subblock_gain[i];
     }
   }else{
     for ( sfb = 0; sfb < SBMAX_l; sfb++ )   {
@@ -1091,10 +1084,14 @@ set_pinfo (lame_global_flags *gfp,
 
 
       /* there is no scalefactor bands >= SBPSY_l */
-      if (sfb<SBPSY_l)
-	pinfo->LAMEsfb[gr][ch][sfb]=-ifqstep*scalefac->l[sfb];
-      else
+      if (sfb<SBPSY_l) {
+	if (scalefac->s[sfb]<0)  /* scfsi! */
+	  pinfo->LAMEsfb[gr][ch][sfb]=pinfo->LAMEsfb[0][ch][sfb];
+	else
+	  pinfo->LAMEsfb[gr][ch][sfb]=-ifqstep*scalefac->l[sfb];
+      }else{
 	pinfo->LAMEsfb[gr][ch][sfb]=0;
+      }
 
       if (cod_info->preflag && sfb>=11) 
 	pinfo->LAMEsfb[gr][ch][sfb]-=ifqstep*pretab[sfb];
