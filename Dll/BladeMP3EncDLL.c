@@ -244,7 +244,7 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 	BE_CONFIG	lameConfig;
 
 	// Init the global flags structure
-    lame_init(&gf);
+	lame_init_old(&gf);
 
 	// clear out structure
 	memset(&lameConfig,0x00,CURRENT_STRUCT_SIZE);

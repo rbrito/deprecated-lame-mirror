@@ -44,8 +44,6 @@
 * The internal representation of PCM samples in type 'sample_t',
   currently this is a FLOAT.
 
-* Use the 'const' attribute if you don't intend to change the variable.
-
 * Use SI base units. Lame mixes Hz, kHz, kbps, bps. This is mess.
 
   Example:
