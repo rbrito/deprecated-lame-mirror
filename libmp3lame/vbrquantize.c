@@ -640,7 +640,7 @@ VBR_quantize_granule(
     }
   
     /* quantize xr34 */
-    cod_info->part2_3_length = count_bits(gfc,cod_info->l3_enc,xr34,cod_info);
+    cod_info->part2_3_length = count_bits(gfc, xr34, cod_info);
     if (cod_info->part2_3_length >= LARGE_BITS) return -2;
     cod_info->part2_3_length += cod_info->part2_length;
 
@@ -1349,14 +1349,14 @@ do {
     if (cod_info->part2_3_length < minbits) {
         huffbits = minbits - cod_info->part2_length;
         bits = bin_search_StepSize (gfc, cod_info, huffbits, 
-                                    gfc->OldValue[ch], xr34, cod_info->l3_enc);
+                                    gfc->OldValue[ch], xr34);
         gfc->OldValue[ch] = cod_info->global_gain;
     }
     if (cod_info->part2_3_length > maxbits) {
         huffbits = maxbits - cod_info->part2_length;
         if (huffbits < 0) huffbits = 0;
         bits = bin_search_StepSize (gfc, cod_info, huffbits, 
-                                    gfc->OldValue[ch], xr34, cod_info->l3_enc);
+                                    gfc->OldValue[ch], xr34);
         gfc->OldValue[ch] = cod_info->global_gain;
         if (bits >= LARGE_BITS) /* Houston, we have a problem */
             return -2;

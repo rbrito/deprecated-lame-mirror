@@ -70,7 +70,7 @@ void    reduce_side (int targ_bits[2], FLOAT8 ms_ener_ratio, int mean_bits,
 
 int     bin_search_StepSize (lame_internal_flags * const gfc, gr_info * const cod_info,
                              const int desired_rate, const int start,
-                             const FLOAT8 xrpow[576], int l3enc[576]);
+                             const FLOAT8 xrpow[576]);
 
 void    iteration_init (lame_global_flags *gfp);
 
@@ -97,7 +97,7 @@ void    quantize_xrpow_ISO (const FLOAT8 *xr, int *ix, FLOAT8 istep);
 
 /* takehiro.c */
 
-int     count_bits (lame_internal_flags * const gfc, int * const ix, const FLOAT8 * const xr,
+int     count_bits (lame_internal_flags * const gfc, const FLOAT8 * const xr,
                     gr_info * const cod_info);
 
 

@@ -314,12 +314,12 @@ static int choose_table_nonMMX(
 
 int count_bits(
           lame_internal_flags * const gfc, 
-          int     * const ix,
     const FLOAT8  * const xr,
           gr_info * const gi)  
 {
     int bits = 0;
     int i, a1, a2;
+    int *const ix = gi->l3_enc;
     /* since quantize_xrpow uses table lookup, we need to check this first: */
     FLOAT8 w = (IXMAX_VAL) / IPOW20(gi->global_gain);
     for ( i = 0; i < 576; i++ )  {

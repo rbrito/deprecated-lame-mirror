@@ -184,8 +184,7 @@ bin_search_StepSize(
           gr_info * const cod_info,
     const int             desired_rate, 
     const int             start, 
-    const FLOAT8          xrpow [576],
-          int             l3enc [576] ) 
+    const FLOAT8          xrpow [576] ) 
 {
     int nBits;
     int CurrentStep;
@@ -198,7 +197,7 @@ bin_search_StepSize(
 
     do {
         cod_info->global_gain = StepSize;
-        nBits = count_bits(gfc,l3enc,xrpow,cod_info);  
+        nBits = count_bits(gfc, xrpow, cod_info);  
 
         if (CurrentStep == 1) break; /* nothing to adjust anymore */
     
@@ -233,7 +232,7 @@ bin_search_StepSize(
 
     if (nBits > desired_rate) {
 	cod_info->global_gain++;
-	nBits = count_bits(gfc,l3enc,xrpow,cod_info);  
+	nBits = count_bits(gfc, xrpow, cod_info);  
     }
     cod_info->part2_3_length = nBits;
     return nBits;
@@ -252,13 +251,12 @@ bin_search_StepSize(
  *
  ***************************************************************************/ 
 
-static int 
+static void
 inner_loop(
           lame_internal_flags * const gfc,
           gr_info * const cod_info,
     const int             max_bits,
-    const FLOAT8          xrpow [576],
-          int             l3enc [576] )
+    const FLOAT8          xrpow [576])
 {
     int bits;
     
@@ -266,16 +264,16 @@ inner_loop(
 
     /*  scalefactors may have changed, so count bits
      */
-    bits=count_bits(gfc,l3enc,xrpow,cod_info);
+    bits=count_bits(gfc, xrpow, cod_info);
 
     /*  increase quantizer stepsize until needed bits are below maximum
      */
     while (bits > max_bits) {
         cod_info->global_gain++;
-        bits = count_bits (gfc, l3enc, xrpow, cod_info);
+        bits = count_bits (gfc, xrpow, cod_info);
     } 
 
-    return bits;
+    cod_info->part2_3_length = bits;
 }
 
 
@@ -782,8 +780,7 @@ outer_loop (
 
     int age;
 
-    bin_search_StepSize (gfc, cod_info, targ_bits, 
-			 gfc->OldValue[ch], xrpow, cod_info->l3_enc);
+    bin_search_StepSize (gfc, cod_info, targ_bits, gfc->OldValue[ch], xrpow);
     gfc->OldValue[ch] = cod_info->global_gain;
 
     if (!gfc->noise_shaping) 
@@ -839,8 +836,7 @@ outer_loop (
         if (huff_bits < 0)
             break;
 
-        cod_info_w.part2_3_length = 
-	    inner_loop (gfc, &cod_info_w, huff_bits, xrpow, cod_info_w.l3_enc);
+	inner_loop (gfc, &cod_info_w, huff_bits, xrpow);
 
         /* compute the distortion in this quantization */
 	over = calc_noise (gfc, cod_info_w.l3_enc, &cod_info_w, l3_xmin, 
