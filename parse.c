@@ -289,10 +289,21 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	  gfp->input_format=sf_mp3;
 	}
 	else if (strcmp(token, "ogginput")==0) {
+#ifdef HAVEVORBIS
 	  gfp->input_format=sf_ogg;
+#else
+	  fprintf(stderr,"Error: LAME not compiled with Vorbis support\n");
+	  exit(1);
+#endif
 	}
 	else if (strcmp(token, "ogg")==0) {
+#ifdef HAVEVORBIS
 	  gfp->ogg=1;
+#else
+	  fprintf(stderr,"Error: LAME not compiled with Vorbis support\n");
+	  exit(1);
+#endif
+
 	}
 	else if (strcmp(token, "voice")==0) {
 	  gfp->lowpassfreq=12000;

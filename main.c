@@ -53,6 +53,9 @@ int main(int argc, char **argv)
    * skip this call and set the values of interest in the gf struct.
    * (see lame.h for documentation about these parameters)
    */
+#ifdef ONLYVORBIS
+  gf.ogg=1;
+#endif
   lame_parse_args(&gf,argc, argv);
 
 

@@ -299,6 +299,30 @@ int lame_decode_ogg_fromfile(FILE *fd,short int pcm_l[],short int pcm_r[],mp3dat
 
 
 
+
+
+
+
+
+
+
+
+
+
+ogg_stream_state os2; /* take physical pages, weld into a logical
+			stream of packets */
+ogg_page         og2; /* one Ogg bitstream page.  Vorbis packets are inside */
+ogg_packet       op2; /* one raw packet of data for decode */
+
+vorbis_info      vi2; /* struct that stores all the static vorbis bitstream
+			settings */
+vorbis_comment   vc2; /* struct that stores all the bitstream user comments */
+vorbis_dsp_state vd2; /* central working state for the packet->PCM decoder */
+vorbis_block     vb2; /* local working space for packet->PCM decode */
+
+
+
+
 int lame_encode_ogg_init(lame_global_flags *gfp)
 {
   lame_internal_flags *gfc=gfp->internal_flags;
@@ -308,24 +332,24 @@ int lame_encode_ogg_init(lame_global_flags *gfp)
   
   /* choose an encoding mode */
   /* (mode 0: 44kHz stereo uncoupled, roughly 128kbps VBR) */
-  memcpy(&vi,&info_A,sizeof(vi));
-  vi.channels = gfc->stereo;
-  vi.rate = gfp->out_samplerate;
+  memcpy(&vi2,&info_A,sizeof(vi));
+  vi2.channels = gfc->stereo;
+  vi2.rate = gfp->out_samplerate;
 
   
   /* add a comment */
-  vorbis_comment_init(&vc);
-  vorbis_comment_add(&vc,"Track encoded using L.A.M.E. libvorbis interface.");
+  vorbis_comment_init(&vc2);
+  vorbis_comment_add(&vc2,"Track encoded using L.A.M.E. libvorbis interface.");
   
   /* set up the analysis state and auxiliary encoding storage */
-  vorbis_analysis_init(&vd,&vi);
-  vorbis_block_init(&vd,&vb);
+  vorbis_analysis_init(&vd2,&vi2);
+  vorbis_block_init(&vd2,&vb2);
   
   /* set up our packet->stream encoder */
   /* pick a random serial number; that way we can more likely build
      chained streams just by concatenation */
   srand(time(NULL));
-  ogg_stream_init(&os,rand());
+  ogg_stream_init(&os2,rand());
   
   /* Vorbis streams begin with three headers; the initial header (with
      most of the codec setup parameters) which is mandated by the Ogg
@@ -339,11 +363,11 @@ int lame_encode_ogg_init(lame_global_flags *gfp)
     ogg_packet header_comm;
     ogg_packet header_code;
     
-    vorbis_analysis_headerout(&vd,&vc,&header,&header_comm,&header_code);
-    ogg_stream_packetin(&os,&header); /* automatically placed in its own
+    vorbis_analysis_headerout(&vd2,&vc2,&header,&header_comm,&header_code);
+    ogg_stream_packetin(&os2,&header); /* automatically placed in its own
 					 page */
-    ogg_stream_packetin(&os,&header_comm);
-    ogg_stream_packetin(&os,&header_code);
+    ogg_stream_packetin(&os2,&header_comm);
+    ogg_stream_packetin(&os2,&header_code);
     
     /* no need to write out here.  We'll get to that in the main loop */
   }
@@ -358,19 +382,19 @@ int lame_encode_ogg_finish(lame_global_flags *gfp,
 {
   int eos=0,bytes=0;
 
-  vorbis_analysis_wrote(&vd,0);
+  vorbis_analysis_wrote(&vd2,0);
 
-  while(vorbis_analysis_blockout(&vd,&vb)==1){
+  while(vorbis_analysis_blockout(&vd2,&vb2)==1){
     
     /* analysis */
-    vorbis_analysis(&vb,&op);
+    vorbis_analysis(&vb2,&op2);
 
       /* weld the packet into the bitstream */
-      ogg_stream_packetin(&os,&op);
+      ogg_stream_packetin(&os2,&op2);
 
       /* write out pages (if any) */
       while(!eos){
-	int result=ogg_stream_pageout(&os,&og);
+	int result=ogg_stream_pageout(&os2,&og2);
 	if(result==0)break;
 
 
@@ -384,16 +408,16 @@ int lame_encode_ogg_finish(lame_global_flags *gfp,
 
 	/* this could be set above, but for illustrative purposes, I do
 	   it here (to show that vorbis does know where the stream ends) */
-	if(ogg_page_eos(&og))eos=1;
+	if(ogg_page_eos(&og2))eos=1;
 
       }
     }
 
 
   /* clean up and exit.  vorbis_info_clear() must be called last */
-  ogg_stream_clear(&os);
-  vorbis_block_clear(&vb);
-  vorbis_dsp_clear(&vd);
+  ogg_stream_clear(&os2);
+  vorbis_block_clear(&vb2);
+  vorbis_dsp_clear(&vd2);
 
   
   /* ogg_page and ogg_packet structs always point to storage in
@@ -415,7 +439,7 @@ int lame_encode_ogg_frame(lame_global_flags *gfp,
   int bytes=0;
   
   /* expose the buffer to submit data */
-  double **buffer=vorbis_analysis_buffer(&vd,gfp->framesize);
+  double **buffer=vorbis_analysis_buffer(&vd2,gfp->framesize);
   
   /* uninterleave samples */
   for(i=0;i<gfp->framesize;i++){
@@ -425,22 +449,22 @@ int lame_encode_ogg_frame(lame_global_flags *gfp,
   }
   
   /* tell the library how much we actually submitted */
-  vorbis_analysis_wrote(&vd,i);
+  vorbis_analysis_wrote(&vd2,i);
 
   /* vorbis does some data preanalysis, then divvies up blocks for
      more involved (potentially parallel) processing.  Get a single
      block for encoding now */
-  while(vorbis_analysis_blockout(&vd,&vb)==1){
+  while(vorbis_analysis_blockout(&vd2,&vb2)==1){
     int result;
     /* analysis */
-    vorbis_analysis(&vb,&op);
+    vorbis_analysis(&vb2,&op2);
     
     /* weld the packet into the bitstream */
-    ogg_stream_packetin(&os,&op);
+    ogg_stream_packetin(&os,&op2);
     
     /* write out pages (if any) */
     do {
-      result=ogg_stream_pageout(&os,&og);
+      result=ogg_stream_pageout(&os,&og2);
       if (result==0) break;
 	
       /* check if mp3buffer is big enough for the output */
@@ -457,7 +481,7 @@ int lame_encode_ogg_frame(lame_global_flags *gfp,
       memcpy(mp3buf+og.header_len,og.body,og.body_len);
       mp3buf += og.header_len + og.body_len;
       
-      if(ogg_page_eos(&og))eos=1;
+      if(ogg_page_eos(&og2))eos=1;
     } while (1);
   }
   gfp->frameNum++;
