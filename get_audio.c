@@ -735,18 +735,6 @@ int read_samples_pcm(lame_global_flags *gfp,short sample_buffer[2304], int frame
 #define WAV_ID_FMT  0x666d7420 /* "fmt " */
 #define WAV_ID_DATA 0x64617461 /* "data" */
 
-typedef struct fmt_chunk_data_struct {
-	short	format_tag;			 /* Format category */
-	u_short channels;			 /* Number of channels */
-	u_long	samples_per_sec;	 /* Sampling rate */
-	u_long	avg_bytes_per_sec;	 /* For buffer estimation */
-	u_short block_align;		 /* Data block size */
-	u_short bits_per_sample;	 /* for PCM data, anyway... */
-} fmt_chunk_data;
-
-
-
-
 
 
 
@@ -763,12 +751,17 @@ static int
 parse_wave_header(lame_global_flags *gfp,FILE *sf)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
-	fmt_chunk_data wave_info;
+        int format_tag=0;
+        int channels=0;
+	int block_align=0;
+	int bits_per_sample=0;
+        unsigned int samples_per_sec=0;
+        unsigned int avg_bytes_per_sec=0;
+	
+
 	int is_wav = 0;
 	long data_length = 0, file_length, subSize = 0;
 	int loop_sanity = 0;
-
-	memset(&wave_info, 0, sizeof(wave_info));
 
 	file_length = Read32BitsHighLow(sf);
 
@@ -776,7 +769,7 @@ parse_wave_header(lame_global_flags *gfp,FILE *sf)
 		return 0;
 
 	for (loop_sanity = 0; loop_sanity < 20; ++loop_sanity) {
-		u_int type = Read32BitsHighLow(sf);
+		int type = Read32BitsHighLow(sf);
 
 		if (type == WAV_ID_FMT) {
 			subSize = Read32BitsLowHigh(sf);
@@ -786,17 +779,17 @@ parse_wave_header(lame_global_flags *gfp,FILE *sf)
 				return 0;
 			}
 
-			wave_info.format_tag		= Read16BitsLowHigh(sf);
+			format_tag		= Read16BitsLowHigh(sf);
 			subSize -= 2;
-			wave_info.channels			= Read16BitsLowHigh(sf);
+			channels			= Read16BitsLowHigh(sf);
 			subSize -= 2;
-			wave_info.samples_per_sec	= Read32BitsLowHigh(sf);
+			samples_per_sec	= Read32BitsLowHigh(sf);
 			subSize -= 4;
-			wave_info.avg_bytes_per_sec = Read32BitsLowHigh(sf);
+			avg_bytes_per_sec = Read32BitsLowHigh(sf);
 			subSize -= 4;
-			wave_info.block_align		= Read16BitsLowHigh(sf);
+			block_align		= Read16BitsLowHigh(sf);
 			subSize -= 2;
-			wave_info.bits_per_sample	= Read16BitsLowHigh(sf);
+			bits_per_sample	= Read16BitsLowHigh(sf);
 			subSize -= 2;
 
 			/* DEBUGF("   skipping %d bytes\n", subSize); */
@@ -821,10 +814,10 @@ parse_wave_header(lame_global_flags *gfp,FILE *sf)
 
 	if (is_wav) {
 		/* make sure the header is sane */
-		gfp->num_channels  = wave_info.channels;
-		gfp->in_samplerate = wave_info.samples_per_sec;
-		gfc->pcmbitwidth = wave_info.bits_per_sample;
-		gfp->num_samples   = data_length / (wave_info.channels * wave_info.bits_per_sample / 8);
+		gfp->num_channels  = channels;
+		gfp->in_samplerate = samples_per_sec;
+		gfc->pcmbitwidth = bits_per_sample;
+		gfp->num_samples   = data_length / (channels * bits_per_sample / 8);
 	}
 	return is_wav;
 }
@@ -899,10 +892,8 @@ parse_aiff_header(lame_global_flags *gfp,FILE *sf)
 
 	while ( chunkSize > 0 )
 	{
-		u_int type = 0;
+		int type = Read32BitsHighLow(sf);
 		chunkSize -= 4;
-
-		type = Read32BitsHighLow(sf);
 
 		/* DEBUGF(
 			"found chunk type %08x '%4.4s'\n", type, (char*)&type); */
@@ -983,8 +974,7 @@ void parse_file_header(lame_global_flags *gfp,FILE *sf)
 {
   lame_internal_flags *gfc=gfp->internal_flags;
 
-	u_int type = 0;
-	type = Read32BitsHighLow(sf);
+	int type = Read32BitsHighLow(sf);
 	/*
 	DEBUGF(
 		"First word of input stream: %08x '%4.4s'\n", type, (char*) &type); 

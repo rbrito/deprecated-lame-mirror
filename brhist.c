@@ -123,9 +123,9 @@ void brhist_add_count( lame_global_flags *gfp, int i)
 void brhist_disp ( lame_global_flags *gfp )
 {
 #ifdef BRHIST
-    u_int   i;
-    u_int   ppt=0;
-    u_long  full;
+    int   i;
+    int   ppt=0;
+    unsigned long  full;
     int     barlen;
     char    brppt [16];
     

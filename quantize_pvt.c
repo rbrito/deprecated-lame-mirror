@@ -26,10 +26,6 @@
 #include "reservoir.h"
 #include "quantize_pvt.h"
 
-/* if your machine is IEEE754 compatible, this may make faster binary */
-#if (defined(__i386__))
-#define TAKEHIRO_IEEE754_HACK
-#endif
 
 #define NSATHSCALE 100 // Assuming dynamic range=96dB, this value should be 92
 
@@ -458,8 +454,7 @@ int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576], III_psy_ratio *ratio,
 	       gr_info *cod_info, III_psy_xmin *l3_xmin)
 {
   lame_internal_flags *gfc=gfp->internal_flags;
-  int j,start, end, bw,l, b, ath_over=0;
-  u_int	sfb;
+  int sfb,j,start, end, bw,l, b, ath_over=0;
   FLOAT8 en0, xmin, ener;
 
   if (cod_info->block_type==SHORT_TYPE) {
@@ -554,8 +549,7 @@ int calc_noise( lame_global_flags *gfp,
 		 III_psy_xmin *l3_xmin, III_scalefac_t *scalefac,
 		 calc_noise_result *res)
 {
-  int start, end, j,l, i, over=0;
-  u_int sfb;
+  int sfb,start, end, j,l, i, over=0;
   FLOAT8 sum, bw;
   lame_internal_flags *gfc=gfp->internal_flags;
   
@@ -578,7 +572,7 @@ int calc_noise( lame_global_flags *gfp,
         distort[2][SBMAX_s-1] =
         distort[3][SBMAX_s-1] = 0;
       }
-    for ( j=0, sfb = 0; sfb < (u_int)max_index; sfb++ ) {
+    for ( j=0, sfb = 0; sfb < max_index; sfb++ ) {
          start = gfc->scalefac_band.s[ sfb ];
          end   = gfc->scalefac_band.s[ sfb+1 ];
          bw = end - start;
@@ -628,7 +622,7 @@ int calc_noise( lame_global_flags *gfp,
       {
         distort[0][SBMAX_l-1] = 0;
       }
-    for ( sfb = 0; sfb < (u_int)max_index; sfb++ ) {
+    for ( sfb = 0; sfb < max_index; sfb++ ) {
 	FLOAT8 step;
 	int s = scalefac->l[sfb];
 
@@ -922,7 +916,15 @@ void set_pinfo (
  *    Mathew Hendry <scampi@dial.pipex.com> 11/1999
  *    Acy Stapp <AStapp@austin.rr.com> 11/1999
  *    Takehiro Tominaga <tominaga@isoternet.org> 11/1999
+ * 9/00: ASM code removed in favor of IEEE754 hack.  If you need
+ * the ASM code, check CVS circa Aug 2000.  
  *********************************************************************/
+
+
+/* if your machine is IEEE754 compatible, this may make faster binary */
+#if (defined(__i386__))
+#define TAKEHIRO_IEEE754_HACK
+#endif
 
 #ifdef TAKEHIRO_IEEE754_HACK
 
@@ -1001,10 +1003,14 @@ void quantize_xrpow_ISO(FLOAT8 xp[576], int pi[576], gr_info *cod_info)
  *
  * if XRPOW_FTOI(x) = floor(x), then QUANTFAC(x)=asj43[x]   
  *                                   ROUNDFAC=0.4054
+ *
+ * Note: using floor() or (int) is extermely slow. On machines where
+ * the TAKEHIRO_IEEE754_HACK code above does not work, it is worthwile
+ * to write some ASM for XRPOW_FTOI().  
  *********************************************************************/
+#define XRPOW_FTOI(src,dest) ((dest) = (int)(src))
 #define QUANTFAC(rx)  adj43[rx]
 #define ROUNDFAC 0.4054
-#define XRPOW_FTOI(src,dest) ((dest) = (int)(src))
 
 
 void quantize_xrpow(FLOAT8 xr[576], int ix[576], gr_info *cod_info) {

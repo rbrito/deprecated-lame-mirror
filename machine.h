@@ -83,6 +83,7 @@
 //#	pragma warning( disable : 4305 )
 #endif
 
+
 #if ( defined(_MSC_VER) || defined(__BORLANDC__) || defined(__MINGW32__) )
 #	define WIN32_LEAN_AND_MEAN
 #	include <windows.h>
@@ -90,65 +91,59 @@
 	typedef float FLOAT;
 #endif
 
+/*
 
-/* MH: the x86 asm quantization routines in quantize-pvt.c
+FLOAT    for variables which require at least 32bits
+FLOAT8   for variables which require at least 64bits
+
+On some machines, 64bit will be faster than 32bit.  Also, some math
+routines require 64bit float, so setting FLOAT=float will result in a
+lot of conversions.
+
+   MH: the x86 asm quantization routines in quantize-pvt.c
    are designed to work only with 8-byte doubles or 4-byte
    floats. if you use a different type (e.g. 10-byte extended
    precision long doubles, as supported by ICL), you will need
-   to disable the ASM routines (or fix them :) */
+   to disable the ASM routines (or fix them :) 
+*/
 
 /* NOTE: RH: 7/00:  if FLOAT8=float, it breaks resampling and VBR code */
-#ifdef FLOAT8_is_double
-	typedef double FLOAT8;
+typedef double FLOAT8;
+
+
+
+/*
+Various integer types 
+ */
+
+#if defined _WIN32 && !defined __CYGWIN__
+	typedef unsigned char	u_char;
+#       define int64 __int64
+
+#elif defined __DECALPHA__
+/*       do nothing */
+
+#elif defined OS_AMIGAOS
+/*       do nothing */
+
+#elif defined __DJGPP__
+	typedef unsigned char	u_char;
+
+#elif !defined __GNUC__ || defined __STRICT_ANSI__
+	typedef unsigned char	u_char;
+
 #else
-	#if defined(FLOAT8_is_float)
-		typedef float FLOAT8;
-	#else
-		typedef double FLOAT8;
-		#define FLOAT8_is_double
-	#endif
+#define int64 long long
 #endif
+
+
+
+
 
 /* sample_t must be floating point, at least 32 bits */
 typedef FLOAT sample_t;
 typedef sample_t          stereo_t [2];
 
 
-
-
-#if defined _WIN32 && !defined __CYGWIN__
-	typedef unsigned long	u_long;
-	typedef unsigned int	u_int;
-	typedef unsigned short	u_short;
-	typedef unsigned char	u_char;
-	typedef short  int	int16_t;
-#elif defined __DECALPHA__
-/*       do nothing */
-#elif defined OS_AMIGAOS
-/*       do nothing */
-#elif defined __DJGPP__
-	typedef unsigned long	u_long;
-	typedef unsigned int	u_int;
-	typedef unsigned short	u_short;
-	typedef unsigned char	u_char;
-#elif !defined __GNUC__ || defined __STRICT_ANSI__
-	typedef unsigned long	u_long;
-	typedef unsigned int	u_int;
-	typedef unsigned short	u_short;
-	typedef unsigned char	u_char;
-#endif
-
-
-
-
-#if defined _WIN32 && !defined __CYGWIN__
-#define int64 __int64
-#elif defined __DECALPHA__
-/* do nothing */
-#elif defined OS_AMIGAOS
-/* do nothing */
-#else
-#define int64 long long
-#endif
 
 #endif

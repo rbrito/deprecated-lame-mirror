@@ -7,7 +7,7 @@
 #include "lame.h"
 #include "util.h"
 
-int16_t convbuffer[4096]; /* take 8k out of the data segment, not the stack */
+short int convbuffer[4096]; /* take 8k out of the data segment, not the stack */
 int convsize;
 
 ogg_sync_state   oy; /* sync and verify incoming physical bitstream */

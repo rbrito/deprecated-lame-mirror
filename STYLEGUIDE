@@ -23,6 +23,9 @@
   so you can assume int is at least 32 bits.  Dont use 'long'.
   Only used 'unsigned' attribute unless absolutely necessary.
   If 64 bits is required, use int64.
+  If an integer requires exactly 32 bits (like in DetermineEndian())
+  use int32
+
 
 * Don't use single 'short' variables to save storage.
   Short variables are especially on Pentium Class Computer much slower than

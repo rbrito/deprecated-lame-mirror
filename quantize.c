@@ -235,10 +235,9 @@ int loop_break
     III_scalefac_t *scalefac 
 ) 
 {
-    int i;
-    u_int sfb;
+    int i,sfb;
 
-    for (sfb = 0; sfb < (u_int)cod_info->sfb_lmax; sfb++)
+    for (sfb = 0; sfb < cod_info->sfb_lmax; sfb++)
         if (scalefac->l[sfb] == 0)
             return 0;
 
@@ -364,8 +363,7 @@ void amp_scalefac_bands
 )
 #ifndef RH_AMP
 {
-  int start, end, l,i,j;
-  u_int sfb;
+  int start, end, l,i,j,sfb;
   FLOAT8 ifqstep34,distort_thresh;
   lame_internal_flags *gfc=gfp->internal_flags;
 
@@ -379,7 +377,7 @@ void amp_scalefac_bands
    * In that case, just amplify bands with distortion
    * within 95% of largest distortion/masking ratio */
   distort_thresh = -900;
-  for ( sfb = 0; sfb < (u_int)cod_info->sfb_lmax; sfb++ ) {
+  for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
     distort_thresh = Max(distort[0][sfb],distort_thresh);
   }
 
@@ -394,7 +392,7 @@ void amp_scalefac_bands
     distort_thresh *= .95;
 
 
-  for ( sfb = 0; sfb < (u_int)cod_info->sfb_lmax; sfb++ ) {
+  for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
     if ( distort[0][sfb]>distort_thresh  ) {
       scalefac->l[sfb]++;
       start = gfc->scalefac_band.l[sfb];
