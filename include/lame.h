@@ -558,9 +558,13 @@ int CDECL lame_encode_buffer_long(
                                               stream                        */
 
 /* as lame_encode_buffer, but for int's 
- * !! NOTE: !! what range should the input data have?
- * internally we need to scale to +/- 32768 before converting to floating
- * point.  we should probably remove this routine.  
+ * !! NOTE: !! input should be scaled to the maximum range of 'int'
+ * If int is 4 bytes, then the values should range from
+ * +/- 2147483648.  
+ *
+ * This routine does not (and cannot, without loosing precision) use
+ * the same scaling as the rest of the lame_encode_buffer() routines.
+ * 
  */   
 int CDECL lame_encode_buffer_int(
         lame_global_flags*  gfp,           /* global context handle         */
