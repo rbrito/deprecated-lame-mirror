@@ -534,11 +534,11 @@ no)
 *)
 	AC_MSG_CHECKING(for assembler routines for this processor type)
 	for recurse_over in ${ASM_FOR_ARCH}
-	{
+	do
 		if test "${CPUTYPE}" = "${recurse_over}"; then
 			include_asm_routines="yes"
 		fi
-	}
+	done
 	if test "x${include_asm_routines}" = "xyes"; then
 		AC_DEFINE(HAVE_NASM, 1, have nasm)
 		AC_DEFINE(MMX_choose_table, 1, use MMX version of choose_table)
