@@ -37,7 +37,7 @@
 
 // lame_enc DLL version number
 const int MAJORVERSION = 1;
-const int MINORVERSION = 31;
+const int MINORVERSION = 32;
 
 
 // Local variables
@@ -422,28 +422,63 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 
 		if ( lameConfig.format.LHV1.bEnableVBR )
 		{
-			lame_set_VBR( gfp, vbr_default );
-
+			/* set VBR quality */
 			lame_set_VBR_q( gfp, lameConfig.format.LHV1.nVBRQuality );
+
+			/* select proper VBR method */
+			switch ( lameConfig.format.LHV1.nVbrMethod)
+			{
+				case VBR_METHOD_NONE:
+					lame_set_VBR( gfp, vbr_off );
+				break;
+
+				case VBR_METHOD_DEFAULT:
+					lame_set_VBR( gfp, vbr_default ); 
+				break;
+
+				case VBR_METHOD_OLD:
+					lame_set_VBR( gfp, vbr_rh ); 
+				break;
+
+				case VBR_METHOD_MTRH:
+				case VBR_METHOD_NEW:
+					/*                                
+					 * the --vbr-mtrh commandline switch is obsolete. 
+					 * now --vbr-mtrh is known as --vbr-new
+					 */
+					lame_set_VBR( gfp, vbr_mtrh ); 
+				break;
+
+				case VBR_METHOD_ABR:
+					lame_set_VBR( gfp, vbr_abr ); 
+				break;
+
+				default:
+					/* unsupported VBR method */
+					assert( FALSE );
+			}
 		}
 		else
 		{
+			/* use CBR encoding method, so turn off VBR */
 			lame_set_VBR( gfp, vbr_off );
 		}
 
-		// Set bitrate.  (CDex users always specify bitrate=Min bitrate when using VBR)
+		/* Set bitrate.  (CDex users always specify bitrate=Min bitrate when using VBR) */
 		lame_set_brate( gfp, lameConfig.format.LHV1.dwBitrate );
 			
-		// Use ABR?
-		if (lameConfig.format.LHV1.dwVbrAbr_bps>0)
+		/* check if we have to use ABR, in order to backwards compatible, this
+		 * condition should still be checked indepedent of the nVbrMethod method
+		 */
+		if (lameConfig.format.LHV1.dwVbrAbr_bps > 0 )
 		{
-			// set VBR to ABR
+			/* set VBR method to ABR */
 			lame_set_VBR( gfp, vbr_abr );
 
-			// calculate to kbps
+			/* calculate to kbps, round to nearest kbps */
 			lame_set_VBR_mean_bitrate_kbps( gfp, ( lameConfig.format.LHV1.dwVbrAbr_bps + 500 ) / 1000 );
 
-			// limit range
+			/* limit range */
 			if( lame_get_VBR_mean_bitrate_kbps( gfp ) > 320)
 			{
 				lame_set_VBR_mean_bitrate_kbps( gfp, 320 );
@@ -455,50 +490,12 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 			}
 		}
 
-		// Use VBR?
-		if ( lameConfig.format.LHV1.bEnableVBR )
-		{
-			switch ( lameConfig.format.LHV1.nVbrMethod)
-			{
-				case VBR_METHOD_NONE:
-					lame_set_VBR( gfp, vbr_off );
-					break;
-
-				case VBR_METHOD_DEFAULT:
-					lame_set_VBR( gfp, vbr_default ); 
-					break;
-
-				case VBR_METHOD_OLD:
-					lame_set_VBR( gfp, vbr_rh ); 
-					break;
-
-				case VBR_METHOD_NEW:
-/*                                
-					lame_set_VBR( gfp, vbr_mt ); 
-					break;
-the --vbr-mtrh commandline switch is obsolete. 
-now --vbr-mtrh is known as --vbr-new
-*/
-				case VBR_METHOD_MTRH:
-					lame_set_VBR( gfp, vbr_mtrh ); 
-					break;
-
-				case VBR_METHOD_ABR:
-					lame_set_VBR( gfp, vbr_abr ); 
-					break;
-
-				default:
-					assert( FALSE );
-
-			}
-		}
-
 	}
 
     // First set all the preset options
     if ( LQP_NOPRESET !=  lameConfig.format.LHV1.nPreset )
     {
-    PresetOptions( gfp, lameConfig.format.LHV1.nPreset );
+		PresetOptions( gfp, lameConfig.format.LHV1.nPreset );
     }
 
 
@@ -514,7 +511,8 @@ now --vbr-mtrh is known as --vbr-new
 		case BE_MP3_MODE_MONO:
 			lame_set_mode( gfp, MONO );
 			lame_set_num_channels( gfp, 1 );
-			break;
+		break;
+
 		default:
             break;
 	}
