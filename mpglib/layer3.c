@@ -346,8 +346,10 @@ static void III_get_side_info_1(struct III_sideinfo *si,int stereo,
 	 unsigned int qss = getbits_fast(8);
 	 gr_info->pow2gain = gainpow2+256 - qss + powdiff;
 #ifdef HAVEGTK
-	 if (gtkflag) 
+	 if (gtkflag) {
 	   pinfo->qss[gr][ch]=qss;
+	   pinfo->big_values[gr][ch]=gr_info->big_values;
+	 }
 #endif
        }
        if(ms_stereo)
@@ -439,8 +441,10 @@ static void III_get_side_info_2(struct III_sideinfo *si,int stereo,
        qss=getbits_fast(8);
        gr_info->pow2gain = gainpow2+256 - qss + powdiff;
 #ifdef HAVEGTK
-	 if (gtkflag) 
+       if (gtkflag) {
 	   pinfo->qss[0][ch]=qss;
+	   pinfo->big_values[0][ch]=gr_info->big_values;
+       }
 #endif
 
        if(ms_stereo)

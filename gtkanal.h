@@ -38,6 +38,7 @@ typedef struct {
 
   int LAMEqss[2][2];
   int qss[2][2];
+  int big_values[2][2];
   int sub_gain[2][2][3];
 
   double xfsf[2][2][SBMAX_l];
