@@ -211,7 +211,7 @@ quantize_01(const FLOAT *xp, gr_info *gi, fi_union *fi, int sfb,
 {
     do {
 	const FLOAT *xe = xp - gi->wi[sfb].width;
-	FLOAT istep = (1.0 - 0.4054) / IPOW20(scalefactor(gi, sfb));
+	FLOAT istep = (FLOAT)(1.0 - ROUNDFAC) / IPOW20(scalefactor(gi, sfb));
 	sfb++;
 	if (xe > xend)
 	    xe = xend;
@@ -725,7 +725,7 @@ count_bits(lame_t gfc, gr_info * const gi)
 	    j -= l;
 	    if (!gfc->pseudohalf[sfb])
 		continue;
-	    roundfac = 0.634521682242439
+	    roundfac = (FLOAT)0.634521682242439
 		/ IPOW20(scalefactor(gi, sfb) + gi->scalefac_scale);
 	    do {
 		if (xr34[j+l] < roundfac)

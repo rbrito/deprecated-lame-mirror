@@ -830,16 +830,16 @@ flush_bitstream(lame_t gfc, unsigned char *buffer, int size)
     if (gfc->findReplayGain) {
 	FLOAT RadioGain = (FLOAT) GetTitleGain(&gfc->rgdata);
 	assert(RadioGain != GAIN_NOT_ENOUGH_SAMPLES); 
-	gfc->RadioGain = (int) floor( RadioGain * 10.0 + 0.5 ); /* round to nearest */
+	gfc->RadioGain = (int) floor( RadioGain * (FLOAT)10.0 + (FLOAT)0.5 ); /* round to nearest */
     }
 
     if (gfc->decode_on_the_fly) {
 	/* find the gain and scale change required for no clipping */
 	gfc->noclipGainChange
-	    = (int) ceil(log10(gfc->PeakSample / 32767.0) *20.0*10.0);  /* round up */
-	if (gfc->noclipGainChange > 0.0) { /* clipping occurs */
-	    if (gfc->scale == 1.0 || gfc->scale == 0.0) 
-		gfc->noclipScale = floor( (32767.0 / gfc->PeakSample) * 100.0 ) / 100.0;  /* round down */
+	    = (int) ceil(log10(gfc->PeakSample / (FLOAT)32767.0) * (FLOAT)20.0*(FLOAT)10.0);  /* round up */
+	if (gfc->noclipGainChange > (FLOAT)0.0) { /* clipping occurs */
+	    if (gfc->scale == (FLOAT)1.0)
+		gfc->noclipScale = floor( ((FLOAT)32767.0 / gfc->PeakSample) * (FLOAT)100.0 ) / (FLOAT)100.0;  /* round down */
 	    else
 		/* the user specified his own scaling factor. We could suggest 
 		 * the scaling factor of (32767.0/gfc->PeakSample)*(gfc->scale)

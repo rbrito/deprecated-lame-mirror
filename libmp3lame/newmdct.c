@@ -578,19 +578,19 @@ mdct_short(FLOAT *inout)
 	ts1 = ts0 + tc0;
 	ts2 = -ts0 + tc0;
 
-	tc0 = (inout[1*3] * win[SHORT_TYPE][1] - inout[4*3]) * 2.069978111953089e-11; /* tritab_s[1] */
-	ts0 = (inout[4*3] * win[SHORT_TYPE][1] + inout[1*3]) * 2.069978111953089e-11; /* tritab_s[1] */
+	tc0 = (inout[1*3] * win[SHORT_TYPE][1] - inout[4*3]) * (FLOAT)2.069978111953089e-11; /* tritab_s[1] */
+	ts0 = (inout[4*3] * win[SHORT_TYPE][1] + inout[1*3]) * (FLOAT)2.069978111953089e-11; /* tritab_s[1] */
 
-	inout[3*0] = tc1 * 1.907525191737280e-11 /* tritab_s[2] */ + tc0;
-	inout[3*5] = -ts1 * 1.907525191737280e-11 /* tritab_s[0] */ + ts0;
+	inout[3*0] = tc1 * (FLOAT)1.907525191737280e-11 /* tritab_s[2] */ + tc0;
+	inout[3*5] = -ts1 * (FLOAT)1.907525191737280e-11 /* tritab_s[0] */ + ts0;
 
-	tc2 = tc2 * 0.86602540378443870761 * 1.907525191737281e-11 /* tritab_s[2] */;
-	ts1 = ts1 * 0.5 * 1.907525191737281e-11 + ts0;
+	tc2 = tc2 * (FLOAT)(0.86602540378443870761 * 1.907525191737281e-11) /* tritab_s[2] */;
+	ts1 = ts1 * (FLOAT)(0.5 * 1.907525191737281e-11) + ts0;
 	inout[3*1] = tc2-ts1;
 	inout[3*2] = tc2+ts1;
 
-	tc1 = tc1 * 0.5 * 1.907525191737281e-11 - tc0;
-	ts2 = ts2 * 0.86602540378443870761 * 1.907525191737281e-11 /* tritab_s[0] */;
+	tc1 = tc1 * (FLOAT)(0.5 * 1.907525191737281e-11) - tc0;
+	ts2 = ts2 * (FLOAT)(0.86602540378443870761 * 1.907525191737281e-11) /* tritab_s[0] */;
 	inout[3*3] = tc1+ts2;
 	inout[3*4] = tc1-ts2;
 
