@@ -196,17 +196,17 @@ int
 bin_search_StepSize(
           lame_internal_flags * const gfc,
           gr_info * const cod_info,
-    const int             desired_rate,
+	  int             desired_rate,
     const int             ch,
     const FLOAT8          xrpow [576] ) 
 {
     int nBits;
-    int CurrentStep;
+    int CurrentStep = gfc->CurrentStep[ch];
     int flag_GoneOver = 0;
     int start = gfc->OldValue[ch];
     binsearchDirection_t Direction = BINSEARCH_NONE;
-    CurrentStep = gfc->CurrentStep[ch];
     cod_info->global_gain = start;
+    desired_rate -= cod_info->part2_length;
 
     assert(CurrentStep);
     do {
@@ -236,11 +236,15 @@ bin_search_StepSize(
 	cod_info->global_gain += step;
     } while (cod_info->global_gain < 256u);
 
-    if (nBits > desired_rate && cod_info->global_gain < 255) {
+    if (cod_info->global_gain >= 255) {
+	cod_info->global_gain = 255;
+	nBits = count_bits(gfc, xrpow, cod_info);
+    } else if (nBits > desired_rate) {
 	cod_info->global_gain++;
 	nBits = count_bits(gfc, xrpow, cod_info);
     }
     gfc->CurrentStep[ch] = (start - cod_info->global_gain >= 4) ? 4 : 2;
+    gfc->OldValue[ch] = cod_info->global_gain;
     cod_info->part2_3_length = nBits;
     return nBits;
 }
@@ -786,9 +790,7 @@ outer_loop (
 
     int age;
 
-    bin_search_StepSize (gfc, cod_info, targ_bits - cod_info->part2_length, ch,
-			 xrpow);
-    gfc->OldValue[ch] = cod_info->global_gain;
+    bin_search_StepSize (gfc, cod_info, targ_bits, ch, xrpow);
 
     if (!gfc->noise_shaping) 
 	/* fast mode, no noise shaping, we are ready */

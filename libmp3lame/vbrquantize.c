@@ -1341,24 +1341,17 @@ do {
         return -1;
 
     if (cod_info->part2_3_length < minbits) {
-        huffbits = minbits - cod_info->part2_length;
-        bits = bin_search_StepSize (gfc, cod_info, huffbits, ch, xr34);
-        gfc->OldValue[ch] = cod_info->global_gain;
+        bin_search_StepSize (gfc, cod_info, minbits, ch, xr34);
+	cod_info->part2_3_length += cod_info->part2_length;
     }
     if (cod_info->part2_3_length > maxbits) {
-        huffbits = maxbits - cod_info->part2_length;
-        if (huffbits < 0) huffbits = 0;
-        bits = bin_search_StepSize (gfc, cod_info, huffbits, ch, xr34);
-        gfc->OldValue[ch] = cod_info->global_gain;
-        if (bits >= LARGE_BITS) /* Houston, we have a problem */
-            return -2;
-        cod_info->part2_3_length += cod_info->part2_length;
+        bin_search_StepSize (gfc, cod_info, maxbits, ch, xr34);
+	cod_info->part2_3_length += cod_info->part2_length;
     }
+    assert (cod_info->global_gain < 256u);
 
-    if (cod_info->part2_length >= LARGE_BITS) /* Houston, we have a problem */
-        return -2;
-        
-    assert (cod_info->global_gain < 256);
+    if (cod_info->part2_3_length >= LARGE_BITS) /* Houston, we have a problem */
+	return -2;
     
     return 0;
 }
