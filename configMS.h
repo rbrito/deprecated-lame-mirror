@@ -1,3 +1,6 @@
+/* The number of bytes in a int.  */
+#define SIZEOF_INT 4
+
 /* The number of bytes in a unsigned long.  */
 #define SIZEOF_UNSIGNED_LONG 4
 
