@@ -515,8 +515,10 @@ FILE * OpenSndFile(lame_global_flags *gfp)
     if (0==stat(inPath,&sb)) {  
       /* try file size, assume 2 bytes per sample */
       if (gfp->input_format == sf_mp3) {
-	FLOAT totalseconds = (sb.st_size*8.0/(1000.0*gfc->input_bitrate));
-	gfp->num_samples= totalseconds*gfp->in_samplerate;
+	if (gfc->input_bitrate>0) {
+	  FLOAT totalseconds = (sb.st_size*8.0/(1000.0*gfc->input_bitrate));
+	  gfp->num_samples= totalseconds*gfp->in_samplerate;
+	}
       }else{
 	gfp->num_samples = sb.st_size/(2*gfp->num_channels);
       }

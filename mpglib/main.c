@@ -61,16 +61,16 @@ unsigned long *num_samples)
 
   InitMP3(&mp);
   memset(buf, 0, sizeof(buf));
-  
+
+
   /* skip RIFF type proprietary headers  */
   /* look for sync word  FFF */
   while (!is_syncword(buf)) {
     buf[0]=buf[1]; 
     if (fread(&buf[1],1,1,fd) == 0) return -1;  /* failed */
   }
-  /*  ret = decodeMP3(&mp,buf,2,out,FSIZE,&size); */
 
-  /* read the header */
+  /* read the rest of header */
   len = fread(&buf[2],1,46,fd);
   if (len ==0 ) return -1;
   len +=2;
@@ -83,9 +83,12 @@ unsigned long *num_samples)
 
   size=0;
   ret = decodeMP3(&mp,buf,len,out,FSIZE,&size);
-  if (size>0 && !xing_header) {
+  if (ret==MP3_OK && size>0 && !xing_header) {
     fprintf(stderr,"Opps: first frame of mpglib output will be lost \n");
   }
+
+  if (ret==MP3_ERR) 
+    return -1;
 
   *stereo = mp.fr.stereo;
   *samp = freqs[mp.fr.sampling_frequency];

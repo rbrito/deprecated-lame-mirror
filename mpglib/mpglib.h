@@ -21,11 +21,14 @@ struct mpstr {
         int header_parsed;
         int side_parsed;  
         int data_parsed;  
+        int free_format;             /* 1 = free format frame */
+        int old_free_format;        /* 1 = last frame was free format */
 	int bsize;
 	int framesize;
 	int ssize;
 	int dsize;
         int fsizeold;
+        int fsizeold_nopadding;
 	struct frame fr;
         unsigned char bsspace[2][MAXFRAMESIZE+512]; /* MAXFRAMESIZE */
 	real hybrid_block[2][2][SBLIMIT*SSLIMIT];

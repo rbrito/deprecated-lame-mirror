@@ -18,6 +18,8 @@ BOOL InitMP3(struct mpstr *mp)
 	mp->header_parsed=0;
 	mp->side_parsed=0;
 	mp->data_parsed=0;
+	mp->free_format=0;
+	mp->old_free_format=0;
 	mp->ssize = 0;
 	mp->dsize=0;
 	mp->fsizeold = -1;
@@ -25,6 +27,7 @@ BOOL InitMP3(struct mpstr *mp)
 	mp->head = mp->tail = NULL;
 	mp->fr.single = -1;
 	mp->bsnum = 0;
+	wordpointer = mp->bsspace[mp->bsnum] + 512;
 	mp->synth_bo = 1;
 
 	make_decode_tables(32767);
@@ -103,7 +106,7 @@ static int read_buf_byte(struct mpstr *mp)
 
 	pos = mp->tail->pos;
 	while(pos >= mp->tail->size) {
-		remove_buf(mp);
+	        remove_buf(mp);
 		pos = mp->tail->pos;
 		if(!mp->tail) {
 			fprintf(stderr,"Fatal error!\n");
@@ -119,6 +122,8 @@ static int read_buf_byte(struct mpstr *mp)
 	return b;
 }
 
+
+
 static void read_head(struct mpstr *mp)
 {
 	unsigned long head;
@@ -133,6 +138,8 @@ static void read_head(struct mpstr *mp)
 
 	mp->header = head;
 }
+
+
 
 
 
@@ -161,6 +168,77 @@ void copy_mp(struct mpstr *mp,int size,char *ptr)
 
 
 
+int sync_buffer(struct mpstr *mp,int free_match) 
+{
+  /* traverse mp structure without modifing pointers, looking
+   * for a frame valid header.
+   * if free_format, valid header must also have the same
+   * samplerate.   
+   * return number of bytes in mp, before the header
+   * return -1 if header is not found
+   */
+  unsigned int b[4]={0,0,0,0};
+  int i,h,pos;
+  struct buf *buf=mp->tail;
+
+  pos = buf->pos;
+  for (i=0; i<mp->bsize; i++) {
+    /* get 4 bytes */
+    
+    b[0]=b[1]; b[1]=b[2]; b[2]=b[3];
+    while(pos >= buf->size) {
+      buf  = buf->next;
+      pos = buf->pos;
+      if(!buf) {
+	fprintf(stderr,"Fatal error!\n");
+	exit(1);
+      }
+    }
+    b[3] = buf->pnt[pos];
+    ++pos;
+
+    if (i>=3) {
+	unsigned long head;
+
+	head = b[0];
+	head <<= 8;
+	head |= b[1];
+	head <<= 8;
+	head |= b[2];
+	head <<= 8;
+	head |= b[3];
+	h = head_check(head);
+
+	if (h && free_match) {
+	  /* just to be even more thorough, match the sample rate */
+	  struct frame *fr = &mp->fr;
+	  int sampling_frequency,mpeg25,lsf;
+
+	  if( head & (1<<20) ) {
+	    lsf = (head & (1<<19)) ? 0x0 : 0x1;
+	    mpeg25 = 0;
+	  }
+	  else {
+	    lsf = 1;
+	    mpeg25 = 1;
+	  }
+
+	  if(mpeg25) 
+	    sampling_frequency = 6 + ((head>>10)&0x3);
+	  else
+	    sampling_frequency = ((head>>10)&0x3) + (lsf*3);
+	  h = ((lsf==fr->lsf) && (mpeg25==fr->mpeg25) && 
+                 (sampling_frequency == fr->sampling_frequency));
+	}
+
+	if (h) {
+	  return i-3;
+	}
+    }
+  }
+  return -1;
+}
+
 
 
 
@@ -168,7 +246,7 @@ void copy_mp(struct mpstr *mp,int size,char *ptr)
 int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
 		int osize,int *done)
 {
-	int iret,bits;
+	int iret,bits,bytes;
 	gmp = mp;
 
 	if(osize < 4608) {
@@ -185,22 +263,44 @@ int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
 
 	/* First decode header */
 	if(!mp->header_parsed) {
-		mp->ssize=0;
-		if(mp->bsize < 4) {
-			return MP3_NEED_MORE;
+
+	        bytes=sync_buffer(mp,0);
+		if (bytes!=0)
+		  fprintf(stderr,"bitstream problem: resyncing...\n");
+
+		if (bytes<0) return MP3_NEED_MORE;
+		if (bytes>0) {
+		  /* bitstream problem, but we are now resynced 
+		   * should try to buffer previous data in case new
+		   * frame has nonzero main_data_begin, but we need
+		   * to make sure we do not overflow buffer
+		  */
+		  int size;
+		  mp->old_free_format=0;
+		  size = (int) (wordpointer - mp->bsspace[mp->bsnum]+512);
+		  if ((size + bytes) < MAXFRAMESIZE) {
+		    copy_mp(mp,bytes,wordpointer);
+		    mp->fsizeold += bytes;
+		  }
 		}
 
 		read_head(mp);
 		decode_header(&mp->fr,mp->header);
+		mp->header_parsed=1;
 		mp->framesize = mp->fr.framesize;
+		mp->free_format = (mp->framesize==0);
 
+		if(mp->fr.lsf)
+		  mp->ssize = (mp->fr.stereo == 1) ? 9 : 17;
+		else
+		  mp->ssize = (mp->fr.stereo == 1) ? 17 : 32;
 		if (mp->fr.error_protection) 
 		  mp->ssize += 2;
-		if(mp->fr.lsf)
-		  mp->ssize += (mp->fr.stereo == 1) ? 9 : 17;
-		else
-		  mp->ssize += (mp->fr.stereo == 1) ? 17 : 32;
-		mp->header_parsed=1;
+
+		mp->bsnum = 1-mp->bsnum; /* toggle buffer */
+		wordpointer = mp->bsspace[mp->bsnum] + 512;
+		//		mp->bsnum = (mp->bsnum + 1) & 0x1;
+		bitindex = 0;
 	}
 
 	/* now decode side information */
@@ -208,9 +308,6 @@ int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
                 if (mp->bsize < mp->ssize) 
 		  return MP3_NEED_MORE;
 
-		wordpointer = mp->bsspace[mp->bsnum] + 512;
-		mp->bsnum = (mp->bsnum + 1) & 0x1;
-		bitindex = 0;
 		copy_mp(mp,mp->ssize,wordpointer);
 
 		if(mp->fr.error_protection)
@@ -238,22 +335,40 @@ int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
 		copy_mp(mp,mp->dsize,wordpointer);
 		*done = 0;
 		do_layer3(&mp->fr,(unsigned char *) out,done);
+		wordpointer = mp->bsspace[mp->bsnum] + 512 + mp->ssize + mp->dsize;
 		mp->data_parsed=1;
 		iret=MP3_OK;
 	}
 
 
 	/* remaining bits are ancillary data, or reservoir for next frame */
-	bits = mp->framesize-(mp->ssize+mp->dsize);
-	if (bits > mp->bsize) {
+	if (mp->free_format) {
+	  if (mp->old_free_format) {
+	    /* free format.  bitrate must not vary */
+	    mp->framesize=mp->fsizeold_nopadding + (mp->fr.padding);
+	  }else{
+	    bytes=sync_buffer(mp,1);
+	    if (bytes<0) return MP3_NEED_MORE;
+	    mp->framesize = bytes + mp->ssize+mp->dsize;
+	    mp->fsizeold_nopadding= mp->framesize - mp->fr.padding;
+	    fprintf(stderr,"freeformat bitstream:  estimated bitrate=%ikbs  \n",
+	        8*(4+mp->framesize)*freqs[mp->fr.sampling_frequency]/
+		    (1000*576*(2-mp->fr.lsf)));
+	  }
+	}
+
+	bytes = mp->framesize-(mp->ssize+mp->dsize);
+	if (bytes > mp->bsize) {
 	  return iret;
 	}
-	if (bits>0) {
-	  char *p = mp->bsspace[1-mp->bsnum] + 512 + mp->ssize + mp->dsize;
-	  copy_mp(mp,bits,p);
+	if (bytes>0) {
+	  copy_mp(mp,bytes,wordpointer);
+	  wordpointer += bytes;
 	}
-	
+
+
 	mp->fsizeold = mp->framesize;
+	mp->old_free_format = mp->free_format;
 	mp->framesize =0;
 	mp->header_parsed=0;
 	mp->side_parsed=0;
@@ -270,7 +385,7 @@ int set_pointer(long backstep)
     fprintf(stderr,"Can't step back %ld!\n",backstep);
     return MP3_ERR; 
   }
-  bsbufold = gmp->bsspace[gmp->bsnum] + 512;
+  bsbufold = gmp->bsspace[1-gmp->bsnum] + 512;
   wordpointer -= backstep;
   if (backstep)
     memcpy(wordpointer,bsbufold+gmp->fsizeold-backstep,backstep);

@@ -60,20 +60,28 @@ static void get_II_stuff(struct frame *fr)
 
 #define HDRCMPMASK 0xfffffd00
 
-#if 0
+
 int head_check(unsigned long head)
 {
-    if( (head & 0xffe00000) != 0xffe00000)
+  if( (head & 0xffe00000) != 0xffe00000) {
+    /* syncword */
 	return FALSE;
-    if(!((head>>17)&3))
+  }
+  if(!((head>>17)&3)) {
+    /* bits 13-14 = layer 3 */
 	return FALSE;
-    if( ((head>>12)&0xf) == 0xf)
-	return FALSE;
-    if( ((head>>10)&0x3) == 0x3 )
-	return FALSE;
-    return TRUE;
+  }
+  if( ((head>>12)&0xf) == 0xf) {
+    /* bits 16,17,18,19 = 1111  invalid bitrate */
+    return FALSE;
+  }
+  if( ((head>>10)&0x3) == 0x3 ) {
+    /* bits 20,21 = 11  invalid sampling freq */
+    return FALSE;
+  }
+  return TRUE;
 }
-#endif
+
 
 /*
  * the code a header and write the information
@@ -119,10 +127,6 @@ int decode_header(struct frame *fr,unsigned long newhead)
 
     fr->stereo    = (fr->mode == MPG_MD_MONO) ? 1 : 2;
 
-    if(!fr->bitrate_index)
-    {
-      fprintf(stderr,"Free format not supported.\n");
-    }
 
     switch(fr->lay)
     {
@@ -164,9 +168,13 @@ int decode_header(struct frame *fr,unsigned long newhead)
         if(fr->error_protection)
           ssize += 2;
 #endif
+	if (fr->bitrate_index==0)
+	  fr->framesize=0;
+	else{
           fr->framesize  = (long) tabsel_123[fr->lsf][2][fr->bitrate_index] * 144000;
           fr->framesize /= freqs[fr->sampling_frequency]<<(fr->lsf);
           fr->framesize = fr->framesize + fr->padding - 4;
+	}
         break; 
       default:
         fprintf(stderr,"Sorry, unknown layer type.\n"); 
