@@ -773,10 +773,6 @@ mask_add_samebark(FLOAT m1, FLOAT m2)
 {
     FLOAT m = m1 + m2;
 
-    /* Should always be true, just checking */
-    assert(m1>0.0);
-    assert(m2>0.0);
-
     if (m2 > m1) {
 	if (m2 >= m1*ma_max_i1)
 	    return m; /* 43% of the total */
@@ -1087,10 +1083,8 @@ psycho_analysis_short(
 	    if (ns_attacks[chn][1] && ns_attacks[chn][0]) ns_attacks[chn][1] = 0;
 	}
     }
-    if (gfc->useshort_next[gr][2] || gfc->useshort_next[gr][3])
-	gfc->useshort_next[gr][2] = gfc->useshort_next[gr][3] = SHORT_TYPE;
 
-    else if (!previous_is_short && !current_is_short) {
+    if (!previous_is_short && !current_is_short) {
 	for (chn=0; chn<numchn; chn++)
 	    gfc->nsPsy.last_attacks[chn] = ns_attacks[chn][2];
 	return current_is_short;
@@ -1105,6 +1099,7 @@ psycho_analysis_short(
     for (chn=0; chn<numchn; chn++) {
 	/* fft and energy calculation   */
 	FLOAT wsamp_S[2][3][BLKSIZE_s];
+	gfc->nsPsy.last_attacks[chn] = ns_attacks[chn][2];
 
 	/* compute masking thresholds for short blocks */
 	for (sblock = 0; sblock < 3; sblock++) {
@@ -1120,11 +1115,19 @@ psycho_analysis_short(
 		}
 	    }
 
+	    if (!gfc->useshort_next[gr][chn]) {
+		/* flag for "short block may be needed but not calculated" */
+		gfc->masking_next[gr][chn].en.s[0][sblock] = -1.0;
+		continue;
+	    }
+
 	    compute_masking_s(gfc, wsamp_S[chn&1][sblock],
 			      &gfc->masking_next[gr][chn], sblock);
 	}
-	gfc->nsPsy.last_attacks[chn] = ns_attacks[chn][2];
     } /* end loop over chn */
+
+    if (gfc->useshort_next[gr][2] || gfc->useshort_next[gr][3])
+	gfc->useshort_next[gr][2] = gfc->useshort_next[gr][3] = SHORT_TYPE;
     return current_is_short;
 }
 
@@ -1286,7 +1289,7 @@ L3psycho_anal_ns(
 	    int kk = gfc->s3ind[b][0];
 	    spread -= kk;
 // calculate same bark masking 1st
-	    ecb = spread[b] * eb2[b];
+	    ecb = spread[b] * eb2[b] + 1e-37;
 	    for (kk = 1; kk <= 3; kk++) {
 		int k2;
 
@@ -1335,8 +1338,8 @@ L3psycho_anal_ns(
 	    enn  -= .5*eb[b];
 	    thmm -= .5*tmp;
 	    thmm *= 0.158489319246111 * gfc->masking_lower; // pow(10,-0.8)
-	    if (enn < gfc->ATH.l_avg[j] * gfc->ATH.adjust)
-		enn = gfc->ATH.l_avg[j] * gfc->ATH.adjust;
+	    if (thmm < gfc->ATH.l_avg[j] * gfc->ATH.adjust)
+		thmm = gfc->ATH.l_avg[j] * gfc->ATH.adjust;
 	    gfc->masking_next[gr][chn].en .l[j] = enn;
 	    gfc->masking_next[gr][chn].thm.l[j] = thmm;
 
@@ -1346,13 +1349,60 @@ L3psycho_anal_ns(
 	}
 
 	thmm *= 0.158489319246111 * gfc->masking_lower; // pow(10,-0.8)
-	if (enn < gfc->ATH.l_avg[SBMAX_l-1] * gfc->ATH.adjust)
-	    enn = gfc->ATH.l_avg[SBMAX_l-1] * gfc->ATH.adjust;
+	if (thmm < gfc->ATH.l_avg[SBMAX_l-1] * gfc->ATH.adjust)
+	    thmm = gfc->ATH.l_avg[SBMAX_l-1] * gfc->ATH.adjust;
 	gfc->masking_next[gr][chn].en .l[SBMAX_l-1] = enn;
 	gfc->masking_next[gr][chn].thm.l[SBMAX_l-1] = thmm;
+
+	if (gfc->masking_next[gr][chn].en.s[0][0] >= 0.0)
+	    continue;
+
+	/* short block may be needed but not calculated */
+	/* calculate it from converting from long */
+	b = j = 0;
+	enn = thmm = 0.0;
+	for (;; b++ ) {
+	    FLOAT tmp = gfc->nb_1[chn][b];
+	    enn  += eb[b];
+	    thmm += tmp;
+	    if (b != gfc->bo_l2s[j])
+		continue;
+
+	    if (j == SBMAX_s - 1)
+		break;
+
+	    enn  -= .5*eb[b];
+	    thmm -= .5*tmp;
+	    thmm *= 0.158489319246111 * gfc->masking_lower; // pow(10,-0.8)
+	    if (thmm < gfc->ATH.s_avg[j] * gfc->ATH.adjust)
+		thmm = gfc->ATH.s_avg[j] * gfc->ATH.adjust;
+	    gfc->masking_next[gr][chn].en .s[j][0]
+		= gfc->masking_next[gr][chn].en .s[j][1]
+		= gfc->masking_next[gr][chn].en .s[j][2]
+		= enn;
+	    gfc->masking_next[gr][chn].thm.s[j][0]
+		= gfc->masking_next[gr][chn].thm.s[j][1]
+		= gfc->masking_next[gr][chn].thm.s[j][2]
+		= thmm;
+
+	    enn  =  eb[b] * 0.5;
+	    thmm = tmp * 0.5;
+	    j++;
+	}
+
+	thmm *= 0.158489319246111 * gfc->masking_lower; // pow(10,-0.8)
+	if (thmm < gfc->ATH.s_avg[SBMAX_s-1] * gfc->ATH.adjust)
+	    thmm = gfc->ATH.s_avg[SBMAX_s-1] * gfc->ATH.adjust;
+	gfc->masking_next[gr][chn].en .s[SBMAX_s-1][0]
+	    = gfc->masking_next[gr][chn].en .s[SBMAX_s-1][1]
+	    = gfc->masking_next[gr][chn].en .s[SBMAX_s-1][2]
+	    = enn;
+	gfc->masking_next[gr][chn].thm.s[SBMAX_s-1][0]
+	    = gfc->masking_next[gr][chn].thm.s[SBMAX_s-1][1]
+	    = gfc->masking_next[gr][chn].thm.s[SBMAX_s-1][2]
+	    = thmm;
     }
 }
-
 
 /*
  * auto-adjust of ATH, useful for low volume
@@ -1586,11 +1636,8 @@ psycho_analysis(
 	    calc_interchannel_masking(gfp, gr);
 
 	if (gfp->mode == JOINT_STEREO) {
-	    FLOAT msfix;
 	    msfix1(gfc, gr);
-	    msfix = gfp->msfix;
-	    if (msfix != 0.0)
-		ns_msfix(gfc, msfix, &gfc->masking_next[gr][0]);
+	    ns_msfix(gfc, gfp->msfix, &gfc->masking_next[gr][0]);
 
 	    numchn = 4;
 	}

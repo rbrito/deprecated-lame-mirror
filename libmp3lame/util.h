@@ -396,7 +396,7 @@ struct lame_internal_flags {
   FLOAT decay;
 
   FLOAT mld_l[SBMAX_l],mld_s[SBMAX_s];
-  int	bo_l[SBMAX_l], bo_s[SBMAX_s] ;
+  int	bo_l[SBMAX_l], bo_s[SBMAX_s], bo_l2s[SBMAX_s];
   int	npart_l,npart_s;
 
   int	s3ind[CBANDS][2];

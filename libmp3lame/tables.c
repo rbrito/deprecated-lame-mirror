@@ -1049,6 +1049,45 @@ init_numline(
     return i+1;
 }
 
+static void
+init_numline_l2s(
+    int *bo,
+
+    FLOAT sfreq, int blksize, int *scalepos,
+    FLOAT deltafreq, int sbmax
+    )
+{
+    int partition[HBLKSIZE];
+    int i, j;
+    int sfb;
+
+    sfreq /= blksize;
+    j = 0;
+    /* compute numlines, the number of spectral lines in each partition band */
+    /* each partition band should be about DELBARK wide. */
+    for (i=0;i<CBANDS;i++) {
+	FLOAT bark1;
+	int j2;
+	bark1 = freq2bark(sfreq*j);
+	for (j2 = j; freq2bark(sfreq*j2) - bark1 < DELBARK && j2 <= blksize/2;
+	     j2++)
+	    ;
+
+	while (j<j2)
+	    partition[j++]=i;
+	if (j > blksize/2) break;
+    }
+
+    for ( sfb = 0; sfb < sbmax; sfb++ ) {
+	int i2, end;
+	end   = scalepos[sfb+1];
+
+	i2 = floor(.5 + deltafreq*(end-.5));
+	if (i2>blksize/2) i2=blksize/2;
+	bo[sfb] = partition[i2];
+    }
+}
+
 static int
 init_s3_values(
     lame_internal_flags *gfc,
@@ -1163,7 +1202,7 @@ int psymodel_init(lame_global_flags *gfp)
 	    l += gfc->numlines_l[i+1];
 
 	gfc->rnumlines_ls[i] = 20.0/(l-1);
-	norm[i] = 0.11749 * 0.7;
+	norm[i] = 0.11749;
 	gfc->rnumlines_l[i] = 1.0 / (gfc->numlines_l[i] * 3);
     }
     i = init_s3_values(gfc, &gfc->s3_ll, gfc->s3ind,
@@ -1192,6 +1231,11 @@ int psymodel_init(lame_global_flags *gfp)
     for (i = 0; i < SBMAX_l; i++)
 	gfc->ATH.l_avg[i] = gfc->ATH.cb[bm[i]] * db2pow(gfp->ATHlower*10.0);
 
+    /* table for long block threshold -> short block threshold conversion */
+    init_numline_l2s(gfc->bo_l2s,
+		     sfreq, BLKSIZE, 
+		     gfc->scalefac_band.s, BLKSIZE/(2.0*192), SBMAX_s);
+
     /************************************************************************
      * do the same things for short blocks
      ************************************************************************/
@@ -1209,7 +1253,7 @@ int psymodel_init(lame_global_flags *gfp)
 	    snr = -4.5 * (bval[i]-13)/(24.0-13.0)
 		-8.25*(bval[i]-24)/(13.0-24.0);
 
-	norm[i] = db2pow(snr) * NS_PREECHO_ATT0;
+	norm[i] = db2pow(snr) * NS_PREECHO_ATT0 * 0.8;
 	gfc->endlines_s[i] = numlines_s[i];
 	if (i != 0)
 	    gfc->endlines_s[i] += gfc->endlines_s[i-1];
@@ -1282,6 +1326,7 @@ int psymodel_init(lame_global_flags *gfp)
 
     gfc->bo_s[SBMAX_s-1]--;
     assert(gfc->bo_l[SBMAX_l-1] <= gfc->npart_l);
+    assert(gfc->bo_l2s[SBMAX_s-1] <= gfc->npart_l);
     assert(gfc->bo_s[SBMAX_s-1] <= gfc->npart_s);
 
     // The type of window used here will make no real difference, but
@@ -1302,16 +1347,16 @@ int psymodel_init(lame_global_flags *gfp)
     if (gfc->CPU_features.AMD_3DNow) {
         extern void fht_3DN(FLOAT *fz, int n);
         gfc->fft_fht = fht_3DN;
-    } else 
+    }
 #endif
 #ifdef USE_FFTSSE
-    if (gfc->CPU_features.SIMD) {
+    else  if (gfc->CPU_features.SIMD) {
         extern void fht_SSE(FLOAT *fz, int n);
         gfc->fft_fht = fht_SSE;
-    } else 
+    }
 #endif
 #ifdef USE_FFTFPU
-    if (gfc->CPU_features.i387) {
+    else  if (gfc->CPU_features.i387) {
         extern void fht_FPU(FLOAT *fz, int n);
         gfc->fft_fht = fht_FPU;
     }
