@@ -602,74 +602,69 @@ inline static void
 mdct_long(FLOAT *out, FLOAT *in)
 {
     FLOAT ct,st;
-  {
-    FLOAT tc1, tc2, tc3, tc4, ts5, ts6, ts7, ts8;
+    FLOAT t1, t2, t3, t4, t5, t6, t7, t8;
     /* 1,2, 5,6, 9,10, 13,14, 17 */
-    tc1 = in[17]-in[ 9];
-    tc3 = in[15]-in[11];
-    tc4 = in[14]-in[12];
-    ts5 = in[ 0]+in[ 8];
-    ts6 = in[ 1]+in[ 7];
-    ts7 = in[ 2]+in[ 6];
-    ts8 = in[ 3]+in[ 5];
+    t1 = in[17]-in[ 9];
+    t3 = in[15]-in[11];
+    t4 = in[14]-in[12];
+    t5 = in[ 0]+in[ 8];
+    t6 = in[ 1]+in[ 7];
+    t7 = in[ 2]+in[ 6];
+    t8 = in[ 3]+in[ 5];
 
-    out[17] = (ts5+ts7-ts8)-(ts6-in[4]);
-    st = (ts5+ts7-ts8)*cx[7]+(ts6-in[4]);
-    ct = (tc1-tc3-tc4)*cx[6];
+    out[17] = (t5+t7-t8)-(t6-in[4]);
+    st = (t5+t7-t8)*cx[7]+(t6-in[4]);
+    ct = (t1-t3-t4)*cx[6];
     out[5] = ct+st;
     out[6] = ct-st;
 
-    tc2 = (in[16]-in[10])*cx[6];
-    ts6 = ts6*cx[7] + in[4];
-    ct =  tc1*cx[0] + tc2 + tc3*cx[1] + tc4*cx[2];
-    st = -ts5*cx[4] + ts6 - ts7*cx[5] + ts8*cx[3];
+    t2 = (in[16]-in[10])*cx[6];
+    t6 = t6*cx[7] + in[4];
+    ct =  t1*cx[0] + t2 + t3*cx[1] + t4*cx[2];
+    st = -t5*cx[4] + t6 - t7*cx[5] + t8*cx[3];
     out[1] = ct+st;
     out[2] = ct-st;
 
-    ct =  tc1*cx[1] - tc2 - tc3*cx[2] + tc4*cx[0];
-    st = -ts5*cx[5] + ts6 - ts7*cx[3] + ts8*cx[4];
+    ct =  t1*cx[1] - t2 - t3*cx[2] + t4*cx[0];
+    st = -t5*cx[5] + t6 - t7*cx[3] + t8*cx[4];
     out[ 9] = ct+st;
     out[10] = ct-st;
 
-    ct = tc1*cx[2] - tc2 + tc3*cx[0] - tc4*cx[1];
-    st = ts5*cx[3] - ts6 + ts7*cx[4] - ts8*cx[5];
+    ct = t1*cx[2] - t2 + t3*cx[0] - t4*cx[1];
+    st = t5*cx[3] - t6 + t7*cx[4] - t8*cx[5];
     out[13] = ct+st;
     out[14] = ct-st;
-  }
-  {
-    FLOAT ts1, ts2, ts3, ts4, tc5, tc6, tc7, tc8;
 
-    ts1 = in[ 8]-in[ 0];
-    ts3 = in[ 6]-in[ 2];
-    ts4 = in[ 5]-in[ 3];
-    tc5 = in[17]+in[ 9];
-    tc6 = in[16]+in[10];
-    tc7 = in[15]+in[11];
-    tc8 = in[14]+in[12];
+    t1 = in[ 8]-in[ 0];
+    t3 = in[ 6]-in[ 2];
+    t4 = in[ 5]-in[ 3];
+    t5 = in[17]+in[ 9];
+    t6 = in[16]+in[10];
+    t7 = in[15]+in[11];
+    t8 = in[14]+in[12];
 
-    out[0]  = (tc5+tc7+tc8)+(tc6+in[13]);
-    ct = (tc5+tc7+tc8)*cx[7]-(tc6+in[13]);
-    st = (ts1-ts3+ts4)*cx[6];
+    out[0]  = (t5+t7+t8)+(t6+in[13]);
+    ct = (t5+t7+t8)*cx[7]-(t6+in[13]);
+    st = (t1-t3+t4)*cx[6];
     out[11] = ct+st;
     out[12] = ct-st;
 
-    ts2 = (in[7]-in[1])*cx[6];
-    tc6 = in[13] - tc6*cx[7];
-    ct = tc5*cx[3] - tc6 + tc7*cx[4] + tc8*cx[5];
-    st = ts1*cx[2] + ts2 + ts3*cx[0] + ts4*cx[1];
+    t2 = (in[7]-in[1])*cx[6];
+    t6 = in[13] - t6*cx[7];
+    ct = t5*cx[3] - t6 + t7*cx[4] + t8*cx[5];
+    st = t1*cx[2] + t2 + t3*cx[0] + t4*cx[1];
     out[3] = ct+st;
     out[4] = ct-st;
 
-    ct = -tc5*cx[5] + tc6 - tc7*cx[3] - tc8*cx[4];
-    st =  ts1*cx[1] + ts2 - ts3*cx[2] - ts4*cx[0];
+    ct = -t5*cx[5] + t6 - t7*cx[3] - t8*cx[4];
+    st =  t1*cx[1] + t2 - t3*cx[2] - t4*cx[0];
     out[7] = ct+st;
     out[8] = ct-st;
 
-    ct = -tc5*cx[4] + tc6 - tc7*cx[5] - tc8*cx[3];
-    st =  ts1*cx[0] - ts2 + ts3*cx[1] - ts4*cx[2];
+    ct = -t5*cx[4] + t6 - t7*cx[5] - t8*cx[3];
+    st =  t1*cx[0] - t2 + t3*cx[1] - t4*cx[2];
     out[15] = ct+st;
     out[16] = ct-st;
-  }
 }
 
 
@@ -681,14 +676,14 @@ mdct_sub48(lame_t gfc, int ch)
     /* thinking cache performance, ch->gr loop is better than gr->ch loop */
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 	gr_info *gi = &gfc->tt[gr][ch];
-	int type = gi->block_type, band = 0, endband = SBLIMIT;
-	FLOAT *mdct_enc = gi->xr;
+	int type = gi->block_type, band = 0;
+	FLOAT *mdct_enc = gi->xr, *endband = &gi->xr[gfc->xrNumMax_longblock];
+	if (gfc->xrNumMax_longblock < 576-18)
+	    endband += 18;
 	/*
-	 * Perform imdct of 18 previous subband samples
-	 * + 18 current subband samples
+	 * Perform imdct of
+	 *  (18 previous subband samples) + (18 current subband samples)
 	 */
-	if (gfc->xrNumMax_longblock < 576-36)
-	    endband = gfc->xrNumMax_longblock / 18 + 1;
 	do {
 	    FLOAT *prev = &gfc->w.sb_smpl[ch][gr  ][0][mdctorder[band]];
 	    FLOAT *next = &gfc->w.sb_smpl[ch][gr+1][0][mdctorder[band]];
@@ -731,7 +726,7 @@ mdct_sub48(lame_t gfc, int ch)
 		}
 		mdct_short(mdct_enc);
 	    }
-	} while (mdct_enc += 18, ++band < endband);
+	} while (++band, (mdct_enc += 18) < endband);
 	memset(mdct_enc, 0, sizeof(FLOAT)*(SBLIMIT-band)*18);
     }
 }
@@ -742,13 +737,13 @@ subband(lame_t gfc, const sample_t *wk, FLOAT *samp)
     int k;
     wk += 286 + FFTOFFSET;
     for (k = 0; k < (18 / 2) * gfc->mode_gr; k++) {
-	int	band;
+	int band;
 	window_subband(gfc->amp_filter, wk, samp);
 	window_subband(gfc->amp_filter, wk + 32, samp + 32);
 	samp += 64;
 	wk += 64;
 	for (band = -16; band < 0; band++)
 	    /* Compensate for inversion in the analysis filter */
-	    samp[band] *= -1;
+	    samp[band] *= (FLOAT)-1.0;
     }
 }
