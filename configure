@@ -28020,15 +28020,6 @@ rm -f conftest.err conftest.$ac_objext \
 
   rm -f conf.gtktest
 
-if test "${HAVE_GTK}" = "yes"; then
-
-cat >>confdefs.h <<\_ACEOF
-#define HAVE_GTK 1
-_ACEOF
-
-fi
-
-
 echo "$as_me:$LINENO: checking use of ElectricFence malloc debugging" >&5
 echo $ECHO_N "checking use of ElectricFence malloc debugging... $ECHO_C" >&6
 # Check whether --enable-efence or --disable-efence was given.
@@ -29069,7 +29060,6 @@ if test "$UNAME" = "OS/2"; then
 # Uncomment & inspect the GTK lines to use MP3x GTK frame analyzer.
 # Properly installed XFree86/devlibs & GTK+ is a prerequisite.
 # The following works for me using Xfree86/OS2 3.3.5 and GTK+ 1.2.3:
-#   AC_DEFINE(HAVE_GTK, 1, have GTK)
 #   AC_DEFINE(__ST_MT_ERRNO__, 1)
 #   INCLUDES="-IC:/XFree86/include/gtk12 -IC:/XFree86/include/glib12 \
 #             -IC:/XFree86/include $INCLUDES"
