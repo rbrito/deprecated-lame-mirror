@@ -286,6 +286,7 @@ lame_init_qval(lame_global_flags * gfp)
         gfc->noise_shaping_amp = 0;
         gfc->noise_shaping_stop = 0;
         gfc->use_best_huffman = 0;
+        gfc->full_outer_loop = 0;
         break;
 
     case 8:
@@ -298,6 +299,7 @@ lame_init_qval(lame_global_flags * gfp)
         gfc->noise_shaping_amp = 0;
         gfc->noise_shaping_stop = 0;
         gfc->use_best_huffman = 0;
+        gfc->full_outer_loop = 0;
         break;
 
     case 6:
@@ -311,6 +313,7 @@ lame_init_qval(lame_global_flags * gfp)
         if (gfc->subblock_gain == -1)
             gfc->subblock_gain = 1;
         gfc->use_best_huffman = 0;
+        gfc->full_outer_loop = 0;
         break;
 
     case 5:
@@ -324,6 +327,7 @@ lame_init_qval(lame_global_flags * gfp)
         if (gfc->subblock_gain == -1)
             gfc->subblock_gain = 1;
         gfc->use_best_huffman = 0;
+        gfc->full_outer_loop = 0;
         break;
 
     case 4:
@@ -337,6 +341,7 @@ lame_init_qval(lame_global_flags * gfp)
         if (gfc->subblock_gain == -1)
             gfc->subblock_gain = 1;
         gfc->use_best_huffman = 1;
+        gfc->full_outer_loop = 0;
         break;
 
     case 3:
@@ -350,6 +355,7 @@ lame_init_qval(lame_global_flags * gfp)
         if (gfc->subblock_gain == -1)
             gfc->subblock_gain = 1;
         gfc->use_best_huffman = 1;
+        gfc->full_outer_loop = 0;
         break;
 
     case 2:
@@ -365,6 +371,7 @@ lame_init_qval(lame_global_flags * gfp)
         if (gfc->subblock_gain == -1)
             gfc->subblock_gain = 1;
         gfc->use_best_huffman = 1; /* inner loop */
+        gfc->full_outer_loop = 0;
         break;
 
     case 1:
@@ -375,11 +382,12 @@ lame_init_qval(lame_global_flags * gfp)
             gfc->noise_shaping = 1;
         if (gfc->substep_shaping != 0)
 	        gfc->substep_shaping = 2;
-        gfc->noise_shaping_amp = 2;
+        gfc->noise_shaping_amp = 1;
         gfc->noise_shaping_stop = 1;
         if (gfc->subblock_gain == -1)
             gfc->subblock_gain = 1;
         gfc->use_best_huffman = 1;
+        gfc->full_outer_loop = 0;
         break;
 
     case 0:
@@ -390,11 +398,13 @@ lame_init_qval(lame_global_flags * gfp)
             gfc->noise_shaping = 1;
         if (gfc->substep_shaping != 0)
 	        gfc->substep_shaping = 2;
-        gfc->noise_shaping_amp = 2;
+        gfc->noise_shaping_amp = 1;
         gfc->noise_shaping_stop = 1;
         if (gfc->subblock_gain == -1)
             gfc->subblock_gain = 1;
-        gfc->use_best_huffman = 2;
+        gfc->use_best_huffman = 1; /*type 2 disabled because of it slowness,
+                                     in favor of full outer loop search */
+        gfc->full_outer_loop = 1;
         break;
     }
     
