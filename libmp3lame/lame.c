@@ -57,8 +57,8 @@
 
 #define DEFAULT_QUALITY 3
 
-static FLOAT8
-filter_coef(FLOAT8 x)
+static FLOAT
+filter_coef(FLOAT x)
 {
     if (x > 1.0) return 0.0;
     if (x <= 0.0) return 1.0;
@@ -74,10 +74,10 @@ lame_init_params_ppflt(lame_global_flags * gfp)
     /* compute info needed for polyphase filter (filter type==0, default) */
     /***************************************************************/
 
-    int     band, maxband, minband;
-    FLOAT8  freq;
+    int band, maxband, minband;
     int lowpass_band = 32;
     int highpass_band = -1;
+    FLOAT   freq;
 
     if (gfc->lowpass1 > 0) {
 	minband = 999;
@@ -631,7 +631,7 @@ lame_init_params(lame_global_flags * const gfp)
     case vbr_rh:
     case vbr_mtrh:
         {
-            FLOAT8  cmp[] = { 5.7, 6.5, 7.3, 8.2, 9.1, 10, 11, 12, 13, 14 };
+            FLOAT  cmp[] = { 5.7, 6.5, 7.3, 8.2, 9.1, 10, 11, 12, 13, 14 };
             gfp->compression_ratio = cmp[gfp->VBR_q];
         }
         break;
@@ -949,8 +949,8 @@ lame_init_params(lame_global_flags * const gfp)
 
         if (gfp->VBR == vbr_rh) /* because of above fall thru */
         {
-            static const FLOAT8 dbQns[10]={- 4,- 3,-2,-1,0,0.7,1.4,2.1,2.8,3.5};
-            /*static const FLOAT8 atQns[10]={-16,-12,-8,-4,0,  1,  2,  3,  4,  5};*/
+            static const FLOAT dbQns[10]={- 4,- 3,-2,-1,0,0.7,1.4,2.1,2.8,3.5};
+            /*static const FLOAT atQns[10]={-16,-12,-8,-4,0,  1,  2,  3,  4,  5};*/
 	    gfc->VBR.mask_adjust = dbQns[gfp->VBR_q];
         }
         
@@ -1385,11 +1385,11 @@ lame_encode_buffer_sample_t(lame_global_flags * gfp,
 
     /* Downsample to Mono if 2 channels in and 1 channel out */
 	if (gfp->num_channels == 2 && gfc->channels_out == 1) {
-		for (i=0; i<nsamples; ++i) {
-			in_buffer[0][i] =
-				0.5 * ((FLOAT8) in_buffer[0][i] + in_buffer[1][i]);
-			in_buffer[1][i] = 0.0;
-		}
+	    for (i=0; i<nsamples; ++i) {
+		in_buffer[0][i] =
+		    0.5f * ((FLOAT) in_buffer[0][i] + in_buffer[1][i]);
+		in_buffer[1][i] = 0.0;
+	    }
 	}
 
 

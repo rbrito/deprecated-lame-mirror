@@ -440,7 +440,7 @@ huffman_coder_count1(lame_internal_flags *gfc, gr_info *gi)
 #endif
 
     int *ix = &gi->l3_enc[gi->big_values];
-    FLOAT8 *xr = &gi->xr[gi->big_values];
+    FLOAT *xr = &gi->xr[gi->big_values];
     assert(gi->count1table_select < 2);
 
     for (i = (gi->count1 - gi->big_values) / 4; i > 0; --i) {

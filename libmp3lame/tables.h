@@ -58,11 +58,11 @@ extern FLOAT window_s[];
 
 #define PRECALC_SIZE (IXMAX_VAL+2)
 
-extern FLOAT8 pow43[PRECALC_SIZE];
+extern FLOAT pow43[PRECALC_SIZE];
 #ifdef TAKEHIRO_IEEE754_HACK
-extern FLOAT8 adj43asm[PRECALC_SIZE];
+extern FLOAT adj43asm[PRECALC_SIZE];
 #else
-extern FLOAT8 adj43[PRECALC_SIZE];
+extern FLOAT adj43[PRECALC_SIZE];
 #endif
 
 #define Q_MAX (256+1)
@@ -76,9 +76,9 @@ extern FLOAT8 adj43[PRECALC_SIZE];
 		      for short block, 0+(15<<2)+7*8 = 15*4+56 = 116
 		   */
 
-extern FLOAT8 pow20[Q_MAX+Q_MAX2];
-extern FLOAT8 ipow20[Q_MAX];
-extern FLOAT8 iipow20[Q_MAX2];
+extern FLOAT pow20[Q_MAX+Q_MAX2];
+extern FLOAT ipow20[Q_MAX];
+extern FLOAT iipow20[Q_MAX2];
 
 
 #endif /* LAME_TABLES_H */

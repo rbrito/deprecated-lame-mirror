@@ -53,7 +53,7 @@ ms_sparsing(lame_internal_flags* gfc, int gr)
     int width;
 
     for (sfb = 0; sfb < gfc->l3_side.tt[gr][0].sfbmax; ++sfb) {
-        FLOAT8 threshold;
+        FLOAT threshold;
         width = gfc->l3_side.tt[gr][0].width[sfb];
 	if (sfb < gfc->l3_side.tt[gr][0].sfb_lmax)
 	    threshold
@@ -66,12 +66,12 @@ ms_sparsing(lame_internal_flags* gfc, int gr)
 
 	i = j + width;
 	do {
-            FLOAT8 *m = gfc->l3_side.tt[gr][0].xr+j;
-            FLOAT8 *s = gfc->l3_side.tt[gr][1].xr+j;
-            FLOAT8 m02 = m[0] * m[0];
-            FLOAT8 m12 = m[1] * m[1];
-            FLOAT8 s02 = s[0] * s[0];
-            FLOAT8 s12 = s[1] * s[1];
+            FLOAT *m = gfc->l3_side.tt[gr][0].xr+j;
+            FLOAT *s = gfc->l3_side.tt[gr][1].xr+j;
+            FLOAT m02 = m[0] * m[0];
+            FLOAT m12 = m[1] * m[1];
+            FLOAT s02 = s[0] * s[0];
+            FLOAT s12 = s[1] * s[1];
             if ( s02 < m02*threshold && s12 < m12*threshold ) { 
                 m[0] += s[0]; s[0] = 0;
                 m[1] += s[1]; s[1] = 0;
@@ -96,12 +96,12 @@ ms_sparsing(lame_internal_flags* gfc, int gr)
  */
 static void
 adjust_ATH( lame_global_flags* const  gfp,
-            FLOAT8              tot_ener[2][4] )
+            FLOAT              tot_ener[2][4] )
 {
     lame_internal_flags* const  gfc = gfp->internal_flags;
     int gr, channel;
     FLOAT max_pow, max_pow_alt;
-    FLOAT8 max_val;
+    FLOAT max_val;
 
     if (gfc->ATH.use_adjust == 0 || gfp->athaa_loudapprox == 0) {
         gfc->ATH.adjust = 1.0;	/* no adjustment */
@@ -178,7 +178,7 @@ adjust_ATH( lame_global_flags* const  gfp,
       {                         /* by Robert Hegemann */
         /*  this code reduces slowly the ATH (speed of 12 dB per second)
          */
-        FLOAT8 
+	FLOAT x;
         //x = Max (640, 320*(int)(max_val/320));
         x = Max (32, 32*(int)(max_val/32));
         x = x/32768;
@@ -192,7 +192,7 @@ adjust_ATH( lame_global_flags* const  gfp,
       {                         /* jd - 2001 feb27, mar12,20, jun30, jul22 */
                                 /* continuous curves based on approximation */
                                 /* to GB's original values. */
-        FLOAT8 adj_lim_new;
+        FLOAT adj_lim_new;
                                 /* For an increase in approximate loudness, */
                                 /* set ATH adjust to adjust_limit immediately*/
                                 /* after a delay of one frame. */
@@ -344,8 +344,8 @@ init_outer_loop(
 	cod_info->window[sfb] = 3; // which is always 0.
     }
     if (cod_info->block_type == SHORT_TYPE) {
-	FLOAT8 ixwork[576];
-	FLOAT8 *ix;
+	FLOAT ixwork[576];
+	FLOAT *ix;
 
         cod_info->sfb_smin        = 0;
         cod_info->sfb_lmax        = 0;
@@ -373,7 +373,7 @@ init_outer_loop(
 	  order of increasing frequency...
 	*/
 	ix = &cod_info->xr[gfc->scalefac_band.l[cod_info->sfb_lmax]];
-	memcpy(ixwork, cod_info->xr, 576*sizeof(FLOAT8));
+	memcpy(ixwork, cod_info->xr, 576*sizeof(FLOAT));
 	for (sfb = cod_info->sfb_smin; sfb < SBMAX_s; sfb++) {
 	    int start = gfc->scalefac_band.s[sfb];
 	    int end   = gfc->scalefac_band.s[sfb + 1];
@@ -445,7 +445,7 @@ FFT's                    <---------1024---------->
 
 */
 
-typedef FLOAT8 chgrdata[2][2];
+typedef FLOAT chgrdata[2][2];
 
 int  lame_encode_mp3_frame (				// Output
 	lame_global_flags* const  gfp,			// Context
@@ -461,8 +461,8 @@ int  lame_encode_mp3_frame (				// Output
   const sample_t *inbuf[2];
   lame_internal_flags *gfc=gfp->internal_flags;
 
-  FLOAT8 tot_ener[2][4];
-  FLOAT8 ms_ener_ratio[2]={.5,.5};
+  FLOAT tot_ener[2][4];
+  FLOAT ms_ener_ratio[2]={.5,.5};
   chgrdata pe,pe_MS;
   chgrdata *pe_use;
 
@@ -604,7 +604,7 @@ int  lame_encode_mp3_frame (				// Output
        * _prev is the value of the last granule of the previous frame
        * _next is the value of the first granule of the next frame
        */
-      FLOAT8 diff_pe = 0;
+      FLOAT diff_pe = 0;
       for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
 	for ( ch = 0; ch < gfc->channels_out; ch++ ) {
 	    diff_pe += pe_MS[gr][ch] - pe[gr][ch];
@@ -647,11 +647,11 @@ int  lame_encode_mp3_frame (				// Output
       for (gr = 0; gr < gfc->mode_gr; gr++) {
 	  int i;
 	  for (i = 0; i < 576; ++i) {
-	      FLOAT8 l, r;
+	      FLOAT l, r;
 	      l = gfc->l3_side.tt[gr][0].xr[i];
 	      r = gfc->l3_side.tt[gr][1].xr[i];
-	      gfc->l3_side.tt[gr][0].xr[i] = (l+r) * (FLOAT8)(SQRT2*0.5);
-	      gfc->l3_side.tt[gr][1].xr[i] = (l-r) * (FLOAT8)(SQRT2*0.5);
+	      gfc->l3_side.tt[gr][0].xr[i] = (l+r) * (FLOAT)(SQRT2*0.5);
+	      gfc->l3_side.tt[gr][1].xr[i] = (l-r) * (FLOAT)(SQRT2*0.5);
 	  }
 	  if (gfc->sparsing)
 	      ms_sparsing(gfc, gr);
@@ -672,7 +672,7 @@ int  lame_encode_mp3_frame (				// Output
 	gfc->pinfo->blocktype[gr][ch]=gfc->l3_side.tt[gr][ch].block_type;
 	gfc->pinfo->pe[gr][ch]=(*pe_use)[gr][ch];
 	memcpy(gfc->pinfo->xr[gr][ch], &gfc->l3_side.tt[gr][ch].xr,
-	       sizeof(FLOAT8)*576);
+	       sizeof(FLOAT)*576);
       }
     }
   }
@@ -686,7 +686,7 @@ int  lame_encode_mp3_frame (				// Output
     };
 
     int i;
-    FLOAT8 f;
+    FLOAT f;
 
     for(i=0;i<18;i++) gfc->nsPsy.pefirbuf[i] = gfc->nsPsy.pefirbuf[i+1];
 

@@ -373,7 +373,7 @@ static const int order[] = {
 
 /* returns sum_j=0^31 a[j]*cos(PI*j*(k+1/2)/32), 0<=k<32 */
 inline static void
-window_subband(const sample_t *x1, FLOAT8 a[SBLIMIT])
+window_subband(const sample_t *x1, FLOAT a[SBLIMIT])
 {
     int i;
     FLOAT8 const *wp = enwindow+10;
@@ -381,7 +381,7 @@ window_subband(const sample_t *x1, FLOAT8 a[SBLIMIT])
     const sample_t *x2 = &x1[238-14-286];
 
     for (i = -15; i < 0; i++) {
-	FLOAT8 w, s, t;
+	FLOAT w, s, t;
 
 	w = wp[-10]; s = x2[-224] * w; t  = x1[ 224] * w;
 	w = wp[-9]; s += x2[-160] * w; t += x1[ 160] * w;
@@ -415,7 +415,7 @@ window_subband(const sample_t *x1, FLOAT8 a[SBLIMIT])
 	x2++;
     }
     {
-	FLOAT8 s,t,u,v;
+	FLOAT s,t,u,v;
 	t  =  x1[- 16] * wp[-10];              s  = x1[ -32] * wp[-2];
 	t += (x1[- 48] - x1[ 16]) * wp[-9];    s += x1[ -96] * wp[-1];
 	t += (x1[- 80] + x1[ 48]) * wp[-8];    s += x1[-160] * wp[ 0];
@@ -437,7 +437,7 @@ window_subband(const sample_t *x1, FLOAT8 a[SBLIMIT])
 	a[14] = v - t;   // A3
     }
 {
-    FLOAT8 xr;
+    FLOAT xr;
     xr = a[28] - a[ 0]; a[ 0] += a[28]; a[28] = xr * wp[-2*18+7];
     xr = a[29] - a[ 1]; a[ 1] += a[29]; a[29] = xr * wp[-2*18+7];
 
@@ -572,11 +572,11 @@ window_subband(const sample_t *x1, FLOAT8 a[SBLIMIT])
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
-inline static void mdct_short(FLOAT8 *inout)
+inline static void mdct_short(FLOAT *inout)
 {
     int l;
     for ( l = 0; l < 3; l++ ) {
-	FLOAT8 tc0,tc1,tc2,ts0,ts1,ts2;
+	FLOAT tc0,tc1,tc2,ts0,ts1,ts2;
 
 	ts0 = inout[2*3] * win[SHORT_TYPE][0] - inout[5*3];
 	tc0 = inout[0*3] * win[SHORT_TYPE][2] - inout[3*3];
@@ -608,11 +608,11 @@ inline static void mdct_short(FLOAT8 *inout)
     }
 }
 
-inline static void mdct_long(FLOAT8 *out, FLOAT8 *in)
+inline static void mdct_long(FLOAT *out, FLOAT *in)
 {
-    FLOAT8 ct,st;
+    FLOAT ct,st;
   {
-    FLOAT8 tc1, tc2, tc3, tc4, ts5, ts6, ts7, ts8;
+    FLOAT tc1, tc2, tc3, tc4, ts5, ts6, ts7, ts8;
     // 1,2, 5,6, 9,10, 13,14, 17
     tc1 = in[17]-in[ 9];
     tc3 = in[15]-in[11];
@@ -646,7 +646,7 @@ inline static void mdct_long(FLOAT8 *out, FLOAT8 *in)
     out[14] = ct-st;
   }
   {
-    FLOAT8 ts1, ts2, ts3, ts4, tc5, tc6, tc7, tc8;
+    FLOAT ts1, ts2, ts3, ts4, tc5, tc6, tc7, tc8;
 
     ts1 = in[ 8]-in[ 0];
     ts3 = in[ 6]-in[ 2];
@@ -693,8 +693,8 @@ void mdct_sub48(
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 	int	band;
 	gr_info *gi = &(gfc->l3_side.tt[gr][ch]);
-	FLOAT8 *mdct_enc = gi->xr;
-	FLOAT8 *samp = gfc->sb_sample[ch][1 - gr][0];
+	FLOAT *mdct_enc = gi->xr;
+	FLOAT *samp = gfc->sb_sample[ch][1 - gr][0];
 
 	for (k = 0; k < 18 / 2; k++) {
 	    window_subband(wk, samp);
@@ -715,13 +715,13 @@ void mdct_sub48(
 	 */
 	for (band = 0; band < 32; band++, mdct_enc += 18) {
 	    int type = gi->block_type;
-	    FLOAT8 *band0, *band1;
+	    FLOAT *band0, *band1;
 	    band0 = gfc->sb_sample[ch][  gr][0] + order[band];
 	    band1 = gfc->sb_sample[ch][1-gr][0] + order[band];
 	    if (gi->mixed_block_flag && band < 2)
 		type = 0;
 	    if (gfc->amp_filter[band] == 0.0) {
-		memset(mdct_enc, 0, 18*sizeof(FLOAT8));
+		memset(mdct_enc, 0, 18*sizeof(FLOAT));
 	    } else {
 		if (gfc->amp_filter[band] != 1.0) {
 		    for (k=0; k<18; k++)
@@ -729,7 +729,7 @@ void mdct_sub48(
 		}
 		if (type == SHORT_TYPE) {
 		    for (k = -NS/4; k < 0; k++) {
-			FLOAT8 w = win[SHORT_TYPE][k+3];
+			FLOAT w = win[SHORT_TYPE][k+3];
 			mdct_enc[k*3+ 9] = band0[( 9+k)*32] * w - band0[( 8-k)*32];
 			mdct_enc[k*3+18] = band0[(14-k)*32] * w + band0[(15+k)*32];
 			mdct_enc[k*3+10] = band0[(15+k)*32] * w - band0[(14-k)*32];
@@ -739,9 +739,9 @@ void mdct_sub48(
 		    }
 		    mdct_short(mdct_enc);
 		} else {
-		    FLOAT8 work[18];
+		    FLOAT work[18];
 		    for (k = -NL/4; k < 0; k++) {
-			FLOAT8 a, b;
+			FLOAT a, b;
 			a = win[type][k+27] * band1[(k+9)*32]
 			  + win[type][k+36] * band1[(8-k)*32];
 			b = win[type][k+ 9] * band0[(k+9)*32]
@@ -758,7 +758,7 @@ void mdct_sub48(
 	     */
 	    if (type != SHORT_TYPE && band != 0) {
 		for (k = 7; k >= 0; --k) {
-		    FLOAT8 bu,bd;
+		    FLOAT bu,bd;
 		    bu = mdct_enc[k] * ca[k] + mdct_enc[-1-k] * cs[k];
 		    bd = mdct_enc[k] * cs[k] - mdct_enc[-1-k] * ca[k];
 		    
@@ -769,6 +769,6 @@ void mdct_sub48(
 	}
     }
     if (gfc->mode_gr == 1) {
-	memcpy(gfc->sb_sample[ch][0], gfc->sb_sample[ch][1], 576 * sizeof(FLOAT8));
+	memcpy(gfc->sb_sample[ch][0], gfc->sb_sample[ch][1], 576 * sizeof(FLOAT));
     }
 }

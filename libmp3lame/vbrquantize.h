@@ -24,10 +24,10 @@
 
 int VBR_noise_shaping(
                     lame_internal_flags * gfc,
-                    FLOAT8            * xr34orig, 
+                    FLOAT             * xr34orig,
                     int                 minbits, 
                     int                 maxbits,
-                    FLOAT8	      * l3_xmin,
+                    FLOAT	      * l3_xmin,
                     int                 gr,
                     int                 ch );
 

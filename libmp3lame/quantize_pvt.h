@@ -32,15 +32,15 @@ extern const int slen2_tab[16];
 extern const scalefac_struct sfBandIndex[9];
 
 typedef struct calc_noise_result_t {
-    FLOAT8  over_noise;      /* sum of quantization noise > masking */
-    FLOAT8  tot_noise;       /* sum of all quantization noise */
-    FLOAT8  max_noise;       /* max quantization noise */
+    FLOAT  over_noise;      /* sum of quantization noise > masking */
+    FLOAT  tot_noise;       /* sum of all quantization noise */
+    FLOAT  max_noise;       /* max quantization noise */
     int     over_count;      /* number of quantization noise > masking */
 } calc_noise_result;
 
 int     bin_search_StepSize (lame_internal_flags * const gfc, gr_info * const cod_info,
                              const int desired_rate, const int ch,
-                             const FLOAT8 xrpow[576]);
+                             const FLOAT xrpow[576]);
 
 void    iteration_init (lame_global_flags *gfp);
 
@@ -48,12 +48,12 @@ void    iteration_init (lame_global_flags *gfp);
 int     calc_xmin (lame_global_flags *gfp,
                    const III_psy_ratio * const ratio,
 		   const gr_info * const cod_info,
-                   FLOAT8 * const l3_xmin);
+                   FLOAT * const l3_xmin);
 
 int     calc_noise (const lame_internal_flags * const gfc,
                     const gr_info * const cod_info,
-                    const FLOAT8 * l3_xmin,
-                    FLOAT8 * distort,
+                    const FLOAT * l3_xmin,
+                    FLOAT * distort,
 		    calc_noise_result * const res);
 
 #if defined(HAVE_GTK)
@@ -66,7 +66,7 @@ void    set_frame_pinfo (lame_global_flags *gfp,
 
 /* takehiro.c */
 
-int     count_bits (lame_internal_flags * const gfc, const FLOAT8 * const xr,
+int     count_bits (lame_internal_flags * const gfc, const FLOAT * const xr,
 		    gr_info * const cod_info);
 int     noquant_count_bits (lame_internal_flags * const gfc,
 			    gr_info * const cod_info);

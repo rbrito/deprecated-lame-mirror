@@ -132,11 +132,11 @@ select_kth_int(int a[], int N, int k)
 
 /*  caution: a[] will be resorted!!
  */
-static FLOAT8
-select_kth(FLOAT8 a[], int N, int k)
+static FLOAT
+select_kth(FLOAT a[], int N, int k)
 {
     int     i, j, l, r;
-    FLOAT8  v, w;
+    FLOAT  v, w;
 
     l = 0;
     r = N - 1;
@@ -171,14 +171,14 @@ select_kth(FLOAT8 a[], int N, int k)
 
 
 
-static  FLOAT8
-calc_sfb_noise(const FLOAT8 * xr, const FLOAT8 * xr34, unsigned int bw, int sf)
+static  FLOAT
+calc_sfb_noise(const FLOAT * xr, const FLOAT * xr34, unsigned int bw, int sf)
 {
     unsigned int j;
     fi_union fi;
-    FLOAT8  temp;
-    FLOAT8  xfsf = 0;
-    FLOAT8  sfpow, sfpow34;
+    FLOAT  temp;
+    FLOAT  xfsf = 0;
+    FLOAT  sfpow, sfpow34;
 
     sfpow = POW20(sf);  /*pow(2.0,sf/4.0); */
     sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
@@ -207,13 +207,13 @@ calc_sfb_noise(const FLOAT8 * xr, const FLOAT8 * xr34, unsigned int bw, int sf)
 
 
 
-static  FLOAT8
-calc_sfb_noise_mq(const FLOAT8 * xr, const FLOAT8 * xr34, int bw, int sf, int mq)
+static  FLOAT
+calc_sfb_noise_mq(const FLOAT * xr, const FLOAT * xr34, int bw, int sf, int mq)
 {
     int     j, k;
     fi_union fi;
-    FLOAT8  temp, scratch[192];
-    FLOAT8  sfpow, sfpow34, xfsfm = 0, xfsf = 0;
+    FLOAT  temp, scratch[192];
+    FLOAT  sfpow, sfpow34, xfsfm = 0, xfsf = 0;
 
     sfpow = POW20(sf);  /*pow(2.0,sf/4.0); */
     sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
@@ -255,13 +255,13 @@ calc_sfb_noise_mq(const FLOAT8 * xr, const FLOAT8 * xr34, int bw, int sf, int mq
 }
 
 
-static const FLOAT8 facm1 = .8408964153; /* pow(2,(sf-1)/4.0) */
-static const FLOAT8 facp1 = 1.189207115;
-static const FLOAT8 fac34m1 = 1.13878863476; /* .84089 ^ -3/4 */
-static const FLOAT8 fac34p1 = 0.878126080187;
+static const FLOAT facm1 = .8408964153; /* pow(2,(sf-1)/4.0) */
+static const FLOAT facp1 = 1.189207115;
+static const FLOAT fac34m1 = 1.13878863476; /* .84089 ^ -3/4 */
+static const FLOAT fac34p1 = 0.878126080187;
 
-static  FLOAT8
-calc_sfb_noise_ave(const FLOAT8 * xr, const FLOAT8 * xr34, int bw, int sf)
+static  FLOAT
+calc_sfb_noise_ave(const FLOAT * xr, const FLOAT * xr34, int bw, int sf)
 {
     double  xp;
     double  xe;
@@ -272,9 +272,9 @@ calc_sfb_noise_ave(const FLOAT8 * xr, const FLOAT8 * xr34, int bw, int sf)
 #endif
     int     xx[3], j;
     fi_union *fi = (fi_union *) xx;
-    FLOAT8  sfpow34_eq, sfpow34_p1, sfpow34_m1;
-    FLOAT8  sfpow_eq, sfpow_p1, sfpow_m1;
-    FLOAT8  xfsf_eq = 0, xfsf_p1 = 0, xfsf_m1 = 0;
+    FLOAT  sfpow34_eq, sfpow34_p1, sfpow34_m1;
+    FLOAT  sfpow_eq, sfpow_p1, sfpow_m1;
+    FLOAT  xfsf_eq = 0, xfsf_p1 = 0, xfsf_m1 = 0;
 
     sfpow_eq = POW20(sf); /*pow(2.0,sf/4.0); */
     sfpow_m1 = sfpow_eq * facm1;
@@ -343,9 +343,9 @@ calc_sfb_noise_ave(const FLOAT8 * xr, const FLOAT8 * xr34, int bw, int sf)
 
 inline int
 find_scalefac(
-    const FLOAT8 * xr, const FLOAT8 * xr34, FLOAT8 l3_xmin, int bw)
+    const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, int bw)
 {
-    FLOAT8  xfsf;
+    FLOAT  xfsf;
     int     i, sf, sf_ok, delsf;
 
     /* search will range from sf:  -209 -> 45  */
@@ -381,10 +381,10 @@ find_scalefac(
 }
 
 inline int
-find_scalefac_mq(const FLOAT8 * xr, const FLOAT8 * xr34, FLOAT8 l3_xmin,
+find_scalefac_mq(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin,
 		 int bw, int mq)
 {
-    FLOAT8  xfsf;
+    FLOAT  xfsf;
     int     i, sf, sf_ok, delsf;
 
     /* search will range from sf:  -209 -> 45  */
@@ -421,9 +421,9 @@ find_scalefac_mq(const FLOAT8 * xr, const FLOAT8 * xr34, FLOAT8 l3_xmin,
 
 inline int
 find_scalefac_ave(
-    const FLOAT8 * xr, const FLOAT8 * xr34, FLOAT8 l3_xmin, int bw)
+    const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, int bw)
 {
-    FLOAT8  xfsf;
+    FLOAT  xfsf;
     int     i, sf, sf_ok, delsf;
 
     /* search will range from sf:  -209 -> 45  */
@@ -464,9 +464,9 @@ find_scalefac_ave(
  *  calculates quantization step size determined by allowed masking
  */
 inline int
-calc_scalefac(FLOAT8 l3_xmin, int bw, FLOAT8 preset_tune)
+calc_scalefac(FLOAT l3_xmin, int bw, FLOAT preset_tune)
 {
-    FLOAT8 const c = (preset_tune > 0 ? preset_tune : 5.799142446); // 10 * 10^(2/3) * log10(4/3)
+    FLOAT const c = (preset_tune > 0 ? preset_tune : 5.799142446); // 10 * 10^(2/3) * log10(4/3)
     return 210 + (int) (c * log10(l3_xmin / bw) - .5);
 }
 
@@ -661,8 +661,8 @@ compute_scalefacs_long(int *sf, const gr_info * cod_info, int *scalefac)
 
 /* a variation for vbr-mtrh */
 static void
-block_sf(const lame_internal_flags * gfc, const FLOAT8 * l3_xmin,
-	 const FLOAT8 * xr34_orig, int * vbrsf, gr_info *gi)
+block_sf(const lame_internal_flags * gfc, const FLOAT * l3_xmin,
+	 const FLOAT * xr34_orig, int * vbrsf, gr_info *gi)
 {
     int     sfb, j;
     int     scalefac_criteria;
@@ -714,7 +714,7 @@ block_sf(const lame_internal_flags * gfc, const FLOAT8 * l3_xmin,
 
 
 static void
-short_block_sf(const lame_internal_flags * gfc, const FLOAT8 * l3_xmin,
+short_block_sf(const lame_internal_flags * gfc, const FLOAT * l3_xmin,
                int * vbrsf, int *vbrmin, int *vbrmax, gr_info *gi)
 {
     int     sfb, b, i;
@@ -807,7 +807,7 @@ short_block_sf(const lame_internal_flags * gfc, const FLOAT8 * l3_xmin,
 
 
 static void
-long_block_sf(const lame_internal_flags * gfc, const FLOAT8 * l3_xmin,
+long_block_sf(const lame_internal_flags * gfc, const FLOAT * l3_xmin,
               int * vbrsf, int *vbrmin, int *vbrmax, gr_info *gi)
 {
     int     sfb;
@@ -1083,7 +1083,7 @@ long_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
 
 static void
 block_xr34(const lame_internal_flags * gfc, const gr_info * cod_info,
-	   const FLOAT8 * xr34_orig, FLOAT8 * xr34)
+	   const FLOAT * xr34_orig, FLOAT * xr34)
 {
     int     sfb, j = 0, sfbmax, *scalefac = cod_info->scalefac;
 
@@ -1098,7 +1098,7 @@ block_xr34(const lame_internal_flags * gfc, const gr_info * cod_info,
         sfbmax += 1;
 
     for (sfb = 0; sfb < sfbmax; ++sfb) {
-	FLOAT8 fac;
+	FLOAT fac;
 	int s =
 	    (((*scalefac++) + (cod_info->preflag ? pretab[sfb] : 0))
 	     << (cod_info->scalefac_scale + 1))
@@ -1106,7 +1106,7 @@ block_xr34(const lame_internal_flags * gfc, const gr_info * cod_info,
 	int l = cod_info->width[sfb];
 
 	if (s == 0) {/* just copy */
-	    memcpy(&xr34[j], &xr34_orig[j], sizeof(FLOAT8)*l);
+	    memcpy(&xr34[j], &xr34_orig[j], sizeof(FLOAT)*l);
 	    j += l;
 	    continue;
 	}
@@ -1131,13 +1131,13 @@ block_xr34(const lame_internal_flags * gfc, const gr_info * cod_info,
  *
  ***********************************************************************/
 int
-VBR_noise_shaping(lame_internal_flags * gfc, FLOAT8 * xr34orig, int minbits, int maxbits,
-                  FLOAT8 * l3_xmin, int gr, int ch)
+VBR_noise_shaping(lame_internal_flags * gfc, FLOAT * xr34orig, int minbits, int maxbits,
+                  FLOAT * l3_xmin, int gr, int ch)
 {
     int vbrsf[SFBMAX];
     int vbrsf2[SFBMAX];
     gr_info *cod_info;
-    FLOAT8  xr34[576];
+    FLOAT  xr34[576];
     int     shortblock, ret;
     int     vbrmin, vbrmax, vbrmin2, vbrmax2;
     int     M = 6;
@@ -1218,7 +1218,7 @@ VBR_noise_shaping(lame_internal_flags * gfc, FLOAT8 * xr34orig, int minbits, int
         return -1;
 
     if (gfc->substep_shaping & 2) {
-	FLOAT8 xrtmp[576];
+	FLOAT xrtmp[576];
 	trancate_smallspectrums(gfc, cod_info, l3_xmin, xrtmp);
     }
 

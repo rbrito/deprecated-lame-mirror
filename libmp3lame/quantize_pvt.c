@@ -60,11 +60,11 @@ void set_pinfo (
     lame_internal_flags *gfc=gfp->internal_flags;
     int sfb, sfb2;
     int j,i,l,start,end,bw;
-    FLOAT8 en0,en1;
+    FLOAT en0,en1;
     FLOAT ifqstep = ( cod_info->scalefac_scale == 0 ) ? .5 : 1.0;
     int* scalefac = cod_info->scalefac;
 
-    FLOAT8 l3_xmin[SFBMAX], xfsf[SFBMAX];
+    FLOAT l3_xmin[SFBMAX], xfsf[SFBMAX];
     calc_noise_result noise;
 
     calc_xmin (gfp, ratio, cod_info, l3_xmin);

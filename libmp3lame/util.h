@@ -174,24 +174,24 @@ typedef struct {
   int     use;
 
   // adjustment to joint stereo
-  FLOAT8  ms_maskadjust;
+  FLOAT  ms_maskadjust;
 
   // adjustments to quantization selection
-  FLOAT8  quantcomp_adjust_rh_tot;    // adjustments for tot_noise with vbr-old
-  FLOAT8  quantcomp_adjust_rh_max;    // adjustments for max_noise with vbr-old
-  FLOAT8  quantcomp_adjust_mtrh;      // adjustments for calc_scalefac "c" with vbr-mtrh
+  FLOAT  quantcomp_adjust_rh_tot;    // adjustments for tot_noise with vbr-old
+  FLOAT  quantcomp_adjust_rh_max;    // adjustments for max_noise with vbr-old
+  FLOAT  quantcomp_adjust_mtrh;      // adjustments for calc_scalefac "c" with vbr-mtrh
   int     quantcomp_type_s;           // quantization comparison to switch to on non-normal blocks
   int     quantcomp_alt_type;          // third quantization comparison to use for special cases
                                        // such as high athadjust values, or long blocks, etc
 
   // tunings reliant upon athadjust
-  FLOAT8  athadjust_switch_level;      // level of athadjust at which to apply tunings at
+  FLOAT  athadjust_switch_level;      // level of athadjust at which to apply tunings at
                                        // x <= 0 == never switch, x >= 1 == always switch
   int     athadjust_safe_noiseshaping; // if 0, noise shaping 2 will not be used no matter what
                                        // the noise shaping type would normally be set to
-  FLOAT8  athadjust_safe_noiseshaping_thre; // value which max_pow_alt must be greater than
+  FLOAT  athadjust_safe_noiseshaping_thre; // value which max_pow_alt must be greater than
                                             // for noise shaping 2 to be used "safely"                                                     
-  FLOAT8  athadjust_safe_athaasensitivity; // used for second determination if it is safe to switch
+  FLOAT  athadjust_safe_athaasensitivity; // used for second determination if it is safe to switch
 	                                      // to noise shaping 2
 } presetTune_t;
 
@@ -222,9 +222,9 @@ typedef enum {
 typedef struct {
     unsigned long  Class_ID;        /* Class ID to recognize a resample_t
                                        object */
-    FLOAT8   sample_freq_in;  /* Input sample frequency in Hz */
-    FLOAT8   sample_freq_out; /* requested Output sample frequency in Hz */
-    FLOAT8   lowpass_freq;    /* lowpass frequency, this is the -6 dB
+    FLOAT   sample_freq_in;  /* Input sample frequency in Hz */
+    FLOAT   sample_freq_out; /* requested Output sample frequency in Hz */
+    FLOAT   lowpass_freq;    /* lowpass frequency, this is the -6 dB
                                        point */
     int            scale_in;        /* the resampling is actually done by
                                        scale_out: */
@@ -295,8 +295,8 @@ struct lame_internal_flags {
   int channels_out;     /* number of channels in the output data stream (not used for decoding) */
   resample_t*  resample_in;   /* context for coding (PCM=>MP3) resampling */
   resample_t*  resample_out;	/* context for decoding (MP3=>PCM) resampling */
-  FLOAT8  samplefreq_in;
-  FLOAT8  samplefreq_out;
+  FLOAT samplefreq_in;
+  FLOAT samplefreq_out;
   FLOAT resample_ratio;           /* input_samp_rate/output_samp_rate */
 
   size_t       frame_size;    /* size of one frame in samples per channel */
@@ -305,8 +305,8 @@ struct lame_internal_flags {
   unsigned long frame_count;  /* Number of frames coded, 2^32 > 3 years */
   int          mf_samples_to_encode;
   int          mf_size;
-  FLOAT8       ampl;	  /* amplification at the end of the current chunk (1. = 0 dB) */
-  FLOAT8       last_ampl;	  /* amplification at the end of the last chunk    (1. = 0 dB) */
+  FLOAT       ampl;	  /* amplification at the end of the current chunk (1. = 0 dB) */
+  FLOAT       last_ampl;	  /* amplification at the end of the last chunk    (1. = 0 dB) */
   int VBR_min_bitrate;            /* min bitrate index */
   int VBR_max_bitrate;            /* max bitrate index */
   int bitrate_index;
@@ -315,8 +315,8 @@ struct lame_internal_flags {
 
 
   /* lowpass and highpass filter control */
-  FLOAT8 lowpass1,lowpass2;   /* normalized frequency bounds of passband */
-  FLOAT8 highpass1,highpass2; /* normalized frequency bounds of passband */
+  FLOAT lowpass1,lowpass2;   /* normalized frequency bounds of passband */
+  FLOAT highpass1,highpass2; /* normalized frequency bounds of passband */
 
   int filter_type;          /* 0=polyphase filter, 1= FIR filter 2=MDCT filter(bad)*/
   int quantization;         /* 0 = ISO formual,  1=best amplitude */
@@ -363,7 +363,7 @@ struct lame_internal_flags {
   int OldValue[2];
   int CurrentStep[2];
 
-  FLOAT8 masking_lower;
+  FLOAT masking_lower;
   char bv_scf[576];
   int pseudohalf[SFBMAX];
 
@@ -379,13 +379,13 @@ struct lame_internal_flags {
 #define BPC 320
   sample_t *inbuf_old [2];
   sample_t *blackfilt [2*BPC+1];
-  FLOAT8 itime[2];
+  FLOAT itime[2];
 #endif
   int sideinfo_len;
 
   /* variables for newmdct.c */
-  FLOAT8 sb_sample[2][2][18][SBLIMIT];
-  FLOAT8 amp_filter[32];
+  FLOAT sb_sample[2][2][18][SBLIMIT];
+  FLOAT amp_filter[32];
 
   /* variables for bitstream.c */
   /* mpeg1: buffer=511 bytes  smallest frame: 96-38(sideinfo)=58
@@ -414,15 +414,11 @@ struct lame_internal_flags {
   scalefac_struct scalefac_band;
 
   /* DATA FROM PSYMODEL.C */
-/* The static variables "r", "phi_sav", "new", "old" and "oldest" have    */
-/* to be remembered for the unpredictability measure.  For "r" and        */
-/* "phi_sav", the first index from the left is the channel select and     */
-/* the second index is the "age" of the data.                             */
-  FLOAT8	nb_1[4][CBANDS], nb_2[4][CBANDS];
-  FLOAT8	nb_s1[4][CBANDS], nb_s2[4][CBANDS];
-  FLOAT8  *s3_ss;
-  FLOAT8  *s3_ll;
-  FLOAT8 decay;
+  FLOAT	nb_1[4][CBANDS], nb_2[4][CBANDS];
+  FLOAT	nb_s1[4][CBANDS], nb_s2[4][CBANDS];
+  FLOAT *s3_ss;
+  FLOAT *s3_ll;
+  FLOAT decay;
 
   III_psy_xmin thm[4];
   III_psy_xmin en[4];
@@ -435,7 +431,7 @@ struct lame_internal_flags {
   FLOAT loudness_sq_save[2];/* account for granule delay of L3psycho_anal */
 
   /* Scale Factor Bands    */
-  FLOAT8 mld_l[SBMAX_l],mld_s[SBMAX_s];
+  FLOAT mld_l[SBMAX_l],mld_s[SBMAX_s];
   int	bo_l[SBMAX_l], bo_s[SBMAX_s] ;
   int	npart_l,npart_s;
 
@@ -498,7 +494,7 @@ struct lame_internal_flags {
      *  VBR related stuff
      */
     struct {
-	FLOAT8  mask_adjust;    // the dbQ stuff
+	FLOAT   mask_adjust;    // the dbQ stuff
 	int     quality;
 	int     smooth;         // 0=no, 1=peaks, 2=+-4
     } VBR;
@@ -515,13 +511,13 @@ struct lame_internal_flags {
   /* used by the frame analyzer */
   plotting_data *pinfo;
   FLOAT energy_save[4][HBLKSIZE];
-  FLOAT8 ers_save[4];
+  FLOAT ers_save[4];
 #endif
 };
 
 
 
- 
+
 
 /***********************************************************************
 *
@@ -533,9 +529,9 @@ extern int            BitrateIndex(int, int,int);
 extern int            FindNearestBitrate(int,int,int);
 extern int            map2MP3Frequency(int freq);
 extern int            SmpFrqIndex(int, int* const);
-extern FLOAT8         ATHformula(FLOAT8 f,lame_global_flags *gfp);
-extern FLOAT8         freq2bark(FLOAT8 freq);
-extern FLOAT8         freq2cbw(FLOAT8 freq);
+extern FLOAT          ATHformula(FLOAT f,lame_global_flags *gfp);
+extern FLOAT          freq2bark(FLOAT freq);
+extern FLOAT          freq2cbw(FLOAT freq);
 void disable_FPE(void);
 
 /* log/log10 approximations */

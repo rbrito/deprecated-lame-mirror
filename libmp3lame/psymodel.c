@@ -458,12 +458,12 @@ psycho_loudness_approx( FLOAT *energy, lame_internal_flags *gfc )
 static void
 calc_interchannel_masking(
     lame_global_flags * gfp,
-    FLOAT8 ratio
+    FLOAT ratio
     )
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     int sb, sblock;
-    FLOAT8 l, r;
+    FLOAT l, r;
     for ( sb = 0; sb < SBMAX_l; sb++ ) {
 	l = gfc->thm[0].l[sb];
 	r = gfc->thm[1].l[sb];
@@ -491,7 +491,7 @@ msfix1(
     )
 {
     int sb, sblock;
-    FLOAT8 rside,rmid,mld;
+    FLOAT rside,rmid,mld;
 #define chmid 2
 #define chside 3
     for ( sb = 0; sb < SBMAX_l; sb++ ) {
@@ -538,16 +538,16 @@ msfix1(
 static void
 ns_msfix(
     lame_internal_flags *gfc,
-    FLOAT8 msfix
+    FLOAT msfix
     )
 {
     int sb, sblock;
-    FLOAT8 msfix2 = msfix;
+    FLOAT msfix2 = msfix;
     if (gfc->presetTune.use)
 	msfix2 = gfc->presetTune.ms_maskadjust;
 
     for ( sb = 0; sb < SBMAX_l; sb++ ) {
-	FLOAT8 thmL,thmR,thmM,thmS,ath;
+	FLOAT thmL,thmR,thmM,thmS,ath;
 	ath  = gfc->ATH.l_avg[sb];
 	thmL = Max(gfc->thm[0].l[sb], ath);
 	thmR = Max(gfc->thm[1].l[sb], ath);
@@ -555,12 +555,12 @@ ns_msfix(
 	thmS = Max(gfc->thm[3].l[sb], ath);
 
 	if (thmL*msfix < thmM+thmS) {
-	    FLOAT8 f = thmL * msfix2 / (thmM+thmS);
+	    FLOAT f = thmL * msfix2 / (thmM+thmS);
 	    thmM *= f;
 	    thmS *= f;
 	}
 	if (thmR*msfix < thmM+thmS) {
-	    FLOAT8 f = thmR * msfix2 / (thmM+thmS);
+	    FLOAT f = thmR * msfix2 / (thmM+thmS);
 	    thmM *= f;
 	    thmS *= f;
 	}
@@ -570,7 +570,7 @@ ns_msfix(
 
     for ( sb = 0; sb < SBMAX_s; sb++ ) {
 	for ( sblock = 0; sblock < 3; sblock++ ) {
-	    FLOAT8 thmL,thmR,thmM,thmS,ath;
+	    FLOAT thmL,thmR,thmM,thmS,ath;
 	    ath  = gfc->ATH.s_avg[sb];
 	    thmL = Max(gfc->thm[0].s[sb][sblock], ath);
 	    thmR = Max(gfc->thm[1].s[sb][sblock], ath);
@@ -578,12 +578,12 @@ ns_msfix(
 	    thmS = Max(gfc->thm[3].s[sb][sblock], ath);
 
 	    if (thmL*msfix < thmM+thmS) {
-		FLOAT8 f = thmL*msfix / (thmM+thmS);
+		FLOAT f = thmL*msfix / (thmM+thmS);
 		thmM *= f;
 		thmS *= f;
 	    }
 	    if (thmR*msfix < thmM+thmS) {
-		FLOAT8 f = thmR*msfix / (thmM+thmS);
+		FLOAT f = thmR*msfix / (thmM+thmS);
 		thmM *= f;
 		thmS *= f;
 	    }
@@ -593,13 +593,13 @@ ns_msfix(
     }
 }
 
-static FLOAT8 calc_mixed_ratio(
+static FLOAT calc_mixed_ratio(
     lame_internal_flags *gfc,
     int chn
     )
 {
     int sb;
-    FLOAT8 m0 = 1.0;
+    FLOAT m0 = 1.0;
     for (sb = 0; sb < 8; sb++) {
 	if (gfc->en[chn].l[sb] > gfc->thm[chn].l[sb]
 	    && gfc->thm[chn].l[sb] > 0.0) {
@@ -628,8 +628,8 @@ static void
 compute_masking_s(
     lame_internal_flags *gfc,
     FLOAT fft_s[BLKSIZE_s],
-    FLOAT8 *eb,
-    FLOAT8 *thr,
+    FLOAT *eb,
+    FLOAT *thr,
     int chn
     )
 {
@@ -651,7 +651,7 @@ compute_masking_s(
     }
     for (j = b = 0; b < gfc->npart_s; b++) {
 	int kk = gfc->s3ind_s[b][0];
-	FLOAT8 ecb = gfc->s3_ss[j++] * eb[kk++];
+	FLOAT ecb = gfc->s3_ss[j++] * eb[kk++];
 	while (kk <= gfc->s3ind_s[b][1])
 	    ecb += gfc->s3_ss[j++] * eb[kk++];
 
@@ -738,9 +738,9 @@ block_type_set(
 #define I2LIMIT 23  /* as in if(i>24) -> changed 23 */ 
 #define MLIMIT  15  /* as in if(m<15) */ 
 
-static FLOAT8 ma_max_i1;
-static FLOAT8 ma_max_i2;
-static FLOAT8 ma_max_m;
+static FLOAT ma_max_i1;
+static FLOAT ma_max_i2;
+static FLOAT ma_max_m;
 
 
 #ifdef TAKEHIRO_IEEE754_HACK
@@ -770,22 +770,22 @@ void init_mask_add_max_values(void)
 
 
 /* addition of simultaneous masking   Naoki Shibata 2000/7 */
-inline static FLOAT8 mask_add(FLOAT8 m1,FLOAT8 m2,int k,int b, lame_internal_flags * const gfc)
+inline static FLOAT mask_add(FLOAT m1,FLOAT m2,int k,int b, lame_internal_flags * const gfc)
 {
-    static const FLOAT8 table1[] = {
+    static const FLOAT table1[] = {
 	3.3246 *3.3246 ,3.23837*3.23837,3.15437*3.15437,3.00412*3.00412,2.86103*2.86103,2.65407*2.65407,2.46209*2.46209,2.284  *2.284  ,
 	2.11879*2.11879,1.96552*1.96552,1.82335*1.82335,1.69146*1.69146,1.56911*1.56911,1.46658*1.46658,1.37074*1.37074,1.31036*1.31036,
 	1.25264*1.25264,1.20648*1.20648,1.16203*1.16203,1.12765*1.12765,1.09428*1.09428,1.0659 *1.0659 ,1.03826*1.03826,1.01895*1.01895,
 	1.0
     };
 
-    static const FLOAT8 table2[] = {
+    static const FLOAT table2[] = {
 	1.33352*1.33352,1.35879*1.35879,1.38454*1.38454,1.39497*1.39497,1.40548*1.40548,1.3537 *1.3537 ,1.30382*1.30382,1.22321*1.22321,
 	1.14758*1.14758,
 	1.0
     };
 
-    static const FLOAT8 table3[] = {
+    static const FLOAT table3[] = {
 	2.35364*2.35364,2.29259*2.29259,2.23313*2.23313,2.12675*2.12675,2.02545*2.02545,1.87894*1.87894,1.74303*1.74303,1.61695*1.61695,
 	1.49999*1.49999,1.39148*1.39148,1.29083*1.29083,1.19746*1.19746,1.11084*1.11084,1.03826*1.03826
     };
@@ -825,7 +825,7 @@ inline static FLOAT8 mask_add(FLOAT8 m1,FLOAT8 m2,int k,int b, lame_internal_fla
 	/* 3% of the total */
 	/* Originally if (m > 0) { */
 	if (m1 > gfc->ATH.cb[k]) {
-	    FLOAT8 f, r;
+	    FLOAT f, r;
 
 	    f = 1.0;
 	    if (i <= 13) f = table3[i];
@@ -849,7 +849,7 @@ inline static FLOAT8 mask_add(FLOAT8 m1,FLOAT8 m2,int k,int b, lame_internal_fla
 
 
 
-static inline FLOAT8 NS_INTERP(FLOAT8 x, FLOAT8 y, FLOAT8 r)
+static inline FLOAT NS_INTERP(FLOAT x, FLOAT y, FLOAT r)
 {
     if (r==1.0)
 	return x;
@@ -862,8 +862,8 @@ static inline FLOAT8 NS_INTERP(FLOAT8 x, FLOAT8 y, FLOAT8 r)
 
 static void nsPsy2dataRead(
     FILE *fp,
-    FLOAT8 *eb2,
-    FLOAT8 *eb,
+    FLOAT *eb2,
+    FLOAT *eb,
     int chn,
     int npart_l
     )
@@ -895,8 +895,8 @@ pecalc_s(
     III_psy_ratio *mr
     )
 {
-    FLOAT8 pe_s;
-    const static FLOAT8 regcoef_s[] = {
+    FLOAT pe_s;
+    const static FLOAT regcoef_s[] = {
 	0, 0, 0, /* I don't know why there're 0 -tt- */
 	0.434542,25.0738,
 	0, 0, 0,
@@ -927,8 +927,8 @@ pecalc_l(
     III_psy_ratio *mr
     )
 {
-    FLOAT8 pe_l;
-    const static FLOAT8 regcoef_l[] = {
+    FLOAT pe_l;
+    const static FLOAT regcoef_l[] = {
 	10.0583,10.7484,7.29006,16.2714,6.2345,4.09743,3.05468,3.33196,
 	2.54688, 3.68168,5.83109,2.93817,-8.03277,-10.8458,8.48777,
 	9.13182,2.05212,8.6674,50.3937,73.267,97.5664,0
@@ -958,8 +958,8 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
                     const sample_t *buffer[2], int gr_out, 
 		    III_psy_ratio masking_ratio[2][2],
 		    III_psy_ratio masking_MS_ratio[2][2],
-		    FLOAT8 percep_entropy[2],FLOAT8 percep_MS_entropy[2], 
-		    FLOAT8 energy[4],
+		    FLOAT percep_entropy[2],FLOAT percep_MS_entropy[2], 
+		    FLOAT energy[4],
                     int blocktype_d[2])
 {
 /* to get a good cache performance, one has to think about
@@ -1039,10 +1039,10 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	int ns_attacks[4] = {0};
 	FLOAT fftenergy[HBLKSIZE];
 	/* convolution   */
-	FLOAT8 eb[CBANDS], eb2[CBANDS], thr[CBANDS], max[CBANDS];
+	FLOAT eb[CBANDS], eb2[CBANDS], thr[CBANDS], max[CBANDS];
 #define avg thr
 
-	static const FLOAT8 tab[] = {
+	static const FLOAT tab[] = {
 	    1.0    /0.11749, 0.79433/0.11749, 0.63096/0.11749, 0.63096/0.11749,
 	    0.63096/0.11749, 0.63096/0.11749, 0.63096/0.11749, 0.25119/0.11749
 	};
@@ -1128,7 +1128,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	    compute_masking_s(gfc, wsamp_S[chn&1][sblock], eb, thr, chn);
 	    b = -1;
 	    for (sb = 0; sb < SBMAX_s; sb++) {
-		FLOAT8 enn, thmm;
+		FLOAT enn, thmm;
 		enn = thmm = 0.0;
 		while (++b < gfc->bo_s[sb]) {
 		    enn  += eb[b];
@@ -1210,7 +1210,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	}
 	/* total energy */
 	{
-	    FLOAT8 totalenergy=0.0;
+	    FLOAT totalenergy=0.0;
 	    for (j = 11; j < gfc->npart_l; j++)
 		totalenergy += eb[j];
 
@@ -1276,7 +1276,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	k = 0;
 	for (b = 0; b < gfc->npart_l; b++ ) {
 	    /* convolve the partitioned energy with the spreading function */
-	    FLOAT8 ecb;
+	    FLOAT ecb;
 	    int kk = gfc->s3ind[b][0];
 	    ecb = gfc->s3_ll[k++] * eb2[kk];
 	    while (++kk <= gfc->s3ind[b][1]) {
@@ -1313,7 +1313,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 
 	/* compute masking thresholds for long blocks */
 	{
-	    FLOAT8 enn, thmm;
+	    FLOAT enn, thmm;
 	    int sb, b;
 	    enn = thmm = 0.0;
 	    sb = b = 0;
@@ -1345,7 +1345,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	calc_interchannel_masking(gfp, gfp->interChRatio);
 
     if (gfp->mode == JOINT_STEREO) {
-	FLOAT8 msfix;
+	FLOAT msfix;
 	msfix1(gfc);
 	msfix = gfp->msfix;
 	if (gfc->ATH.adjust >= gfc->presetTune.athadjust_switch_level)
@@ -1364,7 +1364,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
      * compute the value of PE to return ... no delay and advance
      *********************************************************************/
     for (chn=0;chn<numchn;chn++) {
-	FLOAT8 *ppe;
+	FLOAT *ppe;
 	int type;
 	III_psy_ratio *mr;
 

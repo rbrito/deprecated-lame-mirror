@@ -620,15 +620,15 @@ const unsigned  header_word [3] = { 0xFFF00000, 0xFFF80000, 0xFFE00000 };
 const int scfsi_band[5] = { 0, 6, 11, 16, 21 };
 
 /* for fast quantization */
-FLOAT8 pow20[Q_MAX+Q_MAX2];
-FLOAT8 ipow20[Q_MAX];
-FLOAT8 iipow20[Q_MAX2];
-FLOAT8 pow43[PRECALC_SIZE];
+FLOAT pow20[Q_MAX+Q_MAX2];
+FLOAT ipow20[Q_MAX];
+FLOAT iipow20[Q_MAX2];
+FLOAT pow43[PRECALC_SIZE];
 /* initialized in first call to iteration_init */
 #ifdef TAKEHIRO_IEEE754_HACK
-FLOAT8 adj43asm[PRECALC_SIZE];
+FLOAT adj43asm[PRECALC_SIZE];
 #else
-FLOAT8 adj43[PRECALC_SIZE];
+FLOAT adj43[PRECALC_SIZE];
 #endif
 
 /* psymodel window */
@@ -666,9 +666,9 @@ ATH = ATH * 2.5e-10      (ener)
 
 #define NSATHSCALE 100 // Assuming dynamic range=96dB, this value should be 92
 
-static FLOAT8 ATHmdct( lame_global_flags *gfp, FLOAT8 f )
+static FLOAT ATHmdct( lame_global_flags *gfp, FLOAT f )
 {
-    FLOAT8 ath = ATHformula( f , gfp ) - NSATHSCALE;
+    FLOAT ath = ATHformula( f , gfp ) - NSATHSCALE;
 
     /* modify the MDCT scaling for the ATH and convert to energy */
     return pow( 10.0, ath/10.0 + gfp->ATHlower);
@@ -676,19 +676,19 @@ static FLOAT8 ATHmdct( lame_global_flags *gfp, FLOAT8 f )
 
 static void compute_ath( lame_global_flags *gfp )
 {
-    FLOAT8 *ATH_l = gfp->internal_flags->ATH.l;
-    FLOAT8 *ATH_s = gfp->internal_flags->ATH.s;
+    FLOAT *ATH_l = gfp->internal_flags->ATH.l;
+    FLOAT *ATH_s = gfp->internal_flags->ATH.s;
     lame_internal_flags *gfc = gfp->internal_flags;
     int sfb, i, start, end;
-    FLOAT8 ATH_f;
-    FLOAT8 samp_freq = gfp->out_samplerate;
+    FLOAT ATH_f;
+    FLOAT samp_freq = gfp->out_samplerate;
 
     for (sfb = 0; sfb < SBMAX_l; sfb++) {
         start = gfc->scalefac_band.l[ sfb ];
         end   = gfc->scalefac_band.l[ sfb+1 ];
-        ATH_l[sfb]=FLOAT8_MAX;
+        ATH_l[sfb]=FLOAT_MAX;
         for (i = start ; i < end; i++) {
-            FLOAT8 freq = i*samp_freq/(2*576);
+            FLOAT freq = i*samp_freq/(2*576);
             ATH_f = ATHmdct( gfp, freq );  /* freq in kHz */
             ATH_l[sfb] = Min( ATH_l[sfb], ATH_f );
         }
@@ -697,9 +697,9 @@ static void compute_ath( lame_global_flags *gfp )
     for (sfb = 0; sfb < SBMAX_s; sfb++){
         start = gfc->scalefac_band.s[ sfb ];
         end   = gfc->scalefac_band.s[ sfb+1 ];
-        ATH_s[sfb] = FLOAT8_MAX;
+        ATH_s[sfb] = FLOAT_MAX;
         for (i = start ; i < end; i++) {
-            FLOAT8 freq = i*samp_freq/(2*192);
+            FLOAT freq = i*samp_freq/(2*192);
             ATH_f = ATHmdct( gfp, freq );    /* freq in kHz */
             ATH_s[sfb] = Min( ATH_s[sfb], ATH_f );
         }
@@ -725,7 +725,7 @@ static void compute_ath( lame_global_flags *gfp )
     gfc->ATH.floor = 10. * log10( ATHmdct( gfp, -1. ) );
     
     /*
-    {   FLOAT8 g=10000, t=1e30, x;
+    {   FLOAT g=10000, t=1e30, x;
         for ( f = 100; f < 10000; f++ ) {
             x = ATHmdct( gfp, f );
             if ( t > x ) t = x, g = f;
@@ -825,7 +825,7 @@ iteration_init( lame_global_flags *gfp)
   int i;
 
   if ( gfc->iteration_init_init==0 ) {
-    FLOAT8 bass, alto, treble, sfb21;
+    FLOAT bass, alto, treble, sfb21;
     gfc->iteration_init_init=1;
 
     l3_side->main_data_begin = 0;
@@ -833,7 +833,7 @@ iteration_init( lame_global_flags *gfp)
 
     pow43[0] = 0.0;
     for(i=1;i<PRECALC_SIZE;i++)
-        pow43[i] = pow((FLOAT8)i, 4.0/3.0);
+        pow43[i] = pow((FLOAT)i, 4.0/3.0);
 
 #ifdef TAKEHIRO_IEEE754_HACK
     adj43asm[0] = 0.0;
@@ -876,7 +876,7 @@ iteration_init( lame_global_flags *gfp)
     sfb21 = treble * pow(10, i / 4.0 / 10.0);
 
     for (i = 0; i < SBMAX_l; i++) {
-	FLOAT8 f;
+	FLOAT f;
 	if      (i <=  6) f = bass;
 	else if (i <= 13) f = alto;
 	else if (i <= 20) f = treble;
@@ -887,7 +887,7 @@ iteration_init( lame_global_flags *gfp)
 	gfc->nsPsy.longfact[i] = f;
     }
     for (i = 0; i < SBMAX_s; i++) {
-	FLOAT8 f;
+	FLOAT f;
 	if      (i <=  5) f = bass;
 	else if (i <= 10) f = alto;
 	else              f = treble;
@@ -906,8 +906,8 @@ iteration_init( lame_global_flags *gfp)
 /* 
  *   The spreading function.  Values returned in units of energy
  */
-static FLOAT8 s3_func(FLOAT8 bark) {
-    FLOAT8 tempx,x,tempy,temp;
+static FLOAT s3_func(FLOAT bark) {
+    FLOAT tempx,x,tempy,temp;
     tempx = bark;
     if (tempx>=0) tempx *= 3;
     else tempx *=1.5; 
@@ -939,10 +939,10 @@ static FLOAT8 s3_func(FLOAT8 bark) {
 static int
 init_numline(
     int *numlines, int *bo, int *bm,
-    FLOAT8 *bval, FLOAT8 *bval_width, FLOAT8 *mld,
+    FLOAT *bval, FLOAT *bval_width, FLOAT *mld,
 
-    FLOAT8 sfreq, int blksize, int *scalepos,
-    FLOAT8 deltafreq, int sbmax
+    FLOAT sfreq, int blksize, int *scalepos,
+    FLOAT deltafreq, int sbmax
     )
 {
     int partition[HBLKSIZE];
@@ -954,7 +954,7 @@ init_numline(
     /* compute numlines, the number of spectral lines in each partition band */
     /* each partition band should be about DELBARK wide. */
     for (i=0;i<CBANDS;i++) {
-	FLOAT8 bark1;
+	FLOAT bark1;
 	int j2;
 	bark1 = freq2bark(sfreq*j);
 	for (j2 = j; freq2bark(sfreq*j2) - bark1 < DELBARK && j2 <= blksize/2;
@@ -969,7 +969,7 @@ init_numline(
 
     for ( sfb = 0; sfb < sbmax; sfb++ ) {
 	int i1,i2,start,end;
-	FLOAT8 arg;
+	FLOAT arg;
 	start = scalepos[sfb];
 	end   = scalepos[sfb+1];
 
@@ -993,7 +993,7 @@ init_numline(
     j = 0;
     for (k = 0; k < i+1; k++) {
 	int w = numlines[k];
-	FLOAT8  bark1,bark2;
+	FLOAT  bark1,bark2;
 
 	bark1 = freq2bark (sfreq*(j    ));
 	bark2 = freq2bark (sfreq*(j+w-1));
@@ -1011,15 +1011,15 @@ init_numline(
 static int
 init_s3_values(
     lame_internal_flags *gfc,
-    FLOAT8 **p,
+    FLOAT **p,
     int (*s3ind)[2],
     int npart,
-    FLOAT8 *bval,
-    FLOAT8 *bval_width,
-    FLOAT8 *norm
+    FLOAT *bval,
+    FLOAT *bval_width,
+    FLOAT *norm
     )
 {
-    FLOAT8 s3[CBANDS][CBANDS];
+    FLOAT s3[CBANDS][CBANDS];
     int i, j, k;
     int numberOfNoneZero = 0;
 
@@ -1047,7 +1047,7 @@ init_s3_values(
 	s3ind[i][1] = j;
 	numberOfNoneZero += (s3ind[i][1] - s3ind[i][0] + 1);
     }
-    *p = malloc(sizeof(FLOAT8)*numberOfNoneZero);
+    *p = malloc(sizeof(FLOAT)*numberOfNoneZero);
     if (!*p)
 	return -1;
 
@@ -1065,10 +1065,10 @@ int psymodel_init(lame_global_flags *gfp)
     int i,j,b,sb,k;
     int bm[SBMAX_l];
 
-    FLOAT8 bval[CBANDS];
-    FLOAT8 bval_width[CBANDS];
-    FLOAT8 norm[CBANDS];
-    FLOAT8 sfreq = gfp->out_samplerate;
+    FLOAT bval[CBANDS];
+    FLOAT bval_width[CBANDS];
+    FLOAT norm[CBANDS];
+    FLOAT sfreq = gfp->out_samplerate;
     int numlines_s[CBANDS];
 
     gfc->blocktype_old[0] = gfc->blocktype_old[1] = SHORT_TYPE;
@@ -1134,10 +1134,10 @@ int psymodel_init(lame_global_flags *gfp)
     j = 0;
     for ( i = 0; i < gfc->npart_l; i++ ) {
 	/* ATH */
-	FLOAT8 x = FLOAT8_MAX;
+	FLOAT x = FLOAT_MAX;
 	for (k=0; k < gfc->numlines_l[i]; k++, j++) {
-	    FLOAT8  freq = sfreq*j/(1000.0*BLKSIZE);
-	    FLOAT8  level;
+	    FLOAT  freq = sfreq*j/(1000.0*BLKSIZE);
+	    FLOAT  level;
 	    assert( freq <= 24 );              // or only '<'
 	    //	freq = Min(.1,freq);       // ATH below 100 Hz constant, not further climbing
 	    level  = ATHformula (freq*1000, gfp) - 20;   // scale to FFT units; returned value is in dB
@@ -1210,7 +1210,7 @@ int psymodel_init(lame_global_flags *gfp)
     gfc->decay = exp(-1.0*LOG10/(temporalmask_sustain_sec*sfreq/192.0));
 
     {
-	FLOAT8 msfix;
+	FLOAT msfix;
 
 #define NS_MSFIX 3.5
 #define NSATTACKTHRE 15
@@ -1244,7 +1244,7 @@ int psymodel_init(lame_global_flags *gfp)
      *  we want to decrease the ATH by 12 dB per second
      */
     {
-        FLOAT8 frame_duration = 576. * gfc->mode_gr / sfreq;
+        FLOAT frame_duration = 576. * gfc->mode_gr / sfreq;
         gfc->ATH.decay = pow(10., -12./10. * frame_duration);
         gfc->ATH.adjust = 0.01; /* minimum, for leading low loudness */
         gfc->ATH.adjust_limit = 1.0; /* on lead, allow adjust up to maximum */

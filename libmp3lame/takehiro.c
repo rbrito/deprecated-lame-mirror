@@ -61,7 +61,7 @@ typedef union {
 #define MAGIC_FLOAT (65536*(128))
 #define MAGIC_INT 0x4b000000
 
-static void quantize_xrpow(const FLOAT8 *xp, int *pi, FLOAT8 istep)
+static void quantize_xrpow(const FLOAT *xp, int *pi, FLOAT istep)
 {
     /* quantize on xr^(3/4) instead of xr */
     int j;
@@ -94,7 +94,7 @@ static void quantize_xrpow(const FLOAT8 *xp, int *pi, FLOAT8 istep)
 }
 
 #  define ROUNDFAC -0.0946
-static void quantize_xrpow_ISO(const FLOAT8 *xp, int *pi, FLOAT8 istep)
+static void quantize_xrpow_ISO(const FLOAT *xp, int *pi, FLOAT istep)
 {
     /* quantize on xr^(3/4) instead of xr */
     int j;
@@ -135,14 +135,14 @@ static void quantize_xrpow_ISO(const FLOAT8 *xp, int *pi, FLOAT8 istep)
 #define ROUNDFAC 0.4054
 
 
-static void quantize_xrpow(const FLOAT8 *xr, int *ix, FLOAT8 istep) {
+static void quantize_xrpow(const FLOAT *xr, int *ix, FLOAT istep) {
     /* quantize on xr^(3/4) instead of xr */
     /* from Wilfried.Behne@t-online.de.  Reported to be 2x faster than 
        the above code (when not using ASM) on PowerPC */
     int j;
 
     for ( j = 576/8; j > 0; --j) {
-	FLOAT8	x1, x2, x3, x4, x5, x6, x7, x8;
+	FLOAT	x1, x2, x3, x4, x5, x6, x7, x8;
 	int	rx1, rx2, rx3, rx4, rx5, rx6, rx7, rx8;
 	x1 = *xr++ * istep;
 	x2 = *xr++ * istep;
@@ -184,10 +184,10 @@ static void quantize_xrpow(const FLOAT8 *xr, int *ix, FLOAT8 istep) {
 
 
 
-static void quantize_xrpow_ISO( const FLOAT8 *xr, int *ix, FLOAT8 istep )
+static void quantize_xrpow_ISO( const FLOAT *xr, int *ix, FLOAT istep )
 {
     /* quantize on xr^(3/4) instead of xr */
-    const FLOAT8 compareval0 = (1.0 - 0.4054)/istep;
+    const FLOAT compareval0 = (1.0 - 0.4054)/istep;
     int j;
     /* depending on architecture, it may be worth calculating a few more
        compareval's.
@@ -553,14 +553,14 @@ int noquant_count_bits(
 
 int count_bits(
           lame_internal_flags * const gfc, 
-    const FLOAT8  * const xr,
+    const FLOAT  * const xr,
           gr_info * const gi
 	  )
 {
     int i;
     int *const ix = gi->l3_enc;
     /* since quantize_xrpow uses table lookup, we need to check this first: */
-    FLOAT8 w = (IXMAX_VAL) / IPOW20(gi->global_gain);
+    FLOAT w = (IXMAX_VAL) / IPOW20(gi->global_gain);
     for ( i = 0; i < 576; i++ )  {
 	if (xr[i] > w)
 	    return LARGE_BITS;
@@ -574,7 +574,7 @@ int count_bits(
     if (gfc->substep_shaping & 2) {
 	int sfb, j = 0;
 	// 0.634521682242439 = 0.5946*2**(.5*0.1875)
-	const FLOAT8 roundfac =
+	const FLOAT roundfac =
 	    0.634521682242439 / IPOW20(gi->global_gain+gi->scalefac_scale);
 	for (sfb = 0; sfb < gi->sfbmax; sfb++) {
 	    int width = gi->width[sfb];
