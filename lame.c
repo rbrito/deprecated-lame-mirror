@@ -202,9 +202,15 @@ lame_init_params_ppflt(lame_internal_flags *gfc)
  ********************************************************************/
 int lame_init_params(lame_global_flags *gfp)
 {
-  int                     i;
-  const scalefac_struct*  sf;
-  lame_internal_flags*    gfc = gfp -> internal_flags;
+    static unsigned char vbr_compression_ratio_guess [] = { 
+        52, 57, 64, 71, 89, 98, 110, 125, 137, 150 
+    };
+    static const float  masking_lower [] = { 
+        0.316, 0.422, 0.562, 0.750, 1.000, 1.096, 1.202, 1.318, 1.445, 1.585 
+    };
+    int                     i;
+    const scalefac_struct*  sf;
+    lame_internal_flags*    gfc = gfp -> internal_flags;
   
   gfc->lame_init_params_init=1;
 
@@ -338,7 +344,6 @@ int lame_init_params(lame_global_flags *gfp)
      */
 
     switch ( gfp -> VBR ) {
-        static unsigned char vbr_compression_ratio_guess [] = { 52, 57, 64, 71, 89, 98, 110, 125, 137, 150 };
         
     case vbr_mt:
     case vbr_rh:
@@ -489,9 +494,6 @@ int lame_init_params(lame_global_flags *gfp)
      */
      
         switch ( gfp -> VBR ) {
-            static const float  masking_lower [] = { 
-	        0.316, 0.422, 0.562, 0.750, 1.000, 1.096, 1.202, 1.318, 1.445, 1.585 
-	    };
 	case vbr_abr:
             assert ( (unsigned) (gfp -> VBR_q) < sizeof(masking_lower)/sizeof(*masking_lower) );
             gfc -> masking_lower = masking_lower [gfp -> VBR_q];

@@ -26,7 +26,7 @@
 
 #define LAME_MAJOR_VERSION	3	/* Major version number */
 #define LAME_MINOR_VERSION	87	/* Minor version number */
-#define LAME_ALPHAVERSION	6	/* Patch level of alpha version, otherwise zero */
+#define LAME_ALPHAVERSION	7	/* Patch level of alpha version, otherwise zero */
 #define LAME_BETAVERSION        0	/* Patch level of beta  version, otherwise zero */
 
 #define PSY_MAJOR_VERSION	0	/* Major version number */
@@ -41,9 +41,9 @@
 
 #include "machine.h"
 
-void        lame_print_version (FILE *);
-const char* get_lame_version   (void);		/* returns lame version number string */
-const char* get_psy_version    (void);		/* returns psy model version number string */
-const char* get_mp3x_version   (void);		/* returns mp3x version number string */
+void         lame_print_version ( FILE* fp );
+const char*  get_lame_version   ( void );	/* returns lame version number string */
+const char*  get_psy_version    ( void );	/* returns psy model version number string */
+const char*  get_mp3x_version   ( void );	/* returns mp3x version number string */
 
 #endif

@@ -27,7 +27,7 @@ endif
 
 # generic defaults. OS specific options go in versious sections below
 PGM ?= lame
-CC = gcc
+CC = g++
 CC_OPTS =  -O
 AR = ar
 RANLIB = ranlib
@@ -49,7 +49,7 @@ CPP_OPTS += -DHAVEMPGLIB
 ##########################################################################
 # -DUSE_LAYER_1/2 enables Layer1 or Layer2 *decoding* abilities 
 ##########################################################################
-CPP_OPTS += -DUSE_LAYER_1 -DUSE_LAYER_2
+# CPP_OPTS += -DUSE_LAYER_1 -DUSE_LAYER_2
 
 ##########################################################################
 # floating point option:
@@ -138,7 +138,7 @@ ifeq ($(UNAME),Linux)
 
 
 # suggested for gcc-2.7.x
-   CC_OPTS =  -O3 -fomit-frame-pointer -funroll-loops -ffast-math  -finline-functions -Wall -Wswitch -pedantic
+   CC_OPTS =  -O4 -fomit-frame-pointer -funroll-loops -ffast-math  -finline-functions -Wall -Wswitch -pedantic
 #  CC_OPTS =  -O3 -fomit-frame-pointer -funroll-loops -ffast-math  -finline-functions -Wall -Wswitch
 
 #  CC_OPTS =  -O9 -fomit-frame-pointer -fno-strength-reduce -mpentiumpro -ffast-math -finline-functions -funroll-loops -Wall -malign-double -g -march=pentiumpro -mfancy-math-387 -pipe 

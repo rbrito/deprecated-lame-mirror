@@ -1,7 +1,7 @@
 #include        <stdio.h>
 #include        <string.h>
 #include        <signal.h>
-
+#include "../util.h"
 
 #if defined(__riscos__) && defined(FPA10)
 #include	"ymath.h"
@@ -89,9 +89,14 @@ struct frame {
 	/* AF: ADDED FOR LAYER1/LAYER2 */
 #if defined(USE_LAYER_2) || defined(USE_LAYER_1)
     int II_sblimit;
+    
+#ifdef __cplusplus    
+    al_table* alloc;
+#else
     struct al_table *alloc;
-	int down_sample_sblimit;
-	int	down_sample;
+#endif    
+    int down_sample_sblimit;
+    int	down_sample;
 
 #endif
 

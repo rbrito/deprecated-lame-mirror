@@ -38,23 +38,24 @@ enum byte_order NativeByteOrder = order_unknown;
 
 
 /* Replacement for forward fseek(,,SEEK_CUR), because fseek() fails on pipes */
-int fskip ( FILE* sf, off_t bytes, int whence )
+int fskip ( FILE* fp, off_t bytes, int whence )
 {
     char    data [4096];
-    size_t  skip = 0;
+    size_t  skip;
   
     assert ( whence == SEEK_CUR );
+    assert ( bytes >= 0 );
   
     while ( bytes > 0 ) {
         skip   = bytes > sizeof(data)  ?  sizeof(data)  :  bytes;
-        skip   = fread ( data, 1, (size_t)skip, sf );
-	if ( (signed) skip <= 0 ) {
-	    fprintf (stderr, "Problems reading data in fskip().\n");
+        skip   = fread ( data, 1, (size_t)skip, fp );
+	if ( skip == 0 ) {
+	    fprintf ( stderr, "Out of data in fskip().\n" );
+	    return -1;
 	}
 	bytes -= skip;
     }
-  /* return 0 if last read was successful */
-  return bytes;
+    return 0;
 }
 
 
@@ -195,17 +196,16 @@ long RoundSampleRateUp ( long samplerate )         /* This functions rounds up s
     return 48000;
 }
 
-int BitrateIndex(
-int bRate,        /* legal rates from 32 to 448 */
-int version,      /* MPEG-1 or MPEG-2 LSF */
-int samplerate)   /* convert bitrate in kbps to index */
+int BitrateIndex (
+		unsigned       bRate,        /* legal rates from 32 to 448 */
+		unsigned       version,      /* MPEG-1 or MPEG-2 LSF */
+		unsigned long  samplerate)   /* convert bitrate in kbps to index */
 {
     int* t = index_to_bitrate [version];
 
     if ( bRate == t [ 0] ) { ERRORF ("Bitrate %d kbps not legal for %i Hz output sampling.\n", bRate, samplerate );
                              return 0;
 			   }
-
     if ( bRate == t [ 1] ) return  1;
     if ( bRate == t [ 2] ) return  2;
     if ( bRate == t [ 3] ) return  3;
@@ -227,7 +227,7 @@ int samplerate)   /* convert bitrate in kbps to index */
 
 /* convert Sample Frequency in Hz to MPEG version and index */
 
-int SmpFrqIndex ( long SampleFreq, int* MPEGversion )
+int SmpFrqIndex ( long SampleFreq, MPEG_version_t* MPEGversion )
 {
     switch ( SampleFreq ) {
     case 44100: *MPEGversion = 1; return  0;
@@ -375,13 +375,13 @@ void init_bit_stream_w(lame_internal_flags *gfc)
 }
 
 
-/*open and initialize the buffer; */
-void alloc_buffer(
-Bit_stream_struc *bs,   /* bit stream structure */
-unsigned int size)
+/* open and initialize the buffer */
+void  alloc_buffer (
+		Bit_stream_struc*  bs,   /* bit stream structure */
+		size_t             size)
 {
-   bs->buf = (unsigned char *)       malloc(size);
-   bs->buf_size = size;
+    bs -> buf_size = size;
+    bs -> buf      = (unsigned char*) malloc (size);
 }
 
 /*empty and close mallocs in gfc */

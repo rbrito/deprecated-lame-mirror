@@ -112,7 +112,7 @@ typedef struct {
     unsigned int    quant;
 } sb_alloc, *alloc_ptr;
 
-typedef sb_alloc        al_table[SBLIMIT][16]; 
+typedef sb_alloc        al_table [SBLIMIT] [16]; 
 
 
 
@@ -340,16 +340,15 @@ typedef struct  {
 *  Global Function Prototype Declarations
 *
 ***********************************************************************/
-extern int            fskip(FILE *sf,long num_bytes,int dummy);
-extern void           display_bitrates(FILE *out_fh);
-extern int            BitrateIndex(int, int,int);
-
+extern int            fskip                    ( FILE* fp, off_t bytes, int whence );
+extern void           display_bitrates         ( FILE* fp );
+extern int            BitrateIndex             ( unsigned rate, unsigned version, unsigned long samplerate );
 extern int            FindNearestBitrateIndex  ( unsigned rate, unsigned version, unsigned long samplerate );
 extern unsigned       FindNearestBitrate       ( unsigned rate, unsigned version, unsigned long samplerate );
 extern long           RoundSampleRateToNearest ( long samplerate );
 extern long           RoundSampleRateUp        ( long samplerate );
 
-extern int            SmpFrqIndex(long, int*);
+extern int            SmpFrqIndex(long, MPEG_version_t*);
 extern int            copy_buffer(char *buffer,int buffer_size,Bit_stream_struc *bs);
 extern void           init_bit_stream_w(lame_internal_flags *gfc);
 extern void           alloc_buffer(Bit_stream_struc*, unsigned int);

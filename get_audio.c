@@ -18,6 +18,7 @@
 #include <sys/swis.h>
 #endif
 
+#include "portableio.h"
 
 int read_samples_pcm (lame_global_flags* gfp, sample_t sample_buffer [2*1152], int frame_size, int samples_to_read );
 int read_samples_mp3 (lame_global_flags* gfp, FILE*    musicin, sample_t mpg123pcm [2] [1152],int num_chan );
@@ -253,7 +254,13 @@ int lame_decoder ( lame_global_flags* gfp, FILE* outf, int skip )
     double      wavsize;
     int         layer = 1;
     size_t      i;
+    
+#ifdef __cplusplus    
+    // how to use C-Linkage ????
+    void  (*WriteFunction) (FILE* fp, char *p, int n);
+#else
     CLINK void  (*WriteFunction) (FILE* fp, char *p, int n);
+#endif         
 
     MSGF ( "\rinput:  %s%s(%g kHz, %i channel%s, ", 
            strcmp (gfp->inPath, "-")  ?  gfp->inPath  :  "<stdin>",

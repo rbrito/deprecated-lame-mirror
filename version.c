@@ -40,10 +40,9 @@ void lame_print_version ( FILE* fp )
 #endif
 }
 
-
 const char* get_lame_version ( void )
 {
-    static char ret [64];
+    static char ret [48];
     
     if (LAME_ALPHAVERSION > 0u)
         sprintf ( ret, "%u.%02d (alpha %u, %6.6s %5.5s)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION, LAME_ALPHAVERSION, __DATE__, __TIME__ );

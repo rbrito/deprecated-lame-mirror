@@ -185,8 +185,8 @@ void timestatus ( unsigned long samp_rate,
     process_time.so_far = ts_process_time (frameNum);
 
     if ( frameNum == 0 ) {
-        fputs ( "    Frame          |  CPU time/estim | REAL time/estim | play/CPU |  remain \n"
-                "     0/       ( 0%)|    0:00/     :  |    0:00/     :  |    .    x|     :   \r", stderr );
+        fputs ( "\r    Frame          |  CPU time/estim | REAL time/estim | play/CPU |  remain \n"
+                  "     0/       ( 0%)|    0:00/     :  |    0:00/     :  |    .    x|     :   \r", stderr );
         return;
     }  
 

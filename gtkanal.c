@@ -174,7 +174,8 @@ void plot_frame(void)
   plotting_data *pplot2 = NULL;
 
   double en,samp;
-  int sampindex,version=0;
+  int sampindex;
+  MPEG_version_t version = 0;
   int barthick;
   static int firstcall=1;
   static GdkColor *barcolor,*color,*grcolor[2];
@@ -288,8 +289,8 @@ void plot_frame(void)
    * draw the PCM data *
    *******************************************************************/
   n = 1600;  /* PCM frame + FFT window:   224 + 1152 + 224  */
-  xcord = g_malloc(n*sizeof(gdouble));
-  ycord = g_malloc(n*sizeof(gdouble));
+  xcord = (gdouble*) g_malloc ( n * sizeof(gdouble) );
+  ycord = (gdouble*) g_malloc ( n * sizeof(gdouble) );
 
 
   if (gtkinfo.msflag) 
@@ -1157,8 +1158,18 @@ static void text_window (GtkWidget *widget, gpointer data)
            "<LastBranch>"     -> create a right justified branch 
 */
 
-static GtkItemFactoryEntry menu_items[] = {
+
+/*
+  gchar *path;
+  gchar *accelerator;
+  GtkItemFactoryCallback callback;
+  guint                  callback_action;
+  gchar          *item_type;
+*/                                                
+
+static GtkItemFactoryEntry menu_items [] = {
   {"/_File",         NULL,         NULL, 0, "<Branch>"},
+  
   /*
   {"/File/_New",     "<control>N", print_hello, 0, NULL},
   {"/File/_Open",    "<control>O", print_hello, 0, NULL},
@@ -1167,35 +1178,35 @@ static GtkItemFactoryEntry menu_items[] = {
   {"/File/sep1",     NULL,         NULL, 0, "<Separator>"},
   {"/File/Quit",     "<control>Q", gtk_main_quit, 0, NULL}, 
   */
-  {"/File/_Quit",     "<control>Q", delete_event, 0, NULL}, 
-
+  
+  {"/File/_Quit",     "<control>Q", (GtkItemFactoryCallback) delete_event, 0, NULL}, 
   {"/_Plotting",            NULL,         NULL,   0,    "<Branch>"},
-  {"/Plotting/_While advancing" ,  NULL,  spec_option, 5, NULL},
-  {"/Plotting/_After advancing",  NULL,  spec_option, 6, NULL},
-  {"/Plotting/Toggle SFB lines",       NULL,  spec_option, 7, NULL},
-  {"/Plotting/Toggle orig-diff" ,  NULL,  spec_option, 8, NULL},
+  {"/Plotting/_While advancing" ,  NULL,  (GtkItemFactoryCallback) spec_option, 5, NULL},
+  {"/Plotting/_After advancing",  NULL,  (GtkItemFactoryCallback) spec_option, 6, NULL},
+  {"/Plotting/Toggle SFB lines",       NULL,  (GtkItemFactoryCallback) spec_option, 7, NULL},
+  {"/Plotting/Toggle orig-diff" ,  NULL,  (GtkItemFactoryCallback) spec_option, 8, NULL},
 
   {"/_Channel",            NULL,         NULL,   0,    "<Branch>"},
-  {"/Channel/show _Left" ,  NULL,  channel_option, 1, NULL},
-  {"/Channel/show _Right",  NULL,  channel_option, 2, NULL},
-  {"/Channel/show _Mid" ,   NULL,  channel_option, 3, NULL},
-  {"/Channel/show _Side",   NULL,  channel_option, 4, NULL},
+  {"/Channel/show _Left" ,  NULL,  (GtkItemFactoryCallback) channel_option, 1, NULL},
+  {"/Channel/show _Right",  NULL,  (GtkItemFactoryCallback) channel_option, 2, NULL},
+  {"/Channel/show _Mid" ,   NULL,  (GtkItemFactoryCallback) channel_option, 3, NULL},
+  {"/Channel/show _Side",   NULL,  (GtkItemFactoryCallback) channel_option, 4, NULL},
 
   {"/_Spectrum",                   NULL,  NULL, 0, "<Branch>"},
-  {"/Spectrum/_Scalefactor bands",  NULL,  spec_option, 1, NULL},
-  {"/Spectrum/_Wave number",        NULL,  spec_option, 2, NULL},
+  {"/Spectrum/_Scalefactor bands",  NULL,  (GtkItemFactoryCallback) spec_option, 1, NULL},
+  {"/Spectrum/_Wave number",        NULL,  (GtkItemFactoryCallback) spec_option, 2, NULL},
 
   {"/_MDCT",                         NULL,  NULL, 0, "<Branch>"},
-  {"/MDCT/_Original",               NULL,  spec_option, 3, NULL},
-  {"/MDCT/_Compressed",             NULL,  spec_option, 4, NULL},
-  {"/MDCT/_Toggle SFB lines",       NULL,  spec_option, 7, NULL},
+  {"/MDCT/_Original",               NULL,  (GtkItemFactoryCallback) spec_option, 3, NULL},
+  {"/MDCT/_Compressed",             NULL,  (GtkItemFactoryCallback) spec_option, 4, NULL},
+  {"/MDCT/_Toggle SFB lines",       NULL,  (GtkItemFactoryCallback) spec_option, 7, NULL},
 
   {"/_Stats",                         NULL,  NULL, 0, "<Branch>"},
-  {"/Stats/_Show",               NULL,  text_window, 2, NULL},
+  {"/Stats/_Show",               NULL,  (GtkItemFactoryCallback) text_window, 2, NULL},
 
   {"/_Help",         NULL,         NULL, 0, "<LastBranch>"},
-  {"/_Help/_Documentation",   NULL,   text_window, 0, NULL},
-  {"/_Help/_About",           NULL,   text_window, 1, NULL},
+  {"/_Help/_Documentation",   NULL,   (GtkItemFactoryCallback) text_window, 0, NULL},
+  {"/_Help/_About",           NULL,   (GtkItemFactoryCallback) text_window, 1, NULL},
 };
 
 
@@ -1264,7 +1275,7 @@ int gtkcontrol(lame_global_flags *gfp2)
     graphy = 95;
 
     gfp=gfp2;
-    gfc=gfp->internal_flags;
+    gfc=(lame_internal_flags*) gfp->internal_flags;
 
     /* set some global defaults/variables */
     gtkinfo.filetype = (gfp->input_format == sf_mp1 ||
