@@ -99,6 +99,8 @@ Variable Bit Rate (VBR)
 -t             disable Xing VBR informational tag 
 --nohist       disable display of VBR bitrate histogram
 
+--abr n        specify average bitrate desired
+
 
 Experimental (undocumented):  may work better or worse:
 
@@ -170,6 +172,22 @@ To encode a stereo PCM input file as mono, use "lame -m s -a"
 
 For WAV and AIFF input files, using "-m m" will always produce a
 mono .mp3 file from both mono and stereo input.
+
+
+=======================================================================
+average bitrate encoding (aka Safe VBR)
+=======================================================================
+--abr n
+
+turns on encoding with a targeted average bitrate of n kbits, allowing
+to use frames of different sizes.
+The allowed range of n is 4-310, you can use any integer value
+within that range.
+
+It can be combined with the -b and -B switches like
+lame --abr 123 -b 64 -B 192 a.wav a.mp3
+which would limit the allowed frame sizes between 64 and 192 kbits.
+
 
 =======================================================================
 ATH only
