@@ -1053,7 +1053,7 @@ VBR_encode_granule (
     int this_bits = min_bits+(max_bits-min_bits)/2;
     int dbits, over;
       
-    assert(Max_bits < 4096);
+    assert(Max_bits <= MAX_BITS);
   
     bst_cod_info = *cod_info;
     memset(&bst_scalefac, 0, sizeof(III_scalefac_t));
@@ -1251,7 +1251,7 @@ calc_max_bits (
     
     max_bits  = frameBits[gfc->VBR_max_bitrate];
     max_bits /= gfc->channels_out * gfc->mode_gr;
-    max_bits  = Min (1200 + max_bits, 4095 - 195 * (gfc->channels_out - 1));
+    max_bits  = Min (1200 + max_bits, MAX_BITS - 195 * (gfc->channels_out - 1));
     max_bits  = Max (max_bits, min_bits);
     
     return max_bits;
@@ -1527,7 +1527,8 @@ calc_target_bits (
     
     if (gfc->mode_ext == MPG_MD_MS_LR) 
         for (gr = 0; gr < gfc->mode_gr; gr++) {
-            reduce_side (targ_bits[gr], ms_ener_ratio[gr], mean_bits, 4095);
+            reduce_side (targ_bits[gr], ms_ener_ratio[gr], mean_bits,
+			 MAX_BITS);
         }
 
     /*  sum target bits
@@ -1535,8 +1536,8 @@ calc_target_bits (
     totbits=0;
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         for (ch = 0; ch < gfc->channels_out; ch++) {
-            if (targ_bits[gr][ch] > 4095) 
-                targ_bits[gr][ch] = 4095;
+            if (targ_bits[gr][ch] > MAX_BITS) 
+                targ_bits[gr][ch] = MAX_BITS;
             totbits += targ_bits[gr][ch];
         }
     }
@@ -1719,7 +1720,7 @@ iteration_loop(
                             &scalefac[gr][ch], xrpow, l3_enc[gr][ch],
                             ch, targ_bits[ch]);
             }
-            assert (cod_info->part2_3_length < 4096);
+            assert (cod_info->part2_3_length <= MAX_BITS);
 
             /*  try some better scalefac storage
              */

@@ -352,7 +352,7 @@ int targ_bits[2],int mean_bits, int gr)
      ******************************************************************/
     cod_info = &l3_side->gr[gr].ch[ch].tt;
     
-    targ_bits[ch]=Min(4095,tbits/gfc->channels_out);
+    targ_bits[ch]=Min(MAX_BITS, tbits/gfc->channels_out);
     
     if (gfc->nsPsy.use) {
       add_bits[ch] = targ_bits[ch]*pe[gr][ch]/700.0-targ_bits[ch];
@@ -367,8 +367,8 @@ int targ_bits[2],int mean_bits, int gr)
       if (add_bits[ch] > .75*mean_bits) add_bits[ch]=mean_bits*.75;
       if (add_bits[ch] < 0) add_bits[ch]=0;
 
-      if ((targ_bits[ch]+add_bits[ch]) > 4095) 
-	add_bits[ch]=Max(0,4095-targ_bits[ch]);
+      if ((targ_bits[ch]+add_bits[ch]) > MAX_BITS) 
+	add_bits[ch]=Max(0, MAX_BITS-targ_bits[ch]);
     }
 
     bits += add_bits[ch];
@@ -406,8 +406,8 @@ void reduce_side(int targ_bits[2],FLOAT8 ms_ener_ratio,int mean_bits,int max_bit
     /*    move_bits = fac*targ_bits[1];  */
     move_bits = fac*.5*(targ_bits[0]+targ_bits[1]);  
 
-    if ((move_bits + targ_bits[0]) > 4095) {
-      move_bits = 4095 - targ_bits[0];
+    if (move_bits > MAX_BITS - targ_bits[0]) {
+        move_bits = MAX_BITS - targ_bits[0];
     }
     if (move_bits<0) move_bits=0;
     

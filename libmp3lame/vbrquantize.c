@@ -1090,7 +1090,7 @@ VBR_noise_shaping (
 
     /* inject noise until we meet our bit limit
      */
-    while (cod_info->part2_3_length > Min (maxbits, 4095)) {
+    while (cod_info->part2_3_length > Min (maxbits, MAX_BITS)) {
         /* increase global gain, keep existing scale factors */
         ++cod_info->global_gain;
         if (cod_info->global_gain > 255) 
