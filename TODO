@@ -17,7 +17,7 @@ maxmp3buf=8*960 to see if there is a working combination.
    targets:
           lame.exe
           mp3x.exe   (require GTK libs)
-          lame_enc.dll
+          lame_enc.dll   
           ACM codec
           directshow codec
 

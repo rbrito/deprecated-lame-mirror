@@ -17,9 +17,10 @@ lame_enc.dll    a Windows DLL used by many GUIs which support lame.
                 (Can only be compiled by MSVC???)
                                  
 
-lame_enc.acm    a Windows ACM codec which can be used by 
+lame.acm        a Windows ACM codec which can be used by 
                 many windows programs, and any directshow program.
-                See MSVC project files in ACM directory
+                See MSVC project files in ACM directory.
+                Right click on lame.inf to install.
 
 lame_enc.dshow  a Windows direct show filter for lame.  Potentially has
                 more flexability than the ACM codec, but code needs some
