@@ -1078,10 +1078,33 @@ check_istereo(lame_internal_flags *gfc, int gr)
     for (; sb < SBMAX_l; sb++) {
 	FLOAT l = mr[0].en.l[sb];
 	FLOAT r = mr[1].en.l[sb];
-	
+
 	if (mr[3].en.l[sb] > mr[3].thm.l[sb]
 	    && ((l+r) * (0.5 + 0.366025404) * 0.5 > l
 		|| (l+r) * (0.5 + 0.366025404) * 0.5 > r))
+	    return 1;
+    }
+    return 0;
+}
+
+static int
+check_istereo_LR(lame_internal_flags *gfc, int gr)
+{
+    int sb = SBMAX_l, ch = 0;
+    III_psy_ratio *mr = &gfc->masking_next[gr][0];
+    while (--sb > gfc->is_start_sfb_l_next[gr]) {
+	if (mr[0].en.l[sb] > mr[0].thm.l[sb])
+	    break;
+
+	if (mr[1].en.l[sb] > mr[1].thm.l[sb]) {
+	    ch = 1;
+	    break;
+	}
+    }
+    while (--sb > gfc->is_start_sfb_l_next[gr]) {
+	FLOAT m = mr[  ch].en.l[sb];
+	FLOAT s = mr[1-ch].en.l[sb];
+	if (m*0.211324865 * 0.5 < s)
 	    return 1;
     }
     return 0;
@@ -1866,7 +1889,10 @@ psycho_analysis(
 	} else if (gfc->mode_ext_next != gfc->mode_ext
 		   && (gfc->useshort_next[0][0] | gfc->useshort_next[0][1])) {
 	    gfc->useshort_next[0][0] = gfc->useshort_next[0][1] = SHORT_TYPE;
-	    if (gfp->use_istereo)
+	    if (gfp->use_istereo
+//		&& (check_istereo_LR(gfc, 0)
+//		    + check_istereo_LR(gfc, gfc->mode_gr-1))
+		)
 		gfc->mode_ext_next = MPG_MD_LR_I;
 	}
     }
