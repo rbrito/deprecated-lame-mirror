@@ -865,19 +865,27 @@ int    lame_encode_buffer (
   while (nsamples > 0) {
     int n_in=0;
     int n_out=0;
-    /* copy in new samples into mfbuf, with filtering */
 
-    for (ch=0; ch<gfc->stereo; ch++) {
-      if (gfc->resample_ratio!=1)  {
+    /* copy in new samples into mfbuf, with resampling if necessary */
+    if (gfc->resample_ratio!=1)  {
+      for (ch=0; ch<gfc->stereo; ch++) {
 	n_out=fill_buffer_resample(gfp,&mfbuf[ch][gfc->mf_size],gfp->framesize,
-					  in_buffer[ch],nsamples,&n_in,ch);
-      } else {
-	n_out=Min(gfp->framesize,nsamples);
-	for (n_in = 0 ; n_in< n_out; ++n_in) 
-	  mfbuf[ch][gfc->mf_size+n_in]=in_buffer[ch][n_in];
+				   in_buffer[ch],nsamples,&n_in,ch);
+	in_buffer[ch] += n_in;
       }
-      in_buffer[ch] += n_in;
+    }else{
+      n_out=Min(gfp->framesize,nsamples);
+      n_in=n_out;
+      for (i = 0 ; i< n_out; ++i) {
+	mfbuf[0][gfc->mf_size+i]=in_buffer[0][i];
+	if (gfc->stereo==2)
+	  mfbuf[1][gfc->mf_size+i]=in_buffer[1][i];
+      }
+      in_buffer[0] += n_in;
+      in_buffer[1] += n_in;
     }
+
+
 
     nsamples -= n_in;
     gfc->mf_size += n_out;

@@ -45,7 +45,10 @@ const char*  get_lame_version ( void )
     static char ret [48];
     
     if (LAME_ALPHA_VERSION > 0u)
-        sprintf ( ret, "%u.%02d (alpha %u, %6.6s %5.5s)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION, LAME_ALPHA_VERSION, __DATE__, __TIME__ );
+      /* adding date and time to version string makes it harder for
+       * output validation */
+      /*        sprintf ( ret, "%u.%02d (alpha %u, %6.6s %5.5s)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION, LAME_ALPHA_VERSION, __DATE__, __TIME__ ); */
+        sprintf ( ret, "%u.%02d (alpha %u)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION, LAME_ALPHA_VERSION);
     else if (LAME_BETA_VERSION > 0u)
         sprintf ( ret, "%u.%02d (beta %u, %s)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION, LAME_BETA_VERSION, __DATE__ );
     else
