@@ -1375,7 +1375,7 @@ is_syncword_mp123(const void *const headerptr)
     if ((p[1] & 0xE0) != 0xE0)
         return 0;       /* next 3 bits are also */
     if ((p[1] & 0x18) == 0x08)
-        return 0;       /* no MPEG-1, -2 or -2.5 */
+        return 0;       /* no MPEG-1, -2 or -2.5 */        
     if ((p[1] & 0x06) == 0x00)
         return 0;       /* no Layer I, II and III */
 #ifndef USE_LAYER_1
@@ -1386,6 +1386,10 @@ is_syncword_mp123(const void *const headerptr)
     if ((p[1] & 0x06) == 0x02*2)
 	return 0; /* layer1 is not supported */
 #endif
+    if (!(((p[1] & 0x06) == 0x03*2 && input_format == sf_mp1)
+	  || ((p[1] & 0x06) == 0x02*2 && input_format == sf_mp2)
+	  || ((p[1] & 0x06) == 0x01*2 && input_format == sf_mp3)))
+	return 0; /* imcompatible layer with input file format */
     if ((p[2] & 0xF0) == 0xF0)
         return 0;       /* bad bitrate */
     if ((p[2] & 0x0C) == 0x0C)
@@ -1441,12 +1445,7 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
 	if (fread(&buf, 1, len, fd) != len)
 	    return -1;      /* failed */
     }
-
-
-    /* look for valid 8 byte MPEG header  */
-    if (fread(&buf[4], 1, len, fd) != len)
-        return -1;      /* failed */
-    len = 8;
+    len = 4;
     while (!is_syncword_mp123(buf)) {
         int     i;
         for (i = 0; i < len - 1; i++)
@@ -1459,7 +1458,6 @@ lame_decode_initfile(FILE * fd, mp3data_struct * mp3data)
 	fprintf(stderr,"Input file is freeformat.\n");
 	freeformat = 1;
     }
-
     /* now parse the current buffer looking for MP3 headers.    */
     /* (as of 11/00: mpglib modified so that for the first frame where  */
     /* headers are parsed, no data will be decoded.   */

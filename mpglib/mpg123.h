@@ -60,7 +60,7 @@ char *strchr (), *strrchr ();
 #define         MPG_MD_DUAL_CHANNEL     2
 #define         MPG_MD_MONO             3
 
-#define MAXFRAMESIZE 1792
+#define MAXFRAMESIZE 2880
 
 /* AF: ADDED FOR LAYER1/LAYER2 */
 #define         SCALE_BLOCK             12
