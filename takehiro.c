@@ -25,6 +25,7 @@
 #include "tables.h"
 #include "quantize-pvt.h"
 
+static unsigned int largetbl[16*16];
 
 struct
 {
@@ -91,20 +92,17 @@ int
 count_bit_ESC(int *ix, int *end, int t1, int t2, int *s)
 {
     /* ESC-table is used */
-    int linbits1 = ht[t1].xlen;
-    int linbits2 = ht[t2].xlen;
-    int	sum1 = 0;
-    int	sum2 = 0;
+    int linbits = ht[t1].xlen * 65536 + ht[t2].xlen;
+    unsigned int sum = 0, sum2;
 
-    while (ix < end) {
+    do {
 	int x = *ix++;
 	int y = *ix++;
 
 	if (x != 0) {
 	    if (x > 14) {
 		x = 15;
-		sum1 += linbits1;
-		sum2 += linbits2;
+		sum += linbits;
 	    }
 	    x *= 16;
 	}
@@ -112,24 +110,26 @@ count_bit_ESC(int *ix, int *end, int t1, int t2, int *s)
 	if (y != 0) {
 	    if (y > 14) {
 		y = 15;
-		sum1 += linbits1;
-		sum2 += linbits2;
+		sum += linbits;
 	    }
 	    x += y;
 	}
 
-	sum1 += ht[16].hlen[x];
-	sum2 += ht[24].hlen[x];
-    }
+	sum += largetbl[x];
+    } while (ix < end);
 
-    if (sum1 > sum2) {
-	sum1 = sum2;
+    sum2 = sum & 0xffff;
+    sum >>= 16;
+
+    if (sum > sum2) {
+	sum = sum2;
 	t1 = t2;
     }
 
-    *s += sum1;
+    *s += sum;
     return t1;
 }
+
 
 INLINE static int
 count_bit_noESC(int *ix, int *end, int t1, int *s)
@@ -708,4 +708,13 @@ void best_scalefac_store(lame_global_flags *gfp,int gr, int ch,
     }
 
     gi->part2_3_length += gi->part2_length;
+}
+
+void huffman_init()
+{
+    int i;
+
+    for (i = 0; i < 16*16; i++) {
+	largetbl[i] = (((int)ht[16].hlen[i]) << 16) + ht[24].hlen[i];
+    }
 }

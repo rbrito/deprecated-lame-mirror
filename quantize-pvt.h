@@ -45,6 +45,8 @@ void outer_loop( lame_global_flags *gfp,
 
 void iteration_init( lame_global_flags *gfp,III_side_info_t *l3_side, int l3_enc[2][2][576]);
 
+void huffman_init(void);
+
 int inner_loop( lame_global_flags *gfp,FLOAT8 xrpow[576],
                 int l3_enc[576],
                 int max_bits,
