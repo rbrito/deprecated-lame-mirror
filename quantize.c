@@ -63,7 +63,7 @@ iteration_loop( FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   FLOAT8 xr[2][576];
 
 
-  iteration_init(xr_org,l3_side,l3_enc,fr_ps);
+  iteration_init(l3_side,l3_enc,fr_ps);
   info = fr_ps->header;
   bit_rate = bitrate[info->version][info->lay-1][info->bitrate_index];
 
@@ -263,7 +263,7 @@ VBR_iteration_loop (FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
   int       i,ch, gr, analog_silence;
   int	    reparted = 0;
 
-  iteration_init(xr,l3_side,l3_enc,fr_ps);
+  iteration_init(l3_side,l3_enc,fr_ps);
   info = fr_ps->header;
 
 
@@ -885,6 +885,8 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
 	    s += pretab[sfb];
 
 	s = cod_info->global_gain - (s << (cod_info->scalefac_scale + 1));
+	assert(s<Q_MAX);
+	assert(s>=0);
 	step = POW20(s);
 
 	start = scalefac_band.l[ sfb ];
@@ -939,6 +941,8 @@ int calc_noise1( FLOAT8 xr[576], int ix[576], gr_info *cod_info,
 		+ cod_info->subblock_gain[i] * 8;
 	    s = cod_info->global_gain - s;
 
+	    assert(s<Q_MAX);
+	    assert(s>=0);
 	    step = POW20(s);
 	    start = scalefac_band.s[ sfb ];
 	    end   = scalefac_band.s[ sfb+1 ];

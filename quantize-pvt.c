@@ -134,8 +134,7 @@ FLOAT8 ATH_mdct_short[192];
 /*  initialization for iteration_loop */
 /************************************************************************/
 void
-iteration_init( FLOAT8 xr_org[2][2][576], 
-		III_side_info_t *l3_side, int l3_enc[2][2][576],
+iteration_init( III_side_info_t *l3_side, int l3_enc[2][2][576],
 		frame_params *fr_ps)
 {
   gr_info *cod_info;
@@ -772,11 +771,6 @@ int calc_xmin( FLOAT8 xr[576], III_psy_ratio *ratio,
 
 
 
-
-
-
-
-
 /*************************************************************************/
 /*            loop_break                                                 */
 /*************************************************************************/
@@ -802,17 +796,41 @@ int loop_break( III_scalefac_t *scalefac, gr_info *cod_info)
 }
 
 
+
+
+
+
+
+
+
+
+
+
 #if (defined(__GNUC__) && defined(__i386__))
 #define USE_GNUC_ASM
-//#define USE_GNUC_ASM_OLD
+#endif
+#ifdef _MSC_VER
+#define USE_MSC_AMS
 #endif
 
+
+
+/*********************************************************************
+ * XRPOW_FTOI is a macro to convert floats to ints.  
+ * if XRPOW_FTOI(x) = nearest_int(x), then QUANTFAC(x)=adj43asm[x]
+ *                                         ROUNDFAC= -0.0946
+ *
+ * if XRPOW_FTOI(x) = floor(x), then QUANTFAC(x)=asj43[x]   
+ *                                   ROUNDFAC=0.4054
+ *********************************************************************/
 #ifdef USE_GNUC_ASM
 #  define QUANTFAC(rx)  adj43asm[rx]
+#  define ROUNDFAC -0.0946
 #  define XRPOW_FTOI(src, dest) \
      asm ("fistpl %0 " : "=m"(dest) : "t"(src) : "st")
-#elif defined (_MSC_VER)
+#elif defined (USE_MSC_ASM)
 #  define QUANTFAC(rx)  adj43asm[rx]
+#  define ROUNDFAC -0.0946
 #  define XRPOW_FTOI(src, dest) do { \
      FLOAT8 src_ = (src); \
      int dest_; \
@@ -824,8 +842,11 @@ int loop_break( III_scalefac_t *scalefac, gr_info *cod_info)
    } while (0)
 #else
 #  define QUANTFAC(rx)  adj43[rx]
+#  define ROUNDFAC 0.4054
 #  define XRPOW_FTOI(src,dest) ((dest) = (int)(src))
 #endif
+
+
 
 /*********************************************************************
  * nonlinear quantization of xr 
@@ -844,7 +865,7 @@ void quantize_xrpow(FLOAT8 xr[576], int ix[576], gr_info *cod_info) {
   /* quantize on xr^(3/4) instead of xr */
   const FLOAT8 istep = IPOW20(cod_info->global_gain);
 
-#if defined (USE_GNUC_ASM) && !defined (USE_GNUC_ASM_OLD)
+#if defined (USE_GNUC_ASM) 
   {
       int rx[4];
       __asm__ __volatile__(
@@ -905,7 +926,7 @@ void quantize_xrpow(FLOAT8 xr[576], int ix[576], gr_info *cod_info) {
         : "%eax", "%ebx", "memory", "cc"
       );
   }
-#elif defined (_MSC_VER)
+#elif defined (USE_MSC_ASM)
   {
       /* asm from Acy Stapp <AStapp@austin.rr.com> */
       int rx[4];
@@ -973,7 +994,8 @@ void quantize_xrpow(FLOAT8 xr[576], int ix[576], gr_info *cod_info) {
       }
   }
 #else
-  {
+#if 0
+  {   /* generic code if you write ASM for XRPOW_FTOI() */
       FLOAT8 x;
       int j, rx;
       for (j = 576 / 4; j > 0; --j) {
@@ -995,7 +1017,53 @@ void quantize_xrpow(FLOAT8 xr[576], int ix[576], gr_info *cod_info) {
       }
   }
 #endif
+  {/* from Wilfried.Behne@t-online.de.  Reported to be 2x faster than 
+      the above code (when not using ASM) on PowerPC */
+     	int j;
+     	
+     	for ( j = 576/8; j > 0; --j)
+     	{
+			FLOAT8	x1, x2, x3, x4, x5, x6, x7, x8;
+			int		rx1, rx2, rx3, rx4, rx5, rx6, rx7, rx8;
+			x1 = *xr++ * istep;
+			x2 = *xr++ * istep;
+			XRPOW_FTOI(x1, rx1);
+			x3 = *xr++ * istep;
+			XRPOW_FTOI(x2, rx2);
+			x4 = *xr++ * istep;
+			XRPOW_FTOI(x3, rx3);
+			x5 = *xr++ * istep;
+			XRPOW_FTOI(x4, rx4);
+			x6 = *xr++ * istep;
+			XRPOW_FTOI(x5, rx5);
+			x7 = *xr++ * istep;
+			XRPOW_FTOI(x6, rx6);
+			x8 = *xr++ * istep;
+			XRPOW_FTOI(x7, rx7);
+			x1 += QUANTFAC(rx1);
+			XRPOW_FTOI(x8, rx8);
+			x2 += QUANTFAC(rx2);
+			XRPOW_FTOI(x1,*ix++);
+			x3 += QUANTFAC(rx3);
+			XRPOW_FTOI(x2,*ix++);
+			x4 += QUANTFAC(rx4);		
+			XRPOW_FTOI(x3,*ix++);
+			x5 += QUANTFAC(rx5);
+			XRPOW_FTOI(x4,*ix++);
+			x6 += QUANTFAC(rx6);
+			XRPOW_FTOI(x5,*ix++);
+			x7 += QUANTFAC(rx7);
+			XRPOW_FTOI(x6,*ix++);
+			x8 += QUANTFAC(rx8);		
+			XRPOW_FTOI(x7,*ix++);
+			XRPOW_FTOI(x8,*ix++);
+     	}
+	}
+#endif
 }
+
+
+
 
 
 
@@ -1006,7 +1074,6 @@ void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
   
 #if defined(USE_GNUC_ASM)
    {
-#ifndef USE_GNUC_ASM_OLD
       __asm__ __volatile__ (
         "\n\nloop0:\n\t"
 
@@ -1051,17 +1118,8 @@ void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
         : "r" (576 / 4), "u" ((FLOAT)(0.4054 - 0.5)), "t" (istep), "r" (xr), "r" (ix)
         : "memory", "cc"
       );
-#else
-      register int j;
-      for (j=576/4;j>0;j--) {
-         XRPOW_FTOI(istep * (*xr++) - 0.0946, *ix++);
-         XRPOW_FTOI(istep * (*xr++) - 0.0946, *ix++);
-         XRPOW_FTOI(istep * (*xr++) - 0.0946, *ix++);
-         XRPOW_FTOI(istep * (*xr++) - 0.0946, *ix++);
-      }
-#endif
   }
-#elif defined(_MSC_VER)
+#elif defined(USE_MSC_ASM)
   {
       /* asm from Acy Stapp <AStapp@austin.rr.com> */
       const FLOAT8 temp0 = 0.4054 - 0.5;
@@ -1116,6 +1174,16 @@ void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
       }
   }
 #else
+#if 0
+   /* generic ASM */
+      register int j;
+      for (j=576/4;j>0;j--) {
+         XRPOW_FTOI(istep * (*xr++) + ROUNDFAC, *ix++);
+         XRPOW_FTOI(istep * (*xr++) + ROUNDFAC, *ix++);
+         XRPOW_FTOI(istep * (*xr++) + ROUNDFAC, *ix++);
+         XRPOW_FTOI(istep * (*xr++) + ROUNDFAC, *ix++);
+      }
+#endif
   {
       register int j;
       const FLOAT8 compareval0 = (1.0 - 0.4054)/istep;
@@ -1137,18 +1205,12 @@ void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
             *(ix++) = 0;
             xr++;
           } else
-            *(ix++) = (int)( istep*(*(xr++))  + 0.4054);
+	    //	    *(ix++) = (int)( istep*(*(xr++))  + 0.4054);
+            XRPOW_FTOI(  istep*(*(xr++))  + ROUNDFAC , *(ix++) );
         }
   }
 #endif
 }
-
-
-
-
-
-
-
 
 
 
