@@ -609,7 +609,7 @@ lame_init_params(lame_global_flags * const gfp)
     if (gfp->VBR == vbr_off && gfp->compression_ratio > 0) {
 
         if (gfp->out_samplerate == 0)
-            gfp->out_samplerate = map2MP3Frequency(0.97 * gfp->in_samplerate); /* round up with a margin of 3% */
+            gfp->out_samplerate = map2MP3Frequency( (int)( 0.97 * gfp->in_samplerate ) ); /* round up with a margin of 3% */
 
         /* choose a bitrate for the output samplerate which achieves
          * specified compression ratio 
@@ -633,7 +633,7 @@ lame_init_params(lame_global_flags * const gfp)
 
 
     if (gfp->out_samplerate == 0) { /* if output sample frequency is not given, find an useful value */
-        gfp->out_samplerate = map2MP3Frequency(0.97 * gfp->in_samplerate);
+        gfp->out_samplerate = map2MP3Frequency( (int)( 0.97 * gfp->in_samplerate ) );
 
 
         /* check if user specified bitrate requires downsampling, if compression    */
@@ -645,8 +645,8 @@ lame_init_params(lame_global_flags * const gfp)
                                                                 gfp->brate);
             if (gfp->compression_ratio > 13.)
                 gfp->out_samplerate =
-                    map2MP3Frequency((10. * 1.e3 * gfp->brate) /
-                                     (16 * gfc->channels_out));
+                    map2MP3Frequency( (int)( (10. * 1.e3 * gfp->brate) /
+                                     (16 * gfc->channels_out)));
         }
         if (gfp->VBR == vbr_abr) {
             gfp->compression_ratio =
@@ -655,8 +655,8 @@ lame_init_params(lame_global_flags * const gfp)
                                                                 VBR_mean_bitrate_kbps);
             if (gfp->compression_ratio > 13.)
                 gfp->out_samplerate =
-                    map2MP3Frequency((10. * 1.e3 * gfp->VBR_mean_bitrate_kbps) /
-                                     (16 * gfc->channels_out));
+                    map2MP3Frequency((int)((10. * 1.e3 * gfp->VBR_mean_bitrate_kbps) /
+                                     (16 * gfc->channels_out)));
         }
     }
 
@@ -1542,7 +1542,7 @@ int
 lame_encode_buffer(lame_global_flags * gfp,
                    const short int buffer_l[],
                    const short int buffer_r[],
-                   int nsamples, unsigned char *mp3buf, const int mp3buf_size)
+                   const int nsamples, unsigned char *mp3buf, const int mp3buf_size)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
     int     ret, i;
@@ -1581,7 +1581,7 @@ int
 lame_encode_buffer_float(lame_global_flags * gfp,
                    const float buffer_l[],
                    const float buffer_r[],
-                   int nsamples, unsigned char *mp3buf, const int mp3buf_size)
+                   const int nsamples, unsigned char *mp3buf, const int mp3buf_size)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
     int     ret, i;
@@ -1621,7 +1621,7 @@ int
 lame_encode_buffer_int(lame_global_flags * gfp,
                    const int buffer_l[],
                    const int buffer_r[],
-                   int nsamples, unsigned char *mp3buf, const int mp3buf_size)
+                   const int nsamples, unsigned char *mp3buf, const int mp3buf_size)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
     int     ret, i;
@@ -1663,7 +1663,7 @@ int
 lame_encode_buffer_long(lame_global_flags * gfp,
                    const long buffer_l[],
                    const long buffer_r[],
-                   int nsamples, unsigned char *mp3buf, const int mp3buf_size)
+                   const int nsamples, unsigned char *mp3buf, const int mp3buf_size)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
     int     ret, i;

@@ -184,7 +184,7 @@ static const unsigned char rv_tbl[] = {
 #define ms31(f)	(window_s[0x3e - i] * f(i + k + 0xc1))
 
 
-void fft_short(lame_internal_flags *gfc, 
+void fft_short(lame_internal_flags * const gfc, 
                 FLOAT x_real[3][BLKSIZE_s], int chn, const sample_t *buffer[2])
 {
     const FLOAT*  window_s = (const FLOAT *)&gfc->window_s[0];

@@ -975,7 +975,9 @@ void set_frame_pinfo(
         III_scalefac_t  scalefac [2][2] )
 {
     lame_internal_flags *gfc=gfp->internal_flags;
-    unsigned int          gr, ch, sfb;
+    unsigned int          sfb;
+	int                   ch;
+	int                   gr;
     int                   act_l3enc[576];
     III_scalefac_t        act_scalefac [2];
     int scsfi[2] = {0,0};

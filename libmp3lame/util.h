@@ -520,11 +520,11 @@ struct lame_internal_flags {
 *  Global Function Prototype Declarations
 *
 ***********************************************************************/
-void                  freegfc(lame_internal_flags *gfc);
+void                  freegfc(lame_internal_flags * const gfc);
 extern int            BitrateIndex(int, int,int);
 extern int            FindNearestBitrate(int,int,int);
 extern int            map2MP3Frequency(int freq);
-extern int            SmpFrqIndex(int, int*);
+extern int            SmpFrqIndex(int, int* const);
 extern FLOAT8         ATHformula(FLOAT8 f,lame_global_flags *gfp);
 extern FLOAT8         freq2bark(FLOAT8 freq);
 extern FLOAT8         freq2cbw(FLOAT8 freq);
@@ -555,7 +555,7 @@ extern int  has_3DNow ( void );
 extern int  has_SIMD  ( void );
 extern int  has_SIMD2 ( void );
 
-extern void updateStats (lame_internal_flags *gfc);
+extern void updateStats (lame_internal_flags * const gfc);
 
 
 

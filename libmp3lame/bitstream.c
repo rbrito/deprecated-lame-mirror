@@ -32,6 +32,7 @@
 #include "quantize.h"
 #include "quantize_pvt.h"
 #include "version.h"
+#include "VbrTag.h"
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>

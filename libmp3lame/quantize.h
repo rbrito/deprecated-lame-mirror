@@ -66,8 +66,8 @@ int VBR_noise_shaping2(
                     int              l3_enc   [576], 
                     int              minbits, 
                     int              maxbits,
-                    III_scalefac_t * scalefac, 
-                    III_psy_xmin   * l3_xmin,
+                    III_scalefac_t * const scalefac, 
+                    III_psy_xmin   * const l3_xmin,
                     int              gr,
                     int              ch );
 

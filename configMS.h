@@ -41,7 +41,7 @@
 #define PACKAGE "lame"
 
 /* Version number of package */
-#define VERSION "3.90"
+#define VERSION "3.88"
 
 /* Define if compiler has function prototypes */
 #define PROTOTYPES 1
@@ -78,5 +78,8 @@
 typedef long double ieee854_float80_t;
 typedef double      ieee754_float64_t;
 typedef float       ieee754_float32_t;
+
+
+#pragma warning( disable : 4305 )
 
 #define LAME_LIBRARY_BUILD
