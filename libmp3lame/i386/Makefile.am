@@ -8,7 +8,7 @@ noinst_LTLIBRARIES = liblameasmroutines.la
 
 noinst_HEADERS = nasm.h
 
-INCLUDES = @INCLUDES@ -I$(top_srcdir)/mpglib/ -I$(top_srcdir)/libmp3lame
+INCLUDES = @INCLUDES@ -I$(top_srcdir)/libmp3lame/@CPUTYPE@
 
 SUFFIXES = .nas
 
@@ -36,6 +36,6 @@ EXTRA_DIST = \
 	ffttbl.nas
 
 NASM = @NASM@
-NASMFLAGS=-f elf -i .
+NASMFLAGS=-f elf -i $(top_srcdir)/libmp3lame/@CPUTYPE@/
 .nas.o:
 	$(NASM) $(NASMFLAGS) $< -o $@ -l $<.lst

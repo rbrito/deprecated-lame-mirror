@@ -2,7 +2,7 @@
 
 AUTOMAKE_OPTIONS = foreign $(top_srcdir)/ansi2knr
 
-INCLUDES = @INCLUDES@ -I$(top_srcdir)/libmp3lame -I$(top_srcdir)
+INCLUDES = @INCLUDES@ -I$(top_srcdir)/libmp3lame -I$(top_builddir)
 
 EXTRA_DIST = README
 

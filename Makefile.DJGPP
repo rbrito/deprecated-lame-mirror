@@ -146,7 +146,7 @@ ASFLAGS=-f elf -i i386/
 
 ## use MMX extension. you need nasm and MMX supported CPU.
 #CC_SWITCCH += -DMMX_choose_table
-#OBJ += i386/choose_table.o
+#OBJ += i386/choose_table.o i386/cpu_feat.o i386/scalar.o
 
 %.o: %.c 
 	$(CC) $(CPP_OPTS) $(CC_SWITCHES) -c $< -o $@

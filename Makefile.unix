@@ -490,7 +490,7 @@ ASFLAGS=-f elf -i libmp3lame/i386/
 ifeq ($(HAVE_NASM),YES)
 ## have NASM
 CC_SWITCHES += -DHAVE_NASM
-lib_obj += libmp3lame/i386/cpu_feat.o libmp3lame/i386/scalar.nas
+lib_obj += libmp3lame/i386/cpu_feat.o libmp3lame/i386/scalar.o
 
 ## use MMX extension. you need nasm and MMX supported CPU.
 CC_SWITCHES += -DMMX_choose_table
