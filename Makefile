@@ -487,26 +487,29 @@ ASFLAGS=-f elf -i i386/
 all: $(PGM)
 
 $(PGM):	main.o $(gtk_obj) libmp3lame.a 
-	$(CC) $(CC_OPTS) -o $(PGM)  main.o $(gtk_obj) -L. -lmp3lame $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
+	$(CC) $(CC_OPTS) -o $(PGM)  main.o $(gtk_obj) libmp3lame.a $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
 
 mp3x:	mp3x.o $(gtk_obj) libmp3lame.a
-	$(CC) -o mp3x mp3x.o $(gtk_obj) $(OBJ) $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
+	$(CC) -o mp3x mp3x.o $(gtk_obj) libmp3lame.a $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
 
 mp3rtp:	rtp.o mp3rtp.o libmp3lame.a
-	$(CC) -o mp3rtp mp3rtp.o rtp.o   $(OBJ) $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
+	$(CC) -o mp3rtp mp3rtp.o rtp.o libmp3lame.a $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
 
 libmp3lame.a:  $(OBJ) Makefile
 	$(AR) cr libmp3lame.a  $(OBJ) 
 	$(RANLIB) libmp3lame.a
 
-#shared library, probably linux specific?
+#shared library, probably GNU specific?
+#note: using a shared library is not a good idea!: different 
+#versions of LAME require no code changes to the calling app, but
+#the app must be recompiled.
 libmp3lame.so:  $(OBJ) Makefile
 	gcc -shared -Wl,-soname,libmp3lame.so -o libmp3lame.so $(OBJ)
 
-lib:  libmp3lame.so
-libinstall: libmp3lame.so
-	cp libmp3lame.so /usr/lib
-	cp lame.h /usr/lib
+install:  $(PGM) #libmp3lame.a
+	cp $(PGM) /usr/bin
+	#cp libmp3lame.a /usr/lib
+	#cp lame.h /usr/lib
 
 
 

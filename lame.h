@@ -180,6 +180,7 @@ typedef struct  {
 
   /************************************************************************/
   /* internal variables, do not set... */
+  /* provided because they may be of use to some applications   */
   /************************************************************************/
   BRHST brhist;					  /* histogramming data */
 
