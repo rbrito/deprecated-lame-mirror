@@ -657,7 +657,7 @@ lame_print_config(const lame_global_flags * gfp)
         MSGF(gfc, "CPU features:");
 
         if (gfc->CPU_features.MMX)
-            MSGF(gfc, ", MMX (ASM used)");
+            MSGF(gfc, "MMX (ASM used)");
         if (gfc->CPU_features.AMD_3DNow)
             MSGF(gfc, ", 3DNow! (ASM used)");
         if (gfc->CPU_features.AMD_E3DNow)
