@@ -31,6 +31,7 @@
 #include <assert.h>
 #include "main.h"
 #include "get_audio.h"
+#include "gtkanal.h"
 
 plotting_data *pinfo;
 plotting_data *pplot;

@@ -22,7 +22,7 @@
 #ifndef LAME_GTKANAL_H
 #define LAME_GTKANAL_H
 
-#ifndef NO_ANALYSIS
+#ifndef NOANALYSIS
 #include "lame.h"
 #include "encoder.h"
 #include "l3side.h"
