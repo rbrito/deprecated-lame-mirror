@@ -275,6 +275,70 @@ int samplerate)   /* convert bitrate in kbps to index */
     return -1;
 }
 
+
+
+#ifndef Min
+#define         Min(A, B)       ((A) < (B) ? (A) : (B))
+#endif
+#ifndef Max
+#define         Max(A, B)       ((A) > (B) ? (A) : (B))
+#endif
+
+
+/* Used to find table index when
+ * we need bitrate-based values
+ * determined using tables
+ *
+ * bitrate in kbps
+ *
+ * Gabriel Bouvigne 2002-11-03
+ */
+int nearestBitrateFullIndex(const int bitrate)
+{
+    /* borrowed from DM abr presets*/    
+
+    int index; // resolved range
+
+    const int bitrate_table[] = {8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320};
+
+
+    int lower_range = 0, lower_range_kbps = 0,
+        upper_range = 0, upper_range_kbps = 0;
+    
+
+    int b;
+
+
+    // We assume specified bitrate will be 320kbps
+    upper_range_kbps = bitrate_table[16];
+    upper_range = 16;
+    lower_range_kbps = bitrate_table[16];
+    lower_range = 16;
+ 
+    // Determine which significant bitrates the value specified falls between,
+    // if loop ends without breaking then we were correct above that the value was 320
+    for (b = 0; b < 16; b++) {
+        if ((Max(bitrate, bitrate_table[b+1])) != bitrate) {
+              upper_range_kbps = bitrate_table[b+1];
+              upper_range = b+1;
+              lower_range_kbps = bitrate_table[b];
+              lower_range = (b);
+              break; // We found upper range 
+        }
+    }
+
+    // Determine which range the value specified is closer to
+    if ((upper_range_kbps - bitrate) > (bitrate - lower_range_kbps))
+        index = lower_range;
+    else
+        index = upper_range;
+
+    return index;
+}
+
+
+
+
 /* convert samp freq in Hz to index */
 
 int SmpFrqIndex ( int sample_freq, int* const version )

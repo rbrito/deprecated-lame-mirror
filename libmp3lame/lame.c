@@ -215,15 +215,13 @@ optimum_bandwidth(double *const lowerlimit,
                   double *const upperlimit,
                   const unsigned bitrate,
                   const int samplefreq,
-                  const double channels)
+                  const int channels)
 {
 /* 
  *  Input:
  *      bitrate     total bitrate in bps
  *      samplefreq  output sampling frequency in Hz
- *      channels    1 for mono, 2+epsilon for MS stereo, 3 for LR stereo
- *                  epsilon is the percentage of LR frames for typical audio
- *                  (I use 'Fade to Gray' by Metallica)
+ *      channels    number of channels
  *
  *   Output:
  *      lowerlimit: best lowpass frequency limit for input filter in Hz
@@ -231,92 +229,45 @@ optimum_bandwidth(double *const lowerlimit,
  */
     double  f_low;
     double  f_high;
-    double  br;
+    int  br;
+    int index;
 
-    assert(bitrate >= 8000 && bitrate <= 320000);
-    assert(samplefreq >= 8000 && samplefreq <= 48000);
-    assert(channels == 1 || (channels >= 2 && channels <= 3));
+    typedef struct {
+        int bitrate; /* only indicative value */
+        int lowpass;
+    } band_pass_t;
 
-    if (samplefreq >= 32000)
-        br =
-            bitrate - (channels ==
-                       1 ? (17 + 4) * 8 : (32 + 4) * 8) * samplefreq / 1152;
-    else
-        br =
-            bitrate - (channels ==
-                       1 ? (9 + 4) * 8 : (17 + 4) * 8) * samplefreq / 576;
+    const band_pass_t freq_map[] = {
+        {  8,  2000},
+        { 16,  3700},
+        { 24,  3900},
+        { 32,  5500},
+        { 40,  7000},
+        { 48,  7500},
+        { 56, 10000},
+        { 64, 11000},
+        { 80, 13500},
+        { 96, 15300},
+        {112, 16000},
+        {128, 17500},
+        {160, 18000},
+        {192, 19500},
+        {224, 20000},
+        {256, 20500},
+        {320, 20500}
+    };
 
-    if (channels >= 2.)
-        br /= 1.75 + 0.25 * (channels - 2.); // MS needs 1.75x mono, LR needs 2.00x mono (experimental data of a lot of albums)
 
-    br *= 0.5;          // the sine and cosine term must share the bitrate
+    br = bitrate/1000;
+    index = nearestBitrateFullIndex(br);
 
-/* 
- *  So, now we have the bitrate for every spectral line.
- *  Let's look at the current settings:
- *
- *    Bitrate   limit    bits/line
- *     8 kbps   0.34 kHz  4.76
- *    16 kbps   1.9 kHz   2.06
- *    24 kbps   2.8 kHz   2.21
- *    32 kbps   3.85 kHz  2.14
- *    40 kbps   5.1 kHz   2.06
- *    48 kbps   5.6 kHz   2.21
- *    56 kbps   7.0 kHz   2.10
- *    64 kbps   7.7 kHz   2.14
- *    80 kbps  10.1 kHz   2.08
- *    96 kbps  11.2 kHz   2.24
- *   112 kbps  14.0 kHz   2.12
- *   128 kbps  15.4 kHz   2.17
- *   160 kbps  18.2 kHz   2.05
- *   192 kbps  21.1 kHz   2.14
- *   224 kbps  22.0 kHz   2.41
- *   256 kbps  22.0 kHz   2.78
- *
- *   What can we see?
- *       Value for 8 kbps is nonsense (although 8 kbps and stereo is nonsense)
- *       Values are between 2.05 and 2.24 for 16...192 kbps
- *       Some bitrate lack the following bitrates have: 16, 40, 80, 160 kbps
- *       A lot of bits per spectral line have: 24, 48, 96 kbps
- *
- *   What I propose?
- *       A slightly with the bitrate increasing bits/line function. It is
- *       better to decrease NMR for low bitrates to get a little bit more
- *       bandwidth. So we have a better trade off between twickling and
- *       muffled sound.
- */
+    f_low = freq_map[index].lowpass;
 
-    f_low = br / log10(br * 4.425e-3); // Tests with 8, 16, 32, 64, 112 and 160 kbps
- 
-/*
-GB 04/04/01
-sfb21 is a huge bitrate consumer in vbr with the new ath.
-Need to reduce the lowpass to more reasonable values. This extra lowpass
-won't reduce quality over 3.87 as the previous ath was doing this lowpass
-*/
-/*GB 22/05/01
-I'm also extending this to CBR as tests showed that a
-limited bandwidth is increasing quality
-*/
-    if (f_low>18400)
-	    f_low = 18400+(f_low-18400)/4;
+    if (channels == 1)
+        f_low *= 1.6;
 
-/*
- *  What we get now?
- *
- *    Bitrate       limit  bits/line	difference
- *     8 kbps (8)  1.89 kHz  0.86          +1.6 kHz
- *    16 kbps (8)  3.16 kHz  1.24          +1.2 kHz
- *    32 kbps(16)  5.08 kHz  1.54          +1.2 kHz
- *    56 kbps(22)  7.88 kHz  1.80          +0.9 kHz
- *    64 kbps(22)  8.83 kHz  1.86          +1.1 kHz
- *   112 kbps(32) 14.02 kHz  2.12           0.0 kHz
- *   112 kbps(44) 13.70 kHz  2.11          -0.3 kHz
- *   128 kbps     15.40 kHz  2.17           0.0 kHz
- *   160 kbps     16.80 kHz  2.22          -1.4 kHz 
- *   192 kbps     19.66 kHz  2.30          -1.4 kHz
- *   256 kbps     22.05 kHz  2.78           0.0 kHz
- */
+    f_low = Min(freq_map[16].lowpass, f_low);
+    f_low = Min(samplefreq/2, f_low);
 
 
 /*
@@ -352,14 +303,6 @@ limited bandwidth is increasing quality
         *lowerlimit = (f_low>0.5 * samplefreq ? 0.5 * samplefreq : f_low); // roel - fixes mono "-b320 -a"
     if (upperlimit != NULL)
         *upperlimit = f_high;
-/*
- * Now the weak points:
- *
- *   - the formula f_low=br/log10(br*4.425e-3) is an ad hoc formula
- *     (but has a physical background and is easy to tune)
- *   - the switch to the ATH based bandwidth selecting is the ad hoc
- *     value of 128 kbps
- */
 }
 
 static int
@@ -367,29 +310,30 @@ optimum_samplefreq(int lowpassfreq, int input_samplefreq)
 {
 /*
  * Rules:
- *
- *  - output sample frequency should NOT be decreased by more than 3% if lowpass allows this
  *  - if possible, sfb21 should NOT be used
  *
- *  Problem: Switches to 32 kHz at 112 kbps
  */
-    if (input_samplefreq <= 8000 * 1.03 || lowpassfreq <= 3622)
-        return 8000;
-    if (input_samplefreq <= 11025 * 1.03 || lowpassfreq <= 4991)
-        return 11025;
-    if (input_samplefreq <= 12000 * 1.03 || lowpassfreq <= 5620)
-        return 12000;
-    if (input_samplefreq <= 16000 * 1.03 || lowpassfreq <= 7244)
-        return 16000;
-    if (input_samplefreq <= 22050 * 1.03 || lowpassfreq <= 9982)
-        return 22050;
-    if (input_samplefreq <= 24000 * 1.03 || lowpassfreq <= 11240)
-        return 24000;
-    if (input_samplefreq <= 32000 * 1.03 || lowpassfreq <= 15264)
-        return 32000;
-    if (input_samplefreq <= 44100 * 1.03)
-        return 44100;
-    return 48000;
+    int suggested_samplefreq;
+    if (lowpassfreq <= 15960)
+        suggested_samplefreq = 44100;
+    if (lowpassfreq <= 15250)
+        suggested_samplefreq = 32000;
+    if (lowpassfreq <= 11220)
+        suggested_samplefreq = 24000;
+    if (lowpassfreq <= 9970)
+        suggested_samplefreq = 22050;
+    if (lowpassfreq <= 7230)
+        suggested_samplefreq = 16000;
+    if (lowpassfreq <= 5420)
+        suggested_samplefreq = 12000;
+    if (lowpassfreq <= 4510)
+        suggested_samplefreq = 11025;
+    if (lowpassfreq <= 3970)
+        suggested_samplefreq = 8000;
+
+    if (input_samplefreq < suggested_samplefreq)
+        suggested_samplefreq = input_samplefreq;
+    return suggested_samplefreq;
 }
 
 
@@ -734,7 +678,8 @@ lame_init_params(lame_global_flags * const gfp)
     case vbr_rh:
     case vbr_mtrh:
         {
-            FLOAT8  cmp[] = { 5.7, 6.5, 7.3, 8.2, 9.1, 10, 11, 12, 13, 14 };
+            /*numbers are a bit strange, but they determine the lowpass value*/
+            FLOAT8  cmp[] = { 5.7, 6.5, 7.3, 8.2, 10, 11.9, 13, 14, 15, 16.5 };
             gfp->compression_ratio = cmp[gfp->VBR_q];
         }
         break;
@@ -788,24 +733,16 @@ lame_init_params(lame_global_flags * const gfp)
   /* if a filter has not been enabled, see if we should add one: */
   /****************************************************************/
     if (gfp->lowpassfreq == 0) {
-        double  lowpass;
-        double  highpass;
-        double  channels;
+        double lowpass;
+        double highpass;
+        int channels;
 
         switch (gfp->mode) {
         case MONO:
-            channels = 1.;
-            break;
-        case JOINT_STEREO:
-            channels = 2. + 0.00;
-            break;
-        case DUAL_CHANNEL:
-        case STEREO:
-            channels = 3.;
+            channels = 1;
             break;
         default:    
-            channels = 1.;  // just to make data flow analysis happy :-)
-            assert(0);
+            channels = 2;
             break;
         }
 
@@ -814,13 +751,7 @@ lame_init_params(lame_global_flags * const gfp)
                           gfp->out_samplerate * 16 * gfc->channels_out /
                           gfp->compression_ratio, gfp->out_samplerate, channels);
 			
-/*  roel - is this still needed?
-		if (lowpass > 0.5 * gfp->out_samplerate) {
-            //MSGF(gfc,"Lowpass @ %7.1f Hz\n", lowpass);
-            gfc->lowpass1 = gfc->lowpass2 =
-                lowpass / (0.5 * gfp->out_samplerate);
-        }
-*/
+
         gfp->lowpassfreq = lowpass;
 
 #if 0

@@ -592,6 +592,7 @@ extern int            BitrateIndex(int, int,int);
 extern int            FindNearestBitrate(int,int,int);
 extern int            map2MP3Frequency(int freq);
 extern int            SmpFrqIndex(int, int* const);
+extern int            nearestBitrateFullIndex(const int brate);
 extern FLOAT8         ATHformula(FLOAT8 f,lame_global_flags *gfp);
 extern FLOAT8         freq2bark(FLOAT8 freq);
 extern FLOAT8         freq2cbw(FLOAT8 freq);
