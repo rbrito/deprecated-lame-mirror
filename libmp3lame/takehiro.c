@@ -316,6 +316,9 @@ static void quantize_xrpow(const FLOAT8 *xp, int *pi, FLOAT8 istep, gr_info * co
     int j=0;
     int prev_data_use;
     int *iData;
+    int accumulate=0;
+    int *acc_iData;
+    FLOAT8 *acc_xp;
 
     iData = pi;
 
@@ -345,12 +348,18 @@ static void quantize_xrpow(const FLOAT8 *xp, int *pi, FLOAT8 istep, gr_info * co
         }
         assert( cod_info->width[sfb] >= 0 );
         if (prev_data_use && (prev_noise->step[sfb] == step)){
-            /* do not recompute this part*/
-        } else {
+            /* do not recompute this part,
+               but compute accumulated lines */
+            if (accumulate) {
+                gfc->quantize_lines_xrpow(accumulate, istep, acc_xp, acc_iData);
+                accumulate = 0;
+            }
+        } else { /*should compute this part*/
             int l;
             l = cod_info->width[sfb];
 
             if ((j+cod_info->width[sfb])>cod_info->max_nonzero_coeff) {
+                /*do not compute upper zero part*/
                 int usefullsize;
                 usefullsize = cod_info->max_nonzero_coeff - j +1;
                 memset(&pi[cod_info->max_nonzero_coeff],0,
@@ -360,14 +369,25 @@ static void quantize_xrpow(const FLOAT8 *xp, int *pi, FLOAT8 istep, gr_info * co
                 /* no need to compute higher sfb values */
                 sfb = sfbmax + 1;
             }
+
+            /*accumulate lines to quantize*/
+            if (!accumulate) {
+                acc_iData = iData;
+                acc_xp = xp;
+            }
+            accumulate += l;
+
             if ( l <= 0 ) {
                 /*  rh: 20040215
                  *  may happen due to "prev_data_use" optimization 
                  */
+                if (accumulate) {
+                    gfc->quantize_lines_xrpow(accumulate, istep, acc_xp, acc_iData);
+                    accumulate = 0;
+                }
+
                 break;  /* ends for-loop */
             }
-
-            gfc->quantize_lines_xrpow(l, istep, xp, iData);
         }
         if (sfb <= sfbmax) {
             iData += cod_info->width[sfb];
@@ -375,6 +395,11 @@ static void quantize_xrpow(const FLOAT8 *xp, int *pi, FLOAT8 istep, gr_info * co
             j += cod_info->width[sfb];
         }
     }
+    if (accumulate) { /*last data part*/
+        gfc->quantize_lines_xrpow(accumulate, istep, acc_xp, acc_iData);
+        accumulate = 0;
+    }
+
 }
 
 
