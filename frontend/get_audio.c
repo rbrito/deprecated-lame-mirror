@@ -54,10 +54,7 @@
 # include <unistd.h>
 #endif
 
-#if defined(__riscos__)
-# include <kernel.h>
-# include <sys/swis.h>
-#elif defined(_WIN32)
+#if defined(_WIN32)
 # include <sys/types.h>
 #endif
 
@@ -145,36 +142,16 @@ set_stream_binary_mode ( FILE* const fp )
     return 0;
 }
 
-FILE   *
-init_outfile(char *outPath, int decode)
+FILE *
+init_outfile(char *outPath)
 {
-    FILE   *outf;
-#ifdef __riscos__
-    char   *p;
-#endif
-
     /* open the output file */
     if (0 == strcmp(outPath, "-")) {
-	set_stream_binary_mode(outf = stdout);
+	set_stream_binary_mode(stdout);
+	return stdout;
     }
-    else {
-        if ((outf = fopen(outPath, "wb+")) == NULL)
-            return NULL;
-#ifdef __riscos__
-        /* Assign correct file type */
-        for (p = outPath; *p; p++) /* ugly, ugly to modify a string */
-            switch (*p) {
-            case '.':
-                *p = '/';
-                break;
-            case '/':
-                *p = '.';
-                break;
-            }
-        SetFiletype(outPath, decode ? 0xFB1 /*WAV*/ : 0x1AD /*AMPEG*/);
-#endif
-    }
-    return outf;
+
+    return fopen(outPath, "wb+");
 }
 
 void

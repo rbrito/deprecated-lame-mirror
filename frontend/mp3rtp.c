@@ -180,8 +180,7 @@ int  main ( int argc, char **argv )
     parse_args(gfp, argc - 1, argv + 1, inPath, outPath,NULL,NULL);
 
     /* open the output file.  Filename parsed into inPath */
-    outf = init_outfile(outPath, 0);
-    if (!outf) {
+    if (!(outf = init_outfile(outPath))) {
 	fprintf (stderr, "Could not create \"%s\".\n", outPath);
 	return 1;
     }

@@ -35,7 +35,7 @@ typedef enum sound_file_format_e {
     sf_mp3   /* MPEG Layer 3 */
 } sound_file_format;
 
-FILE *init_outfile ( char *outPath, int decode );
+FILE *init_outfile (char *outPath);
 void init_infile(lame_t , char *inPath);
 void close_infile(void);
 int get_audio(lame_t gfp, int buffer[2][1152]);

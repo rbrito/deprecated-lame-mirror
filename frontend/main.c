@@ -47,7 +47,10 @@
 # include <unistd.h>
 #endif
 
-#if defined(_WIN32)
+#if defined(__riscos__)
+# include <kernel.h>
+# include <sys/swis.h>
+#elif defined(_WIN32)
 # include <windows.h>
 #endif
 
@@ -134,10 +137,26 @@ init_files(lame_t gfp, char *inPath, char *outPath)
      * samplerate, num_channels and num_samples yourself.
      */
     init_infile(gfp, inPath);
-    if ((outf = init_outfile(outPath, decode_only)) == NULL) {
+    if (!(outf = init_outfile(outPath))) {
         fprintf(stderr, "Can't init outfile '%s'\n", outPath);
         return NULL;
     }
+#ifdef __riscos__
+    {
+	char   *p;
+        /* Assign correct file type */
+        for (p = outPath; *p; p++) /* ugly, ugly to modify a string */
+            switch (*p) {
+            case '.':
+                *p = '/';
+                break;
+            case '/':
+                *p = '.';
+                break;
+            }
+        SetFiletype(outPath, decode_only ? 0xFB1 /*WAV*/ : 0x1AD /*AMPEG*/);
+    }
+#endif
 
     return outf;
 }
