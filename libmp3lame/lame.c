@@ -1057,7 +1057,7 @@ lame_init_params(lame_global_flags * const gfp)
         }    
         gfc->sfb21_extra = (gfp->out_samplerate > 44000);
         
-        gfc->ATH->use_adjust = 1;
+        gfc->ATH->use_adjust = 2;
         
         if (gfp->ATHtype == -1) gfp->ATHtype = 4;
         gfp->allow_diff_short = 1;
@@ -1095,7 +1095,7 @@ lame_init_params(lame_global_flags * const gfp)
 
         /*  automatic ATH adjustment on, VBR modes need it
          */
-        gfc->ATH->use_adjust = 1;
+        gfc->ATH->use_adjust = 3;
 
         /*  sfb21 extra only with MPEG-1 at higher sampling rates
          */
@@ -1262,7 +1262,11 @@ lame_print_internals( const lame_global_flags * gfp )
      */
     MSGF( gfc, "\nmisc:\n\n" );
     
-        /* filters and more */
+    MSGF( gfc, "\tfilter type: %d\n", gfc->filter_type );
+    pc = gfc->quantization ? "xr^3/4" : "ISO";
+    MSGF( gfc, "\tquantization: %s\n", pc );
+    pc = gfc->use_best_huffman ? "best" : "normal";
+    MSGF( gfc, "\thuffman search: %s\n", pc ); 
     MSGF( gfc, "\t...\n" );
 
     /*  everything controlling the stream format 
@@ -1303,6 +1307,13 @@ lame_print_internals( const lame_global_flags * gfp )
     pc = gfc->PSY->allow_diff_short ? "yes" : "no";
     MSGF( gfc, "\tallow channels to have different block types: %s\n", pc );    
     MSGF( gfc, "\tadjust masking: %f dB\n", gfc->VBR->mask_adjust );
+    MSGF( gfc, "\tpsymodel: %d\n", gfc->psymodel );
+    MSGF( gfc, "\tnoise shaping: %d\n", gfc->noise_shaping );
+    MSGF( gfc, "\t ^ amplification: %d\n", gfc->noise_shaping_amp );
+    MSGF( gfc, "\t ^ stopping: %d\n", gfc->noise_shaping_stop );
+    
+    MSGF( gfc, "\tATH adjust type: %d\n", gfc->ATH->use_adjust );
+    MSGF( gfc, "\t ^ adapt threshold type: %d\n", gfp->adapt_thres_type );
     MSGF( gfc, "\t...\n" );
     
     /*  that's all ?

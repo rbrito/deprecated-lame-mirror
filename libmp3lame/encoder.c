@@ -55,124 +55,134 @@ adjust_ATH( lame_global_flags* const  gfp,
 {
     lame_internal_flags* const  gfc = gfp->internal_flags;
     int gr, channel;
+    FLOAT8 max_val;
+    FLOAT max_val_n;
 
-    if (gfc->ATH->use_adjust) {
-        FLOAT8 max_val;
-        FLOAT max_val_n;
+    if (gfc->ATH->use_adjust == 0) return;
+    
+    
+    switch( gfp->adapt_thres_type ) {
+    case 1:
+			    /* previous code: energy for loudness, but */
+			    /* energy ~ (loudness pow 2). To preserve old*/
+			    /* behavior, not corrected.  -jd 2001 mar 27 */
+        max_val = 0;
+        for ( gr = 0; gr < gfc->mode_gr; ++gr ) 
+            for ( channel = 0; channel < gfc->channels_out; ++channel ) 
+                max_val = Max( max_val, tot_ener[gr][channel] );
+        /* scale to 0..1, and then rescale to 0..32767 */
+        max_val *= 32767/1e13;
 
-        if( gfp->adapt_thres_type == 1) {
-				/* previous code: energy for loudness, but */
-				/* energy ~ (loudness pow 2). To preserve old*/
-				/* behavior, not corrected.  -jd 2001 mar 27 */
-            max_val = 0;
-            for ( gr = 0; gr < gfc->mode_gr; ++gr ) 
-                for ( channel = 0; channel < gfc->channels_out; ++channel ) 
-                    max_val = Max( max_val, tot_ener[gr][channel] );
-            /* scale to 0..1, and then rescale to 0..32767 */
-            max_val *= 32767/1e13;
-
-            max_val_n = max_val * (1.0/32768 * 0.5);/* scale for previous tuning */
-        } else if( gfp->adapt_thres_type == 2 ) {
-				/* jd - 2001 mar 12, 27 */
-				/* compute maximum combined channel loudness */
-            max_val_n = gfc->loudness_sq[0][0];
-            if( gfc->channels_out == 2 ) {
-                max_val_n += gfc->loudness_sq[0][1];
-                if( gfc->mode_gr == 2 ) {
-                    FLOAT8 mtmp;
-                    mtmp = gfc->loudness_sq[1][0] + gfc->loudness_sq[1][1];
-                    max_val_n = Max( max_val_n, mtmp );
-                }
-                max_val_n /= 2;
-            } else if( gfc->mode_gr == 2 ) {
-                max_val_n = Max( max_val_n, gfc->loudness_sq[1][0] );
+        max_val_n = max_val * (1.0/32768 * 0.5);/* scale for previous tuning */
+    
+    case 2:
+			    /* jd - 2001 mar 12, 27 */
+			    /* compute maximum combined channel loudness */
+        max_val_n = gfc->loudness_sq[0][0];
+        if( gfc->channels_out == 2 ) {
+            max_val_n += gfc->loudness_sq[0][1];
+            if( gfc->mode_gr == 2 ) {
+                FLOAT8 mtmp;
+                mtmp = gfc->loudness_sq[1][0] + gfc->loudness_sq[1][1];
+                max_val_n = Max( max_val_n, mtmp );
             }
-            max_val_n = sqrt( max_val_n ); /* loudness approximation */
-            max_val = 32768 * Max( max_val_n, 1.0 ); /* adapt for vbr_mtrh */
-        } else {			/* jd - 2001 mar 27, 31 */
-            max_val = 32768;	/* no adaptive threshold */
-            max_val_n = 1.0 / gfc->adapt_thres_level_v;
+            max_val_n /= 2;
+        } else if( gfc->mode_gr == 2 ) {
+            max_val_n = Max( max_val_n, gfc->loudness_sq[1][0] );
         }
-
-        /*  adjust ATH depending on range of maximum value
-         */
-        if (vbr_mtrh == gfp->VBR) {
-            /*  this code reduces slowly the ATH (speed of 12 dB per second)
-             *  with some supporting stages to limit the reduction
-             *    640  ->  ~17 dB
-             *         :
-             *  32640  ->  ~0.01 dB
-             */
-            FLOAT8 
-            //x = Max (640, 320*(int)(max_val/320));
-            x = Max (32, 32*(int)(max_val/32));
-            x = x/32768;
-            gfc->ATH->adjust *= gfc->ATH->decay;
-            if (gfc->ATH->adjust < x)       /* but not more than f(x) dB */
-                gfc->ATH->adjust = x;
-        } else {
-#ifdef OLD_ATH_AUTO_ADJUST
-            if      (0.5 < max_val / 32768) {       /* value above 50 % */
-                    gfc->ATH->adjust = 1.0;         /* do not reduce ATH */
-            }
-            else if (0.3 < max_val / 32768) {       /* value above 30 % */
-                    gfc->ATH->adjust *= 0.955;      /* reduce by ~0.2 dB */
-                    if (gfc->ATH->adjust < 0.3)     /* but ~5 dB in maximum */
-                        gfc->ATH->adjust = 0.3;            
-            }
-            else {                                  /* value below 30 % */
-                    gfc->ATH->adjust *= 0.93;       /* reduce by ~0.3 dB */
-                    if (gfc->ATH->adjust < 0.01)    /* but 20 dB in maximum */
-                        gfc->ATH->adjust = 0.01;
-            }
-#else				/* jd - 2001 feb 27, mar 12, 20 */
-				/* continuous curves based on approximation */
-				/* to GB's original values */
-            FLOAT8 adj_lim_new;
-				/* jd - 2001 mar 31 */
-				/* allow tuning the region of ATH reduction */
-            max_val_n *= gfc->adapt_thres_level_v;
-
-				/* For an increase in approximate loudness, */
-				/* set ATH adjust to adjust_limit immediately*/
-				/* after a delay of one frame. */
-				/* For a loudness decrease, reduce ATH adjust*/
-				/* towards adjust_limit gradually. */
-            if( max_val_n > 0.125){ /* sqrt((1 - 0.01)/ 63.36) from curve below*/
-                if( gfc->ATH->adjust >= 1.0) {
-                    gfc->ATH->adjust = 1.0;
-                } else {
-                /* preceding frame has lower ATH adjust; */
-				/* ascend only to the preceding adjust_limit */
-				/* in case there is leading low volume */
-                    if( gfc->ATH->adjust < gfc->ATH->adjust_limit) {
-                        gfc->ATH->adjust = gfc->ATH->adjust_limit;
-                    }
-                }
-                gfc->ATH->adjust_limit = 1.0;
-                } else {		/* adjustment curve (parabolic) */
-                                /* 20 dB maximum adjust (0.01) */
-                    adj_lim_new = 63.36 * (max_val_n * max_val_n) + 0.01;
-                    if( gfc->ATH->adjust >= adj_lim_new) { /* descend gradually */
-                        gfc->ATH->adjust *= adj_lim_new * 0.075 + 0.925;
-                        if( gfc->ATH->adjust < adj_lim_new) { /* stop descent */
-                            gfc->ATH->adjust = adj_lim_new;
-                        }
-                    } else {		/* ascend */
-                        if( gfc->ATH->adjust_limit >= adj_lim_new) {
-                            gfc->ATH->adjust = adj_lim_new;
-                        } else {		/* preceding frame has lower ATH adjust; */
-		                        		/* ascend only to the preceding adjust_limit */
-                            if( gfc->ATH->adjust < gfc->ATH->adjust_limit) {
-                                gfc->ATH->adjust = gfc->ATH->adjust_limit;
-                            }
-                        }
-                    }
-                     gfc->ATH->adjust_limit = adj_lim_new;
-                }
-#endif
-        }
+        max_val_n = sqrt( max_val_n ); /* loudness approximation */
+        max_val = 32768 * Max( max_val_n, 1.0 ); /* adapt for vbr_mtrh */
+    
+    default:			/* jd - 2001 mar 27, 31 */
+        max_val = 32768;	/* no adaptive threshold */
+        max_val_n = 1.0 / gfc->adapt_thres_level_v;
     }
+
+    /*  adjust ATH depending on range of maximum value
+     */
+    switch ( gfc->ATH->use_adjust ) {
+    default:
+
+    case  1:    /* by Gabriel Bouvigne */
+        if      (0.5 < max_val / 32768) {       /* value above 50 % */
+                gfc->ATH->adjust = 1.0;         /* do not reduce ATH */
+        }
+        else if (0.3 < max_val / 32768) {       /* value above 30 % */
+                gfc->ATH->adjust *= 0.955;      /* reduce by ~0.2 dB */
+                if (gfc->ATH->adjust < 0.3)     /* but ~5 dB in maximum */
+                    gfc->ATH->adjust = 0.3;            
+        }
+        else {                                  /* value below 30 % */
+                gfc->ATH->adjust *= 0.93;       /* reduce by ~0.3 dB */
+                if (gfc->ATH->adjust < 0.01)    /* but 20 dB in maximum */
+                    gfc->ATH->adjust = 0.01;
+        }
+        break;
+
+    case  2:    /* by Robert Hegemann */
+      {
+        /*  this code reduces slowly the ATH (speed of 12 dB per second)
+         */
+        FLOAT8 
+        //x = Max (640, 320*(int)(max_val/320));
+        x = Max (32, 32*(int)(max_val/32));
+        x = x/32768;
+        gfc->ATH->adjust *= gfc->ATH->decay;
+        if (gfc->ATH->adjust < x)       /* but not more than f(x) dB */
+            gfc->ATH->adjust = x;
+      }
+        break;
+
+    case  3:    /* by jd */
+      {
+    			    /* jd - 2001 feb 27, mar 12, 20 */
+			    /* continuous curves based on approximation */
+			    /* to GB's original values */
+        FLOAT8 adj_lim_new;
+			    /* jd - 2001 mar 31 */
+			    /* allow tuning the region of ATH reduction */
+        max_val_n *= gfc->adapt_thres_level_v;
+
+			    /* For an increase in approximate loudness, */
+			    /* set ATH adjust to adjust_limit immediately*/
+			    /* after a delay of one frame. */
+			    /* For a loudness decrease, reduce ATH adjust*/
+			    /* towards adjust_limit gradually. */
+        if( max_val_n > 0.125){ /* sqrt((1 - 0.01)/ 63.36) from curve below*/
+            if( gfc->ATH->adjust >= 1.0) {
+                gfc->ATH->adjust = 1.0;
+            } else {
+            /* preceding frame has lower ATH adjust; */
+			    /* ascend only to the preceding adjust_limit */
+			    /* in case there is leading low volume */
+                if( gfc->ATH->adjust < gfc->ATH->adjust_limit) {
+                    gfc->ATH->adjust = gfc->ATH->adjust_limit;
+                }
+            }
+            gfc->ATH->adjust_limit = 1.0;
+            } else {		/* adjustment curve (parabolic) */
+                            /* 20 dB maximum adjust (0.01) */
+                adj_lim_new = 63.36 * (max_val_n * max_val_n) + 0.01;
+                if( gfc->ATH->adjust >= adj_lim_new) { /* descend gradually */
+                    gfc->ATH->adjust *= adj_lim_new * 0.075 + 0.925;
+                    if( gfc->ATH->adjust < adj_lim_new) { /* stop descent */
+                        gfc->ATH->adjust = adj_lim_new;
+                    }
+                } else {		/* ascend */
+                    if( gfc->ATH->adjust_limit >= adj_lim_new) {
+                        gfc->ATH->adjust = adj_lim_new;
+                    } else {		/* preceding frame has lower ATH adjust; */
+		                        	    /* ascend only to the preceding adjust_limit */
+                        if( gfc->ATH->adjust < gfc->ATH->adjust_limit) {
+                            gfc->ATH->adjust = gfc->ATH->adjust_limit;
+                        }
+                    }
+                }
+                 gfc->ATH->adjust_limit = adj_lim_new;
+            }
+      }
+        break;
+    }   /* switch */
 }
 
 /************************************************************************

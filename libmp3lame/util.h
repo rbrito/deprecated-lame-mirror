@@ -150,7 +150,7 @@ typedef struct
  */
 typedef struct
 {
-    int     use_adjust;     // do we want to use the auto adjustment yes/no
+    int     use_adjust;     // method for the auto adjustment 
     FLOAT8  adjust;         // lowering based on peak volume, 1 = no lowering
     FLOAT8  adjust_limit;   // limit for dynamic ATH adjust
     FLOAT8  decay;          // determined to lower x dB each second
