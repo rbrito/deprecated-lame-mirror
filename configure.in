@@ -298,12 +298,18 @@ AC_CHECK_LIB(ncurses, initscr, HAVE_TERMCAP="ncurses")
  
 dnl math lib
 AC_CHECK_LIB(m, cos, USE_LIBM="-lm")
+
 dnl free fast math library
 AC_CHECK_LIB(ffm, cos, USE_LIBM="-lffm -lm")
+
 dnl Compaq fast math library.
 AC_CHECK_LIB(cpml, cos, USE_LIBM="-lcpml")
 CONFIG_MATH_LIB="${USE_LIBM}"
 
+dnl Apple Vector math library
+AC_CHECK_HEADERS(vecLib/vDSP.h)
+
+dnl libsndfile
 AC_CHECK_LIB(sndfile, sf_open, HAVE_SNDFILE="yes")
 
 
