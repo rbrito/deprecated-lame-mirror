@@ -59,12 +59,12 @@ choose_jump_table_L:
 	align	16
 ; int choose_table(int *ix, int *end, int *s)
 choose_table_MMX:
-	mov	ecx,[esp+4]	;ecx = begin
-	mov	edx,[esp+8]	;edx = end
-	sub	ecx,edx		;ecx = begin-end(should be minus)
-	test	ecx,8
- 	pxor	mm0,mm0		;mm0=[0:0]
-	movq	mm1,[edx+ecx]
+	mov	ecx, [esp+4]	;ecx = begin
+	mov	edx, [esp+8]	;edx = end
+	sub	ecx, edx	;ecx = begin-end(should be minus)
+	test	ecx, 8
+ 	pxor	mm0, mm0	;mm0=[0:0]
+	movq	mm1, [edx+ecx]
 	jz	.lp
 
 	add	ecx,8
@@ -72,44 +72,44 @@ choose_table_MMX:
 
 	loopalign	16
 .lp:
-	movq	mm4,[edx+ecx]
-	movq	mm5,[edx+ecx+8]
-	add	ecx,16
+	movq	mm4, [edx+ecx]
+	movq	mm5, [edx+ecx+8]
+	add	ecx, 16
 ; below operations should be done as dword (32bit),
 ; an MMX has no such instruction, however.
 ; but! because the maximum value of IX is 8191+15,
 ; we can safely use "word" operation.
-	psubusw	mm4,mm0
-	psubusw	mm5,mm1
-	paddw	mm0,mm4
-	paddw	mm1,mm5
+	psubusw	mm4, mm0
+	psubusw	mm5, mm1
+	paddw	mm0, mm4
+	paddw	mm1, mm5
 	jnz	.lp
 .exit:
-	psubusw	mm1,mm0
-	paddw	mm0,mm1
+	psubusw	mm1, mm0
+	paddw	mm0, mm1
 
-	movq	mm4,mm0
-	punpckhdq	mm4,mm4
-	psubusw	mm4,mm0
-	paddw	mm0,mm4
-	movd	eax,mm0
+	movq	mm4, mm0
+	punpckhdq	mm4, mm4
+	psubusw	mm4, mm0
+	paddw	mm0, mm4
+	movd	eax, mm0
 
-	cmp	eax,15
-	ja	.with_ESC
+	cmp	eax, 15
+	ja	with_ESC
 	jmp	[choose_jump_table_L+eax*4]
 
-.with_ESC1:
+table_MMX.L_case_0:
+with_ESC1:
 	emms
 	mov	ecx, [esp+12]	; *s
 	mov	[ecx], eax
-	or	eax,-1
 	ret
 
-.with_ESC:
+with_ESC:
 	cmp	eax, 8191+15
-	ja	.with_ESC1	; error !
+	ja	with_ESC1	; error !
 
-	sub	eax,15
+	sub	eax, 15
 	push	ebx
 	push	esi
 	bsr	eax, eax
@@ -165,36 +165,32 @@ choose_table_MMX:
 	punpckldq	mm7,mm7
 
 	pmaddwd	mm7, [linbits32+eax*8]	; linbits
-	mov	ax, [choose_table_H+eax*2]
+	mov	dx, [choose_table_H+eax*2]
 
 	movd	ecx, mm7
 	punpckhdq	mm7,mm7
-	movd	edx,mm7
+	movd	eax, mm7
 	emms
-	shl	edx, 16
-	add	ecx, edx
+	shl	eax, 16
+	add	ecx, eax
 
 	add	ecx, esi
 
 	pop	esi
 	pop	ebx
 
-	mov	edx, ecx
+	mov	eax, ecx
 	and	ecx, 0xffff	; ecx = sum2
-	shr	edx, 16	; edx = sum
+	shr	eax, 16	; eax = sum
 
-	cmp	edx, ecx
+	cmp	eax, ecx
 	jle	.chooseE_s1
-	mov	edx, ecx
-	shr	eax, 8
+	mov	eax, ecx
+	shr	edx, 8
 .chooseE_s1:
 	mov	ecx, [esp+12] ; *s
-	and	eax, 0xff
-	add	[ecx], edx
-	ret
-
-table_MMX.L_case_0:
-	emms
+	and	edx, 0xff
+	mov	[ecx], edx
 	ret
 
 table_MMX.L_case_2:
@@ -204,9 +200,8 @@ table_MMX.L_case_2:
 
 table_MMX.L_case_3:
 	push	dword 5
-	mov	ecx,table5967
-	movq	mm5,[mul_add56]
-	mov	eax,[esp+8]	;eax = *begin
+	mov	ecx, table5967
+	movq	mm5, [mul_add56]
 	jmp	near table.from4_2
 
 table_MMX.L_case_45:
@@ -223,20 +218,20 @@ table_MMX.L_case_8_15:
 	push	dword 13
 	mov	ecx, tableDxEF
 table.from4:
-	movq	mm5,[mul_add]
-	mov	eax,[esp+8]	;eax = *begin
-;	mov	edx,[esp+12]	;edx = *end
+	movq	mm5, [mul_add]
 table.from4_2:
+	mov	edx, [esp+8]	;edx = *begin
+	mov	eax, [esp+12]	;eax = *end
 	push	ebx
-	sub	eax, edx
+	sub	edx, eax
 
-	pxor	mm2,mm2	;mm2 = sum
+	pxor	mm2, mm2	;mm2 = sum
 
-	test	eax, 8
+	test	edx, 8
 	jz	.from4_lp1
 ; odd length
-	movq	mm0,[edx+eax]	;mm0 = ix[0] | ix[1]
-	add	eax,8
+	movq	mm0,[eax+edx]	;mm0 = ix[0] | ix[1]
+	add	edx,8
 	packssdw	mm0,mm2
 
 	pmaddwd	mm0,mm5
@@ -248,9 +243,9 @@ table.from4_2:
 
 	loopalign	16
 .from4_lp1
-	movq	mm0,[edx+eax]
-	movq	mm1,[edx+eax+8]
-	add	eax,16
+	movq	mm0,[eax+edx]
+	movq	mm1,[eax+edx+8]
+	add	edx,16
 	packssdw	mm0,mm1 ;mm0 = ix[0]|ix[1]|ix[2]|ix[3]
 	pmaddwd	mm0,mm5
 	movd	ebx,mm0
@@ -260,101 +255,95 @@ table.from4_2:
 	paddd	mm2, [ecx+ebx*8]
 	jnz	.from4_lp1
 .from4_exit
-;	xor	eax,eax
-	movd	edx, mm2
-	mov	ebx, edx
+;	xor	edx,edx
+	movd	eax, mm2
+	mov	ebx, eax
 	shr	ebx, 16
-	and	edx, 0xffff
-	cmp	edx, ebx
+	and	eax, 0xffff
+	cmp	eax, ebx
 	jle	near .from4_s3
-	mov	edx, ebx
+	mov	eax, ebx
 	cmp	ecx, table7B89+8*8
-	sbb	eax, -5
+	sbb	edx, -5
 	cmp	ecx, table7B89+96*8
-	sbb	eax, -1
+	sbb	edx, -1
 .from4_s3:
 	punpckhdq	mm2,mm2
-	movd	ebx, mm2	; edx = sum
+	movd	ebx, mm2	; eax = sum
 	mov	ecx, ebx
 	and	ecx, 0xffff	; ecx = sum2
 	shr	ebx, 16	; ebx = sum1
 
-	cmp	edx, ebx
+	cmp	eax, ebx
 	jle	near .from4_s1
-	mov	edx, ebx
-	mov	eax, 1
+	mov	eax, ebx
+	mov	edx, 1
 .from4_s1:
 	emms
 	pop	ebx
-	cmp	edx, ecx
+	cmp	eax, ecx
 	jle	.from4_s2
-	mov	edx, ecx
-	mov	eax, 2
+	mov	eax, ecx
+	mov	edx, 2
 .from4_s2:
 	pop	ecx
-	add	eax, ecx
+	add	edx, ecx
 	mov	ecx, [esp+12] ; *s
-	add	[ecx], edx
+	mov	[ecx], edx
 	ret
 
 table_MMX.L_case_1:
-	push	eax	; dword 1
-	mov	ecx, table13
 	movq	mm5, [mul_add13]
-table.from2:
-	mov	eax,[esp+8]	;eax = *begin
-;	mov	edx,[esp+12]	;edx = *end
+	mov	eax, [esp+4]	;eax = *begin
+;	mov	edx, [esp+8]	;edx = *end
 	push	ebx
-	push	edi
 
 	sub	eax, edx
-	xor	edi, edi
+;	xor	ecx, ecx
 	test	eax, 8
 	jz	.from2_lp1
 ; odd length
-	movq	mm0,[edx+eax]	;mm0 = ix[0] | ix[1]
-	pxor	mm2,mm2		;mm2 = sum
+	movq	mm0, [edx+eax]	;mm0 = ix[0] | ix[1]
+	pxor	mm2, mm2		;mm2 = sum
 	packssdw	mm0,mm2
 
-	pmaddwd	mm0,mm5
-	movd	ebx,mm0
+	pmaddwd	mm0, mm5
+	movd	ebx, mm0
 
-	mov	edi,  [ecx+ebx*4]
+	mov	ecx,  [table13+ebx*4]
 
-	add	eax,8
+	add	eax, 8
 	jz	.from2_exit
 
 	loopalign	16
 .from2_lp1
-	movq	mm0,[edx+eax]
-	movq	mm1,[edx+eax+8]
+	movq	mm0, [edx+eax]
+	movq	mm1, [edx+eax+8]
 	packssdw	mm0,mm1 ;mm0 = ix[0]|ix[1]|ix[2]|ix[3]
 	pmaddwd	mm0,mm5
 	movd	ebx,mm0
 	punpckhdq	mm0,mm0
-	add	edi, [ecx+ebx*4]
+	add	ecx, [table13+ebx*4]
 	movd	ebx, mm0
-	add	edi, [ecx+ebx*4]
-	add	eax,16
+	add	ecx, [table13+ebx*4]
+	add	eax, 16
 	jnc	.from2_lp1
 .from2_exit
-	mov	ecx, edi
-	pop	edi
 	pop	ebx
-	pop	eax ; table num.
 	emms
 
-	mov	edx, ecx
+	mov	edx, 1
+	mov	eax, ecx
 	and	ecx, 0xffff	; ecx = sum2
-	shr	edx, 16	; edx = sum1
+	shr	eax, 16	; edx = sum1
 
-	cmp	edx, ecx
+	cmp	eax, ecx
 	jle	.from2_s1
-	mov	edx, ecx
-	mov	eax, 3
+	mov	eax, ecx
+	or	dl, 2
 .from2_s1:
 	mov	ecx, [esp+12] ; *s
-	add	[ecx], edx
+	mov	[ecx], edx
 	ret
 
 	end

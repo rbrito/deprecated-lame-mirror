@@ -114,9 +114,8 @@ count_bit_ESC(
 	sum = sum2;
 	t1 = t2;
     }
-
-    *s += sum;
-    return t1;
+    *s = t1;
+    return sum;
 }
 
 
@@ -136,11 +135,10 @@ count_bit_noESC_from2(int * const s, const int *ix, const int * const end)
     t1 = 1;
     if (sum > sum2) {
 	sum = sum2;
-	t1+=2;
+	t1 = 3;
     }
-
-    *s += sum;
-    return t1;
+    *s = t1;
+    return sum;
 }
 
 
@@ -184,9 +182,9 @@ count_bit_noESC_from4(
 	sum1 = sum2;
 	t = t1+1;
     }
-    *s += sum1;
 
-    return t;
+    *s = t;
+    return sum1;
 }
 
 
@@ -198,13 +196,13 @@ ix_max(const int *ix, const int *end)
     do {
 	int x1 = *ix++;
 	int x2 = *ix++;
-	if (max1 < x1) 
+	if (max1 < x1)
 	    max1 = x1;
 
-	if (max2 < x2) 
+	if (max2 < x2)
 	    max2 = x2;
     } while (ix < end);
-    if (max1 < max2) 
+    if (max1 < max2)
 	max1 = max2;
     return max1;
 }
@@ -231,7 +229,7 @@ choose_table_nonMMX(const int *ix, const int * const end, int * const s)
 
     switch (max) {
     case 0:
-	return max;
+	return (*s = max);
 
     case 1:
 	return count_bit_noESC_from2(s, ix, end);
@@ -253,20 +251,17 @@ choose_table_nonMMX(const int *ix, const int * const end, int * const s)
 
     default:
 	/* try tables with linbits */
-	for (choice2 = 24; choice2 < 32; choice2++)
-	    if (linmax[choice2-16] > max)
-		break;
-
-	if (choice2 == 32) {
-	    *s = LARGE_BITS;
-	    return -1;
+	for (choice2 = 24; choice2 < 32; choice2++) {
+	    if (linmax[choice2-16] > max) {
+		choice = choice2 - 8;
+		do {
+		    if (linmax[choice-16] > max)
+			break;
+		} while (++choice < 24);
+		return count_bit_ESC(s, ix, end, choice, choice2);
+	    }
 	}
-	choice = choice2 - 8;
-	do {
-	    if (linmax[choice-16] > max)
-		break;
-	} while (++choice < 24);
-	return count_bit_ESC(s, ix, end, choice, choice2);
+	return (*s = max);
     }
 }
 
@@ -293,17 +288,15 @@ recalc_divide_init(
 	int a1, r0bits, r1, r0t, r1t, bits;
 	if (gfc->scalefac_band.l[r0 + 2] >= gi->big_values)
 	    break;
-	r0bits = 0;
 	a1 = gfc->scalefac_band.l[r0 + 1];
-	r0t = choosetable(gi->l3_enc, &gi->l3_enc[a1], &r0bits);
+	r0bits = choosetable(gi->l3_enc, &gi->l3_enc[a1], &r0t);
 
 	for (r1 = 0; r1 < 8; r1++) {
 	    int a2 = gfc->scalefac_band.l[r0 + r1 + 2];
 	    if (a2 >= gi->big_values)
 		break;
 
-	    bits = r0bits;
-	    r1t = choosetable(&gi->l3_enc[a1], &gi->l3_enc[a2], &bits);
+	    bits = r0bits + choosetable(&gi->l3_enc[a1], &gi->l3_enc[a2], &r1t);
 	    if (r01_bits[r0 + r1] > bits) {
 		r01_bits[r0 + r1] = bits;
 		r01_div[r0 + r1] = r0;
@@ -332,7 +325,7 @@ recalc_divide_sub(
 	if (gi->part2_3_length <= bits + ((gi->big_values - a2) >> 1))
 	    continue;
 
-	r2t = choosetable(&gi->l3_enc[a2], &gi->l3_enc[gi->big_values], &bits);
+	bits += choosetable(&gi->l3_enc[a2], &gi->l3_enc[gi->big_values], &r2t);
 	if (gi->part2_3_length <= bits)
 	    continue;
 
@@ -405,11 +398,11 @@ best_huffman_divide(lame_t gfc, gr_info * const gi)
 	    a1 = i;
 
 	if (a1 > 0)
-	    gi_w.table_select[0] =
-		choosetable(ix, ix + a1, &gi_w.part2_3_length);
+	    gi_w.part2_3_length
+		+= choosetable(ix, &ix[a1], &gi_w.table_select[0]);
 	if (i > a1)
-	    gi_w.table_select[1] =
-		choosetable(ix + a1, ix + i, &gi_w.part2_3_length);
+	    gi_w.part2_3_length
+		+= choosetable(&ix[a1], &ix[i], &gi_w.table_select[1]);
 	if (gi->part2_3_length > gi_w.part2_3_length)
 	    *gi = gi_w;
     }
@@ -459,8 +452,8 @@ noquant_count_bits(lame_t gfc, gr_info * const gi)
 	assert(a1+a2+2 < SBPSY_l);
         a2 = gfc->scalefac_band.l[a1 + a2 + 2];
 	if (a2 < i)
-	    gi->table_select[2] = choosetable(ix + a2, ix + i,
-					      &gi->part2_3_length);
+	    gi->part2_3_length
+		+= choosetable(&ix[a2], &ix[i], &gi->table_select[2]);
 	else
 	    a2 = i;
     } else {
@@ -477,10 +470,10 @@ noquant_count_bits(lame_t gfc, gr_info * const gi)
     if (a1 >= a2) {
 	a1 = a2;
     } else {
-	gi->table_select[1] = choosetable(ix + a1, ix + a2,
-					  &gi->part2_3_length);
+	gi->part2_3_length
+	    += choosetable(&ix[a1], &ix[a2], &gi->table_select[1]);
     }
-    gi->table_select[0] = choosetable(ix, ix + a1, &gi->part2_3_length);
+    gi->part2_3_length += choosetable(ix, &ix[a1], &gi->table_select[0]);
 
     if (gfc->use_best_huffman == 2)
 	best_huffman_divide (gfc, gi);
