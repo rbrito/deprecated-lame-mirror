@@ -729,7 +729,8 @@ static void init_log_table(void)
 #endif /* define FAST_LOG */
 
 
-static FLOAT ATHformula(FLOAT f,lame_global_flags *gfp)
+static FLOAT
+ATHformula(lame_global_flags *gfp ,FLOAT f)
 {
     /* from Painter & Spanias
        modified by Gabriel Bouvigne to better fit the reality
@@ -751,18 +752,11 @@ static FLOAT ATHformula(FLOAT f,lame_global_flags *gfp)
     f  = Max(0.01, f);
     f  = Min(18.0, f);
 
-    return 3.640 * pow(f,-0.8)
-	- 6.800 * exp(-0.6*pow(f-3.4,2.0))
-	+ 6.000 * exp(-0.15*pow(f-8.7,2.0))
-	+ (0.6+0.04*gfp->ATHcurve)* 0.001 * pow(f,4.0)
-	- gfp->ATHlower;
-}
-
-static FLOAT
-ATHmdct(lame_global_flags *gfp, FLOAT f)
-{
-    /* modify the MDCT scaling for the ATH and convert to energy */
-    return db2pow(ATHformula(f , gfp)) / FFT2MDCT;
+    return db2pow(3.640 * pow(f,-0.8)
+		  - 6.800 * exp(-0.6*pow(f-3.4,2.0))
+		  + 6.000 * exp(-0.15*pow(f-8.7,2.0))
+		  + (0.6+0.04*gfp->ATHcurve)* 0.001 * pow(f,4.0))
+	* gfp->ATHlower;
 }
 
 static void
@@ -788,11 +782,11 @@ compute_ath(lame_global_flags *gfp)
 	end   = gfc->scalefac_band.l[ sfb+1 ];
 	gfc->ATH.l[sfb] = FLOAT_MAX;
 	for (i = start ; i < end; i++) {
-	    ATH_f = ATHmdct(gfp, i*sfreq/(2.0*576));
+	    ATH_f = ATHformula(gfp, i*sfreq/(2.0*576));
 	    if (gfc->ATH.l[sfb] > ATH_f)
 		gfc->ATH.l[sfb] = ATH_f;
 	}
-	gfc->ATH.l[sfb] *= (end-start);
+	gfc->ATH.l[sfb] *= (end-start) / FFT2MDCT;
     }
 
     for (sfb = 0; sfb < SBMAX_s; sfb++){
@@ -800,11 +794,11 @@ compute_ath(lame_global_flags *gfp)
 	end   = gfc->scalefac_band.s[ sfb+1 ];
 	gfc->ATH.s[sfb] = FLOAT_MAX;
 	for (i = start ; i < end; i++) {
-	    ATH_f = ATHmdct(gfp, i*sfreq/(2.0*192));
+	    ATH_f = ATHformula(gfp, i*sfreq/(2.0*192));
 	    if (gfc->ATH.s[sfb] > ATH_f)
 		gfc->ATH.s[sfb] = ATH_f;
 	}
-	gfc->ATH.s[sfb] *= (end-start);
+	gfc->ATH.s[sfb] *= (end-start) / FFT2MDCT;
     }
 }
 
@@ -1323,12 +1317,12 @@ psymodel_init(lame_global_flags *gfp)
 	/* ATH */
 	FLOAT x = FLOAT_MAX;
 	for (k=0; k < gfc->numlines_l[i]; k++, j++) {
-	    FLOAT level = db2pow(ATHformula(sfreq*j/BLKSIZE, gfp));
+	    FLOAT level = ATHformula(gfp, sfreq*j/BLKSIZE);
 	    if (x > level)
 		x = level;
 	}
 	gfc->ATH.cb[i] = x * ATHAdjustLimit * gfc->numlines_l[i];
-	gfc->ATH.eql_w[i] = db2pow(ATHformula(3300, gfp)) / x / FFT2MDCT;
+	gfc->ATH.eql_w[i] = ATHformula(gfp, 3300) / x / FFT2MDCT;
     }
     for (i = 0; i < 8; i++)
 	gfc->ATH.eql_w[i] = gfc->ATH.eql_w[0];

@@ -872,6 +872,8 @@ int
 lame_set_ATHcurve( lame_global_flags*  gfp,
                    float ATHcurve )
 {
+    if (ATHcurve < 0)
+	ATHcurve = 0;
     gfp->ATHcurve = ATHcurve;
 
     return 0;
@@ -889,7 +891,7 @@ int
 lame_set_ATHlower( lame_global_flags*  gfp,
                    float               ATHlower )
 {
-    gfp->ATHlower = ATHlower;
+    gfp->ATHlower = db2pow(-ATHlower);
     return 0;
 }
 
@@ -992,7 +994,7 @@ int
 lame_get_substep(const lame_global_flags*  gfp )
 {
     lame_internal_flags *gfc = gfp->internal_flags;
-    assert(0 <= gfc->substep_shaping && gfc->substep_shaping <= 7);
+    assert(0 <= gfc->substep_shaping && gfc->substep_shaping <= 3);
     return gfc->substep_shaping;
 }
 

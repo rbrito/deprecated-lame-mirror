@@ -270,8 +270,10 @@ static int apply_preset(lame_global_flags*  gfp, int bitrate, vbr_mode mode)
 	    (void) lame_set_scale( gfp, switch_map[r].scale );
     }
 
-    lame_set_ATHcurve(gfp, switch_map[r].ath_curve);
-    lame_set_ATHlower(gfp, (double)switch_map[r].ath_lower);
+    if (gfp->ATHcurve < 0)
+	lame_set_ATHcurve(gfp, switch_map[r].ath_curve);
+    if (gfp->ATHlower < 0)
+	lame_set_ATHlower(gfp, switch_map[r].ath_lower);
 
     if (gfp->lowpassfreq == 0) {
 	int lowpass = switch_map[r].lowpass;
@@ -286,7 +288,7 @@ static int apply_preset(lame_global_flags*  gfp, int bitrate, vbr_mode mode)
 	gfp->mode = JOINT_STEREO;
 
     if (gfp->internal_flags->reduce_side < 0.0)
-	lame_set_reduceSide( gfp, switch_map[r].reduce_side);
+	lame_set_reduceSide(gfp, switch_map[r].reduce_side);
 
     if (gfp->internal_flags->interChRatio < 0)
 	lame_set_interChRatio(gfp, switch_map[r].interch);
@@ -1460,8 +1462,8 @@ lame_init_old(lame_global_flags * gfp)
     gfc->nsPsy.msfix = NS_MSFIX*SQRT2;
     gfc->interChRatio = -1.0;
     gfc->masking_lower = -1.0;
-
-    gfp->ATHcurve = 4;
+    gfp->ATHlower = -1.0;
+    gfp->ATHcurve = -1;
 
     /* The reason for
      *       int mf_samples_to_encode = ENCDELAY + POSTDELAY;
