@@ -185,6 +185,8 @@ void plot_frame(void)
     samp=pplot1->sampfreq;
   else samp=1;
   sampindex = SmpFrqIndex((long)samp, &version);
+
+  ch = gtkinfo.chflag;
   
   headbits = 32 + ((pplot1->stereo==2) ? 256 : 136);
   gtkinfo.approxbits = (pplot1->bitrate*1000*1152.0/samp) - headbits;
@@ -204,8 +206,9 @@ void plot_frame(void)
   gtk_text_insert (GTK_TEXT(headerbox), NULL, color, NULL,"i_stereo ", -1);
   color = pplot1->emph ? &oncolor : &offcolor ; 
   gtk_text_insert (GTK_TEXT(headerbox), NULL, color, NULL,"emph ", -1);
-  color = pplot1->scfsi ? &oncolor : &offcolor ; 
-  gtk_text_insert (GTK_TEXT(headerbox), NULL, color, NULL,"scfsi ", -1);
+  color = pplot1->scfsi[ch] ? &oncolor : &offcolor ; 
+  sprintf(title2,"scfsi=%i ",pplot1->scfsi[ch]);
+  gtk_text_insert (GTK_TEXT(headerbox), NULL, color, NULL,title2, -1);
   if (gtkinfo.filetype) 
     sprintf(title2," mdb=%i %i/NA",pplot1->maindata,pplot1->totbits);
   else
@@ -215,7 +218,7 @@ void plot_frame(void)
   gtk_text_thaw (GTK_TEXT(headerbox));
 
 
-  ch = gtkinfo.chflag;
+
   /*******************************************************************
    * block type
    *******************************************************************/

@@ -1694,7 +1694,7 @@ int do_layer3(struct frame *fr,unsigned char *pcm_sample,int *pcm_point)
       pinfo->mixed[gr][ch] = gr_info->mixed_block_flag;
       pinfo->mpg123blocktype[gr][ch]=gr_info->block_type;
       pinfo->mainbits[gr][ch] = gr_info->part2_3_length;
-      pinfo->scfsi = gr_info->scfsi;
+      if (gr==1) pinfo->scfsi[ch] = gr_info->scfsi;
     }
     for(ch=0;ch<stereo1;ch++) { 
       int j=0;
