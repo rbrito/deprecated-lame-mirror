@@ -56,11 +56,13 @@ int sendrtp(int fd, struct sockaddr_in *sSockAddr, struct rtpheader *foo, void *
 /*  return write(fd,buf,len+sizeof(*foo))==len+sizeof(*foo); */
 }
 
+/* create a sender socket. */
 int makesocket(char *szAddr,unsigned short port,int TTL,struct sockaddr_in *sSockAddr) {
   int          iRet, iLoop = 1;
   struct       sockaddr_in sin;
   char         cTtl = (char)TTL;
   char         cLoop=0;
+  unsigned int tempaddr;
 
   int iSocket = socket( AF_INET, SOCK_DGRAM, 0 );
   if (iSocket < 0) {
@@ -68,9 +70,10 @@ int makesocket(char *szAddr,unsigned short port,int TTL,struct sockaddr_in *sSoc
     exit(1);
   }
 
+  tempaddr=inet_addr(szAddr);
   sSockAddr->sin_family = sin.sin_family = AF_INET;
   sSockAddr->sin_port = sin.sin_port = htons(port);
-  sSockAddr->sin_addr.s_addr = inet_addr(szAddr);
+  sSockAddr->sin_addr.s_addr = tempaddr;
 
   iRet = setsockopt(iSocket, SOL_SOCKET, SO_REUSEADDR, &iLoop, sizeof(int));
   if (iRet < 0) {
@@ -78,20 +81,22 @@ int makesocket(char *szAddr,unsigned short port,int TTL,struct sockaddr_in *sSoc
     exit(1);
   }
 
-  iRet = setsockopt(iSocket, IPPROTO_IP, IP_MULTICAST_TTL, &cTtl, sizeof(char));
-  if (iRet < 0) {
-    fprintf(stderr,"setsockopt IP_MULTICAST_TTL failed.  multicast in kernel?\n");
-    exit(1);
-  }
+  if ((ntohl(tempaddr) >> 28) == 0xe) {
+    /* only set multicast parameters for multicast destination IPs */
+    iRet = setsockopt(iSocket, IPPROTO_IP, IP_MULTICAST_TTL, &cTtl, sizeof(char));
+    if (iRet < 0) {
+      fprintf(stderr,"setsockopt IP_MULTICAST_TTL failed.  multicast in kernel?\n");
+      exit(1);
+    }
 
-  cLoop = 1;	/* !? */
-  iRet = setsockopt(iSocket, IPPROTO_IP, IP_MULTICAST_LOOP,
-                    &cLoop, sizeof(char));
-  if (iRet < 0) {
-    fprintf(stderr,"setsockopt IP_MULTICAST_LOOP failed.  multicast in kernel?\n");
-    exit(1);
+    cLoop = 1;	/* !? */
+    iRet = setsockopt(iSocket, IPPROTO_IP, IP_MULTICAST_LOOP,
+		      &cLoop, sizeof(char));
+    if (iRet < 0) {
+      fprintf(stderr,"setsockopt IP_MULTICAST_LOOP failed.  multicast in kernel?\n");
+      exit(1);
+    }
   }
 
   return iSocket;
 }
-
