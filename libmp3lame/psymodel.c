@@ -623,8 +623,8 @@ set_istereo_sfb(lame_internal_flags *gfc, int gr)
 {
     int sb;
     III_psy_ratio *mr = &gfc->masking_next[gr][0];
-    gfc->l3_side.is_start_sfb_l[gr] = gfc->is_start_sfb_l_next[gr];
-    gfc->l3_side.is_start_sfb_s[gr] = gfc->is_start_sfb_s_next[gr];
+    gfc->is_start_sfb_l[gr] = gfc->is_start_sfb_l_next[gr];
+    gfc->is_start_sfb_s[gr] = gfc->is_start_sfb_s_next[gr];
     sb = gfc->cutoff_sfb_l - 1;
     if (!gfc->useshort_next[gr][0] && !gfc->useshort_next[gr][1]) {
 	do {
@@ -642,9 +642,9 @@ set_istereo_sfb(lame_internal_flags *gfc, int gr)
 
 	    if (x1*gfc->istereo_ratio > x2 || x2*gfc->istereo_ratio > x1)
 		break;
-	} while (--sb > 0);
+	} while (--sb >= 0);
     }
-    gfc->is_start_sfb_l_next[gr] = ++sb;
+    gfc->is_start_sfb_l_next[gr] = ++sb; assert(sb >= 0);
     for (; sb < gfc->cutoff_sfb_l; sb++) {
 	mr[0].en .l[sb] = mr[2].en .l[sb];
 	mr[0].thm.l[sb] = mr[2].thm.l[sb];
@@ -671,8 +671,8 @@ set_istereo_sfb(lame_internal_flags *gfc, int gr)
 	}
 	if (sblock != 3)
 	    break;
-    } while (--sb > 0);
-    gfc->is_start_sfb_s_next[gr] = ++sb;
+    } while (--sb >= 0);
+    gfc->is_start_sfb_s_next[gr] = ++sb; assert(sb >= 0);
     for (; sb < gfc->cutoff_sfb_s; sb++) {
 	mr[0].en .s[sb][0] = mr[2].en .s[sb][0];
 	mr[0].thm.s[sb][0] = mr[2].thm.s[sb][0];
@@ -1023,8 +1023,6 @@ pecalc_l(
 
     return pe_l;
 }
-
-
 
 
 static int
@@ -1751,9 +1749,8 @@ psycho_analysis(
 		gfc->useshort_next[0][0] = gfc->useshort_next[0][1]
 		    = SHORT_TYPE;
 	    else if (gfp->use_istereo
-		&& (check_istereo_LR(gfc, 0)
-		    + check_istereo_LR(gfc, gfc->mode_gr-1))
-		)
+		     && (check_istereo_LR(gfc, 0)
+			 + check_istereo_LR(gfc, gfc->mode_gr-1)))
 		gfc->mode_ext_next = MPG_MD_LR_I;
 	}
     }

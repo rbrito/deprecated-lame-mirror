@@ -215,8 +215,6 @@ typedef struct {
     int resvDrain_pre;
     int resvDrain_post;
     int scfsi[2][4];
-    int is_start_sfb_l[2];
-    int is_start_sfb_s[2];
 } III_side_info_t;
 
 typedef struct 
@@ -402,6 +400,8 @@ struct lame_internal_flags {
     FLOAT loudness_next[2][MAX_CHANNELS];  /* loudness^2 approx. per granule and channel */
     int useshort_next[2][MAX_CHANNELS*2]; /* for block type */
     int mode_ext_next;
+    int is_start_sfb_l[2];
+    int is_start_sfb_s[2];
     int is_start_sfb_l_next[2];
     int is_start_sfb_s_next[2];
 

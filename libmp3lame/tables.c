@@ -1019,10 +1019,10 @@ iteration_init( lame_global_flags *gfp)
 
     gfp->use_istereo = 0;
     gfc->is_start_sfb_l_next[0] = gfc->is_start_sfb_l_next[1]
-	= gfc->l3_side.is_start_sfb_l[0] = gfc->l3_side.is_start_sfb_l[1]
+	= gfc->is_start_sfb_l[0] = gfc->is_start_sfb_l[1]
 	= gfc->cutoff_sfb_l;
     gfc->is_start_sfb_s_next[0] = gfc->is_start_sfb_s_next[1]
-	= gfc->l3_side.is_start_sfb_s[0] = gfc->l3_side.is_start_sfb_s[1]
+	= gfc->is_start_sfb_s[0] = gfc->is_start_sfb_s[1]
 	= gfc->cutoff_sfb_s;
     if (gfp->mode != MONO && gfp->compression_ratio > 12.0
 	&& gfp->internal_flags->mode_gr == 2) {
@@ -1065,7 +1065,7 @@ iteration_init( lame_global_flags *gfp)
 /* see for example "Zwicker: Psychoakustik, 1982; ISBN 3-540-11401-7 */
 static FLOAT freq2bark(FLOAT freq)
 {
-  /* input: freq in hz  output: barks */
+    /* input: freq in hz  output: barks */
     if (freq<0) freq=0;
     freq = freq * 0.001;
     return 13.0*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5));

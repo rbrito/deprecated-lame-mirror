@@ -208,7 +208,7 @@ init_gr_info(lame_internal_flags *gfc, int gr, int ch)
     gi->sfbdivide           = 11;
     j = gfc->cutoff_sfb_l;
     if (ch & 1)
-	j = gfc->is_start_sfb_l_next[gr];
+	j = gfc->is_start_sfb_l[gr];
     gi->psymax = gi->psy_lmax = j;
     gi->sfbmax = gi->sfb_lmax = SBPSY_l;
     gi->sfb_smin              = SBPSY_s;
@@ -430,6 +430,19 @@ int  lame_encode_mp3_frame (				/* Output */
 	    gfc->mode_ext = MPG_MD_MS_LR;
     }
 
+    if (gfc->mode_ext == MPG_MD_MS_I) {
+	int i = 0;
+	for (gr = 0; gr < gfc->mode_gr; gr++) {
+	    gr_info *gi = &gfc->l3_side.tt[gr][0];
+	    if (gi->block_type == SHORT_TYPE)
+		i += gfc->is_start_sfb_s[gr];
+	    else
+		i += gfc->is_start_sfb_l[gr];
+	}
+	if (i == 0)
+	    gfc->mode_ext = MPG_MD_MS_LR;
+    }
+
     /* polyphase filtering / mdct */
     for ( ch = 0; ch < gfc->channels_out; ch++ ) {
 	mdct_sub48(gfc, ch);
@@ -444,7 +457,7 @@ int  lame_encode_mp3_frame (				/* Output */
     }
 
     /* channel conversion */
-    if (gfc->narrowStereo) {
+    if (gfc->narrowStereo != 0.0) {
 	/* narrown_stereo */
 	for (gr = 0; gr < gfc->mode_gr; gr++) {
 	    gr_info *gi = &gfc->l3_side.tt[gr][0];
@@ -456,15 +469,16 @@ int  lame_encode_mp3_frame (				/* Output */
 	    }
 	}
     }
+
     if (gfc->mode_ext & MPG_MD_MS_LR) {
 	/* convert from L/R -> Mid/Side */
 	for (gr = 0; gr < gfc->mode_gr; gr++) {
 	    gr_info *gi = &gfc->l3_side.tt[gr][0];
-	    int sfb = gfc->l3_side.is_start_sfb_l[gr];
+	    int sfb = gfc->is_start_sfb_l[gr];
 	    int end = gfc->scalefac_band.l[sfb];
 	    int i;
 	    if (gi->block_type == SHORT_TYPE) {
-		sfb = gfc->l3_side.is_start_sfb_s[gr];
+		sfb = gfc->is_start_sfb_s[gr];
 		end = gfc->scalefac_band.s[sfb]*3;
 		sfb *= 3;
 	    }
@@ -482,10 +496,10 @@ int  lame_encode_mp3_frame (				/* Output */
     } else if (gfc->mode_ext & 1) {
 	for (gr = 0; gr < gfc->mode_gr; gr++) {
 	    gr_info *gi = &gfc->l3_side.tt[gr][0];
-	    int sfb = gfc->l3_side.is_start_sfb_l[gr];
+	    int sfb = gfc->is_start_sfb_l[gr];
 	    int end = gfc->scalefac_band.l[sfb];
 	    if (gi->block_type == SHORT_TYPE) {
-		sfb = gfc->l3_side.is_start_sfb_s[gr];
+		sfb = gfc->is_start_sfb_s[gr];
 		end = gfc->scalefac_band.s[sfb]*3;
 		sfb *= 3;
 	    }
