@@ -39,6 +39,17 @@
 #include <dmalloc.h>
 #endif
 
+static const int max_range_short[SBMAX_s*3] = {
+    15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+    7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+    0, 0, 0 };
+
+static const int max_range_long[SBMAX_l] = {
+    15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 0 };
+
+static const int max_range_long_lsf_pretab[SBMAX_l] = {
+    7, 7, 7, 7, 7, 7, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
 /************************************************************************
  * allocate bits among 2 channels based on PE
  * mt 6/99
@@ -663,43 +674,37 @@ inc_scalefac_scale (
  *  increases the subblock gain and adjusts scalefactors
  *
  *************************************************************************/
- 
+
 static int 
 inc_subblock_gain (
           gr_info        * const gi
     )
 {
     int sfb, window;
-
-    /* subbloc_gain can't do anything in the long block region */
-    for (sfb = 0; sfb < gi->sfb_lmax; sfb++) {
-	if (gi->scalefac[sfb] >= 16)
-	    return 1;
+    const int *tab = max_range_short;
+    if (gi->sfb_lmax) {	/* mixed_block. */
+	/* subbloc_gain can't do anything in the long block region */
+	for (sfb = 0; sfb < gi->sfb_lmax; sfb++)
+	    if (gi->scalefac[sfb] >= 16)
+		return 1;
+	tab--;
     }
 
     for (window = 0; window < 3; window++) {
-	int s1, s2;
-	s1 = s2 = 0;
+	for (sfb = gi->sfb_lmax+window; sfb < gi->sfbmax; sfb += 3)
+	    if (gi->scalefac[sfb] > tab[sfb])
+		break;
 
-        for (sfb = gi->sfb_lmax+window; sfb < gi->sfbdivide; sfb += 3) {
-	    if (s1 < gi->scalefac[sfb])
-		s1 = gi->scalefac[sfb];
-        }
-	for (; sfb < gi->sfbmax; sfb += 3) {
-	    if (s2 < gi->scalefac[sfb])
-		s2 = gi->scalefac[sfb];
-	}
-
-        if (s1 < 16 && s2 < 8)
+	if (sfb >= gi->sfbmax)
 	    continue;
 
         if (gi->subblock_gain[window] >= 7)
 	    return 1;
 
-        gi->subblock_gain[window]++;
+	gi->subblock_gain[window]++;
 	for (sfb = gi->sfb_lmax+window; sfb < gi->sfbmax; sfb += 3) {
 	    int s = gi->scalefac[sfb] - (4 >> gi->scalefac_scale);
-            if (s < 0)
+	    if (s < 0)
 		s = 0;
 	    gi->scalefac[sfb] = s;
         }
@@ -1221,17 +1226,6 @@ find_scalefac(
 
 
 
-static const int max_range_short[SBMAX_s*3] = {
-    15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
-    7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-    0, 0, 0 };
-
-static const int max_range_long[SBMAX_l] = {
-    15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 0 };
-
-static const int max_range_long_lsf_pretab[SBMAX_l] = {
-    7, 7, 7, 7, 7, 7, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-
 /***********************************************************************
  *
  *      block_sf()
@@ -1365,10 +1359,8 @@ long_block_scalefacs(const lame_internal_flags * gfc, gr_info * gi,
     for (sfb = 0; sfb < gi->psymax; ++sfb) {
 	maxov0  = Min(vbrsf[sfb] + 2*max_range_long[sfb], maxov0);
 	maxov1  = Min(vbrsf[sfb] + 4*max_range_long[sfb], maxov1);
-        maxov0p = Min(vbrsf[sfb] + 2*(max_rangep[sfb] + pretab[sfb]),
-			maxov0p);
-        maxov1p = Min(vbrsf[sfb] + 4*(max_rangep[sfb] + pretab[sfb]),
-			maxov1p);
+        maxov0p = Min(vbrsf[sfb] + 2*(max_rangep[sfb] + pretab[sfb]), maxov0p);
+        maxov1p = Min(vbrsf[sfb] + 4*(max_rangep[sfb] + pretab[sfb]), maxov1p);
     }
 
     if (maxov0 == vbrmax) {
