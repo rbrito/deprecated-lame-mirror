@@ -591,9 +591,6 @@ case 't':  /* dont write VBR tag */
     fprintf(stderr,"Error: mono input, stereo output not supported. \n");
     exit(1);
   }
-  if (gf.autoconvert==TRUE) {
-    fprintf(stderr, "Autoconverting from stereo to mono. Setting encoding to mono mode.\n");
-  }
   gf.stereo=2;
   if (info->mode == MPG_MD_MONO) gf.stereo=1;
 
@@ -658,10 +655,6 @@ case 't':  /* dont write VBR tag */
 
   gf.resample_ratio=1;
   if (resamplerate != samplerate) gf.resample_ratio = (FLOAT)samplerate/(FLOAT)resamplerate;
-  if (gf.resample_ratio!=1) {
-    fprintf(stderr,"Resampling:  input=%iHz  output=%iHz\n",
-	    (int)samplerate,(int)resamplerate);
-  }
 
 
 #ifndef _BLADEDLL
@@ -894,9 +887,28 @@ void lame_print_config(void)
 {
   layer *info = fr_ps.header;
   char *mode_names[4] = { "stereo", "j-stereo", "dual-ch", "single-ch" };
+  FLOAT resamplerate=s_freq[info->version][info->sampling_frequency];    
+  FLOAT samplerate = gf.resample_ratio*resamplerate;
   FLOAT compression=
-    (FLOAT)(gf.stereo*16*s_freq[info->version][info->sampling_frequency])/
+    (FLOAT)(gf.stereo*16*resamplerate)/
     (FLOAT)(bitrate[info->version][info->lay-1][info->bitrate_index]);
+
+  if (gf.autoconvert==TRUE) {
+    fprintf(stderr, "Autoconverting from stereo to mono. Setting encoding to mono mode.\n");
+  }
+  if (gf.resample_ratio!=1) {
+    fprintf(stderr,"Resampling:  input=%iHz  output=%iHz\n",
+	    (int)samplerate,(int)resamplerate);
+  }
+  if (gf.highpass2>0.0)
+    fprintf(stderr, "Highpass filter: cutoff below %g Hz, increasing upto %g Hz\n",
+	    gf.highpass1*resamplerate*500, 
+	    gf.highpass2*resamplerate*500);
+  if (gf.lowpass1>0.0)
+    fprintf(stderr, "Lowpass filter: cutoff above %g Hz, decreasing from %g Hz\n",
+	    gf.lowpass2*resamplerate*500, 
+	    gf.lowpass1*resamplerate*500);
+
 
   if (gf.gtkflag) {
     fprintf(stderr, "Analyzing %s \n",inPath);
@@ -905,14 +917,6 @@ void lame_print_config(void)
     fprintf(stderr, "Encoding %s to %s\n",
 	    (strcmp(inPath, "-")? inPath : "stdin"),
 	    (strcmp(outPath, "-")? outPath : "stdout"));
-    if (gf.highpass2>0.0)
-      fprintf(stderr, "Highpass filter: cutoff below %g Hz, increasing upto %g Hz\n",
-              gf.highpass1*s_freq[info->version][info->sampling_frequency]*500, 
-	      gf.highpass2*s_freq[info->version][info->sampling_frequency]*500);
-    if (gf.lowpass1>0.0)
-      fprintf(stderr, "Lowpass filter: cutoff above %g Hz, decreasing from %g Hz\n",
-              gf.lowpass2*s_freq[info->version][info->sampling_frequency]*500, 
-	      gf.lowpass1*s_freq[info->version][info->sampling_frequency]*500);
     if (gf.VBR)
       fprintf(stderr, "Encoding as %.1fkHz VBR(q=%i) %s MPEG%i LayerIII file\n",
 	      s_freq[info->version][info->sampling_frequency],
