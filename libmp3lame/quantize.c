@@ -1030,10 +1030,10 @@ outer_loop (
 	 */
 	while ((cod_info_w.part2_3_length
 		= count_bits(gfc, xrpow, &cod_info_w)) > huff_bits
-	       && cod_info_w.global_gain < 255u)
+	       && cod_info_w.global_gain < 256u)
 	    cod_info_w.global_gain++;
 
-	if (cod_info_w.global_gain == 255)
+	if (cod_info_w.global_gain >= 256)
 	    break;
 
         /* compute the distortion in this quantization */
