@@ -318,7 +318,7 @@ static void  display_bitrate ( FILE* const fp, const char* const version, const 
               "\nMPEG-%-3s layer III sample frequencies (kHz):  %2d  %2d  %g\n"
               "bitrates (kbps):", 
               version, 32/div, 48/div, 44.1/div );
-    for (i = 1; i < 15; i++ )
+    for (i = 1; i <= 14; i++ )		// 14 numbers are printed, not 15, and it was a bug of me
         fprintf ( fp, " %2i", bitrate_table [index] [i] );
     fprintf ( fp, "\n" );
 }

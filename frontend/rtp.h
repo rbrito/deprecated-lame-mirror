@@ -3,7 +3,6 @@
 
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include "rtp.h"
 
 struct rtpbits {
   int sequence:16;	/* sequence number: random */

@@ -229,11 +229,7 @@ FLOAT8 ATHmdct( lame_global_flags *gfp, FLOAT8 f )
     if (gfc->nsPsy.use) {
         ath -= NSATHSCALE;
     } else {
-#ifdef KLEMM_01
         ath -= 114;
-#else
-        ath -= 114;    /* MDCT scaling.  From tests by macik and MUS420 code */
-#endif
     }
     
     /*  the user wishes to modify the MDCT scaling for the ATH
@@ -551,8 +547,27 @@ int calc_xmin(
 /*************************************************************************/
 /*            calc_noise                                                 */
 /*************************************************************************/
+
+// -oo dB  =>  -1.00
+// - 6 dB  =>  -0.97
+// - 3 dB  =>  -0.80
+// - 2 dB  =>  -0.64
+// - 1 dB  =>  -0.38
+//   0 dB  =>   0.00
+// + 1 dB  =>  +0.49
+// + 2 dB  =>  +1.06
+// + 3 dB  =>  +1.68
+// + 6 dB  =>  +3.69
+// +10 dB  =>  +6.45
+
+double penalties ( double noise )
+{
+    return log ( 0.368 + 0.632 * noise * noise * noise );
+}
+
 /*  mt 5/99:  Function: Improved calc_noise for a single channel   */
-int calc_noise( 
+
+int  calc_noise( 
         const lame_internal_flags           * const gfc,
         const FLOAT8                    xr [576],
         const int                       ix [576],
@@ -570,6 +585,7 @@ int calc_noise(
   FLOAT8 over_noise = 1;     /*    0 dB relative to masking */
   FLOAT8 tot_noise  = 1;     /*    0 dB relative to masking */
   FLOAT8 max_noise  = 1E-20; /* -200 dB relative to masking */
+  double klemm_noise = 1E-37;
 
   if (cod_info->block_type == SHORT_TYPE) {
     int max_index = gfc->sfb21_extra ? SBMAX_s : SBPSY_s;
@@ -607,19 +623,20 @@ int calc_noise(
             noise = xfsf[i+1][sfb];
 	    
             /* multiplying here is adding in dB */
-	    tot_noise *= Max(noise, 1E-20);
+	    tot_noise *= Max(noise, 1E-20);         // IISC this is nonsense, a nearly nondistorted band doesn't comp a heavly distorted one
 
             if (noise > 1) {
 		over++;
 	        /* multiplying here is adding in dB */
 		over_noise *= noise;
 	    }
-	    max_noise=Max(max_noise,noise);
+	    max_noise    = Max(max_noise,noise);
+	    klemm_noise += penalties (noise);
 
 	    count++;	    
         }
     }
-  }else{
+  }else{ /* cod_info->block_type == SHORT_TYPE */
     int max_index = gfc->sfb21_extra ? SBMAX_l : SBPSY_l;
     
     for ( sfb = 0; sfb < max_index; sfb++ ) {
@@ -638,25 +655,16 @@ int calc_noise(
         end   = gfc->scalefac_band.l[ sfb+1 ];
         bw = end - start;
 
+	for ( sum = 0.0, l = start; l < end; l++ ) {
+	  FLOAT8 temp;
+	  temp = fabs(xr[l]) - pow43[ix[l]] * step;
+	  sum += temp * temp;
+	}
+
 	if (gfc->nsPsy.use) {
-	  for ( sum = 0.0, l = start; l < end; l++ )
-	    {
-	      FLOAT8 temp;
-	      temp = fabs(xr[l]) - pow43[ix[l]] * step;
-	      sum += temp * temp;
-	    }
-
 	  xfsf[0][sfb] = sum;
-
 	  sum /= bw;
 	} else {
-	  for ( sum = 0.0, l = start; l < end; l++ )
-	    {
-	      FLOAT8 temp;
-	      temp = fabs(xr[l]) - pow43[ix[l]] * step;
-	      sum += temp * temp;
-	    }
-
 	  xfsf[0][sfb] = sum / bw;
 	}
 
@@ -664,16 +672,17 @@ int calc_noise(
 	noise = xfsf[0][sfb];
 	/* multiplying here is adding in dB */
 	tot_noise *= Max(noise, 1E-20);
-	if (noise>1) {
+	if (noise > 1) {
 	  over++;
 	  /* multiplying here is adding in dB */
 	  over_noise *= noise;
 	}
 
 	max_noise=Max(max_noise,noise);
+	klemm_noise += penalties (noise);
 	count++;
     }
-  }
+  } /* cod_info->block_type == SHORT_TYPE */
 
   /* normalization at this point by "count" is not necessary, since
    * the values are only used to compare with previous values */
@@ -689,9 +698,10 @@ int calc_noise(
 
   */
 
-  res->tot_noise  = 10*log10(Max(1E-20,tot_noise)); 
-  res->over_noise = 10*log10(Max(1.0, over_noise)); 
-  res->max_noise  = 10*log10(Max(1E-20,max_noise));
+  res->tot_noise   = 10. * log10 ( Max (1E-20, tot_noise ) ); 
+  res->over_noise  = 10. * log10 ( Max (1E+00, over_noise) ); 
+  res->max_noise   = 10. * log10 ( Max (1E-20, max_noise ) );
+  res->klemm_noise = 10. * log10 ( klemm_noise );
 
   return over;
 }

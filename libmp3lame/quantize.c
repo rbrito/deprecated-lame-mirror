@@ -282,70 +282,75 @@ quant_compare(
     const calc_noise_result * const calc )
 {
     /*
-       noise is given in decibals (db) relative to masking thesholds.
+       noise is given in decibels (dB) relative to masking thesholds.
 
-       over_noise:  sum of quantization noise > masking
-       tot_noise:   sum of all quantization noise
+       over_noise:  ??? (the previous comment is fully wrong)
+       tot_noise:   ??? (the previous comment is fully wrong)
        max_noise:   max quantization noise 
 
      */
-    int better=0;
+    int better;
 
     switch (experimentalX) {
         default:
-        case 0: better =   calc->over_count  < best->over_count
-                       ||( calc->over_count == best->over_count
-                        && calc->over_noise  < best->over_noise )
-                       ||( calc->over_count == best->over_count 
-                        && calc->over_noise == best->over_noise
-                        && calc->tot_noise   < best->tot_noise  ); break;
-
-
-        case 1: better = calc->max_noise < best->max_noise; break;
-
-        case 2: better = calc->tot_noise < best->tot_noise; break;
-  
-        case 3: better =  calc->tot_noise < best->tot_noise
-                       && calc->max_noise < best->max_noise + 2; break;
-  
-        case 4: better = ( calc->max_noise <= 0
-                        && best->max_noise >  2
-                      )||(   
-                           calc->max_noise <= 0
-                        && best->max_noise <  0
-                        && best->max_noise >  calc->max_noise-2
-                        && calc->tot_noise <  best->tot_noise
-                      )||(
-                           calc->max_noise <= 0
-                        && best->max_noise >  0
-                        && best->max_noise >  calc->max_noise-2
-                        && calc->tot_noise <  best->tot_noise+best->over_noise
-                      )||(
-                           calc->max_noise >  0
-                        && best->max_noise > -0.5
-                        && best->max_noise >  calc->max_noise-1
-                        && calc->tot_noise+calc->over_noise
-                                           <  best->tot_noise+best->over_noise
-                      )||(
-                           calc->max_noise >  0
-                        && best->max_noise > -1
-                        && best->max_noise >  calc->max_noise-1.5
-                        && calc->tot_noise+calc->over_noise+calc->over_noise
-                         < best->tot_noise+best->over_noise+best->over_noise
-                         ); break;
-     
-        case 5: better =   calc->over_noise  < best->over_noise
-                       ||( calc->over_noise == best->over_noise
-                        && calc->tot_noise   < best->tot_noise ); break;
-  
-        case 6: better =     calc->over_noise  < best->over_noise
-                       ||(   calc->over_noise == best->over_noise
-                        &&(  calc->max_noise   < best->max_noise
-                         ||( calc->max_noise  == best->max_noise
-                          && calc->tot_noise  <= best->tot_noise ))); break;
-  
-        case 7: better =  calc->over_count < best->over_count
-                       || calc->over_noise < best->over_noise; break;
+        case 0: 
+	    better = calc->over_count  < best->over_count
+               ||  ( calc->over_count == best->over_count  &&
+                     calc->over_noise  < best->over_noise )
+               ||  ( calc->over_count == best->over_count  &&
+                     calc->over_noise == best->over_noise  &&
+                     calc->tot_noise   < best->tot_noise  ); 
+	    break;
+        case 1: 
+	    better = calc->max_noise < best->max_noise; 
+	    break;
+        case 2: 
+	    better = calc->tot_noise < best->tot_noise; 
+	    break;
+        case 3: 
+	    better = calc->tot_noise < best->tot_noise  &&
+                     calc->max_noise < best->max_noise+2; 
+	    break;
+        case 4: 
+	    better = ( calc->max_noise <= 0  &&
+                       best->max_noise >  2 )
+                 ||  ( calc->max_noise <= 0  &&
+                       best->max_noise <  0  &&
+                       best->max_noise >  calc->max_noise-2  &&
+                       calc->tot_noise <  best->tot_noise )
+                 ||  ( calc->max_noise <= 0  &&
+                       best->max_noise >  0  &&
+                       best->max_noise >  calc->max_noise-2  &&
+                       calc->tot_noise <  best->tot_noise+best->over_noise )
+                 ||  ( calc->max_noise >  0  &&
+                       best->max_noise > -0.5  &&
+                       best->max_noise >  calc->max_noise-1  &&
+                       calc->tot_noise+calc->over_noise < best->tot_noise+best->over_noise )
+                 ||  ( calc->max_noise >  0  &&
+                       best->max_noise > -1  &&
+                       best->max_noise >  calc->max_noise-1.5  &&
+                       calc->tot_noise+calc->over_noise+calc->over_noise < best->tot_noise+best->over_noise+best->over_noise );
+            break;
+        case 5: 
+	    better =   calc->over_noise  < best->over_noise
+                 ||  ( calc->over_noise == best->over_noise  &&
+                       calc->tot_noise   < best->tot_noise ); 
+	    break;
+        case 6: 
+	    better =   calc->over_noise  < best->over_noise
+                 ||  ( calc->over_noise == best->over_noise  &&
+                     ( calc->max_noise   < best->max_noise  
+		     ||  ( calc->max_noise  == best->max_noise  &&
+                           calc->tot_noise  <= best->tot_noise )
+		      )); 
+	    break;
+        case 7: 
+	    better =   calc->over_count < best->over_count
+                   ||  calc->over_noise < best->over_noise; 
+	    break;
+        case 8: 
+	    better =   calc->klemm_noise < best->klemm_noise;
+            break;
     }   
 
     return better;

@@ -1215,6 +1215,9 @@ int lame_init_old(lame_global_flags *gfp)
 {
   lame_internal_flags *gfc;
 
+/* extremly system dependent stuff, move to a lib to make the code readable */
+/*==========================================================================*/
+
   /*
    *  Disable floating point exceptions
    */
@@ -1228,6 +1231,7 @@ int lame_init_old(lame_global_flags *gfp)
   /*  DEBUGF("FreeBSD mask is 0x%x\n",mask); */
   }
 #endif
+
 #if defined(__riscos__) && !defined(ABORTFP)
   /* Disable FPE's under RISC OS */
   /* if bit is set, we disable trapping that error! */
@@ -1238,7 +1242,6 @@ int lame_init_old(lame_global_flags *gfp)
   /*   _FPE_INX : inexact */
   DisableFPETraps( _FPE_IVO | _FPE_DVZ | _FPE_OFL );
 #endif
-
 
   /*
    *  Debugging stuff
@@ -1273,6 +1276,7 @@ int lame_init_old(lame_global_flags *gfp)
   }
 # elif defined(__linux__)
   {
+  
 #  include <fpu_control.h>
 #  ifndef _FPU_GETCW
 #  define _FPU_GETCW(cw) __asm__ ("fnstcw %0" : "=m" (*&cw))
@@ -1280,27 +1284,31 @@ int lame_init_old(lame_global_flags *gfp)
 #  ifndef _FPU_SETCW
 #  define _FPU_SETCW(cw) __asm__ ("fldcw %0" : : "m" (*&cw))
 #  endif
+
+    /* 
+     * Set the Linux mask to abort on most FPE's
+     * if bit is set, we _mask_ SIGFPE on that error!
+     *  mask &= ~( _FPU_MASK_IM | _FPU_MASK_ZM | _FPU_MASK_OM | _FPU_MASK_UM );
+     */
+
     unsigned int mask;
-    _FPU_GETCW(mask);
-    /* Set the Linux mask to abort on most FPE's */
-    /* if bit is set, we _mask_ SIGFPE on that error! */
-    /*  mask &= ~( _FPU_MASK_IM | _FPU_MASK_ZM | _FPU_MASK_OM | _FPU_MASK_UM );*/
-    mask &= ~( _FPU_MASK_IM | _FPU_MASK_ZM | _FPU_MASK_OM );
-    _FPU_SETCW(mask);
+    _FPU_GETCW (mask);
+    mask  &=  ~( _FPU_MASK_IM | _FPU_MASK_ZM | _FPU_MASK_OM );
+    _FPU_SETCW (mask);
   }
 #endif
 #endif /* ABORTFP */
 
-
+/*======================================================================================*/
 
   memset(gfp,0,sizeof(lame_global_flags));
-  if (NULL==(gfp->internal_flags = malloc(sizeof(lame_internal_flags))))
+  
+  if ( NULL == (gfc = gfp->internal_flags = calloc (1, sizeof(lame_internal_flags))) )
     return -1;
-  gfc=(lame_internal_flags *) gfp->internal_flags;
-  memset(gfc,0,sizeof(lame_internal_flags));
 
   /* Global flags.  set defaults here for non-zero values */
   /* see lame.h for description */
+  
   gfp->mode = MPG_MD_JOINT_STEREO;
   gfp->original=1;
   gfp->in_samplerate=1000*44.1;
@@ -1323,10 +1331,11 @@ int lame_init_old(lame_global_flags *gfp)
   gfp->VBR_max_bitrate_kbps=0;
   gfp->VBR_hard_min=0;
 
+
   gfc->resample_ratio=1;
   gfc->lowpass_band=32;
   gfc->highpass_band = -1;
-  gfc->VBR_min_bitrate=1;
+  gfc->VBR_min_bitrate=1;  /* not  0 ????? */
   gfc->VBR_max_bitrate=13; /* not 14 ????? */
 
   gfc->OldValue[0]=180;
@@ -1335,10 +1344,9 @@ int lame_init_old(lame_global_flags *gfp)
   gfc->masking_lower=1;
 
 
-  memset(&gfc->bs, 0, sizeof(Bit_stream_struc));
-  memset(&gfc->l3_side,0x00,sizeof(III_side_info_t));
-
-  memset((char *) gfc->mfbuf, 0, sizeof(gfc->mfbuf[0][0])*2*MFSIZE);
+//  memset(&gfc->bs, 0, sizeof(Bit_stream_struc));
+//  memset(&gfc->l3_side,0x00,sizeof(III_side_info_t));
+//  memset((char *) gfc->mfbuf, 0, sizeof(gfc->mfbuf[0][0])*2*MFSIZE);
 
   /* The reason for
    *       int mf_samples_to_encode = ENCDELAY + 288;
