@@ -115,8 +115,6 @@ static FLOAT8 enwindow[] =
    4.756451e-03,   2.1458e-05,  -6.9618e-05,    2.384e-06
 };
 
-static FLOAT8 sb_sample[2][2][18][SBLIMIT];
-static FLOAT8 mm[16][SBLIMIT - 1];
 
 #define NS 12
 #define NL 36
@@ -143,8 +141,9 @@ static FLOAT8 win[4][36];
 *
 ************************************************************************/
 
-static void window_subband(short *xk, FLOAT8 d[SBLIMIT], FLOAT8 *in)
+static void window_subband(lame_global_flags *gfp,short *xk, FLOAT8 d[SBLIMIT], FLOAT8 *in)
 {
+    lame_internal_flags *gfc=gfp->internal_flags;
     int i;
     FLOAT8 s, t, *wp;
     wp = enwindow;
@@ -200,7 +199,7 @@ static void window_subband(short *xk, FLOAT8 d[SBLIMIT], FLOAT8 *in)
     }
 
     in++;
-    wp = &mm[0][0];
+    wp = &gfc->mm[0][0];
     for (i = 15; i >= 0; --i) {
 	int j;
 	FLOAT8 s0 = s; /* mm[i][0] is always 1 */
@@ -335,9 +334,10 @@ void mdct_sub48(lame_global_flags *gfp,
     lame_internal_flags *gfc=gfp->internal_flags;
 
 
-    if ( init == 0 ) {
-        void mdct_init48(void);
-	mdct_init48();
+    if ( gfc->mdct_sub48_init == 0 ) {
+        void mdct_init48(lame_global_flags *gfp);
+        gfc->mdct_sub48_init=1;
+	mdct_init48(gfp);
 	init++;
     }
 
@@ -348,11 +348,11 @@ void mdct_sub48(lame_global_flags *gfp,
 	    int	band;
 	    FLOAT8 *mdct_enc = mdct_freq[gr][ch];
 	    gr_info *gi = &(l3_side->gr[gr].ch[ch].tt);
-	    FLOAT8 *samp = sb_sample[ch][1 - gr][0];
+	    FLOAT8 *samp = gfc->sb_sample[ch][1 - gr][0];
 
 	    for (k = 0; k < 18 / 2; k++) {
-		window_subband(wk, samp, work);
-		window_subband(wk + 32, samp + 32, work);
+		window_subband(gfp,wk, samp, work);
+		window_subband(gfp,wk + 32, samp + 32, work);
 		/*
 		 * Compensate for inversion in the analysis filter
 		 */
@@ -373,12 +373,12 @@ void mdct_sub48(lame_global_flags *gfp,
 		if (gfc->lowpass1 < freq && freq < gfc->lowpass2) {
 		  amp = cos((PI/2)*(gfc->lowpass1-freq)/(gfc->lowpass2-gfc->lowpass1));
 		  for (k=0; k<18; k++) 
-		    sb_sample[ch][1-gr][k][band]*=amp;
+		    gfc->sb_sample[ch][1-gr][k][band]*=amp;
 		}
 		if (gfc->highpass1 < freq && freq < gfc->highpass2) {
 		  amp = cos((PI/2)*(gfc->highpass2-freq)/(gfc->highpass2-gfc->highpass1));
 		  for (k=0; k<18; k++) 
-		    sb_sample[ch][1-gr][k][band]*=amp;
+		    gfc->sb_sample[ch][1-gr][k][band]*=amp;
 		}
 	      }
 	    }
@@ -403,36 +403,36 @@ void mdct_sub48(lame_global_flags *gfp,
 		    for (k = 2; k >= 0; --k) {
 		      FLOAT8 w1 = win[SHORT_TYPE][k];
 		      work[k] =
-			sb_sample[ch][gr][k+6][band] * w1 -
-			sb_sample[ch][gr][11-k][band];
+			gfc->sb_sample[ch][gr][k+6][band] * w1 -
+			gfc->sb_sample[ch][gr][11-k][band];
 		      work[k+3] =
-			sb_sample[ch][gr][k+12][band] +
-			sb_sample[ch][gr][17-k][band] * w1;
+			gfc->sb_sample[ch][gr][k+12][band] +
+			gfc->sb_sample[ch][gr][17-k][band] * w1;
 		      
 		      work[k+6] =
-			sb_sample[ch][gr][k+12][band] * w1 -
-			sb_sample[ch][gr][17-k][band];
+			gfc->sb_sample[ch][gr][k+12][band] * w1 -
+			gfc->sb_sample[ch][gr][17-k][band];
 		      work[k+9] =
-			sb_sample[ch][1-gr][k][band] +
-			sb_sample[ch][1-gr][5-k][band] * w1;
+			gfc->sb_sample[ch][1-gr][k][band] +
+			gfc->sb_sample[ch][1-gr][5-k][band] * w1;
 		      
 		      work[k+12] =
-			sb_sample[ch][1-gr][k][band] * w1 -
-			sb_sample[ch][1-gr][5-k][band];
+			gfc->sb_sample[ch][1-gr][k][band] * w1 -
+			gfc->sb_sample[ch][1-gr][5-k][band];
 		      work[k+15] =
-			sb_sample[ch][1-gr][k+6][band] +
-			sb_sample[ch][1-gr][11-k][band] * w1;
+			gfc->sb_sample[ch][1-gr][k+6][band] +
+			gfc->sb_sample[ch][1-gr][11-k][band] * w1;
 		    }
 		    mdct_short(mdct_enc, work);
 		  } else {
 		    for (k = 8; k >= 0; --k) {
 		      work[k] =
-			win[type][k  ] * sb_sample[ch][gr][k   ][band]
-			- win[type][k+9] * sb_sample[ch][gr][17-k][band];
+			win[type][k  ] * gfc->sb_sample[ch][gr][k   ][band]
+			- win[type][k+9] * gfc->sb_sample[ch][gr][17-k][band];
 		      
 		      work[9+k] =
-			win[type][k+18] * sb_sample[ch][1-gr][k   ][band]
-			+ win[type][k+27] * sb_sample[ch][1-gr][17-k][band];
+			win[type][k+18] * gfc->sb_sample[ch][1-gr][k   ][band]
+			+ win[type][k+27] * gfc->sb_sample[ch][1-gr][17-k][band];
 		    }
 		    mdct_long(mdct_enc, work);
 		  }
@@ -458,15 +458,16 @@ void mdct_sub48(lame_global_flags *gfp,
 	}
 	wk = w1;
 	if (gfc->mode_gr == 1) {
-	    memcpy(sb_sample[ch][0], sb_sample[ch][1], 576 * sizeof(FLOAT8));
+	    memcpy(gfc->sb_sample[ch][0], gfc->sb_sample[ch][1], 576 * sizeof(FLOAT8));
 	}
     }
 }
 
 
 
-void mdct_init48(void)
+void mdct_init48(lame_global_flags *gfp)
 {
+    lame_internal_flags *gfc=gfp->internal_flags;
     int i, k, m;
     FLOAT8 sq;
     FLOAT8 max;
@@ -574,7 +575,7 @@ void mdct_init48(void)
 	    }
 	}
 
-	wp = &mm[0][0];
+	wp = &gfc->mm[0][0];
 	for (i = 15; i >= 0; --i) {
 	    for (k = 1; k < 32; k++) {
 		*wp++ = cos((2 * i + 1) * k * PI/64) * mmax[k - 1];

@@ -357,42 +357,37 @@ INLINE double blackman(int i,double offset,double fcn,int l)
 int fill_buffer_blackman(lame_global_flags *gfp,short int *outbuf,int desired_len,
 			 short int *inbuf,int len,int *num_used,int ch) {
   
-#define BLACKSIZE 30
-  FLOAT8 offset,xvalue;
-  static short int inbuf_old[2][BLACKSIZE];
-  static int init[2]={0,0};
-  int i,j=0,k,value;
-  static int filter_l;
-  static FLOAT8 fcn,itime[2],intratio;
-  static FLOAT8 blackfilt[BLACKSIZE];
   lame_internal_flags *gfc=gfp->internal_flags;
+  FLOAT8 offset,xvalue;
+  int i,j=0,k,value;
+  int filter_l;
+  FLOAT8 fcn,intratio;
+  short int *inbuf_old;
 
+  intratio=( fabs(gfc->resample_ratio - floor(.5+gfc->resample_ratio)) < .0001 );
+  fcn = .90/gfc->resample_ratio;
+  if (fcn>.90) fcn=.90;
+  filter_l=19;  /* must be odd */
+  /* if resample_ratio = int, filter_l should be even */
+  filter_l += intratio;
+  assert(filter_l +5 < BLACKSIZE);
   
-
-  if (gfc->frameNum==0 && !init[ch]) {
-    init[ch]=1;
-    itime[ch]=0;
-    memset((char *) inbuf_old[ch], 0, sizeof(short int)*BLACKSIZE);
-    intratio=( fabs(gfc->resample_ratio - floor(.5+gfc->resample_ratio)) < .0001 );
-
-    fcn = .90/gfc->resample_ratio;
-    if (fcn>.90) fcn=.90;
-
-    filter_l=19;  /* must be odd */
-    /* if resample_ratio = int, filter_l should be even */
-    filter_l += intratio;
-    assert(filter_l +5 < BLACKSIZE);
+  if (!gfc->fill_buffer_blackman_init) {
+    gfc->fill_buffer_blackman_init=1;
+    gfc->itime[0]=0;
+    gfc->itime[1]=0;
+    memset((char *) gfc->inbuf_old, 0, sizeof(short int)*2*BLACKSIZE);
 
     if (intratio) {
       /* precompute blackman filter coefficients */
       offset=0;
       for (i=0; i<=filter_l; ++i) {
-	blackfilt[i]=blackman(i,offset,fcn,filter_l);
+	gfc->blackfilt[i]=blackman(i,offset,fcn,filter_l);
       }
       
     }
   }
-  if (gfc->frameNum!=0) init[ch]=0; /* reset, for next time framenum=0 */
+  inbuf_old=gfc->inbuf_old[ch];
 
   
   /* time of j'th element in inbuf = itime + j/ifreq; */
@@ -401,12 +396,12 @@ int fill_buffer_blackman(lame_global_flags *gfp,short int *outbuf,int desired_le
     FLOAT8 time0;
     
     time0 = k*gfc->resample_ratio;       /* time of k'th output sample */
-    j = floor( time0 -itime[ch]  );
+    j = floor( time0 -gfc->itime[ch]  );
     if ((j+filter_l/2) >= len) break;
 
     /* blackmon filter.  by default, window centered at j+.5(filter_l%2) */
     /* but we want a window centered at time0.   */
-    offset = ( time0 -itime[ch] - (j + .5*(filter_l%2)));
+    offset = ( time0 -gfc->itime[ch] - (j + .5*(filter_l%2)));
     assert(offset<=.500001);
 
     xvalue=0;
@@ -417,9 +412,9 @@ int fill_buffer_blackman(lame_global_flags *gfp,short int *outbuf,int desired_le
     for (i=0 ; i<=filter_l ; ++i) {
       int j2 = i+j-filter_l/2;
       int y;
-      y = (j2<0) ? inbuf_old[ch][BLACKSIZE+j2] : inbuf[j2];
+      y = (j2<0) ? inbuf_old[BLACKSIZE+j2] : inbuf[j2];
       if (intratio) 
-	xvalue += y*blackfilt[i];
+	xvalue += y*gfc->blackfilt[i];
       else
 	xvalue += y*blackman(i,offset,fcn,filter_l);
 #ifdef DEBUG
@@ -441,9 +436,9 @@ int fill_buffer_blackman(lame_global_flags *gfp,short int *outbuf,int desired_le
   /* last k sample used data from j,j+1, or j+1 overflowed buffer */
   /* remove num_used samples from inbuf: */
   *num_used = Min(len,j+filter_l/2);
-  itime[ch] += *num_used - k*gfc->resample_ratio;
+  gfc->itime[ch] += *num_used - k*gfc->resample_ratio;
   for (i=0;i<BLACKSIZE;i++)
-    inbuf_old[ch][i]=inbuf[*num_used + i -BLACKSIZE];
+    inbuf_old[i]=inbuf[*num_used + i -BLACKSIZE];
   return k;
 }
 

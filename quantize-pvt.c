@@ -139,6 +139,7 @@ struct scalefac_struct scalefac_band;
 FLOAT8 pow20[Q_MAX];
 FLOAT8 ipow20[Q_MAX];
 FLOAT8 pow43[PRECALC_SIZE];
+/* initialized in first call to iteration_init */
 static FLOAT8 adj43[PRECALC_SIZE];
 static FLOAT8 adj43asm[PRECALC_SIZE];
 static FLOAT8 ATH_l[SBPSY_l];
@@ -157,7 +158,8 @@ iteration_init( lame_global_flags *gfp,III_side_info_t *l3_side, int l3_enc[2][2
 
   l3_side->resvDrain = 0;
 
-  if ( gfc->frameNum==0 ) {
+  if ( gfc->iteration_init_init==0 ) {
+    gfc->iteration_init_init=1;
     for (i = 0; i < SBMAX_l + 1; i++) {
       scalefac_band.l[i] =
 	sfBandIndex[gfc->samplerate_index + (gfc->version * 3) + 
@@ -452,16 +454,16 @@ int scale_bitcount( III_scalefac_t *scalefac, gr_info *cod_info)
 {
     int i, k, sfb, max_slen1 = 0, max_slen2 = 0, /*a, b, */ ep = 2;
 
-    static int slen1[16] = { 1, 1, 1, 1, 8, 2, 2, 2, 4, 4, 4, 8, 8, 8,16,16 };
-    static int slen2[16] = { 1, 2, 4, 8, 1, 2, 4, 8, 2, 4, 8, 2, 4, 8, 4, 8 };
+    static const int slen1[16] = { 1, 1, 1, 1, 8, 2, 2, 2, 4, 4, 4, 8, 8, 8,16,16 };
+    static const int slen2[16] = { 1, 2, 4, 8, 1, 2, 4, 8, 2, 4, 8, 2, 4, 8, 4, 8 };
 
-    static int slen1_tab[16] = {0,
+    static const int slen1_tab[16] = {0,
 	18, 36, 54, 54, 36, 54, 72, 54, 72, 90, 72, 90,108,108,126
     };
-    static int slen2_tab[16] = {0,
+    static const int slen2_tab[16] = {0,
 	10, 20, 30, 33, 21, 31, 41, 32, 42, 52, 43, 53, 63, 64, 74
     };
-    int *tab;
+    const int *tab;
 
 
     if ( cod_info->block_type == SHORT_TYPE )
@@ -525,23 +527,9 @@ int scale_bitcount( III_scalefac_t *scalefac, gr_info *cod_info)
 
 
 /*
-  table of largest scalefactors (number of bits) for MPEG2
-*/
-/*
-static unsigned max_sfac_tab[6][4] =
-{
-    {4, 4, 3, 3},
-    {4, 4, 3, 0},
-    {3, 2, 0, 0},
-    {4, 5, 5, 0},
-    {3, 3, 3, 0},
-    {2, 2, 0, 0}
-};
-*/
-/*
   table of largest scalefactor values for MPEG2
 */
-static unsigned max_range_sfac_tab[6][4] =
+static const unsigned max_range_sfac_tab[6][4] =
 {
  { 15, 15, 7,  7},
  { 15, 15, 7,  0},
@@ -620,7 +608,7 @@ int scale_bitcount_lsf(III_scalefac_t *scalefac, gr_info *cod_info)
 	  Since no bands have been over-amplified, we can set scalefac_compress
 	  and slen[] for the formatter
 	*/
-	static int log2tab[] = { 0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4 };
+	static const int log2tab[] = { 0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4 };
 
 	unsigned slen1, slen2, slen3, slen4;
 
@@ -815,11 +803,14 @@ bin_search_StepSize2 (lame_global_flags *gfp,int desired_rate, int start, int *i
                       FLOAT8 xrspow[576], gr_info *cod_info)
 /*-------------------------------------------------------------------------*/
 {
-    static int CurrentStep = 4;
     int nBits;
     int flag_GoneOver = 0;
     int StepSize = start;
+    int CurrentStep;
+    lame_internal_flags *gfc=gfp->internal_flags;
+
     binsearchDirection_t Direction = BINSEARCH_NONE;
+    CurrentStep = gfc->CurrentStep;
 
     do
     {

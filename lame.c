@@ -1242,6 +1242,10 @@ int lame_init(lame_global_flags *gfp)
 
   gfc->lame_init_params_init=0;
   gfc->lame_encode_frame_init=0;
+  gfc->iteration_init_init=0;
+  gfc->fill_buffer_blackman_init=0;
+  gfc->mdct_sub48_init=0;
+
   gfc->frameNum=0;
   gfc->filter_type=0;
 
@@ -1264,6 +1268,9 @@ int lame_init(lame_global_flags *gfp)
   gfc->ms_ener_ratio[1]=0;
   gfc->ms_ratio[0]=0;
   gfc->ms_ratio[1]=0;
+  gfc->OldValue[0]=180;
+  gfc->OldValue[1]=180;
+  gfc->CurrentStep=4;
 
   id3tag.used=0;
   return 0;

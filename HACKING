@@ -34,61 +34,6 @@ FLOAT    4 byte floating point.
 FLOAT8   8 byte floating point (only when necessary)
 
 
-************************************************************************
-Initialization:   LAME can be used as a library, and there are two
-kinds of static data:  data that has to be initialized only once
-when the library is called, and data that has to be initialized
-every time you start encoding a new sample.
-
-These routines should be coded something like:
-
-#include "globalflags"
-void subroutine(void)
-{
-  static int firstcall=1;
-  if (firstcall) {
-    firstcall=0;
-    /* code that needs to be done only once when routine is loaded */
-  }
-  if (gf.frameNum==0) {
-    /* code that needs to be done before encoding each file/stream */
-  }
-}
-
-The frameNum==0 code only works for routines which are only called
-once per frame.  More general code would be:
-
-
-#include "globalflags"
-void subroutine(void)
-{
-  static int init=0;
-  if (gf.frameNum==0 && !init) {
-    /* code that needs to be done before encoding each file/stream */
-    init=1;
-  }
-  if (gf.frameNum>0) init=0;
-}
-
-
-
-
-
-************************************************************************
-Global flags
-
-For better or worse, there are many global flags in lame, 
-in the 'gf' structure.  
-
-The rules for adding a global flag are:
-
-1. declair in struct gf in lame.h
-2. default values must be set in lame_init()
-3. include "globalflags.h" in routines that need access to these flags.
-
-
-
-
 
 
 

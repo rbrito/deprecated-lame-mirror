@@ -238,7 +238,7 @@ set_masking_lower (int VBR_q,int nbits)
 	 * - experiments show that going more than 2dB over GPSYCHO's
 	 *   limits ends up in very annoying artefacts
 	 */
-	static FLOAT dbQ[10]={-6.0,-4.5,-3.0,-1.5,0,0.3,0.6,1.0,1.5,2.0};
+	static const FLOAT dbQ[10]={-6.0,-4.5,-3.0,-1.5,0,0.3,0.6,1.0,1.5,2.0};
 	
 	assert( VBR_q <= 9 );
 	assert( VBR_q >= 0 );
@@ -785,7 +785,6 @@ void outer_loop(
   /* BEGIN MAIN LOOP */
   iteration = 0;
   while ( notdone  ) {
-    static int OldValue[2] = {180, 180};
     int try_scale=0;
     iteration ++;
 
@@ -798,9 +797,9 @@ void outer_loop(
 	temp=fabs(xr[i]);
 	xrpow[i]=sqrt(sqrt(temp)*temp);
       }
-      bits_found=bin_search_StepSize2(gfp,targ_bits,OldValue[ch],
+      bits_found=bin_search_StepSize2(gfp,targ_bits,gfc->OldValue[ch],
 				      l3_enc_w,xrpow,cod_info);
-      OldValue[ch] = cod_info->global_gain;
+      gfc->OldValue[ch] = cod_info->global_gain;
     }
 
 

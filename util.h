@@ -142,6 +142,10 @@ typedef struct  {
   /********************************************************************/
   int lame_init_params_init;      /* was lame_init_params called? */
   int lame_encode_frame_init;     
+  int iteration_init_init;
+  int fill_buffer_blackman_init;
+  int mdct_sub48_init;
+
 
   long int frameNum;              /* frame counter */
   long totalframes;               /* frames: 0..totalframes-1 (estimate)*/
@@ -200,6 +204,23 @@ typedef struct  {
   FLOAT8 slot_lag;
   FLOAT8 ms_ener_ratio[2];
   FLOAT8 ms_ratio[2];
+
+  /* variables used by quantize.c */
+  int OldValue[2];
+  int CurrentStep;
+
+  /* variables used by util.c */
+#define BLACKSIZE 30
+  short int inbuf_old[2][BLACKSIZE];
+  FLOAT8 blackfilt[BLACKSIZE];
+  FLOAT8 itime[2];
+
+  /* variables for newmdct.c */
+  FLOAT8 sb_sample[2][2][18][SBLIMIT];
+  FLOAT8 mm[16][SBLIMIT - 1];
+
+
+
 
 
 } lame_internal_flags;
