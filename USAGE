@@ -94,7 +94,6 @@ Quality related:
 -k             disable all filtering
 -d             allow block types to differ between channels
 --athonly      ignore psy-model output, only use masking from the ATH
---voice        experimental voice encoding mode
 --noshort      disable short blocks
 -q n           Internal algorithm quality setting 0..9. 
                0 = slowest algorithms, but potentially highest quality
@@ -186,7 +185,6 @@ options not yet described:
 --noath            disable ATH
 --athlower <n db>  lower the ATH by n db.  
 --athshort         use only the ATH for short blocks
---cwlimit <freq>   specify range of tonality calculation
 --disptime
 --notemp           disable temporal masking
 
