@@ -320,32 +320,13 @@ int  short_help ( const lame_global_flags* gfp, FILE* const fp, const char* Prog
               "    lame -h input.wav output.mp3\n"
               "\n"
               "OPTIONS:\n"
-              "    -b bitrate      set the bitrate, default 128 kbps\n"
-              "    -f              fast mode (lower quality)\n"
-              "    -h              higher quality, but a little slower.  Recommended.\n"
-              "    -k              keep ALL frequencies (disables all filters)\n"
-              "                    Can cause ringing and twinkling\n"
-              "    -m mode         (s)tereo, (j)oint, (m)ono or (a)uto\n"
-              "                    default is (j) or (s) depending on bitrate\n"
-              "    -V n            quality setting for VBR.  default n=%i\n"
-              "\n"
-#if defined(WIN32)
-              "    --priority type  sets the process priority\n"
-              "                     0,1 = Low priority\n"
-              "                     2   = normal priority\n"
-              "                     3,4 = High priority\n"
-              "\n"
-#endif
-#if defined(__OS2__)
-              "    --priority type  sets the process priority\n"
-              "                     0 = Low priority\n"
-              "                     1 = Medium priority\n"
-              "                     2 = Regular priority\n"
-              "                     3 = High priority\n"
-              "                     4 = Maximum priority\n"
-              "\n"
-#endif
-              "    --longhelp      full list of options\n"
+              "   -b <bitrate>      set the bitrate, default 128 kbps\n"
+              "   -f                fast mode (lower quality)\n"
+              "   -h                higher quality, but a little slower.  Recommended.\n"
+              "   -m <mode>         (s)tereo, (j)oint, (m)ono or (a)uto\n"
+              "                     default is (j)oint for stereo, (m) for mono\n"
+              "   -V <n>            quality setting for VBR(quality/file size ratio).\n"
+	      "                     default n=%i\n"
               "\n",
               ProgramName, lame_get_VBR_q(gfp) );
  
@@ -407,7 +388,7 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
     fprintf ( fp,
               "  Operational options:\n"
               "    -m <mode>       (s)tereo, (j)oint, (f)orce, or (m)ono \n"
-              "                    default is (s) or (j) depending on bitrate\n"
+              "                    default is (j)oint for stereo, (m) for mono\n"
               "                    force = force ms_stereo on all frames.\n"
               "    -a              downmix from stereo to mono file for mono encoding\n"
               "    --freeformat    produce a free format bitstream\n"
