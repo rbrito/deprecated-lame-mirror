@@ -1068,7 +1068,7 @@ int    lame_encode_finish (
 
       if (gfp->brhist_disp)
 	{
-	  brhist_disp(gfp->totalframes);
+	  brhist_disp(gfp);
 	  brhist_disp_total(gfp);
 	}
 

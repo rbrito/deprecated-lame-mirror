@@ -65,7 +65,19 @@ struct id3tag_spec
     int genre;
 };
 
+#ifndef BRHIST_BARMAX
+	# define  BRHIST_BARMAX 50
+#endif
 
+typedef struct BRHST_TAG
+{
+  unsigned long count[15];
+  unsigned long count_max;
+  unsigned int  vbrmin;
+  unsigned int  vbrmax;
+  char          kbps[15][4];
+  char          bar[BRHIST_BARMAX + 1];
+} BRHST, *PBRHST;
 
 
 /***********************************************************************
@@ -150,6 +162,7 @@ typedef struct  {
   int id3v1_enabled;
   struct id3tag_spec tag_spec;
 
+  BRHST brhist;					  /* histogramming data */
 
   /* psycho acoustics and other aguments which you should not change 
    * unless you know what you are doing  */
@@ -157,18 +170,19 @@ typedef struct  {
   int ATHshort;                   /* only use ATH for short blocks */
   int noATH;                      /* disable ATH */
   int ATHlower;                   /* lower ATH by this many db */
-  int cwlimit;                  /* predictability limit */
-  int allow_diff_short;       /* allow blocktypes to differ between channels ? */
-  int no_short_blocks;        /* disable short blocks       */
+  int cwlimit;                    /* predictability limit */
+  int allow_diff_short;           /* allow blocktypes to differ between channels ? */
+  int no_short_blocks;            /* disable short blocks       */
   int emphasis;                   /* obsolete */
 
   float raiseSMR;  /* 0...1 : 0 leave SMR, 1 maximize SMR */
 
 
+
   /************************************************************************/
   /* internal variables, do not set... */
   /************************************************************************/
-  int version;                /* 0=MPEG2  1=MPEG1 */
+  int version;                    /* 0=MPEG2  1=MPEG1 */
   long int frameNum;              /* frame counter */
   long totalframes;               /* frames: 0..totalframes-1 (estimate)*/
   int encoder_delay;

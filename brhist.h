@@ -23,11 +23,12 @@
 #ifndef LAME_BRHIST_H
 #define LAME_BRHIST_H
 
-
 #include "lame.h"
+
 void brhist_init(lame_global_flags *gfp,int br_min, int br_max);
-void brhist_add_count(int i);
-void brhist_disp ( long totalframes );
+void brhist_add_count(lame_global_flags *gfp,int i);
+void brhist_disp (lame_global_flags *gfp );
 void brhist_disp_total(lame_global_flags *gfp);
-#endif
+
+#endif /* LAME_BRHIST_H */
 
