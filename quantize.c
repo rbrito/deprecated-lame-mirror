@@ -535,7 +535,8 @@ void outer_loop(
 	xrpow[i]=sqrt(sqrt(temp)*temp);
       }
       bits_found=bin_search_StepSize2(targ_bits,OldValue[ch],
-		  l3_enc[gr][ch],xr[gr][ch],xrpow,cod_info); 
+		  l3_enc[gr][ch],xr[gr][ch],xrpow,cod_info);
+      OldValue[ch] = cod_info->quantizerStepSize;
     }
     
     
