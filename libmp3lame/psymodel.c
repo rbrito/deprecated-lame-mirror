@@ -1106,9 +1106,8 @@ mp3x display               <------LONG------>
 /* in some scalefactor band, 
    we can use masking threshold value of long block */
 static void
-partially_convert_l2s(lame_internal_flags *gfc, int gr, int ch)
+partially_convert_l2s(lame_internal_flags *gfc, III_psy_ratio *mr, FLOAT *nb_1)
 {
-    III_psy_ratio *mr = &gfc->masking_next[gr][ch];
     int sfb, b;
     for (sfb = 0; sfb < SBMAX_s; sfb++) {
 	FLOAT x = (mr->en.s[sfb][0] + mr->en.s[sfb][1] + mr->en.s[sfb][2])
@@ -1123,12 +1122,12 @@ partially_convert_l2s(lame_internal_flags *gfc, int gr, int ch)
 	    x = 0.0;
 	} else {
 	    b = gfc->bo_l2s[sfb-1];
-	    x = gfc->nb_1[ch][b++] * 0.5;
+	    x = nb_1[b++] * 0.5;
 	}
 	for (; b < gfc->bo_l2s[sfb]; b++) {
-	    x += gfc->nb_1[ch][b];
+	    x += nb_1[b];
 	}
-	x += .5*gfc->nb_1[ch][b];
+	x += .5 * nb_1[b];
 
 	x *= ((double)BLKSIZE_s / BLKSIZE);
 	if (x < gfc->ATH.s_avg[sfb] * gfc->ATH.adjust)
@@ -1147,7 +1146,8 @@ L3psycho_anal_ns(
     int numchn
     )
 {
-    FLOAT wsamp_L[2][BLKSIZE];    /* fft and energy calculation   */
+    FLOAT wsamp_L[MAX_CHANNELS][BLKSIZE];    /* fft and energy calculation   */
+    FLOAT nb_1[CBANDS];
     int ch;
 
     /*********************************************************************
@@ -1313,7 +1313,7 @@ L3psycho_anal_ns(
 	    }
 	    p += gfc->s3ind[b][1] + 1;
 
-	    gfc->nb_1[ch][b] = ecb;
+	    nb_1[b] = ecb;
 
 	    enn  += eb[b];
 	    thmm += ecb;
@@ -1350,7 +1350,7 @@ L3psycho_anal_ns(
 	mr->thm.l[SBMAX_l-1] = thmm * gfc->masking_lower;
 
 	if (mr->en.s[0][0] >= 0.0) {
-	    partially_convert_l2s(gfc, gr, ch);
+	    partially_convert_l2s(gfc, mr, nb_1);
 	    continue;
 	}
 
@@ -1359,7 +1359,7 @@ L3psycho_anal_ns(
 	b = j = 0;
 	enn = thmm = 0.0;
 	for (;; b++ ) {
-	    FLOAT tmp = gfc->nb_1[ch][b];
+	    FLOAT tmp = nb_1[b];
 	    enn  += eb[b];
 	    thmm += tmp;
 	    if (b != gfc->bo_l2s[j])

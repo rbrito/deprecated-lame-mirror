@@ -1226,9 +1226,6 @@ int psymodel_init(lame_global_flags *gfp)
     FLOAT eql_balance;
 
     for (i=0; i<MAX_CHANNELS*2; ++i) {
-	for (j=0; j<CBANDS; ++j) {
-	    gfc->nb_1[i][j]=1e20;
-	}
 	for ( sb = 0; sb < SBMAX_l; sb++ ) {
 	    gfc->masking_next[0][i].en.l[sb] = 1e20;
 	    gfc->masking_next[1][i].en.l[sb] = 1e20;
