@@ -1142,6 +1142,13 @@ inline static FLOAT8 mask_add(FLOAT8 m1,FLOAT8 m2,int k,int b, lame_internal_fla
   return (m1+m2)*table1[i];
 }
 
+inline FLOAT8 NS_INTERP(FLOAT8 x, FLOAT8 y, FLOAT8 r)
+{
+    if(r==1.0) return x;              /* 99.7% of the time */
+    if(y!=0.0) return pow(x/y,r)*y;   /* rest of the time */
+    return 0.0;                       /* never happens */
+}
+
 int L3psycho_anal_ns( lame_global_flags * gfp,
                     const sample_t *buffer[2], int gr_out, 
                     FLOAT8 *ms_ratio,
@@ -1495,23 +1502,20 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 
 	/****   convolve the partitioned energy with the spreading function   ****/
 
-	ecb = 0;
-
 #if 1
-	for ( k = gfc->s3ind[b][0]; k <= gfc->s3ind[b][1]; k++ )
+	k = gfc->s3ind[b][0];
+	ecb = gfc->s3_ll[kk++] * eb2[k];
+	for ( k = k+1; k <= gfc->s3ind[b][1]; k++ )
 	  {
 	    ecb = mask_add(ecb,gfc->s3_ll[kk++] * eb2[k],k,k-b,gfc);
 	  }
-
 	ecb *= 0.158489319246111; // pow(10,-0.8)
-#endif
-
-#if 0
+#else
+	ecb = 0;
 	for ( k = gfc->s3ind[b][0]; k <= gfc->s3ind[b][1]; k++ )
 	  {
 	    ecb += gfc->s3_ll[kk++] * eb2[k];
 	  }
-
 	ecb *= 0.223872113856834; // pow(10,-0.65);
 #endif
 
@@ -1528,8 +1532,6 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	/* chn=0,1   L and R channels
 	   chn=2,3   S and M channels.  
 	*/
-
-#define NS_INTERP(x,y,r) (pow((x),(r))*pow((y),1-(r)))
 
 	if (gfc->blocktype_old[chn>1 ? chn-2 : chn] == SHORT_TYPE )
 	  thr[b] = ecb; /* Min(ecb, rpelev*gfc->nb_1[chn][b]); */
@@ -2478,7 +2480,7 @@ int psymodel_init(lame_global_flags *gfp)
     k = 0;
     for (i=0; i<gfc->npart_l; i++) {
       for (j = gfc->s3ind[i][0]; j <= gfc->s3ind[i][1]; j++) {
-	gfc->s3_ll[k++] = s3_l[i][j];
+	  gfc->s3_ll[k++] = s3_l[i][j];
       }
     }
 
