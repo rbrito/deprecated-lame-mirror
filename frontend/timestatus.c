@@ -211,7 +211,7 @@ void decoder_progress ( const lame_global_flags* const gfp, const mp3data_struct
         last = curr;
     } else {
         fprintf ( stderr, "         " );
-        last = 0;
+	//        last = 0;
     }
 //    fprintf ( stderr, "%s", Console_IO.str_clreoln );
       fprintf ( stderr, "        \b\b\b\b\b\b\b\b" );

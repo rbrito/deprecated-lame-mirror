@@ -55,10 +55,10 @@ int L3para_read( lame_global_flags *gfp,
 		  FLOAT8 s3_l[CBANDS][CBANDS],
 		  FLOAT8 s3_s[CBANDS][CBANDS],
 		  FLOAT8 SNR_s[CBANDS],
-		  int bu_l[SBPSY_l], int bo_l[SBPSY_l],
-		  FLOAT8 w1_l[SBPSY_l], FLOAT8 w2_l[SBPSY_l],
-		  int bu_s[SBPSY_s], int bo_s[SBPSY_s],
-		  FLOAT8 w1_s[SBPSY_s], FLOAT8 w2_s[SBPSY_s],
+		  int bu_l[SBMAX_l], int bo_l[SBMAX_l],
+		  FLOAT8 w1_l[SBMAX_l], FLOAT8 w2_l[SBMAX_l],
+		  int bu_s[SBMAX_s], int bo_s[SBMAX_s],
+		  FLOAT8 w1_s[SBMAX_s], FLOAT8 w2_s[SBMAX_s],
 		  int *, int *, int *, int *);
 
 /* addition of simultaneous masking   Naoki Shibata 2000/7 */
