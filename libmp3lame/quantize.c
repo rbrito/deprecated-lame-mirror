@@ -441,12 +441,24 @@ quantize_ISO(lame_t gfc, gr_info *gi)
 	    (fi++)->i = (int)(*xp++ * istep + ROUNDFAC);
 #endif
 	}
-	istep = (FLOAT)(1.0-ROUNDFAC) / istep;
 	xend = &xr34[gi->count1];
+#ifdef USE_IEEE754_HACK
+	{
+	    fi_union thre;
+	    thre.f = (FLOAT)(1.0-ROUNDFAC) / istep;
+	    while (xp < xend) {
+		(fi++)->i = ((int*)xp)[0] > thre.i ? 1:0;
+		(fi++)->i = ((int*)xp)[1] > thre.i ? 1:0;
+		xp += 2;
+	    }
+	}
+#else
+	istep = (FLOAT)(1.0-ROUNDFAC) / istep;
 	while (xp < xend) {
 	    (fi++)->i = *xp++ > istep ? 1:0;
 	    (fi++)->i = *xp++ > istep ? 1:0;
 	}
+#endif
     }
     if (gfc->noise_shaping_amp >= 3) {
 	istep = (FLOAT)0.634521682242439 / IPOW20(gi->global_gain);
