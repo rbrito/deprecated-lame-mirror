@@ -548,7 +548,7 @@ static void
 trancate_smallspectrums(lame_t gfc, gr_info* const gi, const FLOAT* const xmin)
 {
     int sfb, j;
-    FLOAT distort[SFBMAX], work[576]; /* 576 is too much */
+    FLOAT distort[SFBMAX], work[192]; /* 192 is the width of the widest scale factor band(sfb 21 of 48kHz) */
     assert(gi->psymax != 0);
 
     for (sfb = 0; sfb < gi->psymax; sfb++) {
