@@ -22,10 +22,12 @@
 #ifndef LAME_H_INCLUDED
 #define LAME_H_INCLUDED
 
+/* Please regularly increment version number, for alpha/beta versions at least once a week */
+
 #define LAME_MAJOR_VERSION	3	/* Major version number */
 #define LAME_MINOR_VERSION	87	/* Minor version number */
-#define LAME_ALPHAVERSION	1	/* Set number if this is an alpha version, otherwise zero */
-#define LAME_BETAVERSION        0	/* Set number if this is a beta version, otherwise zero */
+#define LAME_ALPHAVERSION	2	/* Patch level of alpha version, otherwise zero */
+#define LAME_BETAVERSION        0	/* Patch level of beta  version, otherwise zero */
 
 #define PSY_MAJOR_VERSION	0	/* Major version number */
 #define PSY_MINOR_VERSION	80	/* Minor version number */
@@ -38,6 +40,7 @@
 #define MP3X_BETAVERSION	0	/* Set number if this is a beta version, otherwise zero */
 
 #include "machine.h"
+
 void lame_print_version(FILE *);
 char* get_lame_version(void);		/* returns lame version number string */
 char* get_psy_version(void);		/* returns psy model version number string */

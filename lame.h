@@ -219,10 +219,10 @@ int lame_init(lame_global_flags *);
 /* OPTIONAL: call this to print an error with a brief command line usage guide and quit 
  * only supported if libmp3lame compiled with LAMEPARSE defined.  
  */
-void lame_usage(lame_global_flags *, char *);
+void lame_usage(lame_global_flags *, const char *);
 
 /* OPTIONAL: call this to print a command line interface usage guide and quit   */
-void lame_help(lame_global_flags *, char *);
+void lame_help(lame_global_flags *, const char *);
 
 /* OPTIONAL: get the version number, in a string. of the form:  "3.63 (beta)" or 
    just "3.63".  Max allows length is 20 characters  */

@@ -1,3 +1,4 @@
+#include <assert.h>
 #include "util.h"
 #include "id3tag.h"
 #include "get_audio.h"
@@ -15,7 +16,7 @@
 *
 ************************************************************************/
 
-void lame_print_license(lame_global_flags *gfp,char *name)  /* print version,license & exit */
+void lame_print_license ( lame_global_flags* gfp, const char* ProgramName )  /* print version,license & exit */
 {
   LAME_PRINT_VERSION1();
   PRINTF1("\n");
@@ -34,15 +35,15 @@ void lame_print_license(lame_global_flags *gfp,char *name)  /* print version,lic
 *
 ************************************************************************/
 
-void lame_usage(lame_global_flags *gfp,char *name)  /* print syntax & exit */
+void lame_usage ( lame_global_flags* gfp, const char* ProgramName )  /* print syntax & exit */
 {
   LAME_PRINT_VERSION2();
   PRINTF2("\n");
-  PRINTF2("USAGE   :  %s [options] <infile> [outfile]\n",name);
+  PRINTF2("USAGE   :  %s [options] <infile> [outfile]\n", ProgramName );
   PRINTF2("\n<infile> and/or <outfile> can be \"-\", which means stdin/stdout.\n");
   PRINTF2("\n");
-  PRINTF2("Try \"%s --help\"     for more information\n",name);
-  PRINTF2(" or \"%s --longhelp\" for a complete options list\n",name);
+  PRINTF2("Try \"%s --help\"     for more information\n", ProgramName );
+  PRINTF2(" or \"%s --longhelp\" for a complete options list\n", ProgramName );
   LAME_ERROR_EXIT();
 }
 
@@ -57,11 +58,11 @@ void lame_usage(lame_global_flags *gfp,char *name)  /* print syntax & exit */
 *
 ************************************************************************/
 
-void lame_short_help(lame_global_flags *gfp,char *name)  /* print syntax & exit */
+void lame_short_help ( lame_global_flags* gfp, const char* ProgramName )  /* print syntax & exit */
 {
   LAME_PRINT_VERSION1(); /* prints two lines */
   PRINTF1("\n");
-  PRINTF1("USAGE       :  %s [options] <infile> [outfile]\n",name);
+  PRINTF1("USAGE       :  %s [options] <infile> [outfile]\n", ProgramName );
   PRINTF1("\n<infile> and/or <outfile> can be \"-\", which means stdin/stdout.\n");
   PRINTF1("\n");
   PRINTF1("RECOMMENDED :  ");
@@ -94,11 +95,11 @@ void lame_short_help(lame_global_flags *gfp,char *name)  /* print syntax & exit 
 *
 ************************************************************************/
 
-void lame_help(lame_global_flags *gfp,char *name)  /* print syntax & exit */
+void lame_help ( lame_global_flags* gfp, const char* ProgramName )  /* print syntax & exit */
 {
   LAME_PRINT_VERSION1();
   PRINTF1("\n");
-  PRINTF1("USAGE   :  %s [options] <infile> [outfile]\n",name);
+  PRINTF1("USAGE   :  %s [options] <infile> [outfile]\n", ProgramName );
   PRINTF1("\n<infile> and/or <outfile> can be \"-\", which means stdin/stdout.\n");
   PRINTF1("\n");
   PRINTF1("RECOMMENDED :  ");
@@ -214,44 +215,155 @@ void lame_help(lame_global_flags *gfp,char *name)  /* print syntax & exit */
 *
 ************************************************************************/
 
-void lame_presets_info(lame_global_flags *gfp,char *name)  /* print syntax & exit */
-{
-  LAME_PRINT_VERSION1();
-  PRINTF1("\n");
-  PRINTF1("Presets are some shortcuts for common settings.\n");
-  PRINTF1("They can be combined with -v if you want VBR MP3s.\n");
-  PRINTF1("\n");
-  PRINTF1("                 phone   sw     am    fm  voice radio  tape  hifi   cd studio\n");
-  PRINTF1("=============================================================================\n");
-  PRINTF1("--resample        8.0  11.025 16.0  22.05 32.0                               \n");
-  PRINTF1("--lowpass         3.2   4.800  7.2   9.95 12.3  15.0  18.5  20.24            \n");
-  PRINTF1("--lowpass-width   1.0   0.500  0.5   0.88  2.0   0.0   2.0   2.20            \n");
-  PRINTF1("--noshort         yes                      yes                               \n");
-  PRINTF1("-h                                                           yes   yes   yes \n");
-  PRINTF1("-m                  m     m      m     j     m     j     j     j     s     s \n");
-  PRINTF1("-b                 16    24     32    64    56   112   128   160   192   256 \n");
-  PRINTF1("-- PLUS WITH -v -------------------------------------------------------------\n");
-  PRINTF1("-V                  6     5      5     5     4     4     4     3     2     0 \n");
-  PRINTF1("-b                  8     8     16    24    32    64    96   112   128   160 \n");
-  PRINTF1("-B                 56    64    128   160   128   256   320   320   320   320 \n");
-  PRINTF1("\n");
-  PRINTF1("EXAMPLES:\n");
-  PRINTF1(" a) --preset fm\n");
-  PRINTF1("    equals: --resample 22.05 --lowpass 9.95 --lowpass-width 0.88 -mj -b 64\n");
-  PRINTF1(" b) -v --preset studio\n");
-  PRINTF1("    equals: -h -m s -V 0 -b 160 -B 320\n");
-  PRINTF1("\n");
 
-  LAME_NORMAL_EXIT();
+typedef struct {
+    const char* name;
+    long        resample;
+    short       lowpass_freq;
+    short       lowpass_width;
+    signed char no_short_blocks;
+    signed char quality;
+    signed char mode;
+    short       cbr;
+    signed char vbr_mode;
+    short       vbr_min;
+    short       vbr_max;
+} preset_t;
+
+
+preset_t Presets [] = {
+   // name     fs      fo     dfo shrt qual  mode               cbr  vbr_mode/min/max
+    { "phone" ,  8000,  3400,    0,  1,  5, MPG_MD_MONO        ,  16,  6,   8,  56 },
+    { "sw"    , 11025,  4800,  500,  0,  5, MPG_MD_MONO        ,  24,  5,   8,  64 },
+    { "am"    , 16000,  7200,  500,  0,  5, MPG_MD_MONO        ,  32,  5,  16, 128 },
+    { "fm"    , 22050,  9950,  880,  0,  5, MPG_MD_JOINT_STEREO,  64,  5,  24, 160 },
+    { "voice" , 32000, 12300, 2000,  1,  5, MPG_MD_MONO        ,  56,  4,  32, 128 },
+    { "radio" ,    -1, 15000,    0,  0,  5, MPG_MD_JOINT_STEREO, 112,  4,  64, 256 },
+    { "tape"  ,    -1, 18500, 2000,  0,  5, MPG_MD_JOINT_STEREO, 128,  4,  96, 128 },
+    { "hifi"  ,    -1, 20240, 2200,  0,  2, MPG_MD_JOINT_STEREO, 160,  3, 112, 320 },
+    { "cd"    ,    -1,    -1,   -1,  0,  2, MPG_MD_STEREO      , 192,  2, 128, 320 },
+    { "studio",    -1,    -1,   -1,  0,  2, MPG_MD_STEREO      , 256,  0, 160, 320 },
+};
+
+
+void lame_presets_info ( lame_global_flags* gfp, const char* ProgramName )  /* print syntax & exit */
+{
+    size_t  i;
+
+    PRINTF1 ("\n");    
+    LAME_PRINT_VERSION1 ();
+    PRINTF1 ("\n");
+    PRINTF1 ("Presets are some shortcuts for common settings.\n");
+    PRINTF1 ("They can be combined with -v if you want VBR MP3s.\n");
+    
+    PRINTF1 ("\n                ");
+    for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
+        PRINTF1 ( " %-5s", Presets[i].name );
+    PRINTF1 ("\n================");
+    for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
+        PRINTF1 ( "======" );
+    PRINTF1 ("\n--resample      ");
+    for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
+        if ( Presets[i].resample < 0 )
+            PRINTF1 ( "      " );
+        else
+            PRINTF1 ( "%6lu",  Presets[i].resample );
+    PRINTF1 ("\n--lowpass       ");
+    for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
+        if ( Presets[i].lowpass_freq < 0 )
+            PRINTF1 ( "      " );
+        else
+            PRINTF1 ( "%6u",  Presets[i].lowpass_freq );
+    PRINTF1 ("\n--lowpass-width ");
+    for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
+        if ( Presets[i].lowpass_width < 0 )
+            PRINTF1 ( "      " );
+        else
+            PRINTF1 ( "%6u",  Presets[i].lowpass_width );
+    PRINTF1 ("\n--noshort       ");
+    for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
+        switch ( Presets[i].no_short_blocks ) {
+        case  1: PRINTF1 ( "   yes" ); break;
+        case  0: PRINTF1 ( "   no " ); break;
+        case -1: PRINTF1 ( "      " ); break;
+        default: assert (0);           break;
+        }
+    PRINTF1 ("\n                ");
+    for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
+        switch ( Presets[i].mode ) {
+        case MPG_MD_MONO:         PRINTF1 ("   -mm"); break;
+        case MPG_MD_JOINT_STEREO: PRINTF1 ("   -mj"); break;
+        case MPG_MD_STEREO:       PRINTF1 ("   -ms"); break;
+        case -1:                  PRINTF1 ("      "); break;
+        default:                  assert (0);         break;
+        }
+    PRINTF1 ("\n                ");
+    for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
+        switch ( Presets[i].quality ) {
+	case  2: PRINTF1 ("   -h "); break;
+	case  5: PRINTF1 ("      "); break;
+	case  7: PRINTF1 ("   -f "); break;
+	default: assert (0);         break;
+    }
+    PRINTF1 ("\n-b              ");
+    for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
+        PRINTF1 ( "%6u", Presets[i].cbr );
+    PRINTF1 ("\n-- PLUS WITH -v ");
+    for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
+        PRINTF1 ( "------" );
+    PRINTF1 ("\n-v              ");
+    for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
+        PRINTF1 ( "%6u", Presets[i].vbr_mode );
+    PRINTF1 ("\n-b              ");
+    for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
+        PRINTF1 ( "%6u", Presets[i].vbr_min );
+    PRINTF1 ("\n-B              ");
+    for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
+        PRINTF1 ( "%6u", Presets[i].vbr_max );
+    PRINTF1 ("\n----------------");
+    for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++)
+        PRINTF1 ( "------" );
+  
+    PRINTF1 ("\nEXAMPLES:\n");
+    PRINTF1 (" a) --preset fm\n");
+    PRINTF1 ("    equals: --resample 22.05 --lowpass 9.95 --lowpass-width 0.88 -mj -b64\n");
+    PRINTF1 (" b) -v --preset studio\n");
+    PRINTF1 ("    equals: -h -ms -V0 -b160 -B320\n");
+
+    LAME_NORMAL_EXIT ();
 }
 
+
+void lame_presets_setup ( lame_global_flags* gfp, const char* preset_name, const char* ProgramName )
+{
+    size_t  i;
+
+    for ( i = 0; i < sizeof(Presets)/sizeof(*Presets); i++ )
+        if ( 0 == strcmp (preset_name, Presets[i].name ) ) {
+            if ( Presets[i].resample >= 0 )
+	        gfp -> out_samplerate   = Presets[i].resample;
+	    gfp -> lowpassfreq          = Presets[i].lowpass_freq;
+	    gfp -> lowpasswidth         = Presets[i].lowpass_width;
+	    gfp -> no_short_blocks      = Presets[i].no_short_blocks;
+	    gfp -> quality              = Presets[i].quality;
+	    gfp -> mode                 = Presets[i].mode;
+	    gfp -> brate                = Presets[i].cbr;
+	    gfp -> VBR_q                = Presets[i].vbr_mode;
+	    gfp -> VBR_min_bitrate_kbps = Presets[i].vbr_min;
+	    gfp -> VBR_max_bitrate_kbps = Presets[i].vbr_max;
+	    gfp -> mode_fixed           = 1; 
+	    return;
+	}
+
+    lame_presets_info ( gfp, ProgramName );
+    assert (0);
+}
 
 
 static void genre_list_handler(int num,const char *name,void *cookie)
 {
   PRINTF1("%3d %s\n",num,name);
 }
-
 
 
 /************************************************************************
@@ -274,7 +386,7 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
   int   err = 0, i = 0;
   int autoconvert=0;
   int user_quality=-1;
-  char *programName = argv[0]; 
+  const char* ProgramName = argv[0]; 
 
   gfp->inPath[0] = '\0';   
   gfp->outPath[0] = '\0';
@@ -518,183 +630,46 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	   */
 	else if (strcmp(token, "version") ==0
 	       ||strcmp(token, "license")==0){
-	  lame_print_license(gfp,programName);  /* doesn't return */
+	  lame_print_license(gfp,ProgramName);  /* doesn't return */
 	}
 	else if (strcmp(token, "help") ==0
 	       ||strcmp(token, "usage")==0){
-	  lame_short_help(gfp,programName);  /* doesn't return */
+	  lame_short_help(gfp,ProgramName);  /* doesn't return */
 	}
 	else if (strcmp(token, "longhelp") ==0){
-	  lame_help(gfp,programName);  /* doesn't return */
+	  lame_help(gfp,ProgramName);  /* doesn't return */
 	}
-	else if (strcmp(token, "preset")==0) {
-	  argUsed=1;
-	  if (strcmp(nextArg,"phone")==0)
-	  { /* when making changes, please update help text too */
-	    gfp->out_samplerate =  8000;
-	    gfp->lowpassfreq=3200;
-	    gfp->lowpasswidth=1000;
-	    gfp->no_short_blocks=1;
-	    gfp->quality = 5;
-	    gfp->mode = MPG_MD_MONO; 
-	    gfp->mode_fixed = 1; 
-	    gfp->brate = 16; 
-	    gfp->VBR_q=6;
-	    gfp->VBR_min_bitrate_kbps=8;
-	    gfp->VBR_max_bitrate_kbps=56;
-	  }
-	  else if (strcmp(nextArg,"sw")==0)
-	  { /* when making changes, please update help text too */
-	    gfp->out_samplerate =  11025;
-	    gfp->lowpassfreq=4800;
-	    gfp->lowpasswidth=500;
-	    gfp->quality = 5;
-	    gfp->mode = MPG_MD_MONO; 
-	    gfp->mode_fixed = 1; 
-	    gfp->brate = 24; 
-	    gfp->VBR_q=5;
-	    gfp->VBR_min_bitrate_kbps=8;
-	    gfp->VBR_max_bitrate_kbps=64;
-	  }
-	  else if (strcmp(nextArg,"am")==0)
-	  { /* when making changes, please update help text too */
-	    gfp->out_samplerate =  16000;
-	    gfp->lowpassfreq=7200;
-	    gfp->lowpasswidth=500;
-	    gfp->quality = 5;
-	    gfp->mode = MPG_MD_MONO; 
-	    gfp->mode_fixed = 1; 
-	    gfp->brate = 32; 
-	    gfp->VBR_q=5;
-	    gfp->VBR_min_bitrate_kbps=16;
-	    gfp->VBR_max_bitrate_kbps=128;
-	  }
-	  else if (strcmp(nextArg,"fm")==0)
-	  { /* when making changes, please update help text too */
-	    gfp->out_samplerate =  22050; 
-            gfp->lowpassfreq=9950;
-            gfp->lowpasswidth=880;
-	    gfp->quality = 5;
-	    gfp->mode = MPG_MD_JOINT_STEREO; 
-	    gfp->mode_fixed = 1; 
-	    gfp->brate = 64; 
-	    gfp->VBR_q=5;
-	    gfp->VBR_min_bitrate_kbps=24;
-	    gfp->VBR_max_bitrate_kbps=160;
-	  }
-	  else if (strcmp(nextArg,"voice")==0)
-	  { /* when making changes, please update help text too */
-	    gfp->out_samplerate =  32000; 
-	    gfp->lowpassfreq=12300;
-	    gfp->lowpasswidth=2000;
-	    gfp->no_short_blocks=1;
-	    gfp->quality = 5;
-	    gfp->mode = MPG_MD_MONO; 
-	    gfp->mode_fixed = 1; 
-	    gfp->brate = 56; 
-	    gfp->VBR_q=4;
-	    gfp->VBR_min_bitrate_kbps=32;
-	    gfp->VBR_max_bitrate_kbps=128;
-	  }
-	  else if (strcmp(nextArg,"radio")==0)
-	  { /* when making changes, please update help text too */
-            gfp->lowpassfreq=15000;
-            gfp->lowpasswidth=0;
-	    gfp->quality = 5;
-	    gfp->mode = MPG_MD_JOINT_STEREO; 
-	    gfp->mode_fixed = 1; 
-	    gfp->brate = 112; 
-	    gfp->VBR_q=4;
-	    gfp->VBR_min_bitrate_kbps=64;
-	    gfp->VBR_max_bitrate_kbps=256;
-	  }
-	  else if (strcmp(nextArg,"tape")==0)
-	  { /* when making changes, please update help text too */
-            gfp->lowpassfreq=18500;
-            gfp->lowpasswidth=2000;
-	    gfp->quality = 5;
-	    gfp->mode = MPG_MD_JOINT_STEREO; 
-	    gfp->mode_fixed = 1; 
-	    gfp->brate = 128; 
-	    gfp->VBR_q=4;
-	    gfp->VBR_min_bitrate_kbps=96;
-	    gfp->VBR_max_bitrate_kbps=320;
-	  }
-	  else if (strcmp(nextArg,"hifi")==0)
-	  { /* when making changes, please update help text too */
-            gfp->lowpassfreq=20240;
-            gfp->lowpasswidth=2200;
-	    gfp->quality = 2;
-	    gfp->mode = MPG_MD_JOINT_STEREO; 
-	    gfp->mode_fixed = 1; 
-	    gfp->brate = 160;            
-	    gfp->VBR_q=3;
-	    gfp->VBR_min_bitrate_kbps=112;
-	    gfp->VBR_max_bitrate_kbps=320;
-	  }
-	  else if (strcmp(nextArg,"cd")==0)
-	  { /* when making changes, please update help text too */
-	    gfp->lowpassfreq=-1;
-            gfp->highpassfreq=-1;
-	    gfp->quality = 2;
-	    gfp->mode = MPG_MD_STEREO; 
-	    gfp->mode_fixed = 1; 
-	    gfp->brate = 192;  
-	    gfp->VBR_q=2;
-	    gfp->VBR_min_bitrate_kbps=128;
-	    gfp->VBR_max_bitrate_kbps=320;
-	  }
-	  else if (strcmp(nextArg,"studio")==0)
-	  { /* when making changes, please update help text too */
-	    gfp->lowpassfreq=-1;
-            gfp->highpassfreq=-1;
-	    gfp->quality = 2; 
-	    gfp->mode = MPG_MD_STEREO; 
-	    gfp->mode_fixed = 1; 
-	    gfp->brate = 256; 
-	    gfp->VBR_q=0;
-	    gfp->VBR_min_bitrate_kbps=160;
-	    gfp->VBR_max_bitrate_kbps=320;
-	  }
-	  else if (strcmp(nextArg,"help")==0)
-	  {
-	    lame_presets_info(gfp,programName);  /* doesn't return */
-	  }
-	  else
-	    {
-	      ERRORF("%s: --preset type, type must be phone, voice, fm, tape, hifi, cd or studio, not %s\n",
-		      programName, nextArg);
-	      LAME_ERROR_EXIT();
-	    }
+	else if (strcmp(token, "preset") == 0) {
+	  argUsed = 1;
+	  lame_presets_setup ( gfp, nextArg, ProgramName );
 	} /* --preset */
 	else
 	  {
 	    ERRORF("%s: unrec option --%s\n",
-		    programName, token);
+		    ProgramName, token);
 	  }
 	i += argUsed;
 	
-      } else  while( (c = *token++) ) {
-	if(*token ) arg = token;
-	else                             arg = nextArg;
-	switch(c) {
-	case 'm':        argUsed = 1;   gfp->mode_fixed = 1;
-	  if (*arg == 's')
-	    { gfp->mode = MPG_MD_STEREO; }
-	  else if (*arg == 'd')
-	    { gfp->mode = MPG_MD_DUAL_CHANNEL; }
-	  else if (*arg == 'j')
-	    { gfp->mode = MPG_MD_JOINT_STEREO; }
-	  else if (*arg == 'f')
-	    { gfp->mode = MPG_MD_JOINT_STEREO; gfp->force_ms=1; }
-	  else if (*arg == 'm')
-	    { gfp->mode = MPG_MD_MONO; }
-	  else {
-	    ERRORF("%s: -m mode must be s/d/j/f/m not %s\n",
-		    programName, arg);
-	    err = 1;
-	  }
-	  break;
+      } else  
+        while ( (c = *token++) != '\0' ) {
+            arg = *token ? token : nextArg;
+	    switch (c) {
+	    case 'm':        
+	        argUsed           = 1;   
+	        gfp -> mode_fixed = 1;
+	    
+	        switch ( *arg ) {
+	        case 's': gfp -> mode = MPG_MD_STEREO;       break;
+	        case 'd': gfp -> mode = MPG_MD_DUAL_CHANNEL; break;
+	        case 'f': gfp -> force_ms = 1;               /* fall through */
+	        case 'j': gfp -> mode = MPG_MD_JOINT_STEREO; break;
+	        case 'm': gfp -> mode = MPG_MD_MONO;         break;
+	        default : ERRORF ("%s: -m mode must be s/d/j/f/m not %s\n", ProgramName, arg);
+	                  err = 1;
+	                  break;
+	        }
+	        break;
+	    
 	case 'V':        argUsed = 1;
           /* to change VBR default look in lame.h */
 	  if (gfp->VBR == vbr_off) gfp->VBR = vbr_default;  
@@ -784,22 +759,24 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	  gfp->gtkflag = TRUE;
 	  break;
 
-	case 'e':        argUsed = 1;
-	  if (*arg == 'n')                    gfp->emphasis = 0;
-	  else if (*arg == '5')               gfp->emphasis = 1;
-	  else if (*arg == 'c')               gfp->emphasis = 3;
-	  else {
-	    ERRORF("%s: -e emp must be n/5/c not %s\n",
-		    programName, arg);
-	    err = 1;
+	case 'e':        
+	  argUsed = 1;
+	  
+	  switch (*arg) {
+	      case 'n': gfp -> emphasis = 0; break;
+	      case '5': gfp -> emphasis = 1; break;
+	      case 'c': gfp -> emphasis = 3; break;
+	      default : ERRORF ("%s: -e emp must be n/5/c not %s\n", ProgramName, arg );
+	                err = 1;
+	                break;
 	  }
 	  break;
 	case 'c':   gfp->copyright = 1; break;
 	case 'o':   gfp->original  = 0; break;
 	
-	case '?':   lame_help(gfp,programName);  /* doesn't return */
+	case '?':   lame_help(gfp,ProgramName);  /* doesn't return */
 	default:    ERRORF("%s: unrec option %c\n",
-				programName, c);
+				ProgramName, c);
 	err = 1; break;
 	}
 	if(argUsed) {
@@ -812,13 +789,13 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
       if(gfp->inPath[0] == '\0')       strncpy(gfp->inPath, argv[i], MAX_NAME_SIZE);
       else if(gfp->outPath[0] == '\0') strncpy(gfp->outPath, argv[i], MAX_NAME_SIZE);
       else {
-	ERRORF("%s: excess arg %s\n", programName, argv[i]);
+	ERRORF("%s: excess arg %s\n", ProgramName, argv[i]);
 	err = 1;
       }
     }
   }  /* loop over args */
 
-  if(err || gfp->inPath[0] == '\0') lame_usage(gfp,programName);  /* never returns */
+  if(err || gfp->inPath[0] == '\0') lame_usage(gfp,ProgramName);  /* never returns */
   if (gfp->inPath[0]=='-') gfp->silent=1;  /* turn off status - it's broken for stdin */
   if(gfp->outPath[0] == '\0') {
     if (gfp->inPath[0]=='-') {
@@ -898,6 +875,3 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
   }
 
 }
-
-
-
