@@ -443,8 +443,22 @@ int  lame_encode_mp3_frame (				/* Output */
     }
 
     /* channel conversion */
+    if (gfp->experimentalX) {
+	/* narrown_stereo */
+	FLOAT mix_ratio = gfp->experimentalX/128.0;
+	int i;
+	for (gr = 0; gr < gfc->mode_gr; gr++) {
+	    gr_info *gi = &gfc->l3_side.tt[gr][0];
+	    for (i = 0; i < 576; i++) {
+		FLOAT l = gi[0].xr[i];
+		FLOAT r = gi[1].xr[i];
+		gi[0].xr[i] = l-(l-r)*mix_ratio;
+		gi[1].xr[i] = r+(l-r)*mix_ratio;
+	    }
+	}
+    }
     if (gfc->mode_ext & MPG_MD_MS_LR) {
-	/* convert from L/R <-> Mid/Side */
+	/* convert from L/R -> Mid/Side */
 	for (gr = 0; gr < gfc->mode_gr; gr++) {
 	    gr_info *gi = &gfc->l3_side.tt[gr][0];
 	    int sfb = gfc->l3_side.is_start_sfb_l[gr];

@@ -74,6 +74,10 @@ on_pe(
     int     max_bits;  /* maximum allowed bits for this granule */
     int     ch;
 
+    if (gfc->gfp->experimentalX && gfc->mode_ext & MPG_MD_MS_LR)
+	/* reduce side channel bitrate */
+	ratio[1].pe *= 1.0-gfc->gfp->experimentalX/128;
+
     /* allocate targ_bits for granule */
     ResvMaxBits( gfc, mean_bits, &tbits, &extra_bits);
 
