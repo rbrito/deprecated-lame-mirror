@@ -176,9 +176,7 @@ updateStats( lame_internal_flags * const gfc )
 
 
 static void
-init_gr_info(
-    lame_internal_flags *gfc,
-    gr_info *const cod_info)
+init_gr_info(lame_internal_flags *gfc, gr_info *const cod_info)
 {
     int sfb, j;
     /*  initialize fresh cod_info
@@ -195,7 +193,7 @@ init_gr_info(
     cod_info->subblock_gain[0]    = 0;
     cod_info->subblock_gain[1]    = 0;
     cod_info->subblock_gain[2]    = 0;
-    cod_info->subblock_gain[3]    = 0;    // this one is always 0
+    cod_info->subblock_gain[3]    = 0;    /* this one is always 0 */
     cod_info->region0_count       = 0;
     cod_info->region1_count       = 0;
     cod_info->preflag             = 0;
@@ -211,7 +209,7 @@ init_gr_info(
     for (sfb = 0; sfb < SBMAX_l; sfb++) {
 	cod_info->width[sfb]
 	    = gfc->scalefac_band.l[sfb+1] - gfc->scalefac_band.l[sfb];
-	cod_info->window[sfb] = 3; // which is always 0.
+	cod_info->window[sfb] = 3; /* which is always 0. */
     }
 
     if (cod_info->block_type != NORM_TYPE) {
@@ -327,12 +325,12 @@ FFT's                    <---------1024---------->
 
 typedef FLOAT chgrdata[2][2];
 
-int  lame_encode_mp3_frame (				// Output
-	lame_global_flags* const  gfp,			// Context
-	sample_t*                 inbuf_l,              // Input
-	sample_t*                 inbuf_r,              // Input
-	unsigned char*            mp3buf, 		// Output
-	int                    mp3buf_size )		// Output
+int  lame_encode_mp3_frame (				/* Output */
+	lame_global_flags* const  gfp,			/* Context */
+	sample_t*                 inbuf_l,              /* Input */
+	sample_t*                 inbuf_r,              /* Input */
+	unsigned char*            mp3buf, 		/* Output */
+	int                    mp3buf_size )		/* Output */
 {
     int mp3count;
     III_psy_ratio masking[2][2];  /*pointer to selected maskings*/
