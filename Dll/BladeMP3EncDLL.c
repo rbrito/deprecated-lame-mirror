@@ -37,22 +37,20 @@
 
 // lame_enc DLL version number
 const int MAJORVERSION = 1;
-const int MINORVERSION = 30;
+const int MINORVERSION = 31;
 
 
 // Local variables
 static DWORD				dwSampleBufferSize=0;
 static HANDLE				gs_hModule=NULL;
 static BOOL					gs_bLogFile=FALSE;
-static lame_global_flags*	gfp = NULL;
+static lame_global_flags*	gfp_save = NULL;
 
 // Local function prototypes
-static void dump_config( );
+static void dump_config( 	lame_global_flags*	gfp );
 static void DebugPrintf( const char* pzFormat, ... );
 static void DispErr( LPSTR strErr );
 static void PresetOptions( lame_global_flags *gfp, LONG myPreset );
-
-
 
 
 static void DebugPrintf(const char* pzFormat, ...)
@@ -295,12 +293,14 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 {
 	int actual_bitrate;
 //2001-12-18
-	int			nDllArgC=0;
-	BE_CONFIG		lameConfig = { 0, };
-	int			nInitReturn = 0;
+	int					nDllArgC = 0;
+	BE_CONFIG			lameConfig = { 0, };
+	int					nInitReturn = 0;
+	lame_global_flags*	gfp = NULL;
 
 	// Init the global flags structure
 	gfp = lame_init();
+	*phbeStream = (HBE_STREAM)gfp;
 
 	// clear out structure
 	memset(&lameConfig,0x00,CURRENT_STRUCT_SIZE);
@@ -345,11 +345,6 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 		// Copy the parameters
 		memcpy(&lameConfig,pbeConfig,pbeConfig->format.LHV1.dwStructSize);
 	}
-
-
-	// Not used, always assign stream 1
-	*phbeStream=1;
-
 
 	// --------------- Set arguments to LAME encoder -------------------------
 
@@ -624,7 +619,7 @@ now --vbr-mtrh is known as --vbr-new
 	*dwBufferSize=(DWORD)( 1.25 * ( *dwSamples / lame_get_num_channels( gfp ) ) + 7200 );
 
 	// For debugging purposes
-	dump_config( );
+	dump_config( gfp );
 
 	// Everything went OK, thus return SUCCESSFUL
 	return BE_ERR_SUCCESSFUL;
@@ -636,6 +631,9 @@ __declspec(dllexport) BE_ERR	beFlushNoGap(HBE_STREAM hbeStream, PBYTE pOutput, P
 {
 	int nOutputSamples = 0;
 
+	lame_global_flags*	gfp = (lame_global_flags*)hbeStream;
+
+	// Init the global flags structure
     nOutputSamples = lame_encode_flush_nogap( gfp, pOutput, LAME_MAXMP3BUFFER );
 
 	if ( nOutputSamples < 0 )
@@ -654,6 +652,8 @@ __declspec(dllexport) BE_ERR	beFlushNoGap(HBE_STREAM hbeStream, PBYTE pOutput, P
 __declspec(dllexport) BE_ERR	beDeinitStream(HBE_STREAM hbeStream, PBYTE pOutput, PDWORD pdwOutput)
 {
 	int nOutputSamples = 0;
+
+	lame_global_flags*	gfp = (lame_global_flags*)hbeStream;
 
     nOutputSamples = lame_encode_flush( gfp, pOutput, 0 );
 
@@ -681,6 +681,8 @@ __declspec(dllexport) BE_ERR	beDeinitStream(HBE_STREAM hbeStream, PBYTE pOutput,
 
 __declspec(dllexport) BE_ERR	beCloseStream(HBE_STREAM hbeStream)
 {
+	gfp_save = (lame_global_flags*)hbeStream;
+
 	// DeInit encoder
 	return BE_ERR_SUCCESSFUL;
 }
@@ -751,10 +753,10 @@ __declspec(dllexport) VOID		beVersion(PBE_VERSION pbeVersion)
 __declspec(dllexport) BE_ERR	beEncodeChunk(HBE_STREAM hbeStream, DWORD nSamples, 
 			 PSHORT pSamples, PBYTE pOutput, PDWORD pdwOutput)
 {
-
 	// Encode it
 	int dwSamples;
 	int	nOutputSamples = 0;
+	lame_global_flags*	gfp = (lame_global_flags*)hbeStream;
 
 	dwSamples = nSamples / lame_get_num_channels( gfp );
 
@@ -797,6 +799,7 @@ __declspec(dllexport) BE_ERR	beEncodeChunkFloatS16NI(HBE_STREAM hbeStream, DWORD
 			PFLOAT buffer_l, PFLOAT buffer_r, PBYTE pOutput, PDWORD pdwOutput)
 {
 	int nOutputSamples;
+	lame_global_flags*	gfp = (lame_global_flags*)hbeStream;
 
 	nOutputSamples = lame_encode_buffer_float(gfp,buffer_l,buffer_r,nSamples,pOutput,0);
 
@@ -813,11 +816,13 @@ __declspec(dllexport) BE_ERR	beEncodeChunkFloatS16NI(HBE_STREAM hbeStream, DWORD
 	return BE_ERR_SUCCESSFUL;
 }
 
-
-__declspec(dllexport) BE_ERR beWriteVBRHeader(LPCSTR lpszFileName)
+__declspec(dllexport) BE_ERR beWriteInfoTag( HBE_STREAM hbeStream,
+											 LPCSTR lpszFileName )
 {
 	FILE* fpStream	= NULL;
 	BE_ERR beResult	= BE_ERR_SUCCESSFUL;
+
+	lame_global_flags*	gfp = (lame_global_flags*)hbeStream;
 
 	if ( NULL != gfp )
 	{
@@ -855,6 +860,12 @@ __declspec(dllexport) BE_ERR beWriteVBRHeader(LPCSTR lpszFileName)
 	return beResult;
 }
 
+// for backwards compatiblity
+__declspec(dllexport) BE_ERR beWriteVBRHeader(LPCSTR lpszFileName)
+{
+	return beWriteInfoTag( (HBE_STREAM)gfp_save, lpszFileName );
+}
+
 
 BOOL APIENTRY DllMain(HANDLE hModule, 
                       DWORD  ul_reason_for_call, 
@@ -879,7 +890,7 @@ BOOL APIENTRY DllMain(HANDLE hModule,
 }
 
 
-static void dump_config( )
+static void dump_config( 	lame_global_flags*	gfp )
 {
 	DebugPrintf("\n\nLame_enc configuration options:\n");
 	DebugPrintf("==========================================================\n");

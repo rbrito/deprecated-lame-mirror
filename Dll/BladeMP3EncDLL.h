@@ -1,5 +1,5 @@
 /*
- * Blade Type of DLL Interface for MP2Enc.
+ * Blade Type of DLL Interface for Lame encoder
  *
  * Copyright (c) 1999-2002 A.L. Faber
  * Based on bladedll.h version 1.0 written by Jukka Poikolainen
@@ -233,6 +233,7 @@ typedef BE_ERR	(*BEDEINITSTREAM)			(HBE_STREAM, PBYTE, PDWORD);
 typedef BE_ERR	(*BECLOSESTREAM)			(HBE_STREAM);
 typedef VOID	(*BEVERSION)				(PBE_VERSION);
 typedef BE_ERR	(*BEWRITEVBRHEADER)			(LPCSTR);
+typedef BE_ERR	(*BEWRITEINFOTAG)			(HBE_STREAM, LPCSTR );
 
 #define	TEXT_BEINITSTREAM				"beInitStream"
 #define	TEXT_BEENCODECHUNK				"beEncodeChunk"
@@ -242,6 +243,8 @@ typedef BE_ERR	(*BEWRITEVBRHEADER)			(LPCSTR);
 #define	TEXT_BEVERSION					"beVersion"
 #define	TEXT_BEWRITEVBRHEADER			"beWriteVBRHeader"
 #define	TEXT_BEFLUSHNOGAP				"beFlushNoGap"
+#define	TEXT_BEWRITEINFOTAG				"beWriteInfoTag"
+
 
 #else
 
@@ -255,6 +258,7 @@ __declspec(dllexport) BE_ERR	beCloseStream(HBE_STREAM hbeStream);
 __declspec(dllexport) VOID		beVersion(PBE_VERSION pbeVersion);
 __declspec(dllexport) BE_ERR	beWriteVBRHeader(LPCSTR lpszFileName);
 __declspec(dllexport) BE_ERR	beFlushNoGap(HBE_STREAM hbeStream, PBYTE pOutput, PDWORD pdwOutput);
+__declspec(dllexport) BE_ERR	beWriteInfoTag( HBE_STREAM hbeStream, LPCSTR lpszFileName );
 
 #endif
 

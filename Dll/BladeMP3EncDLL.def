@@ -9,6 +9,7 @@ beVersion				@5
 beWriteVBRHeader		@6
 beEncodeChunkFloatS16NI	@7
 beFlushNoGap			@8
+beWriteInfoTag			@9
 
 lame_init						@100
 lame_close						@101
