@@ -49,7 +49,7 @@ static void exit_cleanup(void)
 }
 
 
-int lame_decode_initfile(const char *fullname, mp3data_struct *mp3data)
+int lame_decode_initfile(const char *fullname, mp3data_struct *mp3data, unsigned long *nsamp)
 {
 	mctrl.bs_access = NULL;
 
@@ -84,7 +84,7 @@ int lame_decode_initfile(const char *fullname, mp3data_struct *mp3data)
 	mp3data->stereo     = mstream->dec_channels;
 	mp3data->samplerate = mstream->dec_frequency;
 	mp3data->bitrate    = mstream->bitrate;
-	mp3data->nsamp      = (FLOAT)mstream->ms_duration/1000 * mstream->dec_frequency;
+	nsamp      = (FLOAT)mstream->ms_duration/1000 * mstream->dec_frequency;
 	mp3data->mode       = mstream->mode;
 	mp3data->mode_ext   = MPG_MD_LR_LR;	/* mpega.library doesn't supply this info! :( */
 
@@ -105,7 +105,6 @@ int lame_decode_fromfile(FILE *fd, short pcm_l[], short pcm_r[], mp3data_struct 
 	mp3data->stereo     = mstream->dec_channels;
 	mp3data->samplerate = mstream->dec_frequency;
 	mp3data->bitrate    = mstream->bitrate;
-	mp3data->nsamp      = (FLOAT)mstream->ms_duration/1000 * mstream->dec_frequency;
 	mp3data->mode       = mstream->mode;
 	mp3data->mode_ext   = MPG_MD_LR_LR;	/* mpega.library doesn't supply this info! :( */
 

@@ -272,7 +272,7 @@ void timestatus_klemm(lame_global_flags *gfp)
 
 /* these functions are used in get_audio.c */
 
-void decoder_progress ( lame_global_flags* gfp )
+void decoder_progress ( lame_global_flags* gfp, mp3data_struct *mp3data )
 {
     lame_internal_flags *gfc=gfp->internal_flags;
 #if 0
@@ -306,10 +306,11 @@ void decoder_progress ( lame_global_flags* gfp )
     last_kbps  = gfp -> brate;
 #endif
 
-  fprintf(stderr, "\rFrame#%6lu/%-6lu %3u kbps        ", gfp -> frameNum, gfp -> totalframes, gfp -> brate );
-  if (gfp->mode==MPG_MD_JOINT_STEREO)
+  fprintf(stderr, "\rFrame#%6lu/%-6lu %3u kbps        ",mp3data->framenum, 
+     mp3data->totalframes, mp3data->bitrate );
+  if (mp3data->mode==MPG_MD_JOINT_STEREO)
     fprintf ( stderr, ".... %s ...." ,
-       MPG_MD_MS_LR==gfc->mode_ext ? "M " : " S" );
+       MPG_MD_MS_LR==mp3data->mode_ext ? "M " : " S" );
 
 }
 

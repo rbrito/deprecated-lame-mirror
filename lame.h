@@ -314,16 +314,6 @@ int lame_encode_buffer_interleaved(lame_global_flags *,short int pcm[],
 int num_samples, char *mp3buffer,int  mp3buffer_size);
 
 
-#if 0
-/* input 1 pcm frame, output (maybe) 1 mp3 frame.  
- * return code = number of bytes output in mp3buffer.  can be 0 
- * NOTE: this interface is outdated, please use lame_encode_buffer() instead 
- * declair mp3buffer with:  char mp3buffer[LAME_MAXMP3BUFFER] 
- * if return code = -1:  mp3buffer was too small 
- */
-int lame_encode(lame_global_flags *,short int Buffer[2][1152],char *mp3buffer,int mp3buffer_size);
-#endif
-
 
 /* REQUIRED:  lame_encode_finish will flush the buffers and may return a 
  * final few mp3 frames.  mp3buffer should be at least 7200 bytes.
@@ -343,12 +333,6 @@ by LAME because the output is not a regular file, this call does nothing
 */
 void lame_mp3_tags_fid(lame_global_flags *,FILE* fid);
 
-#if 0
-/* OPTIONAL (and outdated, use lame_mp3_tags_fid):  lame_mp3_tags  
-Same as lame_mp3_tags, only opens the file given in gf->outPath.
-*/
-void lame_mp3_tags(lame_global_flags *);
-#endif
 
 
 
@@ -380,13 +364,17 @@ void lame_close_infile(lame_global_flags *);
  *********************************************************************/
 typedef struct {
   int header_parsed;   /* 1 if header was parsed and following data was computed: */
-  int stereo;      /* number of channels */
-  int samplerate;  /* sample rate */
-  int bitrate;     /* bitrate */
+  int stereo;          /* number of channels */
+  int samplerate;      /* sample rate */
+  int bitrate;         /* bitrate */
   int mode;               /* mp3 frame type */
   int mode_ext;           /* mp3 frame type */
   int framesize;          /* number of samples per mp3 frame */
+
+  /* this data is not currently computed by the mpglib routines: */
   unsigned long nsamp;    /* number of samples in mp3 file.  */
+  int framenum;           /* frames decoded counter */
+  int totalframes;        /* total number of frames in mp3 file */
 } mp3data_struct;
 
 

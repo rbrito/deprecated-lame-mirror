@@ -196,12 +196,6 @@ typedef struct  {
 
 
 
-  /* data set by get_audio.c after reading input file: */
-  unsigned long num_samples_read;  
-  int count_samples_carefully;
-  int input_bitrate;
-  int pcmbitwidth;
-
 
 
   /* variables used by lame.c */
