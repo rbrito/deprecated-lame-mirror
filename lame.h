@@ -20,6 +20,11 @@
 #ifndef LAME_H_INCLUDE
 #define LAME_H_INCLUDE
 #include <stdio.h>
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
+
 
 /* maximum size of mp3buffer needed if you encode at most 1152 samples for
    each call to lame_encode_buffer.  see lame_encode_buffer() below  
@@ -386,6 +391,11 @@ int lame_decode_ogg_fromfile(FILE *fd,short int pcm_l[],short int pcm_r[],mp3dat
  * samples to skip, to (for example) compensate for the encoder delay,
  * only used when decoding mp3 */
 int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip);
+
+
+#if defined(__cplusplus)
+}
+#endif
 
 
 #endif

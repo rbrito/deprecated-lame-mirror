@@ -475,11 +475,6 @@ Ogg Vorbis encoding
 Encode using the Ogg Vobis codec (using libvorbis) instead of
 LAME's internal mp3 codec.
 
-Assume the input file is an Ogg Vorbis file.  Mostly usefull
-with --decode for playing back .ogg files.  
-If the filename ends in ".ogg" LAME will assume
-it is an Ogg.  For stdin or files which dont end in .ogg you need
-to use this switch.
 
 
 =======================================================================
