@@ -123,10 +123,7 @@ init_qval(lame_t gfc)
 #define ABS(A) (((A)>0) ? (A) : -(A))
 
 static int
-FindNearestBitrate(
-    int bRate,       /* legal rates from 32 to 448 */
-    int version      /* MPEG-1 or MPEG-2 LSF */
-    )
+FindNearestBitrate(int bRate, int version)
 {
     int bitrate = 0, i;
     for (i = 1; i <= 14; i++)
@@ -136,9 +133,7 @@ FindNearestBitrate(
     return bitrate;
 }
 
-
 /* convert samp freq in Hz to index */
-
 static int
 SmpFrqIndex (int sample_freq)
 {
@@ -448,7 +443,7 @@ lame_init_params(lame_t gfc)
     }
     gfc->samplerate_index = SmpFrqIndex(gfc->out_samplerate);
     if (gfc->samplerate_index < 0)
-        return -1;
+        return LAME_BADSAMPFREQ;
 
     /* apply user driven high pass filter */
     if (gfc->highpassfreq > 0) {
@@ -506,7 +501,7 @@ lame_init_params(lame_t gfc)
 	gfc->bitrate_index
 	    = BitrateIndex(gfc->mean_bitrate_kbps, gfc->version);
 	if (gfc->bitrate_index < 0)
-	    return -1;
+	    return LAME_BADBITRATE;
     }
     if (gfc->VBR != cbr) {
 	/* choose a min/max bitrate for VBR */
@@ -1104,7 +1099,7 @@ lame_close(lame_t gfc)
 /* initialize mp3 encoder					*/
 /****************************************************************/
 static void
-lame_debugf(const char* format, ... )
+msgf(const char* format, ... )
 {
     va_list  args;
     va_start ( args, format );
@@ -1112,30 +1107,6 @@ lame_debugf(const char* format, ... )
     vfprintf ( stderr, format, args );
 
     fflush ( stderr );      /* an debug function should flush immediately */
-    va_end   ( args );
-}
-
-static void
-lame_msgf(const char* format, ... )
-{
-    va_list  args;
-    va_start ( args, format );
-
-    vfprintf ( stderr, format, args );
-
-    fflush ( stderr );     /* we print to stderr, so me may want to flush */
-    va_end   ( args );
-}
-
-static void
-lame_errorf(const char* format, ... )
-{
-    va_list  args;
-    va_start ( args, format );
-
-    vfprintf ( stderr, format, args );
-    fflush   ( stderr );    /* an error function should flush immediately */
-
     va_end   ( args );
 }
 
@@ -1152,9 +1123,7 @@ lame_init(void)
     gfc = (lame_t)(((unsigned int)work + 15) & ~15);
     gfc->alignment = (unsigned char*)gfc - (unsigned char*)work;
 
-    gfc->report.debugf = lame_debugf;
-    gfc->report.msgf   = lame_msgf;
-    gfc->report.errorf = lame_errorf;
+    gfc->report.debugf = gfc->report.msgf = gfc->report.errorf = msgf;
 
     /* Global flags.  set defaults here for non-zero values */
     /* set integer values to -1 to mean that LAME will compute the
@@ -1233,25 +1202,6 @@ lame_init_bitstream(lame_t gfc)
  *  Robert Hegemann 2000-10-11
  *
  ***********************************************************************/
-
-/*  histogram of used bitrate indexes:
- *  One has to weight them to calculate the average bitrate in kbps
- *
- *  bitrate indices:
- *  there are 14 possible bitrate indices, 0 has the special meaning 
- *  "free format" which is not possible to mix with VBR and 15 is forbidden
- *  anyway.
- *
- *  stereo modes:
- *  0: LR   number of left-right encoded frames
- *  1: LR-I number of left-right and intensity encoded frames
- *  2: MS   number of mid-side encoded frames
- *  3: MS-I number of mid-side and intensity encoded frames
- *
- *  4: number of encoded frames
- *
- */
-
 void
 lame_bitrate_kbps(lame_t gfc, int bitrate_kbps[14])
 {

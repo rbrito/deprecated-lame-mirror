@@ -332,7 +332,7 @@ copy_buffer(lame_t gfc, unsigned char *buffer, int size)
 	if (mp3out>1152) {
 	    /* this should not be possible, and indicates we have
 	     * overflowed the pcm_out buffer.  Fatal error. */
-	    return -6;
+	    return LAME_INTERNALERROR;
 	}
 	if (mp3out <= 0)
 	    break;
@@ -556,9 +556,8 @@ writeheader(char *p, int val, int j, int ptr)
 void
 CRC_writeheader(char *header, int len)
 {
-    uint16_t crc = 0xffff; /* (jo) init crc16 for error_protection */
-
-    crc = calculateCRC(&header[2], 2, crc);
+    uint16_t crc;
+    crc = calculateCRC(&header[2], 2, 0xffff);
     crc = calculateCRC(&header[6], len - 6, crc);
     header[4] = crc >> 8;
     header[5] = crc & 255;

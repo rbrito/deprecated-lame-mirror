@@ -626,13 +626,20 @@ int CDECL lame_init_bitstream(lame_t);
 
 /*
  * OPTIONAL:    some simple statistics
+ *
  * a bitrate histogram to visualize the distribution of used frame sizes
+ * there are 14 possible bitrate indices, 0 has the special meaning 
+ * "free format" which is not possible to mix with VBR and 15 is forbidden
+ * anyway. One has to weight them to calculate the average bitrate in kbps
+ *
  * a stereo mode histogram to visualize the distribution of used stereo
- *   modes, useful in joint-stereo mode only
+ * modes, useful in joint-stereo mode only
  *   0: LR    left-right encoded
  *   1: LR-I  left-right and intensity encoded (currently not supported)
  *   2: MS    mid-side encoded
  *   3: MS-I  mid-side and intensity encoded (currently not supported)
+ *
+ *  4: number of encoded frames
  *
  * attention: don't call them after lame_encode_finish
  * suggested: lame_encode_flush -> lame_*_hist -> lame_close
@@ -646,10 +653,8 @@ void CDECL lame_block_type_hist(lame_t, int btype_count[6]);
 void CDECL lame_bitrate_stereo_mode_hist(
     lame_t, int bitrate_stmode_count[14][4]);
 
-
 void CDECL lame_bitrate_block_type_hist(
     lame_t, int bitrate_btype_count[14][6]);
-
 
 /*
  * OPTIONAL:
@@ -879,14 +884,15 @@ typedef enum {
     LAME_NOERROR          =   0,
     LAME_GENERICERROR     =  -1,
     LAME_NOTINIT          =  -3,
+    LAME_INSUFFICIENTBUF  =  -5,
     LAME_NOMEM            = -10,
     LAME_BADBITRATE       = -11,
     LAME_BADSAMPFREQ      = -12,
     LAME_INTERNALERROR    = -13,
-    
-    FRONTEND_READERROR    = -80,
-    FRONTEND_WRITEERROR   = -81,
-    FRONTEND_FILETOOLARGE = -82,
+
+    LAME_SEEKERROR    = -80,
+    LAME_WRITEERROR   = -81,
+    LAME_FILETOOLARGE = -82,
 } lame_errorcodes_t;
 
 #if defined(__cplusplus)

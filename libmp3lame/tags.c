@@ -297,10 +297,10 @@ id3tag_set_genre(lame_t gfc, const char *genre)
                 }
             }
             if (i == GENRE_NAME_COUNT) {
-                return -1;
+                return LAME_GENERICERROR;
             }
         } else if ((num < 0) || (num >= GENRE_NAME_COUNT)) {
-            return -1;
+            return LAME_GENERICERROR;
         }
         gfc->tag_spec.genre = num;
         gfc->tag_spec.flags |= CHANGED_FLAG;
@@ -445,7 +445,7 @@ id3tag_write_v2(lame_t gfc, unsigned char *buf, int size)
             }
             tag = (unsigned char *)malloc(tag_size);
             if (!tag) {
-                return -1;
+                return LAME_NOMEM;
             }
             p = tag;
             /* set tag header starting with file identifier */
@@ -514,37 +514,35 @@ set_text_field(unsigned char *field, const char *text, size_t size, int pad)
 int
 id3tag_write_v1(lame_t gfc, unsigned char *buf, int size)
 {
-    unsigned int i = 0;
-    if ((gfc->tag_spec.flags & CHANGED_FLAG)
-	&& !(gfc->tag_spec.flags & V2_ONLY_FLAG)) {
-        unsigned char tag[128];
-        unsigned char *p = tag;
-        int pad = (gfc->tag_spec.flags & SPACE_V1_FLAG) ? ' ' : 0;
-        char year[5];
-	if (size != 0 && size < 128)
-	    return -1; /* buffer overrun ! */
+    unsigned char tag[128], *p = tag, year[5];
+    int pad = (gfc->tag_spec.flags & SPACE_V1_FLAG) ? ' ' : 0;
 
-        /* set tag identifier */
-        *p++ = 'T'; *p++ = 'A'; *p++ = 'G';
-        /* set each field in tag */
-        p = set_text_field(p, gfc->tag_spec.title, 30, pad);
-        p = set_text_field(p, gfc->tag_spec.artist, 30, pad);
-        p = set_text_field(p, gfc->tag_spec.album, 30, pad);
-	sprintf(year, "%d", gfc->tag_spec.year);
-	p = set_text_field(p, gfc->tag_spec.year ? year : NULL, 4, pad);
-        p = set_text_field(p, gfc->tag_spec.comment, 30, pad);
-	/* limit comment field to 28 bytes if a track is specified */
-	/* clear the last 2 bytes to indicate a version 1.1 tag */
-        if (gfc->tag_spec.track) {
-	    p[-2] = 0;
-            p[-1] = gfc->tag_spec.track;
-        }
-        *p++ = gfc->tag_spec.genre;
-        /* write tag directly into bitstream at current position */
-	for (; i < 128; i++)
-	    buf[i] = tag[i];
+    if (!(gfc->tag_spec.flags & CHANGED_FLAG)
+	|| (gfc->tag_spec.flags & V2_ONLY_FLAG))
+	return 0;
+
+    if (size != 0 && size < 128)
+	return LAME_INSUFFICIENTBUF; /* buffer overrun ! */
+
+    /* set tag identifier */
+    *p++ = 'T'; *p++ = 'A'; *p++ = 'G';
+    /* set each field in tag */
+    p = set_text_field(p, gfc->tag_spec.title, 30, pad);
+    p = set_text_field(p, gfc->tag_spec.artist, 30, pad);
+    p = set_text_field(p, gfc->tag_spec.album, 30, pad);
+    sprintf(year, "%d", gfc->tag_spec.year);
+    p = set_text_field(p, gfc->tag_spec.year ? year : NULL, 4, pad);
+    p = set_text_field(p, gfc->tag_spec.comment, 30, pad);
+    /* limit comment field to 28 bytes if a track is specified */
+    /* clear the last 2 bytes to indicate a version 1.1 tag */
+    if (gfc->tag_spec.track) {
+	p[-2] = 0;
+	p[-1] = gfc->tag_spec.track;
     }
-    return i;
+    *p++ = gfc->tag_spec.genre;
+    /* write tag directly into bitstream at current position */
+    memcpy(buf, tag, 128);
+    return 128;
 }
 
 /*
@@ -671,7 +669,7 @@ InitVbrTag(lame_t gfc)
 	gfc->VBR_seek_table.size = 0;
 	gfc->bWriteVbrTag = 0;
 	gfc->report.errorf("Error: can't allocate VbrFrames buffer\n");
-	return -1;
+	return LAME_NOMEM;
     }   
 
     /*TOC shouldn't take into account the size of the VBR header itself, too*/
@@ -824,12 +822,12 @@ PutVbrTag(lame_t gfc, FILE *fpStream)
     int i, bitrate;
 
     if (gfc->VBR_seek_table.pos <= 0 && gfc->VBR != cbr)
-	return -1;
+	return LAME_GENERICERROR;
 
     /* Get file size */
     fseek(fpStream, 0, SEEK_END);
     if ((lFileSize=ftell(fpStream)) == 0)
-	return -1;
+	return LAME_GENERICERROR;
 
     /*
      * The VBR tag may NOT be located at the beginning of the stream.
@@ -903,7 +901,7 @@ PutVbrTag(lame_t gfc, FILE *fpStream)
 
     fseek(fpStream, id3v2TagSize, SEEK_SET);
     if (fwrite(buf, gfc->TotalFrameSize, 1, fpStream) != 1)
-	return -1;
+	return LAME_WRITEERROR;
     return 0;
 }
 

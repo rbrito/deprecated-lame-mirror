@@ -533,7 +533,7 @@ encode_buffer_sample(
 	/* Write initial VBR Header to bitstream and init VBR data */
 	i = InitVbrTag(gfc);
 	if ((mp3buf_size && i >= buf_remain) || i < 0)
-	    return -1;  /* not enough buffer space */
+	    return LAME_INSUFFICIENTBUF;  /* not enough buffer space */
 	memset(p, 0, i);
 	p += i;
 	if (mp3buf_size)
