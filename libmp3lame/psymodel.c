@@ -466,8 +466,6 @@ calc_interchannel_masking(lame_internal_flags * gfc, int gr)
     }
 }
 
-
-
 /*************************************************************** 
  * compute M/S thresholds from Johnston & Ferreira 1992 ICASSP paper
  * when the masking threshold of L/R channels are almost same
@@ -741,7 +739,6 @@ static FLOAT ma_max_i1;
 static FLOAT ma_max_i2;
 static FLOAT ma_max_m;
 
-
 #ifdef TAKEHIRO_IEEE754_HACK
 static inline int trancate(FLOAT x)
 {
@@ -768,11 +765,6 @@ init_mask_add_max_values(lame_internal_flags * const gfc)
 
     ma_max_m = 1.0 / ma_max_m;
 }
-
-
-
-
-
 
 /* addition of simultaneous masking   Naoki Shibata 2000/7 */
 
@@ -855,8 +847,6 @@ mask_add(FLOAT m1, FLOAT m2, FLOAT ATH)
     if (i > 13) return m1;
     return m1*table3[i];
 }
-
-
 
 static FLOAT
 pecalc_s(III_psy_ratio *mr, int sb)

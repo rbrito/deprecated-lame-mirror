@@ -1179,21 +1179,21 @@ psymodel_init(lame_global_flags *gfp)
     int numlines_s[CBANDS];
 
     for (i=0; i<MAX_CHANNELS*2; ++i) {
-	for ( sb = 0; sb < SBMAX_l; sb++ ) {
+	for (sb = 0; sb < SBMAX_l; sb++) {
 	    gfc->masking_next[0][i].en.l[sb] = 1e20;
 	    gfc->masking_next[1][i].en.l[sb] = 1e20;
 	    gfc->masking_next[0][i].thm.l[sb] = 1e20;
 	    gfc->masking_next[1][i].thm.l[sb] = 1e20;
 	}
-	for (j=0; j<3; ++j) {
-	    for ( sb = 0; sb < SBMAX_s; sb++ ) {
+	for (sb = 0; sb < SBMAX_s; sb++) {
+	    for (j = 0; j < 3; j++) {
 		gfc->masking_next[0][i].en.s[sb][j] = 1e20;
 		gfc->masking_next[1][i].en.s[sb][j] = 1e20;
 		gfc->masking_next[0][i].thm.s[sb][j] = 1e20;
 		gfc->masking_next[1][i].thm.s[sb][j] = 1e20;
 	    }
 	}
-	for (j=0;j<12;j++)
+	for (j = 0; j < 12; j++)
 	    gfc->nsPsy.subbk_ene[i][j] = 1.0;
 	gfc->blocktype_next[0][i] = gfc->blocktype_next[1][i] = NORM_TYPE;
 

@@ -139,11 +139,6 @@ lame_init_qval(lame_global_flags * gfp)
     }
 }
 
-
-
-
-
-
 #define ABS(A) (((A)>0) ? (A) : -(A))
 
 static int
@@ -152,12 +147,10 @@ FindNearestBitrate(
     int version      /* MPEG-1 or MPEG-2 LSF */
     )
 {
-    int  bitrate = 0;
-    int  i;
-  
-    for ( i = 1; i <= 14; i++ )
-        if ( ABS (bitrate_table[version][i] - bRate) < ABS (bitrate - bRate) )
-            bitrate = bitrate_table [version] [i];
+    int bitrate = 0, i;
+    for (i = 1; i <= 14; i++)
+        if (ABS (bitrate_table[version][i] - bRate) < ABS (bitrate - bRate))
+	    bitrate = bitrate_table [version] [i];
 
     return bitrate;
 }
@@ -310,7 +303,6 @@ static int apply_preset(lame_global_flags*  gfp, int bitrate, vbr_mode mode)
     return bitrate;
 }
 
-
 static int
 optimum_samplefreq(int lowpassfreq, int input_samplefreq)
 {
@@ -350,13 +342,6 @@ optimum_samplefreq(int lowpassfreq, int input_samplefreq)
     if (suggested_samplefreq <= 44100) return 44100;
     return 48000;
 }
-
-
-
-
-
-
-
 
 /********************************************************************
  *   initialize internal params based on data in gf
@@ -424,8 +409,7 @@ lame_init_params(lame_global_flags * const gfp)
         gfc->CPU_features.AMD_3DNow = has_3DNow();
         gfc->CPU_features.AMD_E3DNow = has_E3DNow();
     } else
-        gfc->CPU_features.AMD_3DNow
-	    = gfc->CPU_features.AMD_E3DNow = 0;
+        gfc->CPU_features.AMD_3DNow = gfc->CPU_features.AMD_E3DNow = 0;
 
     if (gfp->asm_optimizations.mmx )
         gfc->CPU_features.MMX = has_MMX();
@@ -1068,8 +1052,6 @@ lame_encode_buffer_float(lame_global_flags * gfp,
     return ret;
 }
 
-
-
 int
 lame_encode_buffer_int(lame_global_flags * gfp,
                    const int buffer_l[],
@@ -1110,9 +1092,6 @@ lame_encode_buffer_int(lame_global_flags * gfp,
     return ret;
 
 }
-
-
-
 
 int
 lame_encode_buffer_long2(lame_global_flags * gfp,
@@ -1155,8 +1134,6 @@ lame_encode_buffer_long2(lame_global_flags * gfp,
 
 }
 
-
-
 int
 lame_encode_buffer_long(lame_global_flags * gfp,
                    const long buffer_l[],
@@ -1196,16 +1173,6 @@ lame_encode_buffer_long(lame_global_flags * gfp,
     return ret;
 }
 
-
-
-
-
-
-
-
-
-
-
 int
 lame_encode_buffer_interleaved(lame_global_flags * gfp,
                                short int buffer[],
@@ -1233,7 +1200,6 @@ lame_encode_buffer_interleaved(lame_global_flags * gfp,
     return ret;
 
 }
-
 
 int
 lame_encode(lame_global_flags * const gfp,
@@ -1288,12 +1254,10 @@ lame_init_bitstream(lame_global_flags * gfp)
     return 0;
 }
 
-
 /*****************************************************************/
 /* flush internal PCM sample buffers, then mp3 buffers           */
 /* then write id3 v1 tags into bitstream.                        */
 /*****************************************************************/
-
 int
 lame_encode_flush(lame_global_flags * gfp,
                   unsigned char *mp3buffer, int mp3buffer_size)
@@ -1308,7 +1272,6 @@ lame_encode_flush(lame_global_flags * gfp,
 
     memset(buffer, 0, sizeof(buffer));
     mp3count = 0;
-
 
     while (gfc->mf_samples_to_encode > 0) {
 
@@ -1377,7 +1340,6 @@ lame_encode_flush(lame_global_flags * gfp,
  *  frees internal buffers
  *
  ***********************************************************************/
-
 int
 lame_close(lame_global_flags * gfp)
 {
@@ -1405,7 +1367,6 @@ lame_close(lame_global_flags * gfp)
 /*****************************************************************/
 /* flush internal mp3 buffers, and free internal buffers         */
 /*****************************************************************/
-
 int
 lame_encode_finish(lame_global_flags * gfp,
                    unsigned char *mp3buffer, int mp3buffer_size)
@@ -1473,7 +1434,7 @@ lame_init_old(lame_global_flags * gfp)
      */
     gfp->mode = NOT_SET;
     gfp->original = 1;
-    gfp->in_samplerate = 1000 * 44.1;
+    gfp->in_samplerate = 44100;
     gfp->num_channels = 2;
     gfp->num_samples = MAX_U_32_NUM;
 
@@ -1491,11 +1452,8 @@ lame_init_old(lame_global_flags * gfp)
     gfp->VBR_min_bitrate_kbps = 0;
     gfp->VBR_max_bitrate_kbps = 0;
 
-    gfc->OldValue[0] = 180;
-    gfc->OldValue[1] = 180;
-    gfc->CurrentStep[0] = 4;
-    gfc->CurrentStep[1] = 4;
-    gfc->masking_lower = 1.0;
+    gfc->OldValue[0] = gfc->OldValue[1] = 180;
+    gfc->CurrentStep[0] = gfc->CurrentStep[1] = 4;
 
     gfc->nsPsy.attackthre = -1.0;
     gfc->istereo_ratio = -1.0;
