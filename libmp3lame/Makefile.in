@@ -1,152 +1,536 @@
-#
-# Makefile.in for LAME 3.xx lib
-#
-# processed by ./configure to produce Makefile
-#
-#
-SHELL = @SHELL@
-@SET_MAKE@
+# Makefile.in generated automatically by automake 1.4 from Makefile.am
 
+# Copyright (C) 1994, 1995-8, 1999 Free Software Foundation, Inc.
+# This Makefile.in is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE.
+
+
+SHELL = @SHELL@
+
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+VPATH = @srcdir@
 prefix = @prefix@
 exec_prefix = @exec_prefix@
 
-BINDIR = @bindir@
-LIBDIR = $(prefix)/lib
-INCLUDEDIR = $(prefix)/include
-CC     = @CC@
-CFLAGS = @CFLAGS@
-LDFLAGS= @LDFLAGS@
-DEFS   = @CONFIG_DEFS@
-INCLUDES = @INCLUDES@
-INSTALL= @INSTALL@
-INSTALL_PROGRAM=@INSTALL_PROGRAM@
-INSTALL_DATA=@INSTALL_DATA@
+bindir = @bindir@
+sbindir = @sbindir@
+libexecdir = @libexecdir@
+datadir = @datadir@
+sysconfdir = @sysconfdir@
+sharedstatedir = @sharedstatedir@
+localstatedir = @localstatedir@
+libdir = @libdir@
+infodir = @infodir@
+mandir = @mandir@
+includedir = @includedir@
+oldincludedir = /usr/include
+
+DESTDIR =
+
+pkgdatadir = $(datadir)/@PACKAGE@
+pkglibdir = $(libdir)/@PACKAGE@
+pkgincludedir = $(includedir)/@PACKAGE@
+
+top_builddir = ..
+
+ACLOCAL = @ACLOCAL@
+AUTOCONF = @AUTOCONF@
+AUTOMAKE = @AUTOMAKE@
+AUTOHEADER = @AUTOHEADER@
+
+INSTALL = @INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@ $(AM_INSTALL_PROGRAM_FLAGS)
+INSTALL_DATA = @INSTALL_DATA@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
+transform = @program_transform_name@
 
-SHARED_LIB = libmp3lame.so
-SHARED_LIB_MAJOR = $(SHARED_LIB).@LIB_MAJOR_VERSION@
-SHARED_LIB_MINOR = $(SHARED_LIB_MAJOR).@LIB_MINOR_VERSION@
-
-AR = @AR@
-RANLIB = @RANLIB@
-MAKEDEP = @MAKEDEP@
-RM_F = @RM_F@
+NORMAL_INSTALL = :
+PRE_INSTALL = :
+POST_INSTALL = :
+NORMAL_UNINSTALL = :
+PRE_UNINSTALL = :
+POST_UNINSTALL = :
+build_alias = @build_alias@
+build_triplet = @build@
+host_alias = @host_alias@
+host_triplet = @host@
+target_alias = @target_alias@
+target_triplet = @target@
+AS = @AS@
+CC = @CC@
+CONFIG_DEFS = @CONFIG_DEFS@
+CPP = @CPP@
+CPUTYPE = @CPUTYPE@
+DLLTOOL = @DLLTOOL@
+ENCODER_DEFS = @ENCODER_DEFS@
+FRONTEND_CFLAGS = @FRONTEND_CFLAGS@
+FRONTEND_LDADD = @FRONTEND_LDADD@
+FRONTEND_LDFLAGS = @FRONTEND_LDFLAGS@
+GTK_CFLAGS = @GTK_CFLAGS@
+GTK_CONFIG = @GTK_CONFIG@
+GTK_LIBS = @GTK_LIBS@
+LDADD = @LDADD@
+LIBTOOL = @LIBTOOL@
+LIBTOOL_DEPS = @LIBTOOL_DEPS@
+LIB_MAJOR_VERSION = @LIB_MAJOR_VERSION@
+LIB_MINOR_VERSION = @LIB_MINOR_VERSION@
 LN_S = @LN_S@
+MAINT = @MAINT@
+MAKEDEP = @MAKEDEP@
+MAKEINFO = @MAKEINFO@
+NASM = @NASM@
+OBJDUMP = @OBJDUMP@
+PACKAGE = @PACKAGE@
+RANLIB = @RANLIB@
+RM_F = @RM_F@
+U = @U@
+VERSION = @VERSION@
+WITH_MP3RTP = @WITH_MP3RTP@
+WITH_MP3X = @WITH_MP3X@
 
-lib_sources = \
-	bitstream.c \
-	encoder.c \
-	fft.c \
-        id3tag.c \
-        lame.c \
-        newmdct.c \
-	psymodel.c \
-	quantize.c \
-	quantize_pvt.c \
-	vbrquantize.c \
-	reservoir.c \
-	tables.c \
-	takehiro.c \
-	util.c \
-        VbrTag.c \
-	vorbis_interface.c \
-	mpglib_interface.c \
-        version.c
+AUTOMAKE_OPTIONS = foreign $(top_srcdir)/ansi2knr
 
-mpglib_sources = ../mpglib/common.c \
-        ../mpglib/dct64_i386.c \
-        ../mpglib/decode_i386.c \
-        ../mpglib/layer1.c \
-        ../mpglib/layer2.c \
-        ../mpglib/layer3.c \
-        ../mpglib/tabinit.c \
-        ../mpglib/interface.c 
-mpglib_obj = $(mpglib_sources:.c=.o) 
-lib_obj = $(lib_sources:.c=.o) 
+DEFS = @DEFS@ @CONFIG_DEFS@ @ENCODER_DEFS@
 
-all_sources = $(lib_sources) @LIB_SOURCES@
-lib_obj = $(all_sources:.c=.o)
+SUBDIRS = i386
 
-DEP = $(all_sources:.c=.d)
+lib_LTLIBRARIES = libmp3lame.la
+@HAVE_NASM_TRUE@nasm_ldadd = $(top_srcdir)/libmp3lame/@CPUTYPE@/liblameasmroutines.la
+@HAVE_NASM_FALSE@nasm_ldadd = 
+@LIB_WITH_DECODER_TRUE@decoder_ldadd = $(top_srcdir)/mpglib/libmpgdecoder.la
+@LIB_WITH_DECODER_FALSE@decoder_ldadd = 
+
+libmp3lame_la_LIBADD = $(nasm_ldadd) $(decoder_ldadd)
+libmp3lame_la_LDFLAGS = -version-info @LIB_MAJOR_VERSION@:@LIB_MINOR_VERSION@
+
+INCLUDES = @INCLUDES@ -I$(top_srcdir)/mpglib/
+
+EXTRA_DIST = amiga_mpega.c 	debugscalefac.c 	libmp3lame.dsp
 
 
+libmp3lame_la_SOURCES =          VbrTag.c 	bitstream.c 	encoder.c 	fft.c         id3tag.c         lame.c         newmdct.c 	psymodel.c 	quantize.c 	quantize_pvt.c 	reservoir.c 	tables.c 	takehiro.c 	util.c 	vbrquantize.c 	version.c 	mpglib_interface.c 	vorbis_interface.c
 
 
-NASM = nasm
-ASFLAGS=-f elf -i i386/
-%.o: %.nas
-	$(NASM) $(ASFLAGS) $< -o $@
-%.o: %.s
-	gcc -c $< -o $@
+noinst_HEADERS =  	VbrTag.h 	bitstream.h 	encoder.h 	fft.h 	id3tag.h 	l3side.h 	lame-analysis.h 	machine.h 	newmdct.h 	psymodel.h 	quantize.h  	quantize_pvt.h 	reservoir.h 	tables.h 	util.h 	version.h
 
-## have NASM
-#CFLAGS += -DHAVE_NASM
-#lib_obj += i386/cpu_feat.o
+mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+CONFIG_CLEAN_FILES = 
+LTLIBRARIES =  $(lib_LTLIBRARIES)
 
-## use MMX extension. you need nasm and MMX supported CPU.
-#CFLAGS += -DMMX_choose_table
-#lib_obj += i386/choose_table.o
+CPPFLAGS = @CPPFLAGS@
+LDFLAGS = @LDFLAGS@
+LIBS = @LIBS@
+ANSI2KNR = $(top_srcdir)/ansi2knr
+@LIB_WITH_DECODER_FALSE@@HAVE_NASM_TRUE@libmp3lame_la_DEPENDENCIES =  \
+@LIB_WITH_DECODER_FALSE@@HAVE_NASM_TRUE@$(top_srcdir)/libmp3lame/@CPUTYPE@/liblameasmroutines.la
+@LIB_WITH_DECODER_TRUE@@HAVE_NASM_FALSE@libmp3lame_la_DEPENDENCIES =  \
+@LIB_WITH_DECODER_TRUE@@HAVE_NASM_FALSE@$(top_srcdir)/mpglib/libmpgdecoder.la
+@LIB_WITH_DECODER_TRUE@@HAVE_NASM_TRUE@libmp3lame_la_DEPENDENCIES =  \
+@LIB_WITH_DECODER_TRUE@@HAVE_NASM_TRUE@$(top_srcdir)/libmp3lame/@CPUTYPE@/liblameasmroutines.la \
+@LIB_WITH_DECODER_TRUE@@HAVE_NASM_TRUE@$(top_srcdir)/mpglib/libmpgdecoder.la
+@LIB_WITH_DECODER_FALSE@@HAVE_NASM_FALSE@libmp3lame_la_DEPENDENCIES = 
+libmp3lame_la_OBJECTS =  VbrTag$U.lo bitstream$U.lo encoder$U.lo \
+fft$U.lo id3tag$U.lo lame$U.lo newmdct$U.lo psymodel$U.lo quantize$U.lo \
+quantize_pvt$U.lo reservoir$U.lo tables$U.lo takehiro$U.lo util$U.lo \
+vbrquantize$U.lo version$U.lo mpglib_interface$U.lo \
+vorbis_interface$U.lo
+CFLAGS = @CFLAGS@
+COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+CCLD = $(CC)
+LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
+HEADERS =  $(noinst_HEADERS)
 
-%.o: %.c 
-	$(CC) $(INCLUDES) $(DEFS) $(CFLAGS) -c $< -o $@
-
-%.d: %.c
-  ifeq ($(NOUNIXCMD),YES)
-	$(CC) $(MAKEDEP) $(INCLUDES) $(DEFS) $(CFLAGS)  $< > $@
-  else
-	$(SHELL) -ec '$(CC) $(MAKEDEP) $(INCLUDES) $(DEFS) $(CFLAGS)  $< | sed '\''s;$*.o;& $@;g'\'' > $@'
-  endif
-
-all: @LIB_TARGETS@
-
-
-libmp3lame.a:  $(lib_obj) Makefile
-	$(AR) cr libmp3lame.a  $(lib_obj)
-	$(RANLIB) libmp3lame.a
-
-#shared library, probably GNU specific?
-libmp3lame.so:  $(lib_obj) Makefile
-	$(CC) -shared -Wl,-soname,$(SHARED_LIB_MAJOR) -o $(SHARED_LIB_MINOR) $(LDFLAGS) $(lib_obj)
-	@$(RM_F) $(SHARED_LIB_MAJOR)
-	$(LN_S) $(SHARED_LIB_MINOR) $(SHARED_LIB_MAJOR)
-	@$(RM_F) $(SHARED_LIB)
-	$(LN_S) $(SHARED_LIB_MAJOR) $(SHARED_LIB)
-
-install_header:
-	@mkdir -p $(INCLUDEDIR)
-	$(INSTALL_DATA) ../include/lame.h $(INCLUDEDIR)
-
-install_static_lib: libmp3lame.a install_header
-	@mkdir -p $(LIBDIR)
-	$(INSTALL_DATA) libmp3lame.a $(LIBDIR)
-
-install_shared_lib: libmp3lame.so install_header
-	@mkdir -p $(LIBDIR)
-	$(INSTALL_DATA) $(SHARED_LIB_MINOR) $(LIBDIR)
-	@$(RM_F) $(LIBDIR)/$(SHARED_LIB_MAJOR)
-	(cd $(LIBDIR) && $(LN_S) $(SHARED_LIB_MINOR) $(SHARED_LIB_MAJOR))
-	@$(RM_F) $(LIBDIR)/$(SHARED_LIB)
-	(cd $(LIBDIR) && $(LN_S) $(SHARED_LIB_MAJOR) $(SHARED_LIB))
-
-install: @LIB_INSTALL_TARGETS@
-
-uninstall:
-	$(RM_F) $(INCLUDEDIR)/lame.h
-	$(RM_F) $(LIBDIR)/libmp3lame.a
-	$(RM_F) $(LIBDIR)/$(SHARED_LIB)
-	$(RM_F) $(LIBDIR)/$(SHARED_LIB_MAJOR)
-	$(RM_F) $(LIBDIR)/$(SHARED_LIB_MINOR)
+DIST_COMMON =  Makefile.am Makefile.in
 
 
-clean:
-	-$(RM_F) $(lib_obj) $(DEP) \
-         libmp3lame.a $(SHARED_LIB) $(SHARED_LIB_MAJOR) $(SHARED_LIB_MINOR)
+DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
+
+TAR = tar
+GZIP_ENV = --best
+DEP_FILES =  .deps/VbrTag.P .deps/bitstream.P .deps/encoder.P \
+.deps/fft.P .deps/id3tag.P .deps/lame.P .deps/mpglib_interface.P \
+.deps/newmdct.P .deps/psymodel.P .deps/quantize.P .deps/quantize_pvt.P \
+.deps/reservoir.P .deps/tables.P .deps/takehiro.P .deps/util.P \
+.deps/vbrquantize.P .deps/version.P .deps/vorbis_interface.P
+SOURCES = $(libmp3lame_la_SOURCES)
+OBJECTS = $(libmp3lame_la_OBJECTS)
+
+all: all-redirect
+.SUFFIXES:
+.SUFFIXES: .S .c .lo .o .s
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
+	cd $(top_srcdir) && $(AUTOMAKE) --foreign libmp3lame/Makefile
+
+Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status $(BUILT_SOURCES)
+	cd $(top_builddir) \
+	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
+
+
+mostlyclean-libLTLIBRARIES:
+
+clean-libLTLIBRARIES:
+	-test -z "$(lib_LTLIBRARIES)" || rm -f $(lib_LTLIBRARIES)
+
+distclean-libLTLIBRARIES:
+
+maintainer-clean-libLTLIBRARIES:
+
+install-libLTLIBRARIES: $(lib_LTLIBRARIES)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(libdir)
+	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
+	  if test -f $$p; then \
+	    echo "$(LIBTOOL)  --mode=install $(INSTALL) $$p $(DESTDIR)$(libdir)/$$p"; \
+	    $(LIBTOOL)  --mode=install $(INSTALL) $$p $(DESTDIR)$(libdir)/$$p; \
+	  else :; fi; \
+	done
+
+uninstall-libLTLIBRARIES:
+	@$(NORMAL_UNINSTALL)
+	list='$(lib_LTLIBRARIES)'; for p in $$list; do \
+	  $(LIBTOOL)  --mode=uninstall rm -f $(DESTDIR)$(libdir)/$$p; \
+	done
+
+.s.o:
+	$(COMPILE) -c $<
+
+.S.o:
+	$(COMPILE) -c $<
+
+mostlyclean-compile:
+	-rm -f *.o core *.core
+
+clean-compile:
+
+distclean-compile:
+	-rm -f *.tab.c
+
+maintainer-clean-compile:
+
+.s.lo:
+	$(LIBTOOL) --mode=compile $(COMPILE) -c $<
+
+.S.lo:
+	$(LIBTOOL) --mode=compile $(COMPILE) -c $<
+
+mostlyclean-libtool:
+	-rm -f *.lo
+
+clean-libtool:
+	-rm -rf .libs _libs
+
+distclean-libtool:
+
+maintainer-clean-libtool:
+$(top_srcdir)/ansi2knr: $(top_srcdir)/ansi2knr.o
+	cd $(top_srcdir) && $(MAKE) $(AM_MAKEFLAGS) ansi2knr
+
+$(top_srcdir)/ansi2knr.o:
+	cd $(top_srcdir) && $(MAKE) $(AM_MAKEFLAGS) ansi2knr.o
+
+
+mostlyclean-kr:
+	-rm -f *_.c
+
+clean-kr:
+
+distclean-kr:
+
+maintainer-clean-kr:
+
+libmp3lame.la: $(libmp3lame_la_OBJECTS) $(libmp3lame_la_DEPENDENCIES)
+	$(LINK) -rpath $(libdir) $(libmp3lame_la_LDFLAGS) $(libmp3lame_la_OBJECTS) $(libmp3lame_la_LIBADD) $(LIBS)
+VbrTag_.c: VbrTag.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/VbrTag.c; then echo $(srcdir)/VbrTag.c; else echo VbrTag.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > VbrTag_.c
+bitstream_.c: bitstream.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/bitstream.c; then echo $(srcdir)/bitstream.c; else echo bitstream.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > bitstream_.c
+encoder_.c: encoder.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/encoder.c; then echo $(srcdir)/encoder.c; else echo encoder.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > encoder_.c
+fft_.c: fft.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/fft.c; then echo $(srcdir)/fft.c; else echo fft.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > fft_.c
+id3tag_.c: id3tag.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/id3tag.c; then echo $(srcdir)/id3tag.c; else echo id3tag.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > id3tag_.c
+lame_.c: lame.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/lame.c; then echo $(srcdir)/lame.c; else echo lame.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > lame_.c
+mpglib_interface_.c: mpglib_interface.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/mpglib_interface.c; then echo $(srcdir)/mpglib_interface.c; else echo mpglib_interface.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > mpglib_interface_.c
+newmdct_.c: newmdct.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/newmdct.c; then echo $(srcdir)/newmdct.c; else echo newmdct.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > newmdct_.c
+psymodel_.c: psymodel.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/psymodel.c; then echo $(srcdir)/psymodel.c; else echo psymodel.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > psymodel_.c
+quantize_.c: quantize.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/quantize.c; then echo $(srcdir)/quantize.c; else echo quantize.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > quantize_.c
+quantize_pvt_.c: quantize_pvt.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/quantize_pvt.c; then echo $(srcdir)/quantize_pvt.c; else echo quantize_pvt.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > quantize_pvt_.c
+reservoir_.c: reservoir.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/reservoir.c; then echo $(srcdir)/reservoir.c; else echo reservoir.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > reservoir_.c
+tables_.c: tables.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/tables.c; then echo $(srcdir)/tables.c; else echo tables.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > tables_.c
+takehiro_.c: takehiro.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/takehiro.c; then echo $(srcdir)/takehiro.c; else echo takehiro.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > takehiro_.c
+util_.c: util.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/util.c; then echo $(srcdir)/util.c; else echo util.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > util_.c
+vbrquantize_.c: vbrquantize.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/vbrquantize.c; then echo $(srcdir)/vbrquantize.c; else echo vbrquantize.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > vbrquantize_.c
+version_.c: version.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/version.c; then echo $(srcdir)/version.c; else echo version.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > version_.c
+vorbis_interface_.c: vorbis_interface.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/vorbis_interface.c; then echo $(srcdir)/vorbis_interface.c; else echo vorbis_interface.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > vorbis_interface_.c
+VbrTag_.o VbrTag_.lo bitstream_.o bitstream_.lo encoder_.o encoder_.lo \
+fft_.o fft_.lo id3tag_.o id3tag_.lo lame_.o lame_.lo \
+mpglib_interface_.o mpglib_interface_.lo newmdct_.o newmdct_.lo \
+psymodel_.o psymodel_.lo quantize_.o quantize_.lo quantize_pvt_.o \
+quantize_pvt_.lo reservoir_.o reservoir_.lo tables_.o tables_.lo \
+takehiro_.o takehiro_.lo util_.o util_.lo vbrquantize_.o \
+vbrquantize_.lo version_.o version_.lo vorbis_interface_.o \
+vorbis_interface_.lo : $(ANSI2KNR)
+
+# This directory's subdirectories are mostly independent; you can cd
+# into them and run `make' without going through this Makefile.
+# To change the values of `make' variables: instead of editing Makefiles,
+# (1) if the variable is set in `config.status', edit `config.status'
+#     (which will cause the Makefiles to be regenerated when you run `make');
+# (2) otherwise, pass the desired values on the `make' command line.
+
+@SET_MAKE@
+
+all-recursive install-data-recursive install-exec-recursive \
+installdirs-recursive install-recursive uninstall-recursive  \
+check-recursive installcheck-recursive info-recursive dvi-recursive:
+	@set fnord $(MAKEFLAGS); amf=$$2; \
+	dot_seen=no; \
+	target=`echo $@ | sed s/-recursive//`; \
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  echo "Making $$target in $$subdir"; \
+	  if test "$$subdir" = "."; then \
+	    dot_seen=yes; \
+	    local_target="$$target-am"; \
+	  else \
+	    local_target="$$target"; \
+	  fi; \
+	  (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
+	   || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; \
+	done; \
+	if test "$$dot_seen" = "no"; then \
+	  $(MAKE) $(AM_MAKEFLAGS) "$$target-am" || exit 1; \
+	fi; test -z "$$fail"
+
+mostlyclean-recursive clean-recursive distclean-recursive \
+maintainer-clean-recursive:
+	@set fnord $(MAKEFLAGS); amf=$$2; \
+	dot_seen=no; \
+	rev=''; list='$(SUBDIRS)'; for subdir in $$list; do \
+	  rev="$$subdir $$rev"; \
+	  test "$$subdir" = "." && dot_seen=yes; \
+	done; \
+	test "$$dot_seen" = "no" && rev=". $$rev"; \
+	target=`echo $@ | sed s/-recursive//`; \
+	for subdir in $$rev; do \
+	  echo "Making $$target in $$subdir"; \
+	  if test "$$subdir" = "."; then \
+	    local_target="$$target-am"; \
+	  else \
+	    local_target="$$target"; \
+	  fi; \
+	  (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
+	   || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; \
+	done && test -z "$$fail"
+tags-recursive:
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  test "$$subdir" = . || (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) tags); \
+	done
 
 tags: TAGS
 
-TAGS: $(all_sources) 
-	etags -T $(all_sources) 
+ID: $(HEADERS) $(SOURCES) $(LISP)
+	list='$(SOURCES) $(HEADERS)'; \
+	unique=`for i in $$list; do echo $$i; done | \
+	  awk '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	here=`pwd` && cd $(srcdir) \
+	  && mkid -f$$here/ID $$unique $(LISP)
 
-ifneq ($(MAKECMDGOALS),clean)
-  -include $(DEP)
-endif
+TAGS: tags-recursive $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) $(LISP)
+	tags=; \
+	here=`pwd`; \
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+   if test "$$subdir" = .; then :; else \
+	    test -f $$subdir/TAGS && tags="$$tags -i $$here/$$subdir/TAGS"; \
+   fi; \
+	done; \
+	list='$(SOURCES) $(HEADERS)'; \
+	unique=`for i in $$list; do echo $$i; done | \
+	  awk '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	test -z "$(ETAGS_ARGS)$$unique$(LISP)$$tags" \
+	  || (cd $(srcdir) && etags $(ETAGS_ARGS) $$tags  $$unique $(LISP) -o $$here/TAGS)
+
+mostlyclean-tags:
+
+clean-tags:
+
+distclean-tags:
+	-rm -f TAGS ID
+
+maintainer-clean-tags:
+
+distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)/$(subdir)
+
+subdir = libmp3lame
+
+distdir: $(DISTFILES)
+	here=`cd $(top_builddir) && pwd`; \
+	top_distdir=`cd $(top_distdir) && pwd`; \
+	distdir=`cd $(distdir) && pwd`; \
+	cd $(top_srcdir) \
+	  && $(AUTOMAKE) --include-deps --build-dir=$$here --srcdir-name=$(top_srcdir) --output-dir=$$top_distdir --foreign libmp3lame/Makefile
+	@for file in $(DISTFILES); do \
+	  d=$(srcdir); \
+	  if test -d $$d/$$file; then \
+	    cp -pr $$d/$$file $(distdir)/$$file; \
+	  else \
+	    test -f $(distdir)/$$file \
+	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \
+	    || cp -p $$d/$$file $(distdir)/$$file || :; \
+	  fi; \
+	done
+	for subdir in $(SUBDIRS); do \
+	  if test "$$subdir" = .; then :; else \
+	    test -d $(distdir)/$$subdir \
+	    || mkdir $(distdir)/$$subdir \
+	    || exit 1; \
+	    chmod 777 $(distdir)/$$subdir; \
+	    (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) top_distdir=../$(top_distdir) distdir=../$(distdir)/$$subdir distdir) \
+	      || exit 1; \
+	  fi; \
+	done
+
+DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
+
+-include $(DEP_FILES)
+
+mostlyclean-depend:
+
+clean-depend:
+
+distclean-depend:
+	-rm -rf .deps
+
+maintainer-clean-depend:
+
+%.o: %.c
+	@echo '$(COMPILE) -c $<'; \
+	$(COMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-cp .deps/$(*F).pp .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm .deps/$(*F).pp
+
+%.lo: %.c
+	@echo '$(LTCOMPILE) -c $<'; \
+	$(LTCOMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-sed -e 's/^\([^:]*\)\.o[ 	]*:/\1.lo \1.o :/' \
+	  < .deps/$(*F).pp > .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm -f .deps/$(*F).pp
+info-am:
+info: info-recursive
+dvi-am:
+dvi: dvi-recursive
+check-am: all-am
+check: check-recursive
+installcheck-am:
+installcheck: installcheck-recursive
+install-exec-am: install-libLTLIBRARIES
+install-exec: install-exec-recursive
+
+install-data-am:
+install-data: install-data-recursive
+
+install-am: all-am
+	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
+install: install-recursive
+uninstall-am: uninstall-libLTLIBRARIES
+uninstall: uninstall-recursive
+all-am: Makefile $(LTLIBRARIES) $(HEADERS)
+all-redirect: all-recursive
+install-strip:
+	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
+installdirs: installdirs-recursive
+installdirs-am:
+	$(mkinstalldirs)  $(DESTDIR)$(libdir)
+
+
+mostlyclean-generic:
+
+clean-generic:
+
+distclean-generic:
+	-rm -f Makefile $(CONFIG_CLEAN_FILES)
+	-rm -f config.cache config.log stamp-h stamp-h[0-9]*
+
+maintainer-clean-generic:
+mostlyclean-am:  mostlyclean-libLTLIBRARIES mostlyclean-compile \
+		mostlyclean-libtool mostlyclean-kr mostlyclean-tags \
+		mostlyclean-depend mostlyclean-generic
+
+mostlyclean: mostlyclean-recursive
+
+clean-am:  clean-libLTLIBRARIES clean-compile clean-libtool clean-kr \
+		clean-tags clean-depend clean-generic mostlyclean-am
+
+clean: clean-recursive
+
+distclean-am:  distclean-libLTLIBRARIES distclean-compile \
+		distclean-libtool distclean-kr distclean-tags \
+		distclean-depend distclean-generic clean-am
+	-rm -f libtool
+
+distclean: distclean-recursive
+
+maintainer-clean-am:  maintainer-clean-libLTLIBRARIES \
+		maintainer-clean-compile maintainer-clean-libtool \
+		maintainer-clean-kr maintainer-clean-tags \
+		maintainer-clean-depend maintainer-clean-generic \
+		distclean-am
+	@echo "This command is intended for maintainers to use;"
+	@echo "it deletes files that may require special tools to rebuild."
+
+maintainer-clean: maintainer-clean-recursive
+
+.PHONY: mostlyclean-libLTLIBRARIES distclean-libLTLIBRARIES \
+clean-libLTLIBRARIES maintainer-clean-libLTLIBRARIES \
+uninstall-libLTLIBRARIES install-libLTLIBRARIES mostlyclean-compile \
+distclean-compile clean-compile maintainer-clean-compile \
+mostlyclean-libtool distclean-libtool clean-libtool \
+maintainer-clean-libtool mostlyclean-kr distclean-kr clean-kr \
+maintainer-clean-kr install-data-recursive uninstall-data-recursive \
+install-exec-recursive uninstall-exec-recursive installdirs-recursive \
+uninstalldirs-recursive all-recursive check-recursive \
+installcheck-recursive info-recursive dvi-recursive \
+mostlyclean-recursive distclean-recursive clean-recursive \
+maintainer-clean-recursive tags tags-recursive mostlyclean-tags \
+distclean-tags clean-tags maintainer-clean-tags distdir \
+mostlyclean-depend distclean-depend clean-depend \
+maintainer-clean-depend info-am info dvi-am dvi check check-am \
+installcheck-am installcheck install-exec-am install-exec \
+install-data-am install-data install-am install uninstall-am uninstall \
+all-redirect all-am all installdirs-am installdirs mostlyclean-generic \
+distclean-generic clean-generic maintainer-clean-generic clean \
+mostlyclean distclean maintainer-clean
+
+
+# Tell versions [3.59,3.63) of GNU make to not export all variables.
+# Otherwise a system limit (for SysV at least) may be exceeded.
+.NOEXPORT:

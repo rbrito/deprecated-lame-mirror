@@ -1,76 +1,395 @@
-#
-# Makefile.in for LAME 3.xx decoding lib
-#
-# processed by ./configure to produce Makefile
-#
-SHELL = @SHELL@
-@SET_MAKE@
+# Makefile.in generated automatically by automake 1.4 from Makefile.am
 
+# Copyright (C) 1994, 1995-8, 1999 Free Software Foundation, Inc.
+# This Makefile.in is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE.
+
+
+SHELL = @SHELL@
+
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+VPATH = @srcdir@
 prefix = @prefix@
 exec_prefix = @exec_prefix@
 
-BINDIR = @bindir@
-LIBDIR = $(prefix)/lib
-INCLUDEDIR = $(prefix)/include
-CC     = @CC@
-CFLAGS = @CFLAGS@
-LDFLAGS= @LDFLAGS@
-DEFS   = @CONFIG_DEFS@
-INCLUDES = @INCLUDES@
-INSTALL= @INSTALL@
-INSTALL_PROGRAM=@INSTALL_PROGRAM@
-INSTALL_DATA=@INSTALL_DATA@
+bindir = @bindir@
+sbindir = @sbindir@
+libexecdir = @libexecdir@
+datadir = @datadir@
+sysconfdir = @sysconfdir@
+sharedstatedir = @sharedstatedir@
+localstatedir = @localstatedir@
+libdir = @libdir@
+infodir = @infodir@
+mandir = @mandir@
+includedir = @includedir@
+oldincludedir = /usr/include
+
+DESTDIR =
+
+pkgdatadir = $(datadir)/@PACKAGE@
+pkglibdir = $(libdir)/@PACKAGE@
+pkgincludedir = $(includedir)/@PACKAGE@
+
+top_builddir = ..
+
+ACLOCAL = @ACLOCAL@
+AUTOCONF = @AUTOCONF@
+AUTOMAKE = @AUTOMAKE@
+AUTOHEADER = @AUTOHEADER@
+
+INSTALL = @INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@ $(AM_INSTALL_PROGRAM_FLAGS)
+INSTALL_DATA = @INSTALL_DATA@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
+transform = @program_transform_name@
 
-AR = @AR@
-RANLIB = @RANLIB@
-MAKEDEP = @MAKEDEP@
-RM_F = @RM_F@
+NORMAL_INSTALL = :
+PRE_INSTALL = :
+POST_INSTALL = :
+NORMAL_UNINSTALL = :
+PRE_UNINSTALL = :
+POST_UNINSTALL = :
+build_alias = @build_alias@
+build_triplet = @build@
+host_alias = @host_alias@
+host_triplet = @host@
+target_alias = @target_alias@
+target_triplet = @target@
+AS = @AS@
+CC = @CC@
+CONFIG_DEFS = @CONFIG_DEFS@
+CPP = @CPP@
+CPUTYPE = @CPUTYPE@
+DLLTOOL = @DLLTOOL@
+ENCODER_DEFS = @ENCODER_DEFS@
+FRONTEND_CFLAGS = @FRONTEND_CFLAGS@
+FRONTEND_LDADD = @FRONTEND_LDADD@
+FRONTEND_LDFLAGS = @FRONTEND_LDFLAGS@
+GTK_CFLAGS = @GTK_CFLAGS@
+GTK_CONFIG = @GTK_CONFIG@
+GTK_LIBS = @GTK_LIBS@
+LDADD = @LDADD@
+LIBTOOL = @LIBTOOL@
+LIBTOOL_DEPS = @LIBTOOL_DEPS@
+LIB_MAJOR_VERSION = @LIB_MAJOR_VERSION@
+LIB_MINOR_VERSION = @LIB_MINOR_VERSION@
 LN_S = @LN_S@
+MAINT = @MAINT@
+MAKEDEP = @MAKEDEP@
+MAKEINFO = @MAKEINFO@
+NASM = @NASM@
+OBJDUMP = @OBJDUMP@
+PACKAGE = @PACKAGE@
+RANLIB = @RANLIB@
+RM_F = @RM_F@
+U = @U@
+VERSION = @VERSION@
+WITH_MP3RTP = @WITH_MP3RTP@
+WITH_MP3X = @WITH_MP3X@
 
-mpglib_sources = common.c \
-        dct64_i386.c \
-        decode_i386.c \
-        layer1.c \
-        layer2.c \
-        layer3.c \
-        tabinit.c \
-        interface.c 
-mpglib_obj = $(mpglib_sources:.c=.o) 
+INCLUDES = @INCLUDES@ -I$(top_srcdir)/libmp3lame
+DEFS = @DEFS@ @CONFIG_DEFS@
 
-DEP = $(mpglib_sources:.c=.d)
-LIB_DEST=libmpgdecoder.a
+noinst_LTLIBRARIES = libmpgdecoder.la
 
-%.o: %.c 
-	$(CC) $(INCLUDES) $(DEFS) $(CFLAGS) -c $< -o $@
+libmpgdecoder_la_SOURCES = common.c 	dct64_i386.c 	decode_i386.c 	interface.c 	layer1.c 	layer2.c 	layer3.c 	tabinit.c
 
-%.d: %.c
-  ifeq ($(NOUNIXCMD),YES)
-	$(CC) $(MAKEDEP) $(INCLUDES) $(DEFS) $(CFLAGS)  $< > $@
-  else
-	$(SHELL) -ec '$(CC) $(MAKEDEP) $(INCLUDES) $(DEFS) $(CFLAGS)  $< | sed '\''s;$*.o;& $@;g'\'' > $@'
-  endif
 
-all: $(LIB_DEST)
+noinst_HEADERS = common.h 	dct64_i386.h 	decode_i386.h 	huffman.h 	interface.h 	l2tables.h 	layer1.h 	layer2.h 	layer3.h 	mpg123.h 	mpglib.h 	tabinit.h
 
-$(LIB_DEST):  $(mpglib_obj) Makefile
-	$(AR) cr $(LIB_DEST)  $(mpglib_obj)
-	$(RANLIB) $(LIB_DEST)
 
-install: 
+EXTRA_DIST = README
 
-uninstall:
+AUTOMAKE_OPTIONS = foreign $(top_srcdir)/ansi2knr
+mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+CONFIG_CLEAN_FILES = 
+LTLIBRARIES =  $(noinst_LTLIBRARIES)
 
-clean:
-	-$(RM_F) $(mpglib_obj) $(DEP) $(LIB_DEST)
+CPPFLAGS = @CPPFLAGS@
+LDFLAGS = @LDFLAGS@
+LIBS = @LIBS@
+ANSI2KNR = $(top_srcdir)/ansi2knr
+libmpgdecoder_la_LDFLAGS = 
+libmpgdecoder_la_LIBADD = 
+libmpgdecoder_la_OBJECTS =  common$U.lo dct64_i386$U.lo decode_i386$U.lo \
+interface$U.lo layer1$U.lo layer2$U.lo layer3$U.lo tabinit$U.lo
+CFLAGS = @CFLAGS@
+COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+CCLD = $(CC)
+LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
+HEADERS =  $(noinst_HEADERS)
+
+DIST_COMMON =  README Makefile.am Makefile.in TODO
+
+
+DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
+
+TAR = tar
+GZIP_ENV = --best
+DEP_FILES =  .deps/common.P .deps/dct64_i386.P .deps/decode_i386.P \
+.deps/interface.P .deps/layer1.P .deps/layer2.P .deps/layer3.P \
+.deps/tabinit.P
+SOURCES = $(libmpgdecoder_la_SOURCES)
+OBJECTS = $(libmpgdecoder_la_OBJECTS)
+
+all: all-redirect
+.SUFFIXES:
+.SUFFIXES: .S .c .lo .o .s
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
+	cd $(top_srcdir) && $(AUTOMAKE) --foreign mpglib/Makefile
+
+Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status $(BUILT_SOURCES)
+	cd $(top_builddir) \
+	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
+
+
+mostlyclean-noinstLTLIBRARIES:
+
+clean-noinstLTLIBRARIES:
+	-test -z "$(noinst_LTLIBRARIES)" || rm -f $(noinst_LTLIBRARIES)
+
+distclean-noinstLTLIBRARIES:
+
+maintainer-clean-noinstLTLIBRARIES:
+
+.s.o:
+	$(COMPILE) -c $<
+
+.S.o:
+	$(COMPILE) -c $<
+
+mostlyclean-compile:
+	-rm -f *.o core *.core
+
+clean-compile:
+
+distclean-compile:
+	-rm -f *.tab.c
+
+maintainer-clean-compile:
+
+.s.lo:
+	$(LIBTOOL) --mode=compile $(COMPILE) -c $<
+
+.S.lo:
+	$(LIBTOOL) --mode=compile $(COMPILE) -c $<
+
+mostlyclean-libtool:
+	-rm -f *.lo
+
+clean-libtool:
+	-rm -rf .libs _libs
+
+distclean-libtool:
+
+maintainer-clean-libtool:
+$(top_srcdir)/ansi2knr: $(top_srcdir)/ansi2knr.o
+	cd $(top_srcdir) && $(MAKE) $(AM_MAKEFLAGS) ansi2knr
+
+$(top_srcdir)/ansi2knr.o:
+	cd $(top_srcdir) && $(MAKE) $(AM_MAKEFLAGS) ansi2knr.o
+
+
+mostlyclean-kr:
+	-rm -f *_.c
+
+clean-kr:
+
+distclean-kr:
+
+maintainer-clean-kr:
+
+libmpgdecoder.la: $(libmpgdecoder_la_OBJECTS) $(libmpgdecoder_la_DEPENDENCIES)
+	$(LINK)  $(libmpgdecoder_la_LDFLAGS) $(libmpgdecoder_la_OBJECTS) $(libmpgdecoder_la_LIBADD) $(LIBS)
+common_.c: common.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/common.c; then echo $(srcdir)/common.c; else echo common.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > common_.c
+dct64_i386_.c: dct64_i386.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/dct64_i386.c; then echo $(srcdir)/dct64_i386.c; else echo dct64_i386.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > dct64_i386_.c
+decode_i386_.c: decode_i386.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/decode_i386.c; then echo $(srcdir)/decode_i386.c; else echo decode_i386.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > decode_i386_.c
+interface_.c: interface.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/interface.c; then echo $(srcdir)/interface.c; else echo interface.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > interface_.c
+layer1_.c: layer1.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/layer1.c; then echo $(srcdir)/layer1.c; else echo layer1.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > layer1_.c
+layer2_.c: layer2.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/layer2.c; then echo $(srcdir)/layer2.c; else echo layer2.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > layer2_.c
+layer3_.c: layer3.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/layer3.c; then echo $(srcdir)/layer3.c; else echo layer3.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > layer3_.c
+tabinit_.c: tabinit.c $(ANSI2KNR)
+	$(CPP) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/tabinit.c; then echo $(srcdir)/tabinit.c; else echo tabinit.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > tabinit_.c
+common_.o common_.lo dct64_i386_.o dct64_i386_.lo decode_i386_.o \
+decode_i386_.lo interface_.o interface_.lo layer1_.o layer1_.lo \
+layer2_.o layer2_.lo layer3_.o layer3_.lo tabinit_.o tabinit_.lo : \
+$(ANSI2KNR)
 
 tags: TAGS
 
-TAGS: $(mpglib_sources) 
-	etags -T $(mpglib_sources) 
+ID: $(HEADERS) $(SOURCES) $(LISP)
+	list='$(SOURCES) $(HEADERS)'; \
+	unique=`for i in $$list; do echo $$i; done | \
+	  awk '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	here=`pwd` && cd $(srcdir) \
+	  && mkid -f$$here/ID $$unique $(LISP)
 
-ifneq ($(MAKECMDGOALS),clean)
-  -include $(DEP)
-endif
+TAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) $(LISP)
+	tags=; \
+	here=`pwd`; \
+	list='$(SOURCES) $(HEADERS)'; \
+	unique=`for i in $$list; do echo $$i; done | \
+	  awk '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	test -z "$(ETAGS_ARGS)$$unique$(LISP)$$tags" \
+	  || (cd $(srcdir) && etags $(ETAGS_ARGS) $$tags  $$unique $(LISP) -o $$here/TAGS)
+
+mostlyclean-tags:
+
+clean-tags:
+
+distclean-tags:
+	-rm -f TAGS ID
+
+maintainer-clean-tags:
+
+distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)/$(subdir)
+
+subdir = mpglib
+
+distdir: $(DISTFILES)
+	here=`cd $(top_builddir) && pwd`; \
+	top_distdir=`cd $(top_distdir) && pwd`; \
+	distdir=`cd $(distdir) && pwd`; \
+	cd $(top_srcdir) \
+	  && $(AUTOMAKE) --include-deps --build-dir=$$here --srcdir-name=$(top_srcdir) --output-dir=$$top_distdir --foreign mpglib/Makefile
+	@for file in $(DISTFILES); do \
+	  d=$(srcdir); \
+	  if test -d $$d/$$file; then \
+	    cp -pr $$d/$$file $(distdir)/$$file; \
+	  else \
+	    test -f $(distdir)/$$file \
+	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \
+	    || cp -p $$d/$$file $(distdir)/$$file || :; \
+	  fi; \
+	done
+
+DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
+
+-include $(DEP_FILES)
+
+mostlyclean-depend:
+
+clean-depend:
+
+distclean-depend:
+	-rm -rf .deps
+
+maintainer-clean-depend:
+
+%.o: %.c
+	@echo '$(COMPILE) -c $<'; \
+	$(COMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-cp .deps/$(*F).pp .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm .deps/$(*F).pp
+
+%.lo: %.c
+	@echo '$(LTCOMPILE) -c $<'; \
+	$(LTCOMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-sed -e 's/^\([^:]*\)\.o[ 	]*:/\1.lo \1.o :/' \
+	  < .deps/$(*F).pp > .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm -f .deps/$(*F).pp
+info-am:
+info: info-am
+dvi-am:
+dvi: dvi-am
+check-am: all-am
+check: check-am
+installcheck-am:
+installcheck: installcheck-am
+install-exec-am:
+install-exec: install-exec-am
+
+install-data-am:
+install-data: install-data-am
+
+install-am: all-am
+	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
+install: install-am
+uninstall-am:
+uninstall: uninstall-am
+all-am: Makefile $(LTLIBRARIES) $(HEADERS)
+all-redirect: all-am
+install-strip:
+	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
+installdirs:
 
 
+mostlyclean-generic:
+
+clean-generic:
+
+distclean-generic:
+	-rm -f Makefile $(CONFIG_CLEAN_FILES)
+	-rm -f config.cache config.log stamp-h stamp-h[0-9]*
+
+maintainer-clean-generic:
+mostlyclean-am:  mostlyclean-noinstLTLIBRARIES mostlyclean-compile \
+		mostlyclean-libtool mostlyclean-kr mostlyclean-tags \
+		mostlyclean-depend mostlyclean-generic
+
+mostlyclean: mostlyclean-am
+
+clean-am:  clean-noinstLTLIBRARIES clean-compile clean-libtool clean-kr \
+		clean-tags clean-depend clean-generic mostlyclean-am
+
+clean: clean-am
+
+distclean-am:  distclean-noinstLTLIBRARIES distclean-compile \
+		distclean-libtool distclean-kr distclean-tags \
+		distclean-depend distclean-generic clean-am
+	-rm -f libtool
+
+distclean: distclean-am
+
+maintainer-clean-am:  maintainer-clean-noinstLTLIBRARIES \
+		maintainer-clean-compile maintainer-clean-libtool \
+		maintainer-clean-kr maintainer-clean-tags \
+		maintainer-clean-depend maintainer-clean-generic \
+		distclean-am
+	@echo "This command is intended for maintainers to use;"
+	@echo "it deletes files that may require special tools to rebuild."
+
+maintainer-clean: maintainer-clean-am
+
+.PHONY: mostlyclean-noinstLTLIBRARIES distclean-noinstLTLIBRARIES \
+clean-noinstLTLIBRARIES maintainer-clean-noinstLTLIBRARIES \
+mostlyclean-compile distclean-compile clean-compile \
+maintainer-clean-compile mostlyclean-libtool distclean-libtool \
+clean-libtool maintainer-clean-libtool mostlyclean-kr distclean-kr \
+clean-kr maintainer-clean-kr tags mostlyclean-tags distclean-tags \
+clean-tags maintainer-clean-tags distdir mostlyclean-depend \
+distclean-depend clean-depend maintainer-clean-depend info-am info \
+dvi-am dvi check check-am installcheck-am installcheck install-exec-am \
+install-exec install-data-am install-data install-am install \
+uninstall-am uninstall all-redirect all-am all installdirs \
+mostlyclean-generic distclean-generic clean-generic \
+maintainer-clean-generic clean mostlyclean distclean maintainer-clean
+
+
+# Tell versions [3.59,3.63) of GNU make to not export all variables.
+# Otherwise a system limit (for SysV at least) may be exceeded.
+.NOEXPORT:
