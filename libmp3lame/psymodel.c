@@ -370,8 +370,7 @@ static void
 fft_short(lame_internal_flags * const gfc,
 	  FLOAT x[BLKSIZE_s], const sample_t *buffer)
 {
-    int i;
-    int j = (BLKSIZE_s / 8 - 1)*4;
+    int i, j = (BLKSIZE_s / 8 - 1)*4;
     x += BLKSIZE_s / 2;
 
     do {
@@ -408,8 +407,7 @@ static void
 fft_long(lame_internal_flags * const gfc,
 	 FLOAT x[BLKSIZE], const sample_t *buffer )
 {
-    int           i;
-    int           j = BLKSIZE / 8 - 1;
+    int i, j = BLKSIZE / 8 - 1;
     x += BLKSIZE / 2;
 
     do {
@@ -1008,10 +1006,9 @@ psycho_analysis_short(
     FLOAT attack_adjust[4];
 
     /* usual variables like loop indices, etc..    */
-    int numchn, chn;
+    int numchn = gfc->channels_out, chn;
     int i, j, sblock;
 
-    numchn = gfc->channels_out;
     if (gfp->mode == JOINT_STEREO) numchn=4;
 
     /*************************************************************** 
@@ -1107,7 +1104,7 @@ mp3x display               <------LONG------>
 	 */
 	gfc->masking_next[gr][chn].en.s[0][0] = -1.0;
 	gfc->useshort_next[gr][chn] = NORM_TYPE;
-	attack_adjust[chn] = 0.1;
+	first_attack_position[chn] = -1;
 	for (i=0;i<3;i++) {
 	    /* calculate energies of each sub-shortblocks */
 	    if (gfc->nsPsy.subbk_ene[chn][i+2]
@@ -1221,35 +1218,16 @@ L3psycho_anal_ns(
     FLOAT wsamp_L[2][BLKSIZE];
 
     /* usual variables like loop indices, etc..    */
-    int numchn, chn;
-    FLOAT pcfact;
+    int numchn = gfc->channels_out, chn;
+    if (gfp->mode == JOINT_STEREO) numchn=4;
 
     /*********************************************************************
      * compute the long block masking ratio
      *********************************************************************/
-    numchn = gfc->channels_out;
-    if (gfp->mode == JOINT_STEREO) numchn=4;
-
-    switch (gfp->VBR) {
-    case cbr:
-	pcfact = gfc->ResvMax == 0
-	    ? 0 : ((FLOAT)gfc->ResvSize)/gfc->ResvMax*0.5;
-	break;
-    case vbr: {
-	static const FLOAT pcQns[10]={1.0,1.0,1.0,0.8,0.6,0.5,0.4,0.3,0.2,0.1};
-	pcfact = pcQns[gfp->VBR_q];
-	break;
-    }
-    case abr:
-    default:
-	pcfact = 1.0;
-    }
-
     for (chn=0; chn<numchn; chn++) {
-	FLOAT fftenergy[HBLKSIZE];
 	/* convolution   */
-	FLOAT eb[CBANDS], max[CBANDS], avg[CBANDS];
-	FLOAT enn, thmm;
+	FLOAT fftenergy[HBLKSIZE], eb[CBANDS], max[CBANDS], avg[CBANDS];
+	FLOAT enn, thmm, *p;
 	III_psy_ratio *mr = &gfc->masking_next[gr][chn];
 #define eb2 fftenergy
 	static const FLOAT tab[] = {
@@ -1257,8 +1235,6 @@ L3psycho_anal_ns(
 	    0.63096/0.11749, 0.63096/0.11749, 0.63096/0.11749, 0.25119/0.11749
 	};
 	int b, i, j;
-	FLOAT *spread;
-
 	if (chn < 2)
 	    fft_long ( gfc, wsamp_L[chn], buffer[chn]);
 	else if (chn == 2) {
@@ -1273,30 +1249,28 @@ L3psycho_anal_ns(
 	/*********************************************************************
 	 *    Calculate the energy and the tonality of each partition.
 	 *********************************************************************/
-	{
-	    FLOAT *p = wsamp_L[chn & 1], ebb, m;
-	    ebb = p[0] * p[0];
-	    eb[0] = ebb;
+	p = wsamp_L[chn & 1];
+	enn = p[0] * p[0];
+	eb[0] = enn;
 
-	    ebb += ebb;
-	    max[0] = fftenergy[0] = ebb;
-	    avg[0] = ebb * gfc->rnumlines_l[0];
+	enn += enn;
+	max[0] = fftenergy[0] = enn;
+	avg[0] = enn * gfc->rnumlines_l[0];
 
-	    for (b = j = 1; b<gfc->npart_l; b++) {
-		fftenergy[j] = m = ebb = p[j]*p[j] + p[BLKSIZE-j]*p[BLKSIZE-j];
+	for (b = j = 1; b<gfc->npart_l; b++) {
+	    fftenergy[j] = thmm = enn = p[j]*p[j] + p[BLKSIZE-j]*p[BLKSIZE-j];
+	    j++;
+	    for (i = gfc->numlines_l[b] - 1; i > 0; --i) {
+		FLOAT el;
+		fftenergy[j] = el = p[j]*p[j] + p[BLKSIZE-j]*p[BLKSIZE-j];
 		j++;
-		for (i = gfc->numlines_l[b] - 1; i > 0; --i) {
-		    FLOAT el;
-		    fftenergy[j] = el = p[j]*p[j] + p[BLKSIZE-j]*p[BLKSIZE-j];
-		    j++;
-		    ebb += el;
-		    if (m < el)
-			m = el;
-		}
-		eb[b] = ebb * 0.5f;
-		max[b] = m;
-		avg[b] = ebb * gfc->rnumlines_l[b];
+		enn += el;
+		if (thmm < el)
+		    thmm = el;
 	    }
+	    eb[b] = enn * 0.5f;
+	    max[b] = thmm;
+	    avg[b] = enn * gfc->rnumlines_l[b];
 	}
 	/*********************************************************************
 	 * compute loudness approximation (used for ATH auto-level adjustment) 
@@ -1305,17 +1279,13 @@ L3psycho_anal_ns(
 	    gfc->loudness_next[gr][chn]
 		= psycho_loudness_approx(fftenergy, gfc) * .5f;
 	}
-	/* total energy */
-	{
-	    FLOAT totalenergy=0.0;
-	    for (j = 11; j < gfc->npart_l; j++)
-		totalenergy += eb[j];
 
-	    /* there is a one granule delay.  Copy maskings computed last call
-	     * into masking_ratio to return to calling program.
-	     */
-	    gfc->tot_ener_next[gr][chn] = totalenergy;
-	}
+	/* total energy */
+	enn = 0.0;
+	for (j = 11; j < gfc->npart_l; j++)
+	    enn += eb[j];
+	gfc->tot_ener_next[gr][chn] = enn;
+
 #ifdef HAVE_GTK
 	if (gfp->analysis)
 	    memcpy(gfc->energy_save[gr][chn], fftenergy, sizeof(fftenergy));
@@ -1367,33 +1337,33 @@ L3psycho_anal_ns(
 	 *      with the spreading function, s3_l[b][k]
 	 ******************************************************************* */
 	b = j = 0;
-	spread = gfc->s3_ll;
+	p = gfc->s3_ll;
 	enn = thmm = 0.0;
 	for (;; b++ ) {
 	    /* convolve the partitioned energy with the spreading function */
 	    FLOAT ecb;
 	    int kk = gfc->s3ind[b][0];
-	    spread -= kk;
+	    p -= kk;
 // calculate same bark masking 1st
-	    ecb = spread[b] * eb2[b];
+	    ecb = p[b] * eb2[b];
 
 	    for (kk = 1; kk <= 3; kk++) {
 		int k2;
 
 		k2 = b + kk;
 		if (k2 <= gfc->s3ind[b][1] && eb2[k2] != 0.0)
-		    ecb = mask_add_samebark(ecb, spread[k2] * eb2[k2]);
+		    ecb = mask_add_samebark(ecb, p[k2] * eb2[k2]);
 
 		k2 = b - kk;
 		if (k2 >= gfc->s3ind[b][0] && eb2[k2] != 0.0)
-		    ecb = mask_add_samebark(ecb, spread[k2] * eb2[k2]);
+		    ecb = mask_add_samebark(ecb, p[k2] * eb2[k2]);
 	    }
 	    for (kk = gfc->s3ind[b][0]; kk <= gfc->s3ind[b][1]; kk++) {
 		if ((unsigned int)(kk - b + 3) <= 6 || eb2[kk] == 0.0)
 		    continue;
-		ecb = mask_add(ecb, spread[kk] * eb2[kk], kk, b, gfc);
+		ecb = mask_add(ecb, p[kk] * eb2[kk], kk, b, gfc);
 	    }
-	    spread += gfc->s3ind[b][1] + 1;
+	    p += gfc->s3ind[b][1] + 1;
 
 	    gfc->nb_1[chn][b] = ecb;
 
@@ -1692,7 +1662,7 @@ psycho_analysis(
     for (gr=0; gr < gfc->mode_gr ; gr++) {
 	int numchn;
 	for (ch = 0; ch < gfc->channels_out; ch++)
-	    bufp[ch] = &buffer[ch][576*(gr + gfc->mode_gr) - FFTOFFSET];
+	    bufp[ch] = buffer[ch] + 576*(gr + gfc->mode_gr) - FFTOFFSET;
 
 	psycho_analysis_short(gfp, bufp, sbsmpl, gr);
 	if (gr == 0) {
