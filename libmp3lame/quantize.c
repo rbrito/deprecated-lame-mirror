@@ -970,8 +970,7 @@ VBR_encode_granule (
         else
             gfc->sfb21_extra = sfb21_extra;
 
-        over = outer_loop ( gfp, cod_info, l3_xmin,
-                            xrpow, ch, this_bits );
+        over = outer_loop ( gfp, cod_info, l3_xmin, xrpow, ch, this_bits );
 
         /*  is quantization as good as we are looking for ?
          *  in this case: is no scalefactor band distorted?
@@ -1188,9 +1187,9 @@ VBR_prepare (
     avg = ResvFrameBegin (gfp, &avg) / gfc->mode_gr;
     
     get_framebits (gfp, analog_mean_bits, min_mean_bits, frameBits);
-    
+
     for (gr = 0; gr < gfc->mode_gr; gr++) {
-        mxb = on_pe (gfp, pe, &gfc->l3_side, max_bits[gr], avg, gr);
+        mxb = on_pe (gfp, pe, &gfc->l3_side, max_bits[gr], avg, gr, 0);
         if (gfc->mode_ext == MPG_MD_MS_LR) {
             ms_convert (&gfc->l3_side, gr);
             reduce_side (max_bits[gr], ms_ener_ratio[gr], avg, mxb);
@@ -1314,7 +1313,6 @@ VBR_iteration_loop (
     int       analog_mean_bits, min_mean_bits;
     int       mean_bits;
     int       ch, gr, analog_silence;
-    gr_info             *cod_info;
     III_side_info_t     *l3_side  = &gfc->l3_side;
 
     analog_silence = VBR_prepare (gfp, pe, ms_ener_ratio, ratio, 
@@ -1333,7 +1331,7 @@ VBR_iteration_loop (
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         for (ch = 0; ch < gfc->channels_out; ch++) {
             int ret; 
-            cod_info = &l3_side->tt[gr][ch];
+	    gr_info *cod_info = &l3_side->tt[gr][ch];
       
             /*  init_outer_loop sets up cod_info, scalefac and xrpow 
              */
@@ -1345,7 +1343,7 @@ VBR_iteration_loop (
                 save_bits[gr][ch] = 0;
                 continue; /* with next channel */
             }
-      
+
             if (gfp->VBR == vbr_mtrh) {
                 ret = VBR_noise_shaping (gfc, xrpow,
 					 min_bits[gr][ch], max_bits[gr][ch], 
@@ -1637,7 +1635,7 @@ iteration_loop(
 
         /*  calculate needed bits
          */
-        max_bits = on_pe (gfp, pe, l3_side, targ_bits, mean_bits, gr);
+        max_bits = on_pe (gfp, pe, l3_side, targ_bits, mean_bits, gr, 1);
 
         if (gfc->mode_ext == MPG_MD_MS_LR) {
             ms_convert (&gfc->l3_side, gr);

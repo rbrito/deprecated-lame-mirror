@@ -26,7 +26,7 @@
 #endif
 
 #include <assert.h>
-#include "util.h"
+#include "bitstream.h"
 #include "reservoir.h"
 
 #ifdef WITH_DMALLOC
@@ -76,12 +76,17 @@
  */
 
 int
-ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, int frameLength )
+ResvFrameBegin(lame_global_flags *gfp, int *mean_bits)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     int fullFrameBits;
     int resvLimit;
     int maxmp3buf;
+    III_side_info_t     *l3_side = &gfc->l3_side;
+    int frameLength;
+
+    frameLength = getframebits(gfp);
+    *mean_bits = (frameLength - gfc->sideinfo_len * 8) / gfc->mode_gr;
 
 /*
  *  Meaning of the variables:
@@ -146,9 +151,9 @@ ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, i
 	  gfc->ResvMax = resvLimit;
     }
 
-    fullFrameBits = mean_bits * gfc->mode_gr + Min ( gfc->ResvSize, gfc->ResvMax );
-    
-    if ( fullFrameBits > maxmp3buf )
+    fullFrameBits = *mean_bits * gfc->mode_gr + Min ( gfc->ResvSize, gfc->ResvMax );
+
+    if (fullFrameBits > maxmp3buf)
         fullFrameBits = maxmp3buf;
 
     assert ( 0 == gfc->ResvMax % 8 );
@@ -157,7 +162,7 @@ ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, i
     l3_side->resvDrain_pre = 0;
 
     if ( gfc->pinfo != NULL ) {
-        gfc->pinfo->mean_bits = mean_bits / 2;  /* expected bits per channel per granule [is this also right for mono/stereo, MPEG-1/2 ?] */
+        gfc->pinfo->mean_bits = *mean_bits / 2;  /* expected bits per channel per granule [is this also right for mono/stereo, MPEG-1/2 ?] */
         gfc->pinfo->resvsize  = gfc->ResvSize;
     }
 
@@ -171,18 +176,27 @@ ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, i
          extra_bits:  amount extra available from reservoir
   Mark Taylor 4/99
 */
-void ResvMaxBits(lame_global_flags *gfp, int mean_bits, int *targ_bits, int *extra_bits)
+void ResvMaxBits(lame_global_flags *gfp, int mean_bits, int *targ_bits, int *extra_bits, int cbr)
 {
   lame_internal_flags *gfc=gfp->internal_flags;
   int add_bits;
-  int full_fac;
-  
+  int ResvSize = gfc->ResvSize;
+
+  /* define NORES_TEST if you do not want the second granule to use
+     bits saved by the first granule. Requires using the --nores.
+     This is useful for testing only */
+#undef  NORES_TEST
+#ifndef NORES_TEST
+  /* conpensate the saved bits used in the 1st granule */
+  if (cbr)
+      ResvSize += mean_bits;
+#endif
+
   *targ_bits = mean_bits ;
 
   /* extra bits if the reservoir is almost full */
-  full_fac=9;
-  if (gfc->ResvSize > ((gfc->ResvMax * full_fac) / 10)) {
-    add_bits= gfc->ResvSize-((gfc->ResvMax * full_fac) / 10);
+  if (ResvSize > ((gfc->ResvMax * 9) / 10)) {
+    add_bits= ResvSize - ((gfc->ResvMax * 9) / 10);
     *targ_bits += add_bits;
   }else {
     add_bits =0 ;
@@ -197,7 +211,7 @@ void ResvMaxBits(lame_global_flags *gfp, int mean_bits, int *targ_bits, int *ext
 
   /* amount from the reservoir we are allowed to use. ISO says 6/10 */
   *extra_bits =
-    (gfc->ResvSize  < (gfc->ResvMax*6)/10  ? gfc->ResvSize : (gfc->ResvMax*6)/10);
+    (ResvSize  < (gfc->ResvMax*6)/10  ? ResvSize : (gfc->ResvMax*6)/10);
   *extra_bits -= add_bits;
 
   if (*extra_bits < 0) *extra_bits=0;
@@ -211,14 +225,9 @@ void ResvMaxBits(lame_global_flags *gfp, int mean_bits, int *targ_bits, int *ext
   the reservoir to reflect the granule's usage.
 */
 void
-ResvAdjust(lame_internal_flags *gfc,gr_info *gi, III_side_info_t *l3_side, int mean_bits )
+ResvAdjust(lame_internal_flags *gfc,gr_info *gi)
 {
-  gfc->ResvSize += (mean_bits / gfc->channels_out) - gi->part2_3_length;
-#if 0
-  printf("part2_3_length:  %i  avg=%i  incres: %i  resvsize=%i\n",gi->part2_3_length,
-	 mean_bits/gfc->channels_out,
-mean_bits/gfc->channels_out-gi->part2_3_length,gfc->ResvSize);
-#endif
+    gfc->ResvSize -= gi->part2_3_length;
 }
 
 
@@ -229,16 +238,14 @@ mean_bits/gfc->channels_out-gi->part2_3_length,gfc->ResvSize);
   bits.
 */
 void
-ResvFrameEnd(lame_internal_flags *gfc, III_side_info_t *l3_side, int mean_bits)
+ResvFrameEnd(lame_internal_flags *gfc, int mean_bits)
 {
     int stuffingBits;
     int over_bits;
+    III_side_info_t     *l3_side = &gfc->l3_side;
 
 
-    /* just in case mean_bits is odd, this is necessary... */
-    if ( gfc->channels_out == 2  &&  (mean_bits & 1) )
-	gfc->ResvSize += 1;
-
+    gfc->ResvSize += mean_bits * gfc->mode_gr;
     stuffingBits=0;
     l3_side->resvDrain_post = 0;
     l3_side->resvDrain_pre = 0;

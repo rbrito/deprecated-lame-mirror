@@ -309,7 +309,7 @@ void compute_ath( lame_global_flags *gfp, FLOAT8 ATH_l[], FLOAT8 ATH_s[] )
  * bugfixes rh 8/01: often allocated more than the allowed 4095 bits
  ************************************************************************/
 int on_pe( lame_global_flags *gfp, FLOAT8 pe[][2], III_side_info_t *l3_side,
-           int targ_bits[2], int mean_bits, int gr )
+           int targ_bits[2], int mean_bits, int gr, int cbr )
 {
     lame_internal_flags * gfc = gfp->internal_flags;
     gr_info *   cod_info;
@@ -319,7 +319,7 @@ int on_pe( lame_global_flags *gfp, FLOAT8 pe[][2], III_side_info_t *l3_side,
     int     ch;
 
     /* allocate targ_bits for granule */
-    ResvMaxBits( gfp, mean_bits, &tbits, &extra_bits, gr);
+    ResvMaxBits( gfp, mean_bits, &tbits, &extra_bits, cbr);
     max_bits = tbits + extra_bits;
     if (max_bits > MAX_BITS) /* hard limit per granule */
         max_bits = MAX_BITS;

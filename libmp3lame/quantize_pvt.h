@@ -60,7 +60,7 @@ void    compute_ath (lame_global_flags * gfp, FLOAT8 ATH_l[SBPSY_l],
                      FLOAT8 ATH_s[SBPSY_l]);
 
 int     on_pe (lame_global_flags *gfp, FLOAT8 pe[2][2], III_side_info_t * l3_side,
-               int targ_bits[2], int mean_bits, int gr);
+               int targ_bits[2], int mean_bits, int gr, int cbr);
 
 void    reduce_side (int targ_bits[2], FLOAT8 ms_ener_ratio, int mean_bits,
                      int max_bits);
