@@ -23,8 +23,8 @@
 #define LAME_H_INCLUDED
 
 #define LAME_MAJOR_VERSION	3	/* Major version number */
-#define LAME_MINOR_VERSION	80	/* Minor version number */
-#define LAME_ALPHAVERSION	0	/* Set number if this is an alpha version, otherwise zero */
+#define LAME_MINOR_VERSION	81	/* Minor version number */
+#define LAME_ALPHAVERSION	1	/* Set number if this is an alpha version, otherwise zero */
 #define LAME_BETAVERSION        0	/* Set number if this is a beta version, otherwise zero */
 
 #define PSY_MAJOR_VERSION	0	/* Major version number */
