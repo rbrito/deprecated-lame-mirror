@@ -812,8 +812,9 @@ best_scalefac_store(lame_t gfc, int gr, int ch)
 	int even = 0;
 	j -= l;
 	do {
-	    even |= gi->l3_enc[l+j];
-	} while (++l < 0);
+	    even |= gi->l3_enc[l+j  ];
+	    even |= gi->l3_enc[l+j+1];
+	} while ((l+=2) < 0);
 	/* remove scalefacs from bands with all ix=0.
 	 * This idea comes from the AAC ISO docs.  added mt 3/00 */
 	if (even == 0) {
@@ -834,6 +835,7 @@ best_scalefac_store(lame_t gfc, int gr, int ch)
 	}
     }
     if (recalc) {
+	recalc = 0;
 	gfc->scale_bitcounter(gi);
 	noquant_count_bits(gfc, gi);
     }
