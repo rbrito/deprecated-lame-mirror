@@ -443,11 +443,15 @@ encoder(lame_t gfp, FILE * outf, int nogap, char *inPath,
 
 	if (id3v2taglen) {
 	    char *id3v2tag = malloc(id3v2taglen);
-	    fseek(outf, 0, SEEK_SET);
-	    fseek(musicin, 0, SEEK_SET);
-	    fread(id3v2tag, 1, id3v2taglen, musicin);
-	    fwrite(id3v2tag, 1, id3v2taglen, outf);
-	    free(id3v2tag);
+	    if (id3v2tag) {
+		fseek(outf, 0, SEEK_SET);
+		fseek(musicin, 0, SEEK_SET);
+		fread(id3v2tag, 1, id3v2taglen, musicin);
+		fwrite(id3v2tag, 1, id3v2taglen, outf);
+		free(id3v2tag);
+	    } else {
+		fprintf(stderr, "Oops, too big ID3v2 Tag to copy...\n");
+	    }
 	}
     }
     return 0;
