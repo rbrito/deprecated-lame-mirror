@@ -24,9 +24,6 @@
 #define LAME_LAME_H
 
 #include <stdio.h>
-#ifdef KLEMM_44
-# include <sys/types.h>
-#endif
 
 #if defined(__cplusplus)
 extern "C" {
@@ -195,40 +192,6 @@ typedef struct  {
 
 } lame_global_flags;
 
-
-#ifdef KLEMM_44
-/*
- *  About handling of octetstreams:
- *  CHAR_BIT = 8: data points to a normal memory block which can be written to
- *                disk via fwrite
- *  CHAR_BIT > 8: On every char only the bits from 0...7 are used. Depending on
- *                the host I/O it can be possible that you must first pack the
- *                data stream before writing to disk.
- *  CHAR_BIT < 8: Not allowed by C
- */
-#ifdef LAME_LIBRARY_BUILD
-
-typedef struct {
-    uint8_t*   data;
-    size_t     length;
-    size_t     size;
-} octetstream_t;
- 
-#else
- 
-typedef struct {
-    volatile const void* volatile const   data;
-    const size_t                          length;
-    const size_t                          size;
-} octetstream_t;
-
-#endif
- 
-octetstream_t*  octetstream_open   ( const size_t  size );
-int             octetstream_resize ( octetstream_t* const  os,
-                                     const size_t  size );
-int             octetstream_close  ( octetstream_t* const  os );
-#endif /* KLEMM_44 */
 
 
 
