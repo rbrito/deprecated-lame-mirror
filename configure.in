@@ -279,6 +279,22 @@ AC_HEADER_TIME
 dnl Checks for library functions.
 AC_FUNC_ALLOCA
 AC_CHECK_FUNCS(gettimeofday socket strtol)
+if test $ac_cv_func_socket = no; then
+	# maybe it is in libsocket
+	AC_CHECK_LIB(socket, socket, [AC_DEFINE(HAVE_SOCKET)
+		LIBS="$LIBS -lsocket"])
+
+	if test "X${ac_cv_lib_socket_socket}" != "Xyes"; then
+		AC_MSG_ERROR([function socket is mandatory])
+	fi
+fi
+
+if test "X${ac_cv_func_strtol}" != "Xyes"; then
+	AC_MSG_ERROR([function strtol is mandatory])
+fi
+if test "X${ac_cv_func_gettimeofday}" != "Xyes"; then
+	AC_MSG_ERROR([function strtol is mandatory])
+fi
 
 
 dnl Initialize configuration variables for the Makefile
