@@ -676,6 +676,10 @@ void lame_print_config(lame_global_flags *gfp)
     fprintf(stderr, "Encoding %s to %s\n",
 	    (strcmp(gfp->inPath, "-")? gfp->inPath : "stdin"),
 	    (strcmp(gfp->outPath, "-")? gfp->outPath : "stdout"));
+    if (gfp->ogg) {
+      fprintf(stderr, "Encoding as %.1f kHz VBR Ogg Vorbis \n",
+	      gfp->out_samplerate/1000.0);
+    }else
     if (gfp->VBR==1)
       fprintf(stderr, "Encoding as %.1f kHz VBR(q=%i) %s MPEG%i LayerIII (%4.1fx estimated) qval=%i\n",
 	      gfp->out_samplerate/1000.0,
