@@ -30,6 +30,7 @@
 #include "lame.h"
 #include "VbrTag.h"
 #include "version.h"
+#include "id3tag.h"
 
 #include	<assert.h>
 

@@ -2,9 +2,6 @@
 #ifndef LAME_ID3_H
 #define LAME_ID3_H
 
-#include "lame.h"
-
-
 #define CHANGED_FLAG    (1U << 0)
 #define ADD_V2_FLAG     (1U << 1)
 #define V1_ONLY_FLAG    (1U << 2)
@@ -12,18 +9,6 @@
 #define SPACE_V1_FLAG   (1U << 4)
 #define PAD_V2_FLAG     (1U << 5)
 
-struct id3tag_spec
-{
-    /* private data members */
-    int flags;
-    const char *title;
-    const char *artist;
-    const char *album;
-    int year;
-    const char *comment;
-    int track;
-    int genre;
-};
 
 
 /* write tag into stream at current position */

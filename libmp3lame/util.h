@@ -32,7 +32,6 @@
 #include "lame.h"
 #include "lame_global_flags.h"
 #include "lame-analysis.h"
-#include "id3tag.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -470,7 +469,17 @@ struct lame_internal_flags {
     int ancillary_flag;
 
     /* optional ID3 tags, used in id3tag.c  */
-    struct id3tag_spec tag_spec;
+    struct id3tag_spec {
+	/* private data members */
+	int flags;
+	const char *title;
+	const char *artist;
+	const char *album;
+	int year;
+	const char *comment;
+	int track;
+	int genre;
+    }  tag_spec;
     uint16_t nMusicCRC;
 
     unsigned int crcvalue;
