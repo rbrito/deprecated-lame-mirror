@@ -467,28 +467,28 @@ libmp3lame.a:  $(OBJ) Makefile
 
 #shared library, probably GNU specific?
 libmp3lame.so:  $(OBJ) Makefile
-	$(CC) -shared -Wl,-soname,$(SHARED_LIB_MAJOR) -o $(SHARED_LIB_MINOR) $(OBJ)
-	$(RM_F) $(SHARED_LIB_MAJOR)
+	$(CC) -shared -Wl,-soname,$(SHARED_LIB_MAJOR) -o $(SHARED_LIB_MINOR) $(LIBS) $(LDFLAGS) $(OBJ)
+	@$(RM_F) $(SHARED_LIB_MAJOR)
 	$(LN_S) $(SHARED_LIB_MINOR) $(SHARED_LIB_MAJOR)
-	$(RM_F) $(SHARED_LIB)
+	@$(RM_F) $(SHARED_LIB)
 	$(LN_S) $(SHARED_LIB_MAJOR) $(SHARED_LIB)
 
 lib:  @LIB_TARGETS@
 
 install_header:
-	mkdir -p $(INCLUDEDIR)
+	@mkdir -p $(INCLUDEDIR)
 	$(INSTALL_PROGRAM) lame.h $(INCLUDEDIR)
 
 install_static_lib: libmp3lame.a install_header
-	mkdir -p $(LIBDIR)
+	@mkdir -p $(LIBDIR)
 	$(INSTALL_PROGRAM) libmp3lame.a $(LIBDIR)
 
 install_shared_lib: libmp3lame.so install_header
-	mkdir -p $(LIBDIR)
+	@mkdir -p $(LIBDIR)
 	$(INSTALL_PROGRAM) $(SHARED_LIB_MINOR) $(LIBDIR)
-	$(RM_F) $(LIBDIR)/$(SHARED_LIB_MAJOR)
+	@$(RM_F) $(LIBDIR)/$(SHARED_LIB_MAJOR)
 	(cd $(LIBDIR) && $(LN_S) $(SHARED_LIB_MINOR) $(SHARED_LIB_MAJOR))
-	$(RM_F) $(LIBDIR)/$(SHARED_LIB)
+	@$(RM_F) $(LIBDIR)/$(SHARED_LIB)
 	(cd $(LIBDIR) && $(LN_S) $(SHARED_LIB_MAJOR) $(SHARED_LIB))
 
 install_program: $(PGM)
