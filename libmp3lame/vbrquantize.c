@@ -57,35 +57,6 @@ typedef union {
 
 
 #ifdef TAKEHIRO_IEEE754_HACK
-
-#define DUFFBLOCK() do { \
-        xp = xr34[index] * sfpow34_p1; \
-        xe = xr34[index] * sfpow34_eq; \
-        xm = xr34[index] * sfpow34_m1; \
-        if ( xm <= IXMAX_VAL ) { \
-        xp += MAGIC_FLOAT; \
-        xe += MAGIC_FLOAT; \
-        xm += MAGIC_FLOAT; \
-        fi[0].f = xp; \
-        fi[1].f = xe; \
-        fi[2].f = xm; \
-        fi[0].f = xp + (adj43asm - MAGIC_INT)[fi[0].i]; \
-        fi[1].f = xe + (adj43asm - MAGIC_INT)[fi[1].i]; \
-        fi[2].f = xm + (adj43asm - MAGIC_INT)[fi[2].i]; \
-        fi[0].i -= MAGIC_INT; \
-        fi[1].i -= MAGIC_INT; \
-        fi[2].i -= MAGIC_INT; \
-        x0 = fabs(xr[index]); \
-        xp = x0 - pow43[fi[0].i] * sfpow_p1; \
-        xe = x0 - pow43[fi[1].i] * sfpow_eq; \
-        xm = x0 - pow43[fi[2].i] * sfpow_m1; \
-        xfsf_p1 += xp * xp; \
-        xfsf_eq += xe * xe; \
-        xfsf_m1 += xm * xm; \
-        ++index; \
-        } else return -1; \
-    } while(0)
-    
 #   define ROUNDFAC -0.0946    
 #else
 
@@ -604,111 +575,6 @@ calc_sfb_noise_mq_ISO(const FLOAT8 * xr, const FLOAT8 * xr34, int bw, int sf, in
 
 
 
-static const FLOAT8 facm1 = .8408964153; /* pow(2,(sf-1)/4.0) */
-static const FLOAT8 facp1 = 1.189207115;
-static const FLOAT8 fac34m1 = 1.13878863476; /* .84089 ^ -3/4 */
-static const FLOAT8 fac34p1 = 0.878126080187;
-
-static  FLOAT8
-calc_sfb_noise_ave_x34(const FLOAT8 * xr, const FLOAT8 * xr34, int bw, int sf)
-{
-    double  xp;
-    double  xe;
-    double  xm;
-#ifdef TAKEHIRO_IEEE754_HACK
-    double  x0;
-    unsigned int index = 0;
-#endif
-    int     xx[3], j;
-    fi_union *fi = (fi_union *) xx;
-    FLOAT8  sfpow34_eq, sfpow34_p1, sfpow34_m1;
-    FLOAT8  sfpow_eq, sfpow_p1, sfpow_m1;
-    FLOAT8  xfsf_eq = 0, xfsf_p1 = 0, xfsf_m1 = 0;
-
-    sfpow_eq = POW20(sf); /*pow(2.0,sf/4.0); */
-    sfpow_m1 = sfpow_eq * facm1;
-    sfpow_p1 = sfpow_eq * facp1;
-
-    sfpow34_eq = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
-    sfpow34_m1 = sfpow34_eq * fac34m1;
-    sfpow34_p1 = sfpow34_eq * fac34p1;
-
-#ifdef TAKEHIRO_IEEE754_HACK
-    /*
-     *  loop unrolled into "Duff's Device".   Robert Hegemann
-     */
-    j = (bw + 3) / 4;
-    switch (bw % 4) {
-    default:
-    case 0:
-        do {
-            DUFFBLOCK();
-    case 3:
-            DUFFBLOCK();
-    case 2:
-            DUFFBLOCK();
-    case 1:
-            DUFFBLOCK();
-        } while (--j);
-    }
-#else
-    for (j = 0; j < bw; ++j) {
-
-        if (xr34[j] * sfpow34_m1 > IXMAX_VAL)
-            return -1;
-
-        xe = xr34[j] * sfpow34_eq;
-        XRPOW_FTOI(xe, fi[0].i);
-        XRPOW_FTOI(xe + QUANTFAC(fi[0].i), fi[0].i);
-        xe = fabs(xr[j]) - pow43[fi[0].i] * sfpow_eq;
-        xe *= xe;
-
-        xp = xr34[j] * sfpow34_p1;
-        XRPOW_FTOI(xp, fi[0].i);
-        XRPOW_FTOI(xp + QUANTFAC(fi[0].i), fi[0].i);
-        xp = fabs(xr[j]) - pow43[fi[0].i] * sfpow_p1;
-        xp *= xp;
-
-        xm = xr34[j] * sfpow34_m1;
-        XRPOW_FTOI(xm, fi[0].i);
-        XRPOW_FTOI(xm + QUANTFAC(fi[0].i), fi[0].i);
-        xm = fabs(xr[j]) - pow43[fi[0].i] * sfpow_m1;
-        xm *= xm;
-
-        xfsf_eq += xe;
-        xfsf_p1 += xp;
-        xfsf_m1 += xm;
-    }
-#endif
-
-    if (xfsf_eq < xfsf_p1)
-        xfsf_eq = xfsf_p1;
-    if (xfsf_eq < xfsf_m1)
-        xfsf_eq = xfsf_m1;
-    return xfsf_eq;
-}
-
-static  FLOAT8
-calc_sfb_noise_ave_ISO(const FLOAT8 * xr, const FLOAT8 * xr34, int bw, int sf)
-{
-    FLOAT8 xfsf_p;
-    FLOAT8 xfsf_e;
-    FLOAT8 xfsf_m = calc_sfb_noise_ISO( xr, xr34, bw, sf-1 );
-    if ( xfsf_m > -0.5 ) {
-        xfsf_e = calc_sfb_noise_ISO( xr, xr34, bw, sf );
-        xfsf_p = calc_sfb_noise_ISO( xr, xr34, bw, sf+1 );
-        if ( xfsf_e < xfsf_p ) {
-            xfsf_e = xfsf_p;
-        }
-        if ( xfsf_e < xfsf_m ) {
-            return xfsf_m;
-        }
-        return xfsf_e;
-    }
-    return -1;
-}
-
-
 /* the find_scalefac* routines calculate
  * a quantization step size which would
  * introduce as much noise as is allowed.
@@ -771,18 +637,91 @@ find_scalefac_ISO(
     FIND_BODY( calc_sfb_noise_ISO(xr, xr34, bw, sf) )
 }
 
-static int
-find_scalefac_ave_x34( 
+static int 
+find_scalefac_ave_x34(
     const FLOAT8* xr, const FLOAT8* xr34, FLOAT8 l3_xmin, int bw )
 {
-    FIND_BODY( calc_sfb_noise_ave_x34(xr, xr34, bw, sf) )
+    FLOAT8  xfsf;                                               
+    int     i, sf, sf_ok, delsf;                                
+                                                                
+    /* search will range from sf:  -209 -> 45  */               
+    sf = 128;                                                   
+    delsf = 128;                                                
+                                                                
+    sf_ok = 10000;                                              
+    for (i = 0; i < 7; ++i) {                                   
+        delsf /= 2;                                             
+        xfsf = calc_sfb_noise_x34(xr,xr34,bw,sf);                                            
+                                                                
+        if (xfsf < 0) {                                         
+            /* scalefactors too small */                        
+            sf += delsf;                                        
+        }                                                       
+        else {                                                  
+            if (xfsf > l3_xmin 
+            || calc_sfb_noise_x34(xr,xr34,bw,sf+1) > l3_xmin
+            || calc_sfb_noise_x34(xr,xr34,bw,sf-1) > l3_xmin
+            ) {                               
+                /* distortion.  try a smaller scalefactor */    
+                sf -= delsf;                                    
+            }                                                   
+            else {
+                sf_ok = sf;                                     
+                sf += delsf;
+            }                                                   
+        }                                                       
+    }                                                           
+                                                                
+    /*  returning a scalefac without distortion, if possible    
+     */                                                         
+    if (sf_ok <= 255) {
+        return sf_ok;                                           
+    }
+    return sf;
 }
+
 
 static int
 find_scalefac_ave_ISO( 
     const FLOAT8* xr, const FLOAT8* xr34, FLOAT8 l3_xmin, int bw )
 {
-    FIND_BODY( calc_sfb_noise_ave_ISO(xr, xr34, bw, sf) )
+    FLOAT8  xfsf;                                               
+    int     i, sf, sf_ok, delsf;                                
+                                                                
+    /* search will range from sf:  -209 -> 45  */               
+    sf = 128;                                                   
+    delsf = 128;                                                
+                                                                
+    sf_ok = 10000;                                              
+    for (i = 0; i < 7; ++i) {                                   
+        delsf /= 2;                                             
+        xfsf = calc_sfb_noise_ISO(xr,xr34,bw,sf);                                            
+                                                                
+        if (xfsf < 0) {                                         
+            /* scalefactors too small */                        
+            sf += delsf;                                        
+        }                                                       
+        else {                                                  
+            if (xfsf > l3_xmin 
+            || calc_sfb_noise_ISO(xr,xr34,bw,sf+1) > l3_xmin
+            || calc_sfb_noise_ISO(xr,xr34,bw,sf-1) > l3_xmin
+            ) {                               
+                /* distortion.  try a smaller scalefactor */    
+                sf -= delsf;                                    
+            }                                                   
+            else {
+                sf_ok = sf;                                     
+                sf += delsf;
+            }                                                   
+        }                                                       
+    }                                                           
+                                                                
+    /*  returning a scalefac without distortion, if possible    
+     */                                                         
+    if (sf_ok <= 255) {
+        return sf_ok;                                           
+    }
+    return sf;
 }
 
 static int
