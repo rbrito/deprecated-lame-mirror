@@ -39,6 +39,16 @@ lame_decode_init(lame_t gfc)
 }
 
 
+int
+decode_init_for_replaygain(lame_t gfc)
+{
+    gfc->pmp_replaygain = InitMP3();
+    if (gfc->pmp_replaygain)
+	return 0;
+    return 1;
+}
+
+
 /* copy mono samples */
 #define COPY_MONO(DST_TYPE, SRC_TYPE)        \
     DST_TYPE *pcm_l = (DST_TYPE *)pcm_l_raw; \

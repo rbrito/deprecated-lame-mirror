@@ -319,8 +319,7 @@ copy_buffer(lame_t gfc, unsigned char *buffer, int size)
     minimum = pbuf - buffer;
 
     gfc->nMusicCRC = calculateCRC(buffer, minimum, gfc->nMusicCRC);
-#define DECODE_ON_THE_FLY 
-#ifdef DECODE_ON_THE_FLY 
+
     if (gfc->decode_on_the_fly) {  /* decode the frame */
 	sample_t pcm_buf[2][1152];
 	int mp3_in = minimum;
@@ -374,7 +373,6 @@ copy_buffer(lame_t gfc, unsigned char *buffer, int size)
             } /* if (samples_out>0) */
 	} /* while (samples_out!=0) */
     } /* if (gfc->decode_on_the_fly) */ 
-#endif
 
     return minimum;
 }

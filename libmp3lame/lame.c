@@ -1217,9 +1217,6 @@ lame_init(void)
 
     gfc->encoder_padding = 0;
 
-#ifdef DECODE_ON_THE_FLY
-    lame_decode_init();  /* initialize the decoder */
-#endif
 #ifdef HAVE_NASM
     gfc->asm_optimizations.mmx = 1;
     gfc->asm_optimizations.amd3dnow = 1;
@@ -1242,6 +1239,8 @@ lame_init_bitstream(lame_t gfc)
 	   sizeof(gfc->bitrate_blockType_Hist));
 #endif
     gfc->frameNum=0;
+    if (gfc->decode_on_the_fly)
+	return decode_init_for_replaygain(gfc);
 
     return 0;
 }
