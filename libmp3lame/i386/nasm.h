@@ -18,8 +18,11 @@
 
 BITS 32
 
-%ifdef WIN32
-	%define _NAMING
+%ifdef YASM
+	%define segment_code segment .text align=16 use32
+	%define segment_data segment .data align=16 use32
+	%define segment_bss  segment .bss align=16 use32
+%elifdef WIN32
 	%define segment_code segment .text align=16 class=CODE use32
 	%define segment_data segment .data align=16 class=DATA use32
 %ifdef __BORLANDC__
@@ -36,6 +39,10 @@ BITS 32
 	%define segment_code segment .text align=16 class=CODE use32
 	%define segment_data segment .data align=16 class=DATA use32
 	%define segment_bss  segment .bss align=16 class=DATA use32
+%endif
+
+%ifdef WIN32
+	%define _NAMING
 %endif
 
 %ifdef __tos__

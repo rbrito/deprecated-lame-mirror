@@ -32,13 +32,11 @@ MU_tFAMILY4		equ	(1<<20)	;/* 486 この時ベンダー判定は当てにならない */
 MU_tFAMILY5		equ	(1<<21)	;/* 586 (P5, P5-MMX, K6, K6-2, K6-III) */
 MU_tFAMILY6		equ	(1<<22)	;/* 686以降 P-Pro, P-II, P-III, Athlon */
 
-	segment_data
-	segment_text
-
 ACflag equ (1<<18)
 IDflag equ (1<<21)
 
-proc haveUNITa
+	segment_code
+	proc haveUNITa
 		push	ebx
 		push	esi
 		xor		esi,esi
