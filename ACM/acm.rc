@@ -54,7 +54,7 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,0,7,3
+ FILEVERSION 0,0,7,5
  PRODUCTVERSION 0,3,0,92
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
@@ -73,13 +73,13 @@ BEGIN
             VALUE "Comments", "This is currently a test of an ACM driver for Win32 using Lame to encode and mpglib to decode\0"
             VALUE "CompanyName", "http://www.mp3dev.org/\0"
             VALUE "FileDescription", "Lame MP3 codec engine\0"
-            VALUE "FileVersion", "0.7.3\0"
+            VALUE "FileVersion", "0.7.5\0"
             VALUE "InternalName", "lameACM\0"
             VALUE "LegalCopyright", "Copyright © 2002 Steve Lhomme\0"
             VALUE "LegalTrademarks", "LGPL (see gnu.org)\0"
             VALUE "OriginalFilename", "lameACM.acm\0"
             VALUE "ProductName", "Lame MP3 codec\0"
-            VALUE "ProductVersion", "0.7.3\0"
+            VALUE "ProductVersion", "0.7.5\0"
         END
     END
     BLOCK "VarFileInfo"
@@ -105,15 +105,15 @@ IDI_ICON                ICON    DISCARDABLE     "lame.ico"
 // Dialog
 //
 
-IDD_CONFIG DIALOG DISCARDABLE  0, 0, 255, 154
+IDD_CONFIG DIALOG DISCARDABLE  0, 0, 256, 151
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Lame MP3 Codec"
+CAPTION "Lame MP3 codec : About"
 FONT 8, "MS Sans Serif"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,80,129,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,140,129,50,14
+    DEFPUSHBUTTON   "OK",IDOK,76,130,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,136,130,50,14
     GROUPBOX        "Encoding",IDC_STATIC,7,7,142,113
-    GROUPBOX        "Decoding",IDC_STATIC_DECODING,157,7,81,63
+    GROUPBOX        "Decoding",IDC_STATIC_DECODING,156,7,93,63
     GROUPBOX        "Bits",IDC_STATIC,16,65,124,42
     CONTROL         "Copyright",IDC_CHECK_COPYRIGHT,"Button",BS_AUTOCHECKBOX | 
                     BS_FLAT | WS_GROUP | WS_TABSTOP,23,76,45,10
@@ -127,19 +127,23 @@ BEGIN
                     WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "Stereo mode",IDC_STATIC,23,24,41,8
     CONTROL         "Smart Encode",IDC_CHECK_ENC_SMART,"Button",
-                    BS_AUTOCHECKBOX | BS_FLAT | WS_DISABLED | WS_GROUP | 
-                    WS_TABSTOP,49,45,61,10
-    ICON            IDI_ICON,IDC_STATIC_ENC_ICON,189,86,20,20
+                    BS_AUTOCHECKBOX | BS_FLAT | WS_GROUP | WS_TABSTOP,49,45,
+                    61,10
+    ICON            IDI_ICON,IDC_STATIC_ENC_ICON,189,79,20,20
+    LTEXT           "v0.0.0 - 0.00",IDC_STATIC_CONFIG_VERSION,179,111,43,8
 END
 
-IDD_ABOUT DIALOG DISCARDABLE  0, 0, 186, 39
+IDD_ABOUT DIALOG DISCARDABLE  0, 0, 187, 66
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "About Lame MP3 Codec"
+CAPTION "Lame MP3 codec : About"
 FONT 8, "MS Sans Serif"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,113,7,50,14
-    LTEXT           "Steve Lhomme + LAME developers",IDC_STATIC,17,22,112,8
-    LTEXT           "LGPL license",IDC_STATIC,18,10,43,8
+    DEFPUSHBUTTON   "OK",IDOK,130,45,50,14
+    LTEXT           "Steve Lhomme + LAME developers",IDC_STATIC,7,33,112,8
+    LTEXT           "LGPL license",IDC_STATIC,7,20,43,8
+    ICON            IDI_ICON,IDC_STATIC,145,16,21,20
+    LTEXT           "Static",IDC_STATIC_ABOUT_TITLE,7,7,111,8
+    LTEXT           "http://www.mp3dev.org/",IDC_STATIC_ABOUT_URL,7,47,80,8
 END
 
 
@@ -154,17 +158,17 @@ BEGIN
     IDD_CONFIG, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 179
+        RIGHTMARGIN, 249
         TOPMARGIN, 7
-        BOTTOMMARGIN, 88
+        BOTTOMMARGIN, 144
     END
 
     IDD_ABOUT, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 179
+        RIGHTMARGIN, 180
         TOPMARGIN, 7
-        BOTTOMMARGIN, 32
+        BOTTOMMARGIN, 59
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -183,5 +187,4 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
-
 

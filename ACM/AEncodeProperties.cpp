@@ -43,9 +43,9 @@
 #include <config.h>
 #include "util.h"
 #include "adebug.h"
-//#include "AOut.h"
-//#include "AParameters/AParameters.h"
 #include "AEncodeProperties.h"
+#include "ACM.h"
+//#include "AParameters/AParameters.h"
 
 const unsigned int AEncodeProperties::the_Bitrates[18] = {320, 256, 224, 192, 160, 144, 128, 112, 96, 80, 64, 56, 48, 40, 32, 24, 16, 8 };
 const unsigned int AEncodeProperties::the_MPEG1_Bitrates[14] = {320, 256, 224, 192, 160, 128, 112, 96, 80, 64, 56, 48, 40, 32 };
@@ -393,6 +393,10 @@ bool AEncodeProperties::InitConfigDlg(HWND HwndDlg)
 	for (i=0;i<GetChannelLentgh();i++)
 		SendMessage(GetDlgItem( HwndDlg, IDC_COMBO_ENC_STEREO), CB_ADDSTRING, NULL, (LPARAM) GetChannelModeString(i));
 
+	char tmp[20];
+	wsprintf(tmp, "v%s",ACM::GetVersionString());
+	SetWindowText( GetDlgItem( HwndDlg, IDC_STATIC_CONFIG_VERSION), tmp);
+
 	// Add all possible re-sampling freq
 /*	SendMessage(GetDlgItem( HwndDlg, IDC_COMBO_SAMPLEFREQ), CB_RESETCONTENT , NULL, NULL);
 	char tmp[10];
@@ -427,9 +431,16 @@ bool AEncodeProperties::InitConfigDlg(HWND HwndDlg)
 	for (i=0;i<GetPresetLentgh();i++)
 		SendMessage(GetDlgItem( HwndDlg, IDC_COMBO_PRESET), CB_ADDSTRING, NULL, (LPARAM) GetPresetModeString(i));
 */
+
+my_debug.OutPut("call UpdateConfigs");
+
 	UpdateConfigs(HwndDlg);
 
+my_debug.OutPut("call UpdateDlgFromValue");
+
 	UpdateDlgFromValue(HwndDlg);
+
+my_debug.OutPut("finished InitConfigDlg");
 
 	return true;
 }
@@ -443,10 +454,11 @@ bool AEncodeProperties::UpdateDlgFromValue(HWND HwndDlg)
 	int i;
 
 	// Check boxes if required
-	::CheckDlgButton( HwndDlg, IDC_CHECK_CHECKSUM,     GetCRCMode()      ?BST_CHECKED:BST_UNCHECKED );
-	::CheckDlgButton( HwndDlg, IDC_CHECK_ORIGINAL,     GetOriginalMode() ?BST_CHECKED:BST_UNCHECKED );
-	::CheckDlgButton( HwndDlg, IDC_CHECK_PRIVATE,      GetPrivateMode()  ?BST_CHECKED:BST_UNCHECKED );
-	::CheckDlgButton( HwndDlg, IDC_CHECK_COPYRIGHT,    GetCopyrightMode()?BST_CHECKED:BST_UNCHECKED );
+	::CheckDlgButton( HwndDlg, IDC_CHECK_CHECKSUM,     GetCRCMode()        ?BST_CHECKED:BST_UNCHECKED );
+	::CheckDlgButton( HwndDlg, IDC_CHECK_ORIGINAL,     GetOriginalMode()   ?BST_CHECKED:BST_UNCHECKED );
+	::CheckDlgButton( HwndDlg, IDC_CHECK_PRIVATE,      GetPrivateMode()    ?BST_CHECKED:BST_UNCHECKED );
+	::CheckDlgButton( HwndDlg, IDC_CHECK_COPYRIGHT,    GetCopyrightMode()  ?BST_CHECKED:BST_UNCHECKED );
+	::CheckDlgButton( HwndDlg, IDC_CHECK_ENC_SMART,    GetSmartOutputMode()?BST_CHECKED:BST_UNCHECKED );
 //	::CheckDlgButton( HwndDlg, IDC_CHECK_RESERVOIR,    !GetNoBiResMode() ?BST_CHECKED:BST_UNCHECKED );
 //	::CheckDlgButton( HwndDlg, IDC_CHECK_XINGVBR,      GetXingFrameMode()?BST_CHECKED:BST_UNCHECKED );
 //	::CheckDlgButton( HwndDlg, IDC_CHECK_RESAMPLE,     GetResampleMode() ?BST_CHECKED:BST_UNCHECKED );
@@ -541,14 +553,17 @@ bool AEncodeProperties::UpdateValueFromDlg(HWND HwndDlg)
 //	VbrQuality         = SendMessage(GetDlgItem( HwndDlg, IDC_SLIDER_QUALITY), TBM_GETPOS , NULL, NULL);
 //	nSamplingFreqIndex = SendMessage(GetDlgItem( HwndDlg, IDC_COMBO_SAMPLEFREQ), CB_GETCURSEL, NULL, NULL);
 
-	bCRC          = (::IsDlgButtonChecked( HwndDlg, IDC_CHECK_CHECKSUM)          == BST_CHECKED);
+	bCRC          = (::IsDlgButtonChecked( HwndDlg, IDC_CHECK_CHECKSUM)     == BST_CHECKED);
 	bCopyright    = (::IsDlgButtonChecked( HwndDlg, IDC_CHECK_COPYRIGHT)    == BST_CHECKED);
 	bOriginal     = (::IsDlgButtonChecked( HwndDlg, IDC_CHECK_ORIGINAL)     == BST_CHECKED);
 	bPrivate      = (::IsDlgButtonChecked( HwndDlg, IDC_CHECK_PRIVATE)      == BST_CHECKED);
+	bSmartOutput  = (::IsDlgButtonChecked( HwndDlg, IDC_CHECK_ENC_SMART)    == BST_CHECKED);
 //	bNoBitRes     =!(::IsDlgButtonChecked( HwndDlg, IDC_CHECK_RESERVOIR)    == BST_CHECKED);
 //	bXingFrame    = (::IsDlgButtonChecked( HwndDlg, IDC_CHECK_XINGVBR)      == BST_CHECKED);
 //	bResample     = (::IsDlgButtonChecked( HwndDlg, IDC_CHECK_RESAMPLE)     == BST_CHECKED);
 //	bForceChannel = (::IsDlgButtonChecked( HwndDlg, IDC_CHECK_CHANNELFORCE) == BST_CHECKED);
+
+my_debug.OutPut("nChannelIndex %d, bCRC %d, bCopyright %d, bOriginal %d, bPrivate %d",nChannelIndex, bCRC, bCopyright, bOriginal, bPrivate);
 
 /*	char tmpPath[MAX_PATH];
 	::GetWindowText( ::GetDlgItem( HwndDlg, IDC_EDIT_OUTPUTDIR), tmpPath, MAX_PATH);
@@ -622,6 +637,7 @@ void AEncodeProperties::ParamsRestore()
 	bXingFrame    = true;
 	bResample     = false;
 	bForceChannel = false;
+	bSmartOutput  = true;
 
 	nChannelIndex = 2; // joint-stereo
 	mBRmode       = BR_CBR;
@@ -764,13 +780,14 @@ AEncodeProperties::AEncodeProperties(HMODULE hModule)
 	my_store_location += "lame_acm.xml";
 
 	my_debug.OutPut("store path = %s",my_store_location.c_str());
-#ifdef OLD
+//#ifdef OLD
 //	::OutputDebugString(my_store_location.c_str());
 
 	// make sure the XML file is present
 	HANDLE hFile = ::CreateFile(my_store_location.c_str(), 0, FILE_SHARE_READ|FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_ARCHIVE, NULL );
 	::CloseHandle(hFile);
-#endif // OLD
+//#endif // OLD
+	my_debug.OutPut("AEncodeProperties creation completed (0x%08X)",this);
 }
 
 // Save the values to the right XML saved config
@@ -846,6 +863,15 @@ void AEncodeProperties::GetValuesFromKey(const std::string & config_name, const 
 	{
 		// get all the parameters saved in this Element
 		const std::string * tmpname;
+
+		// Smart output parameter
+		tmpElt = iterateElmt->FirstChildElement("Smart");
+		if (tmpElt != NULL)
+		{
+			tmpname = tmpElt->Attribute("use");
+			if (tmpname != NULL)
+				bSmartOutput = (tmpname->compare("true") == 0);
+		}
 
 		// Copyright parameter
 		tmpElt = iterateElmt->FirstChildElement("Copyright");
@@ -1074,6 +1100,7 @@ bool AEncodeProperties::operator !=(const AEncodeProperties & the_instance) cons
 		 || (bCRC != the_instance.bCRC)
 		 || (bOriginal != the_instance.bOriginal)
 		 || (bPrivate != the_instance.bPrivate)
+		 || (bSmartOutput != the_instance.bSmartOutput)
 		 || (bNoBitRes != the_instance.bNoBitRes)
 		 || (mBRmode != the_instance.mBRmode)
 		 || (bXingFrame != the_instance.bXingFrame)
@@ -1124,6 +1151,7 @@ void AEncodeProperties::SaveValuesToElement(TiXmlElement * the_element) const
 	TiXmlElement * tmpElt;
 
 	// Bit Reservoir parameter
+/*
 	tmpElt = the_element->FirstChildElement("Bit_reservoir");
 	if (tmpElt == NULL)
 	{
@@ -1135,7 +1163,7 @@ void AEncodeProperties::SaveValuesToElement(TiXmlElement * the_element) const
 	{
 		SetAttributeBool(tmpElt, "use", !bNoBitRes);
 	}
-
+*/
 	// Copyright parameter
 	tmpElt = the_element->FirstChildElement("Copyright");
 	if (tmpElt == NULL)
@@ -1147,6 +1175,19 @@ void AEncodeProperties::SaveValuesToElement(TiXmlElement * the_element) const
 	else
 	{
 		SetAttributeBool( tmpElt, "use", bCopyright);
+	}
+
+	// Smart Output parameter
+	tmpElt = the_element->FirstChildElement("Smart");
+	if (tmpElt == NULL)
+	{
+		tmpElt = new TiXmlElement("Copyright");
+		SetAttributeBool( tmpElt, "use", bSmartOutput);
+		the_element->InsertEndChild(*tmpElt);
+	}
+	else
+	{
+		SetAttributeBool( tmpElt, "use", bSmartOutput);
 	}
 
 	// CRC parameter
@@ -1194,13 +1235,13 @@ void AEncodeProperties::SaveValuesToElement(TiXmlElement * the_element) const
 	{
 		tmpElt = new TiXmlElement("Channel");
 		tmpElt->SetAttribute("mode", GetChannelModeString(nChannelIndex));
-		SetAttributeBool( tmpElt, "force", bForceChannel);
+//		SetAttributeBool( tmpElt, "force", bForceChannel);
 		the_element->InsertEndChild(*tmpElt);
 	}
 	else
 	{
 		tmpElt->SetAttribute("mode", GetChannelModeString(nChannelIndex));
-		SetAttributeBool( tmpElt, "force", bForceChannel);
+//		SetAttributeBool( tmpElt, "force", bForceChannel);
 	}
 /*
 	// Preset parameter
@@ -1305,10 +1346,14 @@ bool AEncodeProperties::HandleDialogCommand(const HWND parentWnd, const WPARAM w
 		char string[MAX_PATH];
 //		::GetWindowText(::GetDlgItem( parentWnd, IDC_COMBO_SETTINGS), string, MAX_PATH);
 
-#ifdef OLD
+		wsprintf(string,"Current"); // only the Current config is supported at the moment
+		
+		my_debug.OutPut("my_hModule = 0x%08X",my_hModule);
+/*
 		AEncodeProperties tmpDlgProps(my_hModule);
-		tmpDlgProps.UpdateValueFromDlg(parentWnd);
 		AEncodeProperties tmpSavedProps(my_hModule);
+//#ifdef OLD
+		tmpDlgProps.UpdateValueFromDlg(parentWnd);
 		tmpSavedProps.SelectSavedParams(string);
 		tmpSavedProps.ParamsRestore();
 		// check if the values from the DLG are the same as the one saved in the config file
@@ -1354,10 +1399,25 @@ bool AEncodeProperties::HandleDialogCommand(const HWND parentWnd, const WPARAM w
 			}
 		}
 */
-#endif // OLD
-		SelectSavedParams(string);
-		UpdateDlgFromValue(parentWnd);
+//#endif // OLD
+my_debug.OutPut("before : nChannelIndex %d, bCRC %d, bCopyright %d, bOriginal %d, bPrivate %d",nChannelIndex, bCRC, bCopyright, bOriginal, bPrivate);
+
+my_debug.OutPut("call UpdateValueFromDlg");
+
+		UpdateValueFromDlg(parentWnd);
+
+my_debug.OutPut("call SaveValuesToStringKey");
+
+		SaveValuesToStringKey("Current"); // only Current config is supported now
+
 //		SaveParams(parentWnd);
+
+//my_debug.OutPut("call SelectSavedParams");
+
+//		SelectSavedParams(string);
+//		UpdateDlgFromValue(parentWnd);
+
+my_debug.OutPut("finished saving");
 
 		if (bShouldEnd)
 		{
@@ -1693,6 +1753,8 @@ void AEncodeProperties::UpdateConfigs(const HWND HwndDlg)
 
 		TiXmlElement* iterateElmt;
 
+my_debug.OutPut("are we here ?");
+
 		// find the config that correspond to CurrentConfig
 		iterateElmt = CurrentNode->FirstChildElement("config");
 		int Idx = 0;
@@ -1712,8 +1774,14 @@ void AEncodeProperties::UpdateConfigs(const HWND HwndDlg)
 					UpdateDlgFromValue(HwndDlg);
 				}
 			}
+my_debug.OutPut("Idx = %d",Idx);
+
 			Idx++;
-			iterateElmt = iterateElmt->NextSiblingElement("config");
+			// only Current config supported now
+//			iterateElmt = iterateElmt->NextSiblingElement("config");
+			iterateElmt = NULL;
+my_debug.OutPut("iterateElmt = 0x%08X",iterateElmt);
+
 		}
 	}
 }

@@ -1,13 +1,14 @@
-- see why the PCM resampling doesn't work from PCM in sndrec32.exe
+- create a smart mode (change output freq. , disable stupid settings 48kHz/48kbps) -> test in VirtualDub
+
 - see why we output a bunch of 0x00 at the beginning
-- change the dialog boxes
-- add the configuration options (stereo mode, flags)
-- save restore parameters in a safe place (not in the registry !) see TinyXML
-- create a smart mode (change output freq. , disable stupid settings 48kHz/48kbps)
+- see desync problems in VirtualDub (1152 bytes -> 1 byte ?)
+- check and try to fill the MPEGLAYER3WAVEFORMAT the same way as the FhG codec (encoding)
 - allow decompression the same way as in the command-line
 - allow VBR/ABR mode
-- see desync problems in VirtualDub (1152 bytes -> 1 byte ?)
 - allow channel resampling (mono to stereo / stereo to mono)
 - allow internal resampling (difference in the format suggestion)
 - use global pointers for string
 - use the bitrate/freq tables from LAME
+
+LAME general
+- avoid to allow the buffer in lame_encode_buffer and lame_encode_buffer_interleaved (if possible)

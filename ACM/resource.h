@@ -13,6 +13,9 @@
 #define IDC_COMBO_ENC_STEREO            1005
 #define IDC_CHECK_ENC_SMART             1006
 #define IDC_STATIC_ENC_ICON             1007
+#define IDC_STATIC_ABOUT_TITLE          1008
+#define IDC_STATIC_ABOUT_URL            1009
+#define IDC_STATIC_CONFIG_VERSION       1010
 
 // Next default values for new objects
 // 
@@ -20,7 +23,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        105
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1008
+#define _APS_NEXT_CONTROL_VALUE         1011
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

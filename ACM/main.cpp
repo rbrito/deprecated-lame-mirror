@@ -50,6 +50,7 @@ void operator delete(void *block) {
 
 #include <assert.h>
 
+#include "AEncodeProperties.h"
 #include "ACM.h"
 #include "resource.h"
 #include "adebug.h"

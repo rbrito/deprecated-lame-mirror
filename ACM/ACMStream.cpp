@@ -128,6 +128,9 @@ bool ACMStream::open(const AEncodeProperties & the_Properties)
 	// Set input sample frequency
 	lame_set_in_samplerate( gfp, my_SamplesPerSec );
 
+	// Set output sample frequency
+	lame_set_out_samplerate( gfp, my_OutBytesPerSec );
+
 	lame_set_num_channels( gfp, my_Channels );
 	if (my_Channels == 1)
 		lame_set_mode( gfp, MONO );
@@ -310,7 +313,7 @@ int dwSamples;
 
 if (my_debug != NULL)
 {
-my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG, "ACMStream::ConvertBuffer result = %d",result);
+my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG, "ACMStream::ConvertBuffer result = %d (0x%02X 0x%02X)",result,a_StreamHeader->pbDst[0],a_StreamHeader->pbDst[1]);
 }
 
 	return result;
@@ -318,12 +321,13 @@ my_debug->OutPut(DEBUG_LEVEL_FUNC_DEBUG, "ACMStream::ConvertBuffer result = %d",
 
 unsigned int ACMStream::GetOutputSampleRate(int samples_per_sec, int bitrate, int channels)
 {
+	/// \todo pass through the same LAME routine
 	unsigned int OutputFrequency;
 	double compression_ratio = double(samples_per_sec * 16 * channels / (bitrate * 8));
 	if (compression_ratio > 13.)
 		OutputFrequency = map2MP3Frequency( (10. * bitrate * 8) / (16 * channels));
 	else
-OutputFrequency = map2MP3Frequency( 0.97 * samples_per_sec );
+		OutputFrequency = map2MP3Frequency( 0.97 * samples_per_sec );
 
 	return OutputFrequency;
 }

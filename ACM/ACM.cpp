@@ -50,8 +50,9 @@
 
 #include "ACM.h"
 
+char ACM::VersionString[20];
 
-const char ACM_VERSION[] = "0.7.3";
+const char ACM_VERSION[] = "0.7.5";
 
 #ifdef WIN32
 //
@@ -77,7 +78,7 @@ const char ACM_VERSION[] = "0.7.3";
 #define SIZE_FORMAT_STRUCT sizeof(MPEGLAYER3WAVEFORMAT)
 //#define FORMAT_BLOCK_ALIGN      1 /// \todo put it on a .h (to be included by the user application)
 /// \todo change to 1 (and keep if it works : better granularity -> see in AVI encoding if it's more verbose or not)
-#define FORMAT_BLOCK_ALIGN 1152 /// \todo put it on a .h (to be included by the user application)
+//#define FORMAT_BLOCK_ALIGN 1152 /// \todo put it on a .h (to be included by the user application)
 
 //static const char channel_mode[][13] = {"mono","stereo","joint stereo","dual channel"};
 static const char channel_mode[][13] = {"mono","stereo"};
@@ -165,6 +166,13 @@ LPARAM lParam  // second message parameter
 	BOOL bResult;
 
 	switch (uMsg) {
+		case WM_INITDIALOG:
+			char tmp[100];
+			wsprintf(tmp,"LAME MP3 codec v%s", ACM::GetVersionString());
+			::SetWindowText(GetDlgItem( hwndDlg, IDC_STATIC_ABOUT_TITLE), tmp);
+
+			bResult = TRUE;
+			break;
 		case WM_COMMAND:
 			UINT command;
 			command = GET_WM_COMMAND_ID(wParam, lParam);
@@ -225,6 +233,9 @@ ACM::ACM( HMODULE hModule )
 			}
 		}
 	}
+
+	wsprintf(VersionString,"%s - %d.%d", ACM_VERSION, LAME_MAJOR_VERSION, LAME_MINOR_VERSION);
+
 	my_debug.OutPut(DEBUG_LEVEL_FUNC_START, "New ACM Creation (0x%08X)",this);
 }
 
@@ -586,7 +597,7 @@ inline DWORD ACM::OnDriverDetails(const HDRVR hdrvr, LPACMDRIVERDETAILS a_Driver
 
 	lstrcpyW( a_DriverDetail->szShortName, L"LAME MP3" );
 	char tmpStr[128];
-	wsprintf(tmpStr, "LAME MP3 Codec v%d.%d - %s", LAME_MAJOR_VERSION, LAME_MINOR_VERSION, ACM_VERSION);
+	wsprintf(tmpStr, "LAME MP3 Codec v%s", GetVersionString());
 	int u = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, tmpStr, -1, a_DriverDetail->szLongName, 0);
 	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, tmpStr, -1, a_DriverDetail->szLongName, u);
 	lstrcpyW( a_DriverDetail->szCopyright, L"2002 Steve Lhomme" );
@@ -843,12 +854,10 @@ inline DWORD ACM::OnStreamOpen(LPACMDRVSTREAMINSTANCE a_StreamInstance)
 				my_EncodingProperties.ParamsRestore();
 
 				/// \todo Smart mode
-/*
-				if (bSmartMode)
+				if (my_EncodingProperties.GetSmartOutputMode())
 					OutputFrequency = ACMStream::GetOutputSampleRate(a_StreamInstance->pwfxSrc->nSamplesPerSec,a_StreamInstance->pwfxDst->nAvgBytesPerSec,a_StreamInstance->pwfxDst->nChannels);
 				else
-*/
-				OutputFrequency = a_StreamInstance->pwfxSrc->nSamplesPerSec;
+					OutputFrequency = a_StreamInstance->pwfxSrc->nSamplesPerSec;
 
 				my_debug.OutPut(DEBUG_LEVEL_FUNC_CODE, "Open stream for PERSONAL output (%05d samples %d channels %d bits/sample %d kbps)",a_StreamInstance->pwfxDst->nSamplesPerSec,a_StreamInstance->pwfxDst->nChannels,a_StreamInstance->pwfxDst->wBitsPerSample,8 * a_StreamInstance->pwfxDst->nAvgBytesPerSec);
 
