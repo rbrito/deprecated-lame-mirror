@@ -134,12 +134,7 @@ id3tag_init(lame_global_flags *gfp)
     gfc->tag_spec.genre = GENRE_NUM_UNKNOWN;
 }
 
-#define CHANGED_FLAG    (1U << 0)
-#define ADD_V2_FLAG     (1U << 1)
-#define V1_ONLY_FLAG    (1U << 2)
-#define V2_ONLY_FLAG    (1U << 3)
-#define SPACE_V1_FLAG   (1U << 4)
-#define PAD_V2_FLAG     (1U << 5)
+
 
 void
 id3tag_add_v2(lame_global_flags *gfp)
