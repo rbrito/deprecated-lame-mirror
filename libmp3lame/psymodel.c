@@ -387,29 +387,28 @@ fft_long(lame_internal_flags * const gfc,
     x += BLKSIZE / 2;
 
     do {
-      FLOAT f0,f1,f2,f3, w;
+	FLOAT f0,f1,f2,f3, w;
 
-      i = rv_tbl[jj];
-      f0 = ml00(ch01); w = ml10(ch01); f1 = f0 - w; f0 = f0 + w;
-      f2 = ml20(ch01); w = ml30(ch01); f3 = f2 - w; f2 = f2 + w;
+	i = rv_tbl[jj];
+	f0 = ml00(ch01); w = ml10(ch01); f1 = f0 - w; f0 = f0 + w;
+	f2 = ml20(ch01); w = ml30(ch01); f3 = f2 - w; f2 = f2 + w;
 
-      x -= 4;
-      x[0] = f0 + f2;
-      x[2] = f0 - f2;
-      x[1] = f1 + f3;
-      x[3] = f1 - f3;
+	x -= 4;
+	x[0] = f0 + f2;
+	x[2] = f0 - f2;
+	x[1] = f1 + f3;
+	x[3] = f1 - f3;
 
-      f0 = ml01(ch01); w = ml11(ch01); f1 = f0 - w; f0 = f0 + w;
-      f2 = ml21(ch01); w = ml31(ch01); f3 = f2 - w; f2 = f2 + w;
+	f0 = ml01(ch01); w = ml11(ch01); f1 = f0 - w; f0 = f0 + w;
+	f2 = ml21(ch01); w = ml31(ch01); f3 = f2 - w; f2 = f2 + w;
 
-      x[BLKSIZE / 2 + 0] = f0 + f2;
-      x[BLKSIZE / 2 + 2] = f0 - f2;
-      x[BLKSIZE / 2 + 1] = f1 + f3;
-      x[BLKSIZE / 2 + 3] = f1 - f3;
+	x[BLKSIZE / 2 + 0] = f0 + f2;
+	x[BLKSIZE / 2 + 2] = f0 - f2;
+	x[BLKSIZE / 2 + 1] = f1 + f3;
+	x[BLKSIZE / 2 + 3] = f1 - f3;
     } while (--jj >= 0);
 
-    gfc->fft_fht(x, BLKSIZE/2);
-    /* BLKSIZE/2 because of 3DNow! ASM routine */
+    gfc->fft_fht(x, BLKSIZE/2); /* BLKSIZE/2 because of 3DNow! ASM routine */
 }
 
 
@@ -697,7 +696,8 @@ void init_mask_add_max_values(void)
 
 
 /* addition of simultaneous masking   Naoki Shibata 2000/7 */
-inline static FLOAT mask_add(FLOAT m1,FLOAT m2,int k,int b, lame_internal_flags * const gfc)
+inline static FLOAT
+mask_add(FLOAT m1,FLOAT m2,int k,int b, lame_internal_flags * const gfc)
 {
     static const FLOAT table1[] = {
 	3.3246 *3.3246 ,3.23837*3.23837,3.15437*3.15437,3.00412*3.00412,2.86103*2.86103,2.65407*2.65407,2.46209*2.46209,2.284  *2.284  ,
@@ -977,9 +977,9 @@ psycho_analysis_short(
 	    }
 	}
 #if defined(HAVE_GTK)
-	if (gfp->analysis) {
+	if (gfc->pinfo) {
 	    FLOAT x = attack_intensity[0];
-	    for (i=1;i<12;i++) 
+	    for (i=1;i<12;i++)
 		if (x < attack_intensity[i])
 		    x = attack_intensity[i];
 	    gfc->pinfo->ers[gr][chn] = gfc->ers_save[gr][chn];
@@ -1098,9 +1098,10 @@ L3psycho_anal_ns(
     for (chn=0; chn<numchn; chn++) {
 	FLOAT fftenergy[HBLKSIZE];
 	/* convolution   */
-	FLOAT eb[CBANDS], eb2[CBANDS], thr[CBANDS], max[CBANDS];
-#define avg thr
-
+	FLOAT eb[CBANDS], max[CBANDS];
+#define avg fftenergy
+#define thr fftenergy
+#define eb2 (fftenergy+CBANDS)
 	static const FLOAT tab[] = {
 	    1.0    /0.11749, 0.79433/0.11749, 0.63096/0.11749, 0.63096/0.11749,
 	    0.63096/0.11749, 0.63096/0.11749, 0.63096/0.11749, 0.25119/0.11749
@@ -1108,7 +1109,7 @@ L3psycho_anal_ns(
 
 	if (chn == 2) {
 	    /* FFT data for mid and side channel is derived from L & R */
-	    for (j = BLKSIZE-1; j >=0 ; --j) {
+	    for (j = 0; j < BLKSIZE; j++) {
 		FLOAT l = wsamp_L[0][j];
 		FLOAT r = wsamp_L[1][j];
 		wsamp_L[0][j] = (l+r)*(FLOAT)(SQRT2*0.5);
@@ -1221,8 +1222,6 @@ L3psycho_anal_ns(
 		k++;
 	    }
 
-	    ecb *= 0.158489319246111 * gfc->masking_lower; // pow(10,-0.8)
-
 	    /****   long block pre-echo control   ****/
 	    /* dont use long block pre-echo control if previous granule was 
 	     * a short block.  This is to avoid the situation:   
@@ -1261,6 +1260,7 @@ L3psycho_anal_ns(
 
 		enn  += .5* eb[b];
 		thmm += .5*thr[b];
+		thmm *= 0.158489319246111 * gfc->masking_lower; // pow(10,-0.8)
 		gfc->masking_next[gr][chn].en .l[sb] = enn;
 		gfc->masking_next[gr][chn].thm.l[sb] = thmm;
 
@@ -1270,6 +1270,7 @@ L3psycho_anal_ns(
 		sb++;
 	    }
 
+	    thmm *= 0.158489319246111 * gfc->masking_lower; // pow(10,-0.8)
 	    gfc->masking_next[gr][chn].en .l[SBMAX_l-1] = enn;
 	    gfc->masking_next[gr][chn].thm.l[SBMAX_l-1] = thmm;
 	}

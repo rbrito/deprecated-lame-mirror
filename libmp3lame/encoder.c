@@ -361,7 +361,7 @@ int  lame_encode_mp3_frame (				// Output
     inbuf[1]=inbuf_r;
     if (gfc->psymodel) {
 #ifdef HAVE_GTK
-	if (gfp->analysis)
+	if (gfc->pinfo)
 	    memcpy(gfc->pinfo->energy, gfc->energy_save,
 		   sizeof(gfc->energy_save));
 #endif
@@ -407,7 +407,7 @@ int  lame_encode_mp3_frame (				// Output
 
 #if defined(HAVE_GTK)
     /* copy data for MP3 frame analyzer */
-    if (gfp->analysis && gfc->pinfo != NULL) {
+    if (gfc->pinfo) {
 	for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
 	    for ( ch = 0; ch < gfc->channels_out; ch++ ) {
 		gfc->pinfo->ms_ratio[gr]=ms_ener_ratio[gr];
@@ -484,7 +484,7 @@ int  lame_encode_mp3_frame (				// Output
     if (gfp->bWriteVbrTag) AddVbrFrame(gfp);
 
 #if defined(HAVE_GTK)
-    if (gfp->analysis && gfc->pinfo != NULL)
+    if (gfc->pinfo != NULL)
 	set_frame_pinfo (gfp, masking);
 #endif
 
