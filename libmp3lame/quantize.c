@@ -62,40 +62,36 @@ on_pe(
 
     /* allocate targ_bits for granule */
     ResvMaxBits( gfp, mean_bits, &tbits, &extra_bits, cbr);
+
     max_bits = tbits + extra_bits;
     if (max_bits > MAX_BITS) /* hard limit per granule */
         max_bits = MAX_BITS;
 
-    tbits /= gfc->channels_out;
-    tbits = Min(tbits, MAX_BITS);
-    for ( bits = 0, ch = 0; ch < gfc->channels_out; ++ch ) {
-        /******************************************************************
-         * allocate bits for each channel 
-         ******************************************************************/
-	targ_bits[ch] = tbits * (ratio[ch].pe * (1.0/700.0) - 1.0);
+    /* at most increase bits by 1.5*average */
+    mean_bits = tbits+ mean_bits*3/4;
+    if (mean_bits > MAX_BITS)
+	mean_bits = MAX_BITS; 
 
-        /* at most increase bits by 1.5*average */
-        if (targ_bits[ch] > mean_bits*3/4) 
-            targ_bits[ch] = mean_bits*3/4;
-        if (targ_bits[ch] > MAX_BITS-tbits)
-	    targ_bits[ch] = MAX_BITS-tbits;
-        if (targ_bits[ch] < 0)
-	    targ_bits[ch] = 0;
+    tbits /= gfc->channels_out;
+    if (tbits > MAX_BITS)
+	tbits = MAX_BITS;
+
+    for ( bits = 0, ch = 0; ch < gfc->channels_out; ++ch ) {
+	if (ratio[ch].pe > 700.0) {
+	    targ_bits[ch] = tbits * (ratio[ch].pe * (1.0/700.0));
+	    if (targ_bits[ch] > mean_bits) 
+		targ_bits[ch] = mean_bits;
+	} else
+	    targ_bits[ch] = tbits;
 
         bits += targ_bits[ch];
     }
-    if (bits > extra_bits) {
+    if (bits > max_bits) {
         for ( ch = 0; ch < gfc->channels_out; ++ch ) {
-            targ_bits[ch] = extra_bits * targ_bits[ch] / bits;
+            targ_bits[ch]
+		= tbits + extra_bits * (targ_bits[ch] - tbits) / bits;
         }
     }
-
-    for ( ch = 0; ch < gfc->channels_out; ++ch ) {
-        extra_bits    -= targ_bits[ch];
-        targ_bits[ch] = tbits + targ_bits[ch];
-        assert( targ_bits[ch] <= MAX_BITS );
-    }
-    assert( max_bits <= MAX_BITS );
     return max_bits;
 }
 
@@ -390,11 +386,9 @@ init_outer_loop(
 	/* set the method how to check if the quantization is "better" */
 	j = gfp->experimentalX;
 	if (cod_info->block_type != NORM_TYPE)
-	    j = gfc->presetTune.quantcomp_type_s;
-	else if (gfc->ATH.adjust >= gfc->presetTune.athadjust_switch_level)
-	    j = gfc->presetTune.quantcomp_alt_type;
+	    j = gfc->quantcomp_type_s;
 
-	gfc->quant_comp_method = j;
+	gfc->quantcomp_method = j;
 
 	return 1;
     }
@@ -637,7 +631,7 @@ better_quant(
      */
 
     calc_noise (gfc, gi, l3_xmin, distort, &calc);
-    switch (gfc->quant_comp_method) {
+    switch (gfc->quantcomp_method) {
         default:
         case 0:
 	    better = calc.over_count  < best->over_count
@@ -976,8 +970,7 @@ balance_noise (
     /*  some scalefactors are too large.
      *  lets try setting scalefac_scale=1 
      */
-    if (gfc->use_scalefac_scale
-	&& gfc->ATH.adjust >= gfc->presetTune.athadjust_switch_level) {
+    if (gfc->use_scalefac_scale) {
 	memset(&gfc->pseudohalf, 0, sizeof(gfc->pseudohalf));
 	if (!cod_info->scalefac_scale) {
 	    inc_scalefac_scale (cod_info, xrpow);
@@ -1047,7 +1040,7 @@ outer_loop (
     calc_noise (gfc, cod_info, l3_xmin, distort, &best_noise_info);
     cod_info_w = *cod_info;
     age = 0;
-    if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh)
+    if (gfp->VBR == vbr_rh)
 	memcpy(save_xrpow, xrpow, sizeof(FLOAT)*576);
 
     /* BEGIN MAIN LOOP */
@@ -1056,7 +1049,7 @@ outer_loop (
 	/* stopping criterion */
 	/******************************************************************/
 	/* if no bands with distortion and -X0, we are done */
-	if (gfc->quant_comp_method == 0 && gfc->noise_shaping_stop == 0
+	if (gfc->quantcomp_method == 0 && gfc->noise_shaping_stop == 0
 	    && best_noise_info.over_count == 0)
 	    break;
 
@@ -1090,8 +1083,10 @@ outer_loop (
          * quantization step.  Too small is ok, but the loop will take longer
          */
 	while (count_bits(gfc, xrpow, &cod_info_w) > huff_bits
-	       && cod_info_w.global_gain < 255u)
-	    cod_info_w.global_gain++;
+	       && ++cod_info_w.global_gain < 256u)
+	    ;
+	if (cod_info_w.global_gain == 256)
+	    break;
 
         /* save data so we can restore this quantization later,
 	 * if the newer scalefactor combination is better
@@ -1103,7 +1098,7 @@ outer_loop (
 	    *cod_info = cod_info_w;
 	    age = 0;
 	    /* save data so we can restore this quantization later */
-	    if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh) {
+	    if (gfp->VBR == vbr_rh) {
 		/* store for later reuse */
 		memcpy(save_xrpow, xrpow, sizeof(FLOAT)*576);
 	    }
@@ -1124,7 +1119,7 @@ outer_loop (
 
     /*  finish up
      */
-    if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh)
+    if (gfp->VBR == vbr_rh)
 	/* restore for reuse on next try */
 	memcpy(xrpow, save_xrpow, sizeof(FLOAT)*576);
     /*  do the 'substep shaping'
@@ -1617,7 +1612,7 @@ calc_target_bits (
 
                 gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
                 targ_bits[gr][ch] = res_factor * mean_bits;
- 
+
                 /* short blocks use a little extra, no matter what the pe */
                 if (cod_info->block_type == SHORT_TYPE) {
                     if (add_bits < mean_bits/2)
@@ -1633,10 +1628,11 @@ calc_target_bits (
                 targ_bits[gr][ch] += add_bits;
             }
         }
-	if (gfc->mode_ext & MPG_MD_MS_LR)
+    }
+    if (gfc->mode_ext & MPG_MD_MS_LR)
+	for (gr = 0; gr < gfc->mode_gr; gr++)
 	    reduce_side(targ_bits[gr], ms_ener_ratio[gr],
 			mean_bits * STEREO, MAX_BITS);
-    }
 
     /*  sum target bits
      */

@@ -1103,7 +1103,7 @@ init_s3_values(
 int psymodel_init(lame_global_flags *gfp)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
-    int i,j,b,sb,k;
+    int i,j,sb,k;
     int bm[SBMAX_l];
 
     FLOAT bval[CBANDS];
@@ -1255,24 +1255,15 @@ int psymodel_init(lame_global_flags *gfp)
 	if (gfp->exp_nspsytune & 2) msfix = 1.0;
 	if (gfp->msfix != 0.0) msfix = gfp->msfix;
 	gfp->msfix = msfix;
-	if (!gfc->presetTune.use || gfc->nsPsy.athadjust_msfix <= 0.0)
-	    gfc->nsPsy.athadjust_msfix = gfp->msfix;
-
 	if (gfc->presetTune.ms_maskadjust <= 0.0)
 	    gfc->presetTune.ms_maskadjust = gfp->msfix;
 
 	gfp->msfix *= 2.0;
-	gfc->nsPsy.athadjust_msfix *= 2.0;
 	gfc->presetTune.ms_maskadjust *= 2.0;
     }
 
-    if (gfc->presetTune.quantcomp_alt_type < 0)
-	gfc->presetTune.quantcomp_alt_type = gfp->experimentalX;
-
     if (!gfc->presetTune.use) {
-	gfc->presetTune.quantcomp_type_s
-	    = gfc->presetTune.quantcomp_alt_type = gfp->experimentalX;
-	gfc->presetTune.athadjust_switch_level = 0.0;
+	gfc->quantcomp_type_s = gfp->experimentalX;
 	gfc->presetTune.ms_maskadjust = gfp->msfix;
 
 	gfc->nsPsy.attackthre   = NSATTACKTHRE;

@@ -666,7 +666,7 @@ block_sf(const lame_internal_flags * gfc, const FLOAT * l3_xmin,
     int     sfb, j;
     int     scalefac_criteria;
 
-    scalefac_criteria = gfc->quant_comp_method;
+    scalefac_criteria = gfc->quantcomp_method;
     j = 0;
     for (sfb = 0; sfb < gi->psymax; sfb++) {
         const int width = gi->width[sfb];

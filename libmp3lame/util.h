@@ -341,7 +341,8 @@ struct lame_internal_flags {
   int quantization;         /* 0 = ISO formual,  1=best amplitude */
 
   int use_scalefac_scale;   /* 0 = not use  1 = use */
-  int quant_comp_method;    /* how to compare the scalefactor combination */
+  int quantcomp_method;     /* how to compare the scalefactor combination */
+  int quantcomp_type_s;     /* and for short block */
   int noise_shaping_amp;    /*  0 = ISO model: amplify all distorted bands
                                 1 = amplify within 50% of max (on db scale)
                                 2 = amplify only most distorted band
@@ -421,7 +422,6 @@ struct lame_internal_flags {
 	FLOAT pefirbuf[19];
 	FLOAT longfact[SBMAX_l];
 	FLOAT shortfact[SBMAX_s];
-	FLOAT athadjust_msfix;  /* msfix adjustment based on athadjust */
 
 	/* short block tuning */
 	FLOAT     attackthre;
@@ -439,8 +439,6 @@ struct lame_internal_flags {
 	// adjustment to joint stereo
 	FLOAT ms_maskadjust;
 
-	// adjustments to quantization selection
-
 	// adjustments for tot_noise with vbr-old
 	FLOAT  quantcomp_adjust_rh_tot;
 
@@ -450,18 +448,6 @@ struct lame_internal_flags {
 	// adjustments for calc_scalefac "c" with vbr-mtrh
 	FLOAT  quantcomp_adjust_mtrh;
 
-	// quantization comparison to switch to on non-normal blocks
-	int     quantcomp_type_s;
-
-	// third quantization comparison to use for special cases
-	// such as high athadjust values, or long blocks, etc
-	int     quantcomp_alt_type;
-
-	// tunings reliant upon athadjust
-
-	// level of athadjust at which to apply tunings at
-	// x <= 0: never switch, x > 1: always switch
-	FLOAT  athadjust_switch_level;
     } presetTune;
   
     /**

@@ -1513,17 +1513,14 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
 	gfc->presetTune.ms_maskadjust = .5;
 
 	lame_set_experimentalX(gfp, 3);
-	gfc->presetTune.quantcomp_type_s = 9;
-	gfc->presetTune.quantcomp_alt_type = 3;
-	gfc->presetTune.athadjust_switch_level = 2; // Always switch
+	gfc->quantcomp_type_s = 9;
 	break;
 
     case 2: /* EXTREME */
 	if (gfp->VBR == vbr_mtrh) {
 	    lame_set_experimentalX(gfp, 2);
 	    gfc->presetTune.quantcomp_adjust_mtrh = 9;
-	    gfc->presetTune.quantcomp_type_s = 4;
-	    gfc->presetTune.quantcomp_alt_type = 0;
+	    gfc->quantcomp_type_s = 4;
 	    lame_set_athaa_sensitivity(
 		gfp, db2pow(-8.0) * lame_get_athaa_sensitivity(gfp));
 	}
@@ -1531,8 +1528,7 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
 	    lame_set_experimentalX(gfp, 3);
 	    gfc->presetTune.quantcomp_adjust_rh_tot = 60;
 	    gfc->presetTune.quantcomp_adjust_rh_max = 6;
-	    gfc->presetTune.quantcomp_type_s = 3;
-	    gfc->presetTune.quantcomp_alt_type = 1;
+	    gfc->quantcomp_type_s = 3;
 	}
 
 	lame_set_experimentalZ(gfp, 1);
@@ -1543,24 +1539,21 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
 	lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (12 << 20));
 
 	gfc->presetTune.ms_maskadjust = .5;
-	gfc->presetTune.athadjust_switch_level = 1;
-	gfc->nsPsy.athadjust_msfix = 2.13;
+	(void) lame_set_msfix( gfp, 2.13 );
 	break;
 
     case 3: /* DM_RADIO, PORTABLE, DM_MEDIUM, MEDIUM, STANDARD */
 	if (gfp->VBR == vbr_mtrh) {
-	    gfc->presetTune.quantcomp_type_s = 4;
+	    gfc->quantcomp_type_s = 4;
 	    gfc->presetTune.quantcomp_adjust_mtrh = 9;
-	    gfc->presetTune.quantcomp_alt_type = 0;
 	    (void) lame_set_ATHlower( gfp, -2 );
 	    lame_set_athaa_sensitivity(
 		gfp, db2pow(-8.0) * lame_get_athaa_sensitivity(gfp));
 	}
 	else {
-	    gfc->presetTune.quantcomp_type_s = 3;
+	    gfc->quantcomp_type_s = 3;
 	    gfc->presetTune.quantcomp_adjust_rh_tot = 60;
 	    gfc->presetTune.quantcomp_adjust_rh_max = 6;
-	    gfc->presetTune.quantcomp_alt_type = 1;
 	    (void) lame_set_ATHlower( gfp, -1 );
 	}
 
@@ -1573,13 +1566,11 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
 	// modify sfb21 by 3.75 dB plus ns-treble=0                 
 	lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (15 << 20));
 	gfc->presetTune.ms_maskadjust = .5;
-	gfc->presetTune.athadjust_switch_level = 1;
-
 	break;
     default:
 	/* ABR */
 	gfc->presetTune.use = 0;
-	gfc->presetTune.quantcomp_type_s = 9;
+	gfc->quantcomp_type_s = 0;
     }
     return 0;
 }

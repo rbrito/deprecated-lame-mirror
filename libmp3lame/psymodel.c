@@ -143,8 +143,7 @@ be masked by strong maskers in the L or R channels.
 /*
    L3psycho_anal.  Compute psycho acoustics.
 
-   Data returned to the calling program must be delayed by one 
-   granule. 
+   Data returned to the calling program must be delayed by one frame.
 
    This is done in two places.  
    If we do not need to know the blocktype, the copying
@@ -217,9 +216,56 @@ void fht(FLOAT *fz, int n)
     int           k4;
     FLOAT *fi, *fn, *gi;
 
-    n <<= 1;        /* to get BLKSIZE, because of 3DNow! ASM routine */
-    fn = fz + n;
-    k4 = 4;
+    fi = fn = fz + n*2;
+    do {
+	FLOAT a,g0,f0,f1,g1,f2,g2,f3,g3;
+	fi -= 16;
+	f1      = fi[0] - fi[ 4];
+	f0      = fi[0] + fi[ 4];
+	f3      = fi[8] - fi[12];
+	f2      = fi[8] + fi[12];
+	fi[ 8]  = f0     - f2;
+	fi[ 0]  = f0     + f2;
+	fi[12]  = f1     - f3;
+	fi[ 4]  = f1     + f3;
+
+	f1      = fi[2+0] - fi[2+4];
+	f0      = fi[2+0] + fi[2+4];
+	f3      = SQRT2  * fi[2+12];
+	f2      = SQRT2  * fi[2+ 8];
+	fi[2+ 8]  = f0     - f2;
+	fi[2+ 0]  = f0     + f2;
+	fi[2+12]  = f1     - f3;
+	fi[2+ 4]  = f1     + f3;
+
+	a       = (SQRT2*0.5)*(fi[1+4] + fi[3+4]);
+	f1      = fi[1+0 ]    - a;
+	f0      = fi[1+0 ]    + a;
+	a       = (SQRT2*0.5)*(fi[1+4] - fi[3+4]);
+	g1      = fi[3+0 ]    - a;
+	g0      = fi[3+0 ]    + a;
+	a       = (SQRT2*0.5)*(fi[1+12] + fi[3+12]);
+	f3      = fi[1+8]    - a;
+	f2      = fi[1+8]    + a;
+	a       = (SQRT2*0.5)*(fi[1+12] - fi[3+12]);
+	g2      = fi[3+8]    + a;
+	g3      = fi[3+8]    - a;
+	a       = tri[0]*f2     + tri[1]*g3;
+	f2      = tri[1]*f2     - tri[0]*g3;
+	fi[1+ 8]  = f0        - a;
+	fi[1+ 0]  = f0        + a;
+	fi[3+12]  = g1        - f2;
+	fi[3+ 4]  = g1        + f2;
+	a       = tri[1]*g2     + tri[0]*f3;
+	g2      = tri[0]*g2     - tri[1]*f3;
+	fi[3+ 8]  = g0        - a;
+	fi[3+ 0]  = g0        + a;
+	fi[1+12]  = f1        - g2;
+	fi[1+ 4]  = f1        + g2;
+    } while (fi!=fz);
+
+    tri += 2;
+    k4 = 16;
     do {
 	FLOAT s1, c1;
 	int   i, k1, k2, k3, kx;
@@ -255,7 +301,7 @@ void fht(FLOAT *fz, int n)
 	s1 = tri[1];
 	for (i = 1; i < kx; i++) {
 	    FLOAT c2,s2;
-	    c2 = 1 - (2*s1)*s1;
+	    c2 = 1.0 - (2*s1)*s1;
 	    s2 = (2*s1)*c1;
 	    fi = fz + i;
 	    gi = fz + k1 - i;
@@ -349,7 +395,11 @@ fft_short(lame_internal_flags * const gfc,
 	x[BLKSIZE_s / 2 + 3] = f1 - f3;
     } while ((j -= BLKSIZE/BLKSIZE_s) >= 0);
 
-    gfc->fft_fht(x, BLKSIZE_s/2);   
+#if HAVE_NASM
+    gfc->fft_fht(x, BLKSIZE_s/2);
+#else
+    fht(x, BLKSIZE_s/2);
+#endif
 }
 
 static void
@@ -381,8 +431,11 @@ fft_long(lame_internal_flags * const gfc,
 	x[BLKSIZE / 2 + 1] = f1 + f3;
 	x[BLKSIZE / 2 + 3] = f1 - f3;
     } while (--j >= 0);
-
+#if HAVE_NASM
     gfc->fft_fht(x, BLKSIZE/2); /* BLKSIZE/2 because of 3DNow! ASM routine */
+#else
+    fht(x, BLKSIZE/2);
+#endif
 }
 
 
@@ -715,9 +768,8 @@ static const FLOAT table3[] = {
 };
 
 inline static FLOAT
-mask_add_samebark(FLOAT m1, FLOAT m2, lame_internal_flags * const gfc)
+mask_add_samebark(FLOAT m1, FLOAT m2)
 {
-    int i;
     FLOAT m = m1 + m2;
 
     /* Should always be true, just checking */
@@ -744,8 +796,7 @@ mask_add(FLOAT m1, FLOAT m2, int k, int b, lame_internal_flags * const gfc)
     int i;
     FLOAT ratio;
 
-    if ((unsigned int)(k-b+3) <= 3+3)
-	return mask_add_samebark(m1, m2, gfc);
+    assert((unsigned int)(k-b+3) > 3+3);
 
     if (m2 > m1) {
 	if (m2 >= m1*ma_max_i2)
@@ -918,8 +969,7 @@ psycho_analysis_short(
 
     /* usual variables like loop indices, etc..    */
     int numchn, chn;
-    int b, i, j;
-    int	sb,sblock;
+    int i, j, sblock;
 
     FLOAT pcfact;
     FLOAT ns_hpfsmpl[MAX_CHANNELS][576];
@@ -1193,7 +1243,8 @@ L3psycho_anal_ns(
 	    a = avg[0] + avg[1];
 	    if (a != 0.0) {
 		m = max[0]; if (m < max[1]) m = max[1];
-		m = (m*(2.0/3.0)-a) / a * gfc->rnumlines_ls[0];
+		a *= 3.0/2.0;
+		m = (m-a) / a * gfc->rnumlines_ls[0];
 		a = eb[0];
 		if (m < sizeof(tab)/sizeof(tab[0]))
 		    a *= tab[trancate(m)];
@@ -1218,7 +1269,8 @@ L3psycho_anal_ns(
 	    if (a != 0.0) {
 		m = max[b-1];
 		if (m < max[b]) m = max[b];
-		m = (m*(2.0/3.0)-a) / a * gfc->rnumlines_ls[b];
+		a *= 3.0/2.0;
+		m = (m-a) / a * gfc->rnumlines_ls[b];
 		a = eb[b];
 		if (m < sizeof(tab)/sizeof(tab[0]))
 		    a *= tab[trancate(m)];
@@ -1238,17 +1290,43 @@ L3psycho_anal_ns(
 	    FLOAT ecb, tmp;
 	    int kk = gfc->s3ind[b][0];
 	    spread -= kk;
+#if 1
+// calculate same bark masking 1st
+	    {
+		ecb = spread[b] * eb2[b];
+		for (kk = 1; kk <= 3; kk++) {
+		    int k2;
+
+		    k2 = b + kk;
+		    if (k2 <= gfc->s3ind[b][1] && eb2[k2] != 0.0)
+			ecb = mask_add_samebark(ecb, spread[k2] * eb2[k2]);
+
+		    k2 = b - kk;
+		    if (k2 >= gfc->s3ind[b][0] && eb2[k2] != 0.0)
+			ecb = mask_add_samebark(ecb, spread[k2] * eb2[k2]);
+		}
+		for (kk = gfc->s3ind[b][0]; kk <= gfc->s3ind[b][1]; kk++) {
+		    if ((unsigned int)(kk - b + 3) <= 6 || eb2[kk] == 0.0)
+			continue;
+		    ecb = mask_add(ecb, spread[kk] * eb2[kk], kk, b, gfc);
+		}
+		kk = gfc->s3ind[b][1] + 1;
+	    }
+#else
+// calculate other bark masking 1st
 	    do {
-		ecb = spread[kk] * eb2[kk];
-		if (ecb != 0.0)
+		if (eb2[kk] != 0.0) {
+		    ecb = spread[kk] * eb2[kk];
 		    break;
+		}
 	    } while (++kk <= gfc->s3ind[b][1]);
 
 	    while (++kk <= gfc->s3ind[b][1]) {
-		if (eb2[kk] != 0.0)
-		    ecb = mask_add(ecb, spread[kk] * eb2[kk], kk, b, gfc);
+		if (eb2[kk] == 0.0)
+		    continue;
+		ecb = mask_add(ecb, spread[kk] * eb2[kk], kk, b, gfc);
 	    }
-
+#endif
 	    spread += kk;
 
 	    /****   long block pre-echo control   ****/
@@ -1310,7 +1388,7 @@ adjust_ATH(
     )
 {
     lame_internal_flags* const  gfc = gfp->internal_flags;
-    int gr, channel;
+    int gr;
     FLOAT max_pow, max_pow_alt;
     FLOAT max_val;
 
@@ -1531,9 +1609,6 @@ psycho_analysis(
 	    FLOAT msfix;
 	    msfix1(gfc, gr);
 	    msfix = gfp->msfix;
-	    if (gfc->ATH.adjust >= gfc->presetTune.athadjust_switch_level)
-		msfix = gfc->nsPsy.athadjust_msfix;
-
 	    if (msfix != 0.0)
 		ns_msfix(gfc, msfix, &gfc->masking_next[gr][0]);
 

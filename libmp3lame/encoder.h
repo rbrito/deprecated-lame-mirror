@@ -109,10 +109,7 @@
 #define BLKSIZE       1024
 #define HBLKSIZE      (BLKSIZE/2 + 1)
 #define BLKSIZE_s     256
-#define HBLKSIZE_s    (BLKSIZE_s/2 + 1)
 
-
-/* #define switch_pe        1800 */
 #define NORM_TYPE     0
 #define START_TYPE    1
 #define SHORT_TYPE    2
