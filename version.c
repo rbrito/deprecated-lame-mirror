@@ -22,7 +22,8 @@
 #include "version.h"    // macros of version numbers
 
 #ifdef LIBSNDFILE
-# include "lame.h"      // prototype of  sf_get_lib_version() ?
+# include "lame.h"
+# include "get_audio.h"      // includes sndfile.h for prototype of sf_get_lib_version()
 #endif
 
 void  lame_print_version ( FILE* fp )
