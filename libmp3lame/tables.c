@@ -1075,11 +1075,7 @@ init_numline(
     j = 0;
     for (k = 0; k < i+1; k++) {
 	int w = numlines[k];
-	FLOAT  bark1,bark2;
-
-	bark1 = freq2bark (sfreq*(j  ));
-	bark2 = freq2bark (sfreq*(j+w));
-	bval[k] = .5*(bark1+bark2);
+	bval[k] = freq2bark(sfreq*(j+w*0.5));
 	j += w;
     }
     return i+1;
@@ -1253,7 +1249,7 @@ int psymodel_init(lame_global_flags *gfp)
 
 	norm[i] = 0.11749/5.0;
 	if (i < 8)
-	    norm[i] = 0.001/5;
+	    norm[i] = 0.001;
 	if (i > 50)
 	    norm[i] *= 2;
 	gfc->rnumlines_ls[i] = 20.0/(l-1);
@@ -1261,8 +1257,7 @@ int psymodel_init(lame_global_flags *gfp)
 	if (gfp->ATHonly)
 	    norm[i] = 1e-37;
     }
-    i = init_s3_values(gfc, &gfc->s3_ll, gfc->s3ind,
-		       gfc->npart_l, bval, norm);
+    i = init_s3_values(gfc, &gfc->s3_ll, gfc->s3ind, gfc->npart_l, bval, norm);
     if (i)
 	return i;
 
