@@ -1216,22 +1216,12 @@ VBR_prepare (
           int             bands         [2][2] )
 {
     lame_internal_flags *gfc=gfp->internal_flags;
-    static const FLOAT8 dbQ[10]={-2.,-1.0,-.66,-.33,0.,0.33,.66,1.0,1.33,1.66};
-    static const FLOAT8 dbQns[10]={- 4,- 3,-2,-1,0,0.7,1.4,2.1,2.8,3.5};
-    /*static const FLOAT8 atQns[10]={-16,-12,-8,-4,0,  1,  2,  3,  4,  5};*/
     
-    static const FLOAT8 dbQmtrh[10]=
-        { -4., -3., -2., -1., 0., 0.5, 1., 1.5, 2., 2.5 };
-    static const FLOAT8 dbQmtrhFast[10]=
-        { -10., -7.5, -5., -2.5, 0., 1.25, 2.5, 3.75, 5., 6.25 };
     
     FLOAT8   masking_lower_db, adjust = 0.0;
     int      gr, ch;
     int      used_bits = 0, bits;
     int      analog_silence = 1;
-  
-    assert( gfp->VBR_q <= 9 );
-    assert( gfp->VBR_q >= 0 );
   
     get_framebits (gfp, analog_mean_bits, min_mean_bits, frameBits);
     
@@ -1247,18 +1237,7 @@ VBR_prepare (
             else 
                 adjust = 2/(1+exp(3.5-pe[gr][ch]/300.))-0.05;
       
-	    if (vbr_mtrh == gfp->VBR) {
-	        if ( gfp->quality == 2 )
-                    masking_lower_db   = dbQmtrhFast[gfp->VBR_q] - adjust; 
-                else
-                    masking_lower_db   = dbQmtrh[gfp->VBR_q] - adjust; 
-            } 
-            else if (gfc->nsPsy.use && gfp->ATHtype == 0) {
-	        masking_lower_db   = dbQns[gfp->VBR_q] - adjust; 
-	    } 
-            else {
-	        masking_lower_db   = dbQ[gfp->VBR_q] - adjust; 
-	    }
+            masking_lower_db   = gfc->VBR->mask_adjust - adjust; 
             gfc->masking_lower = pow (10.0, masking_lower_db * 0.1);
       
             bands[gr][ch] = calc_xmin (gfp, xr[gr][ch], ratio[gr]+ch, 

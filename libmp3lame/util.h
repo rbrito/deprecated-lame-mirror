@@ -160,6 +160,16 @@ typedef struct
     FLOAT8  cb[CBANDS];     // ATH for convolution bands
 } ATH_t;
 
+/**
+ *  VBR related stuff
+ */
+typedef struct
+{
+    int     quality;
+    FLOAT8  mask_adjust;    // the dbQ stuff
+    int     gain_adjust;
+    int     smooth;         // 0=no, 1=peaks, 2=+-4
+} VBR_t;
 
 
 /* Guest structure, only temporarly here */
@@ -478,7 +488,7 @@ typedef struct  {
   
   ATH_t *ATH;   // all ATH related stuff
   
-  
+  VBR_t *VBR;
 } lame_internal_flags;
 
 

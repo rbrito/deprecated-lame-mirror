@@ -669,92 +669,14 @@ VBR_quantize_granule(
 static const int MAX_SF_DELTA = 4;    
 
 static int 
-short_block_vbr_sf (
-    const lame_internal_flags        * const gfc,
-    const III_psy_xmin   * const l3_xmin,
-    const FLOAT8                 xr34_orig[576],
-    const FLOAT8                 xr34     [576],
-          III_scalefac_t * const vbrsf )
-{
-     int j, sfb, b;
-    int vbrmax = -10000; /* initialize for maximum search */
-  
-    for (j = 0, sfb = 0; sfb < SBMAX_s; sfb++) {
-        for (b = 0; b < 3; b++) {
-	    const  int start = gfc->scalefac_band.s[ sfb ];
-	    const  int end   = gfc->scalefac_band.s[ sfb+1 ];
-	    const  int width = end - start;
-	    
-            vbrsf->s[sfb][b] = find_scalefac_ave (&xr34[j], &xr34_orig[j],
-                                              sfb, l3_xmin->s[sfb][b], width);
-            j += width;
-        }
-    }
-    
-    for (sfb = 0; sfb < SBMAX_s; sfb++) {
-        for (b = 0; b < 3; b++) {
-	    if (sfb > 0) 
-	        if (vbrsf->s[sfb][b] > vbrsf->s[sfb-1][b]+MAX_SF_DELTA)
-                    vbrsf->s[sfb][b] = vbrsf->s[sfb-1][b]+MAX_SF_DELTA;
-	    if (sfb < SBMAX_s-1) 
-	        if (vbrsf->s[sfb][b] > vbrsf->s[sfb+1][b]+MAX_SF_DELTA)
-                    vbrsf->s[sfb][b] = vbrsf->s[sfb+1][b]+MAX_SF_DELTA;
-            if (vbrmax < vbrsf->s[sfb][b])
-                vbrmax = vbrsf->s[sfb][b];
-        }
-    }
-
-    return vbrmax;
-}
-
-
-
-static int 
-long_block_vbr_sf (
-    const lame_internal_flags        * const gfc,
-    const III_psy_xmin   * const l3_xmin,
-    const FLOAT8                 xr34_orig[576],
-    const FLOAT8                 xr34     [576],
-          III_scalefac_t * const vbrsf )
-{
-     int sfb;
-    int vbrmax = -10000; /* initialize for maximum search */
-    
-    for (sfb = 0; sfb < SBMAX_l; sfb++) {
-        const  int start = gfc->scalefac_band.l[ sfb ];
-        const  int end   = gfc->scalefac_band.l[ sfb+1 ];
-        const  int width = end - start;
-        
-        vbrsf->l[sfb] = find_scalefac_ave (&xr34[start], &xr34_orig[start],
-                                               sfb, l3_xmin->l[sfb], width);
-    }
-    
-    for (sfb = 0; sfb < SBMAX_l; sfb++) {
-        if (sfb > 0) 
-	    if (vbrsf->l[sfb] > vbrsf->l[sfb-1]+MAX_SF_DELTA)
-                vbrsf->l[sfb] = vbrsf->l[sfb-1]+MAX_SF_DELTA;
-        if (sfb < SBMAX_l-1) 
-	    if (vbrsf->l[sfb] > vbrsf->l[sfb+1]+MAX_SF_DELTA)
-                vbrsf->l[sfb] = vbrsf->l[sfb+1]+MAX_SF_DELTA;
-        if (vbrmax < vbrsf->l[sfb]) 
-            vbrmax = vbrsf->l[sfb];
-    }
-        
-    return vbrmax;
-}
-
-
-    /* a variation for vbr-mtrh */
-static int 
 short_block_sf (
     const lame_internal_flags        * const gfc,
     const III_psy_xmin   * const l3_xmin,
     const FLOAT8                 xr34_orig[576],
     const FLOAT8                 xr34     [576],
-    const int qual,
           III_scalefac_t * const vbrsf )
 {
-     int j, sfb, b;
+    int j, sfb, b;
     int vbrmean, vbrmin, vbrmax;
     int sf_cache[SBMAX_s];
   
@@ -764,8 +686,13 @@ short_block_sf (
 	    const  int end   = gfc->scalefac_band.s[ sfb+1 ];
 	    const  int width = end - start;
 	    
-            switch( qual ) {
+            switch( gfc->VBR->quality ) {
             default:
+                /*  the fastest
+                 */
+                vbrsf->s[sfb][b] = calc_scalefac( l3_xmin->s[sfb][b], width );
+                break;
+            case 5:
             case 4:
             case 3:
                 /*  the faster and sloppier mode to use at lower quality
@@ -774,10 +701,6 @@ short_block_sf (
                                               l3_xmin->s[sfb][b], width);
                 break;
             case 2:
-                /*  the fastest
-                 */
-                vbrsf->s[sfb][b] = calc_scalefac( l3_xmin->s[sfb][b], width );
-                break;
             case 1:
             case 0:
                 /*  the slower and better mode to use at higher quality
@@ -794,34 +717,50 @@ short_block_sf (
     
     for (b = 0; b < 3; b++) { 
 
-        /*  make working copy, select_kth_int will reorder!
+        /*  smoothing
          */
-        for (sfb = 0; sfb < SBMAX_s; sfb++) 
-            sf_cache[sfb] = vbrsf->s[sfb][b];
-        
-        /*  find median value, take it as mean 
-         */
-        vbrmean = select_kth_int (sf_cache, SBMAX_s, (SBMAX_s+1)/2);
-        
-        /*  get min value
-         */
-        vbrmin = 10000;
-        for (sfb = 0; sfb < SBMAX_s; sfb++) { 
-            if (vbrmin > vbrsf->s[sfb][b])
-                vbrmin = vbrsf->s[sfb][b];
-        }
-        
-        /*  patch sfb12
-        vbrsf->s[SBPSY_s][b] = Min (vbrsf->s[SBPSY_s][b], vbrmean);
-        vbrsf->s[SBPSY_s][b] = Max (vbrsf->s[SBPSY_s][b], vbrmin-(vbrmean-vbrmin));
-        no more necessary?
-         */
-        
-        /*  cut peaks
-         */
-        for (sfb = 0; sfb < SBMAX_s; sfb++) {
-            if (vbrsf->s[sfb][b] > vbrmean+(vbrmean-vbrmin))
-                vbrsf->s[sfb][b] = vbrmean+(vbrmean-vbrmin);
+        switch( gfc->VBR->smooth ) {
+        default:
+        case  0: 
+            break;
+            
+        case  1:
+            /*  make working copy, get min value, select_kth_int will reorder!
+             */
+            for (vbrmin = +10000, sfb = 0; sfb < SBMAX_s; sfb++) {
+                sf_cache[sfb] = vbrsf->s[sfb][b];
+                if (vbrmin > vbrsf->s[sfb][b])
+                    vbrmin = vbrsf->s[sfb][b];
+            }
+
+            /*  find median value, take it as mean 
+             */
+            vbrmean = select_kth_int (sf_cache, SBMAX_s, (SBMAX_s+1)/2);
+
+            /*  patch sfb12
+            vbrsf->s[SBPSY_s][b] = Min (vbrsf->s[SBPSY_s][b], vbrmean);
+            vbrsf->s[SBPSY_s][b] = Max (vbrsf->s[SBPSY_s][b], vbrmin-(vbrmean-vbrmin));
+            no more necessary?
+             */
+
+            /*  cut peaks
+             */
+            for (sfb = 0; sfb < SBMAX_s; sfb++) {
+                if (vbrsf->s[sfb][b] > vbrmean+(vbrmean-vbrmin))
+                    vbrsf->s[sfb][b] = vbrmean+(vbrmean-vbrmin);
+            }
+            break;
+            
+        case  2:
+            for (sfb = 0; sfb < SBMAX_s; sfb++) {
+	        if (sfb > 0) 
+	            if (vbrsf->s[sfb][b] > vbrsf->s[sfb-1][b]+MAX_SF_DELTA)
+                        vbrsf->s[sfb][b] = vbrsf->s[sfb-1][b]+MAX_SF_DELTA;
+	        if (sfb < SBMAX_s-1) 
+	            if (vbrsf->s[sfb][b] > vbrsf->s[sfb+1][b]+MAX_SF_DELTA)
+                        vbrsf->s[sfb][b] = vbrsf->s[sfb+1][b]+MAX_SF_DELTA;
+            }
+            break;
         }
         
         /*  get max value
@@ -843,7 +782,6 @@ long_block_sf (
     const III_psy_xmin   * const l3_xmin,
     const FLOAT8                 xr34_orig[576],
     const FLOAT8                 xr34     [576],
-    const int qual,
           III_scalefac_t * const vbrsf )
 {
     int sfb;
@@ -855,8 +793,13 @@ long_block_sf (
         const  int end   = gfc->scalefac_band.l[ sfb+1 ];
         const  int width = end - start;
         
-        switch( qual ) {
+        switch( gfc->VBR->quality ) {
         default:
+            /*  the fastest
+             */
+            vbrsf->l[sfb] = calc_scalefac( l3_xmin->l[sfb], width );
+            break;
+        case 5:
         case 4:
         case 3:
             /*  the faster and sloppier mode to use at lower quality
@@ -865,10 +808,6 @@ long_block_sf (
                                            sfb, l3_xmin->l[sfb], width);
             break;
         case 2:
-            /*  the fastest
-             */
-            vbrsf->l[sfb] = calc_scalefac( l3_xmin->l[sfb], width );
-            break;
         case 1:
         case 0:
             /*  the slower and better mode to use at higher quality
@@ -879,40 +818,52 @@ long_block_sf (
         }
     }
     
-    /*  make working copy, select_kth_int will reorder!
-     */
-    for (sfb = 0; sfb < SBMAX_l; sfb++)
-        sf_cache[sfb] = vbrsf->l[sfb];
-    
-    /*  find median value, take it as mean 
-     */
-    vbrmean = select_kth_int (sf_cache, SBMAX_l, (SBMAX_l+1)/2);
+    switch( gfc->VBR->smooth ) {
+    default:
+    case  0:
+        break;
+        
+    case  1:
+        /*  make working copy, get min value, select_kth_int will reorder!
+         */
+        for (vbrmin = +10000, sfb = 0; sfb < SBMAX_l; sfb++) {
+            sf_cache[sfb] = vbrsf->l[sfb];
+            if (vbrmin > vbrsf->l[sfb])
+                vbrmin = vbrsf->l[sfb];
+        }    
+        /*  find median value, take it as mean 
+         */
+        vbrmean = select_kth_int (sf_cache, SBMAX_l, (SBMAX_l+1)/2);
 
-    /*  get min value
-     */
-    vbrmin = +10000;
-    for (sfb = 0; sfb < SBMAX_l; sfb++) {
-        if (vbrmin > vbrsf->l[sfb])
-            vbrmin = vbrsf->l[sfb];
-    }
-    
-    /*  patch sfb21
-    vbrsf->l[SBPSY_l] = Min (vbrsf->l[SBPSY_l], vbrmean);
-    vbrsf->l[SBPSY_l] = Max (vbrsf->l[SBPSY_l], vbrmin-(vbrmean-vbrmin));
-    no more necessary?
-     */
-    
-    /*  cut peaks
-     */
-    for (sfb = 0; sfb < SBMAX_l; sfb++) {
-        if (vbrsf->l[sfb] > vbrmean+(vbrmean-vbrmin))
-            vbrsf->l[sfb] = vbrmean+(vbrmean-vbrmin);
+        /*  patch sfb21
+        vbrsf->l[SBPSY_l] = Min (vbrsf->l[SBPSY_l], vbrmean);
+        vbrsf->l[SBPSY_l] = Max (vbrsf->l[SBPSY_l], vbrmin-(vbrmean-vbrmin));
+        no more necessary?
+         */
+
+        /*  cut peaks
+         */
+        for (sfb = 0; sfb < SBMAX_l; sfb++) {
+            if (vbrsf->l[sfb] > vbrmean+(vbrmean-vbrmin))
+                vbrsf->l[sfb] = vbrmean+(vbrmean-vbrmin);
+        }
+        break;
+        
+    case  2:
+        for (sfb = 0; sfb < SBMAX_l; sfb++) {
+            if (sfb > 0) 
+	        if (vbrsf->l[sfb] > vbrsf->l[sfb-1]+MAX_SF_DELTA)
+                    vbrsf->l[sfb] = vbrsf->l[sfb-1]+MAX_SF_DELTA;
+            if (sfb < SBMAX_l-1) 
+	        if (vbrsf->l[sfb] > vbrsf->l[sfb+1]+MAX_SF_DELTA)
+                    vbrsf->l[sfb] = vbrsf->l[sfb+1]+MAX_SF_DELTA;
+        }
+        break;
     }
     
     /*  get max value
      */
-    vbrmax = -10000;
-    for (sfb = 0; sfb < SBMAX_l; sfb++) {
+    for (vbrmax = -10000, sfb = 0; sfb < SBMAX_l; sfb++) {
         if (vbrmax < vbrsf->l[sfb]) 
             vbrmax = vbrsf->l[sfb];
     }
@@ -978,10 +929,10 @@ short_block_scalefacs (
     cod_info->global_gain = vbrmax + 210;
     assert(cod_info->global_gain < 256);
     
-    if (vbr_mtrh == gfp->VBR && cod_info->global_gain > 1) {
-        /*  just to be safe, reduce global_gain by one
-         */
-        cod_info->global_gain -= 1; 
+    cod_info->global_gain += gfc->VBR->gain_adjust;
+    
+    if (cod_info->global_gain < 1) {
+        cod_info->global_gain = 1; 
     }
     
     if (cod_info->global_gain > 255)
@@ -1101,10 +1052,10 @@ long_block_scalefacs (
     cod_info->global_gain = vbrmax + 210;
     assert (cod_info->global_gain < 256);
 
-    if (vbr_mtrh == gfp->VBR && cod_info->global_gain > 1) {
-        /*  just to be safe, reduce global gain by one
-         */
-        cod_info->global_gain -= 1; 
+    cod_info->global_gain += gfc->VBR->gain_adjust;
+    
+    if (cod_info->global_gain < 0) {
+        cod_info->global_gain = 0; 
     }
     
     if (cod_info->global_gain > 255) 
@@ -1297,9 +1248,9 @@ VBR_noise_shaping (
     shortblock = (cod_info->block_type == SHORT_TYPE);
   
     if (shortblock)
-        vbrmax = short_block_vbr_sf (gfc, l3_xmin, xr34orig, xr, &vbrsf);  
+        vbrmax = short_block_sf (gfc, l3_xmin, xr34orig, xr, &vbrsf);  
     else
-        vbrmax = long_block_vbr_sf (gfc, l3_xmin, xr34orig, xr, &vbrsf);  
+        vbrmax = long_block_sf (gfc, l3_xmin, xr34orig, xr, &vbrsf);  
 
     /* save a copy of vbrsf, incase we have to recomptue scalefacs */
     memcpy (&save_sf, &vbrsf, sizeof(III_scalefac_t));
@@ -1387,11 +1338,11 @@ VBR_noise_shaping2 (
     shortblock = (cod_info->block_type == SHORT_TYPE);
       
     if (shortblock) {
-        vbrmax = short_block_sf (gfc, l3_xmin, xr34orig, xr, gfp->quality, &vbrsf);  
+        vbrmax = short_block_sf (gfc, l3_xmin, xr34orig, xr, &vbrsf);  
         short_block_scalefacs (gfp, cod_info, scalefac, &vbrsf, &vbrmax);
         short_block_xr34      (gfc, cod_info, scalefac, xr34orig, xr34);
     } else {
-        vbrmax = long_block_sf (gfc, l3_xmin, xr34orig, xr, gfp->quality, &vbrsf);  
+        vbrmax = long_block_sf (gfc, l3_xmin, xr34orig, xr, &vbrsf);  
         long_block_scalefacs (gfp, cod_info, scalefac, &vbrsf, &vbrmax);
         long_block_xr34      (gfc, cod_info, scalefac, xr34orig, xr34);
     } 

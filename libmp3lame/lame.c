@@ -599,6 +599,11 @@ lame_init_params(lame_global_flags * const gfp)
     if (NULL == gfc->ATH)
         return -2;  // maybe error codes should be enumerated in lame.h ??
 
+    if (NULL == gfc->VBR)
+        gfc->VBR = calloc(1, sizeof(VBR_t));
+    if (NULL == gfc->VBR)
+        return -2;
+        
 #ifdef KLEMM_44
     /* Select the fastest functions for this CPU */
     init_scalar_functions(gfc);
@@ -1020,31 +1025,60 @@ lame_init_params(lame_global_flags * const gfp)
         gfc->nsPsy.treble = pow(10, i / 4.0 / 10.0);
     }
 
+    assert( gfp->VBR_q <= 9 );
+    assert( gfp->VBR_q >= 0 );
+  
     switch (gfp->VBR) {
 
     case vbr_mtrh:
 
-        /*  default quality for --vbr-mtrh is 1
-         */
-        if (gfp->quality < 0)
-            gfp->quality = 1;
-
+        {   static const FLOAT8 dbQmtrh[10] = { -4., -3., -2., -1., 0., 0.5, 1., 1.5, 2., 2.5 };
+            gfc->VBR->mask_adjust = dbQmtrh[gfp->VBR_q];
+        }
+        gfc->sfb21_extra = (gfp->out_samplerate > 44000);
+        
         /*  tonality
          */
-        if (gfp->cwlimit <= 0)
-            gfp->cwlimit = 0.454 * gfp->out_samplerate;
+        if (gfp->cwlimit <= 0) gfp->cwlimit = 0.454 * gfp->out_samplerate;
 
-        /*  fall through
-         */
-
+        gfc->VBR->quality = Min( 6, Max( 0, gfp->quality ) );
+             
+        gfp->quality = 1;   // the usual stuff at level 1
+        
+        if ( gfc->VBR->quality > 5 ) {
+            gfc->VBR->gain_adjust = (gfp->VBR_q-9)/3;
+            gfc->VBR->smooth = 1;
+        }
+        else {
+            gfc->VBR->gain_adjust = -1;
+            gfc->VBR->smooth = 1;
+        }    
+        gfc->ATH->use_adjust = 1;
+        
+        if (gfp->ATHtype == -1) gfp->ATHtype = 4;
+        gfp->allow_diff_short = 1;
+        
+        break;
+        
     case vbr_mt:
 
+        gfc->VBR->quality = 0;
+        gfc->VBR->gain_adjust = 0;
+        gfc->VBR->smooth = 2;
 
         /*  fall through
          */
 
     case vbr_rh:
 
+        {   static const FLOAT8 dbQ[10]={-2.,-1.0,-.66,-.33,0.,0.33,.66,1.0,1.33,1.66};
+            static const FLOAT8 dbQns[10]={- 4,- 3,-2,-1,0,0.7,1.4,2.1,2.8,3.5};
+            /*static const FLOAT8 atQns[10]={-16,-12,-8,-4,0,  1,  2,  3,  4,  5};*/
+            if ( gfc->nsPsy.use )
+                gfc->VBR->mask_adjust = dbQns[gfp->VBR_q];
+            else
+                gfc->VBR->mask_adjust = dbQ[gfp->VBR_q]; 
+        }
         /*  use Gabriel's adaptative ATH shape for VBR by default
          */
         if (gfp->ATHtype == -1)
