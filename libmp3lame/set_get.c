@@ -1378,8 +1378,8 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
 {
     lame_internal_flags *gfc = gfp->internal_flags;
 
-    gfc->nsPsy.attackthre   =  3.5;
-    gfc->nsPsy.attackthre_s = 15.0;
+    gfc->nsPsy.attackthre   =  1.8;
+    gfc->nsPsy.attackthre_s = 10.0;
 
     switch (preset_expopts)
     {
@@ -1530,11 +1530,11 @@ static int apply_abr_preset(lame_global_flags*  gfp, int preset)
     lame_set_ATHcurve(gfp, abr_switch_map[r].ath_curve);
 
     if (actual_bitrate > 160)
-	lame_set_short_threshold(gfp, 3.5, 15.0);
+	lame_set_short_threshold(gfp, 1.8, 10.0);
     else if (actual_bitrate > 90)
-	lame_set_short_threshold(gfp, 4.5, 15.0);
+	lame_set_short_threshold(gfp, 2.5, 15.0);
     else if (actual_bitrate > 16)
-	lame_set_short_threshold(gfp, 15.0, 30.0);
+	lame_set_short_threshold(gfp, 10.0, 20.0);
     else
 	lame_set_short_threshold(gfp, 100.0, 100.0); /* no short blocks */
 
