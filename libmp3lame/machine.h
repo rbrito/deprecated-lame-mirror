@@ -138,22 +138,6 @@ typedef double  FLOAT8;
 # endif
 #endif
 
-/* Various integer types */
-
-#if   defined _WIN32 && !defined __CYGWIN__
-typedef unsigned char	u_char;
-#elif defined __DECALPHA__
-/* do nothing */
-#elif defined OS_AMIGAOS
-/* do nothing */
-#elif defined __DJGPP__
-typedef unsigned char	u_char;
-#elif !defined __GNUC__  ||  defined __STRICT_ANSI__
-typedef unsigned char	u_char;
-#else
-/* do nothing */
-#endif
-
 /* sample_t must be floating point, at least 32 bits */
 typedef FLOAT     sample_t;
 typedef sample_t  stereo_t [2];
