@@ -549,6 +549,7 @@ init_filter1(lame_t gfc)
     }
     gfc->xrNumMax_longblock = (band+1) * 18;
 
+    memset(gfc->amp_filter0, 0, sizeof(gfc->amp_filter0));
     while (--band >= 0)
 	gfc->amp_filter0[band] = 1.0;
 }
