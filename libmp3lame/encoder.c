@@ -294,15 +294,6 @@ encode_mp3_frame(lame_t gfc, unsigned char* mp3buf, int mp3buf_size)
 	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    memcpy(gfc->sb_sample[ch][1], sbsmpl[ch],
 		   sizeof(gfc->sb_sample[0][0])*gfc->mode_gr);
-#ifndef NOANALYSIS
-	    if (gfc->pinfo) {
-		/* copy data for MP3 frame analyzer */
-		int j;
-		for (j = 0; j < 1600-FFTOFFSET; j++)
-		    gfc->pinfo->pcmdata[ch][j+FFTOFFSET]
-			= gfc->mfbuf[ch][j];
-	    }
-#endif
 	}
 	return 0;
     }
