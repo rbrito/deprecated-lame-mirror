@@ -401,7 +401,7 @@ amp_scalefac_bands(
     lame_global_flags *gfp,
     const gr_info  *const cod_info, 
     III_scalefac_t *const scalefac,
-    FLOAT8 distort[4][SBMAX_l], 
+    III_psy_xmin *distort,
     FLOAT8 xrpow[576] )
 {
   lame_internal_flags *gfc=gfp->internal_flags;
@@ -417,14 +417,13 @@ amp_scalefac_bands(
   /* compute maximum value of distort[]  */
   distort_thresh = 0;
   for (sfb = 0; sfb < cod_info->sfb_lmax; sfb++) {
-    distort_thresh = Max(distort[0][sfb],distort_thresh);
+    distort_thresh = Max(distort->l[sfb],distort_thresh);
   }
   for (sfb = cod_info->sfb_smin; sfb < SBPSY_s; sfb++) {
     for (i = 0; i < 3; i++ ) {
-      distort_thresh = Max(distort[i+1][sfb],distort_thresh);
+      distort_thresh = Max(distort->s[sfb][i],distort_thresh);
     }
   }
-
 
   switch (gfc->noise_shaping_amp) {
 
@@ -479,7 +478,6 @@ amp_scalefac_bands(
  done:
  return;
 }
-
 
 /*************************************************************************
  *
@@ -626,7 +624,7 @@ balance_noise (
     lame_global_flags  *const gfp,
     gr_info        * const cod_info,
     III_scalefac_t * const scalefac, 
-    FLOAT8                 distort[4][SBMAX_l],
+    III_psy_xmin           *distort,
     FLOAT8                 xrpow[576] )
 {
     lame_internal_flags *const gfc = (lame_internal_flags *)gfp->internal_flags;
@@ -651,7 +649,7 @@ balance_noise (
         status = scale_bitcount (scalefac, cod_info);
     else 
         status = scale_bitcount_lsf (scalefac, cod_info);
-        
+    
     if (!status) 
         return 1; /* amplified some bands not exceeding limits */
     
@@ -664,13 +662,13 @@ balance_noise (
     } else {
         if (cod_info->block_type == SHORT_TYPE
 #ifdef RH_AMP
-         && gfc->noise_shaping > 0)
+	    && gfc->noise_shaping > 0)
 #else
-         && gfp->experimentalZ && gfc->noise_shaping > 1)
+	    && gfp->experimentalZ && gfc->noise_shaping > 1)
 #endif
         {
             status = inc_subblock_gain (gfc, cod_info, scalefac, xrpow)
-                  || loop_break (cod_info, scalefac);
+		|| loop_break (cod_info, scalefac);
         }
     }
     if (!status) {
@@ -718,7 +716,7 @@ outer_loop (
     III_scalefac_t save_scalefac;
     gr_info save_cod_info;
     FLOAT8 save_xrpow[576];
-    FLOAT8 distort[4][SBMAX_l];
+    III_psy_xmin   distort;
     calc_noise_result noise_info;
     calc_noise_result best_noise_info;
     int l3_enc_w[576]; 
@@ -784,7 +782,7 @@ outer_loop (
         if (gfc->noise_shaping) 
             /* coefficients and thresholds both l/r (or both mid/side) */
             over = calc_noise (gfc, xr, l3_enc_w, cod_info, l3_xmin, 
-                               scalefac, distort, &noise_info);
+                               scalefac, &distort, &noise_info);
         else {
             /* fast mode, no noise shaping, we are ready */
             best_noise_info = noise_info;
@@ -843,11 +841,11 @@ outer_loop (
          */
         if (gfc->sfb21_extra) {
             if (cod_info->block_type == SHORT_TYPE) {
-                if (distort[1][SBMAX_s-1] > 1 ||
-                    distort[2][SBMAX_s-1] > 1 ||
-                    distort[3][SBMAX_s-1] > 1) break;
+                if (distort.s[SBMAX_s-1][0] > 1 ||
+                    distort.s[SBMAX_s-1][1] > 1 ||
+                    distort.s[SBMAX_s-1][2] > 1) break;
             } else {
-                if (distort[0][SBMAX_l-1] > 1) break;
+                if (distort.l[SBMAX_l-1] > 1) break;
             }
         }
 
@@ -862,7 +860,7 @@ outer_loop (
             }
         }
             
-        notdone = balance_noise (gfp, cod_info, scalefac, distort, xrpow);
+        notdone = balance_noise (gfp, cod_info, scalefac, &distort, xrpow);
         
         if (notdone == 0) 
             break;

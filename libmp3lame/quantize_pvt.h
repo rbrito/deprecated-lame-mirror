@@ -88,7 +88,7 @@ int     calc_noise (const lame_internal_flags * gfc, const FLOAT8 xr[576],
                     const int ix[576], const gr_info * cod_info,
                     const III_psy_xmin * l3_xmin,
                     const III_scalefac_t * scalefac,
-                    FLOAT8 distort[4][SBMAX_l], calc_noise_result * res);
+                    III_psy_xmin * distort, calc_noise_result * res);
 
 void    set_frame_pinfo (lame_global_flags *gfp, FLOAT8 xr[2][2][576],
                          III_psy_ratio ratio[2][2], int l3_enc[2][2][576],
