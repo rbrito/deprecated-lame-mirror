@@ -52,6 +52,9 @@ typedef union {
     int     i;
 } fi_union;
 
+
+#define valid_sf(sf) (sf>=0?(sf<=255?sf:255):0)
+
 #define MAGIC_FLOAT (65536*(128))
 #define MAGIC_INT    0x4b000000
 
@@ -285,11 +288,12 @@ x1 = fabs(xr[1]) - sfpow * pow43[(short)(fi[1].i)];
 static  FLOAT8
 calc_sfb_noise_x34(const FLOAT8 * xr, const FLOAT8 * xr34, unsigned int bw, int sf)
 {
+    const int SF = valid_sf(sf);
 #ifdef TAKEHIRO_IEEE754_HACK
     const FLOAT8* adj43_asm = adj43asm-MAGIC_INT;
 #endif
-    const FLOAT8 sfpow = POW20(sf);  /*pow(2.0,sf/4.0); */
-    const FLOAT8 sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
+    const FLOAT8 sfpow = POW20(SF);  /*pow(2.0,sf/4.0); */
+    const FLOAT8 sfpow34 = IPOW20(SF); /*pow(sfpow,-3.0/4.0); */
 
     FLOAT8 xfsf = 0;
     fi_union fi[4];
@@ -342,8 +346,9 @@ calc_sfb_noise_x34(const FLOAT8 * xr, const FLOAT8 * xr34, unsigned int bw, int 
 static  FLOAT8
 calc_sfb_noise_ISO(const FLOAT8 * xr, const FLOAT8 * xr34, unsigned int bw, int sf)
 {
-    const FLOAT8 sfpow = POW20(sf);  /*pow(2.0,sf/4.0); */
-    const FLOAT8 sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
+    const int SF = valid_sf(sf);
+    const FLOAT8 sfpow = POW20(SF);  /*pow(2.0,sf/4.0); */
+    const FLOAT8 sfpow34 = IPOW20(SF); /*pow(sfpow,-3.0/4.0); */
 
 #ifndef TAKEHIRO_IEEE754_HACK
     const FLOAT8 compareval0 = (1.0 - 0.4054)/sfpow34;
@@ -402,13 +407,14 @@ calc_sfb_noise_ISO(const FLOAT8 * xr, const FLOAT8 * xr34, unsigned int bw, int 
 static  FLOAT8
 calc_sfb_noise_mq_x34(const FLOAT8 * xr, const FLOAT8 * xr34, int bw, int sf, int mq)
 {
+    const int SF = valid_sf(sf);
     FLOAT8  scratch_[192];
     FLOAT8  *scratch = scratch_;
 #ifdef TAKEHIRO_IEEE754_HACK
     const FLOAT8* adj43_asm = adj43asm-MAGIC_INT;
 #endif
-    const FLOAT8 sfpow = POW20(sf);  /*pow(2.0,sf/4.0); */
-    const FLOAT8 sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
+    const FLOAT8 sfpow = POW20(SF);  /*pow(2.0,sf/4.0); */
+    const FLOAT8 sfpow34 = IPOW20(SF); /*pow(sfpow,-3.0/4.0); */
 
     FLOAT8 xfsfm = 0, xfsf = 0;
     fi_union fi[4];
@@ -489,10 +495,11 @@ calc_sfb_noise_mq_x34(const FLOAT8 * xr, const FLOAT8 * xr34, int bw, int sf, in
 static  FLOAT8
 calc_sfb_noise_mq_ISO(const FLOAT8 * xr, const FLOAT8 * xr34, int bw, int sf, int mq)
 {
+    const int SF = valid_sf(sf);
     FLOAT8  scratch_[192];
     FLOAT8  *scratch = scratch_;
-    const FLOAT8 sfpow = POW20(sf);  /*pow(2.0,sf/4.0); */
-    const FLOAT8 sfpow34 = IPOW20(sf); /*pow(sfpow,-3.0/4.0); */
+    const FLOAT8 sfpow = POW20(SF);  /*pow(2.0,sf/4.0); */
+    const FLOAT8 sfpow34 = IPOW20(SF); /*pow(sfpow,-3.0/4.0); */
 #ifndef TAKEHIRO_IEEE754_HACK
     const FLOAT8 compareval0 = (1.0 - 0.4054)/sfpow34;
     const FLOAT8 compareval1 = (2.0 - 0.4054)/sfpow34;
@@ -651,24 +658,24 @@ find_scalefac_ave_x34(
     sf_ok = 10000;                                              
     for (i = 0; i < 7; ++i) {                                   
         delsf /= 2;                                             
-        xfsf = calc_sfb_noise_x34(xr,xr34,bw,sf);                                            
+        xfsf = calc_sfb_noise_x34( xr, xr34, bw, sf-1 );                                            
                                                                 
         if (xfsf < 0) {                                         
             /* scalefactors too small */                        
             sf += delsf;                                        
         }                                                       
-        else {                                                  
+        else {
             if (xfsf > l3_xmin 
-            || calc_sfb_noise_x34(xr,xr34,bw,sf+1) > l3_xmin
-            || calc_sfb_noise_x34(xr,xr34,bw,sf-1) > l3_xmin
+            || calc_sfb_noise_x34( xr, xr34, bw, sf+1 ) > l3_xmin
+            || calc_sfb_noise_x34( xr, xr34, bw, sf   ) > l3_xmin
             ) {                               
                 /* distortion.  try a smaller scalefactor */    
-                sf -= delsf;                                    
-            }                                                   
+                sf -= delsf;
+            }
             else {
-                sf_ok = sf;                                     
+                sf_ok = sf;
                 sf += delsf;
-            }                                                   
+            }                                                  
         }                                                       
     }                                                           
                                                                 
@@ -695,7 +702,7 @@ find_scalefac_ave_ISO(
     sf_ok = 10000;                                              
     for (i = 0; i < 7; ++i) {                                   
         delsf /= 2;                                             
-        xfsf = calc_sfb_noise_ISO(xr,xr34,bw,sf);                                            
+        xfsf = calc_sfb_noise_ISO( xr, xr34, bw, sf-1 );                                            
                                                                 
         if (xfsf < 0) {                                         
             /* scalefactors too small */                        
@@ -703,8 +710,8 @@ find_scalefac_ave_ISO(
         }                                                       
         else {                                                  
             if (xfsf > l3_xmin 
-            || calc_sfb_noise_ISO(xr,xr34,bw,sf+1) > l3_xmin
-            || calc_sfb_noise_ISO(xr,xr34,bw,sf-1) > l3_xmin
+            || calc_sfb_noise_ISO( xr, xr34, bw, sf+1 ) > l3_xmin
+            || calc_sfb_noise_ISO( xr, xr34, bw, sf   ) > l3_xmin
             ) {                               
                 /* distortion.  try a smaller scalefactor */    
                 sf -= delsf;                                    
