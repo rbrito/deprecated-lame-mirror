@@ -65,9 +65,9 @@ static struct {
     char    bar_percent  [512 + 1];	/* buffer filled up with a lot of '%' to print a bar     */
 } brhist;
 
-static size_t  calculate_index ( const int* const array, const size_t len, const int value )
+static int calculate_index ( const int* const array, const int len, const int value )
 {
-    size_t  i;
+    int i;
     
     for ( i = 0; i < len; i++ )
         if ( array [i] == value )

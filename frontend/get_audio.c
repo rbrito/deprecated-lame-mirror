@@ -97,7 +97,7 @@ static int  fskip ( FILE* fp, long offset, int whence )
 
     while ( offset > 0 ) {
         read      = offset > sizeof(buffer)  ?  sizeof(buffer)  :  offset;
-        if ((read = fread ( buffer, (size_t)1, read, fp )) <= 0)
+        if ((read = fread ( buffer, 1, read, fp )) <= 0)
 	    return -1;
         offset   -= read;
     }
