@@ -191,7 +191,7 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 		case HIGH_QUALITY:		// -h flag for high qualtiy
 			strcpy(DllArgV[nDllArgC++],"-h");
         break;
-		case VOICE_QUALITY:		// --voice flag for high qualtiy
+		case VOICE_QUALITY:		// --voice flag for experimental voice mode
 			strcpy(DllArgV[nDllArgC++],"--voice");
 		break;
 	}
@@ -277,7 +277,7 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 	// Set number of input samples depending on the number of samples
 	*dwSamples=(pInfo->version==MPEG2)?1152:2304;
 
-	*dwSamples=(DWORD)(resample_ratio* *dwSamples);
+	*dwSamples=(DWORD)(gfp->resample_ratio* *dwSamples);
 	if ((lameConfig.format.LHV1.nMode)== BE_MP3_MODE_MONO)
 	{
 		*dwSamples/=2;
@@ -436,7 +436,7 @@ __declspec(dllexport) BE_ERR beWriteVBRHeader(LPCSTR lpszFileName)
 	{
 		// Calculate relative quality of VBR stream 
 		// 0=best, 100=worst
-		int nQuality=VBR_q*100/9;
+		int nQuality=gfp->VBR_q*100/9;
 
 		// Write Xing header again
 		return PutVbrTag((LPSTR)lpszFileName,nQuality);
@@ -481,10 +481,6 @@ void dump_config( frame_params *fr_ps, int *psy, char *inPath, char *outPath)
 {
 	layer *info = fr_ps->header;
 	char strTmp[255];
-extern int VBR;
-extern int VBR_q;
-extern int voice_mode;
-extern int force_ms;
 
 	OutputDebugString("Encoding configuration:\n");
 
@@ -517,20 +513,20 @@ extern int force_ms;
 	sprintf(strTmp,"Fast mode is %s\n",(gfp->quality==9)?"enabled":"disabled");
 	OutputDebugString(strTmp);
 
-	sprintf(strTmp,"Force ms %s\n",(force_ms)?"enabled":"disabled");
+	sprintf(strTmp,"Force ms %s\n",(gfp->force_ms)?"enabled":"disabled");
 	OutputDebugString(strTmp);
 
 //	sprintf(strTmp,"GPsycho acoustic model is %s\n",(gpsycho)?"enabled":"disabled");
 //	OutputDebugString(strTmp);
 
-	sprintf(strTmp,"VRB is %s, VBR_q value is  %d\n",(VBR)?"enabled":"disabled",VBR_q);
+	sprintf(strTmp,"VRB is %s, VBR_q value is  %d\n",(gfp->VBR)?"enabled":"disabled",gfp->VBR_q);
 	OutputDebugString(strTmp);
 
 //	sprintf(strTmp,"input file: '%s'   output file: '%s'\n", inPath, outPath);
 //	OutputDebugString(strTmp);
 
-	sprintf(strTmp,"Voice mode %s\n",(voice_mode)?"enabled":"disabled");
-	OutputDebugString(strTmp);
+//	sprintf(strTmp,"Voice mode %s\n",(voice_mode)?"enabled":"disabled");
+//	OutputDebugString(strTmp);
 
 	sprintf(strTmp,"Encoding as %.1f kHz %d kbps %d MPEG-%d LayerIII file\n",s_freq[info->version][info->sampling_frequency],bitrate[info->version][info->lay-1][info->bitrate_index],info->mode,2-info->version);
 	OutputDebugString(strTmp);
