@@ -746,20 +746,39 @@ case 't':  /* dont write VBR tag */
   lowpass2 = .73+.05;
   */
   
-  /* apply user driven filters */
+  /* apply user driven filters, may override above calculations 
+   * ensure:  0 <= highpass1 < highpass2 <= lowpass1 < lowpass2
+   */
   
-  if (highpass1>0)
-    highpass1 = Max( 0.0, Min( 1.0, 2.0*highpass1/resamplerate));
-  else 
-    highpass1 = 0;
-  highpass2 = Max( highpass1, Min( 1.0, 2.0*highpass2/resamplerate));
-  
-  if (lowpass_l>0)
-    lowpass1 = Max( 0.0, Min( 1.0, 2.0*lowpass_l/resamplerate));
-  if (lowpass_h>0) {
-    lowpass2 = Max( 0.0, Min( 1.0, 2.0*lowpass_h/resamplerate));
-    lowpass1 = Min( lowpass1, lowpass2 );
+  if ( lowpass_h > 0 ) {
+    lowpass2 = Max( 1E-7, 2.0*lowpass_h/resamplerate );
+    lowpass1 = lowpass2 - 1E-8; /* lowpass1 has to be != lowpass2 ! */
   }
+  if ( lowpass_l > 0 ) {
+    if ( lowpass_h <= 0 ) {
+      lowpass2 = 1.0;
+    }
+    lowpass1 = Max( 1E-8, Min( lowpass2-1E-8, 2.0*lowpass_l/resamplerate) );
+  }
+  if ( highpass2 > 0 ) {
+    if ( lowpass_l > 0 || lowpass_h > 0 ) {
+      highpass2 = Max( 1E-9, Min( lowpass1, 2.0*highpass2/resamplerate ));
+    } else {
+      highpass2 = Max( 1E-9, 2.0*highpass2/resamplerate );
+    }
+  }
+  if ( highpass1 > 0 ) {
+    if ( highpass2 > 0 ) {
+      highpass1 = Max( 0.0, Min( highpass2-1E-10, 2.0*highpass1/resamplerate ));
+    } else {
+      highpass1 = Max( 0.0, 2.0*highpass1/resamplerate );
+      highpass2 = highpass1 + 1E-10; /* may violate: highpass2 <= lowpass1 ! */
+    }
+  }
+  if ( highpass2>0 || lowpass1>0 ) {
+    sfb21 = 0;
+  }
+  
 
   /* choose a max bitrate for VBR */
   if (VBR) {
