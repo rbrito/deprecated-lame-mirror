@@ -13,7 +13,6 @@
 */
 #include "lame.h"
 
- 
 #ifdef HAVEGTK
 #include "gtkanal.h"
 #include <gtk/gtk.h>
@@ -29,8 +28,7 @@
 #endif
 
 
-
-
+typedef signed short int        sample_t;       /* SAMPLE_MIN ... SAMPLE_MAX, or -1.0...+1.0 for FP */
 /************************************************************************
 *
 * main
