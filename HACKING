@@ -5,10 +5,13 @@ TESTING
 =======
 If you make changes, please test.  There is a python
 script in the test/ directory which will compare two versions
-of lame using a bunch of CBR and ABR options:  
+of lame using a bunch of CBR and ABR options. To run this
+script, copy your favorite (and short!) wav file to the
+lame/test directory, and run:
 
 % cd lame/test
-% lametest.py [-w]  CBRABR.op castanets.wav lame_orig lame_new
+% ./lametest.py [-w]  CBRABR.op castanets.wav lame_orig lame_new
+
 
 
 
