@@ -868,8 +868,7 @@ lame_encode_buffer(lame_t gfc,
 	    gfc->in_buffer[i+nsamples] = buffer_r[i] * gfc->scale_right;
     }
 
-    ret = encode_buffer_sample(gfc, nsamples, mp3buf, mp3buf_size);
-    return ret;
+    return encode_buffer_sample(gfc, nsamples, mp3buf, mp3buf_size);
 }
 
 int
@@ -891,8 +890,7 @@ lame_encode_buffer_float(lame_t gfc,
 	    gfc->in_buffer[i+nsamples] = buffer_r[i] * gfc->scale_right;
     }
 
-    ret = encode_buffer_sample(gfc, nsamples, mp3buf, mp3buf_size);
-    return ret;
+    return encode_buffer_sample(gfc, nsamples, mp3buf, mp3buf_size);
 }
 
 int
@@ -919,8 +917,7 @@ lame_encode_buffer_int(lame_t gfc,
 	    gfc->in_buffer[i+nsamples] = buffer_r[i] * scale;
     }
 
-    ret = encode_buffer_sample(gfc, nsamples, mp3buf, mp3buf_size);
-    return ret;
+    return encode_buffer_sample(gfc, nsamples, mp3buf, mp3buf_size);
 }
 
 int
@@ -947,8 +944,7 @@ lame_encode_buffer_long2(lame_t gfc,
 	    gfc->in_buffer[i+nsamples] = buffer_r[i] * scale;
     }
 
-    ret = encode_buffer_sample(gfc, nsamples, mp3buf, mp3buf_size);
-    return ret;
+    return encode_buffer_sample(gfc, nsamples, mp3buf, mp3buf_size);
 }
 
 int
@@ -970,8 +966,7 @@ lame_encode_buffer_long(lame_t gfc,
 	    gfc->in_buffer[i+nsamples] = gfc->scale_right * buffer_r[i];
     }
 
-    ret = encode_buffer_sample(gfc, nsamples, mp3buf, mp3buf_size);
-    return ret;
+    return encode_buffer_sample(gfc, nsamples, mp3buf, mp3buf_size);
 }
 
 int
@@ -989,8 +984,7 @@ lame_encode_buffer_interleaved(lame_t gfc,
         gfc->in_buffer[i] = buffer[2 * i]    * gfc->scale_left;
         gfc->in_buffer[i+nsamples] = buffer[2 * i + 1]* gfc->scale_right;
     }
-    ret = encode_buffer_sample(gfc, nsamples, mp3buf, mp3buf_size);
-    return ret;
+    return encode_buffer_sample(gfc, nsamples, mp3buf, mp3buf_size);
 }
 
 /*****************************************************************
@@ -1738,12 +1732,10 @@ fill_buffer(lame_t gfc, sample_t *in_buffer, int nsamples, int *n_in, int ch)
  */
 static int
 encode_buffer_sample(
-    lame_t gfc, int nsamples,
-    unsigned char *mp3buf, const int mp3buf_size)
+    lame_t gfc, int nsamples, unsigned char *mp3buf, const int mp3buf_size)
 {
     int buf_remain = mp3buf_size, i;
-    sample_t *buffer_lr = gfc->in_buffer;
-    sample_t *in_buffer[2];
+    sample_t *lr_buffer[2];
     unsigned char *p = mp3buf;
 
     if (gfc->frameNum == 0) {
@@ -1766,15 +1758,17 @@ encode_buffer_sample(
     }
 
     /* Downsample to Mono if 2 channels in and 1 channel out */
+    lr_buffer[0] = gfc->in_buffer;
+    lr_buffer[1] = gfc->in_buffer + nsamples;
+
     if (gfc->channels_in == 2 && gfc->channels_out == 1) {
 	for (i = 0; i < nsamples; i++)
-	    buffer_lr[i] = 0.5f * (buffer_lr[i] + buffer_lr[i+nsamples]);
+	    lr_buffer[0][i]
+		= (FLOAT)0.5 * (lr_buffer[0][i] + lr_buffer[1][i]);
     }
 
     assert(nsamples > 0);
 
-    in_buffer[0] = buffer_lr;
-    in_buffer[1] = buffer_lr + nsamples;
     do {
 	int n_in, n_out, ch;
 	/* copy the new samples into gfc->mfbuf (with resampling if needed)
@@ -1782,11 +1776,11 @@ encode_buffer_sample(
 	 * and output (n_out) samples in gfc->mfbuf. */
 	ch = 0;
 	do {
-	    n_out = fill_buffer(gfc, in_buffer[ch], nsamples, &n_in, ch);
-	    in_buffer[ch] += n_in;
+	    n_out = fill_buffer(gfc, lr_buffer[ch], nsamples, &n_in, ch);
+	    lr_buffer[ch] += n_in;
 	} while (++ch < gfc->channels_out);
 
-	/* update in_buffer counters */
+	/* update lr_buffer counters */
 	nsamples -= n_in;
 
 	/* update mfbuf[] counters */
