@@ -529,7 +529,9 @@ compute_masking_s(
 	if (gfc->blocktype_old[chn & 1] == SHORT_TYPE ) {
 	    thr[b] = Min(thr[b], rpelev2_s * gfc->nb_s2[chn][b]);
 	}
-	thr[b] = Max( thr[b], gfc->ATH->cb[gfc->bm_s[b]] * athlower );
+	thr[b] = Max( thr[b],
+                  Min(gfc->ATH->cb[gfc->bm_s[b]] * athlower,
+                      thr[b] * 2) );
 	gfc->nb_s2[chn][b] = gfc->nb_s1[chn][b];
 	gfc->nb_s1[chn][b] = ecb;
     assert( thr[b] >= 0 );
