@@ -281,7 +281,7 @@ inner_loop(
      */
     while (bits > max_bits) {
         cod_info->global_gain++;
-        bits = count_bits (gfc, xrpow, cod_info);
+	bits = count_bits (gfc, xrpow, cod_info);
     }
 
     cod_info->part2_3_length = bits;
@@ -886,8 +886,6 @@ outer_loop (
 	/* restore for reuse on next try */
 	memcpy(xrpow, save_xrpow, sizeof(FLOAT8)*576);
 
-    cod_info->part2_3_length += cod_info->part2_length;
-
     assert (cod_info->global_gain < 256);
     return best_noise_info.over_count;
 }
@@ -1355,9 +1353,10 @@ VBR_iteration_loop (
 	        VBR_encode_granule (gfp, cod_info, &l3_xmin[gr][ch], xrpow,
                                     ch, min_bits[gr][ch], max_bits[gr][ch] );
 
-            used_bits += cod_info->part2_3_length;
-            save_bits[gr][ch] = Min(MAX_BITS, cod_info->part2_3_length);
-            used_bits2 += Min(MAX_BITS, cod_info->part2_3_length);
+            ret = cod_info->part2_3_length + cod_info->part2_length;
+            used_bits += ret;
+            save_bits[gr][ch] = Min(MAX_BITS, ret);
+            used_bits2 += Min(MAX_BITS, ret);
         } /* for ch */
     }    /* for gr */
 

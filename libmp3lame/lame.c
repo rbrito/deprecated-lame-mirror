@@ -48,7 +48,7 @@
 #include <dmalloc.h>
 #endif
 
-#define DEFAULT_QUALITY 2
+#define DEFAULT_QUALITY 3
 
 static void
 lame_init_params_ppflt_lowpass(FLOAT8 amp_lowpass[32], FLOAT lowpass1,
@@ -430,8 +430,6 @@ lame_init_qval(lame_global_flags * gfp)
         break;
 
     case 4:
-        gfp->quality = 3;
-    case 3:
         gfc->filter_type = 0;
         gfc->psymodel = 1;
         gfc->quantization = 1;
@@ -441,7 +439,7 @@ lame_init_qval(lame_global_flags * gfp)
         gfc->use_best_huffman = 1;
         break;
 
-    case 2:
+    case 3:
         gfc->filter_type = 0;
         gfc->psymodel = 1;
         gfc->quantization = 1;
@@ -451,15 +449,26 @@ lame_init_qval(lame_global_flags * gfp)
         gfc->use_best_huffman = 1;
         break;
 
-    case 1:
+    case 2:
         gfc->filter_type = 0;
         gfc->psymodel = 1;
         gfc->quantization = 1;
         gfc->noise_shaping = 1;
-        gfc->substep_shaping = 1;
+//        gfc->substep_shaping = 1; // use substep shaping (not coded yet)
+        gfc->noise_shaping_amp = 1;
+        gfc->noise_shaping_stop = 1;
+        gfc->use_best_huffman = 2; // inner loop
+        break;
+
+    case 1:
+        gfc->filter_type = 0; /* 1 not yet coded */
+        gfc->psymodel = 1;
+        gfc->quantization = 1;
+        gfc->noise_shaping = 1;
+        gfc->substep_shaping = 2;
         gfc->noise_shaping_amp = 2;
         gfc->noise_shaping_stop = 1;
-        gfc->use_best_huffman = 1;
+        gfc->use_best_huffman = 2;
         break;
 
     case 0:            /* 0..1 quality */
@@ -470,7 +479,8 @@ lame_init_qval(lame_global_flags * gfp)
         gfc->substep_shaping = 2;
         gfc->noise_shaping_amp = 3;
         gfc->noise_shaping_stop = 1;
-        gfc->use_best_huffman = 1; /* 2 not yet coded */
+        gfc->use_best_huffman = 2;
+        break;
     }
 
     /* modifications to the above rules: */

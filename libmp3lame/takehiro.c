@@ -624,9 +624,15 @@ int count_bits(
 
     /* Count the number of bits necessary to code the bigvalues region. */
     if (0 < a1)
-      gi->table_select[0] = gfc->choose_table(ix, ix + a1, &bits);
+	gi->table_select[0] = gfc->choose_table(ix, ix + a1, &bits);
     if (a1 < a2)
-      gi->table_select[1] = gfc->choose_table(ix + a1, ix + a2, &bits);
+	gi->table_select[1] = gfc->choose_table(ix + a1, ix + a2, &bits);
+    if (gfc->use_best_huffman == 2) {
+	gi->part2_3_length = bits;
+	best_huffman_divide (gfc, gi);
+	bits = gi->part2_3_length;
+    }
+
     return bits;
 }
 
@@ -658,7 +664,7 @@ recalc_divide_init(
 	int a1 = gfc->scalefac_band.l[r0 + 1], r0bits;
 	if (a1 >= bigv)
 	    break;
-	r0bits = cod_info->part2_length;
+	r0bits = 0;
 	r0t = gfc->choose_table(ix, ix + a1, &r0bits);
 
 	for (r1 = 0; r1 < 8; r1++) {
@@ -778,7 +784,7 @@ void best_huffman_divide(
 	recalc_divide_sub(gfc, &cod_info2, gi, ix, r01_bits,r01_div,r0_tbl,r1_tbl);
     else {
 	/* Count the number of bits necessary to code the bigvalues region. */
-	cod_info2.part2_3_length = a1 + cod_info2.part2_length;
+	cod_info2.part2_3_length = a1;
 	a1 = gfc->scalefac_band.l[7 + 1];
 	if (a1 > i) {
 	    a1 = i;
@@ -896,7 +902,6 @@ void best_scalefac_store(
 	}
     }
 
-    gi->part2_3_length -= gi->part2_length;
     if (!gi->scalefac_scale && !gi->preflag) {
 	int b, s = 0;
 	for (sfb = 0; sfb < gi->sfb_lmax; sfb++) {
@@ -938,7 +943,6 @@ void best_scalefac_store(
 	&& l3_side->tt[1][ch].block_type != SHORT_TYPE) {
       	scfsi_calc(ch, l3_side);
     }
-    gi->part2_3_length += gi->part2_length;
 }
 
 

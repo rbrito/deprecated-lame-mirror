@@ -666,8 +666,6 @@ VBR_quantize_granule(lame_internal_flags * gfc, gr_info * cod_info, FLOAT8 * xr3
     cod_info->part2_3_length = count_bits(gfc, xr34, cod_info);
     if (cod_info->part2_3_length >= LARGE_BITS)
         return -2;
-    cod_info->part2_3_length += cod_info->part2_length;
-
 
     if (gfc->use_best_huffman == 1) {
         best_huffman_divide(gfc, cod_info);
@@ -1428,6 +1426,7 @@ VBR_noise_shaping(lame_internal_flags * gfc, FLOAT8 * xr34orig, int minbits, int
     if (ret == -1)      /* Houston, we have a problem */
         return -1;
 
+    cod_info->part2_3_length += cod_info->part2_length;
     if (cod_info->part2_3_length < minbits) {
         bin_search_StepSize (gfc, cod_info, minbits, ch, xr34);
 	cod_info->part2_3_length += cod_info->part2_length;
@@ -1441,5 +1440,6 @@ VBR_noise_shaping(lame_internal_flags * gfc, FLOAT8 * xr34orig, int minbits, int
     if (cod_info->part2_3_length >= LARGE_BITS) /* Houston, we have a problem */
 	return -2;
     
+    cod_info->part2_3_length -= cod_info->part2_length;
     return 0;
 }

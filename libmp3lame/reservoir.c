@@ -227,7 +227,7 @@ void ResvMaxBits(lame_global_flags *gfp, int mean_bits, int *targ_bits, int *ext
 void
 ResvAdjust(lame_internal_flags *gfc,gr_info *gi)
 {
-    gfc->ResvSize -= gi->part2_3_length;
+    gfc->ResvSize -= gi->part2_3_length + gi->part2_length;
 }
 
 
