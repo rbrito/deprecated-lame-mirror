@@ -24,7 +24,7 @@
 #include <string.h>
 #include <assert.h>
 #include "lame.h"
-#include "id3tag.h"
+#include "lame-id3tag.h"
 
 #include "brhist.h"
 #include "parse.h"

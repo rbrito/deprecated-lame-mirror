@@ -27,7 +27,7 @@
 #include "quantize.h"
 #include "reservoir.h"
 #include "quantize_pvt.h"
-#include "analysis.h"
+#include "lame-analysis.h"
 
 
 

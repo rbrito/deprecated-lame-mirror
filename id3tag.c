@@ -29,7 +29,7 @@
  * NOTE: See http://id3.org/ for more information about ID3 tag formats.
  */
 
-#include "id3tag.h"
+#include "lame-id3tag.h"
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>

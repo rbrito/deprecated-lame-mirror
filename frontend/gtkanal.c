@@ -24,7 +24,7 @@
 #include <gtk/gtk.h>
 #include "gpkplotting.h"
 #include "util.h"
-#include "analysis.h"
+#include "lame-analysis.h"
 #include "version.h"
 #include "lame.h"
 #include "tables.h"

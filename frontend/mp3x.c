@@ -1,6 +1,6 @@
 #include "lame.h"
 
-#include "analysis.h"
+#include "lame-analysis.h"
 #include <gtk/gtk.h>
 
 
@@ -25,7 +25,7 @@ int main(int argc, char **argv)
   lame_parse_args(&gf,argc, argv); 
   gf.gtkflag=1;
 
-  lame_init_infile(&gf);
+  init_infile(&gf);
   lame_init_params(&gf);
   lame_print_config(&gf);
 
@@ -34,7 +34,7 @@ int main(int argc, char **argv)
   gtkcontrol(&gf);
 
   lame_encode_finish(&gf,mp3buffer,sizeof(mp3buffer));
-  lame_close_infile(&gf);
+  close_infile(&gf);
   return 0;
 }
 

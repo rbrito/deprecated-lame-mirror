@@ -21,13 +21,13 @@
  */
 
 #include <assert.h>
-#include "analysis.h"
+#include "lame-analysis.h"
 #include "lame.h"
 #include "util.h"
 #include "bitstream.h"
 #include "version.h"
 #include "VbrTag.h"
-#include "id3tag.h"
+#include "lame-id3tag.h"
 #include "tables.h"
 #include "quantize_pvt.h"
 
@@ -42,10 +42,6 @@
 * PURPOSE:  Writes version and license to the file specified by #stdout#
 *
 ************************************************************************/
-
-#define LAME_PRINT_VERSION1()	
-#define LAME_PRINT_VERSION2()	lame_print_version(stderr)
-
 
 
 /* lame_init_params_ppflt_lowpass */

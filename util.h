@@ -30,7 +30,7 @@
 #include "machine.h"
 #include "encoder.h"
 #include "lame.h"
-#include "analysis.h"
+#include "lame-analysis.h"
 
 /***********************************************************************
 *

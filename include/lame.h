@@ -30,18 +30,6 @@ extern "C" {
 #define LAME_MAXMP3BUFFER 16384
 
 
-typedef enum sound_file_format_e {
-  sf_unknown, 
-  sf_raw, 
-  sf_wave, 
-  sf_aiff, 
-  sf_mp1,  /* MPEG Layer 1, aka mpg */
-  sf_mp2,  /* MPEG Layer 2 */
-  sf_mp3,  /* MPEG Layer 3 */
-  sf_ogg 
-} sound_file_format;
-
-
 typedef enum vbr_mode_e {
   vbr_off=0,
   vbr_mt,
@@ -148,13 +136,8 @@ typedef struct  {
   int highpasswidth;              /* freq width of filter, in Hz (default=15%)*/
 
 
-  /* I/O - not used if calling program does the i/o */
-  sound_file_format input_format;   
-  FILE * musicin;             /* file pointer to input file */
-  int swapbytes;              /* force byte swapping   default=0*/
-#define         MAX_NAME_SIZE           1000
-  char inPath[MAX_NAME_SIZE];
   /* Note: outPath must be set if you want Xing VBR or ID3 version 1 tags written */
+#define         MAX_NAME_SIZE           1000
   char outPath[MAX_NAME_SIZE];
 
 
@@ -184,8 +167,6 @@ typedef struct  {
   /************************************************************************/
 
   int version;                    /* 0=MPEG2  1=MPEG1 */
-  int frameNum;                   /* frame counter */
-  int totalframes;                /* frames: 0..totalframes-1 (estimate)*/
   int encoder_delay;
   int framesize;                  
 
@@ -248,10 +229,11 @@ void lame_print_version ( FILE* fp );
 int lame_init_params(lame_global_flags *);
 
 
-/* OPTIONAL:  print internal lame configuration on stderr*/
+
+
+
+/* OPTONAL:  print internal lame configuration on stderr*/
 void lame_print_config(lame_global_flags *);
-
-
 
 /* input pcm data, output (maybe) mp3 frames.
  * This routine handles all buffering, resampling and filtering for you.
@@ -320,27 +302,6 @@ by LAME because the output is not a regular file, this call does nothing
 */
 void lame_mp3_tags_fid(lame_global_flags *,FILE* fid);
 
-
-
-
-
-/*********************************************************************
- * lame file i/o.  Only supported
- * if libmp3lame compiled with LAMESNDFILE or LIBSNDFILE
- *********************************************************************/
-/* OPTIONAL: open the input file, and parse headers if possible 
- * you can skip this call if you will do your own PCM input 
- */
-void lame_init_infile(lame_global_flags *);
-
-/* OPTIONAL:  read one frame of PCM data from audio input file opened by 
- * lame_init_infile.  Input file can be wav, aiff, raw pcm, anything
- * supported by libsndfile, or an mp3 file
- */
-int lame_readframe(lame_global_flags *,short int Buffer[2][1152]);
-
-/* OPTIONAL: close the sound input file if lame_init_infile() was used */
-void lame_close_infile(lame_global_flags *);
 
 
 

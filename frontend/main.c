@@ -37,10 +37,10 @@
  to the library.
 */
 #include "lame.h"
-#include "id3tag.h"
+#include "lame-id3tag.h"
 
 #ifdef HAVEGTK
-#include "analysis.h"
+#include "lame-analysis.h"
 #include <gtk/gtk.h>
 #endif
 

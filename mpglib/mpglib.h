@@ -1,4 +1,4 @@
-#include "analysis.h"
+#include "lame-analysis.h"
 
 #ifdef ANALYSIS
 extern plotting_data *mpg123_pinfo;

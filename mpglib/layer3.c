@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include "common.h"
 #include "huffman.h"
-#include "analysis.h"
+#include "lame-analysis.h"
 
 
 extern struct mpstr *gmp;

@@ -21,7 +21,7 @@
 
 #include <assert.h>
 #include "util.h"
-#include "analysis.h"
+#include "lame-analysis.h"
 #include "tables.h"
 #include "reservoir.h"
 #include "quantize_pvt.h"

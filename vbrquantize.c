@@ -25,7 +25,7 @@
 #include "quantize.h"
 #include "reservoir.h"
 #include "quantize_pvt.h"
-#include "analysis.h"
+#include "lame-analysis.h"
 
 
 #if (defined(__GNUC__) && defined(__i386__))
