@@ -43,7 +43,7 @@
 void psycho_analysis( lame_global_flags *gfp,
 		      const sample_t *buffer[2],
 		      III_psy_ratio masking[2][2],
-		      FLOAT sbsmpl[2][2*1152] );
+		      FLOAT sbsmpl[2][1152] );
 
 int psymodel_init(lame_global_flags *gfp);
 void init_mask_add_max_values(lame_internal_flags *gfc);

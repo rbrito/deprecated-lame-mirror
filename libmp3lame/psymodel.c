@@ -987,7 +987,7 @@ static void
 psycho_analysis_short(
     lame_internal_flags *gfc,
     const sample_t *buffer[2],
-    FLOAT sbsmpl[2][2*1152],
+    FLOAT sbsmpl[2][1152],
     int gr,
     int numchn
     )
@@ -1519,7 +1519,7 @@ psycho_analysis(
     lame_global_flags * gfp,
     const sample_t *buffer[2],
     III_psy_ratio masking_d[2][2],
-    FLOAT sbsmpl[2][2*1152]
+    FLOAT sbsmpl[2][1152]
     )
 {
     lame_internal_flags *gfc=gfp->internal_flags;

@@ -425,9 +425,9 @@ int
 lame_init_params(lame_global_flags * const gfp)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
+    int gr, ch;
 
     gfc->gfp = gfp;
-
     gfc->Class_ID = 0;
 
     /* report functions */
@@ -636,18 +636,19 @@ lame_init_params(lame_global_flags * const gfp)
     gfp->scale_right *= gfp->scale;
 
     if (!gfc->psymodel) {
-	int gr, ch;
 	gfc->ATH.adjust = 1.0;	/* no adjustment */
 	gfc->mode_ext = MPG_MD_LR_LR;
 	if (gfp->mode == JOINT_STEREO)
 	    gfc->mode_ext = MPG_MD_MS_LR;
 	gfp->disable_reservoir = 1;
 	gfc->substep_shaping = 0;
-	for (gr=0; gr < gfc->mode_gr ; gr++)
-	    for ( ch = 0; ch < gfc->channels_out; ch++ ) {
-		gfc->l3_side.tt[gr][ch].block_type=NORM_TYPE;
-		gfc->l3_side.tt[gr][ch].mixed_block_flag=0;
-	    }
+    }
+
+    for (gr=0; gr < gfc->mode_gr ; gr++) {
+	for ( ch = 0; ch < gfc->channels_out; ch++ ) {
+	    gfc->l3_side.tt[gr][ch].block_type=NORM_TYPE;
+	    gfc->l3_side.tt[gr][ch].mixed_block_flag=0;
+	}
     }
 
     return 0;

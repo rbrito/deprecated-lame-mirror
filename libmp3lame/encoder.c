@@ -328,42 +328,32 @@ int  lame_encode_mp3_frame (				/* Output */
 	unsigned char*            mp3buf, 		/* Output */
 	int                    mp3buf_size )		/* Output */
 {
-    int mp3count;
-    III_psy_ratio masking[2][2];  /*pointer to selected maskings*/
-    const sample_t *inbuf[2];
     lame_internal_flags *gfc=gfp->internal_flags;
-    FLOAT sbsmpl[MAX_CHANNELS][2*1152];
+    int mp3count, ch, gr;
+    III_psy_ratio masking[2][MAX_CHANNELS];
+    const sample_t *inbuf[MAX_CHANNELS];
+    FLOAT sbsmpl[MAX_CHANNELS][1152];
 
-    int ch,gr;
+    inbuf[0]=inbuf_l;
+    inbuf[1]=inbuf_r;
 
     if (!gfc->lame_encode_frame_init) {
 	/* prime the MDCT/polyphase filterbank with a short block */
-	int i,j;
-	sample_t primebuff[2][286+1152+576];
+	sample_t primebuff[1152+576];
 	memset(gfc->sb_sample, 0, sizeof(gfc->sb_sample));
 	gfc->lame_encode_frame_init = 1;
-	for (i=0, j=0; i<286+576*(1+gfc->mode_gr); ++i) {
-	    if (i<576*gfc->mode_gr) {
-		primebuff[0][i]=0;
-		primebuff[1][i]=0;
-	    }else{
-		primebuff[0][i]=inbuf_l[j];
-		if (gfc->channels_out==2) 
-		    primebuff[1][i]=inbuf_r[j];
-		++j;
-	    }
-	}
+
 	/* polyphase filtering / mdct */
 	for ( ch = 0; ch < gfc->channels_out; ch++ ) {
-	    inbuf[ch] = primebuff[ch] - gfp->framesize + 286;
-	    for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
-		gfc->l3_side.tt[gr][ch].block_type = NORM_TYPE;
-	    }
-	    subband(gfc, inbuf[ch], sbsmpl[ch]);
-	    memcpy(gfc->sb_sample[ch][1], sbsmpl,
-		   sizeof(gfc->sb_sample[ch][0])*gfc->mode_gr);
-	    memset(gfc->sb_sample[ch][0], 0, sizeof(gfc->sb_sample[ch][0]));
-	    mdct_sub48(gfc, ch);
+	    int i;
+	    memset(primebuff, 0, sizeof(FLOAT)*gfp->framesize);
+	    for (i = 0; i < 576; i++)
+		primebuff[gfp->framesize + i] = inbuf[ch][i];
+
+	    subband(gfc, primebuff-1152, sbsmpl[ch]);
+	    memset(gfc->sb_sample[ch][0], 0, sizeof(gfc->sb_sample[0][0]));
+	    memcpy(gfc->sb_sample[ch][1], sbsmpl[ch],
+		   sizeof(gfc->sb_sample[0][0])*gfc->mode_gr);
 	}
 
 	/* check FFT will not use a negative starting offset */
@@ -396,9 +386,6 @@ int  lame_encode_mp3_frame (				/* Output */
 	gfc->padding = TRUE;
     }
 
-    inbuf[0]=inbuf_l;
-    inbuf[1]=inbuf_r;
-
     /* subband filtering in the next frame */
     /* to determine long/short swithcing in psymodel */
     for ( ch = 0; ch < gfc->channels_out; ch++ )
@@ -409,14 +396,14 @@ int  lame_encode_mp3_frame (				/* Output */
     else
 	memset(masking, 0, sizeof(masking));
 
-    /* polyphase filtering / mdct */
+    /* mdct */
     for (ch = 0; ch < gfc->channels_out; ch++) {
 	mdct_sub48(gfc, ch);
 	/* aging subband filetr output */
 	memcpy(gfc->sb_sample[ch][0], gfc->sb_sample[ch][gfc->mode_gr],
-	       sizeof(gfc->sb_sample[ch][0]));
+	       sizeof(gfc->sb_sample[0][0]));
 	memcpy(gfc->sb_sample[ch][1], sbsmpl[ch],
-	       sizeof(gfc->sb_sample[ch][0])*gfc->mode_gr);
+	       sizeof(gfc->sb_sample[0][0])*gfc->mode_gr);
 
 	for (gr = 0; gr < gfc->mode_gr; gr++)
 	    init_gr_info(gfc, gr, ch);
