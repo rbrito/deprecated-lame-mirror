@@ -19,6 +19,7 @@ Q_fm0p25	dd	-0.25, -0.25, -0.25, -0.25
 Q_ABS		dd	0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF
 
 D_ROUNDFAC	dd	0.4054,0.4054
+D_1ROUNDFAC	dd	0.5946,0.5946
 D_IXMAXVAL	dd	8206.0,8206.0
 minus1		dd	-1.0
 
@@ -585,7 +586,7 @@ proc	quantize_ISO_3DN
 	pfadd		mm0, mm5
 	pf2id		mm0, mm0
 	movq		[ecx - 8+ 0+ edx*4], mm0
-	jz		.exit
+	jz		.exit4
 	loopalignK7	16
 .lp4:
 	movq		mm0, [eax+ 0+ edx*4]
@@ -600,6 +601,24 @@ proc	quantize_ISO_3DN
 	movq		[ecx -16 + 0+ edx*4], mm0
 	movq		[ecx -16 + 8+ edx*4], mm1
 	jnz		.lp4
-.exit:
+.exit4:
+	pfrcp		mm0, mm4
+	mov		edx, [esp+_P+20]
+	lea		ecx, [ecx+edx*4]
+	lea		eax, [eax+edx*4]
+	neg		edx
+	jz		.exit2
+	pfrcpit1	mm4, mm0
+	pfrcpit2	mm4, mm0
+	punpckldq	mm4, mm4	; (1.0 / sfpow34) x 2
+	pfmul		mm4, [D_1ROUNDFAC]
+.lp2:
+	movq		mm0, [eax+ 0+ edx*4]
+	add		edx, byte 2
+	pcmpgtd		mm0, mm4
+	psrld		mm0, 31
+	movq		[ecx - 8 + 0+ edx*4], mm0
+	jnz		.lp2
+.exit2
 	femms
 	ret

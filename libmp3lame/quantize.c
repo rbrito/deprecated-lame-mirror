@@ -43,6 +43,7 @@ extern void pow075_SSE(float *, float *, int, float*);
 extern void pow075_3DN(float *, float *, int, float*);
 extern void sumofsqr_3DN(const FLOAT *, int, FLOAT *);
 extern void calc_noise_sub_3DN(const FLOAT *, const int *, int, int, FLOAT *);
+extern void quantize_ISO_3DN(const FLOAT *, int, int, int *, int);
 extern FLOAT
 calc_sfb_noise_fast_3DN(lame_internal_flags *gfc, int j, int bw, int sf);
 extern FLOAT
@@ -421,7 +422,9 @@ quantize_ISO(lame_internal_flags * const gfc, gr_info *gi)
     if (gfc->CPU_features.AMD_3DNow && gi->big_values) {
 	fi += gi->big_values;
 	xp += gi->big_values;
-	quantize_ISO_3DN(xp, -gi->big_values, gi->global_gain, &fi[0].i);
+	quantize_ISO_3DN(xp, -gi->big_values, gi->global_gain, &fi[0].i,
+			 gi->count1 - gi->big_values);
+	xend = &xr34[gi->count1];
     } else
 #endif
     {
@@ -442,13 +445,12 @@ quantize_ISO(lame_internal_flags * const gfc, gr_info *gi)
 	    (fi++)->i = (int)(*xp++ * istep + ROUNDFAC);
 #endif
 	}
-    }
-
-    istep = (1.0-ROUNDFAC) / istep;
-    xend = &xr34[gi->count1];
-    while (xp < xend) {
-	(fi++)->i = *xp++ > istep ? 1:0;
-	(fi++)->i = *xp++ > istep ? 1:0;
+	istep = (1.0-ROUNDFAC) / istep;
+	xend = &xr34[gi->count1];
+	while (xp < xend) {
+	    (fi++)->i = *xp++ > istep ? 1:0;
+	    (fi++)->i = *xp++ > istep ? 1:0;
+	}
     }
     if (gfc->noise_shaping_amp >= 3) {
 	istep = istep * (0.634521682242439 / (1.0-ROUNDFAC));

@@ -49,7 +49,6 @@ int scale_bitcount_lsf (gr_info * const cod_info);
 
 #ifdef HAVE_NASM
 void quantize_sfb_3DN(const FLOAT *, int, int, int *);
-void quantize_ISO_3DN(const FLOAT *, int, int, int *);
 #endif
 
 #define LARGE_BITS 100000
