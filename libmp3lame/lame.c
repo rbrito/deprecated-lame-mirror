@@ -346,7 +346,8 @@ lame_init_qval(lame_global_flags * gfp)
         gfc->psymodel = 1;
         gfc->quantization = 1;
         gfc->noise_shaping = 1;
-/*        gfc->substep_shaping = 1; // use substep shaping (not coded yet) */
+/*	gfc->substep_shaping = 1;
+	// use substep shaping (not recommended always, yet) */
         gfc->noise_shaping_amp = 1;
         gfc->noise_shaping_stop = 1;
         gfc->use_best_huffman = 2; /* inner loop */
@@ -357,19 +358,18 @@ lame_init_qval(lame_global_flags * gfp)
         gfc->psymodel = 1;
         gfc->quantization = 1;
         gfc->noise_shaping = 1;
-        gfc->substep_shaping = 2;
         gfc->noise_shaping_amp = 2;
         gfc->noise_shaping_stop = 1;
         gfc->use_best_huffman = 2;
         break;
 
-    case 0:            /* 0..1 quality */
+    case 0:
         gfc->filter_type = 0; /* 1 not yet coded */
         gfc->psymodel = 1;
         gfc->quantization = 1;
         gfc->noise_shaping = 1; /* 2=usually lowers quality */
         gfc->substep_shaping = 2;
-        gfc->noise_shaping_amp = 3;
+        gfc->noise_shaping_amp = 2;
         gfc->noise_shaping_stop = 1;
         gfc->use_best_huffman = 2;
         break;
