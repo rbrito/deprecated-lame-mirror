@@ -25,19 +25,19 @@
 #include "util.h"
 /*#include "l3side.h"
 */
-void iteration_loop( context *gfc,
+void iteration_loop( lame_internal_flags *gfc,
                      FLOAT8 pe[2][2], FLOAT8 ms_ratio[2], 
 		     FLOAT8 xr_org[2][2][576], III_psy_ratio ratio[2][2],
 		     int l3_enc[2][2][576], 
 		     III_scalefac_t scalefac[2][2]);
 
-void VBR_iteration_loop( context *gfc,
+void VBR_iteration_loop( lame_internal_flags *gfc,
                      FLOAT8 pe[2][2], FLOAT8 ms_ratio[2], 
 		     FLOAT8 xr_org[2][2][576], III_psy_ratio ratio[2][2],
 		     int l3_enc[2][2][576], 
 		     III_scalefac_t scalefac[2][2]);
 
-void ABR_iteration_loop( context *gfc,
+void ABR_iteration_loop( lame_internal_flags *gfc,
                      FLOAT8 pe[2][2], FLOAT8 ms_ratio[2], 
 		     FLOAT8 xr_org[2][2][576], III_psy_ratio ratio[2][2],
 		     int l3_enc[2][2][576], 
@@ -50,7 +50,7 @@ void ABR_iteration_loop( context *gfc,
  */
 
 void VBR_quantize( 
-                    context      * gfc,
+                    lame_internal_flags      * gfc,
 		    FLOAT8         pe[2][2], 
                     FLOAT8         ms_ener_ratio[2],
 		    FLOAT8         xr[2][2][576], 
@@ -62,7 +62,7 @@ void VBR_quantize(
     /*  used by VBR_iteration_loop() */ 
 
 int VBR_noise_shaping2(
-                    context        * gfc,
+                    lame_internal_flags        * gfc,
                     FLOAT8           xr       [576], 
                     FLOAT8           xr34orig [576], 
                     III_psy_ratio  * ratio,

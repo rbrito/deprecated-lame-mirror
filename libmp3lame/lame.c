@@ -789,24 +789,7 @@ void lame_print_config ( const lame_global_flags* gfp )
     }
 }
 
-/*}}}*/
-/* void          lame_id3v2_tag                 (lame_global_flags *gfp,FILE *outf)                                                                               *//*{{{*/
 
-/*****************************************************************/
-/* write ID3 version 2 tag to output file, if asked for          */
-/*****************************************************************/
-void lame_id3v2_tag(lame_global_flags *gfp,FILE *outf)
-{
-  /*
-   * NOTE: "lame_id3v2_tag" is obviously just a wrapper to call the function
-   * below and have a nice "lame_"-prefixed function name in "lame.h".
-   * -- gramps
-   */
-  /* no ID3 version 2 tags in Ogg Vorbis output */
-
-}
-
-/*}}}*/
 /* int           lame_encode_frame              (lame_global_flags *gfp, sample_t inbuf_l[],sample_t inbuf_r[], char *mp3buf, int mp3buf_size)                    *//*{{{*/
 
 /* routine to feed exactly one frame (gfp->framesize) worth of data to the 
@@ -1140,7 +1123,7 @@ int    lame_encode_flush (
 #endif
     }else{
         /* mp3 related stuff.  bit buffer might still contain some mp3 data */
-        flush_bitstream(gfc);
+        flush_bitstream(gfp);
         /* write a id3 tag to the bitstream */
         id3tag_write_v1(gfp);
         imp3 = copy_buffer(mp3buffer, mp3buffer_size_remaining, &gfc->bs);
