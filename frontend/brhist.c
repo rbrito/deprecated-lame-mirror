@@ -177,14 +177,18 @@ brhist_init(lame_t gfp, const int bitrate_kbps_min, const int bitrate_kbps_max)
 #ifdef HAVE_TERMCAP
     /* try to catch additional information about special console sequences */
     if ((term_name = getenv("TERM")) == NULL) {
-	fprintf(Console_IO.Error_fp,
-		"LAME: Can't get \"TERM\" environment string.\n");
+	if (silent < 10) {
+	    fprintf(Console_IO.Error_fp,
+		    "LAME: Can't get \"TERM\" environment string.\n");
+	}
 	return -1;
     }
     if (tgetent(term_buff, term_name) != 1) {
-	fprintf(Console_IO.Error_fp,
-		"LAME: Can't find termcap entry for terminal \"%s\"\n",
-		term_name);
+	if (silent < 10) {
+	    fprintf(Console_IO.Error_fp,
+		    "LAME: Can't find termcap entry for terminal \"%s\"\n",
+		    term_name);
+	}
 	return -1;
     }
     
