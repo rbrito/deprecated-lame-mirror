@@ -142,7 +142,7 @@ ifeq ($(UNAME),Linux)
 #	-Wall -O9 -fomit-frame-pointer -march=pentium \
 #	-finline-functions -fexpensive-optimizations \
 #	-funroll-loops -funroll-all-loops -pipe -fschedule-insns2 \
-#	-fstrength-reduce -fno-strict-aliasing \
+#	-fstrength-reduce \
 #	-malign-double -mfancy-math-387 -ffast-math 
 
 
@@ -446,7 +446,7 @@ gtk_dep = $(gtk_sources:.c=.d)
 
 
 NASM = nasm
-ASFLAGS=-f elf -i i386/
+ASFLAGS=-f elf -i libmp3lame/i386/
 %.o: %.nas
 	$(NASM) $(ASFLAGS) $< -o $@
 %.o: %.s
@@ -454,11 +454,11 @@ ASFLAGS=-f elf -i i386/
 
 ## have NASM
 #CC_SWITCHES += -DHAVE_NASM
-#lib_obj += i386/cpu_feat.o
+#lib_obj += libmp3lame/i386/cpu_feat.o
 
 ## use MMX extension. you need nasm and MMX supported CPU.
 #CC_SWITCHES += -DMMX_choose_table
-#OBJ += i386/choose_table.o
+#lib_obj += libmp3lame/i386/choose_table.o
 
 %.o: %.c 
 	$(CC) $(CPP_OPTS) $(CC_SWITCHES) -c $< -o $@
