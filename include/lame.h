@@ -317,6 +317,7 @@ int CDECL lame_set_quant_comp_short(lame_global_flags *, int);
 int CDECL lame_get_quantcomp_method(const lame_global_flags *);
 
 /* set/get large scalefactor range */
+int CDECL lame_set_use_subblock_gain(lame_global_flags *, int);
 int CDECL lame_set_use_largescalefac(lame_global_flags *, int);
 int CDECL lame_get_use_largescalefac(const lame_global_flags *);
 
