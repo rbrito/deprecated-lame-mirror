@@ -657,6 +657,7 @@ lame_get_noATH( const lame_global_flags*  gfp ){
 int
 lame_set_ATHtype( lame_global_flags*  gfp,
                   int                 ATHtype ){
+// ATHtype should be converted to an enum
     gfp->ATHtype=ATHtype;
     return 0;
 }
@@ -770,6 +771,7 @@ int
 lame_set_emphasis( lame_global_flags*  gfp,
                    int                 emphasis )
 {
+// emphasis should be converted to an enum
     if (emphasis<0 || emphasis>3) return -1;
     gfp->emphasis = emphasis;
     return 0;
