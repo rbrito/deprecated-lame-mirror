@@ -22,10 +22,101 @@
 /*
     OVERVIEW:
 
-    provides iteration_loop(), ABR_iteration_loop(), VBR_iteration_loop()
+    quantize.c provides:
+    - iteration_loop()
+    - ABR_iteration_loop()
+    - VBR_iteration_loop()
     
-    not yet described
-
+    they use:
+    
+    iteration_loop
+     - iteration_init          quantize_pvt.c
+     - getframebits            util.c
+     - ResvFrameBegin          reservoir.c
+     + on_pe
+        - ResvMaxBits          takehiro.c
+     - ms_convert              quantize_pvt.c
+     + reduce_side
+     + init_outer_loop
+     - calc_xmin               quantize_pvt.c
+     + outer_loop
+        + bin_search_Stepsize
+           - count_bits        takehiro.c
+        + inner_loop
+           - count_bits        takehiro.c
+        - calc_noise           quantize_pvt.c
+        + quant_compare
+        + amp_scalefac_bands
+        + loop_break
+        - scale_bitcount       takehiro.c
+        - scale_bitcount_lsf   takehiro.c
+        + inc_scalefac_scale
+        + inc_subblock_gain
+           - fun_reorder       util.c
+           - freorder          util.c
+     - set_pinfo               quantize_pvt.c
+     - best_scalefac_store     takehiro.c
+     - best_huffman_divide     takehiro.c
+     - ResvAdjust              reservoir.c
+     - ResvFrameEnd            reservoir.c
+     
+    ABR_iteration_loop
+     - iteration_init          quantize_pvt.c
+     - getframebits            util.c
+     - ResvFrameBegin          reservoir.c
+     + reduce_side
+     - ms_convert              quantize_pvt.c
+     + init_outer_loop
+     - calc_xmin               quantize_pvt.c
+     + outer_loop
+        + bin_search_Stepsize
+           - count_bits        takehiro.c
+        + inner_loop
+           - count_bits        takehiro.c
+        - calc_noise           quantize_pvt.c
+        + quant_compare
+        + amp_scalefac_bands
+        + loop_break
+        - scale_bitcount       takehiro.c
+        - scale_bitcount_lsf   takehiro.c
+        + inc_scalefac_scale
+        + inc_subblock_gain
+           - fun_reorder       util.c
+           - freorder          util.c
+     - set_pinfo               quantize_pvt.c
+     - best_scalefac_store     takehiro.c
+     - best_huffman_divide     takehiro.c
+     - ResvAdjust              reservoir.c
+     - ResvFrameEnd            reservoir.c
+     
+    VBR_iteration_loop
+     - iteration_init          quantize_pvt.c
+     - getframebits            util.c
+     - ms_convert              quantize_pvt.c
+     - calc_xmin               quantize_pvt.c
+     - ResvFrameBegin          reservoir.c
+     + init_outer_loop
+     + outer_loop
+        + bin_search_Stepsize
+           - count_bits        takehiro.c
+        + inner_loop
+           - count_bits        takehiro.c
+        - calc_noise           quantize_pvt.c
+        + quant_compare
+        + amp_scalefac_bands
+        + loop_break
+        - scale_bitcount       takehiro.c
+        - scale_bitcount_lsf   takehiro.c
+        + inc_scalefac_scale
+        + inc_subblock_gain
+           - fun_reorder       util.c
+           - freorder          util.c
+     - set_pinfo               quantize_pvt.c
+     - best_scalefac_store     takehiro.c
+     - best_huffman_divide     takehiro.c
+     - ResvAdjust              reservoir.c
+     - ResvFrameEnd            reservoir.c
+    
  */
 
 
@@ -365,7 +456,7 @@ void amp_scalefac_bands(
   } else {
     ifqstep34 = 1.68179283050742922612;  /* 2**(.75*1) */
   }
-  /* distort[] = noise/masking.  Comput distort_thresh so that:
+  /* distort[] = noise/masking.  Compute distort_thresh so that:
    * distort_thresh = 1, unless all bands have distort < 1
    * In that case, just amplify bands with distortion
    * within 95% of largest distortion/masking ratio */
@@ -537,12 +628,13 @@ void inc_subblock_gain(
 
 
 
-/************************************************************************/
-/*  outer_loop                                                         */
-/************************************************************************/
-/*  Function: The outer iteration loop controls the masking conditions  */
-/*  of all scalefactorbands. It computes the best scalefac and          */
-/*  global gain. This module calls the inner iteration loop             
+/************************************************************************
+ *
+ *  outer_loop ()                                                       
+ *
+ *  Function: The outer iteration loop controls the masking conditions  
+ *  of all scalefactorbands. It computes the best scalefac and          
+ *  global gain. This module calls the inner iteration loop             
  * 
  *  mt 5/99 completely rewritten to allow for bit reservoir control,   
  *  mid/side channels with L/R or mid/side masking thresholds, 
@@ -551,6 +643,7 @@ void inc_subblock_gain(
  *  
  *  added VBR support mt 5/99
  ************************************************************************/
+
 void outer_loop(
     lame_global_flags *gfp,
     gr_info           *cod_info,
@@ -561,7 +654,7 @@ void outer_loop(
     III_scalefac_t    *scalefac,    /* scalefactors */
     FLOAT8             xrpow[576],  /* coloured magnitudes of spectral values */
     int                l3_enc[576], /* vector of quantized values ix(0..575) */
-    FLOAT8             best_noise[4])
+    FLOAT8             best_noise[4] )
 {
   III_scalefac_t save_scalefac;
   gr_info save_cod_info;
@@ -848,42 +941,42 @@ void reduce_side (
 
 
   /*  ms_ener_ratio = 0:  allocate 66/33  mid/side  fac=.33  
-   *  ms_ener_ratio =.5:  allocate 50/50 mid/side   fac= 0 */
-  /* 75/25 split is fac=.5 */
+   *  ms_ener_ratio =.5:  allocate 50/50 mid/side   fac= 0 
+   * 75/25 split is fac=.5 */
   /* float fac = .50*(.5-ms_ener_ratio[gr])/.5;*/
   fac = .33*(.5-ms_ener_ratio)/.5;
-  if (fac<0) fac=0;
+  if (fac< 0) fac=0;
   if (fac>.5) fac=.5;
   
-    /* number of bits to move from side channel to mid channel */
-    /*    move_bits = fac*targ_bits[1];  */
-    move_bits = fac*.5*(targ_bits[0]+targ_bits[1]);  
+  /* number of bits to move from side channel to mid channel */
+  /*    move_bits = fac*targ_bits[1];  */
+  move_bits = fac*.5*(targ_bits[0]+targ_bits[1]);  
 
-    if ((move_bits + targ_bits[0]) > 4095) {
-      move_bits = 4095 - targ_bits[0];
-    }
-    if (move_bits<0) move_bits=0;
+  if ((move_bits + targ_bits[0]) > 4095) {
+    move_bits = 4095 - targ_bits[0];
+  }
+  if (move_bits<0) move_bits=0;
     
-    if (targ_bits[1] >= 125) {
-      /* dont reduce side channel below 125 bits */
-      if (targ_bits[1]-move_bits > 125) {
+  if (targ_bits[1] >= 125) {
+    /* dont reduce side channel below 125 bits */
+    if (targ_bits[1]-move_bits > 125) {
 
- /* if mid channel already has 2x more than average, dont bother */
- /* mean_bits = bits per granule (for both channels) */
- if (targ_bits[0] < mean_bits)
-   targ_bits[0] += move_bits;
- targ_bits[1] -= move_bits;
-      } else {
- targ_bits[0] += targ_bits[1] - 125;
- targ_bits[1] = 125;
-      }
+      /* if mid channel already has 2x more than average, dont bother */
+      /* mean_bits = bits per granule (for both channels) */
+      if (targ_bits[0] < mean_bits)
+        targ_bits[0] += move_bits;
+      targ_bits[1] -= move_bits;
+    } else {
+      targ_bits[0] += targ_bits[1] - 125;
+      targ_bits[1] = 125;
     }
+  }
     
-    move_bits=targ_bits[0]+targ_bits[1];
-    if (move_bits > max_bits) {
-      targ_bits[0]=(max_bits*targ_bits[0])/move_bits;
-      targ_bits[1]=(max_bits*targ_bits[1])/move_bits;
-    }
+  move_bits=targ_bits[0]+targ_bits[1];
+  if (move_bits > max_bits) {
+    targ_bits[0]=(max_bits*targ_bits[0])/move_bits;
+    targ_bits[1]=(max_bits*targ_bits[1])/move_bits;
+  }
 }
 
 
@@ -947,16 +1040,16 @@ void iteration_loop (
                     &scalefac[gr][ch], xrpow, l3_enc[gr][ch], noise );
       }
 
+      if (gfp->gtkflag) {
+        set_pinfo (gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], 
+                   xr[gr][ch], l3_enc[gr][ch], gr, ch);
+      }
+
       best_scalefac_store(gfc, l3_side, scalefac, l3_enc,gr, ch);
       if (gfc->use_best_huffman==1) {
         best_huffman_divide(gfc, cod_info, l3_enc[gr][ch], gr, ch);
       }
       assert((int)cod_info->part2_3_length < 4096);
-
-      if (gfp->gtkflag) {
-        set_pinfo (gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], 
-                   xr[gr][ch], l3_enc[gr][ch], gr, ch);
-      }
 
 /*#define NORES_TEST */
 #ifndef NORES_TEST
@@ -1141,13 +1234,13 @@ void ABR_iteration_loop (
     for (ch = 0; ch < gfc->channels; ch++) {
       cod_info = &l3_side->gr[gr].ch[ch].tt;
 
-      best_scalefac_store(gfc, l3_side, scalefac, l3_enc, gr, ch);
-      if (gfc->use_best_huffman==1 ) {
-        best_huffman_divide(gfc, cod_info, l3_enc[gr][ch], gr, ch);
-      }
       if (gfp->gtkflag) {
         set_pinfo(gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch],
                   xr[gr][ch], l3_enc[gr][ch], gr, ch);
+      }
+      best_scalefac_store(gfc, l3_side, scalefac, l3_enc, gr, ch);
+      if (gfc->use_best_huffman==1 ) {
+        best_huffman_divide(gfc, cod_info, l3_enc[gr][ch], gr, ch);
       }
       ResvAdjust (gfp, cod_info, l3_side, mean_bits);
       /* set the sign of l3_enc from the sign of xr */
