@@ -106,6 +106,7 @@ adjust_ATH( lame_global_flags* const  gfp,
     switch ( gfc->ATH->use_adjust ) {
     default:
 
+#ifdef OLD_ATH_AUTO_ADJUST
     case  1:    /* by Gabriel Bouvigne */
         if      (0.5 < max_val / 32768) {       /* value above 50 % */
                 gfc->ATH->adjust = 1.0;         /* do not reduce ATH */
@@ -121,6 +122,7 @@ adjust_ATH( lame_global_flags* const  gfp,
                     gfc->ATH->adjust = 0.01;
         }
         break;
+#endif /* OLD_ATH_AUTO_ADJUST */
 
     case  2:    /* by Robert Hegemann */
       {
@@ -138,51 +140,51 @@ adjust_ATH( lame_global_flags* const  gfp,
 
     case  3:    /* by jd */
       {
-    			    /* jd - 2001 feb 27, mar 12, 20 */
-			    /* continuous curves based on approximation */
-			    /* to GB's original values */
+                                /* jd - 2001 feb 27, mar 12, 20 */
+                                /* continuous curves based on approximation */
+                                /* to GB's original values */
         FLOAT8 adj_lim_new;
-			    /* jd - 2001 mar 31 */
-			    /* allow tuning the region of ATH reduction */
+                                /* jd - 2001 mar 31 */
+                                /* allow tuning the region of ATH reduction */
         max_val_n *= gfc->adapt_thres_level_v;
 
-			    /* For an increase in approximate loudness, */
-			    /* set ATH adjust to adjust_limit immediately*/
-			    /* after a delay of one frame. */
-			    /* For a loudness decrease, reduce ATH adjust*/
-			    /* towards adjust_limit gradually. */
+                                /* For an increase in approximate loudness, */
+                                /* set ATH adjust to adjust_limit immediately*/
+                                /* after a delay of one frame. */
+                                /* For a loudness decrease, reduce ATH adjust*/
+                                /* towards adjust_limit gradually. */
         if( max_val_n > 0.125){ /* sqrt((1 - 0.01)/ 63.36) from curve below*/
             if( gfc->ATH->adjust >= 1.0) {
                 gfc->ATH->adjust = 1.0;
             } else {
-            /* preceding frame has lower ATH adjust; */
-			    /* ascend only to the preceding adjust_limit */
-			    /* in case there is leading low volume */
+                                /* preceding frame has lower ATH adjust; */
+                                /* ascend only to the preceding adjust_limit */
+                                /* in case there is leading low volume */
                 if( gfc->ATH->adjust < gfc->ATH->adjust_limit) {
                     gfc->ATH->adjust = gfc->ATH->adjust_limit;
                 }
             }
             gfc->ATH->adjust_limit = 1.0;
-            } else {		/* adjustment curve (parabolic) */
-                            /* 20 dB maximum adjust (0.01) */
-                adj_lim_new = 63.36 * (max_val_n * max_val_n) + 0.01;
-                if( gfc->ATH->adjust >= adj_lim_new) { /* descend gradually */
-                    gfc->ATH->adjust *= adj_lim_new * 0.075 + 0.925;
-                    if( gfc->ATH->adjust < adj_lim_new) { /* stop descent */
-                        gfc->ATH->adjust = adj_lim_new;
-                    }
-                } else {		/* ascend */
-                    if( gfc->ATH->adjust_limit >= adj_lim_new) {
-                        gfc->ATH->adjust = adj_lim_new;
-                    } else {		/* preceding frame has lower ATH adjust; */
-		                        	    /* ascend only to the preceding adjust_limit */
-                        if( gfc->ATH->adjust < gfc->ATH->adjust_limit) {
-                            gfc->ATH->adjust = gfc->ATH->adjust_limit;
-                        }
+        } else {                /* adjustment curve (parabolic) */
+                                /* 20 dB maximum adjust (0.01) */
+            adj_lim_new = 63.36 * (max_val_n * max_val_n) + 0.01;
+            if( gfc->ATH->adjust >= adj_lim_new) { /* descend gradually */
+                gfc->ATH->adjust *= adj_lim_new * 0.075 + 0.925;
+                if( gfc->ATH->adjust < adj_lim_new) { /* stop descent */
+                    gfc->ATH->adjust = adj_lim_new;
+                }
+            } else {            /* ascend */
+                if( gfc->ATH->adjust_limit >= adj_lim_new) {
+                    gfc->ATH->adjust = adj_lim_new;
+                } else {        /* preceding frame has lower ATH adjust; */
+                                /* ascend only to the preceding adjust_limit */
+                    if( gfc->ATH->adjust < gfc->ATH->adjust_limit) {
+                        gfc->ATH->adjust = gfc->ATH->adjust_limit;
                     }
                 }
-                 gfc->ATH->adjust_limit = adj_lim_new;
             }
+            gfc->ATH->adjust_limit = adj_lim_new;
+        }
       }
         break;
     }   /* switch */
