@@ -447,6 +447,7 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --nssafejoint   M/S switching criterion\n"
               "    --nsmsfix <arg> M/S switching tuning\n"
               "    --interch x     adjust inter-channel masking ratio\n"
+              "    --is-ratio x    adjust intensity stereo usage ratio\n"
               "    --ns-bass x     adjust masking for  0 -  6 bark\n"
               "    --ns-alto x     adjust masking for  6 - 12 bark\n"
               "    --ns-treble x   adjust masking for 12 - 18 bark\n"
@@ -462,9 +463,7 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
 
     fprintf ( fp,
               "  experimental switches:\n"
-              "    -X n            selects between different noise measurements\n"
-              "    -Y              lets LAME ignore noise in sfb21, like in CBR\n"
-              "    -Z              toggles the scalefac feature on\n"
+              "    -X, -Y, -Z      daily changing switches. don't use\n"
             );
 
     wait_for ( fp, lessmode );  
@@ -1120,6 +1119,10 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF ("interch")
                     argUsed=1;
                     (void) lame_set_interChRatio( gfp, atof(nextArg ) );
+
+                T_ELIF ("is-ratio")
+                    argUsed=1;
+                    (void) lame_set_istereoRatio( gfp, atof(nextArg ) );
 
                 T_ELIF ("substep")
                     argUsed=1;
