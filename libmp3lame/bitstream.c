@@ -427,7 +427,7 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 inline static int
 huffman_coder_count1(lame_internal_flags *gfc, gr_info *gi)
 {
-    int bits = 0, index = gi->big_values;
+    int bits = 0, index;
     const unsigned char * const hcode = quadcode[gi->count1table_select];
 
     assert(gi->count1table_select < 2u);
@@ -464,7 +464,7 @@ huffman_coder_count1(lame_internal_flags *gfc, gr_info *gi)
 	bits += hcode[p];
     }
 
-    assert(gi->count1bits == bits);
+    assert(gi->count1bits == bits); assert(index == gi->count1);
     return bits;
 }
 
