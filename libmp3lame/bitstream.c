@@ -969,52 +969,58 @@ int copy_buffer(lame_internal_flags *gfc,unsigned char *buffer,int size,int mp3d
 
 #ifdef DECODE_ON_THE_FLY 
         if (gfc->decode_on_the_fly) {  /* decode the frame */
-          sample_t pcm_out[2][1152];
-          int mp3out;
+          sample_t pcm_buf[2][1152];
+	  int mp3_in = minimum;
+          int samples_out = -1;
           int i;
 
-          /* re-synthesis to pcm.  Repeat until we get a mp3out=0 */
-          mp3out=lame_decode1_unclipped(buffer,minimum,pcm_out[0],pcm_out[1]); 
-          /* mp3out = 0:  need more data to decode */
-          /* mp3out = -1:  error.  Lets assume 0 pcm output */
-          /* mp3out = number of samples output */
+          /* re-synthesis to pcm.  Repeat until we get a samples_out=0 */
+          while(samples_out != 0) {
+
+            samples_out=lame_decode1_unclipped(buffer,mp3_in,pcm_buf[0],pcm_buf[1]); 
+            /* samples_out = 0:  need more data to decode 
+             * samples_out = -1:  error.  Lets assume 0 pcm output 
+             * samples_out = number of samples output */
+	    
+	    /* set the lenght of the mp3 input buffer to zero, so that in the 
+	     * next iteration of the loop we will be querying mpglib about 
+	     * buffered data */
+	    mp3_in = 0;
               
-          if (mp3out==-1) {
-              /* error decoding. Not fatal, but might screw up */
-              /* the ReplayGain tag. what should we do? ignore for now */
-              mp3out=0;
-          }
-          if (mp3out>0) {  
-            /* process the PCM data */
-
-   /*     if (mp3out>1152) {
-    *         this should not be possible, and indicates we have 
-    *         overflown the pcm_out buffer.  Fatal error. 
-    *       return -6;
-    *     } 
-    */
-
-            if (gfc->gfp->findPeakSample) {
-              for (i=0; i<mp3out; i++) {   
-                 if (pcm_out[0][i] > gfc->PeakSample)
-                   gfc->PeakSample = pcm_out[0][i];
-                 else if (-pcm_out[0][i] > gfc->PeakSample)
-                   gfc->PeakSample = -pcm_out[0][i]; 
-              }
-              if (gfc->channels_out > 1)
-                for (i=0; i<mp3out; i++) {
-                  if (pcm_out[1][i] > gfc->PeakSample)
-                    gfc->PeakSample = pcm_out[1][i];
-                  else if (-pcm_out[1][i] > gfc->PeakSample)
-                    gfc->PeakSample = -pcm_out[1][i];
-                }
+            if (samples_out==-1) {
+                /* error decoding. Not fatal, but might screw up 
+                 * the ReplayGain tag. What should we do? Ignore for now */
+                samples_out=0;
             }
+            if (samples_out>0) {  
+              /* process the PCM data */
 
-            if (gfc->gfp->ReplayGain_decode)
-              if (AnalyzeSamples(gfc->rgdata, pcm_out[0], pcm_out[1], mp3out, gfc->channels_out) == GAIN_ANALYSIS_ERROR)
-                 return -6;
+              /* this should not be possible, and indicates we have 
+               * overflown the pcm_buf buffer */
+              assert(samples_out <= 1152);
 
-          } /* if (mp3out>0) */
+              if (gfc->gfp->findPeakSample) {
+                for (i=0; i<samples_out; i++) {   
+                   if (pcm_buf[0][i] > gfc->PeakSample)
+                     gfc->PeakSample = pcm_buf[0][i];
+                   else if (-pcm_buf[0][i] > gfc->PeakSample)
+                     gfc->PeakSample = -pcm_buf[0][i]; 
+                }
+                if (gfc->channels_out > 1)
+                  for (i=0; i<samples_out; i++) {
+                    if (pcm_buf[1][i] > gfc->PeakSample)
+                      gfc->PeakSample = pcm_buf[1][i];
+                    else if (-pcm_buf[1][i] > gfc->PeakSample)
+                      gfc->PeakSample = -pcm_buf[1][i];
+                  }
+              }
+
+              if (gfc->gfp->ReplayGain_decode)
+                if (AnalyzeSamples(gfc->rgdata, pcm_buf[0], pcm_buf[1], samples_out, gfc->channels_out) == GAIN_ANALYSIS_ERROR)
+                   return -6;
+		   
+            } /* if (samples_out>0) */
+          } /* while (samples_out!=0) */
         } /* if (gfc->decode_on_the_fly) */ 
 #endif
   
