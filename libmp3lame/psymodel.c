@@ -586,6 +586,57 @@ block_type_set(
     }
 }
 
+static void 
+determine_block_type( lame_global_flags * gfp, FLOAT fftenergy_s[3][HBLKSIZE_s], int uselongblock[],
+    int chn, int gr_out, FLOAT* pe )
+{
+    lame_internal_flags* gfc = gfp->internal_flags;
+    int j;
+	/*************************************************************** 
+	 * determine the block type (window type) based on L & R channels
+	 ***************************************************************/
+	/* compute PE for all 4 channels */
+	    FLOAT mn,mx,ma=0,mb=0,mc=0;
+            for ( j = HBLKSIZE_s/2; j < HBLKSIZE_s; j ++) {
+		ma += fftenergy_s[0][j];
+		mb += fftenergy_s[1][j];
+		mc += fftenergy_s[2][j];
+	    }
+	    mn = Min(ma,mb);
+	    mn = Min(mn,mc);
+	    mx = Max(ma,mb);
+	    mx = Max(mx,mc);
+#if defined(HAVE_GTK)
+	    if (gfp->analysis) {
+		gfc->pinfo->ers[gr_out][chn]=gfc->ers_save[chn];
+		gfc->ers_save[chn]=(mx/(1e-12+mn));
+	    }
+#endif
+	    /* bit allocation is based on pe.  */
+	    if (mx>mn) {
+		FLOAT tmp = FAST_LOG_X(mx/(1e-12+mn), 400.0);
+		if (tmp > *pe) *pe = tmp;
+	    }
+
+	    /* block type is based just on L or R channel */      
+	    if (chn<2) {
+		uselongblock[chn] = 1;
+
+		/* tuned for t1.wav.  doesnt effect most other samples */
+		if (*pe > 3000) 
+		    uselongblock[chn]=0;
+	
+		if ( mx > 30*mn ) 
+		{/* big surge of energy - always use short blocks */
+		    uselongblock[chn] = 0;
+		}
+		else if ((mx > 10*mn) && (*pe > 1000))
+		{/* medium surge, medium pe - use short blocks */
+		    uselongblock[chn] = 0;
+		}
+	    }
+}
+
 int L3psycho_anal( lame_global_flags * gfp,
                     const sample_t *buffer[2], int gr_out, 
                     FLOAT *ms_ratio,
@@ -879,50 +930,7 @@ int L3psycho_anal( lame_global_flags * gfp,
 		gfc->pe[chn] -= gfc->numlines_l[b] * FAST_LOG(ecb / eb[b]);
 	}
 
-	/*************************************************************** 
-	 * determine the block type (window type) based on L & R channels
-	 ***************************************************************/
-	{  /* compute PE for all 4 channels */
-	    FLOAT mn,mx,ma=0,mb=0,mc=0;
-            for ( j = HBLKSIZE_s/2; j < HBLKSIZE_s; j ++) {
-		ma += fftenergy_s[0][j];
-		mb += fftenergy_s[1][j];
-		mc += fftenergy_s[2][j];
-	    }
-	    mn = Min(ma,mb);
-	    mn = Min(mn,mc);
-	    mx = Max(ma,mb);
-	    mx = Max(mx,mc);
-#if defined(HAVE_GTK)
-	    if (gfp->analysis) {
-		gfc->pinfo->ers[gr_out][chn]=gfc->ers_save[chn];
-		gfc->ers_save[chn]=(mx/(1e-12+mn));
-	    }
-#endif
-	    /* bit allocation is based on pe.  */
-	    if (mx>mn) {
-		FLOAT tmp = FAST_LOG_X(mx/(1e-12+mn), 400.0);
-		if (tmp>gfc->pe[chn]) gfc->pe[chn]=tmp;
-	    }
-
-	    /* block type is based just on L or R channel */      
-	    if (chn<2) {
-		uselongblock[chn] = 1;
-
-		/* tuned for t1.wav.  doesnt effect most other samples */
-		if (gfc->pe[chn] > 3000) 
-		    uselongblock[chn]=0;
-	
-		if ( mx > 30*mn ) 
-		{/* big surge of energy - always use short blocks */
-		    uselongblock[chn] = 0;
-		}
-		else if ((mx > 10*mn) && (gfc->pe[chn] > 1000))
-		{/* medium surge, medium pe - use short blocks */
-		    uselongblock[chn] = 0;
-		}
-	    }
-	}
+    determine_block_type( gfp, fftenergy_s, uselongblock, chn, gr_out, &gfc->pe[chn] );
 
 	/* compute masking thresholds for long blocks */
 	convert_partition2scalefac_l(gfc, eb, thr, chn);
@@ -1623,6 +1631,11 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	 *      convolve the partitioned energy and unpredictability
 	 *      with the spreading function, s3_l[b][k]
 	 ******************************************************************* */
+#undef GPSYCHO_BLOCK_TYPE_DECISION
+#ifdef GPSYCHO_BLOCK_TYPE_DECISION
+   {
+    FLOAT pe = 0;
+#endif
 	k = 0;
 	for ( b = 0;b < gfc->npart_l; b++ ) {
 	    FLOAT ecb;
@@ -1656,8 +1669,18 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 
 	    gfc->nb_2[chn][b] = gfc->nb_1[chn][b];
 	    gfc->nb_1[chn][b] = ecb;
-	}
-
+#ifdef GPSYCHO_BLOCK_TYPE_DECISION
+        /* this pe does not match GPSYCHO's pe, because of difference in 
+         * convolution calculation, (mask_add etc.). Therefore the block
+         * switching does not happen exactly as in GPSYCHO.
+         */
+		pe -= gfc->numlines_l[b] * FAST_LOG(ecb / eb[b]);
+#endif
+    }
+#ifdef GPSYCHO_BLOCK_TYPE_DECISION
+    determine_block_type( gfp, fftenergy_s, uselongblock, chn, gr_out, &pe );
+   }
+#endif
 	/* compute masking thresholds for long blocks */
 	convert_partition2scalefac_l(gfc, eb, thr, chn);
 
