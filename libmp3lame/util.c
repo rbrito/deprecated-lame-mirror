@@ -89,6 +89,9 @@ void  freegfc ( lame_internal_flags* const gfc )   /* bit stream structure */
     if ( gfc->VBR ) {
         free ( gfc->VBR );
     }
+    if ( gfc->PSY ) {
+        free ( gfc->PSY );
+    }
     free ( gfc );
 }
 

@@ -619,6 +619,19 @@ int L3psycho_anal( lame_global_flags * gfp,
 	   */
 
 	  tbb = Min(gfc->minval[b], tbb);
+          
+            /* stabilize tonality estimation */
+            if ( vbr_mtrh == gfp->VBR ) {
+                FLOAT8 w;
+                if ( b > 5 ) {
+                    FLOAT8 const x = 1.77827941; /* pow(10.,2.5/10.) */
+                    w = gfc->PSY->prvTonRed[b/2] * x;
+                    if (tbb > w) 
+                        tbb = w;
+                    gfc->PSY->prvTonRed[b] = tbb;
+                }
+            }
+            
 	  ecb *= tbb;
 
 	  /* long block pre-echo control.   */
@@ -1973,6 +1986,7 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
     double x = (-20+bval_l[i]*20.0/10.0);
     if (bval_l[i]>10) x = 0;
     minval[i]=pow(10.0,x/10);
+    gfc->PSY->prvTonRed[i] = minval[i];
   }
 
 

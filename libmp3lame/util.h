@@ -171,6 +171,14 @@ typedef struct
     int     smooth;         // 0=no, 1=peaks, 2=+-4
 } VBR_t;
 
+/**
+ *  PSY Model related stuff
+ */
+typedef struct
+{
+    FLOAT8  prvTonRed[CBANDS];
+} PSY_t; 
+
 
 /* Guest structure, only temporarly here */
 
@@ -447,6 +455,7 @@ typedef struct  {
   int	numlines_s[CBANDS];
   int	numlines_l[CBANDS];
   
+  
   /* frame analyzer    */
   FLOAT energy_save[4][HBLKSIZE];
   FLOAT8 pe_save[4];
@@ -487,8 +496,8 @@ typedef struct  {
   VBR_seek_info_t VBR_seek_table; // used for Xing VBR header
   
   ATH_t *ATH;   // all ATH related stuff
-  
   VBR_t *VBR;
+  PSY_t *PSY;
 } lame_internal_flags;
 
 
