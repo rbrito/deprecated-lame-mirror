@@ -61,14 +61,18 @@ void lame_short_help(lame_global_flags *gfp,char *name)  /* print syntax & exit 
 {
   LAME_PRINT_VERSION1(); /* prints two lines */
   PRINTF1("\n");
-  PRINTF1("USAGE   :  %s [options] <infile> [outfile]\n",name);
+  PRINTF1("USAGE       :  %s [options] <infile> [outfile]\n",name);
   PRINTF1("\n<infile> and/or <outfile> can be \"-\", which means stdin/stdout.\n");
+  PRINTF1("\n");
+  PRINTF1("RECOMMENDED :  ");
+  PRINTF1("lame -h input.mp3 output.wav\n");
   PRINTF1("\n");
   PRINTF1("OPTIONS :\n");
   PRINTF1("    -b bitrate      set the bitrate, default 128kbps\n");
   PRINTF1("    -f              fast mode (lower quality)\n");
   PRINTF1("    -h              higher quality, but a little slower.  Recommended.\n");
   PRINTF1("    -k              keep ALL frequencies (disables all filters)\n");
+  PRINTF1("                    Can cause ringing and twinkling\n");
   PRINTF1("    -m mode         (s)tereo, (j)oint, (f)orce or (m)ono  (default j)\n");
   PRINTF1("                    force = force ms_stereo on all frames.\n");
   PRINTF1("    -V n            quality setting for VBR.  default n=%i\n",gfp->VBR_q);
@@ -97,6 +101,9 @@ void lame_help(lame_global_flags *gfp,char *name)  /* print syntax & exit */
   PRINTF1("USAGE   :  %s [options] <infile> [outfile]\n",name);
   PRINTF1("\n<infile> and/or <outfile> can be \"-\", which means stdin/stdout.\n");
   PRINTF1("\n");
+  PRINTF1("RECOMMENDED :  ");
+  PRINTF1("lame -h input.mp3 output.wav\n");
+  PRINTF1("\n");
   PRINTF1("OPTIONS :\n");
   PRINTF1("  Input options:\n");
   PRINTF1("    -r              input is raw pcm\n");
@@ -113,7 +120,8 @@ void lame_help(lame_global_flags *gfp,char *name)  /* print syntax & exit */
   PRINTF1("    -S              don't print progress report, VBR histograms\n");
   PRINTF1("    --ogg           encode to Ogg Vorbis instead of MP3\n");
   PRINTF1("    --freeformat    produce a free format bitstream\n");
-  PRINTF1("    --decode        input=mp3 file, output=raw pcm\n");
+  PRINTF1("    --decode        input=mp3 file, output=wav\n");
+  PRINTF1("    -t              disable writing wav header when using --decode\n");
   PRINTF1("    --comp  <arg>   choose bitrate to achive a compression ratio of <arg>\n");
   PRINTF1("    --athonly       only use the ATH for masking\n");
   PRINTF1("    --noath         disable the ATH for masking\n");
@@ -124,8 +132,11 @@ void lame_help(lame_global_flags *gfp,char *name)  /* print syntax & exit */
   PRINTF1("\n");
   PRINTF1("  CBR (constant bitrate, the default) options:\n");
   PRINTF1("    -h              higher quality, but a little slower.  Recommended.\n");
-  PRINTF1("    -f              fast mode (very low quality)\n");
+  PRINTF1("    -f              fast mode (lower quality)\n");
   PRINTF1("    -b <bitrate>    set the bitrate in kbs, default 128kbps\n");
+  PRINTF1("\n");
+  PRINTF1("  ABR options:\n");
+  PRINTF1("    --abr <bitrate> specify average bitrate desired (instead of quality)\n");
   PRINTF1("\n");
   PRINTF1("  VBR options:\n");
   PRINTF1("    -v              use variable bitrate (VBR)\n");
@@ -137,10 +148,8 @@ void lame_help(lame_global_flags *gfp,char *name)  /* print syntax & exit */
   PRINTF1("    -B <bitrate>    specify maximum allowed bitrate, default 256kbs\n");
   PRINTF1("    -F              strictly enforce the -b option, for use with players that\n");
   PRINTF1("                    do not support low bitrate mp3 (Apex AD600-A DVD/mp3 player)\n");
-  PRINTF1("    -t              disable Xing VBR informational tag\n");
+  PRINTF1("    -t              disable writing Xing VBR informational tag\n");
   PRINTF1("    --nohist        disable VBR histogram display\n");
-  PRINTF1("\n");
-  PRINTF1("    --abr <bitrate> specify average bitrate desired (instead of quality)\n");
   PRINTF1("\n");
   PRINTF1("  MP3 header/stream options:\n");
   PRINTF1("    -e <emp>        de-emphasis n/5/c  (obsolete)\n");
@@ -152,7 +161,8 @@ void lame_help(lame_global_flags *gfp,char *name)  /* print syntax & exit */
   PRINTF1("    --strictly-enforce-ISO   comply as much as possible to ISO MPEG spec\n");
   PRINTF1("\n");
   PRINTF1("  Filter options:\n");
-  PRINTF1("    -k              keep ALL frequencies (disables all filters)\n");
+  PRINTF1("    -k              keep ALL frequencies (disables all filters),\n");
+  PRINTF1("                    Can cause ringing and twinkling\n");
   PRINTF1("  --lowpass <freq>        frequency(kHz), lowpass filter cutoff above freq\n");
   PRINTF1("  --lowpass-width <freq>  frequency(kHz) - default 15%% of lowpass freq\n");
   PRINTF1("  --highpass <freq>       frequency(kHz), highpass filter cutoff below freq\n");
