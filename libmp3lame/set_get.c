@@ -417,6 +417,7 @@ lame_set_free_format( lame_global_flags*  gfp,
         return -1;
 
     gfp->free_format = free_format;
+    gfp->disable_reservoir = 1;
 
     return 0;
 }
