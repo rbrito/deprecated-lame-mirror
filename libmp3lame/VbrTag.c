@@ -620,8 +620,9 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 	nStereoMode = 7;
 	break;
     }
+    if (gfp->use_istereo)
+	nStereoMode = 6;
 
-    /*Intensity stereo : nStereoMode = 6. IS is not implemented */
     if (gfp->in_samplerate <= 32000)
 	nSourceFreq = 0x00;
     else if (gfp->in_samplerate ==48000)
