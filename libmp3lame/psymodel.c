@@ -1174,7 +1174,7 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
 		   sizeof(gfc->pinfo->energy_save[gr][ch]));
 	    gfc->pinfo->energy_save[gr][ch][0] = p[0]*p[0];
 	    for (j = 1; j < HBLKSIZE; j++)
-		gfc->pinfo->energy_save[gr][ch][0]
+		gfc->pinfo->energy_save[gr][ch][j]
 		    = (p[j]*p[j] + p[BLKSIZE-j]*p[BLKSIZE-j]) * 0.5;
 	}
 #endif
