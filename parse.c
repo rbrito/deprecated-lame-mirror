@@ -189,81 +189,27 @@ void lame_presets_info(lame_global_flags *gfp,char *name)  /* print syntax & exi
   fprintf(stdout,"Presets are some shortcuts for common settings.\n");
   fprintf(stdout,"They can be combined with -v if you want VBR MP3s.\n");
   fprintf(stdout,"\n");
-  fprintf(stdout,"  --preset phone    =>  --resample      16\n");
-  fprintf(stdout,"                        --highpass       0.200\n");
-  fprintf(stdout,"                        --highpasswidth  0.040\n");
-  fprintf(stdout,"                        --lowpass        3.500\n");
-  fprintf(stdout,"                        --lowpasswidth   0.700\n");
-  fprintf(stdout,"                        --noshort\n");
-  fprintf(stdout,"                        -m   m\n");
-  fprintf(stdout,"                        -b  16\n");
-  fprintf(stdout,"                  plus  -b   8  \\\n");
-  fprintf(stdout,"                        -B  56   > in combination with -v\n");
-  fprintf(stdout,"                        -V   5  /\n");
+  fprintf(stdout,"                 phone voice   sw     am     fm  radio  tape  hifi  cd studio\n");
+  fprintf(stdout,"=============================================================================\n");
+  fprintf(stdout,"--resample        8.00 32.00 11.025 16.000 22.05                             \n");
+  fprintf(stdout,"--highpass        0.11        0.055  0.055                                   \n");
+  fprintf(stdout,"--highpass-width  0.44        0.110  0.110                                   \n");
+  fprintf(stdout,"--lowpass         3.52 12.76  4.400  7.480 10.56  15.0 17.60 20.24           \n");
+  fprintf(stdout,"--lowpass-width   0.88  1.32  0.440  0.660  0.88   0.0  1.76  2.20           \n");
+  fprintf(stdout,"--noshort         yes   yes   yes                                            \n");
+  fprintf(stdout,"-h                                                            yes  yes   yes \n");
+  fprintf(stdout,"-m                  m     m     m      m      j      j    j     j    s     s \n");
+  fprintf(stdout,"-b                 16    56    24     32     64    112  128   160  192   256 \n");
+  fprintf(stdout,"-- PLUS WITH -v -------------------------------------------------------------\n");
+  fprintf(stdout,"-V                  6     4     5      5      5      4    4     3    2     0 \n");
+  fprintf(stdout,"-b                  8    32     8      8      8     32   64    80   96   112 \n");
+  fprintf(stdout,"-B                 40   128    56     80    144    160  192   224  256   320 \n");
   fprintf(stdout,"\n");
-  fprintf(stdout,"  --preset voice:   =>  --resample      22.05\n");
-/*  fprintf(stdout,"                        --highpass       0.100\n");
- *  fprintf(stdout,"                        --highpasswidth  0.020\n");
-*/
-  fprintf(stdout,"                        --lowpass       10\n");
-  fprintf(stdout,"                        --lowpasswidth   2\n");
-  fprintf(stdout,"                        --noshort\n");
-  fprintf(stdout,"                        -m   m\n");
-  fprintf(stdout,"                        -b  32\n");
-  fprintf(stdout,"                  plus  -b   8  \\\n");
-  fprintf(stdout,"                        -B  96   > in combination with -v\n");
-  fprintf(stdout,"                        -V   4  /\n");
-  fprintf(stdout,"\n");
-  fprintf(stdout,"  --preset fm:      =>  --resample      32\n");
-/*  fprintf(stdout,"                        --highpass       0.030\n");
- *  fprintf(stdout,"                        --highpasswidth  0\n");
- */
-  fprintf(stdout,"                        --lowpass       15.0\n");
-  fprintf(stdout,"                        --lowpasswidth   0\n");
-  fprintf(stdout,"                        -m   j\n");
-  fprintf(stdout,"                        -b  96\n");
-  fprintf(stdout,"                  plus  -b  32  \\\n");
-  fprintf(stdout,"                        -B 192   > in combination with -v\n");
-  fprintf(stdout,"                        -V   4  /\n");
-  fprintf(stdout,"\n");
-  fprintf(stdout,"  --preset tape:    =>  --lowpass       17.5\n");
-  fprintf(stdout,"                        --lowpasswidth   2\n");
-/*  fprintf(stdout,"                        --highpass       0.015\n");
- *  fprintf(stdout,"                        --highpasswidth  0.015\n");
- */
-  fprintf(stdout,"                        -m   j\n");
-  fprintf(stdout,"                        -b 128\n");
-  fprintf(stdout,"                  plus  -b  32  \\\n");
-  fprintf(stdout,"                        -B 192   > in combination with -v\n");
-  fprintf(stdout,"                        -V   4  /\n");
-  fprintf(stdout,"\n");
-  fprintf(stdout,"  --preset hifi:    =>  --lowpass       20\n");
-  fprintf(stdout,"                        --lowpasswidth   3\n");
-/*  fprintf(stdout,"                        --highpass       0.015\n");
- *  fprintf(stdout,"                        --highpasswidth  0.015\n");
- */
-  fprintf(stdout,"                        -h\n");
-  fprintf(stdout,"                        -m   j\n");
-  fprintf(stdout,"                        -b 160\n");
-  fprintf(stdout,"                  plus  -b  32  \\\n");
-  fprintf(stdout,"                        -B 224   > in combination with -v\n");
-  fprintf(stdout,"                        -V   3  /\n");
-  fprintf(stdout,"\n");
-  fprintf(stdout,"  --preset cd:      =>  -k\n");
-  fprintf(stdout,"                        -h\n");
-  fprintf(stdout,"                        -m   s\n");
-  fprintf(stdout,"                        -b 192\n");
-  fprintf(stdout,"                  plus  -b  80  \\\n");
-  fprintf(stdout,"                        -B 256   > in combination with -v\n");
-  fprintf(stdout,"                        -V   2  /\n");
-  fprintf(stdout,"\n");
-  fprintf(stdout,"  --preset studio:  =>  -k\n");
-  fprintf(stdout,"                        -h\n");
-  fprintf(stdout,"                        -m   s\n");
-  fprintf(stdout,"                        -b 256\n");
-  fprintf(stdout,"                  plus  -b 112  \\\n");
-  fprintf(stdout,"                        -B 320   > in combination with -v\n");
-  fprintf(stdout,"                        -V   0  /\n");
+  fprintf(stdout,"EXAMPLES:\n");
+  fprintf(stdout," a) --preset fm\n");
+  fprintf(stdout,"    equals: --resample 22.05 --lowpass 10.56 --lowpass-width 0.88 -mj -b 64\n");
+  fprintf(stdout," b) -v --preset cd\n");
+  fprintf(stdout,"    equals: -h -m s -V 0 -b 112 -B 320\n");
   fprintf(stdout,"\n");
 
   exit(0);
@@ -467,102 +413,137 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	  argUsed=1;
 	  if (strcmp(nextArg,"phone")==0)
 	  { /* when making changes, please update help text too */
+	    gfp->out_samplerate =  8000;
+	    gfp->highpassfreq=110;
+            gfp->highpasswidth=440; 
+	    gfp->lowpassfreq=3520;
+	    gfp->lowpasswidth=880;
+	    gfp->no_short_blocks=1;
+	    gfp->quality = 5;
+	    gfp->mode = MPG_MD_MONO; 
+	    gfp->mode_fixed = 1; 
 	    gfp->brate = 16; 
-	    gfp->highpassfreq=200;
-            gfp->highpasswidth=40; 
-	    gfp->lowpassfreq=3500;
-	    gfp->lowpasswidth=700;
+	    gfp->VBR_q=6;
+	    gfp->VBR_min_bitrate_kbps=8;
+	    gfp->VBR_max_bitrate_kbps=40;
+	  }
+	  else if (strcmp(nextArg,"sw")==0)
+	  { /* when making changes, please update help text too */
+	    gfp->out_samplerate =  11025;
+	    gfp->highpassfreq=55;
+            gfp->highpasswidth=110; 
+	    gfp->lowpassfreq=4400;
+	    gfp->lowpasswidth=440;
+	    gfp->no_short_blocks=1;
+	    gfp->quality = 5;
+	    gfp->mode = MPG_MD_MONO; 
+	    gfp->mode_fixed = 1; 
+	    gfp->brate = 24; 
 	    gfp->VBR_q=5;
 	    gfp->VBR_min_bitrate_kbps=8;
 	    gfp->VBR_max_bitrate_kbps=56;
-	    gfp->no_short_blocks=1;
-	    gfp->out_samplerate =  16000;
-	    gfp->mode = MPG_MD_MONO; 
-	    gfp->mode_fixed = 1; 
-	    gfp->quality = 5;
 	  }
-	  else if (strcmp(nextArg,"voice")==0)
+	  else if (strcmp(nextArg,"am")==0)
 	  { /* when making changes, please update help text too */
-	    gfp->brate = 56; 
-/*	    gfp->highpassfreq=100;  
- *	    gfp->highpasswidth=20;
- */	    gfp->lowpasswidth=2000;
-	    gfp->lowpassfreq=10000;
-	    gfp->VBR_q=4;
-	    gfp->VBR_min_bitrate_kbps=8;
-	    gfp->VBR_max_bitrate_kbps=96;
-	    gfp->no_short_blocks=1;
+	    gfp->out_samplerate =  16000;
+	    gfp->highpassfreq=55;
+            gfp->highpasswidth=110; 
+	    gfp->lowpassfreq=7480;
+	    gfp->lowpasswidth=660;
+	    gfp->quality = 5;
 	    gfp->mode = MPG_MD_MONO; 
 	    gfp->mode_fixed = 1; 
-	    gfp->out_samplerate =  22050; 
-	    gfp->quality = 5;
+	    gfp->brate = 32; 
+	    gfp->VBR_q=5;
+	    gfp->VBR_min_bitrate_kbps=8;
+	    gfp->VBR_max_bitrate_kbps=80;
 	  }
 	  else if (strcmp(nextArg,"fm")==0)
 	  { /* when making changes, please update help text too */
-	    gfp->brate = 96; 
-/*          gfp->highpassfreq=30;
- *          gfp->highpasswidth=0;
- */         gfp->lowpassfreq=15000;
-            gfp->lowpasswidth=0;
-	    gfp->VBR_q=4;
-	    gfp->VBR_min_bitrate_kbps=32;
-	    gfp->VBR_max_bitrate_kbps=192;
+	    gfp->out_samplerate =  22050; 
+            gfp->lowpassfreq=10560;
+            gfp->lowpasswidth=880;
+	    gfp->quality = 5;
 	    gfp->mode = MPG_MD_JOINT_STEREO; 
 	    gfp->mode_fixed = 1; 
-	    /*gfp->out_samplerate =  32000; */ /* determined automatically based on bitrate & sample freq. */
+	    gfp->brate = 64; 
+	    gfp->VBR_q=5;
+	    gfp->VBR_min_bitrate_kbps=8;
+	    gfp->VBR_max_bitrate_kbps=144;
+	  }
+	  else if (strcmp(nextArg,"voice")==0)
+	  { /* when making changes, please update help text too */
+	    gfp->out_samplerate =  32000; 
+	    gfp->lowpassfreq=12760;
+	    gfp->lowpasswidth=1320;
+	    gfp->no_short_blocks=1;
 	    gfp->quality = 5;
+	    gfp->mode = MPG_MD_MONO; 
+	    gfp->mode_fixed = 1; 
+	    gfp->brate = 56; 
+	    gfp->VBR_q=4;
+	    gfp->VBR_min_bitrate_kbps=32;
+	    gfp->VBR_max_bitrate_kbps=128;
+	  }
+	  else if (strcmp(nextArg,"radio")==0)
+	  { /* when making changes, please update help text too */
+            gfp->lowpassfreq=15000;
+            gfp->lowpasswidth=0;
+	    gfp->quality = 5;
+	    gfp->mode = MPG_MD_JOINT_STEREO; 
+	    gfp->mode_fixed = 1; 
+	    gfp->brate = 112; 
+	    gfp->VBR_q=4;
+	    gfp->VBR_min_bitrate_kbps=32;
+	    gfp->VBR_max_bitrate_kbps=160;
 	  }
 	  else if (strcmp(nextArg,"tape")==0)
 	  { /* when making changes, please update help text too */
-	    gfp->brate = 128; 
-/*          gfp->highpassfreq=15;
- *          gfp->highpasswidth=15;
- */         gfp->lowpassfreq=17500;
-            gfp->lowpasswidth=2000;
-	    gfp->VBR_q=4;
-	    gfp->VBR_min_bitrate_kbps=32;
-	    gfp->VBR_max_bitrate_kbps=192;
+            gfp->lowpassfreq=17600;
+            gfp->lowpasswidth=1760;
+	    gfp->quality = 5;
 	    gfp->mode = MPG_MD_JOINT_STEREO; 
 	    gfp->mode_fixed = 1; 
-	    gfp->quality = 5;
+	    gfp->brate = 128; 
+	    gfp->VBR_q=4;
+	    gfp->VBR_min_bitrate_kbps=64;
+	    gfp->VBR_max_bitrate_kbps=192;
 	  }
 	  else if (strcmp(nextArg,"hifi")==0)
 	  { /* when making changes, please update help text too */
-	    gfp->brate = 160;            
-/*	    gfp->highpassfreq=15;
- *          gfp->highpasswidth=15;
- */         gfp->lowpassfreq=20000;
-            gfp->lowpasswidth=3000;
-	    gfp->VBR_q=3;
-	    gfp->VBR_min_bitrate_kbps=32;
-	    gfp->VBR_max_bitrate_kbps=224;
+            gfp->lowpassfreq=20240;
+            gfp->lowpasswidth=2200;
+	    gfp->quality = 2;
 	    gfp->mode = MPG_MD_JOINT_STEREO; 
 	    gfp->mode_fixed = 1; 
-	    gfp->quality = 2;
+	    gfp->brate = 160;            
+	    gfp->VBR_q=3;
+	    gfp->VBR_min_bitrate_kbps=80;
+	    gfp->VBR_max_bitrate_kbps=224;
 	  }
 	  else if (strcmp(nextArg,"cd")==0)
 	  { /* when making changes, please update help text too */
-	    gfp->brate = 192;  
 	    gfp->lowpassfreq=-1;
             gfp->highpassfreq=-1;
-	    gfp->VBR_q=2;
-	    gfp->VBR_min_bitrate_kbps=80;
-	    gfp->VBR_max_bitrate_kbps=256;
+	    gfp->quality = 2;
 	    gfp->mode = MPG_MD_STEREO; 
 	    gfp->mode_fixed = 1; 
-	    gfp->quality = 2;
+	    gfp->brate = 192;  
+	    gfp->VBR_q=2;
+	    gfp->VBR_min_bitrate_kbps=96;
+	    gfp->VBR_max_bitrate_kbps=256;
 	  }
 	  else if (strcmp(nextArg,"studio")==0)
 	  { /* when making changes, please update help text too */
-	    gfp->brate = 256; 
 	    gfp->lowpassfreq=-1;
             gfp->highpassfreq=-1;
+	    gfp->quality = 2; 
+	    gfp->mode = MPG_MD_STEREO; 
+	    gfp->mode_fixed = 1; 
+	    gfp->brate = 256; 
 	    gfp->VBR_q=0;
 	    gfp->VBR_min_bitrate_kbps=112;
 	    gfp->VBR_max_bitrate_kbps=320;
-	    gfp->mode = MPG_MD_STEREO; 
-	    gfp->mode_fixed = 1; 
-	    gfp->quality = 2; 
 	  }
 	  else if (strcmp(nextArg,"help")==0)
 	  {
