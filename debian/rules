@@ -12,7 +12,13 @@ configure: configure-stamp
 configure-stamp:
 	dh_testdir
 	# Add here commands to configure the package.
-	./configure --prefix=/usr --with-fileio=lame --disable-mp3x --disable-mp3rtp --disable-analyzer-hooks --without-vorbis --host=$$(dpkg-architecture -qDEB_HOST_GNU_TYPE) --enable-nasm --enable-expopt
+	./configure --prefix=/usr \
+		--with-fileio=lame \
+		--disable-mp3x \
+		--disable-mp3rtp \
+		--disable-analyzer-hooks \
+		--enable-nasm \
+		--enable-expopt
 
 	touch configure-stamp
 
@@ -33,7 +39,9 @@ clean:
 
 	# Add here commands to clean up after the build process.
 	-$(MAKE) distclean
-	-rm -f confcache libmp3lame/i386/choose_table.nas.lst libmp3lame/i386/cpu_feat.nas.lst libmp3lame/i386/scalar.nas.lst
+	-rm -f confcache \
+		libmp3lame/i386/choose_table.nas.lst \
+		libmp3lame/i386/cpu_feat.nas.lst
 
 	dh_clean
 
