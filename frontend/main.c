@@ -662,7 +662,9 @@ main(int argc, char **argv)
          * specify the output file name, only an optional output directory. */
         parse_nogap_filenames(nogapout,nogap_inPath[0],outPath,nogapdir);
         outf = init_files(gf, nogap_inPath[0], outPath);
-        if (lame_get_bWriteVbrTag(gf)) {
+
+        /* disable VBR tags unless user specified the --nogaptags option */
+        if (lame_get_bWriteVbrTag(gf) && nogap_tags==0) {
             fprintf(stderr,"Note: Disabling VBR Xing/Info tag since it interferes with --nogap\n");
             lame_set_bWriteVbrTag( gf, 0 );
         }
