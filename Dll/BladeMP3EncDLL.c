@@ -411,7 +411,7 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 	
 
 	// First set all the preset options
-	if ((int)lameConfig.format.LHV1.nPreset>=(int)LQP_PHONE)
+	if ((int)lameConfig.format.LHV1.nPreset)
 		PresetOptions(&gf,lameConfig.format.LHV1.nPreset);
 
 	lame_init_params(&gf);	
