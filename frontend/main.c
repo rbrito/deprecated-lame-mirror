@@ -263,6 +263,7 @@ lame_encoder(lame_global_flags * gf, FILE *outf, int nogap, char *inPath, char *
             imp3 = lame_encode_flush_nogap(gf, mp3buffer, sizeof(mp3buffer)); /* may return one more mp3 frame */
         else
             imp3 = lame_encode_flush(gf, mp3buffer, sizeof(mp3buffer)); /* may return one more mp3 frame */
+
         if (imp3 < 0) {
             if (imp3 == -1)
                 fprintf(stderr, "mp3 buffer is not big enough... \n");
@@ -413,6 +414,7 @@ main(int argc, char **argv)
     }else {
 	if (max_nogap > 0) {
 	    for (i = 0; i < max_nogap; ++i) {
+		int use_flush_nogap = (i!=(max_nogap-1));
                 if (i>0) {
 		    strncpy(outPath, nogap_inPath[i], MAX_NAME_SIZE - 4);
 		    strncat(outPath, ".mp3", 4);
@@ -421,7 +423,7 @@ main(int argc, char **argv)
 		    outf = init_files(gf,nogap_inPath[i],outPath);
 		}
 		brhist_init_package(gf);
-		ret = lame_encoder(gf, outf, 1,nogap_inPath[i],outPath);
+		ret = lame_encoder(gf, outf, use_flush_nogap,nogap_inPath[i],outPath);
 		fclose(outf);   /* close the output file */
 		close_infile(); /* close the input file */
 	    }
