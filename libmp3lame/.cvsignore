@@ -1,5 +1,8 @@
+.deps
+.libs
 Makefile
 libmp3lame.so*
+libmp3lame.la
 config.status
 config.log
 config.cache
