@@ -77,7 +77,7 @@ char *strchr (), *strrchr ();
 //#define IPOW20(x)  exp( -((double)(x)-210)*.1875*LOG2 )
 //#define IPOW20(x)  pow(2.0,-((double)(x)-210)*.1875)
 
-#define IIPOW20_(x) iipow20_[x]
+#define IIPOW20(x) (assert(0 <= x && x < 128), iipow20[x])
 
 /* in case this is used without configure */
 #ifndef inline

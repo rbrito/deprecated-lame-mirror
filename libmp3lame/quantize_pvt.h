@@ -46,7 +46,7 @@ extern FLOAT8 adj43asm[PRECALC_SIZE];
 
 extern FLOAT8 pow20[Q_MAX+128];
 extern FLOAT8 ipow20[Q_MAX];
-extern FLOAT8 *iipow20_;
+extern FLOAT8 iipow20[128];
 
 typedef struct calc_noise_result_t {
     FLOAT8  over_noise;      /* sum of quantization noise > masking */

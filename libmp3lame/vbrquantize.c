@@ -466,7 +466,10 @@ calc_scalefac(FLOAT8 l3_xmin, int bw, FLOAT8 preset_tune)
 
 
 
-static const int max_range_short[SBMAX_s] = { 15, 15, 15, 15, 15, 15, 7, 7, 7, 7, 7, 7, 0 };
+static const int max_range_short[SBMAX_s*3] = {
+    15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+    7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+    0, 0, 0 };
 
 static const int max_range_long[SBMAX_l] =
     { 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 0 };
@@ -931,7 +934,7 @@ short_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
 		      int *vbrsf,
                       int *VBRmax)
 {
-    int     sfb, maxsfb, b;
+    int     sfb, b;
     int     maxover, maxover0, maxover1, mover;
     int     v0, v1;
     int     minsfb;
@@ -939,16 +942,13 @@ short_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
 
     maxover0 = 0;
     maxover1 = 0;
-    maxsfb = gfc->sfb21_extra ? SBMAX_s : SBPSY_s;
-    for (sfb = 0; sfb < maxsfb; ++sfb) {
-        for (b = 0; b < 3; ++b) {
-            v0 = (vbrmax - vbrsf[sfb*3+b]) - (4 * 14 + 2 * max_range_short[sfb]);
-            v1 = (vbrmax - vbrsf[sfb*3+b]) - (4 * 14 + 4 * max_range_short[sfb]);
-            if (maxover0 < v0)
-                maxover0 = v0;
-            if (maxover1 < v1)
-                maxover1 = v1;
-        }
+    for (sfb = 0; sfb < cod_info->psymax; ++sfb) {
+	v0 = (vbrmax - vbrsf[sfb]) - (4 * 14 + 2 * max_range_short[sfb]);
+	v1 = (vbrmax - vbrsf[sfb]) - (4 * 14 + 4 * max_range_short[sfb]);
+	if (maxover0 < v0)
+	    maxover0 = v0;
+	if (maxover1 < v1)
+	    maxover1 = v1;
     }
 
     if ((gfc->noise_shaping == 2)
@@ -1019,7 +1019,7 @@ long_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
                      int *VBRmax)
 {
     const int *max_rangep;
-    int     sfb, maxsfb;
+    int     sfb;
     int     maxover, maxover0, maxover1, maxover0p, maxover1p, mover;
     int     v0, v1, v0p, v1p;
     int     vbrmax = *VBRmax;
@@ -1031,8 +1031,7 @@ long_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
     maxover0p = 0;      /* pretab */
     maxover1p = 0;      /* pretab */
 
-    maxsfb = gfc->sfb21_extra ? SBMAX_l : SBPSY_l;
-    for (sfb = 0; sfb < maxsfb; ++sfb) {
+    for (sfb = 0; sfb < cod_info->psymax; ++sfb) {
         v0 = (vbrmax - vbrsf[sfb]) - 2 * max_range_long[sfb];
         v1 = (vbrmax - vbrsf[sfb]) - 4 * max_range_long[sfb];
         v0p = (vbrmax - vbrsf[sfb]) - 2 * (max_rangep[sfb] + pretab[sfb]);
@@ -1112,8 +1111,7 @@ long_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
  *
  *  quantize xr34 based on scalefactors
  *
- *  calc_short_block_xr34      
- *  calc_long_block_xr34
+ *  block_xr34      
  *
  *  Mark Taylor 2000-??-??
  *  Robert Hegemann 2000-10-20 made functions of them
@@ -1121,196 +1119,41 @@ long_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
  ***********************************************************************/
 
 static void
-short_block_xr34(const lame_internal_flags * gfc, const gr_info * cod_info,
-                 const FLOAT8 * xr34_orig, FLOAT8 * xr34)
+block_xr34(const lame_internal_flags * gfc, const gr_info * cod_info,
+	   const FLOAT8 * xr34_orig, FLOAT8 * xr34)
 {
-    int     sfb, l, j, b;
-    int     ifac, ifqstep, start, end;
-    FLOAT8  fac;
+    int     sfb, j = 0, sfbmax, *scalefac = cod_info->scalefac;
 
     /* even though there is no scalefactor for sfb12
      * subblock gain affects upper frequencies too, that's why
      * we have to go up to SBMAX_s
      */
-    ifqstep = (cod_info->scalefac_scale == 0) ? 2 : 4;
-    for (j = 0, sfb = 0; sfb < SBMAX_s; ++sfb) {
-        start = gfc->scalefac_band.s[sfb];
-        end = gfc->scalefac_band.s[sfb + 1];
-        for (b = 0; b < 3; ++b) {
-            ifac = 8 * cod_info->subblock_gain[b] + ifqstep * cod_info->scalefac[sfb*3+b];
+    sfbmax = cod_info->psymax;
+    if (sfbmax == 35 || sfbmax == 36)
+	sfbmax += 3;
 
-            if (ifac == 0) { /* just copy */
-                l = (end - start + 7) / 8;
-                switch ((end - start) % 8) {
-                default:
-                case 0:
-                    do {
-                        xr34[j] = xr34_orig[j];
-                        ++j;
-                case 7:
-                        xr34[j] = xr34_orig[j];
-                        ++j;
-                case 6:
-                        xr34[j] = xr34_orig[j];
-                        ++j;
-                case 5:
-                        xr34[j] = xr34_orig[j];
-                        ++j;
-                case 4:
-                        xr34[j] = xr34_orig[j];
-                        ++j;
-                case 3:
-                        xr34[j] = xr34_orig[j];
-                        ++j;
-                case 2:
-                        xr34[j] = xr34_orig[j];
-                        ++j;
-                case 1:
-                        xr34[j] = xr34_orig[j];
-                        ++j;
-                    } while (--l);
-                }
-                continue;
-            }
-            if (ifac < Q_MAX - 210)
-                fac = IIPOW20_(ifac);
-            else
-                fac = pow(2.0, 0.1875 * ifac);
+    for (sfb = 0; sfb < sfbmax; ++sfb) {
+	FLOAT8 fac;
+	int s =
+	    (((*scalefac++) + (cod_info->preflag ? pretab[sfb] : 0))
+	     << (cod_info->scalefac_scale + 1))
+	    + cod_info->subblock_gain[cod_info->window[sfb]] * 8;
+	int l = cod_info->width[sfb];
 
-            /*
-             *  loop unrolled into "Duff's Device".  Robert Hegemann
-             */
-            l = (end - start + 7) / 8;
-            switch ((end - start) % 8) {
-            default:
-            case 0:
-                do {
-                    xr34[j] = xr34_orig[j] * fac;
-                    ++j;
-            case 7:
-                    xr34[j] = xr34_orig[j] * fac;
-                    ++j;
-            case 6:
-                    xr34[j] = xr34_orig[j] * fac;
-                    ++j;
-            case 5:
-                    xr34[j] = xr34_orig[j] * fac;
-                    ++j;
-            case 4:
-                    xr34[j] = xr34_orig[j] * fac;
-                    ++j;
-            case 3:
-                    xr34[j] = xr34_orig[j] * fac;
-                    ++j;
-            case 2:
-                    xr34[j] = xr34_orig[j] * fac;
-                    ++j;
-            case 1:
-                    xr34[j] = xr34_orig[j] * fac;
-                    ++j;
-                } while (--l);
-            }
-        }
+	if (s == 0) {/* just copy */
+	    memcpy(&xr34[j], &xr34_orig[j], sizeof(FLOAT8)*l);
+	    j += l;
+	    continue;
+	}
+
+	fac = IIPOW20(s);
+	l >>= 1;
+	do {
+	    xr34[j] = xr34_orig[j] * fac; ++j;
+	    xr34[j] = xr34_orig[j] * fac; ++j;
+	} while (--l > 0);
     }
 }
-
-
-
-static void
-long_block_xr34(const lame_internal_flags * gfc, const gr_info * cod_info, const FLOAT8 * xr34_orig,
-                FLOAT8 * xr34)
-{
-    int     sfb, l, j;
-    int     ifac, ifqstep, start, end;
-    FLOAT8  fac;
-
-    ifqstep = (cod_info->scalefac_scale == 0) ? 2 : 4;
-    for (sfb = 0; sfb < SBMAX_l; ++sfb) {
-
-        ifac = ifqstep * cod_info->scalefac[sfb];
-        if (cod_info->preflag)
-            ifac += ifqstep * pretab[sfb];
-
-        start = gfc->scalefac_band.l[sfb];
-        end = gfc->scalefac_band.l[sfb + 1];
-
-        if (ifac == 0) { /* just copy */
-            j = start;
-            l = (end - start + 7) / 8;
-            switch ((end - start) % 8) {
-            default:
-            case 0:
-                do {
-                    xr34[j] = xr34_orig[j];
-                    ++j;
-            case 7:
-                    xr34[j] = xr34_orig[j];
-                    ++j;
-            case 6:
-                    xr34[j] = xr34_orig[j];
-                    ++j;
-            case 5:
-                    xr34[j] = xr34_orig[j];
-                    ++j;
-            case 4:
-                    xr34[j] = xr34_orig[j];
-                    ++j;
-            case 3:
-                    xr34[j] = xr34_orig[j];
-                    ++j;
-            case 2:
-                    xr34[j] = xr34_orig[j];
-                    ++j;
-            case 1:
-                    xr34[j] = xr34_orig[j];
-                    ++j;
-                } while (--l);
-            }
-            continue;
-        }
-        if (ifac < Q_MAX - 210)
-            fac = IIPOW20_(ifac);
-        else
-            fac = pow(2.0, 0.1875 * ifac);
-
-        /*
-         *  loop unrolled into "Duff's Device".  Robert Hegemann
-         */
-        j = start;
-        l = (end - start + 7) / 8;
-        switch ((end - start) % 8) {
-        default:
-        case 0:
-            do {
-                xr34[j] = xr34_orig[j] * fac;
-                ++j;
-        case 7:
-                xr34[j] = xr34_orig[j] * fac;
-                ++j;
-        case 6:
-                xr34[j] = xr34_orig[j] * fac;
-                ++j;
-        case 5:
-                xr34[j] = xr34_orig[j] * fac;
-                ++j;
-        case 4:
-                xr34[j] = xr34_orig[j] * fac;
-                ++j;
-        case 3:
-                xr34[j] = xr34_orig[j] * fac;
-                ++j;
-        case 2:
-                xr34[j] = xr34_orig[j] * fac;
-                ++j;
-        case 1:
-                xr34[j] = xr34_orig[j] * fac;
-                ++j;
-            } while (--l);
-        }
-    }
-}
-
-
 
 
 /************************************************************************
@@ -1357,12 +1200,11 @@ VBR_noise_shaping(lame_internal_flags * gfc, FLOAT8 * xr34orig, int minbits, int
 
         if (shortblock) {
             short_block_scalefacs(gfc, cod_info, vbrsf, &vbrmax);
-            short_block_xr34(gfc, cod_info, xr34orig, xr34);
         }
         else {
             long_block_scalefacs(gfc, cod_info, vbrsf, &vbrmax);
-            long_block_xr34(gfc, cod_info, xr34orig, xr34);
         }
+	block_xr34(gfc, cod_info, xr34orig, xr34);
 
         ret = VBR_quantize_granule(gfc, cod_info, xr34, gr, ch);
 
