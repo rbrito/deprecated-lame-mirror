@@ -1558,42 +1558,46 @@ VBR_iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 {
     FLOAT xmin[MAX_GRANULES][MAX_CHANNELS][SFBMAX];
     int max_frame_bits, used_bits, ch, gr, mean_bytes;
-
-    for (gr = 0; gr < gfc->mode_gr; gr++) {
-	for (ch = 0; ch < gfc->channels_out; ch++) {
-	    xmin[gr][ch][0] = -1.0;
-	}
-    }
+    gr_info gi_backup[MAX_GRANULES][MAX_CHANNELS];
+    memcpy(gi_backup, gfc->tt, sizeof(gi_backup));
 
     gfc->bitrate_index = gfc->VBR_max_bitrate;
     max_frame_bits = ResvFrameBegin(gfc, getframebytes(gfc));
 
- VBRloop_restart:
-    {used_bits = 0;
+    used_bits = 0;
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    gr_info *gi = &gfc->tt[gr][ch];
 	    if (init_bitalloc(gfc, gi)) {
-		int ret;
-		if (xmin[gr][ch][0] < 0.0)
-		    calc_xmin (gfc, &ratio[gr][ch], gi, xmin[gr][ch]);
+		calc_xmin(gfc, &ratio[gr][ch], gi, xmin[gr][ch]);
 		gi->global_gain = gfc->OldValue[ch];
-		while ((ret = VBR_noise_shaping(gfc, gi, xmin[gr][ch])) < 0) {
-		    if (ret == -2)
-			bitpressure_strategy(gi, xmin[gr][ch]);
+		while (VBR_noise_shaping(gfc, gi, xmin[gr][ch])) {
+		    bitpressure_strategy(gi, xmin[gr][ch]);
 		}
 		gfc->OldValue[ch] = gi->global_gain;
 	    }
 	    used_bits += iteration_finish_one(gfc, gr, ch);
-	    if (used_bits > max_frame_bits) {
-		for (gr = 0; gr < gfc->mode_gr; gr++)
-		    for (ch = 0; ch < gfc->channels_out; ch++)
-			bitpressure_strategy(&gfc->tt[gr][ch], xmin[gr][ch]);
-		goto VBRloop_restart;
-	    }
 	}
     }
+
+    if (used_bits > max_frame_bits) {
+	used_bits = 0;
+	for (gr = 0; gr < gfc->mode_gr; gr++) {
+	    for (ch = 0; ch < gfc->channels_out; ch++) {
+		gr_info *gi = &gfc->tt[gr][ch];
+		trancate_smallspectrums(gfc, gi, xmin[gr][ch]);
+		used_bits += gi->part2_3_length + gi->part2_length;
+	    }
+	}
+	if (used_bits > max_frame_bits) {
+	    /* oops, still we cannot ... */
+	    memcpy(gfc->tt, gi_backup, sizeof(gi_backup));
+	    gfc->bitrate_index = gfc->VBR_max_bitrate;
+	    iteration_loop(gfc, ratio);
+	    return;
+	}
     }
+
     gfc->ResvSize -= used_bits;
 
     gfc->bitrate_index = gfc->VBR_min_bitrate;
