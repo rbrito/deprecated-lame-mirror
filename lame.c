@@ -1464,6 +1464,7 @@ void lame_init(int nowrite)
   /* Global flags.  set defaults here */
   allow_diff_short=0;
   ATHonly=0;
+  noATH=0;
   autoconvert=FALSE;
   disable_reservoir=0;
   experimentalX = 0;
