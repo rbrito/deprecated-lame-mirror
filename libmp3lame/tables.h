@@ -30,7 +30,7 @@ extern const FLOAT psy_data [];
 struct huffcodetab {
     const int    xlen; 	        /* max. x-index+			*/ 
     const int    linmax;	/* max number to be stored in linbits	*/
-    const int*   table;	        /* pointer to array[xlen][ylen]		*/
+    const short*   table;	        /* pointer to array[xlen][ylen]		*/
     const char*  hlen;	        /* pointer to array[xlen][ylen]		*/
 };
 
