@@ -34,18 +34,23 @@ EXTRA_DIST = \
 #  number of bytes which are different may not be zero, but
 #  should be at most 30.
 #
-test: frontend/lame
-	frontend/lame  --nores -h testcase.wav testcase.new.mp3
+testcase.new.mp3: testcase.wav
+	frontend/lame --nores -h testcase.wav testcase.new.mp3
+
+test: frontend/lame testcase.mp3 testcase.new.mp3
 	cmp -l testcase.new.mp3 testcase.mp3 | wc
 
-testg: frontend/lame
-	analyzer/mp3x -h ../test/castanets.wav
+testg: frontend/lame ../test/castanets.wav
+	frontend/mp3x -h ../test/castanets.wav
 
 update:
-	cvs -z3 -q update -d -A -P
+	CVS_RSH=ssh cvs -z3 -q update -d -A -P
 
 diff:
-	cvs -z3 diff -u
+	CVS_RSH=ssh cvs -z3 diff -u
 
 frontend/lame:
-	cd frontend; $(MAKE)
+	$(MAKE) $(MAKEFLAGS)
+
+frontend/mp3x: frontend/lame
+
