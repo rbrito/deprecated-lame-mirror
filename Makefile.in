@@ -46,83 +46,6 @@ MAKEDEP = -M
 RM_F = rm -f
 LN_S = @LN_S@
 
-##########################################################################
-# -DHAVEMPGLIB compiles the mpglib *decoding* library into libmp3lame
-##########################################################################
-# handled by configure
-
-##########################################################################
-# -DUSE_LAYER_1/2 enables Layer1 or Layer2 *decoding* abilities 
-##########################################################################
-# hadled by configure
-
-
-##########################################################################
-#
-# ** handled by configure **
-# 
-# Define these in the OS specific sections below to compile in support
-# for the Ogg Vorbis audio format (both decoding and encoding)
-# http://www.xiph.org/ogg/vorbis/
-#
-# VORBIS = -DHAVEVORBIS  -I ../vorbis/include
-# VORBIS_LIB = -L ../vorbis/lib -lvorbis
-##########################################################################
-
-##########################################################################
-#
-# ** handled by configure **
-# 
-# Define these in the OS specific sections below to compile in code 
-# for the optional VBR bitrate histogram.  
-# Requires ncurses, but libtermcap also works.  
-# If you have any trouble, just dont define these
-#
-# BRHIST_SWITCH = -DBRHIST
-# LIBTERMCAP = -lncurses
-# LIBTERMCAP = -ltermcap
-#
-# or, to try and simulate TERMCAP (ANSI), use:
-# BRHIST_SWITCH = -DBRHIST -DNOTERMCAP
-#
-##########################################################################
-
-
-##########################################################################
-#
-# ** handled by configure **
-# 
-# Define these in the OS specific sections below to compile in code for:
-#
-# SNDLIB =                no file i/o 
-# SNDLIB = -DLAMESNDFILE  to use internal LAME soundfile routines 
-# SNDLIB = -DLIBSNDFILE   to use Erik de Castro Lopo's libsndfile 
-# http://www.zip.com.au/~erikd/libsndfile/
-#
-# Note: at present, libsndfile does not support input from stdin.  
-#
-# for example:
-#  SNDLIB = -DLIBSNDFILE
-#  LIBSNDFILE=-lsndfile 
-#  if libsndfile is in a custom location, try:
-#  LIBSNDFILE=-L $(LIBSNDHOME) -lsndfile  -I $(LIBSNDHOME)
-##########################################################################
-
-
-##########################################################################
-#
-# ** handled by configure **
-# 
-# Define these in the OS specific sections below to compile in code for
-# the GTK mp3 frame analyzer
-#
-# Requires  -DHAVEMPGLIB
-# and SNDLIB = -DLAME or -DLIBSNDFILE
-#
-# GTK = -DHAVEGTK `gtk-config --cflags`
-# GTKLIBS = `gtk-config --libs` 
-#
-##########################################################################
 
 
 
@@ -487,22 +410,12 @@ uninstall:
 	$(RM_F) $(LIBDIR)/$(SHARED_LIB_MINOR)
 
 clean:
-  ifeq ($(UNAME),MSDOS)
-	-del *.o
-	-del *.d
-	-del *.a
-	-del mpglib\*.o
-	-del mpglib\*.d
-	-del frontend\*.o
-	-del frontend\*.d
-	-del frontend\*.exe
-  else
 	-$(RM_F) $(gtk_obj) $(OBJ) $(DEP) \
          libmp3lame.a $(lib_obj) \
          $(SHARED_LIB) $(SHARED_LIB_MAJOR) $(SHARED_LIB_MINOR)
 	cd mpglib; $(MAKE) clean
 	cd frontend; $(MAKE) clean
-  endif
+
 
 bla:
 	echo "LIB=$(SHARED_LIB) MAJOR=$(SHARED_LIB_MAJOR) MINOR=$(SHARED_LIB_MINOR)"
@@ -527,8 +440,8 @@ endif
 #  should be at most 30.
 #
 test: $(PGM)
-	./$(PGM)  --nores -h testcase.wav testcase.new.mp3
+	frontend/$(PGM)  --nores -h testcase.wav testcase.new.mp3
 	cmp -l testcase.new.mp3 testcase.mp3 | wc
 
 testg: $(PGM)
-	./$(PGM) -g -h ../test/castanets.wav
+	frontend/$(PGM) -g -h ../test/castanets.wav
