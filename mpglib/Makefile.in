@@ -65,6 +65,7 @@ target_alias = @target_alias@
 target_triplet = @target@
 AS = @AS@
 CC = @CC@
+CONFIG_DEFS = @CONFIG_DEFS@
 CPP = @CPP@
 CPUTYPE = @CPUTYPE@
 DLLTOOL = @DLLTOOL@
@@ -95,9 +96,11 @@ WITH_MP3X = @WITH_MP3X@
 
 AUTOMAKE_OPTIONS = foreign $(top_srcdir)/ansi2knr
 
-INCLUDES = @INCLUDES@ -I$(top_srcdir)/libmp3lame
+INCLUDES = @INCLUDES@ -I$(top_srcdir)/libmp3lame -I$(top_srcdir)
 
 EXTRA_DIST = README
+
+DEFS = @DEFS@ @CONFIG_DEFS@
 
 noinst_LTLIBRARIES = libmpgdecoder.la
 
@@ -107,14 +110,12 @@ libmpgdecoder_la_SOURCES = common.c 	dct64_i386.c 	decode_i386.c 	interface.c 	l
 noinst_HEADERS = common.h 	dct64_i386.h 	decode_i386.h 	huffman.h 	interface.h 	l2tables.h 	layer1.h 	layer2.h 	layer3.h 	mpg123.h 	mpglib.h 	tabinit.h
 
 
-LCLINTFLAGS = +posixlib +showsummary +showalluses +whichlib +forcehints
+LCLINTFLAGS = +posixlib +showsummary +showalluses +whichlib +forcehints -Dlint
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../config.h
 CONFIG_CLEAN_FILES = 
 LTLIBRARIES =  $(noinst_LTLIBRARIES)
 
-
-DEFS = @DEFS@ -I. -I$(srcdir) -I..
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
