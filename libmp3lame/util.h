@@ -342,7 +342,9 @@ typedef struct  {
   
 } lame_internal_flags;
 
-typedef lame_internal_flags context;
+// why was lame_internal_flags renamed context?
+//  
+//typedef lame_internal_flags context;
 
  
 
