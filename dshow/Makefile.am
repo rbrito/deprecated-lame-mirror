@@ -17,8 +17,11 @@ EXTRA_DIST = \
 	REG.CPP \
 	REG.H \
 	UIDS.H \
+	aboutprp.cpp \
+	aboutprp.h \
 	dshow.dsp \
 	dshow.dsw \
+	elogo.ico \
 	iaudioprops.h \
 	resource.h
 
