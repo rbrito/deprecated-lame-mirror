@@ -1,4 +1,4 @@
-# $Id$
+## $Id$
 
 AUTOMAKE_OPTIONS = foreign $(top_srcdir)/ansi2knr
 
