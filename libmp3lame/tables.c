@@ -1175,7 +1175,7 @@ init_s3_values(
     k = 0;
     for (i = 0; i < npart; i++) {
 	FLOAT fact;
-	int f = gfc->gfp->exp_nspsytune;
+	int f = gfc->nsPsy.tune;
 	if (bval[i] < 6.0) {
 	    f = (f >> 2) & 63;
 	    if (f >= 32)

@@ -412,7 +412,6 @@ lame_init_params(lame_global_flags * const gfp)
     lame_internal_flags *gfc = gfp->internal_flags;
     int gr, ch;
 
-    gfc->gfp = gfp;
     gfc->Class_ID = 0;
 
     /* report functions */
@@ -786,24 +785,24 @@ lame_print_internals( const lame_global_flags * gfp )
     MSGF( gfc, "\t ^ level adjustement: %f (dB)\n", gfp->ATHlower );
     MSGF( gfc, "\t ^ adjust sensitivity power (dB): %f\n", gfp->athaa_sensitivity);
 
-    i = (gfp->exp_nspsytune >> 2) & 63;
+    i = (gfp->internal_flags->nsPsy.tune >> 2) & 63;
     if (i >= 32)
 	i -= 64;
     bass = i*0.25;
 
-    i = (gfp->exp_nspsytune >> 8) & 63;
+    i = (gfp->internal_flags->nsPsy.tune >> 8) & 63;
     if (i >= 32)
 	i -= 64;
     alto = i*0.25;
 
-    i = (gfp->exp_nspsytune >> 14) & 63;
+    i = (gfp->internal_flags->nsPsy.tune >> 14) & 63;
     if (i >= 32)
 	i -= 64;
     treble = i*0.25;
 
     /*  to be compatible with Naoki's original code, the next 6 bits
      *  define only the amount of changing treble for sfb21 */
-    i = (gfp->exp_nspsytune >> 20) & 63;
+    i = (gfp->internal_flags->nsPsy.tune >> 20) & 63;
     if (i >= 32)
 	i -= 64;
     sfb21 = treble + i*0.25;

@@ -62,7 +62,6 @@ struct lame_global_struct {
     int experimentalX;
     int experimentalY;
     int experimentalZ;
-    int exp_nspsytune;
 
     /* VBR control */
     vbr_mode VBR;

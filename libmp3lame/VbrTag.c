@@ -443,12 +443,12 @@ PutLameVBR(lame_global_flags *gfp, FILE *fpStream,
 	   && !(gfp->internal_flags->tag_spec.flags & V2_ONLY_FLAG));
     uint16_t nMusicCRC				= 0;
 
-    /*psy model type: Gpsycho or NsPsytune */
-    unsigned char    bExpNPsyTune	= 1;
-    unsigned char	 bSafeJoint		= (gfp->exp_nspsytune & 2)!=0;
+    /*psy model type:*/
+    unsigned char bExpNPsyTune = 1;
+    unsigned char bSafeJoint   = 0;
 
-    unsigned char	 bNoGapMore		= 0;
-    unsigned char	 bNoGapPrevious	= 0;
+    unsigned char bNoGapMore		= 0;
+    unsigned char bNoGapPrevious	= 0;
 
     int		 nNoGapCount	= gfp->internal_flags->nogap_total;
     int		 nNoGapCurr		= gfp->internal_flags->nogap_current;

@@ -633,7 +633,7 @@ int
 lame_set_exp_nspsytune( lame_global_flags*  gfp,
                         int                 exp_nspsytune )
 {
-    gfp->exp_nspsytune = exp_nspsytune;
+    gfp->internal_flags->nsPsy.tune = exp_nspsytune;
 
     return 0;
 }
@@ -641,7 +641,7 @@ lame_set_exp_nspsytune( lame_global_flags*  gfp,
 int
 lame_get_exp_nspsytune( const lame_global_flags*  gfp )
 {
-    return gfp->exp_nspsytune;
+    return gfp->internal_flags->nsPsy.tune;
 }
 
 

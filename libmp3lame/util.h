@@ -326,7 +326,6 @@ struct lame_internal_flags {
     FLOAT samplefreq_out;
     FLOAT resample_ratio;      /* input_samp_rate/output_samp_rate */
 
-    lame_global_flags* gfp;    /* needed as long as the frame encoding functions must access gfp (all needed information can be added to gfc) */
     int mf_samples_to_encode;
     int mf_size;
     int VBR_min_bitrate;            /* min bitrate index */
@@ -409,6 +408,7 @@ struct lame_internal_flags {
 
 	/* adjustment of Mid/Side maskings from LR maskings */
 	FLOAT msfix;
+	int tune;
     } nsPsy;
 
     /**
