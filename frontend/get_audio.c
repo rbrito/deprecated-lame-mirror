@@ -90,7 +90,7 @@ int     lame_decode_initfile(FILE * fd, mp3data_struct * mp3data);
 #endif
 
 /* read mp3 file until mpglib returns one frame of PCM data */
-int     lame_decode_fromfile(FILE * fd, short int pcm_l[], short int pcm_r[],
+static int     lame_decode_fromfile(FILE * fd, short int pcm_l[], short int pcm_r[],
                              mp3data_struct * mp3data);
 
 
@@ -1425,7 +1425,7 @@ check_aid(const unsigned char *header)
  * This is a (nearly?) complete header analysis for a MPEG-1/2/2.5 Layer I, II or III
  * data stream
  */
-
+static int layer = 0, srate = 0;
 static int
 is_syncword_mp123(const void *const headerptr)
 {
@@ -1450,6 +1450,9 @@ is_syncword_mp123(const void *const headerptr)
             return 0;
     if ((p[7] & 3) == 2)
 	return 0;       /* reserved enphasis mode */
+
+    layer = (p[1] & 0x0E);
+    srate = (p[2] & 0xF0);
     return 1;
 }
 
@@ -1575,7 +1578,7 @@ For lame_decode1_headers():  return code
    0     ok, but need more data before outputing any samples
    n     number of samples output.  either 576 or 1152 depending on MP3 file.
 */
-int
+static int
 lame_decode_fromfile(FILE * fd, short pcm_l[], short pcm_r[],
                      mp3data_struct * mp3data)
 {
