@@ -821,7 +821,6 @@ Program names:
 System types:
   --build=BUILD     configure for building on BUILD [guessed]
   --host=HOST       cross-compile to build programs to run on HOST [BUILD]
-  --target=TARGET   configure for building compilers for TARGET [HOST]
 _ACEOF
 fi
 
@@ -1312,35 +1311,6 @@ host_cpu=`echo $ac_cv_host | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\1/'`
 host_vendor=`echo $ac_cv_host | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\2/'`
 host_os=`echo $ac_cv_host | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\3/'`
 
-
-echo "$as_me:$LINENO: checking target system type" >&5
-echo $ECHO_N "checking target system type... $ECHO_C" >&6
-if test "${ac_cv_target+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_cv_target_alias=$target_alias
-test "x$ac_cv_target_alias" = "x" &&
-  ac_cv_target_alias=$ac_cv_host_alias
-ac_cv_target=`$ac_config_sub $ac_cv_target_alias` ||
-  { { echo "$as_me:$LINENO: error: $ac_config_sub $ac_cv_target_alias failed" >&5
-echo "$as_me: error: $ac_config_sub $ac_cv_target_alias failed" >&2;}
-   { (exit 1); exit 1; }; }
-
-fi
-echo "$as_me:$LINENO: result: $ac_cv_target" >&5
-echo "${ECHO_T}$ac_cv_target" >&6
-target=$ac_cv_target
-target_cpu=`echo $ac_cv_target | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\1/'`
-target_vendor=`echo $ac_cv_target | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\2/'`
-target_os=`echo $ac_cv_target | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\3/'`
-
-
-# The aliases save the names the user supplied, while $host etc.
-# will get canonicalized.
-test -n "$target_alias" &&
-  test "$program_prefix$program_suffix$program_transform_name" = \
-    NONENONEs,x,x, &&
-  program_prefix=${target_alias}-
 
 
 # Find a good install program.  We prefer a C program (faster),
@@ -2869,7 +2839,7 @@ test x"$silent" = xyes && libtool_flags="$libtool_flags --silent"
 case "$lt_target" in
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 2872 "configure"' > conftest.$ac_ext
+  echo '#line 2842 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -3011,7 +2981,7 @@ LD="$LD" LDFLAGS="$LDFLAGS" LIBS="$LIBS" \
 LN_S="$LN_S" NM="$NM" RANLIB="$RANLIB" \
 DLLTOOL="$DLLTOOL" AS="$AS" OBJDUMP="$OBJDUMP" \
 ${CONFIG_SHELL-/bin/sh} $ac_aux_dir/ltconfig --no-reexec \
-$libtool_flags --no-verify $ac_aux_dir/ltmain.sh $lt_target \
+$libtool_flags  $ac_aux_dir/ltmain.sh $lt_target \
 || { { echo "$as_me:$LINENO: error: libtool configure failed" >&5
 echo "$as_me: error: libtool configure failed" >&2;}
    { (exit 1); exit 1; }; }
@@ -3281,13 +3251,14 @@ fi
 rm -f conftest*
 
 
-echo "$as_me:$LINENO: checking for library containing strerror" >&5
-echo $ECHO_N "checking for library containing strerror... $ECHO_C" >&6
-if test "${ac_cv_search_strerror+set}" = set; then
+
+        echo "$as_me:$LINENO: checking for strerror in -lcposix" >&5
+echo $ECHO_N "checking for strerror in -lcposix... $ECHO_C" >&6
+if test "${ac_cv_lib_cposix_strerror+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
-  ac_func_search_save_LIBS=$LIBS
-ac_cv_search_strerror=no
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lcposix  $LIBS"
 cat >conftest.$ac_ext <<_ACEOF
 #line $LINENO "configure"
 #include "confdefs.h"
@@ -3325,69 +3296,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
-  ac_cv_search_strerror="none required"
+  ac_cv_lib_cposix_strerror=yes
 else
   echo "$as_me: failed program was:" >&5
 cat conftest.$ac_ext >&5
+ac_cv_lib_cposix_strerror=no
 fi
 rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
-if test "$ac_cv_search_strerror" = no; then
-  for ac_lib in cposix; do
-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
-    cat >conftest.$ac_ext <<_ACEOF
-#line $LINENO "configure"
-#include "confdefs.h"
+LIBS=$ac_check_lib_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_lib_cposix_strerror" >&5
+echo "${ECHO_T}$ac_cv_lib_cposix_strerror" >&6
+if test $ac_cv_lib_cposix_strerror = yes; then
+  LIBS="$LIBS -lcposix"
+fi
 
-/* Override any gcc2 internal prototype to avoid an error.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-/* We use char because int might match the return type of a gcc2
-   builtin and then its argument prototype would still apply.  */
-char strerror ();
-#ifdef F77_DUMMY_MAIN
-#  ifdef __cplusplus
-     extern "C"
-#  endif
-   int F77_DUMMY_MAIN() { return 1; }
-#endif
-int
-main ()
-{
-strerror ();
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-         { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_cv_search_strerror="-l$ac_lib"
-break
-else
-  echo "$as_me: failed program was:" >&5
-cat conftest.$ac_ext >&5
-fi
-rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
-  done
-fi
-LIBS=$ac_func_search_save_LIBS
-fi
-echo "$as_me:$LINENO: result: $ac_cv_search_strerror" >&5
-echo "${ECHO_T}$ac_cv_search_strerror" >&6
-if test "$ac_cv_search_strerror" != no; then
-  test "$ac_cv_search_strerror" = "none required" || LIBS="$ac_cv_search_strerror $LIBS"
 
-fi
 
 echo "$as_me:$LINENO: checking for ANSI C header files" >&5
 echo $ECHO_N "checking for ANSI C header files... $ECHO_C" >&6
@@ -3716,8 +3640,6 @@ case $host_os in
   *cygwin* ) CYGWIN=yes;;
          * ) CYGWIN=no;;
 esac
-
-
 
 if test "${ac_cv_cygwin}" = "yes"; then
 	if test "${CC}" != "gcc"; then
@@ -4214,7 +4136,7 @@ echo "${ECHO_T}$ac_cv_header_dmalloc_h" >&6
 fi
 
 
-if test "$ac_cv_header_dmalloc_h" = "yes"; then
+if test "${ac_cv_header_dmalloc_h}" = "yes"; then
 	echo "$as_me:$LINENO: checking if malloc debugging is wanted" >&5
 echo $ECHO_N "checking if malloc debugging is wanted... $ECHO_C" >&6
 
@@ -4389,10 +4311,12 @@ fi
 
 
 
+
 for ac_header in \
 		 errno.h \
 		 fcntl.h \
 		 limits.h \
+		 stdint.h \
 		 string.h \
 		 sys/soundcard.h \
 		 sys/time.h \
@@ -4967,7 +4891,7 @@ fi
 if test "${GCC}" = "yes"; then
 	echo "$as_me:$LINENO: checking version of GCC" >&5
 echo $ECHO_N "checking version of GCC... $ECHO_C" >&6
-	GCC_version=`${CC} --version`
+	GCC_version=`${CC} --version | sed -n '1s/^[^ ]* (.*) //;s/ .*$//;1p'`
 	echo "$as_me:$LINENO: result: ${GCC_version}" >&5
 echo "${ECHO_T}${GCC_version}" >&6
 fi
@@ -8593,8 +8517,7 @@ _ACEOF
 
 
 
-if test ${cross_compiling} = "no"; then
-	echo "$as_me:$LINENO: checking for working long double with more range or precision than double" >&5
+echo "$as_me:$LINENO: checking for working long double with more range or precision than double" >&5
 echo $ECHO_N "checking for working long double with more range or precision than double... $ECHO_C" >&6
 if test "${ac_cv_c_long_double+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
@@ -8652,7 +8575,6 @@ _ACEOF
 
 fi
 
-fi
 if test "${ac_cv_c_have_long_double}" = "yes" ; then
 	echo "$as_me:$LINENO: checking for long double" >&5
 echo $ECHO_N "checking for long double... $ECHO_C" >&6
@@ -9067,15 +8989,13 @@ fi
 echo "$as_me:$LINENO: result: $ac_cv_type_uint8_t" >&5
 echo "${ECHO_T}$ac_cv_type_uint8_t" >&6
 if test $ac_cv_type_uint8_t = yes; then
-  :
-else
 
 cat >>confdefs.h <<_ACEOF
-#define uint8_t unsigned char
+#define HAVE_UINT8_T 1
 _ACEOF
 
-fi
 
+fi
 echo "$as_me:$LINENO: checking for int8_t" >&5
 echo $ECHO_N "checking for int8_t... $ECHO_C" >&6
 if test "${ac_cv_type_int8_t+set}" = set; then
@@ -9125,15 +9045,13 @@ fi
 echo "$as_me:$LINENO: result: $ac_cv_type_int8_t" >&5
 echo "${ECHO_T}$ac_cv_type_int8_t" >&6
 if test $ac_cv_type_int8_t = yes; then
-  :
-else
 
 cat >>confdefs.h <<_ACEOF
-#define int8_t char
+#define HAVE_INT8_T 1
 _ACEOF
 
-fi
 
+fi
 echo "$as_me:$LINENO: checking for uint16_t" >&5
 echo $ECHO_N "checking for uint16_t... $ECHO_C" >&6
 if test "${ac_cv_type_uint16_t+set}" = set; then
@@ -9183,15 +9101,13 @@ fi
 echo "$as_me:$LINENO: result: $ac_cv_type_uint16_t" >&5
 echo "${ECHO_T}$ac_cv_type_uint16_t" >&6
 if test $ac_cv_type_uint16_t = yes; then
-  :
-else
 
 cat >>confdefs.h <<_ACEOF
-#define uint16_t unsigned short
+#define HAVE_UINT16_T 1
 _ACEOF
 
-fi
 
+fi
 echo "$as_me:$LINENO: checking for int16_t" >&5
 echo $ECHO_N "checking for int16_t... $ECHO_C" >&6
 if test "${ac_cv_type_int16_t+set}" = set; then
@@ -9241,17 +9157,14 @@ fi
 echo "$as_me:$LINENO: result: $ac_cv_type_int16_t" >&5
 echo "${ECHO_T}$ac_cv_type_int16_t" >&6
 if test $ac_cv_type_int16_t = yes; then
-  :
-else
 
 cat >>confdefs.h <<_ACEOF
-#define int16_t short
+#define HAVE_INT16_T 1
 _ACEOF
 
-fi
 
-if test "${ac_cv_sizeof_int}" = "4" ; then
-	echo "$as_me:$LINENO: checking for uint32_t" >&5
+fi
+echo "$as_me:$LINENO: checking for uint32_t" >&5
 echo $ECHO_N "checking for uint32_t... $ECHO_C" >&6
 if test "${ac_cv_type_uint32_t+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
@@ -9300,16 +9213,14 @@ fi
 echo "$as_me:$LINENO: result: $ac_cv_type_uint32_t" >&5
 echo "${ECHO_T}$ac_cv_type_uint32_t" >&6
 if test $ac_cv_type_uint32_t = yes; then
-  :
-else
 
 cat >>confdefs.h <<_ACEOF
-#define uint32_t unsigned int
+#define HAVE_UINT32_T 1
 _ACEOF
 
-fi
 
-	echo "$as_me:$LINENO: checking for int32_t" >&5
+fi
+echo "$as_me:$LINENO: checking for int32_t" >&5
 echo $ECHO_N "checking for int32_t... $ECHO_C" >&6
 if test "${ac_cv_type_int32_t+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
@@ -9358,19 +9269,16 @@ fi
 echo "$as_me:$LINENO: result: $ac_cv_type_int32_t" >&5
 echo "${ECHO_T}$ac_cv_type_int32_t" >&6
 if test $ac_cv_type_int32_t = yes; then
-  :
-else
 
 cat >>confdefs.h <<_ACEOF
-#define int32_t int
+#define HAVE_INT32_T 1
 _ACEOF
 
-fi
 
-elif test "${ac_cv_sizeof_long}" = "4" ; then
-	echo "$as_me:$LINENO: checking for uint32_t" >&5
-echo $ECHO_N "checking for uint32_t... $ECHO_C" >&6
-if test "${ac_cv_type_uint32_t+set}" = set; then
+fi
+echo "$as_me:$LINENO: checking for uint64_t" >&5
+echo $ECHO_N "checking for uint64_t... $ECHO_C" >&6
+if test "${ac_cv_type_uint64_t+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
   cat >conftest.$ac_ext <<_ACEOF
@@ -9386,9 +9294,9 @@ $ac_includes_default
 int
 main ()
 {
-if ((uint32_t *) 0)
+if ((uint64_t *) 0)
   return 0;
-if (sizeof (uint32_t))
+if (sizeof (uint64_t))
   return 0;
   ;
   return 0;
@@ -9406,29 +9314,27 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
-  ac_cv_type_uint32_t=yes
+  ac_cv_type_uint64_t=yes
 else
   echo "$as_me: failed program was:" >&5
 cat conftest.$ac_ext >&5
-ac_cv_type_uint32_t=no
+ac_cv_type_uint64_t=no
 fi
 rm -f conftest.$ac_objext conftest.$ac_ext
 fi
-echo "$as_me:$LINENO: result: $ac_cv_type_uint32_t" >&5
-echo "${ECHO_T}$ac_cv_type_uint32_t" >&6
-if test $ac_cv_type_uint32_t = yes; then
-  :
-else
+echo "$as_me:$LINENO: result: $ac_cv_type_uint64_t" >&5
+echo "${ECHO_T}$ac_cv_type_uint64_t" >&6
+if test $ac_cv_type_uint64_t = yes; then
 
 cat >>confdefs.h <<_ACEOF
-#define uint32_t unsigned long
+#define HAVE_UINT64_T 1
 _ACEOF
 
-fi
 
-	echo "$as_me:$LINENO: checking for int32_t" >&5
-echo $ECHO_N "checking for int32_t... $ECHO_C" >&6
-if test "${ac_cv_type_int32_t+set}" = set; then
+fi
+echo "$as_me:$LINENO: checking for int64_t" >&5
+echo $ECHO_N "checking for int64_t... $ECHO_C" >&6
+if test "${ac_cv_type_int64_t+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
   cat >conftest.$ac_ext <<_ACEOF
@@ -9444,9 +9350,9 @@ $ac_includes_default
 int
 main ()
 {
-if ((int32_t *) 0)
+if ((int64_t *) 0)
   return 0;
-if (sizeof (int32_t))
+if (sizeof (int64_t))
   return 0;
   ;
   return 0;
@@ -9464,268 +9370,81 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
-  ac_cv_type_int32_t=yes
+  ac_cv_type_int64_t=yes
 else
   echo "$as_me: failed program was:" >&5
 cat conftest.$ac_ext >&5
-ac_cv_type_int32_t=no
+ac_cv_type_int64_t=no
 fi
 rm -f conftest.$ac_objext conftest.$ac_ext
 fi
-echo "$as_me:$LINENO: result: $ac_cv_type_int32_t" >&5
-echo "${ECHO_T}$ac_cv_type_int32_t" >&6
-if test $ac_cv_type_int32_t = yes; then
-  :
-else
+echo "$as_me:$LINENO: result: $ac_cv_type_int64_t" >&5
+echo "${ECHO_T}$ac_cv_type_int64_t" >&6
+if test $ac_cv_type_int64_t = yes; then
 
 cat >>confdefs.h <<_ACEOF
-#define int32_t long
+#define HAVE_INT64_T 1
 _ACEOF
+
 
 fi
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+if test "${ac_cv_sizeof_unsigned_int}" = "4"; then
+
+
+elif test "${ac_cv_sizeof_unsigned_long}" = "4"; then
+
+
 else
-	# can't determine default value in case the type isn't present
+	{ { echo "$as_me:$LINENO: error: CHECK_TYPE_uint32_t - please report to lame-dev@lists.sourceforge.net" >&5
+echo "$as_me: error: CHECK_TYPE_uint32_t - please report to lame-dev@lists.sourceforge.net" >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+if test "${ac_cv_sizeof_int}" = "4"; then
+
+
+elif test "${ac_cv_sizeof_long}" = "4"; then
+
+
+else
 	{ { echo "$as_me:$LINENO: error: CHECK_TYPE_int32_t - please report to lame-dev@lists.sourceforge.net" >&5
 echo "$as_me: error: CHECK_TYPE_int32_t - please report to lame-dev@lists.sourceforge.net" >&2;}
    { (exit 1); exit 1; }; }
 fi
-if test "${ac_cv_sizeof_long}" = "8" ; then
-	echo "$as_me:$LINENO: checking for uint64_t" >&5
-echo $ECHO_N "checking for uint64_t... $ECHO_C" >&6
-if test "${ac_cv_type_uint64_t+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  cat >conftest.$ac_ext <<_ACEOF
-#line $LINENO "configure"
-#include "confdefs.h"
-$ac_includes_default
-#ifdef F77_DUMMY_MAIN
-#  ifdef __cplusplus
-     extern "C"
-#  endif
-   int F77_DUMMY_MAIN() { return 1; }
-#endif
-int
-main ()
-{
-if ((uint64_t *) 0)
-  return 0;
-if (sizeof (uint64_t))
-  return 0;
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext
-if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
-  (eval $ac_compile) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-         { ac_try='test -s conftest.$ac_objext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_cv_type_uint64_t=yes
-else
-  echo "$as_me: failed program was:" >&5
-cat conftest.$ac_ext >&5
-ac_cv_type_uint64_t=no
-fi
-rm -f conftest.$ac_objext conftest.$ac_ext
-fi
-echo "$as_me:$LINENO: result: $ac_cv_type_uint64_t" >&5
-echo "${ECHO_T}$ac_cv_type_uint64_t" >&6
-if test $ac_cv_type_uint64_t = yes; then
-  :
-else
 
-cat >>confdefs.h <<_ACEOF
-#define uint64_t unsigned long
-_ACEOF
+if test "${ac_cv_sizeof_unsigned_long}" = "8"; then
 
-fi
 
-	echo "$as_me:$LINENO: checking for int64_t" >&5
-echo $ECHO_N "checking for int64_t... $ECHO_C" >&6
-if test "${ac_cv_type_int64_t+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  cat >conftest.$ac_ext <<_ACEOF
-#line $LINENO "configure"
-#include "confdefs.h"
-$ac_includes_default
-#ifdef F77_DUMMY_MAIN
-#  ifdef __cplusplus
-     extern "C"
-#  endif
-   int F77_DUMMY_MAIN() { return 1; }
-#endif
-int
-main ()
-{
-if ((int64_t *) 0)
-  return 0;
-if (sizeof (int64_t))
-  return 0;
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext
-if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
-  (eval $ac_compile) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-         { ac_try='test -s conftest.$ac_objext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_cv_type_int64_t=yes
-else
-  echo "$as_me: failed program was:" >&5
-cat conftest.$ac_ext >&5
-ac_cv_type_int64_t=no
-fi
-rm -f conftest.$ac_objext conftest.$ac_ext
-fi
-echo "$as_me:$LINENO: result: $ac_cv_type_int64_t" >&5
-echo "${ECHO_T}$ac_cv_type_int64_t" >&6
-if test $ac_cv_type_int64_t = yes; then
-  :
-else
+elif test "${ac_cv_sizeof_unsigned_long_long}" = "8"; then
 
-cat >>confdefs.h <<_ACEOF
-#define int64_t long
-_ACEOF
-
-fi
-
-elif test "${ac_cv_sizeof_long_long}" = "8" ; then
-	echo "$as_me:$LINENO: checking for uint64_t" >&5
-echo $ECHO_N "checking for uint64_t... $ECHO_C" >&6
-if test "${ac_cv_type_uint64_t+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  cat >conftest.$ac_ext <<_ACEOF
-#line $LINENO "configure"
-#include "confdefs.h"
-$ac_includes_default
-#ifdef F77_DUMMY_MAIN
-#  ifdef __cplusplus
-     extern "C"
-#  endif
-   int F77_DUMMY_MAIN() { return 1; }
-#endif
-int
-main ()
-{
-if ((uint64_t *) 0)
-  return 0;
-if (sizeof (uint64_t))
-  return 0;
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext
-if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
-  (eval $ac_compile) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-         { ac_try='test -s conftest.$ac_objext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_cv_type_uint64_t=yes
-else
-  echo "$as_me: failed program was:" >&5
-cat conftest.$ac_ext >&5
-ac_cv_type_uint64_t=no
-fi
-rm -f conftest.$ac_objext conftest.$ac_ext
-fi
-echo "$as_me:$LINENO: result: $ac_cv_type_uint64_t" >&5
-echo "${ECHO_T}$ac_cv_type_uint64_t" >&6
-if test $ac_cv_type_uint64_t = yes; then
-  :
-else
-
-cat >>confdefs.h <<_ACEOF
-#define uint64_t unsigned long long
-_ACEOF
-
-fi
-
-	echo "$as_me:$LINENO: checking for int64_t" >&5
-echo $ECHO_N "checking for int64_t... $ECHO_C" >&6
-if test "${ac_cv_type_int64_t+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  cat >conftest.$ac_ext <<_ACEOF
-#line $LINENO "configure"
-#include "confdefs.h"
-$ac_includes_default
-#ifdef F77_DUMMY_MAIN
-#  ifdef __cplusplus
-     extern "C"
-#  endif
-   int F77_DUMMY_MAIN() { return 1; }
-#endif
-int
-main ()
-{
-if ((int64_t *) 0)
-  return 0;
-if (sizeof (int64_t))
-  return 0;
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext
-if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
-  (eval $ac_compile) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-         { ac_try='test -s conftest.$ac_objext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_cv_type_int64_t=yes
-else
-  echo "$as_me: failed program was:" >&5
-cat conftest.$ac_ext >&5
-ac_cv_type_int64_t=no
-fi
-rm -f conftest.$ac_objext conftest.$ac_ext
-fi
-echo "$as_me:$LINENO: result: $ac_cv_type_int64_t" >&5
-echo "${ECHO_T}$ac_cv_type_int64_t" >&6
-if test $ac_cv_type_int64_t = yes; then
-  :
-else
-
-cat >>confdefs.h <<_ACEOF
-#define int64_t long long
-_ACEOF
-
-fi
 
 else
-	# can't determine default value in case the type isn't present
+	{ { echo "$as_me:$LINENO: error: CHECK_TYPE_uint64_t - please report to lame-dev@lists.sourceforge.net" >&5
+echo "$as_me: error: CHECK_TYPE_uint64_t - please report to lame-dev@lists.sourceforge.net" >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+if test "${ac_cv_sizeof_long}" = "8"; then
+
+
+elif test "${ac_cv_sizeof_long_long}" = "8"; then
+
+
+else
 	{ { echo "$as_me:$LINENO: error: CHECK_TYPE_int64_t - please report to lame-dev@lists.sourceforge.net" >&5
 echo "$as_me: error: CHECK_TYPE_int64_t - please report to lame-dev@lists.sourceforge.net" >&2;}
    { (exit 1); exit 1; }; }
@@ -9842,14 +9561,16 @@ fi
 echo "$as_me:$LINENO: result: $ac_cv_type_ieee854_float80_t" >&5
 echo "${ECHO_T}$ac_cv_type_ieee854_float80_t" >&6
 if test $ac_cv_type_ieee854_float80_t = yes; then
-  :
-else
 
 cat >>confdefs.h <<_ACEOF
-#define ieee854_float80_t long double
+#define HAVE_IEEE854_FLOAT80_T 1
 _ACEOF
 
+long double
 fi
+
+
+
 
 
 cat >>confdefs.h <<\_ACEOF
@@ -9907,15 +9628,13 @@ fi
 echo "$as_me:$LINENO: result: $ac_cv_type_ieee754_float64_t" >&5
 echo "${ECHO_T}$ac_cv_type_ieee754_float64_t" >&6
 if test $ac_cv_type_ieee754_float64_t = yes; then
-  :
-else
 
 cat >>confdefs.h <<_ACEOF
-#define ieee754_float64_t double
+#define HAVE_IEEE754_FLOAT64_T 1
 _ACEOF
 
-fi
 
+fi
 echo "$as_me:$LINENO: checking for ieee754_float32_t" >&5
 echo $ECHO_N "checking for ieee754_float32_t... $ECHO_C" >&6
 if test "${ac_cv_type_ieee754_float32_t+set}" = set; then
@@ -9965,14 +9684,19 @@ fi
 echo "$as_me:$LINENO: result: $ac_cv_type_ieee754_float32_t" >&5
 echo "${ECHO_T}$ac_cv_type_ieee754_float32_t" >&6
 if test $ac_cv_type_ieee754_float32_t = yes; then
-  :
-else
 
 cat >>confdefs.h <<_ACEOF
-#define ieee754_float32_t float
+#define HAVE_IEEE754_FLOAT32_T 1
 _ACEOF
 
+
 fi
+
+
+
+
+
+
 
 
 
@@ -9998,7 +9722,7 @@ if test ${cross_compiling} = "yes"; then
   *       - float                                                          *
   *       - double                                                         *
   *       - long double                                                    *
-  *     + the endianess of the target system                               *
+  *     + the endianess of the system                                      *
   *   - You have to provide appropriate defines for them in config.h, e.g. *
   *     + define SIZEOF_SHORT to 2 if the size of a short is 2             *
   *     + define WORDS_BIGENDIAN if your system is a big endian system     *
@@ -10019,7 +9743,7 @@ echo "$as_me: WARNING:
   *       - float                                                          *
   *       - double                                                         *
   *       - long double                                                    *
-  *     + the endianess of the target system                               *
+  *     + the endianess of the system                                      *
   *   - You have to provide appropriate defines for them in config.h, e.g. *
   *     + define SIZEOF_SHORT to 2 if the size of a short is 2             *
   *     + define WORDS_BIGENDIAN if your system is a big endian system     *
@@ -11995,7 +11719,7 @@ fi
 #
 # this is from vorbis
 #
-case $target in
+case $host in
 *86-*-linux*)
 	# glibc < 2.1.3 has a serious FP bug in the math inline header
 	# that will cripple Vorbis.  Look to see if the magic FP stack
@@ -12133,7 +11857,7 @@ fi
 
 
 
-case $target_cpu in
+case $host_cpu in
 *86)
 	CPUTYPE="i386"
 
@@ -12323,8 +12047,8 @@ if test "x$GCC" = "xyes"; then
 			-fforce-mem"
 
 
-	# generic target CPU specific options
-	case ${target_cpu} in
+	# generic CPU specific options
+	case ${host_cpu} in
 	sparc)
 		case "${GCC_version}" in
 		3.1*)
@@ -12355,7 +12079,7 @@ if test "x$GCC" = "xyes"; then
 		case "${GCC_version}" in
 		2.9*|3.*)
 			# "new" GCC, use some "new" CPU specific optimizations
-			case ${target_cpu} in
+			case ${host_cpu} in
 			*486)
 				OPTIMIZATION="${OPTIMIZATION} -m486 \
 					-mfancy-math-387"
@@ -12386,6 +12110,13 @@ _ACEOF
 				OPTIMIZATION="${OPTIMIZATION} -fdelayed-branch"
 				;;
 			esac
+			;;
+		*)
+			# no special optimization for other versions
+			{ echo "$as_me:$LINENO: WARNING: LAME doesn't know about your version of gcc" >&5
+echo "$as_me: WARNING: LAME doesn't know about your version of gcc" >&2;}
+			;;
+		esac
 		;;
 	*)
 		{ { echo "$as_me:$LINENO: error: bad value »${CONFIG_EXPOPT}« for expopt option" >&5
@@ -12393,7 +12124,6 @@ echo "$as_me: error: bad value »${CONFIG_EXPOPT}« for expopt option" >&2;}
    { (exit 1); exit 1; }; }
 		;;
 	esac
-esac
 
 	echo "$as_me:$LINENO: result: ${CONFIG_EXPOPT}" >&5
 echo "${ECHO_T}${CONFIG_EXPOPT}" >&6
@@ -12482,7 +12212,7 @@ fi
 ##########################################################################
 # LINUX on Digital/Compaq Alpha CPUs
 ##########################################################################
-case $target in
+case $host in
 alpha*-*-linux*)
 
 ################################################################
@@ -12564,7 +12294,7 @@ alpha*-dec-osf*)
 ##########################################################################
 *-*-beos*) # todo:is this the right string ?
 	if test CC = "\$(BE_C_COMPILER)"; then
-		case $target in
+		case $host in
 		bepc*-*-*)
 		 # todo: is this right architecture ? was: if ($(ARCH),BePC)
 	   		OPTIMIZATION="-O9 -fomit-frame-pointer -march=pentium \
@@ -13279,10 +13009,6 @@ s,@host@,$host,;t t
 s,@host_cpu@,$host_cpu,;t t
 s,@host_vendor@,$host_vendor,;t t
 s,@host_os@,$host_os,;t t
-s,@target@,$target,;t t
-s,@target_cpu@,$target_cpu,;t t
-s,@target_vendor@,$target_vendor,;t t
-s,@target_os@,$target_os,;t t
 s,@INSTALL_PROGRAM@,$INSTALL_PROGRAM,;t t
 s,@INSTALL_SCRIPT@,$INSTALL_SCRIPT,;t t
 s,@INSTALL_DATA@,$INSTALL_DATA,;t t
