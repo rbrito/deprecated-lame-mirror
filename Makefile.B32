@@ -171,6 +171,11 @@ ASFLAGS=-DWIN32 -f obj -i i386/
 
 all: $(PGM)
 
+$(lib_sources) $(frontend_sources) : config.h
+
+config.h: configMS.h
+	-copy configMS.h config.h
+
 $(PGM):	main.obj $(frontend_obj) $(MP3LIB)
 	$(CC) -e$@ -WC $(CC_OPTS) frontend/main.obj  $(frontend_obj) $(MP3LIB) $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
 
