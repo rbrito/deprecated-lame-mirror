@@ -31,7 +31,7 @@ AM_MAINTAINER_MODE
 AM_MAKE_INCLUDE
 
 dnl libtool
-AC_DISABLE_SHARED
+# AC_DISABLE_SHARED
 AC_PROG_LIBTOOL
 CFLAGS="${ac_save_CFLAGS}"
 
@@ -193,7 +193,8 @@ FRONTEND_CFLAGS=
 LIB_SOURCES=
 MAKEDEP="-M"
 RM_F="rm -f"
-ASM_FOR_ARCH="i386"
+# temporary disable asm optimizations, a shared library has a higher priority
+# ASM_FOR_ARCH="i386"
 
 dnl Checks for libraries.
 
@@ -549,7 +550,7 @@ esac
 AM_CONDITIONAL(HAVE_NASM, test "${NASM}" != "no")
 
 if test "x$CYGWIN" = "xyes"; then
-	NASM_FORMAT="-f coff"
+	NASM_FORMAT="-f win32 -DWIN32"
 else
 	NASM_FORMAT="-f elf"
 fi
