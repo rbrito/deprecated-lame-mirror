@@ -97,7 +97,7 @@ Constant Bit Rate (CBR)
 -h             higher quality but slower
 -f             disable noise shaping.  Encodes faster, but lower quality
 --freeformat   produce a free format bitstream.  User must also specify
-               a bitrate with -b, between 8 and 320 kbps.
+               a bitrate with -b, between 8 and 640 kbps.
 
 Variable Bit Rate (VBR)
 -v             VBR
@@ -349,13 +349,14 @@ free format bitstreams
 
 LAME will produce a fixed bitrate, free format bitstream.
 User must specify the desired bitrate in kbps, which can
-be any integer between 8 and 320.
+be any integer between 8 and 640.
 
 Not supported by most decoders.  Decoders only required to support
 up to 320 kbps.  
 
 Decoders which can handle free format:
                      supports up to
+MAD                      640 kbps
 "lame --decode"          550 kbps  
 Freeamp:                 440 kbps
 l3dec:                   310 kbps
