@@ -282,7 +282,7 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	}
 	else if (strcmp(token, "vbr-old")==0) {
 	  gfp->VBR = 2; 
-	  gfp->quality = 2;
+	  gfp->quality = 1;
 	}
 	else if (strcmp(token, "vbr-new")==0) {
 	  gfp->VBR = 1; 

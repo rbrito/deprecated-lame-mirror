@@ -5,8 +5,9 @@
 #include "reservoir.h"
 #include "quantize-pvt.h"
 
+/* some problems found with -O2 and above, gcc 2.95 */
 #if (defined(__GNUC__) && defined(__i386__))
-#define TAKEHIRO_IEEE754_HACK
+#undef TAKEHIRO_IEEE754_HACK
 #endif
 
 const int slen1_tab[16] = { 0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4 };
