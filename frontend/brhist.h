@@ -22,6 +22,9 @@
 #ifndef LAME_BRHIST_H
 #define LAME_BRHIST_H
 
+#if defined(_WIN32)  &&  !defined(__CYGWIN__)
+# include <windows.h>
+#endif
 #include "lame.h"
 
 int   brhist_init       ( const lame_global_flags *gf, int bitrate_kbps_min, int bitrate_kbps_max );
