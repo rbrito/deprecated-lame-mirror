@@ -487,7 +487,6 @@ Huffmancode( lame_internal_flags* const gfc, const int tableindex,
     for (index = start; index < end; index += 2) {
 	int cbits   = 0;
 	int xbits   = 0;
-	int linbits = h->xlen;
 	int xlen    = h->xlen;
 	int ext = 0;
 	int x1 = gi->l3_enc[index];
@@ -502,19 +501,17 @@ Huffmancode( lame_internal_flags* const gfc, const int tableindex,
 	if (tableindex > 15) {
 	    /* use ESC-words */
 	    if (x1 > 14) {
-		int linbits_x1 = x1 - 15;
-		assert ( linbits_x1 <= h->linmax );
-		ext   |= linbits_x1 << 1;
-		xbits  = linbits;
+		assert ( x1 <= h->linmax+15 );
+		ext   |= (x-15) << 1;
+		xbits  = xlen;
 		x1     = 15;
 	    }
 
 	    if (x2 > 14) {
-		int linbits_x2 = x2 - 15;
-		assert ( linbits_x2 <= h->linmax );
+		assert ( x2 <= h->linmax+15 );
 		ext  <<= linbits;
-		ext   |= linbits_x2;
-		xbits += linbits;
+		ext   |= x2-15;
+		xbits += xlen;
 		x2     = 15;
 	    }
 	    xlen = 16;
