@@ -1,7 +1,7 @@
 #ifndef LAMEPARSE
 
-void lame_usage(char *) {return;}
-void lame_help(char *) {return;}
+void lame_usage(char *name) {return;}
+void lame_help(char *name) {return;}
 void lame_parse_args(int argc, char **argv) {return;}
 
 #else
