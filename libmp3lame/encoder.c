@@ -91,7 +91,7 @@ conv_istereo(lame_internal_flags* gfc, gr_info *gi, int sfb, int i)
 
     for (;;) {
 	FLOAT lsum = 1e-30, rsum = 1e-30;
-	int end = i + gi->width[sfb];
+	int j = i + gi->width[sfb];
 	do {
 	    FLOAT l = gi[0].xr[i];
 	    FLOAT r = gi[1].xr[i];
@@ -99,30 +99,30 @@ conv_istereo(lame_internal_flags* gfc, gr_info *gi, int sfb, int i)
 	    gi[1].xr[i] = 0.0;
 	    lsum += fabs(l);
 	    rsum += fabs(r);
-	} while (++i < end);
+	} while (++i < j);
 	if (i == 576)
 	    break;
 
 	lsum = lsum / (lsum+rsum);
-	gi[1].scalefac[sfb] = 3;
-	gi[1].preflag = -1;
+	j = 3;
 	if (lsum < 0.5) {
 	    if (lsum < 0.211324865 * 0.5)
-		gi[1].scalefac[sfb] = 0;
+		j = 0;
 	    else if (lsum < (0.366025404 + 0.211324865) * 0.5)
-		gi[1].scalefac[sfb] = 1;
+		j = 1;
 	    else if (lsum < (0.5 + 0.366025404) * 0.5)
-		gi[1].scalefac[sfb] = 2;
+		j = 2;
 	} else {
 	    if (lsum > 1.0-0.211324865 * 0.5)
-		gi[1].scalefac[sfb] = 6;
+		j = 6;
 	    else if (lsum > 1.0-(0.366025404 + 0.211324865) * 0.5)
-		gi[1].scalefac[sfb] = 5;
+		j = 5;
 	    else if (lsum > 1.0-(0.5 + 0.366025404) * 0.5)
-		gi[1].scalefac[sfb] = 4;
+		j = 4;
 	}
-	sfb++;
+	gi[1].scalefac[sfb++] = j;
     }
+    gi[1].preflag = -1;
     gfc->scale_bitcounter(&gi[1]);
 }
 
