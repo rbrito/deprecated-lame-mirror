@@ -110,14 +110,14 @@ char *strchr (), *strrchr ();
 #if ( defined(_MSC_VER) || defined(__BORLANDC__) || defined(__MINGW32__) )
 # define WIN32_LEAN_AND_MEAN
 # include <windows.h>
-#else
-# ifndef FLOAT
+#endif
+
+#ifndef FLOAT
 typedef float   FLOAT;
-#  ifdef FLT_MAX
-#   define FLOAT_MAX FLT_MAX
-#  else
-#   define FLOAT_MAX 1e99 /* approx */
-#  endif
+# ifdef FLT_MAX
+#  define FLOAT_MAX FLT_MAX
+# else
+#  define FLOAT_MAX 1e37 /* approx */
 # endif
 #endif
 
