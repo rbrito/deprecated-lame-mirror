@@ -14,6 +14,9 @@ typedef struct lame_internal_flags lame_internal_flags;
 *
 ***********************************************************************/
 struct lame_global_struct {
+    /* internal variables, which won't exist after lame_encode_finish() */
+    lame_internal_flags *internal_flags;
+
     /* input description */
     unsigned long num_samples; /* number of samples. default=2^32-1 */
     int num_channels;          /* input number of channels. default=2 */
@@ -31,7 +34,6 @@ struct lame_global_struct {
 
     /* general control params */
     int bWriteVbrTag;          /* add Xing VBR tag? */
-    int decode_only;           /* use lame/mpglib to convert mp3 to wav */
 
     int quality;               /* quality setting 0=best, 9=worst  default=5 */
     MPEG_mode mode;            /* see enum in lame.h
@@ -86,8 +88,6 @@ struct lame_global_struct {
     float ATHlower;                 /* lower ATH by this many db            */
     float athaa_sensitivity;        /* dB, tune active region of auto-level */
     int mixed_blocks;
-    int useTemporal;                /* use temporal masking effect          */
-    float interChRatio;
     int emphasis;                   /* Input PCM is emphased PCM (for
 				       instance from one of the rarely
 				       emphased CDs), it is STRONGLY not
@@ -113,11 +113,6 @@ struct lame_global_struct {
     int frameNum;                   /* number of frames encoded             */
     int lame_allocated_gfp;         /* is this struct owned by calling
 				       program or lame?                     */
-
-    /*************************************************************************/
-    /* more internal variables, which won't exist after lame_encode_finish() */
-    /*************************************************************************/
-    lame_internal_flags *internal_flags;
 
     /* VBR tags. */
     int TotalFrameSize;

@@ -295,7 +295,7 @@ static int apply_preset(lame_global_flags*  gfp, int bitrate, vbr_mode mode)
     if (gfp->internal_flags->reduce_side < 0.0)
 	lame_set_reduceSide( gfp, switch_map[r].reduce_side);
 
-    if (gfp->interChRatio < 0)
+    if (gfp->internal_flags->interChRatio < 0)
 	lame_set_interChRatio(gfp, switch_map[r].interch);
 
     if (gfp->internal_flags->nsPsy.attackthre < 0.0)
@@ -589,8 +589,6 @@ lame_init_params(lame_global_flags * const gfp)
     /* initialize internal adaptive ATH settings  -jd */
     gfc->ATH.aa_sensitivity_p = db2pow(-gfp->athaa_sensitivity);
 
-/*    if (gfp->useTemporal < 0 ) gfp->useTemporal = 1;  // on by default */
-
     lame_init_bitstream(gfp);
     iteration_init(gfp);
     psymodel_init(gfp);
@@ -806,9 +804,8 @@ lame_print_internals( const lame_global_flags * gfp )
     MSGF(gfc, "\t ^ bass=%g dB, alto=%g dB, treble=%g dB, sfb21=%g dB\n",
 	 bass, alto, treble, sfb21);
 
-    pc = gfp->useTemporal ? "yes" : "no";
-    MSGF( gfc, "\tusing temporal masking effect: %s\n", pc );
-    MSGF( gfc, "\tinterchannel masking ratio: %f\n", gfp->interChRatio );
+    MSGF( gfc, "\ttemporal masking sustain factor: %f\n", gfc->decay);
+    MSGF( gfc, "\tinterchannel masking ratio: %f\n", gfc->interChRatio );
     MSGF( gfc, "\treduce side channel PE factor: %f\n", 1.0-gfc->reduce_side);
     MSGF( gfc, "\tnarrowen stereo factor: %f\n", gfc->narrowStereo*2.0);
     MSGF( gfc, "\t...\n" );
@@ -1507,11 +1504,10 @@ lame_init_old(lame_global_flags * gfp)
     gfc->narrowStereo = -1.0;
     gfc->reduce_side = -1.0;
     gfc->nsPsy.msfix = NS_MSFIX*SQRT2;
+    gfc->interChRatio = -1.0;
 
     gfp->ATHcurve = 4;
     gfp->athaa_sensitivity = 0.0; /* no offset */
-    gfp->useTemporal = -1;
-    gfp->interChRatio = -1.0;
 
     /* The reason for
      *       int mf_samples_to_encode = ENCDELAY + POSTDELAY;

@@ -100,7 +100,7 @@ int in_signed=1;
 int in_unsigned=0;
 int in_endian=order_littleEndian;
 int in_bitwidth=16;
-
+int decode_only=0;
 
 /**  
  *  Long Filename support for the WIN32 platform
@@ -463,7 +463,6 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "   --shortthreshold x,y  short block switching threshold\n"
 	      "                         x for L/R/M channel, y for S channel\n"
               "   --mixedblock    use mixed blocks(experimental)\n"
-              "   --notemp        disable temporal masking effect\n"
               "   --nssafejoint   M/S switching criterion\n"
               "   --nsmsfix <arg> M/S switching tuning\n"
               "   --ns-bass x     adjust masking for  0 -  6 bark\n"
@@ -474,11 +473,6 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "   --is-ratio x    adjust intensity stereo usage ratio\n"
 	      "   --reduce-side x   narrowen the stereo image(0.0<x<1.0)\n"
 	      "   --narrowen-stereo x    narrowen the stereo image (0.0<x<1.0)\n"
-#if 0
-/* this is redundant, we already have --notemp */
-              "    --temporal-masking n  use temporal masking effect n=0:no n=1:yes\n"
-              "    --nspsytune     experimental PSY tunings by Naoki Shibata\n"
-#endif
             );
 
     wait_for ( fp, lessmode );  
@@ -939,7 +933,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 		}
                 
                 T_ELIF ("decode")
-                    (void) lame_set_decode_only( gfp, 1 );
+                    decode_only = 1;
 
                 T_ELIF ("decode-mp3delay")
                     mp3_delay = atoi( nextArg );
@@ -1127,9 +1121,6 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     }
                     lame_set_compression_ratio(gfp,val);
                 
-                T_ELIF ("notemp")
-                    (void) lame_set_useTemporal( gfp, 0 );
-
                 T_ELIF_INTERNAL ("reduce-side")
                     argUsed=1;
                     (void) lame_set_reduceSide( gfp, atof(nextArg ) );
@@ -1165,10 +1156,6 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF_INTERNAL ("narrowen-stereo")
                     argUsed = 1;
                     (void) lame_set_narrowenStereo(gfp, atof(nextArg));
-
-                T_ELIF_INTERNAL ("temporal-masking")
-                    argUsed = 1;
-                    (void) lame_set_useTemporal( gfp, atoi(nextArg)?1:0 );
 
                 T_ELIF ("nspsytune")
 		    fprintf(stderr, "note: nspsytune is defaulted and no need to specify the option.\n");
@@ -1526,7 +1513,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
             strcpy(outPath,"-");
         } else {
             strncpy(outPath, inPath, PATH_MAX + 1 - 4);
-            if ( lame_get_decode_only( gfp ) ) {
+            if (decode_only) {
                 strncat (outPath, ".wav", 4 );
             } else {
                 strncat (outPath, ".mp3", 4 );

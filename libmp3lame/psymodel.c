@@ -443,10 +443,10 @@ fft_long(lame_internal_flags * const gfc,
  * compute interchannel masking effects
  ***************************************************************/
 static void
-calc_interchannel_masking(lame_global_flags * gfp, int gr)
+calc_interchannel_masking(lame_internal_flags * gfc, int gr)
 {
-    FLOAT ratio = gfp->interChRatio, l, r;
-    III_psy_ratio *mr = gfp->internal_flags->masking_next[gr];
+    FLOAT ratio = gfc->interChRatio, l, r;
+    III_psy_ratio *mr = gfc->masking_next[gr];
 
     int sb, sblock;
     for ( sb = 0; sb < SBMAX_l; sb++ ) {
@@ -1507,8 +1507,8 @@ psycho_analysis(
 	/*********************************************************************
 	 * other masking effect
 	 *********************************************************************/
-	if (gfp->interChRatio != 0.0)
-	    calc_interchannel_masking(gfp, gr);
+	if (gfc->interChRatio != 0.0)
+	    calc_interchannel_masking(gfc, gr);
 
 	if (gfp->mode == JOINT_STEREO) {
 	    if (!gfc->blocktype_next[gr][2])

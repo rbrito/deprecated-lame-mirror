@@ -361,6 +361,7 @@ struct lame_internal_flags {
     FLOAT rnumlines_l[CBANDS];
     FLOAT rnumlines_ls[CBANDS];
     FLOAT masking_lower;
+    FLOAT interChRatio;
 
     /* for next frame data */
     III_psy_ratio masking_next[2][MAX_CHANNELS*2];

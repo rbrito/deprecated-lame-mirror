@@ -215,33 +215,6 @@ lame_get_bWriteVbrTag( const lame_global_flags*  gfp )
 
 
 
-/* decode only, use lame/mpglib to convert mp3/ogg to wav */
-int
-lame_set_decode_only( lame_global_flags*  gfp,
-                      int                 decode_only )
-{
-    /* default = 0 (disabled) */
-
-    /* enforce disable/enable meaning, if we need more than two values
-       we need to switch to an enum to have an apropriate representation
-       of the possible meanings of the value */
-    if ( 0 > decode_only || 1 < decode_only )
-        return -1;
-
-    gfp->decode_only = decode_only;
-
-    return 0;
-}
-
-int
-lame_get_decode_only( const lame_global_flags*  gfp )
-{
-    assert( 0 <= gfp->decode_only && 1 >= gfp->decode_only );
-
-    return gfp->decode_only;
-}
-
-
 /*
  * Internal algorithm selection.
  * True quality is determined by the bitrate but this variable will effect
@@ -954,33 +927,6 @@ lame_set_short_threshold( lame_global_flags*  gfp, float s)
 }
 
 
-/* Use temporal masking effect */
-int
-lame_set_useTemporal( lame_global_flags*  gfp,
-                      int                 useTemporal )
-{
-    /* default = 1 (enabled) */
-
-    /* enforce disable/enable meaning, if we need more than two values
-       we need to switch to an enum to have an apropriate representation
-       of the possible meanings of the value */
-    if ( 0 > useTemporal || 1 < useTemporal )
-        return -1;
-
-    gfp->useTemporal = useTemporal;
-
-    return 0;
-}
-
-int
-lame_get_useTemporal( const lame_global_flags*  gfp )
-{
-    assert( 0 <= gfp->useTemporal && 1 >= gfp->useTemporal );
-
-    return gfp->useTemporal;
-}
-
-
 /* Use intensity stereo effect */
 int
 lame_set_istereoRatio( lame_global_flags*  gfp,
@@ -1002,7 +948,7 @@ lame_set_interChRatio( lame_global_flags*  gfp,
     if (! (0 <= ratio && ratio <= 1.0))
         return -1;
 
-    gfp->interChRatio = ratio;
+    gfp->internal_flags->interChRatio = ratio;
 
     return 0;
 }
@@ -1023,9 +969,10 @@ lame_set_reduceSide( lame_global_flags*  gfp,
 float
 lame_get_interChRatio( const lame_global_flags*  gfp )
 {
-    assert( 0 <= gfp->interChRatio && gfp->interChRatio <= 1.0);
+    assert( 0 <= gfp->internal_flags->interChRatio
+	    && gfp->internal_flags->interChRatio <= 1.0);
 
-    return gfp->interChRatio;
+    return gfp->internal_flags->interChRatio;
 }
 
 

@@ -149,7 +149,7 @@ init_files(lame_global_flags * gf, char *inPath, char *outPath)
      * samplerate, num_channels and num_samples yourself.
      */
     init_infile(gf, inPath);
-    if ((outf = init_outfile(outPath, lame_get_decode_only(gf))) == NULL) {
+    if ((outf = init_outfile(outPath, decode_only)) == NULL) {
         fprintf(stderr, "Can't init outfile '%s'\n", outPath);
         return NULL;
     }
@@ -660,13 +660,12 @@ main(int argc, char **argv)
     }
 
 
-    if (lame_get_decode_only(gf)) {
+    if (decode_only) {
         /* decode an mp3 file to a .wav */
         if (mp3_delay_set)
             lame_decoder(gf, outf, mp3_delay, inPath, outPath);
         else
             lame_decoder(gf, outf, 0, inPath, outPath);
-
     }
     else {
         if (max_nogap > 0) {
