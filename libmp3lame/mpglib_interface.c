@@ -17,9 +17,10 @@
 #include <dmalloc.h>
 #endif
 
-
-MPSTR   mp;
+MPSTR   mp; /* oops, not reentrant ... */
+#ifdef HAVE_GTK
 plotting_data *mpg123_pinfo = NULL;
+#endif
 
 int
 lame_decode_exit(void)
