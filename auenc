@@ -8,7 +8,7 @@
 # (C) 1999 Gerhard Wesp <gwesp@cosy.sbg.ac.at> under the GPL.
 
 # set the variables below according to your taste
-LAME=/usr/bin/lame
+LAME=lame
 LAME_OPTS="-S -h -v -V 0 -b 256" # high quality, silent operation
 
 if [ $# -lt 1 ] ; then
@@ -22,17 +22,17 @@ _EOF_
 fi
 
 unset DELETE
-case "$1" in ( -d | --delete )
-  DELETE=1
-  shift ;;
+case "$1" in
+  -d | --delete ) DELETE=1 ; shift ;;
 esac
 
-for f in $* ; do
-  if ! $LAME $LAME_OPTS "$f" `basename "$f" .wav`.mp3 ; then
+for f in $*
+do
+  $LAME $LAME_OPTS "$f" `basename "$f" .wav`.mp3 || {
     exec 1>&2
     echo "encoding of $f failed, aborting..."
     exit 1
-  fi
+  }
   if [ -n "$DELETE" ] ; then
     rm -f "$f"
   fi
