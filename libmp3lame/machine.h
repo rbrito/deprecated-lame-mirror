@@ -88,7 +88,7 @@
 #	define WIN32_LEAN_AND_MEAN
 #	include <windows.h>
 #else
-	typedef float FLOAT;
+	typedef double FLOAT;
 #endif
 
 /*
