@@ -622,7 +622,10 @@ int  lame_encode_mp3_frame (				// Output
   format_bitstream( gfp, bitsPerFrame, l3_enc, scalefac);
 
   /* copy mp3 bit buffer into array */
-  mp3count = copy_buffer(mp3buf,mp3buf_size,&gfc->bs);
+  mp3count = copy_buffer(mp3buf,mp3buf_size,&gfc->bs,1);
+
+
+
 
   if (gfp->bWriteVbrTag) AddVbrFrame(gfp);
 

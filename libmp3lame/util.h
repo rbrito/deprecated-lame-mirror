@@ -200,9 +200,9 @@ typedef enum {
 typedef struct {
     unsigned long  Class_ID;        /* Class ID to recognize a resample_t
                                        object */
-    long double    sample_freq_in;  /* Input sample frequency in Hz */
-    long double    sample_freq_out; /* requested Output sample frequency in Hz */
-    float          lowpass_freq;    /* lowpass frequency, this is the -6 dB
+    FLOAT8   sample_freq_in;  /* Input sample frequency in Hz */
+    FLOAT8   sample_freq_out; /* requested Output sample frequency in Hz */
+    FLOAT8   lowpass_freq;    /* lowpass frequency, this is the -6 dB
                                        point */
     int            scale_in;        /* the resampling is actually done by
                                        scale_out: */
@@ -265,8 +265,10 @@ struct lame_internal_flags {
   int          channels_out;  /* number of channels in the output data stream (not used for decoding) */
   resample_t*  resample_in;   /* context for coding (PCM=>MP3) resampling */
   resample_t*  resample_out;	/* context for decoding (MP3=>PCM) resampling */
-  long double  samplefreq_in;
-  long double  samplefreq_out;
+  FLOAT8  samplefreq_in;
+  FLOAT8  samplefreq_out;
+  uint16_t nMusicCRC;
+
 #ifndef  MFSIZE
 # define MFSIZE  ( 3*1152 + ENCDELAY - MDCTDELAY )
 #endif
@@ -281,19 +283,19 @@ struct lame_internal_flags {
   unsigned long frame_count;  /* Number of frames coded, 2^32 > 3 years */
   int          mf_samples_to_encode;
   int          mf_size;
-  float        ampl;	  /* amplification at the end of the current chunk (1. = 0 dB) */
-  float        last_ampl;	  /* amplification at the end of the last chunk    (1. = 0 dB) */
+  FLOAT8       ampl;	  /* amplification at the end of the current chunk (1. = 0 dB) */
+  FLOAT8       last_ampl;	  /* amplification at the end of the last chunk    (1. = 0 dB) */
   int VBR_min_bitrate;            /* min bitrate index */
   int VBR_max_bitrate;            /* max bitrate index */
-  float resample_ratio;           /* input_samp_rate/output_samp_rate */
+  FLOAT resample_ratio;           /* input_samp_rate/output_samp_rate */
   int bitrate_index;
   int samplerate_index;
   int mode_ext;
 
 
   /* lowpass and highpass filter control */
-  float lowpass1,lowpass2;        /* normalized frequency bounds of passband */
-  float highpass1,highpass2;      /* normalized frequency bounds of passband */
+  FLOAT8 lowpass1,lowpass2;        /* normalized frequency bounds of passband */
+  FLOAT8 highpass1,highpass2;      /* normalized frequency bounds of passband */
                                   
   /* polyphase filter (filter_type=0)  */
   int lowpass_band;          /* zero bands >= lowpass_band in the polyphase filterbank */

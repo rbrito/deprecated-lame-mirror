@@ -933,7 +933,7 @@ format_bitstream(lame_global_flags *gfp, int bitsPerFrame,
 }
 
 
-int copy_buffer(unsigned char *buffer,int size,Bit_stream_struc *bs)
+int copy_buffer(unsigned char *buffer,int size,Bit_stream_struc *bs,int update_crc)
 {
   int minimum = bs->buf_byte_idx + 1;
   if (minimum <= 0) return 0;
@@ -941,6 +941,22 @@ int copy_buffer(unsigned char *buffer,int size,Bit_stream_struc *bs)
   memcpy(buffer,bs->buf,minimum);
   bs->buf_byte_idx = -1;
   bs->buf_bit_idx = 0;
+
+
+#if 0
+  if (update_crc) {
+    if (ret>0) UpdateMusicCRC(&gfc->nMusicCRC,mp3buf,ret);
+    if (gfp->frameNum==0) {
+         fprintf(stderr,"new: first byte: %us \n",mp3buf[0]);
+    }
+    {
+        static count=0;
+        count=count+ret;
+        fprintf(stderr,"new: total sent to crc: %i\n",count);
+    }
+  }
+#endif
+
   return minimum;
 }
 

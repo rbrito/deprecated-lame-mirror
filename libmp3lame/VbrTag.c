@@ -482,29 +482,18 @@ int CRC_update_lookup(int value, int crc)
 	return crc;
 }
 
+void UpdateMusicCRC(uint16_t *crc,unsigned char *buffer, int size){
+    int i;
+    for (i=0; i<size; ++i) 
+        *crc = CRC_update_lookup(buffer[i],*crc);
+}
 
-/*this could be calculated elsewhere in the encoding process.... e.g. as the data is written*/
-/*the current method is TEMPORARY.... but it's fast.*/
-/*
-to compute this as the data is being encoded, two possible places:
 
-"copy_buffer" in bitstream.c.  this routine copies data out of the
-bitbuffer to be returned to the calling program.  But it includes
-vbr and id3 tag data.
-
-Three routines add data into the bit buffer:
-
-putbits2()             huffman data added to bitbuffer
-putheader_bits()       mp3 headers & sidinfo added to bitbuffer
-putbits_noheaders()    non-mp3 data added.  (vbr and id3 tags).  
-
- */
 uint16_t GetMusicCRC(lame_global_flags *gfp, FILE *fpStream, int filesize, int id3v2size, int bId3v1)
 { 
 
 	uint16_t crc = 0;
 	int count;
-	int nFilePos = ftell(fpStream);
 #define BSIZE 1000000
 	//unsigned char buffer[1000000];		//load in about 1MB at a time.
 
@@ -521,11 +510,14 @@ uint16_t GetMusicCRC(lame_global_flags *gfp, FILE *fpStream, int filesize, int i
         buffer=malloc(BSIZE); 
 	memset(buffer, 0, BSIZE);
 	fseek(fpStream, id3v2size + gfp->TotalFrameSize, SEEK_SET);		//first frame of music
-	
+        
+        //        fprintf(stderr,"crc: staring file pos %i \n",ftell(fpStream));
+        //	fprintf(stderr,"crc: total size: %i\n",nNumToGo);
+        //	fprintf(stderr,"crc: filesize: %i\n",filesize);
 	while (nNumToGo)
 	{
-		fread(buffer, 1, BSIZE,fpStream);
-		for (count = 0;count < BSIZE;count++)
+		int n=fread(buffer, 1, BSIZE,fpStream);
+		for (count = 0;count < n;count++)
 		{
 			crc = CRC_update_lookup(buffer[count],crc);
 			nNumToGo--;
@@ -535,7 +527,6 @@ uint16_t GetMusicCRC(lame_global_flags *gfp, FILE *fpStream, int filesize, int i
 		}
 	}
 
-	fseek(fpStream, nFilePos, SEEK_SET);
         free(buffer);
 	return crc;
 }
@@ -569,6 +560,7 @@ void ReportLameTagProgress(lame_global_flags *gfp,int nStart)
 */
 int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, u_char *pbtStreamBuffer, uint32_t id3v2size,  uint16_t crc)
 {
+        lame_internal_flags *gfc = gfp->internal_flags;
 	FLOAT fVersion = LAME_MAJOR_VERSION + 0.01 * LAME_MINOR_VERSION;
 
 	int nBytesWritten = 0;
@@ -603,7 +595,6 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, u_char *pbtStreamBuffer, 
 	uint8_t nSourceFreq				= 0;
 	uint8_t nMisc					= 0;
 	uint32_t nMusicLength			= 0;
-	int		nFilePos;
 	int		bId3v1Present			= ((gfp->internal_flags->tag_spec.flags & CHANGED_FLAG)
 		&& !(gfp->internal_flags->tag_spec.flags & V2_ONLY_FLAG));
 	uint16_t nMusicCRC				= 0;
@@ -734,18 +725,15 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, u_char *pbtStreamBuffer, 
 
 	
 	//get filesize
-	
-	nFilePos = ftell(fpStream);
-
 	fseek(fpStream, 0, SEEK_END);
 	nFilesize = ftell(fpStream);
+
 	
 	nMusicLength = nFilesize - id3v2size;		//omit current frame
 	
 	if (bId3v1Present)
 		nMusicLength-=128;						//id3v1 present.
 
-	fseek(fpStream, nFilePos, SEEK_SET);		//reset file pointer (be nice)
 
 
 	//offset: after id3v2 tag, 
@@ -753,7 +741,6 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, u_char *pbtStreamBuffer, 
 	//end: before id3v1.
 	
 	nMusicCRC = GetMusicCRC(gfp,fpStream, nFilesize,id3v2size, bId3v1Present);
-	
 
 	/*Write all this information into the stream*/
 	
