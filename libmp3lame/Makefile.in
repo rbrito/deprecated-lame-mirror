@@ -116,6 +116,10 @@ libmp3lame_la_SOURCES =          VbrTag.c 	bitstream.c 	encoder.c 	fft.c        
 
 noinst_HEADERS =  	VbrTag.h 	bitstream.h 	encoder.h 	fft.h 	id3tag.h 	l3side.h 	lame-analysis.h 	machine.h 	newmdct.h 	psymodel.h 	quantize.h  	quantize_pvt.h 	reservoir.h 	tables.h 	util.h 	version.h
 
+
+CLEANFILES = lclint.txt
+
+LCLINTFLAGS = +posixlib +showsummary +showalluses +whichlib +forcehints
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../config.h
 CONFIG_CLEAN_FILES = 
@@ -474,6 +478,7 @@ installdirs-am:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-rm -f Makefile $(CONFIG_CLEAN_FILES)
@@ -529,6 +534,12 @@ all-redirect all-am all installdirs-am installdirs mostlyclean-generic \
 distclean-generic clean-generic maintainer-clean-generic clean \
 mostlyclean distclean maintainer-clean
 
+
+lclint.txt: ${libmp3lame_la_SOURCES} ${noinst_HEADERS}
+	@lclint ${LCLINTFLAGS} ${INCLUDES} ${DEFS} ${libmp3lame_la_SOURCES} 2>&1 >lclint.txt || true
+
+lclint: lclint.txt
+	more lclint.txt
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

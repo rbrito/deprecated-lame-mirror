@@ -126,6 +126,10 @@ LDADD = @LDADD@ @FRONTEND_LDADD@ 	$(top_srcdir)/libmp3lame/libmp3lame.la
 
 
 mp3x_LDADD = $(LDADD) @GTK_LIBS@
+
+CLEANFILES = lclint.txt
+
+LCLINTFLAGS = +posixlib +showsummary +showalluses +whichlib +forcehints
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../config.h
 CONFIG_CLEAN_FILES = 
@@ -418,6 +422,7 @@ installdirs:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-rm -f Makefile $(CONFIG_CLEAN_FILES)
@@ -466,6 +471,12 @@ uninstall-am uninstall all-redirect all-am all installdirs \
 mostlyclean-generic distclean-generic clean-generic \
 maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 
+
+lclint.txt: ${lame_SOURCES} ${noinst_HEADERS}
+	@lclint ${LCLINTFLAGS} ${INCLUDES} ${DEFS} ${lame_SOURCES} 2>&1 >lclint.txt || true
+
+lclint: lclint.txt
+	more lclint.txt
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
