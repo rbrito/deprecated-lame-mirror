@@ -30,6 +30,10 @@
 # include <dmalloc.h>
 #endif
 #include <assert.h>
+#include <stdio.h>
+
+#include "lame.h"
+#include "version.h"
 
 #include "encoder.h"
 #include "bitstream.h"  /* because of compute_flushbits */
@@ -1093,3 +1097,167 @@ lame_set_asm_optimizations(lame_t gfc, int optim, int mode)
     return -1;
 #endif
 }
+
+
+/*! Stringify \a x. */
+#define STR(x)   #x
+/*! Stringify \a x, perform macro expansion. */
+#define XSTR(x)  STR(x)
+
+#ifdef HAVE_NASM
+# define V  "MMX, [E]3DNow!, SSE"
+#else
+# define V  ""
+#endif
+
+/*! Get the LAME version string. */
+/*!
+  \param void
+  \return a pointer to a string which describes the version of LAME.
+*/
+const char*
+get_lame_version ( void )		/* primary to write screen reports */
+{
+    /* Here we can also add informations about compile time configurations */
+
+#if   LAME_ALPHA_VERSION > 0
+    static /*@observer@*/ const char *const str =
+        XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) " " V
+        "(alpha " XSTR(LAME_ALPHA_VERSION) ", " __DATE__ " " __TIME__ ")";
+#elif LAME_BETA_VERSION > 0
+    static /*@observer@*/ const char *const str =
+        XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) " " V
+        "(beta " XSTR(LAME_BETA_VERSION) ", " __DATE__ ")";
+#else
+    static /*@observer@*/ const char *const str =
+        XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) " " V;
+#endif
+
+    return str;
+}
+
+
+/*! Get the short LAME version string. */
+/*!
+  It's mainly for inclusion into the MP3 stream.
+
+  \param void   
+  \return a pointer to the short version of the LAME version string.
+*/
+const char*
+get_lame_short_version ( void )
+{
+    /* adding date and time to version string makes it harder for output
+       validation */
+
+#if   LAME_ALPHA_VERSION > 0
+    static /*@observer@*/ const char *const str =
+        XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) " (alpha)";
+#elif LAME_BETA_VERSION > 0
+    static /*@observer@*/ const char *const str =
+        XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) " (beta)";
+#else
+    static /*@observer@*/ const char *const str =
+        XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION);
+#endif
+
+    return str;
+}
+
+/*! Get the _very_ short LAME version string. */
+/*!
+  It's used in the LAME VBR tag only.
+
+  \param void   
+  \return a pointer to the short version of the LAME version string.
+*/
+const char*
+get_lame_very_short_version ( void )
+{
+    /* adding date and time to version string makes it harder for output
+       validation */
+
+#if   LAME_ALPHA_VERSION > 0
+    static /*@observer@*/ const char *const str =
+       "LAME" XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) "a";
+#elif LAME_BETA_VERSION > 0
+    static /*@observer@*/ const char *const str =
+       "LAME" XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) "b";
+#else
+    static /*@observer@*/ const char *const str =
+       "LAME" XSTR(LAME_MAJOR_VERSION) "." XSTR(LAME_MINOR_VERSION) " ";
+#endif
+
+    return str;
+}
+
+/*! Get the version string for psycho-model */
+/*!
+  \param void
+  \return a pointer to a string which describes the version of psycho-model.
+*/
+const char*
+get_psy_version ( void )
+{
+#if   PSY_ALPHA_VERSION > 0
+    static /*@observer@*/ const char *const str =
+        XSTR(PSY_MAJOR_VERSION) "." XSTR(PSY_MINOR_VERSION)
+        " (alpha " XSTR(PSY_ALPHA_VERSION) ", " __DATE__ " " __TIME__ ")";
+#elif PSY_BETA_VERSION > 0
+    static /*@observer@*/ const char *const str =
+        XSTR(PSY_MAJOR_VERSION) "." XSTR(PSY_MINOR_VERSION)
+        " (beta " XSTR(PSY_BETA_VERSION) ", " __DATE__ ")";
+#else
+    static /*@observer@*/ const char *const str =
+        XSTR(PSY_MAJOR_VERSION) "." XSTR(PSY_MINOR_VERSION);
+#endif
+
+    return str;
+}
+
+
+/*! Get the URL for the LAME website. */
+/*!
+  \param void
+  \return a pointer to a string which is a URL for the LAME website.
+*/
+const char*
+get_lame_url ( void )
+{
+    static /*@observer@*/ const char *const str = LAME_URL;
+
+    return str;
+}    
+
+
+/*! Get the numerical representation of the version. */
+/*!
+  Writes the numerical representation of the version of LAME and
+  GPSYCHO into lvp.
+
+  \param lvp    
+*/
+void
+get_lame_version_numerical ( lame_version_t *const lvp )
+{
+    static /*@observer@*/ const char *const features = V;
+
+    /* generic version */
+    lvp->major = LAME_MAJOR_VERSION;
+    lvp->minor = LAME_MINOR_VERSION;
+    lvp->alpha = LAME_ALPHA_VERSION;
+    lvp->beta  = LAME_BETA_VERSION;
+
+    /* psy version */
+    lvp->psy_major = PSY_MAJOR_VERSION;
+    lvp->psy_minor = PSY_MINOR_VERSION;
+    lvp->psy_alpha = PSY_ALPHA_VERSION;
+    lvp->psy_beta  = PSY_BETA_VERSION;
+
+    /* compile time features */
+    /*@-mustfree@*/
+    lvp->features = features;
+    /*@=mustfree@*/
+}
+
+/* end of version.c */

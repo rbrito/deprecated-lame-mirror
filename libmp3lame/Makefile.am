@@ -40,7 +40,6 @@ libmp3lame_la_SOURCES = \
 	tables.c \
 	takehiro.c \
 	util.c \
-	version.c \
 	mpglib_interface.c
 
 noinst_HEADERS= \
