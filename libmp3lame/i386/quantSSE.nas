@@ -560,3 +560,46 @@ proc	quantize_sfb_3DN
 	pop		ebp
 	pop		edi
 	ret
+
+
+;
+; void qnatize_sfb_3DN(FLOAT xr34end[], int -bw, int sf, int l3enc_end[])
+;
+proc	quantize_ISO_3DN
+%assign _P 0
+	mov		eax, [esp+_P+4]  ; xend[]
+	mov		ecx, [esp+_P+16] ; l3_enc[]
+	mov		edx, [esp+_P+12] ; scalefact
+	movq		mm5, [D_ROUNDFAC]
+	movd		mm4, [ipow20+116*4+edx*4] ; sfpow34
+	mov		edx, [esp+_P+8]	; -n
+	punpckldq	mm4, mm4		; sfpow34 x 2
+
+;  mm0, mm1, mm2, mm3 : general work
+
+	test		edx, 2
+	jz		.lp4
+	movq		mm0, [eax+ 0+ edx*4]
+	add		edx, byte 2
+	pfmul		mm0, mm4
+	pfadd		mm0, mm5
+	pf2id		mm0, mm0
+	movq		[ecx - 8+ 0+ edx*4], mm0
+	jz		.exit
+	loopalignK7	16
+.lp4:
+	movq		mm0, [eax+ 0+ edx*4]
+	movq		mm1, [eax+ 8+ edx*4]
+	add		edx, byte 4
+	pfmul		mm0, mm4
+	pfmul		mm1, mm4
+	pfadd		mm0, mm5
+	pfadd		mm1, mm5
+	pf2id		mm0, mm0
+	pf2id		mm1, mm1
+	movq		[ecx -16 + 0+ edx*4], mm0
+	movq		[ecx -16 + 8+ edx*4], mm1
+	jnz		.lp4
+.exit:
+	femms
+	ret

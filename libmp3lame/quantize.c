@@ -471,23 +471,31 @@ quantize_ISO(lame_internal_flags * const gfc, gr_info *gi)
     FLOAT istep = IPOW20(gi->global_gain);
     const FLOAT *xp = xr34;
     const FLOAT *xend = &xr34[gi->big_values];
-
-    while (xp < xend) {
-#ifdef TAKEHIRO_IEEE754_HACK
-	fi[0].f = istep * xp[0] + (ROUNDFAC_NEAR + MAGIC_FLOAT);
-	fi[1].f = istep * xp[1] + (ROUNDFAC_NEAR + MAGIC_FLOAT);
-	fi[2].f = istep * xp[2] + (ROUNDFAC_NEAR + MAGIC_FLOAT);
-	fi[3].f = istep * xp[3] + (ROUNDFAC_NEAR + MAGIC_FLOAT);
-	xp += 4;
-	fi[0].i -= MAGIC_INT;
-	fi[1].i -= MAGIC_INT;
-	fi[2].i -= MAGIC_INT;
-	fi[3].i -= MAGIC_INT;
-	fi += 4;
-#else
-	(fi++)->i = (int)(*xp++ * istep + ROUNDFAC);
-	(fi++)->i = (int)(*xp++ * istep + ROUNDFAC);
+#ifdef HAVE_NASM
+    if (gfc->CPU_features.AMD_3DNow && gi->big_values) {
+	fi += gi->big_values;
+	xp += gi->big_values;
+	quantize_ISO_3DN(xp, -gi->big_values, gi->global_gain, &fi[0].i);
+    } else
 #endif
+    {
+	while (xp < xend) {
+#ifdef TAKEHIRO_IEEE754_HACK
+	    fi[0].f = istep * xp[0] + (ROUNDFAC_NEAR + MAGIC_FLOAT);
+	    fi[1].f = istep * xp[1] + (ROUNDFAC_NEAR + MAGIC_FLOAT);
+	    fi[2].f = istep * xp[2] + (ROUNDFAC_NEAR + MAGIC_FLOAT);
+	    fi[3].f = istep * xp[3] + (ROUNDFAC_NEAR + MAGIC_FLOAT);
+	    xp += 4;
+	    fi[0].i -= MAGIC_INT;
+	    fi[1].i -= MAGIC_INT;
+	    fi[2].i -= MAGIC_INT;
+	    fi[3].i -= MAGIC_INT;
+	    fi += 4;
+#else
+	    (fi++)->i = (int)(*xp++ * istep + ROUNDFAC);
+	    (fi++)->i = (int)(*xp++ * istep + ROUNDFAC);
+#endif
+	}
     }
 
     istep = (1.0-ROUNDFAC) / istep;
