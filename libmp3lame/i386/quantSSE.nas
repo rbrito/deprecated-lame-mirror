@@ -18,6 +18,10 @@ Q_f1p25		dd	1.25, 1.25, 1.25, 1.25
 Q_fm0p25	dd	-0.25, -0.25, -0.25, -0.25
 Q_ABS		dd	0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF, 0x7FFFFFFF
 
+D_ROUNDFAC	dd	0.4054,0.4054
+D_IXMAXVAL	dd	8206.0,8206.0
+minus1		dd	-1.0
+
 	segment_text
 proc	pow075_3DN
 	mov	eax, [esp+4]	; eax = xr
@@ -209,6 +213,7 @@ proc	sumofsqr_3DN
 
 	externdef	pow43
 	externdef	pow20
+	externdef	ipow20
 
 proc	calc_noise_sub_3DN
 %assign _P 16
@@ -268,5 +273,112 @@ proc	calc_noise_sub_3DN
 	pop		ebp
 	pop		edi
 	pop		esi
+	pop		ebx
+	ret
+
+;
+; FLOAT calc_sfb_noise_fast(FLOAT xr[576*2], int start, int bw, int sf)
+;
+proc	calc_sfb_noise_fast_3DN
+%assign _P 12
+	push		ebx
+	push		edi
+	push		ebp
+
+	mov		eax, [esp+_P+4]  ; xr
+	mov		edx, [esp+_P+8]  ; start
+	lea		eax, [eax+edx*4]
+	mov		edx, [esp+_P+16] ; scalefact
+	movd		mm6, [ipow20+116*4+edx*4] ; sfpow34
+	movd		mm7, [pow20+116*4+edx*4]  ; sfpow
+	movq		mm2, [D_ROUNDFAC]
+	movq		mm3, [D_IXMAXVAL]
+	mov		edx, [esp+_P+12] ; -n
+
+	pxor		mm4, mm4
+	pxor		mm5, mm5
+	punpckldq	mm6, mm6
+	punpckldq	mm7, mm7
+
+	test		edx, 2
+	jz		.lp4
+	movq		mm4, [eax+ 0+ edx*4]
+	pfmul		mm4, mm6
+	pfadd		mm4, mm2
+	pf2id		mm4, mm4
+	movd		ebp, mm4
+	punpckhdq	mm4, mm4
+	movd		ecx, mm4
+	cmp	ebp, 8191+15
+	ja	.ixover
+	cmp	ecx, 8191+15
+	ja	.ixover
+
+	movd		mm4, [pow43+ebp*4]
+	punpckldq	mm4, [pow43+ecx*4]
+	pfmul		mm4, mm7
+	pfsubr		mm4, [eax+ 0+ edx*4 + 576*4]
+	add		edx, byte 2
+	pfmul		mm4, mm4
+	jmp	.lp4
+.ixover
+	fld		dword [minus1]
+	pop		eax
+	pop		ebp
+	pop		edi
+	pop		ebx
+	ret
+
+	loopalignK7	16
+.lp4:
+	movq		mm0, [eax+ 0+ edx*4]
+	movq		mm1, [eax+ 8+ edx*4]
+	pfmul		mm0, mm6
+	pfmul		mm1, mm6
+	pfadd		mm0, mm2
+	pfadd		mm1, mm2
+	pf2id		mm0, mm0
+	pf2id		mm1, mm1
+	movd		ebp, mm0
+	movd		edi, mm1
+	punpckhdq	mm0, mm0
+	punpckhdq	mm1, mm1
+	movd		ecx, mm0
+	movd		ebx, mm1
+
+	cmp	ebp, 8191+15
+	ja	.ixover
+	cmp	edi, 8191+15
+	ja	.ixover
+	cmp	ecx, 8191+15
+	ja	.ixover
+	cmp	ebx, 8191+15
+	ja	.ixover
+
+	movd		mm0, [pow43+ebp*4]
+	movd		mm1, [pow43+edi*4]
+	punpckldq	mm0, [pow43+ecx*4]
+	punpckldq	mm1, [pow43+ebx*4]
+	pfmul		mm0, mm7
+	pfmul		mm1, mm7
+	pfsubr		mm0, [eax+ 0+ edx*4 + 576*4]
+	pfsubr		mm1, [eax+ 8+ edx*4 + 576*4]
+	add		edx, byte 4
+	pfmul		mm0, mm0
+	pfmul		mm1, mm1
+	pfadd		mm4, mm0
+	pfadd		mm5, mm1
+	jnz		.lp4
+
+	pfadd		mm4, mm5
+	pfacc		mm4, mm4
+	movd		eax, mm4
+	femms
+	push		eax
+	fld		dword [esp]
+
+	pop		eax
+	pop		ebp
+	pop		edi
 	pop		ebx
 	ret

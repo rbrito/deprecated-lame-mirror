@@ -809,6 +809,9 @@ amp_scalefac_bands(
 
 
 
+extern FLOAT
+calc_sfb_noise_fast_3DN(lame_internal_flags *gfc, int j, int bw, int sf);
+
 inline static FLOAT
 calc_sfb_noise_fast(lame_internal_flags *gfc, int j, int bw, int sf)
 {
@@ -823,8 +826,8 @@ calc_sfb_noise_fast(lame_internal_flags *gfc, int j, int bw, int sf)
 	fi0.f = sfpow34 * xr34[j+bw  ] + (ROUNDFAC_NEAR + MAGIC_FLOAT);
 	fi1.f = sfpow34 * xr34[j+bw+1] + (ROUNDFAC_NEAR + MAGIC_FLOAT);
 
-	if (fi0.i > MAGIC_INT + IXMAX_VAL) return -1;
-	if (fi1.i > MAGIC_INT + IXMAX_VAL) return -1;
+	if (fi0.i > MAGIC_INT + IXMAX_VAL || fi1.i > MAGIC_INT + IXMAX_VAL)
+	    return -1.0;
 	t0 = absxr[j+bw  ] - (pow43 - MAGIC_INT)[fi0.i] * sfpow;
 	t1 = absxr[j+bw+1] - (pow43 - MAGIC_INT)[fi1.i] * sfpow;
 #else
@@ -832,8 +835,8 @@ calc_sfb_noise_fast(lame_internal_flags *gfc, int j, int bw, int sf)
 	i0 = (int)(sfpow34 * xr34[j+bw  ] + ROUNDFAC);
 	i1 = (int)(sfpow34 * xr34[j+bw+1] + ROUNDFAC);
 
-	if (i0 > IXMAX_VAL) return -1;
-	if (i1 > IXMAX_VAL) return -1;
+	if (i0 > IXMAX_VAL || i1 > IXMAX_VAL)
+	    return -1.0;
 	t0 = absxr[j+bw  ] - pow43[i0] * sfpow;
 	t1 = absxr[j+bw+1] - pow43[i1] * sfpow;
 #endif
@@ -1296,7 +1299,13 @@ find_scalefac(lame_internal_flags *gfc, int j, FLOAT xmin, int bw,
 	sfmin = -7*4-7*2;
 
     do {
-	FLOAT xfsf = calc_sfb_noise_fast(gfc, j, bw, sf);
+	FLOAT xfsf;
+#ifdef HAVE_NASM
+	if (gfc->CPU_features.AMD_3DNow)
+	    xfsf = calc_sfb_noise_fast_3DN(gfc, j, bw, sf);
+	else
+#endif
+	    xfsf = calc_sfb_noise_fast(gfc, j, bw, sf);
 	if (xfsf > xmin) {
 	    /* there's noticible noise. try a smaller scalefactor */
 	    endflag |= 1;
