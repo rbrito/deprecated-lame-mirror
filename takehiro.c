@@ -304,7 +304,7 @@ static int choose_table(int *ix, int *end, int *s)
 
     max = ix_max(ix, end);
 
-    if (max > 8191 + 15) {
+    if (max > IXMAX_VAL) {
         *s = 100000;
         return -1;
     }
@@ -381,7 +381,7 @@ static int choose_table_short(int *ix, int *end, int * s)
 
     max = ix_max(ix, end);
 
-    if (max > 8191 + 15) {
+    if (max > IXMAX_VAL) {
         *s = 100000;
         return -1;
     }
@@ -548,7 +548,7 @@ int count_bits(int *ix, FLOAT8 *xr, gr_info *cod_info)
 {
   int bits=0,i;
   if (highq) {
-    FLOAT8 w = (8191 + 15) * pow(2.0, cod_info->quantizerStepSize * 0.1875);
+    FLOAT8 w = (IXMAX_VAL) * pow(2.0, cod_info->quantizerStepSize * 0.1875);
     for ( i = 0; i < 576; i++ )  {
       if (xr[i] > w)
 	return 100000;

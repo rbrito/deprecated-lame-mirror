@@ -543,7 +543,7 @@ void outer_loop(
     
     /* inner_loop starts with the initial quantization step computed above
      * and slowly increases until the bits < huff_bits.
-     * Thus is it important not to start with too large of an inital
+     * Thus it is important not to start with too large of an inital
      * quantization step.  Too small is ok, but inner_loop will take longer 
      */
     huff_bits = targ_bits - cod_info->part2_length;

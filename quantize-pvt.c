@@ -126,15 +126,15 @@ iteration_init( FLOAT8 xr_org[2][2][576],
     for(i=0;i<PRECALC_SIZE;i++)
         pow43[i] = pow((FLOAT8)i, 4.0/3.0);
 
-    for (i = 0; i < PRECALC_SIZE - 1; i++)
+    for (i = 0; i < PRECALC_SIZE; i++)
 	adj43[i] = (i + 1) - pow(0.5 * (pow43[i] + pow43[i + 1]), 0.75);
     adj43[i] = 0.5;
 
 
-    adj43asm[0]=0.0;
-    for (i = 1; i < PRECALC_SIZE - 1; i++)
-    adj43asm[i] = i -.5 - pow(0.5 * (pow((double)(i - 1), 4.0/3.0)
-                         + pow((double)i,4.0/3.0)), 0.75);
+    adj43asm[0] = 0.0;
+    for (i = 1; i < PRECALC_SIZE; i++)
+      adj43asm[i] = i - 0.5 - pow(0.5 * (pow43[i - 1] + pow43[i]),0.75);
+
   }
 
   
@@ -708,7 +708,6 @@ int loop_break( III_scalefac_t *scalefac, gr_info *cod_info,
 
     return 1;
 }
-
 
 
 
