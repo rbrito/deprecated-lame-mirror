@@ -466,12 +466,12 @@ int lame_init_params(lame_global_flags *gfp)
       assert( gfp->VBR_q >= 0 );
       masking_lower_db = dbQ[gfp->VBR_q];
       gfc->masking_lower = pow(10.0,masking_lower_db/10);
-      gfc->ATH_lower = (4-gfp->VBR_q)*4.0; 
+      gfc->ATH_vbrlower = (4-gfp->VBR_q)*4.0; 
     }
     
     if (gfp->VBR == vbr_rh)
     {
-      gfc->ATH_lower = (4-gfp->VBR_q)*4.0;     
+      gfc->ATH_vbrlower = (4-gfp->VBR_q)*4.0;     
     }
 
 

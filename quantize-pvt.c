@@ -226,6 +226,7 @@ FLOAT8 ATHmdct(lame_global_flags *gfp,FLOAT8 f)
 	  
   /* convert to energy */
   ath -= 114;    /* MDCT scaling.  From tests by macik and MUS420 code */
+  ath -= gfp->ATHlower;
 
   /* purpose of RH_QUALITY_CONTROL:
    * at higher quality lower ATH masking abilities   => needs more bits
@@ -235,7 +236,7 @@ FLOAT8 ATHmdct(lame_global_flags *gfp,FLOAT8 f)
    */
   if (gfp->VBR!=vbr_off) 
     {
-      ath -= gfc->ATH_lower;
+      ath -= gfc->ATH_vbrlower;
       ath = Min(gfp->VBR_q-62,ath);
     }
     

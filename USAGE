@@ -154,6 +154,8 @@ or output is redirected to stdout.
 options not yet described:
 --nores            disable bit reservoir
 --noath            disable ATH
+--athlower <n db>  lower the ATH by n db.  
+--athshort         use only the ATH for short blocks
 --cwlimit <freq>   specify range of tonality calculation
 
 --lowpass

@@ -47,15 +47,23 @@ then MSVC "standard".  It is possible to compile the GTK frame
 analyzer under windows, see README.WINGTK
 
 LAME can be compiled with various Windows MSDOS ports (all free)
-of GCC (DJGPP, Mingw32).  See README.DJGPP.  For Mingw32, you
-should now be able to use the Unix Makefile that comes with LAME.
-Try:  "make NOUNIXCMD=YES UNAME=MSDOS"
+of GCC (DJGPP, Mingw32).  See README.DJGPP.  
+
+For Mingw32, you should now be able to use the Unix Makefile that
+comes with LAME.  Try: "make NOUNIXCMD=YES UNAME=MSDOS"
+You may need to remove these lines from brhist.c:
+
+#ifdef _WIN32
+COORD Pos;
+HANDLE CH;
+CONSOLE_SCREEN_BUFFER_INFO CSBI;
+#endif
 
 
 The Windows Borland C compiler is now free!  Borland will also
 compile LAME, although a new makefile is needed.  If you get
 this to work, please write a README.BORLAND which I can include
-with LAME!
+with LAME.
 
 
 

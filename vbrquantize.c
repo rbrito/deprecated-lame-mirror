@@ -746,8 +746,8 @@ VBR_quantize(lame_global_flags *gfp,
   qadjust=0;   /* start with -1 db quality improvement over quantize.c VBR */
 
   l3_side = &gfc->l3_side;
-  gfc->ATH_lower = (4-gfp->VBR_q)*4.0; 
-  if (gfc->ATH_lower < 0) gfc->ATH_lower=0;
+  gfc->ATH_vbrlower = (4-gfp->VBR_q)*4.0; 
+  if (gfc->ATH_vbrlower < 0) gfc->ATH_vbrlower=0;
   iteration_init(gfp,l3_side,l3_enc);
 
 

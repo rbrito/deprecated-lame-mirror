@@ -179,19 +179,47 @@ void timestatus_finish(void)
 
 
 
-#if (defined LIBSNDFILE || defined LAMESNDFILE)
+#if defined LIBSNDFILE || defined LAMESNDFILE
 
 /* these functions are used in get_audio.c */
 
-void decoder_progress(lame_global_flags *gfp)
+void decoder_progress ( lame_global_flags* gfp )
 {
-    fprintf(stderr,"\rFrame# %lu [ %lu]  %ikbs",gfp->frameNum,
-	      gfp->totalframes-1,gfp->brate);
+    static int  last_total = -1;
+    static int  last_kbps  = -1;
+    static int  last_frame = -1;
+
+    if ( (gfp -> frameNum & 255 ) == 1 ) {
+        fprintf ( stderr, "\rFrame#%6lu/%-6lu %3u kbps        ", gfp -> frameNum, gfp -> totalframes, gfp -> brate );
+        last_frame = -1;
+    } 
+    else if ( last_kbps != gfp -> brate ) {
+        fprintf ( stderr, "\rFrame#%6lu/%-6lu %3u", gfp -> frameNum, gfp -> totalframes, gfp -> brate );
+        last_frame = -1;
+    } 
+    else if ( last_total != gfp -> totalframes ) {
+        fprintf ( stderr, "\rFrame#%6lu/%-6lu", gfp -> frameNum, gfp -> totalframes );
+        last_frame = -1;
+    } 
+    else {
+        if ( last_frame > 0  &&  last_frame/10 == gfp -> frameNum/10 )
+            fprintf ( stderr, "\b%lu", gfp -> frameNum % 10 );
+        else if ( last_frame > 0  &&  last_frame/100 == gfp -> frameNum/100 )
+            fprintf ( stderr, "\b\b%02lu", gfp -> frameNum % 100 );
+        else
+            fprintf ( stderr, "\rFrame#%6lu", gfp -> frameNum ),
+        last_frame = gfp -> frameNum;
+    }
+	      
+    last_total = gfp -> totalframes;
+    last_kbps  = gfp -> brate;
 }
 
-void decoder_progress_finish(lame_global_flags *gfp)
+void decoder_progress_finish ( lame_global_flags* gfp )
 {
-    fprintf(stderr,"\n");
+    fprintf ( stderr, "\n" );
 }
 
 #endif
+
+

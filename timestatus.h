@@ -10,4 +10,5 @@ void decoder_progress(lame_global_flags *gfp);
 void decoder_progress_finish(lame_global_flags *gfp);
 #endif
 
+
 #endif

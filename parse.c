@@ -370,6 +370,10 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	else if (strcmp(token, "athonly")==0) {
 	  gfp->ATHonly=1;
 	}
+	else if (strcmp(token, "athlower")==0) {
+	  argUsed=1;
+	  gfp->ATHlower = atoi(nextArg);
+	}
 	else if (strcmp(token, "freeformat")==0) {
 	  gfp->free_format=1;
 	}

@@ -354,19 +354,35 @@ int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
 	while (gfc->scalefac_band.l[++scfb_anz] < i) 
 	    ;
 	index = subdv_table[scfb_anz].region0_count;
-	while (gfc->scalefac_band.l[index + 1] > i)
+
+	while (gfc->scalefac_band.l[index + 1] > i && index>=0)
 	    index--;
+	if (index<0) {
+	  /* this is an indication that everything is going to
+	     be encoded as region0:  bigvalues < region0 < region1
+	     so lets set region0, region1 to some value larger
+	     than bigvalues */
+	  index=subdv_table[scfb_anz].region0_count;
+	}
+
 	gi->region0_count = index;
 
 	index = subdv_table[scfb_anz].region1_count;
-	while (gfc->scalefac_band.l[index + gi->region0_count + 2] > i)
+	while (gfc->scalefac_band.l[index + gi->region0_count + 2] > i && index>=0)
 	    index--;
+	if (index<0) {
+	  /* see above */
+	  index = subdv_table[scfb_anz].region1_count;
+	}
+
 	gi->region1_count = index;
 
 	a1 = gfc->scalefac_band.l[gi->region0_count + 1];
 	a2 = gfc->scalefac_band.l[index + gi->region0_count + 2];
 	if (a2 < i)
 	  gi->table_select[2] = choose_table(ix + a2, ix + i, &bits);
+
+
 
     } else {
 	gi->region0_count = 7;
@@ -399,6 +415,12 @@ int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
 	}
     }
 #endif
+
+    /* have to allow for the case when bigvalues < region0 < region1 */
+    /* (and region0, region1 are ignored) */
+    a1 = Min(a1,i);
+    a2 = Min(a2,i);
+
 
     /* Count the number of bits necessary to code the bigvalues region. */
     if (0 < a1)
@@ -435,7 +457,6 @@ int count_bits(lame_global_flags *gfp,int *ix, FLOAT8 *xr, gr_info *cod_info)
   else
     quantize_xrpow_ISO(xr, ix, cod_info);
 #endif
-
 
   bits=count_bits_long(gfc, ix, cod_info);
 
