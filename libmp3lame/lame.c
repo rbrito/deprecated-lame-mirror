@@ -812,12 +812,11 @@ lame_encode_buffer(lame_t gfc,
     return ret;
 }
 
-
 int
 lame_encode_buffer_float(lame_t gfc,
-                   const float buffer_l[],
-                   const float buffer_r[],
-                   const int nsamples, unsigned char *mp3buf, const int mp3buf_size)
+			 const float buffer_l[], const float buffer_r[],
+			 const int nsamples, unsigned char *mp3buf,
+			 const int mp3buf_size)
 {
     int     ret, i;
     sample_t *in_buffer;
@@ -846,9 +845,9 @@ lame_encode_buffer_float(lame_t gfc,
 
 int
 lame_encode_buffer_int(lame_t gfc,
-                   const int buffer_l[],
-                   const int buffer_r[],
-                   const int nsamples, unsigned char *mp3buf, const int mp3buf_size)
+		       const int buffer_l[], const int buffer_r[],
+		       const int nsamples, unsigned char *mp3buf,
+		       const int mp3buf_size)
 {
     int     ret, i;
     sample_t *in_buffer;
@@ -882,8 +881,7 @@ lame_encode_buffer_int(lame_t gfc,
 
 int
 lame_encode_buffer_long2(lame_t gfc,
-			 const long buffer_l[],
-			 const long buffer_r[],
+			 const long buffer_l[], const long buffer_r[],
 			 const int nsamples, unsigned char *mp3buf,
 			 const int mp3buf_size)
 {
@@ -1316,7 +1314,7 @@ conv_istereo(lame_t gfc, gr_info *gi, int sfb, int i)
 {
     for (; sfb < gi[0].psymax && i < gi->xrNumMax; sfb++) {
 	FLOAT lsum = 1e-30, rsum = 1e-30;
-	int j = i + gi->width[sfb];
+	int j = i - gi->width[sfb];
 	do {
 	    FLOAT l = gi[0].xr[i];
 	    FLOAT r = gi[1].xr[i];
@@ -1367,9 +1365,9 @@ init_gr_info(lame_t gfc, int gr, int ch)
     gi->sfb_smin              = SBPSY_s;
     for (sfb = 0; sfb < SBMAX_l; sfb++) {
 	gi->width[sfb]
-	    = gfc->scalefac_band.l[sfb+1] - gfc->scalefac_band.l[sfb];
+	    = gfc->scalefac_band.l[sfb] - gfc->scalefac_band.l[sfb+1];
     }
-    gi->width[sfb-1] = gfc->xrNumMax_longblock - gfc->scalefac_band.l[sfb-1];
+    gi->width[sfb-1] = gfc->scalefac_band.l[sfb-1] - gfc->xrNumMax_longblock;
 
     if (gi->block_type != NORM_TYPE) {
 	gi->region0_count = 7;
@@ -1414,7 +1412,7 @@ init_gr_info(lame_t gfc, int gr, int ch)
 		for (subwin = 0; subwin < 3; subwin++) {
 		    for (l = start; l < end; l++)
 			*ix++ = ixwork[3*l+subwin];
-		    gi->width [j] = end - start;
+		    gi->width [j] = start - end;
 		    gi->window[j] = subwin+1;
 		    j++;
 		}
