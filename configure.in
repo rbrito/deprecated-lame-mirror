@@ -347,8 +347,8 @@ dnl vorbis
 WARNING=
 AC_ARG_WITH(vorbis, 
   [  --with-vorbis              Use vorbis library to decode ogg files]
-  [                           [default: yes]],
-  CONFIG_VORBIS="${withval}", CONFIG_VORBIS="yes")
+  [                           [default: no]],
+  CONFIG_VORBIS="${withval}", CONFIG_VORBIS="no")
 AC_ARG_WITH(vorbis-prefix,
   [  --with-vorbis-prefix=DIR   Alternate location for vorbis],
   CONFIG_VORBIS_PREFIX="${withval}", CONFIG_VORBIS_PREFIX="")
@@ -369,7 +369,7 @@ if test "${CONFIG_VORBIS}" != "no" ; then
   AC_CHECK_LIB(vorbis, ogg_sync_init, HAVE_VORBIS="yes")
 
   if test "${HAVE_VORBIS}" = "yes" ; then
-    FRONTEND_LDFLAGS="-lvorbis ${FRONTEND_LDFLAGS}"
+    FRONTEND_LDFLAGS="-lvorbis -logg ${FRONTEND_LDFLAGS}"
     AC_DEFINE(HAVE_VORBIS, 1, build with vorbis support)
   else
     CONFIG_VORBIS="no"
