@@ -254,7 +254,6 @@ static int apply_preset(lame_global_flags*  gfp, int bitrate, vbr_mode mode)
     if (upper_range_kbps - bitrate > bitrate - lower_range_kbps)
         r = lower_range;
 
-    lame_set_VBR(gfp, mode);
     lame_set_VBR_mean_bitrate_kbps(gfp, bitrate);
     lame_set_brate(gfp, lame_get_VBR_mean_bitrate_kbps(gfp));
 
@@ -429,15 +428,9 @@ lame_init_params(lame_global_flags * const gfp)
     gfc->mode_ext_next = gfc->mode_ext = MPG_MD_LR_LR;
     if (gfp->mode == MONO)
 	gfp->force_ms = 0; /* cannot use force MS stereo for mono output */
-    if (gfp->VBR != cbr) {
+    if (gfp->VBR != cbr)
 	gfp->free_format = 0; /* VBR can't be mixed with free format */
-	/* at 160 kbps (MPEG-2/2.5)/ 320 kbps (MPEG-1) only
-	   Free format or CBR are possible, no VBR */
-	if (gfp->mean_bitrate_kbps > 160 * gfc->channels_out) {
-	    gfp->VBR = cbr;
-	    gfp->free_format = 1;
-	}
-    }
+
     if (gfp->VBR != vbr && gfp->mean_bitrate_kbps == 0) {
 	/* no bitrate or compression ratio specified,
 	   use default compression ratio of 11.025,
@@ -502,6 +495,12 @@ lame_init_params(lame_global_flags * const gfp)
     gfp->framesize = 576 * gfc->mode_gr;
     gfp->encoder_delay = ENCDELAY;
     gfc->resample_ratio = (double) gfp->in_samplerate / gfp->out_samplerate;
+    /* at 160 kbps (MPEG-2/2.5)/ 320 kbps (MPEG-1) only
+       Free format or CBR are possible, no ABR */
+    if (gfp->mean_bitrate_kbps > 160 * gfc->mode_gr) {
+	gfp->VBR = cbr;
+	gfp->free_format = 1;
+    }
 
     /*******************************************************
      * bitrate index
