@@ -211,6 +211,13 @@ int InitVbrTag(lame_t gfc)
 	gfc->bWriteVbrTag = 0;
 	return 0;
     }
+    if (!gfc->VBR_seek_table.bag
+	&& !(gfc->VBR_seek_table.bag  = malloc (400*sizeof(int)))) {
+	gfc->VBR_seek_table.size = 0;
+	gfc->bWriteVbrTag = 0;
+	ERRORF (gfc,"Error: can't allocate VbrFrames buffer\n");
+	return -1;
+    }   
 
     /* write dummy VBR tag of all 0's into bitstream */
     for (i=0; i<gfc->TotalFrameSize; ++i)
@@ -222,18 +229,7 @@ int InitVbrTag(lame_t gfc)
     gfc->VBR_seek_table.seen = 0;
     gfc->VBR_seek_table.want = 1;
     gfc->VBR_seek_table.pos  = 0;
-    if (!gfc->VBR_seek_table.bag) {
-	gfc->VBR_seek_table.bag  = malloc (400*sizeof(int));
-	if (gfc->VBR_seek_table.bag) {
-	    gfc->VBR_seek_table.size = 400;
-	}
-	else {
-	    gfc->VBR_seek_table.size = 0;
-	    ERRORF (gfc,"Error: can't allocate VbrFrames buffer\n");
-	    return -1;
-	}   
-    }
-    /* Success */
+    gfc->VBR_seek_table.size = 400;
     return 0;
 }
 
