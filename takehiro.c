@@ -229,7 +229,7 @@ count_bit_noESC_from3(int *ix, int *end, int t1, int *s)
   with any arbitrary tables.
 */
 
-int choose_table(int *ix, int *end, unsigned *s)
+int choose_table(int *ix, int *end, int *s)
 {
     unsigned int max;
     int choice, choice2;
@@ -557,9 +557,9 @@ void best_huffman_divide(lame_internal_flags *gfc, int gr, int ch, gr_info *gi, 
 	    a1 = i;
 	}
 	cod_info2.table_select[0] =
-	    choose_table(ix, ix + a1, &cod_info2.part2_3_length);
+	    choose_table(ix, ix + a1, (unsigned *)&cod_info2.part2_3_length);
 	cod_info2.table_select[1] =
-	    choose_table(ix + a1, ix + i, &cod_info2.part2_3_length);
+	    choose_table(ix + a1, ix + i, (unsigned *)&cod_info2.part2_3_length);
 	if (gi->part2_3_length > cod_info2.part2_3_length)
 	    memcpy(gi, &cod_info2, sizeof(gr_info));
     }

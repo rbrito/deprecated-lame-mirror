@@ -179,6 +179,7 @@ int main(int argc, char **argv)
       }
     } while (iread);
     if (wavsize<0) wavsize=0;
+    wavsize *= 2*gf.num_channels;
     fprintf(stderr,"\n");
     /* if outf is seekable, rewind and adjust length */
     if (!fseek(outf,0,SEEK_SET)) 
