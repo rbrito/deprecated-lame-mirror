@@ -731,7 +731,7 @@ int calc_xmin( FLOAT8 xr[576], III_psy_ratio *ratio,
 	  en0 /= bw;
 
 	  xmin = ratio->en.s[sfb][b];
-	  if (xmin != 0.0)
+	  if (xmin > 0.0)
 	    xmin = en0 * ratio->thm.s[sfb][b] * masking_lower / xmin;
 
 #if RH_ATH
@@ -755,8 +755,9 @@ int calc_xmin( FLOAT8 xr[576], III_psy_ratio *ratio,
 	en0 /= bw;
 
 	xmin = ratio->en.l[sfb];
-	if (xmin != 0.0)
+	if (xmin > 0.0)
 	  xmin = en0 * ratio->thm.l[sfb] * masking_lower / xmin;
+
 
 #if RH_ATH
 	l3_xmin->l[sfb]=Max(1e-20, xmin);

@@ -43,6 +43,10 @@
 #include "brhist.h"
 #include "get_audio.h"
 
+#ifdef __riscos__
+#include "asmstuff.h"
+#endif
+
 /* Global flags.  defined extern in globalflags.h */
 /* default values set in lame_init() */
 lame_global_flags gf;
@@ -855,6 +859,16 @@ lame_global_flags * lame_init(void)
    mask &= ~( _FPU_MASK_IM | _FPU_MASK_ZM | _FPU_MASK_OM );
   _FPU_SETCW(mask);
   }
+#endif
+#ifdef __riscos__
+  /* Disable FPE's under RISC OS */
+  /* if bit is set, we disable trapping that error! */
+  /*   _FPE_IVO : invalid operation */
+  /*   _FPE_DVZ : divide by zero */
+  /*   _FPE_OFL : overflow */
+  /*   _FPE_UFL : underflow */
+  /*   _FPE_INX : inexact */
+  DisableFPETraps( _FPE_IVO | _FPE_DVZ | _FPE_OFL );
 #endif
 
 
