@@ -933,31 +933,62 @@ format_bitstream(lame_global_flags *gfp, int bitsPerFrame,
 }
 
 
-int copy_buffer(unsigned char *buffer,int size,Bit_stream_struc *bs,int update_crc)
+
+
+
+/* copy data out of the internal MP3 bit buffer into a user supplied
+   unsigned char buffer.
+
+   mp3data=0      indicates data in buffer is an id3tags and VBR tags
+   mp3data=1      data is real mp3 frame data. 
+
+
+*/
+int copy_buffer(lame_internal_flags *gfc,unsigned char *buffer,int size,int mp3data) 
 {
-  int minimum = bs->buf_byte_idx + 1;
-  if (minimum <= 0) return 0;
-  if (size!=0 && minimum>size) return -1; /* buffer is too small */
-  memcpy(buffer,bs->buf,minimum);
-  bs->buf_byte_idx = -1;
-  bs->buf_bit_idx = 0;
-
-
-#if 0
-  if (update_crc) {
-    if (ret>0) UpdateMusicCRC(&gfc->nMusicCRC,mp3buf,ret);
-    if (gfp->frameNum==0) {
-         fprintf(stderr,"new: first byte: %us \n",mp3buf[0]);
+    Bit_stream_struc *bs=&gfc->bs;
+    int minimum = bs->buf_byte_idx + 1;
+    if (minimum <= 0) return 0;
+    if (size!=0 && minimum>size) return -1; /* buffer is too small */
+    memcpy(buffer,bs->buf,minimum);
+    bs->buf_byte_idx = -1;
+    bs->buf_bit_idx = 0;
+    
+    if (mp3data) {
+        UpdateMusicCRC(&gfc->nMusicCRC,buffer,minimum);
+#ifdef DECODE_ON_THE_FLY
+      untested code;
+      /* if, for somereason, we would like to decode the frame: */
+      {
+          short int pcm_out[2][1152];
+          int mp3out;
+          do {
+              /* re-synthesis to pcm.  Repeat until we get a mp3out=0 */
+              mp3out=lame_decode1(buffer,minimum,pcm_out[0],pcm_out[1]); 
+              /* mp3out = 0:  need more data to decode */
+              /* mp3out = -1:  error.  Lets assume 0 pcm output */
+              /* mp3out = number of samples output */
+              
+              if (mp3out==-1) {
+                  // error decoding.  Not fatal, but might screw up are
+                  // ReplayVolume Info tag.  
+                  // what should we do?  ignore for now
+                  mp3out=0;
+              }
+              if (mp3out>0) {
+                  // process the PCM data.  
+                  if (mp3out>1152) {
+                      // this should not be possible, and indicates we have
+                      // overflowed the pcm_out buffer.  Fatal error.
+                      return -6;
+                  }
+              }
+              
+          } while (mp3out>0);
+      }
+#endif  
     }
-    {
-        static count=0;
-        count=count+ret;
-        fprintf(stderr,"new: total sent to crc: %i\n",count);
-    }
-  }
-#endif
-
-  return minimum;
+    return minimum;
 }
 
 

@@ -1395,40 +1395,6 @@ lame_encode_frame(lame_global_flags * gfp,
     }
 
 
-#ifdef DECODE_ON_THE_FLY
-
-untested code
-
-  /* if, for somereason, we would like to decode the frame: */
-    {
-        short int pcm_out[2][1152];
-        int mp3out;
-        do {
-            /* re-synthesis to pcm.  Repeat until we get a mp3out=0 */
-            mp3out=lame_decode1(mp3buf,mp3count,pcm_out[0],pcm_out[1]); 
-            /* mp3out = 0:  need more data to decode */
-            /* mp3out = -1:  error.  Lets assume 0 pcm output */
-            /* mp3out = number of samples output */
-
-            if (mp3out==-1) {
-                // error decoding.  Not fatal, but might screw up are
-                // ReplayVolume Info tag.  
-                // what should we do?
-                // ignore for now
-                mp3out=0;
-            }
-            if (mp3out>0) {
-                // process the PCM data.  
-                if (mp3out>1152) {
-                    // this should not be possible, and indicates we have
-                    // overflowed the pcm_out buffer.  Fatal error.
-                    return -6;
-                }
-            }
-
-        } while (mp3out>0)
-    }
-#endif  
 
     gfp->frameNum++;
     return ret;
@@ -1471,7 +1437,7 @@ lame_encode_buffer_sample_t(lame_global_flags * gfp,
         return 0;
 
     /* copy out any tags that may have been written into bitstream */
-    mp3out = copy_buffer(mp3buf,mp3buf_size,&gfc->bs,0);
+    mp3out = copy_buffer(gfc,mp3buf,mp3buf_size,0);
     if (mp3out<0) return mp3out;  // not enough buffer space
     mp3buf += mp3out;
     mp3size += mp3out;
@@ -1799,7 +1765,7 @@ lame_encode_flush_nogap(lame_global_flags * gfp,
 {
     lame_internal_flags *gfc = gfp->internal_flags;
     flush_bitstream(gfp);
-    return copy_buffer(mp3buffer, mp3buffer_size,  &gfc->bs,1);
+    return copy_buffer(gfc,mp3buffer, mp3buffer_size,1);
 }
 
 
@@ -1897,7 +1863,7 @@ lame_encode_flush(lame_global_flags * gfp,
     else {
         /* mp3 related stuff.  bit buffer might still contain some mp3 data */
         flush_bitstream(gfp);
-        imp3 = copy_buffer(mp3buffer, mp3buffer_size_remaining, &gfc->bs,1);
+        imp3 = copy_buffer(gfc,mp3buffer, mp3buffer_size_remaining, 1);
         if (imp3 < 0) {
             /* some type of fatal error */
             return imp3;
@@ -1912,7 +1878,7 @@ lame_encode_flush(lame_global_flags * gfp,
 
         /* write a id3 tag to the bitstream */
         id3tag_write_v1(gfp);
-        imp3 = copy_buffer(mp3buffer, mp3buffer_size_remaining, &gfc->bs,0);
+        imp3 = copy_buffer(gfc,mp3buffer, mp3buffer_size_remaining, 0);
     }
 
     if (imp3 < 0) {

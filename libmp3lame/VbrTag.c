@@ -489,55 +489,12 @@ void UpdateMusicCRC(uint16_t *crc,unsigned char *buffer, int size){
 }
 
 
-uint16_t GetMusicCRC(lame_global_flags *gfp, FILE *fpStream, int filesize, int id3v2size, int bId3v1)
-{ 
-
-	uint16_t crc = 0;
-	int count;
-#define BSIZE 1000000
-	//unsigned char buffer[1000000];		//load in about 1MB at a time.
-
-        // often, when lame is used in a second thread, it has limited stack
-        // size (128K!).  so we need this ugly hack to move things off
-        // the stack and on to the heap.
-        unsigned char *buffer;
-
-	int nNumToGo = filesize - id3v2size - gfp->TotalFrameSize;
-	if (bId3v1)
-		nNumToGo-=128;
-	
-
-        buffer=malloc(BSIZE); 
-	memset(buffer, 0, BSIZE);
-	fseek(fpStream, id3v2size + gfp->TotalFrameSize, SEEK_SET);		//first frame of music
-        
-        //        fprintf(stderr,"crc: staring file pos %i \n",ftell(fpStream));
-        //	fprintf(stderr,"crc: total size: %i\n",nNumToGo);
-        //	fprintf(stderr,"crc: filesize: %i\n",filesize);
-	while (nNumToGo)
-	{
-		int n=fread(buffer, 1, BSIZE,fpStream);
-		for (count = 0;count < n;count++)
-		{
-			crc = CRC_update_lookup(buffer[count],crc);
-			nNumToGo--;
-
-			if (nNumToGo==0)
-				break;
-		}
-	}
-
-        free(buffer);
-	return crc;
-}
 
 
 void ReportLameTagProgress(lame_global_flags *gfp,int nStart)
 {
 	if (!gfp->bWriteVbrTag)
 		return;
-
-//	lame_internal_flags *gfc = gfp->internal_flags;
 
 	if (nStart)
 		MSGF( gfp->internal_flags, "Writing Lame Tag...");
@@ -740,7 +697,7 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, u_char *pbtStreamBuffer, 
 	//and after this frame (i.e. where the music starts).
 	//end: before id3v1.
 	
-	nMusicCRC = GetMusicCRC(gfp,fpStream, nFilesize,id3v2size, bId3v1Present);
+        nMusicCRC = gfc->nMusicCRC;
 
 	/*Write all this information into the stream*/
 	
