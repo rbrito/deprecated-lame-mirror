@@ -88,21 +88,17 @@ count_bit_ESC(
 	int x = *ix++;
 	int y = *ix++;
 
-	if (x != 0) {
-	    if (x > 14) {
-		x = 15;
-		sum += linbits;
-	    }
-	    x *= 16;
+	if (x > 14) {
+	    x = 15;
+	    sum += linbits;
 	}
+	x *= 16;
 
-	if (y != 0) {
-	    if (y > 14) {
-		y = 15;
-		sum += linbits;
-	    }
-	    x += y;
+	if (y > 14) {
+	    y = 15;
+	    sum += linbits;
 	}
+	x += y;
 
 	sum += largetbl[x];
     } while (ix < end);
