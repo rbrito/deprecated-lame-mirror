@@ -25,7 +25,6 @@
 # include <config.h>
 #endif
 
-
 #include <assert.h>
 #include "lame.h"
 #include "util.h"
@@ -35,6 +34,7 @@
 #include "quantize.h"
 #include "psymodel.h"
 #include "VbrTag.h"
+#include "id3tag.h"
 #include "quantize_pvt.h"
 
 #if defined(__FreeBSD__) && !defined(__alpha__)
@@ -531,9 +531,42 @@ lame_init_params(lame_global_flags * const gfp)
 
     /* if a filter has not been enabled, see if we should add one */
     apply_preset(gfp, get_bitrate(gfp), gfp->VBR);
+
+    /* output sampling rate is determined by the lowpass value */
     if (gfp->out_samplerate == 0)
 	gfp->out_samplerate
 	    = optimum_samplefreq(gfp->lowpassfreq, gfp->in_samplerate);
+    gfc->samplerate_index = SmpFrqIndex(gfp->out_samplerate);
+    if (gfc->samplerate_index < 0)
+        return -1;
+
+    /* apply user driven high pass filter */
+    if (gfp->highpassfreq > 0) {
+        gfc->highpass1 = 2. * gfp->highpassfreq;
+
+        if (gfp->highpasswidth >= 0)
+            gfc->highpass2 = 2. * (gfp->highpassfreq + gfp->highpasswidth);
+        else            /* 0% above on default */
+            gfc->highpass2 = (1 + 0.00) * 2. * gfp->highpassfreq;
+
+	gfc->highpass1 /= gfp->out_samplerate;
+	gfc->highpass2 /= gfp->out_samplerate;
+    }
+
+    /* apply user driven low pass filter */
+    if (gfp->lowpassfreq > 0) {
+	gfc->lowpass2 = 2. * gfp->lowpassfreq;
+        if (gfp->lowpasswidth >= 0) {
+            gfc->lowpass1 = 2. * (gfp->lowpassfreq - gfp->lowpasswidth);
+            if (gfc->lowpass1 < 0)
+                gfc->lowpass1 = 0;
+        }
+        else          /* 0% below on default */
+	    gfc->lowpass1 = (1 - 0.00) * 2. * gfp->lowpassfreq;
+
+	gfc->lowpass1 /= gfp->out_samplerate;
+	gfc->lowpass2 /= gfp->out_samplerate;
+    }
 
     gfc->scale_bitcounter = scale_bitcount;
     gfp->version = 1;
@@ -547,7 +580,11 @@ lame_init_params(lame_global_flags * const gfp)
     gfp->encoder_delay = ENCDELAY;
     gfc->resample_ratio = (double) gfp->in_samplerate / gfp->out_samplerate;
 
+    /*******************************************************
+     * bitrate index
+     *******************************************************/
     /* for non Free Format find the nearest allowed bitrate */
+    gfc->bitrate_index = 0;
     if (gfp->VBR == cbr && !gfp->free_format) {
 	gfp->mean_bitrate_kbps = FindNearestBitrate(
 	    gfp->mean_bitrate_kbps, gfp->version, gfp->out_samplerate);
@@ -555,48 +592,7 @@ lame_init_params(lame_global_flags * const gfp)
 	    gfp->mean_bitrate_kbps, gfp->version, gfp->out_samplerate);
 	if (gfc->bitrate_index < 0)
 	    return -1;
-    } else
-	gfc->bitrate_index = 0;
-
-    gfc->samplerate_index = SmpFrqIndex(gfp->out_samplerate);
-    if (gfc->samplerate_index < 0)
-        return -1;
-
-    /* apply user driven high pass filter */
-    if (gfp->highpassfreq > 0) {
-        gfc->highpass1 = 2. * gfp->highpassfreq;
-
-        if (gfp->highpasswidth >= 0)
-            gfc->highpass2 =
-                2. * (gfp->highpassfreq + gfp->highpasswidth);
-        else            /* 0% above on default */
-            gfc->highpass2 =
-		(1 + 0.00) * 2. * gfp->highpassfreq;
-
-	gfc->highpass1 /= gfp->out_samplerate;
-	gfc->highpass2 /= gfp->out_samplerate;
     }
-
-    /* apply user driven low pass filter */
-    if (gfp->lowpassfreq > 0) {
-	gfc->lowpass2 = 2. * gfp->lowpassfreq;
-        if (gfp->lowpasswidth >= 0) {
-            gfc->lowpass1 =
-                2. * (gfp->lowpassfreq - gfp->lowpasswidth);
-            if (gfc->lowpass1 < 0) /* has to be >= 0 */
-                gfc->lowpass1 = 0;
-        }
-        else {          /* 0% below on default */
-            gfc->lowpass1 =
-                (1 - 0.00) * 2. * gfp->lowpassfreq;
-        }
-	gfc->lowpass1 /= gfp->out_samplerate;
-	gfc->lowpass2 /= gfp->out_samplerate;
-    }
-
-    /*******************************************************
-     * samplerate and bitrate index
-     *******************************************************/
     if (gfp->VBR != cbr) {
 	/* choose a min/max bitrate for VBR */
         /* if the user didn't specify VBR_max_bitrate: */
