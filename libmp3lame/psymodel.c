@@ -774,7 +774,7 @@ int L3psycho_anal( lame_global_flags *gfp,
 	 *          frame0, but all pre-echo was in frame1.
 	 */
 	//	ecb = Max(ecb,gfc->ATH_partitionbands[b]);
-	if (gfc->blocktype_old[chn] == SHORT_TYPE )
+	if (gfc->blocktype_old[gfp->mode == MPG_MD_JOINT_STEREO ? 0 : chn] == SHORT_TYPE )
 	  thr[b] = ecb; /* Min(ecb, rpelev*gfc->nb_1[chn][b]); */
 	else
 	  thr[b] = Min(ecb, Min(rpelev*gfc->nb_1[chn][b],rpelev2*gfc->nb_2[chn][b]) );
