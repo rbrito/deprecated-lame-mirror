@@ -338,7 +338,7 @@ void lame_parse_args(int argc, char **argv)
 	  gf.mode_fixed=1;
 	  break;
 	case 'h': 
-	  gf.highq = 2;
+	  gf.quality = 2;
 	  break;
 	case 'k': 
 	  gf.sfb21=0;  
@@ -384,7 +384,7 @@ void lame_parse_args(int argc, char **argv)
 	  gf.experimentalZ = TRUE;
 	  break;
 	case 'f': 
-	  gf.highq= 9;
+	  gf.quality= 9;
 	  break;
 #ifdef HAVEGTK
 	case 'g': /* turn on gtk analysis */

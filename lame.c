@@ -308,7 +308,7 @@ void lame_init_params(void)
   }
 
 
-  if (gf.VBR) gf.highq=Min(gf.highq,2);    /* always use highq <=2  with VBR */
+  if (gf.VBR) gf.quality=Min(gf.quality,2);    /* always use quality <=2  with VBR */
   /* dont allow forced mid/side stereo for mono output */
   if (gf.mode == MPG_MD_MONO) gf.force_ms=0;  
 
@@ -345,7 +345,7 @@ void lame_init_params(void)
 
   /* set internal feature flags.  USER should not access these since
    * some combinations will produce strange results */
-  if (gf.highq>=9) {
+  if (gf.quality>=9) {
     /* 9 = worst quality */
     gf.filter_type=0;
     gf.quantization=0;
@@ -354,7 +354,7 @@ void lame_init_params(void)
     gf.noise_shaping_stop=0;
     gf.ms_masking=0;
     gf.use_best_huffman=0;
-  } else if (gf.highq>=5) {
+  } else if (gf.quality>=5) {
     /* 5..8 quality, the default  */
     gf.filter_type=0;
     gf.quantization=0;
@@ -363,7 +363,7 @@ void lame_init_params(void)
     gf.noise_shaping_stop=0;
     gf.ms_masking=0;
     gf.use_best_huffman=0;
-  } else if (gf.highq>=2) {
+  } else if (gf.quality>=2) {
     /* 2..4 quality */
     gf.filter_type=0;
     gf.quantization=1;
@@ -857,7 +857,7 @@ lame_global_flags * lame_init(void)
   gf.experimentalZ = 0;
   gf.frameNum=0;
   gf.gtkflag=0;
-  gf.highq=5;
+  gf.quality=5;
   gf.input_format=sf_unknown;
   gf.lowpassfreq=0;
   gf.highpassfreq=0;

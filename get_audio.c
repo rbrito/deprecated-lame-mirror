@@ -11,7 +11,6 @@ static unsigned long num_samples;
 static int samp_freq;
 static int input_bitrate;
 static int num_channels;
-static int bitwidth;
 
 int read_samples_pcm( short sample_buffer[2304],int frame_size, int samples_to_read);
 int read_samples_mp3(FILE *musicin,short int mpg123pcm[2][1152],int num_chan);
@@ -463,10 +462,10 @@ int default_channels)
 	printf("sections          :%d\n",gs_wfInfo.sections);
 	printf("seekable          :\n",gs_wfInfo.seekable);
 #endif
-    bitwidth=gs_wfInfo.pcmbitwidth;
   }
 
   if (gs_wfInfo.samples==MAX_U_32_NUM) {
+    struct stat sb;
     /* try to figure out num_samples */
     stat(lpszFileName,&sb);  /* try file size, assume 2 bytes per sample */
     if (gf.input_format == sf_mp3) {
@@ -507,7 +506,8 @@ int read_samples_pcm(short sample_buffer[2304],int frame_size,int samples_to_rea
 	for (; samples_read < frame_size; sample_buffer[samples_read++] = 0);
       }
 
-	if (bitwidth==8) for (; samples_read >= 0; sample_buffer[samples_read] = sample_buffer[samples_read--] * 256);
+	if (8==gs_wfInfo.pcmbitwidth)
+	  for (; samples_read >= 0; sample_buffer[samples_read] = sample_buffer[samples_read--] * 256);
 
     return(rcode);
 }

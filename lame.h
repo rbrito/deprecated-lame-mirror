@@ -50,7 +50,7 @@ typedef struct  {
   /* general control params */
   int gtkflag;                /* frame analyzer?       */
   int bWriteVbrTag;           /* Xing VBR tag?         */
-  int highq;                  /* quality setting 0=best,  9=worst  */
+  int quality;                /* quality setting 0=best,  9=worst  */
   int allow_diff_short;       /* allow blocktypes to differ between channels ? */
   int no_short_blocks;        /* disable short blocks       */
   int silent;                 /* disable some status output */
