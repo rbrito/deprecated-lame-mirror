@@ -57,6 +57,7 @@ char *strchr (), *strrchr ();
 #include "parse.h"
 #include "main.h"
 #include "get_audio.h"
+#include "version.h"
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
@@ -206,6 +207,10 @@ static int  lame_version_print ( FILE* const fp )
     else            
         /* text too long, wrap url into next line, right aligned */
         fprintf ( fp, "LAME version %s\n%*s(%s)\n\n", v, lw-2-lenu, "", u );
+
+    if (LAME_ALPHA_VERSION)
+        fprintf ( fp, "warning: alpha versions should be used for testing only\n\n");
+
     
     return 0;
 }

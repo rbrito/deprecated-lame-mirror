@@ -1089,6 +1089,8 @@ lame_print_config(const lame_global_flags * gfp)
     double  in_samplerate = gfp->out_samplerate * gfc->resample_ratio;
 
     MSGF(gfc, "LAME version %s (%s)\n", get_lame_version(), get_lame_url());
+    if (LAME_ALPHA_VERSION)
+        MSGF(gfc, "warning: alpha versions should be used for testing only\n");
 
     if (gfc->CPU_features.MMX
         || gfc->CPU_features.AMD_3DNow
