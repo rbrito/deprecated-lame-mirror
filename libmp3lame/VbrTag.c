@@ -645,23 +645,6 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 		gfp->in_samplerate <= 32000)
 			bNonOptimal = 1;
 	
-/*	else if ((gfp->lowpassfreq >=19100 	|| gfp->lowpassfreq == 0) &&
-		( 
-			(gfp->brate >=256 && (gfp->mode == STEREO || (gfp->mode == JOINT_STEREO && bExpNPsyTune && bSafeJoint))) 
-			||(        (gfp->VBR_max_bitrate_kbps==320) &&
-				(  (nABRBitrate >=224 && gfp->mode == JOINT_STEREO && bExpNPsyTune && bSafeJoint) 
-				|| (nABRBitrate >=256 && gfp->mode == STEREO) 
-				|| (nQuality>=88 && bExpNPsyTune)
-				|| (nQuality>=88 && gfp->VBR_min_bitrate_kbps>=128)
-				|| (nQuality>=78 && gfp->mode == JOINT_STEREO && bExpNPsyTune && bSafeJoint && nAthType > 0 && nAthType < 5) 
-				)
-			  )
-			)
-		)
-		bArchival = 1;*/
-
-
-
 	nMisc =		nNoiseShaping
 			+	(nStereoMode << 2)
 			+	(bNonOptimal << 5)
