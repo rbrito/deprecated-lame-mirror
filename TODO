@@ -99,12 +99,7 @@ So we should use both of ssrc/old resample code...
 
 
 25.
-mp3x cannot display all the infomation when input is .wav file.
-
-
-
-30.
-mp3x cannot display (seg-faults) short file like testcase.new.mp3.
+mp3x does not work at all when the input is .wav file.
 
 
 
