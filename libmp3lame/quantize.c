@@ -1635,7 +1635,7 @@ iteration_loop(
 
         /*  calculate needed bits
          */
-        max_bits = on_pe (gfp, pe, l3_side, targ_bits, mean_bits, gr, 1);
+        max_bits = on_pe (gfp, pe, l3_side, targ_bits, mean_bits, gr, gr);
 
         if (gfc->mode_ext == MPG_MD_MS_LR) {
             ms_convert (&gfc->l3_side, gr);
