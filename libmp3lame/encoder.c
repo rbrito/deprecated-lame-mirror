@@ -390,9 +390,9 @@ char *mp3buf, int mp3buf_size)
   }
 
   /*  write the frame to the bitstream  */
-  getframebits(gfp,&bitsPerFrame,&mean_bits);
+  getframebits(gfc, &bitsPerFrame, &mean_bits);
 
-  format_bitstream( gfp, bitsPerFrame, l3_enc, scalefac);
+  format_bitstream( gfc, bitsPerFrame, l3_enc, scalefac);
 
   /* copy mp3 bit buffer into array */
   mp3count = copy_buffer(mp3buf,mp3buf_size,&gfc->bs);

@@ -36,20 +36,19 @@
   was set properly by the formatter
 */
 int
-ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, int frameLength )
+ResvFrameBegin(context *gfc,III_side_info_t *l3_side, int mean_bits, int frameLength )
 {
-    lame_internal_flags *gfc=gfp->internal_flags;
     int fullFrameBits;
     int resvLimit;
     int maxmp3buf;
 
 
     /* main_data_begin has 9 bits in MPEG 1, 8 bits MPEG2 */
-    resvLimit = (gfp->version==1) ? 8*511 : 8*255 ;
+    resvLimit = (gfc->gfp->version==1) ? 8*511 : 8*255 ;
 
 
     /* maximum allowed frame size */
-    if (gfp->strict_ISO)
+    if (gfc->gfp->strict_ISO)
       maxmp3buf = 8*960;
     else
       maxmp3buf = 8*2047;
@@ -58,7 +57,7 @@ ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, i
 	gfc->ResvMax = 0;
     else
 	gfc->ResvMax = maxmp3buf - frameLength;
-    if (gfp->disable_reservoir) gfc->ResvMax=0;
+    if (gfc->gfp->disable_reservoir) gfc->ResvMax=0;
     if ( gfc->ResvMax > resvLimit ) gfc->ResvMax = resvLimit;
     assert(0==(gfc->ResvMax % 8));
 
@@ -70,7 +69,7 @@ ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, i
     }
 
     fullFrameBits = mean_bits * gfc->mode_gr + Min(gfc->ResvSize,gfc->ResvMax);
-    if (gfp->strict_ISO) {
+    if (gfc->gfp->strict_ISO) {
       if (fullFrameBits>maxmp3buf) fullFrameBits=maxmp3buf;
     }
     return fullFrameBits;
@@ -83,9 +82,8 @@ ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, i
          extra_bits:  amount extra available from reservoir
   Mark Taylor 4/99
 */
-void ResvMaxBits(lame_global_flags *gfp, int mean_bits, int *targ_bits, int *extra_bits)
+void ResvMaxBits(context *gfc, int mean_bits, int *targ_bits, int *extra_bits)
 {
-  lame_internal_flags *gfc=gfp->internal_flags;
   int add_bits,full_fac;
   *targ_bits = mean_bits ;
 
@@ -101,7 +99,7 @@ void ResvMaxBits(lame_global_flags *gfp, int mean_bits, int *targ_bits, int *ext
      * than FhG.  It could simple be mean_bits/15, but this was rigged
      * to always produce 100 (the old value) at 128kbs */
     /*    *targ_bits -= (int) (mean_bits/15.2);*/
-    if (!gfp->disable_reservoir) 
+    if (!gfc->gfp->disable_reservoir) 
       *targ_bits -= .1*mean_bits;
   }
 
@@ -122,9 +120,8 @@ void ResvMaxBits(lame_global_flags *gfp, int mean_bits, int *targ_bits, int *ext
   the reservoir to reflect the granule's usage.
 */
 void
-ResvAdjust(lame_global_flags *gfp,gr_info *gi, III_side_info_t *l3_side, int mean_bits )
+ResvAdjust(context *gfc,gr_info *gi, III_side_info_t *l3_side, int mean_bits )
 {
-  lame_internal_flags *gfc=gfp->internal_flags;
   gfc->ResvSize += (mean_bits / gfc->stereo) - gi->part2_3_length;
 #if 0
   printf("part2_3_length:  %i  avg=%i  incres: %i  resvsize=%i\n",gi->part2_3_length,
@@ -141,11 +138,10 @@ mean_bits/gfc->stereo-gi->part2_3_length,gfc->ResvSize);
   bits.
 */
 void
-ResvFrameEnd(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits)
+ResvFrameEnd(context *gfc, III_side_info_t *l3_side, int mean_bits)
 {
     int stuffingBits;
     int over_bits;
-    lame_internal_flags *gfc=gfp->internal_flags;
 
 
     /* just in case mean_bits is odd, this is necessary... */

@@ -918,7 +918,7 @@ int    lame_encode_buffer (
     /* copy in new samples into mfbuf, with resampling if necessary */
     if (gfc->resample_ratio != 1.0)  {
       for (ch=0; ch<gfc->stereo; ch++) {
-	n_out = fill_buffer_resample(gfp,&mfbuf[ch][gfc->mf_size],gfp->framesize, in_buffer[ch],nsamples,&n_in,ch);
+	n_out = fill_buffer_resample(gfc,&mfbuf[ch][gfc->mf_size],gfp->framesize, in_buffer[ch],nsamples,&n_in,ch);
 	in_buffer[ch] += n_in;
       }
     }else{
@@ -1155,7 +1155,7 @@ int    lame_encode_flush (
 #endif
     }else{
         /* mp3 related stuff.  bit buffer might still contain some mp3 data */
-        flush_bitstream(gfp);
+        flush_bitstream(gfc);
         /* write a id3 tag to the bitstream */
         id3tag_write_v1(gfp);
         imp3 = copy_buffer(mp3buffer, mp3buffer_size_remaining, &gfc->bs);

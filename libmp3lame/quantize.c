@@ -1025,7 +1025,7 @@ iteration_finish (
             
             /*  update reservoir status after FINAL quantization/bitrate
              */
-            ResvAdjust (gfc->gfp, cod_info, l3_side, mean_bits);
+            ResvAdjust (gfc, cod_info, l3_side, mean_bits);
       
             /*  set the sign of l3_enc from the sign of xr
              */
@@ -1035,7 +1035,7 @@ iteration_finish (
         } /* for ch */
     }    /* for gr */
     
-    ResvFrameEnd (gfc->gfp, l3_side, mean_bits);
+    ResvFrameEnd (gfc, l3_side, mean_bits);
 }
 
 
@@ -1231,19 +1231,19 @@ get_framebits (
      *  unless we detect analog silence, see below 
      */
     gfc->bitrate_index = gfc->VBR_min_bitrate;
-    getframebits (gfc->gfp, &bitsPerFrame, &mean_bits);
+    getframebits (gfc, &bitsPerFrame, &mean_bits);
     *min_mean_bits = mean_bits / gfc->stereo;
 
     /*  bits for analog silence 
      */
     gfc->bitrate_index = 1;
-    getframebits (gfc->gfp, &bitsPerFrame, &mean_bits);
+    getframebits (gfc, &bitsPerFrame, &mean_bits);
     *analog_mean_bits = mean_bits / gfc->stereo;
 
     for (i = 1; i <= gfc->VBR_max_bitrate; i++) {
         gfc->bitrate_index = i;
-        getframebits (gfc->gfp, &bitsPerFrame, &mean_bits);
-        frameBits[i] = ResvFrameBegin (gfc->gfp, l3_side, mean_bits, bitsPerFrame);
+        getframebits (gfc, &bitsPerFrame, &mean_bits);
+        frameBits[i] = ResvFrameBegin (gfc, l3_side, mean_bits, bitsPerFrame);
     }
 }
 
@@ -1478,8 +1478,8 @@ VBR_iteration_loop (
         if (used_bits <= frameBits[gfc->bitrate_index]) break; 
     }
 
-    getframebits (gfc->gfp, &bitsPerFrame, &mean_bits);
-    bits = ResvFrameBegin (gfc->gfp, l3_side, mean_bits, bitsPerFrame);
+    getframebits (gfc, &bitsPerFrame, &mean_bits);
+    bits = ResvFrameBegin (gfc, l3_side, mean_bits, bitsPerFrame);
     
     
     /*  quantize granules which violate bit constraints again
@@ -1554,11 +1554,11 @@ calc_target_bits (
     int gr, ch, totbits, mean_bits, bitsPerFrame;
     
     gfc->bitrate_index = gfc->VBR_max_bitrate;
-    getframebits (gfc->gfp, &bitsPerFrame, &mean_bits);
-    *max_frame_bits = ResvFrameBegin (gfc->gfp, l3_side, mean_bits, bitsPerFrame);
+    getframebits (gfc, &bitsPerFrame, &mean_bits);
+    *max_frame_bits = ResvFrameBegin (gfc, l3_side, mean_bits, bitsPerFrame);
 
     gfc->bitrate_index = 1;
-    getframebits (gfc->gfp, &bitsPerFrame, &mean_bits);
+    getframebits (gfc, &bitsPerFrame, &mean_bits);
     *analog_silence_bits = mean_bits / gfc->stereo;
 
     mean_bits  = gfc->gfp->VBR_mean_bitrate_kbps * gfc->gfp->framesize * 1000;
@@ -1709,8 +1709,8 @@ void ABR_iteration_loop
     for (gfc->bitrate_index =  gfc->VBR_min_bitrate ;
          gfc->bitrate_index <= gfc->VBR_max_bitrate;
          gfc->bitrate_index++    ) {
-        getframebits (gfc->gfp, &bitsPerFrame, &mean_bits);
-        max_frame_bits = ResvFrameBegin (gfc->gfp, l3_side, mean_bits, bitsPerFrame);
+        getframebits (gfc, &bitsPerFrame, &mean_bits);
+        max_frame_bits = ResvFrameBegin (gfc, l3_side, mean_bits, bitsPerFrame);
         if (totbits <= max_frame_bits) break; 
     }
     assert (gfc->bitrate_index <= gfc->VBR_max_bitrate);
@@ -1754,8 +1754,8 @@ void iteration_loop
     gr_info             *cod_info;
 
     bit_rate = bitrate_table [gfc->gfp->version] [gfc->bitrate_index];
-    getframebits (gfc->gfp, &bitsPerFrame, &mean_bits);
-    ResvFrameBegin (gfc->gfp, l3_side, mean_bits, bitsPerFrame );
+    getframebits (gfc, &bitsPerFrame, &mean_bits);
+    ResvFrameBegin (gfc, l3_side, mean_bits, bitsPerFrame );
 
     /* quantize! */
     for (gr = 0; gr < gfc->mode_gr; gr++) {
@@ -1806,7 +1806,7 @@ void iteration_loop
              */
 #undef  NORES_TEST
 #ifndef NORES_TEST
-            ResvAdjust (gfc->gfp, cod_info, l3_side, mean_bits);
+            ResvAdjust (gfc, cod_info, l3_side, mean_bits);
 #endif      
             /*  set the sign of l3_enc from the sign of xr
              */
@@ -1823,12 +1823,12 @@ void iteration_loop
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         for (ch =  0; ch < gfc->stereo; ch++) {
             cod_info = &l3_side->gr[gr].ch[ch].tt;
-            ResvAdjust (gfc->gfp, cod_info, l3_side, mean_bits);
+            ResvAdjust (gfc, cod_info, l3_side, mean_bits);
         }
     }
 #endif
 
-    ResvFrameEnd (gfc->gfp, l3_side, mean_bits);
+    ResvFrameEnd (gfc, l3_side, mean_bits);
 }
 
 

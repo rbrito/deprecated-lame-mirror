@@ -351,7 +351,7 @@ typedef lame_internal_flags context;
 *  Global Function Prototype Declarations
 *
 ***********************************************************************/
-void           freegfc(lame_internal_flags *gfc);
+void           freegfc(context *gfc);
 extern int            BitrateIndex(int, int,int);
 extern int            FindNearestBitrate(int,int,int);
 extern int            map2MP3Frequency(int freq);
@@ -363,16 +363,16 @@ extern void freorder(int scalefac_band[],FLOAT8 ix_orig[576]);
 
 
 extern void 
-getframebits(lame_global_flags *gfp,int *bitsPerFrame, int *mean_bits);
+getframebits(context *gfc, int *bitsPerFrame, int *mean_bits);
 
 int  fill_buffer_resample (
-        lame_global_flags* const  gfp,
-        sample_t* const           outbuf,
-        const int                 desired_len,
-        const sample_t*           inbuf,
-        const int                 len,
-        int* const                num_used,
-        const int                 channels );
+        context * const  gfc,
+        sample_t* const  outbuf,
+        const int        desired_len,
+        const sample_t*  inbuf,
+        const int        len,
+        int* const       num_used,
+        const int        channels );
 
 
 extern int has_3DNow (void);
@@ -380,7 +380,7 @@ extern int has_MMX   (void);
 extern int has_SIMD  (void);
 
 
-extern void updateStats (lame_internal_flags *gfc);
+extern void updateStats (context *gfc);
 
 
 
@@ -418,6 +418,6 @@ extern scalar_t   scalar20;
 extern scalar_t   scalar64;
 extern scalarn_t  scalar;
 
-void init_scalar_functions ( const lame_internal_flags* gfp );
+void init_scalar_functions ( const context * gfc );
 
 #endif /* LAME_UTIL_H */

@@ -499,7 +499,7 @@ id3tag_write_v2(lame_global_flags *gfp)
             /* write tag directly into bit stream at current position */
 	    { unsigned int i;
 	    for (i=0 ; i<tag_size; ++i)
-	      add_dummy_byte(gfp,tag[i]);
+	      add_dummy_byte(gfc,tag[i]);
 	    }
 	    /*
             if (fwrite(tag, 1, tag_size, stream) != tag_size) {
@@ -558,7 +558,7 @@ id3tag_write_v1(lame_global_flags *gfp)
         *p++ = spec->genre;
 	{ int i;
 	for (i=0; i<128; ++i)
-	  add_dummy_byte(gfp,tag[i]);
+	  add_dummy_byte(gfc,tag[i]);
 	}
 	return 128;
     }

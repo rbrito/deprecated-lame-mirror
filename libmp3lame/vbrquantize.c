@@ -1193,13 +1193,13 @@ VBR_quantize(context * const gfc,
   } else {
     gfc->bitrate_index=gfc->VBR_min_bitrate;
   }
-  getframebits(gfc->gfp,&bitsPerFrame, &mean_bits);
+  getframebits(gfc, &bitsPerFrame, &mean_bits);
   minbits = (mean_bits/gfc->stereo);
 
   /* compute maximum allowed bits from max allowed bitrate */
   gfc->bitrate_index=gfc->VBR_max_bitrate;
-  getframebits(gfc->gfp,&bitsPerFrame, &mean_bits);
-  max_frame_bits = ResvFrameBegin(gfc->gfp,l3_side, mean_bits, bitsPerFrame);
+  getframebits(gfc, &bitsPerFrame, &mean_bits);
+  max_frame_bits = ResvFrameBegin(gfc, l3_side, mean_bits, bitsPerFrame);
   maxbits=2.5*(mean_bits/gfc->stereo);
 
   {
@@ -1341,13 +1341,13 @@ VBR_quantize(context * const gfc,
   }
   for( ; gfc->bitrate_index < gfc->VBR_max_bitrate; gfc->bitrate_index++ ) {
 
-    getframebits (gfc->gfp,&bitsPerFrame, &mean_bits);
-    maxbits = ResvFrameBegin(gfc->gfp,l3_side, mean_bits, bitsPerFrame);
+    getframebits (gfc, &bitsPerFrame, &mean_bits);
+    maxbits = ResvFrameBegin(gfc, l3_side, mean_bits, bitsPerFrame);
     if (totbits <= maxbits) break;
   }
   if (gfc->bitrate_index == gfc->VBR_max_bitrate) {
-    getframebits (gfc->gfp,&bitsPerFrame, &mean_bits);
-    maxbits = ResvFrameBegin(gfc->gfp,l3_side, mean_bits, bitsPerFrame);
+    getframebits (gfc, &bitsPerFrame, &mean_bits);
+    maxbits = ResvFrameBegin(gfc, l3_side, mean_bits, bitsPerFrame);
   }
 
   //  DEBUGF("%i total_bits=%i max_frame_bits=%i index=%i  \n",gfp->frameNum,totbits,max_frame_bits,gfc->bitrate_index);
@@ -1357,7 +1357,7 @@ VBR_quantize(context * const gfc,
       cod_info = &l3_side->gr[gr].ch[ch].tt;
 
 
-      ResvAdjust (gfc->gfp,cod_info, l3_side, mean_bits);
+      ResvAdjust (gfc, cod_info, l3_side, mean_bits);
       
       /*******************************************************************
        * set the sign of l3_enc from the sign of xr
@@ -1367,7 +1367,7 @@ VBR_quantize(context * const gfc,
       }
     }
   }
-  ResvFrameEnd (gfc->gfp,l3_side, mean_bits);
+  ResvFrameEnd (gfc, l3_side, mean_bits);
 
 
 

@@ -356,7 +356,7 @@ int InitVbrTag(lame_global_flags *gfp)
 	assert(gfp->TotalFrameSize <= MAXFRAMESIZE );
 
 	for (i=0; i<gfp->TotalFrameSize; ++i)
-	  add_dummy_byte(gfp,0);
+	  add_dummy_byte(gfc,0);
 	}
 
 	/* Success */

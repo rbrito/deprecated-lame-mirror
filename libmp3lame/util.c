@@ -41,7 +41,7 @@
 *
 ***********************************************************************/
 /*empty and close mallocs in gfc */
-void freegfc(lame_internal_flags *gfc)   /* bit stream structure */
+void freegfc(context *gfc)   /* bit stream structure */
 {
    int i;
    for (i=0 ; i<2*BPC+1 ; ++i)
@@ -157,26 +157,28 @@ FLOAT8 freq2cbw(FLOAT8 freq)
 /***********************************************************************
  * compute bitsperframe and mean_bits for a layer III frame 
  **********************************************************************/
-void getframebits(lame_global_flags *gfp, int *bitsPerFrame, int *mean_bits) 
+void getframebits(context *const gfc, int *bitsPerFrame, int *mean_bits) 
 {
-  lame_internal_flags *gfc=gfp->internal_flags;
-  int  whole_SpF;  // integral number of bytes per frame without padding
+  int  whole_SpF;  /* integral number of Slots per Frame without padding */
   int  bit_rate;
   
   /* get bitrate in kbps [?] */
   if (gfc->bitrate_index) 
-    bit_rate = bitrate_table[gfp->version][gfc->bitrate_index];
+    bit_rate = bitrate_table[gfc->gfp->version][gfc->bitrate_index];
   else
-    bit_rate = gfp->brate;
+    bit_rate = gfc->gfp->brate;
   assert ( bit_rate <= 550 );
   
   // bytes_per_frame = bitrate * 1000 / ( gfp->out_samplerate / (gfp->version == 1  ?  1152  :  576 )) / 8;
   // bytes_per_frame = bitrate * 1000 / gfp->out_samplerate * (gfp->version == 1  ?  1152  :  576 ) / 8;
   // bytes_per_frame = bitrate * ( gfp->version == 1  ?  1152/8*1000  :  576/8*1000 ) / gfp->out_samplerate;
   
-  whole_SpF = (gfp->version+1)*72000*bit_rate / gfp->out_samplerate;
+  whole_SpF = (gfc->gfp->version+1)*72000*bit_rate / gfc->gfp->out_samplerate;
   
   // There must be somewhere code toggling gfc->padding on and off
+  
+  /* main encoding routine toggles padding on and off */
+  /* one Layer3 Slot consists of 8 bits */
   *bitsPerFrame = 8 * (whole_SpF + gfc->padding);
   
   // sideinfo_len
@@ -336,16 +338,14 @@ int gcd ( int i, int j )
 
 
 int  fill_buffer_resample (
-        lame_global_flags* const  gfp,
-        sample_t* const           outbuf,
-        const int                 desired_len,
-        const sample_t*           inbuf,
-        const int                 len,           /* must be at least > sometwenty, otherwise nonsense will be produced */
-        int* const                num_used,
-        const int                 channels )
+        context * const  gfc,
+        sample_t* const  outbuf,
+        const int        desired_len,
+        const sample_t*  inbuf,
+        const int        len,           /* must be at least > sometwenty, otherwise nonsense will be produced */
+        int* const       num_used,
+        const int        channels )
 {
-  
-    lame_internal_flags* const  gfc = gfp->internal_flags;
     int        BLACKSIZE;
     FLOAT      offset;
     FLOAT      xvalue;
@@ -358,7 +358,9 @@ int  fill_buffer_resample (
     sample_t*  inbuf_old;
     int        bpc;                    /* number of convolution functions to pre-compute */
     
-    bpc = gfp->out_samplerate / gcd ( gfp->out_samplerate, gfp->in_samplerate );
+    bpc = gfc->gfp->out_samplerate 
+        / gcd ( gfc->gfp->out_samplerate, gfc->gfp->in_samplerate );
+    
     if ( bpc > BPC ) 
         bpc = BPC;
 
@@ -547,7 +549,7 @@ int has_SIMD (void)
  *
  ***********************************************************************/
  
-void updateStats( lame_internal_flags *gfc )
+void updateStats( context * const gfc )
 {
     assert ( gfc->bitrate_index < 16u );
     assert ( gfc->mode_ext      <  4u );
@@ -630,7 +632,7 @@ scalar_t   scalar20;
 scalar_t   scalar64;
 scalarn_t  scalar;
 
-void init_scalar_functions ( const lame_internal_flags* const  gfp )
+void init_scalar_functions ( const context * const  gfc )
 {
     scalar4  = std_scalar4;
     scalar8  = std_scalar8;
