@@ -207,8 +207,8 @@ typedef struct  {
   /* variables used by util.c */
   /* BPC = maximum number of filter convolution windows to precompute */
 #define BPC 320
-  FLOAT *inbuf_old[2];
-  FLOAT *blackfilt[2*BPC+1];
+  sample_t *inbuf_old [2];
+  sample_t *blackfilt [2*BPC+1];
   FLOAT8 itime[2];
   int sideinfo_len;
 
@@ -352,11 +352,19 @@ extern FLOAT8         freq2bark(FLOAT8 freq);
 extern FLOAT8         freq2cbw(FLOAT8 freq);
 extern void freorder(int scalefac_band[],FLOAT8 ix_orig[576]);
 
-extern int fill_buffer_resample(lame_global_flags *gfp,sample_t *outbuf,int desired_len,
-	 short int *inbuf,int len,int *num_used,int ch);
 
 extern void 
 getframebits(lame_global_flags *gfp,int *bitsPerFrame, int *mean_bits);
+
+int  fill_buffer_resample (
+        lame_global_flags* const  gfp,
+        sample_t* const           outbuf,
+        const int                 desired_len,
+        const sample_t*           inbuf,
+        const int                 len,
+        int* const                num_used,
+        const int                 channels );
+
 
 extern int has_3DNow (void);
 extern int has_MMX   (void);

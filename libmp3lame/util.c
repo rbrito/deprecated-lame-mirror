@@ -19,6 +19,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#define PRECOMPUTE
+
 #define KLEMM_02
 
 #include "util.h"
@@ -321,103 +323,135 @@ S.D. Stearns and R.A. David, Prentice-Hall, 1992
 
 /* gcd - greatest common divisor */
 /* Joint work of Euclid and M. Hendry */
-int gcd(int i, int j) {
-  return j ? gcd(j, i % j) : i;
+
+int gcd ( int i, int j )
+{
+//    assert ( i > 0  &&  j > 0 );
+    return j ? gcd(j, i % j) : i;
 }
 
 
-int fill_buffer_resample(lame_global_flags *gfp,sample_t *outbuf,int desired_len,
-			 short int *inbuf,int len,int *num_used,int ch) {
+int  fill_buffer_resample (
+        lame_global_flags* const  gfp,
+        sample_t* const           outbuf,
+        const int                 desired_len,
+        const sample_t*           inbuf,
+        const int                 len,           /* must be at least > sometwenty, otherwise nonsense will be produced */
+        int* const                num_used,
+        const int                 channels )
+{
   
-  lame_internal_flags *gfc=gfp->internal_flags;
-  int BLACKSIZE;
-  FLOAT offset,xvalue;
-  int i,j=0,k;
-  int filter_l;
-  FLOAT fcn,intratio;
-  FLOAT *inbuf_old;
-  int bpc;   /* number of convolution functions to pre-compute */
-  bpc = gfp->out_samplerate/gcd(gfp->out_samplerate,gfp->in_samplerate);
-  if (bpc>BPC) bpc = BPC;
+    lame_internal_flags* const  gfc = gfp->internal_flags;
+    int        BLACKSIZE;
+    FLOAT      offset;
+    FLOAT      xvalue;
+    int        i;
+    int        j = 0;  /* why ?? */
+    int        k;
+    int        filter_l;
+    FLOAT      fcn;
+    FLOAT      intratio;
+    sample_t*  inbuf_old;
+    int        bpc;                    /* number of convolution functions to pre-compute */
+    
+    bpc = gfp->out_samplerate / gcd ( gfp->out_samplerate, gfp->in_samplerate );
+    if ( bpc > BPC ) 
+        bpc = BPC;
 
-  intratio=( fabs(gfc->resample_ratio - floor(.5+gfc->resample_ratio)) < .0001 );
-  fcn = .90/gfc->resample_ratio;
-  if (fcn>.90) fcn=.90;
-  filter_l=19;
-  if (0==filter_l % 2 ) --filter_l;  /* must be odd */
-  BLACKSIZE = filter_l+1;  /* size of data needed for FIR */
+    intratio = fabs (gfc->resample_ratio - floor (gfc->resample_ratio + 0.5)) < 1.e-4;
+    fcn = 0.90 / gfc->resample_ratio;
+    if (fcn > 0.90) 
+        fcn = 0.90;
+        
+    BLACKSIZE = 20;
+    filter_l  = 19;
+    if (0 == filter_l % 2 ) 
+        filter_l -= 1;         /* must be odd */
 
-  /* if resample_ratio = int, filter_l should be even */
-  filter_l += intratio;
+    /* if resample_ratio = int, filter_l should be even */
+    filter_l += intratio;
   
-  if (!gfc->fill_buffer_resample_init) {
-    gfc->inbuf_old[0]=calloc(BLACKSIZE,sizeof(gfc->inbuf_old[0][0]));
-    gfc->inbuf_old[1]=calloc(BLACKSIZE,sizeof(gfc->inbuf_old[0][0]));
-    for (i=0; i<2*bpc+1; ++i)
-      gfc->blackfilt[i]=malloc(BLACKSIZE*sizeof(gfc->blackfilt[0][0]));
+    if ( ! gfc->fill_buffer_resample_init ) {
+        gfc->fill_buffer_resample_init = 1;
+        
+        gfc->inbuf_old [0] = calloc ( BLACKSIZE, sizeof (gfc->inbuf_old[0][0]) );
+        gfc->inbuf_old [1] = calloc ( BLACKSIZE, sizeof (gfc->inbuf_old[0][0]) );
+        
+        for ( i = 0; i < 2*bpc+1; i++ )
+            gfc->blackfilt[i] = calloc ( BLACKSIZE, sizeof (gfc->blackfilt[0][0]) );
 
-    gfc->fill_buffer_resample_init=1;
-    gfc->itime[0]=0;
-    gfc->itime[1]=0;
+        gfc->itime[0] = 0;
+        gfc->itime[1] = 0;
 
-    /* precompute blackman filter coefficients */
-    for (j= 0; j<= 2*bpc; ++j) {
-      FLOAT sum=0;
-      offset=(FLOAT)(j-bpc)/(FLOAT)(2*bpc);
-      for (i=0; i<=filter_l; ++i) {
-	sum+= gfc->blackfilt[j][i]=blackman(i,offset,fcn,filter_l);
-      }
-      gfc->blackfilt[j][i] /= sum;
+        /* precompute blackman filter coefficients */
+        for (j = 0; j <= 2*bpc; j++ ) {
+            FLOAT  sum;
+            sum    = 0;
+            offset = (j-bpc) / (2.*bpc);
+            for ( i = 0; i <= filter_l; i++ ) {
+                sum += gfc->blackfilt [j][i] = blackman ( i, offset, fcn, filter_l );
+            }
+            gfc->blackfilt [j][i] /= sum;    /* Error ????????? */
+        }
     }
+    
+    inbuf_old = gfc->inbuf_old [channels];
 
-  }
-  inbuf_old=gfc->inbuf_old[ch];
+    /*
+     * time of j'th element in inbuf  = itime + j/ifreq;
+     * time of k'th element in outbuf = j/ofreq
+     */
+     
+    for ( k = 0; k < desired_len; k++ ) {
+        FLOAT  time0;
+        int    joff;
 
-  /* time of j'th element in inbuf = itime + j/ifreq; */
-  /* time of k'th element in outbuf   =  j/ofreq */
-  for (k=0;k<desired_len;k++) {
-    FLOAT time0;
-    int joff;
+        time0 = k * gfc->resample_ratio;       /* time of k'th output sample */
+        j     = floor ( time0 - gfc->itime [channels] );
 
-    time0 = k*gfc->resample_ratio;       /* time of k'th output sample */
-    j = floor( time0 -gfc->itime[ch]  );
+        /* check if we need more input data */
+        if ( (j + filter_l/2) >= len ) 
+            break;
 
-    /* check if we need more input data */
-    if ((j+filter_l/2) >= len) break;
+        /* blackman filter.  by default, window centered at j+.5(filter_l%2) */
+        /* but we want a window centered at time0.   */
+        offset = ( time0 -gfc->itime[channels] - (j + .5*(filter_l%2)));
+        assert (fabs(offset) <= 0.500001 );
+        joff   = floor ( (offset*2*bpc) + bpc + 0.5 );
 
-    /* blackman filter.  by default, window centered at j+.5(filter_l%2) */
-    /* but we want a window centered at time0.   */
-    offset = ( time0 -gfc->itime[ch] - (j + .5*(filter_l%2)));
-    assert(fabs(offset)<=.500001);
-    joff = floor((offset*2*bpc) + bpc +.5);
-
-    xvalue=0;
-    for (i=0 ; i<=filter_l ; ++i) {
-      int j2 = i+j-filter_l/2;
-      int y;
-      y = (j2<0) ? inbuf_old[BLACKSIZE+j2] : inbuf[j2];
-#define PRECOMPUTE
+	if ( j >= filter_l/2 ) {
+	    // Broken PRECOMPUTE
+            xvalue = scalar20 ( inbuf + j-filter_l/2, gfc->blackfilt [joff] );
+	} else {
+	    xvalue = 0.;
+            for ( i = 0 ; i <= filter_l; i++) {
+                int       j2 = i + j-filter_l/2;
+                sample_t  y;
+            
+                y = (j2 < 0) ? inbuf_old [BLACKSIZE+j2] : inbuf [j2];
 #ifdef PRECOMPUTE
-      xvalue += y*gfc->blackfilt[joff][i];
+                xvalue += y*gfc->blackfilt [joff][i];
 #else
-      xvalue += y*blackman(i,offset,fcn,filter_l);  /* very slow! */
+                xvalue += y*blackman(i,offset,fcn,filter_l);  /* very slow! */
 #endif
+            }
+	}
+        outbuf [k] = xvalue;
     }
-    outbuf[k]=xvalue;
-  }
 
-  
-  /* k = number of samples added to outbuf */
-  /* last k sample used data from j..j+filter_l/2  */
-  /* remove num_used samples from inbuf: */
-  *num_used = Min(len,j+filter_l/2);
-  gfc->itime[ch] += *num_used - k*gfc->resample_ratio;
-  for (i=0;i<BLACKSIZE;i++)
-    inbuf_old[i]=inbuf[*num_used + i -BLACKSIZE];
-  return k;
+    /* k = number of samples added to outbuf
+     * last k sample used data from j ... j+filter_l/2
+     * remove num_used samples from inbuf:
+     */
+    
+    *num_used = Min ( len, j + filter_l/2 );
+    gfc->itime[channels] += *num_used - k*gfc->resample_ratio;
+    for ( i = 0; i < BLACKSIZE; i++ )
+        inbuf_old [i] = inbuf[ *num_used + i - BLACKSIZE ];
+    if (len < BLACKSIZE)
+        fprintf ( stderr, "Warning: len(%u) < BLACKSIZE(%u)\n", len, BLACKSIZE );
+    return k;
 }
-
-
 
 
 
@@ -592,7 +626,7 @@ static FLOAT  std_scalar20 ( const sample_t* p, const sample_t* q )
 }
 
 
-/* currently len must be a multiple of 4. This is necessary for SIMD1 */
+/* currently len must be a multiple of 4 and >= 8. This is necessary for SIMD1 */
 
 static FLOAT  std_scalar ( const sample_t* p, const sample_t* q, size_t len )
 {

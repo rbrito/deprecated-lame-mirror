@@ -249,8 +249,15 @@ void lame_print_config(const lame_global_flags *);
  * This will overwrite the data in leftpcm[] and rightpcm[].
  * 
 */
-int lame_encode_buffer(lame_global_flags *,short int leftpcm[], short int rightpcm[],int num_samples,
-char *mp3buffer,int  mp3buffer_size);
+//int lame_encode_buffer(lame_global_flags *,short int leftpcm[], short int rightpcm[],int num_samples, char *mp3buffer,int  mp3buffer_size);
+
+int    lame_encode_buffer (
+        lame_global_flags*  gfp,
+        const short int     buffer_l [],
+        const short int     buffer_r [],
+        const int           nsamples,
+        char* const         mp3buf,
+        const int           mp3buf_size );
 
 /* as above, but input has L & R channel data interleaved.  Note: 
  * num_samples = number of samples in the L (or R)

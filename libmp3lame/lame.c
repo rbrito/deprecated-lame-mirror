@@ -848,28 +848,44 @@ char *mp3buf, int mp3buf_size)
  * return code = number of bytes output in mp3buffer.  can be 0
 */
 
+/*
+ *  lame_encode_buffer_interleaved() will disaapear in this form in the next 
+ *  version. It is too similar to lame_encode_buffer() and 
+ *  lame_encode_buffer_interleaved(). Especially if there are multiple versions
+ *   (int16, int24, int32, float) I don't want to care several times nearly the same code
+ */
+
 int    lame_encode_buffer (
-                lame_global_flags* gfp,
-                short int          buffer_l[],
-                short int          buffer_r[],
-                int                nsamples,
-                char*              mp3buf,
-                int                mp3buf_size )
+        lame_global_flags*  gfp,
+        const short int     buffer_l [],
+        const short int     buffer_r [],
+        int                 nsamples,
+        char*               mp3buf,
+        const int           mp3buf_size )
 {
+  lame_internal_flags *gfc = gfp->internal_flags;
   int mp3size = 0, ret, i, ch, mf_needed;
-  lame_internal_flags *gfc=gfp->internal_flags;
-  sample_t *mfbuf[2];
-  short int *in_buffer[2];
-  in_buffer[0] = buffer_l;
-  in_buffer[1] = buffer_r;
+  sample_t* mfbuf     [2];
+  sample_t* in_buffer [2];
+  sample_t* fn_buffer [2];
 
   if (!gfc->lame_init_params_init) return -3;
+  
+  fn_buffer [0] = in_buffer [0] = calloc ( sizeof(sample_t), nsamples );
+  fn_buffer [1] = in_buffer [1] = calloc ( sizeof(sample_t), nsamples );
+  
+  for (i = 0; i < nsamples; i++) {
+  
+      in_buffer [0] [i] = buffer_l [i];
+      in_buffer [1] [i] = buffer_r [i];
+  }
+
 
   /* some sanity checks */
   assert(ENCDELAY>=MDCTDELAY);
   assert(BLKSIZE-FFTOFFSET >= 0);
-  mf_needed = BLKSIZE+gfp->framesize-FFTOFFSET;  /* ammount needed for FFT */
-  mf_needed = Max(mf_needed,286+576*(1+gfc->mode_gr)); /* ammount needed for MDCT/filterbank */
+  mf_needed = BLKSIZE+gfp->framesize-FFTOFFSET;  /* amount needed for FFT */
+  mf_needed = Max(mf_needed,286+576*(1+gfc->mode_gr)); /* amount needed for MDCT/filterbank */
   assert(MFSIZE>=mf_needed);
 
   mfbuf[0]=gfc->mfbuf[0];
@@ -878,8 +894,8 @@ int    lame_encode_buffer (
   if (gfp->num_channels==2  && gfc->stereo==1) {
     /* downsample to mono */
     for (i=0; i<nsamples; ++i) {
-      in_buffer[0][i]=((int)in_buffer[0][i]+(int)in_buffer[1][i])/2;
-      in_buffer[1][i]=0;
+      in_buffer[0][i] = 0.5 * ( (double)in_buffer[0][i] + in_buffer[1][i] );
+      in_buffer[1][i] = 0.0;
     }
   }
 
@@ -889,10 +905,9 @@ int    lame_encode_buffer (
     int n_out=0;
 
     /* copy in new samples into mfbuf, with resampling if necessary */
-    if (gfc->resample_ratio!=1)  {
+    if (gfc->resample_ratio != 1.0)  {
       for (ch=0; ch<gfc->stereo; ch++) {
-	n_out=fill_buffer_resample(gfp,&mfbuf[ch][gfc->mf_size],gfp->framesize,
-				   in_buffer[ch],nsamples,&n_in,ch);
+	n_out = fill_buffer_resample(gfp,&mfbuf[ch][gfc->mf_size],gfp->framesize, in_buffer[ch],nsamples,&n_in,ch);
 	in_buffer[ch] += n_in;
       }
     }else{
@@ -933,6 +948,9 @@ int    lame_encode_buffer (
   }
   assert(nsamples==0);
 
+  free (fn_buffer [0]);
+  free (fn_buffer [1]);
+
   return mp3size;
 }
 
@@ -966,7 +984,7 @@ int    lame_encode_buffer_interleaved (
     return lame_encode_buffer(gfp,buffer,NULL,nsamples,mp3buf,mp3buf_size);
   }
 
-  if (gfc->resample_ratio!=1)  {
+  if (gfc->resample_ratio != 1.0)  {
     short int *buffer_l;
     short int *buffer_r;
     
@@ -1055,16 +1073,18 @@ int    lame_encode_buffer_interleaved (
     
 /* old LAME interface.  use lame_encode_buffer instead */
 
-int lame_encode (lame_global_flags* gfp,
-                 short int         in_buffer[2][1152],
-                 char*              mp3buf,
-                 int                size )
+int lame_encode (
+        lame_global_flags* const  gfp,
+        const short int           in_buffer [2] [1152],
+        char* const               mp3buf,
+        const int                 size )
 {
-  int imp3;
-  lame_internal_flags *gfc=gfp->internal_flags;
-  if (!gfc->lame_init_params_init) return -3;
-  imp3= lame_encode_buffer(gfp,in_buffer[0],in_buffer[1],gfp->framesize,mp3buf,size);
-  return imp3;
+    lame_internal_flags*  gfc = gfp->internal_flags;
+  
+    if ( !gfc->lame_init_params_init ) 
+        return -3;
+  
+    return lame_encode_buffer ( gfp, in_buffer[0], in_buffer[1], gfp->framesize, mp3buf, size );
 }
 
 /*}}}*/
