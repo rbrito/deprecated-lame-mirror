@@ -26,7 +26,6 @@
 #endif
 
 #include "util.h"
-#include <ctype.h>
 #include <assert.h>
 #include <stdarg.h>
 
@@ -96,24 +95,22 @@ BitrateIndex(
 /* resampling via FIR filter, blackman window */
 inline static FLOAT blackman(FLOAT x,FLOAT fcn,int l)
 {
-  /* This algorithm from:
-SIGNAL PROCESSING ALGORITHMS IN FORTRAN AND C
-S.D. Stearns and R.A. David, Prentice-Hall, 1992
-  */
-  FLOAT bkwn,x2;
-  FLOAT wcn = (PI * fcn);
+    /* This algorithm from:
+       SIGNAL PROCESSING ALGORITHMS IN FORTRAN AND C
+       S.D. Stearns and R.A. David, Prentice-Hall, 1992
+    */
+    FLOAT bkwn,x2;
+    FLOAT wcn = (PI * fcn);
   
-  x /= l;
-  if (x<0) x=0;
-  if (x>1) x=1;
-  x2 = x - .5;
+    x /= l;
+    if (x<0) x=0;
+    if (x>1) x=1;
+    x2 = x - .5;
 
-  bkwn = 0.42 - 0.5*cos(2*x*PI)  + 0.08*cos(4*x*PI);
-  if (fabs(x2)<1e-9) return wcn/PI;
-  else 
-    return  (  bkwn*sin(l*wcn*x2)  / (PI*l*x2)  );
-
-
+    bkwn = 0.42 - 0.5*cos(2*x*PI)  + 0.08*cos(4*x*PI);
+    if (fabs(x2)<1e-9) return wcn/PI;
+    else 
+	return  (  bkwn*sin(l*wcn*x2)  / (PI*l*x2)  );
 }
 
 /* gcd - greatest common divisor */
@@ -338,19 +335,11 @@ void  lame_errorf (const lame_internal_flags *gfc, const char* format, ... )
 
 
 
+/*
+ *  Disable floating point exceptions
+ *  extremly system dependent stuff, move to a lib to make the code readable
+ */
 void disable_FPE(void) {
-/* extremly system dependent stuff, move to a lib to make the code readable */
-/*==========================================================================*/
-
-
-
-    /*
-     *  Disable floating point exceptions
-     */
-
-
-
-
 #if defined(__FreeBSD__) && !defined(__alpha__)
     {
         /* seet floating point mask to the Linux default */
@@ -436,9 +425,3 @@ void disable_FPE(void) {
 #endif
 #endif /* ABORTFP */
 }
-
-
-
-
-
-/* end of util.c */
