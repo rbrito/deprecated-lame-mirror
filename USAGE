@@ -94,7 +94,7 @@ Quality related:
 -k             disable all filtering
 -d             allow block types to differ between channels
 --athonly      ignore psy-model output, only use masking from the ATH
---voice        experimental voice encoding mode
+--voice        (obsolete, try --preset voice instead)
 --noshort      disable short blocks
 -q n           Internal algorithm quality setting 0..9. 
                0 = slowest algorithms, but potentially highest quality
@@ -706,6 +706,7 @@ voice encoding mode
 --voice
 
 An experimental voice encoding mode.  Tuned for 44.1 kHz input files.
+--voice is deprecated, use --preset voice instead
 
 
 =======================================================================
