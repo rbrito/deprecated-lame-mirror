@@ -189,20 +189,6 @@ AH_VERBATIM([HAVE_INT32_T],
 	typedef A_INT32_T int32_t;
 #endif])
 
-alex_IEEE854_FLOAT80
-if test "${alex_cv_ieee854_float80}" = "yes" ; then
-	if test "${ac_cv_c_long_double}" = "yes" ; then
-		AC_CHECK_TYPES(ieee854_float80_t, long double)
-		AH_VERBATIM([HAVE_IEEE854_FLOAT80_T],
-[/* add ieee854_float80_t type */
-#undef HAVE_IEEE854_FLOAT80_T
-#ifndef HAVE_IEEE854_FLOAT80_T
-	typedef long double ieee854_float80_t;
-#endif])
-
-		AC_DEFINE(HAVE_IEEE854_FLOAT80, 1, [system has 80 bit floats])
-	fi
-fi
 AC_CHECK_TYPES([ieee754_float64_t, ieee754_float32_t])
 
 AH_VERBATIM([HAVE_IEEE754_FLOAT64_T],
