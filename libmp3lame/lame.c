@@ -878,7 +878,7 @@ void lame_print_config ( const lame_global_flags* gfp )
     double    out_samplerate = gfp->out_samplerate;
     double    in_samplerate  = gfp->out_samplerate * gfc->resample_ratio;
 
-    MSGF ( "LAME version %s    (%s)\n", get_lame_version (), get_lame_url () );
+    MSGF ( "LAME version %s (%s)\n", get_lame_version (), get_lame_url () );
 
     if ( gfc->CPU_features_MMX  ||  gfc->CPU_features_3DNow  ||  gfc->CPU_features_SIMD  ||  gfc->CPU_features_SIMD2 ) {
         MSGF ("CPU features:"); 
@@ -1006,11 +1006,12 @@ int    lame_encode_buffer (
   sample_t* fn_buffer [2];
 
   if ( gfc->Class_ID != LAME_ID ) return -3;
+
   if (nsamples==0) return 0;
   
   fn_buffer [0] = in_buffer [0] = calloc ( sizeof(sample_t), nsamples );
   fn_buffer [1] = in_buffer [1] = calloc ( sizeof(sample_t), nsamples );
-  
+
   if (in_buffer[0] == NULL || in_buffer[1] == NULL) {
     ERRORF ("Error: can't allocate in_buffer buffer\n");
     return -2;
@@ -1024,8 +1025,13 @@ int    lame_encode_buffer (
 
 
   /* some sanity checks */
-  assert(ENCDELAY>=MDCTDELAY);
-  assert(BLKSIZE-FFTOFFSET >= 0);
+#if ENCDELAY < MDCTDELAY
+# error ENCDELAY is less than MDCTDELAY, see encoder.h
+#endif
+#if FFTOFFSET > BLKSIZE
+# error FFTOFFSET is greater than BLKSIZE, see encoder.h
+#endif
+
   mf_needed = BLKSIZE+gfp->framesize-FFTOFFSET;  /* amount needed for FFT */
   mf_needed = Max(mf_needed,286+576*(1+gfc->mode_gr)); /* amount needed for MDCT/filterbank */
   assert(MFSIZE>=mf_needed);
@@ -1119,8 +1125,13 @@ int    lame_encode_buffer_interleaved (
   mfbuf[1]=gfc->mfbuf[1];
 
   /* some sanity checks */
-  assert(ENCDELAY>=MDCTDELAY);
-  assert(BLKSIZE-FFTOFFSET >= 0);
+#if ENCDELAY < MDCTDELAY
+# error ENCDELAY is less than MDCTDELAY, see encoder.h
+#endif
+#if FFTOFFSET > BLKSIZE
+# error FFTOFFSET is greater than BLKSIZE, see encoder.h
+#endif
+
   mf_needed = BLKSIZE+gfp->framesize-FFTOFFSET;
   assert(MFSIZE>=mf_needed);
 
