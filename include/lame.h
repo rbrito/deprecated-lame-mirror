@@ -646,7 +646,6 @@ int CDECL lame_init_bitstream(lame_t);
  */
 
 void CDECL lame_bitrate_hist(lame_t, int bitrate_count[14]);
-void CDECL lame_bitrate_kbps(lame_t, int bitrate_kbps[14]);
 void CDECL lame_stereo_mode_hist(lame_t, int stereo_mode_count[4]);
 void CDECL lame_block_type_hist(lame_t, int btype_count[6]);
 

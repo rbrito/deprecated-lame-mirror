@@ -30,7 +30,6 @@ EXTRA_DIST = libmp3lame_vc6.dsp
 
 libmp3lame_la_SOURCES = \
 	bitstream.c \
-	encoder.c \
         tags.c \
         lame.c \
         newmdct.c \

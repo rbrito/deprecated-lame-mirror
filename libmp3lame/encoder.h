@@ -538,14 +538,6 @@ struct lame_internal_flags {
 #endif
 };
 
-int encode_buffer_sample(
-    lame_t gfc,
-    sample_t buffer_lr[],
-    int nsamples,
-    unsigned char *mp3buf,
-    const int mp3buf_size
-    );
-
 /* same as lame_decode1 (look in lame.h), but returns 
    unclipped raw floating-point samples. It is declared
    here, not in lame.h, because it returns LAME's 

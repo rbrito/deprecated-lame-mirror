@@ -186,7 +186,6 @@ EXTRA_DIST = libmp3lame_vc6.dsp
 
 libmp3lame_la_SOURCES = \
 	bitstream.c \
-	encoder.c \
         tags.c \
         lame.c \
         newmdct.c \
@@ -383,8 +382,6 @@ mostlyclean-kr:
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ `test -f '$<' || echo '$(srcdir)/'`$<
 bitstream_.c: bitstream.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/bitstream.c; then echo $(srcdir)/bitstream.c; else echo bitstream.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
-encoder_.c: encoder.c $(ANSI2KNR)
-	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/encoder.c; then echo $(srcdir)/encoder.c; else echo encoder.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
 lame_.c: lame.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/lame.c; then echo $(srcdir)/lame.c; else echo lame.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
 mpglib_interface_.c: mpglib_interface.c $(ANSI2KNR)

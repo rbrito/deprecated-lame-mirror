@@ -133,7 +133,8 @@ brhist_init(lame_t gfp, const int bitrate_kbps_min, const int bitrate_kbps_max)
     }
 
     /* initialize histogramming data structure */
-    lame_bitrate_kbps (gfp, brhist.kbps );
+    memcpy(brhist.kbps, &bitrate_table[lame_get_version(gfp)][1],
+	   sizeof(int)*14);
     brhist.vbr_bitrate_min_index = calculate_index ( brhist.kbps, BRHIST_WIDTH, bitrate_kbps_min );
     brhist.vbr_bitrate_max_index = calculate_index ( brhist.kbps, BRHIST_WIDTH, bitrate_kbps_max );
 
