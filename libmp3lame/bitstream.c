@@ -35,6 +35,7 @@
 #include "quantize_pvt.h"
 #include "version.h"
 #include "VbrTag.h"
+#include "machine.h"
 #include "gain_analysis.h"
 
 #ifdef WITH_DMALLOC

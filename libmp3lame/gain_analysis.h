@@ -28,19 +28,6 @@
 #ifndef GAIN_ANALYSIS_H
 #define GAIN_ANALYSIS_H
 
-#ifdef HAVE_CONFIG_H
-
-/*bad way to check if we already included config.h,
-but necessary in order to compile with both gcc and vc*/
-#ifndef PACKAGE
-
-#include "config.h"
-#include "machine.h"
-
-#endif
-#endif
-
-
 #ifdef __cplusplus
 extern "C" {
 #endif

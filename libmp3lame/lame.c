@@ -37,6 +37,7 @@
 #include "quantize_pvt.h"
 #include "psymodel.h"
 #include "VbrTag.h"
+#include "machine.h"
 #include "gain_analysis.h"
 #include "set_get.h"
 
