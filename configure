@@ -26587,13 +26587,13 @@ cat >>confdefs.h <<\_ACEOF
 #define HAVE_EFENCE 1
 _ACEOF
 
-		echo "$as_me:$LINENO: result: \"${CONFIG_EFENCE}\"" >&5
-echo "${ECHO_T}\"${CONFIG_EFENCE}\"" >&6
+		echo "$as_me:$LINENO: result: ${CONFIG_EFENCE}" >&5
+echo "${ECHO_T}${CONFIG_EFENCE}" >&6
 	fi
 	;;
 no)
-	echo "$as_me:$LINENO: result: \"${CONFIG_EFENCE}\"" >&5
-echo "${ECHO_T}\"${CONFIG_EFENCE}\"" >&6
+	echo "$as_me:$LINENO: result: ${CONFIG_EFENCE}" >&5
+echo "${ECHO_T}${CONFIG_EFENCE}" >&6
 	;;
 *)
 	{ { echo "$as_me:$LINENO: error: bad value »${CONFIG_EFENCE}« for efence option" >&5
