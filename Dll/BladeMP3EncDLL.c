@@ -24,12 +24,7 @@
 #include "version.h"  
 #include "VbrTag.h"   
 #include "lame.h"
-/*
-#include "get_audio.h"
-#include "globalflags.h"
-#include "machine.h"
 #include "util.h"
-*/
 
 #ifdef _DEBUG
 	#define _DEBUGDLL 1
@@ -37,9 +32,7 @@
 
 
 const int MAJORVERSION=1;
-const int MINORVERSION=11;
-const int CURRENT_STRUCT_VERSION=1;
-const int CURRENT_STRUCT_SIZE=sizeof(BE_CONFIG);
+const int MINORVERSION=12;
 
 
 // Local variables
@@ -62,6 +55,146 @@ static void InitParams()
 }
 
 
+static void PresetOptions(lame_global_flags *gfp,LONG myPreset)
+{
+	switch (myPreset)
+	{
+		case LQP_NOPRESET:
+		case LQP_OBS_NORMAL_QUALITY:
+			break;
+		break;
+		case LQP_OBS_LOW_QUALITY:		// -f flag
+			gf.quality=9;
+			break;
+		case LQP_OBS_HIGH_QUALITY:		// -h flag for high qualtiy
+			gf.quality=2;
+			break;
+		case LQP_OBS_VOICE_QUALITY:		// --voice flag for experimental voice mode
+			gf.lowpassfreq=12000;
+			gf.VBR_max_bitrate_kbps=160;
+			gf.no_short_blocks=1;
+		break;
+
+		case LQP_PHONE:
+			gfp->out_samplerate =  8000;
+			gfp->lowpassfreq=3200;
+			gfp->lowpasswidth=1000;
+			gfp->no_short_blocks=1;
+			gfp->quality = 5;
+			gfp->mode = MPG_MD_MONO; 
+			gfp->mode_fixed = 1; 
+			gfp->brate = 16; 
+			gfp->VBR_q=6;
+			gfp->VBR_min_bitrate_kbps=8;
+			gfp->VBR_max_bitrate_kbps=56;
+		break;
+
+		case LQP_SW:
+			gfp->out_samplerate =  11025;
+			gfp->lowpassfreq=4800;
+			gfp->lowpasswidth=500;
+			gfp->quality = 5;
+			gfp->mode = MPG_MD_MONO; 
+			gfp->mode_fixed = 1; 
+			gfp->brate = 24; 
+			gfp->VBR_q=5;
+			gfp->VBR_min_bitrate_kbps=8;
+			gfp->VBR_max_bitrate_kbps=64;
+		break;
+		case LQP_AM:
+			gfp->out_samplerate =  16000;
+			gfp->lowpassfreq=7200;
+			gfp->lowpasswidth=500;
+			gfp->quality = 5;
+			gfp->mode = MPG_MD_MONO; 
+			gfp->mode_fixed = 1; 
+			gfp->brate = 32; 
+			gfp->VBR_q=5;
+			gfp->VBR_min_bitrate_kbps=16;
+			gfp->VBR_max_bitrate_kbps=128;
+		break;
+		case LQP_FM:
+			gfp->out_samplerate =  22050; 
+			gfp->lowpassfreq=9950;
+			gfp->lowpasswidth=880;
+			gfp->quality = 5;
+			gfp->mode = MPG_MD_JOINT_STEREO; 
+			gfp->mode_fixed = 1; 
+			gfp->brate = 64; 
+			gfp->VBR_q=5;
+			gfp->VBR_min_bitrate_kbps=24;
+			gfp->VBR_max_bitrate_kbps=160;
+		break;
+		case LQP_VOICE:
+			gfp->out_samplerate =  32000; 
+			gfp->lowpassfreq=12300;
+			gfp->lowpasswidth=2000;
+			gfp->no_short_blocks=1;
+			gfp->quality = 5;
+			gfp->mode = MPG_MD_MONO; 
+			gfp->mode_fixed = 1; 
+			gfp->brate = 56; 
+			gfp->VBR_q=4;
+			gfp->VBR_min_bitrate_kbps=32;
+			gfp->VBR_max_bitrate_kbps=128;
+		break;
+		case LQP_RADIO:
+			gfp->lowpassfreq=15000;
+			gfp->lowpasswidth=0;
+			gfp->quality = 5;
+			gfp->mode = MPG_MD_JOINT_STEREO; 
+			gfp->mode_fixed = 1; 
+			gfp->brate = 112; 
+			gfp->VBR_q=4;
+			gfp->VBR_min_bitrate_kbps=64;
+			gfp->VBR_max_bitrate_kbps=256;
+		break;
+		case LQP_TAPE:
+			gfp->lowpassfreq=18500;
+			gfp->lowpasswidth=2000;
+			gfp->quality = 5;
+			gfp->mode = MPG_MD_JOINT_STEREO; 
+			gfp->mode_fixed = 1; 
+			gfp->brate = 128; 
+			gfp->VBR_q=4;
+			gfp->VBR_min_bitrate_kbps=96;
+			gfp->VBR_max_bitrate_kbps=320;
+		break;
+		case LQP_HIFI:
+			gfp->lowpassfreq=20240;
+			gfp->lowpasswidth=2200;
+			gfp->quality = 2;
+			gfp->mode = MPG_MD_JOINT_STEREO; 
+			gfp->mode_fixed = 1; 
+			gfp->brate = 160;            
+			gfp->VBR_q=3;
+			gfp->VBR_min_bitrate_kbps=112;
+			gfp->VBR_max_bitrate_kbps=320;
+		break;
+		case LQP_CD:
+			gfp->lowpassfreq=-1;
+			gfp->highpassfreq=-1;
+			gfp->quality = 2;
+			gfp->mode = MPG_MD_STEREO; 
+			gfp->mode_fixed = 1; 
+			gfp->brate = 192;  
+			gfp->VBR_q=2;
+			gfp->VBR_min_bitrate_kbps=128;
+			gfp->VBR_max_bitrate_kbps=320;
+		break;
+		case LQP_STUDIO:
+			gfp->lowpassfreq=-1;
+			gfp->highpassfreq=-1;
+			gfp->quality = 2; 
+			gfp->mode = MPG_MD_STEREO; 
+			gfp->mode_fixed = 1; 
+			gfp->brate = 256; 
+			gfp->VBR_q=0;
+			gfp->VBR_min_bitrate_kbps=160;
+			gfp->VBR_max_bitrate_kbps=320;
+		break;
+	}
+}
 
 
 __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples, PDWORD dwBufferSize, PHBE_STREAM phbeStream)
@@ -106,7 +239,7 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 		}
 
 		// Get Quality from third nibble
-		lameConfig.format.LHV1.nQuality=(MPEG_QUALITY)((nCRC>>8)&0x0F);
+		lameConfig.format.LHV1.nPreset=((nCRC>>8)&0x0F);
 
 	}
 	else
@@ -120,94 +253,75 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 	*phbeStream=1;
 
 
-
 	// --------------- Set arguments to LAME encoder -------------------------
 
-	// Set zero argument, the filename
-	//strcpy(DllArgV[nDllArgC++],"LameDLLEncoder");
-
-  	switch (lameConfig.format.LHV1.nMode)
-	{
-		case BE_MP3_MODE_STEREO:
-			gf.mode=0;
-			gf.mode_fixed=1;  /* dont allow LAME to change the mode */
-			gf.num_channels=2;
-		break;
-		case BE_MP3_MODE_JSTEREO:
-			gf.mode=1;
-			gf.mode_fixed=1;
-			gf.num_channels=2;
-		break;
-		case BE_MP3_MODE_MONO:
-			gf.mode=3;
-			gf.mode_fixed=1;
-			gf.num_channels=1;
-		break;
-		case BE_MP3_MODE_DUALCHANNEL:
-			gf.force_ms=1;
-			gf.mode=1;
-			gf.mode_fixed=1;
-			gf.num_channels=2;
-		break;
-		default:
-		{
-			char lpszError[255];
-			sprintf(lpszError,"Invalid lameConfig.format.LHV1.nMode, value is %d\n",lameConfig.format.LHV1.nMode);
-			OutputDebugString(lpszError);
-			return BE_ERR_INVALID_FORMAT_PARAMETERS;
-		}
-	}
-
-	switch (lameConfig.format.LHV1.nQuality)
-	{
-		case NORMAL_QUALITY:	// Nothing special
-			break;
-		case LOW_QUALITY:		// -f flag
-			gf.quality=9;
-			break;
-		case HIGH_QUALITY:		// -h flag for high qualtiy
-			gf.quality=2;
-			break;
-		case VOICE_QUALITY:		// --voice flag for experimental voice mode
-			gf.lowpassfreq=12000;
-			gf.VBR_max_bitrate_kbps=160;
-			gf.no_short_blocks=1;
-		break;
-	}
-
-	if (lameConfig.format.LHV1.bEnableVBR)
-	{
-		// 0=no vbr 1..10 is VBR quality setting -1
-		gf.VBR=vbr_default;
-		gf.VBR_q=lameConfig.format.LHV1.nVBRQuality;
-
-		if (lameConfig.format.LHV1.bWriteVBRHeader==TRUE)
-		{
-			gf.bWriteVbrTag=TRUE;
-		}
-		else
-		{
-			gf.bWriteVbrTag=FALSE;
-		}
-	}
-
-
-
-	// Set frequency
+	// Set input sample frequency
 	gf.in_samplerate=lameConfig.format.LHV1.dwSampleRate;
 
-	// Set frequency resampling rate, if specified
-	if (lameConfig.format.LHV1.dwReSampleRate>0)
-		gf.out_samplerate=lameConfig.format.LHV1.dwReSampleRate;
+	// The following settings only use when preset is not one of the new LAME QUALITY Presets
+	if ((int)lameConfig.format.LHV1.nPreset<(int)LQP_PHONE)
+	{
+  		switch (lameConfig.format.LHV1.nMode)
+		{
+			case BE_MP3_MODE_STEREO:
+				gf.mode=0;
+				gf.mode_fixed=1;  /* dont allow LAME to change the mode */
+				gf.num_channels=2;
+			break;
+			case BE_MP3_MODE_JSTEREO:
+				gf.mode=1;
+				gf.mode_fixed=1;
+				gf.num_channels=2;
+			break;
+			case BE_MP3_MODE_MONO:
+				gf.mode=3;
+				gf.mode_fixed=1;
+				gf.num_channels=1;
+			break;
+			case BE_MP3_MODE_DUALCHANNEL:
+				gf.force_ms=1;
+				gf.mode=1;
+				gf.mode_fixed=1;
+				gf.num_channels=2;
+			break;
+			default:
+			{
+				char lpszError[255];
+				sprintf(lpszError,"Invalid lameConfig.format.LHV1.nMode, value is %d\n",lameConfig.format.LHV1.nMode);
+				OutputDebugString(lpszError);
+				return BE_ERR_INVALID_FORMAT_PARAMETERS;
+			}
+		}
+
+		if (lameConfig.format.LHV1.bEnableVBR)
+		{
+			// 0=no vbr 1..10 is VBR quality setting -1
+			gf.VBR=vbr_default;
+			gf.VBR_q=lameConfig.format.LHV1.nVBRQuality;
+
+			if (lameConfig.format.LHV1.bWriteVBRHeader==TRUE)
+			{
+				gf.bWriteVbrTag=TRUE;
+			}
+			else
+			{
+				gf.bWriteVbrTag=FALSE;
+			}
+		}
+
+		// Set frequency resampling rate, if specified
+		if (lameConfig.format.LHV1.dwReSampleRate>0)
+			gf.out_samplerate=lameConfig.format.LHV1.dwReSampleRate;
 		
 	
-	// Set bitrate.  (CDex users always specify bitrate=Min bitrate when using VBR)
-	gf.brate=lameConfig.format.LHV1.dwBitrate;
-	gf.VBR_min_bitrate_kbps=gf.brate;
+		// Set bitrate.  (CDex users always specify bitrate=Min bitrate when using VBR)
+		gf.brate=lameConfig.format.LHV1.dwBitrate;
+		gf.VBR_min_bitrate_kbps=gf.brate;
 			
-	// Set Maxbitrate, if specified
-	if (lameConfig.format.LHV1.dwMaxBitrate>0)
-		gf.VBR_max_bitrate_kbps=lameConfig.format.LHV1.dwMaxBitrate;
+		// Set Maxbitrate, if specified
+		if (lameConfig.format.LHV1.dwMaxBitrate>0)
+			gf.VBR_max_bitrate_kbps=lameConfig.format.LHV1.dwMaxBitrate;
+	}
 	
 	// Set copyright flag?
 	if (lameConfig.format.LHV1.bCopyright)
@@ -245,6 +359,10 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 		gf.extension = 0;
 	}
 	
+
+	// First set all the preset options
+	PresetOptions(&gf,lameConfig.format.LHV1.nPreset);
+
 	lame_init_params(&gf);	
 
 	//LAME encoding call will accept any number of samples.  
@@ -265,7 +383,6 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 	// Everything went OK, thus return SUCCESSFUL
 	return BE_ERR_SUCCESSFUL;
 }
-
 
 
 __declspec(dllexport) BE_ERR	beDeinitStream(HBE_STREAM hbeStream, PBYTE pOutput, PDWORD pdwOutput)
@@ -367,7 +484,7 @@ __declspec(dllexport) BE_ERR	beEncodeChunk(HBE_STREAM hbeStream, DWORD nSamples,
 
 __declspec(dllexport) BE_ERR beWriteVBRHeader(LPCSTR lpszFileName)
 {
-	if (gf.bWriteVbrTag)
+	if ( (gf.bWriteVbrTag) && (gf.VBR!=vbr_off) )
 	{
 		// Calculate relative quality of VBR stream 
 		// 0=best, 100=worst
@@ -448,8 +565,16 @@ void dump_config( char *inPath, char *outPath)
 //	sprintf(strTmp,"GPsycho acoustic model is %s\n",(gpsycho)?"enabled":"disabled");
 //	OutputDebugString(strTmp);
 
-	sprintf(strTmp,"VRB is %s, VBR_q value is  %d\n",(gf.VBR)?"enabled":"disabled",gf.VBR_q);
+	sprintf(strTmp,"VBR is %s, VBR_q value is  %d, VBR method is:",(gf.VBR!=vbr_off)?"enabled":"disabled",gf.VBR_q);
 	OutputDebugString(strTmp);
+
+	switch (gf.VBR)
+	{
+		case vbr_off: OutputDebugString("vbr_off\n");	break;
+		case vbr_mt : OutputDebugString("vbr_mt \n");	break;
+		case vbr_rh : OutputDebugString("vbr_rh \n");	break;
+		case vbr_abr: OutputDebugString("vbr_abr\n");	break;
+	}
 
 	sprintf(strTmp,"input file: '%s'   output file: '%s'\n", inPath, outPath);
 	OutputDebugString(strTmp);

@@ -65,14 +65,45 @@ typedef		unsigned long			BE_ERR;
 	#include <Windows.h>
 #endif
 
+#define CURRENT_STRUCT_VERSION 1
+#define CURRENT_STRUCT_SIZE sizeof(BE_CONFIG)	// is currently 331 bytes
 
+/* OBSOLETE, VALUES STILL WORK
 typedef enum 
 {
 	NORMAL_QUALITY=0,
 	LOW_QUALITY,
 	HIGH_QUALITY,
 	VOICE_QUALITY
-} MPEG_QUALITY;
+} LAME_QUALTIY_PRESET;
+
+*/
+
+typedef enum 
+{
+	LQP_NOPRESET=-1,
+
+	// OBSOLETE VALUES, DO NOT USE
+	LQP_OBS_NORMAL_QUALITY=0,
+	LQP_OBS_LOW_QUALITY,
+	LQP_OBS_HIGH_QUALITY,
+	LQP_OBS_VOICE_QUALITY,
+
+	// NEW PRESET VALUES
+	LQP_PHONE	=1000,
+	LQP_SW		=2000,
+	LQP_AM		=3000,
+	LQP_FM		=4000,
+	LQP_VOICE	=5000,
+	LQP_RADIO	=6000,
+	LQP_TAPE	=7000,
+	LQP_HIFI	=8000,
+	LQP_CD		=9000,
+	LQP_STUDIO	=10000
+
+} LAME_QUALTIY_PRESET;
+
+
 
 typedef struct	{
 	DWORD	dwConfig;			// BE_CONFIG_XXXXX
@@ -98,13 +129,13 @@ typedef struct	{
 			DWORD			dwStructSize;
 
 			// BASIC ENCODER SETTINGS
-			DWORD			dwSampleRate;	// ALLOWED SAMPLERATE VALUES DEPENDS ON dwMPEGVersion 
+			DWORD			dwSampleRate;	// SAMPLERATE OF INPUT FILE
 			DWORD			dwReSampleRate;	// DOWNSAMPLERATE, 0=ENCODER DECIDES  
-			INT				nMode;			// BE_MP3_MODE_STEREO, BE_MP3_MODE_DUALCHANNEL, BE_MP3_MODE_MONO
+			LONG			nMode;			// BE_MP3_MODE_STEREO, BE_MP3_MODE_DUALCHANNEL, BE_MP3_MODE_MONO
 			DWORD			dwBitrate;		// CBR bitrate, VBR min bitrate
 			DWORD			dwMaxBitrate;	// CBR ignored, VBR Max bitrate
-			DWORD			nQuality;		// Quality setting (NORMAL,HIGH,LOW,VOICE)
-			DWORD			dwMpegVersion;	// MPEG-1 OR MPEG-2
+			LONG			nPreset;		// Quality preset, use one of the settings of the LAME_QUALITY_PRESET enum
+			DWORD			dwMpegVersion;	// FUTURE USE, MPEG-1 OR MPEG-2
 			DWORD			dwPsyModel;		// FUTURE USE, SET TO 0
 			DWORD			dwEmphasis;		// FUTURE USE, SET TO 0
 

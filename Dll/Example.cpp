@@ -149,7 +149,7 @@ int main(int argc, char *argv[])
 	beConfig.format.LHV1.nMode				= BE_MP3_MODE_STEREO;	// OUTPUT IN STREO
 	beConfig.format.LHV1.dwBitrate			= 32;					// MINIMUM BIT RATE
 	beConfig.format.LHV1.dwMaxBitrate		= 320;					// MAXIMUM BIT RATE
-	beConfig.format.LHV1.nQuality			= NORMAL_QUALITY;		// QUALITY SETTING
+	beConfig.format.LHV1.nPreset			= LQP_NOPRESET;			// QUALITY PRESET SETTING
 	beConfig.format.LHV1.dwMpegVersion		= MPEG1;				// MPEG VERSION (I or II)
 	beConfig.format.LHV1.dwPsyModel			= 0;					// USE DEFAULT PSYCHOACOUSTIC MODEL 
 	beConfig.format.LHV1.dwEmphasis			= 0;					// NO EMPHASIS TURNED ON
@@ -162,6 +162,8 @@ int main(int argc, char *argv[])
 	beConfig.format.LHV1.nVBRQuality		= 5;					// SET VBR QUALITY
 	memset(&beConfig.format.LHV1.btReserved,0,255);					// CLEAR RESERVED AREA
 
+// Preset Test
+//	beConfig.format.LHV1.nPreset			= LQP_PHONE;
 
 	// Init the MP3 Stream
 	err = beInitStream(&beConfig, &dwSamples, &dwMP3Buffer, &hbeStream);

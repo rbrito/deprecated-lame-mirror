@@ -1,0 +1,617 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type"
+content="text/html; charset=iso-8859-1">
+<meta name="Author" content="Tord Jansson">
+<meta name="GENERATOR" content="Microsoft FrontPage Express 2.0">
+<title>BladeEnc DLL Manual</title>
+</head>
+
+<body>
+
+<p align="center">&nbsp; </p>
+
+<p align="center"><font size="7">Lame-enc DLL</font> <br>
+<font size="5">version 1.11</font> <br>
+(Lame engine version 3.86) <br>
+<font size="6">Programmers Manual</font> </p>
+
+<p align="center"><i>Lame-enc.DLL and this manual is copyright by
+Albert L Faber<br>
+Originally the the DLL interface is modeled after the lame_encder
+DLL interface<br>
+which is copyrighted by Tord Jansson and Jukka Poikolainen<br>
+This document and the DLL interface may be distributed freely</i>
+<br>
+<i>as long as no modifications are made to neither one of them.</i>
+</p>
+
+<p align="center">&nbsp; </p>
+
+<p align="center"><b>Homepage</b>: <a
+href="http://www.cdex.n3.net">http://www.cdex.n3.net</a><br>
+<b>E-mail:</b> mailto: <a href="mailto:cdex@softwarecenter.net">cdex@softwarecenter.net</a>
+</p>
+
+<p><br>
+<br>
+<br>
+<br>
+</p>
+
+<p><font size="5">Distribution</font> </p>
+
+<p>People and companies&nbsp; who wants to distribute
+lame_enc.dll with their commercial products are free to do so as
+far as I'm concerned, but should be aware that lame_enc.dll might
+infringe certain MP3 related software patents held by Fraunhofer
+IIS in certain countries. </p>
+
+<p> <br>
+&nbsp; </p>
+
+<p><font size="5">Disclaimer</font> </p>
+
+<p>lame_enc.dll and this manual is distributed 'as is' with no
+warranty of any kind. The Author is not to be held responsible
+for the result of any use or misuse of this product. <br>
+&nbsp; <br>
+&nbsp; </p>
+
+<p><font size="5">Current Bugs and Limitations</font> </p>
+
+<p>Although the interface is designed to be able to handle
+multiple parallel streams it can't be done yet due to limitations
+in the engine, only one stream is allowed. <br>
+&nbsp; </p>
+
+<p><font size="5">Future Compatibility</font> </p>
+
+<p>This interface should be compatible with all future versions
+of lame_enc.DLL without any need to recompile your programs. You
+should therefore <b>not</b> check the version number upon start
+and prevent users from running your program with a later version
+of lame_enc.DLL. <br>
+&nbsp; </p>
+
+<p><font size="5">How to use the DLL</font> </p>
+
+<p>1. Fill in a BE_CONFIG structure and send it to
+beInitStream(). Make sure that BE_ERR_SUCCESSFUL is returned. </p>
+
+<p>2. Reserve at least the amount of memory returned in
+dwBufferSize as your output buffer. </p>
+
+<p>3. Call beEncodeChunk() until you've encoded everything you
+want. </p>
+
+<p>4. Call beDeinitStream() to make sure that all encoded data is
+flushed out before closing the stream. </p>
+
+<p>5. Close the stream using beCloseStream(). <br>
+&nbsp; </p>
+
+<p><font size="5">Return Values</font> </p>
+
+<p>See the header-file for a complete list of function return
+values. All functions should return BE_ERR_SUCCESSFUL unless
+something went wrong. <br>
+&nbsp; </p>
+
+<p><font size="5">Type definitions</font></p>
+
+<p>The DLL is by default compiled with the MS Visual C/C++
+compiler, which has the following type definitions:</p>
+
+<table border="0">
+    <tr>
+        <td>Type </td>
+        <td>Description</td>
+    </tr>
+    <tr>
+        <td>CHAR</td>
+        <td>signed char (8 bits)</td>
+    </tr>
+    <tr>
+        <td>BYTE</td>
+        <td>unsigned char (8 bits)</td>
+    </tr>
+    <tr>
+        <td>SHORT</td>
+        <td>signed short (16 bits)</td>
+    </tr>
+    <tr>
+        <td>WORD</td>
+        <td>unsigned short (16 bits)</td>
+    </tr>
+    <tr>
+        <td>INT</td>
+        <td>signed long (32 bits)</td>
+    </tr>
+    <tr>
+        <td>LONG</td>
+        <td>signed long (32 bits)</td>
+    </tr>
+    <tr>
+        <td>BOOL</td>
+        <td>signed long (32 bits) (YES, 32 bits for a one bit
+        value)<br>
+        TRUE = 0<br>
+        FALSE=-1</td>
+    </tr>
+    <tr>
+        <td>DWORD</td>
+        <td>unsigned long (32 bits)</td>
+    </tr>
+    <tr>
+        <td>FLOAT</td>
+        <td>floating point (32 bits)</td>
+    </tr>
+    <tr>
+        <td>DOUBLE</td>
+        <td>float point (64 bits)</td>
+    </tr>
+    <tr>
+        <td>LPCSTR</td>
+        <td>const char* (32 bits pointer to zero terminated
+        character string)</td>
+    </tr>
+</table>
+
+<p>Within the lame-enc.dll All the structure elements are one
+byte alligned (due to backwards compatibility wiht BladEnc.DLL!</p>
+
+<p>&nbsp;</p>
+
+<p><font size="5">The MP3 BE_CONFIG - structure (OBSOLETE)</font></p>
+
+<p>This is the old structure as it was originally defined by the
+BladeEnc.DLL interface. However, I do highly recommend to use the
+new Lame specific config structure, since it gives you more
+control over the Lame encoder settings.</p>
+
+<p>These are the members of the BE_CONFIG structure you need to
+fill in before you call beInitStream(): <br>
+&nbsp; </p>
+
+<table border="0">
+    <tr>
+        <td><b>dwConfig</b></td>
+        <td>Specifies what kind of output you want. Since only
+        MP3 currently is supported you must set this to <b>BE_CONFIG_MP3</b></td>
+    </tr>
+    <tr>
+        <td><b>format.mp3.dwSampleRate</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+        <td>Samplerate in Hz for MP3 file. This can be set to
+        either <b>32000</b>, <b>44100</b> or <b>48000</b>.</td>
+    </tr>
+    <tr>
+        <td><b>format.mp3.byMode</b></td>
+        <td>Stereomode for MP3 file. This can be either <b>BE_MP3_MODE_STEREO</b>,
+        <b>BE_MP3_MODE_DUALCHANNEL</b> or <b>BE_MP3_MODE_MONO.</b></td>
+    </tr>
+    <tr>
+        <td><b>format.mp3.bitrate</b></td>
+        <td>Bitrate (i.e. size) of MP3 file in kBit/s. Allowed
+        bitrates are: <b>32, 40, 48, 56, 64, 80, 96, 112, 128,
+        160, 192, 224, 256</b> and <b>320</b>.</td>
+    </tr>
+    <tr>
+        <td><b>format.mp3.bCopyright</b></td>
+        <td>If this is set to TRUE the Copyright bit in the MP3
+        stream will be set.</td>
+    </tr>
+    <tr>
+        <td><b>format.mp3.bCRC</b></td>
+        <td>Set this to TRUE in order to enable CRC-checksum in
+        the bitstream.</td>
+    </tr>
+    <tr>
+        <td><b>format.mp3.bOriginal</b></td>
+        <td>If this is set to TRUE the Original bit in the MP3
+        stream will be set.</td>
+    </tr>
+    <tr>
+        <td><b>format.mp3.bPrivate</b></td>
+        <td>If this is set to TRUE the Private bit in the MP3
+        stream will be set.</td>
+    </tr>
+</table>
+
+<p>&nbsp;</p>
+
+<p><font size="5">The LHV1 BE_CONFIG - structure (recommended)</font></p>
+
+<p>These are the members of the LHV1 BE_CONFIG structure, you
+need to fill in before you call beInitStream(): <br>
+</p>
+
+<table border="0">
+    <tr>
+        <td><b>dwConfig</b></td>
+        <td>Specifies what kind of output you want. Since only
+        MP3 currently is supported you must set this to <b>BE_CONFIG_LAME</b></td>
+    </tr>
+    <tr>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+    </tr>
+    <tr>
+        <td><b>format.LHV1.dwStructVersion</b></td>
+        <td>Indicates the version number of the structure,
+        current version number is 1</td>
+    </tr>
+    <tr>
+        <td><b>format.LHV1.dwStructSize</b></td>
+        <td>Specifies the size of the BE_CONFIG structure
+        (currently 331 bytes)</td>
+    </tr>
+    <tr>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+    </tr>
+    <tr>
+        <td><b>format.LHV1.dwSampleRate</b>&nbsp;</td>
+        <td>Samplerate in Hz for MP3 file. This can be set to
+        either:<br>
+        <b>32000</b>, <b>44100</b> or <b>48000</b> for MPEG-I<br>
+        <b>16000</b>, <b>22050</b> or <b>24000</b> for MPEG-I<br>
+        <b>8000</b>, <b>11025</b> or <b>12000</b> for MPEG-II.5</td>
+    </tr>
+    <tr>
+        <td><b>format.LHV1.dwReSampleRate</b></td>
+        <td>Specifies to which sample rate the input stream has
+        to be resampled, if set to 0, the encoder will decide
+        which ReSample rate to use</td>
+    </tr>
+    <tr>
+        <td><b>format.LHV1.nMode</b></td>
+        <td>Stereomode for MP3 file. This can be either <b>BE_MP3_MODE_STEREO</b>,
+        <b>BE_MP3_MODE_JSTEREO, BE_MP3_MODE_DUALCHANNEL</b> or <b>BE_MP3_MODE_MONO.</b></td>
+    </tr>
+    <tr>
+        <td><strong>format.LHV1.dwBitrate</strong></td>
+        <td>For CBR, this specifies the actual bitrate, for VBR,
+        it specifies the minimum bitrate<br>
+        Allowed bitrates are: <b>32, 40, 48, 56, 64, 80, 96, 112,
+        128, 160, 192, 224, 256</b> and <b>320</b>.for MPEG-I<br>
+        Allowed bitrates are: <b>8, 16, 24, 32, 40, 48, 56, 64,
+        80, 96, 112, 128, 144 </b>and<b> 160</b>.for MPEG-II</td>
+    </tr>
+    <tr>
+        <td><strong>format.LHV1.dwMaxBitrate</strong></td>
+        <td>For CBR this setting is ignored, when using VBR, it
+        specifies the maximum bitrate</td>
+    </tr>
+    <tr>
+        <td><strong>format.LHV1.nPreset</strong></td>
+        <td>The quality option can be set to one of the following
+        presets:<br>
+        NOPRESET,PHONE,SW,AM,FM,VOICE,RADIO,TAPE,HIFI,CD,STUDIO
+        as defined in the LAME_QUALTIY_PRESET. Keep in mind that
+        the presets can overwrite some of the other settings,
+        since it is called right before the encoder is
+        initialized</td>
+    </tr>
+    <tr>
+        <td>&nbsp;</td>
+    </tr>
+    <tr>
+        <td><b>format.LHV1.bitrate</b></td>
+        <td>Bitrate (i.e. size) of MP3 file in kBit/s. </td>
+    </tr>
+    <tr>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+    </tr>
+    <tr>
+        <td><b>format.LHV1.bCopyright</b></td>
+        <td>If this is set to TRUE the Copyright bit in the MP3
+        stream will be set.</td>
+    </tr>
+    <tr>
+        <td><b>format.LHV1.bCRC</b></td>
+        <td>Set this to TRUE in order to enable CRC-checksum in
+        the bitstream.</td>
+    </tr>
+    <tr>
+        <td><b>format.LHV1.bOriginal</b></td>
+        <td>If this is set to TRUE the Original bit in the MP3
+        stream will be set.</td>
+    </tr>
+    <tr>
+        <td><b>format.LHV1.bPrivate</b></td>
+        <td>If this is set to TRUE the Private bit in the MP3
+        stream will be set.</td>
+    </tr>
+    <tr>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+    </tr>
+    <tr>
+        <td><strong>format.LHV1.bWriteVBRHeader</strong></td>
+        <td>Sepecifes if the a XING VBR header should be written
+        or not. When this option is enabled, you have to call the
+        <font size="3">beWriteVBRHeader function when encoding
+        has been completed</font></td>
+    </tr>
+    <tr>
+        <td><strong>format.LHV1.bEnableVBR</strong></td>
+        <td>Specifies if VBR encoding option shall be used or
+        not, possible values are TRUE/FALSE</td>
+    </tr>
+    <tr>
+        <td><strong>format.LHV1.nVBRQuality</strong></td>
+        <td>Quality option if VBR is enabled (0=highest quality,
+        9 is lowest quality)</td>
+    </tr>
+    <tr>
+        <td><b>format.mp3.btReserved</b></td>
+        <td>For future use, zer all ementes to zero</td>
+    </tr>
+</table>
+
+<p>&nbsp;</p>
+
+<p><br>
+&nbsp; </p>
+
+<hr>
+
+<p><font size="5">beInitStream()</font> </p>
+
+<table border="0" cellspacing="16" width="100%">
+    <tr>
+        <td valign="top" width="20%"><b>Synopsis:</b></td>
+        <td valign="top" width="80%">&nbsp;BE_ERR beInitStream(
+        PBE_CONFIG <i>pbeConfig</i>, PDWORD <i>dwSamples</i>,
+        PDWORD <i>dwBufferSize</i>, PHBE_STREAM <i>phbeStream</i>
+        )</td>
+    </tr>
+    <tr>
+        <td valign="top" width="20%"><b>Parameters:</b></td>
+        <td valign="top" width="80%"><table border="0"
+        cellspacing="10" width="100%">
+            <tr>
+                <td valign="top" width="20%"><i>pbeConfig</i></td>
+                <td>Pointer at the struct containing encoder
+                settings.</td>
+            </tr>
+            <tr>
+                <td valign="top"><i>dwSamples</i></td>
+                <td>Pointer at double word where number of
+                samples to send to each <i>beEncodeChunk()</i> is
+                returned.</td>
+            </tr>
+            <tr>
+                <td valign="top"><i>dwBufferSize</i></td>
+                <td>Pointer at double word where minimum size in
+                bytes of output buffer is returned.</td>
+            </tr>
+            <tr>
+                <td valign="top"><i>phbeStream</i></td>
+                <td>Pointer at integer where Stream handle is
+                returned.</td>
+            </tr>
+        </table>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top" width="20%"><b>Description:</b></td>
+        <td valign="top" width="80%">This function is the first
+        to call before starting an encoding stream.</td>
+    </tr>
+</table>
+
+<hr>
+
+<p><br>
+<font size="5">&nbsp;</font> <br>
+<font size="5">beEncodeChunk()</font> </p>
+
+<table border="0" cellspacing="16" width="100%">
+    <tr>
+        <td valign="top" width="20%"><b>Synopsis:</b></td>
+        <td valign="top" width="80%">BE_ERR beEncodeChunk(
+        HBE_STREAM <i>hbeStream</i>, DWORD <i>nSamples</i>,
+        PSHORT <i>pSamples</i>, PBYTE <i>pOutput</i>, PDWORD <i>pdwOutput</i>
+        )</td>
+    </tr>
+    <tr>
+        <td valign="top" width="20%"><b>Parameters:</b></td>
+        <td valign="top"><table border="0" cellspacing="10"
+        width="100%">
+            <tr>
+                <td valign="top" width="20%"><i>hbeStream</i></td>
+                <td width="80%">Handle of the stream.</td>
+            </tr>
+            <tr>
+                <td valign="top" width="90"><i>nSamples</i></td>
+                <td>Number of samples to be encoded for this
+                call. This should be identical to what is
+                returned by <i>beInitStream()</i>, unless you are
+                encoding the last chunk, which might be smaller.</td>
+            </tr>
+            <tr>
+                <td valign="top" width="90"><i>pSamples</i></td>
+                <td>Pointer at the 16-bit signed samples to be
+                encoded. These should be in stereo when encoding
+                a stereo MP3 and mono when encoding a mono MP3.</td>
+            </tr>
+            <tr>
+                <td valign="top" width="90"><i>pOutput</i></td>
+                <td>Where to write the encoded data. This buffer
+                should be at least of the minimum size returned
+                by <i>beInitStream()</i>.</td>
+            </tr>
+            <tr>
+                <td valign="top" width="90"><i>pdwOutput</i></td>
+                <td>Where to return number of bytes of encoded
+                data written. The amount of data written might
+                vary from chunk to chunk.</td>
+            </tr>
+        </table>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top" width="20%"><b>Description:</b></td>
+        <td valign="top">Encodes a chunk of samples. <i>Please
+        note that if you have set the output to generate mono MP3
+        files you must feed beEncodeChunk() with mono samples!</i></td>
+    </tr>
+</table>
+
+<hr>
+
+<p><font size="5">beDeinitStream()</font> </p>
+
+<table border="0" cellspacing="16" width="100%">
+    <tr>
+        <td valign="top" width="20%"><b>Synopsis:</b></td>
+        <td valign="top" width="80%">BE_ERR beDeinitStream(
+        HBE_STREAM <i>hbeStream</i>, PBYTE <i>pOutput</i>, PDWORD
+        <i>pdwOutput</i> )</td>
+    </tr>
+    <tr>
+        <td valign="top" width="20%"><b>Parameters:</b></td>
+        <td valign="top"><table border="0" cellspacing="10"
+        width="100%">
+            <tr>
+                <td valign="top" width="20%"><i>hbeStream</i></td>
+                <td width="80%">Handle of the stream.</td>
+            </tr>
+            <tr>
+                <td valign="top"><i>pOutput</i></td>
+                <td>Where to write the encoded data. This buffer
+                should be at least of the minimum size returned
+                by <i>beInitStream()</i>.</td>
+            </tr>
+            <tr>
+                <td><i>pdwOutput</i></td>
+                <td>Where to return number of bytes of encoded
+                data written.</td>
+            </tr>
+        </table>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top" width="20%"><b>Description:</b></td>
+        <td valign="top">This function should be called after
+        encoding the last chunk in order to flush the encoder. It
+        writes any encoded data that still might be left inside
+        the encoder to the output buffer. This function should
+        NOT be called unless you have encoded all of the chunks
+        in your stream.</td>
+    </tr>
+</table>
+
+<hr>
+
+<p><font size="5">beCloseStream()</font> </p>
+
+<table border="0" cellspacing="16" width="100%">
+    <tr>
+        <td valign="top" width="20%"><b>Synopsis:</b></td>
+        <td valign="top">BE_ERR beCloseStream( HBE_STREAM <i>hbeStream</i>
+        )</td>
+    </tr>
+    <tr>
+        <td valign="top" width="90"><b>Parameters:</b></td>
+        <td valign="top"><table border="0" cellspacing="10"
+        width="100%">
+            <tr>
+                <td width="20%"><i>hbeStream</i></td>
+                <td>Handle of the stream.</td>
+            </tr>
+        </table>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top" width="90"><b>Description:</b></td>
+        <td valign="top">Last function to be called when finished
+        encoding a stream. Should unlike <i>beDeinitStream()</i>
+        also be called if the encoding is canceled.</td>
+    </tr>
+</table>
+
+<hr>
+
+<p><font size="5">beVersion()</font> </p>
+
+<table border="0" cellspacing="16" width="100%">
+    <tr>
+        <td valign="top" width="20%"><b>Synopsis:</b></td>
+        <td valign="top">VOID beVersion( PBE_VERSION <i>pbeVersion</i>
+        )</td>
+    </tr>
+    <tr>
+        <td valign="top"><b>Parameters:</b></td>
+        <td valign="top"><table border="0" cellspacing="10"
+        width="100%">
+            <tr>
+                <td valign="top" width="20%"><i>pbeVersion</i></td>
+                <td>Pointer at struct where version number,
+                release date and URL for homepage is returned.</td>
+            </tr>
+        </table>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top"><b>Description:</b></td>
+        <td valign="top">Returns information like version numbers
+        (both of the DLL and encoding engine), release date and
+        URL for lame_enc's homepage. All this information should
+        be made available to the user of your product through a
+        dialog box or something similar.</td>
+    </tr>
+</table>
+
+<p>&nbsp;</p>
+
+<hr>
+
+<p>&nbsp;</p>
+
+<p><font size="5">beWriteVBRHeader()</font> </p>
+
+<table border="0" cellspacing="16" width="100%">
+    <tr>
+        <td valign="top" width="20%"><b>Synopsis:</b></td>
+        <td valign="top">VOID beWriteVBRHeader( LPCSTR <i>pszMP3FileName</i>
+        )</td>
+    </tr>
+    <tr>
+        <td valign="top"><b>Parameters:</b></td>
+        <td valign="top"><table border="0" cellspacing="10"
+        width="100%">
+            <tr>
+                <td valign="top" width="20%"><i>pszMP3FileName</i></td>
+                <td>Const Pointer zero terminated string, that
+                contains the MP3 file name.</td>
+            </tr>
+        </table>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top"><b>Description:</b></td>
+        <td valign="top">Writes a Xing Header in front of the MP3
+        file. Make sure that the MP3 file is closed, and the the
+        beConfig.format.LHV1.bWriteVBRHeader has been set to
+        TRUE. In addition, it is always save to call
+        beWriteVBRHeader after the encoding has been finished,
+        even when the beConfig.format.LHV1.bWriteVBRHeader is not
+        set to TRUE</td>
+    </tr>
+</table>
+
+<p>&nbsp;</p>
+
+<p>&nbsp;</p>
+
+<p>&nbsp;</p>
+
+<p><br>
+&nbsp; </p>
+</body>
+</html>
