@@ -986,6 +986,21 @@ extern const int      samplerate_table [3] [ 4];
 #define LAME_MAXMP3BUFFER   16384
 
 
+typedef enum {
+    LAME_OKAY             =   0,
+    LAME_NOERROR          =   0,
+    LAME_GENERICERROR     =  -1,
+    LAME_NOMEM            = -10,
+    LAME_BADBITRATE       = -11,
+    LAME_BADSAMPFREQ      = -12,
+    LAME_INTERNALERROR    = -13,
+    
+    FRONTEND_READERROR    = -80,
+    FRONTEND_WRITEERROR   = -81,
+    FRONTEND_FILETOOLARGE = -82,
+    
+} lame_errorcodes_t;
+
 #if defined(__cplusplus)
 }
 #endif
