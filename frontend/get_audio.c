@@ -207,8 +207,8 @@ get_audio(lame_t gfp, int buffer[2][1152])
      */
 
     /* if this flag has been set, then we are carefull to read
-     * exactly num_samples and no more.  This is useful for .wav and .aiff
-     * files which have id3 or other tags at the end.  Note that if you
+     * exactly num_samples and no more.  This is useful for .wav
+     * files which have some tags at the end.  Note that if you
      * are using LIBSNDFILE, this is not necessary 
      */
     if (count_samples_carefully) {
@@ -718,19 +718,6 @@ read_samples_pcm(FILE * const musicin, int sample_buffer[1152*2],
 
 
 
-/* AIFF Definitions */
-
-#define IFF_ID_FORM 0x464f524d /* "FORM" */
-#define IFF_ID_AIFF 0x41494646 /* "AIFF" */
-#define IFF_ID_AIFC 0x41494643 /* "AIFC" */
-#define IFF_ID_COMM 0x434f4d4d /* "COMM" */
-#define IFF_ID_SSND 0x53534e44 /* "SSND" */
-#define IFF_ID_MPEG 0x4d504547 /* "MPEG" */
-
-#define IFF_ID_NONE 0x4e4f4e45 /* "NONE" */ /* AIFF-C data format */
-#define IFF_ID_2CBE 0x74776f73 /* "twos" */ /* AIFF-C data format */
-#define IFF_ID_2CLE 0x736f7774 /* "sowt" */ /* AIFF-C data format */
-
 #define WAV_ID_RIFF 0x52494646 /* "RIFF" */
 #define WAV_ID_WAVE 0x57415645 /* "WAVE" */
 #define WAV_ID_FMT  0x666d7420 /* "fmt " */
@@ -905,171 +892,18 @@ parse_wave_header(lame_t gfp, FILE * sf)
 
 
 /************************************************************************
-* aiff_check2
-*
-* PURPOSE:	Checks AIFF header information to make sure it is valid.
-*	        returns 0 on success, 1 on errors
-************************************************************************/
-
-typedef struct  blockAlign_struct {
-    unsigned long   offset;
-    unsigned long   blockSize;
-} blockAlign;
-
-typedef struct  IFF_AIFF_struct {
-    short           numChannels;
-    unsigned long   numSampleFrames;
-    short           sampleSize;
-    double          sampleRate;
-    unsigned long   sampleType;
-    blockAlign      blkAlgn;
-} IFF_AIFF;
-
-static int
-aiff_check2(IFF_AIFF * const pcm_aiff_data)
-{
-    if (pcm_aiff_data->sampleType != IFF_ID_SSND) {
-        fprintf(stderr, "Input Sound data is not PCM\n");
-        return 1;
-    }
-    if (pcm_aiff_data->sampleSize != sizeof(short) * CHAR_BIT) {
-        fprintf(stderr, "Input Sound data is not %i bits\n",
-                sizeof(short) * CHAR_BIT);
-        return 1;
-    }
-    if (pcm_aiff_data->numChannels != 1 && pcm_aiff_data->numChannels != 2) {
-        fprintf(stderr, "Input Sound data is not mono or stereo\n");
-        return 1;
-    }
-    if (pcm_aiff_data->blkAlgn.blockSize != 0) {
-        fprintf(stderr, "Block size of Input Sound data is not 0 bytes\n");
-        return 1;
-    }
-
-    return 0;
-}
-
-/*****************************************************************************
  *
- *	Read Audio Interchange File Format (AIFF) headers.
+ * parse_file_header
  *
- *	By the time we get here the first 32 bits of the file have already been
- *	read, and we're pretty sure that we're looking at an AIFF file.
+ * Read the header from a bytestream.  Try to determine whether
+ * it's a WAV file without rewinding, since rewind doesn't work on
+ * pipes and there's a good chance we're reading
+ * from stdin (otherwise we'd probably be using libsndfile).
  *
- *****************************************************************************/
-
-static int
-parse_aiff_header(lame_t gfp, FILE * sf)
-{
-    int     is_aiff = 0;
-    long    chunkSize = 0, subSize = 0, typeID = 0, dataType = 0;
-    IFF_AIFF aiff_info;
-
-    memset(&aiff_info, 0, sizeof(aiff_info));
-    chunkSize = Read32BitsHighLow(sf);
-
-    typeID = Read32BitsHighLow(sf);
-    if ((typeID != IFF_ID_AIFF)&&(typeID != IFF_ID_AIFC))
-        return 0;
-
-    while (chunkSize > 0) {
-        int     type = Read32BitsHighLow(sf);
-        chunkSize -= 4;
-
-        /* DEBUGF(
-           "found chunk type %08x '%4.4s'\n", type, (char*)&type); */
-
-        /* don't use a switch here to make it easier to use 'break' for SSND */
-        if (type == IFF_ID_COMM) {
-            subSize = Read32BitsHighLow(sf);
-            chunkSize -= subSize;
-
-            aiff_info.numChannels = Read16BitsHighLow(sf);
-            subSize -= 2;
-            aiff_info.numSampleFrames = Read32BitsHighLow(sf);
-            subSize -= 4;
-            aiff_info.sampleSize = Read16BitsHighLow(sf);
-            subSize -= 2;
-            aiff_info.sampleRate = ReadIeeeExtendedHighLow(sf);
-            subSize -= 10;
-
-            if (typeID == IFF_ID_AIFC) {
-                dataType = Read32BitsHighLow(sf);
-                subSize -= 4;
-
-                if ((dataType != IFF_ID_2CLE) && 
-                    (dataType != IFF_ID_2CBE) &&
-                    (dataType != IFF_ID_NONE))
-                    return 0;
-
-                if (aiff_info.sampleSize == 16)
-                  pcmswapbytes = (!swapbytes == (dataType == IFF_ID_2CLE));
-            }
-            
-            if (fskip(sf, (long) subSize, SEEK_CUR) != 0)
-                return 0;
-        }
-        else if (type == IFF_ID_SSND) {
-            subSize = Read32BitsHighLow(sf);
-            chunkSize -= subSize;
-
-            aiff_info.blkAlgn.offset = Read32BitsHighLow(sf);
-            subSize -= 4;
-            aiff_info.blkAlgn.blockSize = Read32BitsHighLow(sf);
-            subSize -= 4;
-
-            if (fskip(sf, (long) aiff_info.blkAlgn.offset, SEEK_CUR) != 0)
-                return 0;
-
-            aiff_info.sampleType = IFF_ID_SSND;
-            is_aiff = 1;
-
-            /* We've found the audio data. Read no further! */
-            break;
-
-        }
-        else {
-            subSize = Read32BitsHighLow(sf);
-            chunkSize -= subSize;
-
-            if (fskip(sf, (long) subSize, SEEK_CUR) != 0)
-                return 0;
-        }
-    }
-
-    /* DEBUGF("Parsed AIFF %d\n", is_aiff); */
-    if (is_aiff) {
-        /* make sure the header is sane */
-        if (aiff_check2(&aiff_info))
-            return 0;
-        if( -1 == lame_set_num_channels( gfp, aiff_info.numChannels ) ) {
-            fprintf( stderr,
-                     "Unsupported number of channels: %ud\n",
-                     aiff_info.numChannels );
-            exit( 1 );
-        }
-        lame_set_in_samplerate( gfp, aiff_info.sampleRate );
-        pcmbitwidth = aiff_info.sampleSize;
-        lame_set_num_samples( gfp, aiff_info.numSampleFrames );
-    }
-    return is_aiff;
-}
-
-
-
-/************************************************************************
-*
-* parse_file_header
-*
-* Read the header from a bytestream.  Try to determine whether
-* it's a WAV file or AIFF without rewinding, since rewind
-* doesn't work on pipes and there's a good chance we're reading
-* from stdin (otherwise we'd probably be using libsndfile).
-*
-* When this function returns, the file offset will be positioned at the
-* beginning of the sound data.
-*
-************************************************************************/
+ * When this function returns, the file offset will be positioned at the
+ * beginning of the sound data.
+ *
+ ************************************************************************/
 
 static void
 parse_file_header(lame_t gfp, FILE * sf)
@@ -1086,13 +920,6 @@ parse_file_header(lame_t gfp, FILE * sf)
         } else {
 	    fprintf(stderr, "Warning: corrupt or unsupported WAVE format\n"); 
         }
-    }
-    else if (type == IFF_ID_FORM) {
-	/* It's probably an AIFF file */
-	if (parse_aiff_header(gfp, sf)) {
-	    input_format = sf_aiff;
-	    count_samples_carefully = 1;
-	}
     }
 
     if (input_format == sf_raw) {
