@@ -29,4 +29,4 @@
 --no-space-after-function-call-names
 
 --tab-size0
---line-length80
+--line-length100
