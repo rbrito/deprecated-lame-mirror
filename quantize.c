@@ -519,48 +519,6 @@ int init_outer_loop(lame_global_flags *gfp,
   cod_info->count1table_select= 0;
   cod_info->count1bits        = 0;
   
-#if 0
-  not working because of new quantize_xrpow_* routines
-  xrpow needs to be scaled by pow(2,.75*2*subblock_gain)
-
-  if (gfp->experimentalZ) {
-    /* compute subblock gains */
-    int j,b;  FLOAT8 en[3],mx;
-    if ((cod_info->block_type==SHORT_TYPE) ) {
-      /* estimate energy within each subblock */
-      for (b=0; b<3; b++) en[b]=0;
-      for ( i=0,j = 0; j < 192; j++ ) {
-	for (b=0; b<3; b++) {
-	  en[b]+=xr[i] * xr[i];
-	  i++;
-	}
-      }
-      mx = 1e-12;
-      for (b=0; b<3; b++) mx=Max(mx,en[b]);
-      for (b=0; b<3; b++) en[b] = Max(en[b],1e-12)/mx;
-      /*printf("ener = %4.2f  %4.2f  %4.2f  \n",en[0],en[1],en[2]);*/
-      /* pick gain so that 2^(2gain)*en[0] = 1  */
-      /* gain = .5* log( 1/en[0] )/LOG2 = -.5*log(en[])/LOG2 */
-      for (b=0; b<3; b++) {
-	cod_info->subblock_gain[b] = (int)(-.5*log(en[b])/LOG2 + 0.5);
-	if (cod_info->subblock_gain[b] > 2) 
-	  cod_info->subblock_gain[b]=2;
-	if (cod_info->subblock_gain[b] < 0) 
-	  cod_info->subblock_gain[b]=0;
-      }
-      /*
-       *  check if there is some energy we have to quantize
-       *  if so, then return 1 else 0
-       */
-      if (1e-99 < en[0]+en[1]+en[2])
-        return 1;
-      else
-        return 0;
-    }
-  }
-#endif
-
-
   /*
    *  check if there is some energy we have to quantize
    *  if so, then return 1 else 0
@@ -676,7 +634,6 @@ void outer_loop(
 	over=calc_noise1( gfp,xr, l3_enc_w, cod_info, 
 			  xfsf_w,distort, l3_xmin, &scalefac_w, &over_noise, 
 			  &tot_noise, &max_noise);
-
       }
 
       /* check if this quantization is better the our saved quantization */
@@ -692,7 +649,7 @@ void outer_loop(
 	best_max_noise=max_noise;
 	best_over_noise=over_noise;
 	best_tot_noise=tot_noise;
-	
+
 	memcpy(scalefac, &scalefac_w, sizeof(III_scalefac_t));
 	memcpy(l3_enc,l3_enc_w,sizeof(int)*576);
 	memcpy(&save_cod_info,cod_info,sizeof(save_cod_info));
@@ -703,7 +660,6 @@ void outer_loop(
       }
     }
 
-    
     /* if no bands with distortion, we are done */
     if (gfc->noise_shaping_stop==0)
       if (over==0) notdone=0;
@@ -718,6 +674,14 @@ void outer_loop(
 		status = scale_bitcount(&scalefac_w, cod_info);
 	    }else{
 		status = scale_bitcount_lsf(&scalefac_w, cod_info);
+	    }
+	    if (status && gfp->experimentalY && !cod_info->scalefac_scale) {
+		inc_scalefac_scale(gfp, &scalefac_w, cod_info, xrpow);
+		if ( gfp->version == 1 ) {
+		    status = scale_bitcount(&scalefac_w, cod_info);
+		}else{
+		    status = scale_bitcount_lsf(&scalefac_w, cod_info);
+		}
 	    }
 	}
 	notdone = !status;
@@ -782,6 +746,7 @@ void outer_loop(
   Amplify the scalefactor bands that violate the masking threshold.
   See ISO 11172-3 Section C.1.5.4.3.5
 */
+
 void amp_scalefac_bands(lame_global_flags *gfp,
 			FLOAT8 xrpow[576], 
 			gr_info *cod_info,
@@ -829,18 +794,51 @@ void amp_scalefac_bands(lame_global_flags *gfp,
 
     for ( i = 0; i < 3; i++ ) {
 	for ( sfb = cod_info->sfb_smax; sfb < 12; sfb++ ) {
-            if ( distort[i+1][sfb]>distort_thresh) {
                 scalefac->s[sfb][i]++;
                 start = gfc->scalefac_band.s[sfb];
                 end   = gfc->scalefac_band.s[sfb+1];
 		for (l = start; l < end; l++)
 		    xrpow[l * 3 + i] *= ifqstep34;
-            }
 	}
     }
 }
 
 
+void inc_scalefac_scale(lame_global_flags *gfp,
+			III_scalefac_t *scalefac,
+			gr_info *cod_info,
+			FLOAT8 xrpow[576])
+{
+    int start, end, l,i;
+    int	sfb;
+    lame_internal_flags *gfc=gfp->internal_flags;
+    const FLOAT8 ifqstep34 = 1.29683955465100964055;
+
+    for ( sfb = 0; sfb < cod_info->sfb_lmax; sfb++ ) {
+	if (scalefac->l[sfb] & 1) {
+	    scalefac->l[sfb]++;
+	    start = gfc->scalefac_band.l[sfb];
+	    end   = gfc->scalefac_band.l[sfb+1];
+	    for ( l = start; l < end; l++ )
+		xrpow[l] *= ifqstep34;
+	}
+	scalefac->l[sfb] >>= 1;
+    }
+
+    for ( i = 0; i < 3; i++ ) {
+	for ( sfb = cod_info->sfb_smax; sfb < 12; sfb++ ) {
+	    if (scalefac->s[sfb][i] & 1) {
+                scalefac->s[sfb][i]++;
+		start = gfc->scalefac_band.s[sfb];
+		end   = gfc->scalefac_band.s[sfb+1];
+		for (l = start; l < end; l++)
+		    xrpow[l * 3 + i] *= ifqstep34;
+	    }
+	    scalefac->s[sfb][i] >>= 1;
+	}
+    }
+    cod_info->scalefac_scale = 1;
+}
 
 int quant_compare(int experimentalX,
 int best_over,FLOAT8 best_tot_noise,FLOAT8 best_over_noise,FLOAT8 best_max_noise,

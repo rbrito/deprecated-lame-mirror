@@ -106,6 +106,12 @@ void best_scalefac_store(lame_global_flags *gfp,int gr, int ch,
 			 III_side_info_t *l3_side,
 			 III_scalefac_t scalefac[2][2]);
 
+void inc_scalefac_scale(lame_global_flags *gfp,
+			III_scalefac_t *scalefac,
+			gr_info *cod_info,
+			FLOAT8 xrpow[576]);
+
+
 int init_outer_loop(
     lame_global_flags *gfp,
     FLOAT8 xr[576],        /*  could be L/R OR MID/SIDE */
