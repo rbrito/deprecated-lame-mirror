@@ -1070,7 +1070,7 @@ parse_wave_header(lame_global_flags * gfp, FILE * sf)
         gfp->num_channels = channels;
         gfp->in_samplerate = samples_per_sec;
         pcmbitwidth = bits_per_sample;
-        gfp->num_samples = data_length / (channels * bits_per_sample / 8.0);
+        gfp->num_samples = data_length / (channels * ((bits_per_sample+7) / 8));
     }
     return is_wav;
 }
