@@ -320,7 +320,7 @@ static int
 find_scalefac_ave(const FLOAT8 *xr, const FLOAT8 *xr34, const int sfb,
 		     const FLOAT8 l3_xmin, const int bw)
 {
-  FLOAT8 xfsf;
+  FLOAT8 xfsf; 
   int i,sf,sf_ok,delsf;
 
   /* search will range from sf:  -209 -> 45  */
@@ -352,6 +352,18 @@ find_scalefac_ave(const FLOAT8 *xr, const FLOAT8 *xr34, const int sfb,
 #endif
 
   return sf;
+}
+
+
+/**
+ *  Robert Hegemann 2001-05-01
+ *  calculates quantization step size determined by allowed masking
+ */
+static int 
+calc_scalefac( FLOAT8 l3_xmin, int bw )
+{
+    FLOAT8 const c = 5.799142446;   // 10 * 10^(2/3) * log10(4/3)
+    return (int)(c*log10(l3_xmin/bw)-.5);
 }
 
 
@@ -739,6 +751,7 @@ short_block_sf (
     const III_psy_xmin   * const l3_xmin,
     const FLOAT8                 xr34_orig[576],
     const FLOAT8                 xr34     [576],
+    const int qual,
           III_scalefac_t * const vbrsf )
 {
      int j, sfb, b;
@@ -751,17 +764,27 @@ short_block_sf (
 	    const  int end   = gfc->scalefac_band.s[ sfb+1 ];
 	    const  int width = end - start;
 	    
-            if (0 == gfc->noise_shaping_amp) {
+            switch( qual ) {
+            default:
+            case 4:
+            case 3:
                 /*  the faster and sloppier mode to use at lower quality
                  */
                 vbrsf->s[sfb][b] = find_scalefac (&xr34[j], &xr34_orig[j], sfb,
                                               l3_xmin->s[sfb][b], width);
-	    }
-            else {
+                break;
+            case 2:
+                /*  the fastest
+                 */
+                vbrsf->s[sfb][b] = calc_scalefac( l3_xmin->s[sfb][b], width );
+                break;
+            case 1:
+            case 0:
                 /*  the slower and better mode to use at higher quality
                  */
                 vbrsf->s[sfb][b] = find_scalefac_ave (&xr34[j], &xr34_orig[j],
                                               sfb, l3_xmin->s[sfb][b], width);
+                break;
             }
             j += width;
         }
@@ -820,9 +843,10 @@ long_block_sf (
     const III_psy_xmin   * const l3_xmin,
     const FLOAT8                 xr34_orig[576],
     const FLOAT8                 xr34     [576],
+    const int qual,
           III_scalefac_t * const vbrsf )
 {
-     int sfb;
+    int sfb;
     int vbrmean, vbrmin, vbrmax;
     int sf_cache[SBMAX_l];
     
@@ -831,17 +855,27 @@ long_block_sf (
         const  int end   = gfc->scalefac_band.l[ sfb+1 ];
         const  int width = end - start;
         
-        if (0 == gfc->noise_shaping_amp) {
+        switch( qual ) {
+        default:
+        case 4:
+        case 3:
             /*  the faster and sloppier mode to use at lower quality
              */
             vbrsf->l[sfb] = find_scalefac (&xr34[start], &xr34_orig[start], 
                                            sfb, l3_xmin->l[sfb], width);
-        }
-        else {
+            break;
+        case 2:
+            /*  the fastest
+             */
+            vbrsf->l[sfb] = calc_scalefac( l3_xmin->l[sfb], width );
+            break;
+        case 1:
+        case 0:
             /*  the slower and better mode to use at higher quality
              */
             vbrsf->l[sfb] = find_scalefac_ave (&xr34[start], &xr34_orig[start],
                                                sfb, l3_xmin->l[sfb], width);
+            break;
         }
     }
     
@@ -1353,11 +1387,11 @@ VBR_noise_shaping2 (
     shortblock = (cod_info->block_type == SHORT_TYPE);
       
     if (shortblock) {
-        vbrmax = short_block_sf (gfc, l3_xmin, xr34orig, xr, &vbrsf);  
+        vbrmax = short_block_sf (gfc, l3_xmin, xr34orig, xr, gfp->quality, &vbrsf);  
         short_block_scalefacs (gfp, cod_info, scalefac, &vbrsf, &vbrmax);
         short_block_xr34      (gfc, cod_info, scalefac, xr34orig, xr34);
     } else {
-        vbrmax = long_block_sf (gfc, l3_xmin, xr34orig, xr, &vbrsf);  
+        vbrmax = long_block_sf (gfc, l3_xmin, xr34orig, xr, gfp->quality, &vbrsf);  
         long_block_scalefacs (gfp, cod_info, scalefac, &vbrsf, &vbrmax);
         long_block_xr34      (gfc, cod_info, scalefac, xr34orig, xr34);
     } 
