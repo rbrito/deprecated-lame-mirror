@@ -144,7 +144,7 @@ int do_layer1(PMPSTR mp, unsigned char *pcm_sample,int *pcm_point)
 
   fr->jsbound = (fr->mode == MPG_MD_JOINT_STEREO) ? (fr->mode_ext<<2)+4 : 32;
 
-  if(stereo == 2 || single == 3)
+  if (stereo == 1 || single == 3)
     single = 0;
 
   I_step_one(balloc,scale_index,fr);
