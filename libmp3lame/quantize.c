@@ -1528,46 +1528,6 @@ long_block_scalefacs(const lame_internal_flags * gfc, gr_info * gi,
 
 
 
-/***********************************************************************
- *
- *  quantize xr34 based on scalefactors
- *
- *  block_xr34      
- *
- *  Mark Taylor 2000-??-??
- *  Robert Hegemann 2000-10-20 made functions of them
- *
- ***********************************************************************/
-
-static void
-block_xr34(const lame_internal_flags * gfc, const gr_info * gi,
-	   const FLOAT * xr34_orig, FLOAT * xr34)
-{
-    int     sfb, j, *scalefac = gi->scalefac;
-    for (j = sfb = 0; j < 576; ++sfb) {
-	FLOAT fac;
-	int s =
-	    (((*scalefac++) + (gi->preflag ? pretab[sfb] : 0))
-	     << (gi->scalefac_scale + 1))
-	    + gi->subblock_gain[gi->window[sfb]] * 8;
-	int l = gi->width[sfb];
-
-	if (s == 0) {/* just copy */
-	    memcpy(&xr34[j], &xr34_orig[j], sizeof(FLOAT)*l);
-	    j += l;
-	    continue;
-	}
-
-	fac = IIPOW20(s);
-	l >>= 1;
-	do {
-	    xr34[j] = xr34_orig[j] * fac; ++j;
-	    xr34[j] = xr34_orig[j] * fac; ++j;
-	} while (--l > 0);
-    }
-}
-
-
 /************************************************************************
  *
  *  VBR_noise_shaping()
@@ -1577,17 +1537,13 @@ block_xr34(const lame_internal_flags * gfc, const gr_info * gi,
  ***********************************************************************/
 static int
 VBR_noise_shaping(
-    lame_internal_flags * gfc, FLOAT * xr34orig,
+    lame_internal_flags * gfc, FLOAT * xr34,
     FLOAT * l3_xmin, int gr, int ch)
 {
-    int vbrsf[SFBMAX];
-    gr_info *gi;
-    FLOAT  xr34[576];
-    int     vbrmax;
+    int vbrsf[SFBMAX], vbrmax;
+    gr_info *gi = &gfc->l3_side.tt[gr][ch];
 
-    gi = &gfc->l3_side.tt[gr][ch];
-
-    vbrmax = block_sf(gfc, l3_xmin, xr34orig, vbrsf, gi);
+    vbrmax = block_sf(gfc, l3_xmin, xr34, vbrsf, gi);
     if (gi->block_type == SHORT_TYPE) {
 	short_block_scalefacs(gfc, gi, vbrsf, vbrmax);
     }
@@ -1602,7 +1558,6 @@ VBR_noise_shaping(
 	scale_bitcount_lsf(gfc, gi);
 
     /* quantize xr34 */
-    block_xr34(gfc, gi, xr34orig, xr34);
     gi->part2_3_length = count_bits(gfc, xr34, gi);
 
     if (gi->part2_3_length + gi->part2_length >= MAX_BITS)
