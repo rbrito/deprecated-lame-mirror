@@ -498,12 +498,7 @@ int noquant_count_bits(
     if (i == 0)
 	return a1;
 
-    if (gi->block_type == SHORT_TYPE) {
-      a1=3*gfc->scalefac_band.s[3];
-      if (a1 > gi->big_values) a1 = gi->big_values;
-      a2 = gi->big_values;
-
-    }else if (gi->block_type == NORM_TYPE) {
+    if (gi->block_type == NORM_TYPE) {
 	assert(i <= 576); /* bv_scf has 576 entries (0..575) */
         a1 = gi->region0_count = gfc->bv_scf[i-2];
 	a2 = gi->region1_count = gfc->bv_scf[i-1];
@@ -512,20 +507,15 @@ int noquant_count_bits(
         a2 = gfc->scalefac_band.l[a1 + a2 + 2];
 	a1 = gfc->scalefac_band.l[a1 + 1];
 	if (a2 < i)
-	  gi->table_select[2] = gfc->choose_table(ix + a2, ix + i,
-						  &gi->part2_3_length);
+	    gi->table_select[2] = gfc->choose_table(ix + a2, ix + i,
+						    &gi->part2_3_length);
 
     } else {
-	gi->region0_count = 7;
-	/*gi->region1_count = SBPSY_l - 7 - 1;*/
-	gi->region1_count = SBMAX_l -1 - 7 - 1;
-	a1 = gfc->scalefac_band.l[7 + 1];
+	a1 = gfc->scalefac_band.l[7 + 1]; // = 3*gfc->scalefac_band.s[3] */
 	a2 = i;
-	if (a1 > a2) {
+	if (a1 > a2)
 	    a1 = a2;
-	}
     }
-
 
     /* have to allow for the case when bigvalues < region0 < region1 */
     /* (and region0, region1 are ignored) */

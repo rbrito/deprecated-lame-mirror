@@ -177,59 +177,63 @@ init_gr_info(
 	    = gfc->scalefac_band.l[sfb+1] - gfc->scalefac_band.l[sfb];
 	cod_info->window[sfb] = 3; // which is always 0.
     }
-    if (cod_info->block_type == SHORT_TYPE) {
-	FLOAT ixwork[576];
-	FLOAT *ix;
 
-        cod_info->sfb_smin        = 0;
-        cod_info->sfb_lmax        = 0;
-	if (cod_info->mixed_block_flag) {
-            /*
-             *  MPEG-1:      sfbs 0-7 long block, 3-12 short blocks 
-             *  MPEG-2(.5):  sfbs 0-5 long block, 3-12 short blocks
-             */ 
-	    cod_info->sfb_smin    = 3;
-            cod_info->sfb_lmax    = gfc->mode_gr*2 + 4;
-	}
-	cod_info->psymax
-	    = cod_info->sfb_lmax
-	    + 3*((gfc->sfb21_extra ? SBMAX_s : SBPSY_s) - cod_info->sfb_smin);
-	cod_info->sfbmax
-	    = cod_info->sfb_lmax + 3*(SBPSY_s - cod_info->sfb_smin);
-	cod_info->sfbdivide   = cod_info->sfbmax - 18;
-	cod_info->psy_lmax    = cod_info->sfb_lmax;
-	/* re-order the short blocks, for more efficient encoding below */
-	/* By Takehiro TOMINAGA */
-	/*
-	  Within each scalefactor band, data is given for successive
-	  time windows, beginning with window 0 and ending with window 2.
-	  Within each window, the quantized values are then arranged in
-	  order of increasing frequency...
-	*/
-	ix = &cod_info->xr[gfc->scalefac_band.l[cod_info->sfb_lmax]];
-	memcpy(ixwork, cod_info->xr, 576*sizeof(FLOAT));
-	for (sfb = cod_info->sfb_smin; sfb < SBMAX_s; sfb++) {
-	    int start = gfc->scalefac_band.s[sfb];
-	    int end   = gfc->scalefac_band.s[sfb + 1];
-	    int window, l;
-	    for (window = 0; window < 3; window++) {
-		for (l = start; l < end; l++) {
-		    *ix++ = ixwork[3*l+window];
+    if (cod_info->block_type != NORM_TYPE) {
+	cod_info->region0_count = 7;
+	cod_info->region1_count = SBMAX_l -1 - 7 - 1;
+	if (cod_info->block_type == SHORT_TYPE) {
+	    FLOAT ixwork[576];
+	    FLOAT *ix;
+
+	    cod_info->sfb_smin        = 0;
+	    cod_info->sfb_lmax        = 0;
+	    if (cod_info->mixed_block_flag) {
+		/*
+		 *  MPEG-1:      sfbs 0-7 long block, 3-12 short blocks 
+		 *  MPEG-2(.5):  sfbs 0-5 long block, 3-12 short blocks
+		 */ 
+		cod_info->sfb_smin    = 3;
+		cod_info->sfb_lmax    = gfc->mode_gr*2 + 4;
+	    }
+	    cod_info->psymax
+		= cod_info->sfb_lmax
+		+ 3*((gfc->sfb21_extra ? SBMAX_s : SBPSY_s) - cod_info->sfb_smin);
+	    cod_info->sfbmax
+		= cod_info->sfb_lmax + 3*(SBPSY_s - cod_info->sfb_smin);
+	    cod_info->sfbdivide   = cod_info->sfbmax - 18;
+	    cod_info->psy_lmax    = cod_info->sfb_lmax;
+	    /* re-order the short blocks, for more efficient encoding below */
+	    /* By Takehiro TOMINAGA */
+	    /*
+	      Within each scalefactor band, data is given for successive
+	      time windows, beginning with window 0 and ending with window 2.
+	      Within each window, the quantized values are then arranged in
+	      order of increasing frequency...
+	    */
+	    ix = &cod_info->xr[gfc->scalefac_band.l[cod_info->sfb_lmax]];
+	    memcpy(ixwork, cod_info->xr, 576*sizeof(FLOAT));
+	    for (sfb = cod_info->sfb_smin; sfb < SBMAX_s; sfb++) {
+		int start = gfc->scalefac_band.s[sfb];
+		int end   = gfc->scalefac_band.s[sfb + 1];
+		int window, l;
+		for (window = 0; window < 3; window++) {
+		    for (l = start; l < end; l++) {
+			*ix++ = ixwork[3*l+window];
+		    }
 		}
 	    }
-	}
 
-	j = cod_info->sfb_lmax;
-	for (sfb = cod_info->sfb_smin; sfb < SBMAX_s; sfb++) {
-	    cod_info->width[j] = cod_info->width[j+1] = cod_info->width[j + 2]
-		= gfc->scalefac_band.s[sfb+1] - gfc->scalefac_band.s[sfb];
-	    cod_info->window[j  ] = 0;
-	    cod_info->window[j+1] = 1;
-	    cod_info->window[j+2] = 2;
-	    j += 3;
+	    j = cod_info->sfb_lmax;
+	    for (sfb = cod_info->sfb_smin; sfb < SBMAX_s; sfb++) {
+		cod_info->width[j] = cod_info->width[j+1] = cod_info->width[j + 2]
+		    = gfc->scalefac_band.s[sfb+1] - gfc->scalefac_band.s[sfb];
+		cod_info->window[j  ] = 0;
+		cod_info->window[j+1] = 1;
+		cod_info->window[j+2] = 2;
+		j += 3;
+	    }
 	}
     }
-
     cod_info->count1bits          = 0;  
     cod_info->sfb_partition_table = nr_of_sfb_block[0][0];
     cod_info->slen[0]             = 0;
