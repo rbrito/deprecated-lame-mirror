@@ -683,27 +683,13 @@ amp_scalefac_bands(
 	    trigger = distort[sfb];
     }
 
-    switch (method) {
-    case 2:
-	/* amplify exactly 1 band */
-	break;
-
-    case 1:
-	/* amplify bands within 50% of max (on db scale) */
-	if (trigger>1.0)
-	    trigger = sqrt(trigger);
+    if (method != 2) {
+	if (trigger <= 1.0)
+	    trigger *= 0.95;
+	else if (method == 0)
+	    trigger =  1.0;
 	else
-	    trigger *= .95;
-	break;
-
-    case 0:
-    default:
-	/* ISO algorithm.  amplify all bands with distort>1 */
-	if (trigger>1.0)
-	    trigger=1.0;
-	else
-	    trigger *= .95;
-	break;
+	    trigger =  sqrt(trigger);
     }
 
     for (sfb = 0; sfb < cod_info->sfbmax; sfb++) {
@@ -837,13 +823,6 @@ balance_noise (
     )
 {
     int status;
-    /* check to make sure we have not amplified too much 
-     * loop_break returns 0 if there is an unamplified scalefac
-     * scale_bitcount returns 0 if no scalefactors are too large
-     */
-    if (loop_break (cod_info)) 
-        return 0; /* all bands amplified */
-    
     /* not all scalefactors have been amplified.  so these 
      * scalefacs are possibly valid.  encode them: 
      */
@@ -931,8 +910,8 @@ outer_loop (
     age = 3;
     for (;;) {
 	/* try the new scalefactor conbination on cod_info_w */
-	amp_scalefac_bands ( gfc, &cod_info_w, distort, current_method);
-	if (balance_noise (gfc, &cod_info_w)
+	amp_scalefac_bands(gfc, &cod_info_w, distort, current_method);
+	if (!loop_break(&cod_info_w) && balance_noise(gfc, &cod_info_w)
 	    && (huff_bits = targ_bits - cod_info_w.part2_length) > 0) {
 
 	    /* adjust global_gain to fit the available bits */
@@ -944,10 +923,12 @@ outer_loop (
 		&& better_quant(gfc, l3_xmin, distort, &best_noise_info,
 				&cod_info_w)) {
 		*cod_info = cod_info_w;
-		/* if no bands with distortion, we are done */
-		if (gfc->noise_shaping_stop == 0
-		    && best_noise_info.over_count == 0)
-		    break;
+		if (best_noise_info.over_count == 0) {
+		    if (gfc->noise_shaping_stop == 0)
+			break;
+		    if (current_method == 0)
+			current_method++;
+		}
 		age = (current_method*3+2) * ((gfc->substep_shaping & 2) + 1);
 		continue;
 	    }
@@ -1608,10 +1589,6 @@ VBR_iteration_loop (
 		    bitpressure_strategy(cod_info, l3_xmin[gr][ch]);
 		}
 
-		if (gfc->substep_shaping & 1)
-		    trancate_smallspectrums(gfc, cod_info,
-					    l3_xmin[gr][ch], xrpow);
-
 		used_bits += cod_info->part2_3_length + cod_info->part2_length;
 		if (used_bits > max_frame_bits) {
 		    for (gr = 0; gr < gfc->mode_gr; gr++) 
@@ -1626,6 +1603,9 @@ VBR_iteration_loop (
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         for (ch = 0; ch < gfc->channels_out; ch++) {
+	    if (gfc->substep_shaping & 1)
+		trancate_smallspectrums(gfc, &gfc->l3_side.tt[gr][ch],
+					l3_xmin[gr][ch], xrpow);
 	    iteration_finish_one(gfc, gr, ch, 0);
 	} /* for ch */
     }    /* for gr */
@@ -1636,7 +1616,7 @@ VBR_iteration_loop (
     if (!ath_over && !gfp->VBR_hard_min)
 	gfc->bitrate_index = 1;
     for (; gfc->bitrate_index <= gfc->VBR_max_bitrate; gfc->bitrate_index++)
-        if (ResvFrameBegin (gfp, &mean_bits) >= 0)
+	if (ResvFrameBegin (gfp, &mean_bits) >= 0)
 	    break;
     assert (gfc->bitrate_index <= gfc->VBR_max_bitrate);
 
