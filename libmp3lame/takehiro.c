@@ -96,26 +96,22 @@ quantize_best(const FLOAT *xp, gr_info *gi)
 	    double x0 = istep * xp[0] + MAGIC_FLOAT;
 	    double x1 = istep * xp[1] + MAGIC_FLOAT;
 	    xp += 2;
-
+	    if (x0 > MAGIC_FLOAT + IXMAX_VAL) x0 = MAGIC_FLOAT + IXMAX_VAL;
+	    if (x1 > MAGIC_FLOAT + IXMAX_VAL) x1 = MAGIC_FLOAT + IXMAX_VAL;
 	    fi[0].f = x0;
 	    fi[1].f = x1;
-
-	    if (fi[0].i >= MAGIC_INT + PRECALC_SIZE) return LARGE_BITS;
 	    fi[0].f = x0 + (adj43asm - MAGIC_INT)[fi[0].i];
-	    if (fi[1].i >= MAGIC_INT + PRECALC_SIZE) return LARGE_BITS;
 	    fi[1].f = x1 + (adj43asm - MAGIC_INT)[fi[1].i];
 	    fi[0].i -= MAGIC_INT;
 	    fi[1].i -= MAGIC_INT;
 	    fi += 2;
 #else
+	    FLOAT x0 = *xp++ * istep;
 	    FLOAT x1 = *xp++ * istep;
-	    FLOAT x2 = *xp++ * istep;
-	    int rx1 = (int)x1;
-	    int rx2 = (int)x2;
-	    if (rx1 >= PRECALC_SIZE) return LARGE_BITS;
-	    if (rx2 >= PRECALC_SIZE) return LARGE_BITS;
-	    (fi++)->i = (int)(x1 + adj43[rx1]);
-	    (fi++)->i = (int)(x2 + adj43[rx2]);
+	    if (x0 > IXMAX_VAL) x0 = IXMAX_VAL;
+	    if (x1 > IXMAX_VAL) x1 = IXMAX_VAL;
+	    (fi++)->i = (int)(x0 + adj43[(int)x0]);
+	    (fi++)->i = (int)(x1 + adj43[(int)x1]);
 #endif
 	} while (xp < xe);
     } while (xp < xend);
@@ -364,10 +360,7 @@ int choose_table_nonMMX(
 
     default:
 	/* try tables with linbits */
-	if (max > IXMAX_VAL) {
-	    *s = LARGE_BITS;
-	    return -1;
-	}
+	assert(max <= IXMAX_VAL);
 	max -= 15;
 	for (choice2 = 24; choice2 < 32; choice2++) {
 	    if (ht[choice2].linmax >= max) {

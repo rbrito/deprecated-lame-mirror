@@ -171,17 +171,7 @@ choose_table_MMX:
 	ja	.with_ESC
 	jmp	[choose_jump_table_L+eax*4]
 
-.with_ESC1:
-	emms
-	mov	ecx, [esp+12]	; *s
-	mov	[ecx], eax
-	or	eax,-1
-	ret
-
 .with_ESC:
-	cmp	eax, 8191+15
-	ja	.with_ESC1
-
 	sub	eax,15
 	push	ebx
 	push	esi

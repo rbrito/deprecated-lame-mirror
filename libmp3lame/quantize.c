@@ -811,22 +811,21 @@ calc_sfb_noise_fast(lame_internal_flags *gfc, int j, int bw, int sf)
 
     do {
 	FLOAT t0, t1;
+	int i0, i1;
 #ifdef TAKEHIRO_IEEE754_HACK
 	fi_union fi0, fi1;
 	fi0.f = sfpow34 * xr34[j+bw  ] + (ROUNDFAC_NEAR + MAGIC_FLOAT);
 	fi1.f = sfpow34 * xr34[j+bw+1] + (ROUNDFAC_NEAR + MAGIC_FLOAT);
-
-	if (fi0.i > MAGIC_INT + IXMAX_VAL) return -1;
-	if (fi1.i > MAGIC_INT + IXMAX_VAL) return -1;
-	t0 = absxr[j+bw  ] - (pow43 - MAGIC_INT)[fi0.i] * sfpow;
-	t1 = absxr[j+bw+1] - (pow43 - MAGIC_INT)[fi1.i] * sfpow;
+	i0 = fi0.i; i1 = fi1.i;
+	if (i0 > MAGIC_INT + IXMAX_VAL) i0 = MAGIC_INT + IXMAX_VAL;
+	if (i1 > MAGIC_INT + IXMAX_VAL) i1 = MAGIC_INT + IXMAX_VAL;
+	t0 = absxr[j+bw  ] - (pow43 - MAGIC_INT)[i0] * sfpow;
+	t1 = absxr[j+bw+1] - (pow43 - MAGIC_INT)[i1] * sfpow;
 #else
-	int i0, i1;
 	i0 = (int)(sfpow34 * xr34[j+bw  ] + ROUNDFAC);
 	i1 = (int)(sfpow34 * xr34[j+bw+1] + ROUNDFAC);
-
-	if (i0 > IXMAX_VAL) return -1;
-	if (i1 > IXMAX_VAL) return -1;
+	if (i0 > IXMAX_VAL) i0 = IXMAX_VAL;
+	if (i1 > IXMAX_VAL) i1 = IXMAX_VAL;
 	t0 = absxr[j+bw  ] - pow43[i0] * sfpow;
 	t1 = absxr[j+bw+1] - pow43[i1] * sfpow;
 #endif
@@ -844,24 +843,23 @@ calc_sfb_noise(lame_internal_flags *gfc, int j, int bw, int sf)
 
     do {
 #ifdef TAKEHIRO_IEEE754_HACK
-	double t0, t1;
+	double t0 = sfpow34 * xr34[j+bw  ] + MAGIC_FLOAT;
+	double t1 = sfpow34 * xr34[j+bw+1] + MAGIC_FLOAT;
 	fi_union fi0, fi1;
-	fi0.f = (t0 = sfpow34 * xr34[j+bw  ] + MAGIC_FLOAT);
-	fi1.f = (t1 = sfpow34 * xr34[j+bw+1] + MAGIC_FLOAT);
-	if (fi0.i > MAGIC_INT + IXMAX_VAL) return -1.0;
-	if (fi1.i > MAGIC_INT + IXMAX_VAL) return -1.0;
+	if (t0 > MAGIC_FLOAT + IXMAX_VAL) t0 = MAGIC_FLOAT + IXMAX_VAL;
+	if (t1 > MAGIC_FLOAT + IXMAX_VAL) t1 = MAGIC_FLOAT + IXMAX_VAL;
+	fi0.f = t0;
+	fi1.f = t1;
 	fi0.f = t0 + (adj43asm - MAGIC_INT)[fi0.i];
 	fi1.f = t1 + (adj43asm - MAGIC_INT)[fi1.i];
 	t0 = absxr[j+bw  ] - (pow43 - MAGIC_INT)[fi0.i] * sfpow;
 	t1 = absxr[j+bw+1] - (pow43 - MAGIC_INT)[fi1.i] * sfpow;
 #else
-	FLOAT t0, t1;
-	int i0, i1;
-	i0 = (int) (t0 = sfpow34 * xr34[j+bw  ]);
-	i1 = (int) (t1 = sfpow34 * xr34[j+bw+1]);
-	if (i0 > IXMAX_VAL) return -1.0;
-	if (i1 > IXMAX_VAL) return -1.0;
-
+	FLOAT t0 = sfpow34 * xr34[j+bw  ];
+	FLOAT t1 = sfpow34 * xr34[j+bw+1];
+	int i0 = (int)t0, i1 = (int) t1;
+	if (i0 > IXMAX_VAL) i0 = IXMAX_VAL;
+	if (i1 > IXMAX_VAL) i1 = IXMAX_VAL;
 	t0 = absxr[j+bw  ] - pow43[(int)(t0 + adj43[i0])] * sfpow;
 	t1 = absxr[j+bw+1] - pow43[(int)(t1 + adj43[i1])] * sfpow;
 #endif
@@ -893,26 +891,21 @@ adjust_global_gain(
 #ifdef TAKEHIRO_IEEE754_HACK
 	    double x0 = istep * xr34[j+bw  ] + MAGIC_FLOAT;
 	    double x1 = istep * xr34[j+bw+1] + MAGIC_FLOAT;
-
+	    if (x0 > MAGIC_FLOAT + IXMAX_VAL) x0 = MAGIC_FLOAT + IXMAX_VAL;
+	    if (x1 > MAGIC_FLOAT + IXMAX_VAL) x1 = MAGIC_FLOAT + IXMAX_VAL;
 	    fi[j+bw  ].f = x0;
 	    fi[j+bw+1].f = x1;
-
-	    if (fi[j+bw  ].i >= MAGIC_INT + PRECALC_SIZE) return LARGE_BITS;
 	    fi[j+bw  ].f = x0 + (adj43asm - MAGIC_INT)[fi[j+bw  ].i];
-	    if (fi[j+bw+1].i >= MAGIC_INT + PRECALC_SIZE) return LARGE_BITS;
 	    fi[j+bw+1].f = x1 + (adj43asm - MAGIC_INT)[fi[j+bw+1].i];
-
 	    fi[j+bw  ].i -= MAGIC_INT;
 	    fi[j+bw+1].i -= MAGIC_INT;
 #else
-	    FLOAT x1 = xr34[j+bw  ] * istep;
-	    FLOAT x2 = xr34[j+bw+1] * istep;
-	    int rx1 = (int)x1;
-	    int rx2 = (int)x2;
-	    if (rx1 >= PRECALC_SIZE) return LARGE_BITS;
-	    if (rx2 >= PRECALC_SIZE) return LARGE_BITS;
-	    fi[j+bw  ].i = (int)(x1 + adj43[rx1]);
-	    fi[j+bw+1].i = (int)(x2 + adj43[rx2]);
+	    FLOAT x0 = istep * xr34[j+bw  ];
+	    FLOAT x1 = istep * xr34[j+bw+1];
+	    if (x0 > IXMAX_VAL) x0 = IXMAX_VAL;
+	    if (x1 > IXMAX_VAL) x1 = IXMAX_VAL;
+	    fi[j+bw  ].i = (int)(x0 + adj43[(int)x0]);
+	    fi[j+bw+1].i = (int)(x1 + adj43[(int)x1]);
 #endif
 	} while ((bw += 2) < 0);
 	if (!gfc->pseudohalf[sfb])
