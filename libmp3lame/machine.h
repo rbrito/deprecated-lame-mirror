@@ -164,8 +164,8 @@ static inline FLOAT POW20core(int x)
 
 /* log/log10 approximations */
 #ifdef USE_FAST_LOG
-# define LOG2_SIZE       (256)
 # define LOG2_SIZE_L2    (8)
+# define LOG2_SIZE       (1 << LOG2_SIZE_L2)
 # define FAST_LOG10(x)       (fast_log2(x)*(LOG2/LOG10))
 # define FAST_LOG(x)         (fast_log2(x)*LOG2)
 # define FAST_LOG10_X(x,y)   (fast_log2(x)*(LOG2/LOG10*(y)))
