@@ -79,15 +79,15 @@ int id3v2taglen = 0;
 #if defined(HAVE_MPGLIB)
 static int decode_initfile(lame_t gfp, FILE * fd, mp3data_struct * mp3data);
 /* read mp3 file until mpglib returns one frame of PCM data */
-static int     decode_fromfile(lame_t gfp,
-			       FILE * fd, short int pcm_l[], short int pcm_r[],
-			       mp3data_struct * mp3data);
+static int decode_fromfile(lame_t gfp,
+			   FILE * fd, short int pcm_l[], short int pcm_r[],
+			   mp3data_struct * mp3data);
 #endif
 
 static int read_samples_pcm(FILE * const musicin, int sample_buffer[1152*2],
                             int samples_to_read);
 static int read_samples_mp3(lame_t gfp, FILE * const musicin,
-                            short int mpg123pcm[2][1152]);
+                            short int mpg123pcm[2*1152]);
 static FILE   *OpenSndFile(lame_t gfp, char *);
 
 
@@ -196,7 +196,7 @@ init_infile(lame_t gfp, char *inPath)
     count_samples_carefully = 0;
     num_samples_read=0;
 #ifndef LIBSNDFILE
-	pcmbitwidth=in_bitwidth;
+    pcmbitwidth=in_bitwidth;
 #endif
     pcmswapbytes=swapbytes;
     musicin = OpenSndFile(gfp, inPath);
@@ -231,9 +231,10 @@ get_audio(lame_t gfp, int buffer[2][1152])
     unsigned int tmp_num_samples = lame_get_num_samples(gfp);
     unsigned int samples_to_read = lame_get_framesize(gfp);
     unsigned int remaining;
-    int     insamp[2 * 1152];
+    char    tmpbuf[2 * 1152 * sizeof(int)];
     int     i, j;
-    short   buf_tmp16[2][1152];
+    short   *buf_tmp16;
+    int     *insamp;
 
     assert(samples_to_read <= 1152);
 
@@ -260,20 +261,20 @@ get_audio(lame_t gfp, int buffer[2][1152])
     }
 
     switch (input_format) {
-    case sf_mp1:
-    case sf_mp2:
-    case sf_mp3:
+    case sf_mp1: case sf_mp2: case sf_mp3:
+	buf_tmp16 = (short*)tmpbuf;
 	samples_read = read_samples_mp3(gfp, musicin, buf_tmp16);
 	/* LAME mp3 output 16bit -  convert to int */
 	for (j = 0; j < num_channels; j++) {
 	    for (i = samples_read; --i >= 0; )
-		buffer[j][i] = buf_tmp16[j][i] << (8 * sizeof(int) - 16);
+		buffer[j][i] = buf_tmp16[j*1152+i] << (8 * sizeof(int) - 16);
 	}
-	if( num_channels == 1 )
+	if (num_channels == 1)
 	    memset(buffer[1], 0, samples_read * sizeof(int));
 	break;
 
     default:
+	insamp = (int*)tmpbuf;
 	samples_read
 	    = read_samples_pcm(musicin, insamp, num_channels * samples_to_read)
 	    / num_channels;
@@ -297,40 +298,6 @@ get_audio(lame_t gfp, int buffer[2][1152])
     return samples_read;
 }
 
-
-
-static int
-read_samples_mp3(lame_t gfp, FILE * const musicin,
-		 short int mpg123pcm[2][1152])
-{
-#if !defined(HAVE_MPGLIB)
-    return -1;
-#endif
-
-    static const char type_name[] = "MP3 file";
-    int     out;
-
-    out = decode_fromfile(gfp, musicin, mpg123pcm[0], mpg123pcm[1], &mp3input_data);
-    /*
-     * out < 0:  error, probably EOF
-     * out = 0:  not possible with decode_fromfile() ???
-     * out > 0:  number of output samples
-     */
-    if (out < 0) {
-        memset(mpg123pcm, 0, sizeof(**mpg123pcm) * 2 * 1152);
-        return 0;
-    }
-
-    if ( lame_get_num_channels(gfp) != mp3input_data.channels)
-        fprintf(stderr,
-                "Error: number of channels has changed in %s - not supported\n",
-                type_name);
-    if ( lame_get_in_samplerate(gfp) != mp3input_data.samplerate )
-        fprintf(stderr,
-                "Error: sample frequency has changed in %s - not supported\n",
-                type_name);
-    return out;
-}
 
 
 int
@@ -406,25 +373,22 @@ close_infile(void)
 static FILE   *
 OpenSndFile(lame_t gfp, char *inPath)
 {
-    char   *lpszFileName = inPath;
     FILE   *musicin;
     SNDFILE *gs_pSndFileIn;
     SF_INFO gs_wfInfo;
 
+#ifdef HAVE_MPGLIB
     if (input_format == sf_mp1 ||
         input_format == sf_mp2 || input_format == sf_mp3) {
-#ifdef HAVE_MPGLIB
-        if ((musicin = fopen(lpszFileName, "rb")) == NULL) {
-            fprintf(stderr, "Could not find \"%s\".\n", lpszFileName);
+        if ((musicin = fopen(inPath, "rb")) == NULL) {
+            fprintf(stderr, "Could not find \"%s\".\n", inPath);
             exit(1);
         }
         if (-1 == decode_initfile(gfp, musicin, &mp3input_data)) {
             fprintf(stderr, "Error reading headers in mp3 input file %s.\n",
-                    lpszFileName);
+                    inPath);
             exit(1);
         }
-#endif
-
         if( -1 == lame_set_num_channels(gfp, mp3input_data.channels) ) {
             fprintf( stderr,
                      "Unsupported number of channels: %ud\n",
@@ -433,9 +397,9 @@ OpenSndFile(lame_t gfp, char *inPath)
         }
         lame_set_in_samplerate(gfp, mp3input_data.samplerate );
         lame_set_num_samples(gfp, mp3input_data.nsamp );
-    }
-    else {
-
+    } else
+#endif
+    {
         /* Try to open the sound file */
         /* set some defaults incase input is raw PCM */
         gs_wfInfo.seekable = (input_format != sf_raw); /* if user specified -r, set to not seekable */
@@ -474,14 +438,14 @@ OpenSndFile(lame_t gfp, char *inPath)
 	    }
 	}
 
-        gs_pSndFileIn = sf_open(lpszFileName, SFM_READ, &gs_wfInfo); 
+        gs_pSndFileIn = sf_open(inPath, SFM_READ, &gs_wfInfo); 
         musicin = (FILE *) gs_pSndFileIn;
 
         /* Check result */
         if (gs_pSndFileIn == NULL) {
             sf_perror(gs_pSndFileIn);
             fprintf(stderr, "Could not open sound file \"%s\".\n",
-                    lpszFileName);
+                    inPath);
             exit(1);
         }
 
@@ -595,27 +559,21 @@ OpenSndFile(lame_t gfp, char *inPath)
 
     if (lame_get_num_samples(gfp) == MAX_U_32_NUM) {
         /* try to figure out num_samples */
-        double  flen = get_file_size( lpszFileName );
-
+        double  flen = get_file_size( inPath );
+	unsigned long tmp_num_samples;
         if (flen >= 0) {
-            /* try file size, assume 2 bytes per sample */
-            if (input_format == sf_mp1 ||
-                input_format == sf_mp2 || input_format == sf_mp3) {
-		if (mp3input_data.bitrate>0) {
-		    double  totalseconds =
-			(flen * 8.0 / (1000.0 * mp3input_data.bitrate));
-		    unsigned long tmp_num_samples =
-			totalseconds * lame_get_in_samplerate(gfp);
-		    
-		    lame_set_num_samples(gfp, tmp_num_samples );
-		    mp3input_data.nsamp = tmp_num_samples;
-		}
+	    /* try file size, assume 2 bytes per sample */
+	    int bps = 2*lame_get_num_channels(gfp);
+            if ((input_format == sf_mp1
+		 || input_format == sf_mp2
+		 || input_format == sf_mp3) && mp3input_data.bitrate > 0) {
+		/* if input is mp3, use its bitrate */
+		bps = 1000.0 * mp3input_data.bitrate / 8.0;
+		flen /= lame_get_in_samplerate(gfp);
             }
-	    else {
-		lame_set_num_samples(
-		    gfp, flen/(2 * lame_get_num_channels(gfp)));
-            }
-        }
+	    tmp_num_samples = flen / bps;
+	    lame_set_num_samples(gfp, tmp_num_samples );
+	}
     }
 
     return musicin;
@@ -993,10 +951,6 @@ OpenSndFile(lame_t gfp, char *inPath)
 {
     FILE   *musicin;
 
-    /* set the defaults from info incase we cannot determine them from file */
-    lame_set_num_samples( gfp, MAX_U_32_NUM );
-
-
     if (!strcmp(inPath, "-")) {
 	musicin = stdin;
         set_stream_binary_mode(stdin); /* Read from standard input. */
@@ -1008,16 +962,15 @@ OpenSndFile(lame_t gfp, char *inPath)
         }
     }
 
+#ifdef HAVE_MPGLIB
     if (input_format == sf_mp1 ||
         input_format == sf_mp2 || input_format == sf_mp3) {
-#ifdef HAVE_MPGLIB
         if (-1 == decode_initfile(gfp, musicin, &mp3input_data)) {
             fprintf(stderr, "Error reading headers in mp3 input file %s.\n",
                     inPath);
             exit(1);
         }
-#endif
-        if( -1 == lame_set_num_channels( gfp, mp3input_data.channels) ) {
+        if( -1 == lame_set_num_channels(gfp, mp3input_data.channels) ) {
             fprintf( stderr,
                      "Unsupported number of channels: %ud\n",
                      mp3input_data.channels);
@@ -1026,8 +979,11 @@ OpenSndFile(lame_t gfp, char *inPath)
 	if (lame_get_in_samplerate(gfp) < 0)
 	    lame_set_in_samplerate(gfp, mp3input_data.samplerate);
 	lame_set_num_samples( gfp, mp3input_data.nsamp );
-    }
-    else {
+    } else
+#endif
+    {
+	/* set the defaults from info incase we cannot determine them from file */
+	lame_set_num_samples( gfp, MAX_U_32_NUM );
         if (input_format != sf_raw) {
             parse_file_header(gfp, musicin);
         }
@@ -1044,31 +1000,25 @@ OpenSndFile(lame_t gfp, char *inPath)
     }
 
 
-    if (lame_get_num_samples( gfp ) == MAX_U_32_NUM && musicin != stdin) {
-
-        double  flen = get_file_size(inPath); /* try to figure out num_samples */
-
+    if (lame_get_num_samples(gfp) == MAX_U_32_NUM) {
+        /* try to figure out num_samples */
+        double  flen = get_file_size( inPath );
+	unsigned long tmp_num_samples;
         if (flen >= 0) {
-            /* try file size, assume 2 bytes per sample */
-            if (input_format == sf_mp1 ||
-                input_format == sf_mp2 || input_format == sf_mp3) {
-
-                if (mp3input_data.bitrate > 0) {
-                    double  totalseconds =
-                        (flen * 8.0 / (1000.0 * mp3input_data.bitrate));
-                    unsigned long tmp_num_samples =
-                        totalseconds * lame_get_in_samplerate( gfp );
-
-                    lame_set_num_samples( gfp, tmp_num_samples );
-                    mp3input_data.nsamp = tmp_num_samples;
-                }
+	    /* try file size, assume 2 bytes per sample */
+	    int bps = 2*lame_get_num_channels(gfp);
+            if ((input_format == sf_mp1
+		 || input_format == sf_mp2
+		 || input_format == sf_mp3) && mp3input_data.bitrate > 0) {
+		/* if input is mp3, use its bitrate */
+		bps = 1000.0 * mp3input_data.bitrate / 8.0;
+		flen /= lame_get_in_samplerate(gfp);
             }
-            else {
-                lame_set_num_samples(
-		    gfp, flen / (2 * lame_get_num_channels( gfp )) );
-            }
-        }
+	    tmp_num_samples = flen / bps;
+	    lame_set_num_samples(gfp, tmp_num_samples );
+	}
     }
+
     return musicin;
 }
 #endif /* defined(LIBSNDFILE) */
@@ -1122,12 +1072,10 @@ is_syncword_mp123(const void *const headerptr)
 static int
 decode_initfile(lame_t gfp, FILE * fd, mp3data_struct * mp3data)
 {
-    /*  VBRTAGDATA pTagData; */
-    /* int xing_header,len2,num_frames; */
     unsigned char buf[100];
     int     ret;
     int     len, aid_header;
-    short int pcm_l[1152], pcm_r[1152];
+    short   pcm_l[1152], pcm_r[1152];
     int freeformat = 0;
 
     memset(mp3data, 0, sizeof(mp3data_struct));
@@ -1256,5 +1204,36 @@ decode_fromfile(lame_t gfp, FILE * fd, short pcm_l[], short pcm_r[],
     return ret;
 }
 #endif /* defined(HAVE_MPGLIB) */
+
+static int
+read_samples_mp3(lame_t gfp, FILE * const musicin, short mpg123pcm[2*1152])
+{
+#if !defined(HAVE_MPGLIB)
+    return -1;
+#endif
+
+    int     out;
+
+    out = decode_fromfile(gfp, musicin, &mpg123pcm[0], &mpg123pcm[1152],
+			  &mp3input_data);
+    /*
+     * out < 0:  error, probably EOF
+     * out = 0:  not possible with decode_fromfile() ???
+     * out > 0:  number of output samples
+     */
+    if (out < 0) {
+        memset(mpg123pcm, 0, sizeof(*mpg123pcm) * 2 * 1152);
+        return 0;
+    }
+
+    if ( lame_get_num_channels(gfp) != mp3input_data.channels)
+        fprintf(stderr,
+                "Error: number of channels has changed in an MP3 file - not supported\n");
+    if ( lame_get_in_samplerate(gfp) != mp3input_data.samplerate )
+        fprintf(stderr,
+                "Error: sample frequency has changed in an MP3 file - not supported\n");
+    return out;
+}
+
 
 /* end of get_audio.c */
