@@ -741,7 +741,7 @@ if test "x$GCC" = "xyes"; then
 			if test -x /bin/uname; then
 				/bin/uname -a | grep i686 > /dev/null 2>&1 && \
 				OPTIMIZATION="${OPTIMIZATION} \
-						-mcpu=pentiumpro"
+						-mtune=pentiumpro"
 			fi
 			;;
 		esac
