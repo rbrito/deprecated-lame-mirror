@@ -1029,7 +1029,7 @@ lame_get_version(lame_t gfc)
 int
 lame_get_encoder_delay(lame_t gfc)
 {
-    return gfc->encoder_delay;
+    return ENCDELAY + gfc->framesize;
 }
 
 /* padding added to the end of the input */
@@ -1110,12 +1110,15 @@ lame_set_forbid_diff_blocktype(lame_t gfc, int val)
 void
 lame_set_analysis(lame_t gfc, plotting_data *pinfo)
 {
+#ifndef NOANALYSIS
     gfc->pinfo = pinfo;
+#endif
 }
 
 int 
 lame_set_asm_optimizations(lame_t gfc, int optim, int mode)
 {
+#if HAVE_NASM
     mode = (mode == 1? 1 : 0);
     switch (optim){
         case MMX: {
@@ -1133,4 +1136,7 @@ lame_set_asm_optimizations(lame_t gfc, int optim, int mode)
         default:
 	    return optim;
     }
+#else
+    return -1;
+#endif
 }
