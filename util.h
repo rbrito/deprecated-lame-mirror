@@ -307,6 +307,7 @@ typedef struct  {
 *  Global Function Prototype Declarations
 *
 ***********************************************************************/
+void           freegfc(lame_internal_flags *gfc);
 extern int            BitrateIndex(int, int,int);
 extern int            FindNearestBitrate(int,int,int);
 extern int            validSamplerate(int samplerate);

@@ -957,13 +957,6 @@ void init_bit_stream_w(lame_internal_flags *gfc)
 }
 
 
-/*empty and close mallocs in gfc */
-void freegfc(lame_internal_flags *gfc)   /* bit stream structure */
-{
-   free(gfc->bs.buf);
-   free(gfc);
-}
-
 
 
 

@@ -32,6 +32,15 @@
 *  Global Function Definitions
 *
 ***********************************************************************/
+/*empty and close mallocs in gfc */
+void freegfc(lame_internal_flags *gfc)   /* bit stream structure */
+{
+   if (gfc->bs.buf) free(gfc->bs.buf);
+   free(gfc);
+}
+
+
+
 FLOAT8 ATHformula(FLOAT8 f)
 {
   FLOAT8 ath;

@@ -31,5 +31,4 @@ void add_dummy_byte(lame_global_flags *gfp,int val);
 
 int            copy_buffer(char *buffer,int buffer_size,Bit_stream_struc *bs);
 void           init_bit_stream_w(lame_internal_flags *gfc);
-void           freegfc(lame_internal_flags *gfc);
 #endif
