@@ -473,15 +473,16 @@ count_bits(const lame_internal_flags * const gfc, gr_info * const gi)
 	int sfb, j = 0;
 	for (sfb = 0; sfb < gi->psymax && j < gi->count1; sfb++) {
 	    FLOAT roundfac;
-	    int bw = gi->width[sfb];
-	    j += bw;
+	    int l = -gi->width[sfb];
+	    j -= l;
 	    if (!gfc->pseudohalf[sfb])
 		continue;
 	    roundfac = 0.634521682242439
 		/ IPOW20(scalefactor(gi, sfb) + gi->scalefac_scale);
-	    for (bw = -bw; bw < 0; bw++)
-		if (xr34[j+bw] < roundfac)
-		    gi->l3_enc[j+bw] = 0;
+	    do {
+		if (xr34[j+l] < roundfac)
+		    gi->l3_enc[j+l] = 0;
+	    } while (++l < 0);
 	}
     }
     return noquant_count_bits(gfc, gi);
@@ -701,7 +702,7 @@ best_scalefac_store(
     /* use scalefac_scale if we can */
     III_side_info_t * const l3_side = &gfc->l3_side;
     gr_info *gi = &l3_side->tt[gr][ch];
-    int sfb,j,l,recalc=0;
+    int sfb,j,recalc=0;
 
     memset(l3_side->scfsi[ch], 0, sizeof(l3_side->scfsi[ch]));
 
@@ -709,11 +710,12 @@ best_scalefac_store(
      * This idea comes from the AAC ISO docs.  added mt 3/00 */
     j = 0;
     for (sfb = 0; sfb < gi->psymax; sfb++) {
-	int width = gi->width[sfb];
-	j += width;
-	for (l = -width; l < 0; l++)
+	int l = -gi->width[sfb];
+	j -= l;
+	do {
 	    if (gi->l3_enc[l+j]!=0)
 		break;
+	} while (++l < 0);
 	if (l==0)
 	    gi->scalefac[sfb] = recalc = -2; /* anything goes. */
     }

@@ -48,11 +48,9 @@
 static void
 ms_sparsing(lame_internal_flags* gfc, int gr)
 {
-    int sfb, i, j = 0, width;
-
+    int sfb, i, j = 0;
     for (sfb = 0; sfb < gfc->l3_side.tt[gr][0].sfbmax; ++sfb) {
 	FLOAT threshold;
-	width = gfc->l3_side.tt[gr][0].width[sfb];
 	if (sfb < gfc->l3_side.tt[gr][0].sfb_lmax)
 	    threshold
 		= db2pow(-(gfc->sparseA - gfc->mld_l[sfb]*gfc->sparseB));
@@ -62,23 +60,23 @@ ms_sparsing(lame_internal_flags* gfc, int gr)
 		= db2pow(-(gfc->sparseA - gfc->mld_s[sfb2]*gfc->sparseB));
 	}
 
-	i = j + width;
+	i = j + gfc->l3_side.tt[gr][0].width[sfb];
 	do {
-            FLOAT *m = gfc->l3_side.tt[gr][0].xr+j;
-            FLOAT *s = gfc->l3_side.tt[gr][1].xr+j;
-            FLOAT m02 = m[0] * m[0];
-            FLOAT m12 = m[1] * m[1];
-            FLOAT s02 = s[0] * s[0];
-            FLOAT s12 = s[1] * s[1];
-            if ( s02 < m02*threshold && s12 < m12*threshold ) { 
-                m[0] += s[0]; s[0] = 0;
-                m[1] += s[1]; s[1] = 0;
-            }
-            if ( m02 < s02*threshold && m12 < s12*threshold ) { 
-                s[0] += m[0]; m[0] = 0;
-                s[1] += m[1]; m[1] = 0;
-            }
-        } while ((j += 2) < i);
+	    FLOAT *m = gfc->l3_side.tt[gr][0].xr+j;
+	    FLOAT *s = gfc->l3_side.tt[gr][1].xr+j;
+	    FLOAT m02 = m[0] * m[0];
+	    FLOAT m12 = m[1] * m[1];
+	    FLOAT s02 = s[0] * s[0];
+	    FLOAT s12 = s[1] * s[1];
+	    if ( s02 < m02*threshold && s12 < m12*threshold ) { 
+		m[0] += s[0]; s[0] = 0;
+		m[1] += s[1]; s[1] = 0;
+	    }
+	    if ( m02 < s02*threshold && m12 < s12*threshold ) { 
+		s[0] += m[0]; m[0] = 0;
+		s[1] += m[1]; m[1] = 0;
+	    }
+	} while ((j += 2) < i);
     }
 }
 
@@ -157,19 +155,19 @@ updateStats( lame_internal_flags * const gfc )
     
     /* count 'em for every mode extension in case of 2 channel encoding */
     if (gfc->channels_out == 2) {
-        gfc->bitrate_stereoMode_Hist [gfc->bitrate_index] [gfc->mode_ext]++;
-        gfc->bitrate_stereoMode_Hist [15] [gfc->mode_ext]++;
+	gfc->bitrate_stereoMode_Hist [gfc->bitrate_index] [gfc->mode_ext]++;
+	gfc->bitrate_stereoMode_Hist [15] [gfc->mode_ext]++;
     }
     for (gr = 0; gr < gfc->mode_gr; ++gr) {
-        for (ch = 0; ch < gfc->channels_out; ++ch) {
-            int bt = gfc->l3_side.tt[gr][ch].block_type;
-            int mf = gfc->l3_side.tt[gr][ch].mixed_block_flag;
-            if (mf) bt = 4;
-            gfc->bitrate_blockType_Hist [gfc->bitrate_index] [bt] ++;
+	for (ch = 0; ch < gfc->channels_out; ++ch) {
+	    int bt = gfc->l3_side.tt[gr][ch].block_type;
+	    int mf = gfc->l3_side.tt[gr][ch].mixed_block_flag;
+	    if (mf) bt = 4;
+	    gfc->bitrate_blockType_Hist [gfc->bitrate_index] [bt] ++;
 	    gfc->bitrate_blockType_Hist [gfc->bitrate_index] [ 5] ++;
-            gfc->bitrate_blockType_Hist [15] [bt] ++;
+	    gfc->bitrate_blockType_Hist [15] [bt] ++;
 	    gfc->bitrate_blockType_Hist [15] [ 5] ++;
-        }
+	}
     }
 }
 #endif
