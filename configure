@@ -1043,16 +1043,16 @@ Optional Features:
   --disable-decoder-layer1   Exclude layer1 decoding
   --disable-decoder-layer2   Exclude layer2 decoding
   --disable-frontend         Do not build the lame executable default=build
-  --enable-mp3x              Build GTK frame analyzer default=no
-  --enable-mp3rtp            Build mp3rtp default=no
-  --disable-brhist          Include the VBR bitrate histogram feature
-                             default=yes
-  --enable-double-float      Whether to make all floting point variables as double, not float
-                             default=no
+  --enable-mp3x              Build GTK frame analyzer [default=no]
+  --enable-mp3rtp            Build mp3rtp [default=no]
+  --disable-brhist           Include the VBR bitrate histogram feature
+                             [default=yes]
+  --enable-double-float      Whether to make all floting point variables
+                             as double, not float [default=no]
   --enable-expopt=full,norm  Whether to enable experimental optimizations
-                             default=no
+                             [default=no]
   --enable-debug=alot,norm   Enable debugging (disables optimizations)
-                             default=no
+                             [default=no]
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -1066,7 +1066,7 @@ Optional Packages:
 			  http://www.dmalloc.com/dmalloc.tar.gz
   --with-gtk-prefix=PFX   Prefix where GTK is installed (optional)
   --with-gtk-exec-prefix=PFX Exec prefix where GTK is installed (optional)
-  --with-fileio=lame         Use lame's internal file io routines default
+  --with-fileio=lame         Use lame's internal file io routines [default]
                =sndfile      Use Erik de Castro Lopo's libsndfile
                              (no stdin possible currently)
   --with-sndfile-prefix=DIR  Alternate location for libsndfile
