@@ -22,7 +22,7 @@
 
 
 #include "get_audio.h"        
-#ifdef WIN32
+#ifndef WIN32
 # include <sys/param.h>
 #endif
 
