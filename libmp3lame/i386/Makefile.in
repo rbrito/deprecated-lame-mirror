@@ -106,12 +106,12 @@ SUFFIXES = .nas
 
 EXTRA_liblameasmroutines_la_SOURCES = $(nasm_sources)
 
-nasm_sources = choose_table.nas cpu_feat.nas scalar.nas
+nasm_sources =  	choose_table.nas 	cpu_feat.nas 	scalar.nas
 
 
 @HAVE_NASM_TRUE@liblameasmroutines_la_SOURCES = $(nasm_sources)
 
-EXTRA_DIST = fft.nas fft3dn.nas fftfpu.nas fftsse.nas ffttbl.nas
+EXTRA_DIST =  	fft.nas 	fft3dn.nas 	fftfpu.nas 	fftsse.nas 	ffttbl.nas
 
 
 NASM = @NASM@
@@ -128,7 +128,7 @@ ANSI2KNR = $(top_srcdir)/ansi2knr
 liblameasmroutines_la_LDFLAGS = 
 liblameasmroutines_la_LIBADD = 
 @HAVE_NASM_TRUE@liblameasmroutines_la_OBJECTS =  choose_table.o \
-@HAVE_NASM_TRUE@cpu_feat.o
+@HAVE_NASM_TRUE@cpu_feat.o scalar.o
 CFLAGS = @CFLAGS@
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -143,7 +143,7 @@ DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
 TAR = tar
 GZIP_ENV = --best
-DEP_FILES =  .deps/choose_table.P .deps/cpu_feat.P
+DEP_FILES =  .deps/choose_table.P .deps/cpu_feat.P .deps/scalar.P
 SOURCES = $(liblameasmroutines_la_SOURCES) $(EXTRA_liblameasmroutines_la_SOURCES)
 OBJECTS = $(liblameasmroutines_la_OBJECTS)
 
