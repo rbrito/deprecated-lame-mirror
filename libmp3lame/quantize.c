@@ -503,9 +503,9 @@ loop_break(const gr_info * const gi)
 {
     int sfb = 0;
     do {
-        if (gi->scalefac[sfb] + gi->subblock_gain[gi->window[sfb]] == 0)
-            return 0;
-    } while (++sfb < gi->sfbmax);
+	if (gi->scalefac[sfb] + gi->subblock_gain[gi->window[sfb]] == 0)
+	    return 0;
+    } while (++sfb < gi->psymax);
     return sfb;
 }
 
