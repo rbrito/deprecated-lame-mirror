@@ -46,7 +46,11 @@
 #define         TRUE                    1
 #endif
 
-#define         MAX_U_32_NUM            0xFFFFFFFF
+#ifdef UINT_MAX
+# define         MAX_U_32_NUM            UINT_MAX
+#else
+# define         MAX_U_32_NUM            0xFFFFFFFF
+#endif
 
 #ifndef PI
 # ifdef M_PI

@@ -25,7 +25,6 @@
 #include "util.h"
 #include "bitstream.h"
 #include "version.h"
-#include "VbrTag.h"
 #include "lame-id3tag.h"
 #include "tables.h"
 #include "quantize_pvt.h"

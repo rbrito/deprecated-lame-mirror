@@ -27,7 +27,6 @@
 #include "quantize.h"
 #include "quantize_pvt.h"
 #include "bitstream.h"
-#include "VbrTag.h"
 
 
 

@@ -21,6 +21,7 @@
 
 #include <stdio.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
@@ -35,10 +36,7 @@
 
 #ifdef _WIN32
 /* needed to set stdin to binary on windoze machines */
-  #include <io.h>
-  #include <fcntl.h>
-#else
-  #include <unistd.h>
+#include <io.h>
 #endif
 
 #ifdef __riscos__
@@ -68,11 +66,11 @@ static int fskip(FILE *sf,long num_bytes,int dummy);
 /* read mp3 file until mpglib returns one frame of PCM data */
 #ifdef AMIGA_MPEGA
 int lame_decode_initfile(const char *fullname,mp3data_struct *mp3data);
-int lame_decode_fromfile(FILE *fd,short int pcm_l[], short int pcm_r[],mp3data_struct *mp3data);
 #else
 int lame_decode_initfile(FILE *fd,mp3data_struct *mp3data);
-int lame_decode_fromfile(FILE *fd,short int pcm_l[],short int pcm_r[],mp3data_struct *mp3data);
 #endif
+
+int lame_decode_fromfile(FILE *fd,short int pcm_l[],short int pcm_r[],mp3data_struct *mp3data);
 
 /* and for Vorbis: */
 int lame_decode_ogg_initfile(FILE *fd,mp3data_struct *mp3data);
@@ -90,9 +88,9 @@ int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip);
 
 
 
-int read_samples_pcm(lame_global_flags *gfp,short sample_buffer[2304],int frame_size, int samples_to_read);
-int read_samples_mp3(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2][1152],int num_chan);
-int read_samples_ogg(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2][1152],int num_chan);
+static int read_samples_pcm(short sample_buffer[2304],int frame_size, int samples_to_read);
+static int read_samples_mp3(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2][1152],int num_chan);
+static int read_samples_ogg(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2][1152],int num_chan);
 
 
 void init_infile(lame_global_flags *gfp)
@@ -234,7 +232,7 @@ int get_audio(lame_global_flags *gfp,short buffer[2][1152])
   } else if (input_format==sf_ogg) {
     samples_read=read_samples_ogg(gfp, musicin,buffer,num_channels);
   }else{
-    samples_read = read_samples_pcm(gfp,insamp,num_channels*framesize,num_channels*samples_to_read);
+    samples_read = read_samples_pcm(insamp,num_channels*framesize,num_channels*samples_to_read);
     samples_read /=num_channels;
 
     for(j=0;j<framesize;j++) {
@@ -682,7 +680,7 @@ FILE * OpenSndFile(lame_global_flags *gfp)
 *
 ************************************************************************/
 
-int read_samples_pcm(lame_global_flags *gfp,short sample_buffer[2304],int frame_size,int samples_to_read)
+int read_samples_pcm(short sample_buffer[2304],int frame_size,int samples_to_read)
 {
     int 		samples_read;
     int			rcode;
@@ -733,7 +731,7 @@ int read_samples_pcm(lame_global_flags *gfp,short sample_buffer[2304],int frame_
 *
 ************************************************************************/
 
-int read_samples_pcm(lame_global_flags *gfp,short sample_buffer[2304], int frame_size,int samples_to_read)
+int read_samples_pcm(short sample_buffer[2304], int frame_size,int samples_to_read)
 {
     int samples_read;
     int iswav=(input_format==sf_wave);
@@ -1214,7 +1212,6 @@ int is_syncword(char *header)
   return (mpeg1 || mpeg25);
 }
 
-#include "VbrTag.h"
 
 int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
 {

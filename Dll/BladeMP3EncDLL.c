@@ -22,7 +22,6 @@
 #include "BladeMP3EncDLL.h"
 #include <assert.h>
 #include "version.h"  
-#include "VbrTag.h"   
 #include "lame.h"
 #include "util.h"
 
