@@ -271,7 +271,7 @@ int choose_table(int *ix, int *end, int *s)
 
     switch (max) {
     case 0:
-	return max;
+	return (int)max;
 
     case 1:
 	return count_bit_noESC(ix, end, 1, s);

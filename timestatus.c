@@ -66,7 +66,7 @@ FLOAT ts_process_time(long frame) {
     initial_time = current_time;
   }
 
-  return (FLOAT)(current_time - initial_time) / TS_CLOCKS_PER_SEC;
+  return (FLOAT)((current_time - initial_time) / TS_CLOCKS_PER_SEC);
 }
 
 #undef TS_CLOCKS_PER_SEC
