@@ -251,28 +251,34 @@ AC_HEADER_TIME
 
 dnl Checks for library functions.
 AC_FUNC_ALLOCA
-AC_CHECK_FUNCS(gettimeofday socket strtol)
-if test $ac_cv_func_socket = no; then
-	# maybe it is in libsocket
-	AC_CHECK_LIB(socket, socket, [AC_DEFINE(HAVE_SOCKET)
-		LIBS="$LIBS -lsocket"])
-
-	if test "X${ac_cv_lib_socket_socket}" != "Xyes"; then
-		AC_MSG_ERROR([function socket is mandatory])
-	else
-		case ${host_os} in
-		*solaris*)
-			LIBS="$LIBS -lnsl"
-			;;
-		esac
-	fi
-fi
+AC_CHECK_FUNCS(gettimeofday strtol)
 
 if test "X${ac_cv_func_strtol}" != "Xyes"; then
 	AC_MSG_ERROR([function strtol is mandatory])
 fi
-if test "X${ac_cv_func_gettimeofday}" != "Xyes"; then
-	AC_MSG_ERROR([function strtol is mandatory])
+
+dnl Check if we have winsock, if so, we are on a mingw system
+dnl and need libwsock32
+SOCKETFUNCTION=YES
+AC_CHECK_HEADER(winsock2.h, [AC_DEFINE(HAVE_WINSOCKET)
+		LIBS="$LIBS -lwsock32"])  
+if test $ac_cv_header_winsock_h = no; then
+	AC_CHECK_FUNCS(socket)
+	if test $ac_cv_func_socket = no; then
+		# maybe it is in libsocket
+		AC_CHECK_LIB(socket, socket, [AC_DEFINE(HAVE_SOCKET)
+			LIBS="$LIBS -lsocket"])
+
+		if test "X${ac_cv_lib_socket_socket}" != "Xyes"; then
+			SOCKETFUNCTION=NO
+		else
+			case ${host_os} in
+			*solaris*)
+				LIBS="$LIBS -lnsl"
+				;;
+			esac
+		fi
+	fi
 fi
 
 
@@ -478,6 +484,9 @@ AC_ARG_ENABLE(mp3rtp,
   [  --enable-mp3rtp            Build mp3rtp [default: no]],
     WITH_MP3RTP="${enableval}", WITH_MP3RTP=no)
 if test "x${WITH_MP3RTP}" = "xyes"; then
+	if test ${SOCKETFUNCTION} = NO; then
+		AC_MSG_ERROR([function socket is mandatory for mp3rtp])
+	fi
 	WITH_MP3RTP=mp3rtp${ac_exeext}
 	AC_MSG_RESULT(yes)
 else
