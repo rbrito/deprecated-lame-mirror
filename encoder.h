@@ -98,5 +98,14 @@ Most decoders, including the one we use,  have a delay of 528 samples.
 #define SHORT_TYPE      2
 #define STOP_TYPE       3
 
+#include "machine.h"
+#include "lame.h"
+
+int lame_encode_mp3_frame(lame_global_flags *gfp,
+sample_t inbuf_l[],
+sample_t inbuf_r[],
+char *mp3buf, int mp3buf_size);
+
+
 
 #endif

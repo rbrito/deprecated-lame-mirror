@@ -125,6 +125,7 @@ CC_SWITCHES = -DNDEBUG $(CC_OPTS) $(SNDLIB) $(GTK) $(BRHIST_SWITCH) $(VORBIS)
 c_sources = \
 	brhist.c \
 	bitstream.c \
+	encoder.c \
 	fft.c \
 	get_audio.c \
 	id3tag.c \

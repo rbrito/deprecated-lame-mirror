@@ -28,7 +28,6 @@
 #endif
 
 
-typedef signed short int        sample_t;       /* SAMPLE_MIN ... SAMPLE_MAX, or -1.0...+1.0 for FP */
 /************************************************************************
 *
 * main
@@ -43,7 +42,7 @@ int main(int argc, char **argv)
 {
 
   char mp3buffer[LAME_MAXMP3BUFFER];
-    sample_t Buffer [2] [1152];
+  short int Buffer[2][1152];
   int iread,imp3;
   lame_global_flags gf;
   FILE *outf;
@@ -72,9 +71,6 @@ int main(int argc, char **argv)
    * skip this call and set the values of interest in the gf struct.
    * (see lame.h for documentation about these parameters)
    */
-#ifdef ONLYVORBIS
-  gf.ogg=1;
-#endif
   lame_parse_args(&gf,argc, argv);
 
   /* Mostly it is not useful to use the same input and output name.
@@ -91,13 +87,13 @@ int main(int argc, char **argv)
    * open the file with name gf.inFile, try to parse the headers and
    * set gf.samplerate, gf.num_channels, gf.num_samples.
    * if you want to do your own file input, skip this call and set
-   * these values yourself.
+   * samplerate, num_channels and num_samples yourself.
    */
   
   lame_init_infile(&gf);
 
   /* Now that all the options are set, lame needs to analyze them and
-   * set some more options
+   * set some more internal options and check for problems
    */
   if (lame_init_params(&gf)<0)  {
     fprintf(stderr,"fatal error during initialization\n");

@@ -119,6 +119,10 @@ SOURCE=..\brhist.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\encoder.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\encoder.h
 # End Source File
 # Begin Source File

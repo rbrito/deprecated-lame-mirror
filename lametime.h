@@ -27,7 +27,6 @@
 double GetCPUTime  ( void );
 double GetRealTime ( void );
 
-void timestatus_klemm(lame_global_flags *gfp);
 
 #endif /* LAME_LAMETIME_H */
                               

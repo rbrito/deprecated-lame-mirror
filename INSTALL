@@ -10,6 +10,7 @@ source code:
 lame/lame.exe   The command line encoder
 lame_enc.dll    a Windows DLL used by many GUIs which support lame.
 libmp3lame.a    the *NIX style encoding library
+libmp3lame.so   shared version of libmp3lame.a
 
 
 The following compile time options can be used.  For libmp3lame.a

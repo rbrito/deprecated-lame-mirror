@@ -416,6 +416,7 @@ $(BRHIST_SWITCH) $(VORBIS)
 c_sources_s = \
         brhist.c \
 	bitstream.c \
+	encoder.c \
 	fft.c \
 	get_audio.c \
         id3tag.c \
