@@ -379,7 +379,7 @@ extern void lame_errorf(const char *, ...);
 #define MSGF	lame_errorf
 
 #define FLUSH_DEBUG()	fflush(stdout)
-#define FLUSH_ERR()	fflush(stderr)
+#define FLUSH_ERROR()	fflush(stderr)
 #define FLUSH_MSG()	fflush(stderr)
 #endif
 
