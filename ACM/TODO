@@ -1,6 +1,6 @@
 - create a smart mode (change output freq. , disable stupid settings 48kHz/48kbps) -> test in VirtualDub
 
-- see why we output a bunch of 0x00 at the beginning
+- known bug : when recording, converting, and recording a lame_close() call fail
 - see desync problems in VirtualDub (1152 bytes -> 1 byte ?)
 - check and try to fill the MPEGLAYER3WAVEFORMAT the same way as the FhG codec (encoding)
 - or try to remove the structure (size = 0)

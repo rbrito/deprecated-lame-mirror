@@ -52,7 +52,7 @@
 
 char ACM::VersionString[20];
 
-const char ACM_VERSION[] = "0.7.6";
+const char ACM_VERSION[] = "0.7.7";
 
 #ifdef WIN32
 //
@@ -75,10 +75,8 @@ const char ACM_VERSION[] = "0.7.6";
 #endif
 
 #define PERSONAL_FORMAT WAVE_FORMAT_MPEGLAYER3
-#define SIZE_FORMAT_STRUCT sizeof(MPEGLAYER3WAVEFORMAT)
-//#define FORMAT_BLOCK_ALIGN      1 /// \todo put it on a .h (to be included by the user application)
-/// \todo change to 1 (and keep if it works : better granularity -> see in AVI encoding if it's more verbose or not)
-//#define FORMAT_BLOCK_ALIGN 1152 /// \todo put it on a .h (to be included by the user application)
+//#define SIZE_FORMAT_STRUCT sizeof(MPEGLAYER3WAVEFORMAT)
+#define SIZE_FORMAT_STRUCT 0
 
 //static const char channel_mode[][13] = {"mono","stereo","joint stereo","dual channel"};
 static const char channel_mode[][13] = {"mono","stereo"};
@@ -547,7 +545,7 @@ inline DWORD ACM::OnFormatTagDetails(LPACMFORMATTAGDETAILS a_FormatTagDetails, c
 				a_FormatTagDetails->cbFormatSize     = SIZE_FORMAT_STRUCT;
 				a_FormatTagDetails->fdwSupport       = ACMDRIVERDETAILS_SUPPORTF_CODEC;
 				a_FormatTagDetails->cStandardFormats = GetNumberEncodingFormats();
-				lstrcpyW( a_FormatTagDetails->szFormatTag, L"Lame MP3 encoder (ACM)" );
+				lstrcpyW( a_FormatTagDetails->szFormatTag, L"Lame MP3" );
 				Result = MMSYSERR_NOERROR;
 				break;
 			default:
@@ -1108,7 +1106,8 @@ inline DWORD ACM::OnStreamConvert(LPACMDRVSTREAMINSTANCE a_StreamInstance, LPACM
 void ACM::GetMP3FormatForIndex(const DWORD the_Index, WAVEFORMATEX & the_Format, unsigned short the_String[ACMFORMATDETAILS_FORMAT_CHARS]) const
 {
 	the_Format.wBitsPerSample = 16;
-	the_Format.cbSize = 2; // never know
+//	the_Format.cbSize = 2; // never know
+	the_Format.cbSize = 0; // not used
 
 	/// \todo handle more channel modes (mono, stereo, joint-stereo, dual-channel)
 //	the_Format.nChannels = SIZE_CHANNEL_MODE - int(the_Index % SIZE_CHANNEL_MODE);
