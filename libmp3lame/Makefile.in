@@ -242,8 +242,8 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 @HAVE_NASM_TRUE@@LIB_WITH_DECODER_TRUE@	$(top_builddir)/mpglib/libmpgdecoder.la
 @HAVE_NASM_TRUE@@LIB_WITH_DECODER_FALSE@libmp3lame_la_DEPENDENCIES = \
 @HAVE_NASM_TRUE@@LIB_WITH_DECODER_FALSE@	$(top_builddir)/libmp3lame/@CPUTYPE@/liblameasmroutines.la
-am_libmp3lame_la_OBJECTS = bitstream$U.lo encoder$U.lo tags$U.lo \
-	lame$U.lo newmdct$U.lo psymodel$U.lo quantize$U.lo set_get$U.lo \
+am_libmp3lame_la_OBJECTS = bitstream$U.lo tags$U.lo lame$U.lo \
+	newmdct$U.lo psymodel$U.lo quantize$U.lo set_get$U.lo \
 	tables$U.lo takehiro$U.lo util$U.lo version$U.lo \
 	mpglib_interface$U.lo
 libmp3lame_la_OBJECTS = $(am_libmp3lame_la_OBJECTS)
@@ -252,7 +252,7 @@ DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 @AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/bitstream$U.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/encoder$U.Plo ./$(DEPDIR)/lame$U.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/lame$U.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/mpglib_interface$U.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/newmdct$U.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/psymodel$U.Plo \
@@ -335,7 +335,6 @@ mostlyclean-kr:
 	-test "$U" = "" || rm -f *_.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bitstream$U.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/encoder$U.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lame$U.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mpglib_interface$U.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/newmdct$U.Plo@am__quote@
@@ -404,13 +403,12 @@ util_.c: util.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/util.c; then echo $(srcdir)/util.c; else echo util.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
 version_.c: version.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/version.c; then echo $(srcdir)/version.c; else echo version.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > $@ || rm -f $@
-bitstream_.$(OBJEXT) bitstream_.lo encoder_.$(OBJEXT) encoder_.lo \
-lame_.$(OBJEXT) lame_.lo mpglib_interface_.$(OBJEXT) \
-mpglib_interface_.lo newmdct_.$(OBJEXT) newmdct_.lo psymodel_.$(OBJEXT) \
-psymodel_.lo quantize_.$(OBJEXT) quantize_.lo set_get_.$(OBJEXT) \
-set_get_.lo tables_.$(OBJEXT) tables_.lo tags_.$(OBJEXT) tags_.lo \
-takehiro_.$(OBJEXT) takehiro_.lo util_.$(OBJEXT) util_.lo \
-version_.$(OBJEXT) version_.lo : $(ANSI2KNR)
+bitstream_.$(OBJEXT) bitstream_.lo lame_.$(OBJEXT) lame_.lo \
+mpglib_interface_.$(OBJEXT) mpglib_interface_.lo newmdct_.$(OBJEXT) \
+newmdct_.lo psymodel_.$(OBJEXT) psymodel_.lo quantize_.$(OBJEXT) \
+quantize_.lo set_get_.$(OBJEXT) set_get_.lo tables_.$(OBJEXT) \
+tables_.lo tags_.$(OBJEXT) tags_.lo takehiro_.$(OBJEXT) takehiro_.lo \
+util_.$(OBJEXT) util_.lo version_.$(OBJEXT) version_.lo : $(ANSI2KNR)
 
 mostlyclean-libtool:
 	-rm -f *.lo

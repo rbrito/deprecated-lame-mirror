@@ -121,10 +121,6 @@ SOURCE=.\bitstream.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\encoder.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\tags.c
 # End Source File
 # Begin Source File
