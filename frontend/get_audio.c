@@ -1615,12 +1615,18 @@ lame_decode_fromfile(FILE * fd, short pcm_l[], short pcm_r[],
         if (len == 0) {
 	    /* we are done reading the file, but check for buffered data */
 	    ret = lame_decode1_headers(buf, len, pcm_l, pcm_r, mp3data);
-	    if (ret<=0) return -1;  // done with file
+	    if (ret<=0) {
+                lame_decode_exit(); // release mp3decoder memory
+                return -1;  // done with file
+            }
 	    break;
 	}
 
         ret = lame_decode1_headers(buf, len, pcm_l, pcm_r, mp3data);
-        if (ret == -1) return -1;
+        if (ret == -1) {
+            lame_decode_exit();  // release mp3decoder memory
+            return -1;
+        }
 	if (ret >0) break;
     }
     return ret;

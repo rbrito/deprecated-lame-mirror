@@ -21,6 +21,13 @@
 MPSTR   mp;
 plotting_data *mpg123_pinfo = NULL;
 
+int
+lame_decode_exit(void)
+{
+    ExitMP3(&mp);
+    return 0;
+}
+
 
 int
 lame_decode_init(void)

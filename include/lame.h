@@ -139,29 +139,37 @@ int CDECL lame_get_in_samplerate(const lame_global_flags *);
 int CDECL lame_set_num_channels(lame_global_flags *, int);
 int CDECL lame_get_num_channels(const lame_global_flags *);
 
-/* scale the input by this amount before encoding.  default=0 (disabled) */
-/* (not used by decoding routines) */
+/*
+  scale the input by this amount before encoding.  default=0 (disabled)
+  (not used by decoding routines)
+*/
 int CDECL lame_set_scale(lame_global_flags *, float);
 float CDECL lame_get_scale(const lame_global_flags *);
     
-/* scale the channel 0 (left) input by this amount before encoding. */
-/*   default=0 (disabled) */
-/* (not used by decoding routines) */
+/*
+  scale the channel 0 (left) input by this amount before encoding.
+    default=0 (disabled)
+  (not used by decoding routines)
+*/
 int CDECL lame_set_scale_left(lame_global_flags *, float);
 float CDECL lame_get_scale_left(const lame_global_flags *);
 
-/* scale the channel 1 (right) input by this amount before encoding. */
-/*   default=0 (disabled) */
-/* (not used by decoding routines) */
+/*
+  scale the channel 1 (right) input by this amount before encoding.
+    default=0 (disabled)
+  (not used by decoding routines)
+*/
 int CDECL lame_set_scale_right(lame_global_flags *, float);
 float CDECL lame_get_scale_right(const lame_global_flags *);
 
-/* output sample rate in Hz.  default = 0, which means LAME picks best value
-   based on the amount of compression.  MPEG only allows:
-   MPEG1    32, 44.1,   48khz
-   MPEG2    16, 22.05,  24
-   MPEG2.5   8, 11.025, 12
-   (not used by decoding routines) */
+/*
+  output sample rate in Hz.  default = 0, which means LAME picks best value
+  based on the amount of compression.  MPEG only allows:
+  MPEG1    32, 44.1,   48khz
+  MPEG2    16, 22.05,  24
+  MPEG2.5   8, 11.025, 12
+  (not used by decoding routines)
+*/
 int CDECL lame_set_out_samplerate(lame_global_flags *, int);
 int CDECL lame_get_out_samplerate(const lame_global_flags *);
 
@@ -173,9 +181,11 @@ int CDECL lame_get_out_samplerate(const lame_global_flags *);
 int CDECL lame_set_analysis(lame_global_flags *, int);
 int CDECL lame_get_analysis(const lame_global_flags *);
 
-/* 1 = write a Xing VBR header frame. */
-/* default = 1 for VBR/ABR modes, 0 for CBR mode */
-/* this variable must have been added by a Hungarian notation Windows programmer :-) */
+/*
+  1 = write a Xing VBR header frame.
+  default = 1 for VBR/ABR modes, 0 for CBR mode
+  this variable must have been added by a Hungarian notation Windows programmer :-)
+*/
 int CDECL lame_set_bWriteVbrTag(lame_global_flags *, int);
 int CDECL lame_get_bWriteVbrTag(const lame_global_flags *);
 
@@ -187,28 +197,36 @@ int CDECL lame_get_decode_only(const lame_global_flags *);
 int CDECL lame_set_ogg(lame_global_flags *, int);
 int CDECL lame_get_ogg(const lame_global_flags *);
 
-/* internal algorithm selection.  True quality is determined by the bitrate */
-/* but this variable will effect quality by selecting expensive or cheap algorithms. */
-/* quality=0..9.  0=best (very slow).  9=worst.   */
-/* recommended:  2     near-best quality, not too slow */
-/*               5     good quality, fast */
-/*               7     ok quality, really fast */
+/*
+  internal algorithm selection.  True quality is determined by the bitrate
+  but this variable will effect quality by selecting expensive or cheap algorithms.
+  quality=0..9.  0=best (very slow).  9=worst.
+  recommended:  2     near-best quality, not too slow
+                5     good quality, fast
+                7     ok quality, really fast
+*/
 int CDECL lame_set_quality(lame_global_flags *, int);
 int CDECL lame_get_quality(const lame_global_flags *);
 
-/* mode = 0,1,2,3 = stereo, jstereo, dual channel (not supported), mono */
-/* default: lame picks based on compression ration and input channels */
+/*
+  mode = 0,1,2,3 = stereo, jstereo, dual channel (not supported), mono
+  default: lame picks based on compression ration and input channels
+*/
 int CDECL lame_set_mode(lame_global_flags *, MPEG_mode);
 MPEG_mode CDECL lame_get_mode(const lame_global_flags *);
 
-/* mode_automs.  Use a M/S mode with a switching threshold based on  */
-/* compression ratio */
-/* default = 0 (disabled) */
+/*
+  mode_automs.  Use a M/S mode with a switching threshold based on
+  compression ratio
+  default = 0 (disabled)
+*/
 int CDECL lame_set_mode_automs(lame_global_flags *, int);
 int CDECL lame_get_mode_automs(const lame_global_flags *);
 
-/* force_ms.  Force M/S for all frames.  For testing only. */
-/* default = 0 (disabled) */
+/*
+  force_ms.  Force M/S for all frames.  For testing only.
+  default = 0 (disabled)
+*/
 int CDECL lame_set_force_ms(lame_global_flags *, int);
 int CDECL lame_get_force_ms(const lame_global_flags *);
 
@@ -330,8 +348,10 @@ int CDECL lame_get_VBR_min_bitrate_kbps(const lame_global_flags *);
 int CDECL lame_set_VBR_max_bitrate_kbps(lame_global_flags *, int);
 int CDECL lame_get_VBR_max_bitrate_kbps(const lame_global_flags *);
 
-/* 1=stricetly enforce VBR_min_bitrate.  Normally it will be violated for */
-/* analog silence */
+/*
+  1=strictly enforce VBR_min_bitrate.  Normally it will be violated for
+  analog silence
+*/
 int CDECL lame_set_VBR_hard_min(lame_global_flags *, int);
 int CDECL lame_get_VBR_hard_min(const lame_global_flags *);
 
@@ -397,8 +417,10 @@ float CDECL lame_get_athaa_sensitivity( const lame_global_flags* );
 int CDECL lame_set_cwlimit(lame_global_flags *, int);
 int CDECL lame_get_cwlimit(const lame_global_flags *);
 
-/* allow blocktypes to differ between channels? */
-/* default: 0 for jstereo, 1 for stereo */
+/*
+  allow blocktypes to differ between channels?
+  default: 0 for jstereo, 1 for stereo
+*/
 int CDECL lame_set_allow_diff_short(lame_global_flags *, int);
 int CDECL lame_get_allow_diff_short(const lame_global_flags *);
 
@@ -444,10 +466,12 @@ int CDECL lame_get_version(const lame_global_flags *);
 /* encoder delay   */
 int CDECL lame_get_encoder_delay(const lame_global_flags *);
 
-/* padding appended to the input to make sure decoder can fully decode
-   all input.  Note that this value can only be calculated during the
-   call to lame_encoder_flush().  Before lame_encoder_flush() has
-   been called, the value of encoder_padding = 0. */
+/*
+  padding appended to the input to make sure decoder can fully decode
+  all input.  Note that this value can only be calculated during the
+  call to lame_encoder_flush().  Before lame_encoder_flush() has
+  been called, the value of encoder_padding = 0.
+*/
 int CDECL lame_get_encoder_padding(const lame_global_flags *);
 
 /* size of MPEG frame */
@@ -456,18 +480,22 @@ int CDECL lame_get_framesize(const lame_global_flags *);
 /* number of PCM samples buffered, but not yet encoded to mp3 data. */
 int CDECL lame_get_mf_samples_to_encode( const lame_global_flags*  gfp );
 
-/* size (bytes) of mp3 data buffered, but not yet encoded.
-   this is the number of bytes which would be output by a call to 
-   lame_encode_flush_nogap.  NOTE: lame_encode_flush() will return
-   more bytes than this because it will encode the reamining buffered
-   PCM samples before flushing the mp3 buffers. */
+/*
+  size (bytes) of mp3 data buffered, but not yet encoded.
+  this is the number of bytes which would be output by a call to 
+  lame_encode_flush_nogap.  NOTE: lame_encode_flush() will return
+  more bytes than this because it will encode the reamining buffered
+  PCM samples before flushing the mp3 buffers.
+*/
 int CDECL lame_get_size_mp3buffer( const lame_global_flags*  gfp );
 
 /* number of frames encoded so far */
 int CDECL lame_get_frameNum(const lame_global_flags *);
 
-/* lame's estimate of the total number of frames to be encoded
-   only valid if calling program set num_samples */
+/*
+  lame's estimate of the total number of frames to be encoded
+   only valid if calling program set num_samples
+*/
 int CDECL lame_get_totalframes(const lame_global_flags *);
 
 
@@ -805,10 +833,20 @@ int CDECL lame_decode_init(void);
 
 /*********************************************************************
  * input 1 mp3 frame, output (maybe) pcm data.  
- * lame_decode() return code:
- *   -1: error
- *    0: need more data
- *  n>0: size of pcm output
+ *
+ *  nout = lame_decode(mp3buf,len,pcm_l,pcm_r);
+ *
+ * input:  
+ *    len          :  number of bytes of mp3 data in mp3buf
+ *    mp3buf[len]  :  mp3 data to be decoded
+ *
+ * output:
+ *    nout:  -1    : decoding error
+ *            0    : need more data before we can complete the decode 
+ *           >0    : returned 'nout' samples worth of data in pcm_l,pcm_r
+ *    pcm_l[nout]  : left channel data
+ *    pcm_r[nout]  : right channel data 
+ *    
  *********************************************************************/
 int CDECL lame_decode(
         unsigned char *  mp3buf,
@@ -851,6 +889,8 @@ int CDECL lame_decode1_headersB(
         int              *enc_padding );
 
 
+/* cleanup call to exit decoder  */
+int CDECL lame_decode_exit(void);
 
 
 
