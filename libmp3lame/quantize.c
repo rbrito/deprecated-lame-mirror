@@ -47,6 +47,7 @@ extern void quantize_ISO_3DN(const float *, int, int, int *, int);
 extern void quantize_ISO_SSE(const float *, int, int, int *);
 extern float calc_sfb_noise_fast_3DN(lame_t gfc, int j, int bw, int sf);
 extern float calc_sfb_noise_3DN(lame_t gfc, int j, int bw, int sf);
+extern float xrmax_MMX(float *start, float *end);
 #endif
 
 static const int max_range_short[SBMAX_s*3] = {
@@ -70,45 +71,43 @@ static const char max_range_long[SBMAX_l] = {
  *
  *  This is the original text from the ISO standard. Because of 
  *  sooo many bugs and irritations correcting comments are added 
- *  in brackets []. A '^W' means you should remove the last word.
+ *  in brackets [].
  *
  *  1) The following rule can be used to calculate the maximum 
- *     number of bits used for one granule [^W frame]: 
+ *     number of bits used for one frame:
  *     At the highest possible bitrate of Layer III (320 kbps 
- *     per stereo signal [^W^W^W], 48 kHz) the frames must be of
- *     [^W^W^W are designed to have] constant length, i.e. 
- *     one buffer [^W^W the frame] length is:
+ *     48 kHz) the frames are designed to have constant length,
+ *     i.e. the frame length is:
  *
  *         320 kbps * 1152/48 kHz = 7680 bit = 960 byte
  *
- *     This value is used as the maximum buffer per channel [^W^W] at 
- *     lower bitrates [than 320 kbps]. At 64 kbps mono or 128 kbps 
- *     stereo the main granule length is 64 kbps * 576/48 kHz = 768 bit
- *     [per granule and channel] at 48 kHz sampling frequency. 
+ *     This value is used as the maximum buffer at lower bitrates (than
+ *     320 kbps). At 64 kbps mono or 128 kbps stereo the main granule
+ *     length is 64 kbps * 576/48 kHz = 768 bit(per granule and channel)
+ *     at 48 kHz sampling frequency. 
  *     This means that there is a maximum deviation (short time buffer 
  *     [= reservoir]) of 7680 - 2*2*768 = 4608 bits is allowed at 64 kbps. 
- *     The actual deviation is equal to the number of bytes [with the 
- *     meaning of octets] denoted by the main_data_end offset pointer. 
+ *     The actual deviation is equal to the number of bytes with the 
+ *     meaning of octets denoted by the main_data_end offset pointer. 
  *     The actual maximum deviation is (2^9-1)*8 bit = 4088 bits 
- *     [for MPEG-1 and (2^8-1)*8 bit for MPEG-2, both are hard limits].
- *     ... The xchange of buffer bits between the left and right channel
- *     is allowed without restrictions [exception: dual channel].
- *     Because of the [constructed] constraint on the buffer size
+ *     for MPEG-1 and (2^8-1)*8 bit for MPEG-2, both are hard limits.
+ *     ... The exchange of buffer bits between the left and right channel
+ *     is allowed without restrictions except dual channel.
+ *     Because of the constructed constraint on the buffer size
  *     main_data_end is always set to 0 in the case of bit_rate_index==14, 
- *     i.e. data rate 320 kbps per stereo signal [^W^W^W]. In this case 
- *     all data are allocated between adjacent header [^W sync] words 
- *     [, i.e. there is no buffering at all].
+ *     i.e. data rate 320 kbps. In this case all data are allocated
+ *     between adjacent sync words, i.e. there is no buffering at all.
  */
 
 /*
  *  Meaning of the variables:
  *      maxmp3buf: ( ??? ... 8*1951 (MPEG-1 and 2), 8*2047 (MPEG-2.5))
- *          Number of bits allowed to encode one frame (you can take 8*511 bit 
- *          from the bit reservoir and at most 8*1440 bit from the current 
- *          frame (320 kbps, 32 kHz), so 8*1951 bit is the largest possible 
+ *          Number of bits allowed to encode one frame (you can take 8*511 bit
+ *          from the bit reservoir and at most 8*1440 bit from the current
+ *          frame (320 kbps, 32 kHz), so 8*1951 bit is the largest possible
  *          value for MPEG-1 and -2)
  *       
- *          maximum allowed granule/channel size times 4 = 8*2047 bits.,
+ *          maximum allowed granule/channel size times 4 = 8*2047 bits,
  *          so this is the absolute maximum supported by the format.
  *
  *      mean_bytes:     target number of bytes.
@@ -1077,7 +1076,9 @@ CBR_bitalloc(
 	 || (gi->block_type != SHORT_TYPE && (gfc->substep_shaping & 1)))
 	    bits *= 1.1;
 
-	if (gi->block_type != NORM_TYPE && gi->block_type != SHORT_TYPE)
+	/* START/STOP block cannot use "huffman block division hack" to
+	 * improve coding efficiency. */
+	if (gi->block_type == START_TYPE || gi->block_type == STOP_TYPE)
 	    bits *= 1.1;
 
 	adjustBits += (targ_bits[ch] = ++bits); /* avoid zero division */
@@ -1480,13 +1481,19 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
 	FLOAT maxXR = 0.0;
 	int i = gi->wi[sfb].width;
 	j -= i;
-	do {
-	    if (maxXR < xr34[i+j])
-		maxXR = xr34[i+j];
-	    if (maxXR < xr34[i+j+1])
-		maxXR = xr34[i+j+1];
-	} while ((i += 2) < 0);
-
+#ifdef HAVE_NASM
+	if (gfc->CPU_features.MMX) {
+	    maxXR = xrmax_MMX(&xr34[j+i], &xr34[j]);
+	} else
+#endif
+	{
+	    do {
+		if (maxXR < xr34[i+j])
+		    maxXR = xr34[i+j];
+		if (maxXR < xr34[i+j+1])
+		    maxXR = xr34[i+j+1];
+	    } while ((i += 2) < 0);
+	}
 	if (maxXR > (FLOAT)(IXMAX_VAL / FLOAT_MAX)) {
 	    gfc->maxXR[sfb] = (maxXR = IXMAX_VAL / maxXR);
 	    gain = find_scalefac(gfc, j, xmin[sfb], gi->wi[sfb].width, maxXR,

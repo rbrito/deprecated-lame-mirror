@@ -51,4 +51,57 @@
 	emms
 	ret
 
+;
+; int xr_max_MMX(float *ix, float *end)
+;
+	proc	xrmax_MMX
+	mov	ecx, [esp+4]	;ecx = begin
+	mov	edx, [esp+8]	;edx = end
+
+	sub	ecx, edx	;ecx = begin-end(should be minus)
+	test	ecx, 8
+ 	pxor	mm1, mm1	;mm1=[0:0]
+	movq	mm0, [edx+ecx]
+	jz	.lp
+
+	add	ecx,8
+	jz	.exit
+
+	loopalign	16
+.lp:
+	movq	mm4,[edx+ecx]
+	movq	mm5,[edx+ecx+8]
+	add	ecx, 16
+	movq	mm2,mm0
+	movq	mm3,mm1
+	pcmpgtd	mm2,mm4
+	pcmpgtd	mm3,mm5
+	pand	mm0,mm2
+	pand	mm1,mm3
+	pandn	mm2,mm4
+	pandn	mm3,mm5
+	por	mm0,mm2
+	por	mm1,mm3
+	jnz	.lp
+
+	movq	mm2,mm0
+	pcmpgtd	mm2,mm1
+	pand	mm0,mm2
+	pandn	mm2,mm1
+	por	mm0,mm2
+.exit:
+	movq	mm1, mm0
+	punpckhdq	mm1, mm1
+	movq	mm2,mm0
+	pcmpgtd	mm2,mm1
+	pand	mm0,mm2
+	pandn	mm2,mm1
+	por	mm0,mm2
+
+	movd	eax, mm0
+	emms
+	mov	[esp+4], eax
+	fld	dword [esp+4]
+	ret
+
 	end
