@@ -106,7 +106,7 @@ int gtkmakeframe(void)
       /* not possible to produce mp3 data without encoding at least 
        * one frame of data which would increment gf.frameNum */
     }
-    mp3out=lame_decode(mp3buffer,mp3count,mpg123pcm); /* re-synthesis to pcm */
+    mp3out=lame_decode(mp3buffer,mp3count,mpg123pcm[0],mpg123pcm[1]); /* re-synthesis to pcm */
     /* mp3out = 0:  need more data to decode */
     /* mp3out = -1:  error.  Lets assume 0 pcm output */
     /* mp3out = number of samples output */

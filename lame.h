@@ -292,7 +292,7 @@ void lame_close_infile(lame_global_flags *);
  * lame_decode return code:  -1: error.  0: need more data.  n>0: size of pcm output
  *********************************************************************/
 int lame_decode_init(void);
-int lame_decode(char *mp3buf,int len,short pcm[][1152]);
+int lame_decode(char *mp3buf,int len,short pcm_l[],short pcm_r[]);
 
 
 #endif

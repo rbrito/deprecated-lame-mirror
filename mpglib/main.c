@@ -169,7 +169,7 @@ For lame_decode:  return code
    0     ok, but need more data before outputing any samples
    n     number of samples output.  either 576 or 1152 depending on MP3 file.
 */
-int lame_decode(char *buf,int len,short pcm[][1152])
+int lame_decode(char *buf,int len,short pcm_l[],short pcm_r[])
 {
   int size;
   int outsize=0,j,i,ret;
@@ -185,7 +185,9 @@ int lame_decode(char *buf,int len,short pcm[][1152])
 
     for (j=0; j<mp.fr.stereo; j++)
       for (i=0; i<outsize; i++) 
-	pcm[j][i] = ((short *) out)[mp.fr.stereo*i+j];
+	if (j==0) pcm_l[i] = ((short *) out)[mp.fr.stereo*i+j];
+	else pcm_r[i] = ((short *) out)[mp.fr.stereo*i+j];
+
   }
   /*
   printf("ok, more, err:  %i %i %i  \n",MP3_OK, MP3_NEED_MORE, MP3_ERR);
