@@ -606,11 +606,11 @@ if test "x$GCC" = "xyes"; then
 					-mfancy-math-387"
 				;;
 			*586)
-				OPTIMIZATION="${OPTIMIZATION} -mpentium \
+				OPTIMIZATION="${OPTIMIZATION} -mcpu=pentium \
 					-march=pentium -mfancy-math-387"
 				;;
 			*686)
-				OPTIMIZATION="${OPTIMIZATION} -mpentiumpro \
+				OPTIMIZATION="${OPTIMIZATION} -mcpu=pentiumpro \
 					-march=pentiumpro -mfancy-math-387"
 				;;
 			*86)
