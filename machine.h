@@ -56,6 +56,7 @@
 */
 
 
+
 #if ( defined(_MSC_VER) && !defined(INLINE))
 	#define INLINE _inline
 #else

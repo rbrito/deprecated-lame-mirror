@@ -46,8 +46,8 @@ void lame_usage(char *name)  /* print syntax & exit */
   fprintf(stderr,"    -t              disable Xing VBR informational tag\n");
   fprintf(stderr,"    --nohist        disable VBR histogram display\n");
   fprintf(stderr,"\n");
-  fprintf(stderr,"    -h              use (maybe) quality improvements\n");
-  fprintf(stderr,"    -f              fast mode (low quality)\n");
+  fprintf(stderr,"    -h              higher quality, but a little slower\n");
+  fprintf(stderr,"    -f              fast mode (very low quality)\n");
   fprintf(stderr,"    -k              keep ALL frequencies (disables all filters)\n");
   fprintf(stderr,"    -d              allow channels to have different blocktypes\n");
   fprintf(stderr,"  --athonly         only use the ATH for masking\n");

@@ -95,6 +95,7 @@ typedef struct  {
 
   /* not yet coded: */
   int filter_type;          /* 0=MDCT filter, 1= (expensive) filters */
+  int quantization;         /* 0 = ISO formual,  1=best amplitude */
   int noise_shaping;        /* 0 = none 
                                1 = ISO model
                                2 = allow multiple scalefacs to hit maximum
@@ -120,6 +121,7 @@ map commandline options to quality settings:
 
 --qual=?
 default      filter_type=0
+             quantization=0
              noise_shaping=1
 	     noise_shaping_stop=0
              psymodel=1
@@ -128,6 +130,7 @@ default      filter_type=0
 
 --qual=?
 -h           filter_type=0
+             quantization=1
              noise_shaping=2
 	     noise_shaping_stop=0
              psymodel=1
@@ -136,6 +139,7 @@ default      filter_type=0
 
 --qual=0 (best, very slow)
              filter_type=1
+             quantization=1
              noise_shaping=3
 	     noise_shaping_stop=1
              psymodel=1

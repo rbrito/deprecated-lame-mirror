@@ -549,7 +549,7 @@ int count_bits(int *ix, FLOAT8 *xr, gr_info *cod_info)
 {
   int bits=0,i;
   if (gf.highq) {
-    FLOAT8 w = (IXMAX_VAL) * IPOW20(cod_info->global_gain);
+    FLOAT8 w = (IXMAX_VAL) / IPOW20(cod_info->global_gain);
     for ( i = 0; i < 576; i++ )  {
       if (xr[i] > w)
 	return 100000;

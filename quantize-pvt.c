@@ -767,11 +767,13 @@ int loop_break( III_scalefac_t *scalefac, gr_info *cod_info,
 }
 
 
+#if (defined(__GNUC__) && defined(__i386__))
+#define USE_GNUC_ASM
+#endif
 
 
 
-
-#if defined(__GNUC__) && defined(__i386__)
+#ifdef USE_GNUC_ASM
 #  define QUANTFAC(rx)  adj43asm[rx]
 #  define XRPOW_FTOI(src, dest) \
      asm ("fistpl %0 " : "=m"(dest) : "t"(src) : "st")
@@ -815,12 +817,15 @@ void quantize_xrpow(FLOAT8 xr[576], int ix[576], gr_info *cod_info) {
           x = *xr++ * istep;
           XRPOW_FTOI(x, rx);
           XRPOW_FTOI(x + QUANTFAC(rx), *ix++);
+
           x = *xr++ * istep;
           XRPOW_FTOI(x, rx);
           XRPOW_FTOI(x + QUANTFAC(rx), *ix++);
+
           x = *xr++ * istep;
           XRPOW_FTOI(x, rx);
           XRPOW_FTOI(x + QUANTFAC(rx), *ix++);
+
           x = *xr++ * istep;
           XRPOW_FTOI(x, rx);
           XRPOW_FTOI(x + QUANTFAC(rx), *ix++);
@@ -904,7 +909,7 @@ void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
   /* quantize on xr^(3/4) instead of xr */
   register int j;
   FLOAT8 istep;
-#if defined(__GNUC__) && defined(__i386__) 
+#ifdef USE_GNUC_ASM
 #elif defined (_MSC_VER)
   FLOAT8 temp0;
 #else
@@ -963,7 +968,7 @@ void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
           fstp st(0);
           fstp st(0);
       }
-#elif defined(__GNUC__) && defined(__i386__) 
+#elif defined(USE_GNUC_ASM)
       for (j=576/4;j>0;j--) {
          XRPOW_FTOI(istep * (*xr++) - 0.0946, *ix++);
          XRPOW_FTOI(istep * (*xr++) - 0.0946, *ix++);
