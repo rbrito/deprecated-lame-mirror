@@ -39,13 +39,11 @@ libmp3lame_la_SOURCES = \
         newmdct.c \
 	psymodel.c \
 	quantize.c \
-	quantize_pvt.c \
 	reservoir.c \
 	set_get.c \
 	tables.c \
 	takehiro.c \
 	util.c \
-	vbrquantize.c \
 	version.c \
 	mpglib_interface.c
 
@@ -64,7 +62,6 @@ noinst_HEADERS= \
 	reservoir.h \
 	tables.h \
 	util.h \
-	vbrquantize.h \
 	version.h
 
 CLEANFILES = lclint.txt

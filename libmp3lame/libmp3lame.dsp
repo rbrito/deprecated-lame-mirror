@@ -166,10 +166,6 @@ SOURCE=.\util.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\vbrquantize.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\VbrTag.c
 # End Source File
 # Begin Source File
