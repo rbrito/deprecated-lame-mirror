@@ -1673,7 +1673,8 @@ psycho_analysis(
     lame_global_flags * gfp,
     const sample_t *buffer[2],
     FLOAT ms_ener_ratio_d[2],
-    III_psy_ratio masking_d[2][2]
+    III_psy_ratio masking_d[2][2],
+    FLOAT sbsmpl[2][2*1152]
     )
 {
     int gr, ch;
@@ -1817,3 +1818,46 @@ psycho_analysis(
 	    == gfc->l3_side.tt[gfc->mode_gr-1][1].block_type);
     }
 }
+
+#if 0
+/*
+  use subband filtered samples to determine block type switching.
+
+  1 character = 1 sample (in subband)
+
+                                          =============stop=============
+                  ===short====      ===short====
+            ===short====      ===short====
+      ===short====      ===short====
+<----------------><----------------><----------------><---------------->
+================long================
+                  ================long================
+
+
+                                          =============stop=============
+                                    ===short====
+                              ===short====
+                        ===short====
+=============start============
+
+
+                                    ================long================
+                        =============stop=============
+=============start============
+*/
+    for (k = 0; k < gfc->mode_gr; k++) {
+	int band, ii,jj;
+	for (ii = 0; ii < 3; ii++) {
+	    FLOAT x, y = 0.1;
+	    for (jj = 0; jj < 6; jj++) {
+		k = ii*6+jj;
+		x = 0.0;
+		for (band = 10; band < 32; band++)
+		    x += fabs(sbsmpl[ch][gr*576+k*32+mdctorder[band]]);
+		if (y < x)
+		    y = x;
+	    }
+	    printf("%f\n", y);
+	}
+    }
+#endif

@@ -22,6 +22,7 @@
 #ifndef LAME_NEWMDCT_H
 #define LAME_NEWMDCT_H
 
-void mdct_sub48(lame_internal_flags *gfc, const sample_t *wk, int ch);
+void mdct_sub48(lame_internal_flags *gfc, int ch);
+void subband(lame_internal_flags *gfc, const sample_t *wk, FLOAT *dist);
 
 #endif /* LAME_NEWMDCT_H */

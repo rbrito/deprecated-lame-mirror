@@ -28,21 +28,10 @@
 
 /* size of each partition band, in barks: */
 #define DELBARK .34
-#define CW_LOWER_INDEX 6
 
 #define vo_scale (1./( 14752 ))
 
 #define TEMPORALMASK_SUSTAIN_SEC 0.01
-
-#if 1
-    /* AAC values, results in more masking over MP3 values */
-# define TMN 18
-# define NMT 6
-#else
-    /* MP3 values */
-# define TMN 29
-# define NMT 6
-#endif
 
 #define NS_PREECHO_ATT0 1.0 /* 0.8 */
 #define NS_PREECHO_ATT1 0.6
@@ -55,7 +44,8 @@
 void psycho_analysis( lame_global_flags *gfp,
 		      const sample_t *buffer[2],
 		      FLOAT ms_ener_ratio_d[2],
-		      III_psy_ratio masking[2][2] );
+		      III_psy_ratio masking[2][2],
+		      FLOAT sbsmpl[2][2*1152] );
 
 int psymodel_init(lame_global_flags *gfp);
 void init_mask_add_max_values(lame_internal_flags *gfc);

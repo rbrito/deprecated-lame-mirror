@@ -31,6 +31,7 @@
 #endif
 
 #include "util.h"
+#include "tables.h"
 #include "newmdct.h"
 
 #ifdef WITH_DMALLOC
@@ -360,12 +361,6 @@ static const FLOAT8 win[4][NL] = {
 /*
  *      new IDCT routine written by Takehiro TOMINAGA
  */
-static const int order[] = {
-  0,30,15,17, 8,22, 7,25, 4,26,11,21,12,18, 3,29,
-  2,28,13,19,10,20, 5,27, 6,24, 9,23,14,16, 1,31
-};
-
-
 /* returns sum_j=0^31 w[j]*a[j]*cos(PI*j*(k+1/2)/32), 0<=k<32 */
 inline static void
 window_subband(FLOAT coef[SBLIMIT], const sample_t *x1, FLOAT a[SBLIMIT])
@@ -677,9 +672,8 @@ inline static void mdct_long(FLOAT *out, FLOAT *in)
 }
 
 
-void mdct_sub48(
-    lame_internal_flags *gfc, const sample_t *wk, int ch
-    )
+void
+mdct_sub48(lame_internal_flags *gfc, int ch)
 {
     int gr, k;
 
@@ -693,8 +687,8 @@ void mdct_sub48(
 	 * + 18 current subband samples
 	 */
 	for (band = 0; band < 32; band++, mdct_enc += 18) {
-	    FLOAT *prev = &gfc->sb_sample[ch][gr  ][0][order[band]];
-	    FLOAT *next = &gfc->sb_sample[ch][gr+1][0][order[band]];
+	    FLOAT *prev = &gfc->sb_sample[ch][gr  ][0][mdctorder[band]];
+	    FLOAT *next = &gfc->sb_sample[ch][gr+1][0][mdctorder[band]];
 	    if (type != SHORT_TYPE || (gi->mixed_block_flag && band < 2)) {
 		FLOAT work[18];
 		for (k = -NL/4; k < 0; k++) {
@@ -737,31 +731,21 @@ void mdct_sub48(
 	    }
 	}
     }
+}
 
-    /* subband filtering for next frame */
-    memcpy(gfc->sb_sample[ch][0], gfc->sb_sample[ch][gfc->mode_gr],
-	   sizeof(gfc->sb_sample[ch][0]));
+void
+subband(lame_internal_flags *gfc, const sample_t *wk, FLOAT *samp)
+{
+    int k;
     wk += 286+1152;
-    for (gr = 0; gr < gfc->mode_gr; gr++) {
+    for (k = 0; k < (18 / 2) * gfc->mode_gr; k++) {
 	int	band;
-	FLOAT *samp = gfc->sb_sample[ch][gr+1][0];
-	for (k = 0; k < 18 / 2; k++) {
-	    window_subband(gfc->amp_filter, wk, samp);
-	    window_subband(gfc->amp_filter, wk + 32, samp + 32);
-	    samp += 64;
-	    wk += 64;
-	    for (band = -16; band < 0; band++)
-		/* Compensate for inversion in the analysis filter */
-		samp[band] *= -1;
-	}
+	window_subband(gfc->amp_filter, wk, samp);
+	window_subband(gfc->amp_filter, wk + 32, samp + 32);
+	samp += 64;
+	wk += 64;
+	for (band = -16; band < 0; band++)
+	    /* Compensate for inversion in the analysis filter */
+	    samp[band] *= -1;
     }
 }
-/*
-
-                ===short====
-          ===short====
-    ===short====
-<--------------><--------------><--------------><-------------->
-==============long==============
-                ==============long==============
-*/

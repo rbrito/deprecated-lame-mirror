@@ -581,6 +581,12 @@ const unsigned int table56[4*4] = {
 };
 
 
+/* for subband filtering */
+const int mdctorder[] = {
+    0,30,15,17, 8,22, 7,25, 4,26,11,21,12,18, 3,29,
+    2,28,13,19,10,20, 5,27, 6,24, 9,23,14,16, 1,31
+};
+
 
 /* 
  * 0: MPEG-2 LSF

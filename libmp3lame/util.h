@@ -368,7 +368,7 @@ struct lame_internal_flags {
 
   /* variables for newmdct.c */
   FLOAT sb_sample[2][3][18][SBLIMIT];
-  FLOAT amp_filter[32];
+  FLOAT amp_filter[SBLIMIT];
 
   int   sparsing;
   FLOAT sparseA;

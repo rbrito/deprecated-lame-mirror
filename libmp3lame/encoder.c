@@ -298,6 +298,7 @@ int  lame_encode_mp3_frame (				// Output
     const sample_t *inbuf[2];
     lame_internal_flags *gfc=gfp->internal_flags;
     FLOAT ms_ener_ratio[2];
+    FLOAT sbsmpl[MAX_CHANNELS][2*1152];
 
     int ch,gr;
 
@@ -323,7 +324,9 @@ int  lame_encode_mp3_frame (				// Output
 	    for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
 		gfc->l3_side.tt[gr][ch].block_type = NORM_TYPE;
 	    }
-	    mdct_sub48(gfc, primebuff[ch]-1152, ch);
+	    subband(gfc, primebuff[ch]-1152, sbsmpl[ch]);
+	    memcpy(gfc->sb_sample[ch][1], sbsmpl,
+		   sizeof(gfc->sb_sample[ch][0])*gfc->mode_gr);
 	}
 
 	/* check FFT will not use a negative starting offset */
@@ -340,12 +343,9 @@ int  lame_encode_mp3_frame (				// Output
 	if (gfc->psymodel) {
 	    inbuf[0]=primebuff[0] - gfp->framesize;
 	    inbuf[1]=primebuff[1] - gfp->framesize;
-	    psycho_analysis(gfp, inbuf, ms_ener_ratio, masking);
+	    psycho_analysis(gfp, inbuf, ms_ener_ratio, masking, sbsmpl);
 	}
     }
-    inbuf[0]=inbuf_l;
-    inbuf[1]=inbuf_r;
-
 
     /********************** padding *****************************/
     /* padding method as described in 
@@ -364,13 +364,19 @@ int  lame_encode_mp3_frame (				// Output
 
     inbuf[0]=inbuf_l;
     inbuf[1]=inbuf_r;
+
+    /* subband filtering in the next frame */
+    /* to determine long/short swithcing in psymodel */
+    for ( ch = 0; ch < gfc->channels_out; ch++ )
+	subband(gfc, inbuf[ch], sbsmpl[ch]);
+
     if (gfc->psymodel) {
 #ifdef HAVE_GTK
 	if (gfc->pinfo)
 	    memcpy(gfc->pinfo->energy, gfc->energy_save,
 		   sizeof(gfc->energy_save));
 #endif
-	psycho_analysis(gfp, inbuf, ms_ener_ratio, masking);
+	psycho_analysis(gfp, inbuf, ms_ener_ratio, masking, sbsmpl);
     } else {
 	memset(masking, 0, sizeof(masking));
 	for (gr=0; gr < gfc->mode_gr ; gr++)
@@ -387,10 +393,15 @@ int  lame_encode_mp3_frame (				// Output
 
     /* polyphase filtering / mdct */
     for ( ch = 0; ch < gfc->channels_out; ch++ ) {
-	mdct_sub48(gfc, inbuf[ch], ch);
-	for (gr = 0; gr < gfc->mode_gr; gr++) {
+	mdct_sub48(gfc, ch);
+	/* aging subband filetr output */
+	memcpy(gfc->sb_sample[ch][0], gfc->sb_sample[ch][gfc->mode_gr],
+	       sizeof(gfc->sb_sample[ch][0]));
+	memcpy(gfc->sb_sample[ch][1], sbsmpl,
+	       sizeof(gfc->sb_sample[ch][0])*gfc->mode_gr);
+
+	for (gr = 0; gr < gfc->mode_gr; gr++)
 	    init_gr_info(gfc, &gfc->l3_side.tt[gr][ch]);
-	}
     }
 
     /* bit and noise allocation */

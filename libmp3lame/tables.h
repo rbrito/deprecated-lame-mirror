@@ -57,6 +57,7 @@ extern const int slen1_tab[16];
 extern const int slen2_tab[16];
 
 extern const scalefac_struct sfBandIndex[9];
+extern const int mdctorder[SBLIMIT];
 
 #define IXMAX_VAL 8206  /* ix always <= 8191+15.    see count_bits() */
 
