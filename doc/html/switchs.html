@@ -173,6 +173,10 @@
     <td align="LEFT" nowrap>algorithm quality selection</td>
   </tr>
   <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd><a href="#-silent">--quiet</a></kbd></td>
+    <td align="LEFT" nowrap>silent operation</td>
+  </tr>
+  <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#r">-r</a></kbd></td>
     <td align="LEFT" nowrap>input file is raw pcm</td>
   </tr>
@@ -180,25 +184,33 @@
     <td align="LEFT" nowrap><kbd><a href="#-resample">--resample</a></kbd></td>
     <td align="LEFT" nowrap>output sampling frequency in kHz</td>
   </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd><a href="#-r3mix">--r3mix</a></kbd></td>
+    <td align="LEFT" nowrap>r3mix VBR preset</td>
+  </tr>
   <TR VALIGN="TOP"> 
     <TD ALIGN="LEFT" nowrap><kbd><a href="#s">-s</a></kbd></TD>
     <TD ALIGN="LEFT" nowrap>sampling frequency in kHz</TD>
   </TR>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><kbd><a href="#S">-S</a></kbd></td>
+    <td align="LEFT" nowrap><kbd><a href="#-silent">-S</a></kbd></td>
     <td align="LEFT" nowrap>silent operation</td>
   </tr>
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#-scale">--scale</a></kbd></td>
     <td align="LEFT" nowrap>scale input</td>
   </tr>
-  <tr valign="TOP">
+  <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#-scale-l">--scale-l</a></kbd></td>
     <td align="LEFT" nowrap>scale input channel 0 (left)</td>
   </tr>
-  <tr valign="TOP">
+  <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#-scale-r">--scale-r</a></kbd></td>
     <td align="LEFT" nowrap>scale input channel 1 (right)</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd><a href="#-silent">--silent</a></kbd></td>
+    <td align="LEFT" nowrap>silent operation</td>
   </tr>
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#-strictly-enforce-ISO">--strictly-enforce-ISO</a></kbd></td>
@@ -206,11 +218,15 @@
   </tr>
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#t">-t</a></kbd></td>
-    <td align="LEFT" nowrap>disable VBR/WAV header</td>
+    <td align="LEFT" nowrap>disable INFO/WAV header</td>
   </tr>
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#V">-V</a></kbd></td>
     <td align="LEFT" nowrap>VBR quality setting (0...9)</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd><a href="#-verbose">--verbose</a></kbd></td>
+    <td align="LEFT" nowrap>verbosity</td>
   </tr>
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#x">-x</a></kbd></td>
@@ -294,14 +310,22 @@
   <br>
 </dl>
 <dl> 
-  <dt><strong>* <kbd>--athtype 0/1/2</kbd><a name="-athtype">&nbsp;&nbsp;&nbsp;&nbsp;select ATH 
-    type</a></strong> </dt>
+  <dt><strong>* <kbd>--athtype 0/1/2</kbd><a name="-athtype">&nbsp;&nbsp;&nbsp;&nbsp;select 
+    ATH type</a></strong> </dt>
 </dl>
 <dl> 
-  <dd>The Absolute Threshold of Hearing is the minimum threshold under which humans are unable to hear any sound. In the past, LAME was using ATH shape 0 which is the Painter & Spanias formula. Tests have shown that this formula is innacurate for the 13-22kHz area, leading to audible artifacts in some cases. Shape 1 was thus implemented, which is over sensitive, leading to very high bitrates. Shape 2 formula was accurately modelized from real data in order to real optimal quality while not wasting bitrate. In CBR and ABR modes, LAME uses ATH shape 2 by default.
-<br>
-<br>
-In VBR mode, LAME is using shape 4 which adapts its shape according to the -V value, going from the 0 shape at -V9 up to shape 2 at -V0. Shape 4 is not available in CBR and ABR modes.
+  <dd>The Absolute Threshold of Hearing is the minimum threshold under which humans 
+    are unable to hear any sound. In the past, LAME was using ATH shape 0 which 
+    is the Painter & Spanias formula. Tests have shown that this formula is innacurate 
+    for the 13-22kHz area, leading to audible artifacts in some cases. Shape 1 
+    was thus implemented, which is over sensitive, leading to very high bitrates. 
+    Shape 2 formula was accurately modelized from real data in order to real optimal 
+    quality while not wasting bitrate. In CBR and ABR modes, LAME uses ATH shape 
+    2 by default. <br>
+    <br>
+    In VBR mode, LAME is using shape 4 which adapts its shape according to the 
+    -V value, going from the 0 shape at -V9 up to shape 2 at -V0. Shape 4 is not 
+    available in CBR and ABR modes. 
 </dl>
 <dl> 
   <dd>&nbsp; 
@@ -348,7 +372,8 @@ In VBR mode, LAME is using shape 4 which adapts its shape according to the -V va
     must set maximum bitrate to no more than 224 kpbs.</i> <br>
 </dl>
 <dl> 
-  <dt><strong>* <kbd>--bitwidth 8/16/24/32</kbd><a name="-bitwidth">&nbsp;&nbsp;&nbsp;&nbsp;input bit width&nbsp;</a></strong> </dt>
+  <dt><strong>* <kbd>--bitwidth 8/16/24/32</kbd><a name="-bitwidth">&nbsp;&nbsp;&nbsp;&nbsp;input 
+    bit width&nbsp;</a></strong> </dt>
 </dl>
 <dl> 
   <dd> Required only for raw PCM input files. Otherwise it will be determined 
@@ -762,8 +787,53 @@ In VBR mode, LAME is using shape 4 which adapts its shape according to the -V va
   <dt><strong>* <kbd>--preset phone/voice/fm/tape/hifi/cd/studio</kbd> <a name="-preset">&nbsp;&nbsp;&nbsp;&nbsp;use 
     built-in preset</a></strong></dt>
 </dl>
-<dl> 
   <dd> Use one of the built-in presets. 
+  <dt><br>
+    <br>
+  </dt>
+  <hr width="50%" noshade align="center">
+  <br>
+  <dl> </dl>
+<dt><strong>* <kbd>--priority 0...4</kbd><a name="-priority">&nbsp;&nbsp;&nbsp;&nbsp;OS/2 
+  process priority control</a></strong> </dt>
+<dl> 
+  <dd> With this option, LAME will run with a different process priority under 
+    IBM OS/2.<br>
+    This will greatly improve system responsiveness, since OS/2 will have more 
+    free time to properly update the screen and poll the keyboard/mouse. It should 
+    make quite a difference overall, especially on slower machines. LAME's performance 
+    impact should be minimal.<br>
+    <br>
+  <dd><b>0 (Low priority)</b><br>
+    Priority 0 assumes "IDLE" class, with delta 0.<br>
+    LAME will have the lowest priority possible, and the encoding may be suspended 
+    very frequently by user interaction.<br>
+    <br>
+  <dd><b>1 (Medium priority)</b><br>
+    Priority 1 assumes "IDLE" class, with delta +31.<br>
+    LAME won't interfere at all with what you're doing.<br>
+    Recommended if you have a slower machine. <br>
+    <br>
+  <dd><b>2 (Regular priority)</b><br>
+    Priority 2 assumes "REGULAR" class, with delta -31.<br>
+    LAME won't interfere with your activity. It'll run just like a regular process, 
+    but will spare just a bit of idle time for the system. Recommended for most 
+    users. <br>
+    <br>
+  <dd><b>3 (High priority)</b><br>
+    Priority 3 assumes "REGULAR" class, with delta 0.<br>
+    LAME will run with a priority a bit higher than a normal process. <br>
+    Good if you're just running LAME by itself or with moderate user interaction.<br>
+    <br>
+  <dd><b>4 (Maximum priority)</b><br>
+    Priority 4 assumes "REGULAR" class, with delta +31.<br>
+    LAME will run with a very high priority, and may interfere with the machine 
+    response.<br>
+    Recommended if you only intend to run LAME by itself, or if you have a fast 
+    processor. <br>
+    <br>
+    <br>
+    Priority 1 or 2 is recommended for most users. 
   <dt><br>
     <br>
   </dt>
@@ -788,7 +858,7 @@ In VBR mode, LAME is using shape 4 which adapts its shape according to the -V va
     -q 7: same as -f. Very fast, ok quality. (psycho acoustics are used for pre-echo 
     & M/S, but no noise shaping is done.<br>
     <br>
-    -q 9: disables almost all algorithms including psy-model. poor quality.
+    -q 9: disables almost all algorithms including psy-model. poor quality. 
   <dt><br>
     <br>
   </dt>
@@ -823,6 +893,18 @@ In VBR mode, LAME is using shape 4 which adapts its shape according to the -V va
   <hr width="50%" noshade align="center">
   <br>
   <dl> </dl>
+  <dt><strong>* <kbd>--r3mix</kbd><a name="-r3mix">&nbsp;&nbsp;&nbsp;&nbsp;r3mix VBR preset</a></strong></dt>
+</dl>
+<dl> 
+  <dd> Uses r3mix VBR preset. <br>
+    See <a href="http://www.r3mix.net">www.r3mix.net</a> for more details. 
+  <dt><br>
+  </dt>
+</dl>
+<dl> 
+  <hr width="50%" noshade align="center">
+  <br>
+  <dl> </dl>
   <dt><strong>* <kbd>-s 8/11.025/12/16/22.05/24/32/44.1/48</kbd><a name="s">&nbsp;&nbsp;&nbsp;&nbsp;sampling 
     frequency</a></strong> </dt>
 </dl>
@@ -838,7 +920,7 @@ In VBR mode, LAME is using shape 4 which adapts its shape according to the -V va
   <hr width="50%" noshade align="center">
   <br>
   <dl> </dl>
-  <dt><strong>* <kbd>-S</kbd><a name="S">&nbsp;&nbsp;&nbsp;&nbsp;silent operation</a></strong> 
+  <dt><strong>* <kbd>-S / --silent / --quiet</kbd><a name="-silent">&nbsp;&nbsp;&nbsp;&nbsp;silent operation</a></strong> 
   </dt>
 </dl>
 <dl> 
@@ -849,25 +931,23 @@ In VBR mode, LAME is using shape 4 which adapts its shape according to the -V va
   <hr width="50%" noshade align="center">
   <br>
   <dl> </dl>
-  <dt><strong>* <kbd>--scale n</kbd><a name="-scale">&nbsp;&nbsp;&nbsp;&nbsp;scales input by n</a></strong> 
-  </dt>
-  <dt><strong>* <kbd>--scale-l n</kbd><a name="-scale-l">&nbsp;&nbsp;&nbsp;&nbsp;scales input channel 0 (left) by n</a></strong>
-  </dt>
-  <dt><strong>* <kbd>--scale-r n</kbd><a name="-scale-r">&nbsp;&nbsp;&nbsp;&nbsp;scales input channel 1 (right) by n</a></strong>
-  </dt>
+  <dt><strong>* <kbd>--scale n</kbd><a name="-scale">&nbsp;&nbsp;&nbsp;&nbsp;scales 
+    input by n</a></strong> </dt>
+  <dt><strong>* <kbd>--scale-l n</kbd><a name="-scale-l">&nbsp;&nbsp;&nbsp;&nbsp;scales 
+    input channel 0 (left) by n</a></strong> </dt>
+  <dt><strong>* <kbd>--scale-r n</kbd><a name="-scale-r">&nbsp;&nbsp;&nbsp;&nbsp;scales 
+    input channel 1 (right) by n</a></strong> </dt>
 </dl>
 <dl> 
-  <dd>Scales input by n.  This just multiplies the PCM data
-(after it has been converted to floating point) by n.
-<br><br>
-
-n > 1:  increase volume<br>
-n = 1:  no effect<br>
-n < 1:  reduce volume<br>
-<br>
-
-Use with care, since most MP3 decoders will truncate data
-which decodes to values greater than 32768
+  <dd>Scales input by n. This just multiplies the PCM data (after it has been 
+    converted to floating point) by n. <br>
+    <br>
+    n > 1: increase volume<br>
+    n = 1: no effect<br>
+    n < 1: reduce volume<br>
+    <br>
+    Use with care, since most MP3 decoders will truncate data which decodes to 
+    values greater than 32768 
   <dt><br>
     <br>
   </dt>
@@ -892,12 +972,13 @@ which decodes to values greater than 32768
   <hr width="50%" noshade align="center">
   <br>
   <dl> </dl>
-  <dt><strong>* <kbd>-t</kbd><a name="t">&nbsp;&nbsp;&nbsp;&nbsp;disable VBR/WAV 
+  <dt><strong>* <kbd>-t</kbd><a name="t">&nbsp;&nbsp;&nbsp;&nbsp;disable INFO/WAV 
     header </a></strong></dt>
 </dl>
 <dl> 
-  <dd> Disable writing of the VBR Tag (only valid in VBR mode).<br>
-    This tag in embedded in frame 0 of the MP3 file. It lets VBR aware players 
+  <dd> Disable writing of the INFO Tag on encoding.<br>
+    This tag in embedded in frame 0 of the MP3 file. It includes some information 
+    about the encoding options of the file, and in VBR it lets VBR aware players 
     correctly seek and compute playing times of VBR files.<br>
     <br>
     When '--decode' is specified (decode to WAV), this flag will disable writing 
@@ -916,6 +997,16 @@ which decodes to values greater than 32768
   <dd> Enable VBR (Variable BitRate) and specifies the value of VBR quality.<br>
     default=4<br>
     0=highest quality. 
+  <dt><br>
+    <br>
+  </dt>
+  <hr width="50%" noshade align="center">
+  <br>
+  <dl> </dl>
+  <dt><strong>* <kbd>--verbose</kbd><a name="-verbose">&nbsp;&nbsp;&nbsp;&nbsp;verbosity</a></strong></dt>
+</dl>
+<dl> 
+  <dd> Print a lot of information on screen. 
   <dt><br>
     <br>
   </dt>
@@ -982,46 +1073,6 @@ which decodes to values greater than 32768
     or<br>
     * the sum of noise over the thresholds is lower 
 </dl>
-  <hr width="50%" noshade align="center">
-  <br>
-  <dl> </dl>
-  <dt><strong>* <kbd>--priority</kbd><a name="-priority">&nbsp;&nbsp;&nbsp;&nbsp;OS/2 process 
-    priority control</a></strong> </dt>
-<dl> 
-  <dd> With this option, LAME will run with a different process priority under IBM OS/2.<br> 
-    This will greatly improve system responsiveness, since OS/2 will have more free time to
-    properly update the screen and poll the keyboard/mouse. It should make quite a difference
-    overall, especially on slower machines. LAME's performance impact should be minimal.<br>
-     <br>
-     <dd><b>0  (Low priority)</b><br>
-        Priority 0 assumes "IDLE" class, with delta 0.<br>
-        LAME will have the lowest priority possible, and the encoding may be suspended very frequently
-        by user interaction.<br><br>
-        
-     <dd><b>1  (Medium priority)</b><br>
-         Priority 1 assumes "IDLE" class, with delta +31.<br>
-         LAME won't interfere at all with what you're doing.<br>
-         Recommended if you have a slower machine.
-         <br><br>
-         
-      <dd><b>2 (Regular priority)</b><br>
-         Priority 2 assumes "REGULAR" class, with delta -31.<br>
-         LAME won't interfere with your activity. It'll run just like a regular process, but will spare
-         just a bit of idle time for the system. Recommended for most users.
-         <br><br>
-         
-      <dd><b>3 (High priority)</b><br>
-         Priority 3 assumes "REGULAR" class, with delta 0.<br>          
-         LAME will run with a priority a bit higher than a normal process. <br>
-         Good if you're just running LAME by itself or with moderate user interaction.<br>
-         <br>
-         
-      <dd><b>4 (Maximum priority)</b><br>
-         Priority 4 assumes "REGULAR" class, with delta +31.<br>
-         LAME will run with a very high priority, and may interfere with the machine response.<br>
-         Recommended if you only intend to run LAME by itself, or if you have a fast processor. <br>
-         <br><br>
-    Priority 1 or 2 is recommended for most users.
-</dl>
+
 </BODY>
 </HTML>
