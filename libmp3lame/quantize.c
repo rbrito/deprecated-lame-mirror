@@ -759,6 +759,9 @@ amp_scalefac_bands(lame_t gfc, gr_info *const gi, FLOAT *distort,
     /* not all scalefactors have been amplified.  so these 
      * scalefacs are possibly valid.  encode them: 
      */
+    if (gfc->mode_gr == 2)
+	check_preflag(gi);
+
     bits = target_bits - gfc->scale_bitcounter(gi);
     if (bits > 0)
 	return bits; /* Ok, we will go with this scalefactor combination */
@@ -773,6 +776,9 @@ amp_scalefac_bands(lame_t gfc, gr_info *const gi, FLOAT *distort,
 	inc_scalefac_scale(gi, distort);
     else
 	return 0;
+
+    if (gfc->mode_gr == 2)
+	check_preflag(gi);
 
     return target_bits - gfc->scale_bitcounter(gi);
 }
@@ -934,6 +940,9 @@ CBR_2nd_bitalloc(lame_t gfc, gr_info *gi, FLOAT distort[])
     }
     if (!flag)
 	return;
+
+    if (gfc->mode_gr == 2)
+	check_preflag(gi);
     gfc->scale_bitcounter(&gi_w);
     if (adjust_global_gain(gfc, &gi_w, distort, gi_w.part2_3_length))
 	return;
@@ -1561,6 +1570,8 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
 	return -2;
 
     /* encode scalefacs */
+    if (gfc->mode_gr == 2)
+	check_preflag(gi);
     gfc->scale_bitcounter(gi);
     assert(gi->part2_length < LARGE_BITS);
 

@@ -799,6 +799,24 @@ scfsi_calc(lame_t gfc, int ch)
   Only call this routine after final scalefactors have been
   chosen and the channel/granule will not be re-encoded.
  */
+void
+check_preflag(gr_info * const gi)
+{
+    int sfb;
+    if (!gi->preflag) {
+	for (sfb = 11; sfb < gi->psymax; sfb++)
+	    if (gi->scalefac[sfb] < pretab[sfb])
+		break;
+
+	if (sfb == gi->psymax) {
+	    gi->preflag = 1;
+	    for (sfb = 11; sfb < gi->psymax; sfb++)
+		if (gi->scalefac[sfb] != LARGE_BITS)
+		    gi->scalefac[sfb] -= pretab[sfb];
+	}
+    }
+}
+
 static void
 best_scalefac_store(lame_t gfc, int gr, int ch)
 {
@@ -856,8 +874,11 @@ best_scalefac_store(lame_t gfc, int gr, int ch)
 	    for (sfb = 0; sfb < gi->psymax; sfb++)
 		if (gi->scalefac[sfb] != SCALEFAC_ANYTHING_GOES)
 		    gi->scalefac[sfb] -= minsfb-(gi->preflag>0 ? pretab[sfb]:0);
-	    if (gi->preflag > 0)
+	    if (gi->preflag > 0) {
 		gi->preflag = 0;
+		if (gfc->mode_gr == 2) 
+		    check_preflag(gi);
+	    }
 	    gfc->scale_bitcounter(gi);
 	    if (gi->part2_length > gi_w.part2_length)
 		*gi = gi_w;
@@ -953,18 +974,6 @@ scale_bitcount(gr_info * const gi)
 	    tab = scale_mixed;
     } else {
 	tab = scale_long;
-	if (!gi->preflag) {
-	    for (sfb = 11; sfb < gi->psymax; sfb++)
-		if (gi->scalefac[sfb] < pretab[sfb])
-		    break;
-
-	    if (sfb == gi->psymax) {
-		gi->preflag = 1;
-		for (sfb = 11; sfb < gi->psymax; sfb++)
-		    if (gi->scalefac[sfb] != LARGE_BITS)
-			gi->scalefac[sfb] -= pretab[sfb];
-	    }
-	}
     }
 
     s1 = s2 = 0;
