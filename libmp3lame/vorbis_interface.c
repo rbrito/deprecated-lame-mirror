@@ -8,7 +8,6 @@
 OGGVORBIS_ROOT=/home/cvs/vorbis
 
 export CPPFLAGS="-I${OGGVORBIS_ROOT}/ogg/include -I${OGGVORBIS_ROOT}/vorbis/lib"
-export CONFIG_DEFS="-DUSE_FFT3DN"
 
 make clean
 ../configure

@@ -1,8 +1,5 @@
 $Id$
 
-USE_FFT3DN:
- - enable 3DNow code for the FFT
-
 KLEMM_36:
  - portability fixes in the IO code
 

@@ -441,7 +441,6 @@ CC_SWITCHES = $(CC_SWITCHES) /DHAVE_NASM
 ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/cpu_feat.obj libmp3lame/i386/scalar.obj
 
 
-CC_SWITCHES = $(CC_SWITCHES) /DUSE_FFT3DN
 ASM_OBJ = $(ASM_OBJ) libmp3lame/i386/fft3dn.obj
 
 #	not yet coded

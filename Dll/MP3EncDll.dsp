@@ -102,7 +102,7 @@ LINK32=xilink.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /Zp2 /MTd /W3 /Gm /GX /Zi /Od /I "../libmp3lame" /I "../include" /I "../" /I "../../" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_CONFIG_H" /YX /FD /c
-# ADD CPP /nologo /Zp2 /MTd /W3 /Gm /GX /Zi /Od /I "../libmp3lame" /I "../include" /I "../" /I "../../" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_CONFIG_H" /D "HAVE_NASM" /D "MMX_choose_table" /D "USE_FFT3DN" /YX /FD /c
+# ADD CPP /nologo /Zp2 /MTd /W3 /Gm /GX /Zi /Od /I "../libmp3lame" /I "../include" /I "../" /I "../../" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_CONFIG_H" /D "HAVE_NASM" /D "MMX_choose_table" /YX /FD /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o NUL /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o NUL /win32
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
@@ -131,7 +131,7 @@ LINK32=xilink.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /Zp2 /MT /W3 /GX /Ox /Ot /Og /Ob2 /I "../libmp3lame" /I "../include" /I "../" /I "../../" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_CONFIG_H" /YX /FD /c
-# ADD CPP /nologo /Zp2 /MT /W3 /GX /Ox /Ot /Og /Ob2 /I "../libmp3lame" /I "../include" /I "../" /I "../../" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_CONFIG_H" /D "HAVE_NASM" /D "MMX_choose_table" /D "USE_FFT3DN" /YX /FD /c
+# ADD CPP /nologo /Zp2 /MT /W3 /GX /Ox /Ot /Og /Ob2 /I "../libmp3lame" /I "../include" /I "../" /I "../../" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_CONFIG_H" /D "HAVE_NASM" /D "MMX_choose_table" /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o NUL /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o NUL /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
