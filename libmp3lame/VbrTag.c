@@ -571,6 +571,7 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 	int		bNonOptimal				= 0;
 	uint8_t nSourceFreq				= 0;
 	uint8_t nMisc					= 0;
+	uint16_t nPresetValue			= 0;
 	uint32_t nMusicLength			= 0;
 	int		bId3v1Present			= ((gfp->internal_flags->tag_spec.flags & CHANGED_FLAG)
 		&& !(gfp->internal_flags->tag_spec.flags & V2_ONLY_FLAG));
@@ -688,6 +689,7 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 	fseek(fpStream, 0, SEEK_END);
 	nFilesize = ftell(fpStream);
 
+    nPresetValue = gfp->preset;
 	
 	nMusicLength = nFilesize - id3v2size;		//omit current frame
 	if (bId3v1Present)
@@ -736,8 +738,11 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 	nBytesWritten++;
 
 
-	memset(pbtStreamBuffer+nBytesWritten,0, 3);		//unused in rev0
-	nBytesWritten+=3;
+	memset(pbtStreamBuffer+nBytesWritten,0, 1);		//unused in rev1
+	nBytesWritten+=1;
+
+	CreateI2(&pbtStreamBuffer[nBytesWritten], nPresetValue);
+	nBytesWritten+=2;
 
 	CreateI4(&pbtStreamBuffer[nBytesWritten], nMusicLength);
 	nBytesWritten+=4;

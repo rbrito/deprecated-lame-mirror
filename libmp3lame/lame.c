@@ -2227,6 +2227,7 @@ lame_init_old(lame_global_flags * gfp)
     gfp->asm_optimizations.amd3dnow = 1;
     gfp->asm_optimizations.sse = 1;
 
+    gfp->preset = 0;
     return 0;
 }
 

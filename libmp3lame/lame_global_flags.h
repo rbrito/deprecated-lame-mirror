@@ -85,6 +85,8 @@ struct lame_global_struct {
   double newmsfix;
   int preset_expopts;
 
+  int preset;
+
   /* VBR control */
   vbr_mode VBR;
   int VBR_q;
