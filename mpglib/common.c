@@ -134,7 +134,7 @@ int decode_header(struct frame *fr,unsigned long newhead)
         fr->framesize /= freqs[fr->sampling_frequency];
         fr->framesize  = ((fr->framesize+fr->padding)<<2)-4;
 #else
-        fprintf(stderr,"Not supported!\n");
+        fprintf(stderr,"layer=1 Not supported!\n");
 #endif
         break;
       case 2:
@@ -147,7 +147,7 @@ int decode_header(struct frame *fr,unsigned long newhead)
         fr->framesize /= freqs[fr->sampling_frequency];
         fr->framesize += fr->padding - 4;
 #else
-        fprintf(stderr,"Not supported!\n");
+        fprintf(stderr,"layer=2 Not supported!\n");
 #endif
         break;
       case 3:
