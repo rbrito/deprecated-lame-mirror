@@ -93,7 +93,7 @@
 *
 ***********************************************************************/
 
-extern int      bitrate_table[2][15];
+extern int index_to_bitrate [2] [16];
 
 
 
@@ -343,7 +343,7 @@ typedef struct  {
 extern int            fskip(FILE *sf,long num_bytes,int dummy);
 extern void           display_bitrates(FILE *out_fh);
 extern int            BitrateIndex(int, int,int);
-extern int            FindNearestBitrate(int,int,int);
+extern int            FindNearestBitrate(unsigned,unsigned, unsigned long);
 extern long           validSamplerate(long samplerate);
 extern int            SmpFrqIndex(long, int*);
 extern int            copy_buffer(char *buffer,int buffer_size,Bit_stream_struc *bs);

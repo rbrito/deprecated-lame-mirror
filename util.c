@@ -14,11 +14,19 @@
 ***********************************************************************/
 
 
-/* 1: MPEG-1, 0: MPEG-2 LSF, 1995-07-11 shn */
-int     bitrate_table[2][15] = {
-          {0,8,16,24,32,40,48,56,64,80,96,112,128,144,160},
-          {0,32,40,48,56,64,80,96,112,128,160,192,224,256,320}};
+/* 1995-07-11 shn */
+int  index_to_bitrate [2] [16] = {
+    // 0   1   2   3   4   5   6   7   8   9  10  11  12  13  14
+    {  0,  8, 16, 24, 32, 40, 48, 56, 64, 80, 96,112,128,144,160 }, // MPEG-2/2.5, LSF < 32 kHz
+    {  0, 32, 40, 48, 56, 64, 80, 96,112,128,160,192,224,256,320 }  // MPEG-1,        >= 32 kHz
+};
 
+unsigned char bitrate_to_index [2] [81] = {
+    //0     8    16    24    32    40    48    56    64    72    80    88    96   104   112   120   128   136   144   152   160   168   176   184   192   200   208   216   224   232   240   248   256   264   272   280   288   296   304   312   320   
+    //   4    12    20    28    36    44    52    60    68    76    84    92   100   108   116   124   132   140   148   156   164   172   180   188   196   204   212   220   228   236   244   252   260   268   276   284   292   300   308   316   
+    { 1, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 8, 9, 9, 9, 9,10,10,10,10,11,11,11,11,12,12,12,12,13,13,13,13,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14 },
+    { 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9, 9, 9,10,10,10,10,10,10,10,10,11,11,11,11,11,11,11,11,12,12,12,12,12,12,12,12,13,13,13,13,13,13,13,13,13,13,13,13,14,14,14,14,14,14,14,14,14 }
+};
 
 enum byte_order NativeByteOrder = order_unknown;
 
@@ -87,7 +95,7 @@ void getframebits(lame_global_flags *gfp,int *bitsPerFrame, int *mean_bits) {
   long bit_rate;
   
   if (gfc->bitrate_index) 
-    bit_rate = bitrate_table[gfp->version][gfc->bitrate_index];
+    bit_rate = index_to_bitrate[gfp->version][gfc->bitrate_index];
   else
     bit_rate = gfp->brate;
   
@@ -110,7 +118,7 @@ void display_bitrates(FILE *out_fh)
 
   fprintf(out_fh,"bitrates(kbs): ");
   for (index=1;index<15;index++) {
-    fprintf(out_fh,"%i ",bitrate_table[version][index]);
+    fprintf(out_fh,"%i ",index_to_bitrate[version][index]);
   }
   fprintf(out_fh,"\n");
   
@@ -120,7 +128,7 @@ void display_bitrates(FILE *out_fh)
   fprintf(out_fh,"MPEG2 layer III samplerates(kHz): 16 22.05 24 \n");
   fprintf(out_fh,"bitrates(kbs): ");
   for (index=1;index<15;index++) {
-    fprintf(out_fh,"%i ",bitrate_table[version][index]);
+    fprintf(out_fh,"%i ",index_to_bitrate[version][index]);
   }
   fprintf(out_fh,"\n");
 
@@ -129,29 +137,19 @@ void display_bitrates(FILE *out_fh)
   fprintf(out_fh,"MPEG2.5 layer III samplerates(kHz): 8 11.025 12 \n");
   fprintf(out_fh,"bitrates(kbs): ");
   for (index=1;index<15;index++) {
-    fprintf(out_fh,"%i ",bitrate_table[version][index]);
+    fprintf(out_fh,"%i ",index_to_bitrate[version][index]);
   }
   fprintf(out_fh,"\n");
 }
 
+/* convert bitrate in kbps to index */
 
-#define ABS(A) (((A)>0) ? (A) : -(A))
-
-int FindNearestBitrate(
-int bRate,        /* legal rates from 32 to 448 */
-int version,      /* MPEG-1 or MPEG-2 LSF */
-int samplerate)   /* convert bitrate in kbps to index */
+int FindNearestBitrate ( unsigned       bRate,        /* legal rates from 32 to 448 */
+		         unsigned       version,      /* MPEG-1 or MPEG-2 LSF */
+                         unsigned long  samplerate )  /* unused */  
 {
-  int     index = 0;
-  int     bitrate = 10000;
-  
-  while( index<15)   {
-    if( ABS( bitrate_table[version][index] - bRate) < ABS(bitrate-bRate) ) {
-      bitrate = bitrate_table[version][index];
-    }
-    ++index;
-  }
-  return bitrate;
+    assert (version < 2);
+    return bitrate_to_index [version] [ bRate <= 320 ? bRate >> 2 : 80 ];
 }
 
 
@@ -177,7 +175,7 @@ int bRate,        /* legal rates from 32 to 448 */
 int version,      /* MPEG-1 or MPEG-2 LSF */
 int samplerate)   /* convert bitrate in kbps to index */
 {
-    int* t = bitrate_table [version];
+    int* t = index_to_bitrate [version];
 
     if ( bRate == t [ 1] ) return  1;
     if ( bRate == t [ 2] ) return  2;
@@ -486,7 +484,7 @@ INLINE double sinc ( double x )
         x = -x;
 
     // mirroring argument of sin to [-pi/2,+pi/2), so zero crosses are really exact zero
-    return sin ( (x - (int) ( x + 0.5 )) * PI ) / x;
+    return sin ( (x - (int) ( x + 0.5 )) * PI ) / ( x * PI );
 }
 
 /* Can someone rewrite this function using blackman() and sinc() and a short comment? */

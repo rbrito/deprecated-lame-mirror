@@ -53,7 +53,7 @@ iteration_loop( lame_global_flags *gfp, FLOAT8 pe[2][2],
   III_side_info_t *l3_side = &gfc->l3_side;
 
   iteration_init(gfp,l3_side,l3_enc);
-  bit_rate = bitrate_table[gfp->version][gfc->bitrate_index];
+  bit_rate = index_to_bitrate [gfp->version] [gfc->bitrate_index];
   getframebits(gfp,&bitsPerFrame, &mean_bits);
   ResvFrameBegin(gfp, l3_side, mean_bits, bitsPerFrame );
 

@@ -463,8 +463,8 @@ int lame_init_params(lame_global_flags *gfp)
 	return -1;
       }
     }
-    gfp->VBR_mean_bitrate_kbps = Min(bitrate_table[gfp->version][gfc->VBR_max_bitrate],gfp->VBR_mean_bitrate_kbps);
-    gfp->VBR_mean_bitrate_kbps = Max(bitrate_table[gfp->version][gfc->VBR_min_bitrate],gfp->VBR_mean_bitrate_kbps);
+    gfp->VBR_mean_bitrate_kbps = Min(index_to_bitrate[gfp->version][gfc->VBR_max_bitrate],gfp->VBR_mean_bitrate_kbps);
+    gfp->VBR_mean_bitrate_kbps = Max(index_to_bitrate[gfp->version][gfc->VBR_min_bitrate],gfp->VBR_mean_bitrate_kbps);
     
     /* Note: ABR mode should normally be used without a -V n setting,
      * (or with the default value of 4)
@@ -686,7 +686,7 @@ void lame_print_config(lame_global_flags *gfp)
     MSGF("Autoconverting from stereo to mono. Setting encoding to mono mode.\n");
   }
   if (gfc->resample_ratio!=1) {
-    MSGF("Resampling:  input=%.1fkHz  output=%.1fkHz\n",
+    MSGF("Resampling:  input=%g kHz  output=%g kHz\n",
 	    in_samplerate,out_samplerate);
   }
   if (gfc->filter_type==0) {
@@ -710,32 +710,35 @@ void lame_print_config(lame_global_flags *gfp)
     MSGF("Analyzing %s \n",gfp->inPath);
   }
   else {
-    MSGF("Encoding %s to %s\n",
+    MSGF("Encoding %s%sto %s\n",
 	    (strcmp(gfp->inPath, "-")? gfp->inPath : "<stdin>"),
+	    strlen(gfp->inPath)+strlen(gfp->outPath) > 66 ? "\n      " : " ",
 	    (strcmp(gfp->outPath, "-")? gfp->outPath : "<stdout>"));
     if (gfp->ogg) {
-      MSGF("Encoding as %.1f kHz VBR Ogg Vorbis \n",
+      MSGF("Encoding as %g kHz VBR Ogg Vorbis \n",
 	      gfp->out_samplerate/1000.0);
-    }else
-    if (gfp->VBR==vbr_mt || gfp->VBR==vbr_rh)
-      MSGF("Encoding as %.1f kHz VBR(q=%i) %s MPEG-%g LayerIII (%4.1fx estimated) qval=%i\n",
-	      gfp->out_samplerate/1000.0,
-	      gfp->VBR_q,mode_names[gfp->mode],
-              2-gfp->version+0.5*(gfp->out_samplerate<16000),
-              gfp->compression_ratio,gfp->quality);
-    else
-    if (gfp->VBR==vbr_abr)
-      MSGF("Encoding as %.1f kHz average %d kbps %s MPEG-%g LayerIII (%4.1fx) qval=%i\n",
-	      gfp->out_samplerate/1000.0,
-	      gfp->VBR_mean_bitrate_kbps,mode_names[gfp->mode],
-              2-gfp->version+0.5*(gfp->out_samplerate<16000),
-              gfp->compression_ratio,gfp->quality);
-    else {
-      MSGF("Encoding as %.1f kHz %d kbps %s MPEG-%g LayerIII (%4.1fx)  qval=%i\n",
-	      gfp->out_samplerate/1000.0,gfp->brate,
-	      mode_names[gfp->mode],
-              2-gfp->version+0.5*(gfp->out_samplerate<16000),
-              gfp->compression_ratio,gfp->quality);
+    } else {
+    
+    	MSGF ( "Encoding as %g kHz ", gfp -> out_samplerate / 1000.0 );
+    
+    	switch ( gfp -> VBR ) {
+    	case vbr_mt:
+    	case vbr_rh:
+      		MSGF ("VBR(q=%i)", gfp->VBR_q );
+              	break;
+    	case vbr_abr:
+      		MSGF ("average %u kbps", gfp -> VBR_mean_bitrate_kbps );
+         	break;
+        default:
+      		MSGF ("%u kbps", gfp -> brate );
+          	break;
+        }
+    	MSGF (" %s MPEG-%u%s Layer III (%gx estim) qval=%i\n", 
+	      mode_names [gfp -> mode],
+              2 - gfp -> version, 
+              gfp -> out_samplerate < 16000 ? ".5" : "",
+              0.1 * (int) (gfp -> compression_ratio * 10 + 0.5),
+              gfp -> quality );
     }
   }
   if (gfp->free_format) {

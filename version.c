@@ -36,7 +36,7 @@ void lame_print_version ( FILE* fp )
   
 #ifdef LIBSNDFILE
     sf_get_lib_version ( tmp, sizeof (tmp) );
-    fprintf ( fp,"Input handled by %s  (http://www.zip.com.au/~erikd/libsndfile/)\n", tmp );
+    fprintf ( fp, "Input handled by %s  (http://www.zip.com.au/~erikd/libsndfile/)\n", tmp );
 #endif
 }
 

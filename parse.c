@@ -272,19 +272,19 @@ typedef struct {
 
 const preset_t Presets [] = {
    // name       fs     fu    fo    dfo shrt qual  mode              cbr vbr_mode/min/max
-    { "phone" ,  8000, 200,  3400,    0,  1,  5, MPG_MD_MONO        ,  16,  6,   8,  24 },  // phone standard 300-3400
+    { "phone" ,  8000, 125,  3400,    0,  1,  5, MPG_MD_MONO        ,  16,  6,   8,  24 },  // phone standard 300-3400
     { "phon+" ,  8000, 100,  4050,    0,  1,  5, MPG_MD_MONO        ,  24,  4,  16,  32 },  // phone theoretical limits
     { "lw"    , 11025,  -1,  4300,    0,  0,  5, MPG_MD_MONO        ,  24,  3,  16,  56 },  // LW           use df= 9 kHz
     { "mw-eu" , 11025,  -1,  4300,    0,  0,  5, MPG_MD_MONO        ,  24,  3,  16,  56 },  // MW in europe use df= 9 kHz
     { "mw-us" , 16000,  -1,  7300,    0,  0,  5, MPG_MD_MONO        ,  40,  3,  24, 112 },  // MW in USA    use df=20 kHz
     { "sw"    , 11025,  -1,  4800,    0,  0,  5, MPG_MD_MONO        ,  24,  4,  16,  56 },  // SW           use df=10 kHz
     { "fm"    , 32000,  -1, 15000,    0,  0,  5, MPG_MD_JOINT_STEREO, 112,  3,  80, 256 },
-    { "voice" , 24000,  -1, 12100,    0,  1,  5, MPG_MD_MONO        ,  56,  4,  40, 112 },
+    { "voice" , 24000,  -1, 12100,    0,  1,  5, MPG_MD_MONO        ,  56,  5,  40, 112 },
     { "radio" ,    -1,  -1, 15000,    0,  0,  5, MPG_MD_JOINT_STEREO, 128,  3,  96, 256 },
-    { "tape"  ,    -1,  -1, 18000, 1800,  0,  5, MPG_MD_JOINT_STEREO, 128,  3,  96, 256 },
-    { "hifi"  ,    -1,  -1, 18000, 1800,  0,  2, MPG_MD_JOINT_STEREO, 160,  2, 112, 320 },  // 144 seems to be enough
-    { "cd"    ,    -1,  -1,    -1,   -1,  0,  2, MPG_MD_STEREO      , 192,  1, 128, 320 },  // 160 seems to be enough
-    { "studio",    -1,  -1,    -1,   -1,  0,  2, MPG_MD_STEREO      , 256,  0, 160, 320 },  // 176 seems to be enough
+    { "tape"  ,    -1,  -1, 18000,  900,  0,  5, MPG_MD_JOINT_STEREO, 128,  3,  96, 256 },
+    { "hifi"  ,    -1,  -1, 18000,  900,  0,  2, MPG_MD_JOINT_STEREO, 160,  2, 112, 320 },
+    { "cd"    ,    -1,  -1,    -1,   -1,  0,  2, MPG_MD_STEREO      , 192,  1, 128, 320 },
+    { "studio",    -1,  -1,    -1,   -1,  0,  2, MPG_MD_STEREO      , 256,  0, 160, 320 },
 };
 
 
