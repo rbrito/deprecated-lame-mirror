@@ -1173,11 +1173,13 @@ int L3psycho_anal( lame_global_flags * gfp,
 
     for ( sb = 0; sb < SBPSY_l; sb++ )
       {
-	FLOAT8 thmL,thmR,thmM,thmS;
-	thmL = gfc->thm[0].l[sb];
-	thmR = gfc->thm[1].l[sb];
-	thmM = gfc->thm[2].l[sb];
-	thmS = gfc->thm[3].l[sb];
+	FLOAT8 thmL,thmR,thmM,thmS,ath;
+	ath  = (gfc->ATH_partitionbands[(gfc->bu_l[sb] + gfc->bo_l[sb])/2])*pow(10,-gfc->ATH_vbrlower/10.0);
+	thmL = Max(gfc->thm[0].l[sb],ath);
+	thmR = Max(gfc->thm[1].l[sb],ath);
+	thmM = Max(gfc->thm[2].l[sb],ath);
+	thmS = Max(gfc->thm[3].l[sb],ath);
+
 	if (thmL*msfix < (thmM+thmS)/2) {
 	  FLOAT8 f = thmL*msfix / ((thmM+thmS)/2);
 	  thmM *= f;
@@ -1189,17 +1191,19 @@ int L3psycho_anal( lame_global_flags * gfp,
 	  thmS *= f;
 	}
 
-	gfc->thm[2].l[sb] = thmM;
-	gfc->thm[3].l[sb] = thmS;
+	gfc->thm[2].l[sb] = Min(thmM,gfc->thm[2].l[sb]);
+	gfc->thm[3].l[sb] = Min(thmS,gfc->thm[3].l[sb]);
       }
 
     for ( sb = 0; sb < SBPSY_s; sb++ ) {
       for ( sblock = 0; sblock < 3; sblock++ ) {
-	FLOAT8 thmL,thmR,thmM,thmS;
-	thmL = gfc->thm[0].s[sb][sblock];
-	thmR = gfc->thm[1].s[sb][sblock];
-	thmM = gfc->thm[2].s[sb][sblock];
-	thmS = gfc->thm[3].s[sb][sblock];
+	FLOAT8 thmL,thmR,thmM,thmS,ath;
+	ath  = (gfc->ATH_partitionbands[(gfc->bu_s[sb] + gfc->bo_s[sb])/2])*pow(10,-gfc->ATH_vbrlower/10.0);
+	thmL = Max(gfc->thm[0].s[sb][sblock],ath);
+	thmR = Max(gfc->thm[1].s[sb][sblock],ath);
+	thmM = Max(gfc->thm[2].s[sb][sblock],ath);
+	thmS = Max(gfc->thm[3].s[sb][sblock],ath);
+
 	if (thmL*msfix < (thmM+thmS)/2) {
 	  FLOAT8 f = thmL*msfix / ((thmM+thmS)/2);
 	  thmM *= f;
@@ -1211,8 +1215,8 @@ int L3psycho_anal( lame_global_flags * gfp,
 	  thmS *= f;
 	}
 
-	gfc->thm[2].s[sb][sblock] = thmM;
-	gfc->thm[3].s[sb][sblock] = thmS;
+	gfc->thm[2].s[sb][sblock] = Min(gfc->thm[2].s[sb][sblock],thmM);
+	gfc->thm[3].s[sb][sblock] = Min(gfc->thm[3].s[sb][sblock],thmS);
       }
     }
   }
