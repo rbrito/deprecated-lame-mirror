@@ -104,6 +104,9 @@ WITH_MP3X = @WITH_MP3X@
 install_sh = @install_sh@
 
 
+# global section for every Makefile.am
+
+
 AUTOMAKE_OPTIONS = foreign $(top_srcdir)/ansi2knr
 
 bin_PROGRAMS = lame @WITH_MP3RTP@ @WITH_MP3X@
@@ -239,7 +242,7 @@ OBJECTS = $(am_lame_OBJECTS) $(am_mp3rtp_OBJECTS) $(am_mp3x_OBJECTS)
 all: all-redirect
 .SUFFIXES:
 .SUFFIXES: .c .h .lo .o
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) $(top_srcdir)/Makefile.am.global
 	cd $(top_srcdir) && $(AUTOMAKE) --foreign ./frontend/Makefile
 
 Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
@@ -520,6 +523,8 @@ uninstall-am uninstall all-redirect all-am all install-strip \
 installdirs mostlyclean-generic distclean-generic clean-generic \
 maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 
+
+# end global section
 
 lclint.txt: ${lame_SOURCES} ${noinst_HEADERS}
 	@lclint ${LCLINTFLAGS} ${INCLUDES} ${DEFS} ${lame_SOURCES} 2>&1 >lclint.txt || true

@@ -1,9 +1,10 @@
 ## $Id$
 
+include $(top_srcdir)/Makefile.am.global
+
 SUBDIRS = mpglib libmp3lame frontend Dll debian doc include misc dshow
 
 CLEANFILES = testcase.new.mp3
-AUTOMAKE_OPTIONS = foreign ansi2knr
 
 EXTRA_DIST = \
 	API \

@@ -106,10 +106,14 @@ WITH_MP3X = @WITH_MP3X@
 install_sh = @install_sh@
 
 
+# global section for every Makefile.am
+
+
+AUTOMAKE_OPTIONS = foreign $(top_srcdir)/ansi2knr
+
 SUBDIRS = mpglib libmp3lame frontend Dll debian doc include misc dshow
 
 CLEANFILES = testcase.new.mp3
-AUTOMAKE_OPTIONS = foreign ansi2knr
 
 EXTRA_DIST = \
 	API \
@@ -139,10 +143,10 @@ mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES =  lame.spec
 DIST_SOURCES = 
-DIST_COMMON =  README ././stamp-h.in ./stamp-h.in COPYING INSTALL \
-Makefile.am Makefile.in TODO acinclude.m4 aclocal.m4 config.guess \
-config.h.in config.sub configure configure.in install-sh lame.spec.in \
-ltconfig ltmain.sh missing mkinstalldirs
+DIST_COMMON =  README ./stamp-h.in COPYING INSTALL Makefile.am \
+Makefile.in TODO acinclude.m4 aclocal.m4 config.guess config.h.in \
+config.sub configure configure.in install-sh lame.spec.in ltconfig \
+ltmain.sh missing mkinstalldirs
 
 
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -151,8 +155,8 @@ GZIP_ENV = --best
 DIST_SUBDIRS =  $(SUBDIRS)
 all: all-redirect
 .SUFFIXES:
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
-	cd $(top_srcdir) && $(AUTOMAKE) --foreign ./Makefile
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) $(top_srcdir)/Makefile.am.global
+	cd $(top_srcdir) && $(AUTOMAKE) --foreign Makefile
 
 Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) \
@@ -354,7 +358,6 @@ dist-all: distdir
 distdir: $(DISTFILES)
 	-chmod -R a+w $(distdir) > /dev/null 2>&1; rm -rf $(distdir)
 	mkdir $(distdir)
-	$(mkinstalldirs) $(distdir)/./.
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
@@ -453,6 +456,8 @@ installdirs-am installdirs mostlyclean-generic distclean-generic \
 clean-generic maintainer-clean-generic clean mostlyclean distclean \
 maintainer-clean
 
+
+# end global section
 
 #
 #  testcase.mp3 is a 2926 byte file.  The first number output by

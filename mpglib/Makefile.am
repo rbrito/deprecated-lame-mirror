@@ -1,11 +1,10 @@
 ## $Id$
 
-AUTOMAKE_OPTIONS = foreign $(top_srcdir)/ansi2knr
+include $(top_srcdir)/Makefile.am.global
 
 INCLUDES = @INCLUDES@ -I$(top_srcdir)/libmp3lame -I$(top_builddir)
 
 EXTRA_DIST = \
-	README \
 	mpglib.dsp
 
 DEFS = @DEFS@ @CONFIG_DEFS@

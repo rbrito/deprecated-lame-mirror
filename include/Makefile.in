@@ -106,7 +106,10 @@ WITH_MP3X = @WITH_MP3X@
 install_sh = @install_sh@
 
 
-AUTOMAKE_OPTIONS = foreign ansi2knr
+# global section for every Makefile.am
+
+
+AUTOMAKE_OPTIONS = foreign $(top_srcdir)/ansi2knr
 
 pkginclude_HEADERS = lame.h
 subdir = ./include
@@ -124,7 +127,7 @@ DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 GZIP_ENV = --best
 all: all-redirect
 .SUFFIXES:
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) $(top_srcdir)/Makefile.am.global
 	cd $(top_srcdir) && $(AUTOMAKE) --foreign ./include/Makefile
 
 Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
@@ -268,6 +271,8 @@ install-strip installdirs mostlyclean-generic distclean-generic \
 clean-generic maintainer-clean-generic clean mostlyclean distclean \
 maintainer-clean
 
+
+# end global section
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

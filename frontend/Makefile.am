@@ -1,6 +1,6 @@
 ## $Id$
 
-AUTOMAKE_OPTIONS = foreign $(top_srcdir)/ansi2knr
+include $(top_srcdir)/Makefile.am.global
 
 bin_PROGRAMS = lame @WITH_MP3RTP@ @WITH_MP3X@
 EXTRA_PROGRAMS = mp3rtp mp3x

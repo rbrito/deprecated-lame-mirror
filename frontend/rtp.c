@@ -4,11 +4,27 @@
 # include <config.h>
 #endif
 
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <stdlib.h>
 #include <stdio.h>
+
+#ifdef STDC_HEADERS
+# include <stdlib.h>
+# include <string.h>
+#else
+# ifndef HAVE_STRCHR
+#  define strchr index
+#  define strrchr rindex
+# endif
+char *strchr (), *strrchr ();
+# ifndef HAVE_MEMCPY
+#  define memcpy(d, s, n) bcopy ((s), (d), (n))
+#  define memmove(d, s, n) bcopy ((s), (d), (n))
+# endif
+#endif
+
+#ifdef HAVE_UNISTD_H
+# include <unistd.h>
+#endif
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -137,7 +153,6 @@ makesocket (char *szAddr, unsigned short port, unsigned char TTL,
 #include <string.h>
 #include <netinet/in.h>
 #include <unistd.h>
-#include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/socket.h>

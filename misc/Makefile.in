@@ -106,16 +106,22 @@ WITH_MP3X = @WITH_MP3X@
 install_sh = @install_sh@
 
 
+# global section for every Makefile.am
+
+
 AUTOMAKE_OPTIONS = foreign $(top_srcdir)/ansi2knr
 
 EXTRA_PROGRAMS = abx ath scalartest
 
+EXTRA_SCRIPTS = \
+	auenc \
+	mugeco.sh \
+	mlame
+
+
 EXTRA_DIST = \
 	Lame.vbs \
-	auenc \
 	lame4dos.bat \
-	mugeco.sh \
-	mlame \
 	mlame_corr.c
 
 
@@ -171,7 +177,7 @@ OBJECTS = $(am_abx_OBJECTS) $(am_ath_OBJECTS) $(am_scalartest_OBJECTS)
 all: all-redirect
 .SUFFIXES:
 .SUFFIXES: .c .lo .o
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) $(top_srcdir)/Makefile.am.global
 	cd $(top_srcdir) && $(AUTOMAKE) --foreign ./misc/Makefile
 
 Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
@@ -388,6 +394,8 @@ uninstall-am uninstall all-redirect all-am all install-strip \
 installdirs mostlyclean-generic distclean-generic clean-generic \
 maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 
+
+# end global section
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

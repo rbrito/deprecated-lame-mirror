@@ -1,5 +1,5 @@
 ## $Id$
 
-AUTOMAKE_OPTIONS = foreign ansi2knr
+include $(top_srcdir)/Makefile.am.global
 
 SUBDIRS = html man

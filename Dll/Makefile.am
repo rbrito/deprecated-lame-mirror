@@ -1,6 +1,6 @@
 ## $Id$
 
-AUTOMAKE_OPTIONS = foreign ansi2knr
+include $(top_srcdir)/Makefile.am.global
 
 EXTRA_DIST = BladeMP3EncDLL.c \
 	BladeMP3EncDLL.def \

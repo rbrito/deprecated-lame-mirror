@@ -1,6 +1,6 @@
 ## $Id$
 
-AUTOMAKE_OPTIONS = foreign ansi2knr
+include $(top_srcdir)/Makefile.am.global
 
 pkginclude_HEADERS = lame.h
 

@@ -7,7 +7,10 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <signal.h>
+
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif
 
 #ifdef macintosh
 #include   <types.h>

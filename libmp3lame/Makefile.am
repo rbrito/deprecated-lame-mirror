@@ -1,6 +1,6 @@
 ## $Id$
 
-AUTOMAKE_OPTIONS = foreign $(top_srcdir)/ansi2knr
+include $(top_srcdir)/Makefile.am.global
 
 SUBDIRS = i386
 

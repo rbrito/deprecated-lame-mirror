@@ -25,6 +25,18 @@
 /* The number of bytes in a unsigned short.  */
 #define SIZEOF_UNSIGNED_SHORT 2
 
+/* Define if you have the ANSI C header files.  */
+#define STDC_HEADERS
+
+/* Define if you have the <errno.h> header file.  */
+#undef HAVE_ERRNO_H
+
+/* Define if you have the <fcntl.h> header file.  */
+#undef HAVE_FCNTL_H
+
+/* Define if you have the <limits.h> header file.  */
+#undef HAVE_LIMITS_H
+
 /* Name of package */
 #define PACKAGE "lame"
 
@@ -39,4 +51,7 @@
 
 /* IEEE754 compatible machine */
 #define TAKEHIRO_IEEE754_HACK 1
+
+#define HAVE_STRCHR
+#define HAVE_MEMCPY
 
