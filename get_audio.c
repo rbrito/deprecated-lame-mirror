@@ -143,8 +143,8 @@ int get_audio(lame_global_flags *gfp,short buffer[2][1152],int stereo)
 int read_samples_ogg(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2][1152],int stereo)
 {
 #ifdef HAVEVORBIS
-  int j,out=0;
-  lame_internal_flags *gfc=gfp->internal_flags;
+  int out=0;
+  /*lame_internal_flags *gfc=gfp->internal_flags;*/
   mp3data_struct mp3data;
 
   out=lame_decode_ogg_fromfile(musicin,mpg123pcm[0],mpg123pcm[1],&mp3data);
@@ -682,29 +682,27 @@ int read_samples_pcm(lame_global_flags *gfp,short sample_buffer[2304], int frame
     }
 
 
-    /*
-       Samples are big-endian. If this is a little-endian machine
-       we must swap
-     */
-    if ( NativeByteOrder == order_unknown )
-      {
-	NativeByteOrder = DetermineByteOrder();
-	if ( NativeByteOrder == order_unknown )
-	  {
-	    ERRORF("byte order not determined\n" );
-	    LAME_ERROR_EXIT();
-	  }
-      }
-    /* intel=littleEndian */
-    if (!iswav && ( NativeByteOrder == order_littleEndian ))
-      SwapBytesInWords( sample_buffer, samples_read );
 
-    if (iswav && ( NativeByteOrder == order_bigEndian ))
-      SwapBytesInWords( sample_buffer, samples_read );
-
-    if (gfp->swapbytes==TRUE)
-      SwapBytesInWords( sample_buffer, samples_read );
-
+    if (16==gfc->pcmbitwidth) {
+      if ( NativeByteOrder == order_unknown )
+	{
+	  NativeByteOrder = DetermineByteOrder();
+	  if ( NativeByteOrder == order_unknown )
+	    {
+	      ERRORF("byte order not determined\n" );
+	      LAME_ERROR_EXIT();
+	    }
+	}
+      /* intel=littleEndian */
+      if (!iswav && ( NativeByteOrder == order_littleEndian ))
+	SwapBytesInWords( sample_buffer, samples_read );
+      
+      if (iswav && ( NativeByteOrder == order_bigEndian ))
+	SwapBytesInWords( sample_buffer, samples_read );
+      
+      if (gfp->swapbytes==TRUE)
+	SwapBytesInWords( sample_buffer, samples_read );
+    }
 
     return samples_read;
 }
