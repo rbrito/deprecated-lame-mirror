@@ -91,6 +91,8 @@ typedef enum preset_mode_e {
 
     PORTABLE = 1010,
     PORTABLE1 = 1014,
+    PORTABLE2 = 1015,
+    PORTABLE3 = 1016
 } preset_mode;
 
 

@@ -772,6 +772,18 @@ static int  presets_set( lame_t gfp, int fast, int cbr, const char* preset_name,
 	return 0;
     }
 
+    if (strcmp(preset_name, "portable2") == 0) {
+        lame_set_preset(gfp, PORTABLE2);
+
+	return 0;
+    }
+
+    if (strcmp(preset_name, "portable3") == 0) {
+        lame_set_preset(gfp, PORTABLE3);
+
+	return 0;
+    }
+
     if (strcmp(preset_name, "medium") == 0) {
 	if (fast > 0)
 	    lame_set_preset(gfp, MEDIUM_FAST);

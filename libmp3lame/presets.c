@@ -176,6 +176,55 @@ int apply_preset(lame_global_flags*  gfp, int preset)
 	    return preset;
 
     }
+    case PORTABLE2: {
+	    lame_set_VBR(gfp, vbr_rh);
+
+	    lame_set_quality(gfp, 3);
+	    lame_set_lowpassfreq(gfp, 17500);
+	    lame_set_mode(gfp, JOINT_STEREO);
+
+        lame_set_short_threshold(gfp, 4.40f, 25.0f);
+        lame_set_quant_comp(gfp, 1);
+        lame_set_quant_comp_short(gfp, 1);
+        lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
+        lame_set_maskingadjust( gfp, -.6 );
+        lame_set_maskingadjust_short( gfp, -.8 );
+        lame_set_interChRatio(gfp, 0.0002);
+        lame_set_ATHlower( gfp, -11 );
+        lame_set_ATHtype(gfp, 4);
+        lame_set_ATHcurve(gfp, 5);
+	    lame_set_athaa_sensitivity(gfp, -16);
+        
+	    lame_set_experimentalY(gfp, 1);
+	    lame_set_substep( gfp, 1 );
+
+	    return preset;
+
+    }
+    case PORTABLE3: {
+	    lame_set_VBR(gfp, vbr_rh);
+
+	    lame_set_quality(gfp, 3);
+	    lame_set_lowpassfreq(gfp, 17500);
+	    lame_set_mode(gfp, JOINT_STEREO);
+
+        lame_set_short_threshold(gfp, 4.40f, 25.0f);
+        lame_set_quant_comp(gfp, 1);
+        lame_set_quant_comp_short(gfp, 1);
+        lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
+        lame_set_maskingadjust( gfp, -.6 );
+        lame_set_maskingadjust_short( gfp, -.8 );
+        lame_set_interChRatio(gfp, 0.0002);
+        lame_set_ATHlower( gfp, -14.5 );
+        lame_set_ATHtype(gfp, 4);
+        lame_set_ATHcurve(gfp, 5);
+	    lame_set_athaa_sensitivity(gfp, -16);
+        
+	    lame_set_experimentalY(gfp, 1);
+
+	    return preset;
+
+    }
     case MEDIUM: {
 	    lame_set_VBR(gfp, vbr_rh);
 
