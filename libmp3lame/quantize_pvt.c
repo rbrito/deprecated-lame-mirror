@@ -186,7 +186,7 @@ static FLOAT8 ATHmdct( lame_global_flags *gfp, FLOAT8 f )
   
     ath = ATHformula( f , gfp );
 	  
-    if (gfc->nsPsy.use) {
+    if (gfp->psymodel == PSY_NSPSYTUNE) {
         ath -= NSATHSCALE;
     } else {
         ath -= 114;
@@ -217,7 +217,7 @@ static void compute_ath( lame_global_flags *gfp )
             ATH_f = ATHmdct( gfp, freq );  /* freq in kHz */
             ATH_l[sfb] = Min( ATH_l[sfb], ATH_f );
         }
-	    if (!gfc->nsPsy.use)
+	    if (gfp->psymodel == PSY_GPSYCHO)
 	        ATH_l[sfb] *=
 		        (gfc->scalefac_band.l[sfb+1] - gfc->scalefac_band.l[sfb]);
     }
@@ -333,8 +333,8 @@ iteration_init( lame_global_flags *gfp)
 
     huffman_init(gfc);
 
-    if (gfc->nsPsy.use) {
-	FLOAT8 bass, alto, treble, sfb21;
+    if (gfp->psymodel == PSY_NSPSYTUNE) {
+	    FLOAT8 bass, alto, treble, sfb21;
 
         i = (gfp->exp_nspsytune >> 2) & 63;
         if (i >= 32)
@@ -422,7 +422,7 @@ int on_pe( lame_global_flags *gfp, FLOAT8 pe[][2], III_side_info_t *l3_side,
     
         targ_bits[ch] = Min( MAX_BITS, tbits/gfc->channels_out );
     
-        if (gfc->nsPsy.use) {
+        if (gfp->psymodel == PSY_NSPSYTUNE) {
             add_bits[ch] = targ_bits[ch] * pe[gr][ch] / 700.0 - targ_bits[ch];
         } 
         else {

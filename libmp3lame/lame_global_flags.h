@@ -113,6 +113,7 @@ struct lame_global_struct {
    * psycho acoustics and other arguments which you should not change 
    * unless you know what you are doing
    */
+  int psymodel;                   /* select psychoacoustic model          */
   int VBR_smooth;
   float maskingadjust;
   float maskingadjust_short;

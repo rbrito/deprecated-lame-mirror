@@ -36,6 +36,11 @@ extern "C" {
 #endif
 
 
+/* select psychoacoustic model */
+int CDECL lame_set_psy_model( lame_global_flags *, int);
+int CDECL lame_get_psy_model( const lame_global_flags *);
+
+
 void CDECL lame_set_ms_sparsing( lame_global_flags*, int );
 void CDECL lame_set_ms_sparse_low(lame_t , float );
 void CDECL lame_set_ms_sparse_high(lame_t , float );

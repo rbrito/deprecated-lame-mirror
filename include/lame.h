@@ -104,6 +104,13 @@ typedef enum asm_optimizations_e {
 } asm_optimizations;
 
 
+/* psychoacoustic model */
+typedef enum Psy_model_e {
+    PSY_GPSYCHO = 1,
+    PSY_NSPSYTUNE = 2
+} Psy_model;
+
+
 struct lame_global_struct;
 typedef struct lame_global_struct lame_global_flags;
 typedef lame_global_flags *lame_t;

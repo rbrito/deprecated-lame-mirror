@@ -153,7 +153,6 @@ typedef struct  bit_stream_struc {
 /* variables used for --nspsytune */
 typedef struct {
     /* variables for nspsytune */
-    int   use; /* indicates the use of nspsytune */
     FLOAT last_en_subshort[4][9];
     int   last_attacks[4];
     FLOAT pefirbuf[19];

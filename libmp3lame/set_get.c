@@ -1145,6 +1145,21 @@ lame_get_highpasswidth( const lame_global_flags*  gfp )
  * unless you know what you are doing
  */
 
+
+int
+lame_set_psy_model( lame_global_flags*  gfp,
+                   int               psy )
+{
+    gfp->psymodel = psy;
+    return 0;
+}
+
+int
+lame_get_psy_model( const lame_global_flags*  gfp )
+{
+    return gfp->psymodel;
+}
+
 int
 lame_set_vbr_smooth( lame_global_flags*  gfp,
                    int               smooth )

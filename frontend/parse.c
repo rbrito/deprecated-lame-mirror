@@ -490,7 +490,6 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --temporal-masking n  use temporal masking effect n=0:no n=1:yes\n"
 #endif
               "    --notemp        disable temporal masking effect\n"
-              "    --nspsytune     experimental PSY tunings by Naoki Shibata\n"
               "    --nssafejoint   M/S switching criterion\n"
               "    --nsmsfix <arg> M/S switching tuning [effective 0-3.5]\n"
               "    --interch x     adjust inter-channel masking ratio\n"
@@ -1055,6 +1054,10 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     argUsed=1;
                     lame_set_ms_sparsing(gfp,atoi(nextArg)); 
                     
+                T_ELIF_INTERNAL ("psymodel") /* 1 gpsycho, 2 nspsytune */
+                    argUsed=1;
+                    lame_set_psy_model(gfp,atoi(nextArg)); 
+                    
                 T_ELIF_INTERNAL ("ms-sparse-low")
                     argUsed=1;
                     lame_set_ms_sparse_low(gfp,atof(nextArg));
@@ -1411,10 +1414,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     (void) lame_set_useTemporal( gfp, atoi(nextArg)?1:0 );
 
                 T_ELIF ("nspsytune")
-                    lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
-                    lame_set_experimentalZ(gfp,1);
-                    lame_set_quant_comp(gfp,1);
-                    lame_set_quant_comp_short(gfp,1);
+                    lame_set_psy_model(gfp, PSY_NSPSYTUNE);
                 
                 T_ELIF ("nssafejoint")
                     lame_set_exp_nspsytune(gfp,lame_get_exp_nspsytune(gfp) | 2);
@@ -1488,7 +1488,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 		    }
 		  /* nspsytune2 implies nspsytune */
                     argUsed=1;
-                    lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
+                    lame_set_psy_model(gfp, PSY_NSPSYTUNE);
                     lame_set_experimentalZ(gfp,1);
                     lame_set_experimentalX(gfp,1);
                 

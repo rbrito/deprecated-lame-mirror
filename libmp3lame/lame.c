@@ -871,7 +871,6 @@ lame_init_params(lame_global_flags * const gfp)
     /*if (gfp->exp_nspsytune & 1)*/ {
         int     i;
 
-        gfc->nsPsy.use = 1;
         for (i = 0; i < 19; i++)
             gfc->nsPsy.pefirbuf[i] = 700*gfc->mode_gr*gfc->channels_out;
 
@@ -969,7 +968,7 @@ lame_init_params(lame_global_flags * const gfp)
             break;        
         }
 
-        if ( gfc->nsPsy.use ) {
+        if ( gfp->psymodel == PSY_NSPSYTUNE ) {
             gfc->PSY->mask_adjust = gfp->maskingadjust;
             gfc->PSY->mask_adjust_short = gfp->maskingadjust_short;
             gfc->VBR->smooth = gfp->VBR_smooth;
@@ -995,7 +994,7 @@ lame_init_params(lame_global_flags * const gfp)
         {   static const FLOAT8 dbQ[10]={-2.,-1.0,-.66,-.33,0.,0.33,.66,1.0,1.33,1.66};
             static const FLOAT8 dbQns[10]={- 4,- 3,-2,-1,0,0.7,1.4,2.1,2.8,3.5};
             /*static const FLOAT8 atQns[10]={-16,-12,-8,-4,0,  1,  2,  3,  4,  5};*/
-            if ( gfc->nsPsy.use ) {
+            if ( gfp->psymodel == PSY_NSPSYTUNE ) {
                  gfc->PSY->mask_adjust = gfp->maskingadjust;
                  gfc->PSY->mask_adjust_short = gfp->maskingadjust_short;
             } else {
@@ -1111,6 +1110,17 @@ lame_init_params(lame_global_flags * const gfp)
     if (lame_get_quant_comp_short(gfp) < 0 ) lame_set_quant_comp_short(gfp, 0);
 
     if (lame_get_msfix(gfp) < 0 ) lame_set_msfix(gfp, 0);
+
+    /* select psychoacoustic model */
+    if ((lame_get_psy_model(gfp) < 0) ||
+        (lame_get_psy_model(gfp) == PSY_NSPSYTUNE)) {
+        lame_set_psy_model(gfp, PSY_NSPSYTUNE);
+        lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
+    } else {
+        lame_set_psy_model(gfp, PSY_GPSYCHO);
+        lame_set_exp_nspsytune(gfp, (lame_get_exp_nspsytune(gfp) >> 1) << 1);
+    }
+
 
     if (lame_get_short_threshold_lrm(gfp) < 0 ) lame_set_short_threshold_lrm(gfp, NSATTACKTHRE);
     if (lame_get_short_threshold_s(gfp) < 0 ) lame_set_short_threshold_s(gfp, NSATTACKTHRE_S);
@@ -1321,8 +1331,8 @@ lame_print_internals( const lame_global_flags * gfp )
     MSGF( gfc, "\npsychoacoustic:\n\n" );
     
     MSGF( gfc, "\tusing psychoacoustic model: %d\n", gfc->psymodel);
-    MSGF( gfc, "\tpsychoacoustic model: %s\n", gfc->nsPsy.use ? "NSPsytune" : "GPsycho" );
-    MSGF( gfc, "\ttonality estimation limit: %f Hz %s\n", gfc->PSY->cwlimit, gfc->nsPsy.use ? "(not relevant)" : "");
+    MSGF( gfc, "\tpsychoacoustic model: %s\n", (gfp->psymodel == PSY_NSPSYTUNE) ? "NSPsytune" : "GPsycho" );
+    MSGF( gfc, "\ttonality estimation limit: %f Hz %s\n", gfc->PSY->cwlimit, (gfp->psymodel == PSY_NSPSYTUNE) ? "(not relevant)" : "");
     switch ( gfp->short_blocks ) {
     default:
     case short_block_not_set:   pc = "?";               break;
@@ -1353,7 +1363,7 @@ lame_print_internals( const lame_global_flags * gfp )
     MSGF( gfc, "\t ^ adjust sensitivity power: %d\n", gfc->ATH->aa_sensitivity_p );
     MSGF( gfc, "\t ^ adapt threshold type: %d\n", gfp->athaa_loudapprox );
     
-    if ( gfc->nsPsy.use ) {
+    if ( gfp->psymodel == PSY_NSPSYTUNE ) {
 	MSGF(gfc, "\texperimental psy tunings by Naoki Shibata\n" );
 	MSGF(gfc, "\t   adjust masking bass=%g dB, alto=%g dB, treble=%g dB, sfb21=%g dB\n", 
 	     10*log10(gfc->nsPsy.longfact[ 0]),
@@ -2144,6 +2154,8 @@ lame_init_old(lame_global_flags * gfp)
 
     gfp->preset = 0;
     
+    gfp->psymodel = -1;
+
     gfp->sparsing = 0;
     gfp->sparse_low = 9.0;
     gfp->sparse_high = 3.0;

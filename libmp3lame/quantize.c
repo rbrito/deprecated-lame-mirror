@@ -1390,7 +1390,7 @@ calc_min_bits (
     lame_internal_flags *gfc=gfp->internal_flags;
     int min_bits, min_pe_bits;
     
-    if (gfc->nsPsy.use) return 126;
+    if (gfp->psymodel == PSY_NSPSYTUNE) return 126;
                     /*  changed minimum from 1 to 126 bits
                      *  the iteration loops require a minimum of bits
                      *  for each granule to start with; robert 2001-07-02 */
