@@ -631,14 +631,14 @@ int L3psycho_anal( lame_global_flags *gfp,
       for (b=0; b < gfc->npart_l_orig; b++ )
 	{
 #if 0
-	  static FLOAT8 tab[20] = {
-	    {  0,  1,  2,  2,  2,  2,  2,  6,9.3,9.3,9.3,9.3,9.3,9.3,9.3,9.3,9.3,9.3,9.3,9.3},
-	  };
+	  static FLOAT8 tab[20] =
+	  {  0,  1,  2,  2,  2,  2,  2,  6,9.3,9.3,9.3,9.3,9.3,9.3,9.3,9.3,9.3,9.3,9.3,9.3};
+
 	  static int init = 1;
 	  if (init) {
 	    int j;
 	      for(j=0;j<20;j++) {
-		tab[j] = pow(10.0,-tab[i][j]/10.0);
+		tab[j] = pow(10.0,-tab[j]/10.0);
 	      }
 	    init = 0;
 	  }
@@ -647,7 +647,9 @@ int L3psycho_anal( lame_global_flags *gfp,
 	          1,0.79433,0.63096,0.63096,0.63096,0.63096,0.63096,0.25119,0.11749,0.11749,
 	    0.11749,0.11749,0.11749,0.11749,0.11749,0.11749,0.11749,0.11749,0.11749,0.11749
 	  };
-	  eb2[b] = eb[b] * tab[(int)(20*tonality2[b])];
+	  int t = 20*tonality2[b];
+	  if (t > 19) t = 19;
+	  eb2[b] = eb[b] * tab[t];
 	}
     } else {
       b = 0;
