@@ -352,9 +352,9 @@ int compute_scalefacs_long(int sf[SBPSY_l],gr_info *cod_info,int scalefac[SBPSY_
  ************************************************************************/
 void
 VBR_quantize_granule(lame_global_flags *gfp,
-                FLOAT8 xr34[576], int l3_enc[2][2][576],
-		     III_psy_ratio *ratio,      III_psy_xmin l3_xmin,
-                III_scalefac_t scalefac[2][2],int gr, int ch)
+                FLOAT8 xr34[576], int l3_enc[576],
+		     III_psy_ratio *ratio,  
+                III_scalefac_t *scalefac, int gr, int ch)
 {
   lame_internal_flags *gfc=gfp->internal_flags;
   int status;
@@ -366,9 +366,9 @@ VBR_quantize_granule(lame_global_flags *gfp,
 
   /* encode scalefacs */
   if ( gfp->version == 1 ) 
-    status=scale_bitcount(&scalefac[gr][ch], cod_info);
+    status=scale_bitcount(scalefac, cod_info);
   else
-    status=scale_bitcount_lsf(&scalefac[gr][ch], cod_info);
+    status=scale_bitcount_lsf(scalefac, cod_info);
 
   if (status!=0) {
     cod_info->part2_3_length = LARGE_BITS;
@@ -376,13 +376,13 @@ VBR_quantize_granule(lame_global_flags *gfp,
   }
   
   /* quantize xr34 */
-  cod_info->part2_3_length = count_bits(gfp,l3_enc[gr][ch],xr34,cod_info);
+  cod_info->part2_3_length = count_bits(gfp,l3_enc,xr34,cod_info);
   if (cod_info->part2_3_length >= LARGE_BITS) return;
   cod_info->part2_3_length += cod_info->part2_length;
 
   
   if (gfc->use_best_huffman==1 && cod_info->block_type != SHORT_TYPE) {
-    best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
+    best_huffman_divide(gfc, gr, ch, cod_info, l3_enc);
   }
   return;
 }
@@ -427,9 +427,9 @@ int
 VBR_noise_shaping
 (
  lame_global_flags *gfp,
- FLOAT8 xr[576], III_psy_ratio *ratio,
- int l3_enc[2][2][576], int *ath_over, int minbits, int maxbits,
- III_scalefac_t scalefac[2][2],
+ FLOAT8 xr[576], FLOAT8 xr34orig[576], III_psy_ratio *ratio,
+ int l3_enc[576], int digital_silence, int minbits, int maxbits,
+ III_scalefac_t *scalefac, III_psy_xmin *l3_xmin,
  int gr,int ch)
 {
   lame_internal_flags *gfc=gfp->internal_flags;
@@ -438,7 +438,6 @@ VBR_noise_shaping
   III_scalefac_t save_sf;
   int maxover0,maxover1,maxover0p,maxover1p,maxover,mover;
   int ifqstep;
-  III_psy_xmin l3_xmin;
   III_side_info_t * l3_side;
   gr_info *cod_info;  
   FLOAT8 xr34[576];
@@ -448,14 +447,10 @@ VBR_noise_shaping
   l3_side = &gfc->l3_side;
   cod_info = &l3_side->gr[gr].ch[ch].tt;
   shortblock = (cod_info->block_type == SHORT_TYPE);
-  *ath_over = calc_xmin( gfp,xr, ratio, cod_info, &l3_xmin);
+  
+  memcpy(xr34, xr34orig, sizeof(xr34));
 
   
-  for(i=0;i<576;i++) {
-    FLOAT8 temp=fabs(xr[i]);
-    xr34[i]=sqrt(sqrt(temp)*temp);
-  }
-
 #define MAX_SF_DELTA 4  
   vbrmax=-10000;
   if (shortblock) {
@@ -465,7 +460,7 @@ VBR_noise_shaping
 	end   = gfc->scalefac_band.s[ sfb+1 ];
 	bw = end - start;
 	vbrsf.s[sfb][i] = find_scalefac(&xr[j],&xr34[j],sfb,
-					l3_xmin.s[sfb][i],bw);
+					l3_xmin->s[sfb][i],bw);
 	j += bw;
       }
     }
@@ -491,7 +486,7 @@ VBR_noise_shaping
       end   = gfc->scalefac_band.l[ sfb+1 ];
       bw = end - start;
       vbrsf.l[sfb] = find_scalefac(&xr[start],&xr34[start],sfb,
-				   l3_xmin.l[sfb],bw);
+				   l3_xmin->l[sfb],bw);
 
     }
 
@@ -517,7 +512,7 @@ VBR_noise_shaping
 
   do { 
 
-  memset(&scalefac[gr][ch],0,sizeof(III_scalefac_t));
+  memset(scalefac,0,sizeof(III_scalefac_t));
     
   if (shortblock) {
     /******************************************************************
@@ -560,7 +555,7 @@ VBR_noise_shaping
 	vbrsf.s[sfb][i]-=vbrmax;
       }
     }
-    maxover=compute_scalefacs_short(vbrsf.s,cod_info,scalefac[gr][ch].s,cod_info->subblock_gain);
+    maxover=compute_scalefacs_short(vbrsf.s,cod_info,scalefac->s,cod_info->subblock_gain);
     assert(maxover <=0);
     {
       /* adjust global_gain so at least 1 subblock gain = 0 */
@@ -582,7 +577,7 @@ VBR_noise_shaping
       for (i=0; i<3; i++) {
 	int ifac;
 	FLOAT8 fac;
-	ifac = (8*cod_info->subblock_gain[i]+ifqstep*scalefac[gr][ch].s[sfb][i]);
+	ifac = (8*cod_info->subblock_gain[i]+ifqstep*scalefac->s[sfb][i]);
 	if (ifac+210<Q_MAX) 
 	  fac = 1/IPOW20(ifac+210);
 	else
@@ -657,7 +652,7 @@ VBR_noise_shaping
       vbrsf.l[sfb] -= vbrmax;
     
     
-    maxover=compute_scalefacs_long(vbrsf.l,cod_info,scalefac[gr][ch].l);
+    maxover=compute_scalefacs_long(vbrsf.l,cod_info,scalefac->l);
     assert(maxover <=0);
     
     
@@ -666,7 +661,7 @@ VBR_noise_shaping
     for ( sfb = 0; sfb < SBPSY_l; sfb++ ) {
       int ifac;
       FLOAT8 fac;
-      ifac = ifqstep*scalefac[gr][ch].l[sfb];
+      ifac = ifqstep*scalefac->l[sfb];
       if (cod_info->preflag)
 	ifac += ifqstep*pretab[sfb];
 
@@ -683,14 +678,14 @@ VBR_noise_shaping
     }
   } 
 
-  VBR_quantize_granule(gfp,xr34,l3_enc,ratio,l3_xmin,scalefac,gr,ch);
+  VBR_quantize_granule(gfp,xr34,l3_enc,ratio,scalefac,gr,ch);
 
 
 
 
   if (cod_info->part2_3_length < minbits) {
     /* decrease global gain, recompute scale factors */
-    if (*ath_over==0) break;  
+    if (digital_silence) break;  
     //    if (cod_info->part2_3_length-cod_info->part2_length== 0) break;
     if (vbrmax+210 ==0 ) break;
     
@@ -699,11 +694,7 @@ VBR_noise_shaping
     --vbrmax;
     --global_gain_adjust;
     memcpy(&vbrsf,&save_sf,sizeof(III_scalefac_t));
-    for(i=0;i<576;i++) {
-      FLOAT8 temp=fabs(xr[i]);
-      xr34[i]=sqrt(sqrt(temp)*temp);
-    }
-
+    memcpy(xr34, xr34orig, sizeof(xr34));
   }
 
   } while ((cod_info->part2_3_length < minbits));
@@ -716,7 +707,7 @@ VBR_noise_shaping
     if (cod_info->global_gain > 255) 
       ERRORF("%ld impossible to encode this frame! bits=%d\n",
 	      gfp->frameNum,cod_info->part2_3_length);
-    VBR_quantize_granule(gfp,xr34,l3_enc,ratio,l3_xmin,scalefac,gr,ch);
+    VBR_quantize_granule(gfp,xr34,l3_enc,ratio,scalefac,gr,ch);
 
     ++global_gain_adjust;
   }
@@ -735,6 +726,7 @@ VBR_quantize(lame_global_flags *gfp,
                 int l3_enc[2][2][576],
                 III_scalefac_t scalefac[2][2])
 {
+  III_psy_xmin l3_xmin[2][2];
   lame_internal_flags *gfc=gfp->internal_flags;
   int minbits,maxbits,max_frame_bits,totbits,gr,ch,i,bits_ok;
   int bitsPerFrame,mean_bits;
@@ -742,8 +734,9 @@ VBR_quantize(lame_global_flags *gfp,
   FLOAT8 qadjust;
   III_side_info_t * l3_side;
   gr_info *cod_info;  
-  int ath_over[2][2];
-  FLOAT8 masking_lower_db;
+  int digital_silence[2][2];
+  FLOAT8 masking_lower_db=0;
+  FLOAT8 xr34[2][2][576];
   // static const FLOAT8 dbQ[10]={-6.0,-5.0,-4.0,-3.0, -2.0, -1.0, -.25, .5, 1.25, 2.0};
   /* from quantize.c VBR algorithm */
   /*static const FLOAT8 dbQ[10]=
@@ -759,13 +752,14 @@ VBR_quantize(lame_global_flags *gfp,
   iteration_init(gfp,l3_side,l3_enc);
 
 
-  /* analog silence detection */
+  /* now find out: if the frame can be considered analog silent
+   *               if each granule can be considered digital silent
+   * and calculate l3_xmin and the fresh xr34 array
+   */
 
-  analog_silence=1;
   assert( gfp->VBR_q <= 9 );
   assert( gfp->VBR_q >= 0 );
-  masking_lower_db = dbQ[gfp->VBR_q];
-  gfc->masking_lower = pow(10.0,masking_lower_db/10);
+  analog_silence=1;
   for (gr = 0; gr < gfc->mode_gr; gr++) {
     /* copy data to be quantized into xr */
     if (gfc->mode_ext==MPG_MD_MS_LR) {
@@ -776,17 +770,39 @@ VBR_quantize(lame_global_flags *gfp,
        * then we would only have to call calc_xmin once here and
        * could drop subsequently calls (rh 2000/07/17)
        */
-      III_psy_xmin l3_xmin;
       int over_ath;
       cod_info = &l3_side->gr[gr].ch[ch].tt;
       cod_info->part2_3_length=LARGE_BITS;
-      over_ath = calc_xmin(gfp,xr[gr][ch],&ratio[gr][ch],cod_info,&l3_xmin);
+      
+      /* quality setting */
+      masking_lower_db = dbQ[gfp->VBR_q];
+      if (pe[gr][ch]>750) {
+        masking_lower_db -= Min(10,4*(pe[gr][ch]-750.)/750.);
+      }
+      gfc->masking_lower = pow(10.0,masking_lower_db/10);
+      
+      /* masking thresholds */
+      over_ath = calc_xmin(gfp,xr[gr][ch],ratio[gr]+ch,cod_info,l3_xmin[gr]+ch);
+      
+      /* if there are bands with more energy than the ATH 
+       * then we say the frame is not analog silent */
       if (over_ath) {
         analog_silence = 0;
       }
-    }
-  }
+      
+      /* if there is no line with more energy than 1e-20
+       * then this granule is considered to be digital silent
+       * plus calculation of xr34 */
+      digital_silence[gr][ch] = 1;
+      for(i=0;i<576;i++) {
+        FLOAT8 temp=fabs(xr[gr][ch][i]);
+        xr34[gr][ch][i]=sqrt(sqrt(temp)*temp);
+        digital_silence[gr][ch] &= temp < 1E-20;
+      }
+    } /* ch */
+  }  /* gr */
 
+  
   /* compute minimum allowed bits from minimum allowed bitrate */
   if (analog_silence) {
     gfc->bitrate_index=1;
@@ -847,58 +863,66 @@ VBR_quantize(lame_global_flags *gfp,
 
 #if 0
       if (gfc->mode_ext==MPG_MD_MS_LR) {
-	FLOAT8 fac;
-	fac = .33*(.5-ms_ener_ratio[gr])/.5;
-	if (fac<0) fac=0;
-	if (fac>.5) fac=.5;
-	minbits_lr[0] = (1+fac)*minbits;
-	minbits_lr[1] = Max(125,(1-fac)*minbits);
+        FLOAT8 fac;
+        fac = .33*(.5-ms_ener_ratio[gr])/.5;
+        if (fac<0) fac=0;
+        if (fac>.5) fac=.5;
+        minbits_lr[0] = (1+fac)*minbits;
+        minbits_lr[1] = Max(125,(1-fac)*minbits);
       }
 #endif
 
 
       for (ch = 0; ch < gfc->stereo; ch++) { 
-	int adjusted,shortblock;
-	cod_info = &l3_side->gr[gr].ch[ch].tt;
-	
-	/* ENCODE this data first pass, and on future passes unless it uses
-	 * a very small percentage of the max_frame_bits  */
-	if (cod_info->part2_3_length > (max_frame_bits/(2*gfc->stereo*gfc->mode_gr))) {
-	  
-	  shortblock = (cod_info->block_type == SHORT_TYPE);
-	  
-	  /* Adjust allowed masking based on quality setting */
-	  assert( gfp->VBR_q <= 9 );
-	  assert( gfp->VBR_q >= 0 );
-	  masking_lower_db = dbQ[gfp->VBR_q] + qadjust;
+        int adjusted,shortblock;
+        cod_info = &l3_side->gr[gr].ch[ch].tt;
+        
+        /* ENCODE this data first pass, and on future passes unless it uses
+         * a very small percentage of the max_frame_bits  */
+        if (cod_info->part2_3_length > (max_frame_bits/(2*gfc->stereo*gfc->mode_gr))) {
+  
+          shortblock = (cod_info->block_type == SHORT_TYPE);
+  
+          /* Adjust allowed masking based on quality setting */
+          if (qadjust!=0 /*|| shortblock*/) {
+            masking_lower_db = dbQ[gfp->VBR_q] + qadjust;
 
-	  if (pe[gr][ch]>750)
-	    masking_lower_db -= Min(10,4*(pe[gr][ch]-750.)/750.);
-	  /*
-	  if (shortblock) masking_lower_db -= 4;
-	  */
-	  
-	  gfc->masking_lower = pow(10.0,masking_lower_db/10);
-	    
-	  adjusted = VBR_noise_shaping (gfp,xr[gr][ch],&ratio[gr][ch],l3_enc,
-              &ath_over[gr][ch],minbits_lr[ch],maxbits,scalefac,gr,ch);
-	  if (adjusted>10) {
-	    /* global_gain was changed by a large amount to get bits < maxbits */
-	    /* quality is set to high.  we could set bits = LARGE_BITS
-	     * to force re-encoding.  But most likely the other channels/granules
-	     * will also use too many bits, and the entire frame will
-	     * be > max_frame_bits, forcing re-encoding below.
-	     */
-	    //	 cod_info->part2_3_bits = LARGE_BITS;
-	  }
-	}
-	totbits += cod_info->part2_3_length;
+            /*
+            if (shortblock) masking_lower_db -= 4;
+            */
+     
+            if (pe[gr][ch]>750)
+              masking_lower_db -= Min(10,4*(pe[gr][ch]-750.)/750.);
+            gfc->masking_lower = pow(10.0,masking_lower_db/10);
+            calc_xmin( gfp,xr[gr][ch], ratio[gr]+ch, cod_info, l3_xmin[gr]+ch);
+          }
+          
+          /* digital silent granules do not need the full round trip,
+           * but this can be optimized later on
+           */
+          adjusted = VBR_noise_shaping (gfp,xr[gr][ch],xr34[gr][ch],
+                                        ratio[gr]+ch,l3_enc[gr][ch],
+                                        digital_silence[gr][ch],
+                                        minbits_lr[ch],
+                                        maxbits,scalefac[gr]+ch,
+                                        l3_xmin[gr]+ch,gr,ch);
+          if (adjusted>10) {
+            /* global_gain was changed by a large amount to get bits < maxbits */
+            /* quality is set to high.  we could set bits = LARGE_BITS
+             * to force re-encoding.  But most likely the other channels/granules
+             * will also use too many bits, and the entire frame will
+             * be > max_frame_bits, forcing re-encoding below.
+             */
+            // cod_info->part2_3_bits = LARGE_BITS;
+          }
+        }
+        totbits += cod_info->part2_3_length;
       }
     }
     bits_ok=1;
     if (totbits>max_frame_bits) {
       /* maybe doing a CBR encoding would speed up things at this point?
-       */
+       * but this is more in line with the VBR quality idea */
       qadjust += Max(.25,(totbits-max_frame_bits)/300.0);
       //      DEBUGF("%i totbits>max_frame_bits   totbits=%i  maxbits=%i \n",gfp->frameNum,totbits,max_frame_bits);
       //      DEBUGF("next masking_lower_db = %f \n",masking_lower_db + qadjust);
@@ -924,29 +948,28 @@ VBR_quantize(lame_global_flags *gfp,
   if (gfp->gtkflag) {
     for (gr = 0; gr < gfc->mode_gr; gr++) {
       for (ch = 0; ch < gfc->stereo; ch++) {
-	III_psy_xmin l3_xmin;
-	calc_noise_result noise_info;
-	FLOAT8 noise[4];
-	FLOAT8 xfsf[4][SBMAX_l];
-	FLOAT8 distort[4][SBMAX_l];
+        III_psy_xmin l3_xmin;
+        calc_noise_result noise_info;
+        FLOAT8 noise[4];
+        FLOAT8 xfsf[4][SBMAX_l];
+        FLOAT8 distort[4][SBMAX_l];
 
-	cod_info = &l3_side->gr[gr].ch[ch].tt;
+        cod_info = &l3_side->gr[gr].ch[ch].tt;
 
-	/* recompute allowed noise with no 'masking_lower' for
-	 * frame analyzer */
-	gfc->masking_lower=1.0;
-	cod_info = &l3_side->gr[gr].ch[ch].tt;	
-	calc_xmin( gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin);
-	
-	calc_noise( gfp, xr[gr][ch], l3_enc[gr][ch], cod_info, 
-			      xfsf,distort, &l3_xmin, &scalefac[gr][ch], 
-			      &noise_info);
-	noise[0] = noise_info.over_count;
-	noise[1] = noise_info.max_noise;
-	noise[2] = noise_info.over_noise;
-	noise[3] = noise_info.tot_noise;
+        /* recompute allowed noise with no 'masking_lower' for
+         * frame analyzer */
+        gfc->masking_lower=1.0;
+        cod_info = &l3_side->gr[gr].ch[ch].tt;
+        calc_xmin( gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin);
 
-	set_pinfo (gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
+        calc_noise( gfp, xr[gr][ch], l3_enc[gr][ch], cod_info, 
+                    xfsf,distort, &l3_xmin, &scalefac[gr][ch], &noise_info);
+        noise[0] = noise_info.over_count;
+        noise[1] = noise_info.max_noise;
+        noise[2] = noise_info.over_noise;
+        noise[3] = noise_info.tot_noise;
+
+        set_pinfo (gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
       }
     }
   }
