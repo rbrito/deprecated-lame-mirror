@@ -816,6 +816,23 @@ lame_get_highpasswidth( const lame_global_flags*  gfp )
  * unless you know what you are doing
  */
 
+/* Adjust masking values. */
+int
+lame_set_maskingadjust( lame_global_flags*  gfp,
+                   float               adjust )
+{
+    gfp->internal_flags->masking_lower = db2pow(adjust);
+    return 0;
+}
+
+int
+lame_set_maskingadjust_short( lame_global_flags*  gfp,
+                   float               adjust )
+{
+    gfp->internal_flags->masking_lower_short = db2pow(adjust);
+    return 0;
+}
+
 /* Only use ATH for masking. */
 int
 lame_set_ATHonly( lame_global_flags*  gfp,

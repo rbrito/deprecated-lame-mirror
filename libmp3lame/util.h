@@ -360,6 +360,7 @@ struct lame_internal_flags {
     FLOAT rnumlines_l[CBANDS];
     FLOAT rnumlines_ls[CBANDS];
     FLOAT masking_lower;
+    FLOAT masking_lower_short;
     FLOAT interChRatio;
 
     /* for next frame data */

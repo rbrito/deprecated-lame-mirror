@@ -224,7 +224,7 @@ calc_xmin(
 		    } while ((l+=2) < 0);
 		    x *= en0;
 		}
-		x *= gfc->masking_lower;
+		x *= gfc->masking_lower_short;
 		if (threshold < x)
 		    threshold = x;
 	    }

@@ -303,7 +303,10 @@ static int apply_preset(lame_global_flags*  gfp, int bitrate, vbr_mode mode)
 	lame_set_narrowenStereo(gfp, switch_map[r].narrow_stereo);
 
     if (gfp->internal_flags->masking_lower < 0.0)
-	gfp->internal_flags->masking_lower = db2pow(switch_map[r].mask_lower);
+	lame_set_maskingadjust(gfp, switch_map[r].mask_lower);
+
+    if (gfp->internal_flags->masking_lower_short < 0.0)
+	lame_set_maskingadjust_short(gfp, switch_map[r].mask_lower);
 
     return bitrate;
 }
@@ -1462,6 +1465,7 @@ lame_init_old(lame_global_flags * gfp)
     gfc->nsPsy.msfix = NS_MSFIX*SQRT2;
     gfc->interChRatio = -1.0;
     gfc->masking_lower = -1.0;
+    gfc->masking_lower_short = -1.0;
     gfp->ATHlower = -1.0;
     gfp->ATHcurve = -1;
 
