@@ -675,7 +675,10 @@ inc_subblock_gain(gr_info * const gi, FLOAT distort[])
 
 	gi->subblock_gain[subwin+1]++;
 	for (sfb = gi->sfb_lmax+subwin; sfb < gi->psymax; sfb += 3) {
-	    int s = gi->scalefac[sfb] - (4 >> gi->scalefac_scale);
+	    int s;
+	    if (gi->scalefac[sfb] < 0)
+		continue;
+	    s = gi->scalefac[sfb] - (4 >> gi->scalefac_scale);
 	    if (s < 0) {
 		distort[sfb] = (FLOAT)-1.0;
 		s = 0;
@@ -685,6 +688,27 @@ inc_subblock_gain(gr_info * const gi, FLOAT distort[])
 	}
     }
     return 0;
+}
+
+static int 
+inc_subblock_gain2(gr_info * const gi, int subwin)
+{
+    int sfb, ret = -1;
+    gi->subblock_gain[subwin]++;
+    for (sfb = gi->sfb_lmax+subwin-1; sfb < gi->psymax; sfb += 3) {
+	int s;
+	if (gi->scalefac[sfb] < 0)
+	    continue;
+	s = gi->scalefac[sfb] - (4 >> gi->scalefac_scale);
+	if (s < 0) {
+	    if (ret < 0)
+		ret = sfb;
+	    s = 0;
+	}
+	if (sfb < gi->sfbmax)
+	    gi->scalefac[sfb] = s;
+    }
+    return ret;
 }
 
 /*************************************************************************
@@ -1315,7 +1339,7 @@ short_block_scalefacs(gr_info * gi, int vbrmax)
 	vbrmax = 255;
 
     for (b = 0; b < 3; b++) {
-	int sbg = (vbrmax - maxov[gi->scalefac_scale][b] + 7) >> 3;
+	int sbg = (vbrmax - maxov[(int)gi->scalefac_scale][b] + 7) >> 3;
 	if (sbg < 0)
 	    sbg = 0;
 	if (sbg > 7)
@@ -1454,11 +1478,16 @@ VBR_2nd_bitalloc(lame_t gfc, gr_info *gi, FLOAT * xmin)
 	sfb = noisesfb(gfc, &gi_w, xmin, sfb);
 	if (sfb >= 0) {
 	    if (sfb >= gi->sfbmax) { /* noise in sfb21 */
-		if (endflag == 2 || gi_w.global_gain == 0)
-		    return 0;
-		endflag |= 1;
-		gi_w.global_gain--;
-		sfb = 0;
+		if (gi_w.wi[sfb].window
+		    && gi_w.subblock_gain[gi_w.wi[sfb].window] < 7) {
+		    sfb = inc_subblock_gain2(&gi_w, gi_w.wi[sfb].window);
+		} else {
+		    if (endflag == 2 || gi_w.global_gain == 0)
+			return 0;
+		    endflag |= 1;
+		    gi_w.global_gain--;
+		    sfb = 0;
+		}
 	    } else {
 		gi_w.scalefac[sfb]++;
 		if (IPOW20(scalefactor(&gi_w, sfb)) > gfc->maxXR[sfb]
