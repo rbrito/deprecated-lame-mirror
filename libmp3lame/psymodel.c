@@ -1285,6 +1285,69 @@ static void nsPsy2dataRead(
 	eb2[b] = eb2[b] * eb[b];
 }
 
+static FLOAT
+pecalc_s(
+    III_psy_ratio *mr,
+    FLOAT8 masking_lower
+    )
+{
+    FLOAT8 pe_s;
+    const static FLOAT8 regcoef_s[] = {
+	0, 0, 0, /* I don't know why there're 0 -tt- */
+	0.434542,25.0738,
+	0, 0, 0,
+	19.5442,19.7486,60,100,0
+    };
+    int sb, sblock;
+
+    pe_s = 1236.28/4;
+    for(sblock=0;sblock<3;sblock++) {
+	for ( sb = 0; sb < SBMAX_s; sb++ ) {
+	    if (mr->thm.s[sb][sblock] <= 0.0
+		|| regcoef_s[sb] == 0.0
+		|| mr->en.s[sb][sblock]
+		<= mr->thm.s[sb][sblock] * masking_lower)
+		continue;
+
+	    pe_s += regcoef_s[sb] *
+		log(mr->en.s[sb][sblock]
+		    / (mr->thm.s[sb][sblock] * masking_lower));
+	}
+    }
+    return pe_s;
+}
+
+static FLOAT
+pecalc_l(
+    III_psy_ratio *mr,
+    FLOAT8 masking_lower
+    )
+{
+    FLOAT8 pe_l;
+    const static FLOAT8 regcoef_l[] = {
+	10.0583,10.7484,7.29006,16.2714,6.2345,4.09743,3.05468,3.33196,
+	2.54688, 3.68168,5.83109,2.93817,-8.03277,-10.8458,8.48777,
+	9.13182,2.05212,8.6674,50.3937,73.267,97.5664,0
+    };
+    int sb;
+
+    pe_l = 1124.23/4;
+    for ( sb = 0; sb < SBMAX_l; sb++ ) {
+	if (mr->thm.l[sb] == 0.0
+	    || mr->en.l[sb] <= mr->thm.l[sb]*masking_lower)
+	    continue;
+
+	pe_l += regcoef_l[sb] * 
+	    log(mr->en.l[sb] / (mr->thm.l[sb]*masking_lower));
+    }
+
+    return pe_l;
+}
+
+
+
+
+
 int L3psycho_anal_ns( lame_global_flags * gfp,
                     const sample_t *buffer[2], int gr_out, 
                     FLOAT8 *ms_ratio,
@@ -1655,44 +1718,8 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
     for(chn=0;chn<numchn;chn++) {
 	FLOAT8 *ppe;
 	int type;
-	FLOAT8 pe_l, pe_s;
-	const static FLOAT8 regcoef_l[] = {
-	    10.0583,10.7484,7.29006,16.2714,6.2345,4.09743,3.05468,3.33196,
-	    2.54688, 3.68168,5.83109,2.93817,-8.03277,-10.8458,8.48777,
-	    9.13182,2.05212,8.6674,50.3937,73.267,97.5664,0
-	};
-	const static FLOAT8 regcoef_s[] = {
-	    0, 0, 0, /* I don't know why there're 0 -tt- */
-	    0.434542,25.0738,
-	    0, 0, 0,
-	    19.5442,19.7486,60,100,0
-	};
-
-	pe_l = 1124.23/4;
-	for ( sb = 0; sb < SBMAX_l; sb++ ) {
-	    if (gfc->thm[chn].l[sb] == 0.0
-		|| gfc->en[chn].l[sb] <= gfc->thm[chn].l[sb]*gfc->masking_lower)
-		continue;
-
-	    pe_l += regcoef_l[sb] * 
-		log(gfc->en[chn].l[sb]
-		    / (gfc->thm[chn].l[sb]*gfc->masking_lower));
-	}
-
-	pe_s = 1236.28/4;
-	for(sblock=0;sblock<3;sblock++) {
-	    for ( sb = 0; sb < SBMAX_s; sb++ ) {
-		if (gfc->thm[chn].s[sb][sblock] <= 0.0
-		    || regcoef_s[sb] == 0.0
-		    || gfc->en[chn].s[sb][sblock]
-		    <= gfc->thm[chn].s[sb][sblock] * gfc->masking_lower)
-		    continue;
-
-		pe_s += regcoef_s[sb] *
-		    log(gfc->en[chn].s[sb][sblock]
-			/ (gfc->thm[chn].s[sb][sblock] * gfc->masking_lower));
-	    }
-	}
+	FLOAT8 prePE;
+	III_psy_ratio *mr;
 
 	ppe = percep_entropy;
 	if (chn > 1) {
@@ -1700,16 +1727,17 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	    type = NORM_TYPE;
 	    if (blocktype_d[0] == SHORT_TYPE || blocktype_d[1] == SHORT_TYPE)
 		type = SHORT_TYPE;
-	} else
+	    mr = &masking_MS_ratio[gr_out][chn-2];
+	} else {
 	    type = blocktype_d[chn];
+	    mr = &masking_ratio[gr_out][chn];
+	}
 
 	if (type == SHORT_TYPE)
-	    ppe[chn] = gfc->nsPsy.pe_s[chn];
+	    ppe[chn] = pecalc_s(mr, gfc->masking_lower);
 	else
-	    ppe[chn] = gfc->nsPsy.pe_l[chn];
+	    ppe[chn] = pecalc_l(mr, gfc->masking_lower);
 
-	gfc->nsPsy.pe_s[chn] = pe_s;
-	gfc->nsPsy.pe_l[chn] = pe_l;
 #if defined(HAVE_GTK)
 	if (gfp->analysis) gfc->pinfo->pe[gr_out][chn] = ppe[chn];
 #endif
@@ -1910,7 +1938,6 @@ int psymodel_init(lame_global_flags *gfp)
 	}
 	for(j=0;j<9;j++)
 	    gfc->nsPsy.last_en_subshort[i][j] = 100;
-	gfc->nsPsy.pe_l[i] = gfc->nsPsy.pe_s[i] = 0;
     }
 
 
