@@ -457,6 +457,17 @@ lame_encoder(lame_global_flags * gf, FILE * outf, int nogap, char *inPath,
 
     fwrite(mp3buffer, 1, imp3, outf);
 
+    /* id3 tag */
+    if (input_format == sf_mp3) {
+#define ID3TAGSIZE 128
+	extern FILE * musicin;
+	char id3tag[ID3TAGSIZE];
+	fseek(musicin, -ID3TAGSIZE, SEEK_CUR);
+	fread(id3tag, 1, ID3TAGSIZE, musicin);
+	if (memcmp(id3tag, "TAG", 3) == 0) {
+	    fwrite(id3tag, 1, ID3TAGSIZE, outf);
+	}
+    }
     return 0;
 }
 
