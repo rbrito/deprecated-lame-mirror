@@ -932,7 +932,7 @@ read_samples_pcm(FILE * musicin, short sample_buffer[2304], int frame_size,
         samples_read = fread(temp, 1, samples_to_read, musicin);
         for (i = 0; i < samples_read; ++i) {
             /* note: 8bit .wav samples are unsigned */
-            sample_buffer[i] = ((short int) temp[i] - 127) * 256;
+            sample_buffer[i] = ((short int) temp[i] - 128) * 256;
         }
     }
     else {
