@@ -47,17 +47,17 @@
 #include "asmstuff.h"
 #endif
 
-/* Global variable definitions for lame.c */
-Bit_stream_struc   bs;
-III_side_info_t l3_side;
-frame_params fr_ps;
-int target_bitrate;
-static layer info;
-
-
 /* Global flags substantiated here.  defined extern in globalflags.h */
 /* default values set in lame_init() */
 lame_global_flags gf;
+
+
+/* Global variable definitions for lame.c */
+static Bit_stream_struc   bs;
+static III_side_info_t l3_side;
+static frame_params fr_ps;
+static int target_bitrate;
+static layer info;
 
 
 
