@@ -461,12 +461,12 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --mixedblock    use mixed blocks(experimental)\n"
               "    --notemp        disable temporal masking effect\n"
               "    --nssafejoint   M/S switching criterion\n"
-              "    --nsmsfix <arg> M/S switching tuning [effective 0-3.5]\n"
+              "    --nsmsfix <arg> M/S switching tuning\n"
               "    --interch x     adjust inter-channel masking ratio\n"
-              "    --ns-bass x     adjust masking for sfbs  0 -  6 (long)  0 -  5 (short)\n"
-              "    --ns-alto x     adjust masking for sfbs  7 - 13 (long)  6 - 10 (short)\n"         
-              "    --ns-treble x   adjust masking for sfbs 14 - 21 (long) 11 - 12 (short)\n"
-              "    --ns-sfb21 x    change ns-treble by x dB for sfb21\n"
+              "    --ns-bass x     adjust masking for  0 -  6 bark\n"
+              "    --ns-alto x     adjust masking for  6 - 12 bark\n"         
+              "    --ns-treble x   adjust masking for 12 - 18 bark\n"
+              "    --ns-sfb21 x    change ns-treble by x dB for 18- bark\n"
 #if 0
 /* this is redundant, we already have --notemp */
               "    --temporal-masking n  use temporal masking effect n=0:no n=1:yes\n"
