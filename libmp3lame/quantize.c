@@ -805,13 +805,7 @@ outer_loop (
 	    age = 0;
 
 	/* stopping criteria */
-	if (--age > 0 && cod_info_w.global_gain != 256
-	    /* Check if the last scalefactor band is distorted.
-	     * (makes a 10% speed increase, the files I tested were
-	     * binary identical, 2000/05/20 Robert Hegemann)
-	     * distort[] > 1 means noise > allowed noise
-	     */
-	    && !(cod_info_w.psy_lmax == SBMAX_l && distort[SBMAX_l-1] > 1.0))
+	if (--age > 0 && cod_info_w.global_gain != 256)
 	    continue;
 
 	/* seems we cannot get a better combination.
