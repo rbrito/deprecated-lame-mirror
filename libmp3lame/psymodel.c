@@ -148,9 +148,9 @@ be masked by strong maskers in the L or R channels.
 #define rpelev 2
 #define rpelev2 16
 
+/* size of each partition band, in barks: */
+#define DELBARK .34
 
-/*  use a simplified spreading function: */
-/*#define NEWS3  */ 
 
 #if 1
     /* AAC values, results in more masking over MP3 values */
@@ -1799,6 +1799,50 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 }
 
 
+
+
+/* 
+ *   The spreading function.  Values returned in units of energy
+ */
+FLOAT8 s3_func(FLOAT8 bark) {
+    
+    FLOAT8 tempx,x,tempy,temp;
+    tempx = bark;
+    if (tempx>=0) tempx *= 3;
+    else tempx *=1.5; 
+    
+    if(tempx>=0.5 && tempx<=2.5)
+	{
+	    temp = tempx - 0.5;
+	    x = 8.0 * (temp*temp - 2.0 * temp);
+	}
+    else x = 0.0;
+    tempx += 0.474;
+    tempy = 15.811389 + 7.5*tempx - 17.5*sqrt(1.0+tempx*tempx);
+    
+    if (tempy <= -60.0) return  0.0;
+
+    tempx = exp( (x + tempy)*LN_TO_LOG10 ); 
+
+    /* Normalization.  The spreading function should be normalized so that:
+         +inf
+           /
+           |  s3 [ bark ]  d(bark)   =  1
+           /
+         -inf
+    */
+    tempx /= .6609193;
+    return tempx;
+    
+}
+
+
+
+
+
+
+
+
 int L3para_read(lame_global_flags * gfp, FLOAT8 sfreq, int *numlines_l,int *numlines_s, 
 FLOAT8 *minval,
 FLOAT8 s3_l[CBANDS][CBANDS], FLOAT8 s3_s[CBANDS][CBANDS],
@@ -1812,6 +1856,7 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 
   FLOAT8 freq_tp;
   FLOAT8 bval_l[CBANDS], bval_s[CBANDS];
+  FLOAT8 bval_l_width[CBANDS], bval_s_width[CBANDS];
   int   cbmax=0, cbmax_tp;
   const FLOAT* p = psy_data;
   int  sbmax ;
@@ -1977,21 +2022,21 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
   j=0;
   for(i=0;i<CBANDS;i++)
     {
-      FLOAT8 ji, bark1,bark2,delbark=.34;
+      FLOAT8 ji, bark1,bark2;
       int k,j2;
 
       j2 = j;
       j2 = Min(j2,BLKSIZE/2);
       
       do {
-	/* find smallest j2 >= j so that  (bark - bark_l[i-1]) < delbark */
+	/* find smallest j2 >= j so that  (bark - bark_l[i-1]) < DELBARK */
 	ji = j;
 	bark1 = freq2bark(sfreq*ji/BLKSIZE);
 	
 	++j2;
 	ji = j2;
 	bark2  = freq2bark(sfreq*ji/BLKSIZE);
-      } while ((bark2 - bark1) < delbark  && j2<=BLKSIZE/2);
+      } while ((bark2 - bark1) < DELBARK  && j2<=BLKSIZE/2);
 
       for (k=j; k<j2; ++k)
 	partition[k]=i;
@@ -2033,16 +2078,18 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
   j = 0;
   for ( i = 0; i < *npart_l_orig; i++ ) {
       int     k;
-      FLOAT8  bark;
+      FLOAT8  bark1,bark2;
       /* FLOAT8 mval,freq; */
 
       // Calculating the medium bark scaled frequency of the spectral lines
-      // from j ... j + numlines[i]-1  (scaleband i ???)
+      // from j ... j + numlines[i]-1  (=spectral lines in parition band i)
 
       k         = numlines_l[i] - 1;
-      bark      = 0.5 * ( freq2bark (sfreq*(j+0)/BLKSIZE) + 
-                          freq2bark (sfreq*(j+k)/BLKSIZE) );
-      bval_l[i] = bark;
+      bark1 = freq2bark(sfreq*(j+0)/BLKSIZE);
+      bark2 = freq2bark(sfreq*(j+k)/BLKSIZE);
+      
+      bval_l[i] = .5*(bark1+bark2);
+      bval_l_width[i] = bark2-bark1;
 
       gfc->ATH->cb [i] = 1.e37; // preinit for minimum search
       for (k=0; k < numlines_l[i]; k++, j++) {
@@ -2079,39 +2126,7 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 
 
 
-  /************************************************************************
-   * Now compute the spreading function, s[j][i], the value of the spread-*
-   * ing function, centered at band j, for band i, store for later use    *
-   ************************************************************************/
-  /* i.e.: sum over j to spread into signal barkval=i  
-     NOTE: i and j are used opposite as in the ISO docs */
-  for(i=0;i<*npart_l_orig;i++)
-    {
-      FLOAT8 tempx,x,tempy,temp;
-      for(j=0;j<*npart_l_orig;j++)
-	{
-          if (i>=j) tempx = (bval_l[i] - bval_l[j])*3.0;
-	  else    tempx = (bval_l[i] - bval_l[j])*1.5; 
 
-	  if(tempx>=0.5 && tempx<=2.5)
-	    {
-	      temp = tempx - 0.5;
-	      x = 8.0 * (temp*temp - 2.0 * temp);
-	    }
-	  else x = 0.0;
-	  tempx += 0.474;
-	  tempy = 15.811389 + 7.5*tempx - 17.5*sqrt(1.0+tempx*tempx);
-
-	  /*
-	  if ((i==cbmax/2)  && (fabs(bval_l[j] - bval_l[i])) < 3) {
-	    DEBUGF("bark=%f   x+tempy = %f  \n",bval_l[j] - bval_l[i],x+tempy);
-	  }
-	  */
-
-	  if (tempy <= -60.0) s3_l[i][j] = 0.0;
-	  else                s3_l[i][j] = exp( (x + tempy)*LN_TO_LOG10 ); 
-	}
-    }
 
 
   /************************************************************************/
@@ -2123,14 +2138,14 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
   j=0;
   for(i=0;i<CBANDS;i++)
     {
-      FLOAT8 ji, bark1,bark2,delbark=.34;
+      FLOAT8 ji, bark1,bark2;
       int k,j2;
 
       j2 = j;
       j2 = Min(j2,BLKSIZE_s/2);
       
       do {
-	/* find smallest j2 >= j so that  (bark - bark_s[i-1]) < delbark */
+	/* find smallest j2 >= j so that  (bark - bark_s[i-1]) < DELBARK */
 	ji = j;
 	bark1  = freq2bark(sfreq*ji/BLKSIZE_s);
 	
@@ -2138,7 +2153,7 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
 	ji = j2;
 	bark2  = freq2bark(sfreq*ji/BLKSIZE_s);
 
-      } while ((bark2 - bark1) < delbark  && j2<=BLKSIZE_s/2);
+      } while ((bark2 - bark1) < DELBARK  && j2<=BLKSIZE_s/2);
 
       /*
       DEBUGF("%i old n=%i  %f old numlines:  %i   new=%i (%i,%i) (%f,%f) \n",
@@ -2186,19 +2201,22 @@ i,*npart_s_orig,freq,numlines_s[i],j2-j,j,j2-1,bark1,bark2);
   for(i=0;i<*npart_s_orig;i++)
     {
       int     k;
-      FLOAT8  bark,snr;
+      FLOAT8  bark1,bark2,snr;
       k    = numlines_s[i] - 1;
-      bark = 0.5 * (freq2bark (sfreq*(j+0)/BLKSIZE_s) +
-                    freq2bark (sfreq*(j+k)/BLKSIZE_s) );
-      bval_s[i] = bark;
-      j        += k+1;
 
+      bark1 = freq2bark (sfreq*(j+0)/BLKSIZE_s);
+      bark2 = freq2bark (sfreq*(j+k)/BLKSIZE_s); 
+      
+      bval_s[i] = .5*(bark1+bark2);
+      bval_s_width[i] = bark2-bark1;
+      j        += k+1;
+      
       /* SNR formula */
       if (bval_s[i]<13)
           snr=-8.25;
       else 
-         snr  = -4.5 * (bval_s[i]-13)/(24.0-13.0)  + 
-                -8.25*(bval_s[i]-24)/(13.0-24.0);
+	  snr  = -4.5 * (bval_s[i]-13)/(24.0-13.0)  + 
+	      -8.25*(bval_s[i]-24)/(13.0-24.0);
 #ifdef NOTABLES
       SNR[i]=pow(10.0,snr/10.0);
       //fprintf(stderr,"%2i old SNR=%f(%f)  new = %f(%f) \n ",i,10*log10(SNR[i]),SNR[i],snr,pow(10.0,snr/10.0));
@@ -2216,27 +2234,19 @@ i,*npart_s_orig,freq,numlines_s[i],j2-j,j,j2-1,bark1,bark2);
    * Now compute the spreading function, s[j][i], the value of the spread-*
    * ing function, centered at band j, for band i, store for later use    *
    ************************************************************************/
-  for(i=0;i<*npart_s_orig;i++)
-    {
-      FLOAT8 tempx,x,tempy,temp;
-      for(j=0;j<*npart_s_orig;j++)
-	{
-          if (i>=j) tempx = (bval_s[i] - bval_s[j])*3.0;
-	  else    tempx = (bval_s[i] - bval_s[j])*1.5; 
-
-	  if(tempx>=0.5 && tempx<=2.5)
-	    {
-	      temp = tempx - 0.5;
-	      x = 8.0 * (temp*temp - 2.0 * temp);
-	    }
-	  else x = 0.0;
-	  tempx += 0.474;
-	  tempy = 15.811389 + 7.5*tempx - 17.5*sqrt(1.0+tempx*tempx);
-	  if (tempy <= -60.0) s3_s[i][j] = 0.0;
-	  else                s3_s[i][j] = exp( (x + tempy)*LN_TO_LOG10 );
-	}
-    }
-
+  /* i.e.: sum over j to spread into signal barkval=i  
+     NOTE: i and j are used opposite as in the ISO docs */
+  for(i=0;i<*npart_l_orig;i++)    {
+      for(j=0;j<*npart_l_orig;j++) 	{
+  	  s3_l[i][j]=s3_func(bval_l[i]-bval_l[j]);
+      }
+  }
+  for(i=0;i<*npart_s_orig;i++)     {
+      for(j=0;j<*npart_s_orig;j++) 	{
+  	  s3_s[i][j]=s3_func(bval_s[i]-bval_s[j]);
+      }
+  }
+  
 
 
 
@@ -2455,7 +2465,7 @@ int psymodel_init(lame_global_flags *gfp)
 	/* long block spreading function normalization */
 	for ( b = 0;b < gfc->npart_l; b++ ) {
 	    for ( k = gfc->s3ind[b][0]; k <= gfc->s3ind[b][1]; k++ ) {
-		gfc->s3_l[b][k] *= 0.5;
+		gfc->s3_l[b][k] *= 0.5*.6609193; ;
 	    }
 	}
 	/* short block spreading function normalization */
