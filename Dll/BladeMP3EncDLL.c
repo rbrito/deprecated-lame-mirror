@@ -37,7 +37,7 @@
 
 // lame_enc DLL version number
 const int MAJORVERSION = 1;
-const int MINORVERSION = 29;
+const int MINORVERSION = 30;
 
 
 // Local variables
@@ -62,12 +62,14 @@ static void DebugPrintf(const char* pzFormat, ...)
     va_list ap;
 
 	// Get the full module (DLL) file name
-	GetModuleFileName(gs_hModule,szFileName,sizeof(szFileName));
+	GetModuleFileName(	gs_hModule, 
+						szFileName,
+						sizeof( szFileName ) );
 
 	// change file name extention
-	szFileName[strlen(szFileName)-3]='t';
-	szFileName[strlen(szFileName)-2]='x';
-	szFileName[strlen(szFileName)-1]='t';
+	szFileName[ strlen(szFileName) - 3 ] = 't';
+	szFileName[ strlen(szFileName) - 2 ] = 'x';
+	szFileName[ strlen(szFileName) - 1 ] = 't';
 
 	// start at beginning of the list
 	va_start(ap, pzFormat);
@@ -800,34 +802,39 @@ __declspec(dllexport) BE_ERR	beEncodeChunkFloatS16NI(HBE_STREAM hbeStream, DWORD
 
 __declspec(dllexport) BE_ERR beWriteVBRHeader(LPCSTR lpszFileName)
 {
-	FILE* fpStream	=NULL;
-	BE_ERR beResult	=BE_ERR_SUCCESSFUL;
+	FILE* fpStream	= NULL;
+	BE_ERR beResult	= BE_ERR_SUCCESSFUL;
 
-	// Do we have to write the VBR tag?
-	if (	 lame_get_bWriteVbrTag( gfp ) )
+	if ( NULL != gfp )
 	{
-
-		// Try to open the file
-		fpStream=fopen( lpszFileName, "rb+" );
-
-		// Check file open result
-		if ( NULL == fpStream )
+		// Do we have to write the VBR tag?
+		if ( lame_get_bWriteVbrTag( gfp ) )
 		{
-			return BE_ERR_INVALID_FORMAT_PARAMETERS;
+
+			// Try to open the file
+			fpStream=fopen( lpszFileName, "rb+" );
+
+			// Check file open result
+			if ( NULL == fpStream )
+			{
+				beResult = BE_ERR_INVALID_FORMAT_PARAMETERS;
+			}
+			else
+			{
+				// Write Xing header again
+				lame_mp3_tags_fid( gfp, fpStream );
+
+				// Close the file stream
+				fclose( fpStream );
+			}
+
+			// clean up of allocated memory
+			lame_close( gfp );
 		}
-
-		// Write Xing header again
-		lame_mp3_tags_fid( gfp, fpStream );
-
-		// Close the file stream
-		fclose( fpStream );
-
 	}
-
-	if ( lame_get_bWriteVbrTag( gfp ) )
+	else
 	{
-		// clean up of allocated memory
-		lame_close( gfp );
+		beResult = BE_ERR_INVALID_FORMAT_PARAMETERS;
 	}
 
 	// return result
