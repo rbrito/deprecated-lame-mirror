@@ -218,6 +218,14 @@ SOURCE=.\lame.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\lametime.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\lametime.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\machine.h
 # End Source File
 # Begin Source File
