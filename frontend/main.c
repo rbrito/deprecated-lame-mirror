@@ -505,21 +505,19 @@ main(int argc, char **argv)
     argc = ccommand(&argv);
 #endif
 
-#if 0
-This works only on NT.  we need a #ifdef that distinguishes between 
-NT and 95/98/me before we can use this:
-
 #if defined(_MSC_VER)
-    {
-   /* set affinity to a single CPU.  Fix for EAC/lame on SMP systems from
+   /* set affinity back to all CPUs.  Fix for EAC/lame on SMP systems from
      "Todd Richmond" <todd.richmond@openwave.com> */
+    typedef BOOL (WINAPI *SPAMFunc)(HANDLE, DWORD);
+    SPAMFunc func;
     SYSTEM_INFO si;
-    GetSystemInfo(&si);
-    SetProcessAffinityMask(GetCurrentProcess(), si.dwActiveProcessorMask);
+
+    if ((func = (SPAMFunc)GetProcAddress(GetModuleHandle("KERNEL32.DLL"),
+        "SetProcessAffinityMask")) != NULL) {
+        GetSystemInfo(&si);
+        func(GetCurrentProcess(), si.dwActiveProcessorMask);
     }
 #endif
-#endif
-
 
 
 #ifdef __EMX__
