@@ -474,8 +474,10 @@ MP3 input file
 =======================================================================
 --mp3input
 
-Assume the input file is a MP3 file.  Usefull for downsampling from
-one mp3 to another.  If the filename ends in ".mp3" LAME will assume
+Assume the input file is a MP3 file.  LAME will decode the input file
+before re-encoding it.  Since MP3 is a lossy format, this is 
+not recommended in general.  But it is useful for creating low bitrate
+mp3s from high bitrate mp3s.  If the filename ends in ".mp3" LAME will assume
 it is an MP3.  For stdin or MP3 files which dont end in .mp3 you need
 to use this switch.
 
@@ -533,7 +535,7 @@ Ogg Vorbis input file
 =======================================================================
 --ogginput
 
-Assume the input file is an Ogg Vorbis file.  Mostly usefull
+Assume the input file is an Ogg Vorbis file.  Mostly useful
 with --decode for playing back .ogg files, or converting
 your .ogg collection to MP3 :-)
 
