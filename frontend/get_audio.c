@@ -1000,10 +1000,12 @@ OpenSndFile(lame_t gfp, char *inPath)
 	}
     }
 #ifdef LIBSNDFILE
-    if (useLibsndfile)
-	fprintf(stderr, "use libsndfile for file input\n");
-    else
-	fprintf(stderr, "use internal audio input routine\n");
+    if (silent < 10) {
+	if (useLibsndfile)
+	    fprintf(stderr, "use libsndfile for file input\n");
+	else
+	    fprintf(stderr, "use internal audio input routine\n");
+    }
 #endif
 }
 
