@@ -1460,11 +1460,7 @@ static int apply_abr_preset(lame_global_flags*  gfp, int preset)
         upper_range = 0, upper_range_kbps = 0;
     
     int r; // r = resolved range
-
     int b;
-
-
-
 
     // We assume specified bitrate will be 320kbps
     upper_range_kbps = abr_switch_map[16].abr_kbps;
@@ -1542,6 +1538,8 @@ static int apply_abr_preset(lame_global_flags*  gfp, int preset)
 int
 lame_set_preset( lame_global_flags*  gfp, int preset )
 {
+    if (preset == 320)
+	preset = INSANE;
     gfp->preset = preset;
     switch (preset) {
     case DM_RADIO:
@@ -1656,7 +1654,7 @@ lame_set_preset( lame_global_flags*  gfp, int preset )
 	break;
     }
 
-    if ((preset >= 8) && (preset <=320))
+    if ((preset >= 8) && (preset < 320))
         return apply_abr_preset(gfp, preset);
 
 
