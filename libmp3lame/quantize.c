@@ -405,10 +405,9 @@ trancate_smallspectrums(
     FLOAT distort[SFBMAX];
     calc_noise_result dummy;
 
-    if ((!(gfc->substep_shaping & 4) && gi->block_type == SHORT_TYPE)
-	|| gfc->substep_shaping & 0x80)
+    if (gfc->substep_shaping & 0x80 || gi->psymax == 0)
 	return;
-    calc_noise (gi, l3_xmin, distort, &dummy);
+    calc_noise(gi, l3_xmin, distort, &dummy);
     for (j = 0; j < 576; j++) {
 	FLOAT xr = 0.0;
 	if (gi->l3_enc[j] != 0)
@@ -515,7 +514,7 @@ better_quant(
        max_noise:   max quantization noise 
      */
 
-    calc_noise (gi, l3_xmin, distort, &calc);
+    calc_noise(gi, l3_xmin, distort, &calc);
     new = calc.max_noise;
     if (gi->block_type == SHORT_TYPE
 	? gfc->quantcomp_method_s : gfc->quantcomp_method) {
@@ -840,7 +839,7 @@ outer_loop (
     /* compute the distortion in this quantization */
     /* coefficients and thresholds of ch0(L or Mid) or ch1(R or Side) */
     calc_xmin (gfc, ratio, gi, l3_xmin);
-    calc_noise (gi, l3_xmin, distort, &best_noise_info);
+    calc_noise(gi, l3_xmin, distort, &best_noise_info);
     if (gfc->noise_shaping_stop == 0 && best_noise_info.max_noise < 0.0)
 	goto quit_quantization;
 
@@ -1547,7 +1546,7 @@ set_pinfo (
     calc_noise_result noise;
 
     calc_xmin (gfc, ratio, gi, l3_xmin);
-    calc_noise (gi, l3_xmin, distort, &noise);
+    calc_noise(gi, l3_xmin, distort, &noise);
 
     j = 0;
     for (sfb2 = 0; sfb2 < gi->psy_lmax; sfb2++) {
