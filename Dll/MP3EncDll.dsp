@@ -204,6 +204,10 @@ SOURCE=..\libmp3lame\reservoir.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\libmp3lame\set_get.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\libmp3lame\tables.c
 # End Source File
 # Begin Source File
@@ -356,28 +360,28 @@ SOURCE=..\libmp3lame\i386\choose_table.nas
 !ELSEIF  "$(CFG)" == "MP3EncDll - Win32 Debug NASM"
 
 # Begin Custom Build - Assembling
-InputDir=\Cvs\lame\libmp3lame\i386
+InputDir=\CVS\cdexos\MP3Enc\libmp3lame\i386
 OutDir=.\Debug_NASM
 InputPath=..\libmp3lame\i386\choose_table.nas
 InputName=choose_table
 
 "$(OutDir)/$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o\
-  $(OutDir)/$(InputName).obj
+   $(OutDir)/$(InputName).obj
 
 # End Custom Build
 
 !ELSEIF  "$(CFG)" == "MP3EncDll - Win32 Release NASM"
 
 # Begin Custom Build - Assembling
-InputDir=\Cvs\lame\libmp3lame\i386
+InputDir=\CVS\cdexos\MP3Enc\libmp3lame\i386
 OutDir=.\Release_NASM
 InputPath=..\libmp3lame\i386\choose_table.nas
 InputName=choose_table
 
 "$(OutDir)/$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o\
-  $(OutDir)/$(InputName).obj
+   $(OutDir)/$(InputName).obj
 
 # End Custom Build
 
@@ -393,42 +397,42 @@ SOURCE=..\libmp3lame\i386\cpu_feat.nas
 !ELSEIF  "$(CFG)" == "MP3EncDll - Win32 Debug"
 
 # Begin Custom Build - Assembling
-InputDir=\Cvs\lame\libmp3lame\i386
+InputDir=\CVS\cdexos\MP3Enc\libmp3lame\i386
 OutDir=.\Debug
 InputPath=..\libmp3lame\i386\cpu_feat.nas
 InputName=cpu_feat
 
 "$(OutDir)/$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o\
-  $(OutDir)/$(InputName).obj
+   $(OutDir)/$(InputName).obj
 
 # End Custom Build
 
 !ELSEIF  "$(CFG)" == "MP3EncDll - Win32 Debug NASM"
 
 # Begin Custom Build - Assembling
-InputDir=\Cvs\lame\libmp3lame\i386
+InputDir=\CVS\cdexos\MP3Enc\libmp3lame\i386
 OutDir=.\Debug_NASM
 InputPath=..\libmp3lame\i386\cpu_feat.nas
 InputName=cpu_feat
 
 "$(OutDir)/$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o\
-  $(OutDir)/$(InputName).obj
+   $(OutDir)/$(InputName).obj
 
 # End Custom Build
 
 !ELSEIF  "$(CFG)" == "MP3EncDll - Win32 Release NASM"
 
 # Begin Custom Build - Assembling
-InputDir=\Cvs\lame\libmp3lame\i386
+InputDir=\CVS\cdexos\MP3Enc\libmp3lame\i386
 OutDir=.\Release_NASM
 InputPath=..\libmp3lame\i386\cpu_feat.nas
 InputName=cpu_feat
 
 "$(OutDir)/$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o\
-  $(OutDir)/$(InputName).obj
+   $(OutDir)/$(InputName).obj
 
 # End Custom Build
 
@@ -450,28 +454,28 @@ SOURCE=..\libmp3lame\i386\fft3dn.nas
 !ELSEIF  "$(CFG)" == "MP3EncDll - Win32 Debug NASM"
 
 # Begin Custom Build - Assembling
-InputDir=\Cvs\lame\libmp3lame\i386
+InputDir=\CVS\cdexos\MP3Enc\libmp3lame\i386
 OutDir=.\Debug_NASM
 InputPath=..\libmp3lame\i386\fft3dn.nas
 InputName=fft3dn
 
 "$(OutDir)/$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o\
-  $(OutDir)/$(InputName).obj
+   $(OutDir)/$(InputName).obj
 
 # End Custom Build
 
 !ELSEIF  "$(CFG)" == "MP3EncDll - Win32 Release NASM"
 
 # Begin Custom Build - Assembling
-InputDir=\Cvs\lame\libmp3lame\i386
+InputDir=\CVS\cdexos\MP3Enc\libmp3lame\i386
 OutDir=.\Release_NASM
 InputPath=..\libmp3lame\i386\fft3dn.nas
 InputName=fft3dn
 
 "$(OutDir)/$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o\
-  $(OutDir)/$(InputName).obj
+   $(OutDir)/$(InputName).obj
 
 # End Custom Build
 
@@ -499,42 +503,42 @@ SOURCE=..\libmp3lame\i386\scalar.nas
 !ELSEIF  "$(CFG)" == "MP3EncDll - Win32 Debug"
 
 # Begin Custom Build - Assembling
-InputDir=\Cvs\lame\libmp3lame\i386
+InputDir=\CVS\cdexos\MP3Enc\libmp3lame\i386
 OutDir=.\Debug
 InputPath=..\libmp3lame\i386\scalar.nas
 InputName=scalar
 
 "$(OutDir)/$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o\
-  $(OutDir)/$(InputName).obj
+   $(OutDir)/$(InputName).obj
 
 # End Custom Build
 
 !ELSEIF  "$(CFG)" == "MP3EncDll - Win32 Debug NASM"
 
 # Begin Custom Build - Assembling
-InputDir=\Cvs\lame\libmp3lame\i386
+InputDir=\CVS\cdexos\MP3Enc\libmp3lame\i386
 OutDir=.\Debug_NASM
 InputPath=..\libmp3lame\i386\scalar.nas
 InputName=scalar
 
 "$(OutDir)/$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o\
-  $(OutDir)/$(InputName).obj
+   $(OutDir)/$(InputName).obj
 
 # End Custom Build
 
 !ELSEIF  "$(CFG)" == "MP3EncDll - Win32 Release NASM"
 
 # Begin Custom Build - Assembling
-InputDir=\Cvs\lame\libmp3lame\i386
+InputDir=\CVS\cdexos\MP3Enc\libmp3lame\i386
 OutDir=.\Release_NASM
 InputPath=..\libmp3lame\i386\scalar.nas
 InputName=scalar
 
 "$(OutDir)/$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o\
-  $(OutDir)/$(InputName).obj
+   $(OutDir)/$(InputName).obj
 
 # End Custom Build
 
