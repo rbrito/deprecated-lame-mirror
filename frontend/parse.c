@@ -1075,7 +1075,6 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
 			    m = n;
 			lame_set_quant_comp(gfp, n);
 			lame_set_quant_comp_short(gfp, m);
-                        break;
 		    }
                 
                 T_ELIF ("shortthreshold")
