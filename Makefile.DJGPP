@@ -101,7 +101,6 @@ lib_sources = \
 	libmp3lame/psymodel.c \
 	libmp3lame/quantize.c \
         libmp3lame/set_get.c \
-	libmp3lame/reservoir.c \
 	libmp3lame/tables.c \
 	libmp3lame/takehiro.c \
 	libmp3lame/util.c \
