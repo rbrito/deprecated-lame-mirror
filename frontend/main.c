@@ -511,7 +511,8 @@ void parse_nogap_filenames(int nogapout,char *outPath, char *inPath) {
           slasher += MAX_NAME_SIZE-4;
 	  
 	  /* backseek to last dir delemiter */
-	  while (*slasher != '/' && *slasher != '\\' && slasher != inPath)
+	  while (*slasher != '/' && *slasher != '\\' && slasher != inPath
+	      && *slasher != ':')
 	  {
 	    slasher--;
 	  }
@@ -520,13 +521,19 @@ void parse_nogap_filenames(int nogapout,char *outPath, char *inPath) {
 	  if (slasher != inPath 
 	      && (outPath[strlen(outPath)-1] == '/'
 		  ||
-		  outPath[strlen(outPath)-1] == '\\')) 
+		  outPath[strlen(outPath)-1] == '\\'
+		  ||
+		  outPath[strlen(outPath)-1] == ':')) 
 	    slasher++;
 	  else if (slasher == inPath
 	      && (outPath[strlen(outPath)-1] != '/'
 		  &&
-		  outPath[strlen(outPath)-1] != '\\'))
+		  outPath[strlen(outPath)-1] != '\\'
+		  && 
+		  outPath[strlen(outPath)-1] != ':'))
 #ifdef _WIN32
+	    strcat(outPath, "\\");
+#elif __OS2__
 	    strcat(outPath, "\\");
 #else
 	    strcat(outPath, "/");
@@ -599,6 +606,8 @@ main(int argc, char **argv)
         nogap_inPath[i] = malloc(MAX_NAME_SIZE);
     }
 
+    memset(inPath, 0, sizeof(inPath));
+    
     /* initialize libmp3lame */
     input_format = sf_unknown;
     if (NULL == (gf = lame_init())) {
