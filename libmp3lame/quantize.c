@@ -554,11 +554,11 @@ static void
 inc_scalefac_scale (
     const lame_internal_flags        * const gfc, 
           gr_info        * const cod_info, 
-          III_scalefac_t * const scalefac,
           FLOAT8                 xrpow[576] )
 {
     int l, j, sfb;
     const FLOAT8 ifqstep34 = 1.29683955465100964055;
+    III_scalefac_t * const scalefac = &cod_info->scalefac;
 
     j = 0;
     for (sfb = 0; sfb < cod_info->sfb_lmax; sfb++) {
@@ -721,7 +721,7 @@ balance_noise (
                                       gfc->ATH->adjust < gfc->presetTune.athadjust_switch_level))) {
 	memset(&gfc->pseudohalf, 0, sizeof(gfc->pseudohalf));
 	if (!cod_info->scalefac_scale) {
-	    inc_scalefac_scale (gfc, cod_info, scalefac, xrpow);
+	    inc_scalefac_scale (gfc, cod_info, xrpow);
 	    status = 0;
 	} else {
 	    if (cod_info->block_type == SHORT_TYPE ) {
@@ -913,15 +913,15 @@ iteration_finish (
              */
             best_scalefac_store (gfc, gr, ch, l3_side);
             
-            /*  best huffman_divide may save some bits too
-             */
-            if (gfc->use_best_huffman == 1) 
-                best_huffman_divide (gfc, cod_info);
+	    /*  best huffman_divide may save some bits too
+	     */
+	    if (gfc->use_best_huffman == 1) 
+		best_huffman_divide (gfc, cod_info);
             
             /*  update reservoir status after FINAL quantization/bitrate
              */
             ResvAdjust (gfc, cod_info, l3_side, mean_bits);
-	} /* for ch */
+      } /* for ch */
     }    /* for gr */
     
     ResvFrameEnd (gfc, l3_side, mean_bits);
