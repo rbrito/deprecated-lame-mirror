@@ -25,6 +25,7 @@ LIBSNDFILE =
 LIBS = -lm 
 MAKEDEP = -M
 MP3LIB = libmp3lame/libmp3lame.a
+CPP_OPTS = -Ianalyzer -Iinclude -Impglib -Ifrontend -Ilibmp3lame -I.
 
 ##########################################################################
 # -DHAVEMPGLIB compiles the mpglib *decoding* library into libmp3lame
@@ -94,10 +95,10 @@ CC_OPTS = -O2
 CC_SWITCHES = -DHAVE_CONFIG_H -DNDEBUG -D__NO_MATH_INLINES $(CC_OPTS) $(SNDLIB)  \
 $(VORBIS) 
 frontend_sources = \
-        frontend/brhist.c \
+	frontend/brhist.c \
 	frontend/get_audio.c \
-        frontend/lametime.c \
-        frontend/parse.c \
+	frontend/lametime.c \
+	frontend/parse.c \
 	frontend/portableio.c \
 	frontend/timestatus.c 
 
@@ -105,9 +106,9 @@ lib_sources = \
 	libmp3lame/bitstream.c \
 	libmp3lame/encoder.c \
 	libmp3lame/fft.c \
-        libmp3lame/id3tag.c \
-        libmp3lame/lame.c \
-        libmp3lame/newmdct.c \
+	libmp3lame/id3tag.c \
+	libmp3lame/lame.c \
+	libmp3lame/newmdct.c \
 	libmp3lame/psymodel.c \
 	libmp3lame/quantize.c \
 	libmp3lame/quantize_pvt.c \
@@ -118,16 +119,16 @@ lib_sources = \
 	libmp3lame/util.c \
 	libmp3lame/vorbis_interface.c \
 	libmp3lame/mpglib_interface.c \
-        libmp3lame/VbrTag.c \
-        libmp3lame/version.c \
-        mpglib/common.c \
-        mpglib/dct64_i386.c \
-        mpglib/decode_i386.c \
-        mpglib/layer1.c \
-        mpglib/layer2.c \
-        mpglib/layer3.c \
-        mpglib/tabinit.c \
-        mpglib/interface.c 
+	libmp3lame/VbrTag.c \
+	libmp3lame/version.c \
+	mpglib/common.c \
+	mpglib/dct64_i386.c \
+	mpglib/decode_i386.c \
+	mpglib/layer1.c \
+	mpglib/layer2.c \
+	mpglib/layer3.c \
+	mpglib/tabinit.c \
+	mpglib/interface.c 
 
 
 DEP = $(lib_sources:.c=.d) $(frontend_sources:.c=.d)
@@ -138,31 +139,45 @@ lib_obj = $(lib_sources:.c=.o)
 
 
 NASM = nasm
-ASFLAGS=-f elf -i i386/
+ASFLAGS=-f elf -i libmp3lame/i386/
 %.o: %.nas
 	$(NASM) $(ASFLAGS) $< -o $@
 %.o: %.s
 	gcc -c $< -o $@
 
-## use MMX extension. you need nasm and MMX supported CPU.
-#CC_SWITCCH += -DMMX_choose_table
-#OBJ += i386/choose_table.o i386/cpu_feat.o i386/scalar.o
+#HAVE_NASM = YES
 
-%.o: %.c config.h
+ifeq ($(HAVE_NASM),YES)
+## have NASM
+CC_SWITCHES += -DHAVE_NASM
+lib_obj += libmp3lame/i386/cpu_feat.o libmp3lame/i386/scalar.o
+
+## use MMX extension. you need nasm and MMX supported CPU.
+CC_SWITCHES += -DMMX_choose_table
+lib_obj += libmp3lame/i386/choose_table.o
+endif
+
+
+%.o: %.c 
 	$(CC) $(CPP_OPTS) $(CC_SWITCHES) -c $< -o $@
 
 #%.d: %.c
-#	$(SHELL) -ec '$(CC) $(MAKEDEP)  $(CPP_OPTS) $(CC_SWITCHES)  $< | sed '\''s;$*.o;& $@;g'\'' > $@'
+#       $(SHELL) -ec '$(CC) $(MAKEDEP)  $(CPP_OPTS) $(CC_SWITCHES)  $< | sed '\''s;$*.o;& $@;g'\'' > $@'
 
 all: $(PGM)
 
-$(PGM):	frontend/main.o $(frontend_obj) $(MP3LIB)
+$(lib_sources) $(frontend_sources) : config.h
+
+config.h: configMS.h
+	cp configMS.h config.h
+
+$(PGM): frontend/main.o $(frontend_obj) $(MP3LIB)
 	$(CC) $(CC_OPTS) -o frontend/$(PGM)  frontend/main.o  $(frontend_obj) \
-        $(MP3LIB) $(LIBS) $(LIBSNDFILE) $(VORBIS_LIB)
+	$(MP3LIB) $(LIBS) $(LIBSNDFILE) $(VORBIS_LIB)
 
 libmp3lame/libmp3lame.a:  $(lib_obj) 
-#	cd libmp3lame
-#	make libmp3lame
+#       cd libmp3lame
+#       make libmp3lame
 	ar cr libmp3lame/libmp3lame.a  $(lib_obj) 
 
 clean:
@@ -171,13 +186,9 @@ clean:
 	del frontend\*.exe 
 	del mpglib\*.o 
 	del mpglib\*.d 
-	del libmp3lame\*.o	
-	del libmp3lame\*.d	
-	del libmp3lame\*.a	
-	del config.h
-
-config.h:
-	copy configMS.h config.h
+	del libmp3lame\*.o      
+	del libmp3lame\*.d      
+	del libmp3lame\*.a      
 
 
 #
