@@ -139,6 +139,8 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
+	memset(&beConfig,0,sizeof(beConfig));					// clear all fields
+
 	// use the LAME config structure
 	beConfig.dwConfig = BE_CONFIG_LAME;
 
@@ -160,7 +162,6 @@ int main(int argc, char *argv[])
 	beConfig.format.LHV1.bWriteVBRHeader	= TRUE;					// YES, WRITE THE XING VBR HEADER
 	beConfig.format.LHV1.bEnableVBR			= TRUE;					// USE VBR
 	beConfig.format.LHV1.nVBRQuality		= 5;					// SET VBR QUALITY
-	memset(&beConfig.format.LHV1.btReserved,0,255);					// CLEAR RESERVED AREA
 
 // Preset Test
 //	beConfig.format.LHV1.nPreset			= LQP_PHONE;
