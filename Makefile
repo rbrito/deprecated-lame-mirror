@@ -274,12 +274,12 @@ ifneq ($(MAKECMDGOALS),clean)
 endif
 
 
-test21: $(PGM)
+test23: $(PGM)
 	./lame  ../test/castanets.wav
-	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref21.mp3 | head
-test21h: $(PGM)
+	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref23.mp3 | head
+test23h: $(PGM)
 	./lame  -h  ../test/castanets.wav
-	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref21h.mp3 | head
+	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref23h.mp3 | head
 test22: $(PGM)
 	./lame  ../test/castanets.wav
 	cmp -l ../test/castanets.wav.mp3 ../test/castanets.ref22.mp3 | head
@@ -292,7 +292,7 @@ testr: $(PGM)
 	cmp -l ../test/castanets.wav.mp3 ../test/castanets.refr.mp3 | wc
 testv: $(PGM)
 	./lame  -v  ../test/castanets.wav
-	cmp -l ../test/castanets.wav.mp3 ../test/castanets.refv.mp3 | head
+	cmp -l ../test/castanets.wav.mp3 ../test/castanets.refv.mp3 | wc
 testg: $(PGM)
 	./lame -h -g ../test/castanets.wav
 

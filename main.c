@@ -36,6 +36,8 @@ int makeframe(void)
      * encode the 576 samples we are interested in.
      */
     samples_to_encode = mp3info.encoder_delay + last_nonzero_iread + 288;
+    /* minus samples encoded on last call to lame_encode() */
+    samples_to_encode -= mp3info.framesize;
 
     /* to guarantee no padding (at the risk of not encoding all data, use:*/
     /* while (samples_to_encode >= mp3info.framesize) { */       

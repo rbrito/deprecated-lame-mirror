@@ -7,6 +7,7 @@
 #include "gtkanal.h"
 #include "version.h"
 #include "lame.h"
+#include "tables.h"
 #include <assert.h>
 
 
@@ -80,9 +81,6 @@ int gtkmakeframe()
     if (frameNum==0) {
       mpglag=1;
       lame_decode_init();
-      /* first frame is only buffered, not encoded */
-      iread=lame_readframe(Buffer);
-      mp3count=lame_encode(Buffer,mp3buffer); /* encode frame */
     }
     iread=lame_readframe(Buffer);
     mp3count=lame_encode(Buffer,mp3buffer); /* encode frame */
@@ -406,7 +404,6 @@ void plot_frame(void)
 
     /* draw some hash marks showing scalefactor bands */
     if (gtkinfo.sfblines) {
-#include "tables.h"
       int fac,nsfb,*scalefac_band;
       if (pplot1->blocktype[gr][ch]==SHORT_TYPE) {
 	nsfb=SBMAX_s;

@@ -1083,10 +1083,13 @@ int lame_encode(short int Buffer[2][1152],char *mpg123bs)
   static FLOAT8 frac_SpF;
   static FLOAT8 slot_lag;
   static int mode_gr;
-  static int old_bitrate;
   static unsigned long sentBits = 0;
   static int samplesPerFrame;
+#if (ENCDELAY < 800) 
 #define EXTRADELAY (1152+ENCDELAY-MDCTDELAY)
+#else
+#define EXTRADELAY (ENCDELAY-MDCTDELAY)
+#endif
 #define MFSIZE (EXTRADELAY+1152)
   static short int mfbuf[2][MFSIZE];
   FLOAT8 xr[2][2][576];
@@ -1111,24 +1114,23 @@ int lame_encode(short int Buffer[2][1152],char *mpg123bs)
   static FLOAT8 ms_ratio[2]={0,0};
   FLOAT8 ms_ratio_next=0;
   FLOAT8 ms_ratio_prev=0;
+  static int init=0;
+
+  if (init==0) {
+    memset((char *) mfbuf, 0, sizeof(mfbuf));
+    init++;
+  }
 
   stereo = fr_ps.stereo;
   info = fr_ps.header;
   info->mode_ext = MPG_MD_LR_LR; 
-  /* use m/s stereo? */
-  check_ms_stereo =   ((info->mode == MPG_MD_JOINT_STEREO) && 
-		       (info->version == 1) &&
-		       (stereo==2) );
-  if (frameNum==0) old_bitrate=info->bitrate_index;
-  info->bitrate_index = old_bitrate;
 
-  if (frameNum==0)  {    
+  if (frameNum==0 )  {    
     FLOAT8 avg_slots_per_frame;
     FLOAT8 sampfreq =   s_freq[info->version][info->sampling_frequency];
     int bit_rate = bitrate[info->version][info->lay-1][info->bitrate_index];
 
     sentBits = 0;
-    memset((char *) mfbuf, 0, sizeof(mfbuf));
     /* Figure average number of 'slots' per frame. */
     /* Bitrate means TOTAL for both channels, not per side. */
     bitsPerSlot = 8;
@@ -1148,6 +1150,8 @@ int lame_encode(short int Buffer[2][1152],char *mpg123bs)
     assert(samplesPerFrame+EXTRADELAY>=BLKSIZE+samplesPerFrame-FFTOFFSET); 
     /* check FFT will not use a negative starting offset */
     assert(576>=FFTOFFSET);
+    /* total delay is at least as large is MDCTDELAY */
+    assert(ENCDELAY>MDCTDELAY);
   }
 
 
@@ -1159,19 +1163,28 @@ int lame_encode(short int Buffer[2][1152],char *mpg123bs)
      for (i=0; i<samplesPerFrame; i++)
        mfbuf[ch][i+EXTRADELAY]=Buffer[ch][i];
 
+#if (ENCDELAY < 800) 
    /* just buffer the first frame, and return */
    if (frameNum==0 && !frame_buffered) {
      frame_buffered=1;
      return 0;
-   }else
-     /* reset, in case we encode a second file after this one */
+   }else {
+     /* reset, for the next time frameNum==0 */
      frame_buffered=0;  
+   }
+#endif
+
+
+  /* use m/s stereo? */
+  check_ms_stereo =   ((info->mode == MPG_MD_JOINT_STEREO) && 
+		       (info->version == 1) &&
+		       (stereo==2) );
 
 
 
   /********************** padding *****************************/
   if (VBR) {
-  /* leave info_padding as it was set above */
+    info->padding=0;
   } else {
     if (frac_SpF != 0) {
       if (slot_lag > (frac_SpF-1.0) ) {
@@ -1209,14 +1222,14 @@ int lame_encode(short int Buffer[2][1152],char *mpg123bs)
 
                        gr 0            gr 1
 mfbuf:           |--------------|---------------|-------------|
-MDCT output:    |--------------|---------------|-------------|
+MDCT output:  |--------------|---------------|-------------|
 
-FFT's                      <---------1024---------->
-                                           <---------1024-------->
+FFT's                    <---------1024---------->
+                                         <---------1024-------->
     
 
 
-    mfbuf = large buffer of PCM data
+    mfbuf = large buffer of PCM data size=frame_size+EXTRADELAY
     encoder acts on mfbuf[ch][0], but output is delayed by MDCTDELAY
     so the MDCT coefficints are from mfbuf[ch][-MDCTDELAY]
 
@@ -1225,10 +1238,10 @@ FFT's                      <---------1024---------->
     So FFT starts at:   576-224-MDCTDELAY
    
     MPEG2:  FFT ends at:  BLKSIZE+576-224-MDCTDELAY
-    MPEG1:  FFT ends at:  BLKSIZE+2*576-224-MDCTDELAY    ( 2 granules) 
+    MPEG1:  FFT ends at:  BLKSIZE+2*576-224-MDCTDELAY    (1904)
 
-    To perform the FFT, mfbuf should contain at least BLKSIZE+2*576+224-MDCTDELAY
-    data, and 576-224-MDCTDELAY >= 0.  
+    FFT starts at 576-224-MDCTDELAY (304)
+
    */
   if (!fast_mode) {  
     /* psychoacoustic model 
@@ -1353,7 +1366,6 @@ FFT's                      <---------1024---------->
 
 
   /*  write the frame to the bitstream  */
-  old_bitrate = info->bitrate_index;
   getframebits(info,stereo,&bitsPerFrame,&mean_bits);
   III_format_bitstream( bitsPerFrame, &fr_ps, l3_enc, &l3_side, 
 			&scalefac, &bs);

@@ -17,22 +17,29 @@ total:    512+16
 */
 
 
-/* original ISO routiens had a delay of 528! */
-/* Takehiro's routines: */
-#define MDCTDELAY 48  
 
-/* 
-   The encoder delay.  Minimum allowed is MDCTDELAY (see encoder.h)
-   Setting ENCDELAY < MDCTDELAY will result in loss of PCM samples
-   samples at the start of the file will be lost.
+/* ENCDELAY  The encoder delay.  
 
-   suggested: 48
+   Minimum allowed is MDCTDELAY (see below)
+   
+   The first 288 samples will be attenuated, so using a value
+   less than 288 will result in lost data in the first 288-ENCDELAY
+   samples. 
+
+   If delay < 800, lame_encodeframe() will introduce some additional
+   buffering because of the data needed by the FFT.
+
+   suggested: 800
    set to 1160 to sync with FhG.
 */
-#define ENCDELAY 48
+#define ENCDELAY 800
 
 
 
+
+/* delay of the MDCT used in mdct.c */
+/* original ISO routiens had a delay of 528!  Takehiro's routines: */
+#define MDCTDELAY 48  
 
 
 
