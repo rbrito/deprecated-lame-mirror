@@ -76,12 +76,12 @@ endif
 # Requires ncurses, but libtermcap also works.  
 # If you have any trouble, just dont define these
 #
-# BRHIST_SWITCH = -DBRHIST
+# BRHIST_SWITCH = -DBRHIST -DHAVE_TERMCAP
 # LIBTERMCAP = -lncurses
 # LIBTERMCAP = -ltermcap
 #
 # or, to try and simulate TERMCAP (ANSI), use:
-# BRHIST_SWITCH = -DBRHIST -DNOTERMCAP
+# BRHIST_SWITCH = -DBRHIST
 #
 ##########################################################################
 
@@ -122,7 +122,7 @@ ifeq ($(UNAME),Linux)
    GTK = -DHAVE_GTK `gtk-config --cflags`
    GTKLIBS = `gtk-config --libs` 
 # Comment out next 2 lines if you want to remove VBR histogram capability
-   BRHIST_SWITCH = -DBRHIST
+   BRHIST_SWITCH = -DBRHIST -DHAVE_TERMCAP
    LIBTERMCAP = -lncurses
 #  uncomment to use LIBSNDFILE
 #   SNDLIB = -DLIBSNDFILE
@@ -241,7 +241,7 @@ ifeq ($(UNAME),FreeBSD)
    GTK = -DHAVE_GTK `gtk12-config --cflags`
    GTKLIBS = `gtk12-config --libs` 
 # Comment out next 2 lines if you want to remove VBR histogram capability
-   BRHIST_SWITCH = -DBRHIST
+   BRHIST_SWITCH = -DBRHIST -DHAVE_TERMCAP
    LIBTERMCAP = -lncurses
 
 endif
@@ -255,7 +255,7 @@ ifeq ($(UNAME),OpenBSD)
    GTK = -DHAVE_GTK `gtk-config --cflags`
    GTKLIBS = `gtk-config --libs` 
 # Comment out next 2 lines if you want to remove VBR histogram capability
-   BRHIST_SWITCH = -DBRHIST
+   BRHIST_SWITCH = -DBRHIST -DHAVE_TERMCAP
    LIBTERMCAP = -lcurses 
 endif
 
@@ -286,7 +286,7 @@ ifeq ($(UNAME),IRIX64)
 #optonal:
 #   GTK = -DHAVE_GTK `gtk-config --cflags`
 #   GTKLIBS = `gtk-config --libs`
-#   BRHIST_SWITCH = -DBRHIST
+#   BRHIST_SWITCH = -DBRHIST -DHAVE_TERMCAP
 #   LIBTERMCAP = -lncurses
 
 endif
@@ -350,7 +350,7 @@ ifeq ($(UNAME),OS/2)
 #   CC_OPTS = -O6 -ffast-math -funroll-loops -mpentiumpro -march=pentiumpro
 
 # Comment out next 2 lines if you want to remove VBR histogram capability
-   BRHIST_SWITCH = -DBRHIST
+   BRHIST_SWITCH = -DBRHIST -DHAVE_TERMCAP
    LIBTERMCAP = -ltermcap
 
 # Uncomment & inspect the 2 GTK lines to use MP3x GTK frame analyzer.
@@ -377,7 +377,7 @@ endif
 ifeq ($(UNAME),AmigaOS)
 	CC = gcc -noixemul
 	CC_OPTS = -O3 -ffast-math -funroll-loops -m68020-60 -m68881
-	BRHIST_SWITCH = -DBRHIST -DNOTERMCAP
+	BRHIST_SWITCH = -DBRHIST
 	MAKEDEP = -MM
 	ifeq ($(ARCH),WOS)
 		CC = ppc-amigaos-gcc -warpup

@@ -10,8 +10,6 @@
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
-#elif defined(HAVE_CONFIG_MS_H)
-# include <configMS.h>
 #endif
 
 #include "dct64_i386.h"

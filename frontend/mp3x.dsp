@@ -22,9 +22,10 @@ CFG=MP3X - WIN32 RELEASE
 !MESSAGE 
 
 # Begin Project
+# PROP AllowPerConfigDependencies 0
 # PROP Scc_ProjName ""
 # PROP Scc_LocalPath ""
-CPP=xicl.exe
+CPP=cl.exe
 RSC=rc.exe
 
 !IF  "$(CFG)" == "MP3x - Win32 Release"
@@ -41,13 +42,14 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /Ox /Ot /Og /I "./WinGTK/gtk-plus" /I "./WinGTK/glib-1.2" /I "./WinGtk/src/gtk+" /I "./WinGtk/src/glib" /I "./WinGtk/src/gtk+/gdk" /I "../include" /I "../libmp3lame" /I "../mp3x" /I "../frontend" /D "NDEBUG" /D "LAMEPARSE" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVEGTK" /D "HAVEMPGLIB" /D "LAMESNDFILE" /D "BRHIST" /D "NOTERMCAP" /YX /FD /c
+# ADD CPP /nologo /W3 /GX- /O2 /I "./WinGTK/gtk-plus" /I "./WinGTK/glib-1.2" /I "./WinGtk/src/gtk+" /I "./WinGtk/src/glib" /I "./WinGtk/src/gtk+/gdk" /I "../include" /I "../libmp3lame" /I "../mp3x" /I "../frontend" /I ".." /D "NDEBUG" /D "LAMEPARSE" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_GTK" /D "HAVE_MPGLIB" /D "LAMESNDFILE" /D "BRHIST" /D "HAVE_CONFIG_H" /FD /c
+# SUBTRACT CPP /YX
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=xilink.exe
+LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib glib-1.3.lib gdk-1.3.lib gtk-1.3.lib /nologo /subsystem:console /profile /map /machine:I386 /libpath:"./WinGtk/src/gtk+/gtk" /libpath:"./WinGtk/src/gtk+/gdk" /libpath:"./WinGtk/src/glib"
 
@@ -65,13 +67,14 @@ LINK32=xilink.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /W3 /Gm /GX /Zi /Od /I "./WinGtk/src/gtk+" /I "./WinGtk/src/glib" /I "./WinGtk/src/gtk+/gdk" /I "../include" /I "../libmp3lame" /I "../mp3x" /I "../frontend" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVEGTK" /D "HAVEMPGLIB" /D "LAMESNDFILE" /D "BRHIST" /D "NOTERMCAP" /YX /FD /c
+# ADD CPP /nologo /W3 /Gm /GX- /ZI /Od /I "./WinGtk/src/gtk+" /I "./WinGtk/src/glib" /I "./WinGtk/src/gtk+/gdk" /I "../include" /I "../libmp3lame" /I "../mp3x" /I "../frontend" /I ".." /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_GTK" /D "HAVE_MPGLIB" /D "LAMESNDFILE" /D "BRHIST" /D "HAVE_CONFIG_H" /FD /c
+# SUBTRACT CPP /YX
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=xilink.exe
+LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib glib-1.3.lib gdk-1.3.lib gtk-1.3.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept /libpath:"./WinGtk/src/gtk+/gtk" /libpath:"./WinGtk/src/gtk+/gdk" /libpath:"./WinGtk/src/glib"
 
@@ -99,10 +102,6 @@ SOURCE=.\gpkplotting.c
 # Begin Source File
 
 SOURCE=.\gtkanal.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\frontend\ieeefloat.c
 # End Source File
 # Begin Source File
 
@@ -134,15 +133,38 @@ SOURCE=..\frontend\brhist.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\configMS.h
+
+!IF  "$(CFG)" == "MP3x - Win32 Release"
+
+# Begin Custom Build
+InputPath=..\configMS.h
+
+"..\config.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy ..\configMS.h ..\config.h
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "MP3x - Win32 Debug"
+
+# Begin Custom Build
+InputPath=..\configMS.h
+
+"..\config.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy ..\configMS.h ..\config.h
+
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=..\frontend\get_audio.h
 # End Source File
 # Begin Source File
 
 SOURCE=.\gpkplotting.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\frontend\ieeefloat.h
 # End Source File
 # Begin Source File
 

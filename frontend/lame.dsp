@@ -22,9 +22,10 @@ CFG=lame - Win32 Release
 !MESSAGE 
 
 # Begin Project
+# PROP AllowPerConfigDependencies 0
 # PROP Scc_ProjName ""
 # PROP Scc_LocalPath ""
-CPP=xicl.exe
+CPP=cl.exe
 RSC=rc.exe
 
 !IF  "$(CFG)" == "lame - Win32 Release"
@@ -40,16 +41,18 @@ RSC=rc.exe
 # PROP Intermediate_Dir "Release"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "HAVE_CONFIG_MS_H" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /Ox /Ot /Og /I "./WinGTK/gtk-plus" /I "./WinGTK/glib-1.2" /I "../include" /I "../" /I "../mp3x" /I "../frontend" /D "NDEBUG" /D "LAMEPARSE" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVE_MPGLIB" /D "LAMESNDFILE" /D "BRHIST" /D "NOTERMCAP" /YX /FD /c
+# ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "HAVE_CONFIG_H" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
+# ADD CPP /nologo /Zp8 /W3 /GX- /O2 /I "./WinGTK/gtk-plus" /I "./WinGTK/glib-1.2" /I "../" /I "../mp3x" /I "../frontend" /I "../include" /I ".." /D "NDEBUG" /D "LAMEPARSE" /D "_CONSOLE" /D "_MBCS" /D "HAVE_MPGLIB" /D "LAMESNDFILE" /D "BRHIST" /D "WIN32" /D "HAVE_CONFIG_H" /FD /c
+# SUBTRACT CPP /YX
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=xilink.exe
+LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /profile /map /machine:I386
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
+# SUBTRACT LINK32 /profile /map
 
 !ELSEIF  "$(CFG)" == "lame - Win32 Debug"
 
@@ -64,14 +67,14 @@ LINK32=xilink.exe
 # PROP Intermediate_Dir "Debug"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /W3 /Gm /GX /Zi /Od /D "HAVE_CONFIG_MS_H" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /W3 /Gm /GX /Zi /Od /I "../include" /I "../" /I "../mp3x" /I "../frontend" /D "_DEBUG" /D "LAMEPARSE" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVEMPGLIB" /D "LAMESNDFILE" /D "BRHIST" /D "NOTERMCAP" /YX /FD /c
+# ADD BASE CPP /nologo /W3 /Gm /GX /Zi /Od /D "HAVE_CONFIG_H" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
+# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "../" /I "../mp3x" /I "../frontend" /I "../include" /I ".." /D "_DEBUG" /D "LAMEPARSE" /D "_CONSOLE" /D "_MBCS" /D "HAVEMPGLIB" /D "LAMESNDFILE" /D "BRHIST" /D "WIN32" /D "HAVE_CONFIG_H" /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=xilink.exe
+LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
 
@@ -91,10 +94,6 @@ SOURCE=.\brhist.c
 # Begin Source File
 
 SOURCE=.\get_audio.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\ieeefloat.c
 # End Source File
 # Begin Source File
 
@@ -126,11 +125,34 @@ SOURCE=.\brhist.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\get_audio.h
+SOURCE=..\configMS.h
+
+!IF  "$(CFG)" == "lame - Win32 Release"
+
+# Begin Custom Build
+InputPath=..\configMS.h
+
+"..\config.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy ..\configMS.h ..\config.h
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "lame - Win32 Debug"
+
+# Begin Custom Build
+InputPath=..\configMS.h
+
+"..\config.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy ..\configMS.h ..\config.h
+
+# End Custom Build
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
-SOURCE=.\ieeefloat.h
+SOURCE=.\get_audio.h
 # End Source File
 # Begin Source File
 

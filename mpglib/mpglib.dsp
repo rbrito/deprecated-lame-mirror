@@ -22,9 +22,11 @@ CFG=mpglib - Win32 Release
 !MESSAGE 
 
 # Begin Project
+# PROP AllowPerConfigDependencies 0
 # PROP Scc_ProjName ""
 # PROP Scc_LocalPath ""
-CPP=xicl.exe
+CPP=cl.exe
+RSC=rc.exe
 
 !IF  "$(CFG)" == "mpglib - Win32 Release"
 
@@ -33,8 +35,11 @@ CPP=xicl.exe
 # PROP Output_Dir "Release"
 # PROP Intermediate_Dir "Release"
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "HAVE_CONFIG_MS_H" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /Ox /Ot /Og /I "../include" /I "../libmp3lame" /D "NDEBUG" /D "HAVEMPGLIB" /D "WIN32" /D "_WINDOWS" /D "USE_LAYER_2" /D "USE_LAYER_1" /YX /FD /c
+# ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "HAVE_CONFIG_H" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
+# ADD CPP /nologo /Zp8 /W3 /GX- /O2 /I "../libmp3lame" /I "../include" /I ".." /D "NDEBUG" /D "HAVE_MPGLIB" /D "_WINDOWS" /D "USE_LAYER_2" /D "USE_LAYER_1" /D "WIN32" /D "HAVE_CONFIG_H" /FD /c
+# SUBTRACT CPP /YX
+# ADD BASE RSC /l 0x409
+# ADD RSC /l 0x409
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
@@ -49,8 +54,10 @@ LIB32=link.exe -lib
 # PROP Output_Dir "Debug"
 # PROP Intermediate_Dir "Debug"
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /W3 /GX /Z7 /Od /D "WIN32" /D "HAVE_CONFIG_MS_H" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /Z7 /Od /I "../include" /I "../libmp3lame" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "USE_LAYER_2" /D "USE_LAYER_1" /D "HAVEMPGLIB" /YX /FD /c
+# ADD BASE CPP /nologo /W3 /GX /Z7 /Od /D "WIN32" /D "HAVE_CONFIG_H" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
+# ADD CPP /nologo /W3 /GX /Z7 /Od /I "../libmp3lame" /I "../include" /I ".." /D "_DEBUG" /D "_WINDOWS" /D "USE_LAYER_2" /D "USE_LAYER_1" /D "HAVE_MPGLIB" /D "WIN32" /D "HAVE_CONFIG_H" /YX /FD /c
+# ADD BASE RSC /l 0x409
+# ADD RSC /l 0x409
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
@@ -106,6 +113,33 @@ SOURCE=.\tabinit.c
 # Begin Source File
 
 SOURCE=.\common.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\configMS.h
+
+!IF  "$(CFG)" == "mpglib - Win32 Release"
+
+# Begin Custom Build
+InputPath=..\configMS.h
+
+"..\config.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy ..\configMS.h ..\config.h
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "mpglib - Win32 Debug"
+
+# Begin Custom Build
+InputPath=..\configMS.h
+
+"..\config.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy ..\configMS.h ..\config.h
+
+# End Custom Build
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 

@@ -7,21 +7,18 @@
  *  you recognize differences
  *
  *  Example: abx music.wav music.mp3
+ *           abx music.wav music.mp3 --help
  *
  *  Note: several 'decoding' utilites must be on the 'right' place
  *
  *  Bugs: 
  *      fix path of decoding utilities
- *      no level analysis, no normalizing if both files are low amplitude
  *      only 16 bit support
  *      only support of the same sample frequency
  *      no exact WAV file header analysis
  *      no mouse or joystick support
  *      don't uses functionality of ath.c
- *      only 1200 tests possible
  *      only 2 files are comparable
- *      no AB repeat mode (like CD players)
- *      mpeg system stream support is missing
  *      worse user interface
  *      quick & dirty hack
  *      wastes memory
@@ -31,13 +28,22 @@
  *      fading time depends on sampling frequency
  *      correlation only done with one channel
  *      correlation of deltas really better than the of the original signal?
- *      Exact calculation with scalar product better?
+ *      cross fade at start/stop
+ *      displaying chunk times?
+ *      reducing DMA buffer to < 0.1 s
+ *      non portable keyboard
+ *      fade out on quit, fade in on start
+ *      level/delay ajustment should be switchable
+ *      pause key missing
+ *      problems with digital silence files (division by 0)
+ *      Größe cross corr fenster 2^16...18
+ *      Stellensuche, ab 0*len oder 0.1*len oder 0.25*len, nach Effektiv oder Spitzenwert
+ *      Maire Brennan Cross Corr Phänomen untersuchen
+ *      Absturz bei LPAC feeding, warum?
  */
 
 #if   defined(HAVE_CONFIG_H)
 # include <config.h>
-#elif defined(HAVE_CONFIG_MS_H)
-# include <configMS.h>
 #endif
 
 #include <assert.h>
@@ -59,7 +65,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 
-#define  MAX  (1<<17)
+#define  MAX  (1<<16)
 
 #ifdef HAVE_SYS_SOUNDCARD_H
 # include <sys/soundcard.h>
@@ -69,8 +75,61 @@
 # include <linux/soundcard.h>         /* stand alone compilable for my tests */
 #endif
 
-#define  BF           4410
-#define  MAX_LEN      (180*44100)
+#define  BF           4608
+#define  MAX_LEN      (210 * 44100)
+#define  DMA_SAMPLES  32768
+
+
+static struct termios stored_settings;
+
+
+void reset ( void )
+{
+    tcsetattr ( 0, TCSANOW, &stored_settings );
+}
+
+
+void set ( void )
+{
+    struct termios new_settings;
+    
+    tcgetattr ( 0, &stored_settings );
+    new_settings = stored_settings;
+    
+    new_settings.c_lflag    &= ~ECHO;
+    /* Disable canonical mode, and set buffer size to 1 byte */
+    new_settings.c_lflag    &= ~ICANON;
+    new_settings.c_cc[VTIME] = 0;
+    new_settings.c_cc[VMIN]  = 1;
+    
+    tcsetattr(0,TCSANOW,&new_settings);
+    return;
+}
+
+
+int sel ( void )
+{
+    struct timeval  t;
+    fd_set          fd [1];
+    int             ret;
+    unsigned char   c;
+
+    FD_SET (0, fd);    
+    t.tv_sec  = 0;
+    t.tv_usec = 0;
+
+    ret = select ( 1, fd, NULL, NULL, &t );
+    
+    switch ( ret ) {
+    case  0: 
+        return -1;
+    case  1: 
+        ret = read (0, &c, 1);
+        return ret == 1  ?  c  :  -1;
+    default: 
+        return -2;
+    }
+}
 
 #define	FFT_ERR_OK	0		// no error
 #define	FFT_ERR_LD	1		// len is not a power of 2
@@ -156,15 +215,13 @@ int  fft ( compl* fn, const size_t newlen )
 	do {
 	    k = p;
 	    do {
-	        f_t  mulr = h1 ( sub ( mult(bp[0],di[0]), mult(bp[1],di[1]) ) );
-		f_t  muli = h1 ( add ( mult(bp[1],di[0]), mult(bp[0],di[1]) ) );
-		f_t  addr = h2 ( si[0] );
-		f_t  addi = h2 ( si[1] );
+	        f_t  mulr = bp[0]*di[0] - bp[1]*di[1];
+		f_t  muli = bp[1]*di[0] + bp[0]*di[1];
 
-		si [0] = add (addr, mulr);
-		si [1] = add (addi, muli);
-		di [0] = sub (addr, mulr);
-		di [1] = sub (addi, muli);
+		di[0]  = si[0] - mulr;
+		di[1]  = si[1] - muli;
+		si[0] += mulr;
+		si[1] += muli;
 
 		si += 2, di += 2;
 	    } while ( --k );
@@ -185,58 +242,47 @@ int  fft ( compl* fn, const size_t newlen )
     return FFT_ERR_OK;
 }
 
-
-static struct termios stored_settings;
-
-
-void reset ( void )
+void  printnumber ( long double x )
 {
-    tcsetattr ( 0, TCSANOW, &stored_settings );
-}
-
-
-void set ( void )
-{
-    struct termios new_settings;
+    unsigned int exp = 0;
     
-    tcgetattr ( 0, &stored_settings );
-    new_settings = stored_settings;
-    
-    new_settings.c_lflag    &= ~ECHO;
-    /* Disable canonical mode, and set buffer size to 1 byte */
-    new_settings.c_lflag    &= ~ICANON;
-    new_settings.c_cc[VTIME] = 0;
-    new_settings.c_cc[VMIN]  = 1;
-    
-    tcsetattr(0,TCSANOW,&new_settings);
-    return;
-}
-
-
-int sel ( void )
-{
-    struct timeval  t;
-    fd_set          fd [1];
-    int             ret;
-    unsigned char   c;
-
-    FD_SET (0, fd);    
-    t.tv_sec  = 0;
-    t.tv_usec = 0;
-
-    ret = select ( 1, fd, NULL, NULL, &t );
-    
-    switch ( ret ) {
-    case  0: 
-        return -1;
-    case  1: 
-        ret = read (0, &c, 1);
-        return ret == 1  ?  c  :  -1;
-    default: 
-        return -2;
+    if      ( x < 9.999995  ) fprintf ( stderr, "%7.5f",  (double)x );
+    else if ( x < 99.99995  ) fprintf ( stderr, "%7.4f",  (double)x );
+    else if ( x < 999.9995  ) fprintf ( stderr, "%7.3f",  (double)x );
+    else if ( x < 9999.995  ) fprintf ( stderr, "%7.2f",  (double)x );
+    else if ( x < 99999.95  ) fprintf ( stderr, "%7.1f",  (double)x );
+    else if ( x < 999999.5  ) fprintf ( stderr, "%6.0f.", (double)x );
+    else if ( x < 9999999.5 ) fprintf ( stderr, "%7.0f",  (double)x );
+    else if ( x < 9.9995e9  ) {
+        while ( x >= 9.9995 ) exp++  , x /= 10;
+        fprintf ( stderr, "%5.3fe%01u", (double)x, exp );
+    } else if ( x < 9.995e99 ) {
+        while ( x >= 9.5e6  ) exp+=6 , x /= 1.e6;
+        while ( x >= 9.995  ) exp++  , x /= 10;
+        fprintf ( stderr, "%4.2fe%02u", (double)x, exp );
+    } else if ( x < 9.95e999L ) {
+        while ( x >= 9.5e18 ) exp+=18, x /= 1.e18;
+        while ( x >= 9.95   ) exp++  , x /= 10;
+        fprintf ( stderr, "%3.1fe%03u", (double)x, exp );
+    } else {
+        while ( x >= 9.5e48 ) exp+=48, x /= 1.e48;
+        while ( x >= 9.5    ) exp++  , x /= 10;
+        fprintf ( stderr, "%1.0f.e%04u", (double)x, exp );
     }
 }
 
+double logdual ( long double x )
+{
+    unsigned int exp = 0;
+    
+    while ( x >= 18446744073709551616. )
+        x /= 18446744073709551616., exp += 64;
+    while ( x >= 256. )
+        x /= 256., exp += 8;
+    while ( x >= 2. )
+        x /= 2., exp += 1;
+    return exp + log (x)/log(2);
+}
 
 int  random_number ( void )
 {
@@ -255,48 +301,116 @@ int  random_number ( void )
     return val & 1;
 }
 
-
-double prob ( int last, int total )
+long double  prob2 ( int last, int total )
 {
-    long double sum = 0.0;
-    long double tmp = pow (0.5, total);
-    int         i   = 0;
+    long double  sum = 0.;
+    long double  tmp = 1.;
+    int          i;
+    int          j   = total;
     
-    
-    for ( ; i <= last; i++ ) {
+    if ( 2*last == total )
+        return 1.;
+    if ( 2*last > total )
+        last = total - last;
+        
+    for ( i = 0; i <= last; i++ ) {
         sum += tmp;
-        tmp = tmp * (total-i) / (1+i);
+        tmp  = tmp * (total-i) / (1+i);
+        while ( j > 0  &&  tmp > 1 )
+            j--, sum *= 0.5, tmp *= 0.5;
     }
-    for ( ; i < total-last; i++ ) {
-        tmp = tmp * (total-i) / (1+i);
-    }
-    for ( ; i <= total; i++ ) {
-        sum += tmp;
-        tmp = tmp * (total-i) / (1+i);
-    }
+    while ( j > 0 )
+        j--, sum *= 0.5;
 
-    return sum;
+    return 2.*sum;
 }
 
 
-void eval ( int right )
+void  eval ( int right )
 {
-    static int  count = 0;
-    static int  okay  = 0;
-    double      val;
+    static int   count = 0;
+    static int   okay  = 0;
+    long double  val;
     
     count ++;
     okay  += right;
     
-    val    = 1 / prob ( okay < count/2 ? okay : count-okay, count );
+    val    = 1.L / prob2 ( okay, count );
     
-    fprintf (stderr, "%4u/%-4u %c %7.2f   %4.2f bit\n", okay, count, right ? ' ' : '!', val, count>1 ? log(val)/log(2)/(count-1) : 0.0 );
+    fprintf (stderr, "   %s %5u/%-5u ", right ? "OK" : "- " , okay, count );
+    printnumber (val);
+    if ( count > 1 )
+        fprintf (stderr, "   %4.2f bit", 0.01 * (int)(logdual(val) / (count-1) * 100.) );
+    fprintf ( stderr, "\n" );
 }
 
 
 typedef signed short  sample_t;
 typedef sample_t      mono_t   [1];
 typedef sample_t      stereo_t [2];
+typedef struct {
+    unsigned long long  n;
+    long double         x;
+    long double         x2;
+    long double         y;
+    long double         y2;
+    long double         xy;
+} korr_t;
+
+
+void  analyze_stereo ( const stereo_t* p1, const stereo_t* p2, size_t len, korr_t* const k )
+{
+    long double  _x = 0, _x2 = 0, _y = 0, _y2 = 0, _xy = 0;
+    double       t1;
+    double       t2;
+    
+    k -> n  += 2*len;
+    
+    for ( ; len--; p1++, p2++ ) {
+        _x  += (t1 = (*p1)[0]); _x2 += t1 * t1;
+        _y  += (t2 = (*p2)[0]); _y2 += t2 * t2;
+                                _xy += t1 * t2;
+        _x  += (t1 = (*p1)[1]); _x2 += t1 * t1;
+        _y  += (t2 = (*p2)[1]); _y2 += t2 * t2;
+                                _xy += t1 * t2;
+    }
+    
+    k -> x  += _x ;
+    k -> x2 += _x2;
+    k -> y  += _y ;
+    k -> y2 += _y2;
+    k -> xy += _xy;
+}
+
+int  sgn ( double x )
+{
+    if ( x == 0 ) return 0;
+    if ( x <  0 ) return -1;
+    return +1;
+}    
+
+long double  report ( const korr_t* const k )
+{
+    long double  r;
+    long double  sx;
+    long double  sy;
+    long double  x;
+    long double  y;
+    long double  b;
+    
+    r  = (k->x2*k->n - k->x*k->x) * (k->y2*k->n - k->y*k->y);
+    r  = r  > 0.l  ?  (k->xy*k->n - k->x*k->y) / sqrt (r)  :  1.l;
+    sx = k->n > 1  ?  sqrt ( (k->x2 - k->x*k->x/k->n) / (k->n - 1) )  :  0.l;
+    sy = k->n > 1  ?  sqrt ( (k->y2 - k->y*k->y/k->n) / (k->n - 1) )  :  0.l;
+    x  = k->n > 0  ?  k->x/k->n  :  0.l;
+    y  = k->n > 0  ?  k->y/k->n  :  0.l;
+    
+    b  = sx != 0   ?  sy/sx * sgn(r)  :  0.l;
+#ifdef DEBUG    
+    fprintf ( stderr, "r=%Lf  sx=%Lf  sy=%Lf  x=%Lf  y=%Lf  b=%Lf\n", r, sx, sy, x, y, b );
+#endif    
+    return b;
+}
 
 
 int feed ( int fd, const stereo_t* p, int len )
@@ -382,92 +496,147 @@ void setup ( int fdd, int samples, long freq )
 }
 
 
-void Message ( const char* s )
+void Message ( const char* s, long index, long freq )
 {
-    fprintf ( stderr, "\rListening %s%*.*s\rListening %s",
-              s, 68-(int)strlen(s), 68-(int)strlen(s), "", s );
+    fprintf ( stderr, "\rListening %s  %2lu:%02lu.%02lu%*.*s\rListening %s",
+              s, index/freq/60, index/freq%60, index*100/freq%100, 58-(int)strlen(s), 58-(int)strlen(s), "", s );
     fflush  ( stderr );
 }
 
 
 void testing ( const stereo_t* A, const stereo_t* B, size_t len, long freq )
 {
-    int    c;
-    int    fd    = open ( "/dev/dsp", O_WRONLY );
-    int    rnd   = random_number ();   /* Auswahl von X */
-    int    state = 0;                  /* derzeitiger Füttungsmodus */
-    int    index = 0;                  /* derzitiger Offset auf den Audioströmen */
-    float  fac1;
-    float  fac2;
-    char   buff [128];
+    int     c;
+    int     fd    = open ( "/dev/dsp", O_WRONLY );
+    int     rnd   = random_number ();   /* Auswahl von X */
+    int     state = 0;                  /* derzeitiger Füttungsmodus */
+    float   fac1  = 0.5;
+    float   fac2  = 0.5;
+    size_t  start = 0;
+    size_t  stop  = len;
+    size_t  index = start;                  /* derzitiger Offset auf den Audioströmen */
+    char    buff [128];
 
     setup ( fd, len, freq );
     
-    Message ( "A" );
+    Message ( "A  ", index, freq );
     while ( 1 ) {
-        c = sel ();
+rep:    c = sel ();
         if ( c == 27 )
             c = sel () + 0x100;
-            
+
         switch ( c ) {
         case 'A' :
         case 'a' :
-            Message ( "A" );
+            Message ( "A  ", index, freq );
             if ( state != 0 )
                 state = 2;
             break;
 
         case 'B' :
         case 'b' :
-            Message ( "B" );
+            Message ( "  B", index, freq );
             if ( state != 1 )
                 state = 3;
             break;
 
         case 'X' :
         case 'x' :
-            Message ( "X" );
+            Message ( " X ", index, freq );
             if ( state != rnd )
                 state = rnd + 2;
             break;
 
-        case 'M' :
         case 'm' :
-            Message ( "Mixing A and B" );
-	    state = 4;
+	    state = 8;
             break;
 
+        case 'M' :
+            state = (state & 1) + 4;
+            break;
+            
+        case 'x'&0x1F:
+            state = (state & 1) + 6;
+            break;
+
+        case ' ':
+            start = 0;
+            stop  = len;
+            break;
+            	    
+	case 'o'  :
+	    if ( index < DMA_SAMPLES )
+	        start = index + stop - start - DMA_SAMPLES;
+	    else
+	        start = index - DMA_SAMPLES;
+	    break;
+	case 'p'  :
+	    if ( index < DMA_SAMPLES )
+	        stop = index + stop - start - DMA_SAMPLES;
+	    else
+	        stop = index - DMA_SAMPLES;
+	    break;
+	case 'h'  :
+	    if ( start > 441 )
+	        start -= 441;
+	    else
+	        start = 0;
+	    index = start;
+	    goto rep;
+	case 'j'  :
+	    if ( start < len-441 )
+	        start += 441;
+	    else
+	        start = len;
+	    index = start;
+	    goto rep;
+	case 'k'  :
+	    if ( stop > 441 )
+	        stop -= 441;
+	    else
+	        stop = 0;
+	    goto rep;
+	case 'l'  :
+	    if ( stop < len-441 )
+	        stop += 441;
+	    else
+	        stop = len;
+	    goto rep;
+	case '\n':
+	    index = start;
+	    break;
+
         case 'D'+0x100:
-            Message ( "Difference (+40 dB)" );
-            state = 5;
+            Message ( "Difference (+40 dB)", index, freq );
+            state = 9;
             fac1  = -100.;
             fac2  = +100.;
             break;
 	    
         case 'd'+0x100:
-            Message ( "Difference (+30 dB)" );
-            state = 5;
+            Message ( "Difference (+30 dB)", index, freq );
+            state = 9;
             fac1  = -32.;
             fac2  = +32.;
             break;
 	    
         case 'D' & 0x1F :
-            Message ( "Difference (+20 dB)" );
-            state = 5;
+            Message ( "Difference (+20 dB)", index, freq );
+            state = 9;
             fac1  = -10.;
             fac2  = +10.;
             break;
 	    
         case 'D' :
-            Message ( "Difference (+10 dB)" );
-            state = 5;
+            Message ( "Difference (+10 dB)", index, freq );
+            state = 9;
             fac1  = -3.;
             fac2  = +3.;
             break;
 	    
         case 'd' :
-            Message ( "Difference (  0 dB)" );
-            state = 5;
+            Message ( "Difference (  0 dB)", index, freq );
+            state = 9;
             fac1  = -1.;
             fac2  = +1.;
             break;
@@ -482,29 +651,33 @@ void testing ( const stereo_t* A, const stereo_t* B, size_t len, long freq )
         case '7' :
         case '8' :
         case '9' :
-	    sprintf ( buff, "B (Errors +%c dB)", c );
-            Message ( buff );
-            state = 5;
+	    sprintf ( buff, "  B (Errors +%c dB)", c );
+            Message ( buff, index, freq );
+            state = 9;
             fac2  = pow (10., 0.05*(c-'0') );
             fac1  = 1. - fac2;
             break;
 	    
         case 'A' & 0x1F:
-            fprintf (stderr, "  Vote for X:=A  " );
+            fprintf (stderr, "   Vote for X:=A" );
             eval ( rnd == 0 );
             rnd   = random_number ();
-            if ( state != rnd )
+	    if ( state == 6  &&  state == 7 )
+	        state = 6 + rnd;
+            else if ( state != rnd )
                 state = rnd + 2;
-            Message ("X" );
+            Message (" X ", index, freq );
             break;
 
         case 'B' & 0x1F:
-            fprintf (stderr, "  Vote for X:=B  " );
+            fprintf (stderr, "   Vote for X:=B" );
             eval ( rnd == 1 );
             rnd   = random_number ();
-            if ( state != rnd )
+	    if ( state == 6  &&  state == 7 )
+	        state = 6 + rnd;
+            else if ( state != rnd )
                 state = rnd + 2;
-            Message ("X" );
+            Message (" X ", index, freq );
             break;
 
         case -1: 
@@ -516,76 +689,113 @@ void testing ( const stereo_t* A, const stereo_t* B, size_t len, long freq )
             
         case 'Q':
 	case 'q':
-            fprintf ( stderr, "\n%-79.79s", "Quit program" );
+            fprintf ( stderr, "\n%-79.79s\r", "Quit program" );
             close (fd);
             fprintf ( stderr, "\n\n");
             return;
-	    
         }
 
         switch (state) {
         case 0: /* A */
-            if ( index + BF >= len )
-                index += feed (fd, A+index, len-index );
+            if ( index + BF >= stop )
+                index += feed (fd, A+index, stop-index );
             else
                 index += feed (fd, A+index, BF );
-
             break;
 
         case 1: /* B */
-            if ( index + BF >= len )
-                index += feed (fd, B+index, len-index );
+            if ( index + BF >= stop )
+                index += feed (fd, B+index, stop-index );
             else
                 index += feed (fd, B+index, BF );
             break;
 
         case 2: /* B => A */
-            if ( index + BF >= len )
-                index += feed2 (fd, B+index, A+index, len-index );
+            if ( index + BF >= stop )
+                index += feed2 (fd, B+index, A+index, stop-index );
             else
                 index += feed2 (fd, B+index, A+index, BF );
             state = 0;
             break;
 
         case 3: /* A => B */
-            if ( index + BF >= len )
-                index += feed2 (fd, A+index, B+index, len-index );
+            if ( index + BF >= stop )
+                index += feed2 (fd, A+index, B+index, stop-index );
             else
                 index += feed2 (fd, A+index, B+index, BF );
             state = 1;
             break;
 	    
-	case 4:
-            if ( index + BF/4 >= len )
-                index += feed2 (fd, A+index, B+index, len-index );
+        case 4: /* A */
+            Message ( "A  ", index, freq );
+            if ( index + BF >= stop )
+                index += feed (fd, A+index, stop-index ),
+                state++;
             else
-                index += feed2 (fd, A+index, B+index, BF/4 );
-            if ( index + BF/2 >= len )
-                index += feed (fd, B+index, len-index );
+                index += feed (fd, A+index, BF );
+            break;
+
+        case 5: /* B */
+            Message ( "  B", index, freq );
+            if ( index + BF >= stop )
+                index += feed (fd, B+index, stop-index ),
+                state--;
+            else
+                index += feed (fd, B+index, BF );
+            break;
+
+        case 6: /* X */
+            Message ( " X ", index, freq );
+            if ( index + BF >= stop )
+                index += feed (fd, (rnd ? B : A)+index, stop-index ),
+                state++;
+            else
+                index += feed (fd, (rnd ? B : A)+index, BF );
+            break;
+
+        case 7: /* !X */
+            Message ( "!X ", index, freq );
+            if ( index + BF >= stop )
+                index += feed (fd, (rnd ? A : B)+index, stop-index ),
+                state--;
+            else
+                index += feed (fd, (rnd ? A : B)+index, BF );
+            break;
+
+	case 8:
+            if ( index + 512 >= stop )
+                index += feed2 (fd, A+index, B+index, stop-index );
+            else
+                index += feed2 (fd, A+index, B+index, 512 );
+            Message ( "  B", index, freq );
+            if ( index + BF/2 >= stop )
+                index += feed (fd, B+index, stop-index );
             else
                 index += feed (fd, B+index, BF/2 );
-            if ( index + BF/4 >= len )
-                index += feed2 (fd, B+index, A+index, len-index );
+            if ( index + 512 >= stop )
+                index += feed2 (fd, B+index, A+index, stop-index );
             else
-                index += feed2 (fd, B+index, A+index, BF/4 );
-            if ( index + BF/2 >= len )
-                index += feed (fd, A+index, len-index );
+                index += feed2 (fd, B+index, A+index, 512 );
+            Message ( "A  ", index, freq );
+            if ( index + BF/2 >= stop )
+                index += feed (fd, A+index, stop-index );
             else
                 index += feed (fd, A+index, BF/2 );
 	    break;
 
-        case 5: /* Liko */
-            if ( index + BF >= len )
-                index += feedfac (fd, A+index, B+index, len-index, fac1, fac2 );
+        case 9: /* Liko */
+            if ( index + BF >= stop )
+                index += feedfac (fd, A+index, B+index, stop-index, fac1, fac2 );
             else
-                index += feedfac (fd, A+index, B+index, BF       , fac1, fac2 );
+                index += feedfac (fd, A+index, B+index, BF        , fac1, fac2 );
             break;
             
         default:
             assert (0);
         }
-        if (index >= len)
-            index = 0;
+        if (index >= stop)
+            index = start;
+        fprintf ( stderr, "  %2lu:%02lu.%02lu\b\b\b\b\b\b\b\b\b\b", index/freq/60, index/freq%60, index*100/freq%100 );
 	fflush ( stderr );
     }
 }
@@ -608,23 +818,25 @@ typedef struct {
 #define REDIR " 2> /dev/null"
 
 const decoder_t  decoder [] = {
-    { ".mp1"    , "/usr/local/bin/mpg123 -w - %s" REDIR },  // MPEG Layer I   : www.iis.fhg.de, www.lame.org, www.toolame.org
-    { ".mp2"    , "/usr/local/bin/mpg123 -w - %s" REDIR },  // MPEG Layer II  : www.iis.fhg.de, www.lame.org, www.toolame.org
-    { ".mp3"    , "/usr/local/bin/mpg123 -w - %s" REDIR },  // MPEG Layer III : www.iis.fhg.de, www.lame.org, www.toolame.org
-    { ".mpp"    , "/usr/local/bin/mppdec %s - "   REDIR },  // MPEGplus       : www.stud.uni-hannover.de/user/73884/
-    { ".mp+"    , "/usr/local/bin/mppdec %s - "   REDIR },  // MPEGplus       : www.stud.uni-hannover.de/user/73884/
-    { ".aac"    , "/usr/local/bin/faad   %s -"    REDIR },  // Advanced Audio Coding: www.psytel.com
-    { ".ac3"    , "/usr/local/bin/ac3dec %s"      REDIR },  // Dolby AC3      : www.att.com
-    { ".ogg"    , "/usr/local/bin/ogg123 %s -"    REDIR },  // Ogg Vorbis     : www.xiph.org
+    { ".mp1"    , "/usr/local/bin/mpg123 -w - %s" REDIR },  // MPEG Layer I         : www.iis.fhg.de, www.mpeg.org
+    { ".mp2"    , "/usr/local/bin/mpg123 -w - %s" REDIR },  // MPEG Layer II        : www.iis.fhg.de, www.uq.net.au/~zzmcheng, www.mpeg.org
+    { ".mp3"    , "/usr/local/bin/mpg123 -w - %s" REDIR },  // MPEG Layer III       : www.iis.fhg.de, www.mp3dev.org/mp3, www.mpeg.org
+    { ".mpp"    , "/usr/local/bin/mppdec %s -"    REDIR },  // MPEGplus             : www.stud.uni-hannover.de/user/73884
+    { ".mp+"    , "/usr/local/bin/mppdec %s -"    REDIR },  // MPEGplus             : www.stud.uni-hannover.de/user/73884
+    { ".aac"    , "/usr/local/bin/faad   %s -"    REDIR },  // Advanced Audio Coding: psytel.hypermart.net, www.aac-tech.com, sourceforge.net/projects/faac, www.aac-audio.com, www.mpeg.org
+    { ".ac3"    , "/usr/local/bin/ac3dec %s"      REDIR },  // Dolby AC3            : www.att.com
+    { ".ogg"    , "/usr/local/bin/ogg123 %s -"    REDIR },  // Ogg Vorbis           : www.xiph.org/ogg/vorbis/index.html
     { ".mod"    , "xmp -b16 -c -f44100 --stereo -o- %s | sox -r44100 -sw -c2 -traw - -twav -"
-                                                  REDIR },  // Amiga's Music on Disk
-    { ".ra"     , "echo %s"                       REDIR },  // Real Audio     : www.real.com
-    { ".epac"   , "echo %s"                       REDIR },  // ePAC           : www.audioveda.com
-    { ".qdm"    , "echo %s"                       REDIR },  // QDesign Music 2: www.qdesign.com
-    { ".vqf"    , "echo %s"                       REDIR },  // TwinVQ         : www.yamaha-xg.com
-    { ".wma"    , "echo %s"                       REDIR },  // Microsoft Media Audio: www.windowsmedia.com
-    { ".mac"    , "echo %s"                       REDIR },  // Monkey's Audio Codec: www.monkeysaudio.com
-    { ".lpac"   , "echo %s"                       REDIR },  // Lossless predictive Audio Compression: www-ft.ee.tu-berlin.de/~liebchen/lpac.html
+                                                  REDIR },  // Amiga's Music on Disk:
+    { ".rm"     , "echo %s '???'"                 REDIR },  // Real Audio           : www.real.com
+    { ".pac"    , "echo %s '???'"                 REDIR },  // ePAC                 : www.audioveda.com, www.lucent.com/ldr
+    { ".mov"    , "echo %s '???'"                 REDIR },  // QDesign Music 2      : www.qdesign.com
+    { ".vqf"    , "echo %s '???'"                 REDIR },  // TwinVQ               : www.yamaha-xg.com/english/xg/SoundVQ, www.vqf.com, sound.splab.ecl.ntt.co.jp/twinvq-e
+    { ".wma"    , "echo %s '???'"                 REDIR },  // Microsoft Media Audio: www.windowsmedia.com, www.microsoft.com/windows/windowsmedia
+    { ".mac"    , "echo %s '???'"                 REDIR },  // Monkey's Audio Codec : www.monkeysaudio.com (email@monkeysaudio.com)
+    { ".pac"    , "/usr/local/bin/lpac -x %s /proc/self/fd/1"                       
+                                                  REDIR },  // Lossless predictive Audio Compression: www-ft.ee.tu-berlin.de/~liebchen/lpac.html (liebchen@ft.ee.tu-berlin.de)
+    { ".shn"    , "/usr/local/bin/shorten -x < %s"REDIR },  // Shorten              : shnutils.freeshell.org, www.softsound.com/Shorten.html (shnutils@freeshell.org, shorten@softsound.com)
     { ".wav.gz" , "gzip  -d < %s | sox -twav - -twav -"  
                                                   REDIR },  // gziped WAV
     { ".wav.sz" , "szip  -d < %s | sox -twav - -twav -"  
@@ -698,8 +910,8 @@ int  readwave ( stereo_t* buff, size_t maxlen, const char* name, size_t* len )
 
 double  cross_analyze_new ( const stereo_t* p1, const stereo_t *p2, size_t len )
 {
-    float   P1 [MAX][2];
-    float   P2 [MAX][2];
+    float   P1 [MAX] [2];
+    float   P2 [MAX] [2];
     int     i;
     int     maxindex;
     double  sum1;
@@ -779,11 +991,13 @@ rep:sum1 = sum2 = 0.;
         
     ret += maxindex;
     tmp = 100./MAX/sqrt(sum1*sum2);
+#ifdef DEBUG    
     printf ( "[%5d]%8.4f  [%5d]%8.4f  [%5d]%8.4f  [%10.4f]%8.4f\n", 
              ret- 1, (y1+y2)*tmp, 
 	     ret   ,     y2 *tmp, 
 	     ret+ 1, (y3+y2)*tmp, 
 	     ret+xo, (yo+y2)*tmp );
+#endif	     
 	     
     if (maxindex) goto rep;
     
@@ -824,6 +1038,33 @@ void  DC_cancel ( stereo_t* p, size_t len )
     }
 }
 
+void  multiply ( char c, stereo_t* p, size_t len, double fact )
+{
+    size_t  i;
+    
+    if ( fact == 1. )
+        return;
+    fprintf (stderr, "Multiplying %c by %7.5f\n", c, fact );
+    
+    for (i = 0; i < len; i++ ) {
+        p[i][0] = to_short (p[i][0] * fact );
+        p[i][1] = to_short (p[i][1] * fact );
+    }
+}
+
+
+int  maximum ( stereo_t* p, size_t len )
+{
+    int     max = 0;
+    size_t  i;
+    
+    for (i = 0; i < len; i++ ) {
+        if (abs(p[i][0]) > max) max = abs(p[i][0]);
+        if (abs(p[i][1]) > max) max = abs(p[i][1]);
+    }
+    return max;
+}
+
 
 void  usage ( void )
 {
@@ -837,15 +1078,17 @@ void  usage ( void )
 	"  x/X:    Listen to the randomly selected File X, which is A or B\n"
 	"  Ctrl-A: You vote for X=A\n"
 	"  Ctrl-B: You vote for X=B\n"
-	"  m/M:    Alternating playing A and B. The switching is done appr. 6 times/sec\n"
-	"  d:      Listen to the difference A-B (+ 6 dB)\n"
-	"  D:      Listen to the difference A-B (+16 dB)\n"
-	"  Ctrl-D: Listen to the difference A-B (+26 dB)\n"
-	"  0...9:  You listen to B, but the errors between A and B are amplified by 0-9 dB\n"
+	"  m:      Alternating playing A and B. Fast switching\n"
+	"  M:      Alternating playing A and B. Slow switching\n"
+	"  d/D/Ctrl-D/Alt-d/Alt-D:\n"
+	"          Listen to the difference A-B (+0 dB...+40 dB)\n"
+	"  o/p:    Chunk select\n"
+	"  hjkl:   Chunk fine adjust (hj: start, kl: stop)\n"
+	"  Space:  Chunk deselect\n"
+	"  0...9:  Listen to B, but difference A-B is amplified by 0-9 dB\n"
 	"  Q:      Quit the program\n"
 	"\n"
-	"I advice to use the \"better\"/reference file as File_A and the other as File_B\n"
-	"\n"
+	"I advice to use the \"better\"/reference file as File_A, the other as File_B\n"
     );
 }
 
@@ -858,18 +1101,26 @@ int  main ( int argc, char** argv )
     stereo_t*  B  = _B;
     size_t     len_A;
     size_t     len_B;
+    size_t     len;
+    int        max_A;
+    int        max_B;
+    int        max;
     long       freq1;
     long       freq2;
     int        shift;
     double     fshift;
+    double     ampl;
+    int        ampl_X;
+    korr_t     k;
 
     switch ( argc ) {
     case 0:
     case 1:
     case 2:
-    default:
         usage ();
 	return 1;
+    default:
+        usage ();
     case 3:
         break;
     }
@@ -884,9 +1135,10 @@ int  main ( int argc, char** argv )
 	return 2;
     }
     
-    fshift = cross_analyze_new     ( A, B, len_A < len_B  ?  len_A  :  len_B );
+    len    = len_A < len_B  ?  len_A  :  len_B;
+    fshift = cross_analyze_new     ( A, B, len );
     shift  = floor ( fshift + 0.5 );
-    
+        
     if (shift > 0) {
         fprintf ( stderr, "Delaying A by %d samples\n", +shift);
         B     += shift;
@@ -898,8 +1150,36 @@ int  main ( int argc, char** argv )
         len_A += shift;
     }
 
+    len    = len_A < len_B  ?  len_A  :  len_B;
+    memset ( &k, 0, sizeof(k) );    
+    analyze_stereo ( A, B, len, &k );
+    ampl  = report (&k);
+    max_A = maximum ( A, len ); 
+    max_B = maximum ( B, len ); 
+    
+    if ( ampl <= 0.98454828442328513548 ) {
+        max    = max_A*ampl < max_B  ?  max_B  :  max_A*ampl;
+        ampl_X = (int)(29203 / max);
+        if ( ampl_X < 2 ) ampl_X = 1;
+        multiply ( 'A', A, len, ampl*ampl_X );
+        multiply ( 'B', B, len,      ampl_X );
+    } else if ( ampl >= 1.01569421817210920582 ) {
+        max    = max_A < max_B/ampl  ?  max_B/ampl  :  max_A;
+        ampl_X = (int)(29203 / max);
+        if ( ampl_X < 2 ) ampl_X = 1;
+        multiply ( 'A', A, len,         ampl_X );
+        multiply ( 'B', B, len, 1./ampl*ampl_X );
+    } else {
+        max    = max_A < max_B ? max_B : max_A;
+        ampl_X = (int)(29203 / max);
+        if ( ampl_X < 2 ) ampl_X = 1;
+        multiply ( 'A', A, len, ampl_X );
+        multiply ( 'B', B, len, ampl_X );
+    }
+
     set ();
-    testing ( A, B, len_A < len_B  ?  len_A  :  len_B, freq1 );
+    nice (-20);
+    testing ( A, B, len, freq1 );
     reset ();
 
     free (_A);

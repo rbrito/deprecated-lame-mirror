@@ -29,7 +29,7 @@ CPP_OPTS = $(CPP_OPTS) -DHAVE_MPGLIB
 # Define these in the OS specific sections below to compile in support
 # for the Ogg Vorbis audio format (both decoding and encoding)
 # 
-# VORBIS = -DHAVEVORBIS  -I ../vorbis/include
+# VORBIS = -DHAVE_VORBIS  -I ../vorbis/include
 # VORBIS_LIB = -L ../vorbis/lib vorbis.lib
 ##########################################################################
 
@@ -39,12 +39,12 @@ CPP_OPTS = $(CPP_OPTS) -DHAVE_MPGLIB
 # Requires ncurses, but libtermcap also works.  
 # If you have any trouble, just dont define these
 #
-# BRHIST_SWITCH = -DBRHIST
+# BRHIST_SWITCH = -DBRHIST -DHAVE_TERMCAP
 # LIBTERMCAP = ncurses.lib
 # LIBTERMCAP = termcap.lib
 #
 # or, to try and simulate TERMCAP (ANSI), use:
-# BRHIST_SWITCH = -DBRHIST -DNOTERMCAP
+# BRHIST_SWITCH = -DBRHIST
 #
 ##########################################################################
 
@@ -74,7 +74,7 @@ CPP_OPTS = $(CPP_OPTS) -DHAVE_MPGLIB
 # Requires  -DHAVE_MPGLIB
 # and SNDLIB = -DLAME or -DLIBSNDFILE
 #
-# GTK = -DHAVEGTK `gtk-config --cflags`
+# GTK = -DHAVE_GTK `gtk-config --cflags`
 # GTKLIBS = `gtk-config --libs` 
 #
 ##########################################################################
@@ -94,7 +94,7 @@ MAKEDEP =
 RM = del
 
 # Comment out next line if you want to remove VBR histogram capability
-BRHIST_SWITCH = -DBRHIST -DNOTERMCAP
+BRHIST_SWITCH = -DBRHIST
 
 # uncomment to use LIBSNDFILE
 # SNDLIB = -DLIBSNDFILE
@@ -112,7 +112,7 @@ BRHIST_SWITCH = -DBRHIST -DNOTERMCAP
 # FEATURES = -DRH_NOISE_CALC
 
 
-CC_SWITCHES = -DHAVE_CONFIG_MS_H -DNDEBUG $(CC_OPTS) $(SNDLIB) $(GTK) $(BRHIST_SWITCH) $(VORBIS) 
+CC_SWITCHES = -DHAVE_CONFIG_H -DNDEBUG $(CC_OPTS) $(SNDLIB) $(GTK) $(BRHIST_SWITCH) $(VORBIS) 
 frontend_sources = \
         frontend/brhist.c \
 	frontend/get_audio.c \
@@ -150,7 +150,7 @@ lib_sources = \
         mpglib/interface.c 
 
 
-gtk_sources = analyze/gtkanal.c analyze/gpkplotting.c
+gtk_sources = frontend/gtkanal.c frontend/gpkplotting.c
 
 gtk_obj = $(gtk_sources:.c=.obj)
 frontend_obj = $(frontend_sources:.c=.obj)

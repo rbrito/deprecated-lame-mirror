@@ -22,9 +22,11 @@ CFG=libmp3lame - Win32 Debug
 !MESSAGE 
 
 # Begin Project
+# PROP AllowPerConfigDependencies 0
 # PROP Scc_ProjName ""
 # PROP Scc_LocalPath ""
-CPP=xicl.exe
+CPP=cl.exe
+RSC=rc.exe
 
 !IF  "$(CFG)" == "libmp3lame - Win32 Release"
 
@@ -38,8 +40,11 @@ CPP=xicl.exe
 # PROP Output_Dir "Release"
 # PROP Intermediate_Dir "Release"
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "HAVE_CONFIG_MS_H" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /O2 /I "../" /I "../include" /I "../mpglib" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_MPGLIB" /YX /FD /c
+# ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "HAVE_CONFIG_H" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
+# ADD CPP /nologo /Zp8 /W3 /GX- /O2 /I "../" /I "../mpglib" /I "../include" /I ".." /D "NDEBUG" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "WIN32" /D "HAVE_CONFIG_H" /FD /c
+# SUBTRACT CPP /YX
+# ADD BASE RSC /l 0x409
+# ADD RSC /l 0x409
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
@@ -59,8 +64,10 @@ LIB32=link.exe -lib
 # PROP Output_Dir "Debug"
 # PROP Intermediate_Dir "Debug"
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /W3 /GX /Z7 /Od /D "WIN32" /D "HAVE_CONFIG_MS_H" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /Z7 /Od /I "../" /I "../include" /I "../mpglib" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "TAKEHIRO_IEEE754_HACK" /D "HAVE_MPGLIB" /YX /FD /c
+# ADD BASE CPP /nologo /W3 /GX /Z7 /Od /D "WIN32" /D "HAVE_CONFIG_H" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
+# ADD CPP /nologo /W3 /GX /Z7 /Od /I "../" /I "../mpglib" /I "../include" /I ".." /D "_DEBUG" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "WIN32" /D "HAVE_CONFIG_H" /YX /FD /c
+# ADD BASE RSC /l 0x409
+# ADD RSC /l 0x409
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
@@ -152,6 +159,25 @@ SOURCE=.\version.c
 # Begin Source File
 
 SOURCE=.\bitstream.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\configMS.h
+
+!IF  "$(CFG)" == "libmp3lame - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "libmp3lame - Win32 Debug"
+
+# Begin Custom Build
+InputPath=..\configMS.h
+
+"..\config.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy ..\configMS.h ..\config.h
+
+# End Custom Build
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
