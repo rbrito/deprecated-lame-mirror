@@ -1244,12 +1244,14 @@ inline static int
 find_scalefac(lame_internal_flags *gfc, int j, FLOAT xmin, int bw,
 	      int shortflag, int sf)
 {
-    int sf_ok = 10000, delsf = 8, sfmin = -7*2, endflag = 0;
+    int sf_ok = 10000, delsf = 8, sfmin = -7*4, endflag = 0;
     /* search range of sf.
        on shoft blocks, it is large because of subblock_gain */
     if (shortflag)
-	sfmin = -7*4-7*2;
+	sfmin = -7*8-7*4;
 
+    sf -= 12;
+    assert(sf >= sfmin);
     do {
 	FLOAT xfsf;
 #ifdef HAVE_NASM
