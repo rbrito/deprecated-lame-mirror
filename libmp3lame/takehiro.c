@@ -529,7 +529,7 @@ recalc_divide_sub(
     )
 {
     int bits, r2, r2t, old = gi->part2_3_length;
-    for (r2 = 0; r2 < SBMAX_l - 1; r2++) {
+    for (r2 = 0; r2 < SBMAX_l - 2; r2++) {
 	int a2 = gfc->scalefac_band.l[r2+2];
 	if (a2 >= gi->big_values)
 	    break;
@@ -537,7 +537,7 @@ recalc_divide_sub(
 	if (gi->part2_3_length <= bits + ((gi->big_values - a2) >> 1) + 2)
 	    continue;
 
-	r2t = ix_max2(&max_info[r2+2], &max_info[SBMAX_l-1]);
+	r2t = ix_max2(&max_info[r2+2], &max_info[SBMAX_l]);
 	bits += choose_table(&gi->l3_enc[a2], &gi->l3_enc[gi->big_values], &r2t);
 	if (gi->part2_3_length <= bits)
 	    continue;
