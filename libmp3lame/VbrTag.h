@@ -70,7 +70,6 @@ int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf);
 int InitVbrTag(lame_t gfp);
 int PutVbrTag(lame_t gfp, FILE *fid);
 void AddVbrFrame(lame_t gfp);
-void ReportLameTagProgress(lame_t gfp,int nStart);
 void UpdateMusicCRC(uint16_t *crc,unsigned char *buffer, int size);
 
 #endif

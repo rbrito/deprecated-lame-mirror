@@ -352,25 +352,14 @@ static int CRC_update_lookup(int value, int crc)
     return crc;
 }
 
-void UpdateMusicCRC(uint16_t *crc,unsigned char *buffer, int size){
+void UpdateMusicCRC(uint16_t *crc,unsigned char *buffer, int size)
+{
     int i;
     for (i=0; i<size; ++i) 
         *crc = CRC_update_lookup(buffer[i],*crc);
 }
 
 
-
-
-void ReportLameTagProgress(lame_t gfc, int nStart)
-{
-    if (!gfc->bWriteVbrTag)
-	return;
-
-    if (nStart)
-	MSGF( gfc, "Writing LAME Tag...");
-    else
-	MSGF( gfc, "done\n");
-}
 
 
 /****************************************************************************

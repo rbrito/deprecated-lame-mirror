@@ -671,9 +671,11 @@ main(int argc, char **argv)
                 ret = encoder(gf, outf, use_flush_nogap, nogap_inPath[i],
 			      outPath);	
                 
-                if (silent<=0) ReportLameTagProgress(gf,1);
-                lame_mp3_tags_fid(gf, outf); /* add VBR tags to mp3 file */
-                if (silent<=0) ReportLameTagProgress(gf,0);
+                if (silent<=0 && lame_get_bWriteVbrTag)
+		    printf("Writing LAME Tag...");
+		lame_mp3_tags_fid(gf, outf); /* add VBR tags to mp3 file */
+                if (silent<=0 && lame_get_bWriteVbrTag)
+		    printf("done\n");
                 
                 fclose(outf); /* close the output file */
                 close_infile(); /* close the input file */
@@ -692,9 +694,11 @@ main(int argc, char **argv)
             brhist_init_package(gf);
             ret = encoder(gf, outf, 0, inPath, outPath);
             
-            if (silent<=0) ReportLameTagProgress(gf,1);
+	    if (silent<=0 && lame_get_bWriteVbrTag)
+		printf("Writing LAME Tag...");
             lame_mp3_tags_fid(gf, outf); /* add VBR tags to mp3 file */
-            if (silent<=0) ReportLameTagProgress(gf,0);
+	    if (silent<=0 && lame_get_bWriteVbrTag)
+		printf("done\n");
             
             fclose(outf); /* close the output file */
             close_infile(); /* close the input file */
