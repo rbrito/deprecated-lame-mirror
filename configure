@@ -2697,7 +2697,7 @@ fi
 if test "${GCC}" = "yes"; then
 	echo $ac_n "checking version of GCC""... $ac_c" 1>&6
 echo "configure:2700: checking version of GCC" >&5
-	GCC_version=`gcc --version`
+	GCC_version=`${CC} --version`
 	echo "$ac_t""${GCC_version}" 1>&6
 fi
 
