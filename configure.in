@@ -570,6 +570,8 @@ case $host_cpu in
 	;;
 x86_64)
 	# use internal knowledge of the IEEE 754 layout
+	CPUTYPE="i386"
+
 	AC_DEFINE(USE_IEEE754_HACK, 1, IEEE754 compatible machine)
 	;;
 *)
@@ -600,12 +602,34 @@ AC_MSG_RESULT(${CONFIG_ALLDOUBLE})
 
 
 
+case $host_os in
+	mingw|mingw32|cygwin|cygwin32)
+		CYGWIN=yes
+		NASM_FORMAT="-f win32 -DWIN32"
+		;;
+	*)
+		CYGWIN=no
+		NASM_FORMAT="-f elf"
+		;;
+esac
+
 AC_PATH_PROG(NASM, nasm, no)
+case $host_cpu in
+x86_64)
+	NASM_FORMAT="$NASM_FORMAT -m amd64"
+	NASM=no
+esac
+
 case "${NASM}" in
 no)
-	AC_PATH_PROG(NASM, yasm, no)
+	AC_PATH_PROG(YASM, yasm, no)
+	if test "${YASM}" != "no"; then
+		NASM_FORMAT="$NASM_FORMAT -DYASM"
+		NASM=${YASM}
+	fi
 	;;
 esac
+
 case "${NASM}" in
 no)
 	;;
@@ -627,17 +651,6 @@ no)
 	;;
 esac
 AM_CONDITIONAL(HAVE_NASM, test "${NASM}" != "no")
-
-case $host_os in
-	mingw|mingw32|cygwin|cygwin32)
-		CYGWIN=yes
-		NASM_FORMAT="-f win32 -DWIN32"
-		;;
-	*)
-		CYGWIN=no
-		NASM_FORMAT="-f elf"
-		;;
-esac
 
 #
 # 'expopt' is used for "additional optimizations", not for optimizations which
