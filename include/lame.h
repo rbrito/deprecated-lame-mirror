@@ -280,11 +280,15 @@ int CDECL lame_set_ReplayGain_input(lame_global_flags *, int);
 int CDECL lame_get_ReplayGain_input(const lame_global_flags *);
 
 #ifdef DECODE_ON_THE_FLY
-/* perform ReplayGain analysis on decoded data?  default = 0 (disabled) */
+/* perform ReplayGain analysis on decoded data?  default = 0 (disabled) 
+ * NOTE: this option enables decoding on the fly and therefore if it is
+ * set the build-in decoder should not be used */
 int CDECL lame_set_ReplayGain_decode(lame_global_flags *, int);
 int CDECL lame_get_ReplayGain_decode(const lame_global_flags *);
 
-/* find peak sample?  default = 0 (disabled) */
+/* find peak sample?  default = 0 (disabled) 
+ * NOTE: this option enables decoding on the fly and therefore if it is
+ * set the build-in decoder should not be used */
 int CDECL lame_set_findPeakSample(lame_global_flags *, int);
 int CDECL lame_get_findPeakSample(const lame_global_flags *);
 #endif
@@ -905,7 +909,9 @@ typedef struct {
 } mp3data_struct;
 
 
-/* required call to initialize decoder */
+/* required call to initialize decoder 
+ * NOTE: the decoder should not be used when encoding is performed
+ * with decoding on the fly */
 int CDECL lame_decode_init(void);
 
 /*********************************************************************
