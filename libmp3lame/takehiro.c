@@ -39,6 +39,9 @@
 # define ixmax(a,b) ix_max(a,b)
 #endif
 
+#define SCALEFAC_SCFSI_FLAG    (-1)
+#define SCALEFAC_ANYTHING_GOES (-2)
+
 /* log2(x). the last element is for the case when sfb is over valid range.*/
 static const int log2tab[] = {
     0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 5};
@@ -765,7 +768,7 @@ scfsi_calc(lame_t gfc, int ch)
 	}
 	if (sfb == scfsi_band[i + 1]) {
 	    for (sfb = scfsi_band[i]; sfb < scfsi_band[i + 1]; sfb++) {
-		gi->scalefac[sfb] = -1;
+		gi->scalefac[sfb] = SCALEFAC_SCFSI_FLAG;
 	    }
 	    s1 = gfc->scfsi[ch][i] = 1;
 	}
@@ -774,7 +777,7 @@ scfsi_calc(lame_t gfc, int ch)
     if (!s1) return;
     s1 = c1 = 0;
     for (sfb = 0; sfb < 11; sfb++) {
-	if (gi->scalefac[sfb] == -1)
+	if (gi->scalefac[sfb] == SCALEFAC_SCFSI_FLAG)
 	    continue;
 	c1++;
 	if (s1 < gi->scalefac[sfb])
@@ -784,7 +787,7 @@ scfsi_calc(lame_t gfc, int ch)
 
     s2 = c2 = 0;
     for (; sfb < SBPSY_l; sfb++) {
-	if (gi->scalefac[sfb] == -1)
+	if (gi->scalefac[sfb] == SCALEFAC_SCFSI_FLAG)
 	    continue;
 	c2++;
 	if (s2 < gi->scalefac[sfb])
@@ -826,7 +829,7 @@ best_scalefac_store(lame_t gfc, int gr, int ch)
 	/* remove scalefacs from bands with all ix=0.
 	 * This idea comes from the AAC ISO docs.  added mt 3/00 */
 	if (even == 0) {
-	    gi->scalefac[sfb] = recalc = -2;
+	    gi->scalefac[sfb] = recalc = SCALEFAC_ANYTHING_GOES;
 	    continue;
 	}
 	/* if all the ix[] is multiple of 8, we can losslessly reduce the
@@ -848,7 +851,7 @@ best_scalefac_store(lame_t gfc, int gr, int ch)
     }
 
     if (gi->psymax > gi->sfbmax && gi->block_type != SHORT_TYPE
-	&& gi->scalefac[gi->sfbmax] == -2) {
+	&& gi->scalefac[gi->sfbmax] == SCALEFAC_ANYTHING_GOES) {
 	int minsfb = 15;
 	for (sfb = 0; sfb < gi->psymax; sfb++)
 	    if (gi->scalefac[sfb] >= 0
@@ -861,7 +864,7 @@ best_scalefac_store(lame_t gfc, int gr, int ch)
 		minsfb = gi->global_gain >> (gi->scalefac_scale+1);
 	    gi->global_gain -= minsfb << (gi->scalefac_scale+1);
 	    for (sfb = 0; sfb < gi->psymax; sfb++)
-		if (gi->scalefac[sfb] != -2)
+		if (gi->scalefac[sfb] != SCALEFAC_ANYTHING_GOES)
 		    gi->scalefac[sfb] -= minsfb-(gi->preflag>0 ? pretab[sfb]:0);
 	    if (gi->preflag > 0)
 		gi->preflag = 0;
@@ -888,7 +891,8 @@ best_scalefac_store(lame_t gfc, int gr, int ch)
 
     if (gfc->mode_gr == 2 && !gi->preflag && gi->block_type != SHORT_TYPE) {
 	for (sfb = 11; sfb < gi->psymax; sfb++)
-	    if (gi->scalefac[sfb] < pretab[sfb] && gi->scalefac[sfb] != -2)
+	    if (gi->scalefac[sfb] < pretab[sfb]
+		&& gi->scalefac[sfb] != SCALEFAC_ANYTHING_GOES)
 		break;
 	if (sfb == gi->psymax) {
 	    for (sfb = 11; sfb < gi->psymax; sfb++)
