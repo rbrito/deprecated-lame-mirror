@@ -181,11 +181,9 @@ timestatus_finish(void)
 void
 timestatus_klemm(lame_t gfp)
 {
-    static double  last_time = 0.;
-    if ( lame_get_frameNum(gfp) == 0  ||  
-	 lame_get_frameNum(gfp) == 9  ||
-	 GetRealTime () - last_time >= update_interval  ||
-	 GetRealTime () - last_time <  0 ) {
+    static double  last_time = -1.0;
+    if ( GetRealTime () - last_time >= update_interval
+	 || GetRealTime () - last_time <  0 ) {
 #ifdef BRHIST
 	brhist_jump_back();
 #endif

@@ -344,8 +344,6 @@ encoder(lame_t gfp, FILE * outf, int nogap, char *inPath, char *outPath)
     do {
         /* read in 'iread' samples */
         iread = get_audio(gfp, Buffer);
-        frames = lame_get_frameNum(gfp);
-
 
 	/********************** status display  *****************************/
 	if (silent <= 0) {
@@ -389,6 +387,7 @@ encoder(lame_t gfp, FILE * outf, int nogap, char *inPath, char *outPath)
 #ifdef BRHIST
 	brhist_jump_back();
 #endif
+        frames = lame_get_frameNum(gfp);
 	timestatus(lame_get_out_samplerate(gfp),
 		   frames, lame_get_totalframes(gfp), lame_get_framesize(gfp));
 #ifdef BRHIST
