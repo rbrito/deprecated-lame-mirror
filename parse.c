@@ -719,7 +719,7 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
     if (!(strcmp((char *) &inPath[strlen(inPath)-4],".mp3")))
       gfp->input_format = sf_mp3;
 
-#if !(defined HAVEMPGLIB || defined AMEGA_MPEGA)
+#if !(defined HAVEMPGLIB || defined AMIGA_MPEGA)
   if (gfp->input_format == sf_mp3) {
     fprintf(stderr,"Error: libmp3lame not compiled with mp3 *decoding* support \n");
     exit(1);
