@@ -654,18 +654,21 @@ FLOAT calc_noise_core_c( const gr_info * const cod_info,
 	    while (l--) {
             FLOAT temp;
             temp = cod_info->xr[j];j++;
-	        noise += temp * temp;
-	        temp = cod_info->xr[j];j++;
-	        noise += temp * temp;
+            noise += temp * temp;
+            temp = cod_info->xr[j];j++;
+            noise += temp * temp;
  	    }
     } else if (j> cod_info->big_values) {
+        FLOAT ix01[2];
+        ix01[0] = 0;
+        ix01[1] = step;
 	    while (l--) {
             FLOAT temp;
-            temp = fabs(cod_info->xr[j]) - ix[j] * step;j++;
-	        noise += temp * temp;
-	        temp = fabs(cod_info->xr[j]) - ix[j] * step;j++;
-	        noise += temp * temp;
- 	    }
+            temp = fabs(cod_info->xr[j]) - ix01[ix[j]];j++;
+            noise += temp * temp;
+            temp = fabs(cod_info->xr[j]) - ix01[ix[j]];j++;
+            noise += temp * temp;
+        }
     } else {
 	    while (l--) {
             FLOAT temp;
