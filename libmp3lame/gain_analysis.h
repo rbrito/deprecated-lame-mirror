@@ -28,23 +28,16 @@
 #ifndef GAIN_ANALYSIS_H
 #define GAIN_ANALYSIS_H
 
-#ifdef HAVE_CONFIG_H
-# include <config.h>
-#endif
-
-
-#include <stddef.h>
-#include "machine.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 
-typedef sample_t Float_t;         /* Type used for filtering */
+typedef float Float_t;         /* Type used for filtering */
 
-typedef uint32_t        Uint32_t;
-typedef int32_t         Int32_t; 
+typedef unsigned int        Uint32_t;
+typedef int         Int32_t; 
 
 
 
