@@ -498,6 +498,8 @@ void lame_print_config(void)
 /************************************************************************
 * 
 * encodeframe()           Layer 3
+* 
+* encode a single frame
 *
 ************************************************************************
 lame_encode_frame(inbuf,mpg123bs)
@@ -811,6 +813,14 @@ int lame_encode_frame(short int inbuf_l[],short int inbuf_r[],int mf_size,char *
 }
 
 
+int fill_buffer_linear_resample(short int *outbuf,int desired_len,short int *inbuf,int len) {
+  int j;
+  j=Min(desired_len,len);
+  memcpy( (char *) outbuf,(char *)inbuf,sizeof(short int)*j);
+  return j;
+}
+
+
 int fill_buffer(short int *outbuf,int desired_len,short int *inbuf,int len) {
   int j;
   j=Min(desired_len,len);
@@ -819,7 +829,19 @@ int fill_buffer(short int *outbuf,int desired_len,short int *inbuf,int len) {
 }
 
 
-
+/* 
+ * THE MAIN LAME ENCODING INTERFACE
+ * mt 3/00
+ *
+ * input pcm data, output (maybe) mp3 frames.
+ * This routine handles all buffering, resampling and filtering for you.
+ * The required mp3buffer_size can be computed from num_samples, 
+ * samplerate and encoding rate, but here is a worst case estimate:
+ *
+ * mp3buffer_size in bytes = 1.25*num_samples + 7200
+ * 
+ * return code = number of bytes output in mp3buffer.  can be 0 
+*/
 int lame_encode_buffer(short int buffer_l[], short int buffer_r[],int nbuffer,
    char *mp3buf, int mpg123size)
 {
@@ -862,8 +884,13 @@ int lame_encode_buffer(short int buffer_l[], short int buffer_r[],int nbuffer,
     int n=0;
 
     /* copy in new samples */
-    for (ch=0; ch<gf.stereo; ch++) 
-      n=fill_buffer(&mfbuf[ch][mf_size],samplesPerFrame,in_buffer[ch],nbuffer);
+    for (ch=0; ch<gf.stereo; ch++) {
+      //      if (gf.resample_ratio!=1) 
+      //	n=fill_buffer_linear_resample(&mfbuf[ch][mf_size],samplesPerFrame,
+      //              in_buffer[ch],nbuffer);
+      //      else
+	n=fill_buffer(&mfbuf[ch][mf_size],samplesPerFrame,in_buffer[ch],nbuffer);
+    }
 
     mf_size += n;
     mf_samples_to_encode += n;
