@@ -539,34 +539,35 @@ msfix_l(
     III_psy_ratio *mr = &gfc->masking_next[gr][0];
     for (sb = 0; sb < SBMAX_l; sb++) {
 	/* use this fix if L & R masking differs by 2db (*1.58) or less */
-	FLOAT rside,rmid,mld;
+	FLOAT thmS, thmM, x;
 	if (mr[0].thm.l[sb] > 1.58*mr[1].thm.l[sb]
 	 || mr[1].thm.l[sb] > 1.58*mr[0].thm.l[sb])
 	{
-	    FLOAT thmLR, thmM, thmS, x;
-	    thmLR = Min(mr[0].thm.l[sb], mr[1].thm.l[sb]);
+	    FLOAT thmLR
+		= Min(mr[0].thm.l[sb], mr[1].thm.l[sb])*gfc->nsPsy.msfix;
 	    thmM = mr[2].thm.l[sb];
 	    thmS = mr[3].thm.l[sb];
 	    x = Min(thmM, mr[2].en.l[sb]) + Min(thmS, mr[3].en.l[sb]);
 
-	    if (thmLR*gfc->nsPsy.msfix < x) {
-		x = thmLR / x * gfc->nsPsy.msfix;
+	    if (thmLR < x) {
+		x = thmLR / x;
 		thmM *= x;
 		thmS *= x;
-		mr[2].thm.l[sb] = thmM;
-		mr[3].thm.l[sb] = thmS;
+		x = gfc->ATH.l_avg[sb] * gfc->ATH.adjust;
+		mr[2].thm.l[sb] = Max(thmM, x);
+		mr[3].thm.l[sb] = Max(thmS, x);
 	    }
 	    continue;
 	}
 
-	mld = gfc->mld_l[sb] * mr[3].en.l[sb];
-	rmid = Max(mr[2].thm.l[sb], Min(mr[3].thm.l[sb], mld));
+	x = gfc->mld_l[sb] * mr[3].en.l[sb];
+	thmM = Max(mr[2].thm.l[sb], Min(mr[3].thm.l[sb], x));
 
-	mld = gfc->mld_l[sb] * mr[2].en.l[sb];
-	rside = Max(mr[3].thm.l[sb], Min(mr[2].thm.l[sb], mld));
+	x = gfc->mld_l[sb] * mr[2].en.l[sb];
+	thmS = Max(mr[3].thm.l[sb], Min(mr[2].thm.l[sb], x));
 
-	mr[2].thm.l[sb] = rmid;
-	mr[3].thm.l[sb] = rside;
+	mr[2].thm.l[sb] = thmM;
+	mr[3].thm.l[sb] = thmS;
     }
 }
 
@@ -580,35 +581,39 @@ msfix_s(
     III_psy_ratio *mr = &gfc->masking_next[gr][0];
     for (sb = 0; sb < SBMAX_s; sb++) {
 	for (sblock = 0; sblock < 3; sblock++) {
-	    FLOAT rside,rmid,mld;
+	    FLOAT thmS, thmM, x;
 	    if (mr[0].thm.s[sb][sblock] > 1.58 * mr[1].thm.s[sb][sblock]
 	     || mr[1].thm.s[sb][sblock] > 1.58 * mr[0].thm.s[sb][sblock])
 	    {
-		FLOAT thmLR, thmM, thmS, x;
-		thmLR = Min(mr[0].thm.s[sb][sblock], mr[1].thm.s[sb][sblock]);
+		FLOAT thmLR
+		    = Min(mr[0].thm.s[sb][sblock], mr[1].thm.s[sb][sblock])
+		    * gfc->nsPsy.msfix;
 		thmM = mr[2].thm.s[sb][sblock];
 		thmS = mr[3].thm.s[sb][sblock];
 		x = Min(thmM, mr[2].en.s[sb][sblock])
 		    + Min(thmS, mr[3].en.s[sb][sblock]);
 
-		if (thmLR*gfc->nsPsy.msfix < x) {
-		    x = thmLR / x * gfc->nsPsy.msfix;
-		    mr[2].thm.s[sb][sblock] = thmM*x;
-		    mr[3].thm.s[sb][sblock] = thmS*x;
+		if (thmLR < x) {
+		    x = thmLR/x;
+		    thmM *= x;
+		    thmS *= x;
+		    x = gfc->ATH.s_avg[sb] * gfc->ATH.adjust;
+		    mr[2].thm.s[sb][sblock] = Max(thmM, x);
+		    mr[3].thm.s[sb][sblock] = Max(thmS, x);
 		}
 		continue;
 	    }
 
-	    mld = gfc->mld_s[sb] * mr[3].en.s[sb][sblock];
-	    rmid = Max(mr[2].thm.s[sb][sblock],
-		       Min(mr[3].thm.s[sb][sblock], mld));
+	    x = gfc->mld_s[sb] * mr[3].en.s[sb][sblock];
+	    thmM = Max(mr[2].thm.s[sb][sblock],
+		       Min(mr[3].thm.s[sb][sblock], x));
 
-	    mld = gfc->mld_s[sb] * mr[2].en.s[sb][sblock];
-	    rside = Max(mr[3].thm.s[sb][sblock],
-			Min(mr[2].thm.s[sb][sblock],mld));
+	    x = gfc->mld_s[sb] * mr[2].en.s[sb][sblock];
+	    thmS = Max(mr[3].thm.s[sb][sblock],
+			Min(mr[2].thm.s[sb][sblock], x));
 
-	    mr[2].thm.s[sb][sblock] = rmid;
-	    mr[3].thm.s[sb][sblock] = rside;
+	    mr[2].thm.s[sb][sblock] = thmM;
+	    mr[3].thm.s[sb][sblock] = thmS;
 	}
     }
 }

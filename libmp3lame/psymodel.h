@@ -36,7 +36,7 @@
 #define NS_PREECHO_ATT1 0.6
 #define NS_PREECHO_ATT2 0.3
 
-#define NS_MSFIX 5.0
+#define NS_MSFIX 4.0
 #define NSATTACKTHRE 1.8
 #define NSATTACKTHRE_S 10
 
