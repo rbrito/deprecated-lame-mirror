@@ -48,7 +48,7 @@ void WriteWav(FILE *f,unsigned long bytes,int srate,int ch){
   fwrite("WAVEfmt ",1,8,f);           /*  8-15 */
   PutNum(16,f,0,4);                /* 16-19 */
   PutNum(1,f,0,2);                 /* 20-21 */
-  PutNum(2,f,0,2);                 /* 22-23 */
+  PutNum(ch,f,0,2);                 /* 22-23 */
   PutNum(srate,f,0,4);             /* 24-27 */
   PutNum(srate*ch*2,f,0,4);         /* 28-31 */
   PutNum(4,f,0,2);                 /* 32-33 */
