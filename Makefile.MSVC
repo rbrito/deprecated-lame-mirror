@@ -238,9 +238,9 @@ PGM = $(T_LAME)
 #	2) faster compared to 3) or 4) on Pentium MMX at 200 MHz
 
 !	IF "$(CPU)" == "P1"
-CC_OPTS = /G5
+CC_OPTS = /G5 /QaxiMK
 !	ELSE
-CC_OPTS = /G6
+CC_OPTS = /G6 /Qax
 !	ENDIF
 
 !	IF "$(OPT)" == "NORMAL"
@@ -264,7 +264,7 @@ CC_OPTS = $(CC_OPTS) /W2 /Wport
 !	ENDIF
 
 CC_OPTS = /nologo /DNDEBUG /YX /GA /O2 /Gs1024 \
-          /Qunroll /Qsox- /QIfist /QIfdiv /QI0f /QaxiMK $(CC_OPTS) /DFLOAT8=float
+          /Qunroll /Qsox- /QIfist /QIfdiv /QI0f $(CC_OPTS) /DFLOAT8=float
 
 LN_OPTS = $(CC_OPTS)
 LN_DLL = /LD
