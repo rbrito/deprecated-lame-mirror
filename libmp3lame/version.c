@@ -48,10 +48,11 @@
 //! Stringify \a x, perform macro expansion.
 #define XSTR(x)  STR(x)
 
-#define V1  "MMX, 3DNow!"
-
-//! Compile time features.
-#define V   V1
+#ifdef HAVE_NASM
+# define V  "MMX, 3DNow!"
+#else
+# define V  ""
+#endif
 
 //! Get the LAME version string.
 /*!
