@@ -174,7 +174,7 @@ int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
 	h_id       = (buf[1] >> 3) & 1;
 	h_sr_index = (buf[2] >> 2) & 3;
 	h_mode     = (buf[3] >> 6) & 3;
-        h_bitrate  = ((buf[1]>>4)&0xf);
+        h_bitrate  = ((buf[2]>>4)&0xf);
 	h_bitrate = bitrate_table[h_id][h_bitrate];
 
 

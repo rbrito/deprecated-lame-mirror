@@ -57,13 +57,13 @@ int fskip(FILE *sf,long num_bytes,int dummy);
 enum byte_order NativeByteOrder = order_unknown;
 
 
-/* read mp3 file until mpglib returns one frame of PCM data */
 #ifdef AMIGA_MPEGA
 int lame_decode_initfile(const char *fullname,mp3data_struct *mp3data);
 #else
 int lame_decode_initfile(FILE *fd,mp3data_struct *mp3data);
 #endif
 
+/* read mp3 file until mpglib returns one frame of PCM data */
 int lame_decode_fromfile(FILE *fd,short int pcm_l[],short int pcm_r[],mp3data_struct *mp3data);
 
 /* and for Vorbis: */
@@ -1231,7 +1231,7 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
   VBRTAGDATA pTagData;
   char buf[1000];
   int ret;
-  unsigned long num_frames=0;
+  int num_frames=0;
   int len,len2,xing_header,aid_header;
   short int pcm_l[1152],pcm_r[1152];
 
@@ -1273,8 +1273,10 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
 
   /* check first 48 bytes for Xing header */
   xing_header = GetVbrTag(&pTagData,(unsigned char*)buf);
+
   if (xing_header && pTagData.headersize >= 48) {
     num_frames=pTagData.frames;
+    fprintf(stderr,"Xing VBR header dectected.  MP3 file has %i frames\n",num_frames);
     
     fskip(fd,pTagData.headersize-48 ,1);
     /* look for next sync word in buffer*/
