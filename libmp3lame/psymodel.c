@@ -992,7 +992,6 @@ psycho_analysis_short(
      * determine the block type (window type)
      ***************************************************************/
     for (ch = 0; ch < numchn; ch++) {
-	FLOAT attackThreshold;
 /*
   use subband filtered samples to determine block type switching.
 
@@ -1072,13 +1071,8 @@ mp3x display               <------LONG------>
 		= gfc->nsPsy.subbk_ene[ch][4] / gfc->nsPsy.subbk_ene[ch][3];
 	}
 #endif
-	/* compare energies between sub-shortblocks */
-	attackThreshold = (ch == 3)
-	    ? gfc->nsPsy.attackthre_s : gfc->nsPsy.attackthre;
-
 	/* initialize the flag representing
-	 * "short block may be needed but not calculated"
-	 */
+	 * "short block may be needed but not calculated" */
 	gfc->masking_next[gr][ch].en.s[0][0] = -1.0;
 	gfc->blocktype_next[gr][ch] = NORM_TYPE;
 	first_attack_position[ch] = -2;
@@ -1086,7 +1080,7 @@ mp3x display               <------LONG------>
 	for (i=0;i<3;i++) {
 	    /* calculate energies of each sub-shortblocks */
 	    if (gfc->nsPsy.subbk_ene[ch][i+2]
-		<= attackThreshold * gfc->nsPsy.subbk_ene[ch][i+1])
+		<= gfc->nsPsy.attackthre * gfc->nsPsy.subbk_ene[ch][i+1])
 		continue;
 
 	    gfc->blocktype_next[gr][ch] = SHORT_TYPE;

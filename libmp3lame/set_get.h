@@ -42,8 +42,7 @@ void CDECL lame_set_ms_sparse_high(lame_t , float );
 
 
 /* short blocks switching threshold */
-int CDECL lame_set_short_threshold(lame_global_flags *,
-				   float forlong, float forshort);
+int CDECL lame_set_short_threshold(lame_global_flags *, float s);
 
 /* use mixed blocks */
 int CDECL lame_set_use_mixed_blocks(lame_global_flags *, int);

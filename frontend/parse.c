@@ -946,17 +946,15 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     (void) lame_set_use_mixed_blocks( gfp, 2);
 
                 T_ELIF_INTERNAL ("allshort")
-                    (void) lame_set_short_threshold( gfp, 0.0f, 0.0f);
+                    (void) lame_set_short_threshold(gfp, 0.0f);
 
                 T_ELIF_INTERNAL ("shortthreshold")
 		{
-		    float x,y;
-		    int i;
-		    argUsed=1;
-		    i = sscanf(nextArg, "%f,%f", &x, &y);
-		    if (i == 1)
-			y = x;
-                    (void) lame_set_short_threshold( gfp, x, y);
+		    float x;
+		    if (sscanf(nextArg, "%f", &x) == 1) {
+			lame_set_short_threshold(gfp, x);
+			argUsed=1;
+		    }
 		}
                 
                 T_ELIF ("decode")

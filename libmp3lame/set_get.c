@@ -976,12 +976,10 @@ lame_get_athaa_sensitivity( const lame_global_flags*  gfp )
 
 
 int
-lame_set_short_threshold( lame_global_flags*  gfp,
-			  float lrm, float s)
+lame_set_short_threshold( lame_global_flags*  gfp, float s)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
-    gfc->nsPsy.attackthre   = lrm;
-    gfc->nsPsy.attackthre_s = s;
+    gfc->nsPsy.attackthre   = s;
     return 0;
 }
 

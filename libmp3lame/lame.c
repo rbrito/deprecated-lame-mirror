@@ -296,8 +296,7 @@ static int apply_preset(lame_global_flags*  gfp, int bitrate, vbr_mode mode)
 	lame_set_interChRatio(gfp, switch_map[r].interch);
 
     if (gfp->internal_flags->nsPsy.attackthre < 0.0)
-	lame_set_short_threshold(gfp, switch_map[r].shortthreshold,
-				 switch_map[r].shortthreshold);
+	lame_set_short_threshold(gfp, switch_map[r].shortthreshold);
 
     if (gfp->internal_flags->istereo_ratio < 0.0)
 	lame_set_istereoRatio(gfp, switch_map[r].istereo_ratio);
@@ -776,8 +775,8 @@ lame_print_internals( const lame_global_flags * gfp )
     /*  everything controlling psychoacoustic settings, like ATH, etc.
      */
     MSGF( gfc, "\npsychoacoustic:\n\n" );
-    MSGF( gfc, "\tshort block switching threshold: %f %f\n",
-	  gfc->nsPsy.attackthre, gfc->nsPsy.attackthre_s );
+    MSGF( gfc, "\tshort block switching threshold: %f\n",
+	  gfc->nsPsy.attackthre);
     MSGF( gfc, "\tpsymodel: %s\n", gfc->psymodel ? "used" : "not used");
     
     pc = "using";
@@ -1518,7 +1517,7 @@ lame_init_old(lame_global_flags * gfp)
     gfc->CurrentStep[1] = 4;
     gfc->masking_lower = 1.0;
 
-    gfc->nsPsy.attackthre = gfc->nsPsy.attackthre_s = -1.0;
+    gfc->nsPsy.attackthre = -1.0;
     gfc->istereo_ratio = -1.0;
     gfc->narrowStereo = -1.0;
     gfc->reduce_side = -1.0;

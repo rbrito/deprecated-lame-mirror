@@ -409,9 +409,8 @@ struct lame_internal_flags {
 
     struct {
 	/* short block tuning */
-	FLOAT	attackthre;
-	FLOAT	attackthre_s;
 	FLOAT	subbk_ene[MAX_CHANNELS*2][6];
+	FLOAT	attackthre;
 	int	switching_band;
 
 	/* adjustment of Mid/Side maskings from LR maskings */
