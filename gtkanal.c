@@ -117,7 +117,20 @@ int gtkmakeframe(void)
       gfp->input_format == sf_mp2 ||
       gfp->input_format == sf_mp3) {
     iread=lame_readframe(gfp,Buffer);
+
+    /* add a delay of framesize-DECDELAY, which will make the total delay
+     * exactly one frame, so we can sync MP3 output with WAV input */
+    for ( ch = 0; ch < gfc->stereo; ch++ ) {
+      for ( j = 0; j < gfp->framesize-DECDELAY; j++ )
+	gfc->pinfo->pcmdata2[ch][j] = gfc->pinfo->pcmdata2[ch][j+gfp->framesize];
+      for ( j = 0; j < gfp->framesize; j++ )
+	gfc->pinfo->pcmdata2[ch][j+gfp->framesize-DECDELAY] = mpg123pcm[ch][j];
+    }
+
+    gfc->pinfo->frameNum123 = gfp->frameNum-1;
+    gfc->pinfo->frameNum = gfp->frameNum;
     gfp->frameNum++;
+
   }else {
 
     /* feed data to encoder until encoder produces some output */

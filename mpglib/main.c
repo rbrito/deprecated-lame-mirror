@@ -29,12 +29,6 @@ static const int smpls[2][4]={
 };
 
 
-int check_aid(char *header) {
-  int aid_header =
-    (header[0]=='A' && header[1]=='i' && header[2]=='D'
-     && header[3]== (char) 1);
-  return aid_header;
-}
 
 
 int is_syncword(char *header)

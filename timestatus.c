@@ -306,7 +306,7 @@ void decoder_progress ( lame_global_flags* gfp, mp3data_struct *mp3data )
     last_kbps  = gfp -> brate;
 #endif
 
-  fprintf(stderr, "\rFrame#%6lu/%-6lu %3u kbps        ",mp3data->framenum, 
+  fprintf(stderr, "\rFrame#%6i/%-6i %3i kbps        ",mp3data->framenum, 
      mp3data->totalframes, mp3data->bitrate );
   if (mp3data->mode==MPG_MD_JOINT_STEREO)
     fprintf ( stderr, ".... %s ...." ,
