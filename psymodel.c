@@ -941,13 +941,6 @@ int L3psycho_anal( lame_global_flags *gfp,
           
           enn  = enn  + (enM -enn)  * gfp->raiseSMR;
           thmm = thmm + (thmM-thmm) * gfp->raiseSMR;
-#else
-	  for ( b = gfc->bu_l[sb]+1; b < gfc->bo_l[sb]; b++ )
-	    {
-	      enn  += eb[b];
-	      thmm = Min(thr[b],thmm);
-	    }
-	  thmm*=(1+gfc->bo_l[sb]-gfc->bu_l[sb]);
 #endif
 	}
 

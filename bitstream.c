@@ -22,7 +22,6 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <stdio.h>
-#include <limits.h>
 #include "tables.h"
 #include "bitstream.h"
 #include "quantize.h"
@@ -33,21 +32,17 @@
 const int scfsi_band[5] = { 0, 6, 11, 16, 21 };
 
 
-typedef unsigned int   bitstream_buffer_t;
-/*      uint32 is better */
 
-/* Can someone replace all int which are bitstream buffer by
-   bitstream_buffer_t, on a CRAY (okay, no home computer) a int is 8 Byte
-   (actually you only have 1 and 8 byte types).
- */
+#define MAX_LENGTH      32   /* Maximum length of word written or
+                                        read from bit stream */
 
-#define MAX_LENGTH      ( sizeof(bitstream_buffer_t) * CHAR_BIT )   
-                        /* Maximum length of word written or read from bit stream in one call */
-                        /* is this right for 25...32 bit ??? I dislike cybernetic entomology */
 
 #ifdef DEBUG
 static int hoge, hogege;
 #endif
+
+
+
 
 
 void putheader_bits(lame_internal_flags *gfc,int w_ptr)
@@ -79,7 +74,7 @@ putbits2(lame_global_flags *gfp, unsigned int val, int j)
     while (j > 0) {
 	int k;
 	if (bs->buf_bit_idx == 0) {
-	    bs->buf_bit_idx = 8;	/* Have this something to do with CHAR_BIT? Probably not */
+	    bs->buf_bit_idx = 8;
 	    bs->buf_byte_idx++;
 	    assert(bs->buf_byte_idx < BUFFER_SIZE);
 	    assert(gfc->header[gfc->w_ptr].write_timing >= bs->totbit);
@@ -113,8 +108,6 @@ putbits2(lame_global_flags *gfp, unsigned int val, int j)
 static INLINE void
 drain_into_ancillary(lame_global_flags *gfp,int remainingBits)
 {
-    char       comment_buffer [4 + 48];
-    char*      comment_ptr;
     lame_internal_flags *gfc=gfp->internal_flags;
     int i,bits;
     assert(remainingBits >= 0);
@@ -124,19 +117,6 @@ drain_into_ancillary(lame_global_flags *gfp,int remainingBits)
     hogege += remainingBits;
 #endif
 
-#if 1
-    /* much more difficult to read version */
-    sprintf ( comment_ptr = comment_buffer, "LAME%s", get_lame_version () );
-
-    for ( ; remainingBits >= 8  &&  *comment_ptr; remainingBits -= 8 )
-        putbits2 ( gfp, *comment_ptr++, 8 );         /* writing octets */
-
-    for ( ; remainingBits-- > 0; gfc -> ancillary_flag ^= 1 )
-        putbits2 ( gfp, gfc -> ancillary_flag, 1 );  /* writing bits */
-                        
-#else
-    /* do the same, except avoiding writing only parts of the first 4 byte version number
-       and speedup to write up to ca. 200 bytes */
     if (remainingBits >= 8) {
       putbits2(gfp,0x4c,8);
       remainingBits -= 8;
@@ -165,7 +145,7 @@ drain_into_ancillary(lame_global_flags *gfp,int remainingBits)
     }
 
 
-    bits = remainingBits % MAX_LENGTH;
+    bits = remainingBits & (MAX_LENGTH - 1);
     for (i=0; i<bits; ++i) {
       putbits2(gfp,gfc->ancillary_flag,1);
       gfc->ancillary_flag = 1-gfc->ancillary_flag;
@@ -174,11 +154,10 @@ drain_into_ancillary(lame_global_flags *gfp,int remainingBits)
     remainingBits /= MAX_LENGTH;
     for (; remainingBits > 0; remainingBits--) {
       if (gfc->ancillary_flag)
-	putbits2 ( gfp, 0xAAAAAAAA, 32);	// probably 32 bit also on 64 bit systems
+	putbits2(gfp,0xAAAAAAAA, MAX_LENGTH);
       else
-	putbits2 ( gfp, 0x55555555, 32);
+	putbits2(gfp,0x55555555, MAX_LENGTH);
     }
-#endif    
 }
 
 /*write N bits into the header */

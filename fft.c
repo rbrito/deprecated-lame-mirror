@@ -37,23 +37,21 @@
 #include "lame.h"
 
 #define TRI_SIZE (5-1) /* 1024 =  4**5 */
+static FLOAT costab[TRI_SIZE*2];
+static FLOAT window[BLKSIZE], window_s[BLKSIZE_s/2];
 
-static FLOAT  cos_sin_tab   [TRI_SIZE] [2];
-static FLOAT  window        [BLKSIZE];
-static FLOAT  window_s      [BLKSIZE_s / 2];
-
-static INLINE void fht ( FLOAT* fz, int n )
+static INLINE void fht(FLOAT *fz, int n)
 {
-    size_t  k4;
+    short k4;
     FLOAT *fi, *fn, *gi;
     FLOAT *tri;
 
     fn = fz + n;
-    tri = & (cos_sin_tab [0] [0]);
+    tri = &costab[0];
     k4 = 4;
     do {
 	FLOAT s1, c1;
-	size_t i, k1, k2, k3, kx;
+	short i, k1, k2, k3, kx;
 	kx  = k4 >> 1;
 	k1  = k4;
 	k2  = k4 << 1;
@@ -127,7 +125,7 @@ static INLINE void fht ( FLOAT* fz, int n )
     } while (k4<n);
 }
 
-static const unsigned char rv_tbl [] = {
+static const short rv_tbl[] = {
     0x00,    0x80,    0x40,    0xc0,    0x20,    0xa0,    0x60,    0xe0,
     0x10,    0x90,    0x50,    0xd0,    0x30,    0xb0,    0x70,    0xf0,
     0x08,    0x88,    0x48,    0xc8,    0x28,    0xa8,    0x68,    0xe8,
@@ -169,19 +167,14 @@ static const unsigned char rv_tbl [] = {
 #define ms31(f)	(window_s[0x3e - i] * f(i + k + 0xc1))
 
 
-void  fft_short (
-        lame_global_flags*  gfp, 
-        FLOAT               x_real [3] [BLKSIZE_s],
-        int                 chn, 
-        sample_t*           buffer [2] )
+void fft_short(
+    lame_global_flags *gfp, FLOAT x_real[3][BLKSIZE_s], int chn, short *buffer[2])
 {
-    size_t  i;
-    size_t  b;
-    int     j;
+    short i, j, b;
 
     for (b = 0; b < 3; b++) {
 	FLOAT *x = &x_real[b][BLKSIZE_s / 2];
-	size_t k = (576 / 3) * (b + 1);
+	short k = (576 / 3) * (b + 1);
 	j = BLKSIZE_s / 8 - 1;
 	do {
 	  FLOAT f0,f1,f2,f3, w;
@@ -210,15 +203,10 @@ void  fft_short (
     }
 }
 
-void  fft_long (
-        lame_global_flags*  gfp, 
-        FLOAT               x [BLKSIZE], 
-        int                 chn, 
-        sample_t*           buffer [2] )
+void fft_long(
+    lame_global_flags *gfp, FLOAT x[BLKSIZE], int chn, short *buffer[2])
 {
-    size_t  i;
-    int     jj = BLKSIZE / 8 - 1;
-
+    short i,jj = BLKSIZE / 8 - 1;
     x += BLKSIZE / 2;
 
     do {
@@ -249,26 +237,25 @@ void  fft_long (
 
 void init_fft(lame_global_flags *gfp)
 {
-    int     i;
-    double  r = PI * 0.125;
-    
+    int i;
+
+    FLOAT r = PI*0.125;
     for (i = 0; i < TRI_SIZE; i++) {
-	cos_sin_tab [i] [0] = cos (r);
-	cos_sin_tab [i] [1] = sin (r);
+	costab[i*2  ] = cos(r);
+	costab[i*2+1] = sin(r);
 	r *= 0.25;
     }
 
     /*
      * calculate HANN window coefficients 
      */
-    if (gfp -> exp_nspsytune) {
-        for (i = 0; i < BLKSIZE ; i++)
-	    window[i] = 0.42-0.5*cos(2*PI*i/(BLKSIZE-1))+0.08*cos(4*PI*i/(BLKSIZE-1)); /* blackmann window */
+    if (gfp->exp_nspsytune) {
+      for (i = 0; i < BLKSIZE ; i++)
+	window[i] = 0.42-0.5*cos(2*PI*i/(BLKSIZE-1))+0.08*cos(4*PI*i/(BLKSIZE-1)); /* blackmann window */
     } else {
-        for (i = 0; i < BLKSIZE ; i++)
-	    window[i] = 0.5 * (1.0 - cos(2.0 * PI * (i + 0.5) / BLKSIZE));
+      for (i = 0; i < BLKSIZE ; i++)
+	window[i] = 0.5 * (1.0 - cos(2.0 * PI * (i + 0.5) / BLKSIZE));
     }
-    
     for (i = 0; i < BLKSIZE_s/2 ; i++)
 	window_s[i] = 0.5 * (1.0 - cos(2.0 * PI * (i + 0.5) / BLKSIZE_s));
 }

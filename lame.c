@@ -501,8 +501,9 @@ int lame_init_params(lame_global_flags *gfp)
     // 0...10 seconds after this report the SPL falls. The listener have the disapperance
     // to report. The SPL still falls for a random 0...10 seconds, then the SPL raises ...
     
-    if ( gfp -> VBR_q < 2 )
-       gfp -> noATH = 1;
+    // this makes no sense:  
+    //    if ( gfp -> VBR_q < 2 )
+    //       gfp -> noATH = 1;
 
   }
 
@@ -669,10 +670,6 @@ int lame_init_params(lame_global_flags *gfp)
   }
 #endif
 
-#ifndef I_HAVE_NEVER_SEEN_LAME_ON_A_486_100_OR_A_ATHLON_1000
-  if ( gfp -> update_interval  <= 0. )
-      gfp -> update_interval = 2.;
-#endif      
 
   return 0;
 }
@@ -956,7 +953,6 @@ char *mp3buf, int mp3buf_size)
 
 
   /********************** status display  *****************************/
-#ifdef I_HAVE_NEVER_SEEN_LAME_ON_A_486_100_OR_A_ATHLON_1000
   if (!gfp->silent) {
     int mod = gfp->version == 0 ? 100 : 50;
     if (gfp->frameNum%mod==0) {
@@ -967,30 +963,7 @@ char *mp3buf, int mp3buf_size)
 
     }
   }
-#else
 
-#ifndef MY_PREFERED_UPDATE_STEP
-# define MY_PREFERED_UPDATE_STEP 1
-#endif
-
-    if (! gfp -> silent) {
-        if ( gfp -> frameNum ==  0  ||  
-             gfp -> frameNum == 10  || 
-             gfp -> frameNum % MY_PREFERED_UPDATE_STEP == 0  &&
-	     ( GetRealTime () - gfc -> last_time >= gfp -> update_interval  ||
-               GetRealTime ()                    <  gfp -> update_interval ) ) {
-            timestatus ( gfp -> out_samplerate, 
-                         gfp -> frameNum, 
-                         gfp -> totalframes, 
-                         gfp -> framesize );
-
-            if ( gfp -> brhist_disp )
-	        brhist_disp ( gfp -> totalframes );
-	        
-	    gfc -> last_time = GetRealTime ();  /* from now! disp_time seconds */
-        }
-  }
-#endif
 
 
   if (gfc->psymodel) {
