@@ -339,7 +339,7 @@ typedef struct  {
 *  Global Function Prototype Declarations
 *
 ***********************************************************************/
-
+extern int            fskip(FILE *sf,long num_bytes,int dummy);
 extern void           display_bitrates(FILE *out_fh);
 extern int            BitrateIndex(int, int,int);
 extern int            FindNearestBitrate(int,int,int);

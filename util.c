@@ -26,6 +26,20 @@ enum byte_order NativeByteOrder = order_unknown;
 *  Global Function Definitions
 *
 ***********************************************************************/
+/* Replacement for forward fseek(,,SEEK_CUR), because fseek() fails on pipes */
+int fskip(FILE *sf,long num_bytes,int dummy)
+{
+  char data[1024];
+  int nskip = 0;
+  while (num_bytes > 0) {
+    nskip = (num_bytes>1024) ? 1024 : num_bytes;
+    num_bytes -= fread(data,(size_t)1,(size_t)nskip,sf);
+  }
+  /* return 0 if last read was successful */
+  return num_bytes;
+}
+
+
 FLOAT8 ATHformula(FLOAT8 f)
 {
   FLOAT8 ath;

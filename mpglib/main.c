@@ -22,6 +22,14 @@ struct mpstr mp;
 plotting_data *mpg123_pinfo=NULL;
 
 
+int check_aid(char *header) {
+  int aid_header =
+    (header[0]=='A' && header[1]=='i' && header[2]=='D'
+     && header[3]== (char) 1);
+  return aid_header;
+}
+
+
 int is_syncword(char *header)
 {
 
@@ -50,41 +58,63 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
   VBRTAGDATA pTagData;
   int ret,size,framesize;
   unsigned long num_frames=0;
-  size_t len;
-  int xing_header;
+  size_t len,len2;
+  int xing_header,aid_header;
 
 
   InitMP3(&mp);
+
+
   memset(buf, 0, sizeof(buf));
 
 
-  /* skip RIFF type proprietary headers  */
-  /* look for sync word  FFF */
-  while (!is_syncword(buf)) {
-    buf[0]=buf[1]; 
-    if (fread(&buf[1],1,1,fd) == 0) return -1;  /* failed */
+  len=4;
+  if (fread(&buf,1,len,fd) == 0) return -1;  /* failed */
+  aid_header = check_aid(buf);
+  if (aid_header) {
+    if (fread(&buf,1,2,fd) == 0) return -1;  /* failed */
+    aid_header = buf[0] + 256*buf[1];
+    fprintf(stderr,"Album ID found.  length=%i\n",aid_header);
+    fskip(fd,aid_header,1);
+    if (fread(&buf,1,2,fd) == 0) return -1;  /* failed */
+    len =2;
   }
+
+
+
+  /* look for sync word  FFF */
+  if (len<2) return -1;
+  while (!is_syncword(buf)) {
+    int i;
+    for (i=0; i<len-1; i++)
+      buf[i]=buf[i+1]; 
+    if (fread(&buf[len-1],1,1,fd) == 0) return -1;  /* failed */
+  }
+
+
   
   /* read the rest of header and enough bytes to check for Xing header */
-  len = fread(&buf[2],1,46,fd);
-  if (len ==0 ) return -1;
-  len +=2;
-  
+  len2 = fread(&buf[len],1,48-len,fd);
+  if (len2 ==0 ) return -1;
+  len +=len2;
+
+
   /* check for Xing header */
   xing_header = GetVbrTag(&pTagData,(unsigned char*)buf);
   if (xing_header) {
     num_frames=pTagData.frames;
 
     /* look for next sync word in buffer*/
-    buf[1]=0;
+    len=2;
+    buf[0]=buf[1]=0;
     while (!is_syncword(buf)) {
       buf[0]=buf[1]; 
       if (fread(&buf[1],1,1,fd) == 0) return -1;  /* fread failed */
     }
     /* read the rest of header */
-    len = fread(&buf[2],1,2,fd);
-    if (len ==0 ) return -1;
-    len +=2;
+    len2 = fread(&buf[2],1,2,fd);
+    if (len2 ==0 ) return -1;
+    len +=len2;
 
 
   } else {
