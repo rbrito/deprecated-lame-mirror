@@ -827,6 +827,23 @@ outer_loop (
         if (age > 3 && best_noise_info.over_count == 0) 
             break;    
     
+        /* Check if the last scalefactor band is distorted.
+         * in VBR mode we can't get rid of the distortion, so quit now
+         * and VBR mode will try again with more bits.  
+         * (makes a 10% speed increase, the files I tested were
+         * binary identical, 2000/05/20 Robert.Hegemann@gmx.de)
+         * distort[] > 1 means noise > allowed noise
+         */
+        if (gfc->sfb21_extra) {
+            if (cod_info->block_type == SHORT_TYPE) {
+                if (distort.s[SBMAX_s-1][0] > 1 ||
+                    distort.s[SBMAX_s-1][1] > 1 ||
+                    distort.s[SBMAX_s-1][2] > 1) break;
+            } else {
+                if (distort.l[SBMAX_l-1] > 1) break;
+            }
+        }
+
         /* save data so we can restore this quantization later */    
         if (better) {
             copy = 1;
@@ -1257,6 +1274,48 @@ VBR_prepare (
 }
  
  
+inline
+void bitpressure_strategy1(
+    lame_internal_flags * gfc,
+    III_psy_xmin l3_xmin[2][2],
+    int min_mean_bits,  
+    int max_bits[2][2] )  
+{
+    int gr, ch, sfb;
+    for (gr = 0; gr < gfc->mode_gr; gr++) {
+        for (ch = 0; ch < gfc->channels_out; ch++) {
+            if (gfc->l3_side.gr[gr].ch[ch].tt.block_type == SHORT_TYPE) {
+                for (sfb = 0; sfb < SBMAX_s; sfb++) {
+                    l3_xmin[gr][ch].s[sfb][0] *= 1.+.029*sfb*sfb/SBMAX_s/SBMAX_s;
+                    l3_xmin[gr][ch].s[sfb][1] *= 1.+.029*sfb*sfb/SBMAX_s/SBMAX_s;
+                    l3_xmin[gr][ch].s[sfb][2] *= 1.+.029*sfb*sfb/SBMAX_s/SBMAX_s;
+                }
+            }
+            else {
+                for (sfb = 0; sfb < SBMAX_l; sfb++) 
+                    l3_xmin[gr][ch].l[sfb] *= 1.+.029*sfb*sfb/SBMAX_l/SBMAX_l;
+            }
+            max_bits[gr][ch] = Max(min_mean_bits, 0.9*max_bits[gr][ch]);
+        }
+    }
+}
+
+inline
+void bitpressure_strategy2( 
+    lame_internal_flags * gfc,
+    int bpf, int used, int const save_bits[2][2],
+    int min_bits[2][2], int max_bits[2][2] )  
+{
+    int gr, ch;
+    for (gr = 0; gr < gfc->mode_gr; gr++) {
+        for (ch = 0; ch < gfc->channels_out; ch++) {
+            max_bits[gr][ch]  = save_bits[gr][ch];
+            max_bits[gr][ch] *= bpf;
+            max_bits[gr][ch] /= used;
+            max_bits[gr][ch]  = Max(min_bits[gr][ch],max_bits[gr][ch]);
+        }
+    }
+}
 
 /************************************************************************
  *
@@ -1302,7 +1361,7 @@ VBR_iteration_loop (
                                   &min_mean_bits, min_bits, max_bits, bands);
   
     /*---------------------------------*/
-    do {  
+    for(;;) {  
     
     /*  quantize granules with lowest possible number of bits
      */
@@ -1365,45 +1424,20 @@ VBR_iteration_loop (
     getframebits (gfp, &bitsPerFrame, &mean_bits);
     bits = ResvFrameBegin (gfp, l3_side, mean_bits, bitsPerFrame);
     
-    if (used_bits > bits){
-        if(gfp->VBR == vbr_mtrh) {        
-            for (gr = 0; gr < gfc->mode_gr; gr++) {
-                for (ch = 0; ch < gfc->channels_out; ch++) {
-                    max_bits[gr][ch] = save_bits[gr][ch];
-                    max_bits[gr][ch] *= frameBits[gfc->bitrate_index];
-                    max_bits[gr][ch] /= used_bits2;
-                    max_bits[gr][ch] = Max(min_bits[gr][ch],max_bits[gr][ch]);
-                }
-            }
-        }
-        else {
-            for (gr = 0; gr < gfc->mode_gr; gr++) {
-                for (ch = 0; ch < gfc->channels_out; ch++) {
-                    int sfb;
-                    cod_info = &l3_side->gr[gr].ch[ch].tt;
-                    if (cod_info->block_type == SHORT_TYPE) {
-                    static FLOAT8 const penalty[] = 
-                    {1.03,1.06,1.09,1.12,1.15,1.18,1.21,1.24,1.27,1.30,1.33,1.36};
-                        for (sfb = 0; sfb < SBMAX_s; sfb++) {
-                            l3_xmin[gr][ch].s[sfb][0] *= penalty[sfb];
-                            l3_xmin[gr][ch].s[sfb][1] *= penalty[sfb];
-                            l3_xmin[gr][ch].s[sfb][2] *= penalty[sfb];
-                        }
-                    }
-                    else {
-                    static FLOAT8 const penalty[] =
-                    {1.015,1.030,1.045,1.060,1.075,1.090,1.105,1.120,1.135,1.150,1.165,
-                     1.180,1.195,1.210,1.225,1.240,1.255,1.270,1.285,1.300,1.315,1.330};
-                        for (sfb = 0; sfb < SBMAX_l; sfb++) 
-                            l3_xmin[gr][ch].l[sfb] *= penalty[sfb];
-                    }
-                    max_bits[gr][ch] = Max(min_mean_bits, 0.975*max_bits[gr][ch]);
-                }
-            }
-        }
+    if (used_bits <= bits) break;
+     
+    switch ( gfc -> VBR -> bitpressure ) {
+    default:
+    case  1:
+        bitpressure_strategy1( gfc, l3_xmin, min_mean_bits, max_bits );
+        break;
+    case  2:
+        bitpressure_strategy2( gfc, frameBits[gfc->bitrate_index], 
+                               used_bits2, save_bits, min_bits, max_bits );
+        break;
     }
 
-    } while (used_bits > bits);
+    }   /* breaks adjusted */
     /*--------------------------------------*/
     
     /*  quantize granules which violate bit constraints again

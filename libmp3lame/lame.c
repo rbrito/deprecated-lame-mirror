@@ -1059,6 +1059,8 @@ lame_init_params(lame_global_flags * const gfp)
             gfc->VBR->gain_adjust = 0;
             gfc->VBR->smooth = 1;
         }    
+        gfc->VBR->bitpressure = 1;
+        
         gfc->sfb21_extra = (gfp->out_samplerate > 44000);
         
         if ( gfp->adjust_type < 0 )
@@ -1099,6 +1101,8 @@ lame_init_params(lame_global_flags * const gfp)
             else
                 gfc->VBR->mask_adjust = dbQ[gfp->VBR_q]; 
         }
+        gfc->VBR->bitpressure = 1;
+        
         /*  use Gabriel's adaptative ATH shape for VBR by default
          */
         if (gfp->ATHtype == -1)
@@ -1171,7 +1175,7 @@ lame_init_params(lame_global_flags * const gfp)
     
 
     gfc->PSY->cwlimit = gfp->cwlimit <= 0 ? 8871.7f : gfp->cwlimit;
-    gfc->PSY->allow_diff_short = gfp->allow_diff_short && !gfp->force_ms;
+    gfc->PSY->allow_diff_short = gfp->allow_diff_short && gfp->mode == STEREO;
     
     if ( gfp->adapt_thres_type < 0 ) gfp->adapt_thres_type = 2;
     
