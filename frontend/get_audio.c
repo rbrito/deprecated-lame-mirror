@@ -80,20 +80,18 @@ int id3v2taglen = 0;
 #ifdef AMIGA_MPEGA
 static int decode_initfile(const char *fullname,
 			   mp3data_struct * const mp3data);
-#else
+#elif defined(HAVE_MPGLIB)
 static int decode_initfile(lame_t gfp, FILE * fd, mp3data_struct * mp3data);
-#endif
-
 /* read mp3 file until mpglib returns one frame of PCM data */
 static int     decode_fromfile(lame_t gfp,
 			       FILE * fd, short int pcm_l[], short int pcm_r[],
 			       mp3data_struct * mp3data);
-
+#endif
 
 static int read_samples_pcm(FILE * musicin, int sample_buffer[2304],
-                            int frame_size, int samples_to_read);
+                            int samples_to_read);
 static int read_samples_mp3(lame_t gfp, FILE * const musicin,
-                            short int mpg123pcm[2][1152], int num_chan);
+                            short int mpg123pcm[2][1152]);
 static void    CloseSndFile(sound_file_format input, FILE * musicin);
 static FILE   *OpenSndFile(lame_t gfp, char *);
 
@@ -269,16 +267,13 @@ get_audio_common(lame_t gfp, int buffer[2][1152], short buffer16[2][1152])
     case sf_mp2:
     case sf_mp3:
 	if (buffer)
-	    samples_read
-		= read_samples_mp3(gfp, musicin, buf_tmp16, num_channels);
+	    samples_read = read_samples_mp3(gfp, musicin, buf_tmp16);
 	else
-	    samples_read
-		= read_samples_mp3(gfp, musicin, buffer16, num_channels);
+	    samples_read = read_samples_mp3(gfp, musicin, buffer16);
 	break;
     default:
         samples_read =
-            read_samples_pcm(musicin, insamp, num_channels * framesize,
-                             num_channels * samples_to_read);
+            read_samples_pcm(musicin, insamp, num_channels * samples_to_read);
 	p = insamp + samples_read;
         samples_read /= num_channels;
 	if (buffer) {	/* output to int buffer */
@@ -336,9 +331,9 @@ get_audio_common(lame_t gfp, int buffer[2][1152], short buffer16[2][1152])
 
 
 
-int
+static int
 read_samples_mp3(lame_t gfp, FILE * const musicin,
-		 short int mpg123pcm[2][1152], int stereo)
+		 short int mpg123pcm[2][1152])
 {
     int     out;
 #if defined(AMIGA_MPEGA)  ||  defined(HAVE_MPGLIB)
@@ -698,7 +693,7 @@ OpenSndFile(lame_t gfp, char *inPath)
 
 static int
 read_samples_pcm(FILE * const musicin, int sample_buffer[2304],
-                 int frame_size /* unused */ , int samples_to_read)
+                 int samples_to_read)
 {
     int     i;
     int     samples_read;
@@ -817,8 +812,8 @@ unpack_read_samples( const int samples_to_read, const int bytes_per_sample,
 *
 ************************************************************************/
 
-int
-read_samples_pcm(FILE * musicin, int sample_buffer[2304], int frame_size,
+static int
+read_samples_pcm(FILE * musicin, int sample_buffer[2304],
                  int samples_to_read)
 {
     int     samples_read;
