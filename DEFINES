@@ -6,7 +6,3 @@ TAKEHIRO_IEEE754_HACK:
 USE_FAST_LOG:
  - use of log/log10 approximation (uses IEEE754 float format)
    (absolute precision of log10 is then around 1e-6)
-
-NEW_DRAIN (theres a define above: NEW_DRAINXX):
- - use new ancillary data filling algorithm which minimize main_data_begin
-

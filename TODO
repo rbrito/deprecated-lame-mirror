@@ -13,14 +13,6 @@ new LAME.
 
 
 
-2. New Xing VBR header is incompable with MS Media Player.  but works
-with most other players.  Most likely MS took some shortcuts and
-made some invalid assumptions about VBR header.  Should we
-track this down and see if we can come up with a work around?
-VBRfix code may give us an answer.
-
-
-
 3. Some switches to support the "BUGGY" decoders.
 --strictly-enforce-ISO is not perfect to these players.
 It seems it needs forcing coupling block type, lower IXMAX_VAL, no
