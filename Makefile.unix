@@ -508,7 +508,9 @@ clean:
 	-del $(DEP)
 	-del $(PGM)
   else
-	-$(RM) $(gtk_obj) $(frontend_obj) $(lib_obj) $(DEP) $(PGM) libmp3lame/libmp3lame.a 
+	-$(RM) $(gtk_obj) $(frontend_obj) $(lib_obj) $(DEP) $(PGM) \
+          frontend/main.o frontend/lame libmp3lame/libmp3lame.a \
+          analyzer/mp3x.o analyzer/mp3x
   endif
 
 

@@ -64,6 +64,7 @@ float update_interval;      /* to use Frank's time status display */
 
 
 
+
 /************************************************************************
 *
 * main
@@ -227,7 +228,7 @@ int main(int argc, char **argv)
 
 	/* encode */
 	imp3=lame_encode_buffer(&gf,Buffer[0],Buffer[1],iread,
-              mp3buffer,(int)sizeof(mp3buffer));
+              mp3buffer,sizeof(mp3buffer));
 
 	/* was our output buffer big enough? */
 	if (imp3<0) {
@@ -242,7 +243,7 @@ int main(int argc, char **argv)
 	  exit(-1);
 	}
       } while (iread);
-      imp3=lame_encode_flush(&gf,mp3buffer,(int)sizeof(mp3buffer));   /* may return one more mp3 frame */
+      imp3=lame_encode_flush(&gf,mp3buffer,sizeof(mp3buffer));   /* may return one more mp3 frame */
       if (imp3<0) {
 	if (imp3==-1) fprintf(stderr,"mp3 buffer is not big enough... \n");
 	else fprintf(stderr,"mp3 internal error:  error code=%i\n",imp3);

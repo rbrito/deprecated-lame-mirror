@@ -348,6 +348,8 @@ int lame_decoder(lame_global_flags *gfp, FILE *outf,int skip, char *inPath, char
     int         i;
     void        (*WriteFunction) (FILE* fp, char *p, int n);
 
+
+
     fprintf(stderr, "\rinput:  %s%s(%g kHz, %i channel%s, ", 
            strcmp (inPath, "-")  ?  inPath  :  "<stdin>",
 	   strlen (inPath) > 26  ? "\n\t" : "  ",
@@ -376,18 +378,26 @@ int lame_decoder(lame_global_flags *gfp, FILE *outf,int skip, char *inPath, char
 	break;
     case sf_raw:
         fprintf(stderr, "raw PCM data");
+	mp3input_data.nsamp = gfp->num_samples;
+	mp3input_data.framesize = 1152;
 	skip = 0;	/* other formats have no delay */ /* is += 0 not better ??? */
 	break;
     case sf_wave:
         fprintf(stderr, "Microsoft WAVE");
+	mp3input_data.nsamp = gfp->num_samples;
+	mp3input_data.framesize = 1152;
 	skip = 0;	/* other formats have no delay */ /* is += 0 not better ??? */
 	break;
     case sf_aiff:
         fprintf(stderr, "SGI/Apple AIFF");
+	mp3input_data.nsamp = gfp->num_samples;
+	mp3input_data.framesize = 1152;
 	skip = 0;	/* other formats have no delay */ /* is += 0 not better ??? */
 	break;
     default:
         fprintf(stderr, "unknown");
+	mp3input_data.nsamp = gfp->num_samples;
+	mp3input_data.framesize = 1152;
 	skip = 0;	/* other formats have no delay */ /* is += 0 not better ??? */
 	assert (0);
 	break;
@@ -406,7 +416,8 @@ int lame_decoder(lame_global_flags *gfp, FILE *outf,int skip, char *inPath, char
     	
     wavsize       = -skip;
     WriteFunction = swapbytes  ?  WriteBytesSwapped  :  WriteBytes;
-    mp3input_data.totalframes = mp3input_data.nsamp/mp3input_data.framesize;
+    mp3input_data.totalframes = 
+      mp3input_data.nsamp/mp3input_data.framesize;
     
     assert ( gfp->num_channels >= 1 && gfp->num_channels <= 2 );
     
