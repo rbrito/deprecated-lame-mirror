@@ -21,6 +21,112 @@
 
 /* $Id$ */
 
+
+/*
+PSYCHO ACOUSTICS
+
+
+This routine computes the psycho acoustics, delayed by
+one granule.  
+
+Input: buffer of PCM data (1024 samples).  
+
+This window should be centered over the 576 sample granule window.
+The routine will compute the psycho acoustics for
+this granule, but return the psycho acoustics computed
+for the *previous* granule.  This is because the block
+type of the previous granule can only be determined
+after we have computed the psycho acoustics for the following
+granule.  
+
+Output:  maskings and energies for each scalefactor band.
+block type, PE, and some correlation measures.  
+The PE is used by CBR modes to determine if extra bits
+from the bit reservoir should be used.  The correlation
+measures are used to determine mid/side or regular stereo.
+
+
+Notation:
+
+barks:  a non-linear frequency scale.  Mapping from frequency to
+        barks is given by freq2bark()
+
+scalefactor bands: The spectrum (frequencies) are broken into 
+                   SBMAX "scalefactor bands".  Thes bands
+                   are determined by the MPEG ISO spec.  In
+                   the noise shaping/quantization code, we allocate
+                   bits among the partition bands to achieve the
+                   best possible quality
+
+partition bands:   The spectrum is also broken into about
+                   64 "partition bands".  Each partition 
+                   band is about .34 barks wide.  There are about 2-5
+                   partition bands for each scalefactor band.
+
+LAME computes all psycho acoustic information for each partition
+band.  Then at the end of the computations, this information
+is mapped to scalefactor bands.  The energy in each scalefactor
+band is taken as the sum of the energy in all partition bands
+which overlap the scalefactor band.  The maskings can be computed
+in the same way (and thus represent the average masking in that band)
+or by taking the minmum value multiplied by the number of
+partition bands used (which represents a minimum masking in that band).
+
+
+The general outline is as follows:
+
+
+1. compute the energy in each partition band
+2. compute the tonality in each partition band
+3. compute the strength of each partion band "masker"
+4. compute the masking (via the spreading function applied to each masker)
+5. Modifications for mid/side masking.  
+
+Each partition band is considiered a "masker".  The strength
+of the i'th masker in band j is given by:
+
+    s3(i-j)*strength(i)
+
+The strength of the masker is a function of the energy and tonality.
+The more tonal, the less masking.  LAME uses a simple linear formula
+(controlled by NMT and TMN) which says the strength is given by the
+energy divided by a linear function of the tonality.
+
+
+s3() is the "spreading function".  It is given by a formula
+determined via listening tests.  
+
+The total masking in the j'th partition band is the sum over
+all maskings i.  It is thus given by the convolution of
+the strength with s3(), the "spreading function."
+
+masking(j) = sum_over_i  s3(i-j)*strength(i)  = s3 o strength
+
+where "o" = convolution operator.  s3 is given by a formula determined
+via listening tests.  It is normalized so that s3 o 1 = 1.
+
+Note: instead of a simle convolution, LAME also has the
+option of using "additive masking"
+
+The most critical part is step 2, computing the tonality of each
+partition band.  LAME has two tonality estimators.  The first
+is based on the ISO spec, and measures how predictiable the
+signal is over time.  The more predictable, the more tonal.
+The second measure is based on looking at the spectrum of
+a single granule.  The more peaky the spectrum, the more
+tonal.  By most indications, the latter approach is better.
+
+Finally, in step 5, the maskings for the mid and side
+channel are possibly increased.  Under certain circumstances,
+noise in the mid & side channels is assumed to also
+be masked by strong maskers in the L or R channels.
+
+
+*/
+
+
+
+
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
