@@ -184,6 +184,8 @@ init_gr_info(
 	    FLOAT ixwork[576];
 	    FLOAT *ix;
 
+	    if (gfc->mode_gr == 1)
+		cod_info->region0_count = 5;
 	    cod_info->sfb_smin        = 0;
 	    cod_info->sfb_lmax        = 0;
 	    if (cod_info->mixed_block_flag) {

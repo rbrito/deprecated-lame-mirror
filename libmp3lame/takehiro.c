@@ -483,7 +483,7 @@ int noquant_count_bits(
 	else
 	    a2 = i;
     } else {
-	a1 = gfc->scalefac_band.l[7 + 1]; // = 3*gfc->scalefac_band.s[3] */
+	a1 = gfc->scalefac_band.l[gi->region0_count+1];
 	a2 = i;
     }
 
