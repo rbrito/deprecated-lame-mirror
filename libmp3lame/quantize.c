@@ -1610,7 +1610,7 @@ void
 ABR_iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 {
     int bytes;
-    FLOAT threshold;
+    FLOAT threshold, newlower;
     /* encode */
     VBR_iteration_loop(gfc, ratio);
 
@@ -1620,22 +1620,25 @@ ABR_iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
     gfc->bytes_diff += bytes;
 
     threshold = (FLOAT)0.2 * gfc->mean_bitrate_kbps * gfc->frameNum;
+    newlower = gfc->masking_lower_short;
     if (bytes > 0
 	&& (gfc->bytes_diff > threshold
 	    || (gfc->bytes_diff > 0
-		&& gfc->masking_lower < gfc->masklower_base*(FLOAT)1.2))) {
-	gfc->masking_lower *= (FLOAT)1.01;
+		&& newlower < gfc->masklower_base*(FLOAT)2.0))) {
+	newlower *= (FLOAT)1.01;
     } else {
 	if (gfc->bytes_diff < -threshold) {
-	    gfc->masking_lower *= (FLOAT)0.97;
+	    newlower *= (FLOAT)0.97;
 	} else if (gfc->bytes_diff < -threshold*(FLOAT)0.5) {
-	    gfc->masking_lower *= (FLOAT)0.99;
+	    newlower *= (FLOAT)0.99;
 	}
-	if (gfc->masking_lower < gfc->masklower_base) {
-	    gfc->masking_lower = gfc->masklower_base;
+	if (newlower < gfc->masklower_base) {
+	    newlower = gfc->masklower_base;
 	}
     }
-    gfc->masking_lower_short = gfc->masking_lower;
+    if (newlower > gfc->masklower_base * (FLOAT)4.0)
+	newlower = gfc->masklower_base * (FLOAT)4.0;
+    gfc->masking_lower = gfc->masking_lower_short = newlower;
 }
 
 #ifndef NOANALYSIS
