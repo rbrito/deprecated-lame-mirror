@@ -1,4 +1,9 @@
 encoding core:
+0.
+Sometime LAME goes into infinite loop, when lower quality VBR.
+This is completely fatal bug.
+
+
 1.
 tuning lowpass with fixed SFB21 oddness code.
 Old LAME (3.x) has bugs in sfb21 handling code and it decrease quality
@@ -57,6 +62,7 @@ because of poor resorvoir handling.
 Right now the code is tuned with the LAME3's pe calculation and
 psymodel. Now they are all changed and we should re-tune these code.
 
+And sometimes it drains too much bits. That's should be fixed.
 
 
 
@@ -86,6 +92,12 @@ higher quality.
 better highpass/lowpass filter:
 We need to first replace the polyphase filter with an FIR filter.
 And setting highpass filtering to enhance the playback frequency range.
+
+
+15.
+There're some sound quality regression compared with LAME3.x
+- short block problem (i.e. spahm.wav)
+- white noise problem (i.e. dr4.wav)
 
 
 20.
