@@ -409,22 +409,66 @@ int  lame_encode_mp3_frame (				// Output
 	    init_gr_info(gfc, &gfc->l3_side.tt[gr][ch]);
     }
 
-    /* bit and noise allocation */
+    /* channel conversion */
     if (gfc->mode_ext & MPG_MD_MS_LR) {
 	/* convert from L/R <-> Mid/Side */
 	for (gr = 0; gr < gfc->mode_gr; gr++) {
+	    gr_info *gi = &gfc->l3_side.tt[gr][0];
+	    int sfb = gfc->l3_side.istereo_start_sfb_l;
+	    int end = gfc->scalefac_band.l[sfb];
 	    int i;
-	    for (i = 0; i < 576; ++i) {
-		FLOAT l, r;
-		l = gfc->l3_side.tt[gr][0].xr[i];
-		r = gfc->l3_side.tt[gr][1].xr[i];
-		gfc->l3_side.tt[gr][0].xr[i] = (l+r) * (FLOAT)(SQRT2*0.5);
-		gfc->l3_side.tt[gr][1].xr[i] = (l-r) * (FLOAT)(SQRT2*0.5);
+	    if (gi->block_type == SHORT_TYPE) {
+		sfb = gfc->l3_side.istereo_start_sfb_s;
+		end = gfc->scalefac_band.s[sfb]*3;
+		sfb *= 3;
 	    }
+	    for (i = 0; i < end; i++) {
+		FLOAT l = gi[0].xr[i];
+		FLOAT r = gi[1].xr[i];
+		gi[0].xr[i] = (l+r) * (FLOAT)(SQRT2*0.5);
+		gi[1].xr[i] = (l-r) * (FLOAT)(SQRT2*0.5);
+	    }
+	    if (gfp->use_istereo) {
+		gfc->mode_ext |= 1;
+		for (; i < 576;) {
+		    end = i + gi->width[sfb];
+		    FLOAT lsum = 1e-30, rsum = 1e-30;
+		    do {
+			FLOAT l = gi[0].xr[i];
+			FLOAT r = gi[1].xr[i];
+			gi[0].xr[i] = l+r;
+			gi[1].xr[i] = 0.0;
+			lsum += fabs(l);
+			rsum += fabs(r);
+		    } while (++i < end);
+		    lsum = lsum / (lsum+rsum);
+
+		    gi[1].scalefac[sfb] = 3;
+		    gi[1].preflag = -1;
+		    if (lsum < 0.5) {
+			if (lsum < 0.211324865 * 0.5)
+			    gi[1].scalefac[sfb] = 0;
+			else if (lsum < (0.366025404 + 0.211324865) * 0.5)
+			    gi[1].scalefac[sfb] = 1;
+			else if (lsum < (0.5 + 0.366025404) * 0.5)
+			    gi[1].scalefac[sfb] = 2;
+		    } else {
+			if (lsum > 1.0-0.211324865 * 0.5)
+			    gi[1].scalefac[sfb] = 6;
+			else if (lsum > 1.0-(0.366025404 + 0.211324865) * 0.5)
+			    gi[1].scalefac[sfb] = 5;
+			else if (lsum > 1.0-(0.5 + 0.366025404) * 0.5)
+			    gi[1].scalefac[sfb] = 4;
+		    }
+		    sfb++;
+		}
+	    }
+	    gfc->scale_bitcounter(&gi[1]);
 	    if (gfc->sparsing)
 		ms_sparsing(gfc, gr);
 	}
     }
+
 #if defined(HAVE_GTK)
     /* copy data for MP3 frame analyzer */
     if (gfc->pinfo) {
@@ -458,6 +502,7 @@ int  lame_encode_mp3_frame (				// Output
     }
 #endif
 
+    /* bit and noise allocation */
     switch (gfp->VBR){ 
     default:
     case cbr:

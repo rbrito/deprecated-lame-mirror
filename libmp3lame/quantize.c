@@ -123,7 +123,7 @@ reduce_side(int targ_bits[2],FLOAT ms_ener_ratio,int mean_bits)
     if (move_bits > MAX_BITS - targ_bits[0])
         move_bits = MAX_BITS - targ_bits[0];
 
-    if (targ_bits[1]-move_bits > 125) {
+    if (targ_bits[1] - move_bits > 125) {
 	targ_bits[1] -= move_bits;
 	/* if mid channel already has 2x more than average, dont bother */
 	/* mean_bits = bits per granule (for both channels) */
@@ -133,8 +133,8 @@ reduce_side(int targ_bits[2],FLOAT ms_ener_ratio,int mean_bits)
 	targ_bits[0] += targ_bits[1] - 125;
 	targ_bits[1] = 125;
     }
-    assert (targ_bits[0] <= MAX_BITS);
-    assert (targ_bits[1] <= MAX_BITS);
+    assert ((unsigned)targ_bits[0] <= MAX_BITS);
+    assert ((unsigned)targ_bits[1] <= MAX_BITS);
 }
 
 
@@ -259,7 +259,7 @@ calc_noise(
     do {
 	FLOAT step
 	    = POW20(gi->global_gain
-		    - ((gi->scalefac[sfb] + (gi->preflag ? pretab[sfb] : 0))
+		    - ((gi->scalefac[sfb] + (gi->preflag>0 ? pretab[sfb] : 0))
 		       << (gi->scalefac_scale + 1))
 		    - gi->subblock_gain[gi->window[sfb]] * 8);
 	FLOAT noise = 0.0;
@@ -613,7 +613,7 @@ inc_scalefac_scale (
     int sfb;
     for (sfb = 0; sfb < gi->sfbmax; sfb++) {
 	int s = gi->scalefac[sfb];
-	if (gi->preflag)
+	if (gi->preflag > 0)
 	    s += pretab[sfb];
 	gi->scalefac[sfb] = (s + 1) >> 1;
     }
@@ -744,7 +744,7 @@ amp_scalefac_bands(
     /* not all scalefactors have been amplified.  so these 
      * scalefacs are possibly valid.  encode them: 
      */
-    bits = target_bits - gfc->scale_bitcounter (gi);
+    bits = target_bits - gfc->scale_bitcounter(gi);
     if (bits > 0)
 	return bits; /* Ok, we will go with this scalefactor combination */
 
@@ -759,7 +759,7 @@ amp_scalefac_bands(
     else
 	return 0;
 
-    return target_bits - gfc->scale_bitcounter (gi);
+    return target_bits - gfc->scale_bitcounter(gi);
 }
 
 
@@ -1270,7 +1270,7 @@ set_scalefactor_values(gr_info *gi, int const max_range[],
     do {
 	int s = (vbrmax - vbrsf[sfb] - gi->subblock_gain[gi->window[sfb]]*8
 		 + ifqstep - 1) >> (1 + gi->scalefac_scale);
-	if (gi->preflag)
+	if (gi->preflag > 0)
 	    s -= pretab[sfb];
 	if (s < 0)
 	    s = 0;
@@ -1586,7 +1586,7 @@ void set_pinfo (
 	    en1*Max(en0*ratio->thm.l[sfb],gfc->ATH.l[sfb]);
 
 	gfc->pinfo->LAMEsfb[gr][ch][sfb] = 0;
-	if (gi->preflag && sfb>=11)
+	if (gi->preflag>0 && sfb>=11)
 	    gfc->pinfo->LAMEsfb[gr][ch][sfb] = -ifqstep*pretab[sfb];
 
 	assert(gi->scalefac[sfb]>=0); /*scfsi should be decoded by the caller*/

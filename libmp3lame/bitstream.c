@@ -323,7 +323,7 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 		    writeheader(gfc,gi->region0_count, 4);
 		    writeheader(gfc,gi->region1_count, 3);
 		}
-		writeheader(gfc,gi->preflag,            1);
+		writeheader(gfc,gi->preflag > 0,        1);
 		writeheader(gfc,gi->scalefac_scale,     1);
 		writeheader(gfc,gi->count1table_select, 1);
 	    }

@@ -69,7 +69,7 @@ static int quantize_xrpow(const FLOAT *xp, gr_info *gi)
 	const FLOAT *xe = xp + gi->width[sfb];
 	FLOAT istep
 	    = IPOW20(gi->global_gain
-		     - ((gi->scalefac[sfb] + (gi->preflag ? pretab[sfb] : 0))
+		     - ((gi->scalefac[sfb] + (gi->preflag>0 ? pretab[sfb] : 0))
 			<< (gi->scalefac_scale + 1))
 		     - gi->subblock_gain[gi->window[sfb]] * 8);
 	sfb++;
@@ -114,7 +114,7 @@ static void quantize_xrpow_ISO(const FLOAT *xp, gr_info *gi)
 	const FLOAT *xe = xp + gi->width[sfb];
 	FLOAT istep
 	    = IPOW20(gi->global_gain
-		     - ((gi->scalefac[sfb] + (gi->preflag ? pretab[sfb] : 0))
+		     - ((gi->scalefac[sfb] + (gi->preflag>0 ? pretab[sfb] : 0))
 			<< (gi->scalefac_scale + 1))
 		     - gi->subblock_gain[gi->window[sfb]] * 8);
 	sfb++;
@@ -477,7 +477,7 @@ int count_bits(
 		continue;
 	    roundfac = 0.634521682242439
 		/ IPOW20(gi->global_gain
-			 - ((gi->scalefac[sfb] + (gi->preflag ? pretab[sfb]:0))
+			 - ((gi->scalefac[sfb] + (gi->preflag>0 ? pretab[sfb]:0))
 			    << (gi->scalefac_scale + 1))
 			 - gi->subblock_gain[gi->window[sfb]] * 8
 			 + gi->scalefac_scale);
@@ -713,6 +713,9 @@ best_scalefac_store(
     int sfb,i,j,l;
     int recalc = 0;
 
+    if (gi->preflag < 0) /* this means sub channel of intensity stereo */
+	return;
+
     /* remove scalefacs from bands with all ix=0.
      * This idea comes from the AAC ISO docs.  added mt 3/00 */
     j = 0;
@@ -822,7 +825,7 @@ scale_bitcount(gr_info * const gi)
 	    tab = scale_mixed;
     } else {
 	tab = scale_long;
-	if (!gi->preflag) {
+	if (gi->preflag == 0) {
 	    for ( sfb = 11; sfb < SBPSY_l; sfb++ )
 		if (gi->scalefac[sfb] < pretab[sfb])
 		    break;
@@ -882,7 +885,7 @@ int
 scale_bitcount_lsf(gr_info * const gi)
 {
     int part, i, sfb;
-    int table_type = gi->preflag * 2;
+    int table_type = (gi->preflag >= 0) ? 2 : 0;
     int tableID = table_type * 3;
 
     if (gi->block_type == SHORT_TYPE) {

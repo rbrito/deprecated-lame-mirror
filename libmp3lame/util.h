@@ -209,6 +209,8 @@ typedef struct {
     int resvDrain_pre;
     int resvDrain_post;
     int scfsi[2][4];
+    int istereo_start_sfb_l;
+    int istereo_start_sfb_s;
 } III_side_info_t;
 
 typedef struct 
@@ -486,9 +488,9 @@ struct lame_internal_flags {
   /* variables used by util.c */
   /* BPC = maximum number of filter convolution windows to precompute */
 #define BPC 320
-  sample_t *inbuf_old [2];
-  sample_t *blackfilt [2*BPC+1];
-  FLOAT itime[2];
+    sample_t *inbuf_old [2];
+    sample_t *blackfilt [2*BPC+1];
+    FLOAT itime[2];
 
     int (*scale_bitcounter)(gr_info * const gi);
 #if HAVE_NASM

@@ -791,6 +791,8 @@ lame_print_internals( const lame_global_flags * gfp )
     default          : pc = "unknown (error)"; break;
     }
     MSGF( gfc, "\t%d channel - %s\n", gfc->channels_out, pc );
+    if (gfp->use_istereo)
+	MSGF(gfc, "\tusing intensity stereo\n");
 
     if (gfp->free_format)    pc = "(free format)";
     else pc = "";

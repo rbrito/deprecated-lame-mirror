@@ -40,7 +40,8 @@ struct lame_global_struct {
   int mode_fixed;             /* ignored                                     */
   int mode_automs;            /* use a m/s threshold based on compression
                                  ratio                                       */
-  int force_ms;               /* force M/S mode.  requires mode=1            */
+  int force_ms;               /* force M/S mode. */
+  int use_istereo;            /* use intensity stereo */
   int free_format;            /* use free format? default=0                  */
 
   /*
@@ -123,7 +124,7 @@ struct lame_global_struct {
   int   sparsing;
   FLOAT sparse_low;
   FLOAT sparse_high;
-  
+
   struct {
     void (*msgf)  (const char *format, va_list ap);
     void (*debugf)(const char *format, va_list ap);

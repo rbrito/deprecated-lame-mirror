@@ -1736,7 +1736,7 @@ psycho_analysis(
 		-  gfc->masking_next[gr][1].pe;
 
 	/* based on PE: M/S coding would not use much more bits than L/R */
-	if (diff_pe <= 0.0 || gfp->force_ms) {
+	if (diff_pe <= 0.0 || gfp->force_ms || gfp->use_istereo) {
 	    gfc->mode_ext_next = MPG_MD_MS_LR;
 	    for (gr = 0; gr < gfc->mode_gr; gr++) {
 		gfc->useshort_next[gr][0] = gfc->useshort_next[gr][2];
