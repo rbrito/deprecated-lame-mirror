@@ -781,20 +781,17 @@ lame_set_VBR_q( lame_global_flags*  gfp,
        VBR_Q_DEFAULT, which aliases the default setting of
        e.g. VBR_Q_MID. */
 
-
-    if( 0 > VBR_q || 10 <= VBR_q )
+    if (VBR_q < 0)
         return -1;  /* Unknown VBR quality level! */
 
     gfp->VBR_q = VBR_q;
-    lame_set_ATHcurve(gfp, VBR_q);
-
     return 0;
 }
 
 int
 lame_get_VBR_q( const lame_global_flags*  gfp )
 {
-    assert( 0 <= gfp->VBR_q && 10 > gfp->VBR_q );
+    assert(0 <= gfp->VBR_q);
 
     return gfp->VBR_q;
 }

@@ -216,7 +216,10 @@ set_compression_ratio(lame_global_flags * gfp)
 
     if (gfp->VBR == vbr) {
 	FLOAT  cmp[] = { 5.7, 6.5, 7.3, 8.2, 10, 11.9, 13, 14, 15, 16.5 };
-	gfp->compression_ratio = cmp[gfp->VBR_q];
+	if (gfp->VBR_q < 10)
+	    gfp->compression_ratio = cmp[gfp->VBR_q];
+	else
+	    gfp->compression_ratio = cmp[9] + gfp->VBR_q-9;
     } else {
 	gfp->compression_ratio
 	    = gfp->in_samplerate * 16 * gfp->internal_flags->channels_in
@@ -602,26 +605,12 @@ lame_init_params(lame_global_flags * const gfp)
 
     gfc->Class_ID = LAME_ID;
 
-    assert( gfp->VBR_q <= 9 );
-    assert( gfp->VBR_q >= 0 );
-
     if (gfp->quality < 0)
 	gfp->quality = LAME_DEFAULT_QUALITY;
 
-    gfc->sfb21_extra = 0;
-
-    if (gfp->VBR == vbr) {
-        if (gfp->quality > 7) {
-            gfp->quality = 7;     // needs psymodel
-            ERRORF(gfc, "VBR needs a psymodel, switching to quality level 7\n");
-        }
-
-        if (!gfp->experimentalY && gfp->out_samplerate > 36000)
-	    gfc->sfb21_extra = 1;
-    } else {
-        if (!gfp->experimentalY && gfp->out_samplerate > 36000
-	    && (gfc->substep_shaping & 1))
-	    gfc->sfb21_extra = 1;
+    if (gfp->VBR == vbr && gfp->quality > 7) {
+	gfp->quality = 7;     // needs psymodel
+	ERRORF(gfc, "VBR needs a psymodel, switching to quality level 7\n");
     }
 
     if (gfc->noise_shaping_amp > 2)

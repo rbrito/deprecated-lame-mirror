@@ -1404,16 +1404,12 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                         break;
             
                     case 'V':        argUsed = 1;
-                        /* to change VBR default look in lame.h */
-                        if (lame_get_VBR(gfp) == vbr_off) lame_set_VBR(gfp,vbr_default);  
-                        lame_set_VBR_q(gfp,atoi(arg));
+                        lame_set_VBR(gfp, vbr);
+                        lame_set_VBR_q(gfp, atoi(arg));
                         if (lame_get_VBR_q(gfp) <0) lame_set_VBR_q(gfp,0);
-                        if (lame_get_VBR_q(gfp) >9) lame_set_VBR_q(gfp,9);
                         break;
                     case 'v': 
-                        /* to change VBR default look in lame.h */
-                        if (lame_get_VBR(gfp) == vbr_off)
-                            lame_set_VBR(gfp,vbr_default); 
+			lame_set_VBR(gfp, vbr);
                         break;
 
                     case 'q':        argUsed = 1;
