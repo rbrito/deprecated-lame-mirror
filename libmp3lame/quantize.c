@@ -468,6 +468,7 @@ init_bitalloc(lame_internal_flags *gfc, gr_info *const gi)
     }
     memset(&xr34[end], 0, sizeof(FLOAT)*(576-end));
     memset(&absxr[end], 0, sizeof(FLOAT)*(576-end));
+    memset(&gi->l3_enc[end], 0, sizeof(int)*(576-end));
 
     if (sum > (FLOAT)1e-20) {
 	int j = 0;
