@@ -1183,14 +1183,16 @@ VBR_noise_shaping(lame_internal_flags * gfc, FLOAT8 * xr34orig, int minbits, int
     if (ret == -1)      /* Houston, we have a problem */
         return -1;
 
-    if (gfc->substep_shaping & 2)
-	trancate_smallspectrums(gfc, cod_info, l3_xmin, xr34);
+    if (gfc->substep_shaping & 2) {
+	FLOAT8 xrtmp[576];
+	trancate_smallspectrums(gfc, cod_info, l3_xmin, xrtmp);
+    }
 
     if (cod_info->part2_3_length < minbits - cod_info->part2_length) {
         bin_search_StepSize (gfc, cod_info, minbits, ch, xr34);
     }
     if (cod_info->part2_3_length > maxbits - cod_info->part2_length) {
-        bin_search_StepSize (gfc, cod_info, maxbits, ch, xr34);
+	bin_search_StepSize (gfc, cod_info, maxbits, ch, xr34);
     }
     assert (cod_info->global_gain < 256u);
 
