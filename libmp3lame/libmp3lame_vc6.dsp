@@ -339,7 +339,7 @@ InputName=cpu_feat
 # End Source File
 # Begin Source File
 
-SOURCE=.\i386\fft.nas
+SOURCE=.\i386\quantSSE.nas
 
 !IF  "$(CFG)" == "libmp3lame - Win32 Release"
 
@@ -347,7 +347,16 @@ SOURCE=.\i386\fft.nas
 
 !ELSEIF  "$(CFG)" == "libmp3lame - Win32 Release NASM"
 
-# PROP Exclude_From_Build 1
+# Begin Custom Build - Assembling $(InputName)...
+InputDir=.\i386
+OutDir=.\Release_NASM
+InputPath=.\i386\quantSSE.nas
+InputName=quantSSE
+
+"$(OutDir)/$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	nasmw -f win32 -i $(InputDir)/ -DWIN32 $(InputPath) -o   $(OutDir)/$(InputName).obj
+
+# End Custom Build
 
 !ENDIF 
 
