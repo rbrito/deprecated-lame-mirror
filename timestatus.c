@@ -123,7 +123,7 @@ void timestatus(int samp_rate,long frameNum,long totalframes,int framesize)
     percent = 100;
   }
 
-  #define TS_TIME_DECOMPOSE(time) \
+#  define TS_TIME_DECOMPOSE(time) \
     (int)((long)(time+.5) / 3600), \
     (int)((long)((time+.5) / 60) % 60), \
     (int)((long)(time+.5) % 60)

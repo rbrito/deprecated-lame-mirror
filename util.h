@@ -27,31 +27,31 @@
 #define         MAX_U_32_NUM            0xFFFFFFFF
 
 #ifndef PI
- #ifdef M_PI
-  #define       PI                      M_PI
- #else
-  #define       PI                      3.14159265358979323846
- #endif
+# ifdef M_PI
+#  define       PI                      M_PI
+# else
+#  define       PI                      3.14159265358979323846
+# endif
 #endif
 
 
 #ifdef M_LN2
- #define        LOG2                    M_LN2
+# define        LOG2                    M_LN2
 #else
- #define        LOG2                    0.69314718055994530942
+# define        LOG2                    0.69314718055994530942
 #endif
 
 #ifdef M_LN10
- #define        LOG10                   M_LN10
+# define        LOG10                   M_LN10
 #else
- #define        LOG10                   2.30258509299404568402
+# define        LOG10                   2.30258509299404568402
 #endif
 
 
 #ifdef M_SQRT2
- #define        SQRT2                   M_SQRT2
+# define        SQRT2                   M_SQRT2
 #else
- #define        SQRT2                   1.41421356237309504880
+# define        SQRT2                   1.41421356237309504880
 #endif
 
 

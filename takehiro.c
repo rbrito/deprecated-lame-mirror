@@ -644,7 +644,7 @@ scfsi_calc(int ch,
     for (i = 0; i < 4; i++) 
 	l3_side->scfsi[ch][i] = 0;
 
-    for (i = 0; i < sizeof(scfsi_band) / sizeof(int) - 1; i++) {
+    for (i = 0; i < (int)(sizeof(scfsi_band) / sizeof(int)) - 1; i++) {
 	for (sfb = scfsi_band[i]; sfb < scfsi_band[i + 1]; sfb++) {
 	    if (scalefac[0][ch].l[sfb] != scalefac[1][ch].l[sfb])
 		break;

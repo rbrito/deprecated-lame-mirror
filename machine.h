@@ -23,6 +23,9 @@
 #ifndef MACHINE_H_INCLUDED
 #define MACHINE_H_INCLUDED
 
+#if	defined hpux
+#define	_POSIX_SOURCE
+#endif
 
 #include        <stdio.h>
 #include        <string.h>
@@ -58,38 +61,44 @@
 
 
 #if ( defined(_MSC_VER) && !defined(INLINE))
-	#define INLINE _inline
-#elif defined(__SASC)
-	#define INLINE __inline
+#	define INLINE _inline
+#elif defined(__SASC) || defined(__GNUC__)
+#	define INLINE __inline
 #else
-	#define INLINE inline
+#	define INLINE
 #endif
 
 #if ( defined(_MSC_VER))
-	#pragma warning( disable : 4244 )
-	#pragma warning( disable : 4305 )
+#	pragma warning( disable : 4244 )
+#	pragma warning( disable : 4305 )
 #endif
 
 #if ( defined(_MSC_VER) || defined(__BORLANDC__) )
-	#define WIN32_LEAN_AND_MEAN
-	#include <windows.h>
+#	define WIN32_LEAN_AND_MEAN
+#	include <windows.h>
 #else
 	typedef float FLOAT;
 #endif
 typedef double FLOAT8;
 
 
-
 #if defined _WIN32 && !defined __CYGWIN__
-	# define M_PI       3.14159265358979323846
-	# define M_SQRT2	1.41421356237309504880
+#	define M_PI       3.14159265358979323846
+#	define M_SQRT2	1.41421356237309504880
 	typedef unsigned long	u_long;
 	typedef unsigned int	u_int;
 	typedef unsigned short	u_short;
 	typedef unsigned char	u_char;
 
-	#include <fcntl.h>
-	#include <io.h>
+#	include <fcntl.h>
+#	include <io.h>
+#else
+#if !defined __GNUC__ || defined __STRICT_ANSI__
+	typedef unsigned long	u_long;
+	typedef unsigned int	u_int;
+	typedef unsigned short	u_short;
+	typedef unsigned char	u_char;
+#endif
 #endif
 #ifdef __CYGWIN__
 #include <io.h>

@@ -398,7 +398,7 @@ int PutVbrTag(char* lpszFileName,int nVbrScale)
                 int frameNum=(int)(floor(0.01*i*nVbrNumFrames));
 
                 /*  Calculate relative file postion, normalized to 0..256!(?) */
-                float fRelStreamPos=256.0f*(float)pVbrFrames[frameNum]/(float)lFileSize;
+                float fRelStreamPos=(float)256.0*(float)pVbrFrames[frameNum]/(float)lFileSize;
 
                 /* Just to be safe */
                 if (fRelStreamPos>255) fRelStreamPos=255;
@@ -473,8 +473,8 @@ int a, seekpoint;
 float fa, fb, fx;
 
 
-if( percent < 0.0f )   percent = 0.0f;
-if( percent > 100.0f ) percent = 100.0f;
+if( percent < (float)0.0 )   percent = (float)0.0;
+if( percent > (float)100.0 ) percent = (float)100.0;
 
 a = (int)percent;
 if( a > 99 ) a = 99;
@@ -483,13 +483,13 @@ if( a < 99 ) {
     fb = TOC[a+1];
 }
 else {
-    fb = 256.0f;
+    fb = (float)256.0;
 }
 
 
 fx = fa + (fb-fa)*(percent-a);
 
-seekpoint = (int)((1.0f/256.0f)*fx*file_bytes); 
+seekpoint = (int)(((float)(1.0/256.0))*fx*file_bytes); 
 
 
 return seekpoint;

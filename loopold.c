@@ -351,7 +351,7 @@ void outer_loop_dual(
 		  l3_xmin[ch].s[sfb][i];
 	      }
 	    }
-	    for ( sfb = 0; sfb < cod_info[ch]->sfb_lmax; sfb++ )   {
+	    for ( sfb = 0; sfb < (int)cod_info[ch]->sfb_lmax; sfb++ )   {
 	      pinfo->xfsf[gr][ch][sfb] =  
 		pinfo->thr[gr][ch][sfb]*xfsf[ch][0][sfb]/
 		l3_xmin[ch].l[sfb];
