@@ -162,6 +162,7 @@ void lame_init_params(lame_global_flags *gfp)
   gfc->mode_gr = (gfp->out_samplerate <= 24000) ? 1 : 2;  /* mode_gr = 2 */
   gfp->encoder_delay = ENCDELAY;
   gfp->framesize = gfc->mode_gr*576;
+  if (gfp->ogg) gfp->framesize = 1024;
 
 
   gfc->resample_ratio=1;
@@ -596,6 +597,11 @@ void lame_init_params(lame_global_flags *gfp)
   if (gfp->brhist_disp)
     brhist_init(gfp,1,14);
 
+#ifdef HAVEVORBIS
+  if (gfp->ogg) 
+    lame_encode_ogg_init(gfp);
+#endif
+
   return;
 }
 
@@ -710,7 +716,8 @@ FFT's                    <---------1024---------->
     FFT starts at 576-224-MDCTDELAY (304)  = 576-FFTOFFSET
 
 */
-int lame_encode_frame(lame_global_flags *gfp,
+
+int lame_encode_mp3_frame(lame_global_flags *gfp,
 short int inbuf_l[],short int inbuf_r[],
 char *mp3buf, int mp3buf_size)
 {
@@ -987,6 +994,28 @@ char *mp3buf, int mp3buf_size)
 }
 
 
+/* routine to feed exactly one frame (gfp->framesize) worth of data to the 
+encoding engine.  All buffering, resampling, etc, handled by calling
+program.  
+*/
+int lame_encode_frame(lame_global_flags *gfp,
+short int inbuf_l[],short int inbuf_r[],
+char *mp3buf, int mp3buf_size)
+{
+  if (gfp->ogg) 
+    return lame_encode_ogg_frame(gfp,inbuf_l,inbuf_r,mp3buf,mp3buf_size);
+  else
+    return lame_encode_mp3_frame(gfp,inbuf_l,inbuf_r,mp3buf,mp3buf_size);
+}
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1062,8 +1091,9 @@ int lame_encode_buffer(lame_global_flags *gfp,
 
 
     if (gfc->mf_size >= mf_needed) {
-      /* encode the frame */
+      /* encode the frame.  */
       ret = lame_encode_frame(gfp,mfbuf[0],mfbuf[1],mp3buf,mp3buf_size);
+
       if (ret < 0) return ret;
       mp3buf += ret;
       mp3size += ret;
@@ -1179,7 +1209,7 @@ int lame_encode(lame_global_flags *gfp, short int in_buffer[2][1152],char *mp3bu
   int imp3;
   lame_internal_flags *gfc=gfp->internal_flags;
   if (!gfc->lame_init_params_init) return -3;
-  imp3= lame_encode_buffer(gfp,in_buffer[0],in_buffer[1],576*gfc->mode_gr,mp3buf,size);
+  imp3= lame_encode_buffer(gfp,in_buffer[0],in_buffer[1],gfp->framesize,mp3buf,size);
   return imp3;
 }
 
@@ -1233,18 +1263,26 @@ int lame_encode_finish(lame_global_flags *gfp,char *mp3buffer, int mp3buffer_siz
   }
 
 
-  flush_bitstream(gfp);
-  mp3buffer_size_remaining = mp3buffer_size - mp3count;
-  /* if user specifed buffer size = 0, dont check size */
-  if (mp3buffer_size == 0) mp3buffer_size_remaining=0;  
-
-  imp3= copy_buffer(mp3buffer,mp3buffer_size_remaining,&gfc->bs);
-  if (imp3 < 0) {
-    freegfc(gfc);    
-    return imp3;
+  if (gfp->ogg) {
+    /* ogg related stuff */
+    lame_encode_ogg_finish(gfp);
+    
+  }else{
+    /* mp3 related stuff.  bit buffer might still contain some data */
+    flush_bitstream(gfp);
+    mp3buffer_size_remaining = mp3buffer_size - mp3count;
+    /* if user specifed buffer size = 0, dont check size */
+    if (mp3buffer_size == 0) mp3buffer_size_remaining=0;  
+    
+    imp3= copy_buffer(mp3buffer,mp3buffer_size_remaining,&gfc->bs);
+    if (imp3 < 0) {
+      freegfc(gfc);    
+      return imp3;
+    }
+    mp3count += imp3;
   }
 
-  mp3count += imp3;
+
   freegfc(gfc);    
   return mp3count;
 }

@@ -1,7 +1,9 @@
 /* LAME interface to libvorbis */
 
 #ifdef HAVEVORBIS
+#include <time.h>
 #include "vorbis/codec.h"
+#include "vorbis/modes.h"
 #include "lame.h"
 #include "util.h"
 
@@ -215,7 +217,7 @@ int lame_decode_ogg_fromfile(FILE *fd,short int pcm_l[],short int pcm_r[],mp3dat
       if(clipflag)
 	fprintf(stderr,"Clipping in frame %ld\n",vd.sequence);
       
-      /* tell libvorbis how many samples we ctually consumed */
+      /* tell libvorbis how many samples we actually consumed */
       vorbis_synthesis_read(&vd,bout); 
       
       break;
@@ -289,6 +291,139 @@ int lame_decode_ogg_fromfile(FILE *fd,short int pcm_l[],short int pcm_r[],mp3dat
 
   
   return bout;
+}
+
+
+
+int lame_encode_ogg_init(lame_global_flags *gfp)
+{
+  vorbis_info      *vi_ptr; 
+  lame_internal_flags *gfc=gfp->internal_flags;
+
+  
+  /********** Encode setup ************/
+  
+  /* choose an encoding mode */
+  /* (mode 0: 44kHz stereo uncoupled, roughly 128kbps VBR) */
+  if (gfc->stereo==2 && gfp->out_samplerate==44100) {
+    vi_ptr=&info_A;
+  }else{
+    fprintf(stderr,"specified mode not yet supported in Vorbis\n");
+    return -1;
+  }
+  
+  /* add a comment */
+  vorbis_comment_init(&vc);
+  vorbis_comment_add(&vc,"Track encoded by L.A.M.E.");
+  
+  /* set up the analysis state and auxiliary encoding storage */
+  vorbis_analysis_init(&vd,vi_ptr);
+  vorbis_block_init(&vd,&vb);
+  
+  /* set up our packet->stream encoder */
+  /* pick a random serial number; that way we can more likely build
+     chained streams just by concatenation */
+  srand(time(NULL));
+  ogg_stream_init(&os,rand());
+  
+  /* Vorbis streams begin with three headers; the initial header (with
+     most of the codec setup parameters) which is mandated by the Ogg
+     bitstream spec.  The second header holds any comment fields.  The
+     third header holds the bitstream codebook.  We merely need to
+     make the headers, then pass them to libvorbis one at a time;
+     libvorbis handles the additional Ogg bitstream constraints */
+  
+  {
+    ogg_packet header;
+    ogg_packet header_comm;
+    ogg_packet header_code;
+    
+    vorbis_analysis_headerout(&vd,&vc,&header,&header_comm,&header_code);
+    ogg_stream_packetin(&os,&header); /* automatically placed in its own
+					 page */
+    ogg_stream_packetin(&os,&header_comm);
+    ogg_stream_packetin(&os,&header_code);
+    
+    /* no need to write out here.  We'll get to that in the main loop */
+  }
+  
+  return 0;
+}
+
+
+
+int lame_encode_ogg_finish(lame_global_flags *gfp)
+{
+  vorbis_analysis_wrote(&vd,0);
+
+  /* clean up and exit.  vorbis_info_clear() must be called last */
+  ogg_stream_clear(&os);
+  vorbis_block_clear(&vb);
+  vorbis_dsp_clear(&vd);
+  
+  /* ogg_page and ogg_packet structs always point to storage in
+     libvorbis.  They're never freed or manipulated directly */
+  return 0;
+}
+
+
+
+int lame_encode_ogg_frame(lame_global_flags *gfp,
+			  short int inbuf_l[],short int inbuf_r[],
+			  char *mp3buf, int mp3buf_size)
+{
+
+  lame_internal_flags *gfc=gfp->internal_flags;
+  long i;
+  int eos=0;
+  int bytes=0;
+  
+  /* expose the buffer to submit data */
+  double **buffer=vorbis_analysis_buffer(&vd,gfp->framesize);
+  
+  /* uninterleave samples */
+  for(i=0;i<gfp->framesize;i++){
+    buffer[0][i]=(double)inbuf_l[i]/32768.0;
+    if (gfc->stereo==2)
+      buffer[1][i]=(double)inbuf_r[i]/32768.0;
+  }
+  
+  /* tell the library how much we actually submitted */
+  vorbis_analysis_wrote(&vd,i);
+
+  /* vorbis does some data preanalysis, then divvies up blocks for
+     more involved (potentially parallel) processing.  Get a single
+     block for encoding now */
+  while(vorbis_analysis_blockout(&vd,&vb)==1){
+    int result;
+    /* analysis */
+    vorbis_analysis(&vb,&op);
+    
+    /* weld the packet into the bitstream */
+    ogg_stream_packetin(&os,&op);
+    
+    /* write out pages (if any) */
+    result=ogg_stream_pageout(&os,&og);
+    //    if(result==0)break;
+    if (result!=0) {
+    
+      /* check if mp3buffer is big enough for the output */
+      bytes += og.header_len + og.body_len;
+      if (bytes > mp3buf_size)
+	return -1;
+      
+      /*
+	fwrite(og.header,1,og.header_len,stdout);
+	fwrite(og.body,1,og.body_len,stdout);
+      */
+      memcpy(mp3buf,og.header,og.header_len);
+      memcpy(mp3buf+og.header_len,og.body,og.body_len);
+      
+      if(ogg_page_eos(&og))eos=1;
+    }
+  }
+  gfp->frameNum++;
+  return bytes;
 }
 
 

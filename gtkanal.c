@@ -96,20 +96,34 @@ int gtkmakeframe(void)
     iread=lame_readframe(gfp,Buffer);
     gfp->frameNum++;
   }else {
+
+    /* feed data to encoder until encoder produces some output */
     while (gfp->frameNum == pinfo->frameNum) {
+      
       if (gfp->frameNum==0 && !init) {
 	mpglag=1;
 	lame_decode_init();
       }
       if (gfp->frameNum==1) init=0; /* reset for next time frameNum==0 */
+      
       iread=lame_readframe(gfp,Buffer);
+      if (iread > gfp->framesize) {
+	/* NOTE: frame analyzer requires that we encode one frame 
+	 * for each pass through this loop.  If lame_encode_buffer()
+	 * is feed data too quickly, it will sometimes encode multiple frames
+	 * breaking this loop.
+	 */
+	fprintf(stderr,"Warning: lame_readframe is returning too much data.\n");
+      }
+      mp3count=lame_encode_buffer(gfp,Buffer[0],Buffer[1],iread,
+				  mp3buffer,(int)sizeof(mp3buffer));
       
-      
-      mp3count=lame_encode(gfp,Buffer,mp3buffer,sizeof(mp3buffer)); /* encode frame */
       assert( !(mp3count > 0 && gfp->frameNum == pinfo->frameNum));
       /* not possible to produce mp3 data without encoding at least 
        * one frame of data which would increment gfp->frameNum */
     }
+    
+    /* decode one frame of output */
     mp3out=lame_decode1(mp3buffer,mp3count,mpg123pcm[0],mpg123pcm[1]); /* re-synthesis to pcm */
     /* mp3out = 0:  need more data to decode */
     /* mp3out = -1:  error.  Lets assume 0 pcm output */

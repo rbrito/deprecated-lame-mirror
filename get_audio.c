@@ -90,7 +90,12 @@ int get_audio(lame_global_flags *gfp,short buffer[2][1152],int stereo)
   lame_internal_flags *gfc=gfp->internal_flags;
   int num_channels = gfp->num_channels;
 
-  framesize = gfc->mode_gr*576;
+  /* NOTE: LAME can now handle arbritray size input data packets,
+   * so there is no reason to read the input data in chuncks of
+   * size "gfp->framesize".  EXCEPT:  the LAME graphical frame analyzer 
+   * will get out of sync if we read more than framesize worth of data.
+   */
+  framesize = gfp->framesize;
 
   samples_to_read = framesize;
   if (gfc->count_samples_carefully) {
@@ -210,8 +215,6 @@ int read_samples_mp3(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2]
   if (gfp->in_samplerate != mp3data.samplerate) {
     fprintf(stderr,"Error: samplerate has changed in mp3 file - not supported. \n");
   }
-
-
   return out;
 
 #endif
@@ -558,15 +561,7 @@ int read_samples_pcm(lame_global_flags *gfp,short sample_buffer[2304],int frame_
     gs_pSndFileIn = (SNDFILE *)gfp->musicin;
 
     samples_read=sf_read_short(gs_pSndFileIn,sample_buffer,samples_to_read);
-
     rcode = samples_read;
-    if (samples_read < frame_size)
-      {
-	/*fprintf(stderr,"Insufficient PCM input for one frame - fillout with zeros\n");
-	*/
-	if (samples_read<0) samples_read=0;
-	for (; samples_read < frame_size; sample_buffer[samples_read++] = 0);
-      }
 
     if (8==gfc->pcmbitwidth)
       for (; samples_read > 0; sample_buffer[--samples_read] *= 256);
@@ -625,7 +620,6 @@ int read_samples_pcm(lame_global_flags *gfp,short sample_buffer[2304], int frame
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     int samples_read;
-    int rcode;
     int iswav=(gfp->input_format==sf_wave);
 
     samples_read = fread(sample_buffer, sizeof(short), (unsigned int)samples_to_read, gfp->musicin);
@@ -663,16 +657,7 @@ int read_samples_pcm(lame_global_flags *gfp,short sample_buffer[2304], int frame
       SwapBytesInWords( sample_buffer, samples_read );
 
 
-    rcode=samples_read;
-    if (samples_read < frame_size) {
-      if (samples_read<0) samples_read=0;
-      /*fprintf(stderr,"Insufficient PCM input for one frame - fillout with zeros\n");
-      */
-      for (; samples_read < frame_size; sample_buffer[samples_read++] = 0);
-    }
-
-
-    return(rcode);
+    return samples_read;
 }
 
 

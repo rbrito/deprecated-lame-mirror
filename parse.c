@@ -121,6 +121,7 @@ void lame_help(lame_global_flags *gfp,char *name)  /* print syntax & exit */
   fprintf(stdout,"    -d              allow channels to have different blocktypes\n");
   fprintf(stdout,"    -S              don't print progress report, VBR histograms\n");
   fprintf(stdout,"    --decode        input=mp3 file, output=raw pcm\n");
+  fprintf(stdout,"    --ogg           encode using Ogg Vorbis\n");
   fprintf(stdout,"    --freeformat    produce a free format bitstream\n");
   fprintf(stdout,"    --comp  <arg>   choose bitrate to achive a compression ratio of <arg>\n");
   fprintf(stdout,"    --athonly       only use the ATH for masking\n");
@@ -280,6 +281,9 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	}
 	else if (strcmp(token, "ogginput")==0) {
 	  gfp->input_format=sf_ogg;
+	}
+	else if (strcmp(token, "ogg")==0) {
+	  gfp->ogg=1;
 	}
 	else if (strcmp(token, "voice")==0) {
 	  gfp->lowpassfreq=12000;
@@ -742,10 +746,13 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
       strcpy(gfp->outPath,"-");
     }else {
       strncpy(gfp->outPath, gfp->inPath, MAX_NAME_SIZE - 4);
-      if (gfp->decode_only)
+      if (gfp->decode_only) {
 	strncat(gfp->outPath, ".wav", 4 );
-      else
+      } else if (gfp->ogg) {
+	strncat(gfp->outPath, ".ogg", 4 );
+      }else{
 	strncat(gfp->outPath, ".mp3", 4 );
+      }
     }
   }
   /* some file options not allowed with stdout */
