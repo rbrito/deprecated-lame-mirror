@@ -438,11 +438,11 @@ static FLOAT8 athAdjust( FLOAT8 a, FLOAT8 x, FLOAT8 athFloor )
      */
     FLOAT8 const o = 90.30873362;
     FLOAT8 const p = 94.82444863;
-    FLOAT8 u = 10. * log10(x); 
+    FLOAT8 u = 10. * FAST_LOG10(x); 
     FLOAT8 v = a*a;
     FLOAT8 w = 0.0;   
     u -= athFloor;                                  // undo scaling
-    if ( v > 1E-20 ) w = 1. + 10. * log10(v) / o;
+    if ( v > 1E-20 ) w = 1. + 10. * FAST_LOG10(v) / o;
     if ( w < 0  )    w = 0.; 
     u *= w; 
     u += athFloor + o-p;                            // redo scaling
