@@ -2130,7 +2130,8 @@ lame_init_old(lame_global_flags * gfp)
 
     gfc->OldValue[0] = 180;
     gfc->OldValue[1] = 180;
-    gfc->CurrentStep = 4;
+    gfc->CurrentStep[0] = 4;
+    gfc->CurrentStep[1] = 4;
     gfc->masking_lower = 1;
 
     gfp->athaa_type = -1;

@@ -394,7 +394,7 @@ struct lame_internal_flags {
 
   /* variables used by quantize.c */
   int OldValue[2];
-  int CurrentStep;
+  int CurrentStep[2];
 
   FLOAT8 masking_lower;
   char bv_scf[576];
@@ -577,9 +577,6 @@ extern FLOAT8         ATHformula(FLOAT8 f,lame_global_flags *gfp);
 extern FLOAT8         freq2bark(FLOAT8 freq);
 extern FLOAT8         freq2cbw(FLOAT8 freq);
 void disable_FPE(void);
-
-extern void 
-getframebits( const lame_global_flags *gfp, int *bitsPerFrame, int *mean_bits);
 
 void fill_buffer(lame_global_flags *gfp,
 		 sample_t *mfbuf[2],

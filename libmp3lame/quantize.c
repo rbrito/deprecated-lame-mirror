@@ -196,58 +196,51 @@ int
 bin_search_StepSize(
           lame_internal_flags * const gfc,
           gr_info * const cod_info,
-    const int             desired_rate, 
-    const int             start, 
+    const int             desired_rate,
+    const int             ch,
     const FLOAT8          xrpow [576] ) 
 {
     int nBits;
     int CurrentStep;
     int flag_GoneOver = 0;
-    int StepSize      = start;
-
+    int start = gfc->OldValue[ch];
     binsearchDirection_t Direction = BINSEARCH_NONE;
-    assert(gfc->CurrentStep);
-    CurrentStep = gfc->CurrentStep;
+    CurrentStep = gfc->CurrentStep[ch];
+    cod_info->global_gain = start;
 
+    assert(CurrentStep);
     do {
-        cod_info->global_gain = StepSize;
+	int step;
         nBits = count_bits(gfc, xrpow, cod_info);  
 
-        if (CurrentStep == 1) break; /* nothing to adjust anymore */
-    
-        if (flag_GoneOver) CurrentStep /= 2;
- 
+        if (CurrentStep == 1 || nBits == desired_rate)
+	    break; /* nothing to adjust anymore */
+
         if (nBits > desired_rate) {  
             /* increase Quantize_StepSize */
-            if (Direction == BINSEARCH_DOWN && !flag_GoneOver) {
+            if (Direction == BINSEARCH_DOWN)
                 flag_GoneOver = 1;
-                CurrentStep  /= 2; /* late adjust */
-            }
+
+	    if (flag_GoneOver) CurrentStep /= 2;
             Direction = BINSEARCH_UP;
-            StepSize += CurrentStep;
-            if (StepSize > 255) break;
-        }
-        else if (nBits < desired_rate) {
+	    step = CurrentStep;
+        } else {
             /* decrease Quantize_StepSize */
-            if (Direction == BINSEARCH_UP && !flag_GoneOver) {
+            if (Direction == BINSEARCH_UP)
                 flag_GoneOver = 1;
-                CurrentStep  /= 2; /* late adjust */
-            }
+
+	    if (flag_GoneOver) CurrentStep /= 2;
             Direction = BINSEARCH_DOWN;
-            StepSize -= CurrentStep;
-            if (StepSize < 0) break;
+	    step = -CurrentStep;
         }
-        else break; /* nBits == desired_rate;; most unlikely to happen.*/
-    } while (1); /* For-ever, break is adjusted. */
+	cod_info->global_gain += step;
+    } while (cod_info->global_gain < 256u);
 
-    CurrentStep = start - StepSize;
-    
-    gfc->CurrentStep = CurrentStep/4 != 0 ? 4 : 2;
-
-    if (nBits > desired_rate) {
+    if (nBits > desired_rate && cod_info->global_gain < 255) {
 	cod_info->global_gain++;
 	nBits = count_bits(gfc, xrpow, cod_info);
     }
+    gfc->CurrentStep[ch] = (start - cod_info->global_gain >= 4) ? 4 : 2;
     cod_info->part2_3_length = nBits;
     return nBits;
 }
@@ -793,8 +786,8 @@ outer_loop (
 
     int age;
 
-    bin_search_StepSize (gfc, cod_info, targ_bits - cod_info->part2_length,
-			 gfc->OldValue[ch], xrpow);
+    bin_search_StepSize (gfc, cod_info, targ_bits - cod_info->part2_length, ch,
+			 xrpow);
     gfc->OldValue[ch] = cod_info->global_gain;
 
     if (!gfc->noise_shaping) 
