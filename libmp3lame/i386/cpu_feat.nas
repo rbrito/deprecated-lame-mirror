@@ -12,6 +12,7 @@
 
 	globaldef	has_MMX_nasm
 	globaldef	has_3DNow_nasm
+	globaldef	has_E3DNow_nasm
 	globaldef	has_SSE_nasm
 	globaldef	has_SSE2_nasm
 
@@ -92,7 +93,26 @@ has_3DNow_nasm:
 	CPUID
 	test	edx,0x80000000
 	jz	return0		; no 3DNow! support
-				; 3DNow! support
+	jmp	return1		; 3DNow! support
+;---------------------------------------
+;	int  has_E3DNow_nasm (void)
+;---------------------------------------
+
+has_E3DNow_nasm:
+        pushad
+	call	testCPUID
+	jz	return0		; no CPUID command, so no E3DNow!
+
+	mov	eax,0x80000000
+	CPUID
+	cmp	eax,0x80000000
+	jbe	return0		; no extended MSR(1), so no E3DNow!
+
+	mov	eax,0x80000001
+	CPUID
+	test	edx,0x40000000
+	jz	return0		; no E3DNow! support
+				; E3DNow! support
 return1:
 	popad
 	xor	eax,eax
