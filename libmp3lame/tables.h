@@ -29,18 +29,14 @@
 struct huffcodetab {
     const int    xlen; 	        /* max. x-index+			*/ 
     const int    linmax;	/* max number to be stored in linbits	*/
-    const short*   table;	        /* pointer to array[xlen][ylen]		*/
+    const short* table;	        /* pointer to array[xlen][ylen]		*/
     const char*  hlen;	        /* pointer to array[xlen][ylen]		*/
 };
 
+/* array of all huffcodtable headers, Huffman code table 0..31 */
 extern const struct huffcodetab ht [HTN];
-    /* global memory block			*/
-    /* array of all huffcodtable headers	*/
-    /* 0..31 Huffman code table 0..31		*/
-    /* 32,33 count1-tables			*/
 
-extern const char t32l [];
-extern const char t33l [];
+extern const unsigned char quadcode[2][16*2];
 
 extern const unsigned int   largetbl    [16*16];
 extern const unsigned int   table23       [3*3];
@@ -51,14 +47,13 @@ extern const int scfsi_band[5];
 extern FLOAT window[];
 extern FLOAT window_s[];
 
-extern const int nr_of_sfb_block[6][3][4];
+extern const int nr_of_sfb_block[6*3][4];
 extern const int pretab[SBMAX_l];
-extern const int slen1_tab[16];
-extern const int slen2_tab[16];
+extern const int s1_bits[16];
+extern const int s2_bits[16];
 
 extern const scalefac_struct sfBandIndex[9];
 extern const int mdctorder[SBLIMIT];
-extern const int log2tab[];
 
 #define IXMAX_VAL 8206  /* ix always <= 8191+15.    see count_bits() */
 

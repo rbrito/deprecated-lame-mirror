@@ -229,7 +229,6 @@ init_gr_info(
 	cod_info->region1_count = SBMAX_l - 2 - cod_info->region0_count;
     }
     cod_info->count1bits          = 0;  
-    cod_info->sfb_partition_table = nr_of_sfb_block[0][0];
     cod_info->slen[0]             = 0;
     cod_info->slen[1]             = 0;
     cod_info->slen[2]             = 0;

@@ -203,7 +203,6 @@ typedef struct {
     int window[SFBMAX];
     int count1bits;
     /* added for LSF */
-    const int *sfb_partition_table;
     int slen[4];
 } gr_info;
 

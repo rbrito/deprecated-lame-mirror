@@ -1,7 +1,7 @@
 /*
  *	MP3 bitstream Output interface for LAME
  *
- *	Copyright (c) 1999 Takehiro TOMINAGA
+ *	Copyright 1999-2003 Takehiro TOMINAGA
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,14 +21,11 @@
  * $Id$
  */
 
-
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+# include <config.h>
 #endif
 
-#include <stdlib.h>
 #include <assert.h>
-#include <stdio.h>
 #include "bitstream.h"
 #include "version.h"
 #include "VbrTag.h"
@@ -42,16 +39,6 @@
 /* we work with ints, so when doing bit manipulation, we limit
  * ourselves to MAX_LENGTH-2 just to be on the safe side */
 #define MAX_LENGTH      32  
-
-
-
-#ifdef DEBUG
-static int hoge, hogege;
-#endif
-
-
-
-
 
 /***********************************************************************
  * compute bitsperframe and mean_bits for a layer III frame 
@@ -81,10 +68,6 @@ static void
 putheader_bits(lame_internal_flags *gfc,int w_ptr)
 {
     Bit_stream_struc *bs = &gfc->bs;
-#ifdef DEBUG
-    hoge += gfc->sideinfo_len * 8;
-    hogege += gfc->sideinfo_len * 8;
-#endif
     memcpy(&bs->buf[bs->buf_byte_idx], gfc->header[gfc->w_ptr].buf,
 	   gfc->sideinfo_len);
     bs->buf_byte_idx += gfc->sideinfo_len;
@@ -268,9 +251,9 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
     gfc->header[gfc->h_ptr].ptr = 0;
     memset(gfc->header[gfc->h_ptr].buf, 0, gfc->sideinfo_len);
     if (gfp->out_samplerate < 16000) 
-      writeheader(gfc,0xffe,                12);
+	writeheader(gfc,0xffe,                12);
     else
-      writeheader(gfc,0xfff,                12);
+	writeheader(gfc,0xfff,                12);
     writeheader(gfc,(gfp->version),            1);
     writeheader(gfc,4 - 3,                 2);
     writeheader(gfc,(!gfp->error_protection),  1);
@@ -357,25 +340,29 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 	    writeheader(gfc,gi->global_gain,           8);
 
 	    /* set scalefac_compress */
-	    for (part = 0; part < 4; part++)
-		gi->slen[part] = log2tab[gi->slen[part]];
 	    switch (gi->scalefac_compress) {
-	    case 0:
-		gi->scalefac_compress
-		    = gi->slen[0]*80 + gi->slen[1]*16 + gi->slen[2]*4 + gi->slen[3];
+	    case 0: case 1: case 2:
+		part = gi->slen[0]*80 + gi->slen[1]*16
+		    + gi->slen[2]*4 + gi->slen[3];
+		assert(part < 400);
 		break;
-	    case 1:
-		gi->scalefac_compress
-		    = 400 + gi->slen[0]*20 + gi->slen[1]*4 + gi->slen[2];
+	    case 3: case 4: case 5:
+		part = 400 + gi->slen[0]*20 + gi->slen[1]*4 + gi->slen[2];
+		assert(400 <= part && part < 500);
+		assert(gi->slen[3] == 0);
 		break;
-	    case 2:
-		gi->scalefac_compress = 500 + gi->slen[0]*3 + gi->slen[1];
+	    case 6: case 7: case 8:
+		part = 500 + gi->slen[0]*3 + gi->slen[1];
+		assert(gi->slen[2] == 0);
+		assert(gi->slen[3] == 0);
 		break;
 	    default:
 		ERRORF(gfc, "intensity stereo not implemented yet\n" );
+		part = 0;
+		assert(0);
 		break;
 	    }
-	    writeheader(gfc,gi->scalefac_compress,     9);
+	    writeheader(gfc, part, 9);
 
 	    if (gi->block_type != NORM_TYPE) {
 		writeheader(gfc, 1, 1); /* window_switching_flag */
@@ -439,64 +426,44 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
 inline static int
 huffman_coder_count1(lame_internal_flags *gfc, gr_info *gi)
 {
-    /* Write count1 area */
-    const struct huffcodetab *h = &ht[gi->count1table_select + 32];
-    int i,bits=0;
-#ifdef DEBUG
-    int gegebo = gfc->bs.totbit;
-#endif
+    int bits = 0, index = gi->big_values;
+    const unsigned char * const hcode = quadcode[gi->count1table_select];
 
-    int *ix = &gi->l3_enc[gi->big_values];
-    FLOAT *xr = &gi->xr[gi->big_values];
-    assert(gi->count1table_select < 2);
+    assert(gi->count1table_select < 2u);
+    for (index = gi->big_values; index < gi->count1; index += 4) {
+	int huffbits = 0, p = 0;
 
-    for (i = (gi->count1 - gi->big_values) / 4; i > 0; --i) {
-	int huffbits = 0;
-	int p = 0, v;
-
-	v = ix[0];
-	if (v) {
+	if (gi->l3_enc[index  ]) {
 	    p += 8;
-	    if (xr[0] < 0)
+	    if (gi->xr[index  ] < 0)
 		huffbits++;
-	    assert(v <= 1u);
 	}
 
-	v = ix[1];
-	if (v) {
+	if (gi->l3_enc[index+1]) {
 	    p += 4;
 	    huffbits *= 2;
-	    if (xr[1] < 0)
+	    if (gi->xr[index+1] < 0)
 		huffbits++;
-	    assert(v <= 1u);
 	}
 
-	v = ix[2];
-	if (v) {
+	if (gi->l3_enc[index+2]) {
 	    p += 2;
 	    huffbits *= 2;
-	    if (xr[2] < 0)
+	    if (gi->xr[index+2] < 0)
 		huffbits++;
-	    assert(v <= 1u);
 	}
 
-	v = ix[3];
-	if (v) {
+	if (gi->l3_enc[index+3]) {
 	    p++;
 	    huffbits *= 2;
-	    if (xr[3] < 0)
+	    if (gi->xr[index+3] < 0)
 		huffbits++;
-	    assert(v <= 1u);
 	}
-
-	ix += 4;
-	xr += 4;
-	putbits2(gfc, huffbits + h->table[p], h->hlen[p]);
-	bits += h->hlen[p];
+	putbits2(gfc, huffbits + hcode[p+16], hcode[p]);
+	bits += hcode[p];
     }
-#ifdef DEBUG
-    DEBUGF(gfc,"%ld %d %d %d\n",gfc->bs.totbit -gegebo, gi->count1bits, gi->big_values, gi->count1);
-#endif
+
+    assert(gi->count1bits == bits);
     return bits;
 }
 
@@ -608,18 +575,15 @@ Huffmancodebits(lame_internal_flags *gfc, gr_info *gi)
 inline static int
 writeMainData (lame_internal_flags *gfc)
 {
-    int gr, ch, sfb,data_bits,tot_bits=0;
+    int gr, ch, sfb, tot_bits=0;
     if (gfc->mode_gr == 2) {
 	/* MPEG 1 */
 	for (gr = 0; gr < 2; gr++) {
 	    for (ch = 0; ch < gfc->channels_out; ch++) {
 		gr_info *gi = &gfc->l3_side.tt[gr][ch];
-		int slen1 = slen1_tab[gi->scalefac_compress];
-		int slen2 = slen2_tab[gi->scalefac_compress];
-		data_bits=0;
-#ifdef DEBUG
-		hogege = gfc->bs.totbit;
-#endif
+		int slen1 = s1_bits[gi->scalefac_compress];
+		int slen2 = s2_bits[gi->scalefac_compress];
+		int data_bits = 0;
 		for (sfb = 0; sfb < gi->sfbdivide; sfb++) {
 		    if (gi->scalefac[sfb] == -1)
 			continue; /* scfsi is used */
@@ -638,9 +602,7 @@ writeMainData (lame_internal_flags *gfc)
 		}
 		assert(data_bits == gi->part2_length);
 		data_bits += Huffmancodebits(gfc, gi);
-#ifdef DEBUG
-		DEBUGF(gfc,"<%ld> ", gfc->bs.totbit-hogege);
-#endif
+
 		/* does bitcount in quantize.c agree with actual bit count?*/
 		assert(data_bits == gi->part2_3_length + gi->part2_length);
 		tot_bits += data_bits;
@@ -650,14 +612,14 @@ writeMainData (lame_internal_flags *gfc)
 	/* MPEG 2 */
 	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    gr_info *gi = &gfc->l3_side.tt[0][ch];
-	    int i, sfb_partition, data_bits = 0;
-	    assert(gi->sfb_partition_table);
+	    int partition, data_bits = 0;
 
 	    sfb = 0;
-	    for (sfb_partition = 0; sfb_partition < 4; sfb_partition++) {
-		int sfbs = gi->sfb_partition_table[sfb_partition];
-		int slen = gi->slen[sfb_partition];
-		for (i = 0; i < sfbs; i++, sfb++) {
+	    for (partition = 0; partition < 4; partition++) {
+		int sfbend
+		    = sfb + nr_of_sfb_block[gi->scalefac_compress][partition];
+		int slen = gi->slen[partition];
+		for (; sfb < sfbend; sfb++) {
 		    putbits2(gfc, Max(gi->scalefac[sfb], 0U), slen);
 		    data_bits += slen;
 		}
@@ -825,10 +787,8 @@ format_bitstream(lame_global_flags *gfp)
 
     /* compare number of bits needed to clear all buffered mp3 frames
      * with what we think the resvsize is: */
-    if (compute_flushbits(gfp,&nbytes) != gfc->ResvSize) {
-        ERRORF(gfc,"Internal buffer inconsistency. flushbits <> ResvSize");
-    }
-
+    if (compute_flushbits(gfp,&nbytes) != gfc->ResvSize)
+	ERRORF(gfc,"Internal buffer inconsistency. flushbits <> ResvSize");
 
     /* compare main_data_begin for the next frame with what we
      * think the resvsize is: */
@@ -866,7 +826,7 @@ format_bitstream(lame_global_flags *gfp)
       /* to avoid totbit overflow, (at 8h encoding at 128kbs) lets reset bit counter*/
       int i;
       for (i=0 ; i< MAX_HEADER_BUF ; ++i) 
-	gfc->header[i].write_timing -= gfc->bs.totbit;      
+	gfc->header[i].write_timing -= gfc->bs.totbit;
       gfc->bs.totbit=0;
     }
 

@@ -1,7 +1,7 @@
 /*
  *	MP3 huffman table selecting and bit counting
  *
- *	Copyright (c) 1999 Takehiro TOMINAGA
+ *	Copyright 1999-2003 Takehiro TOMINAGA
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,9 +17,9 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
+ *
+ * $Id$
  */
-
-/* $Id$ */
 
 #ifdef HAVE_CONFIG_H
 # include <config.h>
@@ -39,6 +39,9 @@
 #else
 # define choosetable(a,b,c) choose_table_nonMMX(a,b,c)
 #endif
+
+/* log2(x) */
+static const int log2tab[] = {0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4};
 
 /*********************************************************************
  * nonlinear quantization of xr 
@@ -399,8 +402,8 @@ int noquant_count_bits(
 	    break;
 
 	p = ((ix[i-4] * 2 + ix[i-3]) * 2 + ix[i-2]) * 2 + ix[i-1];
-	a1 += t32l[p];
-	a2 += t33l[p];
+	a1 += quadcode[0][p];
+	a2 += quadcode[1][p];
     }
 
     gi->count1table_select = 0;
@@ -599,8 +602,8 @@ best_huffman_divide(
     a1 = a2 = 0;
     for (; i > cod_info_w.big_values; i -= 4) {
 	int p = ((ix[i-4] * 2 + ix[i-3]) * 2 + ix[i-2]) * 2 + ix[i-1];
-	a1 += t32l[p];
-	a2 += t33l[p];
+	a1 += quadcode[0][p];
+	a2 += quadcode[1][p];
     }
 
     cod_info_w.count1table_select = 0;
@@ -636,11 +639,6 @@ best_huffman_divide(
   re-calculate the best scalefac_compress using scfsi
   the saved bits are kept in the bit reservoir.
  **********************************************************************/
-static const int slen1_n[16] = { 1, 1, 1, 1, 8, 2, 2, 2, 4, 4, 4, 8, 8, 8,16,16 };
-static const int slen2_n[16] = { 1, 2, 4, 8, 1, 2, 4, 8, 2, 4, 8, 2, 4, 8, 4, 8 };
-const int slen1_tab [16] = { 0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4 };
-const int slen2_tab [16] = { 0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3 };
-
 static void
 scfsi_calc(
     int ch,
@@ -674,6 +672,7 @@ scfsi_calc(
 	if (s1 < gi->scalefac[sfb])
 	    s1 = gi->scalefac[sfb];
     }
+    s1 = log2tab[s1];
 
     s2 = c2 = 0;
     for (; sfb < SBPSY_l; sfb++) {
@@ -683,10 +682,11 @@ scfsi_calc(
 	if (s2 < gi->scalefac[sfb])
 	    s2 = gi->scalefac[sfb];
     }
+    s2 = log2tab[s2];
 
     for (i = 0; i < 16; i++) {
-	if (s1 < slen1_n[i] && s2 < slen2_n[i]) {
-	    int c = slen1_tab[i] * c1 + slen2_tab[i] * c2;
+	if (s1 <= s1_bits[i] && s2 <= s2_bits[i]) {
+	    int c = s1_bits[i] * c1 + s2_bits[i] * c2;
 	    if (gi->part2_length > c) {
 		gi->part2_length = c;
 		gi->scalefac_compress = i;
@@ -795,15 +795,15 @@ iteration_finish_one (
 
 /* number of bits used to encode scalefacs */
 
-/* 18*slen1_tab[i] + 18*slen2_tab[i] */
+/* 18*s1_bits[i] + 18*s2_bits[i] */
 static const int scale_short[16] = {
     0, 18, 36, 54, 54, 36, 54, 72, 54, 72, 90, 72, 90, 108, 108, 126 };
 
-/* 17*slen1_tab[i] + 18*slen2_tab[i] */
+/* 17*s1_bits[i] + 18*s2_bits[i] */
 static const int scale_mixed[16] = {
     0, 18, 36, 54, 51, 35, 53, 71, 52, 70, 88, 69, 87, 105, 104, 122 };
 
-/* 11*slen1_tab[i] + 10*slen2_tab[i] */
+/* 11*s1_bits[i] + 10*s2_bits[i] */
 static const int scale_long[16] = {
     0, 10, 20, 30, 33, 21, 31, 41, 32, 42, 52, 43, 53, 63, 64, 74 };
 
@@ -812,7 +812,7 @@ static const int scale_long[16] = {
 int
 scale_bitcount(gr_info * const gi)
 {
-    int k, sfb, max_slen1 = 0, max_slen2 = 0;
+    int k, sfb, s1, s2;
     const int *tab;
 
     /* maximum values */
@@ -821,7 +821,7 @@ scale_bitcount(gr_info * const gi)
 	if (gi->mixed_block_flag)
 	    tab = scale_mixed;
     } else {
-        tab = scale_long;
+	tab = scale_long;
 	if (!gi->preflag) {
 	    for ( sfb = 11; sfb < SBPSY_l; sfb++ )
 		if (gi->scalefac[sfb] < pretab[sfb])
@@ -835,24 +835,27 @@ scale_bitcount(gr_info * const gi)
 	}
     }
 
+    s1 = 0;
     for (sfb = 0; sfb < gi->sfbdivide; sfb++)
-	if (max_slen1 < gi->scalefac[sfb])
-	    max_slen1 = gi->scalefac[sfb];
+	if (s1 < gi->scalefac[sfb])
+	    s1 = gi->scalefac[sfb];
+    s1 = log2tab[s1];
 
+    s2 = 0;
     for (; sfb < gi->sfbmax; sfb++)
-	if (max_slen2 < gi->scalefac[sfb])
-	    max_slen2 = gi->scalefac[sfb];
+	if (s2 < gi->scalefac[sfb])
+	    s2 = gi->scalefac[sfb];
+    s2 = log2tab[s2];
 
     /* from Takehiro TOMINAGA <tominaga@isoternet.org> 10/99
      * loop over *all* posible values of scalefac_compress to find the
      * one which uses the smallest number of bits.  ISO would stop
      * at first valid index */
     gi->part2_length = LARGE_BITS;
-    for ( k = 0; k < 16; k++ ) {
-	if (max_slen1 < slen1_n[k] && max_slen2 < slen2_n[k]
-	    && gi->part2_length > tab[k]) {
-	    gi->part2_length=tab[k];
-	    gi->scalefac_compress=k;
+    for (k = 0; k < 16; k++) {
+	if (gi->part2_length > tab[k] && s1 <= s1_bits[k] && s2 <= s2_bits[k]) {
+	    gi->part2_length = tab[k];
+	    gi->scalefac_compress = k;
 	}
     }
     return gi->part2_length;
@@ -871,62 +874,61 @@ scale_bitcount(gr_info * const gi)
  ************************************************************************/
 /* table of largest scalefactor values for MPEG2 */
 static const int max_range_sfac_tab[6][4] = {
-    { 15, 15, 7,  7},
-    { 15, 15, 7,  0},
-    { 7,  3,  0,  0},
-    { 15, 31, 31, 0},
-    { 7,  7,  7,  0},
-    { 3,  3,  0,  0}
+    { 4, 4, 3, 3}, { 4, 4, 3, 0}, { 3, 2, 0, 0},
+    { 4, 5, 5, 0}, { 3, 3, 3, 0}, { 2, 2, 0, 0}
 };
 
 int
 scale_bitcount_lsf(gr_info * const gi)
 {
-    int table_number, row_in_table, partition, i, sfb;
-    const int *partition_table;
+    int part, i, sfb;
+    int table_type = gi->preflag * 2;
+    int tableID = table_type * 3;
 
-    table_number = gi->preflag * 2;
-    row_in_table = 0;
     if (gi->block_type == SHORT_TYPE) {
-	row_in_table++;
+	tableID++;
 	if (gi->mixed_block_flag)
-	    row_in_table++;
+	    tableID++;
     }
 
     gi->part2_length = LARGE_BITS;
-    i = 0;
-    partition_table = nr_of_sfb_block[table_number][row_in_table];
-    for ( sfb = 0, partition = 0; partition < 4; partition++ ) {
-	int m = 0, sfbend = sfb + partition_table[partition];
+    sfb = i = 0;
+    for (part = 0; part < 4; part++) {
+	int m = 0, sfbend = sfb + nr_of_sfb_block[tableID][part];
 	for (; sfb < sfbend; sfb++)
 	    if (m < gi->scalefac[sfb])
 		m = gi->scalefac[sfb];
-	gi->slen[partition] = m;
+	gi->slen[part] = m = log2tab[m];
 
-	if (m > max_range_sfac_tab[table_number][partition])
+	if (m > max_range_sfac_tab[table_type][part])
 	    return gi->part2_length; /* fail */
-	i += log2tab[m] * partition_table[partition];
+	i += m * nr_of_sfb_block[tableID][part];
     }
     gi->part2_length = i;
 
-    if (table_number == 0) {
-	/* try to use table 1 */
-	i = 0;
-	for (partition = 0; partition < 4; partition++ ) {
-	    if (gi->slen[partition] > max_range_sfac_tab[1][partition]) {
+    if (table_type == 0) {
+	/* try to use table type 1 */
+	int slen2[4];
+	sfb = i = 0;
+	for (part = 0; part < 4; part++) {
+	    int m = 0, sfbend = sfb + nr_of_sfb_block[3+tableID][part];
+	    for (; sfb < sfbend; sfb++)
+		if (m < gi->scalefac[sfb])
+		    m = gi->scalefac[sfb];
+	    slen2[part] = m = log2tab[m];
+
+	    if (m > max_range_sfac_tab[1][part]) {
 		i = LARGE_BITS;
 		break;
 	    }
-	    i += log2tab[gi->slen[partition]]
-		* nr_of_sfb_block[1][row_in_table][partition];
+	    i += m * nr_of_sfb_block[3+tableID][part];
 	}
 	if (gi->part2_length > i) {
 	    gi->part2_length = i;
-	    table_number = 1;
-	    partition_table = nr_of_sfb_block[1][row_in_table];
+	    tableID += 3;
+	    memcpy(gi->slen, slen2, sizeof(slen2));
 	}
     }
-    gi->scalefac_compress = table_number;
-    gi->sfb_partition_table = partition_table;
+    gi->scalefac_compress = tableID;
     return gi->part2_length;
 }
