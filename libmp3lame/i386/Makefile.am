@@ -28,7 +28,7 @@ EXTRA_DIST = \
 	fft3dn.nas \
 	fftfpu.nas \
 	fftsse.nas \
-	ffttbl.nas \
+	ffttbl.nas
 
 NASM = @NASM@
 NASMFLAGS=-f elf -i .
