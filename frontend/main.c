@@ -489,74 +489,81 @@ brhist_init_package(lame_global_flags * gf)
 
 
 
-void parse_nogap_filenames(int nogapout,char *outPath, char *inPath) {
+void parse_nogap_filenames(int nogapout, char *inPath, char *outPath, char *outdir) {
 
     char    *slasher;
-    char    outdir[MAX_NAME_SIZE];
-    if (!nogapout)
-	{
-            strncpy(outPath, inPath, MAX_NAME_SIZE - 4);
-          /* nuke old extension, if one  */
-	  if (outPath[strlen(outPath)-3] == 'w' 
-	      && outPath[strlen(outPath)-2] == 'a'
-	      && outPath[strlen(outPath)-1] == 'v'
-	      && outPath[strlen(outPath)-4] == '.')
-	  {
-	    outPath[strlen(outPath)-3] = 'm';
-	    outPath[strlen(outPath)-2] = 'p';
-	    outPath[strlen(outPath)-1] = '3';
-	  }
-	}
-	else
-	{
-	  strcpy(outdir, outPath);
-	  
-	  slasher = inPath;
-          slasher += MAX_NAME_SIZE-4;
-	  
-	  /* backseek to last dir delemiter */
-	  while (*slasher != '/' && *slasher != '\\' && slasher != inPath
-	      && *slasher != ':')
-	  {
-	    slasher--;
-	  }
+    int     n;
 
-	  /* skip one foward if needed */
-	  if (slasher != inPath 
-	      && (outPath[strlen(outPath)-1] == '/'
-		  ||
-		  outPath[strlen(outPath)-1] == '\\'
-		  ||
-		  outPath[strlen(outPath)-1] == ':')) 
+    strcpy(outPath,outdir);
+    if (!nogapout) 	{
+        strncpy(outPath, inPath, MAX_NAME_SIZE - 4);
+        n=strlen(outPath);
+        /* nuke old extension, if one  */
+        if (outPath[n-3] == 'w' 
+            && outPath[n-2] == 'a'
+            && outPath[n-1] == 'v'
+            && outPath[n-4] == '.') {
+            outPath[n-3] = 'm';
+            outPath[n-2] = 'p';
+            outPath[n-1] = '3';
+        } else {
+            outPath[n+0] = '.';
+            outPath[n+1] = 'm';
+            outPath[n+2] = 'p';
+            outPath[n+3] = '3';
+            outPath[n+4] = 0;
+        }
+    } else 	{
+        slasher = inPath;
+        slasher += MAX_NAME_SIZE-4;
+        
+        /* backseek to last dir delemiter */
+        while (*slasher != '/' && *slasher != '\\' && slasher != inPath
+               && *slasher != ':')
+            {
+                slasher--;
+            }
+        
+        /* skip one foward if needed */
+        if (slasher != inPath 
+            && (outPath[strlen(outPath)-1] == '/'
+                ||
+                outPath[strlen(outPath)-1] == '\\'
+                ||
+                outPath[strlen(outPath)-1] == ':')) 
 	    slasher++;
-	  else if (slasher == inPath
-	      && (outPath[strlen(outPath)-1] != '/'
-		  &&
-		  outPath[strlen(outPath)-1] != '\\'
-		  && 
-		  outPath[strlen(outPath)-1] != ':'))
+        else if (slasher == inPath
+                 && (outPath[strlen(outPath)-1] != '/'
+                     &&
+                     outPath[strlen(outPath)-1] != '\\'
+                     && 
+                     outPath[strlen(outPath)-1] != ':'))
 #ifdef _WIN32
 	    strcat(outPath, "\\");
 #elif __OS2__
-	    strcat(outPath, "\\");
+        strcat(outPath, "\\");
 #else
-	    strcat(outPath, "/");
+        strcat(outPath, "/");
 #endif
-
-	  strcpy(outdir, outPath);
-	    
-	  strncat(outPath, slasher, MAX_NAME_SIZE-4);
-          /* nuke old extension  */
-	  if (outPath[strlen(outPath)-3] == 'w' 
-	      && outPath[strlen(outPath)-2] == 'a'
-	      && outPath[strlen(outPath)-1] == 'v'
-	      && outPath[strlen(outPath)-4] == '.')
-	  {
-	    outPath[strlen(outPath)-3] = 'm';
-	    outPath[strlen(outPath)-2] = 'p';
-	    outPath[strlen(outPath)-1] = '3';
-	  }
-	}
+        
+        strncat(outPath, slasher, MAX_NAME_SIZE-4);
+        n=strlen(outPath);
+        /* nuke old extension  */
+        if (outPath[n-3] == 'w' 
+            && outPath[n-2] == 'a'
+            && outPath[n-1] == 'v'
+            && outPath[n-4] == '.') 	  {
+	    outPath[n-3] = 'm';
+	    outPath[n-2] = 'p';
+	    outPath[n-1] = '3';
+        } else {
+	    outPath[n+0] = '.';
+	    outPath[n+1] = 'm';
+	    outPath[n+2] = 'p';
+	    outPath[n+3] = '3';
+	    outPath[n+4] = 0;
+        }
+    }
 }
 
 
@@ -571,6 +578,7 @@ main(int argc, char **argv)
     int     ret;
     lame_global_flags *gf;
     char    outPath[MAX_NAME_SIZE];
+    char    nogapdir[MAX_NAME_SIZE];
     char    inPath[MAX_NAME_SIZE];
 
     /* support for "nogap" encoding of up to 200 .wav files */
@@ -637,15 +645,17 @@ main(int argc, char **argv)
     if (update_interval < 0.)
         update_interval = 2.;
 
-    if (outPath[0] != '\0')
-      nogapout = 1;
+    if (outPath[0] != '\0' && max_nogap>0) {
+        strncpy(nogapdir,outPath,MAX_NAME_SIZE);  
+        nogapout = 1;
+    }
     
     /* initialize input file.  This also sets samplerate and as much
        other data on the input file as available in the headers */
     if (max_nogap > 0) {
         /* for nogap encoding of multiple input files, it is not possible to
          * specify the output file name, only an optional output directory. */
-        parse_nogap_filenames(nogapout,nogap_inPath[0],outPath);
+        parse_nogap_filenames(nogapout,nogap_inPath[0],outPath,nogapdir);
         outf = init_files(gf, nogap_inPath[0], outPath);
     }
     else {
@@ -696,7 +706,7 @@ main(int argc, char **argv)
             for (i = 0; i < max_nogap; ++i) {
                 int     use_flush_nogap = (i != (max_nogap - 1));
                 if (i > 0) {
-                    parse_nogap_filenames(nogapout,nogap_inPath[i],outPath);
+                    parse_nogap_filenames(nogapout,nogap_inPath[i],outPath,nogapdir);
                     /* note: if init_files changes anything, like
                        samplerate, num_channels, etc, we are screwed */
                     outf = init_files(gf, nogap_inPath[i], outPath);

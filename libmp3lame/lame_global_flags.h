@@ -149,7 +149,7 @@ struct lame_global_struct {
   /* provided because they may be of use to calling application           */
   /************************************************************************/
 
-  int version;                    /* 0=MPEG-2  1=MPEG-1  (2=MPEG-2.5)     */
+  int version;                    /* 0=MPEG-2/2.5  1=MPEG-1               */
   int encoder_delay;
   int encoder_padding;  /* number of samples of padding appended to input */
   int framesize;                  

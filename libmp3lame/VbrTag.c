@@ -304,6 +304,15 @@ int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
         h_bitrate  = ((buf[2]>>4)&0xf);
 	h_bitrate = bitrate_table[h_id][h_bitrate];
 
+        /* check for FFE syncword */
+        if ((buf[1]>>4)==0xE) 
+            pTagData->samprate = samplerate_table[2][h_sr_index];
+        else
+            pTagData->samprate = samplerate_table[h_id][h_sr_index];
+        //	if( h_id == 0 )
+        //		pTagData->samprate >>= 1;
+
+
 
 	/*  determine offset of header */
 	if( h_id )
@@ -327,10 +336,6 @@ int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
 	buf+=4;
 
 	pTagData->h_id = h_id;
-	pTagData->samprate = samplerate_table[h_id][h_sr_index];
-
-        //	if( h_id == 0 )
-        //		pTagData->samprate >>= 1;
 
 	head_flags = pTagData->flags = ExtractI4(buf); buf+=4;      /* get flags */
 
