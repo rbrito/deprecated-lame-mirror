@@ -254,6 +254,10 @@ SOURCE=.\newmdct.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\parse.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\portableio.c
 # End Source File
 # Begin Source File

@@ -79,13 +79,14 @@ void lame_init_params(void)
   gf.stereo=2;
   if (gf.mode == MPG_MD_MONO) gf.stereo=1;
 
+#ifdef BRHIST
   if (gf.silent) {
     disp_brhist=0;  /* turn of VBR historgram */
   }
   if (!gf.VBR) {
     disp_brhist=0;  /* turn of VBR historgram */
   }
-
+#endif
 
   /* set the output sampling rate, and resample options if necessary 
      samplerate = input sample rate
