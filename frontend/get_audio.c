@@ -641,20 +641,40 @@ OpenSndFile(lame_global_flags * gfp, char *inPath)
         /* set some defaults incase input is raw PCM */
         gs_wfInfo.seekable = (input_format != sf_raw); /* if user specified -r, set to not seekable */
         gs_wfInfo.samplerate = lame_get_in_samplerate( gfp );
-        gs_wfInfo.pcmbitwidth = 16;
+        gs_wfInfo.pcmbitwidth = in_bitwidth;
         gs_wfInfo.channels = lame_get_num_channels( gfp );
+
+	if (in_bitwidth == 8) {
+	    if (in_signed)
+		gs_wfInfo.format = SF_FORMAT_RAW_S8;
+	    else
+		gs_wfInfo.format = SF_FORMAT_RAW_U8;
+
+	} else {
+	    if (!in_signed) {
+		fputs("Unsigned input only supported with bitwidth 8\n", stderr);
+		exit(1);
+	    }
+	    if (in_endian != order_unknown) {
+		if (in_endian == order_littleEndian)
+		    gs_wfInfo.format = SF_FORMAT_RAW_LE;
+		else
+		    gs_wfInfo.format = SF_FORMAT_RAW_BE;
+	    } else {
 #ifndef WORDS_BIGENDIAN
-        /* little endian */
-        if (swapbytes)
-            gs_wfInfo.format = SF_FORMAT_RAW_BE;
-        else
-            gs_wfInfo.format = SF_FORMAT_RAW_LE;
+		/* little endian */
+		if (swapbytes)
+		    gs_wfInfo.format = SF_FORMAT_RAW_BE;
+		else
+		    gs_wfInfo.format = SF_FORMAT_RAW_LE;
 #else
-        if (swapbytes)
-            gs_wfInfo.format = SF_FORMAT_RAW_LE;
-        else
-            gs_wfInfo.format = SF_FORMAT_RAW_BE;
+		if (swapbytes)
+		    gs_wfInfo.format = SF_FORMAT_RAW_LE;
+		else
+		    gs_wfInfo.format = SF_FORMAT_RAW_BE;
 #endif
+	    }
+	}
 
         gs_pSndFileIn = sf_open_read(lpszFileName, &gs_wfInfo);
         musicin = (SNDFILE *) gs_pSndFileIn;
@@ -668,7 +688,10 @@ OpenSndFile(lame_global_flags * gfp, char *inPath)
         }
 
         if ((gs_wfInfo.format == SF_FORMAT_RAW_LE) ||
-            (gs_wfInfo.format == SF_FORMAT_RAW_BE)) input_format = sf_raw;
+            (gs_wfInfo.format == SF_FORMAT_RAW_BE) ||
+	    (gs_wfInfo.format == SF_FORMAT_RAW_S8) ||
+	    (gs_wfInfo.format == SF_FORMAT_RAW_U8))
+	    input_format = sf_raw;
 
 #ifdef _DEBUG_SND_FILE
         DEBUGF("\n\nSF_INFO structure\n");
