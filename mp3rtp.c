@@ -1,5 +1,10 @@
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <unistd.h>
 #include "lame.h"
 #include "rtp.h"
+
 
 /*
 
@@ -10,6 +15,18 @@ arecord -b 16 -s 22050 -w | ./rtpx --rtp 224.17.23.42:5004:2 -b 56 - /dev/null
 fprintf(stderr,"    --rtp ip:port:ttl     send MPEG stream via RTP\n");
 
 */
+
+
+struct rtpheader RTPheader;
+struct sockaddr_in rtpsi;
+int rtpsocket;
+
+void rtp_output(char *mp3buffer,int mp3size)
+{
+  sendrtp(rtpsocket,&rtpsi,&RTPheader,mp3buffer,mp3size);
+  RTPheader.timestamp+=5;
+  RTPheader.b.sequence++;
+}
 
 
 
@@ -76,36 +93,57 @@ int makeframe(void)
 
 int main(int argc, char **argv)
 {
+  int i,err;
   lame_init(0);
   if(argc==1) lame_usage(argv[0]);  /* no command-line args  */
 
-#ifdef 0
+
+
+
+  /*
 parse args and setup RTP stuff.
 The add (kludge) to remove these options from argv[] before
 calling lame_parse_args
+  */
 
-	else if (strcmp(token, "rtp")==0) {
+
+  /* process args */
+  i=0; err=0;
+  while(++i<argc && err == 0) {
+    char *token, *nextArg;
+    int  argUsed;
+    
+    token = argv[i];
+    if(*token++ == '-') {
+      if(i+1 < argc) nextArg = argv[i+1];
+      else           nextArg = "";
+      argUsed = 0;
+      if (*token == '-') {
+	/* GNU style */
+	token++;
+
+	if (strcmp(token, "rtp")==0) {
 	  char *tmp=strchr(nextArg,':');
 	  int port,ttl;
 	  if (!tmp) {
-	    fprintf(stderr,"usage: lame --rtp ip:port:ttl\n");
+	    fprintf(stderr,"usage: mp3rtp --rtp ip:port:ttl\n");
 	    exit(1);
 	  }
 	  *tmp++=0;
 	  port=atoi(tmp);
 	  if (port<=0) {
-	    fprintf(stderr,"usage: lame --rtp ip:port:ttl\n");
+	    fprintf(stderr,"usage: mp3rtp --rtp ip:port:ttl\n");
 	    exit(1);
 	  }
 	  tmp=strchr(tmp,':');
 	  if (!tmp) {
-	    fprintf(stderr,"usage: lame --rtp ip:port:ttl\n");
+	    fprintf(stderr,"usage: mp3rtp --rtp ip:port:ttl\n");
 	    exit(1);
 	  }
 	  *tmp++=0;
 	  ttl=atoi(tmp);
 	  if (tmp<=0) {
-	    fprintf(stderr,"usage: lame --rtp ip:port:ttl\n");
+	    fprintf(stderr,"usage: mp3rtp --rtp ip:port:ttl\n");
 	    exit(1);
 	  }
 	  rtpsocket=makesocket(nextArg,port,ttl,&rtpsi);
@@ -113,7 +151,15 @@ calling lame_parse_args
 	  initrtp(&RTPheader);
 	  argUsed=1;
 	}
-#endif
+	else
+	  {
+	    fprintf(stderr,"unrec option\n");
+	  }
+	i += argUsed;
+	
+      }
+    }
+  }  /* loop over args */
 
 
 

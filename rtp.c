@@ -95,15 +95,3 @@ int makesocket(char *szAddr,unsigned short port,int TTL,struct sockaddr_in *sSoc
   return iSocket;
 }
 
-
-void rtp_output(char *mp3buffer,int mp3size)
-{
-  extern struct rtpheader RTPheader;
-  extern struct sockaddr_in rtpsi;
-  extern int rtpsocket;
-  
-  sendrtp(rtpsocket,&rtpsi,&RTPheader,mp3buffer,mp3size);
-  RTPheader.timestamp+=5;
-  RTPheader.b.sequence++;
-}
-

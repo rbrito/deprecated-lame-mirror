@@ -536,8 +536,7 @@ case 't':  /* dont write VBR tag */
 	  arg = ""; argUsed = 0;
 	}
       }
-    }
-    else {
+    } else {
       if(inPath[0] == '\0')       strncpy(inPath, argv[i], MAX_NAME_SIZE);
       else if(outPath[0] == '\0') strncpy(outPath, argv[i], MAX_NAME_SIZE);
       else {
@@ -545,7 +544,7 @@ case 't':  /* dont write VBR tag */
 	err = 1;
       }
     }
-  }
+  }  /* loop over args */
 
   /* Do not write VBR tag if VBR flag is not specified */
   if (g_bWriteVbrTag==1 && VBR==0) g_bWriteVbrTag=0;
