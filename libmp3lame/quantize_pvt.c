@@ -784,7 +784,7 @@ void set_pinfo (
         }
     } /* block type short */
     gfc->pinfo->LAMEqss     [gr][ch] = cod_info->global_gain;
-    gfc->pinfo->LAMEmainbits[gr][ch] = cod_info->part2_3_length;
+    gfc->pinfo->LAMEmainbits[gr][ch] = cod_info->part2_3_length + cod_info->part2_length;
     gfc->pinfo->LAMEsfbits  [gr][ch] = cod_info->part2_length;
 
     gfc->pinfo->over      [gr][ch] = noise.over_count;
