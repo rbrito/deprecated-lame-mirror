@@ -17,6 +17,11 @@ Does stdin work when LAME is compiled to use libsndfile?
 (new version of libsndfile will support this - try this out)
 
 
+2. 
+LAME has problems with pure DC input.  i.e. a square wave with
+a frequency well below 20Hz.  Not very important, but it should
+be fixed.
+
 
 
 998.

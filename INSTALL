@@ -27,7 +27,8 @@ Other options for the command line encoder:
 #define HAVEGTK      to compile in the LAME MP3 frame analyzer
 #define BRHIST       to allow the optional display of the VBR historgram
 #define NOTERMCAP    to try and emulate termcap/ncurses directly (ANSI)
-                     only needed if BRHIST is used
+                     only needed if BRHIST is used.  Works under Amiga
+                     and Win32.  (but not dos)
 
 
 
