@@ -286,11 +286,11 @@ calc_noise(
 	for (sfb = cod_info->sfb_smin; sfb < cod_info->psymax; sfb += 3) {
 	    FLOAT noise = 0.0;
 	    if (distort[sfb] > 1.0)
-		noise += FAST_LOG10(*distort);
-	    if (distort[sfb] > 1.0)
-		noise += FAST_LOG10(*distort);
-	    if (distort[sfb] > 1.0)
-		noise += FAST_LOG10(*distort);
+		noise += FAST_LOG10(distort[sfb]);
+	    if (distort[sfb+1] > 1.0)
+		noise += FAST_LOG10(distort[sfb+1]);
+	    if (distort[sfb+2] > 1.0)
+		noise += FAST_LOG10(distort[sfb+2]);
 	    if (max_noise < noise)
 		max_noise = noise;
 	    if (noise > 0) {
