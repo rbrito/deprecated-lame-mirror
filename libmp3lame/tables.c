@@ -1006,7 +1006,6 @@ iteration_init( lame_global_flags *gfp)
     lame_internal_flags *gfc=gfp->internal_flags;
     III_side_info_t * const l3_side = &gfc->l3_side;
     int i, j;
-    FLOAT bass, alto, treble, sfb21;
 
     if (gfc->iteration_init_init)
 	return;
@@ -1068,50 +1067,6 @@ iteration_init( lame_global_flags *gfp)
         iipow20[i] = pow(2.0, (double)i * 0.1875);
 
     huffman_init(gfc);
-
-    i = (gfp->exp_nspsytune >> 2) & 63;
-    if (i >= 32)
-	i -= 64;
-    bass = db2pow(i*0.25);
-
-    i = (gfp->exp_nspsytune >> 8) & 63;
-    if (i >= 32)
-	i -= 64;
-    alto = db2pow(i*0.25);
-
-    i = (gfp->exp_nspsytune >> 14) & 63;
-    if (i >= 32)
-	i -= 64;
-    treble = db2pow(i*0.25);
-
-    /*  to be compatible with Naoki's original code, the next 6 bits
-     *  define only the amount of changing treble for sfb21 */
-    i = (gfp->exp_nspsytune >> 20) & 63;
-    if (i >= 32)
-	i -= 64;
-    sfb21 = treble * db2pow(i*0.25);
-
-    for (i = 0; i < SBMAX_l; i++) {
-	FLOAT f;
-	if      (i <=  6) f = bass;
-	else if (i <= 13) f = alto;
-	else if (i <= 20) f = treble;
-	else              f = sfb21;
-	if (gfp->VBR != vbr && gfp->quality <= 1)
-	    f *= 0.001;
-
-	gfc->nsPsy.longfact[i] = f;
-    }
-    for (i = 0; i < SBMAX_s; i++) {
-	FLOAT f;
-	if      (i <=  5) f = bass;
-	else if (i <= 10) f = alto;
-	else              f = treble;
-	if (gfp->VBR != vbr && gfp->quality <= 1)
-	    f *= 0.001;
-
-	gfc->nsPsy.shortfact[i] = f;
-    }
 }
 
 
@@ -1316,10 +1271,37 @@ init_s3_values(
 	return -1;
 
     k = 0;
-    for (i = 0; i < npart; i++)
+    for (i = 0; i < npart; i++) {
+	FLOAT fact;
+	int f = gfc->gfp->exp_nspsytune;
+	if (bval[i] < 6.0) {
+	    f = (f >> 2) & 63;
+	    if (f >= 32)
+		f -= 64;
+	}
+	else if (bval[i] < 12.0) {
+	    f = (f >> 8) & 63;
+	    if (f >= 32)
+		f -= 64;
+	}
+	else if (bval[i] < 18.0) {
+	    f = (f >> 14) & 63;
+	    if (f >= 32)
+		f -= 64;
+	}
+	else {
+	    int g = (f >> 14) & 63;
+	    f = (f >> 20) & 63;
+	    if (f >= 32)
+		f -= 64;
+	    if (g >= 32)
+		g -= 64;
+	    f += g;
+	}
+	fact = db2pow(f*0.25);
 	for (j = s3ind[i][0]; j <= s3ind[i][1]; j++)
-	    (*p)[k++] = s3[i][j];
-
+	    (*p)[k++] = s3[i][j] * fact;
+    }
     return 0;
 }
 

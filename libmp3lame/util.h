@@ -414,8 +414,6 @@ struct lame_internal_flags {
 	FLOAT last_en_subshort[4][9];
 	int   last_attacks[4];
 	FLOAT pefirbuf[19];
-	FLOAT longfact[SBMAX_l];
-	FLOAT shortfact[SBMAX_s];
 
 	/* short block tuning */
 	FLOAT     attackthre;

@@ -894,14 +894,14 @@ pecalc_s(
 {
     FLOAT pe_s;
     const static FLOAT regcoef_s[] = {
-	0,
-	0,
-	0,	/* I don't know why there're 0 -tt- */
-	0.434542,
+	1,
+	1,
+	1,
+	1.434542,
        25.0738,
-	0,
-	0,
-	0,
+	1,
+	1,
+	1,
        19.5442,
        19.7486,
        60,
@@ -915,8 +915,6 @@ pecalc_s(
     if (!gfc->sfb21_extra)
 	sb--;
     do {
-	if (regcoef_s[sb] == 0.0)
-	    continue;
 	for (sblock=0;sblock<3;sblock++) {
 	    FLOAT x = mr->thm.s[sb][sblock];
 	    if (mr->en.s[sb][sblock] <= x)
@@ -928,6 +926,11 @@ pecalc_s(
 		pe_s += regcoef_s[sb] * FAST_LOG10(mr->en.s[sb][sblock] / x);
 	}
     } while (--sb >= 0);
+
+    mr->ath_over = 0;
+    if (pe_s != 1236.28/4)
+	mr->ath_over = 1;
+
     return pe_s;
 }
 
@@ -940,7 +943,7 @@ pecalc_l(
     FLOAT pe_l;
     const static FLOAT regcoef_l[] = {
 	10.0583,10.7484 ,7.29006,16.2714 , 6.2345 ,  4.09743,3.05468,3.33196,
-	2.54688, 3.68168,5.83109, 2.93817,-8.03277,-10.8458 ,8.48777,
+	2.54688, 3.68168,5.83109, 2.93817, 8.03277, 10.8458 ,8.48777,
 	9.13182, 2.05212,8.6674 ,50.3937 ,73.267  , 97.5664 ,200
     };
     int sb = SBMAX_l - 1;
@@ -958,6 +961,10 @@ pecalc_l(
 	else
 	    pe_l += regcoef_l[sb] * FAST_LOG10(mr->en.l[sb] / x);
     } while (--sb >= 0);
+
+    mr->ath_over = 0;
+    if (pe_l != 1124.23/4)
+	mr->ath_over = 1;
 
     return pe_l;
 }
@@ -1350,7 +1357,6 @@ L3psycho_anal_ns(
 	b = j = 0;
 	spread = gfc->s3_ll;
 	enn = thmm = 0.0;
-	mr->ath_over = SBMAX_l;
 	for (;; b++ ) {
 	    /* convolve the partitioned energy with the spreading function */
 	    FLOAT ecb, tmp;
@@ -1409,9 +1415,6 @@ L3psycho_anal_ns(
 	    if (thmm < gfc->ATH.l_avg[j] * gfc->ATH.adjust)
 		thmm = gfc->ATH.l_avg[j] * gfc->ATH.adjust;
 	    
-	    if (enn < gfc->ATH.l_avg[j] * gfc->ATH.adjust)
-		mr->ath_over--;
-
 	    mr->en .l[j] = enn;
 	    mr->thm.l[j] = thmm;
 
@@ -1423,9 +1426,6 @@ L3psycho_anal_ns(
 	thmm *= gfc->masking_lower;
 	if (thmm < gfc->ATH.l_avg[SBMAX_l-1] * gfc->ATH.adjust)
 	    thmm = gfc->ATH.l_avg[SBMAX_l-1] * gfc->ATH.adjust;
-
-	if (enn < gfc->ATH.l_avg[SBMAX_l-1] * gfc->ATH.adjust)
-	    mr->ath_over--;
 
 	mr->en .l[SBMAX_l-1] = enn;
 	mr->thm.l[SBMAX_l-1] = thmm;

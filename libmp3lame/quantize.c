@@ -196,7 +196,7 @@ calc_xmin(
 		    xmin = x;
 	    }
 	}
-	*pxmin++ = xmin * gfc->nsPsy.longfact[gsfb];
+	*pxmin++ = xmin;
     }   /* end of long block loop */
 
     for (sfb = cod_info->sfb_smin; gsfb < cod_info->psymax; sfb++, gsfb += 3) {
@@ -221,7 +221,7 @@ calc_xmin(
 		if (xmin < x) 
 		    xmin = x;
 	    }
-	    *pxmin++ = xmin * gfc->nsPsy.shortfact[sfb];
+	    *pxmin++ = xmin;
 	}   /* b */
     }   /* end of short block sfb loop */
 }
