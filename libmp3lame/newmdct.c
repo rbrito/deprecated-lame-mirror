@@ -155,10 +155,169 @@ static const FLOAT8 enwindow[] =
 #define NS 12
 #define NL 36
 
-static FLOAT8 ca[8], cs[8];
-static FLOAT8 win[4][36];
-static FLOAT8 tantab_l[NL/4];
-static FLOAT8 tritab_s[NS/4*2];
+static const FLOAT8 win[4][NL] = {
+  {
+    2.382191739347913e-13,
+    6.423305872147834e-13,
+    9.400849094049688e-13,
+    1.122435026096556e-12,
+    1.183840321267481e-12,
+    1.122435026096556e-12,
+    9.400849094049690e-13,
+    6.423305872147839e-13,
+    2.382191739347918e-13,
+    5.456116108943412e-12,
+    4.878985199565852e-12,
+    4.240448995017367e-12,
+    3.559909094758252e-12,
+    2.858043359288075e-12,
+    2.156177623817898e-12,
+    1.475637723558783e-12,
+    8.371015190102974e-13,
+    2.599706096327376e-13,
+    -5.456116108943412e-12,
+    -4.878985199565852e-12,
+    -4.240448995017367e-12,
+    -3.559909094758252e-12,
+    -2.858043359288076e-12,
+    -2.156177623817898e-12,
+    -1.475637723558783e-12,
+    -8.371015190102975e-13,
+    -2.599706096327376e-13,
+    -2.382191739347923e-13,
+    -6.423305872147843e-13,
+    -9.400849094049696e-13,
+    -1.122435026096556e-12,
+    -1.183840321267481e-12,
+    -1.122435026096556e-12,
+    -9.400849094049694e-13,
+    -6.423305872147840e-13,
+    -2.382191739347918e-13,
+  },
+  {
+    2.382191739347913e-13,
+    6.423305872147834e-13,
+    9.400849094049688e-13,
+    1.122435026096556e-12,
+    1.183840321267481e-12,
+    1.122435026096556e-12,
+    9.400849094049688e-13,
+    6.423305872147841e-13,
+    2.382191739347918e-13,
+    5.456116108943413e-12,
+    4.878985199565852e-12,
+    4.240448995017367e-12,
+    3.559909094758253e-12,
+    2.858043359288075e-12,
+    2.156177623817898e-12,
+    1.475637723558782e-12,
+    8.371015190102975e-13,
+    2.599706096327376e-13,
+    -5.461314069809755e-12,
+    -4.921085770524055e-12,
+    -4.343405037091838e-12,
+    -3.732668368707687e-12,
+    -3.093523840190885e-12,
+    -2.430835727329465e-12,
+    -1.734679010007751e-12,
+    -9.748253656609281e-13,
+    -2.797435120168326e-13,
+    0.000000000000000e+00,
+    0.000000000000000e+00,
+    0.000000000000000e+00,
+    0.000000000000000e+00,
+    0.000000000000000e+00,
+    0.000000000000000e+00,
+    -2.283748241799531e-13,
+    -4.037858874020686e-13,
+    -2.146547464825323e-13,
+  },
+  {
+    1.316524975873958e-01, /* win[SHORT_TYPE] */
+    4.142135623730950e-01,
+    7.673269879789602e-01,
+
+    1.091308501069271e+00, /* tantab_l */
+    1.303225372841206e+00,
+    1.569685577117490e+00,
+    1.920982126971166e+00,
+    2.414213562373094e+00,
+    3.171594802363212e+00,
+    4.510708503662055e+00,
+    7.595754112725146e+00,
+    2.290376554843115e+01,
+
+    0.98480775301220802032, /* cx */
+    0.64278760968653936292,
+    0.34202014332566882393,
+    0.93969262078590842791,
+    -0.17364817766693030343,
+    -0.76604444311897790243,
+    0.86602540378443870761,
+    0.500000000000000e+00,
+
+    -5.144957554275265e-01, /* ca */
+    -4.717319685649723e-01,
+    -3.133774542039019e-01,
+    -1.819131996109812e-01,
+    -9.457419252642064e-02,
+    -4.096558288530405e-02,
+    -1.419856857247115e-02,
+    -3.699974673760037e-03,
+
+     8.574929257125442e-01, /* cs */
+     8.817419973177052e-01,
+     9.496286491027329e-01,
+     9.833145924917901e-01,
+     9.955178160675857e-01,
+     9.991605581781475e-01,
+     9.998991952444470e-01,
+     9.999931550702802e-01,
+  },
+  {
+    0.000000000000000e+00,
+    0.000000000000000e+00,
+    0.000000000000000e+00,
+    0.000000000000000e+00,
+    0.000000000000000e+00,
+    0.000000000000000e+00,
+    2.283748241799531e-13,
+    4.037858874020686e-13,
+    2.146547464825323e-13,
+    5.461314069809755e-12,
+    4.921085770524055e-12,
+    4.343405037091838e-12,
+    3.732668368707687e-12,
+    3.093523840190885e-12,
+    2.430835727329466e-12,
+    1.734679010007751e-12,
+    9.748253656609281e-13,
+    2.797435120168326e-13,
+    -5.456116108943413e-12,
+    -4.878985199565852e-12,
+    -4.240448995017367e-12,
+    -3.559909094758253e-12,
+    -2.858043359288075e-12,
+    -2.156177623817898e-12,
+    -1.475637723558782e-12,
+    -8.371015190102975e-13,
+    -2.599706096327376e-13,
+    -2.382191739347913e-13,
+    -6.423305872147834e-13,
+    -9.400849094049688e-13,
+    -1.122435026096556e-12,
+    -1.183840321267481e-12,
+    -1.122435026096556e-12,
+    -9.400849094049688e-13,
+    -6.423305872147841e-13,
+    -2.382191739347918e-13,
+  }
+};
+
+#define tantab_l (win[SHORT_TYPE]+3)
+#define cx (win[SHORT_TYPE]+12)
+#define ca (win[SHORT_TYPE]+20)
+#define cs (win[SHORT_TYPE]+28)
 
 /************************************************************************
 *
@@ -430,29 +589,29 @@ INLINE static void mdct_short(FLOAT8 *out, FLOAT8 *in)
     for ( l = 0; l < 3; l++ ) {
 	FLOAT tc0,tc1,tc2,ts0,ts1,ts2;
 
-	ts0 = in[5];
-	tc0 = in[3];
+	ts0 = in[5] * 1.907525191737280e-11;
+	tc0 = in[3] * 1.907525191737280e-11;
 	tc1 = ts0 + tc0;
 	tc2 = ts0 - tc0;
 
-	ts0 = in[2];
-	tc0 = in[0];
+	ts0 = in[2] * 1.907525191737280e-11;
+	tc0 = in[0] * 1.907525191737280e-11;
 	ts1 = ts0 + tc0;
 	ts2 =-ts0 + tc0;
 
-	tc0 = in[4];
-	ts0 = in[1];
+	tc0 = in[4] * 2.069978111953089e-11;
+	ts0 = in[1] * 2.069978111953089e-11;
 
 	out[3*0] = tc1 + tc0;
 	out[3*5] =-ts1 + ts0;
 
-	tc2 = tc2 * 0.86602540378443870761;
-	ts1 = ts1 * 0.5 + ts0;
+	tc2 = tc2 * cx[6];
+	ts1 = ts1 * cx[7] + ts0;
 	out[3*1] = tc2-ts1;
 	out[3*2] = tc2+ts1;
 
-	tc1 = tc1 * 0.5 - tc0;
-	ts2 = ts2 * 0.86602540378443870761;
+	tc1 = tc1 * cx[7] - tc0;
+	ts2 = ts2 * cx[6];
 	out[3*3] = tc1+ts2;
 	out[3*4] = tc1-ts2;
 
@@ -465,54 +624,52 @@ INLINE static void mdct_long(FLOAT8 *out, FLOAT8 *in)
 #define inc(x) in[17-(x)]
 #define ins(x) in[8-(x)]
 
-    const FLOAT8 c0=0.98480775301220802032, c1=0.64278760968653936292, c2=0.34202014332566882393;
-    const FLOAT8 c3=0.93969262078590842791, c4=-0.17364817766693030343, c5=-0.76604444311897790243;
-    FLOAT8 tc1 = inc(0)-inc(8),tc2 = (inc(1)-inc(7))*0.86602540378443870761, tc3 = inc(2)-inc(6), tc4 = inc(3)-inc(5);
-    FLOAT8 tc5 = inc(0)+inc(8),tc6 = (inc(1)+inc(7))*0.5,                    tc7 = inc(2)+inc(6), tc8 = inc(3)+inc(5);
-    FLOAT8 ts1 = ins(0)-ins(8),ts2 = (ins(1)-ins(7))*0.86602540378443870761, ts3 = ins(2)-ins(6), ts4 = ins(3)-ins(5);
-    FLOAT8 ts5 = ins(0)+ins(8),ts6 = (ins(1)+ins(7))*0.5,                    ts7 = ins(2)+ins(6), ts8 = ins(3)+ins(5);
+    FLOAT8 tc1 = inc(0)-inc(8),tc2 = (inc(1)-inc(7))*cx[6], tc3 = inc(2)-inc(6), tc4 = inc(3)-inc(5);
+    FLOAT8 tc5 = inc(0)+inc(8),tc6 = (inc(1)+inc(7))*cx[7], tc7 = inc(2)+inc(6), tc8 = inc(3)+inc(5);
+    FLOAT8 ts1 = ins(0)-ins(8),ts2 = (ins(1)-ins(7))*cx[6], ts3 = ins(2)-ins(6), ts4 = ins(3)-ins(5);
+    FLOAT8 ts5 = ins(0)+ins(8),ts6 = (ins(1)+ins(7))*cx[7], ts7 = ins(2)+ins(6), ts8 = ins(3)+ins(5);
     FLOAT8 ct,st;
 
     ct = tc5+tc7+tc8+inc(1)+inc(4)+inc(7);
     out[0] = ct;
 
-    ct = tc1*c0 + tc2 + tc3*c1 + tc4*c2;
-    st = -ts5*c4 + ts6 - ts7*c5 + ts8*c3 + ins(4);
+    ct = tc1*cx[0] + tc2 + tc3*cx[1] + tc4*cx[2];
+    st = -ts5*cx[4] + ts6 - ts7*cx[5] + ts8*cx[3] + ins(4);
     out[1] = ct+st;
     out[2] = ct-st;
 
-    ct =  tc5*c3 + tc6 + tc7*c4 + tc8*c5 - inc(4);
-    st = ts1*c2 + ts2 + ts3*c0 + ts4*c1;
+    ct =  tc5*cx[3] + tc6 + tc7*cx[4] + tc8*cx[5] - inc(4);
+    st = ts1*cx[2] + ts2 + ts3*cx[0] + ts4*cx[1];
     out[3] = ct+st;
     out[4] = ct-st;
 
-    ct = (tc1-tc3-tc4)*0.86602540378443870761;
-    st = (ts5+ts7-ts8)*0.5+ins(1)-ins(4)+ins(7);
+    ct = (tc1-tc3-tc4)*cx[6];
+    st = (ts5+ts7-ts8)*cx[7]+ins(1)-ins(4)+ins(7);
     out[5] = ct+st;
     out[6] = ct-st;
 
-    ct = -tc5*c5 - tc6 - tc7*c3 - tc8*c4 + inc(4);
-    st = ts1*c1 + ts2 - ts3*c2 - ts4*c0;
+    ct = -tc5*cx[5] - tc6 - tc7*cx[3] - tc8*cx[4] + inc(4);
+    st = ts1*cx[1] + ts2 - ts3*cx[2] - ts4*cx[0];
     out[7] = ct+st;
     out[8] = ct-st;
 
-    ct = tc1*c1 - tc2 - tc3*c2 + tc4*c0;
-    st = -ts5*c5 + ts6 - ts7*c3 + ts8*c4 + ins(4);
+    ct = tc1*cx[1] - tc2 - tc3*cx[2] + tc4*cx[0];
+    st = -ts5*cx[5] + ts6 - ts7*cx[3] + ts8*cx[4] + ins(4);
     out[ 9] = ct+st;
     out[10] = ct-st;
 
-    ct = (tc5+tc7+tc8)*0.5-inc(1)-inc(4)-inc(7);
-    st = (ts1-ts3+ts4)*0.86602540378443870761;
+    ct = (tc5+tc7+tc8)*cx[7]-inc(1)-inc(4)-inc(7);
+    st = (ts1-ts3+ts4)*cx[6];
     out[11] = ct+st;
     out[12] = ct-st;
 
-    ct = tc1*c2 - tc2 + tc3*c0 - tc4*c1;
-    st =  ts5*c3 - ts6 + ts7*c4 - ts8*c5 - ins(4);
+    ct = tc1*cx[2] - tc2 + tc3*cx[0] - tc4*cx[1];
+    st =  ts5*cx[3] - ts6 + ts7*cx[4] - ts8*cx[5] - ins(4);
     out[13] = ct+st;
     out[14] = ct-st;
 
-    ct = -tc5*c4 - tc6 - tc7*c5 - tc8*c3 + inc(4);
-    st = ts1*c0 - ts2 + ts3*c1 - ts4*c2;
+    ct = -tc5*cx[4] - tc6 - tc7*cx[5] - tc8*cx[3] + inc(4);
+    st = ts1*cx[0] - ts2 + ts3*cx[1] - ts4*cx[2];
     out[15] = ct+st;
     out[16] = ct-st;
 
@@ -524,7 +681,8 @@ INLINE static void mdct_long(FLOAT8 *out, FLOAT8 *in)
 
 void mdct_init48()
 {
-    int i, k;
+#if 0
+    int k;
     FLOAT8 sq;
 
     /* prepare the aliasing reduction butterflies */
@@ -540,7 +698,6 @@ void mdct_init48()
 	ca[k] = c[k] / sq;
 	cs[k] = 1.0 / sq;
     }
-
     /* type 0*/
     for (i = 0; i < 36; i++)
 	win[0][i] = sin(PI/36 * (i + 0.5));
@@ -605,9 +762,9 @@ void mdct_init48()
     for (i = 0; i < NS / 4; i++) {
 	FLOAT8 w2 = cos(PI / NS * (i + 0.5)) * (4.0/NS) / SCALE;
 	win[SHORT_TYPE][i] = tan(PI / NS * (i + 0.5));
-	tritab_s[i*2  ] = cos((0.5+2-i)*PI/NS) * w2;
-	tritab_s[i*2+1] = sin((0.5+2-i)*PI/NS) * w2;
+	tritab_s[i  ] = cos((0.5+2-i)*PI/NS) * w2;
     }
+#endif
 }
 
 void mdct_sub48(lame_internal_flags *gfc,
@@ -685,6 +842,7 @@ void mdct_sub48(lame_internal_flags *gfc,
 		  if (type == SHORT_TYPE) {
 		    for (k = 2; k >= 0; --k) {
 			FLOAT8 win1 = win[SHORT_TYPE][k];
+			FLOAT8 win2 = win[SHORT_TYPE][2-k];
 			FLOAT8 a, b;
 
 			a = gfc->sb_sample[ch][gr][k+6][band_swapped] * win1 -
@@ -693,8 +851,8 @@ void mdct_sub48(lame_internal_flags *gfc,
 			b = gfc->sb_sample[ch][gr][k+12][band_swapped] +
 			    gfc->sb_sample[ch][gr][17-k][band_swapped] * win1;
 
-			work[k+3] = -b*tritab_s[k*2  ] + a * tritab_s[k*2+1];
-			work[k  ] =  b*tritab_s[k*2+1] + a * tritab_s[k*2  ];
+			work[k+3] = (a * win2 - b);
+			work[k  ] = (a+b*win2);
 
 			a = gfc->sb_sample[ch][gr][k+12][band_swapped] * win1 -
 			    gfc->sb_sample[ch][gr][17-k][band_swapped];
@@ -702,8 +860,8 @@ void mdct_sub48(lame_internal_flags *gfc,
 			b = gfc->sb_sample[ch][1-gr][k][band_swapped] +
 			    gfc->sb_sample[ch][1-gr][5-k][band_swapped] * win1;
 
-			work[k+9] = -b*tritab_s[k*2  ] + a * tritab_s[k*2+1];
-			work[k+6] =  b*tritab_s[k*2+1] + a * tritab_s[k*2  ];
+			work[k+9] = (a * win2 - b);
+			work[k+6] = (a + b*win2);
 
 			a = gfc->sb_sample[ch][1-gr][k][band_swapped] * win1 -
 			    gfc->sb_sample[ch][1-gr][5-k][band_swapped];
@@ -711,8 +869,8 @@ void mdct_sub48(lame_internal_flags *gfc,
 			b = gfc->sb_sample[ch][1-gr][k+6][band_swapped] +
 			    gfc->sb_sample[ch][1-gr][11-k][band_swapped] * win1;
 
-			work[k+15] = -b*tritab_s[k*2  ] + a * tritab_s[k*2+1];
-			work[k+12] =  b*tritab_s[k*2+1] + a * tritab_s[k*2  ];
+			work[k+15] = (a * win2-b);
+			work[k+12] = (a+b*win2);
 		    }
 		    mdct_short(mdct_enc, work);
 		  } else {
