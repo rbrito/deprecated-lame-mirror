@@ -28,15 +28,14 @@ Then override various default settings as necessary, for example:
    lame_set_mode(gfp,1);
    lame_set_quality(gfp,2);   /* 2=high  5 = medium  7=low */ 
 		
-(the above functions are not yet written!  Right now you 
-have to set options in the lame_global_flags struct explicitly)
-see lame.h for the complete list of options. 
+(Note: not all the above functions are written yet!  check in
+set_get.c first).  See lame.h for the complete list of options.
 
 
+3. sets more internal configuration based on data provided above,
+   as well as checking for problems.  Check that ret_code >= 0.
 
-3. sets more internal configuration based on data provided above:
-   lame_init_params(gfp);
-
+   ret_code = lame_init_params(gfp);
 
 
 4. Encode some data.  input pcm data, output (maybe) mp3 frames.
@@ -60,7 +59,7 @@ There are also routines for various types of input
 final few mp3 frames.  mp3buffer should be at least 7200 bytes.
 return code = number of bytes output to mp3buffer.  This can be 0.
 
-int lame_encode_flush(lame_global_flags *,char *mp3buffer, int size);
+int lame_encode_flush(lame_global_flags *,char *mp3buffer, int mp3buffer_size);
 
 
 6.  Write all remaining data to mp3 file.  If the file was

@@ -664,14 +664,14 @@ short_block_vbr_sf (
     const FLOAT8                 xr34     [576],
           III_scalefac_t * const vbrsf )
 {
-    unsigned int j, sfb, b;
+     int j, sfb, b;
     int vbrmax = -10000; /* initialize for maximum search */
   
     for (j = 0, sfb = 0; sfb < SBMAX_s; sfb++) {
         for (b = 0; b < 3; b++) {
-	    const unsigned int start = gfc->scalefac_band.s[ sfb ];
-	    const unsigned int end   = gfc->scalefac_band.s[ sfb+1 ];
-	    const unsigned int width = end - start;
+	    const  int start = gfc->scalefac_band.s[ sfb ];
+	    const  int end   = gfc->scalefac_band.s[ sfb+1 ];
+	    const  int width = end - start;
 	    
             vbrsf->s[sfb][b] = find_scalefac_ave (&xr34[j], &xr34_orig[j],
                                               sfb, l3_xmin->s[sfb][b], width);
@@ -705,13 +705,13 @@ long_block_vbr_sf (
     const FLOAT8                 xr34     [576],
           III_scalefac_t * const vbrsf )
 {
-    unsigned int sfb;
+     int sfb;
     int vbrmax = -10000; /* initialize for maximum search */
     
     for (sfb = 0; sfb < SBMAX_l; sfb++) {
-        const unsigned int start = gfc->scalefac_band.l[ sfb ];
-        const unsigned int end   = gfc->scalefac_band.l[ sfb+1 ];
-        const unsigned int width = end - start;
+        const  int start = gfc->scalefac_band.l[ sfb ];
+        const  int end   = gfc->scalefac_band.l[ sfb+1 ];
+        const  int width = end - start;
         
         vbrsf->l[sfb] = find_scalefac_ave (&xr34[start], &xr34_orig[start],
                                                sfb, l3_xmin->l[sfb], width);
@@ -741,15 +741,15 @@ short_block_sf (
     const FLOAT8                 xr34     [576],
           III_scalefac_t * const vbrsf )
 {
-    unsigned int j, sfb, b;
+     int j, sfb, b;
     int vbrmean, vbrmin, vbrmax;
     int sf_cache[SBMAX_s];
   
     for (j = 0, sfb = 0; sfb < SBMAX_s; sfb++) {
         for (b = 0; b < 3; b++) {
-	    const unsigned int start = gfc->scalefac_band.s[ sfb ];
-	    const unsigned int end   = gfc->scalefac_band.s[ sfb+1 ];
-	    const unsigned int width = end - start;
+	    const  int start = gfc->scalefac_band.s[ sfb ];
+	    const  int end   = gfc->scalefac_band.s[ sfb+1 ];
+	    const  int width = end - start;
 	    
             if (0 == gfc->noise_shaping_amp) {
                 /*  the faster and sloppier mode to use at lower quality
@@ -821,14 +821,14 @@ long_block_sf (
     const FLOAT8                 xr34     [576],
           III_scalefac_t * const vbrsf )
 {
-    unsigned int sfb;
+     int sfb;
     int vbrmean, vbrmin, vbrmax;
     int sf_cache[SBMAX_l];
     
     for (sfb = 0; sfb < SBMAX_l; sfb++) {
-        const unsigned int start = gfc->scalefac_band.l[ sfb ];
-        const unsigned int end   = gfc->scalefac_band.l[ sfb+1 ];
-        const unsigned int width = end - start;
+        const  int start = gfc->scalefac_band.l[ sfb ];
+        const  int end   = gfc->scalefac_band.l[ sfb+1 ];
+        const  int width = end - start;
         
         if (0 == gfc->noise_shaping_amp) {
             /*  the faster and sloppier mode to use at lower quality
@@ -902,7 +902,7 @@ short_block_scalefacs (
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     const int * max_range;
-    unsigned int sfb, b;
+     int sfb, b;
     int maxover, maxover0, maxover1, mover;
     int v0, v1;
     int minsfb;
@@ -1002,7 +1002,7 @@ long_block_scalefacs (
     lame_internal_flags *gfc=gfp->internal_flags;
     const int * max_range;
     const int * max_rangep;
-    unsigned int sfb;
+     int sfb;
     int maxover, maxover0, maxover1, maxover0p, maxover1p, mover;
     int v0, v1, v0p, v1p;
     int vbrmax = *VBRmax;
@@ -1128,7 +1128,7 @@ short_block_xr34 (
     const FLOAT8                 xr34_orig[576],
           FLOAT8                 xr34     [576] )
 {
-    unsigned int sfb, l, j, b;
+     int sfb, l, j, b;
     int    ifac, ifqstep, start, end;
     FLOAT8 fac;
 
@@ -1172,7 +1172,7 @@ long_block_xr34 (
     const FLOAT8                 xr34_orig[576],
           FLOAT8                 xr34     [576] )
 { 
-    unsigned int sfb, l, j;
+     int sfb, l, j;
     int    ifac, ifqstep, start, end;
     FLOAT8 fac;
         
