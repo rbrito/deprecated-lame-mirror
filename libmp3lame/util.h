@@ -206,8 +206,7 @@ typedef struct  {
   int sfb21_extra; /* will be set in lame_init_params */
 
   /* variables used by util.c */
-  /* be sure to malloc this stuff during initalizatin, and
-   * free the memory in freegfc().  see HACKING for instructions */
+  /* BPC = maximum number of filter convolution windows to precompute */
 #define BPC 320
   FLOAT *inbuf_old[2];
   FLOAT *blackfilt[2*BPC+1];

@@ -16,7 +16,6 @@ SHELL = @SHELL@
 UNAME = $(shell uname)
 ARCH = $(shell uname -m)
 
-
 prefix = @prefix@
 exec_prefix = @exec_prefix@
 

@@ -365,7 +365,7 @@ int fill_buffer_resample(lame_global_flags *gfp,sample_t *outbuf,int desired_len
   if (!gfc->fill_buffer_resample_init) {
     gfc->inbuf_old[0]=calloc(BLACKSIZE,sizeof(gfc->inbuf_old[0][0]));
     gfc->inbuf_old[1]=calloc(BLACKSIZE,sizeof(gfc->inbuf_old[0][0]));
-    for (i=0; i<2*BPC+1; ++i)
+    for (i=0; i<2*bpc+1; ++i)
       gfc->blackfilt[i]=malloc(BLACKSIZE*sizeof(gfc->blackfilt[0][0]));
 
     gfc->fill_buffer_resample_init=1;
