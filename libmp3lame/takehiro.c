@@ -40,8 +40,9 @@
 # define choosetable(a,b,c) choose_table_nonMMX(a,b,c)
 #endif
 
-/* log2(x) */
-static const int log2tab[] = {0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4};
+/* log2(x). the last element is for the case when sfb is over valid range.*/
+static const int log2tab[] = {
+    0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 5};
 
 /*********************************************************************
  * nonlinear quantization of xr 
@@ -650,6 +651,7 @@ scfsi_calc(
     gr_info *gi = &l3_side->tt[1][ch];
     gr_info *g0 = &l3_side->tt[0][ch];
     s1 = 0;
+    return;
     for (i = 0; i < (sizeof(scfsi_band) / sizeof(int)) - 1; i++) {
 	for (sfb = scfsi_band[i]; sfb < scfsi_band[i + 1]; sfb++) {
 	    if (g0->scalefac[sfb] != gi->scalefac[sfb]
@@ -836,16 +838,14 @@ scale_bitcount(gr_info * const gi)
 	}
     }
 
-    s1 = 0;
+    s1 = s2 = 0;
     for (sfb = 0; sfb < gi->sfbdivide; sfb++)
 	if (s1 < gi->scalefac[sfb])
 	    s1 = gi->scalefac[sfb];
-    s1 = log2tab[s1];
-
-    s2 = 0;
     for (; sfb < gi->sfbmax; sfb++)
 	if (s2 < gi->scalefac[sfb])
 	    s2 = gi->scalefac[sfb];
+    s1 = log2tab[s1];
     s2 = log2tab[s2];
 
     /* from Takehiro TOMINAGA <tominaga@isoternet.org> 10/99
