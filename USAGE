@@ -128,27 +128,29 @@ Experimental (undocumented):  may work better or worse:
 
 Operational:
 
--r             assume input file is raw PCM
--s  n          input sampling frequency in kHz (for raw PCM input files)
---resample n   output sampling frequency
---mp3input     input file is an MP3 file.  decode using mpglib/mpg123
---ogginput     input file is an Ogg Vorbis file.  decode using libvorbis
--x             swap bytes of input file
---scale <arg>  multiply PCM input by <arg>
--a             downmix stereo input file to mono .mp3
--e  n/5/c      de-emphasis
--p             add CRC error protection
--c             mark the encoded file as copyrighted
--o             mark the encoded file as a copy
--S             don't print progress report, VBR histogram
--g             run MP3x, the graphical frame analyzer
+-r              assume input file is raw PCM
+-s  n           input sampling frequency in kHz (for raw PCM input files)
+--resample n    output sampling frequency
+--mp3input      input file is an MP3 file.  decode using mpglib/mpg123
+--ogginput      input file is an Ogg Vorbis file.  decode using libvorbis
+-x              swap bytes of input file
+--scale <arg>   multiply PCM input by <arg>
+--scale-l <arg> scale channel 0 (left) input (multiply PCM data) by <arg>
+--scale-r <arg> scale channel 1 (right) input (multiply PCM data) by <arg>
+-a              downmix stereo input file to mono .mp3
+-e  n/5/c       de-emphasis
+-p              add CRC error protection
+-c              mark the encoded file as copyrighted
+-o              mark the encoded file as a copy
+-S              don't print progress report, VBR histogram
+-g              run MP3x, the graphical frame analyzer
 --strictly-enforce-ISO   comply as much as possible to ISO MPEG spec
 
---decode       assume input file is an mp3 file, and decode to wav.
--t             disable writing of WAV header when using --decode
-               (decode to raw pcm, native endian format (use -x to swap))
+--decode        assume input file is an mp3 file, and decode to wav.
+-t              disable writing of WAV header when using --decode
+                (decode to raw pcm, native endian format (use -x to swap))
 
---ogg          Encode using Ogg Vorbis (.ogg) instead of mp3.
+--ogg           Encode using Ogg Vorbis (.ogg) instead of mp3.
 
 
 
