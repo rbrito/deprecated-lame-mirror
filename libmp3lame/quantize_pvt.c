@@ -704,20 +704,7 @@ int  calc_noise(
 	}
     } /* cod_info->block_type == SHORT_TYPE */
 
-    /* normalization at this point by "count" is not necessary, since
-     * the values are only used to compare with previous values */
     res->over_count = over;
-
-    /* convert to db. DO NOT CHANGE THESE */
-    /* tot_noise = is really the average over each sfb of: 
-       [noise(db) - allowed_noise(db)]
-
-       and over_noise is the same average, only over only the
-       bands with noise > allowed_noise.  
-    */
-
-    //res->tot_noise   = 10.*log10(Max(1e-20,tot_noise )); 
-    //res->over_noise  = 10.*log10(Max(1e+00,over_noise)); 
     res->tot_noise   = tot_noise_db;
     res->over_noise  = over_noise_db;
     res->max_noise   = 10.*log10(Max(1e-20,max_noise ));
