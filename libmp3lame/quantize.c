@@ -1114,26 +1114,26 @@ calc_sfb_noise_fast(const FLOAT * xr, const FLOAT * xr34, int bw, int sf)
 
     bw >>= 1;
     do {
- 	fi_union fi0, fi1;
+	fi_union fi0, fi1;
 	FLOAT t0, t1;
 #ifdef TAKEHIRO_IEEE754_HACK
- 	fi0.f = sfpow34 * xr34[0] + (ROUNDFAC + MAGIC_FLOAT);
- 	fi1.f = sfpow34 * xr34[1] + (ROUNDFAC + MAGIC_FLOAT);
- 
- 	if (fi0.i > MAGIC_INT + IXMAX_VAL) return -1;
- 	if (fi1.i > MAGIC_INT + IXMAX_VAL) return -1;
+	fi0.f = sfpow34 * xr34[0] + (ROUNDFAC + MAGIC_FLOAT);
+	fi1.f = sfpow34 * xr34[1] + (ROUNDFAC + MAGIC_FLOAT);
+
+	if (fi0.i > MAGIC_INT + IXMAX_VAL) return -1;
+	if (fi1.i > MAGIC_INT + IXMAX_VAL) return -1;
 	t0 = fabs(xr[0]) - (pow43 - MAGIC_INT)[fi0.i] * sfpow;
 	t1 = fabs(xr[1]) - (pow43 - MAGIC_INT)[fi1.i] * sfpow;
 #else
 	XRPOW_FTOI(sfpow34 * xr34[0] + ROUNDFAC, fi0.i);
 	XRPOW_FTOI(sfpow34 * xr34[1] + ROUNDFAC, fi1.i);
  
- 	if (fi0.i > IXMAX_VAL) return -1;
- 	if (fi1.i > IXMAX_VAL) return -1;
+	if (fi0.i > IXMAX_VAL) return -1;
+	if (fi1.i > IXMAX_VAL) return -1;
 	t0 = fabs(xr[0]) - pow43[fi0.i] * sfpow;
 	t1 = fabs(xr[1]) - pow43[fi1.i] * sfpow;
 #endif
-        xfsf += t0*t0 + t1*t1;
+	xfsf += t0*t0 + t1*t1;
 	xr34 += 2;
 	xr += 2;
     } while (--bw > 0);
@@ -1217,8 +1217,13 @@ find_scalefac(
 
     /*  returning a scalefac without distortion, if possible
      */
-    if (sf_ok <= 255)
-        return sf_ok;
+    if (sf_ok > 255)
+	return sf;
+    for (sf = sf_ok; sf < 256; sf++) {
+	xfsf = calc_sfb_noise(xr, xr34, bw, sf);
+	if (xfsf > l3_xmin || xfsf < 0)
+	    return sf + 1;
+    }
     return sf;
 }
 
