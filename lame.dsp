@@ -155,6 +155,10 @@ SOURCE=.\brhist.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\encoder.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\encoder.h
 # End Source File
 # Begin Source File
@@ -219,6 +223,10 @@ SOURCE=.\lame.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\lametime.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\machine.h
 # End Source File
 # Begin Source File
@@ -255,19 +263,19 @@ SOURCE=.\psymodel.h
 # End Source File
 # Begin Source File
 
-SOURCE=".\quantize-pvt.c"
-# End Source File
-# Begin Source File
-
-SOURCE=".\quantize-pvt.h"
-# End Source File
-# Begin Source File
-
 SOURCE=.\quantize.c
 # End Source File
 # Begin Source File
 
 SOURCE=.\quantize.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\quantize_pvt.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\quantize_pvt.h
 # End Source File
 # Begin Source File
 
