@@ -42,10 +42,19 @@
  *      abx "test.wav" "!lame -b128 test.wav -"
  */
 
+// If the program should increase it priority while playing define USE_NICE. 
+// Program must be installed SUID root. Decompressing phase is using NORMAL priority
 #define USE_NICE
+
+// Not only increase priority but change to relatime scheduling. Program must be installed SUID root
 #define USE_REALTIME
 
-#if defined(HAVE_CONFIG_H)
+// Path of the programs: mpg123, mppdec, faad, ac3dec, ogg123, lpac, shorten, MAC, flac
+//#define PATH_OF_EXTERNAL_TOOLS_FOR_UNCOMPRESSING   "/usr/local/bin/"
+#define PATH_OF_EXTERNAL_TOOLS_FOR_UNCOMPRESSING   ""
+
+
+#if defined HAVE_CONFIG_H
 # include <config.h>
 #endif
 
@@ -70,9 +79,9 @@
 
 #define  MAX  (1<<17)
 
-#ifdef HAVE_SYS_SOUNDCARD_H
+#if   defined HAVE_SYS_SOUNDCARD_H
 # include <sys/soundcard.h>
-#elif defined(HAVE_LINUX_SOUNDCARD_H)
+#elif defined HAVE_LINUX_SOUNDCARD_H
 # include <linux/soundcard.h>
 #else
 # include <linux/soundcard.h>         /* stand alone compilable for my tests */
@@ -86,7 +95,7 @@
 #endif
 
 #define  BF           ((freq)/25)
-#define  MAX_LEN      (60 * 44100)
+#define  MAX_LEN      (210 * 44100)
 #define  DMA_SAMPLES  512	    	/* My Linux driver uses a DMA buffer of 65536*16 bit, which is 32768 samples in 16 bit stereo mode */
 
 void  Set_Realtime ( void )
@@ -875,42 +884,47 @@ typedef struct {
 
 #define REDIR     " 2> /dev/null"
 #define STDOUT    "/dev/fd/1"
+#define PATH      PATH_OF_EXTERNAL_TOOLS_FOR_UNCOMPRESSING
 
 const decoder_t  decoder [] = {
-    { ".mp1"    , "/usr/local/bin/mpg123 -w - %s"                   REDIR },  // MPEG Layer I         : www.iis.fhg.de, www.mpeg.org
-    { ".mp2"    , "/usr/local/bin/mpg123 -w - %s"                   REDIR },  // MPEG Layer II        : www.iis.fhg.de, www.uq.net.au/~zzmcheng, www.mpeg.org
-    { ".mp3"    , "/usr/local/bin/mpg123 -w - %s"                   REDIR },  // MPEG Layer III       : www.iis.fhg.de, www.mp3dev.org/mp3, www.mpeg.org
-    { ".mp3pro" , "/usr/local/bin/mpg123 -w - %s"                   REDIR },  // MPEG Layer III       : www.iis.fhg.de, www.mp3dev.org/mp3, www.mpeg.org
-    { ".mpt"    , "/usr/local/bin/mpg123 -w - %s"                   REDIR },  // MPEG Layer III       : www.iis.fhg.de, www.mp3dev.org/mp3, www.mpeg.org
-    { ".mpp"    , "/usr/local/bin/mppdec %s -"                      REDIR },  // MPEGplus             : www.stud.uni-hannover.de/user/73884
-    { ".mpc"    , "/usr/local/bin/mppdec %s -"                      REDIR },  // MPEGplus             : www.stud.uni-hannover.de/user/73884
-    { ".mp+"    , "/usr/local/bin/mppdec %s -"                      REDIR },  // MPEGplus             : www.stud.uni-hannover.de/user/73884
-    { ".aac"    , "/usr/local/bin/faad -t.wav -w %s"                REDIR },  // Advanced Audio Coding: psytel.hypermart.net, www.aac-tech.com, sourceforge.net/projects/faac, www.aac-audio.com, www.mpeg.org
-    { "aac.lqt" , "/usr/local/bin/faad -t.wav -w %s"                REDIR },  // Advanced Audio Coding: psytel.hypermart.net, www.aac-tech.com, sourceforge.net/projects/faac, www.aac-audio.com, www.mpeg.org
-    { ".ac3"    , "/usr/local/bin/ac3dec %s"                        REDIR },  // Dolby AC3            : www.att.com
-    { "ac3.lqt" , "/usr/local/bin/ac3dec %s"                        REDIR },  // Dolby AC3            : www.att.com
-    { ".ogg"    , "/usr/local/bin/ogg123 -d wav -o file:"STDOUT" %s"REDIR },  // Ogg Vorbis           : www.xiph.org/ogg/vorbis/index.html
-    { ".pac"    , "/usr/local/bin/lpac -x %s "STDOUT                REDIR },  // Lossless predictive Audio Compression: www-ft.ee.tu-berlin.de/~liebchen/lpac.html (liebchen@ft.ee.tu-berlin.de)
-    { ".shn"    , "/usr/local/bin/shorten -x < %s"                  REDIR },  // Shorten              : shnutils.freeshell.org, www.softsound.com/Shorten.html (shnutils@freeshell.org, shorten@softsound.com)
-    { ".wav.gz" , "gzip  -d < %s | sox -twav - -twav -sw -"         REDIR },  // gziped WAV
-    { ".wav.sz" , "szip  -d < %s | sox -twav - -twav -sw -"         REDIR },  // sziped WAV
-    { ".wav.sz2", "szip2 -d < %s | sox -twav - -twav -sw -"         REDIR },  // sziped WAV
-    { ".raw"    , "sox -r44100 -sw -c2 -traw %s -twav -sw -"        REDIR },  // raw files are treated as CD like audio
-    { ".cdr"    , "sox -r44100 -sw -c2 -traw %s -twav -sw -"        REDIR },  // CD-DA files are treated as CD like audio, no preemphasis info available
-    { ".rm"     , "echo %s '???'"                                   REDIR },  // Real Audio           : www.real.com
-    { ".epc"    , "echo %s '???'"                                   REDIR },  // ePAC                 : www.audioveda.com, www.lucent.com/ldr
-    { ".mov"    , "echo %s '???'"                                   REDIR },  // QDesign Music 2      : www.qdesign.com
-    { ".vqf"    , "echo %s '???'"                                   REDIR },  // TwinVQ               : www.yamaha-xg.com/english/xg/SoundVQ, www.vqf.com, sound.splab.ecl.ntt.co.jp/twinvq-e
-    { ".wma"    , "echo %s '???'"                                   REDIR },  // Microsoft Media Audio: www.windowsmedia.com, www.microsoft.com/windows/windowsmedia
-    { ".ape"    , "echo %s '???'"                                   REDIR },  // Monkey's Audio Codec : www.monkeysaudio.com (email@monkeysaudio.com)
-    { ".rka"    , "/opt/winapp/rkau -d %s"                          REDIR },  // RK Audio:              
+    { ".mp1"    , PATH"mpg123 -w - %s"                         REDIR },  // MPEG Layer I         : www.iis.fhg.de, www.mpeg.org
+    { ".mp2"    , PATH"mpg123 -w - %s"                         REDIR },  // MPEG Layer II        : www.iis.fhg.de, www.uq.net.au/~zzmcheng, www.mpeg.org
+    { ".mp3"    , PATH"mpg123 -w - %s"                         REDIR },  // MPEG Layer III       : www.iis.fhg.de, www.mp3dev.org/mp3, www.mpeg.org
+    { ".mp3pro" , PATH"mpg123 -w - %s"                         REDIR },  // MPEG Layer III       : www.iis.fhg.de, www.mp3dev.org/mp3, www.mpeg.org
+    { ".mpt"    , PATH"mpg123 -w - %s"                         REDIR },  // MPEG Layer III       : www.iis.fhg.de, www.mp3dev.org/mp3, www.mpeg.org
+    { ".mpp"    , PATH"mppdec %s -"                            REDIR },  // MPEGplus             : www.stud.uni-hannover.de/user/73884
+    { ".mpc"    , PATH"mppdec %s -"                            REDIR },  // MPEGplus             : www.stud.uni-hannover.de/user/73884
+    { ".mp+"    , PATH"mppdec %s -"                            REDIR },  // MPEGplus             : www.stud.uni-hannover.de/user/73884
+    { ".aac"    , PATH"faad -t.wav -w %s"                      REDIR },  // Advanced Audio Coding: psytel.hypermart.net, www.aac-tech.com, sourceforge.net/projects/faac, www.aac-audio.com, www.mpeg.org
+    { "aac.lqt" , PATH"faad -t.wav -w %s"                      REDIR },  // Advanced Audio Coding: psytel.hypermart.net, www.aac-tech.com, sourceforge.net/projects/faac, www.aac-audio.com, www.mpeg.org
+    { ".ac3"    , PATH"ac3dec %s"                              REDIR },  // Dolby AC3            : www.att.com
+    { "ac3.lqt" , PATH"ac3dec %s"                              REDIR },  // Dolby AC3            : www.att.com
+    { ".ogg"    , PATH"ogg123 -d wav -o file:"STDOUT" %s"      REDIR },  // Ogg Vorbis           : www.xiph.org/ogg/vorbis/index.html
+    { ".pac"    , PATH"lpac -x %s "STDOUT                      REDIR },  // Lossless predictive Audio Compression: www-ft.ee.tu-berlin.de/~liebchen/lpac.html (liebchen@ft.ee.tu-berlin.de)
+    { ".shn"    , PATH"shorten -x < %s"                        REDIR },  // Shorten              : shnutils.freeshell.org, www.softsound.com/Shorten.html (shnutils@freeshell.org, shorten@softsound.com)
+    { ".wav.gz" , "gzip  -d < %s | sox -twav - -twav -sw -"    REDIR },  // gziped WAV
+    { ".wav.sz" , PATH"szip  -d < %s | sox -twav - -twav -sw -"REDIR },  // sziped WAV
+    { ".wav.sz2", PATH"szip2 -d < %s | sox -twav - -twav -sw -"REDIR },  // sziped WAV
+    { ".raw"    , "sox -r44100 -sw -c2 -traw %s -twav -sw -"   REDIR },  // raw files are treated as CD like audio
+    { ".cdr"    , "sox -r44100 -sw -c2 -traw %s -twav -sw -"   REDIR },  // CD-DA files are treated as CD like audio, no preemphasis info available
+    { ".rm"     , "echo %s '???'"                              REDIR },  // Real Audio           : www.real.com
+    { ".epc"    , "echo %s '???'"                              REDIR },  // ePAC                 : www.audioveda.com, www.lucent.com/ldr
+    { ".mov"    , "echo %s '???'"                              REDIR },  // QDesign Music 2      : www.qdesign.com
+    { ".vqf"    , "echo %s '???'"                              REDIR },  // TwinVQ               : www.yamaha-xg.com/english/xg/SoundVQ, www.vqf.com, sound.splab.ecl.ntt.co.jp/twinvq-e
+    { ".wma"    , "echo %s '???'"                              REDIR },  // Microsoft Media Audio: www.windowsmedia.com, www.microsoft.com/windows/windowsmedia
+    { ".flac"   , PATH"flac -c -d %s"                          REDIR },  // Free Lossless Audio Coder: flac.sourceforge.net/
+    { ".fla"    , PATH"flac -c -d %s"                          REDIR },  // Free Lossless Audio Coder: flac.sourceforge.net/
+    { ".ape"    , "( "PATH"MAC %s _._.wav -d > /dev/null; cat _._.wav; rm _._.wav )"  REDIR },  // Monkey's Audio Codec : www.monkeysaudio.com (email@monkeysaudio.com)
+    { ".rka"    , "( "PATH"rkau %s _._.wav   > /dev/null; cat _._.wav; rm _._.wav )"  REDIR },  // RK Audio:              
+    { ".rkau"   , "( "PATH"rkau %s _._.wav   > /dev/null; cat _._.wav; rm _._.wav )"  REDIR },  // RK Audio:              
     { ".mod"    , "xmp -b16 -c -f44100 --stereo -o- %s | sox -r44100 -sw -c2 -traw - -twav -sw -"
-                                                                    REDIR },  // Amiga's Music on Disk:
-    { ""        , "sox %s -twav -sw -"                              REDIR },  // Rest, may be possible with sox
+                                                               REDIR },  // Amiga's Music on Disk:
+    { ""        , "sox %s -twav -sw -"                         REDIR },  // Rest, may be sox can handle it
 };
 
 #undef REDIR
 #undef STDOUT
+#undef PATH
 
 
 int  readwave ( stereo_t* buff, size_t maxlen, const char* name, size_t* len )
