@@ -51,11 +51,17 @@ You also need to write (in get_set.c):
 lame_set_new_variable()
 lame_get_new_variable()
 
-And then document the variable in the file USAGE
+And then document the variable in the file USAGE as well as the
+output of "lame --longhelp"
 
 And add a "--option" style command line option to enable this variable
 in parse.m
 
+Note: for experimental features that you need to call from the frontend
+but that should not be part of the official API, see the section at
+the end of get_set.c.  These functions should *NOT* be prototyped in
+lame.h (since that would indicate to the world that they are part
+of the API). 
 
 
 ************************************************************************

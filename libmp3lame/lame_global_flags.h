@@ -78,6 +78,8 @@ struct lame_global_struct {
   int experimentalZ;
   int exp_nspsytune;
 
+  double newmsfix;
+
   /* VBR control */
   vbr_mode VBR;
   int VBR_q;
@@ -126,10 +128,11 @@ struct lame_global_struct {
 				     psycho does not take it into account,
 				     and last but not least many decoders
                                      don't care about these bits          */
+  float msfix;              /* Naoki's adjustment of Mid/Side maskings */
 
   int   tune;               /* 0 off, 1 on */
-  float tune_value_a;       /* used to pass values for debugging and stuff
-                             */
+  float tune_value_a;       /* used to pass values for debugging and stuff */
+
   
   struct {
     void (*msgf)  (const char *format, va_list ap);

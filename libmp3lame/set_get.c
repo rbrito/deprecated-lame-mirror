@@ -665,6 +665,8 @@ lame_get_disable_reservoir( const lame_global_flags*  gfp )
 }
 
 
+
+
 /* Select a different "best quantization" function. default = 0 */
 int
 lame_set_experimentalX( lame_global_flags*  gfp,
@@ -1358,6 +1360,15 @@ lame_get_totalframes( const lame_global_flags*  gfp )
 
 
 /*
+
+UNDOCUMENTED, experimental settings.  These routines are not prototyped
+in lame.h.  You should not use them, they are experimental and may
+change.  
+
+*/
+
+
+/*
  *  just another daily changing developer switch  
  */
 void lame_set_tune( lame_global_flags* gfp, float val ) 
@@ -1365,3 +1376,39 @@ void lame_set_tune( lame_global_flags* gfp, float val )
     gfp->tune_value_a = val;
     gfp->tune = 1;
 }
+
+/* Custom msfix hack */
+void
+lame_set_msfix( lame_global_flags*  gfp,
+                   double              msfix )
+{
+    /* default = 0 */
+    gfp->msfix = msfix;
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -834,6 +834,10 @@ int L3psycho_anal( lame_global_flags * gfp,
   } /* end loop over chn */
 
 
+
+  /*************************************************************** 
+   * compute M/S thresholds
+   ***************************************************************/
   /* compute M/S thresholds from Johnston & Ferreira 1992 ICASSP paper */
   if (gfp->mode == JOINT_STEREO) {
     FLOAT8 rside,rmid,mld;
@@ -873,6 +877,75 @@ int L3psycho_anal( lame_global_flags * gfp,
       }
     }
   }
+
+
+
+  /*************************************************************** 
+   * Adjust M/S maskings if user set "msfix"
+   ***************************************************************/
+  /* Naoki Shibata 2000 */
+  if (numchn == 4 && gfp->msfix!=0) {
+      FLOAT msfix = gfp->msfix;
+
+    for ( sb = 0; sb < NBPSY_l; sb++ )
+      {
+	FLOAT8 thmL,thmR,thmM,thmS,ath;
+	ath  = (gfc->ATH->cb[(gfc->bu_l[sb] + gfc->bo_l[sb])/2])*pow(10,-gfp->ATHlower/10.0);
+	thmL = Max(gfc->thm[0].l[sb],ath);
+	thmR = Max(gfc->thm[1].l[sb],ath);
+	thmM = Max(gfc->thm[2].l[sb],ath);
+	thmS = Max(gfc->thm[3].l[sb],ath);
+
+	if (thmL*msfix < (thmM+thmS)/2) {
+	  FLOAT8 f = thmL*msfix / ((thmM+thmS)/2);
+	  thmM *= f;
+	  thmS *= f;
+	}
+	if (thmR*msfix < (thmM+thmS)/2) {
+	  FLOAT8 f = thmR*msfix / ((thmM+thmS)/2);
+	  thmM *= f;
+	  thmS *= f;
+	}
+
+	gfc->thm[2].l[sb] = Min(thmM,gfc->thm[2].l[sb]);
+	gfc->thm[3].l[sb] = Min(thmS,gfc->thm[3].l[sb]);
+      }
+
+    for ( sb = 0; sb < NBPSY_s; sb++ ) {
+      for ( sblock = 0; sblock < 3; sblock++ ) {
+	FLOAT8 thmL,thmR,thmM,thmS,ath;
+	ath  = (gfc->ATH->cb[(gfc->bu_s[sb] + gfc->bo_s[sb])/2])*pow(10,-gfp->ATHlower/10.0);
+	thmL = Max(gfc->thm[0].s[sb][sblock],ath);
+	thmR = Max(gfc->thm[1].s[sb][sblock],ath);
+	thmM = Max(gfc->thm[2].s[sb][sblock],ath);
+	thmS = Max(gfc->thm[3].s[sb][sblock],ath);
+
+	if (thmL*msfix < (thmM+thmS)/2) {
+	  FLOAT8 f = thmL*msfix / ((thmM+thmS)/2);
+	  thmM *= f;
+	  thmS *= f;
+	}
+	if (thmR*msfix < (thmM+thmS)/2) {
+	  FLOAT8 f = thmR*msfix / ((thmM+thmS)/2);
+	  thmM *= f;
+	  thmS *= f;
+	}
+
+	gfc->thm[2].s[sb][sblock] = Min(gfc->thm[2].s[sb][sblock],thmM);
+	gfc->thm[3].s[sb][sblock] = Min(gfc->thm[3].s[sb][sblock],thmS);
+      }
+    }
+  }
+
+
+
+
+
+
+
+
+
+
 
   if (gfp->mode == JOINT_STEREO)  {
     /* determin ms_ratio from masking thresholds*/
@@ -1682,6 +1755,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
   if (numchn == 4) {
     FLOAT msfix = NS_MSFIX;
     if (gfc->nsPsy.safejoint) msfix = 1;
+    if (gfp->msfix) msfix = gfp->msfix;
 
     for ( sb = 0; sb < NBPSY_l; sb++ )
       {
