@@ -4,7 +4,7 @@ Compiling LAME with Borland C++
 
 by Magnus Holmgren <lear@algonet.se>
 
-(LAME's homepage is http://www.sulaco.org/mp3, and LAME is distributed
+(LAME's homepage is http://www.mp3dev.org, and LAME is distributed
 under the LGPL. More information is in the README file)
 
 Compiling
@@ -33,9 +33,6 @@ optimizations. So if you are concerned with speed, DJGPP may be a better
 choice. However, it isn't as easy to compile a DLL with it - or so I've 
 read.
 
-Defining MMX_choose_table doesn't make any noticable difference, though some 
-un-documented defines can speed it up by some 10-15 percent (though it might 
-affect quality; I haven't tested that).
 
 Other customizations
 --------------------
