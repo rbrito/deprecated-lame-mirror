@@ -394,13 +394,13 @@ extern void
 getframebits(lame_internal_flags *gfc, int *bitsPerFrame, int *mean_bits);
 
 int  fill_buffer_resample (
-        lame_internal_flags *gfc,
-        sample_t* const  outbuf,
-        const int        desired_len,
-        const sample_t*  inbuf,
-        const int        len,
-        int* const       num_used,
-        const int        channels );
+        lame_global_flags *gfp,
+        sample_t*  outbuf,
+        int        desired_len,
+        sample_t*  inbuf,
+        int        len,
+        int*       num_used,
+        int        channels );
 
 
 extern int  has_i387  ( void );
