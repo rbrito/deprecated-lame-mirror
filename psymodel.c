@@ -47,35 +47,35 @@ int L3para_read( lame_global_flags *gfp,
 		  int *, int *, int *, int *);
 
 /* addition of simultaneous masking   Naoki Shibata 2000/7 */
-INLINE FLOAT8 mask_add(double m1,double m2,int k,int b,lame_internal_flags *gfc)
+INLINE FLOAT8 mask_add(FLOAT8 m1,FLOAT8 m2,int k,int b,lame_internal_flags *gfc)
 {
-  static double table1[] = {
+  static FLOAT8 table1[] = {
     3.3246 *3.3246 ,3.23837*3.23837,3.15437*3.15437,3.00412*3.00412,2.86103*2.86103,2.65407*2.65407,2.46209*2.46209,2.284  *2.284  ,
     2.11879*2.11879,1.96552*1.96552,1.82335*1.82335,1.69146*1.69146,1.56911*1.56911,1.46658*1.46658,1.37074*1.37074,1.31036*1.31036,
     1.25264*1.25264,1.20648*1.20648,1.16203*1.16203,1.12765*1.12765,1.09428*1.09428,1.0659 *1.0659 ,1.03826*1.03826,1.01895*1.01895,
     1
   };
 
-  static double table2[] = {
+  static FLOAT8 table2[] = {
     1.33352*1.33352,1.35879*1.35879,1.38454*1.38454,1.39497*1.39497,1.40548*1.40548,1.3537 *1.3537 ,1.30382*1.30382,1.22321*1.22321,
     1.14758*1.14758
   };
 
-  static double table3[] = {
+  static FLOAT8 table3[] = {
     2.35364*2.35364,2.29259*2.29259,2.23313*2.23313,2.12675*2.12675,2.02545*2.02545,1.87894*1.87894,1.74303*1.74303,1.61695*1.61695,
     1.49999*1.49999,1.39148*1.39148,1.29083*1.29083,1.19746*1.19746,1.11084*1.11084,1.03826*1.03826
   };
 
 
   int i;
-  double m;
+  FLOAT8 m;
 
   if (m1 == 0) return m2;
 
   if (b < 0) b = -b;
 
   i = 10*log10(m2 / m1)/10*16;
-  m = 10*log10((m1+m2)/(gfc->ATH_partitionbands[k]/2.43e+06));
+  m = 10*log10((m1+m2)/gfc->ATH_partitionbands[k]);
 
   if (i < 0) i = -i;
 
@@ -85,15 +85,15 @@ INLINE FLOAT8 mask_add(double m1,double m2,int k,int b,lame_internal_flags *gfc)
   }
 
   if (m<15) {
-    if (m > 0) {
-      double f=1.0,r;
+    if (m > 5) {
+      FLOAT8 f=1.0,r;
       if (i > 24) return m1+m2;
       if (i > 13) f = 1; else f = table3[i];
-      r = (m-0)/15;
-      return (m1+m2)*(table1[i]*r+f*(1-r));
+      r = (m-5)/10;
+      return (m1+m2)*table1[i]*pow(f/table1[i],r);
     }
-    if (i > 13) return m1+m2;
-    return (m1+m2)*table3[i];
+    if (m < 0 || i > 13) return m1+m2;
+    return (m1+m2)*pow(table3[i],m/5);
   }
 
   if (i > 24) return m1+m2;
