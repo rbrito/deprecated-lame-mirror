@@ -1021,7 +1021,7 @@ s3_func(FLOAT bark)
 static int
 init_numline(
     int *numlines, int *bo, int *bm,
-    FLOAT *bval, FLOAT *bval_width, FLOAT *mld,
+    FLOAT *bval, FLOAT *mld,
 
     FLOAT sfreq, int blksize, int *scalepos,
     FLOAT deltafreq, int sbmax
@@ -1080,7 +1080,6 @@ init_numline(
 	bark1 = freq2bark (sfreq*(j  ));
 	bark2 = freq2bark (sfreq*(j+w));
 	bval[k] = .5*(bark1+bark2);
-	bval_width[k] = bark2-bark1;
 	j += w;
     }
     return i+1;
@@ -1132,7 +1131,6 @@ init_s3_values(
     int (*s3ind)[2],
     int npart,
     FLOAT *bval,
-    FLOAT *bval_width,
     FLOAT *norm
     )
 {
@@ -1210,7 +1208,6 @@ int psymodel_init(lame_global_flags *gfp)
     int bm[SBMAX_l];
 
     FLOAT bval[CBANDS];
-    FLOAT bval_width[CBANDS];
     FLOAT norm[CBANDS];
     FLOAT sfreq = gfp->out_samplerate;
     int numlines_s[CBANDS];
@@ -1241,10 +1238,10 @@ int psymodel_init(lame_global_flags *gfp)
     /*************************************************************************
      * now compute the psychoacoustic model specific constants
      ************************************************************************/
-    /* compute numlines, bo, bm, bval, bval_width, mld */
+    /* compute numlines, bo, bm, bval, mld */
     gfc->npart_l
 	= init_numline(gfc->numlines_l, gfc->bo_l, bm,
-		       bval, bval_width, gfc->mld_l,
+		       bval, gfc->mld_l,
 		       sfreq, BLKSIZE, 
 		       gfc->scalefac_band.l, BLKSIZE/(2.0*576), SBMAX_l);
     assert(gfc->npart_l <= CBANDS);
@@ -1268,7 +1265,7 @@ int psymodel_init(lame_global_flags *gfp)
 	    norm[i] = 1e-37;
     }
     i = init_s3_values(gfc, &gfc->s3_ll, gfc->s3ind,
-		       gfc->npart_l, bval, bval_width, norm);
+		       gfc->npart_l, bval, norm);
     if (i)
 	return i;
 
@@ -1298,7 +1295,7 @@ int psymodel_init(lame_global_flags *gfp)
      ************************************************************************/
     gfc->npart_s
 	= init_numline(numlines_s, gfc->bo_s, bm,
-		       bval, bval_width, gfc->mld_s,
+		       bval, gfc->mld_s,
 		       sfreq, BLKSIZE_s,
 		       gfc->scalefac_band.s, BLKSIZE_s/(2.0*192), SBMAX_s);
     assert(gfc->npart_s <= CBANDS);
@@ -1322,7 +1319,7 @@ int psymodel_init(lame_global_flags *gfp)
 	gfc->ATH.s_avg[i] = gfc->ATH.cb[bm[i]] * BLKSIZE_s / BLKSIZE;
 
     i = init_s3_values(gfc, &gfc->s3_ss, gfc->s3ind_s,
-		       gfc->npart_s, bval, bval_width, norm);
+		       gfc->npart_s, bval, norm);
     if (i)
 	return i;
 
