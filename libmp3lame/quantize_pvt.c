@@ -688,7 +688,7 @@ int  calc_noise(
     res->over_noise  = 10.*over_noise_db;
     //    res->max_noise   = 10.*log10(max_noise);
     //    res->klemm_noise = 10.*log10(klemm_noise);
-    res->max_noise   = 10.*log10(Max(1e-20,max_noise ));
+    res->max_noise   = 10.*log10(max_noise);
     res->klemm_noise = 10.*log10(Max(1e-20,klemm_noise));
 
     return over;
