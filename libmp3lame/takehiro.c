@@ -1085,7 +1085,7 @@ scale_bitcount_lsf(gr_info * const gi)
 
     if (table_type == 0) {
 	/* try to use table type 1 and 2(preflag) */
-	int slen2[4];
+	char slen2[4];
 	sfb = i = 0;
 	for (part = 0; part < 4; part++) {
 	    int m = 0, sfbend = sfb + nr_of_sfb_block[3+tableID][part];
