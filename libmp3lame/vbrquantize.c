@@ -37,6 +37,8 @@
 #include <dmalloc.h>
 #endif
 
+#undef MAXQUANTERROR
+
 
 typedef union {
     float f;
@@ -128,8 +130,6 @@ typedef union {
 
 #endif
 
-
-#undef MAXQUANTERROR
 
 static FLOAT8
 calc_sfb_noise(const FLOAT8 *xr, const FLOAT8 *xr34, const int bw, const int sf)
@@ -743,7 +743,7 @@ short_block_sf (
 {
     unsigned int j, sfb, b;
     int vbrmax = -10000; /* initialize for maximum search */
-    int vbrdist, vbrmean, vbrmin = 10000; /* initialize for minimum search */
+    int vbrdist = 0, vbrmean, vbrmin = 10000; /* initialize for minimum search */
   
     for (j = 0, sfb = 0; sfb < SBMAX_s; sfb++) {
         for (b = 0; b < 3; b++) {
@@ -767,7 +767,6 @@ short_block_sf (
         }
     }
     
-    vbrdist = 0;
     for (b = 0; b < 3; b++) { 
         int a[SBPSY_s];
         for (sfb = 0; sfb < SBPSY_s; sfb++) 
@@ -775,14 +774,12 @@ short_block_sf (
         
         vbrmean = select_kth_int (a, SBPSY_s, SBMAX_s/2);
         vbrmin = 10000;
-        for (sfb = 0; sfb < SBPSY_s; sfb++) { 
+        for (sfb = 0; sfb < SBMAX_s; sfb++) { 
             if (vbrmin > vbrsf->s[sfb][b])
                 vbrmin = vbrsf->s[sfb][b];
-            if (vbrsf->s[sfb][b] > vbrmean) {
-                vbrdist = Max (vbrdist, vbrsf->s[sfb][b] - vbrmean);
-            }
         }
-        vbrsf->s[SBPSY_s][b] = Max (vbrmin-(vbrmean-vbrmin)/3, vbrsf->s[SBPSY_s][b]);
+        vbrsf->s[SBPSY_s][b] = Min(vbrmean, vbrsf->s[SBPSY_s][b]);
+        vbrdist = Max (vbrdist, vbrmean-vbrmin);
     }
     
     for (sfb = 0; sfb < SBMAX_s; sfb++) {
@@ -790,7 +787,7 @@ short_block_sf (
 	    if (sfb > 0) 
 	        if (vbrsf->s[sfb][b] > vbrsf->s[sfb-1][b]+MAX_SF_DELTA)
                     vbrsf->s[sfb][b] = vbrsf->s[sfb-1][b]+MAX_SF_DELTA;
-	    if (sfb < SBMAX_s-1) 
+	    if (sfb < SBMAX_s-2) 
 	        if (vbrsf->s[sfb][b] > vbrsf->s[sfb+1][b]+MAX_SF_DELTA)
                     vbrsf->s[sfb][b] = vbrsf->s[sfb+1][b]+MAX_SF_DELTA;
             if (vbrmax < vbrsf->s[sfb][b])
@@ -813,7 +810,7 @@ long_block_sf (
 {
     unsigned int sfb;
     int vbrmax = -10000; /* initialize for maximum search */
-    int vbrdist, vbrmean, vbrmin = 10000; /* initialize for minimum search */
+    int vbrmean, vbrmin = 10000; /* initialize for minimum search */
     
     for (sfb = 0; sfb < SBMAX_l; sfb++) {
         const unsigned int start = gfc->scalefac_band.l[ sfb ];
@@ -841,29 +838,25 @@ long_block_sf (
     
     vbrmean = select_kth_int (a, SBPSY_l, SBMAX_l/2);
     vbrmin = 10000;
-    vbrdist = 0;
-    for (sfb = 0; sfb < SBPSY_l; sfb++) {
+    for (sfb = 0; sfb < SBMAX_l; sfb++) {
         if (vbrmin > vbrsf->l[sfb])
             vbrmin = vbrsf->l[sfb];
-        if (vbrsf->l[sfb] > vbrmean) {
-            vbrdist = Max (vbrdist, vbrsf->l[sfb] - vbrmean);
-        }
     }
-    vbrsf->l[SBPSY_l] = Max (vbrmin-(vbrmean-vbrmin)/3, vbrsf->l[SBPSY_l]);
+    vbrsf->l[SBPSY_l] = Min (vbrmean, vbrsf->l[SBPSY_l]);
     }
     
     for (sfb = 0; sfb < SBMAX_l; sfb++) {
         if (sfb > 0) 
 	    if (vbrsf->l[sfb] > vbrsf->l[sfb-1]+MAX_SF_DELTA)
                 vbrsf->l[sfb] = vbrsf->l[sfb-1]+MAX_SF_DELTA;
-        if (sfb < SBMAX_l-1) 
+        if (sfb < SBMAX_l-2) 
 	    if (vbrsf->l[sfb] > vbrsf->l[sfb+1]+MAX_SF_DELTA)
                 vbrsf->l[sfb] = vbrsf->l[sfb+1]+MAX_SF_DELTA;
         if (vbrmax < vbrsf->l[sfb]) 
             vbrmax = vbrsf->l[sfb];
     }
         
-    return vbrmax+vbrdist;
+    return vbrmax+(vbrmean-vbrmin);
 }
 
 

@@ -897,7 +897,7 @@ int lame_init_params ( lame_global_flags* const gfp )
         InitVbrTag ( gfp );
 
     gfc->sfb21_extra = ( gfp->VBR == vbr_rh  ||  gfp->VBR == vbr_mtrh  ||  gfp->VBR == vbr_mt )
-                    && ( gfp->out_samplerate >= 32000 );
+                    && ( gfp->out_samplerate > 44000 );
 
     if (gfp->version == 1) /* 0 indicates use lower sample freqs algorithm */
       gfc->is_mpeg1=1; /* yes */
