@@ -572,10 +572,7 @@ msfix_l(
 }
 
 static void
-msfix_s(
-    lame_internal_flags *gfc,
-    int gr
-    )
+msfix_s(lame_internal_flags *gfc, int gr)
 {
     int sb, sblock;
     III_psy_ratio *mr = &gfc->masking_next[gr][0];
@@ -610,7 +607,7 @@ msfix_s(
 
 	    x = gfc->mld_s[sb] * mr[2].en.s[sb][sblock];
 	    thmS = Max(mr[3].thm.s[sb][sblock],
-			Min(mr[2].thm.s[sb][sblock], x));
+		       Min(mr[2].thm.s[sb][sblock], x));
 
 	    mr[2].thm.s[sb][sblock] = thmM;
 	    mr[3].thm.s[sb][sblock] = thmS;
@@ -692,9 +689,8 @@ compute_masking_s(
     )
 {
     int j, b, sb;
-    FLOAT eb[CBANDS];
-    FLOAT ecb, enn, thmm;
-    
+    FLOAT eb[CBANDS], ecb, enn, thmm;
+
     ecb = fft_s[0] * fft_s[0] * 2.0f;
     j = 1;
     for (b = 0; b < gfc->npart_s; b++) {
@@ -1220,14 +1216,15 @@ mp3x display               <------LONG------>
 
 	    compute_masking_s(gfc, wsamp_S[chn&1][sblock],
 			      &gfc->masking_next[gr][chn], sblock);
-
+#if 0
 	    if (sblock == first_attack_position[chn]
 		|| sblock == first_attack_position[chn]+1) {
 		int sb;
 		for (sb = 0; sb < SBMAX_s; sb++) 
 		    gfc->masking_next[gr][chn].thm.s[sb][sblock]
-			*= Max(0.1, attack_adjust[chn]);
+			*= Max(0.01, attack_adjust[chn]);
 	    }
+#endif
 	}
     } /* end loop over chn */
 
@@ -1369,7 +1366,7 @@ L3psycho_anal_ns(
 	    }
 	    eb2[0] = a;
 
-	    for (b = 1; b < 12*3; b++) {
+	    for (b = 1; b < 12*2; b++) {
 		a = avg[b-1] + avg[b] + avg[b+1];
 		if (a != 0.0) {
 		    m = max[b-1];
