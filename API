@@ -24,17 +24,14 @@ encoded.
 
 Then override various default settings as necessary, for example:
 
-   gfp->num_channels=2;
-   gfp->in_samplerate = 44100;
-   gfp->brate = 128;
-   gfp->mode = 0,1 or 3      /* stereo, jstereo, mono */
-   gfp->quality = 2,5 or 9       /* 2=high, 5=medium 9=low */
+   lame_set_num_channels(gfp,2);
+   lame_set_in_samplerate(gfp,44100);
+   lame_set_brate(gfp,128);
+   lame_set_mode(gfp,1);
+   lame_set_quality(gfp,2);   /* 2=high  5 = medium  7=low */ 
+		
 
-see lame.h for the complete list of options. In the future,
-these calls will be replaced with a bunch of
-lame_set_variable()'s 
-
-
+see lame.h for the complete list of options. 
 
 
 
