@@ -814,7 +814,7 @@ parse_wave_header(lame_t gfp, FILE * sf)
     long    data_length = 0, file_length, subSize = 0;
     int     loop_sanity = 0;
 
-    file_length = Read32BitsHighLow(sf);
+    file_length = Read32BitsLowHigh(sf);
 
     if (Read32BitsHighLow(sf) != WAV_ID_WAVE)
 	return 0;
