@@ -1263,6 +1263,7 @@ find_scalefac(lame_t gfc, int j, FLOAT xmin, int bw, FLOAT maxXR,
 	else
 #endif
 	    xfsf = calc_sfb_noise_fast(gfc, j, bw, sf);
+
 	if (xfsf > xmin) {
 	    /* there's noticible noise. try a smaller scalefactor */
 	    endflag |= 1;
@@ -1407,27 +1408,6 @@ long_block_scalefacs(lame_t gfc, gr_info * gi, int vbrmax)
     gi->global_gain = vbrmax;
 }
 
-static void
-set_scalefactor_values(gr_info *gi)
-{
-    int ifqstep = 1 + 2*gi->scalefac_scale, sfb = 0;
-    do {
-	int s = gi->scalefac[sfb];
-	if (s == SCALEFAC_ANYTHING_GOES)
-	    continue;
-
-	s = (gi->global_gain - s
-	     - gi->subblock_gain[gi->wi[sfb].window]*8 + ifqstep)
-		 >> (1 + gi->scalefac_scale);
-	if (gi->preflag > 0)
-	    s -= pretab[sfb];
-	if (s < 0)
-	    s = 0;
-	gi->scalefac[sfb] = s;
-    } while (++sfb < gi->psymax);
-}
-
-
 static int
 noisesfb(lame_t gfc, gr_info *gi, FLOAT * xmin, int startsfb)
 {
@@ -1452,23 +1432,38 @@ VBR_2nd_bitalloc(lame_t gfc, gr_info *gi, FLOAT * xmin)
     /* note: we cannot use calc_noise() because l3_enc[] is not calculated
        at this point */
     gr_info gi_w;
-    int sfb, endflag, j = 0;
+    int endflag, j;
     const char *tab;
-    for (sfb = 0; sfb < gi->psymax; sfb++) {
+    int gainbase = gi->global_gain + 1 + 2*gi->scalefac_scale, sfb;
+
+    j = sfb = 0;
+    do {
+	int s = gi->scalefac[sfb];
 	int width = gi->wi[sfb].width;
 	j -= width;
-	if (gi->scalefac[sfb] > MAX_GLOBAL_GAIN) {
+	if (s > MAX_GLOBAL_GAIN) {
 	    memset(&xr34[j + width], 0, -sizeof(float)*width);
-	    gi->scalefac[sfb] = SCALEFAC_ANYTHING_GOES;
+	    memset(&gi->l3_enc[j + width], 0, -sizeof(int)*width);
+	    //XXX: This should be SCALEFAC_ANYTHING_GOES, not 0
+	    gi->scalefac[sfb] = 0;
 	    continue;
 	}
+
+	s = (gainbase - s - gi->subblock_gain[gi->wi[sfb].window]*8)
+	    >> (1 + gi->scalefac_scale);
+	if (gi->preflag > 0)
+	    s -= pretab[sfb];
+	if (s < 0)
+	    s = 0;
+	gi->scalefac[sfb] = s;
 
 	while (IPOW20(scalefactor(gi, sfb)) > gfc->maxXR[sfb]) {
 	    if (gi->scalefac[sfb] == 0)
 		return -2;
 	    gi->scalefac[sfb]--;
 	}
-    }
+    } while (++sfb < gi->psymax);
+
     gi_w = *gi;
     endflag = sfb = 0;
     tab = max_range_long;
@@ -1588,9 +1583,8 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
 	short_block_scalefacs(gi, vbrmax);
     else
 	long_block_scalefacs(gfc, gi, vbrmax);
-    set_scalefactor_values(gi);
 
-    /* ensure there's no noise */
+    /* set scalefac[] as they satisfy the noise threshold */
     if (VBR_2nd_bitalloc(gfc, gi, xmin))
 	return -2;
 
@@ -1604,7 +1598,6 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
 
     /* encode scalefacs */
     gfc->scale_bitcounter(gi);
-    assert(gi->part2_length < LARGE_BITS);
 
     if (gi->part2_3_length + gi->part2_length > MAX_BITS
 	|| (gi->block_type == SHORT_TYPE && (gfc->substep_shaping & 2))
@@ -1614,6 +1607,7 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
 	    return -2;
     }
 
+    assert(gi->part2_length < LARGE_BITS);
     assert((unsigned int)gi->global_gain <= (unsigned int)MAX_GLOBAL_GAIN);
 
     return 0;
