@@ -1358,6 +1358,8 @@ int psymodel_init(lame_global_flags *gfp)
 	    norm[i] *= 2;
 	gfc->rnumlines_ls[i] = 20.0/(l-1);
 	gfc->rnumlines_l[i] = 1.0 / (gfc->numlines_l[i] * 3);
+	if (gfp->ATHonly)
+	    norm[i] = 1e-37;
     }
     i = init_s3_values(gfc, &gfc->s3_ll, gfc->s3ind,
 		       gfc->npart_l, bval, bval_width, norm);
@@ -1405,6 +1407,8 @@ int psymodel_init(lame_global_flags *gfp)
 	gfc->endlines_s[i] = numlines_s[i];
 	if (i != 0)
 	    gfc->endlines_s[i] += gfc->endlines_s[i-1];
+	if (gfp->ATHonly)
+	    norm[i] = 1e-37;
     }
     for (i = 0; i < SBMAX_s; i++)
 	gfc->ATH.s_avg[i] = gfc->ATH.cb[bm[i]] * BLKSIZE_s / BLKSIZE;

@@ -149,18 +149,6 @@ calc_xmin(
     lame_internal_flags *gfc = gfp->internal_flags;
     int sfb, gsfb, j=0;
 
-    if (gfp->ATHonly) {
-	for (gsfb = 0; gsfb < gi->psy_lmax; gsfb++)
-	    pxmin[gsfb]
-		= athAdjust(gfc->ATH.adjust, gfc->ATH.l[gsfb], gfc->ATH.floor);
-
-	for (sfb = gi->sfb_smin; gsfb < gi->psymax; sfb++, gsfb += 3)
-	    pxmin[gsfb] = pxmin[gsfb+1] = pxmin[gsfb+2]
-		= athAdjust(gfc->ATH.adjust, gfc->ATH.s[sfb], gfc->ATH.floor);
-
-	return;
-    }
-
     for (gsfb = 0; gsfb < gi->psy_lmax; gsfb++) {
 	FLOAT en0, xmin, x;
 	int width, l;
