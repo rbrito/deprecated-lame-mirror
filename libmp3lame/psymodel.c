@@ -339,19 +339,21 @@ calc_interchannel_masking(
     lame_internal_flags *gfc=gfp->internal_flags;
     int sb, sblock;
     FLOAT8 l, r;
-    for ( sb = 0; sb < SBMAX_l; sb++ ) {
-	l = gfc->thm[0].l[sb];
-	r = gfc->thm[1].l[sb];
-	gfc->thm[0].l[sb] += r*ratio;
-	gfc->thm[1].l[sb] += l*ratio;
-    }
-    for ( sb = 0; sb < SBMAX_s; sb++ ) {
-	for ( sblock = 0; sblock < 3; sblock++ ) {
-	    l = gfc->thm[0].s[sb][sblock];
-	    r = gfc->thm[1].s[sb][sblock];
-	    gfc->thm[0].s[sb][sblock] += r*ratio;
-	    gfc->thm[1].s[sb][sblock] += l*ratio;
-	}
+    if (gfc->channels_out > 1){
+        for ( sb = 0; sb < SBMAX_l; sb++ ) {
+	        l = gfc->thm[0].l[sb];
+	        r = gfc->thm[1].l[sb];
+	        gfc->thm[0].l[sb] += r*ratio;
+	        gfc->thm[1].l[sb] += l*ratio;
+        }
+        for ( sb = 0; sb < SBMAX_s; sb++ ) {
+	        for ( sblock = 0; sblock < 3; sblock++ ) {
+	            l = gfc->thm[0].s[sb][sblock];
+	            r = gfc->thm[1].s[sb][sblock];
+	            gfc->thm[0].s[sb][sblock] += r*ratio;
+	            gfc->thm[1].s[sb][sblock] += l*ratio;
+	        }
+        }
     }
 }
 
