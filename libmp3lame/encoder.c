@@ -211,27 +211,24 @@ init_gr_info(
 	      Within each window, the quantized values are then arranged in
 	      order of increasing frequency...
 	    */
-	    ix = &cod_info->xr[gfc->scalefac_band.l[cod_info->sfb_lmax]];
-	    memcpy(ixwork, cod_info->xr, 576*sizeof(FLOAT));
+	    j = cod_info->sfb_lmax;
+	    ix = &cod_info->xr[gfc->scalefac_band.l[j]];
+	    memcpy(ixwork, cod_info->xr, sizeof(ixwork));
 	    for (sfb = cod_info->sfb_smin; sfb < SBMAX_s; sfb++) {
 		int start = gfc->scalefac_band.s[sfb];
 		int end   = gfc->scalefac_band.s[sfb + 1];
 		int window, l;
+		cod_info->width[j] = cod_info->width[j+1] = cod_info->width[j + 2]
+		    = end - start;
+		cod_info->window[j  ] = 0;
+		cod_info->window[j+1] = 1;
+		cod_info->window[j+2] = 2;
+		j += 3;
 		for (window = 0; window < 3; window++) {
 		    for (l = start; l < end; l++) {
 			*ix++ = ixwork[3*l+window];
 		    }
 		}
-	    }
-
-	    j = cod_info->sfb_lmax;
-	    for (sfb = cod_info->sfb_smin; sfb < SBMAX_s; sfb++) {
-		cod_info->width[j] = cod_info->width[j+1] = cod_info->width[j + 2]
-		    = gfc->scalefac_band.s[sfb+1] - gfc->scalefac_band.s[sfb];
-		cod_info->window[j  ] = 0;
-		cod_info->window[j+1] = 1;
-		cod_info->window[j+2] = 2;
-		j += 3;
 	    }
 	}
     }
