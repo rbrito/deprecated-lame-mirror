@@ -219,7 +219,7 @@ int lame_init_params(lame_global_flags *gfp)
      9                14.7             96kbs
      for lower bitrates, downsample with --resample
   */
-  if (gfp->VBR==1) {
+  if (gfp->VBR==1 || gfp->VBR==2) {
     gfp->compression_ratio = 5.0 + gfp->VBR_q;
   }else
   if (gfp->VBR==3) {

@@ -624,7 +624,8 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	    err = 1;
 	  }
 	  break;
-	case 'V':        argUsed = 1;   gfp->VBR = 1;  
+	case 'V':        argUsed = 1;
+	  gfp->VBR = gfp->VBR == 0 ? 1 : gfp->VBR;  
 	  gfp->VBR_q = atoi(arg);
 	  if (gfp->VBR_q <0) gfp->VBR_q=0;
 	  if (gfp->VBR_q >9) gfp->VBR_q=9;
