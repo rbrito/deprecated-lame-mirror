@@ -1959,7 +1959,7 @@ int psymodel_init(lame_global_flags *gfp)
 	FLOAT8 msfix;
 
 #define NS_MSFIX 3.5
-#define NSATTACKTHRE 15
+#define NSATTACKTHRE 4.5
 #define NSATTACKTHRE_S 30
 
 	msfix = NS_MSFIX;
