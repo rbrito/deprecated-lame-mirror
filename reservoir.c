@@ -101,9 +101,9 @@ ResvAdjust(lame_global_flags *gfp,gr_info *gi, III_side_info_t *l3_side, int mea
   lame_internal_flags *gfc=gfp->internal_flags;
   gfc->ResvSize += (mean_bits / gfc->stereo) - gi->part2_3_length;
 #if 0
-  printf("part2_3_length:  %i  avg=%i  incres: %i\n",gi->part2_3_length,
+  printf("part2_3_length:  %i  avg=%i  incres: %i  resvsize=%i\n",gi->part2_3_length,
 	 mean_bits/gfc->stereo,
-mean_bits/gfc->stereo-gi->part2_3_length);
+mean_bits/gfc->stereo-gi->part2_3_length,gfc->ResvSize);
 #endif
 }
 
