@@ -119,9 +119,9 @@ S.D. Stearns and R.A. David, Prentice-Hall, 1992
 /* gcd - greatest common divisor */
 /* Joint work of Euclid and M. Hendry */
 
-int gcd ( int i, int j )
+static int
+gcd(int i, int j)
 {
-/*    assert ( i > 0  &&  j > 0 ); */
     return j ? gcd(j, i % j) : i;
 }
 
