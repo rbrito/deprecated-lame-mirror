@@ -291,10 +291,10 @@ get_audio_common(lame_t gfp, int buffer[2][1152], short buffer16[2][1152])
 	    for (i = samples_read; --i >= 0; )
 		buffer[0][i] = buf_tmp16[0][i] << (8 * sizeof(int) - 16);
 	    if (num_channels == 2) {
-		for( i = samples_read; --i >= 0; )
+		for (i = 0; i < samples_read; i++)
 		    buffer[1][i] = buf_tmp16[1][i] << (8 * sizeof(int) - 16);
 	    } else if( num_channels == 1 ) {
-		memset( buffer[1], 0, samples_read * sizeof(int) );
+		memset(buffer[1], 0, samples_read * sizeof(int));
 	    } else
 		assert(0);
 	} else {
@@ -309,8 +309,8 @@ get_audio_common(lame_t gfp, int buffer[2][1152], short buffer16[2][1152])
 	if (buffer) {	/* output to int buffer */
 	    if (num_channels == 2) {
 		for (i = 0; i < samples_read; i++) {
-		    buffer[1][i+samples_read] = insamp[i*2  ];
-		    buffer[0][i+samples_read] = insamp[i*2+1];
+		    buffer[0][i] = insamp[i*2  ];
+		    buffer[1][i] = insamp[i*2+1];
 		}
 	    } else if (num_channels == 1) {
 		memcpy(buffer[0], insamp, samples_read * sizeof(int));
