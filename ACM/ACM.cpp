@@ -1212,6 +1212,7 @@ inline DWORD ACM::OnStreamConvert(LPACMDRVSTREAMINSTANCE a_StreamInstance, LPACM
 void ACM::GetMP3FormatForIndex(const DWORD the_Index, WAVEFORMATEX & the_Format, WCHAR the_String[ACMFORMATDETAILS_FORMAT_CHARS]) const
 {
 	int Block_size;
+	char temp[ACMFORMATDETAILS_FORMAT_CHARS];
 
 	if (the_Index < bitrate_table.size())
 	{
@@ -1243,9 +1244,11 @@ void ACM::GetMP3FormatForIndex(const DWORD the_Index, WAVEFORMATEX & the_Format,
 	
 		/// \todo : generate the string with the appropriate stereo mode
 		if (bitrate_table[the_Index].mode == vbr_abr)
-			wsprintfW( the_String, L"%d Hz, %d kbps ABR, %s", the_Format.nSamplesPerSec, the_Format.nAvgBytesPerSec * 8 / 1000, (the_Format.nChannels == 1)?L"Mono":L"Stereo");
+			wsprintfA( temp, "%d Hz, %d kbps ABR, %s", the_Format.nSamplesPerSec, the_Format.nAvgBytesPerSec * 8 / 1000, (the_Format.nChannels == 1)?"Mono":"Stereo");
 		else
-			wsprintfW( the_String, L"%d Hz, %d kbps CBR, %s", the_Format.nSamplesPerSec, the_Format.nAvgBytesPerSec * 8 / 1000, (the_Format.nChannels == 1)?L"Mono":L"Stereo");
+			wsprintfA( temp, "%d Hz, %d kbps CBR, %s", the_Format.nSamplesPerSec, the_Format.nAvgBytesPerSec * 8 / 1000, (the_Format.nChannels == 1)?"Mono":"Stereo");
+
+		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, temp, -1, the_String, ACMFORMATDETAILS_FORMAT_CHARS);
 	}
 }
 
