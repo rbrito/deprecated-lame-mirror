@@ -1791,7 +1791,7 @@ int psymodel_init(lame_global_flags *gfp)
     FLOAT8 sfreq = gfp->out_samplerate;
 
     gfc->ms_ener_ratio_old=.25;
-    gfc->blocktype_old[0] = gfc->blocktype_old[1] = SHORT_TYPE;
+    gfc->blocktype_old[0] = gfc->blocktype_old[1] = NORM_TYPE; /* the vbr header is long blocks*/
 
     for (i=0; i<4; ++i) {
 	for (j=0; j<CBANDS; ++j) {
