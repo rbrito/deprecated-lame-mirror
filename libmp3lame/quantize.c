@@ -1238,7 +1238,6 @@ VBR_prepare (
     )
 {
     lame_internal_flags *gfc=gfp->internal_flags;
-    FLOAT  masking_lower_db;
     int     gr, ch;
     int     analog_silence = 1;
     int     avg, mxb, bits = 0;
@@ -1255,11 +1254,7 @@ VBR_prepare (
 
         for (ch = 0; ch < gfc->channels_out; ++ch) {
             gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
-      
-            masking_lower_db   = gfc->VBR.mask_adjust;
-            gfc->masking_lower = db2pow(masking_lower_db);
-      
-	    if (calc_xmin (gfp, &ratio[gr][ch], cod_info, l3_xmin[gr][ch]))
+      	    if (calc_xmin (gfp, &ratio[gr][ch], cod_info, l3_xmin[gr][ch]))
                 analog_silence = 0;
 
             min_bits[gr][ch] = 126;

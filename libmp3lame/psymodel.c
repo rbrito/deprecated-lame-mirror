@@ -653,10 +653,11 @@ compute_masking_s(
 
 	enn  -= eb[b] * 0.5;
 	thmm -= ecb * 0.5;
+	thmm *= gfc->masking_lower;
 	if (thmm < gfc->ATH.s_avg[sb] * gfc->ATH.adjust)
 	    thmm = gfc->ATH.s_avg[sb] * gfc->ATH.adjust;
 	mr->en .s[sb][sblock] = enn;
-	mr->thm.s[sb][sblock] = thmm * gfc->masking_lower;
+	mr->thm.s[sb][sblock] = thmm;
 	enn  = eb[b] * 0.5;
 	thmm = ecb * 0.5;
 	sb++;
@@ -947,12 +948,11 @@ pecalc_l(
 
 
 
-static int
+static void
 psycho_analysis_short(
     lame_global_flags * gfp,
     const sample_t *buffer[2],
-    int gr,
-    int previous_is_short
+    int gr
     )
 {
     lame_internal_flags *gfc=gfp->internal_flags;
@@ -1084,10 +1084,12 @@ psycho_analysis_short(
 	}
     }
 
-    if (!previous_is_short && !current_is_short) {
-	for (chn=0; chn<numchn; chn++)
+    if (!current_is_short) {
+	for (chn=0; chn<numchn; chn++) {
+	    gfc->masking_next[gr][chn].en.s[0][0] = -1.0;
 	    gfc->nsPsy.last_attacks[chn] = ns_attacks[chn][2];
-	return current_is_short;
+	}
+	return;
     }
 
     if (gfp->VBR==vbr_off) pcfact = gfc->ResvMax == 0 ? 0 : ((FLOAT)gfc->ResvSize)/gfc->ResvMax*0.5;
@@ -1128,7 +1130,7 @@ psycho_analysis_short(
 
     if (gfc->useshort_next[gr][2] || gfc->useshort_next[gr][3])
 	gfc->useshort_next[gr][2] = gfc->useshort_next[gr][3] = SHORT_TYPE;
-    return current_is_short;
+    return;
 }
 
 static void
@@ -1337,7 +1339,7 @@ L3psycho_anal_ns(
 
 	    enn  -= .5*eb[b];
 	    thmm -= .5*tmp;
-	    thmm *= 0.158489319246111 * gfc->masking_lower; // pow(10,-0.8)
+	    thmm *= gfc->masking_lower;
 	    if (thmm < gfc->ATH.l_avg[j] * gfc->ATH.adjust)
 		thmm = gfc->ATH.l_avg[j] * gfc->ATH.adjust;
 	    gfc->masking_next[gr][chn].en .l[j] = enn;
@@ -1348,7 +1350,7 @@ L3psycho_anal_ns(
 	    j++;
 	}
 
-	thmm *= 0.158489319246111 * gfc->masking_lower; // pow(10,-0.8)
+	thmm *= gfc->masking_lower;
 	if (thmm < gfc->ATH.l_avg[SBMAX_l-1] * gfc->ATH.adjust)
 	    thmm = gfc->ATH.l_avg[SBMAX_l-1] * gfc->ATH.adjust;
 	gfc->masking_next[gr][chn].en .l[SBMAX_l-1] = enn;
@@ -1373,7 +1375,7 @@ L3psycho_anal_ns(
 
 	    enn  -= .5*eb[b];
 	    thmm -= .5*tmp;
-	    thmm *= 0.158489319246111 * gfc->masking_lower; // pow(10,-0.8)
+	    thmm *= gfc->masking_lower;
 	    if (thmm < gfc->ATH.s_avg[j] * gfc->ATH.adjust)
 		thmm = gfc->ATH.s_avg[j] * gfc->ATH.adjust;
 	    gfc->masking_next[gr][chn].en .s[j][0]
@@ -1390,7 +1392,7 @@ L3psycho_anal_ns(
 	    j++;
 	}
 
-	thmm *= 0.158489319246111 * gfc->masking_lower; // pow(10,-0.8)
+	thmm *= gfc->masking_lower;
 	if (thmm < gfc->ATH.s_avg[SBMAX_s-1] * gfc->ATH.adjust)
 	    thmm = gfc->ATH.s_avg[SBMAX_s-1] * gfc->ATH.adjust;
 	gfc->masking_next[gr][chn].en .s[SBMAX_s-1][0]
@@ -1570,7 +1572,7 @@ psycho_analysis(
     III_psy_ratio masking_d[2][2]
     )
 {
-    int gr, ch, need_short;
+    int gr, ch;
     int blocktype_old[MAX_CHANNELS*2];
     lame_internal_flags *gfc=gfp->internal_flags;
 
@@ -1584,7 +1586,6 @@ psycho_analysis(
     /* next frame data -> current frame data (aging) */
     adjust_ATH(gfp);
     gfc->mode_ext = gfc->mode_ext_next;
-    need_short = 0;
     if (gfc->mode_ext & MPG_MD_MS_LR) {
 	for (gr=0; gr < gfc->mode_gr ; gr++) {
 	    FLOAT e0 = gfc->tot_ener_next[gr][2] + gfc->tot_ener_next[gr][3];
@@ -1592,12 +1593,11 @@ psycho_analysis(
 		e0 = gfc->tot_ener_next[gr][3] / e0;
 	    ms_ener_ratio_d[gr] = e0;
 
-	    for (ch = 0; ch < gfc->channels_out; ch++) {
+	    for (ch = 0; ch < 2; ch++) {
 		masking_d[gr][ch] = gfc->masking_next[gr][ch + 2];
 		gfc->l3_side.tt[gr][ch].block_type = NORM_TYPE;
 		if (gfc->useshort_next[gr][ch]) {
 		    gfc->l3_side.tt[gr][ch].block_type = SHORT_TYPE;
-		    need_short |= 2 - gfc->mode_gr + gr;
 		}
 	    }
 	}
@@ -1608,7 +1608,6 @@ psycho_analysis(
 		gfc->l3_side.tt[gr][ch].block_type = NORM_TYPE;
 		if (gfc->useshort_next[gr][ch]) {
 		    gfc->l3_side.tt[gr][ch].block_type = SHORT_TYPE;
-		    need_short |= 2 - gfc->mode_gr + gr;
 		}
 	    }
 	}
@@ -1620,7 +1619,7 @@ psycho_analysis(
 	for (ch = 0; ch < gfc->channels_out; ch++)
 	    bufp[ch] = &buffer[ch][576*(gr + gfc->mode_gr) - FFTOFFSET];
 
-	need_short = psycho_analysis_short(gfp, bufp, gr, need_short);
+	psycho_analysis_short(gfp, bufp, gr);
 	if (gr == 0) {
 	    L3psycho_anal_ns(gfp, bufp, blocktype_old, gr);
 	} else {

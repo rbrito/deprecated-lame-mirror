@@ -171,8 +171,6 @@ void set_frame_pinfo(
     int                   ch;
     int                   gr;
 
-    gfc->masking_lower = 1.0;
-
     /* for every granule and channel patch l3_enc and set info
      */
     for (gr = 0; gr < gfc->mode_gr; gr ++) {

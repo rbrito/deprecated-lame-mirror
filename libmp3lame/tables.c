@@ -1253,7 +1253,7 @@ int psymodel_init(lame_global_flags *gfp)
 	    snr = -4.5 * (bval[i]-13)/(24.0-13.0)
 		-8.25*(bval[i]-24)/(13.0-24.0);
 
-	norm[i] = db2pow(snr) * NS_PREECHO_ATT0 * 0.8;
+	norm[i] = db2pow(snr) * NS_PREECHO_ATT0 * 0.8 * 6.31; // pow(10,0.8)
 	gfc->endlines_s[i] = numlines_s[i];
 	if (i != 0)
 	    gfc->endlines_s[i] += gfc->endlines_s[i-1];
@@ -1307,6 +1307,8 @@ int psymodel_init(lame_global_flags *gfp)
 	gfc->presetTune.ms_maskadjust *= 2.0;
     }
 
+    gfc->masking_lower = db2pow(gfc->VBR.mask_adjust)/0.158489319246111;// pow(10, -0.8)
+      
     if (!gfc->presetTune.use) {
 	gfc->quantcomp_type_s = gfp->experimentalX;
 	gfc->presetTune.ms_maskadjust = gfp->msfix;
