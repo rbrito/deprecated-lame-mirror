@@ -319,16 +319,16 @@ int  lame_encode_mp3_frame (				// Output
      */
     switch (gfp->padding_type) {
     case PAD_ALL:
+	gfc->slot_lag = gfp->out_samplerate;
 	gfc->frac_SpF = gfp->out_samplerate+1;
 	break;
     case PAD_NO:
-	gfc->frac_SpF = 0;
+	gfc->slot_lag = gfc->frac_SpF = 0;
 	break;
     default:
-	gfc->frac_SpF
+	gfc->slot_lag = gfc->frac_SpF
 	    = ((gfp->version+1)*72000L*gfp->brate) % gfp->out_samplerate;
     }
-    gfc->slot_lag = gfc->frac_SpF;
 
     /* check FFT will not use a negative starting offset */
 #if 576 < FFTOFFSET
@@ -382,7 +382,7 @@ int  lame_encode_mp3_frame (				// Output
    * Robert.Hegemann@gmx.de 2000-06-22
    */
   gfc->padding = FALSE;
-  if ((gfc->slot_lag -= gfc->frac_SpF) <= 0) {
+  if ((gfc->slot_lag -= gfc->frac_SpF) < 0) {
       gfc->slot_lag += gfp->out_samplerate;
       gfc->padding = TRUE;
   }
