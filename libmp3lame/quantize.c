@@ -817,10 +817,10 @@ calc_sfb_noise(const FLOAT * xr, const FLOAT * xr34, int bw, int sf)
     bw >>= 1;
     do {
 	fi_union fi0, fi1;
-	FLOAT t0, t1;
 #ifdef TAKEHIRO_IEEE754_HACK
-	fi0.f = (t0 = sfpow34 * xr34[0] + (ROUNDFAC + MAGIC_FLOAT));
-	fi1.f = (t1 = sfpow34 * xr34[1] + (ROUNDFAC + MAGIC_FLOAT));
+	double t0, t1;
+	fi0.f = (t0 = sfpow34 * xr34[0] + MAGIC_FLOAT);
+	fi1.f = (t1 = sfpow34 * xr34[1] + MAGIC_FLOAT);
 	if (fi0.i > MAGIC_INT + IXMAX_VAL) return -1.0;
 	if (fi1.i > MAGIC_INT + IXMAX_VAL) return -1.0;
 	fi0.f = t0 + (adj43asm - MAGIC_INT)[fi0.i];
@@ -828,6 +828,7 @@ calc_sfb_noise(const FLOAT * xr, const FLOAT * xr34, int bw, int sf)
 	t0 = fabs(xr[0]) - (pow43 - MAGIC_INT)[fi0.i] * sfpow;
 	t1 = fabs(xr[1]) - (pow43 - MAGIC_INT)[fi1.i] * sfpow;
 #else
+	FLOAT t0, t1;
 	fi0.i = (int) (t0 = sfpow34 * xr34[0]);
         fi1.i = (int) (t1 = sfpow34 * xr34[1]);
 	if (fi0.i > IXMAX_VAL) return -1.0;
