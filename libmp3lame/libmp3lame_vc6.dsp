@@ -149,10 +149,6 @@ SOURCE=.\quantize.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\quantize_pvt.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\set_get.c
 # End Source File
 # Begin Source File
