@@ -406,6 +406,10 @@ encodeBitStream(lame_global_flags *gfp)
 	for (gr = 0; gr < 2; gr++) {
 	    for (ch = 0; ch < gfc->channels_out; ch++) {
 		gr_info *gi = &l3_side->tt[gr][ch];
+#ifndef NDEBUG
+		int data_bits = gfc->bs.bitidx + gi->part2_length;
+#endif
+		int slen, sfb;
 		ptr = writeheader(p, gi->part2_3_length+gi->part2_length,
 				  12, ptr);
 		ptr = writeheader(p, gi->big_values / 2,        9, ptr);
@@ -415,14 +419,38 @@ encodeBitStream(lame_global_flags *gfp)
 		ptr = writeheader(p,
 				  (gi->preflag > 0)*4 + gi->scalefac_scale*2
 				  + gi->count1table_select, 3, ptr);
-	    }
-	}
+
+		slen = s1bits[gi->scalefac_compress];
+		if (slen)
+		    for (sfb = 0; sfb < gi->sfbdivide; sfb++) {
+			if (gi->scalefac[sfb] == -1)
+			    continue; /* scfsi is used */
+			if (gi->scalefac[sfb] == -2)
+			    gi->scalefac[sfb] = 0;
+			putbits24(&gfc->bs, gi->scalefac[sfb], slen);
+		    }
+		slen = s2bits[gi->scalefac_compress];
+		if (slen)
+		    for (sfb = gi->sfbdivide; sfb < gi->sfbmax; sfb++) {
+			if (gi->scalefac[sfb] == -1)
+			    continue; /* scfsi is used */
+			if (gi->scalefac[sfb] == -2)
+			    gi->scalefac[sfb] = 0;
+			putbits24(&gfc->bs, gi->scalefac[sfb], slen);
+		    }
+		assert(data_bits == gfc->bs.bitidx);
+		Huffmancodebits(gfc, gi);
+	    } /* for ch */
+	} /* for gr */
     } else {
 	/* MPEG2 */
 	ptr += gfc->channels_out; /* private_bits */
 	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    gr_info *gi = &l3_side->tt[0][ch];
-	    int part;
+	    int partition, sfb = 0, part;
+#ifndef NDEBUG
+	    int data_bits = gfc->bs.bitidx + gi->part2_length;
+#endif
 	    ptr = writeheader(p, gi->part2_3_length+gi->part2_length, 12,
 			      ptr);
 	    ptr = writeheader(p, gi->big_values / 2,        9, ptr);
@@ -476,60 +504,7 @@ encodeBitStream(lame_global_flags *gfp)
 	    ptr = writeTableHeader(gfc, gi, ptr);
 	    ptr = writeheader(p, gi->scalefac_scale,     1, ptr);
 	    ptr = writeheader(p, gi->count1table_select, 1, ptr);
-	}
-    }
-    assert(ptr == l3_side->sideinfo_len * 8);
 
-    if (gfp->error_protection) {
-	/* (jo) error_protection: add crc16 information to header */
-	CRC_writeheader(gfc, gfc->bs.header[gfc->bs.h_ptr].buf);
-    }
-
-    ptr = gfc->bs.h_ptr;
-    gfc->bs.h_ptr = (ptr + 1) & (MAX_HEADER_BUF-1);
-    assert(gfc->bs.h_ptr != gfc->bs.w_ptr);
-
-    gfc->bs.header[gfc->bs.h_ptr].write_timing
-	= gfc->bs.header[ptr].write_timing + getframebytes(gfp);
-
-    if (gfc->mode_gr == 2) {
-	/* MPEG 1 */
-	for (gr = 0; gr < 2; gr++) {
-	    for (ch = 0; ch < gfc->channels_out; ch++) {
-		gr_info *gi = &gfc->l3_side.tt[gr][ch];
-		int slen = s1bits[gi->scalefac_compress], sfb;
-#ifndef NDEBUG
-		int data_bits = gfc->bs.bitidx + gi->part2_length;
-#endif
-		if (slen)
-		    for (sfb = 0; sfb < gi->sfbdivide; sfb++) {
-			if (gi->scalefac[sfb] == -1)
-			    continue; /* scfsi is used */
-			if (gi->scalefac[sfb] == -2)
-			    gi->scalefac[sfb] = 0;
-			putbits24(&gfc->bs, gi->scalefac[sfb], slen);
-		    }
-		slen = s2bits[gi->scalefac_compress];
-		if (slen)
-		    for (sfb = gi->sfbdivide; sfb < gi->sfbmax; sfb++) {
-			if (gi->scalefac[sfb] == -1)
-			    continue; /* scfsi is used */
-			if (gi->scalefac[sfb] == -2)
-			    gi->scalefac[sfb] = 0;
-			putbits24(&gfc->bs, gi->scalefac[sfb], slen);
-		    }
-		assert(data_bits == gfc->bs.bitidx);
-		Huffmancodebits(gfc, gi);
-	    } /* for ch */
-	} /* for gr */
-    } else {
-	/* MPEG 2 */
-	for (ch = 0; ch < gfc->channels_out; ch++) {
-	    gr_info *gi = &gfc->l3_side.tt[0][ch];
-	    int partition, sfb = 0;
-#ifndef NDEBUG
-	    int data_bits = gfc->bs.bitidx + gi->part2_length;
-#endif
 	    for (partition = 0; partition < 4; partition++) {
 		int sfbend
 		    = sfb + nr_of_sfb_block[gi->scalefac_compress][partition];
@@ -543,7 +518,20 @@ encodeBitStream(lame_global_flags *gfp)
 	    Huffmancodebits(gfc, gi);
 	} /* for ch */
     } /* for MPEG version */
-} /* main_data */
+    assert(ptr == l3_side->sideinfo_len * 8);
+
+    if (gfp->error_protection) {
+	/* (jo) error_protection: add crc16 information to header */
+	CRC_writeheader(gfc, gfc->bs.header[gfc->bs.h_ptr].buf);
+    }
+
+    ptr = gfc->bs.h_ptr;
+    gfc->bs.h_ptr = (ptr + 1) & (MAX_HEADER_BUF-1);
+    assert(gfc->bs.h_ptr != gfc->bs.w_ptr);
+
+    gfc->bs.header[gfc->bs.h_ptr].write_timing
+	= gfc->bs.header[ptr].write_timing + getframebytes(gfp);
+}
 
 
 
