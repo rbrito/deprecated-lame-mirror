@@ -278,8 +278,7 @@ int fill_buffer_resample(lame_global_flags *gfp,sample_t *outbuf,int desired_len
   int filter_l;
   FLOAT8 fcn,intratio;
   short int *inbuf_old;
-  int bpc = BPC;  /* number of convolution functions to pre-compute */
-
+  int bpc;   /* number of convolution functions to pre-compute */
   bpc = gfp->out_samplerate/gcd(gfp->out_samplerate,gfp->in_samplerate);
   if (bpc>BPC) bpc = BPC;
 
@@ -301,10 +300,12 @@ int fill_buffer_resample(lame_global_flags *gfp,sample_t *outbuf,int desired_len
     memset((char *) gfc->inbuf_old, 0, sizeof(short int)*2*BLACKSIZE);
     /* precompute blackman filter coefficients */
     for (j= 0; j<= 2*bpc; ++j) {
+      FLOAT8 sum=0;
       offset=(double)(j-bpc)/(double)(2*bpc);
       for (i=0; i<=filter_l; ++i) {
-	gfc->blackfilt[j][i]=blackman(i,offset,fcn,filter_l);
+	sum+= gfc->blackfilt[j][i]=blackman(i,offset,fcn,filter_l);
       }
+      gfc->blackfilt[j][i] /= sum;
     }
 
   }
@@ -335,10 +336,7 @@ int fill_buffer_resample(lame_global_flags *gfp,sample_t *outbuf,int desired_len
 #ifdef PRECOMPUTE
       xvalue += y*gfc->blackfilt[joff][i];
 #else
-      if (intratio) 
-	xvalue += y*gfc->blackfilt[joff][i];
-      else
-	xvalue += y*blackman(i,offset,fcn,filter_l);  /* very slow! */
+      xvalue += y*blackman(i,offset,fcn,filter_l);  /* very slow! */
 #endif
     }
 #if 1
