@@ -13,6 +13,9 @@
 #
 # if you have mingw32-gcc, try:
 #   make -fMakefile.unix UNAME=MSDOS
+# or if you get the error
+# "process_begin: CreateProcess((null), copy configMS.h config.h, ...)":
+#   make -fMakefile.unix UNAME=MSDOS NOUNIXCMD=NO
 # or if you have NASM:
 #   make -fMakefile.unix UNAME=MSDOS HAVE_NASM=YES
 #
