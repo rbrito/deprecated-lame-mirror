@@ -291,13 +291,13 @@ int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip)
       } else {
         if (gfp->disable_waveheader) {
           if (gfp->swapbytes) {
-            WriteBytesSwapped(outf,Buffer[0][i],sizeof(short));
+            WriteBytesSwapped(outf,(char *)&Buffer[0][i],sizeof(short));
             if (gfp->num_channels==2)
-              WriteBytesSwapped(outf,Buffer[1][i],sizeof(short));
+              WriteBytesSwapped(outf,(char *)&Buffer[1][i],sizeof(short));
           } else {
-            WriteBytes(outf,Buffer[0][i],sizeof(short));
+            WriteBytes(outf,(char *)&Buffer[0][i],sizeof(short));
             if (gfp->num_channels==2)
-              WriteBytes(outf,Buffer[1][i],sizeof(short));
+              WriteBytes(outf,(char *)&Buffer[1][i],sizeof(short));
           }
         } else {
           Write16BitsLowHigh(outf,Buffer[0][i]);
