@@ -874,6 +874,11 @@ int    lame_encode_buffer (
   fn_buffer [0] = in_buffer [0] = calloc ( sizeof(sample_t), nsamples );
   fn_buffer [1] = in_buffer [1] = calloc ( sizeof(sample_t), nsamples );
   
+  if (in_buffer[0] == NULL || in_buffer[1] == NULL) {
+    ERRORF ("Error: can't allocate in_buffer buffer\n");
+    return -2;
+  }
+  
   for (i = 0; i < nsamples; i++) {
   
       in_buffer [0] [i] = buffer_l [i];
@@ -1391,8 +1396,22 @@ int lame_init_old(lame_global_flags *gfp)
  *
  ***********************************************************************/
 
-/*  histogram of used bitrate indexes
- *  one has to weight them to calculate the average bitrate in kbps
+/*  histogram of used bitrate indexes:
+ *  One has to weight them to calculate the average bitrate in kbps
+ *
+ *  bitrate indices:
+ *  there are 14 possible bitrate indices, 0 has the special meaning 
+ *  "free format" which is not possible to mix with VBR and 15 is forbidden
+ *  anyway.
+ *
+ *  stereo modes:
+ *  0: LR   number of left-right encoded frames
+ *  1: LR-I number of left-right and intensity encoded frames
+ *  2: MS   number of mid-side encoded frames
+ *  3: MS-I number of mid-side and intensity encoded frames
+ *
+ *  4: number of encoded frames
+ *
  */
  
 void lame_bitrate_hist( 
@@ -1406,10 +1425,10 @@ void lame_bitrate_hist(
     assert( NULL != gfp->internal_flags );
     assert( NULL != bitrate_count );
     
-    gfc = (lame_internal_flags*)gfp->internal_flags;
+    gfc = gfp->internal_flags;
     
     for (i = 0; i < 14; i++) 
-        bitrate_count [i] = gfc->bitrateHist [i+1];
+        bitrate_count [i] = gfc->bitrate_stereoMode_Hist [i+1][4];
 }
 
 
@@ -1424,19 +1443,13 @@ void lame_bitrate_kbps(
     assert( NULL != gfp->internal_flags );
     assert( NULL != bitrate_kbps );
     
-    gfc = (lame_internal_flags*)gfp->internal_flags;
+    gfc = gfp->internal_flags;
     
     for (i = 0; i < 14; i++) 
         bitrate_kbps [i] = bitrate_table [gfp->version] [i+1];
 }
 
 
-/*  stereoModeHist:
- *  0: LR   number of left-right encoded frames
- *  1: LR-I number of left-right and intensity encoded frames
- *  2: MS   number of mid-side encoded frames
- *  3: MS-I number of mid-side and intensity encoded frames
- */
  
 void lame_stereo_mode_hist( 
         const lame_global_flags * const gfp, 
@@ -1449,31 +1462,35 @@ void lame_stereo_mode_hist(
     assert( gfp->internal_flags != NULL );
     assert( stmode_count != NULL );
     
-    gfc = (lame_internal_flags*)gfp->internal_flags;
+    gfc = gfp->internal_flags;
     
-    for (i = 0; i < 4; i++)
-        stmode_count[i] = gfc->stereoModeHist[i]; 
+    for (i = 0; i < 4; i++) {
+        int j, sum = 0;
+        for (j = 0; j < 14; j++)
+            sum += gfc->bitrate_stereoMode_Hist [j+1][i];
+        stmode_count[i] = sum; 
+    }
 }
 
-// We should clarify the size of the destination arrays in the future (pfk->rh)
 
+    
 void lame_bitrate_stereo_mode_hist ( 
         const lame_global_flags* const  gfp, 
-        int  bitrate_stmode_count [16] [4] )
+        int  bitrate_stmode_count [14] [4] )
 {
     const lame_internal_flags* gfc;
     int  i;
     int  j;
 
-    assert ( gfp != NULL );
-    assert ( gfp->internal_flags != NULL );
-    assert ( bitrate_stmode_count != NULL );
+    assert ( NULL != gfp );
+    assert ( NULL != gfp->internal_flags );
+    assert ( NULL != bitrate_stmode_count );
     
-    gfc = (lame_internal_flags*) gfp->internal_flags;  // why internal_flags is a void* ???
+    gfc = gfp->internal_flags;
     
     for ( j = 0; j < 14; j++ )
         for ( i = 0; i < 4; i++ )
-            bitrate_stmode_count [j] [i] = gfc->bitrate_stereoModeHist [j+1] [i]; 
+            bitrate_stmode_count [j][i] = gfc->bitrate_stereoMode_Hist [j+1][i];
 }
 
 /* end of lame.c */

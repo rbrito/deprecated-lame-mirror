@@ -377,8 +377,19 @@ int  fill_buffer_resample (
         gfc->inbuf_old [0] = calloc ( BLACKSIZE, sizeof (gfc->inbuf_old[0][0]) );
         gfc->inbuf_old [1] = calloc ( BLACKSIZE, sizeof (gfc->inbuf_old[0][0]) );
         
-        for ( i = 0; i < 2*bpc+1; i++ )
+        if (gfc->inbuf_old[0] == NULL || gfc->inbuf_old[1] == NULL) {
+            ERRORF ("PANIC: can't allocate inbuf_old buffer\n");
+            exit (-1); /* PANIC */
+        }
+        for ( i = 0; i < 2*bpc+1; i++ ) {
             gfc->blackfilt[i] = calloc ( BLACKSIZE, sizeof (gfc->blackfilt[0][0]) );
+            if (gfc->blackfilt[i] == NULL) {
+                ERRORF ("PANIC: can't allocate blackfilt buffer\n");
+                exit (-1); /* PANIC */
+            }
+        }
+        for ( ; i < 2*BPC+1; i++ ) 
+            gfc->blackfilt[i] = NULL;
 
         gfc->itime[0] = 0;
         gfc->itime[1] = 0;
@@ -520,23 +531,29 @@ int has_SIMD (void)
  *
  *  some simple statistics
  *
+ *  bitrate index 0: free bitrate -> not allowed in VBR mode
+ *  : bitrates, kbps depending on MPEG version
+ *  bitrate index 15: forbidden
+ *
+ *  mode_ext:
+ *  0:  LR
+ *  1:  LR-i
+ *  2:  MS
+ *  3:  MS-i
+ *
  ***********************************************************************/
  
 void updateStats( lame_internal_flags *gfc )
 {
     assert ( gfc->bitrate_index < 16u );
     assert ( gfc->mode_ext      <  4u );
-    // AND masking is not a good idea, it only hides errors
     
-    if (gfc->stereo != 2)
-        assert (gfc->mode_ext == 0);
+    /* count bitrate indices */
+    gfc->bitrate_stereoMode_Hist [gfc->bitrate_index] [4] ++;
     
-    // may be one 2D array is enough and calculation is done on request
-    gfc->bitrateHist [gfc->bitrate_index]++;
-    if (gfc->stereo == 2) {
-        gfc->stereoModeHist [gfc->mode_ext]++;
-        gfc->bitrate_stereoModeHist [gfc->bitrate_index] [gfc->mode_ext]++;
-    }
+    /* count 'em for every mode extension in case of stereo encoding */
+    if (gfc->stereo == 2)
+        gfc->bitrate_stereoMode_Hist [gfc->bitrate_index] [gfc->mode_ext]++;
 }
 
 #ifdef KLEMM_02

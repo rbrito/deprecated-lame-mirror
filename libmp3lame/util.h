@@ -301,9 +301,7 @@ typedef struct  {
   FLOAT8 ers_save[4];
   
   /* simple statistics */
-  int   bitrateHist[16];
-  int   stereoModeHist[4];
-  int   bitrate_stereoModeHist [16] [4];
+  int   bitrate_stereoMode_Hist [16] [5];
 
   /* ratios  */
   FLOAT8 pe[4];

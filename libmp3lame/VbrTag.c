@@ -74,32 +74,51 @@ const int SizeOfEmptyFrame[2][2]=
 */
 void AddVbrFrame(lame_global_flags *gfp)
 {
-  int nStreamPos;
-  lame_internal_flags *gfc=gfp->internal_flags;
-  nStreamPos = (gfc->bs.totbit/8);
+    int nStreamPos;
+    lame_internal_flags *gfc = gfp->internal_flags;
+    nStreamPos = (gfc->bs.totbit/8);
 
-        /* Simple exponential growing buffer */
-	if (gfp->pVbrFrames==NULL || gfp->nVbrFrameBufferSize==0)
-	{
-                /* Start with 100 frames */
-		gfp->nVbrFrameBufferSize=100;
+    /* Simple exponential growing buffer */
+    if (gfp->pVbrFrames==NULL || gfp->nVbrFrameBufferSize==0) {
+        /* Start with 100 frames */
+        const size_t buf_size = 100;
+            
+        /* Allocate them */
+        gfp->pVbrFrames = (int*) malloc (buf_size*sizeof(int));
+		
+        if (gfp->pVbrFrames != NULL)
+            gfp->nVbrFrameBufferSize = buf_size;
+        else {
+            gfp->nVbrFrameBufferSize = 0;
+            ERRORF ("Error: can't allocate VbrFrames buffer\n");
+            return;
+        }
+    }
 
-		/* Allocate them */
-		gfp->pVbrFrames=(int*)malloc((size_t)(gfp->nVbrFrameBufferSize*sizeof(int)));
-	}
-
-	/* Is buffer big enough to store this new frame */
-	if (gfp->nVbrNumFrames==gfp->nVbrFrameBufferSize)
-	{
-                /* Guess not, double th e buffer size */
-		gfp->nVbrFrameBufferSize*=2;
-
-		/* Allocate new buffer */
-		gfp->pVbrFrames=(int*)realloc(gfp->pVbrFrames,(size_t)(gfp->nVbrFrameBufferSize*sizeof(int)));
-	}
-
-	/* Store values */
-	gfp->pVbrFrames[gfp->nVbrNumFrames++]=nStreamPos;
+    /* Is buffer big enough to store this new frame */
+    if (gfp->nVbrNumFrames >= gfp->nVbrFrameBufferSize) {
+        /* Guess not, double the buffer size */
+        const size_t buf_size = 2*gfp->nVbrFrameBufferSize;
+        void * p;
+        
+        assert (gfp->nVbrNumFrames < 2*gfp->nVbrFrameBufferSize);
+        
+        /* Allocate new buffer */
+        p = realloc (gfp->pVbrFrames, buf_size*sizeof(int));
+		
+        if (p != NULL) {
+            gfp->nVbrFrameBufferSize = buf_size;
+            gfp->pVbrFrames          = (int*) p;
+        } else {
+            ERRORF ("Error: can't increase VbrFrames buffer\n");
+            return;
+        }
+    }
+    
+    assert (gfp->pVbrFrames != NULL);
+    
+    /* Store values */
+    gfp->pVbrFrames[gfp->nVbrNumFrames++] = nStreamPos;
 }
 
 

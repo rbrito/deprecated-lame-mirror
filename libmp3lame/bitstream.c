@@ -988,14 +988,19 @@ int copy_buffer(char *buffer,int size,Bit_stream_struc *bs)
 
 void init_bit_stream_w(lame_internal_flags *gfc)
 {
-   gfc->bs.buf = (unsigned char *)       malloc(BUFFER_SIZE);
-   gfc->bs.buf_size = BUFFER_SIZE;
+    gfc->bs.buf = (unsigned char *)       malloc(BUFFER_SIZE);
+    gfc->bs.buf_size = BUFFER_SIZE;
 
-   gfc->h_ptr = gfc->w_ptr = 0;
-   gfc->header[gfc->h_ptr].write_timing = 0;
-   gfc->bs.buf_byte_idx = -1;
-   gfc->bs.buf_bit_idx = 0;
-   gfc->bs.totbit = 0;
+    gfc->h_ptr = gfc->w_ptr = 0;
+    gfc->header[gfc->h_ptr].write_timing = 0;
+    gfc->bs.buf_byte_idx = -1;
+    gfc->bs.buf_bit_idx = 0;
+    gfc->bs.totbit = 0;
+   
+    if (gfc->bs.buf == NULL) {
+        ERRORF ("PANIC: can't allocate bs.buf buffer\n");
+        exit (-1);
+    }
 }
 
 

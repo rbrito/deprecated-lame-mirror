@@ -307,7 +307,7 @@ void lame_stereo_mode_hist(
 
 void lame_bitrate_stereo_mode_hist ( 
         const lame_global_flags*  gfp, 
-        int  bitrate_stmode_count [16] [4] );
+        int  bitrate_stmode_count [14] [4] );
 
 
 /* OPTIONAL:  lame_mp3_tags_fid will append a Xing VBR tag to
