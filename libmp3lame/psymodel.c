@@ -653,8 +653,8 @@ compute_masking_s(
 
 	enn  -= eb[b] * 0.5;
 	thmm -= ecb * 0.5;
-	if (enn < gfc->ATH.s_avg[sb] * gfc->ATH.adjust)
-	    enn = gfc->ATH.s_avg[sb] * gfc->ATH.adjust;
+	if (thmm < gfc->ATH.s_avg[sb] * gfc->ATH.adjust)
+	    thmm = gfc->ATH.s_avg[sb] * gfc->ATH.adjust;
 	mr->en .s[sb][sblock] = enn;
 	mr->thm.s[sb][sblock] = thmm * gfc->masking_lower;
 	enn  = eb[b] * 0.5;
