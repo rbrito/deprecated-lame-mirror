@@ -164,6 +164,7 @@ int main(int argc, char **argv)
   }
 #endif
   if (!gf.decode_only) {
+    lame_print_config(&gf);   /* print usefull information about options being used */
 
     fprintf(stderr,"Encoding %s to %s\n",
 	    (strcmp(inPath, "-")? inPath  : "<stdin>"),
@@ -193,7 +194,6 @@ int main(int argc, char **argv)
 		  gf.compression_ratio,gf.quality);
 	}
     }
-    lame_print_config(&gf);   /* print usefull information about options being used */
   }
 
 

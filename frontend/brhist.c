@@ -194,10 +194,10 @@ static void  brhist_disp_line ( const lame_global_flags* const gf, int i, int br
         sprintf ( brppt, "[%3u%%]", (ppt+5)/10 );
           
     if ( Console_IO.str_clreoln [0] ) /* ClearEndOfLine available */
-        fprintf ( Console_IO.Console_fp, "\n%3d%s%.*s%s", brhist.kbps [i], brppt, 
+        fprintf ( Console_IO.Console_fp, "\n%3d%s %.*s%s", brhist.kbps [i], brppt, 
                   barlen, brhist.bar, Console_IO.str_clreoln );
     else
-        fprintf ( Console_IO.Console_fp, "\n%3d%s%.*s%*s ", brhist.kbps [i], brppt, 
+        fprintf ( Console_IO.Console_fp, "\n%3d%s %.*s%*s ", brhist.kbps [i], brppt, 
                   barlen, brhist.bar, BRHIST_BARMAX - barlen, "" );
 }
 
@@ -242,7 +242,7 @@ void  brhist_disp ( const lame_global_flags* const gf, const int jump_back )
 #else
     for ( i=0 ; i < BRHIST_WIDTH; i++) {
         brhist_disp_line ( gf, i, br_hist [i], full, frames );
-	printed_lines++;
+	printed_lines++; 
     }
 #endif	
     
@@ -294,7 +294,8 @@ void  brhist_disp_total ( const lame_global_flags* const gf )
     if (st_frames > 0) {
         double lr = st_mode[0] * 100. / st_frames;
         double ms = st_mode[2] * 100. / st_frames;
-        fprintf ( Console_IO.Console_fp, "   LR: %#5.4g%%   MS: %#5.4g%%", lr, ms );
+        fprintf ( Console_IO.Console_fp, "   LR: %d (%#5.4g%%)   MS: %d (%#5.4g%%)", 
+                  st_mode[0], lr, st_mode[2], ms );
     }
     fprintf ( Console_IO.Console_fp, "\n" );
     fflush  ( Console_IO.Console_fp );
