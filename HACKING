@@ -68,10 +68,12 @@ of the API).
 
 THREADSAFE:
 
-Lame is supposed to be threadsafe.  But it is not yet.
-
-Some static variables in takehiro.c need to be moved
-into lame_internal_flags (in util.h).  
+Lame should now be thread safe and re-entrant. 
+The only problem seems to be some OS's allocate small
+stacks (< 128K) to threads launched by applictions, and this
+is not enough for LAME.  Fix is to increase the stack space,
+or move some of our automatic variables onto the heap with
+by using bug-prove malloc()'s and free().
 
 
 
