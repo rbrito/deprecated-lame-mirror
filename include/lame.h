@@ -192,6 +192,9 @@ typedef struct  {
 
 } lame_global_flags;
 
+// I give up. Klemm has worn me down on this one... 
+typedef lame_global_flags lame_t;
+
 
 
 
@@ -285,17 +288,36 @@ int CDECL lame_get_ogg(lame_global_flags *);
 int CDECL lame_set_quality(lame_global_flags *, int);
 int CDECL lame_get_quality(lame_global_flags *);
 
+// mode = 0,1,2,3 = stereo, jstereo, dual channel (not supported), mono
+// default: lame picks based on compression ration and input channels
+int CDECL lame_set_mode(lame_global_flags *, int);
+int CDECL lame_get_mode(lame_global_flags *);
 
+// mode_automs.  Us a M/S mode with a switching threshold based on 
+// compression ratio
+// default = 0 (disabled)
+int CDECL lame_set_mode_automs(lame_global_flags *, int);
+int CDECL lame_get_mode_automs(lame_global_flags *);
 
+// force_ms.  Force M/S for all frames.  For testing only.
+// default = 0 (disabled)
+int CDECL lame_set_force_ms(lame_global_flags *, int);
+int CDECL lame_get_force_ms(lame_global_flags *);
 
+// use free_format?  default = 0 (disabled)
+int CDECL lame_set_free_format(lame_global_flags *, int);
+int CDECL lame_get_free_format(lame_global_flags *);
 
+/* set one of brate compression ratio.  default is compression ratio of 11.  */
+int CDECL lame_set_brate(lame_global_flags *, int);
+int CDECL lame_get_brate(lame_global_flags *);
+int CDECL lame_set_compression_ratio(lame_global_flags *, float);
+float CDECL lame_get_compression_ratio(lame_global_flags *);
 
-/* set one of these.  default is compression ratio of 11.  */
-int CDECL lame_set_brate            (lame_global_flags *, int);
-int CDECL lame_get_brate            (lame_global_flags *);
+/********************************************************************
+ *  frame params
+ ***********************************************************************/
 
-int CDECL lame_set_compression_ratio(lame_global_flags *, int);
-int CDECL lame_get_compression_ratio(lame_global_flags *);
 
 
 
