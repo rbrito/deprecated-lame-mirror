@@ -1532,8 +1532,8 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
 
     /* default = 0 (disabled) */
     gfp->preset_expopts = preset_expopts;
-    gfc->presetTune.attackthre   = 80;
-    gfc->presetTune.attackthre_s = 150;
+    gfc->nsPsy.attackthre   = 80.0;
+    gfc->nsPsy.attackthre_s = 150.0;
 
     switch (preset_expopts)
     {
@@ -1613,6 +1613,8 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
           gfc->presetTune.athadjust_switch_level = 1;
 
           break;
+    default:
+	assert(0);
     }
     return 0;
 }

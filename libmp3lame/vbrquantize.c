@@ -94,6 +94,43 @@ typedef union {
 
 /*  caution: a[] will be resorted!!
  */
+static int
+select_kth_int(int a[], int N, int k)
+{
+    int i, j, l, r, v, w;
+    
+    l = 0;
+    r = N-1;
+    while (r > l) {
+        v = a[r];
+        i = l-1;
+        j = r;
+        for (;;) {
+            while (a[++i] < v) /*empty*/;
+            while (a[--j] > v) /*empty*/;
+            if (i >= j) 
+                break;
+            /* swap i and j */
+            w = a[i];
+            a[i] = a[j];
+            a[j] = w;
+        }
+        /* swap i and r */
+        w = a[i];
+        a[i] = a[r];
+        a[r] = w;
+        if (i >= k) 
+            r = i-1;
+        if (i <= k) 
+            l = i+1;
+    }
+    return a[k];
+}
+
+
+
+/*  caution: a[] will be resorted!!
+ */
 static FLOAT8
 select_kth(FLOAT8 a[], int N, int k)
 {

@@ -209,6 +209,38 @@ adjust_ATH( lame_global_flags* const  gfp,
     }   /* switch */
 }
 
+/***********************************************************************
+ *
+ *  some simple statistics
+ *
+ *  bitrate index 0: free bitrate -> not allowed in VBR mode
+ *  : bitrates, kbps depending on MPEG version
+ *  bitrate index 15: forbidden
+ *
+ *  mode_ext:
+ *  0:  LR
+ *  1:  LR-i
+ *  2:  MS
+ *  3:  MS-i
+ *
+ ***********************************************************************/
+ 
+static void
+updateStats( lame_internal_flags * const gfc )
+{
+    assert ( gfc->bitrate_index < 16u );
+    assert ( gfc->mode_ext      <  4u );
+    
+    /* count bitrate indices */
+    gfc->bitrate_stereoMode_Hist [gfc->bitrate_index] [4] ++;
+    
+    /* count 'em for every mode extension in case of 2 channel encoding */
+    if (gfc->channels_out == 2)
+        gfc->bitrate_stereoMode_Hist [gfc->bitrate_index] [gfc->mode_ext]++;
+}
+
+
+
 /************************************************************************
 *
 * encodeframe()           Layer 3

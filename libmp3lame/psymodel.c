@@ -1526,7 +1526,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	/* compare energies between sub-shortblocks */
 	ns_attacks[0] = ns_attacks[1] = ns_attacks[2] = ns_attacks[3] = 0;
 	attackThreshold = (chn == 3)
-	    ? gfc->presetTune.attackthre_s : gfc->presetTune.attackthre;
+	    ? gfc->nsPsy.attackthre_s : gfc->nsPsy.attackthre;
 	for (i=0;i<12;i++)
 	    if (!ns_attacks[i/3] && attack_intensity[i] > attackThreshold)
 		ns_attacks[i/3] = (i % 3)+1;
@@ -2026,8 +2026,8 @@ int psymodel_init(lame_global_flags *gfp)
 	gfp->msfix = msfix;
 
 	if (!gfc->presetTune.use) {
-	    gfc->presetTune.attackthre_s = NSATTACKTHRE_S;
-	    gfc->presetTune.attackthre   = NSATTACKTHRE;
+	    gfc->nsPsy.attackthre   = NSATTACKTHRE;
+	    gfc->nsPsy.attackthre_s = NSATTACKTHRE_S;
 	}
 
 	/* spread only from npart_l bands.  Normally, we use the spreading

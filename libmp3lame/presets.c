@@ -63,7 +63,7 @@ int apply_abr_preset(lame_global_flags*  gfp, int preset)
         { 224,  1, 1, 20000,  1,        1.25,    0,      0.98 }, // 224
         { 256,  0, 3, 20500,  1,        0   ,    0,      1.00 }, // 256
         { 320,  0, 3, 21000,  1,        0   ,    0,      1.00 }  // 320
-                                       };
+    };
 
     // Variables for the ABR stuff
     int actual_bitrate = preset;

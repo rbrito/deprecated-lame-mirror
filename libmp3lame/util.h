@@ -159,6 +159,10 @@ typedef struct {
   FLOAT pefirbuf[19];
   FLOAT bass,alto,treble,sfb21;
 
+  // short block tuning
+  FLOAT     attackthre;
+  FLOAT     attackthre_s;
+
   /* variables for nspsytune2 */
   int use2; /* indicates the use of nspsytune2 */
   FILE *pass1fp;
@@ -166,13 +170,8 @@ typedef struct {
 
 /* variables used for --alt-preset */
 typedef struct {
-
   // indicates the use of alt-preset
   int     use;
-
-  // short block tuning
-  FLOAT     attackthre;
-  FLOAT     attackthre_s;
 
   // adjustment to joint stereo
   FLOAT8  ms_maskadjust;
@@ -186,7 +185,7 @@ typedef struct {
                                        // such as high athadjust values, or long blocks, etc
 
   // tunings reliant upon athadjust
-  FLOAT8  athadjust_max_val;           // maximum value of athadjust before limit is applied
+//FLOAT8  athadjust_max_val;           // maximum value of athadjust before limit is applied
   FLOAT8  athadjust_switch_level;      // level of athadjust at which to apply tunings at
                                        // x <= 0 == never switch, x >= 1 == always switch
   FLOAT8  athadjust_msfix;             // msfix adjustment based on athadjust
@@ -488,9 +487,6 @@ struct lame_internal_flags {
    */
   FLOAT athaa_sensitivity_p;
 
-  /* fft.c    */
-  FLOAT window[BLKSIZE], window_s[BLKSIZE_s/2];
-
   /* Scale Factor Bands    */
   FLOAT8 mld_l[SBMAX_l],mld_s[SBMAX_s];
   int	bm_l[SBMAX_l],bo_l[SBMAX_l] ;
@@ -595,8 +591,6 @@ extern int  has_3DNow ( void );
 extern int  has_SIMD  ( void );
 extern int  has_SIMD2 ( void );
 
-extern void updateStats (lame_internal_flags * const gfc);
-
 
 
 /***********************************************************************
@@ -610,9 +604,6 @@ extern void lame_msgf  (const lame_internal_flags *gfc, const char *, ...);
 #define DEBUGF  lame_debugf
 #define ERRORF	lame_errorf
 #define MSGF	lame_msgf
-
-
-int select_kth_int(int b[], int N, int k);
 
 
 #ifdef __cplusplus
