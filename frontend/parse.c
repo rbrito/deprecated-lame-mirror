@@ -35,6 +35,7 @@
 #include "parse.h"
 #include "main.h"
 #include "get_audio.h"
+#include "version.h"
 
 /************************************************************************
 *
