@@ -1098,8 +1098,7 @@ L3psycho_anal_ns(
     for (chn=0; chn<numchn; chn++) {
 	FLOAT fftenergy[HBLKSIZE];
 	/* convolution   */
-	FLOAT eb[CBANDS], max[CBANDS];
-#define avg fftenergy
+	FLOAT eb[CBANDS], max[CBANDS], avg[CBANDS];
 #define thr fftenergy
 #define eb2 (fftenergy+CBANDS)
 	static const FLOAT tab[] = {
