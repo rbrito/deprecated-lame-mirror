@@ -543,16 +543,15 @@ static int
 ShortHuffmancodebits(lame_global_flags *gfp,int *ix, gr_info *gi)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
-    int bits=0;
-    int region1Start, region2Start;
+    int bits;
+    int region1Start;
     
     region1Start=3*gfc->scalefac_band.s[3];
     if (region1Start > gi->big_values) 	region1Start = gi->big_values;
 
     /* short blocks do not have a region2 */
-    region2Start=gi->big_values;
-    bits +=Huffmancodebits(gfp,gi->table_select[0], 0, region1Start, ix);
-    bits +=Huffmancodebits(gfp,gi->table_select[1], region1Start, region2Start, ix);
+    bits  = Huffmancodebits(gfp,gi->table_select[0], 0, region1Start, ix);
+    bits += Huffmancodebits(gfp,gi->table_select[1], region1Start, gi->big_values, ix);
     return bits;
 }
 
