@@ -604,6 +604,7 @@ static void  presets_longinfo_dm ( FILE* msgfp )
 {
     fprintf ( msgfp,
 	      "\n"
+	      "  --preset medium   => -v 6\n"
 	      "  --preset standard => -v 4\n"
 	      "  --preset extreme  => -v 2\n"
 	      "  --preset insane   => -b 320\n"
