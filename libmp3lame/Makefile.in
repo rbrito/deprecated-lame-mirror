@@ -150,8 +150,7 @@ libmp3lame_la_SOURCES = \
 	util.c \
 	vbrquantize.c \
 	version.c \
-	mpglib_interface.c \
-	vorbis_interface.c
+	mpglib_interface.c
 
 
 noinst_HEADERS = \
@@ -205,8 +204,7 @@ am_libmp3lame_la_OBJECTS = VbrTag$U.lo bitstream$U.lo encoder$U.lo \
 	fft$U.lo id3tag$U.lo lame$U.lo newmdct$U.lo presets$U.lo \
 	psymodel$U.lo quantize$U.lo quantize_pvt$U.lo reservoir$U.lo \
 	set_get$U.lo tables$U.lo takehiro$U.lo util$U.lo \
-	vbrquantize$U.lo version$U.lo mpglib_interface$U.lo \
-	vorbis_interface$U.lo
+	vbrquantize$U.lo version$U.lo mpglib_interface$U.lo
 libmp3lame_la_OBJECTS = $(am_libmp3lame_la_OBJECTS)
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
 CPPFLAGS = @CPPFLAGS@
@@ -223,8 +221,7 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 @AMDEP_TRUE@	$(DEPDIR)/reservoir$U.Plo $(DEPDIR)/set_get$U.Plo \
 @AMDEP_TRUE@	$(DEPDIR)/tables$U.Plo $(DEPDIR)/takehiro$U.Plo \
 @AMDEP_TRUE@	$(DEPDIR)/util$U.Plo $(DEPDIR)/vbrquantize$U.Plo \
-@AMDEP_TRUE@	$(DEPDIR)/version$U.Plo \
-@AMDEP_TRUE@	$(DEPDIR)/vorbis_interface$U.Plo
+@AMDEP_TRUE@	$(DEPDIR)/version$U.Plo
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) \
@@ -319,7 +316,6 @@ mostlyclean-kr:
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/util$U.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/vbrquantize$U.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/version$U.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/vorbis_interface$U.Plo@am__quote@
 
 distclean-depend:
 	-rm -rf $(DEPDIR)
@@ -380,8 +376,6 @@ vbrquantize_.c: vbrquantize.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/vbrquantize.c; then echo $(srcdir)/vbrquantize.c; else echo vbrquantize.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > vbrquantize_.c || rm -f vbrquantize_.c
 version_.c: version.c $(ANSI2KNR)
 	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/version.c; then echo $(srcdir)/version.c; else echo version.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > version_.c || rm -f version_.c
-vorbis_interface_.c: vorbis_interface.c $(ANSI2KNR)
-	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) `if test -f $(srcdir)/vorbis_interface.c; then echo $(srcdir)/vorbis_interface.c; else echo vorbis_interface.c; fi` | sed 's/^# \([0-9]\)/#line \1/' | $(ANSI2KNR) > vorbis_interface_.c || rm -f vorbis_interface_.c
 VbrTag_.$(OBJEXT) VbrTag_.lo bitstream_.$(OBJEXT) bitstream_.lo \
 encoder_.$(OBJEXT) encoder_.lo fft_.$(OBJEXT) fft_.lo id3tag_.$(OBJEXT) \
 id3tag_.lo lame_.$(OBJEXT) lame_.lo mpglib_interface_.$(OBJEXT) \
@@ -391,8 +385,7 @@ quantize_.lo quantize_pvt_.$(OBJEXT) quantize_pvt_.lo \
 reservoir_.$(OBJEXT) reservoir_.lo set_get_.$(OBJEXT) set_get_.lo \
 tables_.$(OBJEXT) tables_.lo takehiro_.$(OBJEXT) takehiro_.lo \
 util_.$(OBJEXT) util_.lo vbrquantize_.$(OBJEXT) vbrquantize_.lo \
-version_.$(OBJEXT) version_.lo vorbis_interface_.$(OBJEXT) \
-vorbis_interface_.lo : $(ANSI2KNR)
+version_.$(OBJEXT) version_.lo : $(ANSI2KNR)
 uninstall-info-am:
 
 # This directory's subdirectories are mostly independent; you can cd
