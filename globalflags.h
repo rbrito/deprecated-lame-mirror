@@ -15,6 +15,7 @@ typedef enum sound_file_format_e {
 
 extern int allow_diff_short;
 extern int ATHonly;
+extern int noATH;
 extern int autoconvert;
 extern int disable_reservoir;
 extern int experimentalX;

@@ -45,6 +45,7 @@
 /* Global flags.  defined extern in globalflags.h */
 /* default values set in lame_init() */
 int allow_diff_short;
+int noATH;
 int ATHonly;
 int autoconvert;
 int disable_reservoir;
@@ -148,6 +149,7 @@ void lame_usage(char *name)  /* print syntax & exit */
   fprintf(stderr,"    -k              disable sfb=21 cutoff\n");
   fprintf(stderr,"    -d              allow channels to have different blocktypes\n");
   fprintf(stderr,"  --athonly         only use the ATH for masking\n");
+  fprintf(stderr,"  --noath           disable the ATH for masking\n");
   fprintf(stderr,"  --noshort         do not use short blocks\n");
   fprintf(stderr,"  --nores           disable the bit reservoir\n");
   fprintf(stderr,"\n");
@@ -284,8 +286,8 @@ void lame_parse_args(int argc, char **argv)
 	  voice_mode=1;
 	  no_short_blocks=1;
 	}
-	else if (strcmp(token, "noshort")==0) {
-	  no_short_blocks=1;
+	else if (strcmp(token, "noath")==0) {
+	  noATH=1;
 	}
 	else if (strcmp(token, "nores")==0) {
 	  disable_reservoir=1;

@@ -227,8 +227,9 @@ FLOAT8 ATHformula(FLOAT8 f)
   
   /* convert to energy */
   ath -= 114;    /* MDCT scaling.  From tests by macik and MUS420 code */
-  //ath -= 109;    
-  /*ath -= 200;*/ /* disables ATH */
+  //ath -= 109;
+  if (noATH)
+    ath -= 200; /* disables ATH */
   ath = pow( 10.0, ath/10.0 );
   return ath;
 }
@@ -861,7 +862,6 @@ void quantize_xrpow_ISO( FLOAT8 xr[576], int ix[576], gr_info *cod_info )
   register int j;
   FLOAT8 quantizerStepSize;
   FLOAT8 istep;
-  FLOAT8 rx;
 #if defined(__GNUC__) && defined(__i386__) 
 #elif defined (_MSC_VER)
   FLOAT8 temp0;
