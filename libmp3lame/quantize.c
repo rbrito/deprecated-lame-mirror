@@ -51,6 +51,12 @@ static const int max_range_long[SBMAX_l] = {
 static const int max_range_long_lsf_pretab[SBMAX_l] = {
     7, 7, 7, 7, 7, 7, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
+#define scalefactor(gi, sfb) \
+    (gi->global_gain \
+     - ((gi->scalefac[sfb] + (gi->preflag > 0 ? pretab[sfb] : 0)) \
+        << (gi->scalefac_scale + 1)) \
+     - gi->subblock_gain[gi->window[sfb]]*8)
+
 /************************************************************************
  * allocate bits among 2 channels based on PE
  * mt 6/99
@@ -223,11 +229,7 @@ calc_noise(
     int sfb = 0, j = 0;
 
     do {
-	FLOAT step
-	    = POW20(gi->global_gain
-		    - ((gi->scalefac[sfb] + (gi->preflag>0 ? pretab[sfb] : 0))
-		       << (gi->scalefac_scale + 1))
-		    - gi->subblock_gain[gi->window[sfb]] * 8);
+	FLOAT step = POW20(scalefactor(gi, sfb));
 	FLOAT noise = 0.0;
 	int l = gi->width[sfb] >> 1;
 	do {
@@ -1280,19 +1282,19 @@ long_block_scalefacs(const lame_internal_flags *gfc, gr_info * gi, int vbrmax)
 
 
 static int
-VBR_maxnoise(gr_info *gi, FLOAT * xr34, FLOAT * l3_xmin, int sfb2)
+noisesfb(gr_info *gi, FLOAT * xr34, FLOAT * l3_xmin, int startsfb)
 {
     int sfb, j = 0;
     for (sfb = 0; sfb < gi->psymax; sfb++) {
 	int width = gi->width[sfb];
-	if (sfb >= sfb2
-	    && calc_sfb_noise(
-		&gi->xr[j], &xr34[j], width,
-		gi->global_gain
-		- ((gi->scalefac[sfb] + (gi->preflag>0 ? pretab[sfb] : 0))
-		   << (gi->scalefac_scale + 1))
-		- gi->subblock_gain[gi->window[sfb]] * 8) > l3_xmin[sfb])
-	    return sfb;
+	if (sfb >= startsfb) {
+	    FLOAT noise = calc_sfb_noise(&gi->xr[j], &xr34[j], width,
+					 scalefactor(gi, sfb));
+	    if (noise > l3_xmin[sfb])
+		return sfb;
+	    if (noise < 0.0)
+		return -1;
+	}
 	j += width;
     }
     return -1;
@@ -1326,9 +1328,9 @@ VBR_2nd_bitalloc(
     gr_info gi_w = *gi;
     int sfb = 0, endflag = 0;
     for (;;) {
-	sfb = VBR_maxnoise(&gi_w, xr34, l3_xmin, sfb);
+	sfb = noisesfb(&gi_w, xr34, l3_xmin, sfb);
 	if (sfb >= 0) {
-	    if (sfb >= gi->sfbmax) {
+	    if (sfb >= gi->sfbmax) { /* noise in sfb21 */
 		endflag |= 1;
 		if (endflag == 3 || gi_w.global_gain == 0)
 		    return;
@@ -1357,13 +1359,8 @@ VBR_3rd_bitalloc(gr_info *gi, FLOAT * xr34, FLOAT * l3_xmin)
        at this point */
     int sfb, j, r = 0;
     for (j = sfb = 0; sfb < gi->psymax; sfb++) {
-	if (calc_sfb_noise(
-	    &gi->xr[j], &xr34[j], gi->width[sfb],
-	    gi->global_gain
-	    - ((gi->scalefac[sfb] + (gi->preflag>0 ? pretab[sfb] : 0))
-	       << (gi->scalefac_scale + 1))
-	    - gi->subblock_gain[gi->window[sfb]] * 8) < 0) {
-
+	if (calc_sfb_noise(&gi->xr[j], &xr34[j], gi->width[sfb],
+			   scalefactor(gi, sfb)) < 0) {
 	    if (gi->scalefac[sfb] == 0 || r < 0)
 		r = -2;
 	    else {
@@ -1377,15 +1374,14 @@ VBR_3rd_bitalloc(gr_info *gi, FLOAT * xr34, FLOAT * l3_xmin)
 	return r;
 
     for (j = sfb = 0; sfb < gi->psymax; sfb++) {
-	while (gi->scalefac[sfb] > 0
-	       && calc_sfb_noise(
-		   &gi->xr[j], &xr34[j], gi->width[sfb],
-		   gi->global_gain
-		   - ((gi->scalefac[sfb]-1 + (gi->preflag>0 ? pretab[sfb] : 0))
-		      << (gi->scalefac_scale + 1))
-		   - gi->subblock_gain[gi->window[sfb]] * 8) <= l3_xmin[sfb])
+	while (gi->scalefac[sfb] > 0) {
 	    gi->scalefac[sfb]--;
-
+	    if (calc_sfb_noise(&gi->xr[j], &xr34[j], gi->width[sfb],
+			       scalefactor(gi, sfb)) > l3_xmin[sfb]) {
+		gi->scalefac[sfb]++;
+		break;
+	    }
+	}
 	j += gi->width[sfb];
     }
     return 0;
