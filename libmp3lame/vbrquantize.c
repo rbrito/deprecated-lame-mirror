@@ -743,7 +743,7 @@ short_block_sf (
 {
     unsigned int j, sfb, b;
     int vbrmean, vbrmin, vbrmax;
-    int sf_cache[SBPSY_s];
+    int sf_cache[SBMAX_s];
   
     for (j = 0, sfb = 0; sfb < SBMAX_s; sfb++) {
         for (b = 0; b < 3; b++) {
@@ -773,12 +773,12 @@ short_block_sf (
 
         /*  make working copy, select_kth_int will reorder!
          */
-        for (sfb = 0; sfb < SBPSY_s; sfb++) 
+        for (sfb = 0; sfb < SBMAX_s; sfb++) 
             sf_cache[sfb] = vbrsf->s[sfb][b];
         
         /*  find median value, take it as mean 
          */
-        vbrmean = select_kth_int (sf_cache, SBPSY_s, SBMAX_s/2);
+        vbrmean = select_kth_int (sf_cache, SBMAX_s, (SBMAX_s+1)/2);
         
         /*  get min value
          */
@@ -823,7 +823,7 @@ long_block_sf (
 {
     unsigned int sfb;
     int vbrmean, vbrmin, vbrmax;
-    int sf_cache[SBPSY_l];
+    int sf_cache[SBMAX_l];
     
     for (sfb = 0; sfb < SBMAX_l; sfb++) {
         const unsigned int start = gfc->scalefac_band.l[ sfb ];
@@ -846,12 +846,12 @@ long_block_sf (
     
     /*  make working copy, select_kth_int will reorder!
      */
-    for (sfb = 0; sfb < SBPSY_l; sfb++)
+    for (sfb = 0; sfb < SBMAX_l; sfb++)
         sf_cache[sfb] = vbrsf->l[sfb];
     
     /*  find median value, take it as mean 
      */
-    vbrmean = select_kth_int (sf_cache, SBPSY_l, SBMAX_l/2);
+    vbrmean = select_kth_int (sf_cache, SBMAX_l, (SBMAX_l+1)/2);
 
     /*  get min value
      */
