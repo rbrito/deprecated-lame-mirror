@@ -1279,7 +1279,7 @@ set_scalefactor_values(gr_info *gi, int const max_range[],
 	gi->scalefac[sfb]
 	    = (vbrmax - vbrsf[sfb] - gi->subblock_gain[gi->window[sfb]]*8
 	       - (gi->preflag ? pretab[sfb] * ifqstep : 0)
-	       + ifqstep - 1) / ifqstep;
+	       + ifqstep - 1) >> (1 + gi->scalefac_scale);
 	if (gi->scalefac[sfb] < 0)
 	    gi->scalefac[sfb] = 0;
 	assert(gi->scalefac[sfb] <= max_range[sfb]);
