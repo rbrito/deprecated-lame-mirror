@@ -793,6 +793,8 @@ format_bitstream(lame_global_flags *gfp, int bitsPerFrame,
       fprintf(stderr,"resv drain (pre)          %i \n",l3_side->resvDrain_pre);
       fprintf(stderr,"header and sideinfo:      %i \n",8*gfc->sideinfo_len);
       fprintf(stderr,"data bits:                %i \n",bits-l3_side->resvDrain_post-8*gfc->sideinfo_len);
+
+      gfc->ResvSize = l3_side->main_data_begin*8;
     };
 
 #ifdef DEBUG

@@ -715,7 +715,7 @@ VBR_quantize(lame_global_flags *gfp,
   lame_internal_flags *gfc=gfp->internal_flags;
   int minbits,maxbits,max_frame_bits,totbits,bits,gr,ch,i,bits_ok;
   int bitsPerFrame,mean_bits;
-  FLOAT8 qadjust=0;
+  FLOAT8 qadjust;
   III_side_info_t * l3_side;
   gr_info *cod_info;  
   int ath_over[2][2];
@@ -730,7 +730,7 @@ VBR_quantize(lame_global_flags *gfp,
 
   gfc->bitrate_index=gfc->VBR_min_bitrate;
   getframebits(gfp,&bitsPerFrame, &mean_bits);
-  minbits = (mean_bits/gfc->stereo);
+  minbits = .4*(mean_bits/gfc->stereo);
 
   gfc->bitrate_index=gfc->VBR_max_bitrate;
   getframebits(gfp,&bitsPerFrame, &mean_bits);
@@ -754,6 +754,7 @@ VBR_quantize(lame_global_flags *gfp,
       ms_convert(xr[gr],xr[gr]);
 
 
+  qadjust=0;
   do {
   
   totbits=0;
@@ -780,7 +781,7 @@ VBR_quantize(lame_global_flags *gfp,
 	bits = cod_info->part2_3_length;
 	if (bits>maxbits) {
 	  printf("%i masking_lower=%f  bits>maxbits. bits:  %i  %i  %i  \n",gfp->frameNum,masking_lower_db,minbits,bits,maxbits);
-	  masking_lower_db  += Max(.33,(bits-maxbits)/200.0);
+	  masking_lower_db  += Max(.10,(bits-maxbits)/200.0);
 	}
 
       }	while (bits > maxbits);
@@ -791,7 +792,7 @@ VBR_quantize(lame_global_flags *gfp,
   bits_ok=1;
   if (totbits>max_frame_bits) {
     printf("%i totbits>max_frame_bits   totbits=%i  maxbits=%i \n",gfp->frameNum,totbits,max_frame_bits);
-    qadjust += Max(.33,(totbits-max_frame_bits)/200.0);
+    qadjust += Max(.10,(totbits-max_frame_bits)/200.0);
     printf("next masking_lower_db = %f \n",masking_lower_db + qadjust);
     bits_ok=0;
   }

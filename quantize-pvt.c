@@ -1051,6 +1051,9 @@ set_pinfo (lame_global_flags *gfp,
 	  en0 = en0/ratio->thm.s[sfb][i];
 	else
 	  en0=0;
+	if (gfp->ATHonly || gfp->ATHshort)
+	  en0=0;
+
 	pinfo->thr_s[gr][ch][3*sfb+i] = en1*Max(en0*ratio->thm.s[sfb][i],gfc->ATH_s[sfb]);
 #endif
 	
@@ -1092,9 +1095,16 @@ set_pinfo (lame_global_flags *gfp,
 	en0 = en0/ratio->en.l[sfb];
       else
 	en0=0;
+      if (gfp->ATHonly)
+	en0=0;
       pinfo->thr[gr][ch][sfb] = en1*Max(en0*ratio->thm.l[sfb],gfc->ATH_l[sfb]);
 #endif
-
+#if 0
+      printf("%i %i sfb=%i %e %e %e xfsf>thr? %i\n",gr,ch,sfb,pinfo->en[gr][ch][sfb],
+	     pinfo->thr[gr][ch][sfb],pinfo->xfsf[gr][ch][sfb],
+	     pinfo->thr[gr][ch][sfb]<pinfo->xfsf[gr][ch][sfb]
+	     );
+#endif
 
       /* there is no scalefactor bands >= SBPSY_l */
       if (sfb<SBPSY_l) {

@@ -570,8 +570,10 @@ void plot_frame(void)
           ycord[i] = 0;
         else
 	  ycord[i] = log10( MAX( data[i],(double) 1));
+	/*
 	ymx=(ycord[i] > ymx) ? ycord[i] : ymx;
 	ymn=(ycord[i] < ymn) ? ycord[i] : ymn;
+	*/
       }
 
 
@@ -603,8 +605,6 @@ void plot_frame(void)
           ycord[i] = 0;
         else
 	  ycord[i] = log10( MAX( data2[i], (double) 1));
-	ymx=(ycord[i] > ymx) ? ycord[i] : ymx;
-	ymn=(ycord[i] < ymn) ? ycord[i] : ymn;
       }
 
       gpk_bargraph_draw(enerbox[gr],n,xcord,ycord,
@@ -616,8 +616,6 @@ void plot_frame(void)
           ycord[i] = 0;
         else
 	  ycord[i] = log10( MAX( data3[i], (double) 1));
-	ymx=(ycord[i] > ymx) ? ycord[i] : ymx;
-	ymn=(ycord[i] < ymn) ? ycord[i] : ymn;
       }
       gpk_bargraph_draw(enerbox[gr],n,xcord,ycord,
 			xmn,ymn,xmx,ymx,0,title2,barthick,&red);  
