@@ -106,3 +106,10 @@ void acm_Free( void * mem);
 
 #define LAME_LIBRARY_BUILD
 
+
+#ifdef HAVE_NASM
+#include <malloc.h>
+#ifdef _mm_malloc
+#define HAVE_INTRINSICS_SSE
+#endif
+#endif
