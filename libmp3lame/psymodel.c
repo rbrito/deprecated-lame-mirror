@@ -279,11 +279,6 @@ int L3psycho_anal( lame_global_flags * gfp,
       psymodel_init(gfp);
       init_fft(gfc);
       gfc->psymodel_init=1;
-      
-      for (chn = 0; chn < 4; ++chn )
-      for (b = 0; b < CBANDS; ++b ) 
-        gfc->nb_s1[chn][b] = gfc->nb_s2[chn][b] = 1.0;
-      
   }
   
 
@@ -361,7 +356,7 @@ int L3psycho_anal( lame_global_flags * gfp,
     gfc->energy[0] *= gfc->energy[0];
     
     /* sum total energy at nearly no  extra cost */
-    gfc->tot_ener[chn] = NON_LINEAR_SCALE_ENERGY(gfc->energy[0]);
+    gfc->tot_ener[chn] = 0.0;
     
     for (j=BLKSIZE/2-1; j >= 0; --j)
     {
@@ -821,21 +816,13 @@ int L3psycho_anal( lame_global_flags * gfp,
 	      }
 	      ecb *= gfc->SNR_s[b];
 
-/* 2001-07-13 */
-        if ( gfp->VBR == vbr_off || gfp->VBR == vbr_abr ) {
-            /* this looks like a BUG to me. robert */
-            thr[b] = Max (1e-6, ecb);
-        }
-        else {
-            thr[b] = Min( ecb, rpelev_s  * gfc->nb_s1[chn][b] );
-            if (gfc->blocktype_old[chn>1 ? chn-2 : chn] == SHORT_TYPE ) {
-                thr[b] = Min( thr[b], rpelev2_s * gfc->nb_s2[chn][b] );
-            }
-            thr[b] = Max( thr[b], 1e-37 );
-            gfc->nb_s2[chn][b] = gfc->nb_s1[chn][b];
-            gfc->nb_s1[chn][b] = ecb;
-        }
-        
+	      thr[b] = Min( ecb, rpelev_s  * gfc->nb_s1[chn][b] );
+	      if (gfc->blocktype_old[chn>1 ? chn-2 : chn] == SHORT_TYPE ) {
+		  thr[b] = Min( thr[b], rpelev2_s * gfc->nb_s2[chn][b] );
+	      }
+	      thr[b] = Max( thr[b], 1e-37 );
+	      gfc->nb_s2[chn][b] = gfc->nb_s1[chn][b];
+	      gfc->nb_s1[chn][b] = ecb;
 	    }
 
 	  for ( sb = 0; sb < NBPSY_s; sb++ )
@@ -1294,7 +1281,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 
   /* variables used for --nspsytune */
   int ns_attacks[4];
-  FLOAT ns_hpfsmpl[4][576+576/3+NSFIRLEN];
+  FLOAT ns_hpfsmpl[4][576];
   FLOAT pe_l[4],pe_s[4];
   FLOAT pcfact;
 
@@ -1336,11 +1323,11 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
     for(chn=0;chn<gfc->channels_out;chn++) {
       
       /* apply high pass filter of fs/4 */
-      const sample_t * const firbuf = &buffer[chn][576-350-NSFIRLEN];
+      const sample_t * const firbuf = &buffer[chn][576-350-NSFIRLEN+576/3];
 
-      for(i=0;i<576+576/3-NSFIRLEN;i++) {
+      for(i=0;i<576;i++) {
         FLOAT sum1 = 0, sum2=0, sum3=0, sum4=0;
-        
+
         /* align on 4 */
         for(j=0;j<(NSFIRLEN%4);j++)
           sum1 += fircoef[j] * firbuf[i+j];
@@ -1356,14 +1343,11 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
         ns_hpfsmpl[chn][i] = sum1+sum2+sum3+sum4;
 
       }
-
-      for(;i<576+576/3;i++)
-        ns_hpfsmpl[chn][i] = 0;
     }
 
 
     if (gfp->mode == JOINT_STEREO) {
-      for(i=0;i<576+576/3;i++)
+      for(i=0;i<576;i++)
 	{
 	  ns_hpfsmpl[2][i] = ns_hpfsmpl[0][i]+ns_hpfsmpl[1][i];
 	  ns_hpfsmpl[3][i] = ns_hpfsmpl[0][i]-ns_hpfsmpl[1][i];
@@ -1404,6 +1388,10 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
   }
 
   for (chn=0; chn<numchn; chn++) {
+      FLOAT en_subshort[12];
+      FLOAT attack_intensity[12];
+      int ns_uselongblock = 1;
+      FLOAT attackThreshold;
 
     /**********************************************************************
      *  compute FFTs
@@ -1451,7 +1439,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
     gfc->energy[0] *= gfc->energy[0];
     
     /* sum total energy at nearly no extra cost */
-    gfc->tot_ener[chn] = gfc->energy[0];
+    gfc->tot_ener[chn] = 0.0;
     
     for (j=BLKSIZE/2-1; j >= 0; --j)
     {
@@ -1672,78 +1660,65 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
      * determine the block type (window type)
      ***************************************************************/
 
-    {
-      static int count=0;
-      FLOAT en_subshort[12];
-      FLOAT attack_intensity[12];
-      int ns_uselongblock = 1;
+	/* calculate energies of each sub-shortblocks */
+	for (i=0; i<3; i++) {
+	    en_subshort[i] = gfc->nsPsy.last_en_subshort[chn][i+6];
+	    attack_intensity[i]
+		= en_subshort[i] / gfc->nsPsy.last_en_subshort[chn][i+4];
+	}
 
-      /* calculate energies of each sub-shortblocks */
-
-      k = 0;
-      for(i=0;i<12;i++)
-	{
-	  en_subshort[i] = 0;
-	  for(j=0;j<576/9;j++)
-	    {
-	      en_subshort[i] += ns_hpfsmpl[chn][k] * ns_hpfsmpl[chn][k];
-	      k++;
+	if (chn == 2) {
+	    for(i=0;i<576;i++) {
+		FLOAT l, r;
+		l = ns_hpfsmpl[0][i];
+		r = ns_hpfsmpl[1][i];
+		ns_hpfsmpl[0][i] = l+r;
+		ns_hpfsmpl[1][i] = l-r;
 	    }
-
-	  if (en_subshort[i] < 100) en_subshort[i] = 100;
 	}
-
-      /* compare energies between sub-shortblocks */
-
-#define NSATTACKTHRE 150
-#define NSATTACKTHRE_S 300
-
-      for(i=0;i<2;i++) {
-	attack_intensity[i] = en_subshort[i] / gfc->nsPsy.last_en_subshort[chn][7+i];
-      }
-
-      for(;i<12;i++) {
-	attack_intensity[i] = en_subshort[i] / en_subshort[i-2];
-      }
-
-      ns_attacks[0] = ns_attacks[1] = ns_attacks[2] = ns_attacks[3] = 0;
-
-      for(i=0;i<12;i++)
 	{
-	  if (!ns_attacks[i/3] && attack_intensity[i] > (chn == 3 ? (gfc->presetTune.use ? gfc->presetTune.attackthre_s : NSATTACKTHRE_S)
-                                                              : (gfc->presetTune.use ? gfc->presetTune.attackthre   : NSATTACKTHRE))) ns_attacks[i/3] = (i % 3)+1;
+	    FLOAT *pf = ns_hpfsmpl[chn & 1];
+	    for (i=0;i<9;i++) {
+		double p = 0.0;
+		FLOAT *pfe = pf + 576/9;
+		for (; pf < pfe; pf++)
+		    p += *pf * *pf;
+
+		if (p < 100.0)
+		    p = 100.0;
+		gfc->nsPsy.last_en_subshort[chn][i] = en_subshort[i+3] = p;
+		attack_intensity[i+3] = p / en_subshort[i+3-2];
+	    }
 	}
 
-      if (ns_attacks[0] && gfc->nsPsy.last_attacks[chn][2]) ns_attacks[0] = 0;
-      if (ns_attacks[1] && ns_attacks[0]) ns_attacks[1] = 0;
-      if (ns_attacks[2] && ns_attacks[1]) ns_attacks[2] = 0;
-      if (ns_attacks[3] && ns_attacks[2]) ns_attacks[3] = 0;
+	/* compare energies between sub-shortblocks */
+	ns_attacks[0] = ns_attacks[1] = ns_attacks[2] = ns_attacks[3] = 0;
+	attackThreshold = (chn == 3)
+	    ? gfc->presetTune.attackthre_s : gfc->presetTune.attackthre;
+	for (i=0;i<12;i++) {
+	    if (ns_attacks[i/3])
+		continue;
+	
+	    if (attack_intensity[i] > attackThreshold)
+		ns_attacks[i/3] = (i % 3)+1;
+	}
+        if (ns_attacks[0] && gfc->nsPsy.last_attacks[chn][2])
+	    ns_attacks[0] = 0;
 
-      if (gfc->nsPsy.last_attacks[chn][2] == 3 ||
-	  ns_attacks[0] || ns_attacks[1] || ns_attacks[2] || ns_attacks[3]) ns_uselongblock = 0;
+	if (gfc->nsPsy.last_attacks[chn][2] == 3 ||
+	    ns_attacks[0] || ns_attacks[1] || ns_attacks[2] || ns_attacks[3]) {
+	    ns_uselongblock = 0;
 
-      if (chn < 4) count++;
-
-      for(i=0;i<9;i++)
-	{
-	  gfc->nsPsy.last_en_subshort[chn][i] = en_subshort[i];
-	  gfc->nsPsy.last_attack_intensity[chn][i] = attack_intensity[i];
+	    if (ns_attacks[1] && ns_attacks[0]) ns_attacks[1] = 0;
+	    if (ns_attacks[2] && ns_attacks[1]) ns_attacks[2] = 0;
+	    if (ns_attacks[3] && ns_attacks[2]) ns_attacks[3] = 0;
 	}
 
-      if (gfp->short_blocks == short_block_dispensed) {
-	uselongblock[chn] = 1;
-      } 
-      else if (gfp->short_blocks == short_block_forced) {
-	uselongblock[chn] = 0;
-      }
-      else {
 	if (chn < 2) {
-	  uselongblock[chn] = ns_uselongblock;
+	    uselongblock[chn] = ns_uselongblock;
 	} else {
-	  if (ns_uselongblock == 0) uselongblock[0] = uselongblock[1] = 0;
+	    if (!ns_uselongblock) uselongblock[0] = uselongblock[1] = 0;
 	}
-      }
-    }
 
 #if defined(HAVE_GTK)
     if (gfp->analysis) {
@@ -1814,10 +1789,6 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 		}
 
 /* 2001-07-13 */
-            /* this looks like a BUG  */
-            thr[b] = Max (1e-6, ecb);
-            
-            if (gfp->VBR == vbr_mtrh) {
                 thr[b] = Min( ecb, rpelev_s  * gfc->nb_s1[chn][b] );
                 if (gfc->blocktype_old[chn>1 ? chn-2 : chn] == SHORT_TYPE ) {
                    thr[b] = Min( thr[b], rpelev2_s * gfc->nb_s2[chn][b] );
@@ -1825,7 +1796,6 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
                 thr[b] = Max( thr[b], 1e-37 );
                 gfc->nb_s2[chn][b] = gfc->nb_s1[chn][b];
                 gfc->nb_s1[chn][b] = ecb;
-                }
 	    }
 	}
 	for ( sb = 0; sb < NBPSY_s; sb++ )
@@ -2295,6 +2265,7 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
       bo_l[sfb]=partition[i2];
 
     }
+    w1_l[0] = w2_l[sfb-1] = 1.0;
   }
 
 
@@ -2404,6 +2375,7 @@ int *npart_l_orig,int *npart_l,int *npart_s_orig,int *npart_s)
       bo_s[sfb]=partition[i2];
 
     }
+    w1_s[0] = w2_s[sfb-1] = 1.0;
   }
 
 
@@ -2533,6 +2505,7 @@ int psymodel_init(lame_global_flags *gfp)
       for (j=0; j<CBANDS; ++j) {
 	gfc->nb_1[i][j]=1e20;
 	gfc->nb_2[i][j]=1e20;
+        gfc->nb_s1[i][j] = gfc->nb_s2[i][j] = 1.0;
       }
       for ( sb = 0; sb < NBPSY_l; sb++ ) {
 	gfc->en[i].l[sb] = 1e20;
@@ -2693,6 +2666,17 @@ int psymodel_init(lame_global_flags *gfp)
     gfc->loudness_sq_save[1] = 0.0;
 
 
+
+    if (gfc->nsPsy.use) {
+
+#define NSATTACKTHRE 150
+#define NSATTACKTHRE_S 300
+
+	if (!gfc->presetTune.use) {
+	    gfc->presetTune.attackthre_s = NSATTACKTHRE_S;
+	    gfc->presetTune.attackthre   = NSATTACKTHRE;
+	}
+    }
 
     return 0;
 }
