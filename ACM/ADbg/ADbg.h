@@ -49,9 +49,9 @@ public:
 	virtual ~ADbg();
 
 	/// \todo make an inline function to test the level first and the process
-	int OutPut(int level, const char * format,...);
+	int OutPut(int level, const char * format,...) const;
 
-	int OutPut(const char * format,...);
+	int OutPut(const char * format,...) const;
 
 	inline int setLevel(const int level) {
 		return my_level = level;
@@ -78,7 +78,7 @@ private:
 	bool my_use_file;
 	bool my_debug_output;
 
-	int _OutPut(const char * format,va_list params);
+	int _OutPut(const char * format,va_list params) const;
 
 	char prefix[MAX_PREFIX_LENGTH];
 
@@ -95,11 +95,11 @@ public:
 	ADbg(int level = 0){}
 	virtual ~ADbg() {}
 
-	inline int OutPut(int level, const char * format,...) {
+	inline int OutPut(int level, const char * format,...) const {
 		return 0;
 	}
 
-	inline int OutPut(const char * format,...) {
+	inline int OutPut(const char * format,...) const {
 		return 0;
 	}
 

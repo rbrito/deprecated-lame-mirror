@@ -61,7 +61,7 @@ ADbg::~ADbg()
 	OutPut(-1,"ADbg Deletion (0x%08X)",this);
 }
 
-inline int ADbg::_OutPut(const char * format,va_list params)
+inline int ADbg::_OutPut(const char * format,va_list params) const
 {
 	int result;
 
@@ -113,7 +113,7 @@ inline int ADbg::_OutPut(const char * format,va_list params)
 	return result;
 }
 
-int ADbg::OutPut(int forLevel, const char * format,...)
+int ADbg::OutPut(int forLevel, const char * format,...) const
 {
 	int result=0;
 	
@@ -130,7 +130,7 @@ int ADbg::OutPut(int forLevel, const char * format,...)
 	return result;
 }
 
-int ADbg::OutPut(const char * format,...)
+int ADbg::OutPut(const char * format,...) const
 {
 	va_list tstlist;
 
