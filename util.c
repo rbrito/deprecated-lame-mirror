@@ -169,7 +169,7 @@ void  *mem_alloc(unsigned long block, char *item)
     void    *ptr;
 
     /* what kind of shit does ISO put out?  */
-    ptr = (void *) malloc((size_t) block/*<<1*/); /* allocate twice as much memory as needed. fixes dodgy
+    ptr = (void *) malloc((size_t) block /* <<1 */ ); /* allocate twice as much memory as needed. fixes dodgy
 					    memory problem on most systems */
 
 

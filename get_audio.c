@@ -234,7 +234,7 @@ int get_audio_resample(short int Buffer[2][1152],FLOAT resample_ratio,int stereo
 
 
   
-int GetSndBitrate()
+int GetSndBitrate(void)
 {
 	return input_bitrate;
 }

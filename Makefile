@@ -98,13 +98,20 @@ ifeq ($(ARCH),alpha)
 CC_OPTS =       -O4 -Wall -fomit-frame-pointer -ffast-math -funroll-loops \
                 -mfp-regs -fschedule-insns -fschedule-insns2 \
                 -finline-functions \
-                -DFLOAT=double
+#                -DFLOAT=double
+# add "-mcpu=21164a -Wa,-m21164a" to optimize for 21164a (ev56) CPU
+
+# Compaq's C Compiler
+#CC = ccc
+# Options for Compaq's C Compiler
+#CC_OPTS = -fast -Wall
+
 # standard Linux libm
-LIBS	=	-lm  
+#LIBS	=	-lm  
 # optimized libffm (free fast math library)
 #LIBS	=	-lffm  
 # Compaq's fast math library
-#LIBS    =       -lcpml 
+LIBS    =       -lcpml 
 endif
 endif
 

@@ -5,12 +5,8 @@
 
 #ifdef OS_AMIGAOS
 #include "/lame.h"
-<<<<<<< main.c
-#include "/util.h"
-=======
 #include "/util.h"
 #include "/VbrTag.h"
->>>>>>> 1.5
 #else
 #include "../lame.h"
 #include "../util.h"
@@ -89,13 +85,13 @@ unsigned long *num_samples)
   /* look for sync word  FFF */
   while (!is_syncword(buf)) {
     buf[0]=buf[1]; 
-    if (fread(&buf[1],1,1,fd) <= 0) return -1;  /* failed */
+    if (fread(&buf[1],1,1,fd) == 0) return -1;  /* failed */
   }
   /*  ret = decodeMP3(&mp,buf,2,out,FSIZE,&size); */
 
   /* read the header */
   len = fread(&buf[2],1,46,fd);
-  if (len <=0 ) return -1;
+  if (len ==0 ) return -1;
   len +=2;
 
   /* check for Xing header */
@@ -154,13 +150,13 @@ int lame_decode_fromfile(FILE *fd, short pcm[][1152])
 
   size=0;
   len = fread(buf,1,64,fd);
-  if (len <=0 ) return 0;
+  if (len ==0 ) return 0;
   ret = decodeMP3(&mp,buf,len,out,FSIZE,&size);
 
   /* read more until we get a valid output frame */
   while((ret == MP3_NEED_MORE) || !size) {
     len = fread(buf,1,100,fd);
-    if (len <=0 ) return -1;
+    if (len ==0 ) return -1;
     ret = decodeMP3(&mp,buf,len,out,FSIZE,&size);
     /* if (ret ==MP3_ERR) return -1;  lets ignore errors and keep reading... */
     /*

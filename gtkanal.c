@@ -63,7 +63,7 @@ struct gtkinfostruct {
 /**********************************************************************
  * read one frame and encode it 
  **********************************************************************/
-int gtkmakeframe()
+int gtkmakeframe(void)
 {
   int iread;
   static int mpglag;
@@ -133,7 +133,7 @@ void plot_frame(void)
   char label[80],label2[80];
   char *title;
   plotting_data *pplot1;
-  plotting_data *pplot2;
+  plotting_data *pplot2 = NULL;
 
   double en,samp;
   int sampindex,version=0;
@@ -804,8 +804,8 @@ static void delete_event( GtkWidget *widget,
 
 static void channel_option (GtkWidget *widget, gpointer data)
 {
-  int option;
-  option = (int) data;
+  long option;
+  option = (long) data;
   switch (option) {
   case 1:
     gtkinfo.msflag=0;
@@ -827,8 +827,8 @@ static void channel_option (GtkWidget *widget, gpointer data)
 }
 static void spec_option (GtkWidget *widget, gpointer data)
 {
-  int option;
-  option = (int) data;
+  long option;
+  option = (long) data;
   switch (option) {
   case 1:
     gtkinfo.kbflag=0;
@@ -886,12 +886,12 @@ static gint key_press_event (GtkWidget *widget, GdkEventKey *event)
 
 static void text_window (GtkWidget *widget, gpointer data)
 {
-  int option;
+  long option;
   GtkWidget *hbox,*vbox,*button,*box;
   GtkWidget *textwindow,*vscrollbar;
   char text[80];
 
-  option = (int) data;
+  option = (long) data;
   
   textwindow = gtk_window_new(GTK_WINDOW_DIALOG);
   gtk_signal_connect_object (GTK_OBJECT (window), "delete_event",

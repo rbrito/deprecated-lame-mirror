@@ -44,6 +44,9 @@
  * $Id$
  *
  * $Log$
+ * Revision 1.3  2000/02/21 23:05:05  markt
+ * some 64bit DEC Alpha patches
+ *
  * Revision 1.2  2000/02/19 13:32:30  afaber
  * Fixed many warning messages when compiling with MSVC
  *
@@ -56,6 +59,7 @@
  *
  */
 
+#include        <limits.h>
 #include	<stdio.h>
 #include	<math.h>
 #include	"ieeefloat.h"
@@ -121,7 +125,7 @@ ConvertFromIeeeSingle(char* bytes)
 		}
 	}
 
-	if (bits & 0x80000000)
+	if (bits & LONG_MIN)
 		return -f;
 	else
 		return f;
@@ -138,7 +142,7 @@ ConvertToIeeeSingle(defdouble num, char* bytes)
 	register long bits;
 
 	if (num < 0) {	/* Can't distinguish a negative zero */
-		sign = 0x80000000;
+		sign = LONG_MIN;
 		num *= -1;
 	} else {
 		sign = 0;
@@ -254,7 +258,7 @@ ConvertToIeeeDouble(defdouble num, char *bytes)
 	long	first, second;
 
 	if (num < 0) {	/* Can't distinguish a negative zero */
-		sign = 0x80000000;
+		sign = LONG_MIN;
 		num *= -1;
 	} else {
 		sign = 0;
