@@ -816,7 +816,7 @@ char *mp3buf, int mp3buf_size)
     ms_ratio_ave = .25*(gfc->ms_ratio[0] + gfc->ms_ratio[1]+
 			 ms_ratio_prev + ms_ratio_next);
     ms_ener_ratio_ave = .5*(gfc->ms_ener_ratio[0]+gfc->ms_ener_ratio[1]);
-    if ( ms_ratio_ave <.35 /*&& ms_ener_ratio_ave<.75*/ ) gfc->mode_ext = MPG_MD_MS_LR;
+    if ( ms_ratio_ave <.35 ) gfc->mode_ext = MPG_MD_MS_LR;
   }
   if (gfp->force_ms) gfc->mode_ext = MPG_MD_MS_LR;
 
@@ -857,15 +857,15 @@ char *mp3buf, int mp3buf_size)
 
 
   /*
-  VBR_iteration_loop_new( gfp,*pe_use, ms_ratio, xr, masking, l3_enc,
+  VBR_iteration_loop_new( gfp,*pe_use, ms_ener_ratio, xr, masking, l3_enc,
   	  &scalefac);
   */
 
   if (gfp->VBR) {
-    VBR_iteration_loop( gfp,*pe_use, gfc->ms_ratio, xr, *masking, l3_enc,
+    VBR_iteration_loop( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc,
 			scalefac);
   }else{
-    iteration_loop( gfp,*pe_use, gfc->ms_ratio, xr, *masking, l3_enc,
+    iteration_loop( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc,
 		    scalefac);
   }
 

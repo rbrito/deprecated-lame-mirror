@@ -284,7 +284,7 @@ static int choose_table(int *ix, int *end, int *s)
 }
 
 
-
+int bigv_short_ISO;
 
 
 static int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
@@ -325,6 +325,14 @@ static int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
 	return bits;
 
     if (gi->block_type == SHORT_TYPE) {
+      if (bigv_short_ISO) {
+	/* old ISO formula */
+	bits=0;
+	gi->count1bits=0;
+	gi->count1=576;
+	gi->big_values=576;
+      }
+
       a1=3*gfc->scalefac_band.s[3];
       if (a1 > gi->big_values) a1 = gi->big_values;
       a2 = gi->big_values;
@@ -391,7 +399,17 @@ int count_bits(lame_global_flags *gfp,int *ix, FLOAT8 *xr, gr_info *cod_info)
   if (cod_info->block_type==SHORT_TYPE) {
     int ix_reorder[576];
     reorder(gfc->scalefac_band.s,ix_reorder,ix);
+    /*
+    int obits;
+    bigv_short_ISO=1;
+    obits=count_bits_long(gfc, ix_reorder, cod_info);
+    */
+    bigv_short_ISO=0;
     bits=count_bits_long(gfc, ix_reorder, cod_info);
+    /*
+    printf("new bits = %i  saving=%i   percentage=%f\n",bits,obits-bits,
+            (obits-bits)/(.1+bits));
+    */
   }else{
     bits=count_bits_long(gfc, ix, cod_info);
   }

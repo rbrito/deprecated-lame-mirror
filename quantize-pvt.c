@@ -351,6 +351,8 @@ int targ_bits[2],int mean_bits, int gr)
   /* allocate targ_bits for granule */
   ResvMaxBits( mean_bits, &tbits, &extra_bits, gr);
 
+  bits=0;
+
   for (ch=0 ; ch < gfc->stereo ; ch ++) {
     /******************************************************************
      * allocate bits for each channel 
@@ -359,27 +361,29 @@ int targ_bits[2],int mean_bits, int gr)
     
     targ_bits[ch]=tbits/gfc->stereo;
     
-    /* allocate extra bits from reservoir based on PE */
-    bits=0;
-    
     /* extra bits based on PE > 700 */
     add_bits[ch]=(pe[gr][ch]-750)/1.55;  /* 1.4; */
-    
+    if (add_bits[ch] < 0) add_bits[ch]=0;
+
     /* short blocks need extra, no matter what the pe */
     if (cod_info->block_type==SHORT_TYPE) 
       if (add_bits[ch]<500) add_bits[ch]=500;
     
-    if (add_bits[ch] < 0) add_bits[ch]=0;
     bits += add_bits[ch];
-    
-    if (bits > extra_bits) add_bits[ch] = (extra_bits*add_bits[ch])/bits;
-
     if ((targ_bits[ch]+add_bits[ch]) > 4094) 
       add_bits[ch]=4094-targ_bits[ch];
 
+  }
+  if (bits > extra_bits)
+    for (ch=0 ; ch < gfc->stereo ; ch ++) {
+      add_bits[ch] = (extra_bits*add_bits[ch])/bits;
+    }
+
+  for (ch=0 ; ch < gfc->stereo ; ch ++) {
     targ_bits[ch] = targ_bits[ch] + add_bits[ch];
     extra_bits -= add_bits[ch];
   }
+
 }
 
 void reduce_side(int targ_bits[2],FLOAT8 ms_ener_ratio,int mean_bits)
