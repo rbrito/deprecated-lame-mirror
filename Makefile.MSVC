@@ -161,7 +161,11 @@ CC_OPTS = $(CC_OPTS) /G6
 !	IF "$(WARN)" == "OFF"
 CC_OPTS = $(CC_OPTS) /w
 !	ELSE
-CC_OPTS = $(CC_OPTS) /W2 /Wport
+CC_OPTS = $(CC_OPTS) /W2 
+!	ENDIF
+
+!	IF "$(PREC)" == "SINGLE"
+CC_OPTS = $(CC_OPTS) /DFLOAT8=float /DREAL_IS_FLOAT=1
 !	ENDIF
 
 LN_DLL = /LD
@@ -259,7 +263,7 @@ CC_OPTS = $(CC_OPTS) /W2 /Wport
 !	ENDIF
 
 !	IF "$(PREC)" == "SINGLE"
-CC_OPTS = $(CC_OPTS) /DFLOAT8=float
+CC_OPTS = $(CC_OPTS) /DFLOAT8=float /DREAL_IS_FLOAT=1
 !	ENDIF
 
 CC_OPTS = /nologo /DNDEBUG /YX /GA /Ox /Ob2 \
