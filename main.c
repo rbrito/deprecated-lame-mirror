@@ -193,6 +193,7 @@ int main(int argc, char **argv)
       }
       /* imp3 is not negative, but fwrite needs an unsigned here */
       fwrite(mp3buffer,1,(unsigned int)imp3,outf);
+      //lame_mp3_tags_fid(&gf,outf);       /* add ID3 version 1 or VBR tags to mp3 file */
       fclose(outf);
       lame_mp3_tags(&gf);       /* add ID3 version 1 or VBR tags to mp3 file */
     }

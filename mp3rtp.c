@@ -165,9 +165,10 @@ int main(int argc, char **argv)
   imp3=lame_encode_finish(&gf,mp3buffer,sizeof(mp3buffer));   /* may return one or more mp3 frame */
   fwrite(mp3buffer,1,imp3,outf);  
   rtp_output(mp3buffer,imp3);
+  //lame_mp3_tags_fid(&gf,outf);       /* add ID3 version 1 or VBR tags to mp3 file */
   fclose(outf);
-  lame_close_infile(&gf);             /* close the sound input file */
   lame_mp3_tags(&gf);       /* add ID3 version 1 or VBR tags to mp3 file */
+  lame_close_infile(&gf);             /* close the sound input file */
   return 0;
 }
 

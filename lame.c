@@ -1412,19 +1412,12 @@ int lame_encode_finish(lame_global_flags *gfp,char *mp3buffer, int mp3buffer_siz
 }
 
 
+
 /*****************************************************************/
 /* write VBR Xing header, and ID3 version 1 tag, if asked for    */
 /*****************************************************************/
-void lame_mp3_tags(lame_global_flags *gfp)
+void lame_mp3_tags_fid(lame_global_flags *gfp,FILE *fpStream)
 {
-  FILE *fpStream;
-
-  /* Open the bitstream again */
-  fpStream=fopen(gfp->outPath,"rwb+");
-  /* Assert stream is valid */
-  if (fpStream==NULL)
-    return;
-
   if (gfp->bWriteVbrTag)
     {
       /* Calculate relative quality of VBR stream
@@ -1432,9 +1425,9 @@ void lame_mp3_tags(lame_global_flags *gfp)
       int nQuality=gfp->VBR_q*100/9;
 
       /* Write Xing header again */
-      PutVbrTag(gfp,fpStream,nQuality);
+      if (fpStream && !fseek(fpStream, 0, SEEK_SET)) 
+	PutVbrTag(gfp,fpStream,nQuality);
     }
-
 
   /* write an ID3 version 1 tag  */
   if(gfp->id3v1_enabled
@@ -1455,8 +1448,23 @@ void lame_mp3_tags(lame_global_flags *gfp)
       id3tag_write_v1(&gfp->tag_spec, fpStream);
     }
   }
+
+}
+
+void lame_mp3_tags(lame_global_flags *gfp)
+{
+  FILE *fpStream;
+
+  /* Open the bitstream again */
+  fpStream=fopen(gfp->outPath,"rb+");
+  /* Assert stream is valid */
+  if (fpStream==NULL)
+    return;
+  lame_mp3_tags_fid(gfp,fpStream);
   fclose(fpStream);
 }
+
+
 
 
 void lame_version(lame_global_flags *gfp,char *ostring) {
