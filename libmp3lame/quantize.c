@@ -1131,18 +1131,14 @@ inline static int
 find_scalefac(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, int bw,
 	      int shortflag, int sf)
 {
-    int sf_ok, delsf = 8, sfmin = -7*2, endflag = 0;
-
+    int sf_ok = 10000, delsf = 8, sfmin = -7*2, endflag = 0;
     /* search range of sf.
        on shoft blocks, we can use subblock_gain and the range is large. */
     if (shortflag)
 	sfmin = -7*4-7*2;
 
-    sf_ok = 10000;
     for (;;) {
 	FLOAT xfsf = calc_sfb_noise_fast(xr, xr34, bw, sf);
-	int step;
-
 	if (xfsf > l3_xmin) {
 	    /* distortion.  try a smaller scalefactor */
 	    endflag |= 1;
