@@ -1392,7 +1392,7 @@ set_scalefactor_values(gr_info *gi)
     int ifqstep = 1 + 2*gi->scalefac_scale, sfb = 0;
     do {
 	int s = gi->scalefac[sfb];
-	if (s == LARGE_BITS)
+	if (s == SCALEFAC_ANYTHING_GOES)
 	    continue;
 
 	s = (gi->global_gain - s
@@ -1412,16 +1412,15 @@ noisesfb(lame_t gfc, gr_info *gi, FLOAT * xmin, int startsfb)
 {
     int sfb, j = 0;
     for (sfb = 0; sfb < gi->psymax; sfb++) {
-	int width = gi->wi[sfb].width;
+	int width = gi->wi[sfb].width, s;
 	j -= width;
-	if (gi->scalefac[sfb] < 0)
+	if (sfb < startsfb || gi->scalefac[sfb] == SCALEFAC_ANYTHING_GOES)
 	    continue;
-	if (sfb >= startsfb) {
-	    int s = scalefactor(gi, sfb);
-	    assert(IPOW20(s) <= gfc->maxXR[sfb]);
-	    if (calc_sfb_noise(gfc, j, width, s) > xmin[sfb])
-		return sfb;
-	}
+
+	s = scalefactor(gi, sfb);
+	assert(IPOW20(s) <= gfc->maxXR[sfb]);
+	if (calc_sfb_noise(gfc, j, width, s) > xmin[sfb])
+	    return sfb;
     }
     return -1;
 }
@@ -1432,10 +1431,10 @@ VBR_2nd_bitalloc(lame_t gfc, gr_info *gi, FLOAT * xmin)
     /* note: we cannot use calc_noise() because l3_enc[] is not calculated
        at this point */
     gr_info gi_w;
-    int sfb = 0, endflag = 0;
+    int sfb, endflag;
     for (sfb = 0; sfb < gi->psymax; sfb++) {
 	if (gi->scalefac[sfb] == LARGE_BITS) {
-	    gi->scalefac[sfb] = 0;
+	    gi->scalefac[sfb] = SCALEFAC_ANYTHING_GOES;
 	    continue;
 	}
 
@@ -1446,6 +1445,7 @@ VBR_2nd_bitalloc(lame_t gfc, gr_info *gi, FLOAT * xmin)
 	}
     }
     gi_w = *gi;
+    endflag = sfb = 0;
     for (;;) {
 	sfb = noisesfb(gfc, &gi_w, xmin, sfb);
 	if (sfb >= 0) {
@@ -1546,6 +1546,10 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
 		    vbrmax = gain;
 	    } else
 		gain = 255;
+	}
+	if (gi->scalefac[sfb] == LARGE_BITS) {
+	    memset(&xr34[j + gi->wi[sfb].width], 0,
+		   -sizeof(float)*gi->wi[sfb].width);
 	}
     } while (++sfb < gi->psymax);
     if (vbrmax == -10000)
