@@ -111,9 +111,9 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
   mp3data->stereo = mp.fr.stereo;
   mp3data->samplerate = freqs[mp.fr.sampling_frequency];
   mp3data->bitrate = tabsel_123[mp.fr.lsf][mp.fr.lay-1][mp.fr.bitrate_index];
-  framesize = (mp.fr.lsf == 0) ? 1152 : 576;
   mp3data->nsamp=MAX_U_32_NUM;
-  
+
+  framesize = (mp.fr.lsf == 0) ? 1152 : 576;
   if (xing_header && num_frames) {
     mp3data->nsamp=framesize * num_frames;
   }

@@ -1,5 +1,3 @@
-#ifdef LAMEPARSE
-
 #include "util.h"
 #include "id3tag.h"
 #include "get_audio.h"
@@ -105,6 +103,7 @@ void lame_help(lame_global_flags *gfp,char *name)  /* print syntax & exit */
   fprintf(stdout,"    -x              force byte-swapping of input\n");
   fprintf(stdout,"    -s sfreq        sampling frequency of input file(kHz) - default 44.1kHz\n");
   fprintf(stdout,"    --mp3input      input file is a MP3 file\n");
+  fprintf(stdout,"    --ogginput      input file is a Ogg Vorbis file\n");
   fprintf(stdout,"\n");
   fprintf(stdout,"  Filter options:\n");
   fprintf(stdout,"    -k              keep ALL frequencies (disables all filters)\n");
@@ -278,6 +277,9 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	}
 	else if (strcmp(token, "mp3input")==0) {
 	  gfp->input_format=sf_mp3;
+	}
+	else if (strcmp(token, "ogginput")==0) {
+	  gfp->input_format=sf_ogg;
 	}
 	else if (strcmp(token, "voice")==0) {
 	  gfp->lowpassfreq=12000;
@@ -757,10 +759,13 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 
 
   /* if user did not explicitly specify input is mp3, check file name */
-  if (gfp->input_format != sf_mp3)
+  if (gfp->input_format != sf_mp3 || gfp->input_format != sf_ogg) {
     if (!(strcmp((char *) &gfp->inPath[strlen(gfp->inPath)-4],".mp3")))
       gfp->input_format = sf_mp3;
-
+    else if (!(strcmp((char *) &gfp->inPath[strlen(gfp->inPath)-4],".ogg")))
+      gfp->input_format = sf_ogg;
+  }
+  
 #if !(defined HAVEMPGLIB || defined AMIGA_MPEGA)
   if (gfp->input_format == sf_mp3) {
     fprintf(stderr,"Error: libmp3lame not compiled with mp3 *decoding* support \n");
@@ -786,4 +791,3 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 
 
 
-#endif

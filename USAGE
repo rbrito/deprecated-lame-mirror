@@ -114,6 +114,7 @@ Operational:
 -s  n          input sampling frequency in kHz (for raw PCM input files)
 --resample n   output sampling frequency
 --mp3input     input file is an MP3 file.  decode using mpglib/mpg123
+--ogginput     input file is an Ogg Vorbis file.  decode using libvorbis
 -x             swap bytes of input file
 -a             downmix stereo input file to mono .mp3
 -e  n/5/c      de-emphasis
@@ -431,6 +432,19 @@ non-original
 -o   
 
 mark the encoded file as a copy
+
+=======================================================================
+Ogg Vorbis input file
+=======================================================================
+--ogginput
+
+Assume the input file is an Ogg Vorbis file.  Mostly usefull
+with --decode for playing back .ogg files.  
+If the filename ends in ".ogg" LAME will assume
+it is an Ogg.  For stdin or files which dont end in .ogg you need
+to use this switch.
+
+
 
 
 =======================================================================

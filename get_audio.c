@@ -16,9 +16,9 @@
 #endif
 
 
-
 int read_samples_pcm(lame_global_flags *gfp,short sample_buffer[2304],int frame_size, int samples_to_read);
 int read_samples_mp3(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2][1152],int num_chan);
+int read_samples_ogg(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2][1152],int num_chan);
 
 
 void lame_init_infile(lame_global_flags *gfp)
@@ -107,6 +107,8 @@ int get_audio(lame_global_flags *gfp,short buffer[2][1152],int stereo)
   if (gfp->input_format==sf_mp3) {
     /* decode an mp3 file for the input */
     samples_read=read_samples_mp3(gfp,gfp->musicin,buffer,num_channels);
+  } else if (gfp->input_format==sf_ogg) {
+    samples_read=read_samples_ogg(gfp,gfp->musicin,buffer,num_channels);
   }else{
     samples_read = read_samples_pcm(gfp,insamp,num_channels*framesize,num_channels*samples_to_read);
     samples_read /=num_channels;
@@ -127,6 +129,41 @@ int get_audio(lame_global_flags *gfp,short buffer[2][1152],int stereo)
 
   
 
+
+
+int read_samples_ogg(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2][1152],int stereo)
+{
+#ifdef HAVEVORBIS
+  int j,out=0;
+  lame_internal_flags *gfc=gfp->internal_flags;
+  mp3data_struct mp3data;
+
+  out=lame_decode_ogg_fromfile(musicin,mpg123pcm[0],mpg123pcm[1],&mp3data);
+  /* out = -1:  error, probably EOF */
+  /* out = 0:   not possible with lame_decode_fromfile() */
+  /* out = number of output samples */
+
+  if (out==-1) {
+    for ( j = 0; j < 1152; j++ ) {
+      mpg123pcm[0][j] = 0;
+      mpg123pcm[1][j] = 0;
+    }
+  }
+
+  if (out==-1) return 0;
+
+  gfp->brate=mp3data.bitrate;
+  if (gfp->num_channels != mp3data.stereo) {
+    fprintf(stderr,"Error: number of channels has changed in mp3 file - not supported. \n");
+  }
+  if (gfp->in_samplerate != mp3data.samplerate) {
+    fprintf(stderr,"Error: samplerate has changed in mp3 file - not supported. \n");
+  }
+
+
+  return out;
+#endif
+}
 
 
 int read_samples_mp3(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2][1152],int stereo)
@@ -176,9 +213,7 @@ int read_samples_mp3(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2]
 
 
   return out;
-#else
-  fprintf(stderr,"Error: libmp3lame was not compiled with I/O support \n");
-  exit(1);
+
 #endif
 }
 
@@ -225,14 +260,15 @@ int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip)
   }else{
     /* other formats have no delay */
     skip=0;
-    fprintf(stderr, "input:    %s %.1fkHz  channel\n",
+    fprintf(stderr, "input:    %s %.1fkHz %i channel\n",
 	  (strcmp(gfp->inPath, "-")? gfp->inPath : "stdin"),
 	  gfp->in_samplerate/1000.0,gfp->num_channels);
   }
 
   fprintf(stderr, "output:   %s (wav format)\n",
 	  (strcmp(gfp->outPath, "-")? gfp->outPath : "stdout"));
-  fprintf(stderr, "skipping initial %i samples (encoder + decoder delay)\n",skip);
+  if (skip>0)
+    fprintf(stderr, "skipping initial %i samples (encoder + decoder delay)\n",skip);
   WriteWav(outf,wavsize,gfp->in_samplerate,gfp->num_channels);
   wavsize=-skip;
   do {
@@ -352,6 +388,25 @@ FILE * OpenSndFile(lame_global_flags *gfp)
     gfp->in_samplerate=mp3data.samplerate;
     gfc->input_bitrate=mp3data.bitrate;
     gfp->num_samples=mp3data.nsamp;
+  }else if (gfp->input_format==sf_ogg) {
+#ifdef HAVEVORBIS
+    if ((musicin = fopen(lpszFileName, "rb")) == NULL) {
+	  fprintf(stderr, "Could not find \"%s\".\n", lpszFileName);
+	  exit(1);
+    }
+    if (-1==lame_decode_ogg_initfile(musicin,&mp3data)) {
+	  fprintf(stderr,"Error reading headers in mp3 input file %s.\n", lpszFileName);
+	  exit(1);
+	}
+    gfp->num_channels=0;
+    gfp->in_samplerate=0;
+    gfc->input_bitrate=0;
+    gfp->num_samples=0;
+#else
+    fprintf(stderr,"LAME not compiled with libvorbis support.\n");
+    exit(1);
+#endif
+
 
   } else {
 
@@ -993,6 +1048,21 @@ FILE * OpenSndFile(lame_global_flags *gfp)
     gfp->in_samplerate=mp3data.samplerate;
     gfc->input_bitrate=mp3data.bitrate;
     gfp->num_samples=mp3data.nsamp;
+  }else if (gfp->input_format==sf_ogg) {
+#ifdef HAVEVORBIS
+    mp3data_struct mp3data;
+    if (-1==lame_decode_ogg_initfile(musicin,&mp3data)) {
+      fprintf(stderr,"Error reading headers in ogg input file %s.\n", inPath);
+      exit(1);
+    }
+    gfp->num_channels=mp3data.stereo;
+    gfp->in_samplerate=mp3data.samplerate;
+    gfc->input_bitrate=mp3data.bitrate;
+    gfp->num_samples=mp3data.nsamp;
+#else
+    fprintf(stderr,"LAME not compiled with libvorbis support.\n");
+    exit(1);
+#endif
  }else{
    if (gfp->input_format != sf_raw) {
      parse_file_header(gfp,musicin);

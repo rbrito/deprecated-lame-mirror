@@ -351,6 +351,10 @@ int lame_decode_initfile(FILE *fd,mp3data_struct *mp3data);
 int lame_decode_fromfile(FILE *fd,short int pcm_l[],short int pcm_r[],mp3data_struct *mp3data);
 #endif
 
+/* and for Vorbis: */
+int lame_decode_ogg_initfile(FILE *fd,mp3data_struct *mp3data);
+int lame_decode_ogg_fromfile(FILE *fd,short int pcm_l[],short int pcm_r[],mp3data_struct *mp3data);
+
 /* the simple lame decoder (interface to above routines) */
 /* After calling lame_init(), lame_init_params() and
  * lame_init_infile(), call this routine to read the input MP3 file 
