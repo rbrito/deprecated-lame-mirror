@@ -147,16 +147,7 @@ static void PresetOptions( lame_global_flags *gfp, LONG myPreset )
 			break;
 
 /*4*/		case LQP_R3MIX:					// --R3MIX
-		        lame_set_exp_nspsytune( gfp, lame_get_exp_nspsytune( gfp ) | 1); /*nspsytune*/
-            		(void) lame_set_scale( gfp, 0.98f ); /* --scale 0.98*/
-            		lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (8 << 20));
-            		lame_set_VBR( gfp,vbr_mtrh ); 
-            		lame_set_VBR_q( gfp, 1 );
-            		lame_set_quality( gfp, 2 );
-            		lame_set_lowpassfreq( gfp, 19500 );
-            		lame_set_mode( gfp, JOINT_STEREO );
-            		lame_set_ATHtype( gfp, 3 );
-            		lame_set_VBR_min_bitrate_kbps( gfp, 96 );
+		        lame_set_preset( gfp, R3MIX);
 			break;
 
 /*5*/		case LQP_VERYHIGH_QUALITY:
@@ -164,51 +155,23 @@ static void PresetOptions( lame_global_flags *gfp, LONG myPreset )
 			break;
 
 /*6*/		case LQP_STANDARD:				// --ALT-PRESET STANDARD
-	   		lame_set_VBR(gfp, vbr_rh);
-        		lame_set_preset_expopts(gfp, 3);
-        		lame_set_quality(gfp, 2);
-        		lame_set_lowpassfreq(gfp, 19000);
-        		lame_set_mode(gfp, JOINT_STEREO);
-        		lame_set_VBR_min_bitrate_kbps(gfp, 112);
-        		lame_set_VBR_max_bitrate_kbps( gfp, 320 );
+		        lame_set_preset( gfp, STANDARD);
 			break;
 
 /*7*/		case LQP_FAST_STANDARD:				// --ALT-PRESET FAST STANDARD
-           		lame_set_VBR(gfp, vbr_mtrh);
-        		lame_set_preset_expopts(gfp, 3);
-        		lame_set_quality(gfp, 2);
-        		lame_set_lowpassfreq(gfp, 19000);
-        		lame_set_mode(gfp, JOINT_STEREO);
-        		lame_set_VBR_min_bitrate_kbps(gfp, 112);
-        		lame_set_VBR_max_bitrate_kbps( gfp, 320 );
+		        lame_set_preset( gfp, STANDARD_FAST);
 			break;
 
 /*8*/		case LQP_EXTREME:				// --ALT-PRESET EXTREME
-		        lame_set_VBR(gfp, vbr_rh);
-        		lame_set_preset_expopts(gfp, 2);
-        		lame_set_quality(gfp, 2);
-        		lame_set_lowpassfreq(gfp, 19500);
-        		lame_set_mode(gfp, JOINT_STEREO);
-        		lame_set_VBR_min_bitrate_kbps(gfp, 128);					
-	            lame_set_VBR_max_bitrate_kbps( gfp, 320 );
+		        lame_set_preset( gfp, EXTREME);
 			break;
 
 /*9*/		case LQP_FAST_EXTREME:				// --ALT-PRESET FAST EXTREME:
-				lame_set_VBR(gfp, vbr_mtrh);
-				lame_set_preset_expopts(gfp, 2);
-				lame_set_quality(gfp, 2);
-				lame_set_lowpassfreq(gfp, 19500);
-				lame_set_mode(gfp, JOINT_STEREO);
-				lame_set_VBR_min_bitrate_kbps(gfp, 128);					
-				lame_set_VBR_max_bitrate_kbps( gfp, 320 );
+		        lame_set_preset( gfp, EXTREME_FAST);
 			break;
 
 /*10*/		case LQP_INSANE:				// --ALT-PRESET INSANE
-				lame_set_preset_expopts(gfp, 1);
-				lame_set_brate(gfp, 320);
-				lame_set_quality(gfp, 2);
-				lame_set_mode(gfp, JOINT_STEREO);
-				lame_set_lowpassfreq(gfp, 20500);
+		        lame_set_preset( gfp, INSANE);
 			break;
 
 /*11*/		case LQP_ABR:					// --ALT-PRESET ABR
@@ -586,9 +549,9 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 				lame_set_mode( gfp, MONO );
 				lame_set_num_channels( gfp, 1 );
 				break;
-			case BE_MP3_MODE_DUALCHANNEL:
+			case BE_MP3_MODE_DUALCHANNEL: //warning: there is NO dual channel option working in Lame
 				lame_set_force_ms( gfp, 1 );
-				lame_set_mode( gfp, JOINT_STEREO );
+				lame_set_mode( gfp, STEREO );
 				lame_set_num_channels( gfp, 2 );
 				break;
 			default:
