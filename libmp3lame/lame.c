@@ -783,6 +783,8 @@ lame_init_params(lame_global_flags * const gfp)
     if (gfp->allow_diff_short == -1) {
         if (gfp->mode == STEREO)
             gfp->allow_diff_short = 1;
+        else
+            gfp->allow_diff_short = 0;
     }
 
 
