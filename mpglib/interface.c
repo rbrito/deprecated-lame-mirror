@@ -454,12 +454,8 @@ decodeMP3_clipchoice( PMPSTR mp,unsigned char *in,int isize,char *out,
 {
 	int i,iret,bits,bytes;
 
-	if(in) {
-		if(addbuf(mp,in,isize) == NULL) {
-			return MP3_ERR;
-		}
-	}
-
+	if(in && isize && addbuf(mp,in,isize) == NULL)
+	    return MP3_ERR;
 
 	/* First decode header */
 	if(!mp->header_parsed) {
