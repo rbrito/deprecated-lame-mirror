@@ -730,6 +730,12 @@ int L3psycho_anal( lame_global_flags *gfp,
 		tbb = exp(-LN_TO_LOG10 * ( TMN*tbb + (1-tbb)*NMT) );
 	      }
 	  }
+#ifdef RH_AMP
+        else
+          {
+            tbb = 0.4;
+          }
+#endif
 	/* at this point, tbb represents the amount the spreading function
 	 * will be reduced.  The smaller the value, the less masking.
 	 * minval[] = 1 (0db)     says just use tbb.
@@ -742,7 +748,11 @@ int L3psycho_anal( lame_global_flags *gfp,
 	  ecb *= tbb;
 	  ecb *= 1.58489319246111;   /* pow(10.0,4/20.0) tuned by hearing tests */
 	} else {
+#ifdef RH_AMP
+	  tbb *= gfc->minval[b]; /* always below Min(gfc->minval[b],tbb) */
+#else
 	  tbb = Min(gfc->minval[b], tbb);
+#endif
 	  ecb *= tbb;
 	}
 
