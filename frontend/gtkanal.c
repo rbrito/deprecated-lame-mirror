@@ -1021,7 +1021,7 @@ static void text_window (GtkWidget *widget, gpointer data)
   long option;
   GtkWidget *hbox,*vbox,*button,*box;
   GtkWidget *textwindow,*vscrollbar;
-  char text[80], version[80], url[80];
+  char text[80];
 
   option = (long) data;
   
@@ -1116,17 +1116,13 @@ static void text_window (GtkWidget *widget, gpointer data)
     gtk_window_set_title (GTK_WINDOW (textwindow), "About");
     gtk_widget_set_usize(box,350,260);
 
-    get_lame_url(url, sizeof(url), NULL);
-    get_lame_version(version, sizeof(version), NULL);
-    sprintf(text,"LAME version %s \n%s\n\n",version,url);
+    sprintf(text,"LAME version %s \n%s\n\n",get_lame_version(),get_lame_url());
     gtk_text_insert(GTK_TEXT(box),NULL,NULL,NULL,text,-1);
 
-    get_psy_version(version, sizeof(version), NULL);
-    sprintf(text,"psycho-acoustic model:  GPSYCHO version %s\n",version);
+    sprintf(text,"psycho-acoustic model:  GPSYCHO version %s\n",get_psy_version());
     gtk_text_insert(GTK_TEXT(box),NULL,NULL,NULL,text,-1);
     
-    get_mp3x_version(version, sizeof(version), NULL);
-    sprintf(text,"frame analyzer: MP3x version %s\n\n",version);
+    sprintf(text,"frame analyzer: MP3x version %s\n\n",get_mp3x_version());
     gtk_text_insert(GTK_TEXT(box),NULL,NULL,NULL,text,-1);
     
     gtk_text_insert(GTK_TEXT(box),NULL,NULL,NULL,

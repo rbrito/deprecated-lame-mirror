@@ -68,7 +68,7 @@ GTKLIBS = /LIBPATH:../src/gtk+/gtk \
 #
 # uncomment the following if you have Vorbis
 #
-#VORBIS = /DHAVEVORBIS -I../vorbis/include
+#VORBIS = /DHAVE_VORBIS -I../vorbis/include
 #VORBISLIB = /LIBPATH:../vorbis/lib vorbis.lib
 #============================================================ VORBIS SUPPORT ==
 

@@ -28,6 +28,7 @@
 # include <configMS.h>
 #endif
 
+
 #include <assert.h>
 #include "lame-analysis.h"
 #include "lame.h"
@@ -212,7 +213,7 @@ static void  optimum_bandwidth (
  *      samplefreq  output sampling frequency in Hz
  *      channels    1 for mono, 2+epsilon for MS stereo, 3 for LR stereo
  *                  epsilon is the percentage of LR frames for typical audio
- *                  (I use fade to gray by Metallica)
+ *                  (I use 'Fade to Gray' by Metallica)
  *
  *   Output:
  *      lowerlimit: best lowpass frequency limit for input filter in Hz
@@ -235,7 +236,7 @@ static void  optimum_bandwidth (
         br /= 1.75 + 0.25 * (channels-2.);    // MS needs 1.75x mono, LR needs 2.00x mono (experimental data of a lot of albums)
         
     br *= 0.5;                                // the sinus and cosine term must share the bitrate
-    
+
 /* 
  *  So, now we have the bitrate for every spectral line.
  *  Let's look at the current settings:
@@ -290,6 +291,38 @@ static void  optimum_bandwidth (
  *   256 kbps     22.05 kHz  2.78           0.0 kHz
  */
 
+/* 
+ *  Beginning at 128 kbps/jstereo, we can use the following additional
+ *  strategy:
+ *
+ *      For every increase of f_low in a way that the ATH(f_low) 
+ *      increases by 4 dB we force an additional NMR of 1.25 dB. 
+ *      These are the setting of the VBR quality selecting scheme 
+ *      for V <= 4.
+ */
+    {
+        double  br_sw    = (128000 - (32+4)*8 * 44100 / 1152) / 1.75 * 0.5;
+	double  f_low_sw = br_sw / log10 ( br_sw * 4.425e-3 );
+	
+	// printf ("br_sw=%f  f_low_sw=%f\n", br_sw, f_low_sw );
+	// printf ("br   =%f  f_low   =%f\n", br   , f_low    );
+	// fflush (stdout);
+	
+	while ( f_low > f_low_sw ) {
+	    double  dATH = ATHformula (f_low*1.e-3) - ATHformula (f_low_sw*1.e-3);	// [dB]
+	    double  dNMR = br / f_low - br_sw / f_low_sw;		// bit
+
+  	    // printf ("br   =%f  f_low   =%f\n", br   , f_low    );
+  	    // printf ("dATH =%f  dNMR    =%f\n", dATH , dNMR     );
+  	    // fflush (stdout);
+
+	    
+	    if ( dATH / 4.0  <  dNMR * 6.0206 / 1.25 )			// 1 bit = 6.0206... dB
+		break;
+	    f_low -= 25.;
+	}
+    } 
+
 /*
  *  Now we try to choose a good high pass filtering frequency.
  *  This value is currently not used.
@@ -305,7 +338,7 @@ static void  optimum_bandwidth (
  *  17 kHz =>  10 Hz
  *  18 kHz =>   0 Hz
  *
- *  These are ad hoc values and these can be optimzed if a high pass is available.
+ *  These are ad hoc values and these can be optimized if a high pass is available.
  */
     if ( f_low <= 16000 )
         f_high = 16000.*20./f_low;
@@ -324,11 +357,10 @@ static void  optimum_bandwidth (
 /*
  * Now the weak points:
  *
- *   - the formula f_low=br/log10(br*4.425e-3) is a ad hoc formula
+ *   - the formula f_low=br/log10(br*4.425e-3) is an ad hoc formula
  *     (but has a physical background and is easy to tune)
- *   - the sfb21 problem (no scale factor) is not taken into account,
- *     so for high bitrates with f_high is in sfb21 the lowpass frequency
- *     should be designed by the ATH curve.
+ *   - the switch to the ATH based bandwidth selecting is the ad hoc
+ *     value of 128 kbps
  */
 }
 
@@ -465,32 +497,39 @@ int lame_init_params ( lame_global_flags* const gfp )
     else
         gfc->resample_ratio = 1.;
 
-  /* 44.1kHz at 56kbs/channel: compression factor of 12.6
-     44.1kHz at 64kbs/channel: compression factor of 11.025
-     44.1kHz at 80kbs/channel: compression factor of 8.82
-     22.05kHz at 24kbs:  14.7
-     22.05kHz at 32kbs:  11.025
-     22.05kHz at 40kbs:  8.82
-     16kHz at 16kbs:  16.0
-     16kHz at 24kbs:  10.7
+    /* 
+     *  sample freq       bitrate     compression ratio
+     *     [kHz]      [kbps/channel]   for 16 bit input
+     *     44.1            56               12.6
+     *     44.1            64               11.025
+     *     44.1            80                8.82
+     *     22.05           24               14.7
+     *     22.05           32               11.025
+     *     22.05           40                8.82
+     *     16              16               16.0
+     *     16              24               10.667
+     *
+     *  compression ratio (???)
+     *     11                     0.70 ?
+     *     12        sox resample 0.66
+     *     14.7      sox resample 0.45
+     */
 
-     compression_ratio
-        11                                .70?
-        12                   sox resample .66
-        14.7                 sox resample .45
-
-  */
-
-  /* for VBR, take a guess at the compression_ratio. for example: */
-  /* VBR_q           compression       like
-                      4.4             320kbs/44khz
-     0-1              5.5             256kbs/44khz
-     2                7.3             192kbs/44khz
-     4                8.8             160kbs/44khz
-     6                11              128kbs/44khz
-     9                14.7             96kbs
-     for lower bitrates, downsample with --resample
-  */
+    /* 
+     *  For VBR, take a guess at the compression_ratio. 
+     *  For example:
+     *
+     *    VBR_q    compression     like
+     *     -        4.4         320 kbps/44 kHz
+     *   0...1      5.5         256 kbps/44 kHz
+     *     2        7.3         192 kbps/44 kHz
+     *     4        8.8         160 kbps/44 kHz
+     *     6       11           128 kbps/44 kHz
+     *     9       14.7          96 kbps
+     *
+     *  for lower bitrates, downsample with --resample
+     */
+   
     switch ( gfp->VBR ) {
     case vbr_mt:
     case vbr_rh:
@@ -552,6 +591,69 @@ int lame_init_params ( lame_global_flags* const gfp )
   /* if a filter has not been enabled, see if we should add one: */
   /****************************************************************/
 
+#ifdef KLEMM_42
+    if ( gfp->lowpassfreq == 0 ) {
+        double  lowpass;
+	double  highpass;
+	double  channels;
+	
+	switch ( gfp->mode ) {
+	case MPG_MD_MONO:   	  
+	    channels = 1.; 
+	    break;
+	case MPG_MD_JOINT_STEREO: 
+	    channels = 2. + 0.00; 
+	    break;
+	case MPG_MD_DUAL_CHANNEL: 
+	case MPG_MD_STEREO:       
+	    channels = 3.; 
+	    break;
+	default:                  
+	    assert (0);
+	    break;
+	}
+	
+        optimum_bandwidth ( &lowpass, 
+	                    &highpass, 
+			    gfp->out_samplerate * 16 * gfc->stereo / gfp->compression_ratio,
+			    gfp->out_samplerate,
+			    channels );
+			
+        if ( lowpass < 0.5 * gfp->out_samplerate ) {
+            fprintf (stderr, "Lowpass @ %7.1f Hz\n", lowpass );
+            gfc->lowpass1 = gfc->lowpass2 = lowpass / (0.5 * gfp->out_samplerate) ;
+        }
+	if ( gfp->out_samplerate != optimum_samplefreq ( lowpass, gfp->in_samplerate ) ) {
+            fprintf ( stderr, 
+	              "I would suggest to use %u Hz instead of %u Hz sample frequency\n", 
+	              optimum_samplefreq ( lowpass, gfp->in_samplerate ), 
+		      gfp->out_samplerate );
+	}
+        fflush (stderr);    
+    }
+
+    /* apply user driven high pass filter */
+    if ( gfp->highpassfreq > 0 ) {
+        gfc->highpass1 = 2. * gfp->highpassfreq / gfp->out_samplerate;   /* will always be >=0 */
+        if ( gfp->highpasswidth >= 0 )
+            gfc->highpass2 = 2. * (gfp->highpassfreq + gfp->highpasswidth) / gfp->out_samplerate;
+        else /* 0% above on default */
+            gfc->highpass2 = (1 + 0.00) * 2. * gfp->highpassfreq / gfp->out_samplerate;
+    }
+
+    /* apply user driven low pass filter */
+    if ( gfp->lowpassfreq > 0 ) {
+        gfc->lowpass2 = 2. * gfp->lowpassfreq / gfp->out_samplerate;   /* will always be >=0 */
+        if ( gfp->lowpasswidth >= 0 ) {
+            gfc->lowpass1 = 2. * (gfp->lowpassfreq - gfp->lowpasswidth) / gfp->out_samplerate;
+            if ( gfc->lowpass1 < 0 )                                   /* has to be >= 0 */
+	        gfc->lowpass1 = 0;
+        } else { /* 0% below on default */
+            gfc->lowpass1 = (1 - 0.00) * 2. * gfp->lowpassfreq / gfp->out_samplerate;
+        }
+    }
+
+#else
   if (gfp->lowpassfreq == 0) {
       double  band;
       
@@ -579,38 +681,11 @@ int lame_init_params ( lame_global_flags* const gfp )
       if (band > 29.)
           band = 29.;
     }
-
-#ifdef KLEMM_01
-        if ( gfp->out_samplerate >= 32000 ) {
-            static unsigned char bandwidth [3] [11] = {
-	                 /*  0  32  64  96 128 160 192 224 256 288 320 */
-	        /* 32 */ {   1, 21, 31,  54,58, 60, 62, 62, 62, 62, 62 },
-		/* 44 */ {   1, 17, 25,  39,42, 44, 45, 46, 47, 48, 49 },
-		/* 48 */ {   1, 15, 23,  36,39, 40, 41, 42, 43, 44, 45 },
-            };
-            int  index;
-            int  bitrate;
-
-            switch ( gfp->out_samplerate ) {
-	    case 32000: index = 0; break;
-	    default:    assert (0);
-	    case 44100: index = 1; break;
-	    case 48000: index = 2; break;
-            }
-
-            bitrate = gfp->out_samplerate * 16 * gfc->stereo / gfp->compression_ratio / 32000;
-	    if ( bitrate > 10 )
-	        bitrate = 10;
-            band  = 0.5 * bandwidth [index] [bitrate];
-        }
-#endif  
-      
     if (band < 31) {
       gfc->lowpass1 = band/31.0;
       gfc->lowpass2 = band/31.0;
     }
   }
-  
 
   /****************************************************************/
   /* apply user driven filters*/
@@ -639,6 +714,10 @@ int lame_init_params ( lame_global_flags* const gfp )
       gfc->lowpass1 = 1.00*2.0*gfp->lowpassfreq/gfp->out_samplerate;
     }
   }
+
+#endif    
+  
+
 
 
   /***************************************************************/
@@ -1260,11 +1339,11 @@ int    lame_encode_flush (
          */
         imp3 = lame_encode_buffer (gfp, buffer[0], buffer[1], gfp->framesize,
                                    mp3buffer, mp3buffer_size_remaining);
-        /* dont count the above padding: */
+        /* don't count the above padding: */
         gfc->mf_samples_to_encode -= gfp->framesize;
 
         if (imp3 < 0) {
-            /* some type of fatel error */
+            /* some type of fatal error */
             return imp3;
         }
         mp3buffer += imp3;
