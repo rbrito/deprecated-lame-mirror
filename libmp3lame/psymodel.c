@@ -27,8 +27,6 @@
 #include "tables.h"
 #include "fft.h"
 
-#define KLEMM_04
-
 #ifdef M_LN10
 #define		LN_TO_LOG10		(M_LN10/10)
 #else
@@ -338,14 +336,13 @@ int L3psycho_anal( lame_global_flags *gfp,
 
   if (gfp->exp_nspsytune) {
 #ifdef KLEMM_04
-//    static const FLOAT fircoef[] = {
-//      0,-0.00851586, 0  , 0.0209036,
-//      0,-0.0438162 , 0  , 0.0931738,
-//      0,-0.313819  , 0.5,-0.313819,
-//      0, 0.0931738 , 0  ,-0.0438162,
-//      0, 0.0209036 , 0  ,-0.00851586,
-//      0,
-//    };
+    static const sample_t fircoef[] = {
+      0,-0.00851586, 0  , 0.0209036,
+      0,-0.0438162 , 0  , 0.0931738,
+      0,-0.313819  , 0.5,-0.313819,
+      0, 0.0931738 , 0  ,-0.0438162,
+      0, 0.0209036 , 0  ,-0.00851586,
+    };
 #else    
     static const FLOAT fircoef[] = {
       -8.65163e-18,-0.00851586,-6.74764e-18, 0.0209036,
@@ -359,7 +356,11 @@ int L3psycho_anal( lame_global_flags *gfp,
 
     for(chn=0;chn<gfc->stereo;chn++)
       {
+#ifdef KLEMM_04
+	sample_t firbuf [576 + 576/3 + NSFIRLEN];
+#else      
 	FLOAT firbuf[576+576/3+NSFIRLEN];
+#endif	
 
 	/* apply high pass filter of fs/4 */
 	
@@ -367,21 +368,16 @@ int L3psycho_anal( lame_global_flags *gfp,
 	  firbuf[i+NSFIRLEN] = buffer[chn][576-350+(i)];
 
 	for(i=0;i<576+576/3-NSFIRLEN;i++)
-	  {
-#ifdef KLEMM_04	/* on SIMD machines may be slower */
-	    FLOAT sum = -0.00851586 * ( firbuf[i+ 1] + firbuf[i+19] )
-	                +0.0209036  * ( firbuf[i+ 3] + firbuf[i+17] )
-			-0.0438162  * ( firbuf[i+ 5] + firbuf[i+15] )
-			+0.0931738  * ( firbuf[i+ 7] + firbuf[i+13] )
-			-0.313819   * ( firbuf[i+ 9] + firbuf[i+11] )
-			+0.5        *   firbuf[i+10];
+#ifdef KLEMM_04
+	    ns_hpfsmpl [chn] [i] = scalar20 ( fircoef, firbuf+i );
 #else
+          {
 	    FLOAT sum = 0;
 	    for(j=0;j<NSFIRLEN;j++)
 	      sum += fircoef[j] * firbuf[i+j];
-#endif
 	    ns_hpfsmpl[chn][i] = sum;
 	  }
+#endif	    
 
 	for(;i<576+576/3;i++)
 	  ns_hpfsmpl[chn][i] = 0;

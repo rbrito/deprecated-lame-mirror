@@ -388,5 +388,19 @@ extern void lame_errorf(const char *, ...);
 
 #endif
 
+/* Will be moved to an own source file group (*.c, *.h and *.nasm) */
+
+typedef FLOAT (*scalar_t)  ( const sample_t* p, const sample_t* q );
+typedef FLOAT (*scalarn_t) ( const sample_t* p, const sample_t* q, size_t len );
+
+extern scalar_t   scalar4;
+extern scalar_t   scalar8;
+extern scalar_t   scalar12;
+extern scalar_t   scalar16;
+extern scalar_t   scalar20;
+extern scalar_t   scalar64;
+extern scalarn_t  scalar;
+
+void init_scalar_functions ( const lame_internal_flags* gfp );
 
 #endif /* LAME_UTIL_H */

@@ -206,15 +206,15 @@ int lame_init_params(lame_global_flags *gfp)
     
     int                  i;
     int                  j;
-    lame_internal_flags* gfc = gfp->internal_flags;
+    lame_internal_flags* gfc = gfp -> internal_flags;
 
-    gfc->lame_init_params_init = 0; /* Den Morgen nicht vor dem Abend loben */
+    gfc -> lame_init_params_init = 0;
   
-
-  gfc->CPU_features_3DNow = has_3DNow();
-  gfc->CPU_features_MMX   = has_MMX();
-  gfc->CPU_features_SIMD  = has_SIMD();
-  gfc->CPU_features_SIMD2 = 0;
+    gfc -> CPU_features_3DNow = has_3DNow ();
+    gfc -> CPU_features_MMX   = has_MMX   ();
+    gfc -> CPU_features_SIMD  = has_SIMD  ();
+    gfc -> CPU_features_SIMD2 = 0;
+    init_scalar_functions ( gfc );      /* Select the fastest functions for this CPU */
 
   if (gfp->num_channels == 1)
       gfp->mode = MPG_MD_MONO;
@@ -286,9 +286,10 @@ int lame_init_params(lame_global_flags *gfp)
   }
 
   gfc->mode_gr = (gfp->out_samplerate <= 24000) ? 1 : 2;  /* mode_gr = 2 */
-  gfp->encoder_delay = ENCDELAY;
   gfp->framesize = gfc->mode_gr*576;
   if (gfp->ogg) gfp->framesize = 1024;
+
+  gfp->encoder_delay = ENCDELAY;
 
     if ( gfp->out_samplerate != gfp->in_samplerate ) 
         gfc->resample_ratio = (double)gfp->in_samplerate / gfp->out_samplerate;
@@ -351,7 +352,7 @@ int lame_init_params(lame_global_flags *gfp)
    */
    
     if ( !gfp->mode_fixed  &&  gfp->mode != MPG_MD_MONO )
-        if ( gfp->compression_ratio <= 6.3 )
+        if ( gfp->compression_ratio <= 6.3001 )
             gfp->mode = MPG_MD_STEREO;
 
 #else
@@ -697,9 +698,9 @@ int lame_init_params(lame_global_flags *gfp)
   gfc->sfb21_extra = (gfp->VBR==vbr_rh || gfp->VBR==vbr_mtrh || gfp->VBR==vbr_mt)
                    &&(gfp->out_samplerate >= 32000);
   
-  gfc->exp_nspsytune = gfp->exp_nspsytune;  /* if this makes any sense, document it! */
-
-
+    gfc->exp_nspsytune = gfp->exp_nspsytune;
+    //^                    ^
+    // like swimmer and swimner
 
     /* estimate total frames.  */
     gfp->totalframes           = 2 + gfp->num_samples/(gfc->resample_ratio * gfp->framesize);

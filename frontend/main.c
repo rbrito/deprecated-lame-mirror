@@ -27,20 +27,12 @@
 #include <assert.h>
 
 
-#ifdef _WIN32
-/* needed to set stdout to binary */
-#include <io.h>
-#endif
 /*
  main.c is example code for how to use libmp3lame.a.  To use this library,
  you only need the library and lame.h.  All other .h files are private
  to the library.
 */
 #include "lame.h"
-
-#ifdef __riscos__
-#include "asmstuff.h"
-#endif
 
 #include "brhist.h"
 #include "parse.h"
@@ -162,6 +154,11 @@ int main(int argc, char **argv)
     }
 #endif
   }
+#ifdef KLEMM_13
+  else {
+    brhist_init(&gf, 128, 128 );
+  }
+#endif
 
 
 #ifdef HAVEVORBIS
@@ -258,8 +255,13 @@ int main(int argc, char **argv)
 #ifdef BRHIST
 	if (brhist) {
 	  brhist_disp(&gf,0 /* no flash back */);
+#ifndef KLEMM_13	  
 	  brhist_disp_total(&gf);
+#endif	  
 	}
+#ifdef KLEMM_13	
+	  brhist_disp_total(&gf);
+#endif	  
 #endif
 	timestatus_finish();
       }

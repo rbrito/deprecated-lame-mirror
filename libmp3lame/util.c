@@ -555,4 +555,85 @@ off_t  lame_get_file_size ( const char* const filename )
 
 #endif
 
+
+static FLOAT  std_scalar4  ( const sample_t* p, const sample_t* q )
+{
+    return  p[0]*q[0] + p[1]*q[1] + p[2]*q[2] + p[3]*q[3];
+}
+
+static FLOAT  std_scalar8  ( const sample_t* p, const sample_t* q )
+{
+    return  p[0]*q[0] + p[1]*q[1] + p[2]*q[2] + p[3]*q[3]
+          + p[4]*q[4] + p[5]*q[5] + p[6]*q[6] + p[7]*q[7];
+}
+
+static FLOAT  std_scalar12 ( const sample_t* p, const sample_t* q )
+{
+    return  p[0]*q[0] + p[1]*q[1] + p[ 2]*q[ 2] + p[ 3]*q[ 3]
+          + p[4]*q[4] + p[5]*q[5] + p[ 6]*q[ 6] + p[ 7]*q[ 7]
+          + p[8]*q[8] + p[9]*q[9] + p[10]*q[10] + p[11]*q[11];
+}
+
+static FLOAT  std_scalar16 ( const sample_t* p, const sample_t* q )
+{
+    return  p[ 0]*q[ 0] + p[ 1]*q[ 1] + p[ 2]*q[ 2] + p[ 3]*q[ 3]
+          + p[ 4]*q[ 4] + p[ 5]*q[ 5] + p[ 6]*q[ 6] + p[ 7]*q[ 7]
+          + p[ 8]*q[ 8] + p[ 9]*q[ 9] + p[10]*q[10] + p[11]*q[11]
+          + p[12]*q[12] + p[13]*q[13] + p[14]*q[14] + p[15]*q[15];
+}
+
+static FLOAT  std_scalar20 ( const sample_t* p, const sample_t* q )
+{
+    return  p[ 0]*q[ 0] + p[ 1]*q[ 1] + p[ 2]*q[ 2] + p[ 3]*q[ 3]
+          + p[ 4]*q[ 4] + p[ 5]*q[ 5] + p[ 6]*q[ 6] + p[ 7]*q[ 7]
+          + p[ 8]*q[ 8] + p[ 9]*q[ 9] + p[10]*q[10] + p[11]*q[11]
+          + p[12]*q[12] + p[13]*q[13] + p[14]*q[14] + p[15]*q[15]
+          + p[16]*q[16] + p[17]*q[17] + p[18]*q[18] + p[19]*q[19];
+}
+
+
+/* currently len must be a multiple of 4. This is necessary for SIMD1 */
+
+static FLOAT  std_scalar ( const sample_t* p, const sample_t* q, size_t len )
+{
+    double sum = p[0]*q[0] + p[1]*q[1] + p[2]*q[2] + p[3]*q[3];
+
+    assert (len >= 8);
+        
+    do {
+        p   += 4;
+        q   += 4;
+        len -= 4;
+        sum += p[0]*q[0] + p[1]*q[1] + p[2]*q[2] + p[3]*q[3];
+    } while ( len > 4 );
+    
+    assert (len == 0);
+    
+    return sum;
+}
+
+static FLOAT  std_scalar64 ( const sample_t* p, const sample_t* q )
+{
+    return std_scalar ( p, q, 64 );
+}
+
+scalar_t   scalar4;
+scalar_t   scalar8;
+scalar_t   scalar12;
+scalar_t   scalar16;
+scalar_t   scalar20;
+scalar_t   scalar64;
+scalarn_t  scalar;
+
+void init_scalar_functions ( const lame_internal_flags* const  gfp )
+{
+    scalar4  = std_scalar4;
+    scalar8  = std_scalar8;
+    scalar12 = std_scalar12;
+    scalar16 = std_scalar16;
+    scalar20 = std_scalar20;
+    scalar64 = std_scalar64;
+    scalar   = std_scalar;
+}
+
 /* end of util.c */
