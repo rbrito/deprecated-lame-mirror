@@ -155,7 +155,7 @@ if not (lame2=="ref" or lame2=="makeref"):
         Usage(lame2 + " is not executable")
 
 
-tmp = split(options_file,"/")
+tmp = split(options_file, os.pathsep)
 tmp = tmp[-1]
 basename = replace(input_file,".wav","")
 basename = basename + "." + tmp
