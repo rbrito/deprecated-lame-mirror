@@ -418,6 +418,7 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --nohist        disable VBR histogram display\n"
               "    --silent        don't print anything on screen\n"
               "    --quiet         don't print anything on screen\n"
+              "    --brief         print more useful information\n"
               "    --verbose       print a lot of useful information\n"
               "\n"
               "  Noise shaping & psycho acoustic algorithms:\n"
@@ -1356,7 +1357,16 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF ("cwlimit")
                     val = atof (nextArg);
                     argUsed=1;
-		    fprintf(stderr, "Warning: cwlimit is obsolete\n");
+                    /* useful are 0.001 kHz...50 kHz, 50 Hz...50000 Hz */
+                    {
+                        int my_cwlimit = val * ( val <= 50. ? 1.e3 : 1.e0 );
+                        lame_set_cwlimit( gfp, my_cwlimit );
+                        if ( my_cwlimit <= 0 ) {
+                            fprintf( stderr,
+              "Must specify cwlimit with --cwlimit freq, freq >= 0.001 kHz\n" );
+                            return -1;
+                        }
+                    }
                  
                 T_ELIF ("comp")
                     argUsed=1;
@@ -1386,6 +1396,7 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     (void) lame_set_useTemporal( gfp, atoi(nextArg)?1:0 );
 
                 T_ELIF ("nspsytune")
+                    lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1);
                     lame_set_experimentalZ(gfp,1);
                     lame_set_experimentalX(gfp,1);
                 
@@ -1475,8 +1486,11 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                 T_ELIF2 ("quiet", "silent")
                     silent = 10;    /* on a scale from 1 to 10 be very silent */
                 
+                T_ELIF ("brief")
+                    silent = -5;     /* print few info on screen */
+                    
                 T_ELIF ("verbose")
-                    silent = -10;    /* print a lot on screen, the default */
+                    silent = -10;    /* print a lot on screen */
                     
                 T_ELIF2 ("version", "license")
                     print_license ( gfp, stdout, ProgramName );
