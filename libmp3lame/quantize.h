@@ -43,8 +43,6 @@ void ABR_iteration_loop( lame_global_flags *gfp,
 		     int l3_enc[2][2][576], 
 		     III_scalefac_t scalefac[2][2]);
 
-#define MAX_BITS 4095
-
 /*
  *  vbrquantize.c
  */
