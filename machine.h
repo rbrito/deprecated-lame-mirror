@@ -92,7 +92,8 @@ typedef double FLOAT8;
 #elifdef FLOAT8_is_float
 typedef float FLOAT8;
 #else
-#error "oops!  set FLOAT8_is_float or FLOAT8_is_double"
+typedef double FLOAT8;
+#define FLOAT8_is_double
 #endif
 
 
