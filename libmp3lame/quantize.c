@@ -670,6 +670,27 @@ quant_compare(
 
     switch (quant_comp) {
         default:
+        case 9: {
+            /* minimize var_noise in order to shape noise */
+            if (best->over_count > 0 ) {
+                /* there are distorted sfb*/
+	            better = (calc->over_count == 0)
+                        || ( calc->over_noise <= best->over_noise &&
+                             calc->var_noise  <= best->var_noise )
+                        || ( calc->over_noise <= best->over_noise &&
+                             calc->max_noise  <= best->max_noise );
+            } else {
+                /* no distorted sfb*/
+                if (calc->over_count > 0) {
+                    better = 0;
+                } else {
+		            better = (calc->tot_noise < best->tot_noise)
+		                &&   (calc->var_noise <= best->var_noise);
+                }
+            }
+	        break;
+        }
+
         case 0:
 	    better = calc->over_count  < best->over_count
                ||  ( calc->over_count == best->over_count  &&

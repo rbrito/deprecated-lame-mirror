@@ -684,11 +684,12 @@ void plot_frame(void)
       /* en = max energy difference amoung the 3 short FFTs for this granule */
       en = pplot->ers[gr][ch];
       if (en>999) en=999;
-      sprintf(title2,"FFT%1i pe=%5.2fK/%3.1f n=%i/%3.1f/%3.1f/%3.1f",gr,
+      sprintf(title2,"FFT%1i pe=%5.2fK/%3.1f n=%i/%3.1f/%3.1f/%3.1f/%3.1f",gr,
 	      pplot->pe[gr][ch]/1000,en,pplot->over[gr][ch],
 	      pplot->max_noise[gr][ch],
 	      pplot->over_noise[gr][ch],
-	      pplot->tot_noise[gr][ch]);
+	      pplot->tot_noise[gr][ch],
+	      pplot->var_noise[gr][ch]);
 
       barthick=3;
       if (blocktype[gr][ch]==SHORT_TYPE) barthick=2;
