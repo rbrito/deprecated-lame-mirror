@@ -43,9 +43,6 @@ Increases significantly the quality for 160 kbps. Castagnets is the example
 which sounds much much better with this switch.
 ---snip---
 
-KLEMM_13: (missing)
- bitrate and LR/MS statistics also displayed for CBR
-
 KLEMM_14: (missing)
  some optimizations and code simplifications (unrolled code)
 
