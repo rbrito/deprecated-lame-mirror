@@ -108,9 +108,6 @@ BRHIST_SWITCH = -DBRHIST
 # for debugging:
 # CC_OPTS = $(CC_OPTS) -UNDEBUG
 
-# special noise calculation
-# FEATURES = -DRH_NOISE_CALC
-
 
 CC_SWITCHES = -DHAVE_CONFIG_H -DNDEBUG $(CC_OPTS) $(SNDLIB) $(GTK) $(BRHIST_SWITCH) $(VORBIS) 
 frontend_sources = \

@@ -146,7 +146,7 @@ ifeq ($(UNAME),Linux)
 
 ifeq ($(CFG),RH)
 #  some alternate code (work in progress Robert.Hegemann@gmx.de)
-  CPP_OPTS += -DRH_AMP
+#  CPP_OPTS += /DRH_???
 # these options for gcc-2.95.2 to produce fast code
    CC_OPTS = \
 	-Wall -O9 -fomit-frame-pointer -march=pentium \
