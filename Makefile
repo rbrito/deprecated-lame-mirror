@@ -102,11 +102,11 @@ ifeq ($(UNAME),Linux)
 #   CC_OPTS =  -UNDEBUG -O -Wall -g -DABORTFP
 
 #  for lots of debugging:
-#   CC_OPTS =  -DDEBUG -UNDEBUG  -O -Wall -g -DABORTFP 
-#    -Wconversion \
-#    -Wcast-align -Wcast-qual \
-#    -Wredundant-decls \
-#    -Wshadow
+#   CC_OPTS =  -DDEBUG -UNDEBUG  -O -Wall -g -DABORTFP \
+#	-Wconversion \
+#	-Wcast-align -Wcast-qual \
+#	-Wredundant-decls \
+#	-Wshadow
 
 
 
