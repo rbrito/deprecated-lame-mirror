@@ -113,9 +113,9 @@ void timestatus ( const int samp_rate,
     if ( frameNum == 0 && init == 0 ) {
         fprintf ( stderr,
 	    "\r"
-	    "    Frame          |  CPU time/estim | REAL time/estim | play/CPU |    ETA %s\n"
-            "     0/       ( 0%%)|    0:00/     :  |    0:00/     :  |      .  %%|     :  %s\r",
-	    Console_IO.str_clreoln, Console_IO.str_clreoln );
+	    "    Frame          |  CPU time/estim | REAL time/estim | play/CPU |    ETA \n"
+            "     0/       ( 0%%)|    0:00/     :  |    0:00/     :  |      .  %%|     :  \r"
+	    /* , Console_IO.str_clreoln, Console_IO.str_clreoln */ );
 	init = 1;
         return;
     }  
@@ -160,8 +160,9 @@ void timestatus_klemm ( const lame_global_flags* const gfp )
 	     GetRealTime () - last_time <  0 ) {
             timestatus ( gfp->out_samplerate, gfp->frameNum, gfp->totalframes, gfp->framesize );
 #ifdef BRHIST
-            if ( brhist )
-	        brhist_disp ( gfp, 1 /* jump back */ );
+            if ( brhist ) {
+	        brhist_disp ( gfp );
+	    }
 #endif
             last_time = GetRealTime ();  /* from now! disp_time seconds */
         }
@@ -178,7 +179,8 @@ void decoder_progress ( const lame_global_flags* const gfp, const mp3data_struct
         fprintf ( stderr, "  %s" , 2==mp3data->mode_ext  ?  last ? " MS " : "LMSR"  :  last ? "LMSR" : "L  R" );
         last = 2==mp3data->mode_ext;
     }
-    fprintf ( stderr, "%s", Console_IO.str_clreoln );
+//    fprintf ( stderr, "%s", Console_IO.str_clreoln );
+      fprintf ( stderr, "        \b\b\b\b\b\b\b\b" );
 }
 
 void decoder_progress_finish ( const lame_global_flags* const gfp )

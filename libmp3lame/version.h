@@ -24,11 +24,11 @@
 
 # include <stdio.h>
 
-#define LAME_URL    "http://www.mp3dev.org/"
+# define LAME_URL              "http://www.mp3dev.org/"
 
 # define LAME_MAJOR_VERSION      3      /* Major version number */
 # define LAME_MINOR_VERSION     88      /* Minor version number */
-# define LAME_ALPHA_VERSION      5      /* Patch level of alpha version, otherwise zero */
+# define LAME_ALPHA_VERSION      6      /* Patch level of alpha version, otherwise zero */
 # define LAME_BETA_VERSION       0      /* Patch level of beta  version, otherwise zero */
 
 # define PSY_MAJOR_VERSION       0      /* Major version number */
@@ -45,6 +45,7 @@ const char*  get_lame_version       ( void ); /* returns lame long version numbe
 const char*  get_lame_short_version ( void ); /* returns lame short version number string */
 const char*  get_psy_version        ( void ); /* returns psy model version number string */
 const char*  get_mp3x_version       ( void ); /* returns mp3x version number string */
+const char*  get_lame_url           ( void ); /* returns the lame home page */
 
 #endif  /* LAME_VERSION_H */
 

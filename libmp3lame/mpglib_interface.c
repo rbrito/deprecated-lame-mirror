@@ -21,11 +21,6 @@ static char out  [8192];
 MPSTR mp;
 plotting_data *mpg123_pinfo=NULL;
 
-static const int smpls[2][4]={
-/* Layer x  I   II   III */
-        {0,384,1152,1152}, /* MPEG-1     */
-        {0,384,1152, 576}  /* MPEG-2(.5) */
-};
 
 
 int lame_decode_init(void)
@@ -48,34 +43,40 @@ int lame_decode1_headers(char *buffer,int len,
                          short pcm_l[],short pcm_r[],
                          mp3data_struct *mp3data)
 {
+    static const int smpls [2] [4] = {
+    /* Layer   I    II   III */
+        { 0, 384, 1152, 1152 }, /* MPEG-1     */
+        { 0, 384, 1152,  576 }  /* MPEG-2(.5) */
+    };
     signed short int*  p = (signed short int*) out;
     int                processed_bytes;
     int                processed_samples;  // processed samples per channel
     int                ret;
     int                i;
 
-  mp3data->header_parsed=0;
+    mp3data->header_parsed = 0;
   
-  ret = decodeMP3(&mp,buffer,len,(char*)p, sizeof(out)/sizeof(*out), &processed_bytes );
-  //                                     ^^^^^^^^^^^^^^^^^^^^^^^^
-  //  this argument is the size of the output buffer in bytes.
-  //  Even though decodeMP3 returns short ints!
+    ret = decodeMP3 ( &mp, buffer, len, (char*)p, sizeof(out), &processed_bytes );
+    //                                  ^^^^^^^^^^^^^^^^^^^^^
+    //  this argument is the size of the output buffer in bytes.
+    //  Even though decodeMP3 returns short ints!
+    //
+    // Then sizeof(out) is really right, as expected. Changed.
   
-  if (mp.header_parsed) {
-    mp3data->header_parsed=1;
-    mp3data->stereo = mp.fr.stereo;
-    mp3data->samplerate = freqs[mp.fr.sampling_frequency];
-    if (mp.fsizeold > 0)
-      /* works for free format and fixed */
-      mp3data->bitrate = .5 + 8*(4+mp.fsizeold)*freqs[mp.fr.sampling_frequency]/
-	(1000.0*smpls[mp.fr.lsf][mp.fr.lay]);
-    else
-      mp3data->bitrate = tabsel_123[mp.fr.lsf][mp.fr.lay-1][mp.fr.bitrate_index];
-    
-    mp3data->mode=mp.fr.mode;
-    mp3data->mode_ext=mp.fr.mode_ext;
-    mp3data->framesize = smpls[mp.fr.lsf][mp.fr.lay];
-  }
+    if ( mp.header_parsed ) {
+        mp3data->header_parsed = 1;
+        mp3data->stereo        = mp.fr.stereo;
+        mp3data->samplerate    = freqs [mp.fr.sampling_frequency];
+        mp3data->mode          = mp.fr.mode;
+        mp3data->mode_ext      = mp.fr.mode_ext;
+        mp3data->framesize     = smpls [mp.fr.lsf] [mp.fr.lay];
+	
+        if (mp.fsizeold > 0)      /* works for free format and fixed, no overrun, temporal results are < 400.e6 */
+            mp3data->bitrate   = 8 * (4 + mp.fsizeold) * mp3data->samplerate /
+	                         ( 1.e3 * mp3data->framesize ) + 0.5;
+        else
+            mp3data->bitrate   = tabsel_123 [mp.fr.lsf] [mp.fr.lay-1] [mp.fr.bitrate_index];
+    }
 
     switch ( ret ) {
     case MP3_OK:

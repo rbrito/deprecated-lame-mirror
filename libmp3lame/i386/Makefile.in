@@ -106,12 +106,12 @@ SUFFIXES = .nas
 
 EXTRA_liblameasmroutines_la_SOURCES = $(nasm_sources)
 
-nasm_sources =  	choose_table.nas 	cpu_feat.nas
+nasm_sources = choose_table.nas cpu_feat.nas scalar.nas
 
 
 @HAVE_NASM_TRUE@liblameasmroutines_la_SOURCES = $(nasm_sources)
 
-EXTRA_DIST =  	fft.nas 	fft3dn.nas 	fftfpu.nas 	fftsse.nas 	ffttbl.nas
+EXTRA_DIST = fft.nas fft3dn.nas fftfpu.nas fftsse.nas ffttbl.nas
 
 
 NASM = @NASM@

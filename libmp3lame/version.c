@@ -112,4 +112,9 @@ const char*  get_mp3x_version ( void )
     return ret;
 }
 
+const char*  get_lame_url ( void )
+{
+    return "http://www.mp3dev.org/";
+}    
+
 /* End of version.c */

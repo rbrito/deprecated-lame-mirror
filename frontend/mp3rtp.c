@@ -48,12 +48,10 @@ rtp_output (char *mp3buffer, int mp3size)
     RTPheader.b.sequence++;
 }
 
-void
-rtp_usage (void)
+int  rtp_usage ( void )
 {
-    fprintf (stderr,
-             "usage: mp3rtp ip:port:ttl  [encoder options] <infile> <outfile>\n");
-    exit (1);
+    fprintf (stderr, "usage: mp3rtp ip:port:ttl  [encoder options] <infile> <outfile>\n");
+    return 1;
 }
 
 
@@ -73,6 +71,7 @@ float   update_interval;     /* to use Frank's time status display */
 *
 ************************************************************************/
 
+// better error reporting will be added instead of always printing the same (pfk)
 
 int
 main (int argc, char **argv)
@@ -88,36 +87,26 @@ main (int argc, char **argv)
     FILE   *outf;
     short int Buffer[2][1152];
 
-    if (argc <= 2) {
-        rtp_usage ();
-        exit (1);
-    }
+    if (argc <= 2)
+        return rtp_usage ();
 
     /* process args */
     Arg = argv[1];
     tmp = strchr (Arg, ':');
 
-    if (!tmp) {
-        rtp_usage ();
-        exit (1);
-    }
+    if (!tmp)
+        return rtp_usage ();
     *tmp++ = 0;
     port = atoi (tmp);
-    if (port <= 0) {
-        rtp_usage ();
-        exit (1);
-    }
+    if (port <= 0)
+        return rtp_usage ();
     tmp = strchr (tmp, ':');
-    if (!tmp) {
-        rtp_usage ();
-        exit (1);
-    }
+    if (!tmp)
+        return rtp_usage ();
     *tmp++ = 0;
     ttl = atoi (tmp);
-    if (tmp <= 0) {
-        rtp_usage ();
-        exit (1);
-    }
+    if (tmp <= 0)
+        return rtp_usage ();
     rtpsocket = makesocket (Arg, port, ttl, &rtpsi);
     srand (getpid () ^ time (0));
     initrtp (&RTPheader);
@@ -133,18 +122,16 @@ main (int argc, char **argv)
      * skip this call and set the values of interest in the gf struct.  
      * (see lame.h for documentation about these parameters)
      */
-    for (i = 1; i < argc - 1; i++) /* remove first argument, it was for rtp */
-        argv[i] = argv[i + 1];
-    parse_args (&gf, argc - 1, argv, inPath, outPath);
+    parse_args (&gf, argc - 1, argv + 1, inPath, outPath);
 
     /* open the output file.  Filename parsed into gf.inPath */
-    if (!strcmp (outPath, "-")) {
+    if ( 0 == strcmp ( outPath, "-" ) ) {
         lame_set_stream_binary_mode (outf = stdout);
     }
     else {
         if ((outf = fopen (outPath, "wb+")) == NULL) {
             fprintf (stderr, "Could not create \"%s\".\n", outPath);
-            exit (1);
+            return 1;
         }
     }
 
@@ -167,7 +154,7 @@ main (int argc, char **argv)
             display_bitrates (stderr);
         }
         fprintf (stderr, "fatal error during initialization\n");
-        exit (-1);
+        return -1;
     }
 
     lame_print_config (&gf); /* print usefull information about options being used */

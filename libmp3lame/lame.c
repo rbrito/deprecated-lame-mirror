@@ -733,7 +733,7 @@ void lame_print_config ( const lame_global_flags* gfp )
     double    out_samplerate = gfp->out_samplerate;
     double    in_samplerate  = gfp->out_samplerate * gfc->resample_ratio;
 
-    MSGF ( "LAME version %s    (%s)\n", get_lame_version (), LAME_URL );
+    MSGF ( "LAME version %s    (%s)\n", get_lame_version (), get_lame_url () );
 
     if ( gfc->CPU_features_MMX  ||  gfc->CPU_features_3DNow  ||  gfc->CPU_features_SIMD  ||  gfc->CPU_features_SIMD2 ) {
         MSGF ("CPU features:"); 

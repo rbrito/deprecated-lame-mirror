@@ -16,7 +16,8 @@ EXTRA_liblameasmroutines_la_SOURCES = $(nasm_sources)
 
 nasm_sources = \
 	choose_table.nas \
-	cpu_feat.nas
+	cpu_feat.nas \
+	scalar.nas
 
 if HAVE_NASM
 liblameasmroutines_la_SOURCES = $(nasm_sources)
@@ -27,7 +28,7 @@ EXTRA_DIST = \
 	fft3dn.nas \
 	fftfpu.nas \
 	fftsse.nas \
-	ffttbl.nas
+	ffttbl.nas \
 
 NASM = @NASM@
 NASMFLAGS=-f elf -i .

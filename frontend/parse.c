@@ -47,10 +47,10 @@
 static int  lame_version_print ( FILE* const fp )
 {
 /* 
-   fprintf ( fp, "%sLAME%s version %s    (%s)\n\n", Console_IO.str_emph, Console_IO.str_norm, get_lame_version (), LAME_URL );
+   fprintf ( fp, "%sLAME%s version %s    (%s)\n\n", Console_IO.str_emph, Console_IO.str_norm, get_lame_version (), get_lame_url () );
     ^- disabled as long as there is no proper solution for Console_IO, RH 
  */
-   fprintf ( fp, "LAME version %s    (%s)\n\n", get_lame_version (), LAME_URL );
+   fprintf ( fp, "LAME version %s    (%s)\n\n", get_lame_version (), get_lame_url () );
 
    return 0;
 }
@@ -869,7 +869,7 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 		    
 		T_ELIF ("?")
 #ifdef __unix__
-                    FILE* fp = popen ("less -dEfim", "w");
+                    FILE* fp = popen ("less -Mqc", "w");
 		    long_help ( gfp, fp, ProgramName, 0 /* lessmode=NO */ );
 		    pclose (fp);
 #else		

@@ -202,6 +202,8 @@ const char *get_lame_short_version ( void );
 /* get_lame_short_version() aim is to ease file compare, because subnumber, date and time is NOT reported */
 /* get_lame_version() aim is to ease version tracking, because subnumber, date and time is reported */
 
+const char* get_lame_url ( void );   /* Removes the nasty LAME_URL macro */
+
 /* OPTIONAL:  print internal lame configuration to message handler */
 void lame_print_config(const lame_global_flags *);
 

@@ -243,7 +243,7 @@ int     found = 0;
     if(found)
         return(index);
     else {
-        ERRORF("Bitrate %dkbs not legal for %iHz output sampling.\n",
+        ERRORF("Bitrate %d kbps not legal for %i Hz output sampling frequency.\n",
                 bRate, samplerate);
         return(-1);     /* Error! */
     }
