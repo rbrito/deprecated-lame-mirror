@@ -616,7 +616,7 @@ void lame_parse_args(int argc, char **argv)
 	if(*token ) arg = token;
 	else                             arg = nextArg;
 	switch(c) {
-	case 'm':        argUsed = 1;
+	case 'm':        argUsed = 1;   gf.mode_fixed = 1;
 	  if (*arg == 's')
 	    { gf.mode = MPG_MD_STEREO; }
 	  else if (*arg == 'd')
