@@ -35,7 +35,7 @@
 #endif
 
 
-void get_lame_version ( char *strbuf, size_t buflen )  // primary for reports on screen
+void get_lame_version ( char *strbuf, size_t buflen, const char *prefix )  // primary for reports on screen
 {
     char str [48];
 
@@ -48,11 +48,23 @@ void get_lame_version ( char *strbuf, size_t buflen )  // primary for reports on
     else
         sprintf ( str, "%u.%02d " V1, LAME_MAJOR_VERSION, LAME_MINOR_VERSION );
         
-    strncpy ( strbuf, str, buflen - 1 );
-    strbuf [buflen - 1] = 0;
+    if (buflen-- == 0) buflen = 0;
+
+    if (prefix) {
+        size_t i;
+
+        strncpy ( strbuf, prefix, buflen );
+        strbuf [buflen] = 0;
+        i = strlen( strbuf );
+        strbuf += i;
+        buflen -= i;
+    }
+
+    strncpy ( strbuf, str, buflen );
+    strbuf [buflen] = 0;
 }
 
-void get_lame_short_version ( char *strbuf, size_t buflen )  // primary to write into MP3 files
+void get_lame_short_version ( char *strbuf, size_t buflen, const char *prefix )  // primary to write into MP3 files
 {
     char str [32];
     
@@ -81,11 +93,23 @@ void get_lame_short_version ( char *strbuf, size_t buflen )  // primary to write
 
 #endif    
         
-    strncpy ( strbuf, str, buflen - 1 );
-    strbuf [buflen - 1] = 0;
+    if (buflen-- == 0) buflen = 0;
+
+    if (prefix) {
+        size_t i;
+
+        strncpy ( strbuf, prefix, buflen );
+        strbuf [buflen] = 0;
+        i = strlen( strbuf );
+        strbuf += i;
+        buflen -= i;
+    }
+
+    strncpy ( strbuf, str, buflen );
+    strbuf [buflen] = 0;
 }
 
-void get_psy_version ( char *strbuf, size_t buflen )
+void get_psy_version ( char *strbuf, size_t buflen, const char *prefix )
 {
     char str [48];
     
@@ -96,11 +120,23 @@ void get_psy_version ( char *strbuf, size_t buflen )
     else
         sprintf ( str, "%u.%02d", PSY_MAJOR_VERSION, PSY_MINOR_VERSION );
         
-    strncpy ( strbuf, str, buflen - 1 );
-    strbuf [buflen - 1] = 0;
+    if (buflen-- == 0) buflen = 0;
+
+    if (prefix) {
+        size_t i;
+
+        strncpy ( strbuf, prefix, buflen );
+        strbuf [buflen] = 0;
+        i = strlen( strbuf );
+        strbuf += i;
+        buflen -= i;
+    }
+
+    strncpy ( strbuf, str, buflen );
+    strbuf [buflen] = 0;
 }
 
-void get_mp3x_version ( char *strbuf, size_t buflen )
+void get_mp3x_version ( char *strbuf, size_t buflen, const char *prefix )
 {
     char str [48];
     
@@ -111,14 +147,38 @@ void get_mp3x_version ( char *strbuf, size_t buflen )
     else
         sprintf ( str, "%u:%02u", MP3X_MAJOR_VERSION, MP3X_MINOR_VERSION );
                 
-    strncpy ( strbuf, str, buflen - 1 );
-    strbuf [buflen - 1] = 0;
+    if (buflen-- == 0) buflen = 0;
+
+    if (prefix) {
+        size_t i;
+
+        strncpy ( strbuf, prefix, buflen );
+        strbuf [buflen] = 0;
+        i = strlen( strbuf );
+        strbuf += i;
+        buflen -= i;
+    }
+
+    strncpy ( strbuf, str, buflen );
+    strbuf [buflen] = 0;
 }
 
-void get_lame_url ( char *strbuf, size_t buflen )
+void get_lame_url ( char *strbuf, size_t buflen, const char *prefix )
 {
-    strncpy ( strbuf, LAME_URL, buflen - 1 );
-    strbuf [buflen - 1] = 0;
+    if (buflen-- == 0) buflen = 0;
+
+    if (prefix) {
+        size_t i;
+
+        strncpy ( strbuf, prefix, buflen );
+        strbuf [buflen] = 0;
+        i = strlen( strbuf );
+        strbuf += i;
+        buflen -= i;
+    }
+
+    strncpy ( strbuf, LAME_URL, buflen );
+    strbuf [buflen] = 0;
 }    
 
 /* End of version.c */

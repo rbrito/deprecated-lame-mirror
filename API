@@ -14,7 +14,7 @@ encoded.
 =========================================================================
 
 1. (optional) Get the version number of the encoder, if you are interested.  
-   char *get_lame_version();
+   void get_lame_version(char *strbuf, size_t buflen, const char *prefix);
 
 2. Initialize the encoder.  sets default for all encoder parameters.
 

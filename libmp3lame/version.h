@@ -41,11 +41,11 @@
 # define MP3X_ALPHA_VERSION      0      /* Set number if this is an alpha version, otherwise zero */
 # define MP3X_BETA_VERSION       0      /* Set number if this is a beta version, otherwise zero */
 
-void get_lame_version       ( char *strbuf, size_t buflen ); /* returns lame long version number string */
-void get_lame_short_version ( char *strbuf, size_t buflen ); /* returns lame short version number string */
-void get_psy_version        ( char *strbuf, size_t buflen ); /* returns psy model version number string */
-void get_mp3x_version       ( char *strbuf, size_t buflen ); /* returns mp3x version number string */
-void get_lame_url           ( char *strbuf, size_t buflen ); /* returns the lame home page */
+void get_lame_version       ( char *strbuf, size_t buflen, const char *prefix ); /* returns lame long version number string */
+void get_lame_short_version ( char *strbuf, size_t buflen, const char *prefix ); /* returns lame short version number string */
+void get_psy_version        ( char *strbuf, size_t buflen, const char *prefix ); /* returns psy model version number string */
+void get_mp3x_version       ( char *strbuf, size_t buflen, const char *prefix ); /* returns mp3x version number string */
+void get_lame_url           ( char *strbuf, size_t buflen, const char *prefix ); /* returns the lame home page */
 
 #endif  /* LAME_VERSION_H */
 

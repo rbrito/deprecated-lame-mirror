@@ -1114,16 +1114,16 @@ static void text_window (GtkWidget *widget, gpointer data)
     gtk_window_set_title (GTK_WINDOW (textwindow), "About");
     gtk_widget_set_usize(box,350,260);
 
-    get_lame_url(url, sizeof(url));
-    get_lame_version(version, sizeof(version));
+    get_lame_url(url, sizeof(url), NULL);
+    get_lame_version(version, sizeof(version), NULL);
     sprintf(text,"LAME version %s \n%s\n\n",version,url);
     gtk_text_insert(GTK_TEXT(box),NULL,NULL,NULL,text,-1);
 
-    get_psy_version(version, sizeof(version));
+    get_psy_version(version, sizeof(version), NULL);
     sprintf(text,"psycho-acoustic model:  GPSYCHO version %s\n",version);
     gtk_text_insert(GTK_TEXT(box),NULL,NULL,NULL,text,-1);
     
-    get_mp3x_version(version, sizeof(version));
+    get_mp3x_version(version, sizeof(version), NULL);
     sprintf(text,"frame analyzer: MP3x version %s\n\n",version);
     gtk_text_insert(GTK_TEXT(box),NULL,NULL,NULL,text,-1);
     
