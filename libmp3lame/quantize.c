@@ -494,7 +494,7 @@ bin_search_StepSize(
  *
  ************************************************************************/
 static int
-float8compare(FLOAT *a, FLOAT *b)
+floatcompare(FLOAT *a, FLOAT *b)
 {
     if (*a > *b) return 1;
     if (*a == *b) return 0;
@@ -537,7 +537,7 @@ trancate_smallspectrums(
 	if (distort[sfb] >= 1.0)
 	    continue;
 
-	qsort(&work[j-width], width, sizeof(FLOAT), float8compare);
+	qsort(&work[j-width], width, sizeof(FLOAT), floatcompare);
 	if (work[j - 1] == 0.0)
 	    continue; /* all zero sfb */
 
@@ -1009,7 +1009,7 @@ balance_noise (
     /*  some scalefactors are too large.
      *  lets try setting scalefac_scale=1 
      */
-    if (gfc->noise_shaping > 1
+    if (gfc->use_scalefac_scale
 	&& (!gfc->presetTune.use
 	    || gfc->ATH.adjust >= gfc->presetTune.athadjust_switch_level)) {
 	memset(&gfc->pseudohalf, 0, sizeof(gfc->pseudohalf));
@@ -1074,7 +1074,7 @@ outer_loop (
 
     bin_search_StepSize (gfc, cod_info, targ_bits, ch, xrpow);
 
-    if (!gfc->noise_shaping) 
+    if (gfc->psymodel < 2) 
 	/* fast mode, no noise shaping, we are ready */
 	return 100; /* default noise_info.over_count */
 

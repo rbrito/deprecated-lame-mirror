@@ -915,7 +915,7 @@ short_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
 	    maxover1 = v1;
     }
 
-    if (gfc->noise_shaping == 2 && gfc->presetTune.use
+    if (gfc->use_scalefac_scale && gfc->presetTune.use
 	&& !gfc->presetTune.athadjust_safe_noiseshaping
 	&& gfc->ATH.adjust >= 1.0)
         /* allow scalefac_scale=1 */
@@ -1012,7 +1012,7 @@ long_block_scalefacs(const lame_internal_flags * gfc, gr_info * cod_info,
     }
 
     mover = Min(maxover0, maxover0p);
-    if (gfc->noise_shaping == 2 && gfc->presetTune.use
+    if (gfc->use_scalefac_scale && gfc->presetTune.use
 	&& !gfc->presetTune.athadjust_safe_noiseshaping
 	&& gfc->ATH.adjust >= 1.0) {
         /* allow scalefac_scale=1 */

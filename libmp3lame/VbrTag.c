@@ -557,7 +557,7 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 
 
 
-	uint8_t nNoiseShaping			= gfp->internal_flags->noise_shaping;
+	uint8_t nNoiseShaping	= gfp->internal_flags->psymodel >= 2;
 	uint8_t nStereoMode				= 0;
 	int		bNonOptimal				= 0;
 	uint8_t nSourceFreq				= 0;

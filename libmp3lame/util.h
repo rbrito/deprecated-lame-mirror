@@ -111,15 +111,29 @@ extern "C" {
 #endif
 
 #ifdef USE_FAST_LOG
-#define         FAST_LOG10(x)       (fast_log2(x)*(LOG2/LOG10))
-#define         FAST_LOG(x)         (fast_log2(x)*LOG2)
-#define         FAST_LOG10_X(x,y)   (fast_log2(x)*(LOG2/LOG10*(y)))
-#define         FAST_LOG_X(x,y)     (fast_log2(x)*(LOG2*(y)))
+# define LOG2_SIZE       (256)
+# define LOG2_SIZE_L2    (8)
+# define         FAST_LOG10(x)       (fast_log2(x)*(LOG2/LOG10))
+# define         FAST_LOG(x)         (fast_log2(x)*LOG2)
+# define         FAST_LOG10_X(x,y)   (fast_log2(x)*(LOG2/LOG10*(y)))
+# define         FAST_LOG_X(x,y)     (fast_log2(x)*(LOG2*(y)))
+extern ieee754_float32_t log_table[LOG2_SIZE*2];
+static inline ieee754_float32_t fast_log2(ieee754_float32_t x)
+{
+    int i = *(int*)&x;
+    ieee754_float32_t log2val;
+    int mantisse = i & 0x7FFFFF;
+
+//  assert(i > 0);
+    log2val = i>>23;
+    i = mantisse >> (23-LOG2_SIZE_L2);
+    return log2val + log_table[i*2] + log_table[i*2+1]*mantisse;
+}
 #else
-#define         FAST_LOG10(x)       log10(x)
-#define         FAST_LOG(x)         log(x)
-#define         FAST_LOG10_X(x,y)   (log10(x)*(y))
-#define         FAST_LOG_X(x,y)     (log(x)*(y))
+# define         FAST_LOG10(x)       log10(x)
+# define         FAST_LOG(x)         log(x)
+# define         FAST_LOG10_X(x,y)   (log10(x)*(y))
+# define         FAST_LOG_X(x,y)     (log(x)*(y))
 #endif
 
 
@@ -320,27 +334,29 @@ struct lame_internal_flags {
 
   int filter_type;          /* 0=polyphase filter, 1= FIR filter 2=MDCT filter(bad)*/
   int quantization;         /* 0 = ISO formual,  1=best amplitude */
-  int noise_shaping;        /* 0 = none 
-                               1 = ISO AAC model
-                               2 = allow scalefac_select=1  
-                             */
 
+  int use_scalefac_scale;   /* 0 = not use  1 = use */
   int noise_shaping_amp;    /*  0 = ISO model: amplify all distorted bands
                                 1 = amplify within 50% of max (on db scale)
                                 2 = amplify only most distorted band
 			     */
-  int substep_shaping;      /* 0 = no substep
-			       1 = use substep shaping at last step(VBR only)
-			           (not implemented yet)
-			       2 = use substep inside loop
-			       3 = use substep inside loop and last step
-			    */
+  int substep_shaping;  /* 0,4 = no substep
+			   1 = use substep shaping at last (only long block)
+			   2 = use substep inside loop (only long)
+			   3 = use substep inside loop and at last (only long)
+			   5 = at last step, both of long and short block
+			   6 = inside loop, long and short
+			   7 = inside loop and at last, long and short
+			*/
 
-  int psymodel;             /* 1 = gpsycho. 0 = none */
+  int psymodel;         /* 2 = use psychomodel and noise shaping.
+			   1 = use psychomodel but no noise shaping.
+			   0 = don't use psychomodel
+			*/
   int noise_shaping_stop;   /* 0 = stop at over=0, all scalefacs amplified or
                                    a scalefac has reached max value
-                               1 = stop when all scalefacs amplified or        
-                                   a scalefac has reached max value
+                               1 = stop when all scalefacs amplified or
+			           a scalefac has reached max value
                                2 = stop when all scalefacs amplified 
 			    */
 
@@ -533,11 +549,6 @@ extern FLOAT          ATHformula(FLOAT f,lame_global_flags *gfp);
 extern FLOAT          freq2bark(FLOAT freq);
 extern FLOAT          freq2cbw(FLOAT freq);
 void disable_FPE(void);
-
-/* log/log10 approximations */
-extern void init_log_table(void);
-extern ieee754_float32_t fast_log2(ieee754_float32_t x);
-
 
 void fill_buffer(lame_global_flags *gfp,
 		 sample_t *mfbuf[2],

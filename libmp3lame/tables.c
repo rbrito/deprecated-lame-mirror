@@ -634,7 +634,6 @@ FLOAT adj43[PRECALC_SIZE];
 /* psymodel window */
 FLOAT window[BLKSIZE], window_s[BLKSIZE_s/2];
 
-
 /* 
 compute the ATH for each scalefactor band 
 cd range:  0..96db
@@ -663,6 +662,50 @@ ATH = ATH_formula  - 103  (db)
 ATH = ATH * 2.5e-10      (ener)
 
 */
+
+#ifdef USE_FAST_LOG
+/***********************************************************************
+ *
+ * Fast Log Approximation for log2, used to approximate every other log
+ * (log10 and log)
+ * maximum absolute error for log10 is around 10-6
+ * maximum *relative* error can be high when x is almost 1 because error/log10(x) tends toward x/e
+ *
+ * use it if typical RESULT values are > 1e-5 (for example if x>1.00001 or x<0.99999)
+ * or if the relative precision in the domain around 1 is not important (result in 1 is exact and 0)
+ *
+ ***********************************************************************/
+
+
+ieee754_float32_t log_table[LOG2_SIZE*2];
+
+
+
+static void init_log_table(void)
+{
+    int j;
+    /* Range for log2(x) over [1,2[ is [0,1[ */
+    assert((1<<LOG2_SIZE_L2)==LOG2_SIZE);
+
+    for (j = 0; j < LOG2_SIZE; j++) {
+	FLOAT8 a, b, x;
+	x = log(1.0 + (j+0.5)/(FLOAT8)LOG2_SIZE) / log(2.0);
+	a = log(1.0 +  j     /(FLOAT8)LOG2_SIZE) / log(2.0);
+	b = log(1.0 + (j+1.0)/(FLOAT8)LOG2_SIZE) / log(2.0);
+
+	x = (a + x*2 + b) / 4.0;
+	a = (b-a) * (1.0 / (1 << (23 - LOG2_SIZE_L2)));
+	log_table[j*2+1] = a;
+	log_table[j*2  ] = x - a*(1<<(23-LOG2_SIZE_L2-1))*(j*2+1) - 0x7f;
+    }
+#if 0
+    for (j = 0; j < 1024; j++) {
+	FLOAT x = j / 1024.0+1.0;
+	printf("%f %f\n", log(x)/log(2.0), fast_log2(x));
+    }
+#endif
+}
+#endif /* define FAST_LOG */
 
 #define NSATHSCALE 100 // Assuming dynamic range=96dB, this value should be 92
 
@@ -820,16 +863,21 @@ huffman_init(lame_internal_flags * const gfc)
 void
 iteration_init( lame_global_flags *gfp)
 {
-  lame_internal_flags *gfc=gfp->internal_flags;
-  III_side_info_t * const l3_side = &gfc->l3_side;
-  int i;
-
-  if ( gfc->iteration_init_init==0 ) {
+    lame_internal_flags *gfc=gfp->internal_flags;
+    III_side_info_t * const l3_side = &gfc->l3_side;
+    int i;
     FLOAT bass, alto, treble, sfb21;
+
+    if (gfc->iteration_init_init)
+	return;
+
     gfc->iteration_init_init=1;
 
     l3_side->main_data_begin = 0;
     compute_ath(gfp);
+#ifdef USE_FAST_LOG
+    init_log_table();
+#endif
 
     pow43[0] = 0.0;
     for(i=1;i<PRECALC_SIZE;i++)
@@ -896,7 +944,6 @@ iteration_init( lame_global_flags *gfp)
 
 	gfc->nsPsy.shortfact[i] = f;
     }
-  }
 }
 
 
@@ -1283,5 +1330,6 @@ int psymodel_init(lame_global_flags *gfp)
 
     return 0;
 }
+
 
 /* end of tables.c */
