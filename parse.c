@@ -32,6 +32,7 @@ void lame_usage(char *name)  /* print syntax & exit */
   fprintf(stderr,"  --resample sfreq  sampling frequency of output file(kHz)- default=input sfreq\n");
   fprintf(stderr,"  --mp3input        input file is a MP3 file\n");
   fprintf(stderr,"  --voice           experimental voice mode\n");
+  fprintf(stderr,"  --preset type     type must be phone, voice, fm, tape, hifi, cd or studio\n");
   fprintf(stderr,"\n");
   fprintf(stderr,"  --lowpass freq         frequency(kHz), lowpass filter cutoff above freq\n");
   fprintf(stderr,"  --lowpass-width freq   frequency(kHz) - default 15%% of lowpass freq\n");
@@ -255,6 +256,109 @@ void lame_parse_args(int argc, char **argv)
 	  fclose(stderr);
 	  stderr = stdout;          /* let DOS users scroll thru the usage page */
 	  lame_usage(programName);  /* doesn't return */
+	}
+	else if (strcmp(token, "preset")==0) {
+	  argUsed=1;
+	  if (strcmp(nextArg,"phone")==0)
+	  {
+	    gf.brate = 16; 
+	    gf.highpassfreq=260;
+	    gf.highpasswidth=40;
+	    gf.lowpassfreq=3700;
+	    gf.lowpasswidth=300;
+	    gf.VBR_q=5;
+	    gf.VBR_min_bitrate_kbps=8;
+	    gf.VBR_max_bitrate_kbps=56;
+	    gf.no_short_blocks=1;
+	    gf.resamplerate =  16000;
+	    gf.mode = MPG_MD_MONO; 
+	    gf.quality = 5;
+	  }
+	  else if (strcmp(nextArg,"voice")==0)
+	  {
+	    gf.brate = 64; 
+	    gf.highpassfreq=100;
+	    gf.highpasswidth=20;
+	    gf.lowpassfreq=12000;
+	    gf.lowpasswidth=2000;
+	    gf.VBR_min_bitrate_kbps=8;
+	    gf.VBR_max_bitrate_kbps=96;
+	    gf.no_short_blocks=1;
+	    gf.mode = MPG_MD_JOINT_STEREO; 
+	    gf.mode_fixed = 1; 
+	    gf.resamplerate =  24000;
+	    gf.quality = 5;
+	  }
+	  else if (strcmp(nextArg,"fm")==0)
+	  {
+	    gf.brate = 96; 
+	    gf.highpassfreq=30;
+	    gf.highpasswidth=0;
+	    gf.lowpassfreq=15000;
+	    gf.lowpasswidth=0;
+	    gf.VBR_min_bitrate_kbps=32;
+	    gf.VBR_max_bitrate_kbps=160;
+	    gf.mode = MPG_MD_JOINT_STEREO; 
+	    gf.mode_fixed = 1; 
+	    gf.resamplerate =  32000;
+	    gf.quality = 5;
+	  }
+	  else if (strcmp(nextArg,"tape")==0)
+	  {
+	    gf.brate = 128; 
+	    gf.highpassfreq=15;
+	    gf.highpasswidth=15;
+	    gf.lowpassfreq=18000;
+	    gf.lowpasswidth=2500;
+	    gf.VBR_min_bitrate_kbps=32;
+	    gf.VBR_max_bitrate_kbps=192;
+	    gf.mode = MPG_MD_JOINT_STEREO; 
+	    gf.mode_fixed = 1; 
+	    gf.quality = 5;
+	  }
+	  else if (strcmp(nextArg,"hifi")==0)
+	  {
+	    gf.brate = 160; 
+	    gf.highpassfreq=15;
+	    gf.highpasswidth=15;
+	    gf.lowpassfreq=20000;
+	    gf.lowpasswidth=3000;
+	    gf.VBR_q=3;
+	    gf.VBR_min_bitrate_kbps=32;
+	    gf.VBR_max_bitrate_kbps=224;
+	    gf.mode = MPG_MD_JOINT_STEREO; 
+	    gf.quality = 5;
+	  }
+	  else if (strcmp(nextArg,"cd")==0)
+	  {
+	    gf.brate = 192; 
+	    gf.VBR_q=2;
+	    gf.VBR_min_bitrate_kbps=80;
+	    gf.VBR_max_bitrate_kbps=256;
+	    gf.sfb21=0;  
+	    gf.lowpassfreq=-1;
+	    gf.highpassfreq=-1;
+	    gf.mode = MPG_MD_STEREO; 
+	    gf.quality = 2;
+	  }
+	  else if (strcmp(nextArg,"studio")==0)
+	  {
+	    gf.brate = 256; 
+	    gf.VBR_q=0;
+	    gf.VBR_min_bitrate_kbps=112;
+	    gf.VBR_max_bitrate_kbps=320;
+	    gf.sfb21=0;  
+	    gf.lowpassfreq=-1;
+	    gf.highpassfreq=-1;
+	    gf.mode = MPG_MD_STEREO; 
+	    gf.quality = 2; /* should be 0, but does not work now */
+	  }
+	  else
+	    {
+	      fprintf(stderr,"%s: --preset type, type must be phone, voice, fm, tape, hifi, cd or studio, not %s\n",
+		      programName, nextArg);
+	      err = 1;
+	    }
 	}
 	else
 	  {
