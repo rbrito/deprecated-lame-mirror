@@ -325,8 +325,13 @@ typedef struct  {
   
   /* copied from lame_global_flags */
   
+  /* variables used for --nspsytune */
   int exp_nspsytune;
 
+  FLOAT ns_last_en_subshort[4][9];
+  FLOAT ns_last_attack_intensity[4][9];
+  FLOAT	ns_last_thm[4][SBMAX_s][3];
+  int ns_last_attacks[4][3];
 } lame_internal_flags;
 
 

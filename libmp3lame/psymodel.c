@@ -33,6 +33,7 @@
 #define         LN_TO_LOG10             0.2302585093
 #endif
 
+#define NSFIRLEN 21
 
 int L3para_read( lame_global_flags *gfp,
 		  FLOAT8 sfreq, int numlines[CBANDS],int numlines_s[CBANDS], 
@@ -143,6 +144,10 @@ int L3psycho_anal( lame_global_flags *gfp,
   int	sb,sblock;
   FLOAT cwlimit;
 
+  /* variables used for --nspsytune */
+  int ns_attacks[4];
+  FLOAT ns_hpfsmpl[4][576+576/3+NSFIRLEN];
+
   /*  use a simplified spreading function: */
     /*#define NEWS3  */ 
 #if 1
@@ -199,6 +204,7 @@ int L3psycho_anal( lame_global_flags *gfp,
 	for ( sb = 0; sb < SBPSY_s; sb++ ) {
 	  gfc->en[i].s[sb][j] = 1e20;
 	  gfc->thm[i].s[sb][j] = 1e20;
+	  gfc->ns_last_thm[i][sb][j] = 1e20;
 	}
       }
     }
@@ -310,6 +316,13 @@ int L3psycho_anal( lame_global_flags *gfp,
     }
     
     init_fft(gfc);
+
+    for(i=0;i<4;i++) {
+      for(j=0;j<9;j++)
+	gfc->ns_last_en_subshort[i][j] = 100;
+      for(j=0;j<3;j++)
+	gfc->ns_last_attacks[i][j] = 0;
+    }
   }
   /************************* End of Initialization *****************************/
   
@@ -321,6 +334,47 @@ int L3psycho_anal( lame_global_flags *gfp,
   /* chn=2 and 3 = Mid and Side channels */
   if (gfp->mode == MPG_MD_JOINT_STEREO) numchn=4;
 
+  if (gfp->exp_nspsytune) {
+    static const FLOAT fircoef[] = {
+      -8.65163e-18,-0.00851586,-6.74764e-18, 0.0209036,
+      -3.36639e-17,-0.0438162 ,-1.54175e-17, 0.0931738,
+      -5.52212e-17,-0.313819  , 0.5        ,-0.313819,
+      -5.52212e-17, 0.0931738 ,-1.54175e-17,-0.0438162,
+      -3.36639e-17, 0.0209036 ,-6.74764e-18,-0.00851586,
+      -8.65163e-18,
+    };
+
+    for(chn=0;chn<gfc->stereo;chn++)
+      {
+	FLOAT firbuf[576+576/3+NSFIRLEN];
+
+	/* apply high pass filter of fs/4 */
+	
+	for(i=-NSFIRLEN;i<576+576/3;i++)
+	  firbuf[i+NSFIRLEN] = buffer[chn][576-350+(i)];
+
+	for(i=0;i<576+576/3-NSFIRLEN;i++)
+	  {
+	    FLOAT sum=0;
+
+	    for(j=0;j<NSFIRLEN;j++)
+	      sum += fircoef[j] * firbuf[i+j];
+
+	    ns_hpfsmpl[chn][i] = sum;
+	  }
+
+	for(;i<576+576/3;i++)
+	  ns_hpfsmpl[chn][i] = 0;
+      }
+
+    if (gfp->mode == MPG_MD_JOINT_STEREO) {
+      for(i=0;i<576+576/3;i++)
+	{
+	  ns_hpfsmpl[2][i] = ns_hpfsmpl[0][i]+ns_hpfsmpl[1][i];
+	  ns_hpfsmpl[3][i] = ns_hpfsmpl[0][i]-ns_hpfsmpl[1][i];
+	}
+    }
+  }
   
   for (chn=0; chn<numchn; chn++) {
 
@@ -793,35 +847,8 @@ int L3psycho_anal( lame_global_flags *gfp,
 	  if (thrpe < eb[b])
 	    gfc->pe[chn] -= gfc->numlines_l[b] * log(thrpe / eb[b]);
 	}
-
-#undef PRINTMASKING
-#ifdef PRINTMASKING
- 	if (b != 0)
-	  {
-	    int i,t,e,a;
- 
-	    t = tonality2[b]*b*50-950;
-	    if (t<0) t = 0;
-	    if (t>99) t = 99;
-	    DEBUGF("%2d ",t);
- 
-	    t = -82+20*log10(ecb); // -82+20*log10(thr[b]);
-	    e = -82+20*log10(eb[b]);
-	    a = -82+20*log10(gfc->ATH_partitionbands[b])+120;
-	    for(i=0;i<a;i++) DEBUGF("a");
-	    for(;i<t;i++) {
-	      if (i >= e) DEBUGF("O");
-	      else DEBUGF("@");
-	    }
-	    for(;i<e;i++) DEBUGF("-");
-	    DEBUGF("\n");
-	  }
-#endif
       }
-#ifdef PRINTMASKING
-    DEBUGF("\n");
-#endif
-    
+
     /*************************************************************** 
      * determine the block type (window type) based on L & R channels
      * 
@@ -869,6 +896,78 @@ int L3psycho_anal( lame_global_flags *gfp,
       }
     }
 
+    if (gfp->exp_nspsytune) {
+      static int count=0;
+      FLOAT en_subshort[12];
+      FLOAT attack_intensity[12];
+      int ns_uselongblock = 1;
+
+      /* calculate energies of each sub-shortblocks */
+
+      k = 0;
+      for(i=0;i<12;i++)
+	{
+	  en_subshort[i] = 0;
+	  for(j=0;j<576/9;j++)
+	    {
+	      en_subshort[i] += ns_hpfsmpl[chn][k] * ns_hpfsmpl[chn][k];
+	      k++;
+	    }
+
+	  if (en_subshort[i] < 100) en_subshort[i] = 100;
+	}
+
+      /* compare energies between sub-shortblocks */
+
+#define NSATTACKTHRE 200
+#define NSATTACKTHRE_S 400
+
+      for(i=0;i<2;i++) {
+	attack_intensity[i] = en_subshort[i] / gfc->ns_last_en_subshort[chn][7+i];
+      }
+
+      for(;i<12;i++) {
+	attack_intensity[i] = en_subshort[i] / en_subshort[i-2];
+      }
+
+      ns_attacks[0] = ns_attacks[1] = ns_attacks[2] = ns_attacks[3] = 0;
+
+      for(i=0;i<12;i++)
+	{
+	  if (!ns_attacks[i/3] && attack_intensity[i] > (chn == 3 ? NSATTACKTHRE_S : NSATTACKTHRE)) ns_attacks[i/3] = (i % 3)+1;
+	}
+
+      if (ns_attacks[0] && gfc->ns_last_attacks[chn][2]) ns_attacks[0] = 0;
+      if (ns_attacks[1] && ns_attacks[0]) ns_attacks[1] = 0;
+      if (ns_attacks[2] && ns_attacks[1]) ns_attacks[2] = 0;
+      if (ns_attacks[3] && ns_attacks[2]) ns_attacks[3] = 0;
+
+      if (ns_attacks[0] || ns_attacks[1] || ns_attacks[2] || ns_attacks[3]) ns_uselongblock = 0;
+
+      if (chn < 4) count++;
+
+      for(i=0;i<9;i++)
+	{
+	  gfc->ns_last_en_subshort[chn][i] = en_subshort[i];
+	  gfc->ns_last_attack_intensity[chn][i] = attack_intensity[i];
+	}
+
+      for(i=0;i<9;i++)
+	{
+	  gfc->ns_last_en_subshort[chn][i] = en_subshort[i];
+	  gfc->ns_last_attack_intensity[chn][i] = attack_intensity[i];
+	}
+
+      if (gfp->no_short_blocks) {
+	uselongblock[chn] = 1;
+      } else {
+	if (chn < 2) {
+	  uselongblock[chn] = ns_uselongblock;
+	} else {
+	  if (ns_uselongblock == 0) uselongblock[0] = uselongblock[1] = 0;
+	}
+      }
+    }
 
     if (gfp->analysis) {
       FLOAT mn,mx,ma=0,mb=0,mc=0;
@@ -986,6 +1085,33 @@ int L3psycho_anal( lame_global_flags *gfp,
 		    enn  += eb[b];
 		    thmm += thr[b];
 	          }
+
+#if 0
+#define NS_PREECHO_ATT 0.3
+		/* Short block preecho control. This code is far from completed. */
+		if (ns_attacks[sblock] >= 2) {
+		  if (sblock != 0) {
+		    thmm = Min(thmm,gfc->thm[chn].s[sb][sblock-1]);
+		  } else {
+		    thmm = Min(thmm,gfc->ns_last_thm[chn][sb][2]);
+		  }
+		} else if (ns_attacks[sblock+1] == 1) {
+		  if (sblock != 0) {
+		    thmm = Min(thmm,gfc->thm[chn].s[sb][sblock-1]);
+		  } else {
+		    thmm = Min(thmm,gfc->ns_last_thm[chn][sb][2]);
+		  }
+		}
+
+		if (ns_attacks[sblock] == 1 ||
+		    (sblock != 0 && ns_attacks[sblock-1] == 3) ||
+		    (sblock == 0 && gfc->ns_last_attacks[chn][2] == 3)) {
+		  thmm *= NS_PREECHO_ATT;
+		}
+#endif
+
+		gfc->en [chn].s[sb][sblock] = enn;
+		gfc->thm[chn].s[sb][sblock] = thmm;
             } else {
                 FLOAT8 enM  = enn  / (gfc->w1_s[sb] + gfc->w2_s[sb]);
                 FLOAT8 thmM = thmm / (gfc->w1_s[sb] + gfc->w2_s[sb]);
@@ -1001,12 +1127,25 @@ int L3psycho_anal( lame_global_flags *gfp,
 
                 enn  = enn  + (enM -enn)  * gfp->raiseSMR;
                 thmm = thmm + (thmM-thmm) * gfp->raiseSMR;
+
+		gfc->en [chn].s[sb][sblock] = enn;
+		gfc->thm[chn].s[sb][sblock] = thmm;
 	    }
-            gfc->en [chn].s[sb][sblock] = enn;
-	    gfc->thm[chn].s[sb][sblock] = thmm;
 	  }
       }
 
+    if (gfp->exp_nspsytune) {
+      for ( sblock = 0; sblock < 3; sblock++ )
+	{
+	  for ( sb = 0; sb < SBPSY_s; sb++ )
+	    {
+	      gfc->ns_last_thm[chn][sb][sblock] = gfc->thm[chn].s[sb][sblock];
+	    }
+	}
+
+      for(i=0;i<3;i++)
+	gfc->ns_last_attacks[chn][i] = ns_attacks[i];
+    }
   } /* end loop over chn */
 
 

@@ -475,6 +475,7 @@ int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576], III_psy_ratio *ratio,
       }
       
       if (en0 > gfc->ATH_s[sfb]) ath_over++;
+      if (gfp->exp_nspsytune && gfp->VBR == vbr_off && gfp->quality <= 1) l3_xmin->s[sfb][b] *= 0.001;
     }
   }
 
@@ -499,6 +500,7 @@ int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576], III_psy_ratio *ratio,
 	  l3_xmin->l[sfb]=Max(gfc->ATH_l[sfb], xmin);
 	}
 	if (en0 > gfc->ATH_l[sfb]) ath_over++;
+	if (gfp->VBR == vbr_off && gfp->quality <= 1) l3_xmin->l[sfb] *= 0.001;
       }
     } else {
       for ( sfb = 0; sfb < SBMAX_l; sfb++ ){
