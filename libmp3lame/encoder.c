@@ -123,14 +123,6 @@ int  lame_encode_mp3_frame (				// Output
    * in that data is not modified. A lot of prophylactic copying is done.
    */
    
-  if (gfp->scale != 0) {
-    int i;
-    for (i=0 ; i<gfp->framesize; ++i) {
-      inbuf_l[i] *= gfp->scale;
-      if (gfc->channels_out==2) inbuf_r[i] *= gfp->scale;
-    }
-  }
-  
 
   gfc->mode_ext = MPG_MD_LR_LR;
 

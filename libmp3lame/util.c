@@ -398,6 +398,50 @@ int gcd ( int i, int j )
 
 
 
+/* copy in new samples from in_buffer into mfbuf, with resampling & scaling 
+   if necessary.  n_in = number of samples from the input buffer that
+   were used.  n_out = number of samples copied into mfbuf  */
+
+void fill_buffer(lame_global_flags *gfp,
+		 sample_t *mfbuf[2],
+		 sample_t *in_buffer[2],
+		 int nsamples, int *n_in, int *n_out)
+{
+    lame_internal_flags *gfc = gfp->internal_flags;
+    int ch,i;
+
+    /* copy in new samples into mfbuf, with resampling if necessary */
+    if (gfc->resample_ratio != 1.0) {
+	for (ch = 0; ch < gfc->channels_out; ch++) {
+	    *n_out =
+		fill_buffer_resample(gfp, &mfbuf[ch][gfc->mf_size],
+				     gfp->framesize, in_buffer[ch],
+				     nsamples, n_in, ch);
+	}
+    }
+    else {
+	*n_out = Min(gfp->framesize, nsamples);
+	*n_in = *n_out;
+	for (i = 0; i < *n_out; ++i) {
+	    mfbuf[0][gfc->mf_size + i] = in_buffer[0][i];
+	    if (gfc->channels_out == 2)
+		mfbuf[1][gfc->mf_size + i] = in_buffer[1][i];
+	}
+    }
+
+    /* user selected scaling of the samples */
+    if (gfp->scale != 0) {
+	for (i=0 ; i<*n_out; ++i) {
+	    mfbuf[0][gfc->mf_size+i] *= gfp->scale;
+	    if (gfc->channels_out == 2)
+		mfbuf[1][gfc->mf_size + i] *= gfp->scale;
+	}
+    }
+
+}
+    
+
+
 
 int fill_buffer_resample(
        lame_global_flags *gfp,

@@ -466,6 +466,11 @@ extern void freorder(int scalefac_band[],FLOAT8 ix_orig[576]);
 extern void 
 getframebits(lame_global_flags *gfp, int *bitsPerFrame, int *mean_bits);
 
+void fill_buffer(lame_global_flags *gfp,
+		 sample_t *mfbuf[2],
+		 sample_t *in_buffer[2],
+		 int nsamples, int *n_in, int *n_out);
+
 int  fill_buffer_resample (
         lame_global_flags *gfp,
         sample_t*  outbuf,
