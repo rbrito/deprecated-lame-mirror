@@ -547,18 +547,17 @@ static int count_bits_long(int ix[576], gr_info *gi)
 int count_bits(int *ix, FLOAT8 *xr, gr_info *cod_info)  
 {
   int bits=0,i;
-  if (gf.quantization) {
-    /* since quantize_xrpow uses table lookup, we need to check this first: */
-    FLOAT8 w = (IXMAX_VAL) / IPOW20(cod_info->global_gain);
-    for ( i = 0; i < 576; i++ )  {
-      if (xr[i] > w)
-	return 100000;
-    }
-    quantize_xrpow(xr, ix, cod_info);
-  } else {
-    /* if ix>IXMAX_VAL, it will be caught in the count_bits_long/choose_table_short */
-    quantize_xrpow_ISO(xr, ix, cod_info);
+  /* since quantize_xrpow uses table lookup, we need to check this first: */
+  FLOAT8 w = (IXMAX_VAL) / IPOW20(cod_info->global_gain);
+  for ( i = 0; i < 576; i++ )  {
+    if (xr[i] > w)
+      return 100000;
   }
+  if (gf.quantization) 
+    quantize_xrpow(xr, ix, cod_info);
+  else
+    quantize_xrpow_ISO(xr, ix, cod_info);
+
 
 
   if (cod_info->block_type==SHORT_TYPE) {
