@@ -181,8 +181,15 @@ void ResvMaxBits(lame_global_flags *gfp, int mean_bits, int *targ_bits, int *ext
   int add_bits;
   int ResvSize = gfc->ResvSize;
 
+  /* define NORES_TEST if you do not want the second granule to use
+     bits saved by the first granule. Requires using the --nores.
+     This is useful for testing only */
+#undef  NORES_TEST
+#ifndef NORES_TEST
+  /* conpensate the saved bits used in the 1st granule */
   if (gr == 1)
-      ResvSize += mean_bits; /* adjust the bits used for gr==1 */
+      ResvSize += mean_bits;
+#endif
 
   *targ_bits = mean_bits ;
 

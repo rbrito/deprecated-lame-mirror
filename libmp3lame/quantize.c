@@ -1672,24 +1672,9 @@ iteration_loop(
             
             /*  update reservoir status after FINAL quantization/bitrate
              */
-#undef  NORES_TEST
-#ifndef NORES_TEST
             ResvAdjust (gfc, cod_info);
-#endif      
         } /* for ch */
     }    /* for gr */
-    
-#ifdef NORES_TEST
-    /* replace ResvAdjust above with this code if you do not want
-       the second granule to use bits saved by the first granule.
-       Requires using the --nores.  This is useful for testing only */
-    for (gr = 0; gr < gfc->mode_gr; gr++) {
-        for (ch =  0; ch < gfc->channels_out; ch++) {
-            cod_info = &l3_side->tt[gr][ch];
-            ResvAdjust (gfc, cod_info);
-        }
-    }
-#endif
 
     ResvFrameEnd (gfc, mean_bits);
 }
