@@ -622,6 +622,8 @@ set_istereo_sfb(lame_internal_flags *gfc, int gr)
     III_psy_ratio *mr = &gfc->masking_next[gr][0];
     gfc->is_start_sfb_l[gr] = gfc->is_start_sfb_l_next[gr];
     gfc->is_start_sfb_s[gr] = gfc->is_start_sfb_s_next[gr];
+    gfc->is_start_sfb_l_next[gr] = gfc->cutoff_sfb_l;
+    gfc->is_start_sfb_s_next[gr] = gfc->cutoff_sfb_s;
     sb = gfc->cutoff_sfb_l - 1;
     if (!gfc->useshort_next[gr][0] && !gfc->useshort_next[gr][1]) {
 	do {
@@ -1724,12 +1726,7 @@ psycho_analysis(
 	    if (gfp->use_istereo
 		&& (check_istereo(gfc, 0) + check_istereo(gfc, gfc->mode_gr-1)))
 		gfc->mode_ext_next = MPG_MD_MS_I;
-	    else {
-		gfc->is_start_sfb_l_next[gfc->mode_gr-1]
-		    = gfc->is_start_sfb_l_next[0] = gfc->cutoff_sfb_l;
-		gfc->is_start_sfb_s_next[gfc->mode_gr-1]
-		    = gfc->is_start_sfb_s_next[0] = gfc->cutoff_sfb_s;
-	    }
+
 	    /* LR -> MS case */
 	    if (gfc->mode_ext_next != gfc->mode_ext
 	     && (gfc->l3_side.tt[gfc->mode_gr-1][0].block_type
@@ -1746,12 +1743,6 @@ psycho_analysis(
 		&& (check_istereo_LR(gfc, 0)
 		    + check_istereo_LR(gfc, gfc->mode_gr-1)))
 		gfc->mode_ext_next = MPG_MD_LR_I;
-	    else {
-		gfc->is_start_sfb_l_next[gfc->mode_gr-1]
-		    = gfc->is_start_sfb_l_next[0] = gfc->cutoff_sfb_l;
-		gfc->is_start_sfb_s_next[gfc->mode_gr-1]
-		    = gfc->is_start_sfb_s_next[0] = gfc->cutoff_sfb_s;
-	    }
 	}
     }
 
