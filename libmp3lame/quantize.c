@@ -1120,6 +1120,7 @@ CBR_bitalloc(
 	    targ_bits[1] += bits - (ch0new - targ_bits[0]);
 	targ_bits[0] = ch0new;
     }
+    assert(targ_bits[0] + targ_bits[1] <= MAX_BITS);
     for (ch = 0; ch < gfc->channels_out; ch++) {
 	CBR_1st_bitalloc(gfc, &gfc->l3_side.tt[gr][ch], ch,
 			 targ_bits[ch] + gfc->l3_side.tt[gr][ch].part2_length,
@@ -1157,6 +1158,8 @@ ABR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
     /* check hard limit per granule (by spec) */
     if (max_bits > MAX_BITS)
 	max_bits = MAX_BITS;
+    if (min_bits > MAX_BITS)
+	min_bits = MAX_BITS;
 
     for (gr = 0; gr < gfc->mode_gr; gr++)
 	CBR_bitalloc(gfc, ratio[gr], min_bits, max_bits, factor, gr);
@@ -1214,6 +1217,8 @@ iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
 	/* check hard limit per granule (by spec) */
 	if (max_bits > MAX_BITS)
 	    max_bits = MAX_BITS;
+	if (min_bits > MAX_BITS)
+	    min_bits = MAX_BITS;
 
 	gfc->l3_side.ResvSize += mean_bits;
 
