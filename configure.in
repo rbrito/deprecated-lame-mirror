@@ -148,11 +148,11 @@ if test "$CONFIG_DECODER" != "no" ; then
   MPGLIB_SOURCE="\$(mpglib_sources)"
 
   if test "$CONFIG_DECODER_L1" != "no" ; then
-    CONFIG_OPTS="-DUSE_LAYER1 $CONFIG_OPTS"
+    CONFIG_OPTS="-DUSE_LAYER_1 $CONFIG_OPTS"
   fi
 
   if test "$CONFIG_DECODER_L2" != "no" ; then
-    CONFIG_OPTS="-DUSE_LAYER2 $CONFIG_OPTS"
+    CONFIG_OPTS="-DUSE_LAYER_2 $CONFIG_OPTS"
   fi
 fi
 AC_MSG_RESULT($CONFIG_DECODER)
