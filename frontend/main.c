@@ -60,6 +60,7 @@ char   *strchr(), *strrchr();
 #include "parse.h"
 #include "main.h"
 #include "get_audio.h"
+#include "portableio.h"
 #include "timestatus.h"
 
 /* PLL 14/04/2000 */
