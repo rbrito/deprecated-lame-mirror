@@ -187,8 +187,6 @@ int  lame_encode_mp3_frame (				// Output
     }
     
     iteration_init(gfp);
-    
-    gfc->adjust_ath = 1.0;
   }
 
 
@@ -230,42 +228,8 @@ int  lame_encode_mp3_frame (				// Output
     }
   }
 
-    
-    /*  auto-adjust of ATH, useful for low volume
-     *  Gabriel Bouvigne 3 feb 2001
-     */ {
-        FLOAT8 max_val = 0;
-        int i;
-        
-        /*  check maximum level in left channel
-         */
-        for (i = 0; i < gfp->framesize; i++) {
-            if (max_val < fabs(inbuf_l[i]))
-                max_val = fabs(inbuf_l[i]);
-        }
-        /*  and in right channel (if not mono) 
-         */
-        for (i = 0; gfc->channels_out == 2 && i < gfp->framesize; i++) {
-            if (max_val < fabs(inbuf_r[i]))
-                max_val = fabs(inbuf_r[i]);
-        }
-        
-        /*  adjust ATH depending on range of maximum value
-         */
-        if      (0.5 < max_val / 32768) {       /* value above 50 % */
-                gfc->adjust_ath = 1.0;          /* do not reduce ATH */
-        }
-        else if (0.3 < max_val / 32768) {       /* value above 30 % */
-                gfc->adjust_ath *= 0.955;       /* reduce by ~0.2 dB */
-                if (gfc->adjust_ath < 0.3)      /* but ~5 dB in maximum */
-                    gfc->adjust_ath = 0.3;            
-        }
-        else {                                  /* value below 30 % */
-                gfc->adjust_ath *= 0.93;        /* reduce by ~0.3 dB */
-                if (gfc->adjust_ath < 0.01)     /* but 20 dB in maximum */
-                    gfc->adjust_ath = 0.01;
-        }
-    }
+
+
 
 
   if (gfc->psymodel) {
