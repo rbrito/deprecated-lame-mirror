@@ -119,7 +119,6 @@ static void PresetOptions( lame_global_flags *gfp, LONG myPreset )
 		case LQP_R3MIX_QUALITY:
 
             lame_set_exp_nspsytune( gfp, lame_get_exp_nspsytune( gfp ) | 1); /*nspsytune*/
-            lame_set_experimentalX( gfp, 1 );
 
             (void) lame_set_scale( gfp, 0.98f ); /* --scale 0.98*/
 
