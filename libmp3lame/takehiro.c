@@ -650,11 +650,6 @@ void best_huffman_divide(
     if (gi->big_values == 0)
 	return;
 
-    /* SHORT BLOCK stuff fails for MPEG2 */ 
-    if (gi->block_type == SHORT_TYPE && gfc->mode_gr==1) 
-	return;
-
-
     cod_info2 = *gi;
     if (gi->block_type == NORM_TYPE) {
 	recalc_divide_init(gfc, gi, ix, r01_bits,r01_div,r0_tbl,r1_tbl);
@@ -693,7 +688,7 @@ void best_huffman_divide(
     else {
 	/* Count the number of bits necessary to code the bigvalues region. */
 	cod_info2.part2_3_length = a1;
-	a1 = gfc->scalefac_band.l[7 + 1];
+	a1 = gfc->scalefac_band.l[gi->region0_count+1];
 	if (a1 > i) {
 	    a1 = i;
 	}
