@@ -457,8 +457,6 @@ void CDECL lame_print_internals( const lame_t gfp);
  *                 -2:  malloc() problem
  *                 -3:  lame_init_params() not called
  *                 -4:  psycho acoustic problems 
- *                 -5:  ogg cleanup encoding error
- *                 -6:  ogg frame encoding error
  *
  * The required mp3buf_size can be computed from num_samples, 
  * samplerate and encoding rate, but here is a worst case estimate:
@@ -726,6 +724,29 @@ typedef struct {
   int framenum;        /* frames decoded counter                         */
 } mp3data_struct;
 
+
+/* structure to receive extracted header (VBR header) */
+#define NUMTOCENTRIES 100
+
+#define FRAMES_FLAG     0x0001
+#define BYTES_FLAG      0x0002
+#define TOC_FLAG        0x0004
+#define VBR_SCALE_FLAG  0x0008
+
+/* toc may be NULL*/
+typedef struct
+{
+    int h_id;		/* from MPEG header, 0=MPEG2, 1=MPEG1 */
+    int samprate;	/* determined from MPEG header */
+    int flags;		/* from Vbr header data */
+    int frames;		/* total bit stream frames from Vbr header data */
+    int bytes;		/* total bit stream bytes from Vbr header data*/
+    int vbr_scale;	/* encoded vbr scale from Vbr header data*/
+    unsigned char toc[NUMTOCENTRIES];	/* may be NULL if toc not desired*/
+    int headersize;	/* size of VBR header, in bytes */
+    int enc_delay;	/* encoder delay */
+    int enc_padding;	/* encoder paddign added at end of stream */
+}   VBRTAGDATA;
 
 /* required call to initialize decoder */
 int CDECL lame_decode_init(lame_t);

@@ -207,6 +207,105 @@ copy_mp(PMPSTR mp,int size,unsigned char *ptr)
 /* number of bytes needed by GetVbrTag to parse header */
 #define XING_HEADER_SIZE 194
 
+static const char	VBRTag[]={"Xing"};
+static const char	VBRTag2[]={"Info"};
+
+/*-------------------------------------------------------------*/
+static int ExtractI4(unsigned char *buf)
+{
+    int x;
+    /* big endian extract */
+    x = buf[0];
+    x <<= 8;
+    x |= buf[1];
+    x <<= 8;
+    x |= buf[2];
+    x <<= 8;
+    x |= buf[3];
+    return x;
+}
+
+static int
+GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
+{
+    int	i, head_flags, h_bitrate,h_id, h_mode, h_sr_index;
+    int enc_delay, enc_padding; 
+
+    /* get selected MPEG header data */
+    h_id       = (buf[1] >> 3) & 1;
+    h_sr_index = (buf[2] >> 2) & 3;
+    h_mode     = (buf[3] >> 6) & 3;
+    h_bitrate  = ((buf[2]>>4)&0xf);
+    h_bitrate = bitrate_table[h_id][h_bitrate];
+
+    /* get Vbr header data */
+    pTagData->flags = 0;
+
+    /* check for FFE syncword */
+    if ((buf[1]>>4)==0xE) 
+	pTagData->samprate = samplerate_table[2][h_sr_index];
+    else
+	pTagData->samprate = samplerate_table[h_id][h_sr_index];
+
+    /*  determine offset of header */
+    if (h_id) {
+	/* mpeg1 */
+	if (h_mode != 3)	buf+=(32+4);
+	else				buf+=(17+4);
+    }
+    else
+    {
+	/* mpeg2 */
+	if (h_mode != 3) buf+=(17+4);
+	else             buf+=(9+4);
+    }
+
+    if (strncmp(buf, VBRTag, 4) && strncmp(buf, VBRTag2, 4))
+	return 0;
+    buf+=4;
+
+    pTagData->h_id = h_id;
+    head_flags = pTagData->flags = ExtractI4(buf); buf+=4;      /* get flags */
+
+    if (head_flags & FRAMES_FLAG)
+	pTagData->frames   = ExtractI4(buf); buf+=4;
+
+    if (head_flags & BYTES_FLAG)
+	pTagData->bytes = ExtractI4(buf); buf+=4;
+
+    if (head_flags & TOC_FLAG){
+	if(pTagData->toc)
+	{
+	    for(i=0;i<NUMTOCENTRIES;i++)
+		pTagData->toc[i] = buf[i];
+	}
+	buf+=NUMTOCENTRIES;
+    }
+
+    pTagData->vbr_scale = -1;
+
+    if (head_flags & VBR_SCALE_FLAG)
+	pTagData->vbr_scale = ExtractI4(buf); buf+=4;
+
+    pTagData->headersize = ((h_id+1)*72000*h_bitrate) / pTagData->samprate;
+
+    buf+=21;
+    enc_delay = buf[0] << 4;
+    enc_delay += buf[1] >> 4;
+    enc_padding= (buf[1] & 0x0F)<<8;
+    enc_padding += buf[2];
+    /* check for reasonable values (this may be an old Xing header, */
+    /* not a INFO tag) */
+    if (enc_delay<0 || enc_delay > 3000) enc_delay=-1;
+    if (enc_padding<0 || enc_padding > 3000) enc_padding=-1;
+
+    pTagData->enc_delay=enc_delay;
+    pTagData->enc_padding=enc_padding;
+
+    return 1;       /* success */
+}
+
+
 /* traverse mp data structure without changing it */
 /* (just like sync_buffer) */
 /* pull out Xing bytes */

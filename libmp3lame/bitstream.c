@@ -676,7 +676,7 @@ copy_buffer(lame_t gfc, unsigned char *buffer, int size, int mp3data)
 		 * what should we do?  ignore for now */
 		mp3out=0;
 	    }
-	    if (mp3out>0 && mp3out>1152) {
+	    if (mp3out>1152) {
 		/* this should not be possible, and indicates we have
 		 * overflowed the pcm_out buffer.  Fatal error. */
 		return -6;
