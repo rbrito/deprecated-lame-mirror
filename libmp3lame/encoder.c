@@ -343,19 +343,19 @@ int  lame_encode_mp3_frame (				// Output
 
   /********************** padding *****************************/
   switch (gfp->padding_type) {
-  case 0:
-    gfc->padding=0;
+  case PAD_NO:
+    gfc->padding=PAD_NO;
     break;
-  case 1:
-    gfc->padding=1;
+  case PAD_ALL:
+    gfc->padding=PAD_ALL;
     break;
-  case 2:
+  case PAD_ADJUST:
   default:
     if (gfp->VBR!=vbr_off) {
-      gfc->padding=0;
+      gfc->padding=PAD_NO;
     } else {
       if (gfp->disable_reservoir) {
-	gfc->padding = 0;
+	gfc->padding = PAD_NO;
 	/* if the user specified --nores, dont very gfc->padding either */
 	/* tiny changes in frac_SpF rounding will cause file differences */
       }else{
@@ -371,9 +371,9 @@ int  lame_encode_mp3_frame (				// Output
         gfc->slot_lag -= gfc->frac_SpF;
         if (gfc->slot_lag < 0) {
           gfc->slot_lag += gfp->out_samplerate;
-          gfc->padding = 1;
+          gfc->padding = PAD_ALL;
         } else {
-          gfc->padding = 0;
+          gfc->padding = PAD_NO;
         }
       } /* reservoir enabled */
     }

@@ -34,6 +34,7 @@
 
 
 #include "bitstream.h"
+#include "lame.h"
 #include "VbrTag.h"
 #include "version.h"
 
@@ -68,16 +69,6 @@
 #define XING_BITRATE1 128
 #define XING_BITRATE2  64
 #define XING_BITRATE25 32
-
-
-
-//also defined in mpg123.h
-
-
-#define         MPG_MD_STEREO           0
-#define         MPG_MD_JOINT_STEREO     1
-#define         MPG_MD_DUAL_CHANNEL     2
-#define         MPG_MD_MONO             3
 
 
 
@@ -604,21 +595,23 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 
 	switch(gfp->mode)
 	{
-	case MPG_MD_MONO:
+	case MONO:
 		nStereoMode = 0;
 		break;
-	case MPG_MD_STEREO:
+	case STEREO:
 		nStereoMode = 1;
 		break;
-	case MPG_MD_DUAL_CHANNEL:
+	case DUAL_CHANNEL:
 		nStereoMode = 2;
 		break;
-	case MPG_MD_JOINT_STEREO:
+	case JOINT_STEREO:
 		if (gfp->force_ms)
 			nStereoMode = 4;
 		else
 			nStereoMode = 3;
 		break;
+	case NOT_SET:
+	    /* FALLTHROUGH */
 	default:
 		nStereoMode = 7;
 		break;
@@ -659,10 +652,10 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 		(gfp->lowpassfreq >=19500 || gfp->lowpassfreq == 0) && 
 		(nAthType > 0 && nAthType < 5 )		&&
 		( 
-				(gfp->brate >=256 && (gfp->mode == MPG_MD_STEREO || gfp->mode == MPG_MD_JOINT_STEREO) && bExpNPsyTune && bSafeJoint) 
-			||  (nABRBitrate >=224 && gfp->mode == MPG_MD_JOINT_STEREO && bExpNPsyTune && bSafeJoint) 
+				(gfp->brate >=256 && (gfp->mode == STEREO || gfp->mode == JOINT_STEREO) && bExpNPsyTune && bSafeJoint) 
+			||  (nABRBitrate >=224 && gfp->mode == JOINT_STEREO && bExpNPsyTune && bSafeJoint) 
 			|| (nQuality>=88 && bExpNPsyTune) 
-			|| (nQuality>=78 && gfp->mode == MPG_MD_JOINT_STEREO && bExpNPsyTune && bSafeJoint && nAthType > 0 && nAthType < 5) 
+			|| (nQuality>=78 && gfp->mode == JOINT_STEREO && bExpNPsyTune && bSafeJoint && nAthType > 0 && nAthType < 5) 
 			)
 		)
 		bArchival = 1;

@@ -481,7 +481,7 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 	if (lameConfig.format.LHV1.bNoRes)
 	{
 		lame_set_disable_reservoir( gfp,1 );
-		lame_set_padding_type( gfp, 0 );
+		lame_set_padding_type( gfp, PAD_NO );
 	}
 
 	lame_init_params(gfp);	
@@ -714,11 +714,12 @@ static void dump_config( )
 	DebugPrintf("mode                   =");
 	switch ( lame_get_mode( gfp ) )
 	{
-		case 0:DebugPrintf( "Stereo\n" ); break;
-		case 1:DebugPrintf( "Joint-Stereo\n" ); break;
-		case 2:DebugPrintf( "Forced Stereo\n" ); break;
-		case 3:DebugPrintf( "Mono\n" ); break;
-		default:DebugPrintf( "Error (unknown)\n" ); break;
+		case STEREO:       DebugPrintf( "Stereo\n" ); break;
+		case JOINT_STEREO: DebugPrintf( "Joint-Stereo\n" ); break;
+		case DUAL_CHANNEL: DebugPrintf( "Forced Stereo\n" ); break;
+		case MONO:         DebugPrintf( "Mono\n" ); break;
+		case NOT_SET:      /* FALLTROUGH */
+		default:           DebugPrintf( "Error (unknown)\n" ); break;
 	}
 
 	DebugPrintf("sampling frequency     =%.1f kHz\n", lame_get_in_samplerate( gfp ) /1000.0 );

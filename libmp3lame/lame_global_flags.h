@@ -41,7 +41,7 @@ struct lame_global_struct {
   int ogg;                    /* encode to Vorbis .ogg file                  */
 
   int quality;                /* quality setting 0=best,  9=worst  default=5 */
-  MPEG_mode mode;             /* see enum above
+  MPEG_mode mode;             /* see enum in lame.h
                                  default = LAME picks best value             */
   int mode_fixed;             /* ignored                                     */
   int mode_automs;            /* use a m/s threshold based on compression

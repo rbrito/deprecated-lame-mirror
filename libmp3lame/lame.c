@@ -1305,17 +1305,19 @@ lame_print_internals( const lame_global_flags * gfp )
     }
     MSGF( gfc, "\tMPEG-%s Layer 3\n", pc );
     switch ( gfp->mode ) {
-    case JOINT_STEREO: pc = "joint stereo"; break;
-    case STEREO      : pc = "stereo";       break;
-    case DUAL_CHANNEL: pc = "dual channel"; break;
-    default          : pc = "mono";         break;
+    case JOINT_STEREO: pc = "joint stereo";   break;
+    case STEREO      : pc = "stereo";         break;
+    case DUAL_CHANNEL: pc = "dual channel";   break;
+    case MONO        : pc = "mono";           break;
+    case NOT_SET     : pc = "not set (error)"; break;
+    default          : pc = "unknown (error)"; break;
     }
     MSGF( gfc, "\t%d channel - %s\n", gfc->channels_out, pc );
     switch ( gfp->padding_type ) {
-    case PAD_NO    : pc = "off";  break;
-    case PAD_ALL   : pc = "all";  break;
-    case PAD_ADJUST: pc = "auto"; break;
-    default        : pc = "???";  break;
+    case PAD_NO    : pc = "off";    break;
+    case PAD_ALL   : pc = "all";    break;
+    case PAD_ADJUST: pc = "auto";   break;
+    default        : pc = "(error)"; break;
     }
     MSGF( gfc, "\tpadding: %s\n", pc );
     
@@ -2031,7 +2033,7 @@ lame_init_old(lame_global_flags * gfp)
     gfp->lowpasswidth = -1;
     gfp->highpasswidth = -1;
 
-    gfp->padding_type = 2;
+    gfp->padding_type = PAD_ADJUST;
     gfp->VBR = vbr_off;
     gfp->VBR_q = 4;
     gfp->VBR_mean_bitrate_kbps = 128;
