@@ -41,6 +41,7 @@ FLOAT8 ATHformula(FLOAT8 f)
 }
 
 
+/* see for example "Zwicker: Psychoakustik, 1982; ISBN 3-540-11401-7 */
 FLOAT8 freq2bark(FLOAT8 freq)
 {
   /* input: freq in hz  output: barks */
@@ -48,6 +49,13 @@ FLOAT8 freq2bark(FLOAT8 freq)
     return 13.0*atan(.76*freq) + 3.5*atan(freq*freq/(7.5*7.5));
 }
 
+/* see for example "Zwicker: Psychoakustik, 1982; ISBN 3-540-11401-7 */
+FLOAT8 freq2cbw(FLOAT8 freq)
+{
+  /* input: freq in hz  output: critical band width */
+    freq = freq * 0.001;
+    return 25+75*pow(1+1.4*(freq*freq),0.69);
+}
 
 
 

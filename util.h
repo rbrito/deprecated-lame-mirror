@@ -350,6 +350,7 @@ extern void           alloc_buffer(Bit_stream_struc*, unsigned int);
 extern void           freegfc(lame_internal_flags *gfc);
 extern FLOAT8         ATHformula(FLOAT8 f);
 extern FLOAT8         freq2bark(FLOAT8 freq);
+extern FLOAT8         freq2cbw(FLOAT8 freq);
 extern void ireorder(int scalefac_band[],int ix_orig[576]);
 extern void iun_reorder(int scalefac_band[],int ix_orig[576]);
 extern void freorder(int scalefac_band[],FLOAT8 ix_orig[576]);
