@@ -181,7 +181,6 @@ ATH = ATH * 2.5e-10      (ener)
 
 static FLOAT ATHmdct( lame_global_flags *gfp, FLOAT f )
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
     FLOAT ath;
   
     ath = ATHformula( f , gfp );
