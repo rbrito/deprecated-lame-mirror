@@ -542,9 +542,7 @@ ns_msfix(
     )
 {
     int sb, sblock;
-    FLOAT msfix2 = msfix;
-    if (gfc->presetTune.use)
-	msfix2 = gfc->presetTune.ms_maskadjust;
+    FLOAT msfix2 = gfc->presetTune.ms_maskadjust;
 
     for ( sb = 0; sb < SBMAX_l; sb++ ) {
 	FLOAT thmL,thmR,thmM,thmS,ath;

@@ -288,7 +288,7 @@ int calc_xmin(
 // +10 dB  =>  +6.45
 
 /*  mt 5/99:  Function: Improved calc_noise for a single channel   */
-int  calc_noise( 
+void calc_noise( 
         const lame_internal_flags * const gfc,
         const gr_info             * const cod_info,
         const FLOAT              * l3_xmin, 
@@ -340,8 +340,6 @@ int  calc_noise(
     res->tot_noise   = tot_noise_db;
     res->over_noise  = over_noise_db;
     res->max_noise   = max_noise;
-
-    return over;
 }
 
 
@@ -370,15 +368,13 @@ int  calc_noise(
 
 static int 
 init_xrpow(
-    lame_internal_flags *gfc,
+    lame_global_flags *gfp,
     gr_info *const cod_info, 
     FLOAT xrpow[576] )
 {
     FLOAT tmp, sum = 0;
     int i;
 
-    assert( xrpow != NULL );
-    
     /*  check if there is some energy we have to quantize
      *  and calculate xrpow matching our fresh scalefactors
      */
@@ -391,11 +387,21 @@ init_xrpow(
      */
     if (sum > (FLOAT)1E-20) {
 	int j = 0;
+	lame_internal_flags *gfc=gfp->internal_flags;
 	if (gfc->substep_shaping & 2)
 	    j = 1;
 
 	for (i = 0; i < cod_info->psymax; i++)
 	    gfc->pseudohalf[i] = j;
+
+	/* set the method how to check if the quantization is "better" */
+	j = gfp->experimentalX;
+	if (cod_info->block_type != NORM_TYPE)
+	    j = gfc->presetTune.quantcomp_type_s;
+	else if (gfc->ATH.adjust >= gfc->presetTune.athadjust_switch_level)
+	    j = gfc->presetTune.quantcomp_alt_type;
+
+	gfc->quant_comp_method = j;
 
 	return 1;
     }
@@ -642,7 +648,7 @@ loop_break(
 
 /*************************************************************************
  *
- *      quant_compare()                                               
+ *      better_quant()
  *
  *  author/date??
  *
@@ -650,15 +656,12 @@ loop_break(
  *
  *************************************************************************/
 
-inline 
-static int 
-quant_compare(
-    const int                   experimentalX,
+inline static int 
+better_quant(
           lame_internal_flags	* const gfc,
     const calc_noise_result	* const best,
           calc_noise_result	* const calc,
-    const gr_info		* const gi,
-    const FLOAT		* distort
+    const gr_info		* const gi
     )
 {
     /*
@@ -671,7 +674,7 @@ quant_compare(
      */
     int better;
 
-    switch (experimentalX) {
+    switch (gfc->quant_comp_method) {
         default:
         case 0:
 	    better = calc->over_count  < best->over_count
@@ -682,22 +685,25 @@ quant_compare(
                      calc->tot_noise   < best->tot_noise  ); 
 	    break;
 
-        case 8:
-	    /* pass through */
+        case 8:	    /* for backward compatibility, pass through */
         case 1:
 	    better = calc->max_noise < best->max_noise; 
 	    break;
+
         case 2:
 	    better = calc->tot_noise < best->tot_noise; 
 	    break;
-        case 3:
-	    if (gfc->presetTune.use && gi->block_type != NORM_TYPE)
-		better = (calc->tot_noise < best->tot_noise - gfc->presetTune.quantcomp_adjust_rh_tot)
-		    && (calc->max_noise < best->max_noise - gfc->presetTune.quantcomp_adjust_rh_max);
-	    else 
-		better = (calc->tot_noise < best->tot_noise)
-		    &&   (calc->max_noise < best->max_noise);
+
+        case 9:
+	    better = (calc->tot_noise < best->tot_noise - gfc->presetTune.quantcomp_adjust_rh_tot)
+		&& (calc->max_noise < best->max_noise - gfc->presetTune.quantcomp_adjust_rh_max);
 	    break;
+
+        case 3:
+	    better = (calc->tot_noise < best->tot_noise)
+		&&   (calc->max_noise < best->max_noise);
+	    break;
+
         case 4:
 	    better = ( calc->max_noise <= 0.0  &&
                        best->max_noise >  0.2 )
@@ -718,6 +724,7 @@ quant_compare(
                        best->max_noise >  calc->max_noise-0.15  &&
                        calc->tot_noise+calc->over_noise+calc->over_noise < best->tot_noise+best->over_noise+best->over_noise );
             break;
+
         case 5:
 	    better =   calc->over_noise  < best->over_noise
                  ||  ( calc->over_noise == best->over_noise  &&
@@ -1010,8 +1017,7 @@ balance_noise (
      *  lets try setting scalefac_scale=1 
      */
     if (gfc->use_scalefac_scale
-	&& (!gfc->presetTune.use
-	    || gfc->ATH.adjust >= gfc->presetTune.athadjust_switch_level)) {
+	&& gfc->ATH.adjust >= gfc->presetTune.athadjust_switch_level) {
 	memset(&gfc->pseudohalf, 0, sizeof(gfc->pseudohalf));
 	if (!cod_info->scalefac_scale) {
 	    inc_scalefac_scale (cod_info, xrpow);
@@ -1069,7 +1075,6 @@ outer_loop (
     calc_noise_result best_noise_info;
     int huff_bits;
     int better;
-    int over;
     int age;
 
     bin_search_StepSize (gfc, cod_info, targ_bits, ch, xrpow);
@@ -1080,7 +1085,7 @@ outer_loop (
 
     /* compute the distortion in this quantization */
     /* coefficients and thresholds both l/r (or both mid/side) */
-    over = calc_noise (gfc, cod_info, l3_xmin, distort, &best_noise_info);
+    calc_noise (gfc, cod_info, l3_xmin, distort, &best_noise_info);
     cod_info_w = *cod_info;
     age = 0;
     if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh)
@@ -1093,9 +1098,8 @@ outer_loop (
 	/* stopping criterion */
 	/******************************************************************/
 	/* if no bands with distortion and -X0, we are done */
-	if (0==gfc->noise_shaping_stop && 
-	    0==gfp->experimentalX &&
-	    (over == 0 || best_noise_info.over_count == 0) )
+	if (gfc->quant_comp_method == 0 && gfc->noise_shaping_stop == 0
+	    && best_noise_info.over_count == 0)
 	    break;
 
 	/* Check if the last scalefactor band is distorted.
@@ -1130,23 +1134,13 @@ outer_loop (
 	inner_loop (gfc, &cod_info_w, huff_bits, xrpow);
 
         /* compute the distortion in this quantization */
-	over = calc_noise (gfc, &cod_info_w, l3_xmin, distort, &noise_info);
+	calc_noise (gfc, &cod_info_w, l3_xmin, distort, &noise_info);
 
-        /* check if this quantization is better
-         * than our saved quantization */
-	better = gfp->experimentalX;
-	if (gfc->presetTune.use) {
-	    if (cod_info->block_type != NORM_TYPE)
-		better = gfc->presetTune.quantcomp_type_s;
-	    else if (gfc->ATH.adjust >= gfc->presetTune.athadjust_switch_level
-		     && gfc->presetTune.quantcomp_alt_type >= 0)
-		better = gfc->presetTune.quantcomp_alt_type;
-	}
-	better = quant_compare(better, gfc, &best_noise_info, &noise_info,
-			       &cod_info_w, distort);
+        /* save data so we can restore this quantization later,
+	 * if the newer scalefactor combination is better
+	 */
+	if (better_quant(gfc, &best_noise_info, &noise_info, &cod_info_w)) {
 
-        /* save data so we can restore this quantization later */
-	if (better) {
 	    best_noise_info = noise_info;
 	    *cod_info = cod_info_w;
 	    age = 0;
@@ -1159,7 +1153,7 @@ outer_loop (
         else {
 	    /* allow up to 3 unsuccesful tries in serial, then stop 
 	     * if our best quantization so far had no distorted bands. This
-	     * gives us more possibilities for different quant_compare modes.
+	     * gives us more possibilities for different better_quant modes.
 	     * Much more than 3 makes not a big difference, it is only slower.
 	     */
 	    if (++age > 3 && best_noise_info.over_count == 0)
@@ -1536,7 +1530,7 @@ VBR_iteration_loop (
       
             /*  init_xrpow sets up xrpow
              */
-            ret = init_xrpow(gfc, cod_info, xrpow);
+            ret = init_xrpow(gfp, cod_info, xrpow);
             if (ret == 0 || max_bits[gr][ch] == 0) {
                 /*  xr contains no energy 
                  *  l3_enc, our encoding data, will be quantized to zero
@@ -1767,7 +1761,7 @@ ABR_iteration_loop(
 
             /*  init_xrpow sets up xrpow
              */
-            if (init_xrpow(gfc, cod_info, xrpow)) {
+            if (init_xrpow(gfp, cod_info, xrpow)) {
                 /*  xr contains energy we will have to encode 
                  *  calculate the masking abilities
                  *  find some good quantization in outer_loop 
@@ -1844,7 +1838,7 @@ iteration_loop(
 
             /*  init_xrpow sets up xrpow
              */
-            if (init_xrpow(gfc, cod_info, xrpow)) {
+            if (init_xrpow(gfp, cod_info, xrpow)) {
                 /*  xr contains energy we will have to encode 
                  *  calculate the masking abilities
                  *  find some good quantization in outer_loop 

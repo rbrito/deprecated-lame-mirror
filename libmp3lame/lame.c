@@ -897,49 +897,44 @@ lame_init_params(lame_global_flags * const gfp)
         default:
         case 0: {
                 static const float dbQ[10]={-2.,-1.0,-.66,-.33,0.,0.33,.66,1.0,1.33,1.66};
-                gfc->VBR.quality = 0;
                 gfc->VBR.mask_adjust = dbQ[gfp->VBR_q];
                 gfc->VBR.smooth = 1;
             } 
             break;        
         case 1: {
                 static float const dbQ[10] = { -2., -1.4, -.7, 0, .7, 1.5, 2.3, 3.1, 4., 5 };
-                gfc->VBR.quality = 1;
                 gfc->VBR.mask_adjust = dbQ[gfp->VBR_q];
                 gfc->VBR.smooth = 0;    
             } 
             break;        
         case 2: {
                 static float const dbQ[10] = { -1., -.6, -.3, 0, 1, 2, 3, 4, 5, 6};
-                gfc->VBR.quality = 2;
                 gfc->VBR.mask_adjust = dbQ[gfp->VBR_q];
                 gfc->VBR.smooth = 0;    
             } 
             break;        
         case 3: {
                 static const float dbQ[10]={-2.,-1.0,-.66,-.33,0.,0.33,.66,1.0,1.33,1.66};
-                gfc->VBR.quality = 3;
                 gfc->VBR.mask_adjust = dbQ[gfp->VBR_q];
                 gfc->VBR.smooth = 1;
             } 
             break;        
         case 4: {
                 static float const dbQ[10] = { -6,-4.75,-3.5,-2.25,-1,.25,1.5,2.75,4,5.25 };
-                gfc->VBR.quality = 4;
                 gfc->VBR.mask_adjust = dbQ[gfp->VBR_q];
                 gfc->VBR.smooth = 1;   // not finally
             }
             break;        
         case 5: {
                 static const float dbQ[10]={-2.,-1.0,-.66,-.33,0.,0.33,.66,1.0,1.33,1.66};
-                gfc->VBR.quality = 0;
+                gfp->experimentalX = 0;
                 gfc->VBR.mask_adjust = dbQ[gfp->VBR_q];
                 gfc->VBR.smooth = 2;
             } 
             break;        
         case 9: {
                 static float const dbQ[10] = { -6,-4.75,-3.5,-2.25,-1,.25,1.5,2.75,4,5.25 };
-                gfc->VBR.quality = 4;
+                gfp->experimentalX = 4;
                 gfc->VBR.mask_adjust = dbQ[gfp->VBR_q];
                 gfc->VBR.smooth = 0;   // not finally
             }

@@ -1268,17 +1268,25 @@ int psymodel_init(lame_global_flags *gfp)
 	gfc->nsPsy.athadjust_msfix *= 2.0;
 	gfc->presetTune.ms_maskadjust *= 2.0;
 
-	if (!gfc->presetTune.use) {
-	    gfc->nsPsy.attackthre   = NSATTACKTHRE;
-	    gfc->nsPsy.attackthre_s = NSATTACKTHRE_S;
-	}
-
 	/* spread only from npart_l bands.  Normally, we use the spreading
 	 * function to convolve from npart_l down to npart_l bands 
 	 */
 	for (b=0;b<gfc->npart_l;b++)
 	    if (gfc->s3ind[b][1] > gfc->npart_l-1)
 		gfc->s3ind[b][1] = gfc->npart_l-1;
+    }
+
+    if (gfc->presetTune.quantcomp_alt_type < 0)
+	gfc->presetTune.quantcomp_alt_type = gfp->experimentalX;
+
+    if (!gfc->presetTune.use) {
+	gfc->presetTune.quantcomp_type_s
+	    = gfc->presetTune.quantcomp_alt_type = gfp->experimentalX;
+	gfc->presetTune.athadjust_switch_level = 0.0;
+	gfc->presetTune.ms_maskadjust = gfp->msfix;
+
+	gfc->nsPsy.attackthre   = NSATTACKTHRE;
+	gfc->nsPsy.attackthre_s = NSATTACKTHRE_S;
     }
 
     /*  prepare for ATH auto adjustment:

@@ -50,7 +50,7 @@ int     calc_xmin (lame_global_flags *gfp,
 		   const gr_info * const cod_info,
                    FLOAT * const l3_xmin);
 
-int     calc_noise (const lame_internal_flags * const gfc,
+void    calc_noise (const lame_internal_flags * const gfc,
                     const gr_info * const cod_info,
                     const FLOAT * l3_xmin,
                     FLOAT * distort,

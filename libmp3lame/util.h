@@ -201,8 +201,6 @@ typedef struct {
   // tunings reliant upon athadjust
   FLOAT  athadjust_switch_level;      // level of athadjust at which to apply tunings at
                                        // x <= 0 == never switch, x >= 1 == always switch
-  FLOAT  athadjust_safe_athaasensitivity; // used for second determination if it is safe to switch
-	                                      // to noise shaping 2
 } presetTune_t;
 
 typedef struct 
@@ -332,6 +330,7 @@ struct lame_internal_flags {
   int quantization;         /* 0 = ISO formual,  1=best amplitude */
 
   int use_scalefac_scale;   /* 0 = not use  1 = use */
+  int quant_comp_method;    /* how to compare the scalefactor combination */
   int noise_shaping_amp;    /*  0 = ISO model: amplify all distorted bands
                                 1 = amplify within 50% of max (on db scale)
                                 2 = amplify only most distorted band
