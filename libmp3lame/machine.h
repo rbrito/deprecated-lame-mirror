@@ -118,7 +118,7 @@ typedef float   FLOAT;
 #  ifdef FLT_MAX
 #   define FLOAT_MAX FLT_MAX
 #  else
-#   define FLOAT_MAX 1e99 /* approx */
+#   define FLOAT_MAX 1e37 /* approx */
 #  endif
 # endif
 #endif
