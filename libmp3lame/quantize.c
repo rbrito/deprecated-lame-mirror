@@ -891,10 +891,17 @@ adjust_global_gain(
 	    fi[width+1].i = (int)(x2 + adj43[rx2]);
 #endif
 	} while ((width += 2) < 0);
+	if (!gfc->pseudohalf[sfb])
+	    continue;
+	istep = 0.634521682242439
+	    / IPOW20(scalefactor(gi, sfb) + gi->scalefac_scale);
+	for (width = -gi->width[sfb]; width < 0; width++)
+	    if (xp[width] < istep)
+		fi[width].i = 0;
     } while (++sfb < gi->psymax && xp < xend);
 
     if (noquant_count_bits(gfc, gi) > huffbits)
-	return gi->global_gain++;
+	return (++gi->global_gain) - 256;
 
     return 0;
 }
@@ -957,8 +964,7 @@ CBR_1st_bitalloc (
 	if (huff_bits > 0) {
 	    /* adjust global_gain to fit the available bits */
 	    gi_w.count1 = gi->xrNumMax;
-	    if (current_method >= 3
-		|| adjust_global_gain(gfc, xrpow, &gi_w, distort, huff_bits)) {
+	    if (adjust_global_gain(gfc, xrpow, &gi_w, distort, huff_bits)) {
 		while (count_bits(gfc, xrpow, &gi_w) > huff_bits
 		       && ++gi_w.global_gain < 256u)
 		    ;
