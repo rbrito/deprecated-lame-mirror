@@ -44,7 +44,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /Zp2 /MT /W3 /GX /Ox /Ot /Og /Ob2 /I "..\\" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /YX /FD /c
+# ADD CPP /nologo /Zp2 /MT /W3 /GX /Ox /Ot /Og /Ob2 /I "../" /I "../include" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o NUL /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o NUL /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
@@ -70,7 +70,7 @@ LINK32=xilink.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /Zp2 /MTd /W3 /Gm /GX /Zi /Od /I "..\\" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /YX /FD /c
+# ADD CPP /nologo /Zp2 /MTd /W3 /Gm /GX /Zi /Od /I "../" /I "../include" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_BLADEDLL" /D "TAKEHIRO_IEEE754_HACK" /YX /FD /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o NUL /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o NUL /win32
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
@@ -111,11 +111,7 @@ SOURCE=.\BladeMP3EncDLL.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\brhist.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\brhist.h
+SOURCE=..\confdefs.h
 # End Source File
 # Begin Source File
 
@@ -135,39 +131,7 @@ SOURCE=..\fft.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\gpkplotting.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\gpkplotting.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\gtkanal.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\gtkanal.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\huffman.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\id3tag.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\id3tag.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\ieeefloat.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\ieeefloat.h
 # End Source File
 # Begin Source File
 
@@ -179,15 +143,7 @@ SOURCE=..\lame.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\lame.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\lametime.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\lametime.h
+SOURCE=..\machine.h
 # End Source File
 # Begin Source File
 
@@ -196,14 +152,6 @@ SOURCE=..\newmdct.c
 # Begin Source File
 
 SOURCE=..\newmdct.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\portableio.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\portableio.h
 # End Source File
 # Begin Source File
 
@@ -248,14 +196,6 @@ SOURCE=..\tables.h
 # Begin Source File
 
 SOURCE=..\takehiro.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\timestatus.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\timestatus.h
 # End Source File
 # Begin Source File
 

@@ -29,7 +29,7 @@
 #define _RELEASEDEBUG 0
 
 const int MAJORVERSION=1;
-const int MINORVERSION=16;
+const int MINORVERSION=17;
 
 
 // Local variables
@@ -39,7 +39,7 @@ static BOOL					gs_bLogFile=FALSE;
 static lame_global_flags	gf;
 
 // Local function prototypes
-static void dump_config( char *inPath, char *outPath);
+static void dump_config( );
 static void DebugPrintf(const char* pzFormat, ...);
 static void DispErr(LPSTR strErr);
 static void PresetOptions(lame_global_flags *gfp,LONG myPreset);
@@ -397,7 +397,7 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 		gf.error_protection=0;
 	}
 
-	gf.silent=1;  /* disable status ouput */
+//	gf.silent=1;  /* disable status ouput */
 
 	// Set private bit?
 	if (lameConfig.format.LHV1.bPrivate)
@@ -443,7 +443,7 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 
 
 	// For debugging purposes
-	dump_config(gf.inPath,gf.outPath);
+	dump_config( );
 
 	// Everything went OK, thus return SUCCESSFUL
 	return BE_ERR_SUCCESSFUL;
@@ -605,7 +605,7 @@ BOOL APIENTRY DllMain(HANDLE hModule,
 }
 
 
-static void dump_config( char *inPath, char *outPath)
+static void dump_config( )
 {
 	DebugPrintf("\n\nLame_enc configuration options:\n");
 	DebugPrintf("==========================================================\n");
