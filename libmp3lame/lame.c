@@ -848,8 +848,8 @@ lame_init_params(lame_global_flags * const gfp)
                  optimum_samplefreq(lowpass, gfp->in_samplerate),
                  gfp->out_samplerate);
         }
-#endif
         fflush(stderr);
+#endif
     }
 
     /* apply user driven high pass filter */
@@ -1748,17 +1748,39 @@ lame_encode(lame_global_flags * const gfp,
 /*}}}*/
 /* int           lame_encode_flush              (lame_global_flags* gfp, char* mp3buffer, int mp3buffer_size )                                                    *//*{{{ */
 
+
+
+/*****************************************************************
+ Flush mp3 buffer, reset reservoir size to 0                  
+ but keep all PCM samples and MDCT data in memory             
+ This option is used to break a large file into several mp3 files 
+ that when concatenated together will decode with no gaps         
+ Because we set the reservoir=0, they will also decode seperately 
+ with no errors. 
+*********************************************************************/
+int
+lame_encode_flush_nogap(lame_global_flags * gfp,
+                  unsigned char *mp3buffer, int mp3buffer_size)
+{
+    lame_internal_flags *gfc = gfp->internal_flags;
+    flush_bitstream(gfp);
+    return copy_buffer(mp3buffer, mp3buffer_size,  &gfc->bs);
+}
+
+
 /*****************************************************************/
-/* flush internal mp3 buffers,                                   */
+/* flush internal PCM sample buffers, then mp3 buffers           */
+/* then write id3 v1 tags into bitstream.                        */
 /*****************************************************************/
 
 int
 lame_encode_flush(lame_global_flags * gfp,
                   unsigned char *mp3buffer, int mp3buffer_size)
 {
+    lame_internal_flags *gfc = gfp->internal_flags;
     short int buffer[2][1152];
     int     imp3 = 0, mp3count, mp3buffer_size_remaining;
-    lame_internal_flags *gfc = gfp->internal_flags;
+
 
     memset(buffer, 0, sizeof(buffer));
     mp3count = 0;

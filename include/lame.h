@@ -557,11 +557,11 @@ int CDECL lame_init_params(lame_global_flags *);
  * get the version number, in a string. of the form:  
  * "3.63 (beta)" or just "3.63". 
  */
-const /*@observer@*/ char*  CDECL get_lame_version       ( void );
-const /*@observer@*/ char*  CDECL get_lame_short_version ( void );
-const /*@observer@*/ char*  CDECL get_psy_version        ( void );
-const /*@observer@*/ char*  CDECL get_mp3x_version       ( void );
-const /*@observer@*/ char*  CDECL get_lame_url           ( void );
+const char*  CDECL get_lame_version       ( void );
+const char*  CDECL get_lame_short_version ( void );
+const char*  CDECL get_psy_version        ( void );
+const char*  CDECL get_mp3x_version       ( void );
+const char*  CDECL get_lame_url           ( void );
 
 /*
  * OPTIONAL:
@@ -693,7 +693,9 @@ int CDECL lame_encode_buffer_long(
 
 /*
  * REQUIRED:
- * lame_encode_finish will flush the buffers and may return a 
+ * lame_encode_flush will flush the intenal PCM buffers, padding with 
+ * 0's to make sure the final frame is complete, and then flush
+ * the internal MP3 buffers, and thus may return a 
  * final few mp3 frames.  'mp3buf' should be at least 7200 bytes long
  * to hold all possible emitted data.
  *
@@ -706,21 +708,24 @@ int CDECL lame_encode_flush(
         unsigned char*       mp3buf, /* pointer to encoded MP3 stream         */
         int                  size);  /* number of valid octets in this stream */
 
+/*
+ * OPTIONAL:
+ * lame_encode_flush_nogap will flush the internal mp3 buffers and set
+ * the bit Reservoir to 0.  'mp3buf' should be at least 7200 bytes long
+ * to hold all possible emitted data.
+ *
+ * After a call to this routine, the outputed mp3 data is complete, but
+ * you may continue to encode new PCM samples and write future mp3 data
+ * to a different file.  The two mp3 files will play back with no gaps
+ * if they are concatenated together.
+ *
+ * return code = number of bytes output to mp3buf. Can be 0
+ */
+int CDECL lame_encode_flush_nogap(
+        lame_global_flags *  gfp,    /* global context handle                 */
+        unsigned char*       mp3buf, /* pointer to encoded MP3 stream         */
+        int                  size);  /* number of valid octets in this stream */
 
-#ifdef KLEMM_44
- 
-int CDECL lame_encode_pcm (
-        lame_t* const   lame,      /* lame context handle                     */
-        octetstream_t*  os,        /* octet stream object                     */
-        const void*     pcm,       /* pointer to PCM data                     */
-        size_t          len,       /* samples per channel in this data stream */
-        uint32_t        flags );   /* PCM data description field              */
-
-int CDECL lame_encode_pcm_flush (
-        lame_t*        const  lame,  /* lame context handle                   */
-        octetstream_t* const  os );  /* octet stream object                   */
- 
-#endif /* KLEMM_44 */
 
 
 /*
@@ -737,7 +742,6 @@ int CDECL lame_encode_pcm_flush (
  * suggested: lame_encode_flush -> lame_*_hist -> lame_close
  */
 
-/*@-fixedformalarray@*/ 
 void CDECL lame_bitrate_hist( 
         const lame_global_flags *const gfp, 
               int                      bitrate_count[14] );
@@ -751,7 +755,6 @@ void CDECL lame_stereo_mode_hist(
 void CDECL lame_bitrate_stereo_mode_hist ( 
         const lame_global_flags*  gfp, 
         int  bitrate_stmode_count [14] [4] );
-/*@=fixedformalarray@*/
 
 
 /*

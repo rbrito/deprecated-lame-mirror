@@ -736,9 +736,13 @@ writeMainData ( lame_global_flags * const gfp,
 
 
 
-
-void
-flush_bitstream(lame_global_flags *gfp)
+/* compute the number of bits required to flush all mp3 frames
+   currently in the buffer.  This should be the same as the
+   reservoir size.  Only call this routine between frames - i.e.
+   only after all headers and data have been added to the buffer
+   by format_bitstream(). */
+int
+compute_flushbits(lame_global_flags *gfp)
 {
   lame_internal_flags *gfc=gfp->internal_flags;
   int flushbits,remaining_headers;
@@ -781,11 +785,34 @@ flush_bitstream(lame_global_flags *gfp)
     DEBUGF("sidelen:                   %i \n",gfc->sideinfo_len);
 #endif
     ERRORF(gfc,"strange error flushing buffer ... \n");
-  } else {
-    drain_into_ancillary(gfp,flushbits);
   }
+  return flushbits;
+}
 
+
+
+void
+flush_bitstream(lame_global_flags *gfp)
+{
+  lame_internal_flags *gfc=gfp->internal_flags;
+  int flushbits;
+  int bitsPerFrame, mean_bits;
+  int last_ptr,first_ptr;
+  first_ptr=gfc->w_ptr;           /* first header to add to bitstream */
+  last_ptr = gfc->h_ptr - 1;   /* last header to add to bitstream */
+  if (last_ptr==-1) last_ptr=MAX_HEADER_BUF-1;   
+
+  if ((flushbits = compute_flushbits(gfp)) < 0) return;  
+  drain_into_ancillary(gfp,flushbits);
+
+  /* check that the 100% of the last frame has been written to bitstream */
+  getframebits(gfp,&bitsPerFrame,&mean_bits);
   assert (gfc->header[last_ptr].write_timing + bitsPerFrame  == gfc->bs.totbit);
+
+  /* we have padded out all frames with ancillary data, which is the
+     same as filling the bitreservoir with ancillary data, so : */
+  gfc->ResvSize=0;
+
 }
 
 
@@ -832,6 +859,16 @@ format_bitstream(lame_global_flags *gfp, int bitsPerFrame,
     bits += l3_side->resvDrain_post;
 
     l3_side->main_data_begin += (bitsPerFrame-bits)/8;
+
+    /* compare number of bits needed to clear all buffered mp3 frames
+     * with what we think the resvsize is: */
+    if (compute_flushbits(gfp) != gfc->ResvSize) {
+        ERRORF(gfc,"Internal buffer inconsistency. flushbits <> ResvSize");
+    }
+
+
+    /* compare main_data_begin for the next frame with what we
+     * think the resvsize is: */
     if ((l3_side->main_data_begin * 8) != gfc->ResvSize ) {
       ERRORF(gfc,"bit reservoir error: \n"
              "l3_side->main_data_begin: %i \n"
@@ -864,6 +901,8 @@ format_bitstream(lame_global_flags *gfp, int bitsPerFrame,
 	gfc->header[i].write_timing -= gfc->bs.totbit;      
       gfc->bs.totbit=0;
     }
+
+
     return 0;
 }
 
