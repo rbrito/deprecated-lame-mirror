@@ -12,20 +12,29 @@
 #include <stdio.h>
 #include <stdlib.h>
 #define __USE_SYSBASE
+
+/* We need a small workaround here so GCC doesn't fail upon redefinition. :P */
+#define FLOAT _FLOAT
 #include <proto/exec.h>
-#include <dos.h>
 #include <proto/mpega.h>
+#undef _FLOAT
+
+#ifndef __GNUC__
+#include <dos.h>
+#endif
 
 struct Library  *MPEGABase=NULL;
 MPEGA_STREAM    *mstream=NULL;
 MPEGA_CTRL      mctrl;
 
 
+#ifndef __GNUC__
 static int break_cleanup(void)
 {
 	/* Dummy break function to make atexit() work. :P */
 	return 1;
 }
+#endif
 
 static void exit_cleanup(void)
 {
@@ -64,7 +73,9 @@ int lame_decode_initfile(const char *fullname, mp3data_struct *mp3data)
 		fprintf(stderr, "Unable to open mpega.library v2\n");
 		exit(1);
 	}
+#ifndef __GNUC__
 	onbreak(break_cleanup);
+#endif
 	atexit(exit_cleanup);
 
 	mstream=MPEGA_open(fullname, &mctrl);
