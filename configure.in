@@ -703,10 +703,10 @@ if test "x$GCC" = "xyes"; then
         	OPTIMIZATION="-O -fomit-frame-pointer -ffast-math \
 			-funroll-loops"
         	;;
-	3.*)
+	3.0*)
 		# -funroll-loops seems to produce buggy code with gcc 3.0.3
 		OPTIMIZATION="-O -fomit-frame-pointer -ffast-math \
-			-funroll-loops -maccumulate-outgoing-args"
+			-funroll-loops"
 		;;
 	*)
 		# default
@@ -736,6 +736,14 @@ if test "x$GCC" = "xyes"; then
 						-mcpu=ultrasparc \
 						-mtune=ultrasparc"
 			fi
+			;;
+		esac
+		;;
+	*86)
+		case "${GCC_version}" in
+		3.*)
+			OPTIMIZATION="${OPTIMIZATION} \
+				-maccumulate-outgoing-args"
 			;;
 		esac
 		;;
