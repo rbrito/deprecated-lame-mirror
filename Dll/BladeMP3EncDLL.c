@@ -652,9 +652,6 @@ __declspec(dllexport) BE_ERR beWriteVBRHeader(LPCSTR lpszFileName)
 	if (	( lame_get_bWriteVbrTag( gfp ) ) && 
 			( vbr_off != lame_get_VBR( gfp ) ) )
 	{
-		// Calculate relative quality of VBR stream 
-		// 0=best, 100=worst
-		int nQuality = lame_get_VBR_q( gfp ) * 100 / 9;
 
 		// Try to open the file
 		fpStream=fopen( lpszFileName, "rb+" );

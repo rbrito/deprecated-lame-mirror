@@ -70,6 +70,7 @@ int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf);
 int SeekPoint(unsigned char TOC[NUMTOCENTRIES], int file_bytes, float percent);
 int InitVbrTag(lame_global_flags *gfp);
 int PutVbrTag(lame_global_flags *gfp,FILE *fid,int nVbrScale);
+int PutLameVBR(lame_global_flags *gfp, u_char *pbtStreamBuffer, uint16_t crc);
 void AddVbrFrame(lame_global_flags *gfp);
 
 

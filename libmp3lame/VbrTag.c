@@ -395,6 +395,150 @@ int InitVbrTag(lame_global_flags *gfp)
 
 
 
+//repetition... taken from bitstream.c
+
+
+static int
+CRC_update(int value, int crc)
+{
+    int i;
+    value <<= 8;
+    for (i = 0; i < 8; i++) {
+	value <<= 1;
+	crc <<= 1;
+
+	if (((crc ^ value) & 0x10000))
+	    crc ^= CRC16_POLYNOMIAL;
+    }
+    return crc;
+}
+
+
+/****************************************************************************
+ * PutLameVBR: Write LAME info: mini version + info on various switches used
+ * Paramters:
+ *				pbtStreamBuffer: pointer to output buffer  
+ *				
+ ****************************************************************************
+*/
+int PutLameVBR(lame_global_flags *gfp, u_char *pbtStreamBuffer, uint16_t crc)
+{
+	int nBytesWritten = 0;
+	int i;
+
+
+	//recall:	gfp->VBR_q is for example set by the switch -V 
+	//			gfp->quality by -q, -h, -f, etc
+	
+	int nQuality		= (100 - 10 * gfp->VBR_q - gfp->quality);
+	
+
+	const char *szVersion	= get_lame_very_short_version();
+	uint8_t nVBR;
+	uint8_t nRevision = 0x00;
+	uint8_t nRevMethod;
+	uint8_t vbr_type_translator[] = {1,5,3,2,4,0,3};		//numbering different in vbr_mode vs. Lame tag
+
+	uint8_t nLowpass		= gfp->lowpassfreq / 100;
+
+	float32_t fPeakSignalAmplitude	= 0;				//TODO...
+	uint16_t nRadioReplayGain		= 0;				//TODO...
+	uint16_t nAudioPhileReplayGain  = 0;				//TODO...
+
+ 
+	//psy model type: Gpsycho or NsPsytune
+	BOOL     bExpNPsyTune	= gfp->exp_nspsytune & 1;
+	BOOL	 bSafeJoint		= (gfp->exp_nspsytune & 2)!=0;
+
+	BOOL	 bNoGapMore		= FALSE;
+	BOOL	 bNoGapPrevious	= FALSE;
+
+	int		 nNoGapCount	= gfp->internal_flags->nogap_total;
+	int		 nNoGapCurr		= gfp->internal_flags->nogap_current;
+
+
+	uint8_t  nAthType		= gfp->ATHtype;	//4 bits.
+	
+	uint8_t  nFlags			= 0;
+
+	int nABRBitrate	= (gfp->VBR==vbr_abr)?gfp->VBR_mean_bitrate_kbps:0;
+
+
+
+	//revision and vbr method
+	if (gfp->VBR>=0 && gfp->VBR < sizeof(vbr_type_translator))
+		nVBR = vbr_type_translator[gfp->VBR];
+	else
+		nVBR = 0x00;		//unknown.
+
+	nRevMethod = 0x10 * 0x00 + nVBR; 
+	
+	/*Validate lowpass*/
+	if (gfp->lowpassfreq < 100 || gfp->lowpassfreq > 25500)
+		nLowpass = 0;
+
+	//nogap
+	if (nNoGapCount != -1)
+	{
+		if (nNoGapCurr > 0)
+			bNoGapPrevious = TRUE;
+
+		if (nNoGapCurr < nNoGapCount-1)
+			bNoGapMore = TRUE;
+	}
+
+	//flags
+
+	nFlags	= nAthType	+ (bExpNPsyTune		<< 4)
+						+ (bSafeJoint		<< 5)
+						+ (bNoGapMore		<< 6)
+						+ (bNoGapPrevious	<< 7);
+	
+
+	CreateI4(&pbtStreamBuffer[nBytesWritten], nQuality);
+	nBytesWritten+=4;
+
+	strncpy(&pbtStreamBuffer[nBytesWritten], szVersion, 9);
+	nBytesWritten+=9;
+
+	pbtStreamBuffer[nBytesWritten] = nRevMethod ;
+	nBytesWritten++;
+
+	pbtStreamBuffer[nBytesWritten] = nLowpass;
+	nBytesWritten++;
+
+	*(float32_t *)(&pbtStreamBuffer[nBytesWritten]) = fPeakSignalAmplitude;
+	nBytesWritten+=4;
+
+	*(uint16_t *)(&pbtStreamBuffer[nBytesWritten]) = nRadioReplayGain;
+	nBytesWritten+=2;
+
+	*(uint16_t *)(&pbtStreamBuffer[nBytesWritten]) = nAudioPhileReplayGain;
+	nBytesWritten+=2;
+
+	pbtStreamBuffer[nBytesWritten] = nFlags;
+	nBytesWritten++;
+
+	if (nABRBitrate >= 255)
+		pbtStreamBuffer[nBytesWritten] = 0xFF;
+	else
+		pbtStreamBuffer[nBytesWritten] = nABRBitrate;
+	nBytesWritten++;
+
+	memset(pbtStreamBuffer+nBytesWritten,0, 13);		//unused in rev0
+	nBytesWritten+=13;
+
+	/*Calculate CRC*/
+
+	for (i = 0;i<nBytesWritten;i++)
+		crc = CRC_update(pbtStreamBuffer[i], crc);
+
+	*(uint16_t *)(&pbtStreamBuffer[nBytesWritten]) = crc;
+	nBytesWritten+=2;
+
+	return nBytesWritten;
+}
+
 /****************************************************************************
  * PutVbrTag: Write final VBR tag to the file
  * Paramters:
@@ -404,14 +548,17 @@ int InitVbrTag(lame_global_flags *gfp)
 */
 int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
 {
-        lame_internal_flags * gfc = gfp->internal_flags;
+    lame_internal_flags * gfc = gfp->internal_flags;
 
 	long lFileSize;
 	int nStreamIndex;
 	char abyte,bbyte;
 	u_char		btToc[NUMTOCENTRIES];
 	u_char pbtStreamBuffer[MAXFRAMESIZE];
-	char str1[80];
+	
+	int i;
+	uint16_t crc = 0x0;
+	
         unsigned char id3v2Header[10];
         size_t id3v2TagSize;
 
@@ -532,14 +679,26 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
 	nStreamIndex+=sizeof(btToc);
 
 	/* Put VBR SCALE */
-	CreateI4(&pbtStreamBuffer[nStreamIndex],nVbrScale);
-	nStreamIndex+=4;
+	//Now included in PutLameVBR
+
+//	CreateI4(&pbtStreamBuffer[nStreamIndex],nVbrScale);
+//	nStreamIndex+=4;
+
 
 	/* Put LAME ID */
-        sprintf ( str1, "LAME%s", get_lame_short_version () );
-        strncpy ( pbtStreamBuffer + nStreamIndex, str1, 20 );
-        nStreamIndex += 20;
+	
+//    sprintf ( str1, "LAME%s", get_lame_short_version () );
+//    strncpy ( pbtStreamBuffer + nStreamIndex, str1, 20 );
 
+//	nStreamIndex+=20;
+
+	//work out CRC so far: initially crc = 0
+	for (i = 0;i< nStreamIndex ;i++)
+		crc = CRC_update(pbtStreamBuffer[i], crc);
+
+	/*Put LAME VBR info*/
+
+	nStreamIndex+=PutLameVBR(gfp, pbtStreamBuffer + nStreamIndex, crc);
 
 #ifdef DEBUG_VBRTAG
 	{
