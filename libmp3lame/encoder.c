@@ -114,8 +114,8 @@ updateStats( lame_internal_flags * const gfc )
     if (gfc->channels_out == 2)
 	gfc->bitrate_stereoMode_Hist [gfc->bitrate_index] [gfc->mode_ext]++;
 
-    for (gr = 0; gr < gfc->mode_gr; ++gr) {
-	for (ch = 0; ch < gfc->channels_out; ++ch) {
+    for (gr = 0; gr < gfc->mode_gr; gr++) {
+	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    int bt = gfc->l3_side.tt[gr][ch].block_type;
 	    int mf = gfc->l3_side.tt[gr][ch].mixed_block_flag;
 	    if (mf) bt = 4;

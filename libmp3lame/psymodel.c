@@ -1454,7 +1454,7 @@ psycho_analysis(
 	/*********************************************************************
 	 * compute the value of PE to return
 	 *********************************************************************/
-	for (ch=0;ch<numchn;ch++) {
+	for (ch = 0; ch < numchn; ch++) {
 	    III_psy_ratio *mr = &gfc->masking_next[gr][ch];
 	    FLOAT pe;
 	    if (gfc->blocktype_next[gr][ch]) {

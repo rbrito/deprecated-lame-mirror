@@ -1092,9 +1092,8 @@ CBR_bitalloc(
     int bits, ch, adjustBits, targ_bits[2];
 
     /* allocate minimum bits to encode part2_length (for i-stereo) */
-    bits = 0;
-    for (ch = 0; ch < gfc->channels_out; ch++)
-	bits += gfc->l3_side.tt[gr][ch].part2_length;
+    bits += gfc->l3_side.tt[gr][0].part2_length
+	+ gfc->l3_side.tt[gr][gfc->channels_out].part2_length;
 
     /* check hard limit per granule (by spec) */
     if (max_bits > MAX_BITS)
@@ -1740,7 +1739,7 @@ set_frame_pinfo(
 	gfc->pinfo->athadjust[ch] = gfc->l3_side.tt[0][ch].ATHadjust;
     }
 
-    for (gr = 0; gr < gfc->mode_gr; gr ++) {
+    for (gr = 0; gr < gfc->mode_gr; gr++) {
 	if (gfp->mode == JOINT_STEREO) {
 	    gfc->pinfo->ms_ratio[gr] = gfc->pinfo->ms_ratio_next[gr];
 	    gfc->pinfo->ms_ratio_next[gr]
