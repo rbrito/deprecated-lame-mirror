@@ -139,7 +139,7 @@ proc	fht_3DN
 ; mm0 =  s2| c2
 ; mm1 = -c2| s2
 ; mm6 =  c1| s1
-; mm7 =  s1|-c1 <-GOGOと符号逆
+; mm7 =  s1|-c1 (we use the opposite sign. from GOGO here)
 
 	pmov	[esp], mm0
 	pmov	[esp+8], mm1
@@ -241,7 +241,7 @@ proc	fht_3DN
 
 	add	r5, 4
 ; mm6 =  c1| s1
-; mm7 =  s1|-c1 <-GOGOと符号逆
+; mm7 =  s1|-c1 (we use the opposite sign. from GOGO here)
 	pfmul	mm6, [r3]	; c1*a | s1*a
 	pfmul	mm7, [r3+8]	; s1*b |-c1*b
 	cmp	r5, r4
@@ -358,7 +358,7 @@ proc	fht_E3DN
 ; mm4 =  s2| c2
 ; mm5 = -c2| s2
 ; mm6 =  c1| s1
-; mm7 =  s1|-c1 <-GOGOと符号逆
+; mm7 =  s1|-c1 (we use the opposite sign. from GOGO here)
 
 	pmov	[esp], mm4
 	pmov	[esp+8], mm5
@@ -455,7 +455,7 @@ proc	fht_E3DN
 
 	add	r5, 4
 ; mm6 =  c1| s1
-; mm7 =  s1|-c1 <-GOGOと符号逆
+; mm7 =  s1|-c1 (we use the opposite sign. from GOGO here)
 	pfmul	mm6, [r3]	; c1*a | s1*a
 	pfmul	mm7, [r3+8]	; s1*b |-c1*b
 	cmp	r5, r4
