@@ -551,7 +551,9 @@ lame_init_params(lame_t gfc)
 
 #ifdef HAVE_MPGLIB
     if (gfc->decode_on_the_fly && !gfc->pmp_replaygain) {
-	return decode_init_for_replaygain(gfc);
+	int ret = decode_init_for_replaygain(gfc);
+	if (ret < 0)
+	    return ret;
     }
 #endif
     init_bitstream_w(gfc);
