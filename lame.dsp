@@ -1,5 +1,5 @@
 # Microsoft Developer Studio Project File - Name="lame" - Package Owner=<4>
-# Microsoft Developer Studio Generated Build File, Format Version 5.00
+# Microsoft Developer Studio Generated Build File, Format Version 6.00
 # ** DO NOT EDIT **
 
 # TARGTYPE "Win32 (x86) Console Application" 0x0103
@@ -20,14 +20,14 @@ CFG=lame - Win32 Debug GTK
 !MESSAGE "lame - Win32 Release" (based on "Win32 (x86) Console Application")
 !MESSAGE "lame - Win32 Debug" (based on "Win32 (x86) Console Application")
 !MESSAGE "lame - Win32 Debug GTK" (based on "Win32 (x86) Console Application")
-!MESSAGE "lame - Win32 Release GTK" (based on\
- "Win32 (x86) Console Application")
+!MESSAGE "lame - Win32 Release GTK" (based on "Win32 (x86) Console Application")
 !MESSAGE 
 
 # Begin Project
+# PROP AllowPerConfigDependencies 0
 # PROP Scc_ProjName ""
 # PROP Scc_LocalPath ""
-CPP=xicl.exe
+CPP=cl.exe
 RSC=rc.exe
 
 !IF  "$(CFG)" == "lame - Win32 Release"
@@ -50,7 +50,7 @@ RSC=rc.exe
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=xilink.exe
+LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /profile /map /machine:I386
 
@@ -68,13 +68,13 @@ LINK32=xilink.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D BS_FORMAT=BINARY /YX /FD /c
+# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D BS_FORMAT=BINARY /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=xilink.exe
+LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
 
@@ -92,16 +92,17 @@ LINK32=xilink.exe
 # PROP Intermediate_Dir "DebugGTK"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /Zp4 /W3 /Gm /GX /Zi /Od /I "../WinGTK/gtk-plus" /I "../WinGTK/glib-1.2" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS"  /D "HAVEGTK" /YX /FD /c
-# ADD CPP /nologo /W3 /Gm /GX /Zi /Od /I "./WinGTK/gtk-plus" /I "./WinGTK/glib-1.2" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "LAMESNDFILE" /D "HAVEMPGLIB" /D "HAVEGTK" /YX /FD /c
+# ADD BASE CPP /nologo /Zp4 /W3 /Gm /GX /Zi /Od /I "../WinGTK/gtk-plus" /I "../WinGTK/glib-1.2" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVEGTK" /YX /FD /c
+# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "./WinGTK/gtk-plus" /I "./WinGTK/glib-1.2" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "LAMESNDFILE" /D "HAVEMPGLIB" /D "HAVEGTK" /FR /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
+# SUBTRACT RSC /x
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=xilink.exe
+LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib glib-1.2.lib gdk-1.3.lib gtk-1.3.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept /libpath:"./WinGTK/glib-1.2" /libpath:"./WinGTK/gtk-plus/gdk" /libpath:"./WinGTK/gtk-plus/gtk"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib glib-1.3.lib gdk-1.3.lib gtk-1.3.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept /libpath:"./WinGTK/glib-1.2" /libpath:"./WinGTK/gtk-plus/gdk" /libpath:"./WinGTK/gtk-plus/gtk"
 
 !ELSEIF  "$(CFG)" == "lame - Win32 Release GTK"
 
@@ -117,14 +118,14 @@ LINK32=xilink.exe
 # PROP Intermediate_Dir "ReleaseGTK"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /W3 /GX /O2 /I "../WinGTK/gtk-plus" /I "../WinGTK/glib-1.2" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS"  /D "HAVEGTK" /YX /FD /c
+# ADD BASE CPP /nologo /W3 /GX /O2 /I "../WinGTK/gtk-plus" /I "../WinGTK/glib-1.2" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "HAVEGTK" /YX /FD /c
 # ADD CPP /nologo /W3 /GX /O2 /I "./WinGTK/gtk-plus" /I "./WinGTK/glib-1.2" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "LAMESNDFILE" /D "HAVEMPGLIB" /D "HAVEGTK" /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=xilink.exe
+LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /profile /map /machine:I386
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib glib-1.2.lib gdk-1.3.lib gtk-1.3.lib /nologo /subsystem:console /profile /map /machine:I386 /libpath:"./WinGTK/glib-1.2" /libpath:"./WinGTK/gtk-plus/gdk" /libpath:"./WinGTK/gtk-plus/gtk"
 
@@ -335,10 +336,6 @@ SOURCE=.\version.c
 # Begin Source File
 
 SOURCE=.\version.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\WinGTK.txt
 # End Source File
 # End Target
 # End Project
