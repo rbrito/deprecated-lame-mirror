@@ -12075,8 +12075,7 @@ if test "x$GCC" = "xyes"; then
         	;;
 	3.0*)
 		# -funroll-loops seems to produce buggy code with gcc 3.0.3
-		OPTIMIZATION="-O -fomit-frame-pointer -ffast-math \
-			-funroll-loops"
+		OPTIMIZATION="-O -fomit-frame-pointer -ffast-math"
 		OPTIMIZATION_FULL="-fmove-all-movables -freduce-all-givs \
 			-fbranch-count-reg -fforce-addr -fforce-mem"
 		;;
@@ -12098,7 +12097,9 @@ if test "x$GCC" = "xyes"; then
 	case ${host_cpu} in
 	sparc)
 		case "${GCC_version}" in
-		3.123456*)
+		3.0*)
+			;;
+		3.*)
 			# doesn't work on 3.0.x, but on 3.[12] and
 			# hopefully on every other release after that too
 			if test -x /usr/bin/isalist; then
