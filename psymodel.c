@@ -894,30 +894,43 @@ int L3psycho_anal( lame_global_flags *gfp,
     for ( sb = 0; sb < SBPSY_l; sb++ )
       {
 	FLOAT8 enn,thmm;
+
+	if (!gfp->exp_nspsytune) {
 #if 0
-	/* note by Robert Hegemann 2000-09-11:
-         * using this code will break psychoacoustics on many pieces
-         * like VBRtest.wav (see http://www.sulaco.org)
-         */
+	  /* note by Robert Hegemann 2000-09-11:
+	   * using this code will break psychoacoustics on many pieces
+	   * like VBRtest.wav (see http://www.sulaco.org)
+	   */
          
-        /* additive masking */
-	enn = gfc->w1_l[sb] * eb[gfc->bu_l[sb]] + gfc->w2_l[sb] * eb[gfc->bo_l[sb]];
-	thmm = gfc->w1_l[sb] *thr[gfc->bu_l[sb]] + gfc->w2_l[sb] * thr[gfc->bo_l[sb]];
-	for ( b = gfc->bu_l[sb]+1; b < gfc->bo_l[sb]; b++ )
-	  {
-	    enn  += eb[b];
-	    thmm += thr[b];
-	  }
+	  /* additive masking */
+	  enn = gfc->w1_l[sb] * eb[gfc->bu_l[sb]] + gfc->w2_l[sb] * eb[gfc->bo_l[sb]];
+	  thmm = gfc->w1_l[sb] *thr[gfc->bu_l[sb]] + gfc->w2_l[sb] * thr[gfc->bo_l[sb]];
+	  for ( b = gfc->bu_l[sb]+1; b < gfc->bo_l[sb]; b++ )
+	    {
+	      enn  += eb[b];
+	      thmm += thr[b];
+	    }
 #else
-        enn = gfc->w1_l[sb] * eb[gfc->bu_l[sb]] + gfc->w2_l[sb] * eb[gfc->bo_l[sb]];
-	thmm = Min(thr[gfc->bu_l[sb]],thr[gfc->bo_l[sb]]);
-	for ( b = gfc->bu_l[sb]+1; b < gfc->bo_l[sb]; b++ )
-	  {
-	    enn  += eb[b];
-	    thmm = Min(thr[b],thmm);
-	  }
-	thmm*=(1+gfc->bo_l[sb]-gfc->bu_l[sb]);
+	  enn = gfc->w1_l[sb] * eb[gfc->bu_l[sb]] + gfc->w2_l[sb] * eb[gfc->bo_l[sb]];
+	  thmm = Min(thr[gfc->bu_l[sb]],thr[gfc->bo_l[sb]]);
+	  for ( b = gfc->bu_l[sb]+1; b < gfc->bo_l[sb]; b++ )
+	    {
+	      enn  += eb[b];
+	      thmm = Min(thr[b],thmm);
+	    }
+	  thmm*=(1+gfc->bo_l[sb]-gfc->bu_l[sb]);
 #endif
+	} else {
+	  /* additive masking */
+	  enn = gfc->w1_l[sb] * eb[gfc->bu_l[sb]] + gfc->w2_l[sb] * eb[gfc->bo_l[sb]];
+	  thmm = gfc->w1_l[sb] *thr[gfc->bu_l[sb]] + gfc->w2_l[sb] * thr[gfc->bo_l[sb]];
+	  for ( b = gfc->bu_l[sb]+1; b < gfc->bo_l[sb]; b++ )
+	    {
+	      enn  += eb[b];
+	      thmm += thr[b];
+	    }
+	}
+
 	gfc->en[chn].l[sb] = enn;
 	gfc->thm[chn].l[sb] = thmm;
       }
