@@ -674,6 +674,9 @@ my_debug.OutPut(DEBUG_LEVEL_FUNC_CODE, "Suggest succeed A");
                 a_FormatSuggest->pwfxDst->nChannels = a_FormatSuggest->pwfxSrc->nChannels;
             }
 
+			if (a_FormatSuggest->pwfxSrc->nChannels != 1 && a_FormatSuggest->pwfxSrc->nChannels != 2)
+				return MMSYSERR_INVALPARAM;
+
 
 my_debug.OutPut(DEBUG_LEVEL_FUNC_CODE, "Suggest succeed B");
             //
