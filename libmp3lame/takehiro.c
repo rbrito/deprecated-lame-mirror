@@ -885,14 +885,32 @@ static const int max_range_sfac_tab[6][4] = {
 int
 scale_bitcount_lsf(gr_info * const gi)
 {
-    int part, i, sfb;
-    int table_type = (gi->preflag) ? 2 : 0;
-    int tableID = table_type * 3;
+    int part, i, sfb, table_type, tableID;
 
+    table_type = 0;
+    if (gi->preflag < 0)
+	table_type = 3;
+    else if (gi->preflag > 0)
+	table_type = 2;
+
+    tableID = table_type * 3;
     if (gi->block_type == SHORT_TYPE) {
 	tableID++;
 	if (gi->mixed_block_flag)
 	    tableID++;
+    }
+    else {
+	if (gi->preflag == 0) {
+	    for (sfb = 11; sfb < gi->psymax; sfb++)
+		if (gi->scalefac[sfb] < pretab[sfb])
+		    break;
+
+	    if (sfb == gi->psymax) {
+		gi->preflag = 1; table_type = 2; tableID = 6;
+		for (sfb = 11; sfb < gi->psymax; sfb++)
+		    gi->scalefac[sfb] -= pretab[sfb];
+	    }
+	}
     }
 
     gi->part2_length = LARGE_BITS;
