@@ -549,6 +549,11 @@ recalc_divide_sub(
 	gi->table_select[1] = r01_info[r2] & 0xff;
 	gi->table_select[2] = r2t;
     }
+#if 0
+    if (gi->table_select[1] == gi->table_select[2]
+	|| gi->table_select[1] == gi->table_select[0])
+	printf("%d\n", gi->table_select[1]);
+#endif
     return gi->part2_3_length - old;
 }
 
@@ -916,6 +921,8 @@ best_scalefac_store(lame_t gfc, int gr, int ch)
 	int l = gi->wi[sfb].width;
 	int even = 0;
 	j -= l;
+	if (gi->scalefac[sfb] < 0)
+	    continue;
 	do {
 	    even |= gi->l3_enc[l+j  ];
 	    even |= gi->l3_enc[l+j+1];
@@ -923,7 +930,8 @@ best_scalefac_store(lame_t gfc, int gr, int ch)
 	/* remove scalefacs from bands with all ix=0.
 	 * This idea comes from the AAC ISO docs.  added mt 3/00 */
 	if (even == 0) {
-	    gi->scalefac[sfb] = recalc = SCALEFAC_ANYTHING_GOES;
+	    gi->scalefac[sfb] = SCALEFAC_ANYTHING_GOES;
+	    recalc |= 1;
 	    continue;
 	}
 	/* if all the ix[] is multiple of 8, we can losslessly reduce the
@@ -936,13 +944,14 @@ best_scalefac_store(lame_t gfc, int gr, int ch)
 	    } while (++l < 0);
 	    gi->scalefac[sfb] -= (8 >> gi->scalefac_scale);
 	    even >>= 3;
-	    recalc = 1;
+	    recalc |= 2;
 	}
     }
     if (recalc) {
-	recalc = 0;
+	if (recalc & 2)
+	    noquant_count_bits(gfc, gi);
 	gfc->scale_bitcounter(gi);
-	noquant_count_bits(gfc, gi);
+	recalc = 0;
     }
 
     if (gi->psymax > gi->sfbmax && gi->block_type != SHORT_TYPE
