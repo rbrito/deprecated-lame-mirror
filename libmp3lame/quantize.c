@@ -576,7 +576,7 @@ inc_scalefac_scale (gr_info * const gi)
 	if (gi->preflag > 0)
 	    s += pretab[sfb];
 	gi->scalefac[sfb] = (s + 1) >> 1;
-    } while (++sfb < gi->sfbmax);
+    } while (++sfb < gi->psymax);
     gi->preflag = 0;
     gi->scalefac_scale = 1;
 }
@@ -607,18 +607,18 @@ inc_subblock_gain(gr_info * const gi)
     }
 
     for (window = 0; window < 3; window++) {
-	for (sfb = gi->sfb_lmax+window; sfb < gi->sfbmax; sfb += 3)
+	for (sfb = gi->sfb_lmax+window; sfb < gi->psymax; sfb += 3)
 	    if (gi->scalefac[sfb] > tab[sfb])
 		break;
 
-	if (sfb >= gi->sfbmax)
+	if (sfb >= gi->psymax)
 	    continue;
 
         if (gi->subblock_gain[window] >= 7)
 	    return 1;
 
 	gi->subblock_gain[window]++;
-	for (sfb = gi->sfb_lmax+window; sfb < gi->sfbmax; sfb += 3) {
+	for (sfb = gi->sfb_lmax+window; sfb < gi->psymax; sfb += 3) {
 	    int s = gi->scalefac[sfb] - (4 >> gi->scalefac_scale);
 	    if (s < 0)
 		s = 0;
@@ -710,9 +710,6 @@ amp_scalefac_bands(
     /* some scalefactors are increased too much
      *      -> try to use scalefac_scale or subblock_gain.
      */
-    if (gi->preflag < 0)
-	return 0;
-
     if (gfc->use_subblock_gain && gi->block_type == SHORT_TYPE) {
 	if (inc_subblock_gain(gi) || loop_break(gi))
 	    return 0; /* failed */
