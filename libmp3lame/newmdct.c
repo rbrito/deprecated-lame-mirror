@@ -735,6 +735,7 @@ mdct_sub48(lame_t gfc, int ch)
 		mdct_enc[1] *= gfc->amp_filter1[k];
 		mdct_enc[2] *= gfc->amp_filter1[k];
 		mdct_enc += 3;
+		k++;
 	    } while (mdct_enc < endband);
 	}
 	memset(mdct_enc, 0, sizeof(FLOAT)*(SBLIMIT-band)*18);
