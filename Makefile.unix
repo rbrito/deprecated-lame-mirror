@@ -23,6 +23,9 @@ else
   ARCH = $(shell uname -m)
 endif
 
+HAVE_NASM = NO
+HAVE_NEWER_GLIBC = NO
+
 # generic defaults. OS specific options go in versious sections below
 PGM = lame
 CC = gcc
@@ -135,15 +138,20 @@ ifeq ($(UNAME),Linux)
 #   CC_OPTS =  -DDEBUG -UNDEBUG  -O -Wall -pedantic -g -DABORTFP 
 
 
+ifeq ($(CFG),RH)
 #  some alternate code (work in progress Robert.Hegemann@gmx.de)
-#  CPP_OPTS += -DRH_AMP -DRH_VALIDATE_MS
+  CPP_OPTS += -DRH_AMP -DRH_VALIDATE_MS
 # these options for gcc-2.95.2 to produce fast code
-#   CC_OPTS = \
-#	-Wall -O9 -fomit-frame-pointer -march=pentium \
-#	-finline-functions -fexpensive-optimizations \
-#	-funroll-loops -funroll-all-loops -pipe -fschedule-insns2 \
-#	-fstrength-reduce \
-#	-malign-double -mfancy-math-387 -ffast-math 
+   CC_OPTS = \
+	-Wall -O9 -fomit-frame-pointer -march=pentium \
+	-finline-functions -fexpensive-optimizations \
+	-funroll-loops -funroll-all-loops -pipe -fschedule-insns2 \
+	-fstrength-reduce \
+	-malign-double -mfancy-math-387 -ffast-math 
+        
+   HAVE_NEWER_GLIBC = YES
+   HAVE_NASM = YES
+endif
 
 
 ##########################################################################
@@ -389,7 +397,13 @@ endif
 # 10/99 added -D__NO_MATH_INLINES to fix a bug in *all* versions of
 # gcc 2.8+ as of 10/99.  
 
-CC_SWITCHES = -DNDEBUG -D__NO_MATH_INLINES $(CC_OPTS) $(SNDLIB) $(GTK) \
+ifeq ($(HAVE_NEWER_GLIBC),YES)
+CC_SWITCHES = 
+else
+CC_SWITCHES = -D__NO_MATH_INLINES  # only needed by some older glibc
+endif
+
+CC_SWITCHES += -DNDEBUG $(CC_OPTS) $(SNDLIB) $(GTK) \
 $(BRHIST_SWITCH) $(VORBIS) 
 frontend_sources = \
         frontend/brhist.c \
@@ -452,13 +466,20 @@ ASFLAGS=-f elf -i libmp3lame/i386/
 %.o: %.s
 	gcc -c $< -o $@
 
+
+#HAVE_NASM = YES
+
+ifeq ($(HAVE_NASM),YES)
 ## have NASM
-#CC_SWITCHES += -DHAVE_NASM
-#lib_obj += libmp3lame/i386/cpu_feat.o
+CC_SWITCHES += -DHAVE_NASM
+lib_obj += libmp3lame/i386/cpu_feat.o
 
 ## use MMX extension. you need nasm and MMX supported CPU.
-#CC_SWITCHES += -DMMX_choose_table
-#lib_obj += libmp3lame/i386/choose_table.o
+CC_SWITCHES += -DMMX_choose_table
+lib_obj += libmp3lame/i386/choose_table.o
+endif
+
+
 
 %.o: %.c 
 	$(CC) $(CPP_OPTS) $(CC_SWITCHES) -c $< -o $@
