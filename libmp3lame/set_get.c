@@ -1280,7 +1280,7 @@ lame_set_substep( lame_global_flags*  gfp,
 {
     lame_internal_flags *gfc = gfp->internal_flags;
     /* default = 0.0 (no inter-cahnnel maskin) */
-    if (! (0 <= method && method <= 2))
+    if (! (0 <= method && method <= 3))
         return -1;
 
     gfc->substep_shaping = method;
@@ -1312,7 +1312,7 @@ lame_set_no_short_blocks( lame_global_flags*  gfp,
     return 0;
 }
 
-/* Disable short blocks. */
+/* Use mixed block. */
 int
 lame_set_use_mixed_blocks( lame_global_flags*  gfp,
 			   int                 use_mixed_blocks )

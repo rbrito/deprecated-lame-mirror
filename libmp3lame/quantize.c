@@ -27,6 +27,7 @@
 
 #include <math.h>
 #include <assert.h>
+#include <stdlib.h>
 #include "bitstream.h"
 #include "l3side.h"
 #include "quantize.h"
@@ -34,6 +35,7 @@
 #include "quantize_pvt.h"
 #include "lame-analysis.h"
 #include "vbrquantize.h"
+#include "machine.h"
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
@@ -284,6 +286,89 @@ bin_search_StepSize(
 }
 
 
+
+
+/************************************************************************
+ *
+ *      trancate_smallspectrums()
+ *
+ *  Takehiro TOMINAGA 2002-07-21
+ *
+ *  trancate smaller nubmers into 0 as long as the noise threshold is allowed.
+ *
+ ************************************************************************/
+static int
+float8compare(FLOAT8 *a, FLOAT8 *b)
+{
+    if (*a > *b) return 1;
+    if (*a == *b) return 0;
+    return -1;
+}
+
+static void
+trancate_smallspectrums(
+    lame_internal_flags *gfc,
+    gr_info		* const gi,
+    const FLOAT8	* const l3_xmin,
+    FLOAT8		* work
+    )
+{
+    int sfb, j, width;
+    FLOAT8 distort[SFBMAX];
+    calc_noise_result dummy;
+
+    calc_noise (gfc, gi, l3_xmin, distort, &dummy);
+    for (j = 0; j < 576; j++) {
+	FLOAT8 xr = 0.0;
+	if (gi->l3_enc[j] != 0)
+	    xr = fabs(gi->xr[j]);
+	work[j] = xr;
+    }
+
+    sfb = j = 0;
+    do {
+	FLOAT8 allowedNoise, trancateThreshold;
+	int nsame, start;
+
+	width = gi->width[sfb];
+	j += width;
+	if (distort[sfb] >= 1.0)
+	    continue;
+
+	qsort(&work[j-width], width,
+	      sizeof(FLOAT8), (__compar_fn_t)float8compare);
+
+	if (work[j - 1] == 0.0)
+	    continue; /* all zero sfb */
+
+	allowedNoise = distort[sfb] * l3_xmin[sfb];
+	trancateThreshold = 0.0;
+	start = 0;
+	do {
+	    FLOAT8 noise;
+	    for (nsame = 1; start + nsame < width; nsame++)
+		if (work[start + j] != work[start+j+nsame])
+		    break;
+
+	    noise = work[start+j] * work[start+j] * nsame;
+	    if (allowedNoise < noise) {
+		if (start != 0)
+		    trancateThreshold = work[start+j - 1];
+		break;
+	    }
+	    allowedNoise -= noise;
+	    start += nsame;
+	} while (start < width);
+	if (trancateThreshold == 0.0)
+	    continue;
+
+	do {
+	    if (fabs(gi->xr[j - width]) < trancateThreshold)
+		gi->l3_enc[j - width] = 0;
+	} while (--width > 0);
+    } while (++sfb < gi->psymax);
+    gi->part2_3_length = noquant_count_bits(gfc, gi);
+}
 
 
 /*************************************************************************** 
@@ -718,8 +803,9 @@ balance_noise (
     /*  some scalefactors are too large.
      *  lets try setting scalefac_scale=1 
      */
-    if ((gfc->noise_shaping > 1) && (!(gfc->presetTune.use &&
-                                      gfc->ATH->adjust < gfc->presetTune.athadjust_switch_level))) {
+    if (gfc->noise_shaping > 1
+	&& (!gfc->presetTune.use
+	    || gfc->ATH->adjust >= gfc->presetTune.athadjust_switch_level)) {
 	memset(&gfc->pseudohalf, 0, sizeof(gfc->pseudohalf));
 	if (!cod_info->scalefac_scale) {
 	    inc_scalefac_scale (cod_info, xrpow);
@@ -778,7 +864,6 @@ outer_loop (
     int huff_bits;
     int better;
     int over;
-
     int age;
 
     bin_search_StepSize (gfc, cod_info, targ_bits, ch, xrpow);
@@ -817,11 +902,10 @@ outer_loop (
 	if (gfc->sfb21_extra) {
 	    if (distort[cod_info_w.sfbmax] > 1.0)
 		break;
-	    if (cod_info_w.block_type == SHORT_TYPE) {
-		if (distort[cod_info_w.sfbmax+1] > 1.0
-		    || distort[cod_info_w.sfbmax+2] > 1.0)
+	    if (cod_info_w.block_type == SHORT_TYPE
+		&& (distort[cod_info_w.sfbmax+1] > 1.0
+		    || distort[cod_info_w.sfbmax+2] > 1.0))
 		    break;
-	    }
 	}
 
 	/* try the new scalefactor conbination on cod_info_w */
@@ -881,8 +965,15 @@ outer_loop (
 	memcpy(xrpow, save_xrpow, sizeof(FLOAT8)*576);
 
     assert (cod_info->global_gain < 256);
+
+    /*  do the 'substep shaping'
+     */
+    if (!gfp->VBR && (gfc->substep_shaping & 1))
+	trancate_smallspectrums(gfc, cod_info, l3_xmin, xrpow);
+
     return best_noise_info.over_count;
 }
+
 
 
 
@@ -908,12 +999,12 @@ iteration_finish_one (
     /*  try some better scalefac storage
      */
     best_scalefac_store (gfc, gr, ch, l3_side);
-            
+
     /*  best huffman_divide may save some bits too
      */
     if (gfc->use_best_huffman == 1) 
 	best_huffman_divide (gfc, cod_info);
-            
+
     /*  update reservoir status after FINAL quantization/bitrate
      */
     ResvAdjust (gfc, cod_info);
@@ -1368,6 +1459,13 @@ VBR_iteration_loop (
     
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         for (ch = 0; ch < gfc->channels_out; ch++) {
+	    /*  do the 'substep shaping'
+	     */
+	    if (gfp->VBR && (gfc->substep_shaping & 1)) {
+		trancate_smallspectrums(gfc, &l3_side->tt[gr][ch],
+					l3_xmin[gr][ch], xrpow);
+	    }
+
 	    iteration_finish_one(gfc, gr, ch);
 	} /* for ch */
     }    /* for gr */
@@ -1591,7 +1689,7 @@ void
 iteration_loop(
     lame_global_flags *gfp, 
     FLOAT8             pe           [2][2],
-    FLOAT8             ms_ener_ratio[2],  
+    FLOAT8             ms_ener_ratio[2],
     III_psy_ratio      ratio        [2][2])
 {
     lame_internal_flags *gfc=gfp->internal_flags;

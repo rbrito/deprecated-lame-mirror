@@ -496,49 +496,14 @@ static int choose_table_nonMMX(
 /*************************************************************************/
 /*	      count_bit							 */
 /*************************************************************************/
-
-int count_bits(
+int noquant_count_bits(
           lame_internal_flags * const gfc, 
-    const FLOAT8  * const xr,
-          gr_info * const gi)  
+          gr_info * const gi
+	  )
 {
     int bits = 0;
     int i, a1, a2;
     int *const ix = gi->l3_enc;
-    /* since quantize_xrpow uses table lookup, we need to check this first: */
-    FLOAT8 w = (IXMAX_VAL) / IPOW20(gi->global_gain);
-    for ( i = 0; i < 576; i++ )  {
-	if (xr[i] > w)
-	    return LARGE_BITS;
-    }
-
-    if (gfc->quantization) 
-	quantize_xrpow(xr, ix, IPOW20(gi->global_gain));
-    else
-	quantize_xrpow_ISO(xr, ix, IPOW20(gi->global_gain));
-
-    if (gfc->substep_shaping & 2) {
-	int sfb, j = 0;
-	// 0.634521682242439 = 0.5946*2**(.5*0.1875)
-	const FLOAT8 roundfac =
-	    0.634521682242439 / IPOW20(gi->global_gain+gi->scalefac_scale);
-	for (sfb = 0; sfb < gi->sfbmax; sfb++) {
-	    int width = gi->width[sfb];
-	    int l;
-	    j += width;
-	    if (!gfc->pseudohalf[sfb])
-		continue;
-	    for (l = -width; l < 0; l++)
-		if (xr[j+l] < roundfac)
-		    ix[j+l] = 0.0;
-	}
-    }
-
-
-
-
-
-
     i=576;
     /* Determine count1 region */
     for (; i > 1; i -= 2) 
@@ -621,6 +586,44 @@ int count_bits(
     return bits;
 }
 
+int count_bits(
+          lame_internal_flags * const gfc, 
+    const FLOAT8  * const xr,
+          gr_info * const gi
+	  )
+{
+    int i;
+    int *const ix = gi->l3_enc;
+    /* since quantize_xrpow uses table lookup, we need to check this first: */
+    FLOAT8 w = (IXMAX_VAL) / IPOW20(gi->global_gain);
+    for ( i = 0; i < 576; i++ )  {
+	if (xr[i] > w)
+	    return LARGE_BITS;
+    }
+
+    if (gfc->quantization) 
+	quantize_xrpow(xr, ix, IPOW20(gi->global_gain));
+    else
+	quantize_xrpow_ISO(xr, ix, IPOW20(gi->global_gain));
+
+    if (gfc->substep_shaping & 2) {
+	int sfb, j = 0;
+	// 0.634521682242439 = 0.5946*2**(.5*0.1875)
+	const FLOAT8 roundfac =
+	    0.634521682242439 / IPOW20(gi->global_gain+gi->scalefac_scale);
+	for (sfb = 0; sfb < gi->sfbmax; sfb++) {
+	    int width = gi->width[sfb];
+	    int l;
+	    j += width;
+	    if (!gfc->pseudohalf[sfb])
+		continue;
+	    for (l = -width; l < 0; l++)
+		if (xr[j+l] < roundfac)
+		    ix[j+l] = 0.0;
+	}
+    }
+    return noquant_count_bits(gfc, gi);
+}
 /***********************************************************************
   re-calculate the best scalefac_compress using scfsi
   the saved bits are kept in the bit reservoir.
@@ -726,7 +729,7 @@ void best_huffman_divide(
 
     /* SHORT BLOCK stuff fails for MPEG2 */ 
     if (gi->block_type == SHORT_TYPE && gfc->mode_gr==1) 
-          return;
+	return;
 
 
     memcpy(&cod_info2, gi, sizeof(gr_info));
@@ -873,8 +876,8 @@ void best_scalefac_store(
 	    if (gi->l3_enc[l+j]!=0)
 		break;
 	if (l==0)
-//	    gi->scalefac[sfb]=-2; // anything goes.
-	    gi->scalefac[sfb]=0; // anything goes.
+	    gi->scalefac[sfb]=-2; // anything goes.
+//	    gi->scalefac[sfb]=0; // anything goes.
     }
 
     if (!gi->scalefac_scale && !gi->preflag) {

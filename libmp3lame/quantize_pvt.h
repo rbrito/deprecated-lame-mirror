@@ -45,7 +45,7 @@ extern FLOAT8 adj43asm[PRECALC_SIZE];
 extern FLOAT8 adj43[PRECALC_SIZE];
 #endif
 
-#define Q_MAX 256
+#define Q_MAX (256+1)
 #define Q_MAX2 116 /* minimam possible number of
 		      -cod_info->global_gain
 		      + ((scalefac[] + (cod_info->preflag ? pretab[sfb] : 0))
@@ -105,7 +105,9 @@ void    set_frame_pinfo (lame_global_flags *gfp,
 /* takehiro.c */
 
 int     count_bits (lame_internal_flags * const gfc, const FLOAT8 * const xr,
-                    gr_info * const cod_info);
+		    gr_info * const cod_info);
+int     noquant_count_bits (lame_internal_flags * const gfc,
+			    gr_info * const cod_info);
 
 
 void    best_huffman_divide (const lame_internal_flags * const gfc, 
