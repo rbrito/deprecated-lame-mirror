@@ -191,6 +191,7 @@ void gpk_bargraph_draw(GtkWidget *widget,           /* plot on this widged */
   gint16 width,height,x,y,barheight;
   GdkFont *fixed_font;
   GdkGC *gc;
+  int titleSplit;
 
 
   gc = gdk_gc_new(widget->window);
@@ -214,9 +215,23 @@ void gpk_bargraph_draw(GtkWidget *widget,           /* plot on this widged */
       fixed_font = gdk_font_load ("-misc-fixed-medium-r-*-*-*-100-*-*-*-*-iso8859-1");
 #endif
 
-      gdk_draw_text (*ppixmap,fixed_font,
-		     widget->style->fg_gc[GTK_WIDGET_STATE (widget)],
-		     0,10,title,strlen(title));
+      titleSplit = strcspn(title, "\n");
+
+      if (titleSplit && (titleSplit != strlen(title))) {
+          gdk_draw_text (*ppixmap,fixed_font,
+		         widget->style->fg_gc[GTK_WIDGET_STATE (widget)],
+		         0,10, title, titleSplit);
+
+          gdk_draw_text (*ppixmap,fixed_font,
+		         widget->style->fg_gc[GTK_WIDGET_STATE (widget)],
+		         0,22, title+titleSplit+1, (strlen(title)-titleSplit)-1);
+
+
+      } else {
+          gdk_draw_text (*ppixmap,fixed_font,
+		         widget->style->fg_gc[GTK_WIDGET_STATE (widget)],
+		         0,10,title,strlen(title));
+      }
     }
       
 
