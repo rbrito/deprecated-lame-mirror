@@ -40,7 +40,7 @@
 static void
 conv_istereo(lame_t gfc, gr_info *gi, int sfb, int i)
 {
-    for (; i < gi->xrNumMax; sfb++) {
+    for (; sfb < gi[0].psymax && i < gi->xrNumMax; sfb++) {
 	FLOAT lsum = 1e-30, rsum = 1e-30;
 	int j = i + gi->width[sfb];
 	do {
@@ -52,8 +52,6 @@ conv_istereo(lame_t gfc, gr_info *gi, int sfb, int i)
 	    rsum += fabs(r);
 	} while (++i < j);
 
-	if (sfb > gi[0].psymax)
-	    continue;
 	lsum = lsum / (lsum+rsum);
 	j = 3;
 	if (lsum < 0.5) {
@@ -335,7 +333,7 @@ encode_mp3_frame(lame_t gfc, unsigned char* mp3buf, int mp3buf_size)
 	for (gr = 0; gr < gfc->mode_gr; gr++)
 	    init_gr_info(gfc, gr, ch);
     }
-
+#if 0
     /* channel conversion */
     if (gfc->narrowStereo != 0.0) {
 	/* narrown_stereo */
@@ -349,20 +347,26 @@ encode_mp3_frame(lame_t gfc, unsigned char* mp3buf, int mp3buf_size)
 	    }
 	}
     }
-
-    gfc->mode_ext |= gfc->use_istereo;
-    if (gfc->mode_ext & MPG_MD_MS_LR) {
+#endif
+    if (gfc->mode_ext == MPG_MD_MS_LR) {
 	/* convert from L/R -> Mid/Side */
-	if (gfc->mode_ext == MPG_MD_MS_I) {
-	    int i = 0;
+	if (1
+#if 1
+	    && (gfc->l3_side.tt[0][0].block_type != SHORT_TYPE
+		|| gfc->is_start_sfb_s[0] == 0)
+	    && (gfc->l3_side.tt[1][0].block_type != SHORT_TYPE
+		|| gfc->is_start_sfb_s[1] == 0)
+#endif
+	    && gfc->use_istereo) {
 	    for (gr = 0; gr < gfc->mode_gr; gr++) {
+		int sfb = gfc->is_start_sfb_l[gr];
 		if (gfc->l3_side.tt[gr][0].block_type == SHORT_TYPE)
-		    i += gfc->is_start_sfb_s[gr];
-		else
-		    i += gfc->is_start_sfb_l[gr];
+		    sfb = gfc->is_start_sfb_s[gr];
+		if (sfb && sfb < gfc->l3_side.tt[gr][0].psymax) {
+		    gfc->mode_ext = MPG_MD_MS_I;
+		    break;
+		}
 	    }
-	    if (i == 0)
-		gfc->mode_ext = MPG_MD_MS_LR;
 	}
 
 	for (gr = 0; gr < gfc->mode_gr; gr++) {
@@ -381,10 +385,11 @@ encode_mp3_frame(lame_t gfc, unsigned char* mp3buf, int mp3buf_size)
 		gi[0].xr[i] = (l+r) * (FLOAT)(SQRT2*0.5);
 		gi[1].xr[i] = (l-r) * (FLOAT)(SQRT2*0.5);
 	    }
-	    if (gfc->mode_ext & 1)
+	    if (gfc->mode_ext == MPG_MD_MS_I)
 		conv_istereo(gfc, gi, sfb, end);
 	}
-    } else if (gfc->mode_ext & 1) {
+    } else if (gfc->use_istereo) {
+	gfc->mode_ext = MPG_MD_LR_I;
 	for (gr = 0; gr < gfc->mode_gr; gr++) {
 	    gr_info *gi = &gfc->l3_side.tt[gr][0];
 	    int sfb = gfc->is_start_sfb_l[gr];
