@@ -29,11 +29,9 @@
 <!--End of Table of Child-Links--> 
 <HR>
 <H1><A NAME="SECTION00310000000000000000"> Introduction</A> </H1>
-<A NAME="chap-intro">&#160;</A> There is a lot of confusion surrounding the terms 
-<A NAME="352">&#160;</A><I>audio compression</I>, <A NAME="354">&#160;</A><I>audio 
-encoding</I>, and <A NAME="356">&#160;</A><I>audio decoding</I>. This section 
-will give you an overview what audio coding (another one of these terms...) is 
-all about. 
+There is a lot of confusion surrounding the terms <I>audio compression</I>, <I>audio 
+encoding</I>, and <I>audio decoding</I>. This section will give you an overview 
+what audio coding (another one of these terms...) is all about. 
 <P> 
 <H2><A NAME="SECTION00311000000000000000"> The purpose of audio compression</A> 
 </H2>
@@ -64,16 +62,16 @@ all about.
 <P> 
 <H2><A NAME="SECTION00312000000000000000"> The two parts of audio compression</A> 
 </H2>
-<P> Audio compression really consists of two parts. The first part, called <A NAME="358">&#160;</A><I>encoding</I>, 
+<P> Audio compression really consists of two parts. The first part, called <I>encoding</I>, 
   transforms the digital audio data that resides, say, in a WAVE file, into a 
-  highly compressed form called <A NAME="360">&#160;</A><I>bitstream</I>. To play 
-  the bitstream on your soundcard, you need the second part, called <A NAME="362">&#160;</A><I>decoding</I>. 
-  Decoding takes the bitstream and re-expands it to a WAVE file. 
+  highly compressed form called <I>bitstream</I>. To play the bitstream on your 
+  soundcard, you need the second part, called <I>decoding</I>. Decoding takes 
+  the bitstream and re-expands it to a WAVE file. 
 <P> The program that effects the first part is called an audio <I>encoder</I>. 
   <i>LAME</i> is such an encoder . The program that does the second part is called 
   an audio <I>decoder</I>. One well-known MPEG&nbsp;Layer III decoder is <tt>Xmms</tt>, 
   another <TT>mpg123</TT>. Both can be found on <A NAME="tex2html1"
- HREF="http://www.mp3-tech.org">www.mp3-tech.org</A> . 
+ HREF="http://www.mp3-tech.org">ww.mp3-tech.org</A> . 
 <H2><A NAME="SECTION00313000000000000000"> Compression ratios, bitrate and quality</A> 
 </H2>
 <P> It has not been explicitly mentioned up to now: What you end up with after 
@@ -85,45 +83,50 @@ all about.
   sound quality will be in the end - and <I>vice versa</I>. Table <A HREF="node6.html#table-soundq">1.1</A> 
   gives you an overview about quality achievable. 
 <P> Because compression ratio is a somewhat unwieldy measure, experts use the 
-  term <A NAME="365">&#160;</A><I>bitrate</I> when speaking of the strength of 
-  compression. Bitrate denotes the average number of bits that one second of audio 
-  data will take up in your compressed bitstream. Usually the units used will 
-  be kbps, which is <SUP>kbits</SUP>/<SUB>s</SUB>, or 1000&nbsp;<SUP>bits</SUP>/<SUB>s</SUB>. 
-  To calculate the number of bytes per second of audio data, simply divide the 
-  number of bits per second by eight. 
+  term <I>bitrate</I> when speaking of the strength of compression. Bitrate denotes 
+  the average number of bits that one second of audio data will take up in your 
+  compressed bitstream. Usually the units used will be kbps, which is <SUP>kbits</SUP>/<SUB>s</SUB>, 
+  or 1000&nbsp;<SUP>bits</SUP>/<SUB>s</SUB>. To calculate the number of bytes 
+  per second of audio data, simply divide the number of bits per second by eight. 
 <P> <BR>
 <DIV ALIGN="CENTER"><A NAME="table-soundq">&#160;</A> <A NAME="95">&#160;</A> 
-  <TABLE CELLPADDING=3 BORDER="1">
+  <TABLE CELLPADDING=3 BORDER="1" width="512" height="225">
     <CAPTION><STRONG>Table 1.1:</STRONG> Bitrate versus sound quality</CAPTION>
     <TR VALIGN="TOP"> 
-      <TD ALIGN="RIGHT" nowrap>Bitrate</TD>
-      <TD ALIGN="RIGHT" nowrap>Bandwidth</TD>
-      <TD ALIGN="LEFT" nowrap>Quality comparable to or better than</TD>
+      <TD ALIGN="RIGHT" nowrap width="115">Bitrate</TD>
+      <TD ALIGN="RIGHT" nowrap width="67">Bandwidth</TD>
+      <TD ALIGN="LEFT" nowrap width="246">Quality comparable to or better than</TD>
     </TR>
     <TR VALIGN="TOP"> 
-      <TD ALIGN="RIGHT" nowrap>8 kbps</TD>
-      <TD ALIGN="RIGHT" nowrap>2.5 kHz</TD>
-      <TD ALIGN="LEFT" nowrap>POTS (telephone sound)</TD>
+      <TD ALIGN="RIGHT" nowrap width="115">16 kbps</TD>
+      <TD ALIGN="RIGHT" nowrap width="67">4.5 kHz</TD>
+      <TD ALIGN="LEFT" nowrap width="246">shortwave radio</TD>
     </TR>
     <TR VALIGN="TOP"> 
-      <TD ALIGN="RIGHT" nowrap>16 kbps</TD>
-      <TD ALIGN="RIGHT" nowrap>4.5 kHz</TD>
-      <TD ALIGN="LEFT" nowrap>shortwave radio</TD>
+      <TD ALIGN="RIGHT" nowrap width="115">32 kbps</TD>
+      <TD ALIGN="RIGHT" nowrap width="67">7.5 kHz</TD>
+      <TD ALIGN="LEFT" nowrap width="246">AM radio</TD>
     </TR>
     <TR VALIGN="TOP"> 
-      <TD ALIGN="RIGHT" nowrap>32 kbps</TD>
-      <TD ALIGN="RIGHT" nowrap>7.5 kHz</TD>
-      <TD ALIGN="LEFT" nowrap>AM radio</TD>
+      <TD ALIGN="RIGHT" nowrap width="115">96 kbps</TD>
+      <TD ALIGN="RIGHT" nowrap width="67">11 kHz</TD>
+      <TD ALIGN="LEFT" nowrap width="246">FM radio</TD>
     </TR>
+    <tr valign="TOP"> 
+      <td align="RIGHT" nowrap width="115">128 kbps</td>
+      <td align="RIGHT" nowrap width="67">16 kHz</td>
+      <td align="LEFT" nowrap width="246">near CD</td>
+    </tr>
+    <tr valign="TOP"> 
+      <td align="RIGHT" nowrap width="115">160-180 kbps <br>
+        (variable bitrate)</td>
+      <td align="RIGHT" nowrap width="67">20 kHz</td>
+      <td align="LEFT" nowrap width="246">perceptual transparency</td>
+    </tr>
     <TR VALIGN="TOP"> 
-      <TD ALIGN="RIGHT" nowrap>64 kbps</TD>
-      <TD ALIGN="RIGHT" nowrap>11 kHz</TD>
-      <TD ALIGN="LEFT" nowrap>FM radio</TD>
-    </TR>
-    <TR VALIGN="TOP"> 
-      <TD ALIGN="RIGHT" nowrap>128 kbps</TD>
-      <TD ALIGN="RIGHT" nowrap>16 kHz</TD>
-      <TD ALIGN="LEFT" nowrap>near CD</TD>
+      <TD ALIGN="RIGHT" nowrap width="115">256 kbps</TD>
+      <TD ALIGN="RIGHT" nowrap width="67">22 kHz</TD>
+      <TD ALIGN="LEFT" nowrap width="246">studio</TD>
     </TR>
   </TABLE>
 </DIV>

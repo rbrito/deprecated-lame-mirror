@@ -88,11 +88,6 @@
     <td align="LEFT" nowrap> free format bitstream</td>
   </tr>
   <tr valign="TOP"> 
-    <td align="LEFT" nowrap><kbd>-g</kbd></td>
-    <td align="LEFT" nowrap>turn on MP3x graphical frame analyser (may not be 
-      available on your release)</td>
-  </tr>
-  <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#h">-h</a></kbd></td>
     <td align="LEFT" nowrap>high quality</td>
   </tr>
@@ -164,6 +159,10 @@
     <td align="LEFT" nowrap><kbd><a href="#-preset">--preset</a></kbd></td>
     <td align="LEFT" nowrap>use built-in preset (phone, voice, fm, tape, hifi, 
       cd, studio)</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd><a href="#q">-q</a></kbd></td>
+    <td align="LEFT" nowrap>algorithm quality selection</td>
   </tr>
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#r">-r</a></kbd></td>
@@ -288,8 +287,8 @@
     Default is 128 kbs for MPEG1 and 80 kbs for MPEG2. <br>
     <br>
     When used with variable bitrate encoding (VBR), -b specifies the minimum bitrate 
-    to be used. However, in order to reduce space wasting, during silences the 
-    smallest frame size available will be used. 
+    to be used. However, in order to avoid wasted space, the smallest frame size 
+    available will be used during silences. 
   <dt><br>
   </dt>
   <hr width="50%" noshade align="center">
@@ -406,7 +405,7 @@
 </dl>
 <dl> 
   <dd> This switch forces the encoder to use a faster encoding mode, but with 
-    a lower quality.<br>
+    a lower quality. The behaviour is the same as the -q7 switch.<br>
     <br>
     Noise shaping will be disabled, but psycho acoustics will still be computed 
     for bit allocation and pre-echo detection. 
@@ -448,6 +447,7 @@
     in_mpg123 up to 560kbps<br>
     l3dec up to 310kbps<br>
     LAME up to 560kbps<br>
+    MAD up to 640kbps<br>
   <dt><br>
     <br>
   </dt>
@@ -459,7 +459,7 @@
 </dl>
 <dl> 
   <dd> Use some quality improvements. Encoding will be slower, but the result 
-    will be of higher quality.<br>
+    will be of higher quality. The behaviour is the same as the -q2 switch.<br>
     This switch is always enabled when using VBR. 
   <dt><br>
     <br>
@@ -726,6 +726,31 @@
   <hr width="50%" noshade align="center">
   <br>
   <dl> </dl>
+  <dt><strong>* <kbd>-q 0..9</kbd><a name="q">&nbsp;&nbsp;&nbsp;&nbsp;algorithm 
+    quality selection</a></strong></dt>
+</dl>
+<dl> 
+  <dd> Bitrate is of course the main influence on quality. The higher the bitrate, 
+    the higher the quality. But for a given bitrate, we have a choice of algorithms 
+    to determine the best scalefactors and huffman encoding (noise shaping).<br>
+    <br>
+    -q 0: use slowest & best possible version of all algorithms. -q 0 and -q 1 
+    are slow and may not produce significantly higher quality.<br>
+    <br>
+    -q 2: recommended. Same as -h.<br>
+    <br>
+    -q 5: default value. Good speed, reasonable quality.<br>
+    <br>
+    -q 7: same as -f. Very fast, ok quality. (psycho acoustics are used for pre-echo 
+    & M/S, but no noise shaping is done.<br>
+    <br>
+    -q 9: disables almost all algorithms including psy-model. poor quality.
+  <dt><br>
+    <br>
+  </dt>
+  <hr width="50%" noshade align="center">
+  <br>
+  <dl> </dl>
   <dt><strong>* <kbd>-r</kbd><a name="r">&nbsp;&nbsp;&nbsp;&nbsp;input file is 
     raw pcm</a></strong></dt>
 </dl>
@@ -788,7 +813,7 @@
     size.<br>
     This results in many wasted bits for high bitrate encodings but will ensure 
     strict ISO compatibility. This compatibility might be important for hardware 
-    players.
+    players. 
 </dl>
 <dl> 
   <dd>&nbsp; 
