@@ -342,7 +342,7 @@ limited bandwidth is increasing quality
      */
 
     if (lowerlimit != NULL)
-        *lowerlimit = f_low /* + f_high */ ;
+        *lowerlimit = (f_low>0.5 * samplefreq ? 0.5 * samplefreq : f_low); // roel - fixes mono "-b320 -a"
     if (upperlimit != NULL)
         *upperlimit = f_high;
 /*
@@ -789,12 +789,13 @@ lame_init_params(lame_global_flags * const gfp)
                           gfp->out_samplerate * 16 * gfc->channels_out /
                           gfp->compression_ratio, gfp->out_samplerate, channels);
 			
+/*  roel - is this still needed?
 		if (lowpass > 0.5 * gfp->out_samplerate) {
             //MSGF(gfc,"Lowpass @ %7.1f Hz\n", lowpass);
             gfc->lowpass1 = gfc->lowpass2 =
                 lowpass / (0.5 * gfp->out_samplerate);
         }
-
+*/
         gfp->lowpassfreq = lowpass;
 
 #if 0
