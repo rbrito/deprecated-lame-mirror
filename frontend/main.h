@@ -36,7 +36,7 @@
 extern int keeptag;
 extern int pcmswapbytes;           /* force byte swapping   default=0*/
 extern int silent;
-extern int brhist;
+extern int disp_brhist;
 
 extern int mp3_delay;              /* for decoder only */
 extern int mp3_delay_set;          /* for decoder only */

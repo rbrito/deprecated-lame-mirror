@@ -79,7 +79,7 @@ sound_file_format input_format;
 int keeptag=0;
 int pcmswapbytes=0;         /* force byte swapping   default=0*/
 int silent;                 /* Verbosity */
-int brhist;
+int disp_brhist;
 float update_interval;      /* time status display interval */
 int mp3_delay;              /* to adjust the number of samples truncated
                                during decode */
@@ -843,7 +843,7 @@ int  parse_args (lame_t gfp, int argc, char** argv,
     outPath[0] = '\0';
     /* turn on display options. user settings may turn them off below */
     silent   = 0;
-    brhist   = 1;
+    disp_brhist = 1;
     ignore_tag_errors = 0;
     enc_padding=-1;
     enc_delay=-1;
@@ -1018,7 +1018,7 @@ int  parse_args (lame_t gfp, int argc, char** argv,
                     lame_set_ATHshort( gfp, 1 );
                 
                 T_ELIF ("nohist")
-                    brhist = 0;
+                    disp_brhist = 0;
                 
 #if defined(__OS2__)
       		T_ELIF ("priority")

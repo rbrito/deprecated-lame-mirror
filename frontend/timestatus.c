@@ -196,7 +196,7 @@ timestatus_klemm(lame_t gfp)
                          lame_get_totalframes(gfp),
                          lame_get_framesize(gfp) );
 #ifdef BRHIST
-            if ( brhist ) {
+            if (disp_brhist) {
 	        brhist_disp ( gfp );
 	    }
 #endif

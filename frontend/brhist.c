@@ -62,6 +62,7 @@
 #endif
 
 #include "brhist.h"
+#include "main.h"
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
@@ -319,7 +320,6 @@ brhist_disp_total(lame_t gfp)
     int st_frames = 0;
     int br_frames = 0;
     double sum = 0.;
-    extern int silent;
     
     lame_stereo_mode_hist (gfp, st_mode );
     lame_bitrate_hist     (gfp, br_hist );

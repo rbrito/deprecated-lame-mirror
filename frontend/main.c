@@ -362,7 +362,7 @@ encoder(lame_t gfp, FILE * outf, int nogap, char *inPath, char *outPath)
                                lame_get_totalframes(gfp),
                                lame_get_framesize(gfp));
 #ifdef BRHIST
-                    if (brhist)
+                    if (disp_brhist)
                         brhist_disp(gfp);
 #endif
                 }
@@ -409,7 +409,7 @@ encoder(lame_t gfp, FILE * outf, int nogap, char *inPath, char *outPath)
 	timestatus(lame_get_out_samplerate(gfp),
 		   frames, lame_get_totalframes(gfp), lame_get_framesize(gfp));
 #ifdef BRHIST
-	if (brhist) {
+	if (disp_brhist) {
 	    brhist_disp(gfp);
 	}
 	brhist_disp_total(gfp);
@@ -453,12 +453,12 @@ static void
 brhist_init_package(lame_t gfp)
 {
 #ifdef BRHIST
-    if (brhist) {
+    if (disp_brhist) {
         if (brhist_init
             (gfp, lame_get_VBR_min_bitrate_kbps(gfp),
              lame_get_VBR_max_bitrate_kbps(gfp))) {
             /* fail to initialize */
-            brhist = 0;
+            disp_brhist = 0;
         }
     }
     else {
@@ -665,7 +665,7 @@ main(int argc, char **argv)
     }
 
     if (silent > 0 || lame_get_VBR(gfp) == vbr_off) {
-        brhist = 0;     /* turn off VBR histogram */
+        disp_brhist = 0;     /* turn off VBR histogram */
     }
 
 
