@@ -319,13 +319,26 @@ This is the first try of a Coding Style:
   especially these with a width of unequal 8. Lame sources are using
   different sizes for tabulators.
 
-* Don't set the macro NDEBUG in alpha and beta versions.
+* Don't set the macro NDEBUG in alpha versons.
+  NDEBUG should be set for beta versions.
 
-* If you assume something, check this with an assert().
+* If you assume something, check this with an assert(),
 
-* Functions should be not longer than 50 lines of code.
-  Every function should only do ONE thing, and this should
-  be done well.
+* Keep functions as modular as possible.  But dont adhere to
+  artificial line number limitations.  For example,
+  lame_encode_frame() encodes a single MP3 frame and looks like:
+ 
+  prime MDCT buffer by calling mdct_sub48 with dummy buffer
+  set padding
+  compute psycho acoustics by calling l3psycho_anal
+  compute MDCT by calling mdct_sub48
+  check stereo/ms_stereo
+  compute scalefactors by calling iteration_loop
+  compute bitstream by calling format_bitstream
+
+  it makes no sense to break this well ordered sequeunce into
+  smaller individual subroutines.
+
 
 * Document functions.
 
@@ -333,11 +346,9 @@ This is the first try of a Coding Style:
 
 * Use self explaining variable names, especially for interfaces.
 
-* Use an intentation of 4. It's a good compromise between the
-  2 and the 8.
+* Respec the indentation of the author of the original function.
+  If the indentation is not consistent, use 3.
 
-
-This is the first try of a Programming Style:
 
 * Don't use single 'short' variables to save storage.
   Short variables are especially on Pentium Class Computer much slower than

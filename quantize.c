@@ -426,7 +426,7 @@ void amp_scalefac_bands
     int start, end;
     int l,i,j;
     int max_ind[4]={0,0,0,0};
-    unsigned int sfb;
+    int sfb;
     FLOAT8 ifqstep34;
     FLOAT8 distort_thresh[4] = {1E-20,1E-20,1E-20,1E-20};
     lame_internal_flags *gfc = (lame_internal_flags *)gfp->internal_flags;
@@ -519,7 +519,7 @@ void inc_scalefac_scale
 )
 {
     int start, end, l,i,j;
-    unsigned int sfb;
+    int sfb;
     const FLOAT8 ifqstep34 = 1.29683955465100964055;
 
     for (sfb = 0; sfb < cod_info->sfb_lmax; sfb++) {
@@ -573,7 +573,7 @@ void inc_subblock_gain
 )
 {
     int start, end, l,i;
-    unsigned int sfb;
+    int sfb;
     FLOAT8 amp;
 
     fun_reorder (gfc->scalefac_band.s, xrpow);

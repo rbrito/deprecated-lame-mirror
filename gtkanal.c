@@ -1067,7 +1067,7 @@ static void text_window (GtkWidget *widget, gpointer data)
     gtk_window_set_title (GTK_WINDOW (textwindow), "About");
     gtk_widget_set_usize(box,350,260);
 
-    sprintf(text,"LAME version %s \nwww.sulaco.org/mp3\n\n",get_lame_version());
+    sprintf(text,"LAME version %s \nwww.mp3dev.org\n\n",get_lame_version());
     gtk_text_insert(GTK_TEXT(box),NULL,NULL,NULL,text,-1);
 
     sprintf(text,"psycho-acoustic model:  GPSYCHO version %s\n",get_psy_version());

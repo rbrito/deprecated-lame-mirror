@@ -162,20 +162,22 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
   mp3data->samplerate = freqs[mp.fr.sampling_frequency];
   mp3data->bitrate = tabsel_123[mp.fr.lsf][mp.fr.lay-1][mp.fr.bitrate_index];
   mp3data->nsamp=ULONG_MAX;
+  mp3data->mode=mp.fr.mode;
+  mp3data->mode_ext=mp.fr.mode_ext;
 
   framesize = smpls[mp.fr.lsf][mp.fr.lay];
   if (xing_header && num_frames) {
     mp3data->nsamp=framesize * num_frames;
   }
 
-  /*
-  printf("ret = %i NEED_MORE=%i \n",ret,MP3_NEED_MORE);
-  printf("stereo = %i \n",mp.fr.stereo);
-  printf("samp = %i  \n",(int)freqs[mp.fr.sampling_frequency]);
-  printf("framesize = %i  \n",framesize);
-  printf("num frames = %i  \n",(int)num_frames);
-  printf("num samp = %i  \n",(int)*num_samples);
-  */
+
+  fprintf(stderr,"ret = %i NEED_MORE=%i \n",ret,MP3_NEED_MORE);
+  fprintf(stderr,"stereo = %i \n",mp.fr.stereo);
+  fprintf(stderr,"samp = %i  \n",freqs[mp.fr.sampling_frequency]);
+  fprintf(stderr,"framesize = %i  \n",framesize);
+  fprintf(stderr,"num frames = %i  \n",(int)num_frames);
+  fprintf(stderr,"mode     = %i  \n",mp.fr.mode);
+
   return 0;
 }
 
@@ -221,6 +223,8 @@ int lame_decode_fromfile(FILE *fd, short pcm_l[], short pcm_r[],mp3data_struct *
 
   if (ret == MP3_OK) 
   {
+    mp3data->mode=mp.fr.mode;
+    mp3data->mode_ext=mp.fr.mode_ext;
     mp3data->stereo = mp.fr.stereo;
     mp3data->samplerate = freqs[mp.fr.sampling_frequency];
     /* bitrate formula works for free bitrate also */

@@ -159,6 +159,7 @@ options not yet described:
 --athlower <n db>  lower the ATH by n db.  
 --athshort         use only the ATH for short blocks
 --cwlimit <freq>   specify range of tonality calculation
+--disptime
 
 --lowpass
 --lowpass-width

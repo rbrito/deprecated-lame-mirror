@@ -10,7 +10,7 @@ the LGPL:
    interface (such as lame.h).  
 
 2. Any modifications of LAME must be released under the LGPL.  
-   The LAME project (www.sulaco.org/mp3) would appreciate being
+   The LAME project (www.mp3dev.org) would appreciate being
    notified of any modifications.  
 
 3. You must give prominent notice that your program is:
@@ -18,7 +18,7 @@ the LGPL:
       B. LAME is under the LGPL
       C. Provide a copy of the LGPL.  (the file COPYING contains the LGPL)
       D. Provide a copy of LAME source, or a pointer where the LAME
-         source can be obtained (such as www.sulaco.org/mp3)
+         source can be obtained (such as www.mp3dev.org)
    An example of prominent notice would be an "About the LAME encoding engine"
    button in some pull down menu within the executable of your program.  
 

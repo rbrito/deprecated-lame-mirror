@@ -31,7 +31,7 @@ void  lame_print_version ( FILE* fp )
     char  tmp [80];
 #endif
     
-    fprintf ( fp, "LAME version %s    (http://www.sulaco.org/mp3/) \n", get_lame_version() );
+    fprintf ( fp, "LAME version %s    (http://www.mp3dev.org) \n", get_lame_version() );
  // fprintf ( fp, "GPSYCHO: GPL psycho-acoustic and noise shaping model version %s. \n", get_psy_version () );
   
 #ifdef LIBSNDFILE

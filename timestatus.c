@@ -1,5 +1,6 @@
 #include "lame.h"
 #include "timestatus.h"
+#include "lametime.h"
 #include "util.h"
 #include <assert.h>
 #include <time.h>
@@ -218,6 +219,29 @@ void timestatus_finish(void)
 }
 
 
+void timestatus_klemm(lame_global_flags *gfp)
+{
+    lame_internal_flags *gfc=gfp->internal_flags;
+    if (! gfp -> silent) {
+        if ( gfp -> frameNum ==  0  ||  
+             gfp -> frameNum == 10  ||
+	     ( GetRealTime () - gfc -> last_time >= gfp -> update_interval  ||
+               GetRealTime ()                    <  gfp -> update_interval ) ) {
+            timestatus ( gfp -> out_samplerate, 
+                         gfp -> frameNum, 
+                         gfp -> totalframes, 
+                         gfp -> framesize );
+
+            if ( gfp -> brhist_disp )
+	        brhist_disp ( gfp, 1 );
+	        
+	    gfc -> last_time = GetRealTime ();  /* from now! disp_time seconds */
+        }
+  }
+}
+
+
+
 
 #if defined LIBSNDFILE || defined LAMESNDFILE
 
@@ -225,6 +249,8 @@ void timestatus_finish(void)
 
 void decoder_progress ( lame_global_flags* gfp )
 {
+    lame_internal_flags *gfc=gfp->internal_flags;
+#if 0
     static int  last_total = -1;
     static int  last_kbps  = -1;
     static int  last_frame = -1;
@@ -253,6 +279,13 @@ void decoder_progress ( lame_global_flags* gfp )
 	      
     last_total = gfp -> totalframes;
     last_kbps  = gfp -> brate;
+#endif
+
+  fprintf(stderr, "\rFrame#%6lu/%-6lu %3u kbps        ", gfp -> frameNum, gfp -> totalframes, gfp -> brate );
+  if (gfp->mode==MPG_MD_JOINT_STEREO)
+    fprintf ( stderr, ".... %s ...." ,
+       MPG_MD_MS_LR==gfc->mode_ext ? "M " : " S" );
+
 }
 
 void decoder_progress_finish ( lame_global_flags* gfp )
@@ -261,3 +294,10 @@ void decoder_progress_finish ( lame_global_flags* gfp )
 }
 
 #endif
+
+
+
+
+
+
+

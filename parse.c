@@ -32,7 +32,7 @@ void lame_print_license ( lame_global_flags* gfp, const char* ProgramName )  /* 
     PRINTF1 ("   interface (such as lame.h).\n");
     PRINTF1 ("\n");
     PRINTF1 ("2. Any modifications of LAME must be released under the LGPL.\n");
-    PRINTF1 ("   The LAME project (www.sulaco.org/mp3) would appreciate being\n");
+    PRINTF1 ("   The LAME project (www.mp3dev.org) would appreciate being\n");
     PRINTF1 ("   notified of any modifications.\n");
     PRINTF1 ("\n");
     PRINTF1 ("3. You must give prominent notice that your program is:\n");
@@ -40,7 +40,7 @@ void lame_print_license ( lame_global_flags* gfp, const char* ProgramName )  /* 
     PRINTF1 ("      B. LAME is under the LGPL\n");
     PRINTF1 ("      C. Provide a copy of the LGPL.  (the file COPYING contains the LGPL)\n");
     PRINTF1 ("      D. Provide a copy of LAME source, or a pointer where the LAME\n");
-    PRINTF1 ("         source can be obtained (such as www.sulaco.org/mp3)\n");
+    PRINTF1 ("         source can be obtained (such as www.mp3dev.org)\n");
     PRINTF1 ("   An example of prominent notice would be an \"About the LAME encoding engine\"\n");
     PRINTF1 ("   button in some pull down menu within the executable of your program.\n");
     PRINTF1 ("\n");
@@ -157,6 +157,7 @@ void lame_help ( lame_global_flags* gfp, const char* ProgramName )  /* print syn
   PRINTF1("    -a              downmix from stereo to mono file for mono encoding\n");
   PRINTF1("    -d              allow channels to have different blocktypes\n");
   PRINTF1("    -S              don't print progress report, VBR histograms\n");
+  PRINTF1("    --disptime <arg>print progress report every arg seconds \n");
   PRINTF1("    --ogg           encode to Ogg Vorbis instead of MP3\n");
   PRINTF1("    --freeformat    produce a free format bitstream\n");
   PRINTF1("    --decode        input=mp3 file, output=wav\n");
@@ -796,7 +797,9 @@ void lame_parse_args ( lame_global_flags* gfp, int argc, char** argv )
 		T_ELIF ("preset")
 		    argUsed = 1;
 		    lame_presets_setup ( gfp, nextArg, ProgramName );
-
+                T_ELIF ("disptime")
+                    argUsed = 1;
+		    gfp -> update_interval = atof (nextArg);
 		T_ELSE
 		    ERRORF ("%s: unrec option --%s\n", ProgramName, token);
 		    

@@ -27,8 +27,8 @@
 
 const struct
 {
-    const unsigned region0_count;
-    const unsigned region1_count;
+    const int region0_count;
+    const int region1_count;
 } subdv_table[ 23 ] =
 {
 {0, 0}, /* 0 bands */
@@ -57,6 +57,7 @@ const struct
 };
 
 
+/* These tables break thread-safeness.  Should be moved into util.h */ 
 unsigned int largetbl[16*16];
 unsigned int table23[3*3];
 unsigned int table56[4*4];
@@ -106,7 +107,7 @@ count_bit_ESC(int *ix, int *end, int t1, int t2, int *s)
 {
     /* ESC-table is used */
     int linbits = ht[t1].xlen * 65536 + ht[t2].xlen;
-    unsigned int sum = 0, sum2;
+    int sum = 0, sum2;
 
     do {
 	int x = *ix++;
@@ -149,7 +150,7 @@ count_bit_noESC(int *ix, int *end, int *s)
 {
     /* No ESC-words */
     int	sum1 = 0;
-    const unsigned char *hlen1 = ht[1].hlen;
+    const char *hlen1 = ht[1].hlen;
 
     do {
 	int x = ix[0] * 2 + ix[1];
@@ -168,7 +169,7 @@ count_bit_noESC_from2(int *ix, int *end, int t1, int *s)
 {
     /* No ESC-words */
     unsigned int sum = 0, sum2;
-    const unsigned int xlen = ht[t1].xlen;
+    const int xlen = ht[t1].xlen;
     unsigned int *hlen;
     if (t1 == 2)
 	hlen = table23;
@@ -201,10 +202,10 @@ count_bit_noESC_from3(int *ix, int *end, int t1, int *s)
     int	sum1 = 0;
     int	sum2 = 0;
     int	sum3 = 0;
-    const unsigned int xlen = ht[t1].xlen;
-    const unsigned char *hlen1 = ht[t1].hlen;
-    const unsigned char *hlen2 = ht[t1+1].hlen;
-    const unsigned char *hlen3 = ht[t1+2].hlen;
+    const int xlen = ht[t1].xlen;
+    const char *hlen1 = ht[t1].hlen;
+    const char *hlen2 = ht[t1+1].hlen;
+    const char *hlen3 = ht[t1+2].hlen;
     int t;
 
     do {
@@ -245,7 +246,7 @@ count_bit_noESC_from3(int *ix, int *end, int t1, int *s)
 
 static int choose_table(int *ix, int *end, int *s)
 {
-    unsigned int max;
+    int max;
     int choice, choice2;
     static const int huf_tbl_noESC[] = {
 	1, 2, 5, 7, 7,10,10,13,13,13,13,13,13,13,13 /* char not enough ? */
@@ -255,7 +256,7 @@ static int choose_table(int *ix, int *end, int *s)
 
     switch (max) {
     case 0:
-	return (int)max;
+	return max;
 
     case 1:
 	return count_bit_noESC(ix, end, s);
@@ -340,7 +341,7 @@ int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
 
     if (gi->block_type == SHORT_TYPE) {
       a1=3*gfc->scalefac_band.s[3];
-      if (a1 > (int)gi->big_values) a1 = gi->big_values;
+      if (a1 > gi->big_values) a1 = gi->big_values;
       a2 = gi->big_values;
 
     }else if (gi->block_type == NORM_TYPE) {
@@ -469,11 +470,11 @@ int r01_bits[],int r01_div[],int r0_tbl[],int r1_tbl[])
 	    break;
 
 	bits = r01_bits[r2 - 2] + cod_info2.count1bits;
-	if (gi->part2_3_length <= (u_int)bits)
+	if (gi->part2_3_length <= bits)
 	    break;
 
 	r2t = choose_table(ix + a2, ix + bigv, &bits);
-	if (gi->part2_3_length <= (u_int)bits)
+	if (gi->part2_3_length <= bits)
 	    continue;
 
 	memcpy(gi, &cod_info2, sizeof(gr_info));
@@ -526,7 +527,7 @@ void best_huffman_divide(lame_internal_flags *gfc, int gr, int ch, gr_info *gi, 
 
     assert(i <= 576);
     
-    for (; i > (int)cod_info2.big_values; i -= 4) {
+    for (; i > cod_info2.big_values; i -= 4) {
 	int p = ((ix[i-4] * 2 + ix[i-3]) * 2 + ix[i-2]) * 2 + ix[i-1];
 	a1 += t32l[p];
 	a2 += t33l[p];
@@ -582,7 +583,7 @@ scfsi_calc(int ch,
     for (i = 0; i < 4; i++) 
 	l3_side->scfsi[ch][i] = 0;
 
-    for (i = 0; i < (int)(sizeof(scfsi_band) / sizeof(int)) - 1; i++) {
+    for (i = 0; i < (sizeof(scfsi_band) / sizeof(int)) - 1; i++) {
 	for (sfb = scfsi_band[i]; sfb < scfsi_band[i + 1]; sfb++) {
 	    if (scalefac[0][ch].l[sfb] != scalefac[1][ch].l[sfb])
 		break;
@@ -616,7 +617,7 @@ scfsi_calc(int ch,
     for (i = 0; i < 16; i++) {
 	if (s1 < slen1_n[i] && s2 < slen2_n[i]) {
 	    int c = slen1_tab[i] * c1 + slen2_tab[i] * c2;
-	    if ((int)gi->part2_length > c) {
+	    if (gi->part2_length > c) {
 		gi->part2_length = c;
 		gi->scalefac_compress = i;
 	    }
@@ -774,7 +775,7 @@ int scale_bitcount( III_scalefac_t *scalefac, gr_info *cod_info)
     for ( k = 0; k < 16; k++ )
     {
         if ( (max_slen1 < slen1_n[k]) && (max_slen2 < slen2_n[k]) &&
-             ((int)cod_info->part2_length > tab[k])) {
+             (cod_info->part2_length > tab[k])) {
 	  cod_info->part2_length=tab[k];
 	  cod_info->scalefac_compress=k;
 	  ep=0;  /* we found a suitable scalefac_compress */
@@ -788,7 +789,7 @@ int scale_bitcount( III_scalefac_t *scalefac, gr_info *cod_info)
 /*
   table of largest scalefactor values for MPEG2
 */
-static const unsigned int max_range_sfac_tab[6][4] =
+static const int max_range_sfac_tab[6][4] =
 {
  { 15, 15, 7,  7},
  { 15, 15, 7,  0},
@@ -815,7 +816,7 @@ int scale_bitcount_lsf(III_scalefac_t *scalefac, gr_info *cod_info)
 {
     int table_number, row_in_table, partition, nr_sfb, window, over;
     int i, sfb, max_sfac[ 4 ];
-    unsigned int *partition_table;
+    const int *partition_table;
 
     /*
       Set partition table. Note that should try to use table one,
@@ -857,7 +858,7 @@ int scale_bitcount_lsf(III_scalefac_t *scalefac, gr_info *cod_info)
 
     for ( over = 0, partition = 0; partition < 4; partition++ )
     {
-	if ( max_sfac[partition] > (int)max_range_sfac_tab[table_number][partition] )
+	if ( max_sfac[partition] > max_range_sfac_tab[table_number][partition] )
 	    over++;
     }
     if ( !over )
@@ -868,7 +869,7 @@ int scale_bitcount_lsf(III_scalefac_t *scalefac, gr_info *cod_info)
 	*/
 	static const int log2tab[] = { 0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4 };
 
-	unsigned int slen1, slen2, slen3, slen4;
+	int slen1, slen2, slen3, slen4;
 
         cod_info->sfb_partition_table = &nr_of_sfb_block[table_number][row_in_table][0];
 	for ( partition = 0; partition < 4; partition++ )
@@ -924,15 +925,15 @@ void huffman_init(lame_internal_flags *gfc)
     int i;
 
     for (i = 0; i < 16*16; i++) {
-	largetbl[i] = (((int)ht[16].hlen[i]) << 16) + ht[24].hlen[i];
+	largetbl[i] = ((ht[16].hlen[i]) << 16) + ht[24].hlen[i];
     }
 
     for (i = 0; i < 3*3; i++) {
-	table23[i] = (((int)ht[2].hlen[i]) << 16) + ht[3].hlen[i];
+	table23[i] = ((ht[2].hlen[i]) << 16) + ht[3].hlen[i];
     }
 
     for (i = 0; i < 4*4; i++) {
-	table56[i] = (((int)ht[5].hlen[i]) << 16) + ht[6].hlen[i];
+	table56[i] = ((ht[5].hlen[i]) << 16) + ht[6].hlen[i];
     }
 #ifdef MMX_choose_table
     for (i = 0; i < 6; i++) {

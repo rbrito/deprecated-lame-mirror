@@ -16,7 +16,6 @@
 *
 ***********************************************************************/
 
-/* General Definitions */
 #ifndef FALSE
 #define         FALSE                   0
 #endif
@@ -76,12 +75,6 @@
 
 
 /* "bit_stream.h" Definitions */
-
-// BITSINABYTE is wrong, MINIMUM not used, MAX_LENGTH redefined in bitstream.h
-
-//#define         MINIMUM         4    /* Minimum size of the buffer in bytes */
-//#define         MAX_LENGTH      32   /* Maximum length of word written or
-//                                        read from bit stream */
 #define         BUFFER_SIZE     LAME_MAXMP3BUFFER 
 
 #define         Min(A, B)       ((A) < (B) ? (A) : (B))
@@ -329,7 +322,7 @@ typedef struct  {
   plotting_data *pinfo;
 
   /* variables used for the status display */
-  long double  last_time;
+  FLOAT8  last_time;
 
 } lame_internal_flags;
 

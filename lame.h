@@ -24,10 +24,6 @@
 extern "C" {
 #endif
 
-typedef signed short int  sample_t;
-typedef sample_t          mono_t;
-typedef sample_t          stereo_t [2];
-
 /* maximum size of mp3buffer needed if you encode at most 1152 samples for
    each call to lame_encode_buffer.  see lame_encode_buffer() below  
    (LAME_MAXMP3BUFFER is now obsolete)  */
@@ -98,6 +94,7 @@ typedef struct  {
 
   int quality;                /* quality setting 0=best,  9=worst  */
   int silent;                 /* disable some status output */
+  float update_interval;      /* to use Frank's time status display */
   int brhist_disp;            /* enable VBR bitrate histogram display */
   int mode;                       /* 0,1,2,3 stereo,jstereo,dual channel,mono */
   int mode_fixed;                 /* use specified the mode, do not use lame's opinion of the best mode */
@@ -379,6 +376,8 @@ typedef struct {
   int samplerate;  /* sample rate */
   int bitrate;     /* bitrate */
   unsigned long nsamp;    /* number of samples in mp3 file, estimated */
+  int mode;               /* mp3 frame type */
+  int mode_ext;           /* mp3 frame type */
 } mp3data_struct;
 
 

@@ -204,9 +204,13 @@ int read_samples_mp3(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2]
   gfc->pinfo->frameNum = gfp->frameNum;
   }
 
-  if (out==-1) return 0;
 
   gfp->brate=mp3data.bitrate;
+  gfp->mode=mp3data.mode;
+  gfc->mode_ext=mp3data.mode_ext;
+
+  if (out==-1) return 0;
+
   if (gfp->num_channels != mp3data.stereo) {
     ERRORF("Error: number of channels has changed in mp3 file - not supported. \n");
   }
@@ -263,15 +267,19 @@ int lame_decoder(lame_global_flags *gfp,FILE *outf,int skip)
 
     switch ( gfp -> input_format ) {
     case sf_mp3:
-        layer++;
-        /* fall through */	
-    case sf_mp2:
-        layer++;
-        /* fall through */
-    case sf_mp1:
 	skip += 528+1;   /* mp3 decoder has a 528 sample delay, plus user supplied "skip" */
 	MSGF ( "MPEG-%u%s Layer %.*s", 2 - gfp->version, gfp->out_samplerate < 16000 ? ".5" : "",
-	       layer, "III" );
+	       3, "III" );
+	break;
+    case sf_mp2:
+	skip += 240+1;  
+	MSGF ( "MPEG-%u%s Layer %.*s", 2 - gfp->version, gfp->out_samplerate < 16000 ? ".5" : "",
+	       2, "III" );
+	break;
+    case sf_mp1:
+	skip += 240+1;  
+	MSGF ( "MPEG-%u%s Layer %.*s", 2 - gfp->version, gfp->out_samplerate < 16000 ? ".5" : "",
+	       1, "III" );
 	break;
     case sf_ogg:
         MSGF ("Ogg Vorbis");

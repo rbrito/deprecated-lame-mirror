@@ -32,9 +32,11 @@
 const int scfsi_band[5] = { 0, 6, 11, 16, 21 };
 
 
+/* unsigned int is at least this large:  */
+/* we work with ints, so when doing bit manipulation, we limit
+ * ourselves to MAX_LENGTH-2 just to be on the safe side */
+#define MAX_LENGTH      32  
 
-#define MAX_LENGTH      32   /* Maximum length of word written or
-                                        read from bit stream */
 
 
 #ifdef DEBUG
@@ -63,13 +65,15 @@ void putheader_bits(lame_internal_flags *gfc,int w_ptr)
 
 
 
-/*write N bits into the bit stream */
+/*write j bits into the bit stream */
 static INLINE void
-putbits2(lame_global_flags *gfp, unsigned int val, int j)
+putbits2(lame_global_flags *gfp, int val, int j)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     Bit_stream_struc *bs;
     bs = &gfc->bs;
+
+    assert(j < MAX_LENGTH-2);
 
     while (j > 0) {
 	int k;
@@ -87,11 +91,10 @@ putbits2(lame_global_flags *gfp, unsigned int val, int j)
 	k = Min(j, bs->buf_bit_idx);
 	j -= k;
         
-        assert (j < MAX_LENGTH); /* 32 too large on 32 bit machines */
-
 	bs->buf_bit_idx -= k;
         
-        assert (bs->buf_bit_idx < MAX_LENGTH); /* 32 too large on 32 bit machines */
+	assert (j < MAX_LENGTH); /* 32 too large on 32 bit machines */
+        assert (bs->buf_bit_idx < MAX_LENGTH); 
 	
         bs->buf[bs->buf_byte_idx] |= ((val >> j) << bs->buf_bit_idx);
 	bs->totbit += k;
@@ -140,36 +143,36 @@ drain_into_ancillary(lame_global_flags *gfp,int remainingBits)
       if (remainingBits >= 32) 
 	for (i=0; i<(int)strlen(version) && remainingBits >=8 ; ++i) {
 	  remainingBits -= 8;
-	  putbits2(gfp,(unsigned int)version[i],8);
+	  putbits2(gfp,version[i],8);
 	}
     }
 
-
-    bits = remainingBits & (MAX_LENGTH - 1);
+    /* drain the rest 16 bits at a time */
+    bits = remainingBits & (16 - 1);
     for (i=0; i<bits; ++i) {
       putbits2(gfp,gfc->ancillary_flag,1);
       gfc->ancillary_flag = 1-gfc->ancillary_flag;
     }
 
-    remainingBits /= MAX_LENGTH;
+    remainingBits /= 16;
     for (; remainingBits > 0; remainingBits--) {
       if (gfc->ancillary_flag)
-	putbits2(gfp,0xAAAAAAAA, MAX_LENGTH);
+	putbits2(gfp,0xAAAA, 16);
       else
-	putbits2(gfp,0x55555555, MAX_LENGTH);
+	putbits2(gfp,0x5555, 16);
     }
 }
 
 /*write N bits into the header */
 static INLINE void
-writeheader(lame_internal_flags *gfc,unsigned int val, int j)
+writeheader(lame_internal_flags *gfc,int val, int j)
 {
     int ptr = gfc->header[gfc->h_ptr].ptr;
 
     while (j > 0) {
 	int k = Min(j, 8 - (ptr & 7));
 	j -= k;
-        assert (j < MAX_LENGTH); /* MAX_LENGTH=32, too large for 32 bit machines */
+        assert (j < MAX_LENGTH); /* >> 32  too large for 32 bit machines */
 	gfc->header[gfc->h_ptr].buf[ptr >> 3]
 	    |= ((val >> j)) << (8 - (ptr & 7) - k);
 	ptr += k;
@@ -181,11 +184,11 @@ writeheader(lame_internal_flags *gfc,unsigned int val, int j)
 
 /* (jo) this wrapper function for BF_addEntry() updates also the crc */
 static void
-CRC_writeheader(lame_internal_flags *gfc,unsigned int value, int length,unsigned int *crc)
+CRC_writeheader(lame_internal_flags *gfc, int value, int length,int *crc)
 {
-   unsigned int bit = 1 << length;
+   int bit = 1 << length;
 
-   assert(length < MAX_LENGTH);
+   assert(length < MAX_LENGTH-2);
    
    while((bit >>= 1)){
       *crc <<= 1;
@@ -260,7 +263,7 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
     lame_internal_flags *gfc=gfp->internal_flags;
     III_side_info_t *l3_side;
     int gr, ch;
-    unsigned int crc;
+    int crc;
     
     l3_side = &gfc->l3_side;
     gfc->header[gfc->h_ptr].ptr = 0;
@@ -270,19 +273,19 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
       writeheader(gfc,0xffe,                12);
     else
       writeheader(gfc,0xfff,                12);
-    writeheader(gfc,(unsigned int)(gfp->version),            1);
+    writeheader(gfc,(gfp->version),            1);
     writeheader(gfc,4 - 3,                 2);
-    writeheader(gfc,(unsigned int)(!gfp->error_protection),  1);
+    writeheader(gfc,(!gfp->error_protection),  1);
     /* (jo) from now on call the CRC_writeheader() wrapper to update crc */
-    CRC_writeheader(gfc,(unsigned int)(gfc->bitrate_index),      4,&crc);
-    CRC_writeheader(gfc,(unsigned int)(gfc->samplerate_index),   2,&crc);
-    CRC_writeheader(gfc,(unsigned int)(gfc->padding),            1,&crc);
-    CRC_writeheader(gfc,(unsigned int)(gfp->extension),          1,&crc);
-    CRC_writeheader(gfc,(unsigned int)(gfp->mode),               2,&crc);
-    CRC_writeheader(gfc,(unsigned int)(gfc->mode_ext),           2,&crc);
-    CRC_writeheader(gfc,(unsigned int)(gfp->copyright),          1,&crc);
-    CRC_writeheader(gfc,(unsigned int)(gfp->original),           1,&crc);
-    CRC_writeheader(gfc,(unsigned int)(gfp->emphasis),           2,&crc);
+    CRC_writeheader(gfc,(gfc->bitrate_index),      4,&crc);
+    CRC_writeheader(gfc,(gfc->samplerate_index),   2,&crc);
+    CRC_writeheader(gfc,(gfc->padding),            1,&crc);
+    CRC_writeheader(gfc,(gfp->extension),          1,&crc);
+    CRC_writeheader(gfc,(gfp->mode),               2,&crc);
+    CRC_writeheader(gfc,(gfc->mode_ext),           2,&crc);
+    CRC_writeheader(gfc,(gfp->copyright),          1,&crc);
+    CRC_writeheader(gfc,(gfp->original),           1,&crc);
+    CRC_writeheader(gfc,(gfp->emphasis),           2,&crc);
     if (gfp->error_protection) {
 	writeheader(gfc,0, 16); /* dummy */
     }
@@ -290,7 +293,7 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
     if (gfp->version == 1) {
 	/* MPEG1 */
 	assert(l3_side->main_data_begin >= 0);
-	CRC_writeheader(gfc,(unsigned int)(l3_side->main_data_begin), 9,&crc);
+	CRC_writeheader(gfc,(l3_side->main_data_begin), 9,&crc);
 
 	if (gfc->stereo == 2)
 	    CRC_writeheader(gfc,l3_side->private_bits, 3,&crc);
@@ -352,7 +355,7 @@ encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)
     } else {
 	/* MPEG2 */
 	assert(l3_side->main_data_begin >= 0);
-	CRC_writeheader(gfc,(unsigned int)(l3_side->main_data_begin), 8,&crc);
+	CRC_writeheader(gfc,(l3_side->main_data_begin), 8,&crc);
 	CRC_writeheader(gfc,l3_side->private_bits, gfc->stereo,&crc);
 
 	gr = 0;
@@ -442,7 +445,7 @@ huffman_coder_count1(lame_global_flags *gfp,int *ix, gr_info *gi)
 
 
     for (i = (gi->count1 - gi->big_values) / 4; i > 0; --i) {
-	HUFFBITS huffbits = 0;
+	int huffbits = 0;
 	int p = 0, v;
 
 	v = ix[0];
@@ -495,12 +498,12 @@ huffman_coder_count1(lame_global_flags *gfp,int *ix, gr_info *gi)
   */
 
 static INLINE int
-HuffmanCode(lame_global_flags *gfp, unsigned int table_select, int x, int y)
+HuffmanCode(lame_global_flags *gfp, int table_select, int x, int y)
 {
   /*    lame_internal_flags *gfc=gfp->internal_flags;*/
-    unsigned int code, ext, xlen;
+    int code, ext, xlen;
     int cbits, xbits;
-    unsigned int signx, signy, linbits;
+    int signx, signy, linbits;
     const struct huffcodetab *h;
 
     cbits = 0;
@@ -567,8 +570,8 @@ HuffmanCode(lame_global_flags *gfp, unsigned int table_select, int x, int y)
     code = h->table[x];
     cbits += h->hlen[x];
 
-    assert(cbits <= 32);
-    assert(xbits <= 32);
+    assert(cbits <= MAX_LENGTH);
+    assert(xbits <= MAX_LENGTH);
 
     putbits2(gfp,code, cbits);
     putbits2(gfp, ext, xbits);
@@ -576,7 +579,7 @@ HuffmanCode(lame_global_flags *gfp, unsigned int table_select, int x, int y)
 }
 
 static int
-Huffmancodebits(lame_global_flags *gfp,unsigned int tableindex, int start, int end, int *ix)
+Huffmancodebits(lame_global_flags *gfp, int tableindex, int start, int end, int *ix)
 {
     int i,bits;
 

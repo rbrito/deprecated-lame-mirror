@@ -500,9 +500,9 @@ int lame_init_params(lame_global_flags *gfp)
     // SPL raises slowly. The listener have to report the arise of the tone.
     // 0...10 seconds after this report the SPL falls. The listener have the disapperance
     // to report. The SPL still falls for a random 0...10 seconds, then the SPL raises ...
-    
-    // this makes no sense:  
-    //    if ( gfp -> VBR_q < 2 )
+
+    // this is not the right way to fix this problem.    
+    //if ( gfp -> VBR_q < 2 )
     //       gfp -> noATH = 1;
 
   }
@@ -653,14 +653,12 @@ int lame_init_params(lame_global_flags *gfp)
   if (gfp->error_protection) gfc->sideinfo_len += 2;
   
 
+  /* Write initial VBR Header to bitstream */
   if (gfp->bWriteVbrTag)
-    {
-      /* Write initial VBR Header to bitstream */
       InitVbrTag(gfp);
-    }
 
-    if ( gfp -> brhist_disp )
-        brhist_init ( gfp, gfc -> VBR_min_bitrate, gfc -> VBR_max_bitrate );
+  if (gfp -> brhist_disp)
+    brhist_init(gfp,gfc->VBR_min_bitrate,gfc->VBR_max_bitrate);
 
 #ifdef HAVEVORBIS
   if (gfp->ogg) {
@@ -670,6 +668,10 @@ int lame_init_params(lame_global_flags *gfp)
   }
 #endif
 
+#ifdef KLEMM
+  if ( gfp -> update_interval <= 0. )
+      gfp -> update_interval = 2.;
+#endif      
 
   return 0;
 }
@@ -823,7 +825,8 @@ FFT's                    <---------1024---------->
 */
 
 int lame_encode_mp3_frame(lame_global_flags *gfp,
-short int inbuf_l[],short int inbuf_r[],
+sample_t inbuf_l[],
+sample_t inbuf_r[],
 char *mp3buf, int mp3buf_size)
 {
 #ifdef macintosh /* PLL 14/04/2000 */
@@ -838,7 +841,7 @@ char *mp3buf, int mp3buf_size)
   III_psy_ratio masking_MS_ratio[2][2]; /*MS ratios */
   III_psy_ratio (*masking)[2][2];  /*LR ratios and MS ratios*/
   III_scalefac_t scalefac[2][2];
-  short int *inbuf[2];
+  sample_t *inbuf[2];
   lame_internal_flags *gfc=gfp->internal_flags;
 
 
@@ -888,8 +891,8 @@ char *mp3buf, int mp3buf_size)
     /* prime the MDCT/polyphase filterbank with a short block */
     { 
       int i,j;
-      short primebuff0[286+1152+576];
-      short primebuff1[286+1152+576];
+      sample_t primebuff0[286+1152+576];
+      sample_t primebuff1[286+1152+576];
       for (i=0, j=0; i<286+576*(1+gfc->mode_gr); ++i) {
 	if (i<576*gfc->mode_gr) {
 	  primebuff0[i]=0;
@@ -954,13 +957,15 @@ char *mp3buf, int mp3buf_size)
 
   /********************** status display  *****************************/
   if (!gfp->silent) {
-    int mod = gfp->version == 0 ? 100 : 50;
-    if (gfp->frameNum%mod==0) {
-      timestatus(gfp->out_samplerate,gfp->frameNum,gfp->totalframes,gfp->framesize);
-
-      if (gfp->brhist_disp)
+    if (gfp->update_interval>0) {
+      timestatus_klemm(gfp);
+    }else{
+      int mod = gfp->version == 0 ? 100 : 50;
+      if (gfp->frameNum%mod==0) {
+	timestatus(gfp->out_samplerate,gfp->frameNum,gfp->totalframes,gfp->framesize);
+	if (gfp->brhist_disp)
 	  brhist_disp(gfp->totalframes);
-
+      }
     }
   }
 
@@ -972,7 +977,7 @@ char *mp3buf, int mp3buf_size)
      * (mt 6/99).
      */
     int ret;
-    short int *bufp[2];  /* address of beginning of left & right granule */
+    sample_t *bufp[2];  /* address of beginning of left & right granule */
     int blocktype[2];
 
     ms_ratio_prev=gfc->ms_ratio[gfc->mode_gr-1];
@@ -1154,7 +1159,7 @@ encoding engine.  All buffering, resampling, etc, handled by calling
 program.  
 */
 int lame_encode_frame(lame_global_flags *gfp,
-short int inbuf_l[],short int inbuf_r[],
+sample_t inbuf_l[],sample_t inbuf_r[],
 char *mp3buf, int mp3buf_size)
 {
   if (gfp->ogg) {
@@ -1192,14 +1197,19 @@ char *mp3buf, int mp3buf_size)
  *
  * return code = number of bytes output in mp3buffer.  can be 0
 */
-int lame_encode_buffer(lame_global_flags *gfp,
-   short int buffer_l[], short int buffer_r[],int nsamples,
-   char *mp3buf, int mp3buf_size)
+
+int    lame_encode_buffer (
+                lame_global_flags* gfp,
+                sample_t           buffer_l  [],
+                sample_t           buffer_r [],
+                int                nsamples,
+                char*              mp3buf,
+                int                mp3buf_size )
 {
   int mp3size = 0, ret, i, ch, mf_needed;
   lame_internal_flags *gfc=gfp->internal_flags;
-  short int *mfbuf[2];
-  short int *in_buffer[2];
+  sample_t *mfbuf[2];
+  sample_t *in_buffer[2];
   in_buffer[0] = buffer_l;
   in_buffer[1] = buffer_r;
 
@@ -1236,7 +1246,7 @@ int lame_encode_buffer(lame_global_flags *gfp,
       } else {
 	n_out=Min(gfp->framesize,nsamples);
 	n_in = n_out;
-	memcpy( (char *) &mfbuf[ch][gfc->mf_size],(char *)in_buffer[ch],sizeof(short int)*n_out);
+	memcpy( (char *) &mfbuf[ch][gfc->mf_size],(char *)in_buffer[ch],sizeof(sample_t)*n_out);
       }
       in_buffer[ch] += n_in;
     }
@@ -1271,12 +1281,16 @@ int lame_encode_buffer(lame_global_flags *gfp,
 
 
 
-int lame_encode_buffer_interleaved(lame_global_flags *gfp,
-   short int buffer[], int nsamples, char *mp3buf, int mp3buf_size)
+int    lame_encode_buffer_interleaved (
+                lame_global_flags* gfp,
+                sample_t           buffer [],
+                int                nsamples,
+                char*              mp3buf,
+                int                mp3buf_size )
 {
   int mp3size = 0, ret, i, ch, mf_needed;
   lame_internal_flags *gfc=gfp->internal_flags;
-  short int *mfbuf[2];
+  sample_t *mfbuf[2];
 
   if (!gfc->lame_init_params_init) return -3;
 
@@ -1290,14 +1304,15 @@ int lame_encode_buffer_interleaved(lame_global_flags *gfp,
   assert(MFSIZE>=mf_needed);
 
   if (gfp->num_channels == 1) {
-    return lame_encode_buffer(gfp,buffer, NULL ,nsamples,mp3buf,mp3buf_size);
+    return lame_encode_buffer ( gfp,(sample_t*)buffer, NULL ,nsamples,mp3buf,mp3buf_size);
   }
 
   if (gfc->resample_ratio!=1)  {
-    short int *buffer_l;
-    short int *buffer_r;
-    buffer_l=malloc(sizeof(short int)*nsamples);
-    buffer_r=malloc(sizeof(short int)*nsamples);
+    sample_t *buffer_l;
+    sample_t *buffer_r;
+    
+    buffer_l=malloc(sizeof(sample_t)*nsamples);
+    buffer_r=malloc(sizeof(sample_t)*nsamples);
     if (buffer_l == NULL || buffer_r == NULL) {
       return -2;
     }
@@ -1362,7 +1377,13 @@ int lame_encode_buffer_interleaved(lame_global_flags *gfp,
 
 
 /* old LAME interface.  use lame_encode_buffer instead */
-int lame_encode(lame_global_flags *gfp, short int in_buffer[2][1152],char *mp3buf,int size){
+
+int    lame_encode (
+                lame_global_flags* gfp,
+                sample_t           in_buffer [2] [1152],
+                char*              mp3buf,
+                int                size )
+{
   int imp3;
   lame_internal_flags *gfc=gfp->internal_flags;
   if (!gfc->lame_init_params_init) return -3;
@@ -1374,10 +1395,14 @@ int lame_encode(lame_global_flags *gfp, short int in_buffer[2][1152],char *mp3bu
 /*****************************************************************/
 /* flush internal mp3 buffers,                                   */
 /*****************************************************************/
-int lame_encode_finish(lame_global_flags *gfp,char *mp3buffer, int mp3buffer_size)
+
+int    lame_encode_finish (
+                lame_global_flags* gfp,
+                char*              mp3buffer,
+                int                mp3buffer_size )
 {
   int imp3=0,mp3count,mp3buffer_size_remaining;
-  short int buffer[2][1152];
+  sample_t buffer[2][1152];
   lame_internal_flags *gfc=gfp->internal_flags;
 
   memset((char *)buffer,0,sizeof(buffer));
@@ -1661,7 +1686,7 @@ int lame_init(lame_global_flags *gfp)
   memset(&gfc->bs, 0, sizeof(Bit_stream_struc));
   memset(&gfc->l3_side,0x00,sizeof(III_side_info_t));
 
-  memset((char *) gfc->mfbuf, 0, sizeof(short)*2*MFSIZE);
+  memset((char *) gfc->mfbuf, 0, sizeof(sample_t)*2*MFSIZE);
 
   /* The reason for
    *       int mf_samples_to_encode = ENCDELAY + 288;
@@ -1678,5 +1703,3 @@ int lame_init(lame_global_flags *gfp)
 
   return 0;
 }
-
-

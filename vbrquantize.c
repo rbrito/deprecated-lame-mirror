@@ -266,7 +266,7 @@ int scalefac[SBPSY_s][3],unsigned int sbg[3])
     maxsf1 = Max(maxsf1-maxrange1*ifqstep,maxsf2-maxrange2*ifqstep);
     sbg[i]=0;
     if (minsf >0 ) sbg[i] = floor(.125*minsf + .001);
-    if (maxsf1 > 0)  sbg[i]  = Max((int)sbg[i],maxsf1/8 + (maxsf1 % 8 != 0));
+    if (maxsf1 > 0)  sbg[i]  = Max(sbg[i],maxsf1/8 + (maxsf1 % 8 != 0));
     if (sbg[i] > 7) sbg[i]=7;
 
 
@@ -559,8 +559,8 @@ VBR_noise_shaping
     {
       /* adjust global_gain so at least 1 subblock gain = 0 */
       int minsfb=999;
-      for (i=0; i<3; i++) minsfb = Min(minsfb,(int)cod_info->subblock_gain[i]);
-      minsfb = Min((int)cod_info->global_gain/8,minsfb);
+      for (i=0; i<3; i++) minsfb = Min(minsfb,cod_info->subblock_gain[i]);
+      minsfb = Min(cod_info->global_gain/8,minsfb);
       vbrmax -= 8*minsfb; 
       cod_info->global_gain -= 8*minsfb;
       for (i=0; i<3; i++) cod_info->subblock_gain[i] -= minsfb;
@@ -682,7 +682,7 @@ VBR_noise_shaping
 
 
 
-  if (cod_info->part2_3_length < (u_int)minbits) {
+  if (cod_info->part2_3_length < minbits) {
     /* decrease global gain, recompute scale factors */
     if (digital_silence) break;  
     //    if (cod_info->part2_3_length-cod_info->part2_length== 0) break;
@@ -696,11 +696,11 @@ VBR_noise_shaping
     memcpy(xr34, xr34orig, sizeof(xr34));
   }
 
-  } while ((cod_info->part2_3_length < (u_int)minbits));
+  } while ((cod_info->part2_3_length < minbits));
 
 
 
-  while (cod_info->part2_3_length > (u_int)Min(maxbits,4095)) {
+  while (cod_info->part2_3_length > Min(maxbits,4095)) {
     /* increase global gain, keep exisiting scale factors */
     ++cod_info->global_gain;
     if (cod_info->global_gain > 255) 
@@ -879,7 +879,7 @@ VBR_quantize(lame_global_flags *gfp,
         
         /* ENCODE this data first pass, and on future passes unless it uses
          * a very small percentage of the max_frame_bits  */
-        if (cod_info->part2_3_length >(u_int)(max_frame_bits/(2*gfc->stereo*gfc->mode_gr))) {
+        if (cod_info->part2_3_length > (max_frame_bits/(2*gfc->stereo*gfc->mode_gr))) {
   
           shortblock = (cod_info->block_type == SHORT_TYPE);
   

@@ -24,7 +24,7 @@ const char  slen2_tab [16] = { 0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3 };
 
   [table_number][row_in_table][column of nr_of_sfb]
 */
-const unsigned int  nr_of_sfb_block [6] [3] [4] =
+const int  nr_of_sfb_block [6] [3] [4] =
 {
   {
     {6, 5, 5, 5},

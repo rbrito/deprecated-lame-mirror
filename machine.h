@@ -46,6 +46,11 @@
 #endif
 
 
+typedef signed short int  sample_t;
+typedef sample_t          stereo_t [2];
+
+
+
 
 /* three different types of pow() functions:
    1. table lookup
