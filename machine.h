@@ -110,10 +110,6 @@ typedef double FLOAT8;
 	typedef unsigned char	u_char;
 #endif
 
-#ifdef __CYGWIN__
-#include <io.h>
-#endif
-
 
 
 

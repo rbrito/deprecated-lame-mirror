@@ -8,6 +8,13 @@
 
 #if (defined LIBSNDFILE || defined LAMESNDFILE)
 
+#ifdef _WIN32
+/* needed for set stdin to binary on windoze machines */
+#include <io.h>
+#endif
+
+
+
 static FILE *musicin=NULL;  /* input file pointer */
 static unsigned long num_samples;
 static int samp_freq;
