@@ -966,14 +966,13 @@ scale_bitcount(gr_info * const gi)
 	}
     }
 
-    s1 = (char)gi->scalefac[0];
-    for (sfb = 1; sfb < gi->sfbdivide; sfb++)
-	if (s1 < (char)gi->scalefac[sfb])
-	    s1 = (char)gi->scalefac[sfb];
-    s2 = (char)gi->scalefac[sfb++];
+    s1 = s2 = 0;
+    for (sfb = 0; sfb < gi->sfbdivide; sfb++)
+	if (s1 < (signed char)gi->scalefac[sfb])
+	    s1 = (signed char)gi->scalefac[sfb];
     for (; sfb < gi->sfbmax; sfb++)
-	if (s2 < (char)gi->scalefac[sfb])
-	    s2 = (char)gi->scalefac[sfb];
+	if (s2 < (signed char)gi->scalefac[sfb])
+	    s2 = (signed char)gi->scalefac[sfb];
     s1 = log2tab[s1];
     s2 = log2tab[s2];
 
