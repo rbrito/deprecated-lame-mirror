@@ -343,6 +343,10 @@ typedef struct  {
 } lame_internal_flags;
 
 // why was lame_internal_flags renamed context?
+// this is a cosmetic change.  it causes me no end of grief
+// and is in volation of the rules in STYLEGUIDE.  
+// If you want to make a massive change like this that
+// effects every file, run it by the maintainer first.
 //  
 //typedef lame_internal_flags context;
 
