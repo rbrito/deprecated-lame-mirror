@@ -284,6 +284,8 @@ static int apply_preset(lame_global_flags*  gfp, int bitrate, vbr_mode mode)
 	int lowpass = switch_map[r].lowpass;
 	if (gfp->quality > 7)
 	    lowpass *= 0.9;
+	if (gfp->mode == MONO)
+	    lowpass *= 1.5;
 	lame_set_lowpassfreq(gfp, lowpass);
     }
 
@@ -576,9 +578,6 @@ lame_init_params(lame_global_flags * const gfp)
     init_bit_stream_w(gfp);
 
     gfc->Class_ID = LAME_ID;
-
-    if (gfp->quality < 0)
-	gfp->quality = LAME_DEFAULT_QUALITY;
 
     if (gfp->VBR == vbr && gfp->quality != 5) {
 	gfp->quality = 5;
@@ -1487,8 +1486,6 @@ lame_init_old(lame_global_flags * gfp)
      * best value, UNLESS the calling program as set it
      * (and the value is no longer -1)
      */
-
-
     gfp->mode = NOT_SET;
     gfp->original = 1;
     gfp->in_samplerate = 1000 * 44.1;
@@ -1496,7 +1493,7 @@ lame_init_old(lame_global_flags * gfp)
     gfp->num_samples = MAX_U_32_NUM;
 
     gfp->bWriteVbrTag = 1;
-    gfp->quality = -1;
+    gfp->quality = LAME_DEFAULT_QUALITY;
 
     gfp->lowpassfreq = 0;
     gfp->highpassfreq = 0;
