@@ -363,6 +363,8 @@ struct lame_internal_flags {
 			       1 = use substep shaping at last step(VBR only)
 			           (not implemented yet)
 			       2 = use substep inside loop
+			       3 = use substep inside loop and last step
+			           (not implemented yet, same as 2)
 			    */
 
   int psymodel;             /* 1 = gpsycho. 0 = none */

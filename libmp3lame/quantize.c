@@ -73,7 +73,7 @@ init_xrpow(
 {
     FLOAT8 tmp, sum = 0;
     int i;
-    memset(&gfc->pseudohalf, 0, sizeof(gfc->pseudohalf));
+
     assert( xrpow != NULL );
     
     /*  check if there is some energy we have to quantize
@@ -86,8 +86,16 @@ init_xrpow(
     }
     /*  return 1 if we have something to quantize, else 0
      */
-    if (sum > (FLOAT8)1E-20)
-      return 1;
+    if (sum > (FLOAT8)1E-20) {
+	int j = 0;
+	if (gfc->substep_shaping & 2)
+	    j = 1;
+
+	for (i = 0; i < cod_info->psymax; i++)
+	    gfc->pseudohalf[i] = j;
+
+	return 1;
+    }
 
     memset(&cod_info->l3_enc, 0, sizeof(int)*576);
     return 0;
@@ -536,7 +544,7 @@ amp_scalefac_bands(
 	if (distort[sfb] < trigger)
 	    continue;
 
-	if (gfc->substep_shaping == 2) {
+	if (gfc->substep_shaping & 2) {
 	    gfc->pseudohalf[sfb] = !gfc->pseudohalf[sfb];
 	    if (!gfc->pseudohalf[sfb] && gfc->noise_shaping_amp==2)
 		return;

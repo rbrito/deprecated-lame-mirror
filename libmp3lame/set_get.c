@@ -1291,7 +1291,7 @@ int
 lame_get_substep(const lame_global_flags*  gfp )
 {
     lame_internal_flags *gfc = gfp->internal_flags;
-    assert(0 <= gfc->substep_shaping && gfc->substep_shaping <= 2);
+    assert(0 <= gfc->substep_shaping && gfc->substep_shaping <= 3);
     return gfc->substep_shaping;
 }
 
