@@ -28,7 +28,7 @@
 
 
 
-int apply_abr_preset(lame_global_flags*  gfp, int preset)
+static int apply_abr_preset(lame_global_flags*  gfp, int preset)
 {
     int k; 
 
@@ -221,6 +221,14 @@ int apply_preset(lame_global_flags*  gfp, int preset)
 
 
     return preset;
+}
+
+
+
+int
+lame_set_preset( lame_global_flags*  gfp, int preset )
+{
+    return apply_preset(gfp, preset);
 }
 
 

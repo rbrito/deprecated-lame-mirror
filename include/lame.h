@@ -417,6 +417,9 @@ int CDECL lame_get_substep(const lame_global_flags *);
 int CDECL lame_set_no_short_blocks(lame_global_flags *, int);
 int CDECL lame_get_no_short_blocks(const lame_global_flags *);
 
+// use mixed blocks
+int CDECL lame_set_use_mixed_blocks(lame_global_flags *, int);
+
 // force short blocks
 int CDECL lame_set_force_short_blocks(lame_global_flags *, int);
 int CDECL lame_get_force_short_blocks(const lame_global_flags *);

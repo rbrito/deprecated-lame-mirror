@@ -267,8 +267,7 @@ int  lame_encode_mp3_frame (				// Output
   chgrdata pe,pe_MS;
   chgrdata *pe_use;
 
-  int ch,gr,mean_bits;
-  int bitsPerFrame;
+  int ch,gr;
 
   int check_ms_stereo;
   FLOAT8 ms_ratio_next = 0.;
@@ -442,10 +441,16 @@ int  lame_encode_mp3_frame (				// Output
 
   /* block type flags */
   for( gr = 0; gr < gfc->mode_gr; gr++ ) {
-    for ( ch = 0; ch < gfc->channels_out; ch++ ) {
-      gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
-      cod_info->mixed_block_flag = 0;     /* never used by this model */
-    }
+      for ( ch = 0; ch < gfc->channels_out; ch++ ) {
+	  gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
+	  cod_info->mixed_block_flag = 0;
+	  if (gfp->mixed_blocks == 1 && cod_info->block_type != NORM_TYPE)
+	      cod_info->mixed_block_flag = 1;
+	  if (gfp->mixed_blocks == 2 && cod_info->block_type < 0) {
+	      cod_info->mixed_block_flag = 1;
+	      cod_info->block_type = -cod_info->block_type;
+	  }
+      }
   }
 
 
@@ -608,9 +613,7 @@ int  lame_encode_mp3_frame (				// Output
   }
 
   /*  write the frame to the bitstream  */
-  getframebits(gfp, &bitsPerFrame, &mean_bits);
-
-  format_bitstream( gfp, bitsPerFrame);
+  format_bitstream(gfp);
 
   /* copy mp3 bit buffer into array */
   mp3count = copy_buffer(gfc,mp3buf,mp3buf_size,1);

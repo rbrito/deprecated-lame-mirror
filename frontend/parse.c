@@ -470,6 +470,7 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "  PSY related:\n"
               "    --short         use short blocks when appropriate\n"
               "    --noshort       do not use short blocks\n"
+              "    --mixedblock    use mixed blocks\n"
               "    --allshort      use only short blocks\n"
               "    --cwlimit <freq>  compute tonality up to freq (in kHz) default 8.8717\n"
 #if 0
@@ -1320,6 +1321,9 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     
                 T_ELIF ("noshort")
                     (void) lame_set_no_short_blocks( gfp, 1 );
+                
+                T_ELIF ("mixedblock")
+                    (void) lame_set_use_mixed_blocks( gfp, 1 );
                 
                 T_ELIF ("short")
                     (void) lame_set_no_short_blocks( gfp, 0 );
