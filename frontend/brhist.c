@@ -61,7 +61,9 @@ char *strchr (), *strrchr ();
 # include <termcap.h>
 #elif defined(HAVE_TERMCAP)
 # include <curses.h>
-# include <term.h>
+# if !defined(__bsdi__)
+#  include <term.h>
+# endif
 #endif
 
 #include "brhist.h"
