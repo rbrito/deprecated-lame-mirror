@@ -160,7 +160,7 @@ int apply_preset(lame_global_flags*  gfp, int preset)
 	lame_set_VBR_q(gfp, 3);
 	lame_set_experimentalY(gfp, 1);
 	lame_set_substep(gfp, 1);
-	lame_set_interChRatio(0.0005);
+	lame_set_interChRatio(gfp, 0.0005);
 
 	return preset;
     }
@@ -177,6 +177,7 @@ int apply_preset(lame_global_flags*  gfp, int preset)
 	lame_set_VBR_q(gfp, 3);
 	lame_set_experimentalY(gfp, 1);
 	lame_set_substep( gfp, 1 );
+	lame_set_interChRatio(gfp, 0.0005);
 
 	return preset;
     }
