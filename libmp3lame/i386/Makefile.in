@@ -108,8 +108,7 @@ DEFS = @DEFS@ @CONFIG_DEFS@
 nasm_sources = \
 	choose_table.nas \
 	cpu_feat.nas \
-	fft3dn.nas \
-	scalar.nas
+	fft3dn.nas
 
 
 @HAVE_NASM_TRUE@noinst_LTLIBRARIES = liblameasmroutines.la
@@ -117,8 +116,7 @@ nasm_sources = \
 @HAVE_NASM_TRUE@am_liblameasmroutines_la_OBJECTS = \
 @HAVE_NASM_TRUE@	choose_table$U.lo \
 @HAVE_NASM_TRUE@	cpu_feat$U.lo \
-@HAVE_NASM_TRUE@	fft3dn$U.lo \
-@HAVE_NASM_TRUE@	scalar$U.lo
+@HAVE_NASM_TRUE@	fft3dn$U.lo
 
 
 noinst_HEADERS = nasm.h
@@ -133,9 +131,7 @@ CLEANFILES = \
 	cpu_feat.o.lst \
 	cpu_feat.lo.lst \
 	fft3dn.o.lst \
-	fft3dn.lo.lst \
-	scalar.o.lst \
-	scalar.lo.lst
+	fft3dn.lo.lst
 
 
 EXTRA_DIST = \
