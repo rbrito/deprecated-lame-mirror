@@ -105,12 +105,9 @@ ResvFrameBegin(lame_global_flags *gfp, int *mean_bits)
 {
     lame_internal_flags *gfc=gfp->internal_flags;
     III_side_info_t     *l3_side = &gfc->l3_side;
-    int fullFrameBits, resvLimit, frameLength = getframebits(gfp);
+    int fullFrameBits, frameLength = getframebits(gfp);
 /*
  *  Meaning of the variables:
- *      resvLimit: (0, 8, ..., 8*255 (MPEG-2), 8*511 (MPEG-1))
- *          Number of bits can be stored in previous frame(s) due to 
- *          counter size constaints
  *      maxmp3buf: ( ??? ... 8*1951 (MPEG-1 and 2), 8*2047 (MPEG-2.5))
  *          Number of bits allowed to encode one frame (you can take 8*511 bit 
  *          from the bit reservoir and at most 8*1440 bit from the current 
@@ -135,9 +132,8 @@ ResvFrameBegin(lame_global_flags *gfp, int *mean_bits)
     *mean_bits = frameLength - l3_side->sideinfo_len * 8;
     l3_side->ResvMax = l3_side->maxmp3buf - frameLength;
     /* main_data_begin has 9 bits in MPEG-1, 8 bits MPEG-2 */
-    resvLimit = (8*256)*gfc->mode_gr-8;
-    if (l3_side->ResvMax > resvLimit)
-	l3_side->ResvMax = resvLimit;
+    if (l3_side->ResvMax > (8*256)*gfc->mode_gr-8)
+	l3_side->ResvMax = (8*256)*gfc->mode_gr-8;
     if (l3_side->ResvMax < 0)
 	l3_side->ResvMax = 0;
     assert ( 0 == l3_side->ResvMax % 8 );
