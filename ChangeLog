@@ -8,6 +8,220 @@
 
 -- 
 
+2001-07-05 15:27  markt
+
+	* libmp3lame/version.h:
+
+	updated to 3.89beta
+	
+2001-07-02 21:45  robert
+
+	* libmp3lame/quantize.c:
+
+	bug fix for --nspsytune
+	minimum bits allocated was too low, resulting in assertion failures
+	
+2001-07-02 21:08  robert
+
+	* libmp3lame/lame.c:
+
+	changing --vbr-new noise measuring back to its usual one
+	
+2001-07-01 20:36  markt
+
+	* libmp3lame/psymodel.c:
+
+	unbreak CBR testcases.
+	
+2001-07-01 20:04  markt
+
+	* frontend/: get_audio.c, main.h, parse.c:
+
+	patch from Nick Duffek <nsd@bosbc.com>
+	for signed/unsigned and bitwidth options.
+	
+2001-07-01 16:48  robert
+
+	* libmp3lame/lame.c:
+
+	defaulting --vbr-mtrh to -q2 = -h
+	
+2001-07-01 13:11  robert
+
+	* libmp3lame/lame.c:
+
+	allow --vbr-{old,new} to select between different ATH autoadjust types too
+	
+2001-07-01 11:50  robert
+
+	* libmp3lame/: lame.c, set_get.c:
+
+	nspsytune related:
+	now it is possible to turn the scalefac_feature off again giving
+	--nspsytune -Z
+	the change was necessary, because of the hard coded -Z
+	
+2001-07-01 05:24  jd-
+
+	* libmp3lame/: encoder.c, lame.c, psymodel.c, util.h:
+
+	Restructured ATH auto-leveling code to fix bug for "--adapt-thres-type 1";
+	relaxed tuning for "--adapt-thres-type 2" for compromise with "--athtype 3"
+	(the previous bit rate is still available with "--adapt-thres-level -1.25")
+	
+2001-06-30 16:45  robert
+
+	* Makefile.MSVC:
+
+	fix for compiling mp3x on windows using Makefile.MSVC
+	
+2001-06-30 16:40  robert
+
+	* frontend/parse.c:
+
+	fix for compiling mp3x on windows using Makefile.MSVC
+	
+2001-06-30 00:26  robert
+
+	* frontend/parse.c, libmp3lame/lame.c, libmp3lame/psymodel.c,
+	libmp3lame/util.h, libmp3lame/vbrquantize.c:
+
+	2 new modes for --vbr-mtrh available by different -q n selections:
+	-q0 truely max noise
+	-q1 almost max noise
+	
+2001-06-29 20:58  robert
+
+	* libmp3lame/set_get.c:
+
+	revive --nssafejoint --ns-{alto,treble,bass}
+	lame_set_exp_nspsytune is *not an on/off switch*
+	
+2001-06-29 15:23  markt
+
+	* configure, configure.in, libmp3lame/lame.c:
+
+	patch for configure.in, replaced a bash specific loop,
+	from Oswald Buddenhagen <ob6@inf.tu-dresden.de>
+	
+2001-06-27 15:47  aleidinger
+
+	* configure:
+
+	regen
+	
+2001-06-27 15:46  aleidinger
+
+	* configure.in:
+
+	some hardware specific optimization options for gcc
+	
+2001-06-27 14:53  aleidinger
+
+	* libmp3lame/i386/Makefile.in:
+
+	regen
+	
+2001-06-27 14:53  aleidinger
+
+	* libmp3lame/i386/Makefile.am:
+
+	this is nasty, I want native nasm support in libtool, at least it works for me (sort of)
+	
+2001-06-27 14:11  aleidinger
+
+	* libmp3lame/: Makefile.in, i386/Makefile.in:
+
+	regen
+	
+2001-06-27 14:11  aleidinger
+
+	* libmp3lame/: Makefile.am, i386/Makefile.am:
+
+	go back to let libtool compile liblameasmroutines, the static case was broken, now the libtool v1.4 case may be broken
+	
+2001-06-26 11:38  aleidinger
+
+	* configure:
+
+	regen
+	
+2001-06-26 11:36  aleidinger
+
+	* configure.in:
+
+	make the use of nasm a configure option
+	
+2001-06-25 02:14  cisc
+
+	* frontend/main.c:
+
+	Include portableio.h for the WriteBytes() and WriteBytesSwapped() functions.
+	
+2001-06-24 21:01  robert
+
+	* lame.bat:
+
+	some comments updated
+	
+2001-06-24 16:47  robert
+
+	* doc/html/contributors.html, libmp3lame/version.h:
+
+	adding two more contributors
+	
+2001-06-24 15:58  robert
+
+	* Makefile.MSVC:
+
+	FLOAT8=float for IC
+	
+2001-06-24 15:57  robert
+
+	* Makefile.B32:
+
+	let it work again
+	
+2001-06-24 02:04  robert
+
+	* libmp3lame/: quantize.c, quantize.h, quantize_pvt.h, takehiro.c,
+	vbrquantize.c:
+
+	BUG fix in inc_subblock gain, was amplifying at the wrong place
+	this fix  may break the testcases
+	some unused parameters removed
+	
+2001-06-23 18:26  robert
+
+	* Dll/MP3EncDll.dsp:
+
+	patch for DLL Project file by Dmitry
+	
+2001-06-23 17:56  robert
+
+	* frontend/lametime.c, frontend/parse.c, mpglib/common.c,
+	Makefile.MSVC:
+
+	some fixes needed by the Borland Compiler BCC, first attempt to support BCC with Makefile.MSVC, DLL not supported yet, MP1 MP2 reencoding does not work with BCCcd lame (why?)
+	
+2001-06-23 12:19  robert
+
+	* libmp3lame/quantize_pvt.c:
+
+	fix letting Borland C++ compiler getting thru' again, Makefile.B32 is *not uptodate*
+	
+2001-06-23 12:15  robert
+
+	* frontend/get_audio.c:
+
+	BUG fix for mp1 and mp2 input, fixes problem introduced in Revision 1.63
+	
+2001-06-22 08:55  aleidinger
+
+	* ChangeLog:
+
+	update changelog
+	
 2001-06-22 08:49  aleidinger
 
 	* Makefile.am:
@@ -2688,6 +2902,12 @@
 	updated test case
 	(Takehiro fixed a bug which I introduced, which changes test cases).
 	
+2001-01-14 17:28  aleidinger
+
+	* analyzer/.cvsignore:
+
+	obsolete
+	
 2001-01-14 17:25  aleidinger
 
 	* DEFINES, Makefile.in, aclocal.m4, config.guess, config.sub,
@@ -4984,6 +5204,14 @@
 
 	data encapsulating Naoki's psymode
 	
+2000-10-29 12:54  aleidinger
+
+	* analyzer/: Makefile.in, Makefile.in.old, README.Win32,
+	gpkplotting.c, gpkplotting.h, gtkanal.c, gtkanal.h, mp3x.c,
+	mp3x.dsp, mp3x.dsw:
+
+	they life now in frontend/...
+	
 2000-10-29 12:52  aleidinger
 
 	* .cvsignore:
@@ -5566,6 +5794,12 @@
 
 	Fixed histgramming display for Win32, added fflush
 	
+2000-10-20 21:11  afaber
+
+	* analyzer/: .cvsignore, README.Win32, README.Win32~:
+
+	Small fixes to the Win32 installation instructions, Added Win32 type to the .cvsignore file
+	
 2000-10-20 20:50  afaber
 
 	* frontend/: brhist.c, brhist.h:
@@ -5599,13 +5833,20 @@
 	
 2000-10-18 17:34  robert
 
-	* libmp3lame/lame-analysis.h:
+	* analyzer/mp3x.c, libmp3lame/lame-analysis.h:
 
 	no way to disable analysis for lame-lib
 	
+2000-10-18 17:04  robert
+
+	* analyzer/gtkanal.h:
+
+	first commit
+	
 2000-10-18 16:47  robert
 
-	* libmp3lame/lame-analysis.h, mpglib/layer3.c, mpglib/mpglib.h:
+	* analyzer/gtkanal.c, analyzer/mp3x.c, libmp3lame/lame-analysis.h,
+	mpglib/layer3.c, mpglib/mpglib.h:
 
 	fixed some ambiguities
 	define NOANALYSIS as suggested in INSTALL if you don't want
@@ -5666,8 +5907,8 @@
 	
 2000-10-16 19:55  florian
 
-	* Makefile.in, configure, configure.in, libmp3lame/Makefile.in,
-	libmp3lame/lame.c, mpglib/Makefile.in:
+	* Makefile.in, configure, configure.in, analyzer/Makefile.in,
+	libmp3lame/Makefile.in, libmp3lame/lame.c, mpglib/Makefile.in:
 
 	integrated Alexanders patch, minor bug fixes
 	
@@ -5716,7 +5957,7 @@
 	
 2000-10-16 02:12  markt
 
-	* API, Makefile.in, configure, configure.in:
+	* API, Makefile.in, configure, configure.in, analyzer/mp3x.c:
 
 	broken frame analyzer fixed - -DANALYSIS was missing from default
 	library build
@@ -5892,7 +6133,7 @@
 2000-10-13 05:17  florian
 
 	* Makefile.in, Makefile.in.old, configure, configure.in,
-	configure.in.old:
+	configure.in.old, analyzer/Makefile.in, analyzer/Makefile.in.old:
 
 	prepare for automake: new vars, system dependent checks to configure.in
 	
@@ -5976,6 +6217,12 @@
 	solution: two new functions splitting lame_encode_finish()
 	          into lame_encode_flush() and lame_close()
 	
+2000-10-11 01:03  florian
+
+	* analyzer/.cvsignore:
+
+	[no log message]
+	
 2000-10-10 23:18  pfk
 
 	* libmp3lame/util.c:
@@ -6033,7 +6280,9 @@
 	
 2000-10-09 19:55  markt
 
-	* TODO, frontend/timestatus.c, include/lame.h:
+	* TODO, analyzer/Makefile.in, analyzer/gpkplotting.c,
+	analyzer/gtkanal.c, analyzer/mp3x.c, frontend/timestatus.c,
+	include/lame.h:
 
 	generic cleanup
 	
@@ -6059,7 +6308,11 @@
 2000-10-09 16:23  markt
 
 	* Makefile.in, Makefile.unix, aclocal.m4, configure, configure.in,
-	frontend/Makefile.in, frontend/main.h, libmp3lame/lame-analysis.h:
+	analyzer/Makefile.in, analyzer/README.Win32,
+	analyzer/README.Win32~, analyzer/gpkplotting.c,
+	analyzer/gpkplotting.h, analyzer/gtkanal.c, analyzer/mp3x.c,
+	analyzer/mp3x.dsp, analyzer/mp3x.dsw, frontend/Makefile.in,
+	frontend/main.h, libmp3lame/lame-analysis.h:
 
 	moved mp3x -> analyzer (name was clashing with executable name)
 	work on configure to get mp3x to compile (not yet done)
@@ -13583,7 +13836,8 @@
 	mpglib/main.c, mpglib/mpglib.dsp, mpglib/mpg123.h, mpglib/mpglib.h,
 	mpglib/tabinit.c:
 
-	Initial revision
+	initial checkin of LAME
+	Starting with LAME 3.57beta with some modifications
 	
 1999-11-24 08:43  markt
 
@@ -13602,20 +13856,6 @@
 	mpglib/main.c, mpglib/mpglib.dsp, mpglib/mpg123.h, mpglib/mpglib.h,
 	mpglib/tabinit.c:
 
-	initial checkin of LAME
-	Starting with LAME 3.57beta with some modifications
-	
-1999-11-24 08:40  markt
-
-	* COPYING, INSTALL, Makefile, Makefile.MSVC, tables.c, util.c,
-	README, README.WINGTK, TODO, USAGE, fft.c, VbrTag.c, VbrTag.h,
-	auenc, fft.h, psymodel.c, lame.dsp, util.h, formatBitstream.c,
-	formatBitstream.h, get_audio.c, lame.c, get_audio.h, globalflags.h,
-	gpkplotting.c, gpkplotting.h, gtkanal.c, gtkanal.h, quantize.c,
-	version.h, newmdct.c, id3tag.c, id3tag.h, ieeefloat.c, ieeefloat.h,
-	l3bitstream-pvt.h, l3bitstream.c, l3bitstream.h, LICENSE, l3side.h,
-	lame.dsw, quantize-pvt.c, lame.h, psymodel.h:
-
 	Initial revision
 	
 1999-11-24 08:40  markt
@@ -13631,4 +13871,17 @@
 
 	initial checkin of LAME
 	Starting with LAME 3.57beta with some modifications
+	
+1999-11-24 08:40  markt
+
+	* COPYING, INSTALL, Makefile, Makefile.MSVC, tables.c, util.c,
+	README, README.WINGTK, TODO, USAGE, fft.c, VbrTag.c, VbrTag.h,
+	auenc, fft.h, psymodel.c, lame.dsp, util.h, formatBitstream.c,
+	formatBitstream.h, get_audio.c, lame.c, get_audio.h, globalflags.h,
+	gpkplotting.c, gpkplotting.h, gtkanal.c, gtkanal.h, quantize.c,
+	version.h, newmdct.c, id3tag.c, id3tag.h, ieeefloat.c, ieeefloat.h,
+	l3bitstream-pvt.h, l3bitstream.c, l3bitstream.h, LICENSE, l3side.h,
+	lame.dsw, quantize-pvt.c, lame.h, psymodel.h:
+
+	Initial revision
 	
