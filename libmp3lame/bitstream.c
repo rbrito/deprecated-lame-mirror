@@ -795,12 +795,14 @@ void
 flush_bitstream(lame_global_flags *gfp)
 {
   lame_internal_flags *gfc=gfp->internal_flags;
+  III_side_info_t *l3_side;
   int flushbits;
   int bitsPerFrame, mean_bits;
   int last_ptr,first_ptr;
   first_ptr=gfc->w_ptr;           /* first header to add to bitstream */
   last_ptr = gfc->h_ptr - 1;   /* last header to add to bitstream */
   if (last_ptr==-1) last_ptr=MAX_HEADER_BUF-1;   
+  l3_side = &gfc->l3_side;
 
   if ((flushbits = compute_flushbits(gfp)) < 0) return;  
   drain_into_ancillary(gfp,flushbits);
@@ -812,6 +814,7 @@ flush_bitstream(lame_global_flags *gfp)
   /* we have padded out all frames with ancillary data, which is the
      same as filling the bitreservoir with ancillary data, so : */
   gfc->ResvSize=0;
+  l3_side->main_data_begin = 0;
 
 }
 

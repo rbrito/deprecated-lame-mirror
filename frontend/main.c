@@ -313,6 +313,26 @@ int main(int argc, char **argv)
 	  fprintf(stderr,"Error writing mp3 output \n");
 	  return 1;
 	}
+
+
+#undef NOGAPTEST
+#ifdef NOGAPTEST
+	if (lame_get_frameNum(gf)==100) {
+            fprintf(stderr,"calling flush nogap \n");
+	    imp3=lame_encode_flush_nogap(gf,mp3buffer,sizeof(mp3buffer));   /* may return one more mp3 frame */
+	    if (imp3<0) {
+		if (imp3==-1) fprintf(stderr,"mp3 buffer is not big enough... \n");
+		else fprintf(stderr,"mp3 internal error:  error code=%i\n",imp3);
+		return 1;
+		
+	    }
+	    fwrite(mp3buffer,1,imp3,outf); 
+	    fclose(outf);
+            outf=fopen("nogap2.mp3", "wb+");
+	}
+#endif
+
+
       } while (iread);
       imp3=lame_encode_flush(gf,mp3buffer,sizeof(mp3buffer));   /* may return one more mp3 frame */
       if (imp3<0) {
