@@ -204,7 +204,7 @@ gtkmakeframe(void)
 	    /* decoded output is for frame pinfo->frameNum123
 	     * add a delay of framesize-DECDELAY, which will make
 	     * the total delay exactly one frame */
-	    pinfo->frameNum123=pinfo->frameNum-mpglag;
+	    pinfo->frameNum123=pinfo->frameNum-mpglag+1;
 	    for (ch = 0; ch < pinfo->channels; ch++) {
 		for (j = 0; j < framesize-DECDELAY; j++)
 		    pinfo->pcmdata2[ch][j] = pinfo->pcmdata2[ch][j+framesize];
@@ -845,7 +845,7 @@ static int frameadv1(GtkWidget *widget, gpointer   data )
       } else {
 	/* read in the next frame */
 	for (i=NUMPINFO-1 ; i>0 ; i--)
-	  memcpy(&Pinfo[i],&Pinfo[i-1],sizeof(plotting_data));
+	    Pinfo[i] = Pinfo[i-1];
 	pinfo = &Pinfo[0];
 	pinfo->num_samples = gtkmakeframe();
 	if (pinfo->num_samples==0 && gtkinfo.totalframes==0) 
@@ -934,8 +934,8 @@ static void delete_event( GtkWidget *widget,
                    GdkEvent  *event,
 		   gpointer   data )
 {
-	/* set MP3 done flag in case the File/Quit menu item has been selected */
-	mp3done=1;
+    /* set MP3 done flag in case the File/Quit menu item has been selected */
+    mp3done=1;
 
     gtk_main_quit ();
 }
