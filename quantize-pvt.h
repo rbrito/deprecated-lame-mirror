@@ -7,7 +7,7 @@
 
 extern int convert_mdct, convert_psy, reduce_sidechannel;
 extern unsigned nr_of_sfb_block[6][3][4];
-extern int pretab[21];
+extern int pretab[22];
 extern const int slen1_tab[16];
 extern const int slen2_tab[16];
 
