@@ -8,10 +8,6 @@
 <META NAME="distribution" CONTENT="global">
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
 <LINK REL="STYLESHEET" HREF="lame.css">
-<LINK REL="next" HREF="node9.html">
-<LINK REL="previous" HREF="node7.html">
-<LINK REL="up" HREF="node5.html">
-<LINK REL="next" HREF="node9.html">
 </HEAD>
 <BODY TEXT=#000000
         BGCOLOR=#F9FBFB LINK=#006666 VLINK=#4C4C4C
@@ -38,6 +34,10 @@
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#-athonly">--athonly</a></kbd></td>
     <td align="LEFT" nowrap>ATH only</td>
+  </tr>
+  <tr valign="TOP"> 
+    <td align="LEFT" nowrap><kbd><a href="#-athtype">--athtype</a></kbd></td>
+    <td align="LEFT" nowrap>select ATH type</td>
   </tr>
   <tr valign="TOP"> 
     <td align="LEFT" nowrap><kbd><a href="#b">-b</a></kbd></td>
@@ -229,7 +229,7 @@
 </dl>
 <dl> 
   <dd>Turns on encoding with a targeted average bitrate of n kbits, allowing to 
-    use frames of different sizes. The allowed range of n is 4-310, you can use 
+    use frames of different sizes. The allowed range of n is 8-310, you can use 
     any integer value within that range.<br>
     <br>
     It can be combined with the -b and -B switches like<br>
@@ -269,6 +269,23 @@
   <dd>This option causes LAME to ignore the output of the psy-model and only use 
     masking from the ATH (absolute threshold of hearing). Might be useful at very 
     high bitrates or for testing the ATH. 
+</dl>
+<dl> 
+  <dd>&nbsp; 
+  <dt><br>
+  </dt>
+  <hr width="50%" noshade align="center">
+  <br>
+</dl>
+<dl> 
+  <dt><strong>* <kbd>--athtype 0/1/2</kbd><a name="-athtype">&nbsp;&nbsp;&nbsp;&nbsp;select ATH 
+    type</a></strong> </dt>
+</dl>
+<dl> 
+  <dd>The Absolute Threshold of Hearing is the minimum threshold under which humans are unable to hear any sound. In the past, LAME was using ATH shape 0 which is the Painter & Spanias formula. Tests have shown that this formula is innacurate for the 13-22kHz area, leading to audible artifacts in some cases. Shape 1 was thus implemented, which is over sensitive, leading to very high bitrates. Shape 2 formula was accurately modelized from real data in order to real optimal quality while not wasting bitrate. In CBR and ABR modes, LAME uses ATH shape 2 by default.
+<br>
+<br>
+In VBR mode, LAME is using shape 4 which adapts its shape according to the -V value, going from the 0 shape at -V9 up to shape 2 at -V0. Shape 4 is not available in CBR and ABR modes.
 </dl>
 <dl> 
   <dd>&nbsp; 

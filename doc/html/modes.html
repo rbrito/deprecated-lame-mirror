@@ -8,10 +8,6 @@
 <META NAME="distribution" CONTENT="global">
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso_8859_1">
 <LINK REL="STYLESHEET" HREF="lame.css">
-<LINK REL="next" HREF="node9.html">
-<LINK REL="previous" HREF="node7.html">
-<LINK REL="up" HREF="node5.html">
-<LINK REL="next" HREF="node9.html">
 </HEAD>
 <BODY TEXT=#000000
         BGCOLOR=#F9FBFB LINK=#006666 VLINK=#4C4C4C
@@ -30,13 +26,13 @@
   difficult one to encode or an easy one, the encoder will use the same bitrate, 
   so the quality of your mp3 is variable. Complex parts will be of a lower quality 
   than the easiest ones. The main advantage is that the final files size won't 
-  change and can easily be predicted.<br>
+  change and can be accurately predicted.<br>
   <br>
 </p>
 <h2>Average Bitrate (ABR)</h2>
 <p>In this mode, you choose the encoder will maintain an average bitrate while 
   using higher bitrates for the parts of your music that need more bits. The result 
-  will be of higher quality than CBR encoding, and this mode is highly recommended 
+  will be of higher quality than CBR encoding but the average file size will remain predictible, so this mode is highly recommended 
   over CBR. This encoding mode is similar to what is reffered as vbr in AAC or 
   Liquid Audio (2 other compression technologies).<br>
   <br>
@@ -45,9 +41,5 @@
 <p>In this mode, you choose the desired quality on a sqale from 9 (lowest quality/biggest 
   distortion) to 0 (highest quality/lowest distortion). Then encoder tries to 
   maintain the given quality in the whole file by choosing the optimal number 
-  of bits to spend for each part of your music. However, this mode heavily relies 
-  on the encoder psychoacoustic model and could lead to a few &quot;bad choices&quot; 
-  in the encoding process. You may want to specify a minimum bitrate (ex: -b 64) 
-  to avoid those potential errors.</p>
-</BODY>
+  of bits to spend for each part of your music.  The main advantage is that you are able to specify the quality level that you want to reach, but the inconvenient is that the final file size is totally unpredictible.</p></BODY>
 </HTML>

@@ -26,8 +26,8 @@ ABR is the type of variable bitrate encoding usually found in other
 MP3 encoders, Vorbis and AAC.  The number of bits is determined by
 some metric (like perceptual entropy, or just the number of bits
 needed for a certain set of encoding tables), and it is not based on
-computing the actual encoding/quantization error.  ABR is still in
-beta, but it should always give results equal or better than CBR:
+computing the actual encoding/quantization error.  ABR should always
+give results equal or better than CBR:
 
 ABR:   (--abr <x> means encode with an average bitrate of around x kbps)
 lame -h --abr 128  sample.wav sample.mp3
@@ -113,7 +113,7 @@ Variable Bit Rate (VBR)
 -b  n          specify a minimum allowed bitrate (8,16,24,...,320)
 -B  n          specify a maximum allowed bitrate (8,16,24,...,320)
 -F             strictly enforce minimum bitrate
--t             disable Xing VBR informational tag 
+-t             disable VBR informational tag 
 --nohist       disable display of VBR bitrate histogram
 
 --abr n        specify average bitrate desired
@@ -622,11 +622,11 @@ high bitrate encodings.
 
 
 =======================================================================
-disable Xing VBR tag
+disable VBR tag
 =======================================================================
 -t              
 
-Disable writing of the Xing VBR Tag (only valid if -v flag is
+Disable writing of the VBR Tag (only valid if -v flag is
 specified) This tag in embedded in frame 0 of the MP3 file.  It lets
 VBR aware players correctly seek and compute playing times of VBR
 files.
