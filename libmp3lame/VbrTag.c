@@ -43,11 +43,6 @@
 #include <unistd.h>
 #endif
 
-
-#ifdef _DEBUG
-/*  #define DEBUG_VBRTAG */
-#endif
-
 /*
  *    4 bytes for Header Tag
  *    4 bytes for Header Flags
@@ -67,8 +62,6 @@
 #define XING_BITRATE1 128
 #define XING_BITRATE2  64
 #define XING_BITRATE25 32
-
-
 
 static const char	VBRTag[]={"Xing"};
 static const char	VBRTag2[]={"Info"};
@@ -120,45 +113,113 @@ unsigned int crc16_lookup[256] =
 
 
 
+/*-------------------------------------------------------------*/
+static int ExtractI4(unsigned char *buf)
+{
+    int x;
+    /* big endian extract */
+    x = buf[0];
+    x <<= 8;
+    x |= buf[1];
+    x <<= 8;
+    x |= buf[2];
+    x <<= 8;
+    x |= buf[3];
+    return x;
+}
+
+int
+GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
+{
+    int	i, head_flags, h_bitrate,h_id, h_mode, h_sr_index;
+    int enc_delay, enc_padding; 
+
+    /* get selected MPEG header data */
+    h_id       = (buf[1] >> 3) & 1;
+    h_sr_index = (buf[2] >> 2) & 3;
+    h_mode     = (buf[3] >> 6) & 3;
+    h_bitrate  = ((buf[2]>>4)&0xf);
+    h_bitrate = bitrate_table[h_id][h_bitrate];
+
+    /* get Vbr header data */
+    pTagData->flags = 0;
+
+    /* check for FFE syncword */
+    if ((buf[1]>>4)==0xE) 
+	pTagData->samprate = samplerate_table[2][h_sr_index];
+    else
+	pTagData->samprate = samplerate_table[h_id][h_sr_index];
+
+    /*  determine offset of header */
+    if (h_id) {
+	/* mpeg1 */
+	if (h_mode != 3)	buf+=(32+4);
+	else				buf+=(17+4);
+    }
+    else
+    {
+	/* mpeg2 */
+	if (h_mode != 3) buf+=(17+4);
+	else             buf+=(9+4);
+    }
+
+    if (strncmp(buf, VBRTag, 4) && strncmp(buf, VBRTag2, 4))
+	return 0;
+    buf+=4;
+
+    pTagData->h_id = h_id;
+    head_flags = pTagData->flags = ExtractI4(buf); buf+=4;      /* get flags */
+
+    if (head_flags & FRAMES_FLAG)
+	pTagData->frames   = ExtractI4(buf); buf+=4;
+
+    if (head_flags & BYTES_FLAG)
+	pTagData->bytes = ExtractI4(buf); buf+=4;
+
+    if (head_flags & TOC_FLAG){
+	if(pTagData->toc)
+	{
+	    for(i=0;i<NUMTOCENTRIES;i++)
+		pTagData->toc[i] = buf[i];
+	}
+	buf+=NUMTOCENTRIES;
+    }
+
+    pTagData->vbr_scale = -1;
+
+    if (head_flags & VBR_SCALE_FLAG)
+	pTagData->vbr_scale = ExtractI4(buf); buf+=4;
+
+    pTagData->headersize = ((h_id+1)*72000*h_bitrate) / pTagData->samprate;
+
+    buf+=21;
+    enc_delay = buf[0] << 4;
+    enc_delay += buf[1] >> 4;
+    enc_padding= (buf[1] & 0x0F)<<8;
+    enc_padding += buf[2];
+    /* check for reasonable values (this may be an old Xing header, */
+    /* not a INFO tag) */
+    if (enc_delay<0 || enc_delay > 3000) enc_delay=-1;
+    if (enc_padding<0 || enc_padding > 3000) enc_padding=-1;
+
+    pTagData->enc_delay=enc_delay;
+    pTagData->enc_padding=enc_padding;
+
+    return 1;       /* success */
+}
+
+
 /***********************************************************************
  *  Robert Hegemann 2001-01-17
  ***********************************************************************/
-
-static void addVbr(VBR_seek_info_t * v, int bitrate)
-{
-    int i;
-
-    v->sum += bitrate;
-    v->seen ++;
-    
-    if (v->seen < v->want) {
-        return;
-    }
-
-    if (v->pos < v->size) {
-        v->bag[v->pos] = v->sum;
-        v->pos ++;
-        v->seen = 0;
-    }
-    if (v->pos == v->size) {
-        for (i = 1; i < v->size; i += 2) {
-            v->bag[i/2] = v->bag[i]; 
-        }
-        v->want *= 2;
-        v->pos  /= 2;
-    }
-}
-
 static void Xing_seek_table(VBR_seek_info_t * v, unsigned char *t)
 {
-    int i, index;
-    int seek_point;
-    
+    int i, index, seek_point;
     if (v->pos <= 0)
         return;
-        
+
     for (i = 1; i < NUMTOCENTRIES; ++i) {
-        float j = i/(float)NUMTOCENTRIES, act, sum;
+	float j = i/(float)NUMTOCENTRIES, act, sum;
         index = (int)(floor(j * v->pos));
         if (index > v->pos-1)
             index = v->pos-1;
@@ -171,21 +232,6 @@ static void Xing_seek_table(VBR_seek_info_t * v, unsigned char *t)
     }
 }
 
-#if 0
-void print_seeking(unsigned char *t)
-{
-    int i;
-    
-    printf("seeking table ");
-    for (i = 0; i < NUMTOCENTRIES; ++i) {
-        printf(" %d ", t[i]);
-    }
-    printf("\n");
-}
-#endif
-
-
-
 /****************************************************************************
  * AddVbrFrame: Add VBR entry, used to fill the VBR the TOC entries
  * Paramters:
@@ -196,213 +242,41 @@ void print_seeking(unsigned char *t)
 void AddVbrFrame(lame_global_flags *gfp)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
-
-    int kbps = bitrate_table[gfp->version][gfc->bitrate_index];
+    int i, bitrate = bitrate_table[gfp->version][gfc->bitrate_index];
     assert(gfc->VBR_seek_table.bag);
-    addVbr(&gfc->VBR_seek_table, kbps);
-    gfp->nVbrNumFrames++;
-}
 
+    gfc->VBR_seek_table.sum += bitrate;
+    gfc->VBR_seek_table.seen++;
 
-/*-------------------------------------------------------------*/
-static int ExtractI4(unsigned char *buf)
-{
-	int x;
-	/* big endian extract */
-	x = buf[0];
-	x <<= 8;
-	x |= buf[1];
-	x <<= 8;
-	x |= buf[2];
-	x <<= 8;
-	x |= buf[3];
-	return x;
-}
+    if (gfc->VBR_seek_table.seen < gfc->VBR_seek_table.want)
+        return;
 
-static void CreateI4(unsigned char *buf, int nValue)
-{
-        /* big endian create */
-	buf[0]=(nValue>>24)&0xff;
-	buf[1]=(nValue>>16)&0xff;
-	buf[2]=(nValue>> 8)&0xff;
-	buf[3]=(nValue    )&0xff;
-}
+    if (gfc->VBR_seek_table.pos < gfc->VBR_seek_table.size) {
+	gfc->VBR_seek_table.bag[gfc->VBR_seek_table.pos++]
+	    = gfc->VBR_seek_table.sum;
+        gfc->VBR_seek_table.seen = 0;
+    }
+    if (gfc->VBR_seek_table.pos == gfc->VBR_seek_table.size) {
+        for (i = 1; i < gfc->VBR_seek_table.size; i += 2)
+            gfc->VBR_seek_table.bag[i/2] = gfc->VBR_seek_table.bag[i]; 
 
-
-
-static void CreateI2(unsigned char *buf, int nValue)
-{
-        /* big endian create */
-	buf[0]=(nValue>> 8)&0xff;
-	buf[1]=(nValue    )&0xff;
-}
-
-
-/*-------------------------------------------------------------*/
-/* Same as GetVbrTag below, but only checks for the Xing tag.
-   requires buf to contain only 40 bytes */
-/*-------------------------------------------------------------*/
-int CheckVbrTag(unsigned char *buf)
-{
-	int			h_id, h_mode, h_sr_index;
-
-	/* get selected MPEG header data */
-	h_id       = (buf[1] >> 3) & 1;
-	h_sr_index = (buf[2] >> 2) & 3;
-	h_mode     = (buf[3] >> 6) & 3;
-
-	/*  determine offset of header */
-	if( h_id )
-	{
-                /* mpeg1 */
-		if( h_mode != 3 )	buf+=(32+4);
-		else				buf+=(17+4);
-	}
-	else
-	{
-                /* mpeg2 */
-		if( h_mode != 3 ) buf+=(17+4);
-		else              buf+=(9+4);
-	}
-
-	if( buf[0] != VBRTag[0] && buf[0] != VBRTag2[0] ) return 0;    /* fail */
-	if( buf[1] != VBRTag[1] && buf[1] != VBRTag2[1]) return 0;    /* header not found*/
-	if( buf[2] != VBRTag[2] && buf[2] != VBRTag2[2]) return 0;
-	if( buf[3] != VBRTag[3] && buf[3] != VBRTag2[3]) return 0;
-	return 1;
-}
-
-int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
-{
-	int			i, head_flags;
-	int			h_bitrate,h_id, h_mode, h_sr_index;
-        int enc_delay,enc_padding; 
-
-	/* get Vbr header data */
-	pTagData->flags = 0;
-
-	/* get selected MPEG header data */
-	h_id       = (buf[1] >> 3) & 1;
-	h_sr_index = (buf[2] >> 2) & 3;
-	h_mode     = (buf[3] >> 6) & 3;
-        h_bitrate  = ((buf[2]>>4)&0xf);
-	h_bitrate = bitrate_table[h_id][h_bitrate];
-
-        /* check for FFE syncword */
-        if ((buf[1]>>4)==0xE) 
-            pTagData->samprate = samplerate_table[2][h_sr_index];
-        else
-            pTagData->samprate = samplerate_table[h_id][h_sr_index];
-
-
-
-	/*  determine offset of header */
-	if( h_id )
-	{
-                /* mpeg1 */
-		if( h_mode != 3 )	buf+=(32+4);
-		else				buf+=(17+4);
-	}
-	else
-	{
-                /* mpeg2 */
-		if( h_mode != 3 ) buf+=(17+4);
-		else              buf+=(9+4);
-	}
-
-	if( buf[0] != VBRTag[0] && buf[0] != VBRTag2[0] ) return 0;    /* fail */
-	if( buf[1] != VBRTag[1] && buf[1] != VBRTag2[1]) return 0;    /* header not found*/
-	if( buf[2] != VBRTag[2] && buf[2] != VBRTag2[2]) return 0;
-	if( buf[3] != VBRTag[3] && buf[3] != VBRTag2[3]) return 0;
-
-	buf+=4;
-
-	pTagData->h_id = h_id;
-
-	head_flags = pTagData->flags = ExtractI4(buf); buf+=4;      /* get flags */
-
-	if( head_flags & FRAMES_FLAG )
-	{
-		pTagData->frames   = ExtractI4(buf); buf+=4;
-	}
-
-	if( head_flags & BYTES_FLAG )
-	{
-		pTagData->bytes = ExtractI4(buf); buf+=4;
-	}
-
-	if( head_flags & TOC_FLAG )
-	{
-		if(pTagData->toc)
-		{
-			for(i=0;i<NUMTOCENTRIES;i++)
-				pTagData->toc[i] = buf[i];
-		}
-		buf+=NUMTOCENTRIES;
-	}
-
-	pTagData->vbr_scale = -1;
-
-	if( head_flags & VBR_SCALE_FLAG )
-	{
-		pTagData->vbr_scale = ExtractI4(buf); buf+=4;
-	}
-
-	pTagData->headersize = 
-	  ((h_id+1)*72000*h_bitrate) / pTagData->samprate;
-
-        buf+=21;
-        enc_delay = buf[0] << 4;
-        enc_delay += buf[1] >> 4;
-        enc_padding= (buf[1] & 0x0F)<<8;
-        enc_padding += buf[2];
-        /* check for reasonable values (this may be an old Xing header, */
-        /* not a INFO tag) */
-        if (enc_delay<0 || enc_delay > 3000) enc_delay=-1;
-        if (enc_padding<0 || enc_padding > 3000) enc_padding=-1;
-
-        pTagData->enc_delay=enc_delay;
-        pTagData->enc_padding=enc_padding;
-
-#ifdef DEBUG_VBRTAG
-	fprintf(stderr,"\n\n********************* VBR TAG INFO *****************\n");
-	fprintf(stderr,"tag         :%s\n",VBRTag);
-	fprintf(stderr,"head_flags  :%d\n",head_flags);
-	fprintf(stderr,"bytes       :%d\n",pTagData->bytes);
-	fprintf(stderr,"frames      :%d\n",pTagData->frames);
-	fprintf(stderr,"VBR Scale   :%d\n",pTagData->vbr_scale);
-        fprintf(stderr,"enc_delay  = %i \n",enc_delay);
-        fprintf(stderr,"enc_padding= %i \n",enc_padding);
-	fprintf(stderr,"toc:\n");
-	if( pTagData->toc )
-	{
-		for(i=0;i<NUMTOCENTRIES;i++)
-		{
-			if( (i%10) == 0 ) fprintf(stderr,"\n");
-			fprintf(stderr," %3d", (int)(pTagData->toc[i]));
-		}
-	}
-	fprintf(stderr,"\n***************** END OF VBR TAG INFO ***************\n");
-#endif
-	return 1;       /* success */
+        gfc->VBR_seek_table.want *= 2;
+        gfc->VBR_seek_table.pos  /= 2;
+    }
 }
 
 
 /****************************************************************************
  * InitVbrTag: Initializes the header, and write empty frame to stream
  * Paramters:
- *				fpStream: pointer to output file stream
- *				nMode	: Channel Mode: 0=STEREO 1=JS 2=DS 3=MONO
+ *			fpStream: pointer to output file stream
  ****************************************************************************
 */
 int InitVbrTag(lame_global_flags *gfp)
 {
-    int nMode,SampIndex;
-    int i, header_bitrate, tot;
-    lame_internal_flags *gfc = gfp->internal_flags;
 #define MAXFRAMESIZE 2880 /* the max framesize freeformat 640 32kHz */
-    nMode = gfp->mode;
-    SampIndex = gfc->samplerate_index;
+    lame_internal_flags *gfc = gfp->internal_flags;
+    int i, header_bitrate, tot;
 
     /* we shold also count the vbr tag itself */
     gfp->nVbrNumFrames=1;
@@ -424,7 +298,7 @@ int InitVbrTag(lame_global_flags *gfp)
     if (1==gfp->version) {
 	header_bitrate = XING_BITRATE1;
     } else {
-	if (gfp->out_samplerate < 16000 )
+	if (gfp->out_samplerate < 16000)
 	    header_bitrate = XING_BITRATE25;
 	else
 	    header_bitrate = XING_BITRATE2;
@@ -474,10 +348,10 @@ int InitVbrTag(lame_global_flags *gfp)
 /* fast CRC-16 computation - uses table crc16_lookup 8*/
 int CRC_update_lookup(int value, int crc)
 {
-	int tmp;
-	tmp=crc^value;
-	crc=(crc>>8)^crc16_lookup[tmp & 0xff];
-	return crc;
+    int tmp;
+    tmp=crc^value;
+    crc=(crc>>8)^crc16_lookup[tmp & 0xff];
+    return crc;
 }
 
 void UpdateMusicCRC(uint16_t *crc,unsigned char *buffer, int size){
@@ -491,14 +365,13 @@ void UpdateMusicCRC(uint16_t *crc,unsigned char *buffer, int size){
 
 void ReportLameTagProgress(lame_global_flags *gfp,int nStart)
 {
-	if (!gfp->bWriteVbrTag)
-		return;
+    if (!gfp->bWriteVbrTag)
+	return;
 
-	if (nStart)
-		MSGF( gfp->internal_flags, "Writing LAME Tag...");
-	else
-		MSGF( gfp->internal_flags, "done\n");
-
+    if (nStart)
+	MSGF( gfp->internal_flags, "Writing LAME Tag...");
+    else
+	MSGF( gfp->internal_flags, "done\n");
 }
 
 
@@ -513,7 +386,26 @@ void ReportLameTagProgress(lame_global_flags *gfp,int nStart)
  *				
  ****************************************************************************
 */
-int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer, uint32_t id3v2size,  uint16_t crc)
+static void CreateI4(unsigned char *buf, int nValue)
+{
+    /* big endian create */
+    buf[0]=(nValue>>24)&0xff;
+    buf[1]=(nValue>>16)&0xff;
+    buf[2]=(nValue>> 8)&0xff;
+    buf[3]=(nValue   )&0xff;
+}
+
+static void CreateI2(unsigned char *buf, int nValue)
+{
+    /* big endian create */
+    buf[0]=(nValue>> 8)&0xff;
+    buf[1]=(nValue   )&0xff;
+}
+
+
+int
+PutLameVBR(lame_global_flags *gfp, FILE *fpStream,
+	   uint8_t *pbtStreamBuffer, uint32_t id3v2size,  uint16_t crc)
 {
     lame_internal_flags *gfc = gfp->internal_flags;
 
@@ -534,7 +426,7 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
     uint8_t nRevMethod;
     uint8_t vbr_type_translator[] = {1,5,3};		/*numbering different in vbr_mode vs. Lame tag */
 
-    uint8_t nLowpass		= ( ((gfp->lowpassfreq / 100.0)+.5) > 255 ? 255 : (gfp->lowpassfreq / 100.0)+.5 );
+    uint8_t nLowpass		= ( ((gfp->lowpassfreq / 100.0)+.5) > 255 ? 255 : (gfp->lowpassfreq / 100.0)+.5);
 
     ieee754_float32_t fPeakSignalAmplitude	= 0;				/*TODO... */
     uint16_t nRadioReplayGain		= 0;				/*TODO... */
@@ -582,7 +474,7 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
     }
 
     /*flags */
-    nFlags = (((int)gfp->ATHcurve) & 15 ) /*nAthType*/
+    nFlags = (((int)gfp->ATHcurve) & 15) /*nAthType*/
 	+ (bExpNPsyTune		<< 4)
 	+ (bSafeJoint		<< 5)
 	+ (bNoGapMore		<< 6)
@@ -659,12 +551,8 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
     strncpy(&pbtStreamBuffer[nBytesWritten], szVersion, 9);
     nBytesWritten+=9;
 
-    pbtStreamBuffer[nBytesWritten] = nRevMethod ;
-    nBytesWritten++;
-
-    pbtStreamBuffer[nBytesWritten] = nLowpass;
-    nBytesWritten++;
-
+    pbtStreamBuffer[nBytesWritten++] = nRevMethod ;
+    pbtStreamBuffer[nBytesWritten++] = nLowpass;
     memmove(&pbtStreamBuffer[nBytesWritten], &fPeakSignalAmplitude, 4);
     nBytesWritten+=4;
 
@@ -674,24 +562,18 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
     CreateI2(&pbtStreamBuffer[nBytesWritten],nAudioPhileReplayGain);
     nBytesWritten+=2;
 
-    pbtStreamBuffer[nBytesWritten] = nFlags;
-    nBytesWritten++;
+    pbtStreamBuffer[nBytesWritten++] = nFlags;
 
     if (nABRBitrate >= 255)
-	pbtStreamBuffer[nBytesWritten] = 0xFF;
+	pbtStreamBuffer[nBytesWritten++] = 0xFF;
     else
-	pbtStreamBuffer[nBytesWritten] = nABRBitrate;
-    nBytesWritten++;
+	pbtStreamBuffer[nBytesWritten++] = nABRBitrate;
 
-    pbtStreamBuffer[nBytesWritten   ] = enc_delay >> 4;
-    pbtStreamBuffer[nBytesWritten +1] = (enc_delay << 4) + (enc_padding >> 8);
-    pbtStreamBuffer[nBytesWritten +2] = enc_padding;
+    pbtStreamBuffer[nBytesWritten++] = enc_delay >> 4;
+    pbtStreamBuffer[nBytesWritten++] = (enc_delay << 4) + (enc_padding >> 8);
+    pbtStreamBuffer[nBytesWritten++] = enc_padding;
 
-    nBytesWritten+=3;
-
-    pbtStreamBuffer[nBytesWritten] = nMisc;
-    nBytesWritten++;
-
+    pbtStreamBuffer[nBytesWritten++] = nMisc;
     pbtStreamBuffer[nBytesWritten++] = 0;	/*unused in rev1 */
 
     CreateI2(&pbtStreamBuffer[nBytesWritten], gfp->preset);
@@ -707,7 +589,7 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
      *previous information*/
     for (i = 0;i<nBytesWritten;i++)
 	crc = CRC_update_lookup(pbtStreamBuffer[i], crc);
-	
+
     CreateI2(&pbtStreamBuffer[nBytesWritten], crc);
     nBytesWritten+=2;
 
@@ -724,191 +606,121 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 int PutVbrTag(lame_global_flags *gfp, FILE *fpStream)
 {
     lame_internal_flags * gfc = gfp->internal_flags;
-
-	long lFileSize;
-	int nStreamIndex;
-	char abyte,bbyte;
-	uint8_t		btToc[NUMTOCENTRIES];
-	uint8_t pbtStreamBuffer[MAXFRAMESIZE];
-	
-	int i;
-	uint16_t crc = 0x00;
-	
+    long lFileSize;
+    char abyte;
+    uint8_t pbtStreamBuffer[MAXFRAMESIZE] = {0}, *p;
+    int i;
+    uint16_t crc = 0x00;
     unsigned char id3v2Header[10];
     size_t id3v2TagSize;
+    int bitrate;
 
     if (gfc->VBR_seek_table.pos <= 0)
 	return -1;
 
+    /* Get file size */
+    fseek(fpStream,0,SEEK_END);
+    if ((lFileSize=ftell(fpStream)) == 0)
+	return -1;
 
-	/* Clear stream buffer */
-	memset(pbtStreamBuffer,0x00,sizeof(pbtStreamBuffer));
+    /*
+     * The VBR tag may NOT be located at the beginning of the stream.
+     * If an ID3 version 2 tag was added, then it must be skipped to write
+     * the VBR tag data.
+     */
 
-	/* Seek to end of file*/
-	fseek(fpStream,0,SEEK_END);
+    /* seek to the beginning of the stream */
+    fseek(fpStream, 0, SEEK_SET);
 
-	/* Get file size */
-	lFileSize=ftell(fpStream);
+    /* read 10 bytes in case there's an ID3 version 2 header here */
+    fread(id3v2Header, 1, sizeof id3v2Header, fpStream);
 
-	/* Abort if file has zero length. Yes, it can happen :) */
-	if (lFileSize==0)
-		return -1;
-
-        /*
-         * The VBR tag may NOT be located at the beginning of the stream.
-         * If an ID3 version 2 tag was added, then it must be skipped to write
-         * the VBR tag data.
-         */
-
-        /* seek to the beginning of the stream */
-	fseek(fpStream,0,SEEK_SET);
-        /* read 10 bytes in case there's an ID3 version 2 header here */
-        fread(id3v2Header,1,sizeof id3v2Header,fpStream);
-        /* does the stream begin with the ID3 version 2 file identifier? */
-        if (!strncmp((char *)id3v2Header,"ID3",3)) {
-          /* the tag size (minus the 10-byte header) is encoded into four
-           * bytes where the most significant bit is clear in each byte */
-          id3v2TagSize=(((id3v2Header[6] & 0x7f)<<21)
-            | ((id3v2Header[7] & 0x7f)<<14)
-            | ((id3v2Header[8] & 0x7f)<<7)
-            | (id3v2Header[9] & 0x7f))
+    /* does the stream begin with the ID3 version 2 file identifier? */
+    id3v2TagSize=0;
+    if (!strncmp(id3v2Header, "ID3", 3)) {
+	/* the tag size (minus the 10-byte header) is encoded into four
+	 * bytes where the most significant bit is clear in each byte */
+	id3v2TagSize=(((id3v2Header[6] & 0x7f)<<21)
+		      | ((id3v2Header[7] & 0x7f)<<14)
+		      | ((id3v2Header[8] & 0x7f)<<7)
+		      | (id3v2Header[9] & 0x7f))
             + sizeof id3v2Header;
-        } else {
-          /* no ID3 version 2 tag in this stream */
-          id3v2TagSize=0;
-        }
+    }
 
-	/* Seek to first real frame */
-	fseek(fpStream,id3v2TagSize+gfp->TotalFrameSize,SEEK_SET);
+    /* Seek to first real frame */
+    fseek(fpStream, id3v2TagSize+gfp->TotalFrameSize, SEEK_SET);
 
-	/* Read the header (first valid frame) */
-	fread(pbtStreamBuffer,4,1,fpStream);
+    /* Read the header (first valid frame) */
+    fread(pbtStreamBuffer,4,1,fpStream);
 
-	/* the default VBR header. 48 kbps layer III, no padding, no crc */
-	/* but sampling freq, mode andy copyright/copy protection taken */
-	/* from first valid frame */
-	pbtStreamBuffer[0]=(uint8_t) 0xff;
-	abyte = (pbtStreamBuffer[1] & (char) 0xf1);
-	{	
-		int bitrate;
-		if (1==gfp->version) {
-		  bitrate = XING_BITRATE1;
-		} else {
-		  if (gfp->out_samplerate < 16000 )
-			bitrate = XING_BITRATE25;
-		  else
-			bitrate = XING_BITRATE2;
-		}
-		
-		if (gfp->VBR==cbr)
-		    bitrate = gfp->mean_bitrate_kbps;
+    /* the default VBR header. 48 kbps layer III, no padding, no crc */
+    /* but sampling freq, mode andy copyright/copy protection taken */
+    /* from first valid frame */
+    bitrate = XING_BITRATE1;
+    if (gfp->version != 1) {
+	bitrate = XING_BITRATE2;
+	if (gfp->out_samplerate < 16000)
+	    bitrate = XING_BITRATE25;
+    }
+    if (gfp->VBR==cbr)
+	bitrate = gfp->mean_bitrate_kbps;
 
-		if (gfp->free_format)
-		    bbyte = 0x00;
-		else
-		    bbyte = 16*BitrateIndex(bitrate, gfp->version);
-	}
+    /* Use as much of the info from the real frames in the
+     * Xing header:  samplerate, channels, crc, etc...
+     */
+    pbtStreamBuffer[0] = 0xff;
+    abyte = (pbtStreamBuffer[1] & 0xf1) | 2;
+    if (gfp->version == 1)
+	abyte |= 8;
+    pbtStreamBuffer[1] = abyte;
 
-	/* Use as much of the info from the real frames in the
-	 * Xing header:  samplerate, channels, crc, etc...
-	 */ 
-	if (gfp->version==1) {
-	  /* MPEG1 */
-	  pbtStreamBuffer[1]=abyte | (char) 0x0a;     /* was 0x0b; */
-	  abyte = pbtStreamBuffer[2] & (char) 0x0d;   /* AF keep also private bit */
-	  pbtStreamBuffer[2]=(char) bbyte | abyte;     /* 64kbs MPEG1 frame */
-	}else{
-	  /* MPEG2 */
-	  pbtStreamBuffer[1]=abyte | (char) 0x02;     /* was 0x03; */
-	  abyte = pbtStreamBuffer[2] & (char) 0x0d;   /* AF keep also private bit */
-	  pbtStreamBuffer[2]=(char) bbyte | abyte;     /* 64kbs MPEG2 frame */
-	}
+    abyte = 0;
+    if (!gfp->free_format)
+	abyte = 16*BitrateIndex(bitrate, gfp->version);
+    pbtStreamBuffer[2] = abyte | (pbtStreamBuffer[2] & 0x0d);
 
-	/* Clear all TOC entries */
-	memset(btToc,0,sizeof(btToc));
+    /* note! Xing header specifies that Xing data goes in the
+     * ancillary data with NO ERROR PROTECTION.  If error protecton
+     * in enabled, the Xing data still starts at the same offset,
+     * and now it is in sideinfo data block, and thus will not
+     * decode correctly by non-Xing tag aware players */
+    p = &pbtStreamBuffer[gfc->l3_side.sideinfo_len];
+    if (gfp->error_protection)
+	p -= 2;
 
-	if (gfp->free_format) {
-	    int i;
-	    for (i = 1; i < NUMTOCENTRIES; ++i)
-		btToc[i] = 255*i/100;
-	} else {
-	    Xing_seek_table(&gfc->VBR_seek_table, btToc);
-	}
-        /* print_seeking (btToc); */
+    /* Put Vbr tag */
+    if (gfp->VBR == cbr)
+	memcpy(p, VBRTag2, 4);
+    else
+	memcpy(p, VBRTag, 4);
+    p += 4;
 
-	/* Start writing the tag after the zero frame */
-	nStreamIndex=gfc->l3_side.sideinfo_len;
-	/* note! Xing header specifies that Xing data goes in the
-	 * ancillary data with NO ERROR PROTECTION.  If error protecton
-	 * in enabled, the Xing data still starts at the same offset,
-	 * and now it is in sideinfo data block, and thus will not
-	 * decode correctly by non-Xing tag aware players */
-	if (gfp->error_protection) nStreamIndex -= 2;
+    CreateI4(p, FRAMES_FLAG+BYTES_FLAG+TOC_FLAG+VBR_SCALE_FLAG); p += 4;
+    CreateI4(p, gfp->nVbrNumFrames); p += 4;
+    CreateI4(p, lFileSize); p += 4;
 
-	/* Put Vbr tag */
-	if (gfp->VBR == cbr)
-	{
-		pbtStreamBuffer[nStreamIndex++]=VBRTag2[0];
-		pbtStreamBuffer[nStreamIndex++]=VBRTag2[1];
-		pbtStreamBuffer[nStreamIndex++]=VBRTag2[2];
-		pbtStreamBuffer[nStreamIndex++]=VBRTag2[3];
+    /* Put TOC */
+    if (gfp->VBR == cbr) {
+	for (i = 0; i < NUMTOCENTRIES; ++i)
+	    *p++ = 255*i/100;
+    } else {
+	Xing_seek_table(&gfc->VBR_seek_table, p);
+	p += NUMTOCENTRIES;
+    }
 
-	}
-	else
-	{
-		pbtStreamBuffer[nStreamIndex++]=VBRTag[0];
-		pbtStreamBuffer[nStreamIndex++]=VBRTag[1];
-		pbtStreamBuffer[nStreamIndex++]=VBRTag[2];
-		pbtStreamBuffer[nStreamIndex++]=VBRTag[3];
-	}	
+    /* error_protection: add crc16 information to header !? */
+    if (gfp->error_protection)
+	CRC_writeheader(gfc, pbtStreamBuffer);
 
-	/* Put header flags */
-	CreateI4(&pbtStreamBuffer[nStreamIndex],FRAMES_FLAG+BYTES_FLAG+TOC_FLAG+VBR_SCALE_FLAG);
-	nStreamIndex+=4;
+    /* work out CRC so far: initially crc = 0 */
+    for (i = 0; i < p - pbtStreamBuffer; i++)
+	crc = CRC_update_lookup(pbtStreamBuffer[i], crc);
 
-	/* Put Total Number of frames */
-	CreateI4(&pbtStreamBuffer[nStreamIndex],gfp->nVbrNumFrames);
-	nStreamIndex+=4;
+    /* Put LAME VBR info */
+    PutLameVBR(gfp, fpStream, p, id3v2TagSize, crc);
 
-	/* Put Total file size */
-	CreateI4(&pbtStreamBuffer[nStreamIndex],(int)lFileSize);
-	nStreamIndex+=4;
-
-	/* Put TOC */
-	memcpy(&pbtStreamBuffer[nStreamIndex],btToc,sizeof(btToc));
-	nStreamIndex+=sizeof(btToc);
-
-
-	if (gfp->error_protection) {
-	  /* (jo) error_protection: add crc16 information to header */
-	  CRC_writeheader(gfc, pbtStreamBuffer);
-	}
-
-
-
-	/*work out CRC so far: initially crc = 0 */
-	for (i = 0;i< nStreamIndex ;i++)
-		crc = CRC_update_lookup(pbtStreamBuffer[i], crc);
-
-	/*Put LAME VBR info*/
-	nStreamIndex+=PutLameVBR(gfp, fpStream, pbtStreamBuffer + nStreamIndex, id3v2TagSize,crc);
-
-#ifdef DEBUG_VBRTAG
-	{
-	  VBRTAGDATA TestHeader;
-	  GetVbrTag(&TestHeader,pbtStreamBuffer);
-	}
-#endif
-
-	/*Seek to the beginning of the stream */
-	fseek(fpStream,id3v2TagSize,SEEK_SET);
-
-        /* Put it all to disk again */
-	if (fwrite(pbtStreamBuffer,(unsigned int)gfp->TotalFrameSize,1,fpStream)!=1)
-	{
-		return -1;
-	}
-
-	return 0;       /* success */
+    fseek(fpStream, id3v2TagSize, SEEK_SET);
+    if (fwrite(pbtStreamBuffer, gfp->TotalFrameSize, 1, fpStream) != 1)
+	return -1;
+    return 0;
 }
-

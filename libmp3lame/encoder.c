@@ -525,7 +525,11 @@ int  lame_encode_mp3_frame (				/* Output */
     /* copy mp3 bit buffer into array */
     mp3count = copy_buffer(gfc,mp3buf,mp3buf_size,1);
 
-    if (gfp->bWriteVbrTag) AddVbrFrame(gfp);
+    if (gfp->bWriteVbrTag) {
+	gfp->nVbrNumFrames++;
+	if (gfp->VBR == vbr)
+	    AddVbrFrame(gfp);
+    }
 
 #if defined(HAVE_GTK)
     if (gfc->pinfo)
