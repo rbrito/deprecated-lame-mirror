@@ -33,14 +33,12 @@
 #endif
 
 
-
-#include "VbrTag.h"
-#include "version.h"
 #include "bitstream.h"
 #include "VbrTag.h"
 #include "version.h"
 
 #include	<assert.h>
+#include 	<stdlib.h>
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
@@ -412,7 +410,7 @@ int InitVbrTag(lame_global_flags *gfp)
 	int nMode,SampIndex;
 	lame_internal_flags *gfc = gfp->internal_flags;
 #define MAXFRAMESIZE 1792
-	//	u_char pbtStreamBuffer[MAXFRAMESIZE];
+	//	uint8_t pbtStreamBuffer[MAXFRAMESIZE];
 	nMode = gfp->mode;
 	SampIndex = gfc->samplerate_index;
 
@@ -515,7 +513,7 @@ void ReportLameTagProgress(lame_global_flags *gfp,int nStart)
  *				
  ****************************************************************************
 */
-int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, u_char *pbtStreamBuffer, uint32_t id3v2size,  uint16_t crc)
+int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer, uint32_t id3v2size,  uint16_t crc)
 {
         lame_internal_flags *gfc = gfp->internal_flags;
 	FLOAT fVersion = LAME_MAJOR_VERSION + 0.01 * LAME_MINOR_VERSION;
@@ -780,8 +778,8 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
 	long lFileSize;
 	int nStreamIndex;
 	char abyte,bbyte;
-	u_char		btToc[NUMTOCENTRIES];
-	u_char pbtStreamBuffer[MAXFRAMESIZE];
+	uint8_t		btToc[NUMTOCENTRIES];
+	uint8_t pbtStreamBuffer[MAXFRAMESIZE];
 	
 	int i;
 	uint16_t crc = 0x00;
@@ -839,7 +837,7 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
 	/* the default VBR header. 48 kbps layer III, no padding, no crc */
 	/* but sampling freq, mode andy copyright/copy protection taken */
 	/* from first valid frame */
-	pbtStreamBuffer[0]=(u_char) 0xff;
+	pbtStreamBuffer[0]=(uint8_t) 0xff;
 	abyte = (pbtStreamBuffer[1] & (char) 0xf1);
 	{	
 		int bitrate;
