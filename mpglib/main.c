@@ -64,8 +64,7 @@ int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
   VBRTAGDATA pTagData;
   int ret,size,framesize;
   unsigned long num_frames=0;
-  size_t len,len2;
-  int xing_header,aid_header;
+  int len,len2,xing_header,aid_header;
 
 
   InitMP3(&mp);
