@@ -1144,7 +1144,7 @@ int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inP
 			swapbytes=1;
 			break;
 		    case 'p': /* (jo) error_protection: add crc16 information to stream */
-			gfp->error_protection = 1; 
+			lame_set_error_protection(gfp,1);
 			break;
 		    case 'a': /* autoconvert input file from stereo to mono - for mono mp3 encoding */
 			autoconvert=1;

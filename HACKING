@@ -40,6 +40,21 @@ lame_encode_frame():
                           output to internal bit buffer.
    copy_buffer()          copy internal bit buffer into user's mp3 buffer
 
+************************************************************************
+ADDING NEW OPTIONS
+
+control variable goes in lame_global_flags sturct.
+Assume the variable is called 'new_variable'.
+
+You also need to write (in get_set.c):
+
+lame_set_new_variable()
+lame_get_new_variable()
+
+And then document the variable in the file USAGE
+
+And add a "--option" style command line option to enable this variable
+in parse.m
 
 
 
@@ -65,14 +80,15 @@ both strucs is initialized to zero.
 These are input paramters which are set by the calling program,
 and some information which the calling program may be interested in.
 
-This struct is defined in lame.h.  It is instantiated
-by the call to lame_init().  
+This struct instantiated by the call to lame_init().  
 
 
 2. lame_internal_flags *gfc
 
-For internal data which is not visable to the user.  
 Most global variables go here.
+
+All internal data not set by the user.  All 'static' data from
+old non-reentrant code should be moved here.
 
 Defined in util.h.  Data for which the size is known
 in advace should be explicitly declaired (for example,

@@ -581,6 +581,11 @@ lame_init_params(lame_global_flags * const gfp)
     int     j;
     lame_internal_flags *gfc = gfp->internal_flags;
 
+    if (gfp->error_protection) {
+	ERRORF(gfc,"Error: CRC is temporarily broken as of 5/2001!!!");
+	return -1;
+    }
+
     gfc->gfp = gfp;
 
     gfc->Class_ID = 0;

@@ -27,9 +27,13 @@ Then override various default settings as necessary, for example:
    lame_set_brate(gfp,128);
    lame_set_mode(gfp,1);
    lame_set_quality(gfp,2);   /* 2=high  5 = medium  7=low */ 
+
+
+The default (if you set nothing) is a a J-Stereo, 44.1khz
+128kbps CBR mp3 file at quality 5.
 		
-(Note: not all the above functions are written yet!  check in
-set_get.c first).  See lame.h for the complete list of options.
+See lame.h for the complete list of options.
+
 
 
 3. sets more internal configuration based on data provided above,
@@ -63,7 +67,7 @@ int lame_encode_flush(lame_global_flags *,char *mp3buffer, int mp3buffer_size);
 
 
 6.  Write all remaining data to mp3 file.  If the file was
-encoded using VBR, you should add the Xing VBR header by calling:
+encoded using VBR and you want to add a Xing VBR header:
 
 void lame_mp3_tags_fid(lame_global_flags *,FILE* fid);
 
