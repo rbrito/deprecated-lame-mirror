@@ -557,9 +557,9 @@ void best_huffman_divide(lame_internal_flags *gfc, int gr, int ch, gr_info *gi, 
 	    a1 = i;
 	}
 	cod_info2.table_select[0] =
-	    choose_table(ix, ix + a1, (unsigned *)&cod_info2.part2_3_length);
+	    choose_table(ix, ix + a1, (int *)&cod_info2.part2_3_length);
 	cod_info2.table_select[1] =
-	    choose_table(ix + a1, ix + i, (unsigned *)&cod_info2.part2_3_length);
+	    choose_table(ix + a1, ix + i, (int *)&cod_info2.part2_3_length);
 	if (gi->part2_3_length > cod_info2.part2_3_length)
 	    memcpy(gi, &cod_info2, sizeof(gr_info));
     }
