@@ -99,7 +99,7 @@ int lame_decode_initfile(const char *fullname, mp3data_struct *mp3data)
 	mp3data->bitrate       = mstream->bitrate;
 	mp3data->nsamp         = (float)mstream->ms_duration/1000 * mstream->dec_frequency;
 	mp3data->mode          = mstream->mode;
-	mp3data->mode_ext      = MPG_MD_LR_LR;	/* mpega.library doesn't supply this info! :( */
+	mp3data->mode_ext      = 0;	/* mpega.library doesn't supply this info! :( */
 	mp3data->framesize     = smpls[mstream->norm-1][mstream->layer];
 
 	return 0;
@@ -124,7 +124,7 @@ int lame_decode_fromfile(FILE *fd, short pcm_l[], short pcm_r[], mp3data_struct 
 	mp3data->samplerate    = mstream->dec_frequency;
 	mp3data->bitrate       = mstream->bitrate;
 	mp3data->mode          = mstream->mode;
-	mp3data->mode_ext      = MPG_MD_LR_LR;	/* mpega.library doesn't supply this info! :( */
+	mp3data->mode_ext      = 0;	/* mpega.library doesn't supply this info! :( */
 	mp3data->framesize     = smpls[mstream->norm-1][mstream->layer];
 
 	return outsize;
