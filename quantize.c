@@ -133,10 +133,16 @@ iteration_loop( lame_global_flags *gfp,
   ResvFrameEnd(gfp,l3_side, mean_bits );
 }
 
-#undef SAFE_VBR
-#ifdef SAFE_VBR
+
+/*
+ *  ABR_iteration_loop()
+ *
+ *  encode a frame with a disired average bitrate
+ *
+ *  mt 2000/05/31
+ */
 void
-VBR_iteration_loop (lame_global_flags *gfp,
+ABR_iteration_loop (lame_global_flags *gfp,
                 FLOAT8 pe[2][2], FLOAT8 ms_ener_ratio[2],
                 FLOAT8 xr[2][2][576], III_psy_ratio ratio[2][2],
                 int l3_enc[2][2][576],
@@ -168,7 +174,10 @@ VBR_iteration_loop (lame_global_flags *gfp,
   /* compute a target  mean_bits based on compression ratio 
    * which was set based on VBR_q  
    */
+  /*
   bit_rate = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->compression_ratio);
+   */
+  bit_rate = gfp->VBR_mean_bitrate_kbps;
   bitsPerFrame = (bit_rate*gfp->framesize*1000)/gfp->out_samplerate;
   mean_bits = (bitsPerFrame - 8*gfc->sideinfo_len) / gfc->mode_gr;
 
@@ -294,7 +303,6 @@ VBR_iteration_loop (lame_global_flags *gfp,
   ResvFrameEnd (gfp,l3_side, mean_bits);
 }
 
-#else
 
 
 
@@ -643,7 +651,6 @@ VBR_iteration_loop (lame_global_flags *gfp,
 
   ResvFrameEnd (gfp,l3_side, mean_bits);
 }
-#endif
 
 
 
@@ -868,7 +875,7 @@ void outer_loop(
      * (makes a 10% speed increase, the files I tested were
      * binary identical, 2000/05/20 Robert.Hegemann@gmx.de)
      */
-    if (gfp->VBR)
+    if (gfp->VBR==1 || iteration>100)
       {
         if (cod_info->block_type == SHORT_TYPE)
           {

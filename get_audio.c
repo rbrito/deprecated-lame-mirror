@@ -167,6 +167,8 @@ int read_samples_ogg(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2]
 
 
   return out;
+#else
+  return -1; /* wanna read ogg without vorbis support? */
 #endif
 }
 

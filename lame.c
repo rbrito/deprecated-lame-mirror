@@ -143,13 +143,33 @@ void lame_init_params(lame_global_flags *gfp)
     else gfp->out_samplerate=16000;
 
 
-    if (!gfp->VBR && gfp->brate>0) {
+    if (gfp->VBR==0 && gfp->brate>0) {
       /* check if user specified bitrate requires downsampling */
       gfp->compression_ratio = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->brate);
       if (gfp->compression_ratio > 13 ) {
 	/* automatic downsample, if possible */
 	gfp->out_samplerate = (10*1000.0*gfp->brate)/(16*gfc->stereo);
-	if (gfp->out_samplerate<=16000) gfp->out_samplerate=16000;
+	if (gfp->out_samplerate<=8000) gfp->out_samplerate=8000;
+	else if (gfp->out_samplerate<=11025) gfp->out_samplerate=11025;
+	else if (gfp->out_samplerate<=12000) gfp->out_samplerate=12000;
+	else if (gfp->out_samplerate<=16000) gfp->out_samplerate=16000;
+	else if (gfp->out_samplerate<=22050) gfp->out_samplerate=22050;
+	else if (gfp->out_samplerate<=24000) gfp->out_samplerate=24000;
+	else if (gfp->out_samplerate<=32000) gfp->out_samplerate=32000;
+	else if (gfp->out_samplerate<=44100) gfp->out_samplerate=44100;
+	else gfp->out_samplerate=48000;
+      }
+    }
+    if (gfp->VBR==3) {
+      /* check if user specified bitrate requires downsampling */
+      gfp->compression_ratio = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->VBR_mean_bitrate_kbps);
+      if (gfp->compression_ratio > 13 ) {
+	/* automatic downsample, if possible */
+	gfp->out_samplerate = (10*1000.0*gfp->VBR_mean_bitrate_kbps)/(16*gfc->stereo);
+	if (gfp->out_samplerate<=8000) gfp->out_samplerate=8000;
+	else if (gfp->out_samplerate<=11025) gfp->out_samplerate=11025;
+	else if (gfp->out_samplerate<=12000) gfp->out_samplerate=12000;
+	else if (gfp->out_samplerate<=16000) gfp->out_samplerate=16000;
 	else if (gfp->out_samplerate<=22050) gfp->out_samplerate=22050;
 	else if (gfp->out_samplerate<=24000) gfp->out_samplerate=24000;
 	else if (gfp->out_samplerate<=32000) gfp->out_samplerate=32000;
@@ -202,8 +222,11 @@ void lame_init_params(lame_global_flags *gfp)
      9                14.7             96kbs
      for lower bitrates, downsample with --resample
   */
-  if (gfp->VBR) {
+  if (gfp->VBR==1) {
     gfp->compression_ratio = 5.0 + gfp->VBR_q;
+  }else
+  if (gfp->VBR==3) {
+    gfp->compression_ratio = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->VBR_mean_bitrate_kbps);
   }else{
     gfp->compression_ratio = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->brate);
   }
@@ -440,7 +463,8 @@ void lame_init_params(lame_global_flags *gfp)
 	exit(1);
       }
     }
-
+    gfp->VBR_mean_bitrate_kbps = Min(bitrate_table[gfp->version][gfc->VBR_max_bitrate]*.95,gfp->VBR_mean_bitrate_kbps);
+    gfp->VBR_mean_bitrate_kbps = Max(bitrate_table[gfp->version][gfc->VBR_min_bitrate]*.95,gfp->VBR_mean_bitrate_kbps);
   }
 
   /* VBR needs at least the output of GPSYCHO,
@@ -653,10 +677,15 @@ void lame_print_config(lame_global_flags *gfp)
     fprintf(stderr, "Encoding %s to %s\n",
 	    (strcmp(gfp->inPath, "-")? gfp->inPath : "stdin"),
 	    (strcmp(gfp->outPath, "-")? gfp->outPath : "stdout"));
-    if (gfp->VBR)
-      fprintf(stderr, "Encoding as %.1fkHz VBR(q=%i) %s MPEG%i LayerIII (%4.1fx estimated) qval=%i\n",
+    if (gfp->VBR==1)
+      fprintf(stderr, "Encoding as %.1f kHz VBR(q=%i) %s MPEG%i LayerIII (%4.1fx estimated) qval=%i\n",
 	      gfp->out_samplerate/1000.0,
 	      gfp->VBR_q,mode_names[gfp->mode],2-gfp->version,gfp->compression_ratio,gfp->quality);
+    else
+    if (gfp->VBR==3)
+      fprintf(stderr, "Encoding as %.1f kHz average %d kbps %s MPEG%i LayerIII (%4.1fx) qval=%i\n",
+	      gfp->out_samplerate/1000.0,
+	      gfp->VBR_mean_bitrate_kbps,mode_names[gfp->mode],2-gfp->version,gfp->compression_ratio,gfp->quality);
     else {
       fprintf(stderr, "Encoding as %.1f kHz %d kbps %s MPEG%i LayerIII (%4.1fx)  qval=%i\n",
 	      gfp->out_samplerate/1000.0,gfp->brate,
@@ -957,6 +986,9 @@ char *mp3buf, int mp3buf_size)
   if (gfp->experimentalY)
     VBR_quantize( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc,
 		  scalefac);
+  else if (gfp->VBR == 3)
+    ABR_iteration_loop( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc,
+			scalefac);
   else
     VBR_iteration_loop( gfp,*pe_use, gfc->ms_ener_ratio, xr, *masking, l3_enc,
 			scalefac);
@@ -1006,6 +1038,8 @@ char *mp3buf, int mp3buf_size)
   if (gfp->ogg) {
 #ifdef HAVEVORBIS
     return lame_encode_ogg_frame(gfp,inbuf_l,inbuf_r,mp3buf,mp3buf_size);
+#else
+    return -1; /* wanna encode ogg without vorbis */
 #endif
   } else {
     return lame_encode_mp3_frame(gfp,inbuf_l,inbuf_r,mp3buf,mp3buf_size);
@@ -1040,7 +1074,7 @@ int lame_encode_buffer(lame_global_flags *gfp,
    short int buffer_l[], short int buffer_r[],int nsamples,
    char *mp3buf, int mp3buf_size)
 {
-  int mp3size=0,ret,i,ch,mf_needed;
+  int mp3size=0,ret=0,i,ch,mf_needed;
   lame_internal_flags *gfc=gfp->internal_flags;
   short int *mfbuf[2];
   short int *in_buffer[2];
@@ -1121,7 +1155,7 @@ int lame_encode_buffer(lame_global_flags *gfp,
 int lame_encode_buffer_interleaved(lame_global_flags *gfp,
    short int buffer[], int nsamples, char *mp3buf, int mp3buf_size)
 {
-  int mp3size=0,ret,i,ch,mf_needed;
+  int mp3size=0,ret=0,i,ch,mf_needed;
   lame_internal_flags *gfc=gfp->internal_flags;
   short int *mfbuf[2];
 
@@ -1223,7 +1257,7 @@ int lame_encode(lame_global_flags *gfp, short int in_buffer[2][1152],char *mp3bu
 /*****************************************************************/
 int lame_encode_finish(lame_global_flags *gfp,char *mp3buffer, int mp3buffer_size)
 {
-  int imp3,mp3count,mp3buffer_size_remaining;
+  int imp3=0,mp3count,mp3buffer_size_remaining;
   short int buffer[2][1152];
   lame_internal_flags *gfc=gfp->internal_flags;
 
@@ -1453,6 +1487,7 @@ int lame_init(lame_global_flags *gfp)
   gfp->silent=1;
   gfp->VBR=0;
   gfp->VBR_q=4;
+  gfp->VBR_mean_bitrate_kbps=128;
   gfp->VBR_min_bitrate_kbps=0;
   gfp->VBR_max_bitrate_kbps=0;
   gfp->VBR_hard_min=0;

@@ -147,6 +147,8 @@ void lame_help(lame_global_flags *gfp,char *name)  /* print syntax & exit */
   fprintf(stdout,"    -t              disable Xing VBR informational tag\n");
   fprintf(stdout,"    --nohist        disable VBR histogram display\n");
   fprintf(stdout,"\n");
+  fprintf(stdout,"    --abr <bitrate> specify average bitrate desired\n");
+  fprintf(stdout,"\n");
   fprintf(stdout,"  MP3 header/stream options:\n");
   fprintf(stdout,"    -e <emp>        de-emphasis n/5/c  (obsolete)\n");
   fprintf(stdout,"    -c              mark as copyright\n");
@@ -275,6 +277,13 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
 	    fprintf(stderr,"Must specify a samplerate with --resample\n");
 	    exit(1);
 	  }
+	}
+	else if (strcmp(token, "abr")==0) {
+	  argUsed=1;
+	  gfp->VBR = 3; 
+	  gfp->VBR_mean_bitrate_kbps = atoi(nextArg);
+	  gfp->VBR_mean_bitrate_kbps = Min(gfp->VBR_mean_bitrate_kbps,310); 
+	  gfp->VBR_mean_bitrate_kbps = Max(gfp->VBR_mean_bitrate_kbps,4); 
 	}
 	else if (strcmp(token, "mp3input")==0) {
 	  gfp->input_format=sf_mp3;
@@ -735,8 +744,6 @@ void lame_parse_args(lame_global_flags *gfp,int argc, char **argv)
       }
     }
   }  /* loop over args */
-
-
 
   if(err || gfp->inPath[0] == '\0') lame_usage(gfp,programName);  /* never returns */
   if (gfp->inPath[0]=='-') gfp->silent=1;  /* turn off status - it's broken for stdin */

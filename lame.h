@@ -96,6 +96,7 @@ typedef struct  {
   /* VBR control */
   int VBR;
   int VBR_q;
+  int VBR_mean_bitrate_kbps;
   int VBR_min_bitrate_kbps;
   int VBR_max_bitrate_kbps;
   int VBR_hard_min;             /* strictly enforce VBR_min_bitrate*/
