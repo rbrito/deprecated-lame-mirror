@@ -598,7 +598,7 @@ writeMainData (lame_internal_flags *gfc)
 	for (gr = 0; gr < 2; gr++) {
 	    for (ch = 0; ch < gfc->channels_out; ch++) {
 		gr_info *gi = &gfc->l3_side.tt[gr][ch];
-		int slen = s1_bits[gi->scalefac_compress];
+		int slen = s1bits[gi->scalefac_compress];
 		int data_bits = 0;
 		for (sfb = 0; sfb < gi->sfbdivide; sfb++) {
 		    if (gi->scalefac[sfb] == -1)
@@ -608,7 +608,7 @@ writeMainData (lame_internal_flags *gfc)
 		    putbits2(gfc, gi->scalefac[sfb], slen);
 		    data_bits += slen;
 		}
-		slen = s2_bits[gi->scalefac_compress];
+		slen = s2bits[gi->scalefac_compress];
 		for (; sfb < gi->sfbmax; sfb++) {
 		    if (gi->scalefac[sfb] == -1)
 			continue; /* scfsi is used */

@@ -710,8 +710,8 @@ scfsi_calc(int ch, III_side_info_t *l3_side)
     s2 = log2tab[s2];
 
     for (i = 0; i < 16; i++) {
-	if (s1 <= s1_bits[i] && s2 <= s2_bits[i]) {
-	    int c = s1_bits[i] * c1 + s2_bits[i] * c2;
+	if (s1 <= s1bits[i] && s2 <= s2bits[i]) {
+	    int c = s1bits[i] * c1 + s2bits[i] * c2;
 	    if (gi->part2_length > c) {
 		gi->part2_length = c;
 		gi->scalefac_compress = i;
@@ -839,15 +839,15 @@ iteration_finish_one (
 
 /* number of bits used to encode scalefacs */
 
-/* 18*s1_bits[i] + 18*s2_bits[i] */
+/* 18*s1bits[i] + 18*s2bits[i] */
 static const int scale_short[16] = {
     0, 18, 36, 54, 54, 36, 54, 72, 54, 72, 90, 72, 90, 108, 108, 126 };
 
-/* 17*s1_bits[i] + 18*s2_bits[i] */
+/* 17*s1bits[i] + 18*s2bits[i] */
 static const int scale_mixed[16] = {
     0, 18, 36, 54, 51, 35, 53, 71, 52, 70, 88, 69, 87, 105, 104, 122 };
 
-/* 11*s1_bits[i] + 10*s2_bits[i] */
+/* 11*s1bits[i] + 10*s2bits[i] */
 static const int scale_long[16] = {
     0, 10, 20, 30, 33, 21, 31, 41, 32, 42, 52, 43, 53, 63, 64, 74 };
 
@@ -895,7 +895,7 @@ scale_bitcount(gr_info * const gi)
      * at first valid index */
     gi->part2_length = LARGE_BITS;
     for (k = 0; k < 16; k++) {
-	if (gi->part2_length > tab[k] && s1 <= s1_bits[k] && s2 <= s2_bits[k]) {
+	if (gi->part2_length > tab[k] && s1 <= s1bits[k] && s2 <= s2bits[k]) {
 	    gi->part2_length = tab[k];
 	    gi->scalefac_compress = k;
 	}
@@ -979,7 +979,7 @@ scale_bitcount_lsf(gr_info * const gi)
 		int m = 0, sfbend = sfb + nr_of_sfb_block[6+tableID][part];
 		for (; sfb < sfbend; sfb++) {
 		    if (gi->scalefac[sfb] < pretab[sfb])
-			m = 10000;
+			m = LARGE_BITS;
 		    if (m < gi->scalefac[sfb]-pretab[sfb])
 			m = gi->scalefac[sfb]-pretab[sfb];
 		}

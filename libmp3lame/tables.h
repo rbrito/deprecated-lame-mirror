@@ -47,8 +47,7 @@ extern FLOAT window_s[];
 
 extern const int nr_of_sfb_block[6*3][4];
 extern const int pretab[SBMAX_l];
-extern const int s1_bits[16];
-extern const int s2_bits[16];
+extern const int s1bits[16], s2bits[16];
 
 extern const scalefac_struct sfBandIndex[9];
 extern const int mdctorder[SBLIMIT];

@@ -72,14 +72,12 @@ const int  nr_of_sfb_block [6*3][4] =
 
 
 /* MPEG1 scalefactor bits */
-const int s1_bits[] = { 0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4 };
-const int s2_bits[] = { 0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3 };
+const int s1bits[] = { 0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4 };
+const int s2bits[] = { 0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3 };
 
 /* Table B.6: layer3 preemphasis */
-const int  pretab[SBMAX_l] =
-{
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    1, 1, 1, 1, 2, 2, 3, 3, 3, 2, 0
+const int  pretab[SBMAX_l] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,    1, 1, 1, 1, 2, 2, 3, 3, 3, 2, 0
 };
 
 /*
@@ -89,8 +87,7 @@ const int  pretab[SBMAX_l] =
     idx  = fr_ps->header->sampling_frequency + (fr_ps->header->version * 3)
 */
 
-const scalefac_struct sfBandIndex[9] =
-{
+const scalefac_struct sfBandIndex[9] = {
   { /* Table B.2.b: 22.05 kHz */
     {0,6,12,18,24,30,36,44,54,66,80,96,116,140,168,200,238,284,336,396,464,522,576},
     {0,4,8,12,18,24,32,42,56,74,100,132,174,192}
