@@ -1563,9 +1563,8 @@ psycho_analysis(
 
 	    msfix_s(gfc, gr);
 	    if (gfp->use_istereo) {
-		if (gfc->blocktype_next[gr][0] | gfc->blocktype_next[gr][1])
-		    gfc->blocktype_next[gr][0] = gfc->blocktype_next[gr][1]
-			= SHORT_TYPE;
+		gfc->blocktype_next[gr][0] = gfc->blocktype_next[gr][1]
+		    = gfc->blocktype_next[gr][0] | gfc->blocktype_next[gr][1];
 		set_istereo_sfb(gfc, gr);
 	    }
 	}
@@ -1594,8 +1593,8 @@ psycho_analysis(
 	    mr->pe = pe;
 	}
 	gfc->masking_next[gr][3].pe *= gfc->reduce_side;
-	if (gfc->blocktype_next[gr][2] | gfc->blocktype_next[gr][3])
-	    gfc->blocktype_next[gr][2] = gfc->blocktype_next[gr][3] = SHORT_TYPE;
+	gfc->blocktype_next[gr][2] = gfc->blocktype_next[gr][3]
+	    = gfc->blocktype_next[gr][2] | gfc->blocktype_next[gr][3];
     }
 
     /* determine MS/LR in the next frame */
@@ -1624,24 +1623,16 @@ psycho_analysis(
 	     && (gfc->l3_side.tt[gfc->mode_gr-1][0].block_type
 		 != gfc->l3_side.tt[gfc->mode_gr-1][1].block_type)) {
 		gr_info *gi = &gfc->l3_side.tt[gfc->mode_gr-1][0];
-		if (gi[0].block_type == NORM_TYPE)
-		    gi[0].block_type = START_TYPE;
-		if (gi[0].block_type == STOP_TYPE)
-		    gi[0].block_type = SHORT_TYPE;
-
-		if (gi[1].block_type == NORM_TYPE)
-		    gi[1].block_type = START_TYPE;
-		if (gi[1].block_type == STOP_TYPE)
-		    gi[1].block_type = SHORT_TYPE;
+		gi[0].block_type |= 1;
+		gi[1].block_type |= 1;
 	    }
 	} else {
 	    gfc->mode_ext_next = MPG_MD_LR_LR;
 	    if ((gfc->mode_ext_next ^ gfc->mode_ext) & 2
 		&& (gfc->blocktype_next[0][0] != gfc->blocktype_next[0][1])) {
-		if (gfc->blocktype_next[0][0] != SHORT_TYPE)
-		    gfc->blocktype_next[0][0] = STOP_TYPE;
-		if (gfc->blocktype_next[0][1] != SHORT_TYPE)
-		    gfc->blocktype_next[0][1] = STOP_TYPE;
+
+		gfc->blocktype_next[0][0] |= 2;
+		gfc->blocktype_next[0][1] |= 2;
 	    }
 	}
 	gfc->mode_ext_next |= gfp->use_istereo;
