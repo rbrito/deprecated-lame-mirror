@@ -52,13 +52,11 @@
 #include	<stdio.h>
 
 extern int Read16BitsLowHigh(FILE *fp);
-extern int Read16BitsHighLow(FILE *fp);
 extern void Write16BitsLowHigh(FILE *fp, int i);
 extern int Read32Bits(FILE *fp);
 extern int Read32BitsHighLow(FILE *fp);
 extern void Write32BitsLowHigh(FILE *fp, int i);
 extern void ReadBytes(FILE *fp, char *p, int n);
-extern double ReadIeeeExtendedHighLow(FILE *fp);
 
 #define	Read32BitsLowHigh(f)	Read32Bits(f)
 #endif

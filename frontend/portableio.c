@@ -53,8 +53,6 @@
 #include	<stdio.h>
 #if defined(__riscos__) && defined(FPA10)
 #include	"ymath.h"
-#else
-#include	<math.h>
 #endif
 #include	"portableio.h"
 
@@ -91,14 +89,6 @@ int  Read16BitsLowHigh ( FILE* fp )
 {
     int  low  = ReadByteUnsigned (fp);
     int  high = ReadByteUnsigned (fp);
-
-    return (int) ((short)((high << 8) | low));
-}
-
-int  Read16BitsHighLow ( FILE* fp )
-{
-    int  high = ReadByteUnsigned (fp);
-    int  low  = ReadByteUnsigned (fp);
 
     return (int) ((short)((high << 8) | low));
 }
@@ -143,79 +133,3 @@ void ReadBytes (FILE     *fp, char *p, int n)
     memset ( p, 0, n );
     fread  ( p, 1, n, fp );
 }
-
-/****************************************************************
- * The following two routines make up for deficiencies in many
- * compilers to convert properly between unsigned integers and
- * floating-point.  Some compilers which have this bug are the
- * THINK_C compiler for the Macintosh and the C compiler for the
- * Silicon Graphics MIPS-based Iris.
- ****************************************************************/
-
-#ifdef applec	/* The Apple C compiler works */
-# define UnsignedToFloat(u)	((double)(u))
-#else /* applec */
-# define UnsignedToFloat(u)	(((double)((long)((u) - 2147483647L - 1))) + 2147483648.0)
-#endif /* applec */
-/****************************************************************
- * Extended precision IEEE floating-point conversion routines
- ****************************************************************/
-
-static double
-ConvertFromIeeeExtended(char* bytes)
-{
-	double	f;
-	long	expon;
-	unsigned long hiMant, loMant;
-
-#ifdef	TEST
-printf("ConvertFromIEEEExtended(%lx,%lx,%lx,%lx,%lx,%lx,%lx,%lx,%lx,%lx\r",
-	(long)bytes[0], (long)bytes[1], (long)bytes[2], (long)bytes[3],
-	(long)bytes[4], (long)bytes[5], (long)bytes[6],
-	(long)bytes[7], (long)bytes[8], (long)bytes[9]);
-#endif
-
-	expon = ((bytes[0] & 0x7F) << 8) | (bytes[1] & 0xFF);
-	hiMant	=	((unsigned long)(bytes[2] & 0xFF) << 24)
-			|	((unsigned long)(bytes[3] & 0xFF) << 16)
-			|	((unsigned long)(bytes[4] & 0xFF) << 8)
-			|	((unsigned long)(bytes[5] & 0xFF));
-	loMant	=	((unsigned long)(bytes[6] & 0xFF) << 24)
-			|	((unsigned long)(bytes[7] & 0xFF) << 16)
-			|	((unsigned long)(bytes[8] & 0xFF) << 8)
-			|	((unsigned long)(bytes[9] & 0xFF));
-
-        /* This case should also be called if the number is below the smallest
-	 * positive double variable */
-	if (expon == 0 && hiMant == 0 && loMant == 0) {
-		f = 0;
-	}
-	else {
-	        /* This case should also be called if the number is too large to fit into 
-		 * a double variable */
-	    
-		if (expon == 0x7FFF) {	/* Infinity or NaN */
-			f = HUGE_VAL;
-		}
-		else {
-			expon -= 16383;
-			f  = ldexp(UnsignedToFloat(hiMant), (int) (expon -= 31));
-			f += ldexp(UnsignedToFloat(loMant), (int) (expon -= 32));
-		}
-	}
-
-	if (bytes[0] & 0x80)
-		return -f;
-	else
-		return f;
-}
-
-double
-ReadIeeeExtendedHighLow(FILE *fp)
-{
-    char	bytes [10];
-
-    ReadBytes ( fp, bytes, 10 );
-    return ConvertFromIeeeExtended ( bytes );
-}
-
