@@ -23,8 +23,8 @@ LIB_MAJOR_VERSION=1
 # to previous versions
 LIB_MINOR_VERSION=0
 
-dnl use the default prefix...
-dnl AC_PREFIX_DEFAULT(/usr/local)
+dnl use "/usr" as default prefix...
+AC_PREFIX_DEFAULT(/usr)
 
 dnl check host
 AC_CANONICAL_HOST
