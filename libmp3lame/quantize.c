@@ -351,9 +351,9 @@ calc_noise(
 	max_noise = -100.0;
 	for (sfb = gi->sfb_smin; sfb < gi->psymax; sfb += 3) {
 	    FLOAT noise
-		= FAST_LOG10(distort[sfb])
-		+ FAST_LOG10(distort[sfb+1])
-		+ FAST_LOG10(distort[sfb+2]);
+		= FAST_LOG10(distort[sfb]
+			     * distort[sfb+1]
+			     * distort[sfb+2]);
 	    if (max_noise < noise)
 		max_noise = noise;
 	}
@@ -392,7 +392,7 @@ init_bitalloc(
     /*  return 1 if we have something to quantize, else 0 */
     if (sum > (FLOAT)1E-20) {
 	int j = 0;
-	if (gfc->substep_shaping & 2)
+	if (gfc->noise_shaping_amp >= 3)
 	    j = 1;
 
 	for (i = 0; i < gi->psymax; i++)
@@ -492,9 +492,6 @@ trancate_smallspectrums(
 {
     int sfb, j, width;
     FLOAT distort[SFBMAX];
-
-    if (gfc->substep_shaping & 0x80 || gi->psymax == 0)
-	return;
 
     calc_noise(gi, l3_xmin, distort);
     for (j = 0; j < gi->xrNumMax; j++) {
@@ -998,7 +995,9 @@ CBR_1st_bitalloc (
 
     CBR_2nd_bitalloc(gfc, gi, xrpow);
  quit_quantization:
-    if (gfc->substep_shaping & 1)
+    if (gi->psymax != 0
+	&& !(gi->block_type != SHORT_TYPE && !(gfc->substep_shaping & 1))
+	&& !(gi->block_type == SHORT_TYPE && !(gfc->substep_shaping & 2)))
 	trancate_smallspectrums(gfc, gi, l3_xmin, xrpow);
 }
 
@@ -1538,7 +1537,7 @@ VBR_noise_shaping(
     gfc->scale_bitcounter(gi);
     assert(gi->part2_length < LARGE_BITS);
 
-    if (gfc->substep_shaping & 2) {
+    if (gi->part2_3_length > MAX_BITS) {
 	FLOAT xrtmp[576];
 	trancate_smallspectrums(gfc, gi, l3_xmin, xrtmp);
     }
@@ -1611,7 +1610,9 @@ VBR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    gr_info *gi = &gfc->l3_side.tt[gr][ch];
-	    if (gfc->substep_shaping & 1)
+	    if (gi->psymax != 0
+		&& !(gi->block_type != SHORT_TYPE && !(gfc->substep_shaping & 1))
+		&& !(gi->block_type == SHORT_TYPE && !(gfc->substep_shaping & 2)))
 		trancate_smallspectrums(gfc, gi, l3_xmin[gr][ch], xrpow);
 	    iteration_finish_one(gfc, gr, ch);
 	    gfc->l3_side.ResvSize -= gi->part2_length + gi->part2_3_length;

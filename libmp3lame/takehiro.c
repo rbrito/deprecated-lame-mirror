@@ -461,7 +461,7 @@ int count_bits(
           gr_info * const gi
     )
 {
-    if (gfc->quantization) {
+    if (gfc->quantization > 0) {
 	int i = quantize_xrpow(xrpow, gi);
 	if (i)
 	    return i;
@@ -791,12 +791,10 @@ void
 iteration_finish_one (
     lame_internal_flags *gfc, int gr, int ch)
 {
-    /*  try some better scalefac storage
-     */
+    /*  try some better scalefac storage  */
     best_scalefac_store (gfc, gr, ch);
 
-    /*  best huffman_divide may save some bits too
-     */
+    /*  best huffman_divide may save some bits too */
     if (gfc->use_best_huffman == 1)
 	best_huffman_divide (gfc, &gfc->l3_side.tt[gr][ch]);
 }

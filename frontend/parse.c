@@ -437,7 +437,11 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    -h              Same as -q 2.   Recommended.\n"
               "    -f              Same as -q 7.   Fast, ok quality\n"
 	      "\n"
-              "    --substep n       use pseudo substep noise shaping method types 0-7\n"
+              "    --substep n       use pseudo substep noise shaping method\n"
+	      "                      0: no\n"
+	      "                      1: only on the long blocks\n"
+	      "                      2: only on the short blocks\n"
+	      "                      3: on all blocks\n"
               "    --sfscale [n]     try to use scalefactor scale(n=1, default) or not(n=0).\n"
               "    --sbgain [n]      try to use subblock gain (n=1, default) or not(n=0)\n"
               );

@@ -72,7 +72,6 @@ lame_init_qval(lame_global_flags * gfp)
         gfc->noise_shaping_amp = 0;
         gfc->noise_shaping_stop = 0;
         gfc->use_best_huffman = 0;
-//        gfc->substep_shaping = 0;
         break;
 
     case 8:            /* use psymodel (for short block and m/s switching), but no noise shapping */
@@ -82,7 +81,6 @@ lame_init_qval(lame_global_flags * gfp)
         gfc->noise_shaping_amp = 0;
         gfc->noise_shaping_stop = 0;
         gfc->use_best_huffman = 0;
-//        gfc->substep_shaping = 0;
         break;
 
     case 7:	/* same as the default setting(-q 5) before LAME 3.70 */
@@ -92,7 +90,6 @@ lame_init_qval(lame_global_flags * gfp)
 	gfc->noise_shaping_amp = 0;
         gfc->noise_shaping_stop = 0;
         gfc->use_best_huffman = 0;
-//        gfc->substep_shaping = 0;
         break;
 
     case 6:
@@ -104,47 +101,42 @@ lame_init_qval(lame_global_flags * gfp)
         gfc->noise_shaping_amp = 1;
         gfc->noise_shaping_stop = 1;
         gfc->use_best_huffman = 1;
-//        gfc->substep_shaping = 0;
         break;
 
     case 4:
         gfc->filter_type = 0;
         gfc->psymodel = 2;
         gfc->quantization = 1;
-        gfc->noise_shaping_amp = 1;
+        gfc->noise_shaping_amp = 2;
         gfc->noise_shaping_stop = 1;
         gfc->use_best_huffman = 1;
-//        gfc->substep_shaping = 5; /* use substep shaping in outer loop */
         break;
 
     case 3:	/* aliased -h */
         gfc->filter_type = 0;
         gfc->psymodel = 2;
         gfc->quantization = 1;
-        gfc->noise_shaping_amp = 1;
+        gfc->noise_shaping_amp = 2;
         gfc->noise_shaping_stop = 1;
         gfc->use_best_huffman = 1;
-//        gfc->substep_shaping = 7; /* use substep shaping inner/outer loop */
         break;
 
     case 2:
         gfc->filter_type = 0;
         gfc->psymodel = 2;
         gfc->quantization = 1;
-        gfc->noise_shaping_amp = 1;
+        gfc->noise_shaping_amp = 2;
         gfc->noise_shaping_stop = 1;
         gfc->use_best_huffman = 2; /* inner loop, PAINFULLY SLOW */
-//        gfc->substep_shaping = 7;
         break;
 
     case 1:	/* some "dangerous" setting */
         gfc->filter_type = 0;
         gfc->psymodel = 2;
         gfc->quantization = 1;
-        gfc->noise_shaping_amp = 2; /* this may loose quality */
+        gfc->noise_shaping_amp = 2;
         gfc->noise_shaping_stop = 1;
         gfc->use_best_huffman = 2;
-//        gfc->substep_shaping = 7;
         break;
 
     case 0:	/* some "dangerous" setting */
@@ -152,9 +144,8 @@ lame_init_qval(lame_global_flags * gfp)
         gfc->psymodel = 2;
         gfc->quantization = 1;
         gfc->noise_shaping_amp = 3;
-        gfc->noise_shaping_stop = 2; /* this may loose quality */
+        gfc->noise_shaping_stop = 1; /* 2 not yet coded */
         gfc->use_best_huffman = 2;
-        gfc->substep_shaping = 2;
         break;
     }
 }
@@ -606,9 +597,6 @@ lame_init_params(lame_global_flags * const gfp)
     if (gfc->noise_shaping_amp > 2)
 	gfc->noise_shaping_amp = 2;
 
-    if (gfc->substep_shaping & 2)
-	gfc->noise_shaping_amp = 3;
-
     /* initialize internal qval settings */
     lame_init_qval(gfp);
 
@@ -858,7 +846,9 @@ lame_print_internals( const lame_global_flags * gfp )
 	MSGF( gfc, "\tuse subblock gain=%s\n",
 	      gfc->use_subblock_gain ? "yes" : "no");
     }
-    MSGF( gfc, "\tsubstep shaping=%d\n", gfc->substep_shaping);
+    MSGF( gfc, "\tsubstep shaping=short blocks: %s, long blocks: %s\n",
+	  gfc->substep_shaping&2 ? "yes" : "no",
+	  gfc->substep_shaping&1 ? "yes" : "no" );
     MSGF( gfc, "\t...\n" );
 
     /*  that's all ?
