@@ -25,6 +25,10 @@
 const char*  get_lame_version ( void )  // primary for reports on screen
 {
     static char ret [48];
+
+/*
+ * Here we can also add informations about compile time configurations 
+ */
     
     if (LAME_ALPHA_VERSION > 0)
         sprintf ( ret, "%u.%02d (alpha %u, %6.6s %5.5s)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION, LAME_ALPHA_VERSION, __DATE__, __TIME__ );
@@ -44,6 +48,8 @@ const char*  get_lame_short_version ( void )  // primary to write into MP3 files
      * output validation
      * I also removed version string and replaced by a "1" to be mt friendly 
      */
+
+#if  (LAME_MINOR_VERSION == 88)  /* to avoid changes in the coded MP3 files until minor is changed to != 88 */
     
     if (LAME_ALPHA_VERSION > 0)
         sprintf ( ret, "%u.%02d (alpha 1)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION );
@@ -51,6 +57,17 @@ const char*  get_lame_short_version ( void )  // primary to write into MP3 files
         sprintf ( ret, "%u.%02d (beta 1)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION );
     else
         sprintf ( ret, "%u.%02d", LAME_MAJOR_VERSION, LAME_MINOR_VERSION );
+    
+#else
+
+    if (LAME_ALPHA_VERSION > 0)
+        sprintf ( ret, "%u.%02d (alpha)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION );
+    else if (LAME_BETA_VERSION > 0)
+        sprintf ( ret, "%u.%02d (beta)", LAME_MAJOR_VERSION, LAME_MINOR_VERSION );
+    else
+        sprintf ( ret, "%u.%02d", LAME_MAJOR_VERSION, LAME_MINOR_VERSION );
+
+#endif    
         
     return ret;
 }

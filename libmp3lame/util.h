@@ -303,6 +303,7 @@ typedef struct  {
   /* simple statistics */
   int   bitrateHist[16];
   int   stereoModeHist[4];
+  int   bitrate_stereoModeHist [16] [4];
 
   /* ratios  */
   FLOAT8 pe[4];

@@ -140,6 +140,32 @@ putbits_noheaders(lame_global_flags *gfp, int val, int j)
   the ancillary data...
 */
 
+#ifdef KLEMM_11
+
+static INLINE void drain_into_ancillary ( lame_global_flags* gfp, int remainingBits )
+{
+    lame_internal_flags*  gfc = gfp->internal_flags;
+    char                  buffer [80];
+    char*                 p;
+    
+    assert (remainingBits >= 0);
+    
+    sprintf ( p = buffer, "LAME%s", get_lame_short_version () );
+
+    for (; *p != '\0'  &&  remainingBits >= 8; p++, remainingBits -= 8 )
+        putbits2 ( gfp, *p, 8 );
+
+    for (; remainingBits >= 1; remainingBits -= 1 ) {
+        putbits2 ( gfp, gfc->ancillary_flag, 1 );
+        gfc->ancillary_flag = 1 - gfc->ancillary_flag;
+    }
+
+    assert (remainingBits == 0);
+}
+
+
+#else
+
 static INLINE void
 drain_into_ancillary(lame_global_flags *gfp,int remainingBits)
 {
@@ -194,6 +220,8 @@ drain_into_ancillary(lame_global_flags *gfp,int remainingBits)
 	putbits2(gfp,0x5555, 16);
     }
 }
+
+#endif
 
 /*write N bits into the header */
 static INLINE void
@@ -288,6 +316,18 @@ void main_CRC_init ( void )
 }
 
 #endif
+
+/*
+   Question by pfk: Is it not better to first code all data of one frame
+   to a block and then calculating the CRC if need instead of CRC calculating for
+   every bit?
+   
+   if (CRC)
+       code_block ( ptr+6, len-6 );
+       ptr[4..5] = crc ( ptr+6, len-6 );
+    else
+       code_block ( ptr+4, len-4 );
+ */
 
 static INLINE void
 encodeSideInfo2(lame_global_flags *gfp,int bitsPerFrame)

@@ -81,7 +81,7 @@ int main(int argc, char **argv)
         { "stereo", "j-stereo", "dual-ch", "single-ch" },
         { "stereo", "force-ms", "dual-ch", "single-ch" }
     };
-
+    int  ret;
   char mp3buffer[LAME_MAXMP3BUFFER];
   short int Buffer[2][1152];
   int iread,imp3;
@@ -99,11 +99,11 @@ int main(int argc, char **argv)
   input_format=sf_unknown;
   if (lame_init_old(&gf)<0) {
     fprintf(stderr,"fatal error during initialization\n");
-    exit(-1);
+    return 1;
   }
   if (argc <= 1) {
       usage ( &gf, stderr, argv[0] );  /* no command-line args, print usage, exit  */
-      exit (1);
+      return 1;
   }
 
   /* parse the command line arguments, setting various flags in the
@@ -112,7 +112,9 @@ int main(int argc, char **argv)
    * skip this call and set the values of interest in the gf struct.
    * (see lame.h for documentation about these parameters)
    */
-  parse_args(&gf,argc, argv, inPath, outPath);
+    ret = parse_args ( &gf, argc, argv, inPath, outPath );
+    if ( ret < 0 )
+        return ret == -2 ? 0 : 1;
   if ( update_interval < 0. )
     update_interval = 2.;
 
@@ -124,7 +126,7 @@ int main(int argc, char **argv)
   if ( 0 != strcmp ( "-"   , outPath )  && 
        0 == strcmp ( inPath, outPath ) ) {
       fprintf(stderr,"Input file and Output file are the same. Abort.\n" );
-      exit(-1);
+      return 1;
   }
 
   /* open the wav/aiff/raw pcm or mp3 input file.  This call will
@@ -145,7 +147,7 @@ int main(int argc, char **argv)
       display_bitrates(stderr);
     }
     fprintf(stderr,"fatal error during initialization\n");
-    exit(-1);
+    return 1;
   }
 
   if (silent || gf.VBR==vbr_off) {
@@ -174,30 +176,26 @@ int main(int argc, char **argv)
     fprintf(stderr,"Encoding %s to %s\n",
 	    (strcmp(inPath, "-")? inPath  : "<stdin>"),
 	    (strcmp(outPath,"-")? outPath : "<stdout>"));
+	    
+    fprintf ( stderr, "Encoding as %g kHz ", 1.e-3 * gf.out_samplerate );
+    
     if (gf.ogg) {
-      fprintf(stderr,"Encoding as %.1f kHz VBR Ogg Vorbis \n",
-	      gf.out_samplerate/1000.0);
+      fprintf(stderr,"VBR Ogg Vorbis\n" );
     }else{ 
       if (gf.VBR==vbr_mt || gf.VBR==vbr_rh || gf.VBR==vbr_mtrh)
-	fprintf(stderr,"Encoding as %.1f kHz VBR(q=%i) %s MPEG-%g LayerIII (%4.1fx estimated) qval=%i\n",
-		gf.out_samplerate/1000.0,
+	fprintf(stderr,"VBR(q=%i) %s MPEG-%g Layer III (ca. ",
 		gf.VBR_q,mode_names[gf.force_ms][gf.mode],
-		2-gf.version+0.5*(gf.out_samplerate<16000),
-		gf.compression_ratio, gf.quality);
-      else
-	if (gf.VBR==vbr_abr)
-	  fprintf(stderr,"Encoding as %.1f kHz average %d kbps %s MPEG-%g LayerIII (%4.1fx) qval=%i\n",
-		  gf.out_samplerate/1000.0,
+		2-gf.version+0.5*(gf.out_samplerate<16000) );
+      else if (gf.VBR==vbr_abr)
+	  fprintf(stderr,"average %d kbps %s MPEG-%g Layer III (",
 		  gf.VBR_mean_bitrate_kbps,mode_names[gf.force_ms][gf.mode],
-		  2-gf.version+0.5*(gf.out_samplerate<16000),
-		  gf.compression_ratio,gf.quality);
-	else {
-	  fprintf(stderr,"Encoding as %.1f kHz %d kbps %s MPEG-%g LayerIII (%4.1fx)  qval=%i\n",
-		  gf.out_samplerate/1000.0,gf.brate,
+		  2-gf.version+0.5*(gf.out_samplerate<16000) );
+      else
+	  fprintf(stderr,"%d kbps %s MPEG-%g Layer III (",
+		  gf.brate,
 		  mode_names[gf.force_ms][gf.mode],
-		  2-gf.version+0.5*(gf.out_samplerate<16000),
-		  gf.compression_ratio,gf.quality);
-	}
+		  2-gf.version+0.5*(gf.out_samplerate<16000) );
+      fprintf ( stderr, "%.1fx) qval=%i\n", gf.compression_ratio, gf.quality );
     }
   }
 
@@ -239,20 +237,20 @@ int main(int argc, char **argv)
 	if (imp3<0) {
 	  if (imp3==-1) fprintf(stderr,"mp3 buffer is not big enough... \n");
 	  else fprintf(stderr,"mp3 internal error:  error code=%i\n",imp3);
-	  exit(-1);
+	  return 1;
 	}
 
 	/* imp3 is not negative, but fwrite needs an unsigned here */
 	if (fwrite(mp3buffer,1,(unsigned int)imp3,outf) != (size_t)imp3) {
 	  fprintf(stderr,"Error writing mp3 output \n");
-	  exit(-1);
+	  return 1;
 	}
       } while (iread);
       imp3=lame_encode_flush(&gf,mp3buffer,sizeof(mp3buffer));   /* may return one more mp3 frame */
       if (imp3<0) {
 	if (imp3==-1) fprintf(stderr,"mp3 buffer is not big enough... \n");
 	else fprintf(stderr,"mp3 internal error:  error code=%i\n",imp3);
-	exit(-1);
+	return 1;
       }
 
       if (!silent) {

@@ -40,7 +40,7 @@
 
 static int  lame_version_print ( FILE* const fp )
 {
-   fprintf ( fp, "LAME version %s    (%s)\n\n", get_lame_version (), LAME_URL );
+   fprintf ( fp, "%sLAME%s version %s    (%s)\n\n", Console_IO.str_emph, Console_IO.str_norm, get_lame_version (), LAME_URL );
    return 0;
 }
 
@@ -464,7 +464,7 @@ static int  presets_info ( const lame_global_flags* gfp, FILE* const fp, const c
 }
 
 
-void presets_setup ( lame_global_flags* gfp, const char* preset_name, const char* ProgramName )
+static int  presets_setup ( lame_global_flags* gfp, const char* preset_name, const char* ProgramName )
 {
     size_t  i;
 
@@ -485,11 +485,11 @@ void presets_setup ( lame_global_flags* gfp, const char* preset_name, const char
 	    gfp -> VBR_min_bitrate_kbps = Presets[i].vbr_min;
 	    gfp -> VBR_max_bitrate_kbps = Presets[i].vbr_max;
 	    gfp -> mode_fixed           = 1; 
-	    return;
+	    return 0;
 	}
 
     presets_info ( gfp, stderr, ProgramName );
-    exit (1);
+    return -1;
 }
 
 
@@ -514,8 +514,6 @@ static void genre_list_handler (int num,const char *name,void *cookie)
 *
 ************************************************************************/
 
-// buggy: Should analyze file contents instead of directory contents (file name)
-
 /* would use real "strcasecmp" but it isn't portable */
 static int local_strcasecmp ( const char* s1, const char* s2 )
 {
@@ -533,6 +531,9 @@ static int local_strcasecmp ( const char* s1, const char* s2 )
     } while (c1 == c2);
     return c1 - c2;
 }
+
+
+// buggy: Should analyze file contents instead of directory contents (file name)
 
 static int filename_to_type ( const char* FileName )
 {
@@ -579,13 +580,13 @@ static int resample_rate ( double freq )
 #define T_ELSE             } else {
 #define T_END              }
 
-void parse_args ( lame_global_flags* gfp, int argc, char** argv, char *inPath, char *outPath )
+int  parse_args ( lame_global_flags* gfp, int argc, char** argv, char* const inPath, char* const outPath )
 {
     int         err;
     int         i;
     int         autoconvert  = 0;
     int         user_quality = -1;
-    double      freq;
+    double      val;
     const char* ProgramName  = argv[0]; 
 
     inPath [0] = '\0';   
@@ -658,32 +659,38 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv, char *inPath, c
 		    input_format=sf_ogg;
 #else
 		    fprintf(stderr,"Error: LAME not compiled with Vorbis support\n");
-		    exit(1);
+		    return -1;
 #endif
 		T_ELIF ("ogg")
 #if defined(HAVEVORBIS)
 		    gfp->ogg=1;
 #else
 		    fprintf(stderr,"Error: LAME not compiled with Vorbis support\n");
-		    exit(1);
+		    return -1;
 #endif
 		T_ELIF ("phone")
-                    presets_setup ( gfp, token, ProgramName );
+                    if (presets_setup ( gfp, token, ProgramName ) < 0)
+		        return -1;
                     
 		T_ELIF ("voice")
-                    presets_setup ( gfp, token, ProgramName );
+                    if (presets_setup ( gfp, token, ProgramName ) < 0)
+		        return -1;
                     
 		T_ELIF ("radio")
-                    presets_setup ( gfp, token, ProgramName );
+                    if (presets_setup ( gfp, token, ProgramName ) < 0)
+		        return -1;
                     
 		T_ELIF ("tape")
-                    presets_setup ( gfp, token, ProgramName );
+                    if (presets_setup ( gfp, token, ProgramName ) < 0)
+		        return -1;
                     
 		T_ELIF ("cd")
-                    presets_setup ( gfp, token, ProgramName );
+                    if (presets_setup ( gfp, token, ProgramName ) < 0)
+		        return -1;
                     
 		T_ELIF ("studio")
-                    presets_setup ( gfp, token, ProgramName );
+                    if (presets_setup ( gfp, token, ProgramName ) < 0)
+		        return -1;
                     
 		T_ELIF ("noshort")
 		    gfp->no_short_blocks=1;
@@ -753,7 +760,7 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv, char *inPath, c
 		    argUsed=1;
 		    if (id3tag_set_genre(gfp, nextArg)) {
 			fprintf(stderr,"Unknown genre: %s.  Specify genre name or number\n", nextArg);
-			exit(1);
+			return -1;
 		    }
 		
 		T_ELIF ("add-id3v2")
@@ -773,16 +780,16 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv, char *inPath, c
 		
 		T_ELIF ("genre-list")
 		    id3tag_genre_list(genre_list_handler, NULL);
-		    exit(0);
+		    return -2;
 		
 		T_ELIF ("lowpass")
-		    freq = atof( nextArg );
-		    argUsed=1;
+		    val     = atof( nextArg );
+		    argUsed = 1;
 		    /* useful are 0.001 kHz...50 kHz, 50 Hz...50000 Hz */
-		    gfp -> lowpassfreq = freq * (freq < 50. ? 1.e3 : 1.e0 ) + 0.5;
-		    if ( freq < 0.001 || freq > 50000. ) {
+		    gfp -> lowpassfreq = val * (val < 50. ? 1.e3 : 1.e0 ) + 0.5;
+		    if ( val < 0.001 || val > 50000. ) {
 			fprintf(stderr,"Must specify lowpass with --lowpass freq, freq >= 0.001 kHz\n");
-			exit(1);
+			return -1;
 		    }
 		
 		T_ELIF ("lowpass-width")
@@ -790,17 +797,17 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv, char *inPath, c
 		    gfp->lowpasswidth =  1000.0 * atof( nextArg ) + 0.5;
 		    if (gfp->lowpasswidth  < 0) {
 			fprintf(stderr,"Must specify lowpass width with --lowpass-width freq, freq >= 0 kHz\n");
-			exit(1);
+			return -1;
 		    }
 		
 		T_ELIF ("highpass")
-		    freq = atof( nextArg );
+		    val = atof( nextArg );
 		    argUsed=1;
 		    /* useful are 0.001 kHz...16 kHz, 16 Hz...50000 Hz */
-		    gfp->highpassfreq =  freq * (freq < 16. ? 1.e3 : 1.e0 ) + 0.5;
-		    if ( freq < 0.001 || freq > 50000. ) {
+		    gfp->highpassfreq =  val * (val < 16. ? 1.e3 : 1.e0 ) + 0.5;
+		    if ( val < 0.001 || val > 50000. ) {
 			fprintf(stderr,"Must specify highpass with --highpass freq, freq >= 0.001 kHz\n");
-			exit(1);
+			return -1;
 		    }
 		
 		T_ELIF ("highpass-width")
@@ -808,17 +815,17 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv, char *inPath, c
 		    gfp->highpasswidth =  1000.0 * atof( nextArg ) + 0.5;
 		    if (gfp->highpasswidth  < 0) {
 			fprintf(stderr,"Must specify highpass width with --highpass-width freq, freq >= 0 kHz\n");
-			exit(1);
+			return -1;
 		    }
 		
 		T_ELIF ("cwlimit")
-		    freq = atof (nextArg);
+		    val = atof (nextArg);
 		    argUsed=1;
 		    /* useful are 0.001 kHz...50 kHz, 50 Hz...50000 Hz */
-		    gfp -> cwlimit = freq * ( freq <= 50. ? 1.e3 : 1.e0 );
+		    gfp -> cwlimit = val * ( val <= 50. ? 1.e3 : 1.e0 );
 		    if (gfp->cwlimit <= 0 ) {
 			fprintf(stderr,"Must specify cwlimit with --cwlimit freq, freq >= 0.001 kHz\n");
-			exit(1);
+			return -1;
 		    }
 		 
 		T_ELIF ("comp")
@@ -826,7 +833,7 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv, char *inPath, c
 		    gfp->compression_ratio =  atof( nextArg );
 		    if (gfp->compression_ratio < 1.0 ) {
 			fprintf(stderr,"Must specify compression ratio >= 1.0\n");
-			exit(1);
+			return -1;
 		    }
 		
 		T_ELIF ("nspsytune")
@@ -846,26 +853,35 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv, char *inPath, c
 		 */
 		T_ELIF2 ("version", "license")
 		    print_license ( gfp, stdout, ProgramName );
-		    exit (0);
+		    return -2;
 		
 		T_ELIF2 ("help", "usage")
 		    short_help ( gfp, stdout, ProgramName );
-		    exit (0);
+		    return -2;
 		
 		T_ELIF ("longhelp")
 		    long_help ( gfp, stdout, ProgramName, 0 /* lessmode=NO */ );
-		    exit (0);
+		    return -2;
 		    
 		T_ELIF ("?")
+#ifdef __unix__
+                    FILE* fp = popen ("less -dEfim", "w");
+		    long_help ( gfp, fp, ProgramName, 0 /* lessmode=NO */ );
+		    pclose (fp);
+#else		
 		    long_help ( gfp, stdout, ProgramName, 1 /* lessmode=YES */ );
-		    exit (0);
+#endif		    
+		    return -2;
 		
 		T_ELIF ("preset")
 		    argUsed = 1;
-		    presets_setup ( gfp, nextArg, ProgramName );
+		    if (presets_setup ( gfp, nextArg, ProgramName ) < 0)
+		        return -1;
+		    
                 T_ELIF ("disptime")
                     argUsed = 1;
 		    update_interval = atof (nextArg);
+		    
 		T_ELSE
 		    fprintf(stderr,"%s: unrec option --%s\n", ProgramName, token);
 		    
@@ -908,8 +924,8 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv, char *inPath, c
 			break;
 		    case 's':
 			argUsed = 1;
-			freq = atof( arg );
-			gfp->in_samplerate = ( 1000.0 * freq ) + 0.5;
+			val = atof( arg );
+			gfp->in_samplerate = val * ( val <= 192 ? 1.e3 : 1.e0 ) + 0.5;
 			break;
 		    case 'b':        
 			argUsed = 1;
@@ -1002,7 +1018,7 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv, char *inPath, c
 			
 		    case '?':   
 		        long_help ( gfp, stderr, ProgramName, 0 /* LESSMODE=NO */);
-		        exit (1);
+		        return -1;
 		        
 		    default:    
 		        fprintf(stderr,"%s: unrec option %c\n", ProgramName, c);
@@ -1031,7 +1047,7 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv, char *inPath, c
     
     if ( err  ||  inPath[0] == '\0' ) {
         usage ( gfp, stderr, ProgramName );
-        exit (1);
+        return -1;
     }
 	
     if ( inPath[0] == '-' ) 
@@ -1066,14 +1082,14 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv, char *inPath, c
 	 input_format == sf_mp2 ||
 	 input_format == sf_mp3) {
 	fprintf(stderr,"Error: libmp3lame not compiled with mpg123 *decoding* support \n");
-	exit(1);
+	return -1;
     }
 #endif
 
 #if !(defined HAVEVORBIS)
     if ( input_format == sf_ogg ) {
         fprintf(stderr,"Error: LAME not compiled with Vorbis support\n");
-	exit(1);
+	return -1;
     }
 #endif
     /* default guess for number of channels */
@@ -1091,8 +1107,10 @@ void parse_args ( lame_global_flags* gfp, int argc, char** argv, char *inPath, c
     if ( gfp->free_format ) {
 	if ( gfp -> brate < 8  ||  gfp -> brate > 550 ) {
 	    fprintf(stderr,"For free format, specify a bitrate between 8 and 320 (550) kbps\n");
-	    exit(1);
+	    return -1;
 	}
     }
-    
+    return 0;
 }
+
+/* end of parse.c */

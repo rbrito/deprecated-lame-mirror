@@ -149,21 +149,30 @@ FLOAT8 freq2cbw(FLOAT8 freq)
 /***********************************************************************
  * compute bitsperframe and mean_bits for a layer III frame 
  **********************************************************************/
-void getframebits(lame_global_flags *gfp,int *bitsPerFrame, int *mean_bits) {
-  int whole_SpF;
+void getframebits(lame_global_flags *gfp, int *bitsPerFrame, int *mean_bits) 
+{
   lame_internal_flags *gfc=gfp->internal_flags;
-
-  int bit_rate;
+  int  whole_SpF;  // integral number of bytes per frame without padding
+  int  bit_rate;
   
+  /* get bitrate in kbps [?] */
   if (gfc->bitrate_index) 
     bit_rate = bitrate_table[gfp->version][gfc->bitrate_index];
   else
     bit_rate = gfp->brate;
+  assert ( bit_rate <= 550 );
   
-  whole_SpF=((gfp->version+1)*72000*bit_rate) / gfp->out_samplerate;
+  // bytes_per_frame = bitrate * 1000 / ( gfp->out_samplerate / (gfp->version == 1  ?  1152  :  576 )) / 8;
+  // bytes_per_frame = bitrate * 1000 / gfp->out_samplerate * (gfp->version == 1  ?  1152  :  576 ) / 8;
+  // bytes_per_frame = bitrate * ( gfp->version == 1  ?  1152/8*1000  :  576/8*1000 ) / gfp->out_samplerate;
+  
+  whole_SpF = (gfp->version+1)*72000*bit_rate / gfp->out_samplerate;
+  
+  // There must be somewhere code toggling gfc->padding on and off
   *bitsPerFrame = 8 * (whole_SpF + gfc->padding);
+  
+  // sideinfo_len
   *mean_bits = (*bitsPerFrame - 8*gfc->sideinfo_len) / gfc->mode_gr;
-
 }
 
 
@@ -230,47 +239,24 @@ int     found = 0;
     }
 }
 
-int SmpFrqIndex(  /* convert samp frq in Hz to index */
-int sRate,             /* legal rates 16000, 22050, 24000, 32000, 44100, 48000 */
-int  *version)
-{
-	/* Assign default value */
-	*version=0;
+/* convert samp freq in Hz to index */
 
-    if (sRate == 44100) {
-        *version = 1; return(0);
-    }
-    else if (sRate == 48000) {
-        *version = 1; return(1);
-    }
-    else if (sRate == 32000) {
-        *version = 1; return(2);
-    }
-    else if (sRate == 24000) {
-        *version = 0; return(1);
-    }
-    else if (sRate == 22050) {
-        *version = 0; return(0);
-    }
-    else if (sRate == 16000) {
-        *version = 0; return(2);
-    }
-    else if (sRate == 12000) {
-        *version = 0; return(1);
-    }
-    else if (sRate == 11025) {
-        *version = 0; return(0);
-    }
-    else if (sRate ==  8000) {
-        *version = 0; return(2);
-    }
-    else {
-        ERRORF("SmpFrqIndex: %ldHz is not a legal sample rate\n", sRate);
-        return(-1);     /* Error! */
+int SmpFrqIndex ( int sample_freq, int* const version )
+{
+    switch ( sample_freq ) {
+    case 44100: *version = 1; return  0;
+    case 48000: *version = 1; return  1;
+    case 32000: *version = 1; return  2;
+    case 22050: *version = 0; return  0;
+    case 24000: *version = 0; return  1;
+    case 16000: *version = 0; return  2;
+    case 11025: *version = 0; return  0;
+    case 12000: *version = 0; return  1;
+    case  8000: *version = 0; return  2;
+    default:    ERRORF ( "SmpFrqIndex: %d Hz is not a legal sample frequency\n", sample_freq );
+		*version = 0; return -1;
     }
 }
-
-
 
 
 /*****************************************************************************
@@ -502,9 +488,18 @@ int has_SIMD (void)
  
 void updateStats( lame_internal_flags *gfc )
 {
-    gfc->bitrateHist[gfc->bitrate_index & 0xf] ++;
+    assert ( gfc->bitrate_index < 16u );
+    assert ( gfc->mode_ext      <  4u );
+    // AND masking is not a good idea, it only hides errors
+    
+    if (gfc->stereo != 2)
+        assert (gfc->mode_ext == 0);
+    
+    // may be one 2D array is enough and calculation is done on request
+    gfc->bitrateHist [gfc->bitrate_index]++;
     if (gfc->stereo == 2) {
-        gfc->stereoModeHist[gfc->mode_ext & 0x3] ++;
+        gfc->stereoModeHist [gfc->mode_ext]++;
+        gfc->bitrate_stereoModeHist [gfc->bitrate_index] [gfc->mode_ext]++;
     }
 }
 

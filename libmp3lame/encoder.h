@@ -22,51 +22,53 @@
 
 #ifndef LAME_ENCODER_H
 #define LAME_ENCODER_H
+
 /***********************************************************************
 *
 *  encoder and decoder delays
 *
 ***********************************************************************/
+
 /* 
-layerIII enc->dec delay:  1056 (1057?)   (observed)
-layerII  enc->dec dealy:   480 (481?)    (observed)
+ * layer III enc->dec delay:  1056 (1057?)   (observed)
+ * layer  II enc->dec delay:   480  (481?)   (observed)
+ *
+ * polyphase 256-16             (dec or enc)        = 240
+ * mdct      256+32  (9*32)     (dec or enc)        = 288
+ * total:    512+16
+ *
+ * My guess is that delay of polyphase filterbank is actualy 240.5
+ * (there are technical reasons for this, see postings in mp3encoder).
+ * So total Encode+Decode delay = ENCDELAY + 528 + 1
+ */
 
-
-polyphase 256-16             (dec or enc)        = 240
-mdct      256+32  (9*32)     (dec or enc)        = 288
-total:    512+16
-
-My guess is that delay of polyphase filterbank is actualy 240.5
-(there are technical reasons for this, see postings in mp3encoder)
-So total Encode+Decode delay = ENCDELAY + 528 + 1
-*/
-
-
-
-/* ENCDELAY  The encoder delay.  
-
-   Minimum allowed is MDCTDELAY (see below)
-   
-   The first 96 samples will be attenuated, so using a value
-   less than 96 will result in corrupt data for the first 96-ENCDELAY
-   samples. 
-
-   suggested: 576
-   set to 1160 to sync with FhG.
-*/
+/* 
+ * ENCDELAY  The encoder delay.  
+ *
+ * Minimum allowed is MDCTDELAY (see below)
+ *  
+ * The first 96 samples will be attenuated, so using a value less than 96
+ * will result in corrupt data for the first 96-ENCDELAY samples.
+ *
+ * suggested: 576
+ * set to 1160 to sync with FhG.
+ */
+ 
 #define ENCDELAY 576
 
+/* 
+ * delay of the MDCT used in mdct.c
+ * original ISO routines had a delay of 528!  
+ * Takehiro's routines: 
+ */
 
-
-
-/* delay of the MDCT used in mdct.c */
-/* original ISO routiens had a delay of 528!  Takehiro's routines: */
 #define MDCTDELAY 48  
 #define FFTOFFSET (224+MDCTDELAY)
 
 /*
-Most decoders, including the one we use,  have a delay of 528 samples.  
-*/
+ * Most decoders, including the one we use, have a delay of 528 samples.  
+ */
+ 
 #define DECDELAY 528
 
 
@@ -88,9 +90,9 @@ Most decoders, including the one we use,  have a delay of 528 samples.
 
 /* FFT sizes */
 #define BLKSIZE         1024
-#define HBLKSIZE        513
-#define BLKSIZE_s 256
-#define HBLKSIZE_s 129
+#define HBLKSIZE        (BLKSIZE/2+1)
+#define BLKSIZE_s       256
+#define HBLKSIZE_s      (BLKSIZE_s/2+1)
 
 
 /* #define switch_pe        1800 */
@@ -99,8 +101,17 @@ Most decoders, including the one we use,  have a delay of 528 samples.
 #define SHORT_TYPE      2
 #define STOP_TYPE       3
 
-
-/* Mode Extention */
+/* 
+ * Mode Extention:
+ * When we are in stereo mode, there are 4 possible methods to store these
+ * two channels. The stereo modes -m? are using a subset of them.
+ *
+ *  -ms: MPG_MD_LR_LR
+ *  -mj: MPG_MD_LR_LR and MPG_MD_MS_LR
+ *  -mf: MPG_MD_MS_LR
+ *  -mi: all
+ */
+ 
 #define         MPG_MD_LR_LR             0
 #define         MPG_MD_LR_I              1
 #define         MPG_MD_MS_LR             2

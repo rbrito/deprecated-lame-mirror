@@ -200,10 +200,13 @@ int lame_init_params(lame_global_flags *gfp)
 {
     /* A third dbQ table */
     /* Can all dbQ setup can be done here using a switch statement? */
-    static const FLOAT8 dbQ [] = { -5.0, -3.75, -2.5, -1.25, 0, +0.4, +0.8, +1.2, +1.6, +2.0 };
-    static const int    atQ [] = { +16,  +12,   +8,   +4,    0, -4,   -8,   -12,  -16,  -20  };
-    int i;
-    lame_internal_flags *gfc=gfp->internal_flags;
+    static const FLOAT8  dbQ [] = { -5.0, -3.75, -2.5, -1.25, 0, +0.4, +0.8, +1.2, +1.6, +2.0 };
+    static const int     atQ [] = { +16,  +12,   +8,   +4,    0, -4,   -8,   -12,  -16,  -20  };
+    static const FLOAT8  cmp [] = {   5,    6,    7,    8,    9, 10,   11,    12,   13,   14  };
+    
+    int                  i;
+    int                  j;
+    lame_internal_flags* gfc = gfp->internal_flags;
 
     gfc->lame_init_params_init = 0; /* Den Morgen nicht vor dem Abend loben */
   
@@ -249,7 +252,7 @@ int lame_init_params(lame_global_flags *gfp)
     if (!gfp->free_format)
       gfp->brate = FindNearestBitrate(gfp->brate,gfp->version,gfp->out_samplerate);
   }
-  if (gfp->brate >= 320) gfp->VBR=vbr_off;  /* dont bother with VBR at 320kbs */
+  if (gfp->brate >= 320) gfp->VBR=vbr_off;  /* don't bother with VBR at 320kbs */
 
 
 
@@ -259,12 +262,8 @@ int lame_init_params(lame_global_flags *gfp)
   */
     
   if (gfp->out_samplerate==0) {
-    /* user did not specify output sample rate */
-    gfp->out_samplerate=gfp->in_samplerate;   /* default */
-
-
     /* if resamplerate is not valid, find a valid value */
-    gfp->out_samplerate = map2MP3Frequency(gfp->out_samplerate);
+    gfp->out_samplerate = map2MP3Frequency (0.97 * gfp->in_samplerate);
 
 
     /* check if user specified bitrate requires downsampling */
@@ -291,10 +290,10 @@ int lame_init_params(lame_global_flags *gfp)
   gfp->framesize = gfc->mode_gr*576;
   if (gfp->ogg) gfp->framesize = 1024;
 
-
-  gfc->resample_ratio=1;
-  if (gfp->out_samplerate != gfp->in_samplerate) 
-        gfc->resample_ratio = (FLOAT)gfp->in_samplerate/(FLOAT)gfp->out_samplerate;
+    if ( gfp->out_samplerate != gfp->in_samplerate ) 
+        gfc->resample_ratio = (double)gfp->in_samplerate / gfp->out_samplerate;
+    else
+        gfc->resample_ratio = 1.;
 
   /* 44.1kHz at 56kbs/channel: compression factor of 12.6
      44.1kHz at 64kbs/channel: compression factor of 11.025
@@ -322,24 +321,61 @@ int lame_init_params(lame_global_flags *gfp)
      9                14.7             96kbs
      for lower bitrates, downsample with --resample
   */
-  if (gfp->VBR==vbr_mt || gfp->VBR==vbr_rh || gfp->VBR==vbr_mtrh) {
-    gfp->compression_ratio = 5.0 + gfp->VBR_q;
-  }else
-  if (gfp->VBR==vbr_abr) {
-    gfp->compression_ratio = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->VBR_mean_bitrate_kbps);
-  }else{
-    gfp->compression_ratio = gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->brate);
-  }
+    switch ( gfp->VBR ) {
+    case vbr_mt:
+    case vbr_rh:
+    case vbr_mtrh:
+        gfp->compression_ratio = cmp [ gfp->VBR_q ];
+	break;
+    case vbr_abr:
+        gfp->compression_ratio = gfp->out_samplerate * 16 * gfc->stereo / (1.e3 * gfp->VBR_mean_bitrate_kbps);
+	break;
+    default:  
+        gfp->compression_ratio = gfp->out_samplerate * 16 * gfc->stereo / (1.e3 * gfp->brate);
+	break;
+    }
 
+#ifdef KLEMM_12
 
+  /* At higher quality (lower compression) use STEREO instead of J-STEREO.
+   * (unless the user explicitly specified a mode)
+   *
+   * The threshold to completely switch to STEREO is:
+   *    48 kHz:   244 kbps (used at 256+)
+   *    44.1 kHz: 224 kbps (used at 224+)
+   *    32 kHz:   162 kbps (used at 192+)
+   *
+   * Note, that there is a second mechanism to reduce MS usage at high
+   * compression rates. This code is only to speed up compression for high
+   * data rates, where MS is really never necessary.
+   */
+   
+    if ( !gfp->mode_fixed  &&  gfp->mode != MPG_MD_MONO )
+        if ( gfp->compression_ratio <= 6.3 )
+            gfp->mode = MPG_MD_STEREO;
 
-  /* At higher quality (lower compression) use STEREO instead of JSTEREO.
-   * (unless the user explicitly specified a mode ) */
+#else
+
+  /* At higher quality (lower compression) use STEREO instead of J-STEREO.
+   * (unless the user explicitly specified a mode)
+   *
+   * The threshold to switch to STEREO is:
+   *    48 kHz:   171 kbps (used at 192+)
+   *    44.1 kHz: 160 kbps (used at 160+)
+   *    32 kHz:   119 kbps (used at 128+)
+   *
+   *   Note, that for 32 kHz/128 kbps J-STEREO FM recordings sound much
+   *   better than STEREO, so I'm not so very happy with that. 
+   *   fs < 32 kHz I have not tested.
+   */
+   
   if ( (!gfp->mode_fixed) && (gfp->mode !=MPG_MD_MONO)) {
-    if (gfp->compression_ratio < 9 ) {
+    if (gfp->compression_ratio /* <= 8.82 */ < 9 ) {
       gfp->mode = MPG_MD_STEREO;
     }
   }
+
+#endif    
 
 
   /****************************************************************/
@@ -371,15 +407,28 @@ int lame_init_params(lame_global_flags *gfp)
     }
 
 #ifdef KLEMM_01
-    assert ( gfp->out_samplerate >= 8000  &&  gfp->out_samplerate <= 48000 
-	     &&  gfp->out_samplerate != 44000 );
+        if ( gfp->out_samplerate >= 32000 ) {
+            static unsigned char bandwidth [3] [11] = {
+	                 /*  0  32  64  96 128 160 192 224 256 288 320 */
+	        /* 32 */ {   1, 21, 31,  54,58, 60, 62, 62, 62, 62, 62 },
+		/* 44 */ {   1, 17, 25,  39,42, 44, 45, 46, 47, 48, 49 },
+		/* 48 */ {   1, 15, 23,  36,39, 40, 41, 42, 43, 44, 45 },
+            };
+            int  index;
+            int  bitrate;
 
-    if ( gfp->out_samplerate == 44100 )
-        if ( band > 24.5 )
-            band = 24.5;
-    if ( gfp->out_samplerate == 48000 )
-        if ( band > 22.5 )
-            band = 22.5;
+            switch ( gfp->out_samplerate ) {
+	    case 32000: index = 0; break;
+	    default:    assert (0);
+	    case 44100: index = 1; break;
+	    case 48000: index = 2; break;
+            }
+
+            bitrate = gfp->out_samplerate * 16 * gfc->stereo / gfp->compression_ratio / 32000;
+	    if ( bitrate > 10 )
+	        bitrate = 10;
+            band  = 0.5 * bandwidth [index] [bitrate];
+        }
 #endif  
       
     if (band < 31) {
@@ -475,24 +524,27 @@ int lame_init_params(lame_global_flags *gfp)
      * effects CBR encodings.  Lowering the maskings will make LAME
      * work harder to get over=0 and may give better noise shaping?
      */
-    if (gfp->VBR == vbr_abr)
-    {
+
       /* A third dbQ table */
       /* Can all dbQ setup can be done here using a switch statement? */
-	FLOAT8 masking_lower_db;
-	assert( (unsigned)gfp->VBR_q < sizeof(dbQ)/sizeof(*dbQ) );
-	assert( (unsigned)gfp->VBR_q < sizeof(atQ)/sizeof(*atQ) );
 
-      masking_lower_db = dbQ [gfp->VBR_q];
-      gfc->masking_lower = pow(10.0,masking_lower_db/10);
-      gfc->ATH_vbrlower  = atQ [gfp->VBR_q];
-    }
-    
-    if (gfp->VBR == vbr_rh || gfp->VBR == vbr_mtrh)
-    {
-	assert( (unsigned)gfp->VBR_q < sizeof(atQ)/sizeof(*atQ) );
-	gfc->ATH_vbrlower = atQ [gfp->VBR_q];
-    } 
+     
+        switch ( gfp->VBR ) {
+	case vbr_abr:
+	    assert( (unsigned)gfp->VBR_q < sizeof(dbQ)/sizeof(*dbQ) );
+	    assert( (unsigned)gfp->VBR_q < sizeof(atQ)/sizeof(*atQ) );
+            gfc->masking_lower = pow (10., 0.1 * dbQ [gfp->VBR_q] );
+            gfc->ATH_vbrlower  = atQ [ gfp->VBR_q ];
+            break;
+        case vbr_rh:
+        case vbr_mtrh:
+	    assert( (unsigned)gfp->VBR_q < sizeof(atQ)/sizeof(*atQ) );
+	    gfc->ATH_vbrlower  = atQ [ gfp->VBR_q ];
+            break;
+	default:
+	    break;
+	}
+	
     
     // At low levels VBR currently switches to 32 kbps.
     // instead of filling this minimum data rate with useful data, it often
@@ -615,37 +667,20 @@ int lame_init_params(lame_global_flags *gfp)
 	return -2;
     }
 
+    j = gfc->samplerate_index + (3 * gfp->version) + 6 * (gfp->out_samplerate < 16000);
+    for (i = 0; i < SBMAX_l + 1; i++)
+        gfc->scalefac_band.l[i] = sfBandIndex [j].l[i];
+    for (i = 0; i < SBMAX_s + 1; i++)
+        gfc->scalefac_band.s[i] = sfBandIndex [j].s[i];
 
-  for (i = 0; i < SBMAX_l + 1; i++) {
-    gfc->scalefac_band.l[i] =
-      sfBandIndex[gfc->samplerate_index + (gfp->version * 3) + 
-             6*(gfp->out_samplerate<16000)].l[i];
-  }
-  for (i = 0; i < SBMAX_s + 1; i++) {
-    gfc->scalefac_band.s[i] =
-      sfBandIndex[gfc->samplerate_index + (gfp->version * 3) + 
-             6*(gfp->out_samplerate<16000)].s[i];
-  }
-
-
-  /* determine the mean bitrate for main data */
-  gfc->sideinfo_len = 4;
-  if ( gfp->version == 1 )
-    {   /* MPEG 1 */
-      if ( gfc->stereo == 1 )      // This is mono
-	gfc->sideinfo_len += 17;
-      else
-	gfc->sideinfo_len += 32;
-    }
-  else
-    {   /* MPEG 2 */
-      if ( gfc->stereo == 1 )      // This is mono
-	gfc->sideinfo_len += 9;
-      else
-	gfc->sideinfo_len += 17;
-    }
+    /* determine the mean bitrate for main data */
+    if ( gfp->version == 1 ) /* MPEG 1 */
+	gfc->sideinfo_len = (gfc->stereo == 1)  ?  4+17  :  4+32;
+    else                     /* MPEG 2 */
+	gfc->sideinfo_len = (gfc->stereo == 1)  ?  4+ 9  :  4+17;
   
-  if (gfp->error_protection) gfc->sideinfo_len += 2;
+    if ( gfp->error_protection ) 
+        gfc->sideinfo_len += 2;
   
 
   /* Write id3v2 tag into the bitstream */
@@ -662,16 +697,14 @@ int lame_init_params(lame_global_flags *gfp)
   gfc->sfb21_extra = (gfp->VBR==vbr_rh || gfp->VBR==vbr_mtrh || gfp->VBR==vbr_mt)
                    &&(gfp->out_samplerate >= 32000);
   
-  gfc->exp_nspsytune = gfp->exp_nspsytune;
+  gfc->exp_nspsytune = gfp->exp_nspsytune;  /* if this makes any sense, document it! */
 
 
 
-  /* estimate total frames.  */
-  gfp->totalframes = 0;                    /* is this intended ??? */
-  gfp->totalframes = 2 + gfp->num_samples/(gfc->resample_ratio * gfp->framesize);
-
-  
+    /* estimate total frames.  */
+    gfp->totalframes           = 2 + gfp->num_samples/(gfc->resample_ratio * gfp->framesize);
     gfc->lame_init_params_init = 1;
+    
     return 0;
 }
 
@@ -787,10 +820,11 @@ char *mp3buf, int mp3buf_size)
   } else {
     ret = lame_encode_mp3_frame(gfp,inbuf_l,inbuf_r,mp3buf,mp3buf_size);
   }
-  ++gfp->frameNum;
 
-  /* check to see if we overestimated/underestimated totalframes */
-  if (gfp->frameNum > (gfp->totalframes-1)) gfp->totalframes = gfp->frameNum;
+    /* check to see if we underestimated totalframes */
+    gfp->frameNum++;
+    if ( gfp->totalframes < gfp->frameNum ) 
+        gfp->totalframes = gfp->frameNum;
   return ret;
 }
 
@@ -1184,7 +1218,7 @@ int lame_init_old(lame_global_flags *gfp)
   lame_internal_flags *gfc;
 
   /*
-   *  Disable floating point exepctions
+   *  Disable floating point exceptions
    */
 #ifdef __FreeBSD__
   {
@@ -1398,6 +1432,27 @@ void lame_stereo_mode_hist(
     
     for (i = 0; i < 4; i++)
         stmode_count[i] = gfc->stereoModeHist[i]; 
+}
+
+// We should clarify the size of the destination arrays in the future (pfk->rh)
+
+void lame_bitrate_stereo_mode_hist ( 
+        const lame_global_flags* const  gfp, 
+        int  bitrate_stmode_count [16] [4] )
+{
+    const lame_internal_flags* gfc;
+    int  i;
+    int  j;
+
+    assert ( gfp != NULL );
+    assert ( gfp->internal_flags != NULL );
+    assert ( bitrate_stmode_count != NULL );
+    
+    gfc = (lame_internal_flags*) gfp->internal_flags;  // why internal_flags is a void* ???
+    
+    for ( j = 0; j < 14; j++ )
+        for ( i = 0; i < 4; i++ )
+            bitrate_stmode_count [j] [i] = gfc->bitrate_stereoModeHist [j+1] [i]; 
 }
 
 /* end of lame.c */

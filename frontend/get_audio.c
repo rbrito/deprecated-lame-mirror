@@ -174,7 +174,17 @@ void close_infile(void)
   CloseSndFile(input_format, musicin);
 }
 
-void SwapBytesInWords( short *loc, int words )
+#ifdef KLEMM_10
+void SwapBytesInWords ( short* ptr, int words )
+{
+    int  val;
+    while ( words-- > 0 ) {
+        val    = *ptr;
+        *ptr++ = ((val<<8) & 0xFF00) | ((val>>8) & 0x00FF);
+    }
+}
+#else
+void SwapBytesInWords ( short* loc, int words )
 {
     int i;
     short thisval;
@@ -188,10 +198,7 @@ void SwapBytesInWords( short *loc, int words )
         dst[1] = src[0];
     }
 }
-
-
-
-
+#endif
 
 
 /*****************************************************************************
@@ -240,6 +247,7 @@ int get_audio(lame_global_flags *gfp,short buffer[2][1152])
 
   int		j;
   short	insamp[2304];
+  short* p;
   int samples_read;
   int framesize,samples_to_read;
   unsigned int remaining;
@@ -250,44 +258,58 @@ int get_audio(lame_global_flags *gfp,short buffer[2][1152])
    * size "gfp->framesize".  EXCEPT:  the LAME graphical frame analyzer 
    * will get out of sync if we read more than framesize worth of data.
    */
-  framesize = gfp->framesize;
-  assert(framesize <= 1152);
+    samples_to_read  = framesize  = gfp->framesize;
+    assert (framesize <= 1152);
 
-  samples_to_read = framesize;
-  if (count_samples_carefully) {
     /* if this flag has been set, then we are carefull to read
      * exactly num_samples and no more.  This is usefull for .wav and .aiff
      * files which have id3 or other tags at the end.  Note that if you
-     * are using LIBSNDFILE, this is not necessary */
-    remaining=gfp->num_samples-Min(gfp->num_samples,num_samples_read);
-    if (remaining < (unsigned int)framesize)
-      samples_to_read = remaining;
-  }
-
-
-  if (input_format==sf_mp1 ||
-      input_format==sf_mp2 ||
-      input_format==sf_mp3) {
-    /* decode an mp3 file for the input */
-    samples_read=read_samples_mp3(gfp, musicin,buffer,num_channels);
-  } else if (input_format==sf_ogg) {
-    samples_read=read_samples_ogg(gfp, musicin,buffer,num_channels);
-  }else{
-    samples_read = read_samples_pcm(musicin,insamp,num_channels*framesize,num_channels*samples_to_read);
-    samples_read /=num_channels;
-
-    for(j=0;j<framesize;j++) {
-      buffer[0][j] = insamp[num_channels*j];
-      if (num_channels==2) buffer[1][j] = insamp[2*j+1];
-      else buffer[1][j]=0;
+     * are using LIBSNDFILE, this is not necessary 
+     */
+    if ( count_samples_carefully ) {
+        remaining = gfp->num_samples - Min (gfp->num_samples, num_samples_read);
+        if (remaining < (unsigned int)framesize)
+            samples_to_read = remaining;
     }
-  }
 
-  /* if num_samples = MAX_U_32_NUM, then it is considered
-   * infinitely long.  Dont count the samples */
-  if (gfp->num_samples!=MAX_U_32_NUM) num_samples_read += samples_read;
-  return(samples_read);
+    switch (input_format) {
+    case sf_mp1:
+    case sf_mp2:
+    case sf_mp3:
+        samples_read  = read_samples_mp3 ( gfp, musicin, buffer, num_channels );
+	break;
+    case sf_ogg:
+        samples_read  = read_samples_ogg ( gfp, musicin, buffer, num_channels );
+	break;
+    default:
+        samples_read  = read_samples_pcm (      musicin, insamp, num_channels*framesize, num_channels*samples_to_read );
+        samples_read /= num_channels;
 
+        p = insamp;
+        switch (num_channels) {
+        case 1:
+            for ( j = 0; j < framesize; j++ ) {
+                buffer [0] [j] = *p++;
+                buffer [1] [j] = 0;
+            }
+            break;
+        case 2:
+            for ( j = 0; j < framesize; j++ ) {
+                buffer [0] [j] = *p++;
+                buffer [1] [j] = *p++;
+            }
+            break;
+        default:
+	    assert (0);
+	    break;
+        }
+    }
+
+    /* if num_samples = MAX_U_32_NUM, then it is considered infinitely long. Don't count the samples */
+    if ( gfp->num_samples != MAX_U_32_NUM) 
+        num_samples_read += samples_read;
+	
+    return samples_read;
 }
 
 
@@ -328,16 +350,17 @@ int read_samples_ogg(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2]
 int read_samples_mp3(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2][1152],int stereo)
 {
 #if (defined  AMIGA_MPEGA || defined HAVEMPGLIB)
-  int out=0;
+  int out;
 
   out=lame_decode_fromfile(musicin,mpg123pcm[0],mpg123pcm[1],&mp3input_data);
   /* out = -1:  error, probably EOF */
   /* out = 0:   not possible with lame_decode_fromfile() */
   /* out = number of output samples */
 
-  if ( -1 == out )
+  if ( -1 == out ) {
     memset ( mpg123pcm, 0, sizeof(**mpg123pcm)*1152*2 );
-  if (out==-1) return 0;
+    return 0;
+  }
 
   if (gfp->num_channels != mp3input_data.stereo) {
     fprintf(stderr,"Error: number of channels has changed in mp3 file - not supported. \n");
@@ -346,28 +369,32 @@ int read_samples_mp3(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2]
     fprintf(stderr,"Error: samplerate has changed in mp3 file - not supported. \n");
   }
   return out;
-
+#else
+  return -1;
 #endif
 }
 
 
-
-
-
-void WriteWav(FILE *f,long bytes,int srate,int ch){
-  /* quick and dirty */
-  fwrite("RIFF",1,4,f);               /*  0-3 */
-  Write32BitsLowHigh(f,bytes+44-8);
-  fwrite("WAVEfmt ",1,8,f);           /*  8-15 */
-  Write32BitsLowHigh(f,16);
-  Write16BitsLowHigh(f,1);
-  Write16BitsLowHigh(f,ch);
-  Write32BitsLowHigh(f,srate);
-  Write32BitsLowHigh(f,srate*ch*2);
-  Write16BitsLowHigh(f,4);
-  Write16BitsLowHigh(f,16);
-  fwrite("data",1,4,f);               /* 36-39 */
-  Write32BitsLowHigh(f,bytes);
+static int   WriteWaveHeader ( FILE* const fp, const long pcmbytes, const long double sample_freq, const int channels, const int bits )
+{
+    int  freq  = floor ( sample_freq + 0.5 );
+    int  bytes = (bits + 7) / 8;
+    
+    /* quick and dirty, but documented */
+    fwrite             ( "RIFF", 1, 4, fp );		// label
+    Write32BitsLowHigh ( fp, pcmbytes + 44 - 8 );	// length in bytes without header
+    fwrite             ( "WAVEfmt ", 2, 4, fp );        // 2 labels
+    Write32BitsLowHigh ( fp, 2+2+4+4+2+2 );             // length of PCM format declaration area
+    Write16BitsLowHigh ( fp, 1 );			// is PCM?
+    Write16BitsLowHigh ( fp, channels );		// number of channels
+    Write32BitsLowHigh ( fp, freq );			// sample frequency in [Hz]
+    Write32BitsLowHigh ( fp, freq * channels * bytes );	// bytes per second
+    Write16BitsLowHigh ( fp, channels * bytes );	// bytes per sample time
+    Write16BitsLowHigh ( fp, bits );			// bits per sample
+    fwrite             ( "data", 1, 4, fp );		// label
+    Write32BitsLowHigh ( fp, pcmbytes );		// length in bytes of raw PCM data
+    
+    return ferror(fp)  ?  -1  :  0;
 }
 
 /* the simple lame decoder */
@@ -449,7 +476,7 @@ int lame_decoder(lame_global_flags *gfp, FILE *outf,int skip, char *inPath, char
     	fprintf(stderr, "skipping initial %i samples (encoder+decoder delay)\n", skip );
 	
     if ( ! gfp -> disable_waveheader )
-    	WriteWav ( outf, 0x7FFFFFFF, gfp->in_samplerate, gfp->num_channels );
+    	WriteWaveHeader ( outf, 0x7FFFFFFF, gfp->in_samplerate, gfp->num_channels, 16 );
     	/* unknown size, so write maximum 32 bit signed value */
     	
     wavsize       = -skip;
@@ -484,16 +511,16 @@ int lame_decoder(lame_global_flags *gfp, FILE *outf,int skip, char *inPath, char
     if (wavsize <= 0) {
         fprintf(stderr, "WAVE file contains 0 PCM samples\n");
         wavsize = 0;
-    } else if ( wavsize > 0xFFFFFFC0/i ) {
+    } else if ( wavsize > 0xFFFFFFD0/i ) {
         fprintf(stderr, "Very huge WAVE file, can't set filesize accordingly\n");
-	wavsize = 0xFFFFFFC0;
+	wavsize = 0xFFFFFFD0;
     } else {
         wavsize *= i;
     }
   
     if ( ! gfp->disable_waveheader )
 	if ( ! fseek (outf, 0l, SEEK_SET) ) /* if outf is seekable, rewind and adjust length */
-            WriteWav (outf, (unsigned long)wavsize, gfp->in_samplerate, gfp->num_channels );
+            WriteWaveHeader (outf, (unsigned long)wavsize, gfp->in_samplerate, gfp->num_channels, 16 );
     fclose (outf);
 
     decoder_progress_finish (gfp);
@@ -505,7 +532,18 @@ int lame_decoder(lame_global_flags *gfp, FILE *outf,int skip, char *inPath, char
 
 
 
-#ifdef LIBSNDFILE
+#if defined(LIBSNDFILE)
+
+#if 0    /* currently disabled */
+# include "sndfile.h"   // prototype for sf_get_lib_version()
+void print_sndlib_version(FILE *fp)
+{
+    char  tmp [80];
+    sf_get_lib_version ( tmp, sizeof (tmp) );
+    fprintf ( fp, "Input handled by %s  (http://www.zip.com.au/~erikd/libsndfile/)\n", tmp );
+}
+#endif
+
 /*
 ** Copyright (C) 1999 Albert Faber
 **
@@ -731,24 +769,30 @@ FILE * OpenSndFile(lame_global_flags *gfp, char *inPath)
 *
 ************************************************************************/
 
-int read_samples_pcm(FILE *musicin,short sample_buffer[2304],int frame_size,int samples_to_read)
+static int  read_samples_pcm ( FILE* const musicin, short sample_buffer [2304], int frame_size /* unused */, int samples_to_read )
 {
-    int 		samples_read;
-    int			rcode;
-    SNDFILE * gs_pSndFileIn;
-    gs_pSndFileIn = (SNDFILE *)musicin;
+    int  i;
+    int  samples_read;
 
-    samples_read=sf_read_short(gs_pSndFileIn,sample_buffer,samples_to_read);
-    rcode = samples_read;
+    samples_read = sf_read_short ( (SNDFILE*)musicin, sample_buffer, samples_to_read );
 
-    if (8==pcmbitwidth)
-      for (; samples_read > 0; sample_buffer[--samples_read] *= 256);
+    switch (pcmbitwidth) {
+    case  8:
+        for ( i = 0; i < samples_read; i++ )
+            sample_buffer [i] <<= 8;
+	break;
+    case 16:
+        break;
+    default:
+        assert (0);
+        break;
+    }
 
-    return(rcode);
+    return sample_read;
 }
 
 
-#else
+#else  /* defined(LIBSNDFILE) */
 
 /************************************************************************
  ************************************************************************
@@ -1238,23 +1282,39 @@ FILE * OpenSndFile(lame_global_flags *gfp, char *inPath)
   }
   return musicin;
 }
-#endif  /* LIBSNDFILE */
+#endif  /* defined(LIBSNDFILE) */
 
 
 
 
 
-#ifdef HAVEMPGLIB
-static int check_aid (char* header ) 
+#if defined(HAVEMPGLIB)
+static int check_aid ( const char* header ) 
 {
-  int aid_header =
-    (header[0]=='A' && header[1]=='i' && header[2]=='D'
-     && header[3]== (char) 1);
-  return aid_header;
+    return  0 == strncmp ( header, "AiD\1", 4 );
 }
 
-static int is_syncword(char *header)
+
+static int is_syncword(char *header)  
+// bitstreams should be 'unsigned char', ISO otherwise not guarantees a lot !!!
+// bit operator on 'char' are not portable.
 {
+#ifdef KLEMM_08
+    const unsigned char* p = header;
+    
+    int mpeg1  = p[0] == 0xFF  &&  (p[1] & 0xF0) == 0xF0;
+    int mpeg25 = p[0] == 0xFF  &&  (p[1] & 0xF0) == 0xE0;
+  
+    return mpeg1 | mpeg25;
+    
+#else
+    // Sorry, I'm not a parser, I'm a human. I can't read this. I can only hope ...
+/*
+unsigned int s0,s1;
+s0 = (unsigned char) header[0];
+s1 = (unsigned char) header[1] ;
+printf(" syncword:  %2X   %2X   \n ",s0, s1);
+*/
 
   int mpeg1=((int) ( header[0] == (char) 0xFF)) &&
     ((int) ( (header[1] & (char) 0xF0) == (char) 0xF0));
@@ -1263,11 +1323,8 @@ static int is_syncword(char *header)
     ((int) ( (header[1] & (char) 0xF0) == (char) 0xE0));
   
   return (mpeg1 || mpeg25);
- 
-
+#endif 
 }
-
-
 
 int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
 {
@@ -1401,20 +1458,6 @@ int lame_decode_fromfile(FILE *fd, short pcm_l[], short pcm_r[],mp3data_struct *
   }
   return ret;
 }
-#endif
-
-
-/* currently disabled */
-#if 0
-#ifdef LIBSNDFILE
-# include "sndfile.h"   // prototype for sf_get_lib_version()
-void print_sndlib_version(FILE *fp)
-{
-    char  tmp [80];
-    sf_get_lib_version ( tmp, sizeof (tmp) );
-    fprintf ( fp, "Input handled by %s  (http://www.zip.com.au/~erikd/libsndfile/)\n", tmp );
-}
-#endif
-#endif
+#endif /* defined(HAVEMPGLIB) */
 
 /* end of get_audio.c */

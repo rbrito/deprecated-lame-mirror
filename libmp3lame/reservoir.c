@@ -39,7 +39,7 @@ ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, i
 
 
     /* main_data_begin has 9 bits in MPEG 1, 8 bits MPEG2 */
-    resvLimit = (gfp->version==1) ? 4088 : 2040 ;
+    resvLimit = (gfp->version==1) ? 8*511 : 8*255 ;
 
 
     /* maximum allowed frame size */

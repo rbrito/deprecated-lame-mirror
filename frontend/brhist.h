@@ -42,6 +42,8 @@ typedef struct {
     int     disp_height;
     char    str_up         [10];
     char    str_clreoln    [10];
+    char    str_emph       [10];
+    char    str_norm       [10];
     char    Console_buff [1024];
 } Console_IO_t;
 
