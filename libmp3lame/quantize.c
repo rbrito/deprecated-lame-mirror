@@ -232,7 +232,7 @@ calc_noise(
  *
  *  initializes xrpow
  *
- *  returns 0 if all energies in xr are zero, else 1                    
+ *  returns 0 if all energies in xr are zero, else non-zero.
  *
  ************************************************************************/
 
@@ -250,8 +250,7 @@ init_bitalloc(
 	end = gfc->scalefac_band.l[gi->psymax];
 
     /*  check if there is some energy we have to quantize
-     *  and calculate xrpow matching our fresh scalefactors
-     */
+     *  and calculate xrpow matching our fresh scalefactors */
     for (i = 0; i < end; i++) {
 	tmp = fabs (gi->xr[i]);
 	sum += tmp;
