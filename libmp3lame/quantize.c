@@ -433,8 +433,10 @@ trancate_smallspectrums(
 	work[j] = xr;
     }
 
-    sfb = j = 0;
-    sfb = 5;
+    j = 0;
+    sfb = 8;
+    if (gi->block_type == SHORT_TYPE)
+	sfb = 6;
     do {
 	FLOAT8 allowedNoise, trancateThreshold;
 	int nsame, start;
