@@ -103,8 +103,6 @@ struct lame_global_struct {
   int noATH;                      /* disable ATH                          */
   float ATHcurve;                 /* change ATH formula 4 shape           */
   float ATHlower;                 /* lower ATH by this many db            */
-  int athaa_type;                 /* select ATH auto-adjust scheme        */
-  int athaa_loudapprox;           /* select ATH auto-adjust loudness calc */
   float athaa_sensitivity;        /* dB, tune active region of auto-level */
   int mixed_blocks;
   int useTemporal;                /* use temporal masking effect          */

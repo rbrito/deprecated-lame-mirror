@@ -1080,40 +1080,6 @@ lame_get_ATHlower( const lame_global_flags*  gfp )
 }
 
 
-/* Select ATH adaptive adjustment scheme. */
-int
-lame_set_athaa_type( lame_global_flags*  gfp,
-                      int                athaa_type )
-{
-    gfp->athaa_type = athaa_type;
-
-    return 0;
-}
-
-int
-lame_get_athaa_type( const lame_global_flags*  gfp )
-{
-    return gfp->athaa_type;
-}
-
-
-/* Select the loudness approximation used by the ATH adaptive auto-leveling. */
-int
-lame_set_athaa_loudapprox( lame_global_flags*  gfp,
-                           int                 athaa_loudapprox )
-{
-    gfp->athaa_loudapprox = athaa_loudapprox;
-
-    return 0;
-}
-
-int
-lame_get_athaa_loudapprox( const lame_global_flags*  gfp )
-{
-    return gfp->athaa_loudapprox;
-}
-
-
 /* Adjust (in dB) the point below which adaptive ATH level adjustment occurs. */
 int
 lame_set_athaa_sensitivity( lame_global_flags*  gfp,

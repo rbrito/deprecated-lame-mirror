@@ -618,11 +618,6 @@ lame_init_params(lame_global_flags * const gfp)
 
     gfc->sfb21_extra = 0;
 
-    if ( gfp->athaa_type < 0 )
-	gfc->ATH.use_adjust = 3;
-    else
-	gfc->ATH.use_adjust = gfp->athaa_type;
-
     if (gfp->VBR == vbr) {
         if (gfp->quality > 7) {
             gfp->quality = 7;     // needs psymodel
@@ -648,8 +643,6 @@ lame_init_params(lame_global_flags * const gfp)
 
     /* initialize internal adaptive ATH settings  -jd */
     gfc->ATH.aa_sensitivity_p = db2pow(-gfp->athaa_sensitivity);
-
-    if ( gfp->athaa_loudapprox < 0 ) gfp->athaa_loudapprox = 2;
 
 //    if (gfp->useTemporal < 0 ) gfp->useTemporal = 1;  // on by default
 
@@ -825,9 +818,7 @@ lame_print_internals( const lame_global_flags * gfp )
     MSGF( gfc, "\tATH: %s\n", pc );
     MSGF( gfc, "\t ^ shape: %g\n", gfp->ATHcurve);
     MSGF( gfc, "\t ^ level adjustement: %f (dB)\n", gfp->ATHlower );
-    MSGF( gfc, "\t ^ adjust type: %d\n", gfc->ATH.use_adjust );
     MSGF( gfc, "\t ^ adjust sensitivity power (dB): %f\n", gfp->athaa_sensitivity);
-    MSGF( gfc, "\t ^ adapt threshold type: %d\n", gfp->athaa_loudapprox );
 
     i = (gfp->exp_nspsytune >> 2) & 63;
     if (i >= 32)
@@ -1576,9 +1567,6 @@ lame_init_old(lame_global_flags * gfp)
     gfc->nsPsy.msfix = NS_MSFIX*M_SQRT2;
 
     gfp->ATHcurve = 4;
-    gfp->athaa_type = -1;
-    gfp->athaa_loudapprox = -1;	/* 1 = flat loudness approx. (total energy) */
-                                /* 2 = equal loudness curve */
     gfp->athaa_sensitivity = 0.0; /* no offset */
     gfp->useTemporal = -1;
     gfp->interChRatio = -1.0;
