@@ -108,7 +108,7 @@ install_sh = @install_sh@
 
 AUTOMAKE_OPTIONS = 1.5 foreign $(top_srcdir)/ansi2knr
 
-SUBDIRS = ADbg
+SUBDIRS = ADbg tinyxml
 
 EXTRA_DIST = \
 	ACM.cpp \
@@ -116,12 +116,18 @@ EXTRA_DIST = \
 	ACM.h \
 	ACMStream.cpp \
 	ACMStream.h \
+	AEncodeProperties.cpp \
+	AEncodeProperties.h \
+	DecodeStream.cpp \
+	DecodeStream.h \
 	LameACM.inf \
+	TODO \
 	acm.rc \
 	adebug.h \
 	lame.ico \
 	lameACM.def \
 	lameACM.dsp \
+	lame_acm.xml \
 	main.cpp \
 	readme.txt \
 	resource.h
@@ -136,7 +142,7 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive install-info-recursive \
 	uninstall-info-recursive all-recursive install-data-recursive \
 	install-exec-recursive installdirs-recursive install-recursive \
 	uninstall-recursive check-recursive installcheck-recursive
-DIST_COMMON = Makefile.am Makefile.in
+DIST_COMMON = Makefile.am Makefile.in TODO
 DIST_SUBDIRS = $(SUBDIRS)
 all: all-recursive
 

@@ -39,7 +39,7 @@ oldincludedir = /usr/include
 pkgdatadir = $(datadir)/@PACKAGE@
 pkglibdir = $(libdir)/@PACKAGE@
 pkgincludedir = $(includedir)/@PACKAGE@
-top_builddir = ..
+top_builddir = ../..
 
 ACLOCAL = @ACLOCAL@
 AUTOCONF = @AUTOCONF@
@@ -108,24 +108,28 @@ install_sh = @install_sh@
 
 AUTOMAKE_OPTIONS = 1.5 foreign $(top_srcdir)/ansi2knr
 
-EXTRA_DIST = BladeMP3EncDLL.c \
-	BladeMP3EncDLL.def \
-	BladeMP3EncDLL.h \
-	Example.cpp \
-	Example.dsp \
-	Example.dsw \
-	LameDLLInterface.htm \
-	LameDll_vc6.dsp \
-	MP3EncDll.dsp \
-	MP3EncDll.dsw \
-	MP3export.pas
+EXTRA_DIST = \
+	Makefile.tinyxml \
+	changes.txt \
+	dox \
+	makedistlinux \
+	makedistwin.bat \
+	readme.txt \
+	test.dsp \
+	test.dsw \
+	tinyxml.cpp \
+	tinyxml.dsp \
+	tinyxml.h \
+	tinyxmlerror.cpp \
+	tinyxmlparser.cpp \
+	xmltest.cpp
 
-subdir = Dll
+subdir = ACM/tinyxml
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 DIST_SOURCES =
-DIST_COMMON = README Makefile.am Makefile.in
+DIST_COMMON = Makefile.am Makefile.in
 all: all-am
 
 .SUFFIXES:
@@ -140,7 +144,7 @@ distclean-libtool:
 	-rm -f libtool
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am $(top_srcdir)/Makefile.am.global $(top_srcdir)/configure.in $(ACLOCAL_M4)
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign  Dll/Makefile
+	  $(AUTOMAKE) --foreign  ACM/tinyxml/Makefile
 Makefile: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) && \
 	  CONFIG_HEADERS= CONFIG_LINKS= \
@@ -152,7 +156,7 @@ TAGS:
 
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 
-top_distdir = ..
+top_distdir = ../..
 distdir = $(top_distdir)/$(PACKAGE)-$(VERSION)
 
 distdir: $(DISTFILES)

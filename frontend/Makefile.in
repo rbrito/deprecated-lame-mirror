@@ -124,6 +124,7 @@ EXTRA_DIST = \
 	console.h \
 	lame.dsp \
 	lame.dsw \
+	lame_vc6.dsp \
 	mp3x.dsp \
 	mp3x.dsw \
 	amiga_mpega.c
