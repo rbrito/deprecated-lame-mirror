@@ -373,12 +373,12 @@ calc_noise_allband(
  *	init_bitalloc()
  *  mt 6/99
  *
- *  initializes xrpow
+ *  initializes xr34 and gfc->pseudohalf[]
  *  and returns 0 if all energies in xr are zero, else non-zero.
  ************************************************************************/
 
 static int 
-init_bitalloc(lame_internal_flags *gfc, gr_info *const gi, FLOAT xrpow[576])
+init_bitalloc(lame_internal_flags *gfc, gr_info *const gi, FLOAT xr34[576])
 {
     FLOAT tmp, sum = 0.0;
     int i, end = gi->xrNumMax;
@@ -387,21 +387,21 @@ init_bitalloc(lame_internal_flags *gfc, gr_info *const gi, FLOAT xrpow[576])
 	extern void pow075_SSE(float *, float *, int, float*);
 	if (end) {
 	    end = (end + 7) & (~7);
-	    pow075_SSE(gi->xr, xrpow, end, &sum);
+	    pow075_SSE(gi->xr, xr34, end, &sum);
 	}
     } else
 #endif
     {
 	/*  check if there is some energy we have to quantize
-	 *  and calculate xrpow matching our fresh scalefactors */
+	 *  and calculate xr34 matching our fresh scalefactors */
 	for (i = 0; i < end; i++) {
 	    tmp = fabs (gi->xr[i]);
 	    sum += tmp;
-	    xrpow[i] = sqrt (tmp * sqrt(tmp));
+	    xr34[i] = sqrt (tmp * sqrt(tmp));
 	}
     }
-    memset(&xrpow[end], 0, sizeof(FLOAT)*(576-end));
-    /*  return 1 if we have something to quantize, else 0 */
+    memset(&xr34[end], 0, sizeof(FLOAT)*(576-end));
+
     if (sum > (FLOAT)1e-20) {
 	int j = 0;
 	if (gfc->noise_shaping_amp >= 3)
@@ -427,7 +427,7 @@ init_global_gain(
     gr_info * const gi,
     int desired_rate,
     int CurrentStep,
-    const FLOAT xrpow [576])
+    const FLOAT xr34[576])
 {
     int nbits, flag_GoneOver = 0;
     assert(CurrentStep);
@@ -436,7 +436,7 @@ init_global_gain(
     do {
 	if (flag_GoneOver & 2)
 	    gi->big_values = gi->count1 = gi->xrNumMax;
-	nbits = count_bits(gfc, xrpow, gi);
+	nbits = count_bits(gfc, xr34, gi);
 
 	if (CurrentStep == 1 || nbits == desired_rate)
 	    break; /* nothing to adjust anymore */
@@ -458,14 +458,14 @@ init_global_gain(
 
     if (gi->global_gain < 0) {
 	gi->global_gain = 0;
-	nbits = count_bits(gfc, xrpow, gi);
+	nbits = count_bits(gfc, xr34, gi);
     } else if (gi->global_gain > 255) {
 	gi->global_gain = 255;
 	gi->big_values = gi->count1 = gi->xrNumMax;
-	nbits = count_bits(gfc, xrpow, gi);
+	nbits = count_bits(gfc, xr34, gi);
     } else if (nbits > desired_rate) {
 	gi->global_gain++;
-	nbits = count_bits(gfc, xrpow, gi);
+	nbits = count_bits(gfc, xr34, gi);
     }
     gi->part2_3_length = nbits;
 }
@@ -644,9 +644,10 @@ inc_subblock_gain(gr_info * const gi, FLOAT distort[])
 	gi->subblock_gain[window]++;
 	for (sfb = gi->sfb_lmax+window; sfb < gi->psymax; sfb += 3) {
 	    int s = gi->scalefac[sfb] - (4 >> gi->scalefac_scale);
-	    distort[sfb] = -1.0;
-	    if (s < 0)
+	    if (s < 0) {
+		distort[sfb] = -1.0;
 		s = 0;
+	    }
 	    gi->scalefac[sfb] = s;
 	}
     }
@@ -939,14 +940,14 @@ CBR_1st_bitalloc (
 {
     gr_info gi_w;
     FLOAT distort[SFBMAX], l3_xmin[SFBMAX], rxmin[SFBMAX], bestNoise, newNoise;
-    align16 FLOAT xrpow[576];
+    align16 FLOAT xr34[576];
     int current_method, age;
 
-    if (!init_bitalloc(gfc, gi, xrpow))
+    if (!init_bitalloc(gfc, gi, xr34))
 	return; /* digital silence */
 
     gi->global_gain = gfc->OldValue[ch];
-    init_global_gain(gfc, gi, targ_bits, gfc->CurrentStep[ch], xrpow);
+    init_global_gain(gfc, gi, targ_bits, gfc->CurrentStep[ch], xr34);
 
     gfc->CurrentStep[ch] = (gfc->OldValue[ch] - gi->global_gain) >= 4 ? 4 : 2;
     gfc->OldValue[ch] = gi->global_gain;
@@ -978,9 +979,9 @@ CBR_1st_bitalloc (
 					   current_method, targ_bits);
 	if (huff_bits > 0) {
 	    /* adjust global_gain to fit the available bits */
-	    if (adjust_global_gain(gfc, xrpow, &gi_w, distort, huff_bits)) {
+	    if (adjust_global_gain(gfc, xr34, &gi_w, distort, huff_bits)) {
 		int sfb;
-		while (count_bits(gfc, xrpow, &gi_w) > huff_bits
+		while (count_bits(gfc, xr34, &gi_w) > huff_bits
 		       && ++gi_w.global_gain < 256u)
 		    ;
 		for (sfb = 0; sfb < gi->psymax; sfb++)
@@ -1019,12 +1020,12 @@ CBR_1st_bitalloc (
     }
     assert (gi->global_gain < 256);
 
-    CBR_2nd_bitalloc(gfc, gi, xrpow, distort);
+    CBR_2nd_bitalloc(gfc, gi, xr34, distort);
  quit_quantization:
     if (gi->psymax != 0
 	&& !(gi->block_type != SHORT_TYPE && !(gfc->substep_shaping & 1))
 	&& !(gi->block_type == SHORT_TYPE && !(gfc->substep_shaping & 2)))
-	trancate_smallspectrums(gfc, gi, l3_xmin, xrpow);
+	trancate_smallspectrums(gfc, gi, l3_xmin, xr34);
 }
 
 
@@ -1563,7 +1564,7 @@ void
 VBR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
 {
     lame_internal_flags *gfc=gfp->internal_flags;
-    align16 FLOAT xrpow[576];
+    align16 FLOAT xr34[576];
     FLOAT l3_xmin[2][2][SFBMAX];
     int mean_bits, max_frame_bits, used_bits;
     int ch, gr, ath_over = 0;
@@ -1585,13 +1586,13 @@ VBR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
 	for (gr = 0; gr < gfc->mode_gr; gr++) {
 	    for (ch = 0; ch < gfc->channels_out; ch++) {
 		gr_info *gi = &gfc->l3_side.tt[gr][ch];
-		if (!init_bitalloc(gfc, gi, xrpow))
+		if (!init_bitalloc(gfc, gi, xr34))
 		    continue; /* digital silence */
 
 		gi->global_gain = gfc->OldValue[ch];
 		for (;;) {
 		    int ret
-			= VBR_noise_shaping(gfc, gi, xrpow, l3_xmin[gr][ch]);
+			= VBR_noise_shaping(gfc, gi, xr34, l3_xmin[gr][ch]);
 		    if (ret == 0)
 			break;
 		    if (ret == -2)
@@ -1617,7 +1618,7 @@ VBR_iteration_loop(lame_global_flags *gfp, III_psy_ratio ratio[2][2])
 	    if (gi->psymax != 0
 		&& !(gi->block_type != SHORT_TYPE && !(gfc->substep_shaping & 1))
 		&& !(gi->block_type == SHORT_TYPE && !(gfc->substep_shaping & 2)))
-		trancate_smallspectrums(gfc, gi, l3_xmin[gr][ch], xrpow);
+		trancate_smallspectrums(gfc, gi, l3_xmin[gr][ch], xr34);
 	    iteration_finish_one(gfc, gr, ch);
 	    gfc->l3_side.ResvSize -= gi->part2_length + gi->part2_3_length;
 	}

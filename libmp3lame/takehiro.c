@@ -53,8 +53,8 @@ static const int log2tab[] = {
  * From Segher Boessenkool <segher@eastsite.nl>  11/1999
  *********************************************************************/
 static void
-quantize_xrpow_01(const FLOAT *xp, gr_info *gi, fi_union *fi, int sfb,
-		  const FLOAT *xend)
+quantize_01(const FLOAT *xp, gr_info *gi, fi_union *fi, int sfb,
+	    const FLOAT *xend)
 {
     do {
 	const FLOAT *xe = xp + gi->width[sfb];
@@ -70,7 +70,7 @@ quantize_xrpow_01(const FLOAT *xp, gr_info *gi, fi_union *fi, int sfb,
 }
 
 static int
-quantize_xrpow(const FLOAT *xp, gr_info *gi)
+quantize_best(const FLOAT *xp, gr_info *gi)
 {
     /* quantize on xr^(3/4) instead of xr */
     int sfb = 0;
@@ -82,7 +82,7 @@ quantize_xrpow(const FLOAT *xp, gr_info *gi)
 	const FLOAT *xe;
 	FLOAT istep = IPOW20(scalefactor(gi, sfb));
 	if (xp > xe01) {
-	    quantize_xrpow_01(xp, gi, fi, sfb, xend);
+	    quantize_01(xp, gi, fi, sfb, xend);
 	    return 0;
 	}
 
@@ -124,7 +124,7 @@ quantize_xrpow(const FLOAT *xp, gr_info *gi)
 
 
 static void
-quantize_xrpow_ISO(const FLOAT *xp, gr_info *gi)
+quantize_ISO(const FLOAT *xp, gr_info *gi)
 {
     /* quantize on xr^(3/4) instead of xr */
     int sfb = 0;
@@ -136,7 +136,7 @@ quantize_xrpow_ISO(const FLOAT *xp, gr_info *gi)
 	const FLOAT *xe;
 	FLOAT istep = IPOW20(scalefactor(gi, sfb));
 	if (xp > xe01) {
-	    quantize_xrpow_01(xp, gi, fi, sfb, xend);
+	    quantize_01(xp, gi, fi, sfb, xend);
 	    return;
 	}
 
@@ -462,16 +462,16 @@ noquant_count_bits(const lame_internal_flags * const gfc, gr_info * const gi)
 int
 count_bits(
     const lame_internal_flags * const gfc, 
-    const FLOAT  * const xrpow,
+    const FLOAT  * const xr34,
           gr_info * const gi
     )
 {
     if (gfc->quantization > 0) {
-	int i = quantize_xrpow(xrpow, gi);
+	int i = quantize_best(xr34, gi);
 	if (i)
 	    return i;
     } else
-	quantize_xrpow_ISO(xrpow, gi);
+	quantize_ISO(xr34, gi);
 
     if (gfc->substep_shaping & 2) {
 	int sfb, j = 0;
@@ -484,7 +484,7 @@ count_bits(
 	    roundfac = 0.634521682242439
 		/ IPOW20(scalefactor(gi, sfb) + gi->scalefac_scale);
 	    for (l = -width; l < 0; l++)
-		if (xrpow[j+l] < roundfac)
+		if (xr34[j+l] < roundfac)
 		    gi->l3_enc[j+l] = 0;
 	}
     }
