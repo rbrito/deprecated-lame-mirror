@@ -88,7 +88,7 @@ iteration_loop( lame_global_flags *gfp, FLOAT8 pe[2][2],
 
       best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
       if (gfc->use_best_huffman==1 && cod_info->block_type != SHORT_TYPE) {
-        best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
+	best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
       }
       assert((int)cod_info->part2_3_length < 4096);
 
@@ -657,8 +657,13 @@ int quant_compare(int experimentalX,
   switch (experimentalX) {
   default:
   case 0: better =   calc->over_count  < best->over_count
-                 ||( calc->over_count == best->over_count
-                  && calc->over_noise <= best->over_noise ); break;
+                 ||  ( calc->over_count == best->over_count
+                       && calc->over_noise < best->over_noise )
+                 ||  ( calc->over_count == best->over_count 
+                       && calc->over_noise==best->over_noise
+		       && calc->tot_noise < best->tot_noise)
+	    ; break;
+
 
   case 1: better = calc->max_noise < best->max_noise; break;
 
@@ -895,7 +900,25 @@ void outer_loop(
           memcpy(xfsf, xfsf_w, sizeof(xfsf_w));
         }
       }
+
+      if (ch==1 && gfp->frameNum == 2326) {
+	printf("iter=%i better=%i over=%i  scale=%i gg=%i    \n",iteration,
+            better,over,
+	       cod_info->scalefac_scale,cod_info->global_gain);
+	printf("max_noise = %15.10e  \n",noise_info.max_noise);
+	printf("tot_noise = %15.10e  \n",noise_info.tot_noise);
+	printf("over_noise = %15.10e %15.10e  \n",noise_info.over_noise,best_noise_info.over_noise);
+	printf("distort[0] = %15.10e \n",distort[0][0]);
+	
+      }
+
     }
+
+
+
+
+
+
 
 
     /* if no bands with distortion and -X0, we are done */
@@ -954,14 +977,16 @@ void outer_loop(
      * and VBR mode will try again with more bits.  
      * (makes a 10% speed increase, the files I tested were
      * binary identical, 2000/05/20 Robert.Hegemann@gmx.de)
+     * NOTE: distort[] = changed to:  noise/allowed noise
+     * so distort[] > 1 means noise > allowed noise
      */
     if (gfp->VBR==vbr_rh || iteration>100) {
       if (cod_info->block_type == SHORT_TYPE) {
-        if ((distort[1][SBMAX_s-1] > 0)
-          ||(distort[2][SBMAX_s-1] > 0)
-          ||(distort[3][SBMAX_s-1] > 0)) { notdone=0; }
+        if ((distort[1][SBMAX_s-1] > 1)
+          ||(distort[2][SBMAX_s-1] > 1)
+          ||(distort[3][SBMAX_s-1] > 1)) { notdone=0; }
       } else {
-        if (distort[0][SBMAX_l-1] > 0) { notdone=0; }
+        if (distort[0][SBMAX_l-1] > 1) { notdone=0; }
       }
     }
 
@@ -1036,7 +1061,7 @@ void amp_scalefac_bands(lame_global_flags *gfp, FLOAT8 xrpow[576],
       distort_thresh = Max(distort[i+1][sfb],distort_thresh);
     }
   }
-  distort_thresh=Min(distort_thresh * 1.05, 0.0);
+  distort_thresh=Min(distort_thresh * 1.05, 1.0);
 
 
 

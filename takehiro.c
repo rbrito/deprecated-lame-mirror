@@ -314,7 +314,6 @@ int count_bits_long(lame_internal_flags *gfc, int ix[576], gr_info *gi)
 	    break;
     gi->count1 = i;
 
-
     /* Determines the number of bits to encode the quadruples. */
     a1 = a2 = 0;
     for (; i > 3; i -= 4) {
