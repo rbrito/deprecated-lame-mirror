@@ -319,7 +319,7 @@ int InitVbrTag(lame_global_flags *gfp)
 
     /* write dummy VBR tag of all 0's into bitstream */
     for (i=0; i<gfp->TotalFrameSize; ++i)
-	add_dummy_byte(gfp,0);
+	add_dummy_byte(gfc, 0);
 
 
     /* TOC should also take into account the size of the VBR header
