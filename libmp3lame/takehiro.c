@@ -328,7 +328,7 @@ recalc_divide_sub(
 	if (a2 >= gi->big_values)
 	    break;
 	bits = r01_bits[r2] + gi->count1bits;
-	if (gi->part2_3_length <= bits + (gi->big_values - a2)/2)
+	if (gi->part2_3_length <= bits + ((gi->big_values - a2) >> 1))
 	    continue;
 
 	r2t = choosetable(&gi->l3_enc[a2], &gi->l3_enc[gi->big_values], &bits);

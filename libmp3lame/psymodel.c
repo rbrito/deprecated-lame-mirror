@@ -712,7 +712,7 @@ block_type_set(int prev, int next)
 {
     /* update the blocktype of the previous/next granule,
        since it depends on what happend in this granule */
-    return ((next>>1)&1) | ((prev<<1)&2);
+    return ((next>>1) | (prev<<1)) & 3;
 }
 
 /* mask_add optimization */
