@@ -1138,7 +1138,7 @@ void huffman_init(lame_internal_flags * const gfc)
     
 #ifdef MMX_choose_table
     if (gfc->CPU_features.MMX) {
-        extern int choose_table_MMX(const int *ix, const int *end, int *s);
+        extern int choose_table_MMX(const int *ix, const int * const end, int * const s);
         gfc->choose_table = choose_table_MMX;
     }
 #endif

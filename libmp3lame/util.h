@@ -524,7 +524,7 @@ struct lame_internal_flags {
   } CPU_features;
    
   /* functions to replace with CPU feature optimized versions in takehiro.c */
-  int (*choose_table)(const int *ix, const int *end, int *s);
+  int (*choose_table)(const int *ix, const int * const end, int * const s);
   
   void (*fft_fht)(FLOAT *, int);
 
