@@ -1180,18 +1180,6 @@ lame_encode_buffer_interleaved(lame_t gfc,
 
 }
 
-static int
-lame_encode(const lame_t gfc,
-            const short int in_buffer[2][1152],
-            unsigned char *const mp3buf, const int size)
-{
-    if (gfc->Class_ID != LAME_ID)
-        return -3;
-
-    return lame_encode_buffer(gfc, in_buffer[0], in_buffer[1], gfc->framesize,
-                              mp3buf, size);
-}
-
 /*****************************************************************
  Flush mp3 buffer, pad with ancillary data so last frame is complete.
  Reset reservoir size to 0                  

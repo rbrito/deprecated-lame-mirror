@@ -56,7 +56,7 @@ int getframebytes(const lame_t gfc)
 }
 
 #ifndef NDEBUG
-# define putbits24(a,b,c) assert(0 < (c) <= 24), assert((b) <= (1UL << (c))), putbits24main(a,b,c)
+# define putbits24(a,b,c) assert(0 < (c) && (c) <= 24), assert((b) <= (1UL << (c))), putbits24main(a,b,c)
 #else
 # define putbits24(a,b,c) putbits24main(a,b,c)
 #endif
