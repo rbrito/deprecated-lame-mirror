@@ -1211,6 +1211,7 @@ int lame_encode_finish(char *mp3buffer)
 
   III_FlushBitstream();
   mp3count += copy_buffer(mp3buffer,&bs);
+  empty_buffer(&bs);  /* empty buffer */
 
   desalloc_buffer(&bs);    /* Deallocate all buffers */
 

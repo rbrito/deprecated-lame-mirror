@@ -8,9 +8,19 @@
 
 /* dummy file i/o routines if file i/o support is not compiled into lame */
 #if !(defined LIBSNDFILE || defined LAMESNDFILE)
-void lame_init_infile(void) {return;}
-void lame_close_infile(void) {return;}
-int lame_readframe(short int Buffer[2][1152]) {return 0;}
+void lame_init_infile(void) 
+{
+  fprintf(stderr,"Error: libmp3lame was not compiled with I/O support \n");
+  exit(1);
+}
+void lame_close_infile(void) {
+  fprintf(stderr,"Error: libmp3lame was not compiled with I/O support \n");
+  exit(1);
+}
+int lame_readframe(short int Buffer[2][1152]) {
+  fprintf(stderr,"Error: libmp3lame was not compiled with I/O support \n");
+  exit(1);
+}
 
 #else
 
@@ -27,10 +37,15 @@ int read_samples_mp3(FILE *musicin,short int mpg123pcm[2][1152],int num_chan);
 /* read mp3 file until mpglib returns one frame of PCM data */
 #ifdef AMIGA_MPEGA
 int lame_decode_initfile(const char *fullname,int *stereo,int *samp,int *bitrate, unsigned long *nsamp);
-#else
-int lame_decode_initfile(FILE *fd,int *stereo,int *samp,int *bitrate, unsigned long *nsamp);
-#endif
 int lame_decode_fromfile(FILE *fd,short int mpg123pcm[2][1152]);
+#endif
+#ifdef HAVEMPGLIB
+int lame_decode_initfile(FILE *fd,int *stereo,int *samp,int *bitrate, unsigned long *nsamp);
+int lame_decode_fromfile(FILE *fd,short int mpg123pcm[2][1152]);
+#endif
+
+
+
 
 
 
@@ -164,6 +179,7 @@ int GetSndBitrate(void)
 
 int read_samples_mp3(FILE *musicin,short int mpg123pcm[2][1152],int stereo)
 {
+#if (defined  AMIGA_MPEGA || defined HAVEMPGLIB) 
   int j,out=0;
 #ifdef HAVEGTK
   static int framesize=0;
@@ -212,6 +228,10 @@ int read_samples_mp3(FILE *musicin,short int mpg123pcm[2][1152],int stereo)
 #endif
   if (out==-1) return 0;
   else return out;
+#else
+  fprintf(stderr,"Error: libmp3lame was not compiled with I/O support \n");
+  exit(1);
+#endif
 }
 #endif  /* LAMESNDFILE or LIBSNDFILE */
 
@@ -291,16 +311,20 @@ int default_channels)
   if (gf.input_format==sf_mp3) {
 #ifdef AMIGA_MPEGA
     if (-1==lame_decode_initfile(lpszFileName,&num_channels,&samp_freq,&input_bitrate,&num_samples)) {
-#else
+      fprintf(stderr,"Error reading headers in mp3 input file %s.\n", lpszFileName);
+      exit(1);
+    }
+#endif
+#ifdef HAVEMPGLIB
     if ((musicin = fopen(lpszFileName, "rb")) == NULL) {
       fprintf(stderr, "Could not find \"%s\".\n", lpszFileName);
       exit(1);
     }
     if (-1==lame_decode_initfile(musicin,&num_channels,&samp_freq,&input_bitrate,&num_samples)) {
-#endif
       fprintf(stderr,"Error reading headers in mp3 input file %s.\n", lpszFileName);
       exit(1);
     }
+#endif
     gs_wfInfo.samples=num_samples;
     gs_wfInfo.channels=num_channels;
     gs_wfInfo.samplerate=samp_freq;
@@ -537,12 +561,16 @@ int default_channels)
   if (gf.input_format==sf_mp3) {
 #ifdef AMIGA_MPEGA
     if (-1==lame_decode_initfile(inPath,&num_channels,&samp_freq,&input_bitrate,&num_samples)) {
-#else
-    if (-1==lame_decode_initfile(musicin,&num_channels,&samp_freq,&input_bitrate,&num_samples)) {
-#endif
       fprintf(stderr,"Error reading headers in mp3 input file %s.\n", inPath);
       exit(1);
     }
+#endif
+#ifdef HAVEMPGLIB
+    if (-1==lame_decode_initfile(musicin,&num_channels,&samp_freq,&input_bitrate,&num_samples)) {
+      fprintf(stderr,"Error reading headers in mp3 input file %s.\n", inPath);
+      exit(1);
+    }
+#endif
  }else{
    if (gf.input_format != sf_raw) {
      parse_file_header(musicin);

@@ -659,11 +659,15 @@ void lame_parse_args(int argc, char **argv)
 	case 'f': 
 	  gf.quality= 9;
 	  break;
-#ifdef HAVEGTK
 	case 'g': /* turn on gtk analysis */
+#ifdef HAVEGTK
 	  gf.gtkflag = TRUE;
-	  break;
+#else
+	    fprintf(stderr,"LAME not compiled with GTK support, -g not supported.\n",
+		    programName, arg);
 #endif
+	  break;
+
 	case 'e':        argUsed = 1;
 	  if (*arg == 'n')                    gf.emphasis = 0;
 	  else if (*arg == '5')               gf.emphasis = 1;
@@ -726,6 +730,12 @@ void lame_parse_args(int argc, char **argv)
     if (!(strcmp((char *) &inPath[strlen(inPath)-4],".mp3")))
       gf.input_format = sf_mp3;
 
+#if !(defined HAVEMPGLIB || defined AMEGA_MPEGA)
+  if (gf.input_format == sf_mp3) {
+    fprintf(stderr,"Error: libmp3lame not compiled with mp3 *decoding* support \n");
+    exit(1);
+  }
+#endif
   /* default guess for number of channels */
   if (autoconvert) gf.num_channels=2; 
   else if (gf.mode == MPG_MD_MONO) gf.num_channels=1;
