@@ -397,6 +397,7 @@ typedef struct  {
   FLOAT energy[HBLKSIZE];
   FLOAT wsamp_S[2][3][BLKSIZE_s];
   FLOAT energy_s[3][HBLKSIZE_s];
+  FLOAT tot_ener[4];
 
   
   /* fft.c    */
@@ -414,6 +415,7 @@ typedef struct  {
   
   int	s3ind[CBANDS][2];
   int	s3ind_s[CBANDS][2];
+  FLOAT8 SNR_s[CBANDS];
 
   int	numlines_s[CBANDS];
   int	numlines_l[CBANDS];

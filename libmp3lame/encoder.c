@@ -75,7 +75,7 @@ FFT's                    <---------1024---------->
 
 */
 
-typedef FLOAT8 pedata[2][2];
+typedef FLOAT8 chgrdata[2][2];
 
 int  lame_encode_mp3_frame (				// Output
 	lame_global_flags* const  gfp,			// Context
@@ -99,8 +99,9 @@ int  lame_encode_mp3_frame (				// Output
   const sample_t *inbuf[2];
   lame_internal_flags *gfc=gfp->internal_flags;
 
-  pedata pe,pe_MS;
-  pedata *pe_use;
+  FLOAT8 tot_ener[2][4];   
+  chgrdata pe,pe_MS;
+  chgrdata *pe_use;
 
   int ch,gr,mean_bits;
   int bitsPerFrame;
@@ -109,20 +110,12 @@ int  lame_encode_mp3_frame (				// Output
   FLOAT8 ms_ratio_next = 0.;
   FLOAT8 ms_ratio_prev = 0.;
 
-  /* end of variable definition */
-  
 
   memset((char *) masking_ratio, 0, sizeof(masking_ratio));
   memset((char *) masking_MS_ratio, 0, sizeof(masking_MS_ratio));
   memset((char *) scalefac, 0, sizeof(scalefac));
   inbuf[0]=inbuf_l;
   inbuf[1]=inbuf_r;
-
-  /* Now another nasty example about programming:
-   * A lot of lame functions destroy data, so you can't trust
-   * in that data is not modified. A lot of prophylactic copying is done.
-   */
-   
 
   gfc->mode_ext = MPG_MD_LR_LR;
 
@@ -302,12 +295,12 @@ int  lame_encode_mp3_frame (				// Output
 	ret=L3psycho_anal_ns( gfp, bufp, gr, 
 			      &gfc->ms_ratio[gr],&ms_ratio_next,&gfc->ms_ener_ratio[gr],
 			      masking_ratio, masking_MS_ratio,
-			      pe[gr],pe_MS[gr],blocktype);
+			      pe[gr],pe_MS[gr],tot_ener[gr],blocktype);
       } else {
 	ret=L3psycho_anal( gfp, bufp, gr, 
 			   &gfc->ms_ratio[gr],&ms_ratio_next,&gfc->ms_ener_ratio[gr],
 			   masking_ratio, masking_MS_ratio,
-			   pe[gr],pe_MS[gr],blocktype);
+			   pe[gr],pe_MS[gr],tot_ener[gr],blocktype);
       }
       if (ret!=0) return -4;
 
@@ -315,8 +308,6 @@ int  lame_encode_mp3_frame (				// Output
 	gfc->l3_side.gr[gr].ch[ch].tt.block_type=blocktype[ch];
 
     }
-    /* at LSF there is no 2nd granule */
-    gfc->ms_ratio[1]=gfc->ms_ratio[gfc->mode_gr-1];
   }else{
     for (gr=0; gr < gfc->mode_gr ; gr++)
       for ( ch = 0; ch < gfc->channels_out; ch++ ) {
@@ -370,41 +361,45 @@ int  lame_encode_mp3_frame (				// Output
   if (gfp->force_ms) {
     gfc->mode_ext = MPG_MD_MS_LR;
   } else if (check_ms_stereo) {
-    /* ms_ratio = is like the ratio of side_energy/total_energy */
-    /*     ms_ratio_ave =  .50 * (ms_ratio[0] + ms_ratio[1]);*/
+      /* ms_ratio = is like the ratio of side_energy/total_energy */
+      /*     ms_ratio_ave =  .50 * (ms_ratio[0] + ms_ratio[1]);*/
+      
+      
+      /* [0] and [1] are the results for the two granules in MPEG-1,
+       * in MPEG-2 it's only a faked averaging of the same value
+       * _prev is the value of the last granule of the previous frame
+       * _next is the value of the first granule of the next frame
+       */
+      FLOAT8  ms_ratio_ave1;
+      FLOAT8  ms_ratio_ave2;
+      FLOAT8  threshold1    = 0.35;
+      FLOAT8  threshold2    = 0.45;
 
-    
-        /* [0] and [1] are the results for the two granules in MPEG-1,
-         * in MPEG-2 it's only a faked averaging of the same value
-         * _prev is the value of the last granule of the previous frame
-         * _next is the value of the first granule of the next frame
-         */
-        FLOAT8  ms_ratio_ave1 = 0.25 * ( gfc->ms_ratio[0] + gfc->ms_ratio[1] + ms_ratio_prev + ms_ratio_next );
-        FLOAT8  ms_ratio_ave2 = 0.50 * ( gfc->ms_ratio[0] + gfc->ms_ratio[1] );
-        FLOAT8  threshold1    = 0.35;
-        FLOAT8  threshold2    = 0.45;
+      if (gfc->mode_gr==1) 
+	  gfc->ms_ratio[1]=gfc->ms_ratio[0];
 
-	if (gfp->mode_automs) {
+      ms_ratio_ave1 = 0.25 * ( gfc->ms_ratio[0] + gfc->ms_ratio[1] + ms_ratio_prev + ms_ratio_next );
+      ms_ratio_ave2 = 0.50 * ( gfc->ms_ratio[0] + gfc->ms_ratio[1] );
+      
+      if (gfp->mode_automs) {
 	  if ( gfp->compression_ratio < 11.025 ) {
-            /* 11.025 => 1, 6.3 => 0 */
-            double thr = (gfp->compression_ratio - 6.3) / (11.025 - 6.3);
-            if (thr<0) thr=0;
-            threshold1   *= thr;
-            threshold2   *= thr;
+	      /* 11.025 => 1, 6.3 => 0 */
+	      double thr = (gfp->compression_ratio - 6.3) / (11.025 - 6.3);
+	      if (thr<0) thr=0;
+	      threshold1   *= thr;
+	      threshold2   *= thr;
 	  }
-	}
-
-        if ((ms_ratio_ave1 < threshold1  &&  ms_ratio_ave2 < threshold2) || gfc->nsPsy.use) {
-            int  sum_pe_MS = pe_MS[0][0] + pe_MS[0][1] + pe_MS[1][0] + pe_MS[1][1];
-            int  sum_pe_LR = pe   [0][0] + pe   [0][1] + pe   [1][0] + pe   [1][1];
-            
-            /* based on PE: M/S coding would not use much more bits than L/R coding */
-
-	    if (sum_pe_MS <= 1.07 * sum_pe_LR && !gfc->nsPsy.use) gfc->mode_ext = MPG_MD_MS_LR;
-	    if (sum_pe_MS <= 1.00 * sum_pe_LR &&  gfc->nsPsy.use) gfc->mode_ext = MPG_MD_MS_LR;
-        }
-
-
+      }
+      
+      if ((ms_ratio_ave1 < threshold1  &&  ms_ratio_ave2 < threshold2) || gfc->nsPsy.use) {
+	  int  sum_pe_MS = pe_MS[0][0] + pe_MS[0][1] + pe_MS[1][0] + pe_MS[1][1];
+	  int  sum_pe_LR = pe   [0][0] + pe   [0][1] + pe   [1][0] + pe   [1][1];
+	  
+	  /* based on PE: M/S coding would not use much more bits than L/R coding */
+	  
+	  if (sum_pe_MS <= 1.07 * sum_pe_LR && !gfc->nsPsy.use) gfc->mode_ext = MPG_MD_MS_LR;
+	  if (sum_pe_MS <= 1.00 * sum_pe_LR &&  gfc->nsPsy.use) gfc->mode_ext = MPG_MD_MS_LR;
+      }
   }
 
 
