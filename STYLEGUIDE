@@ -19,23 +19,9 @@
 * check important assumptions with an assert()
 
 * use int for all integer quantities if possible.  
-  LAME requires 32 bit ints,
-  so you can assume int is at least 32 bits.  Dont use 'long'.
-  Only used 'unsigned' attribute unless absolutely necessary.
+  LAME requires 32 bit ints, so you can assume int is at least 32 bits.  
+  Dont use 'long'.  Dont use 'unsigned' unless absolutely necessary.
   If 64 bits is required, use int64.
-  If an integer requires exactly 32 bits (like in DetermineEndian())
-  use int32
-
-
-* Don't use single 'short' variables to save storage.
-  Short variables are especially on Pentium Class Computer much slower than
-  int's. DEC alpha also hates short variables.
-
-  Example:   float bla [1024];
-             short i;
-             for ( i = 0; i < 1024; i++ )
-                bla [i] = i;  
- (note: this is done in fft.c - does this make it faster?)
 
 * Avoid using float or double, and instead use: (defined in machine.h).  
 
@@ -46,11 +32,8 @@ On some machines, 64bit will be faster than 32bit.  Also, some math
 routines require 64bit float, so setting FLOAT=float will result in a
 lot of conversions.
 
-
 * The internal representation of PCM samples in type 'sample_t',
   currently this is a FLOAT.  
-
-* Use the 'size_t' to store sizes of memory objects. 
 
 * Use the 'const' attribute if you don't intend to change the variable.
 
@@ -75,7 +58,6 @@ Respect the indentation of the author of the original function.
 If the indentation is not consistent, dont change it.  If
 you are so anal-retentive about these things and you cant
 bare to even look at code with poor indentation, change it to 3.
-
 
 
                 Chapter 2: Placing Braces
@@ -159,9 +141,6 @@ Calling it "loop_counter" is non-productive, if there is no chance of it
 being mis-understood.  Similarly, "tmp" can be just about any type of
 variable that is used to hold a temporary value. 
 
-If you are afraid to mix up your local variable names, you have another
-problem, which is called the function-growth-hormone-imbalance syndrome. 
-See next chapter. 
 
                 
                 Chapter 4: Functions

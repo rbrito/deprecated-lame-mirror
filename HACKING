@@ -10,7 +10,7 @@ Also, main.c is a simple front end to libmp3lame.a
 
 The guts of the code are called from lame_encode_buffer().
 
-lame_encode_buffer() handles buffering, resampling, filtering, and
+lame_encode_buffer() handles buffering and resampling, and
 then calls lame_encode_frame() for each frame:
 
 lame_encode_frame():
