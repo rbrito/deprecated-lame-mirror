@@ -323,8 +323,6 @@ FFT's                    <---------1024---------->
 
 */
 
-typedef FLOAT chgrdata[2][2];
-
 int  lame_encode_mp3_frame (				/* Output */
 	lame_global_flags* const  gfp,			/* Context */
 	sample_t*                 inbuf_l,              /* Input */
