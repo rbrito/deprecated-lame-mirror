@@ -470,8 +470,7 @@ const unsigned char quadcode[2][16*2]  = {
     }
 };
 
-const struct huffcodetab ht[HTN] =
-{
+const struct huffcodetab ht[] = {
   /* xlen, linmax, table, hlen */
   { 0,   0,NULL,NULL},
   { 2,   0,t1HB, t1l},
@@ -506,7 +505,7 @@ const struct huffcodetab ht[HTN] =
   { 8, 255,t24HB, t24l},
   { 9, 511,t24HB, t24l},
   {11,2047,t24HB, t24l},
-  {13,8191,t24HB, t24l},
+  {13,8191,t24HB, t24l}
 };
 
 

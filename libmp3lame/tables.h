@@ -24,8 +24,6 @@
 
 #include "machine.h"
 
-#define HTN	34
-
 struct huffcodetab {
     const int    xlen; 	        /* max. x-index+			*/ 
     const int    linmax;	/* max number to be stored in linbits	*/
@@ -34,7 +32,7 @@ struct huffcodetab {
 };
 
 /* array of all huffcodtable headers, Huffman code table 0..31 */
-extern const struct huffcodetab ht [HTN];
+extern const struct huffcodetab ht [];
 
 extern const unsigned char quadcode[2][16*2];
 
