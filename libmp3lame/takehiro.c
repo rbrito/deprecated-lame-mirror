@@ -62,7 +62,6 @@ unsigned int largetbl[16*16];
 unsigned int table23[3*3];
 unsigned int table56[4*4];
 
-#ifdef MMX_choose_table
 unsigned int64 tableABC[16*8];
 unsigned int64 tableDEF[16*16];
 #define table789 (tableABC+9)
@@ -71,8 +70,7 @@ unsigned int64 linbits32[13];
 unsigned short choose_table_H[13];
 
 extern int choose_table_MMX(int *ix, int *end, int *s);
-#define choose_table(a,b,c) (assert(a<b),choose_table_MMX(a,b,c))
-#else
+
 /*************************************************************************/
 /*	      ix_max							 */
 /*************************************************************************/
@@ -244,7 +242,7 @@ count_bit_noESC_from3(int *ix, int *end, int t1, int *s)
   with any arbitrary tables.
 */
 
-static int choose_table(int *ix, int *end, int *s)
+static int choose_table_nonMMX(int *ix, int *end, int *s)
 {
     int max;
     int choice, choice2;
@@ -292,7 +290,9 @@ static int choose_table(int *ix, int *end, int *s)
 	return count_bit_ESC(ix, end, choice, choice2, s);
     }
 }
-#endif
+
+static int (*choose_table)(int *ix, int *end, int *s) = choose_table_nonMMX;
+
 
 /*************************************************************************/
 /*	      count_bit							 */
@@ -982,6 +982,8 @@ void huffman_init(lame_internal_flags *gfc)
 	    ((int64)ht[t1].xlen << 48) + ((int64)ht[t1].xlen << 32) +
 	    ((int64)ht[t2].xlen << 16) + ((int64)ht[t2].xlen);
     }
+    if (gfc->CPU_features_MMX)
+        choose_table = choose_table_MMX;
 #endif
     for (i = 0; i < 16; i++) {
 	/* a = 18; b = 18;  */

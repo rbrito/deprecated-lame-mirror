@@ -673,6 +673,17 @@ void lame_print_config(lame_global_flags *gfp)
 
   MSGF("LAME version %s    (http://www.mp3dev.org) \n", get_lame_version() );
 
+#ifdef MMX_choose_table
+  if (gfc->CPU_features_MMX) {
+    MSGF("using MMX features\n");
+  }
+#endif
+  if (gfc->CPU_features_3DNow) {
+    MSGF("CPU features 3DNow, not using\n");
+  }
+  if (gfc->CPU_features_SIMD) {
+    MSGF("CPU features SIMD, not using\n");
+  }
   if (gfp->num_channels==2 && gfc->stereo==1) {
     MSGF("Autoconverting from stereo to mono. Setting encoding to mono mode.\n");
   }
