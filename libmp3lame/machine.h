@@ -128,7 +128,6 @@ typedef double FLOAT;
 # ifdef DBL_MAX
 #  define FLOAT_MAX DBL_MAX
 # endif
-#endif
 #else
 typedef float   FLOAT;
 # ifdef FLT_MAX
