@@ -338,7 +338,7 @@ int  lame_encode_mp3_frame (				// Output
       /* polyphase filtering / mdct */
       for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
 	for ( ch = 0; ch < gfc->channels_out; ch++ ) {
-	  gfc->l3_side.gr[gr].ch[ch].tt.block_type=SHORT_TYPE;
+	  gfc->l3_side.tt[gr][ch].block_type=SHORT_TYPE;
 	}
       }
       mdct_sub48(gfc, primebuff0, primebuff1, xr);
@@ -425,7 +425,7 @@ int  lame_encode_mp3_frame (				// Output
       if (ret!=0) return -4;
 
       for ( ch = 0; ch < gfc->channels_out; ch++ )
-	gfc->l3_side.gr[gr].ch[ch].tt.block_type=blocktype[ch];
+	gfc->l3_side.tt[gr][ch].block_type=blocktype[ch];
 
       if (check_ms_stereo) {
 	  ms_ener_ratio[gr] = tot_ener[gr][2]+tot_ener[gr][3];
@@ -437,7 +437,7 @@ int  lame_encode_mp3_frame (				// Output
   }else{
     for (gr=0; gr < gfc->mode_gr ; gr++)
       for ( ch = 0; ch < gfc->channels_out; ch++ ) {
-	gfc->l3_side.gr[gr].ch[ch].tt.block_type=NORM_TYPE;
+	gfc->l3_side.tt[gr][ch].block_type=NORM_TYPE;
 	pe_MS[gr][ch]=pe[gr][ch]=700;
       }
   }
@@ -452,7 +452,7 @@ int  lame_encode_mp3_frame (				// Output
   /* block type flags */
   for( gr = 0; gr < gfc->mode_gr; gr++ ) {
     for ( ch = 0; ch < gfc->channels_out; ch++ ) {
-      gr_info *cod_info = &gfc->l3_side.gr[gr].ch[ch].tt;
+      gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
       cod_info->mixed_block_flag = 0;     /* never used by this model */
       if (cod_info->block_type == NORM_TYPE )
 	cod_info->window_switching_flag = 0;
@@ -467,7 +467,7 @@ int  lame_encode_mp3_frame (				// Output
   /* re-order the short blocks, for more efficient encoding below */
   for (gr = 0; gr < gfc->mode_gr; gr++) {
     for (ch = 0; ch < gfc->channels_out; ch++) {
-      gr_info *cod_info = &gfc->l3_side.gr[gr].ch[ch].tt;
+      gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
       if (cod_info->block_type==SHORT_TYPE) {
 	freorder(gfc->scalefac_band.s,xr[gr][ch]);
       }
@@ -480,8 +480,8 @@ int  lame_encode_mp3_frame (				// Output
     int gr0 = 0, gr1 = gfc->mode_gr-1;
     /* make sure block type is the same in each channel */
     check_ms_stereo =
-      (gfc->l3_side.gr[gr0].ch[0].tt.block_type==gfc->l3_side.gr[gr0].ch[1].tt.block_type) &&
-      (gfc->l3_side.gr[gr1].ch[0].tt.block_type==gfc->l3_side.gr[gr1].ch[1].tt.block_type);
+      (gfc->l3_side.tt[gr0][0].block_type==gfc->l3_side.tt[gr0][1].block_type) &&
+      (gfc->l3_side.tt[gr1][0].block_type==gfc->l3_side.tt[gr1][1].block_type);
   }
   
   /* Here will be selected MS or LR coding of the 2 stereo channels */
@@ -554,7 +554,7 @@ int  lame_encode_mp3_frame (				// Output
 	gfc->pinfo->ms_ratio[gr]=gfc->ms_ratio[gr];
 	gfc->pinfo->ms_ener_ratio[gr]=ms_ener_ratio[gr];
 	gfc->pinfo->blocktype[gr][ch]=
-	  gfc->l3_side.gr[gr].ch[ch].tt.block_type;
+	  gfc->l3_side.tt[gr][ch].block_type;
 	memcpy(gfc->pinfo->xr[gr][ch],xr[gr][ch],sizeof(xr[gr][ch]));
 	/* in psymodel, LR and MS data was stored in pinfo.  
 	   switch to MS data: */

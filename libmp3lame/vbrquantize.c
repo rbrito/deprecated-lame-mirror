@@ -630,7 +630,7 @@ VBR_quantize_granule(
 {
     int status;
     III_side_info_t * l3_side  = & gfc->l3_side;
-    gr_info         * cod_info = & l3_side->gr[gr].ch[ch].tt;  
+    gr_info         * cod_info = & l3_side->tt[gr][ch];  
 
     /* encode scalefacs */
     if ( gfc->is_mpeg1 ) 
@@ -1280,7 +1280,7 @@ VBR_noise_shaping2 (
     
     gfc->use_best_huffman = 0; /* we will do it later */
  
-    cod_info   = &gfc->l3_side.gr[gr].ch[ch].tt;
+    cod_info   = &gfc->l3_side.tt[gr][ch];
     shortblock = (cod_info->block_type == SHORT_TYPE);
       
     if (shortblock) {
@@ -1435,7 +1435,7 @@ VBR_noise_shaping (
     int vbrmax, vbrmin;
     int global_gain_adjust = 0;
 
-    cod_info   = &gfc->l3_side.gr[gr].ch[ch].tt;
+    cod_info   = &gfc->l3_side.tt[gr][ch];
     shortblock = (cod_info->block_type == SHORT_TYPE);
   
     if (shortblock)
@@ -1535,7 +1535,7 @@ VBR_quantize(lame_global_flags *gfp,
        * could drop subsequently calls (rh 2000/07/17)
        */
       int over_ath;
-      cod_info = &l3_side->gr[gr].ch[ch].tt;
+      cod_info = &l3_side->tt[gr][ch];
       cod_info->part2_3_length=LARGE_BITS;
       
       if (cod_info->block_type == SHORT_TYPE) {
@@ -1652,7 +1652,7 @@ VBR_quantize(lame_global_flags *gfp,
 
       for (ch = 0; ch < gfc->channels_out; ++ch) { 
         int adjusted,shortblock;
-        cod_info = &l3_side->gr[gr].ch[ch].tt;
+        cod_info = &l3_side->tt[gr][ch];
         
         /* ENCODE this data first pass, and on future passes unless it uses
          * a very small percentage of the max_frame_bits  */
@@ -1720,7 +1720,7 @@ VBR_quantize(lame_global_flags *gfp,
   for (gr = 0; gr < gfc->mode_gr; ++gr) {
     for (ch = 0; ch < gfc->channels_out; ++ch) {
       best_scalefac_store(gfc, gr, ch, l3_enc, l3_side, scalefac);
-      totbits += l3_side->gr[gr].ch[ch].tt.part2_3_length;
+      totbits += l3_side->tt[gr][ch].part2_3_length;
     }
   }
 
@@ -1747,7 +1747,7 @@ VBR_quantize(lame_global_flags *gfp,
 
   for (gr = 0; gr < gfc->mode_gr; ++gr) {
     for (ch = 0; ch < gfc->channels_out; ++ch) {
-      cod_info = &l3_side->gr[gr].ch[ch].tt;
+      cod_info = &l3_side->tt[gr][ch];
 
 
       ResvAdjust (gfc, cod_info, l3_side, mean_bits);

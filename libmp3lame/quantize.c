@@ -934,7 +934,7 @@ iteration_finish (
     
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         for (ch = 0; ch < gfc->channels_out; ch++) {
-            gr_info *cod_info = &l3_side->gr[gr].ch[ch].tt;
+            gr_info *cod_info = &l3_side->tt[gr][ch];
 
             /*  try some better scalefac storage
              */
@@ -1241,7 +1241,7 @@ VBR_prepare (
             reduce_side (max_bits[gr], ms_ener_ratio[gr], avg, mxb);
         }
         for (ch = 0; ch < gfc->channels_out; ++ch) {
-            gr_info *cod_info = &gfc->l3_side.gr[gr].ch[ch].tt;
+            gr_info *cod_info = &gfc->l3_side.tt[gr][ch];
       
             if (gfc->nsPsy.use && gfp->VBR == vbr_rh) {
             if (cod_info->block_type == NORM_TYPE) 
@@ -1293,7 +1293,7 @@ void bitpressure_strategy1(
     int gr, ch, sfb;
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         for (ch = 0; ch < gfc->channels_out; ch++) {
-            if (gfc->l3_side.gr[gr].ch[ch].tt.block_type == SHORT_TYPE) {
+            if (gfc->l3_side.tt[gr][ch].block_type == SHORT_TYPE) {
                 for (sfb = 0; sfb < SBMAX_s; sfb++) {
                     l3_xmin[gr][ch].s[sfb][0] *= 1.+.029*sfb*sfb/SBMAX_s/SBMAX_s;
                     l3_xmin[gr][ch].s[sfb][1] *= 1.+.029*sfb*sfb/SBMAX_s/SBMAX_s;
@@ -1381,7 +1381,7 @@ VBR_iteration_loop (
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         for (ch = 0; ch < gfc->channels_out; ch++) {
             int ret; 
-            cod_info = &l3_side->gr[gr].ch[ch].tt;
+            cod_info = &l3_side->tt[gr][ch];
       
             /*  init_outer_loop sets up cod_info, scalefac and xrpow 
              */
@@ -1523,7 +1523,7 @@ calc_target_bits (
             if (pe[gr][ch] > 700) {
                 int add_bits = (pe[gr][ch] - 700) / 1.4;
   
-                gr_info *cod_info = &l3_side->gr[gr].ch[ch].tt;
+                gr_info *cod_info = &l3_side->tt[gr][ch];
                 targ_bits[gr][ch] = res_factor * (mean_bits / gfc->channels_out);
  
                 /* short blocks use a little extra, no matter what the pe */
@@ -1619,7 +1619,7 @@ ABR_iteration_loop(
             ms_convert (xr[gr], xr[gr]);
 
         for (ch = 0; ch < gfc->channels_out; ch++) {
-            cod_info = &l3_side->gr[gr].ch[ch].tt;
+            cod_info = &l3_side->tt[gr][ch];
 
             /*  cod_info, scalefac and xrpow get initialized in init_outer_loop
              */
@@ -1715,7 +1715,7 @@ iteration_loop(
         }
         
         for (ch=0 ; ch < gfc->channels_out ; ch ++) {
-            cod_info = &l3_side->gr[gr].ch[ch].tt; 
+            cod_info = &l3_side->tt[gr][ch]; 
 
             /*  init_outer_loop sets up cod_info, scalefac and xrpow 
              */
@@ -1768,7 +1768,7 @@ iteration_loop(
        Requires using the --nores.  This is useful for testing only */
     for (gr = 0; gr < gfc->mode_gr; gr++) {
         for (ch =  0; ch < gfc->channels_out; ch++) {
-            cod_info = &l3_side->gr[gr].ch[ch].tt;
+            cod_info = &l3_side->tt[gr][ch];
             ResvAdjust (gfc, cod_info, l3_side, mean_bits);
         }
     }

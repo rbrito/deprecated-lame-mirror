@@ -617,7 +617,7 @@ scfsi_calc(int ch,
 {
     int i, s1, s2, c1, c2;
     int sfb;
-    gr_info *gi = &l3_side->gr[1].ch[ch].tt;
+    gr_info *gi = &l3_side->tt[1][ch];
 
     static const int scfsi_band[5] = { 0, 6, 11, 16, 21 };
 #if 0
@@ -685,7 +685,7 @@ void best_scalefac_store(
 {
 
     /* use scalefac_scale if we can */
-    gr_info *gi = &l3_side->gr[gr].ch[ch].tt;
+    gr_info *gi = &l3_side->tt[gr][ch];
     int sfb,i,j,j2,l;
 
     /* remove scalefacs from bands with ix=0.  This idea comes
@@ -751,8 +751,8 @@ void best_scalefac_store(
       l3_side->scfsi[ch][i] = 0;
 
     if (gfc->mode_gr==2 && gr == 1
-	&& l3_side->gr[0].ch[ch].tt.block_type != SHORT_TYPE
-	&& l3_side->gr[1].ch[ch].tt.block_type != SHORT_TYPE) {
+	&& l3_side->tt[0][ch].block_type != SHORT_TYPE
+	&& l3_side->tt[1][ch].block_type != SHORT_TYPE) {
       	scfsi_calc(ch, l3_side, scalefac);
     }
     gi->part2_3_length += gi->part2_length;
