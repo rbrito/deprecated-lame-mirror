@@ -386,7 +386,7 @@ optimum_samplefreq(int lowpassfreq, int input_samplefreq)
 int
 lame_init_params(lame_t gfc)
 {
-    int gr, ch;
+    int gr, ch, sfb;
 
 #ifdef HAVE_NASM
     extern int  has_MMX   ( void );
@@ -595,6 +595,36 @@ lame_init_params(lame_t gfc)
 	}
     }
 
+    /* calculate width information */
+    /* long */
+    for (sfb = 0; sfb < SBMAX_l; sfb++) {
+	gfc->w_long[sfb].width
+	    = gfc->scalefac_band.l[sfb] - gfc->scalefac_band.l[sfb+1];
+	gfc->w_long[sfb].window = 0;
+    }
+    gfc->w_long[sfb-1].width
+	= gfc->scalefac_band.l[sfb-1] - gfc->xrNumMax_longblock;
+    /* short */
+    for (sfb = 0; sfb < SBMAX_s; sfb++) {
+	int start = gfc->scalefac_band.s[sfb];
+	int end   = gfc->scalefac_band.s[sfb + 1];
+	int subwin;
+	for (subwin = 0; subwin < 3; subwin++) {
+	    gfc->w_short[sfb*3+subwin].width  = start - end;
+	    gfc->w_short[sfb*3+subwin].window = subwin+1;
+	}
+    }
+    /* mixed */
+    memcpy(gfc->w_mixed, gfc->w_long, sizeof(winfo_t)*8);
+    for (sfb = 3; sfb < SBMAX_s; sfb++) {
+	int start = gfc->scalefac_band.s[sfb];
+	int end   = gfc->scalefac_band.s[sfb + 1];
+	int subwin;
+	for (subwin = 0; subwin < 3; subwin++) {
+	    gfc->w_mixed[sfb*3+subwin-1].width  = start - end;
+	    gfc->w_mixed[sfb*3+subwin-1].window = subwin+1;
+	}
+    }
     return 0;
 }
 
@@ -1366,12 +1396,7 @@ init_gr_info(lame_t gfc, int gr, int ch)
     gi->psymax = gi->psy_lmax = j;
     gi->sfbmax = gi->sfb_lmax = SBPSY_l;
     gi->sfb_smin              = SBPSY_s;
-    for (sfb = 0; sfb < SBMAX_l; sfb++) {
-	gi->wi[sfb].width
-	    = gfc->scalefac_band.l[sfb] - gfc->scalefac_band.l[sfb+1];
-    }
-    gi->wi[sfb-1].width
-	= gfc->scalefac_band.l[sfb-1] - gfc->xrNumMax_longblock;
+    gi->wi = gfc->w_long;
 
     if (gi->block_type != NORM_TYPE) {
 	gi->region0_count = 7;
@@ -1383,6 +1408,7 @@ init_gr_info(lame_t gfc, int gr, int ch)
 		gi->region0_count = 5;
 	    gi->sfb_smin        = 0;
 	    gi->sfb_lmax        = 0;
+	    gi->wi = gfc->w_short;
 	    if (gi->mixed_block_flag) {
 		/*
 		 *  MPEG-1:      sfbs 0-7 long block, 3-12 short blocks
@@ -1390,6 +1416,7 @@ init_gr_info(lame_t gfc, int gr, int ch)
 		 */ 
 		gi->sfb_smin    = 3;
 		gi->sfb_lmax    = gfc->mode_gr*2 + 4;
+		gi->wi = gfc->w_mixed;
 	    }
 	    j = gfc->cutoff_sfb_s;
 	    if (ch & 1)
@@ -1416,8 +1443,6 @@ init_gr_info(lame_t gfc, int gr, int ch)
 		for (subwin = 0; subwin < 3; subwin++) {
 		    for (l = start; l < end; l++)
 			*ix++ = ixwork[3*l+subwin];
-		    gi->wi[j].width  = start - end;
-		    gi->wi[j].window = subwin+1;
 		    j++;
 		}
 	    }

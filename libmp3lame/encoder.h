@@ -205,12 +205,12 @@ typedef struct {
     int psymax;
     int sfbdivide;
     int xrNumMax;
-    winfo_t wi[SFBMAX];
+    winfo_t *wi;
     int count1bits;
     /* added for LSF */
     int slen[4];
 
-    int dummy_for_padding[1];
+    int dummy_for_padding[3];
 } gr_info;
 
 typedef struct {
@@ -238,6 +238,12 @@ struct lame_internal_flags {
 
     /* side information */
     gr_info tt[MAX_GRANULES][MAX_CHANNELS];
+
+    /* precalculated width information */
+    winfo_t w_long[SBMAX_l];
+    winfo_t w_short[SBMAX_s*3];
+    winfo_t w_mixed[SBMAX_s*3-1];
+
     FLOAT maxXR[SFBMAX];
     int main_data_begin;  /* in bytes */
     int ResvSize; /* in bits */
