@@ -306,6 +306,9 @@ dnl Compaq fast math library.
 AC_CHECK_LIB(cpml, cos, USE_LIBM="-lcpml")
 CONFIG_MATH_LIB="${USE_LIBM}"
 
+dnl Type Generic math functions
+AC_CHECK_HEADERS(tgmath.h)
+
 dnl Apple Vector math library
 AC_CHECK_HEADERS(vecLib/vDSP.h)
 
@@ -561,6 +564,7 @@ AM_CONDITIONAL(WITH_BRHIST, test "${CONFIG_BRHIST}" != "no")
 
 
 dnl ### processor specific options ###
+CPUTYPE="no"
 case $host_cpu in
 *86)
 	CPUTYPE="i386"
@@ -569,19 +573,14 @@ case $host_cpu in
 	AC_DEFINE(USE_IEEE754_HACK, 1, IEEE754 compatible machine)
 	;;
 x86_64)
-	# use internal knowledge of the IEEE 754 layout
-	CPUTYPE="i386"
+	#CPUTYPE="i386"
 
+	# use internal knowledge of the IEEE 754 layout
 	AC_DEFINE(USE_IEEE754_HACK, 1, IEEE754 compatible machine)
 	;;
-powerpc)
+powerpc|alpha*)
 	# use internal knowledge of the IEEE 754 layout
-	CPUTYPE="no"
-
 	AC_DEFINE(USE_IEEE754_HACK, 1, IEEE754 compatible machine)
-	;;
-*)
-	CPUTYPE="no"
 	;;
 esac
 
@@ -817,7 +816,7 @@ if test "x$GCC" = "xyes"; then
 				;;
 			alpha*)
 				OPTIMIZATION="${OPTIMIZATION} -mfp-regs"
-				AC_DEFINE(ALLDOUBLE, 1, double is faster than float on Alpha)
+				#AC_DEFINE(ALLDOUBLE, 1, double is faster than float on Alpha)
 				# add "-mcpu=21164a -Wa,-m21164a" to optimize
 				# for 21164a (ev56) CPU
 				;;

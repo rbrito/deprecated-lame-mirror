@@ -46,7 +46,11 @@
 #if  defined(__riscos__)  &&  defined(FPA10)
 # include "ymath.h"
 #else
-# include <math.h>
+# ifdef HAVE_TGMATH_H
+#  include <tgmath.h>
+# else
+#  include <math.h>
+# endif
 #endif
 
 #include <ctype.h>
