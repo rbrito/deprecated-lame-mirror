@@ -1310,22 +1310,20 @@ lame_encode_flush_nogap(lame_global_flags * gfp,
 int
 lame_init_bitstream(lame_global_flags * gfp)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
-    gfp->frameNum=0;
-
 #ifdef BRHIST
+    lame_internal_flags *gfc = gfp->internal_flags;
     /* initialize histogram data optionally used by frontend */
     memset(gfc->bitrate_stereoMode_Hist, 0,
 	   sizeof(gfc->bitrate_stereoMode_Hist));
     memset(gfc->bitrate_blockType_Hist, 0,
 	   sizeof(gfc->bitrate_blockType_Hist));
 #endif
-
     /* Write initial VBR Header to bitstream and init VBR data */
     if (gfp->bWriteVbrTag)
         InitVbrTag(gfp);
 
-    
+    gfp->frameNum=0;
+
     return 0;
 }
 
