@@ -332,7 +332,7 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 
 		if ( lameConfig.format.LHV1.bEnableVBR )
 		{
-			gf.VBR = vbr_mtrh;
+			gf.VBR = vbr_default;
 
 			gf.VBR_q =lameConfig.format.LHV1.nVBRQuality;
 
@@ -388,7 +388,7 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 				break;
 
 				case VBR_METHOD_DEFAULT:
-					gf.VBR = vbr_mtrh;
+					gf.VBR = vbr_default;
 				break;
 
 				case VBR_METHOD_OLD:
