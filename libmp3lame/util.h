@@ -234,15 +234,6 @@ typedef struct
 
 /* Guest structure, only temporarly here */
 
-typedef enum {
-    coding_MPEG_Layer_1 = 1,
-    coding_MPEG_Layer_2 = 2,
-    coding_MPEG_Layer_3 = 3,
-    coding_MPEG_AAC     = 4, /* not supported */
-    coding_Ogg_Vorbis   = 5, /* not supported */
-    coding_MPEG_plus    = 6  /* not supported */
-} coding_t;
-
 #define MAX_CHANNELS  2
 
 typedef struct {
@@ -316,7 +307,6 @@ struct lame_internal_flags {
   FLOAT resample_ratio;           /* input_samp_rate/output_samp_rate */
 
   lame_global_flags* gfp;     /* needed as long as the frame encoding functions must access gfp (all needed information can be added to gfc) */
-  coding_t     coding;        /* MPEG Layer 1/2/3, Ogg Vorbis, MPEG AAC, ... */
   unsigned long frame_count;  /* Number of frames coded, 2^32 > 3 years */
   int          mf_samples_to_encode;
   int          mf_size;

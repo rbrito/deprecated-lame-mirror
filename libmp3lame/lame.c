@@ -563,7 +563,6 @@ lame_init_params(lame_global_flags * const gfp)
     gfc->mode_gr = gfp->out_samplerate <= 24000 ? 1 : 2;
     gfp->framesize = 576 * gfc->mode_gr;
     gfp->encoder_delay = ENCDELAY;
-    gfc->coding = coding_MPEG_Layer_3;
     gfc->resample_ratio = (double) gfp->in_samplerate / gfp->out_samplerate;
     set_compression_ratio(gfp);
 
