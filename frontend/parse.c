@@ -895,21 +895,7 @@ static int  presets_set_r3mix( lame_t gfp, const char* preset_name,
                                FILE *msgfp )
 {
     if (preset_name[0] == '\0') {
-        lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | 1); /*nspsytune*/
-        /*  lame_set_experimentalX(gfp,1); (test CVS) */
-
-        (void) lame_set_scale( gfp, 0.98 ); /* --scale 0.98*/
-
-        lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (8 << 20));
-
-        lame_set_VBR(gfp,vbr_mtrh); 
-        lame_set_VBR_q(gfp,1);
-        lame_set_quality( gfp, 2 );
-        lame_set_lowpassfreq(gfp,19500);
-        lame_set_mode( gfp, JOINT_STEREO );
-        lame_set_ATHtype( gfp, 3 );
-        lame_set_VBR_min_bitrate_kbps(gfp,96);
-    
+        lame_set_preset(gfp, R3MIX);
         return 0;
     }
 /*  else if( strcmp(preset_name, "-...") == 0 ) {
@@ -1053,33 +1039,19 @@ static int  dm_presets( lame_t gfp, int fast, int cbr, const char* preset_name, 
     if (strcmp(preset_name, "standard") == 0) {
 
         if (fast > 0)
-           lame_set_VBR(gfp, vbr_mtrh);
+           lame_set_preset(gfp, STANDARD_FAST);
         else
-           lame_set_VBR(gfp, vbr_rh);
-
-        lame_set_preset_expopts(gfp, 3);
-        lame_set_quality(gfp, 2);
-        lame_set_lowpassfreq(gfp, 19000);
-        lame_set_mode(gfp, JOINT_STEREO);
-        lame_set_VBR_min_bitrate_kbps(gfp, 128);
+           lame_set_preset(gfp, STANDARD);
 
         return 0;
     }
     
     else if (strcmp(preset_name, "extreme") == 0){
 
-        if (fast > 0) {
-           lame_set_VBR(gfp, vbr_mtrh);
-        }
-        else {
-           lame_set_VBR(gfp, vbr_rh);
-        }
-
-        lame_set_preset_expopts(gfp, 2);
-        lame_set_quality(gfp, 2);
-        lame_set_lowpassfreq(gfp, 19500);
-        lame_set_mode(gfp, JOINT_STEREO);
-        lame_set_VBR_min_bitrate_kbps(gfp, 128);					
+        if (fast > 0)
+           lame_set_preset(gfp, EXTREME_FAST);
+        else
+           lame_set_preset(gfp, EXTREME);
 
         return 0;
     }
@@ -1087,12 +1059,8 @@ static int  dm_presets( lame_t gfp, int fast, int cbr, const char* preset_name, 
     else if (((strcmp(preset_name, "insane") == 0) || 
               (strcmp(preset_name, "320"   ) == 0))   && (fast < 1)) {
 
-        lame_set_preset_expopts(gfp, 1);
-        lame_set_brate(gfp, 320);
-        lame_set_quality(gfp, 2);
-        lame_set_mode(gfp, JOINT_STEREO);
-        lame_set_lowpassfreq(gfp, 20500);
-
+        lame_set_preset(gfp, INSANE);
+ 
         return 0;
     }
 

@@ -41,8 +41,9 @@ RSC=rc.exe
 # PROP Output_Dir "Release"
 # PROP Intermediate_Dir "Release"
 # PROP Target_Dir ""
+LINK32=link.exe
 # ADD BASE CPP /nologo /W3 /GX /O2 /Ob2 /D "WIN32" /D "HAVE_CONFIG_H" /D "NDEBUG" /D "_WINDOWS" /YX /Gs1024 /FD /GAy /QIfdiv /QI0f /c
-# ADD CPP /nologo /W3 /GX- /O2 /Ob2 /I "../" /I "../mpglib" /I "../include" /I ".." /D "NDEBUG" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "WIN32" /D "HAVE_CONFIG_H" /Gs1024 /FD /GAy /QIfdiv /QI0f /c
+# ADD CPP /nologo /W3 /O2 /Ob2 /I "../" /I "../mpglib" /I "../include" /I ".." /D "NDEBUG" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "WIN32" /D "HAVE_CONFIG_H" /Gs1024 /FD /GAy /QIfdiv /QI0f /c
 # SUBTRACT CPP /YX
 # ADD BASE RSC /l 0x409
 # ADD RSC /l 0x409
@@ -65,8 +66,10 @@ LIB32=link.exe -lib
 # PROP Output_Dir "Debug"
 # PROP Intermediate_Dir "Debug"
 # PROP Target_Dir ""
+LINK32=link.exe
 # ADD BASE CPP /nologo /W3 /GX /Z7 /Od /D "WIN32" /D "HAVE_CONFIG_H" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX- /ZI /Od /I "../" /I "../mpglib" /I "../include" /I ".." /D "_DEBUG" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "WIN32" /D "HAVE_CONFIG_H" /YX /FD /c
+# ADD CPP /nologo /W3 /ZI /Od /I "../" /I "../mpglib" /I "../include" /I ".." /D "_DEBUG" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "WIN32" /D "HAVE_CONFIG_H" /FD /c
+# SUBTRACT CPP /YX
 # ADD BASE RSC /l 0x409
 # ADD RSC /l 0x409
 BSC32=bscmake.exe
@@ -88,9 +91,10 @@ LIB32=link.exe -lib
 # PROP Output_Dir "Release_NASM"
 # PROP Intermediate_Dir "Release_NASM"
 # PROP Target_Dir ""
+LINK32=link.exe
 # ADD BASE CPP /nologo /W3 /GX /O2 /Ob2 /I "../" /I "../mpglib" /I "../include" /I ".." /D "NDEBUG" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "WIN32" /D "HAVE_CONFIG_H" /Gs1024 /FD /GAy /QIfdiv /QI0f /c
 # SUBTRACT BASE CPP /YX
-# ADD CPP /nologo /W3 /GX- /O2 /Ob2 /I "../" /I "../mpglib" /I "../include" /I ".." /D "NDEBUG" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "WIN32" /D "HAVE_CONFIG_H" /D "HAVE_NASM" /D "MMX_choose_table" /Gs1024 /FD /GAy /QIfdiv /QI0f /c
+# ADD CPP /nologo /W3 /O2 /Ob2 /I "../" /I "../mpglib" /I "../include" /I ".." /D "NDEBUG" /D "_WINDOWS" /D "HAVE_MPGLIB" /D "WIN32" /D "HAVE_CONFIG_H" /D "HAVE_NASM" /D "MMX_choose_table" /Gs1024 /FD /GAy /QIfdiv /QI0f /c
 # SUBTRACT CPP /YX
 # ADD BASE RSC /l 0x409
 # ADD RSC /l 0x409
@@ -138,6 +142,10 @@ SOURCE=.\mpglib_interface.c
 # Begin Source File
 
 SOURCE=.\newmdct.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\presets.c
 # End Source File
 # Begin Source File
 

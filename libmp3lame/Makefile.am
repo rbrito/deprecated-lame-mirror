@@ -43,6 +43,7 @@ libmp3lame_la_SOURCES = \
         lame.c \
         newmdct.c \
 	pcm.c \
+	presets.c \
 	psymodel.c \
 	quantize.c \
 	quantize_pvt.c \

@@ -69,6 +69,23 @@ typedef enum Padding_type_e {
 
 
 
+/*presets*/
+typedef enum preset_mode_e {
+    /*values from 8 to 320 should be reserved for abr bitrates*/
+    /*for abr I'd suggest to directly use the targeted bitrate as a value*/
+    ABR_8 = 8,
+    ABR_320 = 320,
+    R3MIX = 1000,
+    STANDARD = 1001,
+    EXTREME = 1002,
+    INSANE = 1003,
+    STANDARD_FAST = 1004,
+    EXTREME_FAST = 1005
+} preset_mode;
+
+
+
+
 struct lame_global_struct;
 typedef struct lame_global_struct lame_global_flags;
 typedef lame_global_flags *lame_t;
@@ -220,6 +237,11 @@ int CDECL lame_set_brate(lame_global_flags *, int);
 int CDECL lame_get_brate(const lame_global_flags *);
 int CDECL lame_set_compression_ratio(lame_global_flags *, float);
 float CDECL lame_get_compression_ratio(const lame_global_flags *);
+
+
+int CDECL lame_set_preset( lame_global_flags*  gfp, int );
+
+
 
 /********************************************************************
  *  frame params

@@ -1590,6 +1590,13 @@ lame_set_preset_notune( lame_global_flags*  gfp, int preset_notune )
 }
 
 
+int
+lame_set_preset( lame_global_flags*  gfp, int preset )
+{
+    return apply_preset(gfp, preset);
+}
+
+
 
 
 
