@@ -1570,20 +1570,19 @@ psycho_analysis(
 		    = gfc->blocktype_next[gr][2];
 	    }
 	    /* LR -> MS case */
-	    if (gfc->mode_ext_next != gfc->mode_ext
-		&& gfc->l3_side.tt[gfc->mode_gr-1][0].block_type
-		!= gfc->l3_side.tt[gfc->mode_gr-1][1].block_type) {
+	    if (gfc->mode_ext_next != gfc->mode_ext) {
 		gr_info *gi = &gfc->l3_side.tt[gfc->mode_gr-1][0];
-		gi[0].block_type |= 1;
-		gi[1].block_type |= 1;
+		int next_window_type = 1 & gi[0].block_type & gi[1].block_type;
+		gi[0].block_type |= next_window_type;
+		gi[1].block_type |= next_window_type;
 	    }
 	} else {
 	    gfc->mode_ext_next = MPG_MD_LR_LR;
-	    if (gfc->mode_ext_next != gfc->mode_ext
-		&& gfc->blocktype_next[0][0] != gfc->blocktype_next[0][1]) {
-
-		gfc->blocktype_next[0][0] |= 2;
-		gfc->blocktype_next[0][1] |= 2;
+	    if (gfc->mode_ext_next != gfc->mode_ext) {
+		int prev_window_type = 2
+		    & gfc->blocktype_next[0][0] & gfc->blocktype_next[0][1];
+		gfc->blocktype_next[0][0] |= prev_window_type;
+		gfc->blocktype_next[0][1] |= prev_window_type;
 	    }
 	}
     }
@@ -1607,10 +1606,8 @@ psycho_analysis(
 				 gfc->blocktype_next[0][ch]);
 	}
     }
-    if (gfc->mode_ext) {
-	assert(gfc->l3_side.tt[0][0].block_type
-	       == gfc->l3_side.tt[0][1].block_type);
-	assert(gfc->l3_side.tt[gfc->mode_gr-1][0].block_type
-	       == gfc->l3_side.tt[gfc->mode_gr-1][1].block_type);
-    }
+    assert(gfc->l3_side.tt[0][0].block_type
+	   == gfc->l3_side.tt[0][1].block_type || !gfc->mode_ext);
+    assert(gfc->l3_side.tt[gfc->mode_gr-1][0].block_type
+	   == gfc->l3_side.tt[gfc->mode_gr-1][1].block_type || !gfc->mode_ext);
 }
