@@ -1108,13 +1108,13 @@ CBR_bitalloc(
 
 /************************************************************************
  *
- *      iteration_loop()
+ *      CBR_iteration_loop()
  *
  *  encodes one frame of MP3 data with constant bitrate
  *
  ************************************************************************/
 void 
-iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
+CBR_iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 {
     int gr, mean_bits = getframebytes(gfc);
     FLOAT factor;
@@ -1557,8 +1557,8 @@ void
 VBR_iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 {
     FLOAT xmin[MAX_GRANULES][MAX_CHANNELS][SFBMAX];
-    int max_frame_bits, used_bits, ch, gr, mean_bytes;
     gr_info gi_backup[MAX_GRANULES][MAX_CHANNELS];
+    int max_frame_bits, used_bits, ch, gr, mean_bytes;
     memcpy(gi_backup, gfc->tt, sizeof(gi_backup));
 
     gfc->bitrate_index = gfc->VBR_max_bitrate;
@@ -1593,7 +1593,7 @@ VBR_iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 	    /* oops, still we cannot ... */
 	    memcpy(gfc->tt, gi_backup, sizeof(gi_backup));
 	    gfc->bitrate_index = gfc->VBR_max_bitrate;
-	    iteration_loop(gfc, ratio);
+	    CBR_iteration_loop(gfc, ratio);
 	    return;
 	}
     }

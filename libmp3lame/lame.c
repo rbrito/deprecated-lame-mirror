@@ -1618,7 +1618,7 @@ encode_mp3_frame(lame_t gfc, unsigned char* mp3buf, int mp3buf_size)
     /* bit and noise allocation */
     switch (gfc->VBR){ 
     default:
-    case cbr:	    iteration_loop(gfc, masking); break;
+    case cbr:	CBR_iteration_loop(gfc, masking); break;
     case vbr:	VBR_iteration_loop(gfc, masking); break;
     case abr:	ABR_iteration_loop(gfc, masking); break;
     }
