@@ -796,7 +796,7 @@ lame_print_internals( const lame_global_flags * gfp )
     MSGF( gfc, "\t%d channel - %s\n", gfc->channels_out, pc );
     if (gfp->use_istereo)
 	MSGF(gfc, "\t ^ using intensity stereo, the ratio is %f\n",
-	     gfc->istereo_ratio);
+	     1.0-gfc->istereo_ratio);
 
     if (gfp->free_format)    pc = "(free format)";
     else pc = "";
@@ -855,8 +855,8 @@ lame_print_internals( const lame_global_flags * gfp )
     pc = gfp->useTemporal ? "yes" : "no";
     MSGF( gfc, "\tusing temporal masking effect: %s\n", pc );
     MSGF( gfc, "\tinterchannel masking ratio: %f\n", gfp->interChRatio );
-    MSGF( gfc, "\treduce side channel PE factor: %f\n", gfc->reduce_side);
-    MSGF( gfc, "\tnarrowen stereo factor: %f\n", gfc->narrowStereo);
+    MSGF( gfc, "\treduce side channel PE factor: %f\n", 1.0-gfc->reduce_side);
+    MSGF( gfc, "\tnarrowen stereo factor: %f\n", gfc->narrowStereo*2.0);
     MSGF( gfc, "\t...\n" );
 
     MSGF( gfc, "\nnoisechaping & quantization:\n\n" );
