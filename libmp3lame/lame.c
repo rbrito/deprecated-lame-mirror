@@ -1117,17 +1117,6 @@ lame_init_params(lame_global_flags * const gfp)
 	gfc->slot_lag = gfc->frac_SpF
 	    = ((gfp->version+1)*72000L*gfp->brate) % gfp->out_samplerate;
 
-    /* check FFT will not use a negative starting offset */
-#if 576 < FFTOFFSET
-# error FFTOFFSET greater than 576: FFT uses a negative offset
-#endif
-    /* check if we have enough data for FFT */
-    assert(gfc->mf_size>=(BLKSIZE+gfp->framesize-FFTOFFSET));
-    /* check if we have enough data for polyphase filterbank */
-    /* it needs 1152 samples + 286 samples ignored for one granule */
-    /*          1152+576+286 samples for two granules */
-    assert(gfc->mf_size>=(286+576*(1+gfc->mode_gr)));
-
     iteration_init(gfp);
     psymodel_init(gfp);
 

@@ -331,6 +331,17 @@ int  lame_encode_mp3_frame (				// Output
 	  }
       }
       mdct_sub48(gfc, primebuff0, primebuff1);
+
+      /* check FFT will not use a negative starting offset */
+#if 576 < FFTOFFSET
+# error FFTOFFSET greater than 576: FFT uses a negative offset
+#endif
+      /* check if we have enough data for FFT */
+      assert(gfc->mf_size>=(BLKSIZE+gfp->framesize-FFTOFFSET));
+      /* check if we have enough data for polyphase filterbank */
+      /* it needs 1152 samples + 286 samples ignored for one granule */
+      /*          1152+576+286 samples for two granules */
+      assert(gfc->mf_size>=(286+576*(1+gfc->mode_gr)));
   }
 
 
