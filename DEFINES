@@ -3,23 +3,10 @@ $Id$
 USE_FFT3DN:
  - enable 3DNow code for the FFT
 
-RH_AMP:
- -Y -> careful noise shaping, only max. distorted band at once
-
-KLEMM_04:
+KLEMM_04:  (missing)
  - correctly calculated FIR coefficients
  - sample_t instead of FLOAT for FIR coefficients
  
-KLEMM_05:
- - only write brhist lines if neccessary
-
-KLEMM_06:
- fseek instead of fread (if available)
-
-KLEMM_07 (always on):
- - new timestatus only using lametime.c functions
- - more simple code
-
 KLEMM_14: (missing)
  - some optimizations and code simplifications (unrolled code)
 

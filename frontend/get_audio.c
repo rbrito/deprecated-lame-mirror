@@ -105,10 +105,8 @@ static int  fskip ( FILE* fp, long offset, int whence )
 #endif
     int read;
     
-#ifdef KLEMM_06
     if ( 0 == fseek ( fp, offset, whence ) )
         return 0;
-#endif	
     
     if ( whence != SEEK_CUR  ||  offset < 0 ) {
         fprintf ( stderr, "fskip problem: Mostly the return status of functions is not evaluate so it is more secure to polute <stderr>.\n" );

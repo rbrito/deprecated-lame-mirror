@@ -274,15 +274,9 @@ void  brhist_disp ( const lame_global_flags*  gf )
         if (most_often < br_hist[i]) most_often = br_hist[i];
     }
 
-#ifdef KLEMM_05
     for ( i = 0; i < BRHIST_WIDTH; i++ )
         if ( br_hist [i]  ||  (i >= brhist.vbr_bitrate_min_index  &&  i <= brhist.vbr_bitrate_max_index) )
             brhist_disp_line ( gf, i, br_hist [i], br_sm_hist [i][LR], most_often, frames );
-#else
-    most_often = most_often < Console_IO.disp_width - BRHIST_RES  ?  Console_IO.disp_width - BRHIST_RES : most_often;  /* makes this sense? */
-    for ( i=0 ; i < BRHIST_WIDTH; i++)
-        brhist_disp_line ( gf, i, br_hist [i], br_sm_hist [i][LR], most_often, frames ); 
-#endif	
 
     fputs ( "\r", Console_IO.Console_fp );
     fflush ( Console_IO.Console_fp );   /* fflush is ALSO needed for Windows! */
