@@ -442,7 +442,7 @@ struct lame_internal_flags {
     struct {
 	FLOAT itime[MAX_CHANNELS];
 	sample_t *inbuf_old[MAX_CHANNELS];
-	FLOAT *blackfilt [2*BPC+1];
+	FLOAT *blackfilt;
 	int filter_l;
 	int bpc;
 	FLOAT ratio;      /* input_samp_rate/output_samp_rate */

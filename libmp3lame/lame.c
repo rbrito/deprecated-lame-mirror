@@ -1113,11 +1113,9 @@ lame_close(lame_t gfc)
     gfc->Class_ID = 0;
 
     /* free all malloc'd data in gfc, and then free gfc: */
-    for (i = 0 ; i <= 2*BPC; i++) {
-	if (gfc->resample.blackfilt[i]) {
-	    free(gfc->resample.blackfilt[i]);
-	    gfc->resample.blackfilt[i] = NULL;
-	}
+    if (gfc->resample.blackfilt) {
+	free(gfc->resample.blackfilt);
+	gfc->resample.blackfilt = NULL;
     }
     for (i = 0; i < MAX_CHANNELS; i++) {
 	if (gfc->resample.inbuf_old[i]) { 
@@ -1563,12 +1561,10 @@ encode_mp3_frame(lame_t gfc, unsigned char* mp3buf, int mp3buf_size)
     if (gfc->mode_ext == MPG_MD_MS_LR) {
 	/* convert from L/R -> Mid/Side */
 	if (1
-#if 1
 	    && (gfc->tt[0][0].block_type != SHORT_TYPE
 		|| gfc->is_start_sfb_s[0] == 0)
 	    && (gfc->tt[1][0].block_type != SHORT_TYPE
 		|| gfc->is_start_sfb_s[1] == 0)
-#endif
 	    && gfc->use_istereo) {
 	    for (gr = 0; gr < gfc->mode_gr; gr++) {
 		int sfb = gfc->is_start_sfb_l[gr];
@@ -1684,7 +1680,9 @@ fill_buffer_resample(lame_t gfc, sample_t *outbuf, sample_t *inbuf, int len,
 	assert(fabs(offset)<=.500);
 
 	/* find the closest precomputed window for this offset: */
-	filter_coef = gfc->resample.blackfilt[(int)((offset*2*bpc)+bpc+.5)];
+	filter_coef
+	    = gfc->resample.blackfilt
+	    + ((int)((offset*2*bpc)+bpc+.5)) * (filter_l+1);
 
 	xvalue = 0.;
 	for (i = 0; i <= filter_l; i++) {

@@ -658,7 +658,7 @@ iteration_init(lame_t gfc)
     huffman_init(gfc);
 
     if (gfc->resample.ratio != 1.0) {
-	FLOAT fcn = 1.00;
+	FLOAT fcn = 1.00, *pFilter;
 	int bpc = gcd(gfc->out_samplerate, gfc->in_samplerate);
 	int filter_l = 31;
 	if (bpc == gfc->out_samplerate || bpc == gfc->in_samplerate)
@@ -677,19 +677,19 @@ iteration_init(lame_t gfc)
 	gfc->resample.itime[1]=0;
 
 	/* precompute blackman filter coefficients */
+	pFilter = gfc->resample.blackfilt
+	    = malloc((filter_l+1)*sizeof(FLOAT)*(2*bpc+1));
+	if (!pFilter)
+	    return;
 	for (j = 0; j <= 2*bpc; j++) {
 	    FLOAT sum = 0.; 
 	    FLOAT offset = (j-bpc) / (2.*bpc);
-	    gfc->resample.blackfilt[j] = malloc((filter_l+1)*sizeof(FLOAT));
-	    if (!gfc->resample.blackfilt[j])
-		return;
 
 	    for (i = 0; i <= filter_l; i++)
-		sum += (gfc->resample.blackfilt[j][i]
-			= blackman(i-offset, fcn, filter_l));
+		sum += (pFilter[i] = blackman(i-offset, fcn, filter_l));
 	    sum = 1.0 / sum;
 	    for (i = 0; i <= filter_l; i++)
-		gfc->resample.blackfilt[j][i] *= sum;
+		*pFilter++ *= sum;
 	}
 	gfc->resample.filter_l = filter_l;
 	gfc->resample.bpc = bpc;
