@@ -32,6 +32,10 @@
 #include <assert.h>
 #include <stdarg.h>
 
+#if defined(__FreeBSD__) && !defined(__alpha__)
+# include <machine/floatingpoint.h>
+#endif
+
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
 #endif
