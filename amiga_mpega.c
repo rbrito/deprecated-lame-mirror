@@ -69,10 +69,10 @@ int lame_decode_initfile(const char *fullname, mp3data_struct *mp3data)
 	mstream=MPEGA_open(fullname, &mctrl);
 	if(!mstream) { return (-1); }
 
-	mp3data->stereo  = mstream->dec_channels;
-	mp3data->samp    = mstream->dec_frequency;
-	mp3data->bitrate = mstream->bitrate;
-	mp3data->nsamp   = (FLOAT)mstream->ms_duration/1000 * mstream->dec_frequency;
+	mp3data->stereo     = mstream->dec_channels;
+	mp3data->samplerate = mstream->dec_frequency;
+	mp3data->bitrate    = mstream->bitrate;
+	mp3data->nsamp      = (FLOAT)mstream->ms_duration/1000 * mstream->dec_frequency;
 
 	return 0;
 }
@@ -88,10 +88,10 @@ int lame_decode_fromfile(FILE *fd, short pcm_l[],short pcm_r[],mp3data_struct *m
 	while (outsize == 0)
 		outsize = MPEGA_decode_frame(mstream, b);
 
-	mp3data->stereo  = mstream->dec_channels;
-	mp3data->samp    = mstream->dec_frequency;
-	mp3data->bitrate = mstream->bitrate;
-	mp3data->nsamp   = (FLOAT)mstream->ms_duration/1000 * mstream->dec_frequency;
+	mp3data->stereo     = mstream->dec_channels;
+	mp3data->samplerate = mstream->dec_frequency;
+	mp3data->bitrate    = mstream->bitrate;
+	mp3data->nsamp      = (FLOAT)mstream->ms_duration/1000 * mstream->dec_frequency;
 
 	if (outsize < 0) { return (-1); }
 	else { return outsize; }

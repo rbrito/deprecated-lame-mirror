@@ -317,29 +317,28 @@ FILE * OpenSndFile(lame_global_flags *gfp)
 
   gfc->input_bitrate=0;
   if (gfp->input_format==sf_mp3) {
+    mp3data_struct mp3data;
 #ifdef AMIGA_MPEGA
-    if (-1==lame_decode_initfile(lpszFileName,&gfp->num_channels,&gfp->in_samplerate,&gfc->input_bitrate,&gfp->num_samples)) {
+    if (-1==lame_decode_initfile(lpszFileName,&mp3data)) {
       fprintf(stderr,"Error reading headers in mp3 input file %s.\n", lpszFileName);
       exit(1);
     }
 #endif
 #ifdef HAVEMPGLIB
-    {
-      mp3data_struct mp3data;
-      if ((musicin = fopen(lpszFileName, "rb")) == NULL) {
-	fprintf(stderr, "Could not find \"%s\".\n", lpszFileName);
-	exit(1);
-      }
-      if (-1==lame_decode_initfile(musicin,&mp3data);
+    if ((musicin = fopen(lpszFileName, "rb")) == NULL) {
+	  fprintf(stderr, "Could not find \"%s\".\n", lpszFileName);
+	  exit(1);
+    }
+    if (-1==lame_decode_initfile(musicin,&mp3data)) {
 	  fprintf(stderr,"Error reading headers in mp3 input file %s.\n", lpszFileName);
 	  exit(1);
-	  }
-      gfp->num_channels=mp3data.stereo;
-      gfp->in_samplerate=mp3data.samplerate;
-      gfc->input_bitrate=mp3data.bitrate;
-      gfp->num_samples=mp3data.nsamp;
-    }
+	}
 #endif
+
+    gfp->num_channels=mp3data.stereo;
+    gfp->in_samplerate=mp3data.samplerate;
+    gfc->input_bitrate=mp3data.bitrate;
+    gfp->num_samples=mp3data.nsamp;
 
   } else {
 
@@ -576,7 +575,7 @@ FILE * OpenSndFile(lame_global_flags *gfp)
   if (gfp->input_format==sf_mp3) {
     mp3data_struct mp3data;
 #ifdef AMIGA_MPEGA
-    if (-1==lame_decode_initfile(inPath,&gfp->num_channels,&gfp->in_samplerate,&gfc->input_bitrate,&gfp->num_samples)) {
+    if (-1==lame_decode_initfile(inPath,&mp3data)) {
       fprintf(stderr,"Error reading headers in mp3 input file %s.\n", inPath);
       exit(1);
     }
@@ -649,7 +648,7 @@ int read_samples_pcm(lame_global_flags *gfp,short sample_buffer[2304], int frame
       exit(2);
     }
     if (16!=gfc->pcmbitwidth) {
-      fprintf(stderr, "Compile with LIBSNFILE to read non 16 bit input files\n");
+      fprintf(stderr, "Compile with LIBSNDFILE to read non 16 bit input files\n");
       exit(2);
     }
 
