@@ -34,9 +34,9 @@ void brhist_init(lame_global_flags *gfp,int br_min, int br_max)
 #ifndef NOTERMCAP
   char term_buff[1024];
   char *termname;
-#endif
   char *tp;
   char tc[10];
+#endif
 
 
   for(i = 0; i < 15; i++)
