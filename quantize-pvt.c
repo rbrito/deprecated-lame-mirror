@@ -984,10 +984,11 @@ bin_search_StepSize2(int      desired_rate,
 /*-------------------------------------------------------------------------*/
 {
     int flag_GoneOver = 0;
-    int CurrentStep = 4;
+    static int CurrentStep = 4;
     int nBits;
     int StepSize = start;
     binsearchDirection_t Direction = BINSEARCH_NONE;
+
     do
     {
 	cod_info->quantizerStepSize = StepSize;
@@ -1021,9 +1022,16 @@ bin_search_StepSize2(int      desired_rate,
 	    Direction = BINSEARCH_DOWN;
 	    StepSize -= CurrentStep;
 	}
-	else break; /* nBits == desired_rate;; most unlikely to happen.
-*/
+	else break; /* nBits == desired_rate;; most unlikely to happen.*/
     } while (1); /* For-ever, break is adjusted. */
+
+    CurrentStep = fabs(start - StepSize);
+    if (CurrentStep >= 4) {
+	CurrentStep = 4;
+    } else {
+	CurrentStep = 2;
+    }
+
     return nBits;
 }
 
