@@ -1,5 +1,6 @@
 
 #include "util.h"
+#include <assert.h>
 
 #ifdef LAME_STD_PRINT
 #include <stdarg.h>
@@ -378,7 +379,7 @@ int fill_buffer_downsample(lame_global_flags *gfp,short int *outbuf,int desired_
   filter_l=19;  /* must be odd */
   /* if resample_ratio = int, filter_l should be even */
   filter_l += intratio;
-  LAME_ASSERT(filter_l +5 < BLACKSIZE);
+  assert(filter_l +5 < BLACKSIZE);
   
   if (!gfc->fill_buffer_downsample_init) {
     gfc->fill_buffer_downsample_init=1;
@@ -409,7 +410,7 @@ int fill_buffer_downsample(lame_global_flags *gfp,short int *outbuf,int desired_
     /* blackmon filter.  by default, window centered at j+.5(filter_l%2) */
     /* but we want a window centered at time0.   */
     offset = ( time0 -gfc->itime[ch] - (j + .5*(filter_l%2)));
-    LAME_ASSERT(fabs(offset)<=.500001);
+    assert(fabs(offset)<=.500001);
     joff = floor((offset*2*BPC) + BPC +.5);
 
     xvalue=0;
