@@ -11,11 +11,12 @@
 #include "util.h"
 #include <stdio.h>
 #include <stdlib.h>
+#define __USE_SYSBASE
 #include <proto/exec.h>
 #include <dos.h>
 #include <proto/mpega.h>
 
-struct Library  *MPEGABase;
+struct Library  *MPEGABase=NULL;
 MPEGA_STREAM    *mstream=NULL;
 MPEGA_CTRL      mctrl;
 
