@@ -712,64 +712,48 @@ static void init_log_table(void)
 /*those ATH formulas are returning
 their minimum value for input = -1*/
 
-static FLOAT ATHformula_GB(FLOAT f, FLOAT value)
+static FLOAT ATHformula(FLOAT f,lame_global_flags *gfp)
 {
-  /* from Painter & Spanias
-    modified by Gabriel Bouvigne to better fit the reality
-  ath =    3.640 * pow(f,-0.8)
+    /* from Painter & Spanias
+       modified by Gabriel Bouvigne to better fit the reality
+
+       ath =    3.640 * pow(f,-0.8)
          - 6.800 * exp(-0.6*pow(f-3.4,2.0))
          + 6.000 * exp(-0.15*pow(f-8.7,2.0))
          + 0.6* 0.001 * pow(f,4.0);
 
 
-  In the past LAME was using the Painter &Spanias formula.
-  But we had some recurrent problems with HF content.
-  We measured real ATH values, and found the older formula
-  to be inacurate in the higher part. So we made this new
-  formula and this solved most of HF problematic testcases.
-  The tradeoff is that in VBR mode it increases a lot the
-  bitrate.*/
+	In the past LAME was using the Painter &Spanias formula.
+	But we had some recurrent problems with HF content.
+	We measured real ATH values, and found the older formula
+	to be inacurate in the higher part. So we made this new
+	formula and this solved most of HF problematic testcases.
+	The tradeoff is that in VBR mode it increases a lot the
+	bitrate.*/
 
 
-/*this curve can be udjusted according to the VBR scale:
-it adjusts from something close to Painter & Spanias
-on V9 up to Bouvigne's formula for V0. This way the VBR
-bitrate is more balanced according to the -V value.*/
+/*
+  this curve can be udjusted according to the VBR scale:
+  it adjusts from something close to Painter & Spanias
+  on V9 up to Bouvigne's formula for V0. This way the VBR
+  bitrate is more balanced according to the -V value.
+*/
 
-  FLOAT ath;
+    FLOAT ath, value = gfp->ATHcurve;
+    if (f < -.3)
+	f=3410;
 
-  if (f < -.3)
-      f=3410;
+    f /= 1000;  // convert to khz
+    f  = Max(0.01, f);
+    f  = Min(18.0, f);
 
-  f /= 1000;  // convert to khz
-  f  = Max(0.01, f);
-  f  = Min(18.0, f);
+    ath = 3.640 * pow(f,-0.8)
+	- 6.800 * exp(-0.6*pow(f-3.4,2.0))
+	+ 6.000 * exp(-0.15*pow(f-8.7,2.0))
+	+ (0.6+0.04*value)* 0.001 * pow(f,4.0)
+	- gfp->ATHlower;
 
-  ath =    3.640 * pow(f,-0.8)
-         - 6.800 * exp(-0.6*pow(f-3.4,2.0))
-         + 6.000 * exp(-0.15*pow(f-8.7,2.0))
-         + (0.6+0.04*value)* 0.001 * pow(f,4.0);
-  return ath;
-}
-
-
-
-static FLOAT ATHformula(FLOAT f,lame_global_flags *gfp)
-{
-    switch(gfp->ATHtype)
-    {
-    case 0:
-	return ATHformula_GB(f, 9);
-    case 1:
-        return ATHformula_GB(f, -1); /*over sensitive, should probably be removed*/
-    case 2:
-    default:
-	return ATHformula_GB(f, 0);
-    case 3:
-	return ATHformula_GB(f, 1) +6;  /*modification of GB formula by Roel*/
-    case 4:
-	return ATHformula_GB(f, gfp->ATHcurve);
-    }
+    return ath;
 }
 
 static FLOAT ATHmdct( lame_global_flags *gfp, FLOAT f )
@@ -777,7 +761,7 @@ static FLOAT ATHmdct( lame_global_flags *gfp, FLOAT f )
     FLOAT ath = ATHformula( f , gfp ) - NSATHSCALE;
 
     /* modify the MDCT scaling for the ATH and convert to energy */
-    return db2pow(ath - gfp->ATHlower + gfp->VBR_q - 4);
+    return db2pow(ath + gfp->VBR_q - 4);
 }
 
 static void compute_ath( lame_global_flags *gfp )
@@ -1319,6 +1303,7 @@ int psymodel_init(lame_global_flags *gfp)
     FLOAT norm[CBANDS];
     FLOAT sfreq = gfp->out_samplerate;
     int numlines_s[CBANDS];
+    FLOAT eql_balance;
 
     for (i=0; i<4; ++i) {
 	for (j=0; j<CBANDS; ++j) {
@@ -1345,6 +1330,8 @@ int psymodel_init(lame_global_flags *gfp)
 	gfc->useshort_next[1][i] = NORM_TYPE;
     }
 
+    gfc->masking_lower = db2pow(gfp->VBR_q - 8 - 4);
+      
     /* init. for loudness approx. -jd 2001 mar 27*/
     gfc->loudness_next[0][0] = gfc->loudness_next[0][1]
 	= gfc->loudness_next[1][0] = gfc->loudness_next[1][1]
@@ -1386,10 +1373,9 @@ int psymodel_init(lame_global_flags *gfp)
 	for (k=0; k < gfc->numlines_l[i]; k++, j++) {
 	    FLOAT  freq = sfreq*j/(1000.0*BLKSIZE);
 	    FLOAT  level;
-	    assert( freq <= 24 );              // or only '<'
-	    //	freq = Min(.1,freq);       // ATH below 100 Hz constant, not further climbing
-	    level  = ATHformula (freq*1000, gfp) - 20;   // scale to FFT units; returned value is in dB
-	    level  = db2pow(level);   // convert from dB -> energy
+	    assert( freq <= 24 );
+	    level  = ATHformula (freq*1000, gfp) - 20;
+	    level  = db2pow(level);
 	    level *= gfc->numlines_l [i];
 	    if (x > level)
 		x = level;
@@ -1397,8 +1383,7 @@ int psymodel_init(lame_global_flags *gfp)
 	gfc->ATH.cb[i] = x;
     }
     for (i = 0; i < SBMAX_l; i++)
-	gfc->ATH.l_avg[i] = gfc->ATH.cb[bm[i]]
-	    * db2pow(-gfp->ATHlower + gfp->VBR_q - 4);
+	gfc->ATH.l_avg[i] = gfc->ATH.cb[bm[i]] * db2pow(gfp->VBR_q - 4);
 
     /* table for long block threshold -> short block threshold conversion */
     init_numline_l2s(gfc->bo_l2s,
@@ -1429,7 +1414,7 @@ int psymodel_init(lame_global_flags *gfp)
     }
     for (i = 0; i < SBMAX_s; i++)
 	gfc->ATH.s_avg[i] = gfc->ATH.cb[bm[i]]
-	    * db2pow(-gfp->ATHlower + gfp->VBR_q - 4)
+	    * db2pow(gfp->VBR_q - 4)
 	    * BLKSIZE_s / BLKSIZE;
     
     i = init_s3_values(gfc, &gfc->s3_ss, gfc->s3ind_s,
@@ -1438,18 +1423,16 @@ int psymodel_init(lame_global_flags *gfp)
 	return i;
 
 
-    if (gfp->ATHtype != -1) { 
-	/* compute equal loudness weights */
-	FLOAT eql_balance = 0.0;
-	for( i = 0; i < BLKSIZE/2; ++i ) {
-	    FLOAT freq = gfp->out_samplerate * i / BLKSIZE;
-	    gfc->ATH.eql_w[i] = db2pow(-ATHformula( freq, gfp ));
-	    eql_balance += gfc->ATH.eql_w[i];
-	}
-	eql_balance =  (vo_scale * vo_scale / (BLKSIZE/2)) / eql_balance;
-	for( i = BLKSIZE/2; --i >= 0; ) { /* scale weights */
-	    gfc->ATH.eql_w[i] *= eql_balance;
-	}
+    /* compute equal loudness weights */
+    eql_balance = 0.0;
+    for( i = 0; i < BLKSIZE/2; ++i ) {
+	FLOAT freq = gfp->out_samplerate * i / BLKSIZE;
+	gfc->ATH.eql_w[i] = db2pow(-ATHformula( freq, gfp ));
+	eql_balance += gfc->ATH.eql_w[i];
+    }
+    eql_balance =  (vo_scale * vo_scale / (BLKSIZE/2)) / eql_balance;
+    for( i = BLKSIZE/2; --i >= 0; ) { /* scale weights */
+	gfc->ATH.eql_w[i] *= eql_balance;
     }
 
 
@@ -1458,8 +1441,6 @@ int psymodel_init(lame_global_flags *gfp)
     /* setup temporal masking */
     gfc->decay = db2pow(-(576.0/3)/(TEMPORALMASK_SUSTAIN_SEC*sfreq));
 
-    gfc->masking_lower = db2pow(gfp->VBR_q - 8 - 4);
-      
     /*  prepare for ATH auto adjustment:
      *  we want to decrease the ATH by 12 dB per second
      */

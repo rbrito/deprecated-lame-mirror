@@ -441,7 +441,7 @@ fft_long(lame_internal_flags * const gfc,
 /* psycho_loudness_approx
    jd - 2001 mar 12
 in:  energy   - BLKSIZE/2 elements of frequency magnitudes ^ 2
-     gfp      - uses out_samplerate, ATHtype (also needed for ATHformula)
+     gfp      - for precalculated equal loudness curve, ATH.eql_w 
 returns: loudness^2 approximation, a positive value roughly tuned for a value
          of 1.0 for signals near clipping.
 notes:   When calibrated, feeding this function binary white noise at sample

@@ -1048,24 +1048,6 @@ lame_get_noATH( const lame_global_flags*  gfp )
 }
 
 
-/* Select ATH formula. */
-int
-lame_set_ATHtype( lame_global_flags*  gfp,
-                  int                 ATHtype )
-{
-    /* XXX: ATHtype should be converted to an enum. */
-    gfp->ATHtype = ATHtype;
-
-    return 0;
-}
-
-int
-lame_get_ATHtype( const lame_global_flags*  gfp )
-{
-    return gfp->ATHtype;
-}
-
-
 /* Select ATH formula 4 shape. */
 int
 lame_set_ATHcurve( lame_global_flags*  gfp,
@@ -1384,7 +1366,7 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
     switch (preset_expopts)
     {
     case 1: /* INSANE */
-	lame_set_ATHtype(gfp, 2);
+	lame_set_ATHcurve(gfp, 0);
 	lame_set_quantcomp_method(gfp, 9*16 + 3);
 	break;
 
@@ -1395,7 +1377,7 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
 
 	lame_set_use_largescalefac(gfp, 1);
 	lame_set_VBR_q(gfp, 2);
-	lame_set_ATHtype(gfp, 2);				
+	lame_set_ATHcurve(gfp, 0);
 	// modify sfb21 by 3 dB plus ns-treble=0                 
 	lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (12 << 20));
 
@@ -1409,7 +1391,6 @@ lame_set_preset_expopts( lame_global_flags*  gfp, int preset_expopts )
 	lame_set_use_largescalefac(gfp, 1);
 	lame_set_quantcomp_method(gfp, 0*16 + 0);
 	lame_set_VBR_q(gfp, 2);
-	lame_set_ATHtype(gfp, 4);
 	// modify sfb21 by 3.75 dB plus ns-treble=0
 	lame_set_exp_nspsytune(gfp, lame_get_exp_nspsytune(gfp) | (15 << 20));
 	break;
@@ -1526,7 +1507,6 @@ static int apply_abr_preset(lame_global_flags*  gfp, int preset)
         (void) lame_set_scale( gfp, abr_switch_map[r].scale );
 
     lame_set_interChRatio(gfp, abr_switch_map[r].interch);
-    lame_set_ATHtype(gfp, 4);
     lame_set_ATHcurve(gfp, abr_switch_map[r].ath_curve);
 
     if (actual_bitrate > 160)
@@ -1656,7 +1636,8 @@ lame_set_preset( lame_global_flags*  gfp, int preset )
 	lame_set_quality(gfp, 3);
 	lame_set_lowpassfreq(gfp,19500);
 	lame_set_mode(gfp, JOINT_STEREO);
-	lame_set_ATHtype(gfp, 3);
+	lame_set_ATHcurve(gfp, 1);
+	lame_set_ATHlower(gfp, 6);
 	lame_set_VBR_min_bitrate_kbps(gfp,96);
 	return preset;
     }

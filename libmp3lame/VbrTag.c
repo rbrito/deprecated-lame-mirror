@@ -560,8 +560,6 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
     int		 nNoGapCount	= gfp->internal_flags->nogap_total;
     int		 nNoGapCurr		= gfp->internal_flags->nogap_current;
 
-    uint8_t  nAthType		= gfp->ATHtype;	/*4 bits. */
-
     uint8_t  nFlags			= 0;
 
     /* if ABR, {store bitrate <=255} else { store "-b"} */
@@ -587,8 +585,8 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 
     /*flags */
 
-    nFlags
-	= nAthType	+ (bExpNPsyTune		<< 4)
+    nFlags = (((int)gfp->ATHcurve) & 15 ) /*nAthType*/
+	+ (bExpNPsyTune		<< 4)
 	+ (bSafeJoint		<< 5)
 	+ (bNoGapMore		<< 6)
 	+ (bNoGapPrevious	<< 7);
@@ -642,7 +640,6 @@ int PutLameVBR(lame_global_flags *gfp, FILE *fpStream, uint8_t *pbtStreamBuffer,
 	|| gfp->disable_reservoir
 	|| gfp->noATH
 	|| gfp->ATHonly
-	|| nAthType == 0
 	|| gfp->in_samplerate <= 32000)
 	bNonOptimal = 1;
 

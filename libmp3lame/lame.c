@@ -714,10 +714,13 @@ lame_init_params(lame_global_flags * const gfp)
 	gfp->quality = LAME_DEFAULT_QUALITY;
 
     gfc->sfb21_extra = 0;
-    if (gfp->VBR == vbr) {
-	if (gfp->ATHtype < 0)
-	    gfp->ATHtype = 4;
 
+    if ( gfp->athaa_type < 0 )
+	gfc->ATH.use_adjust = 3;
+    else
+	gfc->ATH.use_adjust = gfp->athaa_type;
+
+    if (gfp->VBR == vbr) {
         if (gfp->quality > 7) {
             gfp->quality = 7;     // needs psymodel
             ERRORF(gfc, "VBR needs a psymodel, switching to quality level 7\n");
@@ -725,23 +728,7 @@ lame_init_params(lame_global_flags * const gfp)
 
         if (!gfp->experimentalY && gfp->out_samplerate > 36000)
 	    gfc->sfb21_extra = 1;
-
-        if ( gfp->athaa_type < 0 )
-            gfc->ATH.use_adjust = 3;
-        else
-            gfc->ATH.use_adjust = gfp->athaa_type;
     } else {
-        if (gfp->ATHtype < 0)
-            gfp->ATHtype = 2;
-
-        /*  automatic ATH adjustment off by default
-         *  not so important for CBR code?
-         */
-        if ( gfp->athaa_type < 0 )
-            gfc->ATH.use_adjust = 0;
-        else
-            gfc->ATH.use_adjust = gfp->athaa_type;
-
         if (!gfp->experimentalY && gfp->out_samplerate > 36000
 	    && (gfc->substep_shaping & 2))
 	    gfc->sfb21_extra = 1;
@@ -942,9 +929,7 @@ lame_print_internals( const lame_global_flags * gfp )
     if ( gfp->ATHonly  ) pc = "the only masking";
     if ( gfp->noATH    ) pc = "not used";
     MSGF( gfc, "\tATH: %s\n", pc );
-    MSGF( gfc, "\t ^ type: %d\n", gfp->ATHtype );
-    if (gfp->ATHtype == 4)
-	MSGF( gfc, "\t ^ shape: %g\n", gfp->ATHcurve);
+    MSGF( gfc, "\t ^ shape: %g\n", gfp->ATHcurve);
     MSGF( gfc, "\t ^ adjust type: %d\n", gfc->ATH.use_adjust );
     MSGF( gfc, "\t ^ adjust sensitivity power: %d\n", gfc->ATH.aa_sensitivity_p );
     MSGF( gfc, "\t ^ adapt threshold type: %d\n", gfp->athaa_loudapprox );
@@ -1675,7 +1660,6 @@ lame_init_old(lame_global_flags * gfp)
 
     gfp->VBR = cbr;
     gfp->VBR_q = 4;
-    gfp->ATHcurve = 4;
     gfp->mean_bitrate_kbps = 0;
     gfp->VBR_min_bitrate_kbps = 0;
     gfp->VBR_max_bitrate_kbps = 0;
@@ -1694,8 +1678,8 @@ lame_init_old(lame_global_flags * gfp)
     gfc->nsPsy.attackthre_s = NSATTACKTHRE_S;
     gfc->nsPsy.msfix = NS_MSFIX*M_SQRT2;
 
+    gfp->ATHcurve = 4;
     gfp->athaa_type = -1;
-    gfp->ATHtype = -1;  /* default = -1 = set in lame_init_params */
     gfp->athaa_loudapprox = -1;	/* 1 = flat loudness approx. (total energy) */
                                 /* 2 = equal loudness curve */
     gfp->athaa_sensitivity = 0.0; /* no offset */
