@@ -551,7 +551,7 @@ ns_msfix(
 
     for ( sb = 0; sb < SBMAX_l; sb++ ) {
 	FLOAT8 thmL,thmR,thmM,thmS,ath;
-	ath  = gfc->ATH.s_avg[sb];
+	ath  = gfc->ATH.l_avg[sb];
 	thmL = Max(gfc->thm[0].l[sb], ath);
 	thmR = Max(gfc->thm[1].l[sb], ath);
 	thmM = Max(gfc->thm[2].l[sb], ath);
