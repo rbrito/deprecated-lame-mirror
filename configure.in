@@ -52,6 +52,7 @@ dnl automake
 AM_INIT_AUTOMAKE(lame,3.88)
 AM_CONFIG_HEADER(config.h)
 AM_MAINTAINER_MODE
+AC_DISABLE_SHARED
 cflags_safe="${CFLAGS}"
 AM_PROG_LIBTOOL
 CFLAGS="${cflags_safe}"
@@ -144,6 +145,7 @@ yes)
 		AC_MSG_RESULT(yes, but libefence not found)
 	else
 		LDADD="${LDADD} ${HAVE_EFENCE}"
+		AC_DEFINE(HAVE_EFENCE, 1, we link against libefence)
 		AC_MSG_RESULT("${CONFIG_EFENCE}")
 	fi
 	;;
