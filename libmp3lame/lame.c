@@ -1558,7 +1558,7 @@ lame_init_old(lame_global_flags * gfp)
     gfc->mf_size = ENCDELAY - MDCTDELAY; /* we pad input with this many 0's */
 
 #ifdef DECODE_ON_THE_FLY
-    lame_decode_init()  // initialize the decoder 
+    lame_decode_init();  // initialize the decoder 
 #endif
 #ifdef HAVE_NASM
     gfp->asm_optimizations.mmx = 1;
