@@ -170,8 +170,14 @@ ResvFrameEnd(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits)
      * be added to the reservoir, and we will deal with them next frame.
      * If the next frame is at a lower bitrate, it may have a larger ResvMax, 
      * and we will not have to waste these bits!  mt 4/00 */
-    l3_side->resvDrain_post += (stuffingBits % 8);
-    gfc->ResvSize -= stuffingBits % 8;
+    if (gfp->VBR) {
+      l3_side->resvDrain_post += (stuffingBits % 8);
+      gfc->ResvSize -= stuffingBits % 8;
+    }else{
+      /* drain the rest into this frames ancillary data*/
+      l3_side->resvDrain_post += stuffingBits;
+      gfc->ResvSize -= stuffingBits;
+    }
 #else
     /* drain the rest into this frames ancillary data*/
     l3_side->resvDrain_post += stuffingBits;
