@@ -1325,10 +1325,24 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	/* convolution   */
 	FLOAT8 eb[CBANDS],eb2[CBANDS];
 	FLOAT8 thr[CBANDS];
-	static const FLOAT8 tab[] = {
-	    1.0,     0.79433, 0.63096, 0.63096,
-	    0.63096, 0.63096, 0.63096, 0.25119,
-	    0.11749
+
+
+    /*This is the masking table:
+      According to tonality, values are going from 0dB (TMN)
+      to 9.3dB (NMT).
+      After additive masking computation, 8dB are added, so
+      final values are going from 8dB to 17.3dB
+    */
+    static const FLOAT8 tab[] = {
+        1.0/*pow(10, -0)*/,
+        0.79433/*pow(10, -0.1)*/,
+        0.63096/*pow(10, -0.2)*/,
+        0.63096/*pow(10, -0.2)*/,
+        0.63096/*pow(10, -0.2)*/,
+        0.63096/*pow(10, -0.2)*/,
+        0.63096/*pow(10, -0.2)*/,
+        0.25119/*pow(10, -0.6)*/,
+	    0.11749/*pow(10, -0.93)*/
 	};
 
 	/*************************************************************** 
