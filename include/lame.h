@@ -348,13 +348,13 @@ float CDECL lame_get_ATHlower(const lame_global_flags *);
 int CDECL lame_set_adjust_type( lame_global_flags *, int);
 int CDECL lame_get_adjust_type( const lame_global_flags *);
 
-// select adaptive ATH level adjustment scheme
-int CDECL lame_set_adapt_thres_type( lame_global_flags *, int);
-int CDECL lame_get_adapt_thres_type( const lame_global_flags *);
+// select the loudness approximation used by the ATH adaptive auto-leveling 
+int CDECL lame_set_athaa_loudapprox( lame_global_flags *, int);
+int CDECL lame_get_athaa_loudapprox( const lame_global_flags *);
 
 // adjust (in dB) the point below which adaptive ATH level adjustment occurs
-int CDECL lame_set_adapt_thres_level( lame_global_flags *, float);
-float CDECL lame_get_adapt_thres_level( const lame_global_flags* );
+int CDECL lame_set_athaa_sensitivity( lame_global_flags *, float);
+float CDECL lame_get_athaa_sensitivity( const lame_global_flags* );
 
 // predictability limit (ISO tonality formula)
 int CDECL lame_set_cwlimit(lame_global_flags *, int);

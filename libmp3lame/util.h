@@ -439,7 +439,7 @@ struct lame_internal_flags {
   /* factor for tuning the (sample power) point below which adaptive threshold
      of hearing adjustment occurs 
    */
-  FLOAT adapt_thres_level_p;
+  FLOAT athaa_sensitivity_p;
 
  
   /* fft.c    */

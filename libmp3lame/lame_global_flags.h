@@ -117,8 +117,8 @@ struct lame_global_struct {
   int ATHtype;                    /* select ATH formula                   */
   float ATHlower;                 /* lower ATH by this many db            */
   int adjust_type;                /* select ATH adjust scheme             */
-  int adapt_thres_type;           /* select ATH auto-level adjust formula */
-  float adapt_thres_level;        /* dB, tune active region of auto-level */
+  int athaa_loudapprox;           /* select ATH auto-adjust loudness calc */
+  float athaa_sensitivity;        /* dB, tune active region of auto-level */
   int cwlimit;                    /* predictability limit                 */
   short_block_t short_blocks;
 /*  int allow_diff_short;            allow blocktypes to differ between

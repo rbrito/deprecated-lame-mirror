@@ -1156,7 +1156,7 @@ lame_init_params(lame_global_flags * const gfp)
 #endif
 
     /* initialize internal adaptive ATH settings  -jd */
-    gfc->adapt_thres_level_p = pow( 10.0, gfp->adapt_thres_level / -10.0 );
+    gfc->athaa_sensitivity_p = pow( 10.0, gfp->athaa_sensitivity / -10.0 );
 
 
     gfc->PSY->cwlimit = gfp->cwlimit <= 0 ? 8871.7f : gfp->cwlimit;
@@ -1168,7 +1168,7 @@ lame_init_params(lame_global_flags * const gfp)
         gfp->short_blocks =  short_block_coupled;
     }    
     
-    if ( gfp->adapt_thres_type < 0 ) gfp->adapt_thres_type = 2;
+    if ( gfp->athaa_loudapprox < 0 ) gfp->athaa_loudapprox = 2;
     
     if (gfp->useTemporal < 0 ) gfp->useTemporal = 1;  // on by default
 
@@ -1367,7 +1367,7 @@ lame_print_internals( const lame_global_flags * gfp )
     MSGF( gfc, "\tATH: %s\n", pc );
     MSGF( gfc, "\t ^ type: %d\n", gfp->ATHtype );
     MSGF( gfc, "\t ^ adjust type: %d\n", gfc->ATH->use_adjust );
-    MSGF( gfc, "\t ^ adapt threshold type: %d\n", gfp->adapt_thres_type );
+    MSGF( gfc, "\t ^ adapt threshold type: %d\n", gfp->athaa_loudapprox );
     
     if ( gfc->nsPsy.use )
     MSGF( gfc, "\texperimental psy tunings by Naoki Shibata\n" ); 
@@ -2059,9 +2059,9 @@ lame_init_old(lame_global_flags * gfp)
 
     gfp->adjust_type = -1;
     gfp->ATHtype = -1;  /* default = -1 = set in lame_init_params */
-    gfp->adapt_thres_type = -1;	/* 1 = adaptive threshold, with flat */
-				/*     approximation for loudness.   */
-    gfp->adapt_thres_level = 0.0; /* no offset */
+    gfp->athaa_loudapprox = -1;	/* 1 = flat loudness approx. (total energy) */
+                                /* 2 = equal loudness curve */
+    gfp->athaa_sensitivity = 0.0; /* no offset */
     gfp->useTemporal = -1;
 
     /* The reason for

@@ -451,8 +451,8 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --athtype n     selects between different ATH types [0-5]\n"
               "    --athlower x    lowers ATH by x dB\n"
               "    --ath-adjust n  ATH auto adjust types 1-3, else no adjustment\n"
-              "    --adapt-thres-type n  n=1 total energy or n=2 approximated loudness\n"
-              "    --adapt-thres-level x ??\n"
+              "    --athaa-loudapprox n   n=1 total energy or n=2 equal loudness curve\n"
+              "    --athaa-sensitivity x  activation offset in -/+ dB for ATH auto-adjustment\n" 
               "\n"
               "  PSY related:\n"
               "    --short         use short blocks when appropriate\n"
@@ -1158,13 +1158,13 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     argUsed=1;          //  1:Gaby, 2:Robert, 3:Jon, else:off
                     lame_set_adjust_type( gfp, atoi(nextArg) );
 
-                T_ELIF ("adapt-thres-type")
+                T_ELIF ("athaa-loudapprox")
                     argUsed=1;
-                    lame_set_adapt_thres_type( gfp, atoi(nextArg) );
+                    lame_set_athaa_loudapprox( gfp, atoi(nextArg) );
 
-                T_ELIF ("adapt-thres-level")
+                T_ELIF ("athaa-sensitivity")
                     argUsed=1;
-                    lame_set_adapt_thres_level( gfp, atof(nextArg) );
+                    lame_set_athaa_sensitivity( gfp, atof(nextArg) );
 
                 T_ELIF ("scale")
                     argUsed=1;
