@@ -23,6 +23,8 @@
 #define LAME_BITSTREAM_H
 #include "util.h"
 
+#define         CRC16_POLYNOMIAL        0x8005
+
 int getframebytes(const lame_t gfc);
 int format_bitstream(lame_t gfc);
 int flush_bitstream(lame_t gfc, unsigned char *, int, int);

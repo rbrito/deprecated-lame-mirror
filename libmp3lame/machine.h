@@ -116,6 +116,7 @@
 # include <windows.h>
 # include <float.h>
 # define FLOAT_MAX FLT_MAX
+# define u64const(x) (uint64_t)x
 #else
 # ifdef ALLDOUBLE
 typedef double FLOAT;
@@ -128,6 +129,7 @@ typedef float   FLOAT;
 #   define FLOAT_MAX FLT_MAX
 #  endif
 # endif
+# define u64const(x) x##LL
 #endif
 
 #ifndef FLOAT_MAX
@@ -221,12 +223,6 @@ inline static ieee754_float32_t fast_log2(ieee754_float32_t xx)
 #else
 # define        SQRT2                   1.41421356237309504880
 #endif
-
-
-#define         CRC16_POLYNOMIAL        0x8005
-#define		MAX_BITS		4095
-
-#define         BUFFER_SIZE     LAME_MAXMP3BUFFER 
 
 #define         Min(A, B)       ((A) < (B) ? (A) : (B))
 #define         Max(A, B)       ((A) > (B) ? (A) : (B))

@@ -1171,8 +1171,8 @@ L3psycho_anal_ns(
 	enn = p[0] * p[0];
 	eb[0] = enn;
 
-	max[0] = enn;
-	avg[0] = enn * gfc->rnumlines_l[0];
+	max[0] = enn * 2.0;
+	avg[0] = enn * 2.0 * gfc->rnumlines_l[0];
 
 	for (b = j = 1; b<gfc->npart_l; b++) {
 	    thmm = enn = p[j]*p[j] + p[BLKSIZE-j]*p[BLKSIZE-j];
@@ -1269,10 +1269,9 @@ L3psycho_anal_ns(
 	 *      convolve the partitioned energy and unpredictability
 	 *      with the spreading function, s3_l[b][k]
 	 ******************************************************************* */
-	b = j = 0;
 	p = gfc->s3_ll;
 	enn = thmm = 0.0;
-	for (;; b++ ) {
+	for (b = j = 0;; b++ ) {
 	    /* convolve the partitioned energy with the spreading function */
 	    FLOAT ecb;
 	    int kk = gfc->s3ind[b][0];
@@ -1332,14 +1331,13 @@ L3psycho_anal_ns(
 
 	/* short block may be needed but not calculated */
 	/* calculate it from converting from long */
-	b = j = 0;
-	enn = thmm = 0.0;
-
 	i = 0;
 	if (mr->en.s[0][0] < 0.0) i += 1;
 	if (mr->en.s[0][1] < 0.0) i += 2;
 	if (mr->en.s[0][2] < 0.0) i += 4;
-	for (;; b++ ) {
+
+	enn = thmm = 0.0;
+	for (b = j = 0;; b++ ) {
 	    FLOAT tmp = nb_1[b];
 	    enn  += eb[b];
 	    thmm += tmp;

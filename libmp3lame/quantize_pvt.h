@@ -43,7 +43,8 @@ int scale_bitcount_lsf (gr_info * const cod_info);
 extern void quantize_sfb_3DN(const FLOAT *, int, int, int *);
 #endif
 
-#define LARGE_BITS 100000
+#define LARGE_BITS	100000
+#define	MAX_BITS	4095
 
 typedef union {
     float f;
