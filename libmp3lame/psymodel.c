@@ -1129,7 +1129,6 @@ partially_convert_l2s(lame_internal_flags *gfc, III_psy_ratio *mr, FLOAT *nb_1,
 	x *= ((double)BLKSIZE_s*BLKSIZE_s) / (BLKSIZE*BLKSIZE);
 	if (x < gfc->ATH.s_avg[sfb] * gfc->ATH.adjust[ch])
 	    continue;
-	x *= gfc->masking_lower;
 	mr->thm.s[sfb][0] = mr->thm.s[sfb][1] = mr->thm.s[sfb][2] = x;
     }
 }
