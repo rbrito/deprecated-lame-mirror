@@ -45,6 +45,7 @@ libmp3lame_la_SOURCES = \
 	quantize.c \
 	quantize_pvt.c \
 	reservoir.c \
+	set_get.c \
 	tables.c \
 	takehiro.c \
 	util.c \
