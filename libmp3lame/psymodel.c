@@ -1365,8 +1365,7 @@ psycho_anal_ns(lame_t gfc, int gr, int numchn)
  */
 void
 psycho_analysis(
-    lame_t gfc,
-    III_psy_ratio masking_d[MAX_GRANULES][MAX_CHANNELS],
+    lame_t gfc, III_psy_ratio masking_d[MAX_GRANULES][MAX_CHANNELS],
     FLOAT sbsmpl[MAX_CHANNELS][1152]
     )
 {

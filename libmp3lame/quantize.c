@@ -288,7 +288,7 @@ calc_noise(
 	    } while ((l+=2) < 0);
 	    *distort = (noise *= *rxmin);
 	}
-	max_noise=Max(max_noise,noise);
+	max_noise = Max(max_noise, noise);
     }
 
     for (;sfb < gi->psymax; rxmin++, distort++, sfb++) {
@@ -312,7 +312,7 @@ calc_noise(
 	    }
 	    *distort = noise;
 	}
-	max_noise=Max(max_noise,noise);
+	max_noise = Max(max_noise, noise);
     }
 
     if (max_noise > 1.0 && gi->block_type == SHORT_TYPE) {
@@ -1007,7 +1007,7 @@ CBR_1st_bitalloc (
 	/* try the new scalefactor conbination on gi_w */
 	int huff_bits = amp_scalefac_bands(gfc, &gi_w, distort, newNoise,
 					   current_method, targ_bits);
-	if (huff_bits > 0) {
+	if (huff_bits >= 3) { /* we need at least 3 bits to encode "not all zero" */
 	    /* adjust global_gain to fit the available bits */
 	    if (adjust_global_gain(gfc, &gi_w, distort, huff_bits)) {
 		int sfb;
@@ -1092,9 +1092,17 @@ CBR_bitalloc(
     /* estimate how many bits we need */
     adjustBits = 0;
     for (ch = 0; ch < gfc->channels_out; ch++) {
+	gr_info *gi = &gfc->l3_side.tt[gr][ch];
 	bits = 0;
-	if (gfc->l3_side.tt[gr][ch].psymax > 0)
+	if (gi->psymax > 0)
 	    bits = (int)(ratio[ch].pe*factor);
+	if ((gi->block_type == SHORT_TYPE && (gfc->substep_shaping & 2))
+	 || (gi->block_type != SHORT_TYPE && (gfc->substep_shaping & 1)))
+	    bits *= 1.1;
+
+	if (gi->block_type != NORM_TYPE && gi->block_type != SHORT_TYPE)
+	    bits *= 1.1;
+
 	adjustBits += (targ_bits[ch] = ++bits); /* avoid zero division */
     }
 
@@ -1172,18 +1180,21 @@ iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 
     ResvFrameBegin(gfc, mean_bits);
     mean_bits *= 8/gfc->mode_gr;
-    factor = (mean_bits/gfc->channels_out+300)*(1.0/1500.0);
+    factor = (mean_bits/gfc->channels_out+300)*(1.0/1300.0);
 
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 	/*  calculate needed bits */
 	int min_bits = mean_bits, max_bits = gfc->l3_side.ResvSize;
 	if (max_bits*10 >= gfc->l3_side.ResvMax*6) {
 	    int add_bits = 0;
-	    if (max_bits*10 >= gfc->l3_side.ResvMax*9) {
-		/* reservoir is filled over 90% -> forced to use reservoir */
-		add_bits = max_bits - (gfc->l3_side.ResvMax * 9) / 10;
-		min_bits += add_bits;
+	    gfc->substep_shaping &= 0x7f;
+	    if (max_bits*10 >= gfc->l3_side.ResvMax*9)
 		gfc->substep_shaping |= 0x80;
+	    if (max_bits*10 >= gfc->l3_side.ResvMax*9
+		|| (gfc->substep_shaping & 1)) {
+		/* reservoir is filled over 90% -> forced to use reservoir */
+		add_bits = max_bits - (gfc->l3_side.ResvMax * 6) / 10;
+		min_bits += add_bits;
 	    }
 	    /* max amount from the reservoir we are allowed to use. */
 	    /* ISO says 60%, but we can tune it */
@@ -1195,7 +1206,6 @@ iteration_loop(lame_t gfc, III_psy_ratio ratio[MAX_GRANULES][MAX_CHANNELS])
 	     * to always produce 100 (the old value) at 128kbs */
 	    /*    min_bits -= (int) (mean_bits/15.2);*/
 	    min_bits -= mean_bits/10;
-	    gfc->substep_shaping &= 0x7f;
 	}
 
 	gfc->l3_side.ResvSize += mean_bits;
@@ -1333,14 +1343,14 @@ short_block_scalefacs(gr_info * gi, int vbrmax)
 	vbrmax = 255;
 
     for (b = 0; b < 3; b++) {
-	int sbg = (vbrmax - maxov[gi->scalefac_scale][b] + 7) / 8;
+	int sbg = (vbrmax - maxov[gi->scalefac_scale][b] + 7) >> 3;
 	if (sbg < 0)
 	    sbg = 0;
 	assert(sbg <= 7);
 	gi->subblock_gain[b] = sbg;
     }
 
-    b = vbrmax/8;
+    b = vbrmax >> 3;
     if (b > gi->subblock_gain[0])
 	b = gi->subblock_gain[0];
     if (b > gi->subblock_gain[1])
@@ -1438,13 +1448,11 @@ noisesfb(lame_t gfc, gr_info *gi, FLOAT * xmin, int startsfb)
 	j += width;
 	if (sfb >= startsfb) {
 	    int s = scalefactor(gi, sfb);
-	    FLOAT noise;
 	    if (IPOW20(s) > gi->maxXR[sfb])
 		return -1;
-	    noise = calc_sfb_noise(gfc, j, -width, s);
-	    if (noise > xmin[sfb])
+
+	    if (calc_sfb_noise(gfc, j, -width, s) > xmin[sfb])
 		return sfb;
-	    assert(noise >= 0.0);
 	}
     }
     return -1;
