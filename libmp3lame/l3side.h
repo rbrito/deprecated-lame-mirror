@@ -27,12 +27,6 @@
 
 /* Layer III side information. */
 
-typedef FLOAT8	D576[576];
-typedef int	I576[576];
-typedef FLOAT8	D192_3[192][3];
-typedef int	I192_3[192][3];
-
-
 typedef struct 
 {
    int l[1+SBMAX_l];
