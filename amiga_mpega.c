@@ -1,6 +1,24 @@
+/* MPGLIB replacement using mpega.library (AmigaOS)
+ * Written by Thomas Wenzel and Sigbjørn (CISC) Skjæret.
+ *
+ * Big thanks to Stéphane Tavernard for mpega.library.
+ *
+ *
+ * $Id$
+ *
+ * $Log$
+ * Revision 1.2  2000/01/11 20:23:41  cisc
+ * Fixed timestatus bug (forgot nsamp variable).
+ *
+ * Revision 1.1  2000/01/10 03:40:20  cisc
+ * MPGLIB replacement using mpega.library (AmigaOS)
+ *
+ */
+
 #ifdef AMIGA_MPEGA
 
 #include "lame.h"
+#include "util.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <proto/exec.h>
@@ -29,6 +47,7 @@ static void exit_cleanup(void)
 {
 	(void)break_cleanup();
 }
+
 
 int lame_decode_initfile(const char *fullname, int *stereo, int *samp, int *bitrate, unsigned long *nsamp)
 {
@@ -62,13 +81,13 @@ int lame_decode_initfile(const char *fullname, int *stereo, int *samp, int *bitr
 	if(!mstream) { return (-1); }
 
 	*stereo  = mstream->dec_channels;
-	*samp    = mstream->frequency;
+	*samp    = mstream->dec_frequency;
 	*bitrate = mstream->bitrate;
+//	*nsamp   = MAX_U_32_NUM;
+	*nsamp   = (mstream->ms_duration * mstream->dec_frequency) / 1000;
 
 	return 0;
 }
-
-
 
 int lame_decode_fromfile(FILE *fd, short pcm[][1152])
 {
