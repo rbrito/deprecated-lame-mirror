@@ -320,36 +320,10 @@ __declspec(dllexport) VOID		beVersion(PBE_VERSION pbeVersion)
 __declspec(dllexport) BE_ERR	beEncodeChunk(HBE_STREAM hbeStream, DWORD nSamples, 
 											  PSHORT pSamples, PBYTE pOutput, PDWORD pdwOutput)
 {
-	int n=nSamples/gf.num_channels;
 
-	if (gf.num_channels==2)
-	{
-	  int iSampleIndex;
-	  PSHORT LBuffer,RBuffer;
-	  LBuffer=malloc(sizeof(short)*n);
-	  RBuffer=malloc(sizeof(short)*n);
-		for (iSampleIndex=0;iSampleIndex<n;iSampleIndex++)
-		{
-			// Copy new sample data into InputBuffer
-			LBuffer[iSampleIndex]=*pSamples++;
-			RBuffer[iSampleIndex]=*pSamples++;
-		}
-		// Encode it
-		*pdwOutput=lame_encode_buffer(&gf,LBuffer,RBuffer,n,pOutput,0);
-		free(LBuffer);
-		free(RBuffer);
-	}
-	else
-	{
-		// Encode it
-		*pdwOutput=lame_encode_buffer(&gf,pSamples,NULL,n,pOutput,0);
-	}
-
-#if 0
 	// Encode it
 	*pdwOutput=lame_encode_buffer_interleaved(&gf,pSamples,
 		  nSamples/gf.num_channels,pOutput,0);
-#endif
 
 	if (*pdwOutput<0) {
 		*pdwOutput=0;
