@@ -12,9 +12,6 @@ KLEMM_43:
 KLEMM_44:
  - enable code in pcm.c
 
-OLD_ATH_AUTO_ADJUST:
- - use Gabriels ATH auto adjust instead of JDs continous one
-
 
 USE_GOGO_SUBBAND:
  ?

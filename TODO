@@ -52,7 +52,11 @@ for the lowpass?  If it is not too much slower, yes.  If it
 is slower, then it should be an option since it will produce
 higher quality.  
 
-
+8.
+We should consider moving the experts options from the *long
+help* text into an *experts only* help text. The average Joe gets
+knocked down by the huge number of possibilities to setup lame.
+ 
 
 
 
