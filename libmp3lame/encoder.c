@@ -179,7 +179,6 @@ init_gr_info(
 
     if (cod_info->block_type != NORM_TYPE) {
 	cod_info->region0_count = 7;
-	cod_info->region1_count = SBMAX_l -1 - 7 - 1;
 	if (cod_info->block_type == SHORT_TYPE) {
 	    FLOAT ixwork[576];
 	    FLOAT *ix;
@@ -227,6 +226,7 @@ init_gr_info(
 		}
 	    }
 	}
+	cod_info->region1_count = SBMAX_l - 2 - cod_info->region0_count;
     }
     cod_info->count1bits          = 0;  
     cod_info->sfb_partition_table = nr_of_sfb_block[0][0];
