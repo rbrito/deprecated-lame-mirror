@@ -447,7 +447,7 @@ static int choose_table_nonMMX(
     int max;
     int choice, choice2;
     static const int huf_tbl_noESC[] = {
-	1, 2, 5, 7, 7,10,10,13,13,13,13,13,13,13,13 /* char not enough ? */
+	1, 2, 5, 7, 7,10,10,13,13,13,13,13,13,13,13
     };
 
     max = ix_max(ix, end);
@@ -517,7 +517,7 @@ int count_bits(
     else
 	quantize_xrpow_ISO(xr, ix, IPOW20(gi->global_gain));
 
-    if (gfc->substep_shaping) {
+    if (gfc->substep_shaping & 2) {
 	int sfb, j = 0;
 	// 0.634521682242439 = 0.5946*2**(.5*0.1875)
 	const FLOAT8 roundfac =
