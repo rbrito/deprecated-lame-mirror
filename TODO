@@ -9,7 +9,7 @@ frontend: a bunch of static variables (input_format, swapbytes,
           get_audio.  should be cleaned up.
 
 
-Makefile.{B32,MSVC,DJGPP} all broken?
+Makefile.{B32,DJGPP} all broken?
 
 These makefiles should only bother to build the static lib,
 (or compile everything without even using the library)
