@@ -989,7 +989,7 @@ iteration_init( lame_global_flags *gfp)
 #ifdef TAKEHIRO_IEEE754_HACK
     adj43asm[0] = 0.0;
     for (i = 1; i < PRECALC_SIZE; i++)
-	adj43asm[i] = i - 0.5 - pow(0.5 * (pow43[i - 1] + pow43[i]),0.75);
+	adj43asm[i] = i - 0.5 - pow(0.5 * (pow(i-1.0,4.0/3.0) + pow(i,4.0/3.0)), 0.75);
 #else
     for (i = 0; i < PRECALC_SIZE-1; i++)
 	adj43[i] = (i + 1) - pow(0.5 * (pow43[i] + pow43[i + 1]), 0.75);
