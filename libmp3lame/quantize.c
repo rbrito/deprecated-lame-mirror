@@ -45,8 +45,8 @@ extern void sumofsqr_3DN(const float *, int, float *);
 extern void calc_noise_sub_3DN(const float *, const int *, int, int, float *);
 extern void quantize_ISO_3DN(const float *, int, int, int *, int);
 extern void quantize_ISO_SSE(const float *, int, int, int *);
-extern FLOAT calc_sfb_noise_fast_3DN(lame_t gfc, int j, int bw, int sf);
-extern FLOAT calc_sfb_noise_3DN(lame_t gfc, int j, int bw, int sf);
+extern float calc_sfb_noise_fast_3DN(lame_t gfc, int j, int bw, int sf);
+extern float calc_sfb_noise_3DN(lame_t gfc, int j, int bw, int sf);
 #endif
 
 static const int max_range_short[SBMAX_s*3] = {
@@ -1555,11 +1555,10 @@ VBR_noise_shaping(lame_t gfc, gr_info *gi, FLOAT * xmin)
 				 gi->block_type == SHORT_TYPE, gain);
 	    if (gain <= 255 && vbrmax < gain)
 		vbrmax = gain;
-	    gi->scalefac[sfb] = gain;
 	} else {
 	    gi->maxXR[sfb] = FLOAT_MAX;
-	    gi->scalefac[sfb] = gain;
 	}
+	gi->scalefac[sfb] = gain;
     } while (++sfb < gi->psymax);
     assert(vbrmax != -10000);
 
