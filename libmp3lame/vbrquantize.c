@@ -337,7 +337,7 @@ calc_sfb_noise_ave(const FLOAT8 * xr, const FLOAT8 * xr34, int bw, int sf)
 
 
 
-INLINE int
+inline int
 find_scalefac(const FLOAT8 * xr, const FLOAT8 * xr34, FLOAT8 l3_xmin, int bw)
 {
     FLOAT8  xfsf;
@@ -375,7 +375,7 @@ find_scalefac(const FLOAT8 * xr, const FLOAT8 * xr34, FLOAT8 l3_xmin, int bw)
     return sf;
 }
 
-INLINE int
+inline int
 find_scalefac_mq(const FLOAT8 * xr, const FLOAT8 * xr34, FLOAT8 l3_xmin, int bw, int mq,
                  FLOAT8 * scratch)
 {
@@ -414,7 +414,7 @@ find_scalefac_mq(const FLOAT8 * xr, const FLOAT8 * xr34, FLOAT8 l3_xmin, int bw,
     return sf;
 }
 
-INLINE int
+inline int
 find_scalefac_ave(const FLOAT8 * xr, const FLOAT8 * xr34, FLOAT8 l3_xmin, int bw)
 {
     FLOAT8  xfsf;
@@ -457,7 +457,7 @@ find_scalefac_ave(const FLOAT8 * xr, const FLOAT8 * xr34, FLOAT8 l3_xmin, int bw
  *  Robert Hegemann 2001-05-01
  *  calculates quantization step size determined by allowed masking
  */
-INLINE int
+inline int
 calc_scalefac(FLOAT8 l3_xmin, int bw, FLOAT8 preset_tune)
 {
     FLOAT8 const c = (preset_tune > 0 ? preset_tune : 5.799142446); // 10 * 10^(2/3) * log10(4/3)
@@ -489,7 +489,7 @@ static const int max_range_long_lsf_pretab[SBMAX_l] =
     ol_sf -= ifqstep*scalefac[gr][ch].s[sfb][i];
 
 */
-INLINE int
+inline int
 compute_scalefacs_short(int sf[], const gr_info * cod_info, int scalefac[],
 			int *sbg)
 {
@@ -558,7 +558,7 @@ compute_scalefacs_short(int sf[], const gr_info * cod_info, int scalefac[],
 	  if (cod_info->preflag && sfb>=11) 
 	  ol_sf -= ifqstep*pretab[sfb];
 */
-INLINE int
+inline int
 compute_scalefacs_long_lsf(int *sf, const gr_info * cod_info, int *scalefac)
 {
     const int *max_range = max_range_long;
@@ -603,7 +603,7 @@ compute_scalefacs_long_lsf(int *sf, const gr_info * cod_info, int *scalefac)
 	  if (cod_info->preflag && sfb>=11) 
 	  ol_sf -= ifqstep*pretab[sfb];
 */
-INLINE int
+inline int
 compute_scalefacs_long(int *sf, const gr_info * cod_info, int *scalefac)
 {
     int     ifqstep = (cod_info->scalefac_scale == 0) ? 2 : 4;

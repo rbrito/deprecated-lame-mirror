@@ -372,7 +372,7 @@ static const int order[] = {
 
 
 /* returns sum_j=0^31 a[j]*cos(PI*j*(k+1/2)/32), 0<=k<32 */
-INLINE static void
+inline static void
 window_subband(const sample_t *x1, FLOAT8 a[SBLIMIT])
 {
     int i;

@@ -83,8 +83,6 @@ char *strchr (), *strrchr ();
 #ifndef inline
 # define inline
 #endif
-/* compatibility */
-#define INLINE inline
 
 #if defined(_MSC_VER)
 # undef inline
