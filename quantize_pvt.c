@@ -926,6 +926,11 @@ void set_pinfo (
 
 #ifdef TAKEHIRO_IEEE754_HACK
 
+typedef union {
+    float f;
+    int i;
+} fi_union;
+
 #define MAGIC_FLOAT (65536*(128))
 #define MAGIC_INT 0x4b000000
 
@@ -935,12 +940,9 @@ void quantize_xrpow(FLOAT8 xp[576], int pi[576], gr_info *cod_info)
     const FLOAT8 istep = IPOW20(cod_info->global_gain);
 
     int j;
-    union {
-	float f;
-	int i;
-    } *fi;
+    fi_union *fi;
 
-    fi = pi;
+    fi = (fi_union *)pi;
     for (j = 576 / 4 - 1; j >= 0; --j) {
 	double x0 = istep * xp[0];
 	double x1 = istep * xp[1];
@@ -972,12 +974,9 @@ void quantize_xrpow_ISO(FLOAT8 xp[576], int pi[576], gr_info *cod_info)
     /* quantize on xr^(3/4) instead of xr */
     const FLOAT8 istep = IPOW20(cod_info->global_gain);
     int j;
-    union {
-	float f;
-	int i;
-    } *fi;
+    fi_union *fi;
 
-    fi = pi;
+    fi = (fi_union *)pi;
     for (j=576/4 - 1;j>=0;j--) {
 	fi[0].f = istep * xp[0] + (ROUNDFAC + MAGIC_FLOAT);
 	fi[1].f = istep * xp[1] + (ROUNDFAC + MAGIC_FLOAT);

@@ -78,7 +78,7 @@ int init_outer_loop
     /* sfb_lmax              was set by iteration_init */
     /* sfb_smax              was set by iteration_init */
     cod_info->count1bits          = 0;  
-    cod_info->sfb_partition_table = (int*)&nr_of_sfb_block[0][0][0];
+    cod_info->sfb_partition_table = nr_of_sfb_block[0][0];
     cod_info->slen[0]             = 0;
     cod_info->slen[1]             = 0;
     cod_info->slen[2]             = 0;

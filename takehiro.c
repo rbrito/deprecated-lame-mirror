@@ -871,7 +871,7 @@ int scale_bitcount_lsf(III_scalefac_t *scalefac, gr_info *cod_info)
 
 	int slen1, slen2, slen3, slen4;
 
-        cod_info->sfb_partition_table = (int*)(&nr_of_sfb_block[table_number][row_in_table][0]);
+        cod_info->sfb_partition_table = nr_of_sfb_block[table_number][row_in_table];
 	for ( partition = 0; partition < 4; partition++ )
 	    cod_info->slen[partition] = log2tab[max_sfac[partition]];
 
