@@ -234,20 +234,16 @@ id3tag_set_comment(lame_t gfc, const char *comment)
 void
 id3tag_set_track(lame_t gfc, const char *track)
 {
-    if (track && *track) {
-        int num = atoi(track);
-        if (num < 0) {
-            num = 0;
-        }
-        /* limit a track to 255 so it fits in a version 1 tag even though CD
-         * audio doesn't allow more than 99 tracks */
-        if (num > 255) {
-            num = 255;
-        }
-        if (num) {
-            gfc->tag_spec.track = num;
-            gfc->tag_spec.flags |= CHANGED_FLAG;
-        }
+    int num, totalnum, n;
+    if (!track)
+	return;
+
+    n = sscanf("%d/%d", track, &num, &totalnum);
+    if (n >= 1) {
+	gfc->tag_spec.track = num;
+	gfc->tag_spec.flags |= CHANGED_FLAG;
+	if (n == 2)
+	    gfc->tag_spec.totaltrack = totalnum;
     }
 }
 
@@ -369,10 +365,10 @@ id3tag_write_v2(lame_t gfc)
             ? strlen(gfc->tag_spec.comment) : 0;
         /* write tag if explicitly requested or if fields overflow */
         if ((gfc->tag_spec.flags & (ADD_V2_FLAG | V2_ONLY_FLAG))
-                || (title_length > 30)
-                || (artist_length > 30) || (album_length > 30)
-                || (comment_length > 30)
-                || (gfc->tag_spec.track && (comment_length > 28))) {
+	    || title_length > 30 || artist_length > 30 || album_length > 30
+	    || comment_length > 30
+	    || (gfc->tag_spec.track && comment_length > 28)
+	    || gfc->tag_spec.track > 255 || gfc->tag_spec.totaltrack > 0) {
             size_t tag_size;
             char encoder[20];
             size_t encoder_length;
@@ -413,7 +409,13 @@ id3tag_write_v2(lame_t gfc)
                 tag_size += 15 + comment_length;
             }
             if (gfc->tag_spec.track) {
-                track_length = sprintf(track, "%d", gfc->tag_spec.track);
+		if (gfc->tag_spec.totaltrack > 0) {
+		    track_length = sprintf(track, "%d/%d",
+					   gfc->tag_spec.track,
+					   gfc->tag_spec.totaltrack);
+		} else {
+		    track_length = sprintf(track, "%d", gfc->tag_spec.track);
+		}
                 tag_size += 11 + track_length;
             } else {
                 track_length = 0;
