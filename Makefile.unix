@@ -515,16 +515,16 @@ all: $(PGM)
 config.h: configMS.h
 	cp configMS.h config.h
 
-$(PGM):	frontend/main.o $(frontend_obj)  $(MP3LIB)
+$(PGM):	config.h frontend/main.o $(frontend_obj)  $(MP3LIB)
 	$(CC) $(CC_OPTS) -o frontend/$(PGM)  frontend/main.o $(frontend_obj) \
         $(MP3LIB) $(LIBS) $(LIBSNDFILE) $(LIBTERMCAP) \
         $(VORBIS_LIB)
 
-mp3x:   frontend/mp3x.o $(frontend_obj) $(gtk_obj) $(MP3LIB)
+mp3x:   config.h frontend/mp3x.o $(frontend_obj) $(gtk_obj) $(MP3LIB)
 	$(CC) $(CC_OPTS) -o frontend/mp3x frontend/mp3x.o $(frontend_obj) $(gtk_obj) $(MP3LIB) \
         $(LIBS) $(LIBSNDFILE) $(GTKLIBS) $(LIBTERMCAP) $(VORBIS_LIB)
 
-mp3rtp:	frontend/rtp.o frontend/mp3rtp.o  $(frontend_obj) $(MP3LIB)
+mp3rtp:	config.h frontend/rtp.o frontend/mp3rtp.o  $(frontend_obj) $(MP3LIB)
 	$(CC) $(CC_OPTS) -o frontend/mp3rtp mp3rtp.o rtp.o $(frontend_obj) $(MP3LIB) \
         $(LIBS) $(LIBSNDFILE) $(LIBTERMCAP) $(VORBIS_LIB)
 
