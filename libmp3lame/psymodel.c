@@ -1758,6 +1758,11 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
     if (gfc->nsPsy.safejoint) msfix = 1;
     if (gfp->msfix) msfix = gfp->msfix;
 
+    if (gfc->presetTune.use && gfc->ATH->adjust >=
+		                       gfc->presetTune.athadjust_switch_level && 
+							   gfc->presetTune.athadjust_msfix > 0)
+		msfix = gfc->presetTune.athadjust_msfix;
+    
     for ( sb = 0; sb < NBPSY_l; sb++ )
       {
 	FLOAT8 thmL,thmR,thmM,thmS,ath;
@@ -1926,8 +1931,11 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
         else
             gfc->presetTune.quantcomp_current = gfp->experimentalX;
     
-        if (gfp->VBR == vbr_mtrh && blocktype_d[chn] == NORM_TYPE)
-		    gfc->presetTune.quantcomp_current = gfc->presetTune.quantcomp_maxath_type_mtrh;
+        if (gfc->ATH->adjust >= gfc->presetTune.athadjust_switch_level && 
+			                             blocktype_d[chn] == NORM_TYPE &&
+										 gfc->presetTune.quantcomp_alt_type > -1) {
+		    gfc->presetTune.quantcomp_current = gfc->presetTune.quantcomp_alt_type;
+		}
     }
   }
   

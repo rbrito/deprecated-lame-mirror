@@ -135,17 +135,31 @@ typedef struct {
 
 /* variables used for --alt-preset */
 typedef struct {
-  int     use;                        // indicates the use of alt-preset
+
+  // indicates the use of alt-preset
+  int     use;
+
+  // short block tuning
   int     attackthre;
   int     attackthre_s;
+
+  // adjustment to joint stereo
   FLOAT8  ms_maskadjust;
-  FLOAT8  athadapt_noiseshaping_thre; // x <= 0 == never switch, x >= 1 == always switch
+
+  // adjustments to quantization selection
   int     quantcomp_current;          // current quant_compare mode we are using
   FLOAT8  quantcomp_adjust_rh_tot;    // adjustments for tot_noise with vbr-old
   FLOAT8  quantcomp_adjust_rh_max;    // adjustments for max_noise with vbr-old
   FLOAT8  quantcomp_adjust_mtrh;      // adjustments for calc_scalefac "c" with vbr-mtrh
-  int     quantcomp_maxath_type_mtrh; // quant compare for mtrh for when ath adjustment == 1
   int     quantcomp_type_s;           // quantization comparison to switch to on non-normal blocks
+  int     quantcomp_alt_type;          // third quantization comparison to use for special cases
+                                       // such as high athadjust values, or long blocks, etc
+
+  // tunings reliant upon athadjust
+  FLOAT8  athadjust_max_val;           // maximum value of athadjust before limit is applied
+  FLOAT8  athadjust_switch_level;      // level of athadjust at which to apply tunings at
+                                       // x <= 0 == never switch, x >= 1 == always switch
+  FLOAT8  athadjust_msfix;             // msfix adjustment based on athadjust
 } presetTune_t;
 
 typedef struct 
