@@ -1217,17 +1217,6 @@ typedef enum {
     BINSEARCH_DOWN
 } binsearchDirection_t;
 
-#define SECAND_SEARCH
-#define DEBUG_STEP_SEARCHXXX
-#ifdef DEBUG_STEP_SEARCH
-static int countall = 0;
-static int countallneu = 0;
-static int countgood = 0;
-static int countgoodneu = 0;
-static int countbad = 0;
-static int countbadneu = 0;
-#endif
-
 /*-------------------------------------------------------------------------*/
 int 
 bin_search_StepSize2(int      desired_rate, 
@@ -1241,21 +1230,13 @@ bin_search_StepSize2(int      desired_rate,
     int flag_GoneOver = 0;
     static int CurrentStep = 4;
     int nBits;
-#   ifdef DEBUG_STEP_SEARCH
-    int step=0;
-#   endif
     int StepSize = start;
     binsearchDirection_t Direction = BINSEARCH_NONE;
-#ifndef SECAND_SEARCH
+
     do
     {
 	cod_info->global_gain = StepSize;
 	nBits = count_bits(ix, xrspow, cod_info);  
-        
-#       ifdef DEBUG_STEP_SEARCH
-        ++countall;
-        ++step;
-#       endif
 
 	if (CurrentStep == 1 )
         {
@@ -1294,119 +1275,7 @@ bin_search_StepSize2(int      desired_rate,
     } else {
 	CurrentStep = 2;
     }
-#   ifdef DEBUG_STEP_SEARCH
-    printf("  %5d sum of iterations  %3d iterations  %4d gain  %6d bits  %6d desired  %6d good  %6d bad\n",
-           countall,step,StepSize,nBits,desired_rate,
-	   nBits <= desired_rate ? ++countgood : countgood,
-	   nBits > desired_rate ? ++countbad : countbad
-	    );
-#   endif
-/*
- * comment out the following #else if you want to compare both versions
- */
-#else
-{
-  int minStep=1, maxStep=255, actStep=Min(Max(start,70),210), lastStep=0;
-  int bitsMinStep=8220;
-  int bitsMaxStep=0;
-  int bitsActStep=10000;
-  
-# ifdef DEBUG_STEP_SEARCH
-  step = 0;
-# endif
 
-  do
-  {
-    if ( bitsActStep == desired_rate )
-    {
-#     ifdef DEBUG_STEP_SEARCH
-      printf("bitsActStep == desired_rate\n");
-#     endif
-      break;
-    }
-    else if ( bitsMinStep == bitsMaxStep )
-    {
-#     ifdef DEBUG_STEP_SEARCH
-      printf("bitsMinStep == bitsMaxStep\n");
-#     endif	
-      break;
-    } 
-    else if ( bitsMinStep <= desired_rate )
-    {
-#     ifdef DEBUG_STEP_SEARCH
-      printf("bitsMinStep <= desired_rate\n");
-#     endif	
-      break;
-    }
-    else if ( actStep == lastStep )
-    {
-#     ifdef DEBUG_STEP_SEARCH
-      printf("actStep == lastStep\n");
-#     endif	
-      break;
-    }
-  
-#   ifdef DEBUG_STEP_SEARCH
-    ++countallneu;
-    ++step;
-#   endif	
-    
-    cod_info->global_gain = actStep;
-    bitsActStep = count_bits(ix, xrspow, cod_info);  
-    
-#   ifdef DEBUG_STEP_SEARCH_2
-    printf("%5d No   %4d gain   %6d bits\n",
-           countallneu, actStep, bitsActStep );
-#   endif
-	
-    bitsActStep = Min ( 8220, bitsActStep );
-  
-    if ( bitsActStep >= desired_rate )
-    {
-      minStep = actStep;
-      bitsMinStep = bitsActStep;
-    }
-    else
-    {
-      maxStep = actStep;
-      bitsMaxStep = bitsActStep;
-    }
-    lastStep = actStep;
-    
-    if( bitsMinStep == bitsMaxStep )
-      actStep=maxStep;
-    else
-    {
-      FLOAT fac = (desired_rate-bitsMaxStep)/(FLOAT)(bitsMinStep-bitsMaxStep);
-      actStep = maxStep+1-(maxStep-minStep)*fac;
-    }
-    actStep = Min ( actStep, maxStep );
-    actStep = Max ( actStep, minStep );
-  }
-  while (1); /* break adjusted */
-
-  actStep = cod_info->global_gain;
-  
-  if ( bitsActStep > desired_rate )
-  {
-#   ifdef DEBUG_STEP_SEARCH
-    ++countallneu;
-#   endif
-    actStep = actStep+1;
-    cod_info->global_gain = actStep;
-    bitsActStep = count_bits(ix, xrspow, cod_info);  
-  }
-# ifdef DEBUG_STEP_SEARCH
-  printf("  %5d sum of iterations  %3d iterations  %4d gain  %6d bits  %6d desired  %6d good  %6d bad\n\n",
-	         countallneu, step, actStep, bitsActStep, desired_rate,
-		 bitsActStep <= desired_rate ? ++countgoodneu : countgoodneu,
-		 bitsActStep >  desired_rate ? ++countbadneu : countbadneu
-		  );
-# endif
-
-  nBits=bitsActStep;
-}
-#endif
     return nBits;
 }
 
