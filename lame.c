@@ -944,17 +944,16 @@ char *mp3buf, int mp3buf_size)
 
   /********************** status display  *****************************/
   if (!gfp->silent) {
-      static time_t  last_time = 0;
       time_t         curr_time = time (NULL);
       
       /* Update display once per second */
-      if ( difftime ( curr_time, last_time ) >= DISPLAY_UPDATE_TIME  ||  last_time == 0 ) {
-      timestatus(gfp->out_samplerate,gfp->frameNum,gfp->totalframes,gfp->framesize);
-
-      if (gfp->brhist_disp)
+      if ( difftime ( curr_time, gfc->last_time ) >= DISPLAY_UPDATE_TIME  ||  gfc->last_time == 0 ) {
+	timestatus(gfp->out_samplerate,gfp->frameNum,gfp->totalframes,gfp->framesize);
+	
+	if (gfp->brhist_disp)
 	  brhist_disp(gfp->totalframes);
-          last_time = time (NULL);
-    }
+	gfc->last_time = time (NULL);
+      }
   }
 
   if (gfc->psymodel) {

@@ -329,6 +329,9 @@ typedef struct  {
   /* used by the frame analyzer */
   plotting_data *pinfo;
 
+  /* variables used for the status display */
+  time_t last_time;
+
 
 } lame_internal_flags;
 
