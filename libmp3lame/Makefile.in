@@ -123,7 +123,6 @@ libmp3lame_la_LDFLAGS = -version-info @LIB_MAJOR_VERSION@:@LIB_MINOR_VERSION@ \
 DEFS = @DEFS@ @CONFIG_DEFS@
 
 EXTRA_DIST = \
-	debugscalefac.c \
 	gain_analysis.c \
 	gain_analysis.h \
 	libmp3lame.dsp \

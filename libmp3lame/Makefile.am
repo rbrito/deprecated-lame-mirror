@@ -27,7 +27,6 @@ INCLUDES = @INCLUDES@ -I$(top_srcdir)/mpglib/ -I$(top_builddir)
 DEFS = @DEFS@ @CONFIG_DEFS@
 
 EXTRA_DIST = \
-	debugscalefac.c \
 	gain_analysis.c \
 	gain_analysis.h \
 	libmp3lame.dsp \
@@ -71,7 +70,6 @@ noinst_HEADERS= \
 	quantize_pvt.h \
 	reservoir.h \
 	tables.h \
-	tools.h \
 	util.h \
 	vbrquantize.h \
 	version.h
