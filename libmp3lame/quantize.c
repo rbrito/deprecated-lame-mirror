@@ -1638,7 +1638,7 @@ set_pinfo (
     const int           gr,
     const int           ch )
 {
-    int i, j, end, bw, sfb, sfb2, over;
+    int i, j, end, sfb, sfb2, over;
     FLOAT en0, en1, tot_noise=0.0, over_noise=0.0, max_noise;
     FLOAT ifqstep = 0.5 * (1+gi->scalefac_scale);
     FLOAT xmin[SFBMAX], distort[SFBMAX], dummy[SFBMAX];
