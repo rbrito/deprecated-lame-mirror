@@ -377,10 +377,6 @@ int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
 			/* takes care that the right amount of data is copied into wordpointer */
 			mp->dsize=mp->fr.framesize;
 			mp->ssize=0;
-
-			if(mp->fr.error_protection)
-			  getbits(16);
-
 		}
 
 		mp->side_parsed=1;
@@ -402,11 +398,17 @@ int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
 		{
 #ifdef USE_LAYER_1
 			case 1:
+				if(mp->fr.error_protection)
+					getbits(16);
+
 				do_layer1(&mp->fr,(unsigned char *) out,done);
 			break;
 #endif
 #ifdef USE_LAYER_2
 			case 2:
+				if(mp->fr.error_protection)
+					getbits(16);
+
 				do_layer2(&mp->fr,(unsigned char *) out,done);
 			break;
 #endif
