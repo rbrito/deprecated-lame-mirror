@@ -1392,7 +1392,7 @@ psycho_analysis(
 	    gr_info *gi = &gfc->l3_side.tt[gr][ch];
 	    masking_d[gr][ch] = gfc->masking_next[gr][ch + gfc->mode_ext];
 	    /* not good XXX */
-x	    gi->ATHadjust = gfc->ATH.adjust[ch + gfc->mode_ext];
+	    gi->ATHadjust = gfc->ATH.adjust[ch + gfc->mode_ext];
 	    gi->block_type = gfc->blocktype_next[gr][ch];
 	}
 
