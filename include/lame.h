@@ -268,8 +268,13 @@ void lame_close(lame_global_flags *);
  * suggested: lame_encode_flush -> lame_***_hist -> lame_close
  */
  
-void lame_bitrate_hist( lame_global_flags *gfp, int bitrate_hist[16] );
-void lame_stereo_mode_hist( lame_global_flags *gfp, int stereo_mode[4] );
+void lame_bitrate_hist( 
+        lame_global_flags* gfp, 
+        int                bitrate_count[14],
+        int                bitrate_kbps [14] );
+void lame_stereo_mode_hist( 
+        lame_global_flags* gfp, 
+        int                stereo_mode_count[4] );
 
 
 

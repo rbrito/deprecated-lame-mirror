@@ -1266,18 +1266,25 @@ int lame_init(lame_global_flags *gfp)
  *  one has to weight them to calculate the average bitrate in kbps
  */
  
-void lame_bitrate_hist( lame_global_flags *gfp, int brhist[16] )
+void lame_bitrate_hist( 
+        lame_global_flags *gfp, 
+        int                bitrate_count[14],
+        int                bitrate_kbps [14] )
 {
     lame_internal_flags *gfc;
     int i;
     
     assert( gfp != NULL );
     assert( gfp->internal_flags != NULL );
-    assert( brhist != NULL );
+    assert( bitrate_count != NULL );
+    assert( bitrate_kbps  != NULL );
     
     gfc = (lame_internal_flags*)gfp->internal_flags;
-    for (i = 0; i < 16; i++)
-        brhist[i] = gfc->bitrateHist[i];
+    
+    for (i = 0; i < 14; i++) {
+        bitrate_count[i] = gfc->bitrateHist[i+1];
+        bitrate_kbps [i] = bitrate_table[gfp->version][i+1];
+    }
 }
 
 
@@ -1288,18 +1295,18 @@ void lame_bitrate_hist( lame_global_flags *gfp, int brhist[16] )
  *  3: MS-I number of mid-side and intensity encoded frames
  */
  
-void lame_stereo_mode_hist( lame_global_flags *gfp, int stmode[4] )
+void lame_stereo_mode_hist( lame_global_flags *gfp, int stmode_count[4] )
 {
     lame_internal_flags *gfc;
     int i;
 
     assert( gfp != NULL );
     assert( gfp->internal_flags != NULL );
-    assert( stmode != NULL );
+    assert( stmode_count != NULL );
     
     gfc = (lame_internal_flags*)gfp->internal_flags;
     
     for (i = 0; i < 4; i++)
-        stmode[i] = gfc->stereoModeHist[i]; 
+        stmode_count[i] = gfc->stereoModeHist[i]; 
 }
 

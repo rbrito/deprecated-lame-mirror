@@ -148,7 +148,7 @@ int main(int argc, char **argv)
 
   if (brhist) {
 #ifdef BRHIST
-    if (brhist_init(gf.VBR_min_bitrate_kbps,gf.VBR_max_bitrate_kbps)) {
+    if (brhist_init(&gf, gf.VBR_min_bitrate_kbps,gf.VBR_max_bitrate_kbps)) {
       /* fall to initialize */
       brhist = 0;
     }
@@ -219,7 +219,7 @@ int main(int argc, char **argv)
 	      timestatus(gf.out_samplerate,gf.frameNum,gf.totalframes,gf.framesize);
 #ifdef BRHIST
 	      if (brhist)
-		brhist_disp(gf.totalframes);
+		brhist_disp(&gf);
 #endif
 	    }
 	  }
@@ -229,11 +229,6 @@ int main(int argc, char **argv)
 	imp3=lame_encode_buffer(&gf,Buffer[0],Buffer[1],iread,
               mp3buffer,(int)sizeof(mp3buffer));
 
-#ifdef BRHIST
-	/* update VBR histogram data */
-	if (brhist)
-	  brhist_update(imp3*8);
-#endif
 	/* was our output buffer big enough? */
 	if (imp3<0) {
 	  if (imp3==-1) fprintf(stderr,"mp3 buffer is not big enough... \n");
@@ -247,7 +242,7 @@ int main(int argc, char **argv)
 	  exit(-1);
 	}
       } while (iread);
-      imp3=lame_encode_finish(&gf,mp3buffer,(int)sizeof(mp3buffer));   /* may return one more mp3 frame */
+      imp3=lame_encode_flush(&gf,mp3buffer,(int)sizeof(mp3buffer));   /* may return one more mp3 frame */
       if (imp3<0) {
 	if (imp3==-1) fprintf(stderr,"mp3 buffer is not big enough... \n");
 	else fprintf(stderr,"mp3 internal error:  error code=%i\n",imp3);
@@ -258,12 +253,12 @@ int main(int argc, char **argv)
 	timestatus(gf.out_samplerate,gf.frameNum,gf.totalframes,gf.framesize);
 #ifdef BRHIST
 	if (brhist) {
-	  brhist_update(imp3);
-	  brhist_disp(gf.totalframes);
-	  brhist_disp_total(gf.totalframes);
+	  brhist_disp(&gf);
+	  brhist_disp_total(&gf);
 	}
 #endif
 	timestatus_finish();
+        lame_close(&gf);
       }
 
       /* imp3 is not negative, but fwrite needs an unsigned here */

@@ -28,7 +28,7 @@
 
 static char str_up[10]={"\033[A"};
 static char str_clreoln[10]={'\0',};
-static char stderr_buff[576];
+static char stderr_buff[1024];
 
 #ifndef NOTERMCAP
 #   include <termcap.h>
@@ -38,13 +38,12 @@ static char stderr_buff[576];
 #ifndef BRHIST_BARMAX
 #   define  BRHIST_BARMAX 50
 #endif
-#ifndef BRHIST_WIDHTMAX
-#   define  BRHIST_WIDTH 16
+#ifndef BRHIST_WIDHT
+#   define  BRHIST_WIDTH 14
 #endif
 
 static struct
 {
-    long count[BRHIST_WIDTH];
     long count_max;
     int  vbrmin;
     int  vbrmax;
@@ -60,9 +59,11 @@ static struct
   CONSOLE_SCREEN_BUFFER_INFO CSBI;
 #endif
 
-int brhist_init(int br_min, int br_max)
+int brhist_init(lame_global_flags *gf, int br_min, int br_max)
 {
     int    i;
+    int br_hist[14];
+    int br_kbps[14];
 
 #ifndef NOTERMCAP
     char term_buff[1024];
@@ -71,6 +72,8 @@ int brhist_init(int br_min, int br_max)
     char tc[10];
 #endif
 
+    lame_bitrate_hist( gf, br_hist, br_kbps );
+    
     if (br_min >= br_max) {
 	fprintf(stderr, "internal error... VBR max %d <= VBR min %d!?\n",
 		br_min, br_max);
@@ -78,17 +81,12 @@ int brhist_init(int br_min, int br_max)
     }
 
     /* initialize histogramming data structure */
-    brhist.vbrmin = br_min;
-    brhist.vbrmax = br_max;
+    brhist.vbrmin = 0;
+    brhist.vbrmax = 13;
     brhist.count_max = 0;
 
     for (i = 0; i < BRHIST_WIDTH; i++) {
-	int kbps;
-	kbps = (br_max - br_min) * i / BRHIST_WIDTH + br_min;
-	assert (kbps < 1000u );
-
-	sprintf(brhist.kbps[i], "%3d", kbps);
-	brhist.count[i] = 0;
+	sprintf(brhist.kbps[i], "%3d", br_kbps[i]);
     }
 
     memset (brhist.bar, '*', sizeof (brhist.bar)-1 );
@@ -125,30 +123,38 @@ int brhist_init(int br_min, int br_max)
 }
 
 
-void brhist_update(int column)
-{
-    brhist.count[column]++;
-}
 
-void brhist_disp(int frames)
+void brhist_disp(lame_global_flags *gf)
 {
     int   i;
     int   ppt=0;
-    unsigned long  full;
+    unsigned long  full = 0;
     int     barlen;
     char    brppt [16];
+    int br_hist[14];
+    int br_kbps[14];
+    int frames = 0;
+    
+    lame_bitrate_hist(gf, br_hist, br_kbps);
+    
+    for (i = 0; i < BRHIST_WIDTH; i++) {
+        frames += br_hist[i];
+        if (full < br_hist[i]) full = br_hist[i];
+    }
 
     full =
-	brhist.count_max < BRHIST_BARMAX  ?  BRHIST_BARMAX : brhist.count_max;
+	full < BRHIST_BARMAX  ?  BRHIST_BARMAX : full;
+    full =
+	full < 1  ?  1 : full;
 
     for (i = 0; i < BRHIST_WIDTH; i++) {
-        barlen  = (brhist.count[i]*BRHIST_BARMAX + full - 1) / full; /* round up */
+        barlen  = (br_hist[i]*BRHIST_BARMAX + full - 1) / full; /* round up */
         if (frames)
-	    ppt = (1000lu * brhist.count[i] + frames/2) / frames;	/* round nearest */
+	    ppt = (1000lu * br_hist[i] + frames/2) / frames;	/* round nearest */
 
-        if ( brhist.count [i] == 0 )
+        if ( br_hist [i] == 0 )
             sprintf ( brppt,  " [   ]" );
-        else if ( ppt < brhist.count[i]/10000 )
+        else if ( ppt < br_hist[i]/10000 )
             sprintf ( brppt," [%%..]" );
         else if ( ppt < 10 )
             sprintf ( brppt," [%%.%1u]", ppt%10 );
@@ -181,20 +187,41 @@ void brhist_disp(int frames)
 }
 
 
-void brhist_disp_total(int frames)
+void brhist_disp_total(lame_global_flags *gf)
 {
     int i;
     double ave;
+    int br_hist[14];
+    int br_kbps[14];
+    int st_mode[4], st_frames = 0;
+    int frames = 0;
+    
+    lame_stereo_mode_hist(gf, st_mode);
+    lame_bitrate_hist(gf, br_hist, br_kbps);
+    
+    for (i = 0; i < BRHIST_WIDTH; i++) 
+        frames += br_hist[i];
 
     for(i = brhist.vbrmin; i <= brhist.vbrmax; i++)
 	fputc('\n', stderr);
 
     ave=0;
     for(i = 0; i < BRHIST_WIDTH; i++) {
-	ave += (brhist.vbrmax - brhist.vbrmin) * i * brhist.count[i] / BRHIST_WIDTH;
+	ave += br_kbps[i] * br_hist[i];
     }
 
-    fprintf ( stderr, "\naverage: %5.1f kbps\n", ave / frames);
+    for (i = 0; i < 4; i++) {
+        st_frames += st_mode[i];
+    }
 
+    fprintf ( stderr, "\naverage: %5.1f kbps", ave / frames);
+
+    if (st_frames > 0) {
+        double lr = st_mode[0] * 100. / st_frames;
+        double ms = st_mode[2] * 100. / st_frames;
+        fprintf ( stderr, "   LR: %5.1f%%   MS: %5.1f%%\n", lr, ms );
+    }
+    
     fflush(stderr);
+    
 }
