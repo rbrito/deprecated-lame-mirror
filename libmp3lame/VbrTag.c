@@ -197,38 +197,7 @@ void AddVbrFrame(lame_global_flags *gfp)
     lame_internal_flags *gfc = gfp->internal_flags;
 
     int kbps = bitrate_table[gfp->version][gfc->bitrate_index];
-    
-    if (gfc->VBR_seek_table.bag == NULL) {
-	int kbps_header;
-	if (1==gfp->version) {
-	  kbps_header = XING_BITRATE1;
-	} else {
-	  if (gfp->out_samplerate < 16000 )
-	    kbps_header = XING_BITRATE25;
-	  else
-	    kbps_header = XING_BITRATE2;
-	}
-        /* TOC should also take into account the size of the VBR header
-           itself.  so initial value of .sum should be the kbps of the header */
-        gfc->VBR_seek_table.sum  = kbps_header;
-
-        gfc->VBR_seek_table.seen = 0;
-        gfc->VBR_seek_table.want = 1;
-        gfc->VBR_seek_table.pos  = 0;
-        gfc->VBR_seek_table.bag  = malloc (400*sizeof(int));
-        if (gfc->VBR_seek_table.bag != NULL) {
-            gfc->VBR_seek_table.size = 400;
-        }
-        else {
-            gfc->VBR_seek_table.size = 0;
-            ERRORF (gfc,"Error: can't allocate VbrFrames buffer\n");
-            return;
-        }   
-
-
-    }
-
-
+    assert(gfc->VBR_seek_table.bag);
     addVbr(&gfc->VBR_seek_table, kbps);
     gfp->nVbrNumFrames++;
 }
@@ -430,6 +399,7 @@ int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
 int InitVbrTag(lame_global_flags *gfp)
 {
 	int nMode,SampIndex;
+	int i,kbps_header,tot;
 	lame_internal_flags *gfc = gfp->internal_flags;
 #define MAXFRAMESIZE 2880 /* or 0xB40, the max freeformat 640 32kHz framesize */
 	/*	uint8_t pbtStreamBuffer[MAXFRAMESIZE]; */
@@ -437,8 +407,6 @@ int InitVbrTag(lame_global_flags *gfp)
 	SampIndex = gfc->samplerate_index;
 
 
-	/* Clear Frame position array variables */
-	/*gfp->pVbrFrames=NULL; */
 
         /* we shold also count the vbr tag itself */
 	gfp->nVbrNumFrames=1;
@@ -464,22 +432,22 @@ int InitVbrTag(lame_global_flags *gfp)
 	 * MPEG 2 values are the same since the framesize and samplerate 
          * are each reduced by a factor of 2. 
 	*/
-	{
-	int i,bitrate,tot;
+
+
 	if (1==gfp->version) {
-	  bitrate = XING_BITRATE1;
+	  kbps_header = XING_BITRATE1;
 	} else {
 	  if (gfp->out_samplerate < 16000 )
-	    bitrate = XING_BITRATE25;
+	    kbps_header = XING_BITRATE25;
 	  else
-	    bitrate = XING_BITRATE2;
+	    kbps_header = XING_BITRATE2;
 	}
 
 	if (gfp->VBR==vbr_off)
-			bitrate = gfp->brate;
+			kbps_header = gfp->brate;
 	
 	gfp->TotalFrameSize= 
-  	  ((gfp->version+1)*72000*bitrate) / gfp->out_samplerate;
+  	  ((gfp->version+1)*72000*kbps_header) / gfp->out_samplerate;
 
 	tot = (gfc->sideinfo_len+LAMEHEADERSIZE);
 
@@ -490,10 +458,30 @@ int InitVbrTag(lame_global_flags *gfp)
             return 0;
         }
 
+        /* write dummy VBR tag of all 0's into bitstream */ 
 	for (i=0; i<gfp->TotalFrameSize; ++i)
 	  add_dummy_byte(gfp,0);
-	}
 
+
+        /* TOC should also take into account the size of the VBR header
+           itself.  so initial value of .sum should be the kbps of the header */
+        gfc->VBR_seek_table.sum  = kbps_header;
+        
+        gfc->VBR_seek_table.seen = 0;
+        gfc->VBR_seek_table.want = 1;
+        gfc->VBR_seek_table.pos  = 0;
+        
+        if (gfc->VBR_seek_table.bag == NULL) {
+            gfc->VBR_seek_table.bag  = malloc (400*sizeof(int));
+            if (gfc->VBR_seek_table.bag != NULL) {
+                gfc->VBR_seek_table.size = 400;
+            }
+            else {
+                gfc->VBR_seek_table.size = 0;
+                ERRORF (gfc,"Error: can't allocate VbrFrames buffer\n");
+                return;
+            }   
+        }
 	/* Success */
 	return 0;
 }
@@ -954,9 +942,7 @@ int PutVbrTag(lame_global_flags *gfp,FILE *fpStream,int nVbrScale)
 	{
 		return -1;
 	}
-	/* Save to delete the frame buffer */
-	/*free(gfp->pVbrFrames);  see HACKING for instructions on how */
-	/*gfp->pVbrFrames=NULL;   memory in 'gfp' is allocated/free'd */
+
 
 	return 0;       /* success */
 }

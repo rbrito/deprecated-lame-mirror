@@ -174,7 +174,6 @@ struct lame_global_struct {
   /*int nVbrFrameBufferSize;*/
   /*int* pVbrFrames; */
 
-
   struct {
     int integer[16];
     float real[16];
