@@ -299,7 +299,7 @@ FLOAT8 ATHformula(FLOAT8 f,lame_global_flags *gfp)
     case 2:
       return ATHformula_GB(f, 0);
     case 3:
-      return ATHformula_GB(f, -.75) +6;     /*modification of GB formula by Roel*/
+      return ATHformula_GB(f, 1) +6;     /*modification of GB formula by Roel*/
     case 4:
       if (!(gfp->VBR == vbr_off || gfp->VBR == vbr_abr)) /*this case should be used with true vbr only*/
         return ATHformula_GB(f,gfp->VBR_q);
