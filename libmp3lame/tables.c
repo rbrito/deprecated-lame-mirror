@@ -1374,11 +1374,14 @@ void init_bit_stream_w(lame_global_flags *gfp)
 	 * instead of using 8*960.
 	 */
 	gfc->l3_side.maxmp3buf = 1440;
-	if (gfp->strict_ISO)
+        if (gfp->strict_ISO) {
 	    /* maximum allowed frame size.  dont use more than this number of
 	       bits, even if the frame has the space for them: */
 	    gfc->l3_side.maxmp3buf
 		= (320000*1152 / gfp->out_samplerate + 7) >> 3;
+	    if (gfc->l3_side.maxmp3buf > MAX_BITS*gfc->mode_gr)
+		gfc->l3_side.maxmp3buf = MAX_BITS*gfc->mode_gr;
+	}
 	gfc->l3_side.maxmp3buf -= gfc->l3_side.sideinfo_len;
     }
 }

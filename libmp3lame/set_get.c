@@ -362,11 +362,6 @@ lame_set_brate( lame_global_flags*  gfp,
                 int                 brate )
 {
     gfp->mean_bitrate_kbps = brate;
-
-    if (brate >= 320) {
-        gfp->disable_reservoir = 1;
-    }
-
     return 0;
 }
 
