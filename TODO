@@ -22,8 +22,7 @@ scfsi, no scalefact_scale, and so on.
 
 
 4.
-There're some sound quality regression compared with LAME3.x
-- short block problem (i.e. spahm.wav)
+short block encoding quality problem (i.e. spahm.wav)
 
 LAME4's block switching is better than LAME3 with nspsy,
 but the threshold calculation of short blocks is not.
@@ -33,10 +32,11 @@ At the high frequency region, LAME4 increases the threshold too much.
 And more the worse, there's sfb21 :(
 
 
-
 5.
-Better intensity stereo.
-And LAME4 should support it when MPEG2 Layer3 (currently not).
+low bitrate quality problem (i.e. "-b 8") and better intensity stereo support.
+
+at 8kbps, LAME4 is definitely worse than LAME3.94.
+and LAME4 should support i-stereo even when MPEG2 Layer3 (currently not).
 
 Note: mpg123 (and all derivatives, like xmms and lame/mpglib)
 have bugs in the intensity stereo decoding.  Bugs have been there
