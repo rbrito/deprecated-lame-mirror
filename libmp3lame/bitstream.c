@@ -283,19 +283,19 @@ encodeSideInfo2(lame_global_flags *gfp, int bitsPerFrame)
     assert(l3_side->main_data_begin >= 0);
 
     memset(gfc->bs.header[gfc->bs.h_ptr].buf, 0, l3_side->sideinfo_len);
-    ptr = writeheader(gfc,0xfff - (gfp->out_samplerate < 16000), 12, ptr);
-    ptr = writeheader(gfc,(gfp->version),            1, ptr);
-    ptr = writeheader(gfc,4 - 3,                     2, ptr);
-    ptr = writeheader(gfc,(!gfp->error_protection),  1, ptr);
-    ptr = writeheader(gfc,(gfc->bitrate_index),      4, ptr);
-    ptr = writeheader(gfc,(gfc->samplerate_index),   2, ptr);
-    ptr = writeheader(gfc,(gfc->padding),            1, ptr);
-    ptr = writeheader(gfc,(gfp->extension),          1, ptr);
-    ptr = writeheader(gfc,(gfp->mode),               2, ptr);
-    ptr = writeheader(gfc,(gfc->mode_ext),           2, ptr);
-    ptr = writeheader(gfc,(gfp->copyright),          1, ptr);
-    ptr = writeheader(gfc,(gfp->original),           1, ptr);
-    ptr = writeheader(gfc,(gfp->emphasis),           2, ptr);
+    ptr = writeheader(gfc, 0xfff - (gfp->out_samplerate < 16000), 12, ptr);
+    ptr = writeheader(gfc, gfp->version,            1, ptr);
+    ptr = writeheader(gfc, 4 - 3,                   2, ptr);
+    ptr = writeheader(gfc, !gfp->error_protection,  1, ptr);
+    ptr = writeheader(gfc, gfc->bitrate_index,      4, ptr);
+    ptr = writeheader(gfc, gfc->samplerate_index,   2, ptr);
+    ptr = writeheader(gfc, gfc->padding,            1, ptr);
+    ptr = writeheader(gfc, gfp->extension,          1, ptr);
+    ptr = writeheader(gfc, gfp->mode,               2, ptr);
+    ptr = writeheader(gfc, gfc->mode_ext,           2, ptr);
+    ptr = writeheader(gfc, gfp->copyright,          1, ptr);
+    ptr = writeheader(gfc, gfp->original,           1, ptr);
+    ptr = writeheader(gfc, gfp->emphasis,           2, ptr);
     if (gfp->error_protection)
 	ptr += 16;
 
@@ -405,7 +405,7 @@ encodeSideInfo2(lame_global_flags *gfp, int bitsPerFrame)
 
 
 inline static void
-huffman_coder_count1(lame_internal_flags *gfc, gr_info *gi)
+Huf_count1(lame_internal_flags *gfc, gr_info *gi)
 {
     int index;
     const unsigned char * const hcode = quadcode[gi->count1table_select];
@@ -442,12 +442,11 @@ huffman_coder_count1(lame_internal_flags *gfc, gr_info *gi)
 /*
   Implements the pseudocode of page 98 of the IS
   */
-inline static void
+static void
 Huffmancode_esc( lame_internal_flags* const gfc, const struct huffcodetab* h,
 		 int index, int end, gr_info *gi)
 {
-    int xlen = h->xlen;
-    for (; index < end; index += 2) {
+    do {
 	int cbits   = 0;
 	int xbits   = 0;
 	int ext = 0;
@@ -459,7 +458,7 @@ Huffmancode_esc( lame_internal_flags* const gfc, const struct huffcodetab* h,
 	    if (x1 > 14) {
 		assert ( x1 <= h->linmax+15 );
 		ext    = (x1-15) << 1;
-		xbits  = xlen;
+		xbits  = h->xlen;
 		x1     = 15;
 	    }
 	    ext += (gi->xr[index] < 0);
@@ -469,9 +468,9 @@ Huffmancode_esc( lame_internal_flags* const gfc, const struct huffcodetab* h,
 	if (x2 != 0) {
 	    if (x2 > 14) {
 		assert ( x2 <= h->linmax+15 );
-		ext  <<= xlen;
+		ext  <<= h->xlen;
 		ext   |= x2-15;
-		xbits += xlen;
+		xbits += h->xlen;
 		x2     = 15;
 	    }
 	    ext = ext*2 + (gi->xr[index+1] < 0);
@@ -485,21 +484,20 @@ Huffmancode_esc( lame_internal_flags* const gfc, const struct huffcodetab* h,
 
 	putbits2(gfc, h->table [x1], cbits );
 	putbits2(gfc, ext, xbits);
-    }
+    } while ((index += 2) < end);
 }
 
-inline static void
+static void
 Huffmancode( lame_internal_flags* const gfc, const struct huffcodetab* h,
 	     int index, int end, gr_info *gi)
 {
-    int xlen = h->xlen;
-    for (; index < end; index += 2) {
+    do {
 	int code, clen;
 	int x1 = gi->l3_enc[index];
 	int x2 = gi->l3_enc[index+1];
 	assert ( (x1|x2) < 16u );
 
-	code = x1*xlen + x2;
+	code = x1*h->xlen + x2;
 	clen = h->hlen[code];
 	code = h->table[code];
 
@@ -507,7 +505,20 @@ Huffmancode( lame_internal_flags* const gfc, const struct huffcodetab* h,
 	if (x2) code = code*2 + (gi->xr[index+1] < 0);
 
 	putbits2(gfc, code, clen);
-    }
+    } while ((index += 2) < end);
+}
+
+inline static void
+Huf_bigvalue(lame_internal_flags* const gfc, int tablesel,
+	     int start, int end, gr_info *gi)
+{
+    if (tablesel == 0 || start >= end)
+	return;
+
+    if (tablesel > 15)
+	Huffmancode_esc(gfc, &ht[tablesel], start, end, gi);
+    else
+	Huffmancode(gfc, &ht[tablesel], start, end, gi);
 }
 
 /*
@@ -522,32 +533,20 @@ Huffmancodebits(lame_internal_flags *gfc, gr_info *gi)
     int data_bits = gfc->bs.totbit;
     int wptr = gfc->bs.w_ptr;
 #endif
-    int i, j, regionStart[4];
+    int r1, r2;
 
-    regionStart[0] = 0;
+    r1 = gfc->scalefac_band.l[gi->region0_count + 1];
+    if (r1 > gi->big_values)
+	r1 = gi->big_values;
+    Huf_bigvalue(gfc, gi->table_select[0], 0, r1, gi);
 
-    j = gfc->scalefac_band.l[gi->region0_count + 1];
-    if (j > gi->big_values)
-	j = gi->big_values;
-    regionStart[1] = j;
+    r2 = gfc->scalefac_band.l[gi->region0_count + gi->region1_count + 2];
+    if (r2 > gi->big_values)
+	r2 = gi->big_values;
+    Huf_bigvalue(gfc, gi->table_select[1], r1, r2, gi);
 
-    j = gfc->scalefac_band.l[gi->region0_count + gi->region1_count + 2];
-    if (j > gi->big_values)
-	j = gi->big_values;
-    regionStart[2] = j;
+    Huf_bigvalue(gfc, gi->table_select[2], r2, gi->big_values, gi);
 
-    regionStart[3] = gi->big_values;
-
-    for (i = 0; i < 3; i++) {
-	const struct huffcodetab* h;
-	if (gi->table_select[i] == 0)
-	    continue;
-	h = &ht[gi->table_select[i]];
-	if (gi->table_select[i] <= 15)
-	    Huffmancode(gfc, h, regionStart[i], regionStart[i+1], gi);
-	else
-	    Huffmancode_esc(gfc, h, regionStart[i], regionStart[i+1], gi);
-    }
 #ifndef NDEBUG
     data_bits += gi->part2_3_length - gi->count1bits;
     assert(gfc->bs.totbit
@@ -555,7 +554,7 @@ Huffmancodebits(lame_internal_flags *gfc, gr_info *gi)
 	   * gfc->l3_side.sideinfo_len*8);
 #endif
 
-    huffman_coder_count1(gfc, gi);
+    Huf_count1(gfc, gi);
 
 #ifndef NDEBUG
     data_bits += gi->count1bits;

@@ -865,7 +865,6 @@ mask_add(FLOAT m1, FLOAT m2, FLOAT ATH)
     assert(m2>0.0);
     assert(ATH>0.0);
 
-
     m1 += m2;
     i = trancate(FAST_LOG10_X(ratio, 16.0));
 
@@ -1142,11 +1141,7 @@ mp3x display               <------LONG------>
 /* in some scalefactor band, 
    we can use masking threshold value of long block */
 static void
-partially_convert_l2s(
-    lame_internal_flags *gfc,
-    int gr,
-    int chn
-    )
+partially_convert_l2s(lame_internal_flags *gfc, int gr, int chn)
 {
     III_psy_ratio *mr = &gfc->masking_next[gr][chn];
     int sfb, b;
@@ -1488,7 +1483,7 @@ adjust_ATH(lame_internal_flags* const  gfc)
 	    if (gfc->ATH.adjust < gfc->ATH.adjust_limit)
 		gfc->ATH.adjust = gfc->ATH.adjust_limit;
 	}
-	gfc->ATH.adjust_limit = 1.0;
+	max_pow = 1.0;
     } else {
 	/* adjustment curve, about 32 dB maximum adjust (0.000625) */
 	max_pow = 31.98 * 0.5 * max_pow + 0.000625;
@@ -1508,8 +1503,8 @@ adjust_ATH(lame_internal_flags* const  gfc)
 		    gfc->ATH.adjust = gfc->ATH.adjust_limit;
 	    }
 	}
-	gfc->ATH.adjust_limit = max_pow;
     }
+    gfc->ATH.adjust_limit = max_pow;
 }
 
 /* psychoacoustic model
