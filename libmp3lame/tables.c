@@ -1387,6 +1387,9 @@ int psymodel_init(lame_global_flags *gfp)
     eql_balance = 0.0;
     for( i = 0; i < BLKSIZE/2; ++i ) {
 	FLOAT freq = gfp->out_samplerate * i / BLKSIZE;
+	/* we cannot get precise analysis at lower frequency */
+	if (i < 20)
+	    freq = gfp->out_samplerate * 20.0 / BLKSIZE;
 	gfc->ATH.eql_w[i] = db2pow(-ATHformula( freq, gfp ));
 	eql_balance += gfc->ATH.eql_w[i];
     }
