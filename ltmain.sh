@@ -818,7 +818,7 @@ compiler."
     convenience=
     old_convenience=
     deplibs=
-    linkopts=
+    linkopts="$LDFLAGS"
 
     if test -n "$shlibpath_var"; then
       # get the directories listed in $shlibpath_var

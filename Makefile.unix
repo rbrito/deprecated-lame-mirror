@@ -172,9 +172,9 @@ CC = /opt/experimental/bin/gcc
 	-fstrength-reduce \
 	-fexpensive-optimizations \
 	-mfancy-math-387 -ffast-math \
-	#-funroll-all-loops # this switch breaks "takehiro.c" somehow, compiler or lame bug ? \
-	#-malign-double \
+	-malign-double \
 	#-funroll-loops \
+	#-funroll-all-loops # this switch breaks "takehiro.c" somehow, compiler or lame bug ? \
         
    HAVE_NEWER_GLIBC = YES
    HAVE_NASM = YES

@@ -32,7 +32,7 @@ See lame.h for details.
    lame_global_flags *gfp;
    gfp = lame_init();
 
-The default (if you set nothing) is a a J-Stereo, 44.1khz
+The default (if you set nothing) is a  J-Stereo, 44.1khz
 128kbps CBR mp3 file at quality 5.  Override various default settings 
 as necessary, for example:
 
@@ -84,10 +84,20 @@ return code = number of bytes output to mp3buffer.  This can be 0.
 int lame_encode_flush(lame_global_flags *,char *mp3buffer, int mp3buffer_size);
 
 
-7.  Write all remaining data to mp3 file.  If the file was
-encoded using VBR and you want to add a Xing VBR header:
+7.  Write the Xing VBR/INFO tag to mp3 file.  
 
 void lame_mp3_tags_fid(lame_global_flags *,FILE* fid);
+
+This adds a valid mp3 frame which contains information about the
+bitstream some players may find usefull.  It is used for CBR,ABR and
+VBR.  The routine will attempt to rewind the output stream to the
+beginning.  If this is not possible, (for example, you are encoding to
+stdout) you should specifically disable the tag by calling
+lame_set_bWriteVbrTag(gfp,0) in step 3 above, and call
+lame_mp3_tags_fid() with fid=NULL.  If the rewind fails and
+the tag was not disabled, the first mp3 frame in the bitstream
+will be all 0's.
+
 
 
 8. free the internal data structures.
