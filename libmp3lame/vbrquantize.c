@@ -1040,7 +1040,7 @@ static int
 quantizeAndCountBits(const algo_t * that)
 {
     that->quantize(that);
-    that->cod_info->part2_3_length = noquant_count_bits(that->gfc, that->cod_info);
+    that->cod_info->part2_3_length = noquant_count_bits(that->gfc, that->cod_info, 0);
     return that->cod_info->part2_3_length;
 }
 

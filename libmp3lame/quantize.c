@@ -686,7 +686,7 @@ trancate_smallspectrums(
 	} while (--width > 0);
     } while (++sfb < gi->psymax);
 
-    gi->part2_3_length = noquant_count_bits(gfc, gi);
+    gi->part2_3_length = noquant_count_bits(gfc, gi, 0);
 }
 
 

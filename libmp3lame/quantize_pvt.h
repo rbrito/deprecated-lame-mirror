@@ -76,6 +76,7 @@ typedef struct calc_noise_result_t {
 */
 typedef struct calc_noise_data_t {
     int global_gain;
+    int sfb_count1;
     int step[39];
     FLOAT noise[39];
     FLOAT noise_log[39];
@@ -121,7 +122,7 @@ void    set_frame_pinfo (lame_global_flags *gfp,
 int     count_bits (lame_internal_flags * const gfc, const FLOAT * const xr,
 		    gr_info * const cod_info, calc_noise_data* prev_noise);
 int     noquant_count_bits (lame_internal_flags * const gfc,
-			    gr_info * const cod_info);
+			    gr_info * const cod_info, calc_noise_data* prev_noise);
 
 
 void    best_huffman_divide (const lame_internal_flags * const gfc, 

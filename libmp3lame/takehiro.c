@@ -87,6 +87,22 @@ static const struct
 
 
 
+
+
+void quantize_lines_xrpow_01(int l, FLOAT istep, const FLOAT* xr, int* ix)
+{
+    const FLOAT compareval0 = (1.0 - 0.4054)/istep;
+
+    assert (l>0);
+    l= l>>1;
+    while (l--) {
+        *(ix++) = (compareval0 > *xr++) ? 0 : 1;
+        *(ix++) = (compareval0 > *xr++) ? 0 : 1;
+    }
+}
+
+
+
 #ifdef TAKEHIRO_IEEE754_HACK
 
 typedef union {
@@ -282,15 +298,17 @@ void quantize_lines_xrpow_ISO(int l, FLOAT istep, const FLOAT* xr, int* ix)
     16% will give 1
     4%  will give 2
     */
-    if (compareval0 > *xr) {
-        *(ix++) = 0;
-        xr++;
-    } else if (compareval1 > *xr) {
-        *(ix++) = 1;
-        xr++;
-    } else {
-        /*    *(ix++) = (int)( istep*(*(xr++))  + 0.4054); */
-        XRPOW_FTOI(  istep*(*(xr++))  + ROUNDFAC , *(ix++) );
+    while (l--) {
+        if (compareval0 > *xr) {
+            *(ix++) = 0;
+            xr++;
+        } else if (compareval1 > *xr) {
+            *(ix++) = 1;
+            xr++;
+        } else {
+            /*    *(ix++) = (int)( istep*(*(xr++))  + 0.4054); */
+            XRPOW_FTOI(  istep*(*(xr++))  + ROUNDFAC , *(ix++) );
+        }
     }
 
 }
@@ -317,6 +335,7 @@ static void quantize_xrpow(const FLOAT *xp, int *pi, FLOAT istep, gr_info * cons
     int prev_data_use;
     int *iData;
     int accumulate=0;
+    int accumulate01=0;
     int *acc_iData;
     const FLOAT *acc_xp;
 
@@ -340,7 +359,7 @@ static void quantize_xrpow(const FLOAT *xp, int *pi, FLOAT istep, gr_info * cons
     for (sfb = 0; sfb <= sfbmax; sfb++) {
 	    int step = -1;
 
-        if (prev_data_use) {
+        if (prev_data_use || cod_info->block_type == NORM_TYPE) {
             step =
 	            cod_info->global_gain
 	            - ((cod_info->scalefac[sfb] + (cod_info->preflag ? pretab[sfb] : 0))
@@ -354,6 +373,10 @@ static void quantize_xrpow(const FLOAT *xp, int *pi, FLOAT istep, gr_info * cons
             if (accumulate) {
                 gfc->quantize_lines_xrpow(accumulate, istep, acc_xp, acc_iData);
                 accumulate = 0;
+            }
+            if (accumulate01) {
+                quantize_lines_xrpow_01(accumulate01, istep, acc_xp, acc_iData);
+                accumulate01 = 0;
             }
         } else { /*should compute this part*/
             int l;
@@ -376,16 +399,41 @@ static void quantize_xrpow(const FLOAT *xp, int *pi, FLOAT istep, gr_info * cons
             }
 
             /*accumulate lines to quantize*/
-            if (!accumulate) {
+            if (!accumulate && !accumulate01) {
                 acc_iData = iData;
                 acc_xp = xp;
             }
-            accumulate += l;
+            if (prev_noise &&
+                prev_noise->sfb_count1 > 0 &&
+                sfb >= prev_noise->sfb_count1 &&
+                prev_noise->step[sfb] > 0 &&
+                step >= prev_noise->step[sfb]) {
+
+                if (accumulate) {
+                    gfc->quantize_lines_xrpow(accumulate, istep, acc_xp, acc_iData);
+                    accumulate = 0;
+                    acc_iData = iData;
+                    acc_xp = xp;
+                }
+                accumulate01 += l;
+            } else {
+                if (accumulate01) {
+                    quantize_lines_xrpow_01(accumulate01, istep, acc_xp, acc_iData);
+                    accumulate01 = 0;
+                    acc_iData = iData;
+                    acc_xp = xp;
+                }
+                accumulate += l;
+            }
 
             if ( l <= 0 ) {
                 /*  rh: 20040215
                  *  may happen due to "prev_data_use" optimization 
                  */
+                if (accumulate01) {
+                    quantize_lines_xrpow_01(accumulate01, istep, acc_xp, acc_iData);
+                    accumulate01 = 0;
+                }
                 if (accumulate) {
                     gfc->quantize_lines_xrpow(accumulate, istep, acc_xp, acc_iData);
                     accumulate = 0;
@@ -403,6 +451,10 @@ static void quantize_xrpow(const FLOAT *xp, int *pi, FLOAT istep, gr_info * cons
     if (accumulate) { /*last data part*/
         gfc->quantize_lines_xrpow(accumulate, istep, acc_xp, acc_iData);
         accumulate = 0;
+    }
+    if (accumulate01) { /*last data part*/
+        quantize_lines_xrpow_01(accumulate01, istep, acc_xp, acc_iData);
+        accumulate01 = 0;
     }
 
 }
@@ -666,13 +718,17 @@ static int choose_table_nonMMX(
 /*************************************************************************/
 int noquant_count_bits(
           lame_internal_flags * const gfc, 
-          gr_info * const gi
-	  )
+          gr_info * const gi,
+          calc_noise_data* prev_noise)
 {
     int bits = 0;
     int i, a1, a2;
     int *const ix = gi->l3_enc;
     i=576;
+
+    if (prev_noise)
+        prev_noise->sfb_count1 = 0;
+
     /* Determine count1 region */
     for (; i > 1; i -= 2) 
 	if (ix[i - 1] | ix[i - 2])
@@ -702,7 +758,7 @@ int noquant_count_bits(
     gi->count1bits = bits;
     gi->big_values = i;
     if (i == 0)
-	return bits;
+	    return bits;
 
     if (gi->block_type == SHORT_TYPE) {
       a1=3*gfc->scalefac_band.s[3];
@@ -751,6 +807,18 @@ int noquant_count_bits(
 	bits = gi->part2_3_length;
     }
 
+
+    if (prev_noise) {
+        if (gi->block_type == NORM_TYPE) {
+            int line = 0;
+            int sfb = 0;
+            while (gfc->scalefac_band.l[sfb] < gi->big_values) {
+                sfb++;
+            }
+            prev_noise->sfb_count1 = sfb;
+        }
+    }
+
     return bits;
 }
 
@@ -788,7 +856,7 @@ int count_bits(
 		    ix[j+l] = 0.0;
 	}
     }
-    return noquant_count_bits(gfc, gi);
+    return noquant_count_bits(gfc, gi, prev_noise);
 }
 /***********************************************************************
   re-calculate the best scalefac_compress using scfsi
