@@ -1,4 +1,4 @@
-LAME 3.xx    7/00 Mark Taylor (http://www.sulaco.org/mp3)
+LAME 3.xx    January 2001  Mark Taylor (http://www.mp3dev.org)
 
 
 =======================================================================
@@ -58,7 +58,6 @@ For the encoding library:
 
 
 For the LAME front end encoder:
-(how do we pass these options to frontend/configure?)
 
   --with-fileio=lame          Use lame's internal file io routines [default]
                =sndfile       Use Erik de Castro Lopo's libsndfile (no stdin possible currently)

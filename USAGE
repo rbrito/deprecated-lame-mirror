@@ -68,11 +68,12 @@ STREAMING EXAMPLES
 For more options, just type:
 % lame --help
 
-Scripts are included to run lame on multiple files:
+Scripts are included (in the 'misc' subdirectory)
+to run lame on multiple files:
 
 bach script:  mlame     Run "mlame -?" for instructions.
 sh script:    auenc     Run auenc for instructions
-sh script:    misc/mugeco.sh
+sh script:    mugeco.sh
 
 
 
