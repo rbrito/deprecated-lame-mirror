@@ -113,8 +113,8 @@ updateStats(lame_t gfc)
     for (gr = 0; gr < gfc->mode_gr; gr++) {
 	for (ch = 0; ch < gfc->channels_out; ch++) {
 	    int bt = gfc->l3_side.tt[gr][ch].block_type;
-	    int mf = gfc->l3_side.tt[gr][ch].mixed_block_flag;
-	    if (mf) bt = 4;
+	    if (bt == SHORT_TYPE && gfc->l3_side.tt[gr][ch].mixed_block_flag)
+		bt = 4;
 	    gfc->bitrate_blockType_Hist [gfc->bitrate_index] [bt] ++;
 	    gfc->bitrate_blockType_Hist [15] [bt] ++;
 	}
@@ -129,26 +129,26 @@ init_gr_info(lame_t gfc, int gr, int ch)
     int sfb, j;
     gr_info *gi = &gfc->l3_side.tt[gr][ch];
 
-    gi->part2_3_length      = 0;
-    gi->big_values          = 0;
-    gi->count1              = 0;
-    gi->global_gain         = 210;
-    gi->scalefac_compress   = 0;
+    gi->part2_3_length     = 0;
+    gi->part2_length       = 0;
+    gi->count1bits         = 0;
+    gi->slen[0]            = 0;
+    gi->slen[1]            = 0;
+    gi->slen[2]            = 0;
+    gi->slen[3]            = 0;
+    gi->big_values         = 0;
+    gi->count1             = 0;
+    gi->scalefac_compress  = 0;
     /* mixed_block_flag, block_type was set in psymodel.c */
-    gi->table_select [0]    = 0;
-    gi->table_select [1]    = 0;
-    gi->table_select [2]    = 0;
-    gi->subblock_gain[0]    = 0;
-    gi->subblock_gain[1]    = 0;
-    gi->subblock_gain[2]    = 0;
-    gi->subblock_gain[3]    = 0;    /* this one is always 0 */
-    gi->region0_count       = 0;
-    gi->region1_count       = 0;
-    gi->preflag             = 0;
-    gi->scalefac_scale      = 0;
-    gi->count1table_select  = 0;
-    gi->part2_length        = 0;
-    gi->sfbdivide           = 11;
+    gi->table_select [0]   = 0;
+    gi->table_select [1]   = 0;
+    gi->table_select [2]   = 0;
+    gi->preflag            = 0;
+    gi->scalefac_scale     = 0;
+    gi->count1table_select = 0;
+    gi->sfbdivide          = 11;
+    gi->xrNumMax           = gfc->xrNumMax_longblock;
+
     j = gfc->cutoff_sfb_l;
     if (ch & 1)
 	j = gfc->is_start_sfb_l[gr];
@@ -163,6 +163,7 @@ init_gr_info(lame_t gfc, int gr, int ch)
     gi->width[sfb-1] = gfc->xrNumMax_longblock - gfc->scalefac_band.l[sfb-1];
 
     if (gi->block_type != NORM_TYPE) {
+	gi->subblock_gain[0] = gi->subblock_gain[1] = gi->subblock_gain[2] = 0;
 	gi->region0_count = 7;
 	if (gi->block_type == SHORT_TYPE) {
 	    FLOAT ixwork[576];
@@ -187,6 +188,7 @@ init_gr_info(lame_t gfc, int gr, int ch)
 	    gi->sfbmax = gi->sfb_lmax + 3*(SBPSY_s - gi->sfb_smin);
 	    gi->sfbdivide   = gi->sfbmax - 18;
 	    gi->psy_lmax    = gi->sfb_lmax;
+	    gi->xrNumMax = gfc->scalefac_band.s[gi->psymax/3]*3;
 	    /* re-order the short blocks, for more efficient encoding below */
 	    /* By Takehiro TOMINAGA */
 	    /*
@@ -213,6 +215,7 @@ init_gr_info(lame_t gfc, int gr, int ch)
 	}
 	gi->region1_count = SBMAX_l - 2 - gi->region0_count;
     } else {
+	gi->region0_count = gi->region1_count = 0;
 	/* analog silence detection in pseudo sfb 22 */
 	if (gfc->scalefac_band.l[SBMAX_l-1] < 576-100) {
 	    int k = (576+gfc->scalefac_band.l[SBMAX_l-1])/2;
@@ -225,15 +228,6 @@ init_gr_info(lame_t gfc, int gr, int ch)
 	    }
 	}
     }
-    gi->count1bits          = 0;
-    gi->slen[0]             = 0;
-    gi->slen[1]             = 0;
-    gi->slen[2]             = 0;
-    gi->slen[3]             = 0;
-    if (gi->block_type == SHORT_TYPE)
-	gi->xrNumMax = gfc->scalefac_band.s[gi->psymax/3]*3;
-    else
-	gi->xrNumMax = gfc->xrNumMax_longblock;
 
     memset(gi->scalefac, 0, sizeof(gi->scalefac));
 }
@@ -293,10 +287,6 @@ encode_mp3_frame(lame_t gfc, unsigned char* mp3buf, int mp3buf_size)
 		   sizeof(gfc->sb_sample[0][0])*gfc->mode_gr);
 	}
 
-	/* check FFT will not use a negative starting offset */
-#if 576 < FFTOFFSET
-# error FFTOFFSET greater than 576: FFT uses a negative offset
-#endif
 	/* check if we have enough data for FFT */
 	assert(gfc->mf_size>=(BLKSIZE+gfc->framesize*2-FFTOFFSET));
 	/* check if we have enough data for polyphase filterbank */
@@ -573,11 +563,12 @@ lame_encode_buffer_sample_t(
     }
 
     /* some sanity checks */
+    /* check FFT will not use a negative starting offset */
+#if 576 < FFTOFFSET
+# error FFTOFFSET greater than 576: FFT uses a negative offset
+#endif
 #if ENCDELAY < MDCTDELAY
 # error ENCDELAY is less than MDCTDELAY, see encoder.h
-#endif
-#if FFTOFFSET > BLKSIZE
-# error FFTOFFSET is greater than BLKSIZE, see encoder.h
 #endif
 
     mf_needed = BLKSIZE + gfc->framesize - FFTOFFSET + 1152; /* amount needed for FFT */
