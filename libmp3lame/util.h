@@ -107,7 +107,7 @@ extern "C" {
 
 /* log/log10 approximations */
 #ifdef TAKEHIRO_IEEE754_HACK
-//#define USE_FAST_LOG
+#define USE_FAST_LOG
 #endif
 
 #ifdef USE_FAST_LOG
