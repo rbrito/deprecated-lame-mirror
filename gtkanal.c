@@ -74,6 +74,12 @@ int gtkmakeframe()
 
   /* even if iread=0, get_audio hit EOF and returned Buffer=all 0's.  encode
    * and decode to flush any previous buffers from the decoder */
+
+  pinfo->frameNum = gf.frameNum;
+  pinfo->sampfreq=gf.resamplerate;
+  pinfo->framesize=576*gf.mode_gr;
+  pinfo->stereo = gf.stereo;
+
   if (gf.input_format == sf_mp3) {
     iread=lame_readframe(Buffer);
     gf.frameNum++;

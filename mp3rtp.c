@@ -29,57 +29,14 @@ void rtp_output(char *mp3buffer,int mp3size)
   RTPheader.b.sequence++;
 }
 
+void rtp_usage(void) {
+    fprintf(stderr,"usage: mp3rtp ip:port:ttl  [encoder options] <infile> <outfile>\n");
+    exit(1);
+}
 
 
 
 char mp3buffer[LAME_MAXMP3BUFFER];
-lame_mp3info  mp3info;
-
-
-/**********************************************************************
- * read one frame and encode it 
- **********************************************************************/
-int makeframe(void)
-{
-  int mp3out,iread;
-  static short int Buffer[2][1152];
-  static int last_nonzero_iread=0;
-  int samples_to_encode;
-
-  iread=lame_readframe(Buffer);
-  if (iread>0) {
-    last_nonzero_iread=iread;
-    mp3out=lame_encode(Buffer,mp3buffer);
-    if (mp3out) rtp_output(mp3buffer,mp3out);
-    
-  }else{
-    /* if iread=0, call lame_encode a few more times to flush buffers 
-     * amount of buffering in lame_encode = mp3info.encoder_delay + last_frame 
-     * and number of samples in last_frame = last_nonzero_iread
-     *
-     * ALSO, because of the 50% overlap, a 576 MDCT granule decodes to 
-     * 1152 samples.  To synthesize the 576 samples centered under this granule
-     * we need the previous granule for the first 288 samples (no problem), and
-     * the next granule for the next 288 samples (not possible if this is last 
-     * granule).  So we need to pad with 288 samples to make sure we can 
-     * encode the 576 samples we are interested in.
-     */
-    samples_to_encode = mp3info.encoder_delay + last_nonzero_iread + 288;
-    /* minus samples encoded on last call to lame_encode() */
-    samples_to_encode -= mp3info.framesize;
-
-    while (samples_to_encode > 0) {
-      mp3out=lame_encode(Buffer,mp3buffer);
-      if (mp3out) rtp_output(mp3buffer,mp3out);
-      samples_to_encode -= mp3info.framesize;
-    }
-
-
-  }
-  return iread;
-}
-
-
 
 
 /************************************************************************
@@ -97,37 +54,41 @@ int main(int argc, char **argv)
 
   int port,ttl;
   char *tmp,*Arg;
+  lame_global_flags *gf;
+  int iread;
+  int samples_to_encode;
+  short int Buffer[2][1152];
 
   if(argc<=2) {
-    fprintf(stderr,"usage: mp3rtp ip:port:ttl  [encoder options] <infile> <outfile>\n");
+    rtp_usage();
     exit(1);
   }
 
-  lame_init(0);
+  gf=lame_init(0,0);
 
   /* process args */
   Arg = argv[1];
   tmp=strchr(Arg,':');
 
   if (!tmp) {
-    fprintf(stderr,"usage: mp3rtp ip:port:ttl\n");
+    rtp_usage();
     exit(1);
   }
   *tmp++=0;
   port=atoi(tmp);
   if (port<=0) {
-    fprintf(stderr,"usage: mp3rtp  ip:port:ttl\n");
+    rtp_usage();
     exit(1);
   }
   tmp=strchr(tmp,':');
   if (!tmp) {
-    fprintf(stderr,"usage: mp3rtp ip:port:ttl\n");
+    rtp_usage();
     exit(1);
   }
   *tmp++=0;
   ttl=atoi(tmp);
   if (tmp<=0) {
-    fprintf(stderr,"usage: mp3rtp ip:port:ttl\n");
+    rtp_usage();
     exit(1);
   }
   rtpsocket=makesocket(Arg,port,ttl,&rtpsi);
@@ -136,11 +97,25 @@ int main(int argc, char **argv)
 
 
   lame_parse_args(argc-1, &argv[1]); 
+  lame_init_params();
   lame_print_config();
-  lame_getmp3info(&mp3info);
 
-  while (makeframe());
 
+  samples_to_encode = gf->encoder_delay + 288;
+
+  /* encode until we hit eof */
+  do {
+    iread=lame_readframe(Buffer);
+    lame_encode(Buffer,mp3buffer);
+    samples_to_encode += iread - gf->framesize;
+  } while (iread);
+  
+  /* encode until we flush internal buffers.  (Buffer=0 at this point */
+  while (samples_to_encode > 0) {
+    lame_encode(Buffer,mp3buffer);
+    samples_to_encode -= gf->framesize;
+  }
+  
 
   lame_cleanup(mp3buffer);
   return 0;

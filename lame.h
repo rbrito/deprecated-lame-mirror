@@ -22,16 +22,102 @@
 #include <stdio.h>
 #define LAME_MAXMP3BUFFER 16384
 
+
+typedef enum sound_file_format_e {
+	sf_unknown, sf_wave, sf_aiff, sf_mp3, sf_raw
+} sound_file_format;
+
+
+/***********************************************************************
+*
+*  Global Variables.  
+*
+*  substantiated in lame.c
+*
+*  Initilized and default values set by gf=lame_init()
+*  gf is a pointer to this struct, which the user may use to 
+*  override any of the default values
+*
+*  a call to lame_set_params() is also needed
+*
+***********************************************************************/
 typedef struct  {
+  /* input file description */
+  unsigned long num_samples;  /* number of samples         */
+  int num_channels;           /* input number of channels  */
+  int samplerate;             /* input_samp_rate           */
+
+  /* input file reading - not used if you handle your own i/o */
+  sound_file_format input_format;   
+  int swapbytes;              /* force byte swapping   default=0*/
+
+
+  /* general control params */
+  int gtkflag;                /* frame analyzer?       */
+  int bWriteVbrTag;           /* Xing VBR tag?         */
+  int fast_mode;              /* fast, very low quaity */
+  int highq;                  /* use best possible quality  */
+  int allow_diff_short;       /* allow blocktypes to differ between channels ? */
+  int no_short_blocks;        /* disable short blocks       */
+  int silent;                 /* disable some status output */
+  int voice_mode;
+  int mode;                       /* mono, stereo, jstereo */
+  int mode_fixed;                 /* use specified mode, not lame's opinion of the best mode */
+  int brate;                      /* bitrate */
+
+  /* frame params */
+  int copyright;                  /* mark as copyright */
+  int original;                   /* mark as original */
+  int emphasis;                   /* obsolete */
+  int error_protection;           /* use 2 bytes per frame for a CRC checksum */
+
+
+  /* psycho acoustics */
+  int ATHonly;                    /* only use ATH */
+  int noATH;                      /* disable ATH */
+  float cwlimit;                  /* predictability limit */
+
+  /* resampling and filtering */
+  int resamplerate;               /* output_samp_rate.   */ 
+  int lowpassfreq;                /* freq in Hz. 0=lame choses. 1=no filter */
+  int highpassfreq;               /* freq in Hz. 0=lame choses. 1=no filter */
+  int lowpasswidth;               /* freq width of filter, in Hz */
+  int highpasswidth;              /* freq width of filter, in Hz */
+  int sfb21;
+
+  /* quantization/noise shaping */
+  int disable_reservoir;          /* use bit reservoir? */
+  int experimentalX;            
+  int experimentalY;
+  int experimentalZ;
+
+  /* VBR control */
+  int VBR;
+  int VBR_q;
+  int VBR_min_bitrate_kbps;
+  int VBR_max_bitrate_kbps;
+
+
+
+  /*******************************************************************/
+  /* internal variables NOT set by calling program, but which might  */
+  /* be of interest to the calling program                           */
+  /*******************************************************************/
+  long int frameNum;              /* frame counter */
+  long totalframes;               /* frames: 0..totalframes-1 (estimate)*/
   int encoder_delay;
   int framesize;
-  int currentframe;
-  int totalframes;
-  int output_channels;
-  int output_samplerate;      /* in Hz */
-} lame_mp3info;
+  int lame_nowrite;               /* user will take care of output */
+  int lame_noread;                /* user will take care of input */
+  int mode_gr;                    /* granules per frame */
+  int stereo;                     /* number of channels */
+  int VBR_min_bitrate;       
+  int VBR_max_bitrate;
+  float resample_ratio;           /* input_samp_rate/output_samp_rate */
+  float lowpass1,lowpass2;
+  float highpass1,highpass2;
 
-
+} lame_global_flags;
 
 
 
@@ -40,17 +126,16 @@ typedef struct  {
  * lame_cleanup()).  In this case, the calling program is responsible 
  * for filling in the Xing VBR header data and adding the id3 tag.
  * see lame_cleanup() for details. */
-void lame_init(int no_output);
+lame_global_flags *lame_init(int no_output, int no_input);
 
 /* lame_cleanup will flush the buffers and may return a final mp3 frame */
 int lame_cleanup(char *mp3buf);
 
 void lame_usage(char *);
 void lame_parse_args(int, char **);
+void lame_init_params(void);
 void lame_print_config(void);
 
-/* fill lame_mp3info with data on the mp3 file */
-void lame_getmp3info(lame_mp3info *);
 
 /* read one frame of PCM data from audio input file opened by lame_parse_args*/
 /* input file can be either mp3 or uncompressed audio file */

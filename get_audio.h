@@ -35,7 +35,6 @@
 
 
 int get_audio_resample(short int Buffer[2][1152],FLOAT resample_ratio,int stereo);
-void InitSndFile(void);
 void CloseSndFile(void);
 void OpenSndFile(const char* lpszFileName,int default_samp, int 
    default_chan);

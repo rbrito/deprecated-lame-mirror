@@ -23,34 +23,34 @@ int main(int argc, char **argv)
 
   char mp3buffer[LAME_MAXMP3BUFFER];
   short int Buffer[2][1152];
-  lame_mp3info  mp3info;
+  lame_global_flags *gf;
 
-  lame_init(0);
+  gf=lame_init(0,0);
   if(argc==1) lame_usage(argv[0]);  /* no command-line args  */
-  lame_parse_args(argc, argv); 
+  lame_parse_args(argc, argv);
+  lame_init_params();
   lame_print_config();
-  lame_getmp3info(&mp3info);
 
 #ifdef HAVEGTK
-  if (gf.gtkflag) gtk_init (&argc, &argv);
-  if (gf.gtkflag) gtkcontrol();
+  if (gf->gtkflag) gtk_init (&argc, &argv);
+  if (gf->gtkflag) gtkcontrol();
   else 
 #endif
     {
       int iread;
-      int samples_to_encode = mp3info.encoder_delay + 288;
+      int samples_to_encode = gf->encoder_delay + 288;
 
       /* encode until we hit eof */
       do {
 	iread=lame_readframe(Buffer);
 	lame_encode(Buffer,mp3buffer);
-	samples_to_encode += iread - mp3info.framesize;
+	samples_to_encode += iread - gf->framesize;
       } while (iread);
 
       /* encode until we flush internal buffers.  (Buffer=0 at this point */
       while (samples_to_encode > 0) {
 	lame_encode(Buffer,mp3buffer);
-	samples_to_encode -= mp3info.framesize;
+	samples_to_encode -= gf->framesize;
       }
     }
   
@@ -62,11 +62,11 @@ int main(int argc, char **argv)
 
 /* The reason for this line:
  *
- *       int samples_to_encode = mp3info.encoder_delay + 288;
+ *       int samples_to_encode = gf.encoder_delay + 288;
  * 
  * is:  
  *
- * amount of buffering in lame_encode = mp3info.encoder_delay 
+ * amount of buffering in lame_encode = gf.encoder_delay 
  *
  * ALSO, because of the 50% overlap, a 576 MDCT granule decodes to 
  * 1152 samples.  To synthesize the 576 samples centered under this granule

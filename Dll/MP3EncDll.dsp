@@ -156,6 +156,14 @@ SOURCE=..\huffman.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\id3tag.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\id3tag.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\ieeefloat.c
 # End Source File
 # Begin Source File
@@ -249,6 +257,14 @@ SOURCE=..\tables.c
 # Begin Source File
 
 SOURCE=..\tables.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\timestatus.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\timestatus.h
 # End Source File
 # Begin Source File
 

@@ -1,7 +1,8 @@
 #include "util.h"
 #include "get_audio.h"
+//#include "machine.h"
 #include "globalflags.h"
-#include "lame.h"
+//#include "lame.h"
 #ifdef HAVEGTK
 #include "gtkanal.h"
 #include <gtk/gtk.h>
@@ -18,6 +19,41 @@ static int bitwidth;
 
 int read_samples_pcm( short sample_buffer[2304],int frame_size, int samples_to_read);
 int read_samples_mp3(FILE *musicin,short int mpg123pcm[2][1152],int num_chan);
+
+
+/************************************************************************
+*
+* lame_readframe()
+*
+* PURPOSE:  reads a frame of audio data from a file to the buffer,
+*   aligns the data for future processing, and separates the
+*   left and right channels
+*
+*
+************************************************************************/
+int lame_readframe(short int Buffer[2][1152])
+{
+  int iread;
+
+  /* note: if input is gf.stereo and output is mono, get_audio() 
+   * will  .5*(L+R) in channel 0,  and nothing in channel 1. */
+  /* DOWNSAMPLE, ETC */
+  if (gf.resample_ratio!=1) {
+    /* input frequency =  output freq*resample_ratio; */
+    iread=get_audio_resample(Buffer,gf.resample_ratio,gf.stereo);
+  }else{
+    iread = get_audio(Buffer,gf.stereo);
+  }
+
+  /* check to see if we overestimated/underestimated totalframes */
+  if (iread==0)  gf.totalframes = Min(gf.totalframes,gf.frameNum+2);
+  if (gf.frameNum > (gf.totalframes-1)) gf.totalframes = gf.frameNum;
+  return iread;
+}
+
+
+
+
 
 /************************************************************************
 *
@@ -37,38 +73,33 @@ int get_audio(short buffer[2][1152],int stereo)
   int samples_read;
   int framesize,samples_to_read;
   static unsigned long num_samples_read;
-  int num_channels;
   unsigned long remaining;
+  int autoconvert=0;
+  int num_channels = gf.num_channels;
 
   if (gf.frameNum==0) {
     num_samples_read=0;
     num_samples= GetSndSamples();
   }
+  if (num_channels==2 && gf.stereo==1) autoconvert=1;
 
   remaining=num_samples-num_samples_read;
   framesize = gf.mode_gr*576;
   samples_to_read = remaining > framesize ? framesize : remaining;
   if (samples_to_read<0) samples_to_read=0;
 
-  if (stereo==2) {
-    /* stereo output, must be stereo input */
-    num_channels=2;
-  }else{
-    /* mono output, mono input unless we are downsampling to mono: */
-    num_channels= gf.autoconvert ? 2 : 1;
-  }
 
   if (gf.input_format==sf_mp3) {
     samples_read=read_samples_mp3(musicin,buffer,num_channels);
   }else{
-    samples_read = read_samples_pcm(insamp, num_channels*framesize,num_channels*samples_to_read);
+    samples_read = read_samples_pcm(insamp,num_channels*framesize,num_channels*samples_to_read);
     samples_read /=num_channels;
 
     for(j=0;j<framesize;j++) {
       buffer[0][j] = insamp[num_channels*j];
       if (num_channels==2) buffer[1][j] = insamp[2*j+1];
       else buffer[1][j]=0;
-      if (gf.autoconvert) {
+      if (autoconvert) {
 	buffer[0][j] = (buffer[0][j] + buffer[1][j])/2;
 	buffer[1][j] = 0;
       }
@@ -189,6 +220,8 @@ int read_samples_mp3(FILE *musicin,short int mpg123pcm[2][1152],int stereo)
   static int framesize=0;
   int ch;
 #endif
+  int autoconvert=0;
+  if (gf.num_channels==2  && gf.stereo==1) autoconvert=1;
 
   out=lame_decode_fromfile(musicin,mpg123pcm);
   /* out = -1:  error, probably EOF */
@@ -201,7 +234,7 @@ int read_samples_mp3(FILE *musicin,short int mpg123pcm[2][1152],int stereo)
       mpg123pcm[1][j] = 0;
     }
   }
-  if (gf.autoconvert) {
+  if (autoconvert) {
     for ( j = 0; j < out; j++ ) {
       mpg123pcm[0][j] = ((int)mpg123pcm[0][j] + (int)mpg123pcm[1][j])/2;
       mpg123pcm[1][j] = 0;
@@ -301,14 +334,6 @@ void CloseSndFile(void)
   }
 }
 
-
-void InitSndFile()
-{
-   gs_wfInfo.samples=MAX_U_32_NUM;
-   gs_wfInfo.channels=0;
-   gs_wfInfo.samplerate=0;
-   input_bitrate=0;
-}
 
 
 void OpenSndFile(const char* lpszFileName, int default_samp,
@@ -515,19 +540,11 @@ int GetSndChannels(void)
 	return num_channels;
 }
 
-void InitSndFile()
-{
-  num_samples=MAX_U_32_NUM;
-  samp_freq=0;
-  num_channels = 0;
-  input_bitrate=0;
-}
-
-
 
 void OpenSndFile(const char* inPath, int default_samp,
 int default_channels)
 {
+  struct stat sb;
   void parse_file_header(FILE *sf);
   /* set the defaults from info incase we cannot determine them from file */
   num_samples=MAX_U_32_NUM;
@@ -568,6 +585,16 @@ int default_channels)
       parse_file_header(musicin);
     }
 
+    if (num_samples==MAX_U_32_NUM) {
+      /* try to figure out num_samples */
+      stat(inPath,&sb);  /* try file size, assume 2 bytes per sample */
+      if (gf.input_format == sf_mp3) {
+	FLOAT totalseconds = (sb.st_size*8.0/(1000.0*GetSndBitrate()));
+	num_samples= totalseconds*GetSndSampleRate();
+      }else{
+	num_samples = sb.st_size/(2*GetSndChannels());
+      }
+    }
     
     if (gf.input_format==sf_raw) {
       /* assume raw PCM */

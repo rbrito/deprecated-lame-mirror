@@ -11,15 +11,24 @@ LAME API
 
 General outline of the code (see main.c)
 
-lame_init()              called before encoding a file
-lame_parse_args()        called to set encoding options, and input and output 
-                         filenames.  Set no_write=1 if you want to do your
-                         own I/O
+gf=lame_init(no_write,no_read)   
+                         called before encoding a file
+                         Set no_write=1 if you want to do your file output
+                         Set no_read=1  if you want to do your own file input
+
+lame_parse_args(int, char **) 
+                         called to set encoding options (gf->*), and input 
+                         and output filenames.  You can ignore this routine
+                         and set all desired encoding options yourself
+
+lame_init_params()       Initialize based on set encoding options
+
 
 while not eof:
-   lame_readframe()       input one frame of data
-   lame_encodeframe()     encode one frame of data
-lame_cleanup()            close files, flush buffers
+   out=lame_readframe(inBuffer)                 input one frame of data
+   out=lame_encodeframe(inBuffer,outBuffer)     encode one frame of data
+
+lame_cleanup(outBuffer)                         close files, flush buffers
 
 
 

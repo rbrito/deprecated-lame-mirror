@@ -45,13 +45,12 @@
 
 /* Global flags.  defined extern in globalflags.h */
 /* default values set in lame_init() */
-global_flags gf;
+lame_global_flags gf;
 
 
 /* Global variable definitions for lame.c */
 int force_ms;
 ID3TAGDATA id3tag;
-struct stat sb;
 Bit_stream_struc   bs;
 III_side_info_t l3_side;
 frame_params fr_ps;
@@ -162,19 +161,11 @@ void lame_init_params(void)
   layer *info = fr_ps.header;
   int framesize;
   FLOAT compression_ratio;
-  
 
-  if (gf.autoconvert==TRUE) {
-    gf.mode = MPG_MD_MONO; 
-  }
+
   if (gf.num_channels==1) {
-    gf.autoconvert = FALSE;  /* avoid 78rpm emulation mode from downmixing mono file! */
     gf.mode = MPG_MD_MONO;
   }      
-  /* if user specified mono and there are 2 channels, autoconvert */
-  if ((gf.num_channels==2) && (gf.mode == MPG_MD_MONO))
-    gf.autoconvert = TRUE;
-
   
   gf.stereo=2;
   if (gf.mode == MPG_MD_MONO) gf.stereo=1;
@@ -216,6 +207,8 @@ void lame_init_params(void)
   }
 
   gf.mode_gr = (gf.resamplerate <= 24000) ? 1 : 2;  /* mode_gr = 2 */
+  gf.encoder_delay = ENCDELAY;
+  gf.framesize = gf.mode_gr*576;
 
   if (gf.brate==0) { /* user didn't specify a bitrate, use default */
     gf.brate=128;
@@ -226,27 +219,11 @@ void lame_init_params(void)
   gf.resample_ratio=1;
   if (gf.resamplerate != gf.samplerate) gf.resample_ratio = (FLOAT)gf.samplerate/(FLOAT)gf.resamplerate;
 
-#ifndef _BLADEDLL
   /* estimate total frames.  must be done after setting sampling rate so
    * we know the framesize.  */
   gf.totalframes=0;
   framesize = gf.mode_gr*576;
-  if (gf.num_samples == MAX_U_32_NUM) { 
-    stat(inPath,&sb);  /* try file size, assume 2 bytes per sample */
-    if (gf.input_format == sf_mp3) {
-      FLOAT totalseconds = (sb.st_size*8.0/(1000.0*GetSndBitrate()));
-      FLOAT framespersecond =  (FLOAT)gf.samplerate/(FLOAT)framesize;
-      gf.totalframes = 1+(totalseconds*framespersecond);
-    }else{
-      gf.totalframes = 2+(sb.st_size/(2*framesize*gf.num_channels));
-    }
-  }else{
-    gf.totalframes = 2+ gf.num_samples/(gf.resample_ratio*framesize);
-  }
-#endif /* _BLADEDLL */
-
-
-
+  gf.totalframes = 2+ gf.num_samples/(gf.resample_ratio*framesize);
 
 
 
@@ -486,15 +463,15 @@ void lame_parse_args(int argc, char **argv)
 {
   FLOAT srate;
   int   err = 0, i = 0;
+  int autoconvert=0;
 
-  /* preset defaults */
+
   programName = argv[0]; 
-  inPath[0] = '\0';   outPath[0] = '\0';
-  
-#ifndef _BLADEDLL
+  inPath[0] = '\0';   
+  outPath[0] = '\0';
+
   id3_inittag(&id3tag);
   id3tag.used = 0;
-#endif
 
   /* process args */
   while(++i<argc && err == 0) {
@@ -549,7 +526,6 @@ void lame_parse_args(int argc, char **argv)
 	  disp_brhist = 0;
 #endif
 	}
-#ifndef _BLADEDLL
 	/* options for ID3 tag */
  	else if (strcmp(token, "tt")==0) {
  		id3tag.used=1;      argUsed = 1;
@@ -588,7 +564,6 @@ void lame_parse_args(int argc, char **argv)
  		id3tag.used=1; argUsed = 1;
   		strncpy(id3tag.genre, &c, 1);
 	       }
-#endif
 	else if (strcmp(token, "lowpass")==0) {
 	  argUsed=1;
 	  gf.lowpassfreq =  (( 1000.0 * atof( nextArg ) ) + 0.5);
@@ -717,7 +692,9 @@ case 't':  /* dont write VBR tag */
 	  gf.error_protection = 1; 
 	  break;
 	case 'a': /* autoconvert input file from stereo to mono - for mono mp3 encoding */
-	  gf.autoconvert = TRUE;
+	  autoconvert=1;
+	  gf.mode=MPG_MD_MONO;
+	  gf.mode_fixed=1;
 	  break;
 	case 'h': 
 	  gf.highq = TRUE;
@@ -835,22 +812,21 @@ case 't':  /* dont write VBR tag */
       gf.input_format = sf_mp3;
 
   /* default guess for number of channels */
-  if (gf.autoconvert) gf.num_channels=2; 
+  if (autoconvert) gf.num_channels=2; 
   else if (gf.mode == MPG_MD_MONO) gf.num_channels=1;
   else gf.num_channels=2;
   
-#ifdef _BLADEDLL
-  gf.num_samples=0;
-#else
-  /* open the input file */
-  OpenSndFile(inPath,gf.samplerate,gf.num_channels);  
-  /* if GetSndSampleRate is non zero, use it to overwrite the default */
-  if (GetSndSampleRate()) gf.samplerate=GetSndSampleRate();
-  if (GetSndChannels()) gf.num_channels=GetSndChannels();
-  gf.num_samples = GetSndSamples();
+#ifndef _BLADEDLL
+  if (!gf.lame_noread) {
+    /* open the input file */
+    OpenSndFile(inPath,gf.samplerate,gf.num_channels);  
+    /* if GetSndSampleRate is non zero, use it to overwrite the default */
+    if (GetSndSampleRate()) gf.samplerate=GetSndSampleRate();
+    if (GetSndChannels()) gf.num_channels=GetSndChannels();
+    gf.num_samples = GetSndSamples();
+  }
 #endif
 
-  lame_init_params();
 }
 
 
@@ -875,7 +851,13 @@ void lame_print_config(void)
     (FLOAT)(gf.stereo*16*resamplerate)/
     (FLOAT)(bitrate[info->version][info->lay-1][info->bitrate_index]);
 
-  if (gf.autoconvert==TRUE) {
+  fprintf(stderr,"LAME version %s (www.sulaco.org/mp3) \n",get_lame_version());
+  fprintf(stderr,"GPSYCHO: GPL psycho-acoustic model version %s. \n",get_psy_version());
+#ifdef LIBSNDFILE
+  fprintf(stderr,"Input handled by libsndfile (www.zip.com.au/~erikd/libsndfile)\n");
+#endif
+
+  if (gf.num_channels==2 && gf.stereo==1) {
     fprintf(stderr, "Autoconverting from stereo to mono. Setting encoding to mono mode.\n");
   }
   if (gf.resample_ratio!=1) {
@@ -1048,7 +1030,7 @@ void brhist_disp_total(void)
   fflush(stderr);
 }
 
-#endif
+#endif /* BRHIST */
 
 
 
@@ -1184,7 +1166,6 @@ int lame_encode(short int Buffer[2][1152],char *mpg123bs)
       }
     }
   }
-#ifndef _BLADEDLL
   /********************** status display  *****************************/
   if (!gf.gtkflag && !gf.silent) {
     int mod = info->version == 0 ? 100 : 20;
@@ -1199,8 +1180,6 @@ int lame_encode(short int Buffer[2][1152],char *mpg123bs)
 #endif
     }
   }
-
-#endif /* _BLADEDLL */
 
 
 
@@ -1392,40 +1371,11 @@ FFT's                    <---------1024---------->
   return mpg123count;
 }
 
-#ifndef _BLADEDLL
-int lame_readframe(short int Buffer[2][1152])
-{
-  int iread;
 
-  /* note: if input is gf.stereo and output is mono, get_audio() 
-   * will  .5*(L+R) in channel 0,  and nothing in channel 1. */
-  /* DOWNSAMPLE, ETC */
-#ifdef HAVEGTK
-  if (gf.gtkflag) {
-    int ofreq;
-    ofreq=1000*s_freq[info.version][info.sampling_frequency];  /* output */
-    pinfo->frameNum = gf.frameNum;
-    pinfo->sampfreq=ofreq;
-    pinfo->framesize=(fr_ps.header->version==0) ? 576 : 1152;
-    pinfo->stereo = gf.stereo;
-  }
-#endif
-  if (gf.resample_ratio!=1) {
-    /* input frequency =  output freq*resample_ratio; */
-    iread=get_audio_resample(Buffer,gf.resample_ratio,gf.stereo);
-  }else{
-    iread = get_audio(Buffer,gf.stereo);
-  }
 
-  /* check to see if we overestimated/underestimated totalframes */
-  if (iread==0)  gf.totalframes = Min(gf.totalframes,gf.frameNum+2);
-  if (gf.frameNum > (gf.totalframes-1)) gf.totalframes = gf.frameNum;
-  return iread;
-}
-#endif /* _BLADEDLL */
 
 /* initialize mp3 encoder */
-void lame_init(int nowrite)
+lame_global_flags * lame_init(int nowrite, int noread)
 {
 
 #ifdef __FreeBSD__
@@ -1453,19 +1403,11 @@ void lame_init(int nowrite)
 #endif
 
 
-#ifndef _BLADEDLL
-  fprintf(stderr,"LAME version %s (www.sulaco.org/mp3) \n",get_lame_version());
-  fprintf(stderr,"GPSYCHO: GPL psycho-acoustic model version %s. \n",get_psy_version());
-#ifdef LIBSNDFILE
-  fprintf(stderr,"Input handled by libsndfile (www.zip.com.au/~erikd/libsndfile)\n");
-#endif
-#endif /* _BLADEDLL */
 
   /* Global flags.  set defaults here */
   gf.allow_diff_short=0;
   gf.ATHonly=0;
   gf.noATH=0;
-  gf.autoconvert=FALSE;
   gf.bWriteVbrTag=1;
   gf.cwlimit=0;
   gf.disable_reservoir=0;
@@ -1478,6 +1420,7 @@ void lame_init(int nowrite)
   gf.highq=0;
   gf.input_format=sf_unknown;
   gf.lame_nowrite=nowrite;
+  gf.lame_noread=noread;
   gf.lowpassfreq=0;
   gf.highpassfreq=0;
   gf.lowpasswidth=-1;
@@ -1533,21 +1476,14 @@ void lame_init(int nowrite)
 
   InitFormatBitStream();
 
-}
-
-void lame_getmp3info(lame_mp3info *mp3info)
-{
-  mp3info->encoder_delay = ENCDELAY;
-  mp3info->currentframe=gf.frameNum;
-  mp3info->totalframes=gf.totalframes;
-  mp3info->framesize = (fr_ps.header->version==0) ? 576 : 1152;
-  mp3info->output_channels = gf.stereo;
-  mp3info->output_samplerate = gf.resamplerate;
+  return &gf;
 }
 
 
 
-#ifndef _BLADEDLL
+
+
+
 int lame_cleanup(char *mpg123bs)
 {
   int mpg123count;
@@ -1559,11 +1495,8 @@ int lame_cleanup(char *mpg123bs)
 	{
 	  brhist_add_count();
 	  brhist_disp();
+	  brhist_disp_total();
 	}
-#endif
-#ifdef BRHIST
-      if (disp_brhist)
-	brhist_disp_total();
 #endif
       fprintf(stderr,"\n");
       fflush(stderr);
@@ -1601,4 +1534,3 @@ int lame_cleanup(char *mpg123bs)
   }
   return mpg123count;
 }
-#endif /* _BLADEDLL */

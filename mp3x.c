@@ -17,13 +17,17 @@
 int main(int argc, char **argv)
 {
   char mp3buffer[LAME_MAXMP3BUFFER];
-  lame_init(1);
-  
+  lame_global_flags *gf;  
+
+  gf=lame_init(1,0);
+
   if(argc==1)  lame_usage(argv[0]);  /* no command-line args  */
-  else lame_parse_args(argc, argv); 
+
+  lame_parse_args(argc, argv); 
+  lame_init_params();
   lame_print_config();
 
-  gf.gtkflag=1;
+  gf->gtkflag=1;
   gtk_init (&argc, &argv);
   gtkcontrol();
 

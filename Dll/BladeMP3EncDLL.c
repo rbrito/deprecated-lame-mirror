@@ -56,9 +56,7 @@ void dump_config( frame_params *fr_ps, int *psy, char *inPath, char *outPath);
 // Taken from main.c
 static char			original_file_name[MAX_NAME_SIZE];
 static char			encoded_file_name[MAX_NAME_SIZE];
-static int			stereo, error_protection;
-//static layer		info;
-
+static lame_global_flags *gf;
 
 extern Bit_stream_struc   bs;
 extern III_side_info_t l3_side;
@@ -73,8 +71,7 @@ static void InitParams()
     // Initialize output buffer
     bs.pbtOutBuf=NULL;
     bs.nOutBufPos=0;
-    lame_init(1);  /* 1 means LAME will do no output file I/O */
-//    InitSndFile();  /* only needed because we will not be calling OpenSndFile */
+    gf=lame_init(1,1);  /* 1,1 means LAME will do no file I/O */
 
 }
 
@@ -249,6 +246,8 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 
 	// Set the encoder variables
 	lame_parse_args(nDllArgC,argv);
+	gf.silent=1;  /* disable status ouput */
+	lame_init_params();
 
 	// Set pointer to fr_ps header
 	pInfo = fr_ps.header;
@@ -265,10 +264,6 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 
 
 	//hdr_to_frps(&fr_ps);  /* now called in parse_args */
-
-    stereo = fr_ps.stereo;
-
-    error_protection = pInfo->error_protection;
 
     if (pInfo->lay != 3)
 	{
@@ -413,7 +408,7 @@ __declspec(dllexport) BE_ERR	beEncodeChunk(HBE_STREAM hbeStream, DWORD nSamples,
 	// Set buffer size, in number of bytes
 	nBladeBufferSize=nSamples*sizeof(SHORT);
 
-	if (stereo==2)
+	if (gf.stereo==2)
 	{
 		for (iSampleIndex=0;iSampleIndex<nSamples/2;iSampleIndex++)
 		{
