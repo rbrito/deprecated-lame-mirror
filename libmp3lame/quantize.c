@@ -70,8 +70,8 @@ on_pe(
 
     for ( bits = 0, ch = 0; ch < gfc->channels_out; ++ch ) {
 	targ_bits[ch] = tbits;
-	if (ratio[ch].pe > 700.0) {
-	    targ_bits[ch] = tbits * (ratio[ch].pe * (1.0/700.0));
+	if (ratio[ch].pe > 800.0) {
+	    targ_bits[ch] = tbits * (ratio[ch].pe-800) / 1.4;
 	    if (targ_bits[ch] > mean_bits) 
 		targ_bits[ch] = mean_bits;
 	}
@@ -1137,7 +1137,7 @@ ABR_calc_target_bits (
 
             targ_bits[gr][ch] = res_factor * mean_bits;
 	    if (ratio[gr][ch].pe > 600.0) {
-                int add_bits = (ratio[gr][ch].pe - 600.0) / 1.4;
+                int add_bits = (ratio[gr][ch].pe - 600.0) / 1000;
 
                 /* short blocks use a little extra, no matter what the pe */
                 if (gfc->l3_side.tt[gr][ch].block_type == SHORT_TYPE

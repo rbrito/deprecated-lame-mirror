@@ -914,7 +914,7 @@ pecalc_s(
     };
     int sb, sblock;
 
-    pe_s = 1900.28/4;
+    pe_s = 0.0;
     sb = SBMAX_s - 1;
     if (!gfc->sfb21_extra)
 	sb--;
@@ -971,7 +971,7 @@ pecalc_l(
 
     if (!gfc->sfb21_extra)
 	sb--;
-    pe_l = 1124.23/4;
+    pe_l = 20.0;
     do {
 	FLOAT x = mr->thm.l[sb];
 	if (mr->en.l[sb] <= x)
