@@ -477,18 +477,20 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    --nssafejoint   M/S switching criterion\n"
               "    --nsmsfix <arg> M/S switching tuning [effective 0-3.5]\n"
               "    --interch x     adjust inter-channel masking ratio\n"
-              "    --substep n     use pseudo substep noise shaping method types 0-2\n"
               "    --ns-bass x     adjust masking for sfbs  0 -  6 (long)  0 -  5 (short)\n"
               "    --ns-alto x     adjust masking for sfbs  7 - 13 (long)  6 - 10 (short)\n"         
               "    --ns-treble x   adjust masking for sfbs 14 - 21 (long) 11 - 12 (short)\n"
               "    --ns-sfb21 x    change ns-treble by x dB for sfb21\n"
+              "  Noise Shaping related:\n"
+              "    --substep n     use pseudo substep noise shaping method types 0-2\n"
             );
 
     wait_for ( fp, lessmode );  
 
     fprintf ( fp,
               "  experimental switches:\n"
-              "    -X n            selects between different noise measurements\n"
+              "    -X n[,m]        selects between different noise measurements\n"
+	      "                    n for long block, m for short. if m is omitted, m = n\n"
               "    -Y              lets LAME ignore noise in sfb21, like in CBR\n"
               "    -Z              toggles the scalefac feature on\n"
             );
@@ -1620,10 +1622,16 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
                     case 'S': 
                         silent = 1;
                         break;
-                    case 'X':        
-                        argUsed = 1;   
-                        lame_set_experimentalX(gfp,atoi(arg)); 
+                    case 'X':
+		    {
+			int n, m, i;
+                        argUsed = 1;
+			i = sscanf(arg, "%d,%d", &n, &m);
+			if (i == 1)
+			    m = n;
+			lame_set_quantcomp(gfp, (m*16 + n) | (~0xff));
                         break;
+		    }
                     case 'Y': 
                         lame_set_experimentalY(gfp,1);
                         break;

@@ -1042,13 +1042,12 @@ outer_loop (
         /* check if this quantization is better
          * than our saved quantization */
 	better = gfp->experimentalX;
-	if (gfc->presetTune.use) {
-	    if (cod_info->block_type != NORM_TYPE)
-		better = gfc->presetTune.quantcomp_type_s;
-	    else if (gfc->ATH->adjust >= gfc->presetTune.athadjust_switch_level
-		     && gfc->presetTune.quantcomp_alt_type >= 0)
-		better = gfc->presetTune.quantcomp_alt_type;
-	}
+	if (cod_info->block_type != NORM_TYPE)
+	    better = gfc->presetTune.quantcomp_type_s;
+	else if (gfc->ATH->adjust >= gfc->presetTune.athadjust_switch_level
+		 && gfc->presetTune.quantcomp_alt_type >= 0)
+	    better = gfc->presetTune.quantcomp_alt_type;
+
 	better = quant_compare(better, gfc, &best_noise_info, &noise_info,
 			       &cod_info_w, distort);
 

@@ -705,7 +705,10 @@ int
 lame_set_experimentalX( lame_global_flags*  gfp,
                         int                 experimentalX )
 {
-    gfp->experimentalX = experimentalX;
+    gfp->internal_flags->presetTune.quantcomp_type_s
+	= gfp->internal_flags->presetTune.quantcomp_alt_type
+	= gfp->experimentalX
+	= experimentalX;
 
     return 0;
 }
@@ -1267,6 +1270,21 @@ lame_get_interChRatio( const lame_global_flags*  gfp )
     return gfp->interChRatio;
 }
 
+
+/* set how to compare the quantization */
+int
+lame_set_quantcomp( lame_global_flags*  gfp,
+		    int                 method )
+{
+    lame_internal_flags *gfc = gfp->internal_flags;
+    /* default = 0.0 (no substep noise shaping) */
+    if (method >= 0)
+	lame_set_experimentalX(gfp, method);
+
+    lame_set_experimentalX(gfp, method & 0xf);
+    gfc->presetTune.quantcomp_type_s = (method >> 4) & 0xf;
+    return 0;
+}
 
 /* Use pseudo substep shaping method */
 int

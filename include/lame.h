@@ -313,6 +313,7 @@ int CDECL lame_set_disable_reservoir(lame_global_flags *, int);
 int CDECL lame_get_disable_reservoir(const lame_global_flags *);
 
 /* select a different "best quantization" function. default=0  */
+int CDECL lame_set_quantcomp(lame_global_flags *, int);
 int CDECL lame_set_experimentalX(lame_global_flags *, int);
 int CDECL lame_get_experimentalX(const lame_global_flags *);
 
