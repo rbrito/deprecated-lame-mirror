@@ -15,6 +15,9 @@
 #else
 # error no suitable value for TS_CLOCKS_PER_SEC
 #endif
+/* divide process time by TS_CLOCKS_PER_TIC to reduce overflow threshold */
+#define TS_CLOCKS_PER_TIC ((CLOCKS_PER_SEC + 63) / 64)
+#define TS_SECS_PER_TIC ((FLOAT) TS_CLOCKS_PER_TIC / TS_CLOCKS_PER_SEC)
 
 /*********************************************************/
 /* ts_real_time: real time elapsed in seconds            */
@@ -37,7 +40,8 @@ FLOAT ts_real_time(long frame) {
 /* ts_process_time: process time elapsed in seconds      */
 /*********************************************************/
 FLOAT ts_process_time(long frame) {
-  static clock_t initial_time;
+  static clock_t initial_tictime;
+  static clock_t previous_time;
   clock_t current_time;
 
 #if ( defined(_MSC_VER) || defined(__BORLANDC__) ) 
@@ -68,13 +72,29 @@ FLOAT ts_process_time(long frame) {
   current_time = clock();
 #endif
 
-  if (frame==0) {
-    initial_time = current_time;
+  if( current_time < previous_time ) {
+				/* adjust initial_tictime for wrapped time */
+				/* whether clock_t is signed or unsigned */
+    initial_tictime -= ((previous_time / TS_CLOCKS_PER_TIC)
+			+ (current_time - previous_time) / TS_CLOCKS_PER_TIC);
+    if( current_time < 0 ) {	/* adjust if clock_t is signed */
+      initial_tictime -= -(((clock_t) 1 << (sizeof(clock_t) * 8 - 1))
+			   / TS_CLOCKS_PER_TIC);
+    }
+  }
+  previous_time = current_time;
+  
+  current_time /= TS_CLOCKS_PER_TIC; /* convert process time to tics */
+
+  if (frame == 0) {
+    initial_tictime = current_time;
   }
 
-  return (FLOAT)((FLOAT)(current_time - initial_time) / TS_CLOCKS_PER_SEC);
+  return (FLOAT)((FLOAT)(current_time - initial_tictime) * TS_SECS_PER_TIC);
 }
 
+#undef TS_SECS_PER_TIC
+#undef TS_CLOCKS_PER_TIC
 #undef TS_CLOCKS_PER_SEC
 
 typedef struct ts_times {
@@ -175,5 +195,3 @@ void decoder_progress_finish(lame_global_flags *gfp)
 }
 
 #endif
-
-
