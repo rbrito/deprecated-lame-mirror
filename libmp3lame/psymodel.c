@@ -160,6 +160,7 @@ blocktype_d[2]        block type to use for previous granule
 
 /* size of each partition band, in barks: */
 #define DELBARK .34
+#define CW_LOWER_INDEX 6
 
 
 #if 1
@@ -769,7 +770,7 @@ int L3psycho_anal( lame_global_flags * gfp,
 	/*********************************************************************
 	 *    compute unpredicatability of first six spectral lines
 	 *********************************************************************/
-	for ( j = 0; j < gfc->cw_lower_index; j++ ) {
+	for ( j = 0; j < CW_LOWER_INDEX; j++ ) {
 	    /* calculate unpredictability measure cw */
 	    FLOAT a2, b2, r1, r2;
 	    FLOAT numre, numim, den;
@@ -820,7 +821,7 @@ int L3psycho_anal( lame_global_flags * gfp,
 	/**********************************************************************
 	 *     compute unpredicatibility of next 200 spectral lines
 	 *********************************************************************/
-	for ( j = gfc->cw_lower_index; j < gfc->cw_upper_index; j += 4 ) {
+	for (; j < gfc->cw_upper_index; j += 4 ) {
 	    /* calculate unpredictability measure cw */
 	    FLOAT rn, r1, r2;
 	    FLOAT numre, numim, den;
@@ -1562,7 +1563,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	}
         if (ns_attacks[0] && gfc->nsPsy.last_attacks[chn][2])
 	    ns_attacks[0] = 0;
-    
+
 	if (gfc->nsPsy.last_attacks[chn][2] == 3 ||
 	    ns_attacks[0] || ns_attacks[1] || ns_attacks[2] || ns_attacks[3]) {
 	    ns_uselongblock = 0;
@@ -1572,6 +1573,10 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	    if (ns_attacks[3] && ns_attacks[2]) ns_attacks[3] = 0;
 	}
 
+	/* pulse like signal detection for vangelis/fatboy */
+	{
+
+	}
 	if (chn < 2) {
 	  uselongblock[chn] = ns_uselongblock;
 	} else {
@@ -1811,7 +1816,6 @@ init_numline(
     for ( sfb = 0; sfb < sbmax; sfb++ ) {
 	int i1,i2,start,end;
 	FLOAT8 arg;
-
 	start = scalepos[sfb];
 	end   = scalepos[sfb+1];
 
@@ -1830,8 +1834,6 @@ init_numline(
 
 	mld[sfb] = pow(10.0, 1.25*(1-cos(PI*arg))-2.5);
     }
-
-
 
     /* compute bark values of each critical band */
     j = 0;
@@ -1941,13 +1943,14 @@ int psymodel_init(lame_global_flags *gfp)
 
 
 
-    /*  gfp->cwlimit = sfreq*j/1024.0;  */
-    gfc->cw_lower_index=6;
-    gfc->cw_upper_index = gfc->PSY->cwlimit*1024.0/sfreq;
-    gfc->cw_upper_index=Min(HBLKSIZE-4,gfc->cw_upper_index);      /* j+3 < HBLKSIZE-1 */
-    gfc->cw_upper_index=Max(6,gfc->cw_upper_index);
+    j = gfc->PSY->cwlimit/(sfreq/BLKSIZE);
+    if (j > HBLKSIZE-4) /* j+3 < HBLKSIZE-1 */
+	j = HBLKSIZE-4;
+    if (j < CW_LOWER_INDEX)
+	j = CW_LOWER_INDEX;
+    gfc->cw_upper_index = j;
 
-    for ( j = 0; j < HBLKSIZE; j++ )
+    for (j = 0; j < HBLKSIZE; j++)
 	gfc->cw[j] = 0.4f;
 
     /* init. for loudness approx. -jd 2001 mar 27*/
