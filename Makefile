@@ -77,8 +77,8 @@ ifeq ($(UNAME),Linux)
 
 # these options were suggested with egcs-990524
 #   CC = egcs   #egcc for Debian systems
-   CC_OPTS =    -O9 -fomit-frame-pointer -march=pentium \
-                   -ffast-math -funroll-loops 
+#   CC_OPTS =    -O9 -fomit-frame-pointer -march=pentium \
+#                   -ffast-math -funroll-loops 
 
 # these options were suggested with gcc-2.95.2
 #   FEATURES = -DAACS3 -DAAC_TMN_NMT -DRH_masking 

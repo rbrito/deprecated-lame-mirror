@@ -721,13 +721,10 @@ void outer_loop(
     if (notdone) {
       /* see if we should apply preemphasis */
       int pre_just_turned_on=0;
-      
-      /* should be done only after the first call to inner loop
-       */
-      if (iteration==1) {
+      /*
         pre_just_turned_on =
       	  preemphasis(xr[gr][ch],xrpow,l3_xmin,gr,ch,l3_side,distort);
-      }
+      */
 
       /* if we didn't just apply pre-emph, let us see if we should 
        * amplify some scale factor bands */
