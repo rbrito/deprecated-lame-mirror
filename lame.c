@@ -460,14 +460,14 @@ void lame_print_config(void)
 	    (strcmp(gf.inPath, "-")? gf.inPath : "stdin"),
 	    (strcmp(gf.outPath, "-")? gf.outPath : "stdout"));
     if (gf.VBR)
-      fprintf(stderr, "Encoding as %.1fkHz VBR(q=%i) %s MPEG%i LayerIII file\n",
+      fprintf(stderr, "Encoding as %.1fkHz VBR(q=%i) %s MPEG%i LayerIII  qual=%i\n",
 	      s_freq[info->version][info->sampling_frequency],
-	      gf.VBR_q,mode_names[info->mode],2-info->version);
+	      gf.VBR_q,mode_names[info->mode],2-info->version,gf.quality);
     else
-      fprintf(stderr, "Encoding as %.1f kHz %d kbps %s MPEG%i LayerIII file  (%4.1fx)\n",
+      fprintf(stderr, "Encoding as %.1f kHz %d kbps %s MPEG%i LayerIII (%4.1fx)  qual=%i\n",
 	      s_freq[info->version][info->sampling_frequency],
 	      bitrate[info->version][info->lay-1][info->bitrate_index],
-	      mode_names[info->mode],2-info->version,compression);
+	      mode_names[info->mode],2-info->version,compression,gf.quality);
   }
   fflush(stderr);
 }
@@ -934,9 +934,6 @@ int lame_encode_finish(char *mpg123bs)
       fprintf(stderr,"\n");
       fflush(stderr);
   }
-
-
-  CloseSndFile();
 
 
   III_FlushBitstream();

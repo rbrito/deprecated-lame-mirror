@@ -36,6 +36,7 @@ int main(int argc, char **argv)
    * struct pointed to by 'gf'.  If you want to parse your own arguments,
    * or call libmp3lame from a program which uses a GUI to set arguments,
    * skip this call and set the values of interest in the gf-> struct.  
+   * (see lame.h for documentation about these parameters)
    */
   lame_parse_args(argc, argv);
 
@@ -96,6 +97,7 @@ int main(int argc, char **argv)
   imp3=lame_encode_finish(mp3buffer);   /* may return one more mp3 frame */
   fwrite(mp3buffer,1,imp3,outf);  
   fclose(outf);
+  lame_close_infile();            /* close the input file */
   lame_mp3_tags();                /* add id3 or VBR tags to mp3 file */
   return 0;
 }

@@ -34,6 +34,10 @@ void lame_init_infile(void)
   if (GetSndChannels()) gf.num_channels=GetSndChannels();
   gf.num_samples = GetSndSamples();
 }
+void lame_close_infile(void)
+{
+  CloseSndFile();
+}
 
 
 

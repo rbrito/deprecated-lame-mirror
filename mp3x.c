@@ -33,6 +33,7 @@ int main(int argc, char **argv)
   gtkcontrol();
 
   lame_encode_finish(mp3buffer);
+  lame_close_infile();
   return 0;
 }
 

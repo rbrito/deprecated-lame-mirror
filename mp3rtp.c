@@ -57,7 +57,7 @@ char mp3buffer[LAME_MAXMP3BUFFER];
 int main(int argc, char **argv)
 {
 
-  int port,ttl;
+  int i,port,ttl;
   char *tmp,*Arg;
   lame_global_flags *gf;
   int iread,imp3;
@@ -108,8 +108,11 @@ int main(int argc, char **argv)
    * struct pointed to by 'gf'.  If you want to parse your own arguments,
    * or call libmp3lame from a program which uses a GUI to set arguments,
    * skip this call and set the values of interest in the gf-> struct.  
+   * (see lame.h for documentation about these parameters)
    */
-  lame_parse_args(argc-1, &argv[1]); 
+  for (i=1; i<argc-1; i++)  /* remove first argument, it was for rtp */
+    argv[i]=argv[i+1];
+  lame_parse_args(argc-1, argv); 
 
   /* open the output file.  Filename parsed into gf->inPath */
   if (!strcmp(gf->outPath, "-")) {
@@ -163,6 +166,7 @@ int main(int argc, char **argv)
   fwrite(mp3buffer,1,imp3,outf);  
   rtp_output(mp3buffer,imp3);
   fclose(outf);
+  lame_close_infile();             /* close the sound input file */
   lame_mp3_tags();                /* add id3 or VBR tags to mp3 file */
   return 0;
 }

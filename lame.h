@@ -216,6 +216,10 @@ char *mp3buffer,int  mp3buffer_size);
 */
 int lame_encode_finish(char *mp3buf);
 
+/* OPTIONAL: close the sound input file if lame_init_infile() was used */
+void lame_close_infile(void);
+
+
 /* OPTIONAL:  lame_mp3_tags will append id3 and Xing VBR tags to
 the mp3 file with name given by gf->outPath.  These cals open the file,
 write tags, and close the file, so make sure the the encoding is finished
