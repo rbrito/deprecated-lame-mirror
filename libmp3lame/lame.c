@@ -382,7 +382,7 @@ lame_init_qval(lame_global_flags * gfp)
             gfc->noise_shaping = 1;
         if (gfc->substep_shaping != 0)
 	        gfc->substep_shaping = 2;
-        gfc->noise_shaping_amp = 1;
+        gfc->noise_shaping_amp = 2;
         gfc->noise_shaping_stop = 1;
         if (gfc->subblock_gain == -1)
             gfc->subblock_gain = 1;
@@ -398,7 +398,7 @@ lame_init_qval(lame_global_flags * gfp)
             gfc->noise_shaping = 1;
         if (gfc->substep_shaping != 0)
 	        gfc->substep_shaping = 2;
-        gfc->noise_shaping_amp = 1;
+        gfc->noise_shaping_amp = 2;
         gfc->noise_shaping_stop = 1;
         if (gfc->subblock_gain == -1)
             gfc->subblock_gain = 1;
