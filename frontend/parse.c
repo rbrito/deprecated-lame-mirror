@@ -131,6 +131,27 @@ dosToLongFileName( char *fn )
 }
 #endif
 
+#if defined(WIN32)
+#include <windows.h>
+BOOL SetPriorityClassMacro(DWORD p)
+{
+    HANDLE op = OpenProcess(PROCESS_ALL_ACCESS,TRUE,GetCurrentProcessId());
+    return SetPriorityClass(op,p);
+}
+
+static void setWin32Priority( lame_global_flags*  gfp, int Priority )
+{
+    if (Priority > 3) {
+	SetPriorityClassMacro(HIGH_PRIORITY_CLASS);
+        printf("==> Priority set to High.\n");
+    }
+    if (Priority < 3) {
+	SetPriorityClassMacro(IDLE_PRIORITY_CLASS);
+        printf("==> Priority set to Low.\n");
+    }
+}
+#endif
+
 #if defined(__OS2__)
 /* OS/2 priority functions */
 static int setOS2Priority( lame_global_flags*  gfp, int Priority )
@@ -308,8 +329,15 @@ int  short_help ( const lame_global_flags* gfp, FILE* const fp, const char* Prog
               "                    default is (j) or (s) depending on bitrate\n"
               "    -V n            quality setting for VBR.  default n=%i\n"
               "\n"
+#if defined(WIN32)
+              "    --priority type  sets the process priority\n"
+              "                     0,1 = Low priority\n"
+              "                     2   = normal priority\n"
+              "                     3,4 = High priority\n"
+              "\n"
+#endif
 #if defined(__OS2__)
-              "    --priority type  sets the process priority (OS/2 only):\n"
+              "    --priority type  sets the process priority\n"
               "                     0 = Low priority\n"
               "                     1 = Medium priority\n"
               "                     2 = Regular priority\n"
@@ -517,6 +545,14 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "    won't fit in a version 1 tag (e.g. the title string is longer than 30\n"
               "    characters), or the '--add-id3v2' or '--id3v2-only' options are used,\n"
               "    or output is redirected to stdout.\n"
+#if defined(WIN32)
+              "\n\nMS-Windows-specific options:\n"
+              "    --priority <type>     sets the process priority:\n"
+              "                               0,1 = Low priority (IDLE_PRIORITY_CLASS)\n"
+              "                               2 = normal priority (NORMAL_PRIORITY_CLASS, default)\n"
+              "                               3,4 = High priority (HIGH_PRIORITY_CLASS))\n"
+              "    Note: Calling '--priority' without a parameter will select priority 0.\n"
+#endif
 #if defined(__OS2__)
               "\n\nOS/2-specific options:\n"
               "    --priority <type>     sets the process priority:\n"
@@ -1016,6 +1052,11 @@ char* const inPath, char* const outPath, char **nogap_inPath, int *num_nogap)
       		T_ELIF ("priority")
       		    argUsed=1;
       		    setOS2Priority(gfp, atoi(nextArg));
+#endif
+#if defined(WIN32)
+      		T_ELIF ("priority")
+      		    argUsed=1;
+      		    setWin32Priority(gfp, atoi(nextArg));
 #endif
 
                 /* options for ID3 tag */
