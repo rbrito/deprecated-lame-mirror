@@ -145,6 +145,8 @@ const scalefac_struct sfBandIndex[9] =
 
 FLOAT8 pow20[Q_MAX];
 FLOAT8 ipow20[Q_MAX];
+FLOAT8 iipow20[Q_MAX];
+FLOAT8 *iipow20_;
 FLOAT8 pow43[PRECALC_SIZE];
 /* initialized in first call to iteration_init */
 FLOAT8 adj43asm[PRECALC_SIZE];
@@ -176,7 +178,9 @@ iteration_init( lame_global_flags *gfp)
     for (i = 0; i < PRECALC_SIZE-1; i++)
 	adj43[i] = (i + 1) - pow(0.5 * (pow43[i] + pow43[i + 1]), 0.75);
     adj43[i] = 0.5;
+    iipow20_ = &iipow20[210];
     for (i = 0; i < Q_MAX; i++) {
+        iipow20[i] = pow(2.0, (double)(i - 210) * 0.1875);
 	ipow20[i] = pow(2.0, (double)(i - 210) * -0.1875);
 	pow20[i] = pow(2.0, (double)(i - 210) * 0.25);
     }

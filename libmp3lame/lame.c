@@ -1005,8 +1005,15 @@ lame_init_params(lame_global_flags * const gfp)
         if (gfp->cwlimit <= 0) gfp->cwlimit = 0.42 * gfp->out_samplerate;
         gfc->PSY->tonalityPatch = 1;
 
-        gfc->VBR->quality = Min( 9, Max( 0, gfp->quality ) );
-             
+        if ( gfp->experimentalX <= 4 && gfp->experimentalX >= 0 )
+        {   /* map experimentalX settings to internal secltions */
+            static char const map[] = {2,1,0,3,6};
+            gfc->VBR->quality = map[gfp->experimentalX];
+        }
+        else    /* defaulting to */
+        {
+            gfc->VBR->quality = 2;
+        }   
         if ( gfc->VBR->quality > 5 ) {
             static float const dbQ[10] = { -6,-4.75,-3.5,-2.25,-1,.25,1.5,2.75,4,5.25 };
             gfc->VBR->mask_adjust = dbQ[gfp->VBR_q];
@@ -1381,7 +1388,6 @@ lame_encode_frame(lame_global_flags * gfp,
                   sample_t inbuf_l[], sample_t inbuf_r[],
                   unsigned char *mp3buf, int mp3buf_size)
 {
-    lame_internal_flags *gfc = gfp->internal_flags;
     int     ret;
     if (gfp->ogg) {
 #ifdef HAVE_VORBIS_ENCODER
