@@ -665,11 +665,14 @@ void L3psycho_anal( lame_global_flags *gfp,
 	ecb *= tbb;
 
 	/* long block pre-echo control.   */
-	/* dont use if previous granule was a short block */
+	/* as soon as we stop basing number of bits on PE, */
+	/* dont use thyis if previous granule was a short block */
 	/* rpelev=2.0, rpelev2=16.0 */
+	/*
 	if (blocktype_old[chn] == SHORT_TYPE )
 	  thr[b] = ecb;
 	else
+	*/
 	  thr[b] = Min(ecb, Min(rpelev*nb_1[chn][b],rpelev2*nb_2[chn][b]) );
 
 	if (thr[b]<1e-6) thr[b]=1e-6;

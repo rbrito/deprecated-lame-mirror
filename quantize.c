@@ -95,7 +95,7 @@ iteration_loop( lame_global_flags *gfp,
         }
       else
 	{
-          calc_xmin(gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin[ch], gfc->masking_lower);
+          calc_xmin(gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin[ch], 1.0);
 	  outer_loop( gfp,xr[gr][ch], targ_bits[ch], noise,
 		      &l3_xmin[ch], l3_enc[gr][ch], 
 		      &scalefac[gr][ch], cod_info, xfsf, ch);
@@ -182,6 +182,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
   int	    reparted = 0;
   int       reduce_sidechannel=0;
   III_side_info_t *l3_side;
+  FLOAT8    masking_lower;
 
   l3_side = &gfc->l3_side;
   iteration_init(gfp,l3_side,l3_enc);
@@ -192,7 +193,6 @@ VBR_iteration_loop (lame_global_flags *gfp,
   if (gfc->mode_ext==MPG_MD_MS_LR) 
     reduce_sidechannel=1;
      */
-
 
 
   /* - lower masking depending on Quality setting
@@ -209,7 +209,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
     assert( gfp->VBR_q <= 9 );
     assert( gfp->VBR_q >= 0 );
     masking_lower_db = dbQ[gfp->VBR_q];	
-    gfc->masking_lower = pow(10.0,masking_lower_db/10);
+    masking_lower = pow(10.0,masking_lower_db/10);
   }
   
 
@@ -277,7 +277,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
       
       /* check for analolg silence */
       /* if energy < ATH, set min_bits = 125 */
-      if (0==calc_xmin(gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin, gfc->masking_lower)) {
+      if (0==calc_xmin(gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin, masking_lower)) {
 	  analog_silence=1;
 	  min_bits=125;
       }
@@ -450,7 +450,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
         }
 	else
 	{
-          calc_xmin(gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin,gfc->masking_lower);
+          calc_xmin(gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin,masking_lower);
 	
           outer_loop( gfp,xr[gr][ch], save_bits[gr][ch], noise,
 	 	      &l3_xmin, l3_enc[gr][ch], 

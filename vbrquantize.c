@@ -335,16 +335,21 @@ VBR_noise_shapping (lame_global_flags *gfp,
                 III_scalefac_t scalefac[2][2])
 {
   lame_internal_flags *gfc=gfp->internal_flags;
-  FLOAT8    masking_lower_db;
   int       start,end,bw,sfb,l, i,ch, gr, bits, vbrmax;
   scalefac_struct2 vbrsf;
   int maxover0,maxover1,maxover0p,maxover1p,maxover;
   int ifqstep,analog_silence;
   III_side_info_t * l3_side;
   gr_info *cod_info;  
+  FLOAT8 masking_lower_db,masking_lower;
+  static const FLOAT8 dbQ[10]={-6.0,-4.5,-3.0,-1.5,0,0.3,0.6,1.0,1.5,2.0};
 
   l3_side = &gfc->l3_side;
   iteration_init(gfp,l3_side,l3_enc);
+
+
+
+
 
 
   bits = 0; 
@@ -359,13 +364,27 @@ VBR_noise_shapping (lame_global_flags *gfp,
       cod_info = &l3_side->gr[gr].ch[ch].tt;
       shortblock = (cod_info->block_type == SHORT_TYPE);
 
+
+        /* Adjust allowed masking based on quality setting */
+      assert( gfp->VBR_q <= 9 );
+      assert( gfp->VBR_q >= 0 );
+      masking_lower_db = dbQ[gfp->VBR_q];	
+      
+      //  masking_lower_db = 0;
+      if (pe[gr][ch]>750)
+	masking_lower_db -= (pe[gr][ch]-750.)/750.;
+      masking_lower = pow(10.0,masking_lower_db/10);
+
+
+
+
       for(i=0;i<576;i++) {
 	FLOAT8 temp=fabs(xr[gr][ch][i]);
 	xr34[i]=sqrt(sqrt(temp)*temp);
       }
 
       analog_silence = 
-	(0==calc_xmin( gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin,gfc->masking_lower));
+	(0==calc_xmin( gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin,masking_lower));
 
       vbrmax=-10000;
       if (shortblock) {
@@ -584,17 +603,6 @@ VBR_quantize(lame_global_flags *gfp,
   int bits,gr,ch,i;
   III_side_info_t * l3_side;
   gr_info *cod_info;  
-  FLOAT8 masking_lower_db;
-  static const FLOAT dbQ[10]={-6.0,-4.5,-3.0,-1.5,0,0.3,0.6,1.0,1.5,2.0};
-
-
-  /* Adjust allowed masking based on quality setting */
-  assert( gfp->VBR_q <= 9 );
-  assert( gfp->VBR_q >= 0 );
-  masking_lower_db = dbQ[gfp->VBR_q];	
-
-  //  masking_lower_db = 0;
-  gfc->masking_lower = pow(10.0,masking_lower_db/10);
 
 
   bits = VBR_noise_shapping (gfp,pe, ms_ener_ratio,
