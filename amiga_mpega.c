@@ -3,22 +3,6 @@
  *
  * Big thanks to Stéphane Tavernard for mpega.library.
  *
- *
- * $Id$
- *
- * $Log$
- * Revision 1.4  2000/02/22 00:54:40  cisc
- * Oh, nevermind, wasn't very efficient here, proper place would be in sndfile.lib
- *
- * Revision 1.3  2000/02/21 23:58:07  cisc
- * Make sure input-file is closed when CTRL-C is received.
- *
- * Revision 1.2  2000/01/11 20:23:41  cisc
- * Fixed timestatus bug (forgot nsamp variable).
- *
- * Revision 1.1  2000/01/10 03:40:20  cisc
- * MPGLIB replacement using mpega.library (AmigaOS)
- *
  */
 
 #ifdef AMIGA_MPEGA
@@ -36,7 +20,7 @@ MPEGA_STREAM    *mstream=NULL;
 MPEGA_CTRL      mctrl;
 
 
-static int break_cleanup(void)
+static void exit_cleanup(void)
 {
 	if(mstream) {
 		MPEGA_close(mstream);
@@ -46,12 +30,6 @@ static int break_cleanup(void)
 		CloseLibrary(MPEGABase);
 		MPEGABase = NULL;
 	}
-	return 1;
-}
-
-static void exit_cleanup(void)
-{
-	(void)break_cleanup();
 }
 
 
@@ -74,14 +52,12 @@ int lame_decode_initfile(const char *fullname, int *stereo, int *samp, int *bitr
 	mctrl.layer_1_2.force_mono      = 0;
 	mctrl.layer_3.force_mono        = 0;
 
-	onbreak(break_cleanup);
-	atexit(exit_cleanup);
-
 	MPEGABase = OpenLibrary("mpega.library", 2);
 	if(!MPEGABase) {
 		fprintf(stderr, "Unable to open mpega.library v2\n");
 		exit(1);
 	}
+	atexit(exit_cleanup);
 
 	mstream=MPEGA_open(fullname, &mctrl);
 	if(!mstream) { return (-1); }
