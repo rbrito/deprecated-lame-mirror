@@ -96,6 +96,7 @@ RANLIB = @RANLIB@
 RM_F = @RM_F@
 U = @U@
 VERSION = @VERSION@
+WITH_FRONTEND = @WITH_FRONTEND@
 WITH_MP3RTP = @WITH_MP3RTP@
 WITH_MP3X = @WITH_MP3X@
 am__include = @am__include@
@@ -105,6 +106,7 @@ install_sh = @install_sh@
 AUTOMAKE_OPTIONS = foreign ansi2knr
 
 man_MANS = lame.1
+
 EXTRA_DIST = ${man_MANS}
 subdir = doc/man
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs

@@ -97,6 +97,7 @@ RANLIB = @RANLIB@
 RM_F = @RM_F@
 U = @U@
 VERSION = @VERSION@
+WITH_FRONTEND = @WITH_FRONTEND@
 WITH_MP3RTP = @WITH_MP3RTP@
 WITH_MP3X = @WITH_MP3X@
 am__include = @am__include@
@@ -111,8 +112,8 @@ LDADD = @LDADD@ @FRONTEND_LDADD@ \
 
 AUTOMAKE_OPTIONS = 1.5 foreign $(top_srcdir)/ansi2knr
 
-bin_PROGRAMS = lame @WITH_MP3RTP@ @WITH_MP3X@
-EXTRA_PROGRAMS = mp3rtp mp3x
+bin_PROGRAMS = @WITH_FRONTEND@ @WITH_MP3RTP@ @WITH_MP3X@
+EXTRA_PROGRAMS = lame mp3rtp mp3x
 
 brhist_sources = brhist.c brhist.h
 
@@ -181,8 +182,8 @@ subdir = frontend
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
-EXTRA_PROGRAMS = mp3rtp$(EXEEXT) mp3x$(EXEEXT)
-bin_PROGRAMS = lame$(EXEEXT) @WITH_MP3RTP@ @WITH_MP3X@
+EXTRA_PROGRAMS = lame$(EXEEXT) mp3rtp$(EXEEXT) mp3x$(EXEEXT)
+bin_PROGRAMS = @WITH_FRONTEND@ @WITH_MP3RTP@ @WITH_MP3X@
 PROGRAMS = $(bin_PROGRAMS)
 
 @WITH_BRHIST_TRUE@am_lame_OBJECTS = main$U.$(OBJEXT) \
