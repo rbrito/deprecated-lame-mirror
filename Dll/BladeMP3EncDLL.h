@@ -1,22 +1,24 @@
 /*
-
-	bladedll.h
-
-    +++++++++++++++++++++++++++
-	+   Blade's Encoder DLL   +
-	+++++++++++++++++++++++++++
-
-    ------------------------------------------------------
-	- Version 1.00 (7 November 1998) - Jukka Poikolainen -
-	------------------------------------------------------
-
-	Initial version
-	
-	------------------------------------------------------
-	- Version x.xx (x xxxxxxxx xxxx) - xxxxx xxxxxxxxxxx -
-	------------------------------------------------------
-
-*/
+ * Blade DLL Interface for LAME.
+ *
+ * Copyright (c) 1999 A.L. Faber
+ * Based on bladedll.h version 1.0 written by Jukka Poikolainen
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA  02111-1307, USA.
+ */
 
 #ifndef ___BLADEDLL_H_INCLUDED___
 #define ___BLADEDLL_H_INCLUDED___
@@ -101,7 +103,7 @@ typedef struct	{
 			INT				nMode;			// BE_MP3_MODE_STEREO, BE_MP3_MODE_DUALCHANNEL, BE_MP3_MODE_MONO
 			DWORD			dwBitrate;		// CBR bitrate, VBR min bitrate
 			DWORD			dwMaxBitrate;	// CBR ignored, VBR Max bitrate
-			MPEG_QUALITY	nQuality;		// Quality setting (NORMAL,HIGH,LOW,VOICE)
+			DWORD			nQuality;		// Quality setting (NORMAL,HIGH,LOW,VOICE)
 			DWORD			dwMpegVersion;	// MPEG-1 OR MPEG-2
 			DWORD			dwPsyModel;		// FUTURE USE, SET TO 0
 			DWORD			dwEmphasis;		// FUTURE USE, SET TO 0
@@ -161,26 +163,20 @@ typedef struct	{
 
 #ifndef _BLADEDLL
 
-typedef BE_ERR	(*BEINITSTREAM)		(PBE_CONFIG, PDWORD, PDWORD, PHBE_STREAM);
-typedef BE_ERR	(*BEENCODECHUNK)	(HBE_STREAM, DWORD, PSHORT, PBYTE, PDWORD);
-typedef BE_ERR	(*BEDEINITSTREAM)	(HBE_STREAM, PBYTE, PDWORD);
-typedef BE_ERR	(*BECLOSESTREAM)	(HBE_STREAM);
-typedef VOID	(*BEVERSION)		(PBE_VERSION);
+typedef BE_ERR	(*BEINITSTREAM)			(PBE_CONFIG, PDWORD, PDWORD, PHBE_STREAM);
+typedef BE_ERR	(*BEENCODECHUNK)		(HBE_STREAM, DWORD, PSHORT, PBYTE, PDWORD);
+typedef BE_ERR	(*BEDEINITSTREAM)		(HBE_STREAM, PBYTE, PDWORD);
+typedef BE_ERR	(*BECLOSESTREAM)		(HBE_STREAM);
+typedef VOID	(*BEVERSION)			(PBE_VERSION);
+typedef VOID	(*BEWRITEVBRHEADER)		(LPCSTR);
 
-#define	TEXT_BEINITSTREAM	"beInitStream"
-#define	TEXT_BEENCODECHUNK	"beEncodeChunk"
-#define	TEXT_BEDEINITSTREAM	"beDeinitStream"
-#define	TEXT_BECLOSESTREAM	"beCloseStream"
-#define	TEXT_BEVERSION		"beVersion"
+#define	TEXT_BEINITSTREAM		"beInitStream"
+#define	TEXT_BEENCODECHUNK		"beEncodeChunk"
+#define	TEXT_BEDEINITSTREAM		"beDeinitStream"
+#define	TEXT_BECLOSESTREAM		"beCloseStream"
+#define	TEXT_BEVERSION			"beVersion"
+#define	TEXT_BEWRITEVBRHEADER	"beWriteVBRHeader"
 
-/*	
-	BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples, PDWORD dwBufferSize, PHBE_STREAM phbeStream);
-	BE_ERR	beEncodeChunk(HBE_STREAM hbeStream, DWORD nSamples, PSHORT pSamples, PBYTE pOutput, PDWORD pdwOutput);
-	BE_ERR	beDeinitStream(HBE_STREAM hbeStream, PBYTE pOutput, PDWORD pdwOutput);
-	BE_ERR	beCloseStream(HBE_STREAM hbeStream);
-	VOID	beVersion(PBE_VERSION pbeVersion);		
-*/
-	
 #else
 
 __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples, PDWORD dwBufferSize, PHBE_STREAM phbeStream);
@@ -188,6 +184,8 @@ __declspec(dllexport) BE_ERR	beEncodeChunk(HBE_STREAM hbeStream, DWORD nSamples,
 __declspec(dllexport) BE_ERR	beDeinitStream(HBE_STREAM hbeStream, PBYTE pOutput, PDWORD pdwOutput);
 __declspec(dllexport) BE_ERR	beCloseStream(HBE_STREAM hbeStream);
 __declspec(dllexport) VOID		beVersion(PBE_VERSION pbeVersion);
+__declspec(dllexport) BE_ERR	beWriteVBRHeader(LPCSTR lpszFileName);
+
 
 #endif
 

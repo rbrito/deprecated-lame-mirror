@@ -4,19 +4,19 @@
  *	Copyright (c) 1999 A.L. Faber
  *
  * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
+ * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2 of the License, or (at your option) any later version.
- *
+ * 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
- * Library General Public License for more details.
- *
- * You should have received a copy of the GNU Library General Public
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * Boston, MA  02111-1307, USA.
  */
 
 #include "BladeMP3EncDLL.h"
@@ -37,7 +37,7 @@
 
 
 const int MAJORVERSION=1;
-const int MINORVERSION=10;
+const int MINORVERSION=11;
 const int CURRENT_STRUCT_VERSION=1;
 const int CURRENT_STRUCT_SIZE=sizeof(BE_CONFIG);
 
@@ -180,7 +180,18 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 		// 0=no vbr 1..10 is VBR quality setting -1
 		gf.VBR=1;
 		gf.VBR_q=lameConfig.format.LHV1.nVBRQuality;
+
+		if (lameConfig.format.LHV1.bWriteVBRHeader==TRUE)
+		{
+			gf.bWriteVbrTag=TRUE;
+		}
+		else
+		{
+			gf.bWriteVbrTag=FALSE;
+		}
 	}
+
+
 
 	// Set frequency
 	gf.in_samplerate=lameConfig.format.LHV1.dwSampleRate;
@@ -204,22 +215,34 @@ __declspec(dllexport) BE_ERR	beInitStream(PBE_CONFIG pbeConfig, PDWORD dwSamples
 
 	// Do we have to tag  it as non original 
 	if (!lameConfig.format.LHV1.bOriginal)
+	{
 		gf.original=0;
+	}
+	else
+	{
+		gf.original=1;
+	}
 
 	// Add CRC?
 	if (lameConfig.format.LHV1.bCRC)
+	{
 		gf.error_protection=1;
+	}
+	else
+	{
+		gf.error_protection=0;
+	}
 
 	gf.silent=1;  /* disable status ouput */
 
 	// Set private bit?
 	if (lameConfig.format.LHV1.bPrivate)
 	{
-		gf.extension = 0;
+		gf.extension = 1;
 	}
 	else
 	{
-		gf.extension = 1;
+		gf.extension = 0;
 	}
 	
 	lame_init_params(&gf);	
@@ -434,7 +457,7 @@ void dump_config( char *inPath, char *outPath)
 //	sprintf(strTmp,"Voice mode %s\n",(voice_mode)?"enabled":"disabled");
 //	OutputDebugString(strTmp);
 
-	sprintf(strTmp,"Encoding as %.1f kHz %d kbps %d MPEG-%d LayerIII file\n",gf.out_samplerate/1000.0,gf.brate,gf.mode,3 - gf.version);
+	sprintf(strTmp,"Encoding as %.1f kHz %d kbps MPEG-%d LayerIII file\n",gf.out_samplerate/1000.0,gf.brate,gf.mode,3 - gf.version);
 	OutputDebugString(strTmp);
 }
 
