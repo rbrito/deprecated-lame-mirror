@@ -452,6 +452,10 @@ ASFLAGS=-f elf -i i386/
 %.o: %.s
 	gcc -c $< -o $@
 
+## have NASM
+#CC_SWITCHES += -DHAVE_NASM
+#lib_obj += i386/cpu_feat.o
+
 ## use MMX extension. you need nasm and MMX supported CPU.
 #CC_SWITCHES += -DMMX_choose_table
 #OBJ += i386/choose_table.o

@@ -174,7 +174,7 @@ all : prg
 #	uncomment the following if you have NASM 
 #	NASM: Netwide Assembler
 #
-libmp3lame/i386/choose_table.obj: libmp3lame/i386/choose_table.nas
+libmp3lame/i386/cpu_feat.obj: libmp3lame/i386/cpu_feat.nas
 	@echo assemble CPU-feature detection, using NASM the Netwide Assembler
 	@nasmw -f win32 -i libmp3lame/i386/ -DWIN32 \
 		libmp3lame/i386/cpu_feat.nas \
