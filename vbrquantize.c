@@ -375,36 +375,6 @@ VBR_quantize_granule(lame_global_flags *gfp,
     scale_bitcount_lsf(&scalefac[gr][ch], cod_info);
 
 
-  {/* check xr vs xr34 */
-    /* quantize xr34[] based on computed scalefactors */
-    int start,end,l,sfb;
-    int ifqstep = ( cod_info->scalefac_scale == 0 ) ? 2 : 4;
-    for ( sfb = 0; sfb < SBPSY_l; sfb++ ) {
-      int ifac;
-      FLOAT8 fac;
-      ifac = ifqstep*scalefac[gr][ch].l[sfb];
-      if (cod_info->preflag)
-	ifac += ifqstep*pretab[sfb];
-
-      if (ifac+210<Q_MAX) 
-	fac = 1/IPOW20(ifac+210);
-      else
-	fac = pow(2.0,.75*ifac/4.0);
-
-      start = gfc->scalefac_band.l[ sfb ];
-      end   = gfc->scalefac_band.l[ sfb+1 ];
-      if (gfp->frameNum>0)
-      for ( l = start; l < end; l++ ) {
-	FLOAT8 temp=fabs(xr[l]);
-	if (fabs(xr34[l]-fac*sqrt(sqrt(temp)*temp)) > 1e-10) {
-	  printf("frame=%i %i %i \n",gfp->frameNum,gr,ch);
-	  printf("xr43[l] = %e  \n",xr34[l]);
-	  printf("fac*xr  = %e  \n",fac*sqrt(sqrt(temp)*temp));
-	  exit(-1);
-	}
-      }
-    }
-  }
 
 
   /* quantize xr34 */
@@ -500,7 +470,7 @@ VBR_noise_shaping
   int       start,end,bw,sfb,l, i, vbrmax;
   III_scalefac_t vbrsf;
   III_scalefac_t save_sf;
-  int maxover0,maxover1,maxover0p,maxover1p,maxover;
+  int maxover0,maxover1,maxover0p,maxover1p,maxover,mover;
   int ifqstep;
   III_psy_xmin l3_xmin;
   III_side_info_t * l3_side;
@@ -566,14 +536,18 @@ VBR_noise_shaping
 	maxover1 = Max(maxover1,(vbrmax - vbrsf.s[sfb][i]) - (4*14 + 4*max_range_short[sfb]) );
       }
     }
+    mover = Min(maxover0,maxover1);
+    mover = maxover0; /* this line will disable scalefac_scale */
+
+    vbrmax -= mover;
+    maxover0 -= mover;
+    maxover1 -= mover;
+
     if (maxover0==0) 
       cod_info->scalefac_scale = 0;
     else if (maxover1==0)
       cod_info->scalefac_scale = 1;
-    else {
-      cod_info->scalefac_scale = 1;
-      vbrmax -= maxover1;
-    }
+
 
     /* sf =  (cod_info->global_gain-210.0) */
     cod_info->global_gain = vbrmax +210;
@@ -636,42 +610,38 @@ VBR_noise_shaping
       maxover1 = Max(maxover1,(vbrmax - vbrsf.l[sfb]) - 4*max_range_long[sfb] );
       maxover1p = Max(maxover1,(vbrmax - vbrsf.l[sfb]) - 4*(max_range_long[sfb]+pretab[sfb]));
     }
-    
-    /* disable preflag: */
+    mover = Min(maxover0,maxover0p);
+    /* disable scalefac scale by commenting out next two lines: */
     /*
-    maxover0p=9999;
-    maxover1p=9999;
+    mover = Min(mover,maxover1);
+    mover = Min(mover,maxover1p);
     */
+    vbrmax -= mover;
+    maxover0 -= mover;
+    maxover0p -= mover;
+    maxover1 -= mover;
+    maxover1p -= mover;
 
-    printf("%i %i %i maxover:  %i %i %i %i \n",gfp->frameNum,gr,ch,maxover0,maxover0p,maxover1,maxover1p);
 
-    if (maxover0==0) {
+    if (maxover0<=12) {
       cod_info->scalefac_scale = 0;
       cod_info->preflag=0;
-    } else if (maxover0p==0) {
+      vbrmax -= maxover0;
+    } else if (maxover0p<=12) {
       cod_info->scalefac_scale = 0;
       cod_info->preflag=1;
+      vbrmax -= maxover0p;
     } else if (maxover1==0) {
-      cod_info->preflag=0;
       cod_info->scalefac_scale = 1;
+      cod_info->preflag=0;
     } else if (maxover1p==0) {
       cod_info->scalefac_scale = 1;
       cod_info->preflag=1;
     } else {
-      /* none were sufficient.  we need to boost vbrmax */
-      if (maxover1 < maxover1p) {
-	cod_info->scalefac_scale = 1;
-	cod_info->preflag=0;
-	vbrmax -= maxover1;
-      }else{
-	cod_info->scalefac_scale = 1;
-	cod_info->preflag=1;
-	vbrmax -= maxover1p;
-      }
+      fprintf(stderr,"error vbrquantize.c...\n");
+      exit(1);
     }
-    
-    printf("preflag, scale = %i %i \n",
-	   cod_info->preflag,cod_info->scalefac_scale);
+
     
     /* sf =  (cod_info->global_gain-210.0) */
     cod_info->global_gain = vbrmax +210;
@@ -682,10 +652,6 @@ VBR_noise_shaping
     
     
     maxover=compute_scalefacs_long(vbrsf.l,cod_info,scalefac[gr][ch].l);
-    if (gfp->frameNum==34 && gr==0 && ch==0) {
-      for ( sfb = 0; sfb < SBPSY_l; sfb++ )   
-	printf("sfb=%i  sf=%i \n",sfb,scalefac[gr][ch].l[sfb]);
-    }
     assert(maxover <=0);
     
     
@@ -698,7 +664,6 @@ VBR_noise_shaping
       if (cod_info->preflag)
 	ifac += ifqstep*pretab[sfb];
 
-      assert(ifac >= -vbrsf.l[sfb]);
       if (ifac+210<Q_MAX) 
 	fac = 1/IPOW20(ifac+210);
       else

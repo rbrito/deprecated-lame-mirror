@@ -54,6 +54,7 @@ struct gtkinfostruct {
   int totmix;             /* total granules with mixed blocks */
   int pupdate;            /* plot while processing, or only when needed */
   int sfblines;           /* plot scalefactor bands in MDCT plot */
+  int difference;         /* plot original - decoded instead of orig vs. decoded */
   int totalframes;
 } gtkinfo;
 
@@ -335,14 +336,7 @@ void plot_frame(void)
 
   /* skip plot if we are doing an mp3 file */
   if (!gtkinfo.filetype) {
-    n = 224;    /* number of points on end of blue part */
-    /* data left of frame */
-    gpk_graph_draw(pcmbox,n+1,xcord,ycord,xmn,ymn,xmx,ymx,0,title2,&black);
-    /* data right of frame */
-    gpk_graph_draw(pcmbox,n+1,&xcord[1152+n-1],&ycord[1152+n-1],
-		   xmn,ymn,xmx,ymx,0,title2,&black);
-    /* the actual frame */
-    gpk_graph_draw(pcmbox,1152,&xcord[n],&ycord[n],xmn,ymn,xmx,ymx,0,title2,&black);
+    gpk_graph_draw(pcmbox,n,xcord,ycord,xmn,ymn,xmx,ymx,0,title2,&black);
   }
 
 
@@ -356,6 +350,8 @@ void plot_frame(void)
 	  pplot->ms_ener_ratio[0],pplot->ms_ener_ratio[1]);
   */
   title="Re-synthesis";
+  if (gtkinfo.difference) 
+    title="Re-synthesis difference (amplified 20db)";
 
 
   ymn = -32767 ; 
@@ -379,10 +375,9 @@ void plot_frame(void)
       }
   }
 
-
-
+  /* this piece of PCM data from previous frame */
   n = 224;
-  for (j=1152-n,i=0; i<=n; i++,j++) {
+  for (j=1152-n,i=0; i<n; i++,j++) {
     xcord[i] = i;
     if (gtkinfo.msflag) 
       ycord[i] = ch ? .5*(pplot1->pcmdata2[0][j]-
@@ -391,18 +386,31 @@ void plot_frame(void)
     else 
       ycord[i]=pplot1->pcmdata2[ch][j];
   }
-  gpk_graph_draw(winbox,n+1,xcord,ycord,
-		 xmn,ymn,xmx,ymx,0,title,&black);
 
+  /* this piece of PCM data from current frame */
   n = 1152;
   for (i=0; i<n; i++) {
-    xcord[i] = i+224;
+    xcord[i+224] = i+224;
     if (gtkinfo.msflag) 
-      ycord[i] = ch ? .5*(pplot2->pcmdata2[0][i]-pplot2->pcmdata2[1][i]) : 
+      ycord[i+224] = ch ? .5*(pplot2->pcmdata2[0][i]-pplot2->pcmdata2[1][i]) : 
       .5*(pplot2->pcmdata2[0][i]+pplot2->pcmdata2[1][i]);
     else 
-      ycord[i]=pplot2->pcmdata2[ch][i];
+      ycord[i+224]=pplot2->pcmdata2[ch][i];
   }
+
+  n=1152+224;
+  if (gtkinfo.difference) {
+    for (i=0; i<n; i++) {
+      if (gtkinfo.msflag) 
+	ycord[i] -= ch ? .5*(pplot->pcmdata[0][i]-pplot->pcmdata[1][i]) : 
+	.5*(pplot->pcmdata[0][i]+pplot->pcmdata[1][i]);
+      else 
+	ycord[i] -= pplot->pcmdata[ch][i];
+    }
+    ycord[i] *= 100;
+  }
+
+
   gpk_graph_draw(winbox,n,xcord,ycord,
 		 xmn,ymn,xmx,ymx,0,title,&black);
 
@@ -891,6 +899,9 @@ static void spec_option (GtkWidget *widget, gpointer data)
   case 7:
     gtkinfo.sfblines = !gtkinfo.sfblines;
     break;
+  case 8:
+    gtkinfo.difference = !gtkinfo.difference;
+    break;
   }
   analyze();
 }
@@ -1133,6 +1144,8 @@ static GtkItemFactoryEntry menu_items[] = {
   {"/_Plotting",            NULL,         NULL,   0,    "<Branch>"},
   {"/Plotting/_While advancing" ,  NULL,  spec_option, 5, NULL},
   {"/Plotting/_After advancing",  NULL,  spec_option, 6, NULL},
+  {"/Plotting/Toggle SFB lines",       NULL,  spec_option, 7, NULL},
+  {"/Plotting/Toggle orig-diff" ,  NULL,  spec_option, 8, NULL},
 
   {"/_Channel",            NULL,         NULL,   0,    "<Branch>"},
   {"/Channel/show _Left" ,  NULL,  channel_option, 1, NULL},
@@ -1241,6 +1254,7 @@ int gtkcontrol(lame_global_flags *gfp2)
     gtkinfo.totshort = 0;
     gtkinfo.totmix = 0;
     gtkinfo.sfblines= 1;
+    gtkinfo.difference= 0;
     gtkinfo.totalframes = 0;
 
     memset((char *) Pinfo, 0, sizeof(Pinfo));

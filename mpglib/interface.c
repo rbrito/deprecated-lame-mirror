@@ -345,14 +345,16 @@ int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
 	}
 
 
-	/* remaining bits are ancillary data, or reservoir for next frame */
+	/* remaining bits are ancillary data, or reservoir for next frame 
+	 * If free format, scan stream looking for next frame to determine
+	 * mp->framesize */
 	if (mp->free_format) {
 	  if (mp->old_free_format) {
 	    /* free format.  bitrate must not vary */
 	    mp->framesize=mp->fsizeold_nopadding + (mp->fr.padding);
 	  }else{
 	    bytes=sync_buffer(mp,1);
-	    if (bytes<0) return MP3_NEED_MORE;
+	    if (bytes<0) return iret;
 	    mp->framesize = bytes + mp->ssize+mp->dsize;
 	    mp->fsizeold_nopadding= mp->framesize - mp->fr.padding;
 	    fprintf(stderr,"freeformat bitstream:  estimated bitrate=%ikbs  \n",
@@ -361,6 +363,7 @@ int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
 	  }
 	}
 
+	/* buffer the ancillary data and reservoir for next frame */
 	bytes = mp->framesize-(mp->ssize+mp->dsize);
 	if (bytes > mp->bsize) {
 	  return iret;
@@ -370,7 +373,7 @@ int decodeMP3(struct mpstr *mp,char *in,int isize,char *out,
 	  wordpointer += bytes;
 	}
 
-
+	/* the above frame is completey parsed.  start looking for next frame */
 	mp->fsizeold = mp->framesize;
 	mp->old_free_format = mp->free_format;
 	mp->framesize =0;

@@ -154,9 +154,9 @@ int main(int argc, char **argv)
     /* decode an mp3 file to a .wav */
     int skip=528+gf.encoder_delay;
     long wavsize=2147483647L;  /* max for a signed long */
-    fprintf(stderr, "input:    %s %.1fkHz MPEG%i LayerIII\n",
+    fprintf(stderr, "input:    %s %.1fkHz MPEG%i %i channel LayerIII\n",
 	    (strcmp(gf.inPath, "-")? gf.inPath : "stdin"),
-	    gf.in_samplerate/1000.0,2-gf.version);
+	    gf.in_samplerate/1000.0,2-gf.version,gf.num_channels);
     fprintf(stderr, "output:   %s (wav format)\n",
 	    (strcmp(gf.outPath, "-")? gf.outPath : "stdout"));
     fprintf(stderr, "skipping initial %i samples (encoder + decoder delay)\n",skip);
@@ -168,7 +168,8 @@ int main(int argc, char **argv)
       iread=lame_readframe(&gf,Buffer);
       wavsize += iread;
       if (!gf.silent)
-	fprintf(stderr,"\rFrame# %lu [ %lu]",gf.frameNum,gf.totalframes-1);
+	fprintf(stderr,"\rFrame# %lu [ %lu]  %ikbs",gf.frameNum,
+           gf.totalframes-1,gf.brate);
       for (i=0; i<iread; ++i) {
 	if (skip) {
 	  --skip;

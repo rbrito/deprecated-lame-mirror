@@ -44,8 +44,7 @@ printf(" syncword:  %2X   %2X   \n ",s0, s1);
 }
 
 
-int lame_decode_initfile(FILE *fd, int *stereo, int *samp, int *bitrate, 
-unsigned long *num_samples)
+int lame_decode_initfile(FILE *fd, mp3data_struct *mp3data)
 {
   extern int tabsel_123[2][3][16];
   VBRTAGDATA pTagData;
@@ -109,14 +108,14 @@ unsigned long *num_samples)
   if (!mp.header_parsed) 
     return -1;
 
-  *stereo = mp.fr.stereo;
-  *samp = freqs[mp.fr.sampling_frequency];
-  *bitrate = tabsel_123[mp.fr.lsf][mp.fr.lay-1][mp.fr.bitrate_index];
+  mp3data->stereo = mp.fr.stereo;
+  mp3data->samplerate = freqs[mp.fr.sampling_frequency];
+  mp3data->bitrate = tabsel_123[mp.fr.lsf][mp.fr.lay-1][mp.fr.bitrate_index];
   framesize = (mp.fr.lsf == 0) ? 1152 : 576;
-  *num_samples=MAX_U_32_NUM;
+  mp3data->nsamp=MAX_U_32_NUM;
   
   if (xing_header && num_frames) {
-    *num_samples=framesize * num_frames;
+    mp3data->nsamp=framesize * num_frames;
   }
 
   /*
@@ -145,7 +144,7 @@ For lame_decode_fromfile:  return code
    0     ok, but need more data before outputing any samples
    n     number of samples output.  either 576 or 1152 depending on MP3 file.
 */
-int lame_decode_fromfile(FILE *fd, short pcm_l[], short pcm_r[])
+int lame_decode_fromfile(FILE *fd, short pcm_l[], short pcm_r[],mp3data_struct *mp3data)
 {
   int size,stereo;
   int outsize=0,j,i,ret;
@@ -172,11 +171,15 @@ int lame_decode_fromfile(FILE *fd, short pcm_l[], short pcm_r[])
 
   if (ret == MP3_OK) 
   {
+    mp3data->stereo = mp.fr.stereo;
+    mp3data->samplerate = freqs[mp.fr.sampling_frequency];
+    /* bitrate formula works for free bitrate also */
+    mp3data->bitrate = .5 + 8*(4+mp.fsizeold)*freqs[mp.fr.sampling_frequency]/
+      (1000.0*576*(2-mp.fr.lsf));
     /*    write(1,out,size); */
     outsize = size/(2*(stereo));
     if ((outsize!=576) && (outsize!=1152)) {
       fprintf(stderr,"Oops: mpg123 returned more than one frame!  Cant handle this... \n");
-      exit(-50);
     }
 
     for (j=0; j<stereo; j++)
