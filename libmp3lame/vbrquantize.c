@@ -380,8 +380,8 @@ find_scalefac(
 }
 
 inline int
-find_scalefac_mq(const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin,
-		 int bw, int mq)
+find_scalefac_mq(
+    const FLOAT * xr, const FLOAT * xr34, FLOAT l3_xmin, int bw, int mq)
 {
     FLOAT  xfsf;
     int     i, sf, sf_ok, delsf;
@@ -463,9 +463,10 @@ find_scalefac_ave(
  *  calculates quantization step size determined by allowed masking
  */
 inline int
-calc_scalefac(FLOAT l3_xmin, int bw, FLOAT preset_tune)
+calc_scalefac(FLOAT l3_xmin, int bw, FLOAT c)
 {
-    FLOAT const c = (preset_tune > 0 ? preset_tune : 5.799142446); // 10 * 10^(2/3) * log10(4/3)
+    if (c < 0)
+	c = 0;
     return 210 + (int) (c * log10(l3_xmin / bw) - .5);
 }
 
