@@ -610,7 +610,7 @@ int  calc_noise(
     FLOAT8 max_noise = -20.0; /* -200 dB relative to masking */
     int j = 0;
     const int *ix = cod_info->l3_enc;
-    int *scalefac = cod_info->scalefac;
+    const int *scalefac = cod_info->scalefac;
 
     for (sfb = 0; sfb < cod_info->psymax; sfb++) {
 	int s =
