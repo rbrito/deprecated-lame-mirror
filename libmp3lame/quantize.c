@@ -850,6 +850,13 @@ inc_subblock_gain (
 		xrpow[j+l] *= amp;
             }
         }
+
+	{
+	    FLOAT8 amp = IPOW20(210 - 8);
+	    j += cod_info->width[sfb];
+	    for (l = -width; l < 0; l++)
+		xrpow[j+l] *= amp;
+        }
     }
     return 0;
 }
