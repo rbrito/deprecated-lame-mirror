@@ -90,9 +90,9 @@ adjust_ATH( lame_global_flags* const  gfp,
 	}
 	max_val_n = sqrt( max_val_n ); /* loudness approximation */
 	max_val = 32768 * Max( max_val_n, 1.0 ); /* adapt for vbr_mtrh */
-      } else {
+      } else {			/* jd - 2001 mar 27, 31 */
 	max_val = 32768;	/* no adaptive threshold */
-	max_val_n = 1.0;
+	max_val_n = 1.0 / gfc->adapt_thres_level_v;
       }
 
         /*  adjust ATH depending on range of maximum value
@@ -130,6 +130,10 @@ adjust_ATH( lame_global_flags* const  gfp,
 				/* continuous curves based on approximation */
 				/* to GB's original values */
 	  FLOAT8 adj_lim_new;
+				/* jd - 2001 mar 31 */
+				/* allow tuning the region of ATH reduction */
+	  max_val_n *= gfc->adapt_thres_level_v;
+
 				/* For an increase in approximate loudness, */
 				/* set ATH adjust to adjust_limit immediately*/
 				/* after a delay of one frame. */

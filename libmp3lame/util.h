@@ -405,9 +405,15 @@ typedef struct  {
   FLOAT energy_s[3][HBLKSIZE_s];
   FLOAT tot_ener[4];
 
+
   /* loudness calculation (for adaptive threshold of hearing) */
   FLOAT loudness_sq[2][2];  /* loudness^2 approx. per granule and channel */
   FLOAT loudness_sq_save[2];/* account for granule delay of L3psycho_anal */
+
+  /* sample (or loudness) factor for tuning the point below which adaptive
+     threshold of hearing adjustment occurs
+   */
+  FLOAT adapt_thres_level_v;
 
   
   /* fft.c    */

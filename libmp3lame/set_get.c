@@ -694,6 +694,20 @@ lame_get_adapt_thres_type( const lame_global_flags* gfp ) {
 }
 
 
+// adjust (in dB) the point below which adaptive ATH level adjustment occurs
+int
+lame_set_adapt_thres_level( lame_global_flags* gfp,
+                            float adapt_thres_level ) {
+    gfp->adapt_thres_level = adapt_thres_level;
+    return 0;
+}
+
+float
+lame_get_adapt_thres_level( const lame_global_flags* gfp ) {
+    return gfp->adapt_thres_level;
+}
+
+
 // predictability limit (ISO tonality formula)
 int
 lame_set_cwlimit( lame_global_flags*  gfp,

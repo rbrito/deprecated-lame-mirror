@@ -1107,6 +1107,10 @@ lame_init_params(lame_global_flags * const gfp)
                                      32);
 #endif
 
+    /* initialize internal adaptive ATH settings  -jd */
+    gfc->adapt_thres_level_v = pow( 10.0, gfp->adapt_thres_level / -20.0 );
+    
+
     return 0;
 }
 
@@ -1740,6 +1744,7 @@ lame_init_old(lame_global_flags * gfp)
     gfp->ATHtype = -1;  /* default = -1 = set in lame_init_params */
     gfp->adapt_thres_type = 1;	/* 1 = adaptive threshold, with flat */
 				/*     approximation for loudness.   */
+    gfp->adapt_thres_level = 0.0; /* no offset */
     gfp->useTemporal = 1;
 
     /* The reason for
