@@ -352,21 +352,6 @@ int putmask[9]={0x0, 0x1, 0x3, 0x7, 0xf, 0x1f, 0x3f, 0x7f, 0xff};
   Within each window, the quantized values are then arranged in
   order of increasing frequency...
 */
-#if 0
-void reorder(int scalefac_band[],int ix[576],int ix_orig[576]) {
-  int i,sfb, window, j=0;
-  for (sfb = 0; sfb < SBMAX_s; sfb++) {
-    int start = scalefac_band[sfb];
-    int end   = scalefac_band[sfb + 1];
-    for (window = 0; window < 3; window++) {
-      for (i = start; i < end; ++i) {
-	ix[j++] = ix_orig[3*i+window];
-      }
-    }
-  }
-}
-#endif
-
 void ireorder(int scalefac_band[],int ix_orig[576]) {
   int i,sfb, window, j=0;
   int ix[576];

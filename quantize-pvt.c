@@ -685,67 +685,6 @@ int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576], III_psy_ratio *ratio,
 	       gr_info *cod_info, III_psy_xmin *l3_xmin)
 {
   lame_internal_flags *gfc=gfp->internal_flags;
-  int start, end, bw,l, b, ath_over=0;
-  u_int	sfb;
-  FLOAT8 en0, xmin, ener;
-
-  if (cod_info->block_type==SHORT_TYPE) {
-
-  for ( sfb = 0; sfb < SBMAX_s; sfb++ ) {
-    start = gfc->scalefac_band.s[ sfb ];
-    end   = gfc->scalefac_band.s[ sfb + 1 ];
-    bw = end - start;
-    for ( b = 0; b < 3; b++ ) {
-      for (en0 = 0.0, l = start; l < end; l++) {
-        ener = xr[l * 3 + b];
-        ener = ener * ener;
-        en0 += ener;
-      }
-      en0 /= bw;
-      
-      if (gfp->ATHonly || gfp->ATHshort) {
-        l3_xmin->s[sfb][b]=gfc->ATH_s[sfb];
-      } else {
-        xmin = ratio->en.s[sfb][b];
-        if (xmin > 0.0)
-          xmin = en0 * ratio->thm.s[sfb][b] * gfc->masking_lower / xmin;
-        l3_xmin->s[sfb][b] = Max(gfc->ATH_s[sfb], xmin);
-      }
-      
-      if (en0 > gfc->ATH_s[sfb]) ath_over++;
-    }
-  }
-
-  }else{
-  
-  for ( sfb = 0; sfb < SBMAX_l; sfb++ ){
-    start = gfc->scalefac_band.l[ sfb ];
-    end   = gfc->scalefac_band.l[ sfb+1 ];
-    bw = end - start;
-    
-    for (en0 = 0.0, l = start; l < end; l++ ) {
-      ener = xr[l] * xr[l];
-      en0 += ener;
-    }
-    en0 /= bw;
-    
-    if (gfp->ATHonly) {
-      l3_xmin->l[sfb]=gfc->ATH_l[sfb];
-    } else {
-      xmin = ratio->en.l[sfb];
-      if (xmin > 0.0)
-        xmin = en0 * ratio->thm.l[sfb] * gfc->masking_lower / xmin;
-      l3_xmin->l[sfb]=Max(gfc->ATH_l[sfb], xmin);
-    }
-    if (en0 > gfc->ATH_l[sfb]) ath_over++;
-  }
-  }
-  return ath_over;
-}
-int rcalc_xmin( lame_global_flags *gfp,FLOAT8 xr[576], III_psy_ratio *ratio,
-	       gr_info *cod_info, III_psy_xmin *l3_xmin)
-{
-  lame_internal_flags *gfc=gfp->internal_flags;
   int j,start, end, bw,l, b, ath_over=0;
   u_int	sfb;
   FLOAT8 en0, xmin, ener;
@@ -1103,25 +1042,23 @@ set_pinfo (lame_global_flags *gfp,
 {
   lame_internal_flags *gfc=gfp->internal_flags;
   int sfb;
-  int i,l,start,end,bw;
+  int j,i,l,start,end,bw;
   FLOAT8 en0,en1;
   D192_3 *xr_s = (D192_3 *)xr;
   FLOAT ifqstep = ( cod_info->scalefac_scale == 0 ) ? .5 : 1.0;
 
 
-
-
-
-
-
   if (cod_info->block_type == SHORT_TYPE) {
-    for ( i = 0; i < 3; i++ ) {
-      for ( sfb = 0; sfb < SBMAX_s; sfb++ )  {
-	start = gfc->scalefac_band.s[ sfb ];
-	end   = gfc->scalefac_band.s[ sfb + 1 ];
-	bw = end - start;
-	for ( en0 = 0.0, l = start; l < end; l++ ) 
-	  en0 += (*xr_s)[l][i] * (*xr_s)[l][i];
+    for (j=0, sfb = 0; sfb < SBMAX_s; sfb++ )  {
+      start = gfc->scalefac_band.s[ sfb ];
+      end   = gfc->scalefac_band.s[ sfb + 1 ];
+      bw = end - start;
+      for ( i = 0; i < 3; i++ ) {
+	for ( en0 = 0.0, l = start; l < end; l++ ) {
+	  en0 += xr[j] * xr[j];
+	//	  en0 += (*xr_s)[l][i] * (*xr_s)[l][i];
+	  ++j;
+	}
 	en0=Max(en0/bw,1e-20);
 
 

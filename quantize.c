@@ -1,4 +1,4 @@
-#define MAXNOISEXX
+#undef MAXNOISE
 /*
  *	MP3 quantization
  *
@@ -53,19 +53,12 @@ iteration_loop( lame_global_flags *gfp,
   III_side_info_t *l3_side;
 
   l3_side = &gfc->l3_side;
-
   iteration_init(gfp,l3_side,l3_enc);
   bit_rate = bitrate_table[gfp->version][gfc->bitrate_index];
-
-
   getframebits(gfp,&bitsPerFrame, &mean_bits);
   ResvFrameBegin(gfp, l3_side, mean_bits, bitsPerFrame );
 
   /* quantize! */
-
-
-
-
   for ( gr = 0; gr < gfc->mode_gr; gr++ ) {
     int targ_bits[2];
 
@@ -79,10 +72,11 @@ iteration_loop( lame_global_flags *gfp,
     
     for (ch=0 ; ch < gfc->stereo ; ch ++) {
       cod_info = &l3_side->gr[gr].ch[ch].tt;	
+
       if (!init_outer_loop(gfp,xr[gr][ch], cod_info))
         {
           /* xr contains no energy 
-           * cod_info was set in init_outer_loop above
+           * cod_info-> was initialized in init_outer_loop
 	   */
           memset(&scalefac[gr][ch],0,sizeof(III_scalefac_t));
           memset(l3_enc[gr][ch],0,576*sizeof(int));
@@ -96,13 +90,17 @@ iteration_loop( lame_global_flags *gfp,
 		      &l3_xmin[ch], l3_enc[gr][ch], 
 		      &scalefac[gr][ch], cod_info, xfsf, ch);
         }
-      best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac,0);
+
+
+      best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
       if (gfc->use_best_huffman==1 && cod_info->block_type != SHORT_TYPE) {
 	best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
       }
       assert((int)cod_info->part2_3_length < 4096);
+
       if (gfp->gtkflag)
 	set_pinfo (gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
+
 
 /*#define NORES_TEST */
 #ifndef NORES_TEST
@@ -113,7 +111,9 @@ iteration_loop( lame_global_flags *gfp,
 	if (xr[gr][ch][i] < 0)
 	  l3_enc[gr][ch][i] *= -1;
       }
-    }
+
+
+    } /* loop over ch */
   } /* loop over gr */
 
 #ifdef NORES_TEST
@@ -127,11 +127,10 @@ iteration_loop( lame_global_flags *gfp,
     }
   }
 #endif
-
-
-
   ResvFrameEnd(gfp,l3_side, mean_bits );
 }
+
+
 
 
 /*
@@ -162,6 +161,9 @@ ABR_iteration_loop (lame_global_flags *gfp,
 
   l3_side = &gfc->l3_side;
   iteration_init(gfp,l3_side,l3_enc);
+
+
+
 
   gfc->bitrate_index = gfc->VBR_max_bitrate;
   getframebits (gfp,&bitsPerFrame, &mean_bits);
@@ -250,10 +252,13 @@ ABR_iteration_loop (lame_global_flags *gfp,
 	    /* analog silence */
 	    targ_bits[gr][ch]=analog_silence_bits;
 	  }
+
 	  outer_loop( gfp,xr[gr][ch], targ_bits[gr][ch], noise,
 		      &l3_xmin, l3_enc[gr][ch], 
 		      &scalefac[gr][ch], cod_info, xfsf, ch);
+
 	}
+
       totbits += cod_info->part2_3_length;
       if (gfp->gtkflag) 
 	set_pinfo(gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
@@ -279,7 +284,8 @@ ABR_iteration_loop (lame_global_flags *gfp,
   for (gr = 0; gr < gfc->mode_gr; gr++)
     for (ch = 0; ch < gfc->stereo; ch++) {
       cod_info = &l3_side->gr[gr].ch[ch].tt;
-      best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac,0);
+
+      best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
       if (gfc->use_best_huffman==1 && cod_info->block_type != SHORT_TYPE) {
 	best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
       }
@@ -287,18 +293,12 @@ ABR_iteration_loop (lame_global_flags *gfp,
 	gfc->pinfo->LAMEmainbits[gr][ch]=cod_info->part2_3_length;
       }
       ResvAdjust (gfp,cod_info, l3_side, mean_bits);
-    }
-
-  /*******************************************************************
-   * set the sign of l3_enc from the sign of xr
-   *******************************************************************/
-  for (gr = 0; gr < gfc->mode_gr; gr++)
-    for (ch = 0; ch < gfc->stereo; ch++) {
+      /* set the sign of l3_enc from the sign of xr */
       for ( i = 0; i < 576; i++) {
-        if (xr[gr][ch][i] < 0) l3_enc[gr][ch][i] *= -1;
+	if (xr[gr][ch][i] < 0) l3_enc[gr][ch][i] *= -1;
       }
-    }
 
+    }
   ResvFrameEnd (gfp,l3_side, mean_bits);
 }
 
@@ -458,9 +458,9 @@ VBR_iteration_loop (lame_global_flags *gfp,
 	   *  + cod_info  we will restore our initialized one, see below
 	   */
 	  memcpy( cod_info, &clean_cod_info, sizeof(gr_info) );
-
 	  outer_loop( gfp,xr[gr][ch], this_bits, noise, &l3_xmin,
                       l3_enc[gr][ch], &scalefac[gr][ch], cod_info, xfsf, ch);
+
 
 	  /* is quantization as good as we are looking for ?
            */
@@ -598,7 +598,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
   for (gr = 0; gr < gfc->mode_gr; gr++)
     for (ch = 0; ch < gfc->stereo; ch++) {
       cod_info = &l3_side->gr[gr].ch[ch].tt;
-      best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac,0);
+      best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
       if (gfc->use_best_huffman==1 && cod_info->block_type != SHORT_TYPE) {
 	best_huffman_divide(gfc, gr, ch, cod_info, l3_enc[gr][ch]);
       }
@@ -620,6 +620,8 @@ VBR_iteration_loop (lame_global_flags *gfp,
 
   ResvFrameEnd (gfp,l3_side, mean_bits);
 }
+
+
 
 
 
@@ -727,10 +729,6 @@ void outer_loop(
 
   /* reset of iteration variables */
   memset(&scalefac_w, 0, sizeof(III_scalefac_t));
-
-  if (cod_info->block_type==SHORT_TYPE) 
-    freorder(gfc->scalefac_band.s,xr);
-
   for (i=0;i<576;i++) {
     temp=fabs(xr[i]);
     xrpow[i]=sqrt(sqrt(temp)*temp);
@@ -893,10 +891,6 @@ void outer_loop(
 
   memcpy(cod_info,&save_cod_info,sizeof(save_cod_info));
   cod_info->part2_3_length += cod_info->part2_length;
-  if (cod_info->block_type==SHORT_TYPE) {
-    iun_reorder(gfc->scalefac_band.s,l3_enc);
-    fun_reorder(gfc->scalefac_band.s,xr);
-  }
 
 
   /* finish up */
@@ -1049,7 +1043,6 @@ void inc_subblock_gain(lame_global_flags *gfp,
     lame_internal_flags *gfc=gfp->internal_flags;
 
     fun_reorder(gfc->scalefac_band.s,xrpow);
-
 
     for ( i = 0; i < 3; i++ ) {
 	if (cod_info->subblock_gain[i] >= 7)

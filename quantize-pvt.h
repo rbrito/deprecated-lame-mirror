@@ -63,11 +63,6 @@ int inner_loop( lame_global_flags *gfp,FLOAT8 xrpow[576],
                 gr_info *cod_info);
 
 int calc_xmin( lame_global_flags *gfp,FLOAT8 xr[576],
-               III_psy_ratio *ratio,
-               gr_info *cod_info,
-               III_psy_xmin *l3_xmin);
-
-int rcalc_xmin( lame_global_flags *gfp,FLOAT8 xr[576],
                 III_psy_ratio *ratio,
 	            gr_info *cod_info,
                 III_psy_xmin *l3_xmin);
@@ -114,7 +109,7 @@ void best_huffman_divide(lame_internal_flags *gfc, int gr, int ch, gr_info *cod_
 void best_scalefac_store(lame_global_flags *gfp,int gr, int ch,
 			 int l3_enc[2][2][576],
 			 III_side_info_t *l3_side,
-			 III_scalefac_t scalefac[2][2], int reorder);
+			 III_scalefac_t scalefac[2][2]);
 
 void inc_scalefac_scale(lame_global_flags *gfp,
 			III_scalefac_t *scalefac,

@@ -448,7 +448,7 @@ VBR_noise_shaping
   l3_side = &gfc->l3_side;
   cod_info = &l3_side->gr[gr].ch[ch].tt;
   shortblock = (cod_info->block_type == SHORT_TYPE);
-  *ath_over = rcalc_xmin( gfp,xr, ratio, cod_info, &l3_xmin);
+  *ath_over = calc_xmin( gfp,xr, ratio, cod_info, &l3_xmin);
 
   
   for(i=0;i<576;i++) {
@@ -856,7 +856,7 @@ VBR_quantize(lame_global_flags *gfp,
   totbits=0;
   for (gr = 0; gr < gfc->mode_gr; gr++) {
     for (ch = 0; ch < gfc->stereo; ch++) {
-      best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac,1);
+      best_scalefac_store(gfp,gr, ch, l3_enc, l3_side, scalefac);
       totbits += l3_side->gr[gr].ch[ch].tt.part2_3_length;
     }
   }
@@ -879,7 +879,7 @@ VBR_quantize(lame_global_flags *gfp,
 	 * frame analyzer */
 	gfc->masking_lower=1.0;
 	cod_info = &l3_side->gr[gr].ch[ch].tt;	
-	rcalc_xmin( gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin);
+	calc_xmin( gfp,xr[gr][ch], &ratio[gr][ch], cod_info, &l3_xmin);
 	
 	calc_noise( gfp, xr[gr][ch], l3_enc[gr][ch], cod_info, 
 			      xfsf,distort, &l3_xmin, &scalefac[gr][ch], 
@@ -888,18 +888,8 @@ VBR_quantize(lame_global_flags *gfp,
 	noise[1] = noise_info.max_noise;
 	noise[2] = noise_info.over_avg_noise;
 	noise[3] = noise_info.tot_avg_noise;
-	
-	if (cod_info->block_type==SHORT_TYPE) {
-	  iun_reorder(gfc->scalefac_band.s,l3_enc[gr][ch]);
-	  fun_reorder(gfc->scalefac_band.s,xr[gr][ch]);
-	}
+
 	set_pinfo (gfp, cod_info, &ratio[gr][ch], &scalefac[gr][ch], xr[gr][ch], xfsf, noise, gr, ch);
-
-	if (cod_info->block_type==SHORT_TYPE) {
-	  ireorder(gfc->scalefac_band.s,l3_enc[gr][ch]);
-	  freorder(gfc->scalefac_band.s,xr[gr][ch]);
-	}
-
       }
     }
   }

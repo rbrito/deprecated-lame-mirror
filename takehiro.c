@@ -491,6 +491,9 @@ int r01_bits[],int r01_div[],int r0_tbl[],int r1_tbl[])
     }
 }
 
+
+
+
 void best_huffman_divide(lame_internal_flags *gfc, int gr, int ch, gr_info *gi, int *ix)
 {
     int i, a1, a2;
@@ -624,7 +627,7 @@ chosen and the channel/granule will not be re-encoded.
 void best_scalefac_store(lame_global_flags *gfp,int gr, int ch,
 			 int l3_enc[2][2][576],
 			 III_side_info_t *l3_side,
-			 III_scalefac_t scalefac[2][2],int reorder)
+			 III_scalefac_t scalefac[2][2])
 {
   lame_internal_flags *gfc=gfp->internal_flags;
 
@@ -632,12 +635,6 @@ void best_scalefac_store(lame_global_flags *gfp,int gr, int ch,
     gr_info *gi = &l3_side->gr[gr].ch[ch].tt;
     u_int sfb,i,j,j2,l,start,end;
 
-    if (!reorder) {
-      if (gi->block_type==SHORT_TYPE) {
-	ireorder(gfc->scalefac_band.s,l3_enc[gr][ch]);
-      }
-    }
-    
     /* remove scalefacs from bands with ix=0.  This idea comes
      * from the AAC ISO docs.  added mt 3/00 */
     /* check if l3_enc=0 */
@@ -662,13 +659,6 @@ void best_scalefac_store(lame_global_flags *gfp,int gr, int ch,
 	  j += end-start;
 	}
     }
-
-    if (!reorder) {
-      if (gi->block_type==SHORT_TYPE) {
-	iun_reorder(gfc->scalefac_band.s,l3_enc[gr][ch]);
-      }
-    }
-
 
 
     gi->part2_3_length -= gi->part2_length;
