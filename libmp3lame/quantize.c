@@ -1113,9 +1113,9 @@ calc_min_bits (
          *  >= 1000 on medium surge
          *  >= 3000 on big surge
          */
-        min_pe_bits = (pe-350) * bands/39;
+        min_pe_bits = (pe-350) * bands/(cod_info->sfbmax+3);
     else 
-        min_pe_bits = (pe-350) * bands/22;
+        min_pe_bits = (pe-350) * bands/(cod_info->sfbmax+1);
     
     if (gfc->mode_ext == MPG_MD_MS_LR && ch == 1) {
         /*  side channel will use a lower bit skeleton based on PE
