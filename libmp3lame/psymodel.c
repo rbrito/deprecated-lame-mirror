@@ -1365,7 +1365,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
      *  This is used for attack detection / handling.
      **********************************************************************/
     /* Don't copy the input buffer into a temporary buffer */
-    /* unroll the loop 4 times */
+    /* unroll the loop 2 times */
     for(chn=0;chn<gfc->channels_out;chn++) {
 	static const FLOAT fircoef[] = {
 	    -8.65163e-18,-0.00851586,-6.74764e-18, 0.0209036,
@@ -1695,7 +1695,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 		continue;
 
 	    msum += regcoef_l[sb] * 
-		FAST_LOG(gfc->en[chn].l[sb]
+		log(gfc->en[chn].l[sb]
 		    / (gfc->thm[chn].l[sb]*gfc->masking_lower));
 	}
 	gfc->nsPsy.pe_l[chn] = msum;
@@ -1708,8 +1708,9 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 		    || gfc->en[chn].s[sb][sblock]
 		    <= gfc->thm[chn].s[sb][sblock] * gfc->masking_lower)
 		    continue;
+
 		msum += regcoef_s[sb] *
-		    FAST_LOG(gfc->en[chn].s[sb][sblock]
+		    log(gfc->en[chn].s[sb][sblock]
 			/ (gfc->thm[chn].s[sb][sblock] * gfc->masking_lower));
 	    }
 	}
