@@ -93,17 +93,30 @@ ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, i
  *          from the bit reservoir and at most 8*1440 bit from the current 
  *          frame (320 kbps, 32 kHz), so 8*1951 bit is the largest possible 
  *          value for MPEG-1 and -2)
- *      fullFrameBits:
+ *       
+ *          maximum allowed granule/channel size times 4 = 8*2047 bits.,
+ *          so this is the absolute maximum supported by the format.
  *
- *      mean_bits:
+ *          
+ *      fullFrameBits:  maximum number of bits available for encoding
+ *                      the current frame.
+ *
+ *      mean_bits:      target number of bits per granule.  
  *
  *      frameLength:
  *
- *      gfc->ResvMax:
+ *      gfc->ResvMax:   maximum allowed reservoir 
  *
- *      gfc->ResvSize:
+ *      gfc->ResvSize:  current reservoir size
  *
  *      l3_side->resvDrain_pre:
+ *         ancillary data to be added to previous frame:
+ *         (only usefull in VBR modes if it is possible to have
+ *         maxmp3buf < fullFrameBits)).  Currently disabled, 
+ *         see #define NEW_DRAIN
+ *
+ *      l3_side->resvDrain_post:
+ *         ancillary data to be added to this frame:
  *
  */
 
@@ -111,15 +124,24 @@ ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, i
     resvLimit = (gfp->version==1) ? 8*511 : 8*255 ;
 
 
-    /* maximum allowed frame size */
+    /* maximum allowed frame size.  dont use more than this number of
+       bits, even if the frame has the space for them: */
     maxmp3buf = (gfp->strict_ISO) ? 8*960 : 8*2047;
+
+    /* Bouvigne suggests this more lax interpretation of the ISO doc 
+       instead of using 8*960. */
     if (gfp->strict_ISO) {
         if (gfp->version==1)
             maxmp3buf=8*((int)(320000/(gfp->out_samplerate / (FLOAT8)1152)/8 +.5));
         else
             maxmp3buf=8*((int)(160000/(gfp->out_samplerate / (FLOAT8)576)/8 +.5));
-    } else
-        maxmp3buf=8*1440; /*size of a 320kpbs 32kHz frame*/
+    }
+
+
+
+
+
+
 
 
 
@@ -241,7 +263,7 @@ ResvFrameEnd(lame_internal_flags *gfc, III_side_info_t *l3_side, int mean_bits)
     }
 
 
-#define NEW_DRAINXX
+#undef NEW_DRAIN
 #ifdef NEW_DRAIN
     /* drain as many bits as possible into previous frame ancillary data
      * In particular, in VBR mode ResvMax may have changed, and we have

@@ -3,16 +3,6 @@ frontend: a bunch of static variables (input_format, swapbytes,
           get_audio.  should be cleaned up.
 
 
-Resolve this:
-http://pub41.ezboard.com/fr3mixfrm1.showMessage?topicID=614.topic
->From the above link, we now have a report of a user using 3.86 for 256 and
-320 cbr and who encountered problems.
-He's using a NAD C660 CD player which uses a Cirrus Logic dsp for decoding.
-On this player, he encountered some pops and clicks.
-I asked him to try adding --striclty-enforce-iso, and this solved his
-problem.
-
-
 
 
 1.
@@ -30,6 +20,8 @@ be fixed.
 modify mpglib to output
 floating point and have finaly quantization step a
 easy-to-change module so it can output other than 16bit.
+(replace mpglib with MAD?  MAD has agreed to write a call back
+which will return all data needed by the frame analyzer)
 
 4.
 Clipping detection.  Compute statistics for input near 2^15, 
@@ -64,13 +56,18 @@ higher quality.
 
 
 997..
-ACM wrapper for LAME.
+ACM wrapper for LAME.  Note: ACM is obsolete and was replaced
+with DirectShow.  We do have a beta directshow filter.
 
 Contact "Florian Bruckner" <h9651030@miraculix.wu-wien.ac.at> for info - 
 he is working on the VorbisACM.
 
+
+
 998.
 Merge GOGO's fast assembler routines.
+
+
 
 
 999.
