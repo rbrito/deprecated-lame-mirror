@@ -76,7 +76,7 @@ iteration_loop( lame_global_flags *gfp,
     
     max_bits=on_pe(gfp,pe,l3_side,targ_bits,mean_bits, gr);
 
-    if (reduce_sidechannel) 
+    if (gfc->mode_ext==MPG_MD_MS_LR) 
       reduce_side(targ_bits,ms_ener_ratio[gr],mean_bits,max_bits);
     
     for (ch=0 ; ch < gfc->stereo ; ch ++) {
@@ -214,10 +214,22 @@ VBR_iteration_loop (lame_global_flags *gfp,
   int       mean_bits;
   int       i,ch, gr, analog_silence;
   int	    reparted = 0;
+  int       reduce_sidechannel=0;
   III_side_info_t *l3_side;
 
   l3_side = &gfc->l3_side;
   iteration_init(gfp,l3_side,l3_enc);
+
+#ifdef  RH_SIDE_VBR
+    /* my experiences are, that side channel reduction  
+     * does more harm than good when VBR encoding
+     * (Robert.Hegemann@gmx.de 2000-02-18)
+     */
+#else
+  if (gfc->mode_ext==MPG_MD_MS_LR) 
+    reduce_sidechannel=1;
+#endif
+
 
 #ifdef RH_QUALITY_CONTROL
   /* with RH_QUALITY_CONTROL we have to set masking_lower only once */
@@ -249,15 +261,9 @@ VBR_iteration_loop (lame_global_flags *gfp,
   analog_silence=0;
   for (gr = 0; gr < gfc->mode_gr; gr++) {
     int num_chan=gfc->stereo;
-#ifdef  RH_SIDE_VBR
-    /* my experiences are, that side channel reduction  
-     * does more harm than good when VBR encoding
-     * (Robert.Hegemann@gmx.de 2000-02-18)
-     */
-#else
     /* determine quality based on mid channel only */
     if (reduce_sidechannel) num_chan=1;  
-#endif
+
 
     /* copy data to be quantized into xr */
     if (gfc->mode_ext==MPG_MD_MS_LR) 
@@ -430,12 +436,6 @@ VBR_iteration_loop (lame_global_flags *gfp,
   } /* for gr */
 
 
-#ifdef  RH_SIDE_VBR
-  /* my experiences are, that side channel reduction  
-   * does more harm than good when VBR encoding
-   * (Robert.Hegemann@gmx.de 2000-02-18)
-   */
-#else	
   if (reduce_sidechannel) {
     /* number of bits needed was found for MID channel above.  Use formula
      * (fixed bitrate code) to set the side channel bits */
@@ -446,7 +446,6 @@ VBR_iteration_loop (lame_global_flags *gfp,
       used_bits += save_bits[gr][1];
     }
   }
-#endif
 
   /******************************************************************
    * find lowest bitrate able to hold used bits
@@ -481,11 +480,7 @@ VBR_iteration_loop (lame_global_flags *gfp,
 
   for(gr = 0; gr < gfc->mode_gr; gr++) {
     for(ch = 0; ch < gfc->stereo; ch++) {
-#ifdef RH_SIDE_VBR
-      if (reparted)
-#else
       if (reparted || (reduce_sidechannel && ch == 1))
-#endif
       {
         cod_info = &l3_side->gr[gr].ch[ch].tt;
 	       

@@ -5,7 +5,6 @@
 #include "quantize-pvt.h"
 
 FLOAT masking_lower=1;
-int reduce_sidechannel;
 
 
 const int slen1_tab[16] = { 0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4 };
@@ -158,10 +157,7 @@ iteration_init( lame_global_flags *gfp,III_side_info_t *l3_side, int l3_enc[2][2
   }
 
 
-  reduce_sidechannel=0;
-  if (gfc->mode_ext==MPG_MD_MS_LR) {
-    reduce_sidechannel=1;
-  }
+
   
   /* some intializations. */
   for ( gr = 0; gr < gfc->mode_gr; gr++ ){
