@@ -1648,7 +1648,7 @@ fi
 
 
 
-LIB_TARGETS="libmp3lame/libmp3lame.a"
+LIB_TARGETS="libmp3lame.a"
 INSTALL_TARGETS="install_static_lib"
 
 
@@ -1666,7 +1666,7 @@ fi
 if test "$CONFIG_SHARED" != "no" ; then
 	case $host in
 	*-*-linux*)
-		LIB_TARGETS="$LIB_TARGETS libmp3lame/libmp3lame.so"
+		LIB_TARGETS="$LIB_TARGETS libmp3lame.so"
 		INSTALL_TARGETS="$INSTALL_TARGETS install_shared_lib"
 		# need position independent code for shared library
 		CONFIG_OPTS="$CONFIG_OPTS -fPIC"
