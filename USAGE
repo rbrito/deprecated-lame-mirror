@@ -163,7 +163,7 @@ ID3 tagging:
 
 Note: A version 2 tag will NOT be added unless one of the input fields
 won't fit in a version 1 tag (e.g. the title string is longer than 30
-characters), or the `--add-id3v2' or `--id3v2-only' options are used,
+characters), or the '--add-id3v2' or '--id3v2-only' options are used,
 or output is redirected to stdout.
 
 

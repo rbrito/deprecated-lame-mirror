@@ -141,11 +141,11 @@ putbits_noheaders(lame_global_flags *gfp, int val, int j)
 #ifdef KLEMM_14 /*======================================================*/
 
 /*
-  Some combinations of bitrate, Fs, and stereo make it impossible to stuff
-  out a frame using just main_data, due to the limited number of bits to
-  indicate main_data_length. In these situations, we put stuffing bits into
-  the ancillary data...
-*/
+ * Some combinations of bitrate, Fs, and stereo make it impossible to stuff
+ * out a frame using just main_data, due to the limited number of bits to
+ * indicate main_data_length. In these situations, we put stuffing bits into
+ * the ancillary data...
+ */
 
 INLINE void drain_into_ancillary ( lame_global_flags* const gfp, int remainingBits )
 {
@@ -364,8 +364,14 @@ INLINE void encodeSideInfo2 ( lame_global_flags* const gfp, int bitsPerFrame )
     }
 }
 
+/* 
+ * For region 1 (only values of -1, 0 and +1) one step codes 4 values.
+ * This table contains the coded 'huffmancode' in bits 7...4 and the
+ * value 'p' in bit 3...0. So you don't need a lot of unpredictable jumps
+ * to code this area. Merge the 4 values and make a table lookup.
+ */
 
-static unsigned char klemm_table [] = {
+static unsigned char klemm_table [3*3*3*3] = {
     0xFF, 0x7E, 0xEF, 0x7D, 0x3C, 0x6D, 0xDF, 0x6E, 0xCF,
     0x7B, 0x3A, 0x6B, 0x39, 0x18, 0x29, 0x5B, 0x2A, 0x4B,
     0xBF, 0x5E, 0xAF, 0x5D, 0x2C, 0x4D, 0x9F, 0x4E, 0x8F,

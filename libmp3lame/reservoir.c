@@ -60,7 +60,8 @@ ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, i
 	gfc->ResvMax = maxmp3buf - frameLength;
     if (gfp->disable_reservoir) gfc->ResvMax=0;
     if ( gfc->ResvMax > resvLimit ) gfc->ResvMax = resvLimit;
-    assert(0==(gfc->ResvMax % 8));
+    assert ( 0 == gfc->ResvMax % 8 );
+    assert ( gfc->ResvMax >= 0 );
 
     l3_side->resvDrain_pre = 0;
 
@@ -86,9 +87,10 @@ ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, i
 void ResvMaxBits(lame_global_flags *gfp, int mean_bits, int *targ_bits, int *extra_bits)
 {
   lame_internal_flags *gfc=gfp->internal_flags;
-  int add_bits,full_fac;
+  int add_bits;
+  int full_fac;
+  
   *targ_bits = mean_bits ;
-
 
   /* extra bits if the reservoir is almost full */
   full_fac=9;
@@ -147,7 +149,7 @@ ResvFrameEnd(lame_internal_flags *gfc, III_side_info_t *l3_side, int mean_bits)
 
 
     /* just in case mean_bits is odd, this is necessary... */
-    if ( gfc->stereo == 2 && mean_bits & 1)
+    if ( gfc->stereo == 2  &&  (mean_bits & 1) )
 	gfc->ResvSize += 1;
 
     stuffingBits=0;
@@ -155,13 +157,14 @@ ResvFrameEnd(lame_internal_flags *gfc, III_side_info_t *l3_side, int mean_bits)
     l3_side->resvDrain_pre = 0;
 
     /* we must be byte aligned */
-    if ( (over_bits = (gfc->ResvSize % 8)) )
+    if ( (over_bits = gfc->ResvSize % 8) != 0 )
 	stuffingBits += over_bits;
 
 
     over_bits = (gfc->ResvSize - stuffingBits) - gfc->ResvMax;
     if (over_bits > 0) {
-      assert(0==(over_bits % 8 ));
+      assert ( 0 == over_bits % 8 );
+      assert ( over_bits >= 0 );
       stuffingBits += over_bits;
     }
 
@@ -184,6 +187,7 @@ ResvFrameEnd(lame_internal_flags *gfc, III_side_info_t *l3_side, int mean_bits)
      * be added to the reservoir, and we will deal with them next frame.
      * If the next frame is at a lower bitrate, it may have a larger ResvMax,
      * and we will not have to waste these bits!  mt 4/00 */
+    assert ( stuffingBits >= 0 );
     l3_side->resvDrain_post += (stuffingBits % 8);
     gfc->ResvSize -= stuffingBits % 8;
   }

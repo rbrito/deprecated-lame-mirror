@@ -21,6 +21,8 @@
 
 /* $Id$ */
 
+#define KLEMM_10
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -38,28 +40,20 @@
 #include "timestatus.h"
 #include "lametime.h"
 
-#ifdef _WIN32
-// /* needed to set stdin to binary on windoze machines */
-//  #include <io.h>
-//  #include <fcntl.h>
-#else
-//  #include <unistd.h>
-#endif
-
 
 /* global data for get_audio.c. */
 int count_samples_carefully;
 int pcmbitwidth;
-mp3data_struct mp3input_data;
+mp3data_struct mp3input_data; /* used by Ogg and MP3 */
 unsigned int num_samples_read;             
 FILE *musicin;
 enum byte_order NativeByteOrder = order_unknown;
 
 
 #ifdef AMIGA_MPEGA
-int lame_decode_initfile(char *fullname,mp3data_struct *mp3data);
+int  lame_decode_initfile ( const char* fullname, mp3data_struct* const mp3data );
 #else
-int lame_decode_initfile(FILE *fd,mp3data_struct *mp3data);
+int  lame_decode_initfile ( FILE* const fd,       mp3data_struct* const mp3data );
 #endif
 
 /* read mp3 file until mpglib returns one frame of PCM data */
@@ -153,16 +147,45 @@ void close_infile(void)
 }
 
 #ifdef KLEMM_10
-void SwapBytesInWords ( short* ptr, int words )
+
+void SwapBytesInWords ( short* ptr, size_t short_words )  /* Some speedy code */
 {
-    int  val;
-    while ( words-- > 0 ) {
-        val    = *ptr;
-        *ptr++ = ((val<<8) & 0xFF00) | ((val>>8) & 0x00FF);
+    unsigned long  val;
+    unsigned long* p = (unsigned long*) ptr;
+    
+    assert ( sizeof(short) == 2  &&  CHAR_BITS == 8 );
+    
+    switch ( sizeof(val) ) {
+    case 4:  
+        for ( ; short_words >= 2; short_words -= 2, p++ ) {
+            val = *p;
+            *p  = ((val<<8) & 0xFF00FF00) | ((val>>8) & 0x00FF00FF);
+        }
+	ptr = (short*)p;
+        for ( ; short_words >= 1; short_words -= 1, ptr++ ) {
+            val   = *ptr;
+            *ptr  = ((val<<8) & 0xFF00) | ((val>>8) & 0x00FF);
+        }
+	break;
+    case 8:
+        for ( ; short_words >= 4; short_words -= 4, p++ ) {
+            val = *p;
+            *p  = ((val<<8) & 0xFF00FF00FF00FF00) | ((val>>8) & 0x00FF00FF00FF00FF);
+        }
+	ptr = (short*)p;
+        for ( ; short_words >= 1; short_words -= 1, ptr++ ) {
+            val   = *ptr;
+            *ptr  = ((val<<8) & 0xFF00) | ((val>>8) & 0x00FF);
+        }
+        break;
+    default:
+        assert (0);
+	break;
     }
+    assert ( short_words == 0 );
 }
 #else
-void SwapBytesInWords ( short* loc, int words )
+void SwapBytesInWords ( short* loc, size_t words )
 {
     int i;
     short thisval;
@@ -210,24 +233,25 @@ enum byte_order DetermineByteOrder(void)
 *   aligns the data for future processing, and separates the
 *   left and right channels
 *
-*
 ************************************************************************/
-int get_audio(lame_global_flags *gfp,short buffer[2][1152])
+int  get_audio ( lame_global_flags* const gfp, short buffer [2] [1152] )
 {
+    int           num_channels = gfp->num_channels;
+    short         insamp [ 2*1152 ];
+    int           samples_read;
+    int           framesize;
+    int           samples_to_read;
+    unsigned int  remaining;
+    int           j;
+    short*        p;
 
-  int		j;
-  short	insamp[2304];
-  short* p;
-  int samples_read;
-  int framesize,samples_to_read;
-  unsigned int remaining;
-  int num_channels = gfp->num_channels;
-
-  /* NOTE: LAME can now handle arbritray size input data packets,
-   * so there is no reason to read the input data in chuncks of
-   * size "gfp->framesize".  EXCEPT:  the LAME graphical frame analyzer 
-   * will get out of sync if we read more than framesize worth of data.
-   */
+    /* 
+     * NOTE: LAME can now handle arbritray size input data packets,
+     * so there is no reason to read the input data in chuncks of
+     * size "gfp->framesize".  EXCEPT:  the LAME graphical frame analyzer 
+     * will get out of sync if we read more than framesize worth of data.
+     */
+     
     samples_to_read  = framesize  = gfp->framesize;
     assert (framesize <= 1152);
 
@@ -287,61 +311,73 @@ int get_audio(lame_global_flags *gfp,short buffer[2][1152])
 
 
 
-int read_samples_ogg(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2][1152],int stereo)
+int  read_samples_ogg ( 
+        lame_global_flags* const  gfp,
+	FILE* const               musicin,
+	short int                 oggpcm [2] [1152],
+	const int                 stereo )
 {
+    int  out = 0;
+
 #ifdef HAVE_VORBIS
-  int out=0;
+    static const char  type_name [] = "Ogg Vorbis file";
 
-  out=lame_decode_ogg_fromfile(musicin,mpg123pcm[0],mpg123pcm[1],&mp3input_data);
-  /* out = -1:  error, probably EOF */
-  /* out = 0:   not possible with lame_decode_fromfile() */
-  /* out = number of output samples */
+    out = lame_decode_ogg_fromfile ( musicin, oggpcm[0], oggpcm[1], &mp3input_data );
+    /*
+     * out < 0:  error, probably EOF
+     * out = 0:  not possible with lame_decode_fromfile() ???
+     * out > 0:  number of output samples
+     */
 
-    if ( -1 == out ) {
-	memset ( mpg123pcm, 0, sizeof(**mpg123pcm)*1152*2 );
+    if ( out < 0 ) {
+	memset ( oggpcm, 0, sizeof (**oggpcm) * 2 * 1152 );
 	return 0;
     }
 
-  if (gfp->num_channels != mp3input_data.stereo) {
-    fprintf(stderr,"Error: number of channels has changed in mp3 file - not supported. \n");
-  }
-  if (gfp->in_samplerate != mp3input_data.samplerate) {
-    fprintf(stderr,"Error: samplerate has changed in mp3 file - not supported. \n");
-  }
+    if ( gfp->num_channels != mp3input_data.stereo )
+        fprintf ( stderr, "Error: number of channels has changed in %s - not supported\n", type_name );
+    if ( gfp->in_samplerate != mp3input_data.samplerate )
+        fprintf ( stderr, "Error: sample frequency has changed in %s - not supported\n", type_name );
 
-
-  return out;
 #else
-  return -1; /* wanna read ogg without vorbis support? */
+    out = -1; /* wanna read ogg without vorbis support? */
 #endif
+
+    return out;
 }
 
 
-int read_samples_mp3(lame_global_flags *gfp,FILE *musicin,short int mpg123pcm[2][1152],int stereo)
+int  read_samples_mp3 (
+        lame_global_flags* const  gfp,
+	FILE* const               musicin,
+	short int                 mpg123pcm [2] [1152],
+	int                       stereo )
 {
-#if (defined  AMIGA_MPEGA || defined HAVE_MPGLIB)
-  int out;
+    int  out;
+#if defined(AMIGA_MPEGA)  ||  defined(HAVE_MPGLIB)
+    static const char  type_name [] = "MP3 file";
 
-  out=lame_decode_fromfile(musicin,mpg123pcm[0],mpg123pcm[1],&mp3input_data);
-  /* out = -1:  error, probably EOF */
-  /* out = 0:   not possible with lame_decode_fromfile() */
-  /* out = number of output samples */
+    out = lame_decode_fromfile ( musicin, mpg123pcm[0], mpg123pcm[1], &mp3input_data );
+    /*
+     * out < 0:  error, probably EOF
+     * out = 0:  not possible with lame_decode_fromfile() ???
+     * out > 0:  number of output samples
+     */
 
-  if ( -1 == out ) {
-    memset ( mpg123pcm, 0, sizeof(**mpg123pcm)*1152*2 );
-    return 0;
-  }
+    if ( out < 0 ) {
+	memset ( mpg123pcm, 0, sizeof (**mpg123pcm) * 2 * 1152 );
+	return 0;
+    }
 
-  if (gfp->num_channels != mp3input_data.stereo) {
-    fprintf(stderr,"Error: number of channels has changed in mp3 file - not supported. \n");
-  }
-  if (gfp->in_samplerate != mp3input_data.samplerate) {
-    fprintf(stderr,"Error: samplerate has changed in mp3 file - not supported. \n");
-  }
-  return out;
+    if ( gfp->num_channels != mp3input_data.stereo )
+        fprintf ( stderr, "Error: number of channels has changed in %s - not supported\n", type_name );
+    if ( gfp->in_samplerate != mp3input_data.samplerate )
+        fprintf ( stderr, "Error: sample frequency has changed in %s - not supported\n", type_name );
+
 #else
-  return -1;
+    out = -1;
 #endif
+    return out;
 }
 
 
@@ -394,18 +430,18 @@ int lame_decoder(lame_global_flags *gfp, FILE *outf,int skip, char *inPath, char
     switch ( input_format ) {
     case sf_mp3:
 	skip += 528+1;   /* mp3 decoder has a 528 sample delay, plus user supplied "skip" */
-	fprintf(stderr, "MPEG-%u%s Layer %.*s", 2 - gfp->version, gfp->out_samplerate < 16000 ? ".5" : "",
-	       3, "III" );
+	fprintf(stderr, "MPEG-%u%s Layer %s", 2 - gfp->version, gfp->out_samplerate < 16000 ? ".5" : "",
+	       "III" );
 	break;
     case sf_mp2:
 	skip += 240+1;  
-	fprintf(stderr, "MPEG-%u%s Layer %.*s", 2 - gfp->version, gfp->out_samplerate < 16000 ? ".5" : "",
-	       2, "III" );
+	fprintf(stderr, "MPEG-%u%s Layer %s", 2 - gfp->version, gfp->out_samplerate < 16000 ? ".5" : "",
+	       "II" );
 	break;
     case sf_mp1:
 	skip += 240+1;  
-	fprintf(stderr, "MPEG-%u%s Layer %.*s", 2 - gfp->version, gfp->out_samplerate < 16000 ? ".5" : "",
-	       1, "III" );
+	fprintf(stderr, "MPEG-%u%s Layer %s", 2 - gfp->version, gfp->out_samplerate < 16000 ? ".5" : "",
+	       "I" );
 	break;
     case sf_ogg:
         fprintf(stderr, "Ogg Vorbis");
@@ -451,8 +487,7 @@ int lame_decoder(lame_global_flags *gfp, FILE *outf,int skip, char *inPath, char
     	
     wavsize       = -skip;
     WriteFunction = swapbytes  ?  WriteBytesSwapped  :  WriteBytes;
-    mp3input_data.totalframes = 
-      mp3input_data.nsamp/mp3input_data.framesize;
+    mp3input_data.totalframes = mp3input_data.nsamp / mp3input_data.framesize;
     
     assert ( gfp->num_channels >= 1 && gfp->num_channels <= 2 );
     
@@ -937,54 +972,44 @@ parse_wave_header(lame_global_flags *gfp,FILE *sf)
 
 
 /************************************************************************
-*
-* aiff_check
+* aiff_check2
 *
 * PURPOSE:	Checks AIFF header information to make sure it is valid.
-*			Exits if not.
-*
+*	        returns 0 on success, 1 on errors
 ************************************************************************/
 
-static void
-aiff_check2(char *file_name, IFF_AIFF *pcm_aiff_data)
+int  aiff_check2 ( const char* file_name, IFF_AIFF* const pcm_aiff_data )
 {
-	if (pcm_aiff_data->sampleType != IFF_ID_SSND) {
-	   fprintf(stderr,"Sound data is not PCM in \"%s\".\n", file_name);
-	   exit(1);
-	}
-
-#define         BITS_IN_A_BYTE          8
-	if (pcm_aiff_data->sampleSize != sizeof(short) * BITS_IN_A_BYTE) {
-		fprintf(stderr,"Sound data is not %d bits in \"%s\".\n",
-				(unsigned int) sizeof(short) * BITS_IN_A_BYTE, file_name);
-		exit(1);
-	}
-
-	if (pcm_aiff_data->numChannels != 1 &&
-		pcm_aiff_data->numChannels != 2) {
-	   fprintf(stderr,"Sound data is not mono or stereo in \"%s\".\n",
-			   file_name);
-	   exit(1);
-	}
-
-	if (pcm_aiff_data->blkAlgn.blockSize != 0) {
-	   fprintf(stderr,"Block size is not %d bytes in \"%s\".\n",
-			   0, file_name);
-	   exit(1);
-	}
-
-	if (pcm_aiff_data->blkAlgn.offset != 0) {
-	   fprintf(stderr,"Block offset is not %d bytes in \"%s\".\n",
-			   0, file_name);
-	   exit(1);
-	}
+    if ( pcm_aiff_data->sampleType != IFF_ID_SSND ) {
+        fprintf ( stderr, "Sound data is not PCM in '%s'\n", file_name );
+	return 1;
+    }
+    if ( pcm_aiff_data->sampleSize != sizeof(short) * CHAR_BIT ) {
+        fprintf ( stderr, "Sound data is not %u bits in '%s'\n", 
+	          (unsigned int) sizeof(short) * CHAR_BIT, file_name );
+        return 1;
+    }
+    if ( pcm_aiff_data->numChannels != 1  &&  pcm_aiff_data->numChannels != 2 ) {
+        fprintf ( stderr, "Sound data is not mono or stereo in '%s'\n", file_name );
+        return 1;
+    }
+    if ( pcm_aiff_data->blkAlgn.blockSize != 0 ) {
+        fprintf ( stderr, "Block size is not 0 bytes in '%s'\n", file_name );
+        return 1;
+    }
+    if ( pcm_aiff_data->blkAlgn.offset != 0 ) {
+        fprintf ( stderr, "Block offset is not 0 bytes in '%s'\n", file_name );
+        return 1;
+    }
+    
+    return 0;
 }
 
 /*****************************************************************************
  *
  *	Read Audio Interchange File Format (AIFF) headers.
  *
- *	By the time we get here the first 32-bits of the file have already been
+ *	By the time we get here the first 32 bits of the file have already been
  *	read, and we're pretty sure that we're looking at an AIFF file.
  *
  *****************************************************************************/
@@ -1057,10 +1082,11 @@ parse_aiff_header(lame_global_flags *gfp,FILE *sf)
 	/* DEBUGF("Parsed AIFF %d\n", is_aiff); */
 	if (is_aiff) {
 		/* make sure the header is sane */
-		aiff_check2("name", &aiff_info);
+		if ( 0 != aiff_check2 ( "name" /*????????????*/, &aiff_info) )
+		    return 0;
 		gfp->num_channels  = aiff_info.numChannels;
 		gfp->in_samplerate = aiff_info.sampleRate;
-		pcmbitwidth =   aiff_info.sampleSize;
+		pcmbitwidth        = aiff_info.sampleSize;
 		gfp->num_samples   = aiff_info.numSampleFrames;
 	}
 	return is_aiff;

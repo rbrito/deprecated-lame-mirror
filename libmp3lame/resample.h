@@ -89,8 +89,9 @@ extern scalar_t   scalar12;
 extern scalar_t   scalar16;
 extern scalar_t   scalar20;
 extern scalar_t   scalar24;
-extern scalar_t   scalar64;
-extern scalarn_t  scalar;
+extern scalar_t   scalar32;
+extern scalarn_t  scalar4n;
+extern scalarn_t  scalar1n;
 
 void init_scalar_functions ( const lame_internal_flags *gfc );
 
@@ -128,6 +129,7 @@ float_t  scalar12_float32_3DNow ( const float32_t* p, const float32_t* q );
 float_t  scalar16_float32_3DNow ( const float32_t* p, const float32_t* q );
 float_t  scalar20_float32_3DNow ( const float32_t* p, const float32_t* q );
 float_t  scalar24_float32_3DNow ( const float32_t* p, const float32_t* q );
+float_t  scalar32_float32_3DNow ( const float32_t* p, const float32_t* q );
 float_t  scalar4n_float32_3DNow ( const float32_t* p, const float32_t* q, const size_t len );
 float_t  scalar1n_float32_3DNow ( const float32_t* p, const float32_t* q, const size_t len );
 
@@ -137,6 +139,7 @@ float_t  scalar12_float32_SIMD  ( const float32_t* p, const float32_t* q );
 float_t  scalar16_float32_SIMD  ( const float32_t* p, const float32_t* q );
 float_t  scalar20_float32_SIMD  ( const float32_t* p, const float32_t* q );
 float_t  scalar24_float32_SIMD  ( const float32_t* p, const float32_t* q );
+float_t  scalar32_float32_SIMD  ( const float32_t* p, const float32_t* q );
 float_t  scalar4n_float32_SIMD  ( const float32_t* p, const float32_t* q, const size_t len );
 float_t  scalar1n_float32_SIMD  ( const float32_t* p, const float32_t* q, const size_t len );
 
@@ -146,6 +149,7 @@ float_t  scalar12_float32       ( const float32_t* p, const float32_t* q );
 float_t  scalar16_float32       ( const float32_t* p, const float32_t* q );
 float_t  scalar20_float32       ( const float32_t* p, const float32_t* q );
 float_t  scalar24_float32       ( const float32_t* p, const float32_t* q );
+float_t  scalar32_float32       ( const float32_t* p, const float32_t* q );
 float_t  scalar4n_float32       ( const float32_t* p, const float32_t* q, const size_t len );
 float_t  scalar1n_float32       ( const float32_t* p, const float32_t* q, const size_t len );
 

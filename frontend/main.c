@@ -182,20 +182,20 @@ int main(int argc, char **argv)
   }
 
   if (silent || gf.VBR==vbr_off) {
-    brhist = 0;  /* turn of VBR historgram */
+    brhist = 0;  /* turn off VBR histogram */
   }
 
 #ifdef BRHIST
   if (brhist) {
     if (brhist_init(&gf, gf.VBR_min_bitrate_kbps,gf.VBR_max_bitrate_kbps)) {
-      /* fall to initialize */
+      /* fail to initialize */
       brhist = 0;
     }
   }
 #endif
 #ifdef KLEMM_13
   else {
-    brhist_init(&gf, 128, 128 );
+    brhist_init(&gf, 128, 128 );   // Dirty hack
   }
 #endif
 

@@ -286,11 +286,11 @@ int  long_help ( const lame_global_flags* gfp, FILE* const fp, const char* Progr
               "\n"
               "    Note: A version 2 tag will NOT be added unless one of the input fields\n"
               "    won't fit in a version 1 tag (e.g. the title string is longer than 30\n"
-              "    characters), or the `--add-id3v2' or `--id3v2-only' options are used,\n"
+              "    characters), or the '--add-id3v2' or '--id3v2-only' options are used,\n"
               "    or output is redirected to stdout."
 #if defined(HAVE_VORBIS)
               "\n\n"
-              "    Note: All `--t*' options (except those for track and genre) work for Ogg\n"
+              "    Note: All '--t*' options (except those for track and genre) work for Ogg\n"
               "    Vorbis output, but other ID3-specific options are ignored."
 #endif              
 #if defined(HAVE_GTK)

@@ -215,6 +215,18 @@ float_t  scalar24_float32 ( const sample_t* p, const sample_t* q )
           + p[20]*q[20] + p[21]*q[21] + p[22]*q[22] + p[23]*q[23];
 }
 
+float_t  scalar32_float32 ( const sample_t* p, const sample_t* q )
+{
+    return  p[ 0]*q[ 0] + p[ 1]*q[ 1] + p[ 2]*q[ 2] + p[ 3]*q[ 3]
+          + p[ 4]*q[ 4] + p[ 5]*q[ 5] + p[ 6]*q[ 6] + p[ 7]*q[ 7]
+          + p[ 8]*q[ 8] + p[ 9]*q[ 9] + p[10]*q[10] + p[11]*q[11]
+          + p[12]*q[12] + p[13]*q[13] + p[14]*q[14] + p[15]*q[15]
+          + p[16]*q[16] + p[17]*q[17] + p[18]*q[18] + p[19]*q[19]
+          + p[20]*q[20] + p[21]*q[21] + p[22]*q[22] + p[23]*q[23]
+          + p[24]*q[24] + p[25]*q[25] + p[26]*q[26] + p[27]*q[27]
+          + p[28]*q[28] + p[29]*q[29] + p[30]*q[30] + p[31]*q[31];
+}
+
 float_t  scalar4n_float32 ( const sample_t* p, const sample_t* q, size_t len )
 {
     double sum = p[0]*q[0] + p[1]*q[1] + p[2]*q[2] + p[3]*q[3];
@@ -261,6 +273,7 @@ void init_scalar_functions ( const lame_internal_flags* const gfc )
     scalar16 = scalar16_float32;
     scalar20 = scalar20_float32;
     scalar24 = scalar24_float32;
+    scalar32 = scalar32_float32;
     scalar4n = scalar4n_float32;
     scalar1n = scalar1n_float32;
 
@@ -271,6 +284,7 @@ void init_scalar_functions ( const lame_internal_flags* const gfc )
         scalar16 = scalar16_float32_i387;
         scalar20 = scalar20_float32_i387;
         scalar24 = scalar24_float32_i387;
+        scalar32 = scalar32_float32_i387;
         scalar4n = scalar4n_float32_i387;
         scalar1n = scalar1n_float32_i387;
     }
@@ -282,6 +296,7 @@ void init_scalar_functions ( const lame_internal_flags* const gfc )
         scalar16 = scalar16_float32_3DNow;
         scalar20 = scalar20_float32_3DNow;
         scalar24 = scalar24_float32_3DNow;
+        scalar32 = scalar32_float32_3DNow;
         scalar4n = scalar4n_float32_3DNow;
         scalar1n = scalar1n_float32_3DNow;
     }
@@ -293,6 +308,7 @@ void init_scalar_functions ( const lame_internal_flags* const gfc )
         scalar16 = scalar16_float32_SIMD;
         scalar20 = scalar20_float32_SIMD;
         scalar24 = scalar24_float32_SIMD;
+        scalar32 = scalar32_float32_SIMD;
         scalar4n = scalar4n_float32_SIMD;
         scalar1n = scalar1n_float32_SIMD;
     }

@@ -28,10 +28,10 @@ extern const FLOAT psy_data [];
 #define HTN	34
  
 struct huffcodetab {
-    const int    xlen; 	        /*max. x-index+			      	*/ 
-    const int    linmax;	/*max number to be stored in linbits	*/
-    const int*   table;	/*pointer to array[xlen][ylen]		*/
-    const char*  hlen;	        /*pointer to array[xlen][ylen]		*/
+    const int    xlen; 	        /* max. x-index+			*/ 
+    const int    linmax;	/* max number to be stored in linbits	*/
+    const int*   table;	        /* pointer to array[xlen][ylen]		*/
+    const char*  hlen;	        /* pointer to array[xlen][ylen]		*/
 };
 
 extern const struct huffcodetab ht [HTN];

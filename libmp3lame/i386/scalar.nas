@@ -317,6 +317,111 @@ proc	scalar24_float32_i387
 endproc
 
 
+proc	scalar32_float32_i387
+%$p	arg	4
+%$q	arg	4
+;;;	alloc
+
+        mov     eax,[sp(%$p)]
+        mov     edx,[sp(%$q)]
+	fld     dword [eax]
+        fmul    dword [edx]
+	fld     dword [eax +  4]
+        fmul    dword [edx +  4]
+        faddp   st1,st0
+	fld     dword [eax +  8]
+        fmul    dword [edx +  8]
+        faddp   st1,st0
+	fld     dword [eax + 12]
+        fmul    dword [edx + 12]
+        faddp   st1,st0    
+	fld     dword [eax + 16]
+        fmul    dword [edx + 16]
+        faddp   st1,st0    
+	fld     dword [eax + 20]
+        fmul    dword [edx + 20]
+        faddp   st1,st0    
+	fld     dword [eax + 24]
+        fmul    dword [edx + 24]
+        faddp   st1,st0    
+	fld     dword [eax + 28]
+        fmul    dword [edx + 28]
+        faddp   st1,st0    
+	fld     dword [eax + 32]
+        fmul    dword [edx + 32]
+        faddp   st1,st0    
+	fld     dword [eax + 36]
+        fmul    dword [edx + 36]
+        faddp   st1,st0    
+	fld     dword [eax + 40]
+        fmul    dword [edx + 40]
+        faddp   st1,st0    
+	fld     dword [eax + 44]
+        fmul    dword [edx + 44]
+        faddp   st1,st0    
+	fld     dword [eax + 48]
+        fmul    dword [edx + 48]
+        faddp   st1,st0    
+	fld     dword [eax + 52]
+        fmul    dword [edx + 52]
+        faddp   st1,st0    
+	fld     dword [eax + 56]
+        fmul    dword [edx + 56]
+        faddp   st1,st0    
+	fld     dword [eax + 60]
+        fmul    dword [edx + 60]
+        faddp   st1,st0    
+	fld     dword [eax + 64]
+        fmul    dword [edx + 64]
+        faddp   st1,st0    
+	fld     dword [eax + 68]
+        fmul    dword [edx + 68]
+        faddp   st1,st0    
+	fld     dword [eax + 72]
+        fmul    dword [edx + 72]
+        faddp   st1,st0    
+	fld     dword [eax + 76]
+        fmul    dword [edx + 76]
+        faddp   st1,st0    
+	fld     dword [eax + 80]
+        fmul    dword [edx + 80]
+        faddp   st1,st0    
+	fld     dword [eax + 84]
+        fmul    dword [edx + 84]
+        faddp   st1,st0    
+	fld     dword [eax + 88]
+        fmul    dword [edx + 88]
+        faddp   st1,st0    
+	fld     dword [eax + 92]
+        fmul    dword [edx + 92]
+        faddp   st1,st0    
+	fld     dword [eax + 96]
+        fmul    dword [edx + 96]
+        faddp   st1,st0    
+	fld     dword [eax +100]
+        fmul    dword [edx +100]
+        faddp   st1,st0    
+	fld     dword [eax +104]
+        fmul    dword [edx +104]
+        faddp   st1,st0    
+	fld     dword [eax +108]
+        fmul    dword [edx +108]
+        faddp   st1,st0    
+	fld     dword [eax +112]
+        fmul    dword [edx +112]
+        faddp   st1,st0    
+	fld     dword [eax +116]
+        fmul    dword [edx +116]
+        faddp   st1,st0    
+	fld     dword [eax +120]
+        fmul    dword [edx +120]
+        faddp   st1,st0    
+	fld     dword [eax +124]
+        fmul    dword [edx +124]
+        faddp   st1,st0    
+endproc
+
+
 ; float_t  scalar4n_float32_i387 ( 
 ;         const float32_t* const  p, 
 ;         const float32_t* const  q,
@@ -642,6 +747,73 @@ proc	scalar24_float32_3DNow
         fadd    dword [sp(%$p)+4]
 endproc
 
+proc	scalar32_float32_3DNow
+%$p	arg	4
+%$q	arg	4
+        mov     eax,[sp(%$p)]
+        mov     edx,[sp(%$q)]
+
+	pmov    mm0,qword [eax]
+	pmov    mm1,qword [eax+8]
+        pfmul   mm0,qword [edx]
+	pfmul   mm1,qword [edx+8]
+
+	pmov    mm2,qword [eax+16]
+	pmov    mm3,qword [eax+24]
+        pfmul   mm2,qword [edx+16]
+	pfmul   mm3,qword [edx+24]
+        pfadd   mm0,mm2
+        pfadd   mm1,mm3
+
+	pmov    mm2,qword [eax+32]
+	pmov    mm3,qword [eax+40]
+        pfmul   mm2,qword [edx+32]
+	pfmul   mm3,qword [edx+40]
+        pfadd   mm0,mm2
+        pfadd   mm1,mm3
+
+	pmov    mm2,qword [eax+48]
+	pmov    mm3,qword [eax+56]
+        pfmul   mm2,qword [edx+48]
+	pfmul   mm3,qword [edx+56]
+        pfadd   mm0,mm2
+        pfadd   mm1,mm3
+
+	pmov    mm2,qword [eax+64]
+	pmov    mm3,qword [eax+72]
+        pfmul   mm2,qword [edx+64]
+	pfmul   mm3,qword [edx+72]
+        pfadd   mm0,mm2
+        pfadd   mm1,mm3
+
+	pmov    mm2,qword [eax+80]
+	pmov    mm3,qword [eax+88]
+        pfmul   mm2,qword [edx+80]
+	pfmul   mm3,qword [edx+88]
+        pfadd   mm0,mm2
+        pfadd   mm1,mm3
+
+	pmov    mm2,qword [eax+96]
+	pmov    mm3,qword [eax+104]
+        pfmul   mm2,qword [edx+96]
+	pfmul   mm3,qword [edx+104]
+        pfadd   mm0,mm2
+        pfadd   mm1,mm3
+
+	pmov    mm2,qword [eax+112]
+	pmov    mm3,qword [eax+120]
+        pfmul   mm2,qword [edx+112]
+	pfmul   mm3,qword [edx+120]
+        pfadd   mm0,mm2
+        pfadd   mm1,mm3
+
+        pfadd   mm0,mm1
+        pmov    qword [sp(%$p)],mm0
+	femms
+	fld     dword [sp(%$p)]
+        fadd    dword [sp(%$p)+4]
+endproc
+
 
 proc	scalar4n_float32_3DNow
 %$p	arg	4
@@ -662,10 +834,10 @@ proc	scalar4n_float32_3DNow
 	add	eax,byte 16
 	add	edx,byte 16
 .lbl4:	
-	pmov    mm2,qword [eax+16]
-	pmov    mm3,qword [eax+24]
-        pfmul   mm2,qword [edx+16]
-	pfmul   mm3,qword [edx+24]
+	pmov    mm2,qword [eax]
+	pmov    mm3,qword [eax+8]
+        pfmul   mm2,qword [edx]
+	pfmul   mm3,qword [edx+8]
 	add	eax,byte 16
 	add	edx,byte 16
         pfadd   mm0,mm2
@@ -713,6 +885,11 @@ endproc
 
 proc	scalar24_float32_SIMD
 	jmp	scalar24_float32_i387
+endproc
+
+
+proc	scalar32_float32_SIMD
+	jmp	scalar32_float32_i387
 endproc
 
 

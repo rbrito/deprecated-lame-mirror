@@ -519,7 +519,7 @@ int  main (void)
       else if (c >= 0x80 && c < 0xA0)
         printf("non-pritable character $%02X\n", c);
       else
-        printf("printable    character `%c'\n",  c);
+        printf("printable    character '%c'\n",  c);
       
     printf("\n^D pressed. Now press any key to continue ...");
     getchar();

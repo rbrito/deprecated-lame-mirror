@@ -195,6 +195,164 @@ lame_init_params_ppflt(lame_internal_flags *gfc)
 }
 
 /*}}}*/
+
+
+static void  optimum_bandwidth ( 
+        double* const   lowerlimit, 
+        double* const   upperlimit, 
+        const unsigned  bitrate, 
+        const int       samplefreq, 
+        const double    channels )
+{
+/* 
+ *  Input:
+ *      bitrate     total bitrate in bps
+ *      samplefreq  output sampling frequency in Hz
+ *      channels    1 for mono, 2+epsilon for MS stereo, 3 for LR stereo
+ *                  epsilon is the percentage of LR frames for typical audio
+ *                  (I use fade to gray by Metallica)
+ *
+ *   Output:
+ *      lowerlimit: best lowpass frequency limit for input filter in Hz
+ *      upperlimit: best highpass frequency limit for input filter in Hz
+ */
+    double  f_low;
+    double  f_high;
+    double  br;
+ 
+    assert ( bitrate >= 8000  && bitrate <= 320000 );
+    assert ( samplefreq >= 8000  &&  samplefreq <= 48000 );
+    assert ( channels == 1  ||  (channels >= 2  &&  channels <= 3) );
+    
+    if ( samplefreq >= 32000 )
+        br = bitrate - (channels == 1  ?  (17+4)*8  :  (32+4)*8) * samplefreq/1152;
+    else
+        br = bitrate - (channels == 1  ?  ( 9+4)*8  :  (17+4)*8) * samplefreq/ 576;
+
+    if (channels >= 2. )
+        br /= 1.75 + 0.25 * (channels-2.);    // MS needs 1.75x mono, LR needs 2.00x mono (experimental data of a lot of albums)
+        
+    br *= 0.5;                                // the sinus and cosine term must share the bitrate
+    
+/* 
+ *  So, now we have the bitrate for every spectral line.
+ *  Let's look at the current settings:
+ *
+ *    Bitrate   limit    bits/line
+ *     8 kbps   0.34 kHz  4.76
+ *    16 kbps   1.9 kHz   2.06
+ *    24 kbps   2.8 kHz   2.21
+ *    32 kbps   3.85 kHz  2.14
+ *    40 kbps   5.1 kHz   2.06
+ *    48 kbps   5.6 kHz   2.21
+ *    56 kbps   7.0 kHz   2.10
+ *    64 kbps   7.7 kHz   2.14
+ *    80 kbps  10.1 kHz   2.08
+ *    96 kbps  11.2 kHz   2.24
+ *   112 kbps  14.0 kHz   2.12
+ *   128 kbps  15.4 kHz   2.17
+ *   160 kbps  18.2 kHz   2.05
+ *   192 kbps  21.1 kHz   2.14
+ *   224 kbps  22.0 kHz   2.41
+ *   256 kbps  22.0 kHz   2.78
+ *
+ *   What can we see?
+ *       Value for 8 kbps is nonsense (although 8 kbps and stereo is nonsense)
+ *       Values are between 2.05 and 2.24 for 16...192 kbps
+ *       Some bitrate lack the following bitrates have: 16, 40, 80, 160 kbps
+ *       A lot of bits per spectral line have: 24, 48, 96 kbps
+ *
+ *   What I propose?
+ *       A slightly with the bitrate increasing bits/line function. It is
+ *       better to decrease NMR for low bitrates to get a little bit more
+ *       bandwidth. So we have a better trade of between twickling and
+ *       muffled sound.
+ */    
+
+    f_low = br / log10 ( br * 4.425e-3 );   // Tests with 8, 16, 32, 64, 112 and 160 kbps
+
+/*
+ *  What we get now?
+ *
+ *    Bitrate       limit  bits/line	difference
+ *     8 kbps (8)  1.89 kHz  0.86          +1.6 kHz
+ *    16 kbps (8)  3.16 kHz  1.24          +1.2 kHz
+ *    32 kbps(16)  5.08 kHz  1.54          +1.2 kHz
+ *    56 kbps(22)  7.88 kHz  1.80          +0.9 kHz
+ *    64 kbps(22)  8.83 kHz  1.86          +1.1 kHz
+ *   112 kbps(32) 14.02 kHz  2.12           0.0 kHz
+ *   112 kbps(44) 13.70 kHz  2.11          -0.3 kHz
+ *   128 kbps     15.40 kHz  2.17           0.0 kHz
+ *   160 kbps     16.80 kHz  2.22          -1.4 kHz 
+ *   192 kbps     19.66 kHz  2.30          -1.4 kHz
+ *   256 kbps     22.05 kHz  2.78           0.0 kHz
+ */
+
+/*
+ *  Now we try to choose a good high pass filtering frequency.
+ *  This value is currently not used.
+ *    For fu < 16 kHz:  sqrt(fu*fl) = 560 Hz
+ *    For fu = 18 kHz:  no high pass filtering
+ *  This gives:
+ *
+ *   2 kHz => 160 Hz
+ *   3 kHz => 107 Hz
+ *   4 kHz =>  80 Hz
+ *   8 kHz =>  40 Hz
+ *  16 kHz =>  20 Hz
+ *  17 kHz =>  10 Hz
+ *  18 kHz =>   0 Hz
+ *
+ *  These are ad hoc values and these can be optimzed if a high pass is available.
+ */
+    if ( f_low <= 16000 )
+        f_high = 16000.*20./f_low;
+    else if ( f_low <= 18000 )
+        f_high = 180. - 0.01*f_low;
+    else
+        f_high = 0.;
+
+    /*  
+     *  When we sometimes have a good highpass filter, we can add the highpass
+     *  frequency to the lowpass frequency
+     */
+
+    if (lowerlimit != NULL) *lowerlimit = f_low /* + f_high */;
+    if (upperlimit != NULL) *upperlimit = f_high;
+/*
+ * Now the weak points:
+ *
+ *   - the formula f_low=br/log10(br*4.425e-3) is a ad hoc formula
+ *     (but has a physical background and is easy to tune)
+ *   - the sfb21 problem (no scale factor) is not taken into account,
+ *     so for high bitrates with f_high is in sfb21 the lowpass frequency
+ *     should be designed by the ATH curve.
+ */
+}
+
+static int  optimum_samplefreq ( int lowpassfreq, int input_samplefreq )
+{
+/*
+ * Rules:
+ *
+ *  - input sample frequency should be decreased 
+ *    by more than 3% if lowpass allows this
+ *  - if possible, sfb21 should NOT be used
+ *
+ *  Problem: Switches to 32 kHz at 112 kbps
+ */
+    if ( input_samplefreq <=  8000*1.03  ||  lowpassfreq <=  3622 ) return  8000;
+    if ( input_samplefreq <= 11025*1.03  ||  lowpassfreq <=  4991 ) return 11025;
+    if ( input_samplefreq <= 12000*1.03  ||  lowpassfreq <=  5620 ) return 12000;
+    if ( input_samplefreq <= 16000*1.03  ||  lowpassfreq <=  7244 ) return 16000;
+    if ( input_samplefreq <= 22050*1.03  ||  lowpassfreq <=  9982 ) return 22050;
+    if ( input_samplefreq <= 24000*1.03  ||  lowpassfreq <= 11240 ) return 24000;
+    if ( input_samplefreq <= 32000*1.03  ||  lowpassfreq <= 15264 ) return 32000;
+    if ( input_samplefreq <= 44100*1.03 ) return 44100;
+    return 48000;
+}
+
+
 /* int           lame_init_params               (lame_global_flags *gfp)                                                                                          *//*{{{*/
 
 /********************************************************************
@@ -209,6 +367,7 @@ int lame_init_params ( lame_global_flags* const gfp )
     static const FLOAT8  dbQ [] = { -5.0, -3.75, -2.5, -1.25, 0, +0.4, +0.8, +1.2, +1.6, +2.0 };
     static const int     atQ [] = { +16,  +12,   +8,   +4,    0, -4,   -8,   -12,  -16,  -20  };
     static const FLOAT8  cmp [] = {   5,    6,    7,    8,    9, 10,   11,    12,   13,   14  };
+
     
     int                  i;
     int                  j;
@@ -249,7 +408,7 @@ int lame_init_params ( lame_global_flags* const gfp )
       gfp->out_samplerate = map2MP3Frequency (0.97 * gfp->in_samplerate); /* round up with a margin of 3% */
     
     /* choose a bitrate for the output samplerate which achieves
-     * specifed compression ratio 
+     * specified compression ratio 
      */
     gfp->brate = 
       gfp->out_samplerate*16*gfc->stereo/(1000.0*gfp->compression_ratio);
@@ -322,11 +481,11 @@ int lame_init_params ( lame_global_flags* const gfp )
 
   /* for VBR, take a guess at the compression_ratio. for example: */
   /* VBR_q           compression       like
-                      4.4             320kbs/41khz
-     0-1              5.5             256kbs/41khz
-     2                7.3             192kbs/41khz
-     4                8.8             160kbs/41khz
-     6                11              128kbs/41khz
+                      4.4             320kbs/44khz
+     0-1              5.5             256kbs/44khz
+     2                7.3             192kbs/44khz
+     4                8.8             160kbs/44khz
+     6                11              128kbs/44khz
      9                14.7             96kbs
      for lower bitrates, downsample with --resample
   */
@@ -392,23 +551,27 @@ int lame_init_params ( lame_global_flags* const gfp )
   /****************************************************************/
 
   if (gfp->lowpassfreq == 0) {
-    /* If the user has not selected their own filter, add a lowpass
-     * filter based on the compression ratio.  Formula based on
-          44.1   /160    4.4x
-          44.1   /128    5.5x      keep all bands
-          44.1   /96kbs  7.3x      keep band 28
-          44.1   /80kbs  8.8x      keep band 25
-          44.1khz/64kbs  11x       keep band 21  22?
-
-	  16khz/24kbs  10.7x       keep band 21
-	  22kHz/32kbs  11x         keep band ?
-	  22kHz/24kbs  14.7x       keep band 16
-          16    16     16x         keep band 14
-    */
-
+      double  band;
+      
+    /* 
+     *  If the user has not selected their own filter, add a lowpass 
+     *  filter based on the compression ratio.  Formula based on:
+     *
+     *    44 kHz /160 kbps   4.4x
+     *    44 kHz /128 kbps   5.5x   keep all bands
+     *    44 kHz / 96 kbps   7.3x   keep band 28
+     *    44 kHz / 80 kbps   8.8x   keep band 25
+     *    44 kHz / 64 kbps  11.0x   keep band 21 (22?)
+     *
+     *	  16 kHz / 24 kbps  10.7x   keep band 21
+     *	  22 kHz / 32 kbps  11.0x   keep band  ?
+     *	  22 kHz / 24 kbps  14.7x   keep band 16
+     *    16 kHz / 16 kbps  16.0x   keep band 14
+     */
 
     /* Should we use some lowpass filters? */
-    double band = floor (15.5 - 18*log (gfp->compression_ratio/16.) );
+    
+    band = floor (15.5 - 18*log (gfp->compression_ratio/16.) );
     if (gfc->resample_ratio != 1) {
       /* resampling.  if we are resampling, add lowpass at least 90.6% (29/32) */
       if (band > 29.)
@@ -507,14 +670,14 @@ int lame_init_params ( lame_global_flags* const gfp )
   if (gfp->VBR!=vbr_off) {
     /* if the user didn't specify VBR_max_bitrate: */
     if (0==gfp->VBR_max_bitrate_kbps) {
-      gfc->VBR_max_bitrate=14;   /* default: allow 320kbs */
+      gfc->VBR_max_bitrate = 14;      /* default: allow 160 kbps (MPEG-2) or 320 kbps (MPEG-1) */
     }else{
       if( (gfc->VBR_max_bitrate  = BitrateIndex(gfp->VBR_max_bitrate_kbps, gfp->version,gfp->out_samplerate)) < 0) {
 	return -1;
       }
     }
     if (0==gfp->VBR_min_bitrate_kbps) {
-      gfc->VBR_min_bitrate=1;  	/* 8 or 32 kbps */
+      gfc->VBR_min_bitrate =  1;      /* default: allow 8 kbps (MPEG-2) or 32 kbps (MPEG-1) */
     }else{
       if( (gfc->VBR_min_bitrate  = BitrateIndex(gfp->VBR_min_bitrate_kbps, gfp->version,gfp->out_samplerate)) < 0) {
 	return -1;

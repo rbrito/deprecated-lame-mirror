@@ -1,7 +1,7 @@
 /*
- *	encoder.h include file
+ *      encoder.h include file
  *
- *	Copyright (c) 2000 Mark Taylor
+ *      Copyright (c) 2000 Mark Taylor
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -10,7 +10,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
@@ -54,7 +54,7 @@
  * set to 1160 to sync with FhG.
  */
  
-#define ENCDELAY 576
+#define ENCDELAY      576
 
 /* 
  * delay of the MDCT used in mdct.c
@@ -62,44 +62,44 @@
  * Takehiro's routines: 
  */
 
-#define MDCTDELAY 48  
-#define FFTOFFSET (224+MDCTDELAY)
+#define MDCTDELAY     48  
+#define FFTOFFSET     (224+MDCTDELAY)
 
 /*
  * Most decoders, including the one we use, have a delay of 528 samples.  
  */
  
-#define DECDELAY 528
+#define DECDELAY      528
 
 
 /* number of subbands */
-#define         SBLIMIT                 32
+#define SBLIMIT       32
 
 /* parition bands bands */
-#define CBANDS          64
+#define CBANDS        64
 
 /* number of critical bands/scale factor bands where masking is computed*/
-#define SBPSY_l 21
-#define SBPSY_s 12
+#define SBPSY_l       21
+#define SBPSY_s       12
 
 /* total number of scalefactor bands encoded */
-#define SBMAX_l 22
-#define SBMAX_s 13
+#define SBMAX_l       22
+#define SBMAX_s       13
 
 
 
 /* FFT sizes */
-#define BLKSIZE         1024
-#define HBLKSIZE        (BLKSIZE/2+1)
-#define BLKSIZE_s       256
-#define HBLKSIZE_s      (BLKSIZE_s/2+1)
+#define BLKSIZE       1024
+#define HBLKSIZE      (BLKSIZE/2 + 1)
+#define BLKSIZE_s     256
+#define HBLKSIZE_s    (BLKSIZE_s/2 + 1)
 
 
 /* #define switch_pe        1800 */
-#define NORM_TYPE       0
-#define START_TYPE      1
-#define SHORT_TYPE      2
-#define STOP_TYPE       3
+#define NORM_TYPE     0
+#define START_TYPE    1
+#define SHORT_TYPE    2
+#define STOP_TYPE     3
 
 /* 
  * Mode Extention:
@@ -112,21 +112,20 @@
  *  -mi: all
  */
  
-#define         MPG_MD_LR_LR             0
-#define         MPG_MD_LR_I              1
-#define         MPG_MD_MS_LR             2
-#define         MPG_MD_MS_I              3
-
+#define MPG_MD_LR_LR  0
+#define MPG_MD_LR_I   1
+#define MPG_MD_MS_LR  2
+#define MPG_MD_MS_I   3
 
 
 #include "machine.h"
 #include "lame.h"
 
-int lame_encode_mp3_frame(lame_global_flags *gfp,
-sample_t inbuf_l[],
-sample_t inbuf_r[],
-char *mp3buf, int mp3buf_size);
-
-
+int  lame_encode_mp3_frame (
+        lame_global_flags* gfp,
+        sample_t  inbuf_l [],
+        sample_t  inbuf_r [],
+        char*     mp3buf, 
+	int       mp3buf_size );
 
 #endif

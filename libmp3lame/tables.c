@@ -414,7 +414,7 @@ const struct huffcodetab ht[HTN] =
 
 
 
-const FLOAT psy_data [] = {		// 8 Byte is overkill, may be FLOAT2 is enough */
+const FLOAT  psy_data [] = {
 
  48000.0, 61,				// Sample Frequency, Table entries
  0, 1, 24.5, 4.532, 0.970, 0.000,	// Table entry 0, data?, TMN?, data?, data?, data?

@@ -569,7 +569,7 @@ endif
 #
 test: $(PGM)
 	frontend/lame  --nores -h testcase.wav testcase.new.mp3
-	cmp -l testcase.new.mp3 testcase.mp3 | wc
+	cmp -l testcase.new.mp3 testcase.mp3 | wc -l
 
 testg: $(PGM)
 	frontend/lame -g -h ../test/castanets.wav
