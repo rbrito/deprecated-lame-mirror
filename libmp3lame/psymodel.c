@@ -965,7 +965,8 @@ int L3psycho_anal( lame_global_flags * gfp,
       if (ns_attacks[2] && ns_attacks[1]) ns_attacks[2] = 0;
       if (ns_attacks[3] && ns_attacks[2]) ns_attacks[3] = 0;
 
-      if (ns_attacks[0] || ns_attacks[1] || ns_attacks[2] || ns_attacks[3]) ns_uselongblock = 0;
+      if (gfc->nsPsy.last_attacks[chn][2] == 3 ||
+	  ns_attacks[0] || ns_attacks[1] || ns_attacks[2] || ns_attacks[3]) ns_uselongblock = 0;
 
       if (chn < 4) count++;
 
