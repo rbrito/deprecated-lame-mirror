@@ -1406,7 +1406,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 
 	ecb = 0;
 
-#if 0
+#if 1
 	for ( k = gfc->s3ind[b][0]; k <= gfc->s3ind[b][1]; k++ )
 	  {
 	    ecb = mask_add(ecb,gfc->s3_l[b][k] * eb2[k],k,k-b,gfc);
@@ -1415,7 +1415,7 @@ int L3psycho_anal_ns( lame_global_flags * gfp,
 	ecb *= 0.158489319246111; // pow(10,-0.8)
 #endif
 
-#if 1
+#if 0
 	for ( k = gfc->s3ind[b][0]; k <= gfc->s3ind[b][1]; k++ )
 	  {
 	    ecb += gfc->s3_l[k][b] * eb2[k];
