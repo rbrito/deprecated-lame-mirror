@@ -518,8 +518,8 @@ struct lame_internal_flags {
 #ifdef HAVE_GTK
   /* used by the frame analyzer */
   plotting_data *pinfo;
+  FLOAT ers_save[2][MAX_CHANNELS*2][3];
   FLOAT energy_save[2][MAX_CHANNELS*2][HBLKSIZE];
-  FLOAT ers_save[2][MAX_CHANNELS*2];
 #endif
 };
 

@@ -1014,18 +1014,21 @@ psycho_analysis_short(
      * determine the block type (window type)
      ***************************************************************/
     for (chn=0; chn<numchn; chn++) {
-	FLOAT attack_intensity[3];
 	FLOAT attackThreshold;
 /*
   use subband filtered samples to determine block type switching.
 
-  1 character = 1 sample (in subband)
+  1 character = 1 sample (in subband) = 32 samples (in original)
 
                                           =============stop=============
                   ===short====      ===short====
             ===short====      ===short====
       ===short====      ===short====
 <----------------><----------------><----------------><---------------->
+subbk_ene         000000111111222222333333444444555555
+mp3x display               <------LONG------>
+                           <=ST=><=ST=><=ST=>
+
 ================long================
                   ================long================
 
@@ -1043,10 +1046,10 @@ psycho_analysis_short(
 */
 	if (chn < 2) {
 	    for (i = 0; i < 3; i++) {
-		FLOAT x, y = 1.0;
+		FLOAT y = 1.0;
 		for (j = 0; j < 6; j++) {
 		    int k = i*6+j, band;
-		    x = 0.0;
+		    FLOAT x = 0.0;
 // for (band = gfc->nsPsy.switching_highpass; ...
 		    for (band = 10; band < SBLIMIT; band++)
 			x += fabs(sbsmpl[chn][gr*576+k*32+mdctorder[band]]);
@@ -1057,10 +1060,10 @@ psycho_analysis_short(
 	    }
 	} else if (chn == 2) {
 	    for (i = 0; i < 3; i++) {
-		FLOAT x0, x1, y0 = 1.0, y1 = 1.0;
+		FLOAT y0 = 1.0, y1 = 1.0;
 		for (j = 0; j < 6; j++) {
 		    int k = i*6+j, band;
-		    x0 = x1 = 0.0;
+		    FLOAT x0 = 0.0, x1 = 0.0;
 // for (band = gfc->nsPsy.switching_highpass; ...
 		    for (band = 10; band < SBLIMIT; band++) {
 			FLOAT l = sbsmpl[0][gr*576+k*32+mdctorder[band]];
@@ -1079,42 +1082,43 @@ psycho_analysis_short(
 	}
 
 	/* calculate energies of each sub-shortblocks */
-	attack_intensity[0]
-	    = gfc->nsPsy.subbk_ene[chn][2] / gfc->nsPsy.subbk_ene[chn][1];
-	attack_intensity[1]
-	    = gfc->nsPsy.subbk_ene[chn][3] / gfc->nsPsy.subbk_ene[chn][2];
-	attack_intensity[2]
-	    = gfc->nsPsy.subbk_ene[chn][4] / gfc->nsPsy.subbk_ene[chn][3];
-
 #if defined(HAVE_GTK)
 	if (gfc->pinfo) {
-	    FLOAT x = attack_intensity[0];
-	    if (x < attack_intensity[1]) x = attack_intensity[1];
-	    if (x < attack_intensity[2]) x = attack_intensity[2];
-	    gfc->pinfo->ers[gr][chn] = gfc->ers_save[gr][chn];
-	    gfc->ers_save[gr][chn] = x;
+	    memcpy(gfc->pinfo->ers[gr][chn], gfc->ers_save[gr][chn],
+		   sizeof(gfc->ers_save[0][0]));
+	    gfc->ers_save[gr][chn][0]
+		= gfc->nsPsy.subbk_ene[chn][2] / gfc->nsPsy.subbk_ene[chn][1];
+	    gfc->ers_save[gr][chn][1]
+		= gfc->nsPsy.subbk_ene[chn][3] / gfc->nsPsy.subbk_ene[chn][2];
+	    gfc->ers_save[gr][chn][2]
+		= gfc->nsPsy.subbk_ene[chn][4] / gfc->nsPsy.subbk_ene[chn][3];
 	}
 #endif
 	/* compare energies between sub-shortblocks */
 	attackThreshold = (chn == 3)
 	    ? gfc->nsPsy.attackthre_s : gfc->nsPsy.attackthre;
 
-	gfc->useshort_next[gr][chn] = NORM_TYPE;
-	for (i=0;i<3;i++) {
-	    if (attack_intensity[i] > attackThreshold) {
-		gfc->useshort_next[gr][chn] = SHORT_TYPE;
-		current_is_short |= 1 << chn;
-	    }
-	}
-
 	/* initialize the flag representing
 	 * "short block may be needed but not calculated"
 	 */
 	gfc->masking_next[gr][chn].en.s[0][0] = -1.0;
+	gfc->useshort_next[gr][chn] = NORM_TYPE;
+	for (i=0;i<3;i++) {
+	    if (gfc->nsPsy.subbk_ene[chn][i + 2]
+		<= gfc->nsPsy.subbk_ene[chn][i + 1] * attackThreshold)
+		continue;
+
+	    gfc->useshort_next[gr][chn] = SHORT_TYPE;
+	    current_is_short += (1 << chn);
+	    break;
+	}
     }
 
     if (!current_is_short)
 	return;
+
+    if (current_is_short & 12)
+	gfc->useshort_next[gr][2] = gfc->useshort_next[gr][3] = SHORT_TYPE;
 
     for (chn=0; chn<numchn; chn++) {
 	/* fft and energy calculation   */
@@ -1141,9 +1145,6 @@ psycho_analysis_short(
 			      &gfc->masking_next[gr][chn], sblock);
 	}
     } /* end loop over chn */
-
-    if (current_is_short & 12)
-	gfc->useshort_next[gr][2] = gfc->useshort_next[gr][3] = SHORT_TYPE;
 
     return;
 }
@@ -1752,13 +1753,14 @@ psycho_analysis(
 		gfc->useshort_next[gr][1] = gfc->useshort_next[gr][3];
 	    }
 	    /* LR -> MS case */
-	    if (gfc->l3_side.tt[gfc->mode_gr-1][0].block_type != NORM_TYPE
-	     || gfc->l3_side.tt[gfc->mode_gr-1][1].block_type != NORM_TYPE)
+	    if (gfc->mode_ext_next != gfc->mode_ext
+	     && (gfc->l3_side.tt[gfc->mode_gr-1][0].block_type
+		 | gfc->l3_side.tt[gfc->mode_gr-1][1].block_type))
 		gfc->l3_side.tt[gfc->mode_gr-1][0].block_type
 		    = gfc->l3_side.tt[gfc->mode_gr-1][1].block_type
 		    = SHORT_TYPE;
 	} else if (gfc->mode_ext_next != gfc->mode_ext
-		   && (gfc->useshort_next[0][0] || gfc->useshort_next[0][1]))
+		   && (gfc->useshort_next[0][0] | gfc->useshort_next[0][1]))
 	    gfc->useshort_next[0][0] = gfc->useshort_next[0][1] = SHORT_TYPE;
     }
 

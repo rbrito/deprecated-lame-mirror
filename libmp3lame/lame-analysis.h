@@ -52,7 +52,7 @@ typedef struct {
   float en[2][4][SBMAX_l];
   float thr_s[2][4][3*SBMAX_s];
   float en_s[2][4][3*SBMAX_s];
-  float ers[2][4];
+  float ers[2][4][3];
 
   float sfb[2][2][SBMAX_l];
   float sfb_s[2][2][3*SBMAX_s];

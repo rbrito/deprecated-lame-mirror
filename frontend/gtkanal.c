@@ -670,10 +670,17 @@ void plot_frame(void)
 
 
       /* en = max energy difference amoung the 3 short FFTs for this granule */
-      en = pplot->ers[gr][ch];
-      if (en>999) en=999;
-      sprintf(title2,"FFT%1i pe=%5.2fK/%3.1f n=%i/%3.1f/%3.1f/%3.1f",gr,
-	      pplot->pe[gr][ch]/1000,en,pplot->over[gr][ch],
+      i = ch+gtkinfo.msflag*2;
+      if (pplot->ers[gr][i][0]>999) pplot->ers[gr][i][0]=999;
+      if (pplot->ers[gr][i][1]>999) pplot->ers[gr][i][1]=999;
+      if (pplot->ers[gr][i][2]>999) pplot->ers[gr][i][2]=999;
+      sprintf(title2,"FFT%1i pe=%4.2fK/%2.1f %2.1f %2.1f n=%i/%3.1f/%3.1f/%3.1f",
+	      gr,
+	      pplot->pe[gr][ch]/1000,
+	      pplot->ers[gr][i][0],
+	      pplot->ers[gr][i][1],
+	      pplot->ers[gr][i][2],
+	      pplot->over[gr][ch],
 	      pplot->max_noise[gr][ch],
 	      pplot->over_noise[gr][ch],
 	      pplot->tot_noise[gr][ch]);
