@@ -83,8 +83,8 @@ int lame_decode_fromfile(FILE *fd, short pcm_l[],short pcm_r[])
 	int outsize=0;
 	WORD *b[MPEGA_MAX_CHANNELS];
 
-	b[0]=pcm_l;
-	b[1]=pcm_r;
+	b[0]=&pcm_l;
+	b[1]=&pcm_r;
 
 	while (outsize == 0)
 		outsize = MPEGA_decode_frame(mstream, b);
