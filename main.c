@@ -6,8 +6,12 @@
 /* needed to set stdout to binary */
 #include <io.h>
 #endif
+/*
+ main.c is example code for how to use libmp3lame.a.  To use this library,
+ you only need the library and lame.h.  All other .h files are private
+ to the library.
+*/
 #include "lame.h"
-#include "util.h"
 
 #ifdef HAVEGTK
 #include "gtkanal.h"
@@ -58,8 +62,8 @@ int main(int argc, char **argv)
   
   /* initialize libmp3lame */
   if (lame_init(&gf)<0) {
-    ERRORF("fatal error during initialization\n");
-    LAME_ERROR_EXIT();  
+    fprintf(stderr,"fatal error during initialization\n");
+    exit(-1);
   }
   if(argc==1) lame_usage(&gf,argv[0]);  /* no command-line args, print usage, exit  */
 
@@ -80,8 +84,8 @@ int main(int argc, char **argv)
    */
   if ( 0 != strcmp ( "-"      , gf.outPath )  && 
        0 == strcmp ( gf.inPath, gf.outPath ) ) {
-      ERRORF ( "Input file and Output file are the same. Abort.\n" );
-      LAME_ERROR_EXIT ();
+      fprintf(stderr,"Input file and Output file are the same. Abort.\n" );
+      exit(-1);
   }
 
   /* open the wav/aiff/raw pcm or mp3 input file.  This call will
@@ -97,8 +101,8 @@ int main(int argc, char **argv)
    * set some more options
    */
   if (lame_init_params(&gf)<0)  {
-    ERRORF("fatal error during initialization\n");
-    LAME_ERROR_EXIT();
+    fprintf(stderr,"fatal error during initialization\n");
+    exit(-1);
   }
 
   if (!gf.decode_only)
@@ -120,8 +124,8 @@ int main(int argc, char **argv)
       outf = stdout;
     } else {
       if ((outf = fopen(gf.outPath, "wb")) == NULL) {
-	ERRORF("Could not create \"%s\".\n", gf.outPath);
-	LAME_ERROR_EXIT();
+	fprintf(stderr,"Could not create \"%s\".\n", gf.outPath);
+	exit(-1);
       }
     }
 #ifdef __riscos__
@@ -146,7 +150,7 @@ int main(int argc, char **argv)
     gtk_init (&argc, &argv);
     gtkcontrol(&gf);
 #else
-    ERRORF("Error: lame not compiled with GTK support \n");
+    fprintf(stderr,"Error: lame not compiled with GTK support \n");
 #endif
 
   } else if (gf.decode_only) {
@@ -170,22 +174,22 @@ int main(int argc, char **argv)
 
 	/* was our output buffer big enough? */
 	if (imp3<0) {
-	  if (imp3==-1) ERRORF("mp3 buffer is not big enough... \n");
-	  else ERRORF("mp3 internal error:  error code=%i\n",imp3);
-	  LAME_ERROR_EXIT();
+	  if (imp3==-1) fprintf(stderr,"mp3 buffer is not big enough... \n");
+	  else fprintf(stderr,"mp3 internal error:  error code=%i\n",imp3);
+	  exit(-1);
 	}
 
 	/* imp3 is not negative, but fwrite needs an unsigned here */
 	if (fwrite(mp3buffer,1,(unsigned int)imp3,outf) != imp3) {
-	  ERRORF("Error writing mp3 output \n");
-	  LAME_ERROR_EXIT();
+	  fprintf(stderr,"Error writing mp3 output \n");
+	  exit(-1);
 	}
       } while (iread);
       imp3=lame_encode_finish(&gf,mp3buffer,(int)sizeof(mp3buffer));   /* may return one more mp3 frame */
       if (imp3<0) {
-	if (imp3==-1) ERRORF("mp3 buffer is not big enough... \n");
-	else ERRORF("mp3 internal error:  error code=%i\n",imp3);
-	LAME_ERROR_EXIT();
+	if (imp3==-1) fprintf(stderr,"mp3 buffer is not big enough... \n");
+	else fprintf(stderr,"mp3 internal error:  error code=%i\n",imp3);
+	exit(-1);
       }
       /* imp3 is not negative, but fwrite needs an unsigned here */
       fwrite(mp3buffer,1,(unsigned int)imp3,outf);
