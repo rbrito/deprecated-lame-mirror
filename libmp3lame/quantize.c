@@ -39,6 +39,9 @@
 #include <dmalloc.h>
 #endif
 
+
+#ifdef HAVE_NASM
+extern void quantize_sfb_3DN(const FLOAT *, int, int, int *);
 extern void pow075_SSE(float *, float *, int, float*);
 extern void pow075_3DN(float *, float *, int, float*);
 extern void sumofsqr_3DN(const FLOAT *, int, FLOAT *);
@@ -49,6 +52,7 @@ extern FLOAT
 calc_sfb_noise_fast_3DN(lame_internal_flags *gfc, int j, int bw, int sf);
 extern FLOAT
 calc_sfb_noise_3DN(lame_internal_flags *gfc, int j, int bw, int sf);
+#endif
 
 static const int max_range_short[SBMAX_s*3] = {
     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,

@@ -1329,10 +1329,6 @@ L3psycho_anal_ns(
 
 	    enn  -= .5*eb[b];
 	    thmm -= .5*ecb;
-	    /****   long block pre-echo control   ****/
-	    /* reduce masking threshold if there's a surge
-	     * in the subbanded signal. */
-	    /* XXX not implemented */
 
 	    if (thmm < gfc->ATH.l_avg[j] * gfc->ATH.adjust) {
 		thmm = gfc->ATH.l_avg[j] * gfc->ATH.adjust;
