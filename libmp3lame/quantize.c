@@ -953,12 +953,13 @@ inc_subblock_gain (
         }
 
         {
-        FLOAT8 amp = IPOW20(210 - 8);
-        j += cod_info->width[sfb] * (window+1);
-        for (l = -cod_info->width[sfb]; l < 0; l++)
-            xrpow[j+l] *= amp;
-            if (xrpow[j+l] > cod_info->xrpow_max)
-                cod_info->xrpow_max = xrpow[j+l];
+            FLOAT8 amp = IPOW20(210 - 8);
+            j += cod_info->width[sfb] * (window+1);
+            for (l = -cod_info->width[sfb]; l < 0; l++) {
+                xrpow[j+l] *= amp;
+                if (xrpow[j+l] > cod_info->xrpow_max)
+                    cod_info->xrpow_max = xrpow[j+l];
+            }
         }
     }
     return 0;
