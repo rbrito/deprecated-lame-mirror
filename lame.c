@@ -910,6 +910,12 @@ lame_global_flags * lame_init(void)
 # else /* not __CYGWIN__ */
   {
 #  include <fpu_control.h>
+#ifndef _FPU_GETCW
+#define _FPU_GETCW(cw) __asm__ ("fnstcw %0" : "=m" (*&cw))
+#endif
+#ifndef _FPU_SETCW
+#define _FPU_SETCW(cw) __asm__ ("fldcw %0" : : "m" (*&cw))
+#endif
     unsigned int mask;
     _FPU_GETCW(mask);
     /* Set the Linux mask to abort on most FPE's */
