@@ -670,7 +670,6 @@ int calc_noise( lame_global_flags *gfp,
   res->tot_count  = count;
   res->over_count = over;
 
-#ifndef RH_NOISE_CALC
   /* convert to db. DO NOT CHANGE THESE */
   /* tot_noise = is really the average over each sfb of: 
      [noise(db) - allowed_noise(db)]
@@ -680,15 +679,10 @@ int calc_noise( lame_global_flags *gfp,
 
   */
 
-  res->tot_noise = 10*log10(Max(.00001,tot_noise)); 
-  res->over_noise = 10*log10(Max(1.0,over_noise)); 
-  res->max_noise = 10*log10(Max(.00001,max_noise));
-#else
-  /* no need for dB. DO NOT CHANGE THESE */
-  res->tot_noise  = tot_noise; 
-  res->over_noise = over_noise; 
-  res->max_noise  = max_noise;
-#endif  
+  res->tot_noise  = 10*log10(Max(1E-20,tot_noise)); 
+  res->over_noise = 10*log10(Max(1.0, over_noise)); 
+  res->max_noise  = 10*log10(Max(1E-20,max_noise));
+
   return over;
 }
 
@@ -1009,15 +1003,9 @@ average seems to be about -147db.
   gfc->pinfo->LAMEsfbits  [gr][ch] = cod_info->part2_length;
 
   gfc->pinfo->over      [gr][ch] = noise[0];
-#ifndef RH_NOISE_CALC
   gfc->pinfo->max_noise [gr][ch] = noise[1];
   gfc->pinfo->over_noise[gr][ch] = noise[2];
   gfc->pinfo->tot_noise [gr][ch] = noise[3];
-#else
-  gfc->pinfo->max_noise [gr][ch] = 10*log10(Max(1E-20,noise[1]));
-  gfc->pinfo->over_noise[gr][ch] = 10*log10(Max(1.0,  noise[2]));
-  gfc->pinfo->tot_noise [gr][ch] = 10*log10(Max(1E-20,noise[3]));
-#endif
 }
 
 

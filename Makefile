@@ -144,7 +144,7 @@ ifeq ($(UNAME),Linux)
 
 
 #  special noise calculation
-#   FEATURES = -DRH_NOISE_CALC
+#   FEATURES = -DRH_AMP
 # these options for gcc-2.95.2 to produce fast code
 #   CC_OPTS = $(FEATURES)\
 #	-Wall -O9 -fomit-frame-pointer -march=pentium \
