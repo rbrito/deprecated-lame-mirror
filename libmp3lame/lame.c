@@ -515,30 +515,21 @@ lame_init_params(lame_global_flags * const gfp)
 	    gfp->free_format = 1;
 	}
     }
-    if (gfp->VBR != vbr) {
-	/* automatic output sampling rate decision.
-	   round up with a margin of 3% */
-	if (gfp->mean_bitrate_kbps == 0) {
-	    /* no bitrate or compression ratio specified,
-	       use default compression ratio of 11.025,
-	       which is the rate to compress a CD down to exactly 128000 bps */
-	    if (gfp->compression_ratio <= 0)
-		gfp->compression_ratio = 11.025;
+    if (gfp->VBR != vbr && gfp->mean_bitrate_kbps == 0) {
+	/* no bitrate or compression ratio specified,
+	   use default compression ratio of 11.025,
+	   which is the rate to compress a CD down to exactly 128000 bps */
+	if (gfp->compression_ratio <= 0)
+	    gfp->compression_ratio = 11.025;
 
-	    /* choose a bitrate for the output samplerate which achieves
-	     * specified compression ratio 
-	     */
-	    gfp->mean_bitrate_kbps = get_bitrate(gfp);
+	/* choose a bitrate which achieves the specified compression ratio
+	 */
+	gfp->mean_bitrate_kbps = get_bitrate(gfp);
     }
     set_compression_ratio(gfp);
 
-    /****************************************************************/
-    /* if a filter has not been enabled, see if we should add one: */
-    /****************************************************************/
-    apply_preset(gfp,
-		 (int)(gfp->in_samplerate * 16 * gfc->channels_out
-		       / (gfp->compression_ratio * 1000)), gfp->VBR);
-
+    /* if a filter has not been enabled, see if we should add one */
+    apply_preset(gfp, get_bitrate(gfp), gfp->VBR);
     if (gfp->out_samplerate == 0)
 	gfp->out_samplerate
 	    = optimum_samplefreq(gfp->lowpassfreq, gfp->in_samplerate);
@@ -548,7 +539,6 @@ lame_init_params(lame_global_flags * const gfp)
     gfp->framesize = 576 * gfc->mode_gr;
     gfp->encoder_delay = ENCDELAY;
     gfc->resample_ratio = (double) gfp->in_samplerate / gfp->out_samplerate;
-    set_compression_ratio(gfp);
 
     /* for non Free Format find the nearest allowed bitrate */
     if (gfp->VBR == cbr && !gfp->free_format) {
