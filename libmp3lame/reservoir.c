@@ -124,12 +124,9 @@ ResvFrameBegin(lame_global_flags *gfp,III_side_info_t *l3_side, int mean_bits, i
     resvLimit = (gfp->version==1) ? 8*511 : 8*255 ;
 
 
-    if (gfp->free_format) {
+    if (gfp->brate >= 320) {
         /* in freeformat the buffer is constant*/
-        if (gfp->version==1)
-            maxmp3buf=8*((int)((gfp->brate*1000)/(gfp->out_samplerate / (FLOAT8)1152)/8 +.5));
-        else
-            maxmp3buf=8*((int)((gfp->brate*1000)/(gfp->out_samplerate / (FLOAT8)576)/8 +.5));
+        maxmp3buf=8*((int)((gfp->brate*1000)/(gfp->out_samplerate / (FLOAT8)1152)/8 +.5));
     } else {
         /* maximum allowed frame size.  dont use more than this number of
            bits, even if the frame has the space for them: */

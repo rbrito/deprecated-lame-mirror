@@ -417,7 +417,6 @@ lame_set_free_format( lame_global_flags*  gfp,
         return -1;
 
     gfp->free_format = free_format;
-    gfp->disable_reservoir = 1;
 
     return 0;
 }
@@ -472,6 +471,10 @@ lame_set_brate( lame_global_flags*  gfp,
                 int                 brate )
 {
     gfp->brate = brate;
+
+    if (brate >= 320) {
+        gfp->disable_reservoir = 1;
+    }
 
     return 0;
 }
